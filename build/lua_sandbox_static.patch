@@ -1,0 +1,13 @@
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index beff13e..64a0f43 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -55,7 +55,7 @@ luasandbox_output.c
+ luasandbox_serialize.c
+ )
+ 
+-add_library(luasandbox SHARED ${LUA_SANDBOX_SRC} ${LUA_SRC})
++add_library(luasandbox STATIC ${LUA_SANDBOX_SRC} ${LUA_SRC})
+ set_target_properties(luasandbox PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 0)
+ target_link_libraries(luasandbox luasandboxutil ${CMAKE_DL_LIBS})
+ if(LIBM_LIBRARY)
