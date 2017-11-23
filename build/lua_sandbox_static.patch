@@ -11,3 +11,15 @@ index beff13e..64a0f43 100644
  set_target_properties(luasandbox PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 0)
  target_link_libraries(luasandbox luasandboxutil ${CMAKE_DL_LIBS})
  if(LIBM_LIBRARY)
+diff --git a/src/util/CMakeLists.txt b/src/util/CMakeLists.txt
+index e0df018..ff3a126 100644
+--- a/src/util/CMakeLists.txt
++++ b/src/util/CMakeLists.txt
+@@ -15,6 +15,6 @@ string_matcher.c
+ util.c
+ )
+ 
+-add_library(luasandboxutil SHARED ${UTIL_SRC})
++add_library(luasandboxutil STATIC ${UTIL_SRC})
+ set_target_properties(luasandboxutil PROPERTIES VERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH} SOVERSION 0)
+ target_compile_definitions(luasandboxutil PRIVATE -Dluasandboxutil_EXPORTS)

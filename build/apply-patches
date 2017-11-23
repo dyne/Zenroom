@@ -4,5 +4,5 @@
 
 # enable static build of lua_sandbox
 if ! grep STATIC lib/lua_sandbox/src/CMakeLists.txt > /dev/null; then
-	cd lib/lua_sandbox && patch -p1 < ../build/lua_sandbox_static.patch && cd -
+	cd lib/lua_sandbox && patch -p1 < ../../build/lua_sandbox_static.patch && cd -
 fi
