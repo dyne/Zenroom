@@ -27,8 +27,6 @@
 #include <luasandbox.h>
 #include <luasandbox/util/util.h>
 
-#define VERSION "0.1"
-
 #define CONF "decode-exec.conf"
 
 void log_debug(lua_State *l, lua_Debug *d) {
@@ -65,8 +63,8 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
-	notice( "DECODE VM v%s",VERSION);
-	act("exec: %s", argv[1]);
+	notice( "DECODE exec v%s",VERSION);
+	act("code: %s", argv[1]);
 
 	conf = lsb_read_file(CONF);
 	if(!conf) error("Error loading configuration: %s",CONF);
@@ -97,13 +95,12 @@ int main(int argc, char **argv) {
 
 
 	lua = lsb_get_lua(lsb);
-	int n = lua_gettop(lua);
-	lsb_output(lsb, 1, n, 1);
+	res = lua_pcall(lua, 0, 0, 0);
  
 	// luaL_openlibs(lua);
-	lsb_pcall_setup(lsb, "process");
+//	lsb_pcall_setup(lsb, "process");
 //	res = lua_pcall(lua, 0, LUA_MULTRET, 0);
-	res = lua_pcall(lua, 1, 2, 0);
+
 	// if (res) {
 	// 	error("Error: %s", lua_tostring(lua, -1));
 	// 	lsb_terminate(lsb, NULL);
@@ -112,7 +109,7 @@ int main(int argc, char **argv) {
 	// do stuff
 
 teardown:
-	act("DECODE VM quit.");
+	act("DECODE exec terminating.");
 	if(conf) free(conf);
 	if(lua) {
 //		lua_close(lua);
