@@ -1,14 +1,26 @@
-luasand := build/lua_sandbox
-musl := build/musl
+pwd := $(shell pwd)
+luasand := ${pwd}/build/lua_sandbox
+musl := ${pwd}/build/musl
+musl-gcc := ${musl}/obj/musl-gcc
 
-all:
-	./build/apply-patches
-	if ! [ -r ${musl}/obj/musl-gcc ]; then mkdir -p ${musl} && cd ${musl} && ../../lib/musl/configure; fi
-	make -j2 -C ${musl}
-	if ! [ -r ${luasand}/CMakeCache.txt ]; then mkdir -p ${luasand} && cd ${luasand} && CC=../musl/obj/musl-gcc cmake ../../lib/lua_sandbox ; fi
-
-	make -C ${luasand} luasandbox
+all: musl patches luasandbox
 	make -C src musl
+
+patches:
+	./build/apply-patches
+
+musl:
+	if ! [ -r ${musl-gcc} ]; then mkdir -p ${musl} && cd ${musl} && ${pwd}/lib/musl/configure; fi
+	make -j2 -C ${musl}
+
+luasandbox:
+	if ! [ -r ${luasand}/CMakeCache.txt ]; then mkdir -p ${luasand} && cd ${luasand} && CC=${musl-gcc} cmake ${pwd}/lib/lua_sandbox ; fi
+	make -C ${luasand} luasandbox
+
+# needed for yices2, in case useful (WIP)
+# gmp:
+# 	if ! [ -r lib/gmp/Makefile ]; then cd lib/gmp && CC=${musl-gcc} ./configure --disable-shared --enable-static; fi
+# 	make -C lib/gmp -j2
 
 clean:
 	rm -rf ${luasand}
