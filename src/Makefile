@@ -5,8 +5,8 @@ VERSION := $(shell cat ../VERSION)
 
 CFLAGS  := -I. -I../lib/lua_sandbox/include
 SOURCES := jutils.o decode-exec.o
-LDADD   := ../lib/lua_sandbox/src/libluasandbox.a
-LDADD   += ../lib/lua_sandbox/src/util/libluasandboxutil.a
+LDADD   := ../build/lua_sandbox/src/libluasandbox.a
+LDADD   += ../build/lua_sandbox/src/util/libluasandboxutil.a
 
 all: shared
 
@@ -19,6 +19,11 @@ shared: ${SOURCES} decode-exec
 
 #	${CC} ${CFLAGS} ${SOURCES} -o decode-exec ${LDFLAGS} ${LDADD}
 
+musl: CC := ../build/musl/obj/musl-gcc
+musl: CFLAGS += -O3 -Wall
+musl: LDADD  += ../build/musl/lib/libc.a
+musl: LDFLAGS += -static
+musl: ${SOURCES} decode-exec
 
 # musl:
 # 	/usr/local/musl/bin/musl-gcc jutils.c decode-exec.c -Os -o decode-exec -DDEBUG=1 -Wall \

@@ -4,3 +4,6 @@
 [submodule "docs/article/writedown"]
 	path = docs/article/writedown
 	url = https://github.com/dyne/writedown
+[submodule "lib/musl"]
+	path = lib/musl
+	url = git://git.musl-libc.org/musl
