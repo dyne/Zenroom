@@ -8,9 +8,9 @@ SOURCES := jutils.o decode-exec.o
 LDADD   := ../build/lua_sandbox/src/libluasandbox.a
 LDADD   += ../build/lua_sandbox/src/util/libluasandboxutil.a
 
-all: shared
+all: musl
 
-decode-exec:
+decode-exec: decode-exec.o
 	${CC} ${CFLAGS} ${SOURCES} -o decode-exec ${LDFLAGS} ${LDADD}
 
 shared: CFLAGS+=  -O3 -Wall
