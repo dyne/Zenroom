@@ -4,13 +4,13 @@ PREFIX?=/usr/local
 VERSION := $(shell cat ../VERSION)
 
 CFLAGS  := -I. -I../lib/lua_sandbox/include
-SOURCES := jutils.o decode-exec.o
+SOURCES := jutils.o timing.o decode-exec.o
 LDADD   := ../build/lua_sandbox/src/libluasandbox.a
 LDADD   += ../build/lua_sandbox/src/util/libluasandboxutil.a
 
 all: musl
 
-decode-exec: decode-exec.o
+decode-exec: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o decode-exec ${LDFLAGS} ${LDADD}
 
 shared: CFLAGS+=  -O3 -Wall

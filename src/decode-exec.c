@@ -29,40 +29,31 @@
 
 #define CONF "decode-exec.conf"
 
-void log_debug(lua_State *l, lua_Debug *d) {
-	error("%s\n%s\n%s",d->name, d->namewhat, d->short_src);
-}
+// from timing.c
+// extern int set_hook(lua_State *L);
 
-static void logger(void *context, const char *component,
+// void log_debug(lua_State *l, lua_Debug *d) {
+// 	error("%s\n%s\n%s",d->name, d->namewhat, d->short_src);
+// }
+
+void logger(void *context, const char *component,
                    int level, const char *fmt, ...) {
-//	(void)context;
+	(void)context;
 	va_list args;
-	fprintf(stderr, "%lld [%d] %s ", (long long)time(NULL), level,
-	        component ? component : "unnamed");
+	// fprintf(stderr, "%lld [%d] %s ", (long long)time(NULL), level,
+	//         component ? component : "unnamed");
 	va_start(args, fmt);
 	vfprintf(stderr, fmt, args);
 	va_end(args);
 	fwrite("\n", 1, 1, stderr);
+	fflush(stderr);
 }
-lsb_logger lsb_vm_logger = { .context = NULL, .cb = logger };
-
-static int traceback(lua_State *L) {
-	lua_getfield(L, LUA_GLOBALSINDEX, "debug");
-	lua_getfield(L, -1, "traceback");
-	lua_pushvalue(L, 1);
-	lua_pushinteger(L, 2);
-	lua_call(L, 2, 1);
-	error("%s\n", lua_tostring(L, -1));
-	return 1;
-}
+lsb_logger lsb_vm_logger = { .context = (char*)"DECODE", .cb = logger };
 
 int main(int argc, char **argv) {
 	lsb_lua_sandbox *lsb = NULL;
-	lua_State *lua = NULL;
-	char *res;
 	char *conf = NULL;
 	char *p;
-	size_t u;
 
 #if DEBUG==1
 	set_debug(3);
@@ -86,39 +77,30 @@ int main(int argc, char **argv) {
 		error("Error creating sandbox: %s", lsb_get_error(lsb));
 		goto teardown; }
 
-	res = lsb_init(lsb, NULL);
-	if(res) {
-		error(res);
-		error(lsb_get_error(lsb));
-		error("Error initialising sandbox. Execution aborted.");
-		goto teardown; }
 
+	{
+		const char *r = lsb_init(lsb, NULL);
+		if(r) {
+			error(r);
+			error(lsb_get_error(lsb));
+			error("Error initialising sandbox. Execution aborted.");
+			goto teardown; }
+	}
+	// // u = lsb_usage(lsb, LSB_UT_MEMORY, LSB_US_CURRENT);
+	// // func("cur_mem %u", u);
+	// // u = lsb_usage(lsb, LSB_UT_MEMORY, LSB_US_MAXIMUM);
+	// // func("max_mem %u", u);
+	// // u = lsb_usage(lsb, LSB_UT_MEMORY, LSB_US_LIMIT);
+	// // func("mem_limit %u", u);
+	// // u = lsb_usage(lsb, LSB_UT_INSTRUCTION, LSB_US_CURRENT);
+	// // func("op: %u", u);
 
-	// u = lsb_usage(lsb, LSB_UT_MEMORY, LSB_US_CURRENT);
-	// func("cur_mem %u", u);
-	// u = lsb_usage(lsb, LSB_UT_MEMORY, LSB_US_MAXIMUM);
-	// func("max_mem %u", u);
-	// u = lsb_usage(lsb, LSB_UT_MEMORY, LSB_US_LIMIT);
-	// func("mem_limit %u", u);
-	// u = lsb_usage(lsb, LSB_UT_INSTRUCTION, LSB_US_CURRENT);
-	// func("op: %u", u);
-
-	// while(lsb_get_state(lsb) == LSB_RUNNING)
-	// 	act("running...");
-
-	lua = lsb_get_lua(lsb);
-
-	lua_pushcfunction(lua, traceback);
-
-	res = lua_pcall(lua, 0, 0, lua_gettop(lua) - 1);
+	// // while(lsb_get_state(lsb) == LSB_RUNNING)
+	// // 	act("running...");
 
 teardown:
 	act("DECODE exec terminating.");
 	if(conf) free(conf);
-	if(lua) {
-//		lua_close(lua);
-		lua_gc(lua, LUA_GCCOLLECT, 0);
-	}
 	if(lsb) {
 		lsb_pcall_teardown(lsb);
 		lsb_stop_sandbox_clean(lsb);
