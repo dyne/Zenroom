@@ -1,0 +1,13 @@
+diff --git a/src/luanacha.c b/src/luanacha.c
+index a8dc54b..3581754 100644
+--- a/src/luanacha.c
++++ b/src/luanacha.c
+@@ -440,7 +440,7 @@ static int ln_argon2i(lua_State *L) {
+ //------------------------------------------------------------
+ // lua library declaration
+ //
+-static const struct luaL_Reg luanachalib[] = {
++const struct luaL_Reg luanachalib[] = {
+ 	{"randombytes", ln_randombytes},
+ 	//
+ 	{"lock", ln_lock},
