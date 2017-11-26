@@ -14,7 +14,7 @@ musl:
 	make -j2 -C ${musl}
 
 luasandbox:
-	if ! [ -r ${luasand}/CMakeCache.txt ]; then mkdir -p ${luasand} && cd ${luasand} && CC=${musl-gcc} cmake ${pwd}/lib/lua_sandbox ; fi
+	if ! [ -r ${luasand}/CMakeCache.txt ]; then mkdir -p ${luasand} && cd ${luasand} && CC=${musl-gcc} CFLAGS='-Os' cmake ${pwd}/lib/lua_sandbox ; fi
 	make -C ${luasand} luasandbox
 
 luanacha:

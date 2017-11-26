@@ -6,3 +6,7 @@
 if ! grep STATIC lib/lua_sandbox/src/CMakeLists.txt > /dev/null; then
 	cd lib/lua_sandbox && patch -p1 < ../../build/lua_sandbox_static.patch && cd -
 fi
+
+if grep 'static const.*luanachalib' lib/luanacha/src/luanacha.c > /dev/null; then
+	cd lib/luanacha && patch -p1 < ../../build/luanacha_build.patch && cd -
+fi

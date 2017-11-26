@@ -110,9 +110,6 @@ int main(int argc, char **argv) {
 			func("%s",lib->name);
 			lsb_add_function(lsb, lib->func, lib->name);
 		}
-			// lua_pushstring(lua, lib->name);
-			// lua_pushcfunction(lua, lib->func);
-			// lua_rawset(lua, -3);
 	}
 
 
