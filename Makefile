@@ -3,13 +3,16 @@ luasand := ${pwd}/build/lua_sandbox
 musl := ${pwd}/build/musl
 musl-gcc := ${musl}/obj/musl-gcc
 
-all: musl patches luasandbox luanacha
+all: bootstrap-check patches luasandbox luanacha
 	make -C src
+
+bootstrap-check:
+	@if ! [ -r ${musl-gcc} ]; then echo "\nRun 'make bootstrap' first to build the compiler.\n" && exit 1; fi
 
 patches:
 	./build/apply-patches
 
-musl:
+bootstrap:
 	if ! [ -r ${musl-gcc} ]; then mkdir -p ${musl} && cd ${musl} && ${pwd}/lib/musl/configure; fi
 	make -j2 -C ${musl}
 
@@ -27,6 +30,8 @@ luanacha:
 
 clean:
 	rm -rf ${luasand}
-	rm -rf ${musl}
 	make -C src clean
 	make -C ${pwd}/build/luanacha clean
+
+distclean:
+	rm -rf ${musl}

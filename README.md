@@ -5,10 +5,23 @@ implementation. For more information see [docs](docs/article).
 
 ## Build instructions
 
+If you have cloned this source code from git, then do:
 ```
 git submodule update --init --recursive
+```
+
+Then first build the static build environment (musl-libc): this needs to be done only once at the beginning of new builds:
+
+```
+make bootstrap
+```
+
+Then at last run the build command:
+```
 make
 ```
+
+
 
 ## Acknowledgements
 
