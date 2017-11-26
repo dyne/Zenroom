@@ -3,8 +3,8 @@ luasand := ${pwd}/build/lua_sandbox
 musl := ${pwd}/build/musl
 musl-gcc := ${musl}/obj/musl-gcc
 
-all: musl patches luasandbox
-	make -C src musl
+all: musl patches luasandbox luanacha
+	make -C src
 
 patches:
 	./build/apply-patches
@@ -17,6 +17,9 @@ luasandbox:
 	if ! [ -r ${luasand}/CMakeCache.txt ]; then mkdir -p ${luasand} && cd ${luasand} && CC=${musl-gcc} cmake ${pwd}/lib/lua_sandbox ; fi
 	make -C ${luasand} luasandbox
 
+luanacha:
+	make -C ${pwd}/build/luanacha
+
 # needed for yices2, in case useful (WIP)
 # gmp:
 # 	if ! [ -r lib/gmp/Makefile ]; then cd lib/gmp && CC=${musl-gcc} ./configure --disable-shared --enable-static; fi
@@ -26,3 +29,4 @@ clean:
 	rm -rf ${luasand}
 	rm -rf ${musl}
 	make -C src clean
+	make -C ${pwd}/build/luanacha clean

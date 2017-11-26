@@ -7,6 +7,7 @@ CFLAGS  := -I. -I../lib/lua_sandbox/include
 SOURCES := jutils.o timing.o decode-exec.o
 LDADD   := ../build/lua_sandbox/src/libluasandbox.a
 LDADD   += ../build/lua_sandbox/src/util/libluasandboxutil.a
+LDADD   += ../build/luanacha/libluanacha.a
 
 all: musl
 

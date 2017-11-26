@@ -26,8 +26,11 @@
 
 #include <luasandbox.h>
 #include <luasandbox/util/util.h>
+#include <luasandbox/lauxlib.h>
 
 #define CONF "decode-exec.conf"
+
+extern const struct luaL_Reg luanachalib;
 
 // from timing.c
 // extern int set_hook(lua_State *L);
@@ -76,6 +79,19 @@ int main(int argc, char **argv) {
 	if(!lsb) {
 		error("Error creating sandbox: %s", lsb_get_error(lsb));
 		goto teardown; }
+
+	// load our own extensions
+	{
+		const luaL_Reg *lib = &luanachalib;
+		notice("Loading crypto extensions");
+		for (; lib->func; lib++) {
+			func("%s",lib->name);
+			lsb_add_function(lsb, lib->func, lib->name);
+		}
+			// lua_pushstring(lua, lib->name);
+			// lua_pushcfunction(lua, lib->func);
+			// lua_rawset(lua, -3);
+	}
 
 
 	{
