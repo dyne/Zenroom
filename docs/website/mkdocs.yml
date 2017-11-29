@@ -1,0 +1,5 @@
+site_name: DECODE language
+site_description: Secure language design patterns for use in blockchain smart-contracts: restricted execution environments for deterministic, provable and distributed computing of algorithms.
+site_author: Jaromil, DECODE project
+theme: windmill
+repo_url: https://gogs.dyne.org/decode/decode-lang
