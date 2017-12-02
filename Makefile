@@ -28,6 +28,9 @@ luanacha:
 # 	if ! [ -r lib/gmp/Makefile ]; then cd lib/gmp && CC=${musl-gcc} ./configure --disable-shared --enable-static; fi
 # 	make -C lib/gmp -j2
 
+check:
+	src/decode-exec -c src/decode-exec.conf test/test_luanacha.lua
+
 clean:
 	rm -rf ${luasand}
 	make -C src clean
