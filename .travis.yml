@@ -1,0 +1,22 @@
+language: c
+sudo: required
+
+git:
+  submodules: true
+
+compiler:
+  - gcc
+
+
+env:
+  - DEBIAN_FRONTEND=noninteractive
+
+before_install:
+  - sudo apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confnew" install --no-install-recommends -y build-essential gcc make valgrind
+  - git submodule update --init --recursive 
+
+script:
+  - make bootstrap
+  - make
+  - make check
+
