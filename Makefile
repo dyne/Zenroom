@@ -2,6 +2,7 @@ pwd := $(shell pwd)
 luasand := ${pwd}/build/lua_sandbox
 musl := ${pwd}/build/musl
 musl-gcc := ${musl}/obj/musl-gcc
+test-exec := ${pwd}/src/decode-exec -c ${pwd}/test/decode-test.conf
 
 all: bootstrap-check patches luasandbox luanacha
 	make -C src
@@ -29,7 +30,15 @@ luanacha:
 # 	make -C lib/gmp -j2
 
 check:
-	src/decode-exec -c src/decode-exec.conf test/test_luanacha.lua
+	${test-exec} test/vararg.lua
+	${test-exec} test/pm.lua
+	${test-exec} test/nextvar.lua
+	${test-exec} test/locals.lua
+	${test-exec} test/constructs.lua
+	${test-exec} test/test_luanacha.lua
+	@echo "----------------"
+	@echo "All tests passed"
+	@echo "----------------"
 
 clean:
 	rm -rf ${luasand}

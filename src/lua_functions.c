@@ -18,11 +18,28 @@
  * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include <jutils.h>
 #include <luasandbox.h>
 #include <luasandbox/lua.h>
+#include <luasandbox/lualib.h>
 
 void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val) {
 	lua_State* L = lsb_get_lua(lsb);
 	lua_pushstring(L, val);
 	lua_setglobal(L, key);
+}
+
+void lsb_openlibs(lsb_lua_sandbox *lsb) {
+	lua_State* L = lsb_get_lua(lsb);
+	func("Loading base libraries:");
+	func("coroutine");
+	luaopen_coroutine(L);
+	func("table");
+	luaopen_table(L);
+	func("string");
+	luaopen_string(L);
+	func("math");
+	luaopen_math(L);
+	func("debug");
+	luaopen_debug(L);
 }

@@ -34,6 +34,7 @@ extern const struct luaL_Reg luanachalib;
 
 // prototypes from lua_functions
 void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val);
+void lsb_openlibs(lsb_lua_sandbox *lsb);
 // from timing.c
 // extern int set_hook(lua_State *L);
 
@@ -96,8 +97,10 @@ int main(int argc, char **argv) {
 	act("code: %s", codefile);
 
 	conf = lsb_read_file(conffile);
-	if(!conf) error("Error loading configuration: %s",conffile);
-	else act("conf: %s", conffile);
+	if(!conf) {
+		error("Error loading configuration: %s",conffile);
+		exit(1);
+	} else act("conf: %s", conffile);
 	func("\n%s",conf);
 
 	lsb_logger lsb_vm_logger = { .context = codefile, .cb = logger };
@@ -110,7 +113,7 @@ int main(int argc, char **argv) {
 		const char *r;
 		// load our own extensions
 		lib = &luanachalib;
-		notice("Loading crypto extensions");
+		func("loading crypto extensions");
 		for (; lib->func; lib++) {
 			func("%s",lib->name);
 			lsb_add_function(lsb, lib->func, lib->name);
@@ -118,6 +121,7 @@ int main(int argc, char **argv) {
 
 		// initialise global variables
 		lsb_setglobal_string(lsb, "VERSION", VERSION);
+		lsb_openlibs(lsb);
 
 		r = lsb_init(lsb, NULL);
 		if(r) {
