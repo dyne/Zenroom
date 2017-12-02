@@ -53,10 +53,6 @@ void logger(void *context, const char *component,
 }
 lsb_logger lsb_vm_logger = { .context = (char*)"DECODE", .cb = logger };
 
-static const char *short_options = "-hc:";
-static const char *help =
-"Usage: decode-exec [-c config] script.lua\n";
-
 int main(int argc, char **argv) {
 	lsb_lua_sandbox *lsb = NULL;
 	char conffile[512] = CONF;
@@ -65,15 +61,18 @@ int main(int argc, char **argv) {
 	char *p;
 	int opt;
 
-#if DEBUG==1
-	set_debug(3);
-#endif
+	const char *short_options = "-hdc:";
+    const char *help =
+		"Usage: decode-exec [-c config] script.lua\n";
 
 	notice( "DECODE restricted execution environment v%s",VERSION);
 	act("Copyright (C) 2017 Dyne.org foundation");
 	do {
 		opt = getopt(argc, argv, short_options);
 		switch(opt) {
+		case 'd':
+			set_debug(3);
+			break;
 		case 'h':
 			fprintf(stdout,"%s",help);
 			exit(0);
@@ -97,7 +96,7 @@ int main(int argc, char **argv) {
 	else act("conf: %s", conffile);
 	func("\n%s",conf);
 
-	lsb = lsb_create(NULL, argv[1], conf, &lsb_vm_logger);
+	lsb = lsb_create(NULL, codefile, conf, &lsb_vm_logger);
 	if(!lsb) {
 		error("Error creating sandbox: %s", lsb_get_error(lsb));
 		goto teardown; }
