@@ -45,13 +45,13 @@ void logger(void *context, const char *component,
 	va_list args;
 	// fprintf(stderr, "%lld [%d] %s ", (long long)time(NULL), level,
 	//         component ? component : "unnamed");
+	fprintf(stderr,"%s: ", component ? component : "unknown");
 	va_start(args, fmt);
 	vfprintf(stderr, fmt, args);
 	va_end(args);
 	fwrite("\n", 1, 1, stderr);
 	fflush(stderr);
 }
-lsb_logger lsb_vm_logger = { .context = (char*)"DECODE", .cb = logger };
 
 int main(int argc, char **argv) {
 	lsb_lua_sandbox *lsb = NULL;
@@ -60,7 +60,6 @@ int main(int argc, char **argv) {
 	char *conf = NULL;
 	char *p;
 	int opt;
-
 	const char *short_options = "-hdc:";
     const char *help =
 		"Usage: decode-exec [-c config] script.lua\n";
@@ -96,42 +95,36 @@ int main(int argc, char **argv) {
 	else act("conf: %s", conffile);
 	func("\n%s",conf);
 
+	lsb_logger lsb_vm_logger = { .context = codefile, .cb = logger };
+
 	lsb = lsb_create(NULL, codefile, conf, &lsb_vm_logger);
 	if(!lsb) {
 		error("Error creating sandbox: %s", lsb_get_error(lsb));
-		goto teardown; }
-
-	// load our own extensions
-	{
-		const luaL_Reg *lib = &luanachalib;
+	} else {
+		const luaL_Reg *lib;
+		const char *r;
+		// load our own extensions
+		lib = &luanachalib;
 		notice("Loading crypto extensions");
 		for (; lib->func; lib++) {
 			func("%s",lib->name);
 			lsb_add_function(lsb, lib->func, lib->name);
 		}
-	}
-
-
-	{
-		const char *r = lsb_init(lsb, NULL);
+		r = lsb_init(lsb, NULL);
 		if(r) {
 			error(r);
 			error(lsb_get_error(lsb));
 			error("Error initialising sandbox. Execution aborted.");
-			goto teardown; }
+		}
+		// debugging stats here
+		// while(lsb_get_state(lsb) == LSB_RUNNING)
+		// 	act("running...");
+		int u;
+		u = lsb_usage(lsb, LSB_UT_MEMORY, LSB_US_CURRENT);
+		act("used memory: %u bytes", u);
+		u = lsb_usage(lsb, LSB_UT_INSTRUCTION, LSB_US_CURRENT);
+		act("executed operations: %u", u);
 	}
-
-	// while(lsb_get_state(lsb) == LSB_RUNNING)
-	// 	act("running...");
-
-	// // u = lsb_usage(lsb, LSB_UT_MEMORY, LSB_US_CURRENT);
-	// // func("cur_mem %u", u);
-	// // u = lsb_usage(lsb, LSB_UT_MEMORY, LSB_US_MAXIMUM);
-	// // func("max_mem %u", u);
-	// // u = lsb_usage(lsb, LSB_UT_MEMORY, LSB_US_LIMIT);
-	// // func("mem_limit %u", u);
-	// // u = lsb_usage(lsb, LSB_UT_INSTRUCTION, LSB_US_CURRENT);
-	// // func("op: %u", u);
 
 teardown:
 	act("DECODE exec terminating.");
