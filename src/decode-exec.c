@@ -32,6 +32,8 @@
 
 extern const struct luaL_Reg luanachalib;
 
+// prototypes from lua_functions
+void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val);
 // from timing.c
 // extern int set_hook(lua_State *L);
 
@@ -41,7 +43,10 @@ extern const struct luaL_Reg luanachalib;
 
 void logger(void *context, const char *component,
                    int level, const char *fmt, ...) {
+	// suppress warnings about these unused paraments
 	(void)context;
+	(void)level;
+
 	va_list args;
 	// fprintf(stderr, "%lld [%d] %s ", (long long)time(NULL), level,
 	//         component ? component : "unnamed");
@@ -64,7 +69,7 @@ int main(int argc, char **argv) {
     const char *help =
 		"Usage: decode-exec [-c config] script.lua\n";
 
-	notice( "DECODE restricted execution environment v%s",VERSION);
+	notice( "LUA Restricted execution environment %s",VERSION);
 	act("Copyright (C) 2017 Dyne.org foundation");
 	do {
 		opt = getopt(argc, argv, short_options);
@@ -110,6 +115,10 @@ int main(int argc, char **argv) {
 			func("%s",lib->name);
 			lsb_add_function(lsb, lib->func, lib->name);
 		}
+
+		// initialise global variables
+		lsb_setglobal_string(lsb, "VERSION", VERSION);
+
 		r = lsb_init(lsb, NULL);
 		if(r) {
 			error(r);
@@ -126,7 +135,6 @@ int main(int argc, char **argv) {
 		act("executed operations: %u", u);
 	}
 
-teardown:
 	act("DECODE exec terminating.");
 	if(conf) free(conf);
 	if(lsb) {

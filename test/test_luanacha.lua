@@ -125,6 +125,7 @@ n2 = c:sub(1,24)
 m2 = unlock(k, n2, c, #n2)
 assert(m2 == m)
 
+print("OK")
 ------------------------------------------------------------------------
 -- blake2b tests
 
@@ -174,7 +175,7 @@ blake2b_update(ctx, "uick brown fox jumps over the lazy dog")
 dig55 = blake2b_final(ctx)
 assert(dig51==dig55)
 
-
+print("OK")
 ------------------------------------------------------------------------
 -- x25519 tests
 
@@ -188,7 +189,7 @@ k1 = key_exchange(ask, bpk)
 k2 = key_exchange(bsk, apk)
 assert(k1 == k2)
 
-
+print("OK")
 ------------------------------------------------------------------------
 -- ed25519 signature tests
 
@@ -209,7 +210,7 @@ assert(check(sig, pk, t))
 -- modified text doesn't check
 assert(not check(sig, pk, t .. "!"))
 
-
+print("OK")
 ------------------------------------------------------------------------
 -- password derivation argon2i tests
 
@@ -221,8 +222,5 @@ k = ""
 c0 = os.clock()
 k = argon2i(pw, salt, 100000, 10)
 assert(#k == 32)
-print("argon2i (100MB, 10 iter) Execution time (sec): ", os.clock()-c0)
-
-
-print("test_luanacha  ok")
+print("OK: argon2i (100MB, 10 iter) Execution time (sec): ", os.clock()-c0)
 print("------------------------------------------------------------")
