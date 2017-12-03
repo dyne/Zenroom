@@ -5,9 +5,9 @@ The main way to communicate with a DECODE node and operate its functions is via 
 
 At this stage of the research, this document is split in 3 sections:
 
-1. a brief "state of the art" analysis, considering existing blockchain based languages and in particular the most popular "Solidity" supported by the Ethereum virtual machine.
+1. a brief "state of the art" analysis, considering existing blockchain-based languages and in particular the most popular "Solidity" supported by the Ethereum virtual machine.
 
-2. a brief enumeration of the characteristics of this implementation and abstract them from it, to individuate the fundamental features a smart-rule language should have in the context of permissionless, distributed computing.
+2. a brief enumeration of the characteristics of this implementation and an abstraction from it, to individuate the fundamental features a smart-rule language should have in the context of permissionless, distributed computing.
 
 3. a set of technical recommendations for the development of smart-rules in DECODE
 
@@ -15,7 +15,7 @@ At this stage of the research, this document is split in 3 sections:
 
 In computing science the concepts of HEAP and STACK are well known and represent the different areas of memory in which a single computer can store code, address it while executing it and store data on which the code can read and write. With "virtual machines" the implementation of logic behind the HEAP and STACK became "virtualised" and not anymore bound to a specific hardware architecture, therefore leaving more space for the portability of code and creative memory management practices (like garbage collection). It is also thanks to the use of virtual machines that high level languages became closer to the way humans think, rather than the way machines work, benefitting creativity, awareness and auditability [@mccartney2002rethinking]. This is an important vector of innovation for the language implementation in DECODE, since it is desirable for this project to implement a language that is close to the way humans think.
 
-With the advent of distributed computing technology and blockchain implementations there is a growing necessity to conceive the HEAP and STACK differently [@DBLP:conf/ipps/PizkaR02].
+With the advent of distributed computing technology and blockchain implementations there is a growing necessity to conceive the HEAP and STACK differently [@DBLP:conf/ipps/PizkaR02], mostly because there are many more different conditions for memory bound to its persistence, read/write speed, mutability, distribution etc.
 
 The underpinning of this document, elaborated on the term "blockchain language", is that a new "distributed ledger", as collective and immutable memory space, can be addressed with code running on different machines.
 
@@ -31,7 +31,7 @@ This section is a brief exploration of the main language implementations working
 
 The conclusion of this section is that the blockchain languages so far existing are designed with a product-oriented mindset, starting from the implementation of a virtual machine that can process OP_CODEs. Higher level languages build upon it, parsing higher level syntactics and semantics and compiling them into a series of OP_CODEs. This is the natural way most languages like ASM, C and C++ have evolved through the years.
 
-Arguably, a task-oriented mindset should be assumed when re-designing a new blockchain language for DECODE: that would be the equivalent of a human-centered research and design process. The opportunity for innovating the field lies in abandoning the OP_CODE approach and instead build an External Domain Specific Language [@fowler2010domain] using an existing grammar to do the Syntax-Directed Translation. The Semantic Model can be then a coarse-grained implementation that can sync computations with blockchain based deterministic conditionals. 
+Arguably, a task-oriented mindset should be assumed when re-designing a new blockchain language for DECODE: that would be the equivalent of a human-centered research and design process. The opportunity for innovating the field lies in abandoning the OP_CODE approach and instead build an External Domain Specific Language [@fowler2010domain] using an existing grammar to do the Syntax-Directed Translation. The Semantic Model can be then a coarse-grained implementation that can sync computations with blockchain-based deterministic conditionals. 
 
 ## Bitcoin's SCRIPT
 
@@ -54,7 +54,7 @@ PUSH1 0 CALLDATALOAD SLOAD NOT PUSH1 9 JUMPI STOP JUMPDEST PUSH1 32 CALLDATALOAD
 ```
 The purpose of this particular contract is to serve as a name registry; anyone can send a message containing 64 bytes of data, 32 for the key and 32 for the value. The contract checks if the key has already been registered in storage, and if it has not been then the contract registers the value at that key. The address of the new contract is deterministic and calculated on the sending address and the number of times that the sending account has made a transaction before.
 
-The EVM is a simple stack-based architecture. The word size of the machine (and thus size of stack item) is 256-bit. This was chosen to fit a simple word-addressed byte array. The stack has a maximum size of 1024. The machine also has an independent storage model; this is similar in concept to the memory but rather than a byte array, it is a word- addressable word array. Unlike memory, which is volatile, storage is non volatile and is maintained as part of the system state. All locations in both storage and memory are well-defined initially as zero.
+The EVM is a simple stack-based architecture. The word size of the machine (and thus size of stack item) is 256-bit. This was chosen to fit a simple word-addressed byte array. The stack has a maximum size of 1024. The machine also has an independent storage model; this is similar in concept to the memory but rather than a byte array, it is a word- addressable word array. Unlike memory, which is volatile, storage is nonvolatile and is maintained as part of the system state. All locations in both storage and memory are well-defined initially as zero.
 
 The machine does not follow the standard von Neumann architecture. Rather than storing program code in generally-accessible memory or storage, it is stored separately in a virtual ROM that can only be interacted with via a specific instruction.  The machine can have exceptional execution for several reasons, including stack underflows and invalid instructions. Like the out-of-gas (OOG) exception, they do not leave state changes intact. Rather, the machine halts immediately and reports the issue to the execution agent (either the transaction processor or, recursively, the spawning execution environment) which will deal with it separately [@wood2014ethereum].
 
@@ -162,7 +162,7 @@ for i in range(1, 17):
     opcodes[0x8f + i] = ['SWAP' + str(i), i + 1, i + 1, 3]
 ```
 
-On top of these OP_CODEs the "Solidity" language was developed as a high-level language that compiles to OP_CODE sequences. Solidity aims to make it easier for people to program "smart contracts". But it is arguable that the Solidity higher-level language, widely present in all Ethereum related literature, carries several problems: the shortcomings of its design can be indirectly related to some well known disasters provoked by flaws in published contracts. To quickly summarise some flaws:
+On top of these OP_CODEs the "Solidity" language was developed as a high-level language that compiles to OP_CODE sequences. Solidity aims to make it easier for people to program "smart contracts". But it is arguable that the Solidity higher-level language, widely present in all Ethereum related literature, carries several problems: the shortcomings of its design can be indirectly related to some well-known disasters provoked by flaws in published contracts. To quickly summarise some flaws:
 
  - there is no garbage collector nor manual memory management
  - floating point numbers are not supported
@@ -172,7 +172,7 @@ On top of these OP_CODEs the "Solidity" language was developed as a high-level l
  - there is no string manipulation support
  - functions can return only statically sized arrays
 
-To overcome the shortcomings and create some shared base of reliable implementations, programmers using Solidity currently adopt "standard" token implementation libraries with basic functions that are proven to be working reliably: known as ERC20, the standard is made for tokens to be supported across different wallets and to be reliable. Yet even with a recent update to a new version (ERC232) the typical code constructs that are known to be working are full of checks (assert calls) to insure the reliability of the calling code. For example typical arithmetic operations need to be implemented in Solidity as:
+To overcome the shortcomings and create some shared base of reliable implementations, programmers using Solidity currently adopt "standard" token implementation libraries with basic functions that are proven to be working reliably: known as ERC20, the standard is made for tokens to be supported across different wallets and to be reliable. Yet even with a recent update to a new version (ERC232) the typical code constructs that are known to be working are full of checks (assert calls) to insure the reliability of the calling code. For example, typical arithmetic operations need to be implemented in Solidity as:
 
 ```c
 
@@ -200,7 +200,7 @@ Despite the shortcomings, nowadays Solidity is widely used: it is the most used 
 
 # Language Security
 
-This chapter will quickly establish the underpinnings of a smart rule language in DECODE, starting from its most theoretical assumptions, to conclude with specific requirements. Most importantly starting from the recent corpus developed by research on language-theoretic security" (LangSec). Here below we include a brief explanation condensed from the information material of the LangSec.org project hosted at IEEE, which is informed by the collective experience of the exploit development community, since exploitation is a practical exploration of the space of unanticipated state, its prevention or containment.
+This chapter will quickly establish the underpinnings of a smart rule language in DECODE, starting from its most theoretical assumptions, to conclude with specific requirements. The chapter will concentrate on the recent corpus developed by research on language-theoretic security" (LangSec). Here below we include a brief explanation condensed from the information material of the LangSec.org project hosted at IEEE, which is informed by the collective experience of the exploit development community, since exploitation is a practical exploration of the space of unanticipated state, its prevention or containment.
 
 "In a nutshell [...] LangSec is the idea that many security issues can be avoided by applying a standard process to input processing and protocol design: the acceptable input to a program should be well-defined (i.e., via a grammar), as simple as possible (on the Chomsky scale of syntactic complexity), and fully validated before use (by a dedicated parser of appropriate but not excessive power in the Chomsky hierarchy of automata)." [@DBLP:conf/secdev/MomotBHP16]
 
@@ -233,9 +233,9 @@ Mutual misinterpretation between system components. Verifiable composition is im
 
 Mixing of basic input validation ("sanity checks") and logically subsequent processing steps that belong only after the integrity of the entire message has been established makes validation hard or impossible. As a practical consequence, unanticipated reachable state exposed by such premature optimization explodes. This explosion makes principled analysis of the possible computation paths untenable. LangSec-style separation of the recognizer and processor code creates a natural partitioning that allows for simpler specification-based verification and management of code. In such designs, effective elimination of exploit-enabling implicit data flows can be achieved by simple systems memory isolation primitives.
 
-### Ungoverned development
+### Language specification drift
 
-Adding New Features / Language Specification Drift. A common practice encouraged by rapid software development is the unconstrained addition of new features to software components and their corresponding reflection in input language specifications. Expressing complex ideas in hastily written code is a hallmark of such development practices. In essence, adding new input feature requirements to an already-underspecified input language compounds the explosion of state and computational paths.
+A common practice encouraged by rapid software development is the unconstrained addition of new features to software components and their corresponding reflection in input language specifications. Expressing complex ideas in hastily written code is a hallmark of such development practices. In essence, adding new input feature requirements to an already-underspecified input language compounds the explosion of state and computational paths.
 
 # Smart-rules language
 
@@ -286,11 +286,11 @@ A visual programming environment (VPE) facilitates participants to directly re-c
 
 A reliable test environment is a fundamental component for a language deployed in mission critical situations, but also for a language dealing with the distribution of its computation and wide adoption by communities of developers in different fields. Languages that improve the developer's experience when writing and testing code directly impact the quality of the code produced.
 
-For DECODE's language implementation it is necessary to have a testing environment designed into it and from the start to facilitate its growth at the same pace of the language itself. Also a more advanced framework for testing that goes beyond the simple usage of asserts is desirable: while being very ambitious, the implementation of solid proof of termination mechanisms that are internal to the language should be contemplated on the long term.
+For DECODE's language implementation it is necessary to have a testing environment designed into it and from the start to facilitate its growth at the same pace of the language itself. Also, a more advanced framework for testing that goes beyond the simple usage of asserts is desirable: while being very ambitious, the implementation of solid proof of termination mechanisms that are internal to the language should be contemplated on the long term.
 
-### First class data
+### First-class data
 
-This is a long-term requirement that should take into consideration the trade-off between feasibility, security and convenience. A data type is considered first class in a programming language if instances of that type can be
+This is a long-term requirement that should take into consideration the trade-off between feasibility, security and convenience. A data type is considered first-class in a programming language if instances of that type can be
 
  - the value of a variable
  - a member of an aggregate (array, list, etc.)
@@ -298,9 +298,9 @@ This is a long-term requirement that should take into consideration the trade-of
  - the value returned by a procedure
  - used without having a name (being the value of a variable)
 
-For example, numbers are first class in every language. Text strings are first class in many languages, but not in C, in which the relevant first class type is “pointer to a character”.
+For example, numbers are first-class in every language. Text strings are first-class in many languages, but not in C, in which the relevant first-class type is “pointer to a character”.
 
-In DECODE it is desirable to establish data structures containing attributes and entitlements as first class data to be seamlessly processed by the language.
+In DECODE it is desirable to establish data structures containing attributes and entitlements as first-class data to be seamlessly processed by the language.
 
 
 # Conclusion
