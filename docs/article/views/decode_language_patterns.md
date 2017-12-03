@@ -5,7 +5,7 @@ The main way to communicate with a DECODE node and operate its functions is via 
 
 At this stage of the research, this document is split in 3 sections:
 
-1. a brief "state of the art" analysis, considering existing blockchain based languages and in particular the most popular "Solididy" supported by the Ethereum virtual machine.
+1. a brief "state of the art" analysis, considering existing blockchain based languages and in particular the most popular "Solidity" supported by the Ethereum virtual machine.
 
 2. a brief enumeration of the characteristics of this implementation and abstract them from it, to individuate the fundamental features a smart-rule language should have in the context of permissionless, distributed computing.
 
@@ -15,13 +15,13 @@ At this stage of the research, this document is split in 3 sections:
 
 In computing science the concepts of HEAP and STACK are well known and represent the different areas of memory in which a single computer can store code, address it while executing it and store data on which the code can read and write. With "virtual machines" the implementation of logic behind the HEAP and STACK became "virtualised" and not anymore bound to a specific hardware architecture, therefore leaving more space for the portability of code and creative memory management practices (like garbage collection). It is also thanks to the use of virtual machines that high level languages became closer to the way humans think, rather than the way machines work. This is an important vector of innovation for the language implementation in DECODE, since it is desirable for this project to implement a language that is close to the way humans think.
 
-With the advent of distributed computing technology and blockchain implementations there is a raising necessity to conceive the HEAP and STACK differently [@DBLP:conf/ipps/PizkaR02].
+With the advent of distributed computing technology and blockchain implementations there is a growing necessity to conceive the HEAP and STACK differently [@DBLP:conf/ipps/PizkaR02].
 
-The underpinning of this document, elaborated on the term "blockchain language", is that a new "distributed ledger", as collective and immutable memory space, can be addressed with code ran on different machines.
+The underpinning of this document, elaborated on the term "blockchain language", is that a new "distributed ledger", as collective and immutable memory space, can be addressed with code running on different machines.
 
 A "blockchain language" then is a language designed to interact with a "distributed ledger".  A distributed ledger is a log of events in possession of all nodes being part of a network.
 
-This document intentionally leaves aside considerations about the consensus algorithm of a blockchain-based network, which are very specific issues concerning the implementation of a blockchain and are covered by other research tasks in DECODE. While assuming an ideal condition for fault tolerance, we will continue focusing on the function that the distributed ledger has for the distributed computation of a language.
+This document intentionally leaves aside considerations about the consensus algorithm of a blockchain-based network, which are very specific issues concerning the implementation of a blockchain and are covered by other research tasks in DECODE. While assuming an ideal condition for fault tolerance will be provided by other research tasks in DECODE, this research will continue focusing on the function that the distributed ledger has for the distributed computation of a language.
 
 
 
@@ -39,7 +39,7 @@ Starting with the "SCRIPT" implementation in Bitcoin [@nakamoto2008bitcoin] and 
 
 The distributed computation is made by blockchain nodes that act as sort of "virtual machines" and process "operation codes" (OP_CODE) just like a computer does. These OP_CODES in fact resemble assembler language operations. 
 
-In Bitcoin the so called SCRIPT implementation had an unfinished number of "OP codes" (operation codes) at the time of its popularisation and, around the 0.6 release, the feature was in large part deactivated to insure the security of the network, since it was assessed by most developers involved that the Bitcoin implementation of SCRIPT was unfinished and represented threats to the network. Increasing the complexity of code that can be executed by nodes of an open network is always a risk, since code can contain arbitrary operations and commands that may lead to unpredictable results affecting both the single node and the whole network. The shortcoming of the SCRIPT in Bitcoin were partially addressed: its space for OP_RETURN [@roio2015d4] became the contested ground for payloads [@sward2017data] that could be interpreted by other VMs, as well the limit was partially circumvented by moving more complex logic in touch with the Bitcoin blockchain[@aron2012bitcoin], for instance using the techniques adopted by Mastercoin [@mastercoin2013willett] and "sidechains" as Counterparty [@bocek2018smart] or "pegged sidechains" [@back2014enabling] implementations. All these are implementations of VMs that run in parallel to Bitcoin, can "peg" their results on the main Bitcoin blockchain and still execute more complex operations in another space, where tokens and conditions can be created and affect a different memory spaces and distributed ledgers.
+In Bitcoin the so called SCRIPT implementation had an unfinished number of "OP codes" (operation codes) at the time of its popularisation and, around the 0.6 release, the feature was in large part deactivated to ensure the security of the network, since it was assessed by most developers involved that the Bitcoin implementation of SCRIPT was unfinished and represented threats to the network. Increasing the complexity of code that can be executed by nodes of an open network is always a risk, since code can contain arbitrary operations and commands that may lead to unpredictable results affecting both the single node and the whole network. The shortcomings of the SCRIPT in Bitcoin were partially addressed: its space for OP_RETURN [@roio2015d4] became the contested ground for payloads [@sward2017data] that could be interpreted by other VMs, as well the limit was partially circumvented by moving more complex logic in touch with the Bitcoin blockchain[@aron2012bitcoin], for instance using the techniques adopted by Mastercoin [@mastercoin2013willett] and "sidechains" as Counterparty [@bocek2018smart] or "pegged sidechains" [@back2014enabling] implementations. All these are implementations of VMs that run in parallel to Bitcoin, can "peg" their results on the main Bitcoin blockchain and still execute more complex operations in another space, where tokens and conditions can be created and affect a different memory spaces and distributed ledgers.
 
 Languages implemented so far for this task are capable of executing single OP codes: implementations are very much "machine-oriented" and focused on reproducing the behaviour of a turing-complete machine [@DBLP:conf/birthday/WegnerEB12] capable of executing generic computing tasks.
 
@@ -54,13 +54,13 @@ PUSH1 0 CALLDATALOAD SLOAD NOT PUSH1 9 JUMPI STOP JUMPDEST PUSH1 32 CALLDATALOAD
 ```
 The purpose of this particular contract is to serve as a name registry; anyone can send a message containing 64 bytes of data, 32 for the key and 32 for the value. The contract checks if the key has already been registered in storage, and if it has not been then the contract registers the value at that key. The address of the new contract is deterministic and calculated on the sending address and the number of times that the sending account has made a transaction before.
 
-The EVM is a simple stack-based architecture. The word size of the machine (and thus size of stack item) is 256-bit. This was chosen to is a simple word-addressed byte array. The stack has a maximum size of 1024. The machine also has an independent storage model; this is similar in concept to the memory but rather than a byte array, it is a word- addressable word array. Unlike memory, which is volatile, storage is non volatile and is maintained as part of the system state. All locations in both storage and memory are well-defined initially as zero.
+The EVM is a simple stack-based architecture. The word size of the machine (and thus size of stack item) is 256-bit. This was chosen to fit a simple word-addressed byte array. The stack has a maximum size of 1024. The machine also has an independent storage model; this is similar in concept to the memory but rather than a byte array, it is a word- addressable word array. Unlike memory, which is volatile, storage is non volatile and is maintained as part of the system state. All locations in both storage and memory are well-defined initially as zero.
 
-The machine does not follow the standard von Neumann architecture. Rather than storing program code in generally-accessible memory or storage, it is stored separately in a virtual ROM interactable only through a specialised instruction.  The machine can have exceptional execution for several reasons, including stack underflows and invalid instructions. Like the out-of-gas (OOG) exception, they do not leave state changes intact. Rather, the machine halts immediately and reports the issue to the execution agent (either the transaction processor or, recursively, the spawning execution environment) which will deal with it separately [@wood2014ethereum].
+The machine does not follow the standard von Neumann architecture. Rather than storing program code in generally-accessible memory or storage, it is stored separately in a virtual ROM that can only be interacted with via a specific instruction.  The machine can have exceptional execution for several reasons, including stack underflows and invalid instructions. Like the out-of-gas (OOG) exception, they do not leave state changes intact. Rather, the machine halts immediately and reports the issue to the execution agent (either the transaction processor or, recursively, the spawning execution environment) which will deal with it separately [@wood2014ethereum].
 
 The resulting implementation consists of a list of OP codes whose execution requires a "price" to be paid (Ethereum's currency for the purpose is called "gas"). This way an incentive is created for running nodes: a fee is paid to nodes for computing the contracts and confirming the outcomes of their execution. This feature technically defines the Ethereum VM as implementing an almost Turing-complete machine since its execution is conditioned by the availability of funds for computation. This approach relies on the fact that each operation is "atomic", meaning it is executed at a constant unit of speed.
 
-Here below is the list of OP codes in use in Ethereum, which results immediately familiar to anyone who has done some assembler language:
+Here below is the list of OP codes in use in Ethereum, which will be familiar to anyone who has coded with assembler language:
 
 ```py
 
@@ -162,7 +162,7 @@ for i in range(1, 17):
     opcodes[0x8f + i] = ['SWAP' + str(i), i + 1, i + 1, 3]
 ```
 
-On top of these OP codes the "Solidity" language was developed as a high-level language that compiles to OP code sequences. Solidity aims to make it easier for people to program "smart contracts". But it is arguable that the Solidity higher-level language, well present in all Ethereum related literature, carries several problems: the shortcomings of its design can be indirectly related to some well known disasters provoked by flaws in published contracts. To quickly summarise some flaws:
+On top of these OP codes the "Solidity" language was developed as a high-level language that compiles to OP code sequences. Solidity aims to make it easier for people to program "smart contracts". But it is arguable that the Solidity higher-level language, widely present in all Ethereum related literature, carries several problems: the shortcomings of its design can be indirectly related to some well known disasters provoked by flaws in published contracts. To quickly summarise some flaws:
 
  - there is no garbage collector nor manual memory management
  - floating point numbers are not supported
@@ -172,7 +172,7 @@ On top of these OP codes the "Solidity" language was developed as a high-level l
  - there is no string manipulation support
  - functions can return only statically sized arrays
 
-To overcome the shortcomings and create some shared base of reliable implementations, programmers using Solidity nowadays adopt sort of "standard" token implementation libraries with basic functions that are proven to be working reliably: known as ERC20, the standard is made for tokens to be supported across different wallets and to be reliable. Yet even with a recent update to a new version (ERC232) the typical code constructs that are known to be working are full of checks (assert calls) to insure the reliability of the calling code. For example typical arithmetic operations need to be implemented in Solidity as:
+To overcome the shortcomings and create some shared base of reliable implementations, programmers using Solidity currently adopt "standard" token implementation libraries with basic functions that are proven to be working reliably: known as ERC20, the standard is made for tokens to be supported across different wallets and to be reliable. Yet even with a recent update to a new version (ERC232) the typical code constructs that are known to be working are full of checks (assert calls) to insure the reliability of the calling code. For example typical arithmetic operations need to be implemented in Solidity as:
 
 ```c
 
@@ -200,7 +200,7 @@ Despite the shortcomings, nowadays Solidity is widely used: it is the most used 
 
 # Language Security
 
-This chapter will quickly establish the underpinnings of a smart rule language in DECODE, starting from its most theoretical assumptions, to conclude with specific requirements. Most importantly starting from the recent corpus developed by researches on language-theoretic security" (LangSec). Here below we include a brief explanation condensed from the information material of the LangSec.org project hosted at IEEE, which is informed by the collective experience of the exploit development community, since exploitation is practical exploration of the space of unanticipated state, its prevention or containment.
+This chapter will quickly establish the underpinnings of a smart rule language in DECODE, starting from its most theoretical assumptions, to conclude with specific requirements. Most importantly starting from the recent corpus developed by research on language-theoretic security" (LangSec). Here below we include a brief explanation condensed from the information material of the LangSec.org project hosted at IEEE, which is informed by the collective experience of the exploit development community, since exploitation is a practical exploration of the space of unanticipated state, its prevention or containment.
 
 ## Threats when developing a language
 
@@ -212,7 +212,7 @@ Verification of input handlers is impossible without formal language-theoretic s
 
 ### Parser differentials
 
-Mutual misinterpretation between system components. Verifiable composition is impossible without means of establishing parsing equivalence between different components of a distributed system. Different interpretation of messages or data streams by components breaks any assumptions that components adhere to a shared specification and so introduces inconsistent state and unanticipated computation. In addition, it breaks any security schemes in which equivalent parsing of messages is a formal requirement, such as the contents of a certificate or of a signed message being interpreted identically (e.g., X.509 CSRs as seen by a CA vs. the signed certificates as seen by the clients or signed app package contents as seen by the signature verifier versus the same content as seen by the installer (as in the recent Android Master Key bug). An input language specification stronger than deterministic context-free makes the problem of establishing parser equivalence undecidable. Such input languages and systems whose trustworthiness is predicated on the component parser equivalence should be avoided.
+Mutual misinterpretation between system components. Verifiable composition is impossible without the means of establishing parsing equivalence between different components of a distributed system. Different interpretation of messages or data streams by components breaks any assumptions that components adhere to a shared specification and so introduces inconsistent state and unanticipated computation. In addition, it breaks any security schemes in which equivalent parsing of messages is a formal requirement, such as the contents of a certificate or of a signed message being interpreted identically, for example a X.509 Certificate Signing Request as seen by a Certificate Authority vs. the signed certificates as seen by the clients or signed app package contents as seen by the signature verifier versus the same content as seen by the installer (as in the recent Android Master Key bug [@freeman2013exploit]). An input language specification stronger than deterministic context-free makes the problem of establishing parser equivalence undecidable. Such input languages and systems whose trustworthiness is predicated on the component parser equivalence should be avoided. Logical programming using Prolog for instance, or languages like Scheme derived from LISP, or OCaml or Erlang would match then our requirements, but they aren't as usable as desired. As a partial solution to this problem the DECODE language parser (and all its components and eventually linked shared libraries) should be self-contained and clearly versioned and hashed and its hash verified before every computation. 
 
 ### Mixing of input recognition and processing
 
@@ -245,9 +245,9 @@ In light of our study of blockchain languages, use-cases and privacy by design g
 
 The conclusion of this section is best described adopting once again the DSL terminology and the patterns established by Fowler. The DECODE smart-rule language is an external DSL implemented using a Syntax-Directed Translation. Its Semantic Model leads to coarse-grained tasks to be executed on the network, perhaps following a Dependency Network approach.
 
-A tempting alternative can be that of a Production Rule System, but this way we'd risk to hide too much the internal processes in DECODE, which should be transparent and comprehensible to anyone with a beginner knowledge of programming.
+A tempting alternative can be that of a Production Rule System, but this way we would hide too much the internal processes in DECODE, which should be transparent and comprehensible to anyone with a beginner knowledge of programming.
 
-An addition to this approach can be that of equipping the language with tools for constraint programming and even a context of Satisfiability Modulo Theories (SMT) to check satisfying Program Termination Proofs.
+An addition to this approach can be that of equipping the language with tools for constraint programming and even a context of Satisfiability Modulo Theories [@barrett2009satisfiability] to check satisfying Program Termination Proofs [@bonfante2001algorithms].
 
 
 
@@ -266,15 +266,15 @@ The deterministic trait must be common also to the DECODE blockchain language fo
 
 ### Trustless
 
-We define as trustless a language (also known as untrusted language) that allows the virtual machine to fence its execution, like in a "sandbox" or isolated execution environment, blocking access to unauthorised parts of the system.
+We define as trustless a language (also known as untrusted language) that allows the virtual machine to fence its execution, as in a "sandbox" or isolated execution environment, blocking access to unauthorised parts of the system.
 
-A language that can be run on a "permissionless" (public) blockchain is a language that can be interpreted by any node in any moment a new node may claim the capacity to do so. This means that its parser, semantics and actions on the system must be designed to handle unknowns: any deviance and malevolent code should not affect the system.
+A language that can be run on a "permissionless" (public) blockchain is a language that can be interpreted by any node and in any moment a new node may claim the capacity to do so. This means that its parser, semantics and actions on the system must be designed to handle unknowns: any deviance and malevolent code should not affect the system.
 
 ### Solid
 
 The language grammar and the semantic model adopted by DECODE need to be capable of sandboxing untrusted code and providing security partitioning. Any process of execution should be strictly limited in what it can do. Any function or data passed to a node cannot break the sandbox in ways the participants did not intend.
 
-For sensitive data structures, the use of proxy objects need to be adopted as a security guard, only allowing the sandbox to call pre-approved methods and access pre-approved data.
+For sensitive data structures, the use of proxy objects must be adopted as a security guard, only allowing the sandbox to call pre-approved methods and access pre-approved data.
 
 ## Usability requirements
 
@@ -282,7 +282,7 @@ Here are listed the requirements emerging from an analysis of priorities about t
 
 ### Simple, graphical representation
 
-A visual programming environment (VPL) facilitates participants to directly re-configure the rules governing their data: this is highly desirable in DECODE, where such code must be transparent and understandable. The event-based BLOCKS graphical metaphor seems the most desirable for the sort of processing in DECODE: it involves letting participants manipulate a series of graphical elements (blocks) that snap onto one another and that execute sequential programs.
+A visual programming environment (VPE) facilitates participants to directly re-configure the rules governing their data: this is highly desirable in DECODE, where such code must be transparent and understandable. The event-based BLOCKS graphical metaphor seems the most desirable for the sort of processing in DECODE: it involves letting participants manipulate a series of graphical elements (blocks) that snap onto one another and that execute sequential programs.
  
 This would mean that someone taking part in a DECODE pilot has the freedom to configure how a DECODE node is operating: change the way data is displayed, enable external services to access the data or remotely operate parts of the DECODE network.
 
@@ -315,11 +315,11 @@ This conclusion provides a brief list of components that can be used.
 
 ## Syntax-Directed Translation
 
-Lua is an interpreted, cross-platform, embeddable, performant and low-footprint language. Lua's popularity is on the rise in the last couple of years. Simple design and efficient usage of resources combined with its performance make it attractive for production web applications even to big organizations such as Wikipedia, CloudFlare and GitHub. In addition to this, Lua is one of the preferred choices for programming embedded and IoT devices. This context allows to assume a large and growing Lua codebase yet to be assessed. This growing Lua codebase could be potentially driving production servers and extremely large number of devices, some perhaps with mission-critical function for example in automotive or home-automation domains. [@costin2017lua]
+Lua is an interpreted, cross-platform, embeddable, performant and low-footprint language. Lua's popularity is on the rise in the last couple of years [@costin2017lua]. Simple design and efficient usage of resources combined with its performance make it attractive for production web applications even to big organizations such as Wikipedia, CloudFlare and GitHub. In addition to this, Lua is one of the preferred choices for programming embedded and IoT devices. This context allows an assumption of a large and growing Lua codebase yet to be assessed. This growing Lua codebase could be potentially driving production servers and an extremely large number of devices, some perhaps with mission-critical function for example in automotive or home-automation domains.
 
-Lua solidity has been well tested through a number of public applications including the adoption by the gaming industry for untrusted language processing in "World of Warcraft" scripting. It is ideal for implementing an external DSL using C or Python as a host language.
+Lua stability has been extensively tested through a number of public applications including the adoption by the gaming industry for untrusted language processing in "World of Warcraft" scripting. It is ideal for implementing an external DSL using C or Python as a host language.
 
-Lua is also tooled with a working VPL implementation for code visualisation in BLOCKS, allowing the project to jump-start into an early phase of prototyping DECODE smart-rules in a visual way and involving directly pilot participants.
+Lua is also tooled with a working VPE implementation for code visualisation in BLOCKS, allowing the project to jump-start into an early phase of prototyping DECODE smart-rules in a visual way and directly involving pilot participants.
 
 ## Satisfiability Modulo theories
 
@@ -329,7 +329,7 @@ While SMT techniques have been traditionally used to support deductive software 
 
 Constraint-satisfaction is crucial to software and hardware verification and static program analsysis [@de2011satisfiability] among the other possible applications.
 
-DECODE will benefit from including SMT capabilities into the design at an early stage: even if not immediately exploited, their inclusion will keep the horizons for language development open while permitting its application in mission critical roles.
+DECODE will benefit from including SMT capabilities into the design at an early stage: even if not immediately exploited, their inclusion will keep the horizons for language development open while permitting its application in mission critical roles. The best implementation to start from in this experimentation seems to be the free and open source software "Yices SMT Solver" published by the Computer Science Laboratory of the Stanford Research Institute (SRI International).
 
 <!--
 ## Ontology
@@ -339,8 +339,19 @@ Considering the overall project schedule and the advancement of other deliverabl
 -->
 
 <!--
+SDT
 http://minikanren.org/
 http://www.gecode.org/
 https://github.com/handsomecheung/miniKanren.lua
 https://github.com/SRI-CSL/yices2
+
+
+python:
+https://wiki.python.org/moin/SandboxedPython
+https://github.com/dsagal/pynbox
+https://github.com/RealTimeWeb/blockpy
+
+
+
+
 -->
