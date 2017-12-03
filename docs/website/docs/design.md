@@ -1,0 +1,1 @@
+../../article/views/decode_language_patterns.md

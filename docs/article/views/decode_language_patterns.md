@@ -11,7 +11,7 @@ At this stage of the research, this document is split in 3 sections:
 
 3. a set of technical recommendations for the development of smart-rules in DECODE
 
-This document is not speculative, but is companion to an actual implementation being developed during the course of DECODE's project, see: https://github.com/decodeproject/lua-zenroom
+This document is not speculative, but is companion to an actual implementation being developed during the course of DECODE's project: the ["zenroom" (link)](https://decodeproject.github.io/lua-zenroom/).
 
 
 ## A new memory model

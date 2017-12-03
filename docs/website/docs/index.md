@@ -1,1 +1,1 @@
-../../article/views/decode_language_patterns.md
+../../../README.md

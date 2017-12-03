@@ -1,37 +1,4 @@
-# LUA Zenroom - DECODE project
-
-Restricted execution environment for LUA based blockchain language
-implementation. For more information see [docs](docs).
-
-The binary produced is fully static and designed to be executed as a new process for each new script.
-
-## Build instructions
-
-If you have cloned this source code from git, then do:
-
-```
-git submodule update --init --recursive
-```
-
-Then first build the static build environment (musl-libc): this needs to be done only once at the beginning of new builds:
-
-```
-make bootstrap
-```
-
-Then at last run the build command:
-
-```
-make
-```
-
-To run tests:
-
-```
-make check
-```
-
-## Crypto functionalities
+# Application protocol interface
 
 This interpreter includes statically the following cryptographic
 primitives, extracted from the NaCl library and included via the
@@ -43,18 +10,20 @@ monocypher/luanacha implementation:
 - Ed25519-based signature function using Blake2b hash instead of sha512,
 - Argon2i, a modern key derivation function based on Blake2b. Like scrypt, it is designed to be expensive in both CPU and memory.
 
-### Crypto API
+# Crypto API
 
 Here a summary of calls available. This API is subject to change and more functions will be added according to requirements for the implementation of attribute based cryptographi in DECODE.
 
+## Random
 
-```
+```text
 randombytes(n)
 	return a string containing n random bytes
+```
 
+## Authenticated encryption
 
---- Authenticated encryption
-
+```text
 lock(key, nonce, plain [, prefix]) => crypted
 	authenticated encryption using Xchacha20 and a Poly1305 MAC
 	key must be a 32-byte string
@@ -85,10 +54,11 @@ unlock(key, nonce, crypted [, offset]) => plain
 	
 	Note: the responsibility of using matching prefix and offset belongs 
 	to the application.
-	
+```	
 
---- Curve25519-based key exchange
+## Curve25519-based key exchange
 
+```text
 public_key(sk) => pk
 	return the public key associated to a curve25519 secret key
 	sk is the secret key as a 32-byte string
@@ -111,10 +81,11 @@ key_exchange(sk, pk) => k
 	pk is the public key of the other party 
 	("their public key").
 	sk, pk and k are 32-byte strings
+```
 
+## Blake2b cryptographic hash
 
---- Blake2b cryptographic hash
-
+```text
 blake2b_init([digest_size [, key]]) => ctx
 	initialize and return a blake2b context object
 	digest_size is the optional length of the expected digest. If provided,
@@ -140,10 +111,11 @@ blake2b(text) => digest
 	Returns a 64-byte digest.
 	This is a convenience function which combines the init(), 
 	update() and final() functions above.
+```
 
+## Ed25519 signature
 
---- Ed25519 signature
-
+```text
 sign_public_key(sk) => pk
 	return the public key associated to a secret key
 	sk is the secret key as a 32-byte string
@@ -174,10 +146,11 @@ check(sig, pk, text) => is_valid
 	Note: curve25519 key pairs (generated with keypair())
 	cannot be used for ed25519 signature. The signature key pairs 
 	must be generated with sign_keypair().
+```
 
+## Argon2i password derivation 
 
---- Argon2i password derivation 
-
+```text
 argon2i(pw, salt, nkb, niter) => k
 	compute a key given a password and some salt
 	This is a password key derivation function similar to scrypt.
@@ -192,33 +165,3 @@ argon2i(pw, salt, nkb, niter) => k
 	with nkb=100000 (100MB) and niter=10, the derivation takes ~ 1.8 sec
 	
 ```
-
-
-
-## Acknowledgements
-
-Copyright (C) 2017 by Dyne.org foundation, Amsterdam
-
-Designed, written and maintained by Denis Roio <jaromil@dyne.org>
-
-Includes code by:
-
-- Mozilla foundation (lua_sandbox)
-- Rich Felker, et al (musl-libc)
-- IETF Trust (blake2b)
-- Daniel J. Bernstein, Tanja Lange and Peter Schwabe (NaCl)
-- Loup Vaillant (monocypher)
-- Phil Leblanc (luanacha)
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as
-published by the Free Software Foundation, either version 3 of the
-License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.

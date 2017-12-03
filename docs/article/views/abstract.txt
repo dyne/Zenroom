@@ -3,4 +3,4 @@ This document explains the nature of smart rules in DECODE. It establishes guide
 
 DECODE's language is an external DSL implemented using a Syntax-Directed Translation. Its Semantic Model leads to coarse-grained tasks to be executed by the nodes on the peer to peer network.
 
-This is a living document and its latest version can be found on files.dyne.org/decode
+This is a living document and its latest version can be found on decodeproject.eu.
