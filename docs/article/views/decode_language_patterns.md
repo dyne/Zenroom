@@ -1,7 +1,7 @@
 
 # Introduction
 
-The main way to communicate with a DECODE node and operate its functions is via a language, rather than an API. All read and write operations affecting entitlements and accessing attributes can be expressed in a smart-rule language, which we intend to design and develop to become a robust open standard for authorisation around personal data. The DECODE smart-rule language will aim to naturally avoid complex constructions and define sets of transformations that can be then easily represented with visual metaphors.
+The main way to communicate with a DECODE node and operate its functions is via a language, rather than an API. All read and write operations affecting entitlements and accessing attributes can be expressed in a smart-rule language, which we intend to design and develop to become a robust open standard for authorisation around personal data. The DECODE smart-rule language will aim to naturally avoid complex constructions and define sets of transformations that can be then easily represented with visual metaphors; in terms of programming language it will be deterministic and side effect-free in order to better prove its correctness.
 
 At this stage of the research, this document is split in 3 sections:
 
@@ -11,9 +11,12 @@ At this stage of the research, this document is split in 3 sections:
 
 3. a set of technical recommendations for the development of smart-rules in DECODE
 
+This document is not speculative, but is companion to an actual implementation being developed during the course of DECODE's project, see: https://github.com/decodeproject/lua-zenroom
+
+
 ## A new memory model
 
-In computing science the concepts of HEAP and STACK are well known and represent the different areas of memory in which a single computer can store code, address it while executing it and store data on which the code can read and write. With "virtual machines" the implementation of logic behind the HEAP and STACK became "virtualised" and not anymore bound to a specific hardware architecture, therefore leaving more space for the portability of code and creative memory management practices (like garbage collection). It is also thanks to the use of virtual machines that high level languages became closer to the way humans think, rather than the way machines work, benefitting creativity, awareness and auditability [@mccartney2002rethinking]. This is an important vector of innovation for the language implementation in DECODE, since it is desirable for this project to implement a language that is close to the way humans think.
+In computing science the concepts of HEAP and STACK are well known and represent the different areas of memory in which a single computer can store code, address it while executing it and store data on which the code can read and write. With the advent of "virtual machines" (abstract computing machines like JVM or BEAM, not virtualised operating systems) the implementation of logic behind the HEAP and STACK became more abstract and not anymore bound to a specific hardware architecture, therefore leaving more space for the portability of code and creative memory management practices (like garbage collection). It is also thanks to the use of virtual machines that high level languages became closer to the way humans think, rather than the way machines work, benefitting creativity, awareness and auditability [@mccartney2002rethinking]. This is an important vector of innovation for the language implementation in DECODE, since it is desirable for this project to implement a language that is close to the way humans think.
 
 With the advent of distributed computing technology and blockchain implementations there is a growing necessity to conceive the HEAP and STACK differently [@DBLP:conf/ipps/PizkaR02], mostly because there are many more different conditions for memory bound to its persistence, read/write speed, mutability, distribution etc.
 
@@ -25,7 +28,7 @@ This document intentionally leaves aside considerations about the consensus algo
 
 
 
-# Blockchain languages
+# 1. Blockchain languages
 
 This section is a brief exploration of the main language implementations working on blockchains. Far from being an exhaustive overview, it highlights the characteristics of these implementations and most importantly the approach followed in building virtual machines that are based on assembler-like operation codes and languages that compile to these.
 
@@ -39,7 +42,7 @@ Starting with the "SCRIPT" implementation in Bitcoin [@nakamoto2008bitcoin] and 
 
 The distributed computation is made by blockchain nodes that act as sort of "virtual machines" and process "operation codes" (OP_CODE) just like a computer does. These OP_CODES in fact resemble assembler language operations. 
 
-In Bitcoin the so called SCRIPT implementation had an unfinished number of "OP_CODE" commands (operation codes) at the time of its popularisation and, around the 0.6 release, the feature was in large part deactivated to ensure the security of the network, since it was assessed by most developers involved that the Bitcoin implementation of SCRIPT was unfinished and represented threats to the network. Increasing the complexity of code that can be executed by nodes of an open network is always a risk, since code can contain arbitrary operations and commands that may lead to unpredictable results affecting both the single node and the whole network. The shortcomings of the SCRIPT in Bitcoin were partially addressed: its space for OP_RETURN [@roio2015d4] became the contested ground for payloads [@sward2017data] that could be interpreted by other VMs, as well the limit was partially circumvented by moving more complex logic in touch with the Bitcoin blockchain[@aron2012bitcoin], for instance using the techniques adopted by Mastercoin [@mastercoin2013willett] and "sidechains" as Counterparty [@bocek2018smart] or "pegged sidechains" [@back2014enabling] implementations. All these are implementations of VMs that run in parallel to Bitcoin, can "peg" their results on the main Bitcoin blockchain and still execute more complex operations in another space, where tokens and conditions can be created and affect a different memory spaces and distributed ledgers.
+In Bitcoin the so called SCRIPT implementation had an unfinished number of "OP_CODE" commands (operation codes) at the time of its popularisation and, around the 0.6 release, the feature was in large part deactivated to ensure the security of the network, since it was assessed by most developers involved that the Bitcoin implementation of SCRIPT was unfinished and represented threats to the network. Increasing the complexity of code that can be executed by nodes of an open network is always a risk, since code can contain arbitrary operations and commands that may lead to unpredictable results affecting both the single node and the whole network. The shortcomings of the SCRIPT in Bitcoin were partially addressed: its space for OP_RETURN [@roio2015d4] became the contested ground for payloads [@sward2017data] that could be interpreted by other VMs, as well the limit was partially circumvented by moving more complex logic in touch with the Bitcoin blockchain [@aron2012bitcoin], for instance using the techniques adopted by Mastercoin [@mastercoin2013willett] and "sidechains" as Counterparty [@bocek2018smart] or "pegged sidechains" [@back2014enabling] implementations. All these are implementations of VMs that run in parallel to Bitcoin, can "peg" their results on the main Bitcoin blockchain and still execute more complex operations in another space, where tokens and conditions can be created and affect different memory spaces and distributed ledgers.
 
 Languages implemented so far for this task are capable of executing single OP_CODEs: implementations are very much "machine-oriented" and focused on reproducing the behaviour of a turing-complete machine [@DBLP:conf/birthday/WegnerEB12] capable of executing generic computing tasks.
 
@@ -58,109 +61,7 @@ The EVM is a simple stack-based architecture. The word size of the machine (and 
 
 The machine does not follow the standard von Neumann architecture. Rather than storing program code in generally-accessible memory or storage, it is stored separately in a virtual ROM that can only be interacted with via a specific instruction.  The machine can have exceptional execution for several reasons, including stack underflows and invalid instructions. Like the out-of-gas (OOG) exception, they do not leave state changes intact. Rather, the machine halts immediately and reports the issue to the execution agent (either the transaction processor or, recursively, the spawning execution environment) which will deal with it separately [@wood2014ethereum].
 
-The resulting implementation consists of a list of OP_CODEs whose execution requires a "price" to be paid (Ethereum's currency for the purpose is called "gas"). This way an incentive is created for running nodes: a fee is paid to nodes for computing the contracts and confirming the outcomes of their execution. This feature technically defines the Ethereum VM as implementing an almost Turing-complete machine since its execution is conditioned by the availability of funds for computation. This approach relies on the fact that each operation is "atomic", meaning it is executed at a constant unit of speed.
-
-Here below is the list of OP_CODEs in use in Ethereum, which will be familiar to anyone who has coded with assembler language:
-
-```py
-
-# schema: [opcode, ins, outs, gas]
-
-opcodes = {
-
-    # arithmetic
-    0x00: ['STOP', 0, 0, 0],
-    0x01: ['ADD', 2, 1, 3],
-    0x02: ['MUL', 2, 1, 5],
-    0x03: ['SUB', 2, 1, 3],
-    0x04: ['DIV', 2, 1, 5],
-    0x05: ['SDIV', 2, 1, 5],
-    0x06: ['MOD', 2, 1, 5],
-    0x07: ['SMOD', 2, 1, 5],
-    0x08: ['ADDMOD', 3, 1, 8],
-    0x09: ['MULMOD', 3, 1, 8],
-    0x0a: ['EXP', 2, 1, 10],
-    0x0b: ['SIGNEXTEND', 2, 1, 5],
-
-    # boolean
-    0x10: ['LT', 2, 1, 3],
-    0x11: ['GT', 2, 1, 3],
-    0x12: ['SLT', 2, 1, 3],
-    0x13: ['SGT', 2, 1, 3],
-    0x14: ['EQ', 2, 1, 3],
-    0x15: ['ISZERO', 1, 1, 3],
-    0x16: ['AND', 2, 1, 3],
-    0x17: ['OR', 2, 1, 3],
-    0x18: ['XOR', 2, 1, 3],
-    0x19: ['NOT', 1, 1, 3],
-    0x1a: ['BYTE', 2, 1, 3],
-
-    # crypto
-    0x20: ['SHA3', 2, 1, 30],
-    
-    # contract context
-    0x30: ['ADDRESS', 0, 1, 2],
-    0x31: ['BALANCE', 1, 1, 20],
-    0x32: ['ORIGIN', 0, 1, 2],
-    0x33: ['CALLER', 0, 1, 2],
-    0x34: ['CALLVALUE', 0, 1, 2],
-    0x35: ['CALLDATALOAD', 1, 1, 3],
-    0x36: ['CALLDATASIZE', 0, 1, 2],
-    0x37: ['CALLDATACOPY', 3, 0, 3],
-    0x38: ['CODESIZE', 0, 1, 2],
-    0x39: ['CODECOPY', 3, 0, 3],
-    0x3a: ['GASPRICE', 0, 1, 2],
-    0x3b: ['EXTCODESIZE', 1, 1, 20],
-    0x3c: ['EXTCODECOPY', 4, 0, 20],
-
-    # blockchain context
-    0x40: ['BLOCKHASH', 1, 1, 20],
-    0x41: ['COINBASE', 0, 1, 2],
-    0x42: ['TIMESTAMP', 0, 1, 2],
-    0x43: ['NUMBER', 0, 1, 2],
-    0x44: ['DIFFICULTY', 0, 1, 2],
-    0x45: ['GASLIMIT', 0, 1, 2],
-  
-    # storage and execution
-    0x50: ['POP', 1, 0, 2],
-    0x51: ['MLOAD', 1, 1, 3],
-    0x52: ['MSTORE', 2, 0, 3],
-    0x53: ['MSTORE8', 2, 0, 3],
-    0x54: ['SLOAD', 1, 1, 50],
-    0x55: ['SSTORE', 2, 0, 0],
-    0x56: ['JUMP', 1, 0, 8],
-    0x57: ['JUMPI', 2, 0, 10],
-    0x58: ['PC', 0, 1, 2],
-    0x59: ['MSIZE', 0, 1, 2],
-    0x5a: ['GAS', 0, 1, 2],
-    0x5b: ['JUMPDEST', 0, 0, 1],
-
-    # logging
-    0xa0: ['LOG0', 2, 0, 375],
-    0xa1: ['LOG1', 3, 0, 750],
-    0xa2: ['LOG2', 4, 0, 1125],
-    0xa3: ['LOG3', 5, 0, 1500],
-    0xa4: ['LOG4', 6, 0, 1875],
-	
-    # arbitrary length storage (proposal for metropolis hardfork)
-    0xe1: ['SLOADBYTES', 3, 0, 50],
-    0xe2: ['SSTOREBYTES', 3, 0, 0],
-    0xe3: ['SSIZE', 1, 1, 50],
-
-    # closures
-    0xf0: ['CREATE', 3, 1, 32000],
-    0xf1: ['CALL', 7, 1, 40],
-    0xf2: ['CALLCODE', 7, 1, 40],
-    0xf3: ['RETURN', 2, 0, 0],
-    0xf4: ['DELEGATECALL', 6, 0, 40],
-    0xff: ['SUICIDE', 1, 0, 0],
-}
-for i in range(1, 33):
-    opcodes[0x5f + i] = ['PUSH' + str(i), 0, 1, 3]
-for i in range(1, 17):
-    opcodes[0x7f + i] = ['DUP' + str(i), i, i + 1, 3]
-    opcodes[0x8f + i] = ['SWAP' + str(i), i + 1, i + 1, 3]
-```
+The resulting implementation consists of a list of OP_CODEs whose execution requires a "price" to be paid (Ethereum's currency for the purpose is called "gas"). This way an incentive is created for running nodes: a fee is paid to nodes for computing the contracts and confirming the outcomes of their execution. This feature technically defines the Ethereum VM as implementing an almost Turing-complete machine since its execution is conditioned by the availability of funds for computation. This approach relies on the fact that each operation is executed at a constant unit of speed.
 
 On top of these OP_CODEs the "Solidity" language was developed as a high-level language that compiles to OP_CODE sequences. Solidity aims to make it easier for people to program "smart contracts". But it is arguable that the Solidity higher-level language, widely present in all Ethereum related literature, carries several problems: the shortcomings of its design can be indirectly related to some well-known disasters provoked by flaws in published contracts. To quickly summarise some flaws:
 
@@ -198,7 +99,7 @@ It must be also noted that the EVM allows calling external contracts that can ta
 
 Despite the shortcomings, nowadays Solidity is widely used: it is the most used "blockchain language" supporting "smart-contracts" in the world.
 
-# Language Security
+# 2. Language Security
 
 This chapter will quickly establish the underpinnings of a smart rule language in DECODE, starting from its most theoretical assumptions, to conclude with specific requirements. The chapter will concentrate on the recent corpus developed by research on language-theoretic security" (LangSec). Here below we include a brief explanation condensed from the information material of the LangSec.org project hosted at IEEE, which is informed by the collective experience of the exploit development community, since exploitation is a practical exploration of the space of unanticipated state, its prevention or containment.
 
@@ -237,7 +138,7 @@ Mixing of basic input validation ("sanity checks") and logically subsequent proc
 
 A common practice encouraged by rapid software development is the unconstrained addition of new features to software components and their corresponding reflection in input language specifications. Expressing complex ideas in hastily written code is a hallmark of such development practices. In essence, adding new input feature requirements to an already-underspecified input language compounds the explosion of state and computational paths.
 
-# Smart-rules language
+# 3. Smart-rules language
 
 In light of our study of blockchain languages, use-cases and privacy by design guidelines in DECODE, this section lists three functional requirements and three usability requirements influencing the design patterns for our language.
 
