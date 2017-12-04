@@ -1,0 +1,13 @@
+diff --git a/src/luazen.c b/src/luazen.c
+index a8e6158..a7d752d 100644
+--- a/src/luazen.c
++++ b/src/luazen.c
+@@ -811,7 +811,7 @@ static int lz_b58decode(lua_State *L) {
+ //------------------------------------------------------------
+ // lua library declaration
+ //
+-static const struct luaL_Reg lzlib[] = {
++const struct luaL_Reg lzlib[] = {
+ 	{"randombytes", lz_randombytes},
+ 	//
+ 	{"aead_encrypt", lz_aead_encrypt},
