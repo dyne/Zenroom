@@ -33,15 +33,20 @@ make check
 
 ## Crypto functionalities
 
-This interpreter includes statically the following cryptographic
-primitives, extracted from the NaCl library and included via the
-luazen implementation:
+This interpreter includes statically the following cryptographic primitives:
 
-- Authenticated encryption with Chacha20 stream encryption (more precisely Xchacha20, ie. Chacha with a 24-byte nonce) and Poly1305 MAC, 
-- Curve25519-based key exchange and public key encryption,
-- Blake2b hash function,
-- Ed25519-based signature function using Blake2b hash instead of sha512,
-- Argon2i, a modern key derivation function based on Blake2b. Like scrypt, it is designed to be expensive in both CPU and memory.
+- **Norx** authenticated encryption with additional data (AEAD) - this is the default 64-4-1 variant (256-bit key and nonce, 4 rounds)
+- **Blake2b** cryptographic hash function
+- **Argon2i**, a modern key derivation function based on Blake2. Like 
+scrypt, it is designed to be expensive in both CPU and memory.
+- **Curve25519**-based key exchange and public key encryption,
+- **Ed25519**-based signature function using Blake2b hash instead of sha512,
+
+Legacy cryptographic functions include **md5**, and **rc4**.
+
+Endoding and decoding functions are provided for **base64** and **base58** (for base58, the BitCoin encoding alphabet is used).
+
+Compression functions based on **BriefLZ** are also included.
 
 ## Acknowledgements
 
@@ -53,9 +58,13 @@ Includes code by:
 
 - Mozilla foundation (lua_sandbox)
 - Rich Felker, et al (musl-libc)
-- IETF Trust (blake2b)
-- Daniel J. Bernstein, Tanja Lange and Peter Schwabe (NaCl)
 - Phil Leblanc (luazen)
+- Joergen Ibsen (brieflz)
+- Loup Vaillant (blake2b, argon2i, ed/x25519)
+- Samuel Neves and Philipp Jovanovic (norx)
+- Luiz Henrique de Figueiredo (base64)
+- Luke Dashjr (base58)
+- Cameron Rich (md5)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as
