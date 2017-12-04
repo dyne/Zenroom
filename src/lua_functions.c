@@ -23,6 +23,8 @@
 #include <luasandbox/lua.h>
 #include <luasandbox/lualib.h>
 
+int get_debug();
+
 void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val) {
 	lua_State* L = lsb_get_lua(lsb);
 	lua_pushstring(L, val);
@@ -32,14 +34,14 @@ void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val) {
 void lsb_openlibs(lsb_lua_sandbox *lsb) {
 	lua_State* L = lsb_get_lua(lsb);
 	func("Loading base libraries:");
-	func("coroutine");
-	luaopen_coroutine(L);
 	func("table");
 	luaopen_table(L);
 	func("string");
 	luaopen_string(L);
 	func("math");
 	luaopen_math(L);
-	func("debug");
-	luaopen_debug(L);
+	if(get_debug() > 1) {
+		func("debug");
+		luaopen_debug(L);
+	}
 }
