@@ -30,7 +30,8 @@
 
 #define CONF "decode-exec.conf"
 
-extern const struct luaL_Reg luanachalib;
+// luazen library declaration
+extern const struct luaL_Reg lzlib;
 
 // prototypes from lua_functions
 void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val);
@@ -112,7 +113,7 @@ int main(int argc, char **argv) {
 		const luaL_Reg *lib;
 		const char *r;
 		// load our own extensions
-		lib = &luanachalib;
+		lib = &lzlib;
 		func("loading crypto extensions");
 		for (; lib->func; lib++) {
 			func("%s",lib->name);

@@ -4,7 +4,7 @@ musl := ${pwd}/build/musl
 musl-gcc := ${musl}/obj/musl-gcc
 test-exec := ${pwd}/src/decode-exec -c ${pwd}/test/decode-test.conf
 
-all: bootstrap-check patches luasandbox luanacha
+all: bootstrap-check patches luasandbox luazen
 	make -C src
 
 bootstrap-check:
@@ -21,8 +21,8 @@ luasandbox:
 	if ! [ -r ${luasand}/CMakeCache.txt ]; then mkdir -p ${luasand} && cd ${luasand} && CC=${musl-gcc} cmake ${pwd}/lib/lua_sandbox -DCMAKE_C_FLAGS="-static -Os -fstack-protector" ; fi
 	make -C ${luasand} luasandbox
 
-luanacha:
-	make -C ${pwd}/build/luanacha
+luazen:
+	make -C ${pwd}/build/luazen
 
 # needed for yices2, in case useful (WIP)
 # gmp:
@@ -43,7 +43,7 @@ check:
 clean:
 	rm -rf ${luasand}
 	make -C src clean
-	make -C ${pwd}/build/luanacha clean
+	make -C ${pwd}/build/luazen clean
 
 distclean:
 	rm -rf ${musl}
