@@ -13,7 +13,7 @@ decode-exec: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o decode-exec ${LDFLAGS} ${LDADD}
 
 musl: CC := ../build/musl/obj/musl-gcc
-musl: CFLAGS += -Os -Wall -Wextra -pedantic -std=gnu99
+musl: CFLAGS += -Os -fstack-protector -Wall -Wextra -pedantic -std=gnu99
 musl: LDADD  += ../build/musl/lib/libc.a
 musl: LDFLAGS += -static
 musl: ${SOURCES} decode-exec

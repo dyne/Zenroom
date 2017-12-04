@@ -14,11 +14,11 @@ patches:
 	./build/apply-patches
 
 bootstrap:
-	if ! [ -r ${musl-gcc} ]; then mkdir -p ${musl} && cd ${musl} && ${pwd}/lib/musl/configure; fi
+	if ! [ -r ${musl-gcc} ]; then mkdir -p ${musl} && cd ${musl} && CFLAGS="-Os -fstack-protector" ${pwd}/lib/musl/configure; fi
 	make -j2 -C ${musl}
 
 luasandbox:
-	if ! [ -r ${luasand}/CMakeCache.txt ]; then mkdir -p ${luasand} && cd ${luasand} && CC=${musl-gcc} cmake ${pwd}/lib/lua_sandbox -DCMAKE_C_FLAGS="-static -Os" ; fi
+	if ! [ -r ${luasand}/CMakeCache.txt ]; then mkdir -p ${luasand} && cd ${luasand} && CC=${musl-gcc} cmake ${pwd}/lib/lua_sandbox -DCMAKE_C_FLAGS="-static -Os -fstack-protector" ; fi
 	make -C ${luasand} luasandbox
 
 luanacha:
