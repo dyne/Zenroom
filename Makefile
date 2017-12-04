@@ -35,7 +35,7 @@ check:
 	${test-exec} test/nextvar.lua
 	${test-exec} test/locals.lua
 	${test-exec} test/constructs.lua
-	${test-exec} test/test_luanacha.lua
+	${test-exec} test/test_luazen.lua
 	@echo "----------------"
 	@echo "All tests passed"
 	@echo "----------------"
