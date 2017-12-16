@@ -50,8 +50,6 @@ void logger(void *context, const char *component,
 	(void)level;
 
 	va_list args;
-	// fprintf(stderr, "%lld [%d] %s ", (long long)time(NULL), level,
-	//         component ? component : "unnamed");
 	fprintf(stderr,"%s: ", component ? component : "unknown");
 	va_start(args, fmt);
 	vfprintf(stderr, fmt, args);
@@ -67,6 +65,8 @@ int main(int argc, char **argv) {
 	char *conf = NULL;
 	char *p;
 	int opt;
+	int return_code = 1; // return error by default
+
 	const char *short_options = "-hdc:";
     const char *help =
 		"Usage: decode-exec [-c config] script.lua\n";
@@ -128,8 +128,9 @@ int main(int argc, char **argv) {
 		if(r) {
 			error(r);
 			error(lsb_get_error(lsb));
-			error("Error initialising sandbox. Execution aborted.");
+			error("Error detected. Execution aborted.");
 		}
+		return_code = 0; // return success
 		// debugging stats here
 		// while(lsb_get_state(lsb) == LSB_RUNNING)
 		// 	act("running...");
@@ -148,5 +149,5 @@ int main(int argc, char **argv) {
 		p = lsb_destroy(lsb);
 		if(p) free(p);
 	}
-	exit(0);
+	exit(return_code);
 }

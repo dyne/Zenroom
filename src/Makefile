@@ -6,7 +6,8 @@ SOURCES := jutils.o lua_functions.o decode-exec.o
 LDADD   := ../build/lua_sandbox/src/libluasandbox.a
 LDADD   += ../build/lua_sandbox/src/util/libluasandboxutil.a
 LDADD   += ../build/luazen/libluazen.a
-
+LDADD   += ../build/jemalloc/lib/libjemalloc.a
+LDADD   += ../build/pbc/.libs/libpbc.a
 all: musl
 
 decode-exec: ${SOURCES}

@@ -3,9 +3,24 @@ luasand := ${pwd}/build/lua_sandbox
 musl := ${pwd}/build/musl
 musl-gcc := ${musl}/obj/musl-gcc
 test-exec := ${pwd}/src/decode-exec -c ${pwd}/test/decode-test.conf
+cflags := -Os -fstack-protector -static
 
-all: bootstrap-check patches luasandbox luazen
+all: bootstrap-check patches jemalloc luasandbox gmp pbc luazen
 	make -C src
+
+gmp:
+	cd ${pwd}/lib/gmp && CFLAGS="${cflags}" CC=${musl-gcc} ./configure --disable-shared
+	make -C ${pwd}/lib/gmp
+
+pbc:
+	mkdir -p ${pwd}/build/pbc
+	cd ${pwd}/build/pbc && CFLAGS="${cflags}" CC=${musl-gcc} ${pwd}/lib/pbc/configure --disable-shared
+	make -C ${pwd}/build/pbc LDFLAGS="-L${pwd}/lib/gmp/.libs -l:libgmp.a" CFLAGS="${cflags} -I${pwd}/lib/gmp -I${pwd}/lib/pbc/include"; return 0
+
+jemalloc:
+	mkdir -p ${pwd}/build/jemalloc
+	cd ${pwd}/build/jemalloc && CFLAGS="${cflags}" CC=${musl-gcc} ${pwd}/lib/jemalloc/configure --disable-cxx
+	make -C ${pwd}/build/jemalloc
 
 bootstrap-check:
 	@if ! [ -r ${musl-gcc} ]; then echo "\nRun 'make bootstrap' first to build the compiler.\n" && exit 1; fi
@@ -30,15 +45,13 @@ luazen:
 # 	make -C lib/gmp -j2
 
 check:
-	${test-exec} test/vararg.lua
-	${test-exec} test/pm.lua
-	${test-exec} test/nextvar.lua
-	${test-exec} test/locals.lua
-	${test-exec} test/constructs.lua
-	${test-exec} test/test_luazen.lua
-	@echo "----------------"
-	@echo "All tests passed"
-	@echo "----------------"
+	${test-exec} test/vararg.lua && \
+	${test-exec} test/pm.lua && \
+	${test-exec} test/nextvar.lua && \
+	${test-exec} test/locals.lua && \
+	${test-exec} test/constructs.lua && \
+	${test-exec} test/test_luazen.lua && \
+	echo "----------------\nAll tests passed\n----------------"
 
 clean:
 	rm -rf ${luasand}
