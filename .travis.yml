@@ -17,5 +17,5 @@ before_install:
 
 script:
   - make shared
-  - make check
+  - make check-shared
 
