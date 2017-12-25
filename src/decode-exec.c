@@ -64,17 +64,17 @@ int main(int argc, char **argv) {
 	char codefile[512];
 	char *conf = NULL;
 	char *p;
-	int opt;
+	int opt, index;
 	int return_code = 1; // return error by default
 
-	const char *short_options = "-hdc:";
+	const char *short_options = "hdc:";
     const char *help =
-		"Usage: decode-exec [-c config] script.lua\n";
+		"Usage: zenroom [-c config] script.lua\n";
+    codefile[0] = '\0';
 
 	notice( "LUA Restricted execution environment %s",VERSION);
 	act("Copyright (C) 2017 Dyne.org foundation");
-	do {
-		opt = getopt(argc, argv, short_options);
+	while((opt = getopt(argc, argv, short_options)) != -1) {
 		switch(opt) {
 		case 'd':
 			set_debug(3);
@@ -86,16 +86,19 @@ int main(int argc, char **argv) {
 		case 'c':
 			snprintf(conffile,511,"%s",optarg);
 			break;
+		case '?': error(help); exit(1);
+		default:  error(help); exit(1);
 		}
-	} while(opt != -1);
-	if(optarg)
-		snprintf(codefile,511,"%s",optarg);
-	else {
-		error("usage: decode-exec script.lua");
+	}
+	for (index = optind; index < argc; index++) {
+		snprintf(codefile,511,"%s",argv[index]);
+		act("code: %s", codefile);
+	}
+	if(codefile[0] == '\0') {
+		error("No script specified.");
+		error(help);
 		exit(1);
 	}
-
-	act("code: %s", codefile);
 
 	conf = lsb_read_file(conffile);
 	if(!conf) {

@@ -10,3 +10,6 @@
 [submodule "lib/luazen"]
 	path = lib/luazen
 	url = https://github.com/philanc/luazen.git
+[submodule "lib/jemalloc"]
+	path = lib/jemalloc
+	url = https://github.com/jemalloc/jemalloc
