@@ -15,7 +15,7 @@ patches:
 
 js: gcc=${EMSCRIPTEN}/emcc
 js: cflags := -O3 -fstack-protector
-js: patches luasandbox luazen
+js: patches luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C src js
 
 bootstrap: musl := ${pwd}/build/musl
@@ -28,12 +28,12 @@ bootstrap:
 static: musl := ${pwd}/build/musl
 static: gcc := ${musl}/obj/musl-gcc
 static: cflags := -Os -fstack-protector -static
-static: bootstrap patches jemalloc luasandbox gmp pbc luazen
+static: bootstrap patches jemalloc luasandbox gmp pbc luazen milagro
 	CC=${gcc} make -C src static
 
 shared: gcc := gcc
 shared: cflags := -O2 -fstack-protector
-shared: patches jemalloc luasandbox luazen
+shared: patches jemalloc luasandbox luazen milagro
 	CC=${gcc} make -C src shared
 
 gmp:
@@ -56,8 +56,14 @@ luasandbox:
 luazen:
 	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/build/luazen
 
+milagro:
+	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-c
+
+check-milagro: milagro
+	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/test/milagro check
+
 check-shared: test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
-check-shared:
+check-shared: check-milagro
 	@${test-exec} test/vararg.lua && \
 	${test-exec} test/pm.lua && \
 	${test-exec} test/nextvar.lua && \
@@ -67,7 +73,7 @@ check-shared:
 	echo "----------------\nAll tests passed for SHARED binary build\n----------------"
 
 check-static: test-exec := ${pwd}/src/zenroom-static -c ${pwd}/test/decode-test.conf
-check-static:
+check-static: check-milagro
 	@${test-exec} test/vararg.lua && \
 	${test-exec} test/pm.lua && \
 	${test-exec} test/nextvar.lua && \
@@ -75,6 +81,8 @@ check-static:
 	${test-exec} test/constructs.lua && \
 	${test-exec} test/test_luazen.lua && \
 	echo "----------------\nAll tests passed for STATIC binary build\n----------------"
+
+# TODO: check js build
 
 clean:
 	rm -rf ${luasand}
