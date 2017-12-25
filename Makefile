@@ -42,29 +42,23 @@ gmp:
 
 pbc:
 	mkdir -p ${pwd}/build/pbc
-	cd ${pwd}/build/pbc && CFLAGS="${cflags}" CC=${gcc} ${pwd}/lib/pbc/configure --disable-shared
-	make -C ${pwd}/build/pbc LDFLAGS="-L${pwd}/lib/gmp/.libs -l:libgmp.a" CFLAGS="${cflags} -I${pwd}/lib/gmp -I${pwd}/lib/pbc/include"; return 0
+	if ! [ ${pwd}/build/pbc/.libs/libpbc.a ]; then cd ${pwd}/build/pbc && CFLAGS="${cflags}" CC=${gcc} ${pwd}/lib/pbc/configure --disable-shared &&	make -C ${pwd}/build/pbc LDFLAGS="-L${pwd}/lib/gmp/.libs -l:libgmp.a" CFLAGS="${cflags} -I${pwd}/lib/gmp -I${pwd}/lib/pbc/include"; return 0; fi
 
 jemalloc:
 	mkdir -p ${pwd}/build/jemalloc
-	cd ${pwd}/build/jemalloc && CFLAGS="${cflags}" CC=${gcc} ${pwd}/lib/jemalloc/configure --disable-cxx
-	make -C ${pwd}/build/jemalloc
+	if ! [ -r ${pwd}/lib/jemalloc/configure ]; then cd ${pwd}/lib/jemalloc &&  ${pwd}/lib/jemalloc/autogen.sh; fi
+	if ! [ -r ${pwd}/build/jemalloc/lib/libjemalloc.a ]; then cd ${pwd}/build/jemalloc && CFLAGS="${cflags}" CC=${gcc} ${pwd}/lib/jemalloc/configure --disable-cxx && make -C ${pwd}/build/jemalloc; fi
 
 luasandbox:
 	if ! [ -r ${luasand}/CMakeCache.txt ]; then mkdir -p ${luasand} && cd ${luasand} && CC=${gcc} cmake ${pwd}/lib/lua_sandbox -DCMAKE_C_FLAGS="${cflags}" ; fi
-	make -C ${luasand} luasandbox
+	if ! [ -r ${pwd}/build/lua_sandbox/src/libluasandbox.a ]; then make -C ${luasand} luasandbox; fi
 
 luazen:
 	make -C ${pwd}/build/luazen
 
-# needed for yices2, in case useful (WIP)
-# gmp:
-# 	if ! [ -r lib/gmp/Makefile ]; then cd lib/gmp && CC=${gcc} ./configure --disable-shared --enable-static; fi
-# 	make -C lib/gmp -j2
-
 check-shared: test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
 check-shared:
-	${test-exec} test/vararg.lua && \
+	@${test-exec} test/vararg.lua && \
 	${test-exec} test/pm.lua && \
 	${test-exec} test/nextvar.lua && \
 	${test-exec} test/locals.lua && \
@@ -74,7 +68,7 @@ check-shared:
 
 check-static: test-exec := ${pwd}/src/zenroom-static -c ${pwd}/test/decode-test.conf
 check-static:
-	${test-exec} test/vararg.lua && \
+	@${test-exec} test/vararg.lua && \
 	${test-exec} test/pm.lua && \
 	${test-exec} test/nextvar.lua && \
 	${test-exec} test/locals.lua && \
