@@ -66,23 +66,23 @@ print("------------------------------------------------------------")
 ------------------------------------------------------------------------
 print("testing lzf compression...")
 do
-	assert(lzf("") == "")
-	assert(unlzf("") == "")
+	assert(compress_lzf("") == "")
+	assert(decompress_lzf("") == "")
 	local x
-	x = "Hello world"; assert(unlzf(lzf(x)) == x)
-	x = ("a"):rep(301); assert(unlzf(lzf(x)) == x)
-	assert(#lzf(("a"):rep(301)) < 30)
+	x = "Hello world"; assert(decompress_lzf(compress_lzf(x)) == x)
+	x = ("a"):rep(301); assert(decompress_lzf(compress_lzf(x)) == x)
+	assert(#compress_lzf(("a"):rep(301)) < 30)
 end
 
 ------------------------------------------------------------------------
-print("testing blz compression...")
+print("testing brieflz compression...")
 do
-	assert(blz("") == "\0\0\0\0")
-	assert(unblz("\0\0\0\0") == "")
+	assert(compress_blz("") == "\0\0\0\0")
+	assert(decompress_blz("\0\0\0\0") == "")
 	local x
-	x = "Hello world"; assert(unblz(blz(x)) == x)
-	x = ("a"):rep(301); assert(unblz(blz(x)) == x)
-	assert(#blz(("a"):rep(301)) < 30)
+	x = "Hello world"; assert(decompress_blz(compress_blz(x)) == x)
+	x = ("a"):rep(301); assert(decompress_blz(compress_blz(x)) == x)
+	assert(#compress_blz(("a"):rep(301)) < 30)
 end
 
 ------------------------------------------------------------------------
@@ -169,8 +169,8 @@ print("testing base64, base58...")
 
 -- b64 encode/decode
 do 
-	local be = b64encode
-	local bd = b64decode
+	local be = encode_b64
+	local bd = decode_b64
 	--
 	assert(be"" == "")
 	assert(be"a" == "YQ==")
@@ -199,27 +199,27 @@ end --b64
 ------------------------------------------------------------------------
 -- b58encode  (check on-line at eg. http://lenschulwitz.com/base58)
 do
-	assert(b58encode(xts'01') == '2')
-	assert(b58encode(xts'0001') == '12')
-	assert(b58encode('') == '')
-	assert(b58encode('\0\0') == '11')
-	assert(b58encode('o hai') == 'DYB3oMS')
-	assert(b58encode('Hello world') == 'JxF12TrwXzT5jvT')
+	assert(encode_b58(xts'01') == '2')
+	assert(encode_b58(xts'0001') == '12')
+	assert(encode_b58('') == '')
+	assert(encode_b58('\0\0') == '11')
+	assert(encode_b58('o hai') == 'DYB3oMS')
+	assert(encode_b58('Hello world') == 'JxF12TrwXzT5jvT')
 	local x1 = xts"00010966776006953D5567439E5E39F86A0D273BEED61967F6"
 	local e1 = "16UwLL9Risc3QfPqBUvKofHmBQ7wMtjvM"
-	assert(b58encode(x1) == e1)
+	assert(encode_b58(x1) == e1)
 	local x2 = xts[[
 		0102030405060708090a0b0c0d0e0f
 		101112131415161718191a1b1c1d1e1f ]]
 	local e2 = "thX6LZfHDZZKUs92febYZhYRcXddmzfzF2NvTkPNE"
-	assert(b58encode(x2) == e2) 
+	assert(encode_b58(x2) == e2) 
 	-- b58decode
-	assert(b58decode('') == '')
-	assert(b58decode('11') == '\0\0')	
-	assert(b58decode('DYB3oMS') == 'o hai')
-	assert(b58decode('JxF12TrwXzT5jvT') == 'Hello world')
-	assert(b58decode(e1) == x1)
-	assert(b58decode(e2) == x2)
+	assert(decode_b58('') == '')
+	assert(decode_b58('11') == '\0\0')	
+	assert(decode_b58('DYB3oMS') == 'o hai')
+	assert(decode_b58('JxF12TrwXzT5jvT') == 'Hello world')
+	assert(decode_b58(e1) == x1)
+	assert(decode_b58(e2) == x2)
 end
 ------------------------------------------------------------------------
 print("testing norx aead...")
@@ -230,53 +230,53 @@ a = ('a'):rep(16)  -- aad  (61 61 ...)
 z = ('z'):rep(8)   -- zad  (7a 7a ...)
 m = ('\0'):rep(83) -- plain text
 
-c = aead_encrypt(k, n, m, 0, a, z)
+c = encrypt_aead(k, n, m, 0, a, z)
 assert(#c == #a + #m + 32 + #z)
-mm, aa, zz = aead_decrypt(k, n, c, 0, 16, 8)
+mm, aa, zz = decrypt_aead(k, n, c, 0, 16, 8)
 assert(mm == m and aa == a and zz == z)
 
 -- test defaults
-c = aead_encrypt(k, n, m, 0, a) -- no zad
+c = encrypt_aead(k, n, m, 0, a) -- no zad
 assert(#c == #a + #m + 32)
-mm, aa, zz = aead_decrypt(k, n, c, 0, 16)
+mm, aa, zz = decrypt_aead(k, n, c, 0, 16)
 assert(mm == m and aa == a and #zz == 0)
 --
-c = aead_encrypt(k, n, m) -- no ninc, no aad, no zad
+c = encrypt_aead(k, n, m) -- no ninc, no aad, no zad
 assert(#c == #m + 32)
-mm, aa, zz = aead_decrypt(k, n, c)
+mm, aa, zz = decrypt_aead(k, n, c)
 assert(mm == m and #aa == 0 and #zz == 0)
 
 -- same encryption stream
 m1 = ('\0'):rep(85) -- plain text
-c1 = aead_encrypt(k, n, m1)
+c1 = encrypt_aead(k, n, m1)
 assert(c1:sub(1,83) == c:sub(1,83))
 
 -- mac error
-r, msg = aead_decrypt(k, n, c .. "!")
+r, msg = decrypt_aead(k, n, c .. "!")
 assert(not r and msg == "decrypt error")
 --
-c = aead_encrypt(k, n, m, 0, a, z)
-r, msg = aead_decrypt(k, n, c) -- no aad and zad
+c = encrypt_aead(k, n, m, 0, a, z)
+r, msg = decrypt_aead(k, n, c) -- no aad and zad
 assert(not r and msg == "decrypt error")
 -- replace unencrypted aad 'aaa...' with 'bbb...'
 c1 = ('b'):rep(16) .. c:sub(17); assert(#c == #c1)
-r, msg = aead_decrypt(k, n, c1, 0, 16, 8)
+r, msg = decrypt_aead(k, n, c1, 0, 16, 8)
 assert(not r and msg == "decrypt error")
 
 -- test nonce increment
-c = aead_encrypt(k, n, m) 
-c1 = aead_encrypt(k, n, m, 1) 
-c2 = aead_encrypt(k, n, m, 2) 
+c = encrypt_aead(k, n, m) 
+c1 = encrypt_aead(k, n, m, 1) 
+c2 = encrypt_aead(k, n, m, 2) 
 assert(#c1 == #m + 32)
 assert((c ~= c1) and (c ~= c2) and (c1 ~= c2))
-r, msg = aead_decrypt(k, n, c1)
+r, msg = decrypt_aead(k, n, c1)
 assert(not r and msg == "decrypt error")
-r, msg = aead_decrypt(k, n, c1, 1)
+r, msg = decrypt_aead(k, n, c1, 1)
 assert(r == m)
 
 -- check aliases: removed. these are different functions in Lua5.1 !!
---~ assert(aead_encrypt == encrypt)
---~ assert(aead_decrypt == decrypt)
+--~ assert(encrypt_aead == encrypt)
+--~ assert(decrypt_aead == decrypt)
 
 ------------------------------------------------------------------------
 -- blake2b tests
@@ -289,42 +289,42 @@ e = hextos(
 	"F82401CF7AA2E4CB1ECD90296E3F14CB5413F8ED77BE73045B13914CDCD6A918")
 	
 -- test convenience function
-dig = blake2b(t)
+dig = hash_blake2b(t)
 assert(e == dig)
 
 -- test chunked interface
-ctx = blake2b_init()
-blake2b_update(ctx, "The q")
-blake2b_update(ctx, "uick brown fox jumps over the lazy dog")
-dig = blake2b_final(ctx)
+ctx = hash_init_blake2b()
+hash_update_blake2b(ctx, "The q")
+hash_update_blake2b(ctx, "uick brown fox jumps over the lazy dog")
+dig = hash_final_blake2b(ctx)
 assert(e == dig)
 
 -- test shorter digests
-ctx = blake2b_init(5)
-blake2b_update(ctx, "The q")
-blake2b_update(ctx, "uick brown fox jumps over the lazy dog")
-dig51 = blake2b_final(ctx)
-ctx = blake2b_init(5)
-blake2b_update(ctx, "The quick b")
-blake2b_update(ctx, "rown fox jumps over the lazy dog")
-dig52 = blake2b_final(ctx)
+ctx = hash_init_blake2b(5)
+hash_update_blake2b(ctx, "The q")
+hash_update_blake2b(ctx, "uick brown fox jumps over the lazy dog")
+dig51 = hash_final_blake2b(ctx)
+ctx = hash_init_blake2b(5)
+hash_update_blake2b(ctx, "The quick b")
+hash_update_blake2b(ctx, "rown fox jumps over the lazy dog")
+dig52 = hash_final_blake2b(ctx)
 assert(#dig51 == 5 and dig51 == dig52)
 
 -- same, with a key
-ctx = blake2b_init(5, "somekey")
-blake2b_update(ctx, "The q")
-blake2b_update(ctx, "uick brown fox jumps over the lazy dog")
-dig53 = blake2b_final(ctx)
-ctx = blake2b_init(5, "somekey")
-blake2b_update(ctx, "The quick b")
-blake2b_update(ctx, "rown fox jumps over the lazy dog")
-dig54 = blake2b_final(ctx)
+ctx = hash_init_blake2b(5, "somekey")
+hash_update_blake2b(ctx, "The q")
+hash_update_blake2b(ctx, "uick brown fox jumps over the lazy dog")
+dig53 = hash_final_blake2b(ctx)
+ctx = hash_init_blake2b(5, "somekey")
+hash_update_blake2b(ctx, "The quick b")
+hash_update_blake2b(ctx, "rown fox jumps over the lazy dog")
+dig54 = hash_final_blake2b(ctx)
 assert(#dig53 == 5 and dig53 == dig54)
 
-ctx = blake2b_init(5, ("\0"):rep(0)) -- is it same as no key??
-blake2b_update(ctx, "The q")
-blake2b_update(ctx, "uick brown fox jumps over the lazy dog")
-dig55 = blake2b_final(ctx)
+ctx = hash_init_blake2b(5, ("\0"):rep(0)) -- is it same as no key??
+hash_update_blake2b(ctx, "The q")
+hash_update_blake2b(ctx, "uick brown fox jumps over the lazy dog")
+dig55 = hash_final_blake2b(ctx)
 assert(dig51==dig55)
 
 
@@ -333,12 +333,12 @@ assert(dig51==dig55)
 
 print("testing x25519 key exchange...")
 
-apk, ask = x25519_keypair() -- alice keypair
-bpk, bsk = x25519_keypair() -- bob keypair
-assert(apk == x25519_public_key(ask))
+apk, ask = keypair_x25519() -- alice keypair
+bpk, bsk = keypair_x25519() -- bob keypair
+assert(apk == pubkey_x25519(ask))
 
-k1 = key_exchange(ask, bpk)
-k2 = key_exchange(bsk, apk)
+k1 = dhxkey_x25519(ask, bpk)
+k2 = dhxkey_x25519(bsk, apk)
 assert(k1 == k2)
 
 
@@ -349,8 +349,8 @@ print("testing ed25519 signature...")
 
 t = "The quick brown fox jumps over the lazy dog"
 
-pk, sk = sign_keypair() -- signature keypair
-assert(pk == sign_public_key(sk))
+pk, sk = keypair_sign() -- signature keypair
+assert(pk == pubkey_sign(sk))
 
 sig = sign(sk, pk, t)
 assert(#sig == 64)
@@ -372,7 +372,7 @@ pw = "hello"
 salt = "salt salt salt"
 k = ""
 -- c0 = os.clock()
-k = argon2i(pw, salt, 100000, 10)
+k = kdf_argon2i(pw, salt, 100000, 10)
 assert(#k == 32)
 print("argon2i (100MB, 10 iter)")
 -- print("Execution time (sec): ", os.clock()-c0)
