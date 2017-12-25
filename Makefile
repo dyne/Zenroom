@@ -5,7 +5,7 @@ luasand := ${pwd}/build/lua_sandbox
 gcc := ${EMSCRIPTEN}/emcc
 cflags := -O3 -fstack-protector
 
-test-exec := ${pwd}/src/zenroom-static -c ${pwd}/test/decode-test.conf
+test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
 
 bootstrap-check:
 	@if ! [ -r ${gcc} ]; then echo "\nRun 'make bootstrap' first to build the compiler.\n" && exit 0; fi
@@ -62,14 +62,25 @@ luazen:
 # 	if ! [ -r lib/gmp/Makefile ]; then cd lib/gmp && CC=${gcc} ./configure --disable-shared --enable-static; fi
 # 	make -C lib/gmp -j2
 
-check:
+check-shared: test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
+check-shared:
 	${test-exec} test/vararg.lua && \
 	${test-exec} test/pm.lua && \
 	${test-exec} test/nextvar.lua && \
 	${test-exec} test/locals.lua && \
 	${test-exec} test/constructs.lua && \
 	${test-exec} test/test_luazen.lua && \
-	echo "----------------\nAll tests passed\n----------------"
+	echo "----------------\nAll tests passed for SHARED binary build\n----------------"
+
+check-static: test-exec := ${pwd}/src/zenroom-static -c ${pwd}/test/decode-test.conf
+check-static:
+	${test-exec} test/vararg.lua && \
+	${test-exec} test/pm.lua && \
+	${test-exec} test/nextvar.lua && \
+	${test-exec} test/locals.lua && \
+	${test-exec} test/constructs.lua && \
+	${test-exec} test/test_luazen.lua && \
+	echo "----------------\nAll tests passed for STATIC binary build\n----------------"
 
 clean:
 	rm -rf ${luasand}

@@ -16,7 +16,6 @@ before_install:
   - git submodule update --init --recursive 
 
 script:
-  - make bootstrap
-  - make
+  - make shared
   - make check
 
