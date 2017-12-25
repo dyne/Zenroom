@@ -54,7 +54,7 @@ luasandbox:
 	if ! [ -r ${pwd}/build/lua_sandbox/src/libluasandbox.a ]; then make -C ${luasand} luasandbox; fi
 
 luazen:
-	make -C ${pwd}/build/luazen
+	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/build/luazen
 
 check-shared: test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
 check-shared:
