@@ -13,7 +13,7 @@ js: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc
 js: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom.js ${LDFLAGS} ${LDADD}
 
-static: LDADD   += ../build/jemalloc/lib/libjemalloc.a
+static: LDADD	+= ../build/jemalloc/lib/libjemalloc.a
 static: LDADD   += ../build/pbc/.libs/libpbc.a
 static: CC := ../build/musl/obj/musl-gcc
 static: CFLAGS += -Os -fstack-protector -Wall -Wextra -pedantic -std=gnu99
@@ -22,8 +22,9 @@ static: LDFLAGS += -static
 static: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-static ${LDFLAGS} ${LDADD}
 
+shared: LDADD	+= ../build/jemalloc/lib/libjemalloc.a
 shared: CFLAGS+=  -O3 -Wall
-shared: LDADD+=   -lm -ldl
+shared: LDADD+=   -lm -ldl -lpthread
 shared: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-shared ${LDFLAGS} ${LDADD}
 

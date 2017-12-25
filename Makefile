@@ -2,8 +2,8 @@ pwd := $(shell pwd)
 luasand := ${pwd}/build/lua_sandbox
 
 # for js (emscripten)
-gcc := ${EMSCRIPTEN}/emcc
-cflags := -O3 -fstack-protector
+gcc := gcc
+cflags := -O2 -fstack-protector
 
 test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
 
@@ -33,7 +33,7 @@ static: bootstrap patches jemalloc luasandbox gmp pbc luazen
 
 shared: gcc := gcc
 shared: cflags := -O2 -fstack-protector
-shared: patches jemalloc luasandbox gmp pbc luazen
+shared: patches jemalloc luasandbox luazen
 	CC=${gcc} make -C src shared
 
 gmp:
