@@ -5,7 +5,7 @@
 Restricted execution environment for a turing-incomplete language implementation to be used in untrusted distributed computing, i.e. for distributed ledger or blockchain smart contracts.
 
 
-[![Build Status](https://travis-ci.org/DECODEproject/lua-zenroom.svg?branch=master)](https://travis-ci.org/DECODEproject/lua-zenroom)
+[![Build Status](https://travis-ci.org/DECODEproject/zenroom.svg?branch=master)](https://travis-ci.org/DECODEproject/zenroom)
 
 This README documentation is operational. For more information on the purpose and design of this software see:
 
