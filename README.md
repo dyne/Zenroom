@@ -1,11 +1,25 @@
-# LUA Zenroom - DECODE project
+# Zenroom - DECODE project
 
-Restricted execution environment for LUA based blockchain language
-implementation. For more information see [docs](docs).
+[![software by Dyne.org](https://www.dyne.org/wp-content/uploads/2015/12/software_by_dyne.png)](http://www.dyne.org)
 
-The binary produced is fully static and designed to be executed as a new process for each new script.
+Restricted execution environment for a turing-incomplete language implementation to be used in untrusted distributed computing, i.e. for distributed ledger or blockchain smart contracts.
+
+
+[![Build Status](https://travis-ci.org/DECODEproject/lua-zenroom.svg?branch=master)](https://travis-ci.org/DECODEproject/lua-zenroom)
+
+This README documentation is operational. For more information on the purpose and design of this software see:
+
+- The DECODE Project website: https://decodeproject.eu
+- The Zenroom whitepaper and API documentation: https://decodeproject.github.io/zenroom
 
 ## Build instructions
+
+The Zenroom compiles the same base sourcecode to 3 different POSIX
+compatible ELF binary targets. They are:
+
+1. Shared executable linked to a system-wide libc, libm and libpthread (mostly for debugging)
+2. Fully static executable linked to musl-libc (to be operated on embedded platforms)
+3. Javascript module to be operated from a browser or NodeJS (for web based operations)
 
 If you have cloned this source code from git, then do:
 
@@ -13,27 +27,34 @@ If you have cloned this source code from git, then do:
 git submodule update --init --recursive
 ```
 
-Then first build the static build environment (musl-libc): this needs to be done only once at the beginning of new builds:
+Then first build the shared executable environment:
 
 ```
-make bootstrap
+make shared
 ```
-
-Then at last run the build command:
-
-```
-make
-```
-
 To run tests:
 
 ```
-make check
+make check-shared
+```
+
+To build the static environment:
+
+```
+make bootstrap
+make static
+make check-static
+```
+
+For the Javascript module:
+
+```
+make js
 ```
 
 ## Crypto functionalities
 
-This interpreter includes statically the following cryptographic primitives:
+The Zenroom language interpreter includes statically the following cryptographic primitives:
 
 - **Norx** authenticated encryption with additional data (AEAD) - this is the default 64-4-1 variant (256-bit key and nonce, 4 rounds)
 - **Blake2b** cryptographic hash function
@@ -50,7 +71,7 @@ Compression functions based on **BriefLZ** are also included.
 
 ## Acknowledgements
 
-Copyright (C) 2017 by Dyne.org foundation, Amsterdam
+Copyright (C) 2017-2018 by Dyne.org foundation, Amsterdam
 
 Designed, written and maintained by Denis Roio <jaromil@dyne.org>
 
