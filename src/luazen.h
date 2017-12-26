@@ -33,13 +33,17 @@ int lz_b58decode(lua_State *L);
 
 const struct luaL_Reg luazen[] = {
 	{"randombytes", lz_randombytes},
-	//
-	{"encrypt_aead", lz_aead_encrypt},
-	{"decrypt_aead", lz_aead_decrypt},
-	//
-	{"keypair_x25519", lz_x25519_keypair},
-	{"pubkey_x25519", lz_x25519_public_key},
-	{"dhxkey_x25519", lz_key_exchange},
+
+	// Symmetric encryption with Norx AEAD
+	{"encrypt_norx", lz_aead_encrypt},
+	{"decrypt_norx", lz_aead_decrypt},
+
+	// Asymmetric shared secret session with x25519
+	// all secrets are 32 bytes long
+	{"keygen_session_x25519", lz_x25519_keypair},
+	{"pubkey_session_x25519", lz_x25519_public_key},
+	// session shared secret hashed by blake2b
+	{"exchange_session_x25519", lz_key_exchange},
 
 	// Blake2b hashing function
 	{"hash_blake2b", lz_blake2b},
@@ -47,13 +51,11 @@ const struct luaL_Reg luazen[] = {
 	{"hash_update_blake2b", lz_blake2b_update},
 	{"hash_final_blake2b", lz_blake2b_final},
 
-	// TODO: ed25519 compare to milagro and choose
-	{"keypair_sign", lz_sign_keypair},
-	{"pubkey_sign", lz_sign_public_key},
-
-	// TODO: specify algo
-	{"sign", lz_sign},
-	{"check", lz_check},
+	// Asymmetric signing with ed25519
+	{"keygen_sign_ed25519", lz_sign_keypair},
+	{"pubkey_sign_ed25519", lz_sign_public_key},
+	{"sign_ed25519", lz_sign},
+	{"check_ed25519", lz_check},
 
 	// Key Derivation Function
 	{"kdf_argon2i", lz_argon2i},

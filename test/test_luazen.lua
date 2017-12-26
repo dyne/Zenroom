@@ -230,53 +230,53 @@ a = ('a'):rep(16)  -- aad  (61 61 ...)
 z = ('z'):rep(8)   -- zad  (7a 7a ...)
 m = ('\0'):rep(83) -- plain text
 
-c = encrypt_aead(k, n, m, 0, a, z)
+c = encrypt_norx(k, n, m, 0, a, z)
 assert(#c == #a + #m + 32 + #z)
-mm, aa, zz = decrypt_aead(k, n, c, 0, 16, 8)
+mm, aa, zz = decrypt_norx(k, n, c, 0, 16, 8)
 assert(mm == m and aa == a and zz == z)
 
 -- test defaults
-c = encrypt_aead(k, n, m, 0, a) -- no zad
+c = encrypt_norx(k, n, m, 0, a) -- no zad
 assert(#c == #a + #m + 32)
-mm, aa, zz = decrypt_aead(k, n, c, 0, 16)
+mm, aa, zz = decrypt_norx(k, n, c, 0, 16)
 assert(mm == m and aa == a and #zz == 0)
 --
-c = encrypt_aead(k, n, m) -- no ninc, no aad, no zad
+c = encrypt_norx(k, n, m) -- no ninc, no aad, no zad
 assert(#c == #m + 32)
-mm, aa, zz = decrypt_aead(k, n, c)
+mm, aa, zz = decrypt_norx(k, n, c)
 assert(mm == m and #aa == 0 and #zz == 0)
 
 -- same encryption stream
 m1 = ('\0'):rep(85) -- plain text
-c1 = encrypt_aead(k, n, m1)
+c1 = encrypt_norx(k, n, m1)
 assert(c1:sub(1,83) == c:sub(1,83))
 
 -- mac error
-r, msg = decrypt_aead(k, n, c .. "!")
+r, msg = decrypt_norx(k, n, c .. "!")
 assert(not r and msg == "decrypt error")
 --
-c = encrypt_aead(k, n, m, 0, a, z)
-r, msg = decrypt_aead(k, n, c) -- no aad and zad
+c = encrypt_norx(k, n, m, 0, a, z)
+r, msg = decrypt_norx(k, n, c) -- no aad and zad
 assert(not r and msg == "decrypt error")
 -- replace unencrypted aad 'aaa...' with 'bbb...'
 c1 = ('b'):rep(16) .. c:sub(17); assert(#c == #c1)
-r, msg = decrypt_aead(k, n, c1, 0, 16, 8)
+r, msg = decrypt_norx(k, n, c1, 0, 16, 8)
 assert(not r and msg == "decrypt error")
 
 -- test nonce increment
-c = encrypt_aead(k, n, m) 
-c1 = encrypt_aead(k, n, m, 1) 
-c2 = encrypt_aead(k, n, m, 2) 
+c = encrypt_norx(k, n, m) 
+c1 = encrypt_norx(k, n, m, 1) 
+c2 = encrypt_norx(k, n, m, 2) 
 assert(#c1 == #m + 32)
 assert((c ~= c1) and (c ~= c2) and (c1 ~= c2))
-r, msg = decrypt_aead(k, n, c1)
+r, msg = decrypt_norx(k, n, c1)
 assert(not r and msg == "decrypt error")
-r, msg = decrypt_aead(k, n, c1, 1)
+r, msg = decrypt_norx(k, n, c1, 1)
 assert(r == m)
 
 -- check aliases: removed. these are different functions in Lua5.1 !!
---~ assert(encrypt_aead == encrypt)
---~ assert(decrypt_aead == decrypt)
+--~ assert(encrypt_norx == encrypt)
+--~ assert(decrypt_norx == decrypt)
 
 ------------------------------------------------------------------------
 -- blake2b tests
@@ -333,12 +333,12 @@ assert(dig51==dig55)
 
 print("testing x25519 key exchange...")
 
-apk, ask = keypair_x25519() -- alice keypair
-bpk, bsk = keypair_x25519() -- bob keypair
-assert(apk == pubkey_x25519(ask))
+apk, ask = keygen_session_x25519() -- alice keypair
+bpk, bsk = keygen_session_x25519() -- bob keypair
+assert(apk == pubkey_session_x25519(ask))
 
-k1 = dhxkey_x25519(ask, bpk)
-k2 = dhxkey_x25519(bsk, apk)
+k1 = exchange_session_x25519(ask, bpk)
+k2 = exchange_session_x25519(bsk, apk)
 assert(k1 == k2)
 
 
@@ -349,18 +349,18 @@ print("testing ed25519 signature...")
 
 t = "The quick brown fox jumps over the lazy dog"
 
-pk, sk = keypair_sign() -- signature keypair
-assert(pk == pubkey_sign(sk))
+pk, sk = keygen_sign_ed25519() -- signature keypair
+assert(pk == pubkey_sign_ed25519(sk))
 
-sig = sign(sk, pk, t)
+sig = sign_ed25519(sk, pk, t)
 assert(#sig == 64)
 --~ px(sig, 'sig')
 
 -- check signature
-assert(check(sig, pk, t))
+assert(check_ed25519(sig, pk, t))
 
 -- modified text doesn't check
-assert(not check(sig, pk, t .. "!"))
+assert(not check_ed25519(sig, pk, t .. "!"))
 
 
 ------------------------------------------------------------------------
