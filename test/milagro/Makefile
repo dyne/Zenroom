@@ -10,8 +10,6 @@ all:
 check: all
 	@echo "------\nRSA tests\n------"
 	@./test_rsa
-	@echo "------\nECM tests\n------"
-	@./test_ecm
 	@echo "------\nECDH tests\n------"
 	@./test_ecdh
 
