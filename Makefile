@@ -31,6 +31,10 @@ static: cflags := -Os -fstack-protector -static
 static: bootstrap patches jemalloc luasandbox gmp pbc luazen milagro
 	CC=${gcc} make -C src static
 
+system-static: cflags := -Os -fstack-protector-all -static
+system-static: patches jemalloc luasandbox luazen milagro
+	CC=${gcc} make -C src system-static
+
 shared: gcc := gcc
 shared: cflags := -O2 -fstack-protector
 shared: patches jemalloc luasandbox luazen milagro
