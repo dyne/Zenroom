@@ -49,8 +49,10 @@ under the License.
 #define AMCL_VERSION_MAJOR 1
 #define AMCL_VERSION_MINOR 1
 #define AMCL_VERSION_PATCH 0
-#define OS "Linux"
+#define OS "Linux" // (tm) is a Trademark of Linus Torvalds and the Linux Foundation
 #define USE_PATENTS
+/* software patents aren't valid in Europe. */
+
 /* #undef USE_ANONYMOUS */
 
 /* Support for C99?  Note for GCC need to explicitly include -std=c99 in command line */
@@ -74,6 +76,9 @@ under the License.
 #endif
 
 /* modulus types */
+
+// TODO: the compile-time configurable settings below need review by
+// staff of the University College London and Radboud Universiteit
 
 #define NOT_SPECIAL 0			/**< Modulus of no exploitable form */
 #define PSEUDO_MERSENNE 1		/**< Pseudo-mersenne modulus of form $2^n-c$  */
@@ -105,7 +110,7 @@ under the License.
 
 /*** START OF USER CONFIGURABLE SECTION - set architecture and choose modulus and curve  ***/
 
-#define CHUNK 64 	/**< size of chunk in bits = wordlength of computer = 16, 32 or 64. Note not all curve options are supported on 16-bit processors - see rom.c */
+#define CHUNK 32 	/**< size of chunk in bits = wordlength of computer = 16, 32 or 64. Note not all curve options are supported on 16-bit processors - see rom.c */
 #define CHOICE  C25519	/**< Current choice of Field */
 #define FIELD_CHOICE "C25519"
 /* For some moduli only WEIERSTRASS curves are supported. For others there is a choice of WEIERSTRASS, EDWARDS or MONTGOMERY curves. See above. */
