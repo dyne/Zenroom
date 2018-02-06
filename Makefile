@@ -1,9 +1,10 @@
 pwd := $(shell pwd)
 luasand := ${pwd}/build/lua_sandbox
 
-# for js (emscripten)
+# default
 gcc := gcc
-cflags := -O2 -fstack-protector
+cflags_protection := -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
+cflags := -O2 ${cflags_protection}
 
 test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
 
@@ -14,31 +15,31 @@ patches:
 	./build/apply-patches
 
 js: gcc=${EMSCRIPTEN}/emcc
-js: cflags := -O3 -fstack-protector
+js: cflags := -O3 ${cflags_protection}
 js: patches luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C src js
 
 bootstrap: musl := ${pwd}/build/musl
 bootstrap: gcc := ${musl}/obj/musl-gcc
-bootstrap: cflags := -Os -fstack-protector -static
+bootstrap: cflags := -Os -static ${cflags_protection}
 bootstrap:
 	if ! [ -r ${gcc} ]; then mkdir -p ${musl} && cd ${musl} && CFLAGS="${cflags}" ${pwd}/lib/musl/configure; fi
 	make -j2 -C ${musl}
 
 static: musl := ${pwd}/build/musl
 static: gcc := ${musl}/obj/musl-gcc
-static: cflags := -Os -fstack-protector -static
+static: cflags := -Os -static ${cflags_protection}
 static: bootstrap patches jemalloc luasandbox gmp pbc luazen milagro
-	CC=${gcc} make -C src static
+	CC=${gcc} CFLAGS="${cflags}" make -C src static
 
-system-static: cflags := -Os -fstack-protector-all -static
+system-static: cflags := -Os -static ${cflags_protection}
 system-static: patches jemalloc luasandbox luazen milagro
-	CC=${gcc} make -C src system-static
+	CC=${gcc} CFLAGS="${cflags}" make -C src system-static
 
 shared: gcc := gcc
-shared: cflags := -O2 -fstack-protector
+shared: cflags := -O2 -fPIC ${cflags_protection}
 shared: patches jemalloc luasandbox luazen milagro
-	CC=${gcc} make -C src shared
+	CC=${gcc} CFLAGS="${cflags}" make -C src shared
 
 gmp:
 	cd ${pwd}/lib/gmp && CFLAGS="${cflags}" CC=${gcc} ./configure --disable-shared
@@ -54,8 +55,8 @@ jemalloc:
 	if ! [ -r ${pwd}/build/jemalloc/lib/libjemalloc.a ]; then cd ${pwd}/build/jemalloc && CFLAGS="${cflags}" CC=${gcc} ${pwd}/lib/jemalloc/configure --disable-cxx && make -C ${pwd}/build/jemalloc; fi
 
 luasandbox:
-	if ! [ -r ${luasand}/CMakeCache.txt ]; then mkdir -p ${luasand} && cd ${luasand} && CC=${gcc} cmake ${pwd}/lib/lua_sandbox -DCMAKE_C_FLAGS="${cflags}" ; fi
-	if ! [ -r ${pwd}/build/lua_sandbox/src/libluasandbox.a ]; then make -C ${luasand} luasandbox; fi
+	if ! [ -r ${luasand}/CMakeCache.txt ]; then mkdir -p ${luasand} && cd ${luasand} && CC=${gcc} cmake ${pwd}/lib/lua_sandbox -DCMAKE_C_FLAGS="${cflags}"; fi
+	if ! [ -r ${pwd}/build/lua_sandbox/src/libluasandbox.a ]; then VERBOSE=1 CFLAGS="${cflags}" make -C ${luasand} luasandbox; fi
 
 luazen:
 	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/build/luazen
