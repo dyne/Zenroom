@@ -1,0 +1,21 @@
+diff --git a/configure.ac b/configure.ac
+index 7544f57e..a55e4c2e 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -1607,15 +1607,6 @@ if test "x$enable_syscall" = "x1" ; then
+   fi
+ fi
+
+-dnl Check if the GNU-specific secure_getenv function exists.
+-AC_CHECK_FUNC([secure_getenv],
+-              [have_secure_getenv="1"],
+-              [have_secure_getenv="0"]
+-             )
+-if test "x$have_secure_getenv" = "x1" ; then
+-  AC_DEFINE([JEMALLOC_HAVE_SECURE_GETENV], [ ])
+-fi
+-
+ dnl Check if the GNU-specific sched_getcpu function exists.
+ AC_CHECK_FUNC([sched_getcpu],
+               [have_sched_getcpu="1"],
+
