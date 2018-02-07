@@ -15,7 +15,6 @@ js: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom.js ${LDFLAGS} ${LDADD}
 
 static: LDADD	+= ../build/jemalloc/lib/libjemalloc.a
-static: LDADD   += ../build/pbc/.libs/libpbc.a
 static: CC := ../build/musl/obj/musl-gcc
 static: CFLAGS += -Os -fstack-protector -Wall -Wextra -pedantic -std=gnu99
 static: LDADD  += ../build/musl/lib/libc.a

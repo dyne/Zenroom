@@ -29,7 +29,7 @@ bootstrap:
 static: musl := ${pwd}/build/musl
 static: gcc := ${musl}/obj/musl-gcc
 static: cflags := -Os -static ${cflags_protection}
-static: bootstrap patches jemalloc luasandbox gmp pbc luazen milagro
+static: bootstrap patches jemalloc luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C src static
 
 system-static: cflags := -Os -static ${cflags_protection}
