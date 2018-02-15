@@ -39,7 +39,7 @@
 
 #include <luazen.h>
 
-#define CONF "decode-exec.conf"
+#define CONF "zenroom.conf"
 
 #define MAX_SCRIPT 102400 // process max 100Kb scripts
 #define MAX_CONF 1024 // load max 1Kb confs
@@ -71,11 +71,12 @@ void logger(void *context, const char *component,
 
 int main(int argc, char **argv) {
 	lsb_lua_sandbox *lsb = NULL;
-	char conffile[512] = CONF;
-	char scriptfile[512];
-	char conf[MAX_CONF];
-	char script[MAX_SCRIPT];
+	static char conffile[512] = "zenroom.conf";
+	static char scriptfile[512] = "zenroom.lua";
+	static char conf[MAX_CONF];
+	static char script[MAX_SCRIPT];
 	int fdconf, fdscript;
+	size_t readin;
 
 	char *p;
 	int opt, index;
@@ -119,7 +120,12 @@ int main(int argc, char **argv) {
 		error("Error opening %s: %s", scriptfile, strerror(errno));
 		close(fdscript);
 		exit(1); }
-	read(fdscript, script, MAX_SCRIPT);
+	readin = read(fdscript, script, MAX_SCRIPT);
+	if(readin<0) {
+		error("Error reading %s: %s", scriptfile, strerror(errno));
+		close(fdscript);
+		exit(1); }
+	act("script size: %u", readin);
 	func("script contents:\n%s\n", script);
 	close(fdscript);
 
@@ -129,20 +135,18 @@ int main(int argc, char **argv) {
 		error("Error opening %s: %s", conffile, strerror(errno));
 		close(fdconf);
 		exit(1); }
-	read(fdconf, conf, MAX_SCRIPT);
+	readin = read(fdconf, conf, MAX_SCRIPT);
+	if(readin<0) {
+		error("Error reading %s: %s", conffile, strerror(errno));
+		close(fdconf);
+		exit(1); }
+	act("conf size: %u", readin);
 	act("configuration: $s", conffile);
 	func("conf contents:\n%s\n", conf);
 	close(fdscript);
 
 
-	// TODO: pass config file and script to javascript
-
-	// conf = lsb_read_file(conffile);
-	// if(!conf) {
-	// 	error("Error loading configuration: %s",conffile);
-	// 	exit(1);
-	// } else act("conf: %s", conffile);
-	// func("\n%s",conf);
+	// TODO: how to pass config file and script to javascript?
 
 	lsb_logger lsb_vm_logger = { .context = scriptfile, .cb = logger };
 

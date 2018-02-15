@@ -14,10 +14,18 @@ bootstrap-check:
 patches:
 	./build/apply-patches
 
+# TODO: improve flags according to
+# https://github.com/kripken/emscripten/blob/master/src/settings.js
 js: gcc=${EMSCRIPTEN}/emcc
 js: cflags := -O3 ${cflags_protection}
 js: patches luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C src js
+
+wasm: gcc=${EMSCRIPTEN}/emcc
+wasm: cflags := -O3 ${cflags_protection}
+wasm: ldflags := -sWASM=1 -s"BINARYEN_METHOD='native-wasm'"
+wasm: patches luasandbox luazen milagro
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 
 bootstrap: musl := ${pwd}/build/musl
 bootstrap: gcc := ${musl}/obj/musl-gcc
@@ -50,13 +58,15 @@ pbc:
 	if ! [ ${pwd}/build/pbc/.libs/libpbc.a ]; then cd ${pwd}/build/pbc && CFLAGS="${cflags}" CC=${gcc} ${pwd}/lib/pbc/configure --disable-shared &&	make -C ${pwd}/build/pbc LDFLAGS="-L${pwd}/lib/gmp/.libs -l:libgmp.a" CFLAGS="${cflags} -I${pwd}/lib/gmp -I${pwd}/lib/pbc/include"; return 0; fi
 
 jemalloc:
+	@echo "-- Building jemalloc"
 	mkdir -p ${pwd}/build/jemalloc
 	if ! [ -r ${pwd}/lib/jemalloc/configure ]; then cd ${pwd}/lib/jemalloc &&  ${pwd}/lib/jemalloc/autogen.sh; fi
 	if ! [ -r ${pwd}/build/jemalloc/lib/libjemalloc.a ]; then cd ${pwd}/build/jemalloc && CFLAGS="${cflags}" CC=${gcc} ${pwd}/lib/jemalloc/configure --disable-cxx && make -C ${pwd}/build/jemalloc; fi
 
 luasandbox:
-	if ! [ -r ${luasand}/CMakeCache.txt ]; then mkdir -p ${luasand} && cd ${luasand} && CC=${gcc} cmake ${pwd}/lib/lua_sandbox -DCMAKE_C_FLAGS="${cflags}"; fi
-	if ! [ -r ${pwd}/build/lua_sandbox/src/libluasandbox.a ]; then VERBOSE=1 CFLAGS="${cflags}" make -C ${luasand} luasandbox; fi
+	@echo "-- Building lua_sandbox"
+	mkdir -p ${luasand} && cd ${luasand} && CC=${gcc} cmake ${pwd}/lib/lua_sandbox -DCMAKE_C_FLAGS="${cflags}"
+	VERBOSE=1 CFLAGS="${cflags}" make -C ${luasand} luasandbox
 
 luazen:
 	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/build/luazen
