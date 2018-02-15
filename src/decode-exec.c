@@ -22,6 +22,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+// open/close
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+// read
+#include <unistd.h>
+
+#include <errno.h>
+
 #include <jutils.h>
 
 #include <luasandbox.h>
@@ -31,6 +40,9 @@
 #include <luazen.h>
 
 #define CONF "decode-exec.conf"
+
+#define MAX_SCRIPT 102400 // process max 100Kb scripts
+#define MAX_CONF 1024 // load max 1Kb confs
 
 // prototypes from lua_functions
 void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val);
@@ -60,8 +72,11 @@ void logger(void *context, const char *component,
 int main(int argc, char **argv) {
 	lsb_lua_sandbox *lsb = NULL;
 	char conffile[512] = CONF;
-	char codefile[512];
-	char *conf = NULL;
+	char scriptfile[512];
+	char conf[MAX_CONF];
+	char script[MAX_SCRIPT];
+	int fdconf, fdscript;
+
 	char *p;
 	int opt, index;
 	int return_code = 1; // return error by default
@@ -69,10 +84,10 @@ int main(int argc, char **argv) {
 	const char *short_options = "hdc:";
     const char *help =
 		"Usage: zenroom [-c config] script.lua\n";
-    codefile[0] = '\0';
+    scriptfile[0] = '\0';
 
 	notice( "LUA Restricted execution environment %s",VERSION);
-	act("Copyright (C) 2017 Dyne.org foundation");
+	act("Copyright (C) 2017-2018 Dyne.org foundation");
 	while((opt = getopt(argc, argv, short_options)) != -1) {
 		switch(opt) {
 		case 'd':
@@ -90,25 +105,48 @@ int main(int argc, char **argv) {
 		}
 	}
 	for (index = optind; index < argc; index++) {
-		snprintf(codefile,511,"%s",argv[index]);
-		act("code: %s", codefile);
+		snprintf(scriptfile,511,"%s",argv[index]);
+		act("script: %s", scriptfile);
 	}
-	if(codefile[0] == '\0') {
+	if(scriptfile[0] == '\0') {
 		error("No script specified.");
 		error(help);
 		exit(1);
 	}
 
-	conf = lsb_read_file(conffile);
-	if(!conf) {
-		error("Error loading configuration: %s",conffile);
-		exit(1);
-	} else act("conf: %s", conffile);
-	func("\n%s",conf);
+	fdscript = open(scriptfile, O_RDONLY);
+	if(fdscript<0) {
+		error("Error opening %s: %s", scriptfile, strerror(errno));
+		close(fdscript);
+		exit(1); }
+	read(fdscript, script, MAX_SCRIPT);
+	func("script contents:\n%s\n", script);
+	close(fdscript);
 
-	lsb_logger lsb_vm_logger = { .context = codefile, .cb = logger };
 
-	lsb = lsb_create(NULL, codefile, conf, &lsb_vm_logger);
+	fdconf = open(conffile, O_RDONLY);
+	if(fdconf<0) {
+		error("Error opening %s: %s", conffile, strerror(errno));
+		close(fdconf);
+		exit(1); }
+	read(fdconf, conf, MAX_SCRIPT);
+	act("configuration: $s", conffile);
+	func("conf contents:\n%s\n", conf);
+	close(fdscript);
+
+
+	// TODO: pass config file and script to javascript
+
+	// conf = lsb_read_file(conffile);
+	// if(!conf) {
+	// 	error("Error loading configuration: %s",conffile);
+	// 	exit(1);
+	// } else act("conf: %s", conffile);
+	// func("\n%s",conf);
+
+	lsb_logger lsb_vm_logger = { .context = scriptfile, .cb = logger };
+
+	lsb = lsb_create(NULL, scriptfile, conf, &lsb_vm_logger);
 	if(!lsb) {
 		error("Error creating sandbox: %s", lsb_get_error(lsb));
 	} else {
