@@ -186,7 +186,7 @@ do
 end
 
 function F(a)
-  assert(debug.getinfo(1, "n").name == 'F')
+--  assert(debug.getinfo(1, "n").name == 'F')
   return a,2,3
 end
 

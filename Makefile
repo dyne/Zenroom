@@ -93,6 +93,7 @@ clean:
 	rm -rf ${luasand}
 	make -C src clean
 	make -C ${pwd}/build/luazen clean
+	make -C ${pwd}/lib/milagro-c clean
 
 distclean:
 	rm -rf ${musl}
