@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
 		error("Error opening %s: %s", conffile, strerror(errno));
 		close(fdconf);
 		exit(1); }
-	readin = read(fdconf, conf, MAX_SCRIPT);
+	readin = read(fdconf, conf, MAX_CONF);
 	if(readin<0) {
 		error("Error reading %s: %s", conffile, strerror(errno));
 		close(fdconf);
@@ -157,7 +157,7 @@ int main(int argc, char **argv) {
 		const luaL_Reg *lib;
 		const char *r;
 		// load our own extensions
-		lib = &luazen;
+		lib = (luaL_Reg*) &luazen;
 		func("loading crypto extensions");
 		for (; lib->func; lib++) {
 			func("%s",lib->name);
@@ -186,7 +186,6 @@ int main(int argc, char **argv) {
 	}
 
 	act("DECODE exec terminating.");
-	if(conf) free(conf);
 	if(lsb) {
 		lsb_pcall_teardown(lsb);
 		lsb_stop_sandbox_clean(lsb);

@@ -27,6 +27,13 @@ wasm: ldflags := -sWASM=1 -s"BINARYEN_METHOD='native-wasm'"
 wasm: patches luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 
+html: gcc=${EMSCRIPTEN}/emcc
+html: cflags := -O3 ${cflags_protection}
+html: ldflags := -s"EXPORTED_FUNCTIONS=\"['main']\""
+
+html: patches luasandbox luazen milagro
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src html
+
 bootstrap: musl := ${pwd}/build/musl
 bootstrap: gcc := ${musl}/obj/musl-gcc
 bootstrap: cflags := -Os -static ${cflags_protection}
