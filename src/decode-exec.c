@@ -41,8 +41,8 @@
 
 #define CONF "zenroom.conf"
 
-#define MAX_SCRIPT 102400 // process max 100Kb scripts
-#define MAX_CONF 1024 // load max 1Kb confs
+#define MAX_FILE 102400 // load max 100Kb files
+
 
 // prototypes from lua_functions
 void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val);
@@ -69,19 +69,107 @@ void logger(void *context, const char *component,
 	fflush(stderr);
 }
 
-int main(int argc, char **argv) {
+// simple function to load files with basic open/read that are not
+// wrapped by emscripten to access its virtual filesystem. This
+// function exists the process on failure.
+void load_file(char *dst, char *path) {
+	int fd = open(path, O_RDONLY);
+	size_t readin = 0;
+	if(fd<0) {
+		error("Error opening %s: %s", path, strerror(errno));
+		close(fd);
+		exit(1); }
+	readin = read(fd, dst, MAX_FILE);
+	if(readin<0) {
+		error("Error reading %s: %s", path, strerror(errno));
+		close(fd);
+		exit(1); }
+	act("loaded file: %s", path);
+	act("file size: %u", readin);
+	func("file contents:\n%s\n", dst);
+	close(fd);
+}
+
+int zenroom_exec(char *scriptfile, char *conffile, int debuglevel) {
+	// the sandbox context (can be initialised only once)
+	// stores the script file and configuration
 	lsb_lua_sandbox *lsb = NULL;
+	char script[MAX_FILE];
+	char conf[MAX_FILE];
+	int usage;
+	int return_code = 1; // return error by default
+	char *p;
+	const luaL_Reg *lib;
+	const char *r;
+
+	if(scriptfile[0] == '\0') {
+		error("No script specified at init().");
+		exit(1); }
+	if(conffile[0] == '\0') {
+		error("No config specified at init.");
+		exit(1); }
+	set_debug(debuglevel);
+
+	load_file(script, scriptfile);
+	load_file(conf, conffile);
+
+	// TODO: how to pass config file and script to javascript?
+
+	lsb_logger lsb_vm_logger = { .context = scriptfile, .cb = logger };
+
+	lsb = lsb_create(NULL, scriptfile, conf, &lsb_vm_logger);
+	if(!lsb) {
+		error("Error creating sandbox: %s", lsb_get_error(lsb));
+		exit(1); }
+
+	// load our own extensions
+	lib = (luaL_Reg*) &luazen;
+	func("loading crypto extensions");
+	for (; lib->func; lib++) {
+		func("%s",lib->name);
+		lsb_add_function(lsb, lib->func, lib->name);
+	}
+
+	// initialise global variables
+	lsb_setglobal_string(lsb, "VERSION", VERSION);
+	lsb_openlibs(lsb);
+
+	r = lsb_init(lsb, NULL);
+	if(r) {
+		error(r);
+		error(lsb_get_error(lsb));
+		error("Error detected. Execution aborted.");
+		lsb_pcall_teardown(lsb);
+		lsb_stop_sandbox_clean(lsb);
+		p = lsb_destroy(lsb);
+		if(p) free(p);
+		exit(1);
+	}
+	return_code = 0; // return success
+	// debugging stats here
+	// while(lsb_get_state(lsb) == LSB_RUNNING)
+	//  act("running...");
+
+	usage = lsb_usage(lsb, LSB_UT_MEMORY, LSB_US_CURRENT);
+	act("used memory: %u bytes", usage);
+	usage = lsb_usage(lsb, LSB_UT_INSTRUCTION, LSB_US_CURRENT);
+	act("executed operations: %u", usage);
+
+	act("Zenroom operations completed.");
+
+	lsb_pcall_teardown(lsb);
+	lsb_stop_sandbox_clean(lsb);
+	p = lsb_destroy(lsb);
+	if(p) free(p);
+	return(return_code);
+}
+
+int main(int argc, char **argv) {
 	static char conffile[512] = "zenroom.conf";
 	static char scriptfile[512] = "zenroom.lua";
-	static char conf[MAX_CONF];
-	static char script[MAX_SCRIPT];
-	int fdconf, fdscript;
-	size_t readin;
-
-	char *p;
 	int opt, index;
-	int return_code = 1; // return error by default
-
+	int debuglevel = 1;
+	int ret;
 	const char *short_options = "hdc:";
     const char *help =
 		"Usage: zenroom [-c config] script.lua\n";
@@ -92,7 +180,7 @@ int main(int argc, char **argv) {
 	while((opt = getopt(argc, argv, short_options)) != -1) {
 		switch(opt) {
 		case 'd':
-			set_debug(3);
+			debuglevel = 3;
 			break;
 		case 'h':
 			fprintf(stdout,"%s",help);
@@ -109,88 +197,8 @@ int main(int argc, char **argv) {
 		snprintf(scriptfile,511,"%s",argv[index]);
 		act("script: %s", scriptfile);
 	}
-	if(scriptfile[0] == '\0') {
-		error("No script specified.");
-		error(help);
-		exit(1);
-	}
 
-	fdscript = open(scriptfile, O_RDONLY);
-	if(fdscript<0) {
-		error("Error opening %s: %s", scriptfile, strerror(errno));
-		close(fdscript);
-		exit(1); }
-	readin = read(fdscript, script, MAX_SCRIPT);
-	if(readin<0) {
-		error("Error reading %s: %s", scriptfile, strerror(errno));
-		close(fdscript);
-		exit(1); }
-	act("script size: %u", readin);
-	func("script contents:\n%s\n", script);
-	close(fdscript);
-
-
-	fdconf = open(conffile, O_RDONLY);
-	if(fdconf<0) {
-		error("Error opening %s: %s", conffile, strerror(errno));
-		close(fdconf);
-		exit(1); }
-	readin = read(fdconf, conf, MAX_CONF);
-	if(readin<0) {
-		error("Error reading %s: %s", conffile, strerror(errno));
-		close(fdconf);
-		exit(1); }
-	act("conf size: %u", readin);
-	act("configuration: $s", conffile);
-	func("conf contents:\n%s\n", conf);
-	close(fdscript);
-
-
-	// TODO: how to pass config file and script to javascript?
-
-	lsb_logger lsb_vm_logger = { .context = scriptfile, .cb = logger };
-
-	lsb = lsb_create(NULL, scriptfile, conf, &lsb_vm_logger);
-	if(!lsb) {
-		error("Error creating sandbox: %s", lsb_get_error(lsb));
-	} else {
-		const luaL_Reg *lib;
-		const char *r;
-		// load our own extensions
-		lib = (luaL_Reg*) &luazen;
-		func("loading crypto extensions");
-		for (; lib->func; lib++) {
-			func("%s",lib->name);
-			lsb_add_function(lsb, lib->func, lib->name);
-		}
-
-		// initialise global variables
-		lsb_setglobal_string(lsb, "VERSION", VERSION);
-		lsb_openlibs(lsb);
-
-		r = lsb_init(lsb, NULL);
-		if(r) {
-			error(r);
-			error(lsb_get_error(lsb));
-			error("Error detected. Execution aborted.");
-		}
-		return_code = 0; // return success
-		// debugging stats here
-		// while(lsb_get_state(lsb) == LSB_RUNNING)
-		// 	act("running...");
-		int u;
-		u = lsb_usage(lsb, LSB_UT_MEMORY, LSB_US_CURRENT);
-		act("used memory: %u bytes", u);
-		u = lsb_usage(lsb, LSB_UT_INSTRUCTION, LSB_US_CURRENT);
-		act("executed operations: %u", u);
-	}
-
-	act("DECODE exec terminating.");
-	if(lsb) {
-		lsb_pcall_teardown(lsb);
-		lsb_stop_sandbox_clean(lsb);
-		p = lsb_destroy(lsb);
-		if(p) free(p);
-	}
-	exit(return_code);
+	// exit(1) on failure
+	ret = zenroom_exec(scriptfile, conffile, debuglevel);
+	exit(ret);
 }
