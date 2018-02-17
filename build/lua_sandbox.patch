@@ -11,11 +11,24 @@ index beff13e..64a0f43 100644
  set_target_properties(luasandbox PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 0)
  target_link_libraries(luasandbox luasandboxutil ${CMAKE_DL_LIBS})
  if(LIBM_LIBRARY)
+diff --git a/src/luasandbox.c b/src/luasandbox.c
+index d6ff41e..99752b1 100644
+--- a/src/luasandbox.c
++++ b/src/luasandbox.c
+@@ -603,7 +603,7 @@ lsb_err_value lsb_init(lsb_lua_sandbox *lsb, const char *state_file)
+   lsb->usage[LSB_UT_MEMORY][LSB_US_LIMIT] = mem_limit;
+   lua_CFunction pf = lua_atpanic(lsb->lua, unprotected_panic);
+   int jump = setjmp(g_jbuf);
+-  if (jump || luaL_dofile(lsb->lua, lsb->lua_file) != 0) {
++  if (jump || luaL_dostring(lsb->lua, lsb->lua_file) != 0) {
+     int len = snprintf(lsb->error_message, LSB_ERROR_SIZE, "%s",
+                        lua_tostring(lsb->lua, -1));
+     if (len >= LSB_ERROR_SIZE || len < 0) {
 diff --git a/src/util/CMakeLists.txt b/src/util/CMakeLists.txt
 index e0df018..ff3a126 100644
 --- a/src/util/CMakeLists.txt
 +++ b/src/util/CMakeLists.txt
-@@ -15,6 +15,6 @@ string_matcher.c
+@@ -15,7 +15,7 @@ string_matcher.c
  util.c
  )
  
@@ -23,3 +36,4 @@ index e0df018..ff3a126 100644
 +add_library(luasandboxutil STATIC ${UTIL_SRC})
  set_target_properties(luasandboxutil PROPERTIES VERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH} SOVERSION 0)
  target_compile_definitions(luasandboxutil PRIVATE -Dluasandboxutil_EXPORTS)
+ 

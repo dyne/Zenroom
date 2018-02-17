@@ -61,7 +61,7 @@ void logger(void *context, const char *component,
 	(void)level;
 
 	va_list args;
-	fprintf(stderr,"%s: ", component ? component : "unknown");
+	fprintf(stderr,"LUA %s: ", component ? component : "unknown");
 	va_start(args, fmt);
 	vfprintf(stderr, fmt, args);
 	va_end(args);
@@ -90,34 +90,30 @@ void load_file(char *dst, char *path) {
 	close(fd);
 }
 
-int zenroom_exec(char *scriptfile, char *conffile, int debuglevel) {
+int zenroom_exec(char *script, char *conf, int debuglevel) {
 	// the sandbox context (can be initialised only once)
 	// stores the script file and configuration
 	lsb_lua_sandbox *lsb = NULL;
-	char script[MAX_FILE];
-	char conf[MAX_FILE];
 	int usage;
 	int return_code = 1; // return error by default
 	char *p;
 	const luaL_Reg *lib;
 	const char *r;
 
-	if(scriptfile[0] == '\0') {
-		error("No script specified at init().");
+	if(!script) {
+		error("NULL string as script for zenroom_exec()");
 		exit(1); }
-	if(conffile[0] == '\0') {
-		error("No config specified at init.");
+	if(!conf) {
+		error("NULL string as conf for zenroom_exec()");
 		exit(1); }
 	set_debug(debuglevel);
 
-	load_file(script, scriptfile);
-	load_file(conf, conffile);
-
 	// TODO: how to pass config file and script to javascript?
 
-	lsb_logger lsb_vm_logger = { .context = scriptfile, .cb = logger };
+	lsb_logger lsb_vm_logger = { .context = "zenroom_exec",
+	                             .cb = logger };
 
-	lsb = lsb_create(NULL, scriptfile, conf, &lsb_vm_logger);
+	lsb = lsb_create(NULL, script, conf, &lsb_vm_logger);
 	if(!lsb) {
 		error("Error creating sandbox: %s", lsb_get_error(lsb));
 		exit(1); }
@@ -167,6 +163,8 @@ int zenroom_exec(char *scriptfile, char *conffile, int debuglevel) {
 int main(int argc, char **argv) {
 	static char conffile[512] = "zenroom.conf";
 	static char scriptfile[512] = "zenroom.lua";
+	static char script[MAX_FILE];
+	static char conf[MAX_FILE];
 	int opt, index;
 	int debuglevel = 1;
 	int ret;
@@ -198,7 +196,9 @@ int main(int argc, char **argv) {
 		act("script: %s", scriptfile);
 	}
 
+	load_file(script, scriptfile);
+	load_file(conf, conffile);
 	// exit(1) on failure
-	ret = zenroom_exec(scriptfile, conffile, debuglevel);
+	ret = zenroom_exec(script, conf, debuglevel);
 	exit(ret);
 }
