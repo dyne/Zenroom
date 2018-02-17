@@ -2,7 +2,7 @@ CC?=gcc
 VERSION := $(shell cat ../VERSION)
 
 CFLAGS  += -I. -I../lib/lua_sandbox/include
-SOURCES := jutils.o lua_functions.o decode-exec.o
+SOURCES := jutils.o lua_functions.o zenroom.o
 LDADD   := ../build/lua_sandbox/src/libluasandbox.a
 LDADD   += ../build/lua_sandbox/src/util/libluasandboxutil.a
 LDADD   += ../build/luazen/libluazen.a
