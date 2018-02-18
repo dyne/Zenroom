@@ -33,6 +33,8 @@
 
 #include <jutils.h>
 
+#include <frozen.h>
+
 #include <luasandbox.h>
 #include <luasandbox/util/util.h>
 #include <luasandbox/lauxlib.h>
@@ -47,6 +49,7 @@
 // prototypes from lua_functions
 void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val);
 void lsb_openlibs(lsb_lua_sandbox *lsb);
+
 // from timing.c
 // extern int set_hook(lua_State *L);
 
@@ -61,7 +64,7 @@ void logger(void *context, const char *component,
 	(void)level;
 
 	va_list args;
-	fprintf(stderr,"LUA %s: ", component ? component : "unknown");
+	fprintf(stderr,"%s: ", component ? component : "unknown");
 	va_start(args, fmt);
 	vfprintf(stderr, fmt, args);
 	va_end(args);
@@ -90,7 +93,19 @@ void load_file(char *dst, char *path) {
 	close(fd);
 }
 
-int zenroom_exec(char *script, char *conf, int debuglevel) {
+void json_walker(void *c_data, const char *name, size_t name_len,
+                   const char *path, const struct json_token *token) {
+	// first level element
+	if((char)path[0]=='.' && token->type == JSON_TYPE_STRING) {
+		char k[512], v[512];
+		snprintf(k,(name_len>511)?511:name_len+1,"%s",name);
+		snprintf(v,(token->len>511)?511:token->len+1,"%s",token->ptr);
+		lsb_setglobal_string((lsb_lua_sandbox*)c_data,k,v);
+		func("argument set: %s=%s", k, v);
+	}
+}
+
+int zenroom_exec(char *script, char *conf, char *args, int debuglevel) {
 	// the sandbox context (can be initialised only once)
 	// stores the script file and configuration
 	lsb_lua_sandbox *lsb = NULL;
@@ -126,8 +141,13 @@ int zenroom_exec(char *script, char *conf, int debuglevel) {
 		lsb_add_function(lsb, lib->func, lib->name);
 	}
 
+	// load arguments from json if present
+	if(args) {
+		func("walking json:\n%s\n", args);
+		json_walk(args, strlen(args), json_walker, (void*)lsb);
+	}
+
 	// TODO: MILAGRO
-	// TODO: JSON ARGS
 
 	// initialise global variables
 	lsb_setglobal_string(lsb, "VERSION", VERSION);
@@ -166,15 +186,19 @@ int zenroom_exec(char *script, char *conf, int debuglevel) {
 int main(int argc, char **argv) {
 	static char conffile[512] = "zenroom.conf";
 	static char scriptfile[512] = "zenroom.lua";
+	static char argfile[512];
 	static char script[MAX_FILE];
 	static char conf[MAX_FILE];
+	static char args[MAX_FILE];
 	int opt, index;
 	int debuglevel = 1;
 	int ret;
-	const char *short_options = "hdc:";
+	const char *short_options = "hdc:a:";
     const char *help =
 		"Usage: zenroom [-c config] script.lua\n";
+    conffile[0] = '\0';
     scriptfile[0] = '\0';
+    argfile[0] = '\0';
 
 	notice( "LUA Restricted execution environment %s",VERSION);
 	act("Copyright (C) 2017-2018 Dyne.org foundation");
@@ -186,6 +210,9 @@ int main(int argc, char **argv) {
 		case 'h':
 			fprintf(stdout,"%s",help);
 			exit(0);
+			break;
+		case 'a':
+			snprintf(argfile,511,"%s",optarg);
 			break;
 		case 'c':
 			snprintf(conffile,511,"%s",optarg);
@@ -201,7 +228,12 @@ int main(int argc, char **argv) {
 
 	load_file(script, scriptfile);
 	load_file(conf, conffile);
+	load_file(args, argfile);
+
+	if(argfile[0])
+		ret = zenroom_exec(script, conf, args, debuglevel);
+	else
+		ret = zenroom_exec(script, conf, NULL, debuglevel);
 	// exit(1) on failure
-	ret = zenroom_exec(script, conf, debuglevel);
 	exit(ret);
 }
