@@ -41,7 +41,9 @@ win: CFLAGS +=  -O3 -Wall -Wextra -pedantic -std=gnu99
 win: LDFLAGS += -L/usr/x86_64-w64-mingw32/lib -static
 win: LDADD +=  -l:libm.a -l:libpthread.a
 win: ${SOURCES}
-	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.exe ${SOURCES} ${LDADD}
+	./stamp-exe.sh
+	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.exe zenroom.res ${SOURCES} ${LDADD}
+	x86_64-w64-mingw32-strip zenroom.exe
 
 
 debug: CFLAGS+= -ggdb -DDEBUG=1 -Wall
