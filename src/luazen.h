@@ -57,6 +57,10 @@ const struct luaL_Reg luazen[] = {
 	// Symmetric encryption with Norx AEAD
 	{"encrypt_norx", lz_aead_encrypt},
 	{"decrypt_norx", lz_aead_decrypt},
+	// Mostly obsolete symmetric stream-cipher
+	// encrypt and decrypt with same function
+	{"crypt_rc4", lz_rc4},
+	{"crypt_rc4raw", lz_rc4raw},
 
 	// Asymmetric shared secret session with x25519
 	// all secrets are 32 bytes long
@@ -70,6 +74,8 @@ const struct luaL_Reg luazen[] = {
 	{"hash_init_blake2b", lz_blake2b_init},
 	{"hash_update_blake2b", lz_blake2b_update},
 	{"hash_final_blake2b", lz_blake2b_final},
+	// simple MD5 hashing function
+	{"hash_md5", lz_md5},
 
 	// Asymmetric signing with ed25519
 	{"keygen_sign_ed25519", lz_sign_keypair},
@@ -87,9 +93,12 @@ const struct luaL_Reg luazen[] = {
 	// lzf compression
 	{"compress_lzf", lz_lzf},
 	{"decompress_lzf", lz_unlzf},
+
+	// TODO: rename in all tests
 	{"rc4", lz_rc4},
 	{"rc4raw", lz_rc4raw},
 	{"md5", lz_md5},
+
 	{"encode_b64",	lz_b64encode},
 	{"decode_b64",	lz_b64decode},
 	{"encode_b58",	lz_b58encode},
