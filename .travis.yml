@@ -12,7 +12,7 @@ env:
   - DEBIAN_FRONTEND=noninteractive
 
 before_install:
-  - sudo apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confnew" install --no-install-recommends -y build-essential gcc make valgrind
+  - sudo apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confnew" install --no-install-recommends -y build-essential gcc make valgrind libjemalloc-dev
   - git submodule update --init --recursive 
 
 script:
