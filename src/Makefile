@@ -38,6 +38,11 @@ shared: LDADD+=   -lm -ldl -lpthread
 shared: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-shared ${LDFLAGS} ${LDADD}
 
+win: CFLAGS+=  -O3 -Wall
+win: ${SOURCES}
+	${CC} ${CFLAGS} ${SOURCES} -o zenroom-shared ${LDFLAGS} ${LDADD}
+
+
 debug: CFLAGS+= -ggdb -DDEBUG=1 -Wall
 debug: LDADD+= -lm -ldl
 debug: clean ${SOURCES}

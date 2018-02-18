@@ -34,6 +34,11 @@ html: ldflags := -sEXPORTED_FUNCTIONS='["_main","_zenroom_exec"]'
 html: patches luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src html
 
+win: gcc=x86_64-w64-mingw32-gcc
+win: cflags := -O3 ${cflags_protection}
+win: patches luasandbox luazen milagro
+	CC=${gcc} CFLAGS="${cflags}" make -C src win
+
 bootstrap: musl := ${pwd}/build/musl
 bootstrap: gcc := ${musl}/obj/musl-gcc
 bootstrap: cflags := -Os -static ${cflags_protection}

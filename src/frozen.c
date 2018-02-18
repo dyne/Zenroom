@@ -44,8 +44,8 @@ int cs_win_vsnprintf(char *str, size_t size, const char *format, va_list ap);
 #if _MSC_VER >= 1700
 #include <stdint.h>
 #else
-typedef _int64 int64_t;
-typedef unsigned _int64 uint64_t;
+typedef __int64 int64_t;
+typedef unsigned __int64 uint64_t;
 #endif
 #define PRId64 "I64d"
 #define PRIu64 "I64u"
