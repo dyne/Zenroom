@@ -120,11 +120,14 @@ int zenroom_exec(char *script, char *conf, int debuglevel) {
 
 	// load our own extensions
 	lib = (luaL_Reg*) &luazen;
-	func("loading crypto extensions");
+	func("loading luazen extensions");
 	for (; lib->func; lib++) {
 		func("%s",lib->name);
 		lsb_add_function(lsb, lib->func, lib->name);
 	}
+
+	// TODO: MILAGRO
+	// TODO: JSON ARGS
 
 	// initialise global variables
 	lsb_setglobal_string(lsb, "VERSION", VERSION);

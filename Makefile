@@ -30,8 +30,7 @@ wasm: patches luasandbox luazen milagro
 
 html: gcc=${EMSCRIPTEN}/emcc
 html: cflags := -O3 ${cflags_protection}
-html: ldflags := -s"EXPORTED_FUNCTIONS=\"['main']\""
-
+html: ldflags := -sEXPORTED_FUNCTIONS='["_main","_zenroom_exec"]'
 html: patches luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src html
 
@@ -39,14 +38,15 @@ bootstrap: musl := ${pwd}/build/musl
 bootstrap: gcc := ${musl}/obj/musl-gcc
 bootstrap: cflags := -Os -static ${cflags_protection}
 bootstrap:
-	if ! [ -r ${gcc} ]; then mkdir -p ${musl} && cd ${musl} && CFLAGS="${cflags}" ${pwd}/lib/musl/configure; fi
+	mkdir -p ${musl} && cd ${musl} && CFLAGS="${cflags}" ${pwd}/lib/musl/configure
 	make -j2 -C ${musl}
 
 static: musl := ${pwd}/build/musl
 static: gcc := ${musl}/obj/musl-gcc
 static: cflags := -Os -static ${cflags_protection}
-static: bootstrap patches jemalloc luasandbox luazen milagro
-	CC=${gcc} CFLAGS="${cflags}" make -C src static
+static: ldflags := /usr/lib/`uname -m`-linux-gnu/libjemalloc_pic.a
+static: bootstrap patches luasandbox luazen milagro
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src static
 
 system-static: cflags := -Os -static ${cflags_protection}
 system-static: patches jemalloc luasandbox luazen milagro
