@@ -1,5 +1,49 @@
+diff --git a/include/luasandbox.h b/include/luasandbox.h
+index 32f8744..36e722c 100644
+--- a/include/luasandbox.h
++++ b/include/luasandbox.h
+@@ -12,11 +12,12 @@
+ #include "luasandbox/error.h"
+ 
+ #ifdef _WIN32
+-#ifdef luasandbox_EXPORTS
+-#define LSB_EXPORT __declspec(dllexport)
+-#else
+-#define LSB_EXPORT __declspec(dllimport)
+-#endif
++// #ifdef luasandbox_EXPORTS
++// #define LSB_EXPORT __declspec(dllexport)
++// #else
++// #define LSB_EXPORT __declspec(dllimport)
++// #endif
++#define LSB_EXPORT
+ #else
+ #if __GNUC__ >= 4
+ #define LSB_EXPORT __attribute__ ((visibility ("default")))
+diff --git a/include/luasandbox/heka/sandbox.h b/include/luasandbox/heka/sandbox.h
+index 1c48bea..5d4136c 100644
+--- a/include/luasandbox/heka/sandbox.h
++++ b/include/luasandbox/heka/sandbox.h
+@@ -16,11 +16,12 @@
+ #include "../util/heka_message.h"
+ 
+ #ifdef _WIN32
+-#ifdef luasandboxheka_EXPORTS
+-#define LSB_HEKA_EXPORT __declspec(dllexport)
+-#else
+-#define LSB_HEKA_EXPORT __declspec(dllimport)
+-#endif
++// #ifdef luasandboxheka_EXPORTS
++// #define LSB_HEKA_EXPORT __declspec(dllexport)
++// #else
++// #define LSB_HEKA_EXPORT __declspec(dllimport)
++// #endif
++#define LSB_HEKA_EXPORT
+ #else
+ #if __GNUC__ >= 4
+ #define LSB_HEKA_EXPORT __attribute__ ((visibility ("default")))
 diff --git a/include/luasandbox/luaconf.h b/include/luasandbox/luaconf.h
-index fa748aa..0c26024 100644
+index fa748aa..c5d6736 100644
 --- a/include/luasandbox/luaconf.h
 +++ b/include/luasandbox/luaconf.h
 @@ -35,13 +35,13 @@
@@ -19,7 +63,21 @@ index fa748aa..0c26024 100644
  #endif
  
  
-@@ -612,7 +612,7 @@ union luai_Cast { double l_d; long l_l; };
+@@ -154,9 +154,10 @@
+ #if defined(LUA_BUILD_AS_DLL)
+ 
+ #if defined(LUA_CORE) || defined(LUA_LIB)
+-#define LUA_API __declspec(dllexport)
+-#else
+-#define LUA_API __declspec(dllimport)
++// #define LUA_API __declspec(dllexport)
++// #else
++// #define LUA_API __declspec(dllimport)
++#define LUA_API
+ #endif
+ 
+ #else
+@@ -612,7 +613,7 @@ union luai_Cast { double l_d; long l_l; };
    { if ((c)->status == 0) (c)->status = -1; }
  #define luai_jmpbuf int  /* dummy variable */
  
@@ -28,7 +86,7 @@ index fa748aa..0c26024 100644
  /* in Unix, try _longjmp/_setjmp (more efficient) */
  #define LUAI_THROW(L,c) _longjmp((c)->b, 1)
  #define LUAI_TRY(L,c,a) if (_setjmp((c)->b) == 0) { a }
-@@ -700,11 +700,11 @@ union luai_Cast { double l_d; long l_l; };
+@@ -700,11 +701,11 @@ union luai_Cast { double l_d; long l_l; };
  ** By default, _WIN32 gets LUA_DL_DLL and MAC OS X gets LUA_DL_DYLD.
  */
  #if defined(LUA_USE_DLOPEN)
@@ -42,11 +100,62 @@ index fa748aa..0c26024 100644
  #endif
  
  
+diff --git a/include/luasandbox/test/sandbox.h b/include/luasandbox/test/sandbox.h
+index 8465fa0..9f4d96a 100644
+--- a/include/luasandbox/test/sandbox.h
++++ b/include/luasandbox/test/sandbox.h
+@@ -15,11 +15,12 @@
+ #include "../error.h"
+ 
+ #ifdef _WIN32
+-#ifdef luasandboxtest_EXPORTS
+-#define LSB_TEST_EXPORT __declspec(dllexport)
+-#else
+-#define LSB_TEST_EXPORT __declspec(dllimport)
+-#endif
++// #ifdef luasandboxtest_EXPORTS
++// #define LSB_TEST_EXPORT __declspec(dllexport)
++// #else
++// #define LSB_TEST_EXPORT __declspec(dllimport)
++// #endif
++#define LSB_TEST_EXPORT
+ #else
+ #if __GNUC__ >= 4
+ #define LSB_TEST_EXPORT __attribute__ ((visibility ("default")))
+diff --git a/include/luasandbox/util/util.h b/include/luasandbox/util/util.h
+index bccc66a..6646742 100644
+--- a/include/luasandbox/util/util.h
++++ b/include/luasandbox/util/util.h
+@@ -16,11 +16,12 @@
+ #include "../error.h"
+ 
+ #ifdef _WIN32
+-#ifdef luasandboxutil_EXPORTS
+-#define LSB_UTIL_EXPORT __declspec(dllexport)
+-#else
+-#define LSB_UTIL_EXPORT __declspec(dllimport)
+-#endif
++// #ifdef luasandboxutil_EXPORTS
++// #define LSB_UTIL_EXPORT __declspec(dllexport)
++// #else
++// #define LSB_UTIL_EXPORT __declspec(dllimport)
++#define LSB_UTIL_EXPORT
++// #endif
+ #else
+ #if __GNUC__ >= 4
+ #define LSB_UTIL_EXPORT __attribute__ ((visibility ("default")))
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index beff13e..0911502 100644
+index beff13e..51cb48b 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
-@@ -10,7 +10,7 @@ if(MSVC)
+@@ -4,13 +4,13 @@
+ 
+ if(MSVC)
+ 	add_definitions(
+-	-DLUA_BUILD_AS_DLL
++#	-DLUA_BUILD_AS_DLL
+ 	-D_CRT_SECURE_NO_WARNINGS
+ 	)
  else()
  	add_definitions(
  	-DLUA_USE_POSIX 
@@ -77,6 +186,19 @@ index 43697e1..b344199 100644
  #if defined(LUA_DL_DLOPEN)
  /*
  ** {========================================================================
+diff --git a/src/lua/loslib.c b/src/lua/loslib.c
+index b822e2d..5deaa92 100644
+--- a/src/lua/loslib.c
++++ b/src/lua/loslib.c
+@@ -76,7 +76,7 @@ static int os_pushresult (lua_State *L, int i, const char *filename) {
+ ** By default, Lua uses gmtime/localtime, except when POSIX is available,
+ ** where it uses gmtime_r/localtime_r
+ */
+-#if defined(LUA_USE_GMTIME_R)
++#if defined(LUA_USE_GMTIME_R) && !defined(_WIN32)
+ 
+ #define l_gmtime(t,r)		gmtime_r(t,r)
+ #define l_localtime(t,r)	localtime_r(t,r)
 diff --git a/src/luasandbox.c b/src/luasandbox.c
 index d6ff41e..99752b1 100644
 --- a/src/luasandbox.c
@@ -103,3 +225,16 @@ index e0df018..ff3a126 100644
  set_target_properties(luasandboxutil PROPERTIES VERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH} SOVERSION 0)
  target_compile_definitions(luasandboxutil PRIVATE -Dluasandboxutil_EXPORTS)
  
+diff --git a/src/util/util.c b/src/util/util.c
+index d14643a..3ea8373 100644
+--- a/src/util/util.c
++++ b/src/util/util.c
+@@ -88,7 +88,7 @@ unsigned long long lsb_get_time()
+   return mach_absolute_time() * convert;
+ #elif defined(_WIN32)
+   static unsigned long long qpf = ULLONG_MAX;
+-  static_assert(sizeof(LARGE_INTEGER) == sizeof qpf, "size mismatch");
++  // static_assert(sizeof(LARGE_INTEGER) == sizeof qpf, "size mismatch");
+ 
+   unsigned long long t;
+   if (qpf == ULLONG_MAX) QueryPerformanceFrequency((LARGE_INTEGER *)&qpf);

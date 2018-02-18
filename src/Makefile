@@ -20,14 +20,14 @@ html: ${SOURCES}
 
 static: LDADD	+= ../build/jemalloc/lib/libjemalloc.a
 static: CC := ../build/musl/obj/musl-gcc
-static: CFLAGS += -Os -fstack-protector -Wall -Wextra -pedantic -std=gnu99
+static: CFLAGS += -Os -Wall -Wextra -pedantic -std=gnu99
 static: LDADD  += ../build/musl/lib/libc.a
 static: LDFLAGS += -static
 static: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-static ${LDFLAGS} ${LDADD}
 
 system-static: LDADD += ../build/jemalloc/lib/libjemalloc.a
-system-static: CFLAGS += -Os -fstack-protector -Wall -Wextra -pedantic -std=gnu99
+system-static: CFLAGS += -Os -Wall -Wextra -pedantic -std=gnu99
 system-static: LDFLAGS += -static
 system-static: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-static ${LDFLAGS} ${LDADD}
@@ -37,10 +37,11 @@ shared: LDADD+=   -lm -lpthread -ljemalloc
 shared: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-shared ${LDFLAGS} ${LDADD}
 
-win: CFLAGS +=  -O3 -Wall
-win: LDADD += -L/usr/x86_64-w64-mingw32/lib -l:libm.a -l:libpthread.a
+win: CFLAGS +=  -O3 -Wall -Wextra -pedantic -std=gnu99
+win: LDFLAGS += -L/usr/x86_64-w64-mingw32/lib -static
+win: LDADD +=  -l:libm.a -l:libpthread.a
 win: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o zenroom.w64 ${LDFLAGS} ${LDADD}
+	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.exe ${SOURCES} ${LDADD}
 
 
 debug: CFLAGS+= -ggdb -DDEBUG=1 -Wall
