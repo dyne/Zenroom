@@ -2,10 +2,15 @@
 
 [![software by Dyne.org](https://www.dyne.org/wp-content/uploads/2015/12/software_by_dyne.png)](http://www.dyne.org)
 
-Restricted execution environment for a turing-incomplete language implementation to be used in untrusted distributed computing, i.e. for distributed ledger or blockchain smart contracts.
-
-
 [![Build Status](https://travis-ci.org/DECODEproject/zenroom.svg?branch=master)](https://travis-ci.org/DECODEproject/zenroom)
+
+**Restricted execution environment** for cryptographic operations in a **Turing-incomplete language** based on LUA syntax and coarse-grained control of number of operations and memory used.
+
+Zenroom follows a minimal design with security and portability in mind: it can be used in **untrusted distributed computing**, for instance in distributed ledger or **blockchain smart contracts**.
+
+Zenroom compiles to fully static native binaries for embedded use, but also to javascript or webassembly modules for client-side use for instance in mobile applications.
+
+With Zenroom is easy to write portable software using end-to-end client-side encryption using various classic and advanced cryptographic primitives to manage asymmetric keys, key derivation, hashing and signing functionalities.
 
 This README documentation is operational. For more information on the purpose and design of this software see:
 
@@ -13,6 +18,8 @@ This README documentation is operational. For more information on the purpose an
 - The Zenroom whitepaper and API documentation: https://decodeproject.github.io/zenroom
 
 ## Build instructions
+
+Pre-built binaries are available here https://sdk.dyne.org:4443/view/decode/ - this section is optional for those who want to build this software from source.
 
 The Zenroom compiles the same base sourcecode to 3 different POSIX
 compatible ELF binary targets. They are:
@@ -46,10 +53,12 @@ make static
 make check-static
 ```
 
-For the Javascript module:
+For the Javascript and WebAssembly modules the Zenroom provides various targets provided by emscripten which must be installed and loaded in the environment according to the emsdk's instructions :
 
 ```
 make js
+make wasm
+make html
 ```
 
 ## Crypto functionalities
@@ -69,6 +78,62 @@ Endoding and decoding functions are provided for **base64** and **base58** (for 
 
 Compression functions based on **BriefLZ** are also included.
 
+Inclusion of classic NIST compliant **RSA** and **DSA** algorithms is in progress.
+
+## Operating instructions
+
+This software is work in progress and this section will be extended in the near future. Scripts found in the test/ directory provide good examples to start from.
+
+From **command-line** the Zenroom is operated passing files as arguments:
+
+```
+Usage: zenroom [-c config] [-a arguments] script.lua
+```
+
+From **javascript** the function `zenroom_exec()` is exposed with four arguments: three strings and one number from 1 to 3 indicating the verbosity of output on the console:
+
+```
+int zenroom_exec(char *script, char *config, char *arguments, int verbosity)
+```
+
+The contents of the three strings cannot exceed 100k in size and are of different types:
+
+- `script` is a parsable LUA script, for example:
+```lua
+t = "The quick brown fox jumps over the lazy dog"
+pk, sk = keygen_sign_ed25519() -- signature keypair
+sig = sign_ed25519(sk, pk, t)
+assert(#sig == 64)
+assert(check_ed25519(sig, pk, t))
+```
+
+- `config` is also a parsable LUA script declaring variables, for example:
+```lua
+memory_limit = 100000
+instruction_limit = 696969
+output_limit = 64*1024
+log_level = 7
+remove_entries = {
+	[''] = {'dofile','load', 'loadfile','newproxy'},
+	os = {'getenv','execute','exit','remove','rename',
+		  'setlocale','tmpname'},
+    math = {'random', 'randomseed'}
+ }
+disable_modules = {io = 1}
+```
+
+- `arguments` is a simple json, flat to the 1st level, declaring key/value pair strings, for example:
+```json
+{
+	"secret": "The quick brown fox jumps over the lazy dog",
+	"salt":   "TKIpxzSJ1enTbnei",
+	"key":    "my symmetric password someone will guess one day"
+}
+```
+All strings parsed in the arguments files will be available as pre-declared global variables to the script.
+
+
+
 ## Acknowledgements
 
 Copyright (C) 2017-2018 by Dyne.org foundation, Amsterdam
@@ -87,11 +152,11 @@ Includes code by:
 - Luiz Henrique de Figueiredo (base64)
 - Luke Dashjr (base58)
 - Cameron Rich (md5)
+- Sergey Lyubka and Cesanta Software (frozen)
 
 This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as
-published by the Free Software Foundation, either version 3 of the
-License, or (at your option) any later version.
+it under the terms of the GNU General Public License version 2 as
+published by the Free Software Foundation.
 
 This program is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of

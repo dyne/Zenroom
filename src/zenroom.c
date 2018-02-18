@@ -195,7 +195,7 @@ int main(int argc, char **argv) {
 	int ret;
 	const char *short_options = "hdc:a:";
     const char *help =
-		"Usage: zenroom [-c config] script.lua\n";
+		"Usage: zenroom [-c config] [-a arguments] script.lua\n";
     conffile[0] = '\0';
     scriptfile[0] = '\0';
     argfile[0] = '\0';
