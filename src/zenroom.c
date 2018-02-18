@@ -228,11 +228,10 @@ int main(int argc, char **argv) {
 
 	load_file(script, scriptfile);
 	load_file(conf, conffile);
-	load_file(args, argfile);
-
-	if(argfile[0])
+	if(argfile[0]!='\0') {
+		load_file(args, argfile);
 		ret = zenroom_exec(script, conf, args, debuglevel);
-	else
+	} else
 		ret = zenroom_exec(script, conf, NULL, debuglevel);
 	// exit(1) on failure
 	exit(ret);
