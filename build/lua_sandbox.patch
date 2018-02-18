@@ -1,7 +1,60 @@
+diff --git a/include/luasandbox/luaconf.h b/include/luasandbox/luaconf.h
+index fa748aa..0c26024 100644
+--- a/include/luasandbox/luaconf.h
++++ b/include/luasandbox/luaconf.h
+@@ -35,13 +35,13 @@
+ 
+ #if defined(LUA_USE_LINUX)
+ #define LUA_USE_POSIX
+-#define LUA_USE_DLOPEN    /* needs an extra library: -ldl */
+-#define LUA_USE_READLINE  /* needs some extra libraries */
++// #define LUA_USE_DLOPEN    /* needs an extra library: -ldl */
++// #define LUA_USE_READLINE  /* needs some extra libraries */
+ #endif
+ 
+ #if defined(LUA_USE_MACOSX)
+ #define LUA_USE_POSIX
+-#define LUA_DL_DYLD   /* does not need extra library */
++// #define LUA_DL_DYLD   /* does not need extra library */
+ #endif
+ 
+ 
+@@ -612,7 +612,7 @@ union luai_Cast { double l_d; long l_l; };
+   { if ((c)->status == 0) (c)->status = -1; }
+ #define luai_jmpbuf int  /* dummy variable */
+ 
+-#elif defined(LUA_USE_ULONGJMP)
++#elif defined(LUA_USE_ULONGJMP) && !defined(LUA_WIN)
+ /* in Unix, try _longjmp/_setjmp (more efficient) */
+ #define LUAI_THROW(L,c) _longjmp((c)->b, 1)
+ #define LUAI_TRY(L,c,a) if (_setjmp((c)->b) == 0) { a }
+@@ -700,11 +700,11 @@ union luai_Cast { double l_d; long l_l; };
+ ** By default, _WIN32 gets LUA_DL_DLL and MAC OS X gets LUA_DL_DYLD.
+ */
+ #if defined(LUA_USE_DLOPEN)
+-#define LUA_DL_DLOPEN
++// #define LUA_DL_DLOPEN
+ #endif
+ 
+ #if defined(LUA_WIN)
+-#define LUA_DL_DLL
++// #define LUA_DL_DLL
+ #endif
+ 
+ 
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index beff13e..64a0f43 100644
+index beff13e..0911502 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
+@@ -10,7 +10,7 @@ if(MSVC)
+ else()
+ 	add_definitions(
+ 	-DLUA_USE_POSIX 
+-	-DLUA_USE_DLOPEN 
++#	-DLUA_USE_DLOPEN
+ 	-DLUA_USE_STRTODHEX
+ 	-DLUA_USE_LONGLONG 
+ 	-DLUA_USE_GMTIME_R
 @@ -55,7 +55,7 @@ luasandbox_output.c
  luasandbox_serialize.c
  )
@@ -11,6 +64,19 @@ index beff13e..64a0f43 100644
  set_target_properties(luasandbox PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 0)
  target_link_libraries(luasandbox luasandboxutil ${CMAKE_DL_LIBS})
  if(LIBM_LIBRARY)
+diff --git a/src/lua/loadlib.c b/src/lua/loadlib.c
+index 43697e1..b344199 100644
+--- a/src/lua/loadlib.c
++++ b/src/lua/loadlib.c
+@@ -48,7 +48,7 @@ static void *ll_load (lua_State *L, const char *path);
+ static lua_CFunction ll_sym (lua_State *L, void *lib, const char *sym);
+ 
+ 
+-
++#undef LUA_DL_DLOPEN
+ #if defined(LUA_DL_DLOPEN)
+ /*
+ ** {========================================================================
 diff --git a/src/luasandbox.c b/src/luasandbox.c
 index d6ff41e..99752b1 100644
 --- a/src/luasandbox.c

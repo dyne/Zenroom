@@ -83,7 +83,7 @@ void load_file(char *dst, char *path) {
 		close(fd);
 		exit(1); }
 	readin = read(fd, dst, MAX_FILE);
-	if(readin<0) {
+	if(!readin) {
 		error("Error reading %s: %s", path, strerror(errno));
 		close(fd);
 		exit(1); }

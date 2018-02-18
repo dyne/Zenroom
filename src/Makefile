@@ -32,19 +32,19 @@ system-static: LDFLAGS += -static
 system-static: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-static ${LDFLAGS} ${LDADD}
 
-shared: LDADD	+= ../build/jemalloc/lib/libjemalloc.a
 shared: CFLAGS+=  -O3 -Wall
-shared: LDADD+=   -lm -ldl -lpthread
+shared: LDADD+=   -lm -lpthread -ljemalloc
 shared: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-shared ${LDFLAGS} ${LDADD}
 
-win: CFLAGS+=  -O3 -Wall
+win: CFLAGS +=  -O3 -Wall
+win: LDADD += -L/usr/x86_64-w64-mingw32/lib -l:libm.a -l:libpthread.a
 win: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o zenroom-shared ${LDFLAGS} ${LDADD}
+	${CC} ${CFLAGS} ${SOURCES} -o zenroom.w64 ${LDFLAGS} ${LDADD}
 
 
 debug: CFLAGS+= -ggdb -DDEBUG=1 -Wall
-debug: LDADD+= -lm -ldl
+debug: LDADD+= -lm
 debug: clean ${SOURCES}
 
 clean:

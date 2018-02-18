@@ -292,3 +292,16 @@ index a8e6158..1dd8fa2 100644
  	{"randombytes", lz_randombytes},
  	//
  	{"aead_encrypt", lz_aead_encrypt},
+diff --git a/src/lzf_c.c b/src/lzf_c.c
+index bc07084..fc4a6d1 100644
+--- a/src/lzf_c.c
++++ b/src/lzf_c.c
+@@ -120,7 +120,7 @@ lzf_compress (const void *const in_data, unsigned int in_len,
+    * special workaround for it.
+    */
+ #if defined (WIN32) && defined (_M_X64)
+-  unsigned _int64 off; /* workaround for missing POSIX compliance */
++  unsigned __int64 off; /* workaround for missing POSIX compliance */
+ #else
+   unsigned long off;
+ #endif
