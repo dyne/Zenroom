@@ -1,8 +1,8 @@
-site_name: LUA Zenroom - blockchain language research in DECODE project
-site_description: "Secure language design patterns for use in blockchain smart-contracts: restricted execution environments for deterministic, provable and distributed computing of algorithms."
+site_name: Zenroom - restricted execution crypto language
+site_description: "Secure language for cryptographic distributed computing: restricted execution environment for blockchain smart-contracts and end-to-end crypto applications supporting native builds and javascript."
 site_author: Jaromil, DECODE project
 theme: 'windmill'
-repo_url: https://github.com/DECODEproject/lua-zenroom
+repo_url: https://github.com/DECODEproject/zenroom
 pages:
   - Introduction: index.md
   - Design principles: design.md

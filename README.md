@@ -8,28 +8,32 @@
 
 Zenroom follows a minimal design with security and portability in mind: it can be used in **untrusted distributed computing**, for instance in distributed ledger or **blockchain smart contracts**.
 
-Zenroom compiles to fully static native binaries for embedded use, but also to javascript or webassembly modules for client-side use for instance in mobile applications.
+Zenroom compiles to fully **static native binaries** for embedded use, but also to **javascript** for client-side use for instance in **mobile applications**.
 
-With Zenroom is easy to write portable software using end-to-end client-side encryption using various classic and advanced cryptographic primitives to manage asymmetric keys, key derivation, hashing and signing functionalities.
+With Zenroom is easy to write **portable** software using **end-to-end encryption** using various classic and advanced cryptographic primitives to manage asymmetric keys, key derivation, hashing and signing functionalities.
 
 This README documentation is operational. For more information on the purpose and design of this software see:
 
 - The DECODE Project website: https://decodeproject.eu
-- The Zenroom whitepaper and API documentation: https://decodeproject.github.io/zenroom
+  The DECODE Whitepaper: https://decodeproject.github.io/whitepaper
+- The Zenroom design documentation: https://decodeproject.github.io/zenroom
+
+[![Horizon 2020](docs/ec_logo.png)]
+
+This project is receiving funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement nr. 732546 (DECODE).
 
 ## Build instructions
 
-Pre-built binaries are available here https://sdk.dyne.org:4443/view/decode/ - this section is optional for those who want to build this software from source.
+Pre-built binaries are available here https://sdk.dyne.org:4443/view/decode/ - this section is optional for those who want to build this software from source. The following build instructions contain generic information meant for an expert audience.
 
-The Zenroom compiles the same base sourcecode to 3 different POSIX
-compatible ELF binary targets. They are:
+The Zenroom compiles the same sourcecode to run on Linux in the form of 2 different POSIX compatible ELF binary formats using GCC (linking shared libraries) or musl-libc (fully static) targeting both X86 and ARM architectures. It also compiles to a Windows 64-bit native and fully static executable. At last, it compiles to Javascript/Webassembly using the LLVM based emscripten SDK. To recapitulate some Makefile targets:
 
-1. Shared executable linked to a system-wide libc, libm and libpthread (mostly for debugging)
-2. Fully static executable linked to musl-libc (to be operated on embedded platforms)
-3. Javascript module to be operated from a browser or NodeJS (for web based operations)
+1. `make shared` its the simpliest, builds a shared executable linked to a system-wide libc, libm and libpthread (mostly for debugging)
+2. `make static` builds a fully static executable linked to musl-libc (to be operated on embedded platforms)
+3. `make js` or `make wasm` builds different flavors of Javascript modules to be operated from a browser or NodeJS (for client side operations)
+4. `make win` builds a Windows 64bit executable with no DLL dependancy, containing the LUA interpreter and all crypto functions (for client side operations on windows desktops)
 
-If you have cloned this source code from git, then do:
-
+Remember that if after cloning this source code from git, one should do:
 ```
 git submodule update --init --recursive
 ```
@@ -144,7 +148,7 @@ Includes code by:
 
 - Mozilla foundation (lua_sandbox)
 - Rich Felker, et al (musl-libc)
-- Mike Scott and kealan McCusker (milagro)
+- Mike Scott and Kealan McCusker (milagro)
 - Phil Leblanc (luazen)
 - Joergen Ibsen (brieflz)
 - Loup Vaillant (blake2b, argon2i, ed/x25519)
