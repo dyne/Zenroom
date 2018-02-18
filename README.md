@@ -15,10 +15,10 @@ With Zenroom is easy to write **portable** software using **end-to-end encryptio
 This README documentation is operational. For more information on the purpose and design of this software see:
 
 - The DECODE Project website: https://decodeproject.eu
-  The DECODE Whitepaper: https://decodeproject.github.io/whitepaper
+- The DECODE Whitepaper: https://decodeproject.github.io/whitepaper
 - The Zenroom design documentation: https://decodeproject.github.io/zenroom
 
-[![Horizon 2020](docs/ec_logo.png)]
+![Horizon 2020](docs/ec_logo.png)
 
 This project is receiving funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement nr. 732546 (DECODE).
 
