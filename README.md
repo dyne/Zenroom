@@ -4,15 +4,15 @@
 
 [![Build Status](https://travis-ci.org/DECODEproject/zenroom.svg?branch=master)](https://travis-ci.org/DECODEproject/zenroom)
 
-**Restricted execution environment** for cryptographic operations in a **Turing-incomplete language** based on LUA syntax and coarse-grained control of number of operations and memory used.
+**Restricted execution environment** for cryptographic operations in a **Turing-incomplete language** based on syntax-direct translation and coarse-grained control of computations and memory used.
 
-Zenroom follows a minimal design with security and portability in mind: it can be used in **untrusted distributed computing**, for instance in distributed ledger or **blockchain smart contracts**.
+Zenroom is a POSIX portable language interpreter inspired by language-theoretical security and it is designed to be small, attack-resistant and very portable. Its main use case is **distributed computing** of untrusted code, for instance it can be used in any distributed ledger implementation (also known as **blockchain smart contracts**).
 
-Zenroom compiles to fully **static native binaries** for embedded use, but also to **javascript** for client-side use for instance in **mobile applications**.
+Zenroom compiles to **static native binaries** (ARM and X86, UNIX and Windows64) for embedded use, but also to **javascript and webassembly** for client-side usage for instance in **browsers and mobile applications**.
 
-With Zenroom is easy to write **portable** software using **end-to-end encryption** using various classic and advanced cryptographic primitives to manage asymmetric keys, key derivation, hashing and signing functionalities.
+With Zenroom is easy to write **portable** software using **end-to-end encryption** inside isolated environments instead of adding built-in dependencies and applications adopting Zenroom for cryptographic computations can be easily made **interoperable**. Basic crypto functions provided include primitives from AES and soon CAESAR competition winners to manage **a/symmetric keys, key derivation, hashing and signing functionalities**.
 
-This README documentation is operational. For more information on the purpose and design of this software see:
+For a larger picture describing the purpose and design of this software in the field of **data-ownership** and **secure distributed computing**, see:
 
 - The DECODE Project website: https://decodeproject.eu
 - The DECODE Whitepaper: https://decodeproject.github.io/whitepaper
