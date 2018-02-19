@@ -35,14 +35,11 @@
 
 #include <frozen.h>
 #include <bitop.h>
+#include <luazen.h>
 
 #include <luasandbox.h>
 #include <luasandbox/util/util.h>
 #include <luasandbox/lauxlib.h>
-
-#include <luazen.h>
-
-#define CONF "zenroom.conf"
 
 #define MAX_FILE 102400 // load max 100Kb files
 
@@ -50,6 +47,8 @@
 // prototypes from lua_functions
 void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val);
 void lsb_openlibs(lsb_lua_sandbox *lsb);
+extern int lua_cjson_safe_new(lua_State *l);
+extern int lua_cjson_new(lua_State *l);
 
 // from timing.c
 // extern int set_hook(lua_State *L);
@@ -78,13 +77,25 @@ void logger(void *context, const char *component,
 // function exists the process on failure.
 void load_file(char *dst, char *path) {
 	int fd = open(path, O_RDONLY);
+	off_t len = 0;
 	size_t readin = 0;
 	func("load_file: %s", path);
 	if(fd<0) {
 		error("Error opening %s: %s", path, strerror(errno));
 		close(fd);
 		exit(1); }
-	readin = read(fd, dst, MAX_FILE);
+	// calculate length
+	len = lseek(fd,0,SEEK_END);
+	if(len<0) {
+		error("Error seeking end of %s: %s", path, strerror(errno));
+		close(fd);
+		exit(1); }
+	if(lseek(fd,0,SEEK_SET)<0) {
+		error("Error rewinding %s: %s", path, strerror(errno));
+		close(fd);
+		exit(1); }
+	// TODO: skip shebang at first line
+	readin = read(fd, dst, len);
 	if(!readin) {
 		error("Error reading %s: %s", path, strerror(errno));
 		close(fd);
@@ -149,6 +160,10 @@ int zenroom_exec(char *script, char *conf, char *args, int debuglevel) {
 		lsb_add_function(lsb, lib->func, lib->name);
 	}
 
+	func("loading cjson extensions");
+	lsb_add_function(lsb, lua_cjson_new, "cjson");
+	lsb_add_function(lsb, lua_cjson_safe_new, "cjson_safe");
+
 	// load arguments from json if present
 	if(args) {
 		func("walking json:\n%s\n", args);
@@ -200,7 +215,7 @@ int main(int argc, char **argv) {
 	static char args[MAX_FILE];
 	char *confdefault =
 "memory_limit = 0\n"
-"instruction_limit = 9999999\n"
+"instruction_limit = 0\n"
 "output_limit = 64*1024\n"
 "log_level = 7\n"
 "path = '/dev/null'\n"
@@ -209,7 +224,7 @@ int main(int argc, char **argv) {
 "	[''] = {'dofile','load', 'loadfile','newproxy'},\n"
 "	os = {'getenv','execute','exit','remove','rename',\n"
 "		  'setlocale','tmpname'},\n"
-"    math = {'random', 'randomseed'}\n"
+"   math = {'random', 'randomseed'}\n"
 " }\n"
 "disable_modules = {io = 1}\n";
 

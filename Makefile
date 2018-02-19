@@ -98,6 +98,7 @@ check-shared: check-milagro
 	${test-exec} test/locals.lua && \
 	${test-exec} test/constructs.lua && \
 	${test-exec} test/bitbench.lua && \
+	${test-exec} test/cjson-test.lua && \
 	${test-exec} test/test_luazen.lua && \
 	echo "----------------\nAll tests passed for SHARED binary build\n----------------"
 
@@ -109,6 +110,7 @@ check-static: check-milagro
 	${test-exec} test/locals.lua && \
 	${test-exec} test/constructs.lua && \
 	${test-exec} test/bitbench.lua && \
+	${test-exec} test/cjson-test.lua && \
 	${test-exec} test/test_luazen.lua && \
 	echo "----------------\nAll tests passed for STATIC binary build\n----------------"
 
