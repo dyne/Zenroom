@@ -12,11 +12,11 @@ all: shared
 
 js: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc
 js: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o zenroom.js ${LDFLAGS} ${LDADD}
+	${CC} ${CFLAGS} ${SOURCES} -o zenroom.js ${=LDFLAGS} ${LDADD}
 
 html: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc
 html: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o zenroom.html ${LDFLAGS} ${LDADD}
+	${CC} ${CFLAGS} ${SOURCES} -o zenroom.html ${=LDFLAGS} ${LDADD}
 
 static: LDADD	+= ../build/jemalloc/lib/libjemalloc.a
 static: CC := ../build/musl/obj/musl-gcc
