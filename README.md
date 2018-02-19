@@ -126,14 +126,13 @@ remove_entries = {
 disable_modules = {io = 1}
 ```
 
-- `arguments` is a simple json, flat to the 1st level, declaring key/value pair strings, for example:
-```json
-{
-	"secret": "The quick brown fox jumps over the lazy dog",
-	"salt":   "TKIpxzSJ1enTbnei",
-	"key":    "my symmetric password someone will guess one day"
-}
+- `arguments` is a simple string, but can be also a json map used to pass multiple arguments, for example:
+```lua
+json = cjson()
+args = json.decode(arguments)
+-- args is now a lua table containing values for each args.argname
 ```
+
 All strings parsed in the arguments files will be available as pre-declared global variables to the script.
 
 
@@ -156,7 +155,7 @@ Includes code by:
 - Luiz Henrique de Figueiredo (base64)
 - Luke Dashjr (base58)
 - Cameron Rich (md5)
-- Sergey Lyubka and Cesanta Software (frozen)
+- Mark Pulford (lua-cjson)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License version 2 as

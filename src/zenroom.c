@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 // open/close
 #include <sys/types.h>
@@ -42,7 +43,7 @@
 #include <luasandbox/lauxlib.h>
 
 #define MAX_FILE 102400 // load max 100Kb files
-
+#define MAX_STRING 4096
 
 // prototypes from lua_functions
 void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val);
@@ -56,6 +57,21 @@ extern int lua_cjson_new(lua_State *l);
 // void log_debug(lua_State *l, lua_Debug *d) {
 // 	error("%s\n%s\n%s",d->name, d->namewhat, d->short_src);
 // }
+
+static char *confdefault =
+"memory_limit = 0\n"
+"instruction_limit = 0\n"
+"output_limit = 64*1024\n"
+"log_level = 7\n"
+"path = '/dev/null'\n"
+"cpath = '/dev/null'\n"
+"remove_entries = {\n"
+"	[''] = {'dofile','load', 'loadfile','newproxy'},\n"
+"	os = {'getenv','execute','exit','remove','rename',\n"
+"		  'setlocale','tmpname'},\n"
+"   math = {'random', 'randomseed'}\n"
+" }\n"
+"disable_modules = {io = 1}\n";
 
 void logger(void *context, const char *component,
                    int level, const char *fmt, ...) {
@@ -105,6 +121,28 @@ void load_file(char *dst, char *path) {
 	close(fd);
 }
 
+char *safe_string(char *str) {
+	int length = 0;
+	while (length < MAX_STRING && str[length] != '\0') ++length;
+
+	if (!length) {
+		warning("NULL string detected");
+		return NULL; }
+
+	if (length >= MAX_STRING) {
+		error("unterminated string detected:\n%s",str);
+		return NULL; }
+
+	for (int i = 0; i < length; ++i) {
+		if (!isprint(str[i]) && !isspace(str[i])) {
+			error("unprintable character (ASCII %d) at position %d",
+			      (unsigned char)str[i], i);
+			return NULL;
+		}
+	}
+	return(str);
+}
+
 void json_walker(void *c_data, const char *name, size_t name_len,
                    const char *path, const struct json_token *token) {
 	// first level element
@@ -130,9 +168,6 @@ int zenroom_exec(char *script, char *conf, char *args, int debuglevel) {
 	if(!script) {
 		error("NULL string as script for zenroom_exec()");
 		exit(1); }
-	if(!conf) {
-		error("NULL string as conf for zenroom_exec()");
-		exit(1); }
 	set_debug(debuglevel);
 
 	// TODO: how to pass config file and script to javascript?
@@ -140,7 +175,7 @@ int zenroom_exec(char *script, char *conf, char *args, int debuglevel) {
 	lsb_logger lsb_vm_logger = { .context = "zenroom_exec",
 	                             .cb = logger };
 
-	lsb = lsb_create(NULL, script, conf, &lsb_vm_logger);
+	lsb = lsb_create(NULL, script, (conf)?safe_string(conf):confdefault, &lsb_vm_logger);
 	if(!lsb) {
 		error("Error creating sandbox: %s", lsb_get_error(lsb));
 		exit(1); }
@@ -165,10 +200,9 @@ int zenroom_exec(char *script, char *conf, char *args, int debuglevel) {
 	lsb_add_function(lsb, lua_cjson_safe_new, "cjson_safe");
 
 	// load arguments from json if present
-	if(args) {
-		func("walking json:\n%s\n", args);
-		json_walk(args, strlen(args), json_walker, (void*)lsb);
-	}
+	if(args) // avoid errors on NULL args
+		if(safe_string(args))
+			lsb_setglobal_string(lsb,"args",args);
 
 	// TODO: MILAGRO
 
@@ -213,20 +247,6 @@ int main(int argc, char **argv) {
 	static char script[MAX_FILE];
 	static char conf[MAX_FILE];
 	static char args[MAX_FILE];
-	char *confdefault =
-"memory_limit = 0\n"
-"instruction_limit = 0\n"
-"output_limit = 64*1024\n"
-"log_level = 7\n"
-"path = '/dev/null'\n"
-"cpath = '/dev/null'\n"
-"remove_entries = {\n"
-"	[''] = {'dofile','load', 'loadfile','newproxy'},\n"
-"	os = {'getenv','execute','exit','remove','rename',\n"
-"		  'setlocale','tmpname'},\n"
-"   math = {'random', 'randomseed'}\n"
-" }\n"
-"disable_modules = {io = 1}\n";
 
 	int opt, index;
 	int debuglevel = 1;
