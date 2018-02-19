@@ -43,7 +43,7 @@ index 1c48bea..5d4136c 100644
  #if __GNUC__ >= 4
  #define LSB_HEKA_EXPORT __attribute__ ((visibility ("default")))
 diff --git a/include/luasandbox/luaconf.h b/include/luasandbox/luaconf.h
-index fa748aa..c5d6736 100644
+index fa748aa..bd10a04 100644
 --- a/include/luasandbox/luaconf.h
 +++ b/include/luasandbox/luaconf.h
 @@ -35,13 +35,13 @@
@@ -60,6 +60,15 @@ index fa748aa..c5d6736 100644
  #define LUA_USE_POSIX
 -#define LUA_DL_DYLD   /* does not need extra library */
 +// #define LUA_DL_DYLD   /* does not need extra library */
+ #endif
+ 
+ 
+@@ -55,7 +55,7 @@
+ #define LUA_USE_MKSTEMP
+ #define LUA_USE_ISATTY
+ #define LUA_USE_POPEN
+-#define LUA_USE_ULONGJMP
++// #define LUA_USE_ULONGJMP
  #endif
  
  
