@@ -18,13 +18,13 @@ patches:
 # https://github.com/kripken/emscripten/blob/master/src/settings.js
 js: gcc=${EMSCRIPTEN}/emcc
 js: cflags := -O3 ${cflags_protection}
-js: ldflags := -s EXPORTED_FUNCTIONS='["_zenroom_exec"]' -s EXTRA_EXPORTED_RUNTIME_METHODS='["ccall","cwrap"]'
+js: ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'"
 js: patches luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 
 wasm: gcc=${EMSCRIPTEN}/emcc
 wasm: cflags := -O3 ${cflags_protection}
-wasm: ldflags := -s "WASM=1" -s BINARYEN_METHOD='native-wasm' -s EXPORTED_FUNCTIONS='["_zenroom_exec"]' -s EXTRA_EXPORTED_RUNTIME_METHODS='["ccall","cwrap"]'
+wasm: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'"
 wasm: patches luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 

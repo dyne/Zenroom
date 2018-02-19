@@ -1,7 +1,7 @@
 CC?=gcc
 VERSION := $(shell cat ../VERSION)
 
-CFLAGS  += -I. -I../lib/lua_sandbox/include
+CFLAGS  += -I. -I../lib/lua_sandbox/include -pedantic
 SOURCES := jutils.o lua_functions.o zenroom.o bitop.o lua_cjson.o strbuf.o fpconv.c
 LDADD   := ../build/lua_sandbox/src/libluasandbox.a
 LDADD   += ../build/lua_sandbox/src/util/libluasandboxutil.a
@@ -12,11 +12,11 @@ all: shared
 
 js: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc
 js: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o zenroom.js ${=LDFLAGS} ${LDADD}
+	${CC} ${CFLAGS} ${SOURCES} -o zenroom.js ${LDFLAGS} ${LDADD}
 
 html: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc
 html: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o zenroom.html ${=LDFLAGS} ${LDADD}
+	${CC} ${CFLAGS} ${SOURCES} -o zenroom.html ${LDFLAGS} ${LDADD}
 
 static: LDADD	+= ../build/jemalloc/lib/libjemalloc.a
 static: CC := ../build/musl/obj/musl-gcc

@@ -56,7 +56,6 @@ extern int lua_cjson_new(lua_State *l);
 // void log_debug(lua_State *l, lua_Debug *d) {
 // 	error("%s\n%s\n%s",d->name, d->namewhat, d->short_src);
 // }
-
 static char *confdefault =
 "memory_limit = 0\n"
 "instruction_limit = 0\n"
@@ -121,7 +120,7 @@ void load_file(char *dst, char *path) {
 }
 
 char *safe_string(char *str) {
-	int length = 0;
+	int i, length = 0;
 	while (length < MAX_STRING && str[length] != '\0') ++length;
 
 	if (!length) {
@@ -132,7 +131,7 @@ char *safe_string(char *str) {
 		error("unterminated string detected:\n%s",str);
 		return NULL; }
 
-	for (int i = 0; i < length; ++i) {
+	for (i = 0; i < length; ++i) {
 		if (!isprint(str[i]) && !isspace(str[i])) {
 			error("unprintable character (ASCII %d) at position %d",
 			      (unsigned char)str[i], i);
