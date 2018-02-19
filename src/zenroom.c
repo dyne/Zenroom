@@ -64,11 +64,11 @@ void logger(void *context, const char *component,
 	(void)level;
 
 	va_list args;
-	fprintf(stderr,"%s: ", component ? component : "unknown");
+	// func("LUA: %s",(component) ? component : "unknown");
 	va_start(args, fmt);
-	vfprintf(stderr, fmt, args);
+	vfprintf(stdout, fmt, args);
 	va_end(args);
-	fwrite("\n", 1, 1, stderr);
+	fwrite("\n", 1, 1, stdout);
 	fflush(stderr);
 }
 
@@ -78,6 +78,7 @@ void logger(void *context, const char *component,
 void load_file(char *dst, char *path) {
 	int fd = open(path, O_RDONLY);
 	size_t readin = 0;
+	func("load_file: %s", path);
 	if(fd<0) {
 		error("Error opening %s: %s", path, strerror(errno));
 		close(fd);
@@ -87,8 +88,7 @@ void load_file(char *dst, char *path) {
 		error("Error reading %s: %s", path, strerror(errno));
 		close(fd);
 		exit(1); }
-	act("loaded file: %s", path);
-	act("file size: %u", readin);
+	act("loaded file: %s (%u bytes)", path, readin);
 	func("file contents:\n%s\n", dst);
 	close(fd);
 }
@@ -105,7 +105,7 @@ void json_walker(void *c_data, const char *name, size_t name_len,
 	}
 }
 
-int zenroom_exec(char *script, char *conf, char *args, int debuglevel) {
+int zenroom_exec(char *script, char *conf, char *args, char *stdin, int debuglevel) {
 	// the sandbox context (can be initialised only once)
 	// stores the script file and configuration
 	lsb_lua_sandbox *lsb = NULL;
@@ -174,7 +174,7 @@ int zenroom_exec(char *script, char *conf, char *args, int debuglevel) {
 	usage = lsb_usage(lsb, LSB_UT_INSTRUCTION, LSB_US_CURRENT);
 	act("executed operations: %u", usage);
 
-	act("Zenroom operations completed.");
+	notice("Zenroom operations completed.");
 
 	lsb_pcall_teardown(lsb);
 	lsb_stop_sandbox_clean(lsb);
@@ -190,17 +190,35 @@ int main(int argc, char **argv) {
 	static char script[MAX_FILE];
 	static char conf[MAX_FILE];
 	static char args[MAX_FILE];
+	static char stdin[MAX_FILE];
+	char *confdefault =
+"memory_limit = 0\n"
+"instruction_limit = 9999999\n"
+"output_limit = 64*1024\n"
+"log_level = 7\n"
+"path = '/dev/null'\n"
+"cpath = '/dev/null'\n"
+"remove_entries = {\n"
+"	[''] = {'dofile','load', 'loadfile','newproxy'},\n"
+"	os = {'getenv','execute','exit','remove','rename',\n"
+"		  'setlocale','tmpname'},\n"
+"    math = {'random', 'randomseed'}\n"
+" }\n"
+"disable_modules = {io = 1}\n";
+
 	int opt, index;
 	int debuglevel = 1;
 	int ret;
-	const char *short_options = "hdc:a:";
+	const char *short_options = "hdc:a:i";
     const char *help =
-		"Usage: zenroom [-c config] [-a arguments] script.lua\n";
+		"Usage: zenroom [ -c config ] [ -a arguments ] [ script.lua | - ]\n";
     conffile[0] = '\0';
     scriptfile[0] = '\0';
     argfile[0] = '\0';
+    stdin[0] = '\0';
+    args[0] = '\0';
 
-	notice( "LUA Restricted execution environment %s",VERSION);
+	notice( "Zenroom - crypto language restricted execution environment %s",VERSION);
 	act("Copyright (C) 2017-2018 Dyne.org foundation");
 	while((opt = getopt(argc, argv, short_options)) != -1) {
 		switch(opt) {
@@ -222,17 +240,32 @@ int main(int argc, char **argv) {
 		}
 	}
 	for (index = optind; index < argc; index++) {
-		snprintf(scriptfile,511,"%s",argv[index]);
-		act("script: %s", scriptfile);
+		char *path = argv[index];
+		if(path[0]=='-') { scriptfile[0]='\0'; break; }
+		else snprintf(scriptfile,511,"%s",argv[index]);
 	}
-
-	load_file(script, scriptfile);
-	load_file(conf, conffile);
-	if(argfile[0]!='\0') {
-		load_file(args, argfile);
-		ret = zenroom_exec(script, conf, args, debuglevel);
+	if(scriptfile[0]=='\0') {
+		// get script from stdin
+		char ch;
+		int c;
+		for(c=0; c<MAX_FILE-1; c++) {
+			if(!read(STDIN_FILENO, &ch, 1)) break;
+			script[c]=ch;
+		}
+		script[c]='\0';
 	} else
-		ret = zenroom_exec(script, conf, NULL, debuglevel);
+		load_file(script, scriptfile);
+	// configuration from -c or default
+	if(conffile[0]!='\0')
+		load_file(conf, conffile);
+	else
+		act("using default configuration");
+
+	if(argfile[0]!='\0') load_file(args, argfile);
+	ret = zenroom_exec(script,
+	                   (conffile[0]=='\0')?confdefault:conf, 
+	                   (args[0]=='\0')?NULL:args,
+	                   (stdin[0]=='\0')?NULL:stdin,debuglevel);
 	// exit(1) on failure
 	exit(ret);
 }
