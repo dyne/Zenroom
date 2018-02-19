@@ -34,7 +34,6 @@
 
 #include <jutils.h>
 
-#include <frozen.h>
 #include <bitop.h>
 #include <luazen.h>
 
@@ -143,18 +142,6 @@ char *safe_string(char *str) {
 	return(str);
 }
 
-void json_walker(void *c_data, const char *name, size_t name_len,
-                   const char *path, const struct json_token *token) {
-	// first level element
-	if((char)path[0]=='.' && token->type == JSON_TYPE_STRING) {
-		char k[512], v[512];
-		snprintf(k,(name_len>511)?511:name_len+1,"%s",name);
-		snprintf(v,(token->len>511)?511:token->len+1,"%s",token->ptr);
-		lsb_setglobal_string((lsb_lua_sandbox*)c_data,k,v);
-		func("argument set: %s=%s", k, v);
-	}
-}
-
 int zenroom_exec(char *script, char *conf, char *args, int debuglevel) {
 	// the sandbox context (can be initialised only once)
 	// stores the script file and configuration
@@ -202,7 +189,7 @@ int zenroom_exec(char *script, char *conf, char *args, int debuglevel) {
 	// load arguments from json if present
 	if(args) // avoid errors on NULL args
 		if(safe_string(args))
-			lsb_setglobal_string(lsb,"args",args);
+			lsb_setglobal_string(lsb,"arguments",args);
 
 	// TODO: MILAGRO
 

@@ -71,7 +71,7 @@ The Zenroom language interpreter includes statically the following cryptographic
 
 - **Norx** authenticated encryption with additional data (AEAD) - this is the default 64-4-1 variant (256-bit key and nonce, 4 rounds)
 - **Blake2b** cryptographic hash function
-- **Argon2i**, a modern key derivation function based on Blake2. Like 
+- **Argon2i**, a modern key derivation function based on Blake2. Like
 scrypt, it is designed to be expensive in both CPU and memory.
 - **Curve25519**-based key exchange and public key encryption,
 - **Ed25519**-based signature function using Blake2b hash instead of sha512,
@@ -86,15 +86,20 @@ Inclusion of classic NIST compliant **RSA** and **DSA** algorithms is in progres
 
 ## Operating instructions
 
-This software is work in progress and this section will be extended in the near future. Scripts found in the test/ directory provide good examples to start from.
+This software is work in progress and this section will be extended in
+the near future. Scripts found in the test/ directory provide good
+examples to start from.
 
-From **command-line** the Zenroom is operated passing files as arguments:
+From **command-line** the Zenroom is operated passing files as
+arguments:
 
 ```
 Usage: zenroom [-c config] [-a arguments] script.lua
 ```
 
-From **javascript** the function `zenroom_exec()` is exposed with four arguments: three strings and one number from 1 to 3 indicating the verbosity of output on the console:
+From **javascript** the function `zenroom_exec()` is exposed with four
+arguments: three strings and one number from 1 to 3 indicating the
+verbosity of output on the console:
 
 ```
 int zenroom_exec(char *script, char *config, char *arguments, int verbosity)
@@ -126,15 +131,42 @@ remove_entries = {
 disable_modules = {io = 1}
 ```
 
-- `arguments` is a simple string, but can be also a json map used to pass multiple arguments, for example:
+- `arguments` is a simple string, but can be also a json map used to
+  pass multiple arguments
+
+For example create a json file containing a map (this can be a string
+passed from javascript)
+
+```json
+{
+	"secret": "zen and the art of programming",
+	"salt": "OU9Qxl3xfClMeiCz"
+}
+```
+
+Then run `zenroon -a arguments.json` and pass the following script as
+final argument, or pipe from stdin or passed as a string argument to
+`zenroom_exec()` from javascript:
+
 ```lua
 json = cjson()
 args = json.decode(arguments)
 -- args is now a lua table containing values for each args.argname
+print(args.secret)
+print(args.salt)
 ```
 
-All strings parsed in the arguments files will be available as pre-declared global variables to the script.
+All strings parsed are in the `arguments` global variable will be
+available to the script. This allows separation of public code and
+private data to be passed via separate channels.
 
+So for instance if we want to encrypt a secret message for multiple
+recipients who have provided us with their public keys:
+
+```json
+{
+	"alice": "
+```
 
 
 ## Acknowledgements

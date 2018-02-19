@@ -1,0 +1,14 @@
+{
+    "keyring": {
+        "public":"GoTdVYbTWEoZ4KtCeMghV7UcpJyhvny1QjVPf8K4oi1i",
+		"secret":"9PSbkNgsbgPnX3hM19MHVMpp2mzvmHcXCcz6iV8r7RyZ"
+    },
+    "recipients": {
+        "jaromil": "A1g6CwFobiMEq6uj4kPxfouLw1Vxk4utZ2W5z17dnNkv",
+        "francesca": "CQ9DE4E5Ag2e71dUW2STYbwseLLnmY1F9pR85gLWkEC6",
+        "jimb": "FNUdjaPchQsxSjzSbPsMNVPA2v1XUhNPazStSRmVcTwu",
+        "mark": "9zxrLG7kwheF3FMa852r3bZ4NEmowYhxdTj3kVfoipPV",
+        "paulus": "2LbUdFSu9mkvtVE6GuvtJxiFnUWBWdYjK2Snq4VhnzpB",
+		"mayo": "5LrSGTwmnBFvm3MekxSxE9KWVENdSPtcmx3RZbktRiXc"
+    }
+}
