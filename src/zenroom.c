@@ -34,6 +34,7 @@
 #include <jutils.h>
 
 #include <frozen.h>
+#include <bitop.h>
 
 #include <luasandbox.h>
 #include <luasandbox/util/util.h>
@@ -136,6 +137,13 @@ int zenroom_exec(char *script, char *conf, char *args, char *stdin, int debuglev
 	// load our own extensions
 	lib = (luaL_Reg*) &luazen;
 	func("loading luazen extensions");
+	for (; lib->func; lib++) {
+		func("%s",lib->name);
+		lsb_add_function(lsb, lib->func, lib->name);
+	}
+
+	lib = (luaL_Reg*) &bit_funcs;
+	func("loading bitop extensions");
 	for (; lib->func; lib++) {
 		func("%s",lib->name);
 		lsb_add_function(lsb, lib->func, lib->name);
