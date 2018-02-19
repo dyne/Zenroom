@@ -106,7 +106,7 @@ void json_walker(void *c_data, const char *name, size_t name_len,
 	}
 }
 
-int zenroom_exec(char *script, char *conf, char *args, char *stdin, int debuglevel) {
+int zenroom_exec(char *script, char *conf, char *args, int debuglevel) {
 	// the sandbox context (can be initialised only once)
 	// stores the script file and configuration
 	lsb_lua_sandbox *lsb = NULL;
@@ -198,7 +198,6 @@ int main(int argc, char **argv) {
 	static char script[MAX_FILE];
 	static char conf[MAX_FILE];
 	static char args[MAX_FILE];
-	static char stdin[MAX_FILE];
 	char *confdefault =
 "memory_limit = 0\n"
 "instruction_limit = 9999999\n"
@@ -223,7 +222,6 @@ int main(int argc, char **argv) {
     conffile[0] = '\0';
     scriptfile[0] = '\0';
     argfile[0] = '\0';
-    stdin[0] = '\0';
     args[0] = '\0';
 
 	notice( "Zenroom - crypto language restricted execution environment %s",VERSION);
@@ -272,8 +270,7 @@ int main(int argc, char **argv) {
 	if(argfile[0]!='\0') load_file(args, argfile);
 	ret = zenroom_exec(script,
 	                   (conffile[0]=='\0')?confdefault:conf, 
-	                   (args[0]=='\0')?NULL:args,
-	                   (stdin[0]=='\0')?NULL:stdin,debuglevel);
+	                   (args[0]=='\0')?NULL:args, debuglevel);
 	// exit(1) on failure
 	exit(ret);
 }
