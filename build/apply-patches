@@ -9,6 +9,7 @@ fi
 
 if grep 'static const.*lzlib' lib/luazen/src/luazen.c > /dev/null; then
 	cd lib/luazen && patch -p1 < ../../build/luazen_build.patch && cd -
+	cp src/randombytes.c src/randombytes.h lib/luazen/src
 fi
 
 cd lib/jemalloc && \
