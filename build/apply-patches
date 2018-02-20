@@ -9,8 +9,13 @@ fi
 
 if grep 'static const.*lzlib' lib/luazen/src/luazen.c > /dev/null; then
 	cd lib/luazen && patch -p1 < ../../build/luazen_build.patch && cd -
-	cp src/randombytes.c src/randombytes.h lib/luazen/src
 fi
+# TODO: patch randombytes to work in emscripten
+# using float emscripten_random(void)
+# https://kripken.github.io/emscripten-site/docs/api_reference/emscripten.h.html#c.emscripten_random
+# if ! [ -r lib/luazen/src/randombytes.h ]; then
+# 	cp src/randombytes.c src/randombytes.h lib/luazen/src
+# fi
 
 cd lib/jemalloc && \
 	git checkout -- . && patch < ../../build/jemalloc_static.patch && cd -
