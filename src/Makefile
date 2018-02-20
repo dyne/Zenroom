@@ -31,7 +31,7 @@ system-static: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-static ${LDFLAGS} ${LDADD}
 
 shared: CFLAGS+=  -O3 -Wall
-shared: LDADD+=   -lm -lpthread -ljemalloc
+shared: LDADD+=   -lm -lpthread
 shared: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-shared ${LDFLAGS} ${LDADD}
 

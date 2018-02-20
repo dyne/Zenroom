@@ -69,12 +69,6 @@ pbc:
 	mkdir -p ${pwd}/build/pbc
 	if ! [ ${pwd}/build/pbc/.libs/libpbc.a ]; then cd ${pwd}/build/pbc && CFLAGS="${cflags}" CC=${gcc} ${pwd}/lib/pbc/configure --disable-shared &&	make -C ${pwd}/build/pbc LDFLAGS="-L${pwd}/lib/gmp/.libs -l:libgmp.a" CFLAGS="${cflags} -I${pwd}/lib/gmp -I${pwd}/lib/pbc/include"; return 0; fi
 
-jemalloc:
-	@echo "-- Building jemalloc"
-	mkdir -p ${pwd}/build/jemalloc
-	if ! [ -r ${pwd}/lib/jemalloc/configure ]; then cd ${pwd}/lib/jemalloc &&  ${pwd}/lib/jemalloc/autogen.sh; fi
-	if ! [ -r ${pwd}/build/jemalloc/lib/libjemalloc.a ]; then cd ${pwd}/build/jemalloc && CFLAGS="${cflags}" CC=${gcc} ${pwd}/lib/jemalloc/configure --disable-cxx && make -C ${pwd}/build/jemalloc; fi
-
 luasandbox:
 	@echo "-- Building lua_sandbox"
 	mkdir -p ${luasand} && cd ${luasand} && CC=${gcc} cmake ${pwd}/lib/lua_sandbox -DCMAKE_C_FLAGS="${cflags}"
