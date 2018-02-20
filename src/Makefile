@@ -18,7 +18,6 @@ html: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc
 html: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom.html ${LDFLAGS} ${LDADD}
 
-static: LDADD	+= ../build/jemalloc/lib/libjemalloc.a
 static: CC := ../build/musl/obj/musl-gcc
 static: CFLAGS += -Os -Wall -Wextra -pedantic -std=gnu99
 static: LDADD  += ../build/musl/lib/libc.a
@@ -26,7 +25,6 @@ static: LDFLAGS += -static
 static: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-static ${LDFLAGS} ${LDADD}
 
-system-static: LDADD += ../build/jemalloc/lib/libjemalloc.a
 system-static: CFLAGS += -Os -Wall -Wextra -pedantic -std=gnu99
 system-static: LDFLAGS += -static
 system-static: ${SOURCES}

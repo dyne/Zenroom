@@ -49,17 +49,16 @@ bootstrap:
 static: musl := ${pwd}/build/musl
 static: gcc := ${musl}/obj/musl-gcc
 static: cflags := -Os -static ${cflags_protection}
-static: ldflags := /usr/lib/`uname -m`-linux-gnu/libjemalloc_pic.a
 static: bootstrap patches luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src static
 
 system-static: cflags := -Os -static ${cflags_protection}
-system-static: patches jemalloc luasandbox luazen milagro
+system-static: patches luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C src system-static
 
 shared: gcc := gcc
 shared: cflags := -O2 -fPIC ${cflags_protection}
-shared: patches jemalloc luasandbox luazen milagro
+shared: patches luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
 
 gmp:
