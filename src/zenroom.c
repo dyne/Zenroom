@@ -188,7 +188,7 @@ int zenroom_exec(char *script, char *conf, char *args, int debuglevel) {
 	}
 
 	func("loading cjson extensions");
-	lsb_add_function(lsb, lua_cjson_new, "cjson");
+	lsb_add_function(lsb, lua_cjson_safe_new, "cjson");
 	lsb_add_function(lsb, lua_cjson_safe_new, "cjson_safe");
 
 	// load arguments from json if present
