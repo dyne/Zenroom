@@ -36,6 +36,7 @@
 
 #include <bitop.h>
 #include <luazen.h>
+#include <linenoise.h>
 
 #include <luasandbox.h>
 #include <luasandbox/util/util.h>
@@ -49,6 +50,11 @@ void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val);
 void lsb_openlibs(lsb_lua_sandbox *lsb);
 extern int lua_cjson_safe_new(lua_State *l);
 extern int lua_cjson_new(lua_State *l);
+
+// from repl.c
+extern lsb_lua_sandbox *repl_init(char *conf);
+extern int repl_exec(lsb_lua_sandbox *lsb, const char *line);
+extern int repl_teardown(lsb_lua_sandbox *lsb);
 
 // from timing.c
 // extern int set_hook(lua_State *L);
@@ -83,12 +89,12 @@ void logger(void *context, const char *component,
 	vfprintf(stdout, fmt, args);
 	va_end(args);
 	fwrite("\n", 1, 1, stdout);
-	fflush(stderr);
+	fflush(stdout);
 }
 
 // simple function to load files with basic open/read that are not
 // wrapped by emscripten to access its virtual filesystem. This
-// function exists the process on failure.
+// function exits the process on failure.
 void load_file(char *dst, char *path) {
 	int fd = open(path, O_RDONLY);
 	off_t len = 0;
@@ -268,10 +274,12 @@ int main(int argc, char **argv) {
 	}
 	for (index = optind; index < argc; index++) {
 		char *path = argv[index];
-		if(path[0]=='-') { scriptfile[0]='\0'; break; }
+		if(path[0]=='-') { scriptfile[0]='-'; break; }
 		else snprintf(scriptfile,511,"%s",argv[index]);
 	}
-	if(scriptfile[0]=='\0') {
+
+	if(scriptfile[0]=='-') {
+		////////////////////////
 		// get script from stdin
 		char ch;
 		int c;
@@ -280,8 +288,26 @@ int main(int argc, char **argv) {
 			script[c]=ch;
 		}
 		script[c]='\0';
+
+		////////////////////////////////////
+		// start an interactive repl console
+	} else if(scriptfile[0]=='\0') {
+		lsb_lua_sandbox *cli;
+		char *line;
+		lsb_err_value ret;
+		cli = repl_init(confdefault);
+		while((line = linenoise("zen> ")) != NULL) {
+			repl_exec(cli, line);
+			// if(ret != 0) break;
+			linenoiseFree(line);
+		}
+		repl_teardown(cli);
+
 	} else
+		////////////////////////////////////
+		// load a file as script and execute
 		load_file(script, scriptfile);
+
 	// configuration from -c or default
 	if(conffile[0]!='\0')
 		load_file(conf, conffile);
