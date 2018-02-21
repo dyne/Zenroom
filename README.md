@@ -156,16 +156,65 @@ print(args.secret)
 print(args.salt)
 ```
 
-All strings parsed are in the `arguments` global variable will be
-available to the script. This allows separation of public code and
-private data to be passed via separate channels.
+All strings parsed are in the `arguments` global variable available
+inside the script. This allows separation of public code and private
+data to be passed via separate channels.
 
 So for instance if we want to encrypt a secret message for multiple
-recipients who have provided us with their public keys:
+recipients who have provided us with their public keys, one would load
+this example keyfile:
 
 ```json
 {
-	"alice": "
+    "keyring": {
+        "public":"GoTdVYbTWEoZ4KtCeMghV7UcpJyhvny1QjVPf8K4oi1i",
+        "secret":"9PSbkNgsbgPnX3hM19MHVMpp2mzvmHcXCcz6iV8r7RyZ"
+    },
+    "recipients": {
+        "jaromil": "A1g6CwFobiMEq6uj4kPxfouLw1Vxk4utZ2W5z17dnNkv",
+        "francesca": "CQ9DE4E5Ag2e71dUW2STYbwseLLnmY1F9pR85gLWkEC6",
+        "jimb": "FNUdjaPchQsxSjzSbPsMNVPA2v1XUhNPazStSRmVcTwu",
+        "mark": "9zxrLG7kwheF3FMa852r3bZ4NEmowYhxdTj3kVfoipPV",
+        "paulus": "2LbUdFSu9mkvtVE6GuvtJxiFnUWBWdYjK2Snq4VhnzpB",
+        "mayo": "5LrSGTwmnBFvm3MekxSxE9KWVENdSPtcmx3RZbktRiXc"
+    }
+}
+```
+
+And then with this code:
+
+```lua
+secret="this is a secret that noone knows"
+-- this should be a random string every time
+nonce="eishai7Queequot7pooc3eiC7Ohthoh1"
+
+json = cjson_safe()
+keys = json.decode(arguments)
+
+res = {}
+
+for name,pubkey in pairs(keys.recipients) do
+   k = exchange_session_x25519(
+	  decode_b58(keys.keyring.secret),
+	  decode_b58(pubkey))
+   enc = encrypt_norx(k,nonce,secret)
+   -- insert in results
+   res[name]=encode_b58(enc)
+end
+print(json.encode(res))
+```
+
+Zenroom can be executed as `zenroom -a keys.json code.lua` and will print out the encrypted message for each recipient reorganised in a similar json structure:
+
+```json
+{
+   "jaromil" : "Ha8185xZoiMiJhfquKRHvtT6vZPWifGaXmD4gxjyfHV9ASNaJF2Xq85NCmeyy4hWLGns4MTbPsRmZ2H7uJh9vEuWt",
+   "mark" : "13nhCBWKbPAYyhJXD7aeHtiFKb89fycBnoKy2nosJdSqfS2vhhHqBvVKb2oasiga9P3UyaEJZQdyYRfiBBKEswdmQ",
+   "francesca" : "7ro9u2ViXjp3AaLzvve4E4ebZNoBPLtxAja8wd8YNn51TD9LjMXNGsRvm85UQ2vmhdTeJuvcmBvz5WuFkdgh3kQxH",
+   "mayo" : "FAjQSYXZdZz3KRuw1MX4aLSjky6kbpRdXdAzhx1YeQxu3JiGDD7GUFK2rhbUfD3i5cEc3tU1RBpoK5NCoWbf2reZc",
+   "jimb" : "7gb5SLYieoFsP4jYfaPM46Vm4XUP2jbCUnkFRQfwNrnJfqaew5VpwqjbNbLJrqGsgJJ995bP2867nYLcn96wuMDMw",
+   "paulus" : "8SGBpRjZ21pgYZhXmy7uWGNEEN7wnHkrWtHEKeh7uCJgsDKtoGZHPk29itCV6oRxPbbiWEuN9Sm83jeZ1vinwQyXM"
+}
 ```
 
 

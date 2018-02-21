@@ -9,6 +9,13 @@ and their specific use-cases.
 - Benchmark suite to measure capacity to de/code large amounts of
   streaming data in chunks.
 
+## Security
+
+- adopt code analysis to report on bad constructs
+
+- support Linux kernel keystore feature for loaded keys (see
+  cryptsetup 2.0)
+
 ## Documentation
 
 - Provide cross-language examples for most basic operations
@@ -29,6 +36,9 @@ and their specific use-cases.
 - Finish integrating Milagro in the LUA script
 
 - Build a usable ABC implementation (maybe compatible with coconut)
+
+- Reproduce tor's new onion address scheme
+  (see tor-dam/pkg/damlib/crypto_25519.go)
 
 - Investigate inclusion of primitives from libsodium
 
