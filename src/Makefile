@@ -6,7 +6,7 @@ SOURCES := jutils.o lua_functions.o zenroom.o bitop.o lua_cjson.o strbuf.o fpcon
 LDADD   := ../build/lua_sandbox/src/libluasandbox.a
 LDADD   += ../build/lua_sandbox/src/util/libluasandboxutil.a
 LDADD   += ../build/luazen/libluazen.a
-LDADD   += ../lib/milagro-c/libmilagro.a
+# LDADD   += ../lib/milagro-c/libmilagro.a
 
 all: shared
 
