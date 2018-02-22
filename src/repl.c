@@ -18,11 +18,9 @@
  * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include <ctype.h>
 #include <jutils.h>
 #include <linenoise.h>
-
-// #include <bitop.h>
-// #include <luazen.h>
 
 #include <luasandbox.h>
 #include <luasandbox/lua.h>
@@ -31,6 +29,8 @@
 #include <luasandbox/util/output_buffer.h>
 
 #include <luasandbox/lauxlib.h>
+
+extern void lsb_load_extensions(lsb_lua_sandbox *lsb);
 
 extern int lua_cjson_safe_new(lua_State *l);
 extern int lua_cjson_new(lua_State *l);
@@ -48,18 +48,113 @@ struct lsb_lua_sandbox {
 	char              error_message[LSB_ERROR_SIZE];
 };
 
-void* memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
-extern void preload_modules(lua_State *lua);
+static const luaL_Reg preload_module_list[] = {
+  { LUA_BASELIBNAME, luaopen_base },
+  { LUA_TABLIBNAME, luaopen_table },
+  { LUA_STRLIBNAME, luaopen_string },
+  { LUA_MATHLIBNAME, luaopen_math },
+  { NULL, NULL }
+};
 
 
-int repl_print(lua_State *L) {
-	const char *str = luaL_checkstring(L, 1);
-	fprintf(stdout,"--\n%s\n--",str);
-	fflush(stdout);
-	return 1;
+static int libsize(const luaL_Reg *l)
+{
+  int size = 0;
+  for (; l->name; l++) size++;
+  return size;
 }
-	
 
+static void preload_modules(lua_State *lua)
+{
+  const luaL_Reg *lib = preload_module_list;
+  luaL_findtable(lua, LUA_REGISTRYINDEX, "_PRELOADED",
+                 libsize(preload_module_list));
+  for (; lib->func; lib++) {
+    lua_pushstring(lua, lib->name);
+    lua_pushcfunction(lua, lib->func);
+    lua_rawset(lua, -3);
+  }
+  lua_pop(lua, 1); // remove the preloaded table
+}
+
+extern void lsb_output_coroutine(lsb_lua_sandbox *lsb, lua_State *lua, int start,
+                                 int end, int append);
+
+static int output(lua_State *lua)
+{
+  lua_getfield(lua, LUA_REGISTRYINDEX, LSB_THIS_PTR);
+  lsb_lua_sandbox *lsb = lua_touserdata(lua, -1);
+  lua_pop(lua, 1); // remove this ptr
+  if (!lsb) return luaL_error(lua, "%s() invalid " LSB_THIS_PTR, __func__);
+
+  int n = lua_gettop(lua);
+  if (n == 0) {
+    return luaL_argerror(lsb->lua, 0, "must have at least one argument");
+  }
+  lsb_output_coroutine(lsb, lua, 1, n, 1);
+  return 0;
+}
+
+
+int output_print(lua_State *lua)
+{
+  lua_getfield(lua, LUA_REGISTRYINDEX, LSB_THIS_PTR);
+  lsb_lua_sandbox *lsb = lua_touserdata(lua, -1);
+  lua_pop(lua, 1); // remove this ptr
+  if (!lsb) return luaL_error(lua, "print() invalid " LSB_THIS_PTR);
+
+  lsb->output.buf[0] = 0;
+  lsb->output.pos = 0; // clear the buffer
+
+  int n = lua_gettop(lua);
+  if (!lsb->logger.cb || n == 0) {
+    return 0;
+  }
+
+  lua_getglobal(lua, "tostring");
+  for (int i = 1; i <= n; ++i) {
+    lua_pushvalue(lua, -1);  // tostring
+    lua_pushvalue(lua, i);   // value
+    lua_call(lua, 1, 1);
+    const char *s = lua_tostring(lua, -1);
+    if (s == NULL) {
+      return luaL_error(lua, LUA_QL("tostring") " must return a string to "
+                        LUA_QL("print"));
+    }
+    if (i > 1) {
+      lsb_outputc(&lsb->output, '\t');
+    }
+
+    while (*s) {
+      if (isprint(*s)) {
+        lsb_outputc(&lsb->output, *s);
+      } else {
+        lsb_outputc(&lsb->output, ' ');
+      }
+      ++s;
+    }
+    lua_pop(lua, 1);
+  }
+
+  const char *component = NULL;
+  lua_getfield(lua, LUA_REGISTRYINDEX, LSB_CONFIG_TABLE);
+  if (lua_type(lua, -1) == LUA_TTABLE) {
+    // this makes an assumptions by looking for a Heka sandbox specific cfg
+    // variable but will fall back to the lua filename in the generic case
+    lua_getfield(lua, -1, "Logger");
+    component = lua_tostring(lua, -1);
+    if (!component) {
+      component = lsb->lua_file;
+    }
+  }
+
+  lsb->logger.cb(lsb->logger.context, component, 7, "%s", lsb->output.buf);
+  lsb->output.pos = 0;
+  return 0;
+}
+
+
+void* memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
 
 void repl_logger(void *context, const char *component,
                    int level, const char *fmt, ...) {
@@ -69,18 +164,17 @@ void repl_logger(void *context, const char *component,
 
 	va_list args;
 	va_start(args, fmt);
-	vfprintf(stderr, fmt, args);
+	vfprintf(stdout, fmt, args);
 	va_end(args);
-	fwrite("\n", 1, 1, stderr);
-	fflush(stderr);
+	fwrite("\n", 1, 1, stdout);
+	fflush(stdout);
 }
-
-lsb_logger lsb_repl_logger = { .context = "repl",
-                               .cb = repl_logger };
 
 lsb_lua_sandbox *repl_init(char *conf) {
 	lsb_lua_sandbox *lsb = NULL;
-	const luaL_Reg *lib;
+
+	lsb_logger lsb_repl_logger = { .context = "repl",
+	                               .cb = repl_logger };
 
 	lsb = calloc(1, sizeof(*lsb));
 	if (!lsb) {
@@ -97,22 +191,15 @@ lsb_lua_sandbox *repl_init(char *conf) {
 		return NULL;
 	}
 
-	// // load our own extensions
-	// lib = (luaL_Reg*) &luazen;
-	// func("loading luazen extensions");
-	// for (; lib->func; lib++) {
-	// 	func("%s",lib->name);
-	// 	lsb_add_function(lsb, lib->func, lib->name);
-	// }
-	// lib = (luaL_Reg*) &bit_funcs;
-	// func("loading bitop extensions");
-	// for (; lib->func; lib++) {
-	// 	func("%s",lib->name);
-	// 	lsb_add_function(lsb, lib->func, lib->name);
-	// }
-	func("loading cjson extensions");
-	lsb_add_function(lsb, lua_cjson_new, "cjson");
-	lsb_add_function(lsb, lua_cjson_safe_new, "cjson_safe");
+	lsb->output.maxsize = 4095;
+	lsb->output.size    = 4096;
+	lsb->output.pos     = 0;
+	lsb->output.buf     = malloc(4096);
+	lua_pushcfunction(lsb->lua, &output);
+	lua_setglobal(lsb->lua, "output");
+
+	preload_modules(lsb->lua);
+	//////////////////// end of create
 
 	// load package module
 	lua_pushcfunction(lsb->lua, luaopen_package);
@@ -122,12 +209,30 @@ lsb_lua_sandbox *repl_init(char *conf) {
 	lua_setmetatable(lsb->lua, -2);
 	lua_pop(lsb->lua, 1);
 
-	preload_modules(lsb->lua);
+	lua_pushlightuserdata(lsb->lua, lsb);
+	lua_setfield(lsb->lua, LUA_REGISTRYINDEX, LSB_THIS_PTR);
+
+	lua_getglobal(lsb->lua, "require");
+	if(!lua_iscfunction(lsb->lua, -1)) {
+		error("LUA init: function 'require' not found");
+		return NULL; }
+	lua_pushstring(lsb->lua, LUA_BASELIBNAME);
+	if(lua_pcall(lsb->lua, 1, 0, 0)) {
+		error("LUA init: cannot load base library");
+		return NULL; }
+
+	// load our own extensions
+	lsb_load_extensions(lsb);
+
+	// print function
+	lsb_add_function(lsb, output_print, "print");
+
+	func("loading cjson extensions");
+	lsb_add_function(lsb, lua_cjson_new, "cjson");
+	lsb_add_function(lsb, lua_cjson_safe_new, "cjson_safe");
 
 	linenoiseHistorySetMaxLen(1024);
     linenoiseSetMultiLine(1);
-
-    lsb_add_function(lsb, repl_print, "print");
 
 	return(lsb);
 
@@ -153,7 +258,7 @@ int repl_exec(lsb_lua_sandbox *lsb, const char *line) {
 
 	if (!lsb) return -1;
 
-	ret = luaL_loadstring(lsb->lua, line);
+	ret = luaL_dostring(lsb->lua, line);
 	linenoiseHistoryAdd(line);
 	// lua_gc(lsb->lua, LUA_GCCOLLECT, 0);
 	if(ret != 0) {

@@ -204,7 +204,7 @@ end
 print(json.encode(res))
 ```
 
-Zenroom can be executed as `zenroom -a keys.json code.lua` and will print out the encrypted message for each recipient reorganised in a similar json structure:
+Zenroom can be executed as `zenroom -k keys.json code.lua` and will print out the encrypted message for each recipient reorganised in a similar json structure:
 
 ```json
 {

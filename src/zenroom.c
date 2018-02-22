@@ -23,19 +23,10 @@
 #include <string.h>
 #include <ctype.h>
 
-// open/close
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-// read
-#include <unistd.h>
-
 #include <errno.h>
 
 #include <jutils.h>
 
-#include <bitop.h>
-#include <luazen.h>
 #include <linenoise.h>
 
 #include <luasandbox.h>
@@ -46,8 +37,10 @@
 #define MAX_STRING 4096
 
 // prototypes from lua_functions
-void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val);
-void lsb_openlibs(lsb_lua_sandbox *lsb);
+extern void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val);
+extern void lsb_openlibs(lsb_lua_sandbox *lsb);
+extern void lsb_load_extensions(lsb_lua_sandbox *lsb);
+
 extern int lua_cjson_safe_new(lua_State *l);
 extern int lua_cjson_new(lua_State *l);
 
@@ -92,37 +85,35 @@ void logger(void *context, const char *component,
 	fflush(stdout);
 }
 
-// simple function to load files with basic open/read that are not
-// wrapped by emscripten to access its virtual filesystem. This
-// function exits the process on failure.
+
+// This function exits the process on failure.
 void load_file(char *dst, char *path) {
-	int fd = open(path, O_RDONLY);
-	off_t len = 0;
-	size_t readin = 0;
-	func("load_file: %s", path);
-	if(fd<0) {
+	char firstline[512];
+	size_t offset = 0;
+	size_t bytes = 0;
+
+	FILE *fd = fopen(path, "r");
+	if(!fd) {
 		error("Error opening %s: %s", path, strerror(errno));
-		close(fd);
 		exit(1); }
-	// calculate length
-	len = lseek(fd,0,SEEK_END);
-	if(len<0) {
-		error("Error seeking end of %s: %s", path, strerror(errno));
-		close(fd);
+	if(!fgets(firstline, 512, fd)) {
+		error("Error reading first line of %s: %s", path, strerror(errno));
 		exit(1); }
-	if(lseek(fd,0,SEEK_SET)<0) {
-		error("Error rewinding %s: %s", path, strerror(errno));
-		close(fd);
-		exit(1); }
-	// TODO: skip shebang at first line
-	readin = read(fd, dst, len);
-	if(!readin) {
-		error("Error reading %s: %s", path, strerror(errno));
-		close(fd);
-		exit(1); }
-	act("loaded file: %s (%u bytes)", path, readin);
-	func("file contents:\n%s\n", dst);
-	close(fd);
+	if(firstline[0]=='#' && firstline[1]=='!')
+		func("Skipping shebang in %s", path);
+	else {
+		offset+=strlen(firstline);
+		strncpy(dst,firstline,512);
+	}
+	for(;;) {
+		if( offset+1024>MAX_FILE ) break;
+		bytes = fread(&dst[offset],sizeof(char),1024,fd);
+		offset += bytes;
+		if( bytes<1024 && feof(fd) ) break;
+	}
+	fclose(fd);
+	act("loaded file: %s (%u bytes)", path, offset);
+	func("file contents:\n%s", dst);
 }
 
 char *safe_string(char *str) {
@@ -147,14 +138,14 @@ char *safe_string(char *str) {
 	return(str);
 }
 
-int zenroom_exec(char *script, char *conf, char *args, int debuglevel) {
+int zenroom_exec(char *script, char *conf, char *keys,
+                 char *data, int debuglevel) {
 	// the sandbox context (can be initialised only once)
 	// stores the script file and configuration
 	lsb_lua_sandbox *lsb = NULL;
 	int usage;
 	int return_code = 1; // return error by default
 	char *p;
-	const luaL_Reg *lib;
 	const char *r;
 
 	if(!script) {
@@ -164,6 +155,7 @@ int zenroom_exec(char *script, char *conf, char *args, int debuglevel) {
 
 	// TODO: how to pass config file and script to javascript?
 
+
 	lsb_logger lsb_vm_logger = { .context = "zenroom_exec",
 	                             .cb = logger };
 
@@ -172,30 +164,23 @@ int zenroom_exec(char *script, char *conf, char *args, int debuglevel) {
 		error("Error creating sandbox: %s", lsb_get_error(lsb));
 		exit(1); }
 
+	lsb_load_extensions(lsb);
 	// load our own extensions
-	lib = (luaL_Reg*) &luazen;
-	func("loading luazen extensions");
-	for (; lib->func; lib++) {
-		func("%s",lib->name);
-		lsb_add_function(lsb, lib->func, lib->name);
-	}
-
-	lib = (luaL_Reg*) &bit_funcs;
-	func("loading bitop extensions");
-	for (; lib->func; lib++) {
-		func("%s",lib->name);
-		lsb_add_function(lsb, lib->func, lib->name);
-	}
 
 	func("loading cjson extensions");
 	lsb_add_function(lsb, lua_cjson_safe_new, "cjson");
-	lsb_add_function(lsb, lua_cjson_safe_new, "cjson_safe");
 
 	// load arguments from json if present
-	if(args) // avoid errors on NULL args
-		if(safe_string(args))
-			lsb_setglobal_string(lsb,"arguments",args);
-
+	if(data) // avoid errors on NULL args
+		if(safe_string(data)) {
+			func("declaring global: DATA");
+			lsb_setglobal_string(lsb,"DATA",data);
+		}
+	if(keys)
+		if(safe_string(keys)) {
+			func("declaring global: KEYS");
+			lsb_setglobal_string(lsb,"KEYS",keys);
+		}
 	// TODO: MILAGRO
 
 	// initialise global variables
@@ -233,23 +218,26 @@ int zenroom_exec(char *script, char *conf, char *args, int debuglevel) {
 }
 
 int main(int argc, char **argv) {
-	static char conffile[512] = "zenroom.conf";
-	static char scriptfile[512] = "zenroom.lua";
-	static char argfile[512];
-	static char script[MAX_FILE];
-	static char conf[MAX_FILE];
-	static char args[MAX_FILE];
-
+	char conffile[512] = "zenroom.conf";
+	char scriptfile[512] = "zenroom.lua";
+	char keysfile[512];
+	char script[MAX_FILE];
+	char conf[MAX_FILE];
+	char keys[MAX_FILE];
+	char pipedin[MAX_FILE];
+	int readstdin = 0;
 	int opt, index;
-	int debuglevel = 1;
+    int debuglevel = 1;
 	int ret;
-	const char *short_options = "hdc:a:i";
+	const char *short_options = "hdc:k:i";
     const char *help =
-		"Usage: zenroom [ -c config ] [ -a arguments ] [ script.lua | - ]\n";
+		"Usage: zenroom [-dh] [ -c config ] [ -k keys ] [ script.lua ] [ - ]\n";
     conffile[0] = '\0';
     scriptfile[0] = '\0';
-    argfile[0] = '\0';
-    args[0] = '\0';
+    keysfile[0] = '\0';
+    keys[0] = '\0';
+    conf[0] = '\0';
+    script[0] = '\0';
 
 	notice( "Zenroom - crypto language restricted execution environment %s",VERSION);
 	act("Copyright (C) 2017-2018 Dyne.org foundation");
@@ -257,13 +245,14 @@ int main(int argc, char **argv) {
 		switch(opt) {
 		case 'd':
 			debuglevel = 3;
+			set_debug(debuglevel);
 			break;
 		case 'h':
 			fprintf(stdout,"%s",help);
 			exit(0);
 			break;
-		case 'a':
-			snprintf(argfile,511,"%s",optarg);
+		case 'k':
+			snprintf(keysfile,511,"%s",optarg);
 			break;
 		case 'c':
 			snprintf(conffile,511,"%s",optarg);
@@ -274,27 +263,32 @@ int main(int argc, char **argv) {
 	}
 	for (index = optind; index < argc; index++) {
 		char *path = argv[index];
-		if(path[0]=='-') { scriptfile[0]='-'; break; }
+		if(path[0]=='-') { readstdin = 1; }
 		else snprintf(scriptfile,511,"%s",argv[index]);
 	}
 
-	if(scriptfile[0]=='-') {
+	if(readstdin) {
 		////////////////////////
-		// get script from stdin
-		char ch;
-		int c;
-		for(c=0; c<MAX_FILE-1; c++) {
-			if(!read(STDIN_FILENO, &ch, 1)) break;
-			script[c]=ch;
+		// get another argument from stdin
+		act("reading DATA from stdin");
+		size_t bytes = 0;
+		size_t offset = 0;
+		for(;;) {
+			bytes = fread(&pipedin[offset],sizeof(char),1024,stdin);
+			offset += bytes;
+			if( bytes<1024 && feof(stdin) ) break;
 		}
-		script[c]='\0';
+		func("%u bytes read",offset);
+		func("%s",pipedin);
 
 		////////////////////////////////////
 		// start an interactive repl console
-	} else if(scriptfile[0]=='\0') {
+	}
+
+	if(scriptfile[0]=='\0') {
+		notice("Starting interactive console");
 		lsb_lua_sandbox *cli;
 		char *line;
-		lsb_err_value ret;
 		cli = repl_init(confdefault);
 		while((line = linenoise("zen> ")) != NULL) {
 			repl_exec(cli, line);
@@ -302,11 +296,11 @@ int main(int argc, char **argv) {
 			linenoiseFree(line);
 		}
 		repl_teardown(cli);
-
-	} else
+	} else {
 		////////////////////////////////////
 		// load a file as script and execute
 		load_file(script, scriptfile);
+	}
 
 	// configuration from -c or default
 	if(conffile[0]!='\0')
@@ -314,10 +308,16 @@ int main(int argc, char **argv) {
 	else
 		act("using default configuration");
 
-	if(argfile[0]!='\0') load_file(args, argfile);
+	if(keysfile[0]!='\0') {
+		act("reading KEYS from file");
+		load_file(keys, keysfile);
+	}
+
 	ret = zenroom_exec(script,
-	                   (conffile[0]=='\0')?confdefault:conf, 
-	                   (args[0]=='\0')?NULL:args, debuglevel);
+	                   (conf[0]!='\0')?conf:confdefault,
+	                   (keys[0]!='\0')?keys:NULL,
+	                   (readstdin)?pipedin:NULL,
+	                   debuglevel);
 	// exit(1) on failure
 	exit(ret);
 }

@@ -21,6 +21,7 @@
 #ifndef __LUAZEN_H__
 #define __LUAZEN_H__
 
+#include <luasandbox/lauxlib.h>
 #include <luasandbox.h>
 
 int lz_randombytes(lua_State *L);
