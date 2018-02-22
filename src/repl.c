@@ -112,7 +112,8 @@ int output_print(lua_State *lua)
   }
 
   lua_getglobal(lua, "tostring");
-  for (int i = 1; i <= n; ++i) {
+  int i;
+  for (i = 1; i <= n; ++i) {
     lua_pushvalue(lua, -1);  // tostring
     lua_pushvalue(lua, i);   // value
     lua_call(lua, 1, 1);
