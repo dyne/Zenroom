@@ -1,0 +1,11 @@
+*.[oa]
+*.so
+CMakeCache.*
+CMakeFiles
+CPack*
+CTest*
+config.log
+config.status
+build/lua_sandbox*
+build/luazen
+
