@@ -4,8 +4,8 @@
 --
 -- Note: The output of this script is easier to read with "less -S"
 
-local json = cjson()
-local json_safe = cjson_safe()
+local json = cjson_full()
+local json_safe = cjson()
 
 local function json_encode_output_type(value)
     local text = json.encode(value)
