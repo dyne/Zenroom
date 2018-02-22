@@ -8,12 +8,13 @@
 -- returns a list of recipients and encrypted secrets for each and the
 -- sender's public key
 
-secret="this is a secret that noone knows"
+secret=DATA
+
 -- this should be a random string every time
 nonce="eishai7Queequot7pooc3eiC7Ohthoh1"
 
-json = cjson_safe()
-keys = json.decode(arguments)
+json = cjson()
+keys = json.decode(KEYS)
 
 res = {}
 
@@ -25,4 +26,5 @@ for name,pubkey in pairs(keys.recipients) do
    -- insert in results
    res[name]=encode_b58(enc)
 end
+
 print(json.encode(res))

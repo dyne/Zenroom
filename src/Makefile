@@ -1,12 +1,12 @@
 CC?=gcc
 VERSION := $(shell cat ../VERSION)
 
-CFLAGS  += -I. -I../lib/lua_sandbox/include -pedantic
-SOURCES := jutils.o lua_functions.o zenroom.o bitop.o lua_cjson.o strbuf.o fpconv.c
+CFLAGS  += -I. -I../lib/lua_sandbox/include
+SOURCES := jutils.o lua_functions.o zenroom.o bitop.o lua_cjson.o strbuf.o fpconv.c repl.c linenoise.c
 LDADD   := ../build/lua_sandbox/src/libluasandbox.a
 LDADD   += ../build/lua_sandbox/src/util/libluasandboxutil.a
 LDADD   += ../build/luazen/libluazen.a
-LDADD   += ../lib/milagro-c/libmilagro.a
+# LDADD   += ../lib/milagro-c/libmilagro.a
 
 all: shared
 
@@ -31,7 +31,7 @@ system-static: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-static ${LDFLAGS} ${LDADD}
 
 shared: CFLAGS+=  -O3 -Wall
-shared: LDADD+=   -lm -lpthread -ljemalloc
+shared: LDADD+=   -lm -lpthread
 shared: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-shared ${LDFLAGS} ${LDADD}
 

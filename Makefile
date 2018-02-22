@@ -1,5 +1,6 @@
 pwd := $(shell pwd)
 luasand := ${pwd}/build/lua_sandbox
+mil := ${pwd}/build/milagro
 
 # default
 gcc := gcc
@@ -69,25 +70,21 @@ pbc:
 	mkdir -p ${pwd}/build/pbc
 	if ! [ ${pwd}/build/pbc/.libs/libpbc.a ]; then cd ${pwd}/build/pbc && CFLAGS="${cflags}" CC=${gcc} ${pwd}/lib/pbc/configure --disable-shared &&	make -C ${pwd}/build/pbc LDFLAGS="-L${pwd}/lib/gmp/.libs -l:libgmp.a" CFLAGS="${cflags} -I${pwd}/lib/gmp -I${pwd}/lib/pbc/include"; return 0; fi
 
-jemalloc:
-	@echo "-- Building jemalloc"
-	mkdir -p ${pwd}/build/jemalloc
-	if ! [ -r ${pwd}/lib/jemalloc/configure ]; then cd ${pwd}/lib/jemalloc &&  ${pwd}/lib/jemalloc/autogen.sh; fi
-	if ! [ -r ${pwd}/build/jemalloc/lib/libjemalloc.a ]; then cd ${pwd}/build/jemalloc && CFLAGS="${cflags}" CC=${gcc} ${pwd}/lib/jemalloc/configure --disable-cxx && make -C ${pwd}/build/jemalloc; fi
-
 luasandbox:
 	@echo "-- Building lua_sandbox"
 	mkdir -p ${luasand} && cd ${luasand} && CC=${gcc} cmake ${pwd}/lib/lua_sandbox -DCMAKE_C_FLAGS="${cflags}"
-	VERBOSE=1 CFLAGS="${cflags}" make -C ${luasand} luasandbox
+	CC=${gcc} VERBOSE=1 CFLAGS="${cflags}" make -C ${luasand} luasandbox
 
 luazen:
 	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/build/luazen
 
 milagro:
-	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-c
+	@echo "-- Building milagro"
+	if ! [ -r ${pwd}/lib/milagro-crypto-c/CMakeCache.txt ]; then cd ${pwd}/lib/milagro-crypto-c && CC=${gcc} cmake . -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DCMAKE_C_FLAGS="${cflags}" -DAMCL_CHUNK=32 -DAMCL_CURVE=ED25519 -DAMCL_RSA=4096; fi
+	CC=${gcc} VERBOSE=1 CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c
 
 check-milagro: milagro
-	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/test/milagro check
+	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c test
 
 check-shared: test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
 check-shared: check-milagro
@@ -117,9 +114,10 @@ check-static: check-milagro
 
 clean:
 	rm -rf ${luasand}
+	cd ${pwd}/lib/lua_sandbox && git clean -fd && git checkout .
+	cd ${pwd}/build/luazen && git clean -fd && git checkout .
+	cd ${pwd}/lib/milagro-crypto-c && git clean -fd && git checkout .
 	make -C src clean
-	make -C ${pwd}/build/luazen clean
-	make -C ${pwd}/lib/milagro-c clean
 
 distclean:
 	rm -rf ${musl}

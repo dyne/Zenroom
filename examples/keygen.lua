@@ -6,7 +6,7 @@
 -- exchanged among different people will lead to the same secret which
 -- is then usable for asymmetric encryption.
 
-json = cjson_safe()
+json = cjson()
 pk, sk = keygen_session_x25519()
 keypair = json.encode(
    {

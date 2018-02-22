@@ -23,6 +23,10 @@
 #include <luasandbox/lua.h>
 #include <luasandbox/lualib.h>
 
+
+#include <luazen.h>
+#include <bitop.h>
+
 int get_debug();
 
 void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val) {
@@ -44,4 +48,24 @@ void lsb_openlibs(lsb_lua_sandbox *lsb) {
 		func("debug");
 		luaopen_debug(L);
 	}
+}
+
+void lsb_load_extensions(lsb_lua_sandbox *lsb) {
+	const luaL_Reg *lib;
+
+	// load our own extensions
+	lib = (luaL_Reg*) &luazen;
+	func("loading luazen extensions");
+	for (; lib->func; lib++) {
+		func("%s",lib->name);
+		lsb_add_function(lsb, lib->func, lib->name);
+	}
+
+	lib = (luaL_Reg*) &bit_funcs;
+	func("loading bitop extensions");
+	for (; lib->func; lib++) {
+		func("%s",lib->name);
+		lsb_add_function(lsb, lib->func, lib->name);
+	}
+
 }
