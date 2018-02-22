@@ -17,5 +17,5 @@ fi
 # 	cp src/randombytes.c src/randombytes.h lib/luazen/src
 # fi
 
-cd lib/jemalloc && \
-	git checkout -- . && patch < ../../build/jemalloc_static.patch && cd -
+# cd lib/jemalloc && \
+# 	git checkout -- . && patch < ../../build/jemalloc_static.patch && cd -
