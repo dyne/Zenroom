@@ -237,7 +237,7 @@ Includes code by:
 - Luke Dashjr (base58)
 - Cameron Rich (md5)
 - Mark Pulford (lua-cjson)
-- Dan Sprenkels (randombytes)
+- Daan Sprenkels (randombytes)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License version 2 as
