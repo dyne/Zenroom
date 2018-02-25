@@ -30,10 +30,7 @@
 #include <luasandbox/util/util.h>
 #include <luasandbox/util/output_buffer.h>
 
-extern const struct luaL_Reg luazen;
-extern const struct luaL_Reg bit_funcs;
-extern const struct luaL_Reg base_funcs;
-extern const struct luaL_Reg mathlib;
+extern void completion(const char *buf, linenoiseCompletions *lc);
 
 extern void lsb_load_extensions(lsb_lua_sandbox *lsb);
 
@@ -64,29 +61,11 @@ static const luaL_Reg preload_module_list[] = {
 };
 
 int print_help(lua_State *lua) {
+	(void)lua;
 	fwrite(cheatsheet,sizeof(unsigned char),cheatsheet_len,stdout);
 	fflush(stdout);
 	return 1;
 }
-
-#define CMATCH(n) { \
-	const struct luaL_Reg *lib = &n; \
-	for(;lib->func;lib++) { \
-		const char *sel = lib->name; \
-		if(strncmp(sel,buf,len) ==0) { \
-			linenoiseAddCompletion(lc, sel); \
-		} } }
-
-void completion(const char *buf, linenoiseCompletions *lc) {
-	int len = strlen(buf);
-	len = (len>64)?64:len;
-
-	CMATCH(luazen);
-	CMATCH(bit_funcs);
-	CMATCH(base_funcs);
-	CMATCH(mathlib);
-}
-
 
 static int libsize(const luaL_Reg *l)
 {
@@ -192,6 +171,7 @@ void* memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
 void repl_logger(void *context, const char *component,
                    int level, const char *fmt, ...) {
 	// suppress warnings about these unused paraments
+	(void)component;
 	(void)context;
 	(void)level;
 
