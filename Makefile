@@ -76,7 +76,7 @@ pbc:
 luasandbox:
 	@echo "-- Building lua_sandbox"
 	mkdir -p ${luasand} && cd ${luasand} && CC=${gcc} cmake ${pwd}/lib/lua_sandbox -DCMAKE_C_FLAGS="${cflags}"
-	CC=${gcc} VERBOSE=1 CFLAGS="${cflags}" make -C ${luasand} luasandbox
+	CC=${gcc} CFLAGS="${cflags}" make -C ${luasand} luasandbox
 
 luazen:
 	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/build/luazen
@@ -84,7 +84,7 @@ luazen:
 milagro:
 	@echo "-- Building milagro"
 	if ! [ -r ${pwd}/lib/milagro-crypto-c/CMakeCache.txt ]; then cd ${pwd}/lib/milagro-crypto-c && CC=${gcc} cmake . -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DCMAKE_C_FLAGS="${cflags}" -DAMCL_CHUNK=32 -DAMCL_CURVE=ED25519 -DAMCL_RSA=4096; fi
-	CC=${gcc} VERBOSE=1 CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c
+	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c
 
 check-milagro: milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c test
