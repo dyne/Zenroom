@@ -26,15 +26,13 @@
 #include <errno.h>
 
 #include <jutils.h>
+#include <zenroom.h>
 
 #include <linenoise.h>
 
 #include <luasandbox.h>
 #include <luasandbox/util/util.h>
 #include <luasandbox/lauxlib.h>
-
-#define MAX_FILE 102400 // load max 100Kb files
-#define MAX_STRING 4096
 
 // prototypes from lua_functions
 extern void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val);
@@ -268,6 +266,11 @@ int main(int argc, char **argv) {
 		else snprintf(scriptfile,511,"%s",argv[index]);
 	}
 
+	if(keysfile[0]!='\0') {
+		act("reading KEYS from file");
+		load_file(keys, keysfile);
+	}
+
 	if(readstdin) {
 		////////////////////////
 		// get another argument from stdin
@@ -290,6 +293,8 @@ int main(int argc, char **argv) {
 		lsb_lua_sandbox *cli;
 		char *line;
 		cli = repl_init(confdefault);
+		if(readstdin)     lsb_setglobal_string(cli,"DATA",pipedin);
+		if(keys[0]!='\0') lsb_setglobal_string(cli,"KEYS",keys);
 		while((line = linenoise("zen> ")) != NULL) {
 			repl_exec(cli, line);
 			// if(ret != 0) break;
@@ -308,10 +313,6 @@ int main(int argc, char **argv) {
 	else
 		act("using default configuration");
 
-	if(keysfile[0]!='\0') {
-		act("reading KEYS from file");
-		load_file(keys, keysfile);
-	}
 
 	ret = zenroom_exec(script,
 	                   (conf[0]!='\0')?conf:confdefault,

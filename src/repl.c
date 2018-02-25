@@ -20,8 +20,8 @@
 
 #include <ctype.h>
 #include <jutils.h>
+#include <zenroom.h>
 #include <linenoise.h>
-//#include <luazen.h>
 
 #include <luasandbox.h>
 #include <luasandbox/lua.h>
@@ -159,11 +159,11 @@ int output_print(lua_State *lua)
     }
 
     while (*s) {
-      if (isprint(*s)) {
+      // if (isprint(*s)) {
         lsb_outputc(&lsb->output, *s);
-      } else {
-        lsb_outputc(&lsb->output, ' ');
-      }
+      // } else {
+      //   lsb_outputc(&lsb->output, ' ');
+      // }
       ++s;
     }
     lua_pop(lua, 1);
@@ -224,10 +224,10 @@ lsb_lua_sandbox *repl_init(char *conf) {
 		return NULL;
 	}
 
-	lsb->output.maxsize = 4095;
-	lsb->output.size    = 4096;
+	lsb->output.maxsize = MAX_FILE;
+	lsb->output.size    = MAX_STRING;
 	lsb->output.pos     = 0;
-	lsb->output.buf     = malloc(4096);
+	lsb->output.buf     = malloc(MAX_STRING);
 	lua_pushcfunction(lsb->lua, &output);
 	lua_setglobal(lsb->lua, "output");
 
