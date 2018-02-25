@@ -247,3 +247,292 @@ index d14643a..3ea8373 100644
  
    unsigned long long t;
    if (qpf == ULLONG_MAX) QueryPerformanceFrequency((LARGE_INTEGER *)&qpf);
+diff --git a/include/luasandbox.h b/include/luasandbox.h
+index 32f8744..36e722c 100644
+--- a/include/luasandbox.h
++++ b/include/luasandbox.h
+@@ -12,11 +12,12 @@
+ #include "luasandbox/error.h"
+ 
+ #ifdef _WIN32
+-#ifdef luasandbox_EXPORTS
+-#define LSB_EXPORT __declspec(dllexport)
+-#else
+-#define LSB_EXPORT __declspec(dllimport)
+-#endif
++// #ifdef luasandbox_EXPORTS
++// #define LSB_EXPORT __declspec(dllexport)
++// #else
++// #define LSB_EXPORT __declspec(dllimport)
++// #endif
++#define LSB_EXPORT
+ #else
+ #if __GNUC__ >= 4
+ #define LSB_EXPORT __attribute__ ((visibility ("default")))
+diff --git a/include/luasandbox/heka/sandbox.h b/include/luasandbox/heka/sandbox.h
+index 1c48bea..5d4136c 100644
+--- a/include/luasandbox/heka/sandbox.h
++++ b/include/luasandbox/heka/sandbox.h
+@@ -16,11 +16,12 @@
+ #include "../util/heka_message.h"
+ 
+ #ifdef _WIN32
+-#ifdef luasandboxheka_EXPORTS
+-#define LSB_HEKA_EXPORT __declspec(dllexport)
+-#else
+-#define LSB_HEKA_EXPORT __declspec(dllimport)
+-#endif
++// #ifdef luasandboxheka_EXPORTS
++// #define LSB_HEKA_EXPORT __declspec(dllexport)
++// #else
++// #define LSB_HEKA_EXPORT __declspec(dllimport)
++// #endif
++#define LSB_HEKA_EXPORT
+ #else
+ #if __GNUC__ >= 4
+ #define LSB_HEKA_EXPORT __attribute__ ((visibility ("default")))
+diff --git a/include/luasandbox/luaconf.h b/include/luasandbox/luaconf.h
+index fa748aa..bd10a04 100644
+--- a/include/luasandbox/luaconf.h
++++ b/include/luasandbox/luaconf.h
+@@ -35,13 +35,13 @@
+ 
+ #if defined(LUA_USE_LINUX)
+ #define LUA_USE_POSIX
+-#define LUA_USE_DLOPEN    /* needs an extra library: -ldl */
+-#define LUA_USE_READLINE  /* needs some extra libraries */
++// #define LUA_USE_DLOPEN    /* needs an extra library: -ldl */
++// #define LUA_USE_READLINE  /* needs some extra libraries */
+ #endif
+ 
+ #if defined(LUA_USE_MACOSX)
+ #define LUA_USE_POSIX
+-#define LUA_DL_DYLD   /* does not need extra library */
++// #define LUA_DL_DYLD   /* does not need extra library */
+ #endif
+ 
+ 
+@@ -55,7 +55,7 @@
+ #define LUA_USE_MKSTEMP
+ #define LUA_USE_ISATTY
+ #define LUA_USE_POPEN
+-#define LUA_USE_ULONGJMP
++// #define LUA_USE_ULONGJMP
+ #endif
+ 
+ 
+@@ -154,9 +154,10 @@
+ #if defined(LUA_BUILD_AS_DLL)
+ 
+ #if defined(LUA_CORE) || defined(LUA_LIB)
+-#define LUA_API __declspec(dllexport)
+-#else
+-#define LUA_API __declspec(dllimport)
++// #define LUA_API __declspec(dllexport)
++// #else
++// #define LUA_API __declspec(dllimport)
++#define LUA_API
+ #endif
+ 
+ #else
+@@ -612,7 +613,7 @@ union luai_Cast { double l_d; long l_l; };
+   { if ((c)->status == 0) (c)->status = -1; }
+ #define luai_jmpbuf int  /* dummy variable */
+ 
+-#elif defined(LUA_USE_ULONGJMP)
++#elif defined(LUA_USE_ULONGJMP) && !defined(LUA_WIN)
+ /* in Unix, try _longjmp/_setjmp (more efficient) */
+ #define LUAI_THROW(L,c) _longjmp((c)->b, 1)
+ #define LUAI_TRY(L,c,a) if (_setjmp((c)->b) == 0) { a }
+@@ -700,11 +701,11 @@ union luai_Cast { double l_d; long l_l; };
+ ** By default, _WIN32 gets LUA_DL_DLL and MAC OS X gets LUA_DL_DYLD.
+ */
+ #if defined(LUA_USE_DLOPEN)
+-#define LUA_DL_DLOPEN
++// #define LUA_DL_DLOPEN
+ #endif
+ 
+ #if defined(LUA_WIN)
+-#define LUA_DL_DLL
++// #define LUA_DL_DLL
+ #endif
+ 
+ 
+diff --git a/include/luasandbox/test/sandbox.h b/include/luasandbox/test/sandbox.h
+index 8465fa0..9f4d96a 100644
+--- a/include/luasandbox/test/sandbox.h
++++ b/include/luasandbox/test/sandbox.h
+@@ -15,11 +15,12 @@
+ #include "../error.h"
+ 
+ #ifdef _WIN32
+-#ifdef luasandboxtest_EXPORTS
+-#define LSB_TEST_EXPORT __declspec(dllexport)
+-#else
+-#define LSB_TEST_EXPORT __declspec(dllimport)
+-#endif
++// #ifdef luasandboxtest_EXPORTS
++// #define LSB_TEST_EXPORT __declspec(dllexport)
++// #else
++// #define LSB_TEST_EXPORT __declspec(dllimport)
++// #endif
++#define LSB_TEST_EXPORT
+ #else
+ #if __GNUC__ >= 4
+ #define LSB_TEST_EXPORT __attribute__ ((visibility ("default")))
+diff --git a/include/luasandbox/util/util.h b/include/luasandbox/util/util.h
+index bccc66a..6646742 100644
+--- a/include/luasandbox/util/util.h
++++ b/include/luasandbox/util/util.h
+@@ -16,11 +16,12 @@
+ #include "../error.h"
+ 
+ #ifdef _WIN32
+-#ifdef luasandboxutil_EXPORTS
+-#define LSB_UTIL_EXPORT __declspec(dllexport)
+-#else
+-#define LSB_UTIL_EXPORT __declspec(dllimport)
+-#endif
++// #ifdef luasandboxutil_EXPORTS
++// #define LSB_UTIL_EXPORT __declspec(dllexport)
++// #else
++// #define LSB_UTIL_EXPORT __declspec(dllimport)
++#define LSB_UTIL_EXPORT
++// #endif
+ #else
+ #if __GNUC__ >= 4
+ #define LSB_UTIL_EXPORT __attribute__ ((visibility ("default")))
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index beff13e..51cb48b 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -4,13 +4,13 @@
+ 
+ if(MSVC)
+ 	add_definitions(
+-	-DLUA_BUILD_AS_DLL
++#	-DLUA_BUILD_AS_DLL
+ 	-D_CRT_SECURE_NO_WARNINGS
+ 	)
+ else()
+ 	add_definitions(
+ 	-DLUA_USE_POSIX 
+-	-DLUA_USE_DLOPEN 
++#	-DLUA_USE_DLOPEN
+ 	-DLUA_USE_STRTODHEX
+ 	-DLUA_USE_LONGLONG 
+ 	-DLUA_USE_GMTIME_R
+@@ -55,7 +55,7 @@ luasandbox_output.c
+ luasandbox_serialize.c
+ )
+ 
+-add_library(luasandbox SHARED ${LUA_SANDBOX_SRC} ${LUA_SRC})
++add_library(luasandbox STATIC ${LUA_SANDBOX_SRC} ${LUA_SRC})
+ set_target_properties(luasandbox PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 0)
+ target_link_libraries(luasandbox luasandboxutil ${CMAKE_DL_LIBS})
+ if(LIBM_LIBRARY)
+diff --git a/src/lua/lbaselib.c b/src/lua/lbaselib.c
+index 8552405..63015cc 100644
+--- a/src/lua/lbaselib.c
++++ b/src/lua/lbaselib.c
+@@ -444,7 +444,7 @@ static int luaB_newproxy (lua_State *L) {
+ }
+ 
+ 
+-static const luaL_Reg base_funcs[] = {
++const luaL_Reg base_funcs[] = {
+   {"assert", luaB_assert},
+   {"collectgarbage", luaB_collectgarbage},
+   {"dofile", luaB_dofile},
+diff --git a/src/lua/lmathlib.c b/src/lua/lmathlib.c
+index 0ff1526..72ca148 100644
+--- a/src/lua/lmathlib.c
++++ b/src/lua/lmathlib.c
+@@ -224,7 +224,7 @@ static int math_erfc (lua_State *L) {
+ }
+ 
+ 
+-static const luaL_Reg mathlib[] = {
++const luaL_Reg mathlib[] = {
+   {"abs",   math_abs},
+   {"acos",  math_acos},
+   {"asin",  math_asin},
+diff --git a/src/lua/loadlib.c b/src/lua/loadlib.c
+index 43697e1..b344199 100644
+--- a/src/lua/loadlib.c
++++ b/src/lua/loadlib.c
+@@ -48,7 +48,7 @@ static void *ll_load (lua_State *L, const char *path);
+ static lua_CFunction ll_sym (lua_State *L, void *lib, const char *sym);
+ 
+ 
+-
++#undef LUA_DL_DLOPEN
+ #if defined(LUA_DL_DLOPEN)
+ /*
+ ** {========================================================================
+diff --git a/src/lua/loslib.c b/src/lua/loslib.c
+index b822e2d..5deaa92 100644
+--- a/src/lua/loslib.c
++++ b/src/lua/loslib.c
+@@ -76,7 +76,7 @@ static int os_pushresult (lua_State *L, int i, const char *filename) {
+ ** By default, Lua uses gmtime/localtime, except when POSIX is available,
+ ** where it uses gmtime_r/localtime_r
+ */
+-#if defined(LUA_USE_GMTIME_R)
++#if defined(LUA_USE_GMTIME_R) && !defined(_WIN32)
+ 
+ #define l_gmtime(t,r)		gmtime_r(t,r)
+ #define l_localtime(t,r)	localtime_r(t,r)
+diff --git a/src/luasandbox.c b/src/luasandbox.c
+index d6ff41e..84793fc 100644
+--- a/src/luasandbox.c
++++ b/src/luasandbox.c
+@@ -33,10 +33,10 @@ static jmp_buf g_jbuf;
+ 
+ static const luaL_Reg preload_module_list[] = {
+   { LUA_BASELIBNAME, luaopen_base },
+-  { LUA_COLIBNAME, luaopen_coroutine },
++//  { LUA_COLIBNAME, luaopen_coroutine },
+   { LUA_TABLIBNAME, luaopen_table },
+-  { LUA_IOLIBNAME, luaopen_io },
+-  { LUA_OSLIBNAME, luaopen_os },
++//  { LUA_IOLIBNAME, luaopen_io },
++//  { LUA_OSLIBNAME, luaopen_os },
+   { LUA_STRLIBNAME, luaopen_string },
+   { LUA_MATHLIBNAME, luaopen_math },
+   { NULL, NULL }
+@@ -603,7 +603,7 @@ lsb_err_value lsb_init(lsb_lua_sandbox *lsb, const char *state_file)
+   lsb->usage[LSB_UT_MEMORY][LSB_US_LIMIT] = mem_limit;
+   lua_CFunction pf = lua_atpanic(lsb->lua, unprotected_panic);
+   int jump = setjmp(g_jbuf);
+-  if (jump || luaL_dofile(lsb->lua, lsb->lua_file) != 0) {
++  if (jump || luaL_dostring(lsb->lua, lsb->lua_file) != 0) {
+     int len = snprintf(lsb->error_message, LSB_ERROR_SIZE, "%s",
+                        lua_tostring(lsb->lua, -1));
+     if (len >= LSB_ERROR_SIZE || len < 0) {
+diff --git a/src/util/CMakeLists.txt b/src/util/CMakeLists.txt
+index e0df018..ff3a126 100644
+--- a/src/util/CMakeLists.txt
++++ b/src/util/CMakeLists.txt
+@@ -15,7 +15,7 @@ string_matcher.c
+ util.c
+ )
+ 
+-add_library(luasandboxutil SHARED ${UTIL_SRC})
++add_library(luasandboxutil STATIC ${UTIL_SRC})
+ set_target_properties(luasandboxutil PROPERTIES VERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH} SOVERSION 0)
+ target_compile_definitions(luasandboxutil PRIVATE -Dluasandboxutil_EXPORTS)
+ 
+diff --git a/src/util/util.c b/src/util/util.c
+index d14643a..3ea8373 100644
+--- a/src/util/util.c
++++ b/src/util/util.c
+@@ -88,7 +88,7 @@ unsigned long long lsb_get_time()
+   return mach_absolute_time() * convert;
+ #elif defined(_WIN32)
+   static unsigned long long qpf = ULLONG_MAX;
+-  static_assert(sizeof(LARGE_INTEGER) == sizeof qpf, "size mismatch");
++  // static_assert(sizeof(LARGE_INTEGER) == sizeof qpf, "size mismatch");
+ 
+   unsigned long long t;
+   if (qpf == ULLONG_MAX) QueryPerformanceFrequency((LARGE_INTEGER *)&qpf);

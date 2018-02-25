@@ -1,8 +1,8 @@
 CC?=gcc
 VERSION := $(shell cat ../VERSION)
 
-CFLAGS  += -I. -I../lib/lua_sandbox/include
-SOURCES := jutils.o lua_functions.o zenroom.o bitop.o lua_cjson.o strbuf.o fpconv.c repl.c linenoise.c
+CFLAGS  += -I. -I../lib/lua_sandbox/include -O3 -Wall -Wextra
+SOURCES := jutils.o lua_functions.o zenroom.o bitop.o lua_cjson.o strbuf.o fpconv.o repl.o linenoise.o
 LDADD   := ../build/lua_sandbox/src/libluasandbox.a
 LDADD   += ../build/lua_sandbox/src/util/libluasandboxutil.a
 LDADD   += ../build/luazen/libluazen.a

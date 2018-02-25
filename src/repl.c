@@ -21,14 +21,19 @@
 #include <ctype.h>
 #include <jutils.h>
 #include <linenoise.h>
+//#include <luazen.h>
 
 #include <luasandbox.h>
 #include <luasandbox/lua.h>
 #include <luasandbox/lualib.h>
+#include <luasandbox/lauxlib.h>
 #include <luasandbox/util/util.h>
 #include <luasandbox/util/output_buffer.h>
 
-#include <luasandbox/lauxlib.h>
+extern const struct luaL_Reg luazen;
+extern const struct luaL_Reg bit_funcs;
+extern const struct luaL_Reg base_funcs;
+extern const struct luaL_Reg mathlib;
 
 extern void lsb_load_extensions(lsb_lua_sandbox *lsb);
 
@@ -56,6 +61,24 @@ static const luaL_Reg preload_module_list[] = {
   { NULL, NULL }
 };
 
+#define CMATCH(n) { \
+	const struct luaL_Reg *lib = &n; \
+	for(;lib->func;lib++) { \
+		const char *sel = lib->name; \
+		if(strncmp(sel,buf,len) ==0) { \
+			linenoiseAddCompletion(lc, sel); \
+		} } }
+
+void completion(const char *buf, linenoiseCompletions *lc) {
+	int len = strlen(buf);
+	len = (len>64)?64:len;
+
+	CMATCH(luazen);
+	CMATCH(bit_funcs);
+	CMATCH(base_funcs);
+	CMATCH(mathlib);
+}
+
 
 static int libsize(const luaL_Reg *l)
 {
@@ -77,15 +100,16 @@ static void preload_modules(lua_State *lua)
   lua_pop(lua, 1); // remove the preloaded table
 }
 
-extern void lsb_output_coroutine(lsb_lua_sandbox *lsb, lua_State *lua, int start,
-                                 int end, int append);
+extern void lsb_output_coroutine(lsb_lua_sandbox *lsb, lua_State *lua,
+                                 int start, int end, int append);
 
 static int output(lua_State *lua)
 {
   lua_getfield(lua, LUA_REGISTRYINDEX, LSB_THIS_PTR);
   lsb_lua_sandbox *lsb = lua_touserdata(lua, -1);
   lua_pop(lua, 1); // remove this ptr
-  if (!lsb) return luaL_error(lua, "%s() invalid " LSB_THIS_PTR, __func__);
+  if (!lsb)
+	  return(luaL_error(lua, "%s() invalid " LSB_THIS_PTR, __func__));
 
   int n = lua_gettop(lua);
   if (n == 0) {
@@ -234,6 +258,8 @@ lsb_lua_sandbox *repl_init(char *conf) {
 
 	linenoiseHistorySetMaxLen(1024);
     linenoiseSetMultiLine(1);
+    linenoiseSetCompletionCallback(completion);
+
 
 	return(lsb);
 

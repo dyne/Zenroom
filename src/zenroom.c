@@ -139,7 +139,7 @@ char *safe_string(char *str) {
 }
 
 int zenroom_exec(char *script, char *conf, char *keys,
-                 char *data, int debuglevel) {
+                 char *data, int verbosity) {
 	// the sandbox context (can be initialised only once)
 	// stores the script file and configuration
 	lsb_lua_sandbox *lsb = NULL;
@@ -151,7 +151,7 @@ int zenroom_exec(char *script, char *conf, char *keys,
 	if(!script) {
 		error("NULL string as script for zenroom_exec()");
 		exit(1); }
-	set_debug(debuglevel);
+	set_debug(verbosity);
 
 	// TODO: how to pass config file and script to javascript?
 
@@ -228,7 +228,7 @@ int main(int argc, char **argv) {
 	char pipedin[MAX_FILE];
 	int readstdin = 0;
 	int opt, index;
-    int debuglevel = 1;
+    int verbosity = 1;
 	int ret;
 	const char *short_options = "hdc:k:i";
     const char *help =
@@ -245,8 +245,8 @@ int main(int argc, char **argv) {
 	while((opt = getopt(argc, argv, short_options)) != -1) {
 		switch(opt) {
 		case 'd':
-			debuglevel = 3;
-			set_debug(debuglevel);
+			verbosity = 3;
+			set_debug(verbosity);
 			break;
 		case 'h':
 			fprintf(stdout,"%s",help);
@@ -318,7 +318,7 @@ int main(int argc, char **argv) {
 	                   (conf[0]!='\0')?conf:confdefault,
 	                   (keys[0]!='\0')?keys:NULL,
 	                   (readstdin)?pipedin:NULL,
-	                   debuglevel);
+	                   verbosity);
 	// exit(1) on failure
 	exit(ret);
 }
