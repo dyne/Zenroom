@@ -12,8 +12,11 @@ test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
 bootstrap-check:
 	@if ! [ -r ${gcc} ]; then echo "\nRun 'make bootstrap' first to build the compiler.\n" && exit 0; fi
 
-patches:
+patches: help-strings
 	./build/apply-patches
+
+help-strings:
+	xxd -i docs/website/docs/cheatsheet.md | sed 's/docs_website_docs_cheatsheet_md/cheatsheet/g' > src/cheatsheet.c
 
 # TODO: improve flags according to
 # https://github.com/kripken/emscripten/blob/master/src/settings.js

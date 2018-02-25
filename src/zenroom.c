@@ -287,7 +287,6 @@ int main(int argc, char **argv) {
 	}
 
 	if(scriptfile[0]=='\0') {
-		notice("Starting interactive console");
 		lsb_lua_sandbox *cli;
 		char *line;
 		cli = repl_init(confdefault);

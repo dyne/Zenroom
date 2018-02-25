@@ -23,7 +23,7 @@
 #include <luasandbox/lua.h>
 #include <luasandbox/lualib.h>
 #include <luasandbox/lauxlib.h>
-
+#include <luazen.h>
 
 const struct luaL_Reg luazen[] = {
 	{"randombytes", lz_randombytes},
