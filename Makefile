@@ -102,6 +102,7 @@ check-shared: check-milagro
 	${test-exec} test/bitbench.lua && \
 	${test-exec} test/cjson-test.lua && \
 	${test-exec} test/test_luazen.lua && \
+	${test-exec} test/schema.lua && \
 	echo "----------------\nAll tests passed for SHARED binary build\n----------------"
 
 check-static: test-exec := ${pwd}/src/zenroom-static -c ${pwd}/test/decode-test.conf
@@ -114,6 +115,7 @@ check-static: check-milagro
 	${test-exec} test/bitbench.lua && \
 	${test-exec} test/cjson-test.lua && \
 	${test-exec} test/test_luazen.lua && \
+	${test-exec} test/schema.lua && \
 	echo "----------------\nAll tests passed for STATIC binary build\n----------------"
 
 # TODO: check js build

@@ -2,7 +2,7 @@ CC?=gcc
 VERSION := $(shell cat ../VERSION)
 
 CFLAGS  += -I. -I../lib/lua_sandbox/include -O3 -Wall -Wextra
-SOURCES := jutils.o lua_functions.o zenroom.o bitop.o lua_cjson.o strbuf.o fpconv.o repl.o replcompl.o linenoise.o cheatsheet.o lualib_schema.o
+SOURCES := jutils.o lua_functions.o zenroom.o bitop.o lua_cjson.o strbuf.o fpconv.o repl.o replcompl.o linenoise.o lualib_schema.o
 LDADD   := ../build/lua_sandbox/src/libluasandbox.a
 LDADD   += ../build/lua_sandbox/src/util/libluasandboxutil.a
 LDADD   += ../build/luazen/libluazen.a
@@ -55,6 +55,7 @@ clean:
 	rm -f *.o
 	rm -f zenroom-static
 	rm -f zenroom.js
+	rm -f lualib_schema.c
 
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"${VERSION}\"
