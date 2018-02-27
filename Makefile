@@ -15,29 +15,32 @@ bootstrap-check:
 patches:
 	./build/apply-patches
 
+embed-lua:
+	xxd -i src/lua/schema.lua | sed 's/src_lua_schema_lua/lualib_schema/g' > src/lualib_schema.c
+
 # TODO: improve flags according to
 # https://github.com/kripken/emscripten/blob/master/src/settings.js
 js: gcc=${EMSCRIPTEN}/emcc
 js: cflags := -O3 ${cflags_protection}
 js: ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'"
-js: patches luasandbox luazen milagro
+js: patches embed-lua luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 
 wasm: gcc=${EMSCRIPTEN}/emcc
 wasm: cflags := -O3 ${cflags_protection}
 wasm: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'"
-wasm: patches luasandbox luazen milagro
+wasm: patches embed-lua luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 
 html: gcc=${EMSCRIPTEN}/emcc
 html: cflags := -O3 ${cflags_protection}
 html: ldflags := -sEXPORTED_FUNCTIONS='["_main","_zenroom_exec"]'
-html: patches luasandbox luazen milagro
+html: patches embed-lua luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src html
 
 win: gcc=x86_64-w64-mingw32-gcc
 win: cflags := -O3 ${cflags_protection}
-win: patches luasandbox luazen milagro-win
+win: patches embed-lua luasandbox luazen milagro-win
 	CC=${gcc} CFLAGS="${cflags}" make -C src win
 
 bootstrap: musl := ${pwd}/build/musl
@@ -50,16 +53,16 @@ bootstrap:
 static: musl := ${pwd}/build/musl
 static: gcc := ${musl}/obj/musl-gcc
 static: cflags := -Os -static ${cflags_protection}
-static: bootstrap patches luasandbox luazen milagro
+static: bootstrap embed-lua patches luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src static
 
 system-static: cflags := -Os -static ${cflags_protection}
-system-static: patches luasandbox luazen milagro
+system-static: patches embed-lua luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C src system-static
 
 shared: gcc := gcc
 shared: cflags := -O2 -fPIC ${cflags_protection}
-shared: patches luasandbox luazen milagro
+shared: patches embed-lua luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
 
 gmp:

@@ -10,38 +10,35 @@ LDADD   += ../build/luazen/libluazen.a
 
 all: shared
 
-embed-lua: lua/schema.lua
-	xxd -i lua/schema.lua | sed 's/lua_schema_lua/lualib_schema/g' > lualib_schema.c
-
 js: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc
-js: embed-lua ${SOURCES}
+js: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom.js ${LDFLAGS} ${LDADD}
 
 html: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc
-html: embed-lua ${SOURCES}
+html: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom.html ${LDFLAGS} ${LDADD}
 
 static: CC := ../build/musl/obj/musl-gcc
 static: CFLAGS += -Os -Wall -Wextra -pedantic -std=gnu99
 static: LDADD  += ../build/musl/lib/libc.a
 static: LDFLAGS += -static
-static: embed-lua ${SOURCES}
+static: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-static ${LDFLAGS} ${LDADD}
 
 system-static: CFLAGS += -Os -Wall -Wextra -pedantic -std=gnu99
 system-static: LDFLAGS += -static
-system-static: embed-lua ${SOURCES}
+system-static: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-static ${LDFLAGS} ${LDADD}
 
 shared: CFLAGS+=  -O3 -Wall
 shared: LDADD+=   -lm -lpthread
-shared: embed-lua ${SOURCES}
+shared: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-shared ${LDFLAGS} ${LDADD}
 
 win: CFLAGS +=  -O3 -Wall -Wextra -pedantic -std=gnu99
 win: LDFLAGS += -L/usr/x86_64-w64-mingw32/lib -static
 win: LDADD +=  -l:libm.a -l:libpthread.a
-win: embed-lua ${SOURCES}
+win: ${SOURCES}
 	./stamp-exe.sh
 	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.exe zenroom.res ${SOURCES} ${LDADD}
 	x86_64-w64-mingw32-strip zenroom.exe

@@ -37,8 +37,8 @@ extern void lsb_load_extensions(lsb_lua_sandbox *lsb);
 extern int lua_cjson_safe_new(lua_State *l);
 extern int lua_cjson_new(lua_State *l);
 
-extern unsigned int  cheatsheet_len;
-extern unsigned char cheatsheet[];
+// extern unsigned int  cheatsheet_len;
+// extern unsigned char cheatsheet[];
 
 struct lsb_lua_sandbox {
 	lua_State         *lua;
@@ -60,12 +60,12 @@ static const luaL_Reg preload_module_list[] = {
   { NULL, NULL }
 };
 
-int print_help(lua_State *lua) {
-	(void)lua;
-	fwrite(cheatsheet,sizeof(unsigned char),cheatsheet_len,stdout);
-	fflush(stdout);
-	return 1;
-}
+// int print_help(lua_State *lua) {
+// 	(void)lua;
+// 	fwrite(cheatsheet,sizeof(unsigned char),cheatsheet_len,stdout);
+// 	fflush(stdout);
+// 	return 1;
+// }
 
 static int libsize(const luaL_Reg *l)
 {
@@ -240,7 +240,7 @@ lsb_lua_sandbox *repl_init(char *conf) {
 	// print function
 	lsb_add_function(lsb, output_print, "print");
 	// help function
-	lsb_add_function(lsb, print_help, "help");
+	// lsb_add_function(lsb, print_help "help");
 
 	func("loading cjson extensions");
 	lsb_add_function(lsb, lua_cjson_new, "cjson");
@@ -250,7 +250,7 @@ lsb_lua_sandbox *repl_init(char *conf) {
     linenoiseSetMultiLine(1);
     linenoiseSetCompletionCallback(completion);
 
-    notice("Interactive REPL console. Type 'help()' for a cheatsheet.");
+    notice("Interactive REPL console.");
 	return(lsb);
 
 }
