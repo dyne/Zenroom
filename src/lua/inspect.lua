@@ -341,6 +341,7 @@ end
 -- this way one can simply prefix an i. to print
 function inspect.print(root, options)
    print(inspect.inspect(root, options))
+   return root
 end
 
 setmetatable(inspect, { __call = function(_, ...) return inspect.print(...) end })
