@@ -22,12 +22,87 @@
 #include <luasandbox.h>
 #include <luasandbox/lua.h>
 #include <luasandbox/lualib.h>
-
-
+#include <luasandbox/lauxlib.h>
 #include <luazen.h>
+
+extern unsigned char lualib_schema[];
+extern unsigned char lualib_inspect[];
+
+const struct luaL_Reg luazen[] = {
+	{"randombytes", lz_randombytes},
+
+	// Symmetric encryption with Norx AEAD
+	{"encrypt_norx", lz_aead_encrypt},
+	{"decrypt_norx", lz_aead_decrypt},
+	// Mostly obsolete symmetric stream-cipher
+	// encrypt and decrypt with same function
+	{"crypt_rc4", lz_rc4},
+	{"crypt_rc4raw", lz_rc4raw},
+
+	// Asymmetric shared secret session with x25519
+	// all secrets are 32 bytes long
+	{"keygen_session_x25519", lz_x25519_keypair},
+	{"pubkey_session_x25519", lz_x25519_public_key},
+	// session shared secret hashed by blake2b
+	{"exchange_session_x25519", lz_key_exchange},
+
+	// Blake2b hashing function
+	{"hash_blake2b", lz_blake2b},
+	{"hash_init_blake2b", lz_blake2b_init},
+	{"hash_update_blake2b", lz_blake2b_update},
+	{"hash_final_blake2b", lz_blake2b_final},
+	// simple MD5 hashing function
+	{"hash_md5", lz_md5},
+
+	// Asymmetric signing with ed25519
+	{"keygen_sign_ed25519", lz_sign_keypair},
+	{"pubkey_sign_ed25519", lz_sign_public_key},
+	{"sign_ed25519", lz_sign},
+	{"check_ed25519", lz_check},
+
+	// Key Derivation Function
+	{"kdf_argon2i", lz_argon2i},
+
+	{"xor", lz_xor},
+	// brieflz compression
+	{"compress_blz", lz_blz},
+	{"decompress_blz", lz_unblz},
+	// lzf compression
+	{"compress_lzf", lz_lzf},
+	{"decompress_lzf", lz_unlzf},
+
+	// TODO: rename in all tests
+	{"rc4", lz_rc4},
+	{"rc4raw", lz_rc4raw},
+	{"md5", lz_md5},
+
+	{"encode_b64",	lz_b64encode},
+	{"decode_b64",	lz_b64decode},
+	{"encode_b58",	lz_b58encode},
+	{"decode_b58",	lz_b58decode},
+	//
+	{NULL, NULL},
+};
+
 #include <bitop.h>
+const struct luaL_Reg bit_funcs[] = {
+  { "tobit",	bit_tobit },
+  { "bnot",	bit_bnot },
+  { "band",	bit_band },
+  { "bor",	bit_bor },
+  { "bxor",	bit_bxor },
+  { "lshift",	bit_lshift },
+  { "rshift",	bit_rshift },
+  { "arshift",	bit_arshift },
+  { "rol",	bit_rol },
+  { "ror",	bit_ror },
+  { "bswap",	bit_bswap },
+  { "tohex",	bit_tohex },
+  { NULL, NULL }
+};
 
 int get_debug();
+
 
 void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val) {
 	lua_State* L = lsb_get_lua(lsb);
@@ -35,23 +110,48 @@ void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val) {
 	lua_setglobal(L, key);
 }
 
-void lsb_openlibs(lsb_lua_sandbox *lsb) {
+
+inline void lsb_load_string(lsb_lua_sandbox *lsb, unsigned char *code,
+                     char *name) {
 	lua_State* L = lsb_get_lua(lsb);
-	func("Loading base libraries:");
-	func("table");
-	luaopen_table(L);
-	func("string");
-	luaopen_string(L);
-	func("math");
-	luaopen_math(L);
-	if(get_debug() > 1) {
-		func("debug");
-		luaopen_debug(L);
+
+	lua_getglobal(L, "loadstring");
+	if(!lua_iscfunction(L, -1)) {
+		error("lsb_load_string: function 'loadstring' not found");
+		return; }
+
+	lua_pushstring(L, (const char*)code);
+
+	if(lua_pcall(L, 1, 1, 0)) {
+		error("lsb_load_string: cannot load %s extension", name);
+		return; }
+
+	func("Loading lua library: %s", name);
+	if (lua_isstring(L, -1) || lua_isnil(L, -1)) {
+		/* loader returned error message? */
+		error("error loading lua string: %s", name);
 	}
+	// run loaded module
+	lua_setglobal(L, name);
+}
+
+inline void lsb_load_luamodule(lsb_lua_sandbox *lsb, lua_CFunction f, const char *name) {
+	lua_State *L = lsb_get_lua(lsb);
+	lua_pushcfunction(L, f);
+	lua_pushstring(L, name);
+	lua_call(L, 1, 1);
+	lua_newtable(L);
+	lua_setmetatable(L, -2);
+	lua_pop(L, 1);
 }
 
 void lsb_load_extensions(lsb_lua_sandbox *lsb) {
 	const luaL_Reg *lib;
+
+	lsb_load_luamodule(lsb, luaopen_base,   LUA_BASELIBNAME);
+	lsb_load_luamodule(lsb, luaopen_table,  LUA_TABLIBNAME);
+	lsb_load_luamodule(lsb, luaopen_string, LUA_STRLIBNAME);
+	lsb_load_luamodule(lsb, luaopen_math,   LUA_MATHLIBNAME);
 
 	// load our own extensions
 	lib = (luaL_Reg*) &luazen;
@@ -67,5 +167,11 @@ void lsb_load_extensions(lsb_lua_sandbox *lsb) {
 		func("%s",lib->name);
 		lsb_add_function(lsb, lib->func, lib->name);
 	}
+
+	func("loading schema extensions");
+	lsb_load_string(lsb, lualib_schema, "schema");
+	lsb_load_string(lsb, lualib_inspect, "inspect");
+	act("done loading all extensions");
+//	lsb_load_string(lsb, lualib_test, "test");
 
 }

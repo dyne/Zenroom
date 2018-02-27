@@ -94,7 +94,7 @@ From **command-line** the Zenroom is operated passing files as
 arguments:
 
 ```
-Usage: zenroom [-c config] [-a arguments] script.lua
+Usage: zenroom [-c config] [-k keys] script.lua
 ```
 
 From **javascript** the function `zenroom_exec()` is exposed with four
@@ -102,7 +102,7 @@ arguments: three strings and one number from 1 to 3 indicating the
 verbosity of output on the console:
 
 ```
-int zenroom_exec(char *script, char *config, char *arguments, int verbosity)
+int zenroom_exec(char *script, char *config, char *keys, char *data, int verbosity)
 ```
 
 The contents of the three strings cannot exceed 100k in size and are of different types:

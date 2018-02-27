@@ -182,6 +182,32 @@ index beff13e..51cb48b 100644
  set_target_properties(luasandbox PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION 0)
  target_link_libraries(luasandbox luasandboxutil ${CMAKE_DL_LIBS})
  if(LIBM_LIBRARY)
+diff --git a/src/lua/lbaselib.c b/src/lua/lbaselib.c
+index 8552405..63015cc 100644
+--- a/src/lua/lbaselib.c
++++ b/src/lua/lbaselib.c
+@@ -444,7 +444,7 @@ static int luaB_newproxy (lua_State *L) {
+ }
+ 
+ 
+-static const luaL_Reg base_funcs[] = {
++const luaL_Reg base_funcs[] = {
+   {"assert", luaB_assert},
+   {"collectgarbage", luaB_collectgarbage},
+   {"dofile", luaB_dofile},
+diff --git a/src/lua/lmathlib.c b/src/lua/lmathlib.c
+index 0ff1526..72ca148 100644
+--- a/src/lua/lmathlib.c
++++ b/src/lua/lmathlib.c
+@@ -224,7 +224,7 @@ static int math_erfc (lua_State *L) {
+ }
+ 
+ 
+-static const luaL_Reg mathlib[] = {
++const luaL_Reg mathlib[] = {
+   {"abs",   math_abs},
+   {"acos",  math_acos},
+   {"asin",  math_asin},
 diff --git a/src/lua/loadlib.c b/src/lua/loadlib.c
 index 43697e1..b344199 100644
 --- a/src/lua/loadlib.c
@@ -209,9 +235,23 @@ index b822e2d..5deaa92 100644
  #define l_gmtime(t,r)		gmtime_r(t,r)
  #define l_localtime(t,r)	localtime_r(t,r)
 diff --git a/src/luasandbox.c b/src/luasandbox.c
-index d6ff41e..99752b1 100644
+index d6ff41e..84793fc 100644
 --- a/src/luasandbox.c
 +++ b/src/luasandbox.c
+@@ -33,10 +33,10 @@ static jmp_buf g_jbuf;
+ 
+ static const luaL_Reg preload_module_list[] = {
+   { LUA_BASELIBNAME, luaopen_base },
+-  { LUA_COLIBNAME, luaopen_coroutine },
++//  { LUA_COLIBNAME, luaopen_coroutine },
+   { LUA_TABLIBNAME, luaopen_table },
+-  { LUA_IOLIBNAME, luaopen_io },
+-  { LUA_OSLIBNAME, luaopen_os },
++//  { LUA_IOLIBNAME, luaopen_io },
++//  { LUA_OSLIBNAME, luaopen_os },
+   { LUA_STRLIBNAME, luaopen_string },
+   { LUA_MATHLIBNAME, luaopen_math },
+   { NULL, NULL }
 @@ -603,7 +603,7 @@ lsb_err_value lsb_init(lsb_lua_sandbox *lsb, const char *state_file)
    lsb->usage[LSB_UT_MEMORY][LSB_US_LIMIT] = mem_limit;
    lua_CFunction pf = lua_atpanic(lsb->lua, unprotected_panic);

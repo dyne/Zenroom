@@ -26,6 +26,7 @@
 #include <errno.h>
 
 #include <jutils.h>
+#include <zenroom.h>
 
 #include <linenoise.h>
 
@@ -33,12 +34,8 @@
 #include <luasandbox/util/util.h>
 #include <luasandbox/lauxlib.h>
 
-#define MAX_FILE 102400 // load max 100Kb files
-#define MAX_STRING 4096
-
 // prototypes from lua_functions
 extern void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val);
-extern void lsb_openlibs(lsb_lua_sandbox *lsb);
 extern void lsb_load_extensions(lsb_lua_sandbox *lsb);
 
 extern int lua_cjson_safe_new(lua_State *l);
@@ -63,7 +60,7 @@ static char *confdefault =
 "path = '/dev/null'\n"
 "cpath = '/dev/null'\n"
 "remove_entries = {\n"
-"	[''] = {'dofile','load', 'loadfile','newproxy'},\n"
+"	[''] = {'dofile', 'load', 'loadfile','newproxy'},\n"
 "	os = {'getenv','execute','exit','remove','rename',\n"
 "		  'setlocale','tmpname'},\n"
 "   math = {'random', 'randomseed'}\n"
@@ -75,6 +72,7 @@ void logger(void *context, const char *component,
 	// suppress warnings about these unused paraments
 	(void)context;
 	(void)level;
+	(void)component;
 
 	va_list args;
 	// func("LUA: %s",(component) ? component : "unknown");
@@ -88,7 +86,7 @@ void logger(void *context, const char *component,
 
 // This function exits the process on failure.
 void load_file(char *dst, char *path) {
-	char firstline[512];
+	char firstline[MAX_STRING];
 	size_t offset = 0;
 	size_t bytes = 0;
 
@@ -96,20 +94,21 @@ void load_file(char *dst, char *path) {
 	if(!fd) {
 		error("Error opening %s: %s", path, strerror(errno));
 		exit(1); }
-	if(!fgets(firstline, 512, fd)) {
+	// skip shebang on firstline
+	if(!fgets(firstline, MAX_STRING, fd)) {
 		error("Error reading first line of %s: %s", path, strerror(errno));
 		exit(1); }
 	if(firstline[0]=='#' && firstline[1]=='!')
 		func("Skipping shebang in %s", path);
 	else {
 		offset+=strlen(firstline);
-		strncpy(dst,firstline,512);
+		strncpy(dst,firstline,MAX_STRING);
 	}
 	for(;;) {
 		if( offset+1024>MAX_FILE ) break;
-		bytes = fread(&dst[offset],sizeof(char),1024,fd);
+		bytes = fread(&dst[offset],sizeof(char),MAX_STRING,fd);
 		offset += bytes;
-		if( bytes<1024 && feof(fd) ) break;
+		if( bytes<MAX_STRING && feof(fd) ) break;
 	}
 	fclose(fd);
 	act("loaded file: %s (%u bytes)", path, offset);
@@ -139,7 +138,7 @@ char *safe_string(char *str) {
 }
 
 int zenroom_exec(char *script, char *conf, char *keys,
-                 char *data, int debuglevel) {
+                 char *data, int verbosity) {
 	// the sandbox context (can be initialised only once)
 	// stores the script file and configuration
 	lsb_lua_sandbox *lsb = NULL;
@@ -151,7 +150,7 @@ int zenroom_exec(char *script, char *conf, char *keys,
 	if(!script) {
 		error("NULL string as script for zenroom_exec()");
 		exit(1); }
-	set_debug(debuglevel);
+	set_debug(verbosity);
 
 	// TODO: how to pass config file and script to javascript?
 
@@ -164,8 +163,12 @@ int zenroom_exec(char *script, char *conf, char *keys,
 		error("Error creating sandbox: %s", lsb_get_error(lsb));
 		exit(1); }
 
+
+	// initialise global variables
+	lsb_setglobal_string(lsb, "VERSION", VERSION);
+
 	lsb_load_extensions(lsb);
-	// load our own extensions
+	// load our own openlibs and extensions
 
 	func("loading cjson extensions");
 	lsb_add_function(lsb, lua_cjson_safe_new, "cjson");
@@ -183,10 +186,6 @@ int zenroom_exec(char *script, char *conf, char *keys,
 			lsb_setglobal_string(lsb,"KEYS",keys);
 		}
 	// TODO: MILAGRO
-
-	// initialise global variables
-	lsb_setglobal_string(lsb, "VERSION", VERSION);
-	lsb_openlibs(lsb);
 
 	r = lsb_init(lsb, NULL);
 	if(r) {
@@ -228,7 +227,7 @@ int main(int argc, char **argv) {
 	char pipedin[MAX_FILE];
 	int readstdin = 0;
 	int opt, index;
-    int debuglevel = 1;
+    int verbosity = 1;
 	int ret;
 	const char *short_options = "hdc:k:i";
     const char *help =
@@ -245,8 +244,8 @@ int main(int argc, char **argv) {
 	while((opt = getopt(argc, argv, short_options)) != -1) {
 		switch(opt) {
 		case 'd':
-			debuglevel = 3;
-			set_debug(debuglevel);
+			verbosity = 3;
+			set_debug(verbosity);
 			break;
 		case 'h':
 			fprintf(stdout,"%s",help);
@@ -268,6 +267,11 @@ int main(int argc, char **argv) {
 		else snprintf(scriptfile,511,"%s",argv[index]);
 	}
 
+	if(keysfile[0]!='\0') {
+		act("reading KEYS from file");
+		load_file(keys, keysfile);
+	}
+
 	if(readstdin) {
 		////////////////////////
 		// get another argument from stdin
@@ -287,10 +291,11 @@ int main(int argc, char **argv) {
 	}
 
 	if(scriptfile[0]=='\0') {
-		notice("Starting interactive console");
 		lsb_lua_sandbox *cli;
 		char *line;
 		cli = repl_init(confdefault);
+		if(readstdin)     lsb_setglobal_string(cli,"DATA",pipedin);
+		if(keys[0]!='\0') lsb_setglobal_string(cli,"KEYS",keys);
 		while((line = linenoise("zen> ")) != NULL) {
 			repl_exec(cli, line);
 			// if(ret != 0) break;
@@ -309,16 +314,12 @@ int main(int argc, char **argv) {
 	else
 		act("using default configuration");
 
-	if(keysfile[0]!='\0') {
-		act("reading KEYS from file");
-		load_file(keys, keysfile);
-	}
 
 	ret = zenroom_exec(script,
 	                   (conf[0]!='\0')?conf:confdefault,
 	                   (keys[0]!='\0')?keys:NULL,
 	                   (readstdin)?pipedin:NULL,
-	                   debuglevel);
+	                   verbosity);
 	// exit(1) on failure
 	exit(ret);
 }

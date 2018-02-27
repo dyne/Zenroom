@@ -20,21 +20,25 @@
 
 #include <ctype.h>
 #include <jutils.h>
+#include <zenroom.h>
 #include <linenoise.h>
 
 #include <luasandbox.h>
 #include <luasandbox/lua.h>
 #include <luasandbox/lualib.h>
+#include <luasandbox/lauxlib.h>
 #include <luasandbox/util/util.h>
 #include <luasandbox/util/output_buffer.h>
 
-#include <luasandbox/lauxlib.h>
+extern void completion(const char *buf, linenoiseCompletions *lc);
 
 extern void lsb_load_extensions(lsb_lua_sandbox *lsb);
 
 extern int lua_cjson_safe_new(lua_State *l);
 extern int lua_cjson_new(lua_State *l);
 
+// extern unsigned int  cheatsheet_len;
+// extern unsigned char cheatsheet[];
 
 struct lsb_lua_sandbox {
 	lua_State         *lua;
@@ -56,6 +60,12 @@ static const luaL_Reg preload_module_list[] = {
   { NULL, NULL }
 };
 
+// int print_help(lua_State *lua) {
+// 	(void)lua;
+// 	fwrite(cheatsheet,sizeof(unsigned char),cheatsheet_len,stdout);
+// 	fflush(stdout);
+// 	return 1;
+// }
 
 static int libsize(const luaL_Reg *l)
 {
@@ -77,15 +87,16 @@ static void preload_modules(lua_State *lua)
   lua_pop(lua, 1); // remove the preloaded table
 }
 
-extern void lsb_output_coroutine(lsb_lua_sandbox *lsb, lua_State *lua, int start,
-                                 int end, int append);
+extern void lsb_output_coroutine(lsb_lua_sandbox *lsb, lua_State *lua,
+                                 int start, int end, int append);
 
 static int output(lua_State *lua)
 {
   lua_getfield(lua, LUA_REGISTRYINDEX, LSB_THIS_PTR);
   lsb_lua_sandbox *lsb = lua_touserdata(lua, -1);
   lua_pop(lua, 1); // remove this ptr
-  if (!lsb) return luaL_error(lua, "%s() invalid " LSB_THIS_PTR, __func__);
+  if (!lsb)
+	  return(luaL_error(lua, "%s() invalid " LSB_THIS_PTR, __func__));
 
   int n = lua_gettop(lua);
   if (n == 0) {
@@ -127,11 +138,11 @@ int output_print(lua_State *lua)
     }
 
     while (*s) {
-      if (isprint(*s)) {
+      // if (isprint(*s)) {
         lsb_outputc(&lsb->output, *s);
-      } else {
-        lsb_outputc(&lsb->output, ' ');
-      }
+      // } else {
+      //   lsb_outputc(&lsb->output, ' ');
+      // }
       ++s;
     }
     lua_pop(lua, 1);
@@ -160,6 +171,7 @@ void* memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
 void repl_logger(void *context, const char *component,
                    int level, const char *fmt, ...) {
 	// suppress warnings about these unused paraments
+	(void)component;
 	(void)context;
 	(void)level;
 
@@ -192,10 +204,10 @@ lsb_lua_sandbox *repl_init(char *conf) {
 		return NULL;
 	}
 
-	lsb->output.maxsize = 4095;
-	lsb->output.size    = 4096;
+	lsb->output.maxsize = MAX_FILE;
+	lsb->output.size    = MAX_STRING;
 	lsb->output.pos     = 0;
-	lsb->output.buf     = malloc(4096);
+	lsb->output.buf     = malloc(MAX_STRING);
 	lua_pushcfunction(lsb->lua, &output);
 	lua_setglobal(lsb->lua, "output");
 
@@ -227,6 +239,8 @@ lsb_lua_sandbox *repl_init(char *conf) {
 
 	// print function
 	lsb_add_function(lsb, output_print, "print");
+	// help function
+	// lsb_add_function(lsb, print_help "help");
 
 	func("loading cjson extensions");
 	lsb_add_function(lsb, lua_cjson_new, "cjson");
@@ -234,7 +248,9 @@ lsb_lua_sandbox *repl_init(char *conf) {
 
 	linenoiseHistorySetMaxLen(1024);
     linenoiseSetMultiLine(1);
+    linenoiseSetCompletionCallback(completion);
 
+    notice("Interactive REPL console.");
 	return(lsb);
 
 }

@@ -31,7 +31,6 @@
 
 #define LUA_BITOP_VERSION	"1.0.2"
 
-#include <luasandbox.h>
 #include <luasandbox/lauxlib.h>
 
 int bit_tobit(lua_State *L);
@@ -46,21 +45,5 @@ int bit_rol(lua_State *L);
 int bit_ror(lua_State *L);
 int bit_bswap(lua_State *L);
 int bit_tohex(lua_State *L);
-
-const struct luaL_Reg bit_funcs[] = {
-  { "tobit",	bit_tobit },
-  { "bnot",	bit_bnot },
-  { "band",	bit_band },
-  { "bor",	bit_bor },
-  { "bxor",	bit_bxor },
-  { "lshift",	bit_lshift },
-  { "rshift",	bit_rshift },
-  { "arshift",	bit_arshift },
-  { "rol",	bit_rol },
-  { "ror",	bit_ror },
-  { "bswap",	bit_bswap },
-  { "tohex",	bit_tohex },
-  { NULL, NULL }
-};
 
 #endif

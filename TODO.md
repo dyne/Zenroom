@@ -11,9 +11,11 @@ and their specific use-cases.
 
 ## Security
 
-- adopt code analysis to report on bad constructs
+- adopt a declarative approach to data schemes accepted in scripts
+  supporting i.e. https://github.com/sschoener/lua-schema
+  code analysis to report on bad constructs
 
-- support Linux kernel keystore feature for loaded keys (see
+- maybe support Linux kernel keystore feature for loaded keys (see
   cryptsetup 2.0)
 
 ## Documentation
@@ -35,11 +37,14 @@ and their specific use-cases.
 
 - Finish integrating Milagro in the LUA script
 
-- Build a usable ABC implementation (maybe compatible with coconut)
-
+- Build a usable ABC implementation (maybe compatible with coconut
+  and/or IRMA?)
+  
 - Reproduce tor's new onion address scheme
   (see tor-dam/pkg/damlib/crypto_25519.go)
 
+- Consider adding GOST from https://github.com/aprelev/libgost15
+  
 - Investigate inclusion of primitives from libsodium
 
 - Investigate inclusion of primitives from libgcrypt
