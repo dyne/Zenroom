@@ -61,7 +61,7 @@ static char *confdefault =
 "path = '/dev/null'\n"
 "cpath = '/dev/null'\n"
 "remove_entries = {\n"
-"	[''] = {'dofile','load', 'loadfile','newproxy'},\n"
+"	[''] = {'dofile', 'load', 'loadfile','newproxy'},\n"
 "	os = {'getenv','execute','exit','remove','rename',\n"
 "		  'setlocale','tmpname'},\n"
 "   math = {'random', 'randomseed'}\n"
@@ -73,6 +73,7 @@ void logger(void *context, const char *component,
 	// suppress warnings about these unused paraments
 	(void)context;
 	(void)level;
+	(void)component;
 
 	va_list args;
 	// func("LUA: %s",(component) ? component : "unknown");
@@ -162,6 +163,11 @@ int zenroom_exec(char *script, char *conf, char *keys,
 		error("Error creating sandbox: %s", lsb_get_error(lsb));
 		exit(1); }
 
+
+	// initialise global variables
+	lsb_setglobal_string(lsb, "VERSION", VERSION);
+	lsb_openlibs(lsb);
+
 	lsb_load_extensions(lsb);
 	// load our own extensions
 
@@ -181,10 +187,6 @@ int zenroom_exec(char *script, char *conf, char *keys,
 			lsb_setglobal_string(lsb,"KEYS",keys);
 		}
 	// TODO: MILAGRO
-
-	// initialise global variables
-	lsb_setglobal_string(lsb, "VERSION", VERSION);
-	lsb_openlibs(lsb);
 
 	r = lsb_init(lsb, NULL);
 	if(r) {

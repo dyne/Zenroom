@@ -25,6 +25,8 @@
 #include <luasandbox/lauxlib.h>
 #include <luazen.h>
 
+extern unsigned char lualib_schema[];
+
 const struct luaL_Reg luazen[] = {
 	{"randombytes", lz_randombytes},
 
@@ -100,6 +102,7 @@ const struct luaL_Reg bit_funcs[] = {
 
 int get_debug();
 
+
 void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val) {
 	lua_State* L = lsb_get_lua(lsb);
 	lua_pushstring(L, val);
@@ -121,8 +124,44 @@ void lsb_openlibs(lsb_lua_sandbox *lsb) {
 	}
 }
 
+
+void lsb_load_string(lsb_lua_sandbox *lsb, unsigned char *code,
+                     char *name) {
+	lua_State* L = lsb_get_lua(lsb);
+
+	lua_getglobal(L, "loadstring");
+	if(!lua_iscfunction(L, -1)) {
+		error("lsb_load_string: function 'loadstring' not found");
+		return; }
+
+	lua_pushstring(L, (const char*)code);
+
+	if(lua_pcall(L, 1, 1, 0)) {
+		error("lsb_load_string: cannot load %s extension", name);
+		return; }
+
+	func("Loading lua library: %s", name);
+	if (lua_isstring(L, -1) || lua_isnil(L, -1)) {
+		/* loader returned error message? */
+		error("error loading lua string: %s", name);
+	}
+	// run loaded module
+	lua_setglobal(L, name);
+	lua_pop(L, 1);
+}
+
 void lsb_load_extensions(lsb_lua_sandbox *lsb) {
 	const luaL_Reg *lib;
+	lua_State *L = lsb_get_lua(lsb);
+
+	// load base module
+	lua_pushcfunction(L, luaopen_base);
+	lua_pushstring(L, LUA_BASELIBNAME);
+	lua_call(L, 1, 1);
+	lua_newtable(L);
+	lua_setmetatable(L, -2);
+	lua_pop(L, 1);
+
 
 	// load our own extensions
 	lib = (luaL_Reg*) &luazen;
@@ -138,5 +177,10 @@ void lsb_load_extensions(lsb_lua_sandbox *lsb) {
 		func("%s",lib->name);
 		lsb_add_function(lsb, lib->func, lib->name);
 	}
+
+	func("loading schema extensions");
+	lsb_load_string(lsb, lualib_schema, "schema");
+	act("done loading all extensions");
+//	lsb_load_string(lsb, lualib_test, "test");
 
 }

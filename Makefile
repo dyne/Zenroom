@@ -12,11 +12,8 @@ test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
 bootstrap-check:
 	@if ! [ -r ${gcc} ]; then echo "\nRun 'make bootstrap' first to build the compiler.\n" && exit 0; fi
 
-patches: help-strings
+patches:
 	./build/apply-patches
-
-help-strings:
-	xxd -i docs/website/docs/cheatsheet.md | sed 's/docs_website_docs_cheatsheet_md/cheatsheet/g' > src/cheatsheet.c
 
 # TODO: improve flags according to
 # https://github.com/kripken/emscripten/blob/master/src/settings.js
@@ -88,7 +85,7 @@ milagro:
 
 milagro-win:
 	@echo "-- Building milagro"
-	sed -i 's/project (AMCL/project (AMCL C/' ${pwd}/lib/milagro-crypto-c/CMakeLists.txt
+	sed -i 's/project (AMCL)/project (AMCL C)/' ${pwd}/lib/milagro-crypto-c/CMakeLists.txt
 	cd ${pwd}/lib/milagro-crypto-c && CC=${gcc} cmake . -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DCMAKE_C_FLAGS="${cflags}" -DAMCL_CHUNK=32 -DAMCL_CURVE=ED25519 -DAMCL_RSA=2048 -DCMAKE_SHARED_LIBRARY_LINK_FLAGS="" -DCMAKE_SYSTEM_NAME="Windows"
 	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c
 

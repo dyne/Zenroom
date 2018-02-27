@@ -11,7 +11,9 @@ and their specific use-cases.
 
 ## Security
 
-- adopt code analysis to report on bad constructs
+- adopt a declarative approach to data schemes accepted in scripts
+  supporting i.e. https://github.com/sschoener/lua-schema
+  code analysis to report on bad constructs
 
 - maybe support Linux kernel keystore feature for loaded keys (see
   cryptsetup 2.0)
