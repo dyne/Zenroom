@@ -26,6 +26,7 @@
 #include <luazen.h>
 
 extern unsigned char lualib_schema[];
+extern unsigned char lualib_inspect[];
 
 const struct luaL_Reg luazen[] = {
 	{"randombytes", lz_randombytes},
@@ -109,23 +110,8 @@ void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val) {
 	lua_setglobal(L, key);
 }
 
-void lsb_openlibs(lsb_lua_sandbox *lsb) {
-	lua_State* L = lsb_get_lua(lsb);
-	func("Loading base libraries:");
-	func("table");
-	luaopen_table(L);
-	func("string");
-	luaopen_string(L);
-	func("math");
-	luaopen_math(L);
-	if(get_debug() > 1) {
-		func("debug");
-		luaopen_debug(L);
-	}
-}
 
-
-void lsb_load_string(lsb_lua_sandbox *lsb, unsigned char *code,
+inline void lsb_load_string(lsb_lua_sandbox *lsb, unsigned char *code,
                      char *name) {
 	lua_State* L = lsb_get_lua(lsb);
 
@@ -147,21 +133,25 @@ void lsb_load_string(lsb_lua_sandbox *lsb, unsigned char *code,
 	}
 	// run loaded module
 	lua_setglobal(L, name);
+}
+
+inline void lsb_load_luamodule(lsb_lua_sandbox *lsb, lua_CFunction f, const char *name) {
+	lua_State *L = lsb_get_lua(lsb);
+	lua_pushcfunction(L, f);
+	lua_pushstring(L, name);
+	lua_call(L, 1, 1);
+	lua_newtable(L);
+	lua_setmetatable(L, -2);
 	lua_pop(L, 1);
 }
 
 void lsb_load_extensions(lsb_lua_sandbox *lsb) {
 	const luaL_Reg *lib;
-	lua_State *L = lsb_get_lua(lsb);
 
-	// load base module
-	lua_pushcfunction(L, luaopen_base);
-	lua_pushstring(L, LUA_BASELIBNAME);
-	lua_call(L, 1, 1);
-	lua_newtable(L);
-	lua_setmetatable(L, -2);
-	lua_pop(L, 1);
-
+	lsb_load_luamodule(lsb, luaopen_base,   LUA_BASELIBNAME);
+	lsb_load_luamodule(lsb, luaopen_table,  LUA_TABLIBNAME);
+	lsb_load_luamodule(lsb, luaopen_string, LUA_STRLIBNAME);
+	lsb_load_luamodule(lsb, luaopen_math,   LUA_MATHLIBNAME);
 
 	// load our own extensions
 	lib = (luaL_Reg*) &luazen;
@@ -180,6 +170,7 @@ void lsb_load_extensions(lsb_lua_sandbox *lsb) {
 
 	func("loading schema extensions");
 	lsb_load_string(lsb, lualib_schema, "schema");
+	lsb_load_string(lsb, lualib_inspect, "inspect");
 	act("done loading all extensions");
 //	lsb_load_string(lsb, lualib_test, "test");
 

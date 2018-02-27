@@ -36,7 +36,6 @@
 
 // prototypes from lua_functions
 extern void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val);
-extern void lsb_openlibs(lsb_lua_sandbox *lsb);
 extern void lsb_load_extensions(lsb_lua_sandbox *lsb);
 
 extern int lua_cjson_safe_new(lua_State *l);
@@ -87,7 +86,7 @@ void logger(void *context, const char *component,
 
 // This function exits the process on failure.
 void load_file(char *dst, char *path) {
-	char firstline[512];
+	char firstline[MAX_STRING];
 	size_t offset = 0;
 	size_t bytes = 0;
 
@@ -95,20 +94,21 @@ void load_file(char *dst, char *path) {
 	if(!fd) {
 		error("Error opening %s: %s", path, strerror(errno));
 		exit(1); }
-	if(!fgets(firstline, 512, fd)) {
+	// skip shebang on firstline
+	if(!fgets(firstline, MAX_STRING, fd)) {
 		error("Error reading first line of %s: %s", path, strerror(errno));
 		exit(1); }
 	if(firstline[0]=='#' && firstline[1]=='!')
 		func("Skipping shebang in %s", path);
 	else {
 		offset+=strlen(firstline);
-		strncpy(dst,firstline,512);
+		strncpy(dst,firstline,MAX_STRING);
 	}
 	for(;;) {
 		if( offset+1024>MAX_FILE ) break;
-		bytes = fread(&dst[offset],sizeof(char),1024,fd);
+		bytes = fread(&dst[offset],sizeof(char),MAX_STRING,fd);
 		offset += bytes;
-		if( bytes<1024 && feof(fd) ) break;
+		if( bytes<MAX_STRING && feof(fd) ) break;
 	}
 	fclose(fd);
 	act("loaded file: %s (%u bytes)", path, offset);
@@ -166,10 +166,9 @@ int zenroom_exec(char *script, char *conf, char *keys,
 
 	// initialise global variables
 	lsb_setglobal_string(lsb, "VERSION", VERSION);
-	lsb_openlibs(lsb);
 
 	lsb_load_extensions(lsb);
-	// load our own extensions
+	// load our own openlibs and extensions
 
 	func("loading cjson extensions");
 	lsb_add_function(lsb, lua_cjson_safe_new, "cjson");

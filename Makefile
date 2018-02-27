@@ -17,6 +17,7 @@ patches:
 
 embed-lua:
 	xxd -i src/lua/schema.lua | sed 's/src_lua_schema_lua/lualib_schema/g' > src/lualib_schema.c
+	xxd -i src/lua/inspect.lua | sed 's/src_lua_inspect_lua/lualib_inspect/g' > src/lualib_inspect.c
 
 # TODO: improve flags according to
 # https://github.com/kripken/emscripten/blob/master/src/settings.js
