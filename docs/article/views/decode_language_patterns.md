@@ -169,11 +169,12 @@ We define as trustless a language (also known as untrusted language) that allows
 
 A language that can be run on a "permissionless" (public) blockchain is a language that can be interpreted by any node. In any moment a new node may claim the capacity to do so. This means that its parser, semantics and actions on the system must be designed to handle unknowns: any deviance and malevolent code should not affect the system.
 
-### Solid
+### Strict
 
-The language and the semantic model adopted by DECODE need to be capable of sandboxing untrusted code and providing security partitioning. Any process of execution should be strictly limited in what it can do. Any function or data passed to a node cannot break the sandbox in ways the participants did not intend.
+The language and the semantic model adopted by Zenroom are designed to allow the sandboxing of untrusted code and to provide security partitioning. Any process of execution is strictly limited in what it can do, first and foremost in terms of memory and computational cycles used.
 
-For sensitive data structures, the use of proxy objects must be adopted as a security guard, only allowing the sandbox to call pre-approved methods and access pre-approved data.
+The objective is that any function or data passed to a Zenroom process cannot break the sandbox in ways the participants did not intend. If an error occurs the Zenroom engine will not continue further, rather exit with a meaningful error message and dispose of all the memory used via garbage collection. For sensitive data structures the use of a declarative schema validation is provided as a security guard, to allow scripts to easily recognise the data they are passing to functions.
+
 
 ## Usability requirements
 
@@ -187,7 +188,7 @@ A visual programming environment (VPE) facilitates participants to directly re-c
 
 A reliable test environment is a fundamental component for a language deployed in mission critical situations, but also for a language dealing with the distribution of its computation and wide adoption by communities of developers in different fields. Languages that improve the developer's experience when writing and testing code directly impact the quality of the code produced.
 
-For DECODE's language implementation it is necessary to have a testing environment designed into it and from the start to facilitate its growth at the same pace of the language itself. Also, a more advanced framework for testing that goes beyond the simple usage of asserts is desirable: while being very ambitious, the implementation of solid proof of termination mechanisms that are internal to the language should be contemplated on the long term.
+For the Zenroom work is in progress to provide a testing environment designed from the start to facilitate its growth at the same pace of the language itself. Also, a more advanced framework for testing that goes beyond the simple usage of asserts and data validations is planned: while being very ambitious, the implementation of solid proof of termination mechanisms that are internal to the language should be contemplated on the long term.
 
 ### First-class data
 
@@ -201,7 +202,7 @@ This is a long-term requirement that should take into consideration the trade-of
 
 For example, numbers are first-class in every language. Text strings are first-class in many languages, but not in C, in which the relevant first-class type is “pointer to a character”.
 
-In DECODE it is desirable to establish data structures containing attributes and entitlements as first-class data to be seamlessly processed by the language.
+In Zenroom any important data structure needs to be validated at start and become a first-class citizen to be seamlessly processed by other scripted functions. Following a declarative and non-imperative approach, developers can concentrate on the script while at the same time producing part of the documentation needed to define its data structures and functional constraints.
 
 
 # Conclusion
@@ -216,7 +217,7 @@ Lua is an interpreted, cross-platform, embeddable, performant and low-footprint 
 
 Lua stability has been extensively tested through a number of public applications including the adoption by the gaming industry for untrusted language processing in "World of Warcraft" scripting. It is ideal for implementing an external DSL using C or Python as a host language.
 
-Lua is also tooled with a working VPE implementation for code visualisation in BLOCKS, allowing the project to jump-start into an early phase of prototyping DECODE smart-rules in a visual way and directly involving pilot participants.
+Lua is also tooled with a working VPE implementation for code visualisation in blocks, allowing the project to jump-start into an early phase of prototyping DECODE's smart-rules in a visual way and directly involving pilot participants.
 
 ## Satisfiability Modulo theories
 

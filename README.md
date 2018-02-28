@@ -11,7 +11,14 @@ Its binaries are smaller than 1MB and ready to use on many platforms. Latest exp
 - [X86-64bit](https://sdk.dyne.org:4443/job/zenroom-static-amd64/lastSuccessfulBuild/artifact/src/zenroom-static)
 - [ARM-HF](https://sdk.dyne.org:4443/job/zenroom-static-armhf/lastSuccessfulBuild/artifact/src/zenroom-static)
 
-Zenroom is in **ALPHA stage** and its the first software of the [Cryptolang](http://cryptolang.com) project aiming to make it easy and less error-prone to write **portable** software using **end-to-end encryption** inside isolated environments that can be easily made **interoperable**. Basic crypto functions provided include primitives from AES and soon CAESAR competition winners to manage **a/symmetric keys, key derivation, hashing and signing functionalities**. Here the [API documentation](https://zenroom.dyne.org/api) is a work in progress subject to slight changes.
+Quick links:
+- [Zenroom API documentation](https://zenroom.dyne.org/api) (work in progress)
+- [Zenroom Cryptolang Whitepaper](https://zenroom.dyne.org/whitepaper)
+- [Zenroom script examples](https://github.com/DECODEproject/zenroom/tree/master/examples) (work in progress)
+- [Zenroom development on github](https://github.com/DECODEproject/zenroom)
+- Online demo (work in progress)
+
+Zenroom is in **ALPHA stage** and its the first software of the [Cryptolang](http://cryptolang.com) project aiming to make it easy and less error-prone to write **portable** software using **end-to-end encryption** inside isolated environments that can be easily made **interoperable**. Basic crypto functions provided include primitives from AES and soon CAESAR competition winners to manage **a/symmetric keys, key derivation, hashing and signing functionalities**. The [API documentation](https://zenroom.dyne.org/api) is a work in progress subject to slight changes.
 
 Zenroom's **restricted execution environment** is a sort of [sandbox](https://en.wikipedia.org/wiki/Sandbox_%28computer_security%29) that executes cryptographic operations in a **Turing-incomplete language** without any access to the calling process, underlying operating system or filesystem. Zenroom's parser is based on LUA's [syntax-direct translation](https://en.wikipedia.org/wiki/Syntax-directed_translation) engine, has coarse-grained control of computations and memory.
 
