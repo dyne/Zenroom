@@ -28,6 +28,9 @@
 extern unsigned char lualib_schema[];
 extern unsigned char lualib_inspect[];
 
+extern int lua_cjson_safe_new(lua_State *l);
+extern int lua_cjson_new(lua_State *l);
+
 const struct luaL_Reg luazen[] = {
 	{"randombytes", lz_randombytes},
 
@@ -161,6 +164,10 @@ void lsb_load_extensions(lsb_lua_sandbox *lsb) {
 	lsb_load_luamodule(lsb, luaopen_table,  LUA_TABLIBNAME);
 	lsb_load_luamodule(lsb, luaopen_string, LUA_STRLIBNAME);
 	lsb_load_luamodule(lsb, luaopen_math,   LUA_MATHLIBNAME);
+
+	// just the constructors are enough for cjson
+	lsb_add_function(lsb, lua_cjson_safe_new, "cjson");
+	lsb_add_function(lsb, lua_cjson_new, "cjson_full");
 
 	lsb_load_cmodule(lsb, (luaL_Reg*) &luazen);
 	lsb_load_cmodule(lsb, (luaL_Reg*) &bit_funcs);

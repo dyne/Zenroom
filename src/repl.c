@@ -183,7 +183,7 @@ void repl_logger(void *context, const char *component,
 	fflush(stdout);
 }
 
-lsb_lua_sandbox *repl_init(char *conf) {
+lsb_lua_sandbox *repl_init() {
 	lsb_lua_sandbox *lsb = NULL;
 
 	lsb_logger lsb_repl_logger = { .context = "repl",
@@ -270,22 +270,32 @@ int repl_teardown(lsb_lua_sandbox *lsb) {
 	return(1);
 }
 
-int repl_exec(lsb_lua_sandbox *lsb, const char *line) {
+int repl_exec(lua_State* lua, const char *line) {
 	int ret;
-
-	if (!lsb) return -1;
-
-	ret = luaL_dostring(lsb->lua, line);
+	ret = luaL_dostring(lua, line);
 	linenoiseHistoryAdd(line);
-	// lua_gc(lsb->lua, LUA_GCCOLLECT, 0);
 	if(ret != 0) {
-		error("%s", lua_tostring(lsb->lua, -1));
+		error("%s", lua_tostring(lua, -1));
 		fflush(stderr);
 		return ret;
-	} // else
-	  //   lsb->state = LSB_RUNNING;
-
+	}
 	return 0;
+}
+
+void repl_loop(lsb_lua_sandbox *lsb) {
+	static const char *line;
+	if(!lsb) return;
+	lua_State* L = lsb_get_lua(lsb);
+	if(!L) return;
+	char prompt[6] = "zen> \0";
+	int ret;
+	while((line = linenoise(prompt)) != NULL) {
+		ret = repl_exec(L, line);
+		if(ret != 0) prompt[3]='!';
+		else prompt[3]='>';
+		linenoiseFree((void *)line);
+	}
+	lua_gc(L, LUA_GCCOLLECT, 0);
 }
 
 

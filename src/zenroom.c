@@ -28,22 +28,15 @@
 #include <jutils.h>
 #include <zenroom.h>
 
-#include <linenoise.h>
-
 #include <luasandbox.h>
-#include <luasandbox/util/util.h>
-#include <luasandbox/lauxlib.h>
 
 // prototypes from lua_functions
 extern void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val);
 extern void lsb_load_extensions(lsb_lua_sandbox *lsb);
 
-extern int lua_cjson_safe_new(lua_State *l);
-extern int lua_cjson_new(lua_State *l);
-
 // from repl.c
-extern lsb_lua_sandbox *repl_init(char *conf);
-extern int repl_exec(lsb_lua_sandbox *lsb, const char *line);
+extern lsb_lua_sandbox *repl_init();
+extern void repl_loop(lsb_lua_sandbox *lsb);
 extern int repl_teardown(lsb_lua_sandbox *lsb);
 
 // from timing.c
@@ -169,10 +162,6 @@ int zenroom_exec(char *script, char *conf, char *keys,
 	lsb_load_extensions(lsb);
 	// load our own openlibs and extensions
 
-	func("loading cjson extensions");
-	lsb_add_function(lsb, lua_cjson_safe_new, "cjson");
-	lsb_add_function(lsb, lua_cjson_new, "cjson_full");
-
 	// load arguments from json if present
 	if(data) // avoid errors on NULL args
 		if(safe_string(data)) {
@@ -293,15 +282,11 @@ int main(int argc, char **argv) {
 		// start an interactive repl console
 	} else if(scriptfile[0]=='\0') {
 		lsb_lua_sandbox *cli;
-		char *line;
 		cli = repl_init(confdefault);
 		if(data[0]!='\0') lsb_setglobal_string(cli,"DATA",data);
 		if(keys[0]!='\0') lsb_setglobal_string(cli,"KEYS",keys);
-		while((line = linenoise("zen> ")) != NULL) {
-			repl_exec(cli, line);
-			// if(ret != 0) break;
-			linenoiseFree(line);
-		}
+		repl_loop(cli);
+		// quits on ctrl-D
 		repl_teardown(cli);
 	} else {
 		////////////////////////////////////
