@@ -1,4 +1,8 @@
 language: c
+os:
+  - linux
+  - osx
+
 sudo: required
 
 git:
@@ -7,15 +11,18 @@ git:
 compiler:
   - gcc
 
-
-env:
-  - DEBIAN_FRONTEND=noninteractive
+addons:
+  apt:
+    packages:
+      - build-essential
+      - gcc
+      - make
+      - valgrind
+      - zsh
 
 before_install:
-  - sudo apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confnew" install --no-install-recommends -y build-essential gcc make valgrind libjemalloc-dev zsh
-  - git submodule update --init --recursive 
+  - git submodule update --init --recursive
 
 script:
   - make shared
   - make check-shared
-
