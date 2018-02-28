@@ -125,7 +125,7 @@ remove_entries = {
 disable_modules = {io = 1}
 ```
 
-- `arguments` is a simple string, but can be also a json map used to
+- `DATA` is a simple string, but can be also a json map used to
   pass multiple arguments
 
 For example create a json file containing a map (this can be a string
