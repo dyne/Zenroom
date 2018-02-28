@@ -18,7 +18,7 @@ Quick links:
 - [Zenroom development on github](https://github.com/DECODEproject/zenroom)
 - Online demo (work in progress)
 
-Zenroom is in **ALPHA stage** and its the first software of the [Cryptolang](http://cryptolang.com) project aiming to make it easy and less error-prone to write **portable** software using **end-to-end encryption** inside isolated environments that can be easily made **interoperable**. Basic crypto functions provided include primitives from AES and soon CAESAR competition winners to manage **a/symmetric keys, key derivation, hashing and signing functionalities**. The [API documentation](https://zenroom.dyne.org/api) is a work in progress subject to slight changes.
+Zenroom is software in **ALPHA stage** and is part of the [DECODE project](https://decodeproject.eu) about data-ownership and technological sovereignty. This software aims to make it easy and less error-prone to write **portable** scripts using **end-to-end encryption** inside isolated environments that can be easily made **interoperable**. Basic crypto functions provided include primitives from AES and soon CAESAR competition winners to manage **a/symmetric keys, key derivation, hashing and signing functionalities**. The [API documentation](https://zenroom.dyne.org/api) is a work in progress subject to slight changes.
 
 Zenroom's **restricted execution environment** is a sort of [sandbox](https://en.wikipedia.org/wiki/Sandbox_%28computer_security%29) that executes cryptographic operations in a **Turing-incomplete language** without any access to the calling process, underlying operating system or filesystem. Zenroom's parser is based on LUA's [syntax-direct translation](https://en.wikipedia.org/wiki/Syntax-directed_translation) engine, has coarse-grained control of computations and memory.
 
@@ -88,15 +88,15 @@ From **command-line** the Zenroom is operated passing files as
 arguments:
 
 ```
-Usage: zenroom [-c config] [-k keys] script.lua
+Usage: zenroom [-c config] [-k KEYS] [-a DATA] SCRIPT.lua
 ```
 
 From **javascript** the function `zenroom_exec()` is exposed with four
-arguments: three strings and one number from 1 to 3 indicating the
+arguments: four strings and one number from 1 to 3 indicating the
 verbosity of output on the console:
 
 ```
-int zenroom_exec(char *script, char *config, char *keys, char *data, int verbosity)
+int zenroom_exec(char *SCRIPT, char *config, char *KEYS, char *DATA, int verbosity)
 ```
 
 The contents of the three strings cannot exceed 100k in size and are of different types:
@@ -143,11 +143,11 @@ final argument, or pipe from stdin or passed as a string argument to
 `zenroom_exec()` from javascript:
 
 ```lua
+i = inspect()
 json = cjson()
-args = json.decode(arguments)
+args = json.decode(DATA)
 -- args is now a lua table containing values for each args.argname
-print(args.secret)
-print(args.salt)
+i.print(args)
 ```
 
 All strings parsed are in the `arguments` global variable available
@@ -182,8 +182,8 @@ secret="this is a secret that noone knows"
 -- this should be a random string every time
 nonce="eishai7Queequot7pooc3eiC7Ohthoh1"
 
-json = cjson_safe()
-keys = json.decode(arguments)
+json = cjson()
+keys = json.decode(KEYS)
 
 res = {}
 
@@ -231,7 +231,7 @@ Includes code by:
 - Luke Dashjr (base58)
 - Cameron Rich (md5)
 - Mark Pulford (lua-cjson)
-- Dan Sprenkels (randombytes)
+- Daan Sprenkels (randombytes)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License version 2 as
