@@ -18,14 +18,18 @@ and their specific use-cases.
 - Benchmark suite to measure capacity to de/code large amounts of
   streaming data in chunks.
 
+- Investigate adoption of LuaJit in place of Lua5.1
+  (should be easy as it seems the C api is pretty much the same)
+
 ## Security
 
-- adopt a declarative approach to data schemes accepted in scripts
+X adopt a declarative approach to data schemes accepted in scripts
   supporting i.e. https://github.com/sschoener/lua-schema
   code analysis to report on bad constructs
+  DONE - just write documentation, examples and tests
 
-- maybe support Linux kernel keystore feature for loaded keys (see
-  cryptsetup 2.0)
+- maybe support Linux kernel keystore feature for loaded keys
+  (see cryptsetup 2.0)
 
 ## Documentation
 
@@ -39,7 +43,7 @@ and their specific use-cases.
 - Make it easy to integrate with BLOCKLY to generate simple
   cryptographic functions.
 
-- Document api with luadoc http://keplerproject.github.io/luadoc/
+X Document api with luadoc http://keplerproject.github.io/luadoc/
   or other means http://lua-users.org/wiki/DocumentingLuaCode
 
 ## Crypto
@@ -72,9 +76,9 @@ This section lists hypotethical developments and may lead to a
 completely new release of Zenroom or a derivate, while keeping the LUA
 one still maintained
 
-- Substitute cjson with a langsec hammer parser (tutorial lesson13)
+? Substitute cjson with a langsec hammer parser (tutorial lesson13)
 
-- After extensive documentation of use-cases, substitute the LUA
+? After extensive documentation of use-cases, substitute the LUA
   syntax parser with a limited DSL also written in langsec hammer
 
 - Add SMT analysis as a backend to most sensitive operations
@@ -83,17 +87,19 @@ one still maintained
 
 - provide cryptographic proof random sources
 
-- make a secure include directive
+V make a secure include directive
 
-- Find a way to load native LUA extensions at compile time
+X Find a way to load native LUA extensions at compile time
 
 - Remove all additional cruft coming in from heka and eventually turn
   the implementation to use only non-dynamic memory
 
 - take configuration parameters from a json struct
 
-- provide a REPL and perhaps a LISP interpreter
+X provide a REPL and perhaps a LISP interpreter
 
 - Include libs from penlight
   http://stevedonovan.github.io/Penlight/api/index.html stringx, lexer
 
+- Include libs for lispy operations on data
+  
