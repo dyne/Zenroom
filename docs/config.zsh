@@ -29,6 +29,8 @@ TWITTER="@DyneOrg"
 # Comment to disable Bootstrap
 BOOTSTRAP=1
 
+FONTAWESOME=1
+
 # What file extension to use for html files
 EXTENSION=".html"
 
