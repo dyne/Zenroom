@@ -1287,7 +1287,7 @@ local function repl(givenOptions)
     local options = {
         prompt = '>> ',
         read = read,
-        write = print,
+        write = write,
         flush = flush,
         print = print,
     }
