@@ -4,8 +4,10 @@ mil := ${pwd}/build/milagro
 
 # default
 gcc := gcc
+ar := ar
 cflags_protection := -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
 cflags := -O2 ${cflags_protection}
+musl := ${pwd}/build/musl
 
 test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
 
@@ -29,24 +31,26 @@ js: patches embed-lua luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 
 wasm: gcc=${EMSCRIPTEN}/emcc
+wasm: ar=${EMSCRIPTEN}/emar
 wasm: cflags :=
 wasm: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s MODULARIZE=1
 wasm: patches embed-lua luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 
 html: gcc=${EMSCRIPTEN}/emcc
+html: ar=${EMSCRIPTEN}/emar
 html: cflags := -O3 ${cflags_protection}
 html: ldflags := -sEXPORTED_FUNCTIONS='["_main","_zenroom_exec"]'
 html: patches embed-lua luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src html
 
 win: gcc=x86_64-w64-mingw32-gcc
+win: ar=x86_64-w64-mingw32-ar
 win: cflags := -O3 ${cflags_protection}
 win: patches embed-lua luasandbox luazen milagro-win
 	CC=${gcc} CFLAGS="${cflags}" make -C src win
 
 bootstrap: musl := ${pwd}/build/musl
-bootstrap: gcc := ${musl}/obj/musl-gcc
 bootstrap: cflags := -Os -static ${cflags_protection}
 bootstrap:
 	mkdir -p ${musl} && cd ${musl} && CFLAGS="${cflags}" ${pwd}/lib/musl/configure
@@ -129,10 +133,9 @@ check-static: check-milagro
 
 clean:
 	rm -rf ${luasand}
-	cd ${pwd}/lib/lua_sandbox && git clean -fd && git checkout .
-	cd ${pwd}/build/luazen && git clean -fd && git checkout .
-	cd ${pwd}/lib/milagro-crypto-c && git clean -fd && git checkout .
-	make -C src clean
+	make clean -C ${pwd}/build/luazen
+	make clean -C ${pwd}/lib/milagro-crypto-c
+	make clean -C src
 
 distclean:
 	rm -rf ${musl}
