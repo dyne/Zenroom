@@ -27,6 +27,7 @@
 
 extern unsigned char lualib_schema[];
 extern unsigned char lualib_inspect[];
+extern unsigned char lualib_fennel[];
 
 extern int lua_cjson_safe_new(lua_State *l);
 extern int lua_cjson_new(lua_State *l);
@@ -104,14 +105,14 @@ const struct luaL_Reg bit_funcs[] = {
   { NULL, NULL }
 };
 
-int get_debug();
-
+extern int get_debug();
 
 void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val) {
 	lua_State* L = lsb_get_lua(lsb);
 	lua_pushstring(L, val);
 	lua_setglobal(L, key);
 }
+
 
 
 void lsb_load_string(lsb_lua_sandbox *lsb, unsigned char *code,
@@ -172,8 +173,10 @@ void lsb_load_extensions(lsb_lua_sandbox *lsb) {
 	lsb_load_cmodule(lsb, (luaL_Reg*) &luazen);
 	lsb_load_cmodule(lsb, (luaL_Reg*) &bit_funcs);
 
-	lsb_load_string(lsb, lualib_schema, "schema");
+	lsb_load_string(lsb, lualib_schema,  "schema");
 	lsb_load_string(lsb, lualib_inspect, "inspect");
+	lsb_load_string(lsb, lualib_fennel,  "fennel");
+
 	act("done loading all extensions");
 
 }
