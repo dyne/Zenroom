@@ -6,6 +6,7 @@ fs.writeFileSync('zenroom.js.mem', fs.readFileSync('../src/zenroom.js.mem'));
 const zenroom_module = require('../src/zenroom.js')
 
 const zenroom = (script_file, conf_file=null, keys_file=null, data_file=null, verbosity=3) => {
+  process.stderr._write = function(chunk, encoding, callback) { callback() }
   const enc = { encoding: 'utf8' }
   const script = fs.readFileSync(script_file, enc)
   const conf = (conf_file) ? fs.readFileSync(conf_file, env) : null
@@ -17,4 +18,4 @@ const zenroom = (script_file, conf_file=null, keys_file=null, data_file=null, ve
                               [script, conf, keys, data, verbosity])
 }
 
-console.log(zenroom('./keygen.lua'))
+zenroom('./keygen.lua')
