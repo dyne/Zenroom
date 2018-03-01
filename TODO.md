@@ -4,6 +4,15 @@ This is a draft TODO list for future directions in zenroom
 development, to be vouched with priorities emerging from DECODE pilots
 and their specific use-cases.
 
+
+## Generic improvements
+
+- Multiline REPL using a linkedlist FIFO of commands, easy using libhl
+  from Xant
+
+- in/out to MSGPACK in addition to JSON for compact messaging easy using
+  Antirez' extension see https://github.com/antirez/lua-cmsgpack
+
 ## Performance
 
 - Benchmark suite to measure capacity to de/code large amounts of

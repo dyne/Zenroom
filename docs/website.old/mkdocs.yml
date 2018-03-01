@@ -5,6 +5,5 @@ theme: 'windmill'
 repo_url: https://github.com/DECODEproject/zenroom
 pages:
   - Introduction: index.md
-  - Cheatsheet: cheatsheet.md
   - Design principles: design.md
   - API: api.md

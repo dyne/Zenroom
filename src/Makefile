@@ -51,7 +51,10 @@ debug: clean ${SOURCES}
 clean:
 	rm -f *.o
 	rm -f zenroom-static
+	rm -f zenroom-shared
 	rm -f zenroom.js
+	rm -f zenroom.js.mem
+	rm -f zenroom.html
 	rm -f lualib_schema.c
 
 .c.o:

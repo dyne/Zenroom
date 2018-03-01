@@ -4,27 +4,40 @@
 
 [![Build Status](https://travis-ci.org/DECODEproject/zenroom.svg?branch=master)](https://travis-ci.org/DECODEproject/zenroom)
 
-**Restricted execution environment** for cryptographic operations in a **Turing-incomplete language** based on syntax-direct translation and coarse-grained control of computations and memory used.
+Zenroom is a small and portable virtual machine for cryptographic operations running on Windows, OSX, GNU/Linux, BSD as well Javascript and Webassembly inside modern browsers.
 
-Zenroom is a POSIX portable language interpreter inspired by language-theoretical security and it is designed to be small, attack-resistant and very portable. Its main use case is **distributed computing** of untrusted code, for instance it can be used in any distributed ledger implementation (also known as **blockchain smart contracts**).
+Its binaries are smaller than 1MB and ready to use on many platforms. Latest experimental test builds:
+- [Javascript](https://sdk.dyne.org:4443/job/zenroom-js/lastSuccessfulBuild/artifact/src/zenroom.js)
+- [X86-64bit](https://sdk.dyne.org:4443/job/zenroom-static-amd64/lastSuccessfulBuild/artifact/src/zenroom-static)
+- [ARM-HF](https://sdk.dyne.org:4443/job/zenroom-static-armhf/lastSuccessfulBuild/artifact/src/zenroom-static)
 
-Zenroom compiles to **static native binaries** (ARM and X86, UNIX and Windows64) for embedded use, but also to **javascript and webassembly** for client-side usage for instance in **browsers and mobile applications**.
+Quick links:
+- [Zenroom API documentation](https://zenroom.dyne.org/api) (work in progress)
+- [Zenroom Cryptolang Whitepaper](https://zenroom.dyne.org/whitepaper)
+- [Zenroom script examples](https://github.com/DECODEproject/zenroom/tree/master/examples) (work in progress)
+- [Zenroom development on github](https://github.com/DECODEproject/zenroom)
+- Online demo (work in progress)
 
-With Zenroom is easy to write **portable** software using **end-to-end encryption** inside isolated environments instead of adding built-in dependencies and applications adopting Zenroom for cryptographic computations can be easily made **interoperable**. Basic crypto functions provided include primitives from AES and soon CAESAR competition winners to manage **a/symmetric keys, key derivation, hashing and signing functionalities**.
+Zenroom is software in **ALPHA stage** and is part of the [DECODE project](https://decodeproject.eu) about data-ownership and technological sovereignty. This software aims to make it easy and less error-prone to write **portable** scripts using **end-to-end encryption** inside isolated environments that can be easily made **interoperable**. Basic crypto functions provided include primitives from AES and soon CAESAR competition winners to manage **a/symmetric keys, key derivation, hashing and signing functionalities**. The [API documentation](https://zenroom.dyne.org/api) is a work in progress subject to slight changes.
+
+Zenroom's **restricted execution environment** is a sort of [sandbox](https://en.wikipedia.org/wiki/Sandbox_%28computer_security%29) that executes cryptographic operations in a **Turing-incomplete language** without any access to the calling process, underlying operating system or filesystem. Zenroom's parser is based on LUA's [syntax-direct translation](https://en.wikipedia.org/wiki/Syntax-directed_translation) engine, has coarse-grained control of computations and memory.
+
+Zenroom is software inspired by [langsec.org](language-theoretical security) and it is designed to brittle and exit execution returning a meaningful error on any error occurred. Zenroom's documentation and examples are being written to encourage a [declarative](https://en.wikipedia.org/wiki/Declarative_programming) approach to scripting, treating even complex data structures as [first-class citizens](https://en.wikipedia.org/wiki/First-class_citizen).
+
+The main use case for Zenroom is that of **distributed computing** of untrusted code where advanced cryptographic functions are required, for instance it can be used as a distributed ledger implementation (also known as **blockchain smart contracts**).
 
 For a larger picture describing the purpose and design of this software in the field of **data-ownership** and **secure distributed computing**, see:
+- [The DECODE Project website](https://decodeproject.eu)
+- [The DECODE Project Whitepaper](https://decodeproject.github.io/whitepaper)
+- [The Zenroom Whitepaper](https://zenroom.dyne.org/whitepaper)
 
-- The DECODE Project website: https://decodeproject.eu
-- The DECODE Whitepaper: https://decodeproject.github.io/whitepaper
-- The Zenroom design documentation: https://decodeproject.github.io/zenroom
-
-![Horizon 2020](docs/ec_logo.png)
+![Horizon 2020](https://zenroom.dyne.org/img/ec_logo.png)
 
 This project is receiving funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement nr. 732546 (DECODE).
 
 ## Build instructions
 
-Pre-built binaries are available here https://sdk.dyne.org:4443/view/decode/ - this section is optional for those who want to build this software from source. The following build instructions contain generic information meant for an expert audience.
+This section is optional for those who want to build this software from source. The following build instructions contain generic information meant for an expert audience.
 
 The Zenroom compiles the same sourcecode to run on Linux in the form of 2 different POSIX compatible ELF binary formats using GCC (linking shared libraries) or musl-libc (fully static) targeting both X86 and ARM architectures. It also compiles to a Windows 64-bit native and fully static executable. At last, it compiles to Javascript/Webassembly using the LLVM based emscripten SDK. To recapitulate some Makefile targets:
 
@@ -65,25 +78,6 @@ make wasm
 make html
 ```
 
-## Crypto functionalities
-
-The Zenroom language interpreter includes statically the following cryptographic primitives:
-
-- **Norx** authenticated encryption with additional data (AEAD) - this is the default 64-4-1 variant (256-bit key and nonce, 4 rounds)
-- **Blake2b** cryptographic hash function
-- **Argon2i**, a modern key derivation function based on Blake2. Like
-scrypt, it is designed to be expensive in both CPU and memory.
-- **Curve25519**-based key exchange and public key encryption,
-- **Ed25519**-based signature function using Blake2b hash instead of sha512,
-
-Legacy cryptographic functions include **md5**, and **rc4**.
-
-Endoding and decoding functions are provided for **base64** and **base58** (for base58, the BitCoin encoding alphabet is used).
-
-Compression functions based on **BriefLZ** are also included.
-
-Inclusion of classic NIST compliant **RSA** and **DSA** algorithms is in progress.
-
 ## Operating instructions
 
 This software is work in progress and this section will be extended in
@@ -94,15 +88,15 @@ From **command-line** the Zenroom is operated passing files as
 arguments:
 
 ```
-Usage: zenroom [-c config] [-k keys] script.lua
+Usage: zenroom [-c config] [-k KEYS] [-a DATA] SCRIPT.lua
 ```
 
 From **javascript** the function `zenroom_exec()` is exposed with four
-arguments: three strings and one number from 1 to 3 indicating the
+arguments: four strings and one number from 1 to 3 indicating the
 verbosity of output on the console:
 
 ```
-int zenroom_exec(char *script, char *config, char *keys, char *data, int verbosity)
+int zenroom_exec(char *SCRIPT, char *config, char *KEYS, char *DATA, int verbosity)
 ```
 
 The contents of the three strings cannot exceed 100k in size and are of different types:
@@ -131,7 +125,7 @@ remove_entries = {
 disable_modules = {io = 1}
 ```
 
-- `arguments` is a simple string, but can be also a json map used to
+- `DATA` is a simple string, but can be also a json map used to
   pass multiple arguments
 
 For example create a json file containing a map (this can be a string
@@ -149,11 +143,11 @@ final argument, or pipe from stdin or passed as a string argument to
 `zenroom_exec()` from javascript:
 
 ```lua
+i = inspect()
 json = cjson()
-args = json.decode(arguments)
+args = json.decode(DATA)
 -- args is now a lua table containing values for each args.argname
-print(args.secret)
-print(args.salt)
+i.print(args)
 ```
 
 All strings parsed are in the `arguments` global variable available
@@ -188,8 +182,8 @@ secret="this is a secret that noone knows"
 -- this should be a random string every time
 nonce="eishai7Queequot7pooc3eiC7Ohthoh1"
 
-json = cjson_safe()
-keys = json.decode(arguments)
+json = cjson()
+keys = json.decode(KEYS)
 
 res = {}
 
@@ -222,7 +216,7 @@ Zenroom can be executed as `zenroom -k keys.json code.lua` and will print out th
 
 Copyright (C) 2017-2018 by Dyne.org foundation, Amsterdam
 
-Designed, written and maintained by Denis Roio <jaromil@dyne.org>
+Designed, written and maintained by Denis "Jaromil" Roio
 
 Includes code by:
 

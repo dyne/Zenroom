@@ -1,7 +1,7 @@
 # Writedown
 # generic configuration defaults for rendered files
 
-WRITEDOWN_TITLE="DECODE language design patterns"
+WRITEDOWN_TITLE="Zenroom Cryptolang Whitepaper"
 WRITEDOWN_AUTHOR="Denis Roio, Dyne.org"
 WRITEDOWN_AFFILIATION="Dyne.org Foundation"
 # WRITEDOWN_DATE="Wednesday 18 October 2017"

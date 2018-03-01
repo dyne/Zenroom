@@ -28,22 +28,15 @@
 #include <jutils.h>
 #include <zenroom.h>
 
-#include <linenoise.h>
-
 #include <luasandbox.h>
-#include <luasandbox/util/util.h>
-#include <luasandbox/lauxlib.h>
 
 // prototypes from lua_functions
 extern void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val);
 extern void lsb_load_extensions(lsb_lua_sandbox *lsb);
 
-extern int lua_cjson_safe_new(lua_State *l);
-extern int lua_cjson_new(lua_State *l);
-
 // from repl.c
-extern lsb_lua_sandbox *repl_init(char *conf);
-extern int repl_exec(lsb_lua_sandbox *lsb, const char *line);
+extern lsb_lua_sandbox *repl_init();
+extern void repl_loop(lsb_lua_sandbox *lsb);
 extern int repl_teardown(lsb_lua_sandbox *lsb);
 
 // from timing.c
@@ -85,21 +78,20 @@ void logger(void *context, const char *component,
 
 
 // This function exits the process on failure.
-void load_file(char *dst, char *path) {
+void load_file(char *dst, FILE *fd) {
 	char firstline[MAX_STRING];
 	size_t offset = 0;
 	size_t bytes = 0;
 
-	FILE *fd = fopen(path, "r");
 	if(!fd) {
-		error("Error opening %s: %s", path, strerror(errno));
+		error("Error opening %s", strerror(errno));
 		exit(1); }
 	// skip shebang on firstline
 	if(!fgets(firstline, MAX_STRING, fd)) {
-		error("Error reading first line of %s: %s", path, strerror(errno));
+		error("Error reading first line: %s", strerror(errno));
 		exit(1); }
 	if(firstline[0]=='#' && firstline[1]=='!')
-		func("Skipping shebang in %s", path);
+		func("Skipping shebang");
 	else {
 		offset+=strlen(firstline);
 		strncpy(dst,firstline,MAX_STRING);
@@ -111,7 +103,7 @@ void load_file(char *dst, char *path) {
 		if( bytes<MAX_STRING && feof(fd) ) break;
 	}
 	fclose(fd);
-	act("loaded file: %s (%u bytes)", path, offset);
+	act("loaded file (%u bytes)", offset);
 	func("file contents:\n%s", dst);
 }
 
@@ -170,10 +162,6 @@ int zenroom_exec(char *script, char *conf, char *keys,
 	lsb_load_extensions(lsb);
 	// load our own openlibs and extensions
 
-	func("loading cjson extensions");
-	lsb_add_function(lsb, lua_cjson_safe_new, "cjson");
-	lsb_add_function(lsb, lua_cjson_new, "cjson_full");
-
 	// load arguments from json if present
 	if(data) // avoid errors on NULL args
 		if(safe_string(data)) {
@@ -218,23 +206,26 @@ int zenroom_exec(char *script, char *conf, char *keys,
 }
 
 int main(int argc, char **argv) {
-	char conffile[512] = "zenroom.conf";
-	char scriptfile[512] = "zenroom.lua";
-	char keysfile[512];
+	char conffile[MAX_STRING] = "zenroom.conf";
+	char scriptfile[MAX_STRING] = "zenroom.lua";
+	char keysfile[MAX_STRING];
+	char datafile[MAX_STRING];
 	char script[MAX_FILE];
 	char conf[MAX_FILE];
 	char keys[MAX_FILE];
-	char pipedin[MAX_FILE];
+	char data[MAX_FILE];
 	int readstdin = 0;
 	int opt, index;
     int verbosity = 1;
 	int ret;
-	const char *short_options = "hdc:k:i";
+	const char *short_options = "hdc:k:a:";
     const char *help =
 		"Usage: zenroom [-dh] [ -c config ] [ -k keys ] [ script.lua ] [ - ]\n";
     conffile[0] = '\0';
     scriptfile[0] = '\0';
     keysfile[0] = '\0';
+    datafile[0] = '\0';
+    data[0] = '\0';
     keys[0] = '\0';
     conf[0] = '\0';
     script[0] = '\0';
@@ -254,6 +245,9 @@ int main(int argc, char **argv) {
 		case 'k':
 			snprintf(keysfile,511,"%s",optarg);
 			break;
+		case 'a':
+			snprintf(datafile,511,"%s",optarg);
+			break;
 		case 'c':
 			snprintf(conffile,511,"%s",optarg);
 			break;
@@ -268,49 +262,42 @@ int main(int argc, char **argv) {
 	}
 
 	if(keysfile[0]!='\0') {
-		act("reading KEYS from file");
-		load_file(keys, keysfile);
+		act("reading KEYS from file: %s", keysfile);
+		load_file(keys, fopen(keysfile, "r"));
+	}
+
+	if(datafile[0]!='\0') {
+		act("reading DATA from file: %s", datafile);
+		load_file(data, fopen(datafile, "r"));
 	}
 
 	if(readstdin) {
 		////////////////////////
 		// get another argument from stdin
-		act("reading DATA from stdin");
-		size_t bytes = 0;
-		size_t offset = 0;
-		for(;;) {
-			bytes = fread(&pipedin[offset],sizeof(char),1024,stdin);
-			offset += bytes;
-			if( bytes<1024 && feof(stdin) ) break;
-		}
-		func("%u bytes read",offset);
-		func("%s",pipedin);
+		act("reading CODE from stdin");
+		load_file(script, stdin);
+		func("%s\n--",script);
 
 		////////////////////////////////////
 		// start an interactive repl console
-	}
-
-	if(scriptfile[0]=='\0') {
+	} else if(scriptfile[0]=='\0') {
 		lsb_lua_sandbox *cli;
-		char *line;
 		cli = repl_init(confdefault);
-		if(readstdin)     lsb_setglobal_string(cli,"DATA",pipedin);
+		if(data[0]!='\0') lsb_setglobal_string(cli,"DATA",data);
 		if(keys[0]!='\0') lsb_setglobal_string(cli,"KEYS",keys);
-		while((line = linenoise("zen> ")) != NULL) {
-			repl_exec(cli, line);
-			// if(ret != 0) break;
-			linenoiseFree(line);
-		}
+		repl_loop(cli);
+		// quits on ctrl-D
 		repl_teardown(cli);
 	} else {
 		////////////////////////////////////
 		// load a file as script and execute
-		load_file(script, scriptfile);
+		act("reading CODE from file: %s", scriptfile);
+		load_file(script, fopen(scriptfile, "r"));
 	}
 
 	// configuration from -c or default
 	if(conffile[0]!='\0')
-		load_file(conf, conffile);
+		load_file(conf, fopen(conffile, "r"));
 	else
 		act("using default configuration");
 
@@ -318,7 +305,7 @@ int main(int argc, char **argv) {
 	ret = zenroom_exec(script,
 	                   (conf[0]!='\0')?conf:confdefault,
 	                   (keys[0]!='\0')?keys:NULL,
-	                   (readstdin)?pipedin:NULL,
+	                   (data[0]!='\0')?data:NULL,
 	                   verbosity);
 	// exit(1) on failure
 	exit(ret);

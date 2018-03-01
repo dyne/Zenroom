@@ -13,3 +13,6 @@
 [submodule "lib/milagro-crypto-c"]
 	path = lib/milagro-crypto-c
 	url = https://github.com/milagro-crypto/milagro-crypto-c
+[submodule "docs/webnomad"]
+	path = docs/webnomad
+	url = https://github.com/dyne/webnomad

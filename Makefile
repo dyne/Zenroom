@@ -4,8 +4,10 @@ mil := ${pwd}/build/milagro
 
 # default
 gcc := gcc
+ar := ar
 cflags_protection := -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
 cflags := -O2 ${cflags_protection}
+musl := ${pwd}/build/musl
 
 test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
 
@@ -22,30 +24,33 @@ embed-lua:
 # TODO: improve flags according to
 # https://github.com/kripken/emscripten/blob/master/src/settings.js
 js: gcc=${EMSCRIPTEN}/emcc
-js: cflags := -O3 ${cflags_protection}
-js: ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'"
-js: patches embed-lua luasandbox luazen milagro
+js: ar=${EMSCRIPTEN}/emar
+js: cflags := --memory-init-file 0
+js: ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s ALLOW_MEMORY_GROWTH=1
+js: patches embed-lua luasandbox luazen
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 
 wasm: gcc=${EMSCRIPTEN}/emcc
-wasm: cflags := -O3 ${cflags_protection}
-wasm: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'"
+wasm: ar=${EMSCRIPTEN}/emar
+wasm: cflags :=
+wasm: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s MODULARIZE=1
 wasm: patches embed-lua luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 
 html: gcc=${EMSCRIPTEN}/emcc
+html: ar=${EMSCRIPTEN}/emar
 html: cflags := -O3 ${cflags_protection}
 html: ldflags := -sEXPORTED_FUNCTIONS='["_main","_zenroom_exec"]'
 html: patches embed-lua luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src html
 
 win: gcc=x86_64-w64-mingw32-gcc
+win: ar=x86_64-w64-mingw32-ar
 win: cflags := -O3 ${cflags_protection}
 win: patches embed-lua luasandbox luazen milagro-win
 	CC=${gcc} CFLAGS="${cflags}" make -C src win
 
 bootstrap: musl := ${pwd}/build/musl
-bootstrap: gcc := ${musl}/obj/musl-gcc
 bootstrap: cflags := -Os -static ${cflags_protection}
 bootstrap:
 	mkdir -p ${musl} && cd ${musl} && CFLAGS="${cflags}" ${pwd}/lib/musl/configure
@@ -80,7 +85,7 @@ luasandbox:
 	CC=${gcc} CFLAGS="${cflags}" make -C ${luasand} luasandbox
 
 luazen:
-	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/build/luazen
+	CC=${gcc} AR=${ar} CFLAGS="${cflags}" make -C ${pwd}/build/luazen
 
 milagro:
 	@echo "-- Building milagro"
@@ -107,6 +112,7 @@ check-shared: check-milagro
 	${test-exec} test/cjson-test.lua && \
 	${test-exec} test/test_luazen.lua && \
 	${test-exec} test/schema.lua && \
+	test/integration_asymmetric_crypto.sh && \
 	echo "----------------\nAll tests passed for SHARED binary build\n----------------"
 
 check-static: test-exec := ${pwd}/src/zenroom-static -c ${pwd}/test/decode-test.conf
@@ -120,16 +126,29 @@ check-static: check-milagro
 	${test-exec} test/cjson-test.lua && \
 	${test-exec} test/test_luazen.lua && \
 	${test-exec} test/schema.lua && \
+	test/integration_asymmetric_crypto.sh && \
+	echo "----------------\nAll tests passed for STATIC binary build\n----------------"
+
+check-js: test-exec := nodejs ${pwd}/test/zenroom-cli.js ${pwd}/src/zenroom.js ${pwd}/src/zenroom.js.mem
+check-js:
+	@${test-exec} test/vararg.lua && \
+	${test-exec} test/nextvar.lua && \
+	${test-exec} test/locals.lua && \
+	${test-exec} test/constructs.lua && \
+	${test-exec} test/bitbench.lua && \
+	${test-exec} test/cjson-test.lua && \
+	${test-exec} test/test_luazen.lua && \
+	${test-exec} test/schema.lua && \
+	test/integration_asymmetric_crypto.sh && \
 	echo "----------------\nAll tests passed for STATIC binary build\n----------------"
 
 # TODO: check js build
 
 clean:
 	rm -rf ${luasand}
-	cd ${pwd}/lib/lua_sandbox && git clean -fd && git checkout .
-	cd ${pwd}/build/luazen && git clean -fd && git checkout .
-	cd ${pwd}/lib/milagro-crypto-c && git clean -fd && git checkout .
-	make -C src clean
+	make clean -C ${pwd}/build/luazen
+	make clean -C ${pwd}/lib/milagro-crypto-c
+	make clean -C src
 
 distclean:
 	rm -rf ${musl}
