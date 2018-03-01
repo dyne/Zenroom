@@ -8,7 +8,7 @@ vpath %.c ../../lib/luazen/src
 all: luazen.a
 
 luazen.a: ${SOURCES}
-	ar rcc libluazen.a *.o
+	$(AR) rcc libluazen.a *.o
 
 clean:
 	rm -f *.o *.a
