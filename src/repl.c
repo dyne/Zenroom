@@ -18,10 +18,10 @@
  * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include <unistd.h>
 #include <ctype.h>
 #include <jutils.h>
 #include <zenroom.h>
-#include <linenoise.h>
 
 #include <luasandbox.h>
 #include <luasandbox/lua.h>
@@ -30,15 +30,12 @@
 #include <luasandbox/util/util.h>
 #include <luasandbox/util/output_buffer.h>
 
-extern void completion(const char *buf, linenoiseCompletions *lc);
+// extern void completion(const char *buf, linenoiseCompletions *lc);
 
 extern void lsb_load_extensions(lsb_lua_sandbox *lsb);
 
 extern int lua_cjson_safe_new(lua_State *l);
 extern int lua_cjson_new(lua_State *l);
-
-// extern unsigned int  cheatsheet_len;
-// extern unsigned char cheatsheet[];
 
 struct lsb_lua_sandbox {
 	lua_State         *lua;
@@ -59,13 +56,6 @@ static const luaL_Reg preload_module_list[] = {
   { LUA_MATHLIBNAME, luaopen_math },
   { NULL, NULL }
 };
-
-// int print_help(lua_State *lua) {
-// 	(void)lua;
-// 	fwrite(cheatsheet,sizeof(unsigned char),cheatsheet_len,stdout);
-// 	fflush(stdout);
-// 	return 1;
-// }
 
 static int libsize(const luaL_Reg *l)
 {
@@ -239,18 +229,12 @@ lsb_lua_sandbox *repl_init() {
 
 	// print function
 	lsb_add_function(lsb, output_print, "print");
-	// help function
-	// lsb_add_function(lsb, print_help "help");
 
 	func("loading cjson extensions");
 	lsb_add_function(lsb, lua_cjson_new, "cjson");
 	lsb_add_function(lsb, lua_cjson_safe_new, "cjson_safe");
 
-	linenoiseHistorySetMaxLen(1024);
-    linenoiseSetMultiLine(1);
-    linenoiseSetCompletionCallback(completion);
-
-    notice("Interactive REPL console.");
+    notice("Interactive console, press ctrl-d to quit.");
 	return(lsb);
 
 }
@@ -273,7 +257,6 @@ int repl_teardown(lsb_lua_sandbox *lsb) {
 int repl_exec(lua_State* lua, const char *line) {
 	int ret;
 	ret = luaL_dostring(lua, line);
-	linenoiseHistoryAdd(line);
 	if(ret != 0) {
 		error("%s", lua_tostring(lua, -1));
 		fflush(stderr);
@@ -282,18 +265,25 @@ int repl_exec(lua_State* lua, const char *line) {
 	return 0;
 }
 
+size_t repl_prompt(int ret, char *line) {
+	size_t len = 0;
+	char *prompt;
+	if(ret) prompt="zen! \0";
+	else prompt="zen> \0";
+	write(STDOUT_FILENO, prompt, 5);
+	len = read(STDIN_FILENO, line, MAX_STRING);
+	line[len] = '\0';
+	return(len);
+}
+
 void repl_loop(lsb_lua_sandbox *lsb) {
-	static const char *line;
+	char line[MAX_STRING];
 	if(!lsb) return;
 	lua_State* L = lsb_get_lua(lsb);
 	if(!L) return;
-	char prompt[6] = "zen> \0";
-	int ret;
-	while((line = linenoise(prompt)) != NULL) {
+	int ret =0;
+	while(repl_prompt(ret, line)) {
 		ret = repl_exec(L, line);
-		if(ret != 0) prompt[3]='!';
-		else prompt[3]='>';
-		linenoiseFree((void *)line);
 	}
 	lua_gc(L, LUA_GCCOLLECT, 0);
 }
