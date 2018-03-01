@@ -96,6 +96,31 @@ static int output(lua_State *lua)
   return 0;
 }
 
+int repl_read(lua_State *lua) {
+	char line[MAX_STRING];
+	size_t len =0;
+	len = read(STDIN_FILENO, line, MAX_STRING);
+	line[len] = '\0';
+	lua_pushlstring(lua, line, len);
+	return 1;
+}
+
+int repl_flush(lua_State *lua) {
+	(void)lua;
+	fflush(stdout);
+	return 0;
+}
+
+int repl_write(lua_State *lua) {
+	size_t len;
+	const char *line = luaL_checklstring(lua,1,&len);
+	if(len>MAX_STRING) {
+		error("Error: LUA string too long");
+		return 0; }
+	write(STDOUT_FILENO, line, len);
+	return 0;
+}
+
 
 int output_print(lua_State *lua)
 {
@@ -229,6 +254,9 @@ lsb_lua_sandbox *repl_init() {
 
 	// print function
 	lsb_add_function(lsb, output_print, "print");
+	lsb_add_function(lsb, repl_flush, "flush");
+	lsb_add_function(lsb, repl_read, "read");
+	lsb_add_function(lsb, repl_write, "write");
 
 	func("loading cjson extensions");
 	lsb_add_function(lsb, lua_cjson_new, "cjson");
