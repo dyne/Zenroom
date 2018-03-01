@@ -25,9 +25,9 @@ embed-lua:
 # https://github.com/kripken/emscripten/blob/master/src/settings.js
 js: gcc=${EMSCRIPTEN}/emcc
 js: ar=${EMSCRIPTEN}/emar
-js: cflags :=
+js: cflags := --memory-init-file 0
 js: ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s ALLOW_MEMORY_GROWTH=1
-js: patches embed-lua luasandbox luazen milagro
+js: patches embed-lua luasandbox luazen
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 
 wasm: gcc=${EMSCRIPTEN}/emcc
@@ -119,6 +119,19 @@ check-static: test-exec := ${pwd}/src/zenroom-static -c ${pwd}/test/decode-test.
 check-static: check-milagro
 	@${test-exec} test/vararg.lua && \
 	${test-exec} test/pm.lua && \
+	${test-exec} test/nextvar.lua && \
+	${test-exec} test/locals.lua && \
+	${test-exec} test/constructs.lua && \
+	${test-exec} test/bitbench.lua && \
+	${test-exec} test/cjson-test.lua && \
+	${test-exec} test/test_luazen.lua && \
+	${test-exec} test/schema.lua && \
+	test/integration_asymmetric_crypto.sh && \
+	echo "----------------\nAll tests passed for STATIC binary build\n----------------"
+
+check-js: test-exec := nodejs ${pwd}/test/zenroom-cli.js ${pwd}/src/zenroom.js ${pwd}/src/zenroom.js.mem
+check-js:
+	@${test-exec} test/vararg.lua && \
 	${test-exec} test/nextvar.lua && \
 	${test-exec} test/locals.lua && \
 	${test-exec} test/constructs.lua && \
