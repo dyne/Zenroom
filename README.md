@@ -9,15 +9,15 @@ Zenroom is a brand new, small and portable virtual machine for cryptographic ope
 Latest stable executables:
 <ul>
 
-<li class="fab fa-node-js"><a href="https://files.dyne.org/zenroom/zenroom-0.4-js.zip">NodeJS</a></li>
+<li class="fab fa-node-js"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.4.0-js.zip">NodeJS</a></li>
 
-<li class="fab fa-linux"><a href="https://files.dyne.org/zenroom/zenroom-0.4-x86_64_linux.zip">Linux x86 64bit</a></li>
+<li class="fab fa-linux"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.4.0-x86_64_linux.zip">Linux x86 64bit</a></li>
 
-<li class="fab fa-android"><a href="https://files.dyne.org/zenroom/zenroom-0.4-armhf.zip">ARM hard-float</a></li>
+<li class="fab fa-android"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.4.0-armhf.zip">ARM hard-float</a></li>
 
-<li class="fab fa-windows"><a href="https://files.dyne.org/zenroom/zenroom-0.4-win64.zip">MS/Windows 64bit</li>
+<li class="fab fa-windows"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.4.0-win64.zip">MS/Windows 64bit</li>
 
-<li class="fab fa-apple"><a href="https://files.dyne.org/zenroom/zenroom-0.4-osx.zip">Apple/OSX</li>
+<li class="fab fa-apple"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.4.0-osx.zip">Apple/OSX</li>
 
 <li class="fab fa-github"><a href="https://github.com/decodeproject/zenroom">Source Code</a></li>
 </ul>
