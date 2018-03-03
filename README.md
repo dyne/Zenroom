@@ -43,9 +43,7 @@ Zenroom is a brand new, small and portable virtual machine for cryptographic ope
 <li class="far fa-cogs"><a href="https://github.com/DECODEproject/zenroom/wiki">Build instructions</a></li>
 
 </ul>
-<p class="pull-right">
-<sup>*</sup> = Work in Progress
-</p>
+<p class="pull-right"><sup>*</sup> = Work in Progress</p>
 
 
 Zenroom is software in **ALPHA stage** and is part of the [DECODE project](https://decodeproject.eu) about data-ownership and [technological sovereignty](https://www.youtube.com/watch?v=RvBRbwBm_nQ).
@@ -56,20 +54,22 @@ Zenroom is software in **ALPHA stage** and is part of the [DECODE project](https
 
 This software aims to make it easy and less error-prone to write **portable** scripts using **end-to-end encryption** inside isolated environments that can be easily made **interoperable**. Basic crypto functions provided include primitives to manage **a/symmetric keys, key derivation, hashing and signing functionalities**.
 
-Zenroom is software inspired by the [language-theoretical security](http://langsec.org) research, it allows to expresses cryptographic operations in a **Turing-incomplete language** without any access to the calling process, underlying operating system or filesystem.
+Zenroom is software inspired by the [language-theoretical security](http://langsec.org) research, it allows to expresses cryptographic operations in a **Turing-incomplete** * language without any access to the calling process, underlying operating system or filesystem.
+<p class="pull-right"><sup>*</sup> = Work in Progress</p>
 
 <a href="http://langsec.org/occupy/">
-<img src="https://zenroom.dyne.org/img/FullRecognition.jpg" class="pic"
-	alt="Full Recognition Before Processing!" target="_blank"></a>
+<img src="https://zenroom.dyne.org/img/InputLanguages.jpg" class="pic"
+	alt="No more Turing Completion!" target="_blank"></a>
 
-Zenroom's **restricted execution environment** is a sort of [sandbox](https://en.wikipedia.org/wiki/Sandbox_%28computer_security%29) whose parser is based on LUA's [syntax-direct translation](https://en.wikipedia.org/wiki/Syntax-directed_translation) engine and has coarse-grained control of computations and memory. The Zenroom VM it is designed to "brittle" and exit execution returning a meaningful messages on any error occurred.
+Zenroom's **restricted execution environment** is a sort of [sandbox](https://en.wikipedia.org/wiki/Sandbox_%28computer_security%29) whose parser is based on LUA's [syntax-direct translation](https://en.wikipedia.org/wiki/Syntax-directed_translation) and has coarse-grained control of computations and memory. The Zenroom VM is designed to "brittle" and exit execution returning a meaningful message on any error.
 
 Zenroom's documentation and examples are being written to encourage a [declarative](https://en.wikipedia.org/wiki/Declarative_programming) approach to scripting, treating even complex data structures as [first-class citizens](https://en.wikipedia.org/wiki/First-class_citizen).
 
 
 <a href="http://langsec.org/occupy/">
-<img src="https://zenroom.dyne.org/img/InputLanguages.jpg" class="pic"
-	alt="No more Turing Completion!" target="_blank"></a>
+<img src="https://zenroom.dyne.org/img/FullRecognition.jpg" class="pic"
+	alt="Full Recognition Before Processing!" target="_blank"></a>
+
 
 The main use case for Zenroom is that of **distributed computing** of untrusted code where advanced cryptographic functions are required, for instance it can be used as a distributed ledger implementation (also known as **blockchain smart contracts**).
 
@@ -84,12 +84,11 @@ Copyright (C) 2017-2018 by Dyne.org foundation, Amsterdam
 
 Designed, written and maintained by Denis "Jaromil" Roio
 
-Special thanks to Francesca Bria for leading the DECODE project and to Ola Bini, Mark de Villiers and Puria Nafisi Azizi for their expert reviews.
+Special thanks to Francesca Bria for leading the DECODE project and to George Danezis, Ola Bini, Mark de Villiers and Puria Nafisi Azizi for their expert reviews and contributions.
 
 This software includes code by:
 
 - R. Ierusalimschy, W. Celes and L.H. de Figueiredo (lua)
-- Mozilla foundation (lua_sandbox)
 - Rich Felker, et al (musl-libc)
 - Mike Scott and Kealan McCusker (milagro)
 - Phil Leblanc (luazen)
