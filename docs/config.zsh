@@ -8,7 +8,7 @@ KEYWORDS="crypto, blockchain, language, LUA, VM, free, open source"
 
 # representative image, 1200x627 pixels is full column banner, 400 is half
 # exact size indicated above is important to avoid resizes server-side
-IMAGE="https://www.dyne.org/wp-content/uploads/2015/12/software_by_dyne.png"
+IMAGE="https://zenroom.dyne.org/img/InputLanguages.jpg"
 
 # list of types: http://ogp.me/#types
 TYPE="website"
