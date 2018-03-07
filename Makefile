@@ -1,6 +1,7 @@
 pwd := $(shell pwd)
 luasand := ${pwd}/build/lua_sandbox
 mil := ${pwd}/build/milagro
+extras := ${pwd}/extras
 
 # default
 gcc := gcc
@@ -37,6 +38,13 @@ wasm: cflags :=
 wasm: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s MODULARIZE=1
 wasm: patches embed-lua luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
+
+web: gcc=${EMSCRIPTEN}/emcc
+web: ar=${EMSCRIPTEN}/emar
+web: cflags :=
+web: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s ASSERTIONS=1 --shell-file ${extras}/shell_minimal.html -s NO_EXIT_RUNTIME=1
+web: patches embed-lua luasandbox luazen milagro
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src extras
 
 html: gcc=${EMSCRIPTEN}/emcc
 html: ar=${EMSCRIPTEN}/emar
@@ -151,6 +159,7 @@ clean:
 	make clean -C ${pwd}/lib/milagro-crypto-c && \
 		rm -f ${pwd}/lib/milagro-crypto-c/CMakeCache.txt
 	make clean -C src
+	rm -f ${extras}/index.*
 
 distclean:
 	rm -rf ${musl}
