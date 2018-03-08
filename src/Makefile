@@ -18,6 +18,10 @@ html: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc
 html: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom.html ${LDFLAGS} ${LDADD}
 
+extras: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc
+extras: ${SOURCES}
+	${CC} ${CFLAGS} ${SOURCES} -o ../extras/index.html ${LDFLAGS} ${LDADD}
+
 static: CC := ../build/musl/obj/musl-gcc
 static: CFLAGS += -Os -Wall -Wextra -pedantic -std=gnu99
 static: LDADD  += ../build/musl/lib/libc.a
