@@ -24,15 +24,10 @@ before_install:
 
 script:
 - mkdir -p build
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make shared ; fi
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make check-shared ; fi
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cp src/zenroom-shared   build/zenroom.x86 ; fi
-- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make bootstrap      ; fi
-- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make check-static   ; fi
-- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cp src/zenroom-static build/zenroom.x86 ; fi
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make shared && make check-shared && cp src/zenroom-shared build/zenroom.x86 ; fi
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make bootstrap && make static && make check-static && cp src/zenroom-static build/zenroom.x86 ; fi
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make clean  ; fi
-- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make win    ; fi
-- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cp src/zenroom.exe build/ ; fi
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make win && cp src/zenroom.exe build/ ; fi
 
 deploy:
   - provider: releases
