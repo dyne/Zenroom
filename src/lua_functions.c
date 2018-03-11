@@ -25,9 +25,9 @@
 #include <luasandbox/lauxlib.h>
 #include <luazen.h>
 
-extern unsigned char lualib_schema[];
-extern unsigned char lualib_inspect[];
-extern unsigned char lualib_fennel[];
+extern unsigned char *lualib_schema;
+extern unsigned char *lualib_inspect;
+extern unsigned char *lualib_fennel;
 
 extern int lua_cjson_safe_new(lua_State *l);
 extern int lua_cjson_new(lua_State *l);
