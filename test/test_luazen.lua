@@ -372,9 +372,10 @@ pw = "hello"
 salt = "salt salt salt"
 k = ""
 -- c0 = os.clock()
-k = kdf_argon2i(pw, salt, 100000, 10)
+k = kdf_argon2i(pw, salt, 1000, 3)
 assert(#k == 32)
-print("argon2i (100MB, 10 iter)")
+assert(encode_b64(k) == "UvEmGTUztnx7XDjZ0uIjg8E8d0Le6NHoZPqGBizo/ms=")
+print("argon2i (1MB, 3 iter)")
 -- print("Execution time (sec): ", os.clock()-c0)
 
 
