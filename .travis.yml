@@ -15,19 +15,19 @@ addons:
     - make
     - valgrind
     - zsh
+    - musl-tools
     - mingw-w64
 
 before_install:
 - git submodule update --init --recursive
-- curl "https://s3.amazonaws.com/mozilla-games/emscripten/releases/emsdk-portable.tar.gz" > emsdk-portable.tar.gz
-- tar xvf emsdk-portable.tar.gz
+- wget "https://s3.amazonaws.com/mozilla-games/emscripten/releases/emsdk-portable.tar.gz"
+- tar xzf emsdk-portable.tar.gz
 
 script:
 - mkdir -p build
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make shared && make check-shared && cp src/zenroom-shared build/zenroom.x86 ; fi
-- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make bootstrap && make static && make check-static && cp src/zenroom-static build/zenroom.x86 ; fi
-- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make clean  ; fi
-- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make win && cp src/zenroom.exe build/ ; fi
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make shared && make check-shared && cp src/zenroom-shared build/zenroom.x86 && make clean ; fi
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make static && make check-static && cp src/zenroom-static build/zenroom.x86 && make clean ; fi
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make win && cp src/zenroom.exe build/ && make clean ; fi
 
 deploy:
   - provider: releases

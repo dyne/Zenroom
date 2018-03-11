@@ -1,6 +1,6 @@
 CC?=gcc
 VERSION := $(shell cat ../VERSION)
-
+ARCH := $(shell uname -m)
 CFLAGS  += -I. -I../lib/lua_sandbox/include -O3 -Wall -Wextra
 SOURCES := jutils.o lua_functions.o zenroom.o bitop.o lua_cjson.o strbuf.o fpconv.o repl.o lualib_schema.o lualib_inspect.o lualib_fennel.o
 LDADD   := ../build/lua_sandbox/src/libluasandbox.a
@@ -22,15 +22,10 @@ extras: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc
 extras: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o ../extras/index.html ${LDFLAGS} ${LDADD}
 
-static: CC := ../build/musl/obj/musl-gcc
-static: CFLAGS += -Os -Wall -Wextra -pedantic -std=gnu99
-static: LDADD  += ../build/musl/lib/libc.a
-static: LDFLAGS += -static
+static: LDADD  += /usr/lib/${ARCH}-linux-musl/libc.a
 static: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-static ${LDFLAGS} ${LDADD}
 
-system-static: CFLAGS += -Os -Wall -Wextra -pedantic -std=gnu99
-system-static: LDFLAGS += -static
 system-static: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-static ${LDFLAGS} ${LDADD}
 
