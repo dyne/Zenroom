@@ -127,7 +127,7 @@ check-static: check-milagro
 	${test-exec} test/cjson-test.lua && \
 	${test-exec} test/test_luazen.lua && \
 	${test-exec} test/schema.lua && \
-	test/integration_asymmetric_crypto.sh && \
+	test/integration_asymmetric_crypto.sh zenroom-static && \
 	echo "----------------\nAll tests passed for STATIC binary build\n----------------"
 
 check-js: test-exec := nodejs ${pwd}/test/zenroom_exec.js ${pwd}/src/zenroom.js
