@@ -12,9 +12,6 @@ musl := ${pwd}/build/musl
 
 test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
 
-bootstrap-check:
-	@if ! [ -r ${gcc} ]; then echo "\nRun 'make bootstrap' first to build the compiler.\n" && exit 0; fi
-
 patches:
 	./build/apply-patches
 
@@ -59,21 +56,16 @@ win: cflags := -O3 ${cflags_protection}
 win: patches embed-lua luasandbox luazen milagro-win
 	CC=${gcc} CFLAGS="${cflags}" make -C src win
 
-bootstrap: musl := ${pwd}/build/musl
-bootstrap: cflags := -Os -static ${cflags_protection}
-bootstrap:
-	mkdir -p ${musl} && cd ${musl} && CFLAGS="${cflags}" ${pwd}/lib/musl/configure
-	make -j2 -C ${musl}
-
-static: musl := ${pwd}/build/musl
-static: gcc := ${musl}/obj/musl-gcc
-static: cflags := -Os -static ${cflags_protection}
-static: bootstrap embed-lua patches luasandbox luazen milagro
+static: gcc := musl-gcc
+static: cflags := -Os -static -Wall -std=gnu99 ${cflags_protection}
+static: ldflags := -static
+static: patches embed-lua luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src static
 
-system-static: cflags := -Os -static ${cflags_protection}
+system-static: cflags := -Os -static -Wall -std=gnu99 ${cflags_protection}
+system-static: ldflags := -static
 system-static: patches embed-lua luasandbox luazen milagro
-	CC=${gcc} CFLAGS="${cflags}" make -C src system-static
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src system-static
 
 shared: gcc := gcc
 shared: cflags := -O2 -fPIC ${cflags_protection}
@@ -135,7 +127,7 @@ check-static: check-milagro
 	${test-exec} test/cjson-test.lua && \
 	${test-exec} test/test_luazen.lua && \
 	${test-exec} test/schema.lua && \
-	test/integration_asymmetric_crypto.sh && \
+	test/integration_asymmetric_crypto.sh zenroom-static && \
 	echo "----------------\nAll tests passed for STATIC binary build\n----------------"
 
 check-js: test-exec := nodejs ${pwd}/test/zenroom_exec.js ${pwd}/src/zenroom.js
@@ -147,11 +139,9 @@ check-js:
 	${test-exec} test/bitbench.lua && \
 	${test-exec} test/cjson-test.lua && \
 	${test-exec} test/test_luazen.lua && \
-	${test-exec} test/schema.lua && \
-	test/integration_asymmetric_crypto.sh && \
-	echo "----------------\nAll tests passed for STATIC binary build\n----------------"
+	echo "----------------\nAll tests passed for JAVASCRIPT binary build\n----------------"
 
-# TODO: check js build
+# TODO: complete js tests with schema and other lua extensions
 
 clean:
 	rm -rf ${luasand}
