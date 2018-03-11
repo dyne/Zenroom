@@ -1,9 +1,9 @@
 const fs = require('fs')
 // you have to copy the js.mem file in the CWD as per design or --memory-init-file 0
 // but it is not recommended as stated in https://github.com/kripken/emscripten/issues/2537
-fs.writeFileSync('zenroom.js.mem', fs.readFileSync('../src/zenroom.js.mem'));
+// fs.writeFileSync('zenroom.js.mem', fs.readFileSync('../src/zenroom.js.mem'));
 
-const zenroom_module = require('../src/zenroom.js')
+const zenroom_module = require(process.argv[2])
 
 const zenroom = (script_file, conf_file=null, keys_file=null, data_file=null, verbosity=3) => {
   process.stderr._write = function(chunk, encoding, callback) { callback() }
@@ -18,4 +18,7 @@ const zenroom = (script_file, conf_file=null, keys_file=null, data_file=null, ve
                               [script, conf, keys, data, verbosity])
 }
 
-zenroom('./keygen.lua')
+console.log("[JS] zenroom_exec %s %s",
+			process.argv[2], process.argv[3])
+
+zenroom(process.argv[3])

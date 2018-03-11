@@ -28,7 +28,7 @@ embed-lua:
 js: gcc=${EMSCRIPTEN}/emcc
 js: ar=${EMSCRIPTEN}/emar
 js: cflags := --memory-init-file 0
-js: ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s ALLOW_MEMORY_GROWTH=1
+js: ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s ALLOW_MEMORY_GROWTH=1 -s USE_SDL=0
 js: patches embed-lua luasandbox luazen
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 
@@ -138,7 +138,7 @@ check-static: check-milagro
 	test/integration_asymmetric_crypto.sh && \
 	echo "----------------\nAll tests passed for STATIC binary build\n----------------"
 
-check-js: test-exec := nodejs ${pwd}/test/zenroom-cli.js ${pwd}/src/zenroom.js ${pwd}/src/zenroom.js.mem
+check-js: test-exec := nodejs ${pwd}/test/zenroom_exec.js ${pwd}/src/zenroom.js
 check-js:
 	@${test-exec} test/vararg.lua && \
 	${test-exec} test/nextvar.lua && \
