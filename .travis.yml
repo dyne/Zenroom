@@ -31,7 +31,7 @@ script:
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make shared && make check-shared && cp src/zenroom-shared build/zenroom.x86 && make clean ; fi
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make static && make check-static && cp src/zenroom-static build/zenroom.x86 && make clean ; fi
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make win && cp src/zenroom.exe build/ && make clean ; fi
-- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then source emsdk-portable/emsdk_set_env.sh && make js && make check-js && cp src/zenroom.js build/ && make clean ; fi
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then source emsdk-portable/emsdk_env.sh && make js && make check-js && cp src/zenroom.js build/ && make clean ; fi
 
 deploy:
   - provider: releases
