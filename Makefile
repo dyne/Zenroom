@@ -139,11 +139,9 @@ check-js:
 	${test-exec} test/bitbench.lua && \
 	${test-exec} test/cjson-test.lua && \
 	${test-exec} test/test_luazen.lua && \
-	${test-exec} test/schema.lua && \
-	test/integration_asymmetric_crypto.sh && \
-	echo "----------------\nAll tests passed for STATIC binary build\n----------------"
+	echo "----------------\nAll tests passed for JAVASCRIPT binary build\n----------------"
 
-# TODO: check js build
+# TODO: complete js tests with schema and other lua extensions
 
 clean:
 	rm -rf ${luasand}

@@ -54,7 +54,7 @@ clean:
 	rm -f zenroom.js
 	rm -f zenroom.js.mem
 	rm -f zenroom.html
-	rm -f lualib_schema.c
+	rm -f lualib_*
 
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"${VERSION}\"
