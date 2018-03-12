@@ -25,9 +25,9 @@
 #include <luasandbox/lauxlib.h>
 #include <luazen.h>
 
-extern unsigned char *lualib_schema;
-extern unsigned char *lualib_inspect;
-extern unsigned char *lualib_fennel;
+#include <lualib_schema.c>
+#include <lualib_inspect.c>
+#include <lualib_fennel.c>
 
 extern int lua_cjson_safe_new(lua_State *l);
 extern int lua_cjson_new(lua_State *l);
@@ -115,26 +115,30 @@ void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val) {
 
 
 
-void lsb_load_string(lsb_lua_sandbox *lsb, unsigned char *code,
-                     char *name) {
+void lsb_load_string(lsb_lua_sandbox *lsb, const char *code,
+                     size_t size, char *name) {
 	lua_State* L = lsb_get_lua(lsb);
 
 	lua_getglobal(L, "loadstring");
 	if(!lua_iscfunction(L, -1)) {
 		error("lsb_load_string: function 'loadstring' not found");
 		return; }
-
-	lua_pushstring(L, (const char*)code);
+	func("memory addr: %p (%u bytes)", code, size);
+	lua_pushlstring(L, code, size);
 
 	if(lua_pcall(L, 1, 1, 0)) {
 		error("lsb_load_string: cannot load %s extension", name);
 		return; }
 
 	func("Loading lua library: %s", name);
+
 	if (lua_isstring(L, -1) || lua_isnil(L, -1)) {
 		/* loader returned error message? */
 		error("error loading lua string: %s", name);
-	}
+		if(!lua_isnil(L,-1))
+			error("%s", lua_tostring(L, -1));
+		return; }
+
 	// run loaded module
 	lua_setglobal(L, name);
 }
@@ -173,9 +177,9 @@ void lsb_load_extensions(lsb_lua_sandbox *lsb) {
 	lsb_load_cmodule(lsb, (luaL_Reg*) &luazen);
 	lsb_load_cmodule(lsb, (luaL_Reg*) &bit_funcs);
 
-	lsb_load_string(lsb, lualib_schema,  "schema");
-	lsb_load_string(lsb, lualib_inspect, "inspect");
-	lsb_load_string(lsb, lualib_fennel,  "fennel");
+	lsb_load_string(lsb, lualib_schema, lualib_schema_len,  "schema");
+	lsb_load_string(lsb, lualib_inspect,lualib_inspect_len, "inspect");
+	lsb_load_string(lsb, lualib_fennel, lualib_fennel_len,  "fennel");
 
 	act("done loading all extensions");
 
