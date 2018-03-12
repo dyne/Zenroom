@@ -26,50 +26,50 @@ js: gcc=${EMSCRIPTEN}/emcc
 js: ar=${EMSCRIPTEN}/emar
 js: cflags := --memory-init-file 0
 js: ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s ALLOW_MEMORY_GROWTH=1 -s USE_SDL=0
-js: patches embed-lua luasandbox luazen
+js: patches  luasandbox luazen
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 
 wasm: gcc=${EMSCRIPTEN}/emcc
 wasm: ar=${EMSCRIPTEN}/emar
 wasm: cflags :=
 wasm: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s MODULARIZE=1
-wasm: patches embed-lua luasandbox luazen milagro
+wasm: patches  luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 
 web: gcc=${EMSCRIPTEN}/emcc
 web: ar=${EMSCRIPTEN}/emar
 web: cflags :=
 web: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s ASSERTIONS=1 --shell-file ${extras}/shell_minimal.html -s NO_EXIT_RUNTIME=1
-web: patches embed-lua luasandbox luazen milagro
+web: patches  luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src extras
 
 html: gcc=${EMSCRIPTEN}/emcc
 html: ar=${EMSCRIPTEN}/emar
 html: cflags := -O3 ${cflags_protection}
 html: ldflags := -sEXPORTED_FUNCTIONS='["_main","_zenroom_exec"]'
-html: patches embed-lua luasandbox luazen milagro
+html: patches  luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src html
 
 win: gcc=x86_64-w64-mingw32-gcc
 win: ar=x86_64-w64-mingw32-ar
 win: cflags := -O3 ${cflags_protection}
-win: patches embed-lua luasandbox luazen milagro-win
+win: patches  luasandbox luazen milagro-win
 	CC=${gcc} CFLAGS="${cflags}" make -C src win
 
 static: gcc := musl-gcc
 static: cflags := -Os -static -Wall -std=gnu99 ${cflags_protection}
 static: ldflags := -static
-static: patches embed-lua luasandbox luazen milagro
+static: patches  luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src static
 
 system-static: cflags := -Os -static -Wall -std=gnu99 ${cflags_protection}
 system-static: ldflags := -static
-system-static: patches embed-lua luasandbox luazen milagro
+system-static: patches  luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src system-static
 
 shared: gcc := gcc
 shared: cflags := -O2 -fPIC ${cflags_protection}
-shared: patches embed-lua luasandbox luazen milagro
+shared: patches  luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
 
 gmp:
