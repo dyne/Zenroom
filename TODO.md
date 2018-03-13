@@ -14,6 +14,43 @@ and their specific use-cases.
   https://github.com/brimworks/lua-ev
   http://software.schmorp.de/pkg/libev.html
 
+- add some more functions from stdlib's string and utils
+  https://github.com/lua-stdlib/lua-stdlib
+
+- provide a finite state machine programming interface
+  https://github.com/kyleconroy/lua-state-machine
+  https://github.com/airstruck/knife/blob/master/readme/behavior.md
+
+- erlang style pattern matching on data structures
+  https://github.com/silentbicycle/tamale
+
+- functional programming facility
+  https://github.com/Yonaba/Moses
+
+- date and time module
+  https://github.com/Tieske/date
+
+- pick extensions from here
+  http://webserver2.tecgraf.puc-rio.br/~lhf/ftp/lua/
+
+## Developer experience
+
+- add superior testing and profiling facility with lust
+  https://github.com/bjornbytes/lust
+
+- enhance debug module stacktrace
+  https://github.com/ignacio/StackTracePlus
+
+- introspection
+  https://github.com/leegao/see.lua
+
+- self documentation
+  https://github.com/rgieseke/locco
+  (also includes interesting modules as luabalanced)
+
+- graphviz representation of complex data structures
+  http://siffiejoe.github.io/lua-microscope/
+
 ## Performance
 
 - Benchmark suite to measure capacity to de/code large amounts of
@@ -53,12 +90,12 @@ X Document api with luadoc http://keplerproject.github.io/luadoc/
 
 - Build a usable ABC implementation (maybe compatible with coconut
   and/or IRMA?)
-  
+
 - Reproduce tor's new onion address scheme
   (see tor-dam/pkg/damlib/crypto_25519.go)
 
 - Consider adding GOST from https://github.com/aprelev/libgost15
-  
+
 - Investigate inclusion of primitives from libsodium
 
 - Investigate inclusion of primitives from libgcrypt
@@ -103,4 +140,3 @@ X provide a REPL and perhaps a LISP interpreter
   http://stevedonovan.github.io/Penlight/api/index.html stringx, lexer
 
 - Include libs for lispy operations on data
-  

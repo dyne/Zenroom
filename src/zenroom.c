@@ -222,7 +222,7 @@ int main(int argc, char **argv) {
 	int ret;
 	const char *short_options = "hdc:k:a:";
     const char *help =
-		"Usage: zenroom [-dh] [ -c config ] [ -k keys ] [ script.lua ] [ - ]\n";
+	    "Usage: zenroom [-dh] [ -c config ] [ -k keys ] [ -a data ] [ script.lua | - ]\n";
     conffile[0] = '\0';
     scriptfile[0] = '\0';
     keysfile[0] = '\0';
