@@ -7,11 +7,12 @@ and their specific use-cases.
 
 ## Generic improvements
 
-- Multiline REPL using a linkedlist FIFO of commands, easy using libhl
-  from Xant
-
 - in/out to MSGPACK in addition to JSON for compact messaging easy using
   Antirez' extension see https://github.com/antirez/lua-cmsgpack
+
+- if event based callback framework needed, try including libev
+  https://github.com/brimworks/lua-ev
+  http://software.schmorp.de/pkg/libev.html
 
 ## Performance
 

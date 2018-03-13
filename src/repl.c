@@ -54,6 +54,8 @@ static const luaL_Reg preload_module_list[] = {
   { LUA_TABLIBNAME, luaopen_table },
   { LUA_STRLIBNAME, luaopen_string },
   { LUA_MATHLIBNAME, luaopen_math },
+  { LUA_OSLIBNAME, luaopen_os },
+  { LUA_DBLIBNAME, luaopen_debug},
   { NULL, NULL }
 };
 

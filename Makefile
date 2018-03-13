@@ -19,6 +19,7 @@ embed-lua:
 	xxd -i src/lua/schema.lua | sed 's/src_lua_schema_lua/lualib_schema/g' > src/lualib_schema.c
 	xxd -i src/lua/inspect.lua | sed 's/src_lua_inspect_lua/lualib_inspect/g' > src/lualib_inspect.c
 	xxd -i src/lua/fennel.lua | sed 's/src_lua_fennel_lua/lualib_fennel/g' > src/lualib_fennel.c
+	xxd -i src/lua/debugger.lua | sed 's/src_lua_debugger_lua/lualib_debugger/g' > src/lualib_debugger.c
 
 # TODO: improve flags according to
 # https://github.com/kripken/emscripten/blob/master/src/settings.js
