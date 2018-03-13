@@ -343,6 +343,11 @@ function inspect.print(root, options)
    print(inspect.inspect(root, options))
    return root
 end
+-- alias to the spy() function (clojurism from timbre)
+function inspect.spy(root, options)
+   print(inspect.inspect(root, options))
+   return root
+end
 
 setmetatable(inspect, { __call = function(_, ...) return inspect.print(...) end })
 
