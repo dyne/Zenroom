@@ -222,7 +222,7 @@ index 43697e1..b344199 100644
  /*
  ** {========================================================================
 diff --git a/src/lua/loslib.c b/src/lua/loslib.c
-index b822e2d..5065713 100644
+index b822e2d..d64d0b9 100644
 --- a/src/lua/loslib.c
 +++ b/src/lua/loslib.c
 @@ -76,7 +76,7 @@ static int os_pushresult (lua_State *L, int i, const char *filename) {
@@ -234,7 +234,32 @@ index b822e2d..5065713 100644
  
  #define l_gmtime(t,r)		gmtime_r(t,r)
  #define l_localtime(t,r)	localtime_r(t,r)
-@@ -300,12 +300,12 @@ static const luaL_Reg syslib[] = {
+@@ -109,15 +109,15 @@ static int os_rename (lua_State *L) {
+ }
+ 
+ 
+-static int os_tmpname (lua_State *L) {
+-  char buff[LUA_TMPNAMBUFSIZE];
+-  int err;
+-  lua_tmpnam(buff, err);
+-  if (err)
+-    return luaL_error(L, "unable to generate a unique filename");
+-  lua_pushstring(L, buff);
+-  return 1;
+-}
++// static int os_tmpname (lua_State *L) {
++//   char buff[LUA_TMPNAMBUFSIZE];
++//   int err;
++//   lua_tmpnam(buff, err);
++//   if (err)
++//     return luaL_error(L, "unable to generate a unique filename");
++//   lua_pushstring(L, buff);
++//   return 1;
++// }
+ 
+ 
+ static int os_getenv (lua_State *L) {
+@@ -300,14 +300,14 @@ static const luaL_Reg syslib[] = {
    {"clock",     os_clock},
    {"date",      os_date},
    {"difftime",  os_difftime},
@@ -249,8 +274,11 @@ index b822e2d..5065713 100644
 +  // {"rename",    os_rename},
 +  // {"setlocale", os_setlocale},
    {"time",      os_time},
-   {"tmpname",   os_tmpname},
+-  {"tmpname",   os_tmpname},
++  // {"tmpname",   os_tmpname},
    {NULL, NULL}
+ };
+ 
 diff --git a/src/luasandbox.c b/src/luasandbox.c
 index d6ff41e..4f66984 100644
 --- a/src/luasandbox.c
