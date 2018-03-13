@@ -54,7 +54,7 @@ static char *confdefault =
 "cpath = '/dev/null'\n"
 "remove_entries = {\n"
 "	[''] = {'dofile', 'load', 'loadfile','newproxy'},\n"
-"	os = {'getenv','execute','exit','remove','rename',\n"
+"	os = {'execute','remove','rename',\n"
 "		  'setlocale','tmpname'},\n"
 "   math = {'random', 'randomseed'}\n"
 " }\n"

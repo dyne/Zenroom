@@ -28,6 +28,7 @@
 #include <lualib_schema.c>
 #include <lualib_inspect.c>
 #include <lualib_fennel.c>
+#include <lualib_debugger.c>
 
 extern int lua_cjson_safe_new(lua_State *l);
 extern int lua_cjson_new(lua_State *l);
@@ -177,9 +178,10 @@ void lsb_load_extensions(lsb_lua_sandbox *lsb) {
 	lsb_load_cmodule(lsb, (luaL_Reg*) &luazen);
 	lsb_load_cmodule(lsb, (luaL_Reg*) &bit_funcs);
 
-	lsb_load_string(lsb, lualib_schema, lualib_schema_len,  "schema");
-	lsb_load_string(lsb, lualib_inspect,lualib_inspect_len, "inspect");
-	lsb_load_string(lsb, lualib_fennel, lualib_fennel_len,  "fennel");
+	lsb_load_string(lsb, (const char*)lualib_schema, lualib_schema_len,  "schema");
+	lsb_load_string(lsb, (const char*)lualib_inspect,lualib_inspect_len, "inspect");
+	lsb_load_string(lsb, (const char*)lualib_fennel, lualib_fennel_len,  "fennel");
+	lsb_load_string(lsb, (const char*)lualib_debugger, lualib_debugger_len,  "debugger");
 
 	act("done loading all extensions");
 
