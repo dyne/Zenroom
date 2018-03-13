@@ -72,6 +72,11 @@ shared: cflags := -O2 -fPIC ${cflags_protection}
 shared: patches  luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
 
+debug: gcc := gcc
+debug: cflags := -O0 -ggdb
+debug: patches luasandbox luazen milagro
+	CC=${gcc} CFLAGS="${cflags}" make -C src shared
+
 gmp:
 	cd ${pwd}/lib/gmp && CFLAGS="${cflags}" CC=${gcc} ./configure --disable-shared
 	make -C ${pwd}/lib/gmp
@@ -142,6 +147,20 @@ check-js:
 	echo "----------------\nAll tests passed for JAVASCRIPT binary build\n----------------"
 
 # TODO: complete js tests with schema and other lua extensions
+
+check-debug: test-exec := valgrind ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
+check-debug: check-milagro
+	@${test-exec} test/vararg.lua && \
+	${test-exec} test/pm.lua && \
+	${test-exec} test/nextvar.lua && \
+	${test-exec} test/locals.lua && \
+	${test-exec} test/constructs.lua && \
+	${test-exec} test/bitbench.lua && \
+	${test-exec} test/cjson-test.lua && \
+	${test-exec} test/test_luazen.lua && \
+	${test-exec} test/schema.lua && \
+	test/integration_asymmetric_crypto.sh && \
+	echo "----------------\nAll tests passed for SHARED binary build\n----------------"
 
 clean:
 	rm -rf ${luasand}
