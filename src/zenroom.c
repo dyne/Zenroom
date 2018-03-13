@@ -109,15 +109,17 @@ void load_file(char *dst, FILE *fd) {
 
 char *safe_string(char *str) {
 	int i, length = 0;
-	while (length < MAX_STRING && str[length] != '\0') ++length;
-
-	if (!length) {
+	if(!str) {
 		warning("NULL string detected");
 		return NULL; }
-
-	if (length >= MAX_STRING) {
-		error("unterminated string detected:\n%s",str);
+	if(str[0]=='\0') {
+		warning("empty string detected");
 		return NULL; }
+
+	while (length < MAX_STRING && str[length] != '\0') ++length;
+
+	if (length == MAX_STRING)
+		warning("maximum size string detected (may be truncated) at address %p",str);
 
 	for (i = 0; i < length; ++i) {
 		if (!isprint(str[i]) && !isspace(str[i])) {
