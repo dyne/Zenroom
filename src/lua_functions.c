@@ -166,6 +166,11 @@ void lsb_load_extensions(lsb_lua_sandbox *lsb) {
 	lsb_load_luamodule(lsb, luaopen_table,  LUA_TABLIBNAME);
 	lsb_load_luamodule(lsb, luaopen_string, LUA_STRLIBNAME);
 	lsb_load_luamodule(lsb, luaopen_math,   LUA_MATHLIBNAME);
+	lsb_load_luamodule(lsb, luaopen_io,     LUA_IOLIBNAME);
+	lsb_load_luamodule(lsb, luaopen_os,     LUA_OSLIBNAME);
+	lsb_load_luamodule(lsb, luaopen_coroutine, LUA_COLIBNAME);
+	lsb_load_luamodule(lsb, luaopen_debug,     LUA_DBLIBNAME);
+
 
 	// just the constructors are enough for cjson
 	lsb_add_function(lsb, lua_cjson_safe_new, "cjson");

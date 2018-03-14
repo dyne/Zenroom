@@ -4,9 +4,6 @@
 -- by parazyd
 --
 
-require "os"
-require "io"
-require "math"
 
 local clock = os.clock
 
