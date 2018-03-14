@@ -56,9 +56,10 @@ static char *confdefault =
 "	[''] = {'dofile', 'load', 'loadfile','newproxy'},\n"
 "	os = {'execute','remove','rename',\n"
 "		  'setlocale','tmpname'},\n"
-"   math = {'random', 'randomseed'}\n"
-" }\n"
-"disable_modules = {io = 1}\n";
+"   math = {'random', 'randomseed'},\n"
+"   io = {'close', 'open', 'popen', 'tmpfile'}\n"
+" }\n";
+// "disable_modules = {io = 1}\n";
 
 void logger(void *context, const char *component,
                    int level, const char *fmt, ...) {
