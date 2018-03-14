@@ -280,7 +280,7 @@ index b822e2d..d64d0b9 100644
  };
  
 diff --git a/src/luasandbox.c b/src/luasandbox.c
-index d6ff41e..4f66984 100644
+index d6ff41e..1b20d27 100644
 --- a/src/luasandbox.c
 +++ b/src/luasandbox.c
 @@ -33,12 +33,13 @@ static jmp_buf g_jbuf;
@@ -290,8 +290,7 @@ index d6ff41e..4f66984 100644
 -  { LUA_COLIBNAME, luaopen_coroutine },
 +//  { LUA_COLIBNAME, luaopen_coroutine },
    { LUA_TABLIBNAME, luaopen_table },
--  { LUA_IOLIBNAME, luaopen_io },
-+//  { LUA_IOLIBNAME, luaopen_io },
+   { LUA_IOLIBNAME, luaopen_io },
    { LUA_OSLIBNAME, luaopen_os },
    { LUA_STRLIBNAME, luaopen_string },
    { LUA_MATHLIBNAME, luaopen_math },
