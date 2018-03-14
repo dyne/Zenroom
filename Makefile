@@ -1,7 +1,7 @@
 pwd := $(shell pwd)
 luasand := ${pwd}/build/lua_sandbox
 mil := ${pwd}/build/milagro
-extras := ${pwd}/extras
+extras := ${pwd}/docs/demo
 
 # default
 gcc := gcc
@@ -38,12 +38,12 @@ wasm: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXT
 wasm: patches  luasandbox luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 
-web: gcc=${EMSCRIPTEN}/emcc
-web: ar=${EMSCRIPTEN}/emar
-web: cflags :=
-web: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s ASSERTIONS=1 --shell-file ${extras}/shell_minimal.html -s NO_EXIT_RUNTIME=1
-web: patches  luasandbox luazen milagro
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src extras
+demo: gcc=${EMSCRIPTEN}/emcc
+demo: ar=${EMSCRIPTEN}/emar
+demo: cflags :=
+demo: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s ASSERTIONS=1 --shell-file ${extras}/shell_minimal.html -s NO_EXIT_RUNTIME=1
+demo: patches luasandbox luazen milagro
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src demo
 
 html: gcc=${EMSCRIPTEN}/emcc
 html: ar=${EMSCRIPTEN}/emar
