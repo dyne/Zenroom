@@ -1,30 +1,9 @@
 ------------
---- <h1>Zenroom - Cryptolang API</h1>
+--- <h1>Cryptographic primitives</h1>
 --
--- Zenroom is a portable language interpreter inspired by
--- language-theoretical security and designed to be small,
--- attack-resistant and very portable. Its main use case is
--- distributed computing of untrusted code, for instance it can be
--- used for delicate cryptographic operations.
--- Here is the "application protocol interface" documentation of the
--- cryptographic primitive functions that are made available by
--- zenroom in its computations.
---
--- For more information see the homepage of this project: <a href="https://zenroom.dyne.org">zenroom.dyne.org</a>.
---
--- The base direct-syntax parser we use is a subset of LUA. To quickly
--- get started the following tutorials suffice, as Zenroom doesn't
--- implements the more advanced functionalities in LUA:
--- <a href="http://lua-users.org/wiki/LuaTypesTutorial">Lua Types</a>, 
--- <a href="http://lua-users.org/wiki/AssignmentTutorial">Assigmnents</a>, 
--- <a href="http://lua-users.org/wiki/NumbersTutorial">Numbers</a>, 
--- <a href="http://lua-users.org/wiki/OperatorsTutorial">Operators</a>, 
--- <a href="http://bitop.luajit.org/api.html">Bitwise Operations</a>, 
--- <a href="http://lua-users.org/wiki/ControlStructureTutorial">Control Structures</a>, 
--- <a href="http://lua-users.org/wiki/StringLibraryTutorial">Strings</a>, 
--- <a href="http://lua-users.org/wiki/TablesTutorial">Tables</a> (useful for cjson() conversions), 
--- <a href="http://lua-users.org/wiki/FunctionsTutorial">Functions</a>
--- and <a href="http://lua-users.org/wiki/ScopeTutorial">Scoping</a>.
+-- The main goal of Zenroom is to provide a compact VM for controlled
+-- execution of cryptographic functions. This section lists all the
+-- cryptographic data transformations that are available in Zenroom.
 --
 -- @author Denis "Jaromil" Roio
 -- @license LGPLv3
