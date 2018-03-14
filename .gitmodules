@@ -16,3 +16,6 @@
 [submodule "docs/webnomad"]
 	path = docs/webnomad
 	url = https://github.com/dyne/webnomad
+[submodule "docs/wiki"]
+	path = docs/wiki
+	url = https://github.com/DECODEproject/zenroom.wiki.git
