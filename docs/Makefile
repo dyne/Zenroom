@@ -2,7 +2,7 @@
 ARTICLE := Zenroom_Cryptolang_Whitepaper
 DEST := pub
 
-all: webnomad
+all: webnomad api
 
 readme:
 	echo "<markdown>" > views/index.html
@@ -24,8 +24,9 @@ article: article/views
 	mkdir -p ${DEST}/whitepaper
 	pdf2htmlEX ${DEST}/${ARTICLE}.pdf ${DEST}/whitepaper/index.html
 
-api: zenroom-api.lua
-	ldoc -d ${DEST}/api -p Zenroom -t "Zenroom API" -X zenroom-api.lua
+api:
+	make -C ldoc
 
 upload: webnomad
 	rsync -Pr pub/* assata.dyne.org:/srv/www/zenroom.dyne.org
+	rsync -Pr demo assata.dyne.org:/srv/www/zenroom.dyne.org/

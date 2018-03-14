@@ -38,7 +38,7 @@ Zenroom is a brand new, small and portable virtual machine for cryptographic ope
 
 <li class="far fa-flag-checkered"><a href="https://github.com/DECODEproject/zenroom/tree/master/examples">Zenroom usage examples</a><sup>*</sup></li>
 
-<li class="far fa-hand-point-right"><a href="/">Online demo</a><sup>*</sup></li>
+<li class="far fa-hand-point-right"><a href="https://zenroom.dyne.org/demo">Online demo</a><sup>*</sup></li>
 
 <li class="far fa-cogs"><a href="https://github.com/DECODEproject/zenroom/wiki">Build instructions</a></li>
 
@@ -53,6 +53,7 @@ Zenroom is software in **ALPHA stage** and is part of the [DECODE project](https
 	alt="DECODE project"></a>
 
 This software aims to make it easy and less error-prone to write **portable** scripts using **end-to-end encryption** inside isolated environments that can be easily made **interoperable**. Basic crypto functions provided include primitives to manage **a/symmetric keys, key derivation, hashing and signing functionalities**.
+
 
 Zenroom is software inspired by the [language-theoretical security](http://langsec.org) research, it allows to expresses cryptographic operations in a **Turing-incomplete** * language without any access to the calling process, underlying operating system or filesystem.
 <p class="pull-right"><sup>*</sup> = Work in Progress</p>

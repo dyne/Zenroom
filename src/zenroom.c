@@ -39,12 +39,6 @@ extern lsb_lua_sandbox *repl_init();
 extern void repl_loop(lsb_lua_sandbox *lsb);
 extern int repl_teardown(lsb_lua_sandbox *lsb);
 
-// from timing.c
-// extern int set_hook(lua_State *L);
-
-// void log_debug(lua_State *l, lua_Debug *d) {
-// 	error("%s\n%s\n%s",d->name, d->namewhat, d->short_src);
-// }
 static char *confdefault =
 "memory_limit = 0\n"
 "instruction_limit = 0\n"
@@ -54,8 +48,7 @@ static char *confdefault =
 "cpath = '/dev/null'\n"
 "remove_entries = {\n"
 "	[''] = {'dofile', 'load', 'loadfile','newproxy'},\n"
-"	os = {'execute','remove','rename',\n"
-"		  'setlocale','tmpname'},\n"
+"	os = {'execute','remove','rename','setlocale','tmpname'},\n"
 "   math = {'random', 'randomseed'},\n"
 "   io = {'close', 'open', 'popen', 'tmpfile'}\n"
 " }\n";
@@ -176,7 +169,6 @@ int zenroom_exec(char *script, char *conf, char *keys,
 			func("declaring global: KEYS");
 			lsb_setglobal_string(lsb,"KEYS",keys);
 		}
-	// TODO: MILAGRO
 
 	r = lsb_init(lsb, NULL);
 	if(r) {

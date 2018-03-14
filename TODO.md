@@ -17,7 +17,7 @@ and their specific use-cases.
 - add some more functions from stdlib's string and utils
   https://github.com/lua-stdlib/lua-stdlib
 
-- provide a finite state machine programming interface
+X provide a finite state machine programming interface
   https://github.com/kyleconroy/lua-state-machine
   https://github.com/airstruck/knife/blob/master/readme/behavior.md
 
