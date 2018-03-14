@@ -7,7 +7,7 @@
 #include <lualib_schema_validation.c>
 #include <lualib_statemachine.c>
 #include <lualib_debugger.c>
-#include <lualib_moses.c>
+#include <lualib_functional.c>
 
 extern void lsb_load_string(lsb_lua_sandbox *lsb, const char *code,
 	                        size_t size, char *name);
@@ -29,9 +29,9 @@ lsb_load_string(lsb, (const char*)src_lua_statemachine_lua,
 func("loading debugger");
 lsb_load_string(lsb, (const char*)src_lua_debugger_lua,
 					 src_lua_debugger_lua_len, "debugger");
-func("loading moses");
-lsb_load_string(lsb, (const char*)src_lua_moses_lua,
-					 src_lua_moses_lua_len, "moses");
+func("loading functional");
+lsb_load_string(lsb, (const char*)src_lua_functional_lua,
+					 src_lua_functional_lua_len, "functional");
 	return(6);
 }
 
