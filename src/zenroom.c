@@ -140,9 +140,6 @@ int zenroom_exec(char *script, char *conf, char *keys,
 		exit(1); }
 	set_debug(verbosity);
 
-	// TODO: how to pass config file and script to javascript?
-
-
 	lsb_logger lsb_vm_logger = { .context = "zenroom_exec",
 	                             .cb = logger };
 
