@@ -4,9 +4,9 @@
 
 #include <lualib_fennel.c>
 #include <lualib_inspect.c>
+#include <lualib_schema_validation.c>
 #include <lualib_statemachine.c>
 #include <lualib_debugger.c>
-#include <lualib_schema.c>
 
 extern void lsb_load_string(lsb_lua_sandbox *lsb, const char *code,
 	                        size_t size, char *name);
@@ -19,15 +19,15 @@ lsb_load_string(lsb, (const char*)src_lua_fennel_lua,
 func("loading inspect");
 lsb_load_string(lsb, (const char*)src_lua_inspect_lua,
 					 src_lua_inspect_lua_len, "inspect");
+func("loading schema_validation");
+lsb_load_string(lsb, (const char*)src_lua_schema_validation_lua,
+					 src_lua_schema_validation_lua_len, "schema_validation");
 func("loading statemachine");
 lsb_load_string(lsb, (const char*)src_lua_statemachine_lua,
 					 src_lua_statemachine_lua_len, "statemachine");
 func("loading debugger");
 lsb_load_string(lsb, (const char*)src_lua_debugger_lua,
 					 src_lua_debugger_lua_len, "debugger");
-func("loading schema");
-lsb_load_string(lsb, (const char*)src_lua_schema_lua,
-					 src_lua_schema_lua_len, "schema");
 	return(5);
 }
 
