@@ -24,7 +24,7 @@ X provide a finite state machine programming interface
 - erlang style pattern matching on data structures
   https://github.com/silentbicycle/tamale
 
-- functional programming facility
+X functional programming facility
   https://github.com/Yonaba/Moses
 
 - date and time module
