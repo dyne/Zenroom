@@ -1,9 +1,15 @@
---- Utility-belt library for functional programming in Lua ([source](http://github.com/Yonaba/Moses))
+--------------
+--- <h1>Advanced data manipulation</h1>
+--
+-- Advanced functionalities to manipulate complex data structures with
+-- functional programming prototypes. Lua extension originally called
+-- "Moses".
+--
 -- @author [Roland Yonaba](http://github.com/Yonaba)
 -- @copyright 2012-2017
 -- @license [MIT](http://www.opensource.org/licenses/mit-license.php)
--- @release 1.6.1
--- @module Functional programming 
+-- @release 1.6.1-zenroom
+-- @module functional 
 
 local _MODULEVERSION = '1.6.1'
 
