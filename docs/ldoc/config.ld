@@ -9,8 +9,7 @@ template=true
 backtick_references=false
 file={
 	'zenroom-api.lua',
-	'../../src/lua/moses.lua',
-	'../../src/lua/statemachine.lua'
+	'../../src/lua/functional.lua'
 }
 dir='../pub/api'
 readme='../../README.md'

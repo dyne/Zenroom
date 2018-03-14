@@ -2,7 +2,7 @@
 #include <jutils.h>
 #include <luasandbox.h>
 
-#include <lualib_fennel.c>
+#include <lualib_lisp.c>
 #include <lualib_inspect.c>
 #include <lualib_schema_validation.c>
 #include <lualib_statemachine.c>
@@ -14,9 +14,9 @@ extern void lsb_load_string(lsb_lua_sandbox *lsb, const char *code,
 
 int lualibs_detected_load(lsb_lua_sandbox *lsb) {
 
-func("loading fennel");
-lsb_load_string(lsb, (const char*)src_lua_fennel_lua,
-					 src_lua_fennel_lua_len, "fennel");
+func("loading lisp");
+lsb_load_string(lsb, (const char*)src_lua_lisp_lua,
+					 src_lua_lisp_lua_len, "lisp");
 func("loading inspect");
 lsb_load_string(lsb, (const char*)src_lua_inspect_lua,
 					 src_lua_inspect_lua_len, "inspect");
