@@ -18,9 +18,9 @@ html: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc
 html: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom.html ${LDFLAGS} ${LDADD}
 
-extras: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc
-extras: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o ../extras/index.html ${LDFLAGS} ${LDADD}
+demo: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc
+demo: ${SOURCES}
+	${CC} ${CFLAGS} ${SOURCES} -o ../docs/demo/index.html ${LDFLAGS} ${LDADD}
 
 static: LDADD  += /usr/lib/${ARCH}-linux-musl/libc.a
 static: ${SOURCES}
