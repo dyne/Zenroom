@@ -46,12 +46,13 @@ file={
 dir='../pub/api'
 -- readme='../../README.md'
 topics={
-	'../wiki/Schema.md',
-	'../wiki/StateMachine.md',
+	'Functional.html',
+	'Schema.html',
+	'StateMachine.html',
 }
 	
 style='!pale'
-kind_names={topic='Manual',script='Programs'}
+-- kind_names={topic='Manual',script='Programs'}
 examples = {
     '../../examples/hello.lua',
     '../../examples/json-tables.lua',
