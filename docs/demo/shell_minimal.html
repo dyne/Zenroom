@@ -11,7 +11,7 @@
     <style>
         html, body { overflow: hidden; height: 100%; }
         #output { font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro", monospace }
-        #output, #input { font-size: 13px; }
+        #output, #input { font-size: 13px; overflow: auto; padding-bottom: 140px; margin-bottom: 20px; }
     </style>
     <title>Zenroom online demo</title>
   </head>
@@ -20,7 +20,7 @@
         <a class="navbar-brand" href="#">
             <img src="https://www.dyne.org/wp-content/uploads/2011/09/dyne-big.png" height="30" class="d-inline-block align-top" alt="">
             &nbsp;Zenroom
-        </a>  
+        </a>
     </nav>
     <div class="container-fluid h-100">
         <div class="row no-gutters">
@@ -33,7 +33,7 @@
         </div>
         <div class="row h-100">
             <div id="input"  class="col-6"></div>
-            <div id="output" class="col bg-dark text-light"></div>
+            <div id="output" class="col bg-dark text-light pt-3"></div>
         </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
@@ -55,16 +55,23 @@
                     text = text.replace(/>/g, "&gt;");
                     text = text.replace('\n', '<br>', 'g');
                     if (element) {
-                        element.innerHTML = text + "<br>";
+                        element.innerHTML += text + "<br>";
+                        element.scrollTop = element.scrollHeight;
                     }
                 };
             })(),
             printErr: function(text) {
+                if (!text.startsWith('[!]')) return
                 if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
                 if (0) { // XXX disabled for safety typeof dump == 'function') {
                     dump(text + '\n'); // fast, straight to the real console
                 } else {
                     console.error(text);
+                    var element = document.getElementById('output');
+                    if (element) { 
+                        element.innerHTML += "<span class='bg-danger'>" + text + "</span><br>";
+                        element.scrollTop = element.scrollHeight;
+                    }
                 }
             },
         }
