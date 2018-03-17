@@ -30,14 +30,12 @@
 
 #include <luasandbox.h>
 
-// prototypes from lua_functions
-extern void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val);
-extern void lsb_load_extensions(lsb_lua_sandbox *lsb);
+#include <lua_functions.h>
+#include <repl.h>
 
-// from repl.c
-extern lsb_lua_sandbox *repl_init();
-extern void repl_loop(lsb_lua_sandbox *lsb);
-extern int repl_teardown(lsb_lua_sandbox *lsb);
+// prototypes from lua_modules.c
+extern void zen_load_extensions(lsb_lua_sandbox *lsb);
+
 
 static char *confdefault =
 "memory_limit = 0\n"
@@ -140,19 +138,13 @@ int zenroom_exec(char *script, char *conf, char *keys,
 		exit(1); }
 	set_debug(verbosity);
 
-	lsb_logger lsb_vm_logger = { .context = "zenroom_exec",
-	                             .cb = logger };
-
-	lsb = lsb_create(NULL, script, (conf)?safe_string(conf):confdefault, &lsb_vm_logger);
+	lsb = zen_init(conf);
 	if(!lsb) {
-		error("Error creating sandbox: %s", lsb_get_error(lsb));
-		exit(1); }
+		error("Initialisation failed.");
+		return 1;
+	}
 
-
-	// initialise global variables
-	lsb_setglobal_string(lsb, "VERSION", VERSION);
-
-	lsb_load_extensions(lsb);
+	zen_load_extensions(lsb);
 	// load our own openlibs and extensions
 
 	// load arguments from json if present
@@ -167,7 +159,7 @@ int zenroom_exec(char *script, char *conf, char *keys,
 			lsb_setglobal_string(lsb,"KEYS",keys);
 		}
 
-	r = lsb_init(lsb, NULL);
+	r = zen_exec_script(lsb, script);
 	if(r) {
 		error(r);
 		error(lsb_get_error(lsb));
@@ -189,11 +181,7 @@ int zenroom_exec(char *script, char *conf, char *keys,
 	act("executed operations: %u", usage);
 
 	notice("Zenroom operations completed.");
-
-	lsb_pcall_teardown(lsb);
-	lsb_stop_sandbox_clean(lsb);
-	p = lsb_destroy(lsb);
-	if(p) free(p);
+	zen_teardown(lsb);
 	return(return_code);
 }
 
@@ -274,12 +262,22 @@ int main(int argc, char **argv) {
 		// start an interactive repl console
 	} else if(scriptfile[0]=='\0') {
 		lsb_lua_sandbox *cli;
-		cli = repl_init(confdefault);
+		cli = zen_init(confdefault);
+		// load our own extensions
+		zen_load_extensions(cli);
+
+		// print function
+		lsb_add_function(cli, output_print, "print");
+		lsb_add_function(cli, repl_flush, "flush");
+		lsb_add_function(cli, repl_read, "read");
+		lsb_add_function(cli, repl_write, "write");
+
 		if(data[0]!='\0') lsb_setglobal_string(cli,"DATA",data);
 		if(keys[0]!='\0') lsb_setglobal_string(cli,"KEYS",keys);
+		notice("Interactive console, press ctrl-d to quit.");
 		repl_loop(cli);
 		// quits on ctrl-D
-		repl_teardown(cli);
+		zen_teardown(cli);
 	} else {
 		////////////////////////////////////
 		// load a file as script and execute
