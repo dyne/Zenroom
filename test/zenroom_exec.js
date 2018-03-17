@@ -22,6 +22,7 @@ const zenroom = (script_file, conf_file=null, keys_file=null, data_file=null, ve
 }
 
 console.log("[JS] zenroom_exec %s %s",
-			process.argv[2], process.argv[3])
+            process.argv[2],
+            process.argv[3])
 
 zenroom(process.argv[3])

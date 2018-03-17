@@ -12,15 +12,22 @@
         html, body { overflow: hidden; height: 100%; }
         #output { font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro", monospace }
         #output, #input { font-size: 13px; overflow: auto; padding-bottom: 140px; margin-bottom: 20px; }
-        @keyframes heartbeat {
-            0% { color: #6c757d; font-size: 24px}
-            20% { color: red; font-size: 30px}
-            40% { color: #6c757d; font-size: 24px}
-            60% { color: red; font-size: 30px}
-            80% { color: #6c757d; font-size: 24px}
-            100% { color: #6c757d; font-size: 24px}
+        #keys, #data { min-height: 150px; }
+        .heart {
+            fill: #ffb7e4;
+            position: relative;
+            top: 5px;
+            width: 18px;
+            animation: heartbeat 1s ease infinite;
         }
-        .play { animation: heartbeat 2s infinite; }
+        @keyframes heartbeat {
+            0% { transform: scale(.85)}
+            20% { transform: scale(1)}
+            40% { transform: scale(.85)}
+            60% { transform: scale(1)}
+            80% { transform: scale(.85)}
+            100% { transform: scale(.85)}
+        }
     </style>
     <title>Zenroom online demo</title>
   </head>
@@ -32,20 +39,51 @@
         </a>
     </nav>
     <div class="container-fluid h-100">
-        <div class="row no-gutters">
-            <div class="col-6">
-                <span id="play" class="play float-right" style="display: none">
-                    <i class="material-icons align-middle">favorite</i>
-                </span>
-                <button type="button" id="run" class="btn btn-outline-secondary rounded-0 my-4 float-right">
-                    <i class="material-icons align-middle">play_circle_filled</i>
-                    <span class="align-middle">Run (&#8984; + Enter)</span>
-                </button>
+        <div class="row no-gutters d-flex">
+            <div class="col-3 justify-content-center align-self-center py-2">
+                <select class="custom-select">
+                    <option selected>Load some examples</option>
+                    <option value="1">One</option>
+                    <option value="2">Two</option>
+                    <option value="3">Three</option>
+                </select>
             </div>
-            <div class="col-6">
-                <a id="clear" href="#" class="btn btn-outline-secondary rounded-0 my-4 float-right border-0" alt="Clear console">
-                    <i class="material-icons align-middle">clear_all</i>
-                </a>
+            <div class="col-3">
+            </div>
+        </div>
+        <div class="row bg-secondary text-light align-text-bottom">
+            <h5 class="col pt-1">KEYS</h5>
+            <h5 class="col pt-1 ml-2">DATA</h5>
+        </div>
+        <div class="row d-flex">
+            <div id="keys" class="col-6"></div>
+            <div id="data" class="col"></div>
+        </div>
+        <div class="row bg-secondary text-light">
+            <div class="col">
+                <div class="row no-gutters">
+                    <h5 class="col pt-1">CODE</h5>
+                    <button type="button" id="run" class="col-3 btn btn-xs btn-outline-light border-top-0 border-bottom-0 rounded-0 float-right">
+                        <span id="play" style="display: none">
+                            <svg class="heart" viewBox="0 0 32 29.6">
+                                <path d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2
+                                         c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z"/>
+                            </svg>
+                        </span>
+                        <i id="play-icon" class="material-icons align-middle">play_circle_filled</i>
+                        <span class="align-middle">Run (&#8984; + Enter)</span>
+                    </button>
+                </div>
+            </div>
+            <div class="col">
+                <div class="row no-gutters">
+                    <h5 class="col pt-1">OUTPUT</h5>
+                    <div class="col-1">
+                        <a id="clear" href="#" class="btn btn-xs btn-outline-light border-0 rounded-0 float-right" alt="Clear console">
+                            <i class="material-icons align-middle">clear_all</i>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="row h-100">
@@ -57,6 +95,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.1/ace.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.1/ext-language_tools.js"></script>
+
     {{{ SCRIPT }}}
     <script>
         const output = document.getElementById('output');
@@ -79,29 +119,54 @@
                 if (!text.startsWith('[!]')) return
                 if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
                 if (output) {
+                    console.error(text)
                     output.innerHTML += "<span class='bg-danger'>" + text + "</span><br>";
                     output.scrollTop = output.scrollHeight;
                 }
             },
+            exec_ok: () => {
+                $("#play").hide()
+                $("#play-icon").show()
+            },
+            exec_error: () => {
+                $("#play").hide()
+                $("#play-icon").show()
+            },
         }
 
         const zenroom = function() {
+            const keys = keys_editor.getValue() || null
+            const data = data_editor.getValue() || null
             Module.ccall('zenroom_exec', 
                              'number',
                              ['string', 'string', 'string', 'string', 'number'],
-                             [editor.getValue(), null, null, null, 3]);
+                             [editor.getValue(), null, keys, data, 3]);
             const o = $("#output")
-            o.html(final_output)
+            o.append(final_output)
             o[0].scrollTop = o[0].scrollHeight
         }
 
+        const data_editor = ace.edit("data")
+        data_editor.session.setMode("ace/mode/json")
+        const keys_editor = ace.edit("keys")
+        keys_editor.session.setMode("ace/mode/json")
+
+        const lang_tools = ace.require("ace/ext/language_tools");
         const editor = ace.edit("input");
+        editor.setOptions({
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true,
+        });
         editor.session.setMode("ace/mode/lua");
         editor.focus();
         editor.commands.addCommand({
             name: 'run',
             bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
-            exec: zenroom
+            exec: () => {
+                $("#play").show()
+                $("#play-icon").hide()
+                setTimeout(zenroom, 300)
+            }
         });
 
         editor.commands.addCommand({
@@ -111,7 +176,11 @@
         });
 
         $(function() {
-            $('#run').click(zenroom);
+            $('#run').click(() => {
+                $("#play").show()
+                $("#play-icon").hide()
+                setTimeout(zenroom, 300)
+            })
             $('#clear').click(() => { $("#output").html("") })
         });
     </script>
