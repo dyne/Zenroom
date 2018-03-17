@@ -164,11 +164,14 @@ int zenroom_exec(char *script, char *conf, char *keys,
 		error(r);
 		error(lsb_get_error(lsb));
 		error("Error detected. Execution aborted.");
-		lsb_pcall_teardown(lsb);
-		lsb_stop_sandbox_clean(lsb);
-		p = lsb_destroy(lsb);
-		if(p) free(p);
-		exit(1);
+
+		usage = lsb_usage(lsb, LSB_UT_MEMORY, LSB_US_CURRENT);
+		error("used memory: %u bytes", usage);
+		usage = lsb_usage(lsb, LSB_UT_INSTRUCTION, LSB_US_CURRENT);
+		error("executed operations: %u", usage);
+
+		zen_teardown(lsb);
+		return(1);
 	}
 	return_code = 0; // return success
 	// debugging stats here

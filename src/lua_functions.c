@@ -311,10 +311,10 @@ lsb_lua_sandbox *zen_init(char *conf) {
 	lsb->error_message[0] = 0;
 	lsb->state_file = NULL;
 
-	lsb->output.maxsize = MAX_FILE;
+	lsb->output.maxsize = MAX_MEMORY;
 	lsb->output.size    = MAX_STRING;
 	lsb->output.pos     = 0;
-	lsb->output.buf     = malloc(MAX_FILE);
+	lsb->output.buf     = malloc(MAX_MEMORY);
 	lua_pushcfunction(lsb->lua, &output);
 	lua_setglobal(lsb->lua, "output");
 
