@@ -5,6 +5,9 @@ const fs = require('fs')
 
 const zenroom_module = require(process.argv[2])
 
+zenroom_module.exec_ok    = () => 0
+zenroom_module.exec_error = () => 0
+
 const zenroom = (script_file, conf_file=null, keys_file=null, data_file=null, verbosity=0) => {
   // process.stderr._write = function(chunk, encoding, callback) { callback() }
   const enc = { encoding: 'utf8' }

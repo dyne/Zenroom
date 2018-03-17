@@ -33,6 +33,10 @@
 #include <lua_functions.h>
 #include <repl.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 // prototypes from lua_modules.c
 extern void zen_load_extensions(lsb_lua_sandbox *lsb);
 
@@ -161,6 +165,9 @@ int zenroom_exec(char *script, char *conf, char *keys,
 
 	r = zen_exec_script(lsb, script);
 	if(r) {
+#ifdef __EMSCRIPTEN__
+		EM_ASM({Module.exec_error();});
+#endif
 		error(r);
 		error(lsb_get_error(lsb));
 		error("Error detected. Execution aborted.");
@@ -177,6 +184,10 @@ int zenroom_exec(char *script, char *conf, char *keys,
 	// debugging stats here
 	// while(lsb_get_state(lsb) == LSB_RUNNING)
 	//  act("running...");
+
+#ifdef __EMSCRIPTEN__
+		EM_ASM({Module.exec_ok();});
+#endif
 
 	usage = lsb_usage(lsb, LSB_UT_MEMORY, LSB_US_CURRENT);
 	act("used memory: %u bytes", usage);
