@@ -10,6 +10,10 @@ and their specific use-cases.
 - in/out to MSGPACK in addition to JSON for compact messaging easy using
   Antirez' extension see https://github.com/antirez/lua-cmsgpack
 
+- compile extensions and load them from strings using the lua load()
+  function directly with callbacks
+  http://www.lua.org/manual/5.1/manual.html#lua_load
+  
 - if event based callback framework needed, try including libev
   https://github.com/brimworks/lua-ev
   http://software.schmorp.de/pkg/libev.html

@@ -2,18 +2,23 @@
 #include <jutils.h>
 #include <luasandbox.h>
 
+#include <lualib_complex.c>
 #include <lualib_lisp.c>
 #include <lualib_inspect.c>
 #include <lualib_schema_validation.c>
 #include <lualib_statemachine.c>
 #include <lualib_debugger.c>
 #include <lualib_functional.c>
+#include <lualib_matrix.c>
 
 extern void lsb_load_string(lsb_lua_sandbox *lsb, const char *code,
 	                        size_t size, char *name);
 
 int lualibs_detected_load(lsb_lua_sandbox *lsb) {
 
+func("loading complex");
+lsb_load_string(lsb, (const char*)src_lua_complex_lua,
+					 src_lua_complex_lua_len, "complex");
 func("loading lisp");
 lsb_load_string(lsb, (const char*)src_lua_lisp_lua,
 					 src_lua_lisp_lua_len, "lisp");
@@ -32,6 +37,9 @@ lsb_load_string(lsb, (const char*)src_lua_debugger_lua,
 func("loading functional");
 lsb_load_string(lsb, (const char*)src_lua_functional_lua,
 					 src_lua_functional_lua_len, "functional");
-	return(6);
+func("loading matrix");
+lsb_load_string(lsb, (const char*)src_lua_matrix_lua,
+					 src_lua_matrix_lua_len, "matrix");
+	return(8);
 }
 
