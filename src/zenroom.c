@@ -37,48 +37,28 @@
 #include <emscripten.h>
 #endif
 
+const char *confdefault =
+	"memory_limit = 1024*1024*2\n"
+	"instruction_limit = 0\n"
+	"output_limit = 64*1024\n"
+	"log_level = 7\n"
+	"path = '/dev/null'\n"
+	"cpath = '/dev/null'\n"
+	"remove_entries = {\n"
+	"	[''] = {'dofile', 'load', 'loadfile','newproxy'},\n"
+	"	os = {'execute','remove','rename','setlocale','tmpname'},\n"
+	"   math = {'random', 'randomseed'},\n"
+	"   io = {'close', 'open', 'popen', 'tmpfile'}\n"
+	" }\n";
+
 // prototypes from lua_modules.c
 extern void zen_load_extensions(lsb_lua_sandbox *lsb);
-
-
-static char *confdefault =
-"memory_limit = 0\n"
-"instruction_limit = 0\n"
-"output_limit = 64*1024\n"
-"log_level = 7\n"
-"path = '/dev/null'\n"
-"cpath = '/dev/null'\n"
-"remove_entries = {\n"
-"	[''] = {'dofile', 'load', 'loadfile','newproxy'},\n"
-"	os = {'execute','remove','rename','setlocale','tmpname'},\n"
-"   math = {'random', 'randomseed'},\n"
-"   io = {'close', 'open', 'popen', 'tmpfile'}\n"
-" }\n";
-// "disable_modules = {io = 1}\n";
-
-void logger(void *context, const char *component,
-                   int level, const char *fmt, ...) {
-	// suppress warnings about these unused paraments
-	(void)context;
-	(void)level;
-	(void)component;
-
-	va_list args;
-	// func("LUA: %s",(component) ? component : "unknown");
-	va_start(args, fmt);
-	vfprintf(stdout, fmt, args);
-	va_end(args);
-	fwrite("\n", 1, 1, stdout);
-	fflush(stdout);
-}
-
 
 // This function exits the process on failure.
 void load_file(char *dst, FILE *fd) {
 	char firstline[MAX_STRING];
 	size_t offset = 0;
 	size_t bytes = 0;
-
 	if(!fd) {
 		error("Error opening %s", strerror(errno));
 		exit(1); }
@@ -134,8 +114,7 @@ int zenroom_exec(char *script, char *conf, char *keys,
 	lsb_lua_sandbox *lsb = NULL;
 	int usage;
 	int return_code = 1; // return error by default
-	char *p;
-	const char *r;
+	int r;
 
 	if(!script) {
 		error("NULL string as script for zenroom_exec()");
@@ -168,7 +147,7 @@ int zenroom_exec(char *script, char *conf, char *keys,
 #ifdef __EMSCRIPTEN__
 		EM_ASM({Module.exec_error();});
 #endif
-		error(r);
+//		error(r);
 		error(lsb_get_error(lsb));
 		error("Error detected. Execution aborted.");
 
@@ -281,7 +260,6 @@ int main(int argc, char **argv) {
 		zen_load_extensions(cli);
 
 		// print function
-		lsb_add_function(cli, output_print, "print");
 		lsb_add_function(cli, repl_flush, "flush");
 		lsb_add_function(cli, repl_read, "read");
 		lsb_add_function(cli, repl_write, "write");
@@ -307,7 +285,7 @@ int main(int argc, char **argv) {
 
 
 	ret = zenroom_exec(script,
-	                   (conf[0]!='\0')?conf:confdefault,
+	                   (conf[0]!='\0')?conf:(char*)confdefault,
 	                   (keys[0]!='\0')?keys:NULL,
 	                   (data[0]!='\0')?data:NULL,
 	                   verbosity);
