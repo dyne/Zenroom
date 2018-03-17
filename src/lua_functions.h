@@ -18,7 +18,7 @@
  * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-lsb_lua_sandbox *zen_init(char *conf);
+lsb_lua_sandbox *zen_init(const char *conf);
 int zen_exec_line(lsb_lua_sandbox *lsb, const char *line);
 int zen_exec_script(lsb_lua_sandbox *lsb, const char *script);
 int zen_teardown(lsb_lua_sandbox *lsb);

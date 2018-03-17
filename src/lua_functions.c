@@ -30,6 +30,10 @@
 #include <lua_functions.h>
 #include <lua_config.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 lsb_err_id ZEN_ERR_UTIL_NULL    = "pointer is NULL";
 lsb_err_id ZEN_ERR_UTIL_OOM     = "memory allocation failed";
 lsb_err_id ZEN_ERR_UTIL_FULL    = "buffer full";
@@ -81,135 +85,6 @@ void* memory_manager(void *ud, void *ptr, size_t osize, size_t nsize)
   return nptr;
 }
 
-
-
-size_t zen_lp2(unsigned long long x)
-{
-  if (x == 0) return 0;
-  x = x - 1;
-  x = x | (x >> 1);
-  x = x | (x >> 2);
-  x = x | (x >> 4);
-  x = x | (x >> 8);
-  x = x | (x >> 16);
-  x = x | (x >> 32);
-  return (size_t)(x + 1);
-}
-
-lsb_err_value zen_check_output(zen_output_buffer *b, size_t needed)
-{
-  if (!b) return ZEN_ERR_UTIL_NULL;
-
-  if (needed <= b->size - b->pos) return NULL;
-
-  if (b->maxsize && needed + b->pos > b->maxsize) {
-    return ZEN_ERR_UTIL_FULL;
-  }
-
-  // size_t newsize = zen_lp2(b->pos + needed);
-  // if (b->maxsize && newsize > b->maxsize) {
-  //   newsize = b->maxsize;
-  // }
-
-  // void *ptr = realloc(b->buf, newsize);
-  // if (!ptr) {
-  //   return ZEN_ERR_UTIL_OOM;
-  // }
-
-  // b->buf = ptr;
-  // b->size = newsize;
-  return NULL;
-}
-
-
-static int output(lua_State *lua)
-{
-  lua_getfield(lua, LUA_REGISTRYINDEX, LSB_THIS_PTR);
-  lsb_lua_sandbox *lsb = lua_touserdata(lua, -1);
-  lua_pop(lua, 1); // remove this ptr
-  if (!lsb)
-	  return(luaL_error(lua, "%s() invalid " LSB_THIS_PTR, __func__));
-
-  int n = lua_gettop(lua);
-  if (n == 0) {
-    return luaL_argerror(lsb->lua, 0, "must have at least one argument");
-  }
-  lsb_output_coroutine(lsb, lua, 1, n, 1);
-  return 0;
-}
-
-
-lsb_err_value zen_outputc(zen_output_buffer *b, char ch)
-{
-  if (!b) {
-    return ZEN_ERR_UTIL_NULL;
-  }
-  lsb_err_value ret = zen_check_output(b, 2);
-  if (ret) return ret;
-
-  b->buf[b->pos++] = ch;
-  b->buf[b->pos] = 0;
-  return NULL;
-}
-
-
-int output_print(lua_State *lua) {
-  lua_getfield(lua, LUA_REGISTRYINDEX, LSB_THIS_PTR);
-  lsb_lua_sandbox *lsb = lua_touserdata(lua, -1);
-  lua_pop(lua, 1); // remove this ptr
-  if (!lsb) return luaL_error(lua, "print() invalid " LSB_THIS_PTR);
-
-  lsb->output.buf[0] = 0;
-  lsb->output.pos = 0; // clear the buffer
-
-  int n = lua_gettop(lua);
-  if (!lsb->logger.cb || n == 0) {
-    return 0;
-  }
-
-  lua_getglobal(lua, "tostring");
-  int i;
-  for (i = 1; i <= n; ++i) {
-    lua_pushvalue(lua, -1);  // tostring
-    lua_pushvalue(lua, i);   // value
-    lua_call(lua, 1, 1);
-    const char *s = lua_tostring(lua, -1);
-    if (s == NULL) {
-      return luaL_error(lua, LUA_QL("tostring") " must return a string to "
-                        LUA_QL("print"));
-    }
-    if (i > 1) {
-      zen_outputc(&lsb->output, '\t');
-    }
-
-    while (*s) {
-      // if (isprint(*s)) {
-        zen_outputc(&lsb->output, *s);
-      // } else {
-      //   lsb_outputc(&lsb->output, ' ');
-      // }
-      ++s;
-    }
-    lua_pop(lua, 1);
-  }
-
-  const char *component = NULL;
-  lua_getfield(lua, LUA_REGISTRYINDEX, LSB_CONFIG_TABLE);
-  if (lua_type(lua, -1) == LUA_TTABLE) {
-    // this makes an assumptions by looking for a Heka sandbox specific cfg
-    // variable but will fall back to the lua filename in the generic case
-    lua_getfield(lua, -1, "Logger");
-    component = lua_tostring(lua, -1);
-    if (!component) {
-      component = lsb->lua_file;
-    }
-  }
-
-  lsb->logger.cb(lsb->logger.context, component, 7, "%s", lsb->output.buf);
-  lsb->output.pos = 0;
-  return 0;
-}
-
 void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val) {
 	lua_State* L = lsb_get_lua(lsb);
 	lua_pushstring(L, val);
@@ -244,6 +119,7 @@ void lsb_load_string(lsb_lua_sandbox *lsb, const char *code,
 	lua_setglobal(L, name);
 }
 
+// TODO: remove all logger (...and remove lsb)
 void zen_logger(void *context, const char *component,
                    int level, const char *fmt, ...) {
 	// suppress warnings about these unused paraments
@@ -251,16 +127,23 @@ void zen_logger(void *context, const char *component,
 	(void)context;
 	(void)level;
 
+	char out[MAX_STRING];
+	size_t len;
 	va_list args;
 	va_start(args, fmt);
-	vfprintf(stdout, fmt, args);
+	vsnprintf(out,MAX_STRING,fmt,args);
 	va_end(args);
-	fwrite("\n", 1, 1, stdout);
+	len = strlen(out);
+
+#ifdef __EMSCRIPTEN__
+	EM_ASM_({Module.print(UTF8ToString($0))}, out);
+#endif
+	fwrite(out, 1, len, stdout);
 	fflush(stdout);
 }
 
 
-lsb_lua_sandbox *zen_init(char *conf) {
+lsb_lua_sandbox *zen_init(const char *conf) {
 	lsb_lua_sandbox *lsb = NULL;
 
 	lsb_logger lsb_zen_logger = { .context = "zenroom",
@@ -280,7 +163,6 @@ lsb_lua_sandbox *zen_init(char *conf) {
 		free(lsb);
 		return NULL;
 	}
-
 
 	// add the config to the lsb_config registry table
 	lua_State *lua_cfg = load_zen_config(conf, &lsb->logger);
@@ -315,15 +197,12 @@ lsb_lua_sandbox *zen_init(char *conf) {
 	lsb->output.size    = MAX_STRING;
 	lsb->output.pos     = 0;
 	lsb->output.buf     = malloc(MAX_MEMORY);
-	lua_pushcfunction(lsb->lua, &output);
-	lua_setglobal(lsb->lua, "output");
 
 	// initialise global variables
 	lsb_setglobal_string(lsb, "VERSION", VERSION);
 
 	preload_modules(lsb->lua);
 	//////////////////// end of create
-
 
 	// load package module
 	lua_pushcfunction(lsb->lua, luaopen_package);
@@ -371,7 +250,7 @@ int zen_exec_line(lsb_lua_sandbox *lsb, const char *line) {
 	lua_State* lua = lsb_get_lua(lsb);
 
 	ret = luaL_dostring(lua, line);
-	if(ret != 0) {
+	if(ret) {
 		error("%s", lua_tostring(lua, -1));
 		fflush(stderr);
 		return ret;
@@ -386,7 +265,7 @@ int zen_exec_script(lsb_lua_sandbox *lsb, const char *script) {
 
 	ret = luaL_dostring(lua, script);
     lua_gc(lua, LUA_GCCOLLECT, 0);
-	if(ret != 0) {
+	if(ret) {
 		error("%s", lua_tostring(lua, -1));
 		fflush(stderr);
 		return ret;
