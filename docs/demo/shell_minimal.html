@@ -12,6 +12,15 @@
         html, body { overflow: hidden; height: 100%; }
         #output { font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro", monospace }
         #output, #input { font-size: 13px; overflow: auto; padding-bottom: 140px; margin-bottom: 20px; }
+        @keyframes heartbeat {
+            0% { color: #6c757d; font-size: 24px}
+            20% { color: red; font-size: 30px}
+            40% { color: #6c757d; font-size: 24px}
+            60% { color: red; font-size: 30px}
+            80% { color: #6c757d; font-size: 24px}
+            100% { color: #6c757d; font-size: 24px}
+        }
+        .play { animation: heartbeat 2s infinite; }
     </style>
     <title>Zenroom online demo</title>
   </head>
@@ -25,10 +34,18 @@
     <div class="container-fluid h-100">
         <div class="row no-gutters">
             <div class="col-6">
+                <span id="play" class="play float-right" style="display: none">
+                    <i class="material-icons align-middle">favorite</i>
+                </span>
                 <button type="button" id="run" class="btn btn-outline-secondary rounded-0 my-4 float-right">
                     <i class="material-icons align-middle">play_circle_filled</i>
                     <span class="align-middle">Run (&#8984; + Enter)</span>
                 </button>
+            </div>
+            <div class="col-6">
+                <a id="clear" href="#" class="btn btn-outline-secondary rounded-0 my-4 float-right border-0" alt="Clear console">
+                    <i class="material-icons align-middle">clear_all</i>
+                </a>
             </div>
         </div>
         <div class="row h-100">
@@ -42,58 +59,60 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.1/ace.js"></script>
     {{{ SCRIPT }}}
     <script>
+        const output = document.getElementById('output');
+        let final_output = ""
+
         var Module = {
             preRun: [],
             postRun: [],
             print: (function() {
-                var element = document.getElementById('output');
-                if (element) element.innerHTML = ''; // clear browser cache
                 return function(text) {
                     if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-                    text = text.replace(/&/g, "&amp;");
-                    text = text.replace(/</g, "&lt;");
-                    text = text.replace(/>/g, "&gt;");
-                    text = text.replace('\n', '<br>', 'g');
-                    if (element) {
-                        element.innerHTML += text + "<br>";
-                        element.scrollTop = element.scrollHeight;
-                    }
+                    // text = text.replace(/&/g, "&amp;");
+                    // text = text.replace(/</g, "&lt;");
+                    // text = text.replace(/>/g, "&gt;");
+                    // text = text.replace('\n', '<br>', 'g');
+                    final_output += text + "<br/>"
                 };
             })(),
             printErr: function(text) {
                 if (!text.startsWith('[!]')) return
                 if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-                if (0) { // XXX disabled for safety typeof dump == 'function') {
-                    dump(text + '\n'); // fast, straight to the real console
-                } else {
-                    console.error(text);
-                    var element = document.getElementById('output');
-                    if (element) { 
-                        element.innerHTML += "<span class='bg-danger'>" + text + "</span><br>";
-                        element.scrollTop = element.scrollHeight;
-                    }
+                if (output) {
+                    output.innerHTML += "<span class='bg-danger'>" + text + "</span><br>";
+                    output.scrollTop = output.scrollHeight;
                 }
             },
         }
 
-        var zenroom = function() {
+        const zenroom = function() {
             Module.ccall('zenroom_exec', 
                              'number',
                              ['string', 'string', 'string', 'string', 'number'],
                              [editor.getValue(), null, null, null, 3]);
+            const o = $("#output")
+            o.html(final_output)
+            o[0].scrollTop = o[0].scrollHeight
         }
 
-        var editor = ace.edit("input");
+        const editor = ace.edit("input");
         editor.session.setMode("ace/mode/lua");
         editor.focus();
         editor.commands.addCommand({
             name: 'run',
             bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
-            exec: function(editor) { zenroom(); }
+            exec: zenroom
+        });
+
+        editor.commands.addCommand({
+            name: 'clear',
+            bindKey: {win: 'Ctrl-l',  mac: 'Ctrl-l'},
+            exec: editor =>  { $("#output").html("") }
         });
 
         $(function() {
             $('#run').click(zenroom);
+            $('#clear').click(() => { $("#output").html("") })
         });
     </script>
 </body>
