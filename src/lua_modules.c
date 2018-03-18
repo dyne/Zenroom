@@ -89,8 +89,11 @@ static int zen_print (lua_State *L) {
 	}
 #ifdef __EMSCRIPTEN__
 	EM_ASM_({Module.print(UTF8ToString($0))}, out);
-#endif
+#else
 	fprintf(stdout,"%s\n",out);
+	fflush(stdout);
+#endif
+
 	return 0;
 }
 // TODO: fix this, right now doesn't writes anything out
