@@ -22,14 +22,16 @@
 #include <errno.h>
 #include <jutils.h>
 
+#include<zenroom.h>
 #include <luasandbox/lauxlib.h>
 
 #ifdef __EMSCRIPTEN__
+#include <emscripten.h>
 
 static int zen_print (lua_State *L) {
 	char out[MAX_STRING];
 	size_t pos = 0;
-	int len = 0;
+	size_t len = 0;
 	int n = lua_gettop(L);  /* number of arguments */
 	int i;
 	lua_getglobal(L, "tostring");
@@ -55,12 +57,11 @@ static int zen_iowrite (lua_State *L) {
 	char out[MAX_STRING];
 	size_t pos = 0;
 	int nargs = lua_gettop(L) +1;
-	int status = 1;
 	int arg = 0;
 	for (; nargs--; arg++) {
 		size_t len;
 		const char *s = lua_tolstring(L, arg, &len);
-		if (i>1) { out[pos]='\t'; pos++; }
+		if (arg>1) { out[pos]='\t'; pos++; }
 		snprintf(out+pos,MAX_STRING-pos,"%s",s);
 		pos+=len;
 	}
