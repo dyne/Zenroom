@@ -1,5 +1,5 @@
-INCFLAGS := -I../../lib/lua_sandbox/include/luasandbox
-CFLAGS   += $(INCFLAGS) -Wall -std=gnu99
+INCFLAGS := -I../../lib/lua53/src
+CFLAGS   += $(INCFLAGS) -Wall
 SOURCES := mono.o md5.o lzf_d.o depacks.o brieflz.o base58.o rc4.o randombytes.o norx.o luazen.o lzf_c.o
 
 # indicate where .c files are
