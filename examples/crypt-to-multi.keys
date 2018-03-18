@@ -1,7 +1,7 @@
 {
     "keyring": {
-        "public":"GoTdVYbTWEoZ4KtCeMghV7UcpJyhvny1QjVPf8K4oi1i",
-        "secret":"9PSbkNgsbgPnX3hM19MHVMpp2mzvmHcXCcz6iV8r7RyZ"
+        "pubkey":"GoTdVYbTWEoZ4KtCeMghV7UcpJyhvny1QjVPf8K4oi1i",
+        "seckey":"9PSbkNgsbgPnX3hM19MHVMpp2mzvmHcXCcz6iV8r7RyZ"
     },
     "recipients": {
         "jaromil": "CsTCsf6i7nRRH97c3LVGGDn7URQ7VHyUtgxmPyMeNgVg",

@@ -137,9 +137,10 @@ void zen_logger(void *context, const char *component,
 
 #ifdef __EMSCRIPTEN__
 	EM_ASM_({Module.print(UTF8ToString($0))}, out);
-#endif
+#else
 	fwrite(out, 1, len, stdout);
 	fflush(stdout);
+#endif
 }
 
 

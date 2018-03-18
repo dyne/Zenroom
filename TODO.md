@@ -39,6 +39,10 @@ X functional programming facility
 
 ## Developer experience
 
+- add list of functions and keywords for completion in ace
+  the js editor used for the example. last review of way
+  to include extensions (with prefix. or?)
+  
 - add superior testing and profiling facility with lust
   https://github.com/bjornbytes/lust
 
