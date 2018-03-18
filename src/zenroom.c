@@ -28,7 +28,7 @@
 #include <jutils.h>
 #include <zenroom.h>
 
-#include <luasandbox.h>
+#include <lua.h>
 
 #include <lua_functions.h>
 #include <repl.h>
@@ -53,6 +53,8 @@ const char *confdefault =
 
 // prototypes from lua_modules.c
 extern void zen_load_extensions(lsb_lua_sandbox *lsb);
+extern void zen_add_function(lsb_lua_sandbox *lsb, lua_CFunction func,
+                                  const char *func_name);
 
 // This function exits the process on failure.
 void load_file(char *dst, FILE *fd) {
@@ -112,7 +114,6 @@ int zenroom_exec(char *script, char *conf, char *keys,
 	// the sandbox context (can be initialised only once)
 	// stores the script file and configuration
 	lsb_lua_sandbox *lsb = NULL;
-	int usage;
 	int return_code = 1; // return error by default
 	int r;
 
@@ -148,30 +149,16 @@ int zenroom_exec(char *script, char *conf, char *keys,
 		EM_ASM({Module.exec_error();});
 #endif
 //		error(r);
-		error(lsb_get_error(lsb));
 		error("Error detected. Execution aborted.");
-
-		usage = lsb_usage(lsb, LSB_UT_MEMORY, LSB_US_CURRENT);
-		error("used memory: %u bytes", usage);
-		usage = lsb_usage(lsb, LSB_UT_INSTRUCTION, LSB_US_CURRENT);
-		error("executed operations: %u", usage);
 
 		zen_teardown(lsb);
 		return(1);
 	}
 	return_code = 0; // return success
-	// debugging stats here
-	// while(lsb_get_state(lsb) == LSB_RUNNING)
-	//  act("running...");
 
 #ifdef __EMSCRIPTEN__
 		EM_ASM({Module.exec_ok();});
 #endif
-
-	usage = lsb_usage(lsb, LSB_UT_MEMORY, LSB_US_CURRENT);
-	act("used memory: %u bytes", usage);
-	usage = lsb_usage(lsb, LSB_UT_INSTRUCTION, LSB_US_CURRENT);
-	act("executed operations: %u", usage);
 
 	notice("Zenroom operations completed.");
 	zen_teardown(lsb);
@@ -260,9 +247,9 @@ int main(int argc, char **argv) {
 		zen_load_extensions(cli);
 
 		// print function
-		lsb_add_function(cli, repl_flush, "flush");
-		lsb_add_function(cli, repl_read, "read");
-		lsb_add_function(cli, repl_write, "write");
+		zen_add_function(cli, repl_flush, "flush");
+		zen_add_function(cli, repl_read, "read");
+		zen_add_function(cli, repl_write, "write");
 
 		if(data[0]!='\0') lsb_setglobal_string(cli,"DATA",data);
 		if(keys[0]!='\0') lsb_setglobal_string(cli,"KEYS",keys);

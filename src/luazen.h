@@ -21,7 +21,7 @@
 #ifndef __LUAZEN_H__
 #define __LUAZEN_H__
 
-#include <luasandbox/lauxlib.h>
+#include <lua.h>
 
 int lz_randombytes(lua_State *L);
 int lz_aead_encrypt(lua_State *L);

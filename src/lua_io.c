@@ -22,8 +22,8 @@
 #include <errno.h>
 #include <jutils.h>
 
-#include<zenroom.h>
-#include <luasandbox/lauxlib.h>
+#include <zenroom.h>
+#include <lauxlib.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -127,18 +127,18 @@ static int zen_iowrite (lua_State *L) {
 
 void zen_add_io(lua_State *L) {
 	// override print() and io.write()
-
 	static const struct luaL_Reg custom_print [] =
 		{ {"print", zen_print}, {NULL, NULL} };
 	lua_getglobal(L, "_G");
-	luaL_register(L, NULL, custom_print); // for Lua versions < 5.2
-	// luaL_setfuncs(L, printlib, 0);  // for Lua versions 5.2 or greater
+	// luaL_register(L, NULL, custom_print); // for Lua versions < 5.2
+	luaL_setfuncs(L, custom_print, 0);  // for Lua versions 5.2 or greater
 	lua_pop(L, 1);
 
 	static const struct luaL_Reg custom_iowrite [] =
 		{ {"write", zen_iowrite}, {NULL, NULL} };
 	lua_getglobal(L, "io");
-	luaL_register(L, NULL, custom_iowrite);
+	// luaL_register(L, NULL, custom_iowrite);
+	luaL_setfuncs(L, custom_iowrite, 0);
 	lua_pop(L, 1);
 
 }

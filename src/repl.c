@@ -23,12 +23,8 @@
 #include <jutils.h>
 #include <zenroom.h>
 
-#include <luasandbox.h>
-#include <luasandbox/lua.h>
-#include <luasandbox/lualib.h>
-#include <luasandbox/lauxlib.h>
-#include <luasandbox/util/util.h>
-#include <luasandbox/util/output_buffer.h>
+#include <lua.h>
+#include <lauxlib.h>
 
 #include <lua_functions.h>
 

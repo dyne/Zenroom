@@ -19,10 +19,9 @@
  */
 
 #include <jutils.h>
-#include <luasandbox.h>
-#include <luasandbox/lua.h>
-#include <luasandbox/lualib.h>
-#include <luasandbox/lauxlib.h>
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 
 #include <luazen.h>
 
@@ -41,8 +40,6 @@ lsb_err_id ZEN_ERR_UTIL_PRANGE  = "parameter out of range";
 
 extern void zen_load_extensions(lsb_lua_sandbox *lsb);
 extern void preload_modules(lua_State *lua);
-extern void lsb_output_coroutine(lsb_lua_sandbox *lsb, lua_State *lua,
-                                 int start, int end, int append);
 
 /**
 * Implementation of the memory allocator for the Lua state.
@@ -63,21 +60,18 @@ void* memory_manager(void *ud, void *ptr, size_t osize, size_t nsize)
   void *nptr = NULL;
   if (nsize == 0) {
     free(ptr);
-    lsb->usage[LSB_UT_MEMORY][LSB_US_CURRENT] -= osize;
+    lsb->mem_usage -= osize;
   } else {
     size_t new_state_memory =
-        lsb->usage[LSB_UT_MEMORY][LSB_US_CURRENT] + nsize - osize;
-    if (0 == lsb->usage[LSB_UT_MEMORY][LSB_US_LIMIT]
+        lsb->mem_usage + nsize - osize;
+    if (0 == lsb->mem_max
         || new_state_memory
-        <= lsb->usage[LSB_UT_MEMORY][LSB_US_LIMIT]) {
+        <= lsb->mem_max) {
       nptr = realloc(ptr, nsize);
       if (nptr != NULL) {
-        lsb->usage[LSB_UT_MEMORY][LSB_US_CURRENT] =
-            new_state_memory;
-        if (lsb->usage[LSB_UT_MEMORY][LSB_US_CURRENT]
-            > lsb->usage[LSB_UT_MEMORY][LSB_US_MAXIMUM]) {
-          lsb->usage[LSB_UT_MEMORY][LSB_US_MAXIMUM] =
-              lsb->usage[LSB_UT_MEMORY][LSB_US_CURRENT];
+        lsb->mem_usage = new_state_memory;
+        if (lsb->mem_usage > lsb->mem_max) {
+          lsb->mem_max = lsb->mem_usage;
         }
       }
     }
@@ -85,124 +79,93 @@ void* memory_manager(void *ud, void *ptr, size_t osize, size_t nsize)
   return nptr;
 }
 
+void lsb_add_function(lsb_lua_sandbox *lsb, lua_CFunction func,
+                      const char *func_name)
+{
+	if (!lsb || !func || !func_name) return;
+
+	lua_pushcfunction(lsb->lua, func);
+	lua_setglobal(lsb->lua, func_name);
+}
+
 void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val) {
-	lua_State* L = lsb_get_lua(lsb);
+	lua_State* L = lsb->lua;
 	lua_pushstring(L, val);
 	lua_setglobal(L, key);
 }
 
-void lsb_load_string(lsb_lua_sandbox *lsb, const char *code,
-                     size_t size, char *name) {
-	lua_State* L = lsb_get_lua(lsb);
-
-	lua_getglobal(L, "loadstring");
-	if(!lua_iscfunction(L, -1)) {
-		error("lsb_load_string: function 'loadstring' not found");
-		return; }
-	func("memory addr: %p (%u bytes)", code, size);
-	lua_pushlstring(L, code, size);
-
-	if(lua_pcall(L, 1, 1, 0)) {
-		error("lsb_load_string: cannot load %s extension", name);
-		return; }
-
-	if (lua_isstring(L, -1) || lua_isnil(L, -1)) {
-		/* loader returned error message? */
-		error("error loading lua string: %s", name);
-		if(!lua_isnil(L,-1))
-			error("%s", lua_tostring(L, -1));
-		return; }
-
-	act("loaded lua from string: %s", name);
-
-	// run loaded module
-	lua_setglobal(L, name);
+int zen_add_package(lua_State *L, char *name, lua_CFunction func) {
+	lua_register(L,name,func);
+	char cmd[MAX_STRING];
+	snprintf(cmd,MAX_STRING,
+	         "table.insert(package.searchers, 2, %s",name);
+	return luaL_dostring(L,cmd);
 }
 
-// TODO: remove all logger (...and remove lsb)
-void zen_logger(void *context, const char *component,
-                   int level, const char *fmt, ...) {
-	// suppress warnings about these unused paraments
-	(void)component;
-	(void)context;
-	(void)level;
+// 	lua_State* L = lsb->lua;
 
-	char out[MAX_STRING];
-	size_t len;
-	va_list args;
-	va_start(args, fmt);
-	vsnprintf(out,MAX_STRING,fmt,args);
-	va_end(args);
-	len = strlen(out);
+// 	lua_getglobal(L, "loadstring");
+// 	if(!lua_iscfunction(L, -1)) {
+// 		error("lsb_load_string: function 'loadstring' not found");
+// 		return; }
+// 	func("memory addr: %p (%u bytes)", code, size);
+// 	lua_pushlstring(L, code, size);
 
-#ifdef __EMSCRIPTEN__
-	EM_ASM_({Module.print(UTF8ToString($0))}, out);
-#else
-	fwrite(out, 1, len, stdout);
-	fflush(stdout);
-#endif
-}
+// 	if(lua_pcall(L, 1, 1, 0)) {
+// 		error("lsb_load_string: cannot load %s extension", name);
+// 		return; }
+
+// 	if (lua_isstring(L, -1) || lua_isnil(L, -1)) {
+// 		/* loader returned error message? */
+// 		error("error loading lua string: %s", name);
+// 		if(!lua_isnil(L,-1))
+// 			error("%s", lua_tostring(L, -1));
+// 		return; }
+
+// 	act("loaded lua from string: %s", name);
+
+// 	// run loaded module
+// 	lua_setglobal(L, name);
+// }
 
 
-lsb_lua_sandbox *zen_init(const char *conf) {
+lsb_lua_sandbox *zen_init() {
 	lsb_lua_sandbox *lsb = NULL;
 
-	lsb_logger lsb_zen_logger = { .context = "zenroom",
-	                              .cb = zen_logger };
 
 	lsb = calloc(1, sizeof(*lsb));
 	if (!lsb) {
-		zen_logger("zen_init", __func__, 3,
-		            "memory allocation failed");
-		return NULL;
-	}
-	lsb->logger = lsb_zen_logger;
-	lsb->lua = lua_newstate(memory_manager, lsb);
+		error("%s: %s", __func__, "memory allocation failed");
+		return NULL; }
+	lsb->mem_usage=0;
+	lsb->mem_max=0;
+	lsb->op_usage=0;
+	lsb->op_max=0;
+
+	// lsb->lua = lua_newstate(memory_manager, lsb);
+	lsb->lua = luaL_newstate();
 	if(!lsb->lua) {
-		zen_logger("zen_init", __func__, 3,
-		            "lua state creation failed");
+		error("%s: %s", __func__, "lua state creation failed");
 		free(lsb);
 		return NULL;
 	}
 
-	// add the config to the lsb_config registry table
-	lua_State *lua_cfg = load_zen_config(conf, &lsb->logger);
-	if (!lua_cfg) {
-		lua_close(lsb->lua);
-		free(lsb);
-		return NULL;
-	}
-	lua_pushnil(lua_cfg);
-	lua_pushvalue(lua_cfg, LUA_GLOBALSINDEX);
-	copy_table(lsb->lua, lua_cfg, &lsb->logger);
-	lua_pop(lua_cfg, 2);
-	lua_close(lua_cfg);
-	size_t ml = get_size(lsb->lua, -1, LSB_MEMORY_LIMIT);
-	size_t il = get_size(lsb->lua, -1, LSB_INSTRUCTION_LIMIT);
-	size_t ol = get_size(lsb->lua, -1, LSB_OUTPUT_LIMIT);
-	// TODO: reactivate limits
-	// size_t log_level = get_size(lsb->lua, -1, LSB_LOG_LEVEL);
-	lua_setfield(lsb->lua, LUA_REGISTRYINDEX, LSB_CONFIG_TABLE);
-	lua_pushlightuserdata(lsb->lua, lsb);
-	lua_setfield(lsb->lua, LUA_REGISTRYINDEX, LSB_THIS_PTR);
-	lua_pushcfunction(lsb->lua, &read_config);
-	lua_setglobal(lsb->lua, "read_config");
-	lsb->usage[LSB_UT_MEMORY][LSB_US_LIMIT] = ml;
-	lsb->usage[LSB_UT_INSTRUCTION][LSB_US_LIMIT] = il;
-	lsb->usage[LSB_UT_OUTPUT][LSB_US_LIMIT] = ol;
-	lsb->state = LSB_UNKNOWN;
+	// // add the config to the lsb_config registry table
+	// lua_State *lua_cfg = load_zen_config(conf);
+	// if (!lua_cfg) {
+	// 	lua_close(lsb->lua);
+	// 	free(lsb);
+	// 	return NULL;
+	// }
+
 	lsb->error_message[0] = 0;
 	lsb->state_file = NULL;
-
-	lsb->output.maxsize = MAX_MEMORY;
-	lsb->output.size    = MAX_STRING;
-	lsb->output.pos     = 0;
-	lsb->output.buf     = malloc(MAX_MEMORY);
 
 	// initialise global variables
 	lsb_setglobal_string(lsb, "VERSION", VERSION);
 
-	preload_modules(lsb->lua);
+	// open all standard lua libraries
+	luaL_openlibs(lsb->lua);
 	//////////////////// end of create
 
 	// load package module
@@ -216,39 +179,35 @@ lsb_lua_sandbox *zen_init(const char *conf) {
 	lua_pushlightuserdata(lsb->lua, lsb);
 	lua_setfield(lsb->lua, LUA_REGISTRYINDEX, LSB_THIS_PTR);
 
-	lua_getglobal(lsb->lua, "require");
-	if(!lua_iscfunction(lsb->lua, -1)) {
-		error("LUA init: function 'require' not found");
-		return NULL; }
-	lua_pushstring(lsb->lua, LUA_BASELIBNAME);
-	if(lua_pcall(lsb->lua, 1, 0, 0)) {
-		error("LUA init: cannot load base library");
-		return NULL; }
+	// lua_getglobal(lsb->lua, "require");
+	// if(!lua_iscfunction(lsb->lua, -1)) {
+	// 	error("LUA init: function 'require' not found");
+	// 	return NULL; }
+	// lua_pushstring(lsb->lua, "base");
+	// if(lua_pcall(lsb->lua, 1, 0, 0)) {
+	// 	error("LUA init: cannot load base library");
+	// 	return NULL; }
 
 	return(lsb);
 
 }
 
 int zen_teardown(lsb_lua_sandbox *lsb) {
-	char *p;
-	lua_State *lua = lsb_get_lua(lsb);
+	lua_State *lua = lsb->lua;
 
 	notice("Zenroom console quit.");
     if(lua) lua_gc(lua, LUA_GCCOLLECT, 0);
-
-	lsb_pcall_teardown(lsb);
-	lsb_stop_sandbox_clean(lsb);
-	p = lsb_destroy(lsb);
-	if(p) {
-		error(p);
-		free(p);
-	}
+    if(lsb->mem_usage > lsb->mem_max)
+	    lsb->mem_usage = lsb->mem_max;
+    lua_close(lsb->lua);
+    lsb->lua = NULL;
+    free(lsb);
 	return(0);
 }
 
 int zen_exec_line(lsb_lua_sandbox *lsb, const char *line) {
 	int ret;
-	lua_State* lua = lsb_get_lua(lsb);
+	lua_State* lua = lsb->lua;
 
 	ret = luaL_dostring(lua, line);
 	if(ret) {
@@ -262,7 +221,7 @@ int zen_exec_line(lsb_lua_sandbox *lsb, const char *line) {
 
 int zen_exec_script(lsb_lua_sandbox *lsb, const char *script) {
 	int ret;
-	lua_State* lua = lsb_get_lua(lsb);
+	lua_State* lua = lsb->lua;
 
 	ret = luaL_dostring(lua, script);
     lua_gc(lua, LUA_GCCOLLECT, 0);
