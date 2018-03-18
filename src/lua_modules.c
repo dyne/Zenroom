@@ -37,6 +37,7 @@
 extern int lualibs_detected_load(lsb_lua_sandbox *lsb);
 extern int lua_cjson_safe_new(lua_State *l);
 extern int lua_cjson_new(lua_State *l);
+extern void zen_add_io(lua_State *L);
 
 static const luaL_Reg preload_module_list[] = {
   { LUA_BASELIBNAME, luaopen_base },
@@ -48,73 +49,6 @@ static const luaL_Reg preload_module_list[] = {
   { NULL, NULL }
 };
 
-
-static int pushresult (lua_State *L, int i, const char *filename) {
-  int en = errno;  /* calls to Lua API may change this value */
-  if (i) {
-    lua_pushboolean(L, 1);
-    return 1;
-  }
-  else {
-    lua_pushnil(L);
-    if (filename)
-      lua_pushfstring(L, "%s: %s", filename, strerror(en));
-    else
-      lua_pushfstring(L, "%s", strerror(en));
-    lua_pushinteger(L, en);
-    return 3;
-  }
-}
-static int zen_print (lua_State *L) {
-	char out[MAX_STRING];
-	int pos = 0;
-	int len = 0;
-	int n = lua_gettop(L);  /* number of arguments */
-	int i;
-	lua_getglobal(L, "tostring");
-	for (i=1; i<=n; i++) {
-		const char *s;
-		lua_pushvalue(L, -1);  /* function to be called */
-		lua_pushvalue(L, i);   /* value to print */
-		lua_call(L, 1, 1);
-		s = lua_tostring(L, -1);  /* get result */
-		if (s == NULL)
-			return luaL_error(L, LUA_QL("tostring") " must return a string to "
-			                  LUA_QL("print"));
-		len = strlen(s);
-		if (i>1) { out[pos]='\t'; pos++; }
-		snprintf(out+pos,MAX_STRING,"%s",s);
-		pos+=len;
-		lua_pop(L, 1);  /* pop result */
-	}
-#ifdef __EMSCRIPTEN__
-	EM_ASM_({Module.print(UTF8ToString($0))}, out);
-#else
-	fprintf(stdout,"%s\n",out);
-	fflush(stdout);
-#endif
-
-	return 0;
-}
-// TODO: fix this, right now doesn't writes anything out
-static int zen_iowrite (lua_State *L) {
-	int nargs = lua_gettop(L) - 1;
-	int status = 1;
-	int arg = 1;
-	FILE *out = stdout;
-	for (; nargs--; arg++) {
-		if (lua_type(L, arg) == LUA_TNUMBER) {
-			/* optimization: could be done exactly as for strings */
-			status = status &&
-				fprintf(out, LUA_NUMBER_FMT, lua_tonumber(L, arg)) > 0;
-		} else {
-			size_t l;
-			const char *s = luaL_checklstring(L, arg, &l);
-			status = status && (fwrite(s, sizeof(char), l, out) == l);
-		}
-	}
-	return pushresult(L, status, NULL);
-}
 
 const struct luaL_Reg luazen[] = {
 	{"randombytes", lz_randombytes},
@@ -210,9 +144,17 @@ void preload_modules(lua_State *lua)
   lua_pop(lua, 1); // remove the preloaded table
 }
 
+void zen_add_function(lsb_lua_sandbox *lsb, lua_CFunction func,
+                      const char *func_name)
+{
+  if (!lsb || !func || !func_name) return;
+  if (lsb->state == LSB_TERMINATED) return;
 
+  lua_pushcfunction(lsb->lua, func);
+  lua_setglobal(lsb->lua, func_name);
+}
 
-void lsb_load_luamodule(lsb_lua_sandbox *lsb, lua_CFunction f, const char *name) {
+void zen_load_luamodule(lsb_lua_sandbox *lsb, lua_CFunction f, const char *name) {
 	lua_State *L = lsb_get_lua(lsb);
 	lua_pushcfunction(L, f);
 	lua_pushstring(L, name);
@@ -222,47 +164,36 @@ void lsb_load_luamodule(lsb_lua_sandbox *lsb, lua_CFunction f, const char *name)
 	lua_pop(L, 1);
 }
 
-void lsb_load_cmodule(lsb_lua_sandbox *lsb, luaL_Reg *lib) {
+void zen_load_cmodule(lsb_lua_sandbox *lsb, luaL_Reg *lib) {
 	if(!lsb || !lib) {
 		error("lsb_load_cmodule: NULL lib, loading aborted.");
 		return; }
 	for (; lib->func; lib++) {
-		lsb_add_function(lsb, lib->func, lib->name);
+		zen_add_function(lsb, lib->func, lib->name);
 	}
 }
 
 void zen_load_extensions(lsb_lua_sandbox *lsb) {
 	act("loading language extensions");
 
-	lsb_load_luamodule(lsb, luaopen_base,   LUA_BASELIBNAME);
-	lsb_load_luamodule(lsb, luaopen_table,  LUA_TABLIBNAME);
-	lsb_load_luamodule(lsb, luaopen_string, LUA_STRLIBNAME);
-	lsb_load_luamodule(lsb, luaopen_math,   LUA_MATHLIBNAME);
-	lsb_load_luamodule(lsb, luaopen_io,     LUA_IOLIBNAME);
-	lsb_load_luamodule(lsb, luaopen_os,     LUA_OSLIBNAME);
-	lsb_load_luamodule(lsb, luaopen_coroutine, LUA_COLIBNAME);
-	lsb_load_luamodule(lsb, luaopen_debug,     LUA_DBLIBNAME);
+	zen_load_luamodule(lsb, luaopen_base,   LUA_BASELIBNAME);
+	zen_load_luamodule(lsb, luaopen_table,  LUA_TABLIBNAME);
+	zen_load_luamodule(lsb, luaopen_string, LUA_STRLIBNAME);
+	zen_load_luamodule(lsb, luaopen_math,   LUA_MATHLIBNAME);
+	zen_load_luamodule(lsb, luaopen_io,     LUA_IOLIBNAME);
+	zen_load_luamodule(lsb, luaopen_os,     LUA_OSLIBNAME);
+	zen_load_luamodule(lsb, luaopen_coroutine, LUA_COLIBNAME);
+	zen_load_luamodule(lsb, luaopen_debug,     LUA_DBLIBNAME);
 
-	// override print() and io.write()
-	static const struct luaL_Reg custom_print [] =
-		{ {"print", zen_print}, {NULL, NULL} };
-	lua_getglobal(lsb->lua, "_G");
-	luaL_register(lsb->lua, NULL, custom_print); // for Lua versions < 5.2
-	// luaL_setfuncs(L, printlib, 0);  // for Lua versions 5.2 or greater
-	lua_pop(lsb->lua, 1);
-	// static const struct luaL_Reg custom_iowrite [] =
-	// 	{ {"write", zen_iowrite}, {NULL, NULL} };
-	// lua_getglobal(lsb->lua, "io");
-	// luaL_register(lsb->lua, NULL, custom_iowrite);
-	// lua_pop(lsb->lua, 1);
-
+	// register our own print and io.write
+	zen_add_io(lsb->lua);
 
 	// just the constructors are enough for cjson
-	lsb_add_function(lsb, lua_cjson_safe_new, "cjson");
-	lsb_add_function(lsb, lua_cjson_new, "cjson_full");
+	zen_add_function(lsb, lua_cjson_safe_new, "cjson");
+	zen_add_function(lsb, lua_cjson_new, "cjson_full");
 
-	lsb_load_cmodule(lsb, (luaL_Reg*) &luazen);
-	lsb_load_cmodule(lsb, (luaL_Reg*) &bit_funcs);
+	zen_load_cmodule(lsb, (luaL_Reg*) &luazen);
+	zen_load_cmodule(lsb, (luaL_Reg*) &bit_funcs);
 
 	// load embedded lua extensions generated by build/embed-lualibs
 	lualibs_detected_load(lsb);
