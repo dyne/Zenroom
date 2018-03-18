@@ -194,6 +194,17 @@
                 $("#play-icon").hide()
                 setTimeout(zenroom, 300)
             })
+            $.get('https://raw.githubusercontent.com/DECODEproject/zenroom/develop/docs/ldoc/crypto.lua', data => {
+                const raw_instances = data.match(/(?:function)\s((\w+))/g)
+                const functions = raw_instances.map(x => x.replace(/function\s/g, ''))
+                const crypto_completer = {
+                    getCompletions: function(editor, session, pos, prefix, callback) {
+                        if (prefix.length === 0) { callback(null, []); return }
+                        callback(null, functions.map(word => ({name: word, value: word, meta: 'zenroom'})))
+                    }
+                }
+                lang_tools.addCompleter(crypto_completer)
+            })
             $("#examples-select").on('change', load_example)
             $('#clear').click(() => { $("#output").html("") })
         });
