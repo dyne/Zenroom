@@ -6,6 +6,7 @@ extras := ${pwd}/docs/demo
 # default
 gcc := gcc
 ar := ar
+ranlib := ranlib
 cflags_protection := -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
 cflags := -O2 ${cflags_protection}
 musl := ${pwd}/build/musl
@@ -54,8 +55,9 @@ html: patches  luasandbox luazen milagro
 
 win: gcc=x86_64-w64-mingw32-gcc
 win: ar=x86_64-w64-mingw32-ar
-win: cflags := -O3 ${cflags_protection}
-win: patches  luasandbox luazen milagro-win
+win: ranlib=x86_64-w64-mingw32-ranlib
+win: platform = posix
+win: patches lua53 luazen milagro-win
 	CC=${gcc} CFLAGS="${cflags}" make -C src win
 
 static: gcc := musl-gcc
@@ -71,13 +73,19 @@ system-static: patches  luasandbox luazen milagro
 
 shared: gcc := gcc
 shared: cflags := -O2 -fPIC ${cflags_protection}
-shared: patches  luasandbox luazen milagro
+shared: patches lua53 luazen
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
 
 debug: gcc := gcc
 debug: cflags := -O0 -ggdb
-debug: patches luasandbox luazen milagro
+debug: patches lua53 luazen
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
+
+lua53:
+	CC=${gcc} CFLAGS="${cflags} \
+	-DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE" \
+	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
+	make -C ${pwd}/lib/lua53/src posix
 
 gmp:
 	cd ${pwd}/lib/gmp && CFLAGS="${cflags}" CC=${gcc} ./configure --disable-shared
@@ -166,6 +174,7 @@ check-debug: check-milagro
 
 clean:
 	rm -rf ${luasand}
+	make clean -C ${pwd}/lib/lua53/src
 	make clean -C ${pwd}/build/luazen
 	make clean -C ${pwd}/lib/milagro-crypto-c && \
 		rm -f ${pwd}/lib/milagro-crypto-c/CMakeCache.txt

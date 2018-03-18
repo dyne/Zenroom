@@ -40,8 +40,8 @@
 #include <string.h>
 #include <math.h>
 #include <limits.h>
-#include <luasandbox/lua.h>
-#include <luasandbox/lauxlib.h>
+#include <lua.h>
+#include <lauxlib.h>
 
 #include "strbuf.h"
 #include "fpconv.h"

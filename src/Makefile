@@ -1,10 +1,11 @@
 CC?=gcc
 VERSION := $(shell cat ../VERSION)
 ARCH := $(shell uname -m)
-CFLAGS  += -I. -I../lib/lua_sandbox/include -O3 -Wall -Wextra
-SOURCES := jutils.o lua_functions.o zenroom.o bitop.o lua_cjson.o strbuf.o fpconv.o repl.o lualibs_detected.o lua_modules.o lua_config.o lua_io.o
-LDADD   := ../build/lua_sandbox/src/libluasandbox.a
-LDADD   += ../build/lua_sandbox/src/util/libluasandboxutil.a
+CFLAGS  += -I. -I../lib/lua53/src -Wall -Wextra
+SOURCES := jutils.o lua_functions.o zenroom.o lua_cjson.o strbuf.o fpconv.o repl.o lualibs_detected.o lua_modules.o lua_io.o
+LDADD   := ../lib/lua53/src/liblua.a
+#LDADD   := ../build/lua_sandbox/src/libluasandbox.a
+#LDADD   += ../build/lua_sandbox/src/util/libluasandboxutil.a
 LDADD   += ../build/luazen/libluazen.a
 # LDADD   += ../lib/milagro-c/libmilagro.a
 
@@ -29,14 +30,13 @@ static: ${SOURCES}
 system-static: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-static ${LDFLAGS} ${LDADD}
 
-shared: CFLAGS+=  -O3 -Wall
 shared: LDADD+=   -lm -lpthread
 shared: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-shared ${LDFLAGS} ${LDADD}
 
 win: CFLAGS +=  -O3 -Wall -Wextra -pedantic -std=gnu99
 win: LDFLAGS += -L/usr/x86_64-w64-mingw32/lib -static
-win: LDADD +=  -l:libm.a -l:libpthread.a
+win: LDADD +=  -l:libm.a -l:libpthread.a -lssp
 win: ${SOURCES}
 	./stamp-exe.sh
 	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.exe zenroom.res ${SOURCES} ${LDADD}
