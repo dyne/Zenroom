@@ -4,8 +4,6 @@ ARCH := $(shell uname -m)
 CFLAGS  += -I. -I../lib/lua53/src -Wall -Wextra
 SOURCES := jutils.o lua_functions.o zenroom.o lua_cjson.o strbuf.o fpconv.o repl.o lualibs_detected.o lua_modules.o lua_io.o
 LDADD   := ../lib/lua53/src/liblua.a
-#LDADD   := ../build/lua_sandbox/src/libluasandbox.a
-#LDADD   += ../build/lua_sandbox/src/util/libluasandboxutil.a
 LDADD   += ../build/luazen/libluazen.a
 # LDADD   += ../lib/milagro-c/libmilagro.a
 

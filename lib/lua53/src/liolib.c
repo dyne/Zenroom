@@ -693,16 +693,16 @@ static int f_flush (lua_State *L) {
 ** functions for 'io' library
 */
 static const luaL_Reg iolib[] = {
-  {"close", io_close},
+//  {"close", io_close},
   {"flush", io_flush},
   {"input", io_input},
   {"lines", io_lines},
-  {"open", io_open},
+//  {"open", io_open},
   {"output", io_output},
-  {"popen", io_popen},
+//  {"popen", io_popen},
   {"read", io_read},
-  {"tmpfile", io_tmpfile},
-  {"type", io_type},
+//  {"tmpfile", io_tmpfile},
+//  {"type", io_type},
   {"write", io_write},
   {NULL, NULL}
 };
@@ -712,15 +712,15 @@ static const luaL_Reg iolib[] = {
 ** methods for file handles
 */
 static const luaL_Reg flib[] = {
-  {"close", io_close},
-  {"flush", f_flush},
-  {"lines", f_lines},
-  {"read", f_read},
-  {"seek", f_seek},
-  {"setvbuf", f_setvbuf},
-  {"write", f_write},
-  {"__gc", f_gc},
-  {"__tostring", f_tostring},
+  // {"close", io_close},
+  // {"flush", f_flush},
+  // {"lines", f_lines},
+  // {"read", f_read},
+  // {"seek", f_seek},
+  // {"setvbuf", f_setvbuf},
+  // {"write", f_write},
+  // {"__gc", f_gc},
+  // {"__tostring", f_tostring},
   {NULL, NULL}
 };
 

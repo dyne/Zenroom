@@ -27,7 +27,6 @@
 
 #include <zenroom.h>
 #include <lua_functions.h>
-#include <lua_config.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>

@@ -27,30 +27,30 @@ embed-lua:
 # https://github.com/kripken/emscripten/blob/master/src/settings.js
 js: gcc=${EMSCRIPTEN}/emcc
 js: ar=${EMSCRIPTEN}/emar
-js: cflags := --memory-init-file 0
+js: cflags := --memory-init-file 0 -O2
 js: ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s ALLOW_MEMORY_GROWTH=1 -s USE_SDL=0
-js: patches  luasandbox luazen
+js: patches lua53 luazen
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 
 wasm: gcc=${EMSCRIPTEN}/emcc
 wasm: ar=${EMSCRIPTEN}/emar
-wasm: cflags :=
+wasm: cflags := -O2
 wasm: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s MODULARIZE=1
-wasm: patches  luasandbox luazen milagro
+wasm: patches lua53 luazen
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 
 demo: gcc=${EMSCRIPTEN}/emcc
 demo: ar=${EMSCRIPTEN}/emar
-demo: cflags :=
+demo: cflags := -O2
 demo: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s ASSERTIONS=1 --shell-file ${extras}/shell_minimal.html -s NO_EXIT_RUNTIME=1 -s USE_SDL=0 -s USE_PTHREADS=0
-demo: patches luasandbox luazen milagro
+demo: patches lua53 luazen
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src demo
 
 html: gcc=${EMSCRIPTEN}/emcc
 html: ar=${EMSCRIPTEN}/emar
-html: cflags := -O3 ${cflags_protection}
+html: cflags := -O2
 html: ldflags := -sEXPORTED_FUNCTIONS='["_main","_zenroom_exec"]'
-html: patches  luasandbox luazen milagro
+html: patches  lua53 luazen
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src html
 
 win: gcc=x86_64-w64-mingw32-gcc
@@ -63,16 +63,17 @@ win: patches lua53 luazen milagro-win
 static: gcc := musl-gcc
 static: cflags := -Os -static -Wall -std=gnu99 ${cflags_protection}
 static: ldflags := -static
-static: patches  luasandbox luazen milagro
+static: patches lua53 luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src static
 
 system-static: cflags := -Os -static -Wall -std=gnu99 ${cflags_protection}
 system-static: ldflags := -static
-system-static: patches  luasandbox luazen milagro
+system-static: patches lua53 luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src system-static
 
 shared: gcc := gcc
 shared: cflags := -O2 -fPIC ${cflags_protection}
+shared: ldflags := -lm
 shared: patches lua53 luazen
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
 
@@ -95,11 +96,6 @@ pbc:
 	mkdir -p ${pwd}/build/pbc
 	if ! [ ${pwd}/build/pbc/.libs/libpbc.a ]; then cd ${pwd}/build/pbc && CFLAGS="${cflags}" CC=${gcc} ${pwd}/lib/pbc/configure --disable-shared &&	make -C ${pwd}/build/pbc LDFLAGS="-L${pwd}/lib/gmp/.libs -l:libgmp.a" CFLAGS="${cflags} -I${pwd}/lib/gmp -I${pwd}/lib/pbc/include"; return 0; fi
 
-luasandbox:
-	@echo "-- Building lua_sandbox"
-	mkdir -p ${luasand} && cd ${luasand} && CC=${gcc} cmake ${pwd}/lib/lua_sandbox -DCMAKE_C_FLAGS="${cflags}"
-	CC=${gcc} CFLAGS="${cflags}" make -C ${luasand} luasandbox
-
 luazen:
 	CC=${gcc} AR=${ar} CFLAGS="${cflags}" make -C ${pwd}/build/luazen
 
@@ -117,7 +113,7 @@ milagro-win:
 check-milagro: milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c test
 
-check-shared: test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
+check-shared: test-exec := ${pwd}/src/zenroom-shared
 check-shared: check-milagro
 	@${test-exec} test/vararg.lua && \
 	${test-exec} test/pm.lua && \

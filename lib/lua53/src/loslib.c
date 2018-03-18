@@ -163,15 +163,15 @@ static int os_rename (lua_State *L) {
 }
 
 
-static int os_tmpname (lua_State *L) {
-  char buff[LUA_TMPNAMBUFSIZE];
-  int err;
-  lua_tmpnam(buff, err);
-  if (err)
-    return luaL_error(L, "unable to generate a unique filename");
-  lua_pushstring(L, buff);
-  return 1;
-}
+// static int os_tmpname (lua_State *L) {
+//   char buff[LUA_TMPNAMBUFSIZE];
+//   int err;
+//   lua_tmpnam(buff, err);
+//   if (err)
+//     return luaL_error(L, "unable to generate a unique filename");
+//   lua_pushstring(L, buff);
+//   return 1;
+// }
 
 
 static int os_getenv (lua_State *L) {
@@ -385,14 +385,14 @@ static const luaL_Reg syslib[] = {
   {"clock",     os_clock},
   {"date",      os_date},
   {"difftime",  os_difftime},
-  {"execute",   os_execute},
+  // {"execute",   os_execute},
   {"exit",      os_exit},
   {"getenv",    os_getenv},
-  {"remove",    os_remove},
-  {"rename",    os_rename},
+  // {"remove",    os_remove},
+  // {"rename",    os_rename},
   {"setlocale", os_setlocale},
   {"time",      os_time},
-  {"tmpname",   os_tmpname},
+  // {"tmpname",   os_tmpname},
   {NULL, NULL}
 };
 
