@@ -74,8 +74,17 @@ system-static: patches lua53 luazen milagro
 shared: gcc := gcc
 shared: cflags := -O2 -fPIC ${cflags_protection}
 shared: ldflags := -lm
+shared: platform := linux
 shared: patches lua53 luazen
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
+
+
+osx: gcc := gcc
+osx: cflags := -O2 -fPIC ${cflags_protection}
+osx: ldflags := -lm
+osx: platform := macosx
+osx: patches lua53 luazen
+CC=${gcc} CFLAGS="${cflags}" make -C src shared
 
 debug: gcc := gcc
 debug: cflags := -O0 -ggdb
