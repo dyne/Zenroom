@@ -30,7 +30,7 @@ before_install:
 
 script:
 - mkdir -p build
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make shared && make check-shared && cp -v src/zenroom-shared build/zenroom.x86 && make clean ; fi
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make osx && make check-shared && cp -v src/zenroom-shared build/zenroom.x86 && make clean ; fi
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make static && make check-static && cp -v src/zenroom-static build/zenroom.x86 && make clean ; fi
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make win && cp -v src/zenroom.exe build/ && make clean ; fi
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker exec -it emscripten make js && docker exec -it emscripten make check-js && cp -v src/zenroom.js build/ && sudo make clean ; fi
