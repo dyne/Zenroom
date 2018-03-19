@@ -10,6 +10,7 @@ ranlib := ranlib
 cflags_protection := -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
 cflags := -O2 ${cflags_protection}
 musl := ${pwd}/build/musl
+platform := posix
 
 test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
 
@@ -84,7 +85,7 @@ osx: cflags := -O2 -fPIC ${cflags_protection}
 osx: ldflags := -lm
 osx: platform := macosx
 osx: patches lua53 luazen
-CC=${gcc} CFLAGS="${cflags}" make -C src shared
+	CC=${gcc} CFLAGS="${cflags}" make -C src shared
 
 debug: gcc := gcc
 debug: cflags := -O0 -ggdb
@@ -95,7 +96,7 @@ lua53:
 	CC=${gcc} CFLAGS="${cflags} \
 	-DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
-	make -C ${pwd}/lib/lua53/src posix
+	make -C ${pwd}/lib/lua53/src ${platform}
 
 gmp:
 	cd ${pwd}/lib/gmp && CFLAGS="${cflags}" CC=${gcc} ./configure --disable-shared
