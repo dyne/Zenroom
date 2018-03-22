@@ -6,7 +6,7 @@ user = {
    rights    = { 4, 1, 7 } -- table of fixed length of types
 }
 
-s = schema_validation()
+s = require "schema_validation"
 
 rights = s.AllOf(s.NumberFrom(0, 7), s.Integer)
 

@@ -1,4 +1,21 @@
-print('testing local variables plus some extra stuff')
+-- $Id: locals.lua,v 1.37 2016/11/07 13:11:28 roberto Exp $
+-- See Copyright Notice in file all.lua
+
+print('testing local variables and environments')
+
+local debug = require"debug"
+
+
+-- bug in 5.1:
+
+local function f(x) x = nil; return x end
+assert(f(10) == nil)
+
+local function f() local x; return x end
+assert(f(10) == nil)
+
+local function f(x) x = nil; local y; return x, y end
+assert(f(10) == nil and select(2, f(20)) == nil)
 
 do
   local i = 10
@@ -21,8 +38,8 @@ local f
 x = 1
 
 a = nil
-loadstring('local a = {}')()
-assert(type(a) ~= 'table')
+load('local a = {}')()
+assert(a == nil)
 
 function f (a)
   local _1, _2, _3, _4, _5
@@ -51,56 +68,38 @@ f(2)
 assert(type(f) == 'function')
 
 
--- testing globals ;-)
-do
-  local f = {}
-  local _G = _G
-  for i=1,10 do f[i] = function (x) A=A+1; return A, _G.getfenv(x) end end
-  A=10; assert(f[1]() == 11)
-  for i=1,10 do assert(setfenv(f[i], {A=i}) == f[i]) end
-  assert(f[3]() == 4 and A == 11)
-  local a,b = f[8](1)
-  assert(b.A == 9)
-  a,b = f[8](0)
-  assert(b.A == 11)   -- `real' global
-  local g
-  local function f () assert(setfenv(2, {a='10'}) == g) end
-  g = function () f(); _G.assert(_G.getfenv(1).a == '10') end
-  g(); assert(getfenv(g).a == '10')
+local function getenv (f)
+  local a,b = debug.getupvalue(f, 1)
+  assert(a == '_ENV')
+  return b
 end
 
 -- test for global table of loaded chunks
-local function foo (s)
-  return loadstring(s)
-end
+assert(getenv(load"a=3") == _G)
+local c = {}; local f = load("a = 3", nil, nil, c)
+assert(getenv(f) == c)
+assert(c.a == nil)
+f()
+assert(c.a == 3)
 
-assert(getfenv(foo("")) == _G)
-local a = {loadstring = loadstring} 
-setfenv(foo, a)
-assert(getfenv(foo("")) == _G)
-setfenv(0, a)  -- change global environment
-assert(getfenv(foo("")) == a)
-setfenv(0, _G)
-
-
--- testing limits for special instructions
-
-local a
-local p = 4
-for i=2,31 do
-  for j=-3,3 do
-    assert(loadstring(string.format([[local a=%s;a=a+
-                                            %s;
-                                      assert(a
-                                      ==2^%s)]], j, p-j, i))) ()
-    assert(loadstring(string.format([[local a=%s;
-                                      a=a-%s;
-                                      assert(a==-2^%s)]], -j, p-j, i))) ()
-    assert(loadstring(string.format([[local a,b=0,%s;
-                                      a=b-%s;
-                                      assert(a==-2^%s)]], -j, p-j, i))) ()
-  end
-  p =2*p
+-- old test for limits for special instructions (now just a generic test)
+do
+  local i = 2
+  local p = 4    -- p == 2^i
+  repeat
+    for j=-3,3 do
+      assert(load(string.format([[local a=%s;
+                                        a=a+%s;
+                                        assert(a ==2^%s)]], j, p-j, i), '')) ()
+      assert(load(string.format([[local a=%s;
+                                        a=a-%s;
+                                        assert(a==-2^%s)]], -j, p-j, i), '')) ()
+      assert(load(string.format([[local a,b=0,%s;
+                                        a=b-%s;
+                                        assert(a==-2^%s)]], -j, p-j, i), '')) ()
+    end
+    p = 2 * p;  i = i + 1
+  until p <= 0
 end
 
 print'+'
@@ -122,6 +121,42 @@ if rawget(_G, "querytab") then
   end
 end
 
+
+-- testing lexical environments
+
+assert(_ENV == _G)
+
+do
+local dummy
+local _ENV = (function (...) return ... end)(_G, dummy)   -- {
+
+do local _ENV = {assert=assert}; assert(true) end
+mt = {_G = _G}
+local foo,x
+A = false    -- "declare" A
+do local _ENV = mt
+  function foo (x)
+    A = x
+    do local _ENV =  _G; A = 1000 end
+    return function (x) return A .. x end
+  end
+end
+assert(getenv(foo) == mt)
+x = foo('hi'); assert(mt.A == 'hi' and A == 1000)
+assert(x('*') == mt.A .. '*')
+
+do local _ENV = {assert=assert, A=10};
+  do local _ENV = {assert=assert, A=20};
+    assert(A==20);x=A
+  end
+  assert(A==10 and x==20)
+end
+assert(x==20)
+
+
 print('OK')
 
 return 5,f
+
+end   -- }
+

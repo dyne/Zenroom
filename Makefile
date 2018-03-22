@@ -126,11 +126,23 @@ check-milagro: milagro
 check-shared: test-exec := ${pwd}/src/zenroom-shared
 check-shared: check-milagro
 	@${test-exec} test/vararg.lua && \
+	${test-exec} test/utf8.lua && \
+	${test-exec} test/tpack.lua && \
+	${test-exec} test/strings.lua && \
+	${test-exec} test/sort.lua && \
+	${test-exec} test/math.lua && \
+	${test-exec} test/literals.lua && \
+	${test-exec} test/goto.lua && \
+	${test-exec} test/gc.lua && \
+	${test-exec} test/events.lua && \
+	${test-exec} test/coroutine.lua && \
+	${test-exec} test/code.lua && \
+	${test-exec} test/closure.lua && \
+	${test-exec} test/calls.lua && \
 	${test-exec} test/pm.lua && \
 	${test-exec} test/nextvar.lua && \
 	${test-exec} test/locals.lua && \
 	${test-exec} test/constructs.lua && \
-	${test-exec} test/bitbench.lua && \
 	${test-exec} test/cjson-test.lua && \
 	${test-exec} test/test_luazen.lua && \
 	${test-exec} test/schema.lua && \
@@ -140,11 +152,23 @@ check-shared: check-milagro
 check-static: test-exec := ${pwd}/src/zenroom-static -c ${pwd}/test/decode-test.conf
 check-static: check-milagro
 	@${test-exec} test/vararg.lua && \
+	${test-exec} test/utf8.lua && \
+	${test-exec} test/tpack.lua && \
+	${test-exec} test/strings.lua && \
+	${test-exec} test/sort.lua && \
+	${test-exec} test/math.lua && \
+	${test-exec} test/literals.lua && \
+	${test-exec} test/goto.lua && \
+	${test-exec} test/gc.lua && \
+	${test-exec} test/events.lua && \
+	${test-exec} test/coroutine.lua && \
+	${test-exec} test/code.lua && \
+	${test-exec} test/closure.lua && \
+	${test-exec} test/calls.lua && \
 	${test-exec} test/pm.lua && \
 	${test-exec} test/nextvar.lua && \
 	${test-exec} test/locals.lua && \
 	${test-exec} test/constructs.lua && \
-	${test-exec} test/bitbench.lua && \
 	${test-exec} test/cjson-test.lua && \
 	${test-exec} test/test_luazen.lua && \
 	${test-exec} test/schema.lua && \
@@ -154,12 +178,26 @@ check-static: check-milagro
 check-js: test-exec := nodejs ${pwd}/test/zenroom_exec.js ${pwd}/src/zenroom.js
 check-js:
 	@${test-exec} test/vararg.lua && \
+	${test-exec} test/utf8.lua && \
+	${test-exec} test/tpack.lua && \
+	${test-exec} test/strings.lua && \
+	${test-exec} test/sort.lua && \
+	${test-exec} test/math.lua && \
+	${test-exec} test/literals.lua && \
+	${test-exec} test/goto.lua && \
+	${test-exec} test/gc.lua && \
+	${test-exec} test/events.lua && \
+	${test-exec} test/coroutine.lua && \
+	${test-exec} test/code.lua && \
+	${test-exec} test/closure.lua && \
+	${test-exec} test/calls.lua && \
+	${test-exec} test/pm.lua && \
 	${test-exec} test/nextvar.lua && \
 	${test-exec} test/locals.lua && \
 	${test-exec} test/constructs.lua && \
-	${test-exec} test/bitbench.lua && \
 	${test-exec} test/cjson-test.lua && \
 	${test-exec} test/test_luazen.lua && \
+	${test-exec} test/schema.lua && \
 	echo "----------------\nAll tests passed for JAVASCRIPT binary build\n----------------"
 
 # TODO: complete js tests with schema and other lua extensions
@@ -167,11 +205,23 @@ check-js:
 check-debug: test-exec := valgrind ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
 check-debug: check-milagro
 	@${test-exec} test/vararg.lua && \
+	${test-exec} test/utf8.lua && \
+	${test-exec} test/tpack.lua && \
+	${test-exec} test/strings.lua && \
+	${test-exec} test/sort.lua && \
+	${test-exec} test/math.lua && \
+	${test-exec} test/literals.lua && \
+	${test-exec} test/goto.lua && \
+	${test-exec} test/gc.lua && \
+	${test-exec} test/events.lua && \
+	${test-exec} test/coroutine.lua && \
+	${test-exec} test/code.lua && \
+	${test-exec} test/closure.lua && \
+	${test-exec} test/calls.lua && \
 	${test-exec} test/pm.lua && \
 	${test-exec} test/nextvar.lua && \
 	${test-exec} test/locals.lua && \
 	${test-exec} test/constructs.lua && \
-	${test-exec} test/bitbench.lua && \
 	${test-exec} test/cjson-test.lua && \
 	${test-exec} test/test_luazen.lua && \
 	${test-exec} test/schema.lua && \
