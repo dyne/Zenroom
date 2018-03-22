@@ -13,7 +13,7 @@ and their specific use-cases.
 - compile extensions and load them from strings using the lua load()
   function directly with callbacks
   http://www.lua.org/manual/5.1/manual.html#lua_load
-  
+
 - if event based callback framework needed, try including libev
   https://github.com/brimworks/lua-ev
   http://software.schmorp.de/pkg/libev.html
@@ -39,10 +39,14 @@ X functional programming facility
 
 ## Developer experience
 
+- !! make a Jupyter kernel for zenroom
+  - http://jupyter-client.readthedocs.io/en/latest/kernels.html
+  - https://github.com/neomantra/lua_ipython_kernel
+
 - add list of functions and keywords for completion in ace
   the js editor used for the example. last review of way
   to include extensions (with prefix. or?)
-  
+
 - add superior testing and profiling facility with lust
   https://github.com/bjornbytes/lust
 

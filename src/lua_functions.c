@@ -52,6 +52,7 @@ extern void preload_modules(lua_State *lua);
 *
 * @return void* A pointer to the memory block.
 */
+// TODO: fix to work with lua 5.3 and implement simple memory fence
 void* memory_manager(void *ud, void *ptr, size_t osize, size_t nsize)
 {
   lsb_lua_sandbox *lsb = (lsb_lua_sandbox *)ud;
@@ -101,31 +102,13 @@ int zen_add_package(lua_State *L, char *name, lua_CFunction func) {
 	return luaL_dostring(L,cmd);
 }
 
-// 	lua_State* L = lsb->lua;
-
-// 	lua_getglobal(L, "loadstring");
-// 	if(!lua_iscfunction(L, -1)) {
-// 		error("lsb_load_string: function 'loadstring' not found");
-// 		return; }
-// 	func("memory addr: %p (%u bytes)", code, size);
-// 	lua_pushlstring(L, code, size);
-
-// 	if(lua_pcall(L, 1, 1, 0)) {
-// 		error("lsb_load_string: cannot load %s extension", name);
-// 		return; }
-
-// 	if (lua_isstring(L, -1) || lua_isnil(L, -1)) {
-// 		/* loader returned error message? */
-// 		error("error loading lua string: %s", name);
-// 		if(!lua_isnil(L,-1))
-// 			error("%s", lua_tostring(L, -1));
-// 		return; }
-
-// 	act("loaded lua from string: %s", name);
-
-// 	// run loaded module
-// 	lua_setglobal(L, name);
-// }
+void zen_add_function(lsb_lua_sandbox *lsb,
+                      lua_CFunction func,
+                      const char *func_name) {
+	if (!lsb || !func || !func_name) return;	
+	lua_pushcfunction(lsb->lua, func);
+	lua_setglobal(lsb->lua, func_name);
+}
 
 
 lsb_lua_sandbox *zen_init() {
@@ -149,14 +132,6 @@ lsb_lua_sandbox *zen_init() {
 		return NULL;
 	}
 
-	// // add the config to the lsb_config registry table
-	// lua_State *lua_cfg = load_zen_config(conf);
-	// if (!lua_cfg) {
-	// 	lua_close(lsb->lua);
-	// 	free(lsb);
-	// 	return NULL;
-	// }
-
 	lsb->error_message[0] = 0;
 	lsb->state_file = NULL;
 
@@ -167,25 +142,8 @@ lsb_lua_sandbox *zen_init() {
 	luaL_openlibs(lsb->lua);
 	//////////////////// end of create
 
-	// load package module
-	lua_pushcfunction(lsb->lua, luaopen_package);
-	lua_pushstring(lsb->lua, LUA_LOADLIBNAME);
-	lua_call(lsb->lua, 1, 1);
-	lua_newtable(lsb->lua);
-	lua_setmetatable(lsb->lua, -2);
-	lua_pop(lsb->lua, 1);
-
 	lua_pushlightuserdata(lsb->lua, lsb);
 	lua_setfield(lsb->lua, LUA_REGISTRYINDEX, LSB_THIS_PTR);
-
-	// lua_getglobal(lsb->lua, "require");
-	// if(!lua_iscfunction(lsb->lua, -1)) {
-	// 	error("LUA init: function 'require' not found");
-	// 	return NULL; }
-	// lua_pushstring(lsb->lua, "base");
-	// if(lua_pcall(lsb->lua, 1, 0, 0)) {
-	// 	error("LUA init: cannot load base library");
-	// 	return NULL; }
 
 	return(lsb);
 

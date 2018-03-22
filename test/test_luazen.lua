@@ -1,5 +1,6 @@
 -- some local definitions
 
+crypto = require "crypto"
 local strf = string.format
 local byte, char = string.byte, string.char
 local spack, sunpack = string.pack, string.unpack
@@ -66,23 +67,23 @@ print("------------------------------------------------------------")
 ------------------------------------------------------------------------
 print("testing lzf compression...")
 do
-	assert(compress_lzf("") == "")
-	assert(decompress_lzf("") == "")
+	assert(crypto.compress_lzf("") == "")
+	assert(crypto.decompress_lzf("") == "")
 	local x
-	x = "Hello world"; assert(decompress_lzf(compress_lzf(x)) == x)
-	x = ("a"):rep(301); assert(decompress_lzf(compress_lzf(x)) == x)
-	assert(#compress_lzf(("a"):rep(301)) < 30)
+	x = "Hello world"; assert(crypto.decompress_lzf(crypto.compress_lzf(x)) == x)
+	x = ("a"):rep(301); assert(crypto.decompress_lzf(crypto.compress_lzf(x)) == x)
+	assert(#crypto.compress_lzf(("a"):rep(301)) < 30)
 end
 
 ------------------------------------------------------------------------
 print("testing brieflz compression...")
 do
-	assert(compress_blz("") == "\0\0\0\0")
-	assert(decompress_blz("\0\0\0\0") == "")
+	assert(crypto.compress_blz("") == "\0\0\0\0")
+	assert(crypto.decompress_blz("\0\0\0\0") == "")
 	local x
-	x = "Hello world"; assert(decompress_blz(compress_blz(x)) == x)
-	x = ("a"):rep(301); assert(decompress_blz(compress_blz(x)) == x)
-	assert(#compress_blz(("a"):rep(301)) < 30)
+	x = "Hello world"; assert(crypto.decompress_blz(crypto.compress_blz(x)) == x)
+	x = ("a"):rep(301); assert(crypto.decompress_blz(crypto.compress_blz(x)) == x)
+	assert(#crypto.compress_blz(("a"):rep(301)) < 30)
 end
 
 ------------------------------------------------------------------------
@@ -90,7 +91,7 @@ print("testing luazen legacy...")
 
 -- xor
 do
-	local xor = xor
+	local xor = crypto.xor
 	pa5 = xts'aa55'; p5a = xts'55aa'; p00 = xts'0000'; pff = xts'ffff'
 	assert(xor(pa5, p00) == pa5)
 	assert(xor(pa5, pff) == p5a)
@@ -108,57 +109,19 @@ end
 if rc4 then do
 	local k = ('1'):rep(16)
 	local plain = 'abcdef'
-	local encr = rc4(plain, k)
+	local encr = crypto.rc4(plain, k)
 	assert(encr == xts"2598fae14d66")
-	encr = rc4raw(plain, k) -- "raw", no drop
+	encr = crypto.rc4raw(plain, k) -- "raw", no drop
 	assert(encr == xts"0178a109f221")
 	plain = plain:rep(100)
-	assert(plain == rc4(rc4(plain, k), k))
+	assert(plain == crypto.rc4(crypto.rc4(plain, k), k))
 	end 
 end
 
-------------------------------------------------------------------------
--- rabbit
-if rabbit then do
-	-- quick test with some eSTREAM test vectors
-	local key, iv, txt, exp, ec
-	local key0 = ('\0'):rep(16)
-	local iv0 = ('\0'):rep(8)
-	local txt0 = ('\0'):rep(48)
-	ec = rabbit(txt0, key0, iv0)
-	exp = xts[[	EDB70567375DCD7CD89554F85E27A7C6
-				8D4ADC7032298F7BD4EFF504ACA6295F
-				668FBF478ADB2BE51E6CDE292B82DE2A ]]
-	assert(ec == exp)
-	
-	iv = xts'2717F4D21A56EBA6'
-	ec = rabbit(txt0, key0, iv)
-	exp = xts[[	4D1051A123AFB670BF8D8505C8D85A44
-				035BC3ACC667AEAE5B2CF44779F2C896
-				CB5115F034F03D31171CA75F89FCCB9F ]]
-	assert(ec == exp)
-	
-	--Set 5, vector# 63
-	iv = xts "0000000000000001"
-	ec = rabbit(txt0, key0, iv)
-	exp = xts[[	55FB0B90A9FB953AE96D372BADBEBD30
-				F531A454D31B669BCD8BAAD78C6C9994
-				FFCCEC7ACB22F914A072DA22A617C0B7 ]]
-	assert(ec == exp)
-	
-	--Set6, vector# 0
-	key = xts "0053A6F94C9FF24598EB3E91E4378ADD"
-	iv =  xts "0D74DB42A91077DE"
-	ec = rabbit(txt0, key, iv)
-	exp = xts[[	75D186D6BC6905C64F1B2DFDD51F7BFC
-				D74F926E6976CD0A9B1A3AE9DD8CB43F
-				F5CD60F2541FF7F22C5C70CE07613989 ]]
-	assert(ec == exp)
-	end--do
-end--if
 
 ------------------------------------------------------------------------
 -- md5
+md5 = crypto.md5
 if md5 then do
 	assert(stx(md5('')) == 'd41d8cd98f00b204e9800998ecf8427e')
 	assert(stx(md5('abc')) == '900150983cd24fb0d6963f7d28e17f72')
@@ -167,6 +130,8 @@ end--if
 ------------------------------------------------------------------------
 print("testing base64, base58...")
 
+encode_b64 = crypto.encode_b64
+decode_b64 = crypto.decode_b64
 -- b64 encode/decode
 do 
 	local be = encode_b64
@@ -198,6 +163,8 @@ end --b64
 
 ------------------------------------------------------------------------
 -- b58encode  (check on-line at eg. http://lenschulwitz.com/base58)
+encode_b58 = crypto.encode_b58
+decode_b58 = crypto.decode_b58
 do
 	assert(encode_b58(xts'01') == '2')
 	assert(encode_b58(xts'0001') == '12')
@@ -223,6 +190,8 @@ do
 end
 ------------------------------------------------------------------------
 print("testing norx aead...")
+encrypt_norx = crypto.encrypt_norx
+decrypt_norx = crypto.decrypt_norx
 
 k = ('k'):rep(32)  -- key
 n = ('n'):rep(32)  -- nonce
@@ -280,6 +249,10 @@ assert(r == m)
 
 ------------------------------------------------------------------------
 -- blake2b tests
+hash_blake2b = crypto.hash_blake2b
+hash_init_blake2b = crypto.hash_init_blake2b
+hash_update_blake2b = crypto.hash_update_blake2b
+hash_final_blake2b = crypto.hash_final_blake2b
 
 print("testing blake2b...")
 
@@ -333,12 +306,12 @@ assert(dig51==dig55)
 
 print("testing x25519 key exchange...")
 
-apk, ask = keygen_session_x25519() -- alice keypair
-bpk, bsk = keygen_session_x25519() -- bob keypair
-assert(apk == pubkey_session_x25519(ask))
+apk, ask = crypto.keygen_session_x25519() -- alice keypair
+bpk, bsk = crypto.keygen_session_x25519() -- bob keypair
+assert(apk == crypto.pubkey_session_x25519(ask))
 
-k1 = exchange_session_x25519(ask, bpk)
-k2 = exchange_session_x25519(bsk, apk)
+k1 = crypto.exchange_session_x25519(ask, bpk)
+k2 = crypto.exchange_session_x25519(bsk, apk)
 assert(k1 == k2)
 
 
@@ -349,18 +322,18 @@ print("testing ed25519 signature...")
 
 t = "The quick brown fox jumps over the lazy dog"
 
-pk, sk = keygen_sign_ed25519() -- signature keypair
-assert(pk == pubkey_sign_ed25519(sk))
+pk, sk = crypto.keygen_sign_ed25519() -- signature keypair
+assert(pk == crypto.pubkey_sign_ed25519(sk))
 
-sig = sign_ed25519(sk, pk, t)
+sig = crypto.sign_ed25519(sk, pk, t)
 assert(#sig == 64)
 --~ px(sig, 'sig')
 
 -- check signature
-assert(check_ed25519(sig, pk, t))
+assert(crypto.check_ed25519(sig, pk, t))
 
 -- modified text doesn't check
-assert(not check_ed25519(sig, pk, t .. "!"))
+assert(not crypto.check_ed25519(sig, pk, t .. "!"))
 
 
 ------------------------------------------------------------------------
@@ -372,7 +345,7 @@ pw = "hello"
 salt = "salt salt salt"
 k = ""
 -- c0 = os.clock()
-k = kdf_argon2i(pw, salt, 1000, 3)
+k = crypto.kdf_argon2i(pw, salt, 1000, 3)
 assert(#k == 32)
 assert(encode_b64(k) == "UvEmGTUztnx7XDjZ0uIjg8E8d0Le6NHoZPqGBizo/ms=")
 print("argon2i (1MB, 3 iter)")
