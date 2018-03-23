@@ -27,7 +27,6 @@
 #include <luazen.h>
 #include <lua_functions.h>
 
-#include <crypto.h>
 #include <zenroom.h>
 
 #ifdef __EMSCRIPTEN__
@@ -39,6 +38,10 @@ extern int lua_cjson_safe_new(lua_State *l);
 extern int lua_cjson_new(lua_State *l);
 extern void zen_add_io(lua_State *L);
 extern zen_extension_t zen_extensions[];
+
+extern int luaopen_crypto(lua_State *L);
+extern int luaopen_octet(lua_State *L);
+
 
 luaL_Reg lualibs[] = {
 	{LUA_LOADLIBNAME, luaopen_package},
@@ -100,6 +103,8 @@ int zen_require(lua_State *L) {
 	// require our own C to lua extensions
 	if     (strcmp(s, "crypto")==0) {
 		luaL_requiref(L, s, luaopen_crypto, 1); return 1; }
+	else if(strcmp(s, "octet")  ==0) {
+		luaL_requiref(L, s, luaopen_octet, 1);	return 1; }
 	else if(strcmp(s, "json")  ==0) {
 		luaL_requiref(L, s, lua_cjson_safe_new, 1);	return 1; }
 	else if(strcmp(s, "cjson_full") ==0) {

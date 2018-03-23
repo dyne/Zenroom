@@ -79,7 +79,7 @@ shared: gcc := gcc
 shared: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"LINUX\"'
 shared: ldflags := -lm
 shared: platform := linux
-shared: patches lua53 luazen
+shared: patches lua53 luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
 
 
@@ -92,7 +92,7 @@ osx: patches lua53 luazen
 
 debug: gcc := gcc
 debug: cflags := -O0 -ggdb -D'ARCH=\"LINUX\"'
-debug: patches lua53 luazen
+debug: patches lua53 luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
 
 lua53:
