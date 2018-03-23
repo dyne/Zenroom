@@ -6,19 +6,19 @@
 #include <lualib_complex.c>
 #include <lualib_lisp.c>
 #include <lualib_inspect.c>
-#include <lualib_schema_validation.c>
 #include <lualib_statemachine.c>
 #include <lualib_debugger.c>
 #include <lualib_functional.c>
 #include <lualib_matrix.c>
+#include <lualib_schema.c>
 zen_extension_t zen_extensions[] = {
 	{"complex", &complex_len, (const char *)complex},
 	{"lisp", &lisp_len, (const char *)lisp},
 	{"inspect", &inspect_len, (const char *)inspect},
-	{"schema_validation", &schema_validation_len, (const char *)schema_validation},
 	{"statemachine", &statemachine_len, (const char *)statemachine},
 	{"debugger", &debugger_len, (const char *)debugger},
 	{"functional", &functional_len, (const char *)functional},
 	{"matrix", &matrix_len, (const char *)matrix},
+	{"schema", &schema_len, (const char *)schema},
     { NULL, NULL, NULL }
 };
