@@ -137,7 +137,7 @@ lsb_lua_sandbox *zen_init() {
 
 	// initialise global variables
 	lsb_setglobal_string(lsb, "VERSION", VERSION);
-
+	lsb_setglobal_string(lsb, "ARCH", ARCH);
 	// open all standard lua libraries
 	luaL_openlibs(lsb->lua);
 	//////////////////// end of create

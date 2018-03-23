@@ -334,7 +334,7 @@ assert(table.concat(a, ",", 2) == "b,c")
 assert(table.concat(a, ",", 3) == "c")
 assert(table.concat(a, ",", 4) == "")
 
-if not _port then
+if not ((ARCH == "UNIX") or (ARCH == "MUSL")) then
 
   local locales = { "ptb", "pt_BR.iso88591", "ISO-8859-1" }
   local function trylocale (w)
