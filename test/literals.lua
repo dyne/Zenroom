@@ -262,29 +262,33 @@ end
 
 
 -- testing decimal point locale
-if os.setlocale("pt_BR") or os.setlocale("ptb") then
-  assert(tonumber("3,4") == 3.4 and tonumber"3.4" == 3.4)
-  assert(tonumber("  -.4  ") == -0.4)
-  assert(tonumber("  +0x.41  ") == 0X0.41)
-  assert(not load("a = (3,4)"))
-  assert(assert(load("return 3.4"))() == 3.4)
-  assert(assert(load("return .4,3"))() == .4)
-  assert(assert(load("return 4."))() == 4.)
-  assert(assert(load("return 4.+.5"))() == 4.5)
+if not ((ARCH == "UNIX") or (ARCH == "MUSL")) then
 
-  assert(" 0x.1 " + " 0x,1" + "-0X.1\t" == 0x0.1)
+   if os.setlocale("pt_BR") or os.setlocale("ptb") then
+	  assert(tonumber("3,4") == 3.4 and tonumber"3.4" == 3.4)
+	  assert(tonumber("  -.4  ") == -0.4)
+	  assert(tonumber("  +0x.41  ") == 0X0.41)
+	  assert(not load("a = (3,4)"))
+	  assert(assert(load("return 3.4"))() == 3.4)
+	  assert(assert(load("return .4,3"))() == .4)
+	  assert(assert(load("return 4."))() == 4.)
+	  assert(assert(load("return 4.+.5"))() == 4.5)
 
-  assert(tonumber"inf" == nil and tonumber"NAN" == nil)
+	  assert(" 0x.1 " + " 0x,1" + "-0X.1\t" == 0x0.1)
 
-  assert(assert(load(string.format("return %q", 4.51)))() == 4.51)
+	  assert(tonumber"inf" == nil and tonumber"NAN" == nil)
 
-  local a,b = load("return 4.5.")
-  assert(string.find(b, "'4%.5%.'"))
+	  assert(assert(load(string.format("return %q", 4.51)))() == 4.51)
 
-  assert(os.setlocale("C"))
-else
-  (Message or print)(
-   '\n >>> pt_BR locale not available: skipping decimal point tests <<<\n')
+	  local a,b = load("return 4.5.")
+	  assert(string.find(b, "'4%.5%.'"))
+
+	  assert(os.setlocale("C"))
+   else
+	  (Message or print)(
+		 '\n >>> pt_BR locale not available: skipping decimal point tests <<<\n')
+   end
+
 end
 
 
