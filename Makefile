@@ -11,6 +11,7 @@ cflags_protection := -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overf
 cflags := -O2 ${cflags_protection}
 musl := ${pwd}/build/musl
 platform := posix
+luasrc := ${pwd}/lib/lua53/src
 
 test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
 
@@ -19,6 +20,7 @@ patches:
 
 embed-lua:
 	@echo "Embedding all files in src/lua"
+	${gcc} -I${luasrc} -o build/luac ${luasrc}/luac.c ${luasrc}/liblua.a -lm
 	./build/embed-lualibs
 	@echo "File generated: src/lualibs_detected.c"
 	@echo "    and lualbs: src/lualib_*.c"
