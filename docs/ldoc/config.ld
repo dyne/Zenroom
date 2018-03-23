@@ -39,9 +39,9 @@ backtick_references=false
 file={
 	'crypto.lua',
 	'../../src/lua/functional.lua',
-	'/usr/share/lua/5.1/ldoc/builtin/math.lua',
-	'/usr/share/lua/5.1/ldoc/builtin/string.lua',
-	'/usr/share/lua/5.1/ldoc/builtin/table.lua'
+	'math.lua',
+	'string.lua',
+	'table.lua',
 }
 dir='../pub/api'
 -- readme='../../README.md'

@@ -88,15 +88,15 @@ local dbg
 -- Default dbg.read function
 local function dbg_read(prompt)
 	dbg.write(prompt)
-	return read()
+	return io.read()
 end
 
 -- Default dbg.write function
 local function dbg_write(str, ...)
 	if select("#", ...) == 0 then
-		write(str or "<NULL>")
+		io.write(str or "<NULL>")
 	else
-		write(string.format(str, ...))
+		io.write(string.format(str, ...))
 	end
 end
 
