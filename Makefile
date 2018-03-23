@@ -59,7 +59,7 @@ html: patches  lua53 luazen
 win: gcc=x86_64-w64-mingw32-gcc
 win: ar=x86_64-w64-mingw32-ar
 win: ranlib=x86_64-w64-mingw32-ranlib
-win: cflags+=-D'ARCH=\"WIN\"'
+win: cflags += -D'ARCH=\"WIN\"' -std=c99
 win: platform = posix
 win: patches lua53 luazen milagro-win
 	CC=${gcc} CFLAGS="${cflags}" make -C src win
