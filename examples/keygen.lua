@@ -6,11 +6,12 @@
 -- exchanged among different people will lead to the same secret which
 -- is then usable for asymmetric encryption.
 
-json = cjson()
-pk, sk = keygen_session_x25519()
+json = require "json"
+crypto = require "crypto"
+pk, sk = crypto.keygen_session_x25519()
 keypair = json.encode(
    {
-	  public=encode_b58(pk),
-	  secret=encode_b58(sk)
+	  public=crypto.encode_b58(pk),
+	  secret=crypto.encode_b58(sk)
    })
 print(keypair)
