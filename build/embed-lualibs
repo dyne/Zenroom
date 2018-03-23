@@ -34,7 +34,7 @@ for i in ${(f)libs}; do
 	f="lualib_${n}.c"
 	print "+ src/$f ($i)"
 	tmp=`mktemp -d`
-	./lib/lua53/src/luac -o ${tmp}/${n} $i
+	./build/luac -o ${tmp}/${n} $i
 	pwd=`pwd`
 	pushd $tmp
 	xxd -i ${n} > ${pwd}/src/$f

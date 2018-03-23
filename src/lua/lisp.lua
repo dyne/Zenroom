@@ -1286,9 +1286,9 @@ end
 local function repl(givenOptions)
     local options = {
         prompt = '>> ',
-        read = read,
-        write = write,
-        flush = flush,
+        read = io.read,
+        write = io.write,
+        flush = io.flush,
         print = print,
     }
     for k,v in pairs(givenOptions or {}) do

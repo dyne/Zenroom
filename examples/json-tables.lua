@@ -2,11 +2,11 @@
 -- (called tables) and convert them back and forth to JSON strings
 
 -- prepare the JSON conversion module
-json = cjson()
+json = require "json"
 
 -- prepare the inspection module to print contents of complex data
 -- structures, using i.print() instead of print()
-i = inspect()
+i = require "inspect"
 
 -- take an example JSON string
 DATA = [[
@@ -57,7 +57,7 @@ DATA = [[
 -- operations can be done (see @tables and @functions modules)
 superheroes = json.decode(DATA)
 
-f = functional()
+f = require "functional"
 
 -- iterate through the members array and print out only names
 for k,v in ipairs(superheroes.members) do
