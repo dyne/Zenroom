@@ -106,7 +106,7 @@ int zen_require(lua_State *L) {
 		luaL_requiref(L, s, lua_cjson_new, 1); return 1; }
 	else {
 		// shall we bail out and abort execution here?
-		warning("required extension not found: %s");
+		warning("required extension not found: %s",s);
 		return 1; }
 
 	return 0;

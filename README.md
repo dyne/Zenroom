@@ -101,6 +101,15 @@ This software includes code by:
 - Mark Pulford (lua-cjson)
 - Daan Sprenkels (randombytes)
 
+And Lua extensions written and documented by:
+
+- Roland Yonaba (moses)
+- Enrique García Cota (inspect)
+- Sebastian Schoener (schema)
+- Kyle Conroy (finite state machine)
+- Scott Lembcke (debugger)
+- Michael Lutz and David Manura (matrix and complex)
+
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License version 3
 as published by the Free Software Foundation.
