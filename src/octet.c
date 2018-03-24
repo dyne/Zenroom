@@ -19,6 +19,7 @@
 #include <jutils.h>
 #include <zenroom.h>
 #include <lua_functions.h>
+#include <randombytes.h>
 
 #include <amcl.h>
 
@@ -157,7 +158,7 @@ static int string(lua_State *L) {
 /***
     Print an octet as a string of hexadecimal numbers or import a string of hex numbers.
 
-    @string[opt] data_hex **optional** a string of hex numbers whose contents in bytes are imported
+    @string[opt] data_hex a string of hex numbers whose contents in bytes are imported
     @function octet:hex(data_hex)
 */
 static int hex(lua_State *L) {
@@ -178,6 +179,25 @@ static int hex(lua_State *L) {
 	return 1;
 }
 
+/***
+    Randomize contents of an octet up to length, or to its maximum
+    size if argument is omitted.
+
+    @int[opt] length amount of random bytes to gather
+    @function octet:random(length)
+*/
+static int octrng(lua_State *L) {
+	octet *o = o_arg(L,1);
+	if(!o) return 0;
+	const int len = luaL_optinteger(L, 2, o->max);
+	char *buf = malloc(len);
+	randombytes(buf,len);
+	o->len=0;
+	OCT_jbytes(o,buf,len);
+	free(buf);
+	return 1;
+}
+
 static int jstring(lua_State *L) {
 	octet *o = o_arg(L,1);
 	if(!o) return 0;
@@ -190,7 +210,7 @@ static int jstring(lua_State *L) {
 /***
     Pad an octet with leading zeroes up to indicated length or its maximum size.
 
-    @int[opt=octet:max] length **optional** pad to this size, will use maximum octet size if omitted
+    @int[opt=octet:max] length pad to this size, will use maximum octet size if omitted
     @function octet:pad(length)
 */
 static int pad(lua_State *L) {
@@ -237,6 +257,7 @@ int luaopen_octet(lua_State *L) {
 		{"length", length},
 		{"size", length},
 
+		{"random", octrng},
 		{"pad", pad},
 		{"xor", xor},
 		{"jstring", jstring},

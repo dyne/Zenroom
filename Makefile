@@ -1,3 +1,21 @@
+#  Zenroom (GNU Makefile build system)
+#
+#  (c) Copyright 2017-2018 Dyne.org foundation
+#  designed, written and maintained by Denis Roio <jaromil@dyne.org>
+#
+#  This program is free software: you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License version
+#  3 as published by the Free Software Foundation.
+#
+#  This program is distributed in the hope that it will be useful, but
+#  WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#  General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see
+#  <http://www.gnu.org/licenses/>.
+
 pwd := $(shell pwd)
 luasand := ${pwd}/build/lua_sandbox
 mil := ${pwd}/build/milagro
@@ -42,21 +60,21 @@ wasm: gcc=${EMSCRIPTEN}/emcc
 wasm: ar=${EMSCRIPTEN}/emar
 wasm: cflags := -O2 -D'ARCH=\"WASM\"'
 wasm: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s MODULARIZE=1
-wasm: patches lua53 luazen
+wasm: patches lua53 luazen milagro-js
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 
 demo: gcc=${EMSCRIPTEN}/emcc
 demo: ar=${EMSCRIPTEN}/emar
 demo: cflags := -O2 -D'ARCH=\"WASM\"'
 demo: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s ASSERTIONS=1 --shell-file ${extras}/shell_minimal.html -s NO_EXIT_RUNTIME=1 -s USE_SDL=0 -s USE_PTHREADS=0
-demo: patches lua53 luazen
+demo: patches lua53 luazen milagro-js
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src demo
 
 html: gcc=${EMSCRIPTEN}/emcc
 html: ar=${EMSCRIPTEN}/emar
 html: cflags := -O2 -D'ARCH=\"JS\"'
 html: ldflags := -sEXPORTED_FUNCTIONS='["_main","_zenroom_exec"]'
-html: patches  lua53 luazen
+html: patches  lua53 luazen milagro-js
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src html
 
 win: gcc=x86_64-w64-mingw32-gcc
@@ -117,7 +135,7 @@ luazen:
 
 milagro:
 	@echo "-- Building milagro (POSIX)"
-	if ! [ -r ${pwd}/lib/milagro-crypto-c/CMakeCache.txt ]; then cd ${pwd}/lib/milagro-crypto-c && CC=${gcc} cmake . -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DCMAKE_C_FLAGS="${cflags}" -DAMCL_CHUNK=32 -DAMCL_CURVE=${ecc_curves} -DAMCL_RSA=${rsa_bits}; fi
+	if ! [ -r ${pwd}/lib/milagro-crypto-c/CMakeCache.txt ]; then cd ${pwd}/lib/milagro-crypto-c && CC=${gcc} cmake . -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DCMAKE_C_FLAGS="${cflags}" -DAMCL_CHUNK=32 -DAMCL_CURVE="${ecc_curves}" -DAMCL_RSA="${rsa_bits}"; fi
 	if ! [ -r ${pwd}/lib/milagro-crypto-c/lib/libamcl_core.a ]; then CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c; fi
 
 milagro-win:
@@ -126,8 +144,6 @@ milagro-win:
 	if ! [ -r ${pwd}/lib/milagro-crypto-c/CMakeCache.txt ]; then cd ${pwd}/lib/milagro-crypto-c && CC=${gcc} cmake . -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DCMAKE_C_FLAGS="${cflags}" -DAMCL_CHUNK=32 -DAMCL_CURVE=${ecc_curves} -DAMCL_RSA=${rsa_bits} -DCMAKE_SHARED_LIBRARY_LINK_FLAGS="" -DCMAKE_SYSTEM_NAME="Windows"; fi
 	if ! [ -r ${pwd}/lib/milagro-crypto-c/lib/libamcl_core.a ]; then CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c; fi
 
-milagro-js: gcc=${EMSCRIPTEN}/emcc
-milagro-js: ar=${EMSCRIPTEN}/emar
 milagro-js:
 	@echo "-- Building milagro (JS Emscripten)"
 	sed -i 's/project (AMCL)/project (AMCL C)/' ${pwd}/lib/milagro-crypto-c/CMakeLists.txt

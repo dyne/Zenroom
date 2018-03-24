@@ -1,8 +1,26 @@
+#  Zenroom (GNU Makefile build system)
+#
+#  (c) Copyright 2017-2018 Dyne.org foundation
+#  designed, written and maintained by Denis Roio <jaromil@dyne.org>
+#
+#  This program is free software: you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License version
+#  3 as published by the Free Software Foundation.
+#
+#  This program is distributed in the hope that it will be useful, but
+#  WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#  General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see
+#  <http://www.gnu.org/licenses/>.
+
 CC?=gcc
 VERSION := $(shell cat ../VERSION)
 ARCH := $(shell uname -m)
 CFLAGS  += -I. -I../lib/lua53/src -I../lib/milagro-crypto-c/include -Wall -Wextra
-SOURCES := jutils.o lua_functions.o zenroom.o lua_cjson.o strbuf.o fpconv.o repl.o lualibs_detected.o lua_modules.o lua_io.o crypto.o octet.o rsa.o
+SOURCES := jutils.o lua_functions.o zenroom.o lua_cjson.o strbuf.o fpconv.o repl.o lualibs_detected.o lua_modules.o lua_io.o crypto.o octet.o rsa.o randombytes.o
 LDADD   := ../lib/lua53/src/liblua.a
 LDADD   += ../build/luazen/libluazen.a
 
