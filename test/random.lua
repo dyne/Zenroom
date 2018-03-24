@@ -1,0 +1,10 @@
+octet = require 'octet'
+rand = octet.new(64)
+rand:random(64)
+print(rand:hex()) 
+rand:random(64)
+print(rand:hex()) 
+rand:random(64)
+print(rand:hex()) 
+rand:random(64)
+print(rand:hex()) 
