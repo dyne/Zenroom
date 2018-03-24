@@ -20,10 +20,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <string.h>
-#include <stdlib.h>
 
 #include "randombytes.h"
+
+#include <stdlib.h>
 
 #if defined(_WIN32)
 /* Windows */
@@ -196,19 +196,15 @@ static int randombytes_bsd_randombytes(void *buf, size_t n)
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 int randombytes(void *buf, size_t n) {
+	size_t c;
 	char *bytes = (char*) EM_ASM_INT({
 			const crypto = require('crypto');
 			var out = _malloc($0);
-			const rand = crypto.randomBytes($0);
-		    for(var i in rand) {out[i] = rand[i];}
-		    writeArrayToMemory(rand, out);
+			writeArrayToMemory(crypto.randomBytes($0), out);
 			return out;
 		}, n);
-			// // var randomBytes = _malloc($0);
-			// var randomBytes = new Uint8Array($0);
-			// Module.getRandomValue(randomBytes);
-			// return randomBytes;
-	memcpy(buf,bytes,n);
+	for(c=0;c<n;c++)
+		((char*)buf)[c] = bytes[c];
 	free(bytes);
 	return 0;
 }
