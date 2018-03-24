@@ -5,8 +5,9 @@ CFLAGS  += -I. -I../lib/lua53/src -I../lib/milagro-crypto-c/include -Wall -Wextr
 SOURCES := jutils.o lua_functions.o zenroom.o lua_cjson.o strbuf.o fpconv.o repl.o lualibs_detected.o lua_modules.o lua_io.o crypto.o octet.o rsa.o
 LDADD   := ../lib/lua53/src/liblua.a
 LDADD   += ../build/luazen/libluazen.a
-LDADD   += -L../lib/milagro-crypto-c/lib
-LDADD   += -l:libamcl_core.a -l:libamcl_rsa_2048.a -l:libamcl_curve_ED25519.a
+
+milib := ../lib/milagro-crypto-c/lib
+LDADD += ${milib}/libamcl_core.a ${milib}/libamcl_rsa_2048.a ${milib}/libamcl_curve_ED25519.a
 
 
 all: shared

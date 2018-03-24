@@ -18,6 +18,8 @@
 
 #include <jutils.h>
 #include <zenroom.h>
+#include <lua_functions.h>
+
 #include <amcl.h>
 
 
@@ -222,8 +224,9 @@ static int length(lua_State *L) {
 }
 
 int luaopen_octet(lua_State *L) {
-	const struct luaL_Reg octet_f[] = {{"new",newoctet},{NULL,NULL}};
-	const struct luaL_Reg octet_m[] = {
+	const struct luaL_Reg octet_class[]
+		= {{"new",newoctet},{NULL,NULL}};
+	const struct luaL_Reg octet_methods[] = {
 		{"empty", empty},
 		{"base64", base64},
 		{"hex"   , hex},
@@ -241,20 +244,7 @@ int luaopen_octet(lua_State *L) {
 		{"__tostring",string},
 		{NULL,NULL}
 	};
-
-	luaL_newmetatable(L, "zenroom.octet");
-	lua_pushstring(L, "__index");
-	lua_pushvalue(L, -2);  /* pushes the metatable */
-	lua_settable(L, -3);  /* metatable.__index = metatable */
-	luaL_setfuncs(L,octet_m,0);
-//	luaL_openlib(L, NULL, octet_methods, 0);
-	luaL_pushmodule(L,"octet",1);
-	lua_insert(L,-1);
-	luaL_setfuncs(L,octet_f,0);
-//  luaL_openlib(L, "octet", octet, 0);
-	// luaL_newlib(L, octet);
-	// lua_getfield(L, -1, "octet");
-	// lua_setglobal(L, "octet");
+	zen_add_class(L, "octet", octet_class, octet_methods);
 	return 1;
 }
 
