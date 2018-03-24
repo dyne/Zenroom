@@ -189,3 +189,34 @@ int zen_exec_script(lsb_lua_sandbox *lsb, const char *script) {
 	}
 	return 0;
 }
+
+void zen_add_class(lua_State *L, char *name,
+                  luaL_Reg *class, luaL_Reg *methods) {
+	char classmeta[512];
+	snprintf(classmeta,511,"zenroom.%s", name);
+	luaL_newmetatable(L, classmeta);
+	lua_pushstring(L, "__index");
+	lua_pushvalue(L, -2);  /* pushes the metatable */
+	lua_settable(L, -3);  /* metatable.__index = metatable */
+	luaL_setfuncs(L,methods,0);
+
+	luaL_findtable(L, LUA_REGISTRYINDEX, LUA_LOADED_TABLE, 1);
+	if (lua_getfield(L, -1, name) != LUA_TTABLE) {
+		// no LOADED[modname]?
+		lua_pop(L, 1);  // remove previous result
+		// try global variable (and create one if it does not exist)
+		lua_pushglobaltable(L);
+		// TODO: 'sizehint' 1 here is for new() constructor. if more
+		// than one it should be counted on the class
+		if (luaL_findtable(L, 0, name, 1) != NULL)
+			luaL_error(L, "name conflict for module '%s'", name);
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -3, name);  /* LOADED[modname] = new table */
+	}
+	lua_remove(L, -2);  /* remove LOADED table */
+
+	// in lua 5.1 was: luaL_pushmodule(L,name,1);
+
+	lua_insert(L,-1);
+	luaL_setfuncs(L,class,0);
+}

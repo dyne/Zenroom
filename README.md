@@ -91,7 +91,7 @@ This software includes code by:
 
 - R. Ierusalimschy, W. Celes and L.H. de Figueiredo (lua)
 - Rich Felker, et al (musl-libc)
-- Mike Scott and Kealan McCusker (milagro)
+- Mike Scott and Kealan McCusker (milagro-crypto-c)
 - Phil Leblanc (luazen)
 - Joergen Ibsen (brieflz)
 - Loup Vaillant (blake2b, argon2i, ed/x25519)
