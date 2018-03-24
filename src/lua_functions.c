@@ -190,8 +190,33 @@ int zen_exec_script(lsb_lua_sandbox *lsb, const char *script) {
 	return 0;
 }
 
+static const char *zen_lua_findtable (lua_State *L, int idx,
+                                   const char *fname, int szhint) {
+	const char *e;
+	if (idx) lua_pushvalue(L, idx);
+	do {
+		e = strchr(fname, '.');
+		if (e == NULL) e = fname + strlen(fname);
+		lua_pushlstring(L, fname, e - fname);
+		if (lua_rawget(L, -2) == LUA_TNIL) {  /* no such field? */
+			lua_pop(L, 1);  /* remove this nil */
+			lua_createtable(L, 0, (*e == '.' ? 1 : szhint)); /* new table for field */
+			lua_pushlstring(L, fname, e - fname);
+			lua_pushvalue(L, -2);
+			lua_settable(L, -4);  /* set new table into field */
+		}
+		else if (!lua_istable(L, -1)) {  /* field has a non-table value? */
+			lua_pop(L, 2);  /* remove table and value */
+			return fname;  /* return problematic part of the name */
+		}
+		lua_remove(L, -2);  /* remove previous table */
+		fname = e + 1;
+	} while (*e == '.');
+	return NULL;
+}
+
 void zen_add_class(lua_State *L, char *name,
-                  luaL_Reg *class, luaL_Reg *methods) {
+                  const luaL_Reg *class, const luaL_Reg *methods) {
 	char classmeta[512];
 	snprintf(classmeta,511,"zenroom.%s", name);
 	luaL_newmetatable(L, classmeta);
@@ -200,7 +225,7 @@ void zen_add_class(lua_State *L, char *name,
 	lua_settable(L, -3);  /* metatable.__index = metatable */
 	luaL_setfuncs(L,methods,0);
 
-	luaL_findtable(L, LUA_REGISTRYINDEX, LUA_LOADED_TABLE, 1);
+	zen_lua_findtable(L, LUA_REGISTRYINDEX, LUA_LOADED_TABLE, 1);
 	if (lua_getfield(L, -1, name) != LUA_TTABLE) {
 		// no LOADED[modname]?
 		lua_pop(L, 1);  // remove previous result
@@ -208,7 +233,7 @@ void zen_add_class(lua_State *L, char *name,
 		lua_pushglobaltable(L);
 		// TODO: 'sizehint' 1 here is for new() constructor. if more
 		// than one it should be counted on the class
-		if (luaL_findtable(L, 0, name, 1) != NULL)
+		if (zen_lua_findtable(L, 0, name, 1) != NULL)
 			luaL_error(L, "name conflict for module '%s'", name);
 		lua_pushvalue(L, -1);
 		lua_setfield(L, -3, name);  /* LOADED[modname] = new table */
