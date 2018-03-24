@@ -1,0 +1,13 @@
+diff --git a/test/test_rsa_sign_WWW_ZZZ.c b/test/test_rsa_sign_WWW_ZZZ.c
+index eddf700..ec7b406 100644
+--- a/test/test_rsa_sign_WWW_ZZZ.c
++++ b/test/test_rsa_sign_WWW_ZZZ.c
+@@ -195,7 +195,7 @@ int main(int argc, char** argv)
+             printf("Issuer Details\n");
+             ic=X509_find_issuer(&H);
+             c=X509_find_entity_property(&H,&EN,ic,&len);
+-            print_out("email=",&H,c,len);
++            // print("email=",&H,c,len);
+             printf("\n");
+ #endif
+ 
