@@ -11,7 +11,7 @@ if grep 'static const.*lzlib' lib/luazen/src/luazen.c > /dev/null; then
 	cd lib/luazen && patch -p1 < ../../build/luazen_build.patch && cd -
 fi
 
-if grep 'print_out' test/test_rsa_sign_WWW_ZZZ.c > /dev/null; then
+if grep 'print_out' lib/milagro-crypto-c/test/test_rsa_sign_WWW_ZZZ.c > /dev/null; then
 	cd lib/milagro-crypto-c && patch -p1 < ../../build/milagro.patch && cd -
 fi
 
