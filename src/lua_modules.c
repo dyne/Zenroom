@@ -41,6 +41,7 @@ extern zen_extension_t zen_extensions[];
 
 extern int luaopen_crypto(lua_State *L);
 extern int luaopen_octet(lua_State *L);
+extern int luaopen_rsa(lua_State *L);
 
 
 luaL_Reg lualibs[] = {
@@ -105,6 +106,8 @@ int zen_require(lua_State *L) {
 		luaL_requiref(L, s, luaopen_crypto, 1); return 1; }
 	else if(strcmp(s, "octet")  ==0) {
 		luaL_requiref(L, s, luaopen_octet, 1);	return 1; }
+	else if(strcmp(s, "rsa")  ==0) {
+		luaL_requiref(L, s, luaopen_rsa, 1);	return 1; }
 	else if(strcmp(s, "json")  ==0) {
 		luaL_requiref(L, s, lua_cjson_safe_new, 1);	return 1; }
 	else if(strcmp(s, "cjson_full") ==0) {

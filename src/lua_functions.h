@@ -19,6 +19,7 @@
  */
 
 #include <zenroom.h>
+#include <lauxlib.h>
 
 typedef struct lsb_lua_sandbox {
 	lua_State         *lua;
@@ -64,6 +65,8 @@ int zen_add_package(lua_State *L, char *name, lua_CFunction func);
 void zen_add_function(lsb_lua_sandbox *lsb,
                       lua_CFunction func,
                       const char *func_name);
+void zen_add_class(lua_State *L, char *name,
+                   const luaL_Reg *class, const luaL_Reg *methods);
 
 void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val);
 void lsb_load_extensions(lsb_lua_sandbox *lsb);

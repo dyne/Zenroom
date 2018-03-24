@@ -13,6 +13,8 @@ musl := ${pwd}/build/musl
 platform := posix
 luasrc := ${pwd}/lib/lua53/src
 
+rsa_bits := 2048,4096
+
 test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
 
 patches:
@@ -114,7 +116,7 @@ luazen:
 
 milagro:
 	@echo "-- Building milagro"
-	if ! [ -r ${pwd}/lib/milagro-crypto-c/CMakeCache.txt ]; then cd ${pwd}/lib/milagro-crypto-c && CC=${gcc} cmake . -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DCMAKE_C_FLAGS="${cflags}" -DAMCL_CHUNK=32 -DAMCL_CURVE=ED25519 -DAMCL_RSA=2048; fi
+	if ! [ -r ${pwd}/lib/milagro-crypto-c/CMakeCache.txt ]; then cd ${pwd}/lib/milagro-crypto-c && CC=${gcc} cmake . -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DCMAKE_C_FLAGS="${cflags}" -DAMCL_CHUNK=32 -DAMCL_CURVE=ED25519,NIST256,GOLDILOCKS,BN254CX,FP256BN -DAMCL_RSA=${rsa_bits}; fi
 	if ! [ -r ${pwd}/lib/milagro-crypto-c/lib/libamcl_core.a ]; then CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c; fi
 
 milagro-win:
