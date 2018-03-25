@@ -11,6 +11,7 @@
 #include <lualib_functional.c>
 #include <lualib_matrix.c>
 #include <lualib_schema.c>
+#include <lualib_init.c>
 zen_extension_t zen_extensions[] = {
 	{"complex", &complex_len, (const char *)complex},
 	{"lisp", &lisp_len, (const char *)lisp},
@@ -20,5 +21,6 @@ zen_extension_t zen_extensions[] = {
 	{"functional", &functional_len, (const char *)functional},
 	{"matrix", &matrix_len, (const char *)matrix},
 	{"schema", &schema_len, (const char *)schema},
+	{"init", &init_len, (const char *)init},
     { NULL, NULL, NULL }
 };

@@ -66,11 +66,11 @@ octet_type = require "octet"
 octet = octet_type.new(2048)
 */
 static int newoctet (lua_State *L) {
-	int n = luaL_checkinteger(L, 1);
-	if(!n) {
+	const int len = luaL_optinteger(L, 1, MAX_OCTET);
+	if(!len) {
 		error("octet created with zero length");
 		return 0; }
-	octet *o = o_new(L,n);
+	octet *o = o_new(L,len);
 	OCT_empty(o);
 	return 1;  /* new userdatum is already on the stack */
 }
@@ -244,8 +244,10 @@ static int length(lua_State *L) {
 }
 
 int luaopen_octet(lua_State *L) {
-	const struct luaL_Reg octet_class[]
-		= {{"new",newoctet},{NULL,NULL}};
+	const struct luaL_Reg octet_class[] = {
+		{"new",newoctet},
+		{NULL,NULL}
+	};
 	const struct luaL_Reg octet_methods[] = {
 		{"empty", empty},
 		{"base64", base64},

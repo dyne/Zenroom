@@ -28,10 +28,7 @@
 
 #include <lua_functions.h>
 
-// extern void completion(const char *buf, linenoiseCompletions *lc);
-
-extern void lsb_load_extensions(lsb_lua_sandbox *lsb);
-
+extern void lsb_load_extensions(lua_State *L);
 
 int repl_read(lua_State *lua) {
 	char line[MAX_STRING];
@@ -69,12 +66,12 @@ size_t repl_prompt(int ret, char *line) {
 	return(len);
 }
 
-void repl_loop(lsb_lua_sandbox *lsb) {
+void repl_loop(lua_State *L) {
 	char line[MAX_STRING];
-	if(!lsb) return;
+	if(!L) return;
 	int ret =0;
 	while(repl_prompt(ret, line)) {
-		ret = zen_exec_line(lsb, line);
+		ret = zen_exec_line(L, line);
 	}
 }
 

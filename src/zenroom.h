@@ -4,6 +4,7 @@
 #define MAX_MEMORY 1024*1024
 #define MAX_FILE 512000 // load max 500Kb files
 #define MAX_STRING 4096
+#define MAX_OCTET 4096
 
 #define LUA_BASELIBNAME "_G"
 

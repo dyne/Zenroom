@@ -81,6 +81,49 @@ X adopt a declarative approach to data schemes accepted in scripts
 - maybe support Linux kernel keystore feature for loaded keys
   (see cryptsetup 2.0)
 
+- new ad-hoc memory manager with boundary control,
+  inspiration from lsb:
+```c
+/**
+* Implementation of the memory allocator for the Lua state.
+*
+* See: http://www.lua.org/manual/5.1/manual.html#lua_Alloc
+*
+* @param ud Pointer to the lsb_lua_sandbox
+* @param ptr Pointer to the memory block being allocated/reallocated/freed.
+* @param osize The original size of the memory block.
+* @param nsize The new size of the memory block.
+*
+* @return void* A pointer to the memory block.
+*/
+// TODO: fix to work with lua 5.3 and implement simple memory fence
+void* memory_manager(void *ud, void *ptr, size_t osize, size_t nsize)
+{
+  lsb_lua_sandbox *lsb = (lsb_lua_sandbox *)ud;
+
+  void *nptr = NULL;
+  if (nsize == 0) {
+    free(ptr);
+    lsb->mem_usage -= osize;
+  } else {
+    size_t new_state_memory =
+        lsb->mem_usage + nsize - osize;
+    if (0 == lsb->mem_max
+        || new_state_memory
+        <= lsb->mem_max) {
+      nptr = realloc(ptr, nsize);
+      if (nptr != NULL) {
+        lsb->mem_usage = new_state_memory;
+        if (lsb->mem_usage > lsb->mem_max) {
+          lsb->mem_max = lsb->mem_usage;
+        }
+      }
+    }
+  }
+  return nptr;
+}
+```
+
 ## Documentation
 
 - Provide cross-language examples for most basic operations

@@ -91,7 +91,7 @@ for p in $ppl; do
 		[[ "$p" = "$pp" ]] && continue
 		res=`decrypt $pp $p 2>/dev/null`
 		if [[ "$secret" != "$res" ]]; then
-			print - "ERROR in integration luazen test: from $pp to $p"
+			print - "ERROR in integration luazen test: $tmp"
 			print - "$secret"
 			print - "$res"
 			print - "envelope from ${pp}:"

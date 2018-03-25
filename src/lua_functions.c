@@ -37,59 +37,19 @@ lsb_err_id ZEN_ERR_UTIL_OOM     = "memory allocation failed";
 lsb_err_id ZEN_ERR_UTIL_FULL    = "buffer full";
 lsb_err_id ZEN_ERR_UTIL_PRANGE  = "parameter out of range";
 
-extern void zen_load_extensions(lsb_lua_sandbox *lsb);
+extern void zen_load_extensions(lua_State *L);
 extern void preload_modules(lua_State *lua);
 
-/**
-* Implementation of the memory allocator for the Lua state.
-*
-* See: http://www.lua.org/manual/5.1/manual.html#lua_Alloc
-*
-* @param ud Pointer to the lsb_lua_sandbox
-* @param ptr Pointer to the memory block being allocated/reallocated/freed.
-* @param osize The original size of the memory block.
-* @param nsize The new size of the memory block.
-*
-* @return void* A pointer to the memory block.
-*/
-// TODO: fix to work with lua 5.3 and implement simple memory fence
-void* memory_manager(void *ud, void *ptr, size_t osize, size_t nsize)
-{
-  lsb_lua_sandbox *lsb = (lsb_lua_sandbox *)ud;
-
-  void *nptr = NULL;
-  if (nsize == 0) {
-    free(ptr);
-    lsb->mem_usage -= osize;
-  } else {
-    size_t new_state_memory =
-        lsb->mem_usage + nsize - osize;
-    if (0 == lsb->mem_max
-        || new_state_memory
-        <= lsb->mem_max) {
-      nptr = realloc(ptr, nsize);
-      if (nptr != NULL) {
-        lsb->mem_usage = new_state_memory;
-        if (lsb->mem_usage > lsb->mem_max) {
-          lsb->mem_max = lsb->mem_usage;
-        }
-      }
-    }
-  }
-  return nptr;
-}
-
-void lsb_add_function(lsb_lua_sandbox *lsb, lua_CFunction func,
+void lsb_add_function(lua_State *L, lua_CFunction func,
                       const char *func_name)
 {
-	if (!lsb || !func || !func_name) return;
+	if (!L || !func || !func_name) return;
 
-	lua_pushcfunction(lsb->lua, func);
-	lua_setglobal(lsb->lua, func_name);
+	lua_pushcfunction(L, func);
+	lua_setglobal(L, func_name);
 }
 
-void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val) {
-	lua_State* L = lsb->lua;
+void lsb_setglobal_string(lua_State *L, char *key, char *val) {
 	lua_pushstring(L, val);
 	lua_setglobal(L, key);
 }
@@ -102,69 +62,58 @@ int zen_add_package(lua_State *L, char *name, lua_CFunction func) {
 	return luaL_dostring(L,cmd);
 }
 
-void zen_add_function(lsb_lua_sandbox *lsb,
+void zen_add_function(lua_State *L,
                       lua_CFunction func,
                       const char *func_name) {
-	if (!lsb || !func || !func_name) return;	
-	lua_pushcfunction(lsb->lua, func);
-	lua_setglobal(lsb->lua, func_name);
+	if (!L || !func || !func_name) return;	
+	lua_pushcfunction(L, func);
+	lua_setglobal(L, func_name);
 }
 
 
-lsb_lua_sandbox *zen_init() {
-	lsb_lua_sandbox *lsb = NULL;
+lua_State *zen_init() {
+	lua_State *L = NULL;
 
-
-	lsb = calloc(1, sizeof(*lsb));
-	if (!lsb) {
-		error("%s: %s", __func__, "memory allocation failed");
-		return NULL; }
-	lsb->mem_usage=0;
-	lsb->mem_max=0;
-	lsb->op_usage=0;
-	lsb->op_max=0;
-
-	// lsb->lua = lua_newstate(memory_manager, lsb);
-	lsb->lua = luaL_newstate();
-	if(!lsb->lua) {
+	// L = lua_newstate(memory_manager, lsb);
+	L = luaL_newstate();
+	if(!L) {
 		error("%s: %s", __func__, "lua state creation failed");
-		free(lsb);
 		return NULL;
 	}
 
-	lsb->error_message[0] = 0;
-	lsb->state_file = NULL;
-
 	// initialise global variables
-	lsb_setglobal_string(lsb, "VERSION", VERSION);
-	lsb_setglobal_string(lsb, "ARCH", ARCH);
+#if defined(VERSION)
+	lsb_setglobal_string(L, "VERSION", VERSION);
+#endif
+#if defined(ARCH)
+	lsb_setglobal_string(L, "ARCH", ARCH);
+#endif
 	// open all standard lua libraries
-	luaL_openlibs(lsb->lua);
+	luaL_openlibs(L);
 	//////////////////// end of create
 
-	lua_pushlightuserdata(lsb->lua, lsb);
-	lua_setfield(lsb->lua, LUA_REGISTRYINDEX, LSB_THIS_PTR);
+	// this is a way to save additional user data together with the
+	// context here: lua_pushlightuserdata(L, lsb);
+	// see lua_sandbox for further examples
 
-	return(lsb);
+	lua_setfield(L, LUA_REGISTRYINDEX, LSB_THIS_PTR);
+
+	return(L);
 
 }
 
-int zen_teardown(lsb_lua_sandbox *lsb) {
-	lua_State *lua = lsb->lua;
+int zen_teardown(lua_State *L) {
 
 	notice("Zenroom console quit.");
-    if(lua) lua_gc(lua, LUA_GCCOLLECT, 0);
-    if(lsb->mem_usage > lsb->mem_max)
-	    lsb->mem_usage = lsb->mem_max;
-    lua_close(lsb->lua);
-    lsb->lua = NULL;
-    free(lsb);
+    if(L) lua_gc(L, LUA_GCCOLLECT, 0);
+    lua_close(L);
+    L = NULL;
 	return(0);
 }
 
-int zen_exec_line(lsb_lua_sandbox *lsb, const char *line) {
+int zen_exec_line(lua_State *L, const char *line) {
 	int ret;
-	lua_State* lua = lsb->lua;
+	lua_State* lua = L;
 
 	ret = luaL_dostring(lua, line);
 	if(ret) {
@@ -176,9 +125,9 @@ int zen_exec_line(lsb_lua_sandbox *lsb, const char *line) {
 }
 
 
-int zen_exec_script(lsb_lua_sandbox *lsb, const char *script) {
+int zen_exec_script(lua_State *L, const char *script) {
 	int ret;
-	lua_State* lua = lsb->lua;
+	lua_State* lua = L;
 
 	ret = luaL_dostring(lua, script);
     lua_gc(lua, LUA_GCCOLLECT, 0);

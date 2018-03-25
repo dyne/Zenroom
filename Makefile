@@ -17,7 +17,6 @@
 #  <http://www.gnu.org/licenses/>.
 
 pwd := $(shell pwd)
-luasand := ${pwd}/build/lua_sandbox
 mil := ${pwd}/build/milagro
 extras := ${pwd}/docs/demo
 
@@ -262,7 +261,6 @@ check-debug: check-milagro
 	echo "----------------\nAll tests passed for SHARED binary build\n----------------"
 
 clean:
-	rm -rf ${luasand}
 	make clean -C ${pwd}/lib/lua53/src
 	make clean -C ${pwd}/build/luazen
 	make clean -C ${pwd}/lib/milagro-crypto-c && \

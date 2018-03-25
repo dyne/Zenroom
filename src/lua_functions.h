@@ -21,18 +21,6 @@
 #include <zenroom.h>
 #include <lauxlib.h>
 
-typedef struct lsb_lua_sandbox {
-	lua_State         *lua;
-	void              *parent;
-	char              *lua_file;
-	char              *state_file;
-	size_t mem_usage;
-	size_t mem_max;
-	size_t op_usage;
-	size_t op_max;
-	char              error_message[MAX_STRING];
-} lsb_lua_sandbox;
-
 typedef struct zen_extension_t {
 	const char         *name;
 	const unsigned int *size;
@@ -52,25 +40,25 @@ typedef struct zen_extension_t {
 // #define LSB_LUA_CPATH         "cpath"
 // #define LSB_NIL_ERROR         "<nil error message>"
 
-lsb_lua_sandbox *zen_init();
-int zen_exec_line(lsb_lua_sandbox *lsb, const char *line);
-int zen_exec_script(lsb_lua_sandbox *lsb, const char *script);
-int zen_teardown(lsb_lua_sandbox *lsb);
+lua_State *zen_init();
+int zen_exec_line(lua_State *L, const char *line);
+int zen_exec_script(lua_State *L, const char *script);
+int zen_teardown(lua_State *L);
 
 int get_debug();
 
 int zen_load_string(lua_State *L, const char *code,
                     size_t size,  const char *name);
 int zen_add_package(lua_State *L, char *name, lua_CFunction func);
-void zen_add_function(lsb_lua_sandbox *lsb,
+void zen_add_function(lua_State *L,
                       lua_CFunction func,
                       const char *func_name);
 void zen_add_class(lua_State *L, char *name,
                    const luaL_Reg *class, const luaL_Reg *methods);
 
-void lsb_setglobal_string(lsb_lua_sandbox *lsb, char *key, char *val);
-void lsb_load_extensions(lsb_lua_sandbox *lsb);
-void lsb_add_function(lsb_lua_sandbox *lsb, lua_CFunction func,
+void lsb_setglobal_string(lua_State *L, char *key, char *val);
+void lsb_load_extensions(lua_State *L);
+void lsb_add_function(lua_State *L, lua_CFunction func,
                       const char *func_name);
 int output_print(lua_State *lua);
 
