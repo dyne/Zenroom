@@ -108,7 +108,7 @@ osx: gcc := gcc
 osx: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"'
 osx: ldflags := -lm
 osx: platform := macosx
-osx: patches lua53 luazen
+osx: patches lua53 luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
 
 debug: gcc := gcc
