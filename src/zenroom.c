@@ -37,33 +37,32 @@
 #include <emscripten.h>
 #endif
 
-const char *confdefault =
-	"memory_limit = 1024*1024*2\n"
-	"instruction_limit = 0\n"
-	"output_limit = 64*1024\n"
-	"log_level = 7\n"
-	"path = '/dev/null'\n"
-	"cpath = '/dev/null'\n"
-	"remove_entries = {\n"
-	"	[''] = {'dofile', 'load', 'loadfile','newproxy'},\n"
-	"	os = {'execute','remove','rename','setlocale','tmpname'},\n"
-	"   math = {'random', 'randomseed'},\n"
-	"   io = {'close', 'open', 'popen', 'tmpfile'}\n"
-	" }\n";
-
 // prototypes from lua_modules.c
-extern void zen_load_extensions(lsb_lua_sandbox *lsb);
-extern void zen_add_function(lsb_lua_sandbox *lsb, lua_CFunction func,
+extern void zen_load_extensions(lua_State *L);
+extern void zen_add_function(lua_State *L, lua_CFunction func,
                                   const char *func_name);
 
 // This function exits the process on failure.
 void load_file(char *dst, FILE *fd) {
 	char firstline[MAX_STRING];
+	long file_size = 0L;
 	size_t offset = 0;
 	size_t bytes = 0;
 	if(!fd) {
 		error("Error opening %s", strerror(errno));
 		exit(1); }
+	if(fd!=stdin) {
+		if(fseek(fd, 0L, SEEK_END)<0) {
+			error("fseek(end) error in %s: %s",__func__,
+			      strerror(errno));
+			exit(1); }
+		file_size = ftell(fd);
+		if(fseek(fd, 0L, SEEK_SET)<0) {
+			error("fseek(start) error in %s: %s",__func__,
+			      strerror(errno));
+			exit(1); }
+		func("size of file: %u",file_size);
+	}
 	// skip shebang on firstline
 	if(!fgets(firstline, MAX_STRING, fd)) {
 		error("Error reading first line: %s", strerror(errno));
@@ -74,15 +73,31 @@ void load_file(char *dst, FILE *fd) {
 		offset+=strlen(firstline);
 		strncpy(dst,firstline,MAX_STRING);
 	}
-	for(;;) {
-		if( offset+1024>MAX_FILE ) break;
-		bytes = fread(&dst[offset],sizeof(char),MAX_STRING,fd);
+
+	size_t chunk;
+	while(1) {
+		chunk = MAX_STRING;
+		if( offset+MAX_STRING>MAX_FILE )
+			chunk = MAX_FILE-offset-1;
+		bytes = fread(&dst[offset],sizeof(char),chunk,fd);
+
+		if(!bytes) {
+			if(feof(fd)) {
+				if((fd!=stdin) && (long)offset!=file_size)
+					warning("Incomplete file read (%u of %u bytes)",
+					      offset, file_size);
+				else
+					func("EOF after %u bytes",offset);
+				break; }
+			if(ferror(fd)) {
+				error("Error in %s: %s",__func__,strerror(errno));
+				fclose(fd);
+				exit(1); }
+		}
 		offset += bytes;
-		if( bytes<MAX_STRING && feof(fd) ) break;
 	}
-	fclose(fd);
+	if(fd!=stdin) fclose(fd);
 	act("loaded file (%u bytes)", offset);
-	func("file contents:\n%s", dst);
 }
 
 char *safe_string(char *str) {
@@ -113,7 +128,7 @@ int zenroom_exec(char *script, char *conf, char *keys,
                  char *data, int verbosity) {
 	// the sandbox context (can be initialised only once)
 	// stores the script file and configuration
-	lsb_lua_sandbox *lsb = NULL;
+	lua_State *L = NULL;
 	int return_code = 1; // return error by default
 	int r;
 
@@ -122,28 +137,28 @@ int zenroom_exec(char *script, char *conf, char *keys,
 		exit(1); }
 	set_debug(verbosity);
 
-	lsb = zen_init(conf);
-	if(!lsb) {
+	L = zen_init(conf);
+	if(!L) {
 		error("Initialisation failed.");
 		return 1;
 	}
 
-	zen_load_extensions(lsb);
+	zen_load_extensions(L);
 	// load our own openlibs and extensions
 
 	// load arguments from json if present
 	if(data) // avoid errors on NULL args
 		if(safe_string(data)) {
 			func("declaring global: DATA");
-			lsb_setglobal_string(lsb,"DATA",data);
+			lsb_setglobal_string(L,"DATA",data);
 		}
 	if(keys)
 		if(safe_string(keys)) {
 			func("declaring global: KEYS");
-			lsb_setglobal_string(lsb,"KEYS",keys);
+			lsb_setglobal_string(L,"KEYS",keys);
 		}
 
-	r = zen_exec_script(lsb, script);
+	r = zen_exec_script(L, script);
 	if(r) {
 #ifdef __EMSCRIPTEN__
 		EM_ASM({Module.exec_error();});
@@ -151,7 +166,7 @@ int zenroom_exec(char *script, char *conf, char *keys,
 //		error(r);
 		error("Error detected. Execution aborted.");
 
-		zen_teardown(lsb);
+		zen_teardown(L);
 		return(1);
 	}
 	return_code = 0; // return success
@@ -161,7 +176,7 @@ int zenroom_exec(char *script, char *conf, char *keys,
 #endif
 
 	notice("Zenroom operations completed.");
-	zen_teardown(lsb);
+	zen_teardown(L);
 	return(return_code);
 }
 
@@ -241,7 +256,7 @@ int main(int argc, char **argv) {
 		////////////////////////////////////
 		// start an interactive repl console
 	} else if(scriptfile[0]=='\0') {
-		lsb_lua_sandbox *cli;
+		lua_State  *cli;
 		cli = zen_init(confdefault);
 		// load our own extensions
 		zen_load_extensions(cli);
@@ -261,7 +276,7 @@ int main(int argc, char **argv) {
 		////////////////////////////////////
 		// load a file as script and execute
 		act("reading CODE from file: %s", scriptfile);
-		load_file(script, fopen(scriptfile, "r"));
+		load_file(script, fopen(scriptfile, "rb"));
 	}
 
 	// configuration from -c or default
