@@ -71,7 +71,8 @@ void zen_add_function(lua_State *L,
 }
 
 
-lua_State *zen_init() {
+lua_State *zen_init(const char *conf) {
+	(void) conf;
 	lua_State *L = NULL;
 
 	// L = lua_newstate(memory_manager, lsb);

@@ -257,7 +257,7 @@ int main(int argc, char **argv) {
 		// start an interactive repl console
 	} else if(scriptfile[0]=='\0') {
 		lua_State  *cli;
-		cli = zen_init(confdefault);
+		cli = zen_init(NULL);
 		// load our own extensions
 		zen_load_extensions(cli);
 
@@ -287,7 +287,7 @@ int main(int argc, char **argv) {
 
 
 	ret = zenroom_exec(script,
-	                   (conf[0]!='\0')?conf:(char*)confdefault,
+	                   (conf[0]!='\0')?conf:NULL,
 	                   (keys[0]!='\0')?keys:NULL,
 	                   (data[0]!='\0')?data:NULL,
 	                   verbosity);
