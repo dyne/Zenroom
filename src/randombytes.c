@@ -126,15 +126,14 @@ static int randombytes_linux_randombytes_getrandom(void *buf, size_t n)
 }
 #endif /* defined(__linux__) && defined(SYS_getrandom) */
 
-
-#if defined(__linux__) && !defined(SYS_getrandom)
+#if defined(__linux__)
+# if defined(SYS_getrandom)
 static int randombytes_linux_get_entropy_avail(int fd)
 {
 	int ret;
 	ioctl(fd, RNDGETENTCNT, &ret);
 	return ret;
 }
-
 
 static int randombytes_linux_wait_for_entropy(int device)
 {
@@ -174,6 +173,7 @@ static int randombytes_linux_wait_for_entropy(int device)
 	return retcode;
 }
 
+# endif //defined(SYS_getrandom)
 
 static int randombytes_linux_randombytes_urandom(void *buf, size_t n)
 {
@@ -183,7 +183,10 @@ static int randombytes_linux_randombytes_urandom(void *buf, size_t n)
 	do {
 		fd = open("/dev/urandom", O_RDONLY);
 	} while (fd == -1 && errno == EINTR);
+
+# if defined(SYS_getrandom)
 	if (randombytes_linux_wait_for_entropy(fd) == -1) return -1;
+# endif
 
 	while (n > 0) {
 		count = n <= SSIZE_MAX ? n : SSIZE_MAX;
@@ -198,7 +201,7 @@ static int randombytes_linux_randombytes_urandom(void *buf, size_t n)
 	assert(n == 0);
 	return 0;
 }
-#endif /* defined(__linux__) && !defined(SYS_getrandom) */
+#endif /* defined(__linux__) */
 
 
 #if defined(BSD)

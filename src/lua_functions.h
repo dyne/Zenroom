@@ -40,7 +40,7 @@ typedef struct zen_extension_t {
 // #define LSB_LUA_CPATH         "cpath"
 // #define LSB_NIL_ERROR         "<nil error message>"
 
-lua_State *zen_init();
+lua_State *zen_init(const char *conf);
 int zen_exec_line(lua_State *L, const char *line);
 int zen_exec_script(lua_State *L, const char *script);
 int zen_teardown(lua_State *L);
