@@ -221,6 +221,7 @@ int randombytes(void *buf, size_t n)
 # if defined(SYS_getrandom)
 #  pragma message("Using getrandom system call")
 	/* Use getrandom system call */
+	(void) randombytes_linux_randombytes_urandom; // no warnings
 	return randombytes_linux_randombytes_getrandom(buf, n);
 # else
 #  pragma message("Using /dev/urandom device")
