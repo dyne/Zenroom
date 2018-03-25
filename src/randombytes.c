@@ -23,8 +23,6 @@
 
 #include "randombytes.h"
 
-#include <stdlib.h>
-
 #if defined(_WIN32)
 /* Windows */
 # include <windows.h>
@@ -38,7 +36,9 @@
 # include <assert.h>
 # include <errno.h>
 # include <fcntl.h>
-# include <linux/random.h>
+# if defined(SYS_getrandom)
+#  include <linux/random.h>
+# endif
 # include <poll.h>
 # include <stdint.h>
 # include <sys/ioctl.h>
@@ -63,6 +63,23 @@
 # endif
 #endif
 
+#ifdef __EMSCRIPTEN__
+#include <stdlib.h>
+#include <emscripten.h>
+int randombytes_js_randombytes_nodejs(void *buf, size_t n) {
+	size_t c;
+	char *bytes = (char*) EM_ASM_INT({
+			const crypto = require('crypto');
+			var out = _malloc($0);
+			writeArrayToMemory(crypto.randomBytes($0), out);
+			return out;
+		}, n);
+	for(c=0;c<n;c++)
+		((char*)buf)[c] = bytes[c];
+	free(bytes);
+	return 0;
+}
+#endif
 
 #if defined(_WIN32)
 static int randombytes_win32_randombytes(void* buf, const size_t n)
@@ -192,27 +209,12 @@ static int randombytes_bsd_randombytes(void *buf, size_t n)
 }
 #endif /* defined(BSD) */
 
-
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-int randombytes(void *buf, size_t n) {
-	size_t c;
-	char *bytes = (char*) EM_ASM_INT({
-			const crypto = require('crypto');
-			var out = _malloc($0);
-			writeArrayToMemory(crypto.randomBytes($0), out);
-			return out;
-		}, n);
-	for(c=0;c<n;c++)
-		((char*)buf)[c] = bytes[c];
-	free(bytes);
-	return 0;
-}
-#else
-
 int randombytes(void *buf, size_t n)
 {
-#if defined(__linux__)
+#if defined(__EMSCRIPTEN__)
+# pragma message("Using crypto api from NodeJS")
+	return randombytes_js_randombytes_nodejs(buf, n);
+#elif defined(__linux__)
 # if defined(SYS_getrandom)
 #  pragma message("Using getrandom system call")
 	/* Use getrandom system call */
@@ -234,5 +236,3 @@ int randombytes(void *buf, size_t n)
 # error "randombytes(...) is not supported on this platform"
 #endif
 }
-
-#endif
