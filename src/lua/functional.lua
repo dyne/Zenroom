@@ -1,15 +1,23 @@
 --------------
 --- <h1>Advanced data manipulation</h1>
 --
--- Advanced functionalities to manipulate complex data structures with
--- functional programming prototypes. Lua extension originally called
--- "Moses".
+-- Advanced functions to manipulate complex data structures with
+-- functional programming prototypes. This set of functions are ideal
+-- to work on nested arrays and maps (also known as datasets or
+-- tables).
 --
--- @author [Roland Yonaba](http://github.com/Yonaba)
+-- The functions here are designed to adopt a functional
+-- programming model when designing algorithms, like it is done in
+-- LISP, mapping functions over collections.
+--
+-- For a brief and effective introduction follow the <b>Functional
+-- Tutorial</b> linked on this page.
+--
+-- @author Roland Yonaba
 -- @copyright 2012-2017
--- @license [MIT](http://www.opensource.org/licenses/mit-license.php)
+-- @license MIT
 -- @release 1.6.1-zenroom
--- @module functional 
+-- @module data 
 
 local _MODULEVERSION = '1.6.1'
 
