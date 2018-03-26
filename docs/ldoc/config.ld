@@ -24,9 +24,9 @@ style=true
 template=true
 backtick_references=false
 file={
-	'../../src/octet.c',
+	'../../src/zen_octet.c',
 	'../../src/lua/functional.lua',
-	'../../src/rsa.c',
+	'../../src/zen_rsa.c',
 	'math.lua',
 	'string.lua',
 	'table.lua',
