@@ -53,14 +53,20 @@ static int _min(int x, int y) { if(x < y) return x;	else return y; }
 // REMEMBER: newuserdata already pushes the object in lua's stack
 octet* o_new(lua_State *L, int size) {
 	if(size<=0) return NULL;
+	if(size>MAX_FILE) {
+		error("Cannot create octet, size too big: %u", size);
+		return NULL; }
 	octet *o = (octet *)lua_newuserdata(L, sizeof(octet));
-	// TODO: check errors
+	if(!o) {
+		error("Error allocating new octet in %s",__func__);
+		return NULL; }
+	// TODO: check that maximum is not exceeded
 	o->val=malloc(size);
-	func("created octet of size %u",size);
 	luaL_getmetatable(L, "zenroom.octet");
 	lua_setmetatable(L, -2);
 	o->len = 0;
 	o->max = size;
+	func("created octet of size %u",size);
 	return(o);
 }
 
@@ -68,15 +74,17 @@ octet* o_arg(lua_State *L,int n) {
 	void *ud = luaL_checkudata(L, n, "zenroom.octet");
 	luaL_argcheck(L, ud != NULL, n, "octet class expected");
 	octet *o = (octet*)ud;
-	if(o->len>MAX_STRING) {
+	if(o->len>MAX_FILE) {
 		error("%s: octet too long (%u bytes)",__func__,o->len);
 		return NULL; }
 	return(o);
 }
 
 int o_destroy(lua_State *L) {
+	HERE();
 	octet *o = o_arg(L,1);
-	if(o->val) free(o->val);
+	SAFE(o);
+	free(o->val);
 	return 0;
 }
 
@@ -113,6 +121,7 @@ static int newoctet (lua_State *L) {
 		error("octet created with zero length");
 		return 0; }
 	octet *o = o_new(L,len);
+	SAFE(o);
 	OCT_empty(o);
 	return 1;  /* new userdatum is already on the stack */
 }
@@ -129,12 +138,10 @@ static int newoctet (lua_State *L) {
     @return a new octet resulting from the operation
 */
 static int xor_n(lua_State *L) {
-	octet *x = o_arg(L,1);
-	if(!x) return 0;
-	octet *y = o_arg(L,2);
-	if(!y) return 0;
+	octet *x = o_arg(L,1);	SAFE(x);
+	octet *y = o_arg(L,2);	SAFE(y);
 	octet *n = o_new(L,_max(x->len, y->len));
-	if(!n) return 0;
+	SAFE(n);
 	OCT_copy(n,x);
 	OCT_xor(n,y);
 	return 1;
@@ -153,15 +160,15 @@ static int xor_n(lua_State *L) {
     @return a new octet resulting from the operation
 */
 static int concat_n(lua_State *L) {
-	octet *x = o_arg(L,1);
-	if(!x) return 0;
-	octet *y = o_arg(L,2);
-	if(!y) return 0;
+	octet *x = o_arg(L,1);	SAFE(x);
+	octet *y = o_arg(L,2);	SAFE(y);
 	octet *n = o_new(L,x->len+y->len);
-	if(!n) return 0;
+	SAFE(n);
+
 	OCT_copy(n,x);
 	OCT_joctet(n,y);
 	return 1;
+	// TODO: support strings
 }
 
 
@@ -171,7 +178,7 @@ static int concat_n(lua_State *L) {
 // This section lists methods that can be called as members of the
 // 'octet' objects, using a semicolon notation instead of a
 // dot. Example synopsis:
-// 
+//
 // <pre class="example">
 // octet:<span class="global">method</span>(<span class="string">args</span>)
 // </pre>
@@ -191,8 +198,10 @@ new octet.
 @usage
 octet:empty()
 */
-static int empty (lua_State *L) {	
-	OCT_empty(o_arg(L,1));
+static int empty (lua_State *L) {
+	octet *o = o_arg(L,1);
+	SAFE(o);
+	OCT_empty(o);
 	return 1;
 }
 
@@ -218,8 +227,7 @@ print(msg:base64())
 
 */
 static int base64 (lua_State *L) {
-	octet *o = o_arg(L,1);
-	if(!o) return 0;
+	octet *o = o_arg(L,1);	SAFE(o);
 	if(lua_isnoneornil(L, 2)) {
 		// export to base64
 		char b[MAX_STRING];
@@ -242,8 +250,7 @@ static int base64 (lua_State *L) {
     @see octet:base64
 */
 static int string(lua_State *L) {
-	octet *o = o_arg(L,1);
-	if(!o) return 0;
+	octet *o = o_arg(L,1);	SAFE(o);
 	if(lua_isnoneornil(L, 2)) {
 		// export to string
 		char s[MAX_STRING];
@@ -269,8 +276,7 @@ static int string(lua_State *L) {
     @see octet:base64
 */
 static int hex(lua_State *L) {
-	octet *o = o_arg(L,1);
-	if(!o) return 0;
+	octet *o = o_arg(L,1);	SAFE(o);
 	if(lua_isnoneornil(L, 2)) {
 		// export to hex
 		char s[MAX_STRING];
@@ -294,8 +300,7 @@ static int hex(lua_State *L) {
     @function octet:random(length)
 */
 static int o_random(lua_State *L) {
-	octet *o = o_arg(L,1);
-	if(!o) return 0;
+	octet *o = o_arg(L,1);	SAFE(o);
 	const int len = luaL_optinteger(L, 2, o->max);
 	char *buf = malloc(len);
 	randombytes(buf,len);
@@ -314,18 +319,15 @@ static int o_random(lua_State *L) {
     @function octet:pad(length)
 */
 static int pad(lua_State *L) {
-	octet *o = o_arg(L,1);
-	if(!o) return 0;
-	const int len = luaL_optinteger(L, 2, o->max);	
+	octet *o = o_arg(L,1);	SAFE(o);
+	const int len = luaL_optinteger(L, 2, o->max);
 	OCT_pad(o,len);
 	return 1;
 }
 
 static int eq(lua_State *L) {
-	octet *x = o_arg(L,1);
-	if(!x) return 0;
-	octet *y = o_arg(L,2);
-	if(!y) return 0;
+	octet *x = o_arg(L,1);	SAFE(x);
+	octet *y = o_arg(L,2);	SAFE(y);
 	lua_pushboolean(L, OCT_comp(x,y));
 	return 1;
 }
@@ -339,10 +341,8 @@ static int eq(lua_State *L) {
     @function octet:xor(const)
 */
 static int xor_i(lua_State *L) {
-	octet *x = o_arg(L,1);
-	if(!x) return 0;
-	octet *y = o_arg(L,2);
-	if(!y) return 0;
+	octet *x = o_arg(L,1);	SAFE(x);
+	octet *y = o_arg(L,2);	SAFE(y);
 	OCT_xor(x,y);
 	return 1;
 }
@@ -354,20 +354,24 @@ static int xor_i(lua_State *L) {
     @function octet:concat(const)
 */
 static int concat_i(lua_State *L) {
-	octet *x = o_arg(L,1);
-	if(!x) return 0;
-	octet *y = o_arg(L,2);
-	if(!y) return 0;
+	octet *x = o_arg(L,1);	SAFE(x);
+	octet *y = o_arg(L,2);	SAFE(y);
 	OCT_joctet(x,y);
+	return 1;
+	// TODO: support strings
+}
+
+static int size(lua_State *L) {
+	octet *o = o_arg(L,1); SAFE(o);
+	luaL_argcheck(L, o != NULL, 1, "octet expected");
+	lua_pushinteger(L,o->len);
 	return 1;
 }
 
-	
-
-static int size(lua_State *L) {
-	octet *o = (octet*)lua_touserdata(L, 1);
+static int max(lua_State *L) {
+	octet *o = o_arg(L,1); SAFE(o);
 	luaL_argcheck(L, o != NULL, 1, "octet expected");
-	lua_pushinteger(L,o->len);
+	lua_pushinteger(L,o->max);
 	return 1;
 }
 
@@ -394,6 +398,7 @@ int luaopen_octet(lua_State *L) {
 		// inplace methods
 		{"concat", concat_i},
 		{"xor", xor_i},
+		{"max", max},
 		// idiomatic operators
 		{"__len",size},
 		{"__concat",concat_n},
@@ -406,4 +411,3 @@ int luaopen_octet(lua_State *L) {
 	zen_add_class(L, "octet", octet_class, octet_methods);
 	return 1;
 }
-
