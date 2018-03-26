@@ -47,13 +47,30 @@
 
 // from zen_rsa_aux
 extern int bitchoice(rsa *r, int bits);
-extern int rsa_priv_to_oct(rsa *r, octet *dst, void *priv);
-extern int rsa_pub_to_oct (rsa *r, octet *dst, void *pub);
+extern int rsa_priv_to_oct(rsa *r, octet *dst, char *priv);
+extern int rsa_pub_to_oct (rsa *r, octet *dst, char *pub);
+extern int rsa_oct_to_priv(rsa*r, void *priv, octet *src);
+extern int rsa_oct_to_pub(rsa *r, void *pub, octet *src);
+extern void error_protect_keys(char *what);
 
 rsa* rsa_new(lua_State *L, int bitsize) {
-	if(bitsize<=0) return NULL;
-	rsa *r = (rsa*)lua_newuserdata(L, sizeof(rsa));
-	if(!r) return NULL;
+	if(bitsize!=2048 && bitsize!=4096) return NULL;
+	int memsize = sizeof(rsa) + sizeof(csprng);
+	if(bitsize==2048) {
+		memsize+=sizeof(rsa_public_key_2048);
+		memsize+=sizeof(rsa_private_key_2048);
+	} else {
+		memsize+=sizeof(rsa_public_key_4096);
+		memsize+=sizeof(rsa_private_key_4096);
+	}
+	rsa *r = (rsa*)lua_newuserdata(L, memsize);
+	SAFE(r);
+
+	// checked to avoid overwriting
+	r->rng = NULL;
+	r->pubkey = NULL;
+	r->privkey = NULL;
+
 	func("%s %u",__func__,bitsize);
 	// check that the bit choice is supported
 	if(!bitchoice(r, bitsize)) {
@@ -61,7 +78,14 @@ rsa* rsa_new(lua_State *L, int bitsize) {
 		lua_pop(L, 1); // pops out the newuserdata instance
 		return NULL;
 	}
+	func("hash: %u", r->hash);
 	r->exponent = 65537; // may be: 3,5,17,257 or 65537
+	func("publen: %u", r->publen);
+	func("privlen: %u", r->privlen);
+	func("fflen: %u", r->fflen);
+	func("bigsize: %u", r->bigsize);
+	func("modbytes: %u", r->modbytes);
+	func("rfs: %u", r->rfs);
 
 	// initialise a new random number generator
 	r->rng = malloc(sizeof(csprng));
@@ -78,7 +102,7 @@ rsa* rsa_new(lua_State *L, int bitsize) {
 	RAND_seed(r->rng,256,tmp);
 
 	func("Created RSA engine %u bits",r->bits);
-	// TODO: check bitsize validity
+
 	luaL_getmetatable(L, "zenroom.rsa");
 	lua_setmetatable(L, -2);
 	return(r);
@@ -91,8 +115,12 @@ rsa* rsa_arg(lua_State *L,int n) {
 }
 
 int rsa_destroy(lua_State *L) {
+	func("%s",__func__);
 	rsa *r = rsa_arg(L,1);
-	if(r->rng) free(r->rng);
+	SAFE(r);
+	// FREE(r->rng);
+	// FREE(r->pubkey);
+	// FREE(r->privkey);
 	return 0;
 }
 
@@ -114,7 +142,8 @@ rsa2k = rsa.new(2048)
 static int newrsa(lua_State *L) {
 	const int bits = luaL_optinteger(L, 1, 2048);
 	rsa *r = rsa_new(L, bits);
-	if(!r) return 0;
+	SAFE(r);
+	warning("Beware RSA support is incomplete!");
 	// any action to be taken here?
 	return 1;
 }
@@ -137,33 +166,122 @@ static int newrsa(lua_State *L) {
 */
 static int rsa_keygen(lua_State *L) {
 	rsa *r = rsa_arg(L, 1);
-	if(!r) return 0;
-	void *pub, *priv;
+	SAFE(r);
+	if(r->pubkey!=NULL) {
+		ERROR(); error_protect_keys("public key"); return 0; }
+	if(r->privkey!=NULL) {
+		ERROR(); error_protect_keys("private key"); return 0; }
+
 	if(r->bits == 2048) {
-		priv = malloc(sizeof(rsa_private_key_2048));
-		pub  = malloc(sizeof(rsa_public_key_2048));
+		r->privkey = malloc(sizeof(rsa_private_key_2048));
+		r->pubkey  = malloc(sizeof(rsa_public_key_2048));
 		RSA_2048_KEY_PAIR(r->rng, r->exponent,
-		                  (rsa_private_key_2048*)priv,
-		                  (rsa_public_key_2048*)pub,
+		                  (rsa_private_key_2048*)r->privkey,
+		                  (rsa_public_key_2048*)r->pubkey,
 		                  NULL, NULL);
 	} else {
-		priv = malloc(sizeof(rsa_private_key_4096));
-		pub  = malloc(sizeof(rsa_public_key_4096));
+		r->privkey = malloc(sizeof(rsa_private_key_4096));
+		r->pubkey  = malloc(sizeof(rsa_public_key_4096));
 		RSA_4096_KEY_PAIR(r->rng, r->exponent,
-		                  (rsa_private_key_4096*)priv,
-		                  (rsa_public_key_4096*)pub,
+		                  (rsa_private_key_4096*)r->privkey,
+		                  (rsa_public_key_4096*)r->pubkey,
 		                  NULL, NULL);
 	}
-	octet *o_pub = o_new(L, r->publen);
-	rsa_pub_to_oct(r, o_pub, pub);
-	func("public key length in bytes: %u", o_pub->len);
-	octet *o_priv = o_new(L, r->privlen);
-	rsa_priv_to_oct(r,o_priv,priv);
-	func("private key length in bytes: %u", o_priv->len);
-	free(pub);
-	free(priv);
-	return 2; // 2 octets returned
+	return 0; // nothing returned
 }
+
+static int rsa_encrypt(lua_State *L) {
+	rsa *r = rsa_arg(L, 1);	SAFE(r);
+	octet *o_msg = o_arg(L,2); SAFE(o_msg);
+	if(!r->pubkey) {
+		ERROR();
+		error("Public key not found in RSA engine. Use :public()");
+		return 0; }
+
+	octet *o_dst = o_new(L, o_msg->len+r->rfs); // TODO: check size
+	SAFE(o_dst);
+
+	if(r->bits == 2048) {
+		RSA_2048_ENCRYPT((rsa_public_key_2048*)r->pubkey,
+		                 o_msg, o_dst);
+	} else if(r->bits == 4096) {
+		RSA_4096_ENCRYPT((rsa_public_key_4096*)r->pubkey,
+		                 o_msg, o_dst);
+	}
+
+	return 1;
+}
+
+static int rsa_decrypt(lua_State *L) {
+	rsa *r = rsa_arg(L, 1); SAFE(r);
+	octet *o_enc = o_arg(L,2); SAFE(o_enc);
+
+	if(!r->privkey) {
+		ERROR();
+		error("Private key not found in RSA engine. Use :private()");
+		return 0; }
+
+	octet *o_dst = o_new(L, o_enc->len + r->rfs); // TODO: check size
+	SAFE(o_dst);
+
+	if(r->bits == 2048) {
+		RSA_2048_DECRYPT((rsa_private_key_2048*)r->privkey,
+		                 o_enc, o_dst);
+	} else if(r->bits == 4096) {
+		RSA_4096_DECRYPT((rsa_private_key_4096*)r->privkey,
+		                 o_enc, o_dst);
+	}
+	return 1;
+}
+
+static int rsa_public(lua_State *L) {
+	rsa *r = rsa_arg(L,1);
+	SAFE(r);
+
+	if(lua_isnoneornil(L, 2)) {
+		if(!r->pubkey) {
+			ERROR(); error("Public key is not found."); return 0; }
+
+		// export public key to octet
+		octet *exp = o_new(L,r->publen);
+		rsa_pub_to_oct(r,exp,r->pubkey);
+		return 1;
+	}
+	if(r->pubkey!=NULL) {
+		ERROR(); error_protect_keys("public key"); return 0; }
+	// import public key from octet
+	octet *imp = o_arg(L,2);
+	SAFE(imp);
+	r->pubkey = malloc(r->publen);
+	rsa_oct_to_pub(r,r->pubkey,imp);
+	return 0;
+}
+
+
+static int rsa_private(lua_State *L) {
+	rsa *r = rsa_arg(L,1);
+	SAFE(r);
+
+	if(lua_isnoneornil(L, 2)) {
+		if(!r->privkey) {
+			ERROR(); error("Private key is not found."); return 0; }
+
+		// export public key to octet
+		octet *exp = o_new(L,r->privlen);
+		rsa_priv_to_oct(r,exp,r->privkey);
+		return 1;
+	}
+	if(r->privkey!=NULL) {
+		ERROR(); error_protect_keys("private key"); return 0; }
+	// import private key from octet
+	octet *imp = o_arg(L,2);
+	SAFE(imp);
+	r->privkey = malloc(r->privlen);
+	rsa_oct_to_priv(r,r->privkey,imp);
+	return 0;
+}
+
+
 
 /***
     PKCS V1.5 padding of a message prior to RSA signature.
@@ -183,7 +301,7 @@ static int pkcs15(lua_State *L) {
 	octet *out = o_new(L, r->bits/8);
 	if(!out) return 0;
 	if(!PKCS15(r->hash, in, out)) {
-		error("error in %s RSA %u",__func__, r->bits);
+		ERROR();
 		lua_pop(L,1); // remove the o_new from stack
 		return 0;
 	}
@@ -196,14 +314,13 @@ static int pkcs15(lua_State *L) {
    The new octet is of a size compatible with the number of bits used
    by this RSA instance.
 
-   @return a new octet with maximum lenfgh tof RSA bit size divided by 8
+   @return a new octet with maximum lenfgh to RSA bit size divided by 8
    @function rsa:octet()
 */
 static int rsa_octet(lua_State *L) {
-	rsa *r = rsa_arg(L,1);
-	if(!r) return 0;
-	octet *out = o_new(L, r->max);
-	if(!out) return 0;
+	rsa *r = rsa_arg(L,1); SAFE(r);
+	octet *out = o_new(L, r->rfs);
+	SAFE(out);
 	return 1;
 }
 
@@ -230,16 +347,14 @@ print(csrand:hex())
 
 */
 static int rsa_random(lua_State *L) {
-	rsa *r = rsa_arg(L,1);
-	if(!r) return 0;
+	rsa *r = rsa_arg(L,1); SAFE(r);
 	const int len = luaL_optinteger(L, 2, r->max);
-	octet *out = o_new(L,r->max);
-	if(!out) return 0;
+	octet *out = o_new(L,r->max); SAFE(out);
 	OCT_rand(out,r->rng,len);
 	return 1;
 }
 
-/**
+/*
    OAEP padding of a message prior to RSA encryption. A new octet is
    returned with the padded message, while the input octet is left
    untouched.
@@ -249,15 +364,17 @@ static int rsa_random(lua_State *L) {
    @function rsa:oaep_encode(const)
 */
 static int oaep_encode(lua_State *L) {
-	rsa *r = rsa_arg(L, 1);
-	if(!r) return 0;
-	octet *in = o_arg(L, 2);
-	if(!in) return 0;
-	octet *out = o_new(L, r->max);
-	return OAEP_ENCODE(r->hash, in, r->rng, NULL, out);
+	rsa *r = rsa_arg(L, 1); SAFE(r);
+	octet *in = o_arg(L, 2); SAFE(in);
+	octet *out = o_new(L, in->len + (r->hash*3));
+	SAFE(out);
+	// TODO: check destination size calculation here
+	if(OAEP_ENCODE(r->hash, in, r->rng, NULL, out) >0) {
+		ERROR(); return 0; }
+	return 1;
 }
 
-/**
+/*
 	OAEP unpadding of a message after RSA decryption. Unpadding is
 	done in-place, directly modifying the given octet.
 
@@ -265,10 +382,11 @@ static int oaep_encode(lua_State *L) {
 	@function rsa:oaep_decode(octet)
 */
 static int oaep_decode(lua_State *L) {
-	rsa *r = rsa_arg(L, 1);
-	if(!r) return 0;
-	octet *o = o_arg(L, 2);
-	return OAEP_DECODE(r->hash, NULL, o);
+	rsa *r = rsa_arg(L, 1); SAFE(r);
+	octet *o = o_arg(L, 2);	SAFE(o);
+	if(OAEP_DECODE(r->hash, NULL, o) >0) {
+		ERROR(); return 0; }
+	return 1;
 }
 
 int luaopen_rsa(lua_State *L) {
@@ -278,6 +396,10 @@ int luaopen_rsa(lua_State *L) {
 		{"pkcs15",pkcs15},
 		{"random",rsa_random},
 		{"keygen",rsa_keygen},
+		{"encrypt",rsa_encrypt},
+		{"decrypt",rsa_decrypt},
+		{"public",rsa_public},
+		{"private", rsa_private},
 		{"oaep_encode",oaep_encode},
 		{"oaep_decode",oaep_decode},
 		{"__gc", rsa_destroy},
