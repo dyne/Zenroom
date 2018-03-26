@@ -26,6 +26,7 @@ backtick_references=false
 file={
 	'../../src/octet.c',
 	'../../src/lua/functional.lua',
+	'../../src/rsa.c',
 	'math.lua',
 	'string.lua',
 	'table.lua',

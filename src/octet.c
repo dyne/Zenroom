@@ -81,7 +81,7 @@ int o_destroy(lua_State *L) {
 }
 
 /// Global Functions
-// @section globals
+// @section octet
 //
 // So called "global functions" are all prefixed by <b>octet.</b>,
 // operate on one or more octet objects and always return a new octet
@@ -98,7 +98,7 @@ Create a new octet with a specified maximum size, or a default if
 omitted. All operations exceeding the octet's size will truncate
 excessing data. Octets cannot be resized.
 
-@function new
+@function octet.new(length)
 @int[opt=4096] length maximum length in bytes
 @return octet newly instantiated octet
 @usage
@@ -166,7 +166,7 @@ static int concat_n(lua_State *L) {
 
 
 /// Object Methods
-// @section methods
+// @type octet
 //
 // This section lists methods that can be called as members of the
 // 'octet' objects, using a semicolon notation instead of a
@@ -293,7 +293,7 @@ static int hex(lua_State *L) {
     @int[opt] length amount of random bytes to gather
     @function octet:random(length)
 */
-static int octrng(lua_State *L) {
+static int o_random(lua_State *L) {
 	octet *o = o_arg(L,1);
 	if(!o) return 0;
 	const int len = luaL_optinteger(L, 2, o->max);
@@ -371,14 +371,14 @@ static int size(lua_State *L) {
 	return 1;
 }
 
-#define octet_common_methods \
-	{"empty", empty},        \
-	{"base64", base64},      \
-	{"hex"   , hex},         \
-	{"string", string},      \
-    {"size", size},          \
-	{"random", octrng},      \
-	{"pad", pad},            \
+#define octet_common_methods  \
+	{"empty", empty},         \
+	{"base64", base64},       \
+	{"hex"   , hex},          \
+	{"string", string},       \
+    {"size", size},           \
+	{"random", o_random},       \
+	{"pad", pad},             \
     {"eq", eq}
 
 int luaopen_octet(lua_State *L) {
