@@ -22,3 +22,7 @@
 #define FREE(p) if(p){func("free(%p)",p); free(p);}
 #define HERE() func("%s",__func__)
 #endif
+
+#define KEYPROT(alg,key) \
+	error("%s engine has already a %s set:",alg,key); \
+	error("Zenroom won't overwrite. Use a .new() instance.");
