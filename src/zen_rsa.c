@@ -16,8 +16,9 @@
 // License along with this program.  If not, see
 // <http://www.gnu.org/licenses/>.
 
-
 /// <h1>RSA encryption</h1>
+//
+//  Asymmetric public/private key encryption technologies..
 //
 //  RSA encryption functionalities are provided with all standard
 //  functions by this extension, which has to be required explicitly
@@ -34,8 +35,9 @@
 
 #include <jutils.h>
 #include <zenroom.h>
+#include <zen_rsa.h>
+#include <zen_octet.h>
 #include <lua_functions.h>
-#include <octet.h>
 #include <randombytes.h>
 
 #include <rsa_2048.h>
@@ -43,42 +45,10 @@
 #include <rsa_support.h>
 #include <pbc_support.h>
 
-typedef struct {
-	int bits;
-	int hash;
-	sign32 exponent;
-	int max;
-	csprng *rng; // random generator defined in amcl.h
-	int publen; // precalculated length of public key
-	int privlen; // precalculated length of a private key's slice
-} rsa;
-
-// setup bits, hash, max, publen and privlen in rsa
-static int bitchoice(rsa *r, int bits) {
-	r->bits = bits;
-	r->max = bits/8;  // maximum bytes (instead of MAX_RSA_BYTES
-	// always to 512 (4096bit) as in rsa_support.h)
-	// used for all new octets
-	switch(bits) {
-	case 2048:
-		r->hash = HASH_TYPE_RSA_2048;
-		r->publen = RFS_2048; // sizeof(sign32)+(FFLEN_2048*sizeof(BIG_1024_28));
-		r->privlen = (RFS_2048*5)/2;
-		return 1;
-
-	case 4096:
-		r->hash = HASH_TYPE_RSA_4096;
-		r->publen = RFS_4096; // sizeof(sign32)+(FFLEN_4096*sizeof(BIG_512_29));
-		r->privlen = (RFS_4096*5)/2;
-		return 1;
-
-	default:
-		error("RSA bit size not supported: %u",bits);
-		return 0;
-	}
-
-	return 1;
-}
+// from zen_rsa_aux
+extern int bitchoice(rsa *r, int bits);
+extern int rsa_priv_to_oct(rsa *r, octet *dst, void *priv);
+extern int rsa_pub_to_oct (rsa *r, octet *dst, void *pub);
 
 rsa* rsa_new(lua_State *L, int bitsize) {
 	if(bitsize<=0) return NULL;
@@ -126,66 +96,6 @@ int rsa_destroy(lua_State *L) {
 	return 0;
 }
 
-int rsa_priv_to_oct(rsa *r, octet *dst, void *priv) {
-
-	// typedef struct
-	// {
-	// 	BIG_1024_28 p[FFLEN_2048/2];  /**< secret prime p  */
-	// 	BIG_1024_28 q[FFLEN_2048/2];  /**< secret prime q  */
-	// 	BIG_1024_28 dp[FFLEN_2048/2]; /**< decrypting exponent mod (p-1)  */
-	// 	BIG_1024_28 dq[FFLEN_2048/2]; /**< decrypting exponent mod (q-1)  */
-	// 	BIG_1024_28 c[FFLEN_2048/2];  /**< 1/p mod q */
-	// } rsa_private_key_2048;
-
-	octet *tmp = (octet *)malloc(sizeof(octet));
-	if(r->bits == 2048) {
-		int bigs = FFLEN_2048/2;
-		int fflen = bigs * sizeof(BIG_1024_28);
-		tmp->val=malloc(fflen);
-		tmp->max=fflen; tmp->len=0;
-		// cast input
-		rsa_private_key_2048 *priv2k = (rsa_private_key_2048*)priv;
-		// _toOctet takes size of FF in BIGS
-		FF_2048_toOctet(tmp, priv2k->p,  bigs); OCT_joctet(dst,tmp);
-		FF_2048_toOctet(tmp, priv2k->q,  bigs); OCT_joctet(dst,tmp);
-		FF_2048_toOctet(tmp, priv2k->dp, bigs); OCT_joctet(dst,tmp);
-		FF_2048_toOctet(tmp, priv2k->dq, bigs); OCT_joctet(dst,tmp);
-		FF_2048_toOctet(tmp, priv2k->c,  bigs); OCT_joctet(dst,tmp);
-		free(tmp->val);
-		free(tmp);
-		return dst->len;
-	} else if(r->bits == 4096) {
-		int bigs = FFLEN_4096/2;
-		int fflen = bigs * sizeof(BIG_512_29);
-		tmp->val=malloc(fflen);
-		tmp->max=fflen; tmp->len=0;
-		// cast input
-		rsa_private_key_4096 *priv4k = (rsa_private_key_4096*)priv;
-		// _toOctet takes size of FF in BIGS
-		FF_4096_toOctet(tmp, priv4k->p,  bigs); OCT_joctet(dst,tmp);
-		FF_4096_toOctet(tmp, priv4k->q,  bigs); OCT_joctet(dst,tmp);
-		FF_4096_toOctet(tmp, priv4k->dp, bigs); OCT_joctet(dst,tmp);
-		FF_4096_toOctet(tmp, priv4k->dq, bigs); OCT_joctet(dst,tmp);
-		FF_4096_toOctet(tmp, priv4k->c,  bigs); OCT_joctet(dst,tmp);
-		free(tmp->val);
-		free(tmp);
-		return dst->len;
-	}
-	// fail
-	return 0;
-}
-
-int rsa_pub_to_oct(rsa *r, octet *dst, void *pub) {
-	if(r->bits == 2048) {
-		rsa_public_key_2048 *pub2k = (rsa_public_key_2048*) pub;
-		FF_2048_toOctet(dst, pub2k->n, FFLEN_2048); // discards exponent
-	} else if(r->bits == 4096) {
-		rsa_public_key_4096 *pub4k = (rsa_public_key_4096*) pub;
-		FF_4096_toOctet(dst, pub4k->n, FFLEN_4096); // discards exponent
-	}
-	return dst->len;
-}
-
 /// Global Functions
 // @section rsa.globals
 
@@ -211,6 +121,49 @@ static int newrsa(lua_State *L) {
 
 /// RSA Methods
 // @type rsa
+
+/**
+   RSA key pair generation, returns new public and private keys. Two
+   new octets are instantiated by this function and returned
+   separately.
+
+   @function rsa:keygen()
+   @treturn[1] octet public key
+   @treturn[1] octet private key
+   @usage
+   rsa = require'rsa'
+   r2k = rsa.new(2048)
+   pub,priv = r2k:keygen()
+*/
+static int rsa_keygen(lua_State *L) {
+	rsa *r = rsa_arg(L, 1);
+	if(!r) return 0;
+	void *pub, *priv;
+	if(r->bits == 2048) {
+		priv = malloc(sizeof(rsa_private_key_2048));
+		pub  = malloc(sizeof(rsa_public_key_2048));
+		RSA_2048_KEY_PAIR(r->rng, r->exponent,
+		                  (rsa_private_key_2048*)priv,
+		                  (rsa_public_key_2048*)pub,
+		                  NULL, NULL);
+	} else {
+		priv = malloc(sizeof(rsa_private_key_4096));
+		pub  = malloc(sizeof(rsa_public_key_4096));
+		RSA_4096_KEY_PAIR(r->rng, r->exponent,
+		                  (rsa_private_key_4096*)priv,
+		                  (rsa_public_key_4096*)pub,
+		                  NULL, NULL);
+	}
+	octet *o_pub = o_new(L, r->publen);
+	rsa_pub_to_oct(r, o_pub, pub);
+	func("public key length in bytes: %u", o_pub->len);
+	octet *o_priv = o_new(L, r->privlen);
+	rsa_priv_to_oct(r,o_priv,priv);
+	func("private key length in bytes: %u", o_priv->len);
+	free(pub);
+	free(priv);
+	return 2; // 2 octets returned
+}
 
 /***
     PKCS V1.5 padding of a message prior to RSA signature.
@@ -307,6 +260,7 @@ static int oaep_encode(lua_State *L) {
 /**
 	OAEP unpadding of a message after RSA decryption. Unpadding is
 	done in-place, directly modifying the given octet.
+
 	@param octet the input padded message, unpadded on output
 	@function rsa:oaep_decode(octet)
 */
@@ -315,36 +269,6 @@ static int oaep_decode(lua_State *L) {
 	if(!r) return 0;
 	octet *o = o_arg(L, 2);
 	return OAEP_DECODE(r->hash, NULL, o);
-}
-
-static int rsa_keygen(lua_State *L) {
-	rsa *r = rsa_arg(L, 1);
-	if(!r) return 0;
-	void *pub, *priv;
-	if(r->bits == 2048) {
-		priv = malloc(sizeof(rsa_private_key_2048));
-		pub  = malloc(sizeof(rsa_public_key_2048));
-		RSA_2048_KEY_PAIR(r->rng, r->exponent,
-		                  (rsa_private_key_2048*)priv,
-		                  (rsa_public_key_2048*)pub,
-		                  NULL, NULL);
-	} else {
-		priv = malloc(sizeof(rsa_private_key_4096));
-		pub  = malloc(sizeof(rsa_public_key_4096));
-		RSA_4096_KEY_PAIR(r->rng, r->exponent,
-		                  (rsa_private_key_4096*)priv,
-		                  (rsa_public_key_4096*)pub,
-		                  NULL, NULL);
-	}
-	octet *o_pub = o_new(L, r->publen);
-	rsa_pub_to_oct(r, o_pub, pub);
-	func("public key length in bytes: %u", o_pub->len);
-	octet *o_priv = o_new(L, r->privlen);
-	rsa_priv_to_oct(r,o_priv,priv);
-	func("private key length in bytes: %u", o_priv->len);
-	free(pub);
-	free(priv);
-	return 2; // 2 octets returned
 }
 
 int luaopen_rsa(lua_State *L) {

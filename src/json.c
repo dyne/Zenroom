@@ -43,8 +43,8 @@
 #include <lua.h>
 #include <lauxlib.h>
 
-#include "strbuf.h"
-#include "fpconv.h"
+#include <json_strbuf.h>
+#include "json_fpconv.h"
 
 #ifndef CJSON_MODNAME
 #define CJSON_MODNAME   "cjson"

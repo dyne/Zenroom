@@ -33,7 +33,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "fpconv.h"
+#include <json_fpconv.h>
 
 /* Lua CJSON assumes the locale is the same for all threads within a
  * process and doesn't change after initialisation.

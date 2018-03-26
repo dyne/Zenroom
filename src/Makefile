@@ -20,7 +20,13 @@ CC?=gcc
 VERSION := $(shell cat ../VERSION)
 ARCH := $(shell uname -m)
 CFLAGS  += -I. -I../lib/lua53/src -I../lib/milagro-crypto-c/include -Wall -Wextra
-SOURCES := jutils.o lua_functions.o zenroom.o lua_cjson.o strbuf.o fpconv.o repl.o lualibs_detected.o lua_modules.o lua_io.o crypto.o octet.o rsa.o randombytes.o
+SOURCES := \
+	jutils.o zenroom.o repl.o \
+	lua_functions.o lua_io.o lualibs_detected.o lua_modules.o \
+	json.o json_strbuf.o json_fpconv.o \
+	zen_octet.o zen_rsa.o zen_rsa_aux.o \
+	crypto.o randombytes.o
+
 LDADD   := ../lib/lua53/src/liblua.a
 LDADD   += ../build/luazen/libluazen.a
 

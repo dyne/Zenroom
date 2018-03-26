@@ -1,10 +1,9 @@
 --------------
 --- <h1>Advanced data manipulation</h1>
 --
--- Advanced functions to manipulate complex data structures with
--- functional programming prototypes. This set of functions are ideal
--- to work on nested arrays and maps (also known as datasets or
--- tables).
+-- Manipulate complex data structures with functional programming
+-- prototypes. This set of functions are ideal to work on nested
+-- arrays and maps (also known as datasets or tables).
 --
 -- The functions here are designed to adopt a functional
 -- programming model when designing algorithms, like it is done in
