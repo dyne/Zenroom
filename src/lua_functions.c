@@ -107,7 +107,7 @@ int zen_teardown(lua_State *L) {
 
 	notice("Zenroom console quit.");
     if(L) lua_gc(L, LUA_GCCOLLECT, 0);
-    // lua_close(L);
+    lua_close(L);
 	return(0);
 }
 
