@@ -181,8 +181,8 @@ int zenroom_exec(char *script, char *conf, char *keys,
 }
 
 int main(int argc, char **argv) {
-	char conffile[MAX_STRING] = "zenroom.conf";
-	char scriptfile[MAX_STRING] = "zenroom.lua";
+	char conffile[MAX_STRING];
+	char scriptfile[MAX_STRING];
 	char keysfile[MAX_STRING];
 	char datafile[MAX_STRING];
 	char script[MAX_FILE];
