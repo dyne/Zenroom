@@ -30,7 +30,7 @@ musl := ${pwd}/build/musl
 platform := posix
 luasrc := ${pwd}/lib/lua53/src
 
-rsa_bits := 2048,4096
+rsa_bits := ""
 ecc_curves := ED25519,NIST256,GOLDILOCKS,BN254CX,FP256BN
 
 test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
