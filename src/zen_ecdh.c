@@ -47,16 +47,29 @@ typedef struct {
 	int (*ECP__VP_DSA)(int h,octet *W,octet *M,octet *c,octet *d);
 	csprng *rng;
 	int keysize;
+	int hash;
+	char curve[16]; // just short names
+	octet *pubkey;
+	octet *seckey;
 } ecdh;
 
 ecdh* ecdh_new(lua_State *L, const char *curve) {
 	ecdh *e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
 
-	// checked to avoid overwriting
-	e->keysize = EGS_ED25519*2;
+	// hardcoded on ed25519 for now
+	(void)curve;
+	e->keysize = EGS_ED25519;
 	e->rng = NULL;
-
+	e->hash = HASH_TYPE_ECC_ED25519;
 	e->ECP__KEY_PAIR_GENERATE = ECP_ED25519_KEY_PAIR_GENERATE;
+	e->ECP__PUBLIC_KEY_VALIDATE	= ECP_ED25519_PUBLIC_KEY_VALIDATE;
+	e->ECP__SVDP_DH = ECP_ED25519_SVDP_DH;
+	e->ECP__ECIES_ENCRYPT = ECP_ED25519_ECIES_ENCRYPT;
+	e->ECP__ECIES_DECRYPT = ECP_ED25519_ECIES_DECRYPT;
+	e->ECP__SP_DSA = ECP_ED25519_SP_DSA;
+	e->ECP__VP_DSA = ECP_ED25519_VP_DSA;
+	e->seckey = NULL;
+	e->pubkey = NULL;
 
 	// initialise a new random number generator
 	e->rng = malloc(sizeof(csprng));
@@ -85,20 +98,34 @@ int ecdh_destroy(lua_State *L) {
 	HERE();
 	ecdh *e = ecdh_arg(L,1);
 	SAFE(e);
-	FREE(e->rng);
+	FREE(e->rng);	
 	// FREE(r->pubkey);
 	// FREE(r->privkey);
 	return 0;
 }
 
 int ecdh_keygen(lua_State *L) {
-	ecdh *e = ecdh_arg(L, 1);
-	SAFE(e);
-	octet *pk = o_new(L,e->keysize); SAFE(pk);
+	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
+	if(e->seckey) {
+		ERROR(); KEYPROT(e->curve,"private key"); return 0; }
+	if(e->pubkey) {
+		ERROR(); KEYPROT(e->curve,"public key"); return 0; }
+	octet *pk = o_new(L,e->keysize*2); SAFE(pk);
 	octet *sk = o_new(L,e->keysize); SAFE(sk);
 	// TODO: generate a public key from any secret
 	(*e->ECP__KEY_PAIR_GENERATE)(e->rng,sk,pk);
+	e->pubkey = pk;
+	e->seckey = sk;
 	return 2;
+}
+	
+int ecdh_session(lua_State *L) {
+	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
+	octet *pk = o_arg(L,2);	SAFE(pk);
+	octet *sk = o_arg(L,3); SAFE(sk);
+	octet *ses = o_new(L,e->keysize); SAFE(ses);
+	(*e->ECP__SVDP_DH)(sk,pk,ses);
+	return 1;
 }
 
 static int lua_new_ecdh(lua_State *L) {
@@ -143,10 +170,12 @@ int luaopen_ecdh(lua_State *L) {
 	const struct luaL_Reg ecdh_class[] = {
 		{"new",lua_new_ecdh},
 		{"keygen",ecdh_keygen},
+		{"session",ecdh_session},
 		{NULL,NULL}};
 	const struct luaL_Reg ecdh_methods[] = {
-		{"keygen",ecdh_keygen},
 		{"random",ecdh_random},
+		{"keygen",ecdh_keygen},
+		{"session",ecdh_session},
 		{"__gc", ecdh_destroy},
 		{NULL,NULL}
 	};
