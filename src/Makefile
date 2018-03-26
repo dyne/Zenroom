@@ -25,7 +25,9 @@ LDADD   := ../lib/lua53/src/liblua.a
 LDADD   += ../build/luazen/libluazen.a
 
 milib := ../lib/milagro-crypto-c/lib
-LDADD += ${milib}/libamcl_core.a ${milib}/libamcl_rsa_2048.a ${milib}/libamcl_curve_ED25519.a
+LDADD += ${milib}/libamcl_core.a
+LDADD += ${milib}/libamcl_rsa_2048.a ${milib}/libamcl_rsa_4096.a
+LDADD += ${milib}/libamcl_curve_ED25519.a
 
 
 all: shared
