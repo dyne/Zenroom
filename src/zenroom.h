@@ -17,6 +17,9 @@
  #endif
 #endif
 
+int zenroom_exec(char *script, char *conf, char *keys,
+                 char *data, int verbosity);
+
 #define ERROR() error("Error in %s",__func__)
 #define SAFE(x) if(!x){error("NULL variable in %s",__func__);return 0;}
 #define FREE(p) if(p){func("free(%p)",p); free(p);}

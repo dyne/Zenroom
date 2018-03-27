@@ -74,6 +74,8 @@ win: ${SOURCES}
 	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.exe zenroom.res ${SOURCES} ${LDADD}
 	x86_64-w64-mingw32-strip zenroom.exe
 
+library: CFLAGS += -D LIBRARY
+library: ${SOURCES}
 
 debug: CFLAGS+= -ggdb -DDEBUG=1 -Wall
 debug: LDADD+= -lm

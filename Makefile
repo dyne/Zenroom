@@ -110,6 +110,52 @@ osx: platform := macosx
 osx: patches lua53 luazen milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
 
+ios-armv7: ARCH := armv7
+ios-armv7: OS := iphoneos
+ios-armv7: gcc := $(shell xcrun --sdk iphoneos -f gcc)
+ios-armv7: ar := $(shell xcrun --sdk iphoneos -f ar)
+ios-armv7: ld := $(shell xcrun --sdk iphoneos -f ld)
+ios-armv7: ranlib := $(shell xcrun --sdk iphoneos -f ranlib)
+ios-armv7: SDK := $(shell xcrun --sdk iphoneos --show-sdk-path)
+ios-armv7: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM
+ios-armv7: ldflags := -lm
+ios-armv7: platform := ios
+ios-armv7: patches lua53 luazen milagro
+	CC=${gcc} CFLAGS="${cflags}" make -C src library
+	${AR} rcs zenroom-armv7.a `find . -name \*.o`
+
+ios-arm64: ARCH := arm64
+ios-arm64: OS := iphoneos
+ios-arm64: gcc := $(shell xcrun --sdk iphoneos -f gcc)
+ios-arm64: ar := $(shell xcrun --sdk iphoneos -f ar)
+ios-arm64: ld := $(shell xcrun --sdk iphoneos -f ld)
+ios-arm64: ranlib := $(shell xcrun --sdk iphoneos -f ranlib)
+ios-arm64: SDK := $(shell xcrun --sdk iphoneos --show-sdk-path)
+ios-arm64: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM
+ios-arm64: ldflags := -lm
+ios-arm64: platform := ios
+ios-arm64: patches lua53 luazen milagro
+	CC=${gcc} CFLAGS="${cflags}" make -C src library
+	${AR} rcs zenroom-arm64.a `find . -name \*.o`
+
+ios-sim: ARCH := x86_64
+ios-sim: OS := iphonesimulator
+ios-sim: gcc := $(shell xcrun --sdk iphonesimulator -f gcc)
+ios-sim: ar := $(shell xcrun --sdk iphonesimulator -f ar)
+ios-sim: ld := $(shell xcrun --sdk iphonesimulator -f ld)
+ios-sim: ranlib := $(shell xcrun --sdk iphonesimulator -f ranlib)
+ios-sim: SDK := $(shell xcrun --sdk iphonesimulator --show-sdk-path)
+ios-sim: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM
+ios-sim: ldflags := -lm
+ios-sim: platform := ios
+ios-sim: patches lua53 luazen milagro
+	CC=${gcc} CFLAGS="${cflags}" make -C src library
+	${AR} rcs zenroom-x86_64.a `find . -name \*.o`
+
+
+ios-fat:
+	lipo -create zenroom-x86_64.a zenroom-arm64.a zenroom-armv7.a -output zenroom.a
+
 debug: gcc := gcc
 debug: cflags := -O0 -ggdb -D'ARCH=\"LINUX\"'
 debug: patches lua53 luazen milagro
