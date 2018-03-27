@@ -180,6 +180,7 @@ int zenroom_exec(char *script, char *conf, char *keys,
 	return(return_code);
 }
 
+#ifndef LIBRARY
 int main(int argc, char **argv) {
 	char conffile[MAX_STRING];
 	char scriptfile[MAX_STRING];
@@ -294,3 +295,4 @@ int main(int argc, char **argv) {
 	// exit(1) on failure
 	exit(ret);
 }
+#endif
