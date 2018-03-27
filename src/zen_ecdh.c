@@ -30,6 +30,8 @@
 #include <ecdh_ED25519.h>
 #include <pbc_support.h>
 
+#define fail return 0
+
 typedef struct {
 
 	// function pointers
@@ -50,7 +52,9 @@ typedef struct {
 	int hash;
 	char curve[16]; // just short names
 	octet *pubkey;
+	int publen;
 	octet *seckey;
+	int seclen;
 } ecdh;
 
 ecdh* ecdh_new(lua_State *L, const char *curve) {
@@ -68,10 +72,17 @@ ecdh* ecdh_new(lua_State *L, const char *curve) {
 	e->ECP__ECIES_DECRYPT = ECP_ED25519_ECIES_DECRYPT;
 	e->ECP__SP_DSA = ECP_ED25519_SP_DSA;
 	e->ECP__VP_DSA = ECP_ED25519_VP_DSA;
+
+	// key storage and key lengths are important 
 	e->seckey = NULL;
+	e->seclen = e->keysize;   // TODO: check for each curve
 	e->pubkey = NULL;
+	e->publen = e->keysize*2; // TODO: check for each curve
 
 	// initialise a new random number generator
+	// TODO: make it a newuserdata object in LUA space so that
+	// it can be cleanly collected by the GC as well it can be
+	// saved transparently in the global state
 	e->rng = malloc(sizeof(csprng));
 	char *tmp = malloc(256);
 	randombytes(tmp,252);
@@ -104,28 +115,76 @@ int ecdh_destroy(lua_State *L) {
 	return 0;
 }
 
-int ecdh_keygen(lua_State *L) {
+static int ecdh_keygen(lua_State *L) {
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	if(e->seckey) {
-		ERROR(); KEYPROT(e->curve,"private key"); return 0; }
+		ERROR(); KEYPROT(e->curve,"private key"); fail; }
 	if(e->pubkey) {
-		ERROR(); KEYPROT(e->curve,"public key"); return 0; }
-	octet *pk = o_new(L,e->keysize*2); SAFE(pk);
-	octet *sk = o_new(L,e->keysize); SAFE(sk);
+		ERROR(); KEYPROT(e->curve,"public key"); fail; }
+	octet *pk = o_new(L,e->publen); SAFE(pk);
+	octet *sk = o_new(L,e->seclen); SAFE(sk);
 	// TODO: generate a public key from any secret
 	(*e->ECP__KEY_PAIR_GENERATE)(e->rng,sk,pk);
 	e->pubkey = pk;
 	e->seckey = sk;
 	return 2;
 }
-	
-int ecdh_session(lua_State *L) {
+
+static int ecdh_checkpub(lua_State *L) {
+	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
+	octet *pk = NULL;
+	if(lua_isnoneornil(L, 2)) {
+		if(!e->pubkey) {
+			ERROR(); error("Public key not found."); fail; }
+		pk = e->pubkey;
+	} else
+		pk = o_arg(L, 2); SAFE(pk);
+	if((*e->ECP__PUBLIC_KEY_VALIDATE)(pk)==0)
+		lua_pushboolean(L, 1);
+	else
+		lua_pushboolean(L, 0);
+	return 1;
+}
+
+static int ecdh_session(lua_State *L) {
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	octet *pk = o_arg(L,2);	SAFE(pk);
 	octet *sk = o_arg(L,3); SAFE(sk);
 	octet *ses = o_new(L,e->keysize); SAFE(ses);
 	(*e->ECP__SVDP_DH)(sk,pk,ses);
 	return 1;
+}
+
+static int ecdh_public(lua_State *L) {
+	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
+	if(lua_isnoneornil(L, 2)) {
+		if(!e->pubkey) {
+			ERROR(); error("Public key is not found."); fail; }
+		// export public key to octet
+		octet *exp = o_new(L,e->publen);
+		OCT_copy(exp,e->pubkey);
+		return 1;
+	}
+	if(e->pubkey!=NULL) {
+		ERROR(); KEYPROT(e->curve, "private key"); fail; }
+	e->pubkey = o_arg(L, 2); SAFE(e->pubkey);
+	return 0;
+}
+
+static int ecdh_private(lua_State *L) {
+	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
+	if(lua_isnoneornil(L, 2)) {
+		if(!e->seckey) {
+			ERROR(); error("Private key is not found."); fail; }
+		// export public key to octet
+		octet *exp = o_new(L,e->seclen);
+		OCT_copy(exp,e->seckey);
+		return 1;
+	}
+	if(e->seckey!=NULL) {
+		ERROR(); KEYPROT(e->curve, "private key"); fail; }
+	e->seckey = o_arg(L, 2); SAFE(e->seckey);
+	return 0;
 }
 
 static int lua_new_ecdh(lua_State *L) {
@@ -135,6 +194,7 @@ static int lua_new_ecdh(lua_State *L) {
 	// any action to be taken here?
 	return 1;
 }
+
 
 /**
    Cryptographically Secure Random Number Generator.
@@ -171,11 +231,17 @@ int luaopen_ecdh(lua_State *L) {
 		{"new",lua_new_ecdh},
 		{"keygen",ecdh_keygen},
 		{"session",ecdh_session},
+		{"public", ecdh_public},
+		{"private", ecdh_private},
+		{"checkpub", ecdh_checkpub},
 		{NULL,NULL}};
 	const struct luaL_Reg ecdh_methods[] = {
 		{"random",ecdh_random},
 		{"keygen",ecdh_keygen},
 		{"session",ecdh_session},
+		{"public", ecdh_public},
+		{"private", ecdh_private},
+		{"checkpub", ecdh_checkpub},
 		{"__gc", ecdh_destroy},
 		{NULL,NULL}
 	};
