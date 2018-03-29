@@ -187,6 +187,31 @@ static int ecdh_private(lua_State *L) {
 	return 0;
 }
 
+static int ecdh_encrypt(lua_State *L) {
+	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
+	octet *k = o_arg(L, 2); SAFE(k);
+	octet *in = o_arg(L, 3); SAFE(in);
+	// output is padded to next word
+	octet *out = o_new(L, in->len+16); SAFE(out);
+	AES_CBC_IV0_ENCRYPT(k,in,out);
+	return 1;
+}
+
+static int ecdh_decrypt(lua_State *L) {
+	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
+	octet *k = o_arg(L, 2); SAFE(k);
+	octet *in = o_arg(L, 3); SAFE(in);
+	// output is padded to next word
+	octet *out = o_new(L, in->len+16); SAFE(out);
+	if(!AES_CBC_IV0_DECRYPT(k,in,out)) {
+		error("%s: decryption failed.",__func__);
+		lua_pop(L, 1);
+		lua_pushboolean(L, 0);
+	}
+	return 1;
+}
+
+
 static int lua_new_ecdh(lua_State *L) {
 	const char *curve = luaL_optstring(L, 1, "ec25519");
 	ecdh *e = ecdh_new(L, curve);
@@ -234,6 +259,8 @@ int luaopen_ecdh(lua_State *L) {
 		{"public", ecdh_public},
 		{"private", ecdh_private},
 		{"checkpub", ecdh_checkpub},
+		{"encrypt", ecdh_encrypt},
+		{"decrypt", ecdh_decrypt},
 		{NULL,NULL}};
 	const struct luaL_Reg ecdh_methods[] = {
 		{"random",ecdh_random},
@@ -241,6 +268,8 @@ int luaopen_ecdh(lua_State *L) {
 		{"session",ecdh_session},
 		{"public", ecdh_public},
 		{"private", ecdh_private},
+		{"encrypt", ecdh_encrypt},
+		{"decrypt", ecdh_decrypt},
 		{"checkpub", ecdh_checkpub},
 		{"__gc", ecdh_destroy},
 		{NULL,NULL}
