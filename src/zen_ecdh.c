@@ -33,7 +33,6 @@
 #define fail return 0
 
 typedef struct {
-
 	// function pointers
 	int (*ECP__KEY_PAIR_GENERATE)(csprng *R,octet *s,octet *W);
 	int (*ECP__PUBLIC_KEY_VALIDATE)(octet *W);
@@ -49,7 +48,7 @@ typedef struct {
 	int (*ECP__VP_DSA)(int h,octet *W,octet *M,octet *c,octet *d);
 	csprng *rng;
 	int keysize;
-	int hash;
+	int hash; // hash type is also bytes length of hash
 	char curve[16]; // just short names
 	octet *pubkey;
 	int publen;
@@ -65,6 +64,7 @@ ecdh* ecdh_new(lua_State *L, const char *curve) {
 	e->keysize = EGS_ED25519;
 	e->rng = NULL;
 	e->hash = HASH_TYPE_ECC_ED25519;
+
 	e->ECP__KEY_PAIR_GENERATE = ECP_ED25519_KEY_PAIR_GENERATE;
 	e->ECP__PUBLIC_KEY_VALIDATE	= ECP_ED25519_PUBLIC_KEY_VALIDATE;
 	e->ECP__SVDP_DH = ECP_ED25519_SVDP_DH;
@@ -211,6 +211,56 @@ static int ecdh_decrypt(lua_State *L) {
 	return 1;
 }
 
+static int ecdh_hash(lua_State *L) {
+	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
+	octet *in = o_arg(L, 2); SAFE(in);
+	// hash type indicates also the length in bytes
+	octet *out = o_new(L, e->hash); SAFE(out);
+	HASH(e->hash, in, out);
+	return 1;
+}
+
+
+static int ecdh_hmac(lua_State *L) {
+	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
+	octet *k = o_arg(L, 2);     SAFE(k);
+	octet *in = o_arg(L, 3);    SAFE(in);	
+	// length defaults to hash bytes
+	const int len = luaL_optinteger(L, 4, e->hash);
+	octet *out = o_new(L, len); SAFE(out);
+	if(!HMAC(e->hash, in, k, len, out)) {
+		error("%s: hmac (%u bytes) failed.", len);
+		lua_pop(L, 1);
+		lua_pushboolean(L,0);
+	}
+	return 1;
+}
+
+
+static int ecdh_kdf2(lua_State *L) {
+	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
+	octet *p = o_arg(L, 2);     SAFE(p);
+	octet *in = o_arg(L, 3); SAFE(in);
+	// keylen is length of input key
+	const int keylen = luaL_optinteger(L, 4, in->len);
+	octet *out = o_new(L, keylen); SAFE(out);
+	KDF2(e->hash, p, in, keylen, out);
+	return 1;
+}
+
+static int ecdh_pbkdf2(lua_State *L) {
+	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
+	octet *k = o_arg(L, 2);     SAFE(k);
+	octet *s = o_arg(L, 3); SAFE(s);
+	// keylen is length of input key
+	const int keylen = luaL_optinteger(L, 4, k->len);
+	// keylen is length of input key
+	octet *out = o_new(L, keylen); SAFE(out);
+	// default iterations 1000
+	const int iter = luaL_optinteger(L, 5, 1000);
+	PBKDF2(e->hash, k, s, iter, keylen, out);
+	return 1;
+}
 
 static int lua_new_ecdh(lua_State *L) {
 	const char *curve = luaL_optstring(L, 1, "ec25519");
@@ -251,26 +301,27 @@ static int ecdh_random(lua_State *L) {
 	return 1;
 }
 
+#define COMMON_METHODS \
+	{"keygen",ecdh_keygen}, \
+	{"session",ecdh_session}, \
+	{"public", ecdh_public}, \
+	{"private", ecdh_private}, \
+	{"encrypt", ecdh_encrypt}, \
+	{"decrypt", ecdh_decrypt}, \
+	{"hash", ecdh_hash}, \
+	{"hmac", ecdh_hmac}, \
+	{"kdf2", ecdh_kdf2}, \
+	{"pbkdf2", ecdh_pbkdf2}, \
+	{"checkpub", ecdh_checkpub}
+
 int luaopen_ecdh(lua_State *L) {
 	const struct luaL_Reg ecdh_class[] = {
 		{"new",lua_new_ecdh},
-		{"keygen",ecdh_keygen},
-		{"session",ecdh_session},
-		{"public", ecdh_public},
-		{"private", ecdh_private},
-		{"checkpub", ecdh_checkpub},
-		{"encrypt", ecdh_encrypt},
-		{"decrypt", ecdh_decrypt},
+		COMMON_METHODS,
 		{NULL,NULL}};
 	const struct luaL_Reg ecdh_methods[] = {
 		{"random",ecdh_random},
-		{"keygen",ecdh_keygen},
-		{"session",ecdh_session},
-		{"public", ecdh_public},
-		{"private", ecdh_private},
-		{"encrypt", ecdh_encrypt},
-		{"decrypt", ecdh_decrypt},
-		{"checkpub", ecdh_checkpub},
+		COMMON_METHODS,
 		{"__gc", ecdh_destroy},
 		{NULL,NULL}
 	};
