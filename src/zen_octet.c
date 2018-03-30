@@ -88,7 +88,7 @@ int o_destroy(lua_State *L) {
 	return 0;
 }
 
-/// Global Functions
+/// Global Octet Functions
 // @section octet
 //
 // So called "global functions" are all prefixed by <b>octet.</b>,
