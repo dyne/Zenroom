@@ -1,4 +1,4 @@
--- generate a signature keypair
+-- generate a private keyring and other fictional public keys
 
 -- run with: zenroom keygen.zen
 
@@ -7,11 +7,23 @@
 -- is then usable for asymmetric encryption.
 
 json = require "json"
-crypto = require "crypto"
-pk, sk = crypto.keygen_session_x25519()
-keypair = json.encode(
-   {
-	  public=crypto.encode_b58(pk),
-	  secret=crypto.encode_b58(sk)
-   })
-print(keypair)
+ecdh = require "ecdh"
+keyring = ecdh.new()
+keyring:keygen()
+
+recipients={'jaromil','francesca','jim','mark','paulus','mayo'}
+keys={}
+for i,name in ipairs(recipients) do
+   kk = ecdh.new()
+   kk:keygen()
+   keys[name] = kk:public():base64()
+   print(kk:public():hex())
+   assert(kk:checkpub(kk:public()))
+end
+
+
+keypairs = json.encode({
+	  keyring={public=keyring:public():base64(),
+			   secret=keyring:private():base64()},
+	  recipients=keys})
+print(keypairs)

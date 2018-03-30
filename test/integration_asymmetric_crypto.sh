@@ -7,8 +7,8 @@ bin=${1:-zenroom-shared}
 }
 zen="src/$bin"
 # echo "using: $zen"
-enc=${2:-"b58"}
-algo=${3:-"x25519"}
+enc=${2:-"base64"}
+algo=${3:-"ec25519"}
 symc=${4:-"norx"}
 secret="This is the secret message that is sent among people."
 ppl=(zora vuk mira darko)
@@ -20,11 +20,12 @@ generate() {
 	for p in $ppl; do
 		cat <<EOF | $zen - > $tmp/$p-keys.json
 json = require "json"
-crypto = require "crypto"
-pk, sk = crypto.keygen_session_$algo()
+ecdh = require "ecdh"
+keyring = ecdh.new()
+keyring:keygen()
 keypair = json.encode({
-      public=crypto.encode_$enc(pk),
-      secret=crypto.encode_$enc(sk)})
+      public=keyring:public():$enc(),
+      secret=keyring:private():$enc()})
 print(keypair)
 EOF
 		cat <<EOF | $zen -k $tmp/$p-keys.json - > $tmp/$p-envelop.json
@@ -44,18 +45,20 @@ encrypt() {
     cat <<EOF | $zen -k $tmp/$from-keys.json -a $tmp/$to-envelop.json - \
 					 > $tmp/from-$from-to-$to-cryptomsg.json
 json = require "json"
-crypto = require "crypto"
+ecdh = require "ecdh"
 keys = json.decode(KEYS)
 data = json.decode(DATA)
-nonce = string.sub(crypto.encode_b64(crypto.randombytes(32)),1,32)
-k = crypto.exchange_session_$algo(
-  crypto.decode_$enc(keys.secret),
-  crypto.decode_$enc(data.pubkey))
-enc = crypto.encrypt_$symc(k,nonce,data.message)
+recipient = ecdh.new()
+recipient:public(data.pubkey)
+sender = ecdh.new()
+sender:secret(keys.secret)
+nonce = sender:random(32)
+k = ecdh.session(sender, recipient)
+enc = ecdh.encrypt(k,data.message)
 print(json.encode({
-    encmsg=crypto.encode_$enc(enc),
+    encmsg=enc:base64(),
     pubkey=keys.public,
-	nonce=nonce}))
+	nonce=nonce:base64()}))
 EOF
 }
 
@@ -64,9 +67,11 @@ decrypt() {
 	to=$2
 	cat <<EOF | $zen -k $tmp/$to-keys.json -a $tmp/from-$from-to-$to-cryptomsg.json -
 json = require "json"
-crypto = require "crypto"
+ecdh = require "ecdh"
 keys = json.decode(KEYS)
 data = json.decode(DATA)
+recipient = ecdh.new()
+recipient:secret(keys.secret)	 
 k = crypto.exchange_session_$algo(
   crypto.decode_$enc(keys.secret),
   crypto.decode_$enc(data.pubkey))

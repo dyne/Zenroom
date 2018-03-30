@@ -1,14 +1,14 @@
 {
-    "keyring": {
-        "pubkey":"GoTdVYbTWEoZ4KtCeMghV7UcpJyhvny1QjVPf8K4oi1i",
-        "seckey":"9PSbkNgsbgPnX3hM19MHVMpp2mzvmHcXCcz6iV8r7RyZ"
-    },
-    "recipients": {
-        "jaromil": "CsTCsf6i7nRRH97c3LVGGDn7URQ7VHyUtgxmPyMeNgVg",
-        "francesca": "CQ9DE4E5Ag2e71dUW2STYbwseLLnmY1F9pR85gLWkEC6",
-        "jimb": "FNUdjaPchQsxSjzSbPsMNVPA2v1XUhNPazStSRmVcTwu",
-        "mark": "9zxrLG7kwheF3FMa852r3bZ4NEmowYhxdTj3kVfoipPV",
-        "paulus": "2LbUdFSu9mkvtVE6GuvtJxiFnUWBWdYjK2Snq4VhnzpB",
-        "mayo": "5LrSGTwmnBFvm3MekxSxE9KWVENdSPtcmx3RZbktRiXc"
-    }
+   "recipients" : {
+      "mayo" : "BBkjohPvJ7cFA4d4UjI+s/JnlKSI6rNsYYocC0MCLA1lAwiVs6V3jd2Zfhqu0Rm7ueztqWduKy1ejvy999RF0Q==",
+      "francesca" : "BDqlb7tK6G3+khHDkYgfkPA9howz6nDSARvMKjcpl8yTBQnBvOwgx4nIyheLS1NdohlIJqoteijSaOSC0OacYA==",
+      "paulus" : "BCa0qSdQdKsB88JzWJlqSU9SrWER8li/zGGbPaSooJXPJDidkX6/NbFJANXEhhn7Ezhz4bCQ8UIDHMd74cS23A==",
+      "jim" : "BBt8qJIL7CXMZFOG0/qrLtCL0L259hip5XdNZXQlI24Hd1ZbCeLL8wcvkJrbcHRJ5oLVAvQp2XmTRSiTjml4Ug==",
+      "mark" : "BF8DaZ0KT9gwOcVzYrQ3uY6Kodts7xAORJ2UEwPOYZIAM7c+boahDMq9r3FByXHe/txK5/h2sKLkmUdoMGU6NQ==",
+      "jaromil" : "BBoYGfcl7H32aw9K926uPr1ipoJA1MxzKvwne8FHMOocVcIlolwefo399bZ/ZA58K0HUBS47/9ho/ViTQmeuLQ=="
+   },
+   "keyring" : {
+      "secret" : "DQutQLEl05vxRmgKQKtMIGXJ2dZ+oRqlYL3FGJDjPgg=",
+      "public" : "BCTNMIQ1QIbpiBjEK7m2qh0LSCRQ+n+idcrJ7tYf+ZPJbzRoeKJFPdFlzrySIjDU30RdrIshbGWiDhhmfjtKBg=="
+   }
 }

@@ -222,7 +222,6 @@ check-shared: check-milagro
 	${test-exec} test/locals.lua && \
 	${test-exec} test/constructs.lua && \
 	${test-exec} test/cjson-test.lua && \
-	${test-exec} test/test_luazen.lua && \
 	${test-exec} test/schema.lua && \
 	test/integration_asymmetric_crypto.sh && \
 	echo "----------------\nAll tests passed for SHARED binary build\n----------------"
@@ -248,7 +247,6 @@ check-static: check-milagro
 	${test-exec} test/locals.lua && \
 	${test-exec} test/constructs.lua && \
 	${test-exec} test/cjson-test.lua && \
-	${test-exec} test/test_luazen.lua && \
 	${test-exec} test/schema.lua && \
 	test/integration_asymmetric_crypto.sh zenroom-static && \
 	echo "----------------\nAll tests passed for STATIC binary build\n----------------"
@@ -274,7 +272,6 @@ check-js:
 	${test-exec} test/locals.lua && \
 	${test-exec} test/constructs.lua && \
 	${test-exec} test/cjson-test.lua && \
-	${test-exec} test/test_luazen.lua && \
 	${test-exec} test/schema.lua && \
 	echo "----------------\nAll tests passed for JAVASCRIPT binary build\n----------------"
 
@@ -301,14 +298,12 @@ check-debug: check-milagro
 	${test-exec} test/locals.lua && \
 	${test-exec} test/constructs.lua && \
 	${test-exec} test/cjson-test.lua && \
-	${test-exec} test/test_luazen.lua && \
 	${test-exec} test/schema.lua && \
 	test/integration_asymmetric_crypto.sh && \
 	echo "----------------\nAll tests passed for SHARED binary build\n----------------"
 
 clean:
 	make clean -C ${pwd}/lib/lua53/src
-	make clean -C ${pwd}/build/luazen
 	make clean -C ${pwd}/lib/milagro-crypto-c && \
 		rm -f ${pwd}/lib/milagro-crypto-c/CMakeCache.txt
 	make clean -C src

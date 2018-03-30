@@ -279,7 +279,7 @@ static int hex(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
 	if(lua_isnoneornil(L, 2)) {
 		// export to hex
-		char *s = malloc(o->len*2+1);
+		char *s = malloc(o->len*2+2);
 		OCT_toHex(o,s);
 		lua_pushstring(L,s);
 		free(s);

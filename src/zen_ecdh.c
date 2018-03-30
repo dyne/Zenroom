@@ -1,4 +1,4 @@
-// Zenroom RSA module
+// Zenroom ECDH module
 //
 // (c) Copyright 2017-2018 Dyne.org foundation
 // designed, written and maintained by Denis Roio <jaromil@dyne.org>
@@ -169,6 +169,13 @@ static int ecdh_keygen(lua_State *L) {
 	octet *sk = o_new(L,e->seclen); SAFE(sk);
 	// TODO: generate a public key from any secret
 	(*e->ECP__KEY_PAIR_GENERATE)(e->rng,sk,pk);
+	int res;
+	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(pk);
+	if(res == ECDH_INVALID_PUBLIC_KEY) {
+		error("%s: generated public key is invalid",__func__);
+		lua_pop(L,1); // remove the pk from stack
+		lua_pop(L,1); // remove the sk from stack
+		return 0; }
 	e->pubkey = pk;
 	e->seckey = sk;
 	return 2;
@@ -213,19 +220,34 @@ static int ecdh_checkpub(lua_State *L) {
    @function ecdh:session(public, private)
    @return a new octet containing the shared session key
 */
-
 static int ecdh_session(lua_State *L) {
-	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
-	ecdh *pk = ecdh_arg(L,2);	SAFE(pk);
-	if(!pk->pubkey) {
-		error("%s: public key not found in keyring",__func__);
-		return 0; }
-	ecdh *sk = ecdh_arg(L,3); SAFE(sk);
-	if(!sk->seckey) {
-		error("%s: secret key not found in keyring",__func__);
+	void *ud;
+	octet *pubkey;
+	ecdh *pk;
+	ecdh *e = ecdh_arg(L,1); SAFE(e);
+	if((ud = luaL_testudata(L, 2, "zenroom.ecdh"))) {
+		pk = (ecdh*)ud;
+		if(!pk->pubkey) {
+			error("%s: public key not found in keyring",__func__);
+			return 0; }
+		pubkey = pk->pubkey; // take secret key from keyring
+		func("%s: public key found in ecdh keyring (%u bytes)",
+		     __func__, pubkey->len);
+	} else if((ud = luaL_testudata(L, 2, "zenroom.octet"))) {
+		pubkey = (octet*)ud; // take secret key from octet
+		func("%s: public key found in octet (%u bytes)",
+		     __func__, pubkey->len);
+	} else {
+		error("%s: invalid public key argument",__func__);
+		return 0;
+	}
+	int res;
+	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(pubkey);
+	if(res == ECDH_INVALID_PUBLIC_KEY) {
+		error("%s: public key found but invalid",__func__);
 		return 0; }
 	octet *ses = o_new(L,e->keysize); SAFE(ses);
-	(*e->ECP__SVDP_DH)(sk->seckey,pk->pubkey,ses);
+	(*e->ECP__SVDP_DH)(e->seckey,pubkey,ses);
 	return 1;
 }
 
@@ -243,15 +265,27 @@ static int ecdh_public(lua_State *L) {
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	if(lua_isnoneornil(L, 2)) {
 		if(!e->pubkey) {
-			ERROR(); error("Public key is not found."); fail; }
+			if(!e->seckey) {
+				ERROR(); error("Public key is not found."); fail;
+			} else {
+				func("TODO: generate public key from secret");
+			}
+		}
 		// export public key to octet
-		octet *exp = o_new(L,e->publen);
+		octet *exp = o_new(L,e->pubkey->len);
 		OCT_copy(exp,e->pubkey);
 		return 1;
 	}
 	if(e->pubkey!=NULL) {
-		ERROR(); KEYPROT(e->curve, "private key"); fail; }
-	e->pubkey = o_arg(L, 2); SAFE(e->pubkey);
+		ERROR(); KEYPROT(e->curve, "public key"); fail; }
+	octet *o = o_arg(L, 2); SAFE(o);
+	int res;
+	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(o);
+	if(res == ECDH_INVALID_PUBLIC_KEY) {
+		error("%s: generated public key is invalid",__func__);
+		return 0; }
+	func("%s: valid key",__func__);
+	e->pubkey = o;
 	return 0;
 }
 
