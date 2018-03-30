@@ -77,6 +77,11 @@ win: ${SOURCES}
 library: CFLAGS += -D LIBRARY
 library: ${SOURCES}
 
+android: LDADD+= -lm
+android: CFLAGS += -D LIBRARY
+android: ${SOURCES} zenroom_jni.o
+	${CC} ${CFLAGS} ${SOURCES} zenroom_jni.o -o zenroom.so ${LDFLAGS} ${LDADD}
+
 debug: CFLAGS+= -ggdb -DDEBUG=1 -Wall
 debug: LDADD+= -lm
 debug: clean ${SOURCES}
