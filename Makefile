@@ -156,6 +156,15 @@ ios-sim: patches lua53 luazen milagro
 ios-fat:
 	lipo -create zenroom-x86_64.a zenroom-arm64.a zenroom-armv7.a -output zenroom.a
 
+android: gcc := $(CC)
+android: ar := $(AR)
+android: ranlib := $(RANLIB)
+android: ld := $(ld)
+android: cflags := ${cflags} -std=c99 -shared -DLUA_USE_DLOPEN
+android: patches lua53 luazen milagro
+	LDFLAGS="--sysroot=/tmp/ndk-arch-21/sysroot" CC=${gcc} CFLAGS="${cflags}" make -C src android
+
+
 debug: gcc := gcc
 debug: cflags := -O0 -ggdb -D'ARCH=\"LINUX\"'
 debug: patches lua53 luazen milagro
