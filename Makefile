@@ -201,8 +201,7 @@ milagro-js:
 check-milagro: milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c test
 
-check-shared: test-exec := ${pwd}/src/zenroom-shared
-check-shared: check-milagro
+tests := \
 	@${test-exec} test/vararg.lua && \
 	${test-exec} test/utf8.lua && \
 	${test-exec} test/tpack.lua && \
@@ -223,83 +222,28 @@ check-shared: check-milagro
 	${test-exec} test/constructs.lua && \
 	${test-exec} test/cjson-test.lua && \
 	${test-exec} test/schema.lua && \
-	test/integration_asymmetric_crypto.sh && \
+	${test-exec} test/octet.lua
+
+
+
+check-shared: test-exec := ${pwd}/src/zenroom-shared
+check-shared:
+	${tests} && \
 	echo "----------------\nAll tests passed for SHARED binary build\n----------------"
 
 check-static: test-exec := ${pwd}/src/zenroom-static -c ${pwd}/test/decode-test.conf
-check-static: check-milagro
-	@${test-exec} test/vararg.lua && \
-	${test-exec} test/utf8.lua && \
-	${test-exec} test/tpack.lua && \
-	${test-exec} test/strings.lua && \
-	${test-exec} test/sort.lua && \
-	${test-exec} test/math.lua && \
-	${test-exec} test/literals.lua && \
-	${test-exec} test/goto.lua && \
-	${test-exec} test/gc.lua && \
-	${test-exec} test/events.lua && \
-	${test-exec} test/coroutine.lua && \
-	${test-exec} test/code.lua && \
-	${test-exec} test/closure.lua && \
-	${test-exec} test/calls.lua && \
-	${test-exec} test/pm.lua && \
-	${test-exec} test/nextvar.lua && \
-	${test-exec} test/locals.lua && \
-	${test-exec} test/constructs.lua && \
-	${test-exec} test/cjson-test.lua && \
-	${test-exec} test/schema.lua && \
-	test/integration_asymmetric_crypto.sh zenroom-static && \
+check-static:
+	${tests} && \
 	echo "----------------\nAll tests passed for STATIC binary build\n----------------"
 
 check-js: test-exec := nodejs ${pwd}/test/zenroom_exec.js ${pwd}/src/zenroom.js
 check-js:
-	@${test-exec} test/vararg.lua && \
-	${test-exec} test/utf8.lua && \
-	${test-exec} test/tpack.lua && \
-	${test-exec} test/strings.lua && \
-	${test-exec} test/sort.lua && \
-	${test-exec} test/math.lua && \
-	${test-exec} test/literals.lua && \
-	${test-exec} test/goto.lua && \
-	${test-exec} test/gc.lua && \
-	${test-exec} test/events.lua && \
-	${test-exec} test/coroutine.lua && \
-	${test-exec} test/code.lua && \
-	${test-exec} test/closure.lua && \
-	${test-exec} test/calls.lua && \
-	${test-exec} test/pm.lua && \
-	${test-exec} test/nextvar.lua && \
-	${test-exec} test/locals.lua && \
-	${test-exec} test/constructs.lua && \
-	${test-exec} test/cjson-test.lua && \
-	${test-exec} test/schema.lua && \
+	${tests} && \
 	echo "----------------\nAll tests passed for JAVASCRIPT binary build\n----------------"
 
-# TODO: complete js tests with schema and other lua extensions
-
 check-debug: test-exec := valgrind ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
-check-debug: check-milagro
-	@${test-exec} test/vararg.lua && \
-	${test-exec} test/utf8.lua && \
-	${test-exec} test/tpack.lua && \
-	${test-exec} test/strings.lua && \
-	${test-exec} test/sort.lua && \
-	${test-exec} test/math.lua && \
-	${test-exec} test/literals.lua && \
-	${test-exec} test/goto.lua && \
-	${test-exec} test/gc.lua && \
-	${test-exec} test/events.lua && \
-	${test-exec} test/coroutine.lua && \
-	${test-exec} test/code.lua && \
-	${test-exec} test/closure.lua && \
-	${test-exec} test/calls.lua && \
-	${test-exec} test/pm.lua && \
-	${test-exec} test/nextvar.lua && \
-	${test-exec} test/locals.lua && \
-	${test-exec} test/constructs.lua && \
-	${test-exec} test/cjson-test.lua && \
-	${test-exec} test/schema.lua && \
-	test/integration_asymmetric_crypto.sh && \
+check-debug:
+	${tests} && \
 	echo "----------------\nAll tests passed for SHARED binary build\n----------------"
 
 clean:
