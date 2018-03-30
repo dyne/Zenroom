@@ -38,7 +38,7 @@ extern int lua_cjson_new(lua_State *l);
 extern void zen_add_io(lua_State *L);
 extern zen_extension_t zen_extensions[];
 
-extern int luaopen_crypto(lua_State *L);
+// extern int luaopen_crypto(lua_State *L);
 extern int luaopen_octet(lua_State *L);
 extern int luaopen_rsa(lua_State *L);
 extern int luaopen_ecdh(lua_State *L);
@@ -104,9 +104,9 @@ int zen_require(lua_State *L) {
 	}
 
 	// require our own C to lua extensions
-	if     (strcmp(s, "crypto")==0) {
-		luaL_requiref(L, s, luaopen_crypto, 1); return 1; }
-	else if(strcmp(s, "octet")  ==0) {
+	// if     (strcmp(s, "crypto")==0) {
+	// 	luaL_requiref(L, s, luaopen_crypto, 1); return 1; }
+	if(strcmp(s, "octet")  ==0) {
 		luaL_requiref(L, s, luaopen_octet, 1);	return 1; }
 	// else if(strcmp(s, "rsa")  ==0) {
 	// 	luaL_requiref(L, s, luaopen_rsa, 1);	return 1; }

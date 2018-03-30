@@ -26,12 +26,12 @@ SOURCES := \
 	json.o json_strbuf.o json_fpconv.o \
 	zen_octet.o \
 	zen_ecdh.o \
-	crypto.o randombytes.o
+	randombytes.o
 
 # zen_rsa.o zen_rsa_aux.o \
 
 LDADD   := ../lib/lua53/src/liblua.a
-LDADD   += ../build/luazen/libluazen.a
+# LDADD   += ../build/luazen/libluazen.a
 
 milib := ../lib/milagro-crypto-c/lib
 # LDADD += ${milib}/libamcl_rsa_2048.a ${milib}/libamcl_rsa_4096.a

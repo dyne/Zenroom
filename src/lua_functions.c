@@ -23,7 +23,7 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
-#include <luazen.h>
+// #include <luazen.h>
 
 #include <zenroom.h>
 #include <lua_functions.h>
