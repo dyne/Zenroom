@@ -238,7 +238,7 @@ tests = \
 check-shared: test-exec := ${pwd}/src/zenroom-shared
 check-shared:
 	$(call tests,${test-exec})
-	@./test/octet-json.sh ${test-exec}
+	./test/octet-json.sh ${test-exec}
 	@echo "----------------"
 	@echo "All tests passed for SHARED binary build"
 	@echo "----------------"
@@ -246,7 +246,7 @@ check-shared:
 check-static: test-exec := ${pwd}/src/zenroom-static
 check-static:
 	$(call tests,${test-exec})
-	@./test/octet-json.sh ${test-exec}
+	./test/octet-json.sh ${test-exec}
 	@echo "----------------"
 	@echo "All tests passed for SHARED binary build"
 	@echo "----------------"
@@ -261,7 +261,7 @@ check-js:
 check-debug: test-exec := valgrind ${pwd}/src/zenroom-shared
 check-debug:
 	$(call tests,${test-exec})
-	@./test/octet-json.sh ${test-exec}
+	./test/octet-json.sh ${test-exec}
 	@echo "----------------"
 	@echo "All tests passed for SHARED binary build"
 	@echo "----------------"

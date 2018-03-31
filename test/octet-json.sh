@@ -20,7 +20,7 @@ dump = json.encode({teststr="$tstr",
 print(dump)
 EOF
 
-${1} \
+${1} -d \
 	/tmp/zenroom_temp_check.lua  > /tmp/octet.json || return 1
 
 
@@ -49,7 +49,7 @@ left:base64(test.pubkey)
 assert(ecc:checkpub(left))
 EOF
 
-${1} \
+${1} -d \
 	-a /tmp/octet.json /tmp/zenroom_temp_check.lua \
 	|| return 1
 
