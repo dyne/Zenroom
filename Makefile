@@ -210,49 +210,48 @@ milagro-js:
 check-milagro: milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c test
 
-tests := \
-	@${test-exec} test/vararg.lua && \
-	${test-exec} test/utf8.lua && \
-	${test-exec} test/tpack.lua && \
-	${test-exec} test/strings.lua && \
-	${test-exec} test/sort.lua && \
-	${test-exec} test/math.lua && \
-	${test-exec} test/literals.lua && \
-	${test-exec} test/goto.lua && \
-	${test-exec} test/gc.lua && \
-	${test-exec} test/events.lua && \
-	${test-exec} test/coroutine.lua && \
-	${test-exec} test/code.lua && \
-	${test-exec} test/closure.lua && \
-	${test-exec} test/calls.lua && \
-	${test-exec} test/pm.lua && \
-	${test-exec} test/nextvar.lua && \
-	${test-exec} test/locals.lua && \
-	${test-exec} test/constructs.lua && \
-	${test-exec} test/cjson-test.lua && \
-	${test-exec} test/schema.lua && \
-	${test-exec} test/octet.lua
+tests = \
+		@${1} test/vararg.lua && \
+		${1} test/utf8.lua && \
+		${1} test/tpack.lua && \
+		${1} test/strings.lua && \
+		${1} test/sort.lua && \
+		${1} test/math.lua && \
+		${1} test/literals.lua && \
+		${1} test/goto.lua && \
+		${1} test/gc.lua && \
+		${1} test/events.lua && \
+		${1} test/coroutine.lua && \
+		${1} test/code.lua && \
+		${1} test/closure.lua && \
+		${1} test/calls.lua && \
+		${1} test/pm.lua && \
+		${1} test/nextvar.lua && \
+		${1} test/locals.lua && \
+		${1} test/constructs.lua && \
+		${1} test/cjson-test.lua && \
+		${1} test/schema.lua && \
+		${1} test/octet.lua
 
 
 
-check-shared: test-exec := ${pwd}/src/zenroom-shared
 check-shared:
-	${tests} && \
+	$(call tests,${pwd}/src/zenroom-shared) && \
 	echo "----------------\nAll tests passed for SHARED binary build\n----------------"
 
-check-static: test-exec := ${pwd}/src/zenroom-static -c ${pwd}/test/decode-test.conf
+check-static: test-exec := ${pwd}/src/zenroom-static
 check-static:
-	${tests} && \
+	$(call tests,${pwd}/src/zenroom-static) && \
 	echo "----------------\nAll tests passed for STATIC binary build\n----------------"
 
 check-js: test-exec := nodejs ${pwd}/test/zenroom_exec.js ${pwd}/src/zenroom.js
 check-js:
-	${tests} && \
+	$(call tests,${test-exec}) && \
 	echo "----------------\nAll tests passed for JAVASCRIPT binary build\n----------------"
 
-check-debug: test-exec := valgrind ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
+check-debug: test-exec := valgrind ${pwd}/src/zenroom-shared
 check-debug:
-	${tests} && \
+	$(call tests,${test-exec}) && \
 	echo "----------------\nAll tests passed for SHARED binary build\n----------------"
 
 clean:
