@@ -231,28 +231,40 @@ tests = \
 		${1} test/constructs.lua && \
 		${1} test/cjson-test.lua && \
 		${1} test/schema.lua && \
-		${1} test/octet.lua
+		${1} test/octet.lua && \
+		${1} test/ecdh.lua
 
 
-
+check-shared: test-exec := ${pwd}/src/zenroom-shared
 check-shared:
-	$(call tests,${pwd}/src/zenroom-shared) && \
-	echo "----------------\nAll tests passed for SHARED binary build\n----------------"
+	$(call tests,${test-exec})
+	@./test/octet-json.sh ${test-exec}
+	@echo "----------------"
+	@echo "All tests passed for SHARED binary build"
+	@echo "----------------"
 
 check-static: test-exec := ${pwd}/src/zenroom-static
 check-static:
-	$(call tests,${pwd}/src/zenroom-static) && \
-	echo "----------------\nAll tests passed for STATIC binary build\n----------------"
+	$(call tests,${test-exec})
+	@./test/octet-json.sh ${test-exec}
+	@echo "----------------"
+	@echo "All tests passed for SHARED binary build"
+	@echo "----------------"
 
 check-js: test-exec := nodejs ${pwd}/test/zenroom_exec.js ${pwd}/src/zenroom.js
 check-js:
-	$(call tests,${test-exec}) && \
-	echo "----------------\nAll tests passed for JAVASCRIPT binary build\n----------------"
+	$(call tests,${test-exec})
+	@echo "----------------"
+	@echo "All tests passed for SHARED binary build"
+	@echo "----------------"
 
 check-debug: test-exec := valgrind ${pwd}/src/zenroom-shared
 check-debug:
-	$(call tests,${test-exec}) && \
-	echo "----------------\nAll tests passed for SHARED binary build\n----------------"
+	$(call tests,${test-exec})
+	@./test/octet-json.sh ${test-exec}
+	@echo "----------------"
+	@echo "All tests passed for SHARED binary build"
+	@echo "----------------"
 
 clean:
 	make clean -C ${pwd}/lib/lua53/src

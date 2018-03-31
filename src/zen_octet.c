@@ -51,7 +51,7 @@ static int _max(int x, int y) { if(x > y) return x;	else return y; }
 static int _min(int x, int y) { if(x < y) return x;	else return y; }
 
 // REMEMBER: newuserdata already pushes the object in lua's stack
-octet* o_new(lua_State *L, int size) {
+octet* o_new(lua_State *L, const int size) {
 	if(size<=0) return NULL;
 	if(size>MAX_FILE) {
 		error("Cannot create octet, size too big: %u", size);
@@ -61,12 +61,12 @@ octet* o_new(lua_State *L, int size) {
 		error("Error allocating new octet in %s",__func__);
 		return NULL; }
 	// TODO: check that maximum is not exceeded
-	o->val=malloc(size);
 	luaL_getmetatable(L, "zenroom.octet");
 	lua_setmetatable(L, -2);
+	o->val = malloc((size_t)size);
 	o->len = 0;
-	o->max = size;
-	func("created octet of size %u",size);
+	o->max = size-1;
+	func("new octet (%u bytes)",size);
 	return(o);
 }
 
@@ -80,6 +80,14 @@ octet* o_arg(lua_State *L,int n) {
 	return(o);
 }
 
+// allocates a new octet in LUA, duplicating the one in arg
+octet *o_dup(lua_State *L, octet *o) {
+	SAFE(o);
+	octet *n = o_new(L, o->len+1);
+	OCT_copy(n,o);
+	return(n);
+}
+	
 int o_destroy(lua_State *L) {
 	HERE();
 	octet *o = o_arg(L,1);
@@ -226,13 +234,21 @@ msg:string("my message to be encoded in base64")
 print(msg:base64())
 
 */
+static int getlen_base64(int len) {
+	int res = ((3+(4*(len/3))) & ~0x03);
+	func("base64 len: %u to %u",len,res);
+	return(res);
+}
 static int base64 (lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
 	if(lua_isnoneornil(L, 2)) {
 		// export to base64
-		char b[MAX_STRING];
+		int newlen = getlen_base64(o->len);
+		char *b = malloc(newlen*sizeof(char));
 		OCT_tobase64(b,o);
+		// b[newlen] = 0;
 		lua_pushstring(L,b);
+		free(b);
 	} else {
 		// import from base64
 		const char *s = lua_tostring(L, 2);
@@ -253,9 +269,11 @@ static int string(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
 	if(lua_isnoneornil(L, 2)) {
 		// export to string
-		char s[MAX_STRING];
+		char *s = malloc(o->len+1);
 		OCT_toStr(o,s);
+		s[o->len] = 0; // make sure string is NULL terminated
 		lua_pushstring(L,s);
+		free(s);
 	} else {
 		// import from string
 		size_t len;
@@ -281,6 +299,7 @@ static int hex(lua_State *L) {
 		// export to hex
 		char *s = malloc(o->len*2+2);
 		OCT_toHex(o,s);
+		s[o->len*2] = 0;
 		lua_pushstring(L,s);
 		free(s);
 	} else {

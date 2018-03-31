@@ -9,11 +9,16 @@ secoctet:string(secret)
 ecdh = require'ecdh'
 ed25519 = ecdh.new()
 pk,sk = ed25519:keygen()
+print  'test both ways of obtaining keys'
 print 'public:'
 print(pk:hex())
+print(ed25519:public():hex())
+assert(ed25519:checkpub(pk))
+assert(ed25519:checkpub(ed25519:public()))
 print 'secret:'
 print(sk:hex())
-
+print(ed25519:private():hex())
+assert(sk:hex() == ed25519:private():hex())
 
 ses = ed25519:session(pk,sk)
 print 'session:'

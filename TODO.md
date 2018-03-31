@@ -7,14 +7,17 @@ and their specific use-cases.
 
 ## Generic improvements
 
+- use static memory pool in place of malloc from host
+  https://github.com/dcshi/ncx_mempool
+
 - in/out to MSGPACK in addition to JSON for compact messaging easy using
   Antirez' extension see https://github.com/antirez/lua-cmsgpack
 
-- compile extensions and load them from strings using the lua load()
+X compile extensions and load them from strings using the lua load()
   function directly with callbacks
   http://www.lua.org/manual/5.1/manual.html#lua_load
 
-- if event based callback framework needed, try including libev
+V if event based callback framework needed, try including libev
   https://github.com/brimworks/lua-ev
   http://software.schmorp.de/pkg/libev.html
 
@@ -34,7 +37,7 @@ X functional programming facility
 - date and time module
   https://github.com/Tieske/date
 
-- pick extensions from here
+V pick extensions from here
   http://webserver2.tecgraf.puc-rio.br/~lhf/ftp/lua/
 
 ## Developer experience
@@ -43,7 +46,7 @@ X functional programming facility
   - http://jupyter-client.readthedocs.io/en/latest/kernels.html
   - https://github.com/neomantra/lua_ipython_kernel
 
-- add list of functions and keywords for completion in ace
+X add list of functions and keywords for completion in ace
   the js editor used for the example. last review of way
   to include extensions (with prefix. or?)
 
@@ -56,7 +59,7 @@ X functional programming facility
 - introspection
   https://github.com/leegao/see.lua
 
-- self documentation
+V self documentation
   https://github.com/rgieseke/locco
   (also includes interesting modules as luabalanced)
 

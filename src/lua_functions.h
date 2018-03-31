@@ -43,7 +43,7 @@ typedef struct zen_extension_t {
 lua_State *zen_init(const char *conf);
 int zen_exec_line(lua_State *L, const char *line);
 int zen_exec_script(lua_State *L, const char *script);
-int zen_teardown(lua_State *L);
+void zen_teardown(lua_State *L);
 
 int get_debug();
 

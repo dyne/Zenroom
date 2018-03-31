@@ -103,12 +103,11 @@ lua_State *zen_init(const char *conf) {
 
 }
 
-int zen_teardown(lua_State *L) {
+void zen_teardown(lua_State *L) {
 
-	notice("Zenroom console quit.");
+	notice("Zenroom teardown.");
     if(L) lua_gc(L, LUA_GCCOLLECT, 0);
     lua_close(L);
-	return(0);
 }
 
 int zen_exec_line(lua_State *L, const char *line) {

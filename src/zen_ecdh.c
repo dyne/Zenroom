@@ -46,6 +46,10 @@
 
 #define fail return 0
 
+#define KEYPROT(alg,key)	  \
+	error("%s engine has already a %s set:",alg,key); \
+	error("Zenroom won't overwrite. Use a .new() instance.");
+
 typedef struct {
 	// function pointers
 	int (*ECP__KEY_PAIR_GENERATE)(csprng *R,octet *s,octet *W);
@@ -262,6 +266,7 @@ static int ecdh_session(lua_State *L) {
    @function ecdh:public(key)
 */
 static int ecdh_public(lua_State *L) {
+	int res;
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	if(lua_isnoneornil(L, 2)) {
 		if(!e->pubkey) {
@@ -272,14 +277,16 @@ static int ecdh_public(lua_State *L) {
 			}
 		}
 		// export public key to octet
-		octet *exp = o_new(L,e->pubkey->len);
-		OCT_copy(exp,e->pubkey);
+		res = (e->ECP__PUBLIC_KEY_VALIDATE)(e->pubkey);
+		if(res == ECDH_INVALID_PUBLIC_KEY) {
+			error("%s: public key found but invalid",__func__);
+			return 0; }
+		o_dup(L,e->pubkey);
 		return 1;
 	}
 	if(e->pubkey!=NULL) {
 		ERROR(); KEYPROT(e->curve, "public key"); fail; }
 	octet *o = o_arg(L, 2); SAFE(o);
-	int res;
 	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(o);
 	if(res == ECDH_INVALID_PUBLIC_KEY) {
 		error("%s: generated public key is invalid",__func__);
@@ -306,8 +313,7 @@ static int ecdh_private(lua_State *L) {
 		if(!e->seckey) {
 			ERROR(); error("Private key is not found."); fail; }
 		// export public key to octet
-		octet *exp = o_new(L,e->seclen);
-		OCT_copy(exp,e->seckey);
+		o_dup(L, e->seckey);
 		return 1;
 	}
 	if(e->seckey!=NULL) {

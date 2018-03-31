@@ -1,5 +1,18 @@
 print '= OCTET TESTS'
 
+function dotest(l,r)
+   if(l == r) then
+	  return true
+   else
+	  print 'ERROR'
+	  print 'left:'
+	  print(l)
+	  print 'right:'
+	  print(r)
+	  exit()
+   end
+end
+
 -- random and  check hash of octets
 ecdh = require'ecdh'
 ecc = ecdh.new()
@@ -8,6 +21,7 @@ teststr = right:string()
 test64 = right:base64()
 testhex = right:hex()
 
+print "left octet.new()"
 left = octet.new()
 
 print '== test octet copy'
@@ -17,9 +31,12 @@ assert(ecc:hash(left) == ecc:hash(right))
 
 print '== test string import/export'
 left:string(teststr)
-assert(left == right)
-assert(left:string() == teststr)
-assert(ecc:hash(left) == ecc:hash(right))
+print '=== compare octets'
+dotest(left, right)
+print '=== compare strings'
+dotest(left:string(), teststr)
+print '=== compare hashes'
+dotest(ecc:hash(left), ecc:hash(right))
 
 print '== test base64 import/export'
 left:base64(test64)

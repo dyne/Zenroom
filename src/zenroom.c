@@ -293,6 +293,7 @@ int main(int argc, char **argv) {
 	                   (data[0]!='\0')?data:NULL,
 	                   verbosity);
 	// exit(1) on failure
-	exit(ret);
+	func("return %u",ret);
+	return(ret);
 }
 #endif
