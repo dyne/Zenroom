@@ -243,6 +243,7 @@ check-shared:
 	@echo "All tests passed for SHARED binary build"
 	@echo "----------------"
 
+
 check-static: test-exec := ${pwd}/src/zenroom-static
 check-static:
 	$(call tests,${test-exec})
@@ -264,6 +265,13 @@ check-debug:
 	./test/octet-json.sh ${test-exec}
 	@echo "----------------"
 	@echo "All tests passed for SHARED binary build"
+	@echo "----------------"
+
+check-osx: test-exec := ${pwd}/src/zenroom-shared
+check-osx:
+	$(call tests,${test-exec})
+	@echo "----------------"
+	@echo "All tests passed for OSX binary build"
 	@echo "----------------"
 
 clean:
