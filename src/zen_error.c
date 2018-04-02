@@ -23,6 +23,13 @@
 #include <stdarg.h>
 #include <errno.h>
 
+#if defined(_WIN32)
+/* Windows */
+# include <windows.h>
+#include <intrin.h>
+#include <malloc.h>
+#endif
+
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
@@ -49,6 +56,12 @@ void *zalloc(lua_State *L, size_t size) {
 		return NULL; }
 	void *mem;
 	int res;
+#if defined(_WIN32)
+	mem = __mingw_aligned_malloc(size, 16);
+	if(!mem) {
+		lerror(L, "error in memory allocation.");
+		return NULL; }
+#else
 	res = posix_memalign(&mem, 16, size);
 	if(res == ENOMEM) {
 		lerror(L, "insufficient memory to allocate %u bytes.", size);
@@ -56,5 +69,6 @@ void *zalloc(lua_State *L, size_t size) {
 	if(res == EINVAL) {
 		lerror(L, "invalid memory alignment at 16 bytes.");
 		return NULL; }
+#endif
 	return(mem);
 }
