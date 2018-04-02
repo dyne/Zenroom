@@ -18,7 +18,7 @@ keys = json.decode(KEYS)
 -- this is our own secret key, combined with the recipient's public
 -- key to obtain a session key
 seckey = octet.new()
-seckey:base64(keys.keyring.seckey);
+seckey:base64(keys.keyring.secret);
 keyring:private(seckey)
 
 res = {}
@@ -28,11 +28,11 @@ pub = octet.new()
 for name,pubkey in pairs(keys.recipients) do
    -- calculate the session key
    pub:base64(pubkey)
-   print(name .. " " .. pub:base64())
-   print("is valid key?")
-   print(keyring:checkpub(pub))
    k = keyring:session(pub)
-   if not k then return end
+   if not k then
+	  print( "Error: not a valid public key for recipient " .. name)
+	  return
+   end
 
    -- encrypt the message with the session key
    enc = keyring:encrypt(k,secret)

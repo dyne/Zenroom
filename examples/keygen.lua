@@ -17,7 +17,6 @@ for i,name in ipairs(recipients) do
    kk = ecdh.new()
    kk:keygen()
    keys[name] = kk:public():base64()
-   print(kk:public():hex())
    assert(kk:checkpub(kk:public()))
 end
 

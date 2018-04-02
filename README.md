@@ -6,7 +6,7 @@
 
 Zenroom is a brand new, small and portable virtual machine for cryptographic operations: it is smaller than 500KB and ready for experimental use on many platforms.
 
-## Latest stable release is 0.4.0:
+## Latest stable release is 0.5.0:
 <ul class="center">
 
 <li class="fab fa-node-js"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.4.0-js.zip">NodeJS</a></li>
@@ -30,15 +30,13 @@ Zenroom is a brand new, small and portable virtual machine for cryptographic ope
 
 ## Documentation:
 
-<ul>
+<ul class="center"
+>
 <li class="fas fa-code"><a href="https://zenroom.dyne.org/api">Zenroom API docs</a><sup>*</sup></li>
-
 
 <li class="far fa-graduation-cap"><a href="https://zenroom.dyne.org/whitepaper">Zenroom Whitepaper</a></li>
 
-<li class="far fa-flag-checkered"><a href="https://github.com/DECODEproject/zenroom/tree/master/examples">Zenroom usage examples</a><sup>*</sup></li>
-
-<li class="far fa-hand-point-right"><a href="https://zenroom.dyne.org/demo">Online demo</a><sup>*</sup></li>
+<li class="far fa-hand-point-right"><a href="https://zenroom.dyne.org/demo">Online demo</a></li>
 
 <li class="far fa-cogs"><a href="https://github.com/DECODEproject/zenroom/wiki">Build instructions</a></li>
 
@@ -64,7 +62,7 @@ Zenroom is software inspired by the [language-theoretical security](http://langs
 
 Zenroom's **restricted execution environment** is a sort of [sandbox](https://en.wikipedia.org/wiki/Sandbox_%28computer_security%29) whose parser is based on LUA's [syntax-direct translation](https://en.wikipedia.org/wiki/Syntax-directed_translation) and has coarse-grained control of computations and memory. The Zenroom VM is designed to "brittle" and exit execution returning a meaningful message on any error.
 
-Zenroom's documentation and examples are being written to encourage a [declarative](https://en.wikipedia.org/wiki/Declarative_programming) approach to scripting, treating even complex data structures as [first-class citizens](https://en.wikipedia.org/wiki/First-class_citizen).
+Zenroom's documentation and examples are being written to encourage a [declarative](https://en.wikipedia.org/wiki/Declarative_programming) approach to scripting, providing functional tools to manipulate efficiently even complex data structures.
 
 
 <a href="http://langsec.org/occupy/">
@@ -83,21 +81,14 @@ This project is receiving funding from the European Union’s Horizon 2020 resea
 
 Copyright (C) 2017-2018 by Dyne.org foundation, Amsterdam
 
-Designed, written and maintained by Denis "Jaromil" Roio
+Designed, written and maintained by <a href="https://jaromil.dyne.org">Denis "Jaromil" Roio</a>
 
 Special thanks to Francesca Bria for leading the DECODE project and to George Danezis, Ola Bini, Mark de Villiers and Puria Nafisi Azizi for their expert reviews and contributions.
 
 This software includes code by:
 
 - R. Ierusalimschy, W. Celes and L.H. de Figueiredo (lua)
-- Rich Felker, et al (musl-libc)
 - Mike Scott and Kealan McCusker (milagro-crypto-c)
-- Phil Leblanc (luazen)
-- Joergen Ibsen (brieflz)
-- Loup Vaillant (blake2b, argon2i, ed/x25519)
-- Samuel Neves and Philipp Jovanovic (norx)
-- Luke Dashjr (base58)
-- Cameron Rich (md5)
 - Mark Pulford (lua-cjson)
 - Daan Sprenkels (randombytes)
 

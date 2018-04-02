@@ -1,14 +1,1 @@
-{
-   "recipients" : {
-      "mayo" : "BBkjohPvJ7cFA4d4UjI+s/JnlKSI6rNsYYocC0MCLA1lAwiVs6V3jd2Zfhqu0Rm7ueztqWduKy1ejvy999RF0Q==",
-      "francesca" : "BDqlb7tK6G3+khHDkYgfkPA9howz6nDSARvMKjcpl8yTBQnBvOwgx4nIyheLS1NdohlIJqoteijSaOSC0OacYA==",
-      "paulus" : "BCa0qSdQdKsB88JzWJlqSU9SrWER8li/zGGbPaSooJXPJDidkX6/NbFJANXEhhn7Ezhz4bCQ8UIDHMd74cS23A==",
-      "jim" : "BBt8qJIL7CXMZFOG0/qrLtCL0L259hip5XdNZXQlI24Hd1ZbCeLL8wcvkJrbcHRJ5oLVAvQp2XmTRSiTjml4Ug==",
-      "mark" : "BF8DaZ0KT9gwOcVzYrQ3uY6Kodts7xAORJ2UEwPOYZIAM7c+boahDMq9r3FByXHe/txK5/h2sKLkmUdoMGU6NQ==",
-      "jaromil" : "BBoYGfcl7H32aw9K926uPr1ipoJA1MxzKvwne8FHMOocVcIlolwefo399bZ/ZA58K0HUBS47/9ho/ViTQmeuLQ=="
-   },
-   "keyring" : {
-      "secret" : "DQutQLEl05vxRmgKQKtMIGXJ2dZ+oRqlYL3FGJDjPgg=",
-      "public" : "BCTNMIQ1QIbpiBjEK7m2qh0LSCRQ+n+idcrJ7tYf+ZPJbzRoeKJFPdFlzrySIjDU30RdrIshbGWiDhhmfjtKBg=="
-   }
-}
+{"keyring":{"secret":"ChW5qi5y\/\/ISDIHKx5Fvxl+XY8IyDGVBHUfELp3PqJQ=","public":"BHMjcDM\/aljpi8pNxFQ436R6F3J+kaB\/Xk1kAVFPmkoLVyeFltDZPgiIYRquh+m2IfvPioBfet7YCd5vVXYoRTk="},"recipients":{"mark":"BFgkjrRMvN+wkJ6qA4UvMaNlYBvl37C9cNYGkqOE4w43AUzkEzcyIIdE6BrgOEUEVefhOOnO6SCBQMgXHXJUUPY=","mayo":"BHqBoQ2WJ3\/FGVNTXzdIc+K\/HzNx05bWzEhn8m58FvSsaqWVdH52jI6fQWdkdjnbqVKCJGmbjA\/OCJ+IKHbiySI=","paulus":"BBUw6Nr3A30cN65maERvAk1cEv2Ji6Vs80kSlpodOC0SCtM8ucaS7e+s158uVMSr3BsvIXVspBeafiL8Qb3kcgc=","francesca":"BCo102mVybieKMyhex8tnVtFM5+Wo1oP02k8JVwKF9OLIjw7w0LmofItbuAcfWl9rcoe++XLI3sySZnqljIfeyU=","jim":"BEs1jeqL0nVwFi7OmG4YdtlWuKADyOvZR4XHpLAEswg8ONPXQHvwJ8+PkHkphoORfSjk2045bMdYkwboU4FdG2Y=","jaromil":"BBZYJtHvFg0vGCxPROAWrThcGZ+vFZJj86k+uncjvbm4DysIg7cWS3J6GrcJKCY55Uf40m2KfBwfaT+T7TTO1e8="}}

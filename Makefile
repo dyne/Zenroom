@@ -166,7 +166,7 @@ android: patches lua53 luazen milagro
 
 
 debug: gcc := gcc
-debug: cflags := -O0 -ggdb -D'ARCH=\"LINUX\"'
+debug: cflags := -O0 -ggdb -D'ARCH=\"LINUX\"' ${cflags_protection}
 debug: patches lua53 milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
 
@@ -190,7 +190,7 @@ luazen:
 milagro:
 	@echo "-- Building milagro (POSIX)"
 	if ! [ -r ${pwd}/lib/milagro-crypto-c/CMakeCache.txt ]; then cd ${pwd}/lib/milagro-crypto-c && CC=${gcc} cmake . -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DCMAKE_C_FLAGS="${cflags}" -DAMCL_CHUNK=32 -DAMCL_CURVE="${ecc_curves}" -DAMCL_RSA="${rsa_bits}"; fi
-	if ! [ -r ${pwd}/lib/milagro-crypto-c/lib/libamcl_core.a ]; then CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c; fi
+	if ! [ -r ${pwd}/lib/milagro-crypto-c/lib/libamcl_core.a ]; then CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c VERBOSE=1; fi
 
 milagro-win:
 	@echo "-- Building milagro (Windows)"

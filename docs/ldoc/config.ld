@@ -25,8 +25,8 @@ template=true
 backtick_references=false
 file={
 	'../../src/zen_octet.c',
-	'../../src/lua/functional.lua',
 	'../../src/zen_ecdh.c',
+	'../../src/lua/functional.lua',
 	'math.lua',
 	'string.lua',
 	'table.lua',

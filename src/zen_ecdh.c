@@ -164,6 +164,7 @@ int ecdh_destroy(lua_State *L) {
    @function keygen()
 */
 static int ecdh_keygen(lua_State *L) {
+	HERE();
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	if(e->seckey) {
 		ERROR(); KEYPROT(e->curve,"private key"); fail; }
@@ -196,6 +197,7 @@ static int ecdh_keygen(lua_State *L) {
 */
 
 static int ecdh_checkpub(lua_State *L) {
+	HERE();
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	octet *pk = NULL;
 	if(lua_isnoneornil(L, 2)) {
@@ -225,6 +227,7 @@ static int ecdh_checkpub(lua_State *L) {
    @return a new octet containing the shared session key
 */
 static int ecdh_session(lua_State *L) {
+	HERE();
 	void *ud;
 	octet *pubkey;
 	ecdh *pk;
@@ -266,6 +269,7 @@ static int ecdh_session(lua_State *L) {
    @function ecdh:public(key)
 */
 static int ecdh_public(lua_State *L) {
+	HERE();
 	int res;
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	if(lua_isnoneornil(L, 2)) {
@@ -308,6 +312,7 @@ static int ecdh_public(lua_State *L) {
    @function ecdh:secret(key)
 */
 static int ecdh_private(lua_State *L) {
+	HERE();
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	if(lua_isnoneornil(L, 2)) {
 		if(!e->seckey) {
@@ -334,11 +339,12 @@ static int ecdh_private(lua_State *L) {
 */
 
 static int ecdh_encrypt(lua_State *L) {
+	HERE();
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	octet *k = o_arg(L, 2); SAFE(k);
 	octet *in = o_arg(L, 3); SAFE(in);
 	// output is padded to next word
-	octet *out = o_new(L, in->len+16); SAFE(out);
+	octet *out = o_new(L, in->len+0x0f); SAFE(out);
 	AES_CBC_IV0_ENCRYPT(k,in,out);
 	return 1;
 }
@@ -356,6 +362,7 @@ static int ecdh_encrypt(lua_State *L) {
 */
 
 static int ecdh_decrypt(lua_State *L) {
+	HERE();
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	octet *k = o_arg(L, 2); SAFE(k);
 	octet *in = o_arg(L, 3); SAFE(in);
@@ -379,6 +386,7 @@ static int ecdh_decrypt(lua_State *L) {
    @return a new octet contianing the hash of the data
 */
 static int ecdh_hash(lua_State *L) {
+	HERE();
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	octet *in = o_arg(L, 2); SAFE(in);
 	// hash type indicates also the length in bytes
@@ -399,6 +407,7 @@ static int ecdh_hash(lua_State *L) {
    @return a new octet contianing the computer HMAC or false on failure
 */
 static int ecdh_hmac(lua_State *L) {
+	HERE();
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	octet *k = o_arg(L, 2);     SAFE(k);
 	octet *in = o_arg(L, 3);    SAFE(in);	
@@ -428,6 +437,7 @@ static int ecdh_hmac(lua_State *L) {
 */
 
 static int ecdh_kdf2(lua_State *L) {
+	HERE();
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	octet *p = o_arg(L, 2);     SAFE(p);
 	octet *in = o_arg(L, 3); SAFE(in);
@@ -455,6 +465,7 @@ static int ecdh_kdf2(lua_State *L) {
 */
 
 static int ecdh_pbkdf2(lua_State *L) {
+	HERE();
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	octet *k = o_arg(L, 2);     SAFE(k);
 	octet *s = o_arg(L, 3); SAFE(s);
@@ -469,6 +480,7 @@ static int ecdh_pbkdf2(lua_State *L) {
 }
 
 static int lua_new_ecdh(lua_State *L) {
+	HERE();
 	const char *curve = luaL_optstring(L, 1, "ec25519");
 	ecdh *e = ecdh_new(L, curve);
 	SAFE(e);
@@ -500,6 +512,7 @@ static int lua_new_ecdh(lua_State *L) {
 
 */
 static int ecdh_random(lua_State *L) {
+	HERE();
 	ecdh *e = ecdh_arg(L,1); SAFE(e);
 	const int len = luaL_optinteger(L, 2, e->keysize);
 	octet *out = o_new(L,len); SAFE(out);
