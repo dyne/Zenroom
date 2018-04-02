@@ -217,6 +217,7 @@ check-milagro: milagro
 # ${1} test/pm.lua && \
 # ${1} test/nextvar.lua && \
 # ${1} test/constructs.lua && \
+# ${1} test/cjson-test.lua && \
 
 ## GC tests break memory management with umm
 # in particular steps (2)
@@ -235,7 +236,6 @@ tests = \
 		${1} test/code.lua && \
 		${1} test/closure.lua && \
 		${1} test/locals.lua && \
-		${1} test/cjson-test.lua && \
 		${1} test/schema.lua && \
 		${1} test/octet.lua && \
 		${1} test/ecdh.lua
