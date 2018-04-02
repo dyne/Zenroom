@@ -70,13 +70,16 @@ void zen_add_function(lua_State *L,
 	lua_setglobal(L, func_name);
 }
 
+extern void zen_memory_init();
+extern void* zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
 
 lua_State *zen_init(const char *conf) {
 	(void) conf;
 	lua_State *L = NULL;
 
-	// L = lua_newstate(memory_manager, lsb);
-	L = luaL_newstate();
+	zen_memory_init();
+	L = lua_newstate(zen_memory_manager, NULL);
+	// L = luaL_newstate();
 	if(!L) {
 		error("%s: %s", __func__, "lua state creation failed");
 		return NULL;

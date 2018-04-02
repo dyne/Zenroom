@@ -36,7 +36,6 @@
 #include <lauxlib.h>
 
 #include <jutils.h>
-#include <zenroom.h>
 #include <zen_error.h>
 #include <zen_octet.h>
 #include <randombytes.h>
@@ -44,6 +43,8 @@
 
 #include <ecdh_ED25519.h>
 #include <pbc_support.h>
+
+#include <zenroom.h>
 
 #define KEYPROT(alg,key)	  \
 	error("%s engine has already a %s set:",alg,key); \

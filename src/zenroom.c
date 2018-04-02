@@ -26,7 +26,6 @@
 #include <errno.h>
 
 #include <jutils.h>
-#include <zenroom.h>
 
 #include <lua.h>
 
@@ -37,10 +36,13 @@
 #include <emscripten.h>
 #endif
 
+#include <zenroom.h>
+
 // prototypes from lua_modules.c
 extern void zen_load_extensions(lua_State *L);
 extern void zen_add_function(lua_State *L, lua_CFunction func,
                                   const char *func_name);
+
 
 // This function exits the process on failure.
 void load_file(char *dst, FILE *fd) {

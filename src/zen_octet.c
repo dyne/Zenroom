@@ -40,12 +40,13 @@
 #include <lauxlib.h>
 
 #include <jutils.h>
-#include <zenroom.h>
 #include <zen_error.h>
 #include <lua_functions.h>
 #include <randombytes.h>
 
 #include <amcl.h>
+
+#include <zenroom.h>
 
 
 static int _max(int x, int y) { if(x > y) return x;	else return y; }
