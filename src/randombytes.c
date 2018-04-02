@@ -63,7 +63,7 @@
 # endif
 #endif
 
-#include <zenroom.h>
+#include <zen_memory.h>
 
 #ifdef __EMSCRIPTEN__
 #include <stdlib.h>

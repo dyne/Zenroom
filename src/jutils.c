@@ -26,8 +26,10 @@
 #include <string.h>
 #include <errno.h>
 
+#include <zenroom.h>
+
 #define MAX_DEBUG 2
-#define MAX_STRING 1024
+// #define MAX_STRING 1024
 #define FUNC 2 /* se il debug level e' questo
 		  ci sono le funzioni chiamate */
 #define WARN 1 /* ... blkbblbl */

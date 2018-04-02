@@ -27,19 +27,6 @@ typedef struct zen_extension_t {
 	const char         *code;
 } zen_extension_t;
 
-
-// #define LSB_SHUTTING_DOWN     "shutting down"
-// #define LSB_CONFIG_TABLE      "lsb_config"
-#define LSB_THIS_PTR          "lsb_this_ptr"
-// #define LSB_MEMORY_LIMIT      "memory_limit"
-// #define LSB_INSTRUCTION_LIMIT "instruction_limit"
-// #define LSB_INPUT_LIMIT       "input_limit"
-// #define LSB_OUTPUT_LIMIT      "output_limit"
-// #define LSB_LOG_LEVEL         "log_level"
-// #define LSB_LUA_PATH          "path"
-// #define LSB_LUA_CPATH         "cpath"
-// #define LSB_NIL_ERROR         "<nil error message>"
-
 lua_State *zen_init(const char *conf);
 int zen_exec_line(lua_State *L, const char *line);
 int zen_exec_script(lua_State *L, const char *script);

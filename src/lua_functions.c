@@ -18,6 +18,9 @@
  * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include <ctype.h>
+#include <errno.h>
+
 #include <jutils.h>
 #include <lua.h>
 #include <lualib.h>
@@ -32,6 +35,90 @@
 #include <emscripten.h>
 #endif
 
+
+
+// This function exits the process on failure.
+void load_file(char *dst, FILE *fd) {
+	char firstline[MAX_STRING];
+	long file_size = 0L;
+	size_t offset = 0;
+	size_t bytes = 0;
+	if(!fd) {
+		error("Error opening %s", strerror(errno));
+		exit(1); }
+	if(fd!=stdin) {
+		if(fseek(fd, 0L, SEEK_END)<0) {
+			error("fseek(end) error in %s: %s",__func__,
+			      strerror(errno));
+			exit(1); }
+		file_size = ftell(fd);
+		if(fseek(fd, 0L, SEEK_SET)<0) {
+			error("fseek(start) error in %s: %s",__func__,
+			      strerror(errno));
+			exit(1); }
+		func("size of file: %u",file_size);
+	}
+	// skip shebang on firstline
+	if(!fgets(firstline, MAX_STRING, fd)) {
+		error("Error reading first line: %s", strerror(errno));
+		exit(1); }
+	if(firstline[0]=='#' && firstline[1]=='!')
+		func("Skipping shebang");
+	else {
+		offset+=strlen(firstline);
+		strncpy(dst,firstline,MAX_STRING);
+	}
+
+	size_t chunk;
+	while(1) {
+		chunk = MAX_STRING;
+		if( offset+MAX_STRING>MAX_FILE )
+			chunk = MAX_FILE-offset-1;
+		bytes = fread(&dst[offset],sizeof(char),chunk,fd);
+
+		if(!bytes) {
+			if(feof(fd)) {
+				if((fd!=stdin) && (long)offset!=file_size)
+					warning("Incomplete file read (%u of %u bytes)",
+					      offset, file_size);
+				else
+					func("EOF after %u bytes",offset);
+				break; }
+			if(ferror(fd)) {
+				error("Error in %s: %s",__func__,strerror(errno));
+				fclose(fd);
+				exit(1); }
+		}
+		offset += bytes;
+	}
+	if(fd!=stdin) fclose(fd);
+	act("loaded file (%u bytes)", offset);
+}
+
+char *safe_string(char *str) {
+	int i, length = 0;
+	if(!str) {
+		warning("NULL string detected");
+		return NULL; }
+	if(str[0]=='\0') {
+		warning("empty string detected");
+		return NULL; }
+
+	while (length < MAX_STRING && str[length] != '\0') ++length;
+
+	if (length == MAX_STRING)
+		warning("maximum size string detected (may be truncated) at address %p",str);
+
+	for (i = 0; i < length; ++i) {
+		if (!isprint(str[i]) && !isspace(str[i])) {
+			error("unprintable character (ASCII %d) at position %d",
+			      (unsigned char)str[i], i);
+			return NULL;
+		}
+	}
+	return(str);
+}
+
 lsb_err_id ZEN_ERR_UTIL_NULL    = "pointer is NULL";
 lsb_err_id ZEN_ERR_UTIL_OOM     = "memory allocation failed";
 lsb_err_id ZEN_ERR_UTIL_FULL    = "buffer full";
@@ -40,16 +127,7 @@ lsb_err_id ZEN_ERR_UTIL_PRANGE  = "parameter out of range";
 extern void zen_load_extensions(lua_State *L);
 extern void preload_modules(lua_State *lua);
 
-void lsb_add_function(lua_State *L, lua_CFunction func,
-                      const char *func_name)
-{
-	if (!L || !func || !func_name) return;
-
-	lua_pushcfunction(L, func);
-	lua_setglobal(L, func_name);
-}
-
-void lsb_setglobal_string(lua_State *L, char *key, char *val) {
+void zen_setenv(lua_State *L, char *key, char *val) {
 	lua_pushstring(L, val);
 	lua_setglobal(L, key);
 }
@@ -70,76 +148,6 @@ void zen_add_function(lua_State *L,
 	lua_setglobal(L, func_name);
 }
 
-extern void zen_memory_init();
-extern void* zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
-
-lua_State *zen_init(const char *conf) {
-	(void) conf;
-	lua_State *L = NULL;
-
-	zen_memory_init();
-	L = lua_newstate(zen_memory_manager, NULL);
-	// L = luaL_newstate();
-	if(!L) {
-		error("%s: %s", __func__, "lua state creation failed");
-		return NULL;
-	}
-
-	// initialise global variables
-#if defined(VERSION)
-	lsb_setglobal_string(L, "VERSION", VERSION);
-#endif
-#if defined(ARCH)
-	lsb_setglobal_string(L, "ARCH", ARCH);
-#endif
-	// open all standard lua libraries
-	luaL_openlibs(L);
-	//////////////////// end of create
-
-	// this is a way to save additional user data together with the
-	// context here: lua_pushlightuserdata(L, lsb);
-	// see lua_sandbox for further examples
-
-	lua_setfield(L, LUA_REGISTRYINDEX, LSB_THIS_PTR);
-
-	return(L);
-
-}
-
-void zen_teardown(lua_State *L) {
-
-	notice("Zenroom teardown.");
-    if(L) lua_gc(L, LUA_GCCOLLECT, 0);
-    lua_close(L);
-}
-
-int zen_exec_line(lua_State *L, const char *line) {
-	int ret;
-	lua_State* lua = L;
-
-	ret = luaL_dostring(lua, line);
-	if(ret) {
-		error("%s", lua_tostring(lua, -1));
-		fflush(stderr);
-		return ret;
-	}
-	return 0;
-}
-
-
-int zen_exec_script(lua_State *L, const char *script) {
-	int ret;
-	lua_State* lua = L;
-
-	ret = luaL_dostring(lua, script);
-    lua_gc(lua, LUA_GCCOLLECT, 0);
-	if(ret) {
-		error("%s", lua_tostring(lua, -1));
-		fflush(stderr);
-		return ret;
-	}
-	return 0;
-}
 
 static const char *zen_lua_findtable (lua_State *L, int idx,
                                    const char *fname, int szhint) {

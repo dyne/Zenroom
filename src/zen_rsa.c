@@ -45,6 +45,8 @@
 #include <rsa_support.h>
 #include <pbc_support.h>
 
+#include <zen_memory.h>
+
 // from zen_rsa_aux
 extern int bitchoice(rsa *r, int bits);
 extern int rsa_priv_to_oct(rsa *r, octet *dst, char *priv);

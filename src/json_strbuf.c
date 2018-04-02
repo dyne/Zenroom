@@ -29,7 +29,7 @@
 
 #include <json_strbuf.h>
 
-#include <zenroom.h>
+#include <zen_memory.h>
 
 static void die(const char *fmt, ...)
 {

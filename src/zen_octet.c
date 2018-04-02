@@ -47,7 +47,7 @@
 #include <amcl.h>
 
 #include <zenroom.h>
-
+#include <zen_memory.h>
 
 static int _max(int x, int y) { if(x > y) return x;	else return y; }
 static int _min(int x, int y) { if(x < y) return x;	else return y; }
@@ -65,7 +65,7 @@ octet* o_new(lua_State *L, const int size) {
 	// TODO: check that maximum is not exceeded
 	luaL_getmetatable(L, "zenroom.octet");
 	lua_setmetatable(L, -2);
-	o->val = zalloc(L, size);
+	o->val = malloc(size);
 	o->len = 0;
 	o->max = size;
 	func("new octet (%u bytes)",size);
@@ -249,7 +249,7 @@ static int base64 (lua_State *L) {
 			lerror(L, "base64 import of empty string");
 			return 0; }
 		int newlen = getlen_base64(o->len);
-		char *b = zalloc(L, newlen);
+		char *b = malloc(newlen);
 		OCT_tobase64(b,o);
 		b[newlen] = 0;
 		lua_pushstring(L,b);
@@ -274,7 +274,7 @@ static int string(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
 	if(lua_isnoneornil(L, 2)) {
 		// export to string
-		char *s = zalloc(L, o->len);
+		char *s = malloc(o->len);
 		OCT_toStr(o,s);
 		s[o->len] = 0; // make sure string is NULL terminated
 		lua_pushstring(L,s);
@@ -302,7 +302,7 @@ static int hex(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
 	if(lua_isnoneornil(L, 2)) {
 		// export to hex
-		char *s = zalloc(L, (o->len*2));
+		char *s = malloc(o->len*2);
 		OCT_toHex(o,s);
 		s[o->len*2] = 0;
 		lua_pushstring(L,s);
@@ -327,7 +327,7 @@ static int hex(lua_State *L) {
 static int o_random(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
 	const int len = luaL_optinteger(L, 2, o->max);
-	char *buf = zalloc(L, len);
+	char *buf = malloc(len);
 	randombytes(buf,len);
 	o->len=0;
 	OCT_jbytes(o,buf,len);

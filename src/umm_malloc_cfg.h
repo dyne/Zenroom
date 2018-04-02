@@ -62,10 +62,6 @@ extern char zen_heap[];
  * heap size that is unallocated - note this is not the same as the largest
  * unallocated block on the heap!
  */
-
-#define UMM_INFO
-
-#ifdef UMM_INFO
   typedef struct UMM_HEAP_INFO_t {
     unsigned short int totalEntries;
     unsigned short int usedEntries;
@@ -83,9 +79,6 @@ extern char zen_heap[];
 
   void *umm_info( void *ptr, int force );
   size_t umm_free_heap_size( void );
-
-#else
-#endif
 
 /*
  * A couple of macros to make it easier to protect the memory allocator

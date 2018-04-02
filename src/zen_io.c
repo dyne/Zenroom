@@ -22,8 +22,9 @@
 #include <errno.h>
 #include <jutils.h>
 
-#include <zenroom.h>
 #include <lauxlib.h>
+
+#include <zenroom.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>

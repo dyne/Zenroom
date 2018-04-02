@@ -1,13 +1,61 @@
+#include <errno.h>
 #include <stdlib.h>
+#include <jutils.h>
+
 #include <zenroom.h>
 #include <umm_malloc.h>
 
+void *zen_memalign(size_t size, size_t align) {
+	void *mem = NULL;
+# if defined(_WIN32)
+	mem = __mingw_aligned_malloc(size, align);
+	if(!mem) {
+		error("error in memory allocation.");
+		return NULL; }
+# else
+	int res;
+	res = posix_memalign(&mem, align, size);
+	if(res == ENOMEM) {
+		error("insufficient memory to allocate %u bytes.", size);
+		return NULL; }
+	if(res == EINVAL) {
+		error("invalid memory alignment at 16 bytes.");
+		return NULL; }
+# endif
+	return(mem);
+}
 
-// hardcoded heap for now
-char *zen_heap[MAX_HEAP+0xff];
-void  zen_memory_init() { umm_init(); }
-void *zen_memory_alloc(size_t size) { return umm_malloc(size); }
-void  zen_memory_free(void *ptr) { umm_free(ptr); }
+typedef struct {
+	void* (*malloc)(size_t size);
+	void* (*realloc)(void *ptr, size_t size);
+	void  (*free)(void *ptr);
+} zen_mem_t;
+
+static zen_mem_t zen_mem_f;
+
+// Global HEAP pointer in the STACK
+char *zen_heap;
+size_t zen_heap_size;
+void umm_memory_init(size_t size) {
+	zen_heap = zen_memalign(size, 8);
+	zen_heap_size = size;
+	zen_mem_f.malloc = umm_malloc;
+	zen_mem_f.realloc = umm_realloc;
+	zen_mem_f.free = umm_free;
+	umm_init(zen_heap, size);
+	// pointers saved in umm_malloc.c (stack)
+}
+
+void libc_memory_init() {
+	zen_mem_f.malloc = malloc;
+	zen_mem_f.realloc = realloc;
+	zen_mem_f.free = free;
+	zen_heap = NULL;
+}
+void *zen_memory_alloc(size_t size) { return (*zen_mem_f.malloc)(size); }
+void *zen_memory_realloc(void *ptr, size_t size) { return (*zen_mem_f.realloc)(ptr, size); }
+void  zen_memory_free(void *ptr) { (*zen_mem_f.free)(ptr); }
+
 
 
 /**
@@ -22,7 +70,7 @@ void  zen_memory_free(void *ptr) { umm_free(ptr); }
  *
  * @return void* A pointer to the memory block.
  */
-void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
+void *umm_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
 	if(ptr == NULL) {
 		// When ptr is NULL, osize encodes the kind of object that Lua
 		// is allocating. osize is any of LUA_TSTRING, LUA_TTABLE,
@@ -30,7 +78,10 @@ void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
 		// when) Lua is creating a new object of that type. When osize
 		// is some other value, Lua is allocating memory for something
 		// else.
-		return umm_malloc(nsize);
+		if(nsize!=0)
+			return umm_malloc(nsize);
+		return NULL;
+
 
 	} else {
 		// When ptr is not NULL, osize is the size of the block
@@ -50,6 +101,6 @@ void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
 			return umm_realloc(ptr, nsize);
 		} else { // extend
 			return umm_realloc(ptr, nsize);
-		}		
-	}		
+		}
+	}
 }

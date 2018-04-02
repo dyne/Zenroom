@@ -45,6 +45,7 @@
 #include <pbc_support.h>
 
 #include <zenroom.h>
+#include <zen_memory.h>
 
 #define KEYPROT(alg,key)	  \
 	error("%s engine has already a %s set:",alg,key); \
@@ -119,8 +120,8 @@ ecdh* ecdh_new(lua_State *L, const char *curve) {
 	// TODO: make it a newuserdata object in LUA space so that
 	// it can be cleanly collected by the GC as well it can be
 	// saved transparently in the global state
-	e->rng = zalloc(L, sizeof(csprng));
-	char *tmp = zalloc(L, 256);
+	e->rng = malloc(sizeof(csprng));
+	char *tmp = malloc(256);
 	randombytes(tmp,252);
 	// using time() from milagro
 	unsign32 ttmp = GET_TIME();

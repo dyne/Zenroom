@@ -21,10 +21,11 @@ VERSION := $(shell cat ../VERSION)
 ARCH := $(shell uname -m)
 CFLAGS  += -I. -I../lib/lua53/src -I../lib/milagro-crypto-c/include -Wall -Wextra
 SOURCES := \
-	jutils.o zenroom.o repl.o zen_error.o \
-	lua_functions.o lua_io.o lualibs_detected.o lua_modules.o \
+	jutils.o zenroom.o zen_error.o \
+	lua_functions.o lualibs_detected.o lua_modules.o \
 	json.o json_strbuf.o json_fpconv.o \
 	umm_malloc.o zen_memory.o \
+	zen_io.o repl.o \
 	zen_octet.o \
 	zen_ecdh.o \
 	randombytes.o

@@ -30,16 +30,19 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "umm_malloc.h"
-
-#include "umm_malloc_cfg.h"   /* user-dependent */
+#include <umm_malloc.h>
+#include <umm_malloc_cfg.h>
+#include <umm_dbglog.h>
 
 /* Use the default DBGLOG_LEVEL and DBGLOG_FUNCTION */
 
-#define DBGLOG_LEVEL 0
+#include <zenroom.h>
+#include <jutils.h>
+
+#define DBGLOG_LEVEL 4
+#define DBGLOG_FUNCTION func
 
 #include "umm_dbglog.h"
-
 /* ------------------------------------------------------------------------- */
 
 UMM_H_ATTPACKPRE typedef struct umm_ptr_t {
@@ -61,17 +64,15 @@ UMM_H_ATTPACKPRE typedef struct umm_block_t {
 #define UMM_FREELIST_MASK (0x8000)
 #define UMM_BLOCKNO_MASK  (0x7FFF)
 
-/* ------------------------------------------------------------------------- */
-
+/* -------------------------------------------------------------- */
+#include <zenroom.h>
 umm_block *umm_heap = NULL;
-unsigned int umm_numblocks = 0;
+size_t umm_numblocks = 0;
+
+/* -------------------------------------------------------------- */
 
 #define UMM_NUMBLOCKS (umm_numblocks)
-
-/* ------------------------------------------------------------------------ */
-
 #define UMM_BLOCK(b)  (umm_heap[b])
-
 #define UMM_NBLOCK(b) (UMM_BLOCK(b).header.used.next)
 #define UMM_PBLOCK(b) (UMM_BLOCK(b).header.used.prev)
 #define UMM_NFREE(b)  (UMM_BLOCK(b).body.free.next)
@@ -85,6 +86,7 @@ unsigned int umm_numblocks = 0;
  * data structures to other programs.
  * -------------------------------------------------------------------------
  */
+#include <umm_info.c>
 
 // #include "umm_integrity.c"
 // #include "umm_poison.c"
@@ -190,11 +192,11 @@ static unsigned short int umm_assimilate_down( unsigned short int c, unsigned sh
 
 /* ------------------------------------------------------------------------- */
 
-void umm_init( void ) {
+void umm_init( void *ptr, size_t size ) {
   /* init heap pointer and size, and memset it to 0 */
-  umm_heap = (umm_block *)UMM_MALLOC_CFG_HEAP_ADDR;
-  umm_numblocks = (UMM_MALLOC_CFG_HEAP_SIZE / sizeof(umm_block));
-  memset(umm_heap, 0x00, UMM_MALLOC_CFG_HEAP_SIZE);
+  umm_heap = (umm_block *)ptr;
+  umm_numblocks = (size / sizeof(umm_block));
+  memset(umm_heap, 0x00, size);
 
   /* setup initial blank heap structure */
   {
@@ -320,9 +322,9 @@ void *umm_malloc( size_t size ) {
 
   unsigned short int cf;
 
-  if (umm_heap == NULL) {
-    umm_init();
-  }
+  // if (umm_heap == NULL) {
+  //   umm_init();
+  // }
 
   /*
    * the very first thing we do is figure out if we're being asked to allocate
@@ -452,9 +454,9 @@ void *umm_realloc( void *ptr, size_t size ) {
 
   size_t curSize;
 
-  if (umm_heap == NULL) {
-    umm_init();
-  }
+  // if (umm_heap == NULL) {
+  //   umm_init();
+  // }
 
   /*
    * This code looks after the case of a NULL value for ptr. The ANSI C

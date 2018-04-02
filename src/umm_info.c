@@ -1,5 +1,3 @@
-#ifdef UMM_INFO
-
 /* ----------------------------------------------------------------------------
  * One of the coolest things about this little library is that it's VERY
  * easy to get debug information about the memory heap by simply iterating
@@ -121,19 +119,15 @@ void *umm_info( void *ptr, int force ) {
       UMM_NFREE(blockNo),
       UMM_PFREE(blockNo) );
 
-  DBGLOG_FORCE( force, "+----------+-------+--------+--------+-------+--------+--------+\n" );
-
-  DBGLOG_FORCE( force, "Total Entries %5i    Used Entries %5i    Free Entries %5i\n",
+  act("Total Entries %5i    Used Entries %5i    Free Entries %5i",
       ummHeapInfo.totalEntries,
       ummHeapInfo.usedEntries,
       ummHeapInfo.freeEntries );
 
-  DBGLOG_FORCE( force, "Total Blocks  %5i    Used Blocks  %5i    Free Blocks  %5i\n",
+  act("Total Blocks  %5i    Used Blocks  %5i    Free Blocks  %5i",
       ummHeapInfo.totalBlocks,
       ummHeapInfo.usedBlocks,
       ummHeapInfo.freeBlocks  );
-
-  DBGLOG_FORCE( force, "+--------------------------------------------------------------+\n" );
 
   /* Release the critical section... */
   UMM_CRITICAL_EXIT();
@@ -149,4 +143,3 @@ size_t umm_free_heap_size( void ) {
 }
 
 /* ------------------------------------------------------------------------ */
-#endif

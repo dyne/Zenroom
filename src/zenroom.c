@@ -28,6 +28,8 @@
 #include <jutils.h>
 
 #include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 
 #include <lua_functions.h>
 #include <repl.h>
@@ -42,88 +44,96 @@
 extern void zen_load_extensions(lua_State *L);
 extern void zen_add_function(lua_State *L, lua_CFunction func,
                                   const char *func_name);
+void zen_setenv(lua_State *L, char *key, char *val);
 
+// prototypes from zen_memory.c
+extern void libc_memory_init();
+extern void umm_memory_init(size_t size);
+extern void* umm_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
+extern void *umm_info(void*, int);
 
-// This function exits the process on failure.
-void load_file(char *dst, FILE *fd) {
-	char firstline[MAX_STRING];
-	long file_size = 0L;
-	size_t offset = 0;
-	size_t bytes = 0;
-	if(!fd) {
-		error("Error opening %s", strerror(errno));
-		exit(1); }
-	if(fd!=stdin) {
-		if(fseek(fd, 0L, SEEK_END)<0) {
-			error("fseek(end) error in %s: %s",__func__,
-			      strerror(errno));
-			exit(1); }
-		file_size = ftell(fd);
-		if(fseek(fd, 0L, SEEK_SET)<0) {
-			error("fseek(start) error in %s: %s",__func__,
-			      strerror(errno));
-			exit(1); }
-		func("size of file: %u",file_size);
-	}
-	// skip shebang on firstline
-	if(!fgets(firstline, MAX_STRING, fd)) {
-		error("Error reading first line: %s", strerror(errno));
-		exit(1); }
-	if(firstline[0]=='#' && firstline[1]=='!')
-		func("Skipping shebang");
-	else {
-		offset+=strlen(firstline);
-		strncpy(dst,firstline,MAX_STRING);
-	}
+// prototypes from lua_functions.c
+extern void load_file(char *dst, FILE *fd);
+extern char *safe_string(char *str);
 
-	size_t chunk;
-	while(1) {
-		chunk = MAX_STRING;
-		if( offset+MAX_STRING>MAX_FILE )
-			chunk = MAX_FILE-offset-1;
-		bytes = fread(&dst[offset],sizeof(char),chunk,fd);
+lua_State *zen_init(const char *conf) {
+	(void) conf;
+	lua_State *L = NULL;
 
-		if(!bytes) {
-			if(feof(fd)) {
-				if((fd!=stdin) && (long)offset!=file_size)
-					warning("Incomplete file read (%u of %u bytes)",
-					      offset, file_size);
-				else
-					func("EOF after %u bytes",offset);
-				break; }
-			if(ferror(fd)) {
-				error("Error in %s: %s",__func__,strerror(errno));
-				fclose(fd);
-				exit(1); }
+	if(conf) {
+		if(strcmp(conf,"umm")==0) {
+			umm_memory_init(1048576*4); // 4 MiBs total memory
+			L = lua_newstate(umm_memory_manager, NULL);
+		} else {
+			error("%s: unknown memory manager: %s",
+			      __func__,conf);
 		}
-		offset += bytes;
+	} else {
+		libc_memory_init();
+		L = luaL_newstate();
 	}
-	if(fd!=stdin) fclose(fd);
-	act("loaded file (%u bytes)", offset);
+	if(!L) {
+		error("%s: %s", __func__, "lua state creation failed");
+		return NULL;
+	}
+
+	// initialise global variables
+#if defined(VERSION)
+	zen_setenv(L, "VERSION", VERSION);
+#endif
+#if defined(ARCH)
+	zen_setenv(L, "ARCH", ARCH);
+#endif
+#if defined(GITLOG)
+	zen_setenv(L, "GITLOG", GITLOG);
+#endif
+
+	// open all standard lua libraries
+	luaL_openlibs(L);
+	// load our own openlibs and extensions
+	zen_load_extensions(L);
+	//////////////////// end of create
+
+	lua_gc(L, LUA_GCCOLLECT, 0);
+//	lua_setfield(L, LUA_REGISTRYINDEX, LSB_THIS_PTR);
+
+	return(L);
+
 }
 
-char *safe_string(char *str) {
-	int i, length = 0;
-	if(!str) {
-		warning("NULL string detected");
-		return NULL; }
-	if(str[0]=='\0') {
-		warning("empty string detected");
-		return NULL; }
+extern char *zen_heap;
+void zen_teardown(lua_State *L) {
+	notice("Zenroom teardown.");
+    if(L) lua_gc(L, LUA_GCCOLLECT, 0);
+    lua_close(L);
+    if(zen_heap) free(zen_heap);
+}
 
-	while (length < MAX_STRING && str[length] != '\0') ++length;
+int zen_exec_line(lua_State *L, const char *line) {
+	int ret;
+	lua_State* lua = L;
 
-	if (length == MAX_STRING)
-		warning("maximum size string detected (may be truncated) at address %p",str);
-
-	for (i = 0; i < length; ++i) {
-		if (!isprint(str[i]) && !isspace(str[i])) {
-			error("unprintable character (ASCII %d) at position %d",
-			      (unsigned char)str[i], i);
-			return NULL;
-		}
+	ret = luaL_dostring(lua, line);
+	if(ret) {
+		error("%s", lua_tostring(lua, -1));
+		fflush(stderr);
+		return ret;
 	}
-	return(str);
+	return 0;
+}
+
+
+int zen_exec_script(lua_State *L, const char *script) {
+	int ret;
+	lua_State* lua = L;
+
+	ret = luaL_dostring(lua, script);
+	if(ret) {
+		error("%s", lua_tostring(lua, -1));
+		fflush(stderr);
+		return ret;
+	}
+	return 0;
 }
 
 int zenroom_exec(char *script, char *conf, char *keys,
@@ -145,19 +155,16 @@ int zenroom_exec(char *script, char *conf, char *keys,
 		return 1;
 	}
 
-	zen_load_extensions(L);
-	// load our own openlibs and extensions
-
 	// load arguments from json if present
 	if(data) // avoid errors on NULL args
 		if(safe_string(data)) {
 			func("declaring global: DATA");
-			lsb_setglobal_string(L,"DATA",data);
+			zen_setenv(L,"DATA",data);
 		}
 	if(keys)
 		if(safe_string(keys)) {
 			func("declaring global: KEYS");
-			lsb_setglobal_string(L,"KEYS",keys);
+			zen_setenv(L,"KEYS",keys);
 		}
 
 	r = zen_exec_script(L, script);
@@ -189,7 +196,7 @@ int main(int argc, char **argv) {
 	char keysfile[MAX_STRING];
 	char datafile[MAX_STRING];
 	char script[MAX_FILE];
-	char conf[MAX_FILE];
+	// char conf[MAX_FILE];
 	char keys[MAX_FILE];
 	char data[MAX_FILE];
 	int readstdin = 0;
@@ -205,7 +212,7 @@ int main(int argc, char **argv) {
     datafile[0] = '\0';
     data[0] = '\0';
     keys[0] = '\0';
-    conf[0] = '\0';
+    // conf[0] = '\0';
     script[0] = '\0';
 
 	notice( "Zenroom - crypto language restricted execution environment %s",VERSION);
@@ -269,12 +276,13 @@ int main(int argc, char **argv) {
 		zen_add_function(cli, repl_read, "read");
 		zen_add_function(cli, repl_write, "write");
 
-		if(data[0]!='\0') lsb_setglobal_string(cli,"DATA",data);
-		if(keys[0]!='\0') lsb_setglobal_string(cli,"KEYS",keys);
+		if(data[0]!='\0') zen_setenv(cli,"DATA",data);
+		if(keys[0]!='\0') zen_setenv(cli,"KEYS",keys);
 		notice("Interactive console, press ctrl-d to quit.");
 		repl_loop(cli);
 		// quits on ctrl-D
 		zen_teardown(cli);
+		return 0;
 	} else {
 		////////////////////////////////////
 		// load a file as script and execute
@@ -282,20 +290,38 @@ int main(int argc, char **argv) {
 		load_file(script, fopen(scriptfile, "rb"));
 	}
 
+	static lua_State *L;
 	// configuration from -c or default
 	if(conffile[0]!='\0')
-		load_file(conf, fopen(conffile, "r"));
+		act("selected configuration: %s",conffile);
+		// load_file(conf, fopen(conffile, "r"));
 	else
 		act("using default configuration");
 
+	set_debug(verbosity);
+	L = zen_init((conffile[0])?conffile:NULL);
+	if(!L) {
+		error("Initialisation failed.");
+		return 1; }
+	if(data[0]) zen_setenv(L,"DATA",data);
+	if(keys[0]) zen_setenv(L,"KEYS",data);
+	if( zen_exec_script(L, script) ) error("Blocked execution.");
+	else notice("Execution completed.");
+	// report experimental memory manager
+	if((strcmp(conffile,"umm")==0) && zen_heap) {
+		lua_gc(L, LUA_GCCOLLECT, 0);
+		umm_info(zen_heap,0);
+	}
+	zen_teardown(L);
+	return 0;
 
-	ret = zenroom_exec(script,
-	                   (conf[0]!='\0')?conf:NULL,
-	                   (keys[0]!='\0')?keys:NULL,
-	                   (data[0]!='\0')?data:NULL,
-	                   verbosity);
-	// exit(1) on failure
-	func("return %u",ret);
-	return(ret);
+	// ret = zenroom_exec(script,
+	//                    (conffile[0]!='\0')?conffile:NULL,
+	//                    (keys[0]!='\0')?keys:NULL,
+	//                    (data[0]!='\0')?data:NULL,
+	//                    verbosity);	
+	// // exit(1) on failure
+	// func("return %u",ret);
+	// return(ret);
 }
 #endif

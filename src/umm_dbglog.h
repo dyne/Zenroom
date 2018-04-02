@@ -49,13 +49,7 @@
 #undef DBGLOG_INFO
 #undef DBGLOG_FORCE
 
-#ifndef DBGLOG_LEVEL
-#  define DBGLOG_LEVEL 0
-#endif
-
-#ifndef DBGLOG_FUNCTION
-#  define DBGLOG_FUNCTION printf
-#endif
+#include <jutils.h>
 
 /* ------------------------------------------------------------------------- */
 
