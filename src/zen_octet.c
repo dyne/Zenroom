@@ -41,6 +41,7 @@
 
 #include <jutils.h>
 #include <zenroom.h>
+#include <zen_error.h>
 #include <lua_functions.h>
 #include <randombytes.h>
 
@@ -54,16 +55,16 @@ static int _min(int x, int y) { if(x < y) return x;	else return y; }
 octet* o_new(lua_State *L, const int size) {
 	if(size<=0) return NULL;
 	if(size>MAX_FILE) {
-		error("Cannot create octet, size too big: %u", size);
+		lerror(L, "Cannot create octet, size too big: %u", size);
 		return NULL; }
 	octet *o = (octet *)lua_newuserdata(L, sizeof(octet));
 	if(!o) {
-		error("Error allocating new octet in %s",__func__);
+		lerror(L, "Error allocating new octet in %s",__func__);
 		return NULL; }
 	// TODO: check that maximum is not exceeded
 	luaL_getmetatable(L, "zenroom.octet");
 	lua_setmetatable(L, -2);
-	o->val = malloc((size_t)size+0x0f); SAFE(o->val);
+	o->val = zalloc(L, size);
 	o->len = 0;
 	o->max = size;
 	func("new octet (%u bytes)",size);
@@ -75,7 +76,7 @@ octet* o_arg(lua_State *L,int n) {
 	luaL_argcheck(L, ud != NULL, n, "octet class expected");
 	octet *o = (octet*)ud;
 	if(o->len>MAX_FILE) {
-		error("%s: octet too long (%u bytes)",__func__,o->len);
+		lerror(L, "%s: octet too long (%u bytes)",__func__,o->len);
 		return NULL; }
 	return(o);
 }
@@ -126,7 +127,7 @@ var4k = octet.new()
 static int newoctet (lua_State *L) {
 	const int len = luaL_optinteger(L, 1, MAX_OCTET);
 	if(!len) {
-		error("octet created with zero length");
+		lerror(L, "octet created with zero length");
 		return 0; }
 	octet *o = o_new(L,len);
 	SAFE(o);
@@ -244,10 +245,10 @@ static int base64 (lua_State *L) {
 	if(lua_isnoneornil(L, 2)) {
 		// export to base64
 		if(!o->len) {
-			error("base64 import of empty string");
+			lerror(L, "base64 import of empty string");
 			return 0; }
 		int newlen = getlen_base64(o->len);
-		char *b = malloc(newlen); SAFE(b);
+		char *b = zalloc(L, newlen);
 		OCT_tobase64(b,o);
 		b[newlen] = 0;
 		lua_pushstring(L,b);
@@ -272,7 +273,7 @@ static int string(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
 	if(lua_isnoneornil(L, 2)) {
 		// export to string
-		char *s = malloc(o->len+0x0f); SAFE(s);
+		char *s = zalloc(L, o->len);
 		OCT_toStr(o,s);
 		s[o->len] = 0; // make sure string is NULL terminated
 		lua_pushstring(L,s);
@@ -300,7 +301,7 @@ static int hex(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
 	if(lua_isnoneornil(L, 2)) {
 		// export to hex
-		char *s = malloc((o->len*2)+0x0f); SAFE(s);
+		char *s = zalloc(L, (o->len*2));
 		OCT_toHex(o,s);
 		s[o->len*2] = 0;
 		lua_pushstring(L,s);
@@ -325,7 +326,7 @@ static int hex(lua_State *L) {
 static int o_random(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
 	const int len = luaL_optinteger(L, 2, o->max);
-	char *buf = malloc(len); SAFE(buf);
+	char *buf = zalloc(L, len);
 	randombytes(buf,len);
 	o->len=0;
 	OCT_jbytes(o,buf,len);

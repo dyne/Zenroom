@@ -37,6 +37,7 @@
 
 #include <jutils.h>
 #include <zenroom.h>
+#include <zen_error.h>
 #include <zen_octet.h>
 #include <randombytes.h>
 #include <lua_functions.h>
@@ -44,11 +45,9 @@
 #include <ecdh_ED25519.h>
 #include <pbc_support.h>
 
-#define fail return 0
-
 #define KEYPROT(alg,key)	  \
 	error("%s engine has already a %s set:",alg,key); \
-	error("Zenroom won't overwrite. Use a .new() instance.");
+	lerror(L, "Zenroom won't overwrite. Use a .new() instance.");
 
 typedef struct {
 	// function pointers
@@ -119,8 +118,8 @@ ecdh* ecdh_new(lua_State *L, const char *curve) {
 	// TODO: make it a newuserdata object in LUA space so that
 	// it can be cleanly collected by the GC as well it can be
 	// saved transparently in the global state
-	e->rng = malloc(sizeof(csprng));
-	char *tmp = malloc(256);
+	e->rng = zalloc(L, sizeof(csprng));
+	char *tmp = zalloc(L, 256);
 	randombytes(tmp,252);
 	// using time() from milagro
 	unsign32 ttmp = GET_TIME();
@@ -167,9 +166,9 @@ static int ecdh_keygen(lua_State *L) {
 	HERE();
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	if(e->seckey) {
-		ERROR(); KEYPROT(e->curve,"private key"); fail; }
+		ERROR(); KEYPROT(e->curve,"private key"); }
 	if(e->pubkey) {
-		ERROR(); KEYPROT(e->curve,"public key"); fail; }
+		ERROR(); KEYPROT(e->curve,"public key"); }
 	octet *pk = o_new(L,e->publen); SAFE(pk);
 	octet *sk = o_new(L,e->seclen); SAFE(sk);
 	// TODO: generate a public key from any secret
@@ -177,7 +176,7 @@ static int ecdh_keygen(lua_State *L) {
 	int res;
 	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(pk);
 	if(res == ECDH_INVALID_PUBLIC_KEY) {
-		error("%s: generated public key is invalid",__func__);
+		lerror(L, "%s: generated public key is invalid",__func__);
 		lua_pop(L,1); // remove the pk from stack
 		lua_pop(L,1); // remove the sk from stack
 		return 0; }
@@ -202,7 +201,8 @@ static int ecdh_checkpub(lua_State *L) {
 	octet *pk = NULL;
 	if(lua_isnoneornil(L, 2)) {
 		if(!e->pubkey) {
-			ERROR(); error("Public key not found."); fail; }
+			ERROR();
+			return lerror(L, "Public key not found."); }
 		pk = e->pubkey;
 	} else
 		pk = o_arg(L, 2); SAFE(pk);
@@ -235,7 +235,7 @@ static int ecdh_session(lua_State *L) {
 	if((ud = luaL_testudata(L, 2, "zenroom.ecdh"))) {
 		pk = (ecdh*)ud;
 		if(!pk->pubkey) {
-			error("%s: public key not found in keyring",__func__);
+			lerror(L, "%s: public key not found in keyring",__func__);
 			return 0; }
 		pubkey = pk->pubkey; // take secret key from keyring
 		func("%s: public key found in ecdh keyring (%u bytes)",
@@ -245,13 +245,13 @@ static int ecdh_session(lua_State *L) {
 		func("%s: public key found in octet (%u bytes)",
 		     __func__, pubkey->len);
 	} else {
-		error("%s: invalid public key argument",__func__);
+		lerror(L, "%s: invalid public key argument",__func__);
 		return 0;
 	}
 	int res;
 	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(pubkey);
 	if(res == ECDH_INVALID_PUBLIC_KEY) {
-		error("%s: public key found but invalid",__func__);
+		lerror(L, "%s: public key found but invalid",__func__);
 		return 0; }
 	octet *ses = o_new(L,e->keysize); SAFE(ses);
 	(*e->ECP__SVDP_DH)(e->seckey,pubkey,ses);
@@ -275,7 +275,8 @@ static int ecdh_public(lua_State *L) {
 	if(lua_isnoneornil(L, 2)) {
 		if(!e->pubkey) {
 			if(!e->seckey) {
-				ERROR(); error("Public key is not found."); fail;
+				ERROR();
+				return lerror(L, "Public key is not found.");
 			} else {
 				func("TODO: generate public key from secret");
 			}
@@ -289,7 +290,8 @@ static int ecdh_public(lua_State *L) {
 		return 1;
 	}
 	if(e->pubkey!=NULL) {
-		ERROR(); KEYPROT(e->curve, "public key"); fail; }
+		ERROR();
+		KEYPROT(e->curve, "public key"); }
 	octet *o = o_arg(L, 2); SAFE(o);
 	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(o);
 	if(res == ECDH_INVALID_PUBLIC_KEY) {
@@ -316,13 +318,14 @@ static int ecdh_private(lua_State *L) {
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	if(lua_isnoneornil(L, 2)) {
 		if(!e->seckey) {
-			ERROR(); error("Private key is not found."); fail; }
+			ERROR();
+			return lerror(L, "Private key is not found."); }
 		// export public key to octet
 		o_dup(L, e->seckey);
 		return 1;
 	}
 	if(e->seckey!=NULL) {
-		ERROR(); KEYPROT(e->curve, "private key"); fail; }
+		ERROR(); KEYPROT(e->curve, "private key"); }
 	e->seckey = o_arg(L, 2); SAFE(e->seckey);
 	return 0;
 }
