@@ -254,8 +254,10 @@ check-shared:
 
 
 check-static: test-exec := ${pwd}/src/zenroom-static
+check-static: test-exec-lowmem := ${pwd}/src/zenroom-shared -c umm
 check-static:
-	$(call lowmem-tests,${test-exec})
+	$(call lowmem-tests,${test-exec-lowmem})
+	$(call himem-tests,${test-exec})
 	./test/octet-json.sh ${test-exec}
 	@echo "----------------"
 	@echo "All tests passed for SHARED binary build"
@@ -264,21 +266,26 @@ check-static:
 check-js: test-exec := nodejs ${pwd}/test/zenroom_exec.js ${pwd}/src/zenroom.js
 check-js:
 	$(call lowmem-tests,${test-exec})
+	$(call himem-tests,${test-exec})
 	@echo "----------------"
 	@echo "All tests passed for SHARED binary build"
 	@echo "----------------"
 
+check-debug: test-exec-lowmem := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared -c umm
 check-debug: test-exec := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared
 check-debug:
-	$(call lowmem-tests,${test-exec})
+	$(call lowmem-tests,${test-exec-lowmem})
+	$(call himem-tests,${test-exec})
 	./test/octet-json.sh ${test-exec}
 	@echo "----------------"
 	@echo "All tests passed for SHARED binary build"
 	@echo "----------------"
 
+check-osx: test-exec-lowmem := ${pwd}/src/zenroom-shared -c umm
 check-osx: test-exec := ${pwd}/src/zenroom-shared
 check-osx:
-	$(call lowmem-tests,${test-exec})
+	$(call lowmem-tests,${test-exec-lowmem})
+	$(call himem-tests,${test-exec})
 	@echo "----------------"
 	@echo "All tests passed for OSX binary build"
 	@echo "----------------"
