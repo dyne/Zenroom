@@ -254,7 +254,7 @@ check-shared:
 
 
 check-static: test-exec := ${pwd}/src/zenroom-static
-check-static: test-exec-lowmem := ${pwd}/src/zenroom-shared -c umm
+check-static: test-exec-lowmem := ${pwd}/src/zenroom-static -c umm
 check-static:
 	$(call lowmem-tests,${test-exec-lowmem})
 	$(call himem-tests,${test-exec})
