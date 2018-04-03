@@ -4,7 +4,7 @@
 
 [![Build Status](https://travis-ci.org/DECODEproject/zenroom.svg?branch=master)](https://travis-ci.org/DECODEproject/zenroom)
 
-Zenroom is a brand new, small and portable virtual machine for cryptographic operations: it is smaller than 500KB and ready for experimental use on many platforms.
+Zenroom is a brand new, small and portable virtual machine for cryptographic operations: it is smaller than 1MB and ready for experimental use on many platforms.
 
 ## Latest stable release is 0.5.0:
 <ul class="center">
@@ -25,7 +25,6 @@ Zenroom is a brand new, small and portable virtual machine for cryptographic ope
 
 <li class="far fa-archive"><a href="https://files.dyne.org/zenroom/">Releases archive</a></li>
 
-
 </ul>
 
 ## Documentation:
@@ -36,7 +35,7 @@ Zenroom is a brand new, small and portable virtual machine for cryptographic ope
 
 <li class="far fa-graduation-cap"><a href="https://zenroom.dyne.org/whitepaper">Zenroom Whitepaper</a></li>
 
-<li class="far fa-hand-point-right"><a href="https://zenroom.dyne.org/demo">Online demo</a></li>
+<li class="far fa-hand-point-right"><a href="https://zenroom.dyne.org/demo">Online demo</a><sup>*</sup></li>
 
 <li class="far fa-cogs"><a href="https://github.com/DECODEproject/zenroom/wiki">Build instructions</a></li>
 
@@ -53,7 +52,7 @@ Zenroom is software in **ALPHA stage** and is part of the [DECODE project](https
 This software aims to make it easy and less error-prone to write **portable** scripts using **end-to-end encryption** inside isolated environments that can be easily made **interoperable**. Basic crypto functions provided include primitives to manage **a/symmetric keys, key derivation, hashing and signing functionalities**.
 
 
-Zenroom is software inspired by the [language-theoretical security](http://langsec.org) research, it allows to expresses cryptographic operations in a **Turing-incomplete** * language without any access to the calling process, underlying operating system or filesystem.
+Zenroom is software inspired by the [language-theoretical security](http://langsec.org) research, it allows to expresses cryptographic operations in a readable scripting language that has no access to the calling process, underlying operating system or filesystem.
 <p class="pull-right"><sup>*</sup> = Work in Progress</p>
 
 <a href="http://langsec.org/occupy/">
@@ -89,6 +88,7 @@ This software includes code by:
 
 - R. Ierusalimschy, W. Celes and L.H. de Figueiredo (lua)
 - Mike Scott and Kealan McCusker (milagro-crypto-c)
+- Ralph Hempel (umm_malloc)
 - Mark Pulford (lua-cjson)
 - Daan Sprenkels (randombytes)
 

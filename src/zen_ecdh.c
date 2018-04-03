@@ -22,8 +22,22 @@
 //  Asymmetric public/private key encryption technologies.
 //
 //  ECDH encryption functionalities are provided with all standard
-//  functions by this extension, which has to be required explicitly
-//  as <code>ecdh = require'ecdh'</code>.
+//  functions by this extension, which has to be required explicitly:
+//
+//  <code>ecdh = require'ecdh'</code>
+//
+//  After requiring the extension it is possible to create keyring
+//  instances using the new() method:
+//
+//  <code>keyring = ecdh.new()</code>
+//
+//  One can create more keyrings in the same script and call them with
+//  meaningful variable names to help making code more
+//  understandable. Each keyring instance offers methods prefixed with
+//  a double-colon that operate on arguments as well keys contained by
+//  the keyring: this way scripting can focus on the identities
+//  represented by each keyring, giving them names as 'Alice' or
+//  'Bob'.
 //
 //  @module ecdh
 //  @author Denis "Jaromil" Roio
@@ -75,7 +89,7 @@ typedef struct {
 	int seclen;
 } ecdh;
 
-/// Global ECDH Functions
+/// Global ECDH extension
 // @section ecdh.globals
 
 /***
@@ -83,12 +97,12 @@ typedef struct {
     EC25519 by default if omitted. The ECDH keyring created will
     offer methods to interact with other keyrings.
 
-    @param string[opt=ec25519] elliptic curve to be used
+    @param curve[opt=ec25519] elliptic curve to be used
     @return a new ECDH keyring
-    @function new(string)
+    @function new(curve)
     @usage
     ecdh = require'ecdh'
-    keyring = ecdh.new()
+    keyring = ecdh.new('ec25519')
     -- generate a keypair
     keyring:keygen()
 */
@@ -152,8 +166,8 @@ int ecdh_destroy(lua_State *L) {
 	return 0;
 }
 
-/// ECDH Methods
-// @type ecdh
+/// Keyring Methods
+// @type keyring
 
 /**
    Generate an ECDH public/private key pair for a keyring
@@ -162,7 +176,7 @@ int ecdh_destroy(lua_State *L) {
    keyring. They can be retrieved using the <code>:public()</code> and
    <code>:private()</code> methods if necessary.
 
-   @function keygen()
+   @function keyring:keygen()
 */
 static int ecdh_keygen(lua_State *L) {
 	HERE();
@@ -193,7 +207,7 @@ static int ecdh_keygen(lua_State *L) {
    possible.
 
    @param key the input public key octet to be validated
-   @function ecdh:checkpub(key)
+   @function keyring:checkpub(key)
    @return true if public key is OK, or false if not.
 */
 
@@ -225,7 +239,7 @@ static int ecdh_checkpub(lua_State *L) {
 
    @param public keyring containing the public key to be used
    @param private keyring containing the private key to be used
-   @function ecdh:session(public, private)
+   @function keyring:session(public, private)
    @return a new octet containing the shared session key
 */
 static int ecdh_session(lua_State *L) {
@@ -268,7 +282,7 @@ static int ecdh_session(lua_State *L) {
    returns an error if a public key is already present.
 
    @param key[opt] octet of a public key to be imported
-   @function ecdh:public(key)
+   @function keyring:public(key)
 */
 static int ecdh_public(lua_State *L) {
 	HERE();
@@ -313,7 +327,7 @@ static int ecdh_public(lua_State *L) {
    returns an error if a secret key is already present.
 
    @param key[opt] octet of a public key to be imported
-   @function ecdh:secret(key)
+   @function keyring:secret(key)
 */
 static int ecdh_private(lua_State *L) {
 	HERE();
@@ -340,7 +354,7 @@ static int ecdh_private(lua_State *L) {
    @param key AES key octet
    @param message input text in an octet
    @return a new octet containing the output ciphertext
-   @function ecdh:encrypt(key, message)
+   @function keyring:encrypt(key, message)
 */
 
 static int ecdh_encrypt(lua_State *L) {
@@ -363,7 +377,7 @@ static int ecdh_encrypt(lua_State *L) {
 	@param key AES key octet
 	@param ciphertext input ciphertext octet
 	@return a new octet containing the decrypted plain text, or false when failed
-	@function ecdh:decrypt(key, ciphertext)
+	@function keyring:decrypt(key, ciphertext)
 */
 
 static int ecdh_decrypt(lua_State *L) {
@@ -383,12 +397,12 @@ static int ecdh_decrypt(lua_State *L) {
 
 /**
    Hash an octet into a new octet. Use the keyring's hash function to
-   hash an octet string and return a new one contianing the hash of
+   hash an octet string and return a new one containing the hash of
    the string.
 
    @param string octet containing the data to be hashed
-   @function ecdh:hash(string)
-   @return a new octet contianing the hash of the data
+   @function keyring:hash(string)
+   @return a new octet containing the hash of the data
 */
 static int ecdh_hash(lua_State *L) {
 	HERE();
@@ -408,8 +422,8 @@ static int ecdh_hash(lua_State *L) {
    @param key an octet containing the key to compute the HMAC
    @param data an octet containing the message to compute the HMAC
    @param len[opt=keyring->hash bytes] length of HMAC or default
-   @function ecdh:hmac(key, data, len)
-   @return a new octet contianing the computer HMAC or false on failure
+   @function keyring:hmac(key, data, len)
+   @return a new octet containing the computer HMAC or false on failure
 */
 static int ecdh_hmac(lua_State *L) {
 	HERE();
@@ -437,7 +451,7 @@ static int ecdh_hmac(lua_State *L) {
    @param parameters[opt=nil] octet of key derivation parameters (can be <code>nil</code>)
    @param key octet of the key to be transformed
    @param length[opt=key length] integer indicating the new length (default same as input key)
-   @function ecdh:kdf2(parameters, key, length)
+   @function keyring:kdf2(parameters, key, length)
    @return a new octet containing the derived key
 */
 
@@ -463,10 +477,10 @@ static int ecdh_kdf2(lua_State *L) {
    @param salt octet containing a salt to be used in transformation
    @param iterations[opt=1000] number of iterations to be applied
    @param length[opt=key length] integer indicating the new length (default same as input key)
-   @function ecdh:pbkdf2(key, salt, iterations, length)
+   @function keyring:pbkdf2(key, salt, iterations, length)
    @return a new octet containing the derived key
 
-   @see ecdh:kdf2
+   @see keyring:kdf2
 */
 
 static int ecdh_pbkdf2(lua_State *L) {
@@ -495,15 +509,20 @@ static int lua_new_ecdh(lua_State *L) {
 
 
 /**
-   Cryptographically Secure Random Number Generator.
+   Cryptographically Secure Random Number Generator (RNG).
 
    Returns a new octet filled with random bytes.
 
-   Unguessable seed -> SHA -> PRNG internal state -> SHA -> random
-   numbers.
+   This method is initialised with a different seed for each keyring
+   upon creation. It doesn't make any difference to use one keyring's
+   RNG or another, but mixing them and making this behavior specific
+   to different scripts helps randomness.
 
-   See <a href="ftp://ftp.rsasecurity.com/pub/pdfs/bull-1.pdf">this
-   paper</a> for a justification.
+   Cryptographic security is achieved by hashing the random numbers
+   using this sequence: unguessable seed -> SHA -> PRNG internal state
+   -> SHA -> random numbers. See <a
+   href="ftp://ftp.rsasecurity.com/pub/pdfs/bull-1.pdf">this paper</a>
+   for a justification.
 
    @param int[opt=rsa->max] length of random material in bytes, defaults to maximum RSA size
    @function random(int)
