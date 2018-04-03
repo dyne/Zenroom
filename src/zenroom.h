@@ -1,7 +1,7 @@
 #ifndef __ZENROOM_H__
 #define __ZENROOM_H__
 
-// #define MAX_HEAP (1048576*64) // 64 MiBs
+#define MAX_HEAP (1048576) // 1 MiB
 #define MAX_FILE 512000 // load max 500Kb files
 #define MAX_STRING 4096
 #define MAX_OCTET 4096

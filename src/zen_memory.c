@@ -5,21 +5,25 @@
 #include <zenroom.h>
 #include <umm_malloc.h>
 
-void *zen_memalign(size_t size, size_t align) {
+void *zen_memalign(const size_t size, const size_t align) {
 	void *mem = NULL;
+	// preserve const values as they seem to be overwritten by calls
+	size_t vsize = size;
+	size_t valign = align;
 # if defined(_WIN32)
-	mem = __mingw_aligned_malloc(size, align);
+	mem = __mingw_aligned_malloc(vsize, valign);
 	if(!mem) {
-		error("error in memory allocation.");
+		error("error in %u byte aligned memory allocation of %u bytes.",
+			align, size);
 		return NULL; }
 # else
 	int res;
-	res = posix_memalign(&mem, align, size);
+	res = posix_memalign(&mem, valign, vsize);
 	if(res == ENOMEM) {
 		error("insufficient memory to allocate %u bytes.", size);
 		return NULL; }
 	if(res == EINVAL) {
-		error("invalid memory alignment at 16 bytes.");
+		error("invalid memory alignment at %u bytes.",align);
 		return NULL; }
 # endif
 	return(mem);
@@ -36,13 +40,13 @@ static zen_mem_t zen_mem_f;
 // Global HEAP pointer in the STACK
 char *zen_heap;
 size_t zen_heap_size;
-void umm_memory_init(size_t size) {
-	zen_heap = zen_memalign(size, 8);
-	zen_heap_size = size;
+void umm_memory_init(size_t S) {
+	zen_heap = zen_memalign(S, 16);
+	zen_heap_size = S;
 	zen_mem_f.malloc = umm_malloc;
 	zen_mem_f.realloc = umm_realloc;
 	zen_mem_f.free = umm_free;
-	umm_init(zen_heap, size);
+	umm_init(zen_heap, S);
 	// pointers saved in umm_malloc.c (stack)
 }
 

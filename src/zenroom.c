@@ -51,6 +51,7 @@ extern void libc_memory_init();
 extern void umm_memory_init(size_t size);
 extern void* umm_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
 extern void *umm_info(void*, int);
+extern int umm_integrity_check();
 
 // prototypes from lua_functions.c
 extern void load_file(char *dst, FILE *fd);
@@ -62,7 +63,7 @@ lua_State *zen_init(const char *conf) {
 
 	if(conf) {
 		if(strcmp(conf,"umm")==0) {
-			umm_memory_init(1048576*4); // 4 MiBs total memory
+			umm_memory_init(MAX_HEAP); // defined in zenroom.h
 			L = lua_newstate(umm_memory_manager, NULL);
 		} else {
 			error("%s: unknown memory manager: %s",
@@ -310,6 +311,7 @@ int main(int argc, char **argv) {
 	// report experimental memory manager
 	if((strcmp(conffile,"umm")==0) && zen_heap) {
 		lua_gc(L, LUA_GCCOLLECT, 0);
+		if(umm_integrity_check(zen_heap)) act("HEAP integrity checks passed.");
 		umm_info(zen_heap,0);
 	}
 	zen_teardown(L);

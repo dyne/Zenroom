@@ -24,11 +24,11 @@
  *                     - Move integrity and poison checking to separate file
  * R.Hempel 2017-12-29 - Fix bug in realloc when requesting a new block that
  *                        results in OOM error - see Issue 11
+ * D.Roio   2018-04-04 - Adaptations to work in the Zenroom.dyne.org VM
  * ----------------------------------------------------------------------------
  */
 
 #include <stdio.h>
-#include <string.h>
 
 #include <umm_malloc.h>
 #include <umm_malloc_cfg.h>
@@ -66,8 +66,9 @@ UMM_H_ATTPACKPRE typedef struct umm_block_t {
 
 /* -------------------------------------------------------------- */
 #include <zenroom.h>
-umm_block *umm_heap = NULL;
-size_t umm_numblocks = 0;
+static umm_block *umm_heap;
+static size_t umm_numblocks = 0;
+UMM_HEAP_INFO ummHeapInfo;
 
 /* -------------------------------------------------------------- */
 
@@ -86,7 +87,6 @@ size_t umm_numblocks = 0;
  * data structures to other programs.
  * -------------------------------------------------------------------------
  */
-#include <umm_info.c>
 
 // #include "umm_integrity.c"
 // #include "umm_poison.c"
@@ -192,11 +192,18 @@ static unsigned short int umm_assimilate_down( unsigned short int c, unsigned sh
 
 /* ------------------------------------------------------------------------- */
 
-void umm_init( void *ptr, size_t size ) {
+void umm_memzero(char *ptr, size_t s) {
+	register size_t i;
+	for(i=0;i<s;i++) ptr[i] = 0x00;
+}
+
+void umm_init( void *ptr, size_t memsize ) {
   /* init heap pointer and size, and memset it to 0 */
   umm_heap = (umm_block *)ptr;
-  umm_numblocks = (size / sizeof(umm_block));
-  memset(umm_heap, 0x00, size);
+  umm_numblocks = (memsize / sizeof(umm_block));
+  act("HEAP memory allocated: %u KiB",memsize/1024);
+  func("UMM blocks available: %u", umm_numblocks);
+  umm_memzero((char*)ptr,memsize);
 
   /* setup initial blank heap structure */
   {
@@ -614,10 +621,256 @@ void *umm_calloc( size_t num, size_t item_size ) {
   ret = umm_malloc((size_t)(item_size * num));
 
   if (ret)
-      memset(ret, 0x00, (size_t)(item_size * num));
+      umm_memzero(ret, (size_t)(item_size * num));
 
   return ret;
 }
 
 /* ------------------------------------------------------------------------ */
 
+void *umm_info( void *ptr, int force ) {
+
+  unsigned short int blockNo = 0;
+
+  /* Protect the critical section... */
+  UMM_CRITICAL_ENTRY();
+
+  /*
+   * Clear out all of the entries in the ummHeapInfo structure before doing
+   * any calculations..
+   */
+
+  umm_memzero( (char*)&ummHeapInfo, sizeof( ummHeapInfo ) );
+
+  // DBGLOG_FORCE( force, "+----------+-------+--------+--------+-------+--------+--------+\n" );
+  // DBGLOG_FORCE( force, "|0x%08lx|B %5i|NB %5i|PB %5i|Z %5i|NF %5i|PF %5i|\n",
+  //     (unsigned long)(&UMM_BLOCK(blockNo)),
+  //     blockNo,
+  //     UMM_NBLOCK(blockNo) & UMM_BLOCKNO_MASK,
+  //     UMM_PBLOCK(blockNo),
+  //     (UMM_NBLOCK(blockNo) & UMM_BLOCKNO_MASK )-blockNo,
+  //     UMM_NFREE(blockNo),
+  //     UMM_PFREE(blockNo) );
+
+  /*
+   * Now loop through the block lists, and keep track of the number and size
+   * of used and free blocks. The terminating condition is an nb pointer with
+   * a value of zero...
+   */
+
+  blockNo = UMM_NBLOCK(blockNo) & UMM_BLOCKNO_MASK;
+
+  while( UMM_NBLOCK(blockNo) & UMM_BLOCKNO_MASK ) {
+    size_t curBlocks = (UMM_NBLOCK(blockNo) & UMM_BLOCKNO_MASK )-blockNo;
+
+    ++ummHeapInfo.totalEntries;
+    ummHeapInfo.totalBlocks += curBlocks;
+
+    /* Is this a free block? */
+
+    if( UMM_NBLOCK(blockNo) & UMM_FREELIST_MASK ) {
+      ++ummHeapInfo.freeEntries;
+      ummHeapInfo.freeBlocks += curBlocks;
+
+      if (ummHeapInfo.maxFreeContiguousBlocks < curBlocks) {
+        ummHeapInfo.maxFreeContiguousBlocks = curBlocks;
+      }
+
+      // DBGLOG_FORCE( force, "|0x%08lx|B %5i|NB %5i|PB %5i|Z %5u|NF %5i|PF %5i|\n",
+      //     (unsigned long)(&UMM_BLOCK(blockNo)),
+      //     blockNo,
+      //     UMM_NBLOCK(blockNo) & UMM_BLOCKNO_MASK,
+      //     UMM_PBLOCK(blockNo),
+      //     (unsigned int)curBlocks,
+      //     UMM_NFREE(blockNo),
+      //     UMM_PFREE(blockNo) );
+
+      /* Does this block address match the ptr we may be trying to free? */
+
+      if( ptr == &UMM_BLOCK(blockNo) ) {
+
+        /* Release the critical section... */
+        UMM_CRITICAL_EXIT();
+
+        return( ptr );
+      }
+    } else {
+      ++ummHeapInfo.usedEntries;
+      ummHeapInfo.usedBlocks += curBlocks;
+
+      // DBGLOG_FORCE( force, "|0x%08lx|B %5i|NB %5i|PB %5i|Z %5u|\n",
+      //     (unsigned long)(&UMM_BLOCK(blockNo)),
+      //     blockNo,
+      //     UMM_NBLOCK(blockNo) & UMM_BLOCKNO_MASK,
+      //     UMM_PBLOCK(blockNo),
+      //     (unsigned int)curBlocks );
+    }
+
+    blockNo = UMM_NBLOCK(blockNo) & UMM_BLOCKNO_MASK;
+  }
+
+  /*
+   * Update the accounting totals with information from the last block, the
+   * rest must be free!
+   */
+
+  {
+    size_t curBlocks = UMM_NUMBLOCKS-blockNo;
+    ummHeapInfo.freeBlocks  += curBlocks;
+    ummHeapInfo.totalBlocks += curBlocks;
+
+    if (ummHeapInfo.maxFreeContiguousBlocks < curBlocks) {
+      ummHeapInfo.maxFreeContiguousBlocks = curBlocks;
+    }
+  }
+
+  // DBGLOG_FORCE( force, "|0x%08lx|B %5i|NB %5i|PB %5i|Z %5i|NF %5i|PF %5i|\n",
+  //     (unsigned long)(&UMM_BLOCK(blockNo)),
+  //     blockNo,
+  //     UMM_NBLOCK(blockNo) & UMM_BLOCKNO_MASK,
+  //     UMM_PBLOCK(blockNo),
+  //     UMM_NUMBLOCKS-blockNo,
+  //     UMM_NFREE(blockNo),
+  //     UMM_PFREE(blockNo) );
+
+  act("Total Entries %5i \t Used Entries %5i \t Free Entries %5i",
+      ummHeapInfo.totalEntries,
+      ummHeapInfo.usedEntries,
+      ummHeapInfo.freeEntries );
+
+  act("Total Blocks  %5i \t Used Blocks  %5i \t Free Blocks  %5i",
+      ummHeapInfo.totalBlocks,
+      ummHeapInfo.usedBlocks,
+      ummHeapInfo.freeBlocks  );
+
+  size_t totmem = ummHeapInfo.totalBlocks * sizeof(umm_block);
+  size_t freemem = ummHeapInfo.freeBlocks * sizeof(umm_block);
+  size_t usedmem = ummHeapInfo.usedBlocks * sizeof(umm_block);
+  act("Total Memory %u KiB \t Used Memory %u KiB \t Free Memory %u KiB",
+      totmem/1024, usedmem/1024, freemem/1024);
+  /* Release the critical section... */
+  UMM_CRITICAL_EXIT();
+
+  return( NULL );
+}
+
+/*
+ * Perform integrity check of the whole heap data. Returns 1 in case of
+ * success, 0 otherwise.
+ *
+ * First of all, iterate through all free blocks, and check that all backlinks
+ * match (i.e. if block X has next free block Y, then the block Y should have
+ * previous free block set to X).
+ *
+ * Additionally, we check that each free block is correctly marked with
+ * `UMM_FREELIST_MASK` on the `next` pointer: during iteration through free
+ * list, we mark each free block by the same flag `UMM_FREELIST_MASK`, but
+ * on `prev` pointer. We'll check and unmark it later.
+ *
+ * Then, we iterate through all blocks in the heap, and similarly check that
+ * all backlinks match (i.e. if block X has next block Y, then the block Y
+ * should have previous block set to X).
+ *
+ * But before checking each backlink, we check that the `next` and `prev`
+ * pointers are both marked with `UMM_FREELIST_MASK`, or both unmarked.
+ * This way, we ensure that the free flag is in sync with the free pointers
+ * chain.
+ */
+int umm_integrity_check() {
+	int ok = 1;
+	unsigned short int prev;
+	unsigned short int cur;
+
+	/* Iterate through all free blocks */
+	prev = 0;
+	while(1) {
+		cur = UMM_NFREE(prev);
+
+		/* Check that next free block number is valid */
+		if (cur >= UMM_NUMBLOCKS) {
+			error("heap integrity broken: too large next free num: %d "
+			      "(in block %d, addr 0x%lx)\n", cur, prev,
+			      (unsigned long)&UMM_NBLOCK(prev));
+			ok = 0;
+			goto clean;
+		}
+		if (cur == 0) {
+			/* No more free blocks */
+			break;
+		}
+
+		/* Check if prev free block number matches */
+		if (UMM_PFREE(cur) != prev) {
+			error("heap integrity broken: free links don't match: "
+			      "%d -> %d, but %d -> %d\n",
+			      prev, cur, cur, UMM_PFREE(cur));
+			ok = 0;
+			goto clean;
+		}
+
+		UMM_PBLOCK(cur) |= UMM_FREELIST_MASK;
+
+		prev = cur;
+	}
+
+	/* Iterate through all blocks */
+	prev = 0;
+	while(1) {
+		cur = UMM_NBLOCK(prev) & UMM_BLOCKNO_MASK;
+
+		/* Check that next block number is valid */
+		if (cur >= UMM_NUMBLOCKS) {
+			error("heap integrity broken: too large next block num: %d "
+			      "(in block %d, addr 0x%lx)\n", cur, prev,
+			      (unsigned long)&UMM_NBLOCK(prev));
+			ok = 0;
+			goto clean;
+		}
+		if (cur == 0) {
+			/* No more blocks */
+			break;
+		}
+
+		/* make sure the free mark is appropriate, and unmark it */
+		if ((UMM_NBLOCK(cur) & UMM_FREELIST_MASK)
+		    != (UMM_PBLOCK(cur) & UMM_FREELIST_MASK))
+		{
+			error("heap integrity broken: mask wrong at addr 0x%lx: n=0x%x, p=0x%x\n",
+			      (unsigned long)&UMM_NBLOCK(cur),
+			      (UMM_NBLOCK(cur) & UMM_FREELIST_MASK),
+			      (UMM_PBLOCK(cur) & UMM_FREELIST_MASK)
+				);
+			ok = 0;
+			goto clean;
+		}
+
+		/* make sure the block list is sequential */
+		if (cur <= prev ) {
+			error("heap integrity broken: next block %d is before prev this one "
+			      "(in block %d, addr 0x%lx)\n", cur, prev,
+			      (unsigned long)&UMM_NBLOCK(prev));
+			ok = 0;
+			goto clean;
+		}
+
+/* unmark */
+		UMM_PBLOCK(cur) &= UMM_BLOCKNO_MASK;
+
+		/* Check if prev block number matches */
+		if (UMM_PBLOCK(cur) != prev) {
+			error("heap integrity broken: block links don't match: "
+			      "%d -> %d, but %d -> %d\n",
+			      prev, cur, cur, UMM_PBLOCK(cur));
+			ok = 0;
+			goto clean;
+		}
+
+		prev = cur;
+	}
+
+clean:
+	if (!ok){
+		UMM_HEAP_CORRUPTION_CB();
+	}
+	return ok;
+}
