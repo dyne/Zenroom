@@ -304,7 +304,7 @@ int main(int argc, char **argv) {
 		error("Initialisation failed.");
 		return 1; }
 	if(data[0]) zen_setenv(L,"DATA",data);
-	if(keys[0]) zen_setenv(L,"KEYS",data);
+	if(keys[0]) zen_setenv(L,"KEYS",keys);
 	if( zen_exec_script(L, script) ) error("Blocked execution.");
 	else notice("Execution completed.");
 	// report experimental memory manager

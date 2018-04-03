@@ -211,20 +211,21 @@ check-milagro: milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c test
 
 ## tests that require too much memory
-# ${1} test/sort.lua && \
-# ${1} test/literals.lua && \
-# ${1} test/calls.lua && \
-# ${1} test/pm.lua && \
-# ${1} test/nextvar.lua && \
-# ${1} test/constructs.lua && \
-# ${1} test/cjson-test.lua && \
+himem-tests = \
+ @${1} test/sort.lua && \
+ ${1} test/literals.lua && \
+ ${1} test/calls.lua && \
+ ${1} test/pm.lua && \
+ ${1} test/nextvar.lua && \
+ ${1} test/constructs.lua && \
+ ${1} test/cjson-test.lua
 
 ## GC tests break memory management with umm
 # in particular steps (2)
 # ${1} test/gc.lua && \
 
 
-tests = \
+lowmem-tests = \
 		@${1} test/vararg.lua && \
 		${1} test/utf8.lua && \
 		${1} test/tpack.lua && \
@@ -241,9 +242,11 @@ tests = \
 		${1} test/ecdh.lua
 
 
+check-shared: test-exec-lowmem := ${pwd}/src/zenroom-shared -c umm
 check-shared: test-exec := ${pwd}/src/zenroom-shared
 check-shared:
-	$(call tests,${test-exec})
+	$(call lowmem-tests,${test-exec-lowmem})
+	$(call himem-tests,${test-exec})
 	./test/octet-json.sh ${test-exec}
 	@echo "----------------"
 	@echo "All tests passed for SHARED binary build"
@@ -252,7 +255,7 @@ check-shared:
 
 check-static: test-exec := ${pwd}/src/zenroom-static
 check-static:
-	$(call tests,${test-exec})
+	$(call lowmem-tests,${test-exec})
 	./test/octet-json.sh ${test-exec}
 	@echo "----------------"
 	@echo "All tests passed for SHARED binary build"
@@ -260,14 +263,14 @@ check-static:
 
 check-js: test-exec := nodejs ${pwd}/test/zenroom_exec.js ${pwd}/src/zenroom.js
 check-js:
-	$(call tests,${test-exec})
+	$(call lowmem-tests,${test-exec})
 	@echo "----------------"
 	@echo "All tests passed for SHARED binary build"
 	@echo "----------------"
 
 check-debug: test-exec := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared
 check-debug:
-	$(call tests,${test-exec})
+	$(call lowmem-tests,${test-exec})
 	./test/octet-json.sh ${test-exec}
 	@echo "----------------"
 	@echo "All tests passed for SHARED binary build"
@@ -275,7 +278,7 @@ check-debug:
 
 check-osx: test-exec := ${pwd}/src/zenroom-shared
 check-osx:
-	$(call tests,${test-exec})
+	$(call lowmem-tests,${test-exec})
 	@echo "----------------"
 	@echo "All tests passed for OSX binary build"
 	@echo "----------------"
