@@ -71,10 +71,26 @@
 int randombytes_js_randombytes_nodejs(void *buf, size_t n) {
 	size_t c;
 	char *bytes = (char*) EM_ASM_INT({
-			const crypto = require('crypto');
-			var out = _malloc($0);
-			writeArrayToMemory(crypto.randomBytes($0), out);
-			return out;
+		var nodeRandomBytes = function() { return require("crypto").randomBytes; };
+		var browserRandomBytes = function(n) {
+			var crypto = (self.crypto || self.msCrypto);
+			var QUOTA = 65536;
+			return function(n) {
+				var arr = new Uint8Array(n);
+				for (var i = 0; i < n; i += QUOTA) {
+					crypto.getRandomValues(
+							arr.subarray(i, i + Math.min(n - i, QUOTA)));
+				}
+				return arr;
+			}
+		};
+		var getRandomBytes = ((typeof self !== 'undefined' && 
+							   (self.crypto || self.msCrypto)) 
+							 ? browserRandomBytes 
+							 : nodeRandomBytes)();
+		var out = _malloc($0);
+		writeArrayToMemory(getRandomBytes($0), out);
+		return out;
 		}, n);
 	for(c=0;c<n;c++)
 		((char*)buf)[c] = bytes[c];
