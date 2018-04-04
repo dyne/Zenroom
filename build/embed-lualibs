@@ -17,35 +17,40 @@ cat <<EOF > src/lualibs_detected.c
 
 EOF
 libs=`find src/lua -type f -name '*.lua'`
-for i in ${(f)libs}; do
-	p=`basename $i`
-	n=${p[(ws:.:)1]}
-	print "#include <lualib_$n.c>" >> src/lualibs_detected.c
-done
+# for i in ${(f)libs}; do
+# 	p=`basename $i`
+# 	n=${p[(ws:.:)1]}
+# 	print "#include <lualib_$n.c>" >> src/lualibs_detected.c
+# done
 
-cat <<EOF >> src/lualibs_detected.c
-zen_extension_t zen_extensions[] = {
-EOF
-
+extarray=()
 c=0
 for i in ${(f)libs}; do
 	p=`basename $i`
 	n=${p[(ws:.:)1]}
 	f="lualib_${n}.c"
-	print "+ src/$f ($i)"
+	print "+ $i"
 	tmp=`mktemp -d`
 	./build/luac -o ${tmp}/${n} $i
 	pwd=`pwd`
 	pushd $tmp
-	xxd -i ${n} > ${pwd}/src/$f
+	print         >> ${pwd}/src/lualibs_detected.c
+	print "// $i" >> ${pwd}/src/lualibs_detected.c
+	xxd -i ${n}   >> ${pwd}/src/lualibs_detected.c
+	print         >> ${pwd}/src/lualibs_detected.c
 	popd
 	rm -rf $tmp
-	cat <<EOF >> src/lualibs_detected.c
-	{"${n}", &${n}_len, (const char *)${n}},
-EOF
+	extarray+=("{\"${n}\", &${n}_len, (const char *)${n}},")
 	c=$(( c + 1 ))
 done
 
+
+cat <<EOF >> src/lualibs_detected.c
+zen_extension_t zen_extensions[] = {
+EOF
+for i in $extarray; do
+	print "$i" >> lualibs_detected.c
+done
 cat <<EOF >> src/lualibs_detected.c
     { NULL, NULL, NULL }
 };

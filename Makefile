@@ -43,7 +43,6 @@ embed-lua:
 	${gcc} -I${luasrc} -o build/luac ${luasrc}/luac.c ${luasrc}/liblua.a -lm
 	./build/embed-lualibs
 	@echo "File generated: src/lualibs_detected.c"
-	@echo "    and lualbs: src/lualib_*.c"
 	@echo "Must commit to git if modified, see git diff."
 
 # TODO: improve flags according to
