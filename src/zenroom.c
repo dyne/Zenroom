@@ -200,13 +200,12 @@ int main(int argc, char **argv) {
 	// char conf[MAX_FILE];
 	char keys[MAX_FILE];
 	char data[MAX_FILE];
-	int readstdin = 0;
 	int opt, index;
     int verbosity = 1;
-	int ret;
-	const char *short_options = "hdc:k:a:";
+    int interactive = 0;
+	const char *short_options = "hdic:k:a:";
     const char *help =
-	    "Usage: zenroom [-dh] [ -c config ] [ -k keys ] [ -a data ] [ script.lua | - ]\n";
+	    "Usage: zenroom [-dh] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ script.lua ]\n";
     conffile[0] = '\0';
     scriptfile[0] = '\0';
     keysfile[0] = '\0';
@@ -216,7 +215,7 @@ int main(int argc, char **argv) {
     // conf[0] = '\0';
     script[0] = '\0';
 
-	notice( "Zenroom - crypto language restricted execution environment %s",VERSION);
+	notice( "Zenroom v%s - crypto language restricted VM",VERSION);
 	act("Copyright (C) 2017-2018 Dyne.org foundation");
 	while((opt = getopt(argc, argv, short_options)) != -1) {
 		switch(opt) {
@@ -227,6 +226,9 @@ int main(int argc, char **argv) {
 		case 'h':
 			fprintf(stdout,"%s",help);
 			exit(0);
+			break;
+		case 'i':
+			interactive = 1;
 			break;
 		case 'k':
 			snprintf(keysfile,511,"%s",optarg);
@@ -242,9 +244,7 @@ int main(int argc, char **argv) {
 		}
 	}
 	for (index = optind; index < argc; index++) {
-		char *path = argv[index];
-		if(path[0]=='-') { readstdin = 1; }
-		else snprintf(scriptfile,511,"%s",argv[index]);
+		snprintf(scriptfile,511,"%s",argv[index]);
 	}
 
 	if(keysfile[0]!='\0') {
@@ -257,16 +257,9 @@ int main(int argc, char **argv) {
 		load_file(data, fopen(datafile, "r"));
 	}
 
-	if(readstdin) {
-		////////////////////////
-		// get another argument from stdin
-		act("reading CODE from stdin");
-		load_file(script, stdin);
-		func("%s\n--",script);
-
+	if(interactive) {
 		////////////////////////////////////
 		// start an interactive repl console
-	} else if(scriptfile[0]=='\0') {
 		lua_State  *cli;
 		cli = zen_init(NULL);
 
@@ -282,11 +275,19 @@ int main(int argc, char **argv) {
 		// quits on ctrl-D
 		zen_teardown(cli);
 		return 0;
-	} else {
+	}
+
+	if(scriptfile[0]!='\0') {
 		////////////////////////////////////
 		// load a file as script and execute
 		act("reading CODE from file: %s", scriptfile);
 		load_file(script, fopen(scriptfile, "rb"));
+	} else {
+		////////////////////////
+		// get another argument from stdin
+		act("reading CODE from stdin");
+		load_file(script, stdin);
+		func("%s\n--",script);
 	}
 
 	static lua_State *L;
@@ -314,14 +315,5 @@ int main(int argc, char **argv) {
 	}
 	zen_teardown(L);
 	return 0;
-
-	// ret = zenroom_exec(script,
-	//                    (conffile[0]!='\0')?conffile:NULL,
-	//                    (keys[0]!='\0')?keys:NULL,
-	//                    (data[0]!='\0')?data:NULL,
-	//                    verbosity);	
-	// // exit(1) on failure
-	// func("return %u",ret);
-	// return(ret);
 }
 #endif
