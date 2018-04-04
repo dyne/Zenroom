@@ -27,6 +27,7 @@
 #include <lua_functions.h>
 
 #include <zenroom.h>
+#include <zen_error.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -77,6 +78,7 @@ int zen_load_string(lua_State *L, const char *code,
 }
 
 int zen_require(lua_State *L) {
+	HERE();
 	size_t len;
 	const char *s = lua_tolstring(L, 1, &len);
 	if(!s) return 0;

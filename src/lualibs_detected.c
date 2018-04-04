@@ -17849,5 +17849,14 @@ unsigned char init[] = {
 unsigned int init_len = 154;
 
 zen_extension_t zen_extensions[] = {
+{"complex", &complex_len, (const char *)complex},
+{"lisp", &lisp_len, (const char *)lisp},
+{"inspect", &inspect_len, (const char *)inspect},
+{"statemachine", &statemachine_len, (const char *)statemachine},
+{"debugger", &debugger_len, (const char *)debugger},
+{"functional", &functional_len, (const char *)functional},
+{"matrix", &matrix_len, (const char *)matrix},
+{"schema", &schema_len, (const char *)schema},
+{"init", &init_len, (const char *)init},
     { NULL, NULL, NULL }
 };
