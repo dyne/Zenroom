@@ -269,8 +269,6 @@ int main(int argc, char **argv) {
 	} else if(scriptfile[0]=='\0') {
 		lua_State  *cli;
 		cli = zen_init(NULL);
-		// load our own extensions
-		zen_load_extensions(cli);
 
 		// print function
 		zen_add_function(cli, repl_flush, "flush");
