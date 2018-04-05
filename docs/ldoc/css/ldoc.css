@@ -1,0 +1,209 @@
+#product { display:none; }
+
+#main { max-width: 960px; margin: auto !important; }
+
+#content li { margin-left: 1.2em; }
+
+#content_top h1, #content_top h2 { }
+
+#content_top p, #content_top .function_list { }
+
+#content_top { }
+
+h1 { font-size: 200%; }
+h2 { font-size: 150%; }
+
+h1, h2 {
+  font-weight: normal;
+  margin:16px 0; padding: 0;
+}
+h3 {
+  color: #999;
+  text-transform: uppercase;
+}
+h3, h4, h5, h6 {
+  font-size: 100%;
+  font-weight: bold;
+  margin:16px 0 0 0; padding: 0;
+}
+
+dt strong {
+  font-family: monospace;
+}
+
+code {
+  background: #fdfdfd;
+  border-radius: 3px;
+  padding: 1px 3px;
+  border: 1px solid #ddd;
+}
+
+h1 code {
+  background: inherit;
+  border-radius: inherit;
+  padding: inherit;
+  border: inherit;
+}
+
+body {
+    margin: 0; padding:0;
+    font-family: sans-serif;
+    color: #333;
+    line-height: 150%;
+    font-size: 12px;
+    background-color: white;
+}
+ul, ol { margin: 0; padding: 0; }
+
+code, tt { font-family: monospace; }
+span.parameter { font-family:monospace; }
+span.parameter:after { content:":"; }
+span.types:before { content:"("; }
+span.types:after { content:")"; }
+.type { font-weight: bold; font-style:italic }
+
+strong { font-weight: bold;}
+
+em { font-style: italic;}
+
+a:link { color: #369; text-decoration: none; font-weight: bold; }
+a:visited { color: #369; text-decoration: none; }
+a:link:hover { text-decoration: underline; }
+a[href^="http"] { color: #963; }
+
+hr {
+    color:#cccccc;
+    background: #00007f;
+    height: 1px;
+}
+
+blockquote { margin-left: 32px; }
+
+ul { list-style-type: disc; }
+
+p.name {
+    font-family: monospace;
+    padding-top: 16px;
+}
+
+pre {
+    background-color: rgb(245, 245, 245);
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin: 10px 0 10px 0;
+    overflow: auto;
+    font-family: monospace;
+    border-radius: 3px;
+}
+
+
+table.index { border: 1px #00007f; }
+table.index td { text-align: left; vertical-align: top; }
+
+#container {
+    margin: 0; padding: 0;
+}
+
+#product {
+    text-align: center;
+}
+
+#product big {
+    font-size: 14pt;
+}
+
+#main {
+}
+
+#navigation {
+    float: left;
+    width: 192px;
+    background-color: #eee;
+    box-shadow: 0 0 8px rgba(0,0,0,0.5);
+    padding: 16px;
+    border-radius: 4px;
+}
+
+#navigation br {
+  display: none;
+}
+
+#navigation h2 {
+}
+
+#navigation ul
+{
+    list-style-type: none;
+    margin: 1px 1px 10px 1px;
+}
+
+#navigation li {
+    text-indent: -16px;
+    display: block;
+    margin: 4px 0px 0px 16px;
+}
+
+#navigation li li a {
+    margin: 0px 4px 0px -16px;
+}
+
+#content {
+    margin-left: 232px;
+    padding: 16px;
+    width: 700px;
+    position: relative;
+    z-index: 1;
+}
+
+#about {
+    clear: both;
+    text-align: center;
+}
+
+table.module_list, table.function_list {
+    border-collapse: collapse;
+}
+table.module_list td, table.function_list td {
+    border-width: 1px;
+    border-style: solid;
+    border-color: #cccccc;
+    padding: 8px 16px;
+}
+table.module_list td.name, table.function_list td.name { min-width: 200px; }
+table.module_list td.summary, table.function_list td.summary { width: 100%; }
+
+#content dl { padding: 0; margin: 0; }
+dl.table dt, dl.function dt { background: #ccc;
+    margin-top: 32px; padding: 16px; border-radius: 4px 4px 0 0; }
+dl.table dd, dl.function dd { background: #eee; border: 1px solid #ccc;
+    margin: 0; padding: 16px; border-radius: 0 0 4px 4px; }
+dl.table h3, dl.function h3 { }
+
+.section-header {
+    margin: 32px 0 16px; padding: 0;
+}
+.section-description {
+   margin: 16px 0; padding: 0;
+}
+
+/* stop sublists from having initial vertical space */
+ul ul { margin-top: 0px; }
+ol ul { margin-top: 0px; }
+ol ol { margin-top: 0px; }
+ul ol { margin-top: 0px; }
+
+
+/* styles for prettification of source */
+pre .comment { color: #558817; }
+pre .constant { color: #a8660d; }
+pre .escape { color: #844631; }
+pre .keyword { color: #2239a8; font-weight: bold; }
+pre .library { color: #0e7c6b; }
+pre .marker { color: #512b1e; background: #fedc56; font-weight: bold; }
+pre .string { color: #a8660d; }
+pre .number { color: #f8660d; }
+pre .operator { color: #2239a8; font-weight: bold; }
+pre .preprocessor, pre .prepro { color: #a33243; }
+pre .global { color: #800080; }
+pre .prompt { color: #558817; }
+pre .url { color: #272fc2; text-decoration: underline; }

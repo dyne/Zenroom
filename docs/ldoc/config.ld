@@ -40,7 +40,7 @@ topics={
 	'StateMachine',
 }
 	
-style='!pale'
+style='css'
 kind_names={topic='Tutorials',script='Programs'}
 examples = {
     '../../examples/hello.lua',
