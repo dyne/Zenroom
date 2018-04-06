@@ -107,7 +107,12 @@ void zen_teardown(lua_State *L) {
 	notice("Zenroom teardown.");
     if(L) lua_gc(L, LUA_GCCOLLECT, 0);
     lua_close(L);
-    if(zen_heap) free(zen_heap);
+    if(zen_heap) {
+	    if(umm_integrity_check(zen_heap))
+		    act("HEAP integrity checks passed.");
+	    // umm_info(zen_heap,0);
+	    free(zen_heap);
+    }
 }
 
 int zen_exec_line(lua_State *L, const char *line) {

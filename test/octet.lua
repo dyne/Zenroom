@@ -1,4 +1,5 @@
 print '= OCTET TESTS'
+octet = require'octet'
 
 function dotest(l,r)
    if(l == r) then

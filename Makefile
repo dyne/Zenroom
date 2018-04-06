@@ -42,7 +42,7 @@ patches:
 
 embed-lua:
 	@echo "Embedding all files in src/lua"
-	${gcc} -I${luasrc} -o build/luac ${luasrc}/luac.c ${luasrc}/liblua.a -lm
+	if ! [ -r build/luac ]; then ${gcc} -I${luasrc} -o build/luac ${luasrc}/luac.c ${luasrc}/liblua.a -lm; fi
 	./build/embed-lualibs
 	@echo "File generated: src/lualibs_detected.c"
 	@echo "Must commit to git if modified, see git diff."

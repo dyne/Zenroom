@@ -6,8 +6,9 @@
 -- exchanged among different people will lead to the same secret which
 -- is then usable for asymmetric encryption.
 
-json = require "json"
-ecdh = require "ecdh"
+octet = require'octet'
+json = require'json'
+ecdh = require'ecdh'
 keyring = ecdh.new()
 keyring:keygen()
 

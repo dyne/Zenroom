@@ -1,4 +1,3 @@
-#!/usr/bin/env zenroom
 --
 -- Copy me if you can.
 -- by parazyd

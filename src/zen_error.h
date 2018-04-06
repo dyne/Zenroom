@@ -12,4 +12,8 @@ void *zalloc(lua_State *L, size_t size);
 #define SAFE(x) if(!x) lerror(L, "NULL variable in %s",__func__)
 #define FREE(p) if(p){func("free(%p)",p); free(p);}
 #define HERE() func("-> %s()",__func__)
+#define HEREs(s) func("-> %s(%s)",__func__,s)
+#define HEREp(p) func("-> %s(%p)",__func__,p)
+#define HEREn(n) func("-> %s(%i)",__func__,n)
+
 #endif
