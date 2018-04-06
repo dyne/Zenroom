@@ -25,4 +25,7 @@ console.log("[JS] zenroom_exec %s %s",
             process.argv[2],
             process.argv[3])
 
+console.time(process.argv[3])
 zenroom(process.argv[3])
+console.timeEnd(process.argv[3])
+console.log("@", "=".repeat(40), "@\n")
