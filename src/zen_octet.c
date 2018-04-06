@@ -26,8 +26,21 @@
 //  compatible with all cryptographic functions and methods. They are
 //  implemented to avoid any buffer overflow and their maximum size is
 //  known at the time of instantiation. The are provided by the
-//  'octet' extension which is preloaded: to create a new octet simply
-//  use <a href="#new">octet.new()</a>.
+//  'octet' extension which has to be required explicitly:
+//
+//  <code>octet = require'octet'</code>
+//
+//  After requiring the extension it is possible to create keyring
+//  instances using the new() method:
+//
+//  <code>message = octet.new()</code>
+//
+//  Octets can import and export their contents to portable formats as
+//  sequences of :base64() or :hex() numbers just using their
+//  appropriate methods. Without an argument, these methods export
+//  contents in the selected format, when there is an argument that is
+//  considered to be of the selected format and its contents are
+//  converted to bytes and imported.
 //
 //  @module octet
 //  @author Denis "Jaromil" Roio
