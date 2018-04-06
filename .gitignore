@@ -8,4 +8,4 @@ config.log
 config.status
 build/lua_sandbox*
 build/luazen
-
+.env
