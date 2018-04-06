@@ -10,12 +10,15 @@ void *zen_memalign(const size_t size, const size_t align) {
 	// preserve const values as they seem to be overwritten by calls
 	size_t vsize = size;
 	size_t valign = align;
+	(void)valign;
 # if defined(_WIN32)
 	mem = __mingw_aligned_malloc(vsize, valign);
 	if(!mem) {
 		error("error in %u byte aligned memory allocation of %u bytes.",
 			align, size);
 		return NULL; }
+# elif defined(__EMSCRIPTEN__)
+	mem = malloc(vsize);
 # else
 	int res;
 	res = posix_memalign(&mem, valign, vsize);
@@ -33,6 +36,10 @@ typedef struct {
 	void* (*malloc)(size_t size);
 	void* (*realloc)(void *ptr, size_t size);
 	void  (*free)(void *ptr);
+	void* (*sys_malloc)(size_t size);
+	void* (*sys_realloc)(void *ptr, size_t size);
+	void  (*sys_free)(void *ptr);
+
 } zen_mem_t;
 
 static zen_mem_t zen_mem_f;
@@ -46,6 +53,9 @@ void umm_memory_init(size_t S) {
 	zen_mem_f.malloc = umm_malloc;
 	zen_mem_f.realloc = umm_realloc;
 	zen_mem_f.free = umm_free;
+	zen_mem_f.sys_malloc = malloc;
+	zen_mem_f.sys_realloc = realloc;
+	zen_mem_f.sys_free = free;
 	umm_init(zen_heap, S);
 	// pointers saved in umm_malloc.c (stack)
 }
@@ -54,11 +64,17 @@ void libc_memory_init() {
 	zen_mem_f.malloc = malloc;
 	zen_mem_f.realloc = realloc;
 	zen_mem_f.free = free;
+	zen_mem_f.sys_malloc = malloc;
+	zen_mem_f.sys_realloc = realloc;
+	zen_mem_f.sys_free = free;
 	zen_heap = NULL;
 }
 void *zen_memory_alloc(size_t size) { return (*zen_mem_f.malloc)(size); }
 void *zen_memory_realloc(void *ptr, size_t size) { return (*zen_mem_f.realloc)(ptr, size); }
 void  zen_memory_free(void *ptr) { (*zen_mem_f.free)(ptr); }
+void *system_alloc(size_t size) { return (*zen_mem_f.sys_malloc)(size); }
+void *system_realloc(void *ptr, size_t size) { return (*zen_mem_f.sys_realloc)(ptr, size); }
+void  system_free(void *ptr) { (*zen_mem_f.sys_free)(ptr); }
 
 
 
@@ -75,6 +91,7 @@ void  zen_memory_free(void *ptr) { (*zen_mem_f.free)(ptr); }
  * @return void* A pointer to the memory block.
  */
 void *umm_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
+	(void)ud;
 	if(ptr == NULL) {
 		// When ptr is NULL, osize encodes the kind of object that Lua
 		// is allocating. osize is any of LUA_TSTRING, LUA_TTABLE,

@@ -6,6 +6,9 @@ extern size_t zen_heap_size;
 extern void *zen_memory_alloc(size_t size);
 extern void *zen_memory_realloc(void *ptr, size_t size);
 extern void  zen_memory_free(void *ptr);
+extern void *system_alloc(size_t size);
+extern void *system_realloc(void *ptr, size_t size);
+extern void  system_free(void *ptr);
 #define free(p) zen_memory_free(p)
 #define malloc(p) zen_memory_alloc(p)
 #define realloc(p, s) zen_memory_realloc(p, s)

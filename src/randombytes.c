@@ -21,6 +21,8 @@
 // THE SOFTWARE.
 
 
+#include <jutils.h>
+
 #include "randombytes.h"
 
 #if defined(_WIN32)
@@ -94,7 +96,7 @@ int randombytes_js_randombytes_nodejs(void *buf, size_t n) {
 		}, n);
 	for(c=0;c<n;c++)
 		((char*)buf)[c] = bytes[c];
-	free(bytes);
+	system_free(bytes);
 	return 0;
 }
 #endif
@@ -232,6 +234,7 @@ static int randombytes_bsd_randombytes(void *buf, size_t n)
 
 int randombytes(void *buf, size_t n)
 {
+	if(!n) return 0;
 #if defined(__EMSCRIPTEN__)
 # pragma message("Using crypto api from NodeJS")
 	return randombytes_js_randombytes_nodejs(buf, n);
