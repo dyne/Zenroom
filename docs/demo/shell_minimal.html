@@ -49,6 +49,12 @@
                     <option value="keygen">Generate a signature keypair</option>
                 </select>
             </div>
+            <div class="col-1 pl-5 form-check form-check-inline ">
+                <label class="form-check-label">
+                    <input id="umm"  class="form-check-input" type="checkbox" value="">
+                    umm
+                </label>
+            </div>
             <div class="col-3">
             </div>
         </div>
@@ -137,11 +143,12 @@
         const zenroom = function() {
             const keys = keys_editor.getValue() || null
             const data = data_editor.getValue() || null
+            const conf = $('#umm').attr('checked') ? 'umm' : null
             console.time('zenroom')
             Module.ccall('zenroom_exec', 
                              'number',
                              ['string', 'string', 'string', 'string', 'number'],
-                             [editor.getValue(), null, keys, data, 3]);
+                             [editor.getValue(), conf, keys, data, 3]);
             console.timeEnd('zenroom')
             const o = $("#output")
             o.append(final_output)
