@@ -7,15 +7,22 @@
 
 		<!-- Bootstrap CSS -->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-		<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:300,400,500">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 		<link rel="stylesheet" href="/css/gh-fork-ribbon.css">
 		<style>
-         html, body { height: 100%; }
-         #output { font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro", monospace }
-         #output, #input { font-size: 13px; overflow: auto; padding-bottom: 140px; margin-bottom: 20px; }
-         #keys, #data { min-height: 150px; }
+         html, body { height: 100%; font-family: Montserrat, sans-serif; }
+         #output { font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro", monospace; }
+         #output, #input { font-size: 13px; overflow: auto; }
+         #keys, #data { min-height: 210px; }
+         .navbar-brand img { height: 40px; }
+         a.nav-link::before { content: " "; height: 10px; width: 10px; background-color: #33e986; margin-right: 10px; display: inline-block; }
+         a.nav-link:hover::before { background-color: #ff00ff; }
+         /* #fff16e #00b1b0 */
+         h5 { font-size: 1rem; font-weight: 500; }
+
          .heart {
-             fill: #ffb7e4;
+             fill: #ff00ff;
              position: relative;
              top: 5px;
              width: 18px;
@@ -33,42 +40,52 @@
 		<title>Zenroom online demo</title>
 	</head>
 	<body>
-		<div class="github-fork-ribbon-wrapper right">
-			<div class="github-fork-ribbon">
-				<a href="https://github.com/decodeproject/zenroom">Fork me!   :^)</a>
-		  </div>
-	  </div>
+    <div class="github-fork-ribbon-wrapper right-bottom fixed">
+        <div class="github-fork-ribbon">
+            <a href="https://github.com/decodeproject/zenroom">Fork me!   :^)</a>
+        </div>
+    </div>
 
-    <nav class="navbar navbar-light bg-light">
-        <a class="navbar-brand" href="#">
-			<img src="/img/decode.svg" height="35" class="d-inline-block align-top" alt="Decode">
-            &nbsp;Zenroom
-            &nbsp; - &nbsp; software by <img src="/img/dyne-big.png" height="35" class="d-inline-block align-top" alt="Dyne.org">
-
-			&nbsp; - &nbsp; powered by <img src="/img/milagro.svg" height="30" class="d-inline-block align-top" alt="Milagro">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="https://zenroom.dyne.org/">
+			<img src="/img/decode.svg" class="d-inline-block align-text-bottom" alt="Decode" /> <span>ZENROOM</span>
         </a>
-    </nav>
-    <div class="container-fluid h-100">
-        <div class="row no-gutters d-flex">
-            <div class="col-3 justify-content-center align-self-center py-2">
-                <select id="examples-select" class="custom-select">
+
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#n-content" aria-controls="n-content" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse ml-3" id="n-content">    
+            <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="https://dyne.org/">
+                        software by <img src="/img/dyne-big.png" height="30" class="d-inline-block align-top" alt="Dyne.org" />
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="https://milagro.apache.org/">
+                        powered by <img src="/img/milagro.svg" height="30" class="d-inline-block align-top" alt="Milagro" />
+                    </a>    
+                </li>
+            </ul>
+            <form class="form-inline my-2 my-lg-0">
+                <select id="examples-select" class="custom-select form-control mr-sm-2">
                     <option selected>Load some examples</option>
                     <option value="crypt-to-multi">Encrypt a secret to multiple recipients</option>
                     <option value="hello">Hello World</option>
                     <option value="json-tables">Manipulate complex data structures</option>
                     <option value="keygen">Generate a signature keypair</option>
                 </select>
-            </div>
-            <div class="col pl-5 form-check form-check-inline ">
-                <label class="form-check-label">
-                    <input id="umm"  class="form-check-input" type="checkbox" value="">
-                    minimal memory manager (64KiB max)
+                <label class="form-check-label my-2 my-sm-0">
+                    <input id="umm"  class="form-check-input" type="checkbox" value=""> minimal memory manager (64KiB max) 
                 </label>
-            </div>
+            </form>
         </div>
+    </nav>
+    <div class="container-fluid h-100">
         <div class="row bg-secondary text-light align-text-bottom">
-            <h5 class="col pt-1">KEYS</h5>
-            <h5 class="col pt-1 ml-2">DATA</h5>
+            <h5 class="col pt-2">KEYS</h5>
+            <h5 class="col pt-2 ml-2">DATA</h5>
         </div>
         <div class="row d-flex">
             <div id="keys" class="col-6"></div>
@@ -77,8 +94,8 @@
         <div class="row bg-secondary text-light">
             <div class="col">
                 <div class="row no-gutters">
-                    <h5 class="col pt-1">CODE</h5>
-                    <button type="button" id="run" class="col-3 btn btn-xs btn-outline-light border-top-0 border-bottom-0 rounded-0 float-right">
+                    <h5 class="col pt-2">CODE</h5>
+                    <button type="button" id="run" class="col btn btn-xs btn-outline-light border-top-0 border-bottom-0 rounded-0">
                         <span id="play" style="display: none">
                             <svg class="heart" viewBox="0 0 32 29.6">
                                 <path d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2
@@ -92,11 +109,11 @@
             </div>
             <div class="col">
                 <div class="row no-gutters">
-                    <h5 class="col pt-1">OUTPUT <small id="timing" class="badge badge-light"></small></h5>
+                    <h5 class="col pt-2">OUTPUT &nbsp;&nbsp;<small id="timing" class="mr-3 badge badge-light"></small></h5>
                     <div class="col-1">
-                        <a id="clear" href="#" class="btn btn-xs btn-outline-light border-0 rounded-0 float-right" alt="Clear console">
+                        <button id="clear" href="#" class="btn btn-xs btn-outline-light border-0 rounded-0 float-right" alt="Clear console">
                             <i class="material-icons align-middle">clear_all</i>
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -113,7 +130,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.1/ext-language_tools.js"></script>
     {{{ SCRIPT }}}
     <script>
-        const output = document.getElementById('output');
         let final_output = ""
 
         var Module = {
@@ -127,13 +143,11 @@
             })(),
             printErr: function(text) {
                 if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-                if (output) {
-                    console.error(text)
-                    if (text.startsWith('[!]')) {
-                        output.innerHTML += "<span class='bg-danger'>" + text + "</span><br>";
-                        output.scrollTop = output.scrollHeight;
-                    }
+                if (text.startsWith('[!]')) {
+                    $(`<span class='bg-danger'>${text}</span><br>`).appendTo("#output")
+                    return
                 }
+                console.error(text)
             },
             exec_ok: () => {
                 $("#play").hide()
@@ -150,6 +164,8 @@
             const data = data_editor.getValue() || null
             const conf = $('#umm').attr('checked') ? 'umm' : null
             final_output = ''
+            const o = $("#output")
+            o.html('')
             let t0 = performance.now()
             Module.ccall('zenroom_exec', 
                              'number',
@@ -158,8 +174,7 @@
             let t1 = performance.now()
             console.log(t1-t0, 'ms')
             $('#timing').html(t1-t0 + 'ms')
-            const o = $("#output")
-            o.html(final_output)
+            o.append(final_output)
             o[0].scrollTop = o[0].scrollHeight
         }
 
