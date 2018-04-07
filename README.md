@@ -9,17 +9,17 @@ Zenroom is a brand new, small and portable virtual machine for cryptographic ope
 ## Latest stable release is 0.5.0:
 <ul class="center">
 
-<li class="fab fa-node-js"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.4.0-js.zip">NodeJS</a></li>
+<li class="fab fa-node-js"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.5.0-js.zip">NodeJS</a></li>
 
-<li class="fab fa-linux"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.4.0-x86_64_linux.zip">Linux x86 64bit</a></li>
+<li class="fab fa-linux"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.5.0-x86_64_linux.zip">Linux x86 64bit</a></li>
 
-<li class="fab fa-android"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.4.0-armhf.zip">ARM hard-float</a></li>
+<li class="fab fa-android"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.5.0-armhf.zip">ARM hard-float</a></li>
 
-<li class="fab fa-windows"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.4.0-win64.zip">MS/Windows 64bit</li>
+<li class="fab fa-windows"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.5.0-win64.zip">MS/Windows 64bit</li>
 
-<li class="fab fa-apple"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.4.0-osx.zip">Apple/OSX</li>
+<li class="fab fa-apple"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.5.0-osx.zip">Apple/OSX</li>
 
-<li class="far fa-file-archive"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.4.0.tar.gz">Source Code</a></li>
+<li class="far fa-file-archive"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.5.0.tar.gz">Source Code</a></li>
 
 <li class="fab fa-github"><a href="https://github.com/decodeproject/zenroom">Git repository</a></li>
 
@@ -80,11 +80,13 @@ This project is receiving funding from the European Union’s Horizon 2020 resea
 
 Copyright (C) 2017-2018 by Dyne.org foundation, Amsterdam
 
-Designed, written and maintained by <a href="https://jaromil.dyne.org">Denis "Jaromil" Roio</a>
+- Designed, written and maintained by <a href="https://jaromil.dyne.org">Denis "Jaromil" Roio</a>
 
-Special thanks to Francesca Bria for leading the DECODE project and to George Danezis, Ola Bini, Mark de Villiers and Puria Nafisi Azizi for their expert reviews and contributions.
+With contributions by Ivan J., Puria Nafisi Azizi, Jordi Coscolla.
 
-This software includes code by:
+Special thanks to Francesca Bria for leading the DECODE project and to George Danezis, Ola Bini, Mark de Villiers and Alberto Sonnino for their expert reviews.
+
+This software includes software components by:
 
 - R. Ierusalimschy, W. Celes and L.H. de Figueiredo (lua)
 - Mike Scott and Kealan McCusker (milagro-crypto-c)
