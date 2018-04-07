@@ -57,8 +57,7 @@ demo: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc
 demo: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o ../docs/demo/index.html ${LDFLAGS} ${LDADD}
 
-# static: LDADD  += /usr/lib/${ARCH}-linux-musl/libc.a
-static: LDADD  += /usr/local/musl/lib/libc.a
+static: LDADD  += /usr/lib/${ARCH}-linux-musl/libc.a
 static: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-static ${LDFLAGS} ${LDADD}
 
