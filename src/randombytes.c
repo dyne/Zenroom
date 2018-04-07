@@ -35,6 +35,9 @@
 #if defined(__linux__)
 /* Linux */
 # define _GNU_SOURCE
+# if defined(__MUSL__)
+#  undef SYS_getrandom
+# endif
 # include <assert.h>
 # include <errno.h>
 # include <fcntl.h>

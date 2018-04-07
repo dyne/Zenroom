@@ -86,12 +86,12 @@ win: patches lua53 milagro-win
 	CC=${gcc} CFLAGS="${cflags}" make -C src win
 
 static: gcc := musl-gcc
-static: cflags := -Os -static -Wall -std=gnu99 ${cflags_protection} -D'ARCH=\"MUSL\"'
+static: cflags := -Os -static -Wall -std=gnu99 ${cflags_protection} -D'ARCH=\"MUSL\"' -D__MUSL__
 static: ldflags := -static
 static: patches lua53 milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src static
 
-system-static: cflags := -Os -static -Wall -std=gnu99 ${cflags_protection} -D'ARCH=\"UNIX\"'
+system-static: cflags := -Os -static -Wall -std=gnu99 ${cflags_protection} -D'ARCH=\"UNIX\"' -D__MUSL__
 system-static: ldflags := -static
 system-static: patches lua53 milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src system-static
