@@ -130,12 +130,13 @@
                 };
             })(),
             printErr: function(text) {
-                if (!text.startsWith('[!]')) return
                 if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
                 if (output) {
                     console.error(text)
-                    output.innerHTML += "<span class='bg-danger'>" + text + "</span><br>";
-                    output.scrollTop = output.scrollHeight;
+                    if (text.startsWith('[!]')) {
+                        output.innerHTML += "<span class='bg-danger'>" + text + "</span><br>";
+                        output.scrollTop = output.scrollHeight;
+                    }
                 }
             },
             exec_ok: () => {
