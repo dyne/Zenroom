@@ -106,7 +106,7 @@ extern char *zen_heap;
 void zen_teardown(lua_State *L) {
 	notice("Zenroom teardown.");
     if(zen_heap) {
-	    if(umm_integrity_check(zen_heap))
+	    if(umm_integrity_check())
 		    act("HEAP integrity checks passed.");
 	    umm_info(zen_heap,0); }
     if(L) lua_gc(L, LUA_GCCOLLECT, 0);

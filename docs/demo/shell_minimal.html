@@ -1,41 +1,51 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<head>
+		<!-- Required meta tags -->
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-    <style>
-        html, body { height: 100%; }
-        #output { font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro", monospace }
-        #output, #input { font-size: 13px; overflow: auto; padding-bottom: 140px; margin-bottom: 20px; }
-        #keys, #data { min-height: 150px; }
-        .heart {
-            fill: #ffb7e4;
-            position: relative;
-            top: 5px;
-            width: 18px;
-            animation: heartbeat 1s ease infinite;
-        }
-        @keyframes heartbeat {
-            0% { transform: scale(.85)}
-            20% { transform: scale(1)}
-            40% { transform: scale(.85)}
-            60% { transform: scale(1)}
-            80% { transform: scale(.85)}
-            100% { transform: scale(.85)}
-        }
-    </style>
-    <title>Zenroom online demo</title>
-  </head>
-  <body>
+		<!-- Bootstrap CSS -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+		<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+		<link rel="stylesheet" href="/css/gh-fork-ribbon.css">
+		<style>
+         html, body { height: 100%; }
+         #output { font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro", monospace }
+         #output, #input { font-size: 13px; overflow: auto; padding-bottom: 140px; margin-bottom: 20px; }
+         #keys, #data { min-height: 150px; }
+         .heart {
+             fill: #ffb7e4;
+             position: relative;
+             top: 5px;
+             width: 18px;
+             animation: heartbeat 1s ease infinite;
+         }
+         @keyframes heartbeat {
+             0% { transform: scale(.85)}
+             20% { transform: scale(1)}
+             40% { transform: scale(.85)}
+             60% { transform: scale(1)}
+             80% { transform: scale(.85)}
+             100% { transform: scale(.85)}
+         }
+		</style>
+		<title>Zenroom online demo</title>
+	</head>
+	<body>
+		<div class="github-fork-ribbon-wrapper right">
+			<div class="github-fork-ribbon">
+				<a href="https://github.com/decodeproject/zenroom">Fork me!   :^)</a>
+		  </div>
+	  </div>
+
     <nav class="navbar navbar-light bg-light">
         <a class="navbar-brand" href="#">
-            <img src="https://www.dyne.org/wp-content/uploads/2011/09/dyne-big.png" height="30" class="d-inline-block align-top" alt="">
+			<img src="/img/decode.svg" height="35" class="d-inline-block align-top" alt="Decode">
             &nbsp;Zenroom
+            &nbsp; - &nbsp; software by <img src="/img/dyne-big.png" height="35" class="d-inline-block align-top" alt="Dyne.org">
+
+			&nbsp; - &nbsp; powered by <img src="/img/milagro.svg" height="30" class="d-inline-block align-top" alt="Milagro">
         </a>
     </nav>
     <div class="container-fluid h-100">
@@ -49,13 +59,11 @@
                     <option value="keygen">Generate a signature keypair</option>
                 </select>
             </div>
-            <div class="col-1 pl-5 form-check form-check-inline ">
+            <div class="col pl-5 form-check form-check-inline ">
                 <label class="form-check-label">
                     <input id="umm"  class="form-check-input" type="checkbox" value="">
-                    umm
+                    minimal memory manager (64KiB max)
                 </label>
-            </div>
-            <div class="col-3">
             </div>
         </div>
         <div class="row bg-secondary text-light align-text-bottom">
