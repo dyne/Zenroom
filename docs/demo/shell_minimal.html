@@ -122,10 +122,6 @@
             print: (function() {
                 return function(text) {
                     if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-                    // text = text.replace(/&/g, "&amp;");
-                    // text = text.replace(/</g, "&lt;");
-                    // text = text.replace(/>/g, "&gt;");
-                    // text = text.replace('\n', '<br>', 'g');
                     final_output += text + "<br/>"
                 };
             })(),
@@ -153,6 +149,7 @@
             const keys = keys_editor.getValue() || null
             const data = data_editor.getValue() || null
             const conf = $('#umm').attr('checked') ? 'umm' : null
+            final_output = ''
             let t0 = performance.now()
             Module.ccall('zenroom_exec', 
                              'number',
@@ -162,7 +159,7 @@
             console.log(t1-t0, 'ms')
             $('#timing').html(t1-t0 + 'ms')
             const o = $("#output")
-            o.append(final_output)
+            o.html(final_output)
             o[0].scrollTop = o[0].scrollHeight
         }
 
@@ -185,7 +182,7 @@
             exec: () => {
                 $("#play").show()
                 $("#play-icon").hide()
-                setTimeout(zenroom, 300)
+                setTimeout(zenroom, 100)
             }
         });
 
@@ -212,7 +209,7 @@
             $('#run').click(() => {
                 $("#play").show()
                 $("#play-icon").hide()
-                setTimeout(zenroom, 300)
+                setTimeout(zenroom, 100)
             })
             $.get('https://raw.githubusercontent.com/DECODEproject/zenroom/develop/docs/ldoc/crypto.lua', data => {
                 const raw_instances = data.match(/(?:function)\s((\w+))/g)
