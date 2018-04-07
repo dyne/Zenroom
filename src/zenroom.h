@@ -1,14 +1,14 @@
 #ifndef __ZENROOM_H__
 #define __ZENROOM_H__
 
-#define MAX_HEAP (1048576) // 1 MiB
-#define MAX_FILE 512000 // load max 500Kb files
-#define MAX_STRING 4096
-#define MAX_OCTET 4096
+#define UMM_HEAP (64*1024) // 64KiB (masked with 0x7fff)
+#define MAX_FILE (64*512) // load max 32KiB files
+#define MAX_STRING 4097 // max 4KiB strings
+#define MAX_OCTET 2049 // max 2KiB octets
 
 #define LUA_BASELIBNAME "_G"
 
-#define ZEN_BITS 32
+#define ZEN_BITS 8
 #ifndef SIZE_MAX
  #if ZEN_BITS == 32
   #define SIZE_MAX 4294967296

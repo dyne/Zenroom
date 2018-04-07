@@ -5,6 +5,7 @@ tstr="[*] Zenroom - crypto language restricted execution environment DECODE-0.4"
 echo "= test octets and keyring saves in json DATA"
 cat <<EOF > /tmp/zenroom_temp_check.lua
 ecdh = require'ecdh'
+octet = require'octet'
 ecc = ecdh.new()
 right = octet.new()
 right:string("$tstr")
@@ -29,6 +30,7 @@ echo "== checking import/export and hashes"
 
 cat <<EOF > /tmp/zenroom_temp_check.lua
 json = require'json'
+octet = require'octet'
 test = json.decode(DATA)
 assert(test.teststr == "$tstr")
 ecdh = require'ecdh'

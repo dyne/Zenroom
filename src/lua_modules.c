@@ -71,11 +71,11 @@ int zen_load_string(lua_State *L, const char *code,
 	int res;
 	res = luaL_loadbufferx(L,code,size,name,"b");
 	switch (res) {
-	case LUA_OK: { func("loaded %s",name); break; }
-	case LUA_ERRSYNTAX: { error("syntax error: %s",name); break; }
-	case LUA_ERRMEM: { error("out of memory: %s", name); break;	}
+	case LUA_OK: { func("%s OK %s",__func__,name); break; }
+	case LUA_ERRSYNTAX: { error("%s syntax error: %s",__func__,name); break; }
+	case LUA_ERRMEM: { error("%s out of memory: %s",__func__, name); break;	}
 	case LUA_ERRGCMM: {
-		error("garbage collection error while loading %s", name);
+		error("%s garbage collection error: %s",__func__, name);
 		break; }
 	}
 	return(res);

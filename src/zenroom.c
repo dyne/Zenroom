@@ -63,7 +63,7 @@ lua_State *zen_init(const char *conf) {
 
 	if(conf) {
 		if(strcmp(conf,"umm")==0) {
-			umm_memory_init(MAX_HEAP); // defined in zenroom.h
+			umm_memory_init(UMM_HEAP); // defined in zenroom.h (64KiB)
 			L = lua_newstate(umm_memory_manager, NULL);
 		} else {
 			error("%s: unknown memory manager: %s",
@@ -105,14 +105,15 @@ lua_State *zen_init(const char *conf) {
 extern char *zen_heap;
 void zen_teardown(lua_State *L) {
 	notice("Zenroom teardown.");
-    if(L) lua_gc(L, LUA_GCCOLLECT, 0);
-    lua_close(L);
     if(zen_heap) {
 	    if(umm_integrity_check(zen_heap))
 		    act("HEAP integrity checks passed.");
-	    // umm_info(zen_heap,0);
-	    free(zen_heap);
-    }
+	    umm_info(zen_heap,0); }
+    if(L) lua_gc(L, LUA_GCCOLLECT, 0);
+    if(L) lua_gc(L, LUA_GCCOLLECT, 0);
+    lua_close(L);
+    if(zen_heap) free(zen_heap);
+
 }
 
 int zen_exec_line(lua_State *L, const char *line) {
@@ -313,11 +314,9 @@ int main(int argc, char **argv) {
 	if( zen_exec_script(L, script) ) error("Blocked execution.");
 	else notice("Execution completed.");
 	// report experimental memory manager
-	if((strcmp(conffile,"umm")==0) && zen_heap) {
-		lua_gc(L, LUA_GCCOLLECT, 0);
-		if(umm_integrity_check(zen_heap)) act("HEAP integrity checks passed.");
-		umm_info(zen_heap,0);
-	}
+	// if((strcmp(conffile,"umm")==0) && zen_heap) {
+	// 	lua_gc(L, LUA_GCCOLLECT, 0);
+	// }
 	zen_teardown(L);
 	return 0;
 }
