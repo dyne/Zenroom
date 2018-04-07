@@ -92,7 +92,7 @@
             </div>
             <div class="col">
                 <div class="row no-gutters">
-                    <h5 class="col pt-1">OUTPUT</h5>
+                    <h5 class="col pt-1">OUTPUT <small id="timing" class="badge badge-light"></small></h5>
                     <div class="col-1">
                         <a id="clear" href="#" class="btn btn-xs btn-outline-light border-0 rounded-0 float-right" alt="Clear console">
                             <i class="material-icons align-middle">clear_all</i>
@@ -152,12 +152,14 @@
             const keys = keys_editor.getValue() || null
             const data = data_editor.getValue() || null
             const conf = $('#umm').attr('checked') ? 'umm' : null
-            console.time('zenroom')
+            let t0 = performance.now()
             Module.ccall('zenroom_exec', 
                              'number',
                              ['string', 'string', 'string', 'string', 'number'],
                              [editor.getValue(), conf, keys, data, 3]);
-            console.timeEnd('zenroom')
+            let t1 = performance.now()
+            console.log(t1-t0, 'ms')
+            $('#timing').html(t1-t0 + 'ms')
             const o = $("#output")
             o.append(final_output)
             o[0].scrollTop = o[0].scrollHeight
