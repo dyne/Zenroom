@@ -4,7 +4,7 @@
 
 [![Build Status](https://travis-ci.org/DECODEproject/zenroom.svg?branch=master)](https://travis-ci.org/DECODEproject/zenroom)
 
-Zenroom is a brand new, small and portable virtual machine for cryptographic operations: it is smaller than 1MB and ready for experimental use on many platforms.
+Zenroom is a brand new, small and portable virtual machine for cryptographic operations. Our effort is that of improving people's awareness of how their data is processed by algorithms, as well facilitate the work of developers to create and publish algorithms that can be used both client and server side. The Zenroom VM has no external dependencies, is smaller than 1MB, runs in less than 64KiB memory and is ready for experimental use on many target platforms: desktop, embedded, mobile, cloud and browsers.
 
 ## Latest stable release is 0.5.0:
 <ul class="center">
@@ -31,13 +31,13 @@ Zenroom is a brand new, small and portable virtual machine for cryptographic ope
 
 <ul class="center"
 >
-<li class="fas fa-code"><a href="https://zenroom.dyne.org/api">Zenroom API docs</a><sup>*</sup></li>
+<li class="fas fa-code"><a href="https://zenroom.dyne.org/api">Language Documentation</a><sup>*</sup></li>
 
 <li class="far fa-graduation-cap"><a href="https://zenroom.dyne.org/whitepaper">Zenroom Whitepaper</a></li>
 
-<li class="far fa-hand-point-right"><a href="https://zenroom.dyne.org/demo">Online demo</a><sup>*</sup></li>
+<li class="far fa-hand-point-right"><a href="https://zenroom.dyne.org/demo">Online Demo</a></li>
 
-<li class="far fa-cogs"><a href="https://github.com/DECODEproject/zenroom/wiki">Build instructions</a></li>
+<li class="far fa-cogs"><a href="https://github.com/DECODEproject/zenroom/wiki">Build Instructions</a></li>
 
 </ul>
 <p class="pull-right"><sup>*</sup> = Work in Progress</p>
