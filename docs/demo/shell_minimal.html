@@ -1,26 +1,24 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<!-- Required meta tags -->
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-		<!-- Bootstrap CSS -->
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:300,400,500">
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-		<link rel="stylesheet" href="/css/gh-fork-ribbon.css">
-		<style>
-         html, body { height: 100%; font-family: Montserrat, sans-serif; }
+        <link rel="stylesheet" href="/css/gh-fork-ribbon.css">
+        <style>
+         html, body { overflow: hidden; height: 100%; font-family: Montserrat, sans-serif; }
          #output { font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro", monospace; }
          #output, #input { font-size: 13px; overflow: auto; }
          #keys, #data { min-height: 210px; }
          .navbar-brand img { height: 40px; }
          a.nav-link::before { content: " "; height: 10px; width: 10px; background-color: #33e986; margin-right: 10px; display: inline-block; }
          a.nav-link:hover::before { background-color: #ff00ff; }
-         /* #fff16e #00b1b0 */
          h5 { font-size: 1rem; font-weight: 500; }
-
          .heart {
              fill: #ff00ff;
              position: relative;
@@ -36,58 +34,58 @@
              80% { transform: scale(.85)}
              100% { transform: scale(.85)}
          }
-		</style>
-		<title>Zenroom online demo</title>
-	</head>
-	<body>
+        </style>
+        <title>Zenroom online demo</title>
+    </head>
+    <body>
     <div class="github-fork-ribbon-wrapper right-bottom fixed">
         <div class="github-fork-ribbon">
             <a href="https://github.com/decodeproject/zenroom">Fork me!   :^)</a>
         </div>
     </div>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="https://zenroom.dyne.org/">
-			<img src="/img/decode.svg" class="d-inline-block align-text-bottom" alt="Decode" /> <span>ZENROOM</span>
-        </a>
+    <div class="container-fluid h-100 d-flex flex-column bg-light">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="https://zenroom.dyne.org/">
+                <img src="/img/decode.svg" class="d-inline-block align-text-bottom" alt="Decode" /> <span>ZENROOM</span>
+            </a>
 
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#n-content" aria-controls="n-content" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#n-content" aria-controls="n-content" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-        <div class="collapse navbar-collapse ml-3" id="n-content">    
-            <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link" href="https://dyne.org/">
-                        software by <img src="/img/dyne-big.png" height="30" class="d-inline-block align-top" alt="Dyne.org" />
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="https://milagro.apache.org/">
-                        powered by <img src="/img/milagro.svg" height="30" class="d-inline-block align-top" alt="Milagro" />
-                    </a>    
-                </li>
-            </ul>
-            <form class="form-inline my-2 my-lg-0">
-                <select id="examples-select" class="custom-select form-control mr-sm-2">
-                    <option selected>Load some examples</option>
-                    <option value="crypt-to-multi">Encrypt a secret to multiple recipients</option>
-                    <option value="hello">Hello World</option>
-                    <option value="json-tables">Manipulate complex data structures</option>
-                    <option value="keygen">Generate a signature keypair</option>
-                </select>
-                <label class="form-check-label my-2 my-sm-0">
-                    <input id="umm"  class="form-check-input" type="checkbox" value=""> minimal memory manager (64KiB max) 
-                </label>
-            </form>
-        </div>
-    </nav>
-    <div class="container-fluid h-100">
+            <div class="collapse navbar-collapse ml-3" id="n-content">    
+                <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://dyne.org/">
+                            software by <img src="/img/dyne-big.png" height="30" class="d-inline-block align-top" alt="Dyne.org" />
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://milagro.apache.org/">
+                            powered by <img src="/img/milagro.svg" height="30" class="d-inline-block align-top" alt="Milagro" />
+                        </a>
+                    </li>
+                </ul>
+                <form class="form-inline my-2 my-lg-0">
+                    <select id="examples-select" class="custom-select form-control mr-sm-2">
+                        <option selected>Load some examples</option>
+                        <option value="crypt-to-multi">Encrypt a secret to multiple recipients</option>
+                        <option value="hello">Hello World</option>
+                        <option value="json-tables">Manipulate complex data structures</option>
+                        <option value="keygen">Generate a signature keypair</option>
+                    </select>
+                    <label class="form-check-label my-2 my-sm-0">
+                        <input id="umm"  class="form-check-input" type="checkbox" value=""> minimal memory manager (64KiB max) 
+                    </label>
+                </form>
+            </div>
+        </nav>
         <div class="row bg-secondary text-light align-text-bottom">
             <h5 class="col pt-2">KEYS</h5>
             <h5 class="col pt-2 ml-2">DATA</h5>
         </div>
-        <div class="row d-flex">
+        <div class="row">
             <div id="keys" class="col-6"></div>
             <div id="data" class="col"></div>
         </div>
@@ -118,7 +116,7 @@
                 </div>
             </div>
         </div>
-        <div class="row h-100">
+        <div class="row flex-fill d-flex justify-content-start">
             <div id="input"  class="col-6"></div>
             <div id="output" class="col bg-dark text-light pt-3"></div>
         </div>
