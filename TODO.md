@@ -7,6 +7,18 @@ and their specific use-cases.
 
 ## Generic improvements
 
+- add a new 8bit memory manager to test
+  https://github.com/8devices/MemoryManager perhaps also build a
+  memory paging system to use 8bit mm over larger portions of memory
+
+- add more memory tracking / fencing facilities also for script
+  testing/profiling
+	  https://github.com/kallisti5/ElectricFence
+	  https://github.com/Ryandev/MemoryTracker
+
+
+- add tracking of single lua command/operations executions
+
 - in/out to MSGPACK in addition to JSON for compact messaging easy using
   Antirez' extension see https://github.com/antirez/lua-cmsgpack
 
@@ -43,7 +55,11 @@ X use static memory pool in place of malloc from host
 
 ## Developer experience
 
-- !! make a Jupyter kernel for zenroom
+- on error print out code at line where it has been detected
+  the line number is already included between semicolons
+  just need to go to script buffer and extract line
+
+- !! make a Jupyter kernel for zenroom (-> Puria)
   - http://jupyter-client.readthedocs.io/en/latest/kernels.html
   - https://github.com/neomantra/lua_ipython_kernel
 
@@ -156,4 +172,3 @@ X make a secure include directive
 X Find a way to load native LUA extensions at compile time
 
 X provide a REPL and perhaps a LISP interpreter
-
