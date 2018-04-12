@@ -2,7 +2,9 @@
 #include <lua.h>
 #include <lua_functions.h>
 
-
+#ifdef __EMSCRIPTEN__
+const unsigned int fakelen = 0;
+#else
 
 // src/lua/complex.lua
 unsigned char complex[] = {
@@ -17848,15 +17850,53 @@ unsigned char init[] = {
 };
 unsigned int init_len = 154;
 
+#endif // __EMSCRIPTEN__
+
 zen_extension_t zen_extensions[] = {
+#ifndef __EMSCRIPTEN__
 {"complex", &complex_len, (const char *)complex},
+#else
+{"complex", &fakelen, "/complex.lua"},
+#endif
+#ifndef __EMSCRIPTEN__
 {"lisp", &lisp_len, (const char *)lisp},
+#else
+{"lisp", &fakelen, "/lisp.lua"},
+#endif
+#ifndef __EMSCRIPTEN__
 {"inspect", &inspect_len, (const char *)inspect},
+#else
+{"inspect", &fakelen, "/inspect.lua"},
+#endif
+#ifndef __EMSCRIPTEN__
 {"statemachine", &statemachine_len, (const char *)statemachine},
+#else
+{"statemachine", &fakelen, "/statemachine.lua"},
+#endif
+#ifndef __EMSCRIPTEN__
 {"debugger", &debugger_len, (const char *)debugger},
+#else
+{"debugger", &fakelen, "/debugger.lua"},
+#endif
+#ifndef __EMSCRIPTEN__
 {"functional", &functional_len, (const char *)functional},
+#else
+{"functional", &fakelen, "/functional.lua"},
+#endif
+#ifndef __EMSCRIPTEN__
 {"matrix", &matrix_len, (const char *)matrix},
+#else
+{"matrix", &fakelen, "/matrix.lua"},
+#endif
+#ifndef __EMSCRIPTEN__
 {"schema", &schema_len, (const char *)schema},
+#else
+{"schema", &fakelen, "/schema.lua"},
+#endif
+#ifndef __EMSCRIPTEN__
 {"init", &init_len, (const char *)init},
+#else
+{"init", &fakelen, "/init.lua"},
+#endif
     { NULL, NULL, NULL }
 };

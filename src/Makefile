@@ -22,7 +22,7 @@ ARCH := $(shell uname -m)
 CFLAGS  += -I. -I../lib/lua53/src -I../lib/milagro-crypto-c/include -Wall -Wextra
 SOURCES := \
 	jutils.o zenroom.o zen_error.o \
-	lua_functions.o lualibs_detected.o lua_modules.o \
+	lua_functions.o lua_modules.o lualibs_detected.o \
 	json.o json_strbuf.o json_fpconv.o \
 	umm_malloc.o zen_memory.o \
 	zen_io.o repl.o \
@@ -51,11 +51,11 @@ js: ${SOURCES}
 
 html: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc
 html: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o zenroom.html ${LDFLAGS} ${LDADD}
+	${CC} ${CFLAGS} ${SOURCES} -o zenroom.html ${LDFLAGS} ${LDADD} --preload-file lua@/
 
 demo: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc
 demo: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o ../docs/demo/index.html ${LDFLAGS} ${LDADD}
+	${CC} ${CFLAGS} ${SOURCES} -o ../docs/demo/index.html ${LDFLAGS} ${LDADD} --preload-file lua@/
 
 static: LDADD  += /usr/lib/${ARCH}-linux-musl/libc.a
 static: ${SOURCES}

@@ -105,11 +105,21 @@ int zen_require(lua_State *L) {
 		if (strcmp(p->name, "init") == 0) continue;
 		if (strcmp(p->name, s) == 0) {
 			HEREp(p->code);
+#ifdef __EMSCRIPTEN__
+			if(p->code) {
+				HEREs(p->code);
+				if(luaL_loadfile(L, p->code)==0)
+					if(lua_pcall(L, 0, LUA_MULTRET, 0) == LUA_OK)
+						return 1;
+			}
+#else
 			if(zen_load_string(L, p->code, *p->size, p->name)
 			   ==LUA_OK) {
 				lua_call(L,0,1);
 				return 1;
 			}
+#endif
+			lerror(L,"%s %s",__func__,s);
 		}
 	}
 
