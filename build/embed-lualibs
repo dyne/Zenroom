@@ -18,15 +18,16 @@ cat <<EOF > ${dst}
 #include <lua.h>
 #include <lua_functions.h>
 
-
+#ifdef __EMSCRIPTEN__
+const unsigned int fakelen = 0;
+#else
 EOF
 libs=`find src/lua -type f -name '*.lua'`
-# for i in ${(f)libs}; do
-# 	p=`basename $i`
-# 	n=${p[(ws:.:)1]}
-# 	print "#include <lualib_$n.c>" >> src/lualibs_detected.c
-# done
 
+# emscripten doesn't supports embedding this way
+# will use --preload-file instead
+
+typeset -A emptyarray=()
 extarray=()
 c=0
 for i in ${(f)libs}; do
@@ -43,15 +44,25 @@ for i in ${(f)libs}; do
 	print         >>  ${dst}
 	popd
 	rm -rf $tmp
-	extarray+=("{\"${n}\", &${n}_len, (const char *)${n}},")
+	ext="{\"${n}\", &${n}_len, (const char *)${n}},"
+	extarray+=($ext)
+	emptyarray+=($ext "{\"${n}\", &fakelen, \"/$p\"},")
 	c=$(( c + 1 ))
 done
 
 cat <<EOF >> ${dst}
+#endif // __EMSCRIPTEN__
+
 zen_extension_t zen_extensions[] = {
 EOF
-for i in $extarray; do	
-	print "$i" >> ${dst}
+for i in $extarray; do
+	cat <<EOF >> ${dst}
+#ifndef __EMSCRIPTEN__
+$i
+#else
+${emptyarray[$i]}
+#endif
+EOF
 done
 cat <<EOF >> ${dst}
     { NULL, NULL, NULL }
