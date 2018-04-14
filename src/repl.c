@@ -71,7 +71,7 @@ void repl_loop(lua_State *L) {
 	if(!L) return;
 	int ret =0;
 	while(repl_prompt(ret, line)) {
-		ret = zen_exec_line(L, line);
+		ret = zen_exec_script(L, line);
 	}
 }
 
