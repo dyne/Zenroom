@@ -27,6 +27,11 @@
 #include <errno.h>
 
 #include <zenroom.h>
+#include <zen_error.h>
+
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 
 #define MAX_DEBUG 2
 // #define MAX_STRING 1024
@@ -48,62 +53,74 @@ int get_debug() {
   return(verbosity);
 }
 
+static zenroom_t *stderr_tobuffer(lua_State *L) {
+	if(!L) return NULL;
+	lua_getglobal(L, "_Z");
+	zenroom_t *Z = lua_touserdata(L, -1);
+	lua_pop(L, 1);
+	SAFE(Z);
+	if(Z->stderr_buf) return Z;
+	return NULL;
+}
 
-void notice(const char *format, ...) {
+static void _printf(zenroom_t *Z, char *pfx, char *msg) {
+	if(Z) {
+		char *err = Z->stderr_buf;
+		size_t len = strlen(msg);
+		snprintf(err+Z->stderr_pos,
+		         Z->stderr_len-Z->stderr_pos,
+		         "%s %s\n",pfx,msg);
+		Z->stderr_pos+=len+5;
+	} else {
+		fprintf(stderr,"%s %s\n",pfx,msg);
+	}
+}
+
+void notice(lua_State *L, const char *format, ...) {
   va_list arg;
   va_start(arg, format);
 
   vsnprintf(msg, MAX_STRING, format, arg);
-
-  fprintf(stderr,"[*] %s\n",msg);
-  
+  _printf(stderr_tobuffer(L), "[*]", msg);
   va_end(arg);
 }
 
-void func(const char *format, ...) {
+void func(lua_State *L, const char *format, ...) {
   if(verbosity>=FUNC) {
     va_list arg;
     va_start(arg, format);
     
     vsnprintf(msg, MAX_STRING, format, arg);
-
-    fprintf(stderr,"[F] %s\n",msg);
-
+    _printf(stderr_tobuffer(L), "[F]", msg);
     va_end(arg);
   }
 }
 
-void error(const char *format, ...) {
+void error(lua_State *L, const char *format, ...) {
   va_list arg;
   va_start(arg, format);
   
   vsnprintf(msg, MAX_STRING, format, arg);
-
-  fprintf(stderr,"[!] %s\n",msg);
-
+  _printf(stderr_tobuffer(L), "[!]", msg);
   va_end(arg);
 }
 
-void act(const char *format, ...) {
+void act(lua_State *L, const char *format, ...) {
   va_list arg;
   va_start(arg, format);
   
   vsnprintf(msg, MAX_STRING, format, arg);
-
-  fprintf(stderr," .  %s\n",msg);
-  
+  _printf(stderr_tobuffer(L), " . ", msg);
   va_end(arg);
 }
 
-void warning(const char *format, ...) {
+void warning(lua_State *L, const char *format, ...) {
   if(verbosity>=WARN) {
     va_list arg;
     va_start(arg, format);
     
     vsnprintf(msg, MAX_STRING, format, arg);
-
-    fprintf(stderr,"[W] %s\n",msg);
-  
+    _printf(stderr_tobuffer(L), "[W]", msg);
     va_end(arg);
   }
 }

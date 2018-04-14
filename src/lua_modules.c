@@ -71,11 +71,11 @@ int zen_load_string(lua_State *L, const char *code,
 	int res;
 	res = luaL_loadbufferx(L,code,size,name,"b");
 	switch (res) {
-	case LUA_OK: { func("%s OK %s",__func__,name); break; }
-	case LUA_ERRSYNTAX: { error("%s syntax error: %s",__func__,name); break; }
-	case LUA_ERRMEM: { error("%s out of memory: %s",__func__, name); break;	}
+	case LUA_OK: { func(L, "%s OK %s",__func__,name); break; }
+	case LUA_ERRSYNTAX: { error(L, "%s syntax error: %s",__func__,name); break; }
+	case LUA_ERRMEM: { error(L, "%s out of memory: %s",__func__, name); break;	}
 	case LUA_ERRGCMM: {
-		error("%s garbage collection error: %s",__func__, name);
+		error(L, "%s garbage collection error: %s",__func__, name);
 		break; }
 	}
 	return(res);
@@ -138,7 +138,7 @@ int zen_require(lua_State *L) {
 		luaL_requiref(L, s, lua_cjson_new, 1); return 1; }
 	else {
 		// shall we bail out and abort execution here?
-		warning("required extension not found: %s",s);
+		warning(L, "required extension not found: %s",s);
 		return 1; }
 
 	return 0;
@@ -154,7 +154,7 @@ int zen_require_override(lua_State *L) {
 }
 
 void zen_load_extensions(lua_State *L) {
-	act("loading language extensions");
+	act(L, "loading language extensions");
 	SAFE(L);
 
 	// register our own print and io.write
@@ -168,5 +168,5 @@ void zen_load_extensions(lua_State *L) {
 	// 	lua_call(L,0,1);
 	// TODO: breaks in js, removed for now (all init must be explicit)
 
-	act("done loading all extensions");
+	act(L, "done loading all extensions");
 }

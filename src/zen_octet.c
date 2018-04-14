@@ -81,7 +81,7 @@ octet* o_new(lua_State *L, const int size) {
 	o->val = malloc(size);
 	o->len = 0;
 	o->max = size;
-	func("new octet (%u bytes)",size);
+	func(L, "new octet (%u bytes)",size);
 	return(o);
 }
 
@@ -251,7 +251,6 @@ print(msg:base64())
 */
 static int getlen_base64(int len) {
 	int res = ((3+(4*(len/3))) & ~0x03)+0x0f;
-	func("base64 len: %u to %u",len,res);
 	return(res);
 }
 static int base64 (lua_State *L) {
@@ -363,10 +362,25 @@ static int pad(lua_State *L) {
 	return 1;
 }
 
+/***
+    Compare two octets to see if contents are equal.
+
+    @function octet:eq(first, second)
+*/
+
 static int eq(lua_State *L) {
 	octet *x = o_arg(L,1);	SAFE(x);
 	octet *y = o_arg(L,2);	SAFE(y);
-	lua_pushboolean(L, OCT_comp(x,y));
+	if (x->len!=y->len) {
+		lua_pushboolean(L, 0);
+		return 1; }
+	int i;
+	for (i=0; i<x->len; i++) {
+		if (x->val[i]!=y->val[i]) {
+			lua_pushboolean(L, 0);
+			return 1; }
+	}
+	lua_pushboolean(L, 1);
 	return 1;
 }
 
