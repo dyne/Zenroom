@@ -27,7 +27,7 @@ SOURCES := \
 	umm_malloc.o zen_memory.o \
 	zen_io.o repl.o \
 	zen_octet.o \
-	zen_ecdh.o \
+	zen_ecdh.o zen_ecdh_factory.o \
 	randombytes.o
 
 # zen_rsa.o zen_rsa_aux.o \
@@ -38,6 +38,10 @@ LDADD   := ../lib/lua53/src/liblua.a
 milib := ../lib/milagro-crypto-c/lib
 # LDADD += ${milib}/libamcl_rsa_2048.a ${milib}/libamcl_rsa_4096.a
 LDADD += ${milib}/libamcl_curve_ED25519.a
+LDADD += ${milib}/libamcl_curve_NIST256.a
+LDADD += ${milib}/libamcl_curve_GOLDILOCKS.a
+LDADD += ${milib}/libamcl_curve_BN254CX.a
+LDADD += ${milib}/libamcl_curve_FP256BN.a
 LDADD += ${milib}/libamcl_core.a
 
 

@@ -55,39 +55,20 @@
 #include <randombytes.h>
 #include <lua_functions.h>
 
+
 #include <ecdh_ED25519.h>
-#include <pbc_support.h>
+
 
 #include <zenroom.h>
 #include <zen_memory.h>
+#include <zen_ecdh.h>
 
 #define KEYPROT(alg,key)	  \
 	error(L, "%s engine has already a %s set:",alg,key); \
 	lerror(L, "Zenroom won't overwrite. Use a .new() instance.");
 
-typedef struct {
-	// function pointers
-	int (*ECP__KEY_PAIR_GENERATE)(csprng *R,octet *s,octet *W);
-	int (*ECP__PUBLIC_KEY_VALIDATE)(octet *W);
-	int (*ECP__SVDP_DH)(octet *s,octet *W,octet *K);
-	void (*ECP__ECIES_ENCRYPT)(int h,octet *P1,octet *P2,
-	                           csprng *R,octet *W,octet *M,int len,
-	                           octet *V,octet *C,octet *T);
-	int (*ECP__ECIES_DECRYPT)(int h,octet *P1,octet *P2,
-	                          octet *V,octet *C,octet *T,
-	                          octet *U,octet *M);
-	int (*ECP__SP_DSA)(int h,csprng *R,octet *k,octet *s,
-	                   octet *M,octet *c,octet *d);
-	int (*ECP__VP_DSA)(int h,octet *W,octet *M,octet *c,octet *d);
-	csprng *rng;
-	int keysize;
-	int hash; // hash type is also bytes length of hash
-	char curve[16]; // just short names
-	octet *pubkey;
-	int publen;
-	octet *seckey;
-	int seclen;
-} ecdh;
+// from zen_ecdh_factory.h to setup function pointers
+extern ecdh *ecdh_new_curve(lua_State *L, const char *curve);
 
 /// Global ECDH extension
 // @section ecdh.globals
@@ -108,21 +89,8 @@ typedef struct {
 */
 
 ecdh* ecdh_new(lua_State *L, const char *curve) {
-	ecdh *e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
-
-	// hardcoded on ed25519 for now
-	(void)curve;
-	e->keysize = EGS_ED25519;
-	e->rng = NULL;
-	e->hash = HASH_TYPE_ECC_ED25519;
-
-	e->ECP__KEY_PAIR_GENERATE = ECP_ED25519_KEY_PAIR_GENERATE;
-	e->ECP__PUBLIC_KEY_VALIDATE	= ECP_ED25519_PUBLIC_KEY_VALIDATE;
-	e->ECP__SVDP_DH = ECP_ED25519_SVDP_DH;
-	e->ECP__ECIES_ENCRYPT = ECP_ED25519_ECIES_ENCRYPT;
-	e->ECP__ECIES_DECRYPT = ECP_ED25519_ECIES_DECRYPT;
-	e->ECP__SP_DSA = ECP_ED25519_SP_DSA;
-	e->ECP__VP_DSA = ECP_ED25519_VP_DSA;
+	ecdh *e = ecdh_new_curve(L, curve);
+	if(!e) { SAFE(e); return NULL; }
 
 	// key storage and key lengths are important 
 	e->seckey = NULL;
