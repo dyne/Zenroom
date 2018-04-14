@@ -21,12 +21,11 @@
 #include <ctype.h>
 #include <errno.h>
 
-#include <jutils.h>
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
 
-// #include <luazen.h>
+#include <jutils.h>
 
 #include <zenroom.h>
 #include <lua_functions.h>
@@ -44,26 +43,26 @@ void load_file(char *dst, FILE *fd) {
 	size_t offset = 0;
 	size_t bytes = 0;
 	if(!fd) {
-		error("Error opening %s", strerror(errno));
+		error(0, "Error opening %s", strerror(errno));
 		exit(1); }
 	if(fd!=stdin) {
 		if(fseek(fd, 0L, SEEK_END)<0) {
-			error("fseek(end) error in %s: %s",__func__,
+			error(0, "fseek(end) error in %s: %s",__func__,
 			      strerror(errno));
 			exit(1); }
 		file_size = ftell(fd);
 		if(fseek(fd, 0L, SEEK_SET)<0) {
-			error("fseek(start) error in %s: %s",__func__,
+			error(0, "fseek(start) error in %s: %s",__func__,
 			      strerror(errno));
 			exit(1); }
-		func("size of file: %u",file_size);
+		func(0, "size of file: %u",file_size);
 	}
 	// skip shebang on firstline
 	if(!fgets(firstline, MAX_STRING, fd)) {
-		error("Error reading first line: %s", strerror(errno));
+		error(0, "Error reading first line: %s", strerror(errno));
 		exit(1); }
 	if(firstline[0]=='#' && firstline[1]=='!')
-		func("Skipping shebang");
+		func(0, "Skipping shebang");
 	else {
 		offset+=strlen(firstline);
 		strncpy(dst,firstline,MAX_STRING);
@@ -79,39 +78,39 @@ void load_file(char *dst, FILE *fd) {
 		if(!bytes) {
 			if(feof(fd)) {
 				if((fd!=stdin) && (long)offset!=file_size)
-					warning("Incomplete file read (%u of %u bytes)",
+					warning(0, "Incomplete file read (%u of %u bytes)",
 					      offset, file_size);
 				else
-					func("EOF after %u bytes",offset);
+					func(0, "EOF after %u bytes",offset);
 				break; }
 			if(ferror(fd)) {
-				error("Error in %s: %s",__func__,strerror(errno));
+				error(0, "Error in %s: %s",__func__,strerror(errno));
 				fclose(fd);
 				exit(1); }
 		}
 		offset += bytes;
 	}
 	if(fd!=stdin) fclose(fd);
-	act("loaded file (%u bytes)", offset);
+	act(0, "loaded file (%u bytes)", offset);
 }
 
 char *safe_string(char *str) {
 	int i, length = 0;
 	if(!str) {
-		warning("NULL string detected");
+		warning(0, "NULL string detected");
 		return NULL; }
 	if(str[0]=='\0') {
-		warning("empty string detected");
+		warning(0, "empty string detected");
 		return NULL; }
 
 	while (length < MAX_STRING && str[length] != '\0') ++length;
 
 	if (length == MAX_STRING)
-		warning("maximum size string detected (may be truncated) at address %p",str);
+		warning(0, "maximum size string detected (may be truncated) at address %p",str);
 
 	for (i = 0; i < length; ++i) {
 		if (!isprint(str[i]) && !isspace(str[i])) {
-			error("unprintable character (ASCII %d) at position %d",
+			error(0, "unprintable character (ASCII %d) at position %d",
 			      (unsigned char)str[i], i);
 			return NULL;
 		}

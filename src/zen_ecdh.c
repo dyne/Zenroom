@@ -62,7 +62,7 @@
 #include <zen_memory.h>
 
 #define KEYPROT(alg,key)	  \
-	error("%s engine has already a %s set:",alg,key); \
+	error(L, "%s engine has already a %s set:",alg,key); \
 	lerror(L, "Zenroom won't overwrite. Use a .new() instance.");
 
 typedef struct {
@@ -254,11 +254,11 @@ static int ecdh_session(lua_State *L) {
 			lerror(L, "%s: public key not found in keyring",__func__);
 			return 0; }
 		pubkey = pk->pubkey; // take secret key from keyring
-		func("%s: public key found in ecdh keyring (%u bytes)",
+		func(L, "%s: public key found in ecdh keyring (%u bytes)",
 		     __func__, pubkey->len);
 	} else if((ud = luaL_testudata(L, 2, "zenroom.octet"))) {
 		pubkey = (octet*)ud; // take secret key from octet
-		func("%s: public key found in octet (%u bytes)",
+		func(L, "%s: public key found in octet (%u bytes)",
 		     __func__, pubkey->len);
 	} else {
 		lerror(L, "%s: invalid public key argument",__func__);
@@ -294,13 +294,13 @@ static int ecdh_public(lua_State *L) {
 				ERROR();
 				return lerror(L, "Public key is not found.");
 			} else {
-				func("TODO: generate public key from secret");
+				func(L, "TODO: generate public key from secret");
 			}
 		}
 		// export public key to octet
 		res = (e->ECP__PUBLIC_KEY_VALIDATE)(e->pubkey);
 		if(res == ECDH_INVALID_PUBLIC_KEY) {
-			error("%s: public key found but invalid",__func__);
+			error(L, "%s: public key found but invalid",__func__);
 			return 0; }
 		o_dup(L,e->pubkey);
 		return 1;
@@ -311,9 +311,9 @@ static int ecdh_public(lua_State *L) {
 	octet *o = o_arg(L, 2); SAFE(o);
 	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(o);
 	if(res == ECDH_INVALID_PUBLIC_KEY) {
-		error("%s: generated public key is invalid",__func__);
+		error(L, "%s: generated public key is invalid",__func__);
 		return 0; }
-	func("%s: valid key",__func__);
+	func(L, "%s: valid key",__func__);
 	e->pubkey = o;
 	return 0;
 }
@@ -388,7 +388,7 @@ static int ecdh_decrypt(lua_State *L) {
 	// output is padded to next word
 	octet *out = o_new(L, in->len+16); SAFE(out);
 	if(!AES_CBC_IV0_DECRYPT(k,in,out)) {
-		error("%s: decryption failed.",__func__);
+		error(L, "%s: decryption failed.",__func__);
 		lua_pop(L, 1);
 		lua_pushboolean(L, 0);
 	}
@@ -434,7 +434,7 @@ static int ecdh_hmac(lua_State *L) {
 	const int len = luaL_optinteger(L, 4, e->hash);
 	octet *out = o_new(L, len); SAFE(out);
 	if(!HMAC(e->hash, in, k, len, out)) {
-		error("%s: hmac (%u bytes) failed.", len);
+		error(L, "%s: hmac (%u bytes) failed.", len);
 		lua_pop(L, 1);
 		lua_pushboolean(L,0);
 	}

@@ -29,7 +29,7 @@
 #include <unistd.h>
 #include <string.h>
 
-
+#include <lauxlib.h>
 
 #define MAX_DEBUG 2
 
@@ -40,11 +40,11 @@
 void set_debug(int lev);
 int get_debug();
 
-void notice(const char *format, ...);
-void func(const char *format, ...);
-void error(const char *format, ...);
-void act(const char *format, ...);
-void warning(const char *format, ...);
+void notice(lua_State *L, const char *format, ...);
+void func(lua_State *L, const char *format, ...);
+void error(lua_State *L, const char *format, ...);
+void act(lua_State *L, const char *format, ...);
+void warning(lua_State *L, const char *format, ...);
 
 double dtime();
 

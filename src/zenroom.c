@@ -25,11 +25,11 @@
 
 #include <errno.h>
 
-#include <jutils.h>
-
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
+
+#include <jutils.h>
 
 #include <lua_functions.h>
 #include <repl.h>
@@ -70,7 +70,7 @@ zenroom_t *zen_init(const char *conf) {
 			umm_memory_init(UMM_HEAP); // defined in zenroom.h (64KiB)
 			L = lua_newstate(umm_memory_manager, NULL);
 		} else {
-			error("%s: unknown memory manager: %s",
+			error(L,"%s: unknown memory manager: %s",
 			      __func__,conf);
 		}
 	} else {
@@ -78,7 +78,7 @@ zenroom_t *zen_init(const char *conf) {
 		L = luaL_newstate();
 	}
 	if(!L) {
-		error("%s: %s", __func__, "lua state creation failed");
+		error(L,"%s: %s", __func__, "lua state creation failed");
 		return NULL;
 	}
 
@@ -121,10 +121,11 @@ zenroom_t *zen_init(const char *conf) {
 
 extern char *zen_heap;
 void zen_teardown(zenroom_t *Z) {
-	notice("Zenroom teardown.");
+	
+	notice(Z->lua,"Zenroom teardown.");
     if(zen_heap) {
 	    if(umm_integrity_check())
-		    act("HEAP integrity checks passed.");
+		    act(Z->lua,"HEAP integrity checks passed.");
 	    umm_info(zen_heap,0); }
     if(Z->lua) {
 	    lua_gc((lua_State*)Z->lua, LUA_GCCOLLECT, 0);
@@ -143,7 +144,7 @@ int zen_exec_script(lua_State *L, const char *script) {
 	zen_setenv(L,"CODE",(char*)script);
 	ret = luaL_dostring(lua, script);
 	if(ret) {
-		error("%s", lua_tostring(lua, -1));
+		error(L, "%s", lua_tostring(lua, -1));
 		fflush(stderr);
 		return ret;
 	}
@@ -160,29 +161,29 @@ int zenroom_exec(char *script, char *conf, char *keys,
 	int r;
 
 	if(!script) {
-		error("NULL string as script for zenroom_exec()");
+		error(L, "NULL string as script for zenroom_exec()");
 		exit(1); }
 	set_debug(verbosity);
 
 
 	Z = zen_init(conf);
 	if(!Z) {
-		error("Initialisation failed.");
+		error(L, "Initialisation failed.");
 		return 1; }
 	L = Z->lua;
 	if(!L) {
-		error("Initialisation failed.");
+		error(L, "Initialisation failed.");
 		return 1; }
 
 	// load arguments from json if present
 	if(data) // avoid errors on NULL args
 		if(safe_string(data)) {
-			func("declaring global: DATA");
+			func(L, "declaring global: DATA");
 			zen_setenv(L,"DATA",data);
 		}
 	if(keys)
 		if(safe_string(keys)) {
-			func("declaring global: KEYS");
+			func(L, "declaring global: KEYS");
 			zen_setenv(L,"KEYS",keys);
 		}
 
@@ -192,7 +193,7 @@ int zenroom_exec(char *script, char *conf, char *keys,
 		EM_ASM({Module.exec_error();});
 #endif
 //		error(r);
-		error("Error detected. Execution aborted.");
+		error(L, "Error detected. Execution aborted.");
 
 		zen_teardown(Z);
 		return(1);
@@ -203,7 +204,7 @@ int zenroom_exec(char *script, char *conf, char *keys,
 		EM_ASM({Module.exec_ok();});
 #endif
 
-	notice("Zenroom operations completed.");
+	notice(L, "Zenroom operations completed.");
 	zen_teardown(Z);
 	return(return_code);
 }
@@ -222,17 +223,17 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys,
 	int r;
 
 	if(!script) {
-		error("NULL string as script for zenroom_exec()");
+		error(L, "NULL string as script for zenroom_exec()");
 		exit(1); }
 	set_debug(verbosity);
 
 	Z = zen_init(conf);
 	if(!Z) {
-		error("Initialisation failed.");
+		error(L, "Initialisation failed.");
 		return 1; }
 	L = Z->lua;
 	if(!L) {
-		error("Initialisation failed.");
+		error(L, "Initialisation failed.");
 		return 1; }
 
 	// setup stdout and stderr buffers
@@ -244,12 +245,12 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys,
 	// load arguments from json if present
 	if(data) // avoid errors on NULL args
 		if(safe_string(data)) {
-			func("declaring global: DATA");
+			func(L, "declaring global: DATA");
 			zen_setenv(L,"DATA",data);
 		}
 	if(keys)
 		if(safe_string(keys)) {
-			func("declaring global: KEYS");
+			func(L, "declaring global: KEYS");
 			zen_setenv(L,"KEYS",keys);
 		}
 
@@ -259,7 +260,7 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys,
 		EM_ASM({Module.exec_error();});
 #endif
 //		error(r);
-		error("Error detected. Execution aborted.");
+		error(L, "Error detected. Execution aborted.");
 
 		zen_teardown(Z);
 		return(1);
@@ -270,7 +271,7 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys,
 		EM_ASM({Module.exec_ok();});
 #endif
 
-	notice("Zenroom operations completed.");
+	notice(L, "Zenroom operations completed.");
 	zen_teardown(Z);
 	return(return_code);
 }
@@ -300,8 +301,8 @@ int main(int argc, char **argv) {
     // conf[0] = '\0';
     script[0] = '\0';
 
-	notice( "Zenroom v%s - crypto language restricted VM",VERSION);
-	act("Copyright (C) 2017-2018 Dyne.org foundation");
+	notice(NULL, "Zenroom v%s - crypto language restricted VM",VERSION);
+	act(NULL, "Copyright (C) 2017-2018 Dyne.org foundation");
 	while((opt = getopt(argc, argv, short_options)) != -1) {
 		switch(opt) {
 		case 'd':
@@ -324,8 +325,8 @@ int main(int argc, char **argv) {
 		case 'c':
 			snprintf(conffile,511,"%s",optarg);
 			break;
-		case '?': error(help); exit(1);
-		default:  error(help); exit(1);
+		case '?': error(0,help); exit(1);
+		default:  error(0,help); exit(1);
 		}
 	}
 	for (index = optind; index < argc; index++) {
@@ -333,12 +334,12 @@ int main(int argc, char **argv) {
 	}
 
 	if(keysfile[0]!='\0') {
-		act("reading KEYS from file: %s", keysfile);
+		act(NULL, "reading KEYS from file: %s", keysfile);
 		load_file(keys, fopen(keysfile, "r"));
 	}
 
 	if(datafile[0]!='\0') {
-		act("reading DATA from file: %s", datafile);
+		act(NULL, "reading DATA from file: %s", datafile);
 		load_file(data, fopen(datafile, "r"));
 	}
 
@@ -356,7 +357,7 @@ int main(int argc, char **argv) {
 
 		if(data[0]!='\0') zen_setenv(L,"DATA",data);
 		if(keys[0]!='\0') zen_setenv(L,"KEYS",keys);
-		notice("Interactive console, press ctrl-d to quit.");
+		notice(NULL, "Interactive console, press ctrl-d to quit.");
 		repl_loop(L);
 		// quits on ctrl-D
 		zen_teardown(cli);
@@ -366,35 +367,35 @@ int main(int argc, char **argv) {
 	if(scriptfile[0]!='\0') {
 		////////////////////////////////////
 		// load a file as script and execute
-		act("reading CODE from file: %s", scriptfile);
+		act(NULL, "reading CODE from file: %s", scriptfile);
 		load_file(script, fopen(scriptfile, "rb"));
 	} else {
 		////////////////////////
 		// get another argument from stdin
-		act("reading CODE from stdin");
+		act(NULL, "reading CODE from stdin");
 		load_file(script, stdin);
-		func("%s\n--",script);
+		func(NULL, "%s\n--",script);
 	}
 
 	// configuration from -c or default
 	if(conffile[0]!='\0')
-		act("selected configuration: %s",conffile);
+		act(NULL, "selected configuration: %s",conffile);
 		// load_file(conf, fopen(conffile, "r"));
 	else
-		act("using default configuration");
+		act(NULL, "using default configuration");
 
 	zenroom_t *Z;
 	lua_State *L;
 	set_debug(verbosity);
 	Z = zen_init((conffile[0])?conffile:NULL);
 	if(!Z) {
-		error("Initialisation failed.");
+		error(NULL, "Initialisation failed.");
 		return 1; }
 	L = (lua_State*)Z->lua;
 	if(data[0]) zen_setenv(L,"DATA",data);
 	if(keys[0]) zen_setenv(L,"KEYS",keys);
-	if( zen_exec_script(L, script) ) error("Blocked execution.");
-	else notice("Execution completed.");
+	if( zen_exec_script(L, script) ) error(NULL, "Blocked execution.");
+	else notice(NULL, "Execution completed.");
 	// report experimental memory manager
 	// if((strcmp(conffile,"umm")==0) && zen_heap) {
 	// 	lua_gc(L, LUA_GCCOLLECT, 0);

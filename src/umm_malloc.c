@@ -201,8 +201,8 @@ void umm_init( void *ptr, size_t memsize ) {
   /* init heap pointer and size, and memset it to 0 */
   umm_heap = (umm_block *)ptr;
   umm_numblocks = (memsize / sizeof(umm_block));
-  act("HEAP memory allocated: %u KiB",memsize/1024);
-  func("UMM blocks available: %u", umm_numblocks);
+  act(0, "HEAP memory allocated: %u KiB",memsize/1024);
+  func(0, "UMM blocks available: %u", umm_numblocks);
   umm_memzero((char*)ptr,memsize);
 
   /* setup initial blank heap structure */
@@ -733,12 +733,12 @@ void *umm_info( void *ptr, int force ) {
   //     UMM_NFREE(blockNo),
   //     UMM_PFREE(blockNo) );
 
-  act("Total Entries %5i \t Used Entries %5i \t Free Entries %5i",
+  act(0, "Total Entries %5i \t Used Entries %5i \t Free Entries %5i",
       ummHeapInfo.totalEntries,
       ummHeapInfo.usedEntries,
       ummHeapInfo.freeEntries );
 
-  act("Total Blocks  %5i \t Used Blocks  %5i \t Free Blocks  %5i",
+  act(0, "Total Blocks  %5i \t Used Blocks  %5i \t Free Blocks  %5i",
       ummHeapInfo.totalBlocks,
       ummHeapInfo.usedBlocks,
       ummHeapInfo.freeBlocks  );
@@ -746,7 +746,7 @@ void *umm_info( void *ptr, int force ) {
   size_t totmem = ummHeapInfo.totalBlocks * sizeof(umm_block);
   size_t freemem = ummHeapInfo.freeBlocks * sizeof(umm_block);
   size_t usedmem = ummHeapInfo.usedBlocks * sizeof(umm_block);
-  act("Total Memory %u KiB \t Used Memory %u KiB \t Free Memory %u KiB",
+  act(0, "Total Memory %u KiB \t Used Memory %u KiB \t Free Memory %u KiB",
       totmem/1024, usedmem/1024, freemem/1024);
   /* Release the critical section... */
   UMM_CRITICAL_EXIT();
@@ -788,7 +788,7 @@ int umm_integrity_check() {
 
 		/* Check that next free block number is valid */
 		if (cur >= UMM_NUMBLOCKS) {
-			error("heap integrity broken: too large next free num: %d "
+			error(0, "heap integrity broken: too large next free num: %d "
 			      "(in block %d, addr 0x%lx)\n", cur, prev,
 			      (unsigned long)&UMM_NBLOCK(prev));
 			ok = 0;
@@ -801,7 +801,7 @@ int umm_integrity_check() {
 
 		/* Check if prev free block number matches */
 		if (UMM_PFREE(cur) != prev) {
-			error("heap integrity broken: free links don't match: "
+			error(0, "heap integrity broken: free links don't match: "
 			      "%d -> %d, but %d -> %d\n",
 			      prev, cur, cur, UMM_PFREE(cur));
 			ok = 0;
@@ -820,7 +820,7 @@ int umm_integrity_check() {
 
 		/* Check that next block number is valid */
 		if (cur >= UMM_NUMBLOCKS) {
-			error("heap integrity broken: too large next block num: %d "
+			error(0, "heap integrity broken: too large next block num: %d "
 			      "(in block %d, addr 0x%lx)\n", cur, prev,
 			      (unsigned long)&UMM_NBLOCK(prev));
 			ok = 0;
@@ -835,7 +835,7 @@ int umm_integrity_check() {
 		if ((UMM_NBLOCK(cur) & UMM_FREELIST_MASK)
 		    != (UMM_PBLOCK(cur) & UMM_FREELIST_MASK))
 		{
-			error("heap integrity broken: mask wrong at addr 0x%lx: n=0x%x, p=0x%x\n",
+			error(0, "heap integrity broken: mask wrong at addr 0x%lx: n=0x%x, p=0x%x\n",
 			      (unsigned long)&UMM_NBLOCK(cur),
 			      (UMM_NBLOCK(cur) & UMM_FREELIST_MASK),
 			      (UMM_PBLOCK(cur) & UMM_FREELIST_MASK)
@@ -846,7 +846,7 @@ int umm_integrity_check() {
 
 		/* make sure the block list is sequential */
 		if (cur <= prev ) {
-			error("heap integrity broken: next block %d is before prev this one "
+			error(0, "heap integrity broken: next block %d is before prev this one "
 			      "(in block %d, addr 0x%lx)\n", cur, prev,
 			      (unsigned long)&UMM_NBLOCK(prev));
 			ok = 0;
@@ -858,7 +858,7 @@ int umm_integrity_check() {
 
 		/* Check if prev block number matches */
 		if (UMM_PBLOCK(cur) != prev) {
-			error("heap integrity broken: block links don't match: "
+			error(0, "heap integrity broken: block links don't match: "
 			      "%d -> %d, but %d -> %d\n",
 			      prev, cur, cur, UMM_PBLOCK(cur));
 			ok = 0;

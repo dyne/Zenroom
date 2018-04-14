@@ -14,7 +14,7 @@ void *zen_memalign(const size_t size, const size_t align) {
 # if defined(_WIN32)
 	mem = __mingw_aligned_malloc(vsize, valign);
 	if(!mem) {
-		error("error in %u byte aligned memory allocation of %u bytes.",
+		error(0, "error in %u byte aligned memory allocation of %u bytes.",
 			align, size);
 		return NULL; }
 # elif defined(__EMSCRIPTEN__)
@@ -23,10 +23,10 @@ void *zen_memalign(const size_t size, const size_t align) {
 	int res;
 	res = posix_memalign(&mem, valign, vsize);
 	if(res == ENOMEM) {
-		error("insufficient memory to allocate %u bytes.", size);
+		error(0, "insufficient memory to allocate %u bytes.", size);
 		return NULL; }
 	if(res == EINVAL) {
-		error("invalid memory alignment at %u bytes.",align);
+		error(0, "invalid memory alignment at %u bytes.",align);
 		return NULL; }
 # endif
 	return(mem);
