@@ -25,11 +25,58 @@
 #include <lauxlib.h>
 
 #include <zenroom.h>
+#include <zen_error.h>
+
+// passes the string to be printed through the 'tosting' function
+// inside lua, taking care of some sanitization and conversions
+static const char *lua_print_format(lua_State *L,
+                                    int pos, size_t *len) {
+	const char *s;
+	lua_pushvalue(L, -1);  /* function to be called */
+	lua_pushvalue(L, pos);   /* value to print */
+	lua_call(L, 1, 1);
+	s = lua_tolstring(L, -1, len);  /* get result */
+	if (s == NULL)
+		luaL_error(L, LUA_QL("tostring") " must return a string to "
+		           LUA_QL("print"));
+	return s;
+}
+
+// retrieves output buffer if configured in _Z and append to that the
+// output without exceeding its length. Return 1 if output buffer was
+// configured so calling function can decide if to proceed with other
+// prints (stdout) or not
+static int lua_print_tobuffer(lua_State *L) {
+	lua_getglobal(L, "_Z");
+	zenroom_t *Z = lua_touserdata(L, -1);
+	lua_pop(L, 1);
+	SAFE(Z);
+	if(Z->stdout_buf && Z->stdout_pos < Z->stdout_len) {
+		int i;
+		int n = lua_gettop(L);  /* number of arguments */
+		char *out = (char*)Z->stdout_buf;
+		size_t len;
+		lua_getglobal(L, "tostring");
+		for (i=1; i<=n; i++) {
+			const char *s = lua_print_format(L, i, &len);
+			if(i>1) { out[Z->stdout_pos]='\t'; Z->stdout_pos++; }
+			snprintf(out+Z->stdout_pos,
+			         Z->stdout_len - Z->stdout_pos,
+			         "%s", s);
+			Z->stdout_pos+=len;
+			lua_pop(L, 1);
+		}
+		return 1;
+	}
+	return 0;
+}
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 
 static int zen_print (lua_State *L) {
+	if( lua_print_tobuffer(L) ) return 0;
+
 	char out[MAX_STRING];
 	size_t pos = 0;
 	size_t len = 0;
@@ -37,14 +84,7 @@ static int zen_print (lua_State *L) {
 	int i;
 	lua_getglobal(L, "tostring");
 	for (i=1; i<=n; i++) {
-		const char *s;
-		lua_pushvalue(L, -1);  /* function to be called */
-		lua_pushvalue(L, i);   /* value to print */
-		lua_call(L, 1, 1);
-		s = lua_tolstring(L, -1, &len);  /* get result */
-		if (s == NULL)
-			return luaL_error(L, LUA_QL("tostring") " must return a string to "
-			                  LUA_QL("print"));
+		const char *s = lua_print_format(L, i, &len);
 		if (i>1) { out[pos]='\t'; pos++; }
 		snprintf(out+pos,MAX_STRING-pos,"%s",s);
 		pos+=len;
@@ -76,25 +116,22 @@ static int zen_iowrite (lua_State *L) {
 
 
 static int zen_print (lua_State *L) {
-	size_t l = 0;
+	if( lua_print_tobuffer(L) ) return 0;
+
 	int status = 1;
+	size_t len = 0;
 	int n = lua_gettop(L);  /* number of arguments */
 	int i;
 	lua_getglobal(L, "tostring");
 	for (i=1; i<=n; i++) {
-		const char *s;
-		lua_pushvalue(L, -1);  /* function to be called */
-		lua_pushvalue(L, i);   /* value to print */
-		lua_call(L, 1, 1);
-		s = lua_tolstring(L, -1, &l);  /* get result */
-		if (s == NULL)
-			return luaL_error(L, LUA_QL("tostring") " must return a string to "
-			                  LUA_QL("print"));
+		const char *s = lua_print_format(L, i, &len);
 		if(i>1) fwrite("\t",sizeof(char),1,stdout);
-		status = status && (fwrite(s, sizeof(char), l, stdout) == l);
+		status = status &&
+			(fwrite(s, sizeof(char), len, stdout) == len);
 		lua_pop(L, 1);  /* pop result */
 	}
 	fwrite("\n",sizeof(char),1,stdout);
+	fflush(stdout);
 	return 0;
 }
 
@@ -131,14 +168,12 @@ void zen_add_io(lua_State *L) {
 	static const struct luaL_Reg custom_print [] =
 		{ {"print", zen_print}, {NULL, NULL} };
 	lua_getglobal(L, "_G");
-	// luaL_register(L, NULL, custom_print); // for Lua versions < 5.2
 	luaL_setfuncs(L, custom_print, 0);  // for Lua versions 5.2 or greater
 	lua_pop(L, 1);
 
 	static const struct luaL_Reg custom_iowrite [] =
 		{ {"write", zen_iowrite}, {NULL, NULL} };
 	lua_getglobal(L, "io");
-	// luaL_register(L, NULL, custom_iowrite);
 	luaL_setfuncs(L, custom_iowrite, 0);
 	lua_pop(L, 1);
 

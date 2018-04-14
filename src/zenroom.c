@@ -39,25 +39,29 @@
 #endif
 
 #include <zenroom.h>
+#include <zen_memory.h>
 
 // prototypes from lua_modules.c
-extern void zen_load_extensions(lua_State *L);
-extern void zen_add_function(lua_State *L, lua_CFunction func,
-                                  const char *func_name);
-void zen_setenv(lua_State *L, char *key, char *val);
+extern int zen_require_override(lua_State *L);
+
+// prototypes from zen_io.c
+extern void zen_add_io(lua_State *L);
 
 // prototypes from zen_memory.c
 extern void libc_memory_init();
 extern void umm_memory_init(size_t size);
-extern void* umm_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
+extern void *umm_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
 extern void *umm_info(void*, int);
 extern int umm_integrity_check();
 
 // prototypes from lua_functions.c
 extern void load_file(char *dst, FILE *fd);
 extern char *safe_string(char *str);
+extern void zen_setenv(lua_State *L, char *key, char *val);
+extern void zen_add_function(lua_State *L, lua_CFunction func,
+                             const char *func_name);
 
-lua_State *zen_init(const char *conf) {
+zenroom_t *zen_init(const char *conf) {
 	(void) conf;
 	lua_State *L = NULL;
 
@@ -92,48 +96,51 @@ lua_State *zen_init(const char *conf) {
 	// open all standard lua libraries
 	luaL_openlibs(L);
 	// load our own openlibs and extensions
-	zen_load_extensions(L);
+	zen_add_io(L);
+	zen_require_override(L);
 	//////////////////// end of create
 
 	lua_gc(L, LUA_GCCOLLECT, 0);
 //	lua_setfield(L, LUA_REGISTRYINDEX, LSB_THIS_PTR);
 
-	return(L);
-
+	// create the zenroom_t global context
+	zenroom_t *Z = system_alloc(sizeof(zenroom_t));
+	Z->lua = L;
+	Z->stdout_buf = NULL;
+	Z->stdout_pos = 0;
+	Z->stdout_len = 0;
+	Z->stderr_buf = NULL;
+	Z->stderr_pos = 0;
+	Z->stderr_len = 0;
+	Z->userdata = NULL;
+	//Set zenroom context as a global in lua
+	lua_pushlightuserdata(L, Z);
+	lua_setglobal(L, "_Z");
+	return(Z);
 }
 
 extern char *zen_heap;
-void zen_teardown(lua_State *L) {
+void zen_teardown(zenroom_t *Z) {
 	notice("Zenroom teardown.");
     if(zen_heap) {
 	    if(umm_integrity_check())
 		    act("HEAP integrity checks passed.");
 	    umm_info(zen_heap,0); }
-    if(L) lua_gc(L, LUA_GCCOLLECT, 0);
-    if(L) lua_gc(L, LUA_GCCOLLECT, 0);
-    lua_close(L);
+    if(Z->lua) {
+	    lua_gc((lua_State*)Z->lua, LUA_GCCOLLECT, 0);
+	    lua_gc((lua_State*)Z->lua, LUA_GCCOLLECT, 0);
+	    lua_close((lua_State*)Z->lua);
+    }
     if(zen_heap) free(zen_heap);
-
-}
-
-int zen_exec_line(lua_State *L, const char *line) {
-	int ret;
-	lua_State* lua = L;
-
-	ret = luaL_dostring(lua, line);
-	if(ret) {
-		error("%s", lua_tostring(lua, -1));
-		fflush(stderr);
-		return ret;
-	}
-	return 0;
+    system_free(Z);
 }
 
 
 int zen_exec_script(lua_State *L, const char *script) {
 	int ret;
 	lua_State* lua = L;
-
+	// introspection on code being executed
+	zen_setenv(L,"CODE",(char*)script);
 	ret = luaL_dostring(lua, script);
 	if(ret) {
 		error("%s", lua_tostring(lua, -1));
@@ -147,6 +154,7 @@ int zenroom_exec(char *script, char *conf, char *keys,
                  char *data, int verbosity) {
 	// the sandbox context (can be initialised only once)
 	// stores the script file and configuration
+	zenroom_t *Z = NULL;
 	lua_State *L = NULL;
 	int return_code = 1; // return error by default
 	int r;
@@ -156,11 +164,15 @@ int zenroom_exec(char *script, char *conf, char *keys,
 		exit(1); }
 	set_debug(verbosity);
 
-	L = zen_init(conf);
+
+	Z = zen_init(conf);
+	if(!Z) {
+		error("Initialisation failed.");
+		return 1; }
+	L = Z->lua;
 	if(!L) {
 		error("Initialisation failed.");
-		return 1;
-	}
+		return 1; }
 
 	// load arguments from json if present
 	if(data) // avoid errors on NULL args
@@ -182,7 +194,7 @@ int zenroom_exec(char *script, char *conf, char *keys,
 //		error(r);
 		error("Error detected. Execution aborted.");
 
-		zen_teardown(L);
+		zen_teardown(Z);
 		return(1);
 	}
 	return_code = 0; // return success
@@ -192,7 +204,74 @@ int zenroom_exec(char *script, char *conf, char *keys,
 #endif
 
 	notice("Zenroom operations completed.");
-	zen_teardown(L);
+	zen_teardown(Z);
+	return(return_code);
+}
+
+
+int zenroom_exec_tobuf(char *script, char *conf, char *keys,
+                       char *data, int verbosity,
+                       char *stdout_buf, size_t stdout_len,
+                       char *stderr_buf, size_t stderr_len) {
+	// the sandbox context (can be initialised only once)
+	// stores the script file and configuration
+	zenroom_t *Z = NULL;
+	lua_State *L = NULL;
+
+	int return_code = 1; // return error by default
+	int r;
+
+	if(!script) {
+		error("NULL string as script for zenroom_exec()");
+		exit(1); }
+	set_debug(verbosity);
+
+	Z = zen_init(conf);
+	if(!Z) {
+		error("Initialisation failed.");
+		return 1; }
+	L = Z->lua;
+	if(!L) {
+		error("Initialisation failed.");
+		return 1; }
+
+	// setup stdout and stderr buffers
+	Z->stdout_buf = stdout_buf;
+	Z->stdout_len = stdout_len;
+	Z->stderr_buf = stderr_buf;
+	Z->stderr_len = stderr_len;
+
+	// load arguments from json if present
+	if(data) // avoid errors on NULL args
+		if(safe_string(data)) {
+			func("declaring global: DATA");
+			zen_setenv(L,"DATA",data);
+		}
+	if(keys)
+		if(safe_string(keys)) {
+			func("declaring global: KEYS");
+			zen_setenv(L,"KEYS",keys);
+		}
+
+	r = zen_exec_script(L, script);
+	if(r) {
+#ifdef __EMSCRIPTEN__
+		EM_ASM({Module.exec_error();});
+#endif
+//		error(r);
+		error("Error detected. Execution aborted.");
+
+		zen_teardown(Z);
+		return(1);
+	}
+	return_code = 0; // return success
+
+#ifdef __EMSCRIPTEN__
+		EM_ASM({Module.exec_ok();});
+#endif
+
+	notice("Zenroom operations completed.");
+	zen_teardown(Z);
 	return(return_code);
 }
 
@@ -266,18 +345,19 @@ int main(int argc, char **argv) {
 	if(interactive) {
 		////////////////////////////////////
 		// start an interactive repl console
-		lua_State  *cli;
+		zenroom_t *cli;
 		cli = zen_init(NULL);
+		lua_State *L = (lua_State*)cli->lua;
 
 		// print function
-		zen_add_function(cli, repl_flush, "flush");
-		zen_add_function(cli, repl_read, "read");
-		zen_add_function(cli, repl_write, "write");
+		zen_add_function(L, repl_flush, "flush");
+		zen_add_function(L, repl_read, "read");
+		zen_add_function(L, repl_write, "write");
 
-		if(data[0]!='\0') zen_setenv(cli,"DATA",data);
-		if(keys[0]!='\0') zen_setenv(cli,"KEYS",keys);
+		if(data[0]!='\0') zen_setenv(L,"DATA",data);
+		if(keys[0]!='\0') zen_setenv(L,"KEYS",keys);
 		notice("Interactive console, press ctrl-d to quit.");
-		repl_loop(cli);
+		repl_loop(L);
 		// quits on ctrl-D
 		zen_teardown(cli);
 		return 0;
@@ -296,7 +376,6 @@ int main(int argc, char **argv) {
 		func("%s\n--",script);
 	}
 
-	static lua_State *L;
 	// configuration from -c or default
 	if(conffile[0]!='\0')
 		act("selected configuration: %s",conffile);
@@ -304,11 +383,14 @@ int main(int argc, char **argv) {
 	else
 		act("using default configuration");
 
+	zenroom_t *Z;
+	lua_State *L;
 	set_debug(verbosity);
-	L = zen_init((conffile[0])?conffile:NULL);
-	if(!L) {
+	Z = zen_init((conffile[0])?conffile:NULL);
+	if(!Z) {
 		error("Initialisation failed.");
 		return 1; }
+	L = (lua_State*)Z->lua;
 	if(data[0]) zen_setenv(L,"DATA",data);
 	if(keys[0]) zen_setenv(L,"KEYS",keys);
 	if( zen_exec_script(L, script) ) error("Blocked execution.");
@@ -317,7 +399,7 @@ int main(int argc, char **argv) {
 	// if((strcmp(conffile,"umm")==0) && zen_heap) {
 	// 	lua_gc(L, LUA_GCCOLLECT, 0);
 	// }
-	zen_teardown(L);
+	zen_teardown(Z);
 	return 0;
 }
 #endif
