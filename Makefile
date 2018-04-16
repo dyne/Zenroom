@@ -103,6 +103,12 @@ shared: platform := linux
 shared: patches lua53 milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
 
+shared-lib: gcc := gcc
+shared-lib: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"LINUX\"' -shared
+shared-lib: ldflags := -lm
+shared-lib: platform := linux
+shared-lib: patches lua53 milagro
+	CC=${gcc} CFLAGS="${cflags}" make -C src shared-lib
 
 osx: gcc := gcc
 osx: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"'
