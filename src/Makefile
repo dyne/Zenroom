@@ -19,6 +19,8 @@
 CC?=gcc
 VERSION := $(shell cat ../VERSION)
 ARCH := $(shell uname -m)
+BRANCH := $(shell git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
+HASH := $(shell git rev-parse --short HEAD)
 CFLAGS  += -I. -I../lib/lua53/src -I../lib/milagro-crypto-c/include -Wall -Wextra
 SOURCES := \
 	jutils.o zenroom.o zen_error.o \
@@ -73,6 +75,10 @@ shared: LDADD+=   -lm -lpthread
 shared: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-shared ${LDFLAGS} ${LDADD}
 
+shared-lib: LDADD+=   -lm
+shared-lib: ${SOURCES}
+	${CC} ${CFLAGS} ${SOURCES} -o libzenroom-${ARCH}-${VERSION}-${BRANCH}-${HASH}.so ${LDFLAGS} ${LDADD}
+
 win: CFLAGS +=  -O3 -Wall -Wextra -pedantic -std=gnu99
 win: LDFLAGS += -L/usr/x86_64-w64-mingw32/lib -static
 win: LDADD +=  -l:libm.a -l:libpthread.a -lssp
@@ -95,6 +101,7 @@ debug: clean ${SOURCES}
 
 clean:
 	rm -f *.o
+	rm -f *.so
 	rm -f zenroom-static
 	rm -f zenroom-shared
 	rm -f zenroom.js
