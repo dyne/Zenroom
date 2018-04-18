@@ -48,10 +48,10 @@ extern int zen_require_override(lua_State *L);
 extern void zen_add_io(lua_State *L);
 
 // prototypes from zen_memory.c
-extern void libc_memory_init();
-extern void umm_memory_init(size_t size);
-extern void *umm_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
-extern void *umm_info(void*, int);
+extern zen_mem_t *libc_memory_init();
+extern zen_mem_t *umm_memory_init(size_t size);
+extern void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
+extern void *umm_info(void*);
 extern int umm_integrity_check();
 
 // prototypes from lua_functions.c
@@ -64,19 +64,14 @@ extern void zen_add_function(lua_State *L, lua_CFunction func,
 zenroom_t *zen_init(const char *conf) {
 	(void) conf;
 	lua_State *L = NULL;
-
+	zen_mem_t *mem = NULL;
 	if(conf) {
-		if(strcmp(conf,"umm")==0) {
-			umm_memory_init(UMM_HEAP); // defined in zenroom.h (64KiB)
-			L = lua_newstate(umm_memory_manager, NULL);
-		} else {
-			error(L,"%s: unknown memory manager: %s",
-			      __func__,conf);
-		}
-	} else {
-		libc_memory_init();
-		L = luaL_newstate();
-	}
+		if(strcmp(conf,"umm")==0)
+			mem = umm_memory_init(UMM_HEAP); // (64KiB)
+	} else
+		mem = libc_memory_init();
+
+	L = lua_newstate(zen_memory_manager, mem);
 	if(!L) {
 		error(L,"%s: %s", __func__, "lua state creation failed");
 		return NULL;
@@ -106,6 +101,7 @@ zenroom_t *zen_init(const char *conf) {
 	// create the zenroom_t global context
 	zenroom_t *Z = system_alloc(sizeof(zenroom_t));
 	Z->lua = L;
+	Z->mem = mem;
 	Z->stdout_buf = NULL;
 	Z->stdout_pos = 0;
 	Z->stdout_len = 0;
@@ -119,21 +115,22 @@ zenroom_t *zen_init(const char *conf) {
 	return(Z);
 }
 
-extern char *zen_heap;
 void zen_teardown(zenroom_t *Z) {
-	
+
 	notice(Z->lua,"Zenroom teardown.");
-    if(zen_heap) {
+    if(Z->mem->heap) {
 	    if(umm_integrity_check())
 		    act(Z->lua,"HEAP integrity checks passed.");
-	    umm_info(zen_heap,0); }
+	    umm_info(Z->mem->heap); }
     if(Z->lua) {
 	    lua_gc((lua_State*)Z->lua, LUA_GCCOLLECT, 0);
 	    lua_gc((lua_State*)Z->lua, LUA_GCCOLLECT, 0);
 	    lua_close((lua_State*)Z->lua);
     }
-    if(zen_heap) free(zen_heap);
-    system_free(Z);
+    if(Z->mem->heap)
+	    system_free(Z->mem->heap);
+    if(Z->mem) system_free(Z->mem);
+    if(Z)      system_free(Z);
 }
 
 
@@ -287,17 +284,17 @@ int main(int argc, char **argv) {
 	char keys[MAX_FILE];
 	char data[MAX_FILE];
 	int opt, index;
-    int verbosity = 1;
-    int interactive = 0;
-	const char *short_options = "hdic:k:a:";
-    const char *help =
+    int   verbosity           = 1;
+    int   interactive         = 0;
+    const char *short_options = "hdic:k:a:";
+    const char *help          =
 	    "Usage: zenroom [-dh] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ script.lua ]\n";
-    conffile[0] = '\0';
-    scriptfile[0] = '\0';
-    keysfile[0] = '\0';
-    datafile[0] = '\0';
-    data[0] = '\0';
-    keys[0] = '\0';
+    conffile   [0] = '\0';
+    scriptfile[0]  = '\0';
+    keysfile   [0] = '\0';
+    datafile   [0] = '\0';
+    data       [0] = '\0';
+    keys       [0] = '\0';
     // conf[0] = '\0';
     script[0] = '\0';
 

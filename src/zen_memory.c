@@ -32,49 +32,47 @@ void *zen_memalign(const size_t size, const size_t align) {
 	return(mem);
 }
 
-typedef struct {
-	void* (*malloc)(size_t size);
-	void* (*realloc)(void *ptr, size_t size);
-	void  (*free)(void *ptr);
-	void* (*sys_malloc)(size_t size);
-	void* (*sys_realloc)(void *ptr, size_t size);
-	void  (*sys_free)(void *ptr);
-
-} zen_mem_t;
-
-static zen_mem_t zen_mem_f;
+// global memory manager saved here
+// TODO: this is not reentrant (see also umm_malloc.c)
+static zen_mem_t *zen_mem;
 
 // Global HEAP pointer in the STACK
-char *zen_heap;
-size_t zen_heap_size;
-void umm_memory_init(size_t S) {
-	zen_heap = zen_memalign(S, 16);
-	zen_heap_size = S;
-	zen_mem_f.malloc = umm_malloc;
-	zen_mem_f.realloc = umm_realloc;
-	zen_mem_f.free = umm_free;
-	zen_mem_f.sys_malloc = malloc;
-	zen_mem_f.sys_realloc = realloc;
-	zen_mem_f.sys_free = free;
-	umm_init(zen_heap, S);
+zen_mem_t *umm_memory_init(size_t S) {
+	zen_mem_t *mem = malloc(sizeof(zen_mem_t));
+	mem->heap = zen_memalign(S, 8);
+	mem->heap_size = S;
+	mem->malloc = umm_malloc;
+	mem->realloc = umm_realloc;
+	mem->free = umm_free;
+	mem->sys_malloc = malloc;
+	mem->sys_realloc = realloc;
+	mem->sys_free = free;
+	umm_init(mem->heap, mem->heap_size);
+	zen_mem = mem;
+	return mem;
 	// pointers saved in umm_malloc.c (stack)
 }
 
-void libc_memory_init() {
-	zen_mem_f.malloc = malloc;
-	zen_mem_f.realloc = realloc;
-	zen_mem_f.free = free;
-	zen_mem_f.sys_malloc = malloc;
-	zen_mem_f.sys_realloc = realloc;
-	zen_mem_f.sys_free = free;
-	zen_heap = NULL;
+zen_mem_t *libc_memory_init() {
+	zen_mem_t *mem = malloc(sizeof(zen_mem_t));
+	mem->heap = NULL;
+	mem->heap_size = 0;
+	mem->malloc = malloc;
+	mem->realloc = realloc;
+	mem->free = free;
+	mem->sys_malloc = malloc;
+	mem->sys_realloc = realloc;
+	mem->sys_free = free;
+	zen_mem = mem;
+	return mem;
 }
-void *zen_memory_alloc(size_t size) { return (*zen_mem_f.malloc)(size); }
-void *zen_memory_realloc(void *ptr, size_t size) { return (*zen_mem_f.realloc)(ptr, size); }
-void  zen_memory_free(void *ptr) { (*zen_mem_f.free)(ptr); }
-void *system_alloc(size_t size) { return (*zen_mem_f.sys_malloc)(size); }
-void *system_realloc(void *ptr, size_t size) { return (*zen_mem_f.sys_realloc)(ptr, size); }
-void  system_free(void *ptr) { (*zen_mem_f.sys_free)(ptr); }
+
+void *zen_memory_alloc(size_t size) { return (*zen_mem->malloc)(size); }
+void *zen_memory_realloc(void *ptr, size_t size) { return (*zen_mem->realloc)(ptr, size); }
+void  zen_memory_free(void *ptr) { (*zen_mem->free)(ptr); }
+void *system_alloc(size_t size) { return (*zen_mem->sys_malloc)(size); }
+void *system_realloc(void *ptr, size_t size) { return (*zen_mem->sys_realloc)(ptr, size); }
+void  system_free(void *ptr) { (*zen_mem->sys_free)(ptr); }
 
 
 
@@ -90,8 +88,8 @@ void  system_free(void *ptr) { (*zen_mem_f.sys_free)(ptr); }
  *
  * @return void* A pointer to the memory block.
  */
-void *umm_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
-	(void)ud;
+void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
+	zen_mem_t *mem = (zen_mem_t*)ud;
 	if(ptr == NULL) {
 		// When ptr is NULL, osize encodes the kind of object that Lua
 		// is allocating. osize is any of LUA_TSTRING, LUA_TTABLE,
@@ -100,7 +98,7 @@ void *umm_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
 		// is some other value, Lua is allocating memory for something
 		// else.
 		if(nsize!=0)
-			return umm_malloc(nsize);
+			return (*mem->malloc)(nsize);
 		return NULL;
 
 
@@ -111,7 +109,7 @@ void *umm_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
 		if(nsize==0) {
 			// When nsize is zero, the allocator must behave like free
 			// and return NULL.
-			umm_free(ptr);
+			(*mem->free)(ptr);
 			return NULL; }
 
 		// When nsize is not zero, the allocator must behave like
@@ -119,9 +117,9 @@ void *umm_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
 		// cannot fulfill the request. Lua assumes that the allocator
 		// never fails when osize >= nsize.
 		if(osize >= nsize) { // shrink
-			return umm_realloc(ptr, nsize);
+			return (*mem->realloc)(ptr, nsize);
 		} else { // extend
-			return umm_realloc(ptr, nsize);
+			return (*mem->realloc)(ptr, nsize);
 		}
 	}
 }

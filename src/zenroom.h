@@ -37,11 +37,23 @@
  #endif
 #endif
 
+// heap initialised by the memory manager
+typedef struct {
+	void* (*malloc)(size_t size);
+	void* (*realloc)(void *ptr, size_t size);
+	void  (*free)(void *ptr);
+	void* (*sys_malloc)(size_t size);
+	void* (*sys_realloc)(void *ptr, size_t size);
+	void  (*sys_free)(void *ptr);
+	char  *heap;
+	size_t heap_size;
+} zen_mem_t;
+
 // zenroom context, also available as "_Z" global in lua space
 // contents are opaque in lua and available only as lightuserdata
 typedef struct {
 	void *lua; // (lua_State*)
-
+	zen_mem_t *mem; // memory manager heap
 	// TODO: void *mem; // (umm_block*)
 	// short int mem_type;
 
