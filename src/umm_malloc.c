@@ -66,9 +66,11 @@ UMM_H_ATTPACKPRE typedef struct umm_block_t {
 
 /* -------------------------------------------------------------- */
 #include <zenroom.h>
+
+// globals for umm
 static umm_block *umm_heap;
 static size_t umm_numblocks = 0;
-UMM_HEAP_INFO ummHeapInfo;
+static UMM_HEAP_INFO ummHeapInfo;
 
 /* -------------------------------------------------------------- */
 
@@ -199,7 +201,7 @@ void umm_memzero(char *ptr, size_t s) {
 
 void umm_init( void *ptr, size_t memsize ) {
   /* init heap pointer and size, and memset it to 0 */
-  umm_heap = (umm_block *)ptr;
+  umm_heap = (umm_block *)ptr; // saves only zen_mem_t->heap
   umm_numblocks = (memsize / sizeof(umm_block));
   act(0, "HEAP memory allocated: %u KiB",memsize/1024);
   func(0, "UMM blocks available: %u", umm_numblocks);
@@ -628,7 +630,7 @@ void *umm_calloc( size_t num, size_t item_size ) {
 
 /* ------------------------------------------------------------------------ */
 
-void *umm_info( void *ptr, int force ) {
+void *umm_info( void *ptr) {
 
   unsigned short int blockNo = 0;
 

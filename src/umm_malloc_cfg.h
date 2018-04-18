@@ -41,11 +41,10 @@
 
 #include <zenroom.h>
 
-extern char zen_heap[];
-
 /* Start addresses and the size of the heap */
-#define UMM_MALLOC_CFG_HEAP_ADDR zen_heap
-#define UMM_MALLOC_CFG_HEAP_SIZE MAX_HEAP
+//extern umm_block *umm_heap;
+//#define UMM_MALLOC_CFG_HEAP_ADDR umm_heap
+//#define UMM_MALLOC_CFG_HEAP_SIZE MAX_HEAP
 
 /* A couple of macros to make packing structures less compiler dependent */
 
@@ -75,9 +74,7 @@ extern char zen_heap[];
   }
   UMM_HEAP_INFO;
 
-  extern UMM_HEAP_INFO ummHeapInfo;
-
-  void *umm_info( void *ptr, int force );
+  void *umm_info( void *ptr );
   size_t umm_free_heap_size( void );
 
 /*
