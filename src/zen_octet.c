@@ -63,7 +63,39 @@
 #include <zen_memory.h>
 
 static int _max(int x, int y) { if(x > y) return x;	else return y; }
-static int _min(int x, int y) { if(x < y) return x;	else return y; }
+// static int _min(int x, int y) { if(x < y) return x;	else return y; }
+
+// takes a base64 string and calculated the maximum length of the
+// decoded string
+#include <ctype.h>
+static int getlen_base64(int len) {
+	int res = ((3+(4*(len/3))) & ~0x03)+0x0f;
+	return(res);
+}
+// assumes null terminated string
+// returns 0 if not base64 else length of base64 string
+int is_base64(const char *in) {
+	if(!in) { ERROR(); return 0; }
+	int c;
+	for(c=0; in[c]!='\0'; c++) {
+		if (!(isalnum(in[c])
+		      || '+' == in[c]
+		      || '=' == in[c]
+		      || '/' == in[c])) {
+			ERROR(); return 0; }
+	}
+	return c;
+}
+
+int is_hex(const char *in) {
+	if(!in) { ERROR(); return 0; }
+	int c;
+	for(c=0; in[c]!='\0'; c++) {
+		if (!isxdigit(in[c])) {
+		    ERROR(); return 0; }
+	}
+	return c;
+}
 
 // REMEMBER: newuserdata already pushes the object in lua's stack
 octet* o_new(lua_State *L, const int size) {
@@ -170,6 +202,41 @@ static int xor_n(lua_State *L) {
 	return 1;
 }
 
+static int from_base64(lua_State *L) {
+	const char *s = lua_tostring(L, 1);
+	luaL_argcheck(L, s != NULL, 1, "base64 string expected");
+	int len = is_base64(s);
+	if(!len) {
+		lerror(L, "base64 string contains invalid characters");
+		return 0; }
+	octet *o = o_new(L, getlen_base64(len));
+	OCT_frombase64(o,(char*)s);
+	return 1;
+}
+
+static int from_string(lua_State *L) {
+	const char *s = lua_tostring(L, 1);
+	luaL_argcheck(L, s != NULL, 1, "string expected");
+	int len = strlen(s);
+	if(!len || len>MAX_STRING) {
+		lerror(L, "invalid string size: %u", len);
+		return 0; }
+	octet *o = o_new(L, len+1);
+	OCT_jstring(o, (char*)s);
+	return 1;
+}
+
+static int from_hex(lua_State *L) {
+	const char *s = lua_tostring(L, 1);
+	luaL_argcheck(L, s != NULL, 1, "hex string sequence expected");
+	int len = is_hex(s);
+	if(!len || len>MAX_STRING*2) {
+		lerror(L, "invalid hex sequence size: %u", len);
+		return 0; }
+	octet *o = o_new(L, len); // could be half size
+	OCT_fromHex(o, (char*)s);
+	return 1;
+}
 
 /***
     Concatenate two octets, returns a new octet. This is also executed
@@ -249,10 +316,6 @@ msg:string("my message to be encoded in base64")
 print(msg:base64())
 
 */
-static int getlen_base64(int len) {
-	int res = ((3+(4*(len/3))) & ~0x03)+0x0f;
-	return(res);
-}
 static int base64 (lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
 	if(lua_isnoneornil(L, 2)) {
@@ -442,6 +505,9 @@ int luaopen_octet(lua_State *L) {
 		{"new",newoctet},
 		{"concat",concat_n},
 		{"xor",xor_n},
+		{"from_base64",from_base64},
+		{"from_string",from_string},
+		{"from_hex",from_hex},
 		octet_common_methods,
 		{NULL,NULL}
 	};
