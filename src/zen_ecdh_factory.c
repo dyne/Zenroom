@@ -11,7 +11,10 @@ ecdh *ecdh_new_curve(lua_State *L, const char *curve) {
 	ecdh *e = NULL;
 	if(strcasecmp(curve,"ec25519")==0) {
 		e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
-		e->keysize = EGS_ED25519;
+		e->keysize = EGS_ED25519; // keysize seems always equal to
+								  // fieldsize but since milagro uses
+								  // two different defines...
+		e->fieldsize = EFS_ED25519; 
 		e->rng = NULL;
 		e->hash = HASH_TYPE_ECC_ED25519;
 		e->ECP__KEY_PAIR_GENERATE = ECP_ED25519_KEY_PAIR_GENERATE;
@@ -25,6 +28,7 @@ ecdh *ecdh_new_curve(lua_State *L, const char *curve) {
 	} else if(strcasecmp(curve,"nist256")==0) {
 			e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
 			e->keysize = EGS_NIST256;
+			e->fieldsize = EFS_NIST256;
 			e->rng = NULL;
 			e->hash = HASH_TYPE_ECC_NIST256;
 			e->ECP__KEY_PAIR_GENERATE = ECP_NIST256_KEY_PAIR_GENERATE;
@@ -38,6 +42,7 @@ ecdh *ecdh_new_curve(lua_State *L, const char *curve) {
 	} else if(strcasecmp(curve,"goldilocks")==0) {
 		e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
 		e->keysize = EGS_GOLDILOCKS;
+		e->fieldsize = EFS_GOLDILOCKS;
 		e->rng = NULL;
 		e->hash = HASH_TYPE_ECC_GOLDILOCKS;
 		e->ECP__KEY_PAIR_GENERATE = ECP_GOLDILOCKS_KEY_PAIR_GENERATE;
@@ -51,6 +56,7 @@ ecdh *ecdh_new_curve(lua_State *L, const char *curve) {
 	} else if(strcasecmp(curve,"bn254cx")==0) {
 		e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
 		e->keysize = EGS_BN254CX;
+		e->fieldsize = EFS_BN254CX;
 		e->rng = NULL;
 		e->hash = HASH_TYPE_ECC_BN254CX;
 		e->ECP__KEY_PAIR_GENERATE = ECP_BN254CX_KEY_PAIR_GENERATE;
@@ -64,6 +70,7 @@ ecdh *ecdh_new_curve(lua_State *L, const char *curve) {
 	} else if(strcasecmp(curve,"fp256bn")==0) {
 		e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
 		e->keysize = EGS_FP256BN;
+		e->fieldsize = EFS_FP256BN;
 		e->rng = NULL;
 		e->hash = HASH_TYPE_ECC_FP256BN;
 		e->ECP__KEY_PAIR_GENERATE = ECP_FP256BN_KEY_PAIR_GENERATE;
