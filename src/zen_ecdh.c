@@ -78,6 +78,8 @@ extern ecdh *ecdh_new_curve(lua_State *L, const char *curve);
     EC25519 by default if omitted. The ECDH keyring created will
     offer methods to interact with other keyrings.
 
+    Supported curves: ec25519, nist256, bn254cx, fp256bn
+
     @param curve[opt=ec25519] elliptic curve to be used
     @return a new ECDH keyring
     @function new(curve)
@@ -102,8 +104,8 @@ ecdh* ecdh_new(lua_State *L, const char *curve) {
 	// TODO: make it a newuserdata object in LUA space so that
 	// it can be cleanly collected by the GC as well it can be
 	// saved transparently in the global state
-	e->rng = malloc(sizeof(csprng));
-	char *tmp = malloc(256);
+	e->rng = zen_memory_alloc(sizeof(csprng));
+	char *tmp = zen_memory_alloc(256);
 	randombytes(tmp,252);
 	// using time() from milagro
 	unsign32 ttmp = GET_TIME();
@@ -112,7 +114,7 @@ ecdh* ecdh_new(lua_State *L, const char *curve) {
 	tmp[254] = (ttmp >>  8) & 0xff;
 	tmp[255] =  ttmp & 0xff;	
 	RAND_seed(e->rng,256,tmp);
-	free(tmp);
+	zen_memory_free(tmp);
 
 	luaL_getmetatable(L, "zenroom.ecdh");
 	lua_setmetatable(L, -2);
@@ -128,7 +130,7 @@ int ecdh_destroy(lua_State *L) {
 	HERE();
 	ecdh *e = ecdh_arg(L,1);
 	SAFE(e);
-	FREE(e->rng);	
+	if(e->rng) zen_memory_free(e->rng);
 	// FREE(r->pubkey);
 	// FREE(r->privkey);
 	return 0;
@@ -216,6 +218,8 @@ static int ecdh_session(lua_State *L) {
 	octet *pubkey;
 	ecdh *pk;
 	ecdh *e = ecdh_arg(L,1); SAFE(e);
+
+	// argument is another keyring
 	if((ud = luaL_testudata(L, 2, "zenroom.ecdh"))) {
 		pk = (ecdh*)ud;
 		if(!pk->pubkey) {
@@ -224,18 +228,21 @@ static int ecdh_session(lua_State *L) {
 		pubkey = pk->pubkey; // take secret key from keyring
 		func(L, "%s: public key found in ecdh keyring (%u bytes)",
 		     __func__, pubkey->len);
+
+		// argument is an octet
 	} else if((ud = luaL_testudata(L, 2, "zenroom.octet"))) {
 		pubkey = (octet*)ud; // take secret key from octet
 		func(L, "%s: public key found in octet (%u bytes)",
 		     __func__, pubkey->len);
+
 	} else {
-		lerror(L, "%s: invalid public key argument",__func__);
+		lerror(L, "%s: invalid key in argument",__func__);
 		return 0;
 	}
 	int res;
 	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(pubkey);
 	if(res == ECDH_INVALID_PUBLIC_KEY) {
-		lerror(L, "%s: public key found but invalid",__func__);
+		lerror(L, "%s: argument found, but is an invalid key",__func__);
 		return 0; }
 	octet *ses = o_new(L,e->keysize); SAFE(ses);
 	(*e->ECP__SVDP_DH)(e->seckey,pubkey,ses);
@@ -279,7 +286,7 @@ static int ecdh_public(lua_State *L) {
 	octet *o = o_arg(L, 2); SAFE(o);
 	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(o);
 	if(res == ECDH_INVALID_PUBLIC_KEY) {
-		error(L, "%s: generated public key is invalid",__func__);
+		error(L, "%s: imported public key is invalid",__func__);
 		return 0; }
 	func(L, "%s: valid key",__func__);
 	e->pubkey = o;
