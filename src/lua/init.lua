@@ -1,10 +1,11 @@
 -- init script embedded at compile time.  executed in
 -- zen_load_extensions(L) usually after zen_init()
 
-octet = require('octet')
-json = require('json')
+json   = require('json')
 schema = require('schema')
-
+octet  = require('octet')
+ecdh   = require('ecdh')
+fun    = require('functional')
 
 function import_json(data, validation)
    if not data then
