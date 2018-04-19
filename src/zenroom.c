@@ -60,6 +60,7 @@ extern char *safe_string(char *str);
 extern void zen_setenv(lua_State *L, char *key, char *val);
 extern void zen_add_function(lua_State *L, lua_CFunction func,
                              const char *func_name);
+extern int zen_lua_init(lua_State *L);
 
 zenroom_t *zen_init(const char *conf) {
 	(void) conf;
@@ -77,6 +78,21 @@ zenroom_t *zen_init(const char *conf) {
 		return NULL;
 	}
 
+	// create the zenroom_t global context
+	zenroom_t *Z = system_alloc(sizeof(zenroom_t));
+	Z->lua = L;
+	Z->mem = mem;
+	Z->stdout_buf = NULL;
+	Z->stdout_pos = 0;
+	Z->stdout_len = 0;
+	Z->stderr_buf = NULL;
+	Z->stderr_pos = 0;
+	Z->stderr_len = 0;
+	Z->userdata = NULL;
+	//Set zenroom context as a global in lua
+	lua_pushlightuserdata(L, Z);
+	lua_setglobal(L, "_Z");
+
 	// initialise global variables
 #if defined(VERSION)
 	zen_setenv(L, "VERSION", VERSION);
@@ -93,25 +109,14 @@ zenroom_t *zen_init(const char *conf) {
 	// load our own openlibs and extensions
 	zen_add_io(L);
 	zen_require_override(L);
+	if(!zen_lua_init(L)) {
+		error(L,"%s: %s", __func__, "initialisation of lua scripts failed");
+		return NULL;
+	}
 	//////////////////// end of create
 
 	lua_gc(L, LUA_GCCOLLECT, 0);
 //	lua_setfield(L, LUA_REGISTRYINDEX, LSB_THIS_PTR);
-
-	// create the zenroom_t global context
-	zenroom_t *Z = system_alloc(sizeof(zenroom_t));
-	Z->lua = L;
-	Z->mem = mem;
-	Z->stdout_buf = NULL;
-	Z->stdout_pos = 0;
-	Z->stdout_len = 0;
-	Z->stderr_buf = NULL;
-	Z->stderr_pos = 0;
-	Z->stderr_len = 0;
-	Z->userdata = NULL;
-	//Set zenroom context as a global in lua
-	lua_pushlightuserdata(L, Z);
-	lua_setglobal(L, "_Z");
 	return(Z);
 }
 
