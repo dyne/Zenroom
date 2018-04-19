@@ -119,7 +119,8 @@ int zen_require(lua_State *L) {
 				return 1;
 			}
 #endif
-			lerror(L,"%s %s",__func__,s);
+			lerror(L,"%s %s",__func__,s); // quits with SIGABRT
+			return 0;
 		}
 	}
 

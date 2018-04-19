@@ -151,12 +151,15 @@ int ecdh_destroy(lua_State *L) {
 static int ecdh_keygen(lua_State *L) {
 	HERE();
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
-	if(e->seckey) {
-		ERROR(); KEYPROT(e->curve,"private key"); }
-	if(e->pubkey) {
-		ERROR(); KEYPROT(e->curve,"public key"); }
+	if(e->seckey && e->pubkey) {
+		ERROR(); KEYPROT(e->curve,"keyring already full"); }
+	if(!e->seckey && e->pubkey) {
+		ERROR(); KEYPROT(e->curve,"cannot generate secret key from public"); }
+	octet *sk;
+	if(!e->seckey && !e->pubkey) {
+		sk = o_new(L,e->seclen); SAFE(sk);
+	} else if(e->seckey) sk = e->seckey;
 	octet *pk = o_new(L,e->publen); SAFE(pk);
-	octet *sk = o_new(L,e->seclen); SAFE(sk);
 	// TODO: generate a public key from any secret
 	(*e->ECP__KEY_PAIR_GENERATE)(e->rng,sk,pk);
 	int res;
