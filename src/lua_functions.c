@@ -118,14 +118,6 @@ char *safe_string(char *str) {
 	return(str);
 }
 
-lsb_err_id ZEN_ERR_UTIL_NULL    = "pointer is NULL";
-lsb_err_id ZEN_ERR_UTIL_OOM     = "memory allocation failed";
-lsb_err_id ZEN_ERR_UTIL_FULL    = "buffer full";
-lsb_err_id ZEN_ERR_UTIL_PRANGE  = "parameter out of range";
-
-extern void zen_load_extensions(lua_State *L);
-extern void preload_modules(lua_State *lua);
-
 void zen_setenv(lua_State *L, char *key, char *val) {
 	lua_pushstring(L, val);
 	lua_setglobal(L, key);
@@ -203,3 +195,4 @@ void zen_add_class(lua_State *L, char *name,
 	lua_insert(L,-1);
 	luaL_setfuncs(L,class,0);
 }
+
