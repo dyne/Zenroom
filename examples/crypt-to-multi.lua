@@ -6,9 +6,6 @@
 -- inside KEYS is a list of names and public keys encoded with b58; it
 -- returns a list of recipients and encrypted secrets for each and the
 -- sender's public key
-octet = require'octet'
-json = require "json"
-ecdh = require "ecdh"
 keyring = ecdh.new()
 
 secret = octet.new(#DATA)
