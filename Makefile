@@ -52,7 +52,7 @@ embed-lua:
 js: gcc=${EMSCRIPTEN}/emcc
 js: ar=${EMSCRIPTEN}/emar
 js: cflags := --memory-init-file 0 -O2 -D'ARCH=\"JS\"'
-js: ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s ALLOW_MEMORY_GROWTH=1 -s USE_SDL=0
+js: ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s USE_SDL=0
 js: patches lua53 milagro-js
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 
@@ -232,7 +232,7 @@ lowmem-tests = \
 		${1} test/ecdh.lua
 
 
-check-shared: test-exec-lowmem := ${pwd}/src/zenroom-shared -c umm
+check-shared: test-exec-lowmem := ${pwd}/src/zenroom-shared
 check-shared: test-exec := ${pwd}/src/zenroom-shared
 check-shared:
 	$(call lowmem-tests,${test-exec-lowmem})
@@ -244,7 +244,7 @@ check-shared:
 
 
 check-static: test-exec := ${pwd}/src/zenroom-static
-check-static: test-exec-lowmem := ${pwd}/src/zenroom-static -c umm
+check-static: test-exec-lowmem := ${pwd}/src/zenroom-static
 check-static:
 	$(call lowmem-tests,${test-exec-lowmem})
 	$(call himem-tests,${test-exec})
@@ -261,7 +261,7 @@ check-js:
 	@echo "All tests passed for SHARED binary build"
 	@echo "----------------"
 
-check-debug: test-exec-lowmem := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared -c umm
+check-debug: test-exec-lowmem := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared
 check-debug: test-exec := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared
 check-debug:
 	$(call lowmem-tests,${test-exec-lowmem})
@@ -271,7 +271,7 @@ check-debug:
 	@echo "All tests passed for SHARED binary build"
 	@echo "----------------"
 
-check-osx: test-exec-lowmem := ${pwd}/src/zenroom-shared -c umm
+check-osx: test-exec-lowmem := ${pwd}/src/zenroom-shared
 check-osx: test-exec := ${pwd}/src/zenroom-shared
 check-osx:
 	$(call lowmem-tests,${test-exec-lowmem})
