@@ -28,7 +28,7 @@
 
 #include <lua_functions.h>
 
-extern void lsb_load_extensions(lua_State *L);
+extern int zen_exec_script(lua_State *L, const char *script);
 
 int repl_read(lua_State *lua) {
 	char line[MAX_STRING];

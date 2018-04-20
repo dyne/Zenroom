@@ -27,29 +27,9 @@ typedef struct zen_extension_t {
 	const char         *code;
 } zen_extension_t;
 
-int zen_exec_line(lua_State *L, const char *line);
-int zen_exec_script(lua_State *L, const char *script);
-
-int get_debug();
-
-int zen_load_string(lua_State *L, const char *code,
-                    size_t size,  const char *name);
-int zen_add_package(lua_State *L, char *name, lua_CFunction func);
 void zen_add_function(lua_State *L,
                       lua_CFunction func,
                       const char *func_name);
 void zen_add_class(lua_State *L, char *name,
                    const luaL_Reg *class, const luaL_Reg *methods);
-
-void lsb_setglobal_string(lua_State *L, char *key, char *val);
-void lsb_load_extensions(lua_State *L);
-void lsb_add_function(lua_State *L, lua_CFunction func,
-                      const char *func_name);
-int output_print(lua_State *lua);
-
-// See Identify your Errors better with char[]
-// http://accu.org/index.php/journals/2184
-typedef const char lsb_err_id[];
-typedef const char *lsb_err_value;
-#define lsb_err_string(s) s ? s : "<no error>"
 

@@ -67,13 +67,13 @@ luaL_Reg lualibs[] = {
 
 
 int zen_load_string(lua_State *L, const char *code,
-                     size_t size, const char *name) {
+                    size_t size, const char *name) {
 	int res;
 	res = luaL_loadbufferx(L,code,size,name,"b");
 	switch (res) {
 	case LUA_OK: { func(L, "%s OK %s",__func__,name); break; }
 	case LUA_ERRSYNTAX: { error(L, "%s syntax error: %s",__func__,name); break; }
-	case LUA_ERRMEM: { error(L, "%s out of memory: %s",__func__, name); break;	}
+	case LUA_ERRMEM: { error(L, "%s out of memory: %s",__func__, name); break;  }
 	case LUA_ERRGCMM: {
 		error(L, "%s garbage collection error: %s",__func__, name);
 		break; }
@@ -93,6 +93,7 @@ int zen_require(lua_State *L) {
 		if (strcmp(p->name, s) == 0) {
 			HEREp(p->func);
 			luaL_requiref(L, p->name, p->func, 1);
+			act(L,"loaded %s",p->name);
 			return 1;
 		}
 	}
@@ -109,40 +110,43 @@ int zen_require(lua_State *L) {
 			if(p->code) {
 				HEREs(p->code);
 				if(luaL_loadfile(L, p->code)==0)
-					if(lua_pcall(L, 0, LUA_MULTRET, 0) == LUA_OK)
+					if(lua_pcall(L, 0, LUA_MULTRET, 0) == LUA_OK) {
+						act(L,"loaded %s", p->name);
 						return 1;
-			}
+					}
 #else
-			if(zen_load_string(L, p->code, *p->size, p->name)
-			   ==LUA_OK) {
-				lua_call(L,0,1);
-				return 1;
-			}
+				if(zen_load_string(L, p->code, *p->size, p->name)
+				   ==LUA_OK) {
+					lua_call(L,0,1);
+					act(L,"loaded %s", p->name);
+					return 1;
+				}
 #endif
-			lerror(L,"%s %s",__func__,s); // quits with SIGABRT
-			return 0;
+				lerror(L,"%s %s",__func__,s); // quits with SIGABRT
+				return 0;
+			}
 		}
 	}
 
 	// require our own C to lua extensions
 	// if     (strcmp(s, "crypto")==0) {
-	// 	luaL_requiref(L, s, luaopen_crypto, 1); return 1; }
+	//  luaL_requiref(L, s, luaopen_crypto, 1); return 1; }
 	if(strcmp(s, "octet")  ==0) {
-		luaL_requiref(L, s, luaopen_octet, 1);	return 1; }
+		luaL_requiref(L, s, luaopen_octet, 1); }
 	// else if(strcmp(s, "rsa")  ==0) {
-	// 	luaL_requiref(L, s, luaopen_rsa, 1);	return 1; }
+	//  luaL_requiref(L, s, luaopen_rsa, 1);    return 1; }
 	else if(strcmp(s, "ecdh")  ==0) {
-		luaL_requiref(L, s, luaopen_ecdh, 1);	return 1; }
+		luaL_requiref(L, s, luaopen_ecdh, 1); }
 	else if(strcmp(s, "json")  ==0) {
-		luaL_requiref(L, s, lua_cjson_safe_new, 1);	return 1; }
+		luaL_requiref(L, s, lua_cjson_safe_new, 1); }
 	else if(strcmp(s, "cjson_full") ==0) {
-		luaL_requiref(L, s, lua_cjson_new, 1); return 1; }
+		luaL_requiref(L, s, lua_cjson_new, 1); }
 	else {
 		// shall we bail out and abort execution here?
 		warning(L, "required extension not found: %s",s);
-		return 1; }
-
-	return 0;
+		return 0; }
+	act(L,"loaded %s",s);
+	return 1;
 }
 
 int zen_require_override(lua_State *L) {
@@ -166,7 +170,7 @@ void zen_load_extensions(lua_State *L) {
 	// // at last the initialisation (see src/lua/zen_lua_init.lua)
 	// if(zen_load_string(L,zen_lua_init,
 	//                    zen_lua_init_len, "zen_lua_init")==LUA_OK)
-	// 	lua_call(L,0,1);
+	//  lua_call(L,0,1);
 	// TODO: breaks in js, removed for now (all init must be explicit)
 
 	act(L, "done loading all extensions");
