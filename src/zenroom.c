@@ -43,6 +43,7 @@
 
 // prototypes from lua_modules.c
 extern int zen_require_override(lua_State *L);
+extern int zen_lua_init(lua_State *L);
 
 // prototypes from zen_io.c
 extern void zen_add_io(lua_State *L);
@@ -60,7 +61,6 @@ extern char *safe_string(char *str);
 extern void zen_setenv(lua_State *L, char *key, char *val);
 extern void zen_add_function(lua_State *L, lua_CFunction func,
                              const char *func_name);
-extern int zen_lua_init(lua_State *L);
 
 zenroom_t *zen_init(const char *conf) {
 	(void) conf;
@@ -90,6 +90,7 @@ zenroom_t *zen_init(const char *conf) {
 	Z->stderr_len = 0;
 	Z->userdata = NULL;
 	//Set zenroom context as a global in lua
+	//this will be freed on lua_close
 	lua_pushlightuserdata(L, Z);
 	lua_setglobal(L, "_Z");
 
@@ -127,15 +128,22 @@ void zen_teardown(zenroom_t *Z) {
 	    if(umm_integrity_check())
 		    act(Z->lua,"HEAP integrity checks passed.");
 	    umm_info(Z->mem->heap); }
+    // save pointers inside Z to free after L and Z
+    void *mem = Z->mem;
+    void *heap = Z->mem->heap;
     if(Z->lua) {
+	    act(Z->lua, "lua gc and close...");
 	    lua_gc((lua_State*)Z->lua, LUA_GCCOLLECT, 0);
 	    lua_gc((lua_State*)Z->lua, LUA_GCCOLLECT, 0);
+	    // this call here frees also Z (lightuserdata)
 	    lua_close((lua_State*)Z->lua);
     }
-    if(Z->mem->heap)
-	    system_free(Z->mem->heap);
-    if(Z->mem) system_free(Z->mem);
-    if(Z)      system_free(Z);
+    act(NULL,"zen free");
+    if(heap)
+	    system_free(heap);
+    if(mem) system_free(mem);
+    // don't free Z since its freed at lua_cllose
+    act(NULL,"teardown completed");
 }
 
 
