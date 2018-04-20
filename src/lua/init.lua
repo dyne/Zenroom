@@ -7,15 +7,15 @@ octet  = require('octet')
 ecdh   = require('ecdh')
 fun    = require('functional')
 
-function import_json(data, validation)
+function read_json(data, validation)
    if not data then
-	  print "ZEN SCRIPT ERROR: missing data"
+	  print "read_json: missing data"
 	  os.exit()
    end
    out,res = json.decode(data)
    if not out then
 	  if res then
-		 print "ZEN SCRIPT ERROR: invalid json"
+		 print "read_json: invalid json"
 		 print(res)
 		 os.exit()
 	  end
@@ -24,7 +24,7 @@ function import_json(data, validation)
 	  if validation then
 		 local err = schema.CheckSchema(out, validation)
 		 if err then
-			print "ZEN SCRIPT ERROR: invalid data schema"
+			print "read_json: invalid data schema"
 			print(schema.FormatOutput(err))
 			os.exit()
 		 end
@@ -32,4 +32,3 @@ function import_json(data, validation)
 	  return out
    end
 end
-

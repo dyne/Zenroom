@@ -6,12 +6,6 @@
 -- exchanged among different people will lead to the same secret which
 -- is then usable for asymmetric encryption.
 
-octet = require'octet'
-json = require'json'
-ecdh = require'ecdh'
-keyring = ecdh.new()
-keyring:keygen()
-
 recipients={'jaromil','francesca','jim','mark','paulus','mayo'}
 keys={}
 for i,name in ipairs(recipients) do
@@ -21,6 +15,9 @@ for i,name in ipairs(recipients) do
    assert(kk:checkpub(kk:public()))
 end
 
+
+keyring = ecdh.new()
+keyring:keygen()
 
 keypairs = json.encode({
 	  keyring={public=keyring:public():base64(),
