@@ -51,7 +51,7 @@ all: shared
 
 js: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc
 js: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o zenroom.js ${LDFLAGS} ${LDADD}
+	${CC} ${CFLAGS} ${SOURCES} -o zenroom.js ${LDFLAGS} ${LDADD} --embed-file lua@/
 
 html: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc
 html: ${SOURCES}

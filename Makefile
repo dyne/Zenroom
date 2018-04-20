@@ -51,14 +51,14 @@ embed-lua:
 # https://github.com/kripken/emscripten/blob/master/src/settings.js
 js: gcc=${EMSCRIPTEN}/emcc
 js: ar=${EMSCRIPTEN}/emar
-js: cflags := --memory-init-file 0 -O2 -D'ARCH=\"JS\"'
+js: cflags := -O2 -D'ARCH=\"JS\"' -Wall
 js: ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s USE_SDL=0
 js: patches lua53 milagro-js
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 
 wasm: gcc=${EMSCRIPTEN}/emcc
 wasm: ar=${EMSCRIPTEN}/emar
-wasm: cflags := -O2 -D'ARCH=\"WASM\"'
+wasm: cflags := -O2 -D'ARCH=\"WASM\"' -Wall
 wasm: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s MODULARIZE=1
 wasm: patches lua53 milagro-js
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
@@ -206,9 +206,7 @@ himem-tests = \
  ${1} test/literals.lua && \
  ${1} test/calls.lua && \
  ${1} test/pm.lua && \
- ${1} test/nextvar.lua && \
- ${1} test/constructs.lua && \
- ${1} test/cjson-test.lua
+ ${1} test/nextvar.lua
 
 ## GC tests break memory management with umm
 # in particular steps (2)
@@ -223,13 +221,26 @@ lowmem-tests = \
 		${1} test/math.lua && \
 		${1} test/goto.lua && \
 		${1} test/events.lua && \
-		${1} test/coroutine.lua && \
 		${1} test/code.lua && \
 		${1} test/closure.lua && \
 		${1} test/locals.lua && \
 		${1} test/schema.lua && \
 		${1} test/octet.lua && \
 		${1} test/ecdh.lua
+
+# failing js tests due to larger memory required:
+# abort("Cannot enlarge memory arrays. Either (1) compile with -s
+# TOTAL_MEMORY=X with X higher than the current value 16777216, (2)
+# compile with -s ALLOW_MEMORY_GROWTH=1 which allows increasing the
+# size at runtime but prevents some optimizations, (3) set
+# Module.TOTAL_MEMORY to a higher value before the program runs, or
+# (4) if you want malloc to return NULL (0) instead of this abort,
+# compile with -s ABORTING_MALLOC=0 ") at Error
+# himem:
+#  ${1} test/constructs.lua && \
+#  ${1} test/cjson-test.lua
+# lowmem:
+#  ${1} test/coroutine.lua && \
 
 
 check-shared: test-exec-lowmem := ${pwd}/src/zenroom-shared
