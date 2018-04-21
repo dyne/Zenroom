@@ -67,7 +67,7 @@ zenroom_t *zen_init(const char *conf) {
 	lua_State *L = NULL;
 	zen_mem_t *mem = NULL;
 	if(conf) {
-		if(strcmp(conf,"umm")==0)
+		if(strcasecmp(conf,"umm")==0)
 			mem = umm_memory_init(UMM_HEAP); // (64KiB)
 	} else
 		mem = libc_memory_init();
@@ -142,7 +142,10 @@ void zen_teardown(zenroom_t *Z) {
     if(heap)
 	    system_free(heap);
     if(mem) system_free(mem);
-    // don't free Z since its freed at lua_cllose
+#ifndef __EMSCRIPTEN__
+    // don't free Z as it seems to crash emscripten
+    free(Z);
+#endif
     func(NULL,"teardown completed");
 }
 
