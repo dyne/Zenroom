@@ -260,6 +260,9 @@ check-shared: test-exec := ${pwd}/src/zenroom-shared
 check-shared:
 	$(call lowmem-tests,${test-exec-lowmem})
 	$(call himem-tests,${test-exec})
+	${test-exec} test/constructs.lua
+	${test-exec} test/cjson-test.lua
+	${test-exec} test/coroutine.lua
 	./test/octet-json.sh ${test-exec}
 	@echo "----------------"
 	@echo "All tests passed for SHARED binary build"
@@ -271,6 +274,9 @@ check-static: test-exec-lowmem := ${pwd}/src/zenroom-static
 check-static:
 	$(call lowmem-tests,${test-exec-lowmem})
 	$(call himem-tests,${test-exec})
+	${test-exec} test/constructs.lua
+	${test-exec} test/cjson-test.lua
+	${test-exec} test/coroutine.lua
 	./test/octet-json.sh ${test-exec}
 	@echo "----------------"
 	@echo "All tests passed for SHARED binary build"
@@ -292,15 +298,6 @@ check-debug:
 	./test/octet-json.sh ${test-exec}
 	@echo "----------------"
 	@echo "All tests passed for SHARED binary build"
-	@echo "----------------"
-
-check-osx: test-exec-lowmem := ${pwd}/src/zenroom-shared
-check-osx: test-exec := ${pwd}/src/zenroom-shared
-check-osx:
-	$(call lowmem-tests,${test-exec-lowmem})
-	$(call himem-tests,${test-exec})
-	@echo "----------------"
-	@echo "All tests passed for OSX binary build"
 	@echo "----------------"
 
 clean:

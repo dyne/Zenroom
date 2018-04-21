@@ -103,43 +103,45 @@ int zen_require(lua_State *L) {
 	for (p = zen_extensions;
 	     p->name != NULL; ++p) {
 		// skip init (called as last)
-		if (strcmp(p->name, "init") == 0) continue;
-		if (strcmp(p->name, s) == 0) {
+		if (strcasecmp(p->name, "init") == 0) continue;
+		if (strcasecmp(p->name, s) == 0) {
 			HEREp(p->code);
 #ifdef __EMSCRIPTEN__
 			if(p->code) {
 				HEREs(p->code);
-				if(luaL_loadfile(L, p->code)==0)
+				if(luaL_loadfile(L, p->code)==0) {
 					if(lua_pcall(L, 0, LUA_MULTRET, 0) == LUA_OK) {
 						act(L,"loaded %s", p->name);
 						return 1;
 					}
-#else
-				if(zen_load_string(L, p->code, *p->size, p->name)
-				   ==LUA_OK) {
-					lua_call(L,0,1);
-					act(L,"loaded %s", p->name);
-					return 1;
 				}
-#endif
-				lerror(L,"%s %s",__func__,s); // quits with SIGABRT
-				return 0;
 			}
+#else
+			if(zen_load_string(L, p->code, *p->size, p->name)
+			   ==LUA_OK) {
+				lua_call(L,0,1);
+				act(L,"loaded %s", p->name);
+				return 1;
+			}
+#endif
+			lerror(L,"%s %s",__func__,s); // quits with SIGABRT
+			return 0;
 		}
 	}
+
 
 	// require our own C to lua extensions
 	// if     (strcmp(s, "crypto")==0) {
 	//  luaL_requiref(L, s, luaopen_crypto, 1); return 1; }
-	if(strcmp(s, "octet")  ==0) {
+	if(strcasecmp(s, "octet")  ==0) {
 		luaL_requiref(L, s, luaopen_octet, 1); }
 	// else if(strcmp(s, "rsa")  ==0) {
 	//  luaL_requiref(L, s, luaopen_rsa, 1);    return 1; }
-	else if(strcmp(s, "ecdh")  ==0) {
+	else if(strcasecmp(s, "ecdh")  ==0) {
 		luaL_requiref(L, s, luaopen_ecdh, 1); }
-	else if(strcmp(s, "json")  ==0) {
+	else if(strcasecmp(s, "json")  ==0) {
 		luaL_requiref(L, s, lua_cjson_safe_new, 1); }
-	else if(strcmp(s, "cjson_full") ==0) {
+	else if(strcasecmp(s, "cjson_full") ==0) {
 		luaL_requiref(L, s, lua_cjson_new, 1); }
 	else {
 		// shall we bail out and abort execution here?

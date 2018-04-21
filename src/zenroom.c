@@ -126,24 +126,24 @@ void zen_teardown(zenroom_t *Z) {
 	notice(Z->lua,"Zenroom teardown.");
     if(Z->mem->heap) {
 	    if(umm_integrity_check())
-		    act(Z->lua,"HEAP integrity checks passed.");
+		    func(Z->lua,"HEAP integrity checks passed.");
 	    umm_info(Z->mem->heap); }
     // save pointers inside Z to free after L and Z
     void *mem = Z->mem;
     void *heap = Z->mem->heap;
     if(Z->lua) {
-	    act(Z->lua, "lua gc and close...");
+	    func(Z->lua, "lua gc and close...");
 	    lua_gc((lua_State*)Z->lua, LUA_GCCOLLECT, 0);
 	    lua_gc((lua_State*)Z->lua, LUA_GCCOLLECT, 0);
 	    // this call here frees also Z (lightuserdata)
 	    lua_close((lua_State*)Z->lua);
     }
-    act(NULL,"zen free");
+    func(NULL,"zen free");
     if(heap)
 	    system_free(heap);
     if(mem) system_free(mem);
     // don't free Z since its freed at lua_cllose
-    act(NULL,"teardown completed");
+    func(NULL,"teardown completed");
 }
 
 
