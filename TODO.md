@@ -7,6 +7,8 @@ and their specific use-cases.
 
 ## Generic improvements
 
+- add brieflz2 compression
+
 - add a new 8bit memory manager to test
   https://github.com/8devices/MemoryManager perhaps also build a
   memory paging system to use 8bit mm over larger portions of memory
@@ -24,6 +26,9 @@ and their specific use-cases.
 
 - add some more functions from stdlib's string and utils
   https://github.com/lua-stdlib/lua-stdlib
+
+- Include libs from penlight
+  http://stevedonovan.github.io/Penlight/api/index.html stringx, lexer
 
 - erlang style pattern matching on data structures
   https://github.com/silentbicycle/tamale
@@ -88,7 +93,7 @@ X add list of functions and keywords for completion in ace
 - Benchmark suite to measure capacity to de/code large amounts of
   streaming data in chunks.
 
-- Investigate adoption of LuaJit in place of Lua5.1
+V Investigate adoption of LuaJit in place of Lua5.1
   (should be easy as it seems the C api is pretty much the same)
 
 ## Security
@@ -134,7 +139,7 @@ X Document api with luadoc http://keplerproject.github.io/luadoc/
 
 - Investigate strategies to build compatibility with gnupg
 
-- Integrate the new secret-sharing library by dsprenkels
+X Integrate the new secret-sharing library by dsprenkels
 
 - Include salsa20 (and its dependency bit32)
 
@@ -152,23 +157,3 @@ one still maintained
   syntax parser with a limited DSL also written in langsec hammer
 
 - Add SMT analysis as a backend to most sensitive operations
-
-## LUA Sandbox
-
-- take configuration parameters from a json struct
-
-- Include libs from penlight
-  http://stevedonovan.github.io/Penlight/api/index.html stringx, lexer
-
-X provide cryptographic proof random sources
-
-X Remove all additional cruft coming in from heka and eventually turn
-  the implementation to use only non-dynamic memory
-
-X Include libs for lispy operations on data
-
-X make a secure include directive
-
-X Find a way to load native LUA extensions at compile time
-
-X provide a REPL and perhaps a LISP interpreter

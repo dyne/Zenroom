@@ -7,9 +7,9 @@
 # 	cd lib/lua_sandbox && patch -p1 < ../../build/lua_sandbox.patch && cd -
 # fi
 
-if grep 'static const.*lzlib' lib/luazen/src/luazen.c > /dev/null; then
-	cd lib/luazen && patch -p1 < ../../build/luazen_build.patch && cd -
-fi
+# if grep 'static const.*lzlib' lib/luazen/src/luazen.c > /dev/null; then
+# 	cd lib/luazen && patch -p1 < ../../build/luazen_build.patch && cd -
+# fi
 
 # should be fixed in ff2669fa0c351bcea846627a2d1493b99ccd525e
 # if grep 'print_out' lib/milagro-crypto-c/test/test_rsa_sign_WWW_ZZZ.c > /dev/null; then

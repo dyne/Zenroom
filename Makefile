@@ -37,8 +37,15 @@ milagro_cmake_flags := -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGE
 
 test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
 
-patches:
-	./build/apply-patches
+all:
+	@echo "Choose a target:"
+	@echo "- js, wasm, demo, html	(need EMSDK env loaded)"
+	@echo "- shared, debug		(uses GCC, opt debugging symbols)"
+	@echo "- osx			(uses default compiler on Apple/OSX)"
+	@echo "- win			(cross-compile using MINGW on Linux)"
+	@echo "- static		(fully static build using MUSLCC)"
+	@echo "- system-static		(static build using system CC)"
+	@echo
 
 embed-lua:
 	@echo "Embedding all files in src/lua"
@@ -53,28 +60,28 @@ js: gcc=${EMSCRIPTEN}/emcc
 js: ar=${EMSCRIPTEN}/emar
 js: cflags := -O2 -D'ARCH=\"JS\"' -Wall
 js: ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s USE_SDL=0
-js: patches lua53 milagro-js
+js: lua53 milagro-js
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 
 wasm: gcc=${EMSCRIPTEN}/emcc
 wasm: ar=${EMSCRIPTEN}/emar
 wasm: cflags := -O2 -D'ARCH=\"WASM\"' -Wall
 wasm: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s MODULARIZE=1
-wasm: patches lua53 milagro-js
+wasm: lua53 milagro-js
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 
 demo: gcc=${EMSCRIPTEN}/emcc
 demo: ar=${EMSCRIPTEN}/emar
 demo: cflags := -O2 -D'ARCH=\"WASM\"'
 demo: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s ASSERTIONS=1 --shell-file ${extras}/shell_minimal.html -s NO_EXIT_RUNTIME=1 -s USE_SDL=0 -s USE_PTHREADS=0
-demo: patches lua53 milagro-js
+demo: lua53 milagro-js
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src demo
 
 html: gcc=${EMSCRIPTEN}/emcc
 html: ar=${EMSCRIPTEN}/emar
 html: cflags := -O2 -D'ARCH=\"JS\"'
 html: ldflags := -sEXPORTED_FUNCTIONS='["_main","_zenroom_exec"]'
-html: patches  lua53 milagro-js
+html: lua53 milagro-js
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src html
 
 win: gcc=x86_64-w64-mingw32-gcc
@@ -82,25 +89,25 @@ win: ar=x86_64-w64-mingw32-ar
 win: ranlib=x86_64-w64-mingw32-ranlib
 win: cflags += -D'ARCH=\"WIN\"' -std=c99
 win: platform = posix
-win: patches lua53 milagro-win
+win: lua53 milagro-win
 	CC=${gcc} CFLAGS="${cflags}" make -C src win
 
 static: gcc := musl-gcc
 static: cflags := -Os -static -Wall -std=gnu99 ${cflags_protection} -D'ARCH=\"MUSL\"' -D__MUSL__
 static: ldflags := -static
-static: patches lua53 milagro
+static: lua53 milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src static
 
 system-static: cflags := -Os -static -Wall -std=gnu99 ${cflags_protection} -D'ARCH=\"UNIX\"' -D__MUSL__
 system-static: ldflags := -static
-system-static: patches lua53 milagro
+system-static: lua53 milagro
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src system-static
 
 shared: gcc := gcc
 shared: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"LINUX\"'
 shared: ldflags := -lm
 shared: platform := linux
-shared: patches lua53 milagro
+shared: lua53 milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
 
 
@@ -108,7 +115,7 @@ osx: gcc := gcc
 osx: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"'
 osx: ldflags := -lm
 osx: platform := macosx
-osx: patches lua53 milagro
+osx: lua53 milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
 
 ios-armv7: ARCH := armv7
@@ -121,7 +128,7 @@ ios-armv7: SDK := $(shell xcrun --sdk iphoneos --show-sdk-path 2>/dev/null)
 ios-armv7: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM
 ios-armv7: ldflags := -lm
 ios-armv7: platform := ios
-ios-armv7: patches lua53 milagro
+ios-armv7: lua53 milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C src library
 	${AR} rcs zenroom-armv7.a `find . -name \*.o`
 
@@ -135,7 +142,7 @@ ios-arm64: SDK := $(shell xcrun --sdk iphoneos --show-sdk-path 2>/dev/null)
 ios-arm64: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM
 ios-arm64: ldflags := -lm
 ios-arm64: platform := ios
-ios-arm64: patches lua53 milagro
+ios-arm64: lua53 milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C src library
 	${AR} rcs zenroom-arm64.a `find . -name \*.o`
 
@@ -149,7 +156,7 @@ ios-sim: SDK := $(shell xcrun --sdk iphonesimulator --show-sdk-path 2>/dev/null)
 ios-sim: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM
 ios-sim: ldflags := -lm
 ios-sim: platform := ios
-ios-sim: patches lua53 milagro
+ios-sim: lua53 milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C src library
 	${AR} rcs zenroom-x86_64.a `find . -name \*.o`
 
@@ -162,14 +169,19 @@ android: ar := $(AR)
 android: ranlib := $(RANLIB)
 android: ld := $(ld)
 android: cflags := ${cflags} -std=c99 -shared -DLUA_USE_DLOPEN
-android: patches lua53 luazen milagro
+android: lua53 luazen milagro
 	LDFLAGS="--sysroot=/tmp/ndk-arch-21/sysroot" CC=${gcc} CFLAGS="${cflags}" make -C src android
 
 
 debug: gcc := gcc
 debug: cflags := -O0 -ggdb -D'ARCH=\"LINUX\"' ${cflags_protection}
-debug: patches lua53 milagro
+debug: lua53 milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
+
+zlib:
+	CC=${gcc} CFLAGS="${cflags}" \
+	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
+	pwd="${pwd}" make -C ${pwd}/build/zlib -f ZenMakefile
 
 lua53:
 	CC=${gcc} CFLAGS="${cflags} \
