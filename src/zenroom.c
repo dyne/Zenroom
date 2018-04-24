@@ -155,7 +155,7 @@ void zen_teardown(zenroom_t *Z) {
     if(heap)
 	    system_free(heap);
     if(mem) system_free(mem);
-#ifndef __EMSCRIPTEN__
+#if !defined(__EMSCRIPTEN__) && !defined(__APPLE__)
     // don't free Z as it seems to crash emscripten
     free(Z);
 #endif
