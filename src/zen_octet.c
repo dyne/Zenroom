@@ -134,7 +134,7 @@ octet *o_dup(lua_State *L, octet *o) {
 	OCT_copy(n,o);
 	return(n);
 }
-	
+
 int o_destroy(lua_State *L) {
 	HERE();
 	octet *o = o_arg(L,1);
@@ -478,17 +478,27 @@ static int concat_i(lua_State *L) {
 
 static int size(lua_State *L) {
 	octet *o = o_arg(L,1); SAFE(o);
-	luaL_argcheck(L, o != NULL, 1, "octet expected");
 	lua_pushinteger(L,o->len);
 	return 1;
 }
 
 static int max(lua_State *L) {
 	octet *o = o_arg(L,1); SAFE(o);
-	luaL_argcheck(L, o != NULL, 1, "octet expected");
 	lua_pushinteger(L,o->max);
 	return 1;
 }
+
+// static int name(lua_State *L) {
+// 	octet *o = o_arg(L,1); SAFE(o);
+// 	char n[MAX_STRING];
+// 	if(!lua_getobjname ((lua_Object*)o, &n)) {
+// 		ERROR();
+// 		return lerror("Name not found for object"); }
+// 	lua_pushstring(L,n);
+// 	return 1;
+// }
+
+
 
 #define octet_common_methods  \
 	{"empty", empty},         \
@@ -498,7 +508,8 @@ static int max(lua_State *L) {
     {"size", size},           \
 	{"random", o_random},       \
 	{"pad", pad},             \
-    {"eq", eq}
+    {"eq", eq}, \
+    {"max", max}
 
 int luaopen_octet(lua_State *L) {
 	const struct luaL_Reg octet_class[] = {
