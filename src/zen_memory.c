@@ -5,6 +5,8 @@
 #include <zenroom.h>
 #include <umm_malloc.h>
 
+extern void *umm_info(void*);
+
 void *zen_memalign(const size_t size, const size_t align) {
 	void *mem = NULL;
 	// preserve const values as they seem to be overwritten by calls
