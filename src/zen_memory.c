@@ -97,10 +97,13 @@ void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
 		// when) Lua is creating a new object of that type. When osize
 		// is some other value, Lua is allocating memory for something
 		// else.
-		if(nsize!=0)
-			return (*mem->malloc)(nsize);
-		return NULL;
-
+		if(nsize!=0) {
+			void *ret = (*mem->malloc)(nsize);
+			if(ret) return ret;
+			error(NULL,"Malloc out of memory, requested %u B",nsize);
+			umm_info(mem->heap);
+			return NULL;
+		} else return NULL;
 
 	} else {
 		// When ptr is not NULL, osize is the size of the block

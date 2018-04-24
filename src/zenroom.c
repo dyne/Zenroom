@@ -117,7 +117,7 @@ zenroom_t *zen_init(const char *conf,
 	}
 	//////////////////// end of create
 
-	lua_gc(L, LUA_GCCOLLECT, 0);
+	// lua_gc(L, LUA_GCCOLLECT, 0);
 
 	// load arguments if present
 	if(data) // avoid errors on NULL args
@@ -146,8 +146,8 @@ void zen_teardown(zenroom_t *Z) {
     void *heap = Z->mem->heap;
     if(Z->lua) {
 	    func(Z->lua, "lua gc and close...");
-	    lua_gc((lua_State*)Z->lua, LUA_GCCOLLECT, 0);
-	    lua_gc((lua_State*)Z->lua, LUA_GCCOLLECT, 0);
+	    // lua_gc((lua_State*)Z->lua, LUA_GCCOLLECT, 0);
+	    // lua_gc((lua_State*)Z->lua, LUA_GCCOLLECT, 0);
 	    // this call here frees also Z (lightuserdata)
 	    lua_close((lua_State*)Z->lua);
     }
@@ -368,7 +368,7 @@ int main(int argc, char **argv) {
 		zen_add_function(L, repl_write, "write");
 
 		notice(NULL, "Interactive console, press ctrl-d to quit.");
-		repl_loop(L);
+		repl_loop(cli);
 		// quits on ctrl-D
 		zen_teardown(cli);
 		return 0;
