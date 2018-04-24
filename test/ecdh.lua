@@ -1,5 +1,4 @@
 print '= ECDH TESTS'
-octet = require'octet'
 
 secret = [[
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
@@ -24,7 +23,7 @@ function test_curve (name)
    -- print 'session:'
    -- print(ses:hex())
 
-   ciphermsg = curve:encrypt(ses,secoctet)
+   ciphermsg = curve:encrypt(ses,octet.from_string(secret))
 
    -- print 'secret:'
    -- print(secoctet:string())
@@ -41,9 +40,6 @@ function test_curve (name)
    print ('         OK')
 end
 
-secoctet = octet.new(#secret)
-secoctet:string(secret)
-ecdh = require'ecdh'
 test_curve('ec25519')
 test_curve('nist256')
 -- TODO: check why goldilocks doesn't works
