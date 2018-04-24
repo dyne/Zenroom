@@ -28,7 +28,7 @@
 
 #include <lua_functions.h>
 
-extern int zen_exec_script(lua_State *L, const char *script);
+extern int zen_exec_script(zenroom_t *Z, const char *script);
 
 int repl_read(lua_State *lua) {
 	char line[MAX_STRING];
@@ -66,12 +66,12 @@ size_t repl_prompt(int ret, char *line) {
 	return(len);
 }
 
-void repl_loop(lua_State *L) {
+void repl_loop(zenroom_t *Z) {
 	char line[MAX_STRING];
-	if(!L) return;
+	if(!Z) return;
 	int ret =0;
 	while(repl_prompt(ret, line)) {
-		ret = zen_exec_script(L, line);
+		ret = zen_exec_script(Z, line);
 	}
 }
 

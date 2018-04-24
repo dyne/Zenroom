@@ -300,6 +300,13 @@ check-debug:
 	@echo "All tests passed for SHARED binary build"
 	@echo "----------------"
 
+debug-crypto: test-exec := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared
+debug-crypto:
+	${test-exec} test/octet.lua
+	${test-exec} test/ecdh.lua
+#	./test/octet-json.sh ${test-exec}
+
+
 clean:
 	make clean -C ${pwd}/lib/lua53/src
 	make clean -C ${pwd}/lib/milagro-crypto-c && \
