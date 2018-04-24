@@ -142,25 +142,24 @@ int ecdh_destroy(lua_State *L) {
 /**
    Generate an ECDH public/private key pair for a keyring
 
-   Keys generated are not returned, but stored inside the
-   keyring. They can be retrieved using the <code>:public()</code> and
-   <code>:private()</code> methods if necessary.
+   Keys generated are both returned and stored inside the
+   keyring. They can also be retrieved later using the
+   <code>:public()</code> and <code>:private()</code> methods if
+   necessary.
 
    @function keyring:keygen()
+   @treturn[1] octet public key
+   @treturn[1] octet private key
 */
 static int ecdh_keygen(lua_State *L) {
 	HERE();
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
-	if(e->seckey && e->pubkey) {
-		ERROR(); KEYPROT(e->curve,"keyring already full"); }
-	if(!e->seckey && e->pubkey) {
-		ERROR(); KEYPROT(e->curve,"cannot generate secret key from public"); }
-	octet *sk;
-	if(!e->seckey && !e->pubkey) {
-		sk = o_new(L,e->seclen); SAFE(sk);
-	} else if(e->seckey) sk = e->seckey;
+	if(e->seckey) {
+		ERROR(); KEYPROT(e->curve,"private key"); }
+	if(e->pubkey) {
+		ERROR(); KEYPROT(e->curve,"public key"); }
 	octet *pk = o_new(L,e->publen); SAFE(pk);
-	// TODO: generate a public key from any secret
+	octet *sk = o_new(L,e->seclen); SAFE(sk);
 	(*e->ECP__KEY_PAIR_GENERATE)(e->rng,sk,pk);
 	int res;
 	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(pk);
@@ -268,30 +267,29 @@ static int ecdh_public(lua_State *L) {
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	if(lua_isnoneornil(L, 2)) {
 		if(!e->pubkey) {
-			if(!e->seckey) {
-				ERROR();
-				return lerror(L, "Public key is not found.");
-			} else {
-				func(L, "TODO: generate public key from secret");
-			}
+			ERROR();
+			return lerror(L, "Public key is not found in keyring.");
 		}
 		// export public key to octet
 		res = (e->ECP__PUBLIC_KEY_VALIDATE)(e->pubkey);
 		if(res == ECDH_INVALID_PUBLIC_KEY) {
-			error(L, "%s: public key found but invalid",__func__);
-			return 0; }
+			ERROR();
+			return lerror(L, "Public key found, but invalid."); }
+		// succesfully return public key stored in keyring
 		o_dup(L,e->pubkey);
 		return 1;
 	}
+	// has an argument: public key to set
 	if(e->pubkey!=NULL) {
 		ERROR();
 		KEYPROT(e->curve, "public key"); }
 	octet *o = o_arg(L, 2); SAFE(o);
 	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(o);
 	if(res == ECDH_INVALID_PUBLIC_KEY) {
-		error(L, "%s: imported public key is invalid",__func__);
-		return 0; }
+		ERROR();
+		return lerror(L, "Public key argument is invalid."); }
 	func(L, "%s: valid key",__func__);
+	// succesfully set the new public key
 	e->pubkey = o;
 	return 0;
 }
@@ -301,8 +299,9 @@ static int ecdh_public(lua_State *L) {
    Imports or exports the secret key from an ECDH keyring. This method
    functions in two ways: without argument it returns the secret key
    of a keyring, or if an octet argument is provided it imports it as
-   secret key inside the keyring, but it refuses to overwrite and
-   returns an error if a secret key is already present.
+   secret key inside the keyring and generates a public key for it. If
+   a secret key is already present in the keyring it refuses to
+   overwrite and returns an error.
 
    @param key[opt] octet of a public key to be imported
    @function keyring:secret(key)
@@ -311,9 +310,10 @@ static int ecdh_private(lua_State *L) {
 	HERE();
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	if(lua_isnoneornil(L, 2)) {
+		// no argument: return stored key
 		if(!e->seckey) {
 			ERROR();
-			return lerror(L, "Private key is not found."); }
+			return lerror(L, "Private key is not found in keyring."); }
 		// export public key to octet
 		o_dup(L, e->seckey);
 		return 1;
@@ -321,7 +321,15 @@ static int ecdh_private(lua_State *L) {
 	if(e->seckey!=NULL) {
 		ERROR(); KEYPROT(e->curve, "private key"); }
 	e->seckey = o_arg(L, 2); SAFE(e->seckey);
-	return 0;
+	octet *pk = o_new(L,e->publen); SAFE(pk);
+	(*e->ECP__KEY_PAIR_GENERATE)(NULL,e->seckey,pk);
+	int res;
+	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(pk);
+	if(res == ECDH_INVALID_PUBLIC_KEY) {
+		ERROR();
+		return lerror(L, "Invalid public key generation."); }
+	e->pubkey = pk;
+	return 1;
 }
 
 /**
