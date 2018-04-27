@@ -9,13 +9,13 @@ ecp2 = ecp.new(
    octet.from_hex('206EF634A6A61E9995149FF7A969E0A3C4D0B8CA9AC353DB3FC4C72746A5520B'))
 
 print("ECP1 =", ecp1)
+print("ECP1 octet: ", ecp1:octet():hex());
 print("ECP2 =", ecp2)
+print("ECP2 octet: ", ecp2:octet():hex());
 
 print "test addition's commutativity"
 ecpaux1 = ecp1 + ecp2
-ecpaux1:affine()
 ecpaux2 = ecp2 + ecp1
-ecpaux2:affine()
 assert(ecpaux1 == ecpaux2)
 print "OK"
 
@@ -50,4 +50,13 @@ ecpdbl = ecp.new(
    octet.from_hex('15A5654CA8A40C561A088B8419017EA1C99C18BC749D585033BECB5633A5207A'))
 ecpaux1 = ecp1:double()
 assert(ecpaux1 == ecpdbl)
+print "OK"
+
+print "test multiplication"
+ecpmul = ecp.new(
+   octet.from_hex('227FC8E60FC4C5D4F152AF1F0B8BE8F96FE5915DCE27118251032A6053247077'),
+   octet.from_hex('17183620D6FF32276C206F2F782F4C2FA147185E9FE71F5A4F710CA577F0E852'))
+bigscalar = octet.from_hex('75DB735876C97D6FE2510BE8EEBE50A1655D55ED15E65667A0689271B6518F3C')
+ecpaux1 = ecp1 * bigscalar;
+assert(ecpaux1 == ecpmul)
 print "OK"
