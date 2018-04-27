@@ -8,6 +8,9 @@ ecp2 = ecp.new(
    octet.from_hex('0C52B2D8BC72606D92C1337662AEEC099876C03F628D7195FAB6CD7A527DDC4F'),
    octet.from_hex('206EF634A6A61E9995149FF7A969E0A3C4D0B8CA9AC353DB3FC4C72746A5520B'))
 
+print("ECP1 =", ecp1)
+print("ECP2 =", ecp2)
+
 print "test addition's commutativity"
 ecpaux1 = ecp1 + ecp2
 ecpaux1:affine()
@@ -31,4 +34,20 @@ ecpsub = ecp.new(
    octet.from_hex('4C1EEA42B7EFBE461468927ADBFF55DB786D64140F3AAF39B7E60C3B759F460A'))
 ecpaux1 = ecp1 - ecp2;
 assert(ecpaux1 == ecpsub)
+print "OK"
+
+print "test negative"
+ecpneg = ecp.new(
+   octet.from_hex('08483473E4D7A042BF2643B62C25DFB7633E7D8D11222FA818EDF1E21C75C491'),
+   octet.from_hex('67D0E5D15854E75154DEF7EB3CE0C3E8B3997347AB8061D8DE8F6BAAE02A154F'))
+ecpaux1 = ecp1:negative()
+assert(ecpaux1 == ecpneg)
+print "OK"
+
+print "test double"
+ecpdbl = ecp.new(
+   octet.from_hex('2B0E1601EF6533B58B75BB0117C8A1449B5D47D73ABF1BC13B2DE948BF552AD0'),
+   octet.from_hex('15A5654CA8A40C561A088B8419017EA1C99C18BC749D585033BECB5633A5207A'))
+ecpaux1 = ecp1:double()
+assert(ecpaux1 == ecpdbl)
 print "OK"
