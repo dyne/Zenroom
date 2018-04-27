@@ -42,21 +42,20 @@ void int2big(BIG_256_29 b, int n) {
 char *big2str(char *str, BIG_256_29 a) {
 	BIG_256_29 b;
 	int i,len;
+	int modby2 = MODBYTES_256_29<<1;
 	len=BIG_256_29_nbits(a);
-	if (len%4==0) len/=4;
+	int lendiv4 = len>>2;
+	if (len%4==0) len=lendiv4;
 	else {
-		len/=4;
+		len=lendiv4;
 		len++;
 	}
-	if (len<MODBYTES_256_29*2) len=MODBYTES_256_29*2;
+	if (len<modby2) len=modby2;
 	int c = 0;
-	func(NULL, "len is %u",len);
-	str[0]='0'; str[1]='x'; // hex prefix
-	char *cc = str+2;
 	for (i=len-1; i>=0; i--) {
 		BIG_256_29_copy(b,a);
-		BIG_256_29_shr(b,i*4);
-		sprintf(cc+c,"%01x",(unsigned int) b[0]&15);
+		BIG_256_29_shr(b,i<<2);
+		sprintf(str+c,"%01x",(unsigned int) b[0]&15);
 		c++;
 	}
 	return str;
@@ -116,17 +115,6 @@ int ecp_destroy(lua_State *L) {
 	FREE(e->ed25519);
 	return 0;
 }
-octet *ecp2o_new(lua_State *L, ecp *e) {
-	// TODO: find out max size for ECP_ED25519
-	octet *o = o_new(L,1024); SAFE(o);
-	ECP_ED25519_toOctet(o, e->ed25519);
-	return o;
-}
-ecp   *o2ecp_new(lua_State *L, octet *o) {
-	ecp *e = ecp_new(L); SAFE(e);
-	ECP_ED25519_fromOctet(e->ed25519, o);
-	return e;
-}
 static int lua_set_ecp(lua_State *L) {
 	ecp *e = ecp_arg(L, 1); SAFE(e);
 	// takes x,y big numbers from octets as arguments
@@ -182,6 +170,23 @@ static int ecp_double(lua_State *L) {
 	return 1;
 }
 
+static int ecp_mul(lua_State *L) {
+	BIG_256_29 big;
+	void *ud;
+	ecp *e = ecp_arg(L,1); SAFE(e);
+	if(lua_isnumber(L,2)) {
+		lua_Number num = lua_tonumber(L,2);
+		int2big(big, (int)num);
+	} else if((ud = luaL_testudata(L, 2, "zenroom.octet"))) {
+		octet *o = (octet*)ud; SAFE(o);
+		oct2big(big,o);
+	}
+	// TODO: check parsing errors
+	const ecp *out = ecp_dup(L,e); SAFE(out);
+	ECP_ED25519_mul(out->ed25519,big);
+	return 1;
+}
+
 static int ecp_eq(lua_State *L) {
 	const ecp *p = ecp_arg(L,1); SAFE(p);
 	const ecp *q = ecp_arg(L,2); SAFE(q);
@@ -193,27 +198,56 @@ static int ecp_eq(lua_State *L) {
 	return 1;
 }
 
+static int ecp_octet(lua_State *L) {
+	void *ud;
+	ecp *e = ecp_arg(L,1); SAFE(e);
+
+	if((ud = luaL_testudata(L, 2, "zenroom.octet"))) {
+		octet *o = (octet*)ud; SAFE(o);
+		if(! ECP_ED25519_fromOctet(e->ed25519, o) )
+			lerror(L,"Octet doesn't contains a valid ECP");
+		return 0;
+	}
+	octet *o = o_new(L,(MODBYTES_256_29<<1)+1);
+	SAFE(o);
+	ECP_ED25519_toOctet(o, e->ed25519);
+	return 1;
+}
+
 static int ecp_output(lua_State *L) {
 	const ecp *e = ecp_arg(L, 1); SAFE(e);
 	ECP_ED25519 *P = e->ed25519;
-	BIG_256_29 x;
 	if (ECP_ED25519_isinf(P)) {
 		lua_pushstring(L,"Infinity");
 		return 1; }
+	BIG_256_29 x;
 	char xs[MAX_STRING];
 	char out[MAX_STRING];
 	ECP_ED25519_affine(P);
-#if CURVETYPE_ED25519!=MONTGOMERY
+#if CURVETYPE_ED25519==MONTGOMERY
+	FP_25519_redc(x,&(P->x));
+	snprintf(out,MAX_STRING-1,
+	         "{ \"curve\": \"%s\",\n"
+	         "  \"type\": \"%s\",\n"
+	         "  \"encoding\": \"hex\",\n"
+	         "  \"vm\": \"%s\",\n"
+	         "  \"x\": \"%s\" }",
+	         e->curve, e->type, VERSION,
+	         big2str(xs,x));
+#else
 	BIG_256_29 y;
 	char ys[MAX_STRING];
 	FP_25519_redc(x,&(P->x));
 	FP_25519_redc(y,&(P->y));
-	snprintf(out,MAX_STRING-1,"(%s,%s)",
+	snprintf(out, MAX_STRING-1,
+"{ \"curve\": \"%s\",\n"
+"  \"type\": \"%s\",\n"
+"  \"encoding\": \"hex\",\n"
+"  \"vm\": \"%s\",\n"
+"  \"x\": \"%s\",\n"
+"  \"y\": \"%s\" }",
+	         e->curve, e->type, VERSION,
 	         big2str(xs,x), big2str(ys,y));
-#else
-	FP_25519_redc(x,&(P->x));
-	snprintf(out,MAX_STRING-1,"(%s)",
-	         big2str(xs,x));
 #endif
 	lua_pushstring(L,out);
 	return 1;
@@ -228,14 +262,15 @@ int luaopen_ecp(lua_State *L) {
 		{"affine",ecp_affine},
 		{"negative",ecp_negative},
 		{"double",ecp_double},
+		{"octet",ecp_octet},
 		{"__add",ecp_add},
 		{"__sub",ecp_sub},
+		{"__mul",ecp_mul},
 		{"__eq", ecp_eq},
 		{"__gc",ecp_destroy},
 		{"__tostring",ecp_output},
 		{NULL,NULL}
 	};
-
 	zen_add_class(L, "ecp", ecp_class, ecp_methods);
 	return 1;
 }
