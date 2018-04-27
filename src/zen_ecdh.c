@@ -56,6 +56,7 @@
 #include <lua_functions.h>
 
 
+// TODO: wrap this for more curves (may solve GOLDILOCKS)
 #include <ecdh_ED25519.h>
 
 
@@ -485,10 +486,10 @@ static int ecdh_pbkdf2(lua_State *L) {
 }
 
 static int lua_new_ecdh(lua_State *L) {
-	HERE();
 	const char *curve = luaL_optstring(L, 1, "ec25519");
 	ecdh *e = ecdh_new(L, curve);
 	SAFE(e);
+	func(L,"new ecdh curve %s type %s", e->curve, e->type);
 	// any action to be taken here?
 	return 1;
 }
