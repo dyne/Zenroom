@@ -30,9 +30,41 @@
 #include <zen_ecp.h>
 #include <lua_functions.h>
 
+void oct2big(BIG_256_29 b, const octet *o) {
+	BIG_256_29_zero(b);
+	BIG_256_29_fromBytesLen(b,o->val,o->len);
+}
+void int2big(BIG_256_29 b, int n) {
+	BIG_256_29_one(b);
+	BIG_256_29_inc(b, n);
+	BIG_256_29_norm(b);
+}
+char *big2str(char *str, BIG_256_29 a) {
+	BIG_256_29 b;
+	int i,len;
+	len=BIG_256_29_nbits(a);
+	if (len%4==0) len/=4;
+	else {
+		len/=4;
+		len++;
+	}
+	if (len<MODBYTES_256_29*2) len=MODBYTES_256_29*2;
+	int c = 0;
+	func(NULL, "len is %u",len);
+	str[0]='0'; str[1]='x'; // hex prefix
+	char *cc = str+2;
+	for (i=len-1; i>=0; i--) {
+		BIG_256_29_copy(b,a);
+		BIG_256_29_shr(b,i*4);
+		sprintf(cc+c,"%01x",(unsigned int) b[0]&15);
+		c++;
+	}
+	return str;
+}
+
 ecp* ecp_new(lua_State *L) {
 	ecp *e = (ecp *)lua_newuserdata(L, sizeof(ecp));
-	if(!e) { 
+	if(!e) {
 		lerror(L, "Error allocating new ecp in %s",__func__);
 		return NULL; }
 	e->ed25519 = malloc(sizeof(ECP_ED25519));
@@ -58,12 +90,8 @@ ecp* ecp_arg(lua_State *L,int n) {
 }
 ecp* ecp_dup(lua_State *L, const ecp* in) {
 	ecp *e = ecp_new(L); SAFE(e);
-	memcpy(e->ed25519,in->ed25519,sizeof(ECP_ED25519));
+	ECP_ED25519_copy(e->ed25519, in->ed25519);
 	return(e);
-}
-void oct2big(BIG_256_29 b, const octet *o) {
-	BIG_256_29_zero(b);
-	BIG_256_29_fromBytesLen(b,o->val,o->len);
 }
 ecp* ecp_set(lua_State *L, ecp *e, int idx) {
 	SAFE(e);
@@ -88,7 +116,6 @@ int ecp_destroy(lua_State *L) {
 	FREE(e->ed25519);
 	return 0;
 }
-
 octet *ecp2o_new(lua_State *L, ecp *e) {
 	// TODO: find out max size for ECP_ED25519
 	octet *o = o_new(L,1024); SAFE(o);
@@ -100,7 +127,6 @@ ecp   *o2ecp_new(lua_State *L, octet *o) {
 	ECP_ED25519_fromOctet(e->ed25519, o);
 	return e;
 }
-
 static int lua_set_ecp(lua_State *L) {
 	ecp *e = ecp_arg(L, 1); SAFE(e);
 	// takes x,y big numbers from octets as arguments
@@ -115,7 +141,6 @@ static int lua_new_ecp(lua_State *L) {
 	if(ud) e = ecp_set(L, e, 1);
 	return 1;
 }
-
 
 static int ecp_affine(lua_State *L) {
 	ecp *e = ecp_arg(L,1); SAFE(e);
@@ -140,7 +165,20 @@ static int ecp_sub(lua_State *L) {
 	ecp *p = ecp_dup(L, e); // push
 	SAFE(p);
 	ECP_ED25519_sub(p->ed25519,q->ed25519);
-	ECP_ED25519_affine(p->ed25519);
+	return 1;
+}
+
+static int ecp_negative(lua_State *L) {
+	const ecp *in = ecp_arg(L,1); SAFE(in);
+	const ecp *out = ecp_dup(L,in); SAFE(out);
+	ECP_ED25519_neg(out->ed25519);
+	return 1;
+}
+
+static int ecp_double(lua_State *L) {
+	const ecp *in = ecp_arg(L,1); SAFE(in);
+	const ecp *out = ecp_dup(L,in); SAFE(out);
+	ECP_ED25519_dbl(out->ed25519);
 	return 1;
 }
 
@@ -155,6 +193,32 @@ static int ecp_eq(lua_State *L) {
 	return 1;
 }
 
+static int ecp_output(lua_State *L) {
+	const ecp *e = ecp_arg(L, 1); SAFE(e);
+	ECP_ED25519 *P = e->ed25519;
+	BIG_256_29 x;
+	if (ECP_ED25519_isinf(P)) {
+		lua_pushstring(L,"Infinity");
+		return 1; }
+	char xs[MAX_STRING];
+	char out[MAX_STRING];
+	ECP_ED25519_affine(P);
+#if CURVETYPE_ED25519!=MONTGOMERY
+	BIG_256_29 y;
+	char ys[MAX_STRING];
+	FP_25519_redc(x,&(P->x));
+	FP_25519_redc(y,&(P->y));
+	snprintf(out,MAX_STRING-1,"(%s,%s)",
+	         big2str(xs,x), big2str(ys,y));
+#else
+	FP_25519_redc(x,&(P->x));
+	snprintf(out,MAX_STRING-1,"(%s)",
+	         big2str(xs,x));
+#endif
+	lua_pushstring(L,out);
+	return 1;
+}
+
 int luaopen_ecp(lua_State *L) {
 	const struct luaL_Reg ecp_class[] = {
 		{"new",lua_new_ecp},
@@ -162,10 +226,13 @@ int luaopen_ecp(lua_State *L) {
 		{NULL,NULL}};
 	const struct luaL_Reg ecp_methods[] = {
 		{"affine",ecp_affine},
+		{"negative",ecp_negative},
+		{"double",ecp_double},
 		{"__add",ecp_add},
 		{"__sub",ecp_sub},
 		{"__eq", ecp_eq},
 		{"__gc",ecp_destroy},
+		{"__tostring",ecp_output},
 		{NULL,NULL}
 	};
 
