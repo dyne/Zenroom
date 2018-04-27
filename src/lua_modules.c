@@ -47,6 +47,7 @@ extern zen_extension_t zen_extensions[];
 extern int luaopen_octet(lua_State *L);
 extern int luaopen_rsa(lua_State *L);
 extern int luaopen_ecdh(lua_State *L);
+extern int luaopen_ecp(lua_State *L);
 
 
 luaL_Reg lualibs[] = {
@@ -139,6 +140,8 @@ int zen_require(lua_State *L) {
 	//  luaL_requiref(L, s, luaopen_rsa, 1);    return 1; }
 	else if(strcasecmp(s, "ecdh")  ==0) {
 		luaL_requiref(L, s, luaopen_ecdh, 1); }
+	else if(strcasecmp(s, "ecp")  ==0) {
+		luaL_requiref(L, s, luaopen_ecp, 1); }
 	else if(strcasecmp(s, "json")  ==0) {
 		luaL_requiref(L, s, lua_cjson_safe_new, 1); }
 	else if(strcasecmp(s, "cjson_full") ==0) {
