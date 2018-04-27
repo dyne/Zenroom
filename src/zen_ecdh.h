@@ -23,6 +23,7 @@ typedef struct {
 	int fieldsize;
 	int hash; // hash type is also bytes length of hash
 	char curve[16]; // just short names
+	char type[16];
 	octet *pubkey;
 	int publen;
 	octet *seckey;

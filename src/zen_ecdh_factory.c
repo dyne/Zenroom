@@ -9,7 +9,9 @@
 
 ecdh *ecdh_new_curve(lua_State *L, const char *curve) {
 	ecdh *e = NULL;
-	if(strcasecmp(curve,"ec25519")==0) {
+	if(strcasecmp(curve,"ec25519")   ==0
+	   || strcasecmp(curve,"ed25519")==0
+	   || strcasecmp(curve,"25519")  ==0) {
 		e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
 		e->keysize = EGS_ED25519; // keysize seems always equal to
 								  // fieldsize but since milagro uses
@@ -24,7 +26,16 @@ ecdh *ecdh_new_curve(lua_State *L, const char *curve) {
 		e->ECP__ECIES_DECRYPT = ECP_ED25519_ECIES_DECRYPT;
 		e->ECP__SP_DSA = ECP_ED25519_SP_DSA;
 		e->ECP__VP_DSA = ECP_ED25519_VP_DSA;
-
+		strncpy(e->curve,curve,15);
+#if CURVETYPE_ED25519==MONTGOMERY
+		strcpy(e->type,"montgomery");
+#elif CURVETYPE_ED25519==WEIERSTRASS
+		strcpy(e->type,"weierstrass");
+#elif CURVETYPE_ED25519==EDWARDS
+		strcpy(e->type,"edwards");
+#else
+		strcpy(e->type,"unknown");
+#endif
 	} else if(strcasecmp(curve,"nist256")==0) {
 			e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
 			e->keysize = EGS_NIST256;
