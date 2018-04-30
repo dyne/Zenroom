@@ -238,7 +238,8 @@ lowmem-tests = \
 		${1} test/locals.lua && \
 		${1} test/schema.lua && \
 		${1} test/octet.lua && \
-		${1} test/ecdh.lua
+		${1} test/ecdh.lua && \
+		${1} test/ecp.lua
 
 # failing js tests due to larger memory required:
 # abort("Cannot enlarge memory arrays. Either (1) compile with -s
@@ -304,6 +305,8 @@ debug-crypto: test-exec := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-
 debug-crypto:
 	${test-exec} test/octet.lua
 	${test-exec} test/ecdh.lua
+	${test-exec} test/ecp.lua
+
 #	./test/octet-json.sh ${test-exec}
 
 
