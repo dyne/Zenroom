@@ -16,7 +16,7 @@
 // License along with this program.  If not, see
 // <http://www.gnu.org/licenses/>.
 
-// only supported curve is ED25519 type EDWARDS
+// For now, the only supported curve is ED25519 type EDWARDS
 
 #include <lua.h>
 #include <lualib.h>
@@ -35,11 +35,11 @@ void oct2big(BIG_256_29 b, const octet *o) {
 	BIG_256_29_fromBytesLen(b,o->val,o->len);
 }
 void int2big(BIG_256_29 b, int n) {
-	BIG_256_29_one(b);
+	BIG_256_29_zero(b);
 	BIG_256_29_inc(b, n);
 	BIG_256_29_norm(b);
 }
-char *big2str(char *str, BIG_256_29 a) {
+char *big2strhex(char *str, BIG_256_29 a) {
 	BIG_256_29 b;
 	int i,len;
 	int modby2 = MODBYTES_256_29<<1;
@@ -92,7 +92,7 @@ ecp* ecp_dup(lua_State *L, const ecp* in) {
 	ECP_ED25519_copy(e->ed25519, in->ed25519);
 	return(e);
 }
-ecp* ecp_set(lua_State *L, ecp *e, int idx) {
+ecp* ecp_set_big_xy(lua_State *L, ecp *e, int idx) {
 	SAFE(e);
 	octet *o;
 	o = o_arg(L, idx); SAFE(o);
@@ -118,15 +118,16 @@ int ecp_destroy(lua_State *L) {
 static int lua_set_ecp(lua_State *L) {
 	ecp *e = ecp_arg(L, 1); SAFE(e);
 	// takes x,y big numbers from octets as arguments
-	e = ecp_set(L, e, 2);
+	e = ecp_set_big_xy(L, e, 2);
 	return 0;
 }
 
 static int lua_new_ecp(lua_State *L) {
 	ecp *e = ecp_new(L); SAFE(e);
 	func(L,"new ecp curve %s type %s", e->curve, e->type);
-	void *ud = luaL_testudata(L, 1, "zenroom.octet");
-	if(ud) e = ecp_set(L, e, 1);
+	void *x = luaL_testudata(L, 1, "zenroom.octet");
+	void *y = luaL_testudata(L, 2, "zenroom.octet");
+	if(x && y) e = ecp_set_big_xy(L, e, 1);
 	return 1;
 }
 
@@ -137,6 +138,22 @@ static int ecp_affine(lua_State *L) {
 }
 
 // assumes curve type is EDWARDS
+static int ecp_isinf(lua_State *L) {
+	const ecp *e = ecp_arg(L,1); SAFE(e);
+	lua_pushboolean(L,ECP_ED25519_isinf(e->ed25519));
+	return 1;
+}
+
+static int ecp_mapit(lua_State *L) {
+	octet *o = o_arg(L,1); SAFE(o);
+	if(o->len < MODBYTES_256_29) {
+		lerror(L, "%s: octet too short (min %u bytes)",
+		       __func__, MODBYTES_256_29);
+		return 0; }
+	const ecp *e = ecp_new(L); SAFE(e);
+	ECP_ED25519_mapit(e->ed25519, o);
+	return 1;
+}
 
 static int ecp_add(lua_State *L) {
 	const ecp *e = ecp_arg(L,1); SAFE(e);
@@ -201,7 +218,6 @@ static int ecp_eq(lua_State *L) {
 static int ecp_octet(lua_State *L) {
 	void *ud;
 	ecp *e = ecp_arg(L,1); SAFE(e);
-
 	if((ud = luaL_testudata(L, 2, "zenroom.octet"))) {
 		octet *o = (octet*)ud; SAFE(o);
 		if(! ECP_ED25519_fromOctet(e->ed25519, o) )
@@ -221,25 +237,25 @@ static int ecp_output(lua_State *L) {
 		lua_pushstring(L,"Infinity");
 		return 1; }
 	BIG_256_29 x;
-	char xs[MAX_STRING];
-	char out[MAX_STRING];
+	char xs[256];
+	char out[512];
 	ECP_ED25519_affine(P);
 #if CURVETYPE_ED25519==MONTGOMERY
 	FP_25519_redc(x,&(P->x));
-	snprintf(out,MAX_STRING-1,
+	snprintf(out,511,
 	         "{ \"curve\": \"%s\",\n"
 	         "  \"type\": \"%s\",\n"
 	         "  \"encoding\": \"hex\",\n"
 	         "  \"vm\": \"%s\",\n"
 	         "  \"x\": \"%s\" }",
 	         e->curve, e->type, VERSION,
-	         big2str(xs,x));
+	         big2strhex(xs,x));
 #else
 	BIG_256_29 y;
-	char ys[MAX_STRING];
+	char ys[256];
 	FP_25519_redc(x,&(P->x));
 	FP_25519_redc(y,&(P->y));
-	snprintf(out, MAX_STRING-1,
+	snprintf(out, 511,
 "{ \"curve\": \"%s\",\n"
 "  \"type\": \"%s\",\n"
 "  \"encoding\": \"hex\",\n"
@@ -247,7 +263,7 @@ static int ecp_output(lua_State *L) {
 "  \"x\": \"%s\",\n"
 "  \"y\": \"%s\" }",
 	         e->curve, e->type, VERSION,
-	         big2str(xs,x), big2str(ys,y));
+	         big2strhex(xs,x), big2strhex(ys,y));
 #endif
 	lua_pushstring(L,out);
 	return 1;
@@ -262,6 +278,8 @@ int luaopen_ecp(lua_State *L) {
 		{"affine",ecp_affine},
 		{"negative",ecp_negative},
 		{"double",ecp_double},
+		{"isinf",ecp_isinf},
+		{"mapit",ecp_mapit},
 		{"octet",ecp_octet},
 		{"__add",ecp_add},
 		{"__sub",ecp_sub},
