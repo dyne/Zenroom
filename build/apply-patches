@@ -2,6 +2,12 @@
 
 # small script to apply patches to submodules
 
+# correct build of lpeglabel
+if ! grep 'lpeglabel.a' lib/lpeglabel/makefile > /dev/null; then
+	echo "applying lpeglabel patch"
+	cd lib/lpeglabel && patch -p1 < ../../build/lpeglabel_makefile.patch && cd -
+fi
+
 # enable static build of lua_sandbox
 # if ! grep STATIC lib/lua_sandbox/src/CMakeLists.txt > /dev/null; then
 # 	cd lib/lua_sandbox && patch -p1 < ../../build/lua_sandbox.patch && cd -
