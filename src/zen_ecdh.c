@@ -526,7 +526,7 @@ static int ecdh_random(lua_State *L) {
 	HERE();
 	ecdh *e = ecdh_arg(L,1); SAFE(e);
 	const int len = luaL_optinteger(L, 2, e->keysize);
-	octet *out = o_new(L,len); SAFE(out);
+	octet *out = o_new(L,len+2); SAFE(out);
 	OCT_rand(out,e->rng,len);
 	return 1;
 }
