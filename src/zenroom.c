@@ -159,12 +159,7 @@ void zen_teardown(zenroom_t *Z) {
     func(NULL,"zen free");
     if(heap)
 	    system_free(heap);
-#if !defined(__EMSCRIPTEN__) && !defined(__APPLE__)
-    // don't free Z as it seems to crash emscripten
-    free(Z);
     if(mem) system_free(mem);
-
-#endif
     func(NULL,"teardown completed");
 }
 
