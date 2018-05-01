@@ -45,7 +45,7 @@ all:
 	@echo "- win			(cross-compile using MINGW on Linux)"
 	@echo "- static		(fully static build using MUSLCC)"
 	@echo "- system-static		(static build using system CC)"
-	@echo
+	@echo "for android and ios see scripts in build/"
 
 embed-lua:
 	@echo "Embedding all files in src/lua"

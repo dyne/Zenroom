@@ -1,5 +1,29 @@
 # Zenroom ChangeLog
 
+## 0.6.0
+### May 2018
+
+Implemented arithmetic operations on elliptic curve points (ECP).
+
+Modularised ECDH class/factory implementation to support multiple
+curve types.
+
+Support for multiple memory managers (still not fully reentrant).
+
+Improved use of memory (and reflexivity), better constructors in
+scripts.
+
+Further progress on syntax in relation to use-cases (DECODE D3.5).
+
+Abstract Syntax Tree parsing of smart rules and rendering to
+JSON (based on lpeglabels and lua-parser).
+
+Exposed more public calls on zenroom.h for usage as a library
+(stdout/stderr to memory).
+
+Added contributed scripts for iOS, Android and Go shared builds.
+
+
 ## 0.5.0
 ### April 2018
 

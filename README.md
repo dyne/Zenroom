@@ -80,7 +80,7 @@ This project is receiving funding from the European Union’s Horizon 2020 resea
 
 Copyright (C) 2017-2018 by Dyne.org foundation, Amsterdam
 
-- Designed, written and maintained by <a href="https://jaromil.dyne.org">Denis "Jaromil" Roio</a>
+Designed, written and maintained by Denis "Jaromil" Roio.
 
 With contributions by Ivan J., Puria Nafisi Azizi, Jordi Coscolla.
 
