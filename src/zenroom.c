@@ -63,7 +63,7 @@ extern void zen_add_function(lua_State *L, lua_CFunction func,
                              const char *func_name);
 
 // prototypes from zen_ast.c
-zenroom_t *ast_init();
+zenroom_t *ast_init(char *script);
 int  ast_parse(zenroom_t *Z);
 void ast_teardown(zenroom_t *Z);
 
@@ -363,9 +363,8 @@ int main(int argc, char **argv) {
 	}
 
 	if(parseast) {
-		zenroom_t *ast = ast_init();
 		load_file(script, fopen(scriptfile, "rb"));
-		zen_setenv(ast->lua,"CODE",(char*)script);
+		zenroom_t *ast = ast_init(script);
 		ast_parse(ast);
 		ast_teardown(ast);
 		return 0;

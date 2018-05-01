@@ -34,6 +34,13 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys,
                        char *data, int verbosity,
                        char *stdout_buf, size_t stdout_len,
                        char *stderr_buf, size_t stderr_len);
+
+// to obtain the Abstract Syntax Tree (AST) of a script
+// (output is in metalua formatted as JSON)
+int zenroom_parse_ast(char *script, int verbosity,
+                      char *stdout_buf, size_t stdout_len,
+                      char *stderr_buf, size_t stderr_len);
+
 ////////////////////////////////////////
 
 

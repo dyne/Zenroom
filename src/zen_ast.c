@@ -38,16 +38,19 @@ extern int zen_exec_extension(lua_State *L, zen_extension_t *p);
 extern int zen_require_override(lua_State *L, int restricted);
 extern int lua_cjson_safe_new(lua_State *l);
 
-void zen_add_io(lua_State *L);
+extern void zen_add_io(lua_State *L);
 
 // prototypes from zen_memory.c
 extern zen_mem_t *libc_memory_init();
 extern void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
 
+// prototypes from lua_functions.c
+extern void zen_setenv(lua_State *L, char *key, char *val);
+
 // prototype from lpeglabel/lptree.c
 int luaopen_lpeglabel (lua_State *L);
 
-zenroom_t *ast_init() {
+zenroom_t *ast_init(char *script) {
 	lua_State *L = NULL;
 	zen_mem_t *mem = NULL;
 	mem = libc_memory_init();
@@ -82,6 +85,8 @@ zenroom_t *ast_init() {
 	zen_add_io(L);
 	// second arg is restriction
 	zen_require_override(L, 0);
+	// save script CODE in Lua context
+	zen_setenv(L,"CODE",(char*)script);
 
 	return(Z);
 }
@@ -91,7 +96,7 @@ int ast_parse(zenroom_t *Z) {
 	for (p = zen_extensions;
 	     p->name != NULL; ++p) {
 		if (strcasecmp(p->name, "ast") == 0)
-			return zen_exec_extension(Z->lua,p);		
+			return zen_exec_extension(Z->lua,p);
 	}
 	return 0;
 }
@@ -100,4 +105,55 @@ void ast_teardown(zenroom_t *Z) {
 	void *mem = Z->mem;
 	if(Z->lua) lua_close((lua_State*)Z->lua);
 	if(mem) system_free(mem);
+	system_free(Z);
+}
+
+// implementation exposed as public function
+int zenroom_parse_ast(char *script, int verbosity,
+                      char *stdout_buf, size_t stdout_len,
+                      char *stderr_buf, size_t stderr_len) {
+	zenroom_t *Z = ast_init(script);
+	if(!Z) {
+		error(NULL, "%s: initialisation failed.", __func__);
+		return 1; }
+	lua_State *L = Z->lua;
+	if(!L) {
+		error(L, "%s: initialisation failed.", __func__);
+		return 1; }
+
+	int return_code = 1; // return error by default
+	if(!script) {
+		error(L, "NULL string as script for zenroom_exec()");
+		exit(1); }
+	set_debug(verbosity);
+
+	// setup stdout and stderr buffers
+	Z->stdout_buf = stdout_buf;
+	Z->stdout_len = stdout_len;
+	Z->stderr_buf = stderr_buf;
+	Z->stderr_len = stderr_len;
+
+	int r;
+	notice(L,"Parsing AST of script");
+	r = ast_parse(Z);
+
+	if(r) {
+#ifdef __EMSCRIPTEN__
+		EM_ASM({Module.exec_error();});
+#endif
+		//		error(r);
+		error(L, "Error detected. Parsing aborted.");
+
+		ast_teardown(Z);
+		return(1);
+	}
+	return_code = 0; // return success
+
+#ifdef __EMSCRIPTEN__
+	EM_ASM({Module.exec_ok();});
+#endif
+
+	act(L, "AST parser completed.");
+	ast_teardown(Z);
+	return(return_code);
 }
