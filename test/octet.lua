@@ -1,4 +1,7 @@
-print '= OCTET TESTS'
+print()
+print '= OCTET FIRST CLASS CITIZEN TESTS'
+print()
+
 octet = require'octet'
 
 function dotest(l,r)

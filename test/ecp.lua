@@ -1,3 +1,7 @@
+print
+print '= ELLIPTIC CURVE ARITHMETIC OPERATIONS TESTS'
+print
+
 ecp = require'ecp'
 
 -- test values found in milagro's vector_ED25519.txt
