@@ -13,3 +13,6 @@
 [submodule "docs/wiki"]
 	path = docs/wiki
 	url = https://github.com/DECODEproject/zenroom.wiki.git
+[submodule "lib/lpeglabel"]
+	path = lib/lpeglabel
+	url = https://github.com/sqmedeiros/lpeglabel

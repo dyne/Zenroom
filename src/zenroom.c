@@ -62,6 +62,11 @@ extern void zen_setenv(lua_State *L, char *key, char *val);
 extern void zen_add_function(lua_State *L, lua_CFunction func,
                              const char *func_name);
 
+// prototypes from zen_ast.c
+zenroom_t *ast_init();
+int  ast_parse(zenroom_t *Z);
+void ast_teardown(zenroom_t *Z);
+
 zenroom_t *zen_init(const char *conf,
                     char *keys, char *data) {
 	(void) conf;
@@ -298,11 +303,12 @@ int main(int argc, char **argv) {
 	int opt, index;
     int   verbosity           = 1;
     int   interactive         = 0;
-    const char *short_options = "hdic:k:a:";
+    int   parseast            = 0;
+    const char *short_options = "hdic:k:a:p:";
     const char *help          =
-	    "Usage: zenroom [-dh] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ script.lua ]\n";
+	    "Usage: zenroom [-dh] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ [ -p ] script.lua ]\n";
     conffile   [0] = '\0';
-    scriptfile[0]  = '\0';
+    scriptfile [0] = '\0';
     keysfile   [0] = '\0';
     datafile   [0] = '\0';
     data       [0] = '\0';
@@ -334,6 +340,10 @@ int main(int argc, char **argv) {
 		case 'c':
 			snprintf(conffile,511,"%s",optarg);
 			break;
+		case 'p':
+			parseast = 1;
+			snprintf(scriptfile,511,"%s",optarg);
+			break;
 		case '?': error(0,help); exit(1);
 		default:  error(0,help); exit(1);
 		}
@@ -350,6 +360,15 @@ int main(int argc, char **argv) {
 	if(datafile[0]!='\0') {
 		act(NULL, "reading DATA from file: %s", datafile);
 		load_file(data, fopen(datafile, "r"));
+	}
+
+	if(parseast) {
+		zenroom_t *ast = ast_init();
+		load_file(script, fopen(scriptfile, "rb"));
+		zen_setenv(ast->lua,"CODE",(char*)script);
+		ast_parse(ast);
+		ast_teardown(ast);
+		return 0;
 	}
 
 	if(interactive) {
