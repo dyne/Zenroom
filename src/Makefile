@@ -25,7 +25,7 @@ SOURCES := \
 	lua_functions.o lua_modules.o lualibs_detected.o \
 	json.o json_strbuf.o json_fpconv.o \
 	umm_malloc.o zen_memory.o \
-	zen_io.o repl.o \
+	zen_io.o zen_ast.o repl.o \
 	zen_octet.o zen_ecp.o \
 	zen_ecdh.o zen_ecdh_factory.o \
 	randombytes.o
@@ -34,6 +34,7 @@ SOURCES := \
 
 LDADD   := ../lib/lua53/src/liblua.a
 # LDADD   += ../build/luazen/libluazen.a
+LDADD   += ../lib/lpeglabel/lpeglabel.a
 
 milib := ../lib/milagro-crypto-c/lib
 # LDADD += ${milib}/libamcl_rsa_2048.a ${milib}/libamcl_rsa_4096.a
