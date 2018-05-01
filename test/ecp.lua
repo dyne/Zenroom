@@ -1,6 +1,6 @@
-print
+print()
 print '= ELLIPTIC CURVE ARITHMETIC OPERATIONS TESTS'
-print
+print()
 
 ecp = require'ecp'
 
