@@ -159,6 +159,7 @@ void zen_teardown(zenroom_t *Z) {
     func(NULL,"zen free");
     if(heap)
 	    system_free(heap);
+    free(Z);
     if(mem) system_free(mem);
     func(NULL,"teardown completed");
 }
