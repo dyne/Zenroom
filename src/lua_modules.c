@@ -89,7 +89,7 @@ int zen_exec_extension(lua_State *L, zen_extension_t *p) {
 		HEREs(p->code);
 		if(luaL_loadfile(L, p->code)==0) {
 			if(lua_pcall(L, 0, LUA_MULTRET, 0) == LUA_OK) {
-				act(L,"loaded %s", p->name);
+				func(L,"loaded %s", p->name);
 				return 1;
 			}
 		}
@@ -98,7 +98,7 @@ int zen_exec_extension(lua_State *L, zen_extension_t *p) {
 	if(zen_load_string(L, p->code, *p->size, p->name)
 	   ==LUA_OK) {
 		lua_call(L,0,1);
-		act(L,"loaded %s", p->name);
+		func(L,"loaded %s", p->name);
 		return 1;
 	}
 #endif
@@ -121,7 +121,7 @@ int zen_require_restricted(lua_State *L) {
 		if (strcmp(p->name, s) == 0) {
 			HEREp(p->func);
 			luaL_requiref(L, p->name, p->func, 1);
-			act(L,"loaded %s",p->name);
+			func(L,"loaded %s",p->name);
 			return 1;
 		}
 	}
@@ -157,7 +157,7 @@ int zen_require_restricted(lua_State *L) {
 		// shall we bail out and abort execution here?
 		warning(L, "required extension not found: %s",s);
 		return 0; }
-	act(L,"loaded %s",s);
+	func(L,"loaded %s",s);
 	return 1;
 }
 
@@ -173,7 +173,7 @@ int zen_require(lua_State *L) {
 		if (strcmp(p->name, s) == 0) {
 			HEREp(p->func);
 			luaL_requiref(L, p->name, p->func, 1);
-			act(L,"loaded %s",p->name);
+			func(L,"loaded %s",p->name);
 			return 1;
 		}
 	}
@@ -208,7 +208,7 @@ int zen_require(lua_State *L) {
 		// shall we bail out and abort execution here?
 		warning(L, "required extension not found: %s",s);
 		return 0; }
-	act(L,"loaded %s",s);
+	func(L,"loaded %s",s);
 	return 1;
 }
 

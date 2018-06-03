@@ -39,7 +39,8 @@ extern zen_extension_t zen_extensions[];
 
 // prototypes from lua_modules.c
 extern int zen_exec_extension(lua_State *L, zen_extension_t *p);
-extern int zen_require_override(lua_State *L, int restricted);
+extern int zen_require_override(lua_State *L, const int restricted);
+
 extern int lua_cjson_safe_new(lua_State *l);
 
 extern void zen_add_io(lua_State *L);

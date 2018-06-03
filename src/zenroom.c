@@ -42,7 +42,7 @@
 #include <zen_memory.h>
 
 // prototypes from lua_modules.c
-extern int zen_require_override(lua_State *L);
+extern int zen_require_override(lua_State *L, const int restricted);
 extern int zen_lua_init(lua_State *L);
 
 // prototypes from zen_io.c
@@ -115,7 +115,7 @@ zenroom_t *zen_init(const char *conf,
 	luaL_openlibs(L);
 	// load our own openlibs and extensions
 	zen_add_io(L);
-	zen_require_override(L);
+	zen_require_override(L,0);
 	if(!zen_lua_init(L)) {
 		error(L,"%s: %s", __func__, "initialisation of lua scripts failed");
 		return NULL;
@@ -123,6 +123,7 @@ zenroom_t *zen_init(const char *conf,
 	//////////////////// end of create
 
 	lua_gc(L, LUA_GCCOLLECT, 0);
+	zen_require_override(L,1);
 
 	// load arguments if present
 	if(data) // avoid errors on NULL args
@@ -135,7 +136,7 @@ zenroom_t *zen_init(const char *conf,
 			func(L, "declaring global: KEYS");
 			zen_setenv(L,"KEYS",keys);
 		}
-//	lua_setfield(L, LUA_REGISTRYINDEX, LSB_THIS_PTR);
+
 	return(Z);
 }
 
