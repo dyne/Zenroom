@@ -1,7 +1,7 @@
 const fs = require('fs')
 // you have to copy the js.mem file in the CWD as per design or --memory-init-file 0
 // but it is not recommended as stated in https://github.com/kripken/emscripten/issues/2537
-fs.writeFileSync('zenroom.js.mem', fs.readFileSync('src/zenroom.js.mem'));
+// fs.writeFileSync('zenroom.js.mem', fs.readFileSync('src/zenroom.js.mem'));
 
 const zenroom_module = require(process.argv[2])
 
