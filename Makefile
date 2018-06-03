@@ -246,12 +246,13 @@ lowmem-tests = \
 		${1} test/goto.lua && \
 		${1} test/events.lua && \
 		${1} test/code.lua && \
-		${1} test/closure.lua && \
 		${1} test/locals.lua && \
 		${1} test/schema.lua && \
 		${1} test/octet.lua && \
 		${1} test/ecdh.lua && \
 		${1} test/ecp.lua
+
+# ${1} test/closure.lua && \
 
 # failing js tests due to larger memory required:
 # abort("Cannot enlarge memory arrays. Either (1) compile with -s
