@@ -8,13 +8,13 @@ const zenroom_module = require(process.argv[2])
 zenroom_module.exec_ok    = () => 0
 zenroom_module.exec_error = () => 0
 
-const zenroom = (script_file, conf_file=null, keys_file=null, data_file=null, verbosity=1) => {
+const zenroom = (script_file, conf_file=null, keys_file=null, data_file=process.argv[4], verbosity=1) => {
 	// process.stderr._write = function(chunk, encoding, callback) { callback() }
   const enc = { encoding: 'utf8' }
   const script = fs.readFileSync(script_file, enc)
-  const conf = (conf_file) ? fs.readFileSync(conf_file, env) : null
-  const keys = (keys_file) ? fs.readFileSync(keys_file, env) : null
-  const data = (data_file) ? fs.readFileSync(data_file, env) : null
+  const conf = (conf_file) ? fs.readFileSync(conf_file, enc) : null
+  const keys = (keys_file) ? fs.readFileSync(keys_file, enc) : null
+  const data = (data_file) ? fs.readFileSync(data_file, enc) : null
 
 
   return zenroom_module.ccall('zenroom_exec', 'number',
