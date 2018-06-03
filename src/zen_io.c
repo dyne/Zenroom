@@ -135,6 +135,27 @@ static int zen_print (lua_State *L) {
 	return 0;
 }
 
+static int zen_error (lua_State *L) {
+	if( lua_print_tobuffer(L) ) return 0;
+
+	int status = 1;
+	size_t len = 0;
+	int n = lua_gettop(L);  /* number of arguments */
+	int i;
+	lua_getglobal(L, "tostring");
+	fwrite("[!] ",sizeof(char),4,stderr);
+	for (i=1; i<=n; i++) {
+		const char *s = lua_print_format(L, i, &len);
+		if(i>1) fwrite("\t",sizeof(char),1,stderr);
+		status = status &&
+			(fwrite(s, sizeof(char), len, stderr) == len);
+		lua_pop(L, 1);  /* pop result */
+	}
+	fwrite("\n",sizeof(char),1,stderr);
+	fflush(stderr);
+	return 0;
+}
+
 static int zen_iowrite (lua_State *L) {
 	int nargs = lua_gettop(L) +1;
 	int status = 1;
@@ -166,7 +187,9 @@ static int zen_iowrite (lua_State *L) {
 void zen_add_io(lua_State *L) {
 	// override print() and io.write()
 	static const struct luaL_Reg custom_print [] =
-		{ {"print", zen_print}, {NULL, NULL} };
+		{ {"print", zen_print},
+		  {"error", zen_error},
+		  {NULL, NULL} };
 	lua_getglobal(L, "_G");
 	luaL_setfuncs(L, custom_print, 0);  // for Lua versions 5.2 or greater
 	lua_pop(L, 1);

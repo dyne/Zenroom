@@ -6,17 +6,18 @@ schema = require('schema')
 octet  = require('octet')
 ecdh   = require('ecdh')
 fun    = require('functional')
+i      = require('inspect')
 
 function read_json(data, validation)
    if not data then
-	  print "read_json: missing data"
+	  error("read_json: missing data")
 	  os.exit()
    end
    out,res = json.decode(data)
    if not out then
 	  if res then
-		 print "read_json: invalid json"
-		 print(res)
+		 error("read_json: invalid json")
+		 error(res)
 		 os.exit()
 	  end
    else
@@ -24,11 +25,15 @@ function read_json(data, validation)
 	  if validation then
 		 local err = schema.CheckSchema(out, validation)
 		 if err then
-			print "read_json: invalid data schema"
-			print(schema.FormatOutput(err))
+			error "read_json: schema validation failed"
+			error(schema.FormatOutput(err))
 			os.exit()
 		 end
 	  end
 	  return out
    end
+end
+
+function write_json(data)
+   i.print(data)
 end
