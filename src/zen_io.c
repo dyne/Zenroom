@@ -94,6 +94,27 @@ static int zen_print (lua_State *L) {
 	return 0;
 }
 
+static int zen_error (lua_State *L) {
+	if( lua_print_tobuffer(L) ) return 0;
+
+	char out[MAX_STRING];
+	size_t pos = 0;
+	size_t len = 0;
+	int n = lua_gettop(L);  /* number of arguments */
+	int i;
+	lua_getglobal(L, "tostring");
+	out[0] = '['; out[1] = '!';	out[2] = ']'; out[3] = ' ';	pos = 4;
+	for (i=1; i<=n; i++) {
+		const char *s = lua_print_format(L, i, &len);
+		if (i>1) { out[pos]='\t'; pos++; }
+		snprintf(out+pos,MAX_STRING-pos,"%s",s);
+		pos+=len;
+		lua_pop(L, 1);  /* pop result */
+	}
+	EM_ASM_({Module.print(UTF8ToString($0))}, out);
+	return 0;
+}
+
 static int zen_iowrite (lua_State *L) {
 	char out[MAX_STRING];
 	size_t pos = 0;
