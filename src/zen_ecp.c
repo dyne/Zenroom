@@ -18,6 +18,43 @@
 
 // For now, the only supported curve is ED25519 type EDWARDS
 
+
+/// <h1>Elliptic Curve Point Arithmetic (ECP)</h1>
+//
+//  Base arithmetical operations on big number point coordinates on elliptic curves.
+//
+//  ECP arithmetic operations are provided to implement existing and
+//  new encryption schemes: they are elliptic curve cryptographic
+//  primitives and work the same across different curves. The ECP
+//  primitive functions need this extension to be required explicitly:
+//
+//  <code>ecp = require'ecp'</code>
+//
+//  After requiring the extension it is possible to create ECP points
+//  instances using the new() method, taking two arguments (the x and
+//  y coordinates):
+//
+//  <code>
+// ecpsum = ecp.new(
+// octet.from_hex('56745BF3132BBE3B36555A1074CB26EC100265303D19FA8628D8513BC73935D2'),
+// octet.from_hex('70D5370B9C54F9E291DC864D03616617CCF50B03D19544A8485A75F7B93D790F'))
+//
+//  The values of each coordinate can be imported using octet methods
+//  from hex or base64. These values (also called vectors) are very
+//  big numbers whose representation is difficult without marshaling
+//  them into such formats. Zenroom provides ECP tests based on the
+//  ED25519 curve which come valid point coordinates on the curve.
+//
+//  Once ECP numbers are created this way, the arithmetic operations
+//  of addition, subtraction and multiplication can be executed
+//  normally using overloaded operators (+ - *).
+//
+//  @module ecp
+//  @author Denis "Jaromil" Roio
+//  @license GPLv3
+//  @copyright Dyne.org foundation 2017-2018
+
+
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
@@ -61,6 +98,16 @@ char *big2strhex(char *str, BIG_256_29 a) {
 	return str;
 }
 
+/***
+    Create a new ECP point from two x,y octet arguments.
+
+    Supported curve: ed25519
+
+    @param X octet of a big number
+    @param Y octet of a big number
+    @return a new ECP point on the curve at X,Y coordinates
+    @function new(X,Y)
+*/
 ecp* ecp_new(lua_State *L) {
 	ecp *e = (ecp *)lua_newuserdata(L, sizeof(ecp));
 	if(!e) {
@@ -115,6 +162,14 @@ int ecp_destroy(lua_State *L) {
 	FREE(e->ed25519);
 	return 0;
 }
+/***
+    Set an existing ECP point with two new x,y octet arguments.
+
+    @param X octet of a big number
+    @param Y octet of a big number
+    @return a new ECP point on the curve at X,Y coordinates
+    @function set(X,Y)
+*/
 static int lua_set_ecp(lua_State *L) {
 	ecp *e = ecp_arg(L, 1); SAFE(e);
 	// takes x,y big numbers from octets as arguments
@@ -131,19 +186,34 @@ static int lua_new_ecp(lua_State *L) {
 	return 1;
 }
 
+/***
+    Make an existing ECP point affine with the curve
+    @function affine()
+*/
 static int ecp_affine(lua_State *L) {
 	ecp *e = ecp_arg(L,1); SAFE(e);
 	ECP_ED25519_affine(e->ed25519);
 	return 0;
 }
 
-// assumes curve type is EDWARDS
+/***
+    Returns true if an ECP coordinate points to infinity (out of the curve) and false otherwise.
+
+    @function isinf()
+    @return false if point is on curve, true if its off curve into infinity.
+*/
 static int ecp_isinf(lua_State *L) {
 	const ecp *e = ecp_arg(L,1); SAFE(e);
 	lua_pushboolean(L,ECP_ED25519_isinf(e->ed25519));
 	return 1;
 }
 
+/***
+    Map a BIG number to a point of the curve, the BIG number should be the output of some hash function.
+
+    @param big octet of a BIG number (single number holding coordinates)
+    @function mapit(big)
+*/
 static int ecp_mapit(lua_State *L) {
 	octet *o = o_arg(L,1); SAFE(o);
 	if(o->len < MODBYTES_256_29) {
@@ -155,6 +225,14 @@ static int ecp_mapit(lua_State *L) {
 	return 1;
 }
 
+/***
+    Add two ECP points to each other (commutative and associative operation). Can be made using the overloaded operator "+" between two ECP objects just like the would be numbers.
+
+    @param first number to be summed
+    @param second number to be summed
+    @function add(first,second)
+    @return sum resulting from the addition
+*/
 static int ecp_add(lua_State *L) {
 	const ecp *e = ecp_arg(L,1); SAFE(e);
 	const ecp *q = ecp_arg(L,2); SAFE(q);
@@ -164,6 +242,14 @@ static int ecp_add(lua_State *L) {
 	return 1;
 }
 
+/***
+    Subtract an ECP point from another (commutative and associative operation). Can be made using the overloaded operator "-" between two ECP objects just like the would be numbers.
+
+    @param first number from which the second should be subtracted
+    @param second number to use in the subtraction
+    @function sub(first,second)
+    @return new ECP point resulting from the subtraction
+*/
 static int ecp_sub(lua_State *L) {
 	const ecp *e = ecp_arg(L,1); SAFE(e);
 	const ecp *q = ecp_arg(L,2); SAFE(q);
@@ -173,6 +259,11 @@ static int ecp_sub(lua_State *L) {
 	return 1;
 }
 
+/***
+    Transforms an ECP point into its equivalent negative point on the elliptic curve.
+
+    @function negative()
+*/
 static int ecp_negative(lua_State *L) {
 	const ecp *in = ecp_arg(L,1); SAFE(in);
 	const ecp *out = ecp_dup(L,in); SAFE(out);
@@ -180,6 +271,11 @@ static int ecp_negative(lua_State *L) {
 	return 1;
 }
 
+/***
+    Transforms an ECP pointo into the double of its value, multiplying it by two. This works faster than multiplying it an arbitrary number of times.
+
+    @function double()
+*/
 static int ecp_double(lua_State *L) {
 	const ecp *in = ecp_arg(L,1); SAFE(in);
 	const ecp *out = ecp_dup(L,in); SAFE(out);
@@ -187,6 +283,15 @@ static int ecp_double(lua_State *L) {
 	return 1;
 }
 
+/***
+    Multiply an ECP point a number of times, indicated by an arbitrary ordinal number. Can be made using the overloaded operator "*" between an ECP object and an integer number.
+
+
+    @function mul(ecp,num)
+    @param ecp point on the elliptic curve to be multiplied
+    @param number indicating how many times it should be multiplied
+    @return new ecp point resulting from the multiplication
+*/
 static int ecp_mul(lua_State *L) {
 	BIG_256_29 big;
 	void *ud;
@@ -204,6 +309,14 @@ static int ecp_mul(lua_State *L) {
 	return 1;
 }
 
+/***
+    Compares two ECP objects and returns true if they indicate the same point on the curve (they are equal) or false otherwise. It can also be executed by using the '==' overloaded operators.
+
+    @param first ecp point to be compared
+    @param second ecp point to be compared
+    @function eq(first,second)
+    @return bool value: true if equal, false if not equal
+*/
 static int ecp_eq(lua_State *L) {
 	const ecp *p = ecp_arg(L,1); SAFE(p);
 	const ecp *q = ecp_arg(L,2); SAFE(q);
@@ -215,6 +328,12 @@ static int ecp_eq(lua_State *L) {
 	return 1;
 }
 
+/***
+    Sets or returns an octet containing a BIG number composed by both x,y coordinates of an ECP point on the curve. It can be used to port the value of an ECP point into hex or base64 encapsulation, to be later set again into an ECP point using this same call.
+
+    @param ecp[opt=octet] the octet to be imported, none if to be exported
+    @function octet(ecp)
+*/
 static int ecp_octet(lua_State *L) {
 	void *ud;
 	ecp *e = ecp_arg(L,1); SAFE(e);
@@ -281,9 +400,13 @@ int luaopen_ecp(lua_State *L) {
 		{"isinf",ecp_isinf},
 		{"mapit",ecp_mapit},
 		{"octet",ecp_octet},
+		{"add",ecp_add},
 		{"__add",ecp_add},
+		{"sub",ecp_sub},
 		{"__sub",ecp_sub},
+		{"mul",ecp_mul},
 		{"__mul",ecp_mul},
+        {"eq",ecp_eq},
 		{"__eq", ecp_eq},
 		{"__gc",ecp_destroy},
 		{"__tostring",ecp_output},
