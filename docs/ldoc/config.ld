@@ -26,6 +26,7 @@ backtick_references=false
 file={
 	'../../src/zen_octet.c',
 	'../../src/zen_ecdh.c',
+	'../../src/zen_ecp.c',
 	'../../src/lua/functional.lua',
 	'math.lua',
 	'string.lua',
