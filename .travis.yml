@@ -26,7 +26,7 @@ addons:
 
 before_install:
 - git submodule update --init --recursive
-- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker run -dit --name emscripten -v $(pwd):/src trzeci/emscripten:sdk-incoming-64bit bash ; fi
+# - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker run -dit --name emscripten -v $(pwd):/src trzeci/emscripten:sdk-incoming-64bit bash ; fi
 
 script:
 - mkdir -p build
@@ -35,7 +35,7 @@ script:
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make clean && cd lib/milagro-crypto-c && git clean -fd && cd - ;fi
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make win && cp -v src/zenroom.exe build/ ; fi
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make clean && cd lib/milagro-crypto-c && git clean -fd && cd - ;fi
-- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker exec -it emscripten make js && docker exec -it emscripten make check-js && cp -v src/zenroom.js build/ ; fi
+# - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker exec -it emscripten make js && docker exec -it emscripten make check-js && cp -v src/zenroom.js build/ ; fi
 
 deploy:
   - provider: releases
