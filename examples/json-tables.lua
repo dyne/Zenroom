@@ -56,7 +56,7 @@ superheroes = json.decode(DATA)
 
 -- iterate through the members array and print out only names
 for k,v in ipairs(superheroes.members) do
-   i.print(f.at(v,"name"))
+   i.print(fun.at(v,"name"))
 end
 
 -- the previous approach is procedural,
