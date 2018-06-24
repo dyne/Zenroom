@@ -1,16 +1,16 @@
 # Zenroom ChangeLog
 
 ## 0.6.0
-### May 2018
+### June 2018
 
-Implemented arithmetic operations on elliptic curve points (ECP).
+Implemented arithmetic operations on elliptic curve points (ECP)
+as cryptographic primitives to implement new schemes.
 
 Modularised ECDH class/factory implementation to support multiple
 curve types.
 
-Support for multiple memory managers (still not fully reentrant).
-
-Improved use of memory (and reflexivity), better constructors in
+Support for multiple memory managers (still not fully reentrant),
+improved use of memory (and reflexivity), better constructors in
 scripts.
 
 Further progress on syntax in relation to use-cases (DECODE D3.5).

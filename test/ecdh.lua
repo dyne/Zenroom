@@ -42,7 +42,7 @@ function test_curve (name)
    print ('         OK')
 end
 
-test_curve('ec25519')
+test_curve('ed25519')
 test_curve('nist256')
 -- TODO: check why goldilocks doesn't works
 -- test_curve('goldilocks')

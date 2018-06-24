@@ -8,7 +8,7 @@ bin=${1:-zenroom-shared}
 zen="src/$bin"
 # echo "using: $zen"
 enc=${2:-"base64"}
-algo=${3:-"ec25519"}
+algo=${3:-"ed25519"}
 symc=${4:-"norx"}
 secret="This is the secret message that is sent among people."
 ppl=(zora vuk mira darko)
