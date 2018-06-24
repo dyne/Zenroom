@@ -39,6 +39,7 @@ topics={
 	'Functional',
 	'Schema',
 	'StateMachine',
+	'Embed',
 }
 	
 style='css'
