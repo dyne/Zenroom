@@ -65,6 +65,9 @@ js: cflags := -O2 -D'ARCH=\"JS\"' -Wall
 js: ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s USE_SDL=0
 js: apply-patches lua53 milagro-js lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
+	@mkdir -p build/nodejs
+	@cp -v src/zenroom.js 	 build/nodejs/
+	@cp -v src/zenroom.js.mem build/nodejs/
 
 wasm: gcc=${EMSCRIPTEN}/emcc
 wasm: ar=${EMSCRIPTEN}/emar
@@ -72,6 +75,9 @@ wasm: cflags := -O2 -D'ARCH=\"WASM\"' -Wall
 wasm: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s MODULARIZE=1
 wasm: apply-patches lua53 milagro-js lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
+	@mkdir -p build/wasm
+	@cp -v src/zenroom.js   build/wasm/
+	@cp -v src/zenroom.wasm build/wasm/
 
 demo: gcc=${EMSCRIPTEN}/emcc
 demo: ar=${EMSCRIPTEN}/emar
