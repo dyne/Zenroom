@@ -93,7 +93,7 @@ win: ranlib=x86_64-w64-mingw32-ranlib
 win: cflags += -D'ARCH=\"WIN\"' -std=c99
 win: platform = posix
 win: apply-patches lua53 milagro-win lpeglabel
-	CC=${gcc} CFLAGS="${cflags}" make -C src win
+	CC=${gcc} CFLAGS="${cflags}" make -C src win-exe
 
 win-dll: gcc=x86_64-w64-mingw32-gcc
 win-dll: ar=x86_64-w64-mingw32-ar
@@ -102,6 +102,7 @@ win-dll: cflags += -D'ARCH=\"WIN\"' -std=c99
 win-dll: platform = posix
 win-dll: apply-patches lua53 milagro-win lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" make -C src win-dll
+
 
 
 static: gcc := musl-gcc
@@ -136,6 +137,10 @@ osx: platform := macosx
 osx: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
 
+ios-lib:
+	TARGET=${ARCH} AR=${ar} CC=${gcc} CFLAGS="${cflags}" make -C src ios-lib
+	cp -v src/zenroom-ios-${ARCH}.a build/
+
 ios-armv7: ARCH := armv7
 ios-armv7: OS := iphoneos
 ios-armv7: gcc := $(shell xcrun --sdk iphoneos -f gcc 2>/dev/null)
@@ -146,9 +151,7 @@ ios-armv7: SDK := $(shell xcrun --sdk iphoneos --show-sdk-path 2>/dev/null)
 ios-armv7: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM
 ios-armv7: ldflags := -lm
 ios-armv7: platform := ios
-ios-armv7: apply-patches lua53 milagro lpeglabel
-	CC=${gcc} CFLAGS="${cflags}" make -C src library
-	${AR} rcs build/zenroom-armv7.a `find . -name \*.o`
+ios-armv7: apply-patches lua53 milagro lpeglabel ios-lib
 
 ios-arm64: ARCH := arm64
 ios-arm64: OS := iphoneos
@@ -160,9 +163,7 @@ ios-arm64: SDK := $(shell xcrun --sdk iphoneos --show-sdk-path 2>/dev/null)
 ios-arm64: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM
 ios-arm64: ldflags := -lm
 ios-arm64: platform := ios
-ios-arm64: apply-patches lua53 milagro lpeglabel
-	CC=${gcc} CFLAGS="${cflags}" make -C src library
-	${AR} rcs build/zenroom-arm64.a `find . -name \*.o`
+ios-arm64: apply-patches lua53 milagro lpeglabel ios-lib
 
 ios-sim: ARCH := x86_64
 ios-sim: OS := iphonesimulator
@@ -174,13 +175,10 @@ ios-sim: SDK := $(shell xcrun --sdk iphonesimulator --show-sdk-path 2>/dev/null)
 ios-sim: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM
 ios-sim: ldflags := -lm
 ios-sim: platform := ios
-ios-sim: apply-patches lua53 milagro lpeglabel
-	CC=${gcc} CFLAGS="${cflags}" make -C src library
-	${AR} rcs build/zenroom-x86_64.a `find . -name \*.o`
-
+ios-sim: apply-patches lua53 milagro lpeglabel ios-lib
 
 ios-fat:
-	lipo -create build/zenroom-x86_64.a build/zenroom-arm64.a build/zenroom-armv7.a -output build/zenroom-ios.a
+	lipo -create build/zenroom-ios-x86_64.a build/zenroom-ios-arm64.a build/zenroom-ios-armv7.a -output build/zenroom-ios.a
 
 android: gcc := $(CC)
 android: ar := $(AR)

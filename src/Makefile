@@ -52,15 +52,15 @@ LDADD += ${milib}/libamcl_core.a
 
 all: shared
 
-js: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc
+js: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
 js: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom.js ${LDFLAGS} ${LDADD} --embed-file lua@/
 
-html: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc
+html: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
 html: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom.html ${LDFLAGS} ${LDADD} --preload-file lua@/
 
-demo: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc
+demo: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
 demo: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o ../docs/demo/index.html ${LDFLAGS} ${LDADD} --preload-file lua@/
 
@@ -82,10 +82,10 @@ shared-lib: CFLAGS += -DLIBRARY
 shared-lib: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o libzenroom-${ARCH}-${VERSION}-${BRANCH}-${HASH}.so ${LDFLAGS} ${LDADD}
 
-win: CFLAGS +=  -O3 -Wall -Wextra -pedantic -std=gnu99
-win: LDFLAGS += -L/usr/x86_64-w64-mingw32/lib -static
-win: LDADD +=  -l:libm.a -l:libpthread.a -lssp
-win: ${SOURCES}
+win-exe: CFLAGS +=  -O3 -Wall -Wextra -pedantic -std=gnu99
+win-exe: LDFLAGS += -L/usr/x86_64-w64-mingw32/lib -static
+win-exe: LDADD +=  -l:libm.a -l:libpthread.a -lssp
+win-exe: ${SOURCES}
 	./stamp-exe.sh
 	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.exe zenroom.res ${SOURCES} ${LDADD}
 	x86_64-w64-mingw32-strip zenroom.exe
@@ -97,8 +97,9 @@ win-dll: ${SOURCES}
 	./stamp-exe.sh
 	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.dll zenroom.res ${SOURCES} ${LDADD} -Wl,--out-implib,zenroom_dll.a
 
-library: CFLAGS += -D LIBRARY
-library: ${SOURCES}
+ios-lib: CFLAGS += -D LIBRARY
+ios-lib: ${SOURCES}
+	${AR} rcs zenroom-ios-${TARGET}.a ${SOURCES} ${LDADD}
 
 android: LDADD+= -lm
 android: CFLAGS += -D LIBRARY
