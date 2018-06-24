@@ -139,7 +139,7 @@ ios-armv7: ldflags := -lm
 ios-armv7: platform := ios
 ios-armv7: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" make -C src library
-	${AR} rcs zenroom-armv7.a `find . -name \*.o`
+	${AR} rcs build/zenroom-armv7.a `find . -name \*.o`
 
 ios-arm64: ARCH := arm64
 ios-arm64: OS := iphoneos
@@ -153,7 +153,7 @@ ios-arm64: ldflags := -lm
 ios-arm64: platform := ios
 ios-arm64: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" make -C src library
-	${AR} rcs zenroom-arm64.a `find . -name \*.o`
+	${AR} rcs build/zenroom-arm64.a `find . -name \*.o`
 
 ios-sim: ARCH := x86_64
 ios-sim: OS := iphonesimulator
@@ -167,11 +167,11 @@ ios-sim: ldflags := -lm
 ios-sim: platform := ios
 ios-sim: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" make -C src library
-	${AR} rcs zenroom-x86_64.a `find . -name \*.o`
+	${AR} rcs build/zenroom-x86_64.a `find . -name \*.o`
 
 
 ios-fat:
-	lipo -create zenroom-x86_64.a zenroom-arm64.a zenroom-armv7.a -output zenroom.a
+	lipo -create build/zenroom-x86_64.a build/zenroom-arm64.a build/zenroom-armv7.a -output build/zenroom-ios.a
 
 android: gcc := $(CC)
 android: ar := $(AR)
