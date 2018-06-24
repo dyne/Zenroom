@@ -27,7 +27,7 @@ addons:
 before_install:
 - git submodule update --init --recursive
 # - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker run -dit --name emscripten -v $(pwd):/src trzeci/emscripten:sdk-incoming-64bit bash ; fi
-- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cp /usr/lib/x86_64-linux-musl/libc.a /usr/local/musl/lib/libc.a ;fi
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then mkdir -p /usr/local/musl/lib && cp /usr/lib/x86_64-linux-musl/libc.a /usr/local/musl/lib/libc.a ;fi
 
 script:
 - mkdir -p build
