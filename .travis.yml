@@ -41,7 +41,8 @@ script:
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make ios-fat; fi
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make static && make check-milagro && make check-static && cp -v src/zenroom-static build/zenroom.x86; fi
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make clean && cd lib/milagro-crypto-c && git clean -fd && cd - ;fi
-- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make win && cp -v src/zenroom.exe build/ ; fi
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make win     && cp -v src/zenroom.exe build/ ; fi
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make win-dll && cp -v src/zenroom.dll build/ ; fi
 # - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make clean && cd lib/milagro-crypto-c && git clean -fd && cd - ;fi
 # - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then docker exec -it emscripten make js && docker exec -it emscripten make check-js && cp -v src/zenroom.js build/ ; fi
 
@@ -76,7 +77,19 @@ deploy:
     file: build/zenroom.exe
     skip_cleanup: true
     draft: true
-    name: Zenroom $TRAVIS_TAG (Win64 build)
+    name: Zenroom $TRAVIS_TAG (Win64 EXE build)
+    on:
+      tags: true
+      repo: DECODEproject/zenroom
+      branch: "$RELEASE_BRANCH"
+      condition: $TRAVIS_OS_NAME = linux
+  - provider: releases
+    api_key:
+      secure: lHmD0cuCkAxWT4s4s7HX8Wz4qrpm8XBbz1GT/Ei56iZJAUTtTEQqAyqD22MnqnBAtpOlSHx/S92iok/VAWmW22H9PD58cob7oimfmkViJq/xLg1x7EW2xVQL2tDF+eB2Rv2iQQ9UBuIy9jSftnlZSs3RBiLzFQDrSLTZe2KDOLrGk4WAuHGpl568jWuHAGNVmSBLSekhw1ucQQhy77qSz/zLp7XH09/Qrk0iYqoVSqgx4wKoeNFHHgq2EB67t1/ar2PAAUHMkpYSxxqNog0wr4OVpOtxBj0f1HJ5gdsAZUXpFyownymZc3fC2UMMJwjgUTcOCnlDW7GUw/kEMneXaGKAlHoH5r7r5gXk4pDCGA4gsk4TMkXwu0rJ6mOKgyKc9XWjBJoCvp2+uFMkEiwQA/VUU9GdoyxH4uKc6VjZo9YajJ89DjV4djr7l6E+0AWHaIo1TvdD5LiaXwM836afzXegwHGEC6yxL4TqZYdyLetxLRweIHY9E9D3Lb9y8qkQU5ZmGxdNV5BK2PmmzupV8Va4wwk5ONnRTAwYWmpmTTBll7DwE98HvmW/yDqIPlyGWk0/pGsCJSnxTbAnu1uns0qQrljpTCms46cezCiWZhlKcFwBucQ0999LOULKPTffVHzRdc4HLWW5XUVQsnlE8kiWALhayiE+Y3wgiPvAgP8=
+    file: build/zenroom.dll
+    skip_cleanup: true
+    draft: true
+    name: Zenroom $TRAVIS_TAG (Win64 DLL build)
     on:
       tags: true
       repo: DECODEproject/zenroom
@@ -88,7 +101,7 @@ deploy:
     file: build/zenroom.x86
     skip_cleanup: true
     draft: true
-    name: Zenroom $TRAVIS_TAG (Linux build)
+    name: Zenroom $TRAVIS_TAG (Linux 64bit static build)
     on:
       tags: true
       repo: DECODEproject/zenroom

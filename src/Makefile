@@ -77,7 +77,8 @@ shared: LDADD+=   -lm -lpthread
 shared: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-shared ${LDFLAGS} ${LDADD}
 
-shared-lib: LDADD+=   -lm
+shared-lib: LDADD+= -lm
+shared-lib: CFLAGS += -DLIBRARY
 shared-lib: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o libzenroom-${ARCH}-${VERSION}-${BRANCH}-${HASH}.so ${LDFLAGS} ${LDADD}
 
@@ -88,6 +89,13 @@ win: ${SOURCES}
 	./stamp-exe.sh
 	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.exe zenroom.res ${SOURCES} ${LDADD}
 	x86_64-w64-mingw32-strip zenroom.exe
+
+win-dll: CFLAGS +=  -O3 -Wall -Wextra -pedantic -std=gnu99 -DLIBRARY
+win-dll: LDFLAGS += -L/usr/x86_64-w64-mingw32/lib -shared
+win-dll: LDADD +=  -l:libm.a -l:libpthread.a -lssp
+win-dll: ${SOURCES}
+	./stamp-exe.sh
+	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.dll zenroom.res ${SOURCES} ${LDADD} -Wl,--out-implib,zenroom_dll.a
 
 library: CFLAGS += -D LIBRARY
 library: ${SOURCES}

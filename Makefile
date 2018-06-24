@@ -95,6 +95,15 @@ win: platform = posix
 win: apply-patches lua53 milagro-win lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" make -C src win
 
+win-dll: gcc=x86_64-w64-mingw32-gcc
+win-dll: ar=x86_64-w64-mingw32-ar
+win-dll: ranlib=x86_64-w64-mingw32-ranlib
+win-dll: cflags += -D'ARCH=\"WIN\"' -std=c99
+win-dll: platform = posix
+win-dll: apply-patches lua53 milagro-win lpeglabel
+	CC=${gcc} CFLAGS="${cflags}" make -C src win-dll
+
+
 static: gcc := musl-gcc
 static: cflags := -Os -static -Wall -std=gnu99 ${cflags_protection} -D'ARCH=\"MUSL\"' -D__MUSL__
 static: ldflags := -static
@@ -117,7 +126,7 @@ shared-lib: gcc := gcc
 shared-lib: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"LINUX\"' -shared
 shared-lib: ldflags := -lm
 shared-lib: platform := linux
-shared-lib: patches lua53 milagro lpeglabel
+shared-lib: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared-lib
 
 osx: gcc := gcc
