@@ -4,20 +4,20 @@
 
 Zenroom is a brand new, small and portable virtual machine for cryptographic operations. The Zenroom VM has no external dependencies, is smaller than 2MB, runs in even less memory and is ready for experimental use on many target platforms: desktop, embedded, mobile, cloud and browsers (webassembly).
 
+Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them. Zencode is a domain specific language implemented as a subset of Lua and its design is informed by concrete use-cases in DECODE.
+
 ## Latest stable release is 0.6.0:
 <ul class="center">
 
-<li class="fab fa-node-js"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.5.0-js.zip">NodeJS</a></li>
+<li class="fab fa-node-js"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.6.0-javascript.zip">Javscript (nodeJS and WASM)</a></li>
 
-<li class="fab fa-linux"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.5.0-x86_64_linux.zip">Linux x86 64bit</a></li>
+<li class="fab fa-linux"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.6.0-linux.zip">Linux (ARM and x86)</a></li>
 
-<li class="fab fa-android"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.5.0-armhf.zip">ARM hard-float</a></li>
+<li class="fab fa-windows"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.6.0-windows.zip">Windows (EXE and DLL)</li>
 
-<li class="fab fa-windows"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.5.0-win64.zip">MS/Windows 64bit</li>
+<li class="fab fa-apple"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.6.0-apple.zip">Apple (OSX and iOS)</li>
 
-<li class="fab fa-apple"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.5.0-osx.zip">Apple/OSX</li>
-
-<li class="far fa-file-archive"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.5.0.tar.gz">Source Code</a></li>
+<li class="far fa-file-archive"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.6.0.tar.gz">Source Code</a></li>
 
 <li class="fab fa-github"><a href="https://github.com/decodeproject/zenroom">Git repository</a></li>
 
@@ -28,7 +28,7 @@ Zenroom is a brand new, small and portable virtual machine for cryptographic ope
 
 <ul class="center"
 >
-<li class="fas fa-code"><a href="https://zenroom.dyne.org/api">Language Documentation</a></li>
+<li class="fas fa-code"><a href="https://zenroom.dyne.org/api">Zencode language API</a></li>
 
 <li class="far fa-graduation-cap"><a href="https://zenroom.dyne.org/whitepaper">Zenroom Whitepaper</a></li>
 
@@ -79,7 +79,7 @@ Designed, written and maintained by Denis "Jaromil" Roio.
 
 With contributions by Ivan J., Puria Nafisi Azizi, Jordi Coscolla and Christian Espinoza.
 
-Special thanks to Francesca Bria for leading the DECODE project and to George Danezis, Ola Bini, Mark de Villiers and Alberto Sonnino for their expert reviews.
+Special thanks to Francesca Bria for leading the DECODE project and to George Danezis, Ola Bini, Mark de Villiers, Alberto Sonnino and Richard Stallman for their expert reviews.
 
 This software includes software components by:
 
