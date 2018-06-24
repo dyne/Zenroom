@@ -76,17 +76,17 @@ extern ecdh *ecdh_new_curve(lua_State *L, const char *curve);
 
 /***
     Create a new ECDH encryption keyring using a specified curve or
-    EC25519 by default if omitted. The ECDH keyring created will
+    ED25519 by default if omitted. The ECDH keyring created will
     offer methods to interact with other keyrings.
 
-    Supported curves: ec25519, nist256, bn254cx, fp256bn
+    Supported curves: ed25519, nist256, bn254cx, fp256bn
 
-    @param curve[opt=ec25519] elliptic curve to be used
+    @param curve[opt=ed25519] elliptic curve to be used
     @return a new ECDH keyring
     @function new(curve)
     @usage
     ecdh = require'ecdh'
-    keyring = ecdh.new('ec25519')
+    keyring = ecdh.new('ed25519')
     -- generate a keypair
     keyring:keygen()
 */
@@ -486,7 +486,7 @@ static int ecdh_pbkdf2(lua_State *L) {
 }
 
 static int lua_new_ecdh(lua_State *L) {
-	const char *curve = luaL_optstring(L, 1, "ec25519");
+	const char *curve = luaL_optstring(L, 1, "ed25519");
 	ecdh *e = ecdh_new(L, curve);
 	SAFE(e);
 	func(L,"new ecdh curve %s type %s", e->curve, e->type);

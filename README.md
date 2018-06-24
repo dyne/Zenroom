@@ -1,12 +1,10 @@
 # Zenroom - crypto language VM
 
-[![software by Dyne.org](https://www.dyne.org/wp-content/uploads/2015/12/software_by_dyne.png)](http://www.dyne.org)
+[![software by Dyne.org](https://github.com/decodeproject/zenroom/blob/master/docs/views/img/software_by_dyne.png)](http://www.dyne.org)
 
-[![Build Status](https://travis-ci.org/DECODEproject/zenroom.svg?branch=master)](https://travis-ci.org/DECODEproject/zenroom)
+Zenroom is a brand new, small and portable virtual machine for cryptographic operations. The Zenroom VM has no external dependencies, is smaller than 2MB, runs in even less memory and is ready for experimental use on many target platforms: desktop, embedded, mobile, cloud and browsers (webassembly).
 
-Zenroom is a brand new, small and portable virtual machine for cryptographic operations. The Zenroom VM has no external dependencies, is smaller than 1MB, runs in less than 64KiB memory and is ready for experimental use on many target platforms: desktop, embedded, mobile, cloud and browsers.
-
-## Latest stable release is 0.5.0:
+## Latest stable release is 0.6.0:
 <ul class="center">
 
 <li class="fab fa-node-js"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.5.0-js.zip">NodeJS</a></li>
@@ -24,14 +22,13 @@ Zenroom is a brand new, small and portable virtual machine for cryptographic ope
 <li class="fab fa-github"><a href="https://github.com/decodeproject/zenroom">Git repository</a></li>
 
 <li class="far fa-archive"><a href="https://files.dyne.org/zenroom/">Releases archive</a></li>
-
 </ul>
 
 ## Documentation:
 
 <ul class="center"
 >
-<li class="fas fa-code"><a href="https://zenroom.dyne.org/api">Language Documentation</a><sup>*</sup></li>
+<li class="fas fa-code"><a href="https://zenroom.dyne.org/api">Language Documentation</a></li>
 
 <li class="far fa-graduation-cap"><a href="https://zenroom.dyne.org/whitepaper">Zenroom Whitepaper</a></li>
 
@@ -39,8 +36,8 @@ Zenroom is a brand new, small and portable virtual machine for cryptographic ope
 
 <li class="far fa-cogs"><a href="https://github.com/DECODEproject/zenroom/wiki">Build Instructions</a></li>
 
+<li class="fas fa-history"><a href="https://files.dyne.org/zenroom/ChangeLog.txt">History of changes</a></li>
 </ul>
-<p class="pull-right"><sup>*</sup> = Work in Progress</p>
 
 
 Zenroom is software in **ALPHA stage** and is part of the [DECODE project](https://decodeproject.eu) about data-ownership and [technological sovereignty](https://www.youtube.com/watch?v=RvBRbwBm_nQ). Our effort is that of improving people's awareness of how their data is processed by algorithms, as well facilitate the work of developers to create along [privacy by design principles](https://decodeproject.eu/publications/privacy-design-strategies-decode-architecture) using algorithms that can be deployed in any situation without any change.
@@ -51,9 +48,9 @@ Zenroom is software in **ALPHA stage** and is part of the [DECODE project](https
 
 This software aims to make it easy and less error-prone to write **portable** scripts using **end-to-end encryption** inside isolated environments that can be easily made **interoperable**. Basic crypto functions provided include primitives to manage **a/symmetric keys, key derivation, hashing and signing functionalities**.
 
+<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/_-ooCbgIiyo?rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 Zenroom is software inspired by the [language-theoretical security](http://langsec.org) research, it allows to expresses cryptographic operations in a readable scripting language that has no access to the calling process, underlying operating system or filesystem.
-<p class="pull-right"><sup>*</sup> = Work in Progress</p>
 
 <a href="http://langsec.org/occupy/">
 <img src="https://zenroom.dyne.org/img/InputLanguages.jpg" class="pic"
@@ -71,8 +68,8 @@ Zenroom's documentation and examples are being written to encourage a [declarati
 
 The main use case for Zenroom is that of **distributed computing** of untrusted code where advanced cryptographic functions are required, for instance it can be used as a distributed ledger implementation (also known as **blockchain smart contracts**).
 
-
-![Horizon 2020](https://zenroom.dyne.org/img/ec_logo.png)
+<img src="https://zenroom.dyne.org/img/ec_logo.png" class="pic"
+	alt="Project funded by the European Commission">
 
 This project is receiving funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement nr. 732546 (DECODE).
 
@@ -82,7 +79,7 @@ Copyright (C) 2017-2018 by Dyne.org foundation, Amsterdam
 
 Designed, written and maintained by Denis "Jaromil" Roio.
 
-With contributions by Ivan J., Puria Nafisi Azizi, Jordi Coscolla.
+With contributions by Ivan J., Puria Nafisi Azizi, Jordi Coscolla and Christian Espinoza.
 
 Special thanks to Francesca Bria for leading the DECODE project and to George Danezis, Ola Bini, Mark de Villiers and Alberto Sonnino for their expert reviews.
 
