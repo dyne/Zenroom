@@ -34,7 +34,7 @@ Zenroom is a brand new, small and portable virtual machine for cryptographic ope
 
 <li class="far fa-hand-point-right"><a href="https://zenroom.dyne.org/demo">Online Demo</a></li>
 
-<li class="far fa-cogs"><a href="https://github.com/DECODEproject/zenroom/wiki">Build Instructions</a></li>
+<li class="far fa-cogs"><a href="https://github.com/DECODEproject/zenroom/wiki">Online Wiki</a></li>
 
 <li class="fas fa-history"><a href="https://files.dyne.org/zenroom/ChangeLog.txt">History of changes</a></li>
 </ul>
@@ -47,8 +47,6 @@ Zenroom is software in **ALPHA stage** and is part of the [DECODE project](https
 	alt="DECODE project"></a>
 
 This software aims to make it easy and less error-prone to write **portable** scripts using **end-to-end encryption** inside isolated environments that can be easily made **interoperable**. Basic crypto functions provided include primitives to manage **a/symmetric keys, key derivation, hashing and signing functionalities**.
-
-<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/_-ooCbgIiyo?rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 Zenroom is software inspired by the [language-theoretical security](http://langsec.org) research, it allows to expresses cryptographic operations in a readable scripting language that has no access to the calling process, underlying operating system or filesystem.
 
@@ -100,15 +98,8 @@ And Lua extensions written and documented by:
 - Scott Lembcke (debugger)
 - Michael Lutz and David Manura (matrix and complex)
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License version 3
-as published by the Free Software Foundation.
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.  You may obtain a copy of the License at
 
-This program is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
+  http://www.apache.org/licenses/LICENSE-2.0
 
-You should have received a copy of the GNU Lesser General Public
-License along with this program.  If not, see
-<http://www.gnu.org/licenses/>.
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the specific language governing permissions and limitations under the License.
