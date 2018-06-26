@@ -1,18 +1,24 @@
 #!/usr/bin/env zsh
 
 tstr="[*] Zenroom - crypto language restricted execution environment DECODE-0.4"
+zenroom=$1
+
+function grind() {
+	valgrind --max-stackframe=2064480 $zenroom $*
+	return $?
+}
 
 echo "= test octets and keyring saves in json DATA"
 cat <<EOF > /tmp/zenroom_temp_check.lua
-ecdh = require'ecdh'
-octet = require'octet'
+-- ecdh = require'ecdh'
+-- octet = require'octet'
 ecc = ecdh.new()
 right = octet.new()
 right:string("$tstr")
 ecc:keygen()
 pk = ecc:public()
 assert(ecc:checkpub(pk))
-json = require'json'
+-- json = require'json'
 dump = json.encode({teststr="$tstr",
                     pubkey=pk:base64(),
 	                test64=right:base64(),
@@ -21,7 +27,7 @@ dump = json.encode({teststr="$tstr",
 print(dump)
 EOF
 
-${1} -d \
+grind -d \
 	/tmp/zenroom_temp_check.lua  > /tmp/octet.json || return 1
 
 
@@ -29,11 +35,11 @@ echo "== generated DATA structure in /tmp/octet.json"
 echo "== checking import/export and hashes"
 
 cat <<EOF > /tmp/zenroom_temp_check.lua
-json = require'json'
-octet = require'octet'
+-- json = require'json'
+-- octet = require'octet'
 test = json.decode(DATA)
 assert(test.teststr == "$tstr")
-ecdh = require'ecdh'
+-- ecdh = require'ecdh'
 ecc = ecdh.new()
 left = octet.new()
 left:string("$tstr")
@@ -51,7 +57,7 @@ left:base64(test.pubkey)
 assert(ecc:checkpub(left))
 EOF
 
-${1} -d \
+grind -d \
 	-a /tmp/octet.json /tmp/zenroom_temp_check.lua \
 	|| return 1
 
