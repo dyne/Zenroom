@@ -95,7 +95,7 @@ ecdh* ecdh_new(lua_State *L, const char *curve) {
 	ecdh *e = ecdh_new_curve(L, curve);
 	if(!e) { SAFE(e); return NULL; }
 
-	// key storage and key lengths are important 
+	// key storage and key lengths are important
 	e->seckey = NULL;
 	e->seclen = e->keysize;   // TODO: check for each curve
 	e->pubkey = NULL;
@@ -113,7 +113,7 @@ ecdh* ecdh_new(lua_State *L, const char *curve) {
 	tmp[252] = (ttmp >> 24) & 0xff;
 	tmp[253] = (ttmp >> 16) & 0xff;
 	tmp[254] = (ttmp >>  8) & 0xff;
-	tmp[255] =  ttmp & 0xff;	
+	tmp[255] =  ttmp & 0xff;
 	RAND_seed(e->rng,256,tmp);
 	zen_memory_free(tmp);
 
@@ -352,7 +352,36 @@ static int ecdh_encrypt(lua_State *L) {
 	// output is padded to next word
 	octet *out = o_new(L, in->len+0x0f); SAFE(out);
 	AES_CBC_IV0_ENCRYPT(k,in,out);
+
 	return 1;
+}
+
+/**
+   AES-GCM encrypt with Additional Data (AEAD)
+   encrypts and authenticate a plaintext to a ciphtertext. IEEE P802.1
+
+   @param key AES key octet
+   @param message input text in an octet
+   @param iv initialization vector
+   @param header the additional data
+   @function keyring:aead_encrypt(key, message, iv, h)
+   @treturn[1] octet containing the output ciphertext
+   @treturn[1] octet containing the authentication tag (checksum)
+*/
+
+static int ecdh_aead_encrypt(lua_State *L) {
+	HERE();
+	ecdh *e = ecdh_arg(L, 1); SAFE(e);
+	octet *k = o_arg(L, 2); SAFE(k);
+	octet *in = o_arg(L, 3); SAFE(in);
+	octet *iv = o_arg(L, 4); SAFE(iv);
+	octet *h = o_arg(L, 5); SAFE(h);
+
+	// output is padded to next word
+	octet *out = o_new(L, in->len+16); SAFE(out);
+	octet *t = o_new(L, 16); SAFE (t);
+	AES_GCM_ENCRYPT(k, iv, h, in, out, t);
+	return 2;
 }
 
 
@@ -376,6 +405,40 @@ static int ecdh_decrypt(lua_State *L) {
 	octet *out = o_new(L, in->len+16); SAFE(out);
 	if(!AES_CBC_IV0_DECRYPT(k,in,out)) {
 		error(L, "%s: decryption failed.",__func__);
+		lua_pop(L, 1);
+		lua_pushboolean(L, 0);
+	}
+	return 1;
+}
+
+/**
+   AES-GCM decrypt with Additional Data (AEAD)
+   decrypts and authenticate a plaintext to a ciphtertext . IEEE P802.1
+
+   @param key AES key octet
+   @param message input text in an octet
+   @param iv initialization vector
+   @param header the additional data
+   @return a new octet containing the output ciphertext and the checksum
+   @function keyring:aead_encrypt(key, message, iv, h, t)
+*/
+
+static int ecdh_aead_decrypt(lua_State *L) {
+	HERE();
+	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
+	octet *k = o_arg(L, 2); SAFE(k);
+	octet *in = o_arg(L, 3); SAFE(in);
+	octet *iv = o_arg(L, 4); SAFE(iv);
+	octet *h = o_arg(L, 5); SAFE(h);
+	octet *t = o_arg(L, 6); SAFE(t);
+
+	// output is padded to next word
+	octet *out = o_new(L, in->len+16); SAFE(out);
+	octet t2;
+	AES_GCM_DECRYPT(k, iv, h, in, out, &t2);
+
+	if(!OCT_comp(t, &t2)) {
+		error(L, "%s: aead decryption failed.",__func__);
 		lua_pop(L, 1);
 		lua_pushboolean(L, 0);
 	}
@@ -416,7 +479,7 @@ static int ecdh_hmac(lua_State *L) {
 	HERE();
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	octet *k = o_arg(L, 2);     SAFE(k);
-	octet *in = o_arg(L, 3);    SAFE(in);	
+	octet *in = o_arg(L, 3);    SAFE(in);
 	// length defaults to hash bytes
 	const int len = luaL_optinteger(L, 4, e->hash);
 	octet *out = o_new(L, len); SAFE(out);
@@ -537,7 +600,9 @@ static int ecdh_random(lua_State *L) {
 	{"public", ecdh_public}, \
 	{"private", ecdh_private}, \
 	{"encrypt", ecdh_encrypt}, \
+	{"aead_encrypt", ecdh_aead_encrypt}, \
 	{"decrypt", ecdh_decrypt}, \
+	{"aead_decrypt", ecdh_aead_decrypt}, \
 	{"hash", ecdh_hash}, \
 	{"hmac", ecdh_hmac}, \
 	{"kdf2", ecdh_kdf2}, \
