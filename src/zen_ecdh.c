@@ -420,7 +420,7 @@ static int ecdh_decrypt(lua_State *L) {
    @param iv initialization vector
    @param header the additional data
    @return a new octet containing the output ciphertext and the checksum
-   @function keyring:aead_encrypt(key, message, iv, h, t)
+   @function keyring:aead_decrypt(key, ciphertext, iv, h, tag)
 */
 
 static int ecdh_aead_decrypt(lua_State *L) {
