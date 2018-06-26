@@ -40,6 +40,23 @@ function test_curve (name)
    -- print(decipher:string())
    -- print(#decipher)
    print ('         OK')
+
+   -- AES-GCM encryption
+   iv = curve:random(16)
+   header = 'This is the header!'
+
+   ciphermsg, tag = curve:aead_encrypt(ses, octet.from_string(secret), iv, octet.from_string(header))
+
+   -- print ('AES-GCM encrypt : ' .. ciphermsg:base64())
+   -- print ('AES-GCM tag : ' .. tag:base64())
+
+   decipher = curve:aead_decrypt(ses, ciphermsg, iv, octet.from_string(header), tag)
+
+   assert(secret == decipher:string())
+   -- print 'decipher message:'
+   -- print(decipher:string())
+   -- print(#decipher)
+   print (' AES-GCM OK')
 end
 
 test_curve('ed25519')
