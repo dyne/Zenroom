@@ -1,6 +1,6 @@
 # Zenroom - crypto language VM
 
-[![software by Dyne.org](https://github.com/decodeproject/zenroom/blob/master/docs/views/img/software_by_dyne.png)](http://www.dyne.org)
+[![software by Dyne.org](https://zenroom.dyne.org/img/software_by_dyne.png)](http://www.dyne.org)
 
 Zenroom is a brand new, small and portable virtual machine for cryptographic operations. The Zenroom VM has no external dependencies, is smaller than 2MB, runs in even less memory and is ready for experimental use on many target platforms: desktop, embedded, mobile, cloud and browsers (webassembly).
 
@@ -9,13 +9,13 @@ Zencode is the name of the language executed by Zenroom: it is simple to underst
 ## Latest stable release is 0.6.0:
 <ul class="center">
 
-<li class="fab fa-node-js"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.6.0-javascript.zip">Javscript (nodeJS and WASM)</a></li>
+<li class="fab fa-node-js"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.6.0-javascript.zip">Javscript (nodeJS and WASM)</a></li>
 
-<li class="fab fa-linux"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.6.0-linux.zip">Linux (ARM and x86)</a></li>
+<li class="fab fa-linux"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.6.0-linux.zip">Linux (ARM and x86)</a></li>
 
-<li class="fab fa-windows"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.6.0-windows.zip">Windows (EXE and DLL)</li>
+<li class="fab fa-windows"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.6.0-windows.zip">Windows (EXE and DLL)</li>
 
-<li class="fab fa-apple"><a href="https://files.dyne.org/zenroom/releases/zenroom-0.6.0-apple.zip">Apple (OSX and iOS)</li>
+<li class="fab fa-apple"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.6.0-apple.zip">Apple (OSX and iOS)</li>
 
 <li class="far fa-file-archive"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.6.0.tar.gz">Source Code</a></li>
 
