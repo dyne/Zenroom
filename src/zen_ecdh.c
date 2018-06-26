@@ -434,14 +434,16 @@ static int ecdh_aead_decrypt(lua_State *L) {
 
 	// output is padded to next word
 	octet *out = o_new(L, in->len+16); SAFE(out);
-	octet t2;
-	AES_GCM_DECRYPT(k, iv, h, in, out, &t2);
+	octet *t2 = o_new(L,t->len);
+	AES_GCM_DECRYPT(k, iv, h, in, out, t2);
 
-	if(!OCT_comp(t, &t2)) {
+	if(!OCT_comp(t, t2)) {
 		error(L, "%s: aead decryption failed.",__func__);
+		lua_pop(L, 1);
 		lua_pop(L, 1);
 		lua_pushboolean(L, 0);
 	}
+	lua_pop(L, 1); // t2
 	return 1;
 }
 
