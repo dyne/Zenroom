@@ -2,9 +2,14 @@
 
 tstr="[*] Zenroom - crypto language restricted execution environment DECODE-0.4"
 zenroom=$1
+valgrind=$2
 
 function grind() {
-	valgrind --max-stackframe=2064480 $zenroom $*
+	if [[ "$valgrind" = "" ]]; then
+		$zenroom $*
+	else
+		valgrind --max-stackframe=2064480 $zenroom $*
+	fi
 	return $?
 }
 

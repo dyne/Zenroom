@@ -322,7 +322,7 @@ check-debug: test-exec := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-s
 check-debug:
 	$(call lowmem-tests,${test-exec-lowmem})
 	$(call himem-tests,${test-exec})
-	./test/octet-json.sh  ${pwd}/src/zenroom-shared
+	./test/octet-json.sh  ${pwd}/src/zenroom-shared valgrind
 	@echo "----------------"
 	@echo "All tests passed for SHARED binary build"
 	@echo "----------------"
