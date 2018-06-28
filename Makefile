@@ -62,7 +62,7 @@ apply-patches:
 js: gcc=${EMSCRIPTEN}/emcc
 js: ar=${EMSCRIPTEN}/emar
 js: cflags := -O2 -D'ARCH=\"JS\"' -Wall
-js: ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"zenroom_exec_tobuf\",\"zenroom_parse_ast\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s USE_SDL=0
+js: ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zenroom_exec_tobuf\",\"_zenroom_parse_ast\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s USE_SDL=0
 js: apply-patches lua53 milagro-js lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 	@mkdir -p build/nodejs
@@ -72,7 +72,7 @@ js: apply-patches lua53 milagro-js lpeglabel
 wasm: gcc=${EMSCRIPTEN}/emcc
 wasm: ar=${EMSCRIPTEN}/emar
 wasm: cflags := -O2 -D'ARCH=\"WASM\"' -Wall
-wasm: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"zenroom_exec_tobuf\",\"zenroom_parse_ast\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s MODULARIZE=1
+wasm: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zenroom_exec_tobuf\",\"_zenroom_parse_ast\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s MODULARIZE=1 -s USE_SDL=0 -s USE_PTHREADS=0
 wasm: apply-patches lua53 milagro-js lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 	@mkdir -p build/wasm
@@ -82,14 +82,14 @@ wasm: apply-patches lua53 milagro-js lpeglabel
 demo: gcc=${EMSCRIPTEN}/emcc
 demo: ar=${EMSCRIPTEN}/emar
 demo: cflags := -O2 -D'ARCH=\"WASM\"'
-demo: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"zenroom_exec_tobuf\",\"zenroom_parse_ast\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s ASSERTIONS=1 --shell-file ${extras}/shell_minimal.html -s NO_EXIT_RUNTIME=1 -s USE_SDL=0 -s USE_PTHREADS=0
+demo: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zenroom_exec_tobuf\",\"_zenroom_parse_ast\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s ASSERTIONS=1 --shell-file ${extras}/shell_minimal.html -s NO_EXIT_RUNTIME=1 -s USE_SDL=0 -s USE_PTHREADS=0
 demo: apply-patches lua53 milagro-js lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src demo
 
 html: gcc=${EMSCRIPTEN}/emcc
 html: ar=${EMSCRIPTEN}/emar
 html: cflags := -O2 -D'ARCH=\"JS\"'
-html: ldflags := -sEXPORTED_FUNCTIONS='["_main","_zenroom_exec",\"zenroom_exec_tobuf\",\"zenroom_parse_ast\"]'
+html: ldflags := -sEXPORTED_FUNCTIONS='["_main","_zenroom_exec",\"_zenroom_exec_tobuf\",\"_zenroom_parse_ast\"]'
 html: apply-patches lua53 milagro-js lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src html
 
