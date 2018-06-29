@@ -41,6 +41,8 @@ int zenroom_parse_ast(char *script, int verbosity,
                       char *stdout_buf, size_t stdout_len,
                       char *stderr_buf, size_t stderr_len);
 
+void set_debug(int lev);
+
 ////////////////////////////////////////
 
 
