@@ -65,3 +65,9 @@ assert( ecp1:double() == ecp1 * 2)
 assert( ecp1 + ecp1 + ecp1 ~= ecp1 + ecp1)
 assert( (ecp1:negative() + ecp1):isinf() )
 print "OK"
+
+print "test infinity"
+O = ecp.infinity()
+assert( ecp1 + O == ecp1)
+assert( ecp1:negative() + ecp1 == O)
+print "OK"

@@ -59,7 +59,9 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
+#include <big_256_29.h> // chunk 32
 #include <ecp_ED25519.h>
+
 
 #include <jutils.h>
 #include <zen_error.h>
@@ -195,6 +197,16 @@ static int ecp_affine(lua_State *L) {
 	ECP_ED25519_affine(e->ed25519);
 	return 0;
 }
+/***
+    Gives a new infinity point on the curve.
+    @function infinity()
+    @return elliptic curve point into infinity.
+*/
+static int ecp_get_infinity(lua_State *L) {
+	ecp *e = ecp_new(L); SAFE(e);
+	ECP_ED25519_inf(e->ed25519);	
+	return 1;
+}
 
 /***
     Returns true if an ECP coordinate points to infinity (out of the curve) and false otherwise.
@@ -211,7 +223,7 @@ static int ecp_isinf(lua_State *L) {
 /***
     Map a BIG number to a point of the curve, the BIG number should be the output of some hash function.
 
-    @param big octet of a BIG number (single number holding coordinates)
+    @param big octet of a BIG number
     @function mapit(big)
 */
 static int ecp_mapit(lua_State *L) {
@@ -349,6 +361,23 @@ static int ecp_octet(lua_State *L) {
 	return 1;
 }
 
+/***
+    Gives the order of the curve, a BIG number contained in an octet.
+
+    @function order()
+    @return an octet containing the curve's order
+*/
+static int ecp_order(lua_State *L) {
+	octet *o = o_new(L, MODBYTES_256_29+1); SAFE(o);
+	// BIG_256_29 is an array of int32_t on chunk 32 (see rom_curve)
+	o->len = MODBYTES_256_29;
+	BIG_256_29 c;
+	// curve order is ready-only so we need a copy for norm() to work
+	BIG_256_29_copy(c,(chunk*)CURVE_Order_ED25519);
+	BIG_256_29_toBytes(o->val, c);
+	return 1;
+}
+
 static int ecp_output(lua_State *L) {
 	const ecp *e = ecp_arg(L, 1); SAFE(e);
 	ECP_ED25519 *P = e->ed25519;
@@ -363,11 +392,10 @@ static int ecp_output(lua_State *L) {
 	FP_25519_redc(x,&(P->x));
 	snprintf(out,511,
 	         "{ \"curve\": \"%s\",\n"
-	         "  \"type\": \"%s\",\n"
 	         "  \"encoding\": \"hex\",\n"
 	         "  \"vm\": \"%s\",\n"
 	         "  \"x\": \"%s\" }",
-	         e->curve, e->type, VERSION,
+	         e->curve, VERSION,
 	         big2strhex(xs,x));
 #else
 	BIG_256_29 y;
@@ -376,12 +404,11 @@ static int ecp_output(lua_State *L) {
 	FP_25519_redc(y,&(P->y));
 	snprintf(out, 511,
 "{ \"curve\": \"%s\",\n"
-"  \"type\": \"%s\",\n"
 "  \"encoding\": \"hex\",\n"
 "  \"vm\": \"%s\",\n"
 "  \"x\": \"%s\",\n"
 "  \"y\": \"%s\" }",
-	         e->curve, e->type, VERSION,
+	         e->curve, VERSION,
 	         big2strhex(xs,x), big2strhex(ys,y));
 #endif
 	lua_pushstring(L,out);
@@ -392,6 +419,9 @@ int luaopen_ecp(lua_State *L) {
 	const struct luaL_Reg ecp_class[] = {
 		{"new",lua_new_ecp},
 		{"set",lua_set_ecp},
+		{"inf",ecp_get_infinity},
+		{"infinity",ecp_get_infinity},
+		{"order",ecp_order},
 		{NULL,NULL}};
 	const struct luaL_Reg ecp_methods[] = {
 		{"affine",ecp_affine},
