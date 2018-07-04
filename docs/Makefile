@@ -27,6 +27,6 @@ article: article/views
 api:
 	make -C ldoc
 
-upload: webnomad
+upload:
 	rsync -Pr pub/* assata.dyne.org:/srv/www/zenroom.dyne.org
 	rsync -Pr demo assata.dyne.org:/srv/www/zenroom.dyne.org/

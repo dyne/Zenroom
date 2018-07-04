@@ -4,7 +4,7 @@
 
 Zenroom is a brand new, small and portable virtual machine for cryptographic operations. The Zenroom VM has no external dependencies, is smaller than 2MB, runs in even less memory and is ready for experimental use on many target platforms: desktop, embedded, mobile, cloud and browsers (webassembly).
 
-Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them. Zencode is a domain specific language implemented as a subset of Lua and its design is informed by concrete use-cases in DECODE.
+Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them. Zencode is a Domain Specific Language whose design is informed by pilot use-cases in DECODE.
 
 ## Latest stable release is 0.6.0:
 <ul class="center">
@@ -40,7 +40,7 @@ Zencode is the name of the language executed by Zenroom: it is simple to underst
 </ul>
 
 
-Zenroom is software in **ALPHA stage** and is part of the [DECODE project](https://decodeproject.eu) about data-ownership and [technological sovereignty](https://www.youtube.com/watch?v=RvBRbwBm_nQ). Our effort is that of improving people's awareness of how their data is processed by algorithms, as well facilitate the work of developers to create along [privacy by design principles](https://decodeproject.eu/publications/privacy-design-strategies-decode-architecture) using algorithms that can be deployed in any situation without any change.
+Zenroom is software in **ALPHA stage** and is part of the [DECODE project](https://decodeproject.eu) about data commons and [technological sovereignty](https://www.youtube.com/watch?v=RvBRbwBm_nQ). Our effort is that of improving people's awareness of how their data is processed by algorithms, as well facilitate the work of developers to create along [privacy by design principles](https://decodeproject.eu/publications/privacy-design-strategies-decode-architecture).
 
 <a href="https://decodeproject.eu">
 <img src="https://zenroom.dyne.org/img/decode.svg" width="54%"

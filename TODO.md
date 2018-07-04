@@ -4,6 +4,37 @@ This is a draft TODO list for future directions in zenroom
 development, to be vouched with priorities emerging from DECODE pilots
 and their specific use-cases.
 
+## Coconut notes
+
+each curve has a different infinity point
+
+
+
+TODO: do all ecp2 (new namespace)
+
+TODO: pair.h 
+extern void PAIR_ZZZ_fexp(FP12_YYY *x);
+extern void PAIR_ZZZ_ate(FP12_YYY *r,ECP2_ZZZ *P,ECP_ZZZ *Q);
+possibly extern int PAIR_ZZZ_GTmember(FP12_YYY *x);
+!!!!
+FP12_YYY is exactly twice as big of the FP1 of the curve
+so its made of two BIGs and can be a tuple
+
+TODO: big numbers operations
+	in particular BIG_XXX_mod*
+
+DONE:
+infinity production for "EC generator"
+test:
+O = infinity point
+P + O = P
+(-P) + P = O
+
+to expose the order of the curve:
+like in rom_curve_XXX:
+const BIG_256_29 CURVE_Order_ED25519= {0x1CF5D3ED,0x9318D2,0x1DE73596,0x1DF3BD45,0x14D,0x0,0x0,0x0,0x100000};
+test:
+multiply group order by the generetor should give the point at infinity
 
 ## Generic improvements
 
