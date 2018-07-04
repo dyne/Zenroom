@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400px" height="400px" viewBox="0 0 400 400" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 50.2 (55047) - http://www.bohemiancoding.com/sketch -->
+    <title>Garden</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Garden" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Group" transform="translate(49.000000, 66.000000)">
+            <path d="M30,201 L254,201" id="Line" stroke="#979797" stroke-width="10" stroke-linecap="square"></path>
+            <path d="M48,231 L254,231" id="Line" stroke="#979797" stroke-width="10" stroke-linecap="square"></path>
+            <path d="M45.1393975,40 L48.0686904,30 L222,30 L227,30 L227,40 L222,40 L45.5318471,40 L45.1393975,40 Z" id="Combined-Shape" fill="#979797"></path>
+            <path d="M23.882256,179.744761 L209.433263,68.2544683" id="Line" stroke="#979797" stroke-width="10" stroke-linecap="square"></path>
+            <path d="M69,199 L238.573897,96.9811544" id="Line" stroke="#979797" stroke-width="10" stroke-linecap="square"></path>
+            <path d="M36.3515187,70 L39.2298336,60 L39.4768114,60 L237.438533,60 L242.351519,60 L242.351519,70 L237.438533,70 L39.4768114,70 L36.3515187,70 Z" id="Combined-Shape" fill="#979797"></path>
+            <rect id="Rectangle-2" fill="#5C5C5C" x="284" y="213" width="55" height="10"></rect>
+            <rect id="Rectangle" fill="#5C5C5C" x="269" y="166" width="10" height="105"></rect>
+            <polyline id="Path-2" stroke="#5C5C5C" stroke-width="10" points="83 5 209.275556 5 271 120 189.022222 171 264 171"></polyline>
+            <polyline id="Path-4" stroke="#5C5C5C" stroke-width="10" points="92 95 0 150 60 261 265 261"></polyline>
+            <polygon id="Combined-Shape" fill="#5C5C5C" points="27.5636399 100 30.4929328 90 257 90 257 100"></polygon>
+            <polygon id="Combined-Shape-Copy" fill="#5C5C5C" points="54 10 56.9292929 0 93.4363601 1.42108547e-14 93.4363601 10"></polygon>
+        </g>
+    </g>
+</svg>
