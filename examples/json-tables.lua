@@ -8,12 +8,14 @@
 -- operations can be done (see @tables and @functions modules)
 superheroes = json.decode(DATA)
 
--- procedural boredom: iterate through the members array and print
+-- iterate through the members array and print
 -- out only names. ipairs is very unelegand
+print "procedural boredom"
 for k,v in ipairs(superheroes['members']) do
    i.print(fun.at(v,"name"))
 end
 
+print "functional fun."
 -- let's try the functional / scheme way of doing things ;^)
 i.print(
    fun.chain(superheroes['members'])
