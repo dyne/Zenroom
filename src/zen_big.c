@@ -35,7 +35,6 @@
 #define BIGSIZE 384
 #include <zen_big_types.h>
 
-
 typedef struct {
 	char name[16];
 	int  len;
@@ -101,6 +100,7 @@ static int big_from_octet(lua_State *L) {
 
 static int big_to_octet(lua_State *L) {
 	big *c = big_arg(L,1); SAFE(c);
+	BIG_norm(c->data);
 	octet *o = o_new(L, c->len+2); SAFE(o);
 	BIG_toBytes(o->val, c->data);
 	o->len = modbytes;
@@ -134,17 +134,64 @@ static int big_to_hex(lua_State *L) {
 	return 1;
 }
 
-
 static int big_eq(lua_State *L) {
 	big *l = big_arg(L,1); SAFE(l);
 	big *r = big_arg(L,2); SAFE(r);
+	// BIG_comp requires external normalization
+	BIG_norm(l->data);
+	BIG_norm(r->data);
 	lua_pushboolean(L, BIG_comp(l->data,r->data));
+	return 1;
+}
+
+static int big_add(lua_State *L) {
+	big *l = big_arg(L,1); SAFE(l);
+	big *r = big_arg(L,2); SAFE(r);
+	big *d = big_new(L); SAFE(d);
+	BIG_add(d->data, l->data, r->data);
+	return 1;
+}
+
+static int big_sub(lua_State *L) {
+	big *l = big_arg(L,1); SAFE(l);
+	big *r = big_arg(L,2); SAFE(r);
+	big *d = big_new(L); SAFE(d);
+	BIG_sub(d->data, l->data, r->data);
+	return 1;
+}
+
+static int big_mul(lua_State *L) {
+	big *l = big_arg(L,1); SAFE(l);
+	big *r = big_arg(L,2); SAFE(r);
+	big *d = big_new(L); SAFE(d);
+	BIG_mul(d->data,l->data,r->data);
+	return 1;
+}
+
+static int big_mod(lua_State *L) {
+	big *l = big_arg(L,1); SAFE(l);
+	big *r = big_arg(L,2); SAFE(r);
+	big *d = big_dup(L,l); SAFE(d);
+	BIG_mod(d->data,r->data);
+	return 1;
+}
+
+static int big_div(lua_State *L) {
+	big *l = big_arg(L,1); SAFE(l);
+	big *r = big_arg(L,2); SAFE(r);
+	big *d = big_dup(L,l); SAFE(d);
+	BIG_div(d->data,r->data);
 	return 1;
 }
 
 int luaopen_big(lua_State *L) {
 	const struct luaL_Reg big_class[] = {
 		{"new",newbig},
+		{"add",big_add},
+		{"sub",big_sub},
+		{"mul",big_mul},
+		{"mod",big_mod},
+		{"div",big_div},
 		{"from_octet",big_from_octet},
 		{NULL,NULL}
 	};
@@ -152,6 +199,16 @@ int luaopen_big(lua_State *L) {
 		// idiomatic operators
 		{"octet",big_to_octet},
 		{"hex",big_to_hex},
+		{"add",  big_add},
+		{"__add",big_add},
+		{"sub",  big_sub},
+		{"__sub",big_sub},
+		{"mul",  big_mul},
+		{"__mul",big_mul},
+		{"mod",big_mod},
+		{"__mod",big_mod},
+		{"div",big_div},
+		{"__div",big_div},
 		{"__eq",big_eq},
 		{"__gc", big_destroy},
 		{"__tostring",big_to_hex},

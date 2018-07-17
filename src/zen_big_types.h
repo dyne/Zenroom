@@ -18,6 +18,12 @@
 #define BIG_shr(b,a) BIG_384_58_shr(b,a)
 #define BIG_toBytes(b,a) BIG_384_58_toBytes(b,a)
 #define BIG_comp(l,r) BIG_384_58_comp(l,r)
+#define BIG_add(d,l,r) BIG_384_58_add(d,l,r)
+#define BIG_sub(d,l,r) BIG_384_58_sub(d,l,r)
+#define BIG_mul(d,l,r) BIG_384_58_smul(d,l,r)
+#define BIG_mod(x,n) BIG_384_58_mod(x,n)
+#define BIG_div(x,n) BIG_384_58_sdiv(x,n)
+
 #elif CHUNK == 32
 #pragma message "BIGnum CHUNK size: 32bit"
 #include <big_384_29.h>
@@ -33,6 +39,11 @@
 #define BIG_shr(b,a) BIG_384_29_shr(b,a)
 #define BIG_toBytes(b,a) BIG_384_29_toBytes(b,a)
 #define BIG_comp(l,r) BIG_384_29_comp(l,r)
+#define BIG_add(d,l,r) BIG_384_29_add(d,l,r)
+#define BIG_sub(d,l,r) BIG_384_29_sub(d,l,r)
+#define BIG_mul(d,l,r) BIG_384_29_smul(d,l,r)
+#define BIG_mod(x,n) BIG_384_29_mod(x,n)
+#define BIG_div(x,n) BIG_384_29_sdiv(x,n)
 #elif CHUNK == 16
 #error "BIGnum CHUNK size: 16bit PLATFORM NOT SUPPORTED"
 #endif // CHUNK
