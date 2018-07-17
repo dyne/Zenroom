@@ -140,7 +140,8 @@ static int big_eq(lua_State *L) {
 	// BIG_comp requires external normalization
 	BIG_norm(l->data);
 	BIG_norm(r->data);
-	lua_pushboolean(L, BIG_comp(l->data,r->data));
+	int res = BIG_comp(l->data,r->data);
+	lua_pushboolean(L, (res==0)?1:0);
 	return 1;
 }
 
@@ -184,14 +185,57 @@ static int big_div(lua_State *L) {
 	return 1;
 }
 
+static int big_modmul(lua_State *L) {
+	big *y = big_arg(L, 1); SAFE(y);
+	big *z = big_arg(L, 2); SAFE(z);
+	big *n = big_arg(L, 3); SAFE(n);
+	big *x = big_new(L); SAFE(x);
+	BIG_modmul(x->data, y->data, z->data, n->data);
+	return 1;
+}
+static int big_moddiv(lua_State *L) {
+	big *y = big_arg(L, 1); SAFE(y);
+	big *z = big_arg(L, 2); SAFE(z);
+	big *n = big_arg(L, 3); SAFE(n);
+	big *x = big_new(L); SAFE(x);
+	BIG_moddiv(x->data, y->data, z->data, n->data);
+	return 1;
+}
+static int big_modsqr(lua_State *L) {
+	big *y = big_arg(L, 1); SAFE(y);
+	big *n = big_arg(L, 2); SAFE(n);
+	big *x = big_new(L); SAFE(x);
+	BIG_modsqr(x->data, y->data, n->data);
+	return 1;
+}
+static int big_modneg(lua_State *L) {
+	big *y = big_arg(L, 1); SAFE(y);
+	big *n = big_arg(L, 2); SAFE(n);
+	big *x = big_new(L); SAFE(x);
+	BIG_modneg(x->data, y->data, n->data);
+	return 1;
+}
+static int big_jacobi(lua_State *L) {
+	big *x = big_arg(L, 1); SAFE(x);
+	big *y = big_arg(L, 2); SAFE(y);
+	lua_pushinteger(L, BIG_jacobi(x->data, y->data));
+	return 1;
+}
+
 int luaopen_big(lua_State *L) {
 	const struct luaL_Reg big_class[] = {
 		{"new",newbig},
+		{"eq",big_eq},
 		{"add",big_add},
 		{"sub",big_sub},
 		{"mul",big_mul},
 		{"mod",big_mod},
 		{"div",big_div},
+		{"modmul",big_modmul},
+		{"moddiv",big_moddiv},
+		{"modsqr",big_modsqr},
+		{"modneg",big_modneg},
+		{"jacobi",big_jacobi},
 		{"from_octet",big_from_octet},
 		{NULL,NULL}
 	};
@@ -205,11 +249,17 @@ int luaopen_big(lua_State *L) {
 		{"__sub",big_sub},
 		{"mul",  big_mul},
 		{"__mul",big_mul},
-		{"mod",big_mod},
+		{"mod",  big_mod},
 		{"__mod",big_mod},
-		{"div",big_div},
+		{"div",  big_div},
 		{"__div",big_div},
+		{"eq",  big_eq},
 		{"__eq",big_eq},
+		{"modmul",big_modmul},
+		{"moddiv",big_moddiv},
+		{"modsqr",big_modsqr},
+		{"modneg",big_modneg},
+		{"jacobi",big_jacobi},
 		{"__gc", big_destroy},
 		{"__tostring",big_to_hex},
 		{NULL,NULL}
