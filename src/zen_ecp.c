@@ -34,11 +34,6 @@
 //  instances using the new() method, taking two arguments (the x and
 //  y coordinates):
 //
-//  <code>
-// ecpsum = ecp.new(
-// octet.from_hex('56745BF3132BBE3B36555A1074CB26EC100265303D19FA8628D8513BC73935D2'),
-// octet.from_hex('70D5370B9C54F9E291DC864D03616617CCF50B03D19544A8485A75F7B93D790F'))
-//
 //  The values of each coordinate can be imported using octet methods
 //  from hex or base64. These values (also called vectors) are very
 //  big numbers whose representation is difficult without marshaling
@@ -59,15 +54,18 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
-#include <zen_big_types.h>
-#include <ecp_BLS383.h>
-
+#include <zen_ecp_bls383.h>
 
 #include <jutils.h>
 #include <zen_error.h>
 #include <zen_octet.h>
-#include <zen_ecp.h>
 #include <lua_functions.h>
+
+typedef struct {
+	char curve[16];
+	char type[16];
+	ECP *data;
+} ecp;
 
 void oct2big(big b, const octet *o) {
 	big_zero(b);
@@ -130,7 +128,7 @@ ecp* ecp_arg(lua_State *L,int n) {
 }
 ecp* ecp_dup(lua_State *L, const ecp* in) {
 	ecp *e = ecp_new(L); SAFE(e);
-	ECP_BLS383_copy(e->data, in->data);
+	ECP_copy(e->data, in->data);
 	return(e);
 }
 ecp* ecp_set_big_xy(lua_State *L, ecp *e, int idx) {
@@ -142,7 +140,7 @@ ecp* ecp_set_big_xy(lua_State *L, ecp *e, int idx) {
 	o = o_arg(L, idx+1); SAFE(o);
 	big y;
 	oct2big(y, o);
-	ECP_BLS383_set(e->data, x, y);
+	ECP_set(e->data, x, y);
 	return e;
 }
 int ecp_destroy(lua_State *L) {
@@ -182,7 +180,7 @@ static int lua_new_ecp(lua_State *L) {
 */
 static int ecp_affine(lua_State *L) {
 	ecp *e = ecp_arg(L,1); SAFE(e);
-	ECP_BLS383_affine(e->data);
+	ECP_affine(e->data);
 	return 0;
 }
 /***
@@ -192,7 +190,7 @@ static int ecp_affine(lua_State *L) {
 */
 static int ecp_get_infinity(lua_State *L) {
 	ecp *e = ecp_new(L); SAFE(e);
-	ECP_BLS383_inf(e->data);
+	ECP_inf(e->data);
 	return 1;
 }
 
@@ -204,7 +202,7 @@ static int ecp_get_infinity(lua_State *L) {
 */
 static int ecp_isinf(lua_State *L) {
 	const ecp *e = ecp_arg(L,1); SAFE(e);
-	lua_pushboolean(L,ECP_BLS383_isinf(e->data));
+	lua_pushboolean(L,ECP_isinf(e->data));
 	return 1;
 }
 
@@ -221,7 +219,7 @@ static int ecp_mapit(lua_State *L) {
 		       __func__, modbytes);
 		return 0; }
 	const ecp *e = ecp_new(L); SAFE(e);
-	ECP_BLS383_mapit(e->data, o);
+	ECP_mapit(e->data, o);
 	return 1;
 }
 
@@ -238,7 +236,7 @@ static int ecp_add(lua_State *L) {
 	const ecp *q = ecp_arg(L,2); SAFE(q);
 	ecp *p = ecp_dup(L, e); // push
 	SAFE(p);
-	ECP_BLS383_add(p->data,q->data);
+	ECP_add(p->data,q->data);
 	return 1;
 }
 
@@ -255,7 +253,7 @@ static int ecp_sub(lua_State *L) {
 	const ecp *q = ecp_arg(L,2); SAFE(q);
 	ecp *p = ecp_dup(L, e); // push
 	SAFE(p);
-	ECP_BLS383_sub(p->data,q->data);
+	ECP_sub(p->data,q->data);
 	return 1;
 }
 
@@ -267,7 +265,7 @@ static int ecp_sub(lua_State *L) {
 static int ecp_negative(lua_State *L) {
 	const ecp *in = ecp_arg(L,1); SAFE(in);
 	const ecp *out = ecp_dup(L,in); SAFE(out);
-	ECP_BLS383_neg(out->data);
+	ECP_neg(out->data);
 	return 1;
 }
 
@@ -279,7 +277,7 @@ static int ecp_negative(lua_State *L) {
 static int ecp_double(lua_State *L) {
 	const ecp *in = ecp_arg(L,1); SAFE(in);
 	const ecp *out = ecp_dup(L,in); SAFE(out);
-	ECP_BLS383_dbl(out->data);
+	ECP_dbl(out->data);
 	return 1;
 }
 
@@ -305,7 +303,7 @@ static int ecp_mul(lua_State *L) {
 	}
 	// TODO: check parsing errors
 	const ecp *out = ecp_dup(L,e); SAFE(out);
-	ECP_BLS383_mul(out->data,big);
+	ECP_mul(out->data,big);
 	return 1;
 }
 
@@ -321,9 +319,9 @@ static int ecp_eq(lua_State *L) {
 	const ecp *p = ecp_arg(L,1); SAFE(p);
 	const ecp *q = ecp_arg(L,2); SAFE(q);
 // TODO: is affine rly needed?
-	ECP_BLS383_affine(p->data);
-	ECP_BLS383_affine(q->data);
-	lua_pushboolean(L,ECP_BLS383_equals(
+	ECP_affine(p->data);
+	ECP_affine(q->data);
+	lua_pushboolean(L,ECP_equals(
 		                p->data, q->data));
 	return 1;
 }
@@ -339,13 +337,13 @@ static int ecp_octet(lua_State *L) {
 	ecp *e = ecp_arg(L,1); SAFE(e);
 	if((ud = luaL_testudata(L, 2, "zenroom.octet"))) {
 		octet *o = (octet*)ud; SAFE(o);
-		if(! ECP_BLS383_fromOctet(e->data, o) )
+		if(! ECP_fromOctet(e->data, o) )
 			lerror(L,"Octet doesn't contains a valid ECP");
 		return 0;
 	}
 	octet *o = o_new(L,(modbytes<<1)+1);
 	SAFE(o);
-	ECP_BLS383_toOctet(o, e->data);
+	ECP_toOctet(o, e->data);
 	return 1;
 }
 
@@ -369,13 +367,13 @@ static int ecp_order(lua_State *L) {
 static int ecp_output(lua_State *L) {
 	const ecp *e = ecp_arg(L, 1); SAFE(e);
 	ECP_BLS383 *P = e->data;
-	if (ECP_BLS383_isinf(P)) {
+	if (ECP_isinf(P)) {
 		lua_pushstring(L,"Infinity");
 		return 1; }
 	big x;
 	char xs[256];
 	char out[512];
-	ECP_BLS383_affine(P);
+	ECP_affine(P);
 	big y;
 	char ys[256];
 	FP_BLS383_redc(x,&(P->x));
