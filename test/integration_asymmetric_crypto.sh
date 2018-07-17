@@ -18,9 +18,7 @@ tmp=`mktemp -d`
 
 generate() {
 	for p in $ppl; do
-		cat <<EOF | $zen - > $tmp/$p-keys.json
-json = require "json"
-ecdh = require "ecdh"
+		cat <<EOF | $zen > $tmp/$p-keys.json
 keyring = ecdh.new()
 keyring:keygen()
 keypair = json.encode({
@@ -28,12 +26,11 @@ keypair = json.encode({
       secret=keyring:private():$enc()})
 print(keypair)
 EOF
-		cat <<EOF | $zen -k $tmp/$p-keys.json - > $tmp/$p-envelop.json
-json = require "json"
+		cat <<EOF | $zen -k $tmp/$p-keys.json > $tmp/$p-envelop.json
 keys = json.decode(KEYS)
 envelop = json.encode({
     message="$secret",
-    pubkey=keys.public})
+    pubkey=keys['public']})
 print(envelop)
 EOF
 	done
@@ -42,41 +39,34 @@ EOF
 encrypt() {
     from=$1
     to=$2
-    cat <<EOF | $zen -k $tmp/$from-keys.json -a $tmp/$to-envelop.json - \
+    cat <<EOF | $zen -k $tmp/$from-keys.json -a $tmp/$to-envelop.json \
 					 > $tmp/from-$from-to-$to-cryptomsg.json
-json = require "json"
-ecdh = require "ecdh"
 keys = json.decode(KEYS)
 data = json.decode(DATA)
 recipient = ecdh.new()
-recipient:public(data.pubkey)
+recipient:public(octet.from_$enc(data['pubkey']))
 sender = ecdh.new()
-sender:secret(keys.secret)
-nonce = sender:random(32)
-k = ecdh.session(sender, recipient)
-enc = ecdh.encrypt(k,data.message)
+sender:private(octet.from_$enc(keys['secret']))
+k = sender:session(recipient)
+enc = sender:encrypt(k,octet.from_string(data['message']))
 print(json.encode({
     encmsg=enc:base64(),
-    pubkey=keys.public,
-	nonce=nonce:base64()}))
+    pubkey=keys['public']}))
 EOF
 }
 
 decrypt() {
 	from=$1
 	to=$2
-	cat <<EOF | $zen -k $tmp/$to-keys.json -a $tmp/from-$from-to-$to-cryptomsg.json -
-json = require "json"
-ecdh = require "ecdh"
+	cat <<EOF | $zen -k $tmp/$to-keys.json -a $tmp/from-$from-to-$to-cryptomsg.json
 keys = json.decode(KEYS)
 data = json.decode(DATA)
 recipient = ecdh.new()
-recipient:secret(keys.secret)	 
-k = crypto.exchange_session_$algo(
-  crypto.decode_$enc(keys.secret),
-  crypto.decode_$enc(data.pubkey))
-dec = crypto.decrypt_$symc(k,data.nonce,
-      crypto.decode_$enc(data.encmsg))
+recipient:private(octet.from_$enc(keys['secret']))
+sender = ecdh.new()
+sender:public(octet.from_$enc(data['pubkey']))
+k = recipient:session(sender)
+dec = recipient:decrypt(k,octet.from_$enc(data['encmsg']))
 print(dec)
 EOF
 }
@@ -97,8 +87,10 @@ for p in $ppl; do
 		res=`decrypt $pp $p 2>/dev/null`
 		if [[ "$secret" != "$res" ]]; then
 			print - "ERROR in integration luazen test: $tmp"
-			print - "$secret"
-			print - "$res"
+			print - "$secret (${#secret} bytes)"
+			print $secret | xxd
+			print - "$res (${#res} bytes)"
+			print $res | xxd
 			print - "envelope from ${pp}:"
 			cat $tmp/$pp-envelop.json
 			print - "recipient-keys to ${p}:"
