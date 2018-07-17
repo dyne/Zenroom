@@ -1,10 +1,30 @@
+/*  Zenroom (DECODE project)
+ *
+ *  (c) Copyright 2017-2018 Dyne.org foundation
+ *  designed, written and maintained by Denis Roio <jaromil@dyne.org>
+ *
+ * This source code is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Public License as published
+ * by the Free Software Foundation; either version 3 of the License,
+ * or (at your option) any later version.
+ *
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * Please refer to the GNU Public License for more details.
+ *
+ * You should have received a copy of the GNU Public License along with
+ * this source code; if not, write to:
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
 #ifndef __ZEN_BIG_TYPES_H__
 #define __ZEN_BIG_TYPES_H__
 #include <arch.h>
 
 #if BIGSIZE == 384
 #if CHUNK == 64
-#pragma message "BIGnum CHUNK size: 64bit"
+// #pragma message "BIGnum CHUNK size: 64bit"
 #include <big_384_58.h>
 #define BIG BIG_384_58
 #define modbytes MODBYTES_384_58
@@ -30,7 +50,7 @@
 #define BIG_jacobi(x,y) BIG_384_58_jacobi(x,y)
 
 #elif CHUNK == 32
-#pragma message "BIGnum CHUNK size: 32bit"
+// #pragma message "BIGnum CHUNK size: 32bit"
 #include <big_384_29.h>
 #define BIG BIG_384_29
 #define modbytes MODBYTES_384_29

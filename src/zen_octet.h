@@ -1,6 +1,6 @@
 
-#ifndef __OCTET_H__
-#define __OCTET_H__
+#ifndef __ZEN_OCTET_H__
+#define __ZEN_OCTET_H__
 
 #include <amcl.h>
 
@@ -10,7 +10,5 @@ octet* o_new(lua_State *L, const int size);
 octet *o_dup(lua_State *L, octet *o);
 
 octet* o_arg(lua_State *L,int n);
-
-int o_destroy(lua_State *L);
 
 #endif

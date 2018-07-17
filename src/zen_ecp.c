@@ -59,6 +59,7 @@
 #include <jutils.h>
 #include <zen_error.h>
 #include <zen_octet.h>
+#include <zen_big.h>
 #include <zen_memory.h>
 #include <lua_functions.h>
 

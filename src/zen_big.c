@@ -31,16 +31,7 @@
 #include <zenroom.h>
 #include <zen_octet.h>
 #include <zen_memory.h>
-
-#define BIGSIZE 384
-#include <zen_big_types.h>
-
-typedef struct {
-	char name[16];
-	int  len;
-	int  chunksize;
-	BIG  val;
-} big;
+#include <zen_big.h>
 
 
 big* big_new(lua_State *L) {
