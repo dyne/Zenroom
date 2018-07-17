@@ -59,7 +59,7 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
-#include <big_384_58.h> // chunk 32
+#include <zen_big_types.h>
 #include <ecp_BLS383.h>
 
 
@@ -69,20 +69,20 @@
 #include <zen_ecp.h>
 #include <lua_functions.h>
 
-void oct2big(BIG_384_58 b, const octet *o) {
-	BIG_384_58_zero(b);
-	BIG_384_58_fromBytesLen(b,o->val,o->len);
+void oct2big(big b, const octet *o) {
+	big_zero(b);
+	big_fromBytesLen(b,o->val,o->len);
 }
-void int2big(BIG_384_58 b, int n) {
-	BIG_384_58_zero(b);
-	BIG_384_58_inc(b, n);
-	BIG_384_58_norm(b);
+void int2big(big b, int n) {
+	big_zero(b);
+	big_inc(b, n);
+	big_norm(b);
 }
-char *big2strhex(char *str, BIG_384_58 a) {
-	BIG_384_58 b;
+char *big2strhex(char *str, big a) {
+	big b;
 	int i,len;
-	int modby2 = MODBYTES_384_58<<1;
-	len=BIG_384_58_nbits(a);
+	int modby2 = modbytes<<1;
+	len=big_nbits(a);
 	int lendiv4 = len>>2;
 	if (len%4==0) len=lendiv4;
 	else {
@@ -92,8 +92,8 @@ char *big2strhex(char *str, BIG_384_58 a) {
 	if (len<modby2) len=modby2;
 	int c = 0;
 	for (i=len-1; i>=0; i--) {
-		BIG_384_58_copy(b,a);
-		BIG_384_58_shr(b,i<<2);
+		big_copy(b,a);
+		big_shr(b,i<<2);
 		sprintf(str+c,"%01x",(unsigned int) b[0]&15);
 		c++;
 	}
@@ -137,10 +137,10 @@ ecp* ecp_set_big_xy(lua_State *L, ecp *e, int idx) {
 	SAFE(e);
 	octet *o;
 	o = o_arg(L, idx); SAFE(o);
-	BIG_384_58 x;
+	big x;
 	oct2big(x, o);
 	o = o_arg(L, idx+1); SAFE(o);
-	BIG_384_58 y;
+	big y;
 	oct2big(y, o);
 	ECP_BLS383_set(e->data, x, y);
 	return e;
@@ -216,9 +216,9 @@ static int ecp_isinf(lua_State *L) {
 */
 static int ecp_mapit(lua_State *L) {
 	octet *o = o_arg(L,1); SAFE(o);
-	if(o->len < MODBYTES_384_58) {
+	if(o->len < modbytes) {
 		lerror(L, "%s: octet too short (min %u bytes)",
-		       __func__, MODBYTES_384_58);
+		       __func__, modbytes);
 		return 0; }
 	const ecp *e = ecp_new(L); SAFE(e);
 	ECP_BLS383_mapit(e->data, o);
@@ -293,7 +293,7 @@ static int ecp_double(lua_State *L) {
     @return new ecp point resulting from the multiplication
 */
 static int ecp_mul(lua_State *L) {
-	BIG_384_58 big;
+	big big;
 	void *ud;
 	ecp *e = ecp_arg(L,1); SAFE(e);
 	if(lua_isnumber(L,2)) {
@@ -343,7 +343,7 @@ static int ecp_octet(lua_State *L) {
 			lerror(L,"Octet doesn't contains a valid ECP");
 		return 0;
 	}
-	octet *o = o_new(L,(MODBYTES_384_58<<1)+1);
+	octet *o = o_new(L,(modbytes<<1)+1);
 	SAFE(o);
 	ECP_BLS383_toOctet(o, e->data);
 	return 1;
@@ -356,13 +356,13 @@ static int ecp_octet(lua_State *L) {
     @return an octet containing the curve's order
 */
 static int ecp_order(lua_State *L) {
-	octet *o = o_new(L, MODBYTES_384_58+1); SAFE(o);
-	// BIG_384_58 is an array of int32_t on chunk 32 (see rom_curve)
-	o->len = MODBYTES_384_58;
-	BIG_384_58 c;
+	octet *o = o_new(L, modbytes+1); SAFE(o);
+	// big is an array of int32_t on chunk 32 (see rom_curve)
+	o->len = modbytes;
+	big c;
 	// curve order is ready-only so we need a copy for norm() to work
-	BIG_384_58_copy(c,(chunk*)CURVE_Order_BLS383);
-	BIG_384_58_toBytes(o->val, c);
+	big_copy(c,(chunk*)CURVE_Order_BLS383);
+	big_toBytes(o->val, c);
 	return 1;
 }
 
@@ -372,11 +372,11 @@ static int ecp_output(lua_State *L) {
 	if (ECP_BLS383_isinf(P)) {
 		lua_pushstring(L,"Infinity");
 		return 1; }
-	BIG_384_58 x;
+	big x;
 	char xs[256];
 	char out[512];
 	ECP_BLS383_affine(P);
-	BIG_384_58 y;
+	big y;
 	char ys[256];
 	FP_BLS383_redc(x,&(P->x));
 	FP_BLS383_redc(y,&(P->y));
