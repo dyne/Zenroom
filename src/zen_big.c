@@ -39,7 +39,7 @@ typedef struct {
 	char name[16];
 	int  len;
 	int  chunksize;
-	BIG  data;
+	BIG  val;
 } big;
 
 
@@ -74,7 +74,7 @@ big* big_arg(lua_State *L,int n) {
 big *big_dup(lua_State *L, big *s) {
 	SAFE(s);
 	big *n = big_new(L);
-	BIG_rcopy(n->data,s->data);
+	BIG_rcopy(n->val,s->val);
 	return(n);
 }
 
@@ -87,22 +87,22 @@ int big_destroy(lua_State *L) {
 
 static int newbig(lua_State *L) {
 	big *c = big_new(L); SAFE(L);
-	BIG_zero(c->data);
+	BIG_zero(c->val);
 	return 1;
 }
 
 static int big_from_octet(lua_State *L) {
 	octet *o = o_arg(L,1); SAFE(o);
 	big *c = big_new(L); SAFE(c);
-	BIG_fromBytesLen(c->data, o->val, o->len);
+	BIG_fromBytesLen(c->val, o->val, o->len);
 	return 1;
 }
 
 static int big_to_octet(lua_State *L) {
 	big *c = big_arg(L,1); SAFE(c);
-	BIG_norm(c->data);
+	BIG_norm(c->val);
 	octet *o = o_new(L, c->len+2); SAFE(o);
-	BIG_toBytes(o->val, c->data);
+	BIG_toBytes(o->val, c->val);
 	o->len = modbytes;
 	return 1;
 }
@@ -115,7 +115,7 @@ static int big_to_hex(lua_State *L) {
 	char str[MAX_STRING]; // TODO:
 	int modby2 = modbytes<<1;
 	big *a = big_arg(L,1); SAFE(a);
-	len = BIG_nbits(a->data);
+	len = BIG_nbits(a->val);
 	int lendiv4 = len>>2;
 	if (len%4==0) len=lendiv4;
 	else {
@@ -125,7 +125,7 @@ static int big_to_hex(lua_State *L) {
 	if (len<modby2) len=modby2;
 	int c = 0;
 	for (i=len-1; i>=0; i--) {
-		BIG_copy(b,a->data);
+		BIG_copy(b,a->val);
 		BIG_shr(b,i<<2);
 		sprintf(str+c,"%01x",(unsigned int) b[0]&15);
 		c++;
@@ -138,9 +138,9 @@ static int big_eq(lua_State *L) {
 	big *l = big_arg(L,1); SAFE(l);
 	big *r = big_arg(L,2); SAFE(r);
 	// BIG_comp requires external normalization
-	BIG_norm(l->data);
-	BIG_norm(r->data);
-	int res = BIG_comp(l->data,r->data);
+	BIG_norm(l->val);
+	BIG_norm(r->val);
+	int res = BIG_comp(l->val,r->val);
 	lua_pushboolean(L, (res==0)?1:0);
 	return 1;
 }
@@ -149,7 +149,7 @@ static int big_add(lua_State *L) {
 	big *l = big_arg(L,1); SAFE(l);
 	big *r = big_arg(L,2); SAFE(r);
 	big *d = big_new(L); SAFE(d);
-	BIG_add(d->data, l->data, r->data);
+	BIG_add(d->val, l->val, r->val);
 	return 1;
 }
 
@@ -157,7 +157,7 @@ static int big_sub(lua_State *L) {
 	big *l = big_arg(L,1); SAFE(l);
 	big *r = big_arg(L,2); SAFE(r);
 	big *d = big_new(L); SAFE(d);
-	BIG_sub(d->data, l->data, r->data);
+	BIG_sub(d->val, l->val, r->val);
 	return 1;
 }
 
@@ -165,7 +165,7 @@ static int big_mul(lua_State *L) {
 	big *l = big_arg(L,1); SAFE(l);
 	big *r = big_arg(L,2); SAFE(r);
 	big *d = big_new(L); SAFE(d);
-	BIG_mul(d->data,l->data,r->data);
+	BIG_mul(d->val,l->val,r->val);
 	return 1;
 }
 
@@ -173,7 +173,7 @@ static int big_mod(lua_State *L) {
 	big *l = big_arg(L,1); SAFE(l);
 	big *r = big_arg(L,2); SAFE(r);
 	big *d = big_dup(L,l); SAFE(d);
-	BIG_mod(d->data,r->data);
+	BIG_mod(d->val,r->val);
 	return 1;
 }
 
@@ -181,7 +181,7 @@ static int big_div(lua_State *L) {
 	big *l = big_arg(L,1); SAFE(l);
 	big *r = big_arg(L,2); SAFE(r);
 	big *d = big_dup(L,l); SAFE(d);
-	BIG_div(d->data,r->data);
+	BIG_div(d->val,r->val);
 	return 1;
 }
 
@@ -190,7 +190,7 @@ static int big_modmul(lua_State *L) {
 	big *z = big_arg(L, 2); SAFE(z);
 	big *n = big_arg(L, 3); SAFE(n);
 	big *x = big_new(L); SAFE(x);
-	BIG_modmul(x->data, y->data, z->data, n->data);
+	BIG_modmul(x->val, y->val, z->val, n->val);
 	return 1;
 }
 static int big_moddiv(lua_State *L) {
@@ -198,27 +198,27 @@ static int big_moddiv(lua_State *L) {
 	big *z = big_arg(L, 2); SAFE(z);
 	big *n = big_arg(L, 3); SAFE(n);
 	big *x = big_new(L); SAFE(x);
-	BIG_moddiv(x->data, y->data, z->data, n->data);
+	BIG_moddiv(x->val, y->val, z->val, n->val);
 	return 1;
 }
 static int big_modsqr(lua_State *L) {
 	big *y = big_arg(L, 1); SAFE(y);
 	big *n = big_arg(L, 2); SAFE(n);
 	big *x = big_new(L); SAFE(x);
-	BIG_modsqr(x->data, y->data, n->data);
+	BIG_modsqr(x->val, y->val, n->val);
 	return 1;
 }
 static int big_modneg(lua_State *L) {
 	big *y = big_arg(L, 1); SAFE(y);
 	big *n = big_arg(L, 2); SAFE(n);
 	big *x = big_new(L); SAFE(x);
-	BIG_modneg(x->data, y->data, n->data);
+	BIG_modneg(x->val, y->val, n->val);
 	return 1;
 }
 static int big_jacobi(lua_State *L) {
 	big *x = big_arg(L, 1); SAFE(x);
 	big *y = big_arg(L, 2); SAFE(y);
-	lua_pushinteger(L, BIG_jacobi(x->data, y->data));
+	lua_pushinteger(L, BIG_jacobi(x->val, y->val));
 	return 1;
 }
 
