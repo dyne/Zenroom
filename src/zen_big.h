@@ -31,7 +31,7 @@ typedef struct {
 	BIG  val;
 } big;
 
-// REMEMBER: o_new already pushes the object in lua's stack
+// new or dup already push the object in LUA's stack
 big* big_new(lua_State *L);
 
 big* big_dup(lua_State *L, big *c);

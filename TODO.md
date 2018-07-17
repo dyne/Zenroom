@@ -8,8 +8,6 @@ and their specific use-cases.
 
 each curve has a different infinity point
 
-
-
 TODO: do all ecp2 (new namespace)
 
 TODO: pair.h 
@@ -29,7 +27,7 @@ test:
 O = infinity point
 P + O = P
 (-P) + P = O
-
+DONE:
 to expose the order of the curve:
 like in rom_curve_XXX:
 const BIG_256_29 CURVE_Order_ED25519= {0x1CF5D3ED,0x9318D2,0x1DE73596,0x1DF3BD45,0x14D,0x0,0x0,0x0,0x100000};
@@ -38,11 +36,10 @@ multiply group order by the generetor should give the point at infinity
 
 ## Generic improvements
 
-- add brieflz2 compression
+- parse lib/milagro-crypto-c/cmake/AMCLParameters.cmake for info about
+  curves: size of BIG, names and pairing-friendliness
 
-- add a new 8bit memory manager to test
-  https://github.com/8devices/MemoryManager perhaps also build a
-  memory paging system to use 8bit mm over larger portions of memory
+- add brieflz2 compression
 
 - add more memory tracking / fencing facilities also for script
   testing/profiling
@@ -89,6 +86,10 @@ X use static memory pool in place of malloc from host
   https://github.com/dcshi/ncx_mempool
   implemented using umm_malloc
 
+V add a new 8bit memory manager to test
+  https://github.com/8devices/MemoryManager perhaps also build a
+  memory paging system to use 8bit mm over larger portions of memory
+
 ## Developer experience
 
 - on error print out code at line where it has been detected
@@ -108,7 +109,7 @@ X use static memory pool in place of malloc from host
 - enhance debug module stacktrace
   https://github.com/ignacio/StackTracePlus
 
-- introspection
+V introspection (now made with AST output)
   https://github.com/leegao/see.lua
 
 V self documentation
@@ -153,6 +154,9 @@ X Document api with luadoc http://keplerproject.github.io/luadoc/
   or other means http://lua-users.org/wiki/DocumentingLuaCode
 
 ## Crypto
+
+- see if ECDAA is any useful https://github.com/xaptum/ecdaa
+  has Direct Anonymous Attestation (DAA) and Schnorr sigs
 
 - Build a usable ABC implementation (maybe compatible with coconut
   and/or IRMA?)
