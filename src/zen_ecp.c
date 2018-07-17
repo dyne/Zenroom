@@ -59,6 +59,7 @@
 #include <jutils.h>
 #include <zen_error.h>
 #include <zen_octet.h>
+#include <zen_memory.h>
 #include <lua_functions.h>
 
 typedef struct {
@@ -113,7 +114,7 @@ ecp* ecp_new(lua_State *L) {
 	if(!e) {
 		lerror(L, "Error allocating new ecp in %s",__func__);
 		return NULL; }
-	e->data = malloc(sizeof(ECP_BLS383));
+	e->data = zen_memory_alloc(sizeof(ECP_BLS383));
 	strcpy(e->curve,"bls383");
 	strcpy(e->type,"weierstrass");
 	luaL_getmetatable(L, "zenroom.ecp");
@@ -147,7 +148,7 @@ int ecp_destroy(lua_State *L) {
 	HERE();
 	ecp *e = ecp_arg(L,1);
 	SAFE(e);
-	FREE(e->data);
+	zen_memory_free(e->data);
 	return 0;
 }
 /***
