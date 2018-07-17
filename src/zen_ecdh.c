@@ -195,7 +195,7 @@ static int ecdh_checkpub(lua_State *L) {
 		pk = e->pubkey;
 	} else {
 		pk = o_arg(L, 2); SAFE(pk);
-    }
+	}
 	if((*e->ECP__PUBLIC_KEY_VALIDATE)(pk)==0)
 		lua_pushboolean(L, 1);
 	else
