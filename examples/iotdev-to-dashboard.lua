@@ -1,4 +1,6 @@
 -- one iot device encrypts its data and ID to a dashboard
+-- defines data validation shcemas that can be used on both ends
+-- complementary to other script for reception
 
 -- data schemas
 keys_schema = schema.Record {
@@ -35,7 +37,7 @@ session = devkey:session(dashkey)
 payload = {}
 payload['device_id'] = keys['device_id']
 payload['data']      = DATA
-schema.CheckSchema(payload, payload_schema)
+schema.check(payload, payload_schema)
 
 -- output is the packet, json formatted
 -- only the device's public key is transmitted in clear
@@ -46,7 +48,7 @@ output['payload'] =
 	  session,
 	  octet.from_string(json.encode(payload))
    ):base64()
-schema.CheckSchema(output, output_schema)
+schema.check(output, output_schema)
 
 -- print out the json packet ready to be sent
 print(json.encode(output))

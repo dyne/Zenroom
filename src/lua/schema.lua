@@ -26,6 +26,9 @@ SOFTWARE.
 local schema = {}
 
 -- Checks an object against a schema.
+function schema.check(obj, schem, path)
+   return schema.CheckSchema(obj, schem, path)
+end
 function schema.CheckSchema(obj, schem, path)
     if path == nil then
         path = schema.Path.new()
