@@ -16,7 +16,7 @@
 // License along with this program.  If not, see
 // <http://www.gnu.org/licenses/>.
 
-// For now, the only supported curve is ED25519 type EDWARDS
+// For now, the only supported curve is BLS383 type WEIERSTRASS
 
 
 /// <h1>Elliptic Curve Point Arithmetic (ECP)</h1>
@@ -43,7 +43,7 @@
 //  from hex or base64. These values (also called vectors) are very
 //  big numbers whose representation is difficult without marshaling
 //  them into such formats. Zenroom provides ECP tests based on the
-//  ED25519 curve which come valid point coordinates on the curve.
+//  BLS383 curve which come valid point coordinates on the curve.
 //
 //  Once ECP numbers are created this way, the arithmetic operations
 //  of addition, subtraction and multiplication can be executed
@@ -59,8 +59,8 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
-#include <big_256_29.h> // chunk 32
-#include <ecp_ED25519.h>
+#include <big_384_58.h> // chunk 32
+#include <ecp_BLS383.h>
 
 
 #include <jutils.h>
@@ -69,20 +69,20 @@
 #include <zen_ecp.h>
 #include <lua_functions.h>
 
-void oct2big(BIG_256_29 b, const octet *o) {
-	BIG_256_29_zero(b);
-	BIG_256_29_fromBytesLen(b,o->val,o->len);
+void oct2big(BIG_384_58 b, const octet *o) {
+	BIG_384_58_zero(b);
+	BIG_384_58_fromBytesLen(b,o->val,o->len);
 }
-void int2big(BIG_256_29 b, int n) {
-	BIG_256_29_zero(b);
-	BIG_256_29_inc(b, n);
-	BIG_256_29_norm(b);
+void int2big(BIG_384_58 b, int n) {
+	BIG_384_58_zero(b);
+	BIG_384_58_inc(b, n);
+	BIG_384_58_norm(b);
 }
-char *big2strhex(char *str, BIG_256_29 a) {
-	BIG_256_29 b;
+char *big2strhex(char *str, BIG_384_58 a) {
+	BIG_384_58 b;
 	int i,len;
-	int modby2 = MODBYTES_256_29<<1;
-	len=BIG_256_29_nbits(a);
+	int modby2 = MODBYTES_384_58<<1;
+	len=BIG_384_58_nbits(a);
 	int lendiv4 = len>>2;
 	if (len%4==0) len=lendiv4;
 	else {
@@ -92,8 +92,8 @@ char *big2strhex(char *str, BIG_256_29 a) {
 	if (len<modby2) len=modby2;
 	int c = 0;
 	for (i=len-1; i>=0; i--) {
-		BIG_256_29_copy(b,a);
-		BIG_256_29_shr(b,i<<2);
+		BIG_384_58_copy(b,a);
+		BIG_384_58_shr(b,i<<2);
 		sprintf(str+c,"%01x",(unsigned int) b[0]&15);
 		c++;
 	}
@@ -103,7 +103,7 @@ char *big2strhex(char *str, BIG_256_29 a) {
 /***
     Create a new ECP point from two x,y octet arguments.
 
-    Supported curve: ed25519
+    Supported curve: bls383
 
     @param X octet of a big number
     @param Y octet of a big number
@@ -115,17 +115,9 @@ ecp* ecp_new(lua_State *L) {
 	if(!e) {
 		lerror(L, "Error allocating new ecp in %s",__func__);
 		return NULL; }
-	e->ed25519 = malloc(sizeof(ECP_ED25519));
-	strcpy(e->curve,"ed25519");
-#if CURVETYPE_ED25519==MONTGOMERY
-	strcpy(e->type,"montgomery");
-#elif CURVETYPE_ED25519==WEIERSTRASS
+	e->data = malloc(sizeof(ECP_BLS383));
+	strcpy(e->curve,"bls383");
 	strcpy(e->type,"weierstrass");
-#elif CURVETYPE_ED25519==EDWARDS
-	strcpy(e->type,"edwards");
-#else
-	strcpy(e->type,"unknown");
-#endif
 	luaL_getmetatable(L, "zenroom.ecp");
 	lua_setmetatable(L, -2);
 	return(e);
@@ -138,30 +130,26 @@ ecp* ecp_arg(lua_State *L,int n) {
 }
 ecp* ecp_dup(lua_State *L, const ecp* in) {
 	ecp *e = ecp_new(L); SAFE(e);
-	ECP_ED25519_copy(e->ed25519, in->ed25519);
+	ECP_BLS383_copy(e->data, in->data);
 	return(e);
 }
 ecp* ecp_set_big_xy(lua_State *L, ecp *e, int idx) {
 	SAFE(e);
 	octet *o;
 	o = o_arg(L, idx); SAFE(o);
-	BIG_256_29 x;
+	BIG_384_58 x;
 	oct2big(x, o);
-#if CURVETYPE_ED25519==MONTGOMERY
-	ECP_ED25519_set(e->ed25519, x);
-#else
 	o = o_arg(L, idx+1); SAFE(o);
-	BIG_256_29 y;
+	BIG_384_58 y;
 	oct2big(y, o);
-	ECP_ED25519_set(e->ed25519, x, y);
-#endif
+	ECP_BLS383_set(e->data, x, y);
 	return e;
 }
 int ecp_destroy(lua_State *L) {
 	HERE();
 	ecp *e = ecp_arg(L,1);
 	SAFE(e);
-	FREE(e->ed25519);
+	FREE(e->data);
 	return 0;
 }
 /***
@@ -194,7 +182,7 @@ static int lua_new_ecp(lua_State *L) {
 */
 static int ecp_affine(lua_State *L) {
 	ecp *e = ecp_arg(L,1); SAFE(e);
-	ECP_ED25519_affine(e->ed25519);
+	ECP_BLS383_affine(e->data);
 	return 0;
 }
 /***
@@ -204,7 +192,7 @@ static int ecp_affine(lua_State *L) {
 */
 static int ecp_get_infinity(lua_State *L) {
 	ecp *e = ecp_new(L); SAFE(e);
-	ECP_ED25519_inf(e->ed25519);	
+	ECP_BLS383_inf(e->data);
 	return 1;
 }
 
@@ -216,7 +204,7 @@ static int ecp_get_infinity(lua_State *L) {
 */
 static int ecp_isinf(lua_State *L) {
 	const ecp *e = ecp_arg(L,1); SAFE(e);
-	lua_pushboolean(L,ECP_ED25519_isinf(e->ed25519));
+	lua_pushboolean(L,ECP_BLS383_isinf(e->data));
 	return 1;
 }
 
@@ -228,12 +216,12 @@ static int ecp_isinf(lua_State *L) {
 */
 static int ecp_mapit(lua_State *L) {
 	octet *o = o_arg(L,1); SAFE(o);
-	if(o->len < MODBYTES_256_29) {
+	if(o->len < MODBYTES_384_58) {
 		lerror(L, "%s: octet too short (min %u bytes)",
-		       __func__, MODBYTES_256_29);
+		       __func__, MODBYTES_384_58);
 		return 0; }
 	const ecp *e = ecp_new(L); SAFE(e);
-	ECP_ED25519_mapit(e->ed25519, o);
+	ECP_BLS383_mapit(e->data, o);
 	return 1;
 }
 
@@ -250,7 +238,7 @@ static int ecp_add(lua_State *L) {
 	const ecp *q = ecp_arg(L,2); SAFE(q);
 	ecp *p = ecp_dup(L, e); // push
 	SAFE(p);
-	ECP_ED25519_add(p->ed25519,q->ed25519);
+	ECP_BLS383_add(p->data,q->data);
 	return 1;
 }
 
@@ -267,7 +255,7 @@ static int ecp_sub(lua_State *L) {
 	const ecp *q = ecp_arg(L,2); SAFE(q);
 	ecp *p = ecp_dup(L, e); // push
 	SAFE(p);
-	ECP_ED25519_sub(p->ed25519,q->ed25519);
+	ECP_BLS383_sub(p->data,q->data);
 	return 1;
 }
 
@@ -279,7 +267,7 @@ static int ecp_sub(lua_State *L) {
 static int ecp_negative(lua_State *L) {
 	const ecp *in = ecp_arg(L,1); SAFE(in);
 	const ecp *out = ecp_dup(L,in); SAFE(out);
-	ECP_ED25519_neg(out->ed25519);
+	ECP_BLS383_neg(out->data);
 	return 1;
 }
 
@@ -291,7 +279,7 @@ static int ecp_negative(lua_State *L) {
 static int ecp_double(lua_State *L) {
 	const ecp *in = ecp_arg(L,1); SAFE(in);
 	const ecp *out = ecp_dup(L,in); SAFE(out);
-	ECP_ED25519_dbl(out->ed25519);
+	ECP_BLS383_dbl(out->data);
 	return 1;
 }
 
@@ -305,7 +293,7 @@ static int ecp_double(lua_State *L) {
     @return new ecp point resulting from the multiplication
 */
 static int ecp_mul(lua_State *L) {
-	BIG_256_29 big;
+	BIG_384_58 big;
 	void *ud;
 	ecp *e = ecp_arg(L,1); SAFE(e);
 	if(lua_isnumber(L,2)) {
@@ -317,7 +305,7 @@ static int ecp_mul(lua_State *L) {
 	}
 	// TODO: check parsing errors
 	const ecp *out = ecp_dup(L,e); SAFE(out);
-	ECP_ED25519_mul(out->ed25519,big);
+	ECP_BLS383_mul(out->data,big);
 	return 1;
 }
 
@@ -333,10 +321,10 @@ static int ecp_eq(lua_State *L) {
 	const ecp *p = ecp_arg(L,1); SAFE(p);
 	const ecp *q = ecp_arg(L,2); SAFE(q);
 // TODO: is affine rly needed?
-	ECP_ED25519_affine(p->ed25519);
-	ECP_ED25519_affine(q->ed25519);
-	lua_pushboolean(L,ECP_ED25519_equals(
-		                p->ed25519, q->ed25519));
+	ECP_BLS383_affine(p->data);
+	ECP_BLS383_affine(q->data);
+	lua_pushboolean(L,ECP_BLS383_equals(
+		                p->data, q->data));
 	return 1;
 }
 
@@ -351,13 +339,13 @@ static int ecp_octet(lua_State *L) {
 	ecp *e = ecp_arg(L,1); SAFE(e);
 	if((ud = luaL_testudata(L, 2, "zenroom.octet"))) {
 		octet *o = (octet*)ud; SAFE(o);
-		if(! ECP_ED25519_fromOctet(e->ed25519, o) )
+		if(! ECP_BLS383_fromOctet(e->data, o) )
 			lerror(L,"Octet doesn't contains a valid ECP");
 		return 0;
 	}
-	octet *o = o_new(L,(MODBYTES_256_29<<1)+1);
+	octet *o = o_new(L,(MODBYTES_384_58<<1)+1);
 	SAFE(o);
-	ECP_ED25519_toOctet(o, e->ed25519);
+	ECP_BLS383_toOctet(o, e->data);
 	return 1;
 }
 
@@ -368,49 +356,38 @@ static int ecp_octet(lua_State *L) {
     @return an octet containing the curve's order
 */
 static int ecp_order(lua_State *L) {
-	octet *o = o_new(L, MODBYTES_256_29+1); SAFE(o);
-	// BIG_256_29 is an array of int32_t on chunk 32 (see rom_curve)
-	o->len = MODBYTES_256_29;
-	BIG_256_29 c;
+	octet *o = o_new(L, MODBYTES_384_58+1); SAFE(o);
+	// BIG_384_58 is an array of int32_t on chunk 32 (see rom_curve)
+	o->len = MODBYTES_384_58;
+	BIG_384_58 c;
 	// curve order is ready-only so we need a copy for norm() to work
-	BIG_256_29_copy(c,(chunk*)CURVE_Order_ED25519);
-	BIG_256_29_toBytes(o->val, c);
+	BIG_384_58_copy(c,(chunk*)CURVE_Order_BLS383);
+	BIG_384_58_toBytes(o->val, c);
 	return 1;
 }
 
 static int ecp_output(lua_State *L) {
 	const ecp *e = ecp_arg(L, 1); SAFE(e);
-	ECP_ED25519 *P = e->ed25519;
-	if (ECP_ED25519_isinf(P)) {
+	ECP_BLS383 *P = e->data;
+	if (ECP_BLS383_isinf(P)) {
 		lua_pushstring(L,"Infinity");
 		return 1; }
-	BIG_256_29 x;
+	BIG_384_58 x;
 	char xs[256];
 	char out[512];
-	ECP_ED25519_affine(P);
-#if CURVETYPE_ED25519==MONTGOMERY
-	FP_25519_redc(x,&(P->x));
-	snprintf(out,511,
-	         "{ \"curve\": \"%s\",\n"
-	         "  \"encoding\": \"hex\",\n"
-	         "  \"vm\": \"%s\",\n"
-	         "  \"x\": \"%s\" }",
-	         e->curve, VERSION,
-	         big2strhex(xs,x));
-#else
-	BIG_256_29 y;
+	ECP_BLS383_affine(P);
+	BIG_384_58 y;
 	char ys[256];
-	FP_25519_redc(x,&(P->x));
-	FP_25519_redc(y,&(P->y));
+	FP_BLS383_redc(x,&(P->x));
+	FP_BLS383_redc(y,&(P->y));
 	snprintf(out, 511,
 "{ \"curve\": \"%s\",\n"
 "  \"encoding\": \"hex\",\n"
-"  \"vm\": \"%s\",\n"
+"  \"zenroom\": \"%s\",\n"
 "  \"x\": \"%s\",\n"
 "  \"y\": \"%s\" }",
 	         e->curve, VERSION,
 	         big2strhex(xs,x), big2strhex(ys,y));
-#endif
 	lua_pushstring(L,out);
 	return 1;
 }

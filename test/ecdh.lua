@@ -60,8 +60,10 @@ function test_curve (name)
 end
 
 test_curve('ed25519')
-test_curve('nist256')
--- TODO: check why goldilocks doesn't works
--- test_curve('goldilocks')
-test_curve('bn254cx')
-test_curve('fp256bn')
+-- BUG? https://github.com/milagro-crypto/milagro-crypto-c/issues/285
+-- test_curve('bls383')
+
+-- -- TODO: check why goldilocks doesn't works
+-- -- test_curve('goldilocks')
+-- test_curve('bn254cx')
+-- test_curve('fp256bn')
