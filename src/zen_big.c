@@ -77,8 +77,18 @@ int big_destroy(lua_State *L) {
 }
 
 static int newbig(lua_State *L) {
+	HERE();
+	int res = lua_isnoneornil(L, 1);
 	big *c = big_new(L); SAFE(L);
-	BIG_zero(c->val);
+	// argument if present must be an octet
+	if(res) {
+		BIG_zero(c->val);
+	} else {
+		void *ud = luaL_testudata(L, 1, "zenroom.octet");
+		luaL_argcheck(L, ud != NULL, 1, "octet argument expected");
+		octet *o = (octet*)ud;
+		BIG_fromBytesLen(c->val, o->val, o->len);
+	}
 	return 1;
 }
 
