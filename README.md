@@ -71,35 +71,39 @@ The main use case for Zenroom is that of **distributed computing** of untrusted 
 
 This project is receiving funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement nr. 732546 (DECODE).
 
+
 ## Acknowledgements
 
 Copyright (C) 2017-2018 by Dyne.org foundation, Amsterdam
 
 Designed, written and maintained by Denis "Jaromil" Roio.
 
-With contributions by Ivan J., Puria Nafisi Azizi, Jordi Coscolla and Christian Espinoza.
+With contributions by Ivan J., Puria Nafisi Azizi, Jordi Coscolla,
+Christian Espinoza, Enrico Zimuel and Daniele Lacamera.
 
-Special thanks to Francesca Bria for leading the DECODE project and to George Danezis, Ola Bini, Mark de Villiers, Alberto Sonnino and Richard Stallman for their expert reviews.
+Special thanks to Francesca Bria for leading the DECODE project and to
+George Danezis, Ola Bini, Mark de Villiers, Alberto Sonnino and
+Richard Stallman for their expert reviews.
 
-This software includes software components by:
+This software includes software components by: R. Ierusalimschy,
+W. Celes and L.H. de Figueiredo (lua), Mike Scott and Kealan McCusker
+(milagro-crypto-c), Ralph Hempel (umm_malloc), Mark Pulford
+(lua-cjson), Daan Sprenkels (randombytes)
 
-- R. Ierusalimschy, W. Celes and L.H. de Figueiredo (lua)
-- Mike Scott and Kealan McCusker (milagro-crypto-c)
-- Ralph Hempel (umm_malloc)
-- Mark Pulford (lua-cjson)
-- Daan Sprenkels (randombytes)
+Lua extensions written and documented by: Roland Yonaba (moses),
+Enrique García Cota (inspect), Sebastian Schoener (schema), Kyle
+Conroy (finite state machine), Scott Lembcke (debugger)
 
-And Lua extensions written and documented by:
+Licensed under the terms of the GNU Public License as published by the
+Free Software Foundation; either version 3 of the License, or (at your
+option) any later version.
 
-- Roland Yonaba (moses)
-- Enrique García Cota (inspect)
-- Sebastian Schoener (schema)
-- Kyle Conroy (finite state machine)
-- Scott Lembcke (debugger)
-- Michael Lutz and David Manura (matrix and complex)
+Source code contained in the full Zenroom build is licensed under the
+Apache License, Version 2.0 (the "License").
 
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.  You may obtain a copy of the License at
+Here is our [Contributor License Agreement](Agreement.md)
 
-  http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the specific language governing permissions and limitations under the License.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+implied.  See [the License](LICENSE.txt).
