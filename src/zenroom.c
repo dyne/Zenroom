@@ -23,6 +23,8 @@
 #include <string.h>
 #include <ctype.h>
 
+#include <wait.h>
+
 #include <errno.h>
 
 #include <lua.h>
@@ -40,6 +42,30 @@
 
 #include <zenroom.h>
 #include <zen_memory.h>
+
+#ifdef __linux__
+#include <sys/prctl.h>
+#include <linux/seccomp.h>
+#include <linux/filter.h>
+#include <sys/syscall.h>
+static const struct sock_filter  strict_filter[] = {
+	BPF_STMT(BPF_LD | BPF_W | BPF_ABS, (offsetof (struct seccomp_data, nr))),
+
+	BPF_JUMP(BPF_JMP | BPF_JEQ, SYS_rt_sigreturn, 5, 0),
+	BPF_JUMP(BPF_JMP | BPF_JEQ, SYS_read,         4, 0),
+	BPF_JUMP(BPF_JMP | BPF_JEQ, SYS_write,        3, 0),
+	BPF_JUMP(BPF_JMP | BPF_JEQ, SYS_exit,         2, 0),
+	BPF_JUMP(BPF_JMP | BPF_JEQ, SYS_exit_group,   1, 0),
+
+	BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_KILL),
+	BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW)
+};
+
+static const struct sock_fprog  strict = {
+	.len = (unsigned short)( sizeof strict_filter / sizeof strict_filter[0] ),
+	.filter = (struct sock_filter *)strict_filter
+};
+#endif
 
 // prototypes from lua_modules.c
 extern int zen_require_override(lua_State *L, const int restricted);
@@ -60,7 +86,7 @@ extern void load_file(char *dst, FILE *fd);
 extern char *safe_string(char *str);
 extern void zen_setenv(lua_State *L, char *key, char *val);
 extern void zen_add_function(lua_State *L, lua_CFunction func,
-                             const char *func_name);
+		const char *func_name);
 
 // prototypes from zen_ast.c
 zenroom_t *ast_init(char *script);
@@ -68,7 +94,7 @@ int  ast_parse(zenroom_t *Z);
 void ast_teardown(zenroom_t *Z);
 
 zenroom_t *zen_init(const char *conf,
-                    char *keys, char *data) {
+		char *keys, char *data) {
 	(void) conf;
 	lua_State *L = NULL;
 	zen_mem_t *mem = NULL;
@@ -143,26 +169,26 @@ zenroom_t *zen_init(const char *conf,
 void zen_teardown(zenroom_t *Z) {
 
 	notice(Z->lua,"Zenroom teardown.");
-    if(Z->mem->heap) {
-	    if(umm_integrity_check())
-		    func(Z->lua,"HEAP integrity checks passed.");
-	    umm_info(Z->mem->heap); }
-    // save pointers inside Z to free after L and Z
-    void *mem = Z->mem;
-    void *heap = Z->mem->heap;
-    if(Z->lua) {
-	    func(Z->lua, "lua gc and close...");
-	    lua_gc((lua_State*)Z->lua, LUA_GCCOLLECT, 0);
-	    lua_gc((lua_State*)Z->lua, LUA_GCCOLLECT, 0);
-	    // this call here frees also Z (lightuserdata)
-	    lua_close((lua_State*)Z->lua);
-    }
-    func(NULL,"zen free");
-    if(heap)
-	    system_free(heap);
-    free(Z);
-    if(mem) system_free(mem);
-    func(NULL,"teardown completed");
+	if(Z->mem->heap) {
+		if(umm_integrity_check())
+			func(Z->lua,"HEAP integrity checks passed.");
+		umm_info(Z->mem->heap); }
+	// save pointers inside Z to free after L and Z
+	void *mem = Z->mem;
+	void *heap = Z->mem->heap;
+	if(Z->lua) {
+		func(Z->lua, "lua gc and close...");
+		lua_gc((lua_State*)Z->lua, LUA_GCCOLLECT, 0);
+		lua_gc((lua_State*)Z->lua, LUA_GCCOLLECT, 0);
+		// this call here frees also Z (lightuserdata)
+		lua_close((lua_State*)Z->lua);
+	}
+	func(NULL,"zen free");
+	if(heap)
+		system_free(heap);
+	free(Z);
+	if(mem) system_free(mem);
+	func(NULL,"teardown completed");
 }
 
 
@@ -172,7 +198,7 @@ int zen_exec_script(zenroom_t *Z, const char *script) {
 		return 1; }
 	if(!Z->lua) {
 		error(NULL,"%s: Zenroom context not initialised.",
-		      __func__);
+				__func__);
 		return 1; }
 	int ret;
 	lua_State* L = Z->lua;
@@ -188,7 +214,7 @@ int zen_exec_script(zenroom_t *Z, const char *script) {
 }
 
 int zenroom_exec(char *script, char *conf, char *keys,
-                 char *data, int verbosity) {
+		char *data, int verbosity) {
 	// the sandbox context (can be initialised only once)
 	// stores the script file and configuration
 	zenroom_t *Z = NULL;
@@ -216,7 +242,7 @@ int zenroom_exec(char *script, char *conf, char *keys,
 #ifdef __EMSCRIPTEN__
 		EM_ASM({Module.exec_error();});
 #endif
-//		error(r);
+		//		error(r);
 		error(L, "Error detected. Execution aborted.");
 
 		zen_teardown(Z);
@@ -225,7 +251,7 @@ int zenroom_exec(char *script, char *conf, char *keys,
 	return_code = 0; // return success
 
 #ifdef __EMSCRIPTEN__
-		EM_ASM({Module.exec_ok();});
+	EM_ASM({Module.exec_ok();});
 #endif
 
 	notice(L, "Zenroom operations completed.");
@@ -235,9 +261,9 @@ int zenroom_exec(char *script, char *conf, char *keys,
 
 
 int zenroom_exec_tobuf(char *script, char *conf, char *keys,
-                       char *data, int verbosity,
-                       char *stdout_buf, size_t stdout_len,
-                       char *stderr_buf, size_t stderr_len) {
+		char *data, int verbosity,
+		char *stdout_buf, size_t stdout_len,
+		char *stderr_buf, size_t stderr_len) {
 	// the sandbox context (can be initialised only once)
 	// stores the script file and configuration
 	zenroom_t *Z = NULL;
@@ -271,7 +297,7 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys,
 #ifdef __EMSCRIPTEN__
 		EM_ASM({Module.exec_error();});
 #endif
-//		error(r);
+		//		error(r);
 		error(L, "Error detected. Execution aborted.");
 
 		zen_teardown(Z);
@@ -280,7 +306,7 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys,
 	return_code = 0; // return success
 
 #ifdef __EMSCRIPTEN__
-		EM_ASM({Module.exec_ok();});
+	EM_ASM({Module.exec_ok();});
 #endif
 
 	notice(L, "Zenroom operations completed.");
@@ -299,51 +325,52 @@ int main(int argc, char **argv) {
 	char keys[MAX_FILE];
 	char data[MAX_FILE];
 	int opt, index;
-    int   verbosity           = 1;
-    int   interactive         = 0;
-    int   parseast            = 0;
-    const char *short_options = "hdic:k:a:p:";
-    const char *help          =
-	    "Usage: zenroom [-dh] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ [ -p ] script.lua ]\n";
-    conffile   [0] = '\0';
-    scriptfile [0] = '\0';
-    keysfile   [0] = '\0';
-    datafile   [0] = '\0';
-    data       [0] = '\0';
-    keys       [0] = '\0';
-    // conf[0] = '\0';
-    script[0] = '\0';
+	int   verbosity           = 1;
+	int   interactive         = 0;
+	int   parseast            = 0;
+	const char *short_options = "hdic:k:a:p:";
+	const char *help          =
+		"Usage: zenroom [-dh] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ [ -p ] script.lua ]\n";
+	int pid, status, retval;
+	conffile   [0] = '\0';
+	scriptfile [0] = '\0';
+	keysfile   [0] = '\0';
+	datafile   [0] = '\0';
+	data       [0] = '\0';
+	keys       [0] = '\0';
+	// conf[0] = '\0';
+	script[0] = '\0';
 
 	notice(NULL, "Zenroom v%s - crypto language restricted VM",VERSION);
 	act(NULL, "Copyright (C) 2017-2018 Dyne.org foundation");
 	while((opt = getopt(argc, argv, short_options)) != -1) {
 		switch(opt) {
-		case 'd':
-			verbosity = 3;
-			set_debug(verbosity);
-			break;
-		case 'h':
-			fprintf(stdout,"%s",help);
-			exit(0);
-			break;
-		case 'i':
-			interactive = 1;
-			break;
-		case 'k':
-			snprintf(keysfile,511,"%s",optarg);
-			break;
-		case 'a':
-			snprintf(datafile,511,"%s",optarg);
-			break;
-		case 'c':
-			snprintf(conffile,511,"%s",optarg);
-			break;
-		case 'p':
-			parseast = 1;
-			snprintf(scriptfile,511,"%s",optarg);
-			break;
-		case '?': error(0,help); exit(1);
-		default:  error(0,help); exit(1);
+			case 'd':
+				verbosity = 3;
+				set_debug(verbosity);
+				break;
+			case 'h':
+				fprintf(stdout,"%s",help);
+				exit(0);
+				break;
+			case 'i':
+				interactive = 1;
+				break;
+			case 'k':
+				snprintf(keysfile,511,"%s",optarg);
+				break;
+			case 'a':
+				snprintf(datafile,511,"%s",optarg);
+				break;
+			case 'c':
+				snprintf(conffile,511,"%s",optarg);
+				break;
+			case 'p':
+				parseast = 1;
+				snprintf(scriptfile,511,"%s",optarg);
+				break;
+			case '?': error(0,help); exit(1);
+			default:  error(0,help); exit(1);
 		}
 	}
 	for (index = optind; index < argc; index++) {
@@ -373,9 +400,9 @@ int main(int argc, char **argv) {
 		// start an interactive repl console
 		zenroom_t *cli;
 		cli = zen_init(
-			conffile[0]?conffile:NULL,
-			keys[0]?keys:NULL,
-			data[0]?data:NULL);
+				conffile[0]?conffile:NULL,
+				keys[0]?keys:NULL,
+				data[0]?data:NULL);
 		lua_State *L = (lua_State*)cli->lua;
 
 		// print function
@@ -406,21 +433,50 @@ int main(int argc, char **argv) {
 	// configuration from -c or default
 	if(conffile[0]!='\0')
 		act(NULL, "selected configuration: %s",conffile);
-		// load_file(conf, fopen(conffile, "r"));
+	// load_file(conf, fopen(conffile, "r"));
 	else
 		act(NULL, "using default configuration");
 
 	zenroom_t *Z;
 	set_debug(verbosity);
 	Z = zen_init(
-		(conffile[0])?conffile:NULL,
-		(keys[0])?keys:NULL,
-		(data[0])?data:NULL);
+			(conffile[0])?conffile:NULL,
+			(keys[0])?keys:NULL,
+			(data[0])?data:NULL);
 	if(!Z) {
 		error(NULL, "Initialisation failed.");
 		return 1; }
-	if( zen_exec_script(Z, script) ) error(NULL, "Blocked execution.");
-	else notice(NULL, "Execution completed.");
+	if (fork() == 0) {
+#ifdef __linux__
+		if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) {
+			fprintf(stderr, "Cannot set no_new_privs: %m.\n");
+			return EXIT_FAILURE;
+		}
+		if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &strict)) {
+			fprintf(stderr, "Cannot install seccomp filter: %m.\n");
+			return EXIT_FAILURE;
+		}
+#endif
+		notice(NULL, "Starting execution.");
+		if( zen_exec_script(Z, script) ) {
+			error(NULL, "Blocked execution.");
+			exit(1);
+		}
+		exit(0);
+	}
+
+	do {
+		pid = wait(&status);
+	} while(pid == -1);
+
+	if (WIFEXITED(status)) {
+		retval = WEXITSTATUS(status);
+		if (retval == 0)
+			notice(NULL, "Execution completed.");
+	} else if (WIFSIGNALED(status)) {
+		notice(NULL, "Execution interrupted by signal %d.", WTERMSIG(status));
+	}
+
 	// report experimental memory manager
 	// if((strcmp(conffile,"umm")==0) && zen_heap) {
 	// 	lua_gc(L, LUA_GCCOLLECT, 0);

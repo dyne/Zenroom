@@ -30,7 +30,7 @@
 // passes the string to be printed through the 'tosting' function
 // inside lua, taking care of some sanitization and conversions
 static const char *lua_print_format(lua_State *L,
-                                    int pos, size_t *len) {
+		int pos, size_t *len) {
 	const char *s;
 	lua_pushvalue(L, -1);  /* function to be called */
 	lua_pushvalue(L, pos);   /* value to print */
@@ -38,7 +38,7 @@ static const char *lua_print_format(lua_State *L,
 	s = lua_tolstring(L, -1, len);  /* get result */
 	if (s == NULL)
 		luaL_error(L, LUA_QL("tostring") " must return a string to "
-		           LUA_QL("print"));
+				LUA_QL("print"));
 	return s;
 }
 
@@ -61,8 +61,8 @@ static int lua_print_tobuffer(lua_State *L) {
 			const char *s = lua_print_format(L, i, &len);
 			if(i>1) { out[Z->stdout_pos]='\t'; Z->stdout_pos++; }
 			snprintf(out+Z->stdout_pos,
-			         Z->stdout_len - Z->stdout_pos,
-			         "%s", s);
+					Z->stdout_len - Z->stdout_pos,
+					"%s", s);
 			Z->stdout_pos+=len;
 			lua_pop(L, 1);
 		}
@@ -142,17 +142,19 @@ static int zen_print (lua_State *L) {
 	int status = 1;
 	size_t len = 0;
 	int n = lua_gettop(L);  /* number of arguments */
-	int i;
+	int i, w;
 	lua_getglobal(L, "tostring");
 	for (i=1; i<=n; i++) {
 		const char *s = lua_print_format(L, i, &len);
-		if(i>1) fwrite("\t",sizeof(char),1,stdout);
+		if(i>1) 
+            w = write(STDOUT_FILENO, "\t", 1);
+        (void)w;
 		status = status &&
-			(fwrite(s, sizeof(char), len, stdout) == len);
+			(write(STDOUT_FILENO, s,  len) == (int)len);
 		lua_pop(L, 1);  /* pop result */
 	}
-	fwrite("\n",sizeof(char),1,stdout);
-	fflush(stdout);
+	w = write(STDOUT_FILENO,"\n",sizeof(char));
+    (void)w;
 	return 0;
 }
 
@@ -162,18 +164,21 @@ static int zen_error (lua_State *L) {
 	int status = 1;
 	size_t len = 0;
 	int n = lua_gettop(L);  /* number of arguments */
-	int i;
+	int i, w;
 	lua_getglobal(L, "tostring");
-	fwrite("[!] ",sizeof(char),4,stderr);
+	w = write(STDERR_FILENO, "[!] ",4* sizeof(char));
+    (void)w;
 	for (i=1; i<=n; i++) {
 		const char *s = lua_print_format(L, i, &len);
-		if(i>1) fwrite("\t",sizeof(char),1,stderr);
+		if(i>1) 
+			w = write(STDERR_FILENO, "\t",sizeof(char));
+        (void)w;
 		status = status &&
-			(fwrite(s, sizeof(char), len, stderr) == len);
+			(write(STDERR_FILENO, s, len) == (int)len);
 		lua_pop(L, 1);  /* pop result */
 	}
-	fwrite("\n",sizeof(char),1,stderr);
-	fflush(stderr);
+	w = write(STDERR_FILENO,"\n",sizeof(char));
+    (void)w;
 	return 0;
 }
 
@@ -181,16 +186,17 @@ static int zen_iowrite (lua_State *L) {
 	int nargs = lua_gettop(L) +1;
 	int status = 1;
 	int arg = 0;
-	FILE *out = stdout;
 	for (; nargs--; arg++) {
 		if (lua_type(L, arg) == LUA_TNUMBER) {
+			char nrep[64];
+			snprintf(nrep, 64, LUA_NUMBER_FMT, lua_tonumber(L, arg));
 			/* optimization: could be done exactly as for strings */
 			status = status &&
-				fprintf(out, LUA_NUMBER_FMT, lua_tonumber(L, arg)) > 0;
+				write(STDOUT_FILENO, nrep, strlen(nrep)) > 0;
 		} else {
 			size_t l;
 			const char *s = lua_tolstring(L, arg, &l);
-			status = status && (fwrite(s, sizeof(char), l, out) == l);
+			status = status && (write(STDOUT_FILENO, s, sizeof(char)) == sizeof(char));
 		}
 	}
 	if (!status) {
@@ -208,15 +214,15 @@ static int zen_iowrite (lua_State *L) {
 void zen_add_io(lua_State *L) {
 	// override print() and io.write()
 	static const struct luaL_Reg custom_print [] =
-		{ {"print", zen_print},
-		  {"error", zen_error},
-		  {NULL, NULL} };
+	{ {"print", zen_print},
+		{"error", zen_error},
+		{NULL, NULL} };
 	lua_getglobal(L, "_G");
 	luaL_setfuncs(L, custom_print, 0);  // for Lua versions 5.2 or greater
 	lua_pop(L, 1);
 
 	static const struct luaL_Reg custom_iowrite [] =
-		{ {"write", zen_iowrite}, {NULL, NULL} };
+	{ {"write", zen_iowrite}, {NULL, NULL} };
 	lua_getglobal(L, "io");
 	luaL_setfuncs(L, custom_iowrite, 0);
 	lua_pop(L, 1);
