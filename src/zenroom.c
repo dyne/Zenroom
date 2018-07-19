@@ -24,7 +24,7 @@
 #include <ctype.h>
 
 #ifndef LIBRARY
-#include <wait.h>
+#include <sys/wait.h>
 #endif
 
 #include <errno.h>
