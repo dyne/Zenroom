@@ -52,6 +52,7 @@
 static const struct sock_filter  strict_filter[] = {
 	BPF_STMT(BPF_LD | BPF_W | BPF_ABS, (offsetof (struct seccomp_data, nr))),
 
+	BPF_JUMP(BPF_JMP | BPF_JEQ, SYS_getrandom,    6, 0),
 	BPF_JUMP(BPF_JMP | BPF_JEQ, SYS_rt_sigreturn, 5, 0),
 	BPF_JUMP(BPF_JMP | BPF_JEQ, SYS_read,         4, 0),
 	BPF_JUMP(BPF_JMP | BPF_JEQ, SYS_write,        3, 0),
