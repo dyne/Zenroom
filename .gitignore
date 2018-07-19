@@ -9,3 +9,9 @@ config.status
 build/lua_sandbox*
 build/luazen
 .env
+docs/test
+docs/pub
+docs/fonts
+lib/musl
+src/zenroom.wasm
+src/zenroom-shared
