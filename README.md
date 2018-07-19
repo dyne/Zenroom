@@ -101,7 +101,10 @@ option) any later version.
 Source code contained in the full Zenroom build is licensed under the
 Apache License, Version 2.0 (the "License").
 
-Here is our [Contributor License Agreement](Agreement.md)
+We are committed to contribute our code to communities and societies
+adopting it as free and open source, according to the Free Software
+Foundation guidelines and GNU artisanal traditions. Here is our
+[Contributor License Agreement](Agreement.md).
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,

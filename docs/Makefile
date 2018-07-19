@@ -10,11 +10,11 @@ readme:
 	echo "</markdown>" >> views/index.html
 
 preview: DEST := test
-preview: views api readme
+preview: views readme
 	./webnomad/preview
 
 webnomad: DEST := pub
-webnomad: views api readme
+webnomad: views readme
 	./webnomad/render
 
 article: article/views
