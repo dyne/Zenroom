@@ -447,8 +447,15 @@ int main(int argc, char **argv) {
 	if(!Z) {
 		error(NULL, "Initialisation failed.");
 		return 1; }
+
+#if (defined(ARCH_WIN) || defined(DISABLE_FORK))
+		notice(NULL, "Starting execution.");
+		if( zen_exec_script(Z, script) ) {
+			error(NULL, "Blocked execution.");
+        }
+#else /* POSIX */
 	if (fork() == 0) {
-#ifdef ARCH_LINUX
+#   ifdef ARCH_LINUX /* LINUX engages SECCOMP. */
 		if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) {
 			fprintf(stderr, "Cannot set no_new_privs: %m.\n");
 			return EXIT_FAILURE;
@@ -457,7 +464,7 @@ int main(int argc, char **argv) {
 			fprintf(stderr, "Cannot install seccomp filter: %m.\n");
 			return EXIT_FAILURE;
 		}
-#endif
+#   endif /* ARCH_LINUX */
 		notice(NULL, "Starting execution.");
 		if( zen_exec_script(Z, script) ) {
 			error(NULL, "Blocked execution.");
@@ -465,7 +472,6 @@ int main(int argc, char **argv) {
 		}
 		exit(0);
 	}
-
 	do {
 		pid = wait(&status);
 	} while(pid == -1);
@@ -477,6 +483,7 @@ int main(int argc, char **argv) {
 	} else if (WIFSIGNALED(status)) {
 		notice(NULL, "Execution interrupted by signal %d.", WTERMSIG(status));
 	}
+#endif /* POSIX */
 
 	// report experimental memory manager
 	// if((strcmp(conffile,"umm")==0) && zen_heap) {
