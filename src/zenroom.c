@@ -23,7 +23,9 @@
 #include <string.h>
 #include <ctype.h>
 
+#ifndef LIBRARY
 #include <wait.h>
+#endif
 
 #include <errno.h>
 
