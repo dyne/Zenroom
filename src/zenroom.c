@@ -23,7 +23,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#ifndef LIBRARY
+#if (defined ARCH_LINUX) || (defined ARCH_OSX) || (defined ARCH_BSD)
 #include <sys/wait.h>
 #endif
 
@@ -44,8 +44,7 @@
 
 #include <zenroom.h>
 #include <zen_memory.h>
-
-#ifdef __linux__
+#ifdef ARCH_LINUX
 #include <sys/prctl.h>
 #include <linux/seccomp.h>
 #include <linux/filter.h>
@@ -449,7 +448,7 @@ int main(int argc, char **argv) {
 		error(NULL, "Initialisation failed.");
 		return 1; }
 	if (fork() == 0) {
-#ifdef __linux__
+#ifdef ARCH_LINUX
 		if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) {
 			fprintf(stderr, "Cannot set no_new_privs: %m.\n");
 			return EXIT_FAILURE;

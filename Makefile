@@ -61,7 +61,7 @@ apply-patches:
 # https://github.com/kripken/emscripten/blob/master/src/settings.js
 js: gcc=${EMSCRIPTEN}/emcc
 js: ar=${EMSCRIPTEN}/emar
-js: cflags := -O2 -D'ARCH=\"JS\"' -Wall
+js: cflags := -O2 -D'ARCH=\"JS\"' -Wall -DARCH_JS
 js: ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zenroom_exec_tobuf\",\"_zenroom_parse_ast\",\"_set_debug\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s USE_SDL=0
 js: apply-patches lua53 milagro-js lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
@@ -71,7 +71,7 @@ js: apply-patches lua53 milagro-js lpeglabel
 
 wasm: gcc=${EMSCRIPTEN}/emcc
 wasm: ar=${EMSCRIPTEN}/emar
-wasm: cflags := -O2 -D'ARCH=\"WASM\"' -Wall
+wasm: cflags := -O2 -D'ARCH=\"WASM\"' -Wall -DARCH_WASM
 wasm: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zenroom_exec_tobuf\",\"_zenroom_parse_ast\",\"_set_debug\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s MODULARIZE=1 -s USE_SDL=0 -s USE_PTHREADS=0
 wasm: apply-patches lua53 milagro-js lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
@@ -81,14 +81,14 @@ wasm: apply-patches lua53 milagro-js lpeglabel
 
 demo: gcc=${EMSCRIPTEN}/emcc
 demo: ar=${EMSCRIPTEN}/emar
-demo: cflags := -O2 -D'ARCH=\"WASM\"'
+demo: cflags := -O2 -D'ARCH=\"WASM\"' -DARCH_WASM
 demo: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zenroom_exec_tobuf\",\"_zenroom_parse_ast\",\"_set_debug\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s ASSERTIONS=1 --shell-file ${extras}/shell_minimal.html -s NO_EXIT_RUNTIME=1 -s USE_SDL=0 -s USE_PTHREADS=0
 demo: apply-patches lua53 milagro-js lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src demo
 
 html: gcc=${EMSCRIPTEN}/emcc
 html: ar=${EMSCRIPTEN}/emar
-html: cflags := -O2 -D'ARCH=\"JS\"'
+html: cflags := -O2 -D'ARCH=\"JS\"' -DARCH_JS
 html: ldflags := -sEXPORTED_FUNCTIONS='["_main","_zenroom_exec",\"_zenroom_exec_tobuf\",\"_zenroom_parse_ast\",\"_set_debug\"]'
 html: apply-patches lua53 milagro-js lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src html
@@ -96,7 +96,7 @@ html: apply-patches lua53 milagro-js lpeglabel
 win: gcc=x86_64-w64-mingw32-gcc
 win: ar=x86_64-w64-mingw32-ar
 win: ranlib=x86_64-w64-mingw32-ranlib
-win: cflags += -D'ARCH=\"WIN\"' -std=c99
+win: cflags += -D'ARCH=\"WIN\"' -std=c99 -DARCH_WIN
 win: platform = posix
 win: apply-patches lua53 milagro-win lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" make -C src win-exe
@@ -104,7 +104,7 @@ win: apply-patches lua53 milagro-win lpeglabel
 win-dll: gcc=x86_64-w64-mingw32-gcc
 win-dll: ar=x86_64-w64-mingw32-ar
 win-dll: ranlib=x86_64-w64-mingw32-ranlib
-win-dll: cflags += -D'ARCH=\"WIN\"' -std=c99
+win-dll: cflags += -D'ARCH=\"WIN\"' -std=c99 -DARCH_WIN
 win-dll: platform = posix
 win-dll: apply-patches lua53 milagro-win lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" make -C src win-dll
@@ -112,32 +112,32 @@ win-dll: apply-patches lua53 milagro-win lpeglabel
 
 
 static: gcc := musl-gcc
-static: cflags := -Os -static -Wall -std=gnu99 ${cflags_protection} -D'ARCH=\"MUSL\"' -D__MUSL__
+static: cflags := -Os -static -Wall -std=gnu99 ${cflags_protection} -D'ARCH=\"MUSL\"' -D__MUSL__ -DARCH_MUSL
 static: ldflags := -static
 static: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src static
 
-system-static: cflags := -Os -static -Wall -std=gnu99 ${cflags_protection} -D'ARCH=\"UNIX\"' -D__MUSL__
+system-static: cflags := -Os -static -Wall -std=gnu99 ${cflags_protection} -D'ARCH=\"UNIX\"' -D__MUSL__ -DARCH_MUSL
 system-static: ldflags := -static
 system-static: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src system-static
 
 shared: gcc := gcc
-shared: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"LINUX\"'
+shared: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"LINUX\"' -DARCH_LINUX
 shared: ldflags := -lm
 shared: platform := linux
 shared: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
 
 shared-lib: gcc := gcc
-shared-lib: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"LINUX\"' -shared
+shared-lib: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"LINUX\"' -shared -DARCH_LINUX
 shared-lib: ldflags := -lm
 shared-lib: platform := linux
 shared-lib: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared-lib
 
 osx: gcc := gcc
-osx: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"'
+osx: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -DARCH_OSX
 osx: ldflags := -lm
 osx: platform := macosx
 osx: apply-patches lua53 milagro lpeglabel
@@ -154,7 +154,7 @@ ios-armv7: ar := $(shell xcrun --sdk iphoneos -f ar 2>/dev/null)
 ios-armv7: ld := $(shell xcrun --sdk iphoneos -f ld 2>/dev/null)
 ios-armv7: ranlib := $(shell xcrun --sdk iphoneos -f ranlib 2>/dev/null)
 ios-armv7: SDK := $(shell xcrun --sdk iphoneos --show-sdk-path 2>/dev/null)
-ios-armv7: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM
+ios-armv7: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM -DARCH_OSX
 ios-armv7: ldflags := -lm
 ios-armv7: platform := ios
 ios-armv7: apply-patches lua53 milagro lpeglabel ios-lib
@@ -166,7 +166,7 @@ ios-arm64: ar := $(shell xcrun --sdk iphoneos -f ar 2>/dev/null)
 ios-arm64: ld := $(shell xcrun --sdk iphoneos -f ld 2>/dev/null)
 ios-arm64: ranlib := $(shell xcrun --sdk iphoneos -f ranlib 2>/dev/null)
 ios-arm64: SDK := $(shell xcrun --sdk iphoneos --show-sdk-path 2>/dev/null)
-ios-arm64: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM
+ios-arm64: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM -DARCH_OSX
 ios-arm64: ldflags := -lm
 ios-arm64: platform := ios
 ios-arm64: apply-patches lua53 milagro lpeglabel ios-lib
@@ -178,7 +178,7 @@ ios-sim: ar := $(shell xcrun --sdk iphonesimulator -f ar 2>/dev/null)
 ios-sim: ld := $(shell xcrun --sdk iphonesimulator -f ld 2>/dev/null)
 ios-sim: ranlib := $(shell xcrun --sdk iphonesimulator -f ranlib 2>/dev/null)
 ios-sim: SDK := $(shell xcrun --sdk iphonesimulator --show-sdk-path 2>/dev/null)
-ios-sim: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM
+ios-sim: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM -DARCH_OSX
 ios-sim: ldflags := -lm
 ios-sim: platform := ios
 ios-sim: apply-patches lua53 milagro lpeglabel ios-lib
@@ -196,7 +196,7 @@ android: apply-patches lua53 milagro lpeglabel
 
 
 debug: gcc := gcc
-debug: cflags := -O0 -ggdb -D'ARCH=\"LINUX\"' ${cflags_protection}
+debug: cflags := -O0 -ggdb -D'ARCH=\"LINUX\"' ${cflags_protection} -DARCH_LINUX
 debug: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
 
