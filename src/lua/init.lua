@@ -8,6 +8,7 @@ ecdh   = require('ecdh')
 fun    = require('functional')
 i      = require('inspect')
 big    = require('zenroom_big')
+fp     = require('zenroom_fp')
 
 function read_json(data, validation)
    if not data then

@@ -92,6 +92,21 @@ static int newfp(lua_State *L) {
 	return 1;
 }
 
+static int fp_from_big(lua_State *L) {
+	big *b = big_arg(L,1); SAFE(b);
+	fp *f = fp_new(L); SAFE(f);
+	BIG_norm(b->val);
+	FP_fromBig(&f->val,b->val);
+	return 1;
+}
+
+static int fp_to_big(lua_State *L) {
+	fp *f = fp_arg(L,1); SAFE(f);
+	big *b = big_new(L); SAFE(b);
+	FP_toBig(b->val, &f->val);
+	return 1;
+}
+
 // static int fp_from_octet(lua_State *L) {
 // 	octet *o = o_arg(L,1); SAFE(o);
 // 	fp *c = fp_new(L); SAFE(c);
@@ -230,12 +245,14 @@ static int fp_qr(lua_State *L) {
 int luaopen_fp(lua_State *L) {
 	const struct luaL_Reg fp_class[] = {
 		{"new",newfp},
+		{"big",fp_from_big},
 		fp_common_methods,
 		{NULL,NULL}
 	};
 	const struct luaL_Reg fp_methods[] = {
 		// idiomatic operators
 		fp_common_methods,
+		{"big",fp_to_big},
 		{"__add",fp_add},
 		{"__sub",fp_sub},
 		{"__mul",fp_mul},

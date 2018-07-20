@@ -11,7 +11,7 @@ function big._import(s, f)
    end
 end
 
-function big.hex(s, f) return big._import(s, octet.from_hex) end
+function big.hex(s) return big._import(s, octet.from_hex) end
 
 function big.base64(s) return big._import(s, octet.from_base64) end
 
