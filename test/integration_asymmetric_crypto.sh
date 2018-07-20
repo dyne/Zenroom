@@ -1,15 +1,12 @@
 #!/usr/bin/env zsh
 
-bin=${1:-zenroom-shared}
 [[ -r test ]] || {
 	print "Run from base directory: ./test/$0"
 	return 1
 }
-zen="src/$bin"
+zen=${1:-./src/$bin}
 # echo "using: $zen"
 enc=${2:-"base64"}
-algo=${3:-"ed25519"}
-symc=${4:-"norx"}
 secret="This is the secret message that is sent among people."
 ppl=(zora vuk mira darko)
 
@@ -72,12 +69,12 @@ EOF
 }
 
 print - "== Running integration tests for asymmetric crypto messaging"
-generate 2>/dev/null
+generate
 
 for p in $ppl; do
 	for pp in $ppl; do
 		[[ "$p" = "$pp" ]] && continue
-		encrypt $p $pp 2>/dev/null
+		encrypt $p $pp
 	done
 done
 

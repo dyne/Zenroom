@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 
-tstr="[*] Zenroom - crypto language restricted execution environment DECODE-0.4"
+tstr="Zenroom test"
 zenroom=$1
 valgrind=$2
 
@@ -13,7 +13,7 @@ function grind() {
 	return $?
 }
 
-echo "= test octets and keyring saves in json DATA"
+print "= test octets and keyring saves in json DATA"
 cat <<EOF > /tmp/zenroom_temp_check.lua
 -- ecdh = require'ecdh'
 -- octet = require'octet'
@@ -22,7 +22,6 @@ right = octet.new()
 right:string("$tstr")
 ecc:keygen()
 pk = ecc:public()
-assert(ecc:checkpub(pk))
 -- json = require'json'
 dump = json.encode({teststr="$tstr",
                     pubkey=pk:base64(),

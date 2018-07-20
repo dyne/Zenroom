@@ -291,6 +291,7 @@ check-shared:
 	${test-exec} test/cjson-test.lua
 	${test-exec} test/coroutine.lua
 	./test/octet-json.sh ${test-exec}
+	./test/integration_asymmetric_crypto.sh ${test-exec}
 	@echo "----------------"
 	@echo "All tests passed for SHARED binary build"
 	@echo "----------------"
@@ -305,8 +306,9 @@ check-static:
 	${test-exec} test/cjson-test.lua
 	${test-exec} test/coroutine.lua
 	./test/octet-json.sh ${test-exec}
+	./test/integration_asymmetric_crypto.sh ${test-exec}
 	@echo "----------------"
-	@echo "All tests passed for SHARED binary build"
+	@echo "All tests passed for STATIC binary build"
 	@echo "----------------"
 
 check-js: test-exec := nodejs ${pwd}/test/zenroom_exec.js ${pwd}/src/zenroom.js
@@ -314,7 +316,7 @@ check-js:
 	$(call lowmem-tests,${test-exec})
 	$(call himem-tests,${test-exec})
 	@echo "----------------"
-	@echo "All tests passed for SHARED binary build"
+	@echo "All tests passed for JS binary build"
 	@echo "----------------"
 
 check-debug: test-exec-lowmem := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared
@@ -322,16 +324,30 @@ check-debug: test-exec := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-s
 check-debug:
 	$(call lowmem-tests,${test-exec-lowmem})
 	$(call himem-tests,${test-exec})
-	./test/octet-json.sh  ${pwd}/src/zenroom-shared valgrind
+	./test/octet-json.sh  ${pwd}/src/zenroom-shared
+	./test/integration_asymmetric_crypto.sh ${pwd}/src/zenroom-shared
 	@echo "----------------"
-	@echo "All tests passed for SHARED binary build"
+	@echo "All tests passed for DEBUG binary build"
 	@echo "----------------"
+
+check-crypto: test-exec := ./src/zenroom-shared
+check-crypto:
+	${test-exec} test/octet.lua
+	${test-exec} test/ecdh.lua
+	${test-exec} test/ecp_bls383.lua
+	./test/octet-json.sh ${test-exec}
+	./test/integration_asymmetric_crypto.sh ${test-exec}
+	@echo "-----------------------"
+	@echo "All CRYPTO tests passed"
+	@echo "-----------------------"
+
 
 debug-crypto: test-exec := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared
 debug-crypto:
 	${test-exec} test/octet.lua
 	${test-exec} test/ecdh.lua
 	${test-exec} test/ecp.lua
+	./test/integration_asymmetric_crypto.sh ${test-exec}
 
 #	./test/octet-json.sh ${test-exec}
 
