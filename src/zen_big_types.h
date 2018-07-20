@@ -22,10 +22,13 @@
 #define __ZEN_BIG_TYPES_H__
 #include <arch.h>
 
+#include <fp12_BLS383.h>
+// cascades includes for big_ fp_ fp2_ and fp4_
+
 #if BIGSIZE == 384
 #if CHUNK == 64
 // #pragma message "BIGnum CHUNK size: 64bit"
-#include <big_384_58.h>
+// #include <big_384_58.h>
 #define BIG BIG_384_58
 #define modbytes MODBYTES_384_58
 #define BIG_zero(b) BIG_384_58_zero(b)
@@ -51,7 +54,7 @@
 
 #elif CHUNK == 32
 // #pragma message "BIGnum CHUNK size: 32bit"
-#include <big_384_29.h>
+//#include <big_384_29.h>
 #define BIG BIG_384_29
 #define modbytes MODBYTES_384_29
 #define BIG_zero(b) BIG_384_29_zero(b)
@@ -74,6 +77,27 @@
 #define BIG_modsqr(x,y,n) BIG_384_29_modsqr(x,y,n)
 #define BIG_modneg(x,y,n) BIG_384_29_modneg(x,y,n)
 #define BIG_jacobi(x,y) BIG_384_29_jacobi(x,y)
+
+#define FP FP_BLS383
+#define FP_zero(b) FP_BLS383_zero(b)
+#define FP_copy(d,s) FP_BLS383_copy(d,s)
+#define FP_eq(l,r) FP_BLS383_equals(l,r)
+#define FP_cmove(d,s,c) FP_BLS383_cmove(d,s,c)
+#define FP_fromBig(f,b) FP_BLS383_nres(f,b)
+#define FP_toBig(b,f) FP_BLS383_redc(b,f)
+#define FP_mul(d, l, r) FP_BLS383_mul(d, l, r)
+#define FP_imul(d, l, r) FP_BLS383_imul(d, l, r)
+#define FP_sqr(d, s) FP_BLS383_sqr(d, s)
+#define FP_add(d, l, r) FP_BLS383_add(d, l, r)
+#define FP_sub(d, l, r) FP_BLS383_sub(d, l, r)
+#define FP_div2(d, s) FP_BLS383_div2(d,s)
+#define FP_pow(d, l, r) FP_BLS383_pow(d,l,r)
+#define FP_sqrt(d,s) FP_BLS383_sqrt(d,s)
+#define FP_neg(d,s) FP_BLS383_neg(d,s)
+#define FP_reduce(f) FP_BLS383_reduce(f)
+#define FP_norm(f) FP_BLS383_norm(f)
+#define FP_qr(f) FP_BLS383_qr(f)
+#define FP_inv(d,s) FP_BLS383_inv(d,s)
 
 #elif CHUNK == 16
 #error "BIGnum CHUNK size: 16bit PLATFORM NOT SUPPORTED"
