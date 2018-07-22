@@ -64,7 +64,7 @@
 typedef struct {
 	char curve[16];
 	char type[16];
-	ECP *data;
+	ECP  val;
 } ecp;
 
 static void oct2big(BIG b, const octet *o) {
@@ -103,7 +103,6 @@ ecp* ecp_new(lua_State *L) {
 	if(!e) {
 		lerror(L, "Error allocating new ecp in %s",__func__);
 		return NULL; }
-	e->data = zen_memory_alloc(sizeof(ECP_BLS383));
 	strcpy(e->curve,"bls383");
 	strcpy(e->type,"weierstrass");
 	luaL_getmetatable(L, "zenroom.ecp");
@@ -116,16 +115,15 @@ ecp* ecp_arg(lua_State *L,int n) {
 	ecp *e = (ecp*)ud;
 	return(e);
 }
-ecp* ecp_dup(lua_State *L, const ecp* in) {
-	ecp *e = ecp_new(L); SAFE(e);
-	ECP_copy(e->data, in->data);
+ecp* ecp_dup(lua_State *L, ecp* in) {
+    ecp *e = ecp_new(L); SAFE(e);
+	ECP_copy(&e->val, &in->val);
 	return(e);
 }
 int ecp_destroy(lua_State *L) {
 	HERE();
 	ecp *e = ecp_arg(L,1);
 	SAFE(e);
-	zen_memory_free(e->data);
 	return 0;
 }
 
@@ -141,7 +139,7 @@ int ecp_destroy(lua_State *L) {
 static int lua_new_ecp(lua_State *L) {
 	if(lua_isnoneornil(L, 1)) { // no args: set to infinity
 		ecp *e = ecp_new(L); SAFE(e);
-		ECP_inf(e->data);
+		ECP_inf(&e->val);
 		return 1; }
 
 	void *tx = luaL_testudata(L, 1, "zenroom.big");
@@ -151,7 +149,7 @@ static int lua_new_ecp(lua_State *L) {
 		big *x, *y;
 		x = big_arg(L, 1); SAFE(x);
 		y = big_arg(L, 2); SAFE(y);
-		ECP_set(e->data, x->val, y->val);
+		ECP_set(&e->val, x->val, y->val);
 		return 1; }
 	// If x is on the curve then y is calculated from the curve equation.
 	int tn;
@@ -159,7 +157,7 @@ static int lua_new_ecp(lua_State *L) {
 	if(tx && tn) {
 		ecp *e = ecp_new(L); SAFE(e);
 		big *x = big_arg(L, 1); SAFE(x);
-		ECP_setx(e->data, x->val, (int)n);
+		ECP_setx(&e->val, x->val, (int)n);
 		return 1; }
 	error(L, "ECP new() expected zenroom.big arguments or none");
 	return 0;
@@ -170,9 +168,9 @@ static int lua_new_ecp(lua_State *L) {
     @function affine()
 */
 static int ecp_affine(lua_State *L) {
-	const ecp *in = ecp_arg(L,1); SAFE(in);
-	const ecp *out = ecp_dup(L,in); SAFE(out);	
-	ECP_affine(out->data);
+	ecp *in = ecp_arg(L,1); SAFE(in);
+	ecp *out = ecp_dup(L,in); SAFE(out);	
+	ECP_affine(&out->val);
 	return 1;
 }
 /***
@@ -181,8 +179,8 @@ static int ecp_affine(lua_State *L) {
     @return elliptic curve point into infinity.
 */
 static int ecp_get_infinity(lua_State *L) {
-	const ecp *e = ecp_new(L); SAFE(e);
-	ECP_inf(e->data);
+	ecp *e = ecp_new(L); SAFE(e);
+	ECP_inf(&e->val);
 	return 1;
 }
 
@@ -193,8 +191,8 @@ static int ecp_get_infinity(lua_State *L) {
     @return false if point is on curve, true if its off curve into infinity.
 */
 static int ecp_isinf(lua_State *L) {
-	const ecp *e = ecp_arg(L,1); SAFE(e);
-	lua_pushboolean(L,ECP_isinf(e->data));
+	ecp *e = ecp_arg(L,1); SAFE(e);
+	lua_pushboolean(L,ECP_isinf(&e->val));
 	return 1;
 }
 
@@ -209,19 +207,19 @@ static int ecp_mapit(lua_State *L) {
 	// this is replicated from milagro's mapit() to avoid octet
 	// conversion, see PR:
 	// https://github.com/milagro-crypto/milagro-crypto-c/pull/286
-	const ecp *e = ecp_new(L); SAFE(e);
+	ecp *e = ecp_new(L); SAFE(e);
 	BIG x,q;
 	BIG_rcopy(x,b->val);
 	BIG_rcopy(q,Modulus);
 	BIG_mod(x,q);
-	while(!ECP_setx(e->data,x,0)) {
+	while(!ECP_setx(&e->val,x,0)) {
 		BIG_inc(x,1);
 		BIG_norm(x);
 	}
 	// #if PAIRING_FRIENDLY_BLS383 == BLS
 	BIG c;
 	BIG_rcopy(c,CURVE_Cofactor);
-	ECP_mul(e->data,c);
+	ECP_mul(&e->val,c);
 	return 1;
 }
 
@@ -234,11 +232,11 @@ static int ecp_mapit(lua_State *L) {
     @return sum resulting from the addition
 */
 static int ecp_add(lua_State *L) {
-	const ecp *e = ecp_arg(L,1); SAFE(e);
-	const ecp *q = ecp_arg(L,2); SAFE(q);
+	ecp *e = ecp_arg(L,1); SAFE(e);
+	ecp *q = ecp_arg(L,2); SAFE(q);
 	ecp *p = ecp_dup(L, e); // push
 	SAFE(p);
-	ECP_add(p->data,q->data);
+	ECP_add(&p->val,&q->val);
 	return 1;
 }
 
@@ -251,11 +249,11 @@ static int ecp_add(lua_State *L) {
     @return new ECP point resulting from the subtraction
 */
 static int ecp_sub(lua_State *L) {
-	const ecp *e = ecp_arg(L,1); SAFE(e);
-	const ecp *q = ecp_arg(L,2); SAFE(q);
+    ecp *e = ecp_arg(L,1); SAFE(e);
+    ecp *q = ecp_arg(L,2); SAFE(q);
 	ecp *p = ecp_dup(L, e); // push
 	SAFE(p);
-	ECP_sub(p->data,q->data);
+	ECP_sub(&p->val,&q->val);
 	return 1;
 }
 
@@ -265,9 +263,9 @@ static int ecp_sub(lua_State *L) {
     @function negative()
 */
 static int ecp_negative(lua_State *L) {
-	const ecp *in = ecp_arg(L,1); SAFE(in);
-	const ecp *out = ecp_dup(L,in); SAFE(out);
-	ECP_neg(out->data);
+	ecp *in = ecp_arg(L,1); SAFE(in);
+	ecp *out = ecp_dup(L,in); SAFE(out);
+	ECP_neg(&out->val);
 	return 1;
 }
 
@@ -277,9 +275,9 @@ static int ecp_negative(lua_State *L) {
     @function double()
 */
 static int ecp_double(lua_State *L) {
-	const ecp *in = ecp_arg(L,1); SAFE(in);
-	const ecp *out = ecp_dup(L,in); SAFE(out);
-	ECP_dbl(out->data);
+	ecp *in = ecp_arg(L,1); SAFE(in);
+	ecp *out = ecp_dup(L,in); SAFE(out);
+	ECP_dbl(&out->val);
 	return 1;
 }
 
@@ -294,7 +292,7 @@ static int ecp_double(lua_State *L) {
 */
 static int ecp_mul(lua_State *L) {
 	ecp *e = ecp_arg(L,1); SAFE(e);
-	const ecp *out = ecp_dup(L,e); SAFE(out);
+	ecp *out = ecp_dup(L,e); SAFE(out);
 	// implicitly convert scalar numbers to big
 	int tn;
 	lua_Number n = lua_tonumberx(L, 2, &tn);
@@ -303,10 +301,10 @@ static int ecp_mul(lua_State *L) {
 		BIG_zero(bn);
 		BIG_inc(bn,(int)n);
 		BIG_norm(bn);
-		ECP_mul(out->data,bn);
+		ECP_mul(&out->val,bn);
 		return 1; }
 	big *b = big_arg(L,2); SAFE(b);
-	ECP_mul(out->data,b->val);
+	ECP_mul(&out->val,b->val);
 	return 1;
 }
 
@@ -319,13 +317,13 @@ static int ecp_mul(lua_State *L) {
     @return bool value: true if equal, false if not equal
 */
 static int ecp_eq(lua_State *L) {
-	const ecp *p = ecp_arg(L,1); SAFE(p);
-	const ecp *q = ecp_arg(L,2); SAFE(q);
+	ecp *p = ecp_arg(L,1); SAFE(p);
+    ecp *q = ecp_arg(L,2); SAFE(q);
 // TODO: is affine rly needed?
-	ECP_affine(p->data);
-	ECP_affine(q->data);
+	ECP_affine(&p->val);
+	ECP_affine(&q->val);
 	lua_pushboolean(L,ECP_equals(
-		                p->data, q->data));
+		                &p->val, &q->val));
 	return 1;
 }
 
@@ -340,13 +338,13 @@ static int ecp_octet(lua_State *L) {
 	ecp *e = ecp_arg(L,1); SAFE(e);
 	if((ud = luaL_testudata(L, 2, "zenroom.octet"))) {
 		octet *o = (octet*)ud; SAFE(o);
-		if(! ECP_fromOctet(e->data, o) )
+		if(! ECP_fromOctet(&e->val, o) )
 			lerror(L,"Octet doesn't contains a valid ECP");
 		return 0;
 	}
 	octet *o = o_new(L,(modbytes<<1)+1);
 	SAFE(o);
-	ECP_toOctet(o, e->data);
+	ECP_toOctet(o, &e->val);
 	return 1;
 }
 
@@ -368,8 +366,8 @@ static int ecp_order(lua_State *L) {
 }
 
 static int ecp_output(lua_State *L) {
-	const ecp *e = ecp_arg(L, 1); SAFE(e);
-	ECP_BLS383 *P = e->data;
+	ecp *e = ecp_arg(L, 1); SAFE(e);
+	ECP_BLS383 *P = &e->val;
 	if (ECP_isinf(P)) {
 		lua_pushstring(L,"Infinity");
 		return 1; }
