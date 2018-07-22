@@ -53,27 +53,47 @@ int get_debug() {
   return(verbosity);
 }
 
-static zenroom_t *stderr_tobuffer(lua_State *L) {
+static zenroom_t *getzen(lua_State *L) {
 	if(!L) return NULL;
 	lua_getglobal(L, "_Z");
 	zenroom_t *Z = lua_touserdata(L, -1);
 	lua_pop(L, 1);
 	SAFE(Z);
+	return(Z);
+}
+
+static zenroom_t *stderr_tobuffer(lua_State *L) {
+	if(!L) return NULL;
+	zenroom_t *Z = getzen(L);
 	if(Z->stderr_buf) return Z;
 	return NULL;
 }
 
 static void _printf(zenroom_t *Z, char *pfx, char *msg) {
-	if(Z) {
+	if(!Z) {
+		fprintf(stderr,"%s %s\n",pfx,msg);
+	} else if(Z->stderr_buf) {
 		char *err = Z->stderr_buf;
 		size_t len = strlen(msg);
 		snprintf(err+Z->stderr_pos,
 		         Z->stderr_len-Z->stderr_pos,
-		         "%s %s\n",pfx,msg);
+		         "%s %s\n", pfx,msg);
 		Z->stderr_pos+=len+5;
 	} else {
 		fprintf(stderr,"%s %s\n",pfx,msg);
 	}
+}
+
+static void _printline(zenroom_t *Z, lua_State *L) {
+	if(!Z || !L) return;
+	lua_Debug ar;
+	if(lua_getstack(L, 1, &ar) && lua_getinfo(L, "nSl", &ar)) {
+		char err[MAX_STRING];
+		snprintf(err,MAX_STRING-1,"%s:%u: ERROR",
+		         ar.short_src, ar.currentline);
+		_printf(Z,"[!]",err);
+	} else
+		_printf(Z,"[!]","[UKNOWN STACK]:?: ERROR");
 }
 
 void notice(lua_State *L, const char *format, ...) {
@@ -99,10 +119,12 @@ void func(lua_State *L, const char *format, ...) {
 void error(lua_State *L, const char *format, ...) {
   va_list arg;
   va_start(arg, format);
-  
   vsnprintf(msg, MAX_STRING, format, arg);
-  _printf(stderr_tobuffer(L), "[!]", msg);
+  zenroom_t *Z = getzen(L);
+  _printline(Z, L);
+  _printf(Z, "[!]", msg);
   va_end(arg);
+  exit(1); // calls teardown (signal 11) TODO: check if OK with seccomp
 }
 
 void act(lua_State *L, const char *format, ...) {
