@@ -15,7 +15,7 @@ tmp=`mktemp -d`
 
 generate() {
 	for p in $ppl; do
-		cat <<EOF | $zen > $tmp/$p-keys.json
+		cat <<EOF | $zen 2>/dev/null > $tmp/$p-keys.json
 keyring = ecdh.new()
 keyring:keygen()
 keypair = json.encode({
@@ -23,7 +23,7 @@ keypair = json.encode({
       secret=keyring:private():$enc()})
 print(keypair)
 EOF
-		cat <<EOF | $zen -k $tmp/$p-keys.json > $tmp/$p-envelop.json
+		cat <<EOF | $zen 2>/dev/null -k $tmp/$p-keys.json > $tmp/$p-envelop.json
 keys = json.decode(KEYS)
 envelop = json.encode({
     message="$secret",
@@ -37,7 +37,7 @@ encrypt() {
     from=$1
     to=$2
     cat <<EOF | $zen -k $tmp/$from-keys.json -a $tmp/$to-envelop.json \
-					 > $tmp/from-$from-to-$to-cryptomsg.json
+					 > $tmp/from-$from-to-$to-cryptomsg.json 2>/dev/null
 keys = json.decode(KEYS)
 data = json.decode(DATA)
 recipient = ecdh.new()
@@ -55,7 +55,7 @@ EOF
 decrypt() {
 	from=$1
 	to=$2
-	cat <<EOF | $zen -k $tmp/$to-keys.json -a $tmp/from-$from-to-$to-cryptomsg.json
+	cat <<EOF | $zen -k $tmp/$to-keys.json -a $tmp/from-$from-to-$to-cryptomsg.json 2>/dev/null
 keys = json.decode(KEYS)
 data = json.decode(DATA)
 recipient = ecdh.new()

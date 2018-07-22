@@ -31,8 +31,8 @@ dump = json.encode({teststr="$tstr",
 print(dump)
 EOF
 
-grind -d \
-	/tmp/zenroom_temp_check.lua  > /tmp/octet.json || return 1
+grind \
+	/tmp/zenroom_temp_check.lua 2>/dev/null > /tmp/octet.json || return 1
 
 
 echo "== generated DATA structure in /tmp/octet.json"
@@ -61,8 +61,8 @@ left:base64(test.pubkey)
 assert(ecc:checkpub(left))
 EOF
 
-grind -d \
-	-a /tmp/octet.json /tmp/zenroom_temp_check.lua \
+grind \
+	-a /tmp/octet.json /tmp/zenroom_temp_check.lua 2>/dev/null\
 	|| return 1
 
 echo "= OK"

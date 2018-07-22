@@ -67,15 +67,6 @@ typedef struct {
 	ECP  val;
 } ecp;
 
-static void oct2big(BIG b, const octet *o) {
-	BIG_zero(b);
-	BIG_fromBytesLen(b,o->val,o->len);
-}
-static void int2big(BIG b, int n) {
-	BIG_zero(b);
-	BIG_inc(b, n);
-	BIG_norm(b);
-}
 static char *big2strhex(char *str, BIG a) {
 	BIG b;
 	int i,len;
