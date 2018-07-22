@@ -21,25 +21,23 @@
 
 /// <h1>Elliptic Curve Point Arithmetic (ECP)</h1>
 //
-//  Base arithmetical operations on big number point coordinates on elliptic curves.
+//  Base arithmetical operations on elliptic curve point coordinates.
 //
 //  ECP arithmetic operations are provided to implement existing and
 //  new encryption schemes: they are elliptic curve cryptographic
 //  primitives and work the same across different curves. The ECP
 //  primitive functions need this extension to be required explicitly:
 //
-//  <code>ecp = require'ecp'</code>
+//  <pre class="example">
+//  ecp = require'ecp'
+//  big = require'big'
+//  fp  = require'fp'</pre>
 //
-//  After requiring the extension it is possible to create ECP points
-//  instances using the new() method, taking two arguments (the x and
-//  y coordinates):
+//  After requiring the extensions it is possible to create ECP points
+//  instances using the @{new} method.
 //
-//  The values of each coordinate can be imported using octet methods
-//  from hex or base64. These values (also called vectors) are very
-//  big numbers whose representation is difficult without marshaling
-//  them into such formats. Zenroom provides ECP tests based on the
-//  BLS383 curve which come valid point coordinates on the curve.
-//
+//  The values of each coordinate can be imported using @{big} methods
+//  from @{big:hex} or @{big:base64}.
 //  Once ECP numbers are created this way, the arithmetic operations
 //  of addition, subtraction and multiplication can be executed
 //  normally using overloaded operators (+ - *).
@@ -100,16 +98,6 @@ static char *big2strhex(char *str, BIG a) {
 	return str;
 }
 
-/***
-    Create a new ECP point from two x,y octet arguments.
-
-    Supported curve: bls383
-
-    @param X octet of a big number
-    @param Y octet of a big number
-    @return a new ECP point on the curve at X,Y coordinates
-    @function new(X,Y)
-*/
 ecp* ecp_new(lua_State *L) {
 	ecp *e = (ecp *)lua_newuserdata(L, sizeof(ecp));
 	if(!e) {
@@ -133,18 +121,6 @@ ecp* ecp_dup(lua_State *L, const ecp* in) {
 	ECP_copy(e->data, in->data);
 	return(e);
 }
-ecp* ecp_set_big_xy(lua_State *L, ecp *e, int idx) {
-	SAFE(e);
-	octet *o;
-	o = o_arg(L, idx); SAFE(o);
-	BIG x;
-	oct2big(x, o);
-	o = o_arg(L, idx+1); SAFE(o);
-	BIG y;
-	oct2big(y, o);
-	ECP_set(e->data, x, y);
-	return e;
-}
 int ecp_destroy(lua_State *L) {
 	HERE();
 	ecp *e = ecp_arg(L,1);
@@ -152,28 +128,41 @@ int ecp_destroy(lua_State *L) {
 	zen_memory_free(e->data);
 	return 0;
 }
+
 /***
-    Set an existing ECP point with two new x,y octet arguments.
+    Create a new ECP point from two X,Y @{big} arguments. Note this is the only way to assign X,Y coordinates to an ECP: new one has to be created. If no X,Y coordinates are specified then the ECP points to Infinity. If X is on the curve and Y is 0 or 1 then Y is calculated from the curve equation according to the given sign (plus or minus).
 
-    @param X octet of a big number
-    @param Y octet of a big number
-    @return a new ECP point on the curve at X,Y coordinates
-    @function set(X,Y)
+    @param[opt=big] X a big number on the curve
+    @param[opt=big] Y a big number on the curve, 0 or 1 to calculate it
+    @return a new ECP point on the curve at X,Y coordinates or Infinity
+    @function new(X,Y)
+    @see big:new
 */
-static int lua_set_ecp(lua_State *L) {
-	ecp *e = ecp_arg(L, 1); SAFE(e);
-	// takes x,y big numbers from octets as arguments
-	e = ecp_set_big_xy(L, e, 2);
-	return 0;
-}
-
 static int lua_new_ecp(lua_State *L) {
-	ecp *e = ecp_new(L); SAFE(e);
-	func(L,"new ecp curve %s type %s", e->curve, e->type);
-	void *x = luaL_testudata(L, 1, "zenroom.octet");
-	void *y = luaL_testudata(L, 2, "zenroom.octet");
-	if(x && y) e = ecp_set_big_xy(L, e, 1);
-	return 1;
+	if(lua_isnoneornil(L, 1)) { // no args: set to infinity
+		ecp *e = ecp_new(L); SAFE(e);
+		ECP_inf(e->data);
+		return 1; }
+
+	void *tx = luaL_testudata(L, 1, "zenroom.big");
+	void *ty = luaL_testudata(L, 2, "zenroom.big");
+	if(tx && ty) {
+		ecp *e = ecp_new(L); SAFE(e);
+		big *x, *y;
+		x = big_arg(L, 1); SAFE(x);
+		y = big_arg(L, 2); SAFE(y);
+		ECP_set(e->data, x->val, y->val);
+		return 1; }
+	// If x is on the curve then y is calculated from the curve equation.
+	int tn;
+	lua_Number n = lua_tonumberx(L, 2, &tn);
+	if(tx && tn) {
+		ecp *e = ecp_new(L); SAFE(e);
+		big *x = big_arg(L, 1); SAFE(x);
+		ECP_setx(e->data, x->val, (int)n);
+		return 1; }
+	error(L, "ECP new() expected zenroom.big arguments or none");
+	return 0;
 }
 
 /***
@@ -181,17 +170,18 @@ static int lua_new_ecp(lua_State *L) {
     @function affine()
 */
 static int ecp_affine(lua_State *L) {
-	ecp *e = ecp_arg(L,1); SAFE(e);
-	ECP_affine(e->data);
-	return 0;
+	const ecp *in = ecp_arg(L,1); SAFE(in);
+	const ecp *out = ecp_dup(L,in); SAFE(out);	
+	ECP_affine(out->data);
+	return 1;
 }
 /***
-    Gives a new infinity point on the curve.
+    Gives a new infinity point on the curve. Deprecated: use @{ecp:new} without arguments.
     @function infinity()
     @return elliptic curve point into infinity.
 */
 static int ecp_get_infinity(lua_State *L) {
-	ecp *e = ecp_new(L); SAFE(e);
+	const ecp *e = ecp_new(L); SAFE(e);
 	ECP_inf(e->data);
 	return 1;
 }
@@ -209,19 +199,29 @@ static int ecp_isinf(lua_State *L) {
 }
 
 /***
-    Map a BIG number to a point of the curve, the BIG number should be the output of some hash function.
+    Map a @{big} number to a point of the curve, where the big number should be the output of some hash function.
 
-    @param big octet of a BIG number
+    @param big number resulting from an hash function
     @function mapit(big)
 */
 static int ecp_mapit(lua_State *L) {
-	octet *o = o_arg(L,1); SAFE(o);
-	if(o->len < modbytes) {
-		lerror(L, "%s: octet too short (min %u bytes)",
-		       __func__, modbytes);
-		return 0; }
+	const big *b = big_arg(L,1); SAFE(b);
+	// this is replicated from milagro's mapit() to avoid octet
+	// conversion, see PR:
+	// https://github.com/milagro-crypto/milagro-crypto-c/pull/286
 	const ecp *e = ecp_new(L); SAFE(e);
-	ECP_mapit(e->data, o);
+	BIG x,q;
+	BIG_rcopy(x,b->val);
+	BIG_rcopy(q,Modulus);
+	BIG_mod(x,q);
+	while(!ECP_setx(e->data,x,0)) {
+		BIG_inc(x,1);
+		BIG_norm(x);
+	}
+	// #if PAIRING_FRIENDLY_BLS383 == BLS
+	BIG c;
+	BIG_rcopy(c,CURVE_Cofactor);
+	ECP_mul(e->data,c);
 	return 1;
 }
 
@@ -293,19 +293,20 @@ static int ecp_double(lua_State *L) {
     @return new ecp point resulting from the multiplication
 */
 static int ecp_mul(lua_State *L) {
-	BIG big;
-	void *ud;
 	ecp *e = ecp_arg(L,1); SAFE(e);
-	if(lua_isnumber(L,2)) {
-		lua_Number num = lua_tonumber(L,2);
-		int2big(big, (int)num);
-	} else if((ud = luaL_testudata(L, 2, "zenroom.octet"))) {
-		octet *o = (octet*)ud; SAFE(o);
-		oct2big(big,o);
-	}
-	// TODO: check parsing errors
 	const ecp *out = ecp_dup(L,e); SAFE(out);
-	ECP_mul(out->data,big);
+	// implicitly convert scalar numbers to big
+	int tn;
+	lua_Number n = lua_tonumberx(L, 2, &tn);
+	if(tn) {
+		BIG bn;
+		BIG_zero(bn);
+		BIG_inc(bn,(int)n);
+		BIG_norm(bn);
+		ECP_mul(out->data,bn);
+		return 1; }
+	big *b = big_arg(L,2); SAFE(b);
+	ECP_mul(out->data,b->val);
 	return 1;
 }
 
@@ -395,7 +396,6 @@ static int ecp_output(lua_State *L) {
 int luaopen_ecp(lua_State *L) {
 	const struct luaL_Reg ecp_class[] = {
 		{"new",lua_new_ecp},
-		{"set",lua_set_ecp},
 		{"inf",ecp_get_infinity},
 		{"infinity",ecp_get_infinity},
 		{"order",ecp_order},

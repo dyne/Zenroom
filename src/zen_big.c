@@ -33,6 +33,17 @@
 #include <zen_memory.h>
 #include <zen_big.h>
 
+/// <h1>Big Number Arithmetic (BIG)</h1>
+//
+// Base arithmetical operations on big numbers.
+//
+// The values of each number can be imported using big:hex() and big:base64() methods.
+//
+//  @module big
+//  @author Denis "Jaromil" Roio
+//  @license GPLv3
+//  @copyright Dyne.org foundation 2017-2018
+
 
 big* big_new(lua_State *L) {
 	big *c = (big *)lua_newuserdata(L, sizeof(big));
@@ -76,20 +87,40 @@ int big_destroy(lua_State *L) {
 	return 0;
 }
 
+/***
+    Create a new Big number. Set it to zero if no argument is present, else import the value from @{octet}.
+
+    @param[opt] octet value of the big number
+    @return a new Big number set to the given value or Zero if none
+    @function big:new(octet)
+    @see octet:hex
+    @see octet:base64
+*/
 static int newbig(lua_State *L) {
 	HERE();
 	int res = lua_isnoneornil(L, 1);
-	big *c = big_new(L); SAFE(L);
 	// argument if present must be an octet
 	if(res) {
+		big *c = big_new(L); SAFE(L);
 		BIG_zero(c->val);
-	} else {
-		void *ud = luaL_testudata(L, 1, "zenroom.octet");
-		luaL_argcheck(L, ud != NULL, 1, "octet argument expected");
+		return 1; }
+	void *ud = luaL_testudata(L, 1, "zenroom.octet");
+	if(ud) {
+		big *c = big_new(L); SAFE(L);
 		octet *o = (octet*)ud;
 		BIG_fromBytesLen(c->val, o->val, o->len);
-	}
-	return 1;
+		return 1; }
+	int tn;
+	lua_Number n = lua_tonumberx(L,1,&tn);
+	if(tn) {
+		big *c = big_new(L); SAFE(L);
+		BIG_zero(c->val);
+		BIG_inc(c->val, n);
+		BIG_norm(c->val);
+		return 1; }
+
+	luaL_argcheck(L, 0, 1, "octet or number argument expected");
+	return 0;
 }
 
 static int big_from_octet(lua_State *L) {

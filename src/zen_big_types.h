@@ -25,6 +25,9 @@
 #include <fp12_BLS383.h>
 // cascades includes for big_ fp_ fp2_ and fp4_
 
+// instance is in rom_field_XXX.c and included by fp_XXX.h
+#define Modulus Modulus_BLS383
+
 #if BIGSIZE == 384
 #if CHUNK == 64
 // #pragma message "BIGnum CHUNK size: 64bit"

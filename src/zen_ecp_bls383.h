@@ -23,12 +23,20 @@
 #ifndef __ZEN_ECP_BLS383_H__
 
 #include <ecp_BLS383.h>
+#include <ecp2_BLS383.h>
 #define BIGSIZE 384
 #include <zen_big_types.h>
 #define ECP ECP_BLS383
+#define CURVE_A CURVE_A_BLS383
+#define CURVE_B Curve_B_BLS383
+#define CURVE_B_I CURVE_B_I_BLS383
+#define CURVE_Gx CURVE_Gx_BLS383
+#define CURVE_Gy CURVE_Gy_BLS383
 #define CURVE_Order CURVE_Order_BLS383
+#define CURVE_Cofactor CURVE_Cof_BLS383
 #define ECP_copy(d,s) ECP_BLS383_copy(d,s)
 #define ECP_set(d,x,y) ECP_BLS383_set(d, x, y)
+#define ECP_setx(d,x,y) ECP_BLS383_setx(d, x, y)
 #define ECP_affine(d) ECP_BLS383_affine(d)
 #define ECP_inf(d) ECP_BLS383_inf(d)
 #define ECP_isinf(d) ECP_BLS383_isinf(d)
