@@ -33,7 +33,7 @@ luasrc := ${pwd}/lib/lua53/src
 # milagro settings
 rsa_bits := ""
 ecc_curves := ED25519,BLS383
-milagro_cmake_flags := -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DWORD_SIZE=32 -DAMCL_CURVE=${ecc_curves} -DAMCL_RSA=${rsa_bits} -DCMAKE_SHARED_LIBRARY_LINK_FLAGS="" -DC99=1
+milagro_cmake_flags := -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DWORD_SIZE=32 -DAMCL_CURVE=${ecc_curves} -DAMCL_RSA=${rsa_bits} -DCMAKE_SHARED_LIBRARY_LINK_FLAGS="" -DC99=1 -DPAIRING_FRIENDLY_BLS383='BLS'
 
 test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
 
@@ -263,6 +263,7 @@ lowmem-tests = \
 		${1} test/schema.lua && \
 		${1} test/octet.lua && \
 		${1} test/ecdh.lua && \
+		${1} test/ecdh_aes-gcm_vectors.lua \
 		${1} test/ecp_bls383.lua
 
 # ${1} test/closure.lua && \
@@ -334,6 +335,7 @@ check-crypto: test-exec := ./src/zenroom-shared
 check-crypto:
 	${test-exec} test/octet.lua
 	${test-exec} test/ecdh.lua
+	${test-exec} test/ecdh_aes-gcm_vectors.lua
 	${test-exec} test/ecp_bls383.lua
 	./test/octet-json.sh ${test-exec}
 	./test/integration_asymmetric_crypto.sh ${test-exec}
