@@ -99,17 +99,18 @@ int big_destroy(lua_State *L) {
 static int newbig(lua_State *L) {
 	HERE();
 	int res = lua_isnoneornil(L, 1);
-	// argument if present must be an octet
-	if(res) {
+	if(res) { // no argument, set to zero
 		big *c = big_new(L); SAFE(L);
 		BIG_zero(c->val);
 		return 1; }
+	// octet argument, import
 	void *ud = luaL_testudata(L, 1, "zenroom.octet");
 	if(ud) {
 		big *c = big_new(L); SAFE(L);
 		octet *o = (octet*)ud;
 		BIG_fromBytesLen(c->val, o->val, o->len);
 		return 1; }
+	// number argument, import
 	int tn;
 	lua_Number n = lua_tonumberx(L,1,&tn);
 	if(tn) {
@@ -119,15 +120,8 @@ static int newbig(lua_State *L) {
 		BIG_norm(c->val);
 		return 1; }
 
-	luaL_argcheck(L, 0, 1, "octet or number argument expected");
+	error(L,"octet or number argument expected");
 	return 0;
-}
-
-static int big_from_octet(lua_State *L) {
-	octet *o = o_arg(L,1); SAFE(o);
-	big *c = big_new(L); SAFE(c);
-	BIG_fromBytesLen(c->val, o->val, o->len);
-	return 1;
 }
 
 static int big_to_octet(lua_State *L) {
@@ -135,7 +129,7 @@ static int big_to_octet(lua_State *L) {
 	BIG_norm(c->val);
 	octet *o = o_new(L, c->len+2); SAFE(o);
 	BIG_toBytes(o->val, c->val);
-	o->len = modbytes;
+	o->len = c->len;
 	return 1;
 }
 
@@ -268,7 +262,6 @@ int luaopen_big(lua_State *L) {
 		{"modsqr",big_modsqr},
 		{"modneg",big_modneg},
 		{"jacobi",big_jacobi},
-		{"from_octet",big_from_octet},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg big_methods[] = {

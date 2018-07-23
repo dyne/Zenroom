@@ -123,6 +123,8 @@ zenroom_t *zen_init(const char *conf,
 	Z->stderr_pos = 0;
 	Z->stderr_len = 0;
 	Z->userdata = NULL;
+	Z->errorlevel = 0;
+
 	//Set zenroom context as a global in lua
 	//this will be freed on lua_close
 	lua_pushlightuserdata(L, Z);
@@ -221,23 +223,23 @@ int zenroom_exec(char *script, char *conf, char *keys,
 	// stores the script file and configuration
 	zenroom_t *Z = NULL;
 	lua_State *L = NULL;
-	int return_code = 1; // return error by default
+	int return_code = EXIT_FAILURE; // return error by default
 	int r;
 
 	if(!script) {
 		error(L, "NULL string as script for zenroom_exec()");
-		exit(1); }
+		return EXIT_FAILURE; }
 	set_debug(verbosity);
 
 
 	Z = zen_init(conf, keys, data);
 	if(!Z) {
 		error(L, "Initialisation failed.");
-		return 1; }
+		return EXIT_FAILURE; }
 	L = Z->lua;
 	if(!L) {
 		error(L, "Initialisation failed.");
-		return 1; }
+		return EXIT_FAILURE; }
 
 	r = zen_exec_script(Z, script);
 	if(r) {
@@ -248,9 +250,9 @@ int zenroom_exec(char *script, char *conf, char *keys,
 		error(L, "Error detected. Execution aborted.");
 
 		zen_teardown(Z);
-		return(1);
+		return EXIT_FAILURE;
 	}
-	return_code = 0; // return success
+	return_code = EXIT_SUCCESS; // return success
 
 #ifdef __EMSCRIPTEN__
 	EM_ASM({Module.exec_ok();});
@@ -271,22 +273,22 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys,
 	zenroom_t *Z = NULL;
 	lua_State *L = NULL;
 
-	int return_code = 1; // return error by default
+	int return_code = EXIT_FAILURE; // return error by default
 	int r;
 
 	if(!script) {
 		error(L, "NULL string as script for zenroom_exec()");
-		exit(1); }
+		return EXIT_FAILURE; }
 	set_debug(verbosity);
 
 	Z = zen_init(conf, keys, data);
 	if(!Z) {
 		error(L, "Initialisation failed.");
-		return 1; }
+		return EXIT_FAILURE; }
 	L = Z->lua;
 	if(!L) {
 		error(L, "Initialisation failed.");
-		return 1; }
+		return EXIT_FAILURE; }
 
 	// setup stdout and stderr buffers
 	Z->stdout_buf = stdout_buf;
@@ -303,9 +305,9 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys,
 		error(L, "Error detected. Execution aborted.");
 
 		zen_teardown(Z);
-		return(1);
+		return EXIT_FAILURE;
 	}
-	return_code = 0; // return success
+	return_code = EXIT_SUCCESS; // return success
 
 #ifdef __EMSCRIPTEN__
 	EM_ASM({Module.exec_ok();});
@@ -353,7 +355,7 @@ int main(int argc, char **argv) {
 				break;
 			case 'h':
 				fprintf(stdout,"%s",help);
-				exit(0);
+				return EXIT_SUCCESS;
 				break;
 			case 'i':
 				interactive = 1;
@@ -371,8 +373,8 @@ int main(int argc, char **argv) {
 				parseast = 1;
 				snprintf(scriptfile,511,"%s",optarg);
 				break;
-			case '?': error(0,help); exit(1);
-			default:  error(0,help); exit(1);
+			case '?': error(0,help); return EXIT_FAILURE;
+		    default:  error(0,help); return EXIT_FAILURE;
 		}
 	}
 	for (index = optind; index < argc; index++) {
@@ -394,7 +396,7 @@ int main(int argc, char **argv) {
 		zenroom_t *ast = ast_init(script);
 		ast_parse(ast);
 		ast_teardown(ast);
-		return 0;
+		return EXIT_SUCCESS;
 	}
 
 	if(interactive) {
@@ -411,12 +413,13 @@ int main(int argc, char **argv) {
 		zen_add_function(L, repl_flush, "flush");
 		zen_add_function(L, repl_read, "read");
 		zen_add_function(L, repl_write, "write");
-
+		int res;
 		notice(NULL, "Interactive console, press ctrl-d to quit.");
-		repl_loop(cli);
-		// quits on ctrl-D
-		zen_teardown(cli);
-		return 0;
+		res = repl_loop(cli);
+		if(res)
+			// quits on ctrl-D
+			zen_teardown(cli);
+		return(res);
 	}
 
 	if(scriptfile[0]!='\0') {
@@ -447,13 +450,12 @@ int main(int argc, char **argv) {
 			(data[0])?data:NULL);
 	if(!Z) {
 		error(NULL, "Initialisation failed.");
-		return 1; }
+		return EXIT_FAILURE; }
 
 #if (defined(ARCH_WIN) || defined(DISABLE_FORK))
 		notice(NULL, "Starting execution.");
 		if( zen_exec_script(Z, script) ) {
-			error(NULL, "Blocked execution.");
-        }
+			return EXIT_FAILURE; }
 #else /* POSIX */
 	if (fork() == 0) {
 #   ifdef ARCH_LINUX /* LINUX engages SECCOMP. */
@@ -468,10 +470,8 @@ int main(int argc, char **argv) {
 #   endif /* ARCH_LINUX */
 		notice(NULL, "Starting execution.");
 		if( zen_exec_script(Z, script) ) {
-			error(NULL, "Blocked execution.");
-			exit(1);
-		}
-		exit(0);
+			return EXIT_FAILURE; }
+		return EXIT_SUCCESS;
 	}
 	do {
 		pid = wait(&status);
@@ -491,6 +491,6 @@ int main(int argc, char **argv) {
 	// 	lua_gc(L, LUA_GCCOLLECT, 0);
 	// }
 	zen_teardown(Z);
-	return 0;
+	return EXIT_SUCCESS;
 }
 #endif

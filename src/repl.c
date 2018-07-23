@@ -66,12 +66,14 @@ size_t repl_prompt(int ret, char *line) {
 	return(len);
 }
 
-void repl_loop(zenroom_t *Z) {
+int repl_loop(zenroom_t *Z) {
 	char line[MAX_STRING];
-	if(!Z) return;
+	if(!Z) return EXIT_FAILURE;
 	int ret =0;
 	while(repl_prompt(ret, line)) {
 		ret = zen_exec_script(Z, line);
+		if(ret) break;
 	}
+	return(ret);
 }
 

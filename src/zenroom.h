@@ -73,6 +73,7 @@ typedef struct {
 	size_t stderr_len;
 	size_t stderr_pos;
 
+	int errorlevel;
 	void *userdata; // anything passed at init (reserved for caller)
 } zenroom_t;
 

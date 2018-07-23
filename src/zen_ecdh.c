@@ -40,7 +40,7 @@
 //  'Bob'.
 //
 //  @module ecdh
-//  @author Denis "Jaromil" Roio
+//  @author Denis "Jaromil" Roio, Enrico Zimuel
 //  @license GPLv3
 //  @copyright Dyne.org foundation 2017-2018
 
@@ -190,7 +190,6 @@ static int ecdh_checkpub(lua_State *L) {
 	octet *pk = NULL;
 	if(lua_isnoneornil(L, 2)) {
 		if(!e->pubkey) {
-			ERROR();
 			return lerror(L, "Public key not found."); }
 		pk = e->pubkey;
 	} else

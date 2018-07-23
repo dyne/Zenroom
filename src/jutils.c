@@ -58,7 +58,6 @@ static zenroom_t *getzen(lua_State *L) {
 	lua_getglobal(L, "_Z");
 	zenroom_t *Z = lua_touserdata(L, -1);
 	lua_pop(L, 1);
-	SAFE(Z);
 	return(Z);
 }
 
@@ -124,7 +123,8 @@ void error(lua_State *L, const char *format, ...) {
   _printline(Z, L);
   _printf(Z, "[!]", msg);
   va_end(arg);
-  exit(1); // calls teardown (signal 11) TODO: check if OK with seccomp
+  Z->errorlevel = 3;
+  // exit(1); // calls teardown (signal 11) TODO: check if OK with seccomp
 }
 
 void act(lua_State *L, const char *format, ...) {
@@ -145,6 +145,7 @@ void warning(lua_State *L, const char *format, ...) {
     _printf(stderr_tobuffer(L), "[W]", msg);
     va_end(arg);
   }
+  getzen(L)->errorlevel = 2;
 }
 
 
