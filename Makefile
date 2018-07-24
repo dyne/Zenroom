@@ -263,7 +263,7 @@ lowmem-tests = \
 		${1} test/schema.lua && \
 		${1} test/octet.lua && \
 		${1} test/ecdh.lua && \
-		${1} test/ecdh_aes-gcm_vectors.lua \
+		${1} test/ecdh_aes-gcm_vectors.lua && \
 		${1} test/ecp_bls383.lua
 
 # ${1} test/closure.lua && \
@@ -320,8 +320,8 @@ check-js:
 	@echo "All tests passed for JS binary build"
 	@echo "----------------"
 
-check-debug: test-exec-lowmem := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared
-check-debug: test-exec := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared
+check-debug: test-exec-lowmem := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared -u
+check-debug: test-exec := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared -u
 check-debug:
 	$(call lowmem-tests,${test-exec-lowmem})
 	$(call himem-tests,${test-exec})
@@ -344,12 +344,13 @@ check-crypto:
 	@echo "-----------------------"
 
 
-debug-crypto: test-exec := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared
+debug-crypto: test-exec := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared -u
 debug-crypto:
 	${test-exec} test/octet.lua
 	${test-exec} test/ecdh.lua
-	${test-exec} test/ecp.lua
-	./test/integration_asymmetric_crypto.sh ${test-exec}
+	${test-exec} test/ecp_bls383.lua
+
+#	./test/integration_asymmetric_crypto.sh ${test-exec}
 
 #	./test/octet-json.sh ${test-exec}
 

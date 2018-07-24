@@ -332,7 +332,8 @@ int main(int argc, char **argv) {
 	int   verbosity           = 1;
 	int   interactive         = 0;
 	int   parseast            = 0;
-	const char *short_options = "hdic:k:a:p:";
+	int   unprotected         = 0;
+	const char *short_options = "hdic:k:a:p:u";
 	const char *help          =
 		"Usage: zenroom [-dh] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ [ -p ] script.lua ]\n";
 	int pid, status, retval;
@@ -349,32 +350,35 @@ int main(int argc, char **argv) {
 	act(NULL, "Copyright (C) 2017-2018 Dyne.org foundation");
 	while((opt = getopt(argc, argv, short_options)) != -1) {
 		switch(opt) {
-			case 'd':
-				verbosity = 3;
-				set_debug(verbosity);
-				break;
-			case 'h':
-				fprintf(stdout,"%s",help);
-				return EXIT_SUCCESS;
-				break;
-			case 'i':
-				interactive = 1;
-				break;
-			case 'k':
-				snprintf(keysfile,511,"%s",optarg);
-				break;
-			case 'a':
-				snprintf(datafile,511,"%s",optarg);
-				break;
-			case 'c':
-				snprintf(conffile,511,"%s",optarg);
-				break;
-			case 'p':
-				parseast = 1;
-				snprintf(scriptfile,511,"%s",optarg);
-				break;
-			case '?': error(0,help); return EXIT_FAILURE;
-		    default:  error(0,help); return EXIT_FAILURE;
+		case 'd':
+			verbosity = 3;
+			set_debug(verbosity);
+			break;
+		case 'h':
+			fprintf(stdout,"%s",help);
+			return EXIT_SUCCESS;
+			break;
+		case 'i':
+			interactive = 1;
+			break;
+		case 'k':
+			snprintf(keysfile,511,"%s",optarg);
+			break;
+		case 'a':
+			snprintf(datafile,511,"%s",optarg);
+			break;
+		case 'c':
+			snprintf(conffile,511,"%s",optarg);
+			break;
+		case 'p':
+			parseast = 1;
+			snprintf(scriptfile,511,"%s",optarg);
+			break;
+		case 'u':
+			unprotected = 1;
+			break;
+		case '?': error(0,help); return EXIT_FAILURE;
+		default:  error(0,help); return EXIT_FAILURE;
 		}
 	}
 	for (index = optind; index < argc; index++) {
@@ -452,10 +456,17 @@ int main(int argc, char **argv) {
 		error(NULL, "Initialisation failed.");
 		return EXIT_FAILURE; }
 
+	if(unprotected) { // avoid seccomp in all cases
+		int res;
+		notice(NULL, "Starting execution (unprotected mode)");
+		res = zen_exec_script(Z, script);
+		zen_teardown(Z);
+		if(res) return EXIT_FAILURE;
+		else return EXIT_SUCCESS;
+	}
 #if (defined(ARCH_WIN) || defined(DISABLE_FORK))
-		notice(NULL, "Starting execution.");
-		if( zen_exec_script(Z, script) ) {
-			return EXIT_FAILURE; }
+	if( zen_exec_script(Z, script) ) {
+		return EXIT_FAILURE; }
 #else /* POSIX */
 	if (fork() == 0) {
 #   ifdef ARCH_LINUX /* LINUX engages SECCOMP. */
