@@ -356,6 +356,27 @@ static int ecp_order(lua_State *L) {
 	return 1;
 }
 
+static int ecp_get_x(lua_State *L) {
+	ecp *e = ecp_arg(L, 1); SAFE(e);
+	FP fx;
+	big *x = big_new(L);
+	FP_copy(&fx, &e->val.x);
+	FP_reduce(&fx);
+	FP_redc(x->val,&fx);
+	return 1;
+}
+
+
+static int ecp_get_y(lua_State *L) {
+	ecp *e = ecp_arg(L, 1); SAFE(e);
+	FP fy;
+	big *y = big_new(L);
+	FP_copy(&fy, &e->val.y);
+	FP_reduce(&fy);
+	FP_redc(y->val,&fy);
+	return 1;
+}
+
 static int ecp_output(lua_State *L) {
 	ecp *e = ecp_arg(L, 1); SAFE(e);
 	ECP_BLS383 *P = &e->val;
@@ -397,6 +418,8 @@ int luaopen_ecp(lua_State *L) {
 		{"mapit",ecp_mapit},
 		{"octet",ecp_octet},
 		{"add",ecp_add},
+		{"x",ecp_get_x},
+		{"y",ecp_get_y},
 		{"__add",ecp_add},
 		{"sub",ecp_sub},
 		{"__sub",ecp_sub},
