@@ -3,17 +3,18 @@
 
 -- key schema
 keys_schema = schema.Record {
-   dashboard_seckey = schema.String
+   community_seckey = schema.String
 }
 -- same as output in iotdev-to-dashboard
 data_schema = schema.Record {
-   device_pubkey = schema.String,
-   payload       = schema.String
+   device_pubkey    = schema.String,
+   community_id     = schema.String,
+   payload          = schema.String
 }
 -- same as payload in iotdev-to-dashboard
 payload_schema = schema.Record {
-   device_id = schema.String,
-   data      = schema.String
+   device_id   = schema.String,
+   data        = schema.String
 }
 
 data = read_json(DATA,data_schema)
@@ -21,7 +22,7 @@ keys = read_json(KEYS,keys_schema)
 
 dashkey = ecdh.new()
 dashkey:private(
-   octet.from_base64(keys['dashboard_seckey']))
+   octet.from_base64(keys['community_seckey']))
 
 devkey = ecdh.new()
 devkey:public(
