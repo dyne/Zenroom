@@ -37,7 +37,7 @@ encrypt() {
     from=$1
     to=$2
     cat <<EOF | $zen -k $tmp/$from-keys.json -a $tmp/$to-envelop.json \
-					 > $tmp/from-$from-to-$to-cryptomsg.json 2>/dev/null
+					 > $tmp/from-$from-to-$to-cryptomsg.json 
 keys = json.decode(KEYS)
 data = json.decode(DATA)
 recipient = ecdh.new()
@@ -45,9 +45,12 @@ recipient:public(octet.from_$enc(data['pubkey']))
 sender = ecdh.new()
 sender:private(octet.from_$enc(keys['secret']))
 k = sender:session(recipient)
-enc = sender:encrypt(k,octet.from_string(data['message']))
+iv = sender:random(16)
+enc,tag = sender:encrypt(k,octet.from_string(data['message']),iv,octet.from_string('header'))
 print(json.encode({
-    encmsg=enc:base64(),
+	iv=iv:$enc(),
+	tag=tag:$enc(),
+    encmsg=enc:$enc(),
     pubkey=keys['public']}))
 EOF
 }
@@ -55,7 +58,7 @@ EOF
 decrypt() {
 	from=$1
 	to=$2
-	cat <<EOF | $zen -k $tmp/$to-keys.json -a $tmp/from-$from-to-$to-cryptomsg.json 2>/dev/null
+	cat <<EOF | $zen -k $tmp/$to-keys.json -a $tmp/from-$from-to-$to-cryptomsg.json
 keys = json.decode(KEYS)
 data = json.decode(DATA)
 recipient = ecdh.new()
@@ -63,7 +66,9 @@ recipient:private(octet.from_$enc(keys['secret']))
 sender = ecdh.new()
 sender:public(octet.from_$enc(data['pubkey']))
 k = recipient:session(sender)
-dec = recipient:decrypt(k,octet.from_$enc(data['encmsg']))
+iv = octet.from_$enc(data['iv'])
+tag = octet.from_$enc(data['tag'])
+dec = recipient:decrypt(k,octet.from_$enc(data['encmsg']),iv,octet.from_string('header'), tag)
 print(dec)
 EOF
 }
@@ -74,6 +79,7 @@ generate
 for p in $ppl; do
 	for pp in $ppl; do
 		[[ "$p" = "$pp" ]] && continue
+		print "ENCRYPT $p -> $pp"
 		encrypt $p $pp
 	done
 done
@@ -81,7 +87,8 @@ done
 for p in $ppl; do
 	for pp in $ppl; do
 		[[ "$p" = "$pp" ]] && continue
-		res=`decrypt $pp $p 2>/dev/null`
+		print "DECRYPT $pp -> $p"
+		res=`decrypt $pp $p`
 		if [[ "$secret" != "$res" ]]; then
 			print - "ERROR in integration luazen test: $tmp"
 			print - "$secret (${#secret} bytes)"

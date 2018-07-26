@@ -9,7 +9,7 @@ function Test(t)
    curve = ecdh.new()
 
    print ("Test vector: " .. t.name)
-   out, tag_out = curve:aead_encrypt(octet.from_hex(t.key), octet.from_hex(t.msg), octet.from_hex(t.iv), octet.from_hex(t.header))
+   out, tag_out = curve:encrypt(octet.from_hex(t.key), octet.from_hex(t.msg), octet.from_hex(t.iv), octet.from_hex(t.header))
 
    assert(octet.from_hex(t.ciphermsg) == out)
    print (' encrypt OK')

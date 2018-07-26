@@ -600,10 +600,10 @@ static int ecdh_random(lua_State *L) {
 	{"session",ecdh_session}, \
 	{"public", ecdh_public}, \
 	{"private", ecdh_private}, \
-	{"encrypt", ecdh_encrypt}, \
-	{"aead_encrypt", ecdh_aead_encrypt}, \
-	{"decrypt", ecdh_decrypt}, \
-	{"aead_decrypt", ecdh_aead_decrypt}, \
+	{"encrypt", ecdh_aead_encrypt}, \
+	{"decrypt", ecdh_aead_decrypt}, \
+	{"encrypt_weak_aes_cbc", ecdh_encrypt}, \
+	{"decrypt_weak_aes_cbc", ecdh_decrypt}, \
 	{"hash", ecdh_hash}, \
 	{"hmac", ecdh_hmac}, \
 	{"kdf2", ecdh_kdf2}, \

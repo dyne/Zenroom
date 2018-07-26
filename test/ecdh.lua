@@ -22,10 +22,8 @@ function test_curve (name)
    assert(sk:hex() == curve:private():hex())
 
    ses = curve:session(pk,sk)
-   -- print 'session:'
-   -- print(ses:hex())
 
-   ciphermsg = curve:encrypt(ses,octet.from_string(secret))
+   -- ciphermsg = curve:encrypt(ses,octet.from_string(secret))
 
    -- print 'secret:'
    -- print(secoctet:string())
@@ -33,30 +31,30 @@ function test_curve (name)
    -- print 'cipher message:'
    -- print(#ciphermsg)
 
-   decipher = curve:decrypt(ses,ciphermsg)
+--    decipher = curve:decrypt(ses,ciphermsg)
 
-   assert(secret == decipher:string())
+--    assert(secret == decipher:string())
    -- print 'decipher message:'
    -- print(decipher:string())
    -- print(#decipher)
-   print ('         OK')
+   -- print ('         OK')
 
    -- AES-GCM encryption
    iv = curve:random(16)
    header = 'This is the header!'
 
-   ciphermsg, tag = curve:aead_encrypt(ses, octet.from_string(secret), iv, octet.from_string(header))
+   ciphermsg, tag = curve:encrypt(ses, octet.from_string(secret), iv, octet.from_string(header))
 
    -- print ('AES-GCM encrypt : ' .. ciphermsg:base64())
    -- print ('AES-GCM tag : ' .. tag:base64())
 
-   decipher = curve:aead_decrypt(ses, ciphermsg, iv, octet.from_string(header), tag)
+   decipher = curve:decrypt(ses, ciphermsg, iv, octet.from_string(header), tag)
 
    assert(secret == decipher:string())
    -- print 'decipher message:'
    -- print(decipher:string())
    -- print(#decipher)
-   print (' AES-GCM OK')
+   print (' AES-GCM on ' .. name .. ' OK')
 end
 
 test_curve('ed25519')
@@ -64,6 +62,6 @@ test_curve('ed25519')
 -- test_curve('bls383')
 
 -- -- TODO: check why goldilocks doesn't works
--- -- test_curve('goldilocks')
+-- test_curve('goldilocks')
 -- test_curve('bn254cx')
 -- test_curve('fp256bn')
