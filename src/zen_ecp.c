@@ -377,6 +377,21 @@ static int ecp_get_y(lua_State *L) {
 	return 1;
 }
 
+/****
+    Creates a new generator ECP from the rom curve
+*/
+static int generator(lua_State *L) {
+	ecp *e = ecp_new(L); SAFE(e);
+	ECP_inf(&e->val);
+	BIG x,y;
+	BIG_rcopy(x, CURVE_Gx);
+	BIG_rcopy(y, CURVE_Gy);
+	
+	ECP_set(&e->val, x, y);
+	return 1;
+}
+
+
 static int ecp_output(lua_State *L) {
 	ecp *e = ecp_arg(L, 1); SAFE(e);
 	ECP_BLS383 *P = &e->val;
@@ -409,6 +424,7 @@ int luaopen_ecp(lua_State *L) {
 		{"inf",ecp_get_infinity},
 		{"infinity",ecp_get_infinity},
 		{"order",ecp_order},
+		{"generator",generator},
 		{NULL,NULL}};
 	const struct luaL_Reg ecp_methods[] = {
 		{"affine",ecp_affine},
