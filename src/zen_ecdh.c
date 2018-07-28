@@ -175,7 +175,7 @@ static int ecdh_keygen(lua_State *L) {
 }
 
 /**
-   Validate an ECDH public key. Any octet can be a secret key, but
+   Validate an ECDH public key. Any octet can be a private key, but
    public keys aren't random and checking them is the only validation
    possible.
 
@@ -227,13 +227,13 @@ static int ecdh_session(lua_State *L) {
 		if(!pk->pubkey) {
 			lerror(L, "%s: public key not found in keyring",__func__);
 			return 0; }
-		pubkey = pk->pubkey; // take secret key from keyring
+		pubkey = pk->pubkey; // take private key from keyring
 		func(L, "%s: public key found in ecdh keyring (%u bytes)",
 		     __func__, pubkey->len);
 
 		// argument is an octet
 	} else if((ud = luaL_testudata(L, 2, "zenroom.octet"))) {
-		pubkey = (octet*)ud; // take secret key from octet
+		pubkey = (octet*)ud; // take private key from octet
 		func(L, "%s: public key found in octet (%u bytes)",
 		     __func__, pubkey->len);
 
@@ -296,15 +296,15 @@ static int ecdh_public(lua_State *L) {
 
 
 /**
-   Imports or exports the secret key from an ECDH keyring. This method
-   functions in two ways: without argument it returns the secret key
+   Imports or exports the private key from an ECDH keyring. This method
+   functions in two ways: without argument it returns the private key
    of a keyring, or if an octet argument is provided it imports it as
-   secret key inside the keyring and generates a public key for it. If
-   a secret key is already present in the keyring it refuses to
+   private  key inside the keyring and generates a public key for it. If
+   a private key is already present in the keyring it refuses to
    overwrite and returns an error.
 
-   @param key[opt] octet of a public key to be imported
-   @function keyring:secret(key)
+   @param key[opt] octet of a private key to be imported
+   @function keyring:private(key)
 */
 static int ecdh_private(lua_State *L) {
 	HERE();
