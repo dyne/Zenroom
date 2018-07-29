@@ -5,7 +5,7 @@
 # correct build of lpeglabel
 if ! grep 'lpeglabel.a' lib/lpeglabel/makefile > /dev/null; then
 	echo "applying lpeglabel patch"
-	cd lib/lpeglabel && patch -p1 < ../../build/lpeglabel_makefile.patch && cd -
+	cd lib/lpeglabel && patch -p1 < ../../build/lpeglabel.patch && cd -
 fi
 
 # enable static build of lua_sandbox

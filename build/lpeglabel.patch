@@ -1,3 +1,18 @@
+diff --git a/lpprint.h b/lpprint.h
+index 6329760..04e7c4d 100644
+--- a/lpprint.h
++++ b/lpprint.h
+@@ -11,8 +11,8 @@
+ #include "lpvm.h"
+ 
+ 
+-#if defined(LPEG_DEBUG)
+-
++#if DEBUG == 1
++#define LPEG_DEBUG
+ void printpatt (Instruction *p, int n);
+ void printtree (TTree *tree, int ident);
+ void printktable (lua_State *L, int idx);
 diff --git a/makefile b/makefile
 index c06ab86..6e6ab51 100644
 --- a/makefile
