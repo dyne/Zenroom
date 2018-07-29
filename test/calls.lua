@@ -3,7 +3,7 @@
 
 print("testing functions and calls")
 
-local debug = require "debug"
+-- local debug = require "debug"
 
 -- get the opportunity to test 'type' too ;)
 
@@ -237,7 +237,7 @@ end
 
 a = assert(load(read1(x), "modname", "t", _G))
 assert(a() == "\0" and _G.x == 33)
-assert(debug.getinfo(a).source == "modname")
+-- assert(debug.getinfo(a).source == "modname")
 -- cannot read text in binary mode
 cannotload("attempt to load a text chunk", load(read1(x), "modname", "b", {}))
 cannotload("attempt to load a text chunk", load(x, "modname", "b"))
@@ -282,9 +282,9 @@ local function h ()
 end
 local d = string.dump(h)
 x = load(d, "", "b")
-assert(debug.getupvalue(x, 2) == '_ENV')
-debug.setupvalue(x, 2, _G)
-assert(x() == 123)
+-- assert(debug.getupvalue(x, 2) == '_ENV')
+-- debug.setupvalue(x, 2, _G)
+-- assert(x() == 123)
 
 assert(assert(load("return XX + ...", nil, nil, {XX = 13}))(4) == 17)
 
@@ -312,10 +312,10 @@ x = load(string.dump(function (x)
   end
 end), "", "b", nil)
 assert(x() == nil)
-assert(debug.setupvalue(x, 1, "hi") == "a")
+-- assert(debug.setupvalue(x, 1, "hi") == "a")
 assert(x() == "hi")
-assert(debug.setupvalue(x, 2, 13) == "b")
-assert(not debug.setupvalue(x, 3, 10))   -- only 2 upvalues
+-- assert(debug.setupvalue(x, 2, 13) == "b")
+-- assert(not debug.setupvalue(x, 3, 10))   -- only 2 upvalues
 x("set")
 assert(x() == 23)
 x("set")
@@ -339,9 +339,9 @@ do
   f = load(string.dump(f))   -- main chunk now has many upvalues
   local a = 10
   local h = function () return a end
-  for i = 1, nup do
-    debug.upvaluejoin(f, i, h, 1)
-  end
+  -- for i = 1, nup do
+  --   debug.upvaluejoin(f, i, h, 1)
+  -- end
   assert(f() == 10 * nup)
 end
 

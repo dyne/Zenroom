@@ -31,8 +31,8 @@ local rawget                     = rawget
 local unpack                     = table.unpack or unpack
 local pairs,ipairs               = pairs,ipairs
 
-require "os"
-local clock                      = os.clock
+-- require "os"
+-- local clock                      = os.clock
 local _                          = {}
 
 
@@ -1709,16 +1709,16 @@ function _.curry(f, n_args)
 	return scurry
 end
 
---- Returns the execution time of `f (...)` and its returned values.
--- @name time
--- @param f a function
--- @param[opt] ... optional args to `f`
--- @return the execution time and the results of `f (...)`
-function _.time(f, ...)
-	local stime = clock()
-	local r = {f(...)}
-	return clock() - stime, unpack(r)
-end
+-- --- Returns the execution time of `f (...)` and its returned values.
+-- -- @name time
+-- -- @param f a function
+-- -- @param[opt] ... optional args to `f`
+-- -- @return the execution time and the results of `f (...)`
+-- function _.time(f, ...)
+-- 	local stime = clock()
+-- 	local r = {f(...)}
+-- 	return clock() - stime, unpack(r)
+-- end
 
 --- Object functions
 --@section Object functions

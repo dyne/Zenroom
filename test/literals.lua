@@ -3,7 +3,7 @@
 
 print('testing scanner')
 
-local debug = require "debug"
+-- local debug = require "debug"
 
 
 local function dostring (x) return assert(load(x), "")() end
@@ -37,14 +37,14 @@ local function lexstring (x, y, n)
   assert(s == y and l == n)
 end
 
-lexstring("'abc\\z  \n   efg'", "abcefg", 2)
-lexstring("'abc\\z  \n\n\n'", "abc", 4)
-lexstring("'\\z  \n\t\f\v\n'",  "", 3)
-lexstring("[[\nalo\nalo\n\n]]", "alo\nalo\n\n", 5)
-lexstring("[[\nalo\ralo\n\n]]", "alo\nalo\n\n", 5)
-lexstring("[[\nalo\ralo\r\n]]", "alo\nalo\n", 4)
-lexstring("[[\ralo\n\ralo\r\n]]", "alo\nalo\n", 4)
-lexstring("[[alo]\n]alo]]", "alo]\n]alo", 2)
+-- lexstring("'abc\\z  \n   efg'", "abcefg", 2)
+-- lexstring("'abc\\z  \n\n\n'", "abc", 4)
+-- lexstring("'\\z  \n\t\f\v\n'",  "", 3)
+-- lexstring("[[\nalo\nalo\n\n]]", "alo\nalo\n\n", 5)
+-- lexstring("[[\nalo\ralo\n\n]]", "alo\nalo\n\n", 5)
+-- lexstring("[[\nalo\ralo\r\n]]", "alo\nalo\n", 4)
+-- lexstring("[[\ralo\n\ralo\r\n]]", "alo\nalo\n", 4)
+-- lexstring("[[alo]\n]alo]]", "alo]\n]alo", 2)
 
 assert("abc\z
         def\z
@@ -213,14 +213,14 @@ hi
 y = "\
 hello\r\n\
 "
-return require"debug".getinfo(1).currentline
+-- return require"debug".getinfo(1).currentline
 ]]
 
-for _, n in pairs{"\n", "\r", "\n\r", "\r\n"} do
-  local prog, nn = string.gsub(prog, "\n", n)
-  assert(dostring(prog) == nn)
-  assert(_G.x == "hi\n" and _G.y == "\nhello\r\n\n")
-end
+-- for _, n in pairs{"\n", "\r", "\n\r", "\r\n"} do
+--   local prog, nn = string.gsub(prog, "\n", n)
+--   assert(dostring(prog) == nn)
+--   assert(_G.x == "hi\n" and _G.y == "\nhello\r\n\n")
+-- end
 
 
 -- testing comments and strings with long brackets
@@ -262,34 +262,34 @@ end
 
 
 -- testing decimal point locale
-if not ((ARCH == "UNIX") or (ARCH == "MUSL")) then
+-- if not ((ARCH == "UNIX") or (ARCH == "MUSL")) then
 
-   if os.setlocale("pt_BR") or os.setlocale("ptb") then
-	  assert(tonumber("3,4") == 3.4 and tonumber"3.4" == 3.4)
-	  assert(tonumber("  -.4  ") == -0.4)
-	  assert(tonumber("  +0x.41  ") == 0X0.41)
-	  assert(not load("a = (3,4)"))
-	  assert(assert(load("return 3.4"))() == 3.4)
-	  assert(assert(load("return .4,3"))() == .4)
-	  assert(assert(load("return 4."))() == 4.)
-	  assert(assert(load("return 4.+.5"))() == 4.5)
+--    if os.setlocale("pt_BR") or os.setlocale("ptb") then
+-- 	  assert(tonumber("3,4") == 3.4 and tonumber"3.4" == 3.4)
+-- 	  assert(tonumber("  -.4  ") == -0.4)
+-- 	  assert(tonumber("  +0x.41  ") == 0X0.41)
+-- 	  assert(not load("a = (3,4)"))
+-- 	  assert(assert(load("return 3.4"))() == 3.4)
+-- 	  assert(assert(load("return .4,3"))() == .4)
+-- 	  assert(assert(load("return 4."))() == 4.)
+-- 	  assert(assert(load("return 4.+.5"))() == 4.5)
 
-	  assert(" 0x.1 " + " 0x,1" + "-0X.1\t" == 0x0.1)
+-- 	  assert(" 0x.1 " + " 0x,1" + "-0X.1\t" == 0x0.1)
 
-	  assert(tonumber"inf" == nil and tonumber"NAN" == nil)
+-- 	  assert(tonumber"inf" == nil and tonumber"NAN" == nil)
 
-	  assert(assert(load(string.format("return %q", 4.51)))() == 4.51)
+-- 	  assert(assert(load(string.format("return %q", 4.51)))() == 4.51)
 
-	  local a,b = load("return 4.5.")
-	  assert(string.find(b, "'4%.5%.'"))
+-- 	  local a,b = load("return 4.5.")
+-- 	  assert(string.find(b, "'4%.5%.'"))
 
-	  assert(os.setlocale("C"))
-   else
-	  (Message or print)(
-		 '\n >>> pt_BR locale not available: skipping decimal point tests <<<\n')
-   end
+-- 	  assert(os.setlocale("C"))
+--    else
+-- 	  (Message or print)(
+-- 		 '\n >>> pt_BR locale not available: skipping decimal point tests <<<\n')
+--    end
 
-end
+-- end
 
 
 -- testing %q x line ends

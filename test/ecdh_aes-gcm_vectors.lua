@@ -9,12 +9,12 @@ function Test(t)
    curve = ecdh.new('goldilocks')
 
    print ("Test vector: " .. t.name)
-   out, tag_out = curve:encrypt(octet.from_hex(t.key), octet.from_hex(t.msg), octet.from_hex(t.iv), octet.from_hex(t.header))
+   out, tag_out = curve:encrypt(octet.hex(t.key), octet.hex(t.msg), octet.hex(t.iv), octet.hex(t.header))
 
-   assert(octet.from_hex(t.ciphermsg) == out)
+   assert(octet.hex(t.ciphermsg) == out)
    print (' encrypt OK')
 
-   assert(octet.from_hex(t.tag) == tag_out)
+   assert(octet.hex(t.tag) == tag_out)
    print ('    auth OK')
 end
 

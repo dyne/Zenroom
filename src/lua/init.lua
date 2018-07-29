@@ -7,30 +7,30 @@ octet  = require('octet')
 ecdh   = require('ecdh')
 lambda = require('functional')
 inside = require('inspect')
+ecp    = require('ecp')
 big    = require('zenroom_big')
 fp     = require('zenroom_fp')
-ecp    = require('ecp')
 
 function read_json(data, validation)
    if not data then
 	  error("read_json: missing data")
-	  os.exit()
+	  -- os.exit()
    end
    out,res = json.decode(data)
    if not out then
 	  if res then
 		 error("read_json: invalid json")
 		 error(res)
-		 os.exit()
+		 -- os.exit()
 	  end
    else
 	  -- operate schema validation if argument is present
 	  if validation then
 		 local err = schema.CheckSchema(out, validation)
 		 if err then
-			error "read_json: schema validation failed"
+			-- error "read_json: schema validation failed"
 			error(schema.FormatOutput(err))
-			os.exit()
+			-- os.exit()
 		 end
 	  end
 	  return out

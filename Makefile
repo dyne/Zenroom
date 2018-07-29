@@ -241,13 +241,14 @@ check-milagro: milagro
 himem-tests = \
  @${1} test/sort.lua && \
  ${1} test/literals.lua && \
- ${1} test/calls.lua && \
  ${1} test/pm.lua && \
  ${1} test/nextvar.lua
 
 ## GC tests break memory management with umm
 # in particular steps (2)
 # ${1} test/gc.lua && \
+# ${1} test/calls.lua && \
+
 
 
 lowmem-tests = \
@@ -282,6 +283,12 @@ lowmem-tests = \
 # lowmem:
 #  ${1} test/coroutine.lua && \
 
+# these all pass but require cjson_full to run
+# 	${test-exec} test/cjson-test.lua
+
+# these require the debug extension too much
+# ${test-exec} test/coroutine.lua
+
 
 check-shared: test-exec-lowmem := ${pwd}/src/zenroom-shared
 check-shared: test-exec := ${pwd}/src/zenroom-shared
@@ -289,8 +296,6 @@ check-shared:
 	$(call lowmem-tests,${test-exec-lowmem})
 	$(call himem-tests,${test-exec})
 	${test-exec} test/constructs.lua
-	${test-exec} test/cjson-test.lua
-	${test-exec} test/coroutine.lua
 	./test/octet-json.sh ${test-exec}
 	./test/integration_asymmetric_crypto.sh ${test-exec}
 	@echo "----------------"
@@ -304,8 +309,6 @@ check-static:
 	$(call lowmem-tests,${test-exec-lowmem})
 	$(call himem-tests,${test-exec})
 	${test-exec} test/constructs.lua
-	${test-exec} test/cjson-test.lua
-	${test-exec} test/coroutine.lua
 	./test/octet-json.sh ${test-exec}
 	./test/integration_asymmetric_crypto.sh ${test-exec}
 	@echo "----------------"

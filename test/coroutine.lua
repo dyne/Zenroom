@@ -3,7 +3,7 @@
 
 print "testing coroutines"
 
-local debug = require'debug'
+-- local debug = require'debug'
 
 local f
 
@@ -179,8 +179,8 @@ end
 
 -- errors in coroutines
 function foo ()
-  assert(debug.getinfo(1).currentline == debug.getinfo(foo).linedefined + 1)
-  assert(debug.getinfo(2).currentline == debug.getinfo(goo).linedefined)
+--   assert(debug.getinfo(1).currentline == debug.getinfo(foo).linedefined + 1)
+--   assert(debug.getinfo(2).currentline == debug.getinfo(goo).linedefined)
   coroutine.yield(3)
   error(foo)
 end

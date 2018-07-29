@@ -4,9 +4,9 @@
 	print "Run from base directory: ./test/$0"
 	return 1
 }
-zen=${1:-./src/$bin}
+zen=($*)
 # echo "using: $zen"
-enc=${2:-"base64"}
+curve="goldilocks"
 secret="This is the secret message that is sent among people."
 ppl=(zora vuk mira darko)
 
@@ -15,15 +15,15 @@ tmp=`mktemp -d`
 
 generate() {
 	for p in $ppl; do
-		cat <<EOF | $zen 2>/dev/null > $tmp/$p-keys.json
-keyring = ecdh.new()
-keyring:keygen()
+		cat <<EOF | $zen > $tmp/$p-keys.json
+keys = ecdh.new('$curve')
+keys:keygen()
 keypair = json.encode({
-      public=keyring:public():$enc(),
-      secret=keyring:private():$enc()})
+      public=keys:public():hex(),
+      private=keys:private():hex()})
 print(keypair)
 EOF
-		cat <<EOF | $zen 2>/dev/null -k $tmp/$p-keys.json > $tmp/$p-envelop.json
+		cat <<EOF | $zen -k $tmp/$p-keys.json > $tmp/$p-envelop.json
 keys = json.decode(KEYS)
 envelop = json.encode({
     message="$secret",
@@ -40,17 +40,17 @@ encrypt() {
 					 > $tmp/from-$from-to-$to-cryptomsg.json 
 keys = json.decode(KEYS)
 data = json.decode(DATA)
-recipient = ecdh.new()
-recipient:public(octet.$enc(data['pubkey']))
-sender = ecdh.new()
-sender:private(octet.$enc(keys['secret']))
+recipient = ecdh.new('$curve')
+recipient:public(octet.hex(data['pubkey']))
+sender = ecdh.new('$curve')
+sender:private(octet.hex(keys['private']))
 k = sender:session(recipient)
 iv = sender:random(16)
 enc,tag = sender:encrypt(k,octet.string(data['message']),iv,octet.string('header'))
 print(json.encode({
-	iv=iv:$enc(),
-	tag=tag:$enc(),
-    encmsg=enc:$enc(),
+	iv=iv:hex(),
+	tag=tag:hex(),
+    encmsg=enc:hex(),
     pubkey=keys['public']}))
 EOF
 }
@@ -61,15 +61,15 @@ decrypt() {
 	cat <<EOF | $zen -k $tmp/$to-keys.json -a $tmp/from-$from-to-$to-cryptomsg.json
 keys = json.decode(KEYS)
 data = json.decode(DATA)
-recipient = ecdh.new()
-recipient:private(octet.$enc(keys['secret']))
-sender = ecdh.new()
-sender:public(octet.$enc(data['pubkey']))
+recipient = ecdh.new('$curve')
+recipient:private(octet.hex(keys['private']))
+sender = ecdh.new('$curve')
+sender:public(octet.hex(data['pubkey']))
 k = recipient:session(sender)
-iv = octet.$enc(data['iv'])
-tag = octet.$enc(data['tag'])
-dec = recipient:decrypt(k,octet.$enc(data['encmsg']),iv,octet.string('header'), tag)
-print(dec)
+iv = octet.hex(data['iv'])
+tag = octet.hex(data['tag'])
+dec = recipient:decrypt(k,octet.hex(data['encmsg']),iv,octet.string('header'), tag)
+print(dec:string())
 EOF
 }
 
@@ -79,28 +79,36 @@ generate
 for p in $ppl; do
 	for pp in $ppl; do
 		[[ "$p" = "$pp" ]] && continue
-		print "ENCRYPT $p -> $pp"
+		from=$p
+		to=$pp
+		print "ENCRYPT $from -> $to"
 		encrypt $p $pp
+		cat $tmp/from-$from-to-$to-cryptomsg.json | json_pp
 	done
 done
 
 for p in $ppl; do
 	for pp in $ppl; do
 		[[ "$p" = "$pp" ]] && continue
-		print "DECRYPT $pp -> $p"
-		res=`decrypt $pp $p`
+		from=$pp
+		to=$p
+		print "DECRYPT $from -> $to"
+		res=`decrypt $from $to`
 		if [[ "$secret" != "$res" ]]; then
-			print - "ERROR in integration ecdh test: $tmp"
-			print - "INPUT \"$secret\" (${#secret} bytes)"
-			print $secret | xxd
-			print - "OUTPUT \"$res\" (${#res} bytes)"
+			print - "ERROR in integration ecdh test: $tmp"			
+			print - "INPUT keys:"
+			cat $tmp/$to-keys.json | json_pp
+			print - "INPUT data:"
+			cat $tmp/from-$from-to-$to-cryptomsg.json | json_pp
+			# print $secret | xxd
+			print - "OUTPUT string: ${#res} bytes"
 			print $res | xxd
-			print - "envelope from ${pp}:"
+			print - "envelope from ${from}:"
 			cat $tmp/$pp-envelop.json
-			print - "recipient-keys to ${p}:"
+			print - "recipient-keys to ${to}:"
 			cat $tmp/$p-keys.json
 			print - "cryptomsg:"
-			cat $tmp/from-$pp-to-$p-cryptomsg.json
+			cat $tmp/from-$from-to-$to-cryptomsg.json
 			print - "==="
 			return 1
 		else

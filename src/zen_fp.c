@@ -213,13 +213,6 @@ static int fp_reduce(lua_State *L) {
 	return 1;
 }
 
-static int fp_norm(lua_State *L) {
-	fp *s = fp_arg(L,1); SAFE(s);
-	fp *d = fp_dup(L,s); SAFE(d);
-	FP_norm(&d->val);
-	return 1;
-}
-
 static int fp_qr(lua_State *L) {
 	fp *s = fp_arg(L,1); SAFE(s);
 	fp *d = fp_dup(L,s); SAFE(d);
@@ -239,7 +232,6 @@ static int fp_qr(lua_State *L) {
 		{"neg",fp_neg}, \
 		{"inv",fp_inv}, \
 		{"reduce",fp_reduce}, \
-		{"norm",fp_norm}, \
 		{"qr",fp_qr}
 
 int luaopen_fp(lua_State *L) {

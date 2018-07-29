@@ -4,8 +4,8 @@
 --
 -- Note: The output of this script is easier to read with "less -S"
 
-local json = require "cjson_full"
-local json_safe = require "json"
+-- local json = require "cjson_full"
+-- local json_safe = require "json"
 local unpack = table.unpack
 
 local function json_encode_output_type(value)

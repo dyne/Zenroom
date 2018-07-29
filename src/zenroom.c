@@ -173,7 +173,7 @@ zenroom_t *zen_init(const char *conf,
 
 void zen_teardown(zenroom_t *Z) {
 
-	notice(Z->lua,"Zenroom teardown.");
+	act(Z->lua,"Zenroom teardown.");
 	if(Z->mem->heap) {
 		if(umm_integrity_check())
 			func(Z->lua,"HEAP integrity checks passed.");
