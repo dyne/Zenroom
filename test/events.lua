@@ -3,7 +3,7 @@
 
 print('testing metatables')
 
-local debug = require'debug'
+-- local debug = require'debug'
 
 X = 20; B = 30
 

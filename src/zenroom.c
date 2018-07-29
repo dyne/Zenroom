@@ -153,6 +153,7 @@ zenroom_t *zen_init(const char *conf,
 	//////////////////// end of create
 
 	lua_gc(L, LUA_GCCOLLECT, 0);
+	lua_gc(L, LUA_GCCOLLECT, 0);
 	zen_require_override(L,1);
 
 	// load arguments if present
@@ -332,7 +333,11 @@ int main(int argc, char **argv) {
 	int   verbosity           = 1;
 	int   interactive         = 0;
 	int   parseast            = 0;
+#if DEBUG == 1
+	int   unprotected         = 1;
+#else
 	int   unprotected         = 0;
+#endif
 	const char *short_options = "hdic:k:a:p:u";
 	const char *help          =
 		"Usage: zenroom [-dh] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ [ -p ] script.lua ]\n";
@@ -374,9 +379,11 @@ int main(int argc, char **argv) {
 			parseast = 1;
 			snprintf(scriptfile,511,"%s",optarg);
 			break;
+#if DEBUG == 1
 		case 'u':
 			unprotected = 1;
 			break;
+#endif
 		case '?': error(0,help); return EXIT_FAILURE;
 		default:  error(0,help); return EXIT_FAILURE;
 		}
@@ -456,6 +463,7 @@ int main(int argc, char **argv) {
 		error(NULL, "Initialisation failed.");
 		return EXIT_FAILURE; }
 
+#if DEBUG == 1
 	if(unprotected) { // avoid seccomp in all cases
 		int res;
 		notice(NULL, "Starting execution (unprotected mode)");
@@ -464,6 +472,8 @@ int main(int argc, char **argv) {
 		if(res) return EXIT_FAILURE;
 		else return EXIT_SUCCESS;
 	}
+#endif
+
 #if (defined(ARCH_WIN) || defined(DISABLE_FORK))
 	if( zen_exec_script(Z, script) ) {
 		return EXIT_FAILURE; }

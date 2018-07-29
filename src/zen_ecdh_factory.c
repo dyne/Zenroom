@@ -1,11 +1,17 @@
 #include <jutils.h>
 #include <zen_ecdh.h>
+#include <zen_error.h>
 
 #include <ecdh_ED25519.h>
 #include <ecdh_BLS383.h>
+#include <ecdh_GOLDILOCKS.h>
 
-ecdh *ecdh_new_curve(lua_State *L, const char *curve) {
+ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 	ecdh *e = NULL;
+	char curve[16];
+	if(cname) snprintf(curve,15,cname);
+	else      snprintf(curve,15,"ed25519");
+	HEREs(curve);
 	if(strcasecmp(curve,"ec25519")   ==0
 	   || strcasecmp(curve,"ed25519")==0
 	   || strcasecmp(curve,"25519")  ==0) {
@@ -23,16 +29,7 @@ ecdh *ecdh_new_curve(lua_State *L, const char *curve) {
 		e->ECP__ECIES_DECRYPT = ECP_ED25519_ECIES_DECRYPT;
 		e->ECP__SP_DSA = ECP_ED25519_SP_DSA;
 		e->ECP__VP_DSA = ECP_ED25519_VP_DSA;
-		strncpy(e->curve,curve,15);
-#if CURVETYPE_ED25519==MONTGOMERY
-		strcpy(e->type,"montgomery");
-#elif CURVETYPE_ED25519==WEIERSTRASS
-		strcpy(e->type,"weierstrass");
-#elif CURVETYPE_ED25519==EDWARDS
-		strcpy(e->type,"edwards");
-#else
-		strcpy(e->type,"unknown");
-#endif
+
 	} else if(strcasecmp(curve,"bls383")==0) {
 			e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
 			e->keysize = EGS_BLS383;
@@ -47,19 +44,19 @@ ecdh *ecdh_new_curve(lua_State *L, const char *curve) {
 			e->ECP__SP_DSA = ECP_BLS383_SP_DSA;
 			e->ECP__VP_DSA = ECP_BLS383_VP_DSA;
 
-	// } else if(strcasecmp(curve,"goldilocks")==0) {
-	// 	e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
-	// 	e->keysize = EGS_GOLDILOCKS;
-	// 	e->fieldsize = EFS_GOLDILOCKS;
-	// 	e->rng = NULL;
-	// 	e->hash = HASH_TYPE_ECC_GOLDILOCKS;
-	// 	e->ECP__KEY_PAIR_GENERATE = ECP_GOLDILOCKS_KEY_PAIR_GENERATE;
-	// 	e->ECP__PUBLIC_KEY_VALIDATE	= ECP_GOLDILOCKS_PUBLIC_KEY_VALIDATE;
-	// 	e->ECP__SVDP_DH = ECP_GOLDILOCKS_SVDP_DH;
-	// 	e->ECP__ECIES_ENCRYPT = ECP_GOLDILOCKS_ECIES_ENCRYPT;
-	// 	e->ECP__ECIES_DECRYPT = ECP_GOLDILOCKS_ECIES_DECRYPT;
-	// 	e->ECP__SP_DSA = ECP_GOLDILOCKS_SP_DSA;
-	// 	e->ECP__VP_DSA = ECP_GOLDILOCKS_VP_DSA;
+	} else if(strcasecmp(curve,"goldilocks")==0) {
+		e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
+		e->keysize = EGS_GOLDILOCKS;
+		e->fieldsize = EFS_GOLDILOCKS;
+		e->rng = NULL;
+		e->hash = HASH_TYPE_ECC_GOLDILOCKS;
+		e->ECP__KEY_PAIR_GENERATE = ECP_GOLDILOCKS_KEY_PAIR_GENERATE;
+		e->ECP__PUBLIC_KEY_VALIDATE	= ECP_GOLDILOCKS_PUBLIC_KEY_VALIDATE;
+		e->ECP__SVDP_DH = ECP_GOLDILOCKS_SVDP_DH;
+		e->ECP__ECIES_ENCRYPT = ECP_GOLDILOCKS_ECIES_ENCRYPT;
+		e->ECP__ECIES_DECRYPT = ECP_GOLDILOCKS_ECIES_DECRYPT;
+		e->ECP__SP_DSA = ECP_GOLDILOCKS_SP_DSA;
+		e->ECP__VP_DSA = ECP_GOLDILOCKS_VP_DSA;
 
 	// } else if(strcasecmp(curve,"bn254cx")==0) {
 	// 	e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
@@ -93,5 +90,16 @@ ecdh *ecdh_new_curve(lua_State *L, const char *curve) {
 		error(L, "%s: curve not found: %s",__func__,curve);
 		return NULL;
 	}
+	strncpy(e->curve,curve,15);
+#if CURVETYPE_ED25519==MONTGOMERY
+	strcpy(e->type,"montgomery");
+#elif CURVETYPE_ED25519==WEIERSTRASS
+	strcpy(e->type,"weierstrass");
+#elif CURVETYPE_ED25519==EDWARDS
+	strcpy(e->type,"edwards");
+#else
+	strcpy(e->type,"unknown");
+#endif
+
 	return e;
 }

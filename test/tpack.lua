@@ -183,7 +183,7 @@ for _, n in ipairs{0, -1.1, 1.9, 1/0, -1/0, 1e20, -1e20, 0.1, 2000.7} do
     assert(pack(">d", n) == pack("<d", n):reverse())
 end
 
--- for non-native precisions, test only with "round" numbers
+print "for non-native precisions, test only with 'round' numbers"
 for _, n in ipairs{0, -1.5, 1/0, -1/0, 1e10, -1e9, 0.5, 2000.25} do
   assert(unpack("<f", pack("<f", n)) == n)
   assert(unpack(">f", pack(">f", n)) == n)
@@ -235,7 +235,7 @@ do
 end
 
 
--- testing multiple types and sequence
+print "testing multiple types and sequence"
 do
   local x = pack("<b h b f d f n i", 1, 2, 3, 4, 5, 6, 7, 8)
   assert(#x == packsize("<b h b f d f n i"))

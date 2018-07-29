@@ -2,7 +2,7 @@ print()
 print '= OCTET FIRST CLASS CITIZEN TESTS'
 print()
 
-octet = require'octet'
+-- octet = require'octet'
 
 function dotest(l,r)
    if(l == r) then
@@ -18,7 +18,7 @@ function dotest(l,r)
 end
 
 -- random and  check hash of octets
-ecdh = require'ecdh'
+-- ecdh = require'ecdh'
 ecc = ecdh.new()
 right = ecc:random(64)
 teststr = right:string()

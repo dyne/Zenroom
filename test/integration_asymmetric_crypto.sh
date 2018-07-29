@@ -41,12 +41,12 @@ encrypt() {
 keys = json.decode(KEYS)
 data = json.decode(DATA)
 recipient = ecdh.new()
-recipient:public(octet.from_$enc(data['pubkey']))
+recipient:public(octet.$enc(data['pubkey']))
 sender = ecdh.new()
-sender:private(octet.from_$enc(keys['secret']))
+sender:private(octet.$enc(keys['secret']))
 k = sender:session(recipient)
 iv = sender:random(16)
-enc,tag = sender:encrypt(k,octet.from_string(data['message']),iv,octet.from_string('header'))
+enc,tag = sender:encrypt(k,octet.string(data['message']),iv,octet.string('header'))
 print(json.encode({
 	iv=iv:$enc(),
 	tag=tag:$enc(),
@@ -62,13 +62,13 @@ decrypt() {
 keys = json.decode(KEYS)
 data = json.decode(DATA)
 recipient = ecdh.new()
-recipient:private(octet.from_$enc(keys['secret']))
+recipient:private(octet.$enc(keys['secret']))
 sender = ecdh.new()
-sender:public(octet.from_$enc(data['pubkey']))
+sender:public(octet.$enc(data['pubkey']))
 k = recipient:session(sender)
-iv = octet.from_$enc(data['iv'])
-tag = octet.from_$enc(data['tag'])
-dec = recipient:decrypt(k,octet.from_$enc(data['encmsg']),iv,octet.from_string('header'), tag)
+iv = octet.$enc(data['iv'])
+tag = octet.$enc(data['tag'])
+dec = recipient:decrypt(k,octet.$enc(data['encmsg']),iv,octet.string('header'), tag)
 print(dec)
 EOF
 }
@@ -90,10 +90,10 @@ for p in $ppl; do
 		print "DECRYPT $pp -> $p"
 		res=`decrypt $pp $p`
 		if [[ "$secret" != "$res" ]]; then
-			print - "ERROR in integration luazen test: $tmp"
-			print - "$secret (${#secret} bytes)"
+			print - "ERROR in integration ecdh test: $tmp"
+			print - "INPUT \"$secret\" (${#secret} bytes)"
 			print $secret | xxd
-			print - "$res (${#res} bytes)"
+			print - "OUTPUT \"$res\" (${#res} bytes)"
 			print $res | xxd
 			print - "envelope from ${pp}:"
 			cat $tmp/$pp-envelop.json

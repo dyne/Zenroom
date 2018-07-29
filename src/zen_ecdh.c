@@ -92,6 +92,7 @@ extern ecdh *ecdh_new_curve(lua_State *L, const char *curve);
 */
 
 ecdh* ecdh_new(lua_State *L, const char *curve) {
+	HERE();
 	ecdh *e = ecdh_new_curve(L, curve);
 	if(!e) { SAFE(e); return NULL; }
 
@@ -209,10 +210,10 @@ static int ecdh_checkpub(lua_State *L) {
    encryption. This is compliant with the IEEE-1363 Diffie-Hellman
    shared secret specification.
 
-   @param public keyring containing the public key to be used
-   @param private keyring containing the private key to be used
-   @function keyring:session(public, private)
-   @return a new octet containing the shared session key
+   @param keyring containing the public key to be used
+   @function keyring:session(keyring)
+   @return a new octet containing the shared session secret
+   @see keyring:encrypt
 */
 static int ecdh_session(lua_State *L) {
 	HERE();
@@ -227,13 +228,13 @@ static int ecdh_session(lua_State *L) {
 		if(!pk->pubkey) {
 			lerror(L, "%s: public key not found in keyring",__func__);
 			return 0; }
-		pubkey = pk->pubkey; // take private key from keyring
+		pubkey = pk->pubkey; // take public key from keyring
 		func(L, "%s: public key found in ecdh keyring (%u bytes)",
 		     __func__, pubkey->len);
 
 		// argument is an octet
 	} else if((ud = luaL_testudata(L, 2, "zenroom.octet"))) {
-		pubkey = (octet*)ud; // take private key from octet
+		pubkey = (octet*)ud; // take public key from octet
 		func(L, "%s: public key found in octet (%u bytes)",
 		     __func__, pubkey->len);
 
@@ -358,12 +359,13 @@ static int ecdh_encrypt(lua_State *L) {
 /**
    AES-GCM encrypt with Additional Data (AEAD)
    encrypts and authenticate a plaintext to a ciphtertext. IEEE P802.1
+   Returns if encryption fails or authentication fails.
 
    @param key AES key octet
    @param message input text in an octet
    @param iv initialization vector
-   @param header the additional data
-   @function keyring:aead_encrypt(key, message, iv, h)
+   @param header clear text, authenticated for integrity (checksum)
+   @function keyring:encrypt(key, message, iv, h)
    @treturn[1] octet containing the output ciphertext
    @treturn[1] octet containing the authentication tag (checksum)
 */
@@ -375,10 +377,10 @@ static int ecdh_aead_encrypt(lua_State *L) {
 	octet *in = o_arg(L, 3); SAFE(in);
 	octet *iv = o_arg(L, 4); SAFE(iv);
 	octet *h = o_arg(L, 5); SAFE(h);
-
+	HEREn(in->len);
 	// output is padded to next word
 	octet *out = o_new(L, in->len+16); SAFE(out);
-	octet *t = o_new(L, 16); SAFE (t);
+	octet *t = o_new(L, 32); SAFE (t);
 	AES_GCM_ENCRYPT(k, iv, h, in, out, t);
 	return 2;
 }
@@ -590,7 +592,7 @@ static int ecdh_random(lua_State *L) {
 	HERE();
 	ecdh *e = ecdh_arg(L,1); SAFE(e);
 	const int len = luaL_optinteger(L, 2, e->keysize);
-	octet *out = o_new(L,len+2); SAFE(out);
+	octet *out = o_new(L,len); SAFE(out);
 	OCT_rand(out,e->rng,len);
 	return 1;
 }

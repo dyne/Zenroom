@@ -3,7 +3,7 @@
 
 print "testing UTF-8 library"
 
-local utf8 = require'utf8'
+-- local utf8 = require'utf8'
 
 
 local function checkerror (msg, f, ...)

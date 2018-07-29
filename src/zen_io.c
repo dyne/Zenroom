@@ -146,7 +146,7 @@ static int zen_print (lua_State *L) {
 	lua_getglobal(L, "tostring");
 	for (i=1; i<=n; i++) {
 		const char *s = lua_print_format(L, i, &len);
-		if(i>1) 
+		if(i>1)
             w = write(STDOUT_FILENO, "\t", 1);
         (void)w;
 		status = status &&
@@ -170,7 +170,7 @@ static int zen_error (lua_State *L) {
     (void)w;
 	for (i=1; i<=n; i++) {
 		const char *s = lua_print_format(L, i, &len);
-		if(i>1) 
+		if(i>1)
 			w = write(STDERR_FILENO, "\t",sizeof(char));
         (void)w;
 		status = status &&
@@ -214,17 +214,16 @@ static int zen_iowrite (lua_State *L) {
 void zen_add_io(lua_State *L) {
 	// override print() and io.write()
 	static const struct luaL_Reg custom_print [] =
-	{ {"print", zen_print},
-		{"error", zen_error},
-		{NULL, NULL} };
+		{ {"print", zen_print},
+		  {"error", zen_error},
+		  {NULL, NULL} };
 	lua_getglobal(L, "_G");
 	luaL_setfuncs(L, custom_print, 0);  // for Lua versions 5.2 or greater
 	lua_pop(L, 1);
 
 	static const struct luaL_Reg custom_iowrite [] =
-	{ {"write", zen_iowrite}, {NULL, NULL} };
+		{ {"write", zen_iowrite}, {NULL, NULL} };
 	lua_getglobal(L, "io");
 	luaL_setfuncs(L, custom_iowrite, 0);
 	lua_pop(L, 1);
-
 }

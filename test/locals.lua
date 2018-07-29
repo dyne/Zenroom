@@ -3,7 +3,7 @@
 
 print('testing local variables and environments')
 
-local debug = require"debug"
+-- local debug = require"debug"
 
 
 -- bug in 5.1:

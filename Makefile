@@ -196,7 +196,7 @@ android: apply-patches lua53 milagro lpeglabel
 
 
 debug: gcc := gcc
-debug: cflags := -O0 -ggdb -D'ARCH=\"LINUX\"' ${cflags_protection} -DARCH_LINUX
+debug: cflags := -O0 -ggdb -D'ARCH=\"LINUX\"' ${cflags_protection} -DARCH_LINUX -DDEBUG=1
 debug: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
 
@@ -320,8 +320,8 @@ check-js:
 	@echo "All tests passed for JS binary build"
 	@echo "----------------"
 
-check-debug: test-exec-lowmem := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared -u
-check-debug: test-exec := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared -u
+check-debug: test-exec-lowmem := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared -u -d
+check-debug: test-exec := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared -u -d
 check-debug:
 	$(call lowmem-tests,${test-exec-lowmem})
 	$(call himem-tests,${test-exec})
@@ -344,7 +344,7 @@ check-crypto:
 	@echo "-----------------------"
 
 
-debug-crypto: test-exec := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared -u
+debug-crypto: test-exec := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared -u -d
 debug-crypto:
 	${test-exec} test/octet.lua
 	${test-exec} test/ecdh.lua
