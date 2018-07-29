@@ -20,7 +20,7 @@ void *zalloc(lua_State *L, size_t size);
 #define HEREoct(o) \
 	func(0, "-> %s - octet %p (%i/%i)",__func__,o->val,o->len,o->max)
 #define HEREecdh(e) \
-	func(0, "--> %s - ecdh %p\n\tcurve[%s] type[%s]\n\tkeysize[%i] fieldsize[%i] hash[%i]\n\tpubkey[%p(%i/%i)] publen[%i]\n\tseckey[%p(%i/%i)] seclen[%i]",__func__, e, e->curve, e->type, e->keysize, e->fieldsize, e->hash, e->pubkey, e->pubkey->len, e->pubkey->max, e->publen, e->seckey, e->seckey->len, e->seckey->max, e->seclen)
+	func(0, "--> %s - ecdh %p\n\tcurve[%s] type[%s]\n\tkeysize[%i] fieldsize[%i] hash[%i]\n\tpubkey[%p(%i/%i)] publen[%i]\n\tseckey[%p(%i/%i)] seclen[%i]",__func__, e, e->curve, e->type, e->keysize, e->fieldsize, e->hash, e->pubkey, e->pubkey?e->pubkey->len:0x0, e->pubkey?e->pubkey->max:0x0, e->publen, e->seckey, e->seckey?e->seckey->len:0x0, e->seckey?e->seckey->max:0x0, e->seclen)
 #else
 #define HERE() (void)__func__
 #define HEREs(s) (void)__func__
