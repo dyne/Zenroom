@@ -120,7 +120,7 @@ void error(lua_State *L, const char *format, ...) {
   va_start(arg, format);
   vsnprintf(msg, MAX_STRING, format, arg);
   zenroom_t *Z = getzen(L);
-  _printline(Z, L);
+  // _printline(Z, L);
   _printf(Z, "[!]", msg);
   va_end(arg);
   Z->errorlevel = 3;

@@ -2,7 +2,7 @@
 -- (called tables) and convert them back and forth to JSON strings
 
 -- using the "inspection module" to print contents of complex data
--- structures: i.print() instead of print()
+-- structures: inside.print() instead of print()
 
 -- this converts the JSON string to a table on which various
 -- operations can be done (see @tables and @functions modules)
@@ -12,13 +12,13 @@ superheroes = json.decode(DATA)
 -- out only names. ipairs is very unelegand
 print "procedural boredom"
 for k,v in ipairs(superheroes['members']) do
-   i.print(fun.at(v,"name"))
+   inside.print(lambda.at(v,"name"))
 end
 
-print "functional fun."
+print "lambda fun."
 -- let's try the functional / scheme way of doing things ;^)
-i.print(
-   fun.chain(superheroes['members'])
+inside.print(
+   lambda.chain(superheroes['members'])
    :pluck("name")
    :value()
 )

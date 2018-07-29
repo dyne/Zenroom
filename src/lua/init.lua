@@ -5,10 +5,11 @@ json   = require('json')
 schema = require('schema')
 octet  = require('octet')
 ecdh   = require('ecdh')
-fun    = require('functional')
-i      = require('inspect')
+lambda = require('functional')
+inside = require('inspect')
 big    = require('zenroom_big')
 fp     = require('zenroom_fp')
+ecp    = require('ecp')
 
 function read_json(data, validation)
    if not data then
@@ -37,7 +38,7 @@ function read_json(data, validation)
 end
 
 function write_json(data)
-   i.print(data)
+   inside.print(data)
 end
 
 -- CompareTables.lua
