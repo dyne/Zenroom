@@ -25,19 +25,12 @@
 //
 //  ECP arithmetic operations are provided to implement existing and
 //  new encryption schemes: they are elliptic curve cryptographic
-//  primitives and work the same across different curves. The ECP
-//  primitive functions need this extension to be required explicitly:
+//  primitives and work the same across different curves.
 //
-//  <pre class="example">
-//  ecp = require'ecp'
-//  big = require'big'
-//  fp  = require'fp'</pre>
+//  It is possible to create ECP points instances using the @{new}
+//  method. The values of each coordinate can be imported using @{big}
+//  methods from @{big:hex} or @{big:base64}.
 //
-//  After requiring the extensions it is possible to create ECP points
-//  instances using the @{new} method.
-//
-//  The values of each coordinate can be imported using @{big} methods
-//  from @{big:hex} or @{big:base64}.
 //  Once ECP numbers are created this way, the arithmetic operations
 //  of addition, subtraction and multiplication can be executed
 //  normally using overloaded operators (+ - *).

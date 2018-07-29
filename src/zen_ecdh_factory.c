@@ -21,7 +21,7 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 								  // two different defines...
 		e->fieldsize = EFS_ED25519; 
 		e->rng = NULL;
-		e->hash = HASH_TYPE_ECC_ED25519;
+		e->hash = 32; // HASH_TYPE_ECC_ED25519;
 		e->ECP__KEY_PAIR_GENERATE = ECP_ED25519_KEY_PAIR_GENERATE;
 		e->ECP__PUBLIC_KEY_VALIDATE	= ECP_ED25519_PUBLIC_KEY_VALIDATE;
 		e->ECP__SVDP_DH = ECP_ED25519_SVDP_DH;
@@ -35,7 +35,10 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 			e->keysize = EGS_BLS383;
 			e->fieldsize = EFS_BLS383;
 			e->rng = NULL;
-			e->hash = HASH_TYPE_ECC_BLS383;
+			e->hash = 32; // TODO: AES256 hardcoded for now, was
+						  // HASH_TYPE_ECC_BLS383 but that has size 64
+						  // and breaks AES_GCM, see:
+						  // https://github.com/milagro-crypto/milagro-crypto-c/issues/285
 			e->ECP__KEY_PAIR_GENERATE = ECP_BLS383_KEY_PAIR_GENERATE;
 			e->ECP__PUBLIC_KEY_VALIDATE	= ECP_BLS383_PUBLIC_KEY_VALIDATE;
 			e->ECP__SVDP_DH = ECP_BLS383_SVDP_DH;
@@ -49,7 +52,10 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 		e->keysize = EGS_GOLDILOCKS;
 		e->fieldsize = EFS_GOLDILOCKS;
 		e->rng = NULL;
-		e->hash = HASH_TYPE_ECC_GOLDILOCKS;
+		e->hash = 32;  // TODO: AES256 hardcoded for now, was
+					   // HASH_TYPE_ECC_GOLDILOCKS but that has size
+					   // 64 and breaks AES_GCM, see:
+					   // https://github.com/milagro-crypto/milagro-crypto-c/issues/285
 		e->ECP__KEY_PAIR_GENERATE = ECP_GOLDILOCKS_KEY_PAIR_GENERATE;
 		e->ECP__PUBLIC_KEY_VALIDATE	= ECP_GOLDILOCKS_PUBLIC_KEY_VALIDATE;
 		e->ECP__SVDP_DH = ECP_GOLDILOCKS_SVDP_DH;

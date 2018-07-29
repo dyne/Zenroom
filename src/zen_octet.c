@@ -137,7 +137,6 @@ octet *o_dup(lua_State *L, octet *o) {
 }
 
 int o_destroy(lua_State *L) {
-	HERE();
 	octet *o = o_arg(L,1);
 	SAFE(o);
 	zen_memory_free(o->val);
@@ -339,7 +338,6 @@ static int to_base64 (lua_State *L) {
 	char *b = zen_memory_alloc(newlen+16);
 	OCT_tobase64(b,o);
 	b[newlen] = '\0';
-	HEREs(b);
 	lua_pushstring(L,b);
 	zen_memory_free(b);
 	return 1;
@@ -358,7 +356,6 @@ static int to_string(lua_State *L) {
 	OCT_toStr(o,s); // TODO: inverted function signature, see
 					// https://github.com/milagro-crypto/milagro-crypto-c/issues/291
 	s[o->len] = '\0'; // make sure string is NULL terminated
-	HEREs(s);
 	lua_pushstring(L,s);
 	zen_memory_free(s);
 	return 1;
@@ -379,7 +376,6 @@ static int to_hex(lua_State *L) {
 	OCT_toHex(o,s); // TODO: inverted function signature, see
 					// https://github.com/milagro-crypto/milagro-crypto-c/issues/291
 	s[odlen] = '\0'; // string boundary \0
-	HEREs(s);
 	lua_pushstring(L,s);
 	zen_memory_free(s);
 	return 1;

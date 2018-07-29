@@ -160,18 +160,14 @@ static int ecdh_keygen(lua_State *L) {
 		ERROR(); KEYPROT(e->curve,"private key"); }
 	if(e->pubkey) {
 		ERROR(); KEYPROT(e->curve,"public key"); }
-	octet *pk = o_new(L,e->publen); SAFE(pk);
-	octet *sk = o_new(L,e->seclen); SAFE(sk);
+	octet *pk = o_new(L,e->publen +0x0f); SAFE(pk);
+	octet *sk = o_new(L,e->seclen +0x0f); SAFE(sk);
 	(*e->ECP__KEY_PAIR_GENERATE)(e->rng,sk,pk);
 	int res;
-	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(pk);
-	if(res == ECDH_INVALID_PUBLIC_KEY) {
-		lerror(L, "%s: generated public key is invalid",__func__);
-		lua_pop(L,1); // remove the pk from stack
-		lua_pop(L,1); // remove the sk from stack
-		return 0; }
 	e->pubkey = pk;
 	e->seckey = sk;
+	HEREecdh(e);
+//	HEREoct(pk); HEREoct(sk);
 	return 2;
 }
 
@@ -203,16 +199,16 @@ static int ecdh_checkpub(lua_State *L) {
 }
 
 /**
-   Generate a Diffie-Hellman shared session key. This function takes a
-   two keyrings and calculates a shared key to be used in
-   communication. The same key is returned by any combination of
-   keyrings, making it possible to have asymmetric key
-   encryption. This is compliant with the IEEE-1363 Diffie-Hellman
-   shared secret specification.
+   Generate a Diffie-Hellman shared session key. This function uses
+   two keyrings to calculate a shared key, then process it through
+   KDF2 to make it ready for use in @{keyring:encrypt}. This is
+   compliant with the IEEE-1363 Diffie-Hellman shared secret
+   specification for asymmetric key encryption.
 
    @param keyring containing the public key to be used
    @function keyring:session(keyring)
-   @return a new octet containing the shared session secret
+   @treturn[1] octet KDF2 hashed session key ready for @{keyring:encrypt}
+   @treturn[1] octet a big number result of mod(private,curve_order)*public
    @see keyring:encrypt
 */
 static int ecdh_session(lua_State *L) {
@@ -221,35 +217,45 @@ static int ecdh_session(lua_State *L) {
 	octet *pubkey;
 	ecdh *pk;
 	ecdh *e = ecdh_arg(L,1); SAFE(e);
-
+	HEREecdh(e);
+	SAFE(e->seckey);
 	// argument is another keyring
-	if((ud = luaL_testudata(L, 2, "zenroom.ecdh"))) {
+	ud = luaL_testudata(L, 2, "zenroom.ecdh");
+	if(ud) {
+		HEREs("argument is an ecdh keyring");
 		pk = (ecdh*)ud;
+		HEREecdh(pk);
 		if(!pk->pubkey) {
 			lerror(L, "%s: public key not found in keyring",__func__);
 			return 0; }
 		pubkey = pk->pubkey; // take public key from keyring
 		func(L, "%s: public key found in ecdh keyring (%u bytes)",
 		     __func__, pubkey->len);
-
-		// argument is an octet
-	} else if((ud = luaL_testudata(L, 2, "zenroom.octet"))) {
-		pubkey = (octet*)ud; // take public key from octet
-		func(L, "%s: public key found in octet (%u bytes)",
-		     __func__, pubkey->len);
-
-	} else {
-		lerror(L, "%s: invalid key in argument",__func__);
-		return 0;
+		goto finish;
 	}
-	int res;
-	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(pubkey);
-	if(res == ECDH_INVALID_PUBLIC_KEY) {
-		lerror(L, "%s: argument found, but is an invalid key",__func__);
-		return 0; }
-	octet *ses = o_new(L,e->keysize); SAFE(ses);
-	(*e->ECP__SVDP_DH)(e->seckey,pubkey,ses);
-	return 1;
+	ud = luaL_testudata(L, 2, "zenroom.octet");
+	if(ud) {
+		HEREs("argument is an octet");
+		pubkey = (octet*)ud; // take public key from octet
+		HEREoct(pubkey);
+		goto finish;
+	}
+	lerror(L, "%s: invalid key in argument",__func__);
+	return 0;
+
+finish:{
+		int res;
+		res = (*e->ECP__PUBLIC_KEY_VALIDATE)(pubkey);
+		if(res == ECDH_INVALID_PUBLIC_KEY) {
+			lerror(L, "%s: argument found, but is an invalid key",__func__);
+			return 0; }
+		octet *kdf = o_new(L,e->hash); SAFE(kdf);
+		octet *ses = o_new(L,e->keysize); SAFE(ses);
+		(*e->ECP__SVDP_DH)(e->seckey,pubkey,ses);
+		// here the NULL could be a salt (TODO: global?)
+		KDF2(e->hash,ses,NULL,e->hash,kdf);
+		return 2;
+	}
 }
 
 /**
@@ -334,32 +340,38 @@ static int ecdh_private(lua_State *L) {
 }
 
 /**
-   AES encrypts a plaintext to a ciphtertext. IEEE-1363
-   AES_CBC_IV0_ENCRYPT function. Encrypts in CBC mode with a zero IV,
-   padding as necessary to create a full final block.
+   AES encrypts a plaintext to a ciphtertext. Function compatible with
+   IEEE-1363 `AES_CBC_IV0_ENCRYPT`. Encrypts in CBC mode with a zero
+   IV, pads necessary to create a full final block. This is weak
+   encryption and @{keyring:encrypt} should be preferred.
 
    @param key AES key octet
    @param message input text in an octet
    @return a new octet containing the output ciphertext
-   @function keyring:encrypt(key, message)
+   @function keyring:encrypt_weak_aes_cbc(key, message)
 */
 
-static int ecdh_encrypt(lua_State *L) {
+static int ecdh_encrypt_weak_aes_cbc(lua_State *L) {
 	HERE();
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	octet *k = o_arg(L, 2); SAFE(k);
 	octet *in = o_arg(L, 3); SAFE(in);
 	// output is padded to next word
 	octet *out = o_new(L, in->len+0x0f); SAFE(out);
+	HEREoct(k);
+	HEREoct(in);
 	AES_CBC_IV0_ENCRYPT(k,in,out);
-
+	HEREoct(out);
 	return 1;
 }
 
 /**
-   AES-GCM encrypt with Additional Data (AEAD)
-   encrypts and authenticate a plaintext to a ciphtertext. IEEE P802.1
-   Returns if encryption fails or authentication fails.
+   AES-GCM encrypt with Additional Data (AEAD) encrypts and
+   authenticate a plaintext to a ciphtertext. Function compatible with
+   IEEE P802.1 specification. Errors out if encryption fails or
+   authentication fails, else returns the secret ciphertext and a
+   SHA256 of the header to checksum the integrity of the accompanying
+   plaintext.
 
    @param key AES key octet
    @param message input text in an octet
@@ -373,31 +385,41 @@ static int ecdh_encrypt(lua_State *L) {
 static int ecdh_aead_encrypt(lua_State *L) {
 	HERE();
 	ecdh *e = ecdh_arg(L, 1); SAFE(e);
+	if(e->hash != 32) {
+		error(L,"curve %s hash is set to %i bytes length (SHA%i)",e->curve, e->hash, e->hash*8);
+		lerror(L,"AES-GCM/AEAD encryption only supports SHA256 hashing (32 bytes)");
+		HEREecdh(e);
+		return 0; }
 	octet *k = o_arg(L, 2); SAFE(k);
 	octet *in = o_arg(L, 3); SAFE(in);
 	octet *iv = o_arg(L, 4); SAFE(iv);
 	octet *h = o_arg(L, 5); SAFE(h);
-	HEREn(in->len);
+	HEREoct(k);
+	HEREoct(in);
+	HEREoct(iv);
+	HEREoct(h);
 	// output is padded to next word
 	octet *out = o_new(L, in->len+16); SAFE(out);
 	octet *t = o_new(L, 32); SAFE (t);
 	AES_GCM_ENCRYPT(k, iv, h, in, out, t);
+	HEREoct(out);
+	HEREoct(t);
 	return 2;
 }
 
 
-/**	AES decrypts a plaintext to a ciphtertext.
-
-	IEEE-1363 AES_CBC_IV0_DECRYPT function. Decrypts in CBC mode with
-	a zero IV.
+/**	AES decrypts a plaintext to a ciphtertext. Function compabible
+	with IEEE-1363 specification for AES CBC using IV set to
+	zero. Decrypts a secret produced using
+	@{keyring:encrypt_weak_aes_cbc} in CBC mode.
 
 	@param key AES key octet
 	@param ciphertext input ciphertext octet
 	@return a new octet containing the decrypted plain text, or false when failed
-	@function keyring:decrypt(key, ciphertext)
+	@function keyring:decrypt_weak_aes_cbc(key, ciphertext)
 */
 
-static int ecdh_decrypt(lua_State *L) {
+static int ecdh_decrypt_weak_aes_cbc(lua_State *L) {
 	HERE();
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	octet *k = o_arg(L, 2); SAFE(k);
@@ -413,15 +435,16 @@ static int ecdh_decrypt(lua_State *L) {
 }
 
 /**
-   AES-GCM decrypt with Additional Data (AEAD)
-   decrypts and authenticate a plaintext to a ciphtertext . IEEE P802.1
+   AES-GCM decrypt with Additional Data (AEAD) decrypts and
+   authenticate a plaintext to a ciphtertext . Compatible with IEEE
+   P802.1 specification.
 
    @param key AES key octet
    @param message input text in an octet
    @param iv initialization vector
    @param header the additional data
    @return a new octet containing the output ciphertext and the checksum
-   @function keyring:aead_decrypt(key, ciphertext, iv, h, tag)
+   @function keyring:decrypt(key, ciphertext, iv, h, tag)
 */
 
 static int ecdh_aead_decrypt(lua_State *L) {
@@ -437,7 +460,7 @@ static int ecdh_aead_decrypt(lua_State *L) {
 	octet *out = o_new(L, in->len+16); SAFE(out);
 	octet *t2 = o_new(L,t->len);
 	AES_GCM_DECRYPT(k, iv, h, in, out, t2);
-
+	HEREoct(out);
 	if(!OCT_comp(t, t2)) {
 		error(L, "%s: aead decryption failed.",__func__);
 		lua_pop(L, 1);
@@ -458,12 +481,14 @@ static int ecdh_aead_decrypt(lua_State *L) {
    @return a new octet containing the hash of the data
 */
 static int ecdh_hash(lua_State *L) {
-	HERE();
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
+	HEREecdh(e);
 	octet *in = o_arg(L, 2); SAFE(in);
+	HEREoct(in);
 	// hash type indicates also the length in bytes
 	octet *out = o_new(L, e->hash); SAFE(out);
 	HASH(e->hash, in, out);
+	HEREoct(out);
 	return 1;
 }
 
@@ -604,8 +629,8 @@ static int ecdh_random(lua_State *L) {
 	{"private", ecdh_private}, \
 	{"encrypt", ecdh_aead_encrypt}, \
 	{"decrypt", ecdh_aead_decrypt}, \
-	{"encrypt_weak_aes_cbc", ecdh_encrypt}, \
-	{"decrypt_weak_aes_cbc", ecdh_decrypt}, \
+	{"encrypt_weak_aes_cbc", ecdh_encrypt_weak_aes_cbc}, \
+	{"decrypt_weak_aes_cbc", ecdh_decrypt_weak_aes_cbc}, \
 	{"hash", ecdh_hash}, \
 	{"hmac", ecdh_hmac}, \
 	{"kdf2", ecdh_kdf2}, \
