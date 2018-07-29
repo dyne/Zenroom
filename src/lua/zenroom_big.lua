@@ -11,11 +11,11 @@ function big._import(s, f)
    end
 end
 
-function big.hex(s) return big._import(s, octet.from_hex) end
+function big.hex(s) return big._import(s, octet.hex) end
 
-function big.base64(s) return big._import(s, octet.from_base64) end
+function big.base64(s) return big._import(s, octet.base64) end
 
-function big.string(s) return big._import(s, octet.from_string) end
+function big.string(s) return big._import(s, octet.string) end
 
 function big.octet(s)  return big._import(s, nil) end
 

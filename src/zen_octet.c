@@ -131,6 +131,7 @@ octet* o_arg(lua_State *L,int n) {
 octet *o_dup(lua_State *L, octet *o) {
 	SAFE(o);
 	octet *n = o_new(L, o->len+1);
+	SAFE(n);
 	OCT_copy(n,o);
 	return(n);
 }
@@ -206,10 +207,13 @@ static int from_base64(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "base64 string expected");
 	int len = is_base64(s);
+	HEREn(len);
 	if(!len) {
 		lerror(L, "base64 string contains invalid characters");
 		return 0; }
-	octet *o = o_new(L, getlen_base64(len));
+	int nlen = getlen_base64(len);
+	HEREn(nlen);
+	octet *o = o_new(L, nlen);
 	OCT_frombase64(o,(char*)s);
 	return 1;
 }
@@ -218,6 +222,7 @@ static int from_string(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "string expected");
 	int len = strlen(s);
+	HEREn(len);
 	if(!len || len>MAX_STRING) {
 		lerror(L, "invalid string size: %u", len);
 		return 0; }
@@ -230,6 +235,7 @@ static int from_hex(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "hex string sequence expected");
 	int len = is_hex(s);
+	HEREn(len);
 	if(!len || len>MAX_STRING*2) {
 		lerror(L, "invalid hex sequence size: %u", len);
 		return 0; }
@@ -250,15 +256,35 @@ static int from_hex(lua_State *L) {
     @return a new octet resulting from the operation
 */
 static int concat_n(lua_State *L) {
-	octet *x = o_arg(L,1);	SAFE(x);
-	octet *y = o_arg(L,2);	SAFE(y);
-	octet *n = o_new(L,x->len+y->len);
-	SAFE(n);
-
+	octet *x, *y;
+	char *sx = NULL;
+	char *sy = NULL;
+	octet xs, ys;
+	void *ud;
+	ud = luaL_checkudata(L, 1, "zenroom.octet");
+	if(ud) {
+		x = o_arg(L,1);	SAFE(x);
+	} else {
+		x = &xs;
+		sx = (char*) lua_tostring(L, 1);
+		luaL_argcheck(L, sx != NULL, 1, "octet or string expected in concat");
+		xs.len = strlen(sx);
+		xs.val = sx;
+	}
+	ud = luaL_checkudata(L, 2, "zenroom.octet");
+	if(ud) {
+		y = o_arg(L,2);	SAFE(y);
+	} else {
+		y = &ys;
+		sy = (char*) lua_tostring(L, 2);
+		luaL_argcheck(L, sy != NULL, 2, "octet or string expected in concat");
+		ys.len = strlen(sy);
+		ys.val = sy;
+	}
+	octet *n = o_new(L,x->len+y->len); SAFE(n);
 	OCT_copy(n,x);
 	OCT_joctet(n,y);
 	return 1;
-	// TODO: support strings
 }
 
 
@@ -280,20 +306,6 @@ static int concat_n(lua_State *L) {
 
 // above we could use @type octet but rendering is ugly
 
-/***
-Empty an octet filling it with zeroes. It is already executed on every
-new octet.
-
-@function octet:empty
-@usage
-octet:empty()
-*/
-static int empty (lua_State *L) {
-	octet *o = o_arg(L,1);
-	SAFE(o);
-	OCT_empty(o);
-	return 1;
-}
 
 /***
 Print an octet in base64 notation or import a base64 string inside the
@@ -316,25 +328,20 @@ msg:string("my message to be encoded in base64")
 print(msg:base64())
 
 */
-static int base64 (lua_State *L) {
+static int to_base64 (lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
-	if(lua_isnoneornil(L, 2)) {
-		// export to base64
-		if(!o->len) {
-			lerror(L, "base64 import of empty string");
-			return 0; }
-		int newlen = getlen_base64(o->len);
-		char *b = zen_memory_alloc(newlen+2);
-		OCT_tobase64(b,o);
-		b[newlen] = 0;
-		lua_pushstring(L,b);
-		zen_memory_free(b);
-	} else {
-		// import from base64
-		const char *s = lua_tostring(L, 2);
-		luaL_argcheck(L, s != NULL, 2, "base64 string expected");
-		OCT_frombase64(o,(char*)s);
-	}
+	int newlen;
+	if(!o->len || !o->val) {
+		lerror(L, "base64 import of empty string");
+		return 0; }
+	newlen = getlen_base64(o->len);
+	HEREn(newlen);
+	char *b = zen_memory_alloc(newlen+16);
+	OCT_tobase64(b,o);
+	b[newlen] = '\0';
+	HEREs(b);
+	lua_pushstring(L,b);
+	zen_memory_free(b);
 	return 1;
 }
 
@@ -345,50 +352,36 @@ static int base64 (lua_State *L) {
     @function octet:string(data_str)
     @see octet:base64
 */
-static int string(lua_State *L) {
+static int to_string(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
-	if(lua_isnoneornil(L, 2)) {
-		// export to string
-		char *s = zen_memory_alloc(o->len+2);
-		OCT_toStr(o,s);
-		s[o->len] = 0; // make sure string is NULL terminated
-		lua_pushstring(L,s);
-		zen_memory_free(s);
-	} else {
-		// import from string
-		size_t len;
-		const char *s = lua_tolstring(L, 2, &len);
-		luaL_argcheck(L, s != NULL, 2, "string expected");
-		o->len=0;
-		OCT_jstring(o,(char*)s);
-	}
+	char *s = zen_memory_alloc(o->len+2);
+	OCT_toStr(o,s); // TODO: inverted function signature, see
+					// https://github.com/milagro-crypto/milagro-crypto-c/issues/291
+	s[o->len] = '\0'; // make sure string is NULL terminated
+	HEREs(s);
+	lua_pushstring(L,s);
+	zen_memory_free(s);
 	return 1;
 }
 
 
 /***
-    Print an octet as a string of hexadecimal numbers or import a string of hex numbers.
+    Return a string of hexadecimal numbers representing the octet's content.
 
-    @string[opt] data_hex a string of hex numbers whose contents in bytes are imported
-    @function octet:hex(data_hex)
+    @function octet:hex(hex)
     @see octet:base64
 */
-static int hex(lua_State *L) {
+static int to_hex(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
-	if(lua_isnoneornil(L, 2)) {
-		// export to hex
-		char *s = zen_memory_alloc(o->len*2+2);
-		OCT_toHex(o,s);
-		s[o->len*2] = 0;
-		lua_pushstring(L,s);
-		zen_memory_free(s);
-	} else {
-		// import from hex
-		size_t len;
-		const char *s = lua_tolstring(L, 2, &len);
-		luaL_argcheck(L, s != NULL, 2, "string expected");
-		OCT_fromHex(o,(char*)s);
-	}
+	int odlen = o->len*2;
+	// export to hex
+	char *s = zen_memory_alloc(odlen+1);
+	OCT_toHex(o,s); // TODO: inverted function signature, see
+					// https://github.com/milagro-crypto/milagro-crypto-c/issues/291
+	s[odlen] = '\0'; // string boundary \0
+	HEREs(s);
+	lua_pushstring(L,s);
+	zen_memory_free(s);
 	return 1;
 }
 
@@ -421,7 +414,9 @@ static int o_random(lua_State *L) {
 static int pad(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
 	const int len = luaL_optinteger(L, 2, o->max);
-	OCT_pad(o,len);
+	octet *n = o_new(L,len); SAFE(n);
+	OCT_copy(n,o);
+	OCT_pad(n,len);
 	return 1;
 }
 
@@ -455,27 +450,6 @@ static int eq(lua_State *L) {
     @param const octet used in XOR operation
     @function octet:xor(const)
 */
-static int xor_i(lua_State *L) {
-	octet *x = o_arg(L,1);	SAFE(x);
-	octet *y = o_arg(L,2);	SAFE(y);
-	OCT_xor(x,y);
-	return 1;
-}
-
-/***
-    Concatenate a new octet, appending it to current contents.
-
-    @param const octet whose contents will be appended to this.
-    @function octet:concat(const)
-*/
-static int concat_i(lua_State *L) {
-	octet *x = o_arg(L,1);	SAFE(x);
-	octet *y = o_arg(L,2);	SAFE(y);
-	OCT_joctet(x,y);
-	return 1;
-	// TODO: support strings
-}
-
 static int size(lua_State *L) {
 	octet *o = o_arg(L,1); SAFE(o);
 	lua_pushinteger(L,o->len);
@@ -501,14 +475,7 @@ static int max(lua_State *L) {
 
 
 #define octet_common_methods  \
-	{"empty", empty},         \
-	{"base64", base64},       \
-	{"hex"   , hex},          \
-	{"string", string},       \
-    {"size", size},           \
 	{"random", o_random},       \
-	{"pad", pad},             \
-    {"eq", eq}, \
     {"max", max}
 
 int luaopen_octet(lua_State *L) {
@@ -519,22 +486,28 @@ int luaopen_octet(lua_State *L) {
 		{"from_base64",from_base64},
 		{"from_string",from_string},
 		{"from_hex",from_hex},
+		{"base64",from_base64},
+		{"string",from_string},
+		{"hex",from_hex},
+
 		octet_common_methods,
 		{NULL,NULL}
 	};
 	const struct luaL_Reg octet_methods[] = {
 		octet_common_methods,
 		// inplace methods
-		{"concat", concat_i},
-		{"xor", xor_i},
-		{"max", max},
+		{"hex"   , to_hex},
+		{"base64", to_base64},
+		{"string", to_string},
+		{"eq", eq},
+		{"pad", pad},
 		// idiomatic operators
 		{"__len",size},
 		{"__concat",concat_n},
 		{"__bxor",xor_n},
 		{"__eq",eq},
 		{"__gc", o_destroy},
-		{"__tostring",string},
+		{"__tostring",to_hex},
 		{NULL,NULL}
 	};
 	zen_add_class(L, "octet", octet_class, octet_methods);
