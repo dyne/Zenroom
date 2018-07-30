@@ -69,9 +69,6 @@ RNG* rng_arg(lua_State *L, int n) {
 int rng_destroy(lua_State *L) {
 	HERE();
 	(void)L;
-	// userdata
-	// RNG *rng = rng_arg(L,1); SAFE(rng);
-	// zen_memory_free(rng);
 	return 0;
 }
 
@@ -81,6 +78,14 @@ static int newrng(lua_State *L) {
     return 1;
 }
 
+static int rng_oct(lua_State *L) {
+	RNG *rng = rng_arg(L,1); SAFE(rng);
+	int tn;
+	lua_Number n = lua_tonumberx(L, 2, &tn);
+	octet *o = o_new(L,(int)n); SAFE(o);
+	OCT_rand(o,rng,(int)n);
+	return 1;
+}
 
 static int rng_big(lua_State *L) {
 	RNG *rng = rng_arg(L,1); SAFE(rng);
@@ -107,6 +112,8 @@ int luaopen_rng(lua_State *L) {
 		{NULL,NULL}
 	};
 	const struct luaL_Reg rng_methods[] = {
+		{"octet", rng_oct},
+		{"oct", rng_oct},
 		{"big", rng_big},
 		{"modbig", rng_modbig},
 		{"__gc", rng_destroy},
