@@ -20,7 +20,7 @@ function read_json(data, validation)
 	  error("read_json: missing data")
 	  -- os.exit()
    end
-   out,res = json.decode(data)
+   out,res = JSON.decode(data)
    if not out then
 	  if res then
 		 error("read_json: invalid json")
@@ -30,10 +30,10 @@ function read_json(data, validation)
    else
 	  -- operate schema validation if argument is present
 	  if validation then
-		 local err = schema.CheckSchema(out, validation)
+		 local err = SCHEMA.CheckSchema(out, validation)
 		 if err then
 			-- error "read_json: schema validation failed"
-			error(schema.FormatOutput(err))
+			error(SCHEMA.FormatOutput(err))
 			-- os.exit()
 		 end
 	  end
@@ -42,7 +42,7 @@ function read_json(data, validation)
 end
 
 function write_json(data)
-   inside.print(data)
+   INSIDE.print(data)
 end
 
 -- CompareTables.lua

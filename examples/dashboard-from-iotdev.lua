@@ -2,38 +2,36 @@
 
 
 -- key schema
-keys_schema = schema.Record {
-   community_seckey = schema.String
+keys_schema = SCHEMA.Record {
+   community_seckey = SCHEMA.String
 }
 -- same as output in iotdev-to-dashboard
-data_schema = schema.Record {
-   device_pubkey    = schema.String,
-   community_id     = schema.String,
-   payload          = schema.String
+data_schema = SCHEMA.Record {
+   device_pubkey    = SCHEMA.String,
+   community_id     = SCHEMA.String,
+   payload          = SCHEMA.String
 }
 -- same as payload in iotdev-to-dashboard
-payload_schema = schema.Record {
-   device_id   = schema.String,
-   data        = schema.String
+payload_schema = SCHEMA.Record {
+   device_id   = SCHEMA.String,
+   data        = SCHEMA.String
 }
 
 data = read_json(DATA,data_schema)
 keys = read_json(KEYS,keys_schema)
 
-dashkey = ecdh.new()
-dashkey:private(
-   octet.from_base64(keys['community_seckey']))
+dashkey = ECDH.new()
+dashkey:private( base64(keys['community_seckey']) )
 
-devkey = ecdh.new()
-devkey:public(
-   octet.from_base64(data['device_pubkey']))
+devkey = ECDH.new()
+devkey:public( base64(data['device_pubkey']) )
 
 session = dashkey:session(devkey)
 
 payload = 
-   dashkey:decrypt(
+   dashkey:decrypt_weak_aes_cbc(
 	  session,
-	  octet.from_base64(data['payload']))
+	  base64(data['payload']))
 -- validate the schema
 read_json(payload:string(),payload_schema)
 -- payload is already json encoded

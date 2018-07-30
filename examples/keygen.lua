@@ -1,7 +1,7 @@
 -- generate a simple keyring
-keyring = ecdh.new()
+keyring = ECDH.new()
 keyring:keygen()
-keypair = json.encode(
+keypair = JSON.encode(
    {
       public = keyring:public():base64(),
 	  private = keyring:private():base64()

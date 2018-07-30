@@ -3,32 +3,32 @@
 -- complementary to other script for reception
 
 -- data schemas
-keys_schema = schema.Record {
-   device_id     = schema.String,
-   community_id  = schema.String,
-   community_pubkey = schema.String
+keys_schema = SCHEMA.Record {
+   device_id     = SCHEMA.String,
+   community_id  = SCHEMA.String,
+   community_pubkey = SCHEMA.String
 }
-payload_schema = schema.Record {
-   device_id = schema.String,
-   data      = schema.String
+payload_schema = SCHEMA.Record {
+   device_id = SCHEMA.String,
+   data      = SCHEMA.String
 }
-output_schema = schema.Record {
-   device_pubkey = schema.String,
-   community_id  = schema.String,
-   payload       = schema.String
+output_schema = SCHEMA.Record {
+   device_pubkey = SCHEMA.String,
+   community_id  = SCHEMA.String,
+   payload       = SCHEMA.String
 }
 
 -- import and validate keys 
 keys = read_json(KEYS, keys_schema)
 
 -- import community's public key
-comkey = ecdh.new()
+comkey = ECDH.new()
 comkey:public(
-   octet.from_base64(keys['community_pubkey']))
+   base64(keys['community_pubkey']))
 -- generate a new device keypair every time
 -- this could be optimised by creating keys onetime at first run
 -- or temporarily, i.e: every day or every hour
-devkey = ecdh.new()
+devkey = ECDH.new()
 devkey:keygen()
 
 -- compute the session key using private/public keys
@@ -39,7 +39,7 @@ session = devkey:session(comkey)
 payload = {}
 payload['device_id'] = keys['device_id']
 payload['data']      = DATA
-schema.check(payload, payload_schema)
+SCHEMA.check(payload, payload_schema)
 
 -- output is the packet, json formatted
 -- only the device's public key is transmitted in clear
@@ -47,11 +47,11 @@ output = {}
 output['device_pubkey'] = devkey:public():base64()
 output['community_id'] = keys['community_id']
 output['payload'] =
-   devkey:encrypt(
+   devkey:encrypt_weak_aes_cbc(
 	  session,
-	  octet.from_string(json.encode(payload))
+	  str(json.encode(payload))
    ):base64()
-schema.check(output, output_schema)
+SCHEMA.check(output, output_schema)
 
 -- print out the json packet ready to be sent
-print(json.encode(output))
+print(JSON.encode(output))

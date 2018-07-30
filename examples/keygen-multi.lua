@@ -9,17 +9,17 @@
 recipients={'jaromil','francesca','jim','mark','paulus','mayo'}
 keys={}
 for i,name in ipairs(recipients) do
-   kk = ecdh.new()
+   kk = ECDH.new()
    kk:keygen()
    keys[name] = kk:public():base64()
    assert(kk:checkpub(kk:public()))
 end
 
 
-keyring = ecdh.new()
+keyring = ECDH.new()
 keyring:keygen()
 
-keypairs = json.encode({
+keypairs = JSON.encode({
 	  keyring={public=keyring:public():base64(),
 			   secret=keyring:private():base64()},
 	  recipients=keys})

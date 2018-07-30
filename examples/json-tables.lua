@@ -6,19 +6,19 @@
 
 -- this converts the JSON string to a table on which various
 -- operations can be done (see @tables and @functions modules)
-superheroes = json.decode(DATA)
+superheroes = JSON.decode(DATA)
 
 -- iterate through the members array and print
 -- out only names. ipairs is very unelegand
 print "procedural boredom"
 for k,v in ipairs(superheroes['members']) do
-   inside.print(lambda.at(v,"name"))
+   INSIDE.print(LAMBDA.at(v,"name"))
 end
 
 print "lambda fun."
 -- let's try the functional / scheme way of doing things ;^)
-inside.print(
-   lambda.chain(superheroes['members'])
+INSIDE.print(
+   LAMBDA.chain(superheroes['members'])
    :pluck("name")
    :value()
 )
