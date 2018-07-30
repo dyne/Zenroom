@@ -8,20 +8,20 @@ user = {
 
 -- s = require "schema"
 
-rights = schema.AllOf(schema.NumberFrom(0, 7), schema.Integer)
+rights = SCHEMA.AllOf(SCHEMA.NumberFrom(0, 7), SCHEMA.Integer)
 
-userSchema = schema.Record {
-   id        = schema.Number,
-   usertype  = schema.OneOf("admin", "moderator", "user"),
-   nicknames = schema.Collection(schema.String),
-   rights    = schema.Tuple(rights, rights, rights) 
+userSchema = SCHEMA.Record {
+   id        = SCHEMA.Number,
+   usertype  = SCHEMA.OneOf("admin", "moderator", "user"),
+   nicknames = SCHEMA.Collection(SCHEMA.String),
+   rights    = SCHEMA.Tuple(rights, rights, rights) 
 }
 
-local err = schema.CheckSchema(user, userSchema)
+local err = SCHEMA.CheckSchema(user, userSchema)
 
 -- 'err' is nil if no error occured
 if err then
-   print(schema.FormatOutput(err))
+   print(SCHEMA.FormatOutput(err))
 end
 
 user2 = {
@@ -31,7 +31,7 @@ user2 = {
    rights    = { 4, 1, 7, 23 } -- table of fixed length of types
 }
 
-local err2 = schema.CheckSchema(user2, userSchema)
+local err2 = SCHEMA.CheckSchema(user2, userSchema)
 
 assert(err2)
 print("-- Schema test passed - OK")

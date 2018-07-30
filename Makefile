@@ -268,6 +268,15 @@ lowmem-tests = \
 		${1} test/ecdh_aes-gcm_vectors.lua && \
 		${1} test/ecp_bls383.lua
 
+crypto-tests = \
+	@${1} test/octet.lua && \
+	${1} test/hash.lua && \
+	${1} test/ecdh.lua && \
+	${1} test/ecdh_aes-gcm_vectors.lua && \
+	${1} test/ecp_bls383.lua && \
+	test/octet-json.sh ${1} && \
+	test/integration_asymmetric_crypto.sh ${1}
+
 # ${1} test/closure.lua && \
 
 # failing js tests due to larger memory required:
@@ -290,15 +299,17 @@ lowmem-tests = \
 # these require the debug extension too much
 # ${test-exec} test/coroutine.lua
 
+# these may serve to verify the boundary of maximum memory
+# since some trigger warnings when compiled with full debug
+# $(call himem-tests,${test-exec})
 
-check-shared: test-exec-lowmem := ${pwd}/src/zenroom-shared
-check-shared: test-exec := ${pwd}/src/zenroom-shared
+
+check-shared: test-exec-lowmem := ${pwd}/src/zenroom-shared 2>/dev/null
+check-shared: test-exec := ${pwd}/src/zenroom-shared 2>/dev/null
 check-shared:
-	$(call lowmem-tests,${test-exec-lowmem})
-	$(call himem-tests,${test-exec})
 	${test-exec} test/constructs.lua
-	./test/octet-json.sh ${test-exec}
-	./test/integration_asymmetric_crypto.sh ${test-exec}
+	$(call lowmem-tests,${test-exec-lowmem})
+	$(call crypto-tests,${test-exec-lowmem})
 	@echo "----------------"
 	@echo "All tests passed for SHARED binary build"
 	@echo "----------------"
@@ -307,11 +318,9 @@ check-shared:
 check-static: test-exec := ${pwd}/src/zenroom-static
 check-static: test-exec-lowmem := ${pwd}/src/zenroom-static
 check-static:
-	$(call lowmem-tests,${test-exec-lowmem})
-	$(call himem-tests,${test-exec})
 	${test-exec} test/constructs.lua
-	./test/octet-json.sh ${test-exec}
-	./test/integration_asymmetric_crypto.sh ${test-exec}
+	$(call lowmem-tests,${test-exec-lowmem})
+	$(call crypto-tests,${test-exec-lowmem})
 	@echo "----------------"
 	@echo "All tests passed for STATIC binary build"
 	@echo "----------------"
@@ -319,7 +328,7 @@ check-static:
 check-js: test-exec := nodejs ${pwd}/test/zenroom_exec.js ${pwd}/src/zenroom.js
 check-js:
 	$(call lowmem-tests,${test-exec})
-	$(call himem-tests,${test-exec})
+	$(call crypto-tests,${test-exec})
 	@echo "----------------"
 	@echo "All tests passed for JS binary build"
 	@echo "----------------"
@@ -328,22 +337,14 @@ check-debug: test-exec-lowmem := valgrind --max-stackframe=2064480 ${pwd}/src/ze
 check-debug: test-exec := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared -u -d
 check-debug:
 	$(call lowmem-tests,${test-exec-lowmem})
-	$(call himem-tests,${test-exec})
-	./test/octet-json.sh  ${pwd}/src/zenroom-shared
-	./test/integration_asymmetric_crypto.sh ${pwd}/src/zenroom-shared
+	$(call crypto-tests,${test-exec})
 	@echo "----------------"
 	@echo "All tests passed for DEBUG binary build"
 	@echo "----------------"
 
-check-crypto: test-exec := ./src/zenroom-shared
+check-crypto: test-exec := ./src/zenroom-shared -d
 check-crypto:
-	${test-exec} test/octet.lua
-	${test-exec} test/hash.lua
-	${test-exec} test/ecdh.lua
-	${test-exec} test/ecdh_aes-gcm_vectors.lua
-	${test-exec} test/ecp_bls383.lua
-	./test/octet-json.sh ${test-exec}
-	./test/integration_asymmetric_crypto.sh ${test-exec}
+	$(call crypto-tests,${test-exec})
 	@echo "-----------------------"
 	@echo "All CRYPTO tests passed"
 	@echo "-----------------------"
@@ -351,11 +352,7 @@ check-crypto:
 
 debug-crypto: test-exec := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared -u -d
 debug-crypto:
-	${test-exec} test/octet.lua
-	${test-exec} test/hash.lua
-	${test-exec} test/ecdh.lua
-	${test-exec} test/ecdh_aes-gcm_vectors.lua
-	${test-exec} test/ecp_bls383.lua
+	$(call crypto-tests,${test-exec})
 
 #	./test/integration_asymmetric_crypto.sh ${test-exec}
 

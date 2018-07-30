@@ -379,11 +379,11 @@ int main(int argc, char **argv) {
 			parseast = 1;
 			snprintf(scriptfile,511,"%s",optarg);
 			break;
-#if DEBUG == 1
 		case 'u':
+#if DEBUG == 1
 			unprotected = 1;
-			break;
 #endif
+			break;
 		case '?': error(0,help); return EXIT_FAILURE;
 		default:  error(0,help); return EXIT_FAILURE;
 		}
@@ -436,12 +436,12 @@ int main(int argc, char **argv) {
 	if(scriptfile[0]!='\0') {
 		////////////////////////////////////
 		// load a file as script and execute
-		act(NULL, "reading CODE from file: %s", scriptfile);
+		notice(NULL, "reading Zencode from file: %s", scriptfile);
 		load_file(script, fopen(scriptfile, "rb"));
 	} else {
 		////////////////////////
 		// get another argument from stdin
-		act(NULL, "reading CODE from stdin");
+		act(NULL, "reading Zencode from stdin");
 		load_file(script, stdin);
 		func(NULL, "%s\n--",script);
 	}
