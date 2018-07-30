@@ -57,7 +57,13 @@
 typedef struct {
 	char curve[16];
 	char type[16];
+	BIG  order;
 	ECP  val;
+	// TODO: the values above make it necessary to propagate the
+	// visibility on the specific curve point types to the rest of the
+	// code. To abstract these and have get/set functions may save a
+	// lot of boilerplate when implementing support for multiple
+	// curves ECP.
 } ecp;
 
 static char *big2strhex(char *str, BIG a) {
@@ -89,6 +95,7 @@ ecp* ecp_new(lua_State *L) {
 		return NULL; }
 	strcpy(e->curve,"bls383");
 	strcpy(e->type,"weierstrass");
+	BIG_copy(e->order, (chunk*)CURVE_Order);
 	luaL_getmetatable(L, "zenroom.ecp");
 	lua_setmetatable(L, -2);
 	return(e);
@@ -112,7 +119,7 @@ int ecp_destroy(lua_State *L) {
 }
 
 /***
-    Create a new ECP point from two X,Y @{big} arguments. Note this is the only way to assign X,Y coordinates to an ECP: new one has to be created. If no X,Y coordinates are specified then the ECP points to Infinity. If X is on the curve and Y is 0 or 1 then Y is calculated from the curve equation according to the given sign (plus or minus).
+    Create a new ECP point from two X,Y @{big} arguments. If no X,Y arguments are specified then the ECP points to the curve's @{generator} coordinates. If the first argument is an X coordinate on the curve and Y is just a number 0 or 1 then Y is calculated from the curve equation according to the given sign (plus or minus).
 
     @param[opt=big] X a big number on the curve
     @param[opt=big] Y a big number on the curve, 0 or 1 to calculate it
@@ -123,7 +130,7 @@ int ecp_destroy(lua_State *L) {
 static int lua_new_ecp(lua_State *L) {
 	if(lua_isnoneornil(L, 1)) { // no args: set to infinity
 		ecp *e = ecp_new(L); SAFE(e);
-		ECP_inf(&e->val);
+		ECP_set(&e->val, (chunk*)CURVE_Gx_BLS383, (chunk*)CURVE_Gy_BLS383);
 		return 1; }
 
 	void *tx = luaL_testudata(L, 1, "zenroom.big");
@@ -143,7 +150,7 @@ static int lua_new_ecp(lua_State *L) {
 		big *x = big_arg(L, 1); SAFE(x);
 		ECP_setx(&e->val, x->val, (int)n);
 		return 1; }
-	error(L, "ECP new() expected zenroom.big arguments or none");
+	error(L, "ECP.new() expected zenroom.big arguments or none");
 	return 0;
 }
 
@@ -158,9 +165,9 @@ static int ecp_affine(lua_State *L) {
 	return 1;
 }
 /***
-    Gives a new infinity point on the curve. Deprecated: use @{ecp:new} without arguments.
+    Gives a new infinity point that is definitely not on the curve.
     @function infinity()
-    @return elliptic curve point into infinity.
+    @return ECP pointing to infinity out of the curve.
 */
 static int ecp_get_infinity(lua_State *L) {
 	ecp *e = ecp_new(L); SAFE(e);
@@ -208,7 +215,7 @@ static int ecp_mapit(lua_State *L) {
 }
 
 /***
-    Add two ECP points to each other (commutative and associative operation). Can be made using the overloaded operator "+" between two ECP objects just like the would be numbers.
+    Add two ECP points to each other (commutative and associative operation). Can be made using the overloaded operator `+` between two ECP objects just like the would be numbers.
 
     @param first number to be summed
     @param second number to be summed
@@ -225,7 +232,7 @@ static int ecp_add(lua_State *L) {
 }
 
 /***
-    Subtract an ECP point from another (commutative and associative operation). Can be made using the overloaded operator "-" between two ECP objects just like the would be numbers.
+    Subtract an ECP point from another (commutative and associative operation). Can be made using the overloaded operator `-` between two ECP objects just like the would be numbers.
 
     @param first number from which the second should be subtracted
     @param second number to use in the subtraction
@@ -266,8 +273,7 @@ static int ecp_double(lua_State *L) {
 }
 
 /***
-    Multiply an ECP point a number of times, indicated by an arbitrary ordinal number. Can be made using the overloaded operator "*" between an ECP object and an integer number.
-
+    Multiply an ECP point a number of times, indicated by an arbitrary ordinal number. Can be made using the overloaded operator `*` between an ECP object and an integer number.
 
     @function mul(ecp,num)
     @param ecp point on the elliptic curve to be multiplied
@@ -293,7 +299,7 @@ static int ecp_mul(lua_State *L) {
 }
 
 /***
-    Compares two ECP objects and returns true if they indicate the same point on the curve (they are equal) or false otherwise. It can also be executed by using the '==' overloaded operators.
+    Compares two ECP objects and returns true if they indicate the same point on the curve (they are equal) or false otherwise. It can also be executed by using the `==` overloaded operator.
 
     @param first ecp point to be compared
     @param second ecp point to be compared
@@ -312,7 +318,7 @@ static int ecp_eq(lua_State *L) {
 }
 
 /***
-    Sets or returns an octet containing a BIG number composed by both x,y coordinates of an ECP point on the curve. It can be used to port the value of an ECP point into hex or base64 encapsulation, to be later set again into an ECP point using this same call.
+    Sets or returns an octet containing a @{big} number composed by both x,y coordinates of an ECP point on the curve. It can be used to port the value of an ECP point into @{octet:hex} or @{octet:base64} encapsulation, to be later set again into an ECP point using this same call.
 
     @param ecp[opt=octet] the octet to be imported, none if to be exported
     @function octet(ecp)
@@ -365,6 +371,12 @@ static int ecp_setx(lua_State *L) {
 	return 1;
 }
 
+/***
+    Gives the X coordinate of the ECP point as a single @{big} number.
+
+    @function x()
+    @return a big number indicating the X coordinate of the point on curve.
+*/
 static int ecp_get_x(lua_State *L) {
 	ecp *e = ecp_arg(L, 1); SAFE(e);
 	FP fx;
@@ -375,7 +387,12 @@ static int ecp_get_x(lua_State *L) {
 	return 1;
 }
 
+/***
+    Gives the Y coordinate of the ECP point as a single @{big} number.
 
+    @function y()
+    @return a big number indicating the Y coordinate of the point on curve.
+*/
 static int ecp_get_y(lua_State *L) {
 	ecp *e = ecp_arg(L, 1); SAFE(e);
 	FP fy;
@@ -412,6 +429,18 @@ static int ecp_output(lua_State *L) {
 	return 1;
 }
 
+/***
+    Returns the generator of the curve: an ECP point to its X and Y coordinates.
+
+    @function generator()
+    @return ECP coordinates of the curve's generator.
+*/
+static int ecp_generator(lua_State *L) {
+	ecp *e = ecp_new(L); SAFE(e);
+	ECP_set(&e->val, (chunk*)CURVE_Gx_BLS383, (chunk*)CURVE_Gy_BLS383);
+	return(1);
+}
+
 int luaopen_ecp(lua_State *L) {
 	const struct luaL_Reg ecp_class[] = {
 		{"new",lua_new_ecp},
@@ -420,6 +449,8 @@ int luaopen_ecp(lua_State *L) {
 		{"order",ecp_order},
 		{"x",ecp_setx},
 		{"xy",ecp_set},
+		{"generator",ecp_generator},
+		{"G",ecp_generator},
 		{NULL,NULL}};
 	const struct luaL_Reg ecp_methods[] = {
 		{"affine",ecp_affine},
