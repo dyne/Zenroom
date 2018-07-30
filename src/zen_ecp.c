@@ -336,16 +336,32 @@ static int ecp_octet(lua_State *L) {
     Gives the order of the curve, a BIG number contained in an octet.
 
     @function order()
-    @return an octet containing the curve's order
+    @return a big containing the curve's order
 */
 static int ecp_order(lua_State *L) {
-	octet *o = o_new(L, modbytes+1); SAFE(o);
+	big *res = big_new(L); SAFE(res);
 	// big is an array of int32_t on chunk 32 (see rom_curve)
-	o->len = modbytes;
-	BIG c;
+
 	// curve order is ready-only so we need a copy for norm() to work
-	BIG_copy(c,(chunk*)CURVE_Order);
-	BIG_toBytes(o->val, c);
+	BIG_copy(res->val,(chunk*)CURVE_Order);
+	return 1;
+}
+
+static int ecp_set(lua_State *L) {
+	big *x = big_arg(L, 1); SAFE(x);
+	big *y = big_arg(L, 1); SAFE(y);
+	ecp *ec = ecp_new(L); SAFE(ec);
+	ECP_set(&ec->val,x->val,y->val);
+	return 1;
+}
+
+static int ecp_setx(lua_State *L) {
+	big *x = big_arg(L, 1); SAFE(x);
+	// y is calculated from the curve equation and sign
+	int tn;
+	lua_Number n = lua_tonumberx(L, 2, &tn);
+	ecp *ec = ecp_new(L); SAFE(ec);
+	ECP_setx(&ec->val,x->val, (int)n);
 	return 1;
 }
 
@@ -402,12 +418,15 @@ int luaopen_ecp(lua_State *L) {
 		{"inf",ecp_get_infinity},
 		{"infinity",ecp_get_infinity},
 		{"order",ecp_order},
+		{"x",ecp_setx},
+		{"xy",ecp_set},
 		{NULL,NULL}};
 	const struct luaL_Reg ecp_methods[] = {
 		{"affine",ecp_affine},
 		{"negative",ecp_negative},
 		{"double",ecp_double},
 		{"isinf",ecp_isinf},
+		{"isinfinity",ecp_isinf},
 		{"mapit",ecp_mapit},
 		{"octet",ecp_octet},
 		{"add",ecp_add},

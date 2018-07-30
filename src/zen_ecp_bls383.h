@@ -36,7 +36,7 @@
 #define CURVE_Cofactor CURVE_Cof_BLS383
 #define ECP_copy(d,s) ECP_BLS383_copy(d,s)
 #define ECP_set(d,x,y) ECP_BLS383_set(d, x, y)
-#define ECP_setx(d,x,y) ECP_BLS383_setx(d, x, y)
+#define ECP_setx(d,x,n) ECP_BLS383_setx(d, x, n)
 #define ECP_affine(d) ECP_BLS383_affine(d)
 #define ECP_inf(d) ECP_BLS383_inf(d)
 #define ECP_isinf(d) ECP_BLS383_isinf(d)

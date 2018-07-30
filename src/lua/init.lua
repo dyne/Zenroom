@@ -10,6 +10,7 @@ inside = require('inspect')
 ecp    = require('ecp')
 big    = require('zenroom_big')
 fp     = require('zenroom_fp')
+rng    = require('rng')
 
 function read_json(data, validation)
    if not data then
