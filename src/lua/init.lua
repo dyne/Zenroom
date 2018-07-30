@@ -1,16 +1,19 @@
 -- init script embedded at compile time.  executed in
 -- zen_load_extensions(L) usually after zen_init()
 
-json   = require('json')
-schema = require('schema')
-octet  = require('octet')
-ecdh   = require('ecdh')
-lambda = require('functional')
-inside = require('inspect')
-ecp    = require('ecp')
-big    = require('zenroom_big')
-fp     = require('zenroom_fp')
-rng    = require('rng')
+JSON   = require('json')
+SCHEMA = require('schema')
+OCTET  = require('octet')
+ECDH   = require('ecdh')
+LAMBDA = require('functional')
+INSIDE = require('inspect')
+ECP    = require('ecp')
+BIG    = require('zenroom_big')
+RNG    = require('rng')
+
+function hex(data) return OCTET.hex(data) end
+function str(data) return OCTET.string(data) end
+function base64(data) return OCTET.base64(data) end
 
 function read_json(data, validation)
    if not data then

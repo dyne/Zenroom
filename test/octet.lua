@@ -19,14 +19,14 @@ end
 
 -- random and  check hash of octets
 -- ecdh = require'ecdh'
-ecc = ecdh.new()
+ecc = ECDH.new()
 right = ecc:random(64)
 teststr = right:string()
 test64 = right:base64()
 testhex = right:hex()
 
 print "left octet.new()"
-left = octet.new()
+left = OCTET.new()
 
 print '== test octet copy'
 left = right;

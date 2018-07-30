@@ -6,15 +6,15 @@ print()
 -- http://www.ieee802.org/1/files/public/docs2011/bn-randall-test-vectors-0511-v1.pdf
 
 function Test(t)
-   curve = ecdh.new('goldilocks')
+   curve = ECDH.new('goldilocks')
 
    print ("Test vector: " .. t.name)
-   out, tag_out = curve:encrypt(octet.hex(t.key), octet.hex(t.msg), octet.hex(t.iv), octet.hex(t.header))
+   out, tag_out = curve:encrypt(hex(t.key), hex(t.msg), hex(t.iv), hex(t.header))
 
-   assert(octet.hex(t.ciphermsg) == out)
+   assert(hex(t.ciphermsg) == out)
    print (' encrypt OK')
 
-   assert(octet.hex(t.tag) == tag_out)
+   assert(hex(t.tag) == tag_out)
    print ('    auth OK')
 end
 
