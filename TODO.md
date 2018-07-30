@@ -4,7 +4,87 @@ This is a draft TODO list for future directions in zenroom
 development, to be vouched with priorities emerging from DECODE pilots
 and their specific use-cases.
 
+-faddress-sanitizers <- (check flags)
+
+
+## Deterministic Random in the Checker
+
+how to be sure that code executes on any computer and that the answer
+is correct
+
+if i give someone a contract and get a result how can I be sure that
+has been computed/executed correctly
+
+a solution can be to make it done by many....
+
+the only random useful in EC are numbers in FP
+and the FP is already modulus so smaller than the order
+
+
+
+the only random needed is for generation of the private key
+the private key is a random number smaller than the order of the curve
+the public key is the scalar multiplication between G1 and the private key
+(all public keys have this procedure)
+this should work also in G2
+
+the scalars that are multiplied to G1 and G2 need to be random
+
+the ecp1 and ecp2 functions for _mul are there and side-channel resistant
+so the only needed thing needed is the generation of a big number
+
+
+(optimisation)
+G1 and G2 multiplications can be done using pairing functions
+that optimise using endomorphism
+see: `void PAIR_BLS383_G1mul(ECP_BLS383 *P,BIG_384_29 e)`
+
 ## Coconut notes
+
+useful to have a functio that does PAIR:ate and PAIR:fexp on the same ECP2
+also ate() can be called miller_loop and miller() and loop()
+FP12 = pair(ECP1, ECP2)
+then FP12 equals is the only thing needed
+
+
+```
+require'ecp'
+mypoint = ecp.hash_to_point(octet)
+mynewbig = big.hash_to_big(13123,123123213,2334)
+mypoint = ecp.hash(octet)
+mynewbig = big.hash(1213123213,1221232141,123213324)
+!! hash_to_big has variadic arguments !!
+
+```
+hash_to_point:
+function that takes any octet string
+hashes it with any hashing algorithm
+does a mapit to place it on the curve
+
+hash_to_big:
+very useful to have
+a hash function that takes a series of big numbers
+and outputs a big number
+the big number series can be simply concatenated
+and then hashed as a series of bytes
+
+
+expose G1 as fixed ECP point
+expose G2 as fixed ECP2 point
+i.e.
+/* Generator point on G1 */
+extern const BIG_384_29 CURVE_Gx_BLS383; /**< x-coordinate of generator point in group G1  */
+extern const BIG_384_29 CURVE_Gy_BLS383; /**< y-coordinate of generator point in group G1  */
+should become a const ECP 
+
+about DBIG: no need to expose
+they result from big multiplications between big numbers
+but there is never a real use, because all useful multiplications have a modulus applied
+
+every FP is also a BIG
+but not every BIG is also an FP
+exporting in BIG is more interesting since it can be of any size
+and can be reduced to FP to match the curve
 
 each curve has a different infinity point
 
