@@ -29,7 +29,7 @@ SOURCES := \
 	umm_malloc.o zen_memory.o \
 	zen_io.o zen_ast.o repl.o \
 	zen_octet.o zen_ecp.o zen_big.o \
-	zen_fp.o zen_random.o \
+	zen_fp.o zen_random.o zen_hash.o \
 	zen_ecdh.o zen_ecdh_factory.o \
 	randombytes.o
 

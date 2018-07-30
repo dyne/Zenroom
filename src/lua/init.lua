@@ -10,6 +10,7 @@ INSIDE = require('inspect')
 ECP    = require('ecp')
 BIG    = require('zenroom_big')
 RNG    = require('rng')
+HASH   = require('hash')
 
 function hex(data) return OCTET.hex(data) end
 function str(data) return OCTET.string(data) end

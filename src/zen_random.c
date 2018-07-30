@@ -27,7 +27,7 @@
 #include <lua_functions.h>
 
 #include <amcl.h>
-#include <pbc_support.h>
+#include <time.h>
 
 #include <zenroom.h>
 #include <zen_octet.h>
@@ -50,7 +50,7 @@ RNG* rng_new(lua_State *L) {
 	char *tmp = zen_memory_alloc(256);
 	randombytes(tmp,252);
 	// using time() from milagro
-	unsign32 ttmp = GET_TIME();
+	unsign32 ttmp = (unsign32)time(NULL);
 	tmp[252] = (ttmp >> 24) & 0xff;
 	tmp[253] = (ttmp >> 16) & 0xff;
 	tmp[254] = (ttmp >>  8) & 0xff;
@@ -59,7 +59,7 @@ RNG* rng_new(lua_State *L) {
 	zen_memory_free(tmp);
 	return(rng);
 }
-	
+
 RNG* rng_arg(lua_State *L, int n) {
 	void *ud = luaL_checkudata(L, n, "zenroom.rng");
 	luaL_argcheck(L, ud != NULL, n, "rng class expected");	

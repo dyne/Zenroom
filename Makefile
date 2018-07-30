@@ -263,6 +263,7 @@ lowmem-tests = \
 		${1} test/locals.lua && \
 		${1} test/schema.lua && \
 		${1} test/octet.lua && \
+		${1} test/hash.lua && \
 		${1} test/ecdh.lua && \
 		${1} test/ecdh_aes-gcm_vectors.lua && \
 		${1} test/ecp_bls383.lua
@@ -337,6 +338,7 @@ check-debug:
 check-crypto: test-exec := ./src/zenroom-shared
 check-crypto:
 	${test-exec} test/octet.lua
+	${test-exec} test/hash.lua
 	${test-exec} test/ecdh.lua
 	${test-exec} test/ecdh_aes-gcm_vectors.lua
 	${test-exec} test/ecp_bls383.lua
@@ -350,7 +352,9 @@ check-crypto:
 debug-crypto: test-exec := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared -u -d
 debug-crypto:
 	${test-exec} test/octet.lua
+	${test-exec} test/hash.lua
 	${test-exec} test/ecdh.lua
+	${test-exec} test/ecdh_aes-gcm_vectors.lua
 	${test-exec} test/ecp_bls383.lua
 
 #	./test/integration_asymmetric_crypto.sh ${test-exec}
