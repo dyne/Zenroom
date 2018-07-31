@@ -15,6 +15,13 @@ HASH   = require('hash')
 function hex(data) return OCTET.hex(data) end
 function str(data) return OCTET.string(data) end
 function base64(data) return OCTET.base64(data) end
+function inspect(var)
+   local simple = type(var)
+   if simple == "userdata" then 
+	  return(getmetatable(var).__name)
+   else return(simple) end
+end
+function content(var) INSIDE.print(var) end
 
 function read_json(data, validation)
    if not data then
