@@ -51,7 +51,8 @@ int repl_write(lua_State *lua) {
 	if(len>MAX_STRING) {
 		error(lua, "Error: LUA string too long");
 		return 0; }
-	write(STDOUT_FILENO, line, len);
+	int nop = write(STDOUT_FILENO, line, len);
+	(void)nop;
 	return 0;
 }
 
@@ -60,7 +61,8 @@ size_t repl_prompt(int ret, char *line) {
 	char *prompt;
 	if(ret) prompt="zen! \0";
 	else prompt="zen> \0";
-	write(STDOUT_FILENO, prompt, 5);
+	int nop = write(STDOUT_FILENO, prompt, 5);
+	(void)nop;
 	len = read(STDIN_FILENO, line, MAX_STRING);
 	line[len] = '\0';
 	return(len);

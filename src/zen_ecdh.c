@@ -163,7 +163,6 @@ static int ecdh_keygen(lua_State *L) {
 	octet *pk = o_new(L,e->publen +0x0f); SAFE(pk);
 	octet *sk = o_new(L,e->seclen +0x0f); SAFE(sk);
 	(*e->ECP__KEY_PAIR_GENERATE)(e->rng,sk,pk);
-	int res;
 	e->pubkey = pk;
 	e->seckey = sk;
 	HEREecdh(e);

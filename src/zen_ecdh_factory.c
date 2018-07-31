@@ -9,8 +9,8 @@
 ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 	ecdh *e = NULL;
 	char curve[16];
-	if(cname) snprintf(curve,15,cname);
-	else      snprintf(curve,15,"ed25519");
+	if(cname) strncpy(curve,cname,15);
+	else      strncpy(curve,"ed25519",15);
 	HEREs(curve);
 	if(strcasecmp(curve,"ec25519")   ==0
 	   || strcasecmp(curve,"ed25519")==0

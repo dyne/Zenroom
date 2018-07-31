@@ -92,6 +92,7 @@ void  system_free(void *ptr) { (*zen_mem->sys_free)(ptr); }
  */
 void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
 	zen_mem_t *mem = (zen_mem_t*)ud;
+	if(!mem) return NULL;
 	if(ptr == NULL) {
 		// When ptr is NULL, osize encodes the kind of object that Lua
 		// is allocating. osize is any of LUA_TSTRING, LUA_TTABLE,
@@ -103,7 +104,6 @@ void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
 			void *ret = (*mem->malloc)(nsize);
 			if(ret) return ret;
 			error(NULL,"Malloc out of memory, requested %u B",nsize);
-			umm_info(mem->heap);
 			return NULL;
 		} else return NULL;
 

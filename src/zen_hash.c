@@ -61,8 +61,8 @@ HASH* hash_new(lua_State *L, const char *hashtype) {
 	luaL_getmetatable(L, "zenroom.hash");
 	lua_setmetatable(L, -2);
 	char ht[16];
-	if(hashtype) snprintf(ht,15,hashtype);
-	else         snprintf(ht,15,"sha256");
+	if(hashtype) strncpy(ht,hashtype,15);
+	else         strncpy(ht,"sha256",15);
 	if(strcasecmp(hashtype,"sha256") == 0) {
 		strncpy(hash->name,hashtype,15);
 		hash->len = 32;

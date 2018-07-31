@@ -83,17 +83,17 @@ static void _printf(zenroom_t *Z, char *pfx, char *msg) {
 	}
 }
 
-static void _printline(zenroom_t *Z, lua_State *L) {
-	if(!Z || !L) return;
-	lua_Debug ar;
-	if(lua_getstack(L, 1, &ar) && lua_getinfo(L, "nSl", &ar)) {
-		char err[MAX_STRING];
-		snprintf(err,MAX_STRING-1,"%s:%u: ERROR",
-		         ar.short_src, ar.currentline);
-		_printf(Z,"[!]",err);
-	} else
-		_printf(Z,"[!]","[UKNOWN STACK]:?: ERROR");
-}
+// static void _printline(zenroom_t *Z, lua_State *L) {
+// 	if(!Z || !L) return;
+// 	lua_Debug ar;
+// 	if(lua_getstack(L, 1, &ar) && lua_getinfo(L, "nSl", &ar)) {
+// 		char err[MAX_STRING];
+// 		snprintf(err,MAX_STRING-1,"%s:%u: ERROR",
+// 		         ar.short_src, ar.currentline);
+// 		_printf(Z,"[!]",err);
+// 	} else
+// 		_printf(Z,"[!]","[UKNOWN STACK]:?: ERROR");
+// }
 
 void notice(lua_State *L, const char *format, ...) {
   va_list arg;

@@ -129,6 +129,14 @@ shared: platform := linux
 shared: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
 
+
+shared-clang: gcc := clang
+shared-clang: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"LINUX\"' -DARCH_LINUX
+shared-clang: ldflags := -lm
+shared-clang: platform := linux
+shared-clang: apply-patches lua53 milagro lpeglabel
+CC=${gcc} CFLAGS="${cflags}" make -C src shared
+
 shared-lib: gcc := gcc
 shared-lib: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"LINUX\"' -shared -DARCH_LINUX
 shared-lib: ldflags := -lm
@@ -196,9 +204,19 @@ android: apply-patches lua53 milagro lpeglabel
 
 
 debug: gcc := gcc
-debug: cflags := -O0 -ggdb -D'ARCH=\"LINUX\"' ${cflags_protection} -DARCH_LINUX -DDEBUG=1
+debug: cflags := -O1 -ggdb -D'ARCH=\"LINUX\"' ${cflags_protection} -DARCH_LINUX -DDEBUG=1
 debug: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" make -C src shared
+
+
+sanitizer: gcc := gcc
+sanitizer: cflags := -O1 -ggdb -D'ARCH=\"LINUX\"' ${cflags_protection} -DARCH_LINUX -DDEBUG=1 -fsanitize=address -fno-omit-frame-pointer
+sanitizer: apply-patches lua53 milagro lpeglabel
+	CC=${gcc} CFLAGS="${cflags}" make -C src shared
+	ASAN_OPTIONS=verbosity=1:log_threads=1 \
+	ASAN_SYMBOLIZER_PATH=/usr/bin/asan_symbolizer \
+	ASAN_OPTIONS=abort_on_error=1 \
+	  ./src/zenroom-shared -i -d
 
 lpeglabel:
 	CC=${gcc} CFLAGS="${cflags} -I${pwd}/lib/lua53/src" AR="${ar}" make -C lib/lpeglabel
