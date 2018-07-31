@@ -273,7 +273,9 @@ crypto-tests = \
 	${1} test/hash.lua && \
 	${1} test/ecdh.lua && \
 	${1} test/ecdh_aes-gcm_vectors.lua && \
-	${1} test/ecp_bls383.lua && \
+	${1} test/ecp_bls383.lua
+
+shell-tests = \
 	test/octet-json.sh ${1} && \
 	test/integration_asymmetric_crypto.sh ${1}
 
@@ -310,6 +312,7 @@ check-shared:
 	${test-exec} test/constructs.lua
 	$(call lowmem-tests,${test-exec-lowmem})
 	$(call crypto-tests,${test-exec-lowmem})
+	$(call shell-tests,${test-exec-lowmem})
 	@echo "----------------"
 	@echo "All tests passed for SHARED binary build"
 	@echo "----------------"
@@ -321,12 +324,14 @@ check-static:
 	${test-exec} test/constructs.lua
 	$(call lowmem-tests,${test-exec-lowmem})
 	$(call crypto-tests,${test-exec-lowmem})
+	$(call shell-tests,${test-exec-lowmem})
 	@echo "----------------"
 	@echo "All tests passed for STATIC binary build"
 	@echo "----------------"
 
 check-js: test-exec := nodejs ${pwd}/test/zenroom_exec.js ${pwd}/src/zenroom.js
 check-js:
+	cp src/zenroom.js.mem .
 	$(call lowmem-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
 	@echo "----------------"
@@ -353,6 +358,7 @@ check-crypto:
 debug-crypto: test-exec := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared -u -d
 debug-crypto:
 	$(call crypto-tests,${test-exec})
+	$(call shell-tests,${test-exec-lowmem})
 
 #	./test/integration_asymmetric_crypto.sh ${test-exec}
 
