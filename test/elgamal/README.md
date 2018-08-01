@@ -22,6 +22,7 @@ zenroom -a votes.json verify_init.lua
 
 ```
 zenroom -a votes.json vote.lua > votes2.json; mv votes2.json votes.json
+zenroom -a votes.json verify_vote.lua
 ```
 
 and verify that votes are all 0 or 1, and the sum of all the addition is 1
@@ -48,9 +49,13 @@ zenroom -k key.json -a public.json init.lua > votes.json
 zenroom -a votes.json verify_init.lua
 
 zenroom -a votes.json vote.lua > votes2.json; mv votes2.json votes.json
+zenroom -a votes.json verify_vote.lua
 zenroom -a votes.json vote.lua > votes2.json; mv votes2.json votes.json
+zenroom -a votes.json verify_vote.lua
 zenroom -a votes.json vote.lua > votes2.json; mv votes2.json votes.json
+zenroom -a votes.json verify_vote.lua
 zenroom -a votes.json vote.lua > votes2.json; mv votes2.json votes.json
+zenroom -a votes.json verify_vote.lua
 
 zenroom -k key.json -a votes.json tally.lua 
 ```
