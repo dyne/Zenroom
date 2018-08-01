@@ -49,15 +49,38 @@ public = readEcp(DATA_TABLE["public"])
 
 -- Creates a cipher with a message m
 function encrypt(m)
+	m = BIG.new(m)
 	local k = rng:big() % order
 	local a = g * k
-	local b = (public * k) + h * BIG.new(m)
+	local b = (public * k) + h * m
+
+	local c, rk, rm = provebinary(a, b, k, m)
 
 	return {
 		k = k,
 		a = a,
-		b = b
+		b = b,
+		c = c,
+		rk = rk,
+		rm = rm
 	}
+end
+
+function provebinary(a, b, k, m)
+	-- prove that m is either 0 or 1
+	local wk = rng:big()
+	local wm = rng:big()
+
+	local Aw = g * wk
+	local Bw = public * wk + h * wm
+	local Dw = g * wk + h1 * (m*(BIG.new(1)-m))
+
+	local c = to_challenge({g, h, h1, a, b, Aw, Bw, Dw})
+
+	local rk = (wk - c:modmul(k, order)) % order
+	local rm = (wm - c:modmul(m, order)) % order
+
+	return c, rk, rm
 end
 
 options = DATA_TABLE['options']
@@ -67,32 +90,36 @@ scores = DATA_TABLE['scores']
 increment = {1, 0, 0}
 -- encrypt them
 increment = LAMBDA.map(increment, function(k,v) return encrypt(v) end)
+provebin = LAMBDA.map(increment, function(k,v) return { c = tostring(v['c']), rk = tostring(v['rk']), rm = tostring(v['rm'])} end)
+
 
 -- Load scores in json
-scores = LAMBDA.map(scores, function(k, v) 
+prev_scores = LAMBDA.map(scores, function(k, v) 
 								local a = readEcp(v['a'])
 								local b = readEcp(v['b'])
 								return { a = a, b = b}
 							end)
 
+new_scores = {}
 
 for i = 1, #options do
-	a = increment[i]['a'] + scores[i]['a']
-	b = increment[i]['b'] + scores[i]['b']
+	a = increment[i]['a'] + prev_scores[i]['a']
+	b = increment[i]['b'] + prev_scores[i]['b']
 
-	increment[i]['a'] = a
-	increment[i]['b'] = b
+	new_scores[i] = { a = a, b = b }
 end
 
 -- convert the scores in a serializable form
 increment = LAMBDA.map(increment, function(k,v) return { a = writeEcp(v['a']), b = writeEcp(v['b']) } end)
-
+new_scores = LAMBDA.map(new_scores, function(k,v) return { a = writeEcp(v['a']), b = writeEcp(v['b']) } end)
 
 export = JSON.encode(
    {
       options = options,
-      scores = increment,
-      public = writeEcp(public)
+      scores = new_scores,
+      public = writeEcp(public),
+      provebin = provebin,
+      increment = increment,
    }
 )
 print(export)
