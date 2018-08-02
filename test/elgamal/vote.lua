@@ -83,15 +83,45 @@ function provebinary(a, b, k, m)
 	return c, rk, rm
 end
 
+function prove_one(a, b, k)
+	local wk = rng:big()
+	local wm = rng:big()
+
+	local Aw = g * wk
+	local Bw = public * wk + h * BIG.new(1)
+
+	local c = to_challenge({g, h, public, a, b, Aw, Bw})
+
+	local rk = (wk - c:modmul(k, order)) % order
+
+	return c, rk, Aw, Bw
+end
+
+
 options = DATA_TABLE['options']
 scores = DATA_TABLE['scores']
 
 -- increment to do to the options
-increment = {1, 0, 0}
+increment = LAMBDA.map(options, function(k,v) return 0 end)
+increment[1] = 1
+
 -- encrypt them
 increment = LAMBDA.map(increment, function(k,v) return encrypt(v) end)
+
+-- ADD prove that the increments are either 0 or 1
 provebin = LAMBDA.map(increment, function(k,v) return { c = tostring(v['c']), rk = tostring(v['rk']), rm = tostring(v['rm'])} end)
 
+-- ADD prove that the sum of the increments is 1
+sum_a = increment[1]['a']
+sum_b = increment[1]['b']
+sum_k = increment[1]['k']
+for i =2, #increment do
+	sum_a = sum_a + increment[i]['a']
+	sum_b = sum_b + increment[i]['b']
+	sum_k = sum_k + increment[i]['k']
+end
+c, rk, Aw, Bw = prove_one(sum_a, sum_b, sum_k)
+prove_sum_one = { c = tostring(c), rk = tostring(rk), Aw = writeEcp(Aw), Bw = writeEcp(Bw) }
 
 -- Load scores in json
 prev_scores = LAMBDA.map(scores, function(k, v) 
@@ -120,6 +150,7 @@ export = JSON.encode(
       public = writeEcp(public),
       provebin = provebin,
       increment = increment,
+      prove_sum_one = prove_sum_one
    }
 )
 print(export)

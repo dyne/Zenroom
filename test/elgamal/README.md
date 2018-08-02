@@ -1,15 +1,14 @@
-
-# Keygen
+## Keygen
 
 ```
 zenroom keygen.lua > key.json
 ```
 
 
-# Initialize the votes to 0
+## Initialize the votes to 0
 
 ```
-zenroom -k key.json -a public.json init.lua > votes.json
+zenroom -k key.json init.lua > votes.json
 ```
 
 and verify that all votes are 0
@@ -18,7 +17,7 @@ and verify that all votes are 0
 zenroom -a votes.json verify_init.lua
 ```
 
-# Vote 
+## Vote 
 
 ```
 zenroom -a votes.json vote.lua > votes2.json; mv votes2.json votes.json
@@ -31,7 +30,7 @@ and verify that votes are all 0 or 1, and the sum of all the addition is 1
 - We don't add multiple votes (various 1's)
 
 
-# Decrypt
+## Tally
 
 ```
 zenroom -k key.json -a votes.json tally.lua 
@@ -45,7 +44,7 @@ zenroom -k key.json -a votes.json tally.lua
 ```
 zenroom keygen.lua > key.json
 
-zenroom -k key.json -a public.json init.lua > votes.json
+zenroom -k key.json init.lua > votes.json
 zenroom -a votes.json verify_init.lua
 
 zenroom -a votes.json vote.lua > votes2.json; mv votes2.json votes.json

@@ -70,10 +70,10 @@ function encrypt(m)
 	}
 end
 
-options = {'yes', 'no', 'maybe'}
+options = {'yes', 'no'}
 
 -- initial state of the options
-scores = {0, 0, 0}
+scores = {0, 0}
 -- encrypt them
 scores = LAMBDA.map(scores, function(k,v) return encrypt(v) end)
 -- create the ZKP that they are zero

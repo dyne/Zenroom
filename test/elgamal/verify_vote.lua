@@ -46,13 +46,23 @@ function verifybinary(a, b, c, rk, rm)
 	assert(c_prime == c)
 end
 
+function verifyone(a, b, c, rk)
+	local Aw = g * rk + a * c
+	local Bw = public * rk + b * c + h * (BIG.new(1) + c:modneg(order))
+
+	c_prime = to_challenge({g, h, public, a, b, Aw, Bw})
+	assert(c_prime == c)
+end
+
 
 -- Load public data
 public = readEcp(DATA_TABLE["public"])
 
+
+-- verify that increments where either 0 or 1
 proves = DATA_TABLE['provebin']
 increment = DATA_TABLE['increment']
-
+increment = LAMBDA.map(increment, function(k,v) return { a = readEcp(v['a']), b = readEcp(v['b']) } end)
 size = math.max(#proves, #increment)
 
 for i = 1, size do
@@ -61,7 +71,18 @@ for i = 1, size do
   rm = readBig(proves[i]['rm'])
   rk = readBig(proves[i]['rk'])
 
-  a = readEcp(increment[i]['a'])
-  b = readEcp(increment[i]['b'])
+  a = increment[i]['a']
+  b = increment[i]['b']
   verifybinary(a, b, c, rk, rm)
 end
+
+-- verify that sum of increments is 1
+sum_a = increment[1]['a']
+sum_b = increment[1]['b']
+for i =2, #increment do
+	sum_a = sum_a + increment[i]['a']
+	sum_b = sum_b + increment[i]['b']
+end
+c = readBig(DATA_TABLE['prove_sum_one']['c'])
+rk = readBig(DATA_TABLE['prove_sum_one']['rk'])
+verifyone(sum_a, sum_b, c, rk)
