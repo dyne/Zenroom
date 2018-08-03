@@ -86,3 +86,10 @@ end
 c = readBig(DATA_TABLE['prove_sum_one']['c'])
 rk = readBig(DATA_TABLE['prove_sum_one']['rk'])
 verifyone(sum_a, sum_b, c, rk)
+
+export = JSON.encode(
+   {
+      ok = true
+   }
+)
+print(export)

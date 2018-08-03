@@ -47,19 +47,26 @@ end
 
 -- Load public data
 public = readEcp(DATA_TABLE["public"])
-
-proves = DATA_TABLE['proves']
+proof = DATA_TABLE['proof']
 scores = DATA_TABLE['scores']
-size = math.max(#proves, #scores)
+outcome = DATA_TABLE['outcome']
+
+scores = LAMBDA.map(scores, function(k,v) return { a = readEcp(v['a']), b = readEcp(v['b']) } end)
+proof = LAMBDA.map(proof, function(k,v) return { c = readBig(v['c']), rx = readBig(v['rx']) } end)
+
+size = math.max(#proof, #scores)
 
 for i = 1, size do
-  c = readBig(proves[i]['c'])
-  rx = readBig(proves[i]['rx'])
-  a = readEcp(scores[i]['a'])
-  b = readEcp(scores[i]['b'])
+	a = scores[i]['a']
+	b = scores[i]['b']
+	c = proof[i]['c']
+	num_votes = BIG.new(outcome[i])
+	rx = proof[i]['rx']
 
-  verifyzero(a, b, c, rx)
+	b = b + (h * num_votes):negative()
+	verifyzero(a, b, c, rx)
 end
+
 export = JSON.encode(
    {
       ok = true
