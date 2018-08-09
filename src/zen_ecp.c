@@ -128,9 +128,12 @@ int ecp_destroy(lua_State *L) {
     @see big:new
 */
 static int lua_new_ecp(lua_State *L) {
-	if(lua_isnoneornil(L, 1)) { // no args: set to infinity
+	if(lua_isnoneornil(L, 1)) { // no args: set to generator
 		ecp *e = ecp_new(L); SAFE(e);
-		ECP_set(&e->val, (chunk*)CURVE_Gx_BLS383, (chunk*)CURVE_Gy_BLS383);
+		if(!ECP_set(&e->val,
+		            (chunk*)CURVE_Gx_BLS383, (chunk*)CURVE_Gy_BLS383)) {
+			lerror(L,"ECP generator value out of curve (stack corruption)");
+			return 0; }
 		return 1; }
 
 	void *tx = luaL_testudata(L, 1, "zenroom.big");
@@ -140,7 +143,8 @@ static int lua_new_ecp(lua_State *L) {
 		big *x, *y;
 		x = big_arg(L, 1); SAFE(x);
 		y = big_arg(L, 2); SAFE(y);
-		ECP_set(&e->val, x->val, y->val);
+		if(!ECP_set(&e->val, x->val, y->val))
+			warning(L,"new ECP value out of curve (points to infinity)");
 		return 1; }
 	// If x is on the curve then y is calculated from the curve equation.
 	int tn;
@@ -148,9 +152,10 @@ static int lua_new_ecp(lua_State *L) {
 	if(tx && tn) {
 		ecp *e = ecp_new(L); SAFE(e);
 		big *x = big_arg(L, 1); SAFE(x);
-		ECP_setx(&e->val, x->val, (int)n);
+		if(!ECP_setx(&e->val, x->val, (int)n))
+			warning(L,"new ECP value out of curve (points to infinity)");
 		return 1; }
-	error(L, "ECP.new() expected zenroom.big arguments or none");
+	lerror(L, "ECP.new() expected zenroom.big arguments or none");
 	return 0;
 }
 
@@ -353,27 +358,6 @@ static int ecp_order(lua_State *L) {
 	return 1;
 }
 
-static int ecp_set(lua_State *L) {
-	big *x = big_arg(L, 1); SAFE(x);
-	big *y = big_arg(L, 1); SAFE(y);
-	ecp *ec = ecp_new(L); SAFE(ec);
-	if(!ECP_set(&ec->val,x->val,y->val))
-		warning(L,"ECP:set() value out of curve (returns infinity)");
-
-	return 1;
-}
-
-static int ecp_setx(lua_State *L) {
-	big *x = big_arg(L, 1); SAFE(x);
-	// y is calculated from the curve equation and sign
-	int tn;
-	lua_Number n = lua_tonumberx(L, 2, &tn);
-	ecp *ec = ecp_new(L); SAFE(ec);
-	if(!ECP_setx(&ec->val,x->val, (int)n))
-		warning(L,"ECP:setx() value out of curve (returns infinity)");
-	return 1;
-}
-
 /***
     Gives the X coordinate of the ECP point as a single @{big} number.
 
@@ -450,8 +434,6 @@ int luaopen_ecp(lua_State *L) {
 		{"inf",ecp_get_infinity},
 		{"infinity",ecp_get_infinity},
 		{"order",ecp_order},
-		{"x",ecp_setx},
-		{"xy",ecp_set},
 		{"generator",ecp_generator},
 		{"G",ecp_generator},
 		{NULL,NULL}};

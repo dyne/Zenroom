@@ -24,8 +24,10 @@
 #include <ctype.h>
 
 #if (defined ARCH_LINUX) || (defined ARCH_OSX) || (defined ARCH_BSD)
+#include <sys/types.h>
 #include <sys/wait.h>
 #endif
+
 
 #include <errno.h>
 
@@ -338,6 +340,7 @@ int main(int argc, char **argv) {
 #else
 	int   unprotected         = 0;
 #endif
+	(void)unprotected; // remove warning
 	const char *short_options = "hdic:k:a:p:u";
 	const char *help          =
 		"Usage: zenroom [-dh] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ [ -p ] script.lua ]\n";
