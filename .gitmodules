@@ -13,3 +13,6 @@
 [submodule "lib/lpeglabel"]
 	path = lib/lpeglabel
 	url = https://github.com/sqmedeiros/lpeglabel
+[submodule "lib/sss"]
+	path = lib/sss
+	url = https://github.com/dsprenkels/sss
