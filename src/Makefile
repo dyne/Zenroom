@@ -28,7 +28,7 @@ SOURCES := \
 	json.o json_strbuf.o json_fpconv.o \
 	umm_malloc.o zen_memory.o \
 	zen_io.o zen_ast.o repl.o \
-	zen_octet.o zen_ecp.o zen_big.o \
+	zen_octet.o zen_ecp.o zen_ecp2.o zen_big.o \
 	zen_fp.o zen_random.o zen_hash.o \
 	zen_ecdh.o zen_ecdh_factory.o \
 	randombytes.o
@@ -43,6 +43,7 @@ milib := ../lib/milagro-crypto-c/lib
 # LDADD += ${milib}/libamcl_rsa_2048.a ${milib}/libamcl_rsa_4096.a
 LDADD += ${milib}/libamcl_curve_ED25519.a
 LDADD += ${milib}/libamcl_curve_BLS383.a
+LDADD += ${milib}/libamcl_pairing_BLS383.a
 LDADD += ${milib}/libamcl_curve_GOLDILOCKS.a
 LDADD += ${milib}/libamcl_core.a
 

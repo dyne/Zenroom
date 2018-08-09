@@ -8,6 +8,7 @@ ECDH   = require('ecdh')
 LAMBDA = require('functional')
 INSIDE = require('inspect')
 ECP    = require('ecp')
+ECP2    = require('ecp2')
 BIG    = require('zenroom_big')
 RNG    = require('rng')
 HASH   = require('hash')
@@ -22,6 +23,10 @@ function inspect(var)
    else return(simple) end
 end
 function content(var) INSIDE.print(var) end
+
+function ECP2.G()         return ECP2.new() end
+function ECP2.generator() return ECP2.new() end
+
 
 function read_json(data, validation)
    if not data then

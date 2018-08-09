@@ -26,7 +26,9 @@
 #include <ecp2_BLS383.h>
 #define BIGSIZE 384
 #include <zen_big_types.h>
+
 #define ECP ECP_BLS383
+#define ECP2 ECP2_BLS383
 #define CURVE_A CURVE_A_BLS383
 #define CURVE_B Curve_B_BLS383
 #define CURVE_B_I CURVE_B_I_BLS383
@@ -34,13 +36,13 @@
 #define CURVE_Gy CURVE_Gy_BLS383
 #define CURVE_Order CURVE_Order_BLS383
 #define CURVE_Cofactor CURVE_Cof_BLS383
+
 #define ECP_copy(d,s) ECP_BLS383_copy(d,s)
 #define ECP_set(d,x,y) ECP_BLS383_set(d, x, y)
 #define ECP_setx(d,x,n) ECP_BLS383_setx(d, x, n)
 #define ECP_affine(d) ECP_BLS383_affine(d)
 #define ECP_inf(d) ECP_BLS383_inf(d)
 #define ECP_isinf(d) ECP_BLS383_isinf(d)
-#define ECP_mapit(d, s) ECP_BLS383_mapit(d,s)
 #define ECP_add(d,s) ECP_BLS383_add(d,s)
 #define ECP_sub(d,s) ECP_BLS383_sub(d,s)
 #define ECP_neg(d) ECP_BLS383_neg(d)
@@ -50,5 +52,24 @@
 #define ECP_fromOctet(d,o) ECP_BLS383_fromOctet(d, o)
 #define ECP_toOctet(o,d) ECP_BLS383_toOctet(o,d)
 #define FP_redc(x,s) FP_BLS383_redc(x,s)
+
+#define FP2 FP2_BLS383
+#define FP2_from_BIGs(x,a,b) FP2_BLS383_from_BIGs(x,a,b)
+
+#define ECP2_copy(d,s) ECP2_BLS383_copy(d,s)
+#define ECP2_set(d,x,y) ECP2_BLS383_set(d, x, y)
+#define ECP2_setx(d,x) ECP2_BLS383_setx(d, x)
+#define ECP2_affine(d) ECP2_BLS383_affine(d)
+#define ECP2_inf(d) ECP2_BLS383_inf(d)
+#define ECP2_isinf(d) ECP2_BLS383_isinf(d)
+#define ECP2_add(d,s) ECP2_BLS383_add(d,s)
+#define ECP2_sub(d,s) ECP2_BLS383_sub(d,s)
+#define ECP2_neg(d) ECP2_BLS383_neg(d)
+#define ECP2_dbl(d) ECP2_BLS383_dbl(d)
+#define ECP2_mul(d,b) ECP2_BLS383_mul(d,b)
+#define ECP2_equals(l,r) ECP2_BLS383_equals(l,r)
+#define ECP2_fromOctet(d,o) ECP2_BLS383_fromOctet(d, o)
+#define ECP2_toOctet(o,d) ECP2_BLS383_toOctet(o,d)
+
 
 #endif
