@@ -40,13 +40,13 @@
 
 
 /* Return a mutable pointer to the ciphertext part of this Share */
-static uint8_t* get_ciphertext(sss_Share *share) {
-//	return &((uint8_t*)share->val)[sss_KEYSHARE_LEN];
-	return &((uint8_t*) share)[sss_KEYSHARE_LEN];
+static uint8_t* get_ciphertext(octet* share) {
+	return &((uint8_t*)share->val)[sss_KEYSHARE_LEN];
+	/// return &((uint8_t*) share)[sss_KEYSHARE_LEN];
 }
 /* Return a mutable pointer to the Keyshare part of this Share */
-static sss_Keyshare* get_keyshare(sss_Share *share) {
-	return (sss_Keyshare*) &share[0]; }
+static sss_Keyshare* get_keyshare(octet *share) {
+	return (sss_Keyshare*) &share->val[0]; }
 
 static int lua_sss_share(lua_State *L) {
 	int res;
@@ -81,18 +81,14 @@ static int lua_sss_share(lua_State *L) {
 	/* Generate KeyShares */
 	sss_create_keyshares(keyshares,key,(int)n,(int)k);
 	/* Build regular shares */
-	int sharelen = sizeof(sss_Share)*n;
-	octet *o = o_new(L,sharelen);
-	o->len = sharelen;
-	sss_Share *out = (sss_Share*)o->val;
 	for (idx = 0; idx < n; idx++) {
-		memcpy(get_keyshare((sss_Share*) &out[idx]), &keyshares[idx][0],
-		       sss_KEYSHARE_LEN);
-		memcpy(get_ciphertext((sss_Share*) &out[idx]),
-		       &c[crypto_secretbox_BOXZEROBYTES], sss_CLEN);
+		octet *o = o_new(L,sss_SHARE_LEN);
+		o->len = sss_SHARE_LEN;
+		memcpy(get_keyshare(o), &keyshares[idx][0], sss_KEYSHARE_LEN);
+		memcpy(get_ciphertext(o), &c[crypto_secretbox_BOXZEROBYTES], sss_CLEN);
 	}
 	zen_memory_free(keyshares);
-	return 1;
+	return n;
 }
 
 int luaopen_sss(lua_State *L) {
