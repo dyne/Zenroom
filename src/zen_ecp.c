@@ -357,7 +357,9 @@ static int ecp_set(lua_State *L) {
 	big *x = big_arg(L, 1); SAFE(x);
 	big *y = big_arg(L, 1); SAFE(y);
 	ecp *ec = ecp_new(L); SAFE(ec);
-	ECP_set(&ec->val,x->val,y->val);
+	if(!ECP_set(&ec->val,x->val,y->val))
+		warning(L,"ECP:set() value out of curve (returns infinity)");
+
 	return 1;
 }
 
@@ -367,7 +369,8 @@ static int ecp_setx(lua_State *L) {
 	int tn;
 	lua_Number n = lua_tonumberx(L, 2, &tn);
 	ecp *ec = ecp_new(L); SAFE(ec);
-	ECP_setx(&ec->val,x->val, (int)n);
+	if(!ECP_setx(&ec->val,x->val, (int)n))
+		warning(L,"ECP:setx() value out of curve (returns infinity)");
 	return 1;
 }
 
