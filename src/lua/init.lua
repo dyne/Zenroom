@@ -8,10 +8,11 @@ ECDH   = require('ecdh')
 LAMBDA = require('functional')
 INSIDE = require('inspect')
 ECP    = require('ecp')
-ECP2    = require('ecp2')
+ECP2   = require('ecp2')
 BIG    = require('zenroom_big')
 RNG    = require('rng')
 HASH   = require('hash')
+SSS    = require('sss')
 
 function hex(data) return OCTET.hex(data) end
 function str(data) return OCTET.string(data) end
@@ -22,7 +23,8 @@ function inspect(var)
 	  return(getmetatable(var).__name)
    else return(simple) end
 end
-function content(var) INSIDE.print(var) end
+function content(var)  INSIDE.print(var) end
+function contents(var) INSIDE.print(var) end
 
 function ECP2.G()         return ECP2.new() end
 function ECP2.generator() return ECP2.new() end

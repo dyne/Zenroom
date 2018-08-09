@@ -31,7 +31,7 @@ SOURCES := \
 	zen_octet.o zen_ecp.o zen_ecp2.o zen_big.o \
 	zen_fp.o zen_random.o zen_hash.o \
 	zen_ecdh.o zen_ecdh_factory.o \
-	randombytes.o
+	randombytes.o sss.o hazmat.o tweetnacl.o zen_sss.o
 
 # zen_rsa.o zen_rsa_aux.o \
 
