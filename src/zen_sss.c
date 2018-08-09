@@ -91,9 +91,23 @@ static int lua_sss_share(lua_State *L) {
 	return n;
 }
 
+static int lua_sss_combine(lua_State *L) {
+	int res;
+	octet *shares = o_arg(L,1); SAFE(shares);
+	lua_Number k = lua_tonumberx(L, 2, &res);
+	if(!res) {
+		lerror(L, "missing integer as second argument of SSS.combine()");
+		return 0; }
+	octet *o = o_new(L,sss_MLEN);
+	o->len = sss_MLEN;
+	sss_combine_shares((uint8_t*) o->val, (sss_Share*)shares->val, k);
+	return 1;
+}
+
 int luaopen_sss(lua_State *L) {
 	const struct luaL_Reg sss_class[] = {
 		{"share",lua_sss_share},
+		{"combine",lua_sss_combine},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg sss_methods[] = {

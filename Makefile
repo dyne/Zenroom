@@ -282,6 +282,7 @@ lowmem-tests = \
 		${1} test/schema.lua && \
 		${1} test/octet.lua && \
 		${1} test/hash.lua && \
+		${1} test/secretsharing.lua && \
 		${1} test/ecdh.lua && \
 		${1} test/ecdh_aes-gcm_vectors.lua && \
 		${1} test/ecp_bls383.lua
