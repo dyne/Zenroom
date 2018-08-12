@@ -19,19 +19,18 @@ end
 
 -- random and  check hash of octets
 -- ecdh = require'ecdh'
+rng = RNG.new()
 ecc = ECDH.new()
-right = ecc:random(64)
+right = rng:octet(64)
 teststr = right:string()
 test64 = right:base64()
 testhex = right:hex()
 
-print "left octet.new()"
-left = OCTET.new()
-
 print '== test octet copy'
 left = right;
+hash = HASH.new()
 assert(left == right)
-assert(ecc:hash(left) == ecc:hash(right))
+assert(hash:process(left) == hash:process(right))
 
 print '== test string import/export'
 left:string(teststr)
@@ -40,20 +39,20 @@ dotest(left, right)
 print '=== compare strings'
 dotest(left:string(), teststr)
 print '=== compare hashes'
-dotest(ecc:hash(left), ecc:hash(right))
+dotest(hash:process(left), hash:process(right))
 
 print '== test base64 import/export'
 left:base64(test64)
 assert(left == right)
 assert(left:base64() == test64)
-assert(ecc:hash(left) == ecc:hash(right))
+assert(hash:process(left) == hash:process(right))
 
 
 print '== test hex import/export'
 left:hex(testhex)
 assert(left == right)
 assert(left:hex() == testhex)
-assert(ecc:hash(left) == ecc:hash(right))
+assert(hash:process(left) == hash:process(right))
 
 print '= OK'
 
