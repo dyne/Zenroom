@@ -417,6 +417,23 @@ static int pad(lua_State *L) {
 }
 
 /***
+    Fill an octet with zero values up to indicated size or its maximum size.
+
+    @int[opt=octet:max] length fill with zero up to this size, use maxumum octet size if omitted
+    @function octet:zero(length)
+*/
+static int zero(lua_State *L) {
+	octet *o = o_arg(L,1);	SAFE(o);
+	const int len = luaL_optinteger(L, 2, o->max);
+	octet *n = o_new(L,len); SAFE(n);
+	OCT_copy(n,o);
+	int i;
+	for(i=0; i<len; i++) n->val[i]=0x0;
+	n->len = len;
+	return 1;
+}
+
+/***
     Compare two octets to see if contents are equal.
 
     @function octet:eq(first, second)
@@ -470,10 +487,6 @@ static int max(lua_State *L) {
 
 
 
-#define octet_common_methods  \
-	{"random", o_random},       \
-    {"max", max}
-
 int luaopen_octet(lua_State *L) {
 	const struct luaL_Reg octet_class[] = {
 		{"new",newoctet},
@@ -485,18 +498,16 @@ int luaopen_octet(lua_State *L) {
 		{"base64",from_base64},
 		{"string",from_string},
 		{"hex",from_hex},
-
-		octet_common_methods,
 		{NULL,NULL}
 	};
 	const struct luaL_Reg octet_methods[] = {
-		octet_common_methods,
-		// inplace methods
 		{"hex"   , to_hex},
 		{"base64", to_base64},
 		{"string", to_string},
 		{"eq", eq},
 		{"pad", pad},
+		{"zero", zero},
+		{"max", max},
 		// idiomatic operators
 		{"__len",size},
 		{"__concat",concat_n},

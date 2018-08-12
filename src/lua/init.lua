@@ -13,9 +13,13 @@ BIG    = require('zenroom_big')
 RNG    = require('rng')
 HASH   = require('hash')
 
-function hex(data) return OCTET.hex(data) end
-function str(data) return OCTET.string(data) end
+function hex(data)    return OCTET.hex(data) end
+function str(data)    return OCTET.string(data) end
 function base64(data) return OCTET.base64(data) end
+
+function zero(len)   return OCTET.new(len):zero(len) end
+function random(len) return RNG.new():octet(len) end
+
 function inspect(var)
    local simple = type(var)
    if simple == "userdata" then 
