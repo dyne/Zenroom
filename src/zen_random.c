@@ -18,6 +18,22 @@
  * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+
+/// <h1>Cryptographically Secure Random Number Generator (RNG)</h1>
+//
+// This method is initialised with a different seed upon creation.
+//
+// Cryptographic security is achieved by hashing the random numbers
+// using this sequence: unguessable seed -> SHA -> PRNG internal state
+// -> SHA -> random numbers. See <a
+// href="ftp://ftp.rsasecurity.com/pub/pdfs/bull-1.pdf">this paper</a>
+// for a justification.
+//
+// @module rng
+// @author Denis "Jaromil" Roio
+// @license GPLv3
+// @copyright Dyne.org foundation 2017-2018
+
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
@@ -26,17 +42,14 @@
 #include <zen_error.h>
 #include <lua_functions.h>
 
-#include <amcl.h>
 #include <time.h>
 
 #include <zenroom.h>
 #include <zen_octet.h>
+#include <zen_random.h>
 #include <zen_memory.h>
 #include <zen_big.h>
 #include <randombytes.h>
-
-// easier name (csprng comes from amcl.h in milagro)
-#define RNG csprng
 
 RNG* rng_new(lua_State *L) {
 	HERE();
@@ -66,11 +79,8 @@ RNG* rng_arg(lua_State *L, int n) {
 	return((RNG*)ud);
 }
 
-int rng_destroy(lua_State *L) {
-	HERE();
-	(void)L;
-	return 0;
-}
+/// Global RNG extension
+// @section rng.globals
 
 static int newrng(lua_State *L) {
 	HERE();
@@ -78,7 +88,16 @@ static int newrng(lua_State *L) {
     return 1;
 }
 
-static int rng_oct(lua_State *L) {
+/***
+    Create a new octet of given lenght filled with random data.
+
+    @param int length of random material in bytes
+    @function octet(int)
+    @usage
+    rng = RNG.new()
+    print(rng:octet(32):hex())
+*/
+int rng_oct(lua_State *L) {
 	RNG *rng = rng_arg(L,1); SAFE(rng);
 	int tn;
 	lua_Number n = lua_tonumberx(L, 2, &tn);
@@ -87,16 +106,19 @@ static int rng_oct(lua_State *L) {
 	return 1;
 }
 
-static int rng_big(lua_State *L) {
+int rng_big(lua_State *L) {
 	RNG *rng = rng_arg(L,1); SAFE(rng);
 	big *res = big_new(L); SAFE(res);
 	BIG_random(res->val, rng);
 	return(1);
 }
 
-/**
-   Returns a random BIG number reduced to modulo first argument, removing bias.
-   see WCC function randomnum in milagro.
+/***
+   Returns a random BIG number reduced to modulo first argument,
+   removing bias.
+
+   @param modulus limit the big number to this modulus
+   @return a new randomg @{big} number
 */
 static int rng_modbig(lua_State *L) {
 	RNG *rng = rng_arg(L,1); SAFE(rng);
@@ -116,7 +138,6 @@ int luaopen_rng(lua_State *L) {
 		{"oct", rng_oct},
 		{"big", rng_big},
 		{"modbig", rng_modbig},
-		{"__gc", rng_destroy},
 		{NULL,NULL}
 	};
 	zen_add_class(L, "rng", rng_class, rng_methods);
