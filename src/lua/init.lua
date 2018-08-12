@@ -20,6 +20,18 @@ function base64(data) return OCTET.base64(data) end
 function zero(len)   return OCTET.new(len):zero(len) end
 function random(len) return RNG.new():octet(len) end
 
+-- when using facility functions, global hashers are created only once
+SHA256 = nil
+SHA512 = nil
+function sha256(data)
+   if SHA256==nil then SHA256 = HASH.new('sha256') end -- optimization
+   return SHA256:process(data)
+end
+function sha512(data)
+   if SHA512==nil then SHA512 = HASH.new('sha512') end -- optimization
+   return SHA512:process(data)
+end
+
 function inspect(var)
    local simple = type(var)
    if simple == "userdata" then 
