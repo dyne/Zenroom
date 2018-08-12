@@ -61,6 +61,7 @@ HASH* hash_new(lua_State *L, const char *hashtype) {
 	luaL_getmetatable(L, "zenroom.hash");
 	lua_setmetatable(L, -2);
 	char ht[16];
+	hash->sha256 = NULL; hash->sha384 = NULL; hash->sha512 = NULL;
 	if(hashtype) strncpy(ht,hashtype,15);
 	else         strncpy(ht,"sha256",15);
 	if(strcasecmp(hashtype,"sha256") == 0) {
@@ -69,6 +70,12 @@ HASH* hash_new(lua_State *L, const char *hashtype) {
 		hash->algo = _SHA256;
 		hash->sha256 = zen_memory_alloc(sizeof(hash256));
 		HASH256_init(hash->sha256);
+	} else if(strcasecmp(hashtype,"sha512") == 0) {
+		strncpy(hash->name,hashtype,15);
+		hash->len = 64;
+		hash->algo = _SHA512;
+		hash->sha512 = zen_memory_alloc(sizeof(hash512));
+		HASH512_init(hash->sha512);
 	} // ... TODO: other hashes
 	else {
 		lerror(L, "Hash algorithm not known: %s", hashtype);
@@ -88,6 +95,8 @@ int hash_destroy(lua_State *L) {
 	HEREs(h->name);
 	if(h->algo == _SHA256)
 		zen_memory_free(h->sha256);
+	else if (h->algo == _SHA512)
+		zen_memory_free(h->sha512);
 	return 0;
 }
 
@@ -98,6 +107,15 @@ static int lua_new_hash(lua_State *L) {
 	return 1;
 }
 
+
+/**
+   Hash an octet into a new octet. Use the configured hash function to
+   hash an octet string and return a new one containing its hash.
+
+   @param data octet containing the data to be hashed
+   @function hash:process(data)
+   @return a new octet containing the hash of the data
+*/
 static int hash_process(lua_State *L) {
 	HASH *h = hash_arg(L,1); SAFE(h);
 	octet *o = o_arg(L,2); SAFE(o);
@@ -106,6 +124,11 @@ static int hash_process(lua_State *L) {
 		int i; octet *res = o_new(L,33); SAFE(res);
 		for(i=0;i<o->len;i++) HASH256_process(h->sha256,o->val[i]);
 		HASH256_hash(h->sha256,res->val);
+		res->len = h->len;
+	} else if(h->algo == _SHA512) {
+		int i; octet *res = o_new(L,65); SAFE(res);
+		for(i=0;i<o->len;i++) HASH512_process(h->sha512,o->val[i]);
+		HASH512_hash(h->sha512,res->val);
 		res->len = h->len;
 	}
 	return 1;
