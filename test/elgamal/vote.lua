@@ -94,7 +94,7 @@ function prove_one(a, b, k)
 
 	local rk = (wk - c:modmul(k, order)) % order
 
-	return c, rk, Aw, Bw
+	return c, rk
 end
 
 
@@ -120,8 +120,8 @@ for i =2, #increment do
 	sum_b = sum_b + increment[i]['b']
 	sum_k = sum_k + increment[i]['k']
 end
-c, rk, Aw, Bw = prove_one(sum_a, sum_b, sum_k)
-prove_sum_one = { c = tostring(c), rk = tostring(rk), Aw = writeEcp(Aw), Bw = writeEcp(Bw) }
+c, rk  = prove_one(sum_a, sum_b, sum_k)
+prove_sum_one = { c = tostring(c), rk = tostring(rk) }
 
 -- Load scores in json
 prev_scores = LAMBDA.map(scores, function(k, v) 
