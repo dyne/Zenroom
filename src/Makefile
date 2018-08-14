@@ -46,6 +46,7 @@ LDADD += ${milib}/libamcl_curve_ED25519.a
 LDADD += ${milib}/libamcl_curve_BLS383.a
 LDADD += ${milib}/libamcl_pairing_BLS383.a
 LDADD += ${milib}/libamcl_curve_GOLDILOCKS.a
+LDADD += ${milib}/libamcl_curve_SECP256K1.a
 LDADD += ${milib}/libamcl_core.a
 
 

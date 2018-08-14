@@ -5,6 +5,7 @@
 #include <ecdh_ED25519.h>
 #include <ecdh_BLS383.h>
 #include <ecdh_GOLDILOCKS.h>
+#include <ecdh_SECP256K1.h>
 
 ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 	ecdh *e = NULL;
@@ -63,6 +64,23 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 		e->ECP__ECIES_DECRYPT = ECP_GOLDILOCKS_ECIES_DECRYPT;
 		e->ECP__SP_DSA = ECP_GOLDILOCKS_SP_DSA;
 		e->ECP__VP_DSA = ECP_GOLDILOCKS_VP_DSA;
+
+	} else if(strcasecmp(curve,"secp256k1")==0) {
+		e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
+		e->keysize = EGS_SECP256K1;
+		e->fieldsize = EFS_SECP256K1;
+		e->rng = NULL;
+		e->hash = 32;  // TODO: AES256 hardcoded for now, was
+		// HASH_TYPE_ECC_GOLDILOCKS but that has size
+		// 64 and breaks AES_GCM, see:
+		// https://github.com/milagro-crypto/milagro-crypto-c/issues/285
+		e->ECP__KEY_PAIR_GENERATE = ECP_SECP256K1_KEY_PAIR_GENERATE;
+		e->ECP__PUBLIC_KEY_VALIDATE	= ECP_SECP256K1_PUBLIC_KEY_VALIDATE;
+		e->ECP__SVDP_DH = ECP_SECP256K1_SVDP_DH;
+		e->ECP__ECIES_ENCRYPT = ECP_SECP256K1_ECIES_ENCRYPT;
+		e->ECP__ECIES_DECRYPT = ECP_SECP256K1_ECIES_DECRYPT;
+		e->ECP__SP_DSA = ECP_SECP256K1_SP_DSA;
+		e->ECP__VP_DSA = ECP_SECP256K1_VP_DSA;
 
 	// } else if(strcasecmp(curve,"bn254cx")==0) {
 	// 	e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
