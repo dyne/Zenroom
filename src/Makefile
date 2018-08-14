@@ -36,18 +36,18 @@ SOURCES := \
 
 # zen_rsa.o zen_rsa_aux.o \
 
-LDADD   := ../lib/lua53/src/liblua.a
-# LDADD   += ../build/luazen/libluazen.a
-LDADD   += ../lib/lpeglabel/lpeglabel.a
+# LDADD   := ../lib/lua53/src/liblua.a
+# # LDADD   += ../build/luazen/libluazen.a
+# LDADD   += ../lib/lpeglabel/lpeglabel.a
 
-milib := ../lib/milagro-crypto-c/lib
-# LDADD += ${milib}/libamcl_rsa_2048.a ${milib}/libamcl_rsa_4096.a
-LDADD += ${milib}/libamcl_curve_ED25519.a
-LDADD += ${milib}/libamcl_curve_BLS383.a
-LDADD += ${milib}/libamcl_pairing_BLS383.a
-LDADD += ${milib}/libamcl_curve_GOLDILOCKS.a
-LDADD += ${milib}/libamcl_curve_SECP256K1.a
-LDADD += ${milib}/libamcl_core.a
+# milib := ../lib/milagro-crypto-c/lib
+# # LDADD += ${milib}/libamcl_rsa_2048.a ${milib}/libamcl_rsa_4096.a
+# LDADD += ${milib}/libamcl_curve_ED25519.a
+# LDADD += ${milib}/libamcl_curve_BLS383.a
+# LDADD += ${milib}/libamcl_pairing_BLS383.a
+# LDADD += ${milib}/libamcl_curve_GOLDILOCKS.a
+# LDADD += ${milib}/libamcl_curve_SECP256K1.a
+# LDADD += ${milib}/libamcl_core.a
 
 
 
@@ -58,43 +58,37 @@ js: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
 js: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom.js ${LDFLAGS} ${LDADD} --embed-file lua@/
 
-html: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
-html: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o zenroom.html ${LDFLAGS} ${LDADD} --preload-file lua@/
-
-demo: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
-demo: ${SOURCES}
+js-demo: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o ../docs/demo/index.html ${LDFLAGS} ${LDADD} --preload-file lua@/
 
 # static: LDADD  += /usr/lib/${ARCH}-linux-musl/libc.a
 # using default path for non-native installs of musl
-static: LDADD  += /usr/local/musl/lib/libc.a
-static: ${SOURCES}
+musl: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-static ${LDFLAGS} ${LDADD}
 
-system-static: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o zenroom-static ${LDFLAGS} ${LDADD}
-
-shared: LDADD+=   -lm -lpthread
-shared: ${SOURCES}
+linux: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-shared ${LDFLAGS} ${LDADD}
 
-shared-lib: LDADD+= -lm
-shared-lib: CFLAGS += -DLIBRARY
-shared-lib: ${SOURCES}
+linux-lib: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o libzenroom-${ARCH}-${VERSION}-${BRANCH}-${HASH}.so ${LDFLAGS} ${LDADD}
 
-win-exe: CFLAGS +=  -O3 -Wall -Wextra -pedantic -std=gnu99
-win-exe: LDFLAGS += -L/usr/x86_64-w64-mingw32/lib -static
-win-exe: LDADD +=  -l:libm.a -l:libpthread.a -lssp
+linux-python: ${SOURCES}
+	${LD} -shared ${SOURCES} zen_python.o -o _zenroom.so
+
+linux-java: ${SOURCES}
+	${LD} -shared ${SOURCES} zen_java.o -o zenroom-java-linux.so ${LDADD}
+
+osx: ${SOURCES}
+	${CC} ${CFLAGS} ${SOURCES} -o zenroom.command ${LDFLAGS} ${LDADD}
+
+win-exe: LDFLAGS += -static
 win-exe: ${SOURCES}
 	./stamp-exe.sh
 	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.exe zenroom.res ${SOURCES} ${LDADD}
 	x86_64-w64-mingw32-strip zenroom.exe
 
-win-dll: CFLAGS +=  -O3 -Wall -Wextra -pedantic -std=gnu99 -DLIBRARY
-win-dll: LDFLAGS += -L/usr/x86_64-w64-mingw32/lib -shared
-win-dll: LDADD +=  -l:libm.a -l:libpthread.a -lssp
+win-dll: CFLAGS += -DLIBRARY
+win-dll: LDFLAGS += -shared
 win-dll: ${SOURCES}
 	./stamp-exe.sh
 	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.dll zenroom.res ${SOURCES} ${LDADD} -Wl,--out-implib,zenroom_dll.a

@@ -17,34 +17,21 @@
 #  <http://www.gnu.org/licenses/>.
 
 pwd := $(shell pwd)
-mil := ${pwd}/build/milagro
-extras := ${pwd}/docs/demo
+ARCH=$(shell uname -m)
 
-# default
-gcc := gcc
-ar := ar
-ranlib := ranlib
-cflags_protection := -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
-cflags := -O2 ${cflags_protection}
-musl := ${pwd}/build/musl
-platform := posix
-luasrc := ${pwd}/lib/lua53/src
-
-# milagro settings
-rsa_bits := ""
-ecc_curves := ED25519,BLS383,GOLDILOCKS,SECP256K1
-milagro_cmake_flags := -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DWORD_SIZE=32 -DAMCL_CURVE=${ecc_curves} -DAMCL_RSA=${rsa_bits} -DCMAKE_SHARED_LIBRARY_LINK_FLAGS="" -DC99=1 -DPAIRING_FRIENDLY_BLS383='BLS'
+include ${pwd}/build/config.mk
 
 test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
 
 all:
 	@echo "Choose a target:"
-	@echo "- js, wasm, demo, html	(need EMSDK env loaded)"
-	@echo "- shared, debug		(uses GCC, opt debugging symbols)"
+	@echo "- js-node, js-wasm, js-demo   (need EMSDK env loaded)"
+	@echo "- linux, linux-lib, linux-clang, linux-debug"
+	@echo "- linux-python, linux-java        (language bindings)"
 	@echo "- osx			(uses default compiler on Apple/OSX)"
-	@echo "- win			(cross-compile using MINGW on Linux)"
-	@echo "- static		(fully static build using MUSLCC)"
-	@echo "- system-static		(static build using system CC)"
+	@echo "- win, win-dll	(cross-compile using MINGW on Linux)"
+	@echo "- musl, musl-local, musl-system   (full static build)"
+
 	@echo "for android and ios see scripts in build/"
 
 embed-lua:
@@ -59,123 +46,105 @@ apply-patches:
 
 # TODO: improve flags according to
 # https://github.com/kripken/emscripten/blob/master/src/settings.js
-js: gcc=${EMSCRIPTEN}/emcc
-js: ar=${EMSCRIPTEN}/emar
-js: cflags := -O2 -D'ARCH=\"JS\"' -Wall -DARCH_JS
-js: ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zenroom_exec_tobuf\",\"_zenroom_parse_ast\",\"_set_debug\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s USE_SDL=0
-js: apply-patches lua53 milagro-js lpeglabel
+js-node: cflags += -DARCH_JS -D'ARCH=\"JS\"'
+js-node: apply-patches lua53 milagro-js lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 	@mkdir -p build/nodejs
-	@cp -v src/zenroom.js 	 build/nodejs/
+	@cp -v src/zenroom.js 	  build/nodejs/
 	@cp -v src/zenroom.js.mem build/nodejs/
 
-wasm: gcc=${EMSCRIPTEN}/emcc
-wasm: ar=${EMSCRIPTEN}/emar
-wasm: cflags := -O2 -D'ARCH=\"WASM\"' -Wall -DARCH_WASM
-wasm: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zenroom_exec_tobuf\",\"_zenroom_parse_ast\",\"_set_debug\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s MODULARIZE=1 -s USE_SDL=0 -s USE_PTHREADS=0
-wasm: apply-patches lua53 milagro-js lpeglabel
+js-wasm: cflags += -DARCH_WASM -D'ARCH=\"WASM\"'
+js-wasm: ldflags += -s WASM=1 -s MODULARIZE=1
+js-wasm: apply-patches lua53 milagro-js lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
 	@mkdir -p build/wasm
 	@cp -v src/zenroom.js   build/wasm/
 	@cp -v src/zenroom.wasm build/wasm/
 
-demo: gcc=${EMSCRIPTEN}/emcc
-demo: ar=${EMSCRIPTEN}/emar
-demo: cflags := -O2 -D'ARCH=\"WASM\"' -DARCH_WASM
-demo: ldflags := -s WASM=1 -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zenroom_exec_tobuf\",\"_zenroom_parse_ast\",\"_set_debug\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s ASSERTIONS=1 --shell-file ${extras}/shell_minimal.html -s NO_EXIT_RUNTIME=1 -s USE_SDL=0 -s USE_PTHREADS=0
-demo: apply-patches lua53 milagro-js lpeglabel
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src demo
 
-html: gcc=${EMSCRIPTEN}/emcc
-html: ar=${EMSCRIPTEN}/emar
-html: cflags := -O2 -D'ARCH=\"JS\"' -DARCH_JS
-html: ldflags := -sEXPORTED_FUNCTIONS='["_main","_zenroom_exec",\"_zenroom_exec_tobuf\",\"_zenroom_parse_ast\",\"_set_debug\"]'
-html: apply-patches lua53 milagro-js lpeglabel
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src html
+js-demo: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"'
+js-demo: ldflags += -s WASM=1 -s ASSERTIONS=1 --shell-file ${extras}/shell_minimal.html -s NO_EXIT_RUNTIME=1
+js-demo: apply-patches lua53 milagro-js lpeglabel
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js-demo
 
-win: gcc=x86_64-w64-mingw32-gcc
-win: ar=x86_64-w64-mingw32-ar
-win: ranlib=x86_64-w64-mingw32-ranlib
-win: cflags += -D'ARCH=\"WIN\"' -std=c99 -DARCH_WIN
-win: platform = posix
 win: apply-patches lua53 milagro-win lpeglabel
-	CC=${gcc} CFLAGS="${cflags}" make -C src win-exe
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+		make -C src win-exe
 
-win-dll: gcc=x86_64-w64-mingw32-gcc
-win-dll: ar=x86_64-w64-mingw32-ar
-win-dll: ranlib=x86_64-w64-mingw32-ranlib
-win-dll: cflags += -D'ARCH=\"WIN\"' -std=c99 -DARCH_WIN
-win-dll: platform = posix
 win-dll: apply-patches lua53 milagro-win lpeglabel
-	CC=${gcc} CFLAGS="${cflags}" make -C src win-dll
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+		 make -C src win-dll
+
+musl: ldadd += /usr/lib/${ARCH}-linux-musl/libc.a
+musl: apply-patches lua53 milagro lpeglabel
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+		make -C src musl
+
+musl-local: ldadd += /usr/local/musl/lib/libc.a
+musl-local: apply-patches lua53 milagro lpeglabel
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+		make -C src musl
+
+musl-system: gcc := gcc
+musl-system: apply-patches lua53 milagro lpeglabel
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+		make -C src musl
 
 
+linux: apply-patches lua53 milagro lpeglabel
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+		make -C src linux
 
-static: gcc := musl-gcc
-static: cflags := -Os -static -Wall -std=gnu99 ${cflags_protection} -D'ARCH=\"MUSL\"' -D__MUSL__ -DARCH_MUSL
-static: ldflags := -static
-static: apply-patches lua53 milagro lpeglabel
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src static
+linux-debug:
+linux-debug: cflags := -O1 -ggdb -D'ARCH=\"LINUX\"' ${cflags_protection} -DARCH_LINUX -DDEBUG=1
+linux-debug: apply-patches lua53 milagro lpeglabel linux
 
-system-static: cflags := -Os -static -Wall -std=gnu99 ${cflags_protection} -D'ARCH=\"UNIX\"' -D__MUSL__ -DARCH_MUSL
-system-static: ldflags := -static
-system-static: apply-patches lua53 milagro lpeglabel
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src system-static
+linux-clang: gcc := clang
+linux-clang: apply-patches lua53 milagro lpeglabel linux
 
-shared: gcc := gcc
-shared: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"LINUX\"' -DARCH_LINUX
-shared: ldflags := -lm
-shared: platform := linux
-shared: apply-patches lua53 milagro lpeglabel
-	CC=${gcc} CFLAGS="${cflags}" make -C src shared
+linux-sanitizer: gcc := clang
+linux-sanitizer: cflags := -O1 -ggdb -D'ARCH=\"LINUX\"' ${cflags_protection} -DARCH_LINUX -DDEBUG=1 -fsanitize=address -fno-omit-frame-pointer
+linux-sanitizer: apply-patches lua53 milagro lpeglabel linux
+	ASAN_OPTIONS=verbosity=1:log_threads=1 \
+	ASAN_SYMBOLIZER_PATH=/usr/bin/asan_symbolizer \
+	ASAN_OPTIONS=abort_on_error=1 \
+		./src/zenroom-shared -i -d
 
+linux-lib: cflags += -shared -DLIBRARY
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+		make -C src linux-lib
 
-shared-clang: gcc := clang
-shared-clang: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"LINUX\"' -DARCH_LINUX
-shared-clang: ldflags := -lm
-shared-clang: platform := linux
-shared-clang: apply-patches lua53 milagro lpeglabel
-CC=${gcc} CFLAGS="${cflags}" make -C src shared
+linux-python: apply-patches lua53 milagro lpeglabel
+	swig -python ${pwd}/build/swig.i
+	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c \
+		 -o src/zen_python.o $(shell pkg-config python --cflags)
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+		make -C src linux-python
 
-shared-lib: gcc := gcc
-shared-lib: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"LINUX\"' -shared -DARCH_LINUX
-shared-lib: ldflags := -lm
-shared-lib: platform := linux
-shared-lib: apply-patches lua53 milagro lpeglabel
-	CC=${gcc} CFLAGS="${cflags}" make -C src shared-lib
+linux-java: cflags += -I /opt/jdk/include -I /opt/jdk/include/linux
+linux-java: apply-patches lua53 milagro lpeglabel
+	swig -java ${pwd}/build/swig.i
+	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c -o src/zen_java.o
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+		make -C src linux-java
 
-osx: gcc := gcc
-osx: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -DARCH_OSX
-osx: ldflags := -lm
-osx: platform := macosx
 osx: apply-patches lua53 milagro lpeglabel
-	CC=${gcc} CFLAGS="${cflags}" make -C src shared
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+		make -C src osx
 
 ios-lib:
-	TARGET=${ARCH} AR=${ar} CC=${gcc} CFLAGS="${cflags}" make -C src ios-lib
-	cp -v src/zenroom-ios-${ARCH}.a build/
+	TARGET=${ARCH} AR=${ar} \
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	make -C src ios-lib
+	@cp -v src/zenroom-ios-${ARCH}.a build/
 
 ios-armv7: ARCH := armv7
 ios-armv7: OS := iphoneos
-ios-armv7: gcc := $(shell xcrun --sdk iphoneos -f gcc 2>/dev/null)
-ios-armv7: ar := $(shell xcrun --sdk iphoneos -f ar 2>/dev/null)
-ios-armv7: ld := $(shell xcrun --sdk iphoneos -f ld 2>/dev/null)
-ios-armv7: ranlib := $(shell xcrun --sdk iphoneos -f ranlib 2>/dev/null)
-ios-armv7: SDK := $(shell xcrun --sdk iphoneos --show-sdk-path 2>/dev/null)
-ios-armv7: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM -DARCH_OSX
-ios-armv7: ldflags := -lm
 ios-armv7: platform := ios
 ios-armv7: apply-patches lua53 milagro lpeglabel ios-lib
 
 ios-arm64: ARCH := arm64
 ios-arm64: OS := iphoneos
-ios-arm64: gcc := $(shell xcrun --sdk iphoneos -f gcc 2>/dev/null)
-ios-arm64: ar := $(shell xcrun --sdk iphoneos -f ar 2>/dev/null)
-ios-arm64: ld := $(shell xcrun --sdk iphoneos -f ld 2>/dev/null)
-ios-arm64: ranlib := $(shell xcrun --sdk iphoneos -f ranlib 2>/dev/null)
-ios-arm64: SDK := $(shell xcrun --sdk iphoneos --show-sdk-path 2>/dev/null)
-ios-arm64: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM -DARCH_OSX
-ios-arm64: ldflags := -lm
 ios-arm64: platform := ios
 ios-arm64: apply-patches lua53 milagro lpeglabel ios-lib
 
@@ -186,8 +155,6 @@ ios-sim: ar := $(shell xcrun --sdk iphonesimulator -f ar 2>/dev/null)
 ios-sim: ld := $(shell xcrun --sdk iphonesimulator -f ld 2>/dev/null)
 ios-sim: ranlib := $(shell xcrun --sdk iphonesimulator -f ranlib 2>/dev/null)
 ios-sim: SDK := $(shell xcrun --sdk iphonesimulator --show-sdk-path 2>/dev/null)
-ios-sim: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM -DARCH_OSX
-ios-sim: ldflags := -lm
 ios-sim: platform := ios
 ios-sim: apply-patches lua53 milagro lpeglabel ios-lib
 
@@ -203,20 +170,6 @@ android: apply-patches lua53 milagro lpeglabel
 	LDFLAGS="--sysroot=/tmp/ndk-arch-21/sysroot" CC=${gcc} CFLAGS="${cflags}" make -C src android
 
 
-debug: gcc := gcc
-debug: cflags := -O1 -ggdb -D'ARCH=\"LINUX\"' ${cflags_protection} -DARCH_LINUX -DDEBUG=1
-debug: apply-patches lua53 milagro lpeglabel
-	CC=${gcc} CFLAGS="${cflags}" make -C src shared
-
-
-sanitizer: gcc := gcc
-sanitizer: cflags := -O1 -ggdb -D'ARCH=\"LINUX\"' ${cflags_protection} -DARCH_LINUX -DDEBUG=1 -fsanitize=address -fno-omit-frame-pointer
-sanitizer: apply-patches lua53 milagro lpeglabel
-	CC=${gcc} CFLAGS="${cflags}" make -C src shared
-	ASAN_OPTIONS=verbosity=1:log_threads=1 \
-	ASAN_SYMBOLIZER_PATH=/usr/bin/asan_symbolizer \
-	ASAN_OPTIONS=abort_on_error=1 \
-	  ./src/zenroom-shared -i -d
 
 lpeglabel:
 	CC=${gcc} CFLAGS="${cflags} -I${pwd}/lib/lua53/src" AR="${ar}" make -C lib/lpeglabel
@@ -232,24 +185,18 @@ lua53:
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
 	make -C ${pwd}/lib/lua53/src ${platform}
 
+milagro: system := Linux
 milagro:
-	@echo "-- Building milagro (POSIX)"
-	if ! [ -r ${pwd}/lib/milagro-crypto-c/CMakeCache.txt ]; then cd ${pwd}/lib/milagro-crypto-c && CC=${gcc} cmake . -DCMAKE_C_FLAGS="${cflags}" ${milagro_cmake_flags}; fi
-	if ! [ -r ${pwd}/lib/milagro-crypto-c/lib/libamcl_core.a ]; then CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c; fi
-
-milagro-win:
-	@echo "-- Building milagro (Windows)"
-	sed -i 's/project (AMCL)/project (AMCL C)/' ${pwd}/lib/milagro-crypto-c/CMakeLists.txt
-	if ! [ -r ${pwd}/lib/milagro-crypto-c/CMakeCache.txt ]; then cd ${pwd}/lib/milagro-crypto-c && CC=${gcc} AR=${ar} RANLIB=${ranlib} cmake . -DCMAKE_C_FLAGS="${cflags}" -DCMAKE_SYSTEM_NAME="Windows" ${milagro_cmake_flags}; fi
+	@echo "-- Building milagro (${system})"
+	@sed -i 's/project (AMCL)/project (AMCL C)/' ${pwd}/lib/milagro-crypto-c/CMakeLists.txt
+	if ! [ -r ${pwd}/lib/milagro-crypto-c/CMakeCache.txt ]; then cd ${pwd}/lib/milagro-crypto-c && CC=${gcc} AR=${ar} RANLIB=${ranlib} cmake . -DCMAKE_C_FLAGS="${cflags}" -DCMAKE_SYSTEM_NAME="${system}" ${milagro_cmake_flags}; fi
 	if ! [ -r ${pwd}/lib/milagro-crypto-c/lib/libamcl_core.a ]; then CC=${gcc} CFLAGS="${cflags}" AR=${ar} RANLIB=${ranlib} make -C ${pwd}/lib/milagro-crypto-c VERBOSE=1; fi
 
-milagro-js:
-	@echo "-- Building milagro (JS Emscripten)"
-	sed -i 's/project (AMCL)/project (AMCL C)/' ${pwd}/lib/milagro-crypto-c/CMakeLists.txt
-	if ! [ -r ${pwd}/lib/milagro-crypto-c/CMakeCache.txt ]; then cd ${pwd}/lib/milagro-crypto-c && CC=${gcc} cmake . -DCMAKE_C_FLAGS="${cflags}" -DCMAKE_SYSTEM_NAME="Javascript" ${milagro_cmake_flags} ; fi
-	if ! [ -r ${pwd}/lib/milagro-crypto-c/lib/libamcl_core.a ]; then CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c; fi
+milagro-win: system := Windows
+milagro-win: milagro
 
-#-DCMAKE_TOOLCHAIN_FILE="${pwd}/lib/milagro-crypto-c/resources/cmake/emscripten-cross.cmake"
+milagro-js: system:= Javascript
+milagro-js: milagro
 
 
 check-milagro: milagro
