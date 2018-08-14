@@ -8,9 +8,9 @@ local modules = {
    ["RNG"] = RNG, ["rng"] = RNG.new(),
    ["HASH"] = HASH, ["hash"] = HASH.new() }
 for n,m in pairs(modules) do
-   if inspect(m)=='table' then
+   if type(m)=='table' then
 	  for k,v in pairs(m) do 
-		 if inspect(v)~='table' and string.sub(k,1,1)~='_' then
+		 if type(v)~='table' and string.sub(k,1,1)~='_' then
 			print(n.."."..k)
 		 end
 	  end
