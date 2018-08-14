@@ -76,35 +76,35 @@ win-dll: apply-patches lua53 milagro-win lpeglabel
 		 make -C src win-dll
 
 musl: ldadd += /usr/lib/${ARCH}-linux-musl/libc.a
-musl: apply-patches lua53 milagro lpeglabel
+musl: apply-patches lua53 milagro-posix lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src musl
 
 musl-local: ldadd += /usr/local/musl/lib/libc.a
-musl-local: apply-patches lua53 milagro lpeglabel
+musl-local: apply-patches lua53 milagro-posix lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src musl
 
 musl-system: gcc := gcc
-musl-system: apply-patches lua53 milagro lpeglabel
+musl-system: apply-patches lua53 milagro-posix lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src musl
 
 
-linux: apply-patches lua53 milagro lpeglabel
+linux: apply-patches lua53 milagro-posix lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src linux
 
 linux-debug:
 linux-debug: cflags := -O1 -ggdb -D'ARCH=\"LINUX\"' ${cflags_protection} -DARCH_LINUX -DDEBUG=1
-linux-debug: apply-patches lua53 milagro lpeglabel linux
+linux-debug: apply-patches lua53 milagro-posix lpeglabel linux
 
 linux-clang: gcc := clang
-linux-clang: apply-patches lua53 milagro lpeglabel linux
+linux-clang: apply-patches lua53 milagro-posix lpeglabel linux
 
 linux-sanitizer: gcc := clang
 linux-sanitizer: cflags := -O1 -ggdb -D'ARCH=\"LINUX\"' ${cflags_protection} -DARCH_LINUX -DDEBUG=1 -fsanitize=address -fno-omit-frame-pointer
-linux-sanitizer: apply-patches lua53 milagro lpeglabel linux
+linux-sanitizer: apply-patches lua53 milagro-posix lpeglabel linux
 	ASAN_OPTIONS=verbosity=1:log_threads=1 \
 	ASAN_SYMBOLIZER_PATH=/usr/bin/asan_symbolizer \
 	ASAN_OPTIONS=abort_on_error=1 \
@@ -114,7 +114,7 @@ linux-lib: cflags += -shared -DLIBRARY
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src linux-lib
 
-linux-python: apply-patches lua53 milagro lpeglabel
+linux-python: apply-patches lua53 milagro-posix lpeglabel
 	swig -python ${pwd}/build/swig.i
 	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c \
 		 -o src/zen_python.o $(shell pkg-config python --cflags)
@@ -122,15 +122,22 @@ linux-python: apply-patches lua53 milagro lpeglabel
 		make -C src linux-python
 
 linux-java: cflags += -I /opt/jdk/include -I /opt/jdk/include/linux
-linux-java: apply-patches lua53 milagro lpeglabel
+linux-java: apply-patches lua53 milagro-posix lpeglabel
 	swig -java ${pwd}/build/swig.i
 	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c -o src/zen_java.o
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src linux-java
 
-osx: apply-patches lua53 milagro lpeglabel
+osx: apply-patches lua53 milagro-posix lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src osx
+
+osx-python: osx
+	swig -python ${pwd}/build/swig.i
+	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c \
+		-o src/zen_python.o $(shell pkg-config python --cflags)
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	make -C src linux-python
 
 ios-lib:
 	TARGET=${ARCH} AR=${ar} \
@@ -141,12 +148,12 @@ ios-lib:
 ios-armv7: ARCH := armv7
 ios-armv7: OS := iphoneos
 ios-armv7: platform := ios
-ios-armv7: apply-patches lua53 milagro lpeglabel ios-lib
+ios-armv7: apply-patches lua53 milagro-posix lpeglabel ios-lib
 
 ios-arm64: ARCH := arm64
 ios-arm64: OS := iphoneos
 ios-arm64: platform := ios
-ios-arm64: apply-patches lua53 milagro lpeglabel ios-lib
+ios-arm64: apply-patches lua53 milagro-posix lpeglabel ios-lib
 
 ios-sim: ARCH := x86_64
 ios-sim: OS := iphonesimulator
@@ -156,7 +163,7 @@ ios-sim: ld := $(shell xcrun --sdk iphonesimulator -f ld 2>/dev/null)
 ios-sim: ranlib := $(shell xcrun --sdk iphonesimulator -f ranlib 2>/dev/null)
 ios-sim: SDK := $(shell xcrun --sdk iphonesimulator --show-sdk-path 2>/dev/null)
 ios-sim: platform := ios
-ios-sim: apply-patches lua53 milagro lpeglabel ios-lib
+ios-sim: apply-patches lua53 milagro-posix lpeglabel ios-lib
 
 ios-fat:
 	lipo -create build/zenroom-ios-x86_64.a build/zenroom-ios-arm64.a build/zenroom-ios-armv7.a -output build/zenroom-ios.a
@@ -166,7 +173,7 @@ android: ar := $(AR)
 android: ranlib := $(RANLIB)
 android: ld := $(ld)
 android: cflags := ${cflags} -std=c99 -shared -DLUA_USE_DLOPEN
-android: apply-patches lua53 milagro lpeglabel
+android: apply-patches lua53 milagro-posix lpeglabel
 	LDFLAGS="--sysroot=/tmp/ndk-arch-21/sysroot" CC=${gcc} CFLAGS="${cflags}" make -C src android
 
 
@@ -185,12 +192,14 @@ lua53:
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
 	make -C ${pwd}/lib/lua53/src ${platform}
 
-milagro: system := Linux
 milagro:
 	@echo "-- Building milagro (${system})"
 	@sed -i 's/project (AMCL)/project (AMCL C)/' ${pwd}/lib/milagro-crypto-c/CMakeLists.txt
 	if ! [ -r ${pwd}/lib/milagro-crypto-c/CMakeCache.txt ]; then cd ${pwd}/lib/milagro-crypto-c && CC=${gcc} AR=${ar} RANLIB=${ranlib} cmake . -DCMAKE_C_FLAGS="${cflags}" -DCMAKE_SYSTEM_NAME="${system}" ${milagro_cmake_flags}; fi
 	if ! [ -r ${pwd}/lib/milagro-crypto-c/lib/libamcl_core.a ]; then CC=${gcc} CFLAGS="${cflags}" AR=${ar} RANLIB=${ranlib} make -C ${pwd}/lib/milagro-crypto-c VERBOSE=1; fi
+
+milagro-posix: system:= Linux
+milagro-posix: milagro
 
 milagro-win: system := Windows
 milagro-win: milagro
@@ -199,7 +208,7 @@ milagro-js: system:= Javascript
 milagro-js: milagro
 
 
-check-milagro: milagro
+check-milagro: milagro-posix
 	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c test
 
 ## tests that require too much memory

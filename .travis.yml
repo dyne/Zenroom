@@ -23,6 +23,7 @@ addons:
     - zsh
     - musl-tools
     - mingw-w64
+    - swig
 
 before_install:
 - git submodule update --init --recursive
