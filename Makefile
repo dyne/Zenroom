@@ -194,17 +194,22 @@ lua53:
 
 milagro:
 	@echo "-- Building milagro (${system})"
-	@sed -i 's/project (AMCL)/project (AMCL C)/' ${pwd}/lib/milagro-crypto-c/CMakeLists.txt
 	if ! [ -r ${pwd}/lib/milagro-crypto-c/CMakeCache.txt ]; then cd ${pwd}/lib/milagro-crypto-c && CC=${gcc} AR=${ar} RANLIB=${ranlib} cmake . -DCMAKE_C_FLAGS="${cflags}" -DCMAKE_SYSTEM_NAME="${system}" ${milagro_cmake_flags}; fi
 	if ! [ -r ${pwd}/lib/milagro-crypto-c/lib/libamcl_core.a ]; then CC=${gcc} CFLAGS="${cflags}" AR=${ar} RANLIB=${ranlib} make -C ${pwd}/lib/milagro-crypto-c VERBOSE=1; fi
+
+milagro-osx: system:= Darwin
+milagro-osx: $(shell sed -i '' "s/project (AMCL)/project (AMCL C)/" ${pwd}/lib/milagro-crypto-c/CMakeLists.txt)
+milagro-osx: milagro
 
 milagro-posix: system:= Linux
 milagro-posix: milagro
 
 milagro-win: system := Windows
+milagro-win: $(shell sed -i 's/project (AMCL)/project (AMCL C)/' ${pwd}/lib/milagro-crypto-c/CMakeLists.txt)
 milagro-win: milagro
 
 milagro-js: system:= Javascript
+milagro-js: $(shell sed -i 's/project (AMCL)/project (AMCL C)/' ${pwd}/lib/milagro-crypto-c/CMakeLists.txt)
 milagro-js: milagro
 
 
