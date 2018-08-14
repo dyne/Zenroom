@@ -9,14 +9,14 @@ ECDH   = require('ecdh')
 LAMBDA = require('functional')
 INSIDE = require('inspect')
 ECP    = require('ecp')
-ECP2    = require('ecp2')
+ECP2   = require('ecp2')
 BIG    = require('zenroom_big')
 HASH   = require('zenroom_hash')
 
-
-
-function inspect(var)
-   local simple = type(var)
+-- override type to recognize zenroom's types
+luatype = type
+function type(var)
+   local simple = luatype(var)
    if simple == "userdata" then 
 	  return(getmetatable(var).__name)
    else return(simple) end
