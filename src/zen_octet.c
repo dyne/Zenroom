@@ -62,18 +62,21 @@
 #include <zenroom.h>
 #include <zen_memory.h>
 
+// from base58.c
+extern int b58tobin(void *bin, size_t *binszp, const char *b58, size_t b58sz);
+extern int b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz);
+
 static int _max(int x, int y) { if(x > y) return x;	else return y; }
 // static int _min(int x, int y) { if(x < y) return x;	else return y; }
 
-// takes a base64 string and calculated the maximum length of the
+// takes a base string and calculated the maximum length of the
 // decoded string
 #include <ctype.h>
-static int getlen_base64(int len) {
-	int res = ((3+(4*(len/3))) & ~0x03)+0x0f;
-	return(res);
-}
+static int getlen_base64(int len) {	return( ((3+(4*(len/3))) & ~0x03)+0x0f ); }
+static int getlen_base58(int len) {	return( ((3+(5*(len/3))) & ~0x03)+0x0f ); }
+
 // assumes null terminated string
-// returns 0 if not base64 else length of base64 string
+// returns 0 if not base else length of base encoded string
 int is_base64(const char *in) {
 	if(!in) { ERROR(); return 0; }
 	int c;
@@ -83,6 +86,22 @@ int is_base64(const char *in) {
 		      || '=' == in[c]
 		      || '/' == in[c])) {
 			ERROR(); return 0; }
+	}
+	return c;
+}
+extern const int8_t b58digits_map[];
+int is_base58(const char *in) {
+	if(!in) {
+		HEREs("null string in is_base58");
+		return 0; }
+	int c;
+	for(c=0; in[c]!='\0'; c++) {
+		if(b58digits_map[(int8_t)in[c]]==-1) {
+			func(NULL,"invalid base58 digit");
+			return 0; }
+		if(in[c] & 0x80) {
+			func(NULL,"high-bit set on invalid digit");
+			return 0; }
 	}
 	return c;
 }
@@ -107,10 +126,9 @@ octet* o_new(lua_State *L, const int size) {
 	if(!o) {
 		lerror(L, "Error allocating new octet in %s",__func__);
 		return NULL; }
-	// TODO: check that maximum is not exceeded
 	luaL_getmetatable(L, "zenroom.octet");
 	lua_setmetatable(L, -2);
-	o->val = zen_memory_alloc(size+2);
+	o->val = zen_memory_alloc(size + 0x0f); // add word for safe boundary
 	o->len = 0;
 	o->max = size;
 	func(L, "new octet (%u bytes)",size);
@@ -210,10 +228,37 @@ static int from_base64(lua_State *L) {
 	if(!len) {
 		lerror(L, "base64 string contains invalid characters");
 		return 0; }
-	int nlen = getlen_base64(len);
+	int nlen = len + len + len; // getlen_base64(len);
 	HEREn(nlen);
 	octet *o = o_new(L, nlen);
 	OCT_frombase64(o,(char*)s);
+	return 1;
+}
+
+static int from_base58(lua_State *L) {
+	const char *s = lua_tostring(L, 1);
+	luaL_argcheck(L, s != NULL, 1, "base58 string expected");
+	HEREs(s);
+	int len = is_base58(s);
+	HEREn(len);
+	if(!len) {
+		lerror(L, "base58 string contains invalid characters");
+		return 0; }
+	size_t binmax = len + len + len;
+	size_t binlen = binmax;
+	char *dst = zen_memory_alloc(binmax);
+	if(!b58tobin(dst, &binlen, s, len)) {
+		zen_memory_free(dst);
+		lerror(L,"Error in conversion from base58 for string: %s",s);
+		return 0; }
+	// o->val[binsize] = '\0';
+	HEREn(binlen);
+	octet *o = o_new(L, binlen);
+	o->len = binlen;
+	// b58tobin returns its result at the _end_ of buf!!!
+	int l,r;
+	for(l=binlen, r=binmax; l>=0; l--, r--) o->val[l] = dst[r];
+	zen_memory_free(dst);
 	return 1;
 }
 
@@ -307,38 +352,69 @@ static int concat_n(lua_State *L) {
 
 
 /***
-Print an octet in base64 notation or import a base64 string inside the
-octet.
+Print an octet in base64 notation
 
-@string[opt] data_b64 a base64 string whose contents in bytes are imported
-@function octet:base64(data_b64)
+@function octet:base64()
 @usage
 
 -- This method as well :string() and :hex() can be used both to set
--- from and print out in particular formats. If the argument is not
--- present, the method will print out converting to its format, else
--- will import its contents inside the octet.
+-- from and print out in particular formats.
 
--- create a small 128 bytes octet:
-msg = octet.new(128)
--- set a string message inside the new octet:
-msg:string("my message to be encoded in base64")
+-- create an octet from a string:
+OCTET.string("my message to be encoded in base64")
 -- print the message in base64 notation:
 print(msg:base64())
 
 */
 static int to_base64 (lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
-	int newlen;
 	if(!o->len || !o->val) {
-		lerror(L, "base64 import of empty string");
+		lerror(L, "base64 cannot encode an empty string");
 		return 0; }
+	int newlen;
 	newlen = getlen_base64(o->len);
 	HEREn(newlen);
-	char *b = zen_memory_alloc(newlen+16);
+	char *b = zen_memory_alloc(newlen);
 	OCT_tobase64(b,o);
-	b[newlen] = '\0';
+//	b[newlen] = '\0';
 	lua_pushstring(L,b);
+	zen_memory_free(b);
+	return 1;
+}
+
+
+/***
+    Print an octet in base58 notation
+
+    This encoding uses the same alphabet as Bitcoin addresses. Why
+    base58 instead of standard base64 encoding?
+    - Don't want 0OIl characters that look the same in some fonts and could be used to create visually identical looking data.
+    - A string with non-alphanumeric characters is not as easily accepted as input.
+    - E-mail usually won't line-break if there's no punctuation to break at.
+    - Double-clicking selects the whole string as one word if it's all alphanumeric.
+
+    @string data a base58 string whose contents are imported
+    @function octet:base58(data)
+*/
+static int to_base58(lua_State *L) {
+	octet *o = o_arg(L,1);	SAFE(o);
+	if(!o->len || !o->val) {
+		lerror(L, "base64 cannot encode an empty string");
+		return 0; }
+	if(o->len < 3) {
+		// there is a bug in luke-jr's implementation of base58 (fixed
+		// in bitcoin-core) when encoding strings smaller than 3 bytes
+		// the 'j' counter being unsigned and initialised at size-2 in
+		// the carry inner loop flips to 18446744073709551615
+		lerror(L,"base58 cannot encode octets smaller than 3 bytes");
+		return 0; }
+	int newlen = getlen_base58(o->len);
+	HEREn(newlen);
+	char *b = zen_memory_alloc(newlen);
+	size_t b58len = newlen;
+	b58enc(b, &b58len, o->val, o->len);
+	// b[b58len] = '\0'; // already present, but for safety
+	lua_pushlstring(L,b,b58len-1);
 	zen_memory_free(b);
 	return 1;
 }
@@ -455,7 +531,6 @@ static int eq(lua_State *L) {
 	return 1;
 }
 
-
 /***
     Bitwise XOR operation on this octet and another one. Operates
     in-place, overwriting contents of this octet.
@@ -493,9 +568,11 @@ int luaopen_octet(lua_State *L) {
 		{"concat",concat_n},
 		{"xor",xor_n},
 		{"from_base64",from_base64},
+		{"from_base58",from_base58},
 		{"from_string",from_string},
 		{"from_hex",from_hex},
 		{"base64",from_base64},
+		{"base58",from_base58},
 		{"string",from_string},
 		{"hex",from_hex},
 		{NULL,NULL}
@@ -503,6 +580,7 @@ int luaopen_octet(lua_State *L) {
 	const struct luaL_Reg octet_methods[] = {
 		{"hex"   , to_hex},
 		{"base64", to_base64},
+		{"base58", to_base58},
 		{"string", to_string},
 		{"eq", eq},
 		{"pad", pad},

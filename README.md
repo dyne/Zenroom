@@ -88,11 +88,11 @@ Richard Stallman for their expert reviews.
 This software includes software components by: R. Ierusalimschy,
 W. Celes and L.H. de Figueiredo (lua), Mike Scott and Kealan McCusker
 (milagro-crypto-c), Ralph Hempel (umm_malloc), Mark Pulford
-(lua-cjson), Daan Sprenkels (randombytes)
+(lua-cjson), Daan Sprenkels (randombytes), Luke-jr (base58).
 
 Lua extensions written and documented by: Roland Yonaba (moses),
 Enrique García Cota (inspect), Sebastian Schoener (schema), Kyle
-Conroy (finite state machine), Scott Lembcke (debugger)
+Conroy (finite state machine), Scott Lembcke (debugger).
 
 Licensed under the terms of the GNU Public License as published by the
 Free Software Foundation; either version 3 of the License, or (at your

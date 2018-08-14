@@ -5,7 +5,7 @@ print()
 -- octet = require'octet'
 
 function dotest(l,r)
-   if(l == r) then
+   if(l == r and #l == #r) then
 	  return true
    else
 	  print 'ERROR'
@@ -13,27 +13,26 @@ function dotest(l,r)
 	  print(l)
 	  print 'right:'
 	  print(r)
-	  exit()
+	  assert(false)
    end
 end
 
 -- random and  check hash of octets
 -- ecdh = require'ecdh'
-rng = RNG.new()
-ecc = ECDH.new()
-right = rng:octet(64)
+right = OCTET.string([[Minim quis typewriter ut. Deep v ut man braid neutra culpa in officia consectetur tousled art party stumptown yuccie. Elit lo-fi pour-over woke venmo keffiyeh in normcore enim sunt labore williamsburg flexitarian. Tumblr distillery fanny pack, banjo tacos vaporware keffiyeh.]])
 teststr = right:string()
-test64 = right:base64()
+test64  = right:base64()
+test58  = right:base58()
 testhex = right:hex()
 
 print '== test octet copy'
 left = right;
 hash = HASH.new()
-assert(left == right)
-assert(hash:process(left) == hash:process(right))
+dotest(left, right)
+dotest(hash:process(left),hash:process(right))
 
 print '== test string import/export'
-left:string(teststr)
+left = OCTET.string(teststr)
 print '=== compare octets'
 dotest(left, right)
 print '=== compare strings'
@@ -42,17 +41,23 @@ print '=== compare hashes'
 dotest(hash:process(left), hash:process(right))
 
 print '== test base64 import/export'
-left:base64(test64)
-assert(left == right)
-assert(left:base64() == test64)
-assert(hash:process(left) == hash:process(right))
+left = OCTET.base64(test64)
+dotest(left, right)
+dotest(left:base64(), test64)
+dotest(hash:process(left), hash:process(right))
+
+print '== test base58 import/export'
+left = OCTET.base58(test58)
+dotest(left, right)
+dotest(left:base58(), test58)
+dotest(hash:process(left), hash:process(right))
 
 
 print '== test hex import/export'
-left:hex(testhex)
-assert(left == right)
-assert(left:hex() == testhex)
-assert(hash:process(left) == hash:process(right))
+left = OCTET.hex(testhex)
+dotest(left, right)
+dotest(left:hex(), testhex)
+dotest(hash:process(left), hash:process(right))
 
 print '= OK'
 
