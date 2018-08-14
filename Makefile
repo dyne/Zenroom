@@ -128,7 +128,7 @@ linux-java: apply-patches lua53 milagro-posix lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src linux-java
 
-osx: apply-patches lua53 milagro-posix lpeglabel
+osx: apply-patches lua53 milagro-osx lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src osx
 
@@ -139,34 +139,9 @@ osx-python: osx
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src linux-python
 
-ios-lib:
-	TARGET=${ARCH} AR=${ar} \
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-	make -C src ios-lib
-	@cp -v src/zenroom-ios-${ARCH}.a build/
-
-ios-armv7: ARCH := armv7
-ios-armv7: OS := iphoneos
-ios-armv7: platform := ios
-ios-armv7: apply-patches lua53 milagro-posix lpeglabel ios-lib
-
-ios-arm64: ARCH := arm64
-ios-arm64: OS := iphoneos
-ios-arm64: platform := ios
-ios-arm64: apply-patches lua53 milagro-posix lpeglabel ios-lib
-
-ios-sim: ARCH := x86_64
-ios-sim: OS := iphonesimulator
-ios-sim: gcc := $(shell xcrun --sdk iphonesimulator -f gcc 2>/dev/null)
-ios-sim: ar := $(shell xcrun --sdk iphonesimulator -f ar 2>/dev/null)
-ios-sim: ld := $(shell xcrun --sdk iphonesimulator -f ld 2>/dev/null)
-ios-sim: ranlib := $(shell xcrun --sdk iphonesimulator -f ranlib 2>/dev/null)
-ios-sim: SDK := $(shell xcrun --sdk iphonesimulator --show-sdk-path 2>/dev/null)
-ios-sim: platform := ios
-ios-sim: apply-patches lua53 milagro-posix lpeglabel ios-lib
-
-ios-fat:
-	lipo -create build/zenroom-ios-x86_64.a build/zenroom-ios-arm64.a build/zenroom-ios-armv7.a -output build/zenroom-ios.a
+# ------------------
+# ios build recepies
+include ${pwd}/build/ios.mk
 
 android: gcc := $(CC)
 android: ar := $(AR)
@@ -198,18 +173,15 @@ milagro:
 	if ! [ -r ${pwd}/lib/milagro-crypto-c/lib/libamcl_core.a ]; then CC=${gcc} CFLAGS="${cflags}" AR=${ar} RANLIB=${ranlib} make -C ${pwd}/lib/milagro-crypto-c VERBOSE=1; fi
 
 milagro-osx: system:= Darwin
-milagro-osx: $(shell sed -i '' "s/project (AMCL)/project (AMCL C)/" ${pwd}/lib/milagro-crypto-c/CMakeLists.txt)
 milagro-osx: milagro
 
 milagro-posix: system:= Linux
 milagro-posix: milagro
 
 milagro-win: system := Windows
-milagro-win: $(shell sed -i 's/project (AMCL)/project (AMCL C)/' ${pwd}/lib/milagro-crypto-c/CMakeLists.txt)
 milagro-win: milagro
 
 milagro-js: system:= Javascript
-milagro-js: $(shell sed -i 's/project (AMCL)/project (AMCL C)/' ${pwd}/lib/milagro-crypto-c/CMakeLists.txt)
 milagro-js: milagro
 
 
@@ -284,6 +256,17 @@ shell-tests = \
 # since some trigger warnings when compiled with full debug
 # $(call himem-tests,${test-exec})
 
+
+check-osx: test-exec-lowmem := ${pwd}/src/zenroom.command 2>/dev/null
+check-osx: test-exec := ${pwd}/src/zenroom.command 2>/dev/null
+check-osx:
+	${test-exec} test/constructs.lua
+	$(call lowmem-tests,${test-exec-lowmem})
+	$(call crypto-tests,${test-exec-lowmem})
+	$(call shell-tests,${test-exec-lowmem})
+	@echo "----------------"
+	@echo "All tests passed for SHARED binary build"
+	@echo "----------------"
 
 check-shared: test-exec-lowmem := ${pwd}/src/zenroom-shared 2>/dev/null
 check-shared: test-exec := ${pwd}/src/zenroom-shared 2>/dev/null

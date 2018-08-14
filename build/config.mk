@@ -71,12 +71,12 @@ ldflags := -lm
 endif
 
 
-ifneq (,$(findstring ios,$(MAKECMDGOALS)))
-gcc := $(shell xcrun --sdk iphoneos -f gcc 2>/dev/null)
-ar := $(shell xcrun --sdk iphoneos -f ar 2>/dev/null)
-ld := $(shell xcrun --sdk iphoneos -f ld 2>/dev/null)
-ldflags := lm
-ranlib := $(shell xcrun --sdk iphoneos -f ranlib 2>/dev/null)
-SDK := $(shell xcrun --sdk iphoneos --show-sdk-path 2>/dev/null)
-cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM -DARCH_OSX
-endif
+# ifneq (,$(findstring ios,$(MAKECMDGOALS)))
+# gcc := $(shell xcrun --sdk iphoneos -f gcc 2>/dev/null)
+# ar := $(shell xcrun --sdk iphoneos -f ar 2>/dev/null)
+# ld := $(shell xcrun --sdk iphoneos -f ld 2>/dev/null)
+# ldflags := lm
+# ranlib := $(shell xcrun --sdk iphoneos -f ranlib 2>/dev/null)
+# SDK := $(shell xcrun --sdk iphoneos --show-sdk-path 2>/dev/null)
+# cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM -DARCH_OSX
+# endif

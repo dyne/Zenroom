@@ -34,24 +34,6 @@ SOURCES := \
 	zen_ecdh.o zen_ecdh_factory.o \
 	randombytes.o
 
-# zen_rsa.o zen_rsa_aux.o \
-
-# LDADD   := ../lib/lua53/src/liblua.a
-# # LDADD   += ../build/luazen/libluazen.a
-# LDADD   += ../lib/lpeglabel/lpeglabel.a
-
-# milib := ../lib/milagro-crypto-c/lib
-# # LDADD += ${milib}/libamcl_rsa_2048.a ${milib}/libamcl_rsa_4096.a
-# LDADD += ${milib}/libamcl_curve_ED25519.a
-# LDADD += ${milib}/libamcl_curve_BLS383.a
-# LDADD += ${milib}/libamcl_pairing_BLS383.a
-# LDADD += ${milib}/libamcl_curve_GOLDILOCKS.a
-# LDADD += ${milib}/libamcl_curve_SECP256K1.a
-# LDADD += ${milib}/libamcl_core.a
-
-
-
-
 all: shared
 
 js: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY

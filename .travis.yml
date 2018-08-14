@@ -32,7 +32,7 @@ before_install:
 
 script:
 - mkdir -p build
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make osx && make check-shared && cp -v src/zenroom.command build/zenroom.command; fi
+- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make osx && make check-osx && cp -v src/zenroom.command build/zenroom.command; fi
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make clean && cd lib/milagro-crypto-c && git clean -fd && cd - ;fi
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make ios-armv7; fi
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make clean && cd lib/milagro-crypto-c && git clean -fd && cd - ;fi
