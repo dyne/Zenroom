@@ -55,7 +55,6 @@
 #include <jutils.h>
 #include <zen_error.h>
 #include <lua_functions.h>
-#include <randombytes.h>
 
 #include <amcl.h>
 
@@ -399,7 +398,7 @@ static int to_base64 (lua_State *L) {
 static int to_base58(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
 	if(!o->len || !o->val) {
-		lerror(L, "base64 cannot encode an empty string");
+		lerror(L, "base64 cannot encode an empty octet");
 		return 0; }
 	if(o->len < 3) {
 		// there is a bug in luke-jr's implementation of base58 (fixed
@@ -416,6 +415,24 @@ static int to_base58(lua_State *L) {
 	// b[b58len] = '\0'; // already present, but for safety
 	lua_pushlstring(L,b,b58len-1);
 	zen_memory_free(b);
+	return 1;
+}
+
+static int to_array(lua_State *L) {
+	octet *o = o_arg(L,1);	SAFE(o);
+	if(!o->len || !o->val) {
+		lerror(L, "array cannot encode an empty octet");
+		return 0; }
+	lua_newtable(L);
+	luaL_checkstack(L,1, "in octet:to_array()");
+	int c = o->len;
+	int idx = 0;
+	while(c--) {
+		lua_pushnumber(L,idx+1);
+		lua_pushinteger(L,o->val[idx]);
+		lua_settable(L,-3);
+		idx++;
+	}
 	return 1;
 }
 
@@ -454,24 +471,6 @@ static int to_hex(lua_State *L) {
 	s[odlen] = '\0'; // string boundary \0
 	lua_pushstring(L,s);
 	zen_memory_free(s);
-	return 1;
-}
-
-/***
-    Randomize contents of an octet up to length, or to its maximum
-    size if argument is omitted.
-
-    @int[opt] length amount of random bytes to gather
-    @function octet:random(length)
-*/
-static int o_random(lua_State *L) {
-	octet *o = o_arg(L,1);	SAFE(o);
-	const int len = luaL_optinteger(L, 2, o->max);
-	char *buf = zen_memory_alloc(len+2);
-	randombytes(buf,len);
-	o->len=0;
-	OCT_jbytes(o,buf,len);
-	zen_memory_free(buf);
 	return 1;
 }
 
@@ -582,6 +581,7 @@ int luaopen_octet(lua_State *L) {
 		{"base64", to_base64},
 		{"base58", to_base58},
 		{"string", to_string},
+		{"array",  to_array},
 		{"eq", eq},
 		{"pad", pad},
 		{"zero", zero},

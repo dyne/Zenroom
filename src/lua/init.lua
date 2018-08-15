@@ -2,7 +2,6 @@
 -- zen_load_extensions(L) usually after zen_init()
 
 JSON   = require('json')
-MSG    = require('msgpack')
 SCHEMA = require('schema')
 RNG    = require('zenroom_rng')
 OCTET  = require('zenroom_octet')
@@ -13,26 +12,33 @@ ECP    = require('ecp')
 ECP2   = require('ecp2')
 BIG    = require('zenroom_big')
 HASH   = require('zenroom_hash')
+MSG    = require('msgpack')
 
 -- override type to recognize zenroom's types
 luatype = type
 function type(var)
    local simple = luatype(var)
    if simple == "userdata" then
-	  if not getmetatable(var) == nil then
+	  if getmetatable(var).__name then
 		 return(getmetatable(var).__name)
 	  else
 		 return("unknown")
 	  end
    else return(simple) end
 end
-function content(var) INSIDE.print(var) end
+function content(var)
+   if type(var) == "zenroom.octet" then
+	  INSIDE.print(var:array())
+   else
+	  INSIDE.print(var)
+   end
+end
 
 function ECP2.G()         return ECP2.new() end
 function ECP2.generator() return ECP2.new() end
 
 function help(module)
-   for k,v in pairs(module) do 
+   for k,v in pairs(module) do
 	  if type(v)~='table' and string.sub(k,1,1)~='_' then
 		 print("class method: "..k)
 	  end
