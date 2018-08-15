@@ -54,11 +54,11 @@ linux: ${SOURCES}
 linux-lib: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o libzenroom-${ARCH}-${VERSION}-${BRANCH}-${HASH}.so ${LDFLAGS} ${LDADD}
 
-linux-python: ${SOURCES}
-	${LD} -shared ${SOURCES} zen_python.o -o _zenroom.so
+python: ${SOURCES}
+	${LD} -shared ${SOURCES} zen_python.o -o _zenroom.so ${LDFLAGS} ${LDADD}
 
-linux-java: ${SOURCES}
-	${LD} -shared ${SOURCES} zen_java.o -o zenroom-java-linux.so ${LDADD}
+java: ${SOURCES}
+	${LD} -shared ${SOURCES} zen_java.o -o zenroom-java-linux.so ${LDFLAGS} ${LDADD}
 
 osx: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom.command ${LDFLAGS} ${LDADD}

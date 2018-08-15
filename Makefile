@@ -75,6 +75,13 @@ win-dll: apply-patches lua53 milagro-win lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		 make -C src win-dll
 
+linux-java: cflags += -I /opt/jdk/include -I /opt/jdk/include/win32
+linux-java: apply-patches lua53 milagro-posix lpeglabel
+	swig -java ${pwd}/build/swig.i
+	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c -o src/zen_java.o
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	make -C src java
+
 musl: ldadd += /usr/lib/${ARCH}-linux-musl/libc.a
 musl: apply-patches lua53 milagro-posix lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
@@ -119,14 +126,14 @@ linux-python: apply-patches lua53 milagro-posix lpeglabel
 	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c \
 		 -o src/zen_python.o $(shell pkg-config python --cflags)
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-		make -C src linux-python
+		make -C src python
 
 linux-java: cflags += -I /opt/jdk/include -I /opt/jdk/include/linux
 linux-java: apply-patches lua53 milagro-posix lpeglabel
 	swig -java ${pwd}/build/swig.i
 	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c -o src/zen_java.o
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-		make -C src linux-java
+		make -C src java
 
 osx: apply-patches lua53 milagro-osx lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
@@ -137,7 +144,7 @@ osx-python: osx
 	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c \
 		-o src/zen_python.o $(shell pkg-config python --cflags)
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-	make -C src linux-python
+	make -C src python
 
 # ------------------
 # ios build recepies

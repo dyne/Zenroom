@@ -51,6 +51,8 @@ for t in $targets; do
 		linux)
 			checkbin zenroom.x86 $dir
 			checkbin zenroom.armhf $dir
+			checkbin _zenroom.so   $dir
+			checkbin zenroom-wrapper.py $dir
 			continue ;;
 		javascript)
 			checkdir nodejs $dir
