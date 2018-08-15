@@ -18,8 +18,12 @@ HASH   = require('zenroom_hash')
 luatype = type
 function type(var)
    local simple = luatype(var)
-   if simple == "userdata" then 
-	  return(getmetatable(var).__name)
+   if simple == "userdata" then
+	  if not getmetatable(var) == nil then
+		 return(getmetatable(var).__name)
+	  else
+		 return("unknown")
+	  end
    else return(simple) end
 end
 function content(var) INSIDE.print(var) end
@@ -27,6 +31,18 @@ function content(var) INSIDE.print(var) end
 function ECP2.G()         return ECP2.new() end
 function ECP2.generator() return ECP2.new() end
 
+function help(module)
+   for k,v in pairs(module) do 
+	  if type(v)~='table' and string.sub(k,1,1)~='_' then
+		 print("class method: "..k)
+	  end
+   end
+   if module.new == nil then return end
+   local inst = module.new()
+   for s,f in pairs(getmetatable(inst)) do
+	  if(string.sub(s,1,2)~='__') then print("object method: "..s) end
+   end
+end
 
 function read_json(data, validation)
    if not data then
@@ -53,10 +69,11 @@ function read_json(data, validation)
 	  return out
    end
 end
-
 function write_json(data)
    INSIDE.print(data)
 end
+json_write = write_json
+json_read = read_json
 
 -- CompareTables.lua
 -- Gianluca Vespignani (c) 2012, Memorandum: technique about Compare Tables
