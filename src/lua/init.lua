@@ -2,6 +2,7 @@
 -- zen_load_extensions(L) usually after zen_init()
 
 JSON   = require('json')
+MSG    = require('msgpack')
 SCHEMA = require('schema')
 RNG    = require('zenroom_rng')
 OCTET  = require('zenroom_octet')

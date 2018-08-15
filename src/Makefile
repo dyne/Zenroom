@@ -26,7 +26,7 @@ SOURCES := \
 	jutils.o zenroom.o zen_error.o \
 	lua_functions.o lua_modules.o lualibs_detected.o \
 	json.o json_strbuf.o json_fpconv.o \
-	base58.o \
+	base58.o cmsgpack.o \
 	umm_malloc.o zen_memory.o \
 	zen_io.o zen_ast.o repl.o \
 	zen_octet.o zen_ecp.o zen_ecp2.o zen_big.o \
