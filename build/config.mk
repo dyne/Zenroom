@@ -9,6 +9,7 @@ extras := ${pwd}/docs/demo
 gcc := gcc
 ar := ar
 ranlib := ranlib
+ld := ld
 cflags_protection := -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
 cflags := -O2 ${cflags_protection}
 musl := ${pwd}/build/musl
@@ -40,6 +41,8 @@ ifneq (,$(findstring win,$(MAKECMDGOALS)))
 gcc := x86_64-w64-mingw32-gcc
 ar  := x86_64-w64-mingw32-ar
 ranlib := x86_64-w64-mingw32-ranlib
+ld := x86_64-w64-mingw32-ld
+system := Windows
 cflags := ${cflags_protection} -D'ARCH=\"WIN\"' -DARCH_WIN -O3 -Wall -Wextra -pedantic -std=gnu99
 ldflags := -L/usr/x86_64-w64-mingw32/lib
 ldadd += ${ldadd} -l:libm.a -l:libpthread.a -lssp
@@ -50,25 +53,45 @@ ifneq (,$(findstring musl,$(MAKECMDGOALS)))
 gcc := musl-gcc
 cflags := -Os -static -Wall -std=gnu99 -fPIC ${cflags_protection} -D'ARCH=\"MUSL\"' -D__MUSL__ -DARCH_MUSL
 ldflags := -static
+system := Linux
 endif
 
 ifneq (,$(findstring linux,$(MAKECMDGOALS)))
 cflags := ${cflags} -fPIC ${cflags_protection} -D'ARCH=\"LINUX\"' -DARCH_LINUX
 ldflags := -lm -lpthread
+system := Linux
 endif
 
 ifneq (,$(findstring osx,$(MAKECMDGOALS)))
 cflags := ${cflags} -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -DARCH_OSX
 ldflags := -lm
+system := Darwin
 endif
 
 ifneq (,$(findstring js,$(MAKECMDGOALS)))
 gcc := ${EMSCRIPTEN}/emcc
 ar := ${EMSCRIPTEN}/emar
+ld := ${gcc}
+system:= Javascript
 ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zenroom_exec_tobuf\",\"_zenroom_parse_ast\",\"_set_debug\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s USE_SDL=0 -s USE_PTHREADS=0
 cflags := -O2 -Wall -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
 ldflags := -lm
 endif
+
+ifneq (,$(findstring esp32,$(MAKECMDGOALS)))
+gcc := ${pwd}/build/xtensa-esp32-elf/bin/xtensa-esp32-elf-gcc
+ld  := ${pwd}/build/xtensa-esp32-elf/bin/xtensa-esp32-elf-ld
+ar  := ${pwd}/build/xtensa-esp32-elf/bin/xtensa-esp32-elf-ar
+ranlib := ${pwd}/build/xtensa-esp32-elf/bin/xtensa-esp32-elf-ranlib
+system := Generic
+# TODO: not working, cmake doesn't uses the specified linked (bug?)
+milagro_cmake_flags := -DCMAKE_LINKER=${ld} -DCMAKE_C_LINK_EXECUTABLE="<CMAKE_LINKER> <FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
+cflags := -I. -mlongcalls  #${cflags_protection} -D'ARCH=\"LINUX\"' -DARCH_LINUX
+ldflags += -L${pwd}/build/xtensa-esp32-elf/lib -Teagle.app.v6.ld
+ldadd += ${ldadd} -nostdlib -Wl,--start-group -lmain -lc -Wl,--end-group -lgcc
+# ldadd += ${ldadd} -l:libm.a -l:libpthread.a -lssp
+endif
+
 
 
 # ifneq (,$(findstring ios,$(MAKECMDGOALS)))
