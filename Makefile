@@ -48,7 +48,8 @@ apply-patches:
 # https://github.com/kripken/emscripten/blob/master/src/settings.js
 js-node: cflags += -DARCH_JS -D'ARCH=\"JS\"'
 js-node: apply-patches lua53 milagro lpeglabel
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	make -C src js
 	@mkdir -p build/nodejs
 	@cp -v src/zenroom.js 	  build/nodejs/
 	@cp -v src/zenroom.js.mem build/nodejs/
@@ -56,7 +57,8 @@ js-node: apply-patches lua53 milagro lpeglabel
 js-wasm: cflags += -DARCH_WASM -D'ARCH=\"WASM\"'
 js-wasm: ldflags += -s WASM=1 -s MODULARIZE=1
 js-wasm: apply-patches lua53 milagro lpeglabel
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	make -C src js
 	@mkdir -p build/wasm
 	@cp -v src/zenroom.js   build/wasm/
 	@cp -v src/zenroom.wasm build/wasm/
@@ -65,7 +67,8 @@ js-wasm: apply-patches lua53 milagro lpeglabel
 js-demo: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"'
 js-demo: ldflags += -s WASM=1 -s ASSERTIONS=1 --shell-file ${extras}/shell_minimal.html -s NO_EXIT_RUNTIME=1
 js-demo: apply-patches lua53 milagro lpeglabel
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" make -C src js-demo
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	make -C src js-demo
 
 win: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
@@ -74,13 +77,6 @@ win: apply-patches lua53 milagro lpeglabel
 win-dll: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		 make -C src win-dll
-
-linux-java: cflags += -I /opt/jdk/include -I /opt/jdk/include/win32
-linux-java: apply-patches lua53 milagro lpeglabel
-	swig -java ${pwd}/build/swig.i
-	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c -o src/zen_java.o
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-	make -C src java
 
 musl: ldadd += /usr/lib/${ARCH}-linux-musl/libc.a
 musl: apply-patches lua53 milagro lpeglabel
@@ -96,7 +92,6 @@ musl-system: gcc := gcc
 musl-system: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src musl
-
 
 linux: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
