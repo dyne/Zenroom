@@ -46,17 +46,17 @@ apply-patches:
 
 # TODO: improve flags according to
 # https://github.com/kripken/emscripten/blob/master/src/settings.js
-js-node: cflags += -DARCH_JS -D'ARCH=\"JS\"'
-js-node: apply-patches lua53 milagro lpeglabel
+javascript-node: cflags += -DARCH_JS -D'ARCH=\"JS\"'
+javascript-node: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src js
 	@mkdir -p build/nodejs
 	@cp -v src/zenroom.js 	  build/nodejs/
 	@cp -v src/zenroom.js.mem build/nodejs/
 
-js-wasm: cflags += -DARCH_WASM -D'ARCH=\"WASM\"'
-js-wasm: ldflags += -s WASM=1 -s MODULARIZE=1
-js-wasm: apply-patches lua53 milagro lpeglabel
+javascript-wasm: cflags += -DARCH_WASM -D'ARCH=\"WASM\"'
+javascript-wasm: ldflags += -s WASM=1 -s MODULARIZE=1
+javascript-wasm: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src js
 	@mkdir -p build/wasm
@@ -64,9 +64,9 @@ js-wasm: apply-patches lua53 milagro lpeglabel
 	@cp -v src/zenroom.wasm build/wasm/
 
 
-js-demo: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"'
-js-demo: ldflags += -s WASM=1 -s ASSERTIONS=1 --shell-file ${extras}/shell_minimal.html -s NO_EXIT_RUNTIME=1
-js-demo: apply-patches lua53 milagro lpeglabel
+javascript-demo: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"'
+javascript-demo: ldflags += -s WASM=1 -s ASSERTIONS=1 --shell-file ${extras}/shell_minimal.html -s NO_EXIT_RUNTIME=1
+javascript-demo: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src js-demo
 

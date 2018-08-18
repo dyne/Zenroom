@@ -68,14 +68,13 @@ ldflags := -lm
 system := Darwin
 endif
 
-ifneq (,$(findstring js,$(MAKECMDGOALS)))
+ifneq (,$(findstring javascript,$(MAKECMDGOALS)))
 gcc := ${EMSCRIPTEN}/emcc
 ar := ${EMSCRIPTEN}/emar
 ld := ${gcc}
 system:= Javascript
-ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zenroom_exec_tobuf\",\"_zenroom_parse_ast\",\"_set_debug\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s USE_SDL=0 -s USE_PTHREADS=0
+ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zenroom_exec_tobuf\",\"_zenroom_parse_ast\",\"_set_debug\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s USE_SDL=0 -s USE_PTHREADS=0 -lm
 cflags := -O2 -Wall -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
-ldflags := -lm
 endif
 
 ifneq (,$(findstring esp32,$(MAKECMDGOALS)))
