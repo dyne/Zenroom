@@ -22,14 +22,10 @@
 //  Asymmetric public/private key encryption technologies.
 //
 //  ECDH encryption functionalities are provided with all standard
-//  functions by this extension, which has to be required explicitly:
-//
-//  <code>ecdh = require'ecdh'</code>
-//
-//  After requiring the extension it is possible to create keyring
+//  functions by this extension. It is possible to create keyring
 //  instances using the new() method:
 //
-//  <code>keyring = ecdh.new()</code>
+//  <code>keyring = ECDH.new()</code>
 //
 //  One can create more keyrings in the same script and call them with
 //  meaningful variable names to help making code more
@@ -39,7 +35,7 @@
 //  represented by each keyring, giving them names as 'Alice' or
 //  'Bob'.
 //
-//  @module ecdh
+//  @module ECDH
 //  @author Denis "Jaromil" Roio, Enrico Zimuel
 //  @license GPLv3
 //  @copyright Dyne.org foundation 2017-2018
@@ -71,8 +67,8 @@
 // from zen_ecdh_factory.h to setup function pointers
 extern ecdh *ecdh_new_curve(lua_State *L, const char *curve);
 
-/// Global ECDH extension
-// @section ecdh.globals
+/// Global ECDH functions
+// @section ECDH.globals
 
 /***
     Create a new ECDH encryption keyring using a specified curve or
@@ -85,8 +81,7 @@ extern ecdh *ecdh_new_curve(lua_State *L, const char *curve);
     @return a new ECDH keyring
     @function new(curve)
     @usage
-    ecdh = require'ecdh'
-    keyring = ecdh.new('ed25519')
+    keyring = ECDH.new('ed25519')
     -- generate a keypair
     keyring:keygen()
 */
@@ -138,7 +133,7 @@ int ecdh_destroy(lua_State *L) {
 	return 0;
 }
 
-/// Keyring Methods
+/// Instance Methods
 // @type keyring
 
 /**
@@ -150,8 +145,8 @@ int ecdh_destroy(lua_State *L) {
    necessary.
 
    @function keyring:keygen()
-   @treturn[1] octet public key
-   @treturn[1] octet private key
+   @treturn[1] OCTET public key
+   @treturn[1] OCTET private key
 */
 static int ecdh_keygen(lua_State *L) {
 	HERE();

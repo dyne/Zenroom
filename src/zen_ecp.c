@@ -28,14 +28,14 @@
 //  primitives and work the same across different curves.
 //
 //  It is possible to create ECP points instances using the @{new}
-//  method. The values of each coordinate can be imported using @{big}
-//  methods from @{big:hex} or @{big:base64}.
+//  method. The values of each coordinate can be imported using @{BIG}
+//  methods `BIG.hex()` or `BIG.base64()`.
 //
 //  Once ECP numbers are created this way, the arithmetic operations
 //  of addition, subtraction and multiplication can be executed
 //  normally using overloaded operators (+ - *).
 //
-//  @module ecp
+//  @module ECP
 //  @author Denis "Jaromil" Roio
 //  @license GPLv3
 //  @copyright Dyne.org foundation 2017-2018
@@ -119,13 +119,13 @@ int ecp_destroy(lua_State *L) {
 }
 
 /***
-    Create a new ECP point from two X,Y @{big} arguments. If no X,Y arguments are specified then the ECP points to the curve's @{generator} coordinates. If the first argument is an X coordinate on the curve and Y is just a number 0 or 1 then Y is calculated from the curve equation according to the given sign (plus or minus).
+    Create a new ECP point from two X,Y @{BIG} arguments. If no X,Y arguments are specified then the ECP points to the curve's @{generator} coordinates. If the first argument is an X coordinate on the curve and Y is just a number 0 or 1 then Y is calculated from the curve equation according to the given sign (plus or minus).
 
-    @param[opt=big] X a big number on the curve
-    @param[opt=big] Y a big number on the curve, 0 or 1 to calculate it
+    @param[opt=BIG] X a BIG number on the curve
+    @param[opt=BIG] Y a BIG number on the curve, 0 or 1 to calculate it
     @return a new ECP point on the curve at X,Y coordinates or Infinity
     @function new(X,Y)
-    @see big:new
+    @see BIG:new
 */
 static int lua_new_ecp(lua_State *L) {
 	if(lua_isnoneornil(L, 1)) { // no args: set to generator
@@ -159,8 +159,11 @@ static int lua_new_ecp(lua_State *L) {
 	return 0;
 }
 
+/// Instance Methods
+// @type ecp
+
 /***
-    Make an existing ECP point affine with the curve
+    Make an existing ECP point affine with its curve
     @function affine()
 */
 static int ecp_affine(lua_State *L) {
@@ -193,10 +196,10 @@ static int ecp_isinf(lua_State *L) {
 }
 
 /***
-    Map a @{big} number to a point of the curve, where the big number should be the output of some hash function.
+    Map a @{BIG} number to a point of the curve, where the BIG number should be the output of some hash function.
 
-    @param big number resulting from an hash function
-    @function mapit(big)
+    @param BIG number resulting from an hash function
+    @function mapit(BIG)
 */
 static int ecp_mapit(lua_State *L) {
 	const big *b = big_arg(L,1); SAFE(b);
@@ -288,7 +291,7 @@ static int ecp_double(lua_State *L) {
 static int ecp_mul(lua_State *L) {
 	ecp *e = ecp_arg(L,1); SAFE(e);
 	ecp *out = ecp_dup(L,e); SAFE(out);
-	// implicitly convert scalar numbers to big
+	// implicitly convert scalar numbers to BIG
 	int tn;
 	lua_Number n = lua_tonumberx(L, 2, &tn);
 	if(tn) {
@@ -323,7 +326,7 @@ static int ecp_eq(lua_State *L) {
 }
 
 /***
-    Sets or returns an octet containing a @{big} number composed by both x,y coordinates of an ECP point on the curve. It can be used to port the value of an ECP point into @{octet:hex} or @{octet:base64} encapsulation, to be later set again into an ECP point using this same call.
+    Sets or returns an octet containing a @{BIG} number composed by both x,y coordinates of an ECP point on the curve. It can be used to port the value of an ECP point into @{OCTET:hex} or @{OCTET:base64} encapsulation, to be later set again into an ECP point using this same call.
 
     @param ecp[opt=octet] the octet to be imported, none if to be exported
     @function octet(ecp)
@@ -347,11 +350,11 @@ static int ecp_octet(lua_State *L) {
     Gives the order of the curve, a BIG number contained in an octet.
 
     @function order()
-    @return a big containing the curve's order
+    @return a BIG containing the curve's order
 */
 static int ecp_order(lua_State *L) {
 	big *res = big_new(L); SAFE(res);
-	// big is an array of int32_t on chunk 32 (see rom_curve)
+	// BIG is an array of int32_t on chunk 32 (see rom_curve)
 
 	// curve order is ready-only so we need a copy for norm() to work
 	BIG_copy(res->val,(chunk*)CURVE_Order);
@@ -359,10 +362,10 @@ static int ecp_order(lua_State *L) {
 }
 
 /***
-    Gives the X coordinate of the ECP point as a single @{big} number.
+    Gives the X coordinate of the ECP point as a single @{BIG} number.
 
     @function x()
-    @return a big number indicating the X coordinate of the point on curve.
+    @return a BIG number indicating the X coordinate of the point on curve.
 */
 static int ecp_get_x(lua_State *L) {
 	ecp *e = ecp_arg(L, 1); SAFE(e);
@@ -375,10 +378,10 @@ static int ecp_get_x(lua_State *L) {
 }
 
 /***
-    Gives the Y coordinate of the ECP point as a single @{big} number.
+    Gives the Y coordinate of the ECP point as a single @{BIG} number.
 
     @function y()
-    @return a big number indicating the Y coordinate of the point on curve.
+    @return a BIG number indicating the Y coordinate of the point on curve.
 */
 static int ecp_get_y(lua_State *L) {
 	ecp *e = ecp_arg(L, 1); SAFE(e);

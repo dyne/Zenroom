@@ -39,7 +39,7 @@
 //
 // The values of each number can be imported using big:hex() and big:base64() methods.
 //
-//  @module big
+//  @module BIG
 //  @author Denis "Jaromil" Roio
 //  @license GPLv3
 //  @copyright Dyne.org foundation 2017-2018
@@ -88,13 +88,13 @@ int big_destroy(lua_State *L) {
 }
 
 /***
-    Create a new Big number. Set it to zero if no argument is present, else import the value from @{octet}.
+    Create a new Big number. Set it to zero if no argument is present, else import the value from @{OCTET}.
 
     @param[opt] octet value of the big number
     @return a new Big number set to the given value or Zero if none
-    @function big:new(octet)
-    @see octet:hex
-    @see octet:base64
+    @function BIG.new(octet)
+    @see OCTET:hex
+    @see OCTET:base64
 */
 static int newbig(lua_State *L) {
 	HERE();

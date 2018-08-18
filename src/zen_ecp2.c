@@ -30,14 +30,14 @@
 //  pairing.
 //
 //  It is possible to create ECP2 points instances using the @{new}
-//  method. The values of each coordinate can be imported using @{big}
-//  methods from @{big:hex} or @{big:base64}.
+//  method. The values of each coordinate can be imported using @{BIG}
+//  methods from `BIG.hex()` or `BIG.base64()`.
 //
 //  Once ECP2 points are created this way, the arithmetic operations
 //  of addition, subtraction and multiplication can be executed
 //  normally using overloaded operators (+ - *).
 //
-//  @module ecp2
+//  @module ECP2
 //  @author Denis "Jaromil" Roio
 //  @license GPLv3
 //  @copyright Dyne.org foundation 2017-2018
@@ -100,17 +100,22 @@ int ecp2_destroy(lua_State *L) {
 	return 0;
 }
 
+/// Global ECP2 functions
+// @section ECP2.globals
 
 /***
-    Create a new ECP2 point from four X,Xi,Y,Yi @{big} arguments. If no arguments are specified then the ECP points to the curve's @{generator} coordinates. If only the first two arguments are provided (X and Xi), then Y and Yi are calculated from them.
+Create a new ECP2 point from four X,Xi,Y,Yi @{BIG} arguments.
 
-    @param[opt=big] X a big number on the curve
-    @param[opt=big] Xi imaginary part of the X (big number)
-    @param[opt=big] Y a big number on the curve
-    @param[opt=big] Yi imaginary part of the Y (big number)
-    @return a new ECP2 point on the curve at X,Xi,Y,Yi coordinates or Infinity
-    @function new(X,Xi,Y,Yi)
-    @see big:new
+If no arguments are specified then the ECP points to the curve's **generator** coordinates.
+
+If only the first two arguments are provided (X and Xi), then Y and Yi are calculated from them.
+
+    @param X a BIG number on the curve
+    @param Xi imaginary part of the X (BIG number)
+    @param Y a BIG number on the curve
+    @param Yi imaginary part of the Y (BIG number)
+    @return a new ECP2 point on the curve at X,Xi,Y,Yi coordinates or the curve's Generator
+    @function ECP2.new(X,Xi,Y,Yi)
 */
 static int lua_new_ecp2(lua_State *L) {
 	if(lua_isnoneornil(L, 1)) { // no args: set to generator
@@ -157,10 +162,13 @@ static int lua_new_ecp2(lua_State *L) {
 	return 0;
 }
 
+/// Class methods
+// @type ecp2
 
 /***
     Make an existing ECP2 point affine with the curve
-    @function affine()
+    @function ecp2:affine()
+    @return affine version of the ECP2 point
 */
 static int ecp2_affine(lua_State *L) {
 	ecp2 *in = ecp2_arg(L,1); SAFE(in);

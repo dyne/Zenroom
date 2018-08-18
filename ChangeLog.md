@@ -1,5 +1,26 @@
 # Zenroom ChangeLog
 
+## 0.7.0
+### August 2018
+
+Adopted AES-GCM as default encryption method, downgraded CBC as weak.
+Fixes to the exposed API for complete usage in Zenroom-studio.  Added
+seccomp kernel-level protection and insured unikernel functionality
+with provable isolation from network and filesystem access. Added
+language bindings, a Python module is now provided.
+
+Switched to BLS383 curve for ECP operations and upgraded Milagro to
+version 4.12.0. Implemented arithmetic operations on BIG numbers and
+improved the language design around ECP, ECDH and OCTET. Exposed and
+improved objects for HASH and RNG. Added curves GOLDILOCKS and
+SECP256K1 for use in ECDH and Base58 for OCTET. Added support for
+MSGPACK binary serialization format.
+
+Updated tests and examples, added new simple implementation for
+ElGamal with ZKP using ECP primitives. Started ECP2 twisted curve
+implementation. Improved build system; added python, java and esp32
+targets. Updated API documentation.
+
 ## 0.6.0
 ### June 2018
 

@@ -18,31 +18,24 @@
  * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/// <h1>Base data type for cryptography</h1>
+/// <h1>Base data type for cryptographic opearations</h1>
 //
 //  Octets are <a
 //  href="https://en.wikipedia.org/wiki/First-class_citizen">first-class
 //  citizens</a> in Zenroom. They consist of arrays of bytes (8bit)
 //  compatible with all cryptographic functions and methods. They are
 //  implemented to avoid any buffer overflow and their maximum size is
-//  known at the time of instantiation. The are provided by the
-//  'octet' extension which has to be required explicitly:
-//
-//  <code>octet = require'octet'</code>
-//
-//  After requiring the extension it is possible to create keyring
+//  known at the time of instantiation. It is possible to create OCTET
 //  instances using the new() method:
 //
-//  <code>message = octet.new()</code>
+//  <code>message = octet.new(64) -- creates a 64 bytes long octet</code>
 //
-//  Octets can import and export their contents to portable formats as
-//  sequences of :base64() or :hex() numbers just using their
-//  appropriate methods. Without an argument, these methods export
-//  contents in the selected format, when there is an argument that is
-//  considered to be of the selected format and its contents are
-//  converted to bytes and imported.
+//  Octets can export their contents to portable formats as sequences
+//  of @{base64} or @{base58} or @{hex} strings just using their
+//  appropriate methods. They can also be exported to Lua's @{array}
+//  format.
 //
-//  @module octet
+//  @module OCTET
 //  @author Denis "Jaromil" Roio
 //  @license GPLv3
 //  @copyright Dyne.org foundation 2017-2018
@@ -161,7 +154,7 @@ int o_destroy(lua_State *L) {
 }
 
 /// Global Octet Functions
-// @section octet
+// @section OCTET
 //
 // So called "global functions" are all prefixed by <b>octet.</b>,
 // operate on one or more octet objects and always return a new octet
@@ -178,14 +171,9 @@ Create a new octet with a specified maximum size, or a default if
 omitted. All operations exceeding the octet's size will truncate
 excessing data. Octets cannot be resized.
 
-@function octet.new(length)
+@function OCTET.new(length)
 @int[opt=4096] length maximum length in bytes
 @return octet newly instantiated octet
-@usage
-var2k = octet.new(2048) -- create an octet of 2KB
--- create another octet at default size
-var4k = octet.new()
-
 */
 static int newoctet (lua_State *L) {
 	const int len = luaL_optinteger(L, 1, MAX_OCTET);
@@ -199,14 +187,15 @@ static int newoctet (lua_State *L) {
 }
 
 /***
-    Bitwise XOR operation on two octets, returns a new octet. This is
-    also executed when using the '<b>~</b>' operator between two
-    octets. Results in a newly allocated octet, does not change the
-    contents of any other octet involved.
+
+Bitwise XOR operation on two octets, returns a new octet. This is also
+executed when using the '<b>~</b>' operator between two
+octets. Results in a newly allocated octet, does not change the
+contents of any other octet involved.
 
     @param dest leftmost octet used in XOR operation
     @param source rightmost octet used in XOR operation
-    @function octet.xor(dest, source)
+    @function OCTET.xor(dest, source)
     @return a new octet resulting from the operation
 */
 static int xor_n(lua_State *L) {
@@ -288,14 +277,13 @@ static int from_hex(lua_State *L) {
 }
 
 /***
-    Concatenate two octets, returns a new octet. This is also executed
-    when using the '<b>..</b>' operator btween two octets. It results
-    in a newly allocated octet, does not change the contents of other
-    octets.
+Concatenate two octets, returns a new octet. This is also executed
+when using the '<b>..</b>' operator btween two octets. It results in a
+newly allocated octet, does not change the contents of other octets.
 
     @param dest leftmost octet will be overwritten by result
     @param source rightmost octet used in XOR operation
-    @function octet.concat(dest, source)
+    @function OCTET.concat(dest, source)
     @return a new octet resulting from the operation
 */
 static int concat_n(lua_State *L) {
@@ -342,27 +330,27 @@ static int concat_n(lua_State *L) {
 // octet:<span class="global">method</span>(<span class="string">args</span>)
 // </pre>
 //
-// Octet contents are changed by the method "in-place" on "this"
-// object, instead of returning a new octet. This is the main
-// difference from using global functions in the octet namespace.
-// @see globals
-
-// above we could use @type octet but rendering is ugly
-
+// Octet contents are never changed: the methods always return a new
+// octet with the requested changes applied.
+//
 
 /***
-Print an octet in base64 notation
+Print an octet in base64 notation.
 
 @function octet:base64()
+@return a string representing the octet's contents in base64
+
+@see octet:hex
 @usage
 
 -- This method as well :string() and :hex() can be used both to set
 -- from and print out in particular formats.
 
 -- create an octet from a string:
-OCTET.string("my message to be encoded in base64")
+msg = OCTET.string("my message to be encoded in base64")
 -- print the message in base64 notation:
 print(msg:base64())
+
 
 */
 static int to_base64 (lua_State *L) {
@@ -383,17 +371,17 @@ static int to_base64 (lua_State *L) {
 
 
 /***
-    Print an octet in base58 notation
+Print an octet in base58 notation.
 
-    This encoding uses the same alphabet as Bitcoin addresses. Why
-    base58 instead of standard base64 encoding?
-    - Don't want 0OIl characters that look the same in some fonts and could be used to create visually identical looking data.
-    - A string with non-alphanumeric characters is not as easily accepted as input.
-    - E-mail usually won't line-break if there's no punctuation to break at.
-    - Double-clicking selects the whole string as one word if it's all alphanumeric.
+This encoding uses the same alphabet as Bitcoin addresses. Why base58 instead of standard base64 encoding?
 
-    @string data a base58 string whose contents are imported
-    @function octet:base58(data)
+- Don't want 0OIl characters that look the same in some fonts and could be used to create visually identical looking data.
+- A string with non-alphanumeric characters is not as easily accepted as input.
+- E-mail usually won't line-break if there's no punctuation to break at.
+- Double-clicking selects the whole string as one word if it's all alphanumeric.
+
+    @function octet:base58()
+    @return a string representing the octet's contents in base58
 */
 static int to_base58(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
@@ -418,6 +406,13 @@ static int to_base58(lua_State *L) {
 	return 1;
 }
 
+/***
+    Converts an octet into an array of bytes, compatible with Lua's transformations on <a href="https://www.lua.org/pil/11.1.html">arrays</a>.
+
+    @function octet:array()
+    @return an array as Lua's internal representation
+*/
+
 static int to_array(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
 	if(!o->len || !o->val) {
@@ -437,11 +432,10 @@ static int to_array(lua_State *L) {
 }
 
 /***
-    Print an octet as string or import a string inside the octet.
+    Print an octet as string.
 
-    @string[opt] data_str a string whose contents in bytes are imported
-    @function octet:string(data_str)
-    @see octet:base64
+    @function octet:string()
+    @return a string representing the octet's contents
 */
 static int to_string(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
@@ -456,10 +450,12 @@ static int to_string(lua_State *L) {
 
 
 /***
-    Return a string of hexadecimal numbers representing the octet's content.
+Converts an octet into a string of hexadecimal numbers representing its contents.
 
-    @function octet:hex(hex)
-    @see octet:base64
+This is the default format when `print()` is used on an octet.
+
+    @function octet:hex()
+    @return a string of hexadecimal numbers
 */
 static int to_hex(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
@@ -480,6 +476,7 @@ static int to_hex(lua_State *L) {
     maximum size.
 
     @int[opt=octet:max] length pad to this size, will use maximum octet size if omitted
+    @return new octet padded at length
     @function octet:pad(length)
 */
 static int pad(lua_State *L) {
@@ -512,6 +509,7 @@ static int zero(lua_State *L) {
     Compare two octets to see if contents are equal.
 
     @function octet:eq(first, second)
+    @return true if equal, false otherwise
 */
 
 static int eq(lua_State *L) {
@@ -530,13 +528,6 @@ static int eq(lua_State *L) {
 	return 1;
 }
 
-/***
-    Bitwise XOR operation on this octet and another one. Operates
-    in-place, overwriting contents of this octet.
-
-    @param const octet used in XOR operation
-    @function octet:xor(const)
-*/
 static int size(lua_State *L) {
 	octet *o = o_arg(L,1); SAFE(o);
 	lua_pushinteger(L,o->len);
@@ -549,27 +540,12 @@ static int max(lua_State *L) {
 	return 1;
 }
 
-// static int name(lua_State *L) {
-// 	octet *o = o_arg(L,1); SAFE(o);
-// 	char n[MAX_STRING];
-// 	if(!lua_getobjname ((lua_Object*)o, &n)) {
-// 		ERROR();
-// 		return lerror("Name not found for object"); }
-// 	lua_pushstring(L,n);
-// 	return 1;
-// }
-
-
 
 int luaopen_octet(lua_State *L) {
 	const struct luaL_Reg octet_class[] = {
 		{"new",newoctet},
 		{"concat",concat_n},
 		{"xor",xor_n},
-		{"from_base64",from_base64},
-		{"from_base58",from_base58},
-		{"from_string",from_string},
-		{"from_hex",from_hex},
 		{"base64",from_base64},
 		{"base58",from_base58},
 		{"string",from_string},
