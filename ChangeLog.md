@@ -1,5 +1,10 @@
 # Zenroom ChangeLog
 
+## 0.7.1
+### August 2018
+
+Fixes to all Javascript builds.
+
 ## 0.7.0
 ### August 2018
 
