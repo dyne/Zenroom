@@ -196,3 +196,8 @@ void zen_add_class(lua_State *L, char *name,
 	luaL_setfuncs(L,class,0);
 }
 
+char *str_arg(lua_State *L, int idx) {
+	char *s = lua_tostring(L, idx);
+	luaL_argcheck(L,s!=NULL,idx,"string expected");
+	return(s);
+}
