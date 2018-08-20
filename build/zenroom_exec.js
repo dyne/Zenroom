@@ -1,5 +1,6 @@
+#!/usr/bin/env nodejs
 // try this script from nodejs with a script as argument:
-// nodejs zenroom_exec.js ../../examples/keygen.lua
+// nodejs zenroom_exec.js examples/hello.lua
 
 const fs = require('fs')
 

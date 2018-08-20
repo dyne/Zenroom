@@ -46,7 +46,8 @@ apply-patches:
 
 # TODO: improve flags according to
 # https://github.com/kripken/emscripten/blob/master/src/settings.js
-javascript-node: cflags += -DARCH_JS -D'ARCH=\"JS\"'
+javascript-node: cflags += -DARCH_JS -D'ARCH=\"JS\"' --memory-init-file 1
+javascript-node: ldflags += --memory-init-file 1
 javascript-node: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src js

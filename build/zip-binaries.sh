@@ -29,6 +29,7 @@ function checkdir() {
 		cp ../LICENSE.txt $2
 		cp ../README.md $2
 		cp ../ChangeLog.md $2
+		rsync -raX ../examples $2/
 		return 0
 	}
 	print "directory not found: $1"
