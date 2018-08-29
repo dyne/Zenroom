@@ -17,6 +17,7 @@ void *zalloc(lua_State *L, size_t size);
 #define HEREs(s) func(0, "-> %s(%s)",__func__,s)
 #define HEREp(p) func(0, "-> %s(%p)",__func__,p)
 #define HEREn(n) func(0, "-> %s(%i)",__func__,n)
+#define HEREc(c) func(0, "-> %s(%c)",__func__,c)
 #define HEREoct(o) \
 	func(0, "-> %s - octet %p (%i/%i)",__func__,o->val,o->len,o->max)
 #define HEREecdh(e) \
