@@ -470,6 +470,28 @@ static int to_hex(lua_State *L) {
 	return 1;
 }
 
+static int to_bin(lua_State *L) {
+	octet *o = o_arg(L,1);	SAFE(o);
+	char *s = zen_memory_alloc(o->len*8+2);
+	int i, j;
+	char oo;
+	char *is = s;
+	for(i=0;i<o->len;i++) {
+		oo = o->val[i];
+		is = &s[i*8];
+		is[7] = oo    & 0x1 ? '1':'0';
+		is[6] = oo>>1 & 0x1 ? '1':'0';
+		is[5] = oo>>2 & 0x1 ? '1':'0';
+		is[4] = oo>>3 & 0x1 ? '1':'0';
+		is[3] = oo>>4 & 0x1 ? '1':'0';
+		is[2] = oo>>5 & 0x1 ? '1':'0';
+		is[1] = oo>>6 & 0x1 ? '1':'0';
+		is[0] = oo>>7 & 0x1 ? '1':'0';
+	}
+	lua_pushstring(L,s);
+	zen_memory_free(s);
+	return(1);
+}
 
 /***
     Pad an octet with leading zeroes up to indicated length or its
@@ -558,6 +580,7 @@ int luaopen_octet(lua_State *L) {
 		{"base58", to_base58},
 		{"string", to_string},
 		{"array",  to_array},
+		{"bin", to_bin},
 		{"eq", eq},
 		{"pad", pad},
 		{"zero", zero},
