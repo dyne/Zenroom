@@ -13,9 +13,19 @@ H = HASH.new('sha256')
 
 local DATA_TABLE = JSON.decode(DATA)
 
+function table.indexOf(t, object)
+    if type(t) ~= "table" then error("table expected, got " .. type(t), 2) end
+
+    for i, v in pairs(t) do
+        if object == v then
+            return i
+        end
+    end
+end
+
 function readBig(str)
 	return BIG.new(hex(str))
-end 
+end
 
 function readEcp(table)
 	local x = readBig(table['x'])
@@ -103,7 +113,9 @@ scores = DATA_TABLE['scores']
 
 -- increment to do to the options
 increment = LAMBDA.map(options, function(k,v) return 0 end)
-increment[1] = 1
+increment_index = table.indexOf(DATA_TABLE['options'], DATA_TABLE['option'])
+assert(increment_index, "option not found inside options")
+increment[increment_index] = 1
 
 -- encrypt them
 increment = LAMBDA.map(increment, function(k,v) return encrypt(v) end)
