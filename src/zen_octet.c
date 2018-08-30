@@ -108,6 +108,16 @@ int is_hex(const char *in) {
 	return c;
 }
 
+int is_bin(const char *in) {
+	if(!in) { ERROR(); return 0; }
+	int c;
+	for(c=0; in[c]!='\0'; c++) {
+		if (in[c]!='0' && in[c]!='1') {
+			ERROR(); return 0; }
+	}
+	return c;
+}
+
 // REMEMBER: newuserdata already pushes the object in lua's stack
 octet* o_new(lua_State *L, const int size) {
 	if(size<=0) return NULL;
@@ -273,6 +283,30 @@ static int from_hex(lua_State *L) {
 		return 0; }
 	octet *o = o_new(L, len); // could be half size
 	OCT_fromHex(o, (char*)s);
+	return 1;
+}
+
+static int from_bin(lua_State *L) {
+	const char *s = lua_tostring(L, 1);
+	luaL_argcheck(L, s != NULL, 1, "binary string sequence expected");
+	int len = is_bin(s);
+	int bytes = len/8; // TODO: check that len is mult of 8 (no carry)
+	if(!len || bytes>MAX_STRING) {
+		lerror(L, "invalid binary sequence size: %u", bytes);
+		return 0; }
+	octet *o = o_new(L, bytes+1);
+	int i,j;
+	uint8_t b;
+	for(i=0; i<len; i+=8) {
+		b = 0x0;
+		for(j=0;j<8;++j) {
+			if(s[i+j]=='1') b = b | 0x1;
+			b <<= 1;
+		}
+		o->val[i/8] = b>>1;
+	}
+	o->val[bytes] = 0x0;
+	o->len = bytes;
 	return 1;
 }
 
@@ -470,6 +504,29 @@ static int to_hex(lua_State *L) {
 	return 1;
 }
 
+static int to_bin(lua_State *L) {
+	octet *o = o_arg(L,1);	SAFE(o);
+	char *s = zen_memory_alloc(o->len*8+2);
+	int i;
+	char oo;
+	char *is = s;
+	for(i=0;i<o->len;i++) {
+		oo = o->val[i];
+		is = &s[i*8];
+		is[7] = oo    & 0x1 ? '1':'0';
+		is[6] = oo>>1 & 0x1 ? '1':'0';
+		is[5] = oo>>2 & 0x1 ? '1':'0';
+		is[4] = oo>>3 & 0x1 ? '1':'0';
+		is[3] = oo>>4 & 0x1 ? '1':'0';
+		is[2] = oo>>5 & 0x1 ? '1':'0';
+		is[1] = oo>>6 & 0x1 ? '1':'0';
+		is[0] = oo>>7 & 0x1 ? '1':'0';
+	}
+	s[o->len*8] = 0x0;
+	lua_pushstring(L,s);
+	zen_memory_free(s);
+	return(1);
+}
 
 /***
     Pad an octet with leading zeroes up to indicated length or its
@@ -550,6 +607,7 @@ int luaopen_octet(lua_State *L) {
 		{"base58",from_base58},
 		{"string",from_string},
 		{"hex",from_hex},
+		{"bin",from_bin},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg octet_methods[] = {
@@ -558,6 +616,7 @@ int luaopen_octet(lua_State *L) {
 		{"base58", to_base58},
 		{"string", to_string},
 		{"array",  to_array},
+		{"bin", to_bin},
 		{"eq", eq},
 		{"pad", pad},
 		{"zero", zero},
