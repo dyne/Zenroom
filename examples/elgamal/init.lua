@@ -70,17 +70,23 @@ function encrypt(m)
 	}
 end
 
-options = {'yes', 'no'}
+
+if DATA_TABLE then
+    options = DATA_TABLE['options']
+else
+    options = {'yes', 'no'}
+end
 
 -- initial state of the options
-scores = {0, 0}
+scores = LAMBDA.map(options, function(k,v) return 0 end)
+
 -- encrypt them
 scores = LAMBDA.map(scores, function(k,v) return encrypt(v) end)
 -- create the ZKP that they are zero
-proves = LAMBDA.map(scores, function(k,v) 
-								c, rx = provezero(v['a'], v['b']) 
-								return { c = tostring(c), rx = tostring(rx) }
-							end)
+proves = LAMBDA.map(scores, function(k,v)
+       				c, rx = provezero(v['a'], v['b'])
+                                return { c = tostring(c), rx = tostring(rx) }
+                                end)
 
 -- convert the scores in a serializable form
 scores = LAMBDA.map(scores, function(k,v) return { a = writeEcp(v['a']), b = writeEcp(v['b']) } end)

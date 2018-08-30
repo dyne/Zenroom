@@ -20,7 +20,9 @@ zenroom -a votes.json verify_init.lua
 ## Vote 
 
 ```
-zenroom -a votes.json vote.lua > votes2.json; mv votes2.json votes.json
+cat votes.json | jq --arg opt yes '. +{option: $opt}' | tee votes.json
+
+zenroom -a votes.json vote.lua | tee votes.json
 zenroom -a votes.json verify_vote.lua
 ```
 
@@ -33,7 +35,7 @@ and verify that votes are all 0 or 1, and the sum of all the addition is 1
 ## Tally
 
 ```
-zenroom -k key.json -a votes.json tally.lua 
+zenroom -k key.json -a votes.json tally.lua
 ```
 
 
@@ -47,14 +49,22 @@ zenroom keygen.lua > key.json
 zenroom -k key.json init.lua > votes.json
 zenroom -a votes.json verify_init.lua
 
-zenroom -a votes.json vote.lua > votes2.json; mv votes2.json votes.json
-zenroom -a votes.json verify_vote.lua
-zenroom -a votes.json vote.lua > votes2.json; mv votes2.json votes.json
-zenroom -a votes.json verify_vote.lua
-zenroom -a votes.json vote.lua > votes2.json; mv votes2.json votes.json
-zenroom -a votes.json verify_vote.lua
-zenroom -a votes.json vote.lua > votes2.json; mv votes2.json votes.json
+cat votes.json | jq --arg opt yes '. +{option: $opt}' | tee votes.json
+zenroom -a votes.json vote.lua | tee votes.json
 zenroom -a votes.json verify_vote.lua
 
-zenroom -k key.json -a votes.json tally.lua 
+cat votes.json | jq --arg opt no '. +{option: $opt}' | tee votes.json
+zenroom -a votes.json vote.lua | tee votes.json
+zenroom -a votes.json verify_vote.lua
+
+cat votes.json | jq --arg opt yes '. +{option: $opt}' | tee votes.json
+zenroom -a votes.json vote.lua | tee votes.json
+zenroom -a votes.json verify_vote.lua
+
+cat votes.json | jq --arg opt no '. +{option: $opt}' | tee votes.json
+zenroom -a votes.json vote.lua | tee votes.json
+zenroom -a votes.json verify_vote.lua
+
+
+zenroom -k key.json -a votes.json tally.lua
 ```
