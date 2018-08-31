@@ -222,12 +222,10 @@ static int from_base64(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "base64 string expected");
 	int len = is_base64(s);
-	HEREn(len);
 	if(!len) {
 		lerror(L, "base64 string contains invalid characters");
 		return 0; }
 	int nlen = len + len + len; // getlen_base64(len);
-	HEREn(nlen);
 	octet *o = o_new(L, nlen);
 	OCT_frombase64(o,(char*)s);
 	return 1;
@@ -236,9 +234,7 @@ static int from_base64(lua_State *L) {
 static int from_base58(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "base58 string expected");
-	HEREs(s);
 	int len = is_base58(s);
-	HEREn(len);
 	if(!len) {
 		lerror(L, "base58 string contains invalid characters");
 		return 0; }
@@ -249,8 +245,6 @@ static int from_base58(lua_State *L) {
 		zen_memory_free(dst);
 		lerror(L,"Error in conversion from base58 for string: %s",s);
 		return 0; }
-	// o->val[binsize] = '\0';
-	HEREn(binlen);
 	octet *o = o_new(L, binlen);
 	o->len = binlen;
 	// b58tobin returns its result at the _end_ of buf!!!
@@ -264,7 +258,6 @@ static int from_string(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "string expected");
 	int len = strlen(s);
-	HEREn(len);
 	if(!len || len>MAX_STRING) {
 		lerror(L, "invalid string size: %u", len);
 		return 0; }
@@ -277,7 +270,6 @@ static int from_hex(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "hex string sequence expected");
 	int len = is_hex(s);
-	HEREn(len);
 	if(!len || len>MAX_STRING*2) {
 		lerror(L, "invalid hex sequence size: %u", len);
 		return 0; }
@@ -394,7 +386,6 @@ static int to_base64 (lua_State *L) {
 		return 0; }
 	int newlen;
 	newlen = getlen_base64(o->len);
-	HEREn(newlen);
 	char *b = zen_memory_alloc(newlen);
 	OCT_tobase64(b,o);
 //	b[newlen] = '\0';
@@ -430,7 +421,6 @@ static int to_base58(lua_State *L) {
 		lerror(L,"base58 cannot encode octets smaller than 3 bytes");
 		return 0; }
 	int newlen = getlen_base58(o->len);
-	HEREn(newlen);
 	char *b = zen_memory_alloc(newlen);
 	size_t b58len = newlen;
 	b58enc(b, &b58len, o->val, o->len);
@@ -600,14 +590,14 @@ static int max(lua_State *L) {
 
 int luaopen_octet(lua_State *L) {
 	const struct luaL_Reg octet_class[] = {
-		{"new",newoctet},
+		{"new",   newoctet},
 		{"concat",concat_n},
-		{"xor",xor_n},
+		{"xor",   xor_n},
 		{"base64",from_base64},
 		{"base58",from_base58},
 		{"string",from_string},
-		{"hex",from_hex},
-		{"bin",from_bin},
+		{"hex",   from_hex},
+		{"bin",   from_bin},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg octet_methods[] = {
@@ -615,8 +605,9 @@ int luaopen_octet(lua_State *L) {
 		{"base64", to_base64},
 		{"base58", to_base58},
 		{"string", to_string},
+		{"str",    to_string},
 		{"array",  to_array},
-		{"bin", to_bin},
+		{"bin",    to_bin},
 		{"eq", eq},
 		{"pad", pad},
 		{"zero", zero},
