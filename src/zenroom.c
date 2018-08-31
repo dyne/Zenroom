@@ -87,7 +87,6 @@ extern int umm_integrity_check();
 
 // prototypes from lua_functions.c
 extern void load_file(char *dst, FILE *fd);
-extern char *safe_string(char *str);
 extern void zen_setenv(lua_State *L, char *key, char *val);
 extern void zen_add_function(lua_State *L, lua_CFunction func,
 		const char *func_name);
@@ -159,16 +158,14 @@ zenroom_t *zen_init(const char *conf,
 	zen_require_override(L,1);
 
 	// load arguments if present
-	if(data) // avoid errors on NULL args
-		if(safe_string(data)) {
-			func(L, "declaring global: DATA");
-			zen_setenv(L,"DATA",data);
-		}
-	if(keys)
-		if(safe_string(keys)) {
-			func(L, "declaring global: KEYS");
-			zen_setenv(L,"KEYS",keys);
-		}
+	if(data) {
+		func(L, "declaring global: DATA");
+		zen_setenv(L,"DATA",data);
+	}
+	if(keys) {
+		func(L, "declaring global: KEYS");
+		zen_setenv(L,"KEYS",keys);
+	}
 
 	return(Z);
 }

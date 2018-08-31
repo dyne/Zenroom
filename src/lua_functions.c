@@ -28,6 +28,7 @@
 #include <jutils.h>
 
 #include <zenroom.h>
+#include <zen_error.h>
 #include <lua_functions.h>
 
 #ifdef __EMSCRIPTEN__
@@ -73,16 +74,22 @@ void load_file(char *dst, FILE *fd) {
 		chunk = MAX_STRING;
 		if( offset+MAX_STRING>MAX_FILE )
 			chunk = MAX_FILE-offset-1;
-		bytes = fread(&dst[offset],sizeof(char),chunk,fd);
+		if(!chunk) {
+			warning(0, "File too big, truncated at maximum supported size");
+			break; }
+		bytes = fread(&dst[offset],1,chunk,fd);
 
 		if(!bytes) {
 			if(feof(fd)) {
-				if((fd!=stdin) && (long)offset!=file_size)
+				if((fd!=stdin) && (long)offset!=file_size) {
 					warning(0, "Incomplete file read (%u of %u bytes)",
 					      offset, file_size);
-				else
+				} else {
 					func(0, "EOF after %u bytes",offset);
-				break; }
+				}
+ 				dst[offset] = '\0';
+				break;
+			}
 			if(ferror(fd)) {
 				error(0, "Error in %s: %s",__func__,strerror(errno));
 				fclose(fd);
@@ -94,7 +101,7 @@ void load_file(char *dst, FILE *fd) {
 	act(0, "loaded file (%u bytes)", offset);
 }
 
-char *safe_string(char *str) {
+static char *safe_string(char *str, int max) {
 	int i, length = 0;
 	if(!str) {
 		warning(0, "NULL string detected");
@@ -102,24 +109,11 @@ char *safe_string(char *str) {
 	if(str[0]=='\0') {
 		warning(0, "empty string detected");
 		return NULL; }
-
-	while (length < MAX_STRING && str[length] != '\0') ++length;
-
-	if (length == MAX_STRING)
-		warning(0, "maximum size string detected (may be truncated) at address %p",str);
-
-	for (i = 0; i < length; ++i) {
-		if (!isprint(str[i]) && !isspace(str[i])) {
-			error(0, "unprintable character (ASCII %d) at position %d",
-			      (unsigned char)str[i], i);
-			return NULL;
-		}
-	}
-	return(str);
+ 	return(str);
 }
 
 void zen_setenv(lua_State *L, char *key, char *val) {
-	lua_pushstring(L, val);
+	lua_pushstring(L, safe_string(val, MAX_FILE) );
 	lua_setglobal(L, key);
 }
 
@@ -134,7 +128,7 @@ int zen_add_package(lua_State *L, char *name, lua_CFunction func) {
 void zen_add_function(lua_State *L,
                       lua_CFunction func,
                       const char *func_name) {
-	if (!L || !func || !func_name) return;	
+	if (!L || !func || !func_name) return;
 	lua_pushcfunction(L, func);
 	lua_setglobal(L, func_name);
 }

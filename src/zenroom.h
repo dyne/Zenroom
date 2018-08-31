@@ -83,7 +83,7 @@ int  zen_exec_script(zenroom_t *Z, const char *script);
 void zen_teardown(zenroom_t *zenroom);
 
 #define UMM_HEAP (64*1024) // 64KiB (masked with 0x7fff)
-#define MAX_FILE (64*512) // load max 32KiB files
+#define MAX_FILE (64*1024) // load max 64KiB files
 #define MAX_STRING 4097 // max 4KiB strings
 #define MAX_OCTET 2049 // max 2KiB octets
 
