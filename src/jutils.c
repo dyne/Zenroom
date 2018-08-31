@@ -123,7 +123,7 @@ void error(lua_State *L, const char *format, ...) {
   // _printline(Z, L);
   _printf(Z, "[!]", msg);
   va_end(arg);
-  Z->errorlevel = 3;
+  if(Z) Z->errorlevel = 3;
   // exit(1); // calls teardown (signal 11) TODO: check if OK with seccomp
 }
 
@@ -140,12 +140,12 @@ void warning(lua_State *L, const char *format, ...) {
   if(verbosity>=WARN) {
     va_list arg;
     va_start(arg, format);
-    
     vsnprintf(msg, MAX_STRING, format, arg);
-    _printf(stderr_tobuffer(L), "[W]", msg);
+    zenroom_t *Z = getzen(L);
+    _printf(Z, "[W]", msg);
     va_end(arg);
+    if(Z) Z->errorlevel = 2;
   }
-  getzen(L)->errorlevel = 2;
 }
 
 
