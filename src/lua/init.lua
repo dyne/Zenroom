@@ -38,6 +38,13 @@ function ECP2.G()         return ECP2.new() end
 function ECP2.generator() return ECP2.new() end
 
 function help(module)
+   if module == nil then
+	  print("usage: help(module)")
+	  print("example > help(octet)")
+	  print("example > help(ecdh)")
+	  print("example > help(ecp)")
+	  return
+   end
    for k,v in pairs(module) do
 	  if type(v)~='table' and string.sub(k,1,1)~='_' then
 		 print("class method: "..k)

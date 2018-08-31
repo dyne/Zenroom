@@ -76,7 +76,7 @@ This project is receiving funding from the European Union’s Horizon 2020 resea
 
 Copyright (C) 2017-2018 by Dyne.org foundation, Amsterdam
 
-Designed, written and maintained by Denis "Jaromil" Roio.
+Designed, written and maintained by Denis Roio <jaromil@dyne.org>
 
 With contributions by Ivan J., Puria Nafisi Azizi, Jordi Coscolla,
 Christian Espinoza, Enrico Zimuel and Daniele Lacamera.
@@ -89,23 +89,26 @@ This software includes software components by: R. Ierusalimschy,
 W. Celes and L.H. de Figueiredo (lua), Mike Scott and Kealan McCusker
 (milagro-crypto-c), Ralph Hempel (umm_malloc), Mark Pulford
 (lua-cjson), Daan Sprenkels (randombytes), Luke-jr (base58), Salvatore
-Sanfilippo (cmsgpack).
+Sanfilippo (cmsgpack)
 
 Lua extensions written and documented by: Roland Yonaba (moses),
 Enrique García Cota (inspect), Sebastian Schoener (schema), Kyle
-Conroy (finite state machine), Scott Lembcke (debugger).
+Conroy (finite state machine), Scott Lembcke (debugger), Gianluca
+Vespignani (comparetables).
 
-Licensed under the terms of the GNU Public License as published by the
-Free Software Foundation; either version 3 of the License, or (at your
-option) any later version.
+Zenroom is Licensed under the terms of the GNU Public License as
+published by the Free Software Foundation; either version 3 of the
+License, or (at your option) any later version.
 
-Source code contained in the full Zenroom build is licensed under the
-Apache License, Version 2.0 (the "License").
+Software contained include Lua 5.3, Copyright (C) 1994-2017 Lua.org,
+PUC-Rio licensed with an MIT style license. Also included Milagro,
+Copyright 2016 MIRACL UK Ltd licensed with the Apache License, Version
+2.0 (the "License").
 
-We are committed to contribute our code to communities and societies
-adopting it as free and open source, according to the Free Software
-Foundation guidelines and GNU artisanal traditions. Here is our
-[Contributor License Agreement](Agreement.md).
+<!-- We are committed to contribute our code to communities and societies -->
+<!-- adopting it as free and open source, according to the Free Software -->
+<!-- Foundation guidelines and GNU artisanal traditions. Here is our -->
+<!-- [Contributor License Agreement](Agreement.md). -->
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
