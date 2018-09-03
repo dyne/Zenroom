@@ -57,6 +57,9 @@ linux-lib: ${SOURCES}
 python: ${SOURCES}
 	${LD} -shared ${SOURCES} zen_python.o -o _zenroom.so ${LDFLAGS} ${LDADD}
 
+go: ${SOURCES}
+	${LD} -shared ${SOURCES} zen_go.o -o ZenroomGo.so ${LDFLAGS} ${LDADD}
+
 java: ${SOURCES}
 	${LD} -shared ${SOURCES} zen_java.o -o zenroom-java-linux.so ${LDFLAGS} ${LDADD}
 

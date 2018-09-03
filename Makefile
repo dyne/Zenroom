@@ -139,6 +139,12 @@ linux-python: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src python
 
+linux-go: apply-patches lua53 milagro lpeglabel
+	swig -go -cgo -intgosize 32 ${pwd}/build/swig.i
+	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c -o src/zen_go.o
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	make -C src go
+
 linux-java: cflags += -I /opt/jdk/include -I /opt/jdk/include/linux
 linux-java: apply-patches lua53 milagro lpeglabel
 	swig -java ${pwd}/build/swig.i

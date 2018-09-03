@@ -18,7 +18,7 @@ function checkbin() {
 		cp ../ChangeLog.md $2
 		return 0
 	}
-	print "file not found: zenroom$1"
+	print "file not found: $1"
 	return 1
 }
 
@@ -54,6 +54,7 @@ for t in $targets; do
 			checkbin zenroom.armhf $dir
 			checkbin _zenroom.so   $dir
 			checkbin zenroom-wrapper.py $dir
+			checkbin ZenroomGo.so $dir
 			continue ;;
 		javascript)
 			checkdir nodejs $dir
