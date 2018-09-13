@@ -105,6 +105,7 @@ musl-local: apply-patches lua53 milagro lpeglabel
 		make -C src musl
 
 musl-system: gcc := gcc
+musl-system: ldadd += -lm
 musl-system: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src musl
