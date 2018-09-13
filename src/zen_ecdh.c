@@ -378,12 +378,12 @@ static int ecdh_encrypt_weak_aes_cbc(lua_State *L) {
 
 static int ecdh_aead_encrypt(lua_State *L) {
 	HERE();
-	ecdh *e = ecdh_arg(L, 1); SAFE(e);
-	if(e->hash != 32) {
-		error(L,"curve %s hash is set to %i bytes length (SHA%i)",e->curve, e->hash, e->hash*8);
-		lerror(L,"AES-GCM/AEAD encryption only supports SHA256 hashing (32 bytes)");
-		HEREecdh(e);
-		return 0; }
+	// ecdh *e = ecdh_arg(L, 1); SAFE(e);
+	// if(e->hash != 32) {
+	// 	error(L,"curve %s hash is set to %i bytes length (SHA%i)",e->curve, e->hash, e->hash*8);
+	// 	lerror(L,"AES-GCM/AEAD encryption only supports SHA256 hashing (32 bytes)");
+	// 	HEREecdh(e);
+	// 	return 0; }
 	octet *k = o_arg(L, 2); SAFE(k);
 	octet *in = o_arg(L, 3); SAFE(in);
 	octet *iv = o_arg(L, 4); SAFE(iv);
@@ -402,15 +402,16 @@ static int ecdh_aead_encrypt(lua_State *L) {
 }
 
 
-/**	AES decrypts a plaintext to a ciphtertext. Function compabible
-	with IEEE-1363 specification for AES CBC using IV set to
-	zero. Decrypts a secret produced using
-	@{keyring:encrypt_weak_aes_cbc} in CBC mode.
+/**
+   AES decrypts a plaintext to a ciphtertext. Function compabible
+   with IEEE-1363 specification for AES CBC using IV set to
+   zero. Decrypts a secret produced using
+   @{keyring:encrypt_weak_aes_cbc} in CBC mode.
 
-	@param key AES key octet
-	@param ciphertext input ciphertext octet
-	@return a new octet containing the decrypted plain text, or false when failed
-	@function keyring:decrypt_weak_aes_cbc(key, ciphertext)
+   @param key AES key octet
+   @param ciphertext input ciphertext octet
+   @return a new octet containing the decrypted plain text, or false when failed
+   @function keyring:decrypt_weak_aes_cbc(key, ciphertext)
 */
 
 static int ecdh_decrypt_weak_aes_cbc(lua_State *L) {
@@ -579,6 +580,20 @@ static int lua_new_ecdh(lua_State *L) {
 	return 1;
 }
 
+static int ecdh_new_keygen(lua_State *L) {
+	HERE();
+	const char *curve = luaL_optstring(L, 1, "ed25519");
+	ecdh *e = ecdh_new(L, curve); SAFE(e);
+	e->pubkey = o_new(L,e->publen +0x0f); SAFE(e->pubkey);
+	e->seckey = o_new(L,e->seclen +0x0f); SAFE(e->seckey);
+	(*e->ECP__KEY_PAIR_GENERATE)(e->rng,e->seckey,e->pubkey);
+	HEREecdh(e);
+	lua_pop(L, 1);
+	lua_pop(L, 1);
+	//	HEREoct(pk); HEREoct(sk);
+	return 1;
+}
+
 
 /**
    Cryptographically Secure Random Number Generator (RNG).
@@ -617,11 +632,9 @@ static int ecdh_random(lua_State *L) {
 }
 
 #define COMMON_METHODS \
-	{"keygen",ecdh_keygen}, \
 	{"session",ecdh_session}, \
 	{"public", ecdh_public}, \
 	{"private", ecdh_private}, \
-	{"encrypt", ecdh_aead_encrypt}, \
 	{"decrypt", ecdh_aead_decrypt}, \
 	{"encrypt_weak_aes_cbc", ecdh_encrypt_weak_aes_cbc}, \
 	{"decrypt_weak_aes_cbc", ecdh_decrypt_weak_aes_cbc}, \
@@ -634,10 +647,13 @@ static int ecdh_random(lua_State *L) {
 int luaopen_ecdh(lua_State *L) {
 	const struct luaL_Reg ecdh_class[] = {
 		{"new",lua_new_ecdh},
+		{"keygen",ecdh_new_keygen},
+		{"encrypt", ecdh_aead_encrypt},
 		COMMON_METHODS,
 		{NULL,NULL}};
 	const struct luaL_Reg ecdh_methods[] = {
 		{"random",ecdh_random},
+		{"keygen",ecdh_keygen},
 		COMMON_METHODS,
 		{"__gc", ecdh_destroy},
 		{NULL,NULL}
