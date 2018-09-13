@@ -54,7 +54,7 @@ for t in $targets; do
 			checkbin zenroom.armhf $dir
 			checkbin _zenroom.so   $dir
 			checkbin zenroom-wrapper.py $dir
-			checkbin ZenroomGo.so $dir
+			checkbin libzenroomgo.so $dir
 			continue ;;
 		javascript)
 			checkdir nodejs $dir
