@@ -136,14 +136,14 @@ linux-lib: cflags += -shared -DLIBRARY
 linux-python: apply-patches lua53 milagro lpeglabel
 	swig -python ${pwd}/build/swig.i
 	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c \
-		 -o src/zen_python.o $(shell pkg-config python --cflags)
+		 -o src/zen_python.o
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src python
 
 osx-python: apply-patches lua53 milagro lpeglabel
 	swig -python ${pwd}/build/swig.i
 	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c \
-		-o src/zen_python.o $(shell pkg-config python --cflags)
+		-o src/zen_python.o
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src python
 

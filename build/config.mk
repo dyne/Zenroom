@@ -68,6 +68,11 @@ ldflags := -lm
 system := Darwin
 endif
 
+ifneq (,$(findstring python,$(MAKECMDGOALS)))
+cflags += $(shell pkg-config python --cflags)
+ldflags += $(shell pkg-config python --libs)
+endif
+
 ifneq (,$(findstring javascript,$(MAKECMDGOALS)))
 gcc := ${EMSCRIPTEN}/emcc
 ar := ${EMSCRIPTEN}/emar
