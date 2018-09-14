@@ -34,7 +34,7 @@ EOF
 	done
 }
 
-encrypt() {
+test_encrypt() {
     from=$1
     to=$2
     cat <<EOF | $zen -k $tmp/$from-keys.json -a $tmp/$to-envelop.json \
@@ -45,18 +45,12 @@ recipient = ECDH.new('$curve')
 recipient:public(hex(data['pubkey']))
 sender = ECDH.new('$curve')
 sender:private(hex(keys['private']))
-k = sender:session(recipient)
-iv = sender:random(16)
-enc,tag = sender:encrypt(k,str(data['message']),iv,str('header'))
-print(JSON.encode({
-	iv=iv:hex(),
-	tag=tag:hex(),
-    encmsg=enc:hex(),
-    pubkey=keys['public']}))
+enc,tag = encrypt(sender,recipient,str(data['message']),sender:public())
+print(JSON.encode(map(enc,hex)))
 EOF
 }
 
-decrypt() {
+test_decrypt() {
 	from=$1
 	to=$2
 	cat <<EOF | $zen -k $tmp/$to-keys.json -a $tmp/from-$from-to-$to-cryptomsg.json
@@ -65,12 +59,9 @@ data = JSON.decode(DATA)
 recipient = ECDH.new('$curve')
 recipient:private(hex(keys['private']))
 sender = ECDH.new('$curve')
-sender:public(hex(data['pubkey']))
-k = recipient:session(sender)
-iv = hex(data['iv'])
-tag = hex(data['tag'])
-dec = recipient:decrypt(k,hex(data['encmsg']),iv,str('header'), tag)
-print(dec:string())
+sender:public(hex(data['header']))
+dec = decrypt(recipient,sender,map(data,hex))
+print(dec.text:string())
 EOF
 }
 
@@ -83,7 +74,7 @@ for p in $ppl; do
 		from=$p
 		to=$pp
 		print "ENCRYPT $from -> $to"
-		encrypt $p $pp
+		test_encrypt $p $pp
 		cat $tmp/from-$from-to-$to-cryptomsg.json | json_pp
 	done
 done
@@ -94,7 +85,7 @@ for p in $ppl; do
 		from=$pp
 		to=$p
 		print "DECRYPT $from -> $to"
-		res=`decrypt $from $to`
+		res=`test_decrypt $from $to`
 		if [[ "$secret" != "$res" ]]; then
 			print - "ERROR in integration ecdh test: $tmp"			
 			print - "INPUT keys:"

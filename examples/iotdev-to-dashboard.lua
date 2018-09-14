@@ -2,6 +2,9 @@
 -- defines data validation shcemas that can be used on both ends
 -- complementary to other script for reception
 
+-- curve used
+curve = 'ed25519'
+
 -- data schemas
 keys_schema = SCHEMA.Record {
    device_id     = SCHEMA.String,
@@ -21,31 +24,38 @@ output_schema = SCHEMA.Record {
 -- import and validate keys 
 keys = read_json(KEYS, keys_schema)
 
--- import community's public key
-comkey = ECDH.new()
-comkey:public(
-   base64(keys['community_pubkey']))
 -- generate a new device keypair every time
 -- this could be optimised by creating keys onetime at first run
 -- or temporarily, i.e: every day or every hour
-devkey = ECDH.new()
-devkey:keygen()
+devkey = ECDH.keygen(curve)
+
 
 -- compute the session key using private/public keys
 -- it may change to use random, but then we need a session channel
-session = devkey:session(comkey)
 
 -- payload is a nested json structure to be encrypted
 payload = {}
 payload['device_id'] = keys['device_id']
 payload['data']      = DATA
-SCHEMA.check(payload, payload_schema)
+validate(payload, payload_schema)
 
--- output is the packet, json formatted
--- only the device's public key is transmitted in clear
+-- The device's public key, the 'community_id' and the encryption
+-- curve type are transmitted in clear inside the header, which is
+-- authenticated (AEAD)
 header = {}
 header['device_pubkey'] = devkey:public():base64()
 header['community_id'] = keys['community_id']
--- content( header )
-output = encrypt(devkey, comkey, MSG.pack(payload), MSG.pack(header))
-print( JSON.encode( map(output, base64) ) )
+-- content( header ) -- uncomment for debug
+
+-- The output is a table with crypto contents which is standard for
+-- zenroom's functions encrypt/decrypt: .checksum .header .iv .text
+output = encrypt(devkey,
+				 base64(keys.community_pubkey),
+				 pack(payload), pack(header))
+
+output = map(output, O.to_base64)
+output.zenroom = VERSION
+output.encoding = 'base64'
+output.curve = curve
+-- content(output) -- uncomment for debug
+print( JSON.encode( output ) ) -- map(output, base64) ) )

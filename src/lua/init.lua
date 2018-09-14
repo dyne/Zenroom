@@ -85,7 +85,9 @@ end
 -- validate against a schema
 function validate(data, schema)
    if(type(data) ~= "table") then
-	  error("validate: argument is not a table: cannot process schema validation") return end
+	  error("validate: first argument is not a table, cannot process validation") return end
+   if(type(schema) ~= "function") then
+	  error("validate: second argument is not a function, invalid schema") return end
    return SCHEMA.CheckSchema(data,schema)
 end
 

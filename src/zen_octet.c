@@ -70,14 +70,14 @@ static int getlen_base58(int len) {	return( ((3+(5*(len/3))) & ~0x03)+0x0f ); }
 // assumes null terminated string
 // returns 0 if not base else length of base encoded string
 int is_base64(const char *in) {
-	if(!in) { ERROR(); return 0; }
+	if(!in) { return 0; }
 	int c;
 	for(c=0; in[c]!='\0'; c++) {
 		if (!(isalnum(in[c])
 		      || '+' == in[c]
 		      || '=' == in[c]
 		      || '/' == in[c])) {
-			ERROR(); return 0; }
+			return 0; }
 	}
 	return c;
 }
@@ -215,6 +215,51 @@ static int xor_n(lua_State *L) {
 	SAFE(n);
 	OCT_copy(n,x);
 	OCT_xor(n,y);
+	return 1;
+}
+
+static int lua_is_base64(lua_State *L) {
+	const char *s = lua_tostring(L, 1);
+	luaL_argcheck(L, s != NULL, 1, "string expected");
+	int len = is_base64(s);
+	if(!len) {
+		lua_pushboolean(L, 0);
+		func(L, "string is not a valid base64 sequence");
+		return 1; }
+	lua_pushboolean(L, 1);
+	return 1;
+}
+static int lua_is_base58(lua_State *L) {
+	const char *s = lua_tostring(L, 1);
+	luaL_argcheck(L, s != NULL, 1, "string expected");
+	int len = is_base58(s);
+	if(!len) {
+		lua_pushboolean(L, 0);
+		func(L, "string is not a valid base58 sequence");
+		return 1; }
+	lua_pushboolean(L, 1);
+	return 1;
+}
+static int lua_is_hex(lua_State *L) {
+	const char *s = lua_tostring(L, 1);
+	luaL_argcheck(L, s != NULL, 1, "string expected");
+	int len = is_hex(s);
+	if(!len) {
+		lua_pushboolean(L, 0);
+		func(L, "string is not a valid hex sequence");
+		return 1; }
+	lua_pushboolean(L, 1);
+	return 1;
+}
+static int lua_is_bin(lua_State *L) {
+	const char *s = lua_tostring(L, 1);
+	luaL_argcheck(L, s != NULL, 1, "string expected");
+	int len = is_bin(s);
+	if(!len) {
+		lua_pushboolean(L, 0);
+		func(L, "string is not a valid binary sequence");
+		return 1; }
+	lua_pushboolean(L, 1);
 	return 1;
 }
 
@@ -593,9 +638,14 @@ int luaopen_octet(lua_State *L) {
 		{"new",   newoctet},
 		{"concat",concat_n},
 		{"xor",   xor_n},
+		{"is_base64", lua_is_base64},
+		{"is_base58", lua_is_base58},
+		{"is_hex", lua_is_hex},
+		{"is_bin", lua_is_bin},
 		{"base64",from_base64},
 		{"base58",from_base58},
 		{"string",from_string},
+		{"str",   from_string},
 		{"hex",   from_hex},
 		{"bin",   from_bin},
 		{NULL,NULL}

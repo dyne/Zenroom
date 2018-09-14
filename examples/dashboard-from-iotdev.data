@@ -1,6 +1,9 @@
 {
-   "text" : "FUqLMKuwI87BUlhkq8uTjBclNSljm8t5imz3bBj4yZLwMbC5A12J2TVB6ey53lS0wvi/vq8i7lQ=",
-   "iv" : "keV42FNxnjYZckGu9ZBocg==",
-   "checksum" : "2rUSEsmOqcknKj2/PLXG0g==",
-   "header" : "gqxjb21tdW5pdHlfaWStc21hcnRjaXRpemVuc61kZXZpY2VfcHVia2V52VhCRFE0VHBJc2I4d2NGemhpYXE1cDhKOVRJZDRDU1NrRmYwT1ArZjF3T0RBdkswUW00dEVIMkMvRUFLQ0dmK0dYTUVaUklJOGxFTmpRQ0xwdEZuRmRFT1U9"
+   "zenroom" : "0.7.1",
+   "text" : "roejuBKJ/uGLbxLRmbF02IPVpEmlc8SVx/Ob9THT1bOmddp4tXSi0JL6vbo/1tRH3Enz5t48DTA=",
+   "iv" : "bBtCrhf70cFqpbC6iaYq3w==",
+   "curve" : "ed25519",
+   "encoding" : "base64",
+   "checksum" : "NVbeywBQvBKaOXRwqWQ5PQ==",
+   "header" : "gq1kZXZpY2VfcHVia2V52VhCQytsanBlSGg1dXZzV3pPVHdpNXhIZGEwTzIyR0IyYU1VYWV6b2l6VWtKTE9leUJOREdYNG5aYkRpOW5aRm1rKzBHM2FYUW02TmlBSFhOelRXRlp0bkE9rGNvbW11bml0eV9pZK1zbWFydGNpdGl6ZW5z"
 }
