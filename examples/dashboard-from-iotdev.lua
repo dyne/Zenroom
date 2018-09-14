@@ -2,37 +2,35 @@
 
 
 -- key schema
-keys_schema = SCHEMA.Record {
-   community_seckey = SCHEMA.String
-}
--- same as output in iotdev-to-dashboard
+keys_schema = SCHEMA.Record { community_seckey = SCHEMA.String }
+
 data_schema = SCHEMA.Record {
-   device_pubkey    = SCHEMA.String,
-   community_id     = SCHEMA.String,
-   payload          = SCHEMA.String
+   text     = SCHEMA.string,
+   iv       = SCHEMA.string,
+   header   = SCHEMA.string,
+   checksum = SCHEMA.string
 }
+
 -- same as payload in iotdev-to-dashboard
 payload_schema = SCHEMA.Record {
    device_id   = SCHEMA.String,
    data        = SCHEMA.String
 }
 
-data = read_json(DATA,data_schema)
-keys = read_json(KEYS,keys_schema)
+data = read_json(DATA) -- TODO: data_schema validation
+keys = read_json(KEYS, keys_schema)
+header = unpack( base64(data.header) )
 
 dashkey = ECDH.new()
-dashkey:private( base64(keys['community_seckey']) )
+dashkey:private( base64(keys.community_seckey) )
 
-devkey = ECDH.new()
-devkey:public( base64(data['device_pubkey']) )
+payload,ck = decrypt(dashkey,
+   base64( header.device_pubkey ),
+   map(data, base64))
 
-session = dashkey:session(devkey)
+-- validate the payload
+validate(payload, payload_schema)
 
-payload = 
-   dashkey:decrypt_weak_aes_cbc(
-	  session,
-	  base64(data['payload']))
--- validate the schema
-read_json(payload:string(),payload_schema)
--- payload is already json encoded
-print(payload:string())
+-- print("Header:")
+-- content(unpack(payload.header) )
+print(JSON.encode(unpack(payload.text) ))

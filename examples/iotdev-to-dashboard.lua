@@ -43,15 +43,9 @@ SCHEMA.check(payload, payload_schema)
 
 -- output is the packet, json formatted
 -- only the device's public key is transmitted in clear
-output = {}
-output['device_pubkey'] = devkey:public():base64()
-output['community_id'] = keys['community_id']
-output['payload'] =
-   devkey:encrypt_weak_aes_cbc(
-	  session,
-	  str(json.encode(payload))
-   ):base64()
-SCHEMA.check(output, output_schema)
-
--- print out the json packet ready to be sent
-print(JSON.encode(output))
+header = {}
+header['device_pubkey'] = devkey:public():base64()
+header['community_id'] = keys['community_id']
+-- content( header )
+output = encrypt(devkey, comkey, MSG.pack(payload), MSG.pack(header))
+print( JSON.encode( map(output, base64) ) )

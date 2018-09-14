@@ -3,16 +3,20 @@
 
 JSON   = require('json')
 SCHEMA = require('schema')
+S = SCHEMA -- alias
 RNG    = require('zenroom_rng')
 OCTET  = require('zenroom_octet')
+O = OCTET -- alias
 ECDH   = require('ecdh')
 LAMBDA = require('functional')
+L = LAMBDA -- alias
 INSIDE = require('inspect')
 I = INSIDE -- alias
 ECP    = require('ecp')
 ECP2   = require('ecp2')
 BIG    = require('zenroom_big')
 HASH   = require('zenroom_hash')
+H = HASH -- alias
 MSG    = require('msgpack')
 
 -- override type to recognize zenroom's types
@@ -35,10 +39,13 @@ function content(var)
    end
 end
 
+-- encrypt with default AES-GCM technique, returns base58 encoded
+-- values into a table containing: .text .iv .checksum .header
 function encrypt(alice, bob, msg, header)
-   key = alice:session(bob)
-   iv = RNG.new():octet(16)
+   local key = alice:session(bob)
+   local iv = RNG.new():octet(16)
    -- convert strings to octets
+   local omsg, ohead
    if(type(msg) == "string") then
 	  omsg = str(msg) else omsg = msg end
    if(type(header) == "string") then
@@ -51,11 +58,35 @@ end
 function decrypt(alice, bob, cypher)
    key = alice:session(bob)
    decode = {header = cypher.header}
-   decode.text, decode.checksum = ECDH.decrypt(key, cypher.text, cypher.iv, cypher.header)
+   decode.text, decode.checksum =
+	  ECDH.decrypt(key,
+				   cypher.text,
+				   cypher.iv,
+				   cypher.header)
    if(cypher.checksum ~= decode.checksum) then
 	  error("decrypt error: header checksum mismatch")
    end
    return(decode)
+end
+
+-- map values in place
+function map(data, fun)
+   if(type(data) ~= "table") then
+	  error "map: first argument is not a table"
+	  return nil end
+   if(type(fun) ~= "function") then
+	  error "map: second argument is not a function"
+	  return nil end
+   out = {}
+   L.map(data,function(k,v)	out[k] = fun(v) end)
+   return(out)
+end
+
+-- validate against a schema
+function validate(data, schema)
+   if(type(data) ~= "table") then
+	  error("validate: argument is not a table: cannot process schema validation") return end
+   return SCHEMA.CheckSchema(data,schema)
 end
 
 function ECP2.G()         return ECP2.new() end
@@ -96,7 +127,7 @@ function read_json(data, validation)
    else
 	  -- operate schema validation if argument is present
 	  if validation then
-		 local err = SCHEMA.CheckSchema(out, validation)
+		 local err = validate(out, validation)
 		 if err then
 			-- error "read_json: schema validation failed"
 			error(SCHEMA.FormatOutput(err))
