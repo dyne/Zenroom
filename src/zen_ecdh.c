@@ -247,6 +247,9 @@ finish:{
 		octet *ses = o_new(L,e->keysize); SAFE(ses);
 		(*e->ECP__SVDP_DH)(e->seckey,pubkey,ses);
 		// here the NULL could be a salt (TODO: global?)
+		// its used as 'p' in the hash function
+		//         ehashit(sha,z,counter,p,&H,0);
+
 		KDF2(e->hash,ses,NULL,e->hash,kdf);
 		return 2;
 	}
@@ -360,49 +363,6 @@ static int ecdh_encrypt_weak_aes_cbc(lua_State *L) {
 }
 
 /**
-   AES-GCM encrypt with Additional Data (AEAD) encrypts and
-   authenticate a plaintext to a ciphtertext. Function compatible with
-   IEEE P802.1 specification. Errors out if encryption fails or
-   authentication fails, else returns the secret ciphertext and a
-   SHA256 of the header to checksum the integrity of the accompanying
-   plaintext.
-
-   @param key AES key octet
-   @param message input text in an octet
-   @param iv initialization vector
-   @param header clear text, authenticated for integrity (checksum)
-   @function keyring:encrypt(key, message, iv, h)
-   @treturn[1] octet containing the output ciphertext
-   @treturn[1] octet containing the authentication tag (checksum)
-*/
-
-static int ecdh_aead_encrypt(lua_State *L) {
-	HERE();
-	// ecdh *e = ecdh_arg(L, 1); SAFE(e);
-	// if(e->hash != 32) {
-	// 	error(L,"curve %s hash is set to %i bytes length (SHA%i)",e->curve, e->hash, e->hash*8);
-	// 	lerror(L,"AES-GCM/AEAD encryption only supports SHA256 hashing (32 bytes)");
-	// 	HEREecdh(e);
-	// 	return 0; }
-	octet *k = o_arg(L, 2); SAFE(k);
-	octet *in = o_arg(L, 3); SAFE(in);
-	octet *iv = o_arg(L, 4); SAFE(iv);
-	octet *h = o_arg(L, 5); SAFE(h);
-	HEREoct(k);
-	HEREoct(in);
-	HEREoct(iv);
-	HEREoct(h);
-	// output is padded to next word
-	octet *out = o_new(L, in->len+16); SAFE(out);
-	octet *t = o_new(L, 32); SAFE (t);
-	AES_GCM_ENCRYPT(k, iv, h, in, out, t);
-	HEREoct(out);
-	HEREoct(t);
-	return 2;
-}
-
-
-/**
    AES decrypts a plaintext to a ciphtertext. Function compabible
    with IEEE-1363 specification for AES CBC using IV set to
    zero. Decrypts a secret produced using
@@ -430,6 +390,42 @@ static int ecdh_decrypt_weak_aes_cbc(lua_State *L) {
 }
 
 /**
+   AES-GCM encrypt with Additional Data (AEAD) encrypts and
+   authenticate a plaintext to a ciphtertext. Function compatible with
+   IEEE P802.1 specification. Errors out if encryption fails or
+   authentication fails, else returns the secret ciphertext and a
+   SHA256 of the header to checksum the integrity of the accompanying
+   plaintext.
+
+   @param key AES key octet
+   @param message input text in an octet
+   @param iv initialization vector
+   @param header clear text, authenticated for integrity (checksum)
+   @function keyring:encrypt(key, message, iv, h)
+   @treturn[1] octet containing the output ciphertext
+   @treturn[1] octet containing the authentication tag (checksum)
+*/
+
+static int ecdh_aead_encrypt(lua_State *L) {
+	HERE();
+	// ecdh *e = ecdh_arg(L, 1); SAFE(e);
+	// if(e->hash != 32) {
+	// 	error(L,"curve %s hash is set to %i bytes length (SHA%i)",e->curve, e->hash, e->hash*8);
+	// 	lerror(L,"AES-GCM/AEAD encryption only supports SHA256 hashing (32 bytes)");
+	// 	HEREecdh(e);
+	// 	return 0; }
+	octet *k =  o_arg(L, 1); SAFE(k);
+	octet *in = o_arg(L, 2); SAFE(in);
+	octet *iv = o_arg(L, 3); SAFE(iv);
+	octet *h =  o_arg(L, 4); SAFE(h);
+	// output is padded to next word
+	octet *out = o_new(L, in->len+16); SAFE(out);
+	octet *t = o_new(L, 32); SAFE (t);
+	AES_GCM_ENCRYPT(k, iv, h, in, out, t);
+	return 2;
+}
+
+/**
    AES-GCM decrypt with Additional Data (AEAD) decrypts and
    authenticate a plaintext to a ciphtertext . Compatible with IEEE
    P802.1 specification.
@@ -444,26 +440,16 @@ static int ecdh_decrypt_weak_aes_cbc(lua_State *L) {
 
 static int ecdh_aead_decrypt(lua_State *L) {
 	HERE();
-	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
-	octet *k = o_arg(L, 2); SAFE(k);
-	octet *in = o_arg(L, 3); SAFE(in);
-	octet *iv = o_arg(L, 4); SAFE(iv);
-	octet *h = o_arg(L, 5); SAFE(h);
-	octet *t = o_arg(L, 6); SAFE(t);
+	octet *k = o_arg(L, 1); SAFE(k);
+	octet *in = o_arg(L, 2); SAFE(in);
+	octet *iv = o_arg(L, 3); SAFE(iv);
+	octet *h = o_arg(L, 4); SAFE(h);
 
 	// output is padded to next word
 	octet *out = o_new(L, in->len+16); SAFE(out);
-	octet *t2 = o_new(L,t->len);
+	octet *t2 = o_new(L,32); SAFE(t2); // measured empirically is 16
 	AES_GCM_DECRYPT(k, iv, h, in, out, t2);
-	HEREoct(out);
-	if(!OCT_comp(t, t2)) {
-		error(L, "%s: aead decryption failed.",__func__);
-		lua_pop(L, 1);
-		lua_pop(L, 1);
-		lua_pushboolean(L, 0);
-	}
-	lua_pop(L, 1); // t2
-	return 1;
+	return 2;
 }
 
 /**
@@ -635,7 +621,6 @@ static int ecdh_random(lua_State *L) {
 	{"session",ecdh_session}, \
 	{"public", ecdh_public}, \
 	{"private", ecdh_private}, \
-	{"decrypt", ecdh_aead_decrypt}, \
 	{"encrypt_weak_aes_cbc", ecdh_encrypt_weak_aes_cbc}, \
 	{"decrypt_weak_aes_cbc", ecdh_decrypt_weak_aes_cbc}, \
 	{"hash", ecdh_hash}, \
@@ -649,6 +634,7 @@ int luaopen_ecdh(lua_State *L) {
 		{"new",lua_new_ecdh},
 		{"keygen",ecdh_new_keygen},
 		{"encrypt", ecdh_aead_encrypt},
+		{"decrypt", ecdh_aead_decrypt},
 		COMMON_METHODS,
 		{NULL,NULL}};
 	const struct luaL_Reg ecdh_methods[] = {

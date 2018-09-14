@@ -8,6 +8,7 @@ OCTET  = require('zenroom_octet')
 ECDH   = require('ecdh')
 LAMBDA = require('functional')
 INSIDE = require('inspect')
+I = INSIDE -- alias
 ECP    = require('ecp')
 ECP2   = require('ecp2')
 BIG    = require('zenroom_big')
@@ -32,6 +33,29 @@ function content(var)
    else
 	  INSIDE.print(var)
    end
+end
+
+function encrypt(alice, bob, msg, header)
+   key = alice:session(bob)
+   iv = RNG.new():octet(16)
+   -- convert strings to octets
+   if(type(msg) == "string") then
+	  omsg = str(msg) else omsg = msg end
+   if(type(header) == "string") then
+	  ohead = str(header) else ohead = header end
+   cypher = {header = ohead, iv = iv}
+   cypher.text, cypher.checksum = ECDH.encrypt(key,omsg,iv,ohead)
+   return(cypher)
+end
+
+function decrypt(alice, bob, cypher)
+   key = alice:session(bob)
+   decode = {header = cypher.header}
+   decode.text, decode.checksum = ECDH.decrypt(key, cypher.text, cypher.iv, cypher.header)
+   if(cypher.checksum ~= decode.checksum) then
+	  error("decrypt error: header checksum mismatch")
+   end
+   return(decode)
 end
 
 function ECP2.G()         return ECP2.new() end
