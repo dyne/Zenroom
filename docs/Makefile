@@ -28,5 +28,5 @@ api:
 	make -C ldoc
 
 upload:
-	rsync -Pr pub/* assata.dyne.org:/srv/www/zenroom.dyne.org
-	rsync -Pr demo assata.dyne.org:/srv/www/zenroom.dyne.org/
+	rsync -Pr pub/* files.dyne.org:/srv/www/zenroom.dyne.org
+	rsync -Pr demo files.dyne.org:/srv/www/zenroom.dyne.org/
