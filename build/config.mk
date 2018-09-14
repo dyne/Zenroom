@@ -64,8 +64,14 @@ endif
 
 ifneq (,$(findstring osx,$(MAKECMDGOALS)))
 cflags := ${cflags} -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -DARCH_OSX
+ld := ${gcc}
 ldflags := -lm
 system := Darwin
+endif
+
+ifneq (,$(findstring python,$(MAKECMDGOALS)))
+cflags += $(shell pkg-config python --cflags)
+ldflags += $(shell pkg-config python --libs)
 endif
 
 ifneq (,$(findstring javascript,$(MAKECMDGOALS)))

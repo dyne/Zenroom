@@ -55,7 +55,7 @@ linux-lib: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o libzenroom-${ARCH}-${VERSION}-${BRANCH}-${HASH}.so ${LDFLAGS} ${LDADD}
 
 python: ${SOURCES}
-	${LD} -shared ${SOURCES} zen_python.o -o _zenroom.so ${LDFLAGS} ${LDADD}
+	${CC} -shared ${SOURCES} zen_python.o -o _zenroom.so ${LDFLAGS} ${LDADD}
 
 go: ${SOURCES}
 	${LD} -shared ${SOURCES} zen_go.o -o libzenroomgo.so ${LDFLAGS} ${LDADD}
