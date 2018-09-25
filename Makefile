@@ -64,6 +64,7 @@ javascript-rn: apply-patches lua53 milagro lpeglabel
 	@mkdir -p build/rnjs
 	sed -i 's/require("crypto")/require(".\/crypto")/g' src/zenroom.js
 	sed -i 's/require("[^\.]/console.log("/g' src/zenroom.js
+	sed -i 's/console.warn.bind/console.log.bind/g' src/zenroom.js
 	sed -i 's/;ENVIRONMENT_IS_SHELL=[^;]*;/;ENVIRONMENT_IS_SHELL=true;/g' src/zenroom.js
 	sed -i 's/;ENVIRONMENT_IS_NODE=[^;]*;/;ENVIRONMENT_IS_NODE=false;/g' src/zenroom.js
 	sed -i 's/;ENVIRONMENT_IS_WORKER=[^;]*;/;ENVIRONMENT_IS_WORKER=false;/g' src/zenroom.js
