@@ -1,3 +1,24 @@
+osx: apply-patches lua53 milagro lpeglabel
+	CC=${gcc} LD=${ld} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+		make -C src osx
+	@cp -v ${pwd}/src/zenroom.command ${pwd}/build
+
+osx-python2: apply-patches lua53 milagro lpeglabel
+	swig -python ${pwd}/build/swig.i
+	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c \
+		-o src/zen_python.o
+	CC=${gcc} LD=${ld} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+		make -C src python
+	@mkdir -p ${pwd}/build/python2 && cp -v ${pwd}/src/_zenroom.so ${pwd}/build/python2
+
+osx-python3: apply-patches lua53 milagro lpeglabel
+	swig -python -py3 ${pwd}/build/swig.i
+	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c \
+		-o src/zen_python.o
+	CC=${gcc} LD=${ld} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+		make -C src python
+	@mkdir -p ${pwd}/build/python2 && cp -v ${pwd}/src/_zenroom.so ${pwd}/build/python3
+
 
 ios-lib:
 	TARGET=${ARCH} AR=${ar} CC=${gcc} CFLAGS="${cflags}" make -C src ios-lib

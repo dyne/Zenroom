@@ -15,3 +15,16 @@ docs/fonts
 lib/musl
 src/zenroom.wasm
 src/zenroom-shared
+build/Zenroom-*
+build/xtensa-*
+build/*wasm
+build/*js
+build/*dll
+build/*exe
+build/*command
+build/*py
+build/python2
+build/python3
+build/*go
+build/*java
+build/*x86
