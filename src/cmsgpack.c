@@ -923,11 +923,11 @@ int luaopen_create(lua_State *L) {
 LUALIB_API int luaopen_cmsgpack(lua_State *L) {
     luaopen_create(L);
 
-#if LUA_VERSION_NUM < 502
-    /* Register name globally for 5.1 */
-    lua_pushvalue(L, -1);
-    lua_setglobal(L, LUACMSGPACK_NAME);
-#endif
+// #if LUA_VERSION_NUM < 502
+//     /* Register name globally for 5.1 */
+//     lua_pushvalue(L, -1);
+//     lua_setglobal(L, LUACMSGPACK_NAME);
+// #endif
 
     return 1;
 }
@@ -935,7 +935,7 @@ LUALIB_API int luaopen_cmsgpack(lua_State *L) {
 LUALIB_API int luaopen_cmsgpack_safe(lua_State *L) {
     int i;
 
-    luaopen_cmsgpack(L);
+    luaopen_create(L);
 
     /* Wrap all functions in the safe handler */
     for (i = 0; i < (sizeof(cmds)/sizeof(*cmds) - 1); i++) {
@@ -944,11 +944,11 @@ LUALIB_API int luaopen_cmsgpack_safe(lua_State *L) {
         lua_setfield(L, -2, cmds[i].name);
     }
 
-#if LUA_VERSION_NUM < 502
-    /* Register name globally for 5.1 */
-    lua_pushvalue(L, -1);
-    lua_setglobal(L, LUACMSGPACK_SAFE_NAME);
-#endif
+// #if LUA_VERSION_NUM < 502
+//     /* Register name globally for 5.1 */
+//     lua_pushvalue(L, -1);
+//     lua_setglobal(L, LUACMSGPACK_SAFE_NAME);
+// #endif
 
     return 1;
 }

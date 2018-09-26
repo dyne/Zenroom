@@ -19,7 +19,7 @@ payload_schema = SCHEMA.Record {
 
 data = read_json(DATA) -- TODO: data_schema validation
 keys = read_json(KEYS, keys_schema)
-header = unpack( base64(data.header) )
+header = msgunpack( base64(data.header) )
 
 dashkey = ECDH.new()
 dashkey:private( base64(keys.community_seckey) )
@@ -32,5 +32,5 @@ payload,ck = decrypt(dashkey,
 validate(payload, payload_schema)
 
 -- print("Header:")
--- content(unpack(payload.header) )
-print(JSON.encode(unpack(payload.text) ))
+-- content(msgunpack(payload.header) )
+print(JSON.encode(msgunpack(payload.text) ))

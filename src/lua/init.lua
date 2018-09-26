@@ -2,6 +2,11 @@
 -- zen_load_extensions(L) usually after zen_init()
 
 JSON   = require('json')
+
+require('msgpack')
+MSG = msgpack
+msgpack = nil -- rename default global
+
 SCHEMA = require('schema')
 S = SCHEMA -- alias
 RNG    = require('zenroom_rng')
@@ -17,7 +22,6 @@ ECP2   = require('ecp2')
 BIG    = require('zenroom_big')
 HASH   = require('zenroom_hash')
 H = HASH -- alias
-MSG    = require('msgpack')
 
 -- override type to recognize zenroom's types
 luatype = type

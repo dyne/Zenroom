@@ -51,7 +51,7 @@ header['community_id'] = keys['community_id']
 -- zenroom's functions encrypt/decrypt: .checksum .header .iv .text
 output = encrypt(devkey,
 				 base64(keys.community_pubkey),
-				 pack(payload), pack(header))
+				 msgpack(payload), msgpack(header))
 
 output = map(output, O.to_base64)
 output.zenroom = VERSION

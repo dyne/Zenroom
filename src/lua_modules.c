@@ -118,7 +118,7 @@ int zen_exec_extension(lua_State *L, zen_extension_t *p) {
 }
 
 int nop(lua_State *L) {
-	lerror(L,"illegal instruction: required");
+	lerror(L,"illegal instruction: require");
 	return 0; }
 
 int zen_require(lua_State *L) {
@@ -148,10 +148,7 @@ int zen_require(lua_State *L) {
 		}
 	}
 
-
 	// require our own C to lua extensions
-	// if     (strcmp(s, "crypto")==0) {
-	//  luaL_requiref(L, s, luaopen_crypto, 1); return 1; }
 	if(strcasecmp(s, "octet")  ==0) {
 		luaL_requiref(L, s, luaopen_octet, 1); }
 	// else if(strcmp(s, "rsa")  ==0) {
@@ -174,9 +171,6 @@ int zen_require(lua_State *L) {
 		luaL_requiref(L, s, lua_cjson_safe_new, 1); }
 	else if(strcasecmp(s, "msgpack")  ==0) {
 		luaL_requiref(L, s, luaopen_cmsgpack_safe, 1); }
-
-	// else if(strcasecmp(s, "cjson_full") ==0) {
-	// 	luaL_requiref(L, s, lua_cjson_new, 1); }
 	else {
 		// shall we bail out and abort execution here?
 		warning(L, "required extension not found: %s",s);
