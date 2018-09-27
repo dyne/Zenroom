@@ -53,6 +53,7 @@
 #include <zen_error.h>
 #include <zen_octet.h>
 #include <zen_big.h>
+#include <zen_fp12.h>
 #include <zen_memory.h>
 #include <lua_functions.h>
 
@@ -121,8 +122,8 @@ static int lua_new_ecp2(lua_State *L) {
 	if(lua_isnoneornil(L, 1)) { // no args: set to generator
 		ecp2 *e = ecp2_new(L); SAFE(e);
 		FP2 x, y;
-		FP2_from_BIGs(&x,(chunk*)CURVE_Pxa_BLS383,(chunk*)CURVE_Pxb_BLS383);
-		FP2_from_BIGs(&y,(chunk*)CURVE_Pya_BLS383,(chunk*)CURVE_Pyb_BLS383);
+		FP2_from_BIGs(&x,(chunk*)CURVE_G2xa,(chunk*)CURVE_G2xb);
+		FP2_from_BIGs(&y,(chunk*)CURVE_G2ya,(chunk*)CURVE_G2yb);
 
 		if(!ECP2_set(&e->val,&x,&y)) {
 			lerror(L,"ECP2 generator value out of curve (stack corruption)");
@@ -133,7 +134,7 @@ static int lua_new_ecp2(lua_State *L) {
 	void *txi = luaL_testudata(L, 2, "zenroom.big");
 	void *ty  = luaL_testudata(L, 3, "zenroom.big");
 	void *tyi = luaL_testudata(L, 4, "zenroom.big");
-	
+
 	if(tx && txi && ty && tyi) {
 		ecp2 *e = ecp2_new(L); SAFE(e);
 		big *x, *xi, *y, *yi;
@@ -162,6 +163,35 @@ static int lua_new_ecp2(lua_State *L) {
 	return 0;
 }
 
+/***
+    Returns the generator of the twisted curve: an ECP2 point to its X and Y coordinates.
+
+    @function generator()
+    @return ECP2 coordinates of the curve's generator.
+*/
+static int ecp2_generator(lua_State *L) {
+	ecp2 *e = ecp2_new(L); SAFE(e);
+/* 	FP2 x, y;
+	FP2_from_BIGs(&x,(chunk*)CURVE_G2xa,(chunk*)CURVE_G2xb);
+	FP2_from_BIGs(&y,(chunk*)CURVE_G2ya,(chunk*)CURVE_G2yb);
+	if(!ECP2_set(&e->val,&x,&y)) {
+		lerror(L,"ECP2 generator value out of curve (stack corruption)");
+		return 0; }
+ */
+	ECP2_generator(&e->val);
+	return 1;
+}
+
+
+static int ecp2_millerloop(lua_State *L) {
+	fp12 *f = fp12_new(L);   SAFE(f);
+	ecp2 *x = ecp2_arg(L,1); SAFE(x);
+	ecp  *y = ecp_arg(L,2);  SAFE(y);
+	PAIR_ate(&f->val,&x->val,&y->val);
+	PAIR_fexp(&f->val);
+	return 1;
+}
+
 /// Class methods
 // @type ecp2
 
@@ -172,7 +202,7 @@ static int lua_new_ecp2(lua_State *L) {
 */
 static int ecp2_affine(lua_State *L) {
 	ecp2 *in = ecp2_arg(L,1); SAFE(in);
-	ecp2 *out = ecp2_dup(L,in); SAFE(out);	
+	ecp2 *out = ecp2_dup(L,in); SAFE(out);
 	ECP2_affine(&out->val);
 	return 1;
 }
@@ -256,9 +286,22 @@ static int ecp2_eq(lua_State *L) {
 	return 1;
 }
 
+static int ecp2_mul(lua_State *L) {
+	ecp2 *p = ecp2_arg(L,1); SAFE(p);
+	big  *b = big_arg(L,2); SAFE(b);
+	ecp2 *r = ecp2_dup(L, p); SAFE(r);	
+	PAIR_G2mul(&r->val,b->val);
+	return 1;
+}
+
 int luaopen_ecp2(lua_State *L) {
 	const struct luaL_Reg ecp2_class[] = {
 		{"new",lua_new_ecp2},
+		{"generator",ecp2_generator},
+		{"millerloop",ecp2_millerloop},
+		{"loop",ecp2_millerloop},
+		{"miller",ecp2_millerloop},
+		{"ate",ecp2_millerloop},
 		{NULL,NULL}};
 	const struct luaL_Reg ecp2_methods[] = {
 		{"affine",ecp2_affine},
@@ -271,6 +314,8 @@ int luaopen_ecp2(lua_State *L) {
 		{"__sub",ecp2_sub},
 		{"eq",ecp2_eq},
 		{"__eq", ecp2_eq},
+		{"mul",ecp2_mul},
+		{"__mul",ecp2_mul},
 		{NULL,NULL}
 	};
 	zen_add_class(L, "ecp2", ecp2_class, ecp2_methods);

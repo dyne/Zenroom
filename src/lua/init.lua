@@ -19,6 +19,7 @@ INSIDE = require('inspect')
 I = INSIDE -- alias
 ECP    = require('ecp')
 ECP2   = require('ecp2')
+FP12   = require('fp12')
 BIG    = require('zenroom_big')
 HASH   = require('zenroom_hash')
 H = HASH -- alias

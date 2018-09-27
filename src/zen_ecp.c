@@ -51,20 +51,9 @@
 #include <zen_error.h>
 #include <zen_octet.h>
 #include <zen_big.h>
+#include <zen_fp12.h>
 #include <zen_memory.h>
 #include <lua_functions.h>
-
-typedef struct {
-	char curve[16];
-	char type[16];
-	BIG  order;
-	ECP  val;
-	// TODO: the values above make it necessary to propagate the
-	// visibility on the specific curve point types to the rest of the
-	// code. To abstract these and have get/set functions may save a
-	// lot of boilerplate when implementing support for multiple
-	// curves ECP.
-} ecp;
 
 static char *big2strhex(char *str, BIG a) {
 	BIG b;
@@ -131,7 +120,7 @@ static int lua_new_ecp(lua_State *L) {
 	if(lua_isnoneornil(L, 1)) { // no args: set to generator
 		ecp *e = ecp_new(L); SAFE(e);
 		if(!ECP_set(&e->val,
-		            (chunk*)CURVE_Gx_BLS383, (chunk*)CURVE_Gy_BLS383)) {
+		            (chunk*)CURVE_Gx, (chunk*)CURVE_Gy)) {
 			lerror(L,"ECP generator value out of curve (stack corruption)");
 			return 0; }
 		return 1; }
@@ -159,6 +148,23 @@ static int lua_new_ecp(lua_State *L) {
 	return 0;
 }
 
+/***
+    Returns the generator of the curve: an ECP point to its X and Y coordinates.
+
+    @function generator()
+    @return ECP coordinates of the curve's generator.
+*/
+static int ecp_generator(lua_State *L) {
+	ecp *e = ecp_new(L); SAFE(e);
+/* 	if(!ECP_set(&e->val,
+	    (chunk*)CURVE_Gx, (chunk*)CURVE_Gy)) {
+		lerror(L,"ECP generator value out of curve (stack corruption)");
+		return 0; }
+ */
+	ECP_generator(&e->val);
+	return 1;
+}
+
 /// Instance Methods
 // @type ecp
 
@@ -168,7 +174,7 @@ static int lua_new_ecp(lua_State *L) {
 */
 static int ecp_affine(lua_State *L) {
 	ecp *in = ecp_arg(L,1); SAFE(in);
-	ecp *out = ecp_dup(L,in); SAFE(out);	
+	ecp *out = ecp_dup(L,in); SAFE(out);
 	ECP_affine(&out->val);
 	return 1;
 }
@@ -215,7 +221,7 @@ static int ecp_mapit(lua_State *L) {
 		BIG_inc(x,1);
 		BIG_norm(x);
 	}
-	// #if PAIRING_FRIENDLY_BLS383 == BLS
+	// #if PAIRING_FRIENDLY == BLS
 	BIG c;
 	BIG_rcopy(c,CURVE_Cofactor);
 	ECP_mul(&e->val,c);
@@ -295,14 +301,16 @@ static int ecp_mul(lua_State *L) {
 	int tn;
 	lua_Number n = lua_tonumberx(L, 2, &tn);
 	if(tn) {
+		func(L,"G1mul argument is a scalar number");
 		BIG bn;
 		BIG_zero(bn);
 		BIG_inc(bn,(int)n);
 		BIG_norm(bn);
-		ECP_mul(&out->val,bn);
+	    PAIR_G1mul(&out->val,bn);
 		return 1; }
+	func(L,"G1mul argument is a BIG number");
 	big *b = big_arg(L,2); SAFE(b);
-	ECP_mul(&out->val,b->val);
+	PAIR_G1mul(&out->val,b->val);
 	return 1;
 }
 
@@ -395,7 +403,7 @@ static int ecp_get_y(lua_State *L) {
 
 static int ecp_output(lua_State *L) {
 	ecp *e = ecp_arg(L, 1); SAFE(e);
-	ECP_BLS383 *P = &e->val;
+	ECP *P = &e->val;
 	if (ECP_isinf(P)) {
 		lua_pushstring(L,"Infinity");
 		return 1; }
@@ -405,8 +413,8 @@ static int ecp_output(lua_State *L) {
 	ECP_affine(P);
 	BIG y;
 	char ys[256];
-	FP_BLS383_redc(x,&(P->x));
-	FP_BLS383_redc(y,&(P->y));
+	FP_redc(x,&(P->x));
+	FP_redc(y,&(P->y));
 	snprintf(out, 511,
 "{ \"curve\": \"%s\",\n"
 "  \"encoding\": \"hex\",\n"
@@ -419,17 +427,6 @@ static int ecp_output(lua_State *L) {
 	return 1;
 }
 
-/***
-    Returns the generator of the curve: an ECP point to its X and Y coordinates.
-
-    @function generator()
-    @return ECP coordinates of the curve's generator.
-*/
-static int ecp_generator(lua_State *L) {
-	ecp *e = ecp_new(L); SAFE(e);
-	ECP_set(&e->val, (chunk*)CURVE_Gx_BLS383, (chunk*)CURVE_Gy_BLS383);
-	return(1);
-}
 
 int luaopen_ecp(lua_State *L) {
 	const struct luaL_Reg ecp_class[] = {
@@ -438,7 +435,6 @@ int luaopen_ecp(lua_State *L) {
 		{"infinity",ecp_get_infinity},
 		{"order",ecp_order},
 		{"generator",ecp_generator},
-		{"G",ecp_generator},
 		{NULL,NULL}};
 	const struct luaL_Reg ecp_methods[] = {
 		{"affine",ecp_affine},

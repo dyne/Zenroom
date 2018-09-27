@@ -23,19 +23,15 @@ lowmem-tests = \
 		${1} test/events.lua && \
 		${1} test/code.lua && \
 		${1} test/locals.lua && \
-		${1} test/schema.lua && \
-		${1} test/octet.lua && \
-		${1} test/hash.lua && \
-		${1} test/ecdh.lua && \
-		${1} test/ecdh_aes-gcm_vectors.lua && \
-		${1} test/ecp_bls383.lua
+		${1} test/schema.lua
 
 crypto-tests = \
 	@${1} test/octet.lua && \
 	${1} test/hash.lua && \
 	${1} test/ecdh.lua && \
 	${1} test/ecdh_aes-gcm_vectors.lua && \
-	${1} test/ecp_bls383.lua
+	${1} test/ecp_bls383.lua && \
+	${1} test/pair_bls383.lua
 
 shell-tests = \
 	test/octet-json.sh ${1} && \
