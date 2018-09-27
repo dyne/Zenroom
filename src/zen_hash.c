@@ -18,6 +18,24 @@
  * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+/// <h1>Cryptographic hash functions</h1>
+//
+// An hash is also known as 'message digest', 'digital fingerprint',
+// 'digest' or 'checksum'.
+//
+// HASH objects can be generated from a number of implemented
+// algorithms: `sha256` and `sha512`.
+//
+// objects are instantiated using @{HASH:new} and then provide the
+// method @{HASH:process} that takes an input @{OCTET} and then
+// returns another fixed-size octet that is uniquely matched to the
+// original data. The process is not reversible (the original data
+// cannot be retrieved from an hash).
+//
+// @module HASH
+// @author Denis "Jaromil" Roio
+// @license GPLv3
+// @copyright Dyne.org foundation 2017-2018
 
 #include <lua.h>
 #include <lualib.h>
@@ -51,6 +69,18 @@ typedef struct {
 	hash512 *sha512;
 	// ...
 } HASH;
+
+
+/**
+   Create a new hash object of a selected algorithm (sha256 or
+   sha512). The resulting object can then process any @{OCTET} into
+   its hashed equivalent.
+
+   @param string indicating the type of hash algorithm
+   @function HASH.new(string)
+   @return a new hash object ready to process data.
+   @see process
+*/
 
 HASH* hash_new(lua_State *L, const char *hashtype) {
 	HEREs(hashtype);

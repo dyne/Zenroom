@@ -1,5 +1,5 @@
 --------------
---- <h1>Advanced data manipulation</h1>
+--- <h1>Advanced data manipulation (LAMBDA)</h1>
 --
 -- Manipulate complex data structures with functional programming
 -- prototypes. This set of functions are ideal to work on nested
@@ -16,7 +16,7 @@
 -- @copyright 2012-2017
 -- @license MIT
 -- @release 1.6.1-zenroom
--- @module data 
+-- @module LAMBDA
 
 local _MODULEVERSION = '1.6.1'
 

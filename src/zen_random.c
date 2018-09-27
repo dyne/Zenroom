@@ -21,15 +21,16 @@
 
 /// <h1>Cryptographically Secure Random Number Generator (RNG)</h1>
 //
-// This method is initialised with a different seed upon creation.
+// Each new RNG instance is initialised with a different random seed
 //
 // Cryptographic security is achieved by hashing the random numbers
 // using this sequence: unguessable seed -> SHA -> PRNG internal state
 // -> SHA -> random numbers. See <a
 // href="ftp://ftp.rsasecurity.com/pub/pdfs/bull-1.pdf">this paper</a>
-// for a justification.
+// for an exstensive description of the process. More recent methods
+// (fortuna etc) are in the works.
 //
-// @module rng
+// @module RNG
 // @author Denis "Jaromil" Roio
 // @license GPLv3
 // @copyright Dyne.org foundation 2017-2018
@@ -79,9 +80,6 @@ RNG* rng_arg(lua_State *L, int n) {
 	return((RNG*)ud);
 }
 
-/// Global RNG extension
-// @section rng.globals
-
 static int newrng(lua_State *L) {
 	HERE();
     RNG *rng = rng_new(L); SAFE(rng);
@@ -89,7 +87,7 @@ static int newrng(lua_State *L) {
 }
 
 /***
-    Create a new octet of given lenght filled with random data.
+    Create a new @{OCTET} of given lenght filled with random data.
 
     @param int length of random material in bytes
     @function octet(int)
@@ -106,6 +104,13 @@ int rng_oct(lua_State *L) {
 	return 1;
 }
 
+/***
+    Create a new @{BIG} of default @{ECP} curve length filled with random data.
+
+    @function big()
+    @usage
+    print( RNG.new():big():base64() )
+*/
 int rng_big(lua_State *L) {
 	RNG *rng = rng_arg(L,1); SAFE(rng);
 	big *res = big_new(L); SAFE(res);
@@ -114,11 +119,12 @@ int rng_big(lua_State *L) {
 }
 
 /***
-   Returns a random BIG number reduced to modulo first argument,
-   removing bias.
+   Returns a random @{BIG} of default @{ECP} curve length reduced to
+   a modulus (another BIG number) and removing bias.
 
+   @function modbig(modulus)
    @param modulus limit the big number to this modulus
-   @return a new randomg @{big} number
+   @return a new randomg @{BIG} number
 */
 static int rng_modbig(lua_State *L) {
 	RNG *rng = rng_arg(L,1); SAFE(rng);

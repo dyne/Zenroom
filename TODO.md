@@ -6,6 +6,11 @@ and their specific use-cases.
 
 -faddress-sanitizers <- (check flags)
 
+elements in multiplications that take ECP* and BIG should be checked
+for position, for instance ECP multiplication needs to have the BIG
+number always as second argument. Instead of returning error we should
+check the type and reposition the arguments accordingly.
+
 
 ## Deterministic Random in the Checker
 
@@ -19,7 +24,6 @@ a solution can be to make it done by many....
 
 the only random useful in EC are numbers in FP
 and the FP is already modulus so smaller than the order
-
 
 
 the only random needed is for generation of the private key
@@ -116,8 +120,11 @@ multiply group order by the generetor should give the point at infinity
 
 ## Generic improvements
 
-- parse lib/milagro-crypto-c/cmake/AMCLParameters.cmake for info about
-  curves: size of BIG, names and pairing-friendliness
+
+^ add tracking of single lua command/operations executions
+
+- erlang style pattern matching on data structures
+  https://github.com/silentbicycle/tamale
 
 - add brieflz2 compression
 
@@ -126,11 +133,8 @@ multiply group order by the generetor should give the point at infinity
 	  https://github.com/kallisti5/ElectricFence
 	  https://github.com/Ryandev/MemoryTracker
 
-
-- add tracking of single lua command/operations executions
-
-- in/out to MSGPACK in addition to JSON for compact messaging easy using
-  Antirez' extension see https://github.com/antirez/lua-cmsgpack
+- parse lib/milagro-crypto-c/cmake/AMCLParameters.cmake for info about
+  curves: size of BIG, names and pairing-friendliness
 
 - add some more functions from stdlib's string and utils
   https://github.com/lua-stdlib/lua-stdlib
@@ -138,11 +142,11 @@ multiply group order by the generetor should give the point at infinity
 - Include libs from penlight
   http://stevedonovan.github.io/Penlight/api/index.html stringx, lexer
 
-- erlang style pattern matching on data structures
-  https://github.com/silentbicycle/tamale
-
 - date and time module
   https://github.com/Tieske/date
+
+X in/out to MSGPACK in addition to JSON for compact messaging easy using
+  Antirez' extension see https://github.com/antirez/lua-cmsgpack
 
 V if event based callback framework needed, try including libev
   https://github.com/brimworks/lua-ev
@@ -172,13 +176,15 @@ V add a new 8bit memory manager to test
 
 ## Developer experience
 
-- on error print out code at line where it has been detected
+^ on error print out code at line where it has been detected
   the line number is already included between semicolons
   just need to go to script buffer and extract line
 
-- !! make a Jupyter kernel for zenroom (-> Puria)
+- improve Jupyter kernel for zenroom
   - http://jupyter-client.readthedocs.io/en/latest/kernels.html
   - https://github.com/neomantra/lua_ipython_kernel
+
+- language server in lua (lsp branch) followup
 
 - graphviz representation of complex data structures
   http://siffiejoe.github.io/lua-microscope/
@@ -205,9 +211,6 @@ X add list of functions and keywords for completion in ace
 - Benchmark suite to measure capacity to de/code large amounts of
   streaming data in chunks.
 
-V Investigate adoption of LuaJit in place of Lua5.1
-  (should be easy as it seems the C api is pretty much the same)
-
 ## Security
 
 - maybe support Linux kernel keystore feature for loaded keys
@@ -220,9 +223,9 @@ X adopt a declarative approach to data schemes accepted in scripts
 
 ## Documentation
 
-- Start sketching an high-level API based on experience in DECODE
+^ Start sketching an high-level API based on experience in DECODE
 
-- Provide cross-language examples for most basic operations
+^ Provide cross-language examples for most basic operations
 
 V Make it easy to integrate with BLOCKLY to generate simple
   cryptographic functions.
@@ -235,11 +238,11 @@ X Document api with luadoc http://keplerproject.github.io/luadoc/
 
 ## Crypto
 
+^ Build a usable ABC implementation (maybe compatible with coconut
+  and/or IRMA?)
+
 - see if ECDAA is any useful https://github.com/xaptum/ecdaa
   has Direct Anonymous Attestation (DAA) and Schnorr sigs
-
-- Build a usable ABC implementation (maybe compatible with coconut
-  and/or IRMA?)
 
 - Reproduce tor's new onion address scheme
   (see tor-dam/pkg/damlib/crypto_25519.go)
