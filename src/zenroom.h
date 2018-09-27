@@ -84,7 +84,9 @@ void zen_teardown(zenroom_t *zenroom);
 
 #define UMM_HEAP (64*1024) // 64KiB (masked with 0x7fff)
 #define MAX_FILE (64*1024) // load max 64KiB files
+#ifndef MAX_STRING
 #define MAX_STRING 4097 // max 4KiB strings
+#endif
 #define MAX_OCTET 2049 // max 2KiB octets
 
 #define LUA_BASELIBNAME "_G"
