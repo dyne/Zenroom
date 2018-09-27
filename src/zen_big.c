@@ -133,6 +133,18 @@ static int big_to_octet(lua_State *L) {
 	return 1;
 }
 
+static int big_concat(lua_State *L) {
+	big *l = big_arg(L,1); SAFE(l);
+	big *r = big_arg(L,2); SAFE(r);
+//	BIG_norm(l->val); BIG_norm(r->val);
+	int nlen = l->len + r->len;
+	octet *o = o_new(L, nlen +2); SAFE(o);
+	BIG_toBytes(o->val,l->val);
+	BIG_toBytes(o->val+l->len,r->val);
+	o->len = nlen;
+	return 1;
+}
+
 // useful to double-check big_to_octet():hex()
 // this function is known to return good results
 static int big_to_hex(lua_State *L) {
@@ -280,6 +292,7 @@ int luaopen_big(lua_State *L) {
 		{"__div",big_div},
 		{"eq",  big_eq},
 		{"__eq",big_eq},
+		{"__concat",big_concat},
 		{"modmul",big_modmul},
 		{"moddiv",big_moddiv},
 		{"modsqr",big_modsqr},
