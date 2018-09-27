@@ -130,7 +130,7 @@ sum_k = increment[1]['k']
 for i =2, #increment do
 	sum_a = sum_a + increment[i]['a']
 	sum_b = sum_b + increment[i]['b']
-	sum_k = sum_k + increment[i]['k']
+	sum_k = (sum_k + increment[i]['k']) % order
 end
 c, rk  = prove_one(sum_a, sum_b, sum_k)
 prove_sum_one = { c = tostring(c), rk = tostring(rk) }
