@@ -92,25 +92,32 @@
 #define BIG_randomnum(m,q,r) BIG_384_29_randomnum(m,q,r)
 
 #define FP FP_BLS383
-#define FP_zero(b) FP_BLS383_zero(b)
 #define FP_copy(d,s) FP_BLS383_copy(d,s)
-#define FP_eq(l,r) FP_BLS383_equals(l,r)
-#define FP_cmove(d,s,c) FP_BLS383_cmove(d,s,c)
-#define FP_fromBig(f,b) FP_BLS383_nres(f,b)
-#define FP_toBig(b,f) FP_BLS383_redc(b,f)
-#define FP_mul(d, l, r) FP_BLS383_mul(d, l, r)
-#define FP_imul(d, l, r) FP_BLS383_imul(d, l, r)
-#define FP_sqr(d, s) FP_BLS383_sqr(d, s)
-#define FP_add(d, l, r) FP_BLS383_add(d, l, r)
-#define FP_sub(d, l, r) FP_BLS383_sub(d, l, r)
-#define FP_div2(d, s) FP_BLS383_div2(d,s)
-#define FP_pow(d, l, r) FP_BLS383_pow(d,l,r)
-#define FP_sqrt(d,s) FP_BLS383_sqrt(d,s)
-#define FP_neg(d,s) FP_BLS383_neg(d,s)
-#define FP_reduce(f) FP_BLS383_reduce(f)
-#define FP_norm(f) FP_BLS383_norm(f)
-#define FP_qr(f) FP_BLS383_qr(f)
-#define FP_inv(d,s) FP_BLS383_inv(d,s)
+#define FP_redc(x,y) FP_BLS383_redc(x,y)
+#define FP_reduce(x) FP_BLS383_reduce(x)
+
+#define FP12 FP12_BLS383
+/* #define FP12_zero(b) FP12_BLS383_zero(b) */
+#define FP12_copy(d,s) FP12_BLS383_copy(d,s)
+#define FP12_eq(l,r) FP12_BLS383_equals(l,r)
+/* #define FP12_cmove(d,s,c) FP12_BLS383_cmove(d,s,c) */
+#define FP12_fromOctet(f,o) FP12_BLS383_fromOctet(f,o)
+#define FP12_toOctet(o,f) FP12_BLS383_toOctet(o,f)
+#define FP12_mul(l, r) FP12_BLS383_mul(l, r)
+/* #define FP12_imul(d, l, r) FP12_BLS383_imul(d, l, r) */
+#define FP12_sqr(d, s) FP12_BLS383_sqr(d, s)
+/* #define FP12_add(d, l, r) FP12_BLS383_add(d, l, r)
+#define FP12_sub(d, l, r) FP12_BLS383_sub(d, l, r) */
+#define FP12_div2(d, s) FP12_BLS383_div2(d,s)
+#define FP12_pow(r, x, b) FP12_BLS383_pow(r,x,b)
+// #define FP12_pinpow(r, x, b) FP12_BLS383_pinpow(r,x,b)
+
+// #define FP12_sqrt(d,s) FP12_BLS383_sqrt(d,s)
+// #define FP12_neg(d,s) FP12_BLS383_neg(d,s)
+// #define FP12_reduce(f) FP12_BLS383_reduce(f)
+// #define FP12_norm(f) FP12_BLS383_norm(f)
+// #define FP12_qr(f) FP12_BLS383_qr(f)
+#define FP12_inv(d,s) FP12_BLS383_inv(d,s)
 
 #elif CHUNK == 16
 #error "BIGnum CHUNK size: 16bit PLATFORM NOT SUPPORTED"

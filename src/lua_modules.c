@@ -49,8 +49,8 @@ extern int luaopen_octet(lua_State *L);
 extern int luaopen_ecdh(lua_State *L);
 extern int luaopen_ecp(lua_State *L);
 extern int luaopen_ecp2(lua_State *L);
+extern int luaopen_fp12(lua_State *L);
 extern int luaopen_big(lua_State *L);
-extern int luaopen_fp(lua_State *L);
 extern int luaopen_rng(lua_State *L);
 extern int luaopen_hash(lua_State *L);
 
@@ -161,8 +161,8 @@ int zen_require(lua_State *L) {
 		luaL_requiref(L, s, luaopen_ecp2, 1); }
 	else if(strcasecmp(s, "big")  ==0) {
 		luaL_requiref(L, s, luaopen_big, 1); }
-	else if(strcasecmp(s, "fp")  ==0) {
-		luaL_requiref(L, s, luaopen_fp, 1); }
+	else if(strcasecmp(s, "fp12")  ==0) {
+		luaL_requiref(L, s, luaopen_fp12, 1); }
 	else if(strcasecmp(s, "rng")  ==0) {
 		luaL_requiref(L, s, luaopen_rng, 1); }
 	else if(strcasecmp(s, "hash")  ==0) {

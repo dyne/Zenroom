@@ -18,8 +18,8 @@
  * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __ZEN_FP_H__
-#define __ZEN_FP_H__
+#ifndef __ZEN_FP12_H__
+#define __ZEN_FP12_H__
 
 #define BIGSIZE 384
 #include <zen_big.h>
@@ -28,14 +28,14 @@ typedef struct {
 	char name[16];
 	int  len;
 	int  chunk;
-	FP  val;
-} fp;
+	FP12 val;
+} fp12;
 
 // new or dup already push the object in LUA's stack
-fp* fp_new(lua_State *L);
+fp12* fp12_new(lua_State *L);
 
-fp* fp_dup(lua_State *L, fp *c);
+fp12* fp12_dup(lua_State *L, fp12 *c);
 
-fp* fp_arg(lua_State *L, int n);
+fp12* fp12_arg(lua_State *L, int n);
 
 #endif
