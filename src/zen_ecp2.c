@@ -187,6 +187,8 @@ static int ecp2_millerloop(lua_State *L) {
 	fp12 *f = fp12_new(L);   SAFE(f);
 	ecp2 *x = ecp2_arg(L,1); SAFE(x);
 	ecp  *y = ecp_arg(L,2);  SAFE(y);
+	ECP2_affine(&x->val);
+	ECP_affine(&y->val);
 	PAIR_ate(&f->val,&x->val,&y->val);
 	PAIR_fexp(&f->val);
 	return 1;
@@ -298,7 +300,8 @@ int luaopen_ecp2(lua_State *L) {
 	const struct luaL_Reg ecp2_class[] = {
 		{"new",lua_new_ecp2},
 		{"generator",ecp2_generator},
-		{"millerloop",ecp2_millerloop},
+		// basic pairing function & aliases
+		{"pair",ecp2_millerloop},
 		{"loop",ecp2_millerloop},
 		{"miller",ecp2_millerloop},
 		{"ate",ecp2_millerloop},
