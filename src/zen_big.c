@@ -127,7 +127,7 @@ static int newbig(lua_State *L) {
 static int big_to_octet(lua_State *L) {
 	big *c = big_arg(L,1); SAFE(c);
 	BIG_norm(c->val);
-	octet *o = o_new(L, c->len+2); SAFE(o);
+	octet *o = o_new(L, c->len); SAFE(o);
 	BIG_toBytes(o->val, c->val);
 	o->len = c->len;
 	return 1;
