@@ -1,5 +1,18 @@
 # Zenroom ChangeLog
 
+## 0.8.0
+### October 2019
+
+New Elliptic Curve Arithmetics (ECP2) with Twisted Curve Pairings
+(Miller-Loop). Hamming distance measurements on OCTET
+(bitwise). Example of ECP based ElGamal implementation of omomorphic
+encryption over integers for petition and tally with verifications
+(checkers). Default encryption now AES-GCM with AEAD authenticated
+headers, examples using a public random IV. Support for Javascript's
+React-Native. Language bindings for Go lang, Python version 2
+and 3. Zenroom virtual machine language design improvements to build
+and documentation, object introspection.
+
 ## 0.7.1
 ### August 2018
 
