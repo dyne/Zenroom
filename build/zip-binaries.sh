@@ -8,32 +8,26 @@ VERSION=`cat ../VERSION`
 
 targets=(windows apple linux javascript)
 
+function md2txt() {
+	pandoc -f gfm -t plain -o $2 $1
+}
+
 function checkbin() {
 	[[ -r $1 ]] && {
 		mkdir -p $2
-		cp -v $1 $2
+		cp -rv $1 $2
 		chmod +x $2/$1
 		cp ../LICENSE.txt $2
-		cp ../README.md $2
-		cp ../ChangeLog.md $2
+		md2txt ../README.md $2/README.txt
+		md2txt ../ChangeLog.md $2/ChangeLog.txt
 		return 0
 	}
-	print "file not found: $1"
+	print "file or dir not found: $1"
 	return 1
 }
 
-function checkdir() {
-	[[ -d $1 ]] && {
-		mkdir -p $2/$1
-		cp -v $1/* $2/$1/
-		cp ../LICENSE.txt $2
-		cp ../README.md $2
-		cp ../ChangeLog.md $2
-		rsync -raX ../examples $2/
-		return 0
-	}
-	print "directory not found: $1"
-	return 1
+function copyexamples() {
+	rsync -raX ../examples $1/
 }
 
 for t in $targets; do
@@ -44,23 +38,31 @@ for t in $targets; do
 		windows)
 			checkbin zenroom.exe $dir
 			checkbin zenroom.dll $dir
+			copyexamples $dir
 			continue ;;
 		apple)
 			checkbin zenroom.command $dir
 			checkbin zenroom-ios.a $dir
+			copyexamples $dir
 			continue ;;
 		linux)
 			checkbin zenroom.x86 $dir
 			checkbin zenroom.armhf $dir
-			checkbin _zenroom.so   $dir
-			checkbin zenroom-wrapper.py $dir
+			checkbin python2       $dir
+			checkbin python3       $dir
+			checkbin go            $dir
+			checkbin zenroom-wrapper.py $dir/python2
+			checkbin zenroom-wrapper.py $dir/python3
 			checkbin libzenroomgo.so $dir
+			copyexamples $dir
 			continue ;;
 		javascript)
-			checkdir nodejs $dir
-			checkdir wasm   $dir
+			checkbin nodejs $dir
+			checkbin wasm   $dir
+			checkbin rnjs   $dir
 			checkbin nodejs/zenroom.js.mem $dir
 			checkbin zenroom_exec.js $dir
+			copyexamples $dir
 			continue ;;
 	esac
 done

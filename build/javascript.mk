@@ -24,18 +24,10 @@ javascript-rn: apply-patches lua53 milagro lpeglabel
 	sed -i 's/;ENVIRONMENT_IS_WEB=[^;]*;/;ENVIRONMENT_IS_WEB=false;/g' src/zenroom.js
 	@cp -v src/zenroom.js 	  build/rnjs/
 
-javascript-wasm: cflags += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
-javascript-wasm: ldflags += -s WASM=1 -s MODULARIZE=1
-javascript-wasm: apply-patches lua53 milagro lpeglabel
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-	make -C src js
-	@mkdir -p build/wasm
-	@cp -v src/zenroom.js   build/wasm/
-	@cp -v src/zenroom.wasm build/wasm/
-
-
-javascript-demo: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"'
+javascript-demo: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
 javascript-demo: ldflags += -s WASM=1 -s ASSERTIONS=1 --shell-file ${extras}/shell_minimal.html -s NO_EXIT_RUNTIME=1
 javascript-demo: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src js-demo
+	@mkdir -p build/wasm
+	@cp -v docs/demo/index.* build/wasm/

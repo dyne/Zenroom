@@ -12,12 +12,22 @@ void *zen_memalign(const size_t size, const size_t align) {
 	// preserve const values as they seem to be overwritten by calls
 	size_t vsize = size;
 	size_t valign = align;
+// TODO: Round up to the next highest power of 2
+// uint32_t v = valign; // compute the next highest power of 2 of 32-bit v
+// v--;
+// v |= v >> 1;
+// v |= v >> 2;
+// v |= v >> 4;
+// v |= v >> 8;
+// v |= v >> 16;
+// v++;
+// // from https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
 	(void)valign;
 # if defined(_WIN32)
 	mem = __mingw_aligned_malloc(vsize, valign);
 	if(!mem) {
 		error(0, "error in %u byte aligned memory allocation of %u bytes.",
-			align, size);
+		      align, size);
 		return NULL; }
 # elif defined(__EMSCRIPTEN__)
 	mem = malloc(vsize);
