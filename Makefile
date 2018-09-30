@@ -73,6 +73,12 @@ zlib:
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
 	pwd="${pwd}" make -C ${pwd}/build/zlib -f ZenMakefile
 
+musl-lua53:
+	CC=${gcc} CFLAGS="${cflags} \
+		-DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE" \
+	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
+	make -C ${pwd}/lib/lua53/src ${platform}
+
 lua53:
 	CC=${gcc} CFLAGS="${cflags} \
 	-DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE" \
