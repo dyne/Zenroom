@@ -2,6 +2,7 @@ musl: ldadd += /usr/lib/${ARCH}-linux-musl/libc.a
 musl: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} AR="${ar}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src musl
+		@cp -v src/zenroom-static build/zenroom.x86
 
 musl-local: ldadd += /usr/local/musl/lib/libc.a
 musl-local: apply-patches lua53 milagro lpeglabel
@@ -58,6 +59,7 @@ linux-go: apply-patches lua53 milagro lpeglabel
 	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c -o src/zen_go.o
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src go
+	@mkdir -p ${pwd}/build/go && cp -v ${pwd}/src/libzenroomgo.so ${pwd}/build/go
 
 linux-java: cflags += -I /opt/jdk/include -I /opt/jdk/include/linux
 linux-java: apply-patches lua53 milagro lpeglabel
