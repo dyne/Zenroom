@@ -207,52 +207,26 @@ static int ecdh_checkpub(lua_State *L) {
 */
 static int ecdh_session(lua_State *L) {
 	HERE();
-	void *ud;
 	octet *pubkey;
-	ecdh *pk;
 	ecdh *e = ecdh_arg(L,1); SAFE(e);
 	HEREecdh(e);
 	SAFE(e->seckey);
-	// argument is another keyring
-	ud = luaL_testudata(L, 2, "zenroom.ecdh");
-	if(ud) {
-		HEREs("argument is an ecdh keyring");
-		pk = (ecdh*)ud;
-		HEREecdh(pk);
-		if(!pk->pubkey) {
-			lerror(L, "%s: public key not found in keyring",__func__);
-			return 0; }
-		pubkey = pk->pubkey; // take public key from keyring
-		func(L, "%s: public key found in ecdh keyring (%u bytes)",
-		     __func__, pubkey->len);
-		goto finish;
-	}
-	ud = luaL_testudata(L, 2, "zenroom.octet");
-	if(ud) {
-		HEREs("argument is an octet");
-		pubkey = (octet*)ud; // take public key from octet
-		HEREoct(pubkey);
-		goto finish;
-	}
-	lerror(L, "%s: invalid key in argument",__func__);
-	return 0;
+	pubkey = o_arg(L,2); SAFE(pubkey);
 
-finish:{
-		int res;
-		res = (*e->ECP__PUBLIC_KEY_VALIDATE)(pubkey);
-		if(res == ECDH_INVALID_PUBLIC_KEY) {
-			lerror(L, "%s: argument found, but is an invalid key",__func__);
-			return 0; }
-		octet *kdf = o_new(L,e->hash); SAFE(kdf);
-		octet *ses = o_new(L,e->keysize); SAFE(ses);
-		(*e->ECP__SVDP_DH)(e->seckey,pubkey,ses);
-		// here the NULL could be a salt (TODO: global?)
-		// its used as 'p' in the hash function
-		//         ehashit(sha,z,counter,p,&H,0);
-
-		KDF2(e->hash,ses,NULL,e->hash,kdf);
-		return 2;
-	}
+	int res;
+	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(pubkey);
+	if(res == ECDH_INVALID_PUBLIC_KEY) {
+		lerror(L, "%s: argument found, but is an invalid key",__func__);
+		return 0; }
+	octet *kdf = o_new(L,e->hash); SAFE(kdf);
+	octet *ses = o_new(L,e->keysize); SAFE(ses);
+	(*e->ECP__SVDP_DH)(e->seckey,pubkey,ses);
+	// here the NULL could be a salt (TODO: global?)
+	// its used as 'p' in the hash function
+	//         ehashit(sha,z,counter,p,&H,0);
+	
+	KDF2(e->hash,ses,NULL,e->hash,kdf);
+	return 2;
 }
 
 /**
@@ -336,58 +310,6 @@ static int ecdh_private(lua_State *L) {
 	return 1;
 }
 
-/**
-   AES encrypts a plaintext to a ciphtertext. Function compatible with
-   IEEE-1363 `AES_CBC_IV0_ENCRYPT`. Encrypts in CBC mode with a zero
-   IV, pads necessary to create a full final block. This is weak
-   encryption and @{keyring:encrypt} should be preferred.
-
-   @param key AES key octet
-   @param message input text in an octet
-   @return a new octet containing the output ciphertext
-   @function keyring:encrypt_weak_aes_cbc(key, message)
-*/
-
-static int ecdh_encrypt_weak_aes_cbc(lua_State *L) {
-	HERE();
-	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
-	octet *k = o_arg(L, 2); SAFE(k);
-	octet *in = o_arg(L, 3); SAFE(in);
-	// output is padded to next word
-	octet *out = o_new(L, in->len+0x0f); SAFE(out);
-	HEREoct(k);
-	HEREoct(in);
-	AES_CBC_IV0_ENCRYPT(k,in,out);
-	HEREoct(out);
-	return 1;
-}
-
-/**
-   AES decrypts a plaintext to a ciphtertext. Function compabible
-   with IEEE-1363 specification for AES CBC using IV set to
-   zero. Decrypts a secret produced using
-   @{keyring:encrypt_weak_aes_cbc} in CBC mode.
-
-   @param key AES key octet
-   @param ciphertext input ciphertext octet
-   @return a new octet containing the decrypted plain text, or false when failed
-   @function keyring:decrypt_weak_aes_cbc(key, ciphertext)
-*/
-
-static int ecdh_decrypt_weak_aes_cbc(lua_State *L) {
-	HERE();
-	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
-	octet *k = o_arg(L, 2); SAFE(k);
-	octet *in = o_arg(L, 3); SAFE(in);
-	// output is padded to next word
-	octet *out = o_new(L, in->len+16); SAFE(out);
-	if(!AES_CBC_IV0_DECRYPT(k,in,out)) {
-		error(L, "%s: decryption failed.",__func__);
-		lua_pop(L, 1);
-		lua_pushboolean(L, 0);
-	}
-	return 1;
-}
 
 /**
    AES-GCM encrypt with Additional Data (AEAD) encrypts and
@@ -620,21 +542,19 @@ static int ecdh_random(lua_State *L) {
 #define COMMON_METHODS \
 	{"session",ecdh_session}, \
 	{"public", ecdh_public}, \
-	{"private", ecdh_private}, \
-	{"encrypt_weak_aes_cbc", ecdh_encrypt_weak_aes_cbc}, \
-	{"decrypt_weak_aes_cbc", ecdh_decrypt_weak_aes_cbc}, \
-	{"hash", ecdh_hash}, \
-	{"hmac", ecdh_hmac}, \
-	{"kdf2", ecdh_kdf2}, \
-	{"pbkdf2", ecdh_pbkdf2}, \
-	{"checkpub", ecdh_checkpub}
+	{"private", ecdh_private}
 
 int luaopen_ecdh(lua_State *L) {
 	const struct luaL_Reg ecdh_class[] = {
 		{"new",lua_new_ecdh},
 		{"keygen",ecdh_new_keygen},
-		{"encrypt", ecdh_aead_encrypt},
-		{"decrypt", ecdh_aead_decrypt},
+		{"aead_encrypt", ecdh_aead_encrypt},
+		{"aead_decrypt", ecdh_aead_decrypt},
+		{"hash", ecdh_hash},
+		{"hmac", ecdh_hmac},
+		{"kdf2", ecdh_kdf2},
+		{"pbkdf2", ecdh_pbkdf2},
+		{"checkpub", ecdh_checkpub},
 		COMMON_METHODS,
 		{NULL,NULL}};
 	const struct luaL_Reg ecdh_methods[] = {

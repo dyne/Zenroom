@@ -49,7 +49,7 @@ header['community_id'] = keys['community_id']
 
 -- The output is a table with crypto contents which is standard for
 -- zenroom's functions encrypt/decrypt: .checksum .header .iv .text
- output = encrypt(devkey,
+ output = ECDH.encrypt(devkey,
 				 base64(keys.community_pubkey),
 				 MSG.pack(payload), MSG.pack(header))
 

@@ -14,8 +14,7 @@ keys = JSON.decode(KEYS)
 
 -- this is our own secret key, combined with the recipient's public
 -- key to obtain a session key
-seckey = base64(keys.keyring.secret)
-keyring:private(seckey)
+keyring:private( base64(keys.keyring.secret) )
 
 res = {}
 
@@ -23,16 +22,11 @@ res = {}
 for name,pubkey in pairs(keys.recipients) do
    -- calculate the session key
    pub = base64(pubkey)
-   k = keyring:session(pub)
-   if not k then
-	  print( "Error: not a valid public key for recipient " .. name)
-	  return
-   end
 
    -- encrypt the message with the session key
-   enc = keyring:encrypt_weak_aes_cbc(k,secret)
+   enc = ECDH.encrypt(keyring,pub,secret,keyring:public())
    -- insert results in final json array
-   res[name]= enc:base64()
+   res[name] = OCTET.msgpack( map(enc,base64) ):base64()
 end
 
 -- return the json array

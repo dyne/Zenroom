@@ -12,7 +12,7 @@ S = SCHEMA -- alias
 RNG    = require('zenroom_rng')
 OCTET  = require('zenroom_octet')
 O = OCTET -- alias
-ECDH   = require('ecdh')
+ECDH   = require('zenroom_ecdh')
 LAMBDA = require('functional')
 L = LAMBDA -- alias
 INSIDE = require('inspect')
@@ -42,36 +42,6 @@ function content(var)
    else
 	  INSIDE.print(var)
    end
-end
-
--- encrypt with default AES-GCM technique, returns base58 encoded
--- values into a table containing: .text .iv .checksum .header
-function encrypt(alice, bob, msg, header)
-   local key = alice:session(bob)
-   local iv = RNG.new():octet(16)
-   -- convert strings to octets
-   local omsg, ohead
-   if(type(msg) == "string") then
-	  omsg = str(msg) else omsg = msg end
-   if(type(header) == "string") then
-	  ohead = str(header) else ohead = header end
-   cypher = {header = ohead, iv = iv}
-   cypher.text, cypher.checksum = ECDH.encrypt(key,omsg,iv,ohead)
-   return(cypher)
-end
-
-function decrypt(alice, bob, cypher)
-   key = alice:session(bob)
-   decode = {header = cypher.header}
-   decode.text, decode.checksum =
-	  ECDH.decrypt(key,
-				   cypher.text,
-				   cypher.iv,
-				   cypher.header)
-   if(cypher.checksum ~= decode.checksum) then
-	  error("decrypt error: header checksum mismatch")
-   end
-   return(decode)
 end
 
 -- map values in place

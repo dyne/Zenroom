@@ -32,17 +32,19 @@ own = ECDH.new()
 own:private (base64 (keys.own_private) )
 
 -- now calculate the session key between us and decidim
-session = own:session(decidim_key)
+-- session = own:session(decidim_key)
 
 
 -- use a map() function in a somehow more efficient way to update all
 -- first level k/v entries of the received data
+content(data)
 out = {}
-LAMBDA.map(data,function(k,v)
-			  out[k] = own:encrypt_weak_aes_cbc(
-				 session,str(v))
-				 :base64()
+out = LAMBDA.map(data,function(k,v)
+					header = OCTET.msgpack({ key=k,
+											 pubkey=own:public() })
+					enc = ECDH.encrypt(own,decidim_key,str(v), header)
+					oct = OCTET.msgpack( map(enc,base64) )
+					return oct:base64()
 end)
-
 -- print out result
 print(JSON.encode(out))

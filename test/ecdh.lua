@@ -18,26 +18,25 @@ function test_curve (name)
    assert(ask:hex() == alice:private():hex()) -- compare strings
    assert(ask == alice:private()) -- compare octects
 
-   kdf = alice:session(bob)
-
    -- AES-GCM encryption
    iv = rng:octet(16)
    -- iv = octet.hex('00000000000000000000000000000000')
    header = octet.string('This is the header!')
 
-   ciphermsg, ck = ECDH.encrypt(kdf, secret, iv, header)
+   ciphermsg = ECDH.encrypt(alice, bob, secret, header)
 
-   print ('AES-GCM encrypt : ' .. ciphermsg:base64())
-   print ('AES-GCM checksum : ' .. ck:base64())
+   print ('AES-GCM encrypt : '  .. ciphermsg.text:base64())
+   print ('AES-GCM checksum : ' .. ciphermsg.checksum:base64())
 
-   decipher, ck2 = ECDH.decrypt(kdf, ciphermsg, iv, header)
+   decipher = ECDH.decrypt(alice, bob, ciphermsg)
 
-   print ('AES-GCM checksum : ' .. ck2:base64())
+   -- print ('AES-GCM checksum : ' .. ck2:base64())
 
-   assert(secret == decipher)
+   assert(secret == decipher.text)
+   assert(header == decipher.header)
    print 'decipher message:'
-   print(header:string())
-   print(decipher:string())
+   print(decipher.header:string())
+   print(decipher.text:string())
    print (' AES-GCM on ' .. name .. ' OK')
 end
 

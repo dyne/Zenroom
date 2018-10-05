@@ -12,7 +12,7 @@ for i,name in ipairs(recipients) do
    kk = ECDH.new()
    kk:keygen()
    keys[name] = kk:public():base64()
-   assert(kk:checkpub(kk:public()))
+   assert(ECDH.checkpub(kk))
 end
 
 

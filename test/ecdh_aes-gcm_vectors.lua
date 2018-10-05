@@ -9,7 +9,7 @@ function Test(t)
    curve = ECDH.new('goldilocks')
 
    print ("Test vector: " .. t.name)
-   out, tag_out = curve:encrypt(hex(t.key), hex(t.msg), hex(t.iv), hex(t.header))
+   out, tag_out = ECDH.aead_encrypt(hex(t.key), hex(t.msg), hex(t.iv), hex(t.header))
 
    assert(hex(t.ciphermsg) == out)
    print (' encrypt OK')

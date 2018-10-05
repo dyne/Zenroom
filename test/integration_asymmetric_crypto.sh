@@ -45,7 +45,7 @@ recipient = ECDH.new('$curve')
 recipient:public(hex(data['pubkey']))
 sender = ECDH.new('$curve')
 sender:private(hex(keys['private']))
-enc,tag = encrypt(sender,recipient,str(data['message']),sender:public())
+enc = ECDH.encrypt(sender,recipient,str(data['message']),sender:public())
 print(JSON.encode(map(enc,hex)))
 EOF
 }
@@ -60,7 +60,7 @@ recipient = ECDH.new('$curve')
 recipient:private(hex(keys['private']))
 sender = ECDH.new('$curve')
 sender:public(hex(data['header']))
-dec = decrypt(recipient,sender,map(data,hex))
+dec = ECDH.decrypt(recipient,sender,map(data,hex))
 print(dec.text:string())
 EOF
 }

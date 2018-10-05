@@ -51,14 +51,14 @@ octet.from_base64 = function(s)
 end
 
 -- msgpack returning octets
-function msgpack(data)
-   if (type(data) == "zenroom.octet") then return str(MSG.pack(data:string())) end
+function octet.msgpack(data)
+   if (type(data) == "zenroom.octet") then return str(MSG.pack(data:base64())) end
    -- else
    return str(MSG.pack(data))
 end
 
 -- msgunpack returning lua's tables or single types
-function msgunpack(data)
+function octet.msgunpack(data)
    if (type(data) == "table") then error("unpack: argument is already a table") return
    elseif(type(data) == "zenroom.octet") then return MSG.unpack(data:string())
    elseif(type(data) == "string") then return MSG.unpack(data)
