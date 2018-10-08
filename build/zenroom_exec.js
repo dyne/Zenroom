@@ -9,6 +9,7 @@ fs.writeFileSync('zenroom.js.mem', fs.readFileSync('./nodejs/zenroom.js.mem'));
 
 zenroom_module.exec_ok    = () => 0
 zenroom_module.exec_error = () => 0
+zenroom_module.print = text => console.log(text)
 
 const zenroom = (script_file=process.argv[2],
 				 conf=null,
@@ -26,4 +27,3 @@ const zenroom = (script_file=process.argv[2],
 								[script, config, keys, data, verbosity])
 }
 zenroom()
-
