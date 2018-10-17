@@ -5,8 +5,6 @@ order = ECP.order() -- get the curves order in a big
 rng = RNG.new()
 H = HASH.new('sha256')
 
-local DATA_TABLE = JSON.decode(DATA)
-local KEYS_TABLE = JSON.decode(KEYS)
 
 function readBig(str)
 	return BIG.new(hex(str))
@@ -41,6 +39,7 @@ end
 
 
 -- Creates a ZKP that (a,b) encrypts a value of 0
+-- Fiat Shamir Heuristic
 function provezero(a, b)
 	local wx = rng:big()
 
@@ -50,7 +49,7 @@ function provezero(a, b)
 	local c = to_challenge({g, h, public, a, b, Aw, Bw})
 
 	local rx = (wx - c:modmul(private, order)) % order
-
+	-- (wx - (c * private)) % order
 	return c, rx
 end
 
@@ -88,6 +87,9 @@ lookupTable = generateLookupTable(100)
 
 
 -- Load public data
+DATA_TABLE = JSON.decode(DATA)
+KEYS_TABLE = JSON.decode(KEYS)
+
 public = readEcp(DATA_TABLE["public"])
 private = readBig(KEYS_TABLE["private"])
 
