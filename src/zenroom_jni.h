@@ -12,7 +12,7 @@ extern "C" {
  * Method:    zenroom
  * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_decode_zenroom_Zenroom_zenroom
+JNIEXPORT jstring JNICALL Java_decode_zenroom_Zenroom_zenroom
   (JNIEnv *, jobject, jstring, jstring, jstring, jstring);
 
 #ifdef __cplusplus
