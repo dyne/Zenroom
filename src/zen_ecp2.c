@@ -300,6 +300,7 @@ int luaopen_ecp2(lua_State *L) {
 	const struct luaL_Reg ecp2_class[] = {
 		{"new",lua_new_ecp2},
 		{"generator",ecp2_generator},
+		{"G",ecp2_generator},
 		// basic pairing function & aliases
 		{"pair",ecp2_millerloop},
 		{"loop",ecp2_millerloop},

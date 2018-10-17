@@ -435,6 +435,7 @@ int luaopen_ecp(lua_State *L) {
 		{"infinity",ecp_get_infinity},
 		{"order",ecp_order},
 		{"generator",ecp_generator},
+		{"G",ecp_generator},
 		{NULL,NULL}};
 	const struct luaL_Reg ecp_methods[] = {
 		{"affine",ecp_affine},
