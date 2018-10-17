@@ -68,11 +68,21 @@ linux-java: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src java
 
-android: gcc := $(CC)
-android: ar := $(AR)
-android: ranlib := $(RANLIB)
-android: ld := $(ld)
-android: cflags := ${cflags} -std=c99 -shared -DLUA_USE_DLOPEN
-android: apply-patches lua53 milagro lpeglabel
-	LDFLAGS="--sysroot=/tmp/ndk-arch-21/sysroot" CC=${gcc} CFLAGS="${cflags}" make -C src android
+# android: gcc := $(CC)
+# android: ar := $(AR)
+# android: ranlib := $(RANLIB)
 
+# default android target is 'arm-linux-androideabi-'
+# android: ndk = /opt/android-ndk-r18b
+# android: target = arm-linux-androideabi
+# android: toolchain = ${ndk}/toolchains/${target}-4.9/prebuilt/linux-x86_64
+# android: cflags += -DLUA_USE_DLOPEN -I${ndk}/sysroot/usr/include -I${ndk}/sysroot/usr/include/arm-linux-androideabi
+# android: gcc = ${toolchain}/bin/${target}-gcc
+# android: ar = ${toolchain}/bin/${target}-ar
+# android: ranlib = ${toolchain}/bin/${target}-ranlib
+# android: ld = ${toolchain}/bin/${target}-ld
+# android: ldflags += --sysroot=${ndk}/sysroot
+android: apply-patches lua53 milagro lpeglabel
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	LD="${ld}" RANLIB="${ranlib}" AR=${ar} \
+		make -C src android
