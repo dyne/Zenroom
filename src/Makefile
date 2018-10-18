@@ -80,7 +80,7 @@ win-dll: ${SOURCES}
 
 ios-lib: CFLAGS += -D LIBRARY
 ios-lib: ${SOURCES}
-	${AR} rcs zenroom-ios-${TARGET}.a ${SOURCES} ${LDADD}
+	${AR} rcs zenroom-ios-${TARGET}.a ${SOURCES} $(shell find ../lib -name \*.a) ${LDADD}
 
 android: CFLAGS += -shared
 android: LDADD+= -lm -llog
