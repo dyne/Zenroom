@@ -296,11 +296,86 @@ static int ecp2_mul(lua_State *L) {
 	return 1;
 }
 
+
+/***
+    Map a @{BIG} number to a point of the curve, where the BIG number should be the output of some hash function.
+
+    @param BIG number resulting from an hash function
+    @function mapit(BIG)
+*/
+static int ecp2_mapit(lua_State *L) {
+	big *b = big_arg(L,1); SAFE(b);
+	ecp2 *e = ecp2_new(L); SAFE(e);
+	// this has to convert a big into an octet
+	// https://github.com/milagro-crypto/milagro-crypto-c/pull/286
+	BIG_norm(b->val);
+	octet *o = o_new(L,b->len); SAFE(o);
+	lua_pop(L, 1); // pop the new temporary octet
+	BIG_toBytes(o->val,b->val);
+	o->len = b->len;
+	ECP2_mapit(&e->val,o);
+	return 1;
+}
+
+// get the x coordinate real part as BIG
+static int ecp2_get_xr(lua_State *L) {
+	ecp2 *e = ecp2_arg(L,1); SAFE(e);
+	FP fx;
+	big *xa = big_new(L);
+	FP_copy(&fx,&e->val.x.a);
+	FP_reduce(&fx); FP_redc(xa->val, &fx);
+	return 1;
+}
+// get the x coordinate imaginary part as BIG
+static int ecp2_get_xi(lua_State *L) {
+	ecp2 *e = ecp2_arg(L,1); SAFE(e);
+	FP fx;
+	big *xb = big_new(L);
+	FP_copy(&fx,&e->val.x.b);
+	FP_reduce(&fx); FP_redc(xb->val, &fx);
+	return 1;
+}
+
+// get the y coordinate real part as BIG
+static int ecp2_get_yr(lua_State *L) {
+	ecp2 *e = ecp2_arg(L,1); SAFE(e);
+	FP fy;
+	big *ya = big_new(L);
+	FP_copy(&fy,&e->val.y.a);
+	FP_reduce(&fy); FP_redc(ya->val, &fy);
+	return 1;
+}
+static int ecp2_get_yi(lua_State *L) {
+	ecp2 *e = ecp2_arg(L,1); SAFE(e);
+	FP fy;
+	big *yb = big_new(L);
+	FP_copy(&fy,&e->val.y.b);
+	FP_reduce(&fy); FP_redc(yb->val, &fy);
+	return 1;
+}
+static int ecp2_get_zr(lua_State *L) {
+	ecp2 *e = ecp2_arg(L,1); SAFE(e);
+	FP fz;
+	big *za = big_new(L);
+	FP_copy(&fz,&e->val.z.a);
+	FP_reduce(&fz); FP_redc(za->val, &fz);
+	return 1;
+}
+static int ecp2_get_zi(lua_State *L) {
+	ecp2 *e = ecp2_arg(L,1); SAFE(e);
+	FP fz;
+	big *zb = big_new(L);
+	FP_copy(&fz,&e->val.z.b);
+	FP_reduce(&fz); FP_redc(zb->val, &fz);
+	return 1;
+}
+
 int luaopen_ecp2(lua_State *L) {
 	const struct luaL_Reg ecp2_class[] = {
 		{"new",lua_new_ecp2},
 		{"generator",ecp2_generator},
 		{"G",ecp2_generator},
+		{"mapit",ecp2_mapit},
 		// basic pairing function & aliases
 		{"pair",ecp2_millerloop},
 		{"loop",ecp2_millerloop},
@@ -312,6 +387,12 @@ int luaopen_ecp2(lua_State *L) {
 		{"negative",ecp2_negative},
 		{"isinf",ecp2_isinf},
 		{"isinfinity",ecp2_isinf},
+		{"xr",ecp2_get_xr},
+		{"xi",ecp2_get_xi},
+		{"yr",ecp2_get_yr},
+		{"yi",ecp2_get_yi},
+		{"zr",ecp2_get_zr},
+		{"zi",ecp2_get_zi},
 		{"add",ecp2_add},
 		{"__add",ecp2_add},
 		{"sub",ecp2_sub},

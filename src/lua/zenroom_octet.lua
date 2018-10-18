@@ -50,6 +50,26 @@ octet.from_base64 = function(s)
    return O.base64(s)
 end
 
+-- serialize an array containing any type of cryptographic numbers
+octet.serialize = function(arr)
+   concat = O.new()
+   map(arr,function(e)
+		  t = type(e)
+		  if(t == "zenroom.octet") then
+			 concat = concat .. e
+		  elseif(t == "zenroom.big") then
+			 concat = concat .. e:octet()
+		  elseif(t == "zenroom.ecp") then
+			 concat = concat .. e:x() .. e:y()
+		  elseif(t == "zenroom.ecp2") then
+			 concat = concat .. e:xr() .. e:xi()
+			 concat = concat .. e:yr() .. e:yi()
+			 concat = concat .. e:zr() .. e:zi()
+		  end
+   end)
+   return concat
+end
+
 -- msgpack returning octets
 function octet.msgpack(data)
    if (type(data) == "zenroom.octet") then return str(MSG.pack(data:base64())) end

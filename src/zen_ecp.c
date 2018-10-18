@@ -437,6 +437,9 @@ int luaopen_ecp(lua_State *L) {
 		{"mapit",ecp_mapit},
 		{"generator",ecp_generator},
 		{"G",ecp_generator},
+		{"add",ecp_add},
+		{"sub",ecp_sub},
+		{"mul",ecp_mul},
 		{NULL,NULL}};
 	const struct luaL_Reg ecp_methods[] = {
 		{"affine",ecp_affine},
