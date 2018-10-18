@@ -17,6 +17,10 @@
  * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#ifdef __ANDROID__
+#include <android/log.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -69,6 +73,10 @@ static zenroom_t *stderr_tobuffer(lua_State *L) {
 }
 
 static void _printf(zenroom_t *Z, char *pfx, char *msg) {
+
+#ifdef __ANDROID__
+	__android_log_print(ANDROID_LOG_VERBOSE, "KZK", "%s -- %s", pfx, msg);
+#endif
 	if(!Z) {
 		fprintf(stderr,"%s %s\n",pfx,msg);
 	} else if(Z->stderr_buf) {

@@ -35,6 +35,7 @@ linux-sanitizer: apply-patches lua53 milagro lpeglabel linux
 		./src/zenroom-shared -i -d
 
 linux-lib: cflags += -shared -DLIBRARY
+linux-lib: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src linux-lib
 
