@@ -17,11 +17,11 @@ LAMBDA = require('functional')
 L = LAMBDA -- alias
 INSIDE = require('inspect')
 I = INSIDE -- alias
-ECP    = require('ecp')
 ECP2   = require('ecp2')
 FP12   = require('fp12')
 BIG    = require('zenroom_big')
 HASH   = require('zenroom_hash')
+ECP    = require('zenroom_ecp')
 H = HASH -- alias
 
 -- override type to recognize zenroom's types

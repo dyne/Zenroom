@@ -434,6 +434,7 @@ int luaopen_ecp(lua_State *L) {
 		{"inf",ecp_get_infinity},
 		{"infinity",ecp_get_infinity},
 		{"order",ecp_order},
+		{"mapit",ecp_mapit},
 		{"generator",ecp_generator},
 		{"G",ecp_generator},
 		{NULL,NULL}};
@@ -443,7 +444,6 @@ int luaopen_ecp(lua_State *L) {
 		{"double",ecp_double},
 		{"isinf",ecp_isinf},
 		{"isinfinity",ecp_isinf},
-		{"mapit",ecp_mapit},
 		{"octet",ecp_octet},
 		{"add",ecp_add},
 		{"x",ecp_get_x},

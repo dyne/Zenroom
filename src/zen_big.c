@@ -106,8 +106,12 @@ static int newbig(lua_State *L) {
 	// octet argument, import
 	void *ud = luaL_testudata(L, 1, "zenroom.octet");
 	if(ud) {
-		big *c = big_new(L); SAFE(L);
 		octet *o = (octet*)ud;
+		if(o->len < modbytes) {
+			error(L,"Octet too short: %u bytes of %u minimum required",	o->len, modbytes);
+			lerror(L,"Cannot create a BIG number.");
+			return 0; }
+		big *c = big_new(L); SAFE(L);
 		BIG_fromBytesLen(c->val, o->val, o->len);
 		return 1; }
 	// number argument, import
@@ -120,7 +124,7 @@ static int newbig(lua_State *L) {
 		BIG_norm(c->val);
 		return 1; }
 
-	error(L,"octet or number argument expected");
+	lerror(L,"octet or number argument expected");
 	return 0;
 }
 
