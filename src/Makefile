@@ -83,7 +83,7 @@ ios-lib: ${SOURCES}
 	${AR} rcs zenroom-ios-${TARGET}.a ${SOURCES} ${LDADD}
 
 # android: CFLAGS += -D LIBRARY
-android: LDADD+= -lm
+# android: LDADD+= -lm
 android: ${SOURCES} zenroom_jni.o
 	${CC} ${CFLAGS} ${SOURCES} zenroom_jni.o -o zenroom.so ${LDFLAGS} ${LDADD}
 
