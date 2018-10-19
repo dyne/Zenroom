@@ -65,6 +65,8 @@
 // #pragma message "BIGnum CHUNK size: 32bit"
 //#include <big_384_29.h>
 #define  BIG  BIG_384_29
+#define  DBIG  DBIG_384_29
+
 // #define DBIG DBIG_384_29
 #define modbytes MODBYTES_384_29
 #define BIG_zero(b) BIG_384_29_zero(b)
@@ -79,7 +81,7 @@
 #define BIG_comp(l,r) BIG_384_29_comp(l,r)
 #define BIG_add(d,l,r) BIG_384_29_add(d,l,r)
 #define BIG_sub(d,l,r) BIG_384_29_sub(d,l,r)
-#define BIG_mul(d,l,r) BIG_384_29_smul(d,l,r)
+#define BIG_mul(d,l,r) BIG_384_29_mul(d,l,r)
 #define BIG_mod(x,n) BIG_384_29_mod(x,n)
 // #define BIG_dmod(a,b,c) BIG_384_29_dmod(a,b,c)
 #define BIG_div(x,n) BIG_384_29_sdiv(x,n)
@@ -90,6 +92,21 @@
 #define BIG_jacobi(x,y) BIG_384_29_jacobi(x,y)
 #define BIG_random(m,r) BIG_384_29_random(m,r)
 #define BIG_randomnum(m,q,r) BIG_384_29_randomnum(m,q,r)
+
+#define BIG_sqr(x,y) BIG_384_29_sqr(x,y);
+#define BIG_dcopy(d,s) BIG_384_29_dcopy(d,s)
+#define BIG_sducopy(d,s) BIG_384_29_sducopy(d,s)
+#define BIG_sdcopy(d,s) BIG_384_29_sdcopy(d,s)
+#define BIG_dnorm(x) BIG_384_29_dnorm(x)
+#define BIG_dcomp(l,r) BIG_384_29_dcomp(l,r)
+#define BIG_dscopy(d,s) BIG_384_29_dscopy(d,s)
+#define BIG_dsub(d,l,r) BIG_384_29_dsub(d,l,r)
+#define BIG_dadd(d,l,r) BIG_384_29_dadd(d,l,r)
+#define BIG_dmod(d,l,r) BIG_384_29_dmod(d,l,r)
+#define BIG_dfromBytesLen(d,o,l) BIG_384_29_dfromBytesLen(d,o,l)
+#define BIG_dshr(b,n) BIG_384_29_dshr(b,n)
+#define BIG_dzero(d) BIG_384_29_dzero(d)
+#define BIG_dnbits(d) BIG_384_29_dnbits(d)
 
 #define FP FP_BLS383
 #define FP_copy(d,s) FP_BLS383_copy(d,s)

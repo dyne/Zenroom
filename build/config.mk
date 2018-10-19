@@ -25,7 +25,7 @@ ldadd += ${pwd}/lib/lpeglabel/lpeglabel.a
 # milagro settings
 rsa_bits := ""
 ecc_curves := ED25519,BLS383,GOLDILOCKS,SECP256K1
-milagro_cmake_flags := -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DWORD_SIZE=32 -DAMCL_CURVE=${ecc_curves} -DAMCL_RSA=${rsa_bits} -DCMAKE_SHARED_LIBRARY_LINK_FLAGS="" -DC99=1 -DPAIRING_FRIENDLY_BLS383='BLS'
+milagro_cmake_flags := -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DWORD_SIZE=32 -DAMCL_CURVE=${ecc_curves} -DAMCL_RSA=${rsa_bits} -DCMAKE_SHARED_LIBRARY_LINK_FLAGS="" -DC99=1 -DPAIRING_FRIENDLY_BLS383='BLS' -DCOMBA=1
 milib := ${pwd}/lib/milagro-crypto-c/lib
 ldadd += ${milib}/libamcl_curve_ED25519.a
 ldadd += ${milib}/libamcl_curve_BLS383.a

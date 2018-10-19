@@ -18,6 +18,7 @@ function big.base64(s) return big._import(s, octet.base64) end
 function big.string(s) return big._import(s, octet.string) end
 
 function big.generic(s)  return big._import(s, nil) end
+
 big.octet   = big.generic
 big.int     = big.generic
 big.number  = big.generic

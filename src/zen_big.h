@@ -26,9 +26,13 @@
 
 typedef struct {
 	char name[16];
-	int  len;
+	int  len; // modbytes
 	int  chunksize;
-	BIG  val;
+	chunk *val;
+	chunk *dval;
+	// BIG  val;
+	// DBIG dval;
+	int doublesize;
 } big;
 
 // new or dup already push the object in LUA's stack
@@ -37,5 +41,9 @@ big* big_new(lua_State *L);
 big* big_dup(lua_State *L, big *c);
 
 big* big_arg(lua_State *L, int n);
+
+// internal initialisation of double or single big
+int big_init(big *n);
+int dbig_init(big *n);
 
 #endif

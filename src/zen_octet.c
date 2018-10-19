@@ -53,6 +53,7 @@
 
 #include <zenroom.h>
 #include <zen_memory.h>
+#include <zen_octet.h>
 
 // from base58.c
 extern int b58tobin(void *bin, size_t *binszp, const char *b58, size_t b58sz);
@@ -526,16 +527,9 @@ This is the default format when `print()` is used on an octet.
     @function octet:hex()
     @return a string of hexadecimal numbers
 */
-static int to_hex(lua_State *L) {
+int to_hex(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
-	int odlen = o->len*2;
-	// export to hex
-	char *s = zen_memory_alloc(odlen+1);
-	OCT_toHex(o,s); // TODO: inverted function signature, see
-					// https://github.com/milagro-crypto/milagro-crypto-c/issues/291
-	s[odlen] = '\0'; // string boundary \0
-	lua_pushstring(L,s);
-	zen_memory_free(s);
+	push_octet_to_hex_string(o);
 	return 1;
 }
 

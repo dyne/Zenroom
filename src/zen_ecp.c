@@ -308,9 +308,10 @@ static int ecp_mul(lua_State *L) {
 		BIG_norm(bn);
 	    PAIR_G1mul(&out->val,bn);
 		return 1; }
-	func(L,"G1mul argument is a BIG number");
 	big *b = big_arg(L,2); SAFE(b);
-	PAIR_G1mul(&out->val,b->val);
+	func(L,"G1mul argument is a %s number",
+		(b->doublesize)?"double BIG":"BIG");
+	PAIR_G1mul(&out->val,(b->doublesize)?b->dval:b->val);
 	return 1;
 }
 
@@ -362,6 +363,7 @@ static int ecp_octet(lua_State *L) {
 */
 static int ecp_order(lua_State *L) {
 	big *res = big_new(L); SAFE(res);
+	big_init(res);
 	// BIG is an array of int32_t on chunk 32 (see rom_curve)
 
 	// curve order is ready-only so we need a copy for norm() to work
@@ -379,6 +381,7 @@ static int ecp_get_x(lua_State *L) {
 	ecp *e = ecp_arg(L, 1); SAFE(e);
 	FP fx;
 	big *x = big_new(L);
+	big_init(x);
 	FP_copy(&fx, &e->val.x);
 	FP_reduce(&fx);
 	FP_redc(x->val,&fx);
@@ -395,6 +398,7 @@ static int ecp_get_y(lua_State *L) {
 	ecp *e = ecp_arg(L, 1); SAFE(e);
 	FP fy;
 	big *y = big_new(L);
+	big_init(y);
 	FP_copy(&fy, &e->val.y);
 	FP_reduce(&fy);
 	FP_redc(y->val,&fy);
