@@ -30,6 +30,7 @@ crypto-tests = \
 	${1} test/hash.lua && \
 	${1} test/ecdh.lua && \
 	${1} test/ecdh_aes-gcm_vectors.lua && \
+	${1} test/big_bls383.lua && \
 	${1} test/ecp_bls383.lua && \
 	${1} test/pair_bls383.lua
 

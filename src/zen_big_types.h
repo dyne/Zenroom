@@ -29,9 +29,10 @@
 #define Modulus Modulus_BLS383
 #define CURVE_Gx CURVE_Gx_BLS383
 #define CURVE_Gy CURVE_Gy_BLS383
-
+#define Montgomery MConst_BLS383 // 0x73435FD from rom_field_BLS383 at 32bit
 #if BIGSIZE == 384
 #if CHUNK == 64
+// TODO: 64bit is here unfinished and unsupported
 // #pragma message "BIGnum CHUNK size: 64bit"
 // #include <big_384_58.h>
 #define  BIG  BIG_384_58
@@ -83,6 +84,7 @@
 #define BIG_sub(d,l,r) BIG_384_29_sub(d,l,r)
 #define BIG_mul(d,l,r) BIG_384_29_mul(d,l,r)
 #define BIG_mod(x,n) BIG_384_29_mod(x,n)
+#define BIG_monty(d,m,c,s) BIG_384_29_monty(d,m,c,s)
 // #define BIG_dmod(a,b,c) BIG_384_29_dmod(a,b,c)
 #define BIG_div(x,n) BIG_384_29_sdiv(x,n)
 #define BIG_modmul(x,y,z,n) BIG_384_29_modmul(x,y,z,n)
@@ -112,6 +114,7 @@
 #define FP_copy(d,s) FP_BLS383_copy(d,s)
 #define FP_redc(x,y) FP_BLS383_redc(x,y)
 #define FP_reduce(x) FP_BLS383_reduce(x)
+#define FP_mod(d,s) FP_BLS383_mod(d,s)
 
 #define FP12 FP12_BLS383
 /* #define FP12_zero(b) FP12_BLS383_zero(b) */

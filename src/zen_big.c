@@ -48,6 +48,9 @@
 
 extern int octet_to_hex(lua_State *L);
 
+// to copy contents from BIG to DBIG
+#define dcopy(d,s) BIG_dscopy(d,s);
+
 #define checkalldouble(l,r) \
 	if(!l->val && !l->dval) { \
 		error(L,"error in %s %u",__FUNCTION__,__LINE__); \
@@ -80,25 +83,6 @@ big* big_new(lua_State *L) {
 	return(c);
 }
 
-int big_init(big *n) {
-	if(n->val || n->dval)
-		error(NULL,"%s re-initialization in %s %u %s",
-		      (n->doublesize)?"double big ":"big ",
-		      __FUNCTION__,__LINE__);
-	size_t size = sizeof(BIG);
-	n->val = zen_memory_alloc(size);
-	return(size);
-}
-int dbig_init(big *n) {
-	if(n->val || n->dval)
-		error(NULL,"%s re-initialization in %s %u %s",
-		      (n->doublesize)?"double big ":"big ",
-		      __FUNCTION__,__LINE__);
-	n->doublesize = 1;
-	size_t size = sizeof(DBIG); // modbytes * 2, aka n->len<<1
-	n->dval = zen_memory_alloc(size);
-	return(size);
-}
 
 // big* big2dbig_new(lua_State *L, big *s) {
 // 	big *d = big_new(L);
@@ -106,25 +90,6 @@ int dbig_init(big *n) {
 // 	BIG_dscopy(d->dval,s->val);
 // 	return d;
 // }
-
-static int bitsize(big *b) {
-	double bits;
-	if(b->doublesize)
-		bits = BIG_dnbits(b->dval);
-	else
-		bits = BIG_nbits(b->val);
-	return bits;
-}
-static int big_bits(lua_State *L) {
-	big *d = big_arg(L,1); SAFE(d);
-	lua_pushinteger(L,bitsize(d));
-	return 1;
-}
-static int big_bytes(lua_State *L) {
-	big *d = big_arg(L,1); SAFE(d);
-	lua_pushinteger(L,ceil(bitsize(d)/8));
-	return 1;
-}
 
 static int big_double(lua_State *L) {
 	big *s = big_arg(L,1); SAFE(s);
@@ -176,6 +141,63 @@ int big_destroy(lua_State *L) {
 	}
 	SAFE(c);
 	return 0;
+}
+
+
+static int bitsize(big *b) {
+	double bits;
+	if(b->doublesize)
+		bits = BIG_dnbits(b->dval);
+	else
+		bits = BIG_nbits(b->val);
+	return bits;
+}
+static int big_bits(lua_State *L) {
+	big *d = big_arg(L,1); SAFE(d);
+	lua_pushinteger(L,bitsize(d));
+	return 1;
+}
+static int big_bytes(lua_State *L) {
+	big *d = big_arg(L,1); SAFE(d);
+	lua_pushinteger(L,ceil(bitsize(d)/8));
+	return 1;
+}
+
+int big_init(big *n) {
+	if(n->val && !n->doublesize) {
+		func(NULL,"ignoring superflous initialization of big");
+		return(1); }
+	if(n->dval || n->doublesize) {
+		error(NULL,"cannot shrink double big to big in re-initialization");
+		return 0; }
+	if(!n->val && !n->dval) {
+		size_t size = sizeof(BIG);
+		n->val = zen_memory_alloc(size);
+		n->doublesize = 0;
+		return(size);
+	}
+	error(NULL,"anomalous state of big number detected on initialization");
+	return(-1);
+}
+int dbig_init(big *n) {
+	if(n->dval && n->doublesize) {
+		func(NULL,"ignoring superflous initialization of double big");
+		return(1); }
+	size_t size = sizeof(DBIG); // modbytes * 2, aka n->len<<1
+	if(n->val && !n->doublesize) {
+		n->doublesize = 1;
+		n->dval = zen_memory_alloc(size);
+		// extend from big to double big
+		BIG_dscopy(n->dval,n->val);
+		zen_memory_free(n->val);
+	}
+	if(!n->val || !n->dval) {
+		n->doublesize = 1;
+		n->dval = zen_memory_alloc(size);
+		return(size);
+	}
+	error(NULL,"anomalous state of double big number detected on initialization");
+	return(-1);
 }
 
 /***
@@ -379,32 +401,37 @@ static int big_modsub(lua_State *L) {
 	big *r = big_arg(L,2); SAFE(r);
 	big *m = big_arg(L,3); SAFE(m);
 	checkalldouble(l,r);
-	if(l->doublesize && r->doublesize) {
-		big *d = big_new(L); SAFE(d);
-		big_init(d);
-		DBIG t;
-		if(BIG_dcomp(l->dval,r->dval)<0) {
+	big *d = big_new(L); SAFE(d);
+	big_init(d);
+	if(l->doublesize || r->doublesize) {
+		// temporary bring all to DBIG
+		chunk *llv, *lrv;
+		DBIG ll, lr;
+		if   (l->doublesize)     llv = l->dval;
+		else { dcopy(ll,l->val); llv = (chunk*)&ll; }
+		if   (r->doublesize)     lrv = r->dval;
+		else { dcopy(lr,r->val); lrv = (chunk*)&lr; }
+		if(BIG_dcomp(l->dval,r->dval)<0) { // if l < r
 			// res = m - (r-l % m)
-			BIG tm;
-			BIG_dsub(t,r->dval,l->dval);
-			BIG_dmod(tm,t,m->val);
-			BIG_sub(d->val,m->val,tm);
-			BIG_norm(d->val);
-			return 1;
-		} else {
-			BIG_dsub(t, l->dval, r->dval);
+			DBIG t; BIG tm;
+			BIG_dsub (t,  lrv, llv);
+			BIG_dmod (tm, t,   m->val);
+			BIG_sub  (d->val,  m->val, tm);
+		} else { // if l > r
+			DBIG t;
+			BIG_dsub(t  , llv, lrv);
 			BIG_dmod(d->val,t,m->val);
-			BIG_dnorm(d->val);
-			return 1;
 		}
-	} else {
-		// if(BIG_comp(l->val,r->val)<0) {
-		// 	lerror(L,"Subtraction error: arg1 smaller than arg2");
-		// 	return 0; }
-		big *d = big_new(L); SAFE(d);
-		big_init(d);
-		BIG_sub(d->val, l->val, r->val);
-		BIG_norm(d->val);
+	} else { // no DBIG involved
+		if(BIG_comp(l->val,r->val)<0) {
+			BIG t;
+			BIG_sub(t, r->val, l->val);
+			BIG_mod(t, m->val);
+			BIG_sub(d->val, m->val, t);
+		} else {
+			BIG_sub(d->val, l->val, r->val);
+			BIG_mod(d->val, m->val);
+		}
 	}
 	return 1;
 }
