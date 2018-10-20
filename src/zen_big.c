@@ -86,7 +86,7 @@ int big_init(big *n) {
 		      (n->doublesize)?"double big ":"big ",
 		      __FUNCTION__,__LINE__);
 	size_t size = sizeof(BIG);
-	n->val = zen_memory_alloc(sizeof(BIG));
+	n->val = zen_memory_alloc(size);
 	return(size);
 }
 int dbig_init(big *n) {
@@ -96,7 +96,7 @@ int dbig_init(big *n) {
 		      __FUNCTION__,__LINE__);
 	n->doublesize = 1;
 	size_t size = sizeof(DBIG); // modbytes * 2, aka n->len<<1
-	n->dval = zen_memory_alloc(sizeof(DBIG));
+	n->dval = zen_memory_alloc(size);
 	return(size);
 }
 
@@ -200,15 +200,15 @@ static int newbig(lua_State *L) {
 	if(ud) {
 		big *c = big_new(L); SAFE(c);
 		octet *o = (octet*)ud;
-		if(o->len <= c->len) { // big
+		if(o->len <= modbytes) { // big
 			// TODO: measure byte length to detect doublebig
 			big_init(c);
 			BIG_fromBytesLen(c->val, o->val, o->len);
-		} else if(o->len > c->len && o->len < c->len<<1) {
+		} else if(o->len > modbytes && o->len < modbytes<<1) {
 			dbig_init(c);
 			BIG_dfromBytesLen(c->dval, o->val, o->len);
 		} else {
-			error(L, "size %u is invalid (big has modbytes %u)",o->len, c->len);
+			error(L, "size %u is invalid (big has modbytes %u)",o->len, modbytes);
 			lua_pop(L,1);
 			lerror(L,"Cannot import BIG number");
 		}
@@ -355,17 +355,52 @@ static int big_sub(lua_State *L) {
 	big *r = big_arg(L,2); SAFE(r);
 	checkalldouble(l,r);
 	if(l->doublesize && r->doublesize) {
+		big *d = big_new(L); SAFE(d);
+		dbig_init(d);
 		if(BIG_dcomp(l->dval,r->dval)<0) {
 			lerror(L,"Subtraction error: arg1 smaller than arg2");
 			return 0; }
-		big *d = big_new(L); SAFE(d);
-		dbig_init(d);
 		BIG_dsub(d->dval, l->dval, r->dval);
 		BIG_dnorm(d->dval);
 	} else {
-		if(BIG_comp(l->val,r->val)<0) {
-			lerror(L,"Subtraction error: arg1 smaller than arg2");
-			return 0; }
+		// if(BIG_comp(l->val,r->val)<0) {
+		// 	lerror(L,"Subtraction error: arg1 smaller than arg2");
+		// 	return 0; }
+		big *d = big_new(L); SAFE(d);
+		big_init(d);
+		BIG_sub(d->val, l->val, r->val);
+		BIG_norm(d->val);
+	}
+	return 1;
+}
+
+static int big_modsub(lua_State *L) {
+	big *l = big_arg(L,1); SAFE(l);
+	big *r = big_arg(L,2); SAFE(r);
+	big *m = big_arg(L,3); SAFE(m);
+	checkalldouble(l,r);
+	if(l->doublesize && r->doublesize) {
+		big *d = big_new(L); SAFE(d);
+		big_init(d);
+		DBIG t;
+		if(BIG_dcomp(l->dval,r->dval)<0) {
+			// res = m - (r-l % m)
+			BIG tm;
+			BIG_dsub(t,r->dval,l->dval);
+			BIG_dmod(tm,t,m->val);
+			BIG_sub(d->val,m->val,tm);
+			BIG_norm(d->val);
+			return 1;
+		} else {
+			BIG_dsub(t, l->dval, r->dval);
+			BIG_dmod(d->val,t,m->val);
+			BIG_dnorm(d->val);
+			return 1;
+		}
+	} else {
+		// if(BIG_comp(l->val,r->val)<0) {
+		// 	lerror(L,"Subtraction error: arg1 smaller than arg2");
+		// 	return 0; }
 		big *d = big_new(L); SAFE(d);
 		big_init(d);
 		BIG_sub(d->val, l->val, r->val);
@@ -441,12 +476,16 @@ static int big_modmul(lua_State *L) {
 	if(y->doublesize || z->doublesize || n->doublesize) {
 		lerror(L,"modmul not supported on double big numbers");
 		return 0; }
+	BIG t1, t2;
+	BIG_copy(t1,y->val);
+	BIG_copy(t2,z->val);
 	big *x = big_new(L); SAFE(x);
 	big_init(x);
-	BIG_modmul(x->val, y->val, z->val, n->val);
+	BIG_modmul(x->val, t1, t2, n->val);
 	BIG_norm(x->val);
 	return 1;
 }
+
 static int big_moddiv(lua_State *L) {
 	big *y = big_arg(L, 1); SAFE(y);
 	big *div = big_arg(L, 2); SAFE(div);
@@ -455,12 +494,15 @@ static int big_moddiv(lua_State *L) {
 	if(y->doublesize || div->doublesize || mod->doublesize) {
 		lerror(L,"moddiv not supported on double big numbers");
 		return 0; }
+	BIG t;
+	BIG_copy(t,y->val);
 	big *x = big_new(L); SAFE(x);
 	big_init(x);
-	BIG_moddiv(x->val, y->val, div->val, mod->val);
+	BIG_moddiv(x->val, t, div->val, mod->val);
 	BIG_norm(x->val);
 	return 1;
 }
+
 static int big_modsqr(lua_State *L) {
 	big *y = big_arg(L, 1); SAFE(y);
 	big *n = big_arg(L, 2); SAFE(n);
@@ -468,9 +510,11 @@ static int big_modsqr(lua_State *L) {
 	if(y->doublesize || n->doublesize) {
 		lerror(L,"modsqr not supported on double big numbers");
 		return 0; }
+	BIG t;
+	BIG_copy(t,y->val);
 	big *x = big_new(L); SAFE(x);
 	big_init(x);
-	BIG_modsqr(x->val, y->val, n->val);
+	BIG_modsqr(x->val, t, n->val);
 	BIG_norm(x->val);
 	return 1;
 }
@@ -482,9 +526,11 @@ static int big_modneg(lua_State *L) {
 	if(y->doublesize || n->doublesize) {
 		lerror(L,"modneg not supported on double big numbers");
 		return 0; }
+	BIG t;
+	BIG_copy(t,y->val);
 	big *x = big_new(L); SAFE(x);
 	big_init(x);
-	BIG_modneg(x->val, y->val, n->val);
+	BIG_modneg(x->val, t, n->val);
 	BIG_norm(x->val);
 	return 1;
 }
@@ -515,6 +561,7 @@ int luaopen_big(lua_State *L) {
 		{"moddiv",big_moddiv},
 		{"modsqr",big_modsqr},
 		{"modneg",big_modneg},
+		{"modsub",big_modsub},
 		{"jacobi",big_jacobi},
 		{NULL,NULL}
 	};
@@ -538,11 +585,13 @@ int luaopen_big(lua_State *L) {
 		{"__concat",big_concat},
 		{"bits",big_bits},
 		{"bytes",big_bytes},
+		{"__len",big_bytes},
 		{"double",big_double},
 		{"modmul",big_modmul},
 		{"moddiv",big_moddiv},
 		{"modsqr",big_modsqr},
 		{"modneg",big_modneg},
+		{"modsub",big_modsub},
 		{"jacobi",big_jacobi},
 		{"__gc", big_destroy},
 		{"__tostring",big_to_hex},
