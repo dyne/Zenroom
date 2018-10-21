@@ -72,12 +72,13 @@ target = arm-linux-androideabi
 #toolchain = ${ndk}/toolchains/${target}-4.9/prebuilt/linux-x86_64
 toolchain = ${ndk}/toolchains/llvm/prebuilt/linux-x86_64
 sysroot = ${ndk}/platforms/android-26/arch-arm
-cflags += -fPIC ${cflags_protection} -D'ARCH=\"LINUX\"' -DARCH_LINUX -DARCH_ANDROID -DLUA_USE_DLOPEN -I${ndk}/sysroot/usr/include -I${ndk}/sysroot/usr/include/arm-linux-androideabi --target=armv7-none-linux-androideabi --gcc-toolchain=/opt/android-ndk-r18b/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64 --sysroot=/opt/android-ndk-r18b/platforms/android-26/arch-arm
+cflags += -fPIC ${cflags_protection} -DLIBRARY -shared -D'ARCH=\"LINUX\"' -DARCH_LINUX -DARCH_ANDROID -DLUA_USE_DLOPEN -I${ndk}/sysroot/usr/include -I${ndk}/sysroot/usr/include/arm-linux-androideabi --target=armv7-none-linux-androideabi --gcc-toolchain=/opt/android-ndk-r18b/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64 --sysroot=/opt/android-ndk-r18b/platforms/android-26/arch-arm
 # ldflags := -lm -lpthread
 gcc = ${toolchain}/bin/clang
 ar = ${toolchain}/bin/llvm-ar
 # ranlib = ${toolchain}/bin/${target}-ranlib
 ld = ${toolchain}/bin/${target}-link
+ldadd += -lm -llog
 milagro_cmake_flags += -DCMAKE_SYSROOT=${sysroot} -DCMAKE_SYSTEM_VERSION=26 -DCMAKE_ANDROID_NDK_TOOLCHAIN_VERSION=clang -DCMAKE_ANDROID_ARCH_ABI=armeabi-v7a
 # ldflags += --sysroot=${ndk}/sysroot
 system := Android
@@ -86,7 +87,7 @@ endif
 ifneq (,$(findstring osx,$(MAKECMDGOALS)))
 cflags := ${cflags} -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -DARCH_OSX
 ld := ${gcc}
-ldflags := -lm
+ldflags := -lm -llog
 system := Darwin
 endif
 

@@ -18,6 +18,10 @@ musl-system: apply-patches lua53 milagro lpeglabel
 linux: apply-patches lua53 milagro lpeglabel
 	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src linux
+android: apply-patches lua53 milagro lpeglabel
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	LD="${ld}" RANLIB="${ranlib}" AR="${ar}" \
+		make -C src android
 
 linux-debug:
 linux-debug: cflags := -O1 -ggdb -D'ARCH=\"LINUX\"' ${cflags_protection} -DARCH_LINUX -DDEBUG=1
@@ -83,7 +87,3 @@ linux-java: apply-patches lua53 milagro lpeglabel
 # android: ranlib = ${toolchain}/bin/${target}-ranlib
 # android: ld = ${toolchain}/bin/${target}-ld
 # android: ldflags += --sysroot=${ndk}/sysroot
-android: apply-patches lua53 milagro lpeglabel
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-	LD="${ld}" RANLIB="${ranlib}" AR=${ar} \
-		make -C src android

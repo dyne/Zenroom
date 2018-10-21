@@ -1,7 +1,7 @@
 #include "zenroom_jni.h"
 #include "zenroom.h"
 
-#ifdef __ANDROID
+#ifdef ARCH_ANDROID
 #include <android/log.h>
 #endif
 
