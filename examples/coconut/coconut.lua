@@ -12,7 +12,7 @@
 -- law or agreed to in writing, software distributed under the License
 -- is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 -- CONDITIONS OF ANY KIND, either express or implied.
- 
+
 -- Setup
 rng = RNG.new()
 g1 = ECP.generator()
@@ -23,14 +23,14 @@ o = ECP.order()
 
 -- El-Gamal cryptosystem
 function elgamal_keygen()
-   local d = rng:big() % o
+   local d = rng:modbig(o)
    local gamma = g1 * d
 
    return d, gamma
 end
 
 function elgamal_enc(gamma, m, h)
-   local k = rng:big() % o
+   local k = rng:modbig(o)
    local a = g1 * k
    local b = gamma * k + h * m
    return a, b, k
@@ -43,8 +43,8 @@ end
 
 -- Coconut
 function keygen()
-   local x = rng:big() % o
-   local y = rng:big() % o
+   local x = rng:modbig(o)
+   local y = rng:modbig(o)
    local sk = { x = x , y = y }
    local vk = { g2 = g2, alpha = g2 * x, beta = g2 * y }
 
@@ -61,7 +61,7 @@ function aggKey(keys)
 end
 
 function prepareBlindSing(gamma, m)
-   local r = rng:big() % o
+   local r = rng:modbig(o)
    local cm = g1 * r + hs * m
    local h = ECP.hashtopoint(cm:x():octet()..cm:y():octet())
    local a, b, k = elgamal_enc(gamma, m, h)
@@ -94,8 +94,8 @@ function aggCred(sigmas)
 end
 
 function proveCred(vk, m, sigma)
-   local r = rng:big() % o
-   local r_prime = rng:big() % o
+   local r = rng:modbig(o)
+   local r_prime = rng:modbig(o)
    local sigma_prime = { h_prime = sigma.h * r_prime, s_prime = sigma.s * r_prime }
    local kappa = vk.alpha + vk.beta * m + vk.g2 * r
    local nu = sigma_prime.h_prime * r
@@ -121,22 +121,23 @@ end
 function make_pi_s(gamma, cm, k, r, m)
    local h = ECP.hashtopoint(cm:x():octet()..cm:y():octet())
 
-   local wr = rng:big() % o
-   local wk = rng:big() % o
-   local wm = rng:big() % o
+   local wr = rng:modbig(o)
+   local wk = rng:modbig(o)
+   local wm = rng:modbig(o)
 
    local Aw = g1 * wk
    local Bw = gamma * wk + h * wm
    local Cw = g1 * wr + hs * wm
 
    local c = to_challenge({g1, g2, cm, h, hs, Aw})
-   local rr = (wr - c * r) % o
-   local rk = (wk - c * k) % o
-   --local rk = (wk - c:modmul(k, o)) % o
-   --print(rk == rk1)
+   local rr = wr:modsub(c * r, o) -- subtract within modulo origin
+   local rk = wk:modsub(c * k, o)
+   -- WIP from here
+   -- local rk1 = wk:modsub(c:modmul(k, o), o)
+   -- assert(rk == rk1)
 
-   --print(g1 * wk)
-   --print( (g1*k) * c + g1 * rk )
+   -- print(g1 * wk)
+   -- print( (g1*k) * c + g1 * rk )
    local rm = (wm - c * m) % o
    return { c = c, rk = rk, rm = rm, rr = rr }
 end
@@ -159,14 +160,14 @@ end
 
 --[[
    function make_pi_v(vk, sigma, m, t)
-   local wm = rng:big() % o
-   local wt = rng:big() % o
+   local wm = rng:modbig(o)
+   local wt = rng:modbig(o)
 
    local Aw = g2 * wt + vk.alpha + vk.beta * wm
    local Bw = sigma.h * wt
    local c = to_challenge({g1, g2, hs, vk.alpha, vk.beta, Aw, Bw})
-   local rm = (wm - m * c) % o
-   local rt = (wt - t * c) % o
+   local rm = wm:modsub(m * c, o)
+   local rt = wt:modsub(t * c, o)
    return { c = c, rm = rm, rt = rt }
    end
 
