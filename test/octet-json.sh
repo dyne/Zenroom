@@ -15,15 +15,14 @@ function grind() {
 
 print "= test octets and keyring saves in json DATA"
 cat <<EOF > /tmp/zenroom_temp_check.lua
-ecc = ECDH.new()
+ecc = ECDH.keygen()
 right = str("$tstr")
-ecc:keygen()
 pk = ecc:public()
 dump = JSON.encode({teststr="$tstr",
                     pubkey=pk:base64(),
 	                test64=right:base64(),
 					testhex=right:hex(),
-					testhash=ecc:hash(right):base64()})
+					testhash=sha512(right):base64()})
 print(dump)
 EOF
 
@@ -45,8 +44,8 @@ right = str(test.teststr)
 assert(left == right)
 right = hex(test.testhex)
 assert(left == right)
-assert(ecc:hash(left):base64() == test.testhash)
-assert(ecc:hash(right):base64() == test.testhash)
+assert(sha512(left):base64() == test.testhash)
+assert(sha512(right):base64() == test.testhash)
 print "== check the pubkey"
 left = base64(test.pubkey)
 assert(ecc:checkpub(left))

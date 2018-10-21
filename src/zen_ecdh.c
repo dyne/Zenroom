@@ -177,7 +177,7 @@ static int ecdh_keygen(lua_State *L) {
 
 static int ecdh_checkpub(lua_State *L) {
 	HERE();
-	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
+	ecdh *e = ecdh_arg(L,1); SAFE(e);
 	octet *pk = NULL;
 	if(lua_isnoneornil(L, 2)) {
 		if(!e->pubkey) {
@@ -542,7 +542,9 @@ static int ecdh_random(lua_State *L) {
 #define COMMON_METHODS \
 	{"session",ecdh_session}, \
 	{"public", ecdh_public}, \
-	{"private", ecdh_private}
+	{"private", ecdh_private}, \
+	{"checkpub", ecdh_checkpub}
+
 
 int luaopen_ecdh(lua_State *L) {
 	const struct luaL_Reg ecdh_class[] = {
@@ -554,7 +556,6 @@ int luaopen_ecdh(lua_State *L) {
 		{"hmac", ecdh_hmac},
 		{"kdf2", ecdh_kdf2},
 		{"pbkdf2", ecdh_pbkdf2},
-		{"checkpub", ecdh_checkpub},
 		COMMON_METHODS,
 		{NULL,NULL}};
 	const struct luaL_Reg ecdh_methods[] = {
