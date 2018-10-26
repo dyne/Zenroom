@@ -202,29 +202,15 @@ static int ecp_isinf(lua_State *L) {
 }
 
 /***
-    Map a @{BIG} number to a point of the curve, where the BIG number should be the output of some hash function.
+    Map an @{OCTET} to a point of the curve, where the OCTET should be the output of some hash function.
 
-    @param BIG number resulting from an hash function
-    @function mapit(BIG)
+    @param OCTET resulting from an hash function
+    @function mapit(OCTET)
 */
 static int ecp_mapit(lua_State *L) {
-	const big *b = big_arg(L,1); SAFE(b);
-	// this is replicated from milagro's mapit() to avoid octet
-	// conversion, see PR:
-	// https://github.com/milagro-crypto/milagro-crypto-c/pull/286
+	octet *o = o_arg(L,1); SAFE(o);
 	ecp *e = ecp_new(L); SAFE(e);
-	BIG x,q;
-	BIG_rcopy(x,b->val);
-	BIG_rcopy(q,Modulus);
-	BIG_mod(x,q);
-	while(!ECP_setx(&e->val,x,0)) {
-		BIG_inc(x,1);
-		BIG_norm(x);
-	}
-	// #if PAIRING_FRIENDLY == BLS
-	BIG c;
-	BIG_rcopy(c,CURVE_Cofactor);
-	ECP_mul(&e->val,c);
+	ECP_mapit(&e->val, o);
 	return 1;
 }
 

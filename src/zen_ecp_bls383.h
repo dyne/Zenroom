@@ -75,6 +75,7 @@ ecp* ecp_arg(lua_State *L,int n);
 #define ECP_fromOctet(d,o) ECP_BLS383_fromOctet(d, o)
 #define ECP_toOctet(o,d) ECP_BLS383_toOctet(o,d)
 #define ECP_generator(e) ECP_BLS383_generator(e)
+#define ECP_mapit(q,w) ECP_BLS383_mapit(q,w)
 
 #define FP2 FP2_BLS383
 #define FP2_from_BIGs(x,a,b) FP2_BLS383_from_BIGs(x,a,b)
