@@ -321,7 +321,7 @@ static int ecp2_mapit(lua_State *L) {
 static int ecp2_get_xr(lua_State *L) {
 	ecp2 *e = ecp2_arg(L,1); SAFE(e);
 	FP fx;
-	big *xa = big_new(L);
+	big *xa = big_new(L); big_init(xa); SAFE(xa);
 	FP_copy(&fx,&e->val.x.a);
 	FP_reduce(&fx); FP_redc(xa->val, &fx);
 	return 1;
@@ -330,7 +330,7 @@ static int ecp2_get_xr(lua_State *L) {
 static int ecp2_get_xi(lua_State *L) {
 	ecp2 *e = ecp2_arg(L,1); SAFE(e);
 	FP fx;
-	big *xb = big_new(L);
+	big *xb = big_new(L); big_init(xb); SAFE(xb);
 	FP_copy(&fx,&e->val.x.b);
 	FP_reduce(&fx); FP_redc(xb->val, &fx);
 	return 1;
@@ -340,7 +340,7 @@ static int ecp2_get_xi(lua_State *L) {
 static int ecp2_get_yr(lua_State *L) {
 	ecp2 *e = ecp2_arg(L,1); SAFE(e);
 	FP fy;
-	big *ya = big_new(L);
+	big *ya = big_new(L); big_init(ya); SAFE(ya);
 	FP_copy(&fy,&e->val.y.a);
 	FP_reduce(&fy); FP_redc(ya->val, &fy);
 	return 1;
@@ -348,7 +348,7 @@ static int ecp2_get_yr(lua_State *L) {
 static int ecp2_get_yi(lua_State *L) {
 	ecp2 *e = ecp2_arg(L,1); SAFE(e);
 	FP fy;
-	big *yb = big_new(L);
+	big *yb = big_new(L); big_init(yb); SAFE(yb);
 	FP_copy(&fy,&e->val.y.b);
 	FP_reduce(&fy); FP_redc(yb->val, &fy);
 	return 1;
@@ -356,7 +356,7 @@ static int ecp2_get_yi(lua_State *L) {
 static int ecp2_get_zr(lua_State *L) {
 	ecp2 *e = ecp2_arg(L,1); SAFE(e);
 	FP fz;
-	big *za = big_new(L);
+	big *za = big_new(L); big_init(za); SAFE(za);
 	FP_copy(&fz,&e->val.z.a);
 	FP_reduce(&fz); FP_redc(za->val, &fz);
 	return 1;
@@ -364,7 +364,7 @@ static int ecp2_get_zr(lua_State *L) {
 static int ecp2_get_zi(lua_State *L) {
 	ecp2 *e = ecp2_arg(L,1); SAFE(e);
 	FP fz;
-	big *zb = big_new(L);
+	big *zb = big_new(L); big_init(zb); SAFE(zb);
 	FP_copy(&fz,&e->val.z.b);
 	FP_reduce(&fz); FP_redc(zb->val, &fz);
 	return 1;
