@@ -131,7 +131,6 @@ static int rng_modbig(lua_State *L) {
 	RNG *rng = rng_arg(L,1); SAFE(rng);
 	big *modulus = big_arg(L,2); SAFE(modulus);	
 	big *res = big_new(L); big_init(res); SAFE(res);
-	big_init(res);
 	BIG_randomnum(res->val,modulus->val,rng);
 	return(1);
 }

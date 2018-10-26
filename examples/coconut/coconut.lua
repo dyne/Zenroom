@@ -115,7 +115,7 @@ end
 -- proofs
 function to_challenge(list)
    local concat = OCTET.serialize(list)
-   return BIG.new(sha512(concat))
+   return BIG.new(sha256(concat))
 end
 
 function make_pi_s(gamma, cm, k, r, m)
@@ -130,15 +130,16 @@ function make_pi_s(gamma, cm, k, r, m)
    local Cw = g1 * wr + hs * wm
 
    local c = to_challenge({g1, g2, cm, h, hs, Aw})
+   -- c here is a doublesize big
    local rr = wr:modsub(c * r, o) -- subtract within modulo origin
    local rk = wk:modsub(c * k, o)
-   -- WIP from here
+   -- sanity checks:
    -- local rk1 = wk:modsub(c:modmul(k, o), o)
    -- assert(rk == rk1)
-
-   -- print(g1 * wk)
-   -- print( (g1*k) * c + g1 * rk )
-   local rm = (wm - c * m) % o
+   --    print(g1 * wk)
+   --    print( (g1*k) * c + g1 * rk )
+   -- assert(g1*wk == (g1*k) * c + g1 * rk)
+   local rm = wm:modsub(c * m, o)
    return { c = c, rk = rk, rm = rm, rr = rr }
 end
 

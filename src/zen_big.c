@@ -223,9 +223,9 @@ static int newbig(lua_State *L) {
 		big *c = big_new(L); SAFE(c);
 		octet *o = (octet*)ud;
 		if(o->len <= modbytes) { // big
-			// TODO: measure byte length to detect doublebig
 			big_init(c);
 			BIG_fromBytesLen(c->val, o->val, o->len);
+			// or should we measure byte length to detect doublebig?
 		} else if(o->len > modbytes && o->len < modbytes<<1) {
 			dbig_init(c);
 			BIG_dfromBytesLen(c->dval, o->val, o->len);
@@ -400,7 +400,7 @@ static int big_modsub(lua_State *L) {
 	big *l = big_arg(L,1); SAFE(l);
 	big *r = big_arg(L,2); SAFE(r);
 	big *m = big_arg(L,3); SAFE(m);
-	checkalldouble(l,r);
+	// checkalldouble(l,r);
 	big *d = big_new(L); SAFE(d);
 	big_init(d);
 	if(l->doublesize || r->doublesize) {
@@ -411,7 +411,7 @@ static int big_modsub(lua_State *L) {
 		else { dcopy(ll,l->val); llv = (chunk*)&ll; }
 		if   (r->doublesize)     lrv = r->dval;
 		else { dcopy(lr,r->val); lrv = (chunk*)&lr; }
-		if(BIG_dcomp(l->dval,r->dval)<0) { // if l < r
+		if(BIG_dcomp(llv,lrv)<0) { // if l < r
 			// res = m - (r-l % m)
 			DBIG t; BIG tm;
 			BIG_dsub (t,  lrv, llv);
