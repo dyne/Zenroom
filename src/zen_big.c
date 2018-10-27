@@ -51,6 +51,16 @@ extern int octet_to_hex(lua_State *L);
 // to copy contents from BIG to DBIG
 #define dcopy(d,s) BIG_dscopy(d,s);
 
+// temporary bring all arguments to DBIG
+// generates local variables _l(eft) and _r(right)
+#define godbig2(l,r)	  \
+	chunk *_l, *_r; \
+	DBIG ll, lr; \
+	if   (l->doublesize)     _l = l->dval; \
+	else { dcopy(ll,l->val); _l = (chunk*)&ll; } \
+	if   (r->doublesize)     _r = r->dval; \
+	else { dcopy(lr,r->val); _r = (chunk*)&lr; }
+
 #define checkalldouble(l,r) \
 	if(!l->val && !l->dval) { \
 		error(L,"error in %s %u",__FUNCTION__,__LINE__); \
@@ -400,26 +410,20 @@ static int big_modsub(lua_State *L) {
 	big *l = big_arg(L,1); SAFE(l);
 	big *r = big_arg(L,2); SAFE(r);
 	big *m = big_arg(L,3); SAFE(m);
-	// checkalldouble(l,r);
 	big *d = big_new(L); SAFE(d);
 	big_init(d);
 	if(l->doublesize || r->doublesize) {
 		// temporary bring all to DBIG
-		chunk *llv, *lrv;
-		DBIG ll, lr;
-		if   (l->doublesize)     llv = l->dval;
-		else { dcopy(ll,l->val); llv = (chunk*)&ll; }
-		if   (r->doublesize)     lrv = r->dval;
-		else { dcopy(lr,r->val); lrv = (chunk*)&lr; }
-		if(BIG_dcomp(llv,lrv)<0) { // if l < r
+		godbig2(l,r);
+		if(BIG_dcomp(_l,_r)<0) { // if l < r
 			// res = m - (r-l % m)
 			DBIG t; BIG tm;
-			BIG_dsub (t,  lrv, llv);
+			BIG_dsub (t,  _r, _l);
 			BIG_dmod (tm, t,   m->val);
 			BIG_sub  (d->val,  m->val, tm);
 		} else { // if l > r
 			DBIG t;
-			BIG_dsub(t  , llv, lrv);
+			BIG_dsub(t  , _l, _r);
 			BIG_dmod(d->val,t,m->val);
 		}
 	} else { // no DBIG involved
@@ -439,7 +443,6 @@ static int big_modsub(lua_State *L) {
 static int big_mul(lua_State *L) {
 	big *l = big_arg(L,1); SAFE(l);
 	big *r = big_arg(L,2); SAFE(r);
-	checkalldouble(l,r);
 	if(l->doublesize || r->doublesize) {
 		lerror(L,"cannot multiply double big numbers");
 		return 0; }
@@ -486,12 +489,16 @@ static int big_mod(lua_State *L) {
 static int big_div(lua_State *L) {
 	big *l = big_arg(L,1); SAFE(l);
 	big *r = big_arg(L,2); SAFE(r);
-	checkalldouble(l,r);
-	if(l->doublesize || r->doublesize)
-		lerror(L,"division not supported on double big numbers (ddiv)");
+	if(r->doublesize) {
+		lerror(L,"division not supported with double big modulus");
+		return 0; }
 	big *d = big_dup(L,l); SAFE(d);
-	BIG_div(d->val,r->val);
-	BIG_norm(d->val);
+	if(l->doublesize) { // use ddiv on double big
+		BIG t; BIG_copy(t,l->val); 	// in ddiv the 2nd arg is destroyed
+		BIG_ddiv(d->val, t, r->val);
+	} else { // use sdiv for normal bigs
+		BIG_sdiv(d->val, r->val);
+	}
 	return 1;
 }
 
@@ -499,7 +506,6 @@ static int big_modmul(lua_State *L) {
 	big *y = big_arg(L, 1); SAFE(y);
 	big *z = big_arg(L, 2); SAFE(z);
 	big *n = big_arg(L, 3); SAFE(n);
-	checkalldouble(y,z);
 	if(y->doublesize || z->doublesize || n->doublesize) {
 		lerror(L,"modmul not supported on double big numbers");
 		return 0; }
@@ -517,7 +523,6 @@ static int big_moddiv(lua_State *L) {
 	big *y = big_arg(L, 1); SAFE(y);
 	big *div = big_arg(L, 2); SAFE(div);
 	big *mod = big_arg(L, 3); SAFE(mod);
-	checkalldouble(y,div);
 	if(y->doublesize || div->doublesize || mod->doublesize) {
 		lerror(L,"moddiv not supported on double big numbers");
 		return 0; }
@@ -533,7 +538,6 @@ static int big_moddiv(lua_State *L) {
 static int big_modsqr(lua_State *L) {
 	big *y = big_arg(L, 1); SAFE(y);
 	big *n = big_arg(L, 2); SAFE(n);
-	checkalldouble(y,n);
 	if(y->doublesize || n->doublesize) {
 		lerror(L,"modsqr not supported on double big numbers");
 		return 0; }
@@ -549,7 +553,6 @@ static int big_modsqr(lua_State *L) {
 static int big_modneg(lua_State *L) {
 	big *y = big_arg(L, 1); SAFE(y);
 	big *n = big_arg(L, 2); SAFE(n);
-	checkalldouble(y,n);
 	if(y->doublesize || n->doublesize) {
 		lerror(L,"modneg not supported on double big numbers");
 		return 0; }
@@ -564,7 +567,6 @@ static int big_modneg(lua_State *L) {
 static int big_jacobi(lua_State *L) {
 	big *x = big_arg(L, 1); SAFE(x);
 	big *y = big_arg(L, 2); SAFE(y);
-	checkalldouble(x,y);
 	if(x->doublesize || y->doublesize) {
 		lerror(L,"jacobi not supported on double big numbers");
 		return 0; }
