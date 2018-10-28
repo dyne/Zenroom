@@ -84,12 +84,11 @@ big* big_new(lua_State *L) {
 	luaL_getmetatable(L, "zenroom.big");
 	lua_setmetatable(L, -2);
 	strcpy(c->name,"big384");
-	c->len = modbytes;
+	// c->len = modbytes;
 	c->chunksize = CHUNK;
 	c->doublesize = 0;
 	c->val = NULL;
 	c->dval = NULL;
-	func(L, "new big (%u bytes)",modbytes);
 	return(c);
 }
 
@@ -101,27 +100,16 @@ big* big_new(lua_State *L) {
 // 	return d;
 // }
 
-static int big_double(lua_State *L) {
-	big *s = big_arg(L,1); SAFE(s);
-	big *d = big_new(L); SAFE(d);
-	dbig_init(d);
-	if(s->doublesize)
-		BIG_dcopy(d->dval, s->dval);
-	else
-		BIG_dscopy(d->dval, s->val);
-	return 1;
-}
-
 big* big_arg(lua_State *L,int n) {
 	void *ud = luaL_checkudata(L, n, "zenroom.big");
 	luaL_argcheck(L, ud != NULL, n, "big class expected");
 	big *o = (big*)ud;
-	if(o->len != modbytes) {
-		lerror(L, "%s: big modbytes mismatch (%u != %u)",__func__,o->len, modbytes);
-		return NULL; }
-	if(o->chunksize != CHUNK) {
-		lerror(L, "%s: big chunk size mismatch (%u != %u)",__func__,o->chunksize, CHUNK);
-		return NULL; }
+	// if(o->len != modbytes) {
+	// 	lerror(L, "%s: big modbytes mismatch (%u != %u)",__func__,o->len, modbytes);
+	// 	return NULL; }
+	// if(o->chunksize != CHUNK) {
+	// 	lerror(L, "%s: big chunk size mismatch (%u != %u)",__func__,o->chunksize, CHUNK);
+	// 	return NULL; }
 	return(o);
 }
 
@@ -184,6 +172,7 @@ int big_init(big *n) {
 		size_t size = sizeof(BIG);
 		n->val = zen_memory_alloc(size);
 		n->doublesize = 0;
+		n->len = biglen;
 		return(size);
 	}
 	error(NULL,"anomalous state of big number detected on initialization");
@@ -200,10 +189,12 @@ int dbig_init(big *n) {
 		// extend from big to double big
 		BIG_dscopy(n->dval,n->val);
 		zen_memory_free(n->val);
+		n->len = doublelen;
 	}
 	if(!n->val || !n->dval) {
 		n->doublesize = 1;
 		n->dval = zen_memory_alloc(size);
+		n->len = doublelen;
 		return(size);
 	}
 	error(NULL,"anomalous state of double big number detected on initialization");
@@ -352,10 +343,11 @@ static int big_eq(lua_State *L) {
 	// BIG_comp requires external normalization
 	int res;
 	checkalldouble(l,r);
-	if(l->doublesize && r->doublesize) {
-		BIG_dnorm(l->dval);
-		BIG_dnorm(r->dval);
-		res = BIG_dcomp(l->dval,r->dval);
+	if(l->doublesize || r->doublesize) {
+		godbig2(l,r);
+		BIG_dnorm(_l);
+		BIG_dnorm(_r);
+		res = BIG_dcomp(_l,_r);
 	} else {
 		BIG_norm(l->val);
 		BIG_norm(r->val);
@@ -370,9 +362,10 @@ static int big_add(lua_State *L) {
 	big *r = big_arg(L,2); SAFE(r);
 	big *d = big_new(L); SAFE(d);
 	checkalldouble(l,r);
-	if(l->doublesize && r->doublesize) {
+	if(l->doublesize || r->doublesize) {
+		godbig2(l,r);
 		dbig_init(d);
-		BIG_dadd(d->dval, l->dval, r->dval);
+		BIG_dadd(d->dval, _l, _r);
 		BIG_dnorm(d->dval);
 	} else {
 		big_init(d);
@@ -385,20 +378,19 @@ static int big_add(lua_State *L) {
 static int big_sub(lua_State *L) {
 	big *l = big_arg(L,1); SAFE(l);
 	big *r = big_arg(L,2); SAFE(r);
-	checkalldouble(l,r);
-	if(l->doublesize && r->doublesize) {
-		big *d = big_new(L); SAFE(d);
+	big *d = big_new(L); SAFE(d);
+	if(l->doublesize || r->doublesize) {
+		godbig2(l, r);
 		dbig_init(d);
-		if(BIG_dcomp(l->dval,r->dval)<0) {
-			lerror(L,"Subtraction error: arg1 smaller than arg2");
+		if(BIG_dcomp(_l,_r)<0) {
+			lerror(L,"Subtraction error: arg1 smaller than arg2 (consider use of :modsub)");
 			return 0; }
-		BIG_dsub(d->dval, l->dval, r->dval);
+		BIG_dsub(d->dval, _l, _r);
 		BIG_dnorm(d->dval);
 	} else {
 		// if(BIG_comp(l->val,r->val)<0) {
 		// 	lerror(L,"Subtraction error: arg1 smaller than arg2");
 		// 	return 0; }
-		big *d = big_new(L); SAFE(d);
 		big_init(d);
 		BIG_sub(d->val, l->val, r->val);
 		BIG_norm(d->val);
@@ -463,9 +455,21 @@ static int big_sqr(lua_State *L) {
 	// BIG_norm(l->val); BIG_norm(r->val);
 	big *d = big_new(L); SAFE(d);
 	dbig_init(d); // assume it always returns a double big
-	// BIG_dzero(d->dval);
 	BIG_sqr(d->dval,l->val);
-	BIG_dnorm(d->dval);
+	return 1;
+}
+
+static int big_monty(lua_State *L) {
+	big *s = big_arg(L,1); SAFE(s);
+	if(!s->doublesize) {
+		lerror(L,"no need for montgomery reduction: not a double big number");
+		return 0; }
+	big *m = big_arg(L,2); SAFE(m);
+	if(m->doublesize) {
+		lerror(L,"double big modulus in montgomery reduction");
+		return 0; }
+	big *d = big_new(L); big_init(d); SAFE(d);
+	BIG_monty(d->val, m->val, Montgomery, s->dval);
 	return 1;
 }
 
@@ -476,9 +480,9 @@ static int big_mod(lua_State *L) {
 		lerror(L,"modulus cannot be a double big (dmod)");
 		return 0; }
 	if(l->doublesize) {
-		big *d = big_new(L); SAFE(d);
-		dbig_init(d);
-		BIG_dmod(d->dval,l->dval,r->val);
+		big *d = big_new(L); big_init(d); SAFE(d);
+		DBIG t; BIG_dcopy(t, l->dval); // dmod destroys 2nd arg
+		BIG_dmod(d->val,l->dval,r->val);
 	} else {
 		big *d = big_dup(L,l); SAFE(d);
 		BIG_mod(d->val,r->val);
@@ -494,7 +498,7 @@ static int big_div(lua_State *L) {
 		return 0; }
 	big *d = big_dup(L,l); SAFE(d);
 	if(l->doublesize) { // use ddiv on double big
-		BIG t; BIG_copy(t,l->val); 	// in ddiv the 2nd arg is destroyed
+		DBIG t; BIG_dcopy(t, l->dval); 	// in ddiv the 2nd arg is destroyed
 		BIG_ddiv(d->val, t, r->val);
 	} else { // use sdiv for normal bigs
 		BIG_sdiv(d->val, r->val);
@@ -592,6 +596,7 @@ int luaopen_big(lua_State *L) {
 		{"modneg",big_modneg},
 		{"modsub",big_modsub},
 		{"jacobi",big_jacobi},
+		{"monty",big_monty},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg big_methods[] = {
@@ -615,13 +620,13 @@ int luaopen_big(lua_State *L) {
 		{"bits",big_bits},
 		{"bytes",big_bytes},
 		{"__len",big_bytes},
-		{"double",big_double},
 		{"modmul",big_modmul},
 		{"moddiv",big_moddiv},
 		{"modsqr",big_modsqr},
 		{"modneg",big_modneg},
 		{"modsub",big_modsub},
 		{"jacobi",big_jacobi},
+		{"monty",big_monty},
 		{"__gc", big_destroy},
 		{"__tostring",big_to_hex},
 		{NULL,NULL}
