@@ -92,24 +92,13 @@ big* big_new(lua_State *L) {
 	return(c);
 }
 
-
-// big* big2dbig_new(lua_State *L, big *s) {
-// 	big *d = big_new(L);
-// 	dbig_init(d);
-// 	BIG_dscopy(d->dval,s->val);
-// 	return d;
-// }
-
 big* big_arg(lua_State *L,int n) {
 	void *ud = luaL_checkudata(L, n, "zenroom.big");
 	luaL_argcheck(L, ud != NULL, n, "big class expected");
 	big *o = (big*)ud;
-	// if(o->len != modbytes) {
-	// 	lerror(L, "%s: big modbytes mismatch (%u != %u)",__func__,o->len, modbytes);
-	// 	return NULL; }
-	// if(o->chunksize != CHUNK) {
-	// 	lerror(L, "%s: big chunk size mismatch (%u != %u)",__func__,o->chunksize, CHUNK);
-	// 	return NULL; }
+	if(!o->val && !o->dval) {
+		lerror(L, "invalid big number in argument: not initalized");
+		return NULL; }
 	return(o);
 }
 
@@ -255,30 +244,26 @@ static int newbig(lua_State *L) {
 static octet *to_octet(lua_State *L, big *c) {
 	octet *o = NULL;
 	int i;
-	int size = 0;
+	SAFE(c);
+	o = o_new(L, c->len); SAFE(o);
 	if(c->doublesize && c->dval) {
 		BIG_dnorm(c->dval);
-		size = BIG_dnbits(c->dval)>>3;
-		o = o_new(L, size); SAFE(o);
-		DBIG t;
-		BIG_dcopy(t,c->dval);
-		for(i=size-1; i>=0; i--) {
+		// size = // BIG_dnbits(c->dval)>>3;
+		DBIG t;	BIG_dcopy(t,c->dval);
+		for(i=c->len-1; i>=0; i--) {
 			o->val[i]=t[0]&0xff;
 			BIG_dshr(t,8);
 		}
 	} else if(c->val) {
 		BIG_norm(c->val);
-		size = BIG_nbits(c->val)>>3;
-		o = o_new(L, size); SAFE(o);
-		BIG t;
-		BIG_copy(t,c->val);
-		for(i=size-1; i>=0; i--) {
+		BIG t; BIG_copy(t,c->val);
+		for(i=c->len-1; i>=0; i--) {
 			o->val[i]=t[0]&0xff;
 			BIG_dshr(t,8);
 		}
 	} else
 		lerror(L,"Invalid BIG number, cannot convert to octet");
-	o->len = size;
+	o->len = c->len;
 	return o;
 }
 static int big_to_octet(lua_State *L) {
@@ -291,43 +276,13 @@ static int big_to_octet(lua_State *L) {
 static int big_concat(lua_State *L) {
 	big *l = big_arg(L,1); SAFE(l);
 	big *r = big_arg(L,2); SAFE(r);
-//	BIG_norm(l->val); BIG_norm(r->val);
-	int nlen = l->len + r->len;
-	octet *o = o_new(L, nlen +2); SAFE(o);
-	// TODO: dbig
-	BIG_toBytes(o->val,l->val);
-	BIG_toBytes(o->val+l->len,r->val);
-	o->len = nlen;
+	octet *ol = to_octet(L, l);	lua_pop(L,1); SAFE(ol);
+	octet *or = to_octet(L, r); lua_pop(L,1); SAFE(or);
+	octet *d = o_new(L, ol->len + or->len); SAFE(d);
+	OCT_copy(d,ol);
+	OCT_joctet(d,or);
 	return 1;
 }
-
-// useful to double-check big_to_octet():hex()
-// this function is known to return good results
-// static int big_to_hex(lua_State *L) {
-// 	BIG b;
-// 	int i,len;
-// 	char str[MAX_STRING]; // TODO:
-// 	int modby2 = modbytes<<1;
-// 	big *a = big_arg(L,1); SAFE(a);
-// 	len = BIG_nbits(a->val);
-// 	int lendiv4 = len>>2;
-// 	if (len%4==0) len=lendiv4;
-// 	else {
-// 		len=lendiv4;
-// 		len++;
-// 	}
-// 	if (len<modby2) len=modby2;
-// 	int c = 0;
-// 	// TODO: double
-// 	for (i=len-1; i>=0; i--) {
-// 		BIG_copy(b,a->val);
-// 		BIG_shr(b,i<<2);
-// 		sprintf(str+c,"%01x",(unsigned int) b[0]&15);
-// 		c++;
-// 	}
-// 	lua_pushstring(L,str);
-// 	return 1;
-// }
 
 static int big_to_hex(lua_State *L) {
 	big *a = big_arg(L,1); SAFE(a);
