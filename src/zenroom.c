@@ -229,10 +229,17 @@ int zenroom_exec(char *script, char *conf, char *keys,
 	if(!script) {
 		error(L, "NULL string as script for zenroom_exec()");
 		return EXIT_FAILURE; }
+	if(script[0] == '\0') {
+		error(L, "Empty string as script for zenroom_exec()");
+		return EXIT_FAILURE; }
+
 	set_debug(verbosity);
 
-
-	Z = zen_init(conf, keys, data);
+	char *c, *k, *d;
+	c = (conf[0] == '\0') ? NULL : conf;
+	k = (keys[0] == '\0') ? NULL : keys;
+	d = (data[0] == '\0') ? NULL : data;
+	Z = zen_init(c, k, d);
 	if(!Z) {
 		error(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
@@ -279,9 +286,17 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys,
 	if(!script) {
 		error(L, "NULL string as script for zenroom_exec()");
 		return EXIT_FAILURE; }
+	if(script[0] == '\0') {
+		error(L, "Empty string as script for zenroom_exec()");
+		return EXIT_FAILURE; }
+
 	set_debug(verbosity);
 
-	Z = zen_init(conf, keys, data);
+	char *c, *k, *d;
+	c = (conf[0] == '\0') ? NULL : conf;
+	k = (keys[0] == '\0') ? NULL : keys;
+	d = (data[0] == '\0') ? NULL : data;
+	Z = zen_init(c, k, d);
 	if(!Z) {
 		error(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
