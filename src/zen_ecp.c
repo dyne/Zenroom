@@ -125,6 +125,15 @@ static int lua_new_ecp(lua_State *L) {
 			return 0; }
 		return 1; }
 
+	void *ud = luaL_testudata(L, 1, "zenroom.octet");
+	if(ud) {
+		octet *o = (octet*)ud; SAFE(o);
+		ecp *e = ecp_new(L); SAFE(e);
+		if(! ECP_fromOctet(&e->val, o) )
+			lerror(L,"Octet doesn't contains a valid ECP");
+		return 1;
+	}
+
 	void *tx = luaL_testudata(L, 1, "zenroom.big");
 	void *ty = luaL_testudata(L, 2, "zenroom.big");
 	if(tx && ty) {
@@ -321,20 +330,13 @@ static int ecp_eq(lua_State *L) {
 }
 
 /***
-    Sets or returns an octet containing a @{BIG} number composed by both x,y coordinates of an ECP point on the curve. It can be used to port the value of an ECP point into @{OCTET:hex} or @{OCTET:base64} encapsulation, to be later set again into an ECP point using this same call.
+    Sets or returns an octet containing a @{BIG} number composed by both x,y coordinates of an ECP point on the curve. It can be used to port the value of an ECP point into @{OCTET:hex} or @{OCTET:base64} encapsulation, to be later set again into an ECP point using @{ECP:new}.
 
     @param ecp[opt=octet] the octet to be imported, none if to be exported
     @function octet(ecp)
 */
 static int ecp_octet(lua_State *L) {
-	void *ud;
 	ecp *e = ecp_arg(L,1); SAFE(e);
-	if((ud = luaL_testudata(L, 2, "zenroom.octet"))) {
-		octet *o = (octet*)ud; SAFE(o);
-		if(! ECP_fromOctet(&e->val, o) )
-			lerror(L,"Octet doesn't contains a valid ECP");
-		return 0;
-	}
 	octet *o = o_new(L,(modbytes<<1)+1);
 	SAFE(o);
 	ECP_toOctet(o, &e->val);

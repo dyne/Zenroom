@@ -316,7 +316,6 @@ static int big_add(lua_State *L) {
 	big *l = big_arg(L,1); SAFE(l);
 	big *r = big_arg(L,2); SAFE(r);
 	big *d = big_new(L); SAFE(d);
-	checkalldouble(l,r);
 	if(l->doublesize || r->doublesize) {
 		godbig2(l,r);
 		dbig_init(d);
