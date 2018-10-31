@@ -330,10 +330,10 @@ static int ecp_eq(lua_State *L) {
 }
 
 /***
-    Sets or returns an octet containing a @{BIG} number composed by both x,y coordinates of an ECP point on the curve. It can be used to port the value of an ECP point into @{OCTET:hex} or @{OCTET:base64} encapsulation, to be later set again into an ECP point using @{ECP:new}.
+    Returns an octet containing all serialized @{BIG} number coordinatesof an ECP point on the curve. It can be used to port the value of an ECP point into @{OCTET:hex} or @{OCTET:base64} encapsulation, to be later set again into an ECP point using @{ECP:new}.
 
-    @param ecp[opt=octet] the octet to be imported, none if to be exported
-    @function octet(ecp)
+    @function octet()
+    @return an OCTET sequence
 */
 static int ecp_octet(lua_State *L) {
 	ecp *e = ecp_arg(L,1); SAFE(e);

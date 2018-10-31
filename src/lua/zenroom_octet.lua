@@ -41,7 +41,7 @@ octet.to_base64 = function(o)
 	  if octet.is_base64(o) then return(o) -- skip what is already base64
 	  else return octet.string(o):base64() end
    elseif(type(o) ~= "zenroom.octet") then
-	  error("OCTET.to_base64: invalid argument type for conversion (%s)",type(o)) return end
+	  error("OCTET.to_base64: invalid argument type for conversion: "..type(o)) return end
    return o:base64()
 end
 octet.from_base64 = function(s)
@@ -57,14 +57,14 @@ octet.serialize = function(arr)
 		  t = type(e)
 		  if(t == "zenroom.octet") then
 			 concat = concat .. e
-		  elseif(t == "zenroom.big") then
+		  elseif(t == "zenroom.big"
+				 or
+				 t == "zenroom.ecp"
+				 or
+				 t == "zenroom.ecp2") then
 			 concat = concat .. e:octet()
-		  elseif(t == "zenroom.ecp") then
-			 concat = concat .. e:x() .. e:y()
-		  elseif(t == "zenroom.ecp2") then
-			 concat = concat .. e:xr() .. e:xi()
-			 concat = concat .. e:yr() .. e:yi()
-			 concat = concat .. e:zr() .. e:zi()
+		  else
+			 error("OCTET.serialize: unsupported type: "..t)
 		  end
    end)
    return concat

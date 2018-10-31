@@ -130,6 +130,15 @@ static int lua_new_ecp2(lua_State *L) {
 			return 0; }
 		return 1; }
 
+	void *ud = luaL_testudata(L, 1, "zenroom.octet");
+	if(ud) {
+		octet *o = (octet*)ud; SAFE(o);
+		ecp2 *e = ecp2_new(L); SAFE(e);
+		if(! ECP2_fromOctet(&e->val, o) )
+			lerror(L,"Octet doesn't contains a valid ECP2");
+		return 1;
+	}
+
 	void *tx  = luaL_testudata(L, 1, "zenroom.big");
 	void *txi = luaL_testudata(L, 2, "zenroom.big");
 	void *ty  = luaL_testudata(L, 3, "zenroom.big");
@@ -288,6 +297,21 @@ static int ecp2_eq(lua_State *L) {
 	return 1;
 }
 
+
+/***
+    Returns an octet containing all serialized @{BIG} number coordinatesof an ECP2 point on the curve. It can be used to port the value of an ECP2 point into @{OCTET:hex} or @{OCTET:base64} encapsulation, to be later set again into an ECP2 point using @{ECP2:new}.
+
+    @function octet()
+    @return an OCTET sequence
+*/
+static int ecp2_octet(lua_State *L) {
+	ecp2 *e = ecp2_arg(L,1); SAFE(e);
+	octet *o = o_new(L,(modbytes<<2)+1);
+	SAFE(o);
+	ECP2_toOctet(o, &e->val);
+	return 1;
+}
+
 static int ecp2_mul(lua_State *L) {
 	ecp2 *p = ecp2_arg(L,1); SAFE(p);
 	big  *b = big_arg(L,2); SAFE(b);
@@ -387,6 +411,7 @@ int luaopen_ecp2(lua_State *L) {
 		{"negative",ecp2_negative},
 		{"isinf",ecp2_isinf},
 		{"isinfinity",ecp2_isinf},
+		{"octet",ecp2_octet},
 		{"xr",ecp2_get_xr},
 		{"xi",ecp2_get_xi},
 		{"yr",ecp2_get_yr},
