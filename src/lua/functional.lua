@@ -207,6 +207,22 @@ function _.cycle(t, n)
   end
 end
 
+-- sorted iterator for deterministic ordering of tables
+-- from: https://www.lua.org/pil/19.3.html
+function _.pairs(t)
+   local a = {}
+   for n in pairs(t) do table.insert(a, n) end
+   table.sort(a)
+   local i = 0      -- iterator variable
+   local iter = function ()   -- iterator function
+	  i = i + 1
+	  if a[i] == nil then return nil
+	  else return a[i], t[a[i]]
+	  end
+   end
+   return iter
+end
+
 --- Maps `f (k, v)` on key-value pairs, collects and returns the results.
 -- <br/><em>Aliased as `collect`</em>.
 -- @name map
@@ -215,8 +231,8 @@ end
 -- @param[opt] ... Optional args to be passed to `f`
 -- @return a table of results
 function _.map(t, f, ...)
-  local _t = {}
-  for index,value in pairs(t) do
+   local _t = {}
+   for index,value in _.pairs(t) do
     local k, kv, v = index, f(index,value,...)
     _t[v and kv or k] = v or kv
   end

@@ -20,6 +20,7 @@ I = INSIDE -- alias
 ECP2   = require('ecp2')
 FP12   = require('fp12')
 BIG    = require('zenroom_big')
+INT = BIG -- alias
 HASH   = require('zenroom_hash')
 ECP    = require('zenroom_ecp')
 H = HASH -- alias
@@ -36,6 +37,13 @@ function type(var)
 	  end
    else return(simple) end
 end
+function iszen(n)
+   for c in n:gmatch("zenroom") do
+	  return true
+   end
+   return false
+end
+
 function content(var)
    if type(var) == "zenroom.octet" then
 	  INSIDE.print(var:array())
@@ -44,7 +52,7 @@ function content(var)
    end
 end
 
--- map values in place
+-- map values in place, sort tables by keys for deterministic order
 function map(data, fun)
    if(type(data) ~= "table") then
 	  error "map: first argument is not a table"

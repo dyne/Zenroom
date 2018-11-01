@@ -302,6 +302,12 @@ function Inspector:putValue(v)
     self:puts(tostring(v))
   elseif tv == 'table' then
     self:putTable(v)
+  elseif iszen(tv) then
+	 if tv == "zenroom.octet" then
+		self:puts("octet[" .. #v .. "] " .. v:hex())
+	 else
+		self:puts(v:octet():hex())
+	 end
   else
     self:puts('<',tv,' ',self:getId(v),'>')
   end
