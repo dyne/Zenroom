@@ -34,6 +34,7 @@
 #include <zen_octet.h>
 #include <zen_memory.h>
 #include <zen_big.h>
+#include <zen_random.h>
 
 /// <h1>Big Number Arithmetic (BIG)</h1>
 //
@@ -201,14 +202,16 @@ int dbig_init(big *n) {
 */
 static int newbig(lua_State *L) {
 	HERE();
+	void *ud;
 	int res = lua_isnoneornil(L, 1);
 	if(res) { // no argument, set to zero
 		big *c = big_new(L); SAFE(c);
 		big_init(c);
 		BIG_zero(c->val);
 		return 1; }
+
 	// octet argument, import
-	void *ud = luaL_testudata(L, 1, "zenroom.octet");
+	ud = luaL_testudata(L, 1, "zenroom.octet");
 	if(ud) {
 		big *c = big_new(L); SAFE(c);
 		octet *o = (octet*)ud;
@@ -225,6 +228,22 @@ static int newbig(lua_State *L) {
 			lerror(L,"Cannot import BIG number");
 		}
 		return 1; }
+
+	ud = luaL_testudata(L, 1, "zenroom.rng");
+	if(ud) {
+		RNG *rng = (RNG*)ud; SAFE(rng);
+		big *res = big_new(L); big_init(res); SAFE(res);
+		ud = luaL_testudata(L, 1, "zenroom.big");
+		if(ud) { // random with modulus
+			big *modulus = (big*)ud; SAFE(modulus);
+			BIG_randomnum(res->val,modulus->val,rng);
+			return 1;
+		} else { // random without modulus
+			BIG_random(res->val, rng);
+			return 1;
+		}
+	}
+
 	// number argument, import
 	int tn;
 	lua_Number n = lua_tonumberx(L,1,&tn);

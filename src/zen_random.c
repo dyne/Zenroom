@@ -114,7 +114,6 @@ int rng_oct(lua_State *L) {
 int rng_big(lua_State *L) {
 	RNG *rng = rng_arg(L,1); SAFE(rng);
 	big *res = big_new(L); big_init(res); SAFE(res);
-	big_init(res);
 	BIG_random(res->val, rng);
 	return(1);
 }
