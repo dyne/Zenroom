@@ -291,22 +291,12 @@ static int ecp_double(lua_State *L) {
 */
 static int ecp_mul(lua_State *L) {
 	ecp *e = ecp_arg(L,1); SAFE(e);
-	ecp *out = ecp_dup(L,e); SAFE(out);
-	// implicitly convert scalar numbers to BIG
-	int tn;
-	lua_Number n = lua_tonumberx(L, 2, &tn);
-	if(tn) {
-		func(L,"G1mul argument is a scalar number");
-		BIG bn;
-		BIG_zero(bn);
-		BIG_inc(bn,(int)n);
-		BIG_norm(bn);
-	    PAIR_G1mul(&out->val,bn);
-		return 1; }
 	big *b = big_arg(L,2); SAFE(b);
-	func(L,"G1mul argument is a %s number",
-		(b->doublesize)?"double BIG":"BIG");
-	PAIR_G1mul(&out->val,(b->doublesize)?b->dval:b->val);
+	if(b->doublesize) {
+		lerror(L,"cannot multiply ECP point with double BIG numbers, need modulo");
+		return 0; }
+	ecp *out = ecp_dup(L,e); SAFE(out);
+	PAIR_G1mul(&out->val,b->val);
 	return 1;
 }
 

@@ -34,6 +34,7 @@
 #include <zen_octet.h>
 #include <zen_memory.h>
 #include <zen_big.h>
+#include <zen_ecp_bls383.h> // TODO: abstract to support multiple curves
 #include <zen_random.h>
 
 /// <h1>Big Number Arithmetic (BIG)</h1>
@@ -48,6 +49,8 @@
 //  @copyright Dyne.org foundation 2017-2018
 
 extern int octet_to_hex(lua_State *L);
+
+extern ecp* ecp_dup(lua_State *L, ecp* in);
 
 // to copy contents from BIG to DBIG
 #define dcopy(d,s) BIG_dscopy(d,s);
@@ -407,9 +410,18 @@ static int big_modsub(lua_State *L) {
 
 static int big_mul(lua_State *L) {
 	big *l = big_arg(L,1); SAFE(l);
+	void *ud = luaL_testudata(L, 2, "zenroom.ecp");
+	if(ud) {
+		ecp *e = (ecp*)ud; SAFE(e);
+		if(l->doublesize) {
+			lerror(L,"cannot multiply double BIG numbers with ECP point, need modulo");
+			return 0; }
+		ecp *out = ecp_dup(L,e); SAFE(out);
+		PAIR_G1mul(&out->val,l->val);
+		return 1; }
 	big *r = big_arg(L,2); SAFE(r);
 	if(l->doublesize || r->doublesize) {
-		lerror(L,"cannot multiply double big numbers");
+		lerror(L,"cannot multiply double BIG numbers");
 		return 0; }
 	// BIG_norm(l->val); BIG_norm(r->val);
 	big *d = big_new(L); SAFE(d);

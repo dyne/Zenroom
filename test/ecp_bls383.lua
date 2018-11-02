@@ -61,9 +61,9 @@ print "more misc tests on operations"
 print "test double and addition"
 assert( ecp1:double() == ecp1 + ecp1)
 print "test double and multiplication"
-assert( ecp1:double() == ecp1 * 2)
+assert( ecp1:double() == ecp1 * BIG.new(2))
 print "test triplication" 
-assert( ecp1 * 3 == ecp1 + ecp1 + ecp1 )
+assert( ecp1 * BIG.new(3) == ecp1 + ecp1 + ecp1 )
 print "test addition fail"
 assert( ecp1 + ecp1 + ecp1 ~= ecp1 + ecp1)
 print "test negative and infinite"
