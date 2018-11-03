@@ -19,19 +19,19 @@ g1 = ECP.generator()
 g2 = ECP2.generator()
 hs = ECP.hashtopoint(str("Untold secret string"))
 o = ECP.order()
-
+function rand() return INT.new(random,o) end
 
 -- El-Gamal cryptosystem
 function elgamal_keygen()
-   local d = INT.new(random,o)
-   local gamma = g1 * d
+   local d = rand()
+   local gamma = d * g1
 
    return d, gamma
 end
 
 function elgamal_enc(gamma, m, h)
-   local k = INT.new(random,o)
-   local a = g1 * k
+   local k = rand()
+   local a = k * g1
    local b = gamma * k + h * m
    return a, b, k
 end
@@ -43,10 +43,13 @@ end
 
 -- Coconut
 function keygen()
-   local x = INT.new(random,o)
-   local y = INT.new(random,o)
-   local sk = { x = x , y = y }
-   local vk = { g2 = g2, alpha = g2 * x, beta = g2 * y }
+   local x = rand()
+   local y = rand()
+   local sk = { x = x,
+				y = y  }
+   local vk = { g2 = g2,
+				alpha = g2 * x,
+				beta  = g2 * y  }
 
    return sk, vk
 end
@@ -61,9 +64,9 @@ function aggKey(keys)
 end
 
 function prepareBlindSing(gamma, m)
-   local r = INT.new(random,o)
+   local r = rand()
    local cm = g1 * r + hs * m
-   local h = ECP.hashtopoint(cm:octet())
+   local h = ECP.hashtopoint(cm)
    local a, b, k = elgamal_enc(gamma, m, h)
    local c = {a = a, b = b}
    local pi_s = make_pi_s(gamma, cm, k, r, m)
@@ -73,15 +76,18 @@ end
 function blindSign(sk, cm, c, pi_s, gamma)
    local ret = verify_pi_s(gamma, c, cm, pi_s)
    assert(ret == true, 'Proof pi_s does not verify') -- verify zero knowledge proof
-   local h = ECP.hashtopoint(cm:octet())
+   local h = ECP.hashtopoint(cm)
    local a_tilde = c.a * sk.y
    local b_tilde = h * sk.x + c.b * sk.y
-   return {h = h, a_tilde = a_tilde, b_tilde = b_tilde}
+   return { h = h,
+			a_tilde = a_tilde,
+			b_tilde = b_tilde  }
 end
 
 function unblind(sigma_tilde, d)
    local s = elgamal_dec(d, sigma_tilde.a_tilde, sigma_tilde.b_tilde)
-   return { h = sigma_tilde.h, s = s }
+   return { h = sigma_tilde.h,
+			s = s }
 end
 
 function aggCred(sigmas)
@@ -94,9 +100,10 @@ function aggCred(sigmas)
 end
 
 function proveCred(vk, m, sigma)
-   local r = INT.new(random,o)
-   local r_prime = INT.new(random,o)
-   local sigma_prime = { h_prime = sigma.h * r_prime, s_prime = sigma.s * r_prime }
+   local r = rand()
+   local r_prime = rand()
+   local sigma_prime = { h_prime = sigma.h * r_prime,
+						 s_prime = sigma.s * r_prime  }
    local kappa = vk.alpha + vk.beta * m + vk.g2 * r
    local nu = sigma_prime.h_prime * r
    local pi_v = 1 -- make zero knowledge proof
@@ -107,45 +114,50 @@ end
 function verifyCred(vk, sigma_prime, kappa, nu, pi_v)
    assert(pi_v == 1, 'Proof pi_v does not verify') -- verify zero knowledge proof
    local ret1 = not sigma_prime.h_prime:isinf()
-   local ret2 = ECP2.miller(kappa, sigma_prime.h_prime) == ECP2.miller(vk.g2, sigma_prime.s_prime + nu)
+   local ret2 = ECP2.miller(kappa, sigma_prime.h_prime)
+	  == ECP2.miller(vk.g2, sigma_prime.s_prime + nu)
    return ret1 and ret2
 end
 
-
 -- proofs
 function to_challenge(list)
-   local concat = OCTET.serialize(list)
-   return BIG.new(sha256(concat))
+   local concat = { g1, g2, hs } -- 3 globals
+   local len = #list
+   for i=1,len do concat[3+i] = list[i] end
+   return INT.new( sha256( OCTET.serialize( concat ) ) )
 end
 
 function make_pi_s(gamma, cm, k, r, m)
-   local h = ECP.hashtopoint(cm:octet())
+   local h = ECP.hashtopoint(cm)
 
-   local wr = INT.new(random,o)
-   local wk = INT.new(random,o)
-   local wm = INT.new(random,o)
+   -- local wr = rand()
+   local wk = rand()
 
    local Aw = g1 * wk
-   local Bw = gamma * wk + h * wm
-   local Cw = g1 * wr + hs * wm
+   -- local Bw = gamma * wk + h * wm
+   -- local Cw = g1 * wr + hs * wm
 
-   local c = to_challenge({g1, g2, cm, h, hs, Aw})
+   local c = to_challenge({cm, h, Aw})
    -- c here is a doublesize big
-   local rr = wr:modsub(c * r, o) -- subtract within modulo origin
    local rk = wk:modsub(c * k, o)
    -- sanity checks:
-   -- local rk1 = wk:modsub(c:modmul(k, o), o)
+   -- assert(rk == wk:modsub(c:modmul(k, o), o))
+   assert(Aw == (g1*k) * c + g1 * rk)
+   assert(rk == wk:modsub(c:modmul(k, o), o))
    -- assert(rk == rk1)
    --    print(g1 * wk)
    --    print( (g1*k) * c + g1 * rk )
-   -- assert(g1*wk == (g1*k) * c + g1 * rk)
+   assert(g1*wk == (g1*k) * c + g1 * rk)
    -- 
-   local rm = wm:modsub(c * m, o)
-   return { c = c, rk = rk, rm = rm, rr = rr }
+   -- local rm = wm:modsub(c * m, o)
+   return { c  = c,
+			rk = rk,
+			rm = rand():modsub(c * m, o),
+			rr = rand():modsub(c * r, o)  }
 end
 
 function verify_pi_s(gamma, ciphertext, cm, proof)
-   local h = ECP.hashtopoint(cm:octet())
+   local h = ECP.hashtopoint(cm)
 
    local a = ciphertext.a
    local b = ciphertext.b
@@ -155,15 +167,15 @@ function verify_pi_s(gamma, ciphertext, cm, proof)
    local rr = proof.rr
 
    local Aw = a * c + g1 * rk
-   local Bw = b * c + gamma * rk + h * rm
-   local Cw = cm * c + g1 * rr + hs * rm
-   return c == to_challenge({g1, g2, cm, h, hs, Aw})
+   -- local Bw = b * c + gamma * rk + h * rm
+   -- local Cw = cm * c + g1 * rr + hs * rm
+   return c == to_challenge({ cm, h, Aw })
 end
 
 --[[
    function make_pi_v(vk, sigma, m, t)
-   local wm = INT.new(random,o)
-   local wt = INT.new(random,o)
+   local wm = rand()
+   local wt = rand()
 
    local Aw = g2 * wt + vk.alpha + vk.beta * wm
    local Bw = sigma.h * wt
@@ -186,7 +198,7 @@ end
 
 
 -- tests
-m = BIG.new(5)
+m = INT.new(sha256(str("Some sort of secret")))
 d, gamma = elgamal_keygen()
 a, b, k = elgamal_enc(gamma, m, hs)
 dec = elgamal_dec(d, a, b)
