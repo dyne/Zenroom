@@ -7,6 +7,7 @@ const zenroom_module = require(process.argv[2])
 
 zenroom_module.exec_ok    = () => 0
 zenroom_module.exec_error = () => 0
+zenroom_module.print = text => console.log(text)
 
 const zenroom = (script_file, conf_file=null, keys_file=null, data_file=process.argv[4], verbosity=1) => {
 	// process.stderr._write = function(chunk, encoding, callback) { callback() }
