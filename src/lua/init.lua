@@ -1,30 +1,6 @@
 -- init script embedded at compile time.  executed in
 -- zen_load_extensions(L) usually after zen_init()
 
-JSON   = require('json')
-
-require('msgpack')
-MSG = msgpack
-msgpack = nil -- rename default global
-
-SCHEMA = require('schema')
-S = SCHEMA -- alias
-RNG    = require('zenroom_rng')
-OCTET  = require('zenroom_octet')
-O = OCTET -- alias
-ECDH   = require('zenroom_ecdh')
-LAMBDA = require('functional')
-L = LAMBDA -- alias
-INSIDE = require('inspect')
-I = INSIDE -- alias
-ECP2   = require('ecp2')
-FP12   = require('fp12')
-BIG    = require('zenroom_big')
-INT = BIG -- alias
-HASH   = require('zenroom_hash')
-ECP    = require('zenroom_ecp')
-H = HASH -- alias
-
 -- override type to recognize zenroom's types
 luatype = type
 function type(var)
@@ -44,11 +20,65 @@ function iszen(n)
    return false
 end
 
+JSON   = require('json')
+
+require('msgpack')
+MSG = msgpack
+msgpack = nil -- rename default global
+
+SCHEMA = require('schema')
+S = SCHEMA -- alias
+RNG    = require('zenroom_rng')
+OCTET  = require('zenroom_octet')
+O = OCTET -- alias
+ECDH   = require('zenroom_ecdh')
+LAMBDA = require('functional')
+L = LAMBDA -- alias
+INSIDE = require('inspect')
+I = INSIDE -- alias
+FP12   = require('fp12')
+BIG    = require('zenroom_big')
+INT = BIG -- alias
+HASH   = require('zenroom_hash')
+ECP    = require('zenroom_ecp')
+ECP2   = require('zenroom_ecp2')
+H = HASH -- alias
+
 function content(var)
    if type(var) == "zenroom.octet" then
 	  INSIDE.print(var:array())
    else
 	  INSIDE.print(var)
+   end
+end
+
+-- implicit functions to convert both ways
+function hex(data)
+   if    (type(data) == "string")        then return octet.hex(data)
+   elseif(type(data) == "zenroom.octet") then return data:hex()
+   end
+end
+function str(data)
+   if    (type(data) == "string")        then return octet.string(data)
+   elseif(type(data) == "zenroom.octet") then return data:string()
+   end
+end
+function bin(data)
+   if    (type(data) == "string")        then return octet.bin(data)
+   elseif(type(data) == "zenroom.octet") then return data:bin()
+   end
+end
+function base64(data)
+   local t = type(data)
+   if(t == "zenroom.octet") then return data:base64()
+   elseif iszen(t) then return(data) -- skip other zenroom types
+   elseif not O.is_base64(data) then return(data) -- skip non base64
+   elseif(t == "string") then return octet.base64(data)
+   end
+end
+function base58(data)
+   if    (type(data) == "string")        then return octet.base58(data)
+   elseif(type(data) == "zenroom.octet") then return data:base58()
    end
 end
 

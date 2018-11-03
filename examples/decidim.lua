@@ -40,11 +40,11 @@ own:private (base64 (keys.own_private) )
 content(data)
 out = {}
 out = LAMBDA.map(data,function(k,v)
-					header = OCTET.msgpack({ key=k,
-											 pubkey=own:public() })
+					header = MSG.pack({ key=k,
+										pubkey=own:public() })
 					enc = ECDH.encrypt(own,decidim_key,str(v), header)
-					oct = OCTET.msgpack( map(enc,base64) )
-					return oct:base64()
+					oct = MSG.pack( map(enc,base64) )
+					return str(oct):base64()
 end)
 -- print out result
 print(JSON.encode(out))

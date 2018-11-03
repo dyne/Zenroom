@@ -26,7 +26,7 @@ for name,pubkey in pairs(keys.recipients) do
    -- encrypt the message with the session key
    enc = ECDH.encrypt(keyring,pub,secret,keyring:public())
    -- insert results in final json array
-   res[name] = OCTET.msgpack( map(enc,base64) ):base64()
+   res[name] = str( MSG.pack( map(enc,base64) ) ):base64()
 end
 
 -- return the json array

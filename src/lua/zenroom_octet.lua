@@ -1,11 +1,5 @@
 local octet = require'octet'
 
-function zentype(data)
-   if(type(data):sub(1,7) == "zenroom") then
-	  return true
-   else return false end
-end
-
 -- implicit functions to convert both ways
 function hex(data)
    if    (type(data) == "string")        then return octet.hex(data)
@@ -35,26 +29,14 @@ function base58(data)
    end
 end
 
--- explicit functions to import/export octets
-octet.to_base64 = function(o)
-   if(type(o) == "string") then
-	  if octet.is_base64(o) then return(o) -- skip what is already base64
-	  else return octet.string(o):base64() end
-   elseif(type(o) ~= "zenroom.octet") then
-	  error("OCTET.to_base64: invalid argument type for conversion: "..type(o)) return end
-   return o:base64()
-end
-octet.from_base64 = function(s)
-   if(type(s) == "zenroom.octet") then
-	  error("OCTET.from_base64: argument is already an octet") return end
-   return O.base64(s)
-end
-
 -- serialize an array containing any type of cryptographic numbers
 octet.serialize = function(arr)
    concat = O.new()
    map(arr,function(e)
 		  t = type(e)
+		  if not iszen(t) then
+			 error("OCTET.serialize: unsupported type: "..t)
+		  end
 		  if(t == "zenroom.octet") then
 			 concat = concat .. e
 		  elseif(t == "zenroom.big"
@@ -64,28 +46,11 @@ octet.serialize = function(arr)
 				 t == "zenroom.ecp2") then
 			 concat = concat .. e:octet()
 		  else
-			 error("OCTET.serialize: unsupported type: "..t)
+			 error("OCTET.serialize: unsupported zenroom type: "..t)
 		  end
    end)
    return concat
 end
-
--- msgpack returning octets
-function octet.msgpack(data)
-   if (type(data) == "zenroom.octet") then return str(MSG.pack(data:base64())) end
-   -- else
-   return str(MSG.pack(data))
-end
-
--- msgunpack returning lua's tables or single types
-function octet.msgunpack(data)
-   if (type(data) == "table") then error("unpack: argument is already a table") return
-   elseif(type(data) == "zenroom.octet") then return MSG.unpack(data:string())
-   elseif(type(data) == "string") then return MSG.unpack(data)
-   else error("unpack: argument of unknown type") return
-   end
-end
-
 
 function zero(len)    return octet.new(len):zero(len) end
 
