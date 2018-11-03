@@ -74,7 +74,11 @@ luaL_Reg lualibs[] = {
 int zen_load_string(lua_State *L, const char *code,
                     size_t size, const char *name) {
 	int res;
+#ifdef LUA_COMPILED
 	res = luaL_loadbufferx(L,code,size,name,"b");
+#else
+	res = luaL_loadbuffer(L,code,size,name);
+#endif
 	switch (res) {
 	case LUA_OK: { func(L, "%s OK %s",__func__,name); break; }
 	case LUA_ERRSYNTAX: { error(L, "%s syntax error: %s",__func__,name); break; }

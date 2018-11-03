@@ -26,10 +26,10 @@ test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
 
 all:
 	@echo "Choose a target:"
-	@echo "- js-node, js-wasm, js-demo   (need EMSDK env loaded)"
+	@echo "- javascript-node, javascript-wasm, javascript-demo (need EMSDK env)"
 	@echo "- linux, linux-lib, linux-clang, linux-debug"
 	@echo "- linux-python, linux-java        (language bindings)"
-	@echo "- osx			(uses default compiler on Apple/OSX)"
+	@echo "- osx, osx-python2/3, ios-armv7, ios-arm64, ios-sim (need Apple/OSX)"
 	@echo "- win, win-dll	(cross-compile using MINGW on Linux)"
 	@echo "- musl, musl-local, musl-system   (full static build)"
 
@@ -38,7 +38,7 @@ all:
 embed-lua:
 	@echo "Embedding all files in src/lua"
 	if ! [ -r build/luac ]; then ${gcc} -I${luasrc} -o build/luac ${luasrc}/luac.c ${luasrc}/liblua.a -lm; fi
-	./build/embed-lualibs
+	./build/embed-lualibs ${lua_embed_opts}
 	@echo "File generated: src/lualibs_detected.c"
 	@echo "Must commit to git if modified, see git diff."
 

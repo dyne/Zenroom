@@ -20,6 +20,7 @@ platform := posix
 luasrc := ${pwd}/lib/lua53/src
 ldadd := ${pwd}/lib/lua53/src/liblua.a
 ldadd += ${pwd}/lib/lpeglabel/lpeglabel.a
+lua_embed_opts := ""
 
 # ----------------
 # milagro settings
@@ -100,6 +101,7 @@ gcc := ${EMSCRIPTEN}/emcc
 ar := ${EMSCRIPTEN}/emar
 ld := ${gcc}
 system:= Javascript
+lua_embed_opts := "compile"
 ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zenroom_exec_tobuf\",\"_zenroom_parse_ast\",\"_set_debug\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\"]'" -s USE_SDL=0 -s USE_PTHREADS=0 -lm
 cflags := -O2 -Wall -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
 endif
