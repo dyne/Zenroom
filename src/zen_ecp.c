@@ -324,6 +324,13 @@ static int ecp_eq(lua_State *L) {
 	return 1;
 }
 
+// use shared internally with octet o_arg()
+octet *ecp2octet(lua_State *L, ecp *e) {
+	octet *o = o_new(L,(modbytes<<1)+1);
+	SAFE(o);
+	ECP_toOctet(o, &e->val);
+	return(o);
+}
 /***
     Returns an octet containing all serialized @{BIG} number coordinatesof an ECP point on the curve. It can be used to port the value of an ECP point into @{OCTET:hex} or @{OCTET:base64} encapsulation, to be later set again into an ECP point using @{ECP:new}.
 
@@ -332,9 +339,7 @@ static int ecp_eq(lua_State *L) {
 */
 static int ecp_octet(lua_State *L) {
 	ecp *e = ecp_arg(L,1); SAFE(e);
-	octet *o = o_new(L,(modbytes<<1)+1);
-	SAFE(o);
-	ECP_toOctet(o, &e->val);
+	ecp2octet(L, e);
 	return 1;
 }
 

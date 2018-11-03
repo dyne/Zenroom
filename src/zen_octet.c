@@ -56,12 +56,30 @@
 #include <zen_octet.h>
 #include <zen_big.h>
 
+// should abstract this away
+// #include <fp12_BLS383.h>
+// #include <ecp2_BLS383.h>
+#include <ecp_BLS383.h>
+#define ECP ECP_BLS383
+#define ECP2 ECP2_BLS383
+// #pragma message "BIGnum CHUNK size: 32bit"
+#include <big_384_29.h>
+#define  BIG  BIG_384_29
+
+typedef struct {
+	char curve[16];
+	char type[16];
+	BIG  order;
+	ECP  val;
+} ecp;
+
 // from base58.c
 extern int b58tobin(void *bin, size_t *binszp, const char *b58, size_t b58sz);
 extern int b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz);
 
 // from zenroom types that are convertible to octet
 extern octet *big2octet(lua_State *L, big *c);
+extern octet *ecp2octet(lua_State *L, ecp *e);
 
 static int _max(int x, int y) { if(x > y) return x;	else return y; }
 // static int _min(int x, int y) { if(x < y) return x;	else return y; }
@@ -149,6 +167,9 @@ octet* o_arg(lua_State *L,int n) {
 	if(ud) o = (octet*)ud;
 	if(!o) { ud = luaL_testudata(L, n, "zenroom.big");
 		  if(ud) { o = big2octet(L,(big*)ud); lua_pop(L,1);
+		  } }
+	if(!o) { ud = luaL_testudata(L, n, "zenroom.ecp");
+		  if(ud) { o = ecp2octet(L,(ecp*)ud); lua_pop(L,1);
 		  } }
 	if(!o) {
 		lerror(L, "%s: cannot convert argument to octet",__func__);
