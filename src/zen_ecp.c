@@ -218,7 +218,12 @@ static int ecp_isinf(lua_State *L) {
 */
 static int ecp_mapit(lua_State *L) {
 	octet *o = o_arg(L,1); SAFE(o);
+	if(o->len != 64) {
+		error(L,"octet length is %u instead of 64 (need to use sha512)",o->len);
+		lerror(L,"Invalid argument to ECP.mapit(), not an hash");
+		return 0; }
 	ecp *e = ecp_new(L); SAFE(e);
+	func(L,"mapit on o->len %u",o->len);
 	ECP_mapit(&e->val, o);
 	return 1;
 }

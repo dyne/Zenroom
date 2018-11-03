@@ -4,7 +4,7 @@
 
 #include <amcl.h>
 
-// REMEMBER: o_new already pushes the object in lua's stack
+// REMEMBER: o_new and o_dup push a new object in lua's stack
 octet* o_new(lua_State *L, const int size);
 
 octet *o_dup(lua_State *L, octet *o);

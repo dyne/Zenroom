@@ -328,15 +328,12 @@ static int ecp2_mul(lua_State *L) {
     @function mapit(BIG)
 */
 static int ecp2_mapit(lua_State *L) {
-	big *b = big_arg(L,1); SAFE(b);
+	octet *o = o_arg(L,1); SAFE(o);
+	if(o->len != 64) {
+		error(L,"octet length is %u instead of 64 (need to use sha512)",o->len);
+		lerror(L,"Invalid argument to ECP2.mapit(), not an hash");
+		return 0; }
 	ecp2 *e = ecp2_new(L); SAFE(e);
-	// this has to convert a big into an octet
-	// https://github.com/milagro-crypto/milagro-crypto-c/pull/286
-	BIG_norm(b->val);
-	octet *o = o_new(L,b->len); SAFE(o);
-	lua_pop(L, 1); // pop the new temporary octet
-	BIG_toBytes(o->val,b->val);
-	o->len = b->len;
 	ECP2_mapit(&e->val,o);
 	return 1;
 }

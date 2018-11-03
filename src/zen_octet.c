@@ -54,10 +54,14 @@
 #include <zenroom.h>
 #include <zen_memory.h>
 #include <zen_octet.h>
+#include <zen_big.h>
 
 // from base58.c
 extern int b58tobin(void *bin, size_t *binszp, const char *b58, size_t b58sz);
 extern int b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz);
+
+// from zenroom types that are convertible to octet
+extern octet *big2octet(lua_State *L, big *c);
 
 static int _max(int x, int y) { if(x > y) return x;	else return y; }
 // static int _min(int x, int y) { if(x < y) return x;	else return y; }
@@ -131,7 +135,7 @@ octet* o_new(lua_State *L, const int size) {
 		return NULL; }
 	luaL_getmetatable(L, "zenroom.octet");
 	lua_setmetatable(L, -2);
-	o->val = zen_memory_alloc(size + 0x0f); // add word for safe boundary
+	o->val = zen_memory_alloc(size +0x0f);
 	o->len = 0;
 	o->max = size;
 	func(L, "new octet (%u bytes)",size);
@@ -139,9 +143,16 @@ octet* o_new(lua_State *L, const int size) {
 }
 
 octet* o_arg(lua_State *L,int n) {
-	void *ud = luaL_checkudata(L, n, "zenroom.octet");
-	luaL_argcheck(L, ud != NULL, n, "octet class expected");
-	octet *o = (octet*)ud;
+	void *ud;
+	octet *o = NULL;
+	ud = luaL_testudata(L, n, "zenroom.octet");
+	if(ud) o = (octet*)ud;
+	if(!o) { ud = luaL_testudata(L, n, "zenroom.big");
+		  if(ud) { o = big2octet(L,(big*)ud); lua_pop(L,1);
+		  } }
+	if(!o) {
+		lerror(L, "%s: cannot convert argument to octet",__func__);
+		return NULL; }
 	if(o->len>MAX_FILE) {
 		lerror(L, "%s: octet too long (%u bytes)",__func__,o->len);
 		return NULL; }
@@ -158,9 +169,11 @@ octet *o_dup(lua_State *L, octet *o) {
 }
 
 int o_destroy(lua_State *L) {
-	octet *o = o_arg(L,1);
-	SAFE(o);
-	zen_memory_free(o->val);
+	void *ud = luaL_testudata(L, 1, "zenroom.octet");
+	if(ud) {
+		octet *o = (octet*)ud;
+		if(o->val) zen_memory_free(o->val);
+	}
 	return 0;
 }
 

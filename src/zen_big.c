@@ -263,7 +263,7 @@ static int newbig(lua_State *L) {
 	return 0;
 }
 
-static octet *to_octet(lua_State *L, big *c) {
+octet *big2octet(lua_State *L, big *c) {
 	octet *o = NULL;
 	int i;
 	SAFE(c);
@@ -290,7 +290,7 @@ static octet *to_octet(lua_State *L, big *c) {
 }
 static int big_to_octet(lua_State *L) {
 	big *c = big_arg(L,1); SAFE(c);
-	octet *o = to_octet(L,c);
+	octet *o = big2octet(L,c);
 	(void)o;
 	return 1;
 }
@@ -298,8 +298,8 @@ static int big_to_octet(lua_State *L) {
 static int big_concat(lua_State *L) {
 	big *l = big_arg(L,1); SAFE(l);
 	big *r = big_arg(L,2); SAFE(r);
-	octet *ol = to_octet(L, l);	lua_pop(L,1); SAFE(ol);
-	octet *or = to_octet(L, r); lua_pop(L,1); SAFE(or);
+	octet *ol = big2octet(L, l);	lua_pop(L,1); SAFE(ol);
+	octet *or = big2octet(L, r); lua_pop(L,1); SAFE(or);
 	octet *d = o_new(L, ol->len + or->len); SAFE(d);
 	OCT_copy(d,ol);
 	OCT_joctet(d,or);
@@ -308,7 +308,7 @@ static int big_concat(lua_State *L) {
 
 static int big_to_hex(lua_State *L) {
 	big *a = big_arg(L,1); SAFE(a);
-	octet *o = to_octet(L,a);
+	octet *o = big2octet(L,a);
 	lua_pop(L,1);
 	push_octet_to_hex_string(o);
 	return 1;
