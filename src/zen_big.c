@@ -236,7 +236,7 @@ static int newbig(lua_State *L) {
 	if(ud) {
 		RNG *rng = (RNG*)ud; SAFE(rng);
 		big *res = big_new(L); big_init(res); SAFE(res);
-		ud = luaL_testudata(L, 1, "zenroom.big");
+		ud = luaL_testudata(L, 2, "zenroom.big");
 		if(ud) { // random with modulus
 			big *modulus = (big*)ud; SAFE(modulus);
 			BIG_randomnum(res->val,modulus->val,rng);
