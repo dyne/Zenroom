@@ -236,9 +236,9 @@ int zenroom_exec(char *script, char *conf, char *keys,
 	set_debug(verbosity);
 
 	char *c, *k, *d;
-	c = (conf[0] == '\0') ? NULL : conf;
-	k = (keys[0] == '\0') ? NULL : keys;
-	d = (data[0] == '\0') ? NULL : data;
+	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
+	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
+	d = data ? (data[0] == '\0') ? NULL : data : NULL;
 	Z = zen_init(c, k, d);
 	if(!Z) {
 		error(L, "Initialisation failed.");
@@ -293,9 +293,9 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys,
 	set_debug(verbosity);
 
 	char *c, *k, *d;
-	c = (conf[0] == '\0') ? NULL : conf;
-	k = (keys[0] == '\0') ? NULL : keys;
-	d = (data[0] == '\0') ? NULL : data;
+	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
+	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
+	d = data ? (data[0] == '\0') ? NULL : data : NULL;
 	Z = zen_init(c, k, d);
 	if(!Z) {
 		error(L, "Initialisation failed.");
