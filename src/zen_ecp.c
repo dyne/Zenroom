@@ -127,28 +127,34 @@ int _fp_to_big(big *dst, FP *src) {
 static int lua_new_ecp(lua_State *L) {
 	if(lua_isnoneornil(L, 1)) { // no args: set to generator
 		ecp *e = ecp_new(L); SAFE(e);
-		if(!ECP_set(&e->val,
-		            (chunk*)CURVE_Gx, (chunk*)CURVE_Gy)) {
-			lerror(L,"ECP generator value out of curve (stack corruption)");
-			return 0; }
+		ECP_generator(&e->val);
+
+		// if(!ECP_set(&e->val,
+		//             (chunk*)CURVE_Gx, (chunk*)CURVE_Gy)) {
+		// 	lerror(L,"ECP generator value out of curve (stack corruption)");
+		// 	return 0; }
 		return 1; }
 
 	// TODO: protect well this entrypoint since parsing any octet is at risk
-	void *ud = luaL_testudata(L, 1, "zenroom.octet");
-	if(ud) {
-		octet *o = (octet*)ud; SAFE(o);
-		ecp *e = ecp_new(L); SAFE(e);
-		if(o->len != e->totlen) { // safety
-			lua_pop(L,1);
-			lerror(L,"Invalid octet length to parse an ECP point");
-			return 0; }
-		if(! ECP_fromOctet(&e->val, o) ) {
-			lua_pop(L,1);
-			lerror(L,"Octet doesn't contains a valid ECP");
-			return 0; }
-		return 1;
-	}
+	// Milagro's _fromOctet() functions are not safe
+	// void *ud = luaL_testudata(L, 1, "zenroom.octet");
+	// if(ud) {
+	// 	octet *o = (octet*)ud; SAFE(o);
+	// 	ecp *e = ecp_new(L); SAFE(e);
+	// 	if(o->len != e->totlen) { // safety
+	// 		lua_pop(L,1);
+	// 		lerror(L,"Invalid octet length to parse an ECP point");
+	// 		return 0; }
+	// 	if(! ECP_fromOctet(&e->val, o) ) {
+	// 		lua_pop(L,1);
+	// 		lerror(L,"Octet doesn't contains a valid ECP");
+	// 		return 0; }
+	// 	return 1;
+	// }
 
+	// TODO: unsafe parsing into BIG, only necessary for tests
+	// deactivate when not running tests
+#ifdef DEBUG
 	void *tx = luaL_testudata(L, 1, "zenroom.big");
 	void *ty = luaL_testudata(L, 2, "zenroom.big");
 	if(tx && ty) {
@@ -169,6 +175,7 @@ static int lua_new_ecp(lua_State *L) {
 			warning(L,"new ECP value out of curve (points to infinity)");
 		return 1; }
 	lerror(L, "ECP.new() expected zenroom.big arguments or none");
+#endif
 	return 0;
 }
 

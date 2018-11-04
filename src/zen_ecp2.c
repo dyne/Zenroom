@@ -130,15 +130,18 @@ static int lua_new_ecp2(lua_State *L) {
 			return 0; }
 		return 1; }
 
-	void *ud = luaL_testudata(L, 1, "zenroom.octet");
-	if(ud) {
-		octet *o = (octet*)ud; SAFE(o);
-		ecp2 *e = ecp2_new(L); SAFE(e);
-		if(! ECP2_fromOctet(&e->val, o) )
-			lerror(L,"Octet doesn't contains a valid ECP2");
-		return 1;
-	}
+	// _fromOctet() not safe
+	// void *ud = luaL_testudata(L, 1, "zenroom.octet");
+	// if(ud) {
+	// 	octet *o = (octet*)ud; SAFE(o);
+	// 	ecp2 *e = ecp2_new(L); SAFE(e);
+	// 	if(! ECP2_fromOctet(&e->val, o) )
+	// 		lerror(L,"Octet doesn't contains a valid ECP2");
+	// 	return 1;
+	// }
 
+// TODO: unsafe and only needed when running tests
+#ifdef DEBUG
 	void *tx  = luaL_testudata(L, 1, "zenroom.big");
 	void *txi = luaL_testudata(L, 2, "zenroom.big");
 	void *ty  = luaL_testudata(L, 3, "zenroom.big");
@@ -169,6 +172,7 @@ static int lua_new_ecp2(lua_State *L) {
 			warning(L,"new ECP2 value out of curve (points to infinity)");
 		return 1; }
 	lerror(L, "ECP2.new() expected zenroom.big arguments or none");
+#endif
 	return 0;
 }
 
