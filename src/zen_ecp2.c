@@ -306,7 +306,7 @@ static int ecp2_eq(lua_State *L) {
 */
 static int ecp2_octet(lua_State *L) {
 	ecp2 *e = ecp2_arg(L,1); SAFE(e);
-	octet *o = o_new(L,(modbytes<<2)+1);
+	octet *o = o_new(L,(MODBYTES<<2)+1);
 	SAFE(o);
 	ECP2_toOctet(o, &e->val);
 	return 1;

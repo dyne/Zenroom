@@ -37,7 +37,7 @@
 // #include <big_384_58.h>
 #define  BIG  BIG_384_58
 // #define DBIG DBIG_384_58
-#define modbytes MODBYTES_384_58
+#define MODBYTES MODBYTES_384_58
 #define BIG_zero(b) BIG_384_58_zero(b)
 #define BIG_fromBytesLen(b,v,l) BIG_384_58_fromBytesLen(b,v,l)
 #define BIG_inc(b,n) BIG_384_58_inc(b,n)
@@ -65,13 +65,11 @@
 #elif CHUNK == 32
 // #pragma message "BIGnum CHUNK size: 32bit"
 //#include <big_384_29.h>
-#define  BIG  BIG_384_29
-#define  DBIG  DBIG_384_29
-
-// #define DBIG DBIG_384_29
-#define modbytes MODBYTES_384_29
+#define BIG  BIG_384_29
+#define DBIG DBIG_384_29
+#define MODBYTES MODBYTES_384_29
 #define BIGLEN NLEN_384_29
-#define doublelen DNLEN_384_29
+#define DBIGLEN DNLEN_384_29
 #define BIG_zero(b) BIG_384_29_zero(b)
 #define BIG_fromBytesLen(b,v,l) BIG_384_29_fromBytesLen(b,v,l)
 #define BIG_inc(b,n) BIG_384_29_inc(b,n)

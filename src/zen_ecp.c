@@ -58,7 +58,7 @@
 static char *big2strhex(char *str, BIG a) {
 	BIG b;
 	int i,len;
-	int modby2 = modbytes<<1;
+	int modby2 = MODBYTES<<1;
 	len=BIG_nbits(a);
 	int lendiv4 = len>>2;
 	if (len%4==0) len=lendiv4;
@@ -84,7 +84,7 @@ ecp* ecp_new(lua_State *L) {
 		return NULL; }
 	strcpy(e->curve,"bls383");
 	strcpy(e->type,"weierstrass");
-	e->biglen = BIGLEN;
+	e->biglen = sizeof(BIG);
 	e->totlen = 97; // length of ECP.new(rng:modbig(o),0):octet()
 	BIG_copy(e->order, (chunk*)CURVE_Order);
 	luaL_getmetatable(L, "zenroom.ecp");

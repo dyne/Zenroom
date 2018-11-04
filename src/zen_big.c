@@ -134,8 +134,7 @@ int big_destroy(lua_State *L) {
 	return 0;
 }
 
-
-static int bitsize(big *b) {
+int _bitsize(big *b) {
 	double bits;
 	if(b->doublesize)
 		bits = BIG_dnbits(b->dval);
@@ -143,14 +142,16 @@ static int bitsize(big *b) {
 		bits = BIG_nbits(b->val);
 	return bits;
 }
+
 static int big_bits(lua_State *L) {
 	big *d = big_arg(L,1); SAFE(d);
-	lua_pushinteger(L,bitsize(d));
+	lua_pushinteger(L,_bitsize(d));
 	return 1;
 }
 static int big_bytes(lua_State *L) {
 	big *d = big_arg(L,1); SAFE(d);
-	lua_pushinteger(L,ceil(bitsize(d)/8));
+	lua_pushinteger(L,ceil(_bitsize(d)/8));
+	// lua_pushinteger(L,d->len);
 	return 1;
 }
 
@@ -165,7 +166,7 @@ int big_init(big *n) {
 		size_t size = sizeof(BIG);
 		n->val = zen_memory_alloc(size);
 		n->doublesize = 0;
-		n->len = BIGLEN;
+		n->len = size;
 		return(size);
 	}
 	error(NULL,"anomalous state of big number detected on initialization");
@@ -182,16 +183,32 @@ int dbig_init(big *n) {
 		// extend from big to double big
 		BIG_dscopy(n->dval,n->val);
 		zen_memory_free(n->val);
-		n->len = doublelen;
+		n->len = size;
 	}
 	if(!n->val || !n->dval) {
 		n->doublesize = 1;
 		n->dval = zen_memory_alloc(size);
-		n->len = doublelen;
+		n->len = size;
 		return(size);
 	}
 	error(NULL,"anomalous state of double big number detected on initialization");
 	return(-1);
+}
+
+// give information about BIG numbers internal formats
+static int lua_biginfo(lua_State *L) {
+	lua_newtable(L);
+	lua_pushinteger(L,BIGLEN);
+	lua_setfield(L,1,"biglen");
+	lua_pushinteger(L,DBIGLEN);
+	lua_setfield(L,1,"dbiglen");
+	lua_pushinteger(L,MODBYTES);
+	lua_setfield(L,1,"modbytes");
+	lua_pushinteger(L,(unsigned int)sizeof(BIG));
+	lua_setfield(L,1,"sizeof_BIG");
+	lua_pushinteger(L,(unsigned int)sizeof(DBIG));
+	lua_setfield(L,1,"sizeof_DBIG");
+	return 1;
 }
 
 /***
@@ -216,17 +233,19 @@ static int newbig(lua_State *L) {
 	// octet argument, import
 	ud = luaL_testudata(L, 1, "zenroom.octet");
 	if(ud) {
+		int biglen = sizeof(BIG);
+		int dbiglen = sizeof(DBIG);
 		big *c = big_new(L); SAFE(c);
 		octet *o = (octet*)ud;
-		if(o->len <= modbytes) { // big
+		if(o->len <= biglen) { // big
 			big_init(c);
 			BIG_fromBytesLen(c->val, o->val, o->len);
 			// or should we measure byte length to detect doublebig?
-		} else if(o->len > modbytes && o->len <= modbytes<<1) {
+		} else if(o->len > biglen && o->len <= dbiglen) {
 			dbig_init(c);
 			BIG_dfromBytesLen(c->dval, o->val, o->len);
 		} else {
-			error(L, "size %u is invalid (big has modbytes %u)",o->len, modbytes);
+			error(L, "size %u is invalid (big has len %u)",o->len, c->len);
 			lua_pop(L,1);
 			lerror(L,"Cannot import BIG number");
 		}
@@ -583,6 +602,7 @@ int luaopen_big(lua_State *L) {
 		{"modsub",big_modsub},
 		{"jacobi",big_jacobi},
 		{"monty",big_monty},
+		{"info",lua_biginfo},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg big_methods[] = {
