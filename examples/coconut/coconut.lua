@@ -17,8 +17,18 @@
 random = RNG.new()
 g1 = ECP.generator()
 g2 = ECP2.generator()
-hs = ECP.hashtopoint(str("Untold secret string"))
+
+challenge = OCTET.serialize({ g1, g2, hs })
+-- proofs
+function to_challenge(list)
+   return INT.new( sha256( challenge .. OCTET.serialize( list ) ) )
+end
+
+function hashtopoint(m) return ECP.mapit( sha512( m ) ) end
+hs = hashtopoint(str("Salt string")) -- salt?
+
 o = ECP.order()
+
 function rand() return INT.new(random,o) end
 
 -- El-Gamal cryptosystem
@@ -66,7 +76,7 @@ end
 function prepareBlindSing(gamma, m)
    local r = rand()
    local cm = g1 * r + hs * m
-   local h = ECP.hashtopoint(cm)
+   local h = hashtopoint(cm)
    local a, b, k = elgamal_enc(gamma, m, h)
    local c = {a = a, b = b}
    local pi_s = make_pi_s(gamma, cm, k, r, m)
@@ -76,7 +86,7 @@ end
 function blindSign(sk, cm, c, pi_s, gamma)
    local ret = verify_pi_s(gamma, c, cm, pi_s)
    assert(ret == true, 'Proof pi_s does not verify') -- verify zero knowledge proof
-   local h = ECP.hashtopoint(cm)
+   local h = hashtopoint(cm)
    local a_tilde = c.a * sk.y
    local b_tilde = h * sk.x + c.b * sk.y
    return { h = h,
@@ -119,24 +129,14 @@ function verifyCred(vk, sigma_prime, kappa, nu, pi_v)
    return ret1 and ret2
 end
 
--- proofs
-function to_challenge(list)
-   local concat = { g1, g2, hs } -- 3 globals
-   local len = #list
-   for i=1,len do concat[3+i] = list[i] end
-   return INT.new( sha256( OCTET.serialize( concat ) ) )
-end
 
 function make_pi_s(gamma, cm, k, r, m)
-   local h = ECP.hashtopoint(cm)
-
+   local h = hashtopoint(cm)
    -- local wr = rand()
    local wk = rand()
-
    local Aw = g1 * wk
    -- local Bw = gamma * wk + h * wm
    -- local Cw = g1 * wr + hs * wm
-
    local c = to_challenge({cm, h, Aw})
    -- c here is a doublesize big
    local rk = wk:modsub(c * k, o)
@@ -157,15 +157,13 @@ function make_pi_s(gamma, cm, k, r, m)
 end
 
 function verify_pi_s(gamma, ciphertext, cm, proof)
-   local h = ECP.hashtopoint(cm)
-
+   local h = hashtopoint(cm)
    local a = ciphertext.a
    local b = ciphertext.b
    local c = proof.c
    local rk = proof.rk
    local rm = proof.rm
    local rr = proof.rr
-
    local Aw = a * c + g1 * rk
    -- local Bw = b * c + gamma * rk + h * rm
    -- local Cw = cm * c + g1 * rr + hs * rm
@@ -179,7 +177,7 @@ end
 
    local Aw = g2 * wt + vk.alpha + vk.beta * wm
    local Bw = sigma.h * wt
-   local c = to_challenge({g1, g2, hs, vk.alpha, vk.beta, Aw, Bw})
+   local c = to_challenge({vk.alpha, vk.beta, Aw, Bw})
    local rm = wm:modsub(m * c, o)
    local rt = wt:modsub(t * c, o)
    return { c = c, rm = rm, rt = rt }
@@ -192,7 +190,7 @@ end
 
    local Aw = kappa * c + g2 * rt + vk.alpha * (1-c) + vk.beta * rm
    local Bw = nu * c + sigma.h * rt
-   return c == to_challenge({g1, g2, hs, vk.alpha, vk.beta, Aw, Bw})
+   return c == to_challenge({vk.alpha, vk.beta, Aw, Bw})
    end
 --]]
 
