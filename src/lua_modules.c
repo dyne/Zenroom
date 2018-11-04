@@ -80,15 +80,16 @@ int zen_load_string(lua_State *L, const char *code,
 	res = luaL_loadbuffer(L,code,size,name);
 #endif
 	switch (res) {
-	case LUA_OK: { func(L, "%s OK %s",__func__,name); break; }
+	case LUA_OK: { // func(L, "%s OK %s",__func__,name);
+			break; }
 	case LUA_ERRSYNTAX: { error(L, "%s syntax error: %s",__func__,name); break; }
 	case LUA_ERRMEM: { error(L, "%s out of memory: %s",__func__, name); break;  }
 	case LUA_ERRGCMM: {
 		error(L, "%s garbage collection error: %s",__func__, name);
 		break; }
 	}
-	HEREn(size);
-	HEREp(code);
+	// HEREn(size);
+	// HEREp(code);
 	return(res);
 }
 
@@ -96,7 +97,7 @@ int zen_exec_extension(lua_State *L, zen_extension_t *p) {
 	SAFE(p);
 #ifdef __EMSCRIPTEN__
 	if(p->code) {
-		HEREs(p->code);
+		// HEREs(p->code);
 		if(luaL_loadfile(L, p->code)==0) {
 			if(lua_pcall(L, 0, LUA_MULTRET, 0) == LUA_OK) {
 				func(L,"loaded %s", p->name);
@@ -107,9 +108,9 @@ int zen_exec_extension(lua_State *L, zen_extension_t *p) {
 #else
 	if(zen_load_string(L, p->code, *p->size, p->name)
 	   ==LUA_OK) {
-		func(L,"%s %s", __func__, p->name);
-		HEREn(*p->size);
-		HEREp(p->code);
+		// func(L,"%s %s", __func__, p->name);
+		// HEREn(*p->size);
+		// HEREp(p->code);
 		lua_call(L,0,1);
 		func(L,"loaded %s", p->name);
 		return 1;
@@ -129,15 +130,15 @@ int zen_require(lua_State *L) {
 	SAFE(L);
 	size_t len;
 	const char *s = lua_tolstring(L, 1, &len);
-	HEREs(s);
+	// HEREs(s);
 	if(!s) return 0;
 	// require classic lua libs
 	for (luaL_Reg *p = lualibs;
 	     p->name != NULL; ++p) {
 		if (strcmp(p->name, s) == 0) {
-			HEREp(p->func);
+			// HEREp(p->func);
 			luaL_requiref(L, p->name, p->func, 1);
-			func(L,"%s %s",__func__, p->name);
+			// func(L,"%s %s",__func__, p->name);
 			return 1;
 		}
 	}
