@@ -167,6 +167,21 @@ octet* o_arg(lua_State *L,int n) {
 	octet *o = NULL;
 	ud = luaL_testudata(L, n, "zenroom.octet");
 	if(ud) o = (octet*)ud;
+	if(!o) { if(strncmp("string",luaL_typename(L,n),6)==0) {
+			func(L,"TOOD: string to octet");
+			size_t len; const char *str;
+			str = luaL_optlstring(L,n,NULL,&len);
+			if(!str || !len) {
+				error(L, "invalid NULL string (zero size)");
+				lerror(L,"failed implicit conversion from string to octet");
+				return 0; }
+			if(!len || len>MAX_STRING) {
+				error(L, "invalid string size: %u", len);
+				lerror(L,"failed implicit conversion from string to octet");
+				return 0; }
+			o = o_new(L, len+1); SAFE(o); lua_pop(L,1);
+			OCT_jstring(o, (char*)str); 
+		} }
 	if(!o) { ud = luaL_testudata(L, n, "zenroom.big");
 		  if(ud) {
 			  big *b = (big*)ud;
