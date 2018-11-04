@@ -106,11 +106,15 @@ include ${pwd}/build/tests.mk
 
 clean:
 	make clean -C ${pwd}/lib/lua53/src
-	make clean -C ${pwd}/lib/milagro-crypto-c && \
-		rm -f ${pwd}/lib/milagro-crypto-c/CMakeCache.txt
+	make clean -C ${pwd}/lib/milagro-crypto-c
+	rm -f ${pwd}/lib/milagro-crypto-c/CMakeCache.txt
+	rm -rf ${pwd}/lib/milagro-crypto-c/CMakeFiles
 	make clean -C ${pwd}/lib/lpeglabel
 	make clean -C src
 	rm -f ${extras}/index.*
+
+clean-src:
+	make clean -C src
 
 distclean:
 	rm -rf ${musl}

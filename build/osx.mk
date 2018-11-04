@@ -3,6 +3,9 @@ osx: apply-patches lua53 milagro embed-lua lpeglabel
 		make -C src osx
 	@cp -v ${pwd}/src/zenroom.command ${pwd}/build
 
+osx-debug: cflags := -O1 -ggdb ${cflags_protection} -DDEBUG=1
+osx-debug: osx
+
 osx-python2: apply-patches lua53 milagro embed-lua lpeglabel
 	swig -python ${pwd}/build/swig.i
 	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c \

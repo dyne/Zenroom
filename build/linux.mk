@@ -23,14 +23,15 @@ android: apply-patches lua53 milagro embed-lua lpeglabel
 	LD="${ld}" RANLIB="${ranlib}" AR="${ar}" \
 		make -C src android
 
-linux-debug: cflags := -O1 -ggdb -D'ARCH=\"LINUX\"' ${cflags_protection} -DARCH_LINUX -DDEBUG=1
+linux-debug: cflags := -O1 -ggdb ${cflags_protection} -DDEBUG=1
 linux-debug: linux
 
 linux-clang: gcc := clang
 linux-clang: linux
 
 linux-sanitizer: gcc := clang
-linux-sanitizer: cflags := -O1 -ggdb -D'ARCH=\"LINUX\"' ${cflags_protection} -DARCH_LINUX -DDEBUG=1 -fsanitize=address -fno-omit-frame-pointer
+linux-sanitizer: cflags := -O1 -ggdb ${cflags_protection} -DDEBUG=1
+linux-sanitizer: cflags += -fsanitize=address -fno-omit-frame-pointer
 linux-sanitizer: linux
 	ASAN_OPTIONS=verbosity=1:log_threads=1 \
 	ASAN_SYMBOLIZER_PATH=/usr/bin/asan_symbolizer \
