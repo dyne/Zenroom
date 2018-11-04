@@ -70,7 +70,7 @@
 
 // #define DBIG DBIG_384_29
 #define modbytes MODBYTES_384_29
-#define biglen NLEN_384_29
+#define BIGLEN NLEN_384_29
 #define doublelen DNLEN_384_29
 #define BIG_zero(b) BIG_384_29_zero(b)
 #define BIG_fromBytesLen(b,v,l) BIG_384_29_fromBytesLen(b,v,l)

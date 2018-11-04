@@ -78,7 +78,8 @@ extern int b58tobin(void *bin, size_t *binszp, const char *b58, size_t b58sz);
 extern int b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz);
 
 // from zenroom types that are convertible to octet
-extern octet *big2octet(lua_State *L, big *c);
+extern int _big_to_octet(octet *o, big *c);
+
 extern octet *ecp2octet(lua_State *L, ecp *e);
 
 static int _max(int x, int y) { if(x > y) return x;	else return y; }
@@ -160,17 +161,22 @@ octet* o_new(lua_State *L, const int size) {
 	return(o);
 }
 
+// here most internal type conversions happen
 octet* o_arg(lua_State *L,int n) {
 	void *ud;
 	octet *o = NULL;
 	ud = luaL_testudata(L, n, "zenroom.octet");
 	if(ud) o = (octet*)ud;
 	if(!o) { ud = luaL_testudata(L, n, "zenroom.big");
-		  if(ud) { o = big2octet(L,(big*)ud); lua_pop(L,1);
+		  if(ud) {
+			  big *b = (big*)ud;
+			  octet *o = o_new(L, b->len); SAFE(o);
+			  _big_to_octet(o,b); lua_pop(L,1);
 		  } }
 	if(!o) { ud = luaL_testudata(L, n, "zenroom.ecp");
 		  if(ud) { o = ecp2octet(L,(ecp*)ud); lua_pop(L,1);
 		  } }
+
 	if(!o) {
 		lerror(L, "%s: cannot convert argument to octet",__func__);
 		return NULL; }
@@ -523,7 +529,7 @@ static int to_array(lua_State *L) {
 		lerror(L, "array cannot encode an empty octet");
 		return 0; }
 	lua_newtable(L);
-	luaL_checkstack(L,1, "in octet:to_array()");
+	// luaL_checkstack(L,1, "in octet:to_array()");
 	int c = o->len;
 	int idx = 0;
 	while(c--) {
@@ -672,8 +678,8 @@ static int popcount64b(uint64_t x) {
 	// const uint64_t hff = 0xffffffffffffffff; //binary: all ones
 	// const uint64_t h01 = 0x0101010101010101; //the sum of 256 to the power of 0,1,2,3...
 	x -= (x >> 1) & m1;             //put count of each 2 bits into those 2 bits
-	x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits 
-	x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits 
+	x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits
+	x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits
 	x += x >>  8;  //put count of each 16 bits into their lowest 8 bits
 	x += x >> 16;  //put count of each 32 bits into their lowest 8 bits
 	x += x >> 32;  //put count of each 64 bits into their lowest 8 bits

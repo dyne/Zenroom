@@ -46,4 +46,7 @@ big* big_arg(lua_State *L, int n);
 int big_init(big *n);
 int dbig_init(big *n);
 
+// internal conversion from d/big to octet
+int _big_to_octet(octet *o, big *c);
+
 #endif

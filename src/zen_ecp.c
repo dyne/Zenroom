@@ -84,6 +84,8 @@ ecp* ecp_new(lua_State *L) {
 		return NULL; }
 	strcpy(e->curve,"bls383");
 	strcpy(e->type,"weierstrass");
+	e->biglen = BIGLEN;
+	e->totlen = 97; // length of ECP.new(rng:modbig(o),0):octet()
 	BIG_copy(e->order, (chunk*)CURVE_Order);
 	luaL_getmetatable(L, "zenroom.ecp");
 	lua_setmetatable(L, -2);
@@ -107,6 +109,12 @@ int ecp_destroy(lua_State *L) {
 	return 0;
 }
 
+int _fp_to_big(big *dst, FP *src) {
+	FP_reduce(src);
+	FP_redc(dst->val,src);
+	return 1;
+}
+
 /***
     Create a new ECP point from two X,Y @{BIG} arguments. If no X,Y arguments are specified then the ECP points to the curve's @{generator} coordinates. If the first argument is an X coordinate on the curve and Y is just a number 0 or 1 then Y is calculated from the curve equation according to the given sign (plus or minus).
 
@@ -125,12 +133,19 @@ static int lua_new_ecp(lua_State *L) {
 			return 0; }
 		return 1; }
 
+	// TODO: protect well this entrypoint since parsing any octet is at risk
 	void *ud = luaL_testudata(L, 1, "zenroom.octet");
 	if(ud) {
 		octet *o = (octet*)ud; SAFE(o);
 		ecp *e = ecp_new(L); SAFE(e);
-		if(! ECP_fromOctet(&e->val, o) )
+		if(o->len != e->totlen) { // safety
+			lua_pop(L,1);
+			lerror(L,"Invalid octet length to parse an ECP point");
+			return 0; }
+		if(! ECP_fromOctet(&e->val, o) ) {
+			lua_pop(L,1);
 			lerror(L,"Octet doesn't contains a valid ECP");
+			return 0; }
 		return 1;
 	}
 
@@ -326,7 +341,7 @@ static int ecp_eq(lua_State *L) {
 
 // use shared internally with octet o_arg()
 octet *ecp2octet(lua_State *L, ecp *e) {
-	octet *o = o_new(L,(modbytes<<1)+1);
+	octet *o = o_new(L,e->totlen + 0x0f);
 	SAFE(o);
 	ECP_toOctet(o, &e->val);
 	return(o);
@@ -393,8 +408,36 @@ static int ecp_get_y(lua_State *L) {
 	return 1;
 }
 
-static int ecp_output(lua_State *L) {
+static int ecp_table(lua_State *L) {
 	ecp *e = ecp_arg(L, 1); SAFE(e);
+	octet *o;
+	ECP_affine(&e->val);
+	lua_newtable(L);
+	lua_pushstring(L,e->curve);
+	lua_setfield(L,2,"curve");
+	lua_pushstring(L,"hex");
+	lua_setfield(L,2,"encoding");
+	lua_pushstring(L,VERSION);
+	lua_setfield(L,2,"zenroom");
+	big *x,*y;
+	x = big_new(L); big_init(x);
+	lua_pop(L,1); _fp_to_big(x, &e->val.x);
+	o = o_new(L,e->biglen); lua_pop(L,1);
+	_big_to_octet(o,x);
+	push_octet_to_hex_string(o);
+	lua_setfield(L,2,"x");
+	// y
+	y = big_new(L); big_init(y);
+	lua_pop(L,1); _fp_to_big(y, &e->val.y);
+	o = o_new(L,e->biglen); lua_pop(L,1);
+	_big_to_octet(o,y);
+	push_octet_to_hex_string(o);
+	lua_setfield(L,2,"y");
+	return 1;
+}
+
+static int ecp_output(lua_State *L) {
+	ecp *e = ecp_arg(L,1); SAFE(e);
 	ECP *P = &e->val;
 	if (ECP_isinf(P)) {
 		lua_pushstring(L,"Infinity");
@@ -440,6 +483,7 @@ int luaopen_ecp(lua_State *L) {
 		{"isinf",ecp_isinf},
 		{"isinfinity",ecp_isinf},
 		{"octet",ecp_octet},
+		{"table",ecp_table},
 		{"add",ecp_add},
 		{"x",ecp_get_x},
 		{"y",ecp_get_y},

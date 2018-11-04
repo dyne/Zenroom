@@ -165,7 +165,7 @@ int big_init(big *n) {
 		size_t size = sizeof(BIG);
 		n->val = zen_memory_alloc(size);
 		n->doublesize = 0;
-		n->len = biglen;
+		n->len = BIGLEN;
 		return(size);
 	}
 	error(NULL,"anomalous state of big number detected on initialization");
@@ -222,7 +222,7 @@ static int newbig(lua_State *L) {
 			big_init(c);
 			BIG_fromBytesLen(c->val, o->val, o->len);
 			// or should we measure byte length to detect doublebig?
-		} else if(o->len > modbytes && o->len < modbytes<<1) {
+		} else if(o->len > modbytes && o->len <= modbytes<<1) {
 			dbig_init(c);
 			BIG_dfromBytesLen(c->dval, o->val, o->len);
 		} else {
@@ -263,43 +263,44 @@ static int newbig(lua_State *L) {
 	return 0;
 }
 
-octet *big2octet(lua_State *L, big *c) {
-	octet *o = NULL;
-	int i;
-	SAFE(c);
-	o = o_new(L, c->len); SAFE(o);
+int _big_to_octet(octet *o, big *c) {
+	if(o->max < c->len) {
+		error(NULL,"Octet max is %u, DBIG length is %u (bytes)",o->max,c->len);
+		lerror(NULL,"Error converting BIG to octet");
+		return 0; }
 	if(c->doublesize && c->dval) {
-		BIG_dnorm(c->dval);
-		// size = // BIG_dnbits(c->dval)>>3;
-		DBIG t;	BIG_dcopy(t,c->dval);
-		for(i=c->len-1; i>=0; i--) {
+		DBIG t; BIG_dcopy(t,c->dval); BIG_dnorm(t);
+		for(int i=c->len-1; i>=0; i--) {
 			o->val[i]=t[0]&0xff;
 			BIG_dshr(t,8);
 		}
 	} else if(c->val) {
-		BIG_norm(c->val);
-		BIG t; BIG_copy(t,c->val);
-		for(i=c->len-1; i>=0; i--) {
+		BIG t; BIG_copy(t,c->val); BIG_norm(t);
+		for(int i=c->len-1; i>=0; i--) {
 			o->val[i]=t[0]&0xff;
-			BIG_dshr(t,8);
+			BIG_shr(t,8);
 		}
-	} else
-		lerror(L,"Invalid BIG number, cannot convert to octet");
+	} else {
+		lerror(NULL,"Invalid BIG number, cannot convert to octet");
+		return 0; }
 	o->len = c->len;
-	return o;
+	return 1;
 }
-static int big_to_octet(lua_State *L) {
+
+static int luabig_to_octet(lua_State *L) {
 	big *c = big_arg(L,1); SAFE(c);
-	octet *o = big2octet(L,c);
-	(void)o;
+	octet *o = o_new(L, c->len); SAFE(o);
+	_big_to_octet(o,c);
 	return 1;
 }
 
 static int big_concat(lua_State *L) {
 	big *l = big_arg(L,1); SAFE(l);
 	big *r = big_arg(L,2); SAFE(r);
-	octet *ol = big2octet(L, l);	lua_pop(L,1); SAFE(ol);
-	octet *or = big2octet(L, r); lua_pop(L,1); SAFE(or);
+	octet *ol = o_new(L,l->len); SAFE(ol);
+	lua_pop(L,1); _big_to_octet(ol,l);
+	octet *or = o_new(L,r->len); SAFE(or);
+	lua_pop(L,1); _big_to_octet(or,r);
 	octet *d = o_new(L, ol->len + or->len); SAFE(d);
 	OCT_copy(d,ol);
 	OCT_joctet(d,or);
@@ -308,8 +309,8 @@ static int big_concat(lua_State *L) {
 
 static int big_to_hex(lua_State *L) {
 	big *a = big_arg(L,1); SAFE(a);
-	octet *o = big2octet(L,a);
-	lua_pop(L,1);
+	octet *o = o_new(L,a->len); SAFE(o);
+	lua_pop(L,1); _big_to_octet(o,a);
 	push_octet_to_hex_string(o);
 	return 1;
 }
@@ -586,7 +587,7 @@ int luaopen_big(lua_State *L) {
 	};
 	const struct luaL_Reg big_methods[] = {
 		// idiomatic operators
-		{"octet",big_to_octet},
+		{"octet",luabig_to_octet},
 		{"hex",big_to_hex},
 		{"add",  big_add},
 		{"__add",big_add},

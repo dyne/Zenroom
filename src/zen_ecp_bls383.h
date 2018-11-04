@@ -37,6 +37,9 @@
 typedef struct {
 	char curve[16];
 	char type[16];
+	int  biglen; // length in bytes of a reduced coordinate
+	int  totlen; // length of a serialized octet
+
 	BIG  order;
 	ECP  val;
 	// TODO: the values above make it necessary to propagate the
