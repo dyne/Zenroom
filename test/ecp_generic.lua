@@ -6,6 +6,14 @@ rng = RNG.new()
 g1 = ECP.generator()
 o = ECP.order()
 
+-- octet serialization back and forth
+a = ECP.hashtopoint(rng:octet(64))
+print("ECP serialized length: "..#a:octet().." bytes")
+print(a:octet())
+b = ECP.new(a:octet())
+assert(a == b)
+
+-- learned from Coconut
 wk = rng:modbig(o)
 k = rng:modbig(o)
 c = rng:modbig(o)
