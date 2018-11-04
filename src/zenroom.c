@@ -395,9 +395,7 @@ int main(int argc, char **argv) {
 			snprintf(scriptfile,511,"%s",optarg);
 			break;
 		case 'u':
-#if DEBUG == 1
 			unprotected = 1;
-#endif
 			break;
 		case '?': error(0,help); return EXIT_FAILURE;
 		default:  error(0,help); return EXIT_FAILURE;
