@@ -346,14 +346,16 @@ end
 -- facilitation wrapper
 -- this way one can simply prefix an i. to print
 function inspect.print(root, options)
+   t = type(root)
+   if t == "zenroom.ecp" then
+	  print(inspect.inspect(root:table(), options))
+	  return root
+   end
    print(inspect.inspect(root, options))
    return root
 end
 -- alias to the spy() function (clojurism from timbre)
-function inspect.spy(root, options)
-   print(inspect.inspect(root, options))
-   return root
-end
+inspect.spy = inspect.print
 
 setmetatable(inspect, { __call = function(_, ...) return inspect.print(...) end })
 

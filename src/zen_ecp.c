@@ -438,27 +438,13 @@ static int ecp_table(lua_State *L) {
 
 static int ecp_output(lua_State *L) {
 	ecp *e = ecp_arg(L,1); SAFE(e);
-	ECP *P = &e->val;
-	if (ECP_isinf(P)) {
+	if (ECP_isinf(&e->val)) {
 		lua_pushstring(L,"Infinity");
 		return 1; }
-	BIG x;
-	char xs[256];
-	char out[512];
-	ECP_affine(P);
-	BIG y;
-	char ys[256];
-	FP_redc(x,&(P->x));
-	FP_redc(y,&(P->y));
-	snprintf(out, 511,
-"{ \"curve\": \"%s\",\n"
-"  \"encoding\": \"hex\",\n"
-"  \"zenroom\": \"%s\",\n"
-"  \"x\": \"%s\",\n"
-"  \"y\": \"%s\" }",
-	         e->curve, VERSION,
-	         big2strhex(xs,x), big2strhex(ys,y));
-	lua_pushstring(L,out);
+	octet *o = o_new(L,e->totlen + 0x0f);
+	SAFE(o); lua_pop(L,1);
+	ECP_toOctet(o,&e->val);
+	push_octet_to_hex_string(o);
 	return 1;
 }
 

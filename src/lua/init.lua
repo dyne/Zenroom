@@ -153,7 +153,13 @@ function read_json(data, validation)
    end
 end
 function write_json(data)
-   INSIDE.print(data)
+   t = type(data)
+   if(t == "zenroom.ecp") then
+	  print(JSON.encode(data:table()))
+	  return
+   else
+	  print(JSON.encode(data))
+   end
 end
 json_write = write_json
 json_read = read_json
