@@ -8,7 +8,7 @@ echo " on randomly generated ECP/2 points by Zenroom"
 R=random_hamming_gnuplot
 
 samples=1000
-methods="mult mod_mult mod_mapit hashtopoint"
+methods=""
 
 function render() {	dst=$1
 	if ! [ -r $R/${dst}.data ]; then
@@ -32,12 +32,19 @@ for i=$samples,1,-1 do
    print(ham)
 end
 EOF
+	methods="$methods $1"
 }
 
-script mult        "INT.new(rng) * g1"
+# script mult        "INT.new(rng) * g1"
 script mod_mult    "INT.new(rng,o) * g1"
+# script mapit       "ECP.mapit(INT.new(rng):octet())"
 script mod_mapit   "ECP.mapit(INT.new(rng,o):octet())"
-script hashtopoint "ECP.hashtopoint(rng:octet(64))"
+script hashtp64    "ECP.hashtopoint(rng:octet(64))"
+script hashtp32    "ECP.hashtopoint(rng:octet(32))"
+# script hashtp16    "ECP.hashtopoint(rng:octet(16))"
+# script hashtp8    "ECP.hashtopoint(rng:octet(8))"
+# script hashtp4    "ECP.hashtopoint(rng:octet(4))"
+# script hashtp2    "ECP.hashtopoint(rng:octet(2))"
 
 c=0
 for i in $methods; do

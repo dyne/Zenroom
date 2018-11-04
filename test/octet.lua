@@ -5,7 +5,9 @@ print()
 -- octet = require'octet'
 
 function dotest(l,r)
-   if(l == r and #l == #r) then
+   if(l == r
+	  and
+	  #l == #r) then
 	  return true
    else
 	  print 'ERROR'

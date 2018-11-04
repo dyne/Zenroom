@@ -28,28 +28,7 @@
 
 #define BIGSIZE 384
 #include <zen_big_types.h>
-
-
-#define ECP ECP_BLS383
-#define ECP2 ECP2_BLS383
-
-
-typedef struct {
-	char curve[16];
-	char type[16];
-	int  biglen; // length in bytes of a reduced coordinate
-	int  totlen; // length of a serialized octet
-
-	BIG  order;
-	ECP  val;
-	// TODO: the values above make it necessary to propagate the
-	// visibility on the specific curve point types to the rest of the
-	// code. To abstract these and have get/set functions may save a
-	// lot of boilerplate when implementing support for multiple
-	// curves ECP.
-} ecp;
-ecp* ecp_new(lua_State *L);
-ecp* ecp_arg(lua_State *L,int n);
+#include <zen_ecp.h>
 
 #define CURVE_A CURVE_A_BLS383
 #define CURVE_B Curve_B_BLS383

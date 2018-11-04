@@ -45,6 +45,7 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
+#include <zen_ecp.h>
 #include <zen_ecp_bls383.h>
 
 #include <jutils.h>
@@ -55,28 +56,6 @@
 #include <zen_memory.h>
 #include <lua_functions.h>
 
-static char *big2strhex(char *str, BIG a) {
-	BIG b;
-	int i,len;
-	int modby2 = MODBYTES<<1;
-	len=BIG_nbits(a);
-	int lendiv4 = len>>2;
-	if (len%4==0) len=lendiv4;
-	else {
-		len=lendiv4;
-		len++;
-	}
-	if (len<modby2) len=modby2;
-	int c = 0;
-	for (i=len-1; i>=0; i--) {
-		BIG_copy(b,a);
-		BIG_shr(b,i<<2);
-		sprintf(str+c,"%01x",(unsigned int) b[0]&15);
-		c++;
-	}
-	return str;
-}
-
 ecp* ecp_new(lua_State *L) {
 	ecp *e = (ecp *)lua_newuserdata(L, sizeof(ecp));
 	if(!e) {
@@ -85,7 +64,7 @@ ecp* ecp_new(lua_State *L) {
 	strcpy(e->curve,"bls383");
 	strcpy(e->type,"weierstrass");
 	e->biglen = sizeof(BIG);
-	e->totlen = 97; // length of ECP.new(rng:modbig(o),0):octet()
+	e->totlen = (MODBYTES*2)+1; // length of ECP.new(rng:modbig(o),0):octet()
 	BIG_copy(e->order, (chunk*)CURVE_Order);
 	luaL_getmetatable(L, "zenroom.ecp");
 	lua_setmetatable(L, -2);
@@ -135,23 +114,6 @@ static int lua_new_ecp(lua_State *L) {
 		// 	return 0; }
 		return 1; }
 
-	// TODO: protect well this entrypoint since parsing any octet is at risk
-	// Milagro's _fromOctet() functions are not safe
-	// void *ud = luaL_testudata(L, 1, "zenroom.octet");
-	// if(ud) {
-	// 	octet *o = (octet*)ud; SAFE(o);
-	// 	ecp *e = ecp_new(L); SAFE(e);
-	// 	if(o->len != e->totlen) { // safety
-	// 		lua_pop(L,1);
-	// 		lerror(L,"Invalid octet length to parse an ECP point");
-	// 		return 0; }
-	// 	if(! ECP_fromOctet(&e->val, o) ) {
-	// 		lua_pop(L,1);
-	// 		lerror(L,"Octet doesn't contains a valid ECP");
-	// 		return 0; }
-	// 	return 1;
-	// }
-
 	// TODO: unsafe parsing into BIG, only necessary for tests
 	// deactivate when not running tests
 #ifdef DEBUG
@@ -174,9 +136,22 @@ static int lua_new_ecp(lua_State *L) {
 		if(!ECP_setx(&e->val, x->val, (int)n))
 			warning(L,"new ECP value out of curve (points to infinity)");
 		return 1; }
-	lerror(L, "ECP.new() expected zenroom.big arguments or none");
 #endif
-	return 0;
+
+	// TODO: protect well this entrypoint since parsing any octet is at risk
+	// Milagro's _fromOctet() uses ECP_BLS383_set(ECP_BLS383 *P,BIG_384_29 x)
+	// then converts the BIG to an FP modulo using FP_BLS383_nres.
+	octet *o = o_arg(L,1); SAFE(o);
+	ecp *e = ecp_new(L); SAFE(e);
+	if(o->len > e->totlen) { // safety
+		lua_pop(L,1);
+		lerror(L,"Invalid octet length to parse an ECP point");
+		return 0; }
+	if(! ECP_fromOctet(&e->val, o) ) {
+		lua_pop(L,1);
+		lerror(L,"Octet doesn't contains a valid ECP");
+		return 0; }
+	return 1;
 }
 
 /***
@@ -309,7 +284,7 @@ static int ecp_double(lua_State *L) {
 }
 
 /***
-    Multiply an ECP point a number of times, indicated by an arbitrary ordinal number. Can be made using the overloaded operator `*` between an ECP object and an integer number.
+    Multiply an ECP point by a @{BIG} number. Can be made using the overloaded operator `*`
 
     @function mul(ecp,num)
     @param ecp point on the elliptic curve to be multiplied
@@ -347,11 +322,9 @@ static int ecp_eq(lua_State *L) {
 }
 
 // use shared internally with octet o_arg()
-octet *ecp2octet(lua_State *L, ecp *e) {
-	octet *o = o_new(L,e->totlen + 0x0f);
-	SAFE(o);
+int _ecp_to_octet(octet *o, ecp *e) {
 	ECP_toOctet(o, &e->val);
-	return(o);
+	return(1);
 }
 /***
     Returns an octet containing all serialized @{BIG} number coordinatesof an ECP point on the curve. It can be used to port the value of an ECP point into @{OCTET:hex} or @{OCTET:base64} encapsulation, to be later set again into an ECP point using @{ECP:new}.
@@ -361,7 +334,8 @@ octet *ecp2octet(lua_State *L, ecp *e) {
 */
 static int ecp_octet(lua_State *L) {
 	ecp *e = ecp_arg(L,1); SAFE(e);
-	ecp2octet(L, e);
+	octet *o = o_new(L,e->totlen + 0x0f); SAFE(o);
+	_ecp_to_octet(o,e);
 	return 1;
 }
 
@@ -450,11 +424,10 @@ static int ecp_output(lua_State *L) {
 		return 1; }
 	octet *o = o_new(L,e->totlen + 0x0f);
 	SAFE(o); lua_pop(L,1);
-	ECP_toOctet(o,&e->val);
+	_ecp_to_octet(o,e);
 	push_octet_to_hex_string(o);
 	return 1;
 }
-
 
 int luaopen_ecp(lua_State *L) {
 	const struct luaL_Reg ecp_class[] = {

@@ -7,12 +7,11 @@ g1 = ECP.generator()
 o = ECP.order()
 
 -- octet serialization back and forth
--- deactivated for now until ECP.new() can have a secure serialization
--- a = ECP.hashtopoint(rng:octet(64))
--- print("ECP serialized length: "..#a:octet().." bytes")
--- print(a:octet())
--- b = ECP.new(a:octet())
--- assert(a == b)
+a = ECP.hashtopoint(rng:octet(64))
+print("ECP serialized length: "..#a:octet().." bytes")
+print(a:octet())
+b = ECP.new(a:octet())
+assert(a == b)
 
 -- learned from Coconut
 wk = rng:modbig(o)

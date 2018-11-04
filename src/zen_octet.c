@@ -56,31 +56,17 @@
 #include <zen_octet.h>
 #include <zen_big.h>
 
-// should abstract this away
-// #include <fp12_BLS383.h>
-// #include <ecp2_BLS383.h>
-#include <ecp_BLS383.h>
-#define ECP ECP_BLS383
-#define ECP2 ECP2_BLS383
-// #pragma message "BIGnum CHUNK size: 32bit"
-#include <big_384_29.h>
-#define  BIG  BIG_384_29
-
-typedef struct {
-	char curve[16];
-	char type[16];
-	BIG  order;
-	ECP  val;
-} ecp;
+#include <zen_ecp.h>
 
 // from base58.c
 extern int b58tobin(void *bin, size_t *binszp, const char *b58, size_t b58sz);
 extern int b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz);
 
 // from zenroom types that are convertible to octet
+// they don't do any internal memory allocation
+// all arguments are allocated and freed by the caller
 extern int _big_to_octet(octet *o, big *c);
-
-extern octet *ecp2octet(lua_State *L, ecp *e);
+extern int _ecp_to_octet(octet *o, ecp *e);
 
 static int _max(int x, int y) { if(x > y) return x;	else return y; }
 // static int _min(int x, int y) { if(x < y) return x;	else return y; }
@@ -165,36 +151,43 @@ octet* o_new(lua_State *L, const int size) {
 octet* o_arg(lua_State *L,int n) {
 	void *ud;
 	octet *o = NULL;
-	ud = luaL_testudata(L, n, "zenroom.octet");
-	if(ud) o = (octet*)ud;
-	if(!o) { if(strncmp("string",luaL_typename(L,n),6)==0) {
-			func(L,"TOOD: string to octet");
-			size_t len; const char *str;
-			str = luaL_optlstring(L,n,NULL,&len);
-			if(!str || !len) {
-				error(L, "invalid NULL string (zero size)");
-				lerror(L,"failed implicit conversion from string to octet");
-				return 0; }
-			if(!len || len>MAX_STRING) {
-				error(L, "invalid string size: %u", len);
-				lerror(L,"failed implicit conversion from string to octet");
-				return 0; }
-			o = o_new(L, len+1); SAFE(o); lua_pop(L,1);
-			OCT_jstring(o, (char*)str); 
-		} }
-	if(!o) { ud = luaL_testudata(L, n, "zenroom.big");
-		  if(ud) {
-			  big *b = (big*)ud;
-			  octet *o = o_new(L, b->len); SAFE(o);
-			  _big_to_octet(o,b); lua_pop(L,1);
-		  } }
-	if(!o) { ud = luaL_testudata(L, n, "zenroom.ecp");
-		  if(ud) { o = ecp2octet(L,(ecp*)ud); lua_pop(L,1);
-		  } }
-
+	o = (octet*) luaL_testudata(L, n, "zenroom.octet"); // new
+	if(!o && strncmp("string",luaL_typename(L,n),6)==0) {
+		size_t len; const char *str;
+		str = luaL_optlstring(L,n,NULL,&len);
+		if(!str || !len) {
+			error(L, "invalid NULL string (zero size)");
+			lerror(L,"failed implicit conversion from string to octet");
+			return 0; }
+		if(!len || len>MAX_STRING) {
+			error(L, "invalid string size: %u", len);
+			lerror(L,"failed implicit conversion from string to octet");
+			return 0; }
+		o = o_new(L, len+1); SAFE(o); // new
+		OCT_jstring(o, (char*)str);
+		lua_pop(L,1);
+	}
+	ud = luaL_testudata(L, n, "zenroom.big");
+	if(!o && ud) {
+		big *b = (big*)ud;
+		o = o_new(L, b->len); SAFE(o); // new
+		_big_to_octet(o,b);
+		lua_pop(L,1);
+	}
+	ud = luaL_testudata(L, n, "zenroom.ecp");
+	if(!o && ud) {
+		ecp *e = (ecp*)ud;
+		o = o_new(L, e->totlen + 0x0f); SAFE(o); // new
+		_ecp_to_octet(o,e);
+		lua_pop(L,1);
+	}
 	if(!o) {
-		lerror(L, "%s: cannot convert argument to octet",__func__);
+		error(L,"Error in argument #%u",n);
+		lerror(L, "%s: cannot convert %s to zeroom.octet",__func__,luaL_typename(L,n));
 		return NULL; }
+	// if executing here, something is pushed into Lua's stack
+	// but this is an internal function to gather arguments, so
+	// should be popped before returning the new octet
 	if(o->len>MAX_FILE) {
 		lerror(L, "%s: octet too long (%u bytes)",__func__,o->len);
 		return NULL; }
@@ -362,7 +355,7 @@ static int from_string(lua_State *L) {
 	if(!len || len>MAX_STRING) {
 		lerror(L, "invalid string size: %u", len);
 		return 0; }
-	octet *o = o_new(L, len+1);
+	octet *o = o_new(L, len);
 	OCT_jstring(o, (char*)s);
 	return 1;
 }
