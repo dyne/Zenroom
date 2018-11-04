@@ -130,8 +130,8 @@ check-crypto:
 	@echo "-----------------------"
 
 
-debug-crypto: test-exec := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared -u -d
-debug-crypto:
+check-crypto-debug: test-exec := valgrind --max-stackframe=2064480 ${pwd}/src/zenroom-shared -u -d
+check-crypto-debug:
 	$(call crypto-tests,${test-exec})
 	$(call shell-tests,${test-exec-lowmem})
 
