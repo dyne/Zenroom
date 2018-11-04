@@ -35,9 +35,10 @@ all:
 
 	@echo "for android and ios see scripts in build/"
 
+# if ! [ -r build/luac ]; then ${gcc} -I${luasrc} -o build/luac ${luasrc}/luac.c ${luasrc}/liblua.a -lm; fi
+
 embed-lua:
 	@echo "Embedding all files in src/lua"
-	if ! [ -r build/luac ]; then ${gcc} -I${luasrc} -o build/luac ${luasrc}/luac.c ${luasrc}/liblua.a -lm; fi
 	./build/embed-lualibs ${lua_embed_opts}
 	@echo "File generated: src/lualibs_detected.c"
 	@echo "Must commit to git if modified, see git diff."
