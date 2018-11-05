@@ -3,45 +3,64 @@
 -- based on "Standards for Efficient Cryptogrpahy"
 -- specification SEC 4 v1.0 retrieved from www.secg.org
 
-requester = str("Alice")
-statement = str("Let me know.")
-
 -- setup
 random = RNG.new()
 order = ECP.order()
 G = ECP.generator()
 
--- make a request for certification
-ku = INT.new(random, order)
-Ru = G * ku
+-- typical EC key generation on G1
+function keygen(rng,modulo)
+   local key = INT.new(rng,modulo)
+   return { private = key,
+			public = key * G }
+end
 
--- keypair for CA
-dCA = INT.new(random, order) -- private
-QCA = G * dCA       -- public (known to Alice)
+-- generate the certification request
+certreq = keygen(random,order)
+-- certreq.private is preserved in a safe place
+-- certreq.public is sent to the CA along with a declaration
+declaration = { requester = str("Alice"),
+				statement = str("I am stuck in Wonderland") }
+-- Requester sends to CA -->
+
+-- ... once upon a time ...
+
+-- --> CA receives from Requester
+-- keypair for CA (known to everyone as the Mad Hatter)
+CA = keygen(random,order)
 
 -- from here the CA has received the request
-k = INT.new(random, order)
-kG = G * k
+certkey = keygen(random,order)
+-- certkey.private is sent to requester
+-- certkey.public is broadcasted
 
 -- public key reconstruction data
-Pu = Ru + kG
-
-declaration = { public = Pu:octet(),
-				requester = str("Alice"),
-				statement = str("Is in Wonderland.") }
-
-I.print(declaration)
-print(OCTET.serialize(declaration))
-
-declhash = sha256(OCTET.serialize(declaration))
--- TODO: proper encapsulation x509 or ASN-1
--- declaration = Pu:octet() .. requester .. statement
-hash = INT.new(declhash) -- % order
+certpub = certreq.public + certkey.public
+-- the certification is serialized (could use ASN-1 or X509)
+certification = { public = certpub,
+				  requester = declaration.requester,
+				  statement = declaration.statement,
+				  certifier = str("Mad Hatter") }
+CERT = sha256(OCTET.serialize(certification))
+CERThash = INT.new(CERT, order)
 -- private key reconstruction data
-r = (hash * k + dCA) % order
+certpriv = (CERThash * certkey.private + CA.private) % order
+-- CA sends to Requester certpriv and CERThash
+-- eventually CA broadcasts certpub and CERThash
 
--- verified by the requester, receiving r,Certu
-du = (r + hash * ku) % order
-Qu = Pu * hash + QCA
-assert(Qu == G * du)
+-- ... on the other side of the mirror ...
 
+-- Alice has received from the CA the certpriv and CERT
+-- which can be used to create a new CERTprivate key
+CERTprivate = (certpriv + CERThash * certreq.private) % order
+
+-- Anyone may receive the certpub and CERThash and, knowing the CA
+-- public key, can recover the same CERTpublic key from them
+CERTpublic  = certpub * CERThash + CA.public
+
+-- As a proof here we generate the public key in a standard way,
+-- multiplying it by the curve generator point, then check equality
+assert(CERTpublic == G * CERTprivate)
+print "Certified keypair:"
+I.print({ private = CERTprivate:octet():base64(),
+		  public  =  CERTpublic:octet():base64()    })
