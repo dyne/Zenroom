@@ -48,18 +48,18 @@ for t in $targets; do
 		linux)
 			checkbin zenroom.x86 $dir
 			checkbin zenroom.armhf $dir
+			checkbin zenroom-armhf.so $dir
 			checkbin python2       $dir
 			checkbin python3       $dir
 			checkbin go            $dir
 			checkbin zenroom-wrapper.py $dir/python2
 			checkbin zenroom-wrapper.py $dir/python3
-			checkbin libzenroomgo.so $dir
 			copyexamples $dir
 			continue ;;
 		javascript)
 			checkbin nodejs $dir
 			checkbin wasm   $dir
-			checkbin rnjs   $dir
+			checkbin reactnative $dir
 			checkbin nodejs/zenroom.js.mem $dir
 			checkbin zenroom_exec.js $dir
 			copyexamples $dir

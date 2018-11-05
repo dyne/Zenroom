@@ -1,7 +1,19 @@
 # Zenroom ChangeLog
 
+## 0.8.1
+### November 2018
+
+Several fixes and improvements to the arithmetics and language
+constructions for EC and PAIR operations, deeper testing with
+Coconut's work in progress implementation lead to several fixes. New
+working targets for Go and python 2/3 bindings and fixes to existing
+iOS and Android. Overall cleanup of the build system and first stab to
+improve the security when executing malicious code.  Working examples
+now include an implicit certificate scheme (ECQV) and a working
+ElGamal encryption scheme inside Coconut's implementation.
+
 ## 0.8.0
-### October 2019
+### October 2018
 
 New Elliptic Curve Arithmetics (ECP2) with Twisted Curve Pairings
 (Miller-Loop). Hamming distance measurements on OCTET
