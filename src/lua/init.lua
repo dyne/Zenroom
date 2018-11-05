@@ -43,6 +43,7 @@ HASH   = require('zenroom_hash')
 ECP    = require('zenroom_ecp')
 ECP2   = require('zenroom_ecp2')
 H = HASH -- alias
+ZEN    = require('zencode')
 
 function content(var)
    if type(var) == "zenroom.octet" then
