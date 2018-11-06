@@ -91,7 +91,12 @@ ldflags := -lm
 system := Darwin
 endif
 
-ifneq (,$(findstring python,$(MAKECMDGOALS)))
+ifneq (,$(findstring python2,$(MAKECMDGOALS)))
+cflags += $(shell pkg-config python2 --cflags)
+ldflags += $(shell pkg-config python2 --libs)
+endif
+
+ifneq (,$(findstring python3,$(MAKECMDGOALS)))
 cflags += $(shell pkg-config python3 --cflags)
 ldflags += $(shell pkg-config python3 --libs)
 endif
