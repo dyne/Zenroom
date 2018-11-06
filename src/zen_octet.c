@@ -132,7 +132,8 @@ int is_bin(const char *in) {
 octet* o_new(lua_State *L, const int size) {
 	if(size<=0) return NULL;
 	if(size>MAX_FILE) {
-		lerror(L, "Cannot create octet, size too big: %u", size);
+		error(L, "Cannot create octet, size too big: %u", size);
+		lerror(L, "operation aborted");
 		return NULL; }
 	octet *o = (octet *)lua_newuserdata(L, sizeof(octet));
 	if(!o) {
@@ -189,7 +190,8 @@ octet* o_arg(lua_State *L,int n) {
 	// but this is an internal function to gather arguments, so
 	// should be popped before returning the new octet
 	if(o->len>MAX_FILE) {
-		lerror(L, "%s: octet too long (%u bytes)",__func__,o->len);
+		error(L, "argument %u octet too long: %u bytes",n,o->len);
+		lerror(L, "operation aborted");
 		return NULL; }
 	return(o);
 }
@@ -353,7 +355,8 @@ static int from_string(lua_State *L) {
 	luaL_argcheck(L, s != NULL, 1, "string expected");
 	int len = strlen(s);
 	if(!len || len>MAX_STRING) {
-		lerror(L, "invalid string size: %u", len);
+		error(L, "%s: invalid string size: %u", __func__,len);
+		lerror(L, "operation aborted");
 		return 0; }
 	octet *o = o_new(L, len);
 	OCT_jstring(o, (char*)s);
@@ -365,7 +368,8 @@ static int from_hex(lua_State *L) {
 	luaL_argcheck(L, s != NULL, 1, "hex string sequence expected");
 	int len = is_hex(s);
 	if(!len || len>MAX_STRING*2) {
-		lerror(L, "invalid hex sequence size: %u", len);
+		error(L, "invalid hex sequence size: %u", len);
+		lerror(L, "operation aborted");
 		return 0; }
 	octet *o = o_new(L, len); // could be half size
 	OCT_fromHex(o, (char*)s);
@@ -378,7 +382,8 @@ static int from_bin(lua_State *L) {
 	int len = is_bin(s);
 	int bytes = len/8; // TODO: check that len is mult of 8 (no carry)
 	if(!len || bytes>MAX_STRING) {
-		lerror(L, "invalid binary sequence size: %u", bytes);
+		error(L, "invalid binary sequence size: %u", bytes);
+		lerror(L, "operation aborted");
 		return 0; }
 	octet *o = o_new(L, bytes+1);
 	int i,j;
