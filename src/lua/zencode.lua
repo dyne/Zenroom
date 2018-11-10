@@ -62,7 +62,7 @@ function zencode:newline(s)
 end
 
 function zencode:parse(text)
-   for line in self:newline(addition) do
+   for line in self:newline(text) do
 	  if line then
 		 print(line)
 		 self:step(line)
