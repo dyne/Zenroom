@@ -1,51 +1,43 @@
 -- Zencode test
 
-Calculator = { numbers = {} }
+verbosity = 1
+numbers = {}
 
-function Calculator:Reset ()
-   self.numbers = {}
+function enter (number)
+   table.insert(numbers, tonumber(number))
 end
 
-function Calculator:Enter (number)
-   table.insert(self.numbers, tonumber(number))
-end
-
-function Calculator:Add ()
-   self.result = 0
-   for i = 1, #self.numbers do
-      self.result = self.result + self.numbers[i]
+function add ()
+   result = 0
+   for i = 1, #numbers do
+      result = result + numbers[i]
    end
 end
 
 -- steps
 
-Before(function()
-	  Calculator:Reset()
+Given("I have entered '' [^and]", function (number)
+         enter(number)
 end)
 
-Given("I have entered '(%w+)' [^and]", function (number)
-         Calculator:Enter(number)
-end)
-
-Given("I have entered '(%w+)' and '(%w+)'", function (num1, num2)
-         Calculator:Enter(num1)
-         Calculator:Enter(num2)
+Given("I have entered '' and ''", function (num1, num2)
+         enter(num1)
+         enter(num2)
 end)
 
 When("I press add", function ()
-		Calculator:Add()
+		add()
 end)
 
-Then("result should be '(%w+)'", function (number)
-		assert(Calculator.result == tonumber(number),
-			   "Result was expected to be " .. number .. ", but was " .. Calculator.result)
-		print("Result is ".. Calculator.result)
+Then("result should be ''", function (number)
+		assert(result == tonumber(number),
+			   "Result was expected to be " .. number .. ", but was " .. result)
+		print("Result is ".. result)
 end)
 
 
 -- execution
-print "=== Zencode begin"
-ZEN:begin()
+ZEN:begin(verbosity)
 
 
 addition = [[
