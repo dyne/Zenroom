@@ -83,6 +83,10 @@ function base58(data)
    end
 end
 
+-- switch to deterministic (sorted) table iterators
+_G["pairs"]  = LAMBDA.pairs
+_G["ipairs"] = LAMBDA.pairs
+
 -- map values in place, sort tables by keys for deterministic order
 function map(data, fun)
    if(type(data) ~= "table") then
