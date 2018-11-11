@@ -42,9 +42,9 @@ certification = { public = certpub,
 				  statement = declaration.statement,
 				  certifier = str("Mad Hatter") }
 CERT = sha256(OCTET.serialize(certification))
-CERThash = INT.new(CERT, order)
+CERThash = INT.new(CERT,order)
 -- private key reconstruction data
-certpriv = (CERThash * certkey.private + CA.private) % order
+certpriv = (CERThash * certkey.private + CA.private)
 -- CA sends to Requester certpriv and CERThash
 -- eventually CA broadcasts certpub and CERThash
 
@@ -52,7 +52,7 @@ certpriv = (CERThash * certkey.private + CA.private) % order
 
 -- Alice has received from the CA the certpriv and CERT
 -- which can be used to create a new CERTprivate key
-CERTprivate = (certpriv + CERThash * certreq.private) % order
+CERTprivate = (CERThash * certreq.private + certpriv) % order
 
 -- Anyone may receive the certpub and CERThash and, knowing the CA
 -- public key, can recover the same CERTpublic key from them
