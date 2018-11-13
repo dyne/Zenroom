@@ -53,36 +53,6 @@ function content(var)
    end
 end
 
--- implicit functions to convert both ways
-function hex(data)
-   if    (type(data) == "string")        then return octet.hex(data)
-   elseif(type(data) == "zenroom.octet") then return data:hex()
-   end
-end
-function str(data)
-   if    (type(data) == "string")        then return octet.string(data)
-   elseif(type(data) == "zenroom.octet") then return data:string()
-   end
-end
-function bin(data)
-   if    (type(data) == "string")        then return octet.bin(data)
-   elseif(type(data) == "zenroom.octet") then return data:bin()
-   end
-end
-function base64(data)
-   local t = type(data)
-   if(t == "zenroom.octet") then return data:base64()
-   elseif iszen(t) then return(data) -- skip other zenroom types
-   elseif not O.is_base64(data) then return(data) -- skip non base64
-   elseif(t == "string") then return octet.base64(data)
-   end
-end
-function base58(data)
-   if    (type(data) == "string")        then return octet.base58(data)
-   elseif(type(data) == "zenroom.octet") then return data:base58()
-   end
-end
-
 -- switch to deterministic (sorted) table iterators
 _G["pairs"]  = LAMBDA.pairs
 _G["ipairs"] = LAMBDA.pairs
@@ -96,7 +66,7 @@ function map(data, fun)
 	  error "map: second argument is not a function"
 	  return nil end
    out = {}
-   L.map(data,function(k,v)	out[k] = fun(v) end)
+   L.map(data,function(k,v) out[k] = fun(v) end)
    return(out)
 end
 

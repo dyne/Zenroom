@@ -5,7 +5,7 @@ zenroom=$1
 valgrind=$2
 
 function grind() {
-	if [[ "$valgrind" = "" ]]; then
+	if [[ "$2" != "valgrind" ]]; then
 		$zenroom $*
 	else
 		valgrind --max-stackframe=2064480 $zenroom $*

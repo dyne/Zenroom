@@ -726,12 +726,27 @@ int luaopen_octet(lua_State *L) {
 		{"is_base58", lua_is_base58},
 		{"is_hex", lua_is_hex},
 		{"is_bin", lua_is_bin},
+
+		{"from_base64",from_base64},
+		{"from_base58",from_base58},
+		{"from_string",from_string},
+		{"from_str",   from_string},
+		{"from_hex",   from_hex},
+		{"from_bin",   from_bin},
 		{"base64",from_base64},
 		{"base58",from_base58},
 		{"string",from_string},
 		{"str",   from_string},
 		{"hex",   from_hex},
 		{"bin",   from_bin},
+		{"to_hex"   , to_hex},
+		{"to_base64", to_base64},
+		{"to_base58", to_base58},
+		{"to_string", to_string},
+		{"to_str",    to_string},
+		{"to_array",  to_array},
+		{"to_bin",    to_bin},
+
 		{"hamming", hamming_distance},
 		{NULL,NULL}
 	};
