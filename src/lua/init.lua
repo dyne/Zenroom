@@ -20,11 +20,12 @@ function iszen(n)
    return false
 end
 
-JSON   = require('json')
+JSON = require('zenroom_json')
 
 require('msgpack')
 MSG = msgpack
 msgpack = nil -- rename default global
+
 
 SCHEMA = require('schema')
 S = SCHEMA -- alias
@@ -78,9 +79,6 @@ function validate(data, schema)
 	  error("validate: second argument is not a function, invalid schema") return end
    return SCHEMA.CheckSchema(data,schema)
 end
-
-function ECP2.G()         return ECP2.new() end
-function ECP2.generator() return ECP2.new() end
 
 function help(module)
    if module == nil then

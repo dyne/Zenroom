@@ -1357,8 +1357,8 @@ static int json_protect_conversion(lua_State *l)
 int lua_cjson_new(lua_State *l)
 {
     luaL_Reg reg[] = {
-        { "encode", json_encode },
-        { "decode", json_decode },
+        { "raw_encode", json_encode },
+        { "raw_decode", json_decode },
         { "encode_sparse_array", json_cfg_encode_sparse_array },
         { "encode_max_depth", json_cfg_encode_max_depth },
         { "decode_max_depth", json_cfg_decode_max_depth },
@@ -1396,14 +1396,14 @@ int lua_cjson_new(lua_State *l)
 /* Return cjson.safe module table */
 int lua_cjson_safe_new(lua_State *l)
 {
-    const char *func[] = { "decode", "encode", NULL };
+    const char *func[] = { "raw_decode", "raw_encode", NULL };
     int i;
 
     lua_cjson_new(l);
 
     // /* Fix new() method */
-    // lua_pushcfunction(l, lua_cjson_safe_new);
-    // lua_setfield(l, -2, "new");
+    lua_pushcfunction(l, lua_cjson_safe_new);
+    lua_setfield(l, -2, "new");
 
     for (i = 0; func[i]; i++) {
         lua_getfield(l, -1, func[i]);
