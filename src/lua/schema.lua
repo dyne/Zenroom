@@ -26,9 +26,6 @@ SOFTWARE.
 local schema = {}
 
 -- Checks an object against a schema.
-function schema.check(obj, schem, path)
-   return schema.CheckSchema(obj, schem, path)
-end
 function schema.CheckSchema(obj, schem, path)
     if path == nil then
         path = schema.Path.new()
@@ -260,45 +257,13 @@ local function TypeSchema(obj, path, typeId)
     end
 end
 
-function schema.boolean (obj, path) return TypeSchema(obj, path, "boolean")  end
-function schema.func    (obj, path) return TypeSchema(obj, path, "function") end
-function schema.null    (obj, path) return TypeSchema(obj, path, "nil")      end
-function schema.number  (obj, path) return TypeSchema(obj, path, "number")   end
-function schema.string  (obj, path) return TypeSchema(obj, path, "string")   end
-function schema.table   (obj, path) return TypeSchema(obj, path, "table")    end
-function schema.userdata(obj, path) return TypeSchema(obj, path, "userdata") end
--- alias for back compat with camelcase
-schema.Function = schema['function']
-schema.boolean = schema.Boolean
-schema.Nil = schema['nil']
-schema.Number = schema.number
-schema.String = schema.string
-schema.Table = schema.table
-schema.UserData = schema.userdata
-
--- zenroom specific types
-function schema.octet(obj, path) return TypeSchema(obj, path, "zenroom.octet") end
-function schema.big(obj, path)   return TypeSchema(obj, path, "zenroom.big") end
-function schema.ecp(obj, path)   return TypeSchema(obj, path, "zenroom.ecp") end
-function schema.ecp2(obj, path)  return TypeSchema(obj, path, "zenroom.ecp2") end
-function schema.fp12(obj, path)  return TypeSchema(obj, path, "zenroom.fp12") end
-function schema.ecdh(obj, path)  return TypeSchema(obj, path, "zenroom.ecdh") end
-function schema.rng(obj, path)   return TypeSchema(obj, path, "zenroom.rng") end
-
--- content encapsulation types
-function ByteSchema(obj, path, enc)
-   if type(obj) ~= "string" then
-	  return schema.Error("Type mismatch: '"..path.."' should be a string, is "..type(obj), path)
-   end
-   if OCTET["is_"..enc](obj) then return nil -- success
-   else
-	  return schema.Error("Type mismatch: '"..path.."' should be a "..enc.." encoded string", path)
-   end
-end
-function schema.base64(obj, path) return ByteSchema(obj, path, 'base64') end
-function schema.base58(obj, path) return ByteSchema(obj, path, 'base58') end
-function schema.hex(obj, path)    return ByteSchema(obj, path, 'hex') end
-function schema.bin(obj, path)    return ByteSchema(obj, path, 'bin') end
+function schema.Boolean (obj, path) return TypeSchema(obj, path, "boolean")  end
+function schema.Function(obj, path) return TypeSchema(obj, path, "function") end
+function schema.Nil     (obj, path) return TypeSchema(obj, path, "nil")      end
+function schema.Number  (obj, path) return TypeSchema(obj, path, "number")   end
+function schema.String  (obj, path) return TypeSchema(obj, path, "string")   end
+function schema.Table   (obj, path) return TypeSchema(obj, path, "table")    end
+function schema.UserData(obj, path) return TypeSchema(obj, path, "userdata") end
 
 -- Checks that some value is a string matching a given pattern.
 function schema.Pattern(pattern)

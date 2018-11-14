@@ -26,12 +26,12 @@ require('msgpack')
 MSG = msgpack
 msgpack = nil -- rename default global
 
-
-SCHEMA = require('schema')
-S = SCHEMA -- alias
-RNG    = require('zenroom_rng')
 OCTET  = require('zenroom_octet')
 O = OCTET -- alias
+
+SCHEMA = require('zenroom_schema')
+S = SCHEMA -- alias
+RNG    = require('zenroom_rng')
 ECDH   = require('zenroom_ecdh')
 LAMBDA = require('functional')
 L = LAMBDA -- alias
@@ -77,7 +77,12 @@ function validate(data, schema)
 	  error("validate: first argument is not a table, cannot process validation") return end
    if(type(schema) ~= "function") then
 	  error("validate: second argument is not a function, invalid schema") return end
-   return SCHEMA.CheckSchema(data,schema)
+   local err = SCHEMA.CheckSchema(data,schema)
+   if err then
+	  error(S.print(err))
+	  return false
+   end
+   return true
 end
 
 function help(module)
