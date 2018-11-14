@@ -34,4 +34,23 @@ user2 = {
 local err2 = SCHEMA.CheckSchema(user2, userSchema)
 
 assert(err2)
+
+-- "Hello World"
+hello = {
+   base64 = "SGVsbG8gV29ybGQ=",
+   base58 = "JxF12TrwUP45BMd",
+   hex = "48656c6c6f20576f726c64",
+   bin = "0100100001100101011011000110110001101111001000000101011101101111011100100110110001100100"
+}
+helloSchema = S.Record {
+   base64 = S.base64,
+   base58 = S.base58,
+   hex = S.hex,
+   bin = S.bin }
+
+local err = S.CheckSchema(hello,helloSchema)
+if err then
+   print(S.FormatOutput(err))
+end
+
 print("-- Schema test passed - OK")
