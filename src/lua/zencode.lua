@@ -93,8 +93,13 @@ function zencode:run()
    end
    for i,x in ipairs(self.matches) do
 	  -- I.warn(table.unpack(x.args))
-      local ok, err = pcall(x.hook,table.unpack(x.args))
-      if not ok then error(err) end
+
+	  -- protected call (doesn't exists on errors)
+      -- local ok, err = pcall(x.hook,table.unpack(x.args))
+      -- if not ok then error(err) end
+
+	  -- unprotected call
+      x.hook(table.unpack(x.args))
    end
 end
 
