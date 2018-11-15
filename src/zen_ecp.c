@@ -138,14 +138,18 @@ static int lua_new_ecp(lua_State *L) {
 		return 1; }
 #endif
 
-	// TODO: protect well this entrypoint since parsing any octet is at risk
+	// We protect well this entrypoint since parsing any input is at risk
 	// Milagro's _fromOctet() uses ECP_BLS383_set(ECP_BLS383 *P,BIG_384_29 x)
 	// then converts the BIG to an FP modulo using FP_BLS383_nres.
 	octet *o = o_arg(L,1); SAFE(o);
 	ecp *e = ecp_new(L); SAFE(e);
-	if(o->len > e->totlen) { // safety
+	if(o->len > e->totlen) { // quick and dirty safety
 		lua_pop(L,1);
 		lerror(L,"Invalid octet length to parse an ECP point");
+		return 0; }
+	if(ECP_validate(o)<0) { // test in Milagro's ecdh_*.h ECP_*_PUBLIC_KEY_VALIDATE
+		lua_pop(L,1);
+		lerror(L,"Octet is not a valid public key (point is not on this curve)");
 		return 0; }
 	if(! ECP_fromOctet(&e->val, o) ) {
 		lua_pop(L,1);

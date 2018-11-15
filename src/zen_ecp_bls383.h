@@ -24,6 +24,7 @@
 
 #include <ecp_BLS383.h>
 #include <ecp2_BLS383.h>
+#include <ecdh_BLS383.h>
 #include <pair_BLS383.h>
 
 #define BIGSIZE 384
@@ -48,6 +49,8 @@
 #define ECP_affine(d) ECP_BLS383_affine(d)
 #define ECP_inf(d) ECP_BLS383_inf(d)
 #define ECP_isinf(d) ECP_BLS383_isinf(d)
+#define ECP_unity(d) ECP_BLS383_isunity(d)
+#define ECP_parity(d) ECP_BLS383_parity(d)
 #define ECP_add(d,s) ECP_BLS383_add(d,s)
 #define ECP_sub(d,s) ECP_BLS383_sub(d,s)
 #define ECP_neg(d) ECP_BLS383_neg(d)
@@ -58,6 +61,7 @@
 #define ECP_toOctet(o,d) ECP_BLS383_toOctet(o,d)
 #define ECP_generator(e) ECP_BLS383_generator(e)
 #define ECP_mapit(q,w) ECP_BLS383_mapit(q,w)
+#define ECP_validate(o) ECP_BLS383_PUBLIC_KEY_VALIDATE(o)
 
 #define FP2 FP2_BLS383
 #define FP2_from_BIGs(x,a,b) FP2_BLS383_from_BIGs(x,a,b)
