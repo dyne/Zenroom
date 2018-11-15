@@ -19,8 +19,10 @@ end
 certreq = keygen(random,order)
 -- certreq.private is preserved in a safe place
 -- certreq.public is sent to the CA along with a declaration
-declaration = { requester = str("Alice"),
-				statement = str("I am stuck in Wonderland") }
+declaration = { requester = "Alice",
+				statement = "I am stuck in Wonderland" }
+print("Declaration:")
+I.print(declaration)
 -- Requester sends to CA -->
 
 -- ... once upon a time ...
@@ -61,6 +63,6 @@ CERTpublic  = certpub * CERThash + CA.public
 -- As a proof here we generate the public key in a standard way,
 -- multiplying it by the curve generator point, then check equality
 assert(CERTpublic == G * CERTprivate)
-print "Certified keypair:"
+print "Certification by Mad Hatter:"
 I.print({ private = CERTprivate:octet():base64(),
 		  public  =  CERTpublic:octet():base64()    })

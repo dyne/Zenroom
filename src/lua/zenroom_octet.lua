@@ -51,7 +51,9 @@ octet.serialize = function(arr)
    concat = O.new()
    map(arr,function(e)
 		  t = type(e)
-		  if not iszen(t) then
+		  -- supported lua native types
+		  if(t == "string") then concat = concat .. str(e) return
+		  elseif not iszen(t) then
 			 error("OCTET.serialize: unsupported type: "..t)
 		  end
 		  if(t == "zenroom.octet") then
