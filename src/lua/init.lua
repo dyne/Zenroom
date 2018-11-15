@@ -118,14 +118,9 @@ function read_json(data, validation)
 		 -- os.exit()
 	  end
    else
-	  -- operate schema validation if argument is present
-	  if validation then
-		 local err = validate(out, validation)
-		 if err then
-			-- error "read_json: schema validation failed"
-			error(SCHEMA.FormatOutput(err))
-			-- os.exit()
-		 end
+	  if validation ~= nil then
+		 -- operate schema validation if argument is present
+		 assert(validate(out, validation), "read_json: invalid schema")
 	  end
 	  return out
    end
