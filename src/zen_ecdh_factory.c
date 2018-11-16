@@ -17,12 +17,10 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 	   || strcasecmp(curve,"ed25519")==0
 	   || strcasecmp(curve,"25519")  ==0) {
 		e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
-		e->keysize = EGS_ED25519; // keysize seems always equal to
-								  // fieldsize but since milagro uses
-								  // two different defines...
+		e->keysize = EGS_ED25519*2; // public key size
 		e->fieldsize = EFS_ED25519; 
 		e->rng = NULL;
-		e->hash = 32; // HASH_TYPE_ECC_ED25519;
+		e->hash = HASH_TYPE_ED25519;
 		e->ECP__KEY_PAIR_GENERATE = ECP_ED25519_KEY_PAIR_GENERATE;
 		e->ECP__PUBLIC_KEY_VALIDATE	= ECP_ED25519_PUBLIC_KEY_VALIDATE;
 		e->ECP__SVDP_DH = ECP_ED25519_SVDP_DH;
@@ -33,13 +31,10 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 
 	} else if(strcasecmp(curve,"bls383")==0) {
 			e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
-			e->keysize = EGS_BLS383;
+			e->keysize = EGS_BLS383*2;
 			e->fieldsize = EFS_BLS383;
 			e->rng = NULL;
-			e->hash = 32; // TODO: AES256 hardcoded for now, was
-						  // HASH_TYPE_ECC_BLS383 but that has size 64
-						  // and breaks AES_GCM, see:
-						  // https://github.com/milagro-crypto/milagro-crypto-c/issues/285
+			e->hash = HASH_TYPE_BLS383;
 			e->ECP__KEY_PAIR_GENERATE = ECP_BLS383_KEY_PAIR_GENERATE;
 			e->ECP__PUBLIC_KEY_VALIDATE	= ECP_BLS383_PUBLIC_KEY_VALIDATE;
 			e->ECP__SVDP_DH = ECP_BLS383_SVDP_DH;
@@ -50,13 +45,10 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 
 	} else if(strcasecmp(curve,"goldilocks")==0) {
 		e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
-		e->keysize = EGS_GOLDILOCKS;
+		e->keysize = EGS_GOLDILOCKS*2;
 		e->fieldsize = EFS_GOLDILOCKS;
 		e->rng = NULL;
-		e->hash = 32;  // TODO: AES256 hardcoded for now, was
-					   // HASH_TYPE_ECC_GOLDILOCKS but that has size
-					   // 64 and breaks AES_GCM, see:
-					   // https://github.com/milagro-crypto/milagro-crypto-c/issues/285
+		e->hash = HASH_TYPE_GOLDILOCKS;
 		e->ECP__KEY_PAIR_GENERATE = ECP_GOLDILOCKS_KEY_PAIR_GENERATE;
 		e->ECP__PUBLIC_KEY_VALIDATE	= ECP_GOLDILOCKS_PUBLIC_KEY_VALIDATE;
 		e->ECP__SVDP_DH = ECP_GOLDILOCKS_SVDP_DH;
@@ -67,13 +59,10 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 
 	} else if(strcasecmp(curve,"secp256k1")==0) {
 		e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
-		e->keysize = EGS_SECP256K1;
+		e->keysize = EGS_SECP256K1*2;
 		e->fieldsize = EFS_SECP256K1;
 		e->rng = NULL;
-		e->hash = 32;  // TODO: AES256 hardcoded for now, was
-		// HASH_TYPE_ECC_GOLDILOCKS but that has size
-		// 64 and breaks AES_GCM, see:
-		// https://github.com/milagro-crypto/milagro-crypto-c/issues/285
+		e->hash = HASH_TYPE_SECP256K1;
 		e->ECP__KEY_PAIR_GENERATE = ECP_SECP256K1_KEY_PAIR_GENERATE;
 		e->ECP__PUBLIC_KEY_VALIDATE	= ECP_SECP256K1_PUBLIC_KEY_VALIDATE;
 		e->ECP__SVDP_DH = ECP_SECP256K1_SVDP_DH;
@@ -81,34 +70,6 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 		e->ECP__ECIES_DECRYPT = ECP_SECP256K1_ECIES_DECRYPT;
 		e->ECP__SP_DSA = ECP_SECP256K1_SP_DSA;
 		e->ECP__VP_DSA = ECP_SECP256K1_VP_DSA;
-
-	// } else if(strcasecmp(curve,"bn254cx")==0) {
-	// 	e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
-	// 	e->keysize = EGS_BN254CX;
-	// 	e->fieldsize = EFS_BN254CX;
-	// 	e->rng = NULL;
-	// 	e->hash = HASH_TYPE_ECC_BN254CX;
-	// 	e->ECP__KEY_PAIR_GENERATE = ECP_BN254CX_KEY_PAIR_GENERATE;
-	// 	e->ECP__PUBLIC_KEY_VALIDATE	= ECP_BN254CX_PUBLIC_KEY_VALIDATE;
-	// 	e->ECP__SVDP_DH = ECP_BN254CX_SVDP_DH;
-	// 	e->ECP__ECIES_ENCRYPT = ECP_BN254CX_ECIES_ENCRYPT;
-	// 	e->ECP__ECIES_DECRYPT = ECP_BN254CX_ECIES_DECRYPT;
-	// 	e->ECP__SP_DSA = ECP_BN254CX_SP_DSA;
-	// 	e->ECP__VP_DSA = ECP_BN254CX_VP_DSA;
-
-	// } else if(strcasecmp(curve,"fp256bn")==0) {
-	// 	e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
-	// 	e->keysize = EGS_FP256BN;
-	// 	e->fieldsize = EFS_FP256BN;
-	// 	e->rng = NULL;
-	// 	e->hash = HASH_TYPE_ECC_FP256BN;
-	// 	e->ECP__KEY_PAIR_GENERATE = ECP_FP256BN_KEY_PAIR_GENERATE;
-	// 	e->ECP__PUBLIC_KEY_VALIDATE	= ECP_FP256BN_PUBLIC_KEY_VALIDATE;
-	// 	e->ECP__SVDP_DH = ECP_FP256BN_SVDP_DH;
-	// 	e->ECP__ECIES_ENCRYPT = ECP_FP256BN_ECIES_ENCRYPT;
-	// 	e->ECP__ECIES_DECRYPT = ECP_FP256BN_ECIES_DECRYPT;
-	// 	e->ECP__SP_DSA = ECP_FP256BN_SP_DSA;
-	// 	e->ECP__VP_DSA = ECP_FP256BN_VP_DSA;
 
 	} else {
 		error(L, "%s: curve not found: %s",__func__,curve);
@@ -124,6 +85,8 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 #else
 	strcpy(e->type,"unknown");
 #endif
-
+	func(NULL,"ECDH new curve %s",e->curve);
+	func(NULL,"ECDH type %s",e->type);
+	func(NULL,"ECDH keysize[%u] fieldsize[%u]",e->keysize,e->fieldsize);
 	return e;
 }
