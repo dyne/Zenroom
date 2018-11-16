@@ -51,11 +51,6 @@
 #include <randombytes.h>
 #include <lua_functions.h>
 
-
-// TODO: wrap this for more curves (may solve GOLDILOCKS)
-#include <ecdh_ED25519.h>
-
-
 #include <zenroom.h>
 #include <zen_memory.h>
 #include <zen_ecdh.h>
@@ -215,16 +210,17 @@ static int ecdh_session(lua_State *L) {
 
 	int res;
 	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(pubkey);
-	if(res == ECDH_INVALID_PUBLIC_KEY) {
+	if(res<0) {
 		lerror(L, "%s: argument found, but is an invalid key",__func__);
 		return 0; }
 	octet *kdf = o_new(L,e->hash); SAFE(kdf);
 	octet *ses = o_new(L,e->keysize); SAFE(ses);
 	(*e->ECP__SVDP_DH)(e->seckey,pubkey,ses);
+	// process via KDF2
+	// https://github.com/milagro-crypto/milagro-crypto-c/issues/285	
 	// here the NULL could be a salt (TODO: global?)
-	// its used as 'p' in the hash function
+	// its used internally by KDF2 as 'p' in the hash function
 	//         ehashit(sha,z,counter,p,&H,0);
-	
 	KDF2(e->hash,ses,NULL,e->hash,kdf);
 	return 2;
 }
@@ -250,7 +246,7 @@ static int ecdh_public(lua_State *L) {
 		}
 		// export public key to octet
 		res = (e->ECP__PUBLIC_KEY_VALIDATE)(e->pubkey);
-		if(res == ECDH_INVALID_PUBLIC_KEY) {
+		if(res<0) {
 			ERROR();
 			return lerror(L, "Public key found, but invalid."); }
 		// succesfully return public key stored in keyring
@@ -263,7 +259,7 @@ static int ecdh_public(lua_State *L) {
 		KEYPROT(e->curve, "public key"); }
 	octet *o = o_arg(L, 2); SAFE(o);
 	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(o);
-	if(res == ECDH_INVALID_PUBLIC_KEY) {
+	if(res<0) {
 		ERROR();
 		return lerror(L, "Public key argument is invalid."); }
 	func(L, "%s: valid key",__func__);
@@ -303,7 +299,7 @@ static int ecdh_private(lua_State *L) {
 	(*e->ECP__KEY_PAIR_GENERATE)(NULL,e->seckey,pk);
 	int res;
 	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(pk);
-	if(res == ECDH_INVALID_PUBLIC_KEY) {
+	if(res<0) {
 		ERROR();
 		return lerror(L, "Invalid public key generation."); }
 	e->pubkey = pk;
