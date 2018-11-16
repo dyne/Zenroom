@@ -14,8 +14,7 @@
  * Please refer to the GNU Public License for more details.
  *
  * You should have received a copy of the GNU Public License along with
- * this source code; if not, write to:
- * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * this source code; if not, see: <http://www.gnu.org/licenses/>.
  */
 
 #ifndef __ZEN_BIG_H__
