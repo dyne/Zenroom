@@ -334,6 +334,10 @@ static int ecdh_aead_encrypt(lua_State *L) {
 	// 	HEREecdh(e);
 	// 	return 0; }
 	octet *k =  o_arg(L, 1); SAFE(k);
+	if(k->len != 32) {
+		error(L,"ECDH.aead_encrypt accepts only keys of 32 bytes, octet is %u", k->len);
+		lerror(L,"ECDH encryption aborted");
+		return 0; }
 	octet *in = o_arg(L, 2); SAFE(in);
 	octet *iv = o_arg(L, 3); SAFE(iv);
 	octet *h =  o_arg(L, 4); SAFE(h);
