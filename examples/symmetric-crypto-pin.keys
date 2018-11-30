@@ -1,0 +1,6 @@
+{
+	"pin": "1234",
+	"text": "my private declaration or certificate of sorts",
+	"salt": "c6e49670a3c65d7f19ee7d39a25478900f8e98ec1e9a82131e23e7b07d17c0c9",
+	"iterations": 10000
+}
