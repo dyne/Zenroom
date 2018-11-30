@@ -9,10 +9,13 @@ order = ECP.order()
 G = ECP.generator()
 
 -- typical EC key generation on G1
+-- take a random big integer modulo curve order
+-- and multiply it by the curve generator
+
 function keygen(rng,modulo)
    local key = INT.new(rng,modulo)
    return { private = key,
-			public = key * G }
+   			public = key * G }
 end
 
 -- generate the certification request

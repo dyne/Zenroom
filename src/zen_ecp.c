@@ -146,10 +146,13 @@ static int lua_new_ecp(lua_State *L) {
 	ecp *e = ecp_new(L); SAFE(e);
 	if(o->len > e->totlen) { // quick and dirty safety
 		lua_pop(L,1);
+		error(L,"Octet length %u instead of %u bytes",o->len,e->totlen);
 		lerror(L,"Invalid octet length to parse an ECP point");
 		return 0; }
-	if(ECP_validate(o)<0) { // test in Milagro's ecdh_*.h ECP_*_PUBLIC_KEY_VALIDATE
+	int res = ECP_validate(o);
+	if(res<0) { // test in Milagro's ecdh_*.h ECP_*_PUBLIC_KEY_VALIDATE
 		lua_pop(L,1);
+		error(L,"ECP point validation returns %i",res);
 		lerror(L,"Octet is not a valid public key (point is not on this curve)");
 		return 0; }
 	if(! ECP_fromOctet(&e->val, o) ) {

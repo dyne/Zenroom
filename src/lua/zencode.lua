@@ -103,6 +103,14 @@ function zencode:run()
    end
 end
 
+
+verbosity = 1
+-- debugging facility
+local function x(n,s)
+   if verbosity > n then
+	  warn(s) end
+end
+
 _G["Given"] = function(text, fn)
    zencode.given_steps[text] = fn
 end

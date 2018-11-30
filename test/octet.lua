@@ -61,6 +61,21 @@ dotest(left, right)
 dotest(left:hex(), testhex)
 dotest(hash:process(left), hash:process(right))
 
+-- print '= OK'
+
+
+print '== ECP import/export'
+rng = RNG.new()
+left = INT.new(rng,ECP.order()) * ECP.generator() -- ECP point aka pub key
+b64 = left:octet():base64()
+-- print(b64)
+right = base64(b64)
+-- print(right:base64())
+dotest(left:octet(),right)
+print '== JSON import/export'
+str = JSON.encode({public = base64(left)})
+-- print(str)
+right = JSON.decode(str)
+dotest(left:octet(),base64(right['public']))
+ECP.new(base64(right['public'])) -- test ecp point on curve
 print '= OK'
-
-
