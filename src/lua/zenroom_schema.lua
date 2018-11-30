@@ -13,9 +13,10 @@ schema.record = schema.Record
 schema.check =  schema.CheckSchema
 schema.oneof = schema.OneOf
 schema.print = schema.FormatOutput
+schema.octet = schema.Octet
 
 -- zenroom specific types
-schema.octet = function(obj, path)  return TypeSchema(obj, path, "zenroom.octet") end
+-- schema.octet = function(obj, path)  return TypeSchema(obj, path, "zenroom.octet") end
 schema.big =   function(obj, path)  return TypeSchema(obj, path, "zenroom.big")   end
 schema.ecp =   function(obj, path)  return TypeSchema(obj, path, "zenroom.ecp")   end
 schema.ecp2 =  function(obj, path)  return TypeSchema(obj, path, "zenroom.ecp2")  end

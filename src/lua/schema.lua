@@ -264,6 +264,9 @@ function schema.Number  (obj, path) return TypeSchema(obj, path, "number")   end
 function schema.String  (obj, path) return TypeSchema(obj, path, "string")   end
 function schema.Table   (obj, path) return TypeSchema(obj, path, "table")    end
 function schema.UserData(obj, path) return TypeSchema(obj, path, "userdata") end
+-- zenroom specific types
+function schema.Octet(obj, path) return TypeSchema(obj, path, "zenroom.octet") end
+-- TODO: move others from zenroom_schema
 
 -- Checks that some value is a string matching a given pattern.
 function schema.Pattern(pattern)
