@@ -230,27 +230,6 @@ static int newbig(lua_State *L) {
 		BIG_zero(c->val);
 		return 1; }
 
-	// octet argument, import
-	ud = luaL_testudata(L, 1, "zenroom.octet");
-	if(ud) {
-		int biglen = sizeof(BIG);
-		int dbiglen = sizeof(DBIG);
-		big *c = big_new(L); SAFE(c);
-		octet *o = (octet*)ud;
-		if(o->len <= biglen) { // big
-			big_init(c);
-			BIG_fromBytesLen(c->val, o->val, o->len);
-			// or should we measure byte length to detect doublebig?
-		} else if(o->len > biglen && o->len <= dbiglen) {
-			dbig_init(c);
-			BIG_dfromBytesLen(c->dval, o->val, o->len);
-		} else {
-			error(L, "size %u is invalid (big has len %u)",o->len, c->len);
-			lua_pop(L,1);
-			lerror(L,"Cannot import BIG number");
-		}
-		return 1; }
-
 	ud = luaL_testudata(L, 1, "zenroom.rng");
 	if(ud) {
 		RNG *rng = (RNG*)ud; SAFE(rng);
@@ -276,10 +255,25 @@ static int newbig(lua_State *L) {
 		BIG_inc(c->val, n);
 		BIG_norm(c->val);
 		return 1; }
-	// BIG_384_29_dzero(DBIG_384_29 x)
 
-	error(L,"octet or number argument expected");
-	return 0;
+	// octet argument, import
+	octet *o = o_arg(L, 1); SAFE(o);
+	int biglen = sizeof(BIG);
+	int dbiglen = sizeof(DBIG);
+	big *c = big_new(L); SAFE(c);
+	if(o->len <= biglen) { // big
+		big_init(c);
+		BIG_fromBytesLen(c->val, o->val, o->len);
+		// or should we measure byte length to detect doublebig?
+	} else if(o->len > biglen && o->len <= dbiglen) {
+		dbig_init(c);
+		BIG_dfromBytesLen(c->dval, o->val, o->len);
+	} else {
+		error(L, "size %u is invalid (big has len %u)",o->len, c->len);
+		lua_pop(L,1);
+		lerror(L,"Cannot import BIG number");
+	}
+	return 1;
 }
 
 int _big_to_octet(octet *o, big *c) {
