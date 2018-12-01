@@ -54,6 +54,7 @@
 
 #include <zenroom.h>
 #include <zen_memory.h>
+#include <zen_hash.h>
 #include <zen_ecdh.h>
 
 #define KEYPROT(alg,key)	  \
@@ -311,31 +312,26 @@ static int ecdh_private(lua_State *L) {
 /**
    AES-GCM encrypt with Additional Data (AEAD) encrypts and
    authenticate a plaintext to a ciphtertext. Function compatible with
-   IEEE P802.1 specification. Errors out if encryption fails or
-   authentication fails, else returns the secret ciphertext and a
-   SHA256 of the header to checksum the integrity of the accompanying
-   plaintext.
+   IEEE P802.1 specification. Errors out if encryption fails, else
+   returns the secret ciphertext and a SHA256 of the header to
+   checksum the integrity of the accompanying plaintext, to be
+   compared with the one obtained by @{aead_decrypt}.
 
-   @param key AES key octet
+   @param key AES key octet (must be 8, 16, 32 or 64 bytes long)
    @param message input text in an octet
-   @param iv initialization vector
+   @param iv initialization vector (can be random each time)
    @param header clear text, authenticated for integrity (checksum)
-   @function keyring:encrypt(key, message, iv, h)
+   @function aead_encrypt(key, message, iv, h)
    @treturn[1] octet containing the output ciphertext
    @treturn[1] octet containing the authentication tag (checksum)
 */
 
 static int ecdh_aead_encrypt(lua_State *L) {
 	HERE();
-	// ecdh *e = ecdh_arg(L, 1); SAFE(e);
-	// if(e->hash != 32) {
-	// 	error(L,"curve %s hash is set to %i bytes length (SHA%i)",e->curve, e->hash, e->hash*8);
-	// 	lerror(L,"AES-GCM/AEAD encryption only supports SHA256 hashing (32 bytes)");
-	// 	HEREecdh(e);
-	// 	return 0; }
 	octet *k =  o_arg(L, 1); SAFE(k);
-	if(k->len != 32) {
-		error(L,"ECDH.aead_encrypt accepts only keys of 32 bytes, octet is %u", k->len);
+	// check if key is a power of two byte length and not bigger than 64 bytes
+	if(!(k->len && !(k->len & (k->len - 1))) || k->len > 64) {
+		error(L,"ECDH.aead_encrypt accepts only keys of ^2 length (16,32,64), octet is %u", k->len);
 		lerror(L,"ECDH encryption aborted");
 		return 0; }
 	octet *in = o_arg(L, 2); SAFE(in);
@@ -357,8 +353,9 @@ static int ecdh_aead_encrypt(lua_State *L) {
    @param message input text in an octet
    @param iv initialization vector
    @param header the additional data
-   @return a new octet containing the output ciphertext and the checksum
-   @function keyring:decrypt(key, ciphertext, iv, h, tag)
+   @treturn[1] octet containing the output ciphertext
+   @treturn[1] octet containing the authentication tag (checksum)
+   @function aead_decrypt(key, ciphertext, iv, h)
 */
 
 static int ecdh_aead_decrypt(lua_State *L) {
@@ -467,8 +464,18 @@ static int ecdh_kdf2(lua_State *L) {
 
 static int ecdh_pbkdf2(lua_State *L) {
 	HERE();
-	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
-	octet *k = o_arg(L, 2);     SAFE(k);
+	int hashlen = 0;
+	if(luaL_testudata(L, 1, "zenroom.ecdh")) {
+		ecdh *e = ecdh_arg(L,1); SAFE(e);
+		hashlen = e->hash;
+	} else if(luaL_testudata(L, 1, "zenroom.hash")) {
+		hash *h = hash_arg(L,1); SAFE(h);
+		hashlen = h->len;
+	} else {
+		lerror(L,"Invalid first argument for ECDH.pbkdf2: should be an ECDH or HASH object");
+		return 0;
+	}
+	octet *k = o_arg(L, 2); SAFE(k);
 	octet *s = o_arg(L, 3); SAFE(s);
 	const int iter = luaL_optinteger(L, 4, 1000);
 	// keylen is length of input key
@@ -476,7 +483,10 @@ static int ecdh_pbkdf2(lua_State *L) {
 	// keylen is length of input key
 	octet *out = o_new(L, keylen); SAFE(out);
 	// default iterations 1000
-	PBKDF2(e->hash, k, s, iter, keylen, out);
+
+	// TODO: OPTIMIZATION: reuse the initialized hash* structure in
+	// hmac->ehashit instead of milagro's
+	PBKDF2(hashlen, k, s, iter, keylen, out);
 	return 1;
 }
 

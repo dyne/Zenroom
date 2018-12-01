@@ -45,30 +45,11 @@
 #include <zen_error.h>
 #include <lua_functions.h>
 
-#include <amcl.h>
-
 #include <zenroom.h>
 #include <zen_octet.h>
 #include <zen_memory.h>
 #include <zen_big.h>
-
-#define _SHA256 2
-#define _SHA384 3
-#define _SHA512 5
-#define _SHA3_224 3224
-#define _SHA3_256 3256
-#define _SHA3_384 3384
-#define _SHA3_512 3512
-
-typedef struct {
-	char name[16];
-	int algo;
-	int len;
-	hash256 *sha256;
-	hash384 *sha384;
-	hash512 *sha512;
-	// ...
-} HASH;
+#include <zen_hash.h>
 
 
 /**
@@ -82,46 +63,46 @@ typedef struct {
    @see process
 */
 
-HASH* hash_new(lua_State *L, const char *hashtype) {
+hash* hash_new(lua_State *L, const char *hashtype) {
 	HEREs(hashtype);
-	HASH *hash = (HASH*)lua_newuserdata(L, sizeof(HASH));
-	if(!hash) {
+	hash *h = lua_newuserdata(L, sizeof(hash));
+	if(!h) {
 		lerror(L, "Error allocating new hash generator in %s",__func__);
 		return NULL; }
 	luaL_getmetatable(L, "zenroom.hash");
 	lua_setmetatable(L, -2);
 	char ht[16];
-	hash->sha256 = NULL; hash->sha384 = NULL; hash->sha512 = NULL;
+	h->sha256 = NULL; h->sha384 = NULL; h->sha512 = NULL;
 	if(hashtype) strncpy(ht,hashtype,15);
 	else         strncpy(ht,"sha256",15);
 	if(strcasecmp(hashtype,"sha256") == 0) {
-		strncpy(hash->name,hashtype,15);
-		hash->len = 32;
-		hash->algo = _SHA256;
-		hash->sha256 = zen_memory_alloc(sizeof(hash256));
-		HASH256_init(hash->sha256);
+		strncpy(h->name,hashtype,15);
+		h->len = 32;
+		h->algo = _SHA256;
+		h->sha256 = zen_memory_alloc(sizeof(hash256));
+		HASH256_init(h->sha256);
 	} else if(strcasecmp(hashtype,"sha512") == 0) {
-		strncpy(hash->name,hashtype,15);
-		hash->len = 64;
-		hash->algo = _SHA512;
-		hash->sha512 = zen_memory_alloc(sizeof(hash512));
-		HASH512_init(hash->sha512);
+		strncpy(h->name,hashtype,15);
+		h->len = 64;
+		h->algo = _SHA512;
+		h->sha512 = zen_memory_alloc(sizeof(hash512));
+		HASH512_init(h->sha512);
 	} // ... TODO: other hashes
 	else {
 		lerror(L, "Hash algorithm not known: %s", hashtype);
 		return NULL; }
-	return(hash);
+	return(h);
 }
 
-HASH* hash_arg(lua_State *L, int n) {
+hash* hash_arg(lua_State *L, int n) {
 	void *ud = luaL_checkudata(L, n, "zenroom.hash");
 	luaL_argcheck(L, ud != NULL, n, "hash class expected");
-	HASH *h = (HASH*)ud;
+	hash *h = (hash*)ud;
 	return(h);
 }
 
 int hash_destroy(lua_State *L) {
-	HASH *h = hash_arg(L,1); SAFE(h);
+	hash *h = hash_arg(L,1); SAFE(h);
 	HEREs(h->name);
 	if(h->algo == _SHA256)
 		zen_memory_free(h->sha256);
@@ -132,7 +113,7 @@ int hash_destroy(lua_State *L) {
 
 static int lua_new_hash(lua_State *L) {
 	const char *hashtype = luaL_optstring(L,1,"sha256");
-	HASH *h = hash_new(L, hashtype); SAFE(h);
+	hash *h = hash_new(L, hashtype); SAFE(h);
 	if(h) func(L,"new hash type %s",hashtype);
 	return 1;
 }
@@ -147,7 +128,7 @@ static int lua_new_hash(lua_State *L) {
    @return a new octet containing the hash of the data
 */
 static int hash_process(lua_State *L) {
-	HASH *h = hash_arg(L,1); SAFE(h);
+	hash *h = hash_arg(L,1); SAFE(h);
 	octet *o = o_arg(L,2); SAFE(o);
 	HEREs(h->name);
 	if(h->algo == _SHA256) {
