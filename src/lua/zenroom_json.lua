@@ -7,6 +7,7 @@ J.decode = function(str)
    -- TODO: investigate this behavior
    local t = JSON.raw_decode(str)
    local i = t
+   assert(t, "JSON.decode error decoding string:\n"..str)
    return i,t
 end
 

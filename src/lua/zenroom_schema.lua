@@ -19,15 +19,6 @@ schema.big = schema.BIG
 schema.ecp = schema.ECP
 schema.ecp2 = schema.ECP2
 
--- zenroom specific types
--- schema.octet = function(obj, path)  return TypeSchema(obj, path, "zenroom.octet") end
-schema.big =   function(obj, path)  return TypeSchema(obj, path, "zenroom.big")   end
-schema.ecp =   function(obj, path)  return TypeSchema(obj, path, "zenroom.ecp")   end
-schema.ecp2 =  function(obj, path)  return TypeSchema(obj, path, "zenroom.ecp2")  end
-schema.fp12 =  function(obj, path)  return TypeSchema(obj, path, "zenroom.fp12")  end
-schema.ecdh =  function(obj, path)  return TypeSchema(obj, path, "zenroom.ecdh")  end
-schema.rng =   function(obj, path)  return TypeSchema(obj, path, "zenroom.rng")   end
-
 -- content encapsulation types
 function ByteSchema(obj, path, enc)
    if type(obj) ~= "string" then
