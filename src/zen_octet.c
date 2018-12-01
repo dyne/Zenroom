@@ -164,23 +164,30 @@ octet* o_arg(lua_State *L,int n) {
 			error(L, "invalid string size: %u", len);
 			lerror(L,"failed implicit conversion from string to octet");
 			return 0; }
-		o = o_new(L, len+1); SAFE(o); // new
-		OCT_jstring(o, (char*)str);
+		int hlen = is_hex(str);
+		if(hlen>0) { // import from a HEX encoded string
+			o = o_new(L, hlen); SAFE(o);
+			OCT_fromHex(o, (char*)str);
+		} else {
+			o = o_new(L, len+1); SAFE(o); // new
+			OCT_jstring(o, (char*)str);
+		}
 		lua_pop(L,1);
-	}
-	ud = luaL_testudata(L, n, "zenroom.big");
-	if(!o && ud) {
-		big *b = (big*)ud;
-		o = o_new(L, b->len); SAFE(o); // new
-		_big_to_octet(o,b);
-		lua_pop(L,1);
-	}
-	ud = luaL_testudata(L, n, "zenroom.ecp");
-	if(!o && ud) {
-		ecp *e = (ecp*)ud;
-		o = o_new(L, e->totlen + 0x0f); SAFE(o); // new
-		_ecp_to_octet(o,e);
-		lua_pop(L,1);
+	} else {
+		ud = luaL_testudata(L, n, "zenroom.big");
+		if(!o && ud) {
+			big *b = (big*)ud;
+			o = o_new(L, b->len); SAFE(o); // new
+			_big_to_octet(o,b);
+			lua_pop(L,1);
+		}
+		ud = luaL_testudata(L, n, "zenroom.ecp");
+		if(!o && ud) {
+			ecp *e = (ecp*)ud;
+			o = o_new(L, e->totlen + 0x0f); SAFE(o); // new
+			_ecp_to_octet(o,e);
+			lua_pop(L,1);
+		}
 	}
 	if(!o) {
 		error(L,"Error in argument #%u",n);
