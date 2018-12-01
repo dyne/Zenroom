@@ -30,10 +30,8 @@ validate(secrets, secrets_schema)
 
 ecdh = ECDH.new()
 
--- TODO: hash = HASH.new("sha512")
-key = ECDH.pbkdf2(ecdh, secrets.pin, secrets.salt, secrets.kdf_iterations, 32)
-
--- print(key)
+hash = HASH.new("sha256")
+key = ECDH.pbkdf2(hash, secrets.pin, secrets.salt, secrets.kdf_iterations, 32)
 
 local cipher = { header = str("my header"),
 				 iv = rng:octet(16) }
