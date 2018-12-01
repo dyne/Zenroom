@@ -1,261 +1,124 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <!-- Required meta tags -->
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!DOCTYPE html>
+<html>
 
-        <!-- Bootstrap CSS -->
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:300,400,500">
-        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-        <link rel="stylesheet" href="/css/gh-fork-ribbon.css">
-        <style>
-         html, body { overflow: hidden; height: 100%; font-family: Montserrat, sans-serif; }
-         #output { font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro", monospace; }
-         #output, #input { font-size: 13px; overflow: auto; }
-         #keys, #data { min-height: 210px; }
-         .navbar-brand img { height: 40px; }
-         a.nav-link::before { content: " "; height: 10px; width: 10px; background-color: #33e986; margin-right: 10px; display: inline-block; }
-         a.nav-link:hover::before { background-color: #ff00ff; }
-         h5 { font-size: 1rem; font-weight: 500; }
-         .heart {
-             fill: #ff00ff;
-             position: relative;
-             top: 5px;
-             width: 18px;
-             animation: heartbeat 1s ease infinite;
-         }
-         @keyframes heartbeat {
-             0% { transform: scale(.85)}
-             20% { transform: scale(1)}
-             40% { transform: scale(.85)}
-             60% { transform: scale(1)}
-             80% { transform: scale(.85)}
-             100% { transform: scale(.85)}
-         }
-        </style>
-        <title>Zenroom online demo</title>
-    </head>
-    <body>
-    <div class="github-fork-ribbon-wrapper right-bottom fixed">
-        <div class="github-fork-ribbon">
-            <a href="https://github.com/decodeproject/zenroom">Fork me!   :^)</a>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zenroom online demo</title>
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css">
+  <link rel="stylesheet" href="//golden-layout.com/files/latest/css/goldenlayout-base.css" />
+  <link rel="stylesheet" href="//golden-layout.com/files/latest/css/goldenlayout-light-theme.css" />
+  
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Montserrat:300,500">
+  <script defer src="//use.fontawesome.com/releases/v5.5.0/js/all.js"></script>
+  <script src="//code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+  <script src="//golden-layout.com/files/latest/js/goldenlayout.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/ace/1.3.1/ace.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/ace/1.3.1/ext-language_tools.js"></script>
+  <script src="//rawgit.com/caldwell/renderjson/master/renderjson.js"></script>
+  <script src="./shell.js"></script>
+  <style>
+  body { font-family: Montserrat, sans-serif; font-size: 14px; }
+  #output { font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro", monospace; overflow: auto; padding: 5px; }
+  #zenbar .navbar-start a.navbar-item::before { content: " "; height: 10px; width: 10px; background-color: #33e986; margin-right: 10px; display: inline-block; }
+  #zenbar .navbar-start a.navbar-item:hover::before { background-color: #ff00ff; }
+  .lm_header .lm_tab { font-family: Montserrat; font-size: 14px; height: 21px; }
+  .lm_header .lm_controls>li, .icon { height: 28px; width: 28px; }
+  .lm_controls > li { background-size: 15px; }
+  .renderjson                { background-color: transparent; height: 100%;}
+  .renderjson a              { text-decoration: none; }
+  .renderjson .disclosure    { color: crimson; }
+  .renderjson .syntax        { color: grey; }
+  .renderjson .string        { color: red; }
+  .renderjson .number        { color: cyan; }
+  .renderjson .boolean       { color: plum; }
+  .renderjson .key           { color: lightblue; }
+  .renderjson .keyword       { color: lightgoldenrodyellow; }
+  .renderjson .object.syntax { color: lightseagreen; }
+  .renderjson .array.syntax  { color: lightsalmon; }
+  #timing { height: auto; position: relative; bottom: 6px; margin-left: 4px; }
+  </style>
+</head>
+
+<body>
+  <template type="text/html" id="play-button-template">
+    <li title="Run (⌘ + Enter)">
+      <span class="icon has-text-success">
+        <i class="fas fa-play-circle"></i>
+      </span>
+    </li>
+  </template>
+  <template type="text/html" id="clear-button-template">
+    <li>
+      <span class="icon has-text-grey-light">
+        <i class="fas fa-toilet-paper"></i>
+      </span>
+    </li>
+  </template>
+  <div class="container is-fluid">
+    <nav class="navbar" role="navigation" aria-label="main navigation">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="https://zenroom.dyne.org/">
+          <img src="/img/decode.svg" width="112" height="28">
+        </a>
+
+        <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="zenbar">
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+        </a>
+      </div>
+
+      <div id="zenbar" class="navbar-menu">
+        <div class="navbar-start">
+          <a class="navbar-item" href="https://dyne.org/">
+            software by <img src="/img/dyne-big.png" height="28" alt="Dyne.org" />
+          </a>
+
+          <a class="navbar-item" href="https://milagro.apache.org/">
+            powered by <img src="/img/milagro.svg" height="28" alt="Milagro" />
+          </a>
         </div>
-    </div>
 
-    <div class="container-fluid h-100 d-flex flex-column bg-light">
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <a class="navbar-brand" href="https://zenroom.dyne.org/">
-                <img src="/img/decode.svg" class="d-inline-block align-text-bottom" alt="Decode" /> <span>ZENROOM</span>
-            </a>
-
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#n-content" aria-controls="n-content" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse ml-3" id="n-content">    
-                <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" href="https://dyne.org/">
-                            software by <img src="/img/dyne-big.png" height="30" class="d-inline-block align-top" alt="Dyne.org" />
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="https://milagro.apache.org/">
-                            powered by <img src="/img/milagro.svg" height="30" class="d-inline-block align-top" alt="Milagro" />
-                        </a>
-                    </li>
-                </ul>
-                <form class="form-inline my-2 my-lg-0">
-                    <select id="examples-select" class="custom-select form-control mr-sm-2">
-                        <option selected>Load some examples</option>
-                        <option value="hello">Hello world in hex and base64</option>
-                        <option value="keygen">Generate a new pair of public / private keys</option>
-                        <option value="keygen-multi">Generate a keyring with multiple recipients</option>
-                        <option value="crypt-to-multi">Encrypt a secret to multiple recipients</option>
-                        <option value="decidim">Encrypt private data with known keys</option>
-                        <option value="iotdev-to-dashboard">IoT sensor encode and send with key</option>
-                        <option value="dashboard-from-iotdev">Receive and decode IoT sensos messages</option>
-                        <option value="json-tables">Manipulate complex data structures</option>
-                        <option value="implicit-certificate">Implicit Certificate scheme</option>
-                    </select>
-                    <label class="form-check-label my-2 my-sm-0">
-                        <input id="umm"  class="form-check-input" type="checkbox" value=""> minimal memory manager (64KiB max) 
-                    </label>
-                </form>
+        <div class="navbar-end">
+          <div class="navbar-item has-dropdown is-hoverable">
+              <a class="navbar-link">
+                Examples
+              </a>
+  
+              <div class="navbar-dropdown">
+                <a class="navbar-item examples" id="hello">Hello world in hex and base64</a>
+                <a class="navbar-item examples" id="keygen">Generate a new pair of public / privatekeys</a>
+                <a class="navbar-item examples" id="keygen-multi">Generate a keyring with multiple recipients</a>
+                <a class="navbar-item examples" id="crypt-to-multi">Encrypt a secret to multiple recipients</a>
+                <a class="navbar-item examples" id="decidim">Encrypt private data with known keys</a>
+                <a class="navbar-item examples" id="iotdev-to-dashboard">IoT sensor encode and send with key</a>
+                <a class="navbar-item examples" id="dashboard-from-iotdev">Receive and decode IoT sensos messages</a>
+                <a class="navbar-item examples" id="json-tables">Manipulate complex data structures</a>
+                <a class="navbar-item examples" id="implicit-certificate">Implicit Certificate scheme</a>
+              </div>
             </div>
-        </nav>
-        <div class="row bg-secondary text-light align-text-bottom">
-            <h5 class="col pt-2">KEYS</h5>
-            <h5 class="col pt-2 ml-2">DATA</h5>
-        </div>
-        <div class="row">
-            <div id="keys" class="col-6"></div>
-            <div id="data" class="col"></div>
-        </div>
-        <div class="row bg-secondary text-light">
-            <div class="col">
-                <div class="row no-gutters">
-                    <h5 class="col pt-2">CODE</h5>
-                    <button type="button" id="run" class="col btn btn-xs btn-outline-light border-top-0 border-bottom-0 rounded-0">
-                        <span id="play" style="display: none">
-                            <svg class="heart" viewBox="0 0 32 29.6">
-                                <path d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2
-                                         c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z"/>
-                            </svg>
-                        </span>
-                        <i id="play-icon" class="material-icons align-middle">play_circle_filled</i>
-                        <span class="align-middle">Run (&#8984; + Enter)</span>
-                    </button>
-                </div>
+          <div class="navbar-item">
+            <div class="buttons">
+              <input id="umm" class="form-check-input" type="checkbox" value="">&nbsp; minimal memory manager (64KiB max)
             </div>
-            <div class="col">
-                <div class="row no-gutters">
-                    <h5 class="col pt-2">OUTPUT &nbsp;&nbsp;<small id="timing" class="mr-3 badge badge-light"></small></h5>
-                    <div class="col-1">
-                        <button id="clear" href="#" class="btn btn-xs btn-outline-light border-0 rounded-0 float-right" alt="Clear console">
-                            <i class="material-icons align-middle">clear_all</i>
-                        </button>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
-        <div class="row flex-fill d-flex justify-content-start">
-            <div id="input"  class="col-6"></div>
-            <div id="output" class="col bg-dark text-light pt-3"></div>
-        </div>
-    </div>
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.1/ace.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.1/ext-language_tools.js"></script>
-    {{{ SCRIPT }}}
-    <script>
-        let final_output = ""
-        let autocompleteWords = [];
+      </div>
+    </nav>
+  </div>
+  <section id="ide">
 
-        const autocompleteSetup = () => {
-            $.get('https://raw.githubusercontent.com/DECODEproject/zenroom/master/docs/completions.lua', data => {
-                Module.ccall('zenroom_exec', 
-                             'number',
-                             ['string', 'string', 'string', 'string', 'number'],
-                             [data, null, null, null, 3]);
-                Module['print'] = (function() {
-                    return function(text) {
-                        if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-                        final_output += text + "<br/>"
-                    };
-                })()
-            })
-        }
-
-        var Module = {
-            preRun: [autocompleteSetup],
-            postRun: [],
-            print:  (()=> {
-                return text => { 
-                    autocompleteWords.push(text)
-                }
-            })(),
-            printErr: function(text) {
-                if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-                if (text.startsWith('[!]')) {
-                    $(`<span class='bg-danger'>${text}</span><br>`).appendTo("#output")
-                    return
-                }
-                console.error(text)
-            },
-            exec_ok: () => {
-                $("#play").hide()
-                $("#play-icon").show()
-            },
-            exec_error: () => {
-                $("#play").hide()
-                $("#play-icon").show()
-            },
-        }
-
-        const zenroom = function() {
-            const keys = keys_editor.getValue() || null
-            const data = data_editor.getValue() || null
-            const conf = $('#umm').attr('checked') ? 'umm' : null
-            final_output = ''
-            const o = $("#output")
-            o.html('')
-            let t0 = performance.now()
-            Module.ccall('zenroom_exec', 
-                             'number',
-                             ['string', 'string', 'string', 'string', 'number'],
-                             [editor.getValue(), conf, keys, data, 3]);
-            let t1 = performance.now()
-            console.log(t1-t0, 'ms')
-            $('#timing').html(t1-t0 + 'ms')
-            o.append(final_output)
-            o[0].scrollTop = o[0].scrollHeight
-        }
-
-        const data_editor = ace.edit("data")
-        data_editor.session.setMode("ace/mode/json")
-        const keys_editor = ace.edit("keys")
-        keys_editor.session.setMode("ace/mode/json")
-
-        const lang_tools = ace.require("ace/ext/language_tools");
-        const editor = ace.edit("input");
-        editor.setOptions({
-            enableBasicAutocompletion: true,
-            enableLiveAutocompletion: true,
-        });
-        editor.session.setMode("ace/mode/lua");
-        editor.focus();
-        editor.commands.addCommand({
-            name: 'run',
-            bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
-            exec: () => {
-                $("#play").show()
-                $("#play-icon").hide()
-                setTimeout(zenroom, 100)
-            }
-        });
-
-        editor.commands.addCommand({
-            name: 'clear',
-            bindKey: {win: 'Ctrl-l',  mac: 'Ctrl-l'},
-            exec: editor =>  { $("#output").html("") }
-        });
-
-        const load_example = () => {
-            const name = $("#examples-select").val()
-            const extensions = {'#input': '.lua', '#data': '.data', '#keys': '.keys'}
-            const base_url = "https://raw.githubusercontent.com/DECODEproject/zenroom/master/examples/"
-            for (var e in extensions) {
-                const editor = $(e)[0].env.editor
-                editor.setValue("")
-                $.get(base_url + name + extensions[e], value => {
-                    editor.setValue(value)
-                })
-            }
-        }
-
-        $(function() {
-            $('#run').click(() => {
-                $("#play").show()
-                $("#play-icon").hide()
-                setTimeout(zenroom, 100)
-            })
-
-            const crypto_completer = {
-                getCompletions: function(editor, session, pos, prefix, callback) {
-                    if (prefix.length === 0) { callback(null, []); return }
-                    callback(null, autocompleteWords.map(word => ({name: word, value: word, meta: 'zenroom'})))
-                }
-            }
-            lang_tools.addCompleter(crypto_completer)
-
-            $("#examples-select").on('change', load_example)
-            $('#clear').click(() => { $("#output").html("") })
-        });
-    </script>
+  </section>
+  {{{ SCRIPT }}}
+  <script>
+    ZR.init()
+    $(document).ready(function() {
+      $(".navbar-burger").click(() => {
+          $(".navbar-burger").toggleClass("is-active");
+          $(".navbar-menu").toggleClass("is-active");
+      });
+    });
+  </script>
 </body>
 </html>

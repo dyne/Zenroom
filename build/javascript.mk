@@ -29,5 +29,6 @@ javascript-demo: ldflags += -s WASM=1 -s ASSERTIONS=1 --shell-file ${extras}/she
 javascript-demo: apply-patches lua53 milagro embed-lua lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src js-demo
-	@mkdir -p build/wasm
-	@cp -v docs/demo/index.* build/wasm/
+	@mkdir -p build/demo
+	@cp -v docs/demo/index.* build/demo/
+	@cp -v docs/demo/*.js build/demo/
