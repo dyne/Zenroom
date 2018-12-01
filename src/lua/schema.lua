@@ -265,7 +265,38 @@ function schema.String  (obj, path) return TypeSchema(obj, path, "string")   end
 function schema.Table   (obj, path) return TypeSchema(obj, path, "table")    end
 function schema.UserData(obj, path) return TypeSchema(obj, path, "userdata") end
 -- zenroom specific types
-function schema.Octet(obj, path) return TypeSchema(obj, path, "zenroom.octet") end
+function schema.OCTET(obj, path) return TypeSchema(obj, path, "zenroom.octet") end
+function schema.BIG(obj, path)
+   if type(obj) == "zenroom.big" then return nil -- success
+   else local b = BIG.new(obj)
+	  if not b then
+		 return schema.Error("Type mismatch: '"..path..
+								"' should be a valid BIG, is "..type(obj), path)
+	  else return nil -- success converting object -> octet arg -> big
+	  end
+   end
+end
+function schema.ECP(obj, path)
+   if type(obj) == "zenroom.ecp" then return nil -- success
+   else local b = ECP.new(obj)
+	  if not b then
+		 return schema.Error("Type mismatch: '"..path..
+								"' should be a valid ECP, is "..type(obj), path)
+	  else return nil -- success converting object -> octet arg -> big
+	  end
+   end
+end
+function schema.ECP2(obj, path)
+   if type(obj) == "zenroom.ecp2" then return nil -- success
+   else local b = ECP2.new(obj)
+	  if not b then
+		 return schema.Error("Type mismatch: '"..path..
+								"' should be a valid ECP2, is "..type(obj), path)
+	  else return nil -- success converting object -> octet arg -> big
+	  end
+   end
+end
+
 -- TODO: move others from zenroom_schema
 
 -- Checks that some value is a string matching a given pattern.
