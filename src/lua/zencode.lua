@@ -9,7 +9,7 @@ local zencode = {
 }
 
 -- debugging facility
-local function x(n,s)
+local function xxx(n,s)
    if zencode.verbosity > n then
 	  warn(s) end
 end
@@ -23,10 +23,12 @@ function zencode:begin(verbosity)
 end
 
 function zencode:step(text)
-   if text == nil or text == '' then return false end
+   if text == nil or text == '' then 
+	  return false
+   end
    -- case insensitive match of first word
    local prefix = text:match("(%w+)(.+)"):lower()
-   x(1,"prefix: "..prefix)
+   xxx(1,"prefix: "..prefix)
    local defs -- parse in what phase are we
    -- TODO: use state machine
    if     prefix == 'given' then
@@ -42,7 +44,7 @@ function zencode:step(text)
       defs = self.current_step
    end
    if not defs then
-      x(1,"no valid definitions found in parsed zencode")
+      xxx(1,"no valid definitions found in parsed zencode")
       return false
    end
    for pattern,func in pairs(defs) do
@@ -52,12 +54,12 @@ function zencode:step(text)
       end
 	  -- support simplified notation for arg match
 	  local pat = string.gsub(pattern,"''","'(.-)'")
-	  x(1,"pattern: "..pat)
+	  xxx(1,"pattern: "..pat)
       local res = string.match(text, pat)
       if res then
 		 local args = {} -- handle multiple arguments in same string
 		 for arg in string.gmatch(text,"'(.-)'") do
-			x(1,"arg: "..arg)
+			xxx(1,"arg: "..arg)
 			table.insert(args,arg)
 		 end
 		 self.id = self.id + 1
@@ -81,7 +83,7 @@ end
 
 function zencode:parse(text)
    for line in self:newline(text) do
-      x(0,line)
+      -- xxx(0,line)
       self:step(line)
    end
 end
@@ -92,8 +94,7 @@ function zencode:run()
       I.warn(self.matches)
    end
    for i,x in ipairs(self.matches) do
-	  -- I.warn(table.unpack(x.args))
-
+	   -- xxx(1,table.unpack(x))
 	  -- protected call (doesn't exists on errors)
       -- local ok, err = pcall(x.hook,table.unpack(x.args))
       -- if not ok then error(err) end
@@ -101,14 +102,6 @@ function zencode:run()
 	  -- unprotected call
       x.hook(table.unpack(x.args))
    end
-end
-
-
-verbosity = 1
--- debugging facility
-local function x(n,s)
-   if verbosity > n then
-	  warn(s) end
 end
 
 _G["Given"] = function(text, fn)

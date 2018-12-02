@@ -45,6 +45,8 @@ ECP    = require('zenroom_ecp')
 ECP2   = require('zenroom_ecp2')
 H = HASH -- alias
 ZEN    = require('zencode')
+-- implicit certificates
+require('zencode_ecqv')
 
 function content(var)
    if type(var) == "zenroom.octet" then

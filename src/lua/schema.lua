@@ -277,6 +277,9 @@ function schema.BIG(obj, path)
    end
 end
 function schema.ECP(obj, path)
+   if not obj then
+	  schema.Error("Type mismatch: '"..path..
+				   "' should be a valid ECP, is nil", path) end
    if type(obj) == "zenroom.ecp" then return nil -- success
    else local b = ECP.new(obj)
 	  if not b then
