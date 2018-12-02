@@ -97,13 +97,26 @@ big* big_new(lua_State *L) {
 }
 
 big* big_arg(lua_State *L,int n) {
-	void *ud = luaL_checkudata(L, n, "zenroom.big");
-	luaL_argcheck(L, ud != NULL, n, "big class expected");
-	big *o = (big*)ud;
-	if(!o->val && !o->dval) {
-		lerror(L, "invalid big number in argument: not initalized");
-		return NULL; }
-	return(o);
+	void *ud = luaL_testudata(L, n, "zenroom.big");
+	// luaL_argcheck(L, ud != NULL, n, "big class expected");
+	if(ud) {
+		big *b = (big*)ud;
+		if(!b->val && !b->dval) {
+			lerror(L, "invalid big number in argument: not initalized");
+			return NULL; }
+		return(b);
+	}
+
+	octet *o = o_arg(L,n);
+	if(o) {
+		big *b  = big_new(L); SAFE(b);
+		big_init(b);
+		BIG_fromBytesLen(b->val, o->val, o->len);
+		lua_pop(L,1);
+		return(b);
+	}
+	lerror(L, "invalib big number in argument");
+	return NULL;
 }
 
 // allocates a new big in LUA, duplicating the one in arg
