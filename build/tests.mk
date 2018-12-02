@@ -36,9 +36,9 @@ crypto-tests = \
 	${1} test/ecp_generic.lua && \
 	${1} test/pair_bls383.lua
 
-# test/octet-json.sh ${1} && \
 
 shell-tests = \
+	test/octet-json.sh ${1} && \
 	test/integration_asymmetric_crypto.sh ${1}
 
 # ${1} test/closure.lua && \

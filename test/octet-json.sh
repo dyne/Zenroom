@@ -21,7 +21,7 @@ pk = ecc:public()
 dump = JSON.encode({teststr="$tstr",
                     pubkey=pk:base64(),
 	                test64=right:base64(),
-					testhex=right:hex(),
+ 					testhex=right:hex(),
 					testhash=sha512(right):base64()})
 print(dump)
 EOF

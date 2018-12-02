@@ -16,7 +16,7 @@ octet* o_arg(lua_State *L,int n);
 #define push_octet_to_hex_string(o)	  \
 	{ \
 		int odlen = o->len<<1; \
-		char *s = zen_memory_alloc(odlen); \
+		char *s = zen_memory_alloc(odlen+1); \
 		int i; unsigned char ch; \
 		for (i=0; i<o->len; i++) { \
 		ch=o->val[i]; sprintf(&s[i<<1],"%02x", ch); } \
