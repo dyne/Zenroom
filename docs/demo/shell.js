@@ -117,6 +117,8 @@ var ZR = (function() {
 
     const addControls = function(stack) {
         const component = stack.contentItems[0]
+		if (!component)
+			return
         if (component.componentName == 'ZencodeEditor') {
             const button = $($('#play-button-template').html())
             stack.header.controlsContainer.prepend(button)
