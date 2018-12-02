@@ -78,6 +78,7 @@
 #define BIG_rcopy(b,a) BIG_384_29_rcopy(b,a)
 #define BIG_shl(b,a) BIG_384_29_shl(b,a)
 #define BIG_shr(b,a) BIG_384_29_shr(b,a)
+#define BIG_fshl(b,a) BIG_384_29_fshl(b,a)
 #define BIG_fshr(b,a) BIG_384_29_fshr(b,a)
 #define BIG_parity(b) BIG_384_29_parity(b)
 #define BIG_isunity(b) BIG_384_29_isunity(b)

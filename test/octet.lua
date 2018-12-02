@@ -79,9 +79,9 @@ function jsontest(f,reason)
    dotest(left:octet(),f(right['public']),reason)
    ECP.new(f(right['public'])) -- test if ecp point on curve
 end
-jsontest(base64,"base64")
 jsontest(hex,"hex")
 jsontest(base58,"base58")
+jsontest(base64,"base64")
 -- jsontest(bin,"bin") -- TODO: fix
 
 -- more testing using crypto verification of pub/priv keypair
@@ -99,8 +99,8 @@ function jsoncryptotest(f)
 			 .._G[f](dint).."\n".._G[f](key.private))
 end
 jsoncryptotest('hex')
-jsoncryptotest('base64')
 jsoncryptotest('base58')
+jsoncryptotest('base64')
 -- jsoncryptotest('bin') -- TODO: fix
 print '= OK'
 

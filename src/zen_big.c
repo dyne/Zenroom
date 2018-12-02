@@ -179,7 +179,7 @@ int big_init(big *n) {
 		size_t size = sizeof(BIG);
 		n->val = zen_memory_alloc(size);
 		n->doublesize = 0;
-		n->len = size;
+		n->len = MODBYTES;
 		return(size);
 	}
 	error(NULL,"anomalous state of big number detected on initialization");
@@ -189,19 +189,19 @@ int dbig_init(big *n) {
 	if(n->dval && n->doublesize) {
 		func(NULL,"ignoring superflous initialization of double big");
 		return(1); }
-	size_t size = sizeof(DBIG); // modbytes * 2, aka n->len<<1
+	size_t size = sizeof(DBIG); //sizeof(DBIG); // modbytes * 2, aka n->len<<1
 	if(n->val && !n->doublesize) {
 		n->doublesize = 1;
 		n->dval = zen_memory_alloc(size);
 		// extend from big to double big
 		BIG_dscopy(n->dval,n->val);
 		zen_memory_free(n->val);
-		n->len = size;
+		n->len = MODBYTES<<1;
 	}
 	if(!n->val || !n->dval) {
 		n->doublesize = 1;
 		n->dval = zen_memory_alloc(size);
-		n->len = size;
+		n->len = MODBYTES<<1;
 		return(size);
 	}
 	error(NULL,"anomalous state of double big number detected on initialization");
@@ -271,8 +271,8 @@ static int newbig(lua_State *L) {
 
 	// octet argument, import
 	octet *o = o_arg(L, 1); SAFE(o);
-	int biglen = sizeof(BIG);
-	int dbiglen = sizeof(DBIG);
+	int biglen = MODBYTES; // sizeof(BIG);
+	int dbiglen = MODBYTES<<1; // sizeof(DBIG);
 	big *c = big_new(L); SAFE(c);
 	if(o->len <= biglen) { // big
 		big_init(c);
@@ -465,6 +465,7 @@ static int big_sqr(lua_State *L) {
 		lerror(L,"cannot make square root of a double big number");
 		return 0; }
 	// BIG_norm(l->val); BIG_norm(r->val);
+	// BIG_norm(l->val);
 	big *d = big_new(L); SAFE(d);
 	dbig_init(d); // assume it always returns a double big
 	BIG_sqr(d->dval,l->val);
