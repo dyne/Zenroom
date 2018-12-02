@@ -4,7 +4,7 @@ print()
 
 -- octet = require'octet'
 
-function dotest(l,r)
+function dotest(l,r,reason)
    if(l == r
 	  and
 	  #l == #r) then
@@ -15,7 +15,7 @@ function dotest(l,r)
 	  print(l)
 	  print 'right:'
 	  print(r)
-	  assert(false)
+	  assert(false, reason)
    end
 end
 
@@ -73,9 +73,35 @@ right = base64(b64)
 -- print(right:base64())
 dotest(left:octet(),right)
 print '== JSON import/export'
-str = JSON.encode({public = base64(left)})
--- print(str)
-right = JSON.decode(str)
-dotest(left:octet(),base64(right['public']))
-ECP.new(base64(right['public'])) -- test ecp point on curve
+function jsontest(f,reason)
+   str = JSON.encode({public = f(left)})
+   right = JSON.decode(str)
+   dotest(left:octet(),f(right['public']),reason)
+   ECP.new(f(right['public'])) -- test if ecp point on curve
+end
+jsontest(base64,"base64")
+jsontest(hex,"hex")
+jsontest(base58,"base58")
+-- jsontest(bin,"bin") -- TODO: fix
+
+-- more testing using crypto verification of pub/priv keypair
+function jsoncryptotest(f)
+   local key = {}
+   key.private = INT.new(rng,ECP.order())
+   key.public = key.private * ECP.G()
+   str = JSON.encode({private = _G[f](key.private)})
+   dstr = L.property('private')(JSON.decode(str))
+   doct = _G[f](dstr)
+   assert(doct == key.private, "Error importing to OCTET from "..f..":\n"
+			 .._G[f](doct).."\n".._G[f](key.private))
+   dint = BIG.new(_G[f](dstr))
+   assert(dint * ECP.G() == key.public, "Error importing to BIG from "..f..":\n"
+			 .._G[f](dint).."\n".._G[f](key.private))
+end
+jsoncryptotest('hex')
+jsoncryptotest('base64')
+jsoncryptotest('base58')
+-- jsoncryptotest('bin') -- TODO: fix
 print '= OK'
+
+
