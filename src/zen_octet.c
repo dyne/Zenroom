@@ -111,7 +111,7 @@ int is_base58(const char *in) {
 int is_hex(const char *in) {
 	if(!in) { ERROR(); return 0; }
 	int c;
-	for(c=0; in[c]!='\0'; c++) {
+	for(c=0; in[c]!=0; c++) {
 		if (!isxdigit(in[c])) {
 		    ERROR(); return 0; }
 	}
@@ -371,15 +371,38 @@ static int from_string(lua_State *L) {
 }
 
 static int from_hex(lua_State *L) {
+	const int32_t hextable[] = {
+		-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+		-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+		-1,-1, 0,1,2,3,4,5,6,7,8,9,-1,-1,-1,-1,-1,-1,-1,10,11,12,13,14,15,-1,
+		-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+		-1,-1,10,11,12,13,14,15,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+		-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+		-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+		-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+		-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+		-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
+		-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1
+	};
+	// const long hextable[] = {
+	// 	[0 ... 255] = -1,
+	// 	['0'] = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+	// 	['A'] = 10, 11, 12, 13, 14, 15,
+	// 	['a'] = 10, 11, 12, 13, 14, 15
+	// };
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "hex string sequence expected");
 	int len = is_hex(s);
+	func(L,"hex string sequence length: %u",len);
 	if(!len || len>MAX_STRING*2) {
 		error(L, "invalid hex sequence size: %u", len);
 		lerror(L, "operation aborted");
 		return 0; }
-	octet *o = o_new(L, len); // could be half size
-	OCT_fromHex(o, (char*)s);
+	octet *o = o_new(L, len); // can be halved
+	int i, j;
+	for(i=0, j=0; s[j]!=0; i++, j+=2)
+		o->val[i] = (hextable[(short)s[j]]<<4) + hextable[(short)s[j+1]];
+	o->len=i;
 	return 1;
 }
 
