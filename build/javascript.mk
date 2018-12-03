@@ -32,3 +32,19 @@ javascript-demo: apply-patches lua53 milagro embed-lua lpeglabel
 	@mkdir -p build/demo
 	@cp -v docs/demo/index.* build/demo/
 	@cp -v docs/demo/*.js build/demo/
+
+javascript-npm: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
+javascript-npm: ldflags += -s INVOKE_RUN=0 \
+	                       -s EXPORT_NAME="'ZR'" \
+	                       -s MODULARIZE=1 \
+						   -s NO_FILESYSTEM=1 \
+						   -s NODEJS_CATCH_EXIT=0 \
+						   -s ALLOW_MEMORY_GROWTH=1 \
+						   -s WARN_UNALIGNED=1 --memory-init-file 0
+javascript-npm: apply-patches lua53 milagro embed-lua lpeglabel
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	make -C src js
+	@mkdir -p build/npm
+	@cp -v src/zenroom.js build/npm/
+	@echo "module.exports = ZR();" >> build/npm/zenroom.js
+
