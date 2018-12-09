@@ -47,7 +47,7 @@ certification = { public = certpub,
 				  statement = declaration.statement,
 				  certifier = str("Mad Hatter") }
 CERT = sha256(OCTET.serialize(certification))
-CERThash = INT.new(CERT,order)
+CERThash = INT.new(CERT)
 -- private key reconstruction data
 certpriv = (CERThash * certkey.private + CA.private)
 -- CA sends to Requester certpriv and CERThash
@@ -67,5 +67,5 @@ CERTpublic  = certpub * CERThash + CA.public
 -- multiplying it by the curve generator point, then check equality
 assert(CERTpublic == G * CERTprivate)
 print "Certification by Mad Hatter:"
-I.print({ private = CERTprivate:octet():base64(),
-		  public  =  CERTpublic:octet():base64()    })
+I.print({ private = CERTprivate:octet():hex(),
+		  public  =  CERTpublic:octet():hex()    })

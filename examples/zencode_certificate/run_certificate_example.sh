@@ -12,7 +12,7 @@ rm -v -f \
 
 verbose=1
 
-echo "CA generates its private keyring"
+echo "MadHatter generates its private keyring"
 cat <<EOF | zenroom | tee madhatter.keys | json_pp
 local rng = RNG.new()
 local priv = INT.new(rng,ECP.order())
@@ -23,7 +23,7 @@ write_json({ MadHatter = {
 		   })
 EOF
 
-echo "REQ generates a declaration"
+echo "Alice generates a declaration"
 cat <<EOF | zenroom -k madhatter.keys | tee alice_declaration.json | json_pp
 -- alice declares 
 ZEN:begin($verbose)
@@ -31,7 +31,7 @@ ZEN:parse([[
   Scenario 'request': Make my declaration and request certificate
     Given that I introduce myself as 'Alice'
     and I have the 'public' key 'MadHatter' in keyring
-    When I declare to 'Mad Hatter' that I am 'lost in Wonderland'
+    When I declare to 'MadHatter' that I am 'lost in Wonderland'
     and I issue my declaration
     Then print my 'declaration'
 ]])
@@ -47,9 +47,9 @@ echo "write_json({ declaration = L.property('keypair')(JSON.decode(DATA))})" \
 	| zenroom -a alice_declaration.json | tee declaration_keypair.json | json_pp
 
 
-echo "CA gets the declaration and issues a certificate"
+echo "MadHatter gets the declaration and issues a certificate"
 cat <<EOF | zenroom -k madhatter.keys -a declaration_public.json \
-	| tee madhatter_certificate.json | json_pp
+	| tee madhatter_certificate.json
 -- madhatter certifies
 ZEN:begin($verbose)
 ZEN:parse([[
@@ -71,10 +71,10 @@ echo "write_json({ certificate = L.property('public')(JSON.decode(DATA))})" \
 	| zenroom -a madhatter_certificate.json | tee certificate_public.json | json_pp
 echo "write_json({ certificate = L.property('private')(JSON.decode(DATA))})" \
 	| zenroom -a madhatter_certificate.json | tee certificate_private.json | json_pp
+rm -f madhatter_certificate.json
 
-
-echo "REQ receives certificate_private and verifies its validity"
-cat <<EOF | zenroom -k madhatter.keys -a certificate_private.json -k declaration_keypair.json
+echo "Alice receives certificate_private and verifies its validity"
+cat <<EOF | zenroom -a certificate_private.json -k declaration_keypair.json | json_pp
 ZEN:begin($verbose)
 ZEN:parse([[
   Scenario 'save': Receive a certificate of a declaration and save it
@@ -98,8 +98,8 @@ write_json({ Bob = {
 		   })
 EOF
 
-echo "ANY receives certificate_public and uses it to encrypt a message"
-cat <<EOF | zenroom -k bob.keys -a certificate_public.json | tee message.json
+echo "Bob receives a certified declaration and uses it to encrypt a message"
+cat <<EOF | zenroom -k bob.keys -a certificate_public.json | tee bob_handshake.json
 ZEN:begin($verbose)
 ZEN:parse([[
   Scenario 'verify': Receive a certificate of a declaration and use it to encrypt a message
@@ -112,3 +112,4 @@ ZEN:parse([[
 ]])
 ZEN:run()
 EOF
+

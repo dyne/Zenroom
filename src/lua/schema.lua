@@ -267,7 +267,9 @@ function schema.UserData(obj, path) return TypeSchema(obj, path, "userdata") end
 -- zenroom specific types
 function schema.OCTET(obj, path) return TypeSchema(obj, path, "zenroom.octet") end
 function schema.BIG(obj, path)
-   if type(obj) == "zenroom.big" then return nil -- success
+   if not obj then return schema.Error("Type mismatch: '"..path..
+										  "' should be a valid BIG, is nil", path)
+   elseif type(obj) == "zenroom.big" then return nil -- success
    else local b = BIG.new(obj)
 	  if not b then
 		 return schema.Error("Type mismatch: '"..path..

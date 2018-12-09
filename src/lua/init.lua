@@ -63,10 +63,10 @@ _G["ipairs"] = LAMBDA.pairs
 -- map values in place, sort tables by keys for deterministic order
 function map(data, fun)
    if(type(data) ~= "table") then
-	  error "map: first argument is not a table"
+	  error "map() first argument is not a table"
 	  return nil end
    if(type(fun) ~= "function") then
-	  error "map: second argument is not a function"
+	  error "map() second argument is not a function"
 	  return nil end
    out = {}
    L.map(data,function(k,v) out[k] = fun(v) end)
@@ -76,9 +76,9 @@ end
 -- validate against a schema
 function validate(data, schema)
    if(type(data) ~= "table") then
-	  error("validate: first argument is not a table, cannot process validation") return end
+	  error("validate() first argument is not a table, cannot process validation") return end
    if(type(schema) ~= "function") then
-	  error("validate: second argument is not a function, invalid schema") return end
+	  error("validate() second argument is not a function, invalid schema") return end
    local err = SCHEMA.CheckSchema(data,schema)
    if err then
 	  error(S.print(err))
@@ -109,20 +109,20 @@ end
 
 function read_json(data, validation)
    if not data then
-	  error("read_json: missing data")
+	  error("read_json() missing data")
 	  -- os.exit()
    end
    out,res = JSON.decode(data)
    if not out then
 	  if res then
-		 error("read_json: invalid json")
+		 error("read_json() invalid json")
 		 error(res)
 		 -- os.exit()
 	  end
    else
 	  if validation ~= nil then
 		 -- operate schema validation if argument is present
-		 assert(validate(out, validation), "read_json: invalid schema")
+		 assert(validate(out, validation), "read_json() invalid schema")
 	  end
 	  return out
    end

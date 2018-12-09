@@ -13,29 +13,37 @@ authority = nil
 random = RNG.new()
 order = ECP.order()
 G = ECP.generator()
+KDF_rounds = 10000
 
 schemas = {
 
    certificate = S.record {
 	  objid = S.string,
-	  certpriv = S.OneOf( S.string, S.big),
-	  certpub = S.hex,
-	  certhash = S.OneOf( S.hex, S.big),
+	  private = S.Optional(S.big),
+	  public = S.ecp,
+	  hash = S.big,
 	  from = S.string,
-	  authkey = S.hex
+	  authkey = S.ecp
+   },
+
+   certificate_hash = S.Record {
+	  public = S.ecp,
+	  requester = S.string,
+	  statement = S.string,
+	  certifier = S.string
    },
 
    declaration = S.record {
 	  from = S.string,
 	  to = S.string,
-	  declared = S.string,
-	  public = S.hex
+	  statement = S.string,
+	  public = S.ecp
    },
 
    declaration_keypair = S.record {
 	  objid = S.string,
 	  requester = S.string,
-	  declared = S.string,
+	  statement = S.string,
 	  public = S.ecp,
 	  private = S.hex
    },
@@ -68,6 +76,12 @@ f_havekey = function (keytype, keyname)
    _G['keyring'] = keypair -- explicit global state
 end
 
+function f_certhash(t)
+   assert(validate(t,schemas['certificate_hash']),
+		  "Invalid input to generate a certificate hash")
+   return INT.new(sha256(OCTET.serialize(I.spy(t))))
+end
+
 Given("I have the '' key '' in keyring", f_havekey)
 Given("I have my '' key in keyring", f_havekey)
 
@@ -79,7 +93,6 @@ When("I declare to '' that I am ''",   function (auth,decl)
 		 authority = auth
 end)
 When("I issue my declaration", function()
-		-- request certificate
 		local certreq = keygen()
 		declaration = {
 		   zencode = VERSION,
@@ -87,7 +100,7 @@ When("I issue my declaration", function()
 		   public = {
 			  from = whoami,
 			  to = authority,
-			  declared = declared,
+			  statement = declared,
 			  public = hex(certreq.public) },
 		   keypair =  {
 			  public = hex(certreq.public),
@@ -113,30 +126,30 @@ end)
 When("I issue my certificate", function()
 		-- read global states set before
 		local certkey = keygen()
-		local declaration = _G['declaration']
-		local keyring     = _G['keyring']
+		-- local declaration = _G['declaration']
+		-- local keyring     = _G['keyring']
 		local certreq = ECP.new(declaration.public)
 		-- generate the certificate
 		local certpub = certreq + certkey.public
-		local cert = { public    = certpub,
-					   requester = declaration.requester,
-					   statement = declaration.statement,
-					   certifier = whoami }
-		local certhash = INT.new(sha256(OCTET.serialize(cert)),order)
+		local certhash = f_certhash({ public    = hex(certpub),
+									  requester = declaration.from,
+									  statement = declaration.statement,
+									  certifier = whoami })
 		local certpriv = (certhash * certkey.private + keyring.private)
 		-- format the certificate
 		certificate = {
 		   public = {
 			  objid = 'certificate.ECQV',
-			  certpub  = hex(certpub),
+			  public  = hex(certpub),
+			  hash    = hex(certhash),
 			  authkey = keyring.public,
 			  from = whoami
 		   },
 		   private = {
 			  objid = 'certificate.ECQV',
-			  certpub  = hex(certpub),
-			  certpriv = hex(certpriv),
-			  certhash = hex(certhash),
+			  public  = hex(certpub),
+			  private = hex(certpriv),
+			  hash    = hex(certhash),
 			  authkey = keyring.public,
 			  from = whoami
 		   }
@@ -149,23 +162,23 @@ When("I verify the ''", function(verif)
 		-- we only know how to verify declarations with certificates
 		-- assert(obj == "declaration" and verif == "certificate",
 		-- 	   "Cannot verify "..obj.." with "..verif)
-		verif_t = L.property(verif)(JSON.decode(DATA))
-		assert(validate(verif_t,schemas[verif]), "Invalid "..verif)
+		certificate = L.property(verif)(JSON.decode(DATA))
+		assert(validate(certificate,schemas[verif]), "Invalid "..verif)
 		-- explicit conversions
-		local v = { certhash = INT.new(verif_t.certhash),
+		local v = { certhash = INT.new(certificate.hash),
 					declpriv = INT.new(keyring.private),
-					certpriv = INT.new(verif_t.certpriv),
-					capub    = ECP.new(verif_t.authkey),
-					certpub  = ECP.new(verif_t.certpub)  }
+					certpriv = INT.new(certificate.private),
+					capub    = ECP.new(certificate.authkey),
+					certpub  = ECP.new(certificate.public)  }
 		v.checkpriv = (v.certhash * v.declpriv + v.certpriv) % order
 		v.checkpub  =  v.certpub  * v.certhash + v.capub
 		assert(v.checkpub == (G * v.checkpriv),
 			   "Verification failed: "..verif.." is not valid:\n"..DATA)
 		-- publish signed declaration
 		_G['declaration'] = {
-		   hash = verif_t.certhash,
-		   authkey = verif_t.authkey,
-		   certificate = verif_t.certpub }
+		   hash = certificate.hash,
+		   authkey = certificate.authkey,
+		   certificate = certificate.public }
 end)
 
 -- verify
@@ -176,7 +189,7 @@ Given("that '' declares to be ''",function(who, decl)
 		 else declared = declared .." and ".. decl end
 		 whois = who
 end)
-Given("declares to be ''", function(decl)
+Given("declares also to be ''", function(decl)
 		 assert(who ~= "", "The subject making the declaration is unknown")
 		 -- declaration
 		 if not declared then declared = decl
@@ -184,73 +197,33 @@ Given("declares to be ''", function(decl)
 end)
 When("I receive the '' from ''", function(obj, who)
 		local d = L.property(obj)(JSON.decode(DATA))
-		assert(validate(d,schemas[obj]), "Invalid "..obj)
+		assert(validate(d,schemas[obj]), "Invalid schema: "..obj)
 		assert(d.from == who, "The "..obj.." is not from "..who)
 		_G[obj] = d -- set state
 end)
 When("I use the '' to encrypt ''", function(what,content)
 		local cipher = { iv = random:octet(16) }
 		if what == "certificate" then
-		   local CERT = sha256(OCTET.serialize({ public = certificate.certpub,
-												 requester = whois,
-												 statement = declared,
-												 certifier = certificate.from }))
-		   local CERThash = INT.new(CERT) % order
-		   local CERTpublic = ECP.new(certificate.certpub) * CERThash + ECP.new(certificate.authkey)
+		   local CERThash = f_certhash({ public    = certificate.public,
+										 requester = whois,
+										 statement = declared,
+										 certifier = certificate.from })
+		   error(certificate.hash)
+		   error(CERThash)
+		   error(type(hex(certificate.hash)))
+		   error(type(CERThash:octet()))
+		   error(#certificate.hash)
+		   error(#CERThash)
+		   assert(certificate.hash == CERThash, "Incorrect certificate hash")
+		   local CERTpublic = ECP.new(certificate.public) * CERThash + ECP.new(certificate.authkey)
 		   -- calculate shared session key
 		   session_raw = ( INT.new(keyring.private) % order) * CERTpublic
-		   session = ECDH.pbkdf2(HASH.new('sha256'),session_raw,random:octet(64),10000,32)
+		   session = ECDH.pbkdf2(HASH.new('sha256'),session_raw,random:octet(64),KDF_rounds,32)
 		end
 
 		cipher.text,cipher.checksum =
 		   ECDH.aead_encrypt(session, content, random:octet(16), keyring.public)
-		cipher = map(cipher,hex)
-		cipher.objid = "certificate.handshake"
-		_G['message'] = JSON.encode(cipher)
+		-- cipher = map(cipher,hex)
+		cipher.objid = what ..".ciphermsg"
+		_G['message'] = cipher
 end)
-
--- -- execution
--- ZEN:begin(verbosity)
-
--- request = [[
--- Feature: Produce a verifiable 'certificate' for a 'declaration'
---   In order to have a 'declaration' certified
---   As a 'participant' who knows an 'authority'
---   Or as an 'authority' who is also a 'participant'
---   I want to make a 'declaration' and request its 'certificate'
---   I want to verify a 'declaration' using its 'certificate'
---   I want to communicate privately with any other 'participant'
-
---   Scenario 'request': Make my declaration and request certificate
---     Given that I introduce myself as 'Alice'
---     and I have the 'public' key 'Mad Hatter' in keyring
---     When I declare to 'Mad Hatter' that I am 'lost in Wonderland'
---     and I issue my declaration
---     Then my 'declaration' should be valid
-
---   Scenario 'issue': Receive a declaration request and issue a certificate
---     Given that I am known as 'Mad Hatter'
---     and I receive a 'declaration' from 'Alice'
---     and I have my 'private' key in keyring
---     When the 'declaration' by 'Alice' is true
---     and I issue my certificate
---     Then my 'certificate' should be valid
-
---   Scenario 'save': Receive a certificate of a declaration and save it
---     Given I receive a 'certificate' from 'Mad Hatter'
---     and I have the 'private' key 'declaration' in keyring
---     When I verify the 'declaration' with its 'certificate'
---     Then my 'certificate' should be valid
-
---   Scenario 'verify': Verify a declaration with its certificate
---     Given I receive a 'declaration' from 'Alice'
---     and I receive a 'certificate' from 'Mad Hatter'
---     and I have the 'public' key 'Mad Hatter' in keyring
---     When I verify the 'declaration' with its 'certificate'
---     Then the 'certificate' should be valid
-
--- ]]
-
--- ZEN:parse(request)
-
--- ZEN:run()

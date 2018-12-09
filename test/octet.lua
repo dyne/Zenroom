@@ -21,6 +21,7 @@ end
 
 -- random and  check hash of octets
 -- ecdh = require'ecdh'
+hash = HASH.new()
 right = OCTET.string([[Minim quis typewriter ut. Deep v ut man braid neutra culpa in officia consectetur tousled art party stumptown yuccie. Elit lo-fi pour-over woke venmo keffiyeh in normcore enim sunt labore williamsburg flexitarian. Tumblr distillery fanny pack, banjo tacos vaporware keffiyeh.]])
 teststr = right:string()
 test64  = right:base64()
@@ -29,7 +30,6 @@ testhex = right:hex()
 
 print '== test octet copy'
 left = right;
-hash = HASH.new()
 dotest(left, right)
 dotest(hash:process(left),hash:process(right))
 
@@ -41,6 +41,19 @@ print '=== compare strings'
 dotest(left:string(), teststr)
 print '=== compare hashes'
 dotest(hash:process(left), hash:process(right))
+
+print '=== compare different sizes same content'
+rng = RNG.new()
+randright = sha256(rng:octet(48))
+r = hex(randright)
+left = INT.new(r)
+print(left)
+print(#left)
+print(r)
+print(#r)
+print(randright)
+print(#randright)
+assert(left == r)
 
 print '== test base64 import/export'
 left = OCTET.base64(test64)
@@ -62,7 +75,6 @@ dotest(left:hex(), testhex)
 dotest(hash:process(left), hash:process(right))
 
 -- print '= OK'
-
 
 print '== ECP import/export'
 rng = RNG.new()

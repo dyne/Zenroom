@@ -225,24 +225,15 @@ static int lua_biginfo(lua_State *L) {
 }
 
 /***
-    Create a new Big number. Set it to zero if no argument is present, else import the value from @{OCTET}.
+    Create a new Big number. Import the value from an @{OCTET} argument; or create a random one if argument is an @{RNG} and, optionally, modulo it to a second argument.
 
-    @param[opt] octet value of the big number
-    @return a new Big number set to the given value or Zero if none
+    @param[opt] octet value or a random number generator
+    @return a new Big number
     @function BIG.new(octet)
-    @see OCTET:hex
-    @see OCTET:base64
 */
 static int newbig(lua_State *L) {
 	HERE();
 	void *ud;
-	int res = lua_isnoneornil(L, 1);
-	if(res) { // no argument, set to zero
-		big *c = big_new(L); SAFE(c);
-		big_init(c);
-		BIG_zero(c->val);
-		return 1; }
-
 	ud = luaL_testudata(L, 1, "zenroom.rng");
 	if(ud) {
 		RNG *rng = (RNG*)ud; SAFE(rng);

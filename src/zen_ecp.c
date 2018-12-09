@@ -105,17 +105,8 @@ int _fp_to_big(big *dst, FP *src) {
     @see BIG:new
 */
 static int lua_new_ecp(lua_State *L) {
-	if(lua_isnoneornil(L, 1)) { // no args: set to generator
-		ecp *e = ecp_new(L); SAFE(e);
-		ECP_generator(&e->val);
 
-		// if(!ECP_set(&e->val,
-		//             (chunk*)CURVE_Gx, (chunk*)CURVE_Gy)) {
-		// 	lerror(L,"ECP generator value out of curve (stack corruption)");
-		// 	return 0; }
-		return 1; }
-
-	// TODO: unsafe parsing into BIG, only necessary for tests
+	// unsafe parsing into BIG, only necessary for tests
 	// deactivate when not running tests
 #ifdef DEBUG
 	void *tx = luaL_testudata(L, 1, "zenroom.big");
