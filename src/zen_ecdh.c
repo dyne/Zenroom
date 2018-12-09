@@ -204,12 +204,16 @@ static int ecdh_checkpub(lua_State *L) {
 */
 static int ecdh_session(lua_State *L) {
 	HERE();
-	octet *pubkey;
+	octet *pubkey, *seckey;
 	ecdh *e = ecdh_arg(L,1); SAFE(e);
-	HEREecdh(e);
-	SAFE(e->seckey);
 	pubkey = o_arg(L,2); SAFE(pubkey);
-
+	void *u = luaL_testudata(L, 3, "zenroom.big");
+	if(u) {
+		seckey = o_arg(L,3); SAFE(seckey);
+	} else {
+		SAFE(e->seckey);
+		seckey = e->seckey;
+	}
 	int res;
 	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(pubkey);
 	if(res<0) {
@@ -217,7 +221,7 @@ static int ecdh_session(lua_State *L) {
 		return 0; }
 	octet *kdf = o_new(L,e->hash); SAFE(kdf);
 	octet *ses = o_new(L,e->keysize); SAFE(ses);
-	(*e->ECP__SVDP_DH)(e->seckey,pubkey,ses);
+	(*e->ECP__SVDP_DH)(seckey,pubkey,ses);
 	// process via KDF2
 	// https://github.com/milagro-crypto/milagro-crypto-c/issues/285	
 	// here the NULL could be a salt (TODO: global?)
@@ -551,7 +555,6 @@ static int ecdh_random(lua_State *L) {
 }
 
 #define COMMON_METHODS \
-	{"session",ecdh_session}, \
 	{"public", ecdh_public}, \
 	{"private", ecdh_private}, \
 	{"checkpub", ecdh_checkpub}
@@ -567,11 +570,13 @@ int luaopen_ecdh(lua_State *L) {
 		{"hmac", ecdh_hmac},
 		{"kdf2", ecdh_kdf2},
 		{"pbkdf2", ecdh_pbkdf2},
+		{"session", ecdh_session},
 		COMMON_METHODS,
 		{NULL,NULL}};
 	const struct luaL_Reg ecdh_methods[] = {
 		{"random",ecdh_random},
 		{"keygen",ecdh_keygen},
+		{"session",ecdh_session},
 		COMMON_METHODS,
 		{"__gc", ecdh_destroy},
 		{NULL,NULL}

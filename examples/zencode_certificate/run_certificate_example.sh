@@ -67,7 +67,7 @@ EOF
 echo "The certificate is split in two:"
 echo " _private is sent to REQ (certpriv and CERThash)"
 echo " _public is broadcast (certpub and CERThash)"
-echo "write_json(L.property('public')(JSON.decode(DATA)))" \
+echo "write_json({ certificate = L.property('public')(JSON.decode(DATA))})" \
 	| zenroom -a madhatter_certificate.json | tee certificate_public.json | json_pp
 echo "write_json({ certificate = L.property('private')(JSON.decode(DATA))})" \
 	| zenroom -a madhatter_certificate.json | tee certificate_private.json | json_pp
@@ -82,6 +82,33 @@ ZEN:parse([[
 	and I have the 'private' key 'declaration' in keyring
 	When I verify the 'certificate'
 	Then I print my 'declaration'
+]])
+ZEN:run()
+EOF
+
+
+echo "Bob generates its private keyring"
+cat <<EOF | zenroom | tee bob.keys | json_pp
+local rng = RNG.new()
+local priv = INT.new(rng,ECP.order())
+write_json({ Bob = {
+			 private = hex(priv),
+			 public = hex(priv * ECP.generator())
+			 }
+		   })
+EOF
+
+echo "ANY receives certificate_public and uses it to encrypt a message"
+cat <<EOF | zenroom -k bob.keys -a certificate_public.json | tee message.json
+ZEN:begin($verbose)
+ZEN:parse([[
+  Scenario 'verify': Receive a certificate of a declaration and use it to encrypt a message
+    Given that I am known as 'Bob'
+    and I have my 'private' key in keyring
+  	and that 'Alice' declares to be 'lost in Wonderland'
+	When I receive the 'certificate' from 'MadHatter'
+	and I use the 'certificate' to encrypt 'a random proof'
+	Then I print my 'message'
 ]])
 ZEN:run()
 EOF

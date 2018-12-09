@@ -6,6 +6,7 @@ whoami = nil
 declared = nil
 certificate = nil
 declaration = nil
+whois = nil
 authority = nil
 
 -- crypto setup
@@ -128,7 +129,6 @@ When("I issue my certificate", function()
 		   public = {
 			  objid = 'certificate.ECQV',
 			  certpub  = hex(certpub),
-			  certhash = hex(certhash),
 			  authkey = keyring.public,
 			  from = whoami
 		   },
@@ -166,6 +166,47 @@ When("I verify the ''", function(verif)
 		   hash = verif_t.certhash,
 		   authkey = verif_t.authkey,
 		   certificate = verif_t.certpub }
+end)
+
+-- verify
+-- keyring contains authority's keypair
+Given("that '' declares to be ''",function(who, decl)
+		 -- declaration
+		 if not declared then declared = decl
+		 else declared = declared .." and ".. decl end
+		 whois = who
+end)
+Given("declares to be ''", function(decl)
+		 assert(who ~= "", "The subject making the declaration is unknown")
+		 -- declaration
+		 if not declared then declared = decl
+		 else declared = declared .." and ".. decl end
+end)
+When("I receive the '' from ''", function(obj, who)
+		local d = L.property(obj)(JSON.decode(DATA))
+		assert(validate(d,schemas[obj]), "Invalid "..obj)
+		assert(d.from == who, "The "..obj.." is not from "..who)
+		_G[obj] = d -- set state
+end)
+When("I use the '' to encrypt ''", function(what,content)
+		local cipher = { iv = random:octet(16) }
+		if what == "certificate" then
+		   local CERT = sha256(OCTET.serialize({ public = certificate.certpub,
+												 requester = whois,
+												 statement = declared,
+												 certifier = certificate.from }))
+		   local CERThash = INT.new(CERT) % order
+		   local CERTpublic = ECP.new(certificate.certpub) * CERThash + ECP.new(certificate.authkey)
+		   -- calculate shared session key
+		   session_raw = ( INT.new(keyring.private) % order) * CERTpublic
+		   session = ECDH.pbkdf2(HASH.new('sha256'),session_raw,random:octet(64),10000,32)
+		end
+
+		cipher.text,cipher.checksum =
+		   ECDH.aead_encrypt(session, content, random:octet(16), keyring.public)
+		cipher = map(cipher,hex)
+		cipher.objid = "certificate.handshake"
+		_G['message'] = JSON.encode(cipher)
 end)
 
 -- -- execution
