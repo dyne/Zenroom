@@ -42,19 +42,6 @@ dotest(left:string(), teststr)
 print '=== compare hashes'
 dotest(hash:process(left), hash:process(right))
 
-print '=== compare different sizes same content'
-rng = RNG.new()
-randright = sha256(rng:octet(48))
-r = hex(randright)
-left = INT.new(r)
-print(left)
-print(#left)
-print(r)
-print(#r)
-print(randright)
-print(#randright)
-assert(left == r)
-
 print '== test base64 import/export'
 left = OCTET.base64(test64)
 dotest(left, right)

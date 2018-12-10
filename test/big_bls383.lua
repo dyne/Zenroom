@@ -10,6 +10,19 @@ function equals(l,r,desc)
    return
 end
 
+
+print '=== compare different sizes same content'
+rng = RNG.new()
+randright = sha256(rng:octet(48))
+left = INT.new(randright)
+print("INT.new octet arg <- hash octet ("..#left.." bytes)")
+print(left)
+print("hash octet ("..#randright.." bytes)")
+print(randright)
+
+equals(randright, left,"INT.new octet")
+equals(randright, r,"hash octet")
+
 -- from Milagro's testVectors
 -- # BIG ARITHMETICS
 -- # BIGdiv = BIGmul/BIGsum.  BIGdivmod = (BIG1/0ED5066C6815047425DF 2(mod E186EB30EF))

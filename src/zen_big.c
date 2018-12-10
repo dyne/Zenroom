@@ -112,6 +112,7 @@ big* big_arg(lua_State *L,int n) {
 		big *b  = big_new(L); SAFE(b);
 		big_init(b);
 		BIG_fromBytesLen(b->val, o->val, o->len);
+		b->len = o->len;
 		lua_pop(L,1);
 		return(b);
 	}
@@ -486,7 +487,7 @@ static int big_mod(lua_State *L) {
 	if(l->doublesize) {
 		big *d = big_new(L); big_init(d); SAFE(d);
 		DBIG t; BIG_dcopy(t, l->dval); // dmod destroys 2nd arg
-		BIG_dmod(d->val,l->dval,r->val);
+		BIG_dmod(d->val, t, r->val);
 	} else {
 		big *d = big_dup(L,l); SAFE(d);
 		BIG_mod(d->val,r->val);
