@@ -80,6 +80,31 @@ extern ecp* ecp_dup(lua_State *L, ecp* in);
 		lerror(L,"incompatible sizes: arg2 is double, arg1 is not"); \
 	}
 
+int _octet_to_big(big *dst, octet *src) {
+	int i;
+	if(src->len <= MODBYTES) { // big
+		big_init(dst);
+		BIG_zero(dst->val);
+		// BIG *d = dst->val;
+		for(i=0; i<src->len; i++) {
+			BIG_fshl(dst->val,8);
+			dst->val[0] += (int)(unsigned char) src->val[i];
+		}
+	} else if(src->len > MODBYTES && src->len <= MODBYTES<<1) {
+		dbig_init(dst);
+		BIG_zero(dst->dval);
+		for(i=0; i<src->len; i++) {
+			BIG_dshl(dst->dval,8);
+			dst->dval[0] += (int)(unsigned char) src->val[i];
+		}
+	} else {
+		lerror(NULL,"Cannot import BIG number");
+		return(0);
+	}
+	dst->len = i;
+	return(i);
+}
+
 big* big_new(lua_State *L) {
 	big *c = (big *)lua_newuserdata(L, sizeof(big));
 	if(!c) {
@@ -110,9 +135,7 @@ big* big_arg(lua_State *L,int n) {
 	octet *o = o_arg(L,n);
 	if(o) {
 		big *b  = big_new(L); SAFE(b);
-		big_init(b);
-		BIG_fromBytesLen(b->val, o->val, o->len);
-		b->len = o->len;
+		_octet_to_big(b,o);
 		lua_pop(L,1);
 		return(b);
 	}
@@ -263,22 +286,46 @@ static int newbig(lua_State *L) {
 
 	// octet argument, import
 	octet *o = o_arg(L, 1); SAFE(o);
-	int biglen = MODBYTES; // sizeof(BIG);
-	int dbiglen = MODBYTES<<1; // sizeof(DBIG);
 	big *c = big_new(L); SAFE(c);
-	if(o->len <= biglen) { // big
-		big_init(c);
-		BIG_fromBytesLen(c->val, o->val, o->len);
-		// or should we measure byte length to detect doublebig?
-	} else if(o->len > biglen && o->len <= dbiglen) {
-		dbig_init(c);
-		BIG_dfromBytesLen(c->dval, o->val, o->len);
-	} else {
-		error(L, "size %u is invalid (big has len %u)",o->len, c->len);
-		lua_pop(L,1);
-		lerror(L,"Cannot import BIG number");
-	}
+	_octet_to_big(c,o);
 	return 1;
+}
+
+octet *new_octet_from_big(lua_State *L, big *c) {
+	int i;
+	octet *o;
+	if(c->doublesize && c->dval) {
+		DBIG t; BIG_dcopy(t,c->dval); BIG_dnorm(t);
+		o = o_new(L,c->len); SAFE(o);
+		for(i=c->len-1; i>=0; i--) {
+			o->val[i]=t[0]&0xff;
+			BIG_dshr(t,8);
+		}
+		o->len = c->len;
+
+	} else if(c->val) {
+		// fshr is destructive so use a copy
+		BIG t; BIG_copy(t,c->val); BIG_norm(t);
+		o = o_new(L,c->len); SAFE(o);
+		for(i=c->len-1; i>=0; i--) {
+			o->val[i] = t[0]&0xff;
+			BIG_fshr(t,8);
+		}
+		o->len = c->len;
+
+	} else {
+		lerror(NULL,"Invalid BIG number, cannot convert to octet");
+		return NULL;
+	}
+	// remove leading zeroes from octet
+	if(o->val[0]==0x0) {
+		func(L,"LEADING ZEROES");
+		int p;
+		for(p = 0; p < o->len && o->val[p] == 0x0; p++);
+		for(i=0; i < o->len-p; i++) o->val[i] = o->val[i+p];
+		o->len = o->len-p;
+	}
+	return(o);
 }
 
 int _big_to_octet(octet *o, big *c) {
@@ -292,33 +339,40 @@ int _big_to_octet(octet *o, big *c) {
 			o->val[i]=t[0]&0xff;
 			BIG_dshr(t,8);
 		}
+		o->len = c->len;
 	} else if(c->val) {
+		int i;
 		BIG t; BIG_copy(t,c->val); BIG_norm(t);
-		for(int i=c->len-1; i>=0; i--) {
+
+		for(i=c->len-1; i>=0; i--) {
 			o->val[i]=t[0]&0xff;
-			BIG_shr(t,8);
+			BIG_fshr(t,8);
 		}
+		o->len = c->len;
 	} else {
 		lerror(NULL,"Invalid BIG number, cannot convert to octet");
 		return 0; }
-	o->len = c->len;
 	return 1;
 }
 
 static int luabig_to_octet(lua_State *L) {
 	big *c = big_arg(L,1); SAFE(c);
-	octet *o = o_new(L, c->len); SAFE(o);
-	_big_to_octet(o,c);
+	new_octet_from_big(L,c);
+//	octet *o = o_new(L, c->len); SAFE(o);
+//	_big_to_octet(o,c);
 	return 1;
 }
 
 static int big_concat(lua_State *L) {
 	big *l = big_arg(L,1); SAFE(l);
 	big *r = big_arg(L,2); SAFE(r);
-	octet *ol = o_new(L,l->len); SAFE(ol);
-	lua_pop(L,1); _big_to_octet(ol,l);
-	octet *or = o_new(L,r->len); SAFE(or);
-	lua_pop(L,1); _big_to_octet(or,r);
+	
+	octet *ol = new_octet_from_big(L,l);
+    //o_new(L,l->len); SAFE(ol);
+	lua_pop(L,1); // _big_to_octet(ol,l);
+	octet *or = new_octet_from_big(L,r);
+	//o_new(L,r->len); SAFE(or);
+	lua_pop(L,1); // _big_to_octet(or,r);
 	octet *d = o_new(L, ol->len + or->len); SAFE(d);
 	OCT_copy(d,ol);
 	OCT_joctet(d,or);
@@ -327,8 +381,9 @@ static int big_concat(lua_State *L) {
 
 static int big_to_hex(lua_State *L) {
 	big *a = big_arg(L,1); SAFE(a);
-	octet *o = o_new(L,a->len); SAFE(o);
-	lua_pop(L,1); _big_to_octet(o,a);
+	octet *o = new_octet_from_big(L,a);
+    //o_new(L,a->len); SAFE(o);
+	lua_pop(L,1); // _big_to_octet(o,a);
 	push_octet_to_hex_string(o);
 	return 1;
 }
@@ -358,6 +413,7 @@ static int big_add(lua_State *L) {
 	big *r = big_arg(L,2); SAFE(r);
 	big *d = big_new(L); SAFE(d);
 	if(l->doublesize || r->doublesize) {
+		func(L,"ADD doublesize");
 		godbig2(l,r);
 		dbig_init(d);
 		BIG_dadd(d->dval, _l, _r);

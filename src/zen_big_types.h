@@ -80,6 +80,8 @@
 #define BIG_shr(b,a) BIG_384_29_shr(b,a)
 #define BIG_fshl(b,a) BIG_384_29_fshl(b,a)
 #define BIG_fshr(b,a) BIG_384_29_fshr(b,a)
+#define BIG_dshl(b,a) BIG_384_29_dshl(b,a)
+#define BIG_dshr(b,a) BIG_384_29_dshr(b,a)
 #define BIG_parity(b) BIG_384_29_parity(b)
 #define BIG_isunity(b) BIG_384_29_isunity(b)
 #define BIG_toBytes(b,a) BIG_384_29_toBytes(b,a)
@@ -111,7 +113,6 @@
 #define BIG_dadd(d,l,r) BIG_384_29_dadd(d,l,r)
 #define BIG_dmod(d,l,r) BIG_384_29_dmod(d,l,r)
 #define BIG_dfromBytesLen(d,o,l) BIG_384_29_dfromBytesLen(d,o,l)
-#define BIG_dshr(b,n) BIG_384_29_dshr(b,n)
 #define BIG_dzero(d) BIG_384_29_dzero(d)
 #define BIG_dnbits(d) BIG_384_29_dnbits(d)
 
