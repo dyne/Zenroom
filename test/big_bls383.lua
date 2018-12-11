@@ -4,9 +4,12 @@ print()
 
 function equals(l,r,desc)
    assert(l == r, desc .. " (__eq comparison)")
-   assert(l:octet() == r:octet(), desc .. " (octet comparison)")
-   assert(l:octet():string() == r:octet():string(), desc .. " (string comparison)")
-   assert(OCTET.hamming(l:octet(),r:octet())==0, desc .. " (hamming comparison)")
+   local tr, tl
+   if type(r) == "zenroom.octet" then tr = r else tr = r:octet() end
+   if type(l) == "zenroom.octet" then tl = l else tl = l:octet() end
+   assert(tl == tr, desc .. " (octet comparison)")
+   assert(tl:string() == tr:string(), desc .. " (string comparison)")
+   assert(OCTET.hamming(tl,tr)==0, desc .. " (hamming comparison)")
    return
 end
 
@@ -15,22 +18,15 @@ print '=== compare different sizes same content'
 rng = RNG.new()
 randright = sha256(rng:octet(48))
 left = INT.new(randright)
-print("INT.new octet arg <- hash octet ("..#left.." bytes)")
-print(left)
-print("hash octet ("..#randright.." bytes)")
-print(randright)
+equals(randright,left, "INT.new octet")
 
-equals(randright, left,"INT.new octet")
-equals(randright, r,"hash octet")
-
--- from Milagro's testVectors
+print "=== BIG arithmetics from Milagro's testVectors"
 -- # BIG ARITHMETICS
 -- # BIGdiv = BIGmul/BIGsum.  BIGdivmod = (BIG1/0ED5066C6815047425DF 2(mod E186EB30EF))
 big1 = BIG.new(hex '2758F22ABFE4085C27F2691BEBB75D7EF7BF4F9D441AD5CFC2AC3956748C1407')
 big2 = BIG.new(hex '09A52FE465983AEA1FBE357D9238C11CBD0F1557248E24B9247DA6AF3D51FF8D')
 
 BIGsum = BIG.new(hex '30FE220F257C434647B09E997DF01E9BB4CE64F468A8FA88E729E005B1DE1394')
--- assert( big1+big2 == BIGsum, "bigsum")
 equals(big1+big2, BIGsum, "bigsum")
 
 bigsub = BIG.new(hex '1DB3C2465A4BCD720834339E597E9C623AB03A461F8CB1169E2E92A7373A147A')
