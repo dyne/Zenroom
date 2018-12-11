@@ -402,15 +402,15 @@ static int ecp_table(lua_State *L) {
 	big *x,*y;
 	x = big_new(L); big_init(x);
 	lua_pop(L,1); _fp_to_big(x, &e->val.x);
-	o = o_new(L,e->biglen); lua_pop(L,1);
-	_big_to_octet(o,x);
+	o = new_octet_from_big(L,x);
+	lua_pop(L,1);
 	push_octet_to_hex_string(o);
 	lua_setfield(L,2,"x");
 	// y
 	y = big_new(L); big_init(y);
 	lua_pop(L,1); _fp_to_big(y, &e->val.y);
-	o = o_new(L,e->biglen); lua_pop(L,1);
-	_big_to_octet(o,y);
+	o = new_octet_from_big(L,y);
+	lua_pop(L,1);
 	push_octet_to_hex_string(o);
 	lua_setfield(L,2,"y");
 	return 1;

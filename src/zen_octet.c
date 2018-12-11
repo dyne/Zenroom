@@ -65,7 +65,6 @@ extern int b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz);
 // from zenroom types that are convertible to octet
 // they don't do any internal memory allocation
 // all arguments are allocated and freed by the caller
-extern int _big_to_octet(octet *o, big *c);
 extern int _ecp_to_octet(octet *o, ecp *e);
 
 static int _max(int x, int y) { if(x > y) return x;	else return y; }
@@ -177,8 +176,7 @@ octet* o_arg(lua_State *L,int n) {
 		ud = luaL_testudata(L, n, "zenroom.big");
 		if(!o && ud) {
 			big *b = (big*)ud;
-			o = o_new(L, b->len); SAFE(o); // new
-			_big_to_octet(o,b);
+			o = new_octet_from_big(L,b); SAFE(o);
 			lua_pop(L,1);
 		}
 		ud = luaL_testudata(L, n, "zenroom.ecp");
