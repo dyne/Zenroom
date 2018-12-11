@@ -125,7 +125,7 @@ check-debug:
 	@echo "All tests passed for DEBUG binary build"
 	@echo "----------------"
 
-check-crypto: test-exec := ./src/zenroom-shared -d
+check-crypto: test-exec := ./src/zenroom-shared
 check-crypto:
 	$(call crypto-tests,${test-exec})
 	@echo "-----------------------"
