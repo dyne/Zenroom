@@ -18,9 +18,11 @@ function prepare_session(keyring, pub) -- internal function
    return(kr:session(pk))
 end
 
+
 -- encrypt with default AES-GCM technique, returns base58 encoded
 -- values into a table containing: .text .iv .checksum .header
 function ecdh.encrypt(alice, bob, msg, header)
+   warn("ecdh.decrypt() use of this function is DEPRECATED");
    local key = prepare_session(alice,bob)
    local iv = RNG.new():octet(16)
    -- convert strings to octets
@@ -35,6 +37,7 @@ function ecdh.encrypt(alice, bob, msg, header)
 end
 
 function ecdh.decrypt(alice, bob, cypher)
+   warn("ecdh.decrypt() use of this function is DEPRECATED");
    local key = prepare_session(alice,bob)
    local decode = {header = cypher.header}
    decode.text, decode.checksum =
