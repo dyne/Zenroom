@@ -440,13 +440,21 @@ static int ecdh_hmac(lua_State *L) {
 
 static int ecdh_kdf2(lua_State *L) {
 	HERE();
-	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
-	octet *p = o_arg(L, 2);     SAFE(p);
-	octet *in = o_arg(L, 3); SAFE(in);
-	// keylen is length of input key
-	const int keylen = luaL_optinteger(L, 4, in->len);
-	octet *out = o_new(L, keylen); SAFE(out);
-	KDF2(e->hash, p, in, keylen, out);
+	int hashlen = 0;
+	if(luaL_testudata(L, 1, "zenroom.ecdh")) {
+		ecdh *e = ecdh_arg(L,1); SAFE(e);
+		hashlen = e->hash;
+	} else if(luaL_testudata(L, 1, "zenroom.hash")) {
+		hash *h = hash_arg(L,1); SAFE(h);
+		hashlen = h->len;
+	} else {
+		lerror(L,"Invalid first argument for ECDH.kdf2: should be an ECDH or HASH object");
+		return 0;
+	}
+	octet *in = o_arg(L, 2); SAFE(in);
+	// output keylen is length of hash
+	octet *out = o_new(L, hashlen+0x0f); SAFE(out);
+	KDF2(hashlen, in, NULL , hashlen, out);
 	return 1;
 }
 
@@ -481,12 +489,12 @@ static int ecdh_pbkdf2(lua_State *L) {
 	}
 	octet *k = o_arg(L, 2); SAFE(k);
 	octet *s = o_arg(L, 3); SAFE(s);
+	// default iterations 1000
 	const int iter = luaL_optinteger(L, 4, 1000);
 	// keylen is length of input key
 	const int keylen = luaL_optinteger(L, 5, k->len);
-	// keylen is length of input key
+
 	octet *out = o_new(L, keylen); SAFE(out);
-	// default iterations 1000
 
 	// TODO: OPTIMIZATION: reuse the initialized hash* structure in
 	// hmac->ehashit instead of milagro's
@@ -557,19 +565,26 @@ static int ecdh_random(lua_State *L) {
 #define COMMON_METHODS \
 	{"public", ecdh_public}, \
 	{"private", ecdh_private}, \
-	{"checkpub", ecdh_checkpub}
+	{"checkpub", ecdh_checkpub}, \
+	{"kdf2", ecdh_kdf2}, \
+	{"kdf", ecdh_kdf2}, \
+	{"pbkdf2", ecdh_pbkdf2}, \
+	{"pbkdf", ecdh_pbkdf2}
+
 
 
 int luaopen_ecdh(lua_State *L) {
 	const struct luaL_Reg ecdh_class[] = {
 		{"new",lua_new_ecdh},
 		{"keygen",ecdh_new_keygen},
-		{"aead_encrypt", ecdh_aead_encrypt},
-		{"aead_decrypt", ecdh_aead_decrypt},
+		{"aead_encrypt",   ecdh_aead_encrypt},
+		{"aead_decrypt",   ecdh_aead_decrypt},
+		{"aesgcm_encrypt", ecdh_aead_encrypt},
+		{"aesgcm_decrypt", ecdh_aead_decrypt},
+		{"aes_encrypt",    ecdh_aead_encrypt},
+		{"aes_decrypt",    ecdh_aead_decrypt},
 		{"hash", ecdh_hash},
 		{"hmac", ecdh_hmac},
-		{"kdf2", ecdh_kdf2},
-		{"pbkdf2", ecdh_pbkdf2},
 		{"session", ecdh_session},
 		COMMON_METHODS,
 		{NULL,NULL}};
