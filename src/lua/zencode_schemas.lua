@@ -2,6 +2,14 @@
 
 _G['schemas'] = {
 
+   -- packets encoded with AES GCM
+   ciphertext = S.record {
+	  checksum = S.hex,
+	  iv = S.hex,
+	  schema = S.Optional(S.string),
+	  text = S.hex
+   },
+
    -- zencode_keypair
    keypair = S.record {
 	  schema = S.Optional(S.string),

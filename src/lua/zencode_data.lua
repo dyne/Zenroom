@@ -4,7 +4,9 @@
 -- data        (root, decoded from DATA in Given)
 -- data_select (currently selected portion of root)
 
-function ZEN.conjoin(_data, section, key, value)
+ZEN.data = { }
+
+function ZEN.data.conjoin(_data, section, key, value)
    local _data = _data or data
    if _data[section] then
 	  portion = _data[section]
@@ -21,7 +23,7 @@ function ZEN.conjoin(_data, section, key, value)
    return _data
 end
 
-function ZEN.disjoin(_data, section, key)
+function ZEN.data.disjoin(_data, section, key)
    _data = _data or _G['data']
    portion = _data[section] -- L.property(section)(_data)
    local out = {}
@@ -32,7 +34,7 @@ function ZEN.disjoin(_data, section, key)
    return _data
 end
 
-function ZEN.check(_data, section, key)
+function ZEN.data.check(_data, section, key)
    -- _data = _data or _G['data']
    portion = _data[section] -- L.property(section)(_data)
    if not portion then
@@ -61,13 +63,18 @@ function ZEN.check(_data, section, key)
    end
 end
 
+-- request
+f_hello = function(nam) whoami = nam end
+Given("I introduce myself as ''", f_hello)
+Given("I am known as ''", f_hello)
+
 f_havedata = function (section,key)
    -- _G['data'] = ZEN.check(JSON.decode(DATA),dataname)
    data = data or JSON.decode(DATA)
    if key then
-	  ZEN.check(data,section,key)
+	  ZEN.data.check(data,section,key)
    else
-	  ZEN.check(data,section)
+	  ZEN.data.check(data,section)
    end
    -- _data = data or JSON.decode(DATA)
    -- section = _data[dataname] -- L.property(dataname)(_data)
@@ -83,7 +90,7 @@ Given("I have a ''", f_havedata)
 
 f_datakeyvalue = function(section,key,value)
    data = data or JSON.decode(DATA)
-   k = ZEN.check(data,section,key)
+   k = ZEN.data.check(data,section,key)
    assert(k == value, section.." data key "..key.."="..k.." instead of "..value)
    _G[section] = data[section]
 end
@@ -94,8 +101,29 @@ f_datarm = function (section)
    if not data        then error("No data loaded") end
    if not data_select then error("No data selected") end
    if not section     then error("Specify the data portion to remove") end
-   data = ZEN.disjoin(data, data_select, section)
+   data = ZEN.data.disjoin(data, data_select, section)
 end
+
+When("I declare to '' that I am ''",function (auth,decl)
+		-- declaration
+		if not declared then declared = decl
+		else declared = declared .." and ".. decl end
+		-- authority
+		authority = auth
+end)
+
+Given("that '' declares to be ''",function(who, decl)
+		 -- declaration
+		 if not declared then declared = decl
+		 else declared = declared .." and ".. decl end
+		 whois = who
+end)
+Given("declares also to be ''", function(decl)
+		 assert(who ~= "", "The subject making the declaration is unknown")
+		 -- declaration
+		 if not declared then declared = decl
+		 else declared = declared .." and ".. decl end
+end)
 
 When("I remove '' from data", f_datarm)
 
@@ -119,7 +147,7 @@ end)
 
 Then("print '' ''", function (what, section)
 		data = data or JSON.decode(DATA)
-		local sub = ZEN.check(data,section)
+		local sub = ZEN.data.check(data,section)
 		local t = type(sub)
 		if t == "table" then write_json(sub)
 		elseif iszen(t) or t == "string" then

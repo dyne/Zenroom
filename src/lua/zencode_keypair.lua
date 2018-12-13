@@ -4,6 +4,19 @@
 -- keyring: straight from JSON.decode(KEYS)
 -- keypair: section in keyring
 -- keypair_name: current section in keyring
+
+-- crypto setup
+random = RNG.new()
+order = ECP.order()
+G = ECP.generator()
+KDF_rounds = 10000
+
+ZEN.keygen = function()
+   local key = INT.new(random,order)
+   return { private = key,
+			public = key * G }
+end
+
 f_havekey = function (keytype, keyname)
    keypair_name = keyname or whoami
    keyring = JSON.decode(KEYS)
