@@ -18,6 +18,7 @@ function zencode:begin(verbosity)
       warn("Zencode debug verbosity: "..verbosity)
       self.verbosity = verbosity
    end
+   _G.ZEN_traceback = "Zencode traceback:\n"
    self.current_step = self.given_steps
    return true
 end
@@ -100,6 +101,8 @@ function zencode:run()
       -- if not ok then error(err) end
 
 	  -- unprotected call
+	  _G.ZEN_traceback = _G.ZEN_traceback
+		 .."[!] -> ".. x.source:gsub("^%s*", "") .."\n"
       x.hook(table.unpack(x.args))
    end
 end

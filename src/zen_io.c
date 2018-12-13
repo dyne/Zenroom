@@ -202,12 +202,13 @@ static int zen_warn (lua_State *L) {
 }
 
 static int zen_error (lua_State *L) {
+	int n = lua_gettop(L);  /* number of arguments */
+	int w;
 	if( lua_print_tobuffer(L) ) return 0;
 
 	int status = 1;
 	size_t len = 0;
-	int n = lua_gettop(L);  /* number of arguments */
-	int i, w;
+	int i;
 	lua_getglobal(L, "tostring");
 	w = write(STDERR_FILENO, "[!] ",4* sizeof(char));
     (void)w;
@@ -221,6 +222,17 @@ static int zen_error (lua_State *L) {
 		lua_pop(L, 1);  /* pop result */
 	}
 	w = write(STDERR_FILENO,"\n",sizeof(char));
+
+	// output the zencode line if active
+	lua_getglobal(L,"ZEN_traceback");
+	size_t zencode_line_len;
+	const char *zencode_line = lua_tolstring(L,3,&zencode_line_len);
+	if(zencode_line) {
+		w = write(STDERR_FILENO, "[!] ",4* sizeof(char));
+		w = write(STDERR_FILENO, zencode_line, zencode_line_len);
+	}
+	lua_pop(L,1);
+
     (void)w;
 	return 0;
 }
