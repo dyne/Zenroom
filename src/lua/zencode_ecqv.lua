@@ -15,49 +15,10 @@ order = ECP.order()
 G = ECP.generator()
 KDF_rounds = 10000
 
-schemas = {
-
-   certificate = S.record {
-	  objid = S.string,
-	  private = S.Optional(S.big),
-	  public = S.ecp,
-	  hash = S.big,
-	  from = S.string,
-	  authkey = S.ecp
-   },
-
-   certificate_hash = S.Record {
-	  public = S.ecp,
-	  requester = S.string,
-	  statement = S.string,
-	  certifier = S.string
-   },
-
-   declaration = S.record {
-	  from = S.string,
-	  to = S.string,
-	  statement = S.string,
-	  public = S.ecp
-   },
-
-   declaration_keypair = S.record {
-	  objid = S.string,
-	  requester = S.string,
-	  statement = S.string,
-	  public = S.ecp,
-	  private = S.hex
-   },
-
-   keyring = S.record {
-	  private = S.hex,
-	  public = S.ecp
-   }
-}
-
 local function keygen()
-   local key = INT.new(random,order)
-   return { private = key,
-            public = key * G }
+      local key = INT.new(random,order)
+	  return { private = key,
+			   public = key * G }
 end
 
 -- request
@@ -65,27 +26,13 @@ f_hello = function(nam) whoami = nam end
 Given("I introduce myself as ''", f_hello)
 Given("I am known as ''", f_hello)
 
-f_havekey = function (keytype, keyname)
-   local kn = keyname or whoami
-   -- x(0,"have "..keytype.." key for "..keyname)
-   keypair = L.property(kn)(JSON.decode(KEYS))
-   assert(validate(keypair,schemas['keyring']),
-		  "Invalid keyring for "..kn)
-   assert(keypair[keytype],
-		  "Key "..keytype.." not found in "..kn.." keyring")
-   _G['keyring'] = keypair -- explicit global state
-end
-
 function f_certhash(t)
    assert(validate(t,schemas['certificate_hash']),
 		  "Invalid input to generate a certificate hash")
    return INT.new(sha256(OCTET.serialize(I.spy(t))))
 end
 
-Given("I have the '' key '' in keyring", f_havekey)
-Given("I have my '' key in keyring", f_havekey)
-
-When("I declare to '' that I am ''",   function (auth,decl)
+When("I declare to '' that I am ''",function (auth,decl)
 		 -- declaration
 		 if not declared then declared = decl
 		 else declared = declared .." and ".. decl end
@@ -94,40 +41,43 @@ When("I declare to '' that I am ''",   function (auth,decl)
 end)
 When("I issue my declaration", function()
 		local certreq = keygen()
-		declaration = {
-		   zencode = VERSION,
-		   objid = 'declaration',
-		   public = {
-			  from = whoami,
-			  to = authority,
-			  statement = declared,
-			  public = hex(certreq.public) },
-		   keypair =  {
-			  public = hex(certreq.public),
-			  private = hex(certreq.private) }
-		}
+		data = data or {}
+		ZEN.conjoin(data, 'certreq', 'declaration',
+					{ schema = "declaration",
+					  from = whoami,
+					  to = authority,
+					  statement = declared,
+					  public = hex(certreq.public) })
+		ZEN.conjoin(data, 'certreq', 'keypair',
+					{ schema = "keypair",
+					  public = hex(certreq.public),
+					  private = hex(certreq.private) })
 end)
 Then("print my ''", function (what)
 		assert(_G[what], "Cannot print, data not found: "..what)
-		write_json(_G[what])
+		local t = type(_G[what])
+		if t == "table" then write_json(_G[what])
+		elseif iszen(t) or t == "string" then
+		   print(_G[what])
+		else
+		   error("Cannot print '"..what.."' data type: "..t)
+		end
 end)
 
--- issue
-Given("I receive a '' from ''", function(obj, sender)
-		 local d = L.property(obj)(JSON.decode(DATA))
-		 assert(validate(d,schemas[obj]),
-				"Invalid "..obj.." (expected from "..sender..")")
-		 assert(d.from == sender,
-				"Invalid "..obj.." sent from "..d.from..
-				   " instead of "..sender)
-		 _G[obj] = d -- set state		 
-end)
+-- -- issue
+-- Given("I receive a '' from ''", function(obj, sender)
+-- 		 local d = L.property(obj)(JSON.decode(DATA))
+-- 		 assert(validate(d,schemas[obj]),
+-- 				"Invalid "..obj.." (expected from "..sender..")")
+-- 		 assert(d.from == sender,
+-- 				"Invalid "..obj.." sent from "..d.from..
+-- 				   " instead of "..sender)
+-- 		 _G[obj] = d -- set state
+-- end)
 
 When("I issue my certificate", function()
 		-- read global states set before
 		local certkey = keygen()
-		-- local declaration = _G['declaration']
-		-- local keyring     = _G['keyring']
 		local certreq = ECP.new(declaration.public)
 		-- generate the certificate
 		local certpub = certreq + certkey.public
@@ -135,29 +85,25 @@ When("I issue my certificate", function()
 									  requester = declaration.from,
 									  statement = declaration.statement,
 									  certifier = whoami })
-		local certpriv = (certhash * certkey.private + keyring.private)
+		local certpriv = (certhash * certkey.private + keypair.private)
 		-- format the certificate
-		certificate = {
-		   public = {
-			  objid = 'certificate.ECQV',
-			  public  = hex(certpub),
-			  hash    = hex(certhash),
-			  authkey = keyring.public,
-			  from = whoami
-		   },
-		   private = {
-			  objid = 'certificate.ECQV',
-			  public  = hex(certpub),
-			  private = hex(certpriv),
-			  hash    = hex(certhash),
-			  authkey = keyring.public,
-			  from = whoami
-		   }
-		}
+		data = ZEN.conjoin(data, 'certificate', 'public',
+					{ schema = 'certificate',
+					  public  = hex(certpub),
+					  hash    = hex(certhash),
+					  authkey = keypair.public,
+					  from = whoami })
+		data = ZEN.conjoin(data, 'certificate', 'private',
+					{ schema = 'certificate',
+					  public  = hex(certpub),
+					  private = hex(certpriv),
+					  hash    = hex(certhash),
+					  authkey = keypair.public,
+					  from = whoami })
 end)
 
 -- save
--- keyring contains declaration's keypair
+-- keypair contains declaration's keys
 When("I verify the ''", function(verif)
 		-- we only know how to verify declarations with certificates
 		-- assert(obj == "declaration" and verif == "certificate",
@@ -166,7 +112,7 @@ When("I verify the ''", function(verif)
 		assert(validate(certificate,schemas[verif]), "Invalid "..verif)
 		-- explicit conversions
 		local v = { certhash = INT.new(certificate.hash),
-					declpriv = INT.new(keyring.private),
+					declpriv = INT.new(keypair.private),
 					certpriv = INT.new(certificate.private),
 					capub    = ECP.new(certificate.authkey),
 					certpub  = ECP.new(certificate.public)  }
@@ -182,7 +128,7 @@ When("I verify the ''", function(verif)
 end)
 
 -- verify
--- keyring contains authority's keypair
+-- keypayr contains authority's keys
 Given("that '' declares to be ''",function(who, decl)
 		 -- declaration
 		 if not declared then declared = decl
@@ -208,22 +154,27 @@ When("I use the '' to encrypt ''", function(what,content)
 										 requester = whois,
 										 statement = declared,
 										 certifier = certificate.from })
-		   error(certificate.hash)
-		   error(CERThash)
-		   error(type(hex(certificate.hash)))
-		   error(type(CERThash:octet()))
-		   error(#certificate.hash)
-		   error(#CERThash)
-		   assert(certificate.hash == CERThash, "Incorrect certificate hash")
+		   -- TODO: correct hash comparison
+		   I.print(certificate.hash)
+		   I.print(CERThash)
+		   I.print(type(hex(certificate.hash)))
+		   I.print(type(CERThash:octet()))
+--		   assert(certificate.hash == CERThash, "Incorrect certificate hash")
 		   local CERTpublic = ECP.new(certificate.public) * CERThash + ECP.new(certificate.authkey)
 		   -- calculate shared session key
-		   session_raw = ( INT.new(keyring.private) % order) * CERTpublic
-		   session = ECDH.pbkdf2(HASH.new('sha256'),session_raw,random:octet(64),KDF_rounds,32)
+		   session_raw = ( INT.new(keypair.private) % order) * CERTpublic
+		   session = ECDH.kdf2(HASH.new('sha256'),session_raw) -- ,random:octet(64),KDF_rounds,32)
 		end
+		-- header is in the ciphertext for increased privacy (no metadata)
+		local text = str(MSG.pack({ from = whoami,
+									pubkey = keypair.public,
+									text = content }))
 
 		cipher.text,cipher.checksum =
-		   ECDH.aead_encrypt(session, content, random:octet(16), keyring.public)
+		   ECDH.aesgcm_encrypt(session, text, random:octet(16), str("Zencode"))
+
 		-- cipher = map(cipher,hex)
 		cipher.objid = what ..".ciphermsg"
-		_G['message'] = cipher
+		-- cipher.header = header -- hex(header)
+		_G['message'] = I.spy(cipher)
 end)

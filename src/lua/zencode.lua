@@ -101,8 +101,8 @@ function zencode:run()
       -- if not ok then error(err) end
 
 	  -- unprotected call
-	  _G.ZEN_traceback = _G.ZEN_traceback
-		 .."[!] -> ".. x.source:gsub("^%s*", "") .."\n"
+	  _G['ZEN_traceback'] = _G['ZEN_traceback']..
+		 "    -> ".. x.source:gsub("^%s*", "") .."\n"
       x.hook(table.unpack(x.args))
    end
 end

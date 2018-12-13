@@ -29,14 +29,14 @@ msgpack = nil -- rename default global
 OCTET  = require('zenroom_octet')
 O = OCTET -- alias
 
+INSIDE = require('inspect')
+I = INSIDE -- alias
 SCHEMA = require('zenroom_schema')
 S = SCHEMA -- alias
 RNG    = require('zenroom_rng')
 ECDH   = require('zenroom_ecdh')
 LAMBDA = require('functional')
 L = LAMBDA -- alias
-INSIDE = require('inspect')
-I = INSIDE -- alias
 FP12   = require('fp12')
 BIG    = require('zenroom_big')
 INT = BIG -- alias
@@ -44,7 +44,15 @@ HASH   = require('zenroom_hash')
 ECP    = require('zenroom_ecp')
 ECP2   = require('zenroom_ecp2')
 H = HASH -- alias
+
+-- Zencode language interpreter
 ZEN    = require('zencode')
+-- data schemas
+require('zencode_schemas')
+-- base data functions
+require('zencode_data')
+-- basic keypair functions
+require('zencode_keypair')
 -- implicit certificates
 require('zencode_ecqv')
 
@@ -76,12 +84,14 @@ end
 -- validate against a schema
 function validate(data, schema)
    if(type(data) ~= "table") then
-	  error("validate() first argument is not a table, cannot process validation") return end
+	  error("validate() first argument is "..type(data)..": cannot process validation") return end
    if(type(schema) ~= "function") then
-	  error("validate() second argument is not a function, invalid schema") return end
+	  error("validate() second argument is "..type(schema)..": invalid schema for validation") return end
    local err = SCHEMA.CheckSchema(data,schema)
    if err then
-	  error(S.print(err))
+	  if(data.schema) then error("Schema error: "..data.schema..
+								 "\n    "..S.print(err)) end
+	  I.print(data)
 	  return false
    end
    return true
