@@ -1,0 +1,53 @@
+digraph zencode_encrypt {
+	// node [shape=box, splines=compound, rank=max,
+	// 	  overlap=false, overlap_shrink=true,
+	// 	  pack=true, packmode=nodes, resolution=1200,
+	// 	  outputorder=edgesfirst, style=filled color="#00b1b0" fontcolor=white];
+	graph [ dpi=200, bgcolor=white ];
+	node [shape=box, rank=max, fontname=Montserrat, fontsize=11, bgcolor=white,
+		  overlap=false, pack=true, style=filled color="#00b1b0" fontcolor=white];
+	edge [fontname=Montserrat, fontsize=9, arrowsize=0.3]
+
+	Keygen_Bob [label=
+				<Given that I am known as '<b><font color="#fff16e">Bob</font></b>'<br/>
+				When I create my new keypair<br/>
+				Then print keypair '<b><font color="#fff16e">Bob</font></b>'>]
+
+	Kimport_Alice [label=
+				   <Given that I am known as '<b><font color="#fff16e">Alice</font></b>'<br/>
+				   and I have my keypair<br/>
+				   and I have a '<font color="#fff16e"><b>Bob</b></font>' 'public' key<br/>
+				   When I import '<font color="#fff16e"><b>Bob</b></font>' keypair into my keyring<br/>
+				   Then print my keyring>]
+
+	Encrypt_Alice [label=
+				   <Given that I am known as '<font color="#fff16e"><b>Alice</b></font>'<br/>
+				   and I have my keypair<br/>
+				   and I have the '<font color="#fff16e"><b>public</b></font>' key '<font color="#fff16e"><b>Bob</b></font>' in keyring<br/>
+				   When I draft the text '<font color="#fff16e"><b>Hi Bob!</b></font>'<br/>
+				   and I use '<font color="#fff16e"><b>Bob</b></font>' key to encrypt the text into '<font color="#fff16e"><b>ciphertext</b></font>'<br/>
+				   Then print data '<font color="#fff16e"><b>ciphertext</b></font>'>]
+
+	Decrypt_Bob [label=
+				 <Given that I am known as '<font color="#fff16e"><b>Bob</b></font>'<br/>
+				 and I have my keypair<br/>
+				 When I decrypt the '<font color="#fff16e"><b>ciphertext</b></font>' to '<font color="#fff16e"><b>decoded</b></font>'<br/>
+				 Then print data '<font color="#fff16e"><b>decoded</b></font>'>]
+
+	Answer_Alice [label=
+				<Given that I am known as '<font color="#fff16e"><b>Bob</b></font>'<br/>
+				and I have my keypair<br/>
+				and I have the '<font color="#fff16e"><b>public</b></font>' key '<font color="#fff16e"><b>Alice</b></font>' in keyring<br/>
+				When I draft the text '<font color="#fff16e"><b>Hi Alice, lets talk!</b></font>'<br/>
+				and I use '<font color="#fff16e"><b>Alice</b></font>' key to encrypt the text into '<font color="#fff16e"><b>ciphertext</b></font>'<br/>
+				Then print data '<font color="#fff16e"><b>ciphertext</b></font>'>]
+
+	Keygen_Bob -> Kimport_Alice [label="send public key\n{ public: zenroom.ECP }"]
+
+	Kimport_Alice -> Encrypt_Alice [label="save keypair into keyring\n{ Bob: { public: zenroom.ECP,\n  private: zenroom.octet },\nAlice: { public: zenroom.ECP } }"]
+
+	Encrypt_Alice -> Decrypt_Bob [label="send a secret message\n{ schema: 'AES-GCM',\n  curve: 'bls383'\n  text: zenroom.octet\n  pubkey: zenroom.ECP\n  checksum: zenroom.octet\n  iv: zenroom.random\n  zenroom: '0.9'\n  encoding: 'hex' }"]
+
+	Decrypt_Bob -> Answer_Alice [label="reply the secret message\n{ decoded = { from: 'Alice',\n  text: 'Hi Bob!' } }"]
+
+}

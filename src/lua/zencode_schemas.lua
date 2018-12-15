@@ -13,7 +13,7 @@ end
 _G['schemas'] = {
 
    -- packets encoded with AES GCM
-   ciphertext = S.record {
+   AES-GCM = S.record {
 	  checksum = S.hex,
 	  iv = S.hex,
 	  schema = S.Optional(S.string),
