@@ -10,27 +10,27 @@ whois = nil
 authority = nil
 
 function f_certhash(t)
-   assert(validate(t,schemas['certificate_hash']),
+   ZEN.assert(validate(t,schemas['certificate_hash']),
 		  "Invalid input to generate a certificate hash")
    return INT.new(sha256(OCTET.serialize(t)))
 end
 
-When("I issue my implicit certificate declaration", function()
+When("I issue my implicit certificate request ''", function(decl)
 		local certreq = ZEN.keygen()
-		data = data or {} -- JSON.decode(DATA)
-		ZEN.data.conjoin(data, 'certreq', 'declaration',
+		data = data or ZEN.data.load()
+		ZEN.data.add(data, decl.."_public",
 					{ schema = "declaration",
 					  from = whoami,
 					  to = authority,
 					  statement = declared,
 					  public = hex(certreq.public) })
-		ZEN.data.conjoin(data, 'certreq', 'keypair',
+		ZEN.data.add(data, decl.."_keypair",
 					{ schema = "keypair",
 					  public = hex(certreq.public),
 					  private = hex(certreq.private) })
 end)
 Then("print my ''", function (what)
-		assert(_G[what], "Cannot print, data not found: "..what)
+		ZEN.assert(_G[what], "Cannot print, data not found: "..what)
 		local t = type(_G[what])
 		if t == "table" then write_json(_G[what])
 		elseif iszen(t) or t == "string" then
@@ -40,30 +40,34 @@ Then("print my ''", function (what)
 		end
 end)
 
-When("I issue an implicit certificate", function()
+When("I issue an implicit certificate for ''", function(decl)
+		init_keyring(whoami)
+		data = data or ZEN.data.load()
 		-- read global states set before
+		local declaration = data[decl]
 		local certkey = ZEN.keygen()
 		local certreq = ECP.new(declaration.public)
 		-- generate the certificate
 		local certpub = certreq + certkey.public
-		local certhash = f_certhash({ public    = hex(certpub),
+		local certhash = f_certhash({ public    = certpub,
 									  requester = declaration.from,
 									  statement = declaration.statement,
 									  certifier = whoami })
-		local certpriv = (certhash * certkey.private + keypair.private)
+		local certpriv = (certhash * certkey.private + keyring[keypair].private)
 		-- format the certificate
-		ZEN.data.conjoin(data, 'certificate', 'public',
+		local certificate = { }
+		ZEN.data.add(data, 'certificate_public',
 					{ schema = 'certificate',
 					  public  = hex(certpub),
 					  hash    = hex(certhash),
-					  authkey = keypair.public,
+					  authkey = keyring[keypair].public,
 					  from = whoami })
-		ZEN.data.conjoin(data, 'certificate', 'private',
+		ZEN.data.add(data, 'certificate_private',
 					{ schema = 'certificate',
 					  public  = hex(certpub),
 					  private = hex(certpriv),
 					  hash    = hex(certhash),
-					  authkey = keypair.public,
+					  authkey = keyring[keypair].public,
 					  from = whoami })
 end)
 
@@ -71,27 +75,29 @@ end)
 -- keypair contains declaration's keys
 When("I verify the implicit certificate ''", function(verif)
 		-- we only know how to verify declarations with certificates
-		-- assert(obj == "declaration" and verif == "certificate",
+		-- ZEN.assert(obj == "declaration" and verif == "certificate",
 		-- 	   "Cannot verify "..obj.." with "..verif)
 		-- certificate = L.property(verif)(JSON.decode(DATA))
-		data = data or JSON.decode(DATA)
-		certificate = ZEN.data.check(data,verif)
-		assert(validate(certificate,schemas[verif]), "Invalid "..verif)
+		init_keyring('declaration_keypair')
+		data = data or ZEN.data.load()
+		certificate = data[verif]
+		ZEN.assert(validate(certificate,schemas['certificate']),
+				   "Invalid implicit certificate: "..verif)
 		-- explicit conversions
 		local v = { certhash = INT.new(certificate.hash),
-					declpriv = INT.new(keypair.private),
+					declpriv = INT.new(keyring[keypair].private),
 					certpriv = INT.new(certificate.private),
 					capub    = ECP.new(certificate.authkey),
 					certpub  = ECP.new(certificate.public)  }
 		v.checkpriv = (v.certhash * v.declpriv + v.certpriv) % order
 		v.checkpub  =  v.certpub  * v.certhash + v.capub
-		assert(v.checkpub == (G * v.checkpriv),
+		ZEN.assert(v.checkpub == (G * v.checkpriv),
 			   "Verification failed: "..verif.." is not valid:\n"..DATA)
 		-- publish signed declaration
-		_G['declaration'] = {
-		   hash = certificate.hash,
-		   authkey = certificate.authkey,
-		   certificate = certificate.public }
+		ZEN.data.add(data,'declaration', {
+						hash = certificate.hash,
+						authkey = certificate.authkey,
+						certificate = certificate.public })
 end)
 
 When("I use the '' to encrypt ''", function(what,content)
@@ -106,7 +112,7 @@ When("I use the '' to encrypt ''", function(what,content)
 		   -- I.print(CERThash)
 		   -- I.print(type(hex(certificate.hash)))
 		   -- I.print(type(CERThash:octet()))
---		   assert(certificate.hash == CERThash, "Incorrect certificate hash")
+--		   ZEN.assert(certificate.hash == CERThash, "Incorrect certificate hash")
 		   local CERTpublic = ECP.new(certificate.public) * CERThash + ECP.new(certificate.authkey)
 		   -- calculate shared session key
 		   session_raw = ( INT.new(keypair.private) % order) * CERTpublic

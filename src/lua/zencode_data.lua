@@ -2,9 +2,31 @@
 
 -- GLOBALS:
 -- data        (root, decoded from DATA in Given)
--- data_select (currently selected portion of root)
+-- selection   (currently selected portion of root)
 
 ZEN.data = { }
+
+function ZEN.data.load()
+   local _data
+   if DATA then -- global set by zenroom
+	  _data = JSON.decode(DATA)
+   else
+	  _data = { }
+   end
+   return _data
+end
+function ZEN.data.add(_data, key, value)
+   local _data = _data or data
+   if _data[key] then
+	  error("ZEN.data.add(): DATA already contains '"..key.."' key")
+   end
+   if value['schema'] then
+	  ZEN.assert(validate(value, schemas[value['schema']]),
+				 "ZEN.data.add(): invalid data format for "..key..
+					" (schema: "..value['schema']..")", value)
+   end
+   _data[key] = value
+end
 
 function ZEN.data.conjoin(_data, section, key, value)
    local _data = _data or data
@@ -13,8 +35,8 @@ function ZEN.data.conjoin(_data, section, key, value)
    else
 	  portion = { }
    end
-   if value.schema then
-	  assert(validate(value, schemas[value.schema]),
+   if value['schema'] then
+	  ZEN.assert(validate(value, schemas[value.schema]),
 			 "conjoin(): invalid data format for "..section.."."..key..
 				" (schema: "..value.schema..")")
    end
@@ -45,7 +67,7 @@ function ZEN.data.check(_data, section, key)
 				  "' not found in '"..section.."' data") end
 	  if type(portion) == "table" then
 		 if portion[key].schema then
-			assert(validate(portion[key], schemas[portion[key].schema]),
+			ZEN.assert(validate(portion[key], schemas[portion[key].schema]),
 				   "ZEN.data.check(): invalid data format for "..section.."."..key..
 					  " (schema: "..portion[key].schema..")");
 		 end
@@ -54,7 +76,7 @@ function ZEN.data.check(_data, section, key)
    else
 	  if type(portion) == "table" then
 		 if portion.schema then
-			assert(validate(portion, schemas[portion.schema]),
+			ZEN.assert(validate(portion, schemas[portion.schema]),
 				   "ZEN.data.check(): invalid data format for "..section..
 					  " (schema: "..portion.schema..")");
 			return(portion)
@@ -70,7 +92,7 @@ Given("I am known as ''", f_hello)
 
 f_havedata = function (section,key)
    -- _G['data'] = ZEN.check(JSON.decode(DATA),dataname)
-   data = data or JSON.decode(DATA)
+   data = data or ZEN.data.load()
    if key then
 	  ZEN.data.check(data,section,key)
    else
@@ -78,10 +100,10 @@ f_havedata = function (section,key)
    end
    -- _data = data or JSON.decode(DATA)
    -- section = _data[dataname] -- L.property(dataname)(_data)
-   -- assert(validate(section,schemas[dataname]),
+   -- ZEN.assert(validate(section,schemas[dataname]),
    -- 		  "Invalid data format for "..dataname)
    -- -- explicit global states
-   data_select = section
+   selection = section
 end
 
 Given("I have a '' ''", f_havedata)
@@ -89,9 +111,9 @@ Given("I have a ''", f_havedata)
 
 
 f_datakeyvalue = function(section,key,value)
-   data = data or JSON.decode(DATA)
+   data = data or ZEN.data.load()
    k = ZEN.data.check(data,section,key)
-   assert(k == value, section.." data key "..key.."="..k.." instead of "..value)
+   ZEN.assert(k == value, section.." data key "..key.."="..k.." instead of "..value)
    _G[section] = data[section]
 end
 Given("I have a '' '' ''", f_datakeyvalue)
@@ -99,9 +121,9 @@ Given("data '' field '' contains ''", f_datakeyvalue)
 
 f_datarm = function (section)
    if not data        then error("No data loaded") end
-   if not data_select then error("No data selected") end
+   if not selection   then error("No data selected") end
    if not section     then error("Specify the data portion to remove") end
-   data = ZEN.data.disjoin(data, data_select, section)
+   data = ZEN.data.disjoin(data, selection, section)
 end
 
 When("I declare to '' that I am ''",function (auth,decl)
@@ -112,6 +134,12 @@ When("I declare to '' that I am ''",function (auth,decl)
 		authority = auth
 end)
 
+When("I draft the text ''", function(text)
+		data = data or ZEN.data.load()
+		ZEN.data.add(data,'text',text)
+end)
+
+
 Given("that '' declares to be ''",function(who, decl)
 		 -- declaration
 		 if not declared then declared = decl
@@ -119,7 +147,7 @@ Given("that '' declares to be ''",function(who, decl)
 		 whois = who
 end)
 Given("declares also to be ''", function(decl)
-		 assert(who ~= "", "The subject making the declaration is unknown")
+		 ZEN.assert(who ~= "", "The subject making the declaration is unknown")
 		 -- declaration
 		 if not declared then declared = decl
 		 else declared = declared .." and ".. decl end
@@ -128,25 +156,26 @@ end)
 When("I remove '' from data", f_datarm)
 
 Then("print data ''", function (what)
-		data = data or JSON.decode(DATA)
-		assert(data[what], "Cannot print, data not found: "..what)
-		local t = type(data[what])
-		if t == "table" then write_json(data[what])
-		elseif iszen(t) or t == "string" then
-		   print(data[what])
-		else
-		   error("Cannot print '"..what.."' data type: "..t)
-		end
+		data = data or ZEN.data.load()
+		ZEN.assert(data[what], "Cannot print, data not found: "..what)
+		write_json({ [what] = data[what] })
+		-- local t = type(data[what])
+		-- if t == "table" then write_json({ [what] = data[what]})
+		-- elseif iszen(t) or t == "string" then
+		--    print({ [what] = data[what])
+		-- else
+		--    error("Cannot print '"..what.."' data type: "..t)
+		-- end
 end)
 Then("print '' inside ''", function (what, section)
-		data = data or JSON.decode(DATA)
-		assert(data[what], "Cannot print, data not found: "..what)
+		data = data or ZEN.data.load()
+		ZEN.assert(data[what], "Cannot print, data not found: "..what)
 		local t = type(data[what])
 		write_json({ [section] = data[what] })
 end)
 
 Then("print '' ''", function (what, section)
-		data = data or JSON.decode(DATA)
+		data = data or ZEN.data.load()
 		local sub = ZEN.data.check(data,section)
 		local t = type(sub)
 		if t == "table" then write_json(sub)

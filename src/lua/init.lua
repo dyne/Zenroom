@@ -49,10 +49,12 @@ H = HASH -- alias
 ZEN    = require('zencode')
 -- data schemas
 require('zencode_schemas')
--- base data functions
-require('zencode_data')
 -- basic keypair functions
 require('zencode_keypair')
+-- base data functions
+require('zencode_data')
+-- base encryption functions
+require('zencode_aesgcm')
 -- implicit certificates
 require('zencode_ecqv')
 

@@ -35,7 +35,7 @@ ZEN:parse([[
     Given that I introduce myself as 'Alice'
     and I have the 'public' key 'MadHatter' in keyring
     When I declare to 'MadHatter' that I am 'lost in Wonderland'
-    and I issue my implicit certificate declaration
+    and I issue my implicit certificate request 'declaration'
     Then print all data
 ]])
 ZEN:run()
@@ -48,9 +48,8 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'keygen': $scenario
 		 Given that I am known as 'Alice'
-		 and I have a 'certreq' 'declaration'
-		 When I remove 'keypair' from data
-		 Then print data 'certreq'
+		 and I have a 'declaration_public' 'from' 'Alice'
+		 Then print data 'declaration_public'
 ]])
 ZEN:run()
 EOF
@@ -59,9 +58,8 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'keygen': $scenario
 		 Given that I am known as 'Alice'
-		 and I have a 'certreq' 'keypair'
-		 When I remove 'declaration' from data
-		 Then print data 'certreq'
+		 and I have a 'declaration_keypair'
+		 Then print data 'declaration_keypair'
 ]])
 ZEN:run()
 EOF
@@ -69,16 +67,16 @@ EOF
 
 echo "MadHatter gets the declaration and issues a certificate"
 cat <<EOF | zenroom -k madhatter.keys -a declaration_public.json \
-	| tee madhatter_certificate.json | json_pp
+	| tee madhatter_certificate.json
 -- madhatter certifies
 ZEN:begin($verbose)
 ZEN:parse([[
   Scenario 'issue': Receive a declaration request and issue a certificate
     Given that I am known as 'MadHatter'
-    and I have a 'declaration' 'from' 'Alice'
+    and I have a 'declaration_public' 'from' 'Alice'
     and I have my 'private' key in keyring
-    When I issue an implicit certificate
-    Then print data 'certificate'
+    When I issue an implicit certificate for 'declaration_public'
+    Then print all data
 ]])
 ZEN:run()
 EOF
@@ -91,9 +89,9 @@ cat <<EOF | zenroom -a madhatter_certificate.json | tee certificate_public.json
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'split': Print the public section of the certificate
-		  Given I have a 'public'
+		  Given I have a 'certificate_public' 'from' 'MadHatter'
 		  When possible
-		  Then print 'public' inside 'certificate'
+		  Then print data 'certificate_public'
 ]])
 ZEN:run()
 EOF
@@ -101,23 +99,22 @@ cat <<EOF | zenroom -a madhatter_certificate.json | tee certificate_private.json
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'split': Print the private section of the certificate
-		  Given I have a 'private'
+		  Given I have a 'certificate_private'
 		  When possible
-		  Then print 'private' inside 'certificate'
+		  Then print data 'certificate_private'
 ]])
 ZEN:run()
 EOF
-rm -f madhatter_certificate.json
 
 echo "Alice receives certificate_private and verifies its validity"
-cat <<EOF | zenroom -a certificate_private.json -k declaration_keypair.json | json_pp
+cat <<EOF | zenroom -a certificate_private.json -k declaration_keypair.json
 ZEN:begin($verbose)
 ZEN:parse([[
   Scenario 'save': Receive a certificate of a declaration and save it
-  	Given I have a 'certificate' 'from' 'MadHatter'
-	and I have the 'private' key 'keypair' in keyring
-	When I verify the implicit certificate 'certificate'
-	Then I print my 'declaration'
+  	Given I have a 'certificate_private' 'from' 'MadHatter'
+	and I have the 'private' key 'declaration_keypair' in keyring
+	When I verify the implicit certificate 'certificate_private'
+	Then I print data 'declaration'
 ]])
 ZEN:run()
 EOF

@@ -1,5 +1,15 @@
 -- Zencode data schemas for validation
 
+ZEN.assert = function(condition, errmsg, datastruct)
+   if condition then return true end
+
+   -- if datastruct then
+   -- 	  I.print("Error, data dump:")
+   -- 	  I.print(datastruct)
+   -- end
+   error(errmsg) -- prints zencode backtrace
+end
+
 _G['schemas'] = {
 
    -- packets encoded with AES GCM
@@ -7,13 +17,17 @@ _G['schemas'] = {
 	  checksum = S.hex,
 	  iv = S.hex,
 	  schema = S.Optional(S.string),
-	  text = S.hex
+	  text = S.hex,
+	  zenroom = S.Optional(S.string),
+	  encoding = S.string,
+	  curve = S.string,
+	  pubkey = S.ecp
    },
 
    -- zencode_keypair
    keypair = S.record {
 	  schema = S.Optional(S.string),
-	  private = S.hex,
+	  private = S.Optional(S.hex),
 	  public = S.ecp
    },
 

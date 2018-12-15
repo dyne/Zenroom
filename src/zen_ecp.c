@@ -320,6 +320,23 @@ static int ecp_eq(lua_State *L) {
 	return 1;
 }
 
+
+
+/***
+    Validate an ECP object if corresponding to a point on the curve.
+
+    @param ecp point to be validated
+    @function validate(ecp)
+    @return bool value: true if valid, false if not valid
+*/
+static int ecp_validate(lua_State *L) {
+	octet *o = o_arg(L,1); SAFE(o);
+	int res = ECP_validate(o);
+	lua_pushboolean(L,res>=0);
+	return 1;
+}
+
+
 // use shared internally with octet o_arg()
 int _ecp_to_octet(octet *o, ecp *e) {
 	ECP_toOctet(o, &e->val);
@@ -440,6 +457,7 @@ int luaopen_ecp(lua_State *L) {
 		{"add",ecp_add},
 		{"sub",ecp_sub},
 		{"mul",ecp_mul},
+		{"validate",ecp_validate},
 		{NULL,NULL}};
 	const struct luaL_Reg ecp_methods[] = {
 		{"affine",ecp_affine},
