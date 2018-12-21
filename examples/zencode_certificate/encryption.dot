@@ -1,9 +1,5 @@
 digraph zencode_encrypt {
-	// node [shape=box, splines=compound, rank=max,
-	// 	  overlap=false, overlap_shrink=true,
-	// 	  pack=true, packmode=nodes, resolution=1200,
-	// 	  outputorder=edgesfirst, style=filled color="#00b1b0" fontcolor=white];
-	graph [ dpi=200, bgcolor=white ];
+	graph [ dpi=300, bgcolor=white ];
 	node [shape=box, rank=max, fontname=Montserrat, fontsize=11, bgcolor=white,
 		  overlap=false, pack=true, style=filled color="#00b1b0" fontcolor=white];
 	edge [fontname=Montserrat, fontsize=9, arrowsize=0.3]
@@ -16,7 +12,7 @@ digraph zencode_encrypt {
 	Kimport_Alice [label=
 				   <Given that I am known as '<b><font color="#fff16e">Alice</font></b>'<br/>
 				   and I have my keypair<br/>
-				   and I have a '<font color="#fff16e"><b>Bob</b></font>' 'public' key<br/>
+				   and I have a '<font color="#fff16e"><b>Bob</b></font>' '<font color="#fff16e"><b>public</b></font>' key<br/>
 				   When I import '<font color="#fff16e"><b>Bob</b></font>' keypair into my keyring<br/>
 				   Then print my keyring>]
 
@@ -48,6 +44,9 @@ digraph zencode_encrypt {
 
 	Encrypt_Alice -> Decrypt_Bob [label="send a secret message\n{ schema: 'AES-GCM',\n  curve: 'bls383'\n  text: zenroom.octet\n  pubkey: zenroom.ECP\n  checksum: zenroom.octet\n  iv: zenroom.random\n  zenroom: '0.9'\n  encoding: 'hex' }"]
 
-	Decrypt_Bob -> Answer_Alice [label="reply the secret message\n{ decoded = { from: 'Alice',\n  text: 'Hi Bob!' } }"]
+	Decrypt_Bob -> Answer_Alice [label=<
+								 Reply the secret message<br/>
+								 { decoded = { from: 'Alice',<br/>
+									 text: '<b>Hi Bob!</b>' } }>]
 
 }

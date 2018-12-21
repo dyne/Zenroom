@@ -26,9 +26,9 @@ Zencode is the name of the language executed by Zenroom: it is simple to underst
 
 ## Documentation:
 
-<ul class="center"
->
-<li class="fas fa-code"><a href="https://zenroom.dyne.org/api">Zencode language API</a></li>
+<ul class="center">
+
+<li class="fas fa-code"><a href="https://zenroom.dyne.org/api">Zenroom scripting API</a></li>
 
 <li class="far fa-graduation-cap"><a href="https://zenroom.dyne.org/whitepaper">Zenroom Whitepaper</a></li>
 
@@ -39,6 +39,25 @@ Zencode is the name of the language executed by Zenroom: it is simple to underst
 <li class="fas fa-history"><a href="https://files.dyne.org/zenroom/ChangeLog.txt">History of changes</a></li>
 </ul>
 
+## Language bindings
+
+Zenroom is designed to be embedded inside host applications and used from its very simple interface to execute code on an input and return an output of the transformation. The embedding API is:
+
+```c
+int zenroom_exec(char *script, char *conf, char *keys,
+                 char *data, int verbosity);
+```
+
+This API can be called in similar ways from a variety of languages and in particular four wrappers already facilitate its usage:
+
+<ul class="center">
+<li><a href="https://www.npmjs.com/package/zenroom">Javascript NPM package</a></li>
+<li><a href="https://github.com/DECODEproject/zenroom-py">Python language bindings</a></li>
+<li><a href="https://github.com/DECODEproject/zenroom-go">Go language bindings</a></li>
+<li>Java (JNI) and SWIG (universal) bindings inside source</li>
+</ul>
+
+## Mission
 
 Zenroom is software in **ALPHA stage** and is part of the [DECODE project](https://decodeproject.eu) about data commons and [technological sovereignty](https://www.youtube.com/watch?v=RvBRbwBm_nQ). Our effort is that of improving people's awareness of how their data is processed by algorithms, as well facilitate the work of developers to create along [privacy by design principles](https://decodeproject.eu/publications/privacy-design-strategies-decode-architecture).
 

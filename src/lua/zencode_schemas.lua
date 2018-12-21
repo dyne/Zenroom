@@ -1,12 +1,7 @@
 -- Zencode data schemas for validation
 
-ZEN.assert = function(condition, errmsg, datastruct)
+ZEN.assert = function(condition, errmsg)
    if condition then return true end
-
-   -- if datastruct then
-   -- 	  I.print("Error, data dump:")
-   -- 	  I.print(datastruct)
-   -- end
    error(errmsg) -- prints zencode backtrace
 end
 

@@ -4,7 +4,7 @@ verbose=1
 
 scenario="Generate a new keypair"
 echo $scenario
-cat <<EOF | zenroom | tee alice.keys
+cat <<EOF | zenroom | tee alice.keys | json_pp
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'keygen': $scenario
@@ -17,7 +17,7 @@ EOF
 
 scenario="Split a keypair"
 echo $scenario
-cat <<EOF | zenroom -k alice.keys | tee alice_public.keys
+cat <<EOF | zenroom -k alice.keys | tee alice_public.keys | json_pp
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'keygen': $scenario
