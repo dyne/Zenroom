@@ -25,7 +25,7 @@ function to_challenge(list)
 end
 
 function hashtopoint(m) return ECP.mapit( sha512( m ) ) end
-hs = hashtopoint(str("Salt string")) -- salt?
+hs = hashtopoint(str("anystring"))
 
 o = ECP.order()
 
@@ -56,104 +56,100 @@ function keygen()
    local x = rand()
    local y = rand()
    local sk = { x = x,
-				y = y  }
+            y = y  }
    local vk = { g2 = g2,
-				alpha = g2 * x,
-				beta  = g2 * y  }
+            alpha = g2 * x,
+            beta  = g2 * y  }
 
    return sk, vk
 end
 
 function aggKey(keys)
-   local agg_vk = keys[1]
-   for i = 2, #keys do
-	  agg_vk = agg_vk + keys[i]
-   end
+  local agg_alpha = keys[1].alpha
+  local agg_beta  = keys[1].beta
+  for i = 2, #keys do
+     agg_alpha = agg_alpha + keys[i].alpha
+     agg_beta  = agg_beta  + keys[i].beta
+  end
 
-   return agg_vk
+   return {g2 = g2, alpha = agg_alpha, beta = agg_beta}
 end
 
-function prepareBlindSing(gamma, m)
+function prepareBlindSign(gamma, m)
    local r = rand()
    local cm = g1 * r + hs * m
    local h = hashtopoint(cm)
    local a, b, k = elgamal_enc(gamma, m, h)
    local c = {a = a, b = b}
    local pi_s = make_pi_s(gamma, cm, k, r, m)
-   return cm, c, pi_s
+   local Lambda = { cm = cm, c = c, pi_s = pi_s }
+   return Lambda
 end
 
-function blindSign(sk, cm, c, pi_s, gamma)
-   local ret = verify_pi_s(gamma, c, cm, pi_s)
+function blindSign(sk, gamma, Lambda)
+   local ret = verify_pi_s(gamma, Lambda.c, Lambda.cm, Lambda.pi_s)
    assert(ret == true, 'Proof pi_s does not verify') -- verify zero knowledge proof
-   local h = hashtopoint(cm)
-   local a_tilde = c.a * sk.y
-   local b_tilde = h * sk.x + c.b * sk.y
+   local h = hashtopoint(Lambda.cm)
+   local a_tilde = Lambda.c.a * sk.y
+   local b_tilde = h * sk.x + Lambda.c.b * sk.y
    return { h = h,
-			a_tilde = a_tilde,
-			b_tilde = b_tilde  }
+         a_tilde = a_tilde,
+         b_tilde = b_tilde  }
 end
 
 function unblind(sigma_tilde, d)
    local s = elgamal_dec(d, sigma_tilde.a_tilde, sigma_tilde.b_tilde)
    return { h = sigma_tilde.h,
-			s = s }
+         s = s }
 end
 
 function aggCred(sigmas)
-   local agg_sigma = sigmas[1]
+   local agg_s = sigmas[1].s
    for i = 2, #sigmas do
-	  agg_sigma = agg_sigma + sigmas[i]
+     agg_s = agg_s + sigmas[i].s
    end
 
-   return agg_sigma
+   return {h = sigmas[1].h, s = agg_s}
 end
 
-function proveCred(vk, m, sigma)
+function proveCred(vk, sigma, m)
    local r = rand()
    local r_prime = rand()
-   local sigma_prime = { h_prime = sigma.h * r_prime,
-						 s_prime = sigma.s * r_prime  }
+   local sigma_prime = { h_prime = sigma.h * r_prime, 
+         s_prime = sigma.s * r_prime  }
    local kappa = vk.alpha + vk.beta * m + vk.g2 * r
    local nu = sigma_prime.h_prime * r
-   local pi_v = 1 -- make zero knowledge proof
-
-   return sigma_prime, kappa, nu, pi_v
+   local pi_v = make_pi_v(vk, sigma_prime, m, r)
+   local Theta = {kappa = kappa, nu = nu, sigma_prime = sigma_prime, pi_v = pi_v}
+   return Theta
 end
 
-function verifyCred(vk, sigma_prime, kappa, nu, pi_v)
-   assert(pi_v == 1, 'Proof pi_v does not verify') -- verify zero knowledge proof
-   local ret1 = not sigma_prime.h_prime:isinf()
-   local ret2 = ECP2.miller(kappa, sigma_prime.h_prime)
-	  == ECP2.miller(vk.g2, sigma_prime.s_prime + nu)
+function verifyCred(vk, Theta)
+   local ret = verify_pi_v(vk, Theta.kappa, Theta.nu, Theta.sigma_prime, Theta.pi_v)
+   assert(ret == true, 'Proof pi_v does not verify') -- verify zero knowledge proof
+   local ret1 = not Theta.sigma_prime.h_prime:isinf()
+   local ret2 = ECP2.miller(Theta.kappa, Theta.sigma_prime.h_prime)
+     == ECP2.miller(vk.g2, Theta.sigma_prime.s_prime + Theta.nu)
    return ret1 and ret2
 end
 
 
 function make_pi_s(gamma, cm, k, r, m)
    local h = hashtopoint(cm)
-   -- local wr = rand()
    local wk = rand()
+   local wm = rand()
+   local wr = rand()
    local Aw = g1 * wk
-   -- local Bw = gamma * wk + h * wm
-   -- local Cw = g1 * wr + hs * wm
-   local c = to_challenge({cm, h, Aw})
-   -- c here is a doublesize big
+   local Bw = gamma * wk + h * wm
+   local Cw = g1 * wr + hs * wm
+   local c = to_challenge({ cm, h, Aw, Bw, Cw })
    local rk = wk:modsub(c * k, o)
-   -- sanity checks:
-   -- assert(rk == wk:modsub(c:modmul(k, o), o))
-   assert(Aw == (g1*k) * c + g1 * rk)
-   assert(rk == wk:modsub(c:modmul(k, o), o))
-   -- assert(rk == rk1)
-   --    print(g1 * wk)
-   --    print( (g1*k) * c + g1 * rk )
-   assert(g1*wk == (g1*k) * c + g1 * rk)
-   -- 
-   -- local rm = wm:modsub(c * m, o)
+   local rm = wm:modsub(c * m, o)
+   local rr = wr:modsub(c * r, o)
    return { c  = c,
-			rk = rk,
-			rm = rand():modsub(c * m, o),
-			rr = rand():modsub(c * r, o)  }
+         rk = rk,
+         rm = rm,
+         rr = rr }
 end
 
 function verify_pi_s(gamma, ciphertext, cm, proof)
@@ -165,34 +161,32 @@ function verify_pi_s(gamma, ciphertext, cm, proof)
    local rm = proof.rm
    local rr = proof.rr
    local Aw = a * c + g1 * rk
-   -- local Bw = b * c + gamma * rk + h * rm
-   -- local Cw = cm * c + g1 * rr + hs * rm
-   return c == to_challenge({ cm, h, Aw })
+   local Bw = b * c + gamma * rk + h * rm
+   local Cw = cm * c + g1 * rr + hs * rm
+   return c == to_challenge({ cm, h, Aw, Bw, Cw })
 end
 
---[[
-   function make_pi_v(vk, sigma, m, t)
+
+function make_pi_v(vk, sigma_prime, m, r)
    local wm = rand()
-   local wt = rand()
-
-   local Aw = g2 * wt + vk.alpha + vk.beta * wm
-   local Bw = sigma.h * wt
-   local c = to_challenge({vk.alpha, vk.beta, Aw, Bw})
+   local wr = rand()
+   local Aw = g2 * wr + vk.alpha + vk.beta * wm
+   local Bw = sigma_prime.h_prime * wr
+   local c = to_challenge({ vk.alpha, vk.beta, Aw, Bw })
    local rm = wm:modsub(m * c, o)
-   local rt = wt:modsub(t * c, o)
-   return { c = c, rm = rm, rt = rt }
-   end
+   local rr = wr:modsub(r * c, o)
+   return { c = c, rm = rm, rr = rr }
+end
 
-   function verify_pi_v(params, vk, sigma, kappa, nu, proof)
+function verify_pi_v(vk, kappa, nu, sigma_prime, proof)
    local c = proof.c
    local rm = proof.rm
    local rr = proof.rr
+   local Aw = kappa * c + g2 * rr + vk.alpha * INT.new(1):modsub(c,o) + vk.beta * rm
+   local Bw = nu * c + sigma_prime.h_prime * rr
+   return c == to_challenge({ vk.alpha, vk.beta, Aw, Bw })
+end
 
-   local Aw = kappa * c + g2 * rt + vk.alpha * (1-c) + vk.beta * rm
-   local Bw = nu * c + sigma.h * rt
-   return c == to_challenge({vk.alpha, vk.beta, Aw, Bw})
-   end
---]]
 
 
 -- tests
@@ -206,12 +200,31 @@ print('[ok] test El-Gamal')
 print('')
 
 sk, vk = keygen()
-cm, c, pi_s = prepareBlindSing(gamma, m)
-sigma_tilde = blindSign(sk, cm, c, pi_s, gamma)
+Lambda = prepareBlindSign(gamma, m)
+sigma_tilde = blindSign(sk, gamma, Lambda)
 sigma = unblind(sigma_tilde, d)
-sigma_prime, kappa, nu, pi_v = proveCred(vk, m, sigma)
-ret = verifyCred(vk, sigma_prime, kappa, nu, pi_v)
+Theta = proveCred(vk, sigma, m)
+ret = verifyCred(vk, Theta)
 assert(ret == true, 'Coconut credentials not verifying')
 print('')
 print('[ok] test Coconut')
+print('')
+
+sk1, vk1 = keygen()
+sk2, vk2 = keygen()
+---sk3, vk3 = keygen()
+agg_vk = aggKey({vk1, vk2, vk3})
+Lambda = prepareBlindSign(gamma, m)
+sigma_tilde1 = blindSign(sk1, gamma, Lambda)
+sigma_tilde2 = blindSign(sk2, gamma, Lambda)
+---sigma_tilde3 = blindSign(sk3, gamma, Lambda)
+sigma1 = unblind(sigma_tilde1, d)
+sigma2 = unblind(sigma_tilde2, d)
+---sigma3 = unblind(sigma_tilde3, d)
+agg_sigma = aggCred({sigma1, sigma2})
+Theta = proveCred(agg_vk, agg_sigma, m)
+ret = verifyCred(agg_vk, Theta)
+assert(ret == true, 'Coconut credentials not verifying')
+print('')
+print('[ok] test multi-authority Coconut')
 print('')
