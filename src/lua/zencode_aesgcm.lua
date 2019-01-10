@@ -33,7 +33,7 @@ When("I use '' key to encrypt the text", function(keyname,dest)
 		cipher.encoding = "hex"
 		cipher.curve = "bls383"
 		cipher.zenroom = VERSION
-		cipher.schema = "AES-GCM"
+		cipher.schema = "aes_gcm"
 		cipher.pubkey = keyring[whoami].public
 		ZEN.data.add(data,dest,cipher)
 end)
@@ -41,7 +41,7 @@ end)
 When("I decrypt the '' to ''", function(src, dest)
 		data = data or ZEN.data.load()		
 		ZEN.assert(data[src], "Encrypted packet not found in: "..src)
-		ZEN.assert(validate(data[src],schemas['AES-GCM']),
+		ZEN.assert(validate(data[src],schemas['aes_gcm']),
 				   "Invalid AES-GCM encrypted packet in: "..src)
 
 		init_keyring()
