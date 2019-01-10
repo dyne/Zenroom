@@ -1,7 +1,13 @@
 notifications:
   email: false
+
 env:
-  - RELEASE_BRANCH="master"
+  global:
+    - RELEASE_BRANCH="master"
+    - HOMEBREW_LOGS=/tmp
+    - HOMEBREW_TEMP=/tmp
+    - HOMEBREW_NO_AUTO_UPDATE=yes
+
 language: c
 os:
 - linux
