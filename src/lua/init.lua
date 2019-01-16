@@ -44,6 +44,8 @@ HASH   = require('zenroom_hash')
 ECP    = require('zenroom_ecp')
 ECP2   = require('zenroom_ecp2')
 H = HASH -- alias
+ELGAMAL = require('crypto_elgamal')
+COCONUT = require('crypto_coconut')
 
 -- Zencode language interpreter
 ZEN    = require('zencode')
