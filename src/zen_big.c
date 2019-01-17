@@ -80,7 +80,7 @@ extern ecp* ecp_dup(lua_State *L, ecp* in);
 		lerror(L,"incompatible sizes: arg2 is double, arg1 is not"); \
 	}
 
-int _octet_to_big(big *dst, octet *src) {
+int _octet_to_big(lua_State *L, big *dst, octet *src) {
 	int i;
 	if(src->len <= MODBYTES) { // big
 		big_init(dst);
@@ -98,7 +98,7 @@ int _octet_to_big(big *dst, octet *src) {
 			dst->dval[0] += (int)(unsigned char) src->val[i];
 		}
 	} else {
-		lerror(NULL,"Cannot import BIG number");
+		lerror(L,"Cannot import BIG number");
 		return(0);
 	}
 	dst->len = i;
@@ -135,7 +135,7 @@ big* big_arg(lua_State *L,int n) {
 	octet *o = o_arg(L,n);
 	if(o) {
 		big *b  = big_new(L); SAFE(b);
-		_octet_to_big(b,o);
+		_octet_to_big(L,b,o);
 		lua_pop(L,1);
 		return(b);
 	}
@@ -287,7 +287,7 @@ static int newbig(lua_State *L) {
 	// octet argument, import
 	octet *o = o_arg(L, 1); SAFE(o);
 	big *c = big_new(L); SAFE(c);
-	_octet_to_big(c,o);
+	_octet_to_big(L, c,o);
 	return 1;
 }
 
