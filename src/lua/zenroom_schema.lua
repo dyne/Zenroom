@@ -16,6 +16,8 @@ schema.print = schema.FormatOutput
 -- zenroom specific typecheckers
 schema.octet = schema.OCTET
 schema.big = schema.BIG
+schema.int = schema.BIG
+schema.INT = schema.BIG
 schema.ecp = schema.ECP
 schema.ecp2 = schema.ECP2
 
