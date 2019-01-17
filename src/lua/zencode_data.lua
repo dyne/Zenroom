@@ -56,6 +56,7 @@ function ZEN.data.disjoin(_data, section, key)
    return _data
 end
 
+-- checks that a data section contains a key (no check on value)
 function ZEN.data.check(_data, section, key)
    -- _data = _data or _G['data']
    portion = _data[section] -- L.property(section)(_data)
@@ -125,6 +126,12 @@ f_datarm = function (section)
    if not section     then error("Specify the data portion to remove") end
    data = ZEN.data.disjoin(data, selection, section)
 end
+
+When("I declare that I am ''", function(decl)
+   -- declaration
+   if not declared then declared = decl
+   else declared = declared .." and ".. decl end   
+end)
 
 When("I declare to '' that I am ''",function (auth,decl)
 		-- declaration

@@ -58,6 +58,29 @@ _G['schemas'] = {
 	  statement = S.string,
 	  public = S.ecp,
 	  private = S.hex
+   },
+
+   -- zencode_coconut
+   coconut_ca_vk = S.record {
+	  g2 = S.hex,
+	  alpha = S.hex,
+	  beta = S.hex
+   },
+   coconut_ca_sk = S.record {
+	  x = S.int,
+	  y = S.int
+   },
+   coconut_ca_keypair = S.record {
+	  schema = S.Optional(S.string),
+	  version = S.Optional(S.string),
+	  verify = S.table,
+	  sign = S.table
+   },
+
+   coconut_req_keypair = S.record {
+	  schema = S.Optional(S.string),
+	  public = S.ecp,
+	  private = S.hex
    }
 
 }

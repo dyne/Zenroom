@@ -9,6 +9,7 @@ keyring = nil
 keypair = nil
 
 -- crypto setup
+-- TODO: review scoping, make local or into finite-state machine
 random = RNG.new()
 order = ECP.order()
 G = ECP.generator()
@@ -65,15 +66,19 @@ When("I create my new keypair", f_keygen)
 
 f_keyrm = function (keytype)
    init_keyring(keypair or whoami)
-   ZEN.assert(validate(keyring[keypair],schemas['keypair']),
-		  "Keypair is already halved, cannot remove element")
-   if not (keytype == "public" or keytype == "private") then
-	  error("keys inside a keypair are either public or private")
-   end
    local kp = keyring[keypair]
+   if kp.schema then
+	  ZEN.assert(validate(kp,schemas[kp.schema]),
+				 "Keypair "..keypair.." does not validate as "..kp.schema)
+   end
+   -- if not (keytype == "public" or keytype == "private") then
+   -- 	  error("keys inside a keypair are either public or private")
+   -- end
+   ZEN.assert(kp[keytype],
+			  "Keypair "..keypair.." does not contain element: ".. keytype)
    if kp[keytype] then
 	  local out = {}
-	  L.map(keyring[keypair],function(k,v)
+	  L.map(kp,function(k,v)
 			   if k ~= keytype then
 				  out[k] = v end end)
 	  keyring[keypair] = out

@@ -59,6 +59,8 @@ require('zencode_data')
 require('zencode_aesgcm')
 -- implicit certificates
 require('zencode_ecqv')
+-- coconut credentials
+require('zencode_coconut')
 
 function content(var)
    if type(var) == "zenroom.octet" then

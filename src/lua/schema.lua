@@ -295,7 +295,13 @@ function schema.ECP(obj, path)
    end
 end
 function schema.ECP2(obj, path)
+   if not obj then
+	  return schema.Error("Type mismatch: '"..path..
+						  "' should be a valid ECP2, is nil", path) end
    if type(obj) == "zenroom.ecp2" then return nil -- success
+   elseif type(obj) == "table" then
+	  return schema.Error("Type mismatch: '"..path..
+							 "' should be a valid ECP2, is a table", path)	  
    else local b = ECP2.new(obj)
 	  if not b then
 		 return schema.Error("Type mismatch: '"..path..

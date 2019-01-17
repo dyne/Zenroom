@@ -120,16 +120,12 @@ function coco.ca_keygen()
                 alpha = g2 * x,
                 beta  = g2 * y  }
    -- return keypair
-   return { schema = 'coconut_ca_keypair',
-            version = coco._VERSION,
-            sign = sk,
+   return { sign = sk,
             verify = vk }
 end
 function coco.cred_keygen()
    local d, gamma = ELGAMAL.keygen()
-   return { schema = 'coconut_cred_keypair',
-			version = coco._VERSION,
-			private = d,
+   return { private = d,
 			public  = gamma }
 end
 
@@ -153,15 +149,13 @@ end
 function coco.prepare_blind_sign(gamma, secret)
    local m = INT.new(sha256(str(secret)))
    local r = rand()
-   local cm = I.spy(g1 * r + hs * m)
+   local cm = g1 * r + hs * m
    local h = ECP.hashtopoint(cm)
    local a, b, k = ELGAMAL.encrypt(gamma, m, h)
    local c = {a = a, b = b}
    local pi_s = make_pi_s(gamma, cm, k, r, m)
    -- return Lambda
-   return { schema = 'coconut_lambda',
-            version = coco._VERSION,
-            cm   = cm,
+   return { cm   = cm,
             c    = c,
             pi_s = pi_s }
 end
