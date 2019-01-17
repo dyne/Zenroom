@@ -79,10 +79,24 @@ ZEN:parse([[
 Scenario 'credential_issue_blindsign': $scenario
 		 Given that I am known as 'MadHatter'
 		 and I have my credential issuer keypair
-		 and I have a valid blind signature request
-		 When I am sure that the credential is legitimate
-		 and I blind sign the credential request
-		 Then print 'signature'
+		 When I have a valid blind signature 'request'
+		 and I blind sign the credential 'MadHatter'
+		 Then print all data
+]])
+ZEN:run()
+EOF
+
+scenario="Receive the signature and publish the credential"
+echo $scenario
+cat <<EOF | zenroom -k alice.keys -a madhatter_signed_credential.json | tee alice_aggregated_credential.json | json_pp
+ZEN:begin($verbose)
+ZEN:parse([[
+Scenario 'credential_receive_signature': $scenario
+		 Given that I am known as 'Alice'
+		 and I have my credential request keypair
+		 When I have a credential signature by 'MadHatter'
+		 and I aggregate all signatures into my credential
+		 Then print all data
 ]])
 ZEN:run()
 EOF

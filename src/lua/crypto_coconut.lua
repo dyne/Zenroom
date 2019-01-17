@@ -31,13 +31,16 @@ local g1 = ECP.generator() -- return value
 local g2 = ECP2.generator() -- return value
 local o  = ECP.order() -- return value
 
--- stateful random generator init
+-- stateful challenge hardcoded string
+local hs = ECP.hashtopoint(str([[
+Developed for the DECODE project
+]] .. coco._LICENSE))
+local challenge = g1:octet() .. g2:octet() .. hs:octet()
+
+
+-- random generator init
 local random = RNG.new()
 local function rand() return INT.new(random,o) end
-
--- stateful challenge
-local hs = ECP.mapit(sha512(random:octet(32)))
-local challenge = OCTET.from_string(hex(g1) .. hex(g2) .. hex(hs))
 
 -- El-Gamal cryptosystem
 function coco.elgamal_keygen()
@@ -58,8 +61,7 @@ end
 -- local zero-knowledge proof verifications
 local function to_challenge(list)
    -- assert(coco.challenge, "COCONUT secret challenge not set")
-   return INT.new( sha256( challenge
-                              .. OCTET.serialize(list)))
+   return INT.new( sha256( challenge .. OCTET.serialize(list)))
 end
 local function make_pi_s(gamma, cm, k, r, m)
    local h = ECP.hashtopoint(cm)
@@ -78,7 +80,7 @@ local function make_pi_s(gamma, cm, k, r, m)
 			rm = rm,
 			rr = rr }
 end
-local function verify_pi_s(gamma, ciphertext, cm, proof)
+function coco.verify_pi_s(gamma, ciphertext, cm, proof)
    local h = ECP.hashtopoint(cm)
    local a = ciphertext.a
    local b = ciphertext.b
@@ -161,14 +163,12 @@ function coco.prepare_blind_sign(gamma, secret)
 end
 
 function coco.blind_sign(sk, gamma, Lambda)
-   local ret = verify_pi_s(gamma, Lambda.c, Lambda.cm, Lambda.pi_s)
+   local ret = coco.verify_pi_s(gamma, Lambda.c, Lambda.cm, Lambda.pi_s)
    assert(ret == true, 'Proof pi_s does not verify') -- verify zero knowledge proof
    local h = ECP.hashtopoint(Lambda.cm)
    local a_tilde = Lambda.c.a * sk.y
    local b_tilde = h * sk.x + Lambda.c.b * sk.y
-   return { schema = 'coconut_sigmatilde',
-            version = coco._VERSION,
-            h = h,
+   return { h = h,
             a_tilde = a_tilde,
             b_tilde = b_tilde  }
 end

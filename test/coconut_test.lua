@@ -11,13 +11,11 @@ print('')
 print('[ok] test El-Gamal')
 print('')
 
+-- A single CA signs
 secret = "Some sort of secret credential"
 cred_keypair = COCONUT.cred_keygen()
 ca_keypair = COCONUT.ca_keygen()
 Lambda = COCONUT.prepare_blind_sign(cred_keypair.public, secret)
--- send lambda to CA
-
--- A single CA signs
 sigmatilde = COCONUT.blind_sign(ca_keypair.sign, cred_keypair.public, Lambda)
 aggsigma = COCONUT.aggregate_creds(cred_keypair.private, {sigmatilde})
 Theta = COCONUT.prove_creds(ca_keypair.verify, aggsigma, secret)
