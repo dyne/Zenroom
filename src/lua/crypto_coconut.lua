@@ -180,9 +180,7 @@ function coco.aggregate_creds(d, sigma_tilde)
          agg_s = agg_s + ELGAMAL.decrypt(d, sigma_tilde[i].a_tilde, sigma_tilde[i].b_tilde)
       end
    end
-   return { schema = 'coconut_aggsigma',
-            version = coco._VERSION,
-            h = sigma_tilde[1].h,
+   return { h = sigma_tilde[1].h,
             s = agg_s }
 end
 

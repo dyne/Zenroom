@@ -47,7 +47,7 @@ echo $scenario
 cat <<EOF | zenroom -k madhatter.keys | tee madhatter_verification.keys | json_pp
 ZEN:begin($verbose)
 ZEN:parse([[
-Scenario 'publish_credential_issuer_key': $scenario
+Scenario 'credential_publish_issuer': $scenario
 		 Given that I am known as 'MadHatter'
 		 and I have my credential issuer keypair
 		 When I remove the 'sign' key
@@ -61,7 +61,7 @@ echo $scenario
 cat <<EOF | zenroom -k alice.keys | tee alice_blindsign_request.json | json_pp
 ZEN:begin($verbose)
 ZEN:parse([[
-Scenario 'credential_request_blindsign': $scenario
+Scenario 'credential_request': $scenario
 		 Given that I am known as 'Alice'
 		 and I have my credential request keypair
 		 When I declare that I am 'lost in Wonderland'
@@ -76,12 +76,13 @@ echo $scenario
 cat <<EOF | zenroom -k madhatter.keys -a alice_blindsign_request.json | tee madhatter_signed_credential.json | json_pp
 ZEN:begin($verbose)
 ZEN:parse([[
-Scenario 'credential_issue_blindsign': $scenario
+Scenario 'credential_sign': $scenario
 		 Given that I am known as 'MadHatter'
 		 and I have my credential issuer keypair
-		 When I have a valid blind signature 'request'
-		 and I blind sign the credential 'MadHatter'
-		 Then print all data
+		 When I am requested to sign a credential
+		 and I verify the credential to be true
+		 and I sign the credential 'MadHatter'
+		 Then print data 'MadHatter'
 ]])
 ZEN:run()
 EOF
@@ -91,12 +92,27 @@ echo $scenario
 cat <<EOF | zenroom -k alice.keys -a madhatter_signed_credential.json | tee alice_aggregated_credential.json | json_pp
 ZEN:begin($verbose)
 ZEN:parse([[
-Scenario 'credential_receive_signature': $scenario
+Scenario 'credential_publish': $scenario
 		 Given that I am known as 'Alice'
 		 and I have my credential request keypair
-		 When I have a credential signature by 'MadHatter'
+		 When I receive a credential signature 'MadHatter'
 		 and I aggregate all signatures into my credential
 		 Then print all data
+]])
+ZEN:run()
+EOF
+
+scenario="Meet a stranger and verify credentials"
+echo $scenario
+cat <<EOF | zenroom -k madhatter_verification.keys -a alice_aggregated_credential.json | json_pp
+ZEN:begin($verbose)
+ZEN:parse([[
+Scenario 'credential_verify': $scenario
+		 Given that I use the verification key by 'MadHatter'
+		 and that 'Alice' declares to be 'lost in Wonderland'
+		 When I aggregate all the verification keys
+		 and the declaration is proven by credentials
+		 Then print data 'proof'
 ]])
 ZEN:run()
 EOF

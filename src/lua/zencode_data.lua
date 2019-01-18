@@ -162,18 +162,13 @@ end)
 
 When("I remove '' from data", f_datarm)
 
-Then("print data ''", function (what)
-		data = data or ZEN.data.load()
-		ZEN.assert(data[what], "Cannot print, data not found: "..what)
-		write_json({ [what] = data[what] })
-		-- local t = type(data[what])
-		-- if t == "table" then write_json({ [what] = data[what]})
-		-- elseif iszen(t) or t == "string" then
-		--    print({ [what] = data[what])
-		-- else
-		--    error("Cannot print '"..what.."' data type: "..t)
-		-- end
-end)
+f_justprint =  function (what)
+   data = data or ZEN.data.load()
+   ZEN.assert(data[what], "Cannot print, data not found: "..what)
+   write_json({ [what] = data[what] })
+end
+Then("print data ''", f_justprint)
+
 Then("print '' inside ''", function (what, section)
 		data = data or ZEN.data.load()
 		ZEN.assert(data[what], "Cannot print, data not found: "..what)

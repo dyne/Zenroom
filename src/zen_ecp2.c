@@ -119,26 +119,6 @@ If only the first two arguments are provided (X and Xi), then Y and Yi are calcu
     @function ECP2.new(X,Xi,Y,Yi)
 */
 static int lua_new_ecp2(lua_State *L) {
-	if(lua_isnoneornil(L, 1)) { // no args: set to generator
-		ecp2 *e = ecp2_new(L); SAFE(e);
-		FP2 x, y;
-		FP2_from_BIGs(&x,(chunk*)CURVE_G2xa,(chunk*)CURVE_G2xb);
-		FP2_from_BIGs(&y,(chunk*)CURVE_G2ya,(chunk*)CURVE_G2yb);
-
-		if(!ECP2_set(&e->val,&x,&y)) {
-			lerror(L,"ECP2 generator value out of curve (stack corruption)");
-			return 0; }
-		return 1; }
-
-	// _fromOctet() not safe
-	// void *ud = luaL_testudata(L, 1, "zenroom.octet");
-	// if(ud) {
-	// 	octet *o = (octet*)ud; SAFE(o);
-	// 	ecp2 *e = ecp2_new(L); SAFE(e);
-	// 	if(! ECP2_fromOctet(&e->val, o) )
-	// 		lerror(L,"Octet doesn't contains a valid ECP2");
-	// 	return 1;
-	// }
 
 // TODO: unsafe and only needed when running tests
 #ifdef DEBUG
@@ -171,9 +151,13 @@ static int lua_new_ecp2(lua_State *L) {
 		if(!ECP2_setx(&e->val, &fx))
 			warning(L,"new ECP2 value out of curve (points to infinity)");
 		return 1; }
-	lerror(L, "ECP2.new() expected zenroom.big arguments or none");
 #endif
-	return 0;
+
+	octet *o = o_arg(L,1); SAFE(o);
+	ecp2 *e = ecp2_new(L); SAFE(e);
+	if(! ECP2_fromOctet(&e->val, o) )
+		lerror(L,"Octet doesn't contains a valid ECP2");
+	return 1;
 }
 
 /***
