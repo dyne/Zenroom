@@ -5,14 +5,14 @@
 --
 
 g = ECP.G() -- get the curve's generator coordinates
-h = g * 2 -- hashtopoint "h0"
-h1 = g * 20 -- hashtopoint "h1"
+h = g * INT.new(2) -- hashtopoint "h0"
+h1 = g * INT.new(20) -- hashtopoint "h1"
 order = ECP.order() -- get the curves order in a big
 rng = RNG.new()
 H = HASH.new('sha256')
 
 local KEYS_TABLE = JSON.decode(KEYS)
-local DATA_TABLE = JSON.decode(DATA)
+local DATA_TABLE = DATA and JSON.decode(DATA) or nil
 
 function readBig(str)
 	return BIG.new(hex(str))
