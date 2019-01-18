@@ -30,5 +30,5 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.schema-version="1.0" \
       org.dyne.zenroom.docker.dockerfile="/Dockerfile" \
       org.dyne.zenroom.license="GPL-3.0-only" \
-	  maintainer="Puria Nafisi Azizi <puria@dyne.org>"
-
+      maintainer="Puria Nafisi Azizi <puria@dyne.org>" \
+      homepage=$VCS_URL
