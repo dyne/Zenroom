@@ -58,6 +58,9 @@ include ${pwd}/build/linux.mk
 # build targets for apple systems (OSX and IOS)
 include ${pwd}/build/osx.mk
 
+# build docker images and releasing
+include ${pwd}/build/docker.mk
+
 # experimental target for xtensa embedded boards
 esp32: apply-patches lua53 milagro lpeglabel
 	CC=${pwd}/build/xtensa-esp32-elf/bin/xtensa-esp32-elf-${gcc} \

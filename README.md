@@ -32,11 +32,17 @@ Zencode is the name of the language executed by Zenroom: it is simple to underst
 
 <li class="far fa-graduation-cap"><a href="https://zenroom.dyne.org/whitepaper">Zenroom Whitepaper</a></li>
 
-<li class="far fa-hand-point-right"><a href="https://zenroom.dyne.org/demo">Online Demo</a></li>
 
 <li class="far fa-cogs"><a href="https://github.com/DECODEproject/zenroom/wiki">Online Wiki</a></li>
 
 <li class="fas fa-history"><a href="https://files.dyne.org/zenroom/ChangeLog.txt">History of changes</a></li>
+</ul>
+
+## Playground:
+
+<ul class="center">
+<li class="far fa-hand-point-right"><a href="https://zenroom.dyne.org/demo">Online Demo</a></li>
+<li class="far fa-fighter-jet"><a href="https://hub.docker.com/r/dyne/zenroom">:whale: Docker image</a></li>
 </ul>
 
 ## Language bindings
