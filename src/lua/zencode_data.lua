@@ -188,6 +188,10 @@ Then("print '' ''", function (what, section)
 		end
 end)
 
+Then("print string ''", function(s)
+		print(s)
+end)
+
 Then("print all data", function()
 		local t = type(data)
 		if t == "table" then

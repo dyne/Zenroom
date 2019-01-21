@@ -195,8 +195,6 @@ function coco.prove_creds(vk, sigma, secret)
    local pi_v = make_pi_v(vk, sigma_prime, m, r)
    -- return Theta
    local Theta = {
-      schema = 'coconut_theta',
-      version = coco._VERSION,
       kappa = kappa,
       nu = nu,
       sigma_prime = sigma_prime,

@@ -138,6 +138,7 @@ end)
 
 When("the declaration is proven by credentials", function()
 		-- TODO: multiple credential issuers
+		data = data or ZEN.data.load()
 		ZEN.assert(declared, "Nothing has been declared yet")
 		ZEN.assert(data._aggkeys, "There are no verification keys selected")
 		-- I.print(data._aggkeys)
@@ -153,4 +154,30 @@ When("the declaration is proven by credentials", function()
 		data.proof = map(Theta, hex)
 		data.proof.pi_v = map(Theta.pi_v, hex)
 		data.proof.sigma_prime = map(Theta.sigma_prime, hex)
+		data.proof.schema = 'coconut_theta'
+		data.proof.version = COCONUT._VERSION
+
+end)
+
+Given("I have a valid credential proof", function()
+		 data = data or ZEN.data.load()		 
+		 ZEN.assert(data.proof.schema == "coconut_theta",
+					"Invalid credential proof")
+		 local theta = { }
+		 theta.nu = ECP.new(data.proof.nu)
+		 theta.kappa = ECP2.new(data.proof.kappa)
+		 theta.pi_v = map(data.proof.pi_v, INT.new)
+		 theta.sigma_prime = map(data.proof.sigma_prime, ECP.new)
+		 data._theta = theta
+end)
+
+When("the credential proof is verified correctly", function()
+		data = data or ZEN.data.load()
+		ZEN.assert(data._theta, "No valid credential proof found")
+		ZEN.assert(data._aggkeys, "There are no verification keys selected")
+		-- I.print(data._aggkeys)
+		local aggkeys = COCONUT.aggregate_keys(data._aggkeys)
+		ZEN.assert(
+		   COCONUT.verify_creds(aggkeys, data._theta),
+		   "Credential proof does not validate")
 end)

@@ -51,7 +51,7 @@ Scenario 'credential_publish_issuer': $scenario
 		 Given that I am known as 'MadHatter'
 		 and I have my credential issuer keypair
 		 When I remove the 'sign' key
-		 Then print all keyring 
+		 Then print all keyring
 ]])
 ZEN:run()
 EOF
@@ -102,12 +102,12 @@ Scenario 'credential_publish': $scenario
 ZEN:run()
 EOF
 
-scenario="Meet a stranger and verify credentials"
+scenario="Generate a blind proof of the credentials"
 echo $scenario
-cat <<EOF | zenroom -k madhatter_verification.keys -a alice_aggregated_credential.json | json_pp
+cat <<EOF | zenroom -k madhatter_verification.keys -a alice_aggregated_credential.json | tee alice_blindproof_credential.json | json_pp
 ZEN:begin($verbose)
 ZEN:parse([[
-Scenario 'credential_verify': $scenario
+Scenario 'credential_blindproof': $scenario
 		 Given that I use the verification key by 'MadHatter'
 		 and that 'Alice' declares to be 'lost in Wonderland'
 		 When I aggregate all the verification keys
@@ -116,3 +116,19 @@ Scenario 'credential_verify': $scenario
 ]])
 ZEN:run()
 EOF
+
+scenario="Verify a blind proof of the credentials"
+echo $scenario
+cat <<EOF | zenroom -k madhatter_verification.keys -a alice_blindproof_credential.json
+ZEN:begin($verbose)
+ZEN:parse([[
+Scenario 'blindproof_verify': $scenario
+		 Given that I use the verification key by 'MadHatter'
+		 and that I have a valid credential proof
+		 When I aggregate all the verification keys
+		 and the credential proof is verified correctly
+		 Then print string 'OK'
+]])
+ZEN:run()
+EOF
+
