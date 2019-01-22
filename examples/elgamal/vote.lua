@@ -5,8 +5,8 @@
 --
 
 g = ECP.G() -- get the curve's generator coordinates
-h = g * 2 -- hashtopoint "h0"
-h1 = g * 20 -- hashtopoint "h1"
+h = g * INT.new(2) -- hashtopoint "h0"
+h1 = g * INT.new(20) -- hashtopoint "h1"
 order = ECP.order() -- get the curves order in a big
 rng = RNG.new()
 H = HASH.new('sha256')
@@ -83,7 +83,7 @@ function provebinary(a, b, k, m)
 
 	local Aw = g * wk
 	local Bw = public * wk + h * wm
-	local Dw = g * wk + h1 * (m*(BIG.new(1)-m))
+	local Dw = g * wk + h1 * (BIG.new(1) - m):modmul(m, order)
 
 	local c = to_challenge({g, h, h1, a, b, Aw, Bw, Dw})
 
