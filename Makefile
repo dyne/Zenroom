@@ -32,6 +32,7 @@ all:
 	@echo "- osx, osx-python2/3, ios-armv7, ios-arm64, ios-sim (need Apple/OSX)"
 	@echo "- win, win-dll	(cross-compile using MINGW on Linux)"
 	@echo "- musl, musl-local, musl-system   (full static build)"
+	@echo "- docker-build, docker-release"
 
 	@echo "for android and ios see scripts in build/"
 
