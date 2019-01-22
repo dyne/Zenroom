@@ -79,7 +79,7 @@ ar = ${toolchain}/bin/llvm-ar
 ld = ${toolchain}/bin/${target}-link
 ldadd += -lm -llog
 ldflags += -shared
-milagro_cmake_flags += -DCMAKE_SYSROOT=${sysroot} -DCMAKE_SYSTEM_VERSION=26 -DCMAKE_ANDROID_NDK_TOOLCHAIN_VERSION=clang -DCMAKE_ANDROID_ARCH_ABI=armeabi-v7a -DCMAKE_C_COMPILER=${toolchain}/bin/clang
+milagro_cmake_flags += -DCMAKE_SYSTEM_NAME=Android -DCMAKE_ANDROID_NDK=${ndk}
 # ldflags += --sysroot=${ndk}/sysroot
 system := Android
 endif
