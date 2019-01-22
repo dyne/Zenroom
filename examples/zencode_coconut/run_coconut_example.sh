@@ -1,7 +1,9 @@
 #!/bin/sh
 
+# Comments use names from the Coconut paper: https://arxiv.org/pdf/1802.07344.pdf
 
 verbose=1
+
 
 scenario="Generate credential request keypair"
 echo $scenario
@@ -42,6 +44,7 @@ Scenario 'credential_issuer_keygen': $scenario
 ZEN:run()
 EOF
 
+# Note for devs: the output is verification cryptographic object (alpha, beta, g2) 
 scenario="Publish the credential issuer verification key"
 echo $scenario
 cat <<EOF | zenroom -k madhatter.keys | tee madhatter_verification.keys | json_pp
@@ -87,6 +90,7 @@ Scenario 'credential_sign': $scenario
 ZEN:run()
 EOF
 
+# Dev note: this generates sigma (AggCred(σ1, . . . , σt) → (σ):) 
 scenario="Receive the signature and publish the credential"
 echo $scenario
 cat <<EOF | zenroom -k alice.keys -a madhatter_signed_credential.json | tee alice_aggregated_credential.json | json_pp
@@ -102,6 +106,7 @@ Scenario 'credential_publish': $scenario
 ZEN:run()
 EOF
 
+# Dev note: this generates theta (❖ ProveCred(vk, m, φ0) → (Θ, φ0):
 scenario="Generate a blind proof of the credentials"
 echo $scenario
 cat <<EOF | zenroom -k madhatter_verification.keys -a alice_aggregated_credential.json | tee alice_blindproof_credential.json | json_pp
@@ -117,6 +122,7 @@ Scenario 'credential_blindproof': $scenario
 ZEN:run()
 EOF
 
+# Dev note: this checks if theta contains the statement, and returns a boolean VerifyCred(vk, Θ, φ0) 
 scenario="Verify a blind proof of the credentials"
 echo $scenario
 cat <<EOF | zenroom -k madhatter_verification.keys -a alice_blindproof_credential.json
