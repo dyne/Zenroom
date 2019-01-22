@@ -69,19 +69,29 @@ endif
 
 ifneq (,$(findstring android,$(MAKECMDGOALS)))
 ndk = /opt/android-ndk-r18b
-target = arm-linux-androideabi
-#toolchain = ${ndk}/toolchains/${target}-4.9/prebuilt/linux-x86_64
 toolchain = ${ndk}/toolchains/llvm/prebuilt/linux-x86_64
-sysroot = ${ndk}/platforms/android-26/arch-arm
-cflags += -fPIC ${cflags_protection} -DLIBRARY -D'ARCH=\"LINUX\"' -DARCH_LINUX -DARCH_ANDROID -DLUA_USE_DLOPEN -I${ndk}/sysroot/usr/include -I${ndk}/sysroot/usr/include/arm-linux-androideabi --target=armv7-none-linux-androideabi --gcc-toolchain=${ndk}/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64 --sysroot=${sysroot}
 gcc = ${toolchain}/bin/clang
 ar = ${toolchain}/bin/llvm-ar
-ld = ${toolchain}/bin/${target}-link
 ldadd += -lm -llog
 ldflags += -shared
-milagro_cmake_flags += -DCMAKE_SYSTEM_NAME=Android -DCMAKE_ANDROID_NDK=${ndk}
-# ldflags += --sysroot=${ndk}/sysroot
+cflags += -fPIC ${cflags_protection} -DLIBRARY -D'ARCH=\"LINUX\"' -DARCH_LINUX -DARCH_ANDROID
+cflags += -DLUA_USE_DLOPEN -I${ndk}/sysroot/usr/include
 system := Android
+milagro_cmake_flags += -DCMAKE_SYSTEM_NAME=${system} -DCMAKE_ANDROID_NDK=${ndk}
+endif
+
+ifneq (,$(findstring android-arm,$(MAKECMDGOALS)))
+target = arm-linux-androideabi
+sysroot = ${ndk}/platforms/android-26/arch-arm
+ld = ${toolchain}/bin/${target}-link
+cflags += -I${ndk}/sysroot/usr/include/arm-linux-androideabi --target=armv7-none-linux-androideabi --gcc-toolchain=${ndk}/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64 --sysroot=${sysroot}
+endif
+
+ifneq (,$(findstring android-x86,$(MAKECMDGOALS)))
+target = x86
+ld = ${toolchain}/bin/${target}-link
+sysroot = ${ndk}/platforms/android-26/arch-x86
+cflags += -I${ndk}/sysroot/usr/include/i686-linux-android --target=i686-linux-android --gcc-toolchain=${ndk}/toolchains/${target}-4.9/prebuilt/linux-x86_64 --sysroot=${sysroot}
 endif
 
 ifneq (,$(findstring osx,$(MAKECMDGOALS)))

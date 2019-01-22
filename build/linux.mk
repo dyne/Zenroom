@@ -18,10 +18,11 @@ musl-system: apply-patches lua53 embed-lua milagro lpeglabel
 linux: apply-patches lua53 milagro embed-lua lpeglabel
 	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src linux
-android: apply-patches lua53 milagro embed-lua lpeglabel
+
+android-arm android-x86: apply-patches lua53 milagro embed-lua lpeglabel
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	LD="${ld}" RANLIB="${ranlib}" AR="${ar}" \
-		make -C src android
+		make -C src $@
 
 linux-debug: cflags := -O1 -ggdb ${cflags_protection} -DDEBUG=1
 linux-debug: linux

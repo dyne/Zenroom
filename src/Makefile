@@ -82,7 +82,7 @@ ios-lib: CFLAGS += -D LIBRARY
 ios-lib: ${SOURCES}
 	${AR} rcs zenroom-ios-${TARGET}.a ${SOURCES} $(shell find ../lib -name \*.a) ${LDADD}
 
-android: ${SOURCES} zenroom_jni.o
+android-arm android-x86: ${SOURCES} zenroom_jni.o
 	${CC} ${CFLAGS} ${SOURCES} zenroom_jni.o -o zenroom.so ${LDFLAGS} ${LDADD}
 
 debug: CFLAGS+= -ggdb -DDEBUG=1 -Wall
