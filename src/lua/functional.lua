@@ -231,6 +231,11 @@ end
 -- @param[opt] ... Optional args to be passed to `f`
 -- @return a table of results
 function _.map(t, f, ...)
+   -- safety
+   if not (type(t) == "table") then return {} end
+   if t == nil then return {} end
+   -- if #t == 0  then return {} end
+
    local _t = {}
    for index,value in _.pairs(t) do
     local k, kv, v = index, f(index,value,...)
