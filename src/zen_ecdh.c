@@ -69,16 +69,16 @@ extern ecdh *ecdh_new_curve(lua_State *L, const char *curve);
 
 /***
     Create a new ECDH encryption keyring using a specified curve or
-    ED25519 by default if omitted. The ECDH keyring created will
+    BLS383 by default if omitted. The ECDH keyring created will
     offer methods to interact with other keyrings.
 
-    Supported curves: ed25519, nist256, bn254cx, fp256bn
+    Supported curves: ed25519, nist256, bn254cx, fp256bn, bls383
 
-    @param curve[opt=ed25519] elliptic curve to be used
+    @param curve[opt=bls383] elliptic curve to be used
     @return a new ECDH keyring
     @function new(curve)
     @usage
-    keyring = ECDH.new('ed25519')
+    keyring = ECDH.new()
     -- generate a keypair
     keyring:keygen()
 */
@@ -312,7 +312,40 @@ static int ecdh_private(lua_State *L) {
 	return 1;
 }
 
+static int ecdh_dsa_sign(lua_State *L) {
+	HERE();
+	ecdh *e = ecdh_arg(L,1); SAFE(e);
+	octet *f = o_arg(L,2); SAFE(f);
+	octet *c = o_new(L,64); SAFE(c);
+	octet *d = o_new(L,64); SAFE(d);
+	// IEEE ECDSA Signature, C and D are signature on F using private key S
+	// either pass an RNG or K already randomised
+	// for K's generation see also RFC6979
+	// ECP_BLS383_SP_DSA(int sha,csprng *RNG,octet *K,octet *S,octet *F,octet *C,octet *D)
+	(*e->ECP__SP_DSA)(     64,     e->rng,     NULL, e->seckey,    f,      c,      d );
+	return 2;
+}
 
+
+static int ecdh_dsa_verify(lua_State *L) {
+	HERE();
+	ecdh *e = ecdh_arg(L, 1); SAFE(e);
+    // IEEE1363 ECDSA Signature Verification. Signature C and D on F
+    // is verified using public key W
+	octet *f = o_arg(L,2); SAFE(f);
+	octet *c = o_arg(L,3); SAFE(c);
+	octet *d = o_arg(L,4); SAFE(d);
+	int res = (*e->ECP__VP_DSA)(64, e->pubkey, f, c, d);
+	if(res <0) // ECDH_INVALID in milagro/include/ecdh.h.in (!?!)
+		// TODO: maybe suggest fixing since there seems to be
+		// no criteria between ERROR (used in the first check
+		// in VP_SDA) and INVALID (in the following two
+		// checks...)
+		lua_pushboolean(L, 0);
+	else
+		lua_pushboolean(L, 1);
+	return 1;
+}
 /**
    AES-GCM encrypt with Additional Data (AEAD) encrypts and
    authenticate a plaintext to a ciphtertext. Function compatible with
@@ -503,7 +536,7 @@ static int ecdh_pbkdf2(lua_State *L) {
 }
 
 static int lua_new_ecdh(lua_State *L) {
-	const char *curve = luaL_optstring(L, 1, "ed25519");
+	const char *curve = luaL_optstring(L, 1, "bls383");
 	ecdh *e = ecdh_new(L, curve);
 	SAFE(e);
 	func(L,"new ecdh curve %s type %s", e->curve, e->type);
@@ -513,7 +546,7 @@ static int lua_new_ecdh(lua_State *L) {
 
 static int ecdh_new_keygen(lua_State *L) {
 	HERE();
-	const char *curve = luaL_optstring(L, 1, "ed25519");
+	const char *curve = luaL_optstring(L, 1, "bls383");
 	ecdh *e = ecdh_new(L, curve); SAFE(e);
 	e->pubkey = o_new(L,e->publen +0x0f); SAFE(e->pubkey);
 	e->seckey = o_new(L,e->seclen +0x0f); SAFE(e->seckey);
@@ -569,7 +602,9 @@ static int ecdh_random(lua_State *L) {
 	{"kdf2", ecdh_kdf2}, \
 	{"kdf", ecdh_kdf2}, \
 	{"pbkdf2", ecdh_pbkdf2}, \
-	{"pbkdf", ecdh_pbkdf2}
+	{"pbkdf", ecdh_pbkdf2}, \
+	{"sign", ecdh_dsa_sign}, \
+	{"verify", ecdh_dsa_verify}
 
 
 
