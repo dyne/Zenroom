@@ -96,13 +96,12 @@ int _fp_to_big(big *dst, FP *src) {
 }
 
 /***
-    Create a new ECP point from two X,Y @{BIG} arguments. If no X,Y arguments are specified then the ECP points to the curve's @{generator} coordinates. If the first argument is an X coordinate on the curve and Y is just a number 0 or 1 then Y is calculated from the curve equation according to the given sign (plus or minus).
+    Create a new ECP point from an @{OCTET} argument containing its coordinates.
 
-    @param[opt=BIG] X a BIG number on the curve
-    @param[opt=BIG] Y a BIG number on the curve, 0 or 1 to calculate it
-    @return a new ECP point on the curve at X,Y coordinates or Infinity
-    @function new(X,Y)
-    @see BIG:new
+    @param[@{OCTET}] coordinates of the point on the elliptic curve
+    @return a new ECP point on the curve
+    @function new(octet)
+    @see ECP:octet
 */
 static int lua_new_ecp(lua_State *L) {
 
@@ -154,10 +153,10 @@ static int lua_new_ecp(lua_State *L) {
 }
 
 /***
-    Returns the generator of the curve: an ECP point to its X and Y coordinates.
+    Returns the generator of the curve: an ECP point that is multiplied by any @{BIG} number to obtain a correspondent point on the curve.
 
     @function generator()
-    @return ECP coordinates of the curve's generator.
+    @return ECP point of the curve's generator.
 */
 static int ecp_generator(lua_State *L) {
 	ecp *e = ecp_new(L); SAFE(e);
@@ -170,23 +169,11 @@ static int ecp_generator(lua_State *L) {
 	return 1;
 }
 
-/// Instance Methods
-// @type ecp
+/***
+    Returns a new ECP infinity point that is definitely not on the curve.
 
-/***
-    Make an existing ECP point affine with its curve
-    @function affine()
-*/
-static int ecp_affine(lua_State *L) {
-	ecp *in = ecp_arg(L,1); SAFE(in);
-	ecp *out = ecp_dup(L,in); SAFE(out);
-	ECP_affine(&out->val);
-	return 1;
-}
-/***
-    Gives a new infinity point that is definitely not on the curve.
     @function infinity()
-    @return ECP pointing to infinity out of the curve.
+    @return ECP pointing to infinity (out of the curve).
 */
 static int ecp_get_infinity(lua_State *L) {
 	ecp *e = ecp_new(L); SAFE(e);
@@ -194,23 +181,30 @@ static int ecp_get_infinity(lua_State *L) {
 	return 1;
 }
 
-/***
-    Returns true if an ECP coordinate points to infinity (out of the curve) and false otherwise.
 
-    @function isinf()
-    @return false if point is on curve, true if its off curve into infinity.
+/***
+    Gives the order of the curve, a @{BIG} number contained in an octet.
+
+    @function order()
+    @return a @{BIG} number containing the curve's order
 */
-static int ecp_isinf(lua_State *L) {
-	ecp *e = ecp_arg(L,1); SAFE(e);
-	lua_pushboolean(L,ECP_isinf(&e->val));
+static int ecp_order(lua_State *L) {
+	big *res = big_new(L); SAFE(res);
+	big_init(res);
+	// BIG is an array of int32_t on chunk 32 (see rom_curve)
+
+	// curve order is ready-only so we need a copy for norm() to work
+	BIG_copy(res->val,(chunk*)CURVE_Order);
 	return 1;
 }
 
+
 /***
-    Map an @{OCTET} to a point of the curve, where the OCTET should be the output of some hash function.
+    Map an @{OCTET} of exactly 64 bytes length to a point on the curve: the OCTET should be the output of an hash function.
 
     @param OCTET resulting from an hash function
     @function mapit(OCTET)
+    @return an ECP that is univocally linked to the input OCTET
 */
 static int ecp_mapit(lua_State *L) {
 	octet *o = o_arg(L,1); SAFE(o);
@@ -221,6 +215,47 @@ static int ecp_mapit(lua_State *L) {
 	ecp *e = ecp_new(L); SAFE(e);
 	func(L,"mapit on o->len %u",o->len);
 	ECP_mapit(&e->val, o);
+	return 1;
+}
+
+/***
+    Verify that an @{OCTET} really corresponds to an ECP point on the curve.
+
+    @param OCTET point to be validated
+    @function validate(OCTET)
+    @return bool value: true if valid, false if not valid
+*/
+static int ecp_validate(lua_State *L) {
+	octet *o = o_arg(L,1); SAFE(o);
+	int res = ECP_validate(o);
+	lua_pushboolean(L,res>=0);
+	return 1;
+}
+
+
+/// Instance Methods
+// @type ecp
+
+/***
+    Make an existing ECP point affine with its curve
+    @function affine()
+    @return ECP point made affine
+*/
+static int ecp_affine(lua_State *L) {
+	ecp *in = ecp_arg(L,1); SAFE(in);
+	ecp *out = ecp_dup(L,in); SAFE(out);
+	ECP_affine(&out->val);
+	return 1;
+}
+/***
+    Returns true if an ECP coordinate points to infinity (out of the curve) and false otherwise.
+
+    @function isinf()
+    @return false if point is on curve, true if its off curve into infinity.
+*/
+static int ecp_isinf(lua_State *L) {
+	ecp *e = ecp_arg(L,1); SAFE(e);
+	lua_pushboolean(L,ECP_isinf(&e->val));
 	return 1;
 }
 
@@ -321,53 +356,21 @@ static int ecp_eq(lua_State *L) {
 }
 
 
-
-/***
-    Validate an ECP object if corresponding to a point on the curve.
-
-    @param ecp point to be validated
-    @function validate(ecp)
-    @return bool value: true if valid, false if not valid
-*/
-static int ecp_validate(lua_State *L) {
-	octet *o = o_arg(L,1); SAFE(o);
-	int res = ECP_validate(o);
-	lua_pushboolean(L,res>=0);
-	return 1;
-}
-
-
 // use shared internally with octet o_arg()
 int _ecp_to_octet(octet *o, ecp *e) {
 	ECP_toOctet(o, &e->val);
 	return(1);
 }
 /***
-    Returns an octet containing all serialized @{BIG} number coordinatesof an ECP point on the curve. It can be used to port the value of an ECP point into @{OCTET:hex} or @{OCTET:base64} encapsulation, to be later set again into an ECP point using @{ECP:new}.
+    Returns an octet containing the coordinate of an ECP point on the curve. It can be used to export the value of an ECP point into a string, using @{OCTET:hex} or @{OCTET:base64} encapsulation. It can be decoded back to an ECP point using @{ECP:new}.
 
     @function octet()
-    @return an OCTET sequence
+    @return the ECP point as an OCTET sequence
 */
 static int ecp_octet(lua_State *L) {
 	ecp *e = ecp_arg(L,1); SAFE(e);
 	octet *o = o_new(L,e->totlen + 0x0f); SAFE(o);
 	_ecp_to_octet(o,e);
-	return 1;
-}
-
-/***
-    Gives the order of the curve, a BIG number contained in an octet.
-
-    @function order()
-    @return a BIG containing the curve's order
-*/
-static int ecp_order(lua_State *L) {
-	big *res = big_new(L); SAFE(res);
-	big_init(res);
-	// BIG is an array of int32_t on chunk 32 (see rom_curve)
-
-	// curve order is ready-only so we need a copy for norm() to work
-	BIG_copy(res->val,(chunk*)CURVE_Order);
 	return 1;
 }
 
