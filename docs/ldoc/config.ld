@@ -51,7 +51,6 @@ kind_names={topic='Tutorials',script='Programs'}
 examples = {
     '../../examples/hello.lua',
     '../../examples/json-tables.lua',
-    '../../examples/wave.lua',
     '../../examples/keygen.lua',
 	'../../examples/crypt-to-multi.lua',
 }

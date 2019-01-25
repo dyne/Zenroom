@@ -72,9 +72,12 @@ extern ecdh *ecdh_new_curve(lua_State *L, const char *curve);
     BLS383 by default if omitted. The ECDH keyring created will
     offer methods to interact with other keyrings.
 
-    Supported curves: ed25519, nist256, bn254cx, fp256bn, bls383
+    Supported curves: BLS383, ED25519, GOLDILOCKS, SECP256K1
 
-    @param curve[opt=bls383] elliptic curve to be used
+    Please note curve selection is only supported in ECDH, while only
+    BLS383 is supported for @{ECP}/@{ECP2} arithmetics.
+
+    @param curve[opt=BLS383] elliptic curve to be used
     @return a new ECDH keyring
     @function new(curve)
     @usage
@@ -192,15 +195,15 @@ static int ecdh_checkpub(lua_State *L) {
 /**
    Generate a Diffie-Hellman shared session key. This function uses
    two keyrings to calculate a shared key, then process it through
-   KDF2 to make it ready for use in @{keyring:encrypt}. This is
+   KDF2 to make it ready for use in @{keyring:aead_encrypt}. This is
    compliant with the IEEE-1363 Diffie-Hellman shared secret
    specification for asymmetric key encryption.
 
    @param keyring containing the public key to be used
    @function keyring:session(keyring)
-   @treturn[1] octet KDF2 hashed session key ready for @{keyring:encrypt}
-   @treturn[1] octet a big number result of mod(private,curve_order)*public
-   @see keyring:encrypt
+   @treturn[1] octet KDF2 hashed session key ready for @{keyring:aead_encrypt}
+   @treturn[1] octet a @{BIG} number result of (private * public) % curve_order
+   @see keyring:aead_encrypt
 */
 static int ecdh_session(lua_State *L) {
 	HERE();
@@ -312,6 +315,23 @@ static int ecdh_private(lua_State *L) {
 	return 1;
 }
 
+/**
+   Elliptic Curve Digital Signature Algorithm (ECDSA) signing
+   function. This method uses the private key inside a keyring to
+   sign a message, returning two parameters 'r' and 's' representing
+   the signature. The parameters can be used in @{keyring:verify}.
+
+   @param message string or @{OCTET} message to sign
+   @function keyring:sign(message)
+   @treturn[1] octet containing the first signature parameter (r)
+   @treturn[1] octet containing the second signature parameter (s)
+   @usage
+   ecdh = ECDH.keygen() -- generate keys or import them
+   m = "Message to be signed"
+   r,s = ecdh:sign(m)
+   assert( ecdh:verify(m,r,s) )
+*/
+
 static int ecdh_dsa_sign(lua_State *L) {
 	HERE();
 	ecdh *e = ecdh_arg(L,1); SAFE(e);
@@ -327,6 +347,19 @@ static int ecdh_dsa_sign(lua_State *L) {
 }
 
 
+/**
+   Elliptic Curve Digital Signature Algorithm (ECDSA) verification
+   function. This method uses the public key iside a keyring to verify
+   a message, returning true or false. The signature parameters are
+   returned as 'r' and 's' in this same order by @{keyring:sign}.
+
+   @param message the message whose signature has to be verified
+   @param r the first signature parameter
+   @param s the second signature paramter
+   @function keyring:verify(message,r,s)
+   @return true if the signature is OK, or false if not.
+   @see keyring:sign
+*/
 static int ecdh_dsa_verify(lua_State *L) {
 	HERE();
 	ecdh *e = ecdh_arg(L, 1); SAFE(e);
