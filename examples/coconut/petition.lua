@@ -110,7 +110,7 @@ local function prove_cred_petition(vk, sigma, m, uid)
     local c = COCONUT.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw })
 	-- create responses
     local rm = wm:modsub(m * c, o)
-    local rr = wr:modsub(t * c, o)
+    local rr = wr:modsub(r * c, o)
     local pi_v = { c = c, 
 				   rm = rm,
 				   rr = rr }
@@ -128,11 +128,14 @@ local function verify_cred_petition(vk, Theta, zeta, uid)
 	local c = Theta.pi_v.c
     local rm = Theta.pi_v.rm
     local rr = Theta.pi_v.rr
-    local Aw = kappa * c + g2 * rr + vk.alpha * INT.new(1):modsub(c,o) + vk.beta * rm
+    local Aw = kappa * c
+	   + g2 * rr
+	   + vk.alpha * INT.new(1):modsub(c,o)
+	   + vk.beta * rm
     local Bw = nu * c + sigma_prime.h_prime * rr
     local Cw = rm*ECP.hashtopoint(uid) + zeta*c
 	assert(c == COCONUT.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw }),
-	"COCONUT internal error: failure to compute the challenge prime")
+		   "COCONUT internal error: failure to compute the challenge prime")
     assert(not sigma_prime.h_prime:isinf(),
 		   "COCONUT internal error: sigma_prime.h points to infinity")
     assert(ECP2.miller(kappa, sigma_prime.h_prime) == ECP2.miller(vk.g2, sigma_prime.s_prime + nu),
@@ -148,8 +151,7 @@ function sign_petition(inputs, settings)
 
 	-- show coconut credentials
 	local Theta, zeta = prove_cred_petition(aggr_vk, cred, priv_user, old_petition.uid)
-	-- I.print(Theta)
-	-- I.print(zeta)
+
 	assert(true == verify_cred_petition(aggr_vk, Theta, zeta, old_petition.uid), 
 		   'Credentials petition proof does not verify') -- ret3 line 303 is failing
 	-- coconut prov_cred_petition
