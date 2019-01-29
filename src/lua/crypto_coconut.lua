@@ -59,7 +59,7 @@ function coco.elgamal_dec(d, a, b)
 end
 
 -- local zero-knowledge proof verifications
-local function to_challenge(list)
+function coco.to_challenge(list)
    -- assert(coco.challenge, "COCONUT secret challenge not set")
    return INT.new( sha256( challenge .. OCTET.serialize(list)))
 end
@@ -71,7 +71,7 @@ local function make_pi_s(gamma, cm, k, r, m)
    local Aw = g1 * wk
    local Bw = gamma * wk + h * wm
    local Cw = g1 * wr + hs * wm
-   local c = to_challenge({ cm, h, Aw, Bw, Cw })
+   local c = coco.to_challenge({ cm, h, Aw, Bw, Cw })
    local rk = wk:modsub(c * k, o)
    local rm = wm:modsub(c * m, o)
    local rr = wr:modsub(c * r, o)
@@ -91,14 +91,16 @@ function coco.verify_pi_s(gamma, ciphertext, cm, proof)
    local Aw = a * c + g1 * rk
    local Bw = b * c + gamma * rk + h * rm
    local Cw = cm * c + g1 * rr + hs * rm
-   return c == to_challenge({ cm, h, Aw, Bw, Cw })
+   return c == coco.to_challenge({ cm, h, Aw, Bw, Cw })
 end
+
+
 local function make_pi_v(vk, sigma_prime, m, r)
    local wm = rand()
    local wr = rand()
    local Aw = g2 * wr + vk.alpha + vk.beta * wm
    local Bw = sigma_prime.h_prime * wr
-   local c = to_challenge({ vk.alpha, vk.beta, Aw, Bw })
+   local c = coco.to_challenge({ vk.alpha, vk.beta, Aw, Bw })
    local rm = wm:modsub(m * c, o)
    local rr = wr:modsub(r * c, o)
    return { c = c, rm = rm, rr = rr }
@@ -109,7 +111,7 @@ local function verify_pi_v(vk, kappa, nu, sigma_prime, proof)
    local rr = proof.rr
    local Aw = kappa * c + g2 * rr + vk.alpha * INT.new(1):modsub(c,o) + vk.beta * rm
    local Bw = nu * c + sigma_prime.h_prime * rr
-   return c == to_challenge({ vk.alpha, vk.beta, Aw, Bw })
+   return c == coco.to_challenge({ vk.alpha, vk.beta, Aw, Bw })
 end
 
 -- Public Coconut API
