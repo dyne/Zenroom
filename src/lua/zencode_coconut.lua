@@ -23,18 +23,18 @@ When("I create my new credential issuer keypair", f_coco_ca_keygen)
 Given("I have my credential issuer keypair", function()
          init_keyring(whoami)
          local kp = keyring[keypair]
-         ZEN.assert(validate(kp, schemas[kp.schema]), "Keypair "..whoami.." does not validate as "..kp.schema)
-         ZEN.assert(validate(kp.verify, schemas['coconut_ca_vk']), "Keypair "..whoami.." lacks a valid verify key")
-         ZEN.assert(validate(kp.sign, schemas['coconut_ca_sk']), "Keypair "..whoami.." lacks a valid sign key")
+         ZEN.validate(kp, schemas[kp.schema], "Keypair "..whoami.." does not validate as "..kp.schema)
+         ZEN.validate(kp.verify, schemas['coconut_ca_vk'], "Keypair "..whoami.." lacks a valid verify key")
+         ZEN.validate(kp.sign, schemas['coconut_ca_sk'], "Keypair "..whoami.." lacks a valid sign key")
 end)
 Given("I have my credential request keypair", function()
          init_keyring(keyname or whoami)
          local kp = keyring[keypair]
-         ZEN.assert(validate(kp, schemas[kp.schema]), "Keypair "..whoami.." does not validate as "..kp.schema)
+         ZEN.validate(kp, schemas[kp.schema], "Keypair "..whoami.." does not validate as "..kp.schema)
 end)
 Given("I select the credential issuer ''", function(ca)
          data = data or ZEN.data.load()
-         ZEN.assert(validate(data[ca].verify, schemas['coconut_ca_vk']),
+         ZEN.validate(data[ca].verify, schemas['coconut_ca_vk'],
                     "Invalid credential issuer verification key: ".. ca)
          table.insert(coco_ci, ca)
 end)
@@ -42,7 +42,7 @@ Given("I use the verification key by ''", function(ca)
 		 data = data or ZEN.data.load()
 		 init_keyring(ca)
 		 local kp = keyring[keypair]
-         ZEN.assert(validate(kp.verify, schemas['coconut_ca_vk']), "Keypair "..ca.." lacks a valid verify key")
+         ZEN.validate(kp.verify, schemas['coconut_ca_vk'], "Keypair "..ca.." lacks a valid verify key")
 		 local vk = { }
 		 vk.alpha = ECP2.new(kp.verify.alpha)
 		 vk.beta = ECP2.new(kp.verify.beta)
@@ -76,7 +76,7 @@ When("I am requested to sign a credential", function(reqname)
 		data = data or ZEN.data.load()
 		local req = data[reqname or 'request']
 		local lambda = {}
-		ZEN.assert(validate(req.pi_s, schemas['coconut_pi_s']),
+		ZEN.validate(req.pi_s, schemas['coconut_pi_s'],
 				   "Signature request fails schema validation (pi_s)")
 		lambda.pi_s = { rr = INT.new(req.pi_s.rr),
 						rm = INT.new(req.pi_s.rm),
@@ -112,7 +112,7 @@ When("I receive a credential signature ''", function(signfrom)
 		data = data or ZEN.data.load()
 		init_keyring(whoami)
 		-- one dimensional array is simple enough
-		ZEN.assert(validate(data[signfrom], schemas['coconut_sigmatilde']),
+		ZEN.validate(data[signfrom], schemas['coconut_sigmatilde'],
 				   "No valid signature found: " .. signfrom)		
 		local sigmatilde = {}
 		sigmatilde.h = ECP.new(data[signfrom].h)
@@ -143,15 +143,19 @@ When("the declaration is proven by credentials", function()
 		ZEN.assert(data._aggkeys, "There are no verification keys selected")
 		-- I.print(data._aggkeys)
 		local aggkeys = COCONUT.aggregate_keys(data._aggkeys)
-		ZEN.assert(validate(data.credential, schemas['coconut_aggsigma']),
-				   "Invalid credentials provided by "..whois)
-		-- I.print(data)
+		-- ZEN.assert(validate(data.credential, schemas['coconut_aggsigma']),
+		-- 		   "Invalid credentials provided by "..whois)
+		ZEN.validate(data.credential, schemas['coconut_aggsigma'],
+					 "Invalid credentials provided by "..whois)
 		local aggsigma = { }
 		aggsigma.h = ECP.new(data.credential.h)
 		aggsigma.s = ECP.new(data.credential.s)
 		local Theta = COCONUT.prove_creds(aggkeys, aggsigma, declared)
+		ZEN.validate(Theta.sigma_prime, schemas['coconut_sigmaprime'], "Invalid proof (Theta.sigmaprime)")
+		ZEN.validate(Theta.pi_v, schemas['coconut_pi_v'], "Invalid proof (Theta.pi_v)")
+		ZEN.assert(ECP.new(Theta.nu), "Invalid proof (Theta.nu)")
 		data = { proof = { } }
-		data.proof = map(Theta, hex)
+		data.proof = map(Theta, hex) -- .kappa and .nu
 		data.proof.pi_v = map(Theta.pi_v, hex)
 		data.proof.sigma_prime = map(Theta.sigma_prime, hex)
 		data.proof.schema = 'coconut_theta'

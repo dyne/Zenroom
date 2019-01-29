@@ -48,9 +48,9 @@ ELGAMAL = require('crypto_elgamal')
 COCONUT = require('crypto_coconut')
 
 -- Zencode language interpreter
+require('zencode_schemas') -- data schemas
+-- global class
 ZEN    = require('zencode')
--- data schemas
-require('zencode_schemas')
 -- basic keypair functions
 require('zencode_keypair')
 -- base data functions

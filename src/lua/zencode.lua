@@ -107,6 +107,23 @@ function zencode:run()
    end
 end
 
+function zencode:assert(condition, errmsg)
+   if condition then return true end
+   error(errmsg) -- prints zencode backtrace
+   assert(false)
+end
+
+zencode.validate = function(obj, objschema, errmsg)
+   -- zencode.assert(type(obj) == 'table', "ZEN:validate called with an invalid object (not a table)")
+   -- zencode.assert(type(objschema) == 'string', "ZEN:validate called with invalid schema (not a function)")
+   -- sc = objschema
+   -- zencode.assert(sc ~= nil, errmsg .. " - schema function '"..objschema.."' is not defined")
+   -- zencode.assert(type(sc) == "function", errmsg .. " - schema '"..objschema.."' is not a function")
+   if validate(obj, objschema, errmsg) then return true end
+   error(errmsg)
+   assert(false)
+end
+
 _G["Given"] = function(text, fn)
    zencode.given_steps[text] = fn
 end

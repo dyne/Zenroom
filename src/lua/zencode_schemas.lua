@@ -1,11 +1,6 @@
 -- Zencode data schemas for validation
 
-ZEN.assert = function(condition, errmsg)
-   if condition then return true end
-   error(errmsg) -- prints zencode backtrace
-end
-
-_G['schemas'] = {
+schemas = {
 
    -- packets encoded with AES GCM
    aes_gcm = S.record {
@@ -91,6 +86,12 @@ _G['schemas'] = {
 	  c = S.int
    },
 
+   coconut_pi_v = S.record {
+	  rr = S.int,
+	  rm = S.int,
+	  c = S.int
+   },
+
    coconut_sigmatilde = S.record {
       schema = S.Optional(S.string),
       version = S.Optional(S.string),
@@ -99,10 +100,18 @@ _G['schemas'] = {
       a_tilde = S.ecp
    },
 
+   coconut_sigmaprime = S.record {
+	  h_prime = S.ecp,
+	  s_prime = S.ecp
+   },
+
    coconut_aggsigma = S.record {
 	  schema = S.Optional(S.string),
 	  version = S.Optional(S.string),
 	  h = S.ecp,
 	  s = S.ecp
-   }
+   },
+
 }
+
+_G['schemas'] = schemas
