@@ -112,7 +112,7 @@ int is_hex(const char *in) {
 	int c;
 	for(c=0; in[c]!=0; c++) {
 		if (!isxdigit(in[c])) {
-		    ERROR(); return 0; }
+			return 0; }
 	}
 	return c;
 }
@@ -122,7 +122,7 @@ int is_bin(const char *in) {
 	int c;
 	for(c=0; in[c]!='\0'; c++) {
 		if (in[c]!='0' && in[c]!='1') {
-			ERROR(); return 0; }
+			return 0; }
 	}
 	return c;
 }
@@ -163,11 +163,14 @@ octet* o_arg(lua_State *L,int n) {
 			error(L, "invalid string size: %u", len);
 			lerror(L,"failed implicit conversion from string to octet");
 			return 0; }
+		// note here implicit conversion is only made from hex
+		// TODO: this could be a zenroom configuration setting
 		int hlen = is_hex(str);
 		if(hlen>0) { // import from a HEX encoded string
 			o = o_new(L, hlen); SAFE(o);
 			OCT_fromHex(o, (char*)str);
 		} else {
+			// fallback to a string
 			o = o_new(L, len+1); SAFE(o); // new
 			OCT_jstring(o, (char*)str);
 		}
