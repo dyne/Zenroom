@@ -21,11 +21,14 @@
 //
 //  Asymmetric public/private key encryption technologies.
 //
-//  ECDH encryption functionalities are provided with all standard
-//  functions by this extension. It is possible to create keyring
-//  instances using the new() method:
+//  ECDH encryption and ECDSA signing functionalities are provided by
+//  this module. New keyring instances are instantiated by calling the
+//  new() method, keys can be imported using the 
 //
-//  <code>keyring = ECDH.new()</code>
+//  <code>
+//  Alice = ECDH.new()
+//  Bob = ECDH.new()
+//  </code>
 //
 //  One can create more keyrings in the same script and call them with
 //  meaningful variable names to help making code more
@@ -131,6 +134,30 @@ int ecdh_destroy(lua_State *L) {
 	// FREE(r->pubkey);
 	// FREE(r->privkey);
 	return 0;
+}
+
+
+static int lua_new_ecdh(lua_State *L) {
+	const char *curve = luaL_optstring(L, 1, "bls383");
+	ecdh *e = ecdh_new(L, curve);
+	SAFE(e);
+	func(L,"new ecdh curve %s type %s", e->curve, e->type);
+	// any action to be taken here?
+	return 1;
+}
+
+static int ecdh_new_keygen(lua_State *L) {
+	HERE();
+	const char *curve = luaL_optstring(L, 1, "bls383");
+	ecdh *e = ecdh_new(L, curve); SAFE(e);
+	e->pubkey = o_new(L,e->publen +0x0f); SAFE(e->pubkey);
+	e->seckey = o_new(L,e->seclen +0x0f); SAFE(e->seckey);
+	(*e->ECP__KEY_PAIR_GENERATE)(e->rng,e->seckey,e->pubkey);
+	HEREecdh(e);
+	lua_pop(L, 1);
+	lua_pop(L, 1);
+	//	HEREoct(pk); HEREoct(sk);
+	return 1;
 }
 
 /// Instance Methods
@@ -568,65 +595,6 @@ static int ecdh_pbkdf2(lua_State *L) {
 	return 1;
 }
 
-static int lua_new_ecdh(lua_State *L) {
-	const char *curve = luaL_optstring(L, 1, "bls383");
-	ecdh *e = ecdh_new(L, curve);
-	SAFE(e);
-	func(L,"new ecdh curve %s type %s", e->curve, e->type);
-	// any action to be taken here?
-	return 1;
-}
-
-static int ecdh_new_keygen(lua_State *L) {
-	HERE();
-	const char *curve = luaL_optstring(L, 1, "bls383");
-	ecdh *e = ecdh_new(L, curve); SAFE(e);
-	e->pubkey = o_new(L,e->publen +0x0f); SAFE(e->pubkey);
-	e->seckey = o_new(L,e->seclen +0x0f); SAFE(e->seckey);
-	(*e->ECP__KEY_PAIR_GENERATE)(e->rng,e->seckey,e->pubkey);
-	HEREecdh(e);
-	lua_pop(L, 1);
-	lua_pop(L, 1);
-	//	HEREoct(pk); HEREoct(sk);
-	return 1;
-}
-
-
-/**
-   Cryptographically Secure Random Number Generator (RNG).
-
-   Returns a new octet filled with random bytes.
-
-   This method is initialised with a different seed for each keyring
-   upon creation. It doesn't make any difference to use one keyring's
-   RNG or another, but mixing them and making this behavior specific
-   to different scripts helps randomness.
-
-   Cryptographic security is achieved by hashing the random numbers
-   using this sequence: unguessable seed -> SHA -> PRNG internal state
-   -> SHA -> random numbers. See <a
-   href="ftp://ftp.rsasecurity.com/pub/pdfs/bull-1.pdf">this paper</a>
-   for a justification.
-
-   @param int[opt=rsa->max] length of random material in bytes, defaults to maximum RSA size
-   @function random(int)
-   @usage
-   ecdh = require'ecdh'
-   ed25519 = ecdh.new('ed25519')
-   -- generate a random octet (will be sized 2048/8 bytes)
-   csrand = ed25519:random()
-   -- print out the cryptographically secure random sequence in hex
-   print(csrand:hex())
-
-*/
-static int ecdh_random(lua_State *L) {
-	HERE();
-	ecdh *e = ecdh_arg(L,1); SAFE(e);
-	const int len = luaL_optinteger(L, 2, e->keysize);
-	octet *out = o_new(L,len); SAFE(out);
-	OCT_rand(out,e->rng,len);
-	return 1;
-}
 
 #define COMMON_METHODS \
 	{"public", ecdh_public}, \
@@ -657,7 +625,6 @@ int luaopen_ecdh(lua_State *L) {
 		COMMON_METHODS,
 		{NULL,NULL}};
 	const struct luaL_Reg ecdh_methods[] = {
-		{"random",ecdh_random},
 		{"keygen",ecdh_keygen},
 		{"session",ecdh_session},
 		COMMON_METHODS,

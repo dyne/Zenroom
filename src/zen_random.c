@@ -33,7 +33,7 @@
 // @module RNG
 // @author Denis "Jaromil" Roio
 // @license GPLv3
-// @copyright Dyne.org foundation 2017-2018
+// @copyright Dyne.org foundation 2017-2019
 
 #include <lua.h>
 #include <lualib.h>
@@ -93,7 +93,7 @@ static int newrng(lua_State *L) {
     @function octet(int)
     @usage
     rng = RNG.new()
-    print(rng:octet(32):hex())
+    print(rng:octet(32))
 */
 int rng_oct(lua_State *L) {
 	RNG *rng = rng_arg(L,1); SAFE(rng);
@@ -109,6 +109,7 @@ int rng_oct(lua_State *L) {
 
     @function big()
     @usage
+    -- example to print a new BIG random number encoded in base64
     print( RNG.new():big():base64() )
 */
 int rng_big(lua_State *L) {
