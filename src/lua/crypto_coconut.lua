@@ -36,6 +36,10 @@ local hs = ECP.hashtopoint(str([[
 Developed for the DECODE project
 ]] .. coco._LICENSE))
 local challenge = g1:octet() .. g2:octet() .. hs:octet()
+function coco.to_challenge(list)
+   -- assert(coco.challenge, "COCONUT secret challenge not set")
+   return INT.new( sha256( challenge .. OCTET.serialize(list)))
+end
 
 
 -- random generator init
@@ -59,10 +63,6 @@ function coco.elgamal_dec(d, a, b)
 end
 
 -- local zero-knowledge proof verifications
-function coco.to_challenge(list)
-   -- assert(coco.challenge, "COCONUT secret challenge not set")
-   return INT.new( sha256( challenge .. OCTET.serialize(list)))
-end
 local function make_pi_s(gamma, cm, k, r, m)
    local h = ECP.hashtopoint(cm)
    local wk = rand()

@@ -3,14 +3,13 @@
 local g1 = ECP.generator() -- return value
 local g2 = ECP2.generator() -- return value
 local o  = ECP.order() -- return value
-
 -- random generator init
 local random = RNG.new()
 local function rand() return INT.new(random,o) end
 
+-- generic coconut TESTS
 -- elgamal
 m = INT.new(sha256(str("Some sort of secret")))
-
 hs = ECP.hashtopoint(str("anystring"))
 d, gamma = COCONUT.elgamal_keygen()
 a, b, k = COCONUT.elgamal_enc(gamma, m, hs)
@@ -51,7 +50,7 @@ assert(ret == true, 'Coconut credentials not verifying')
 print('')
 print('[ok] test multi-authority Coconut')
 print('')
-
+-------------
 
 
 -- Petition Contract
@@ -62,9 +61,10 @@ function create_petition(inputs, settings)
 		object_type = 'PObject',
 		uid = settings.uid,
 		pub_owner = settings.pub_owner,
-		scores = {first = ECP.infinity(), second = ECP.infinity(),
-		dec = {}, -- hold the decryption shards
-		list = {}} -- hold the spent list
+		scores = { first = ECP.infinity(),
+				   second = ECP.infinity(),
+				   dec = { }, -- hold the decryption shards
+				   list = { } } -- hold the spent list
 	}
 	local sig = 1 -- /!\ create a signature over `new_petition` using priv_owner
 
@@ -87,23 +87,33 @@ end
 
 
 local function prove_cred_petition(vk, sigma, m, uid)
+   -- material
     local r = rand()
     local r_prime = rand()
-    local sigma_prime = { h_prime = sigma.h * r_prime, s_prime = sigma.s * r_prime  }
-    local kappa = vk.alpha + vk.beta * m + vk.g2 * r
-    local nu = sigma_prime.h_prime * r
-    local zeta = m * ECP.hashtopoint(str(uid))
+    local sigma_prime = { h_prime = sigma.h * r_prime,
+						  s_prime = sigma.s * r_prime  }
+    local kappa = vk.g2 * r
+	   + vk.alpha
+	   + vk.beta * m
+    local nu = r * sigma_prime.h_prime
+    local zeta = m * ECP.hashtopoint(uid)
     
+	-- proof
+	-- create the witnesses
     local wm = rand()
     local wr = rand()
+	-- compute the witnesses commitments
     local Aw = g2 * wr + vk.alpha + vk.beta * wm
-    local Bw = sigma_prime.h_prime * wr
+    local Bw = wr * sigma_prime.h_prime
     local Cw = wm * ECP.hashtopoint(uid)
+	-- create the challenge
     local c = COCONUT.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw })
+	-- create responses
     local rm = wm:modsub(m * c, o)
-    local rr = wr:modsub(r * c, o)
-    local pi_v = { c = c, rm = rm, rr = rr }
-
+    local rr = wr:modsub(t * c, o)
+    local pi_v = { c = c, 
+				   rm = rm,
+				   rr = rr }
     local Theta = {
        kappa = kappa,
        nu = nu,
@@ -121,11 +131,13 @@ local function verify_cred_petition(vk, Theta, zeta, uid)
     local Aw = kappa * c + g2 * rr + vk.alpha * INT.new(1):modsub(c,o) + vk.beta * rm
     local Bw = nu * c + sigma_prime.h_prime * rr
     local Cw = rm*ECP.hashtopoint(uid) + zeta*c
-    local ret1 = c == COCONUT.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw })
-
-    local ret2 = not sigma_prime.h_prime:isinf()
-    local ret3 = ECP2.miller(kappa, sigma_prime.h_prime) == ECP2.miller(vk.g2, sigma_prime.s_prime + nu)
-    return ret1 and ret2 and ret3
+	assert(c == COCONUT.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw }),
+	"COCONUT internal error: failure to compute the challenge prime")
+    assert(not sigma_prime.h_prime:isinf(),
+		   "COCONUT internal error: sigma_prime.h points to infinity")
+    assert(ECP2.miller(kappa, sigma_prime.h_prime) == ECP2.miller(vk.g2, sigma_prime.s_prime + nu),
+		   "COCONUT internal error: petition credential signature does not verify")
+    return true
 end
 function sign_petition(inputs, settings)
 	local old_petition = inputs.petition
@@ -136,8 +148,10 @@ function sign_petition(inputs, settings)
 
 	-- show coconut credentials
 	local Theta, zeta = prove_cred_petition(aggr_vk, cred, priv_user, old_petition.uid)
+	-- I.print(Theta)
+	-- I.print(zeta)
 	assert(true == verify_cred_petition(aggr_vk, Theta, zeta, old_petition.uid), 
-		'Credentials petition proof does not verify') -- ret3 line 303 is failing
+		   'Credentials petition proof does not verify') -- ret3 line 303 is failing
 	-- coconut prov_cred_petition
 	-- add zeta to the spend list
 	-- (enc_v, enc_v_not, cv, pi_vote) = make proof of correct encryption
@@ -150,6 +164,13 @@ end
 
 
 -- Test Petition Contract
+ca_keypair = COCONUT.ca_keygen()
+ca2_keypair = COCONUT.ca_keygen()
+ca3_keypair = COCONUT.ca_keygen()
+ca_aggkeys = COCONUT.aggregate_keys({ca_keypair.verify,
+									 ca2_keypair.verify,
+									 ca3_keypair.verify})
+
 priv_owner, pub_owner = COCONUT.elgamal_keygen()
 priv_user, pub_user = COCONUT.elgamal_keygen()
 Lambda = COCONUT.prepare_blind_sign(pub_user, secret)
@@ -160,18 +181,21 @@ aggsigma = COCONUT.aggregate_creds(priv_user, {sigma_tilde1, sigma_tilde2, sigma
 
 local inputs = { token = 'Chainspace token' }
 local settings = {
-	uid = str([[petition unique identifier]]),
+	uid = "petition unique identifier",
 	priv_owner = priv_owner,
 	pub_owner = pub_owner }
 local outputs, parameters = create_petition(inputs, settings)
 local ret = checker_create_petition(inputs, outputs, parameters)
 assert(ret == true, 'Checker of `create_petition` not passing')
-
+I.print(inputs)
+I.print(outputs)
+I.print(parameters)
 inputs = outputs
 settings = {
 	priv_user = priv_user,
 	cred = aggsigma,
 	aggr_vk = ca_aggkeys} 
+I.print(settings)
 outputs, parameters = sign_petition(inputs, settings)
 
 -- https://github.com/asonnino/coconut-chainspace
