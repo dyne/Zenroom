@@ -66,6 +66,7 @@ extern int b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz);
 // they don't do any internal memory allocation
 // all arguments are allocated and freed by the caller
 extern int _ecp_to_octet(octet *o, ecp *e);
+extern int _ecp2_to_octet(octet *o, ecp2 *e);
 
 static int _max(int x, int y) { if(x > y) return x;	else return y; }
 // static int _min(int x, int y) { if(x < y) return x;	else return y; }
@@ -187,6 +188,13 @@ octet* o_arg(lua_State *L,int n) {
 			ecp *e = (ecp*)ud;
 			o = o_new(L, e->totlen + 0x0f); SAFE(o); // new
 			_ecp_to_octet(o,e);
+			lua_pop(L,1);
+		}
+		ud = luaL_testudata(L, n, "zenroom.ecp2");
+		if(!o && ud) {
+			ecp2 *e = (ecp2*)ud;
+			o = o_new(L, e->totlen + 0x0f); SAFE(o); // new
+			_ecp2_to_octet(o,e);
 			lua_pop(L,1);
 		}
 	}

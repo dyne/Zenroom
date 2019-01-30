@@ -52,23 +52,18 @@
 #include <jutils.h>
 #include <zen_error.h>
 #include <zen_octet.h>
+#include <zen_ecp.h>
 #include <zen_big.h>
 #include <zen_fp12.h>
 #include <zen_memory.h>
 #include <lua_functions.h>
 
 
-typedef struct {
-	char curve[16];
-	char type[16];
-	BIG  order;
-	ECP2  val;
-	// TODO: the values above make it necessary to propagate the
-	// visibility on the specific curve point types to the rest of the
-	// code. To abstract these and have get/set functions may save a
-	// lot of boilerplate when implementing support for multiple
-	// curves ECP.
-} ecp2;
+// use shared internally with octet o_arg()
+int _ecp2_to_octet(octet *o, ecp2 *e) {
+	ECP2_toOctet(o, &e->val);
+	return(1);
+}
 
 
 ecp2* ecp2_new(lua_State *L) {
@@ -78,6 +73,7 @@ ecp2* ecp2_new(lua_State *L) {
 		return NULL; }
 	strcpy(e->curve,"bls383");
 	strcpy(e->type,"weierstrass");
+	e->totlen = (MODBYTES*4)+1;
 	BIG_copy(e->order, (chunk*)CURVE_Order);
 	luaL_getmetatable(L, "zenroom.ecp2");
 	lua_setmetatable(L, -2);
