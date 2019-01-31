@@ -103,8 +103,18 @@ function zencode:run()
 	  -- unprotected call
 	  _G['ZEN_traceback'] = _G['ZEN_traceback']..
 		 "    -> ".. x.source:gsub("^%s*", "") .."\n"
+	  IN = ZEN.data.load()
+	  ACK = ACK or { }
+	  OUT = OUT or { }
       x.hook(table.unpack(x.args))
    end
+end
+
+function zencode:debug()
+   error("Zencode debug states")
+   I.print({IN = IN})
+   I.print({ACK = ACK})
+   I.print({OUT = OUT})
 end
 
 function zencode:assert(condition, errmsg)
@@ -114,11 +124,13 @@ function zencode:assert(condition, errmsg)
 end
 
 zencode.validate = function(obj, objschema, errmsg)
-   -- zencode.assert(type(obj) == 'table', "ZEN:validate called with an invalid object (not a table)")
-   -- zencode.assert(type(objschema) == 'string', "ZEN:validate called with invalid schema (not a function)")
+   zencode.assert(type(obj) == 'table', "ZEN:validate called with an invalid object (not a table)")
+   zencode.assert(type(objschema) == 'string', "ZEN:validate called with invalid schema (not a function)")
    -- sc = objschema
    -- zencode.assert(sc ~= nil, errmsg .. " - schema function '"..objschema.."' is not defined")
    -- zencode.assert(type(sc) == "function", errmsg .. " - schema '"..objschema.."' is not a function")
+   zencode.assert(obj ~= nil,
+				  "Object not found in schema validation - "..errmsg)
    if validate(obj, objschema, errmsg) then return true end
    error(errmsg)
    assert(false)

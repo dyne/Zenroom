@@ -7,7 +7,7 @@ verbose=1
 
 scenario="Generate credential request keypair"
 echo $scenario
-cat <<EOF | zenroom | tee alice.keys | json_pp
+cat <<EOF | zenroom | tee alice.keys
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'credential_request_keygen': $scenario
@@ -20,7 +20,7 @@ EOF
 
 scenario="Generate credential issuer keypair"
 echo $scenario
-cat <<EOF | zenroom | tee madhatter.keys | json_pp
+cat <<EOF | zenroom | tee madhatter.keys
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'credential_issuer_keygen': $scenario
@@ -33,7 +33,7 @@ EOF
 
 scenario="Generate credential issuer keypair"
 echo $scenario
-cat <<EOF | zenroom | tee cheshirecat.keys | json_pp
+cat <<EOF | zenroom | tee cheshirecat.keys
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'credential_issuer_keygen': $scenario
@@ -47,7 +47,7 @@ EOF
 # Note for devs: the output is verification cryptographic object (alpha, beta, g2) 
 scenario="Publish the credential issuer verification key"
 echo $scenario
-cat <<EOF | zenroom -k madhatter.keys | tee madhatter_verification.keys | json_pp
+cat <<EOF | zenroom -k madhatter.keys | tee madhatter_verification.keys
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'credential_publish_issuer': $scenario
@@ -61,7 +61,7 @@ EOF
 
 scenario="Request a credential blind signature"
 echo $scenario
-cat <<EOF | zenroom -k alice.keys | tee alice_blindsign_request.json | json_pp
+cat <<EOF | zenroom -k alice.keys | tee alice_blindsign_request.json
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'credential_request': $scenario
@@ -76,7 +76,7 @@ EOF
 
 scenario="Issue a credential blind signature"
 echo $scenario
-cat <<EOF | zenroom -k madhatter.keys -a alice_blindsign_request.json | tee madhatter_signed_credential.json | json_pp
+cat <<EOF | zenroom -k madhatter.keys -a alice_blindsign_request.json | tee madhatter_signed_credential.json
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'credential_sign': $scenario
@@ -85,7 +85,7 @@ Scenario 'credential_sign': $scenario
 		 When I am requested to sign a credential
 		 and I verify the credential to be true
 		 and I sign the credential 'MadHatter'
-		 Then print data 'MadHatter'
+		 Then print all data
 ]])
 ZEN:run()
 EOF
@@ -93,7 +93,7 @@ EOF
 # Dev note: this generates sigma (AggCred(σ1, . . . , σt) → (σ):) 
 scenario="Receive the signature and publish the credential"
 echo $scenario
-cat <<EOF | zenroom -k alice.keys -a madhatter_signed_credential.json | tee alice_aggregated_credential.json | json_pp
+cat <<EOF | zenroom -k alice.keys -a madhatter_signed_credential.json | tee alice_aggregated_credential.json
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'credential_publish': $scenario
@@ -109,7 +109,7 @@ EOF
 # Dev note: this generates theta (❖ ProveCred(vk, m, φ0) → (Θ, φ0):
 scenario="Generate a blind proof of the credentials"
 echo $scenario
-cat <<EOF | zenroom -k madhatter_verification.keys -a alice_aggregated_credential.json | tee alice_blindproof_credential.json | json_pp
+cat <<EOF | zenroom -k madhatter_verification.keys -a alice_aggregated_credential.json | tee alice_blindproof_credential.json 
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'credential_blindproof': $scenario
