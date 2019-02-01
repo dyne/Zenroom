@@ -1,43 +1,40 @@
--- global array of credential issuers
 
-local function import(obj, sname)
-   ZEN.assert(obj, "Import error: obj is nil")
-   ZEN.assert(sname, "Import error: schema is nil")
-   local s = schemas[sname]
-   ZEN.assert(s ~= nil, "Import error: schema not found '"..sname.."'")
-   return s(obj, nil)
+
+
+
+When("I create my new credential request keypair", function()
+		OUT[ACK.whoami] = export(COCONUT.cred_keygen(), 'coconut_req_keypair',hex)
+end)
+
+When("I create my new credential issuer keypair", function()
+		OUT[ACK.whoami] = export(COCONUT.ca_keygen(), 'coconut_ca_keypair',hex)
+end)
+
+f_ca_keypair = function(keyname)
+   ZEN.assert(keyname or ACK.whoami, "Cannot identify the issuer keypair to use")
+   ACK.ca_keypair = import(IN.KEYS[keyname or ACK.whoami],'coconut_ca_keypair')
 end
-local function export(obj, sname, conv)
-   ZEN.assert(obj, "Export error: obj is nil")
-   ZEN.assert(type(sname) == "string", "Export error: invalid schema string")
-   ZEN.assert(type(conv) == "function", "Export error: invalid conversion function")
-   return schemas[sname](obj, conv)
+Given("I have my credential issuer keypair", f_ca_keypair)
+Given("I have '' credential issuer keypair", f_ca_keypair)
+
+When("I publish my issuer verification key", function()
+		ZEN.assert(ACK.whoami, "Cannot identify the issuer")
+		ZEN.assert(ACK.ca_keypair.verify, "Issuer verification key not found")
+		OUT[ACK.whoami] = { }
+		OUT[ACK.whoami].verify = map(ACK.ca_keypair.verify, hex)
+end)
+
+f_req_keypair = function(keyname)
+   ZEN.assert(keyname or ACK.whoami, "Cannot identify the request keypair to use")
+   ACK.req_keypair = import(IN.KEYS[keyname or ACK.whoami],'coconut_req_keypair')
 end
+Given("I have my credential request keypair", f_req_keypair)
+Given("I have '' credential request keypair", f_req_keypair)
 
-When("I create my new credential request keypair", function(keyname)
-		init_keyring(keyname or whoami)
-		keyring[keypair] = export(COCONUT.cred_keygen(), 'coconut_req_keypair',hex)
-end)
-
-When("I create my new credential issuer keypair", function(keyname)
-		init_keyring(keyname or whoami)
-		keyring[keypair] = export(COCONUT.ca_keygen(), 'coconut_ca_keypair',hex)
-end)
-
-Given("I have my credential issuer keypair", function()
-         init_keyring(whoami)
-		 ACK.ca_keypair = import(keyring[keypair],'coconut_ca_keypair')
-end)
-
-Given("I have my credential request keypair", function()
-         init_keyring(keyname or whoami)
-		 ACK.req_keypair = import(keyring[keypair],'coconut_req_keypair')
-end)
 
 Given("I use the verification key by ''", function(ca)
-		 init_keyring(ca)
-		 local kp = keyring[keypair]
-		 ACK.aggkeys = { import(kp.verify,'coconut_ca_vk') }
+		 ZEN.assert(IN.KEYS[ca].verify, "Verification key not found: "..ca)
+		 ACK.aggkeys = { import(IN.KEYS[ca].verify,'coconut_ca_vk') }
 end)
 
 When("I request a credential blind signature", function()
@@ -57,17 +54,16 @@ When("I am requested to sign a credential", function(reqname)
 end)
 
 When("I sign the credential ''", function(ca)
-        init_keyring(whoami)
         ZEN.assert(ACK.blindsign, "No valid signature request found.")
+        ZEN.assert(ACK.ca_keypair.sign, "No valid issuer signature keys found.")
         local sigmatilde =
-           COCONUT.blind_sign(keyring[keypair].sign,
+           COCONUT.blind_sign(ACK.ca_keypair.sign,
                               ACK.blindsign.public,
 							  ACK.blindsign)
         OUT[ca] = export(sigmatilde,'coconut_sigmatilde', hex)
 end)
 
 When("I receive a credential signature ''", function(signfrom)
-		init_keyring(whoami)
 		-- one dimensional array is simple enough
 		ZEN.assert(type(IN[signfrom]) == "table",
 				   "No valid signature found for: " .. signfrom)
@@ -76,15 +72,15 @@ When("I receive a credential signature ''", function(signfrom)
 end)
 
 When("I aggregate all signatures into my credential", function()
-		init_keyring(whoami)
 		-- check the blocking state _sigmatilde
 		ZEN.assert(ACK.sigmatilde, "No valid signatures have been collected.")
+		ZEN.assert(ACK.req_keypair.private, "No valid request private key found")
 		-- prepare output with an aggregated sigma credential
 		-- requester signs the sigma with private key
-		local cred = COCONUT.aggregate_creds(INT.new(keyring[keypair].private),
+		local cred = COCONUT.aggregate_creds(ACK.req_keypair.private,
 											 ACK.sigmatilde)
 		OUT = { credential = export(cred,'coconut_aggsigma', hex) }
-		OUT.name = whoami -- TODO: customise according to pilot identifier
+		OUT.name = ACK.whoami -- TODO: customise according to pilot identifier
 end)
 
 When("the declaration is proven by credentials", function()

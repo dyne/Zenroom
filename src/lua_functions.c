@@ -60,6 +60,9 @@ void load_file(char *dst, FILE *fd) {
 	}
 	// skip shebang on firstline
 	if(!fgets(firstline, MAX_STRING, fd)) {
+		if(errno==0) { // file is empty
+			error(0, "Error reading, file is empty");
+			exit(1); }
 		error(0, "Error reading first line: %s", strerror(errno));
 		exit(1); }
 	if(firstline[0]=='#' && firstline[1]=='!')

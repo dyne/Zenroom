@@ -13,7 +13,7 @@ ZEN:parse([[
 Scenario 'credential_request_keygen': $scenario
 		 Given that I am known as 'Alice'
 		 When I create my new credential request keypair
-		 Then print keypair 'Alice'
+		 Then print all data
 ]])
 ZEN:run()
 EOF
@@ -26,23 +26,23 @@ ZEN:parse([[
 Scenario 'credential_issuer_keygen': $scenario
 		 Given that I am known as 'MadHatter'
 		 When I create my new credential issuer keypair
-		 Then print keypair 'MadHatter'
+		 Then print all data
 ]])
 ZEN:run()
 EOF
 
-scenario="Generate credential issuer keypair"
-echo $scenario
-cat <<EOF | zenroom | tee cheshirecat.keys
-ZEN:begin($verbose)
-ZEN:parse([[
-Scenario 'credential_issuer_keygen': $scenario
-		 Given that I am known as 'CheshireCat'
-		 When I create my new credential issuer keypair
-		 Then print keypair 'CheshireCat'
-]])
-ZEN:run()
-EOF
+# scenario="Generate credential issuer keypair"
+# echo $scenario
+# cat <<EOF | zenroom | tee cheshirecat.keys
+# ZEN:begin($verbose)
+# ZEN:parse([[
+# Scenario 'credential_issuer_keygen': $scenario
+# 		 Given that I am known as 'CheshireCat'
+# 		 When I create my new credential issuer keypair
+# 		 Then print all data
+# ]])
+# ZEN:run()
+# EOF
 
 # Note for devs: the output is verification cryptographic object (alpha, beta, g2) 
 scenario="Publish the credential issuer verification key"
@@ -53,8 +53,8 @@ ZEN:parse([[
 Scenario 'credential_publish_issuer': $scenario
 		 Given that I am known as 'MadHatter'
 		 and I have my credential issuer keypair
-		 When I remove the 'sign' key
-		 Then print all keyring
+		 When I publish my issuer verification key
+		 Then print all data
 ]])
 ZEN:run()
 EOF

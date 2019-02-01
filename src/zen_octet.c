@@ -400,13 +400,17 @@ static int from_hex(lua_State *L) {
 	// 	['a'] = 10, 11, 12, 13, 14, 15
 	// };
 	const char *s = lua_tostring(L, 1);
-	luaL_argcheck(L, s != NULL, 1, "hex string sequence expected");
+	if(!s) {
+		error(L, "%s :: invalid argument",__func__);
+		lua_pushboolean(L,0);
+		return 1; }
+	// luaL_argcheck(L, s != NULL, 1, "hex string sequence expected");
 	int len = is_hex(s);
 	func(L,"hex string sequence length: %u",len);
 	if(!len || len>MAX_STRING*2) {
 		error(L, "invalid hex sequence size: %u", len);
-		lerror(L, "operation aborted");
-		return 0; }
+		lua_pushboolean(L,0);
+		return 1; }
 	octet *o = o_new(L, len); // can be halved
 	int i, j;
 	for(i=0, j=0; s[j]!=0; i++, j+=2)

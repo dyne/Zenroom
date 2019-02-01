@@ -100,24 +100,28 @@ function zencode:run()
       -- local ok, err = pcall(x.hook,table.unpack(x.args))
       -- if not ok then error(err) end
 
-	  -- unprotected call
 	  _G['ZEN_traceback'] = _G['ZEN_traceback']..
 		 "    -> ".. x.source:gsub("^%s*", "") .."\n"
-	  IN = ZEN.data.load()
+	  IN = { } -- import global DATA from json
+	  if DATA then IN = JSON.decode(DATA) end
+	  IN.KEYS = { } -- import global KEYS from json
+	  if KEYS then IN.KEYS = JSON.decode(KEYS) end
+	  -- clean ACK and OUT tables
 	  ACK = ACK or { }
 	  OUT = OUT or { }
+	  -- exec all hooks via unprotected call (quit on error)
       x.hook(table.unpack(x.args))
    end
 end
 
-function zencode:debug()
+function zencode.debug()
    error("Zencode debug states")
    I.print({IN = IN})
    I.print({ACK = ACK})
    I.print({OUT = OUT})
 end
 
-function zencode:assert(condition, errmsg)
+function zencode.assert(condition, errmsg)
    if condition then return true end
    error(errmsg) -- prints zencode backtrace
    assert(false)

@@ -5,9 +5,6 @@
 -- keypair: section in keyring
 -- keypair_name: current section in keyring
 
-keyring = nil
-keypair = nil
-
 -- crypto setup
 -- TODO: review scoping, make local or into finite-state machine
 random = RNG.new()
@@ -15,40 +12,23 @@ order = ECP.order()
 G = ECP.generator()
 KDF_rounds = 10000
 
-ZEN.keygen = function()
+local ecdh_keygen = function()
    local key = INT.new(random,order)
    return { private = key,
 			public = key * G }
 end
 
-function init_keyring(keyname)
-   keypair = keyname
-   if KEYS then
-	  keyring = keyring or JSON.decode(KEYS)
-   else
-	  keyring = keyring or {}
-   end
-end
-
 f_havekey = function (keytype, keyname)
-   init_keyring(keyname or whoami)
-   ZEN.assert(validate(keyring[keypair],schemas['keypair']), "Invalid keypair for "..keypair)
-   local kp = keyring[keypair]
-   local kt = keytype or { "public", "private" }
-   if type(kt) == "string" then
-	  if kt == "public" then
-		 ZEN.assert(ECP.validate(kp[kt]), "Key "..kt.." not found in "..keypair.." keypair")
-	  else
-		 ZEN.assert(kp[kt], "Key "..kt.." not found in "..keypair.." keypair")
-	  end
-   elseif type(kt) == "table" then
-	  for k,v in ipairs(kt) do
-		 if v == "public" then
-			ZEN.assert(ECP.validate(kp[v]), "Key "..v.." not found in "..keypair.." keypair")
-		 else
-			ZEN.assert(kp[v], "Key "..v.." not found in "..keypair.." keypair")
-		 end
-	  end
+   local name = keyname or ACK.whoami
+   local keypair = IN.KEYS[name]
+   ZEN.assert(keypair, "Keypair not found: "..name)
+   if keytype then
+	  local key = keypair[keytype]
+	  ZEN.assert(key, "Key not found for keypair "..name..": "..keytype)	  
+	  ACK[name] = { }
+	  ACK[name][keytype] = ZEN.get(ECP.new, keypair, keytype)
+   else
+	  ACK[name] = import(keypair, "ecdh_keypair")
    end
 end
 
@@ -57,33 +37,23 @@ Given("I have my '' key in keyring", f_havekey)
 Given("I have my keypair", f_havekey)
 
 f_keygen = function (keyname)
-   init_keyring(keyname or whoami)
-   keyring[keypair] = map(ZEN.keygen(),hex)
+   ACK[keyname or ACK.whoami] = map(ecdh_keygen(),hex)
 end
 
 When("I create a new keypair as ''", f_keygen)
 When("I create my new keypair", f_keygen)
 
-f_keyrm = function (keytype)
-   init_keyring(keypair or whoami)
-   local kp = keyring[keypair]
-   if kp.schema then
-	  ZEN.assert(validate(kp,schemas[kp.schema]),
-				 "Keypair "..keypair.." does not validate as "..kp.schema)
-   end
-   -- if not (keytype == "public" or keytype == "private") then
-   -- 	  error("keys inside a keypair are either public or private")
-   -- end
-   ZEN.assert(kp[keytype],
-			  "Keypair "..keypair.." does not contain element: ".. keytype)
-   if kp[keytype] then
-	  local out = {}
-	  L.map(kp,function(k,v)
-			   if k ~= keytype then
-				  out[k] = v end end)
-	  keyring[keypair] = out
-   end
-end
+-- f_keyrm = function (keytype)
+--    ZEN.assert([keytype],
+-- 			  "Keypair "..keypair.." does not contain element: ".. keytype)
+--    if kp[keytype] then
+-- 	  local out = {}
+-- 	  L.map(kp,function(k,v)
+-- 			   if k ~= keytype then
+-- 				  out[k] = v end end)
+-- 	  keyring[keypair] = out
+--    end
+-- end
 
 When("I remove the '' key", f_keyrm)
 
@@ -97,14 +67,8 @@ When("I import '' keypair into my keyring", function(kp)
 end)
 
 Then("print my keyring", function()
-		init_keyring()
-		write_json(keyring)
-end)
-Then("print all keyring", function()
-		init_keyring()
-		write_json(keyring)
+		write_json(OUT[whoami])
 end)
 Then("print keypair ''", function(kp)
-		init_keyring(kp)
 		write_json({ [keypair] = keyring[keypair]})
 end)

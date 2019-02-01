@@ -1,25 +1,38 @@
 -- Zencode data schemas for validation
 
+ZEN.get = function(conv, obj, key)
+   ZEN.assert(obj[key], "Key not found in object conversion: "..key)
+   local res = conv(obj[key])
+   assert(res, "Error converting object key: ".. key)
+   return res
+end
+local get = ZEN.get
+
 schemas = {
 
-   -- packets encoded with AES GCM
-   aes_gcm = S.record {
-      checksum = S.hex,
-      iv = S.hex,
-      schema = S.Optional(S.string),
-      text = S.hex,
-      zenroom = S.Optional(S.string),
-      encoding = S.string,
-      curve = S.string,
-      pubkey = S.ecp
-   },
+   aes_gcm = { import = function(obj)
+				  return { checksum = get(O.from_hex, obj, 'checksum'),
+						   iv = get(O.from_hex, obj, 'iv'),
+						   text = get(O.from_hex, obj, 'text'), -- may be MSGpack
+						   encoding = obj.encoding,
+						   curve = obj.curve,
+						   pubkey = get(ECP.new, obj, 'pubkey') } end,
+			   export = function(obj,conv)
+				  return { checksum = conv(obj.checksum),
+						   iv = conv(obj.iv),
+						   text = conv(obj.text),
+						   encoding = obj.encoding,
+						   curve = obj.curve,
+						   pubkey = conv(obj.pubkey) } end,
+			 },
 
    -- zencode_keypair
-   keypair = S.record {
-      schema = S.Optional(S.string),
-      private = S.Optional(S.hex),
-      public = S.ecp
-   },
+   ecdh_keypair = {
+	  import = function(obj)
+		 return { private = get(O.from_hex, obj, 'private'),
+				  public = get(ECP.new, obj, 'public') } end,
+	  export = function(obj, conv)
+		 return map(obj, conv) end },
 
    -- zencode_ecqv
    certificate = S.record {
@@ -55,172 +68,115 @@ schemas = {
       private = S.hex
    },
 
-   -- zencode_coconut
-   coconut_ca_sk = S.record {
-      x = S.int,
-      y = S.int
-   },
-   -- coconut_ca_keypair = S.record {
-   --    schema = S.Optional(S.string),
-   --    version = S.Optional(S.string),
-   --    verify = S.table,
-   --    sign = S.table
-   -- },
+   coconut_req_keypair =
+	  { import = function(obj)
+		   return { public = get(ECP.new, obj, 'public'),
+					private = get(INT.new, obj, 'private') } end,
+		export = function(obj, conv)
+		   return map(obj,conv) end },
 
-   -- coconut_req_keypair = S.record {
-   --    schema = S.Optional(S.string),
-   --    version = S.Optional(S.string),
-   --    public = S.ecp,
-   --    private = S.hex
-   -- },
+   coconut_ca_keypair =
+	  { import = function(obj)
+		   return { sign = { x = get(INT.new, obj.sign, 'x'),
+							 y = get(INT.new, obj.sign, 'y') },
+					verify = { alpha = get(ECP2.new,obj.verify, 'alpha'),
+							   beta = get(ECP2.new, obj.verify, 'beta'),
+							   g2 = get(ECP2.new, obj.verify, 'g2') } } end,
+		export = function(obj,conv)
+		   return { sign   = map(obj.sign, conv),
+					verify = map(obj.verify, conv) } end },
 
-   coconut_pi_s = S.record {
-	  rr = S.int,
-	  rm = S.int,
-	  rk = S.int,
-	  c = S.int
-   },
+   coconut_ca_vk =
+	  { import = function(obj)
+		   return { alpha = get(ECP2.new, obj, 'alpha'),
+					beta = get(ECP2.new, obj, 'beta'),
+					g2 = get(ECP2.new, obj, 'g2') } end,
+		export = function(obj,conv)
+		   return map(obj,conv) end },
 
-   coconut_pi_v = S.record {
-	  rr = S.int,
-	  rm = S.int,
-	  c = S.int
-   },
-
-   coconut_sigmaprime = S.record {
-	  h_prime = S.ecp,
-	  s_prime = S.ecp
-   },
-
-   coconut_req_keypair = function(obj,conv)
-	  local req = { public = ECP.new(obj.public),
-					private = INT.new(obj.private) }
-	  if conv == nil then return req
-	  else -- export
-		 return map(req,conv)
-	  end
-   end,
-
-   coconut_ca_keypair = function(obj,conv)
-	  local req = { }
-	  req.sign = { x = INT.new(obj.sign.x),
-				   y = INT.new(obj.sign.y) }
-	  req.verify = { alpha = ECP2.new(obj.verify.alpha),
-					 beta = ECP2.new(obj.verify.beta),
-					 g2 = ECP2.new(obj.verify.g2) }
-	  if conv == nil then return req
-	  else -- export
-		 return { sign = map(req.sign, conv),
-				  verify = map(req.verify, conv) }
-	  end
-   end,
-
-   coconut_ca_vk = function(obj,conv)
-	  local req = { }
-	  req.alpha = ECP2.new(obj.alpha)
-	  req.beta = ECP2.new(obj.beta)
-	  req.g2 = ECP2.new(obj.g2)
-	  if conv == nil then return req
-	  else -- export
-		 local out = map(req,conv)
-		 return out
-	  end
-   end,
-
-   coconut_request = function(obj,conv)
-	  local req = { }
-	  req.c = { a = ECP.new(obj.c.a),
-				b = ECP.new(obj.c.b) }
-	  req.pi_s = { rr = INT.new(obj.pi_s.rr),
-				   rm = INT.new(obj.pi_s.rm),
-				   rk = INT.new(obj.pi_s.rk),
-				   c =  INT.new(obj.pi_s.c)  }
-	  req.cm = ECP.new(obj.cm)
-	  if conv == nil then return req
-	  else -- export
-		 local out = map(req,conv)
-		 out.pi_s = map(req.pi_s, conv)
-		 out.c = map(req.c, conv)
-		 return out
-	  end
-   end,
-
-   coconut_lambda = function(obj,conv)
-	  local lambda = { }
-	  lambda.pi_s = { rr = INT.new(obj.pi_s.rr),
-					  rm = INT.new(obj.pi_s.rm),
-					  rk = INT.new(obj.pi_s.rk),
-					  c =  INT.new(obj.pi_s.c)  }
-	  lambda.cm = ECP.new(obj.cm)
-	  lambda.c = { a = ECP.new(obj.c.a),
-				   b = ECP.new(obj.c.b) }
-	  lambda.public = ECP.new(obj.public)
-	  if conv == nil then return lambda
-	  else -- export
-		 local out = map(lambda,conv)
-		 out.pi_s = map(lambda.pi_s, conv)
-		 out.c = map(lambda.c, conv)
-		 return out
-	  end
-   end,
-
-   coconut_sigmatilde = function(obj,conv)
-	  local ret = { }
-	  ret.h = ECP.new(obj.h)
-	  ret.b_tilde = ECP.new(obj.b_tilde)
-	  ret.a_tilde = ECP.new(obj.a_tilde)
-	  if conv == nil then return ret
-	  else -- export
-		 local out = { }
-		 out = map(ret,conv)
-		 out.version = VERSION
-		 out.schema = 'coconut_sigmatilde'
-		 return out
-	  end
-   end,
-
-   coconut_aggsigma = function(obj,conv)
-	  local ret = { }
-	  ret.h = ECP.new(obj.h)
-	  ret.s = ECP.new(obj.s)
-	  if conv == nil then return ret
-	  else -- export
-		 local out = { }
-		 out = map(ret,conv)
-		 out.version = VERSION
-		 out.schema = 'coconut_aggsigma'
-		 return out
-	  end
-   end,
-
-   coconut_theta = function(obj, conv)
-	  local ret = { }
-	  ret.nu = ECP.new(obj.nu)
-	  ret.kappa = ECP2.new(obj.kappa)
-	  ret.pi_v = map(obj.pi_v, INT.new)
-	  ret.sigma_prime = map(obj.sigma_prime, ECP.new)
-
-	  if conv == nil then -- import
+   coconut_request = {
+	  import = function(obj)
+		 return { c = { a = get(ECP.new, obj.c, 'a'),
+						b = get(ECP.new, obj.c, 'b') },
+				  pi_s = { rr = get(INT.new, obj.pi_s, 'rr'),
+						   rm = get(INT.new, obj.pi_s, 'rm'),
+						   rk = get(INT.new, obj.pi_s, 'rk'),
+						   c =  get(INT.new, obj.pi_s, 'c')  },
+				  cm = get(ECP.new, obj, 'cm') } end,
+	  export = function(obj,conv)
+		 local ret = map(obj, conv)
+		 ret.pi_s = map(obj.pi_s, conv)
+		 ret.c = map(obj.c, conv)
 		 return ret
-	  else -- export
-		 -- TODO: check conv is a function
-		 local out = { }
-		 -- TODO: validation of kappa and nu
-		 out = map(obj, conv)
+   end },
+
+   coconut_lambda = {
+	  import = function(obj)
+		 return { pi_s = { rr = get(INT.new, obj.pi_s, 'rr'),
+						   rm = get(INT.new, obj.pi_s, 'rm'),
+						   rk = get(INT.new, obj.pi_s, 'rk'),
+						   c =  get(INT.new, obj.pi_s, 'c')  },
+				  cm = get(ECP.new, obj, 'cm'),
+				  c = { a = get(ECP.new, obj.c, 'a'),
+						b = get(ECP.new, obj.c, 'b') },
+				  public = get(ECP.new, obj, 'public') } end,
+	  export = function(obj,conv)
+		 local out = map(obj,conv)
+		 out.pi_s = map(obj.pi_s, conv)
+		 out.c = map(obj.c, conv)
+		 return out
+	  end },
+
+   coconut_sigmatilde = {
+	  import = function(obj)
+	  return { h = get(ECP.new, obj, 'h'),
+			   b_tilde = get(ECP.new, obj, 'b_tilde'),
+			   a_tilde = get(ECP.new, obj, 'a_tilde') } end,
+	  export = function(obj,conv)
+		 return map(obj,conv) end },
+
+   coconut_aggsigma = {
+	  import = function(obj)
+		 return { h = get(ECP.new, obj, 'h'),
+				  s = get(ECP.new, obj, 's') } end,
+	  export = function(obj,conv)
+		 return map(obj,conv) end },
+
+   coconut_theta = {
+	  import = function(obj)
+		 return { nu = get(ECP.new, obj, 'nu'),
+				  kappa = get(ECP2.new, obj, 'kappa'),
+				  pi_v = map(obj.pi_v, INT.new), -- TODO map wrappers
+				  sigma_prime = map(obj.sigma_prime, ECP.new) } end,
+	  export = function(obj, conv)
+		 -- TODO: validation of kappa and nu		 
+		 local out = map(obj, conv)
 		 out.sigma_prime = map(obj.sigma_prime, conv)
 		 out.pi_v = map(obj.pi_v, conv)
-		 out.version = VERSION
-		 out.schema = 'coconut_theta'
 		 return out
-	  end
-   end
+	  end }
+
 }
 
--- function schemas:validate(obj, sname, err)
---    local s = self[sname]
---    ZEN.assert(s ~= nil, "Schema not found: "..sname)
---    ZEN.assert(s(self, obj), err)
---    return true
--- end
-
 _G['schemas'] = schemas
+function import(obj, sname)
+   ZEN.assert(obj, "Import error: obj is nil")
+   ZEN.assert(sname, "Import error: schema is nil")
+   local s = schemas[sname]
+   ZEN.assert(s ~= nil, "Import error: schema not found '"..sname.."'")
+   return s.import(obj)
+end
+function export(obj, sname, conv)
+   ZEN.assert(obj, "Export error: obj is nil")
+   ZEN.assert(type(sname) == "string", "Export error: invalid schema string")
+   ZEN.assert(type(conv) == "function", "Export error: invalid conversion function")
+   local s = schemas[sname]
+   ZEN.assert(s ~= nil, "Export error: schema not found '"..sname.."'")
+   local out = s.export(obj, conv)
+   ZEN.assert(out, "Export error: returned nil for schema '"..sname.."'")
+   out.encoding = 'hex' -- hardcoded
+   out.curve = 'bls383'
+   out.schema = sname
+   out.zenroom = VERSION
+   return out
+end

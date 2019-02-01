@@ -90,7 +90,7 @@ function ZEN.data.check(_data, section, key)
 end
 
 -- request
-f_hello = function(nam) whoami = nam end
+f_hello = function(nam) ACK.whoami = nam end
 Given("I introduce myself as ''", f_hello)
 Given("I am known as ''", f_hello)
 
@@ -147,7 +147,7 @@ end)
 
 When("I draft the text ''", function(text)
         -- local _data = IN or ZEN.data.load()
-        OUT = ZEN.data.add(IN,'text',text)
+        ACK = ZEN.data.add(IN,'text',text)
 end)
 
 
