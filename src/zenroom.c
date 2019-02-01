@@ -155,7 +155,8 @@ zenroom_t *zen_init(const char *conf,
 
 	lua_gc(L, LUA_GCCOLLECT, 0);
 	lua_gc(L, LUA_GCCOLLECT, 0);
-	zen_require_override(L,1);
+	// allow further requires
+	// zen_require_override(L,1);
 
 	// load arguments if present
 	if(data) {

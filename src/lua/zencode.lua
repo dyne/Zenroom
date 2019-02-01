@@ -32,7 +32,7 @@ function zencode:step(text)
    xxx(1,"prefix: "..prefix)
    local defs -- parse in what phase are we
    -- TODO: use state machine
-   if     prefix == 'given' then
+   if prefix == 'given' then
       self.current_step = self.given_steps
       defs = self.current_step
    elseif prefix == 'when'  then
@@ -83,6 +83,14 @@ function zencode:newline(s)
 end
 
 function zencode:parse(text)
+   for first in self:newline(text) do
+	  -- lowercase match
+	  if first:match("(%w+)(.+)"):lower() == "scenario" then
+		 local scenario = string.match(first, "'(.-)'")
+		 require("zencode_"..scenario)
+	  end
+	  break
+   end
    for line in self:newline(text) do
       -- xxx(0,line)
       self:step(line)

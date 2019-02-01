@@ -53,15 +53,15 @@ ZEN = require('zencode')
 -- data schemas
 require('zencode_schemas')
 -- basic keypair functions
-require('zencode_keypair')
+-- require('zencode_keypair')
 -- base data functions
 require('zencode_data')
 -- base encryption functions
-require('zencode_aesgcm')
+-- require('zencode_aesgcm')
 -- implicit certificates
-require('zencode_ecqv')
+-- require('zencode_ecqv')
 -- coconut credentials
-require('zencode_coconut')
+-- require('zencode_coconut')
 
 function content(var)
    if type(var) == "zenroom.octet" then

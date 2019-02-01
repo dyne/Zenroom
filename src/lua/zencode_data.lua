@@ -6,10 +6,6 @@
 
 ZEN.data = { }
 
-IN = { }
-ACK = { }
-OUT = { }
-
 function ZEN.data.load()
    local _data
    if DATA then -- global set by zenroom
