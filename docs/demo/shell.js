@@ -1,6 +1,7 @@
 var ZR = (function() {
     let autocompleteWords = []
     let outputBuffer = []
+    let layout = null
 
     const initialConfig = {
         settings: {
@@ -12,30 +13,40 @@ var ZR = (function() {
         },
         content: [{
             type: 'row',
-            content:[{
-                type: 'component',
-                title: 'ZENCODE',
-                componentName: 'ZencodeEditor',
-                componentState: { label: 'code' },
-                isClosable: false,
-            },{
+            content: [{
+                type: 'stack',
+                id: 'container',
+                content: [{
+                    type: 'component',
+                    title: 'ZENCODE',
+                    componentName: 'ZencodeEditor',
+                    componentState: { label: 'zencode' },
+                    isClosable: false,
+                }, {
+                    type: 'component',
+                    title: 'CODE',
+                    componentName: 'CodeEditor',
+                    componentState: { label: 'code' },
+                    isClosable: false,
+                }]
+            }, {
                 type: 'column',
-                content:[{
+                content: [{
                     type: 'stack',
                     content: [{
                         type: 'component',
                         title: 'KEYS',
                         componentName: 'JsonEditor',
-                        componentState: { label: 'keys'},
+                        componentState: { label: 'keys' },
                         isClosable: false,
-                    },{
+                    }, {
                         type: 'component',
                         title: 'DATA',
                         componentName: 'JsonEditor',
                         componentState: { label: 'data' },
                         isClosable: false,
                     }]
-                },{
+                }, {
                     type: 'component',
                     componentName: 'OUTPUT',
                     componentState: { label: 'output' },
@@ -59,7 +70,7 @@ var ZR = (function() {
         return false;
     }
 
-    const setupZencodeEditor = editor => {
+    const setupCodeEditor = editor => {
         editor.setOptions({
             enableBasicAutocompletion: true,
             enableLiveAutocompletion: true,
@@ -79,11 +90,20 @@ var ZR = (function() {
         editor.focus();
     }
 
-    const setupZencodeEditorComponent = function(container, state) {
+    const setupCodeEditorComponent = function(container, state) {
         container.getElement().html(`<div style="height:100%" id="${state.label}"></div>`)
         container.on('open', ()=>{
             const editor = ace.edit(state.label);
-            setupZencodeEditor(editor)
+            setupCodeEditor(editor)
+        })
+    }
+
+    const setupZencodeEditorComponent = function(container, state) {
+        container.getElement().html(`<div style="height:100%" id="${state.label}"></div>`)
+        container.on('open', () => {
+            const editor = ace.edit(state.label)
+            editor.session.setMode("ace/mode/gherkin")
+            container.extendState({editor: editor})
         })
     }
 
@@ -139,9 +159,10 @@ var ZR = (function() {
     }
 
     const layoutInit = () => {
-        const layout = new GoldenLayout(loadConfig());
-        layout.registerComponent('ZencodeEditor', setupZencodeEditorComponent)
+        layout = new GoldenLayout(loadConfig());
+        layout.registerComponent('CodeEditor', setupCodeEditorComponent)
         layout.registerComponent('JsonEditor', setupJsonEditorComponent)
+        layout.registerComponent('ZencodeEditor', setupZencodeEditorComponent)
         layout.registerComponent('OUTPUT', setupOutputComponent)
         layout.on('stackCreated', bindAutoFocus)
         layout.on('stackCreated', addControls)
@@ -193,7 +214,7 @@ var ZR = (function() {
         $('#output').append(renderedJson||outputBuffer)
     }
 
-    const zenroom = function() {
+    const execute_zenroom = function(code) {
         const keys = ace.edit("keys").getValue() || null
         const data = ace.edit("data").getValue() || null
         const conf = $('#umm').attr('checked') ? 'umm' : null
@@ -203,12 +224,28 @@ var ZR = (function() {
         Module.ccall('zenroom_exec', 
                          'number',
                          ['string', 'string', 'string', 'string', 'number'],
-                         [ace.edit("code").getValue(), conf, keys, data, 3]);
+                         [code, conf, keys, data, 3]);
         let t1 = performance.now()
         console.log(t1-t0, 'ms')
         flushOutput()
         $('#timing').html(Math.ceil(t1-t0) + 'ms')
         $('#output')[0].scrollTop = $('#output')[0].scrollHeight
+    }
+
+    const zenroom = function() {
+        const activeEditor = layout.root.getItemsById('container')[0].getActiveContentItem().container.getState().label
+        let code = ace.edit(activeEditor).getValue()
+        if (activeEditor == 'zencode') {
+            code = `
+ZEN:begin(0)
+ZEN:parse([[
+${code}
+]])
+ZEN:run()
+            `
+            console.log(code)
+        }
+        execute_zenroom(code)
     }
 
     return {
