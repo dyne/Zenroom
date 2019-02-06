@@ -68,15 +68,12 @@ end
 
 function coco.verify_pi_s(l)
    local h = ECP.hashtopoint(l.cm)
-   local Aw =
-	  l.c.a * l.pi_s.c
+   local Aw = l.c.a * l.pi_s.c
 	  + g1 * l.pi_s.rk
-   local Bw =
-	  l.c.b * l.pi_s.c
+   local Bw = l.c.b * l.pi_s.c
 	  + l.public * l.pi_s.rk
 	  + h * l.pi_s.rm
-   local Cw =
-	  l.cm * l.pi_s.c
+   local Cw = l.cm * l.pi_s.c
 	  + g1 * l.pi_s.rr
 	  + hs * l.pi_s.rm
    -- return a bool for assert
@@ -115,7 +112,7 @@ function coco.aggregate_keys(keys)
 end
 
 function coco.prepare_blind_sign(gamma, secret)
-   local m = INT.new(sha256(str(secret)))
+   local m = INT.new(sha256(secret))
    local r = rand()
    local cm = g1 * r + hs * m
    local h = ECP.hashtopoint(cm)
@@ -158,7 +155,7 @@ function coco.aggregate_creds(d, sigma_tilde)
 end
 
 function coco.prove_creds(vk, sigma, secret)
-   local m = INT.new(sha256(str(secret)))
+   local m = INT.new(sha256(secret))
    local r = rand()
    local r_prime = rand()
    local sigma_prime = { h_prime = sigma.h * r_prime,

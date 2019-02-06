@@ -39,7 +39,7 @@ ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'Alice'
 		 and I have my credential request keypair
-		 When I create a new petition 'to betray the Queen'
+		 When I create a new petition
 		 Then print all data
 ]])
 ZEN:run()
@@ -79,11 +79,11 @@ EOF
 
 scenario="Sign a petition (produce a proof of signature)"
 echo $scenario
-cat <<EOF | zenroom -k bob_petition.keys -a alice_aggregated_petition.json
+cat <<EOF | zenroom -k alice_petition.keys -a alice_aggregated_petition.json
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
-		 Given that I am known as 'Bob'
+		 Given that I am known as 'Alice'
 		 and I have my credential request keypair
 		 and I can sign a petition
 		 When I sign the petition

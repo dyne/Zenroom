@@ -108,9 +108,10 @@ ZEN.add_schema(
 					 pub_owner = get(ECP.new, obj, 'pub_owner'),
 					 lambda = import(obj.lambda, 'lambda'), -- see above
 					 scores = { first = get(hex, obj.scores, 'first'),
-								second = get(hex, obj.scores, 'second'),
-								dec = obj.scores.dec,
-								list = obj.scores.list } } end,
+					 			second = get(hex, obj.scores, 'second'),
+					 			dec = obj.scores.dec,
+					 			list = obj.scores.list }
+		 } end,
 		 export = function(obj,conv)
 			local out = map(obj, conv)
 			out.lambda = export(obj.lambda, 'lambda', conv)
@@ -142,14 +143,17 @@ ZEN.add_schema(
 })
 
 
-When("I create a new petition ''", function(ptext)
-        local j = export({ uid = INT.new(RNG.new()),
-                           pub_owner = ACK.req_keypair.public,
-                           lambda = COCONUT.prepare_blind_sign(ACK.req_keypair.public, ptext),
-                           scores = { first = "Infinity",
-                                      second = "Infinity",
-                                      dec = { },
-                                      list = { } } }, 'new_petition', hex)
+When("I create a new petition", function()
+        local j = export(
+		   { uid = "sadasd", -- INT.new(random),
+			 pub_owner = ACK.req_keypair.public,
+			 lambda = COCONUT.prepare_blind_sign(
+				-- TODO: private key or secret string?
+				ACK.req_keypair.public, ACK.req_keypair.private),
+			 scores = { first = "Infinity",
+						second = "Infinity",
+						dec = { },
+						list = { } } }, 'new_petition', hex)
         -- TODO: sign the JSON string or MSGPACK
         OUT.petition = j
         OUT.petition_signature = true
@@ -207,7 +211,8 @@ end)
 -- TODO: fix this and verify_cred_petition
 local random = RNG.new()
 local function rand() return INT.new(random,ECP.order()) end
-local function prove_cred_petition(vk, sigma, m, uid)
+local function prove_cred_petition(vk, sigma, secret, uid)
+   local m = INT.new(sha256(secret))
    local o = ECP.order()
    local r = rand()
    -- local m = INT.new(sha256(secret))
@@ -279,7 +284,6 @@ When("I sign the petition", function()
 		ZEN.assert(ACK.petition.sigma, "No valid petition found")
 		local Theta
 		local zeta
-		ZEN.debug()
 		Theta, zeta = prove_cred_petition(ACK.petition.ca_public,
 										  ACK.petition.sigma,
 										  ACK.req_keypair.private,
@@ -287,7 +291,7 @@ When("I sign the petition", function()
 		ZEN.assert(verify_cred_petition(ACK.petition.ca_public,
 										Theta, zeta, ACK.petition.uid),
 				   "Failed to verify the petition signature")
-		I.print(Theta)
+		print("PETITION SIGN SUCCESS") -- WIP
 end)
 
 
