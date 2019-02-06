@@ -163,4 +163,11 @@ end
 -- _G["When"]     = when_step
 -- _G["Then"]     = then_step
 
+-- init schemas
+zencode.schemas = { }
+function zencode.add_schema(arr)
+   for k,v in ipairs(arr) do
+	  zencode.schemas[k] = v
+   end
+end
 return zencode

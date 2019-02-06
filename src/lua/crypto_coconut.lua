@@ -161,7 +161,8 @@ function coco.prepare_blind_sign(gamma, secret)
    -- return Lambda
    return { cm   = cm,
             c    = c,
-            pi_s = pi_s }
+            pi_s = pi_s,
+			public = gamma }
 end
 
 function coco.blind_sign(sk, gamma, Lambda)
