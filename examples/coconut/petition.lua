@@ -11,9 +11,9 @@ local function rand() return INT.new(random,o) end
 -- elgamal
 m = INT.new(sha256(str("Some sort of secret")))
 hs = ECP.hashtopoint(str("anystring"))
-d, gamma = COCONUT.elgamal_keygen()
-a, b, k = COCONUT.elgamal_enc(gamma, m, hs)
-dec = COCONUT.elgamal_dec(d, a, b)
+d, gamma = ELGAMAL.keygen()
+a, b, k = ELGAMAL.encrypt(gamma, m, hs)
+dec = ELGAMAL.decrypt(d, a, b)
 assert(dec == hs * m, 'El-Gamal encryption not working')
 print('')
 print('[ok] test El-Gamal')
@@ -21,10 +21,11 @@ print('')
 
 -- A single CA signs
 secret = "Some sort of secret credential"
-cred_keypair = COCONUT.cred_keygen()
+cred_keypair = { }
+cred_keypair.private, cred_keypair.public = ELGAMAL.keygen()
 ca_keypair = COCONUT.ca_keygen()
 Lambda = COCONUT.prepare_blind_sign(cred_keypair.public, secret)
-sigmatilde = COCONUT.blind_sign(ca_keypair.sign, cred_keypair.public, Lambda)
+sigmatilde = COCONUT.blind_sign(ca_keypair.sign, Lambda)
 aggsigma = COCONUT.aggregate_creds(cred_keypair.private, {sigmatilde})
 Theta = COCONUT.prove_creds(ca_keypair.verify, aggsigma, secret)
 ret = COCONUT.verify_creds(ca_keypair.verify, Theta)
@@ -40,9 +41,9 @@ ca_aggkeys = COCONUT.aggregate_keys({ca_keypair.verify,
 									 ca2_keypair.verify,
 									 ca3_keypair.verify})
 Lambda = COCONUT.prepare_blind_sign(cred_keypair.public, secret)
-sigma_tilde1 = COCONUT.blind_sign(ca_keypair.sign,  cred_keypair.public, Lambda)
-sigma_tilde2 = COCONUT.blind_sign(ca2_keypair.sign, cred_keypair.public, Lambda)
-sigma_tilde3 = COCONUT.blind_sign(ca3_keypair.sign, cred_keypair.public, Lambda)
+sigma_tilde1 = COCONUT.blind_sign(ca_keypair.sign, Lambda)
+sigma_tilde2 = COCONUT.blind_sign(ca2_keypair.sign, Lambda)
+sigma_tilde3 = COCONUT.blind_sign(ca3_keypair.sign, Lambda)
 aggsigma = COCONUT.aggregate_creds(cred_keypair.private, {sigma_tilde1, sigma_tilde2, sigma_tilde3})
 Theta = COCONUT.prove_creds(ca_aggkeys, aggsigma, secret)
 ret = COCONUT.verify_creds(ca_aggkeys, Theta)
@@ -85,8 +86,8 @@ function checker_create_petition(inputs, outputs, parameters)
 	return ret
 end
 
-
-local function prove_cred_petition(vk, sigma, m, uid)
+local function prove_cred_petition(vk, sigma, secret, uid)
+   local m = INT.new(sha256(secret))
    -- material
     local r = rand()
     local r_prime = rand()
@@ -95,8 +96,8 @@ local function prove_cred_petition(vk, sigma, m, uid)
     local kappa = vk.g2 * r
 	   + vk.alpha
 	   + vk.beta * m
-    local nu = r * sigma_prime.h_prime
-    local zeta = m * ECP.hashtopoint(uid)
+    local nu = sigma_prime.h_prime * r
+    local zeta = ECP.hashtopoint(uid) * m
     
 	-- proof
 	-- create the witnesses
@@ -104,13 +105,13 @@ local function prove_cred_petition(vk, sigma, m, uid)
     local wr = rand()
 	-- compute the witnesses commitments
     local Aw = g2 * wr + vk.alpha + vk.beta * wm
-    local Bw = wr * sigma_prime.h_prime
-    local Cw = wm * ECP.hashtopoint(uid)
+    local Bw = sigma_prime.h_prime * wr
+    local Cw = ECP.hashtopoint(uid) * wm
 	-- create the challenge
     local c = COCONUT.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw })
 	-- create responses
-    local rm = wm:modsub(m * c, o)
-    local rr = wr:modsub(r * c, o)
+    local rm = wm:modsub(c * m, o)
+    local rr = wr:modsub(c * r, o)
     local pi_v = { c = c, 
 				   rm = rm,
 				   rr = rr }
@@ -118,6 +119,7 @@ local function prove_cred_petition(vk, sigma, m, uid)
        kappa = kappa,
        nu = nu,
        sigma_prime = sigma_prime,
+	   sigma = sigma,
        pi_v = pi_v }
     return Theta, zeta
 end
@@ -125,6 +127,9 @@ local function verify_cred_petition(vk, Theta, zeta, uid)
 	local kappa = Theta.kappa
 	local nu = Theta.nu
 	local sigma_prime = Theta.sigma_prime
+	-- I.print(Theta)
+	-- assert(validate(Theta.pi_v, schemas['coconut_pi_s']), "Theta.pi signature schema invalid")
+	local sigma = Theta.sigma
 	local c = Theta.pi_v.c
     local rm = Theta.pi_v.rm
     local rr = Theta.pi_v.rr
@@ -138,26 +143,29 @@ local function verify_cred_petition(vk, Theta, zeta, uid)
 		   "COCONUT internal error: failure to compute the challenge prime")
     assert(not sigma_prime.h_prime:isinf(),
 		   "COCONUT internal error: sigma_prime.h points to infinity")
-    assert(ECP2.miller(kappa, sigma_prime.h_prime) == ECP2.miller(vk.g2, sigma_prime.s_prime + nu),
+    assert(ECP2.miller(kappa, sigma_prime.h_prime)
+			  == ECP2.miller(vk.g2, sigma_prime.s_prime + nu),
 		   "COCONUT internal error: petition credential signature does not verify")
     return true
 end
 function sign_petition(inputs, settings)
-	local old_petition = inputs.petition
-	local new_petition = inputs.petition
-	local priv_user = settings.priv_user
-	local cred = settings.cred
-	local aggr_vk = settings.aggr_vk
 
 	-- show coconut credentials
-	local Theta, zeta = prove_cred_petition(aggr_vk, cred, priv_user, old_petition.uid)
+	local Theta, zeta = prove_cred_petition(
+	   settings.aggr_vk,
+	   settings.cred,
+	   settings.priv_owner,
+	   inputs.petition.uid)
 
-	assert(true == verify_cred_petition(aggr_vk, Theta, zeta, old_petition.uid), 
-		   'Credentials petition proof does not verify') -- ret3 line 303 is failing
+	verify_cred_petition(
+	   settings.aggr_vk,
+	   Theta, zeta,
+	   inputs.petition.uid)
+	print "PETITION SIGN SUCCESS"
 	-- coconut prov_cred_petition
 	-- add zeta to the spend list
 	-- (enc_v, enc_v_not, cv, pi_vote) = make proof of correct encryption
-	local outputs = { petition = new_petition}
+	local outputs = { petition = inputs.petition} -- new_petition
 	local parameters = { Theta = Theta }
 	return outputs, parameters
 end
@@ -172,14 +180,13 @@ ca3_keypair = COCONUT.ca_keygen()
 ca_aggkeys = COCONUT.aggregate_keys({ca_keypair.verify,
 									 ca2_keypair.verify,
 									 ca3_keypair.verify})
-
-priv_owner, pub_owner = COCONUT.elgamal_keygen()
-priv_user, pub_user = COCONUT.elgamal_keygen()
-Lambda = COCONUT.prepare_blind_sign(pub_user, secret)
-sigma_tilde1 = COCONUT.blind_sign(ca_keypair.sign, pub_user, Lambda)
-sigma_tilde2 = COCONUT.blind_sign(ca2_keypair.sign, pub_user, Lambda)
-sigma_tilde3 = COCONUT.blind_sign(ca3_keypair.sign, pub_user, Lambda)
-aggsigma = COCONUT.aggregate_creds(priv_user, {sigma_tilde1, sigma_tilde2, sigma_tilde3})
+priv_owner, pub_owner = ELGAMAL.keygen()
+-- priv_user, pub_user = ELGAMAL.keygen()
+Lambda = COCONUT.prepare_blind_sign(pub_owner, priv_owner)
+sigma_tilde1 = COCONUT.blind_sign(ca_keypair.sign, Lambda)
+sigma_tilde2 = COCONUT.blind_sign(ca2_keypair.sign, Lambda)
+sigma_tilde3 = COCONUT.blind_sign(ca3_keypair.sign, Lambda)
+aggsigma = COCONUT.aggregate_creds(priv_owner, {sigma_tilde1, sigma_tilde2, sigma_tilde3})
 
 local inputs = { token = 'Chainspace token' }
 local settings = {
@@ -189,15 +196,15 @@ local settings = {
 local outputs, parameters = create_petition(inputs, settings)
 local ret = checker_create_petition(inputs, outputs, parameters)
 assert(ret == true, 'Checker of `create_petition` not passing')
-I.print(inputs)
-I.print(outputs)
-I.print(parameters)
+-- I.print(inputs)
+-- I.print(outputs)
+-- I.print(parameters)
 inputs = outputs
 settings = {
-	priv_user = priv_user,
+	priv_owner = priv_owner,
 	cred = aggsigma,
 	aggr_vk = ca_aggkeys} 
-I.print(settings)
+-- I.print(settings)
 outputs, parameters = sign_petition(inputs, settings)
 
 -- https://github.com/asonnino/coconut-chainspace
