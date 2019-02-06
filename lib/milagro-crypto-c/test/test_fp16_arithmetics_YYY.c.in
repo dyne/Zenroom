@@ -1,0 +1,584 @@
+/**
+ * @file test_FP16_arithmetics_YYY.c
+ * @author Samuele Andreoli
+ * @brief Test for aritmetics with FP16_YYY
+ *
+ * LICENSE
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "arch.h"
+#include "amcl.h"
+#include "utils.h"
+#include "fp16_YYY.h"
+
+#define LINE_LEN 10000
+#define MAX_STRING 300
+
+/*
+ * Skips n closed brackets.
+ * Null terminates after the nth bracket and
+ * returns a pointer to the next char
+ */
+char* skip_cb(char* str, int n)
+{
+    int i;
+    char* next=str;
+
+    for(i=0; i<n; i++)
+    {
+        next = strchr(++next,']');
+        if (next == NULL)
+        {
+            printf("ERROR unexpected test vector\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+    *(++next) = '\0';
+
+    return next++;
+}
+
+void read_BIG_XXX(BIG_XXX A, char* string)
+{
+    int len;
+    char support[LINE_LEN];
+    BIG_XXX_zero(A);
+    len = strlen(string)+1;
+    amcl_hex2bin(string,support,len);
+    len = (len-1)/2;
+    BIG_XXX_fromBytesLen(A,support,len);
+    BIG_XXX_norm(A);
+}
+
+void read_FP2_YYY(FP2_YYY *fp2, char* stringx)
+{
+    char *stringy;
+    BIG_XXX x,y;
+
+    stringy = strchr(++stringx,',');
+    if (stringy == NULL)
+    {
+        printf("ERROR unexpected test vector\n");
+        exit(EXIT_FAILURE);
+    }
+    *(stringy)=0;
+    skip_cb(stringy++,1);
+
+    read_BIG_XXX(x,stringx);
+    read_BIG_XXX(y,stringy);
+
+    FP2_YYY_from_BIGs(fp2,x,y);
+}
+
+void read_FP4_YYY(FP4_YYY *fp4, char* stringx)
+{
+    char *stringy;
+    FP2_YYY x,y;
+    stringy = skip_cb(stringx++,1);
+    skip_cb(stringy++,1);
+
+    read_FP2_YYY(&x,stringx);
+    read_FP2_YYY(&y,stringy);
+
+    FP4_YYY_from_FP2s(fp4,&x,&y);
+}
+
+void read_FP8_YYY(FP8_YYY *fp8, char* stringx)
+{
+    char *stringy;
+    FP4_YYY x,y;
+    stringy = skip_cb(stringx++,3);
+    skip_cb(stringy++,3);
+
+    read_FP4_YYY(&x,stringx);
+    read_FP4_YYY(&y,stringy);
+
+    FP8_YYY_from_FP4s(fp8,&x,&y);
+}
+
+void read_FP16_YYY(FP16_YYY *fp16, char* stringx)
+{
+    char *stringy;
+    FP8_YYY x,y;
+    stringy = skip_cb(stringx++,7);
+    skip_cb(stringy++,7);
+
+    read_FP8_YYY(&x,stringx);
+    read_FP8_YYY(&y,stringy);
+
+    FP16_YYY_from_FP8s(fp16,&x,&y);
+}
+
+int main(int argc, char** argv)
+{
+    if (argc != 2)
+    {
+        printf("usage: ./test_fp4_arithmetics_YYY [path to test vector file]\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int i = 0, len = 0, j = 0;
+    FILE *fp;
+
+    char line[LINE_LEN];
+    char * linePtr = NULL;
+
+    FP16_YYY FP16aux1, FP16aux2, FP16aux3, FP16aux4;
+
+    FP16_YYY FP16_1;
+    const char* FP16_1line = "FP16_1 = ";
+    FP16_YYY FP16_2;
+    const char* FP16_2line = "FP16_2 = ";
+    FP16_YYY FP16add;
+    const char* FP16addline = "FP16add = ";
+    FP16_YYY FP16neg;
+    const char* FP16negline = "FP16neg = ";
+    FP16_YYY FP16sub;
+    const char* FP16subline = "FP16sub = ";
+    FP16_YYY FP16conj;
+    const char* FP16conjline = "FP16conj = ";
+    FP16_YYY FP16nconj;
+    const char* FP16nconjline = "FP16nconj = ";
+    FP8_YYY FP8sc;
+    const char* FP8scline = "FP8sc = ";
+    FP16_YYY FP16pmul;
+    const char* FP16pmulline = "FP16pmul = ";
+    FP2_YYY FP2sc;
+    const char* FP2scline = "FP2sc = ";
+    FP16_YYY FP16qmul;
+    const char* FP16qmulline = "FP16qmul = ";
+    FP16_YYY FP16imul;
+    const char* FP16imulline = "FP16imul = ";
+    FP16_YYY FP16sqr;
+    const char* FP16sqrline = "FP16sqr = ";
+    FP16_YYY FP16mul;
+    const char* FP16mulline = "FP16mul = ";
+    FP16_YYY FP16inv;
+    const char* FP16invline = "FP16inv = ";
+    FP16_YYY FP16mulj;
+    const char* FP16muljline = "FP16mulj = ";
+    BIG_XXX BIGsc1;
+    const char* BIGsc1line = "BIGsc1 = ";
+    BIG_XXX BIGsc2;
+    const char* BIGsc2line = "BIGsc2 = ";
+    FP16_YYY FP16pow;
+    const char* FP16powline = "FP16pow = ";
+#if CURVE_SECURITY_ZZZ == 256
+    FP16_YYY FP48traces[4];
+    const char* FP48_1line = "FP48_1 = ";
+    const char* FP48_2line = "FP48_2 = ";
+    const char* FP48_3line = "FP48_3 = ";
+    const char* FP48_4line = "FP48_4 = ";
+    FP16_YYY FP16_xtrA;
+    const char* FP16_xtrAline = "FP16_xtrA = ";
+    FP16_YYY FP16_xtrD;
+    const char* FP16_xtrDline = "FP16_xtrD = ";
+    FP16_YYY FP16_xtrpow;
+    const char* FP16_xtrpowline = "FP16_xtrpow = ";
+    FP16_YYY FP16_xtrpow2;
+    const char* FP16_xtrpow2line = "FP16_xtrpow2 = ";
+#endif
+
+    // Set to zero and one
+    FP16_YYY_zero(&FP16aux1);
+    FP16_YYY_zero(&FP16aux2);
+
+    // Testing equal function and set zero function
+    if(!FP16_YYY_equals(&FP16aux1,&FP16aux2) || !FP16_YYY_iszilch(&FP16aux1) || !FP16_YYY_isreal(&FP16aux1))
+    {
+        printf("ERROR comparing FP16s or setting FP16 to zero FP\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Set to one
+    FP16_YYY_one(&FP16aux1);
+
+    // Testing equal function and set one function
+    if(FP16_YYY_equals(&FP16aux1,&FP16aux2) || !FP16_YYY_isunity(&FP16aux1) || FP16_YYY_isunity(&FP16aux2) || FP16_YYY_iszilch(&FP16aux1) || !FP16_YYY_isreal(&FP16aux1))
+    {
+        printf("ERROR comparing FP16s or setting FP16 to unity FP\n");
+        exit(EXIT_FAILURE);
+    }
+
+
+    fp = fopen(argv[1], "r");
+    if (fp == NULL)
+    {
+        printf("ERROR opening test vector file\n");
+        exit(EXIT_FAILURE);
+    }
+
+    while (fgets(line, LINE_LEN, fp) != NULL)
+    {
+        i++;
+        // Read first FP16 and perform some tests
+        if (!strncmp(line,FP16_1line, strlen(FP16_1line)))
+        {
+            len = strlen(FP16_1line);
+            linePtr = line + len;
+            read_FP16_YYY(&FP16_1,linePtr);
+            // test FP16_from_FP8s
+            FP16_YYY_from_FP8s(&FP16aux1,&FP16_1.a,&FP16_1.b);
+            if(!FP16_YYY_equals(&FP16aux1,&FP16_1))
+            {
+                printf("ERROR in generating FP16 from two FP8s, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            // test FP16_from_FP8
+            FP16_YYY_from_FP8(&FP16aux1,&FP16_1.a);
+            FP16_YYY_copy(&FP16aux2,&FP16_1);
+            FP8_YYY_zero(&FP16aux2.b);
+            if(!FP16_YYY_equals(&FP16aux1,&FP16aux2))
+            {
+                printf("ERROR in generating FP16 from one FP8, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            // test FP16_from_FP4
+            FP16_YYY_from_FP8H(&FP16aux1,&FP16_1.b);
+            FP16_YYY_copy(&FP16aux2,&FP16_1);
+            FP8_YYY_zero(&FP16aux2.a);
+            if(!FP16_YYY_equals(&FP16aux1,&FP16aux2))
+            {
+                printf("ERROR in generating FP16 from one FP8 as high part, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Read second FP16
+        if (!strncmp(line,FP16_2line, strlen(FP16_2line)))
+        {
+            len = strlen(FP16_2line);
+            linePtr = line + len;
+            read_FP16_YYY(&FP16_2,linePtr);
+        }
+        // Addition test
+        if (!strncmp(line,FP16addline, strlen(FP16addline)))
+        {
+            len = strlen(FP16addline);
+            linePtr = line + len;
+            read_FP16_YYY(&FP16add,linePtr);
+            FP16_YYY_copy(&FP16aux1,&FP16_1);
+            FP16_YYY_copy(&FP16aux2,&FP16_2);
+            FP16_YYY_add(&FP16aux1,&FP16aux1,&FP16aux2);
+            // test commutativity P+Q = Q+P
+            FP16_YYY_copy(&FP16aux3,&FP16_1);
+            FP16_YYY_add(&FP16aux2,&FP16aux2,&FP16aux3);
+            if(!FP16_YYY_equals(&FP16aux1,&FP16add) || !FP16_YYY_equals(&FP16aux2,&FP16add))
+            {
+                printf("ERROR adding two FP16, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            // test associativity (P+Q)+R = P+(Q+R)
+            FP16_YYY_copy(&FP16aux1,&FP16_1);
+            FP16_YYY_copy(&FP16aux3,&FP16_1);
+            FP16_YYY_copy(&FP16aux2,&FP16_2);
+            FP16_YYY_copy(&FP16aux4,&FP16add);
+            FP16_YYY_add(&FP16aux1,&FP16aux1,&FP16aux2);
+            FP16_YYY_add(&FP16aux1,&FP16aux1,&FP16aux4);
+            FP16_YYY_add(&FP16aux2,&FP16aux2,&FP16aux4);
+            FP16_YYY_add(&FP16aux2,&FP16aux2,&FP16aux3);
+            FP16_YYY_reduce(&FP16aux1);
+            FP16_YYY_norm(&FP16aux2);
+            if(!FP16_YYY_equals(&FP16aux1,&FP16aux2))
+            {
+                printf("ERROR testing associativity between three FP16s, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test negative of an FP16
+        if (!strncmp(line,FP16negline, strlen(FP16negline)))
+        {
+            len = strlen(FP16negline);
+            linePtr = line + len;
+            read_FP16_YYY(&FP16neg,linePtr);
+            FP16_YYY_copy(&FP16aux1,&FP16_1);
+            FP16_YYY_neg(&FP16aux1,&FP16aux1);
+            if(!FP16_YYY_equals(&FP16aux1,&FP16neg))
+            {
+                printf("ERROR in computing negative of FP16, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Subtraction test
+        if (!strncmp(line,FP16subline, strlen(FP16subline)))
+        {
+            len = strlen(FP16subline);
+            linePtr = line + len;
+            read_FP16_YYY(&FP16sub,linePtr);
+            FP16_YYY_copy(&FP16aux1,&FP16_1);
+            FP16_YYY_copy(&FP16aux2,&FP16_2);
+            FP16_YYY_sub(&FP16aux1,&FP16aux1,&FP16aux2);
+            if(FP16_YYY_equals(&FP16aux1,&FP16sub) == 0)
+            {
+                printf("ERROR subtraction between two FP16, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test conjugate
+        if (!strncmp(line,FP16conjline, strlen(FP16conjline)))
+        {
+            len = strlen(FP16conjline);
+            linePtr = line + len;
+            read_FP16_YYY(&FP16conj,linePtr);
+            FP16_YYY_copy(&FP16aux1,&FP16_1);
+            FP16_YYY_conj(&FP16aux1,&FP16aux1);
+            if(!FP16_YYY_equals(&FP16aux1,&FP16conj))
+            {
+                printf("ERROR computing conjugate of FP16, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test negative conjugate
+        if (!strncmp(line,FP16nconjline, strlen(FP16nconjline)))
+        {
+            len = strlen(FP16nconjline);
+            linePtr = line + len;
+            read_FP16_YYY(&FP16nconj,linePtr);
+            FP16_YYY_copy(&FP16aux1,&FP16_1);
+            FP16_YYY_nconj(&FP16aux1,&FP16aux1);
+            if(!FP16_YYY_equals(&FP16aux1,&FP16nconj))
+            {
+                printf("ERROR computing negative conjugate of FP16, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Read FP8 scalar
+        if (!strncmp(line,FP8scline, strlen(FP8scline)))
+        {
+            len = strlen(FP8scline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8sc,linePtr);
+        }
+        // Read FP2 scalar
+        if (!strncmp(line,FP2scline, strlen(FP2scline)))
+        {
+            len = strlen(FP2scline);
+            linePtr = line + len;
+            read_FP2_YYY(&FP2sc,linePtr);
+        }
+        // Multiplication by FP8
+        if (!strncmp(line,FP16pmulline, strlen(FP16pmulline)))
+        {
+            len = strlen(FP16pmulline);
+            linePtr = line + len;
+            read_FP16_YYY(&FP16pmul,linePtr);
+            FP16_YYY_pmul(&FP16aux1,&FP16_1,&FP8sc);
+            if(!FP16_YYY_equals(&FP16aux1,&FP16pmul))
+            {
+                printf("ERROR in multiplication by FP8, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Multiplication by FP2
+        if (!strncmp(line,FP16qmulline, strlen(FP16qmulline)))
+        {
+            len = strlen(FP16qmulline);
+            linePtr = line + len;
+            read_FP16_YYY(&FP16qmul,linePtr);
+            FP16_YYY_qmul(&FP16aux1,&FP16_1,&FP2sc);
+            if(!FP16_YYY_equals(&FP16aux1,&FP16qmul))
+            {
+                printf("ERROR in multiplication by FP2, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Multiplication by j = 0..2
+        if (!strncmp(line,FP16imulline, strlen(FP16imulline)))
+        {
+            len = strlen(FP16imulline);
+            linePtr = line + len;
+            read_FP16_YYY(&FP16imul,linePtr);
+            FP16_YYY_imul(&FP16aux1,&FP16_1,j);
+            j++;
+            if(!FP16_YYY_equals(&FP16aux1,&FP16imul))
+            {
+                printf("ERROR in multiplication by small integer, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Square test
+        if (!strncmp(line,FP16sqrline, strlen(FP16sqrline)))
+        {
+            len = strlen(FP16sqrline);
+            linePtr = line + len;
+            read_FP16_YYY(&FP16sqr,linePtr);
+            FP16_YYY_sqr(&FP16aux1,&FP16_1);
+            if(!FP16_YYY_equals(&FP16aux1,&FP16sqr))
+            {
+                printf("ERROR in squaring FP16, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Multiplication between two FP16s
+        if (!strncmp(line,FP16mulline, strlen(FP16mulline)))
+        {
+            len = strlen(FP16mulline);
+            linePtr = line + len;
+            read_FP16_YYY(&FP16mul,linePtr);
+            FP16_YYY_mul(&FP16aux1,&FP16_1,&FP16_2);
+            if(!FP16_YYY_equals(&FP16aux1,&FP16mul))
+            {
+                printf("ERROR in multiplication between two FP16s, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Inverse
+        if (!strncmp(line,FP16invline, strlen(FP16invline)))
+        {
+            len = strlen(FP16invline);
+            linePtr = line + len;
+            read_FP16_YYY(&FP16inv,linePtr);
+            FP16_YYY_inv(&FP16aux1,&FP16_1);
+            if(!FP16_YYY_equals(&FP16aux1,&FP16inv))
+            {
+                printf("ERROR in computing inverse of FP16, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test multiplication of an FP16 instance by sqrt(sqrt(1+sqrt(-1)))
+        if (!strncmp(line,FP16muljline, strlen(FP16muljline)))
+        {
+            len = strlen(FP16muljline);
+            linePtr = line + len;
+            read_FP16_YYY(&FP16mulj,linePtr);
+            FP16_YYY_copy(&FP16aux1,&FP16_1);
+            FP16_YYY_times_i(&FP16aux1);
+            if(!FP16_YYY_equals(&FP16aux1,&FP16mulj))
+            {
+                printf("ERROR in  multiplication of an FP16 instance by sqrt(sqrt(1+sqrt(-1))), line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Read exponent
+        if (!strncmp(line,BIGsc1line, strlen(BIGsc1line)))
+        {
+            len = strlen(BIGsc1line);
+            linePtr = line + len;
+            read_BIG_XXX(BIGsc1,linePtr);
+        }
+        if (!strncmp(line,BIGsc2line, strlen(BIGsc2line)))
+        {
+            len = strlen(BIGsc2line);
+            linePtr = line + len;
+            read_BIG_XXX(BIGsc2,linePtr);
+        }
+        // Raise FP16 by BIG power
+        if (!strncmp(line,FP16powline, strlen(FP16powline)))
+        {
+            len = strlen(FP16powline);
+            linePtr = line + len;
+            read_FP16_YYY(&FP16pow,linePtr);
+            FP16_YYY_pow(&FP16aux1,&FP16_1,BIGsc1);
+            if(!FP16_YYY_equals(&FP16aux1,&FP16pow))
+            {
+                printf("ERROR in raising FP16 by BIG power, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+#if CURVE_SECURITY_ZZZ == 256
+        // Read first FP48 trace
+        if (!strncmp(line,FP48_1line, strlen(FP48_1line)))
+        {
+            len = strlen(FP48_1line);
+            linePtr = line + len;
+            read_FP16_YYY(FP48traces,linePtr);
+        }
+        // Read second FP48 trace
+        if (!strncmp(line,FP48_2line, strlen(FP48_2line)))
+        {
+            len = strlen(FP48_2line);
+            linePtr = line + len;
+            read_FP16_YYY(FP48traces+1,linePtr);
+        }
+        // Read third FP48 trace
+        if (!strncmp(line,FP48_3line, strlen(FP48_3line)))
+        {
+            len = strlen(FP48_3line);
+            linePtr = line + len;
+            read_FP16_YYY(FP48traces+2,linePtr);
+        }
+        // Read fourth FP48 trace
+        if (!strncmp(line,FP48_4line, strlen(FP48_4line)))
+        {
+            len = strlen(FP48_4line);
+            linePtr = line + len;
+            read_FP16_YYY(FP48traces+3,linePtr);
+        }
+        // Test the XTR addition function r=w*x-conj(x)*y+z
+        if (!strncmp(line,FP16_xtrAline, strlen(FP16_xtrAline)))
+        {
+            len = strlen(FP16_xtrAline);
+            linePtr = line + len;
+            read_FP16_YYY(&FP16_xtrA,linePtr);
+            FP16_YYY_xtr_A(&FP16aux1,&FP16_1,&FP16_2,&FP16add,&FP16sub);
+            if(!FP16_YYY_equals(&FP16aux1,&FP16_xtrA))
+            {
+                printf("ERROR in testing the XTR addition function r=w*x-conj(x)*y+z, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test the XTR doubling function r=x^2-2*conj(x)
+        if (!strncmp(line,FP16_xtrDline, strlen(FP16_xtrDline)))
+        {
+            len = strlen(FP16_xtrDline);
+            linePtr = line + len;
+            read_FP16_YYY(&FP16_xtrD,linePtr);
+            FP16_YYY_xtr_D(&FP16aux1,&FP16_1);
+            if(!FP16_YYY_equals(&FP16aux1,&FP16_xtrD))
+            {
+                printf("ERROR in testing the XTR doubling function r=x^2-2*conj(x), line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Calculates FP16 trace of an FP48 raised to the power of a BIG number
+        if (!strncmp(line,FP16_xtrpowline, strlen(FP16_xtrpowline)))
+        {
+            len = strlen(FP16_xtrpowline);
+            linePtr = line + len;
+            read_FP16_YYY(&FP16_xtrpow,linePtr);
+            FP16_YYY_xtr_pow(&FP16aux1,FP48traces,BIGsc1);
+            if(!FP16_YYY_equals(&FP16aux1,&FP16_xtrpow))
+            {
+                printf("ERROR computing FP16 trace of an FP48 raised to the power of a BIG number, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Calculates FP16 trace of two FP48 raised to the power of two BIG numbers
+        if (!strncmp(line,FP16_xtrpow2line, strlen(FP16_xtrpow2line)))
+        {
+            len = strlen(FP16_xtrpow2line);
+            linePtr = line + len;
+            read_FP16_YYY(&FP16_xtrpow2,linePtr);
+            FP16_YYY_xtr_pow2(&FP16aux1,FP48traces+1,FP48traces,FP48traces+2,FP48traces+3,BIGsc2,BIGsc1);
+            if(!FP16_YYY_equals(&FP16aux1,&FP16_xtrpow2))
+            {
+                printf("ERROR computing FP16 trace of an FP48 raised to the power of a BIG number (Double), line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+#endif
+    }
+    fclose(fp);
+
+    printf("SUCCESS TEST ARITMETIC OF FP PASSED\n");
+    exit(EXIT_SUCCESS);
+}

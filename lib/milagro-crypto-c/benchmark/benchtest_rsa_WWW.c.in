@@ -1,0 +1,127 @@
+/**
+ * @file test_mpin_sign.c
+ * @author Mike Scott
+ * @brief est and benchmark and RSA functions
+ *
+ * LICENSE
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#include "rsa_WWW.h"
+
+#define MIN_TIME 10.0
+#define MIN_ITERS 10
+
+int main()
+{
+    csprng RNG;
+    int i,iterations;
+    clock_t start;
+    double elapsed;
+    char pr[10];
+    unsigned long ran;
+    rsa_public_key_WWW pub;
+    rsa_private_key_WWW priv;
+    char m[RFS_WWW],d[RFS_WWW],c[RFS_WWW];
+    octet M= {0,sizeof(m),m};
+    octet D= {0,sizeof(d),d};
+    octet C= {0,sizeof(c),c};
+
+    printf("\nBechmark test RSA - ");
+
+#if CHUNK==16
+    printf("16-bit Build\n\n");
+#endif
+#if CHUNK==32
+    printf("32-bit Build\n\n");
+#endif
+#if CHUNK==64
+    printf("64-bit Build\n\n");
+#endif
+
+    time((time_t *)&ran);
+    pr[0]=ran;
+    pr[1]=ran>>8;
+    pr[2]=ran>>16;
+    pr[3]=ran>>24;
+    for (i=4; i<10; i++) pr[i]=i;
+    RAND_seed(&RNG,10,pr);
+
+    printf("Generating %d-bit RSA public/private key pair\n",FFLEN_WWW*BIGBITS_XXX);
+
+    iterations=0;
+    start=clock();
+    do
+    {
+        RSA_WWW_KEY_PAIR(&RNG,65537,&priv,&pub,NULL,NULL);
+        iterations++;
+        elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
+    }
+    while (elapsed<MIN_TIME || iterations<MIN_ITERS);
+    elapsed=1000.0*elapsed/iterations;
+    printf("RSA gen - %8d iterations  ",iterations);
+    printf(" %8.2lf ms per iteration\n",elapsed);
+
+    //FF_randomnum(plain,pub.n,&RNG,FFLEN);
+
+    M.len=RFS_WWW;
+    for (i=0; i<RFS_WWW; i++) M.val[i]=i%128;
+
+    iterations=0;
+    start=clock();
+    do
+    {
+        RSA_WWW_ENCRYPT(&pub,&M,&C);
+        iterations++;
+        elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
+    }
+    while (elapsed<MIN_TIME || iterations<MIN_ITERS);
+    elapsed=1000.0*elapsed/iterations;
+    printf("RSA enc - %8d iterations  ",iterations);
+    printf(" %8.2lf ms per iteration\n",elapsed);
+
+    iterations=0;
+    start=clock();
+    do
+    {
+        RSA_WWW_DECRYPT(&priv,&C,&D);
+        iterations++;
+        elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
+    }
+    while (elapsed<MIN_TIME || iterations<MIN_ITERS);
+    elapsed=1000.0*elapsed/iterations;
+    printf("RSA dec - %8d iterations  ",iterations);
+    printf(" %8.2lf ms per iteration\n",elapsed);
+
+    for (i=0; i<RFS_WWW; i++)
+    {
+        if (M.val[i]!=D.val[i])
+        {
+            printf("FAILURE - RSA decryption\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    printf("\nSUCCESS BENCHMARK TEST OF RSA FUNCTIONS PASSED\n\n");
+    exit(EXIT_SUCCESS);
+}

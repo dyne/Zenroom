@@ -1,0 +1,245 @@
+/**
+ * @file test_wcc_invalid_points.c
+ * @author Samuele Andreoli
+ * @brief Test WCC handling of invalid points
+ *
+ * LICENSE
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/* Test WCC with invalid, random generated, points */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include "utils.h"
+#include "config_curve_ZZZ.h"
+#include "config_test.h"
+#include "randapi.h"
+#if CURVE_SECURITY_ZZZ == 128
+#include "wcc_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 192
+#include "wcc192_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 256
+#include "wcc256_ZZZ.h"
+#endif
+
+#if CURVE_SECURITY_ZZZ == 128
+#define G2LEN 4*WCC_PFS_ZZZ
+#elif CURVE_SECURITY_ZZZ == 192
+#define G2LEN 8*WCC_PFS_ZZZ
+#elif CURVE_SECURITY_ZZZ == 256
+#define G2LEN 16*WCC_PFS_ZZZ
+#endif
+
+// #define DEBUG
+
+int main()
+{
+
+    /* Master secret */
+    char ms[WCC_PGS_ZZZ];
+    octet MS= {sizeof(ms),sizeof(ms),ms};
+
+    // Sender key
+    char akeyG1[2*WCC_PFS_ZZZ+1];
+    octet AKeyG1= {0,sizeof(akeyG1), akeyG1};
+
+    // Receiver key
+    char bkeyG2[G2LEN];
+    octet BKeyG2= {0,sizeof(bkeyG2), bkeyG2};
+
+    // Identities
+    char alice_id[256],bob_id[256];
+    octet IdA= {0,sizeof(alice_id),alice_id};
+    octet IdB= {0,sizeof(bob_id),bob_id};
+
+    // Hash of the identities
+    char hida[WCC_PFS_ZZZ], hidb[WCC_PFS_ZZZ];
+    octet HIdA = {0,sizeof(hida),hida};
+    octet HIdB = {0,sizeof(hidb),hidb};
+
+    // Ephemeral parameters
+    char x[WCC_PGS_ZZZ];
+    octet X= {0,sizeof(x),x};
+    char y[WCC_PGS_ZZZ];
+    octet Y= {0,sizeof(y),y};
+    char w[WCC_PGS_ZZZ];
+    octet W= {0,sizeof(w),w};
+    char pia[WCC_PGS_ZZZ];
+    octet PIA= {0,sizeof(pia),pia};
+    char pib[WCC_PGS_ZZZ];
+    octet PIB= {0,sizeof(pib),pib};
+
+    char pgg1[2*WCC_PFS_ZZZ+1];
+    octet PgG1= {0,sizeof(pgg1), pgg1};
+    char pag1[2*WCC_PFS_ZZZ+1];
+    octet PaG1= {0,sizeof(pag1), pag1};
+    char pbg2[G2LEN];
+    octet PbG2= {0,sizeof(pbg2), pbg2};
+
+    // Invalid points
+    char invalidG1[2*WCC_PFS_ZZZ+1];
+    octet InvalidG1= {0,sizeof(invalidG1), invalidG1};
+
+    char invalidG2[G2LEN];
+    octet InvalidG2= {0,sizeof(invalidG2), invalidG2};
+
+    // Session keys
+    char k1[AESKEY_ZZZ];
+    octet K1= {0,sizeof(k1),k1};
+    char k2[AESKEY_ZZZ];
+    octet K2= {0,sizeof(k2),k2};
+
+    char seed[32] = {0};
+    octet SEED = {0,sizeof(seed),seed};
+    csprng RNG;
+
+    int i, rtn;
+
+    /* non random seed value */
+    SEED.len=32;
+    for (i=0; i<32; i++) SEED.val[i]=i+1;
+
+    /* initialize random number generator */
+    CREATE_CSPRNG(&RNG,&SEED);
+
+    /* TEST RUN: execute a test run with valid points to make sure
+     * the protocol runs correctly with valid points
+     */
+
+    /* TA: Generate master secret  */
+    WCC_ZZZ_RANDOM_GENERATE(&RNG,&MS);
+
+    // Alice's ID
+    OCT_jstring(&IdA,"alice@miracl.com");
+
+    // Hash Alice's Id
+    HASH_ID(HASH_TYPE_ZZZ,&IdA,&HIdA);
+
+    // TA: Generate Alice's sender key
+    WCC_ZZZ_GET_G1_MULTIPLE(&MS,&HIdA,&AKeyG1);
+
+    // Bob's ID
+    OCT_jstring(&IdB,"bob@miracl.com");
+
+    // Hash Bob's Id
+    HASH_ID(HASH_TYPE_ZZZ,&IdB,&HIdB);
+
+    // TA: Generate Bob's receiver key
+    WCC_ZZZ_GET_G2_MULTIPLE(&MS,&HIdB,&BKeyG2);
+
+    // Generate ephemeral parameters
+    WCC_ZZZ_RANDOM_GENERATE(&RNG,&X);
+    WCC_ZZZ_GET_G1_MULTIPLE(&X,&HIdA,&PaG1);
+
+    WCC_ZZZ_RANDOM_GENERATE(&RNG,&W);
+    WCC_ZZZ_GET_G1_MULTIPLE(&W,&HIdA,&PgG1);
+
+    WCC_ZZZ_RANDOM_GENERATE(&RNG,&Y);
+    WCC_ZZZ_GET_G2_MULTIPLE(&Y,&HIdB,&PbG2);
+
+    WCC_ZZZ_Hq(HASH_TYPE_ZZZ,&PaG1,&PbG2,&PgG1,&IdB,&PIA);
+    WCC_ZZZ_Hq(HASH_TYPE_ZZZ,&PbG2,&PaG1,&PgG1,&IdA,&PIB);
+
+    /* Check that the functions work with valid points */
+    rtn = WCC_ZZZ_SENDER_KEY(HASH_TYPE_ZZZ,&X,&PIA,&PIB,&PbG2,&PgG1,&AKeyG1,&IdB,&K1);
+    if (rtn != WCC_OK)
+    {
+        printf("FAILURE Check sender with valid points\n");
+        return 1;
+    }
+
+    rtn = WCC_ZZZ_RECEIVER_KEY(HASH_TYPE_ZZZ,&Y,&W,&PIA,&PIB,&PaG1,&PgG1,&BKeyG2,&IdA,&K2);
+    if (rtn != WCC_OK)
+    {
+        printf("FAILURE Check receiver with valid points\n");
+        return 1;
+    }
+
+    if (!OCT_ncomp(&K1,&K2,AESKEY_ZZZ))
+    {
+        printf("FAILURE Keys do not match\n");
+        return 1;
+    }
+
+    /* Generate invalid points
+     * Randomly generate two octets of the right length to be points in G1 and G2.
+     * The probability these are actually valid points is negligible.
+     */
+    OCT_rand(&InvalidG1,&RNG,InvalidG1.max);
+    OCT_rand(&InvalidG2,&RNG,InvalidG2.max);
+    // Fix point encoding for G1
+    invalidG1[0] = '\x04';
+
+    /* Check handling of invalid points */
+
+    // Invalid Sender PbG2
+    rtn = WCC_ZZZ_SENDER_KEY(HASH_TYPE_ZZZ,&X,&PIA,&PIB,&InvalidG2,&PgG1,&AKeyG1,&IdB,&K1);
+    if (rtn != WCC_INVALID_POINT)
+    {
+        printf("FAILURE Handle invalid PbG2: 51 != %d\n", rtn);
+        return 1;
+    }
+
+    // Invalid Sender PgG1
+    rtn = WCC_ZZZ_SENDER_KEY(HASH_TYPE_ZZZ,&X,&PIA,&PIB,&PbG2,&InvalidG1,&AKeyG1,&IdB,&K1);
+    if (rtn != WCC_INVALID_POINT)
+    {
+        printf("FAILURE Handle invalid PgG1: 51 != %d\n", rtn);
+        return 1;
+    }
+
+    // Invalid Sender AKeyG1
+    rtn = WCC_ZZZ_SENDER_KEY(HASH_TYPE_ZZZ,&X,&PIA,&PIB,&PbG2,&PgG1,&InvalidG1,&IdB,&K1);
+    if (rtn != WCC_INVALID_POINT)
+    {
+        printf("FAILURE Handle invalid AKeyG1: 51 != %d\n", rtn);
+        return 1;
+    }
+
+    // Invalid Receiver PaG1
+    rtn = WCC_ZZZ_RECEIVER_KEY(HASH_TYPE_ZZZ,&Y,&W,&PIA,&PIB,&InvalidG1,&PgG1,&BKeyG2,&IdA,&K2);
+    if (rtn != WCC_INVALID_POINT)
+    {
+        printf("FAILURE Handle invalid PaG1: 51 != %d\n", rtn);
+        return 1;
+    }
+
+    // Invalid Receiver PgG1
+    rtn = WCC_ZZZ_RECEIVER_KEY(HASH_TYPE_ZZZ,&Y,&W,&PIA,&PIB,&PaG1,&InvalidG1,&BKeyG2,&IdA,&K2);
+    if (rtn != WCC_INVALID_POINT)
+    {
+        printf("FAILURE Handle invalid PgG1: 51 != %d\n", rtn);
+        return 1;
+    }
+
+    // Invalid Receiver BKeyG2
+    rtn = WCC_ZZZ_RECEIVER_KEY(HASH_TYPE_ZZZ,&Y,&W,&PIA,&PIB,&PaG1,&PgG1,&InvalidG2,&IdA,&K2);
+    if (rtn != WCC_INVALID_POINT)
+    {
+        printf("FAILURE Handle invalid BKeyG2: 51 != %d\n", rtn);
+        return 1;
+    }
+
+    KILL_CSPRNG(&RNG);
+    printf("SUCCESS! WCC INVALID POINT HANDLING TEST\n");
+    return 0;
+}

@@ -1,0 +1,416 @@
+/**
+ * @file test_ecp8_arithmetics_ZZZ.c
+ * @author Alessandro Budroni
+ * @brief Test for aritmetics with ECP8_ZZZ
+ *
+ * LICENSE
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "arch.h"
+#include "amcl.h"
+#include "utils.h"
+#include "ecp8_ZZZ.h"
+
+#define LINE_LEN 3000
+
+void read_BIG_XXX(BIG_XXX A, char* string, int len)
+{
+    char bin[MODBYTES_XXX];
+    amcl_hex2bin(string,bin,len);
+    BIG_XXX_fromBytes(A,bin);
+}
+
+void read_FP2_ZZZ(FP2_YYY *fp2, char* str)
+{
+    BIG_XXX X,Y;
+
+    read_BIG_XXX(X,str,2*MODBYTES_XXX);
+    read_BIG_XXX(Y,str+2*MODBYTES_XXX,2*MODBYTES_XXX);
+
+    FP2_YYY_from_BIGs(fp2,X,Y);
+}
+
+int read_ECP8_ZZZ(ECP8_ZZZ *ecp8, char* str)
+{
+    char octstr[16*MODBYTES_XXX];
+    octet OCTstr = {sizeof(octstr),sizeof(octstr),octstr};
+
+    amcl_hex2bin(str,OCTstr.val,strlen(str));
+    return ECP8_ZZZ_fromOctet(ecp8,&OCTstr);
+}
+
+int main(int argc, char** argv)
+{
+    if (argc != 2)
+    {
+        printf("usage: ./test_ecp8_arithmetics_ZZZ [path to test vector file]\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int i=0, k, len=0;
+
+    char line[LINE_LEN];
+    char * linePtr = NULL;
+
+    ECP8_ZZZ ECP8aux1, ECP8aux2, inf;
+    FP8_YYY FP8aux1,FP8aux2;
+
+    char oct[LINE_LEN];
+    octet OCTaux= {0,sizeof(oct),oct};
+
+    ECP8_ZZZ ecp81, ecp8frobs[16];
+    const char* ECP81line = "ECP81 = ";
+    ECP8_ZZZ ecp82;
+    const char* ECP82line = "ECP82 = ";
+    ECP8_ZZZ ecp8sum;
+    const char* ECP8sumline = "ECP8sum = ";
+    ECP8_ZZZ ecp8neg;
+    const char* ECP8negline = "ECP8neg = ";
+    ECP8_ZZZ ecp8sub;
+    const char* ECP8subline = "ECP8sub = ";
+    ECP8_ZZZ ecp8dbl;
+    const char* ECP8dblline = "ECP8dbl = ";
+    BIG_XXX BIGscalar[16];
+    const char* BIGscalarlines[16] =
+    {
+        "BIGscalar1 = ",
+        "BIGscalar2 = ",
+        "BIGscalar3 = ",
+        "BIGscalar4 = ",
+        "BIGscalar5 = ",
+        "BIGscalar6 = ",
+        "BIGscalar7 = ",
+        "BIGscalar8 = ",
+        "BIGscalar9 = ",
+        "BIGscalar10 = ",
+        "BIGscalar11 = ",
+        "BIGscalar12 = ",
+        "BIGscalar13 = ",
+        "BIGscalar14 = ",
+        "BIGscalar15 = ",
+        "BIGscalar16 = ",
+    };
+    ECP8_ZZZ ecp8mul;
+    const char* ECP8mulline = "ECP8mul = ";
+    FP2_YYY fp2fr;
+    const char* FP2frline[3] =
+    {
+        "FP2fr1 = ",
+        "FP2fr2 = ",
+        "FP2fr3 = "
+    };
+    ECP8_ZZZ ecp8frob;
+    const char* ECP8frobline = "ECP8frob = ";
+    ECP8_ZZZ ecp8mul16;
+    const char* ECP8mul16line = "ECP8mul16 = ";
+    ECP8_ZZZ ecp8wrong;
+    const char* ECP8wrongline = "ECP8wrong = ";
+    ECP8_ZZZ ecp8inf;
+    const char* ECP8infline = "ECP8inf = ";
+    ECP8_ZZZ ecp8set1;
+    const char* ECP8set1line = "ECP8set1 = ";
+    ECP8_ZZZ ecp8set2;
+    const char* ECP8set2line = "ECP8set2 = ";
+
+    FP2_YYY F[3];
+    ECP8_ZZZ_frob_constants(F);
+
+    ECP8_ZZZ_inf(&inf);
+
+    if(!ECP8_ZZZ_isinf(&inf))
+    {
+        printf("ERROR setting ECP8_ZZZ to infinity\n");
+        exit(EXIT_FAILURE);
+    }
+
+    FILE *fp;
+    fp = fopen(argv[1],"r");
+    if (fp == NULL)
+    {
+        printf("ERROR opening test vector file\n");
+        exit(EXIT_FAILURE);
+    }
+
+    while (fgets(line, LINE_LEN, fp) != NULL)
+    {
+        i++;
+        if (!strncmp(line,  ECP81line, strlen(ECP81line)))
+        {
+            len = strlen(ECP81line);
+            linePtr = line + len;
+            if(!read_ECP8_ZZZ(&ecp81,linePtr) || ECP8_ZZZ_isinf(&ecp81))
+            {
+                printf("ERROR getting test vector input ECP8_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            ECP8_ZZZ_get(&FP8aux1,&FP8aux2,&ecp81);
+            FP8_YYY_sqr(&FP8aux2,&FP8aux2);
+            ECP8_ZZZ_rhs(&FP8aux1,&FP8aux1);
+            if (!FP8_YYY_equals(&FP8aux1,&FP8aux2))
+            {
+                printf("ERROR computing right hand side of equation ECP, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            ECP8_ZZZ_toOctet(&OCTaux,&ecp81);
+            ECP8_ZZZ_fromOctet(&ECP8aux1,&OCTaux);
+            if(!ECP8_ZZZ_equals(&ECP8aux1,&ecp81))
+            {
+                printf("ERROR converting ECP8_ZZZ to/from OCTET, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            ECP8_ZZZ_copy(ecp8frobs,&ecp81);
+            for(k=1; k<16; k++)
+            {
+                ECP8_ZZZ_copy(ecp8frobs+k,ecp8frobs+k-1);
+                ECP8_ZZZ_frob(ecp8frobs+k,F,1);
+            }
+        }
+        if (!strncmp(line,  ECP82line, strlen(ECP82line)))
+        {
+            len = strlen(ECP82line);
+            linePtr = line + len;
+            if(!read_ECP8_ZZZ(&ecp82,linePtr) || ECP8_ZZZ_isinf(&ecp82))
+            {
+                printf("ERROR getting test vector input ECP8_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        if (!strncmp(line,  ECP8sumline, strlen(ECP8sumline)))
+        {
+            len = strlen(ECP8sumline);
+            linePtr = line + len;
+            if(!read_ECP8_ZZZ(&ecp8sum,linePtr))
+            {
+                printf("ERROR reading test vector input ECP8_ZZZs, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            ECP8_ZZZ_copy(&ECP8aux1,&ecp81);
+            ECP8_ZZZ_add(&ECP8aux1,&ecp82);
+            ECP8_ZZZ_reduce(&ECP8aux1);
+            ECP8_ZZZ_affine(&ECP8aux1);
+            ECP8_ZZZ_copy(&ECP8aux2,&ecp82); // testing commutativity P+Q = Q+P
+            ECP8_ZZZ_add(&ECP8aux2,&ecp81);
+            ECP8_ZZZ_reduce(&ECP8aux1);
+            ECP8_ZZZ_affine(&ECP8aux1);
+            if(!ECP8_ZZZ_equals(&ECP8aux1,&ecp8sum) || !ECP8_ZZZ_equals(&ECP8aux2,&ecp8sum))
+            {
+                printf("ERROR adding two ECP8_ZZZs, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            ECP8_ZZZ_copy(&ECP8aux1,&ecp81); // testing associativity (P+Q)+R = P+(Q+R)
+            ECP8_ZZZ_add(&ECP8aux1,&ecp82);
+            ECP8_ZZZ_add(&ECP8aux1,ecp8frobs+2);
+            ECP8_ZZZ_affine(&ECP8aux1);
+            ECP8_ZZZ_copy(&ECP8aux2,ecp8frobs+2);
+            ECP8_ZZZ_add(&ECP8aux2,&ecp82);
+            ECP8_ZZZ_add(&ECP8aux2,&ecp81);
+            ECP8_ZZZ_affine(&ECP8aux2);
+            if(!ECP8_ZZZ_equals(&ECP8aux1,&ECP8aux2))
+            {
+                printf("ERROR testing associativity bewtween three ECP8_ZZZs, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        if (!strncmp(line,  ECP8negline, strlen(ECP8negline)))
+        {
+            len = strlen(ECP8negline);
+            linePtr = line + len;
+            if(!read_ECP8_ZZZ(&ecp8neg,linePtr))
+            {
+                printf("ERROR getting test vector input ECP8_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            ECP8_ZZZ_copy(&ECP8aux1,&ecp81);
+            ECP8_ZZZ_neg(&ECP8aux1);
+            ECP8_ZZZ_affine(&ECP8aux1);
+            if(!ECP8_ZZZ_equals(&ECP8aux1,&ecp8neg))
+            {
+                printf("ERROR computing negative of ECP8_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        if (!strncmp(line,  ECP8subline, strlen(ECP8subline)))
+        {
+            len = strlen(ECP8subline);
+            linePtr = line + len;
+            if(!read_ECP8_ZZZ(&ecp8sub,linePtr))
+            {
+                printf("ERROR getting test vector input ECP8_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            ECP8_ZZZ_copy(&ECP8aux1,&ecp81);
+            ECP8_ZZZ_sub(&ECP8aux1,&ecp82);
+            ECP8_ZZZ_affine(&ECP8aux1);
+            if(!ECP8_ZZZ_equals(&ECP8aux1,&ecp8sub))
+            {
+                printf("ERROR performing subtraction bewtween two ECP8_ZZZs, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        if (!strncmp(line,  ECP8dblline, strlen(ECP8dblline)))
+        {
+            len = strlen(ECP8dblline);
+            linePtr = line + len;
+            if(!read_ECP8_ZZZ(&ecp8dbl,linePtr))
+            {
+                printf("ERROR getting test vector input ECP8_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            ECP8_ZZZ_copy(&ECP8aux1,&ecp81);
+            ECP8_ZZZ_dbl(&ECP8aux1);
+            ECP8_ZZZ_affine(&ECP8aux1);
+            if(!ECP8_ZZZ_equals(&ECP8aux1,&ecp8dbl))
+            {
+                printf("ERROR computing double of ECP8_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        for(k=0; k<16; k++)
+        {
+            if (!strncmp(line,  BIGscalarlines[k], strlen(BIGscalarlines[k])))
+            {
+                len = strlen(BIGscalarlines[k]);
+                linePtr = line + len;
+                read_BIG_XXX(BIGscalar[k],linePtr,strlen(linePtr));
+            }
+        }
+        if (!strncmp(line,  ECP8mulline, strlen(ECP8mulline)))
+        {
+            len = strlen(ECP8mulline);
+            linePtr = line + len;
+            if(!read_ECP8_ZZZ(&ecp8mul,linePtr))
+            {
+                printf("ERROR getting test vector input ECP8_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            ECP8_ZZZ_copy(&ECP8aux1,&ecp81);
+            ECP8_ZZZ_mul(&ECP8aux1,BIGscalar[0]);
+            ECP8_ZZZ_affine(&ECP8aux1);
+            if(!ECP8_ZZZ_equals(&ECP8aux1,&ecp8mul))
+            {
+                printf("ERROR computing multiplication of ECP8_ZZZ by a scalar, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        for (k=0; k<3; k++)
+        {
+            if(!strncmp(line, FP2frline[k], strlen(FP2frline[k])))
+            {
+                len = strlen(FP2frline[k]);
+                linePtr = line+len;
+                read_FP2_ZZZ(&fp2fr,linePtr);
+
+                if(!FP2_YYY_equals(&fp2fr,F+k))
+                {
+                    printf("ERROR computing %d-th frobenius constant, line %d\n",k+1,i);
+                    exit(EXIT_FAILURE);
+                }
+            }
+        }
+        if(!strncmp(line, ECP8frobline, strlen(ECP8frobline)))
+        {
+            len = strlen(ECP8frobline);
+            linePtr = line+len;
+            read_ECP8_ZZZ(&ecp8frob,linePtr);
+
+            ECP8_ZZZ_copy(&ECP8aux1,&ecp81);
+            ECP8_ZZZ_frob(&ECP8aux1,F,3);
+
+            if(!ECP8_ZZZ_equals(&ecp8frob,&ECP8aux1))
+            {
+                printf("ERROR computing frobenius action (P^3), line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        if (!strncmp(line,  ECP8mul16line, strlen(ECP8mul16line)))
+        {
+            len = strlen(ECP8mul16line);
+            linePtr = line + len;
+            if(!read_ECP8_ZZZ(&ecp8mul16,linePtr))
+            {
+                printf("ERROR getting test vector input ECP8_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+
+            ECP8_ZZZ_mul16(&ECP8aux1,ecp8frobs,BIGscalar);
+            ECP8_ZZZ_affine(&ECP8aux1);
+
+            if(!ECP8_ZZZ_equals(&ECP8aux1,&ecp8mul16))
+            {
+                printf("ERROR computing linear combination of 8 ECP8_ZZZs, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        if (!strncmp(line,  ECP8wrongline, strlen(ECP8wrongline)))
+        {
+            len = strlen(ECP8wrongline);
+            linePtr = line + len;
+            if(read_ECP8_ZZZ(&ecp8wrong,linePtr) || !ECP8_ZZZ_isinf(&ecp8wrong) || !ECP8_ZZZ_equals(&ecp8wrong,&inf))
+            {
+                printf("ERROR identifying a wrong ECP8_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        if (!strncmp(line,  ECP8infline, strlen(ECP8infline)))
+        {
+            len = strlen(ECP8infline);
+            linePtr = line + len;
+            if(read_ECP8_ZZZ(&ecp8inf,linePtr) || !ECP8_ZZZ_isinf(&ecp8inf) || !ECP8_ZZZ_equals(&ecp8inf,&inf))
+            {
+                printf("ERROR identifying infinite point ECP8_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        if (!strncmp(line,  ECP8set1line, strlen(ECP8set1line)))
+        {
+            len = strlen(ECP8set1line);
+            linePtr = line + len;
+            if(!read_ECP8_ZZZ(&ecp8set1,linePtr))
+            {
+                printf("ERROR getting test vector input ECP8_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            ECP8_ZZZ_get(&FP8aux1,&FP8aux2,&ecp81);
+            ECP8_ZZZ_setx(&ECP8aux1,&FP8aux1);
+        }
+        if (!strncmp(line,  ECP8set2line, strlen(ECP8set2line)))
+        {
+            len = strlen(ECP8set2line);
+            linePtr = line + len;
+            if(!read_ECP8_ZZZ(&ecp8set2,linePtr))
+            {
+                printf("ERROR getting test vector input ECP8_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            if((!ECP8_ZZZ_equals(&ECP8aux1,&ecp8set2)) && (!ECP8_ZZZ_equals(&ECP8aux1,&ecp8set1)))
+            {
+                printf("ERROR computing ECP8_ZZZ from coordinate x and with y set2, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
+    fclose(fp);
+
+    printf("SUCCESS TEST ARITMETIC OF ECP8_ZZZ PASSED\n");
+    exit(EXIT_SUCCESS);
+}

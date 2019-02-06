@@ -1,0 +1,723 @@
+/**
+ * @file test_fp8_arithmetics_YYY.c
+ * @author Samuele Andreoli
+ * @brief Test for aritmetics with FP8_YYY
+ *
+ * LICENSE
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "arch.h"
+#include "amcl.h"
+#include "utils.h"
+#include "fp8_YYY.h"
+
+#define LINE_LEN 10000
+#define MAX_STRING 300
+
+void read_BIG_XXX(BIG_XXX A, char* string)
+{
+    int len;
+    char support[LINE_LEN];
+    len = strlen(string)+1;
+    amcl_hex2bin(string,support,len);
+    len = (len-1)/2;
+    BIG_XXX_fromBytesLen(A,support,len);
+    BIG_XXX_norm(A);
+}
+
+void read_FP2_YYY(FP2_YYY *fp2, char* stringx)
+{
+    char *stringy, *end;
+    BIG_XXX x,y;
+
+    stringy = strchr(++stringx,',');
+    if (stringy == NULL)
+    {
+        printf("ERROR unexpected test vector\n");
+        exit(EXIT_FAILURE);
+    }
+    *stringy = '\0';
+
+    end = strchr(++stringy,']');
+    if (end == NULL)
+    {
+        printf("ERROR unexpected test vector\n");
+        exit(EXIT_FAILURE);
+    }
+    *end = '\0';
+
+    read_BIG_XXX(x,stringx);
+    read_BIG_XXX(y,stringy);
+
+    FP2_YYY_from_BIGs(fp2,x,y);
+}
+
+void read_FP4_YYY(FP4_YYY *fp4, char* stringx)
+{
+    char *stringy, *end;
+    FP2_YYY x,y;
+
+    stringy = strchr(++stringx,']');
+    if (stringy == NULL)
+    {
+        printf("ERROR unexpected test vector\n");
+        exit(EXIT_FAILURE);
+    }
+    *(++stringy) = '\0';
+
+    end = strchr(++stringy,']');
+    if (end == NULL)
+    {
+        printf("ERROR unexpected test vector\n");
+        exit(EXIT_FAILURE);
+    }
+    *(++end) = '\0';
+
+    read_FP2_YYY(&x,stringx);
+    read_FP2_YYY(&y,stringy);
+
+    FP4_YYY_from_FP2s(fp4,&x,&y);
+}
+
+void read_FP8_YYY(FP8_YYY *fp8, char* stringx)
+{
+    char *stringy, *end;
+    FP4_YYY x,y;
+
+    stringy = strchr(++stringx, ']');
+    if (stringy == NULL)
+    {
+        printf("ERROR unexpected test vector\n");
+        exit(EXIT_FAILURE);
+    }
+    stringy = strchr(++stringy, ']');
+    if (stringy == NULL)
+    {
+        printf("ERROR unexpected test vector\n");
+        exit(EXIT_FAILURE);
+    }
+    stringy+=2;
+    *(stringy)=0;
+
+    end = strchr(++stringy, ']');
+    if (end == NULL)
+    {
+        printf("ERROR unexpected test vector\n");
+        exit(EXIT_FAILURE);
+    }
+    end = strchr(++end, ']');
+    if (end == NULL)
+    {
+        printf("ERROR unexpected test vector\n");
+        exit(EXIT_FAILURE);
+    }
+    end+=2;
+    *(end)=0;
+
+    read_FP4_YYY(&x,stringx);
+    read_FP4_YYY(&y,stringy);
+
+    FP8_YYY_from_FP4s(fp8,&x,&y);
+}
+
+int main(int argc, char** argv)
+{
+    if (argc != 2)
+    {
+        printf("usage: ./test_fp4_arithmetics_YYY [path to test vector file]\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int i = 0, len = 0, j = 0;
+    FILE *fp;
+
+    char line[LINE_LEN];
+    char * linePtr = NULL;
+
+    FP8_YYY FP8aux1, FP8aux2, FP8aux3, FP8aux4;
+
+    FP8_YYY FP8_1;
+    const char* FP8_1line = "FP8_1 = ";
+    FP8_YYY FP8_2;
+    const char* FP8_2line = "FP8_2 = ";
+    FP8_YYY FP8add;
+    const char* FP8addline = "FP8add = ";
+    FP8_YYY FP8neg;
+    const char* FP8negline = "FP8neg = ";
+    FP8_YYY FP8sub;
+    const char* FP8subline = "FP8sub = ";
+    FP8_YYY FP8conj;
+    const char* FP8conjline = "FP8conj = ";
+    FP8_YYY FP8nconj;
+    const char* FP8nconjline = "FP8nconj = ";
+    FP4_YYY FP4sc;
+    const char* FP4scline = "FP4sc = ";
+    FP8_YYY FP8pmul;
+    const char* FP8pmulline = "FP8pmul = ";
+    FP2_YYY FP2sc;
+    const char* FP2scline = "FP2sc = ";
+    FP8_YYY FP8qmul;
+    const char* FP8qmulline = "FP8qmul = ";
+    BIG_XXX bigFPsc;
+    FP_YYY FPsc;
+    const char* FPscline = "FPsc = ";
+    FP8_YYY FP8tmul;
+    const char* FP8tmulline = "FP8tmul = ";
+    FP8_YYY FP8imul;
+    const char* FP8imulline = "FP8imul = ";
+    FP8_YYY FP8sqr;
+    const char* FP8sqrline = "FP8sqr = ";
+    FP8_YYY FP8mul;
+    const char* FP8mulline = "FP8mul = ";
+    FP8_YYY FP8inv;
+    const char* FP8invline = "FP8inv = ";
+    FP8_YYY FP8mulj;
+    const char* FP8muljline = "FP8mulj = ";
+    BIG_XXX BIGsc1;
+    const char* BIGsc1line = "BIGsc1 = ";
+    BIG_XXX BIGsc2;
+    const char* BIGsc2line = "BIGsc2 = ";
+    FP8_YYY FP8pow;
+    const char* FP8powline = "FP8pow = ";
+#if CURVE_SECURITY_ZZZ == 192
+    FP8_YYY FP24traces[4];
+    const char* FP24_1line = "FP24_1 = ";
+    const char* FP24_2line = "FP24_2 = ";
+    const char* FP24_3line = "FP24_3 = ";
+    const char* FP24_4line = "FP24_4 = ";
+    FP8_YYY FP8_xtrA;
+    const char* FP8_xtrAline = "FP8_xtrA = ";
+    FP8_YYY FP8_xtrD;
+    const char* FP8_xtrDline = "FP8_xtrD = ";
+    FP8_YYY FP8_xtrpow;
+    const char* FP8_xtrpowline = "FP8_xtrpow = ";
+    FP8_YYY FP8_xtrpow2;
+    const char* FP8_xtrpow2line = "FP8_xtrpow2 = ";
+#elif CURVE_SECURITY_ZZZ == 256
+    FP8_YYY FP8sqrt;
+    const char* FP8sqrtline = "FP8sqrt = ";
+    FP8_YYY FP8divi;
+    const char* FP8diviline = "FP8divi = ";
+    FP8_YYY FP8divi2;
+    const char* FP8divi2line = "FP8divi2 = ";
+    FP8_YYY FP8div2i;
+    const char* FP8div2iline = "FP8div2i = ";
+#endif
+
+    // Set to zero and one
+    FP8_YYY_zero(&FP8aux1);
+    FP8_YYY_zero(&FP8aux2);
+
+    // Testing equal function and set zero function
+    if(!FP8_YYY_equals(&FP8aux1,&FP8aux2) || !FP8_YYY_iszilch(&FP8aux1) || !FP8_YYY_isreal(&FP8aux1))
+    {
+        printf("ERROR comparing FP8s or setting FP8 to zero FP\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Set to one
+    FP8_YYY_one(&FP8aux1);
+
+    // Testing equal function and set one function
+    if(FP8_YYY_equals(&FP8aux1,&FP8aux2) || !FP8_YYY_isunity(&FP8aux1) || FP8_YYY_isunity(&FP8aux2) || FP8_YYY_iszilch(&FP8aux1) || !FP8_YYY_isreal(&FP8aux1))
+    {
+        printf("ERROR comparing FP8s or setting FP8 to unity FP\n");
+        exit(EXIT_FAILURE);
+    }
+
+
+    fp = fopen(argv[1], "r");
+    if (fp == NULL)
+    {
+        printf("ERROR opening test vector file\n");
+        exit(EXIT_FAILURE);
+    }
+
+    while (fgets(line, LINE_LEN, fp) != NULL)
+    {
+        i++;
+        // Read first FP8 and perform some tests
+        if (!strncmp(line,FP8_1line, strlen(FP8_1line)))
+        {
+            len = strlen(FP8_1line);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8_1,linePtr);
+            // test FP8_from_FP4s
+            FP8_YYY_from_FP4s(&FP8aux1,&FP8_1.a,&FP8_1.b);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8_1))
+            {
+                printf("ERROR in generating FP8 from two FP4s, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            // test FP8_from_FP4
+            FP8_YYY_from_FP4(&FP8aux1,&FP8_1.a);
+            FP8_YYY_copy(&FP8aux2,&FP8_1);
+            FP4_YYY_zero(&FP8aux2.b);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8aux2))
+            {
+                printf("ERROR in generating FP8 from one FP4, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            // test FP8_from_FP4
+            FP8_YYY_from_FP4H(&FP8aux1,&FP8_1.b);
+            FP8_YYY_copy(&FP8aux2,&FP8_1);
+            FP4_YYY_zero(&FP8aux2.a);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8aux2))
+            {
+                printf("ERROR in generating FP8 from one FP4 as high part, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Read second FP8
+        if (!strncmp(line,FP8_2line, strlen(FP8_2line)))
+        {
+            len = strlen(FP8_2line);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8_2,linePtr);
+        }
+        // Addition test
+        if (!strncmp(line,FP8addline, strlen(FP8addline)))
+        {
+            len = strlen(FP8addline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8add,linePtr);
+            FP8_YYY_copy(&FP8aux1,&FP8_1);
+            FP8_YYY_copy(&FP8aux2,&FP8_2);
+            FP8_YYY_add(&FP8aux1,&FP8aux1,&FP8aux2);
+            // test commutativity P+Q = Q+P
+            FP8_YYY_copy(&FP8aux3,&FP8_1);
+            FP8_YYY_add(&FP8aux2,&FP8aux2,&FP8aux3);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8add) || !FP8_YYY_equals(&FP8aux2,&FP8add))
+            {
+                printf("ERROR adding two FP8, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            // test associativity (P+Q)+R = P+(Q+R)
+            FP8_YYY_copy(&FP8aux1,&FP8_1);
+            FP8_YYY_copy(&FP8aux3,&FP8_1);
+            FP8_YYY_copy(&FP8aux2,&FP8_2);
+            FP8_YYY_copy(&FP8aux4,&FP8add);
+            FP8_YYY_add(&FP8aux1,&FP8aux1,&FP8aux2);
+            FP8_YYY_add(&FP8aux1,&FP8aux1,&FP8aux4);
+            FP8_YYY_add(&FP8aux2,&FP8aux2,&FP8aux4);
+            FP8_YYY_add(&FP8aux2,&FP8aux2,&FP8aux3);
+            FP8_YYY_reduce(&FP8aux1);
+            FP8_YYY_norm(&FP8aux2);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8aux2))
+            {
+                printf("ERROR testing associativity between three FP8s, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test negative of an FP8
+        if (!strncmp(line,FP8negline, strlen(FP8negline)))
+        {
+            len = strlen(FP8negline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8neg,linePtr);
+            FP8_YYY_copy(&FP8aux1,&FP8_1);
+            FP8_YYY_neg(&FP8aux1,&FP8aux1);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8neg))
+            {
+                printf("ERROR in computing negative of FP8, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Subtraction test
+        if (!strncmp(line,FP8subline, strlen(FP8subline)))
+        {
+            len = strlen(FP8subline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8sub,linePtr);
+            FP8_YYY_copy(&FP8aux1,&FP8_1);
+            FP8_YYY_copy(&FP8aux2,&FP8_2);
+            FP8_YYY_sub(&FP8aux1,&FP8aux1,&FP8aux2);
+            if(FP8_YYY_equals(&FP8aux1,&FP8sub) == 0)
+            {
+                printf("ERROR subtraction between two FP8, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test conjugate
+        if (!strncmp(line,FP8conjline, strlen(FP8conjline)))
+        {
+            len = strlen(FP8conjline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8conj,linePtr);
+            FP8_YYY_copy(&FP8aux1,&FP8_1);
+            FP8_YYY_conj(&FP8aux1,&FP8aux1);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8conj))
+            {
+                printf("ERROR computing conjugate of FP8, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test negative conjugate
+        if (!strncmp(line,FP8nconjline, strlen(FP8nconjline)))
+        {
+            len = strlen(FP8nconjline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8nconj,linePtr);
+            FP8_YYY_copy(&FP8aux1,&FP8_1);
+            FP8_YYY_nconj(&FP8aux1,&FP8aux1);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8nconj))
+            {
+                printf("ERROR computing negative conjugate of FP8, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Read FP4 scalar
+        if (!strncmp(line,FP4scline, strlen(FP4scline)))
+        {
+            len = strlen(FP4scline);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4sc,linePtr);
+        }
+        // Read FP2 scalar
+        if (!strncmp(line,FP2scline, strlen(FP2scline)))
+        {
+            len = strlen(FP2scline);
+            linePtr = line + len;
+            read_FP2_YYY(&FP2sc,linePtr);
+        }
+        // Read FP scalar
+        if (!strncmp(line,FPscline, strlen(FPscline)))
+        {
+            len = strlen(FPscline);
+            linePtr = line + len;
+            read_BIG_XXX(bigFPsc,linePtr);
+            FP_YYY_nres(&FPsc,bigFPsc);
+        }
+        // Multiplication by FP4
+        if (!strncmp(line,FP8pmulline, strlen(FP8pmulline)))
+        {
+            len = strlen(FP8pmulline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8pmul,linePtr);
+            FP8_YYY_pmul(&FP8aux1,&FP8_1,&FP4sc);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8pmul))
+            {
+                printf("ERROR in multiplication by FP4, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Multiplication by FP2
+        if (!strncmp(line,FP8qmulline, strlen(FP8qmulline)))
+        {
+            len = strlen(FP8qmulline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8qmul,linePtr);
+            FP8_YYY_qmul(&FP8aux1,&FP8_1,&FP2sc);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8qmul))
+            {
+                printf("ERROR in multiplication by FP2, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Multiplication by FP
+        if (!strncmp(line,FP8tmulline, strlen(FP8tmulline)))
+        {
+            len = strlen(FP8tmulline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8tmul,linePtr);
+            FP8_YYY_tmul(&FP8aux1,&FP8_1,&FPsc);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8tmul))
+            {
+                printf("ERROR in multiplication by FP, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Multiplication by j = 0..10
+        if (!strncmp(line,FP8imulline, strlen(FP8imulline)))
+        {
+            len = strlen(FP8imulline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8imul,linePtr);
+            FP8_YYY_imul(&FP8aux1,&FP8_1,j);
+            j++;
+            if(!FP8_YYY_equals(&FP8aux1,&FP8imul))
+            {
+                printf("ERROR in multiplication by small integer, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Square test
+        if (!strncmp(line,FP8sqrline, strlen(FP8sqrline)))
+        {
+            len = strlen(FP8sqrline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8sqr,linePtr);
+            FP8_YYY_sqr(&FP8aux1,&FP8_1);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8sqr))
+            {
+                printf("ERROR in squaring FP8, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Multiplication between two FP8s
+        if (!strncmp(line,FP8mulline, strlen(FP8mulline)))
+        {
+            len = strlen(FP8mulline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8mul,linePtr);
+            FP8_YYY_mul(&FP8aux1,&FP8_1,&FP8_2);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8mul))
+            {
+                printf("ERROR in multiplication between two FP8s, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Inverse
+        if (!strncmp(line,FP8invline, strlen(FP8invline)))
+        {
+            len = strlen(FP8invline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8inv,linePtr);
+            FP8_YYY_inv(&FP8aux1,&FP8_1);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8inv))
+            {
+                printf("ERROR in computing inverse of FP8, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test multiplication of an FP8 instance by sqrt(sqrt(1+sqrt(-1)))
+        if (!strncmp(line,FP8muljline, strlen(FP8muljline)))
+        {
+            len = strlen(FP8muljline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8mulj,linePtr);
+            FP8_YYY_copy(&FP8aux1,&FP8_1);
+            FP8_YYY_times_i(&FP8aux1);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8mulj))
+            {
+                printf("ERROR in  multiplication of an FP8 instance by sqrt(sqrt(1+sqrt(-1))), line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Read exponent
+        if (!strncmp(line,BIGsc1line, strlen(BIGsc1line)))
+        {
+            len = strlen(BIGsc1line);
+            linePtr = line + len;
+            read_BIG_XXX(BIGsc1,linePtr);
+        }
+        if (!strncmp(line,BIGsc2line, strlen(BIGsc2line)))
+        {
+            len = strlen(BIGsc2line);
+            linePtr = line + len;
+            read_BIG_XXX(BIGsc2,linePtr);
+        }
+        // Raise FP8 by BIG power
+        if (!strncmp(line,FP8powline, strlen(FP8powline)))
+        {
+            len = strlen(FP8powline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8pow,linePtr);
+            FP8_YYY_pow(&FP8aux1,&FP8_1,BIGsc1);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8pow))
+            {
+                printf("ERROR in raising FP8 by BIG power, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+#if CURVE_SECURITY_ZZZ == 192
+        // Read first FP24 trace
+        if (!strncmp(line,FP24_1line, strlen(FP24_1line)))
+        {
+            len = strlen(FP24_1line);
+            linePtr = line + len;
+            read_FP8_YYY(FP24traces,linePtr);
+        }
+        // Read second FP24 trace
+        if (!strncmp(line,FP24_2line, strlen(FP24_2line)))
+        {
+            len = strlen(FP24_2line);
+            linePtr = line + len;
+            read_FP8_YYY(FP24traces+1,linePtr);
+        }
+        // Read third FP24 trace
+        if (!strncmp(line,FP24_3line, strlen(FP24_3line)))
+        {
+            len = strlen(FP24_3line);
+            linePtr = line + len;
+            read_FP8_YYY(FP24traces+2,linePtr);
+        }
+        // Read fourth FP24 trace
+        if (!strncmp(line,FP24_4line, strlen(FP24_4line)))
+        {
+            len = strlen(FP24_4line);
+            linePtr = line + len;
+            read_FP8_YYY(FP24traces+3,linePtr);
+        }
+        // Test the XTR addition function r=w*x-conj(x)*y+z
+        if (!strncmp(line,FP8_xtrAline, strlen(FP8_xtrAline)))
+        {
+            len = strlen(FP8_xtrAline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8_xtrA,linePtr);
+            FP8_YYY_xtr_A(&FP8aux1,&FP8_1,&FP8_2,&FP8add,&FP8sub);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8_xtrA))
+            {
+                printf("ERROR in testing the XTR addition function r=w*x-conj(x)*y+z, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test the XTR doubling function r=x^2-2*conj(x)
+        if (!strncmp(line,FP8_xtrDline, strlen(FP8_xtrDline)))
+        {
+            len = strlen(FP8_xtrDline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8_xtrD,linePtr);
+            FP8_YYY_xtr_D(&FP8aux1,&FP8_1);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8_xtrD))
+            {
+                printf("ERROR in testing the XTR doubling function r=x^2-2*conj(x), line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Calculates FP8 trace of an FP24 raised to the power of a BIG number
+        if (!strncmp(line,FP8_xtrpowline, strlen(FP8_xtrpowline)))
+        {
+            len = strlen(FP8_xtrpowline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8_xtrpow,linePtr);
+            FP8_YYY_xtr_pow(&FP8aux1,FP24traces,BIGsc1);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8_xtrpow))
+            {
+                printf("ERROR computing FP8 trace of an FP24 raised to the power of a BIG number, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+
+        // Calculates FP8 trace of two FP24 raised to the power of two BIG numbers
+        if (!strncmp(line,FP8_xtrpow2line, strlen(FP8_xtrpow2line)))
+        {
+            len = strlen(FP8_xtrpow2line);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8_xtrpow2,linePtr);
+            FP8_YYY_xtr_pow2(&FP8aux1,FP24traces+1,FP24traces,FP24traces+2,FP24traces+3,BIGsc2,BIGsc1);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8_xtrpow2))
+            {
+                printf("ERROR computing FP8 trace of an FP24 raised to the power of a BIG number (Double), line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+#elif CURVE_SECURITY_ZZZ == 256
+        if(!strncmp(line,FP8sqrtline, strlen(FP8sqrtline)))
+        {
+            len = strlen(FP8sqrtline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8sqrt,linePtr);
+            FP8_YYY_sqrt(&FP8aux1,&FP8_1);
+            FP8_YYY_sqr(&FP8aux2,&FP8aux1);
+            if(!FP8_YYY_equals(&FP8aux2,&FP8_1))
+            {
+                printf("ERROR consistency FP8_YYY_sqr and FP8_YYY_sqrt, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            FP8_YYY_neg(&FP8aux2,&FP8aux1);
+            if(!(FP8_YYY_equals(&FP8aux1,&FP8sqrt) || FP8_YYY_equals(&FP8aux2,&FP8sqrt)))
+            {
+                printf("ERROR computing square root of FP8, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        if(!strncmp(line,FP8diviline, strlen(FP8diviline)))
+        {
+            len = strlen(FP8diviline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8divi,linePtr);
+            FP8_YYY_copy(&FP8aux1,&FP8_1);
+            FP8_YYY_div_i(&FP8aux1);
+            FP8_YYY_copy(&FP8aux2,&FP8aux1);
+            FP8_YYY_times_i(&FP8aux2);
+            if(!FP8_YYY_equals(&FP8aux2,&FP8_1))
+            {
+                printf("ERROR consistency FP8_YYY_times_i and FP8_YYY_div_i, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            if(!FP8_YYY_equals(&FP8aux1,&FP8divi))
+            {
+                printf("ERROR dividing FP8 by sqrt(sqrt(1+sqrt(-1))), line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        if(!strncmp(line,FP8divi2line, strlen(FP8divi2line)))
+        {
+            len = strlen(FP8divi2line);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8divi2,linePtr);
+            FP8_YYY_copy(&FP8aux1,&FP8_1);
+            FP8_YYY_div_i2(&FP8aux1);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8divi2))
+            {
+                printf("ERROR dividing FP8 by sqrt(1+sqrt(-1)) twice, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        if(!strncmp(line,FP8div2iline, strlen(FP8div2iline)))
+        {
+            len = strlen(FP8div2iline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8div2i,linePtr);
+            FP8_YYY_copy(&FP8aux1,&FP8_1);
+            FP8_YYY_div_2i(&FP8aux1);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8div2i))
+            {
+                printf("ERROR dividing FP8 by sqrt(sqrt(1+sqrt(-1)))/2, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+#endif
+    }
+    fclose(fp);
+
+#if CURVE_SECURITY_ZZZ == 256
+    /* Consistency tests for sqrt */
+
+    // Sqrt of 0
+    FP8_YYY_zero(&FP8aux1);
+    FP8_YYY_output(&FP8aux1);
+    printf("\n");
+
+    if(!(FP8_YYY_sqrt(&FP8aux1,&FP8aux1) && FP8_YYY_iszilch(&FP8aux1)))
+    {
+        printf("ERROR Handling 0 in FP8_YYY_sqrt");
+        exit(EXIT_FAILURE);
+    }
+
+    // Sqrt of "real" FP8
+    // REMARK: Assume FP4sc is set during the TV test
+    FP8_YYY_from_FP4(&FP8aux1,&FP4sc);
+    FP8_YYY_sqrt(&FP8aux2,&FP8aux1);
+    FP8_YYY_sqr(&FP8aux3,&FP8aux2);
+    if(!FP8_YYY_equals(&FP8aux1,&FP8aux3))
+    {
+        printf("ERROR consistency of FP8_YYY_sqrt for real FP8, line %d\n",i);
+        exit(EXIT_FAILURE);
+    }
+#endif
+
+    printf("SUCCESS TEST ARITMETIC OF FP PASSED\n");
+    exit(EXIT_SUCCESS);
+}

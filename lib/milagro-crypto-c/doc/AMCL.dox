@@ -1,0 +1,278 @@
+/*
+  This file contains NO source code, just some documentation for doxygen to parse.
+*/
+
+/*!
+  \mainpage Apache Milagro Crypto Library (AMCL)
+
+ AMCL is a standards compliant C cryptographic library with no external dependencies, specifically designed to support the Internet of Things (IoT).
+
+ For a detailed explanation about this library please read: <a href="AMCL.pdf">AMCL.pdf</a>
+
+ AMCL is provided in *C* language but includes a <a href="https://www.python.org">Python</a> wrapper.for some components as an aid for development work.
+
+  \section homepage Project page
+  The official project page is hosted at 
+	<a href="http://milagro.apache.org/">Apache Milagro (incubating)</a>
+
+  \section license License
+
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+
+  \section platforms Platforms
+
+  The software can be compiled and installed for these operating systems;
+
+<ul type="disc">
+  <li>Linux</li>
+  <li>Windows</li>
+  <li>Mac OS</li>
+</ul>
+
+
+
+  \section downloads Downloads
+
+  The source code is available from here;
+
+  git clone https://github.com/milagro-crypto/milagro-crypto-c
+
+  \section installonmainpage Installation
+ 
+  There are instructions for building for \ref linux, \ref mac and \ref windows.
+
+*/
+
+
+/*!
+  \page linux Linux 
+
+<h2>Software dependencies</h2>
+
+CMake is required to build the library and can usually be installed from
+the operating system package manager.
+
+<ul type="disc">
+  <li>sudo apt-get install cmake</li>
+</ul>
+
+If not, then you can download it from www.cmake.org
+
+In order to use the Python language wrapper install <a href="https://www.python.org">Python</a>
+
+The C Foreign Function Interface for Python <a href="https://cffi.readthedocs.org/en/latest/">CFFI</a> module
+is also required if you wish to use the Python module.
+
+<ul type="disc">
+  <li>sudo pip install cffi</li>
+</ul>
+
+In order to build the documentation <a href="http://www.stack.nl/~dimitri/doxygen/">doxygen</a> is required.
+
+<h2>Quick Start</h2>
+
+<p>A Makefile is present at the project root that reads the options defined in
+config.mk. Change these options and then type  ```make``` to build and test
+the library.</p>
+
+<p>If <a href="https://www.docker.com/">docker</a> is installed then type ```make dbuild``` to build and test
+the library in a docker container.</p>
+
+<h2>Manual build</h2>
+
+<p>The default build is for 64 bit machines, Elliptic curve BN254CX and curve type Weierstrass</p>
+
+<ol type="disc">
+  <li>mkdir target/build</li>
+  <li>cd target/build</li>
+  <li>cmake -D CMAKE_INSTALL_PREFIX=/opt/amcl ../..
+  <li>export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./
+  <li>make</li>
+  <li>make test</li>
+  <li>make doc</li>
+  <li>sudo make install</li>
+</ol>
+
+<p>The build can be configured using by setting flags on the command line i.e.</p>
+
+<ol type="disc">
+  <li>cmake  -D CMAKE_INSTALL_PREFIX=/opt/amcl -D WORD_LENGTH=32 ../..</li>
+</ol>
+
+<p>list available CMake options</p>
+
+<ol type="disc">
+  <li>cmake -LH</li>
+</ol>
+
+<h2>Uninstall software</h2>
+
+<ul type="disc">
+  <li>sudo make uninstall</li>
+</ul>
+
+<h2>Building an installer</h2>
+
+<p>After having built the libraries you can build a binary installer and a source distribution by running this command</p>
+
+<ul type="disc">
+  <li>make package</li>
+</ul>
+
+*/
+
+
+
+
+/*!
+  \page mac Mac OS 
+
+<h2>Software dependencies</h2>
+
+Install <a href="http://brew.sh/">Homebrew</a>
+
+<ul type="disc">
+  <li>ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"</li>
+</ul>
+
+Install  <a href="http://www.cmake.org/download/">cmake</a>
+
+<ul type="disc">
+  <li>brew install cmake</li>
+</ul>
+
+In order to use the Python language wrapper install <a href="https://www.python.org">Python</a>
+
+The C Foreign Function Interface for Python <a href="https://cffi.readthedocs.org/en/latest/">CFFI</a> module
+is also required if you wish to use the Python module.
+
+<ul type="disc">
+  <li>brew install pkg-config libffi</li>
+  <li>sudo pip install cffi</li>
+</ul>
+
+In order to build the documentation <a href="http://www.stack.nl/~dimitri/doxygen/">doxygen</a> is required.
+
+<ul type="disc">
+  <li>brew install doxygen</li>
+</ul>
+
+<h2>Build Instructions</h2>
+
+<p>The default build is for 64 bit machines, Elliptic curve BN254CX and curve type Weierstrass</p>
+
+<ol type="disc">
+  <li>mkdir -p target/build</li>
+  <li>cd target/build</li>
+  <li>cmake ../..</li>
+  <li>make</li>
+  <li>make test</li>
+  <li>make doc</li>
+  <li>sudo make install</li>
+</ol>
+
+<p>The build can be configured using by setting flags on the command line i.e.</p>
+
+<ol type="disc">
+  <li>cmake -DWORD_LENGTH=32 ../..</li>
+</ol>
+
+<h2>Uninstall software</h2>
+
+<ul type="disc">
+  <li>sudo make uninstall</li>
+</ul>
+
+*/
+
+/*!
+  \page windows Windows
+
+<h2>Software dependencies</h2>
+
+<p>Minimalist GNU for Windows <a href="http://www.mingw.org/">MinGW</a> provides the 
+tool set used to build the library and should be installed. When the MinGW installer
+starts select the mingw32-base and mingw32-gcc-g++ components. From the menu select
+"Installation" -> "Apply Changes", then click "Apply". Finally add C:\\MinGW\\bin
+to the PATH variable.</p>
+
+<p>CMake is required to build the library and can be downloaded from www.cmake.org</p>
+
+In order to use the Python language wrapper install <a href="https://www.python.org">Python</a> 
+
+<p>The C Foreign Function Interface for Python <a href="https://cffi.readthedocs.org/en/latest/">CFFI</a> module
+is also required, if you wish to use the Python module.</p>
+
+<ul type="disc">
+  <li>pip install cffi</li>
+</ul>
+
+In order to build the documentation <a href="http://www.stack.nl/~dimitri/doxygen/">doxygen</a> is required.
+
+<h2>Build Instructions</h2>
+
+<p>Start a command prompt as an administrator</p>
+
+<p>The default build is for 64 bit machines, Elliptic curve BN254CX and curve type Weierstrass</p>
+
+<ol type="disc">
+  <li>mkdir target\\build</li>
+  <li>cd target\\build</li>
+  <li>cmake -G "MinGW Makefiles" ..\\..</li>
+  <li>mingw32-make</li>
+  <li>mingw32-make test</li>
+  <li>mingw32-make doc</li>
+  <li>mingw32-make install</li>
+</ol>
+
+<p>
+
+Post install append the PATH system variable to point to the install ./lib.
+
+My Computer -> Properties -> Advanced > Environment Variables
+
+</p>
+
+
+<p>The build can be configured using by setting flags on the command line i.e.</p>
+
+<ol type="disc">
+  <li>cmake -G "MinGW Makefiles" -DWORD_LENGTH=32 ../..</li>
+</ol>
+
+<h2>Uninstall software</h2>
+
+<ul type="disc">
+  <li>mingw32-make uninstall</li>
+</ul>
+
+<h2>Building an installer</h2>
+
+<p>After having built the libraries you can build a Windows installer using this command</p>
+
+<ul type="disc">
+  <li>sudo mingw32-make package</li>
+</ul>
+
+<p>In order for this to work <a href="http://nsis.sourceforge.net/Download">NSSI</a> has
+to have been installed</p>
+
+*/
+
+
+

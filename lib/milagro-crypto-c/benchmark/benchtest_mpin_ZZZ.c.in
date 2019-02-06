@@ -1,0 +1,255 @@
+/*
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+*/
+
+/* Time MPIN Protocol */
+
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include "config_curve_ZZZ.h"
+#include "randapi.h"
+#if CURVE_SECURITY_ZZZ == 128
+#include "mpin_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 192
+#include "mpin192_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 256
+#include "mpin256_ZZZ.h"
+#endif
+
+#if CURVE_SECURITY_ZZZ == 128
+#define G2LEN 4*PFS_ZZZ
+#elif CURVE_SECURITY_ZZZ == 192
+#define G2LEN 8*PFS_ZZZ
+#elif CURVE_SECURITY_ZZZ == 256
+#define G2LEN 16*PFS_ZZZ
+#endif
+#define GTLEN 3*G2LEN
+
+#define MIN_TIME 10.0
+#define MIN_ITERS 10
+
+int mpin(csprng *RNG)
+{
+    int pin,rtn;
+    int date=0;
+    char x[PGS_ZZZ],s[PGS_ZZZ],y[PGS_ZZZ],client_id[100],sst[G2LEN],token[2*PFS_ZZZ+1],sec[2*PFS_ZZZ+1],permit[2*PFS_ZZZ+1],xcid[2*PFS_ZZZ+1],xid[2*PFS_ZZZ+1],e[GTLEN],f[GTLEN];
+    char hcid[PFS_ZZZ],hsid[PFS_ZZZ],hid[2*PFS_ZZZ+1],htid[2*PFS_ZZZ+1],h[PGS_ZZZ];
+    char r[PGS_ZZZ],z[2*PFS_ZZZ+1],w[PGS_ZZZ],t[2*PFS_ZZZ+1];
+    char g1[GTLEN],g2[GTLEN];
+    char ck[AESKEY_ZZZ],sk[AESKEY_ZZZ];
+    octet S= {0,sizeof(s),s};
+    octet X= {0,sizeof(x),x};
+    octet Y= {0,sizeof(y),y};
+    octet H= {0,sizeof(h),h};
+    octet CLIENT_ID= {0,sizeof(client_id),client_id};
+    octet SST= {0,sizeof(sst),sst};
+    octet TOKEN= {0,sizeof(token),token};
+    octet SEC= {0,sizeof(sec),sec};
+    octet PERMIT= {0,sizeof(permit),permit};
+    octet xCID= {0,sizeof(xcid),xcid};
+    octet xID= {0,sizeof(xid),xid};
+    octet HCID= {0,sizeof(hcid),hcid};
+    octet HSID= {0,sizeof(hsid),hsid};
+    octet HID= {0,sizeof(hid),hid};
+    octet HTID= {0,sizeof(htid),htid};
+    octet E= {0,sizeof(e),e};
+    octet F= {0,sizeof(f),f};
+    octet R= {0,sizeof(r),r};
+    octet Z= {0,sizeof(z),z};
+    octet W= {0,sizeof(w),w};
+    octet T= {0,sizeof(t),t};
+    octet G1= {0,sizeof(g1),g1};
+    octet G2= {0,sizeof(g2),g2};
+    octet SK= {0,sizeof(sk),sk};
+    octet CK= {0,sizeof(ck),ck};
+    octet *pxID,*pxCID,*pHID,*pHTID,*pE,*pF,*pPERMIT,*prHID;
+    char idhex[100];
+
+    int iterations;
+    clock_t start;
+    double elapsed;
+
+    /* Trusted Authority set-up */
+    MPIN_ZZZ_RANDOM_GENERATE(RNG,&S);
+    printf("Master Secret= ");
+    OCT_output(&S);
+
+    /* Create Client Identity */
+    OCT_jstring(&CLIENT_ID,"testUser@miracl.com");
+    HASH_ID(HASH_TYPE_ZZZ,&CLIENT_ID,&HCID);  /* Either Client or TA calculates Hash(ID) - you decide! */
+
+    printf("Client ID Hash= ");
+    OCT_output(&HCID);
+    printf("\n");
+
+    OCT_toHex(&CLIENT_ID,idhex);
+    printf("Client ID= %s\n",idhex);// OCT_toHex(&CLIENT_ID); printf("\n");
+
+    /* Client and Server are issued secrets by DTA */
+    MPIN_ZZZ_GET_SERVER_SECRET(&S,&SST);
+    printf("Server Secret= ");
+    OCT_output(&SST);
+
+    MPIN_ZZZ_GET_CLIENT_SECRET(&S,&HCID,&TOKEN);
+    printf("Client Secret= ");
+    OCT_output(&TOKEN);
+
+    /* Client extracts PIN from secret to create Token */
+    pin=1234;
+    printf("Client extracts PIN= %d\n",pin);
+    MPIN_ZZZ_EXTRACT_PIN(HASH_TYPE_ZZZ,&CLIENT_ID,pin,&TOKEN);
+    printf("Client Token= ");
+    OCT_output(&TOKEN);
+
+    MPIN_ZZZ_PRECOMPUTE(&TOKEN,&HCID,NULL,&G1,&G2);
+
+    /* MPin Protocol */
+    pxID=&xID;
+    pxCID=&xCID;
+    pHID=&HID;
+    pHTID=&HTID;
+    pE=&E;
+    pF=&F;
+    pPERMIT=&PERMIT;
+
+    prHID=pHID;
+    pPERMIT=NULL;
+    pxCID=NULL;
+    pHTID=NULL;
+    pE=NULL;
+    pF=NULL;
+
+    int timeValue;
+    printf("MPIN Single Pass\n");
+    timeValue = GET_TIME();
+
+    iterations=0;
+    start=clock();
+    do
+    {
+        MPIN_ZZZ_CLIENT(HASH_TYPE_ZZZ,date,&CLIENT_ID,RNG,&X,pin,&TOKEN,&SEC,pxID,pxCID,pPERMIT,NULL,timeValue,&Y);
+
+        iterations++;
+        elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
+    }
+    while (elapsed<MIN_TIME || iterations<MIN_ITERS);
+    elapsed=1000.0*elapsed/iterations;
+    printf("MPIN Client              - %8d iterations  ",iterations);
+    printf(" %8.2lf ms per iteration\n",elapsed);
+
+
+    MPIN_ZZZ_GET_G1_MULTIPLE(RNG,1,&R,&HCID,&Z);  /* Also Send Z=r.ID to Server, remember random r */
+
+    iterations=0;
+    start=clock();
+    do
+    {
+        rtn = MPIN_ZZZ_SERVER(HASH_TYPE_ZZZ,date,pHID,pHTID,&Y,&SST,pxID,pxCID,&SEC,pE,pF,&CLIENT_ID,NULL,timeValue,NULL);
+
+        iterations++;
+        elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
+    }
+    while (elapsed<MIN_TIME || iterations<MIN_ITERS);
+    elapsed=1000.0*elapsed/iterations;
+    printf("MPIN Server              - %8d iterations  ",iterations);
+    printf(" %8.2lf ms per iteration\n",elapsed);
+
+    HASH_ID(HASH_TYPE_ZZZ,&CLIENT_ID,&HSID);  // new
+    MPIN_ZZZ_GET_G1_MULTIPLE(RNG,0,&W,prHID,&T);  /* Also send T=w.ID to client, remember random w  */
+
+    if (rtn!=0)
+    {
+        printf("Server says - Bad Pin.\n");
+        return 1;
+    }
+    else
+    {
+        printf("Server says - PIN is good! You really are ");
+        OCT_output_string(&CLIENT_ID);
+        printf(".\n");
+    }
+
+    HASH_ALL(HASH_TYPE_ZZZ,&HCID,pxID,pxCID,&SEC,&Y,&Z,&T,&H);  // new
+    MPIN_ZZZ_CLIENT_KEY(HASH_TYPE_ZZZ,&G1,&G2,pin,&R,&X,&H,&T,&CK);      // new H
+    printf("Client Key = ");
+    OCT_output(&CK);
+
+    HASH_ALL(HASH_TYPE_ZZZ,&HSID,pxID,pxCID,&SEC,&Y,&Z,&T,&H);
+    MPIN_ZZZ_SERVER_KEY(HASH_TYPE_ZZZ,&Z,&SST,&W,&H,pHID,pxID,pxCID,&SK); // new H,pHID
+    printf("Server Key = ");
+    OCT_output(&SK);
+
+    /* clear memory */
+    OCT_clear(&S);
+    OCT_clear(&X);
+    OCT_clear(&Y);
+    OCT_clear(&H);
+    OCT_clear(&CLIENT_ID);
+    OCT_clear(&SST);
+    OCT_clear(&TOKEN);
+    OCT_clear(&SEC);
+    OCT_clear(&PERMIT);
+    OCT_clear(&xCID);
+    OCT_clear(&xID);
+    OCT_clear(&HCID);
+    OCT_clear(&HSID);
+    OCT_clear(&HID);
+    OCT_clear(&HTID);
+    OCT_clear(&E);
+    OCT_clear(&F);
+    OCT_clear(&R);
+    OCT_clear(&Z);
+    OCT_clear(&W);
+    OCT_clear(&T);
+    OCT_clear(&G1);
+    OCT_clear(&G2);
+    OCT_clear(&SK);
+    OCT_clear(&CK);
+
+    return 0;
+}
+
+int main()
+{
+    int i;
+    unsigned long ran;
+
+    char raw[100];
+    octet RAW= {0,sizeof(raw),raw};
+    /* Crypto Strong RNG */
+    csprng RNG;
+
+    time((time_t *)&ran);
+
+    /* fake random seed source */
+    RAW.len=100;
+    RAW.val[0]=ran;
+    RAW.val[1]=ran>>8;
+    RAW.val[2]=ran>>16;
+    RAW.val[3]=ran>>24;
+    for (i=0; i<100; i++) RAW.val[i]=i+1;
+
+    /* initialise strong RNG */
+    CREATE_CSPRNG(&RNG,&RAW);
+
+    mpin(&RNG);
+
+    KILL_CSPRNG(&RNG);
+}
+

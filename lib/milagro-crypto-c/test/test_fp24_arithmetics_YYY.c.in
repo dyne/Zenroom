@@ -1,0 +1,527 @@
+/**
+ * @file test_fp_arithmetics.c
+ * @author Samuele Andreoli
+ * @brief Test for aritmetics with FP
+ *
+ * LICENSE
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "arch.h"
+#include "amcl.h"
+#include "utils.h"
+#include "fp24_YYY.h"
+
+#define LINE_LEN 5000
+
+/*
+ * Skips n closed brackets.
+ * Null terminates after the nth bracket and
+ * returns a pointer to the next char
+ */
+char* skip_cb(char* str, int n)
+{
+    int i;
+    char* next=str;
+
+    for(i=0; i<n; i++)
+    {
+        next = strchr(++next,']');
+        if (next == NULL)
+        {
+            printf("ERROR unexpected test vector\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+    *(++next) = '\0';
+
+    return next++;
+}
+
+void read_BIG_XXX(BIG_XXX A, char* string)
+{
+    int len;
+    char support[LINE_LEN];
+    BIG_XXX_zero(A);
+    len = strlen(string)+1;
+    amcl_hex2bin(string,support,len);
+    len = (len-1)/2;
+    BIG_XXX_fromBytesLen(A,support,len);
+    BIG_XXX_norm(A);
+}
+
+void read_FP2_YYY(FP2_YYY *fp2, char* stringx)
+{
+    char *stringy;
+    BIG_XXX x,y;
+
+    stringy = strchr(++stringx,',');
+    if (stringy == NULL)
+    {
+        printf("ERROR unexpected test vector\n");
+        exit(EXIT_FAILURE);
+    }
+    *(stringy)=0;
+    skip_cb(stringy++,1);
+
+    read_BIG_XXX(x,stringx);
+    read_BIG_XXX(y,stringy);
+
+    FP2_YYY_from_BIGs(fp2,x,y);
+}
+
+void read_FP4_YYY(FP4_YYY *fp4, char* stringx)
+{
+    char *stringy;
+    FP2_YYY x,y;
+
+    stringy = skip_cb(stringx++,1);
+    skip_cb(stringy++,1);
+
+    read_FP2_YYY(&x,stringx);
+    read_FP2_YYY(&y,stringy);
+
+    FP4_YYY_from_FP2s(fp4,&x,&y);
+}
+
+void read_FP8_YYY(FP8_YYY *fp8, char* stringx)
+{
+    char *stringy;
+    FP4_YYY x,y;
+
+    stringy = skip_cb(stringx++,3);
+    skip_cb(stringy++,3);
+
+    read_FP4_YYY(&x,stringx);
+    read_FP4_YYY(&y,stringy);
+
+    FP8_YYY_from_FP4s(fp8,&x,&y);
+}
+
+void read_FP24_YYY(FP24_YYY *fp24, char *stringx)
+{
+    char *stringy, *stringz;
+    FP8_YYY x,y,z;
+
+    stringy = skip_cb(stringx++,7);
+    stringz = skip_cb(stringy++,7);
+    skip_cb(stringz++,7);
+
+    read_FP8_YYY(&x,stringx);
+    read_FP8_YYY(&y,stringy);
+    read_FP8_YYY(&z,stringz);
+
+    FP24_YYY_from_FP8s(fp24,&x,&y,&z);
+
+}
+
+int main(int argc, char** argv)
+{
+
+    if (argc != 2)
+    {
+        printf("usage: ./test_fp24_arithmetics_ZZZ [path to test vector file]\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int i = 0, j = 1, k, len = 0;
+    FILE *fp;
+
+    char line[LINE_LEN];
+    char * linePtr = NULL;
+
+    BIG_XXX M, Fr_a, Fr_b;
+    FP2_YYY Frob;
+    FP8_YYY FP8aux1;
+    FP24_YYY FP24aux1, FP24aux2;
+    char octaux[24*MODBYTES_XXX];
+    octet OCTaux = {0,sizeof(octaux),octaux};
+
+    FP24_YYY FP_24[3], FP_24_frobs[8];
+    const char* FP24_lines[3] =
+    {
+        "FP24_1 = ",
+        "FP24_2 = ",
+        "FP24_c = "
+    };
+    FP24_YYY FP_24_smul_y_dtype;
+    const char* FP24smul_y_dtypeline = "FP24smul_y_dtype = ";
+    FP24_YYY FP_24_smul_y_mtype;
+    const char* FP24smul_y_mtypeline = "FP24smul_y_mtype = ";
+    FP24_YYY FP24conj;
+    const char* FP24conjline = "FP24conj = ";
+    FP24_YYY FP24usquare;
+    const char* FP24usquareline = "FP24usquare = ";
+    FP24_YYY FP24square;
+    const char* FP24squareline = "FP24square = ";
+    FP24_YYY FP24mul;
+    const char* FP24mulline = "FP24mul = ";
+    FP24_YYY FP24smul_dtype;
+    const char* FP24smuldtypeline = "FP24smul_dtype = ";
+    FP24_YYY FP24smul_mtype;
+    const char* FP24smulmtypeline = "FP24smul_mtype = ";
+    FP24_YYY FP24inv;
+    const char* FP24invline = "FP24inv = ";
+    BIG_XXX BIGsc[10];
+    const char* BIGsclines[10] =
+    {
+        "BIGsc1 = ",
+        "BIGsc2 = ",
+        "BIGsc3 = ",
+        "BIGsc4 = ",
+        "BIGsc5 = ",
+        "BIGsc6 = ",
+        "BIGsc7 = ",
+        "BIGsc8 = ",
+        "BIGscs = ",
+        "BIGsco = "
+    };
+    FP24_YYY FP24pow;
+    const char* FP24powline = "FP24pow = ";
+    FP24_YYY FP24pinpow;
+    const char* FP24pinpowline = "FP24pinpow = ";
+    FP8_YYY FP24compows;
+    const char* FP24compowsline = "FP24compows = ";
+    FP8_YYY FP24compow;
+    const char* FP24compowline = "FP24compow = ";
+    FP24_YYY FP24pow8;
+    const char* FP24pow8line = "FP24pow8 = ";
+    FP24_YYY FP24frob;
+    const char* FP24frobline = "FP24frob = ";
+    FP8_YYY FP8trace;
+    const char* FP8traceline = "FP8trace = ";
+
+    BIG_XXX_rcopy(M,Modulus_YYY);
+    BIG_XXX_rcopy(Fr_a,Fra_YYY);
+    BIG_XXX_rcopy(Fr_b,Frb_YYY);
+    FP2_YYY_from_BIGs(&Frob,Fr_a,Fr_b);
+
+    // Set to one
+    FP24_YYY_one(&FP24aux1);
+    FP24_YYY_copy(&FP24aux2,&FP24aux1);
+
+    // Testing equal function
+    if(!FP24_YYY_equals(&FP24aux1,&FP24aux2))
+    {
+        printf("ERROR comparing equal FP24s or copying FP24\n");
+        exit(EXIT_FAILURE);
+    }
+    FP8_YYY_zero(&FP8aux1);
+    FP24_YYY_from_FP8(&FP24aux1,&FP8aux1);
+    if(FP24_YYY_equals(&FP24aux1,&FP24aux2))
+    {
+        printf("ERROR comparing different FP24s\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if(!FP24_YYY_iszilch(&FP24aux1) || FP24_YYY_iszilch(&FP24aux2) || FP24_YYY_isunity(&FP24aux1) || !FP24_YYY_isunity(&FP24aux2))
+    {
+        printf("ERROR checking iszilch/isunity functions\n");
+        exit(EXIT_FAILURE);
+    }
+
+    fp = fopen(argv[1], "r");
+    if (fp == NULL)
+    {
+        printf("ERROR opening test vector file\n");
+        exit(EXIT_FAILURE);
+    }
+
+    while (fgets(line, LINE_LEN, fp) != NULL)
+    {
+        i++;
+        // Read first FP24 and perform some tests on it
+        if (!strncmp(line,FP24_lines[0], strlen(FP24_lines[0])))
+        {
+            len = strlen(FP24_lines[0]);
+            linePtr = line + len;
+            read_FP24_YYY(FP_24,linePtr);
+
+            // Test setting functions
+            FP24_YYY_from_FP8(&FP24aux1,&FP_24->a);
+            if(!FP8_YYY_equals(&FP24aux1.a,&FP_24->a) || !FP8_YYY_iszilch(&FP24aux1.b) || !FP8_YYY_iszilch(&FP24aux1.c))
+            {
+                printf("ERROR setting FP24 from a FP8, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            FP24_YYY_from_FP8s(&FP24aux1,&FP_24->a,&FP_24->b,&FP_24->c);
+            if(!FP24_YYY_equals(&FP24aux1,FP_24))
+            {
+                printf("ERROR setting FP24 from three FP8s, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+
+            // Test octet conversion consistency
+            FP24_YYY_toOctet(&OCTaux,FP_24);
+            FP24_YYY_fromOctet(&FP24aux1,&OCTaux);
+            if(!FP24_YYY_equals(&FP24aux1,FP_24))
+            {
+                printf("ERROR octet conversion consistency, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            FP24_YYY_copy(FP_24_frobs,FP_24);
+            for (k=1; k<8; k++)
+            {
+                FP24_YYY_copy(FP_24_frobs+k,FP_24_frobs+k-1);
+                FP24_YYY_frob(FP_24_frobs+k,&Frob,1);
+            }
+        }
+        // Read other FP24s.
+        for(k = 1; k<3; k++)
+        {
+            if (!strncmp(line,FP24_lines[k], strlen(FP24_lines[k])))
+            {
+                len = strlen(FP24_lines[k]);
+                linePtr = line + len;
+                read_FP24_YYY(FP_24+k,linePtr);
+            }
+        }
+        // Read y for M-TYPE smul test
+        if (!strncmp(line,FP24smul_y_mtypeline, strlen(FP24smul_y_mtypeline)))
+        {
+            len = strlen(FP24smul_y_mtypeline);
+            linePtr = line + len;
+            read_FP24_YYY(&FP_24_smul_y_mtype,linePtr);
+        }
+        // Read y for D-TYPE smul test
+        if (!strncmp(line,FP24smul_y_dtypeline, strlen(FP24smul_y_dtypeline)))
+        {
+            len = strlen(FP24smul_y_dtypeline);
+            linePtr = line + len;
+            read_FP24_YYY(&FP_24_smul_y_dtype,linePtr);
+        }
+        // Test FP24_YYY_conj
+        if (!strncmp(line,FP24conjline, strlen(FP24conjline)))
+        {
+            len = strlen(FP24conjline);
+            linePtr = line + len;
+            read_FP24_YYY(&FP24conj,linePtr);
+            FP24_YYY_copy(&FP24aux1,FP_24);
+            FP24_YYY_conj(&FP24aux1,&FP24aux1);
+            if(!FP24_YYY_equals(&FP24aux1,&FP24conj))
+            {
+                printf("ERROR computing conjugate of FP24, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test multiplication and commutativity
+        if (!strncmp(line,FP24mulline, strlen(FP24mulline)))
+        {
+            len = strlen(FP24mulline);
+            linePtr = line + len;
+            read_FP24_YYY(&FP24mul,linePtr);
+            FP24_YYY_copy(&FP24aux1,FP_24);
+            FP24_YYY_mul(&FP24aux1,FP_24+1);
+            FP24_YYY_copy(&FP24aux2,FP_24+1);
+            FP24_YYY_mul(&FP24aux2,FP_24);
+            if(!FP24_YYY_equals(&FP24aux1,&FP24mul) || !FP24_YYY_equals(&FP24aux2,&FP24mul))
+            {
+                printf("ERROR computing multiplication of two FP24s, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test squaring
+        if (!strncmp(line,FP24squareline, strlen(FP24squareline)))
+        {
+            len = strlen(FP24squareline);
+            linePtr = line + len;
+            read_FP24_YYY(&FP24square,linePtr);
+            FP24_YYY_copy(&FP24aux1,FP_24);
+            FP24_YYY_sqr(&FP24aux1,&FP24aux1);
+            if(!FP24_YYY_equals(&FP24aux1,&FP24square))
+            {
+                printf("ERROR computing square of FP24, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test usquaring
+        if (!strncmp(line,FP24usquareline, strlen(FP24usquareline)))
+        {
+            len = strlen(FP24usquareline);
+            linePtr = line + len;
+            read_FP24_YYY(&FP24usquare,linePtr);
+            FP24_YYY_copy(&FP24aux1,FP_24);
+            FP24_YYY_usqr(&FP24aux1,&FP24aux1);
+            if(!FP24_YYY_equals(&FP24aux1,&FP24usquare))
+            {
+                printf("ERROR computing usquare of FP24, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test s-multiplication for D-TYPE
+        if (!strncmp(line,FP24smuldtypeline, strlen(FP24smuldtypeline)))
+        {
+            len = strlen(FP24smuldtypeline);
+            linePtr = line + len;
+            read_FP24_YYY(&FP24smul_dtype,linePtr);
+            FP24_YYY_copy(&FP24aux1,FP_24);
+            FP24_YYY_smul(&FP24aux1,&FP_24_smul_y_dtype,D_TYPE);
+            if(!FP24_YYY_equals(&FP24aux1,&FP24smul_dtype))
+            {
+                printf("ERROR computing s-multiplication for D-TYPE, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test s-multiplication for M-TYPE
+        if (!strncmp(line,FP24smulmtypeline, strlen(FP24smulmtypeline)))
+        {
+            len = strlen(FP24smulmtypeline);
+            linePtr = line + len;
+            read_FP24_YYY(&FP24smul_mtype,linePtr);
+            FP24_YYY_copy(&FP24aux1,FP_24);
+            FP24_YYY_smul(&FP24aux1,&FP_24_smul_y_mtype,M_TYPE);
+            if(!FP24_YYY_equals(&FP24aux1,&FP24smul_mtype))
+            {
+                printf("ERROR computing s-multiplication for M-TYPE, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test inverse fuction
+        if (!strncmp(line,FP24invline, strlen(FP24invline)))
+        {
+            len = strlen(FP24invline);
+            linePtr = line + len;
+            read_FP24_YYY(&FP24inv,linePtr);
+            FP24_YYY_copy(&FP24aux1,FP_24);
+            FP24_YYY_inv(&FP24aux1,&FP24aux1);
+            if(!FP24_YYY_equals(&FP24aux1,&FP24inv))
+            {
+                printf("ERROR computing inverse of a FP24, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Read BIGS
+        for(k=0; k<10; k++)
+        {
+            if (!strncmp(line,BIGsclines[k], strlen(BIGsclines[k])))
+            {
+                len = strlen(BIGsclines[k]);
+                linePtr = line + len;
+                read_BIG_XXX(BIGsc[k],linePtr);
+            }
+        }
+        // Test power by a BIG
+        if (!strncmp(line,FP24powline, strlen(FP24powline)))
+        {
+            len = strlen(FP24powline);
+            linePtr = line + len;
+            read_FP24_YYY(&FP24pow,linePtr);
+            FP24_YYY_copy(&FP24aux1,FP_24);
+            FP24_YYY_pow(&FP24aux1,&FP24aux1,BIGsc[0]);
+            if(!FP24_YYY_equals(&FP24aux1,&FP24pow))
+            {
+                printf("ERROR computing power of a FP24 by a BIG, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test power by a small integer
+        if (!strncmp(line,FP24pinpowline, strlen(FP24pinpowline)))
+        {
+            len = strlen(FP24pinpowline);
+            linePtr = line + len;
+            read_FP24_YYY(&FP24pinpow,linePtr);
+            FP24_YYY_copy(&FP24aux1,FP_24);
+            FP24_YYY_pinpow(&FP24aux1,j,10);
+            if(!FP24_YYY_equals(&FP24aux1,&FP24pinpow))
+            {
+                printf("ERROR computing power of a FP24 by a small integer, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            j++;
+        }
+        // Test fucntion FP24_YYY_compow with small integer [< Modulus mod Curve_Order]
+        if (!strncmp(line,FP24compowsline, strlen(FP24compowsline)))
+        {
+            len = strlen(FP24compowsline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP24compows,linePtr);
+            FP24_YYY_copy(&FP24aux1,FP_24+2);
+            FP24_YYY_compow(&FP8aux1,&FP24aux1,BIGsc[8],BIGsc[9]);
+            if(!FP8_YYY_equals(&FP8aux1,&FP24compows))
+            {
+                printf("ERROR testing function FP24_compow with small integer, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test fucntion FP24_YYY_compow with big integer [> Modulus mod Curve_Order]
+        if (!strncmp(line,FP24compowline, strlen(FP24compowline)))
+        {
+            len = strlen(FP24compowline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP24compow,linePtr);
+            FP24_YYY_copy(&FP24aux1,FP_24+2);
+            FP24_YYY_compow(&FP8aux1,&FP24aux1,BIGsc[0],BIGsc[9]);
+            if(!FP8_YYY_equals(&FP8aux1,&FP24compow))
+            {
+                printf("ERROR testing function FP24_compow with big integer, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test function FP24_YYY_pow8
+        if (!strncmp(line,FP24pow8line, strlen(FP24pow8line)))
+        {
+            len = strlen(FP24pow8line);
+            linePtr = line + len;
+            read_FP24_YYY(&FP24pow8,linePtr);
+            FP24_YYY_pow8(&FP24aux1,FP_24_frobs,BIGsc);
+            if(!FP24_YYY_equals(&FP24aux1,&FP24pow8))
+            {
+                printf("ERROR testing function FP24pow8, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Raises an FP24 to the power of the internal modulus p, using the Frobenius constant f
+        if (!strncmp(line,FP24frobline, strlen(FP24frobline)))
+        {
+            len = strlen(FP24frobline);
+            linePtr = line + len;
+            read_FP24_YYY(&FP24frob,linePtr);
+            FP24_YYY_copy(&FP24aux1,FP_24);
+            FP24_YYY_frob(&FP24aux1,&Frob,1);
+            if(!FP24_YYY_equals(&FP24aux1,&FP24frob) || !FP24_YYY_equals(FP_24_frobs+1,&FP24frob))
+            {
+                printf("ERROR in raising FP24 by an internal modulus p, using the Frobenius constant f, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test computing trace of FP24
+        if (!strncmp(line,FP8traceline, strlen(FP8traceline)))
+        {
+            len = strlen(FP8traceline);
+            linePtr = line + len;
+            read_FP8_YYY(&FP8trace,linePtr);
+            FP24_YYY_copy(&FP24aux1,FP_24);
+            FP24_YYY_trace(&FP8aux1,&FP24aux1);
+            if(!FP8_YYY_equals(&FP8aux1,&FP8trace))
+            {
+                printf("ERROR computing trace of FP24, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
+
+    fclose(fp);
+
+    printf("SUCCESS TEST ARITMETIC OF FP24 PASSED\n");
+    exit(EXIT_SUCCESS);
+}

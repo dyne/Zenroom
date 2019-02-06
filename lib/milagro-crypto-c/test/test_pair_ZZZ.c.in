@@ -1,0 +1,218 @@
+/**
+ * @file test_pair_ZZZ.c
+ * @author Alessandro Budroni
+ * @brief Test function for pairing
+ *
+ * LICENSE
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "randapi.h"
+#include "config_curve_ZZZ.h"
+#if CURVE_SECURITY_ZZZ == 128
+#include "pair_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 192
+#include "pair192_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 256
+#include "pair256_ZZZ.h"
+#endif
+
+#define N_ITER 16
+
+// Renamings for multiple security level support
+#if CURVE_SECURITY_ZZZ == 128
+#define ECPG2_ZZZ_generator ECP2_ZZZ_generator
+#define ECPG2_ZZZ_copy ECP2_ZZZ_copy
+#define ECPG2_ZZZ_mul ECP2_ZZZ_mul
+#define ECPG2_ZZZ_add ECP2_ZZZ_add
+#define ECPG2_ZZZ_affine ECP2_ZZZ_affine
+#define ECPG2_ZZZ_isinf ECP2_ZZZ_isinf
+#define GT_ZZZ_equals FP12_YYY_equals
+#define GT_ZZZ_mul FP12_YYY_mul
+#elif CURVE_SECURITY_ZZZ == 192
+#define ECPG2_ZZZ_generator ECP4_ZZZ_generator
+#define ECPG2_ZZZ_copy ECP4_ZZZ_copy
+#define ECPG2_ZZZ_mul ECP4_ZZZ_mul
+#define ECPG2_ZZZ_add ECP4_ZZZ_add
+#define ECPG2_ZZZ_affine ECP4_ZZZ_affine
+#define ECPG2_ZZZ_isinf ECP4_ZZZ_isinf
+#define GT_ZZZ_equals FP24_YYY_equals
+#define GT_ZZZ_mul FP24_YYY_mul
+#elif CURVE_SECURITY_ZZZ == 256
+#define ECPG2_ZZZ_generator ECP8_ZZZ_generator
+#define ECPG2_ZZZ_copy ECP8_ZZZ_copy
+#define ECPG2_ZZZ_mul ECP8_ZZZ_mul
+#define ECPG2_ZZZ_add ECP8_ZZZ_add
+#define ECPG2_ZZZ_affine ECP8_ZZZ_affine
+#define ECPG2_ZZZ_isinf ECP8_ZZZ_isinf
+#define GT_ZZZ_equals FP48_YYY_equals
+#define GT_ZZZ_mul FP48_YYY_mul
+#endif
+
+int main()
+{
+    int i;
+    BIG_XXX s,r,x,y;
+    ECP_ZZZ G,P1,P2,P3;
+
+#if CURVE_SECURITY_ZZZ == 128
+    ECP2_ZZZ W,Q1,Q2,Q3;
+    FP12_YYY g1,g2;
+#elif CURVE_SECURITY_ZZZ == 192
+    ECP4_ZZZ W,Q1,Q2,Q3;
+    FP24_YYY g1,g2;
+#elif CURVE_SECURITY_ZZZ == 256
+    ECP8_ZZZ W,Q1,Q2,Q3;
+    FP48_YYY g1,g2;
+#endif
+
+    char seed[100] = {0};
+    octet SEED = {0,sizeof(seed),seed};
+    csprng RNG;
+
+    /* non random seed value! */
+    SEED.len=100;
+    for (i=0; i<100; i++) SEED.val[i]=i+1;
+
+    /* initialise random number generator */
+    CREATE_CSPRNG(&RNG,&SEED);
+
+    // Set Generator of G1
+    ECP_ZZZ_generator(&G);
+
+    // Set Generator of G2
+    ECPG2_ZZZ_generator(&W);
+
+    // Check that scalar multiplication by curve order gives the infinte point
+    BIG_XXX_rcopy(r,CURVE_Order_ZZZ);
+    ECP_ZZZ_copy(&P1,&G);
+    PAIR_ZZZ_G1mul(&P1,r);
+    if (!ECP_ZZZ_isinf(&P1))
+    {
+        printf("FAILURE - rP!=O\n");
+        return 1;
+    }
+
+    BIG_XXX_randomnum(s,r,&RNG);
+    ECPG2_ZZZ_copy(&Q1,&W);
+    ECPG2_ZZZ_mul(&Q1,r);
+
+    if (!ECPG2_ZZZ_isinf(&Q1))
+    {
+        printf("FAILURE - rQ!=O\n");
+        return 0;
+    }
+
+    for (i = 0; i < N_ITER; ++i)
+    {
+        // Pick a random point in G1
+        BIG_XXX_randomnum(x,r,&RNG);
+        ECP_ZZZ_copy(&P1,&G);
+        ECP_ZZZ_mul(&P1,x);
+        ECP_ZZZ_copy(&P2,&P1);
+
+        // Pick a random point in G2
+        BIG_XXX_randomnum(y,r,&RNG);
+        ECPG2_ZZZ_copy(&Q1,&W);
+        ECPG2_ZZZ_mul(&Q1,y);
+        ECPG2_ZZZ_copy(&Q2,&Q1);
+
+        // Test that e(sQ,P) = e(Q,sP) = e(Q,P)^s, s random
+        BIG_XXX_randomnum(s,r,&RNG);
+        PAIR_ZZZ_G1mul(&P2,s);
+        ECPG2_ZZZ_mul(&Q2,s);
+        PAIR_ZZZ_ate(&g1,&Q1,&P2);
+        PAIR_ZZZ_fexp(&g1);
+        PAIR_ZZZ_ate(&g2,&Q2,&P1);
+        PAIR_ZZZ_fexp(&g2);
+        if (!GT_ZZZ_equals(&g1,&g2))
+        {
+            printf("FAILURE - e(sQ,P)!=e(Q,sP)\n");
+            return 1;
+        }
+        PAIR_ZZZ_ate(&g2,&Q1,&P1);
+        PAIR_ZZZ_fexp(&g2);
+        PAIR_ZZZ_GTpow(&g2,s);
+        if (!GT_ZZZ_equals(&g1,&g2))
+        {
+            printf("FAILURE - e(sQ,P)!=e(Q,P)^s\n");
+            return 1;
+        }
+
+        // Test that e(Q,P1+P2) = e(Q,P1).e(Q,P2)
+        PAIR_ZZZ_ate(&g1,&Q1,&P1);
+        PAIR_ZZZ_fexp(&g1);
+        PAIR_ZZZ_ate(&g2,&Q1,&P2);
+        PAIR_ZZZ_fexp(&g2);
+        GT_YYY_mul(&g1,&g2);
+        ECP_ZZZ_copy(&P3,&P1);
+        ECP_ZZZ_add(&P3,&P2);
+        ECP_ZZZ_affine(&P3);
+        PAIR_ZZZ_ate(&g2,&Q1,&P3);
+        PAIR_ZZZ_fexp(&g2);
+        if (!GT_YYY_equals(&g1,&g2))
+        {
+            printf("FAILURE - e(Q,P1+P2)!=e(Q,P1).e(Q,P2)\n");
+            return 1;
+        }
+
+        // Test double_ate function on G1
+        PAIR_ZZZ_double_ate(&g1,&Q1,&P1,&Q1,&P2);
+        PAIR_ZZZ_fexp(&g1);
+        if (!GT_YYY_equals(&g1,&g2))
+        {
+            printf("FAILURE - double ate failed\n");
+            return 1;
+        }
+
+        // Test that e(Q1+Q2,P1) = e(Q1,P1).e(Q2,P1)
+        PAIR_ZZZ_ate(&g1,&Q1,&P1);
+        PAIR_ZZZ_fexp(&g1);
+        PAIR_ZZZ_ate(&g2,&Q2,&P1);
+        PAIR_ZZZ_fexp(&g2);
+        GT_YYY_mul(&g1,&g2);
+        ECPG2_ZZZ_copy(&Q3,&Q1);
+        ECPG2_ZZZ_add(&Q3,&Q2);
+        ECPG2_ZZZ_affine(&Q3);
+        PAIR_ZZZ_ate(&g2,&Q3,&P1);
+        PAIR_ZZZ_fexp(&g2);
+        if (!GT_YYY_equals(&g1,&g2))
+        {
+            printf("FAILURE - e(Q1+Q2,P1)!=e(Q1,P1).e(Q2,P1)\n");
+            return 1;
+        }
+
+        // Test double_ate function on G2
+        PAIR_ZZZ_double_ate(&g1,&Q1,&P1,&Q2,&P1);
+        PAIR_ZZZ_fexp(&g1);
+        if (!GT_YYY_equals(&g1,&g2))
+        {
+            printf("FAILURE - double ate failed\n");
+            return 1;
+        }
+
+    }
+
+    KILL_CSPRNG(&RNG);
+    printf("SUCCESS\n");
+    return 0;
+}

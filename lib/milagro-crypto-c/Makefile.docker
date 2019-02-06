@@ -1,0 +1,43 @@
+# The name for the docker builder image
+BUILDER_CONTAINER_NAME="milagro-crypto/amcl-builder"
+
+# Coverage info
+COVERAGE_INFO=target/LINUX_64BIT_COVERAGE/coverage/amcl.info
+
+define make
+	rm -rf target
+	docker create \
+		--env WINEPREFIX=/tmp/.wine \
+		--name builder \
+		--workdir /src \
+		$(BUILDER_CONTAINER_NAME) sh -c "mkdir -p /tmp/.wine && make $1"
+	docker cp . builder:/src
+	-docker start -ai builder; \
+	echo $$? > buildall.exit
+	docker cp builder:/src/target .
+	docker stop builder
+	docker rm builder
+	@# Workaround: Correct path for coverage src files
+	ls ${COVERAGE_INFO} && sed -i -e "s#^SF:/src\(.*\)#SF:${PWD}\1#g" ${COVERAGE_INFO} || echo "Skipping coverage info"
+	@mv buildall.exit target
+	@exit `cat target/buildall.exit`
+endef
+
+all: builder
+
+builder:
+	docker build -t $(BUILDER_CONTAINER_NAME) .
+
+
+# --- MAKE TARGETS DOCKER WRAPPERS ---
+
+default:
+	$(call make,default)
+qa:
+	$(call make,qa)
+build:
+	$(call make,build TYPE=$(TYPE))
+buildall:
+	$(call make,buildall)
+
+.PHONY: all builder default qa build buildall

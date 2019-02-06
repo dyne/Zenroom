@@ -1,0 +1,632 @@
+/**
+ * @file test_fp4_arithmetics_YYY.c
+ * @author Alessandro Budroni
+ * @brief Test for aritmetics with FP4_YYY
+ *
+ * LICENSE
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "arch.h"
+#include "amcl.h"
+#include "utils.h"
+#include "fp4_YYY.h"
+
+#define LINE_LEN 10000
+#define MAX_STRING 300
+
+void read_BIG_XXX(BIG_XXX A, char* string)
+{
+    int len;
+    char support[LINE_LEN];
+    BIG_XXX_zero(A);
+    len = strlen(string)+1;
+    amcl_hex2bin(string,support,len);
+    len = (len-1)/2;
+    BIG_XXX_fromBytesLen(A,support,len);
+    BIG_XXX_norm(A);
+}
+
+void read_FP2_YYY(FP2_YYY *fp2, char* stringx)
+{
+    char *stringy, *end;
+    BIG_XXX x,y;
+
+    stringy = strchr(++stringx,',');
+    if (stringy == NULL)
+    {
+        printf("ERROR unexpected test vector\n");
+        exit(EXIT_FAILURE);
+    }
+    *stringy = '\0';
+
+    end = strchr(++stringy,']');
+    if (end == NULL)
+    {
+        printf("ERROR unexpected test vector\n");
+        exit(EXIT_FAILURE);
+    }
+    *end = '\0';
+
+    read_BIG_XXX(x,stringx);
+    read_BIG_XXX(y,stringy);
+
+    FP2_YYY_from_BIGs(fp2,x,y);
+}
+
+void read_FP4_YYY(FP4_YYY *fp4, char* stringx)
+{
+    char *stringy, *end;
+    FP2_YYY x,y;
+
+    stringy = strchr(++stringx,']');
+    if (stringy == NULL)
+    {
+        printf("ERROR unexpected test vector\n");
+        exit(EXIT_FAILURE);
+    }
+    *(++stringy) = '\0';
+
+    end = strchr(++stringy,']');
+    if (end == NULL)
+    {
+        printf("ERROR unexpected test vector\n");
+        exit(EXIT_FAILURE);
+    }
+    *(++end) = '\0';
+
+    read_FP2_YYY(&x,stringx);
+    read_FP2_YYY(&y,stringy);
+
+    FP4_YYY_from_FP2s(fp4,&x,&y);
+}
+
+int main(int argc, char** argv)
+{
+    if (argc != 2)
+    {
+        printf("usage: ./test_fp4_arithmetics_YYY [path to test vector file]\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int i = 0, len = 0, j = 0;
+    FILE *fp;
+
+    char line[LINE_LEN];
+    char * linePtr = NULL;
+
+    FP4_YYY FP4aux1, FP4aux2, FP4aux3, FP4aux4;
+
+    FP4_YYY FP4_1;
+    const char* FP4_1line = "FP4_1 = ";
+    FP4_YYY FP4_2;
+    const char* FP4_2line = "FP4_2 = ";
+    FP4_YYY FP12traces[4];
+    const char* FP12_1line = "FP12_1 = ";
+    const char* FP12_2line = "FP12_2 = ";
+    const char* FP12_3line = "FP12_3 = ";
+    const char* FP12_4line = "FP12_4 = ";
+    FP4_YYY FP4add;
+    const char* FP4addline = "FP4add = ";
+    FP4_YYY FP4neg;
+    const char* FP4negline = "FP4neg = ";
+    FP4_YYY FP4sub;
+    const char* FP4subline = "FP4sub = ";
+    FP4_YYY FP4conj;
+    const char* FP4conjline = "FP4conj = ";
+    FP4_YYY FP4nconj;
+    const char* FP4nconjline = "FP4nconj = ";
+    FP2_YYY FP2sc;
+    const char* FP2scline = "FP2sc = ";
+    FP4_YYY FP4pmul;
+    const char* FP4pmulline = "FP4pmul = ";
+    FP4_YYY FP4imul;
+    const char* FP4imulline = "FP4imul = ";
+    FP4_YYY FP4sqr;
+    const char* FP4sqrline = "FP4sqr = ";
+    FP4_YYY FP4mul;
+    const char* FP4mulline = "FP4mul = ";
+    FP4_YYY FP4div2;
+    const char* FP4div2line = "FP4div2 = ";
+    FP4_YYY FP4inv;
+    const char* FP4invline = "FP4inv = ";
+    FP4_YYY FP4mulj;
+    const char* FP4muljline = "FP4mulj = ";
+    BIG_XXX BIGsc1;
+    const char* BIGsc1line = "BIGsc1 = ";
+    BIG_XXX BIGsc2;
+    const char* BIGsc2line = "BIGsc2 = ";
+    FP4_YYY FP4pow;
+    const char* FP4powline = "FP4pow = ";
+    FP4_YYY FP4_xtrA;
+    const char* FP4_xtrAline = "FP4_xtrA = ";
+    FP4_YYY FP4_xtrD;
+    const char* FP4_xtrDline = "FP4_xtrD = ";
+    FP4_YYY FP4_xtrpow;
+    const char* FP4_xtrpowline = "FP4_xtrpow = ";
+    FP4_YYY FP4_xtrpow2;
+    const char* FP4_xtrpow2line = "FP4_xtrpow2 = ";
+#if CURVE_SECURITY_ZZZ >= 192
+    FP4_YYY FP4sqrt;
+    const char* FP4sqrtline = "FP4sqrt = ";
+    FP4_YYY FP4divi;
+    const char* FP4diviline = "FP4divi = ";
+    FP4_YYY FP4div2i;
+    const char* FP4div2iline = "FP4div2i = ";
+#endif
+
+    // Set to zero
+    FP4_YYY_zero(&FP4aux1);
+    FP4_YYY_zero(&FP4aux2);
+
+    // Testing equal function and set zero function
+    if(!FP4_YYY_equals(&FP4aux1,&FP4aux2) || !FP4_YYY_iszilch(&FP4aux1) || !FP4_YYY_isreal(&FP4aux1))
+    {
+        printf("ERROR comparing FP4s or setting FP4 to zero FP\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Set to one
+    FP4_YYY_one(&FP4aux1);
+
+    // Testing equal function and set one function
+    if(FP4_YYY_equals(&FP4aux1,&FP4aux2) || !FP4_YYY_isunity(&FP4aux1) || FP4_YYY_isunity(&FP4aux2) || FP4_YYY_iszilch(&FP4aux1) || !FP4_YYY_isreal(&FP4aux1))
+    {
+        printf("ERROR comparing FP4s or setting FP4 to unity FP\n");
+        exit(EXIT_FAILURE);
+    }
+
+
+    fp = fopen(argv[1], "r");
+    if (fp == NULL)
+    {
+        printf("ERROR opening test vector file\n");
+        exit(EXIT_FAILURE);
+    }
+
+    while (fgets(line, LINE_LEN, fp) != NULL)
+    {
+        i++;
+        // Read first FP4 and perform some tests
+        if (!strncmp(line,FP4_1line, strlen(FP4_1line)))
+        {
+            len = strlen(FP4_1line);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4_1,linePtr);
+            // test FP4_from_FP2s
+            FP4_YYY_from_FP2s(&FP4aux1,&FP4_1.a,&FP4_1.b);
+            if(!FP4_YYY_equals(&FP4aux1,&FP4_1))
+            {
+                printf("ERROR in generating FP4 from two FP2s, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            // test FP4_from_FP2
+            FP4_YYY_from_FP2(&FP4aux1,&FP4_1.a);
+            FP4_YYY_copy(&FP4aux2,&FP4_1);
+            FP2_YYY_zero(&FP4aux2.b);
+            if(!FP4_YYY_equals(&FP4aux1,&FP4aux2))
+            {
+                printf("ERROR in generating FP4 from one FP2, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            // test FP4_from_FP2H
+            FP4_YYY_from_FP2H(&FP4aux1,&FP4_1.b);
+            FP4_YYY_copy(&FP4aux2,&FP4_1);
+            FP2_YYY_zero(&FP4aux2.a);
+            if(!FP4_YYY_equals(&FP4aux1,&FP4aux2))
+            {
+                printf("ERROR in generating \"complex\" FP4 from one FP2 , line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Read second FP4
+        if (!strncmp(line,FP4_2line, strlen(FP4_2line)))
+        {
+            len = strlen(FP4_2line);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4_2,linePtr);
+        }
+        // Read first FP12 trace
+        if (!strncmp(line,FP12_1line, strlen(FP12_1line)))
+        {
+            len = strlen(FP12_1line);
+            linePtr = line + len;
+            read_FP4_YYY(FP12traces,linePtr);
+        }
+        // Read second FP12 trace
+        if (!strncmp(line,FP12_2line, strlen(FP12_2line)))
+        {
+            len = strlen(FP12_2line);
+            linePtr = line + len;
+            read_FP4_YYY(FP12traces+1,linePtr);
+        }
+        // Read third FP12 trace
+        if (!strncmp(line,FP12_3line, strlen(FP12_3line)))
+        {
+            len = strlen(FP12_3line);
+            linePtr = line + len;
+            read_FP4_YYY(FP12traces+2,linePtr);
+        }
+        // Read fourth FP12 trace
+        if (!strncmp(line,FP12_4line, strlen(FP12_4line)))
+        {
+            len = strlen(FP12_4line);
+            linePtr = line + len;
+            read_FP4_YYY(FP12traces+3,linePtr);
+        }
+        // Addition test
+        if (!strncmp(line,FP4addline, strlen(FP4addline)))
+        {
+            len = strlen(FP4addline);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4add,linePtr);
+            FP4_YYY_copy(&FP4aux1,&FP4_1);
+            FP4_YYY_copy(&FP4aux2,&FP4_2);
+            FP4_YYY_add(&FP4aux1,&FP4aux1,&FP4aux2);
+            // test commutativity P+Q = Q+P
+            FP4_YYY_copy(&FP4aux3,&FP4_1);
+            FP4_YYY_add(&FP4aux2,&FP4aux2,&FP4aux3);
+            if(!FP4_YYY_equals(&FP4aux1,&FP4add) || !FP4_YYY_equals(&FP4aux2,&FP4add))
+            {
+                printf("ERROR adding two FP4, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            // test associativity (P+Q)+R = P+(Q+R)
+            FP4_YYY_copy(&FP4aux1,&FP4_1);
+            FP4_YYY_copy(&FP4aux3,&FP4_1);
+            FP4_YYY_copy(&FP4aux2,&FP4_2);
+            FP4_YYY_copy(&FP4aux4,&FP4add);
+            FP4_YYY_add(&FP4aux1,&FP4aux1,&FP4aux2);
+            FP4_YYY_add(&FP4aux1,&FP4aux1,&FP4aux4);
+            FP4_YYY_add(&FP4aux2,&FP4aux2,&FP4aux4);
+            FP4_YYY_add(&FP4aux2,&FP4aux2,&FP4aux3);
+            FP4_YYY_reduce(&FP4aux1);
+            FP4_YYY_norm(&FP4aux2);
+            if(!FP4_YYY_equals(&FP4aux1,&FP4aux2))
+            {
+                printf("ERROR testing associativity between three FP4s, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test negative of an FP4
+        if (!strncmp(line,FP4negline, strlen(FP4negline)))
+        {
+            len = strlen(FP4negline);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4neg,linePtr);
+            FP4_YYY_copy(&FP4aux1,&FP4_1);
+            FP4_YYY_neg(&FP4aux1,&FP4aux1);
+            if(!FP4_YYY_equals(&FP4aux1,&FP4neg))
+            {
+                printf("ERROR in computing negative of FP4, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Subtraction test
+        if (!strncmp(line,FP4subline, strlen(FP4subline)))
+        {
+            len = strlen(FP4subline);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4sub,linePtr);
+            FP4_YYY_copy(&FP4aux1,&FP4_1);
+            FP4_YYY_copy(&FP4aux2,&FP4_2);
+            FP4_YYY_sub(&FP4aux1,&FP4aux1,&FP4aux2);
+            if(FP4_YYY_equals(&FP4aux1,&FP4sub) == 0)
+            {
+                printf("ERROR subtraction between two FP4, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test conjugate
+        if (!strncmp(line,FP4conjline, strlen(FP4conjline)))
+        {
+            len = strlen(FP4conjline);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4conj,linePtr);
+            FP4_YYY_copy(&FP4aux1,&FP4_1);
+            FP4_YYY_conj(&FP4aux1,&FP4aux1);
+            if(!FP4_YYY_equals(&FP4aux1,&FP4conj))
+            {
+                printf("ERROR computing conjugate of FP4, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test negative conjugate
+        if (!strncmp(line,FP4nconjline, strlen(FP4nconjline)))
+        {
+            len = strlen(FP4nconjline);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4nconj,linePtr);
+            FP4_YYY_copy(&FP4aux1,&FP4_1);
+            FP4_YYY_nconj(&FP4aux1,&FP4aux1);
+            if(!FP4_YYY_equals(&FP4aux1,&FP4nconj))
+            {
+                printf("ERROR computing negative conjugate of FP4, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Read multiplicator
+        if (!strncmp(line,FP2scline, strlen(FP2scline)))
+        {
+            len = strlen(FP2scline);
+            linePtr = line + len;
+            read_FP2_YYY(&FP2sc,linePtr);
+        }
+        // Multiplication by FP2
+        if (!strncmp(line,FP4pmulline, strlen(FP4pmulline)))
+        {
+            len = strlen(FP4pmulline);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4pmul,linePtr);
+            FP4_YYY_pmul(&FP4aux1,&FP4_1,&FP2sc);
+            if(!FP4_YYY_equals(&FP4aux1,&FP4pmul))
+            {
+                printf("ERROR in multiplication by FP2, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Multiplication by j = 0..10
+        if (!strncmp(line,FP4imulline, strlen(FP4imulline)))
+        {
+            len = strlen(FP4imulline);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4imul,linePtr);
+            FP4_YYY_imul(&FP4aux1,&FP4_1,j);
+            j++;
+            if(!FP4_YYY_equals(&FP4aux1,&FP4imul))
+            {
+                printf("ERROR in multiplication by small integer, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Square test
+        if (!strncmp(line,FP4sqrline, strlen(FP4sqrline)))
+        {
+            len = strlen(FP4sqrline);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4sqr,linePtr);
+            FP4_YYY_copy(&FP4aux1,&FP4_1);
+            FP4_YYY_sqr(&FP4aux1,&FP4aux1);
+            if(!FP4_YYY_equals(&FP4aux1,&FP4sqr))
+            {
+                printf("ERROR in squaring FP4, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Multiplication between two FP4s
+        if (!strncmp(line,FP4mulline, strlen(FP4mulline)))
+        {
+            len = strlen(FP4mulline);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4mul,linePtr);
+            FP4_YYY_mul(&FP4aux1,&FP4_1,&FP4_2);
+            if(!FP4_YYY_equals(&FP4aux1,&FP4mul))
+            {
+                printf("ERROR in multiplication between two FP4s, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Inverse
+        if (!strncmp(line,FP4invline, strlen(FP4invline)))
+        {
+            len = strlen(FP4invline);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4inv,linePtr);
+            FP4_YYY_copy(&FP4aux1,&FP4_1);
+            FP4_YYY_inv(&FP4aux1,&FP4aux1);
+            if(!FP4_YYY_equals(&FP4aux1,&FP4inv))
+            {
+                printf("ERROR in computing inverse of FP4, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test multiplication of an FP4 instance by sqrt(1+sqrt(-1))
+        if (!strncmp(line,FP4muljline, strlen(FP4muljline)))
+        {
+            len = strlen(FP4muljline);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4mulj,linePtr);
+            FP4_YYY_copy(&FP4aux1,&FP4_1);
+            FP4_YYY_times_i(&FP4aux1);
+            if(!FP4_YYY_equals(&FP4aux1,&FP4mulj))
+            {
+                printf("ERROR in  multiplication of an FP4 instance by sqrt(1+sqrt(-1)), line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Read exponent
+        if (!strncmp(line,BIGsc1line, strlen(BIGsc1line)))
+        {
+            len = strlen(BIGsc1line);
+            linePtr = line + len;
+            read_BIG_XXX(BIGsc1,linePtr);
+        }
+        if (!strncmp(line,BIGsc2line, strlen(BIGsc2line)))
+        {
+            len = strlen(BIGsc2line);
+            linePtr = line + len;
+            read_BIG_XXX(BIGsc2,linePtr);
+        }
+        // Raise FP4 by BIG power
+        if (!strncmp(line,FP4powline, strlen(FP4powline)))
+        {
+            len = strlen(FP4powline);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4pow,linePtr);
+            FP4_YYY_pow(&FP4aux1,&FP4_1,BIGsc1);
+            if(!FP4_YYY_equals(&FP4aux1,&FP4pow))
+            {
+                printf("ERROR in raising FP4 by BIG power, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test the XTR addition function r=w*x-conj(x)*y+z
+        if (!strncmp(line,FP4_xtrAline, strlen(FP4_xtrAline)))
+        {
+            len = strlen(FP4_xtrAline);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4_xtrA,linePtr);
+            FP4_YYY_xtr_A(&FP4aux1,&FP4_1,&FP4_2,&FP4add,&FP4sub);
+            if(!FP4_YYY_equals(&FP4aux1,&FP4_xtrA))
+            {
+                printf("ERROR in testing the XTR addition function r=w*x-conj(x)*y+z, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test the XTR doubling function r=x^2-2*conj(x)
+        if (!strncmp(line,FP4_xtrDline, strlen(FP4_xtrDline)))
+        {
+            len = strlen(FP4_xtrDline);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4_xtrD,linePtr);
+            FP4_YYY_xtr_D(&FP4aux1,&FP4_1);
+            if(!FP4_YYY_equals(&FP4aux1,&FP4_xtrD))
+            {
+                printf("ERROR in testing the XTR doubling function r=x^2-2*conj(x), line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Calculates FP4 trace of an FP12 raised to the power of a BIG number
+        if (!strncmp(line,FP4_xtrpowline, strlen(FP4_xtrpowline)))
+        {
+            len = strlen(FP4_xtrpowline);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4_xtrpow,linePtr);
+            FP4_YYY_xtr_pow(&FP4aux1,FP12traces,BIGsc1);
+            if(!FP4_YYY_equals(&FP4aux1,&FP4_xtrpow))
+            {
+                printf("ERROR computing FP4 trace of an FP12 raised to the power of a BIG number, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+
+        // Calculates FP4 trace of two FP12 raised to the power of two BIG numbers
+        if (!strncmp(line,FP4_xtrpow2line, strlen(FP4_xtrpow2line)))
+        {
+            len = strlen(FP4_xtrpow2line);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4_xtrpow2,linePtr);
+            FP4_YYY_xtr_pow2(&FP4aux1,FP12traces+1,FP12traces,FP12traces+2,FP12traces+3,BIGsc2,BIGsc1);
+            if(!FP4_YYY_equals(&FP4aux1,&FP4_xtrpow2))
+            {
+                printf("ERROR computing FP4 trace of an FP12 raised to the power of a BIG number (Double), line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        if(!strncmp(line,FP4div2line, strlen(FP4div2line)))
+        {
+            len = strlen(FP4div2line);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4div2,linePtr);
+            FP4_YYY_div2(&FP4aux1,&FP4_1);
+            if(!FP4_YYY_equals(&FP4aux1,&FP4div2))
+            {
+                printf("ERROR dividing FP4 by sqrt(sqrt(1+sqrt(-1)))/2, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+#if CURVE_SECURITY_ZZZ >= 192
+        if(!strncmp(line,FP4sqrtline, strlen(FP4sqrtline)))
+        {
+            len = strlen(FP4sqrtline);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4sqrt,linePtr);
+            FP4_YYY_sqrt(&FP4aux1,&FP4_1);
+            FP4_YYY_sqr(&FP4aux2,&FP4aux1);
+            if(!FP4_YYY_equals(&FP4aux2,&FP4_1))
+            {
+                printf("ERROR consistency FP4_YYY_sqr and FP4_YYY_sqrt, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            FP4_YYY_neg(&FP4aux2,&FP4aux1);
+            if(!(FP4_YYY_equals(&FP4aux1,&FP4sqrt) || FP4_YYY_equals(&FP4aux2,&FP4sqrt)))
+            {
+                printf("ERROR computing square root of FP4, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        if(!strncmp(line,FP4diviline, strlen(FP4diviline)))
+        {
+            len = strlen(FP4diviline);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4divi,linePtr);
+            FP4_YYY_copy(&FP4aux1,&FP4_1);
+            FP4_YYY_div_i(&FP4aux1);
+            FP4_YYY_copy(&FP4aux2,&FP4aux1);
+            FP4_YYY_times_i(&FP4aux2);
+            if(!FP4_YYY_equals(&FP4aux2,&FP4_1))
+            {
+                printf("ERROR consistency FP4_YYY_times_i and FP4_YYY_div_i, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            if(!FP4_YYY_equals(&FP4aux1,&FP4divi))
+            {
+                printf("ERROR dividing FP4 by sqrt(1+sqrt(-1)), line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        if(!strncmp(line,FP4div2iline, strlen(FP4div2iline)))
+        {
+            len = strlen(FP4div2iline);
+            linePtr = line + len;
+            read_FP4_YYY(&FP4div2i,linePtr);
+            FP4_YYY_copy(&FP4aux1,&FP4_1);
+            FP4_YYY_div_2i(&FP4aux1);
+            if(!FP4_YYY_equals(&FP4aux1,&FP4div2i))
+            {
+                printf("ERROR dividing FP4 by sqrt(1+sqrt(-1))/2, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+#endif
+    }
+    fclose(fp);
+
+#if CURVE_SECURITY_ZZZ >= 192
+    /* Consistency tests for sqrt */
+
+    // Sqrt of 0
+    FP4_YYY_zero(&FP4aux1);
+    FP4_YYY_output(&FP4aux1);
+    printf("\n");
+
+    if(!(FP4_YYY_sqrt(&FP4aux1,&FP4aux1) && FP4_YYY_iszilch(&FP4aux1)))
+    {
+        printf("ERROR Handling 0 in FP4_YYY_sqrt");
+        exit(EXIT_FAILURE);
+    }
+
+    // Sqrt of "real" FP4
+    // REMARK: Assume FP2sc is set during the TV test
+    FP4_YYY_from_FP2(&FP4aux1,&FP2sc);
+    FP4_YYY_sqrt(&FP4aux2,&FP4aux1);
+    FP4_YYY_sqr(&FP4aux3,&FP4aux2);
+    if(!FP4_YYY_equals(&FP4aux1,&FP4aux3))
+    {
+        printf("ERROR consistency of FP4_YYY_sqrt for real FP4, line %d\n",i);
+        exit(EXIT_FAILURE);
+    }
+#endif
+
+    printf("SUCCESS TEST ARITMETIC OF FP PASSED\n");
+    exit(EXIT_SUCCESS);
+}

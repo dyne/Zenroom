@@ -1,0 +1,541 @@
+/**
+ * @file test_fp_arithmetics.c
+ * @author Samuele Andreoli
+ * @brief Test for aritmetics with FP
+ *
+ * LICENSE
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "arch.h"
+#include "amcl.h"
+#include "utils.h"
+#include "fp48_YYY.h"
+
+#define LINE_LEN 10000
+
+/*
+ * Skips n closed brackets.
+ * Null terminates after the nth bracket and
+ * returns a pointer to the next char
+ */
+char* skip_cb(char* str, int n)
+{
+    int i;
+    char* next=str;
+
+    for(i=0; i<n; i++)
+    {
+        next = strchr(++next,']');
+        if (next == NULL)
+        {
+            printf("ERROR unexpected test vector\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+    *(++next) = '\0';
+
+    return next++;
+}
+
+void read_BIG_XXX(BIG_XXX A, char* string)
+{
+    int len;
+    char support[LINE_LEN];
+    BIG_XXX_zero(A);
+    len = strlen(string)+1;
+    amcl_hex2bin(string,support,len);
+    len = (len-1)/2;
+    BIG_XXX_fromBytesLen(A,support,len);
+    BIG_XXX_norm(A);
+}
+
+void read_FP2_YYY(FP2_YYY *fp2, char* stringx)
+{
+    char *stringy;
+    BIG_XXX x,y;
+
+    stringy = strchr(++stringx,',');
+    if (stringy == NULL)
+    {
+        printf("ERROR unexpected test vector\n");
+        exit(EXIT_FAILURE);
+    }
+    *(stringy)=0;
+    skip_cb(stringy++,1);
+
+    read_BIG_XXX(x,stringx);
+    read_BIG_XXX(y,stringy);
+
+    FP2_YYY_from_BIGs(fp2,x,y);
+}
+
+void read_FP4_YYY(FP4_YYY *fp4, char* stringx)
+{
+    char *stringy;
+    FP2_YYY x,y;
+    stringy = skip_cb(stringx++,1);
+    skip_cb(stringy++,1);
+
+    read_FP2_YYY(&x,stringx);
+    read_FP2_YYY(&y,stringy);
+
+    FP4_YYY_from_FP2s(fp4,&x,&y);
+}
+
+void read_FP8_YYY(FP8_YYY *fp8, char* stringx)
+{
+    char *stringy;
+    FP4_YYY x,y;
+    stringy = skip_cb(stringx++,3);
+    skip_cb(stringy++,3);
+
+    read_FP4_YYY(&x,stringx);
+    read_FP4_YYY(&y,stringy);
+
+    FP8_YYY_from_FP4s(fp8,&x,&y);
+}
+
+void read_FP16_YYY(FP16_YYY *fp16, char* stringx)
+{
+    char *stringy;
+    FP8_YYY x,y;
+    stringy = skip_cb(stringx++,7);
+    skip_cb(stringy++,7);
+
+    read_FP8_YYY(&x,stringx);
+    read_FP8_YYY(&y,stringy);
+
+    FP16_YYY_from_FP8s(fp16,&x,&y);
+}
+
+void read_FP48_YYY(FP48_YYY *fp48, char *stringx)
+{
+    char *stringy, *stringz;
+    FP16_YYY x,y,z;
+
+    stringy = skip_cb(stringx++,15);
+    stringz = skip_cb(stringy++,15);
+    skip_cb(stringz++,15);
+
+    read_FP16_YYY(&x,stringx);
+    read_FP16_YYY(&y,stringy);
+    read_FP16_YYY(&z,stringz);
+
+    FP48_YYY_from_FP16s(fp48,&x,&y,&z);
+}
+
+int main(int argc, char** argv)
+{
+
+    if (argc != 2)
+    {
+        printf("usage: ./test_fp48_arithmetics_ZZZ [path to test vector file]\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int i = 0, j = 1, k, len = 0;
+    FILE *fp;
+
+    char line[LINE_LEN];
+    char * linePtr = NULL;
+
+    BIG_XXX M, Fr_a, Fr_b;
+    FP2_YYY Frob;
+    FP16_YYY FP16aux1;
+    FP48_YYY FP48aux1, FP48aux2;
+    char octaux[48*MODBYTES_XXX];
+    octet OCTaux = {0,sizeof(octaux),octaux};
+
+    FP48_YYY FP_48[3], FP_48_frobs[16];
+    const char* FP48_lines[3] =
+    {
+        "FP48_1 = ",
+        "FP48_2 = ",
+        "FP48_c = "
+    };
+    FP48_YYY FP_48_smul_y_dtype;
+    const char* FP48smul_y_dtypeline = "FP48smul_y_dtype = ";
+    FP48_YYY FP_48_smul_y_mtype;
+    const char* FP48smul_y_mtypeline = "FP48smul_y_mtype = ";
+    FP48_YYY FP48conj;
+    const char* FP48conjline = "FP48conj = ";
+    FP48_YYY FP48usquare;
+    const char* FP48usquareline = "FP48usquare = ";
+    FP48_YYY FP48square;
+    const char* FP48squareline = "FP48square = ";
+    FP48_YYY FP48mul;
+    const char* FP48mulline = "FP48mul = ";
+    FP48_YYY FP48smul_dtype;
+    const char* FP48smuldtypeline = "FP48smul_dtype = ";
+    FP48_YYY FP48smul_mtype;
+    const char* FP48smulmtypeline = "FP48smul_mtype = ";
+    FP48_YYY FP48inv;
+    const char* FP48invline = "FP48inv = ";
+    BIG_XXX BIGsc[18];
+    const char* BIGsclines[18] =
+    {
+        "BIGsc1 = ",
+        "BIGsc2 = ",
+        "BIGsc3 = ",
+        "BIGsc4 = ",
+        "BIGsc5 = ",
+        "BIGsc6 = ",
+        "BIGsc7 = ",
+        "BIGsc8 = ",
+        "BIGsc9 = ",
+        "BIGsc10 = ",
+        "BIGsc11 = ",
+        "BIGsc12 = ",
+        "BIGsc13 = ",
+        "BIGsc14 = ",
+        "BIGsc15 = ",
+        "BIGsc16 = ",
+        "BIGscs = ",
+        "BIGsco = "
+    };
+    FP48_YYY FP48pow;
+    const char* FP48powline = "FP48pow = ";
+    FP48_YYY FP48pinpow;
+    const char* FP48pinpowline = "FP48pinpow = ";
+    FP16_YYY FP48compows;
+    const char* FP48compowsline = "FP48compows = ";
+    FP16_YYY FP48compow;
+    const char* FP48compowline = "FP48compow = ";
+    FP48_YYY FP48pow16;
+    const char* FP48pow16line = "FP48pow16 = ";
+    FP48_YYY FP48frob;
+    const char* FP48frobline = "FP48frob = ";
+    FP16_YYY FP16trace;
+    const char* FP16traceline = "FP16trace = ";
+
+    BIG_XXX_rcopy(M,Modulus_YYY);
+    BIG_XXX_rcopy(Fr_a,Fra_YYY);
+    BIG_XXX_rcopy(Fr_b,Frb_YYY);
+    FP2_YYY_from_BIGs(&Frob,Fr_a,Fr_b);
+
+    // Set to one
+    FP48_YYY_one(&FP48aux1);
+    FP48_YYY_copy(&FP48aux2,&FP48aux1);
+
+    // Testing equal function
+    if(!FP48_YYY_equals(&FP48aux1,&FP48aux2))
+    {
+        printf("ERROR comparing equal FP48s or copying FP48\n");
+        exit(EXIT_FAILURE);
+    }
+    FP16_YYY_zero(&FP16aux1);
+    FP48_YYY_from_FP16(&FP48aux1,&FP16aux1);
+    if(FP48_YYY_equals(&FP48aux1,&FP48aux2))
+    {
+        printf("ERROR comparing different FP48s\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if(!FP48_YYY_iszilch(&FP48aux1) || FP48_YYY_iszilch(&FP48aux2) || FP48_YYY_isunity(&FP48aux1) || !FP48_YYY_isunity(&FP48aux2))
+    {
+        printf("ERROR checking iszilch/isunity functions\n");
+        exit(EXIT_FAILURE);
+    }
+
+    fp = fopen(argv[1], "r");
+    if (fp == NULL)
+    {
+        printf("ERROR opening test vector file\n");
+        exit(EXIT_FAILURE);
+    }
+
+    while (fgets(line, LINE_LEN, fp) != NULL)
+    {
+        i++;
+        // Read first FP48 and perform some tests on it
+        if (!strncmp(line,FP48_lines[0], strlen(FP48_lines[0])))
+        {
+            len = strlen(FP48_lines[0]);
+            linePtr = line + len;
+            read_FP48_YYY(FP_48,linePtr);
+
+            // Test setting functions
+            FP48_YYY_from_FP16(&FP48aux1,&FP_48->a);
+            if(!FP16_YYY_equals(&FP48aux1.a,&FP_48->a) || !FP16_YYY_iszilch(&FP48aux1.b) || !FP16_YYY_iszilch(&FP48aux1.c))
+            {
+                printf("ERROR setting FP48 from a FP16, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            FP48_YYY_from_FP16s(&FP48aux1,&FP_48->a,&FP_48->b,&FP_48->c);
+            if(!FP48_YYY_equals(&FP48aux1,FP_48))
+            {
+                printf("ERROR setting FP48 from three FP16s, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+
+            // Test octet conversion consistency
+            FP48_YYY_toOctet(&OCTaux,FP_48);
+            FP48_YYY_fromOctet(&FP48aux1,&OCTaux);
+            if(!FP48_YYY_equals(&FP48aux1,FP_48))
+            {
+                printf("ERROR octet conversion consistency, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            FP48_YYY_copy(FP_48_frobs,FP_48);
+            for (k=1; k<16; k++)
+            {
+                FP48_YYY_copy(FP_48_frobs+k,FP_48_frobs+k-1);
+                FP48_YYY_frob(FP_48_frobs+k,&Frob,1);
+            }
+        }
+        // Read other FP48s.
+        for(k = 1; k<3; k++)
+        {
+            if (!strncmp(line,FP48_lines[k], strlen(FP48_lines[k])))
+            {
+                len = strlen(FP48_lines[k]);
+                linePtr = line + len;
+                read_FP48_YYY(FP_48+k,linePtr);
+            }
+        }
+        // Read y for M-TYPE smul test
+        if (!strncmp(line,FP48smul_y_mtypeline, strlen(FP48smul_y_mtypeline)))
+        {
+            len = strlen(FP48smul_y_mtypeline);
+            linePtr = line + len;
+            read_FP48_YYY(&FP_48_smul_y_mtype,linePtr);
+        }
+        // Read y for D-TYPE smul test
+        if (!strncmp(line,FP48smul_y_dtypeline, strlen(FP48smul_y_dtypeline)))
+        {
+            len = strlen(FP48smul_y_dtypeline);
+            linePtr = line + len;
+            read_FP48_YYY(&FP_48_smul_y_dtype,linePtr);
+        }
+        // Test FP48_YYY_conj
+        if (!strncmp(line,FP48conjline, strlen(FP48conjline)))
+        {
+            len = strlen(FP48conjline);
+            linePtr = line + len;
+            read_FP48_YYY(&FP48conj,linePtr);
+            FP48_YYY_conj(&FP48aux1,FP_48);
+            if(!FP48_YYY_equals(&FP48aux1,&FP48conj))
+            {
+                printf("ERROR computing conjugate of FP48, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test multiplication and commutativity
+        if (!strncmp(line,FP48mulline, strlen(FP48mulline)))
+        {
+            len = strlen(FP48mulline);
+            linePtr = line + len;
+            read_FP48_YYY(&FP48mul,linePtr);
+            FP48_YYY_copy(&FP48aux1,FP_48);
+            FP48_YYY_mul(&FP48aux1,FP_48+1);
+            FP48_YYY_copy(&FP48aux2,FP_48+1);
+            FP48_YYY_mul(&FP48aux2,FP_48);
+            if(!FP48_YYY_equals(&FP48aux1,&FP48mul) || !FP48_YYY_equals(&FP48aux2,&FP48mul))
+            {
+                printf("ERROR computing multiplication of two FP48s, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test squaring
+        if (!strncmp(line,FP48squareline, strlen(FP48squareline)))
+        {
+            len = strlen(FP48squareline);
+            linePtr = line + len;
+            read_FP48_YYY(&FP48square,linePtr);
+            FP48_YYY_sqr(&FP48aux1,FP_48);
+            if(!FP48_YYY_equals(&FP48aux1,&FP48square))
+            {
+                printf("ERROR computing square of FP48, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test usquaring
+        if (!strncmp(line,FP48usquareline, strlen(FP48usquareline)))
+        {
+            len = strlen(FP48usquareline);
+            linePtr = line + len;
+            read_FP48_YYY(&FP48usquare,linePtr);
+            FP48_YYY_usqr(&FP48aux1,FP_48);
+            if(!FP48_YYY_equals(&FP48aux1,&FP48usquare))
+            {
+                printf("ERROR computing usquare of FP48, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test s-multiplication for D-TYPE
+        if (!strncmp(line,FP48smuldtypeline, strlen(FP48smuldtypeline)))
+        {
+            len = strlen(FP48smuldtypeline);
+            linePtr = line + len;
+            read_FP48_YYY(&FP48smul_dtype,linePtr);
+            FP48_YYY_copy(&FP48aux1,FP_48);
+            FP48_YYY_smul(&FP48aux1,&FP_48_smul_y_dtype,D_TYPE);
+            if(!FP48_YYY_equals(&FP48aux1,&FP48smul_dtype))
+            {
+                printf("ERROR computing s-multiplication for D-TYPE, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test s-multiplication for M-TYPE
+        if (!strncmp(line,FP48smulmtypeline, strlen(FP48smulmtypeline)))
+        {
+            len = strlen(FP48smulmtypeline);
+            linePtr = line + len;
+            read_FP48_YYY(&FP48smul_mtype,linePtr);
+            FP48_YYY_copy(&FP48aux1,FP_48);
+            FP48_YYY_smul(&FP48aux1,&FP_48_smul_y_mtype,M_TYPE);
+            if(!FP48_YYY_equals(&FP48aux1,&FP48smul_mtype))
+            {
+                printf("ERROR computing s-multiplication for M-TYPE, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test inverse fuction
+        if (!strncmp(line,FP48invline, strlen(FP48invline)))
+        {
+            len = strlen(FP48invline);
+            linePtr = line + len;
+            read_FP48_YYY(&FP48inv,linePtr);
+            FP48_YYY_inv(&FP48aux1,FP_48);
+            if(!FP48_YYY_equals(&FP48aux1,&FP48inv))
+            {
+                printf("ERROR computing inverse of a FP48, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Read BIGS
+        for(k=0; k<18; k++)
+        {
+            if (!strncmp(line,BIGsclines[k], strlen(BIGsclines[k])))
+            {
+                len = strlen(BIGsclines[k]);
+                linePtr = line + len;
+                read_BIG_XXX(BIGsc[k],linePtr);
+            }
+        }
+        // Test power by a BIG
+        if (!strncmp(line,FP48powline, strlen(FP48powline)))
+        {
+            len = strlen(FP48powline);
+            linePtr = line + len;
+            read_FP48_YYY(&FP48pow,linePtr);
+            FP48_YYY_pow(&FP48aux1,FP_48,BIGsc[0]);
+            if(!FP48_YYY_equals(&FP48aux1,&FP48pow))
+            {
+                printf("ERROR computing power of a FP48 by a BIG, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test power by a small integer
+        if (!strncmp(line,FP48pinpowline, strlen(FP48pinpowline)))
+        {
+            len = strlen(FP48pinpowline);
+            linePtr = line + len;
+            read_FP48_YYY(&FP48pinpow,linePtr);
+            FP48_YYY_copy(&FP48aux1,FP_48);
+            FP48_YYY_pinpow(&FP48aux1,j,10);
+            if(!FP48_YYY_equals(&FP48aux1,&FP48pinpow))
+            {
+                printf("ERROR computing power of a FP48 by a small integer, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            j++;
+        }
+        // Test fucntion FP48_YYY_compow with small integer [< Modulus mod Curve_Order]
+        if (!strncmp(line,FP48compowsline, strlen(FP48compowsline)))
+        {
+            len = strlen(FP48compowsline);
+            linePtr = line + len;
+            read_FP16_YYY(&FP48compows,linePtr);
+            FP48_YYY_copy(&FP48aux1,FP_48+2);
+            FP48_YYY_compow(&FP16aux1,&FP48aux1,BIGsc[16],BIGsc[17]);
+            if(!FP16_YYY_equals(&FP16aux1,&FP48compows))
+            {
+                printf("ERROR testing function FP48_compow with small integer, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test fucntion FP48_YYY_compow with big integer [> Modulus mod Curve_Order]
+        if (!strncmp(line,FP48compowline, strlen(FP48compowline)))
+        {
+            len = strlen(FP48compowline);
+            linePtr = line + len;
+            read_FP16_YYY(&FP48compow,linePtr);
+            FP48_YYY_copy(&FP48aux1,FP_48+2);
+            FP48_YYY_compow(&FP16aux1,&FP48aux1,BIGsc[0],BIGsc[17]);
+            if(!FP16_YYY_equals(&FP16aux1,&FP48compow))
+            {
+                printf("ERROR testing function FP48_compow with big integer, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test function FP48_YYY_pow16
+        if (!strncmp(line,FP48pow16line, strlen(FP48pow16line)))
+        {
+            len = strlen(FP48pow16line);
+            linePtr = line + len;
+            read_FP48_YYY(&FP48pow16,linePtr);
+            FP48_YYY_pow16(&FP48aux1,FP_48_frobs,BIGsc);
+
+            if(!FP48_YYY_equals(&FP48aux1,&FP48pow16))
+            {
+                printf("ERROR testing function FP48pow16, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Raises an FP48 to the power of the internal modulus p, using the Frobenius constant f
+        if (!strncmp(line,FP48frobline, strlen(FP48frobline)))
+        {
+            len = strlen(FP48frobline);
+            linePtr = line + len;
+            read_FP48_YYY(&FP48frob,linePtr);
+            FP48_YYY_copy(&FP48aux1,FP_48);
+            FP48_YYY_frob(&FP48aux1,&Frob,1);
+            if(!FP48_YYY_equals(&FP48aux1,&FP48frob) || !FP48_YYY_equals(FP_48_frobs+1,&FP48frob))
+            {
+                printf("ERROR in raising FP48 by an internal modulus p, using the Frobenius constant f, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        // Test computing trace of FP48
+        if (!strncmp(line,FP16traceline, strlen(FP16traceline)))
+        {
+            len = strlen(FP16traceline);
+            linePtr = line + len;
+            read_FP16_YYY(&FP16trace,linePtr);
+            FP48_YYY_copy(&FP48aux1,&FP_48[0]);
+            FP48_YYY_trace(&FP16aux1,&FP48aux1);
+            if(!FP16_YYY_equals(&FP16aux1,&FP16trace))
+            {
+                printf("ERROR computing trace of FP48, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
+
+    fclose(fp);
+
+    printf("SUCCESS TEST ARITMETIC OF FP48 PASSED\n");
+    exit(EXIT_SUCCESS);
+}

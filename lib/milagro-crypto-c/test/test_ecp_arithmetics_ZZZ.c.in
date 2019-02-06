@@ -1,0 +1,443 @@
+/**
+ * @file test_ecp_arithmetics_ZZZ.c
+ * @author Alessandro Budroni
+ * @brief Test for aritmetics with ECP_ZZZ
+ *
+ * LICENSE
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "arch.h"
+#include "amcl.h"
+#include "utils.h"
+#include "ecp_ZZZ.h"
+
+#define LINE_LEN 1000
+#define MAX_STRING 400
+#define PIN 1234
+
+void read_BIG_XXX(BIG_XXX A, char* string)
+{
+    int len;
+    char support[LINE_LEN];
+    BIG_XXX_zero(A);
+    len = strlen(string)+1;
+    amcl_hex2bin(string,support,len);
+    len = (len-1)/2;;
+    BIG_XXX_fromBytesLen(A,support,len);
+    BIG_XXX_norm(A);
+}
+
+int read_ECP_ZZZ(ECP_ZZZ *ecp, char* string)
+{
+    BIG_XXX x;
+#if CURVETYPE_ZZZ!=MONTGOMERY
+    BIG_XXX y;
+#endif
+    char *stringy = strchr(string,':');
+    stringy[0] = '\0';
+    read_BIG_XXX(x,string);
+#if CURVETYPE_ZZZ==MONTGOMERY
+    return ECP_ZZZ_set(ecp,x);
+#else
+    stringy++;
+    read_BIG_XXX(y,stringy);
+    return ECP_ZZZ_set(ecp,x,y);
+#endif
+}
+
+int main(int argc, char** argv)
+{
+    if (argc != 2)
+    {
+        printf("usage: ./test_ecp_arithmetics_ZZZ [path to test vector file]\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int i=0, len=0;
+
+    char line[LINE_LEN];
+    char * linePtr = NULL;
+
+    ECP_ZZZ inf, ECPaux1;
+    BIG_XXX BIGaux1;
+
+    char oct[LINE_LEN];
+    octet OCTaux = {0,sizeof(oct),oct};
+#if CURVETYPE_ZZZ!=MONTGOMERY
+    BIG_XXX BIGaux2;
+    FP_YYY FPaux1,FPaux2;
+    ECP_ZZZ ECPaux2;
+#endif
+    ECP_ZZZ ecp1;
+    const char* ECP1line = "ECP1 = ";
+#if CURVETYPE_ZZZ!=MONTGOMERY
+    ECP_ZZZ ecp2;
+    const char* ECP2line = "ECP2 = ";
+    ECP_ZZZ ecpsum;
+    const char* ECPsumline = "ECPsum = ";
+    ECP_ZZZ ecpneg;
+    const char* ECPnegline = "ECPneg = ";
+    ECP_ZZZ ecpsub;
+    const char* ECPsubline = "ECPsub = ";
+#endif
+    ECP_ZZZ ecpdbl;
+    const char* ECPdblline = "ECPdbl = ";
+    BIG_XXX BIGscalar1;
+    const char* BIGscalar1line = "BIGscalar1 = ";
+    ECP_ZZZ ecpmul;
+    const char* ECPmulline = "ECPmul = ";
+    ECP_ZZZ ecpwrong;
+    const char* ECPwrongline = "ECPwrong = ";
+    ECP_ZZZ ecpinf;
+    const char* ECPinfline = "ECPinf = ";
+#if CURVETYPE_ZZZ!=MONTGOMERY
+    ECP_ZZZ ecppinmul;
+    const char* ECPpinmulline = "ECPpinmul = ";
+    BIG_XXX BIGscalar2;
+    const char* BIGscalar2line = "BIGscalar2 = ";
+    ECP_ZZZ ecpmul2;
+    const char* ECPmul2line = "ECPmul2 = ";
+    ECP_ZZZ ecpeven;
+    const char* ECPevenline = "ECPeven = ";
+    ECP_ZZZ ecpodd;
+    const char* ECPoddline = "ECPodd = ";
+#endif
+#if CURVETYPE_ZZZ==MONTGOMERY
+    ECP_ZZZ ecpmul3;
+    const char* ECPmul3line = "ECPmul3 = ";
+#endif
+
+    ECP_ZZZ_inf(&inf);
+
+    if(!ECP_ZZZ_isinf(&inf))
+    {
+        printf("ERROR setting ECP_ZZZ to infinity\n");
+        exit(EXIT_FAILURE);
+    }
+
+    FILE *fp;
+    fp = fopen(argv[1],"r");
+    if (fp == NULL)
+    {
+        printf("ERROR opening test vector file\n");
+        exit(EXIT_FAILURE);
+    }
+
+    while (fgets(line, LINE_LEN, fp) != NULL)
+    {
+        i++;
+        if (!strncmp(line,  ECP1line, strlen(ECP1line))) // get first test vector
+        {
+            len = strlen(ECP1line);
+            linePtr = line + len;
+            if(!read_ECP_ZZZ(&ecp1,linePtr) || ECP_ZZZ_isinf(&ecp1))
+            {
+                printf("ERROR getting test vector input ECP_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+#if CURVETYPE_ZZZ!=MONTGOMERY
+            ECP_ZZZ_get(BIGaux1,BIGaux2,&ecp1);
+            FP_YYY_nres(&FPaux1,BIGaux1);
+            FP_YYY_nres(&FPaux2,BIGaux2);
+            FP_YYY_sqr(&FPaux2,&FPaux2);
+            ECP_ZZZ_rhs(&FPaux1,&FPaux1);
+            FP_YYY_reduce(&FPaux1); // in case of lazy reduction
+            FP_YYY_reduce(&FPaux2); // in case of lazy reduction
+            if (!FP_YYY_equals(&FPaux1,&FPaux2)) // test if y^2=f(x)
+            {
+                printf("ERROR computing right hand side of equation ECP_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+#endif
+            ECP_ZZZ_toOctet(&OCTaux,&ecp1);
+            ECP_ZZZ_fromOctet(&ECPaux1,&OCTaux);
+            if(!ECP_ZZZ_equals(&ECPaux1,&ecp1)) // test octet conversion
+            {
+                printf("ERROR converting ECP_ZZZ to/from OCTET, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+#if CURVETYPE_ZZZ!=MONTGOMERY
+        if (!strncmp(line,  ECP2line, strlen(ECP2line))) // get second test vector
+        {
+            len = strlen(ECP2line);
+            linePtr = line + len;
+            if(!read_ECP_ZZZ(&ecp2,linePtr) || ECP_ZZZ_isinf(&ecp2))
+            {
+                printf("ERROR getting test vector input ECP_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        if (!strncmp(line,  ECPsumline, strlen(ECPsumline)))
+        {
+            len = strlen(ECPsumline);
+            linePtr = line + len;
+            if(!read_ECP_ZZZ(&ecpsum,linePtr) || ECP_ZZZ_isinf(&ecpsum))
+            {
+                printf("ERROR getting test vector input ECP_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            ECP_ZZZ_copy(&ECPaux1,&ecp1);
+            ECP_ZZZ_add(&ECPaux1,&ecp2);
+            ECP_ZZZ_affine(&ECPaux1);
+            ECP_ZZZ_copy(&ECPaux2,&ecp2);
+            ECP_ZZZ_add(&ECPaux2,&ecp1);
+            ECP_ZZZ_affine(&ECPaux2);
+            if(!ECP_ZZZ_equals(&ECPaux1,&ecpsum) || !ECP_ZZZ_equals(&ECPaux2,&ecpsum)) // test addition P+Q and Q+P (commutativity)
+            {
+                printf("ERROR adding two ECPs, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            ECP_ZZZ_copy(&ECPaux1,&ecp1); // test associativity
+            ECP_ZZZ_add(&ECPaux1,&ecp2);
+            ECP_ZZZ_add(&ECPaux1,&ecpsum);
+            ECP_ZZZ_copy(&ECPaux2,&ecpsum);
+            ECP_ZZZ_add(&ECPaux2,&ecp2);
+            ECP_ZZZ_add(&ECPaux2,&ecp1);
+            if(!ECP_ZZZ_equals(&ECPaux1,&ECPaux2)) // test associativity (P+Q)+R = P+(Q+R)
+            {
+                printf("ERROR testing associativity between three ECPs, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        if (!strncmp(line,  ECPsubline, strlen(ECPsubline)))
+        {
+            len = strlen(ECPsubline);
+            linePtr = line + len;
+            if(!read_ECP_ZZZ(&ecpsub,linePtr) || ECP_ZZZ_isinf(&ecpsub))
+            {
+                printf("ERROR getting test vector input ECP_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            ECP_ZZZ_copy(&ECPaux1,&ecp1);
+            ECP_ZZZ_sub(&ECPaux1,&ecp2);
+            ECP_ZZZ_affine(&ECPaux1);
+            if(!ECP_ZZZ_equals(&ECPaux1,&ecpsub)) // test subtraction P-Q
+            {
+                printf("ERROR computing subtraction of two ECPs, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        if (!strncmp(line,  ECPnegline, strlen(ECPnegline)))
+        {
+            len = strlen(ECPnegline);
+            linePtr = line + len;
+            if(!read_ECP_ZZZ(&ecpneg,linePtr) || ECP_ZZZ_isinf(&ecpneg))
+            {
+                printf("ERROR getting test vector input ECP_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            ECP_ZZZ_copy(&ECPaux1,&ecp1);
+            ECP_ZZZ_neg(&ECPaux1);
+            ECP_ZZZ_affine(&ECPaux1);
+            if(!ECP_ZZZ_equals(&ECPaux1,&ecpneg))
+            {
+                printf("ERROR computing negative of ECP_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+#endif
+        if (!strncmp(line,  ECPdblline, strlen(ECPdblline)))
+        {
+            len = strlen(ECPdblline);
+            linePtr = line + len;
+            if(!read_ECP_ZZZ(&ecpdbl,linePtr) || ECP_ZZZ_isinf(&ecpdbl))
+            {
+                printf("ERROR getting test vector input ECP_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            ECP_ZZZ_copy(&ECPaux1,&ecp1);
+            ECP_ZZZ_dbl(&ECPaux1);
+            ECP_ZZZ_affine(&ECPaux1);
+            if(!ECP_ZZZ_equals(&ECPaux1,&ecpdbl))
+            {
+                ECP_ZZZ_outputxyz(&ECPaux1);
+                ECP_ZZZ_outputxyz(&ecpdbl);
+                printf("ERROR computing double of ECP_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+#if CURVETYPE_ZZZ==MONTGOMERY
+        if (!strncmp(line,  ECPmul3line, strlen(ECPmul3line)))
+        {
+            len = strlen(ECPmul3line);
+            linePtr = line + len;
+            if(!read_ECP_ZZZ(&ecpmul3,linePtr) || ECP_ZZZ_isinf(&ecpmul3))
+            {
+                printf("ERROR getting test vector input ECP_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            BIG_XXX_one(BIGaux1);
+            BIG_XXX_inc(BIGaux1,2);
+            BIG_XXX_norm(BIGaux1);
+            ECP_ZZZ_copy(&ECPaux1,&ecp1);
+            ECP_ZZZ_mul(&ECPaux1,BIGaux1);
+            ECP_ZZZ_affine(&ECPaux1);
+            if(!ECP_ZZZ_equals(&ECPaux1,&ecpmul3))
+            {
+                printf("ERROR computing multiplication of ECP_ZZZ by 3, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            ECP_ZZZ_copy(&ECPaux1,&ecpdbl);
+            ECP_ZZZ_add(&ECPaux1,&ecp1,&ecp1);
+            if(!ECP_ZZZ_equals(&ECPaux1,&ecpmul3))
+            {
+                printf("ERROR computing multiplication of ECP_ZZZ by 3, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+#endif
+        if (!strncmp(line,  BIGscalar1line, strlen(BIGscalar1line)))
+        {
+            len = strlen(BIGscalar1line);
+            linePtr = line + len;
+            read_BIG_XXX(BIGscalar1,linePtr);
+        }
+        if (!strncmp(line,  ECPmulline, strlen(ECPmulline)))
+        {
+            len = strlen(ECPmulline);
+            linePtr = line + len;
+            if(!read_ECP_ZZZ(&ecpmul,linePtr))
+            {
+                printf("ERROR getting test vector input ECP_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            ECP_ZZZ_copy(&ECPaux1,&ecp1);
+            ECP_ZZZ_mul(&ECPaux1,BIGscalar1);
+            ECP_ZZZ_affine(&ECPaux1);
+            if(!ECP_ZZZ_equals(&ECPaux1,&ecpmul))
+            {
+                ECP_ZZZ_outputxyz(&ecp1);
+                ECP_ZZZ_outputxyz(&ECPaux1);
+                ECP_ZZZ_outputxyz(&ecpmul);
+                printf("ERROR computing multiplication of ECP_ZZZ by a scalar, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+#if CURVETYPE_ZZZ!=MONTGOMERY
+        if (!strncmp(line,  ECPpinmulline, strlen(ECPpinmulline)))
+        {
+            len = strlen(ECPpinmulline);
+            linePtr = line + len;
+            if(!read_ECP_ZZZ(&ecppinmul,linePtr))
+            {
+                printf("ERROR getting test vector input ECP_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            ECP_ZZZ_copy(&ECPaux1,&ecp1);
+            ECP_ZZZ_pinmul(&ECPaux1,PIN,14);
+            ECP_ZZZ_affine(&ECPaux1);
+            if(!ECP_ZZZ_equals(&ECPaux1,&ecppinmul))
+            {
+                printf("ERROR computing multiplication of ECP_ZZZ by small integer, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        if (!strncmp(line,  BIGscalar2line, strlen(BIGscalar2line)))
+        {
+            len = strlen(BIGscalar2line);
+            linePtr = line + len;
+            read_BIG_XXX(BIGscalar2,linePtr);
+        }
+        if (!strncmp(line,  ECPmul2line, strlen(ECPmul2line)))
+        {
+            len = strlen(ECPmul2line);
+            linePtr = line + len;
+            if(!read_ECP_ZZZ(&ecpmul2,linePtr))
+            {
+                printf("ERROR getting test vector input ECP_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            ECP_ZZZ_copy(&ECPaux1,&ecp1);
+            ECP_ZZZ_copy(&ECPaux2,&ecp2);
+            ECP_ZZZ_mul2(&ECPaux1,&ECPaux2,BIGscalar1,BIGscalar2);
+            ECP_ZZZ_affine(&ECPaux1);
+            if(!ECP_ZZZ_equals(&ECPaux1,&ecpmul2))
+            {
+                printf("ERROR computing linear combination of 2 ECPs, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+#endif
+        if (!strncmp(line,  ECPwrongline, strlen(ECPwrongline)))
+        {
+            len = strlen(ECPwrongline);
+            linePtr = line + len;
+            if(read_ECP_ZZZ(&ecpwrong,linePtr) || !ECP_ZZZ_isinf(&ecpwrong) || !ECP_ZZZ_equals(&ecpwrong,&inf))
+            {
+                printf("ERROR identifying wrong ECP_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        if (!strncmp(line,  ECPinfline, strlen(ECPinfline)))
+        {
+            len = strlen(ECPinfline);
+            linePtr = line + len;
+            if(read_ECP_ZZZ(&ecpinf,linePtr) || !ECP_ZZZ_isinf(&ecpinf) || !ECP_ZZZ_equals(&ecpinf,&inf))
+            {
+                printf("ERROR identifying infinite point ECP_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+#if CURVETYPE_ZZZ!=MONTGOMERY
+        if (!strncmp(line,  ECPevenline, strlen(ECPevenline)))
+        {
+            len = strlen(ECPevenline);
+            linePtr = line + len;
+            if(!read_ECP_ZZZ(&ecpeven,linePtr))
+            {
+                printf("ERROR getting test vector input ECP_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            ECP_ZZZ_get(BIGaux1,BIGaux2,&ecp1);
+            BIG_XXX_norm(BIGaux1);
+            ECP_ZZZ_setx(&ECPaux1,BIGaux1,0);
+            if(!ECP_ZZZ_equals(&ECPaux1,&ecpeven))
+            {
+                printf("ERROR computing ECP_ZZZ from coordinate x and with y even, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+        if (!strncmp(line,  ECPoddline, strlen(ECPoddline)))
+        {
+            len = strlen(ECPoddline);
+            linePtr = line + len;
+            if(!read_ECP_ZZZ(&ecpodd,linePtr))
+            {
+                printf("ERROR getting test vector input ECP_ZZZ, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+            ECP_ZZZ_setx(&ECPaux1,BIGaux1,1);
+            if(!ECP_ZZZ_equals(&ECPaux1,&ecpodd))
+            {
+                printf("ERROR computing ECP_ZZZ from coordinate x and with y odd, line %d\n",i);
+                exit(EXIT_FAILURE);
+            }
+        }
+#endif
+    }
+    fclose(fp);
+
+    printf("SUCCESS TEST ARITMETIC OF ECP_ZZZ PASSED\n");
+    exit(EXIT_SUCCESS);
+}

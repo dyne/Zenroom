@@ -1,0 +1,31 @@
+get_filename_component(amcl_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+set(AMCL_LIBRARIES "@AMCL_LIBRARIES@")
+
+if(NOT TARGET AMCL::AMCL)
+  include("${amcl_CMAKE_DIR}/AMCLTargets.cmake")
+
+  # Add change prefix to get target names
+  foreach(_lib ${AMCL_LIBRARIES})
+    string(REGEX REPLACE "^amcl_" "AMCL::" _target "${_lib}")
+    list(APPEND AMCL_TARGETS "${_target}")
+  endforeach()
+
+  # Create an uber-target depending on all install AMCL libraries
+  add_library(AMCL::AMCL INTERFACE IMPORTED)
+  set_target_properties(AMCL::AMCL PROPERTIES INTERFACE_LINK_LIBRARIES "${AMCL_TARGETS}")
+endif()
+
+# If components were specified, determine which were actually found.
+if(AMCL_FIND_COMPONENTS)
+  foreach(comp ${AMCL_FIND_COMPONENTS})
+    if(TARGET "AMCL::${comp}")
+      set(AMCL_${comp}_FOUND 1)
+    else()
+      set(AMCL_${comp}_FOUND 0)
+      if(AMCL_FIND_REQUIRED_${comp})
+        message(FATAL_ERROR "AMCL::${comp} not available.")
+      endif()
+    endif()
+  endforeach()
+endif()

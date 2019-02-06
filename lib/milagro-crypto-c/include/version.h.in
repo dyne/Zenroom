@@ -1,0 +1,74 @@
+/**
+ * @file version.h
+ * @author Kealan McCusker
+ * @date 28th April 2016
+ * @brief Build information
+ *
+ * LICENSE
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/* AMCL header support version function */
+
+#ifndef VERSION_H
+#define VERSION_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "amcl.h"
+
+/*
+ * Supported curves
+ * Current choice of Elliptic Curves:
+ * - NIST256
+ * - C25519
+ * - ED25519
+ * - BRAINPOOL
+ * - ANSSI
+ * - NUMS256E
+ * - NUMS256W
+ * - NUMS384E
+ * - NUMS384W
+ * - NUMS512E
+ * - NUMS512W
+ * - HIFIVE
+ * - GOLDILOCKS
+ * - NIST384
+ * - C41417
+ * - NIST521
+ * - BN254
+ * - BN254CX
+ * - BLS383
+ */
+@SC@
+
+/*
+ * Supported RSA security levels
+ * Current choice of security levels: 2048, 3072, 4096
+ */
+@RSL@
+
+/**
+ * @brief Print version number and information about the build
+ *
+ * Print version number and information about the build.
+ */
+void amcl_version(void);
+
+#endif

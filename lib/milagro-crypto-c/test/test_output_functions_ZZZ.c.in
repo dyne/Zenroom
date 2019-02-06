@@ -1,0 +1,695 @@
+/**
+ * @file test_output_functions.c
+ * @author Alessandro Budroni
+ * @brief Test output functions for debug
+ *
+ * LICENSE
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "arch.h"
+#include "amcl.h"
+#include "utils.h"
+#include "big_XXX.h"
+#include "fp_YYY.h"
+#include "fp2_YYY.h"
+#include "fp4_YYY.h"
+#include "ecp_ZZZ.h"
+#if CURVE_SECURITY_ZZZ == 128
+#include "fp12_YYY.h"
+#include "ecp2_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 192
+#include "fp8_YYY.h"
+#include "fp24_YYY.h"
+#include "ecp4_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 256
+#include "fp8_YYY.h"
+#include "fp16_YYY.h"
+#include "fp48_YYY.h"
+#include "ecp8_ZZZ.h"
+#endif
+
+extern int dup(int oldfd);
+extern int dup2(int oldfd, int newfd);
+extern int close(int fildes);
+extern int fileno(FILE *stream);
+
+#if CURVE_SECURITY_ZZZ == 128
+#define LINE_LEN 2000
+#elif CURVE_SECURITY_ZZZ == 192
+#define LINE_LEN 4000
+#elif CURVE_SECURITY_ZZZ == 256
+#define LINE_LEN 8000
+#endif
+
+
+/*
+ * Skips n closed brackets.
+ * Null terminates after the nth bracket and
+ * returns a pointer to the next char
+ */
+char* skip_cb(char* str, int n)
+{
+    int i;
+    char* next=str;
+
+    for(i=0; i<n; i++)
+    {
+        next = strchr(++next,']');
+        if (next == NULL)
+        {
+            printf("ERROR unexpected test vector\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+    *(++next) = '\0';
+
+    return next++;
+}
+
+void read_BIG_XXX(BIG_XXX A, char* string)
+{
+    int len;
+    char support[LINE_LEN];
+    BIG_XXX_zero(A);
+    len = strlen(string)+1;
+    amcl_hex2bin(string,support,len);
+    len = (len-1)/2;
+    BIG_XXX_fromBytesLen(A,support,len);
+    BIG_XXX_norm(A);
+}
+
+void read_DBIG_XXX(DBIG_XXX A, char* string)
+{
+    int len;
+    char support[LINE_LEN] = "0";
+    BIG_XXX_dzero(A);
+
+    // replace eventual line feed
+    len=strlen(string);
+    if(string[len-1] == '\x0a')
+    {
+        string[len-1]='\0';
+        len--;
+    }
+
+    // Handle odd length strings
+    if(len %2 == 0)
+        support[0]='\0';
+    strcat(support,string);
+
+    len = strlen(support);
+    amcl_hex2bin(support,support,len);
+    BIG_XXX_dfromBytesLen(A,support,len/2);
+    BIG_XXX_dnorm(A);
+}
+
+void read_FP2_YYY(FP2_YYY *fp2, char* stringx)
+{
+    char *stringy;
+    BIG_XXX x,y;
+
+    stringy = strchr(++stringx,',');
+    if (stringy == NULL)
+    {
+        printf("ERROR unexpected test vector\n");
+        exit(EXIT_FAILURE);
+    }
+    *(stringy)=0;
+    skip_cb(stringy++,1);
+
+    read_BIG_XXX(x,stringx);
+    read_BIG_XXX(y,stringy);
+
+    FP2_YYY_from_BIGs(fp2,x,y);
+}
+
+void read_FP4_YYY(FP4_YYY *fp4, char* stringx)
+{
+    char *stringy;
+    FP2_YYY x,y;
+
+    stringy = skip_cb(stringx++,1);
+    skip_cb(stringy++,1);
+
+    read_FP2_YYY(&x,stringx);
+    read_FP2_YYY(&y,stringy);
+
+    FP4_YYY_from_FP2s(fp4,&x,&y);
+}
+
+int read_ECP_ZZZ(ECP_ZZZ *ecp, char* string)
+{
+    BIG_XXX x;
+    char *end;
+    BIG_XXX y;
+    char *stringy;
+    string++;
+    stringy = strchr(string,',');
+    if (stringy == NULL)
+    {
+        printf("ERROR unexpected test vector\n");
+        exit(EXIT_FAILURE);
+    }
+    stringy[0] = '\0';
+    stringy++;
+    end = strchr(stringy,')');
+    if (end == NULL)
+    {
+        printf("ERROR unexpected test vector\n");
+        exit(EXIT_FAILURE);
+    }
+    end[0] = '\0';
+    read_BIG_XXX(x,string);
+    read_BIG_XXX(y,stringy);
+    return ECP_ZZZ_set(ecp,x,y);
+}
+
+#if CURVE_SECURITY_ZZZ == 128
+void read_FP12_YYY(FP12_YYY *fp12, char *stringx)
+{
+    char *stringy, *stringz;
+    FP4_YYY x,y,z;
+
+    stringy = skip_cb(stringx++,3);
+    stringz = skip_cb(stringy++,3);
+    skip_cb(stringz++,3);
+
+    read_FP4_YYY(&x,stringx);
+    read_FP4_YYY(&y,stringy);
+    read_FP4_YYY(&z,stringz);
+
+    FP12_YYY_from_FP4s(fp12,&x,&y,&z);
+}
+int read_ECP2_ZZZ(ECP2_ZZZ *ecp2, char* stringx)
+{
+    char *stringy;
+    FP2_YYY x,y;
+
+    stringy = skip_cb(stringx++,1);
+    skip_cb(stringy++,1);
+
+    read_FP2_YYY(&x,stringx);
+    read_FP2_YYY(&y,stringy);
+
+    return ECP2_ZZZ_set(ecp2,&x,&y);
+}
+#else
+void read_FP8_YYY(FP8_YYY *fp8, char* stringx)
+{
+    char *stringy;
+    FP4_YYY x,y;
+
+    stringy = skip_cb(stringx++,3);
+    skip_cb(stringy++,3);
+
+    read_FP4_YYY(&x,stringx);
+    read_FP4_YYY(&y,stringy);
+
+    FP8_YYY_from_FP4s(fp8,&x,&y);
+}
+#if CURVE_SECURITY_ZZZ == 192
+void read_FP24_YYY(FP24_YYY *fp24, char *stringx)
+{
+    char *stringy, *stringz;
+    FP8_YYY x,y,z;
+
+    stringy = skip_cb(stringx++,7);
+    stringz = skip_cb(stringy++,7);
+    skip_cb(stringz++,7);
+
+    read_FP8_YYY(&x,stringx);
+    read_FP8_YYY(&y,stringy);
+    read_FP8_YYY(&z,stringz);
+
+    FP24_YYY_from_FP8s(fp24,&x,&y,&z);
+
+}
+int read_ECP4_ZZZ(ECP4_ZZZ *ecp4, char* stringx)
+{
+    char *stringy;
+    FP4_YYY x,y;
+
+    stringy = skip_cb(stringx++,3);
+    skip_cb(stringy++,3);
+
+    read_FP4_YYY(&x,stringx);
+    read_FP4_YYY(&y,stringy);
+
+    return ECP4_ZZZ_set(ecp4,&x,&y);
+}
+#elif CURVE_SECURITY_ZZZ == 256
+void read_FP16_YYY(FP16_YYY *fp16, char* stringx)
+{
+    char *stringy;
+    FP8_YYY x,y;
+
+    stringy = skip_cb(stringx++,7);
+    skip_cb(stringy++,7);
+    read_FP8_YYY(&x,stringx);
+    read_FP8_YYY(&y,stringy);
+
+    FP16_YYY_from_FP8s(fp16,&x,&y);
+}
+void read_FP48_YYY(FP48_YYY *fp48, char *stringx)
+{
+    char *stringy, *stringz;
+    FP16_YYY x,y,z;
+
+    stringy = skip_cb(stringx++,15);
+    stringz = skip_cb(stringy++,15);
+    skip_cb(stringz++,15);
+
+    read_FP16_YYY(&x,stringx);
+    read_FP16_YYY(&y,stringy);
+    read_FP16_YYY(&z,stringz);
+
+    FP48_YYY_from_FP16s(fp48,&x,&y,&z);
+}
+int read_ECP8_ZZZ(ECP8_ZZZ *ecp8, char* stringx)
+{
+    char *stringy;
+    FP8_YYY x,y;
+
+    stringy = skip_cb(stringx++,7);
+    skip_cb(stringy++,7);
+
+    read_FP8_YYY(&x,stringx);
+    read_FP8_YYY(&y,stringy);
+
+    return ECP8_ZZZ_set(ecp8,&x,&y);
+}
+#endif
+#endif
+
+void read_OCT(octet *oct, char* string, int len)
+{
+    char buff[len-1];
+    buff[len-1] = '\0';
+    strncpy(buff,string,len-1);
+    OCT_fromHex(oct,buff);
+}
+
+int main(int argc, char** argv)
+{
+    if (argc != 3)
+    {
+        printf("usage: ./test_ECP2_ZZZ_arithmetics [path to test vector file] [path to output directory]\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int fd, len, ch1 = 0, ch2 = 0, i=0, done;
+    fpos_t pos;
+    FILE *testVectFile, *writtenFile;
+
+    char line[LINE_LEN];
+    char * linePtr = NULL;
+
+    BIG_XXX big, bigaux1, bigaux2;
+    const char* BIGline = "BIG = ";
+    const char* BIGrawline = "BIGraw = ";
+    DBIG_XXX dbig;
+    const char* DBIGline = "DBIG = ";
+    FP_YYY fp;
+    const char* FPline = "FP = ";
+    const char* FPrawline = "FPraw = ";
+    ECP_ZZZ ecp;
+    ECP_ZZZ ecpinf;
+    const char* ECPline = "ECP = ";
+    const char* ECPxyzline = "ECPxyz = ";
+    const char* ECPrawline = "ECPraw = ";
+    const char* ECPinfline = "ECPinf = ";
+    const char* ECPinfxyzline = "ECPinfxyz = ";
+    const char* ECPinfrawline = "ECPinfraw = ";
+    FP2_YYY fp2;
+    const char* FP2line = "FP2 = ";
+    const char* FP2rawline = "FP2raw = ";
+    FP4_YYY fp4;
+    const char* FP4line = "FP4 = ";
+    const char* FP4rawline = "FP4raw = ";
+# if CURVE_SECURITY_ZZZ == 128
+    FP12_YYY fp12;
+    const char* FP12line = "FP12 = ";
+    FP2_YYY fp2aux;
+    ECP2_ZZZ ecp2;
+    ECP2_ZZZ ecp2inf;
+    const char* ECP2line = "ECP2 = ";
+    const char* ECP2xyzline = "ECP2xyz = ";
+    const char* ECP2infline = "ECP2inf = ";
+    const char* ECP2infxyzline = "ECP2infxyz = ";
+#else
+    FP8_YYY fp8;
+    const char* FP8line = "FP8 = ";
+    const char* FP8rawline = "FP8raw = ";
+#if CURVE_SECURITY_ZZZ == 192
+    FP24_YYY fp24;
+    const char* FP24line = "FP24 = ";
+    FP4_YYY fp4aux;
+    ECP4_ZZZ ecp4;
+    ECP4_ZZZ ecp4inf;
+    const char* ECP4line = "ECP4 = ";
+    const char* ECP4infline = "ECP4inf = ";
+#elif CURVE_SECURITY_ZZZ == 256
+    FP16_YYY fp16;
+    const char* FP16line = "FP16 = ";
+    const char* FP16rawline = "FP16raw = ";
+    FP48_YYY fp48;
+    const char* FP48line = "FP48 = ";
+    FP8_YYY fp8aux;
+    ECP8_ZZZ ecp8;
+    ECP8_ZZZ ecp8inf;
+    const char* ECP8line = "ECP8 = ";
+    const char* ECP8infline = "ECP8inf = ";
+#endif
+#endif
+    char octbuf[LINE_LEN];
+    octet oct = {0,sizeof(octbuf),octbuf};
+    const char* OCTline = "OCT = ";
+    //const char* OCTstringline = "OCTstring = ";
+    char bin[32];
+    const char* HEXline = "HEX = ";
+
+    testVectFile = fopen(argv[1],"r");
+    if (testVectFile == NULL)
+    {
+        printf("ERROR opening test vector file\n");
+        exit(EXIT_FAILURE);
+    }
+
+    fgetpos(stdout, &pos);
+    fd = dup(fileno(stdout));
+
+    if(freopen(argv[2], "w", stdout) == NULL)
+    {
+        printf("ERROR redirecting stdout\n");
+        exit(EXIT_FAILURE);
+    }
+
+    while (fgets(line, LINE_LEN, testVectFile) != NULL)
+    {
+        i++;
+        done=0;
+        if (!strncmp(line,  BIGline, strlen(BIGline)))
+        {
+            len = strlen(BIGline);
+            linePtr = line + len;
+            read_BIG_XXX(big, linePtr);
+            printf("%s",BIGline);
+            BIG_XXX_output(big);
+            printf("\n");
+            printf("%s",BIGrawline);
+            BIG_XXX_rawoutput(big);
+            printf("\n");
+            done = 1;
+        }
+        if (!strncmp(line,  DBIGline, strlen(DBIGline)))
+        {
+            len = strlen(DBIGline);
+            linePtr = line + len;
+            read_DBIG_XXX(dbig, linePtr);
+            printf("%s",DBIGline);
+            BIG_XXX_doutput(dbig);
+            printf("\n");
+            done = 1;
+        }
+        if (!strncmp(line,  FPline, strlen(FPline)))
+        {
+            len = strlen(FPline);
+            linePtr = line + len;
+            read_BIG_XXX(big,linePtr);
+            FP_YYY_nres(&fp,big);
+            printf("%s",FPline);
+            FP_YYY_output(&fp);
+            printf("\n");
+            printf("%s",FPrawline);
+            FP_YYY_rawoutput(&fp);
+            printf("\n");
+            done = 1;
+        }
+        if (!strncmp(line,  FP2line, strlen(FP2line)))
+        {
+            len = strlen(FP2line);
+            linePtr = line + len;
+            read_FP2_YYY(&fp2,linePtr);
+            printf("%s",FP2line);
+            FP2_YYY_output(&fp2);
+            printf("\n");
+            printf("%s",FP2rawline);
+            FP2_YYY_rawoutput(&fp2);
+            printf("\n");
+            done = 1;
+        }
+        if (!strncmp(line,  FP4line, strlen(FP4line)))
+        {
+            len = strlen(FP4line);
+            linePtr = line + len;
+            read_FP4_YYY(&fp4,linePtr);
+            printf("%s",FP4line);
+            FP4_YYY_output(&fp4);
+            printf("\n");
+            printf("%s",FP4rawline);
+            FP4_YYY_rawoutput(&fp4);
+            printf("\n");
+            done = 1;
+        }
+        if (!strncmp(line,  ECPline, strlen(ECPline)))
+        {
+            len = strlen(ECPline);
+            linePtr = line + len;
+            read_ECP_ZZZ(&ecp,linePtr);
+            printf("%s",ECPline);
+            ECP_ZZZ_output(&ecp);
+            printf("%s",ECPxyzline);
+            ECP_ZZZ_outputxyz(&ecp);
+            printf("%s",ECPrawline);
+            ECP_ZZZ_rawoutput(&ecp);
+            FP_YYY_redc(bigaux1,&ecp.x);
+            FP_YYY_redc(bigaux2,&ecp.y);
+            BIG_XXX_inc(bigaux1,100);
+            ECP_ZZZ_set(&ecpinf,bigaux1,bigaux2);
+            printf("%s",ECPinfline);
+            ECP_ZZZ_output(&ecpinf);
+            printf("%s",ECPinfxyzline);
+            ECP_ZZZ_outputxyz(&ecpinf);
+            printf("%s",ECPinfrawline);
+            ECP_ZZZ_rawoutput(&ecpinf);
+            done = 1;
+        }
+#if CURVE_SECURITY_ZZZ == 128
+        if (!strncmp(line,  FP12line, strlen(FP12line)))
+        {
+            len = strlen(FP12line);
+            linePtr = line + len;
+            read_FP12_YYY(&fp12,linePtr);
+            printf("%s",FP12line);
+            FP12_YYY_output(&fp12);
+            printf("\n");
+            done = 1;
+        }
+        if (!strncmp(line,  ECP2line, strlen(ECP2line)))
+        {
+            len = strlen(ECP2line);
+            linePtr = line + len;
+            read_ECP2_ZZZ(&ecp2,linePtr);
+            printf("%s",ECP2line);
+            ECP2_ZZZ_output(&ecp2);
+            printf("%s",ECP2xyzline);
+            ECP2_ZZZ_outputxyz(&ecp2);
+            FP2_YYY_add(&fp2aux,&ecp2.x,&ecp2.y);
+            ECP2_ZZZ_set(&ecp2inf,&fp2aux,&fp2aux);
+            printf("%s",ECP2infline);
+            ECP2_ZZZ_output(&ecp2inf);
+            printf("%s",ECP2infxyzline);
+            ECP2_ZZZ_outputxyz(&ecp2inf);
+            done = 1;
+        }
+#else
+        if (!strncmp(line,  FP8line, strlen(FP8line)))
+        {
+            len = strlen(FP8line);
+            linePtr = line + len;
+            read_FP8_YYY(&fp8,linePtr);
+            printf("%s",FP8line);
+            FP8_YYY_output(&fp8);
+            printf("\n");
+            printf("%s",FP8rawline);
+            FP8_YYY_rawoutput(&fp8);
+            printf("\n");
+            done = 1;
+        }
+#if CURVE_SECURITY_ZZZ == 192
+        if (!strncmp(line,  FP24line, strlen(FP24line)))
+        {
+            len = strlen(FP24line);
+            linePtr = line + len;
+            read_FP24_YYY(&fp24,linePtr);
+            printf("%s",FP24line);
+            FP24_YYY_output(&fp24);
+            printf("\n");
+            done = 1;
+        }
+        if (!strncmp(line,  ECP4line, strlen(ECP4line)))
+        {
+            len = strlen(ECP4line);
+            linePtr = line + len;
+            read_ECP4_ZZZ(&ecp4,linePtr);
+            printf("%s",ECP4line);
+            ECP4_ZZZ_output(&ecp4);
+            FP4_YYY_add(&fp4aux,&ecp4.x,&ecp4.y);
+            ECP4_ZZZ_set(&ecp4inf,&fp4aux,&fp4aux);
+            printf("%s",ECP4infline);
+            ECP4_ZZZ_output(&ecp4inf);
+            done = 1;
+        }
+#elif CURVE_SECURITY_ZZZ == 256
+        if (!strncmp(line,  FP16line, strlen(FP16line)))
+        {
+            len = strlen(FP16line);
+            linePtr = line + len;
+            read_FP16_YYY(&fp16,linePtr);
+            printf("%s",FP16line);
+            FP16_YYY_output(&fp16);
+            printf("\n");
+            printf("%s",FP16rawline);
+            FP16_YYY_rawoutput(&fp16);
+            printf("\n");
+            done = 1;
+        }
+        if (!strncmp(line,  FP48line, strlen(FP48line)))
+        {
+            len = strlen(FP48line);
+            linePtr = line + len;
+            read_FP48_YYY(&fp48,linePtr);
+            printf("%s",FP48line);
+            FP48_YYY_output(&fp48);
+            printf("\n");
+            done = 1;
+        }
+        if (!strncmp(line,  ECP8line, strlen(ECP8line)))
+        {
+            len = strlen(ECP8line);
+            linePtr = line + len;
+            read_ECP8_ZZZ(&ecp8,linePtr);
+            printf("%s",ECP8line);
+            ECP8_ZZZ_output(&ecp8);
+            FP8_YYY_add(&fp8aux,&ecp8.x,&ecp8.y);
+            ECP8_ZZZ_set(&ecp8inf,&fp8aux,&fp8aux);
+            printf("%s",ECP8infline);
+            ECP8_ZZZ_output(&ecp8inf);
+            done = 1;
+        }
+#endif
+#endif
+        if (!strncmp(line,  OCTline, strlen(OCTline)))
+        {
+            len = strlen(OCTline);
+            linePtr = line + len;
+            read_OCT(&oct,linePtr,strlen(linePtr));
+            printf("%s",OCTline);
+            OCT_output(&oct);
+            done = 1;
+        }
+        if (!strncmp(line,  HEXline, strlen(HEXline)))
+        {
+            len = strlen(HEXline);
+            linePtr = line + len;
+            amcl_hex2bin(linePtr, bin, 64);
+            printf("%s", HEXline);
+            amcl_print_hex(bin,32);
+            done = 1;
+        }
+        if (!strncmp(line, BIGrawline, strlen(BIGrawline))||
+                !strncmp(line, FPrawline, strlen(FPrawline))||
+                !strncmp(line, ECPxyzline, strlen(ECPxyzline))||
+                !strncmp(line, ECPrawline, strlen(ECPrawline))||
+                !strncmp(line, ECPinfline, strlen(ECPinfline))||
+                !strncmp(line, ECPinfxyzline, strlen(ECPinfxyzline))||
+                !strncmp(line, ECPinfrawline, strlen(ECPinfrawline))||
+                !strncmp(line, FP2rawline, strlen(FP2rawline))||
+                !strncmp(line, FP4rawline, strlen(FP4rawline)))
+            done=1;
+#if CURVE_SECURITY_ZZZ == 128
+        if (!strncmp(line, ECP2xyzline, strlen(ECP2xyzline))||
+                !strncmp(line, ECP2infline, strlen(ECP2infline))||
+                !strncmp(line, ECP2infxyzline, strlen(ECP2infxyzline)))
+            done=1;
+#elif CURVE_SECURITY_ZZZ == 192
+        if (!strncmp(line, FP8rawline, strlen(FP8rawline))||
+                !strncmp(line, ECP4infline, strlen(ECP4infline)))
+            done=1;
+#elif CURVE_SECURITY_ZZZ == 256
+        if (!strncmp(line, FP8rawline, strlen(FP8rawline))||
+                !strncmp(line, FP16rawline, strlen(FP16rawline))||
+                !strncmp(line, ECP8infline, strlen(ECP8infline)))
+            done=1;
+#endif
+        if(!done)
+            printf("%s",line);
+    }
+
+    // Restore stdout
+    fflush(stdout);
+    dup2(fd, fileno(stdout));
+    close(fd);
+    clearerr(stdout);
+    fsetpos(stdout, &pos);        /* for C9X */
+
+    writtenFile = fopen(argv[2],"r");
+    if (writtenFile == NULL)
+    {
+        printf("ERROR opening output file\n");
+        exit(EXIT_FAILURE);
+    }
+    fclose(testVectFile);
+
+    // Check the equality of the output with the test vector file
+
+    testVectFile = fopen(argv[1],"r");
+    if (testVectFile == NULL)
+    {
+        printf("ERROR opening test vector file\n");
+        exit(EXIT_FAILURE);
+    }
+
+    ch1 = getc(testVectFile);
+    ch2 = getc(writtenFile);
+
+    while ((ch1 != EOF) && (ch2 != EOF) && (ch1 == ch2))
+    {
+        ch1 = getc(testVectFile);
+        ch2 = getc(writtenFile);
+    }
+
+    if (ch1 != ch2)
+    {
+        printf("ERROR output does not match the expected one \n");
+        exit(EXIT_FAILURE);
+    }
+    fclose(writtenFile);
+    fclose(testVectFile);
+
+    remove(argv[2]);
+
+    printf("SUCCESS TEST OUTPUT FUNCTIONS PASSED\n");
+    exit(EXIT_SUCCESS);
+}

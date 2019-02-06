@@ -1,0 +1,281 @@
+/**
+ * @file test_mpin_sign.c
+ * @author Mike Scott
+ * @brief Test and benchmark pairing functions
+ *
+ * LICENSE
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include "config_curve_ZZZ.h"
+#if CURVE_SECURITY_ZZZ == 128
+#include "pair_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 192
+#include "pair192_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 256
+#include "pair256_ZZZ.h"
+#endif
+
+#define N_ITER 16
+
+// Renamings for multiple security level support
+#if CURVE_SECURITY_ZZZ == 128
+#define ECPG2_ZZZ_generator ECP2_ZZZ_generator
+#define ECPG2_ZZZ_set ECP2_ZZZ_set
+#define ECPG2_ZZZ_copy ECP2_ZZZ_copy
+#define ECPG2_ZZZ_mul ECP2_ZZZ_mul
+#define ECPG2_ZZZ_isinf ECP2_ZZZ_isinf
+#define GT_ZZZ_copy FP12_YYY_copy
+#define GT_ZZZ_isunity FP12_YYY_isunity
+#define GT_ZZZ_equals FP12_YYY_equals
+#define GT_ZZZ_compow FP12_YYY_compow
+#elif CURVE_SECURITY_ZZZ == 192
+#define ECPG2_ZZZ_generator ECP4_ZZZ_generator
+#define ECPG2_ZZZ_set ECP4_ZZZ_set
+#define ECPG2_ZZZ_copy ECP4_ZZZ_copy
+#define ECPG2_ZZZ_mul ECP4_ZZZ_mul
+#define ECPG2_ZZZ_isinf ECP4_ZZZ_isinf
+#define GT_ZZZ_copy FP24_YYY_copy
+#define GT_ZZZ_isunity FP24_YYY_isunity
+#define GT_ZZZ_equals FP24_YYY_equals
+#define GT_ZZZ_compow FP24_YYY_compow
+#elif CURVE_SECURITY_ZZZ == 256
+#define ECPG2_ZZZ_generator ECP8_ZZZ_generator
+#define ECPG2_ZZZ_set ECP8_ZZZ_set
+#define ECPG2_ZZZ_copy ECP8_ZZZ_copy
+#define ECPG2_ZZZ_mul ECP8_ZZZ_mul
+#define ECPG2_ZZZ_isinf ECP8_ZZZ_isinf
+#define GT_ZZZ_copy FP48_YYY_copy
+#define GT_ZZZ_isunity FP48_YYY_isunity
+#define GT_ZZZ_equals FP48_YYY_equals
+#define GT_ZZZ_compow FP48_YYY_compow
+#endif
+
+#define MIN_TIME 10.0
+#define MIN_ITERS 10
+
+int main()
+{
+    csprng RNG;
+    unsigned long ran;
+    char pr[10];
+
+    printf("Bechmark test PAIR - ZZZ Curve\n");
+
+#if CHUNK==16
+    printf("16-bit Build\n\n");
+#endif
+#if CHUNK==32
+    printf("32-bit Build\n\n");
+#endif
+#if CHUNK==64
+    printf("64-bit Build\n\n");
+#endif
+
+    time((time_t *)&ran);
+    pr[0]=ran;
+    pr[1]=ran>>8;
+    pr[2]=ran>>16;
+    pr[3]=ran>>24;
+    for (int i=4; i<10; i++) pr[i]=i;
+
+    RAND_seed(&RNG,10,pr);
+
+    int iterations;
+    clock_t start;
+    double elapsed;
+
+    ECP_ZZZ P,G;
+#if CURVE_SECURITY_ZZZ == 128
+    ECP2_ZZZ Q,W;
+    FP12_YYY g,w;
+    FP4_YYY cm;
+#elif CURVE_SECURITY_ZZZ == 192
+    ECP4_ZZZ Q,W;
+    FP24_YYY g,w;
+    FP8_YYY cm;
+#elif CURVE_SECURITY_ZZZ == 256
+    ECP8_ZZZ Q,W;
+    FP48_YYY g,w;
+    FP16_YYY cm;
+#endif
+
+    BIG_XXX s,r;
+    printf("\nTesting/Timing ZZZ Pairings\n");
+
+    ECP_ZZZ_generator(&G);
+
+    BIG_XXX_rcopy(r,CURVE_Order_ZZZ);
+    BIG_XXX_randomnum(s,r,&RNG);
+    ECP_ZZZ_copy(&P,&G);
+    PAIR_ZZZ_G1mul(&P,r);
+
+    if (!ECP_ZZZ_isinf(&P))
+    {
+        printf("FAILURE - rG!=O\n");
+        return 0;
+    }
+
+    iterations=0;
+    start=clock();
+    do
+    {
+        ECP_ZZZ_copy(&P,&G);
+        PAIR_ZZZ_G1mul(&P,s);
+
+        iterations++;
+        elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
+    }
+    while (elapsed<MIN_TIME || iterations<MIN_ITERS);
+    elapsed=1000.0*elapsed/iterations;
+    printf("G1 mul              - %8d iterations  ",iterations);
+    printf(" %8.2lf ms per iteration\n",elapsed);
+
+    ECPG2_ZZZ_generator(&W);
+
+    ECPG2_ZZZ_copy(&Q,&W);
+    ECPG2_ZZZ_mul(&Q,r);
+
+    if (!ECPG2_ZZZ_isinf(&Q))
+    {
+        printf("FAILURE - rQ!=O\n");
+        return 0;
+    }
+
+    iterations=0;
+    start=clock();
+    do
+    {
+        ECPG2_ZZZ_copy(&Q,&W);
+        PAIR_ZZZ_G2mul(&Q,s);
+
+        iterations++;
+        elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
+    }
+    while (elapsed<MIN_TIME || iterations<MIN_ITERS);
+    elapsed=1000.0*elapsed/iterations;
+    printf("G2 mul              - %8d iterations  ",iterations);
+    printf(" %8.2lf ms per iteration\n",elapsed);
+
+    PAIR_ZZZ_ate(&w,&Q,&P);
+    PAIR_ZZZ_fexp(&w);
+
+    GT_ZZZ_copy(&g,&w);
+
+    PAIR_ZZZ_GTpow(&g,r);
+
+    if (!GT_ZZZ_isunity(&g))
+    {
+        printf("FAILURE - g^r!=1\n");
+        return 0;
+    }
+
+    iterations=0;
+    start=clock();
+    do
+    {
+        GT_ZZZ_copy(&g,&w);
+        PAIR_ZZZ_GTpow(&g,s);
+
+        iterations++;
+        elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
+    }
+    while (elapsed<MIN_TIME || iterations<MIN_ITERS);
+    elapsed=1000.0*elapsed/iterations;
+    printf("GT pow              - %8d iterations  ",iterations);
+    printf(" %8.2lf ms per iteration\n",elapsed);
+
+    GT_ZZZ_copy(&g,&w);
+
+    iterations=0;
+    start=clock();
+    do
+    {
+        GT_ZZZ_compow(&cm,&g,s,r);
+        iterations++;
+        elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
+    }
+    while (elapsed<MIN_TIME || iterations<MIN_ITERS);
+    elapsed=1000.0*elapsed/iterations;
+    printf("GT pow (compressed) - %8d iterations  ",iterations);
+    printf(" %8.2lf ms per iteration\n",elapsed);
+
+    iterations=0;
+    start=clock();
+    do
+    {
+        PAIR_ZZZ_ate(&w,&Q,&P);
+        iterations++;
+        elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
+    }
+    while (elapsed<MIN_TIME || iterations<MIN_ITERS);
+    elapsed=1000.0*elapsed/iterations;
+    printf("PAIRing ATE         - %8d iterations  ",iterations);
+    printf(" %8.2lf ms per iteration\n",elapsed);
+
+    iterations=0;
+    start=clock();
+    do
+    {
+        GT_ZZZ_copy(&g,&w);
+        PAIR_ZZZ_fexp(&g);
+        iterations++;
+        elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
+    }
+    while (elapsed<MIN_TIME || iterations<MIN_ITERS);
+    elapsed=1000.0*elapsed/iterations;
+    printf("PAIRing FEXP        - %8d iterations  ",iterations);
+    printf(" %8.2lf ms per iteration\n",elapsed);
+
+    ECP_ZZZ_copy(&P,&G);
+    ECPG2_ZZZ_copy(&Q,&W);
+
+    PAIR_ZZZ_G1mul(&P,s);
+    PAIR_ZZZ_ate(&g,&Q,&P);
+    PAIR_ZZZ_fexp(&g);
+
+    ECP_ZZZ_copy(&P,&G);
+
+    PAIR_ZZZ_G2mul(&Q,s);
+    PAIR_ZZZ_ate(&w,&Q,&P);
+    PAIR_ZZZ_fexp(&w);
+
+    if (!GT_ZZZ_equals(&g,&w))
+    {
+        printf("FAILURE - e(sQ,p)!=e(Q,sP) \n");
+        return 1;
+    }
+
+    ECPG2_ZZZ_copy(&Q,&W);
+    PAIR_ZZZ_ate(&g,&Q,&P);
+    PAIR_ZZZ_fexp(&g);
+
+    PAIR_ZZZ_GTpow(&g,s);
+
+    if (!GT_ZZZ_equals(&g,&w))
+    {
+        printf("FAILURE - e(sQ,p)!=e(Q,P)^s \n");
+        return 1;
+    }
+    printf("SUCCESS BENCHMARK TEST OF PAIRING FUNCTIONS PASSED\n");
+    return 0;
+}

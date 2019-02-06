@@ -1,0 +1,271 @@
+/**
+ * @file test_wcc.c
+ * @author Kealan McCusker
+ * @brief Test WCC with and without time permits
+ *
+ * LICENSE
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
+/* Smoke test: Test WCC */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include "utils.h"
+#include "config_curve_ZZZ.h"
+#include "randapi.h"
+#if CURVE_SECURITY_ZZZ == 128
+#include "wcc_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 192
+#include "wcc192_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 256
+#include "wcc256_ZZZ.h"
+#endif
+
+#if CURVE_SECURITY_ZZZ == 128
+#define G2LEN 4*WCC_PFS_ZZZ
+#elif CURVE_SECURITY_ZZZ == 192
+#define G2LEN 8*WCC_PFS_ZZZ
+#elif CURVE_SECURITY_ZZZ == 256
+#define G2LEN 16*WCC_PFS_ZZZ
+#endif
+
+// #define DEBUG
+
+int main()
+{
+    int i,rtn;
+
+    /* Master secret */
+    char ms[WCC_PGS_ZZZ];
+    octet MS= {sizeof(ms),sizeof(ms),ms};
+
+    // sender key
+    char akeyG1[2*WCC_PFS_ZZZ+1];
+    octet AKeyG1= {0,sizeof(akeyG1), akeyG1};
+
+    // receiver key
+    char bkeyG2[G2LEN];
+    octet BKeyG2= {0,sizeof(bkeyG2), bkeyG2};
+
+    // Identities
+    char alice_id[256],bob_id[256];
+    octet IdA= {0,sizeof(alice_id),alice_id};
+    octet IdB= {0,sizeof(bob_id),bob_id};
+
+    // Hash of the identities
+    char hida[WCC_PFS_ZZZ], hidb[WCC_PFS_ZZZ];
+    octet HIdA = {0,sizeof(hida),hida};
+    octet HIdB = {0,sizeof(hidb),hidb};
+
+    char x[WCC_PGS_ZZZ];
+    octet X= {0,sizeof(x),x};
+    char y[WCC_PGS_ZZZ];
+    octet Y= {0,sizeof(y),y};
+    char w[WCC_PGS_ZZZ];
+    octet W= {0,sizeof(w),w};
+    char pia[WCC_PGS_ZZZ];
+    octet PIA= {0,sizeof(pia),pia};
+    char pib[WCC_PGS_ZZZ];
+    octet PIB= {0,sizeof(pib),pib};
+
+    char pgg1[2*WCC_PFS_ZZZ+1];
+    octet PgG1= {0,sizeof(pgg1), pgg1};
+
+    char pag1[2*WCC_PFS_ZZZ+1];
+    octet PaG1= {0,sizeof(pag1), pag1};
+
+    char pbg2[G2LEN];
+    octet PbG2= {0,sizeof(pbg2), pbg2};
+
+    char seed[32] = {0};
+    octet SEED = {0,sizeof(seed),seed};
+    csprng RNG;
+
+    char message1[256];
+    octet MESSAGE1 = {0, sizeof(message1), message1};
+    OCT_jstring(&MESSAGE1,"Hello Bob");
+
+    char k1[AESKEY_ZZZ];  // AES Key
+    char k2[AESKEY_ZZZ];  // AES Key
+    octet K1= {0,sizeof(k1),k1};
+    octet K2= {0,sizeof(k2),k2};
+
+    // Zero octet
+    char zero[AESKEY_ZZZ];
+    octet ZERO= {0,sizeof(zero),zero};
+    for(i=0; i<AESKEY_ZZZ; i++)
+    {
+        ZERO.val[i]=0;
+    }
+
+    /* non random seed value */
+    SEED.len=32;
+    for (i=0; i<32; i++) SEED.val[i]=i+1;
+
+    /* initialise random number generator */
+    CREATE_CSPRNG(&RNG,&SEED);
+
+#ifdef DEBUG
+    printf("SEED: 0x");
+    OCT_output(&SEED);
+#endif
+
+    /* TA: Generate master secret  */
+    rtn = WCC_ZZZ_RANDOM_GENERATE(&RNG,&MS);
+    if (rtn != 0)
+    {
+        printf("TA WCC_ZZZ_RANDOM_GENERATE() Error %d\n", rtn);
+        return 1;
+    }
+
+    printf("MS: 0x");
+    OCT_output(&MS);
+
+    // Alice's ID
+    OCT_jstring(&IdA,"alice@miracl.com");
+
+    // Hash Alice's Id
+    HASH_ID(HASH_TYPE_ZZZ,&IdA,&HIdA);
+
+    // TA: Generate Alice's sender key
+    rtn = WCC_ZZZ_GET_G1_MULTIPLE(&MS,&HIdA,&AKeyG1);
+    if (rtn != 0)
+    {
+        printf("TA WCC_ZZZ_GET_G1_MULTIPLE() Error %d\n", rtn);
+        return 1;
+    }
+
+    // Bob's ID
+    OCT_jstring(&IdB,"bob@miracl.com");
+
+    // Hash Bob's Id
+    HASH_ID(HASH_TYPE_ZZZ,&IdB,&HIdB);
+
+    // TA: Generate Bob's receiver key
+    rtn = WCC_ZZZ_GET_G2_MULTIPLE(&MS,&HIdB,&BKeyG2);
+    if (rtn != 0)
+    {
+        printf("TA WCC_ZZZ_GET_G2_MULTIPLE() Error %d\n", rtn);
+        return 1;
+    }
+
+    rtn = WCC_ZZZ_RANDOM_GENERATE(&RNG,&X);
+    if (rtn != 0)
+    {
+        printf("Alice WCC_ZZZ_RANDOM_GENERATE() Error %d\n", rtn);
+        return 1;
+    }
+
+    printf("X: 0x");
+    OCT_output(&X);
+
+    rtn = WCC_ZZZ_GET_G1_MULTIPLE(&X,&HIdA,&PaG1);
+    if (rtn != 0)
+    {
+        printf("Alice WCC_ZZZ_GET_G1_MULTIPLE() Error %d\n", rtn);
+        return 1;
+    }
+
+    rtn = WCC_ZZZ_RANDOM_GENERATE(&RNG,&W);
+    if (rtn != 0)
+    {
+        printf("Bob WCC_ZZZ_RANDOM_GENERATE() Error %d\n", rtn);
+        return 1;
+    }
+    rtn = WCC_ZZZ_GET_G1_MULTIPLE(&W,&HIdA,&PgG1);
+    if (rtn != 0)
+    {
+        printf("Bob WCC_ZZZ_GET_G1_MULTIPLE() Error %d\n", rtn);
+        return 1;
+    }
+
+    rtn = WCC_ZZZ_RANDOM_GENERATE(&RNG,&Y);
+    if (rtn != 0)
+    {
+        printf("Bob WCC_ZZZ_RANDOM_GENERATE(&RNG,&Y) Error %d\n", rtn);
+        return 1;
+    }
+
+    rtn = WCC_ZZZ_GET_G2_MULTIPLE(&Y,&HIdB,&PbG2);
+    if (rtn != 0)
+    {
+        printf("Bob WCC_ZZZ_GET_G1_MULTIPLE() Error %d\n", rtn);
+        return 1;
+    }
+
+    // pia = Hq(PaG1,PbG2,PgG1,IdB)
+    WCC_ZZZ_Hq(HASH_TYPE_ZZZ,&PaG1,&PbG2,&PgG1,&IdB,&PIA);
+
+    // pib = Hq(PbG2,PaG1,PgG1,IdA)
+    WCC_ZZZ_Hq(HASH_TYPE_ZZZ,&PbG2,&PaG1,&PgG1,&IdA,&PIB);
+
+    // Bob calculates AES Key
+    rtn = WCC_ZZZ_RECEIVER_KEY(HASH_TYPE_ZZZ,&Y,&W, &PIA,&PIB,&PaG1,&PgG1,&BKeyG2,&IdA,&K2);
+    if (rtn != 0)
+    {
+        printf("Bob WCC_ZZZ_RECEIVER_KEY() Error %d\n", rtn);
+        return 1;
+    }
+    if (OCT_comp(&K2,&ZERO))
+    {
+        printf("Bob WCC_ZZZ_Receiver_KEY() Error: generated key is zero\n");
+        return 1;
+    }
+
+    // pia = Hq(PaG1,PbG2,PgG1,IdB)
+    WCC_ZZZ_Hq(HASH_TYPE_ZZZ,&PaG1,&PbG2,&PgG1,&IdB,&PIA);
+
+    // pib = Hq(PbG2,PaG1,PgG1,IdA)
+    WCC_ZZZ_Hq(HASH_TYPE_ZZZ,&PbG2,&PaG1,&PgG1,&IdA,&PIB);
+
+    // printf("PIA: ");OCT_output(&PIA);printf("\n");
+    // printf("PIB: ");OCT_output(&PIB);printf("\n");
+
+    // Alice calculates AES Key
+    rtn = WCC_ZZZ_SENDER_KEY(HASH_TYPE_ZZZ,&X,&PIA,&PIB,&PbG2,&PgG1,&AKeyG1,&IdB,&K1);
+    if (rtn != 0)
+    {
+        printf("Alice WCC_ZZZ_SENDER_KEY() Error %d\n", rtn);
+        return 1;
+    }
+    if (OCT_comp(&K1,&ZERO))
+    {
+        printf("Alice WCC_ZZZ_SENDER_KEY() Error: generated key is zero\n");
+        return 1;
+    }
+
+    printf("K1: 0x");
+    OCT_output(&K1);
+    printf("K2: 0x");
+    OCT_output(&K2);
+    if (!OCT_comp(&K1,&K2))
+    {
+        printf("FAILURE OCT_comp(&K1,&K2)\n");
+        return 1;
+    }
+
+    KILL_CSPRNG(&RNG);
+
+    printf("SUCCESS\n");
+    return 0;
+}

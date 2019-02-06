@@ -1,0 +1,116 @@
+/**
+ * @file test_mpin_sign.c
+ * @author Mike Scott
+ * @brief Test and benchmark elliptic curve
+ *
+ * LICENSE
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include "ecp_ZZZ.h"
+
+#define MIN_TIME 10.0
+#define MIN_ITERS 10
+
+int main()
+{
+    csprng RNG;
+#if CURVETYPE_ZZZ!=MONTGOMERY
+    BIG_XXX y;
+#endif
+    BIG_XXX s,r,x;
+    ECP_ZZZ P,G;
+    int i,iterations;
+    clock_t start;
+    double elapsed;
+    char pr[10];
+    unsigned long ran;
+
+    printf("\nBechmark test EC - ");
+
+    printf("ZZZ Curve\n");
+
+#if CURVETYPE_ZZZ==WEIERSTRASS
+    printf("Weierstrass parameterization\n");
+#endif
+#if CURVETYPE_ZZZ==EDWARDS
+    printf("Edwards parameterization\n");
+#endif
+#if CURVETYPE_ZZZ==MONTGOMERY
+    printf("Montgomery parameterization\n");
+#endif
+
+#if CHUNK==16
+    printf("16-bit Build\n\n");
+#endif
+#if CHUNK==32
+    printf("32-bit Build\n\n");
+#endif
+#if CHUNK==64
+    printf("64-bit Build\n\n");
+#endif
+
+    time((time_t *)&ran);
+    pr[0]=ran;
+    pr[1]=ran>>8;
+    pr[2]=ran>>16;
+    pr[3]=ran>>24;
+    for (i=4; i<10; i++) pr[i]=i;
+    RAND_seed(&RNG,10,pr);
+
+    BIG_XXX_rcopy(x,CURVE_Gx_ZZZ);
+#if CURVETYPE_ZZZ!=MONTGOMERY
+    BIG_XXX_rcopy(y,CURVE_Gy_ZZZ);
+    ECP_ZZZ_set(&G,x,y);
+#else
+    ECP_ZZZ_set(&G,x);
+#endif
+
+    BIG_XXX_rcopy(r,CURVE_Order_ZZZ);
+    BIG_XXX_randomnum(s,r,&RNG);
+    ECP_ZZZ_copy(&P,&G);
+    ECP_ZZZ_mul(&P,r);
+
+    if (!ECP_ZZZ_isinf(&P))
+    {
+        printf("FAILURE - rG!=O\n");
+        exit(EXIT_FAILURE);
+    }
+
+    iterations=0;
+    start=clock();
+    do
+    {
+        ECP_ZZZ_copy(&P,&G);
+        ECP_ZZZ_mul(&P,s);
+
+        iterations++;
+        elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
+    }
+    while (elapsed<MIN_TIME || iterations<MIN_ITERS);
+    elapsed=1000.0*elapsed/iterations;
+    printf("EC  mul - %8d iterations  ",iterations);
+    printf(" %8.2lf ms per iteration\n",elapsed);
+
+    printf("\nSUCCESS BENCHMARK TEST OF EC FUNCTIONS PASSED\n\n");
+    exit(EXIT_SUCCESS);
+}
