@@ -143,7 +143,7 @@ ZEN.add_schema(
 
 
 When("I create a new petition ''", function(ptext)
-        local j = export({ uid = random:octet(8), -- add some time for UID
+        local j = export({ uid = INT.new(RNG.new()),
                            pub_owner = ACK.req_keypair.public,
                            lambda = COCONUT.prepare_blind_sign(ACK.req_keypair.public, ptext),
                            scores = { first = "Infinity",
@@ -178,7 +178,6 @@ When("I certify the issuing of the petition", function()
         ZEN.assert(ACK.ca_keypair.sign, "No valid issuer signature keys found.")
         local sigmatilde =
            COCONUT.blind_sign(ACK.ca_keypair.sign,
-                              ACK.petition.pub_owner,
                               ACK.petition.lambda)
 		OUT.ca_public = export(ACK.ca_keypair.verify, 'ca_vk', hex)
 		OUT[ACK.whoami] = export(sigmatilde,'sigmatilde', hex)
@@ -211,27 +210,34 @@ local function rand() return INT.new(random,ECP.order()) end
 local function prove_cred_petition(vk, sigma, m, uid)
    local o = ECP.order()
    local r = rand()
+   -- local m = INT.new(sha256(secret))
+   -- material
    local r_prime = rand()
-   local sigma_prime = { h_prime = sigma.h * r_prime, s_prime = sigma.s * r_prime  }
-   local kappa = 
-	  vk.alpha 
+   local sigma_prime = { h_prime = sigma.h * r_prime,
+						 s_prime = sigma.s * r_prime  }
+   local kappa = vk.alpha
 	  + vk.beta * m
 	  + vk.g2 * r
    local nu = sigma_prime.h_prime * r
    local zeta = m * ECP.hashtopoint(str(uid))
-
+   -- proof --
+   -- create the witnessess
    local wm = rand()
    local wr = rand()
+   -- compute the witnessess commitments
    local Aw = vk.g2 * wr
 	  + vk.alpha
 	  + vk.beta * wm
    local Bw = sigma_prime.h_prime * wr
    local Cw = wm * ECP.hashtopoint(uid)
+   -- create the challenge
    local c = COCONUT.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw })
+   -- create responses
    local rm = wm:modsub(m * c, o)
    local rr = wr:modsub(r * c, o)
-   local pi_v = { c = c, rm = rm, rr = rr }
-
+   local pi_v = { c = c,
+				  rm = rm,
+				  rr = rr }
    local Theta = {
       kappa = kappa,
       nu = nu,
@@ -247,14 +253,18 @@ local function verify_cred_petition(vk, Theta, zeta, uid)
    local c = Theta.pi_v.c
    local rm = Theta.pi_v.rm
    local rr = Theta.pi_v.rr
+   -- verify proof --
+   -- recompute witnessess commitments
    local Aw = kappa * c
 	  + vk.g2 * rr
 	  + vk.alpha * INT.new(1):modsub(c,ECP.order())
 	  + vk.beta * rm
    local Bw = nu * c + sigma_prime.h_prime * rr
    local Cw = rm*ECP.hashtopoint(uid) + zeta*c
+   -- compute the challenge prime
    ZEN.assert(c == COCONUT.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw }),
 			  "verify_cred_petition: invalid challenge")
+   -- verify signature --
    ZEN.assert(not sigma_prime.h_prime:isinf(),
 			  "verify_cred_petition: sigma_prime.h points at infinite")
    ZEN.assert(ECP2.miller(kappa, sigma_prime.h_prime)
@@ -280,20 +290,28 @@ When("I sign the petition", function()
 		I.print(Theta)
 end)
 
-When("I create my new credential keypair", function()
-        OUT[ACK.whoami] = export(COCONUT.cred_keygen(), 'req_keypair',hex) end)
-When("I create my new credential request keypair", function()
-        OUT[ACK.whoami] = export(COCONUT.cred_keygen(), 'req_keypair',hex) end)
 
-When("I create my new credential issuer keypair", function()
-        OUT[ACK.whoami] = export(COCONUT.ca_keygen(), 'ca_keypair',hex) end)
-When("I create my new authority keypair", function()
-        OUT[ACK.whoami] = export(COCONUT.ca_keygen(), 'ca_keypair',hex) end)
+-- credential keypair operations
+local function f_keygen()
+   local kp = { }
+   kp.private, kp.public = ELGAMAL.keygen()
+   OUT[ACK.whoami] = export(kp, 'req_keypair',hex) end
+When("I create my new credential keypair", f_keygen)
+When("I create my new credential request keypair", f_keygen)
+f_req_keypair = function(keyname)
+   ZEN.assert(keyname or ACK.whoami, "Cannot identify the request keypair to use")
+   ACK.req_keypair = import(IN.KEYS[keyname or ACK.whoami],'req_keypair') end
+Given("I have my credential request keypair", f_req_keypair)
+Given("I have '' credential request keypair", f_req_keypair)
 
+-- issuer authority kepair operations
+local function f_ca_keygen()
+   OUT[ACK.whoami] = export(COCONUT.ca_keygen(), 'ca_keypair',hex) end
+When("I create my new credential issuer keypair", f_ca_keygen)
+When("I create my new authority keypair", f_ca_keygen)
 f_ca_keypair = function(keyname)
    ZEN.assert(keyname or ACK.whoami, "Cannot identify the issuer keypair to use")
-   ACK.ca_keypair = import(IN.KEYS[keyname or ACK.whoami],'ca_keypair')
-end
+   ACK.ca_keypair = import(IN.KEYS[keyname or ACK.whoami],'ca_keypair') end
 Given("I have my credential issuer keypair", f_ca_keypair)
 Given("I have '' credential issuer keypair", f_ca_keypair)
 
@@ -301,33 +319,27 @@ When("I publish my issuer verification key", function()
         ZEN.assert(ACK.whoami, "Cannot identify the issuer")
         ZEN.assert(ACK.ca_keypair.verify, "Issuer verification key not found")
         OUT[ACK.whoami] = { }
-        OUT[ACK.whoami].verify = map(ACK.ca_keypair.verify, hex)
+        OUT[ACK.whoami].verify = map(ACK.ca_keypair.verify, hex) -- array
 end)
-
-f_req_keypair = function(keyname)
-   ZEN.assert(keyname or ACK.whoami, "Cannot identify the request keypair to use")
-   ACK.req_keypair = import(IN.KEYS[keyname or ACK.whoami],'req_keypair')
-end
-Given("I have my credential request keypair", f_req_keypair)
-Given("I have '' credential request keypair", f_req_keypair)
 
 
 Given("I use the verification key by ''", function(ca)
-         ZEN.assert(IN.KEYS[ca].verify, "Verification key not found: "..ca)
+         ZEN.assert(type(IN.KEYS[ca].verify) == "table",
+					"Invalid verification key by issuer: "..ca)
          ACK.aggkeys = { import(IN.KEYS[ca].verify,'ca_vk') }
 end)
 
 When("I request a credential blind signature", function()
-        ZEN.assert(ACK.req_keypair.public,
-                   "Public key for credential request not found")
+        ZEN.assert(type(ACK.req_keypair.public) == "zenroom.ecp",
+                   "Invalid public key for credential request")
         local lambda = COCONUT.prepare_blind_sign(
            ACK.req_keypair.public, str(declared))
         OUT['request'] = export(lambda,'request',hex)
 end)
 
-When("I am requested to sign a credential", function(reqname)
-        local lambda = import(IN[reqname or 'request'],'lambda')
-        ZEN.assert(COCONUT.verify_pi_s(lambda.public, lambda.c, lambda.cm, lambda.pi_s),
+When("I am requested to sign a credential", function()
+        local lambda = import(IN['request'],'lambda')
+        ZEN.assert(COCONUT.verify_pi_s(lambda),
                    "Crypto error in signature, proof is invalid (verify_pi_s)")
         ACK.blindsign = lambda
 end)
@@ -337,7 +349,6 @@ When("I sign the credential ''", function(ca)
         ZEN.assert(ACK.ca_keypair.sign, "No valid issuer signature keys found.")
         local sigmatilde =
            COCONUT.blind_sign(ACK.ca_keypair.sign,
-                              ACK.blindsign.public,
                               ACK.blindsign)
         OUT[ca] = export(sigmatilde,'sigmatilde', hex)
 end)

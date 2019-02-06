@@ -305,6 +305,14 @@ function Inspector:putValue(v)
   elseif iszen(tv) then
 	 if tv == "zenroom.octet" then
 		self:puts("octet[" .. #v .. "] " .. v:hex())
+	 elseif tv == "zenroom.big" then
+		self:puts("int[] " .. v:octet():hex())
+	 elseif tv == "zenroom.ecp" then
+		self:puts("ecp[] " .. v:octet():hex())
+	 elseif tv == "zenroom.ecp2" then
+		self:puts("ecp2[] ".. v:octet():hex())
+	 elseif tv == "zenroom.fp12" then
+		self:puts("fp12[] ".. v:octet():hex())
 	 else
 		self:puts(v:octet():hex())
 	 end

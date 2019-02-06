@@ -46,22 +46,6 @@ end
 local random = RNG.new()
 local function rand() return INT.new(random,o) end
 
--- El-Gamal cryptosystem
-function coco.elgamal_keygen()
-   local d = rand()
-   local gamma = d * g1
-   return d, gamma
-end
-function coco.elgamal_enc(gamma, m, h)
-   local k = rand()
-   local a = k * g1
-   local b = gamma * k + h * m
-   return a, b, k
-end
-function coco.elgamal_dec(d, a, b)
-   return b - a * d
-end
-
 -- local zero-knowledge proof verifications
 local function make_pi_s(gamma, cm, k, r, m)
    local h = ECP.hashtopoint(cm)
@@ -75,43 +59,28 @@ local function make_pi_s(gamma, cm, k, r, m)
    local rk = wk:modsub(c * k, o)
    local rm = wm:modsub(c * m, o)
    local rr = wr:modsub(c * r, o)
+   -- return Lambda
    return { c  = c,
 			rk = rk,
 			rm = rm,
 			rr = rr }
 end
-function coco.verify_pi_s(gamma, ciphertext, cm, proof)
-   local h = ECP.hashtopoint(cm)
-   local a = ciphertext.a
-   local b = ciphertext.b
-   local c = proof.c
-   local rk = proof.rk
-   local rm = proof.rm
-   local rr = proof.rr
-   local Aw = a * c + g1 * rk
-   local Bw = b * c + gamma * rk + h * rm
-   local Cw = cm * c + g1 * rr + hs * rm
-   return c == coco.to_challenge({ cm, h, Aw, Bw, Cw })
-end
 
-
-local function make_pi_v(vk, sigma_prime, m, r)
-   local wm = rand()
-   local wr = rand()
-   local Aw = g2 * wr + vk.alpha + vk.beta * wm
-   local Bw = sigma_prime.h_prime * wr
-   local c = coco.to_challenge({ vk.alpha, vk.beta, Aw, Bw })
-   local rm = wm:modsub(m * c, o)
-   local rr = wr:modsub(r * c, o)
-   return { c = c, rm = rm, rr = rr }
-end
-local function verify_pi_v(vk, kappa, nu, sigma_prime, proof)
-   local c = proof.c
-   local rm = proof.rm
-   local rr = proof.rr
-   local Aw = kappa * c + g2 * rr + vk.alpha * INT.new(1):modsub(c,o) + vk.beta * rm
-   local Bw = nu * c + sigma_prime.h_prime * rr
-   return c == coco.to_challenge({ vk.alpha, vk.beta, Aw, Bw })
+function coco.verify_pi_s(l)
+   local h = ECP.hashtopoint(l.cm)
+   local Aw =
+	  l.c.a * l.pi_s.c
+	  + g1 * l.pi_s.rk
+   local Bw =
+	  l.c.b * l.pi_s.c
+	  + l.public * l.pi_s.rk
+	  + h * l.pi_s.rm
+   local Cw =
+	  l.cm * l.pi_s.c
+	  + g1 * l.pi_s.rr
+	  + hs * l.pi_s.rm
+   -- return a bool for assert
+   return l.pi_s.c == coco.to_challenge({ l.cm, h, Aw, Bw, Cw })
 end
 
 -- Public Coconut API
@@ -126,11 +95,6 @@ function coco.ca_keygen()
    -- return keypair
    return { sign = sk,
             verify = vk }
-end
-function coco.cred_keygen()
-   local d, gamma = ELGAMAL.keygen()
-   return { private = d,
-			public  = gamma }
 end
 
 function coco.aggregate_keys(keys)
@@ -165,24 +129,30 @@ function coco.prepare_blind_sign(gamma, secret)
 			public = gamma }
 end
 
-function coco.blind_sign(sk, gamma, Lambda)
-   local ret = coco.verify_pi_s(gamma, Lambda.c, Lambda.cm, Lambda.pi_s)
-   assert(ret == true, 'Proof pi_s does not verify') -- verify zero knowledge proof
+function coco.blind_sign(sk, Lambda)
+   ZEN.assert(coco.verify_pi_s(Lambda),
+			  'Zero knowledge proof does not verify (Lambda.pi_s)')
    local h = ECP.hashtopoint(Lambda.cm)
    local a_tilde = Lambda.c.a * sk.y
    local b_tilde = h * sk.x + Lambda.c.b * sk.y
+   -- sigma tilde
    return { h = h,
             a_tilde = a_tilde,
             b_tilde = b_tilde  }
 end
 
 function coco.aggregate_creds(d, sigma_tilde)
-   local agg_s = ELGAMAL.decrypt(d, sigma_tilde[1].a_tilde, sigma_tilde[1].b_tilde)
+   local agg_s = ELGAMAL.decrypt(d,
+								 sigma_tilde[1].a_tilde,
+								 sigma_tilde[1].b_tilde)
    if #sigma_tilde > 1 then
       for i = 2, #sigma_tilde do
-         agg_s = agg_s + ELGAMAL.decrypt(d, sigma_tilde[i].a_tilde, sigma_tilde[i].b_tilde)
+         agg_s = agg_s + ELGAMAL.decrypt(d,
+										 sigma_tilde[i].a_tilde,
+										 sigma_tilde[i].b_tilde)
       end
    end
+   -- aggregated sigma
    return { h = sigma_tilde[1].h,
             s = agg_s }
 end
@@ -195,7 +165,15 @@ function coco.prove_creds(vk, sigma, secret)
                          s_prime = sigma.s * r_prime  }
    local kappa = vk.alpha + vk.beta * m + vk.g2 * r
    local nu = sigma_prime.h_prime * r
-   local pi_v = make_pi_v(vk, sigma_prime, m, r)
+   -- make pi_v
+   local wm = rand()
+   local wr = rand()
+   local Aw = vk.alpha + vk.g2 * wr + vk.beta * wm
+   local Bw = sigma_prime.h_prime * wr
+   local ch = coco.to_challenge({ vk.alpha, vk.beta, Aw, Bw })
+   local pi_v = { c = ch,
+				  rm = wm:modsub(m * ch, o),
+				  rr = wr:modsub(r * ch, o)  }
    -- return Theta
    local Theta = {
       kappa = kappa,
@@ -206,12 +184,22 @@ function coco.prove_creds(vk, sigma, secret)
 end
 
 function coco.verify_creds(vk, Theta)
-   local ret = verify_pi_v(vk, Theta.kappa, Theta.nu, Theta.sigma_prime, Theta.pi_v)
-   assert(ret == true, 'Proof pi_v does not verify') -- verify zero knowledge proof
-   local ret1 = not Theta.sigma_prime.h_prime:isinf()
-   local ret2 = ECP2.miller(Theta.kappa, Theta.sigma_prime.h_prime)
-	  == ECP2.miller(vk.g2, Theta.sigma_prime.s_prime + Theta.nu)
-   return ret1 and ret2
+   -- verify pi_v
+   local Aw = Theta.kappa * Theta.pi_v.c
+	  + vk.g2 * Theta.pi_v.rr
+	  + vk.alpha * INT.new(1):modsub(Theta.pi_v.c, o)
+	  + vk.beta * Theta.pi_v.rm
+   local Bw = Theta.nu * Theta.pi_v.c
+	  + Theta.sigma_prime.h_prime * Theta.pi_v.rr
+   -- check zero knowledge proof
+   ZEN.assert(Theta.pi_v.c == coco.to_challenge({vk.alpha, vk.beta, Aw, Bw}),
+			  "Credential proof does not verify (wrong challenge)")
+   ZEN.assert(not Theta.sigma_prime.h_prime:isinf(),
+			  "Credential proof does not verify (sigma.h is infinite)")
+   ZEN.assert(ECP2.miller(Theta.kappa, Theta.sigma_prime.h_prime)
+				 == ECP2.miller(vk.g2, Theta.sigma_prime.s_prime + Theta.nu),
+			  "Credential proof does not verify (miller loop error)")
+   return true
 end
 
 
