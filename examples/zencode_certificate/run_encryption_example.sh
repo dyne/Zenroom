@@ -96,8 +96,8 @@ Scenario 'crypto message': $scenario
 		 and I have my keypair
 		 and I have the 'public' key 'Bob' in keyring
 		 When I draft the text 'Hey Bob: Alice here, can you read me?'
-		 and I use 'Bob' key to encrypt the text into 'ciphertext'
-		 Then print data 'ciphertext'
+		 and I use 'Bob' key to encrypt the text
+		 Then print all data
 ]])
 ZEN:run()
 EOF
@@ -110,8 +110,9 @@ ZEN:parse([[
 Scenario 'crypto answer': $scenario
 		 Given that I am known as 'Bob'
 		 and I have my keypair
-		 When I decrypt the 'ciphertext' to 'decoded'
-		 Then print data 'decoded'
+		 and I have an encrypted message 
+		 When I decrypt the message
+		 Then print all data
 ]])
 ZEN:run()
 EOF

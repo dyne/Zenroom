@@ -1,6 +1,31 @@
 -- Zencode implementation to encrypt and decrypt AES GCM messages
 -- uses random IV and sha256 by default
 
+ZEN.add_schema({
+	  aes_gcm = { import = function(obj)
+					 return { checksum = get(O.from_hex, obj, 'checksum'),
+							  iv = get(O.from_hex, obj, 'iv'),
+							  text = get(O.from_hex, obj, 'text'), -- may be MSGpack
+							  encoding = obj.encoding,
+							  curve = obj.curve,
+							  pubkey = get(ECP.new, obj, 'pubkey') } end,
+				  export = function(obj,conv)
+					 return { checksum = conv(obj.checksum),
+							  iv = conv(obj.iv),
+							  text = conv(obj.text),
+							  encoding = obj.encoding,
+							  curve = obj.curve,
+							  pubkey = conv(obj.pubkey) } end,
+				},
+
+	  ecdh_keypair = {
+		 import = function(obj)
+			return { private = get(O.from_hex, obj, 'private'),
+					 public = get(ECP.new, obj, 'public') } end,
+		 export = function(obj, conv)
+			return map(obj, conv) end }
+})
+
 When("I use '' key to encrypt the text", function(keyname,dest)
 		ZEN.debug()
 		ZEN.assert(ACK.text,
