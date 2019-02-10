@@ -56,7 +56,11 @@ ZEN.add_schema(
                              rm = get(INT.new, obj.pi_s, 'rm'),
                              rk = get(INT.new, obj.pi_s, 'rk'),
                              c =  get(INT.new, obj.pi_s, 'c')  },
+					-- cm is the h element in elgamal crypto
+					-- in coconut is cm = (g1 * r + hs * m)
+					-- where hs is a constant, r is random and m is secret
                     cm = get(ECP.new, obj, 'cm'),
+					-- c .a .b are the results of elgamal encryption
                     c = { a = get(ECP.new, obj.c, 'a'),
                           b = get(ECP.new, obj.c, 'b') },
                     public = get(ECP.new, obj, 'public') } end,
@@ -208,88 +212,18 @@ When("I aggregate all certifications for my petition", function()
         OUT.name = ACK.whoami -- TODO: customise according to pilot identifier
 end)
 
--- TODO: fix this and verify_cred_petition
-local random = RNG.new()
-local function rand() return INT.new(random,ECP.order()) end
-local function prove_cred_petition(vk, sigma, secret, uid)
-   local m = INT.new(sha256(secret))
-   local o = ECP.order()
-   local r = rand()
-   -- local m = INT.new(sha256(secret))
-   -- material
-   local r_prime = rand()
-   local sigma_prime = { h_prime = sigma.h * r_prime,
-						 s_prime = sigma.s * r_prime  }
-   local kappa = vk.alpha
-	  + vk.beta * m
-	  + vk.g2 * r
-   local nu = sigma_prime.h_prime * r
-   local zeta = m * ECP.hashtopoint(str(uid))
-   -- proof --
-   -- create the witnessess
-   local wm = rand()
-   local wr = rand()
-   -- compute the witnessess commitments
-   local Aw = vk.g2 * wr
-	  + vk.alpha
-	  + vk.beta * wm
-   local Bw = sigma_prime.h_prime * wr
-   local Cw = wm * ECP.hashtopoint(uid)
-   -- create the challenge
-   local c = COCONUT.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw })
-   -- create responses
-   local rm = wm:modsub(m * c, o)
-   local rr = wr:modsub(r * c, o)
-   local pi_v = { c = c,
-				  rm = rm,
-				  rr = rr }
-   local Theta = {
-      kappa = kappa,
-      nu = nu,
-      sigma_prime = sigma_prime,
-      pi_v = pi_v }
-   return Theta, zeta
-end
-
-local function verify_cred_petition(vk, Theta, zeta, uid)
-   local kappa = Theta.kappa
-   local nu = Theta.nu
-   local sigma_prime = Theta.sigma_prime
-   local c = Theta.pi_v.c
-   local rm = Theta.pi_v.rm
-   local rr = Theta.pi_v.rr
-   -- verify proof --
-   -- recompute witnessess commitments
-   local Aw = kappa * c
-	  + vk.g2 * rr
-	  + vk.alpha * INT.new(1):modsub(c,ECP.order())
-	  + vk.beta * rm
-   local Bw = nu * c + sigma_prime.h_prime * rr
-   local Cw = rm*ECP.hashtopoint(uid) + zeta*c
-   -- compute the challenge prime
-   ZEN.assert(c == COCONUT.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw }),
-			  "verify_cred_petition: invalid challenge")
-   -- verify signature --
-   ZEN.assert(not sigma_prime.h_prime:isinf(),
-			  "verify_cred_petition: sigma_prime.h points at infinite")
-   ZEN.assert(ECP2.miller(kappa, sigma_prime.h_prime)
-				 == ECP2.miller(vk.g2, sigma_prime.s_prime + nu),
-			  "verify_cred_petition: miller loop fails")
-   return true
-end
-
 When("I sign the petition", function()
 		ZEN.assert(ACK.whoami, "Signer is not known")
 		ZEN.assert(ACK.req_keypair.private, "No valid request private key found")
 		ZEN.assert(ACK.petition.sigma, "No valid petition found")
 		local Theta
 		local zeta
-		Theta, zeta = prove_cred_petition(ACK.petition.ca_public,
-										  ACK.petition.sigma,
-										  ACK.req_keypair.private,
-										  ACK.petition.uid)
-		ZEN.assert(verify_cred_petition(ACK.petition.ca_public,
-										Theta, zeta, ACK.petition.uid),
+		Theta, zeta = COCONUT.prove_cred_petition(ACK.petition.ca_public,
+												  ACK.petition.sigma,
+												  ACK.req_keypair.private,
+												  ACK.petition.uid)
+		ZEN.assert(COCONUT.verify_cred_petition(ACK.petition.ca_public,
+												Theta, zeta, ACK.petition.uid),
 				   "Failed to verify the petition signature")
 		print("PETITION SIGN SUCCESS") -- WIP
 end)
