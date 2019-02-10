@@ -4,27 +4,27 @@ verbose=1
 
 scenario="Generate a new keypair"
 echo $scenario
-cat <<EOF | zenroom | tee alice.keys | json_pp
+cat <<EOF | zenroom | tee alice.keys
 ZEN:begin($verbose)
 ZEN:parse([[
-Scenario 'keygen': $scenario
+Scenario 'encryption': $scenario
 		 Given that I am known as 'Alice'
 		 When I create my new keypair
-		 Then print keypair 'Alice'
+		 Then print all data
 ]])
 ZEN:run()
 EOF
 
 scenario="Split a keypair"
 echo $scenario
-cat <<EOF | zenroom -k alice.keys | tee alice_public.keys | json_pp
+cat <<EOF | zenroom -k alice.keys | tee alice_public.keys
 ZEN:begin($verbose)
 ZEN:parse([[
-Scenario 'keygen': $scenario
+Scenario 'encryption': $scenario
 		 Given that I am known as 'Alice'
-		 and I have my keypair
-		 When I remove the 'private' key
-		 Then print all keyring
+		 and I have my public key
+		 When I export my public key
+		 Then print all data
 ]])
 ZEN:run()
 EOF
@@ -34,10 +34,10 @@ echo $scenario
 cat <<EOF | zenroom | tee bob.keys
 ZEN:begin($verbose)
 ZEN:parse([[
-Scenario 'keygen': $scenario
+Scenario 'encryption': $scenario
 		 Given that I am known as 'Bob'
 		 When I create my new keypair
-		 Then print all keyring
+		 Then print all data
 ]])
 ZEN:run()
 EOF
@@ -47,11 +47,11 @@ echo $scenario
 cat <<EOF | zenroom -k bob.keys | tee bob_public.keys
 ZEN:begin($verbose)
 ZEN:parse([[
-Scenario 'keygen': $scenario
+Scenario 'encryption': $scenario
 		 Given that I am known as 'Bob'
-		 and I have my keypair
-		 When I remove the 'private' key
-		 Then print all keyring
+		 and I have my public key
+		 When I export my public key
+		 Then print all data
 ]])
 ZEN:run()
 EOF
@@ -61,12 +61,12 @@ echo $scenario
 cat <<EOF | zenroom -k alice.keys -a bob_public.keys | tee alice_ring.keys | json_pp
 ZEN:begin($verbose)
 ZEN:parse([[
-Scenario 'store in keyring': $scenario
+Scenario 'encryption': $scenario
 		 Given that I am known as 'Alice'
 		 and I have my keypair
-		 and I have a 'Bob' 'public' key
-		 When I import 'Bob' keypair into my keyring
-		 Then print my keyring
+		 and I have the public key by 'Bob'
+		 When I export all keys
+		 Then print all data
 ]])
 ZEN:run()
 EOF
@@ -76,12 +76,12 @@ echo $scenario
 cat <<EOF | zenroom -k bob.keys -a alice_public.keys | tee bob_ring.keys | json_pp
 ZEN:begin($verbose)
 ZEN:parse([[
-Scenario 'store in keyring': $scenario
+Scenario 'encryption': $scenario
 		 Given that I am known as 'Bob'
 		 and I have my keypair
-		 and I have a 'Alice' 'public' key
-		 When I import 'Alice' keypair into my keyring
-		 Then print my keyring
+		 and I have the public key by 'Alice'
+		 When I export all keys
+		 Then print all data
 ]])
 ZEN:run()
 EOF
@@ -91,10 +91,10 @@ echo $scenario
 cat <<EOF | zenroom -k alice_ring.keys | tee alice_to_bob.json
 ZEN:begin($verbose)
 ZEN:parse([[
-Scenario 'crypto message': $scenario
+Scenario 'encryption': $scenario
 		 Given that I am known as 'Alice'
 		 and I have my keypair
-		 and I have the 'public' key 'Bob' in keyring
+		 and I have the public key by 'Bob'
 		 When I draft the text 'Hey Bob: Alice here, can you read me?'
 		 and I use 'Bob' key to encrypt the text
 		 Then print all data
@@ -102,15 +102,15 @@ Scenario 'crypto message': $scenario
 ZEN:run()
 EOF
 
-scenario="Bob answers a message from Alice"
+scenario="Bob decrypts a message from Alice"
 echo $scenario
 cat <<EOF | zenroom -k bob_ring.keys -a alice_to_bob.json | tee bob_to_alice.json
 ZEN:begin($verbose)
 ZEN:parse([[
-Scenario 'crypto answer': $scenario
+Scenario 'encryption': $scenario
 		 Given that I am known as 'Bob'
 		 and I have my keypair
-		 and I have an encrypted message 
+		 and I receive an encrypted message 
 		 When I decrypt the message
 		 Then print all data
 ]])

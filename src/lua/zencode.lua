@@ -132,6 +132,7 @@ end
 function zencode.assert(condition, errmsg)
    if condition then return true end
    error(errmsg) -- prints zencode backtrace
+   ZEN.debug() -- prints all data in memory
    assert(false)
 end
 

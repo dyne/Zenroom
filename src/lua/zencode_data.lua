@@ -85,10 +85,25 @@ function ZEN.data.check(_data, section, key)
    end
 end
 
--- request
+
+-- most used functions
+Then("print all data", function()
+        -- local _data = OUT or ZEN.data.load()
+        local t = type(OUT)
+        if t == "table" then
+           write_json(OUT)
+        elseif iszen(t) or t == "string" then
+           print(OUT)
+        end
+end)
 f_hello = function(nam) ACK.whoami = nam end
 Given("I introduce myself as ''", f_hello)
 Given("I am known as ''", f_hello)
+
+-- debug functions
+Given("I print debug info", function() ZEN.debug() end)
+When("I print debug info", function() ZEN.debug() end)
+Then("I print debug info", function() ZEN.debug() end)
 
 f_havedata = function (section,key)
    -- _G['data'] = ZEN.check(JSON.decode(DATA),dataname)
@@ -143,7 +158,7 @@ end)
 
 When("I draft the text ''", function(text)
         -- local _data = IN or ZEN.data.load()
-        ACK = ZEN.data.add(IN,'text',text)
+		ACK.text = text
 end)
 
 
@@ -189,14 +204,4 @@ end)
 
 Then("print string ''", function(s)
         print(s)
-end)
-
-Then("print all data", function()
-        -- local _data = OUT or ZEN.data.load()
-        local t = type(OUT)
-        if t == "table" then
-           write_json(OUT)
-        elseif iszen(t) or t == "string" then
-           print(OUT)
-        end
 end)
