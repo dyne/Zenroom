@@ -82,7 +82,7 @@ endif
 
 ifneq (,$(findstring android-arm,$(MAKECMDGOALS)))
 target = arm-linux-androideabi
-sysroot = ${ndk}/platforms/android-26/arch-arm
+sysroot = ${ndk}/platforms/android-21/arch-arm
 ld = ${toolchain}/bin/${target}-link
 cflags += -I${ndk}/sysroot/usr/include/arm-linux-androideabi --target=armv7-none-linux-androideabi --gcc-toolchain=${ndk}/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64 --sysroot=${sysroot}
 endif
