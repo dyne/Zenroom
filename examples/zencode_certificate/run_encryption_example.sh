@@ -1,6 +1,7 @@
-#!/bin/sh
+#!/usr/bin/env zsh
 
 verbose=1
+alias zenroom='../../src/zenroom-shared'
 
 scenario="Generate a new keypair"
 echo $scenario

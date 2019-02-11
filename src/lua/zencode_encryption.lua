@@ -92,7 +92,7 @@ When("I export all keys", function()
 end)	  
 		   
 
-When("I use '' key to encrypt the text", function(keyname,dest)
+When("I use '' key to encrypt the text", function(keyname)
 		ZEN.assert(ACK.text, "No draft text to encrypt found")
 		ZEN.assert(ACK.whoami, "No identity specified")
 		local pk = ACK.keys[keyname]
@@ -112,7 +112,7 @@ When("I use '' key to encrypt the text", function(keyname,dest)
 		cipher.encoding = "hex"
 		cipher.curve = "bls383"
 		cipher.schema = "aes_gcm"
-		cipher.pubkey = pk
+		cipher.pubkey = ACK.pubkey
 		OUT.aes_gcm = export(cipher, 'aes_gcm', hex)
 end)
 
@@ -133,8 +133,6 @@ When("I decrypt the message", function()
 		local decode = { }
 		decode.text, decode.checksum =
 		   ECDH.aead_decrypt(session, cipher.text, cipher.iv, "Zencode")
-		I.print(decode)
-		I.print(cipher)
 		ZEN.assert(decode.checksum == cipher.checksum,
 				   "Checksum mismatch when decrypting ciphertext")
 		OUT = MSG.unpack(decode.text:str())

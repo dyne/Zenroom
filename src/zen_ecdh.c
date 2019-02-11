@@ -331,6 +331,7 @@ static int ecdh_private(lua_State *L) {
 	if(e->seckey!=NULL) {
 		ERROR(); KEYPROT(e->curve, "private key"); }
 	e->seckey = o_arg(L, 2); SAFE(e->seckey);
+
 	octet *pk = o_new(L,e->publen); SAFE(pk);
 	(*e->ECP__KEY_PAIR_GENERATE)(NULL,e->seckey,pk);
 	int res;
