@@ -89,15 +89,17 @@ EOF
 
 scenario="Alice encrypts a message for Bob"
 echo $scenario
-cat <<EOF | zenroom -k alice_ring.keys | tee alice_to_bob.json
+cat <<EOF | zenroom -k alice_ring.keys -a fake_data.json | tee alice_to_bob.json
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'encryption': $scenario
 		 Given that I am known as 'Alice'
 		 and I have my keypair
 		 and I have the public key by 'Bob'
-		 When I draft the text 'Hey Bob: Alice here, can you read me?'
-		 and I use 'Bob' key to encrypt the text
+		 When I include the text 'Hey Bob: Alice here, copy?'
+		 and I include myself as sender
+		 and I include the hex data 'blob'
+		 and I use 'Bob' key to encrypt the output
 		 Then print all data
 ]])
 ZEN:run()

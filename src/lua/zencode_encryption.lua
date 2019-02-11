@@ -33,6 +33,19 @@ ZEN.add_schema(
 					  public = get(ECP.new, obj, 'public') } end,
 		  export = function(obj, conv)
 			 return map(obj, conv) end
+		},
+
+	 encryption_draft =
+		{ import = function(obj)
+			 return { from = get(O.from_string, obj, 'from'),
+					  text = get(O.from_string, obj, 'text'),
+					  data = get(O.from_hex, obj, 'data') }
+			 end,
+		  export = function(obj, conv)
+			 return { from = str(obj.from),
+					  text = str(obj.text),
+					  data = conv(obj.data) }
+			 end
 		}
 })
 
@@ -92,8 +105,8 @@ When("I export all keys", function()
 end)	  
 		   
 
-When("I use '' key to encrypt the text", function(keyname)
-		ZEN.assert(ACK.text, "No draft text to encrypt found")
+When("I use '' key to encrypt the output", function(keyname)
+		ZEN.assert(ACK.draft, "No draft to encrypt found")
 		ZEN.assert(ACK.whoami, "No identity specified")
 		local pk = ACK.keys[keyname]
 		ZEN.assert(pk, "Public key not found in keyring: "..keyname)
@@ -103,12 +116,13 @@ When("I use '' key to encrypt the text", function(keyname)
 		local session = ECDH.kdf2(HASH.new('sha256'), pk * sk)
 
 		-- compose the cipher message
-		local text = MSG.pack({ from = ACK.whoami,
-								text = ACK.text })
+		local message = MSG.pack({ from = ACK.draft.from,
+								   text = ACK.draft.text,
+								   data = hex(ACK.draft.data) })
 		local cipher = { }
 		cipher.iv = random:octet(16)
-		cipher.text,cipher.checksum =
-		   ECDH.aesgcm_encrypt(session, text, cipher.iv, "Zencode")
+		cipher.text, cipher.checksum =
+		   ECDH.aesgcm_encrypt(session, message, cipher.iv, "Zencode")
 		cipher.encoding = "hex"
 		cipher.curve = "bls383"
 		cipher.schema = "aes_gcm"

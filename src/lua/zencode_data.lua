@@ -156,11 +156,26 @@ When("I declare to '' that I am ''",function (auth,decl)
         authority = auth
 end)
 
-When("I draft the text ''", function(text)
-        -- local _data = IN or ZEN.data.load()
-		ACK.text = text
+When("I include the text ''", function(text)
+		if not ACK.draft then ACK.draft = { } end
+		if ACK.draft.text then
+			  ACK.draft.text = ACK.draft.text.."\n"..text
+		else
+		   ACK.draft.text = text
+		end
 end)
 
+When("I include the hex data ''", function(data)
+		if not ACK.draft then ACK.draft = { } end
+		ZEN.assert(IN[data], "Data not found in input: "..data)
+		ACK.draft.data = hex(IN[data])
+end)
+
+When("I include myself as sender", function(data)
+		ZEN.assert(ACK.whoami, "No identity specified")
+		if not ACK.draft then ACK.draft = { } end
+		ACK.draft.from = ACK.whoami
+end)
 
 Given("that '' declares to be ''",function(who, decl)
          -- declaration
