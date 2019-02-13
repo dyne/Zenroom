@@ -270,7 +270,7 @@ function coco.verify_cred_petition(vk, Theta, zeta, uid)
 end
 
 -- takes an array of bigs and a curve order (modulo)
-function coco.lagrange_interpolation(indexes, o)
+function coco.lagrange_interpolation(indexes)
    ZEN.assert(type(indexes) == "table", "Lagrange interpolation argument is not an array")
    local l = {}
    local numerator
@@ -327,19 +327,18 @@ function coco.prove_sign_petition(pub, m)
 					 rr2 = rr2 }
 
    -- signature's Theta
-   return { enc_v = enc_v,
-			env_v_neg = enc_v_neg,
-			cv = cv,
-			pi_vote = pi_vote }
+   return { scores = { pos = enc_v, neg = enc_v_neg }, -- tuples
+			cv = cv, -- ecp
+			pi_vote = pi_vote } -- pi
 end
 
 function coco.verify_sign_petition(pub, theta)
    -- recompute witnessess commitment
    local Aw = g1 * theta.pi_vote.rk
-	  + theta.enc_v[1] * theta.pi_vote.c
+	  + theta.scores.pos[1] * theta.pi_vote.c
    local Bw = pub * theta.pi_vote.rk
 	  + hs * theta.pi_vote.rm
-	  + theta.enc_v[2] * theta.pi_vote.c
+	  + theta.scores.pos[2] * theta.pi_vote.c
    local Cw = g1 * theta.pi_vote.rm
 	  + hs * theta.pi_vote.rr1
 	  + theta.cv * theta.pi_vote.c
@@ -348,9 +347,34 @@ function coco.verify_sign_petition(pub, theta)
 	  + theta.cv * theta.pi_vote.c
    -- verify challenge
    ZEN.assert(theta.pi_vote.c == COCONUT.to_challenge(
-				 {theta.enc_v[1], theta.enc_v[2], theta.cv, Aw, Bw, Cw, Dw }),
+				 {theta.scores.pos[1], theta.scores.pos[2],
+				  theta.cv, Aw, Bw, Cw, Dw }),
 			  "verify_sign_petition: challenge fails")
    return true
 end
+
+function coco.prove_tally_petition(sk, scores)
+   local wx = rand()
+   local Aw = { wx:modneg(o)*scores.pos[1],
+				wx:modneg(o)*scores.neg[1]  }
+   local c = COCONUT.to_challenge(Aw)
+   local rx = wx:modsub(c*sk, o)
+   local dec = { scores.pos[1]*sk:modneg(o),
+				 scores.neg[1]*sk:modneg(o) }
+   -- return pi_tally
+   return { dec = dec,
+			rx = rx,
+			c = c    }
+end
+
+function coco.verify_tally_petition(scores, pi_tally)
+   local rxneg = pi_tally.rx:modneg(o)
+   local Aw = { rxneg*scores.pos[1] + pi_tally.c * pi_tally.dec[1],
+				rxneg*scores.neg[1] + pi_tally.c * pi_tally.dec[2]  }
+   ZEN.assert(pi_tally.c == COCONUT.to_challenge(Aw),
+			  "verify_tally_petition: challenge fails")
+   return true
+end
+
 
 return coco

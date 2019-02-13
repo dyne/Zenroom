@@ -12,10 +12,10 @@ print('[ok] test El-Gamal')
 print('')
 
 -- A single CA signs
-secret = "Some sort of secret credential"
 -- generate the keys of the credential
 cred_keypair = { private = d,
 				 public = gamma }
+secret = cred_keypair.private -- "Some sort of secret credential"
 -- simple credential test
 ca_keypair = COCONUT.ca_keygen()
 Lambda = COCONUT.prepare_blind_sign(cred_keypair.public, secret)
@@ -58,9 +58,17 @@ print('')
 print('[ok] test petition credential Coconut')
 print('')
 
-psign = COCONUT.prove_sign_petition(cred_keypair.public, BIG.new(1))
-local res = COCONUT.verify_sign_petition(cred_keypair.public, psign)
+voter = { }
+voter.private, voter.public = ELGAMAL.keygen()
+
+psign = COCONUT.prove_sign_petition(voter.public, BIG.new(1))
+local res = COCONUT.verify_sign_petition(voter.public, psign)
 assert(res == true, "Coconut petition signature not verifying")
 print('')
 print('[ok] test petition signature Coconut')
+print('')
+ptally = COCONUT.prove_tally_petition(secret, psign.scores)
+local res = COCONUT.verify_tally_petition(psign.scores, ptally)
+print('')
+print('[ok] test petition tally Coconut')
 print('')
