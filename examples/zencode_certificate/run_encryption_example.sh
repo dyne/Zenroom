@@ -87,6 +87,10 @@ Scenario 'encryption': $scenario
 ZEN:run()
 EOF
 
+cat <<EOF > fake_data.json
+{"blob":"48656c6c6f20576f726c64"}
+EOF
+
 scenario="Alice encrypts a message for Bob"
 echo $scenario
 cat <<EOF | zenroom -k alice_ring.keys -a fake_data.json | tee alice_to_bob.json
