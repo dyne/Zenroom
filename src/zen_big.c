@@ -639,6 +639,15 @@ static int big_jacobi(lua_State *L) {
 	return 1;
 }
 
+static int big_modinv(lua_State *L) {
+	big *y = big_arg(L, 1); SAFE(y);
+	big *m = big_arg(L, 2); SAFE(m);
+	big *x = big_new(L); SAFE(x);
+	big_init(x);
+	BIG_invmodp(x->val, y->val, m->val);
+	return 1;
+}
+
 int luaopen_big(lua_State *L) {
 	const struct luaL_Reg big_class[] = {
 		{"new",newbig},
@@ -656,6 +665,7 @@ int luaopen_big(lua_State *L) {
 		{"modsqr",big_modsqr},
 		{"modneg",big_modneg},
 		{"modsub",big_modsub},
+		{"modinv",big_modinv},
 		{"jacobi",big_jacobi},
 		{"monty",big_monty},
 		{"info",lua_biginfo},
@@ -687,6 +697,7 @@ int luaopen_big(lua_State *L) {
 		{"modsqr",big_modsqr},
 		{"modneg",big_modneg},
 		{"modsub",big_modsub},
+		{"modinv",big_modinv},
 		{"jacobi",big_jacobi},
 		{"monty",big_monty},
 		{"__gc", big_destroy},

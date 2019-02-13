@@ -90,6 +90,7 @@
 #define BIG_sub(d,l,r) BIG_384_29_sub(d,l,r)
 #define BIG_mul(d,l,r) BIG_384_29_mul(d,l,r)
 #define BIG_mod(x,n) BIG_384_29_mod(x,n)
+#define BIG_invmodp(x,y,n) BIG_384_29_invmodp(x,y,n)
 #define BIG_monty(d,m,c,s) BIG_384_29_monty(d,m,c,s)
 // #define BIG_dmod(a,b,c) BIG_384_29_dmod(a,b,c)
 #define BIG_sdiv(x,n) BIG_384_29_sdiv(x,n)
