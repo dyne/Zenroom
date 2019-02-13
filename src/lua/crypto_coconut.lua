@@ -269,5 +269,25 @@ function coco.verify_cred_petition(vk, Theta, zeta, uid)
    return true
 end
 
+-- takes an array of bigs and a curve order (modulo)
+function coco.lagrange_interpolation(indexes, o)
+   ZEN.assert(type(indexes) == "table", "Lagrange interpolation argument is not an array")
+   local l = {}
+   local numerator
+   local denominator
+   for i in indexes do
+	  numerator = BIG.new(1)
+	  denominator = BIG.new(1)
+	  for j in indexes do
+		 if (j ~= i)
+		 then
+            numerator = numerator:modmul(x:modsub(j,o),o)
+            denominator = denominator:modmul(i:modsub(j,o),o)
+		 end
+		 l[#l+1] = numerator:modmul(denominator:modinv(o),o)
+	  end
+   end
+   return l
+end
 
 return coco

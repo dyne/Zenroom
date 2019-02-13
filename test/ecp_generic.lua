@@ -24,4 +24,9 @@ Aw2 = (g1*k) * c + g1 * rk
 
 assert(Aw1 == Aw2, 'Error in subtraction / modsub()')
 
+-- mod_inverse
+i = BIG.new(RNG.new(), ECP.order())
+inv = i:modinv(ECP.order())
+assert(i:modmul(inv, ECP.order()) == BIG.new(1), 'Error in mod_inverse (gcd based)')
+
 print "OK"
