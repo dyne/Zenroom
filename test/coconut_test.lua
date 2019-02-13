@@ -13,10 +13,13 @@ print('')
 
 -- A single CA signs
 secret = "Some sort of secret credential"
-cred_keypair = COCONUT.cred_keygen()
+-- generate the keys of the credential
+cred_keypair = { private = d,
+				 public = gamma }
+-- simple credential test
 ca_keypair = COCONUT.ca_keygen()
 Lambda = COCONUT.prepare_blind_sign(cred_keypair.public, secret)
-sigmatilde = COCONUT.blind_sign(ca_keypair.sign, cred_keypair.public, Lambda)
+sigmatilde = COCONUT.blind_sign(ca_keypair.sign, Lambda)
 aggsigma = COCONUT.aggregate_creds(cred_keypair.private, {sigmatilde})
 Theta = COCONUT.prove_creds(ca_keypair.verify, aggsigma, secret)
 ret = COCONUT.verify_creds(ca_keypair.verify, Theta)
@@ -32,13 +35,32 @@ ca_aggkeys = COCONUT.aggregate_keys({ca_keypair.verify,
 									 ca2_keypair.verify,
 									 ca3_keypair.verify})
 Lambda = COCONUT.prepare_blind_sign(cred_keypair.public, secret)
-sigma_tilde1 = COCONUT.blind_sign(ca_keypair.sign,  cred_keypair.public, Lambda)
-sigma_tilde2 = COCONUT.blind_sign(ca2_keypair.sign, cred_keypair.public, Lambda)
-sigma_tilde3 = COCONUT.blind_sign(ca3_keypair.sign, cred_keypair.public, Lambda)
+sigma_tilde1 = COCONUT.blind_sign(ca_keypair.sign, Lambda)
+sigma_tilde2 = COCONUT.blind_sign(ca2_keypair.sign, Lambda)
+sigma_tilde3 = COCONUT.blind_sign(ca3_keypair.sign, Lambda)
 aggsigma = COCONUT.aggregate_creds(cred_keypair.private, {sigma_tilde1, sigma_tilde2, sigma_tilde3})
-Theta = COCONUT.prove_creds(ca_aggkeys, aggsigma, secret)
-ret = COCONUT.verify_creds(ca_aggkeys, Theta)
+-- do the actual test
+local Theta = COCONUT.prove_creds(ca_aggkeys, aggsigma, secret)
+local ret = COCONUT.verify_creds(ca_aggkeys, Theta)
 assert(ret == true, 'Coconut credentials not verifying')
 print('')
 print('[ok] test multi-authority Coconut')
+print('')
+
+
+-- PETITION
+local UID = "petition unique identifier"
+-- show coconut credentials
+Theta, zeta = COCONUT.prove_cred_petition(ca_aggkeys, aggsigma, secret, UID)
+local res = COCONUT.verify_cred_petition(ca_aggkeys, Theta, zeta, UID)
+assert(res == true, "Coconut petition credentials not verifying")
+print('')
+print('[ok] test petition credential Coconut')
+print('')
+
+psign = COCONUT.prove_sign_petition(cred_keypair.public, BIG.new(1))
+local res = COCONUT.verify_sign_petition(cred_keypair.public, psign)
+assert(res == true, "Coconut petition signature not verifying")
+print('')
+print('[ok] test petition signature Coconut')
 print('')

@@ -290,4 +290,67 @@ function coco.lagrange_interpolation(indexes, o)
    return l
 end
 
+function coco.prove_sign_petition(pub, m)
+   -- sign == vote
+   local k = rand()
+   -- vote encryption
+   local enc_v = { g1 * k, pub * k + hs * m }
+   -- opposite of vote encryption
+   local enc_v_neg = { enc_v[1]:negative(), enc_v[2]:negative() + hs }
+   -- commitment to the vote
+   local r1 = rand()
+   local r2 = r1:modmul(BIG.new(1):modsub(m,o), o)
+   local cv = g1 * m + hs * r1
+
+   -- proof
+   -- create the witnesess
+   local wk = rand()
+   local wm = rand()
+   local wr1 = rand()
+   local wr2 = rand()
+   -- compute the witnessess commitments
+   local Aw = g1*wk
+   local Bw = pub*wk + hs*wm
+   local Cw = g1*wm + hs*wr1
+   local Dw = cv*wm + hs*wr2
+   -- create the challenge
+   local c = COCONUT.to_challenge({enc_v[1], enc_v[2], cv, Aw, Bw, Cw, Dw}) % o
+   -- create responses
+   local rk = wk:modsub(c*k, o)
+   local rm = wm:modsub(c*m, o)
+   local rr1 = wr1:modsub(c*r1, o)
+   local rr2 = wr2:modsub(c*r2, o)
+   local pi_vote = { c = c,
+					 rk = rk,
+					 rm = rm,
+					 rr1 = rr1,
+					 rr2 = rr2 }
+
+   -- signature's Theta
+   return { enc_v = enc_v,
+			env_v_neg = enc_v_neg,
+			cv = cv,
+			pi_vote = pi_vote }
+end
+
+function coco.verify_sign_petition(pub, theta)
+   -- recompute witnessess commitment
+   local Aw = g1 * theta.pi_vote.rk
+	  + theta.enc_v[1] * theta.pi_vote.c
+   local Bw = pub * theta.pi_vote.rk
+	  + hs * theta.pi_vote.rm
+	  + theta.enc_v[2] * theta.pi_vote.c
+   local Cw = g1 * theta.pi_vote.rm
+	  + hs * theta.pi_vote.rr1
+	  + theta.cv * theta.pi_vote.c
+   local Dw = theta.cv * theta.pi_vote.rm
+	  + hs * theta.pi_vote.rr2
+	  + theta.cv * theta.pi_vote.c
+   -- verify challenge
+   ZEN.assert(theta.pi_vote.c == COCONUT.to_challenge(
+				 {theta.enc_v[1], theta.enc_v[2], theta.cv, Aw, Bw, Cw, Dw }),
+			  "verify_sign_petition: challenge fails")
+   return true
+end
+
 return coco

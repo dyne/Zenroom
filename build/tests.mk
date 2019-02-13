@@ -35,7 +35,8 @@ crypto-tests = \
 	${1} test/big_bls383.lua && \
 	${1} test/ecp_bls383.lua && \
 	${1} test/ecp_generic.lua && \
-	${1} test/pair_bls383.lua
+	${1} test/pair_bls383.lua && \
+	${1} test/coconut_test.lua
 
 
 shell-tests = \
