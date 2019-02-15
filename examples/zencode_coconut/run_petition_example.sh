@@ -4,6 +4,8 @@
 
 verbose=1
 
+alias zenroom='../../src/zenroom-shared'
+
 scenario="Generate Alice's credential request keypair"
 echo $scenario
 cat <<EOF | zenroom | tee alice_petition.keys

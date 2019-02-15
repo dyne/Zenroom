@@ -294,9 +294,11 @@ function coco.prove_sign_petition(pub, m)
    -- sign == vote
    local k = rand()
    -- vote encryption
-   local enc_v = { g1 * k, pub * k + hs * m }
+   local enc_v = { left = g1 * k,
+				   right = pub * k + hs * m }
    -- opposite of vote encryption
-   local enc_v_neg = { enc_v[1]:negative(), enc_v[2]:negative() + hs }
+   local enc_v_neg = { left = enc_v.left:negative(),
+					   right = enc_v.right:negative() + hs }
    -- commitment to the vote
    local r1 = rand()
    local r2 = r1:modmul(BIG.new(1):modsub(m,o), o)
@@ -314,7 +316,8 @@ function coco.prove_sign_petition(pub, m)
    local Cw = g1*wm + hs*wr1
    local Dw = cv*wm + hs*wr2
    -- create the challenge
-   local c = COCONUT.to_challenge({enc_v[1], enc_v[2], cv, Aw, Bw, Cw, Dw}) % o
+   local c = COCONUT.to_challenge({enc_v.left, enc_v.right,
+								   cv, Aw, Bw, Cw, Dw}) % o
    -- create responses
    local rk = wk:modsub(c*k, o)
    local rm = wm:modsub(c*m, o)
@@ -327,18 +330,20 @@ function coco.prove_sign_petition(pub, m)
 					 rr2 = rr2 }
 
    -- signature's Theta
-   return { scores = { pos = enc_v, neg = enc_v_neg }, -- tuples
+   return { scores = { pos = enc_v,
+					   neg = enc_v_neg }, -- left/right tuples
 			cv = cv, -- ecp
 			pi_vote = pi_vote } -- pi
 end
 
 function coco.verify_sign_petition(pub, theta)
    -- recompute witnessess commitment
+   local scores = theta.scores.pos -- only positive, not negative?
    local Aw = g1 * theta.pi_vote.rk
-	  + theta.scores.pos[1] * theta.pi_vote.c
+	  + scores.left * theta.pi_vote.c
    local Bw = pub * theta.pi_vote.rk
 	  + hs * theta.pi_vote.rm
-	  + theta.scores.pos[2] * theta.pi_vote.c
+	  + scores.right * theta.pi_vote.c
    local Cw = g1 * theta.pi_vote.rm
 	  + hs * theta.pi_vote.rr1
 	  + theta.cv * theta.pi_vote.c
@@ -347,7 +352,7 @@ function coco.verify_sign_petition(pub, theta)
 	  + theta.cv * theta.pi_vote.c
    -- verify challenge
    ZEN.assert(theta.pi_vote.c == COCONUT.to_challenge(
-				 {theta.scores.pos[1], theta.scores.pos[2],
+				 {scores.left, scores.right,
 				  theta.cv, Aw, Bw, Cw, Dw }),
 			  "verify_sign_petition: challenge fails")
    return true
@@ -355,12 +360,12 @@ end
 
 function coco.prove_tally_petition(sk, scores)
    local wx = rand()
-   local Aw = { wx:modneg(o)*scores.pos[1],
-				wx:modneg(o)*scores.neg[1]  }
+   local Aw = { wx:modneg(o) * scores.pos.left,
+				wx:modneg(o) * scores.neg.left  }
    local c = COCONUT.to_challenge(Aw)
    local rx = wx:modsub(c*sk, o)
-   local dec = { scores.pos[1]*sk:modneg(o),
-				 scores.neg[1]*sk:modneg(o) }
+   local dec = { pos = scores.pos.left * sk:modneg(o),
+				 neg = scores.neg.left * sk:modneg(o) }
    -- return pi_tally
    return { dec = dec,
 			rx = rx,
@@ -369,12 +374,32 @@ end
 
 function coco.verify_tally_petition(scores, pi_tally)
    local rxneg = pi_tally.rx:modneg(o)
-   local Aw = { rxneg*scores.pos[1] + pi_tally.c * pi_tally.dec[1],
-				rxneg*scores.neg[1] + pi_tally.c * pi_tally.dec[2]  }
+   local Aw = { rxneg*scores.pos.left + pi_tally.c * pi_tally.dec.pos,
+				rxneg*scores.neg.left + pi_tally.c * pi_tally.dec.neg  }
    ZEN.assert(pi_tally.c == COCONUT.to_challenge(Aw),
 			  "verify_tally_petition: challenge fails")
    return true
 end
 
-
+function coco.count_signatures_petition(scores, pi_tally)
+   -- local dec = { pos = ECP.infinity(),
+   -- 				 neg = ECP.infinity()  }
+   -- dec.pos = dec.pos + pi_tally.dec.pos
+   -- dec.neg = dec.neg + pi_tally.dec.neg
+   local restab = { }
+   for idx=-100,100 do
+	  restab[hex(BIG.new(idx) * hs)] = idx
+   end
+   for idx=0,100 do
+	  -- local i = BIG.new(idx) * hs
+	  local i = hex(BIG.new(idx):modneg(o) * hs)
+	  if restab[i] then print('dup: '..idx) end
+	  restab[i] = -idx
+   end
+   -- I.print(restab)
+   local res = I.spy({ pos = scores.pos.right + pi_tally.dec.pos,
+					   neg = scores.neg.right + pi_tally.dec.neg  })
+   return { pos = restab[hex(res.pos)],
+			neg = restab[hex(res.neg)]  }
+end
 return coco

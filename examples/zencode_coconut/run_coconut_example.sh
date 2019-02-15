@@ -4,6 +4,7 @@
 
 verbose=1
 
+alias zenroom='../../src/zenroom-shared'
 
 scenario="Generate credential request keypair"
 echo $scenario

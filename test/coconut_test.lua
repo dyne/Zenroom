@@ -50,25 +50,35 @@ print('')
 
 -- PETITION
 local UID = "petition unique identifier"
+issuer = cred_keypair -- reuse the signed credential keypair for the issuer
+voter = { } -- create a new signed credential keypair for the voter
+voter.private, voter.public = ELGAMAL.keygen()
+Lambda = COCONUT.prepare_blind_sign(voter.public, voter.private)
+sigma_tilde1 = COCONUT.blind_sign(ca_keypair.sign, Lambda)
+sigma_tilde2 = COCONUT.blind_sign(ca2_keypair.sign, Lambda)
+sigma_tilde3 = COCONUT.blind_sign(ca3_keypair.sign, Lambda)
+voter.aggsigma = COCONUT.aggregate_creds(voter.private, {sigma_tilde1, sigma_tilde2, sigma_tilde3})
+local Theta = COCONUT.prove_creds(ca_aggkeys, voter.aggsigma, voter.private)
+local ret = COCONUT.verify_creds(ca_aggkeys, Theta)
+
 -- show coconut credentials
-Theta, zeta = COCONUT.prove_cred_petition(ca_aggkeys, aggsigma, secret, UID)
+Theta, zeta = COCONUT.prove_cred_petition(ca_aggkeys, voter.aggsigma, voter.private, UID)
 local res = COCONUT.verify_cred_petition(ca_aggkeys, Theta, zeta, UID)
 assert(res == true, "Coconut petition credentials not verifying")
 print('')
 print('[ok] test petition credential Coconut')
 print('')
 
-voter = { }
-voter.private, voter.public = ELGAMAL.keygen()
-
-psign = COCONUT.prove_sign_petition(voter.public, BIG.new(1))
-local res = COCONUT.verify_sign_petition(voter.public, psign)
+psign = COCONUT.prove_sign_petition(issuer.public, BIG.new(1))
+local res = COCONUT.verify_sign_petition(issuer.public, psign)
 assert(res == true, "Coconut petition signature not verifying")
 print('')
 print('[ok] test petition signature Coconut')
 print('')
-ptally = COCONUT.prove_tally_petition(secret, psign.scores)
+ptally = COCONUT.prove_tally_petition(issuer.private, psign.scores)
 local res = COCONUT.verify_tally_petition(psign.scores, ptally)
 print('')
 print('[ok] test petition tally Coconut')
 print('')
+
+I.print(COCONUT.count_signatures_petition(psign.scores, ptally))
