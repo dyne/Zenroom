@@ -382,23 +382,12 @@ function coco.verify_tally_petition(scores, pi_tally)
 end
 
 function coco.count_signatures_petition(scores, pi_tally)
-   -- local dec = { pos = ECP.infinity(),
-   -- 				 neg = ECP.infinity()  }
-   -- dec.pos = dec.pos + pi_tally.dec.pos
-   -- dec.neg = dec.neg + pi_tally.dec.neg
    local restab = { }
    for idx=-100,100 do
 	  restab[hex(BIG.new(idx) * hs)] = idx
    end
-   for idx=0,100 do
-	  -- local i = BIG.new(idx) * hs
-	  local i = hex(BIG.new(idx):modneg(o) * hs)
-	  if restab[i] then print('dup: '..idx) end
-	  restab[i] = -idx
-   end
-   -- I.print(restab)
-   local res = I.spy({ pos = scores.pos.right + pi_tally.dec.pos,
-					   neg = scores.neg.right + pi_tally.dec.neg  })
+   local res = { pos = scores.pos.right + pi_tally.dec.pos,
+				 neg = scores.neg.right + pi_tally.dec.neg  }
    return { pos = restab[hex(res.pos)],
 			neg = restab[hex(res.neg)]  }
 end

@@ -69,16 +69,26 @@ print('')
 print('[ok] test petition credential Coconut')
 print('')
 
-psign = COCONUT.prove_sign_petition(issuer.public, BIG.new(1))
-local res = COCONUT.verify_sign_petition(issuer.public, psign)
-assert(res == true, "Coconut petition signature not verifying")
+-- create the petition scores
+local scores = { pos = { left = ECP.infinity(), right = ECP.infinity() },
+				 neg = { left = ECP.infinity(), right = ECP.infinity() } }
+-- loop through votes
+for v=1,6 do
+   psign = COCONUT.prove_sign_petition(issuer.public, BIG.new(1))
+   local res = COCONUT.verify_sign_petition(issuer.public, psign)
+   assert(res == true, "Coconut petition signature not verifying")
+   print('[ok] test petition signature Coconut')
+   -- sum the vote to the petition scores
+   scores.pos.left =  scores.pos.left  + psign.scores.pos.left
+   scores.pos.right = scores.pos.right + psign.scores.pos.right
+   scores.neg.left =  scores.neg.left  + psign.scores.neg.left
+   scores.neg.right = scores.neg.right + psign.scores.neg.right
+end
 print('')
-print('[ok] test petition signature Coconut')
-print('')
-ptally = COCONUT.prove_tally_petition(issuer.private, psign.scores)
-local res = COCONUT.verify_tally_petition(psign.scores, ptally)
+ptally = COCONUT.prove_tally_petition(issuer.private, scores)
+local res = COCONUT.verify_tally_petition(scores, ptally)
 print('')
 print('[ok] test petition tally Coconut')
 print('')
 
-I.print(COCONUT.count_signatures_petition(psign.scores, ptally))
+I.print(COCONUT.count_signatures_petition(scores, ptally))
