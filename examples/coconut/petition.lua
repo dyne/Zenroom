@@ -63,11 +63,11 @@ function create_petition(inputs, settings)
 		uid = settings.uid,
 		pub_owner = settings.pub_owner,
 		scores = { first = ECP.infinity(),
-				   second = ECP.infinity(),
-				   dec = { }, -- hold the decryption shards
-				   list = { } } -- hold the spent list
+				   second = ECP.infinity() },
+		dec = { }, -- hold the decryption shards
+		list = { } -- hold the spent list
 	}
-	local sig = 1 -- /!\ create a signature over `new_petition` using priv_owner
+	local sig = 1 -- TODO: create a signature over `new_petition` using priv_owner
 
 	local outputs = { token = inputs.token, petition = petition}
 	local parameters = { sig = sig }
@@ -82,82 +82,22 @@ function checker_create_petition(inputs, outputs, parameters)
 	ret = ret and (inputs.token == outputs.token)
 	ret = ret and (petition.scores.first == ECP.infinity())
 	ret = ret and (petition.scores.second == ECP.infinity())
-	ret = ret and (parameters.sig == 1) -- /!\ verify the signature
+	ret = ret and (parameters.sig == 1) -- TODO: verify the signature
 	return ret
 end
 
-local function prove_cred_petition(vk, sigma, secret, uid)
-   local m = INT.new(sha256(secret))
-   -- material
-    local r = rand()
-    local r_prime = rand()
-    local sigma_prime = { h_prime = sigma.h * r_prime,
-						  s_prime = sigma.s * r_prime  }
-    local kappa = vk.g2 * r
-	   + vk.alpha
-	   + vk.beta * m
-    local nu = sigma_prime.h_prime * r
-    local zeta = ECP.hashtopoint(uid) * m
-    
-	-- proof
-	-- create the witnesses
-    local wm = rand()
-    local wr = rand()
-	-- compute the witnesses commitments
-    local Aw = g2 * wr + vk.alpha + vk.beta * wm
-    local Bw = sigma_prime.h_prime * wr
-    local Cw = ECP.hashtopoint(uid) * wm
-	-- create the challenge
-    local c = COCONUT.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw })
-	-- create responses
-    local rm = wm:modsub(c * m, o)
-    local rr = wr:modsub(c * r, o)
-    local pi_v = { c = c, 
-				   rm = rm,
-				   rr = rr }
-    local Theta = {
-       kappa = kappa,
-       nu = nu,
-       sigma_prime = sigma_prime,
-	   sigma = sigma,
-       pi_v = pi_v }
-    return Theta, zeta
-end
-local function verify_cred_petition(vk, Theta, zeta, uid)
-	local kappa = Theta.kappa
-	local nu = Theta.nu
-	local sigma_prime = Theta.sigma_prime
-	-- I.print(Theta)
-	-- assert(validate(Theta.pi_v, schemas['coconut_pi_s']), "Theta.pi signature schema invalid")
-	local sigma = Theta.sigma
-	local c = Theta.pi_v.c
-    local rm = Theta.pi_v.rm
-    local rr = Theta.pi_v.rr
-    local Aw = kappa * c
-	   + g2 * rr
-	   + vk.alpha * INT.new(1):modsub(c,o)
-	   + vk.beta * rm
-    local Bw = nu * c + sigma_prime.h_prime * rr
-    local Cw = rm*ECP.hashtopoint(uid) + zeta*c
-	assert(c == COCONUT.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw }),
-		   "COCONUT internal error: failure to compute the challenge prime")
-    assert(not sigma_prime.h_prime:isinf(),
-		   "COCONUT internal error: sigma_prime.h points to infinity")
-    assert(ECP2.miller(kappa, sigma_prime.h_prime)
-			  == ECP2.miller(vk.g2, sigma_prime.s_prime + nu),
-		   "COCONUT internal error: petition credential signature does not verify")
-    return true
-end
 function sign_petition(inputs, settings)
 
 	-- show coconut credentials
-	local Theta, zeta = prove_cred_petition(
+	local Theta, zeta = COCONUT.prove_cred_petition(
 	   settings.aggr_vk,
 	   settings.cred,
 	   settings.priv_owner,
 	   inputs.petition.uid)
 
-	verify_cred_petition(
+	table.insert(inputs.petition.list,zeta)
+
+	COCONUT.verify_cred_petition(
 	   settings.aggr_vk,
 	   Theta, zeta,
 	   inputs.petition.uid)

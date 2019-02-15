@@ -73,7 +73,8 @@ print('')
 local scores = { pos = { left = ECP.infinity(), right = ECP.infinity() },
 				 neg = { left = ECP.infinity(), right = ECP.infinity() } }
 -- loop through votes
-for v=1,6 do
+local loops=6
+for v=1,loops do
    psign = COCONUT.prove_sign_petition(issuer.public, BIG.new(1))
    local res = COCONUT.verify_sign_petition(issuer.public, psign)
    assert(res == true, "Coconut petition signature not verifying")
@@ -91,4 +92,9 @@ print('')
 print('[ok] test petition tally Coconut')
 print('')
 
-I.print(COCONUT.count_signatures_petition(scores, ptally))
+assert( COCONUT.count_signatures_petition(scores, ptally).pos
+		== loops, "Invalid vote count for petition")
+print('')
+print('[ok] test petition count Coconut')
+print('')
+
