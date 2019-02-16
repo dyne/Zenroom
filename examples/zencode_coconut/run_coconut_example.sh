@@ -13,7 +13,7 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'Alice'
-		 When I create my new credential request keypair
+		 When I create my new keypair
 		 Then print all data
 ]])
 ZEN:run()
@@ -26,7 +26,7 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'MadHatter'
-		 When I create my new credential issuer keypair
+		 When I create my new issuer keypair
 		 Then print all data
 ]])
 ZEN:run()
@@ -53,7 +53,7 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'MadHatter'
-		 and I have my credential issuer keypair
+		 and I have my issuer keypair
 		 When I publish my issuer verification key
 		 Then print all data
 ]])
@@ -67,7 +67,7 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'Alice'
-		 and I have my credential request keypair
+		 and I have my credential keypair
 		 When I declare that I am 'lost in Wonderland'
 		 and I request a credential blind signature
 		 Then print all data
@@ -82,7 +82,7 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'MadHatter'
-		 and I have my credential issuer keypair
+		 and I have my issuer keypair
 		 When I am requested to sign a credential
 		 and I verify the credential to be true
 		 and I sign the credential 'MadHatter'
@@ -99,7 +99,7 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'Alice'
-		 and I have my credential request keypair
+		 and I have my credential keypair
 		 When I receive a credential signature 'MadHatter'
 		 and I aggregate all signatures into my credential
 		 Then print all data

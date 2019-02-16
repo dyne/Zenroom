@@ -13,7 +13,7 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'Alice'
-		 When I create my new credential keypair
+		 When I create my keypair
 		 Then print all data
 ]])
 ZEN:run()
