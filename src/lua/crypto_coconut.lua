@@ -153,6 +153,10 @@ function coco.aggregate_creds(d, sigma_tilde)
 end
 
 function coco.prove_creds(vk, sigma, secret)
+   ZEN.assert(vk, "COCONUT.prove_creds called with empty verifier")
+   ZEN.assert(sigma, "COCONUT.prove_creds called with empty credential")
+   ZEN.assert(secret, "COCONUT.prove_creds called with empty secret")
+
    local m = INT.new(sha256(secret))
    local r = rand()
    local r_prime = rand()
@@ -179,6 +183,8 @@ function coco.prove_creds(vk, sigma, secret)
 end
 
 function coco.verify_creds(vk, Theta)
+   ZEN.assert(vk, "COCONUT.verify_creds called with empty verifier")
+   ZEN.assert(Theta, "COCONUT.verify_creds valled with empty proof")
    -- verify pi_v
    local Aw = Theta.kappa * Theta.pi_v.c
 	  + g2 * Theta.pi_v.rr

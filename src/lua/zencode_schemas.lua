@@ -12,8 +12,8 @@ ZEN.get = function(conv, obj, key)
 end
 
 function import(obj, sname)
-   ZEN.assert(obj, "Import error: obj is nil")
    ZEN.assert(sname, "Import error: schema is nil")
+   ZEN.assert(obj, "Import error: obj is nil ("..sname..")")
    local s = ZEN.schemas[sname]
    ZEN.assert(s ~= nil, "Import error: schema not found '"..sname.."'")
    return s.import(obj)
