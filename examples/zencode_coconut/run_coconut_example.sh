@@ -32,19 +32,6 @@ Scenario 'coconut': $scenario
 ZEN:run()
 EOF
 
-# scenario="Generate credential issuer keypair"
-# echo $scenario
-# cat <<EOF | zenroom | tee cheshirecat.keys
-# ZEN:begin($verbose)
-# ZEN:parse([[
-# Scenario 'credential_issuer_keygen': $scenario
-# 		 Given that I am known as 'CheshireCat'
-# 		 When I create my new credential issuer keypair
-# 		 Then print all data
-# ]])
-# ZEN:run()
-# EOF
-
 # Note for devs: the output is verification cryptographic object (alpha, beta, g2) 
 scenario="Publish the credential issuer verification key"
 echo $scenario
@@ -68,16 +55,15 @@ ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'Alice'
 		 and I have my credential keypair
-		 When I declare that I am 'lost in Wonderland'
-		 and I request a credential blind signature
+		 When I request a blind signature of my keypair
 		 Then print all data
 ]])
 ZEN:run()
 EOF
 
-scenario="Issue a credential blind signature"
+scenario="Issuer signs a credential"
 echo $scenario
-cat <<EOF | zenroom -k madhatter.keys -a alice_blindsign_request.json | tee madhatter_signed_credential.json
+cat <<EOF | zenroom -k madhatter.keys -a alice_blindsign_request.json | tee madhatter_signed_credential.json |json_pp
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
@@ -85,7 +71,7 @@ Scenario 'coconut': $scenario
 		 and I have my issuer keypair
 		 When I am requested to sign a credential
 		 and I verify the credential to be true
-		 and I sign the credential 'MadHatter'
+		 and I sign the credential
 		 Then print all data
 ]])
 ZEN:run()
@@ -94,31 +80,34 @@ EOF
 # Dev note: this generates sigma (AggCred(σ1, . . . , σt) → (σ):) 
 scenario="Receive the signature and publish the credential"
 echo $scenario
-cat <<EOF | zenroom -k alice.keys -a madhatter_signed_credential.json | tee alice_aggregated_credential.json | json_pp
+cat <<EOF | zenroom -k alice.keys -a madhatter_signed_credential.json | tee /tmp/alice.keys |json_pp
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'Alice'
 		 and I have my credential keypair
 		 When I receive a credential signature 'MadHatter'
-		 and I aggregate all signatures into my credential
+		 and I aggregate the credential into my keyring
 		 Then print all data
 ]])
 ZEN:run()
 EOF
+mv /tmp/alice.keys . # restore to avoid overwrite 
 
 # Dev note: this generates theta (❖ ProveCred(vk, m, φ0) → (Θ, φ0):
 scenario="Generate a blind proof of the credentials"
 echo $scenario
-cat <<EOF | zenroom -k madhatter_verification.keys -a alice_aggregated_credential.json | tee alice_blindproof_credential.json |json_pp
+cat <<EOF | zenroom -k alice.keys -a madhatter_verification.keys | tee alice_proof.json | json_pp
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
-		 Given that I use the verification key by 'MadHatter'
-		 and that 'Alice' declares to be 'lost in Wonderland'
+		 Given that I am known as 'Alice'
+		 and I have my credential keypair
+		 and I use the verification key by 'MadHatter'
+		 and I have a signed credential
 		 When I aggregate all the verification keys
-		 and the declaration is proven by credentials
-		 Then print data 'proof'
+		 and I generate a credential proof
+		 Then print all data
 ]])
 ZEN:run()
 EOF
@@ -126,7 +115,7 @@ EOF
 # Dev note: this checks if theta contains the statement, and returns a boolean VerifyCred(vk, Θ, φ0) 
 scenario="Verify a blind proof of the credentials"
 echo $scenario
-cat <<EOF | zenroom -k madhatter_verification.keys -a alice_blindproof_credential.json
+cat <<EOF | zenroom -k alice_proof.json -a madhatter_verification.keys
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario

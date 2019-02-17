@@ -144,16 +144,16 @@ end
 
 When("I declare that I am ''", function(decl)
 		-- declaration
-		if not declared then declared = decl
-		else declared = declared .." and ".. decl end
+		if not ACK.declared then ACK.declared = decl
+		else ACK.declared = ACK.declared .." and ".. decl end
 end)
 
 When("I declare to '' that I am ''",function (auth,decl)
         -- declaration
-        if not declared then declared = decl
-        else declared = declared .." and ".. decl end
+        if not ACK.declared then ACK.declared = decl
+        else ACK.declared = ACK.declared .." and ".. decl end
         -- authority
-        authority = auth
+        ACK.authority = auth
 end)
 
 When("I include the text ''", function(text)
@@ -179,15 +179,15 @@ end)
 
 Given("that '' declares to be ''",function(who, decl)
          -- declaration
-         if not declared then declared = decl
-         else declared = declared .." and ".. decl end
-         whois = who
+         if not ACK.declared then ACK.declared = decl
+         else ACK.declared = ACK.declared .." and ".. decl end
+         ACK.whois = who
 end)
 Given("declares also to be ''", function(decl)
-         ZEN.assert(who ~= "", "The subject making the declaration is unknown")
+         ZEN.assert(ACK.who ~= "", "The subject making the declaration is unknown")
          -- declaration
-         if not declared then declared = decl
-         else declared = declared .." and ".. decl end
+         if not ACK.declared then ACK.declared = decl
+         else ACK.declared = ACK.declared .." and ".. decl end
 end)
 
 When("I remove '' from data", f_datarm)

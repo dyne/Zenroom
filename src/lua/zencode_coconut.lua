@@ -1,7 +1,5 @@
 -- COCONUT implementation in Zencode
 
-local random = RNG.new()
-
 local get = ZEN.get
 ZEN.add_schema(
    -- credential keypair (elgamal)
@@ -13,24 +11,30 @@ ZEN.add_schema(
              return map(obj,conv) end },
 
      -- certificate authority (ca) / issuer keypair
+	 issue_sign =
+		{ import = function(obj)
+			 return { x = get(INT.new, obj, 'x'),
+					  y = get(INT.new, obj, 'y') }
+		end,
+		  export = function(obj,conv)
+			 return map(obj, conv)
+		end },
+	 issue_verify =
+		{ import = function(obj)
+			 return { alpha = get(ECP2.new, obj, 'alpha'),
+					  beta = get(ECP2.new, obj, 'beta') } 
+		end,
+		  export = function(obj,conv) return map(obj, conv)
+		end },
      issue_keypair =
         { import = function(obj)
-             return { sign = { x = get(INT.new, obj.sign, 'x'),
-                               y = get(INT.new, obj.sign, 'y') },
-                      verify = { alpha = get(ECP2.new,obj.verify, 'alpha'),
-                                 beta = get(ECP2.new, obj.verify, 'beta'),
-                                 g2 = get(ECP2.new, obj.verify, 'g2') } } end,
-          export = function(obj,conv)
-             return { sign   = map(obj.sign, conv),
-                      verify = map(obj.verify, conv) } end },
-     -- ca public issuer keys / verification key
-     ca_vk =
-        { import = function(obj)
-             return { alpha = get(ECP2.new, obj, 'alpha'),
-                      beta = get(ECP2.new, obj, 'beta'),
-                      g2 = get(ECP2.new, obj, 'g2') } end,
-          export = function(obj,conv)
-             return map(obj,conv) end },
+			 return { sign = import(obj.sign, 'issue_sign'),
+					  verify = import(obj.verify, 'issue_verify') }
+		end,
+		  export = function(obj,conv)
+			 return { sign = export(obj.sign, 'issue_sign', conv),
+					  verify = export(obj.verify, 'issue_verify', conv) }
+		  end },
 
      -- request
      request = {
@@ -106,72 +110,72 @@ ZEN.add_schema(
      end },
 
 	  -- petition
-      new_petition = {
-         import = function(obj)
-			return { uid = get(O.from_hex, obj, 'uid'),
-					 pub_owner = get(ECP.new, obj, 'pub_owner'),
-					 lambda = import(obj.lambda, 'lambda'), -- see above
-					 scores = { first = get(hex, obj.scores, 'first'),
-					 			second = get(hex, obj.scores, 'second'),
-					 			dec = obj.scores.dec,
-					 			list = obj.scores.list }
-		 } end,
-		 export = function(obj,conv)
-			local out = map(obj, conv)
-			out.lambda = export(obj.lambda, 'lambda', conv)
-			out.scores = map(obj.scores, conv)
-			out.scores.dec = map(obj.scores.dec, conv)
-			out.scores.list = map(obj.scores.list, conv)
-			return out
-	  end },
+	 petition_scores = {
+		import = function(obj)
+		   local res = { }
+		   if obj.pos == "zero" then res.pos = ECP.infinity()
+		   else res.pos = get(hex, obj, 'pos') end
+		   if obj.neg == "zero" then res.neg = ECP.infinity()
+		   else res.neg = get(hex, obj, 'neg') end
+		   return res
+		end,
+		export = function(obj, conv)
+		   local res = { }
+		   if obj.pos == "zero" then res.pos = "zero"
+		   else res.pos = conv(obj.pos) end
+		   if obj.neg == "zero" then res.neg = "zero"
+		   else res.neg = conv(obj.neg) end
+		   return res
+		end },
 
-	  running_petition = {
-		 import = function(obj)
-			return { uid = get(O.from_hex, obj, 'uid'),
-					 scores = hex("TODO"),
-						-- { first = get(hex, obj.scores, 'first'),
-						--   second = get(hex, obj.scores, 'second'),
-						--   dec = obj.scores.dec,
-						--   list = obj.scores.list },
-					 sigma = import(obj.sigma, 'aggsigma'),
-					 ca_public = import(obj.ca_public, 'ca_vk') } end,
-		 export = function(obj,conv)
-			local out = map(obj,conv)
-			out.sigma = export(obj.sigma,'aggsigma',conv)
-			out.scores = conv("TODO")
-			out.ca_public = export(obj.ca_public, 'ca_vk', conv)
-			return out
-		 end
-	  }
+	 petition = {
+		import = function(obj)
+		   local res = { uid = get(O.from_hex, obj, 'uid'),
+						 gid = get(nil, obj, 'gid'), -- string
+						 owner = get(ECP.new, obj, 'pub_owner'),
+						 scores = import(obj.scores, 'petition_scores') }
+		   if type(obj.vkeys) == 'table' then res.vkeys = import(obj.vkeys, 'issue_verify') end
+		   if type(obj.list) == 'table' then res.list = map(obj.list, INT.new) end
+		   return res
+		end,
+		export = function(obj,conv)
+		   local res = { }
+		   res.uid = get(conv, obj, 'uid')
+		   res.gid = get(nil, obj, 'gid')
+		   res.owner = get(conv, obj, 'owner')
+		   res.scores = export(obj.scores, 'petition_scores', conv)
+		   if type(obj.vkeys) == 'table' then res.vkeys = export(obj.vkeys, 'issue_verify', conv) end
+		   if type(obj.list) == 'table' then res.list = map(obj.list, hex) end
+		   return res
+		end },
 
+	 petition_credential = {
+		import = function(obj)
+		   return { sigma = import(obj.sigma, 'aggsigma'),
+					theta = import(obj.theta, 'theta') }
+		end,
+		export = function(obj, conv)
+		   return { sigma = export(obj.sigma, 'aggsigma', conv),
+					theta = export(obj.theta, 'theta', conv) }
+		end }
 })
 
-
-When("I create a new petition", function()
-        local j = export(
-		   { uid = "sadasd", -- INT.new(random),
-			 pub_owner = ACK.cred_kp.public,
-			 lambda = COCONUT.prepare_blind_sign(
-				-- TODO: private key or secret string?
-				ACK.cred_kp.public, ACK.cred_kp.private),
-			 scores = { first = "Infinity",
-						second = "Infinity",
-						dec = { },
-						list = { } } }, 'new_petition', hex)
-        -- TODO: sign the JSON string or MSGPACK
-        OUT.petition = j
-        OUT.petition_signature = true
-        OUT.petition_owner = ACK.whoami
+Given("I receive a new petition request", function()
+		 ZEN.assert(type(IN.petition_signed) == 'table',
+					"No petition signature found")
+		 ZEN.assert(type(IN.petition_credential) == 'table',
+					"No petition credential found")
+		 ACK.petition = import(IN.petition, 'petition')
+		 ACK.petition_signature = map(IN.petition_signed, hex)
+		 ACK.petition_credential = import(IN.petition_credential, 'petition_credential')
+		 ecdh = ECDH.new()
 end)
 
-Given("I am requested to sign a new petition", function()
-         ACK.petition = import(IN.petition, 'new_petition')
-end)
 Given("I can sign a petition", function()
          ACK.petition = import(IN.petition, 'running_petition')
 end)
 
-When("I verify the petition to be valid", function()
+When("I verify the new petition to be valid", function()
         -- ZEN.debug()
         ZEN.assert(ACK.petition.scores.first == str("Infinity"),
                    "Invalid new petition: first score is not infinite")
@@ -187,7 +191,7 @@ When("I certify the issuing of the petition", function()
         local sigmatilde =
            COCONUT.blind_sign(ACK.issue_kp.sign,
                               ACK.petition.lambda)
-		OUT.ca_public = export(ACK.issue_kp.verify, 'ca_vk', hex)
+		OUT.ca_public = export(ACK.issue_kp.verify, 'issue_verify', hex)
 		OUT[ACK.whoami] = export(sigmatilde,'sigmatilde', hex)
 		OUT.petition = export(ACK.petition, 'new_petition', hex)
 end)
@@ -207,7 +211,7 @@ When("I aggregate all certifications for my petition", function()
 									uid = ACK.petition.uid,
 									scores = "TODO",
 									-- TODOS here
-									ca_public = import(IN.ca_public,'ca_vk') },
+									ca_public = import(IN.ca_public,'issue_verify') },
 				   'running_petition', hex) }
         OUT.name = ACK.whoami -- TODO: customise according to pilot identifier
 end)
@@ -237,6 +241,7 @@ local function f_keygen()
 When("I create my new credential keypair", f_keygen)
 When("I create my new credential request keypair", f_keygen)
 When("I create my new keypair", f_keygen)
+
 f_cred_keypair = function(keyname)
    ZEN.assert(keyname or ACK.whoami, "Cannot identify the request keypair to use")
    ACK.cred_kp = import(IN.KEYS[keyname or ACK.whoami],'cred_keypair') end
@@ -265,17 +270,36 @@ end)
 
 
 Given("I use the verification key by ''", function(ca)
-         ZEN.assert(type(IN.KEYS[ca].verify) == "table",
+         ZEN.assert(type(IN[ca].verify) == "table",
 					"Invalid verification key by issuer: "..ca)
-         ACK.aggkeys = { import(IN.KEYS[ca].verify,'ca_vk') }
+         if not ACK.aggkeys then ACK.aggkeys = { } end
+		 table.insert(ACK.aggkeys, import(IN[ca].verify,'issue_verify'))
 end)
 
-When("I request a credential blind signature", function()
+When("I aggregate all the verification keys", function()
+        ZEN.assert(ACK.aggkeys, "No verification keys have been selected")
+		ACK.verifier = COCONUT.aggregate_keys(ACK.aggkeys)
+		OUT.verifier = export(ACK.verifier, 'issue_verify', hex)
+end)
+
+When("I request a blind signature of my keypair", function()
         ZEN.assert(type(ACK.cred_kp.public) == "zenroom.ecp",
                    "Invalid public key for credential request")
-        local lambda = COCONUT.prepare_blind_sign(
-           ACK.cred_kp.public, str(declared))
-        OUT['request'] = export(lambda,'request',hex)
+        ZEN.assert(ACK.cred_kp.private,
+                   "Private key not found in credential keypair")
+		ACK.lambda = COCONUT.prepare_blind_sign(
+		   ACK.cred_kp.public, ACK.cred_kp.private)
+		OUT['request'] = export(ACK.lambda,'request',hex)
+end)
+
+When("I request a blind signature of my declaration", function()
+        ZEN.assert(type(ACK.cred_kp.public) == "zenroom.ecp",
+                   "Invalid public key for credential request")
+		ZEN.assert(ACK.declared,
+				   "No declaration was made so far")
+		ACK.lambda = COCONUT.prepare_blind_sign(
+		   ACK.cred_kp.public, str(ACK.declared))
+		OUT['request'] = export(ACK.lambda,'request',hex)
 end)
 
 When("I am requested to sign a credential", function()
@@ -285,52 +309,79 @@ When("I am requested to sign a credential", function()
         ACK.blindsign = lambda
 end)
 
-When("I sign the credential ''", function(ca)
+When("I sign the credential", function()
+		ZEN.assert(ACK.whoami, "Issuer is not known")
         ZEN.assert(ACK.blindsign, "No valid signature request found.")
         ZEN.assert(ACK.issue_kp.sign, "No valid issuer signature keys found.")
         local sigmatilde =
            COCONUT.blind_sign(ACK.issue_kp.sign,
                               ACK.blindsign)
-        OUT[ca] = export(sigmatilde,'sigmatilde', hex)
+        OUT[ACK.whoami] = export(sigmatilde,'sigmatilde', hex)
+		OUT.verify = export(ACK.issue_kp.verify, 'issue_verify', hex)
 end)
 
 When("I receive a credential signature ''", function(signfrom)
         -- one dimensional array is simple enough
+		ACK.issuer = signfrom
         ZEN.assert(type(IN[signfrom]) == "table",
                    "No valid signature found for: " .. signfrom)
         ACK.sigmatilde = { import(IN[signfrom],'sigmatilde') }
+		ACK.verify = import(IN.verify, 'issue_verify')
         -- set the blocking state _sigmatilde (array)
 end)
 
-When("I aggregate all signatures into my credential", function()
+When("I aggregate the credential into my keyring", function()
         -- check the blocking state _sigmatilde
-        ZEN.assert(ACK.sigmatilde, "No valid signatures have been collected.")
-        ZEN.assert(ACK.cred_kp.private, "No valid request private key found")
+		ZEN.assert(ACK.verify, "Verification keys from issuer not found")
+        ZEN.assert(ACK.sigmatilde, "Credential issuer signatures not found")
+        ZEN.assert(ACK.cred_kp.private, "Credential private key not found")
         -- prepare output with an aggregated sigma credential
         -- requester signs the sigma with private key
-        local cred = COCONUT.aggregate_creds(ACK.cred_kp.private,
-                                             ACK.sigmatilde)
-        OUT = { credential = export(cred,'aggsigma', hex) }
-        OUT.name = ACK.whoami -- TODO: customise according to pilot identifier
+		-- TODO: for added security check sigmatilde with an ECDH
+		-- signature before aggregating into credential
+        local cred = COCONUT.aggregate_creds(ACK.cred_kp.private, ACK.sigmatilde)
+		OUT.credential = export(cred,'aggsigma', hex)
+		-- merge credentials with keyring
+        OUT[ACK.whoami] = export(ACK.cred_kp, 'cred_keypair', hex)
+end)
+
+Given("I have a signed credential", function()
+ 		 ACK.sigma = import(IN.KEYS.credential, 'aggsigma')
+end)
+
+When("I generate a credential proof", function()
+        ZEN.assert(ACK.aggkeys, "No verification keys have been selected")
+		ZEN.assert(ACK.cred_kp.private, "Credential private key not found")
+		ZEN.assert(ACK.sigma, "Signed credential not found")
+		local verifier = COCONUT.aggregate_keys(ACK.aggkeys)
+		local Theta = COCONUT.prove_creds(verifier, ACK.sigma, 
+										  ACK.cred_kp.private)
+		OUT.proof = export(Theta, 'theta', hex)
 end)
 
 When("the declaration is proven by credentials", function()
         -- TODO: multiple credential issuers
-        ZEN.assert(declared, "Nothing has been declared yet")
+        ZEN.assert(ACK.declared, "Nothing has been declared yet")
         ZEN.assert(ACK.aggkeys, "There are no verification keys selected")
         -- aggregate ca public keys
         local aggkeys = COCONUT.aggregate_keys(ACK.aggkeys)
         -- import sigma
-        local aggsigma = import(IN.credential, 'aggsigma')
+        ACK.aggsigma = import(IN.credential, 'aggsigma')
         -- generate proof (theta)
-        local Theta = COCONUT.prove_creds(aggkeys, aggsigma, declared)
+        local Theta = COCONUT.prove_creds(aggkeys, ACK.aggsigma, ACK.declared)
         -- export proof
         OUT = { proof = export(Theta, 'theta', hex) }
 
 end)
 
 Given("I have a valid credential proof", function()
-         ACK.theta = import(IN.proof, 'theta')
+		 if IN.KEYS.proof then
+			ACK.theta = import(IN.KEYS.proof, 'theta')
+		 elseif IN.proof then
+			ACK.theta = import(IN.proof, 'theta')
+		 else
+			ZEN.assert(false, "Credential proof not found")
+		 end
 end)
 
 When("the credential proof is verified correctly", function()
@@ -342,13 +393,14 @@ When("the credential proof is verified correctly", function()
            "Credential proof does not validate")
 end)
 
-When("I create a new petition ''", function(ptext)
-		ACK.petition = { uid = O.new(RNG.new(),32),
+When("I create a new petition '' in ''", function(ptext, pgroup)
+		ACK.petition = { uid = RNG.new():octet(32),
+						 gid = pgroup,
 						 owner = ACK.cred_kp.public,
-						 scores = { first = 0,
-									second = 0 },
-						 list = { } }
+						 scores = { pos = 'zero', neg = 'zero' } }
 		OUT.petition = export(ACK.petition, 'petition', hex)
-		ACK.petition_ecdh_sign = 'signed' -- TODO sign OUT.petition string
-		OUT.petition_signed = hex(ACK.petition_ecdh_sign)
+		ecdh = ECDH.new()
+		ecdh:private(ACK.cred_kp.private)
+		ACK.petition_ecdh_sign = { ecdh:sign(JSON.encode(OUT.petition)) }
+		OUT.petition_signed = map(ACK.petition_ecdh_sign, hex)
 end)

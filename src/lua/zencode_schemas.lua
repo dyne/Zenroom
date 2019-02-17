@@ -4,7 +4,9 @@ ZEN.get = function(conv, obj, key)
    ZEN.assert(type(key) == "string", "Invalid key in object conversion")
    ZEN.assert(obj, "Object not found for conversion")
    ZEN.assert(obj[key], "Key not found in object conversion: "..key)
-   local res = conv(obj[key])
+   local res
+   if conv then res = conv(obj[key])
+   else res = obj[key] end
    assert(res, "Error converting object key: ".. key)
    return res
 end

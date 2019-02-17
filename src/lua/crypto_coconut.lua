@@ -86,8 +86,7 @@ function coco.ca_keygen()
    local y = rand()
    local sk = { x = x,
                 y = y  }
-   local vk = { g2 = g2,
-                alpha = g2 * x,
+   local vk = { alpha = g2 * x,
                 beta  = g2 * y  }
    -- return keypair
    return { sign = sk,
@@ -106,7 +105,6 @@ function coco.aggregate_keys(keys)
    -- return aggkeys
    return { schema = 'coconut_aggkeys',
 			version = coco._VERSION,
-			g2 = g2,
 			alpha = agg_alpha,
 			beta = agg_beta }
 end
@@ -160,12 +158,12 @@ function coco.prove_creds(vk, sigma, secret)
    local r_prime = rand()
    local sigma_prime = { h_prime = sigma.h * r_prime,
                          s_prime = sigma.s * r_prime  }
-   local kappa = vk.alpha + vk.beta * m + vk.g2 * r
+   local kappa = vk.alpha + vk.beta * m + g2 * r
    local nu = sigma_prime.h_prime * r
    -- make pi_v
    local wm = rand()
    local wr = rand()
-   local Aw = vk.alpha + vk.g2 * wr + vk.beta * wm
+   local Aw = vk.alpha + g2 * wr + vk.beta * wm
    local Bw = sigma_prime.h_prime * wr
    local ch = coco.to_challenge({ vk.alpha, vk.beta, Aw, Bw })
    local pi_v = { c = ch,
@@ -183,7 +181,7 @@ end
 function coco.verify_creds(vk, Theta)
    -- verify pi_v
    local Aw = Theta.kappa * Theta.pi_v.c
-	  + vk.g2 * Theta.pi_v.rr
+	  + g2 * Theta.pi_v.rr
 	  + vk.alpha * INT.new(1):modsub(Theta.pi_v.c, o)
 	  + vk.beta * Theta.pi_v.rm
    local Bw = Theta.nu * Theta.pi_v.c
@@ -194,7 +192,7 @@ function coco.verify_creds(vk, Theta)
    ZEN.assert(not Theta.sigma_prime.h_prime:isinf(),
 			  "Credential proof does not verify (sigma.h is infinite)")
    ZEN.assert(ECP2.miller(Theta.kappa, Theta.sigma_prime.h_prime)
-				 == ECP2.miller(vk.g2, Theta.sigma_prime.s_prime + Theta.nu),
+				 == ECP2.miller(g2, Theta.sigma_prime.s_prime + Theta.nu),
 			  "Credential proof does not verify (miller loop error)")
    return true
 end
@@ -213,7 +211,7 @@ function coco.prove_cred_petition(vk, sigma, secret, uid)
 						 s_prime = sigma.s * r_prime  }
    local kappa = vk.alpha
 	  + vk.beta * m
-	  + vk.g2 * r
+	  + g2 * r
    local nu = sigma_prime.h_prime * r
    local zeta = m * ECP.hashtopoint(str(uid))
    -- proof --
@@ -221,7 +219,7 @@ function coco.prove_cred_petition(vk, sigma, secret, uid)
    local wm = rand()
    local wr = rand()
    -- compute the witnessess commitments
-   local Aw = vk.g2 * wr
+   local Aw = g2 * wr
 	  + vk.alpha
 	  + vk.beta * wm
    local Bw = sigma_prime.h_prime * wr
@@ -252,7 +250,7 @@ function coco.verify_cred_petition(vk, Theta, zeta, uid)
    -- verify proof --
    -- recompute witnessess commitments
    local Aw = kappa * c
-	  + vk.g2 * rr
+	  + g2 * rr
 	  + vk.alpha * INT.new(1):modsub(c,ECP.order())
 	  + vk.beta * rm
    local Bw = nu * c + sigma_prime.h_prime * rr
@@ -264,7 +262,7 @@ function coco.verify_cred_petition(vk, Theta, zeta, uid)
    ZEN.assert(not sigma_prime.h_prime:isinf(),
 			  "verify_cred_petition: sigma_prime.h points at infinite")
    ZEN.assert(ECP2.miller(kappa, sigma_prime.h_prime)
-				 == ECP2.miller(vk.g2, sigma_prime.s_prime + nu),
+				 == ECP2.miller(g2, sigma_prime.s_prime + nu),
 			  "verify_cred_petition: miller loop fails")
    return true
 end

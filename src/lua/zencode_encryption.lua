@@ -29,7 +29,7 @@ ZEN.add_schema(
 
 	 ecdh_keypair =
 		{ import = function(obj)
-			 return { private = get(O.from_hex, obj, 'private'),
+			 return { private = get(INT.new, obj, 'private'),
 					  public = get(ECP.new, obj, 'public') } end,
 		  export = function(obj, conv)
 			 return map(obj, conv) end

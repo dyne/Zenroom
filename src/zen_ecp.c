@@ -453,6 +453,7 @@ int luaopen_ecp(lua_State *L) {
 		{"new",lua_new_ecp},
 		{"inf",ecp_get_infinity},
 		{"infinity",ecp_get_infinity},
+		{"isinf",ecp_isinf},
 		{"order",ecp_order},
 		{"mapit",ecp_mapit},
 		{"generator",ecp_generator},
