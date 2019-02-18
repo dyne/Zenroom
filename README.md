@@ -99,16 +99,16 @@ This project is receiving funding from the European Union’s Horizon 2020 resea
 
 ## Acknowledgements
 
-Copyright (C) 2017-2018 by Dyne.org foundation, Amsterdam
+Copyright (C) 2017-2019 by Dyne.org foundation, Amsterdam
 
 Designed, written and maintained by Denis Roio <jaromil@dyne.org>
 
-With contributions by Ivan J., Puria Nafisi Azizi, Jordi Coscolla,
-Christian Espinoza, Enrico Zimuel and Daniele Lacamera.
+With contributions by Puria Nafisi Azizi and Daniele Lacamera.
 
 Special thanks to Francesca Bria for leading the DECODE project and to
-George Danezis, Ola Bini, Mark de Villiers, Alberto Sonnino and
-Richard Stallman for their expert reviews.
+George Danezis, Ola Bini, Mark de Villiers, Ivan J., Alberto Sonnino,
+Richard Stallman, Enrico Zimuel, Christian Espinoza, Jordi Coscolla
+for their expert reviews.
 
 This software includes software components by: R. Ierusalimschy,
 W. Celes and L.H. de Figueiredo (lua), Mike Scott and Kealan McCusker
