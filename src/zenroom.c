@@ -368,7 +368,7 @@ int main(int argc, char **argv) {
 	script[0] = '\0';
 
 	notice(NULL, "Zenroom v%s - crypto language restricted VM",VERSION);
-	act(NULL, "Copyright (C) 2017-2018 Dyne.org foundation");
+	act(NULL, "Copyright (C) 2017-2019 Dyne.org foundation");
 	while((opt = getopt(argc, argv, short_options)) != -1) {
 		switch(opt) {
 		case 'd':
