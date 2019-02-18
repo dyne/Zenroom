@@ -121,7 +121,7 @@ Enrique García Cota (inspect), Sebastian Schoener (schema), Kyle
 Conroy (finite state machine), Scott Lembcke (debugger), Gianluca
 Vespignani (comparetables).
 
-Zenroom is Licensed under the terms of the GNU Public License as
+Zenroom is Licensed under the terms of the Affero GNU Public License as
 published by the Free Software Foundation; either version 3 of the
 License, or (at your option) any later version.
 
