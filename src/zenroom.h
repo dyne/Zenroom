@@ -27,10 +27,17 @@
 int zenroom_exec(char *script, char *conf, char *keys,
                  char *data, int verbosity);
 
+int zencode_exec(char *script, char *conf, char *keys,
+                 char *data, int verbosity);
+
 // in case buffers should be used instead of stdout/err file
 // descriptors, this call defines where to print out the output and
 // the maximum sizes allowed for it. Output is NULL terminated.
 int zenroom_exec_tobuf(char *script, char *conf, char *keys,
+                       char *data, int verbosity,
+                       char *stdout_buf, size_t stdout_len,
+                       char *stderr_buf, size_t stderr_len);
+int zencode_exec_tobuf(char *script, char *conf, char *keys,
                        char *data, int verbosity,
                        char *stdout_buf, size_t stdout_len,
                        char *stderr_buf, size_t stderr_len);
@@ -75,11 +82,13 @@ typedef struct {
 
 	int errorlevel;
 	void *userdata; // anything passed at init (reserved for caller)
+
 } zenroom_t;
 
 
 zenroom_t *zen_init(const char *conf, char *keys, char *data);
 int  zen_exec_script(zenroom_t *Z, const char *script);
+int  zen_exec_zencode(zenroom_t *Z, const char *script);
 void zen_teardown(zenroom_t *zenroom);
 
 #define UMM_HEAP (64*1024) // 64KiB (masked with 0x7fff)
