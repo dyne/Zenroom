@@ -13,9 +13,9 @@ cat <<EOF | zenroom | tee madhatter.keys
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
-		 Given that I am known as 'MadHatter'
-		 When I create my new issuer keypair
-		 Then print all data
+Given that I am known as 'MadHatter'
+When I create my new issuer keypair
+Then print all data
 ]])
 ZEN:run()
 EOF
@@ -27,10 +27,10 @@ cat <<EOF | zenroom -k madhatter.keys | tee madhatter_verification.keys
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
-		 Given that I am known as 'MadHatter'
-		 and I have my issuer keypair
-		 When I publish my issuer verification key
-		 Then print all data
+Given that I am known as 'MadHatter'
+and I have my issuer keypair
+When I publish my issuer verification key
+Then print all data
 ]])
 ZEN:run()
 EOF
@@ -84,10 +84,10 @@ cat <<EOF | zenroom -k alice.keys | tee alice_blindsign_request.json
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
-		 Given that I am known as 'Alice'
-		 and I have my credential keypair
-		 When I request a blind signature of my keypair
-		 Then print all data
+Given that I am known as 'Alice'
+and I have my credential keypair
+When I request a blind signature of my keypair
+Then print all data
 ]])
 ZEN:run()
 EOF

@@ -55,7 +55,7 @@ ZEN.add_schema(
 		  end },
 
      -- request
-     request = {
+     lambda = {
         import = function(obj)
            return { c = { a = get(ECP.new, obj.c, 'a'),
                           b = get(ECP.new, obj.c, 'b') },
@@ -69,30 +69,6 @@ ZEN.add_schema(
            ret.pi_s = map(obj.pi_s, conv)
            ret.c = map(obj.c, conv)
            return ret
-     end },
-
-     -- proof
-     lambda = {
-        import = function(obj)
-           return { pi_s = { rr = get(INT.new, obj.pi_s, 'rr'),
-                             rm = get(INT.new, obj.pi_s, 'rm'),
-                             rk = get(INT.new, obj.pi_s, 'rk'),
-                             c =  get(INT.new, obj.pi_s, 'c')  },
-					-- cm is the h element in elgamal crypto
-					-- in coconut is cm = (g1 * r + hs * m)
-					-- where hs is a constant, r is random and m is secret
-                    cm = get(ECP.new, obj, 'cm'),
-					-- c .a .b are the results of elgamal encryption
-                    c = { a = get(ECP.new, obj.c, 'a'),
-                          b = get(ECP.new, obj.c, 'b') },
-                    public = get(ECP.new, obj, 'public') } end,
-        export = function(obj,conv)
-		   local out = { }
-		   out.cm = conv(obj.cm)
-		   if obj.public then out.public = conv(obj.public) end
-           out.pi_s = map(obj.pi_s, conv)
-           out.c = map(obj.c, conv)
-           return out
      end },
 
      -- ca issuer signature
@@ -304,9 +280,11 @@ When("a valid petition signature is counted", function()
 		   ACK.petition.list = { }
 		   ACK.petition.list[k] = true
 		end
+		-- verify that the signature is +1 (no other value supported)
 		local psign = COCONUT.prove_sign_petition(ACK.petition.owner, BIG.new(1))
 		ZEN.assert(COCONUT.verify_sign_petition(ACK.petition.owner, psign),
 				   "Coconut petition signature internal error")
+		-- add the signature to the petition count
 		local ps = ACK.petition.scores
 		local ss = psign.scores
 		ps.pos.left  = ps.pos.left  + ss.pos.left
@@ -399,15 +377,22 @@ When("I aggregate all the verification keys", function()
 		OUT.verifier = export(ACK.verifier, 'issue_verify', hex)
 end)
 
-When("I request a blind signature of my keypair", function()
-        ZEN.assert(type(ACK.cred_kp.public) == "zenroom.ecp",
-                   "Invalid public key for credential request")
-        ZEN.assert(ACK.cred_kp.private,
-                   "Private key not found in credential keypair")
-		ACK.lambda = COCONUT.prepare_blind_sign(
-		   ACK.cred_kp.public, ACK.cred_kp.private)
-		OUT['request'] = export(ACK.lambda,'request',hex)
-end)
+f_blindsign_req = function()
+   ZEN.assert(type(ACK.cred_kp.public) == "zenroom.ecp",
+			  "Invalid public key for credential request")
+   ZEN.assert(ACK.cred_kp.private,
+			  "Private key not found in credential keypair")
+   ACK.lambda = COCONUT.prepare_blind_sign(
+	  ACK.cred_kp.public, ACK.cred_kp.private)
+   OUT['request'] = export(ACK.lambda,'lambda',hex)
+end -- synonyms
+When("I request a blind signature of my keypair", f_blindsign_req)
+When("I request a signature of my keypair", f_blindsign_req)
+When("I request to verify my keypair", f_blindsign_req)
+When("I request to certify my keypair", f_blindsign_req)
+When("I request a verification of my keypair", f_blindsign_req)
+When("I request a certification of my keypair", f_blindsign_req)
+
 
 When("I request a blind signature of my declaration", function()
         ZEN.assert(type(ACK.cred_kp.public) == "zenroom.ecp",
@@ -416,7 +401,7 @@ When("I request a blind signature of my declaration", function()
 				   "No declaration was made so far")
 		ACK.lambda = COCONUT.prepare_blind_sign(
 		   ACK.cred_kp.public, str(ACK.declared))
-		OUT['request'] = export(ACK.lambda,'request',hex)
+		OUT['request'] = export(ACK.lambda,'lambda',hex)
 end)
 
 When("I am requested to sign a credential", function()
