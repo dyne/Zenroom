@@ -80,7 +80,7 @@ win-dll: ${SOURCES}
 
 ios-lib: CFLAGS += -D LIBRARY
 ios-lib: ${SOURCES}
-	${AR} rcs zenroom-ios-${TARGET}.a ${SOURCES} $(shell find ../lib -name \*.a) ${LDADD}
+	libtool -static -o zenroom-ios-${TARGET}.a ${SOURCES} $(shell find ../lib -name \*.a) ${LDADD}
 
 android-arm android-x86: ${SOURCES} zenroom_jni.o
 	${CC} ${CFLAGS} ${SOURCES} zenroom_jni.o -o zenroom.so ${LDFLAGS} ${LDADD}
