@@ -29,6 +29,7 @@ petition_signature:    # theta, zeta (proof)
 
 credential_request:      # lambda
    - cm                  # ECP
+   - public              # public credential key
    c: [a, b]             # ECP array
    pi_s: [rr, rm, rk, c] # INT array
 

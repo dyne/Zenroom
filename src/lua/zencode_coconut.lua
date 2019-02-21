@@ -63,9 +63,12 @@ ZEN.add_schema(
                              rm = get(INT.new, obj.pi_s, 'rm'),
                              rk = get(INT.new, obj.pi_s, 'rk'),
                              c =  get(INT.new, obj.pi_s, 'c')  },
-                    cm = get(ECP.new, obj, 'cm') } end,
+                    cm = get(ECP.new, obj, 'cm'),
+					public = get(ECP.new, obj, 'public') } end,
         export = function(obj,conv)
-           local ret = map(obj, conv)
+		   local ret = { }
+		   ret.cm = get(conv, obj, 'cm')
+		   ret.public = get(conv, obj, 'public')
            ret.pi_s = map(obj.pi_s, conv)
            ret.c = map(obj.c, conv)
            return ret
