@@ -5,6 +5,8 @@
 ## PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install 3.6.8
 ## and so on for 3.5.6 and 3.7.2
 
+cd ../
+
 for VERSION in 3.5.6 3.6.8 3.7.2
 do
   pyenv local $VERSION
