@@ -25,7 +25,7 @@
 
 #include "randombytes.h"
 
-#if defined(_WIN32)
+#if defined(ARCH_WIN)
 /* Windows */
 # include <windows.h>
 # include <wincrypt.h> /* CryptAcquireContext, CryptGenRandom */
@@ -104,7 +104,7 @@ int randombytes_js_randombytes_nodejs(void *buf, size_t n) {
 }
 #endif
 
-#if defined(_WIN32)
+#if defined(ARCH_WIN)
 static int randombytes_win32_randombytes(void* buf, const size_t n)
 {
 	HCRYPTPROV ctx;
@@ -256,7 +256,7 @@ int randombytes(void *buf, size_t n)
 # pragma message("Using arc4random system call")
 	/* Use arc4random system call */
 	return randombytes_bsd_randombytes(buf, n);
-#elif defined(_WIN32)
+#elif defined(ARCH_WIN)
 # pragma message("Using Windows cryptographic API")
 	/* Use windows API */
 	return randombytes_win32_randombytes(buf, n);

@@ -49,6 +49,17 @@ ldflags := -L/usr/x86_64-w64-mingw32/lib
 ldadd += ${ldadd} -l:libm.a -l:libpthread.a -lssp
 endif
 
+ifneq (,$(findstring cyg,$(MAKECMDGOALS)))
+gcc := gcc
+ar  := ar
+ranlib := ranlib
+ld := ld
+system := Windows
+cflags := ${cflags_protection} -D'ARCH=\"WIN\"' -DARCH_WIN -O3 -Wall -Wextra -pedantic -std=gnu99
+ldadd += ${ldadd} -l:libm.a -l:libpthread.a -lssp
+endif
+
+
 
 ifneq (,$(findstring musl,$(MAKECMDGOALS)))
 gcc := musl-gcc

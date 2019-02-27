@@ -78,6 +78,20 @@ win-dll: ${SOURCES}
 	./stamp-exe.sh
 	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.dll zenroom.res ${SOURCES} ${LDADD} -Wl,--out-implib,zenroom_dll.a
 
+cyg-exe: LDFLAGS += -static
+cyg-exe: ${SOURCES}
+	./stamp-exe.sh
+	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.exe zenroom.res ${SOURCES} ${LDADD}
+	strip zenroom.exe
+
+cyg-dll: CFLAGS += -DLIBRARY
+cyg-dll: LDFLAGS += -shared
+cyg-dll: ${SOURCES}
+	./stamp-exe.sh
+	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.dll zenroom.res ${SOURCES} ${LDADD} -Wl,--out-implib,zenroom_dll.a
+
+
+
 ios-lib: CFLAGS += -D LIBRARY
 ios-lib: ${SOURCES}
 	libtool -static -o zenroom-ios-${TARGET}.a ${SOURCES} $(shell find ../lib -name \*.a) ${LDADD}

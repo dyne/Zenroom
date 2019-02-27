@@ -1,7 +1,7 @@
 #ifndef sss_RANDOMBYTES_H
 #define sss_RANDOMBYTES_H
 
-#ifdef _WIN32
+#ifdef ARCH_WIN
 /* Load size_t on windows */
 #include <crtdefs.h>
 #else

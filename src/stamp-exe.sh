@@ -29,4 +29,8 @@ BEGIN
 END
 EOF
 
-x86_64-w64-mingw32-windres zenroom.rc -O coff -o zenroom.res
+if [ "$(which windres.exe)" == "" ]; then
+    x86_64-w64-mingw32-windres zenroom.rc -O coff -o zenroom.res
+else
+    windres.exe zenroom.rc -O coff -o zenroom.res
+fi
