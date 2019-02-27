@@ -119,8 +119,8 @@ ldflags += $(shell pkg-config python2 --libs)
 endif
 
 ifneq (,$(findstring python3,$(MAKECMDGOALS)))
-cflags += $(shell pkg-config python3 --cflags)
-ldflags += $(shell pkg-config python3 --libs)
+cflags += $(shell python-config --cflags) -fPIC
+ldflags += $(shell python-config --ldflags)
 endif
 
 ifneq (,$(findstring javascript,$(MAKECMDGOALS)))
