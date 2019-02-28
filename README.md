@@ -4,7 +4,11 @@
 
 Zenroom is a brand new virtual machine for fast cryptographic operations on Elliptic Curves. The Zenroom VM has no external dependencies, includes a cutting edge selection of C99 libraries and builds a small executable ready to run on: desktop, embedded, mobile, cloud and browsers (webassembly). It also compiles unikernel (without Linux).
 
-Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them. Zencode is a Domain Specific Language whose design is informed by pilot use-cases in DECODE.
+Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them.
+
+<a href=https://github.com/DECODEproject/zenroom/tree/master/examples/zencode_coconut"><img src="https://zenroom.dyne.org/img/coconut_credential.jpg" width="92%"></a>
+
+Zencode is a Domain Specific Language whose design is informed by pilot use-cases in the [DECODE Project](https://decodeproject.eu) .
 
 ## Latest stable release is 0.8.1:
 <ul class="center">
@@ -65,7 +69,7 @@ This API can be called in similar ways from a variety of languages and in partic
 
 ## Mission
 
-Zenroom is software in **ALPHA stage** and is part of the [DECODE project](https://decodeproject.eu) about data commons and [technological sovereignty](https://www.youtube.com/watch?v=RvBRbwBm_nQ). Our effort is that of improving people's awareness of how their data is processed by algorithms, as well facilitate the work of developers to create along [privacy by design principles](https://decodeproject.eu/publications/privacy-design-strategies-decode-architecture).
+Zenroom is software in **BETA stage** and is part of the [DECODE project](https://decodeproject.eu) about data commons and [technological sovereignty](https://www.youtube.com/watch?v=RvBRbwBm_nQ). Our effort is that of improving people's awareness of how their data is processed by algorithms, as well facilitate the work of developers to create along [privacy by design principles](https://decodeproject.eu/publications/privacy-design-strategies-decode-architecture).
 
 <a href="https://decodeproject.eu">
 <img src="https://zenroom.dyne.org/img/decode.svg" width="54%"
@@ -105,10 +109,14 @@ Designed, written and maintained by Denis Roio <jaromil@dyne.org>
 
 With contributions by Puria Nafisi Azizi and Daniele Lacamera.
 
+Go bindings by Christian Espinoza and Samuel Mulube.
+
+JS bindings by Jordi Coscolla and Puria.
+
 Special thanks to Francesca Bria for leading the DECODE project and to
 George Danezis, Ola Bini, Mark de Villiers, Ivan J., Alberto Sonnino,
-Richard Stallman, Enrico Zimuel, Christian Espinoza, Jordi Coscolla
-for their expert reviews.
+Richard Stallman, Enrico Zimuel, Jim Barritt and Andrea D'Intino for
+their expert reviews.
 
 This software includes software components by: R. Ierusalimschy,
 W. Celes and L.H. de Figueiredo (lua), Mike Scott and Kealan McCusker

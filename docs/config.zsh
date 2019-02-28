@@ -44,7 +44,7 @@ FLOWTYPE=1
 # What is the size ratio of text with respect to the width
 # of its container element. This is better than setting the
 # text size in an absolute way (we use Flowtype)
-FONT_RATIO=50
+FONT_RATIO=40
 
 # Cleanup EXIF information from jpeg images (requires jhead)
 # i.e: location, camera type, time of shot, editors used
