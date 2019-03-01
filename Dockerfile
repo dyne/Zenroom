@@ -9,8 +9,9 @@ RUN apk add --no-cache git openssh git
 RUN git clone --recursive https://github.com/DECODEproject/zenroom.git .
 RUN apk add --no-cache vim cmake build-base zsh linux-headers
 RUN make musl-system
+RUN ln -s /code/zenroom/src/zenroom-static /usr/bin/zenroom
 
-ENTRYPOINT ["/code/zenroom/src/zenroom-static"]
+ENTRYPOINT ["zenroom"]
 
 # Metadata params
 ARG BUILD_DATE
