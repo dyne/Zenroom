@@ -101,14 +101,18 @@ function zencode:newline(s)
 end
 
 function zencode:parse(text)
+   local scenario_found = false
    for first in self:newline(text) do
 	  -- lowercase match
 	  if first:match("(%w+)(.+)"):lower() == "scenario" then
 		 local scenario = string.match(first, "'(.-)'")
 		 require("zencode_"..scenario)
+		 scenario_found = true
 	  end
 	  break
    end
+   if not scenario_found then -- print a small warning
+	  warn("No scenario found in first line of Zencode") end
    for line in self:newline(text) do
       -- xxx(0,line)
       self:step(line)
