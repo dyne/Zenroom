@@ -49,6 +49,7 @@ for i in ${(f)libs}; do
 	print         >>  ${dst}
 	print "// $i" >>  ${dst}
 	xxd -i ${n}   >>  ${dst}
+	sed -i 's/^unsigned/const unsigned/' ${dst}
 	print         >>  ${dst}
 	popd
 	rm -rf $tmp

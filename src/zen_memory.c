@@ -49,7 +49,7 @@ void *zen_memalign(const size_t size, const size_t align) {
 		error(0, "error in %u byte aligned memory allocation of %u bytes.",
 		      align, size);
 		return NULL; }
-# elif defined(__EMSCRIPTEN__)
+# elif defined(__EMSCRIPTEN__) || defined(ARCH_CORTEX)
 	mem = malloc(vsize);
 # else
 	int res;

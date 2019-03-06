@@ -25,7 +25,7 @@
 
 #include "randombytes.h"
 
-#if defined(ARCH_WIN)
+#if defined(_WIN32)
 /* Windows */
 # include <windows.h>
 # include <wincrypt.h> /* CryptAcquireContext, CryptGenRandom */
@@ -104,7 +104,7 @@ int randombytes_js_randombytes_nodejs(void *buf, size_t n) {
 }
 #endif
 
-#if defined(ARCH_WIN)
+#if defined(_WIN32)
 static int randombytes_win32_randombytes(void* buf, const size_t n)
 {
 	HCRYPTPROV ctx;
@@ -123,6 +123,17 @@ static int randombytes_win32_randombytes(void* buf, const size_t n)
 	return 0;
 }
 #endif /* defined(_WIN32) */
+
+#ifdef ARCH_CORTEX
+#  undef SYS_getrandom
+static int randombytes_cortexm(void *buf, size_t n)
+{
+    /* Certified to be random by fair dice roll */
+    memset(buf, 4, n);
+    return n;
+}
+
+#endif
 
 
 #if defined(__linux__) && defined(SYS_getrandom)
@@ -256,10 +267,13 @@ int randombytes(void *buf, size_t n)
 # pragma message("Using arc4random system call")
 	/* Use arc4random system call */
 	return randombytes_bsd_randombytes(buf, n);
-#elif defined(ARCH_WIN)
+#elif defined(_WIN32)
 # pragma message("Using Windows cryptographic API")
 	/* Use windows API */
 	return randombytes_win32_randombytes(buf, n);
+#elif defined(ARCH_CORTEX)
+# pragma message("Using Cortex-M support for random API")
+    return randombytes_cortexm(buf, n);
 #else
 # error "randombytes(...) is not supported on this platform"
 #endif

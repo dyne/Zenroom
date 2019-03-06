@@ -45,8 +45,8 @@
 ** lua_stdin_is_tty detects whether the standard input is a 'tty' (that
 ** is, whether we're running lua interactively).
 */
-#if !defined(lua_stdin_is_tty)	/* { */
-
+#if !defined(lua_stdin_is_tty) || !defined(LUA_BAREBONE) /* { */
+#pragma message("LUA_POSIX build")
 #if defined(LUA_USE_POSIX)	/* { */
 
 #include <unistd.h>

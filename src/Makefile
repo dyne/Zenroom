@@ -32,7 +32,8 @@ SOURCES := \
 	zen_octet.o zen_ecp.o zen_ecp2.o zen_big.o \
 	zen_fp12.o zen_random.o zen_hash.o \
 	zen_ecdh.o zen_ecdh_factory.o \
-	randombytes.o
+	randombytes.o \
+	cortex_m.o
 
 all: shared
 
@@ -98,6 +99,10 @@ ios-lib: ${SOURCES}
 
 android-arm android-x86: ${SOURCES} zenroom_jni.o
 	${CC} ${CFLAGS} ${SOURCES} zenroom_jni.o -o zenroom.so ${LDFLAGS} ${LDADD}
+
+cortex-arm: ${SOURCES}
+	${CC} ${CFLAGS} ${SOURCES} -o zenroom.elf ${LDFLAGS} ${LDADD}
+	${OBJCOPY} -O binary zenroom.elf zenroom.bin
 
 debug: CFLAGS+= -ggdb -DDEBUG=1 -Wall
 debug: LDADD+= -lm

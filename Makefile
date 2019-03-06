@@ -96,6 +96,12 @@ lua53:
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
 	make -C ${pwd}/lib/lua53/src ${platform}
 
+cortex-lua53:
+	CC=${gcc} CFLAGS="${cflags} \
+	-DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE -DLUA_BAREBONE" \
+	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
+	make -C ${pwd}/lib/lua53/src ${platform}
+
 milagro:
 	@echo "-- Building milagro (${system})"
 	if ! [ -r ${pwd}/lib/milagro-crypto-c/CMakeCache.txt ]; then cd ${pwd}/lib/milagro-crypto-c && CC=${gcc} LD=${ld} cmake . -DCMAKE_C_FLAGS="${cflags}" -DCMAKE_SYSTEM_NAME="${system}" -DCMAKE_AR=/usr/bin/ar -DCMAKE_C_COMPILER=${gcc} ${milagro_cmake_flags}; fi

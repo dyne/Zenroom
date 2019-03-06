@@ -647,7 +647,7 @@ int main(int argc, char **argv) {
 	}
 #endif
 
-#if (defined(ARCH_WIN) || defined(DISABLE_FORK))
+#if (defined(ARCH_WIN) || defined(DISABLE_FORK)) || defined(ARCH_CORTEX)
 	if(zencode)
 		if( zen_exec_zencode(Z, script) ) return EXIT_FAILURE;
 	else

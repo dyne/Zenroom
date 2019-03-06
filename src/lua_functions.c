@@ -36,6 +36,7 @@
 #endif
 
 
+#if !defined(ARCH_CORTEX)
 
 // This function exits the process on failure.
 void load_file(char *dst, FILE *fd) {
@@ -103,6 +104,7 @@ void load_file(char *dst, FILE *fd) {
 	if(fd!=stdin) fclose(fd);
 	act(0, "loaded file (%u bytes)", offset);
 }
+#endif
 
 static char *safe_string(char *str, int max) {
 	int i, length = 0;

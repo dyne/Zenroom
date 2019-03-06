@@ -24,8 +24,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <time.h> // nanosleep
-#include <sys/time.h> // gettimeofday
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
@@ -154,39 +152,6 @@ void warning(lua_State *L, const char *format, ...) {
     va_end(arg);
     if(Z) Z->errorlevel = 2;
   }
-}
-
-
-#undef ARCH_X86
-double dtime() {
-#ifdef ARCH_X86
-  double x;
-  __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
-  return x;
-#else
-  struct timeval mytv;
-  gettimeofday(&mytv,NULL);
-  return((double)mytv.tv_sec+1.0e-6*(double)mytv.tv_usec);
-#endif
-}
-
-
-/* From the manpage:
- * nanosleep  delays  the execution of the program for at least
- * the time specified in *req.  The function can return earlier
- * if a signal has been delivered to the process. In this case,
- * it returns -1, sets errno to EINTR, and writes the remaining
- * time into the structure pointed to by rem unless rem is
- * NULL.  The value of *rem can then be used to call nanosleep
- * again and complete the specified pause.
- */ 
-void jsleep(int sec, long nsec) {
-    struct timespec tmp_rem,*rem;
-    rem = &tmp_rem;
-    struct timespec timelap;
-    timelap.tv_sec = sec;
-    timelap.tv_nsec = nsec;
-    while (nanosleep (&timelap, rem) == -1 && (errno == EINTR));
 }
 
 

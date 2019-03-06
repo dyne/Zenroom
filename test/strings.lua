@@ -334,36 +334,6 @@ assert(table.concat(a, ",", 2) == "b,c")
 assert(table.concat(a, ",", 3) == "c")
 assert(table.concat(a, ",", 4) == "")
 
-if not ((ARCH == "UNIX") or (ARCH == "MUSL")) then
-
-  local locales = { "ptb", "pt_BR.iso88591", "ISO-8859-1" }
-  local function trylocale (w)
-    for i = 1, #locales do
-      if os.setlocale(locales[i], w) then
-        print(string.format("'%s' locale set to '%s'", w, locales[i]))
-        return locales[i]
-      end
-    end
-    print(string.format("'%s' locale not found", w))
-    return false
-  end
-
-  if trylocale("collate")  then
-    assert("alo" < "álo" and "álo" < "amo")
-  end
-
-  if trylocale("ctype") then
-    assert(string.gsub("áéíóú", "%a", "x") == "xxxxx")
-    assert(string.gsub("áÁéÉ", "%l", "x") == "xÁxÉ")
-    assert(string.gsub("áÁéÉ", "%u", "x") == "áxéx")
-    assert(string.upper"áÁé{xuxu}ção" == "ÁÁÉ{XUXU}ÇÃO")
-  end
-
-  os.setlocale("C")
-  assert(os.setlocale() == 'C')
-  assert(os.setlocale(nil, "numeric") == 'C')
-
-end
 
 
 -- bug in Lua 5.3.2

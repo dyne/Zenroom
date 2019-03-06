@@ -5,7 +5,9 @@
 /* Load size_t on windows */
 #include <crtdefs.h>
 #else
+#ifndef ARCH_CORTEX
 #include <sys/syscall.h>
+#endif
 #include <unistd.h>
 #endif /* _WIN32 */
 

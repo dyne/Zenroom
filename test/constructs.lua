@@ -234,7 +234,7 @@ a,b = F(nil)==nil; assert(a == true and b == nil)
 ------------------------------------------------------------------
 
 -- sometimes will be 0, sometimes will not...
-_ENV.GLOB1 = math.floor(os.time()) % 2
+-- _ENV.GLOB1 = math.floor(os.time()) % 2
 
 -- basic expressions with their respective values
 local basiccases = {
@@ -242,10 +242,10 @@ local basiccases = {
   {"false", false},
   {"true", true},
   {"10", 10},
-  {"(0==_ENV.GLOB1)", 0 == _ENV.GLOB1},
+--  {"(0==_ENV.GLOB1)", 0 == _ENV.GLOB1},
 }
 
-print('testing short-circuit optimizations (' .. _ENV.GLOB1 .. ')')
+-- print('testing short-circuit optimizations (' .. _ENV.GLOB1 .. ')')
 
 
 -- operators with their respective values
