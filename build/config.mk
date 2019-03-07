@@ -19,7 +19,6 @@ platform := posix
 # lua settings
 luasrc := ${pwd}/lib/lua53/src
 ldadd := ${pwd}/lib/lua53/src/liblua.a
-ldadd += ${pwd}/lib/lpeglabel/lpeglabel.a
 lua_embed_opts := ""
 
 # ----------------

@@ -91,10 +91,6 @@ extern void zen_setenv(lua_State *L, char *key, char *val);
 extern void zen_add_function(lua_State *L, lua_CFunction func,
 		const char *func_name);
 
-// prototypes from zen_ast.c
-zenroom_t *ast_init(char *script);
-int  ast_parse(zenroom_t *Z);
-void ast_teardown(zenroom_t *Z);
 
 zenroom_t *zen_init(const char *conf,
 		char *keys, char *data) {
@@ -489,7 +485,6 @@ int main(int argc, char **argv) {
 	int opt, index;
 	int   verbosity           = 1;
 	int   interactive         = 0;
-	int   parseast            = 0;
 #if DEBUG == 1
 	int   unprotected         = 1;
 #else
@@ -536,16 +531,11 @@ int main(int argc, char **argv) {
 		case 'c':
 			snprintf(conffile,511,"%s",optarg);
 			break;
-		case 'p':
-			parseast = 1;
-			snprintf(scriptfile,511,"%s",optarg);
-			break;
 		case 'u':
 			unprotected = 1;
 			break;
 		case 'z':
 			zencode = 1;
-			parseast = 0;
 			interactive = 0;
 			break;
 		case '?': error(0,help); return EXIT_FAILURE;
@@ -564,14 +554,6 @@ int main(int argc, char **argv) {
 	if(datafile[0]!='\0') {
 		act(NULL, "reading DATA from file: %s", datafile);
 		load_file(data, fopen(datafile, "r"));
-	}
-
-	if(parseast) {
-		load_file(script, fopen(scriptfile, "rb"));
-		zenroom_t *ast = ast_init(script);
-		ast_parse(ast);
-		ast_teardown(ast);
-		return EXIT_SUCCESS;
 	}
 
 	if(interactive) {

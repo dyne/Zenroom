@@ -63,15 +63,15 @@ include ${pwd}/build/osx.mk
 include ${pwd}/build/docker.mk
 
 # experimental target for xtensa embedded boards
-esp32: apply-patches lua53 milagro lpeglabel
+esp32: apply-patches lua53 milagro
 	CC=${pwd}/build/xtensa-esp32-elf/bin/xtensa-esp32-elf-${gcc} \
 	LD=${pwd}/build/xtensa-esp32-elf/bin/xtensa-esp32-elf-ld \
 	CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src linux
 
 # static dependencies in lib
-lpeglabel:
-	CC=${gcc} CFLAGS="${cflags} -I${pwd}/lib/lua53/src" AR="${ar}" make -C lib/lpeglabel
+# lpeglabel:
+# 	CC=${gcc} CFLAGS="${cflags} -I${pwd}/lib/lua53/src" AR="${ar}" make -C lib/lpeglabel
 
 zlib:
 	CC=${gcc} CFLAGS="${cflags}" \
@@ -119,7 +119,6 @@ clean:
 	make clean -C ${pwd}/lib/milagro-crypto-c
 	rm -f ${pwd}/lib/milagro-crypto-c/CMakeCache.txt
 	rm -rf ${pwd}/lib/milagro-crypto-c/CMakeFiles
-	make clean -C ${pwd}/lib/lpeglabel
 	make clean -C src
 	rm -f ${extras}/index.*
 

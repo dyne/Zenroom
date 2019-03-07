@@ -1,38 +1,38 @@
 musl: ldadd += /usr/lib/${ARCH}-linux-musl/libc.a
-musl: apply-patches lua53 embed-lua milagro lpeglabel
+musl: apply-patches lua53 embed-lua milagro
 	CC=${gcc} AR="${ar}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src musl
 		@cp -v src/zenroom-static build/zenroom.x86
 
 musl-local: ldadd += /usr/local/musl/lib/libc.a
-musl-local: apply-patches lua53 embed-lua milagro lpeglabel
+musl-local: apply-patches lua53 embed-lua milagro
 	CC=${gcc} AR="${ar}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src musl
 
-musl-local: apply-patches lua53 embed-lua milagro lpeglabel
+musl-local: apply-patches lua53 embed-lua milagro
 CC=${gcc} AR="${ar}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 make -C src musl
 
 musl-system: gcc := gcc
 musl-system: ldadd += -lm
-musl-system: apply-patches lua53 embed-lua milagro lpeglabel
+musl-system: apply-patches lua53 embed-lua milagro
 	CC=${gcc} AR="${ar}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src musl
 
-linux: apply-patches lua53 milagro embed-lua lpeglabel
+linux: apply-patches lua53 milagro embed-lua
 	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src linux
 
-android-arm android-x86: apply-patches lua53 milagro embed-lua lpeglabel
+android-arm android-x86: apply-patches lua53 milagro embed-lua
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	LD="${ld}" RANLIB="${ranlib}" AR="${ar}" \
 		make -C src $@
 
-cortex-arm:	apply-patches cortex-lua53 milagro embed-lua lpeglabel
+cortex-arm:	apply-patches cortex-lua53 milagro embed-lua
 	CC=${gcc} AR="${ar}" OBJCOPY="${objcopy}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src cortex-arm
 
-linux-debug: cflags := -O1 -ggdb ${cflags_protection} -DDEBUG=1
+linux-debug: cflags := -O1 -ggdb ${cflags_protection} -DDEBUG=1 -Wstack-usage=4096
 linux-debug: linux
 
 linux-clang: gcc := clang
@@ -48,11 +48,11 @@ linux-sanitizer: linux
 		./src/zenroom-shared -i -d
 
 linux-lib: cflags += -shared -DLIBRARY
-linux-lib: apply-patches lua53 milagro embed-lua lpeglabel
+linux-lib: apply-patches lua53 milagro embed-lua
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src linux-lib
 
-linux-python3: apply-patches lua53 milagro embed-lua lpeglabel
+linux-python3: apply-patches lua53 milagro embed-lua
 	swig -python -py3 ${pwd}/build/swig.i
 	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c \
 		-o src/zen_python.o
@@ -60,7 +60,7 @@ linux-python3: apply-patches lua53 milagro embed-lua lpeglabel
 		make -C src python
 	@mkdir -p ${pwd}/build/python3 && cp -v ${pwd}/src/_zenroom.so ${pwd}/build/python3
 
-linux-python2: apply-patches lua53 milagro embed-lua lpeglabel
+linux-python2: apply-patches lua53 milagro embed-lua
 	swig -python ${pwd}/build/swig.i
 	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c \
 		-o src/zen_python.o
@@ -68,7 +68,7 @@ linux-python2: apply-patches lua53 milagro embed-lua lpeglabel
 		make -C src python
 	@mkdir -p ${pwd}/build/python2 && cp -v ${pwd}/src/_zenroom.so ${pwd}/build/python2
 
-linux-go: apply-patches lua53 milagro embed-lua lpeglabel
+linux-go: apply-patches lua53 milagro embed-lua
 	swig -go -cgo -intgosize 32 ${pwd}/build/swig.i
 	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c -o src/zen_go.o
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
@@ -76,7 +76,7 @@ linux-go: apply-patches lua53 milagro embed-lua lpeglabel
 	@mkdir -p ${pwd}/build/go && cp -v ${pwd}/src/libzenroomgo.so ${pwd}/build/go
 
 linux-java: cflags += -I /opt/jdk/include -I /opt/jdk/include/linux
-linux-java: apply-patches lua53 milagro embed-lua lpeglabel
+linux-java: apply-patches lua53 milagro embed-lua
 	swig -java ${pwd}/build/swig.i
 	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c -o src/zen_java.o
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
