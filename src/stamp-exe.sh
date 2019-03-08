@@ -29,7 +29,7 @@ BEGIN
 END
 EOF
 
-if [[ "$(which windres)" == "" ]]; then
+if test "$(which windres > /dev/null)" = ""; then
     x86_64-w64-mingw32-windres zenroom.rc -O coff -o zenroom.res
 else
     windres zenroom.rc -O coff -o zenroom.res
