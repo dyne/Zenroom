@@ -2,13 +2,6 @@
 
 # small script to apply patches to submodules
 
-if [ "$(uname -s)" = "Darwin" ]; then
-	# on OSX there isn't GNU sed....
-	sed -i '' "s/project (AMCL)/project (AMCL C)/" lib/milagro-crypto-c/CMakeLists.txt
-else
-	sed -i 's/project (AMCL)/project (AMCL C)/' lib/milagro-crypto-c/CMakeLists.txt
-fi
-
 # enable static build of lua_sandbox
 # if ! grep STATIC lib/lua_sandbox/src/CMakeLists.txt > /dev/null; then
 # 	cd lib/lua_sandbox && patch -p1 < ../../build/lua_sandbox.patch && cd -
