@@ -2,12 +2,6 @@
 
 # small script to apply patches to submodules
 
-# correct build of lpeglabel
-if ! grep 'lpeglabel.a' lib/lpeglabel/makefile > /dev/null; then
-	echo "applying lpeglabel patch"
-	cd lib/lpeglabel && patch -p1 < ../../build/lpeglabel.patch && cd -
-fi
-
 if [ "$(uname -s)" = "Darwin" ]; then
 	# on OSX there isn't GNU sed....
 	sed -i '' "s/project (AMCL)/project (AMCL C)/" lib/milagro-crypto-c/CMakeLists.txt
