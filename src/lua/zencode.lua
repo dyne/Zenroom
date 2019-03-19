@@ -43,11 +43,14 @@ end
 
 function zencode:step(text)
    if text == nil or text == '' then 
-	  return false
-   end
+	  return false end
+   local m = text:match("(%w+)(.+)")
+   -- check if no word just whitespace
+   if m == nil or m == '' then
+	  xxx(1,"no match: "..text)
+	  return false end
    -- case insensitive match of first word
-   local prefix = text:match("(%w+)(.+)"):lower()
-   xxx(1,"prefix: "..prefix)
+   local prefix = m:lower()
    local defs -- parse in what phase are we
    -- TODO: use state machine
    if prefix == 'given' then
