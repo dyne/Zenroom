@@ -34,6 +34,7 @@ function import(obj, sname)
    ZEN.assert(obj, "Import error: obj is nil ("..sname..")")
    local s = ZEN.schemas[sname]
    ZEN.assert(s ~= nil, "Import error: schema not found '"..sname.."'")
+   warn("import schema member: "..sname)
    return s.import(obj)
 end
 function export(obj, sname, conv)

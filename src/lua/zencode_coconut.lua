@@ -166,17 +166,23 @@ ZEN.add_schema(
 
 	 petition_tally = {
 		import = function(obj)
+		   local dec = { }
+		   if obj.dec.neg ~= "Infinity" then dec.neg = get(ECP.new, obj.dec, 'neg')
+		   else dec.neg = ECP.infinity() end
+		   if obj.dec.pos ~= "Infinity" then dec.pos = get(ECP.new, obj.dec, 'pos')
+		   else dec.pos = ECP.infinity() end
 		   return { uid = get(nil, obj, 'uid'),
 					c = get(INT.new, obj, 'c'),
-					dec = { neg = get(ECP.new, obj.dec, 'neg'),
-							pos = get(ECP.new, obj.dec, 'pos') },
+					dec = dec,
 					rx = get(INT.new, obj, 'rx') }
 		end,
 		export = function(obj, conv)
+		   local dec = { neg = "Infinity", pos = "Infinity" }
+		   if not ECP.isinf(obj.dec.neg) then dec.neg = get(conv, obj.dec, 'neg') end
+		   if not ECP.isinf(obj.dec.pos) then dec.pos = get(conv, obj.dec, 'pos') end
 		   return { uid = get(nil, obj, 'uid'),
 					c = get(conv, obj, 'c'),
-					dec = { neg = get(conv, obj.dec, 'neg'),
-							pos = get(conv, obj.dec, 'pos') },
+					dec = dec,
 					rx = get(conv, obj, 'rx') }
 		end }
 })
@@ -322,8 +328,10 @@ When("I count the petition results", function()
 		ZEN.assert(ACK.tally, "Tally not found")
 		ZEN.assert(ACK.tally.uid == ACK.petition.uid,
 				   "Tally does not correspond to petition")
-		OUT = { result = COCONUT.count_signatures_petition(ACK.petition.scores,
-														   ACK.tally).pos }
+		OUT = { }
+		local res = COCONUT.count_signatures_petition(ACK.petition.scores, ACK.tally)
+		-- handle no signatures correctly: res.pos is nil hence result: 0
+		if res.pos then OUT.result = res.pos else OUT.result = 0 end
 		OUT.uid = ACK.petition.uid
 end)
 
