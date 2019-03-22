@@ -10,18 +10,18 @@ Zencode is the name of the language executed by Zenroom: it is simple to underst
 
 Zencode is a Domain Specific Language whose design is informed by pilot use-cases in the [DECODE Project](https://decodeproject.eu) .
 
-## Latest stable release is 0.8.1:
+## Latest stable release is 0.9:
 <ul class="center">
 
-<li class="fab fa-node-js"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.8.1-javascript.zip">Javscript (nodeJS and WASM)</a></li>
+<li class="fab fa-node-js"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.9-javascript.zip">Javscript (nodeJS and WASM)</a></li>
 
-<li class="fab fa-linux"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.8.1-linux.zip">Linux (ARM and x86)</a></li>
+<li class="fab fa-linux"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.9-linux.zip">Linux (ARM and x86)</a></li>
 
-<li class="fab fa-windows"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.8.1-windows.zip">Windows (EXE and DLL)</li>
+<li class="fab fa-windows"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.9-windows.zip">Windows (EXE and DLL)</li>
 
-<li class="fab fa-apple"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.8.1-apple.zip">Apple (OSX and iOS)</li>
+<li class="fab fa-apple"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.9-apple.zip">Apple (OSX and iOS)</li>
 
-<li class="far fa-file-archive"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.8.1.tar.gz">Source Code</a></li>
+<li class="far fa-file-archive"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.9.tar.gz">Source Code</a></li>
 
 <li class="fab fa-github"><a href="https://github.com/decodeproject/zenroom">Git repository</a></li>
 

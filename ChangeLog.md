@@ -1,5 +1,17 @@
 # Zenroom ChangeLog
 
+## 0.9
+### March 2019
+
+Completed high-level language implementation of Zencode and underlying
+zero-knowledge proof credential system Coconut, Elgamal and homomorphic
+encryption. Overall improvements to primitives and to AES-GCM crypto.
+Full implementation of authentication and secure petition signing.
+Several bug fixes and improvements targeting reliability, error reporting
+and portability. Removed many unused libraries, Schema refactoring.
+Working builds for python2/3, nodejs/wasm, golang, Android and iOS.
+Native integration in the mobile react-native app for DDDC petitions. 
+
 ## 0.8.1
 ### November 2018
 
