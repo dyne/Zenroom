@@ -1,11 +1,17 @@
 #!/usr/bin/env nodejs
 // try this script from nodejs with a script as argument:
-// nodejs zenroom_exec.js examples/hello.lua
+if ( process.argv[2] === undefined ) {
+	console.log("usage: zenroom_exec.js script_file.lua")
+	console.log("for example: zenroom_exec.js example/hello.lua")
+	console.log("for a complete wrapper see: https://github.com/decodeproject/zenroomjs")
+    return(1)
+}
 
-const fs = require('fs')
+const zenroom_module = require('./zenroom.js')
 
-const zenroom_module = require('./nodejs/zenroom.js')
-fs.writeFileSync('zenroom.js.mem', fs.readFileSync('./nodejs/zenroom.js.mem'));
+// use in case the .mem file is not in the same directory as the .js
+// const fs = require('fs')
+// fs.writeFileSync('zenroom.js.mem', fs.readFileSync('./nodejs/zenroom.js.mem'));
 
 zenroom_module.exec_ok    = () => 0
 zenroom_module.exec_error = () => 0

@@ -6,20 +6,27 @@
 
 VERSION=`cat ../VERSION`
 
-targets=(windows apple linux javascript)
+if [[ "$1" == "" ]]; then
+	targets=(windows apple linux javascript)
+else
+	targets=($*)
+fi
 
 function md2txt() {
 	pandoc -f gfm -t plain -o $2 $1
 }
 
+function prepdir() {
+	mkdir -p $1
+	cp ../LICENSE.txt $1
+	md2txt ../README.md $1/README.txt
+	md2txt ../ChangeLog.md $1/ChangeLog.txt
+}
+
 function checkbin() {
 	[[ -r $1 ]] && {
-		mkdir -p $2
 		cp -rv $1 $2
 		chmod +x $2/$1
-		cp ../LICENSE.txt $2
-		md2txt ../README.md $2/README.txt
-		md2txt ../ChangeLog.md $2/ChangeLog.txt
 		return 0
 	}
 	print "file or dir not found: $1"
@@ -30,37 +37,87 @@ function copyexamples() {
 	rsync -raX ../examples $1/
 }
 
+function download() {
+	# download the binaries from our jenkins SDK
+	url=https://sdk.dyne.org:4443/view/zenroom/job
+	latest=lastSuccessfulBuild/artifact
+	build=$1
+	file=$2
+	rm -f `basename $file`
+	if [[ "$3" == "" ]]; then
+		wget $url/$build/$latest/$file
+	else
+		wget $url/$build/$latest/$file -O "$3"
+	fi
+}
+
 for t in $targets; do
 	dir=Zenroom-$VERSION-$t
 	rm -rf $dir
 	print "zipping $t binaries..."
 	case $t in
 		windows)
+			prepdir $dir
+			# download
+			downlaod zenroom-windows src/zenroom.dll
+			downlaod zenroom-windows src/zenroom.exe
+			# pack
 			checkbin zenroom.exe $dir
 			checkbin zenroom.dll $dir
 			copyexamples $dir
 			continue ;;
 		apple)
+			prepdir $dir
+			# download
+			download zenroom-apple-ios build/zenroom-ios-arm64.a
+			download zenroom-apple-ios build/zenroom-ios-armv7.a
+			download zenroom-apple-ios build/zenroom-ios-x86_64.a
+			download zenroom-apple-osx  src/zenroom.command
+			download zenroom-python-apple-osx build/python2/_zenroom.so py2_osx_zenroom.so
+			mkdir -p $dir/python2 && mv py2_osx_zenroom.so $dir/python2/_zenroom.so
+			download zenroom-python-apple-osx build/python3/_zenroom.so py3_osx_zenroom.so
+			mkdir -p $dir/python3 && mv py3_osx_zenroom.so $dir/python3/_zenroom.so
+			# pack
 			checkbin zenroom.command $dir
-			checkbin zenroom-ios.a $dir
+			checkbin zenroom-ios-arm64.a $dir
+			checkbin zenroom-ios-armv7.a $dir
+			checkbin zenroom-ios-x86_64.a $dir
+			checkbin zenroom-wrapper.py $dir/python2
+			checkbin zenroom-wrapper.py $dir/python3
 			copyexamples $dir
 			continue ;;
 		linux)
+			prepdir $dir
+			# download  (TODO: destination rename)
+			download zenroom-static-armhf src/zenroom-static zenroom.arm
+			download zenroom-static-amd64 src/zenroom-static zenroom.x86
+			download zenroom-shared-android-x86 src/zenroom.so zenroom-android-x86.so
+			download zenroom-shared-android-arm src/zenroom.so zenroom-android-arm.so
+			mkdir -p $dir/python2
+			download zenroom-python build/python2/_zenroom.so $dir/python2/_zenroom.so
+			mkdir -p $dir/python3
+			download zenroom-python build/python3/_zenroom.so $dir/python3/_zenroom.so
+			# pack
 			checkbin zenroom.x86 $dir
-			checkbin zenroom.armhf $dir
-			checkbin zenroom-armhf.so $dir
-			checkbin python2       $dir
-			checkbin python3       $dir
-			checkbin go            $dir
+			checkbin zenroom.arm $dir
+			checkbin zenroom-android-x86.so $dir
+			checkbin zenroom-android-arm.so $dir
+			# checkbin go            $dir
 			checkbin zenroom-wrapper.py $dir/python2
 			checkbin zenroom-wrapper.py $dir/python3
 			copyexamples $dir
 			continue ;;
 		javascript)
-			checkbin nodejs $dir
-			checkbin wasm   $dir
-			checkbin reactnative $dir
-			checkbin nodejs/zenroom.js.mem $dir
+			prepdir $dir
+			# download
+			download zenroom-react build/rnjs/zenroom.js $dir/zenroom-react.js
+			download zenroom-nodejs src/zenroom.js       $dir/zenroom.js
+			download zenroom-nodejs src/zenroom.js.mem   $dir/zenroom.js.mem
+			mkdir -p $dir/webassembly
+			download zenroom-demo docs/demo/index.data   $dir/webassembly/index.data
+			download zenroom-demo docs/demo/index.js     $dir/webassembly/index.js
+			download zenroom-demo docs/demo/index.wasm   $dir/webassembly/index.wasm
+			# pack
 			checkbin zenroom_exec.js $dir
 			copyexamples $dir
 			continue ;;
