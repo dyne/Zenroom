@@ -59,8 +59,8 @@ for t in $targets; do
 		windows)
 			prepdir $dir
 			# download
-			downlaod zenroom-windows src/zenroom.dll
-			downlaod zenroom-windows src/zenroom.exe
+			download zenroom-windows src/zenroom.dll
+			download zenroom-windows src/zenroom.exe
 			# pack
 			checkbin zenroom.exe $dir
 			checkbin zenroom.dll $dir
@@ -96,7 +96,10 @@ for t in $targets; do
 			mkdir -p $dir/python2
 			download zenroom-python build/python2/_zenroom.so $dir/python2/_zenroom.so
 			mkdir -p $dir/python3
-			download zenroom-python build/python3/_zenroom.so $dir/python3/_zenroom.so
+			# list taken from build/python3.sh - please update me!
+			for v in 3.5.0 3.5.1 3.5.2 3.5.3 3.5.4 3.5.5 3.5.6 3.6.0 3.6.1 3.6.2 3.6.3 3.6.4 3.6.5 3.6.6 3.6.7 3.6.8 3.7.0 3.7.1 3.7.2; do
+				download zenroom-python build/python3/_zenroom_${v}.so $dir/python3/_zenroom_${v}.so
+			done
 			# pack
 			checkbin zenroom.x86 $dir
 			checkbin zenroom.arm $dir
