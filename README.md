@@ -8,7 +8,9 @@ Zencode is the name of the language executed by Zenroom: it is simple to underst
 
 <a href=https://github.com/DECODEproject/zenroom/tree/master/examples/zencode_coconut"><img src="https://zenroom.dyne.org/img/coconut_credential.jpg" width="92%"></a>
 
-Zencode is a Domain Specific Language whose design is informed by pilot use-cases in the [DECODE Project](https://decodeproject.eu) .
+Zencode is a Domain Specific Language whose design is informed by pilot use-cases in the [DECODE Project](https://decodeproject.eu).
+
+To know more, read our blog post <a href="https://decodeproject.eu/blog/smart-contracts-english-speaker">"Smart contracts for the English speaker"</a>.
 
 ## Latest stable release is 0.9:
 <ul class="center">
