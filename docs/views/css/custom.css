@@ -3,6 +3,13 @@
 	font-family: 'ubuntu';
 }
 
+
+@media (min-width: 768px) {
+    .container-fluid {
+        width: 44em;
+    }
+}
+
 .nav-item {
 	font-size: 1.7em;
 	padding: .5em;
