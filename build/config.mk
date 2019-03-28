@@ -131,13 +131,13 @@ system := Darwin
 endif
 
 ifneq (,$(findstring python2,$(MAKECMDGOALS)))
-cflags += $(shell pkg-config python2 --cflags)
-ldflags += $(shell pkg-config python2 --libs)
+cflags += $(shell python2.7-config --cflags) -fPIC
+ldflags += $(shell python2.7-config --ldflags)
 endif
 
 ifneq (,$(findstring python3,$(MAKECMDGOALS)))
-cflags += $(shell python-config --cflags) -fPIC
-ldflags += $(shell python-config --ldflags)
+cflags += $(shell python3-config --cflags) -fPIC
+ldflags += $(shell python3-config --ldflags)
 endif
 
 ifneq (,$(findstring javascript,$(MAKECMDGOALS)))
