@@ -74,6 +74,8 @@ typedef struct {
 	size_t stderr_len;
 	size_t stderr_pos;
 
+
+
 	int errorlevel;
 	void *userdata; // anything passed at init (reserved for caller)
 
@@ -86,7 +88,7 @@ int  zen_exec_zencode(zenroom_t *Z, const char *script);
 void zen_teardown(zenroom_t *zenroom);
 
 #define UMM_HEAP (64*1024) // 64KiB (masked with 0x7fff)
-#define MAX_FILE (64*1024) // load max 64KiB files
+#define MAX_FILE (1024*1024) // load max 1MB files
 #ifndef MAX_STRING
 #define MAX_STRING 20480 // max 20KiB strings
 #endif
