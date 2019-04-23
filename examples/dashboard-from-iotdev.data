@@ -1,9 +1,8 @@
 {
-   "zenroom" : "0.7.1",
-   "text" : "roejuBKJ/uGLbxLRmbF02IPVpEmlc8SVx/Ob9THT1bOmddp4tXSi0JL6vbo/1tRH3Enz5t48DTA=",
-   "iv" : "bBtCrhf70cFqpbC6iaYq3w==",
-   "curve" : "ed25519",
-   "encoding" : "base64",
-   "checksum" : "NVbeywBQvBKaOXRwqWQ5PQ==",
-   "header" : "gq1kZXZpY2VfcHVia2V52VhCQytsanBlSGg1dXZzV3pPVHdpNXhIZGEwTzIyR0IyYU1VYWV6b2l6VWtKTE9leUJOREdYNG5aYkRpOW5aRm1rKzBHM2FYUW02TmlBSFhOelRXRlp0bkE9rGNvbW11bml0eV9pZK1zbWFydGNpdGl6ZW5z"
+    "text": "+7J5vjjzhVRizTkWzvvKkj1pvEPRLsldJJQ1ARcQ3gr8eAFQuXWe8lePNIZorz/txZWOUfMRQ9U=",
+    "header": "g6Jpdrg3ZmdFeklSQUpBTlErUDRjWUpvWVVBPT2sY29tbXVuaXR5X2lkrXNtYXJ0Y2l0aXplbnOtZGV2aWNlX3B1YmtledlYQkRXcUpycjNzWXBlcit2bm12aDAxSGNGdjI0Zmt1UFRkMnZsOFFaZ2c5ZDVjWHFvS2d5NEk1N3VpUDFjUlZtQXlSOVFreWhQbHNNMXBNQVhlT3UxOGQ4PQ==",
+    "curve": "ed25519",
+    "encoding": "base64",
+    "checksum": "HSEqItcDHgHnlpiyRJZ63A==",
+    "zenroom": "0.9"
 }
