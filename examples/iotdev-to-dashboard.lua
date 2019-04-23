@@ -5,30 +5,13 @@
 -- curve used
 curve = 'ed25519'
 
--- data schemas
-keys_schema = SCHEMA.Record {
-   device_id     = SCHEMA.String,
-   community_id  = SCHEMA.String,
-   community_pubkey = SCHEMA.String
-}
-payload_schema = SCHEMA.Record {
-   device_id = SCHEMA.String,
-   data      = SCHEMA.String
-}
-output_schema = SCHEMA.Record {
-   device_pubkey = SCHEMA.String,
-   community_id  = SCHEMA.String,
-   payload       = SCHEMA.String
-}
-
 -- import and validate keys 
-keys = read_json(KEYS, keys_schema)
+keys = JSON.decode(KEYS)
 
 -- generate a new device keypair every time
 -- this could be optimised by creating keys onetime at first run
 -- or temporarily, i.e: every day or every hour
 devkey = ECDH.keygen(curve)
-
 
 -- compute the session key using private/public keys
 -- it may change to use random, but then we need a session channel
@@ -37,7 +20,6 @@ devkey = ECDH.keygen(curve)
 payload = {}
 payload['device_id'] = keys['device_id']
 payload['data']      = DATA
-validate(payload, payload_schema)
 
 -- The device's public key, the 'community_id' and the encryption
 -- curve type are transmitted in clear inside the header, which is
@@ -45,17 +27,24 @@ validate(payload, payload_schema)
 header = {}
 header['device_pubkey'] = devkey:public():base64()
 header['community_id'] = keys['community_id']
+iv = RNG.new():octet(16)
+header['iv'] = iv:base64()
+
 -- content( header ) -- uncomment for debug
 
 -- The output is a table with crypto contents which is standard for
 -- zenroom's functions encrypt/decrypt: .checksum .header .iv .text
-output = ECDH.encrypt(devkey,
-					  base64(keys.community_pubkey),
-					  MSG.pack(payload), MSG.pack(header))
+local session = devkey:session(base64(keys.community_pubkey))
+local head = str(MSG.pack(header))
+local out = { header = head }
+out.text, out.checksum = 
+   ECDH.aead_encrypt(session, str(MSG.pack(payload)), iv, head)
 
-output = map(output, base64)
+output = map(out, base64)
 output.zenroom = VERSION
 output.encoding = 'base64'
 output.curve = curve
 -- content(output) -- uncomment for debug
 print( JSON.encode( output ) ) -- map(output, base64) ) )
+
+

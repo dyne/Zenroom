@@ -1,36 +1,23 @@
 -- a dashboard receives an ID and payload packet from an IoT device
 
+-- curve used
+curve = 'ed25519'
 
--- key schema
-keys_schema = SCHEMA.Record { community_seckey = SCHEMA.String }
+-- data schemas
+-- read and validate data
+keys = JSON.decode(KEYS)
+data = JSON.decode(DATA)
 
-data_schema = SCHEMA.Record {
-   text     = SCHEMA.string,
-   iv       = SCHEMA.string,
-   header   = SCHEMA.string,
-   checksum = SCHEMA.string
-}
+header = MSG.unpack(base64(data.header):str())
 
--- same as payload in iotdev-to-dashboard
-payload_schema = SCHEMA.Record {
-   device_id   = SCHEMA.String,
-   data        = SCHEMA.String
-}
+community_key = ECDH.new(curve)
+community_key:private(base64(keys.community_seckey))
 
-data = read_json(DATA) -- TODO: data_schema validation
-keys = read_json(KEYS, keys_schema)
-head = MSG.unpack( base64(data.header):str() )
+session = community_key:session(base64(header.device_pubkey))
 
-dashkey = ECDH.new()
-dashkey:private( base64(keys.community_seckey) )
+decode = { header = header }
+decode.text, decode.checksum =
+   ECDH.aead_decrypt(session, base64(data.text), base64(header.iv), base64(data.header))
 
-payload,ck = ECDH.decrypt(dashkey,
-   base64( head.device_pubkey ),
-   map(data, base64))
+print(JSON.encode(MSG.unpack(decode.text:str())))
 
--- validate the payload
-validate(payload, payload_schema)
-
--- print("Header:")
--- content(msgunpack(payload.header) )
-print(JSON.encode( MSG.unpack( payload.text:str() ) ))
