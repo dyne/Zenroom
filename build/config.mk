@@ -75,6 +75,7 @@ endif
 
 ifneq (,$(findstring redis,$(MAKECMDGOALS)))
 cflags := ${cflags_protection} -DARCH_REDIS -O3 -Wall -std=gnu99
+cflags += -O1 -ggdb -DDEBUG=1
 endif
 
 ifneq (,$(findstring ios,$(MAKECMDGOALS)))
