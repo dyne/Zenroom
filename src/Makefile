@@ -33,7 +33,8 @@ SOURCES := \
 	zen_fp12.o zen_random.o zen_hash.o \
 	zen_ecdh.o zen_ecdh_factory.o \
 	randombytes.o \
-	cortex_m.o
+	cortex_m.o \
+	redis_mod.o redis_util.o
 
 all: shared
 
@@ -54,6 +55,9 @@ linux: ${SOURCES}
 
 linux-lib: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o libzenroom-${ARCH}-${VERSION}-${BRANCH}-${HASH}.so ${LDFLAGS} ${LDADD}
+
+redis: ${SOURCES}
+	${CC} ${CFLAGS} ${SOURCES} -o redis_zenroom.so-${ARCH}-${VERSION}.so ${LDFLAGS} ${LDADD}
 
 python: ${SOURCES}
 	${CC} -shared ${SOURCES} zen_python.o -o _zenroom.so ${LDFLAGS} ${LDADD}
