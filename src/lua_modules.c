@@ -204,7 +204,7 @@ int zen_require_override(lua_State *L, const int restricted) {
 
 // load the src/lua/init.lua
 int zen_lua_init(lua_State *L) {
-	act(L, "loading lua initialisation");
+	func(L, "loading lua initialisation");
 	zen_extension_t *p;
 	for (p = zen_extensions;
 	     p->name != NULL; ++p) {

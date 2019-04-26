@@ -169,7 +169,7 @@ zenroom_t *zen_init(const char *conf,
 
 void zen_teardown(zenroom_t *Z) {
 
-	act(Z->lua,"Zenroom teardown.");
+	func(Z->lua,"Zenroom teardown.");
 	if(Z->mem->heap) {
 		if(umm_integrity_check())
 			func(Z->lua,"HEAP integrity checks passed.");
@@ -287,7 +287,7 @@ int zencode_exec(char *script, char *conf, char *keys,
 	EM_ASM({Module.exec_ok();});
 #endif
 
-	notice(L, "Zenroom operations completed.");
+	func(L, "Zenroom operations completed.");
 	zen_teardown(Z);
 	return(return_code);
 }
@@ -340,7 +340,7 @@ int zenroom_exec(char *script, char *conf, char *keys,
 	EM_ASM({Module.exec_ok();});
 #endif
 
-	notice(L, "Zenroom operations completed.");
+	func(L, "Zenroom operations completed.");
 	zen_teardown(Z);
 	return(return_code);
 }
@@ -404,7 +404,7 @@ int zencode_exec_tobuf(char *script, char *conf, char *keys,
 	EM_ASM({Module.exec_ok();});
 #endif
 
-	notice(L, "Zenroom operations completed.");
+	func(L, "Zenroom operations completed.");
 	zen_teardown(Z);
 	return(return_code);
 }
@@ -467,7 +467,7 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys,
 	EM_ASM({Module.exec_ok();});
 #endif
 
-	notice(L, "Zenroom operations completed.");
+	func(L, "Zenroom operations completed.");
 	zen_teardown(Z);
 	return(return_code);
 }
