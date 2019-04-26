@@ -11,6 +11,12 @@ for position, for instance ECP multiplication needs to have the BIG
 number always as second argument. Instead of returning error we should
 check the type and reposition the arguments accordingly.
 
+reentrant memory model: zen_mem is now a static variable in zen_memory
+because it needs to be referred from internal models of different
+memory managers (so far umm) but this is not REENTRANT: it prevents
+the concurrent allocation of multiple zenroom instances and in general
+is bad practice.
+
 
 ## Deterministic Random in the Checker
 
