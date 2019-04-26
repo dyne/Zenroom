@@ -493,6 +493,8 @@ static int big_mul(lua_State *L) {
 			return 0; }
 		ecp *out = ecp_dup(L,e); SAFE(out);
 		PAIR_G1mul(&out->val,l->val);
+		// TODO: use unaccellerated multiplication for non-pairing curves
+		// ECP_mul(&out->val,l->val);
 		return 1; }
 	big *r = big_arg(L,2); SAFE(r);
 	if(l->doublesize || r->doublesize) {
