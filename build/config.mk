@@ -74,7 +74,7 @@ ldflags+=-mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb-interwork -Wstack-usage
 endif
 
 ifneq (,$(findstring redis,$(MAKECMDGOALS)))
-cflags := ${cflags_protection} -DARCH_REDIS -O3 -Wall -std=gnu99
+cflags := ${cflags_protection} -DARCH_REDIS -Wall -std=gnu99
 cflags += -O1 -ggdb -DDEBUG=1
 endif
 
