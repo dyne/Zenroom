@@ -19,16 +19,11 @@ typedef RedisModuleKey           KEY;
 #define r_free(p)  RedisModule_Free(p)
 
 int Zenroom_Reply(CTX *ctx, STR **argv, int argc) {
-	REDISMODULE_NOT_USED(argv);
-	REDISMODULE_NOT_USED(argc);
-	// int *myint = RedisModule_GetBlockedClientPrivateData(ctx);
-	// return RedisModule_ReplyWithLongLong(ctx,*myint);
-	// TODO:
+	REDISMODULE_NOT_USED(argv);	REDISMODULE_NOT_USED(argc);
 	return RedisModule_ReplyWithSimpleString(ctx,"OK");
 }
 int Zenroom_Timeout(CTX *ctx, STR **argv, int argc) {
-	REDISMODULE_NOT_USED(argv);
-	REDISMODULE_NOT_USED(argc);
+	REDISMODULE_NOT_USED(argv);	REDISMODULE_NOT_USED(argc);
 	return RedisModule_ReplyWithSimpleString(ctx,"Request timedout");
 }
 void Zenroom_FreeData(CTX *ctx, void *privdata) {
@@ -36,8 +31,7 @@ void Zenroom_FreeData(CTX *ctx, void *privdata) {
 	RedisModule_Free(privdata);
 }
 void Zenroom_Disconnected(CTX *ctx, BLK *bc) {
-	RedisModule_Log(ctx,"warning","Blocked client %p disconnected!",
-	                (void*)bc);
+	RedisModule_Log(ctx,"warning","Blocked client %p disconnected!", (void*)bc);
 	/* Here you should cleanup your state / threads, and if possible
 	 * call RedisModule_UnblockClient(), or notify the thread that will
 	 * call the function ASAP. */

@@ -60,7 +60,7 @@ linux-lib: apply-patches lua53 milagro embed-lua
 linux-redis: cflags += -shared -DLIBRARY
 linux-redis: apply-patches lua53 milagro embed-lua
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-	make -C src redis
+		make -C src redis
 
 linux-python3: apply-patches lua53 milagro embed-lua
 	swig -python -py3 ${pwd}/build/swig.i
