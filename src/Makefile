@@ -34,7 +34,7 @@ SOURCES := \
 	zen_ecdh.o zen_ecdh_factory.o \
 	randombytes.o \
 	cortex_m.o \
-	redis_mod.o redis_util.o
+	redis_mod.o
 
 all: shared
 
