@@ -91,26 +91,19 @@ extern void zen_setenv(lua_State *L, char *key, char *val);
 extern void zen_add_function(lua_State *L, lua_CFunction func,
 		const char *func_name);
 
+// single instance globals
+zenroom_t *Z = NULL;   // zenroom STACK
+zen_mem_t *mem = NULL; // zenroom HEAP
 
-zenroom_t *zen_init(const char *conf,
-		char *keys, char *data) {
-	(void) conf;
-	lua_State *L = NULL;
-	zen_mem_t *mem = NULL;
-	if(conf) {
-		if(strcasecmp(conf,"umm")==0)
-			mem = umm_memory_init(UMM_HEAP); // (64KiB)
-	} else
-		mem = libc_memory_init();
+static int zen_lua_panic (lua_State *L) {
+	lua_writestringerror("PANIC: unprotected error in call to Lua API (%s)\n",
+	                     lua_tostring(L, -1));
+	return 0;  /* return to Lua to abort */
+}
 
-	L = lua_newstate(zen_memory_manager, mem);
-	if(!L) {
-		error(L,"%s: %s", __func__, "lua state creation failed");
-		return NULL;
-	}
-
+static int zen_init_pmain(lua_State *L) { // protected mode init
 	// create the zenroom_t global context
-	zenroom_t *Z = system_alloc(sizeof(zenroom_t));
+	Z = system_alloc(sizeof(zenroom_t));
 	Z->lua = L;
 	Z->mem = mem;
 	Z->stdout_buf = NULL;
@@ -145,15 +138,37 @@ zenroom_t *zen_init(const char *conf,
 	zen_require_override(L,0);
 	if(!zen_lua_init(L)) {
 		error(L,"%s: %s", __func__, "initialisation of lua scripts failed");
+		return(LUA_ERRRUN);
+	}
+	return(LUA_OK);
+}
+
+zenroom_t *zen_init(const char *conf, char *keys, char *data) {
+	(void) conf;
+	lua_State *L = NULL;
+	if(conf) {
+		if(strcasecmp(conf,"umm")==0)
+			mem = umm_memory_init(UMM_HEAP); // (64KiB)
+	} else
+		mem = libc_memory_init();
+	L = lua_newstate(zen_memory_manager, mem);
+	if(!L) {
+		error(L,"%s: %s", __func__, "Lua newstate creation failed");
 		return NULL;
 	}
-	//////////////////// end of create
-
+	lua_atpanic(L, &zen_lua_panic); // as done in lauxlib luaL_newstate
+	lua_pushcfunction(L, &zen_init_pmain);  /* to call in protected mode */
+	lua_pushinteger(L, 0);  /* 1st argument */
+	lua_pushlightuserdata(L, NULL); /* 2nd argument */
+	int status = lua_pcall(L,2,1,0);
+	if(status != LUA_OK) {
+		error(L,"%s: %s", __func__, "Lua initialization failed");
+		return NULL;
+	}
 	lua_gc(L, LUA_GCCOLLECT, 0);
 	lua_gc(L, LUA_GCCOLLECT, 0);
 	// allow further requires
 	// zen_require_override(L,1);
-
 	// load arguments if present
 	if(data) {
 		func(L, "declaring global: DATA");
@@ -163,9 +178,9 @@ zenroom_t *zen_init(const char *conf,
 		func(L, "declaring global: KEYS");
 		zen_setenv(L,"KEYS",keys);
 	}
-
-	return(Z);
+	return Z;
 }
+
 
 void zen_teardown(zenroom_t *Z) {
 
