@@ -33,7 +33,7 @@
 ** ensure that all software connected to Lua will be compiled with the
 ** same configuration.
 */
-/* #define LUA_32BITS */
+#define LUA_32BITS
 
 
 /*
@@ -353,17 +353,17 @@
 @@ macro 'lua_cpcall' emulates deprecated function lua_cpcall.
 ** You can call your C function directly (with light C functions).
 */
-#define lua_cpcall(L,f,u)  \
-	(lua_pushcfunction(L, (f)), \
-	 lua_pushlightuserdata(L,(u)), \
-	 lua_pcall(L,1,0,0))
+// #define lua_cpcall(L,f,u) 
+// 	(lua_pushcfunction(L, (f)),
+// 	 lua_pushlightuserdata(L,(u)),
+// 	 lua_pcall(L,1,0,0))
 
 
 /*
 @@ LUA_COMPAT_LOG10 defines the function 'log10' in the math library.
 ** You can rewrite 'log10(x)' as 'log(x, 10)'.
 */
-#define LUA_COMPAT_LOG10
+// #define LUA_COMPAT_LOG10
 
 /*
 @@ LUA_COMPAT_LOADSTRING defines the function 'loadstring' in the base
@@ -722,7 +722,7 @@
 ** space (and to reserve some numbers for pseudo-indices).
 */
 #if LUAI_BITSINT >= 32
-#define LUAI_MAXSTACK		1000000
+#define LUAI_MAXSTACK		5000000
 #else
 #define LUAI_MAXSTACK		15000
 #endif
