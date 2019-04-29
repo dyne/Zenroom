@@ -3,8 +3,8 @@
 local modules = { 
    ["OCTET"] = OCTET, ["octet"] = OCTET.new(),
    ["ECDH"] = ECDH, ["ecdh"] = ECDH.new(),
-   ["ECP"] = ECP, ["ecp"] = ECP.new(),
-   ["BIG"] = BIG, ["big"] = BIG.new(),
+   ["ECP"] = ECP, ["ecp"] = ECP.new(ECP.generator()),
+   ["BIG"] = BIG, ["big"] = BIG.new(1),
    ["RNG"] = RNG, ["rng"] = RNG.new(),
    ["HASH"] = HASH, ["hash"] = HASH.new() }
 for n,m in pairs(modules) do
