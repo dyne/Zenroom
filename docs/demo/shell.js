@@ -70,6 +70,16 @@ var ZR = (function() {
         return false;
     }
 
+    const loadCoconutExamples = (e) => {
+        const name = $(e.target).attr('id');
+        const base_url = "https://raw.githubusercontent.com/DECODEproject/dddc-pilot-contracts/master/src/"
+        const editor = $('#zencode')[0].env.editor
+        editor.setValue("")
+        $.get(base_url + name, value => {
+            editor.setValue(value)
+        })
+    };
+
     const setupCodeEditor = editor => {
         editor.setOptions({
             enableBasicAutocompletion: true,
@@ -133,7 +143,7 @@ var ZR = (function() {
         });
     }
 
-    const clearOutput = () => $("#output").html('')
+    const clearOutput = () => $("#output").html('');
 
     const addControls = function(stack) {
         const component = stack.contentItems[0]
@@ -148,7 +158,9 @@ var ZR = (function() {
         }
 
         if (component.componentName == 'OUTPUT') {
+            const copyButton = $($('#copy-button-template').html())
             const button = $($('#clear-button-template').html())
+            stack.header.controlsContainer.prepend(copyButton)
             stack.header.controlsContainer.prepend(button)
             button.on('click', clearOutput)
         }
@@ -173,6 +185,7 @@ var ZR = (function() {
     const init = function() {
        layoutInit()
        $(".examples").on('click', e => loadExamples(e))
+       $(".coconut").on('click', e => loadCoconutExamples(e))
     };
 
     const addAutocompletionWord = word => {
@@ -210,8 +223,17 @@ var ZR = (function() {
                 renderedJson = renderjson(JSON.parse(outputBuffer))
             } catch {}
         }
-        outputBuffer = outputBuffer.join('<br/>')
-        $('#output').append(renderedJson||outputBuffer)
+        var resultBuffer = outputBuffer.join('<br/>')
+        $('#output').append(renderedJson||resultBuffer)
+        $('#copyOutput').removeClass('has-text-grey-light');
+        $('#copyOutput').off('click').on('click', function() {
+            $(this).addClass('has-text-grey-light')
+            var $temp = $("<input>");
+            $("body").append($temp);
+            $temp.val(outputBuffer).select();
+            document.execCommand("copy");
+            $temp.remove();
+        })
     }
 
     const execute_zenroom = function(code) {
