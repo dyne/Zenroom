@@ -66,6 +66,7 @@ static zenroom_t *getzen(lua_State *L) {
 static zenroom_t *stderr_tobuffer(lua_State *L) {
 	if(!L) return NULL;
 	zenroom_t *Z = getzen(L);
+	if(!Z) return NULL;
 	if(Z->stderr_buf) return Z;
 	return NULL;
 }
@@ -104,7 +105,6 @@ static void _printf(zenroom_t *Z, char *pfx, char *msg) {
 void notice(lua_State *L, const char *format, ...) {
   va_list arg;
   va_start(arg, format);
-
   vsnprintf(msg, MAX_STRING, format, arg);
   _printf(stderr_tobuffer(L), "[*]", msg);
   va_end(arg);
@@ -114,7 +114,6 @@ void func(lua_State *L, const char *format, ...) {
   if(verbosity>=FUNC) {
     va_list arg;
     va_start(arg, format);
-    
     vsnprintf(msg, MAX_STRING, format, arg);
     _printf(stderr_tobuffer(L), "[F]", msg);
     va_end(arg);
@@ -126,6 +125,7 @@ void error(lua_State *L, const char *format, ...) {
   va_start(arg, format);
   vsnprintf(msg, MAX_STRING, format, arg);
   zenroom_t *Z = getzen(L);
+  if(!Z) { va_end(arg); return; }
   // _printline(Z, L);
   _printf(Z, "[!]", msg);
   va_end(arg);
@@ -148,6 +148,7 @@ void warning(lua_State *L, const char *format, ...) {
     va_start(arg, format);
     vsnprintf(msg, MAX_STRING, format, arg);
     zenroom_t *Z = getzen(L);
+    if(!Z) { va_end(arg); return; }
     _printf(Z, "[W]", msg);
     va_end(arg);
     if(Z) Z->errorlevel = 2;
