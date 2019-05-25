@@ -60,7 +60,7 @@ void strbuf_init(strbuf_t *s, int len)
     s->reallocs = 0;
     s->debug = 0;
 
-    s->buf = (char *)malloc(size);
+    s->buf = (char *)zen_memory_alloc(size);
     if (!s->buf)
         die("Out of memory");
 
@@ -71,7 +71,7 @@ strbuf_t *strbuf_new(int len)
 {
     strbuf_t *s;
 
-    s = (strbuf_t*)malloc(sizeof(strbuf_t));
+    s = (strbuf_t*)zen_memory_alloc(sizeof(strbuf_t));
     if (!s)
         die("Out of memory");
 
@@ -108,11 +108,11 @@ void strbuf_free(strbuf_t *s)
     debug_stats(s);
 
     if (s->buf) {
-        free(s->buf);
+        zen_memory_free(s->buf);
         s->buf = NULL;
     }
     if (s->dynamic)
-        free(s);
+        zen_memory_free(s);
 }
 
 char *strbuf_free_to_string(strbuf_t *s, int *len)
@@ -128,7 +128,7 @@ char *strbuf_free_to_string(strbuf_t *s, int *len)
         *len = s->length;
 
     if (s->dynamic)
-        free(s);
+        zen_memory_free(s);
 
     return buf;
 }
@@ -175,7 +175,7 @@ void strbuf_resize(strbuf_t *s, int len)
     }
 
     s->size = newsize;
-    s->buf = (char *)realloc(s->buf, s->size);
+    s->buf = (char *)zen_memory_realloc(s->buf, s->size);
     if (!s->buf)
         die("Out of memory");
     s->reallocs++;
