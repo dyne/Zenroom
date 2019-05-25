@@ -20,34 +20,12 @@ is bad practice.
 
 ## Deterministic Random in the Checker
 
-how to be sure that code executes on any computer and that the answer
-is correct
+take an external rng buffer filled with random by the caller
 
-if i give someone a contract and get a result how can I be sure that
-has been computed/executed correctly
+provide zencode with random from this pool and move the index forward
 
-a solution can be to make it done by many....
+return an error when the random is exhausted and more is needed
 
-the only random useful in EC are numbers in FP
-and the FP is already modulus so smaller than the order
-
-
-the only random needed is for generation of the private key
-the private key is a random number smaller than the order of the curve
-the public key is the scalar multiplication between G1 and the private key
-(all public keys have this procedure)
-this should work also in G2
-
-the scalars that are multiplied to G1 and G2 need to be random
-
-the ecp1 and ecp2 functions for _mul are there and side-channel resistant
-so the only needed thing needed is the generation of a big number
-
-
-(optimisation)
-G1 and G2 multiplications can be done using pairing functions
-that optimise using endomorphism
-see: `void PAIR_BLS383_G1mul(ECP_BLS383 *P,BIG_384_29 e)`
 
 ## Coconut notes
 

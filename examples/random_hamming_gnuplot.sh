@@ -1,20 +1,22 @@
 #!/usr/bin/env bash
 #
 # Zenroom benchmark script by Jaromil (2018)
+#
+# uses BLS383 curve with point length of 97 bytes (776 bits)
 
 graphtitle="Hamming distance frequency of random ECP points"
 echo "Plot random benchmarks measuring hamming distance"
 echo " on randomly generated ECP/2 points by Zenroom"
 R=random_hamming_gnuplot
 
-samples=1000
+samples=10000
 methods=""
 
 function render() {	dst=$1
 	if ! [ -r $R/${dst}.data ]; then
 		echo
 		echo "rendering method $dst"		
-		time ./src/zenroom-shared $R/${dst}.lua > $R/${dst}.data 2>/dev/null
+		time zenroom $R/${dst}.lua > $R/${dst}.data 2>/dev/null
 		echo "---"
 	else echo "skip $dst"; fi }
 mkdir -p $R
@@ -38,9 +40,9 @@ EOF
 # script mult        "INT.new(rng) * g1"
 script mod_mult    "INT.new(rng,o) * g1"
 # script mapit       "ECP.mapit(INT.new(rng):octet())"
-script mod_mapit   "ECP.mapit(INT.new(rng,o):octet())"
-script hashtp64    "ECP.hashtopoint(rng:octet(64))"
-script hashtp32    "ECP.hashtopoint(rng:octet(32))"
+# script mod_mapit   "ECP.mapit(sha512(rng:octet(32)))"
+script hash2point  "ECP.hashtopoint(rng:octet(64))"
+# script hashtp32    "ECP.hashtopoint(rng:octet(32))"
 # script hashtp16    "ECP.hashtopoint(rng:octet(16))"
 # script hashtp8    "ECP.hashtopoint(rng:octet(8))"
 # script hashtp4    "ECP.hashtopoint(rng:octet(4))"
