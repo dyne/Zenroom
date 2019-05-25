@@ -71,7 +71,8 @@ void *zen_memalign(const size_t size, const size_t align) {
 
 // global memory manager saved here
 // TODO: this is not reentrant (see also umm_malloc.c)
-zen_mem_t *zen_mem;
+// zen_mem_t *zen_mem;
+extern zen_mem_t *MEM;
 
 // Global HEAP pointer in the STACK
 zen_mem_t *umm_memory_init(size_t S) {
@@ -85,7 +86,6 @@ zen_mem_t *umm_memory_init(size_t S) {
 	mem->sys_realloc = realloc;
 	mem->sys_free = free;
 	umm_init(mem->heap, mem->heap_size);
-	zen_mem = mem;
 	return mem;
 	// pointers saved in umm_malloc.c (stack)
 }
@@ -100,7 +100,6 @@ zen_mem_t *libc_memory_init() {
 	mem->sys_malloc = malloc;
 	mem->sys_realloc = realloc;
 	mem->sys_free = free;
-	zen_mem = mem;
 	return mem;
 }
 
@@ -115,17 +114,16 @@ zen_mem_t *jemalloc_memory_init() {
 	mem->sys_malloc = mem->malloc;
 	mem->sys_realloc = mem->realloc;
 	mem->sys_free = mem->free;
-	zen_mem = mem;
 	return mem;
 }
 #endif
 
-void *zen_memory_alloc(size_t size) { return (*zen_mem->malloc)(size); }
-void *zen_memory_realloc(void *ptr, size_t size) { return (*zen_mem->realloc)(ptr, size); }
-void  zen_memory_free(void *ptr) { (*zen_mem->free)(ptr); }
-void *system_alloc(size_t size) { return (*zen_mem->sys_malloc)(size); }
-void *system_realloc(void *ptr, size_t size) { return (*zen_mem->sys_realloc)(ptr, size); }
-void  system_free(void *ptr) { (*zen_mem->sys_free)(ptr); }
+void *zen_memory_alloc(size_t size) { return (*MEM->malloc)(size); }
+void *zen_memory_realloc(void *ptr, size_t size) { return (*MEM->realloc)(ptr, size); }
+void  zen_memory_free(void *ptr) { (*MEM->free)(ptr); }
+void *system_alloc(size_t size) { return (*MEM->sys_malloc)(size); }
+void *system_realloc(void *ptr, size_t size) { return (*MEM->sys_realloc)(ptr, size); }
+void  system_free(void *ptr) { (*MEM->sys_free)(ptr); }
 
 
 

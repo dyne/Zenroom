@@ -38,9 +38,12 @@
 #include <lauxlib.h>
 #include <lstate.h>
 
+// Zenroom global context (zenroom.c)
+extern zenroom_t *Z;   // STACK
+extern zen_mem_t *MEM; // HEAP
+
 // get rid of the annoying camel-case in Redis, all its types are
 // distinguished by being uppercase
-//typedef RedisModuleBlockedClient BLK;
 typedef RedisModuleCtx           CTX;
 typedef RedisModuleString        STR;
 typedef RedisModuleKey           KEY;
@@ -61,7 +64,7 @@ extern void zen_add_io(lua_State *L);
 extern void zen_setenv(lua_State *L, char *key, char *val);
 
 extern void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
-extern zen_mem_t *zen_mem;
+
 zen_mem_t *redis_memory_init() {
 	zen_mem_t *mem = r_alloc(sizeof(zen_mem_t));
 	mem->heap = NULL;
@@ -72,25 +75,23 @@ zen_mem_t *redis_memory_init() {
 	mem->sys_malloc = RedisModule_Alloc;
 	mem->sys_realloc = RedisModule_Realloc;
 	mem->sys_free = RedisModule_Free;
-	zen_mem = mem;
 	return mem;
 }
 
 zenroom_t *zen_redis_init() {
 	notice(NULL, "Initializing Zenroom");
 	lua_State *L = NULL;
-	zen_mem_t *mem = NULL;
-	mem = redis_memory_init();
-	func(NULL,"memory init: %p",mem);
-	L = lua_newstate(zen_memory_manager, mem);
+	MEM = redis_memory_init();
+	func(NULL,"memory init: %p",MEM);
+	L = lua_newstate(zen_memory_manager, MEM);
 	if(!L) {
 		//error(L,"%s: %s", __func__, "lua state creation failed");
 		return NULL;
 	}
 	// create the zenroom_t global context
-	zenroom_t *Z = (*mem->malloc)(sizeof(zenroom_t));
+	zenroom_t *Z = (*MEM->malloc)(sizeof(zenroom_t));
 	Z->lua = L;
-	Z->mem = mem;
+	Z->mem = MEM;
 	Z->stdout_buf = NULL;
 	Z->stdout_pos = 0;
 	Z->stdout_len = 0;
@@ -162,7 +163,6 @@ char* get(CTX *ctx, const STR * key, size_t *len) {
 // ZENROOM.EXEC <script> [<keys> <data>]
 int zenroom_exec_rediscmd(CTX *ctx, STR **argv, int argc) {
 	// we must have at least 2 args
-	set_debug(3);
 	if (argc < 2) return RedisModule_WrongArity(ctx);
 	char out[MAX_STRING];
 	char err[MAX_STRING];
@@ -181,13 +181,9 @@ int zenroom_exec_rediscmd(CTX *ctx, STR **argv, int argc) {
 	// 	zen_setenv(L,"KEYS",keys);
 	// }
 	//
-	zenroom_t *Z = zen_redis_init();
-	if(!Z) {
-		reply_error(ctx, "ERR zenroom initialization failure");
-		return REDISMODULE_ERR;
-	}
 	// int res = zenroom_exec_tobuf((char*)script, NULL, NULL, NULL, 3,
 	//                              out, MAX_STRING, err, MAX_STRING);
+	if(!Z) return REDISMODULE_ERR;
 	int res = zen_exec_script(Z, script);
 	if(res != 0) {
 		reply_error(ctx,"ERR zenroom execution failure");
@@ -196,7 +192,6 @@ int zenroom_exec_rediscmd(CTX *ctx, STR **argv, int argc) {
 	}
 	RedisModule_ReplyWithStringBuffer(ctx, out, strlen(out));
 	r_free(script);
-	zen_teardown(Z);
 	return REDISMODULE_OK;
 }
 
@@ -206,6 +201,13 @@ int RedisModule_OnLoad(CTX *ctx) {
 	if (RedisModule_Init(ctx, "zenroom", 1, REDISMODULE_APIVER_1) ==
 	    REDISMODULE_ERR)
 		return REDISMODULE_ERR;
+	//
+	set_debug(3);
+	Z = zen_redis_init();
+	if(!Z) {
+		reply_error(ctx, "ERR zenroom initialization failure");
+		return REDISMODULE_ERR;
+	}
 	//
 	if (RedisModule_CreateCommand(ctx, "zenroom.exec",
 	                              zenroom_exec_rediscmd, "readonly",
