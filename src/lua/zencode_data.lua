@@ -119,9 +119,9 @@ Given("I introduce myself as ''", f_hello)
 Given("I am known as ''", f_hello)
 
 -- debug functions
-Given("I print debug info", function() ZEN.debug() end)
-When("I print debug info", function() ZEN.debug() end)
-Then("I print debug info", function() ZEN.debug() end)
+Given("print debug info", function() ZEN.debug() end)
+When("print debug info", function() ZEN.debug() end)
+Then("print debug info", function() ZEN.debug() end)
 
 f_havedata = function (section,key)
    -- _G['data'] = ZEN.check(JSON.decode(DATA),dataname)
