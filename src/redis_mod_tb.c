@@ -85,11 +85,11 @@ zenroom_t *zen_redis_init() {
 	func(NULL,"memory init: %p",MEM);
 	L = lua_newstate(zen_memory_manager, MEM);
 	if(!L) {
-		//error(L,"%s: %s", __func__, "lua state creation failed");
+		error(NULL,"%s: %s", __func__, "lua state creation failed");
 		return NULL;
 	}
 	// create the zenroom_t global context
-	zenroom_t *Z = (*MEM->malloc)(sizeof(zenroom_t));
+	Z = (*MEM->malloc)(sizeof(zenroom_t));
 	Z->lua = L;
 	Z->mem = MEM;
 	Z->stdout_buf = NULL;
@@ -127,7 +127,7 @@ zenroom_t *zen_redis_init() {
 	zen_add_io(L);
 	zen_require_override(L,0);
 	if(!zen_lua_init(L)) {
-		//error(L,"%s: %s", __func__, "initialisation of lua scripts failed");
+		error(NULL,"%s: %s", __func__, "initialisation of lua scripts failed");
 		return NULL;
 	}
 	//////////////////// end of create
@@ -183,7 +183,8 @@ int zenroom_exec_rediscmd(CTX *ctx, STR **argv, int argc) {
 	//
 	// int res = zenroom_exec_tobuf((char*)script, NULL, NULL, NULL, 3,
 	//                              out, MAX_STRING, err, MAX_STRING);
-	if(!Z) return REDISMODULE_ERR;
+	// if(!Z) return REDISMODULE_ERR;
+	script[script_len] = '\0';
 	int res = zen_exec_script(Z, script);
 	if(res != 0) {
 		reply_error(ctx,"ERR zenroom execution failure");
