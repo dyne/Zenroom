@@ -91,6 +91,12 @@ ldflags := -lm -lpthread
 system := Linux
 endif
 
+ifneq (,$(findstring jemalloc,$(MAKECMDGOALS)))
+cflags += -DUSE_JEMALLOC
+ldflags += -ljemalloc
+endif
+
+
 #milagro_cmake_flags += -DCMAKE_SYSROOT=${sysroot} -DCMAKE_LINKER=${ld} -DCMAKE_C_LINK_EXECUTABLE="<CMAKE_LINKER> <FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
 # -DCMAKE_ANDROID_NDK=${sysroot}
 #milagro_cmake_flags += -DCMAKE_ANDROID_STANDALONE_TOOLCHAIN=${ndk} -DCMAKE_SYSTEM_VERSION=26

@@ -25,6 +25,11 @@
 #include <zenroom.h>
 #include <umm_malloc.h>
 
+#ifdef USE_JEMALLOC
+#define JEMALLOC_NO_DEMANGLE
+#include <jemalloc/jemalloc.h>
+#endif
+
 extern void *umm_info(void*);
 
 void *zen_memalign(const size_t size, const size_t align) {
@@ -98,6 +103,22 @@ zen_mem_t *libc_memory_init() {
 	zen_mem = mem;
 	return mem;
 }
+
+#ifdef USE_JEMALLOC
+zen_mem_t *jemalloc_memory_init() {
+	zen_mem_t *mem = je_malloc(sizeof(zen_mem_t));
+	mem->heap = NULL;
+	mem->heap_size = 0;
+	mem->malloc = je_malloc;
+	mem->realloc = je_realloc;
+	mem->free = je_free;
+	mem->sys_malloc = mem->malloc;
+	mem->sys_realloc = mem->realloc;
+	mem->sys_free = mem->free;
+	zen_mem = mem;
+	return mem;
+}
+#endif
 
 void *zen_memory_alloc(size_t size) { return (*zen_mem->malloc)(size); }
 void *zen_memory_realloc(void *ptr, size_t size) { return (*zen_mem->realloc)(ptr, size); }

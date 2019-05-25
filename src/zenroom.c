@@ -80,6 +80,9 @@ extern void zen_add_io(lua_State *L);
 
 // prototypes from zen_memory.c
 extern zen_mem_t *libc_memory_init();
+#ifdef USE_JEMALLOC
+extern zen_mem_t *jemalloc_memory_init();
+#endif
 extern zen_mem_t *umm_memory_init(size_t size);
 extern void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
 extern void *umm_info(void*);
@@ -149,8 +152,13 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	if(conf) {
 		if(strcasecmp(conf,"umm")==0)
 			mem = umm_memory_init(UMM_HEAP); // (64KiB)
-	} else
+	} else {
+#ifdef USE_JEMALLOC
+		mem = jemalloc_memory_init();
+#else
 		mem = libc_memory_init();
+#endif
+	}
 	L = lua_newstate(zen_memory_manager, mem);
 	if(!L) {
 		error(L,"%s: %s", __func__, "Lua newstate creation failed");
