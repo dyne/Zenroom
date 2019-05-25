@@ -71,7 +71,7 @@ void *zen_memalign(const size_t size, const size_t align) {
 
 // global memory manager saved here
 // TODO: this is not reentrant (see also umm_malloc.c)
-static zen_mem_t *zen_mem;
+zen_mem_t *zen_mem;
 
 // Global HEAP pointer in the STACK
 zen_mem_t *umm_memory_init(size_t S) {
