@@ -62,6 +62,7 @@ extern int zen_require_override(lua_State *L, const int restricted);
 extern int zen_lua_init(lua_State *L);
 extern void zen_add_io(lua_State *L);
 extern void zen_setenv(lua_State *L, char *key, char *val);
+extern void zen_unset(lua_State *L, char *key);
 
 extern void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
 
@@ -140,7 +141,8 @@ zenroom_t *zen_redis_init() {
 	return(Z);
 }
 
-// TODO: wastes a memcpy on each get. tried DMA access but no luck
+// TODO: allocated memory and wastes a memcpy on each get; freeing is
+// up to the caller.
 char* get(CTX *ctx, const STR * key, size_t *len) {
     REPLY *reply;
     reply = RedisModule_Call(ctx,"GET","s", key);
@@ -157,9 +159,43 @@ char* get(CTX *ctx, const STR * key, size_t *len) {
     char *res = r_alloc(*len);
     memcpy(res, tmpval, *len);
     reply_free(reply);
+    res[*len] = '\0';
     return(res);
 }
-
+// ZENROOM.RESET
+int zenroom_reset_rediscmd(CTX *ctx, STR **argv, int argc) {
+	if (argc != 1) return RedisModule_WrongArity(ctx);
+	(void)argv;
+	if(Z) zen_teardown(Z);
+	Z = NULL; // nop
+	Z = zen_redis_init();
+	if(!Z) {
+		reply_error(ctx, "ERR zenroom initialization failure");
+		return REDISMODULE_ERR;
+	}
+	reply_ok(ctx, "OK zenroom.reset");
+	return REDISMODULE_OK;
+}
+// ZENROOM.DEBUG <int>
+int zenroom_debug_rediscmd(CTX *ctx, STR **argv, int argc) {
+	const char *arg; size_t arg_len;
+	if (argc != 2) return RedisModule_WrongArity(ctx);
+	arg = RedisModule_StringPtrLen(argv[1], &arg_len);
+	if(arg_len < 1) {
+		reply_error(ctx, "ERR zenroom.debug invalid argument");
+		return REDISMODULE_ERR;	}
+	switch(arg[0]) {
+	case '1': set_debug(1); break;
+	case '2': set_debug(2); break;
+	case '3': set_debug(3); break;
+	default:
+		reply_error(ctx, "ERR zenroom.debug invalid argument");
+		return REDISMODULE_ERR;
+		break;
+	}
+	reply_ok(ctx, "OK zenroom.debug");
+	return REDISMODULE_OK;
+}
 // ZENROOM.EXEC <script> [<keys> <data>]
 int zenroom_exec_rediscmd(CTX *ctx, STR **argv, int argc) {
 	// we must have at least 2 args
@@ -167,23 +203,19 @@ int zenroom_exec_rediscmd(CTX *ctx, STR **argv, int argc) {
 	char out[MAX_STRING];
 	char err[MAX_STRING];
 	char *script; size_t script_len;
+	char *data; size_t data_len;
+	char *keys; size_t keys_len;
 	// alloc'd by get, needs r_free
 	script = get(ctx, argv[1], &script_len);
 	if(!script) return REDISMODULE_ERR;
-	// TODO: load arguments if present
-	// if(data) {
-	// 	func(L, "declaring global: DATA");
-	// 	zen_setenv(L,"DATA",data);
-	// }
-	// if(keys) {
-	// 	func(L, "declaring global: KEYS");
-	// 	zen_setenv(L,"KEYS",keys);
-	// }
-	//
-	// int res = zenroom_exec_tobuf((char*)script, NULL, NULL, NULL, 3,
-	//                              out, MAX_STRING, err, MAX_STRING);
+	zen_unset(Z->lua, "DATA"); zen_unset(Z->lua, "KEYS");
+	if(argc > 2) {
+		data = get(ctx, argv[2], &data_len);
+		if(data) zen_setenv(Z->lua, "DATA", data); }
+	if(argc > 3) {
+		keys = get(ctx, argv[3], &keys_len);
+		if(keys) zen_setenv(Z->lua, "KEYS", keys); }
 	if(!Z) return REDISMODULE_ERR;
-	script[script_len] = '\0';
 	Z->stdout_buf = out; Z->stdout_len = MAX_STRING; Z->stdout_pos = 0;
 	Z->stderr_buf = err; Z->stderr_len = MAX_STRING; Z->stderr_pos = 0;
 	int res = zen_exec_script(Z, script);
@@ -195,6 +227,46 @@ int zenroom_exec_rediscmd(CTX *ctx, STR **argv, int argc) {
 	RedisModule_ReplyWithStringBuffer(ctx, Z->stdout_buf,
 	                                  Z->stdout_pos);
 	warning(Z->lua, Z->stderr_buf);
+	lua_gc(Z->lua, LUA_GCCOLLECT, 0);
+	r_free(script);
+	return REDISMODULE_OK;
+}
+
+// ZENCODE.EXEC <script> [<keys> <data>]
+int zencode_exec_rediscmd(CTX *ctx, STR **argv, int argc) {
+	// we must have at least 2 args
+	if (argc < 2) return RedisModule_WrongArity(ctx);
+	char out[MAX_STRING];
+	char err[MAX_STRING];
+	char *script; size_t script_len;
+	char *data; size_t data_len;
+	char *keys; size_t keys_len;
+	// alloc'd by get, needs r_free
+	script = get(ctx, argv[1], &script_len);
+	if(!script) return REDISMODULE_ERR;
+	zen_unset(Z->lua, "DATA"); zen_unset(Z->lua, "KEYS");
+	if(argc > 2) {
+		data = get(ctx, argv[2], &data_len);
+		if(data) zen_setenv(Z->lua, "DATA", data); }
+	if(argc > 3) {
+		keys = get(ctx, argv[3], &keys_len);
+		if(keys) zen_setenv(Z->lua, "KEYS", keys); }
+	if(!Z) return REDISMODULE_ERR;
+	Z->stdout_buf = out; Z->stdout_len = MAX_STRING; Z->stdout_pos = 0;
+	Z->stderr_buf = err; Z->stderr_len = MAX_STRING; Z->stderr_pos = 0;
+	int res = zen_exec_zencode(Z, script);
+	Z->stdout_buf[Z->stdout_pos] = '\0'; Z->stderr_buf[Z->stderr_pos] = '\0';
+	if(res != 0) {
+		char errmsg[MAX_STRING];
+		sprintf(errmsg,"ERR zencode.exec :: %s", Z->stderr_buf);
+		RedisModule_ReplyWithStringBuffer(ctx, errmsg, strlen(errmsg));
+		r_free(script);
+		return REDISMODULE_ERR;
+	}
+	RedisModule_ReplyWithStringBuffer(ctx, Z->stdout_buf,strlen(Z->stdout_buf));
+	// Z->stdout_pos);
+//	warning(Z->lua, Z->stderr_buf);
+	lua_gc(Z->lua, LUA_GCCOLLECT, 0);
 	r_free(script);
 	return REDISMODULE_OK;
 }
@@ -214,10 +286,28 @@ int RedisModule_OnLoad(CTX *ctx) {
 	}
 	//
 	if (RedisModule_CreateCommand(ctx, "zenroom.exec",
-	                              zenroom_exec_rediscmd, "readonly",
-	                              1, 1, 1) == REDISMODULE_ERR)
+	                              zenroom_exec_rediscmd,
+	                              "readonly deny-oom no-monitor",
+	                              1, 3, 1) == REDISMODULE_ERR)
 		return REDISMODULE_ERR;
 	//
+	if (RedisModule_CreateCommand(ctx, "zencode.exec",
+	                              zencode_exec_rediscmd,
+	                              "readonly deny-oom no-monitor",
+	                              1, 3, 1) == REDISMODULE_ERR)
+		return REDISMODULE_ERR;
+	//
+	if (RedisModule_CreateCommand(ctx, "zenroom.reset",
+	                              zenroom_reset_rediscmd,
+	                              "deny-oom",
+	                              0, 0, 0) == REDISMODULE_ERR)
+		return REDISMODULE_ERR;
+	//
+	if (RedisModule_CreateCommand(ctx, "zenroom.debug",
+	                              zenroom_debug_rediscmd,
+	                              "", 0, 0, 0) == REDISMODULE_ERR)
+		return REDISMODULE_ERR;
+
 	return REDISMODULE_OK;
 }
 
