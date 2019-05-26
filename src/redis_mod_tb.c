@@ -21,179 +21,111 @@
 // Redis module for multi-threaded blocking operations using Zenroom.
 // This uses Redis' experimental API and is still a work in progress.
 
-#ifdef ARCH_REDIS
+#ifdef ARCH_REDIS_THREADBLOCK
 
 #define REDISMODULE_EXPERIMENTAL_API
 #include <redismodule.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stddef.h>
-
-#include <jutils.h>
+#include <pthread.h>
 #include <zenroom.h>
-#include <zen_memory.h>
-
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-#include <lstate.h>
-
-// Zenroom global context (zenroom.c)
-extern zenroom_t *Z;   // STACK
-extern zen_mem_t *MEM; // HEAP
 
 // get rid of the annoying camel-case in Redis, all its types are
 // distinguished by being uppercase
+typedef RedisModuleBlockedClient BLK;
 typedef RedisModuleCtx           CTX;
 typedef RedisModuleString        STR;
 typedef RedisModuleKey           KEY;
-typedef RedisModuleCallReply     REPLY;
 // redis functions
 #define r_alloc(p) RedisModule_Alloc(p)
 #define r_free(p)  RedisModule_Free(p)
 
-// TODO: defines
-#define reply_ok(C, M) RedisModule_ReplyWithSimpleString(C, M)
-#define reply_error(C, M) RedisModule_ReplyWithError(C, M)
-#define reply_type(R) RedisModule_CallReplyType(R)
-#define reply_free(R) RedisModule_FreeCallReply(R)
-
-extern int zen_require_override(lua_State *L, const int restricted);
-extern int zen_lua_init(lua_State *L);
-extern void zen_add_io(lua_State *L);
-extern void zen_setenv(lua_State *L, char *key, char *val);
-
-extern void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
-
-zen_mem_t *redis_memory_init() {
-	zen_mem_t *mem = r_alloc(sizeof(zen_mem_t));
-	mem->heap = NULL;
-	mem->heap_size = 0;
-	mem->malloc = RedisModule_Alloc;
-	mem->realloc = RedisModule_Realloc;
-	mem->free = RedisModule_Free;
-	mem->sys_malloc = RedisModule_Alloc;
-	mem->sys_realloc = RedisModule_Realloc;
-	mem->sys_free = RedisModule_Free;
-	return mem;
+int Zenroom_Reply(CTX *ctx, STR **argv, int argc) {
+	REDISMODULE_NOT_USED(argv);	REDISMODULE_NOT_USED(argc);
+	return RedisModule_ReplyWithSimpleString(ctx,"OK");
+}
+int Zenroom_Timeout(CTX *ctx, STR **argv, int argc) {
+	REDISMODULE_NOT_USED(argv);	REDISMODULE_NOT_USED(argc);
+	return RedisModule_ReplyWithSimpleString(ctx,"Request timedout");
+}
+void Zenroom_FreeData(CTX *ctx, void *privdata) {
+	REDISMODULE_NOT_USED(ctx);
+	RedisModule_Free(privdata);
+}
+void Zenroom_Disconnected(CTX *ctx, BLK *bc) {
+	RedisModule_Log(ctx,"warning","Blocked client %p disconnected!", (void*)bc);
+	/* Here you should cleanup your state / threads, and if possible
+	 * call RedisModule_UnblockClient(), or notify the thread that will
+	 * call the function ASAP. */
 }
 
-zenroom_t *zen_redis_init() {
-	notice(NULL, "Initializing Zenroom");
-	lua_State *L = NULL;
-	MEM = redis_memory_init();
-	func(NULL,"memory init: %p",MEM);
-	L = lua_newstate(zen_memory_manager, MEM);
-	if(!L) {
-		error(NULL,"%s: %s", __func__, "lua state creation failed");
-		return NULL;
-	}
-	// create the zenroom_t global context
-	Z = (*MEM->malloc)(sizeof(zenroom_t));
-	Z->lua = L;
-	Z->mem = MEM;
-	Z->stdout_buf = NULL;
-	Z->stdout_pos = 0;
-	Z->stdout_len = 0;
-	Z->stderr_buf = NULL;
-	Z->stderr_pos = 0;
-	Z->stderr_len = 0;
-	Z->userdata = NULL;
-	Z->errorlevel = 0;
-
-	func(NULL,"global state: L[%p] _G[%p] _Z[%p]", L, L->l_G, Z);
-
-	//Set zenroom context as a global in lua
-	//this will be freed on lua_close
-	lua_pushlightuserdata(L, Z);
-	lua_setglobal(L, "_Z");
-
-	// initialise global variables
-#if defined(VERSION)
-	zen_setenv(L, "VERSION", VERSION);
-#endif
-#if defined(ARCH)
-	zen_setenv(L, "ARCH", ARCH);
-#endif
-#if defined(GITLOG)
-	zen_setenv(L, "GITLOG", GITLOG);
-#endif
-
-
-	// open all standard lua libraries
-	luaL_openlibs(L);
-
-	// load our own openlibs and extensions
-	zen_add_io(L);
-	zen_require_override(L,0);
-	if(!zen_lua_init(L)) {
-		error(NULL,"%s: %s", __func__, "initialisation of lua scripts failed");
-		return NULL;
-	}
-	//////////////////// end of create
-
-	// lua_gc(L, LUA_GCCOLLECT, 0);
-	// lua_gc(L, LUA_GCCOLLECT, 0);
-	// allow further requires
-	// zen_require_override(L,1);
-
-	return(Z);
+BLK *block_client(CTX *ctx) {
+	BLK *bc =
+		RedisModule_BlockClient(ctx,
+		                        Zenroom_Reply,
+		                        Zenroom_Timeout,
+		                        Zenroom_FreeData,
+		                        3000); // timeout msecs
+	RedisModule_SetDisconnectCallback(bc,Zenroom_Disconnected);
+	return(bc);
 }
 
-// TODO: wastes a memcpy on each get. tried DMA access but no luck
-char* get(CTX *ctx, const STR * key, size_t *len) {
-    REPLY *reply;
-    reply = RedisModule_Call(ctx,"GET","s", key);
-    if (reply_type(reply) == REDISMODULE_REPLY_ERROR) {
-	    RedisModule_ReplyWithCallReply(ctx, reply);
-        reply_free(reply);
-        return NULL;
-    }
-    if ( reply_type(reply) == REDISMODULE_REPLY_NULL ) {
-        reply_free(reply);
-        return NULL;
-    }
-    const char *tmpval = RedisModule_CallReplyStringPtr(reply, len);
-    char *res = r_alloc(*len);
-    memcpy(res, tmpval, *len);
-    reply_free(reply);
-    return(res);
+// parsed command structure passed to execution thread
+typedef enum { EXEC } zcommand;
+typedef struct {
+	BLK      *bc;   // redis blocked client
+	zcommand  cmd;  // zenroom command (enum)
+	KEY      *scriptkey; // redis key for script string
+	char     *script;    // script string
+	size_t    scriptlen; // length of script string
+} zcmd_t;
+
+void *thread_exec(void *arg) {
+	zcmd_t *z = arg;
+	CTX *ctx = RedisModule_GetThreadSafeContext(z->bc);
+	RedisModule_ThreadSafeContextLock(ctx);
+	// debug then exec
+	fprintf(stderr,"%u: %s\n", (int)z->scriptlen, z->script);
+	zenroom_exec(z->script, NULL,NULL,NULL,3);
+	// close, unlock and unblock after execution
+	RedisModule_CloseKey(z->scriptkey);
+	RedisModule_ThreadSafeContextUnlock(ctx);
+	RedisModule_FreeThreadSafeContext(ctx);
+	RedisModule_UnblockClient(z->bc,z);
+	// z is allocated by caller, freed by thread
+	return NULL;
 }
 
-// ZENROOM.EXEC <script> [<keys> <data>]
-int zenroom_exec_rediscmd(CTX *ctx, STR **argv, int argc) {
+int Zenroom_Command(CTX *ctx, STR **argv, int argc) {
+	pthread_t tid;
+	size_t larg;
+	const char *carg;
 	// we must have at least 2 args
-	if (argc < 2) return RedisModule_WrongArity(ctx);
-	char out[MAX_STRING];
-	char err[MAX_STRING];
-	size_t script_len;
-	char *script;
-	// alloc'd by get, needs r_free
-	script = get(ctx, argv[1], &script_len);
-	if(!script) return REDISMODULE_ERR;
-	// TODO: load arguments if present
-	// if(data) {
-	// 	func(L, "declaring global: DATA");
-	// 	zen_setenv(L,"DATA",data);
-	// }
-	// if(keys) {
-	// 	func(L, "declaring global: KEYS");
-	// 	zen_setenv(L,"KEYS",keys);
-	// }
-	//
-	// int res = zenroom_exec_tobuf((char*)script, NULL, NULL, NULL, 3,
-	//                              out, MAX_STRING, err, MAX_STRING);
-	// if(!Z) return REDISMODULE_ERR;
-	script[script_len] = '\0';
-	int res = zen_exec_script(Z, script);
-	if(res != 0) {
-		reply_error(ctx,"ERR zenroom execution failure");
-		r_free(script);
-		return REDISMODULE_ERR;
+	if (argc < 3) return RedisModule_WrongArity(ctx);
+
+	// ZENROOM EXEC <script> [<keys> <data>]
+	carg = RedisModule_StringPtrLen(argv[1], &larg);
+	if (strncasecmp(carg,"EXEC",4) == 0) {
+		zcmd_t *zcmd = r_alloc(sizeof(zcmd_t)); // to be freed at end of thread!
+		zcmd->bc = block_client(ctx); zcmd->cmd = EXEC;
+		// get the script variable name from the next argument
+		zcmd->scriptkey = RedisModule_OpenKey(ctx, argv[2], REDISMODULE_READ);
+		if (RedisModule_KeyType(zcmd->scriptkey) != REDISMODULE_KEYTYPE_STRING)
+			return RedisModule_ReplyWithError(ctx, "ERR ZENROOM EXEC: no script found");
+		zcmd->script = RedisModule_StringDMA(zcmd->scriptkey,&zcmd->scriptlen,REDISMODULE_READ);
+
+		if (pthread_create(&tid, NULL, thread_exec, zcmd) != 0) {
+			RedisModule_AbortBlock(zcmd->bc);
+			r_free(zcmd); // reply not called from abort: free here
+			return RedisModule_ReplyWithError(ctx,"-ERR Can't start thread");
+		}
+		return REDISMODULE_OK;
 	}
-	RedisModule_ReplyWithStringBuffer(ctx, out, strlen(out));
-	r_free(script);
-	return REDISMODULE_OK;
+
+	// no command recognized
+	return RedisModule_ReplyWithError(ctx,"ERR invalid ZENROOM command");
+
 }
 
 // main entrypoint symbol
@@ -202,19 +134,10 @@ int RedisModule_OnLoad(CTX *ctx) {
 	if (RedisModule_Init(ctx, "zenroom", 1, REDISMODULE_APIVER_1) ==
 	    REDISMODULE_ERR)
 		return REDISMODULE_ERR;
-	//
-	set_debug(3);
-	Z = zen_redis_init();
-	if(!Z) {
-		reply_error(ctx, "ERR zenroom initialization failure");
-		return REDISMODULE_ERR;
-	}
-	//
-	if (RedisModule_CreateCommand(ctx, "zenroom.exec",
-	                              zenroom_exec_rediscmd, "readonly",
+	if (RedisModule_CreateCommand(ctx, "zenroom",
+	                              Zenroom_Command, "readonly",
 	                              1, 1, 1) == REDISMODULE_ERR)
 		return REDISMODULE_ERR;
-	//
 	return REDISMODULE_OK;
 }
 
