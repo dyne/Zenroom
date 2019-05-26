@@ -27,6 +27,8 @@
 #include <zenroom.h>
 #include <zen_error.h>
 
+extern zenroom_t *Z;
+
 // passes the string to be printed through the 'tosting' function
 // inside lua, taking care of some sanitization and conversions
 static const char *lua_print_format(lua_State *L,
@@ -47,11 +49,8 @@ static const char *lua_print_format(lua_State *L,
 // configured so calling function can decide if to proceed with other
 // prints (stdout) or not
 static int lua_print_tobuffer(lua_State *L) {
-	lua_getglobal(L, "_Z");
-	zenroom_t *Z = lua_touserdata(L, -1);
-	lua_pop(L, 1);
 	SAFE(Z);
-	if(Z->stdout_buf && Z->stdout_pos < Z->stdout_len) {
+	if(Z->stdout_buf && (Z->stdout_pos < Z->stdout_len)) {
 		int i;
 		int n = lua_gettop(L);  /* number of arguments */
 		char *out = (char*)Z->stdout_buf;
