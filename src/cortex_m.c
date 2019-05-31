@@ -1,6 +1,9 @@
+#include <stddef.h>
+#include "zenroom.h"
 #ifdef ARCH_CORTEX
 extern unsigned int _start_heap;
 #define NULL (((void *)0))
+
 
 void abort(void)
 {
@@ -188,8 +191,12 @@ void (* const IV[])(void) =
 
 };
 
+static const char zenroom_test_code[] = "print('Hello, world!\r\n')";
+
 void main(void)
 {
+    int i;
+    zenroom_exec(zenroom_test_code, NULL, NULL, NULL, 3);
 }
 
 
