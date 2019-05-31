@@ -52,6 +52,8 @@
 #include <zen_big.h>
 #include <randombytes.h>
 
+extern zenroom_t *Z;
+
 RNG* rng_new(lua_State *L) {
 	HERE();
     RNG *rng = (RNG*)lua_newuserdata(L, sizeof(csprng));
@@ -61,16 +63,21 @@ RNG* rng_new(lua_State *L) {
     luaL_getmetatable(L, "zenroom.rng");
     lua_setmetatable(L, -2);
 
-	char *tmp = zen_memory_alloc(256);
-	randombytes(tmp,252);
-	// using time() from milagro
-	unsign32 ttmp = (unsign32)time(NULL);
-	tmp[252] = (ttmp >> 24) & 0xff;
-	tmp[253] = (ttmp >> 16) & 0xff;
-	tmp[254] = (ttmp >>  8) & 0xff;
-	tmp[255] =  ttmp & 0xff;
-	RAND_seed(rng,256,tmp);
-	zen_memory_free(tmp);
+    if(Z->random_seed) {
+	    SAFE(Z->random_seed);
+	    RAND_seed(rng, Z->random_seed_len, Z->random_seed);
+    } else {
+	    char *tmp = zen_memory_alloc(256);
+	    randombytes(tmp,252);
+	    // using time() from milagro
+	    unsign32 ttmp = (unsign32)time(NULL);
+	    tmp[252] = (ttmp >> 24) & 0xff;
+	    tmp[253] = (ttmp >> 16) & 0xff;
+	    tmp[254] = (ttmp >>  8) & 0xff;
+	    tmp[255] =  ttmp & 0xff;
+	    RAND_seed(rng,256,tmp);
+	    zen_memory_free(tmp);
+    }
 	return(rng);
 }
 

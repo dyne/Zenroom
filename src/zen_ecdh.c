@@ -68,6 +68,10 @@
 // from zen_ecdh_factory.h to setup function pointers
 extern ecdh *ecdh_new_curve(lua_State *L, const char *curve);
 
+
+extern zenroom_t *Z; // accessed to check random_seed configuration
+
+
 /// Global ECDH functions
 // @section ECDH.globals
 
@@ -106,16 +110,21 @@ ecdh* ecdh_new(lua_State *L, const char *curve) {
 	// it can be cleanly collected by the GC as well it can be
 	// saved transparently in the global state
 	e->rng = zen_memory_alloc(sizeof(csprng));
-	char *tmp = zen_memory_alloc(256);
-	randombytes(tmp,252);
-	// using time() from milagro
-	unsign32 ttmp = GET_TIME();
-	tmp[252] = (ttmp >> 24) & 0xff;
-	tmp[253] = (ttmp >> 16) & 0xff;
-	tmp[254] = (ttmp >>  8) & 0xff;
-	tmp[255] =  ttmp & 0xff;
-	RAND_seed(e->rng,256,tmp);
-	zen_memory_free(tmp);
+	if(Z->random_seed) {
+		SAFE(Z->random_seed);
+		RAND_seed(e->rng, Z->random_seed_len, Z->random_seed);
+	} else {
+		char *tmp = zen_memory_alloc(256);
+		randombytes(tmp,252);
+		// using time() from milagro
+		unsign32 ttmp = GET_TIME();
+		tmp[252] = (ttmp >> 24) & 0xff;
+		tmp[253] = (ttmp >> 16) & 0xff;
+		tmp[254] = (ttmp >>  8) & 0xff;
+		tmp[255] =  ttmp & 0xff;
+		RAND_seed(e->rng,256,tmp);
+		zen_memory_free(tmp);
+	}
 
 	luaL_getmetatable(L, "zenroom.ecdh");
 	lua_setmetatable(L, -2);
