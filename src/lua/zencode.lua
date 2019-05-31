@@ -103,6 +103,7 @@ function zencode:newline(s)
    return s:gmatch("(.-)\n")
 end
 
+-- TODO: improve parsing for strings starting with newline, missing scenarios etc.
 function zencode:parse(text)
    local scenario_found = false
    for first in self:newline(text) do
