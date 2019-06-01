@@ -123,8 +123,13 @@ function zencode:parse(text)
 	  warn("No scenario found in first line of Zencode")
    end
    for line in self:newline_iter(text) do
+	  -- skip first if scenario is found
+	  if scenario_found == true then 
+		 scenario_found = false
+	  else
       -- xxx(0,line)
-      self:step(line)
+		 self:step(line)
+	  end
    end
 end
 
