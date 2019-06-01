@@ -97,6 +97,7 @@ extern void zen_add_function(lua_State *L, lua_CFunction func,
 // single instance globals
 zenroom_t *Z = NULL;   // zenroom STACK
 zen_mem_t *MEM = NULL; // zenroom HEAP
+int verbosity = 1;
 
 static int zen_lua_panic (lua_State *L) {
 	lua_writestringerror("PANIC: unprotected error in call to Lua API (%s)\n",
@@ -116,7 +117,7 @@ static int zen_init_pmain(lua_State *L) { // protected mode init
 	Z->stderr_pos = 0;
 	Z->stderr_len = 0;
 	Z->userdata = NULL;
-	Z->errorlevel = 0;
+	Z->errorlevel = verbosity;
 	Z->random_seed = NULL;
 	Z->random_seed_len = 0;
 
@@ -647,7 +648,6 @@ int main(int argc, char **argv) {
 	char keys[MAX_FILE];
 	char data[MAX_FILE];
 	int opt, index;
-	int   verbosity           = 1;
 	int   interactive         = 0;
 #if DEBUG == 1
 	int   unprotected         = 1;
