@@ -509,7 +509,7 @@ int zenroom_exec_rng_tobuf(char *script, char *conf, char *keys,
 	// stores the script file and configuration
 	zenroom_t *Z = NULL;
 	lua_State *L = NULL;
-
+	char *_random_seed = NULL;
 	int return_code = EXIT_FAILURE; // return error by default
 	int r;
 
@@ -522,11 +522,11 @@ int zenroom_exec_rng_tobuf(char *script, char *conf, char *keys,
 
 	set_debug(verbosity);
 
-	char *c, *k, *d, rng;
+	char *c, *k, *d;
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
-	rng = random_seed ? (random_seed[0] == '\0') ? NULL : random_seed : NULL;
+	_random_seed = random_seed ? (random_seed[0] == '\0') ? NULL : random_seed : NULL;
 	Z = zen_init(c, k, d);
 	if(!Z) {
 		error(L, "Initialisation failed.");
@@ -541,10 +541,10 @@ int zenroom_exec_rng_tobuf(char *script, char *conf, char *keys,
 	Z->stdout_len = stdout_len;
 	Z->stderr_buf = stderr_buf;
 	Z->stderr_len = stderr_len;
-	Z->random_seed = rng;
+	Z->random_seed = _random_seed;
 	Z->random_seed_len = random_seed_len;
 	// export the random_seed buffer to Lua
-	zen_setenv(L, "RANDOM_SEED", rng);
+	zen_setenv(L, "RANDOM_SEED", Z->random_seed);
 
 	r = zen_exec_script(Z, script);
 	if(r) {
@@ -578,7 +578,7 @@ int zencode_exec_rng_tobuf(char *script, char *conf, char *keys,
 	// stores the script file and configuration
 	zenroom_t *Z = NULL;
 	lua_State *L = NULL;
-
+	char *_random_seed = NULL;
 	int return_code = EXIT_FAILURE; // return error by default
 	int r;
 
@@ -591,11 +591,11 @@ int zencode_exec_rng_tobuf(char *script, char *conf, char *keys,
 
 	set_debug(verbosity);
 
-	char *c, *k, *d, rng;
+	char *c, *k, *d;
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
-	rng = random_seed ? (random_seed[0] == '\0') ? NULL : random_seed : NULL;
+	_random_seed = random_seed ? (random_seed[0] == '\0') ? NULL : random_seed : NULL;
 	Z = zen_init(c, k, d);
 	if(!Z) {
 		error(L, "Initialisation failed.");
@@ -610,10 +610,10 @@ int zencode_exec_rng_tobuf(char *script, char *conf, char *keys,
 	Z->stdout_len = stdout_len;
 	Z->stderr_buf = stderr_buf;
 	Z->stderr_len = stderr_len;
-	Z->random_seed = rng;
+	Z->random_seed = _random_seed;
 	Z->random_seed_len = random_seed_len;
 	// export the random_seed buffer to Lua
-	zen_setenv(L, "RANDOM_SEED", rng);
+	zen_setenv(L, "RANDOM_SEED", Z->random_seed);
 
 	r = zen_exec_script(Z, script);
 	if(r) {
