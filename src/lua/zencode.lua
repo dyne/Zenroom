@@ -33,7 +33,7 @@ local function xxx(n,s)
 end
 function zencode:begin(verbosity)
    if verbosity > 0 then
-      xxx(1,"Zencode debug verbosity: "..verbosity)
+      xxx(2,"Zencode debug verbosity: "..verbosity)
       self.verbosity = verbosity
    end
    _G.ZEN_traceback = "Zencode traceback:\n"
@@ -47,7 +47,8 @@ function zencode:step(text)
    local m = text:match("(%w+)(.+)")
    -- check if no word just whitespace
    if m == nil or m == '' then
-	  error("zencode keyword empty: "..text)
+	  error("Zencode keyword empty: "..text)
+	  error(_G.ZEN_traceback)
 	  return false end
    -- case insensitive match of first word
    local prefix = m:lower()
@@ -66,12 +67,14 @@ function zencode:step(text)
       defs = self.current_step
    end
    if not defs then
-      error("zencode invalid: "..text)
+      error("Zencode invalid: "..text)
+	  error(_G.ZEN_traceback)
       return false
    end
    for pattern,func in pairs(defs) do
       if (type(func) ~= "function") then
-         error("zencode function missing: "..pattern)
+         error("Zencode function missing: "..pattern)
+		 error(_G.ZEN_traceback)
          return false
       end
 	  -- support simplified notation for arg match
@@ -92,6 +95,8 @@ function zencode:step(text)
 						prefix = prefix,
 						regexp = pat,
 						hook = func       })
+		 _G['ZEN_traceback'] = _G['ZEN_traceback']..
+			"    -> ".. text:gsub("^%s*", "") .. " ("..#args.." args)\n"
 	  end
    end
 end
