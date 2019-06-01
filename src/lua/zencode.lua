@@ -98,7 +98,8 @@ end
 
 
 -- returns an iterator for newline termination
-function zencode:newline_iter(s)
+function zencode:newline_iter(text)
+   s = trim(text) -- implemented in zen_io.c
    if s:sub(-1)~="\n" then s=s.."\n" end
    return s:gmatch("(.-)\n")
 end

@@ -19,6 +19,7 @@
  */
 
 #include <stdio.h>
+#include <ctype.h>
 #include <errno.h>
 #include <jutils.h>
 
@@ -303,12 +304,31 @@ static int zen_iowrite (lua_State *L) {
 
 #endif
 
+static int zen_trim(lua_State* L) {
+	const char* front;
+	const char* end;
+	size_t size;
+	front = luaL_checklstring(L,1,&size);
+	end = &front[size - 1];
+	while (size && isspace(*front)) {
+		size--;
+		front++;
+	}
+	while (size && isspace(*end)) {
+		size--;
+		end--;
+	}
+	lua_pushlstring(L,front,(size_t)(end - front) + 1);
+	return 1;
+}
+
 void zen_add_io(lua_State *L) {
 	// override print() and io.write()
 	static const struct luaL_Reg custom_print [] =
 		{ {"print", zen_print},
 		  {"error", zen_error},
 		  {"warn", zen_warn},
+		  {"trim", zen_trim},
 		  {NULL, NULL} };
 	lua_getglobal(L, "_G");
 	luaL_setfuncs(L, custom_print, 0);  // for Lua versions 5.2 or greater
