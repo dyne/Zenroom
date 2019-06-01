@@ -33,7 +33,7 @@ local function xxx(n,s)
 end
 function zencode:begin(verbosity)
    if verbosity > 0 then
-      warn("Zencode debug verbosity: "..verbosity)
+      xxx(1,"Zencode debug verbosity: "..verbosity)
       self.verbosity = verbosity
    end
    _G.ZEN_traceback = "Zencode traceback:\n"
@@ -98,15 +98,18 @@ end
 
 
 -- returns an iterator for newline termination
-function zencode:newline(s)
+function zencode:newline_iter(s)
    if s:sub(-1)~="\n" then s=s.."\n" end
    return s:gmatch("(.-)\n")
 end
 
 -- TODO: improve parsing for strings starting with newline, missing scenarios etc.
 function zencode:parse(text)
+   if  #text < 16 then
+	  warn("Zencode text too short to parse")
+	  return false end
    local scenario_found = false
-   for first in self:newline(text) do
+   for first in self:newline_iter(text) do
 	  -- lowercase match
 	  if first:match("(%w+)(.+)"):lower() == "scenario" then
 		 local scenario = string.match(first, "'(.-)'")
@@ -116,8 +119,9 @@ function zencode:parse(text)
 	  break
    end
    if not scenario_found then -- print a small warning
-	  warn("No scenario found in first line of Zencode") end
-   for line in self:newline(text) do
+	  warn("No scenario found in first line of Zencode")
+   end
+   for line in self:newline_iter(text) do
       -- xxx(0,line)
       self:step(line)
    end

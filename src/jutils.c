@@ -45,6 +45,8 @@ char msg[MAX_STRING];
 
 static int verbosity = 1;
 
+extern zenroom_t *Z;
+
 void set_debug(int lev) {
   lev = lev<0 ? 0 : lev;
   lev = lev>MAX_DEBUG ? MAX_DEBUG : lev;
@@ -55,23 +57,7 @@ int get_debug() {
   return(verbosity);
 }
 
-static zenroom_t *getzen(lua_State *L) {
-	if(!L) return NULL;
-	lua_getglobal(L, "_Z");
-	zenroom_t *Z = lua_touserdata(L, -1);
-	lua_pop(L, 1);
-	return(Z);
-}
-
-static zenroom_t *stderr_tobuffer(lua_State *L) {
-	if(!L) return NULL;
-	zenroom_t *Z = getzen(L);
-	if(!Z) return NULL;
-	if(Z->stderr_buf) return Z;
-	return NULL;
-}
-
-static void _printf(zenroom_t *Z, char *pfx, char *msg) {
+static void _printf(char *pfx, char *msg) {
 
 #ifdef __ANDROID__
 	__android_log_print(ANDROID_LOG_VERBOSE, "KZK", "%s -- %s", pfx, msg);
@@ -103,53 +89,53 @@ static void _printf(zenroom_t *Z, char *pfx, char *msg) {
 // }
 
 void notice(lua_State *L, const char *format, ...) {
+	(void)L;
   va_list arg;
   va_start(arg, format);
   vsnprintf(msg, MAX_STRING, format, arg);
-  _printf(stderr_tobuffer(L), "[*]", msg);
+  _printf("[*]", msg);
   va_end(arg);
 }
 
 void func(lua_State *L, const char *format, ...) {
+	(void)L;
   if(verbosity>=FUNC) {
     va_list arg;
     va_start(arg, format);
     vsnprintf(msg, MAX_STRING, format, arg);
-    _printf(stderr_tobuffer(L), "[F]", msg);
+    _printf("[F]", msg);
     va_end(arg);
   }
 }
 
 void error(lua_State *L, const char *format, ...) {
+	(void)L;
   va_list arg;
   va_start(arg, format);
   vsnprintf(msg, MAX_STRING, format, arg);
-  zenroom_t *Z = getzen(L);
-  if(!Z) { va_end(arg); return; }
-  // _printline(Z, L);
-  _printf(Z, "[!]", msg);
+  _printf("[!]", msg);
   va_end(arg);
   if(Z) Z->errorlevel = 3;
   // exit(1); // calls teardown (signal 11) TODO: check if OK with seccomp
 }
 
 void act(lua_State *L, const char *format, ...) {
+	(void)L;
   va_list arg;
   va_start(arg, format);
   
   vsnprintf(msg, MAX_STRING, format, arg);
-  _printf(stderr_tobuffer(L), " . ", msg);
+  _printf(" . ", msg);
   va_end(arg);
 }
 
 void warning(lua_State *L, const char *format, ...) {
+	(void)L;
   if(verbosity>=WARN) {
     va_list arg;
     va_start(arg, format);
     vsnprintf(msg, MAX_STRING, format, arg);
-    zenroom_t *Z = getzen(L);
-    if(!Z) { va_end(arg); return; }
-    _printf(Z, "[W]", msg);
+    _printf("[W]", msg);
     va_end(arg);
     if(Z) Z->errorlevel = 2;
   }

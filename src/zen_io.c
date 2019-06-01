@@ -48,7 +48,7 @@ static const char *lua_print_format(lua_State *L,
 // output without exceeding its length. Return 1 if output buffer was
 // configured so calling function can decide if to proceed with other
 // prints (stdout) or not
-static int lua_print_tobuffer(lua_State *L) {
+static int lua_print_stdout_tobuf(lua_State *L) {
 	SAFE(Z);
 	if(Z->stdout_buf && (Z->stdout_pos < Z->stdout_len)) {
 		int i;
@@ -69,13 +69,34 @@ static int lua_print_tobuffer(lua_State *L) {
 	}
 	return 0;
 }
+static int lua_print_stderr_tobuf(lua_State *L) {
+	SAFE(Z);
+	if(Z->stderr_buf && (Z->stderr_pos < Z->stderr_len)) {
+		int i;
+		int n = lua_gettop(L);  /* number of arguments */
+		char *out = (char*)Z->stderr_buf;
+		size_t len;
+		lua_getglobal(L, "tostring");
+		for (i=1; i<=n; i++) {
+			const char *s = lua_print_format(L, i, &len);
+			if(i>1) { out[Z->stderr_pos]='\t'; Z->stderr_pos++; }
+			snprintf(out+Z->stderr_pos,
+					Z->stderr_len - Z->stderr_pos,
+					"%s", s);
+			Z->stderr_pos+=len;
+			lua_pop(L, 1);
+		}
+		return 1;
+	}
+	return 0;
+}
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 static char out[MAX_STRING];
 
 static int zen_print (lua_State *L) {
-	if( lua_print_tobuffer(L) ) return 0;
+	if( lua_print_stdout_tobuf(L) ) return 0;
 
 	size_t pos = 0;
 	size_t len = 0;
@@ -94,7 +115,7 @@ static int zen_print (lua_State *L) {
 }
 
 static int zen_error (lua_State *L) {
-	if( lua_print_tobuffer(L) ) return 0;
+	if( lua_print_stderr_tobuf(L) ) return 0;
 	size_t pos = 0;
 	size_t len = 0;
 	int n = lua_gettop(L);  /* number of arguments */
@@ -113,7 +134,7 @@ static int zen_error (lua_State *L) {
 }
 
 static int zen_warn (lua_State *L) {
-	if( lua_print_tobuffer(L) ) return 0;
+	if( lua_print_stderr_tobuf(L) ) return 0;
 	size_t pos = 0;
 	size_t len = 0;
 	int n = lua_gettop(L);  /* number of arguments */
@@ -172,7 +193,7 @@ static int zen_iowrite (lua_State *L)
 
 
 static int zen_print (lua_State *L) {
-	if( lua_print_tobuffer(L) ) return 0;
+	if( lua_print_stdout_tobuf(L) ) return 0;
 
 	int status = 1;
 	size_t len = 0;
@@ -194,7 +215,7 @@ static int zen_print (lua_State *L) {
 }
 
 static int zen_warn (lua_State *L) {
-	if( lua_print_tobuffer(L) ) return 0;
+	if( lua_print_stderr_tobuf(L) ) return 0;
 
 	int status = 1;
 	size_t len = 0;
@@ -220,7 +241,7 @@ static int zen_warn (lua_State *L) {
 static int zen_error (lua_State *L) {
 	int n = lua_gettop(L);  /* number of arguments */
 	int w;
-	if( lua_print_tobuffer(L) ) return 0;
+	if( lua_print_stderr_tobuf(L) ) return 0;
 
 	int status = 1;
 	size_t len = 0;
