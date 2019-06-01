@@ -149,7 +149,12 @@ function zencode:run()
 	  ACK = ACK or { }
 	  OUT = OUT or { }
 	  -- exec all hooks via unprotected call (quit on error)
-      x.hook(table.unpack(x.args))
+      -- x.hook(table.unpack(x.args))
+      local ok, err = pcall(x.hook,table.unpack(x.args))
+      if not ok then
+		 error(err)
+		 error(_G.ZEN_traceback)
+	  end
    end
 end
 
