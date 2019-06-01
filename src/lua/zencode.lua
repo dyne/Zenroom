@@ -47,7 +47,7 @@ function zencode:step(text)
    local m = text:match("(%w+)(.+)")
    -- check if no word just whitespace
    if m == nil or m == '' then
-	  xxx(1,"no match: "..text)
+	  error("zencode keyword empty: "..text)
 	  return false end
    -- case insensitive match of first word
    local prefix = m:lower()
@@ -66,12 +66,12 @@ function zencode:step(text)
       defs = self.current_step
    end
    if not defs then
-      xxx(1,"no valid definitions found in parsed zencode")
+      error("zencode invalid: "..text)
       return false
    end
    for pattern,func in pairs(defs) do
       if (type(func) ~= "function") then
-         error("invalid function matched to pattern: "..pattern)
+         error("zencode function missing: "..pattern)
          return false
       end
 	  -- support simplified notation for arg match

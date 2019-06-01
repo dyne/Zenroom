@@ -319,7 +319,7 @@ octet *new_octet_from_big(lua_State *L, big *c) {
 	}
 	// remove leading zeroes from octet
 	if(o->val[0]==0x0) {
-		func(L,"LEADING ZEROES");
+		// func(L,"LEADING ZEROES");
 		int p;
 		for(p = 0; p < o->len && o->val[p] == 0x0; p++);
 		for(i=0; i < o->len-p; i++) o->val[i] = o->val[i+p];

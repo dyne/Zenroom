@@ -62,8 +62,8 @@ static int lua_print_stdout_tobuf(lua_State *L) {
 			if(i>1) { out[Z->stdout_pos]='\t'; Z->stdout_pos++; }
 			snprintf(out+Z->stdout_pos,
 					Z->stdout_len - Z->stdout_pos,
-					"%s", s);
-			Z->stdout_pos+=len;
+					"%s\n", s);
+			Z->stdout_pos+=len+1;
 			lua_pop(L, 1);
 		}
 		return 1;
@@ -83,8 +83,8 @@ static int lua_print_stderr_tobuf(lua_State *L) {
 			if(i>1) { out[Z->stderr_pos]='\t'; Z->stderr_pos++; }
 			snprintf(out+Z->stderr_pos,
 					Z->stderr_len - Z->stderr_pos,
-					"%s", s);
-			Z->stderr_pos+=len;
+					"%s\n", s);
+			Z->stderr_pos+=len+1;
 			lua_pop(L, 1);
 		}
 		return 1;
