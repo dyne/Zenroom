@@ -7,7 +7,7 @@ docker-build: _docker_build _output
 docker-release: _docker_build _docker_push _output
 
 # Image and binary can be overidden with env vars.
-DOCKER_IMAGE ?= dyne/zenroom
+DOCKER_IMAGE ?= decodeproject/zenroom
 
 # Get the latest commit.
 GIT_COMMIT = $(strip $(shell git rev-parse --short HEAD))
