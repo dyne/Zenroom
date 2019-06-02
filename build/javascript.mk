@@ -35,8 +35,8 @@ javascript-demo: apply-patches lua53 milagro embed-lua
 
 javascript-npm: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
 javascript-npm: ldflags += -s INVOKE_RUN=0 \
-	                       -s EXPORT_NAME="'ZR'" \
-	                       -s MODULARIZE=1 \
+						   -s EXPORT_NAME="'ZR'" \
+						   -s MODULARIZE=1 \
 						   -s FILESYSTEM=0 \
 						   -s NODEJS_CATCH_EXIT=0 \
 						   -s ALLOW_MEMORY_GROWTH=1 \
