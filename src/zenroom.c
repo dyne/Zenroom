@@ -615,7 +615,7 @@ int zencode_exec_rng_tobuf(char *script, char *conf, char *keys,
 	// export the random_seed buffer to Lua
 	zen_setenv(L, "RANDOM_SEED", Z->random_seed);
 
-	r = zen_exec_script(Z, script);
+	r = zen_exec_zencode(Z, script);
 	if(r) {
 #ifdef __EMSCRIPTEN__
 		EM_ASM({Module.exec_error();});
