@@ -106,7 +106,7 @@ end
 function zencode:newline_iter(text)
    s = trim(text) -- implemented in zen_io.c
    if s:sub(-1)~="\n" then s=s.."\n" end
-   return s:gmatch("(.-)\n")
+   return s:gmatch("(.-)\n") -- iterators return functions
 end
 
 -- TODO: improve parsing for strings starting with newline, missing scenarios etc.
@@ -115,14 +115,16 @@ function zencode:parse(text)
 	  warn("Zencode text too short to parse")
 	  return false end
    local scenario_found = false
-   for first in self:newline_iter(text) do
-	  -- lowercase match
-	  if first:match("(%w+)(.+)"):lower() == "scenario" then
-		 local scenario = string.match(first, "'(.-)'")
-		 require("zencode_"..scenario)
-		 scenario_found = true
-	  end
-	  break
+   first = self:newline_iter(text)() -- iterators return functions
+   --for first in self:newline_iter(text) do
+   -- lowercase match
+   if first:match("(%w+)(.+)"):lower() == "scenario" then
+	  local scenario = string.match(first, "'(.-)'")
+	  require("zencode_"..scenario)
+	  scenario_found = true
+	  _G['ZEN_traceback'] = _G['ZEN_traceback']..
+		 "   | Scenario "..scenario.."\n"
+	  xxx(2, "Scenario: "..scenario)
    end
    if not scenario_found then -- print a small warning
 	  warn("No scenario found in first line of Zencode")
@@ -144,11 +146,7 @@ function zencode:run()
       I.warn(self.matches)
    end
    for i,x in ipairs(self.matches) do
-	   -- xxx(1,table.unpack(x))
-	  -- protected call (doesn't exists on errors)
-      -- local ok, err = pcall(x.hook,table.unpack(x.args))
-      -- if not ok then error(err) end
-
+	  -- xxx(1,table.unpack(x))
 	  _G['ZEN_traceback'] = _G['ZEN_traceback']..
 		 "    -> ".. x.source:gsub("^%s*", "") .."\n"
 	  IN = { } -- import global DATA from json
@@ -158,8 +156,9 @@ function zencode:run()
 	  -- clean ACK and OUT tables
 	  ACK = ACK or { }
 	  OUT = OUT or { }
-	  -- exec all hooks via unprotected call (quit on error)
-      -- x.hook(table.unpack(x.args))
+	  -- unprotected call (quit on error):
+      --   x.hook(table.unpack(x.args))
+	  -- protected call (doesn't exits on errors)
       local ok, err = pcall(x.hook,table.unpack(x.args))
       if not ok then
 		 error(err)
