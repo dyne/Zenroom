@@ -90,7 +90,7 @@ zenroom_t *zen_redis_init() {
 		return NULL;
 	}
 	// create the zenroom_t global context
-	zenroom_t *Z = (*MEM->malloc)(sizeof(zenroom_t));
+	Z = (*MEM->malloc)(sizeof(zenroom_t));
 	Z->lua = L;
 	Z->mem = MEM;
 	Z->stdout_buf = NULL;
