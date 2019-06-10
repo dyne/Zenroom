@@ -12,7 +12,14 @@ do
   make clean
   PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -s $VERSION
   pyenv local $VERSION
-  make linux-python3
+  case "$(uname)" in
+  Linux)
+    make linux-python3 || exit 1
+    ;;
+  Darwin)
+    make osx-python3 || exit 1
+    ;;
+  esac
   SAFE_DIR_VERSION=$(echo $VERSION|tr . _)
   PYTHON_PACKAGE="build/python3/$SAFE_DIR_VERSION"
   mkdir -p "$PYTHON_PACKAGE"
