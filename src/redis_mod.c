@@ -151,7 +151,8 @@ char* get(CTX *ctx, const STR * key, size_t *len) {
         reply_free(reply);
         return NULL;
     }
-    if ( reply_type(reply) == REDISMODULE_REPLY_NULL ) {
+    if (reply_type(reply) == REDISMODULE_REPLY_NULL ) {
+	    RedisModule_ReplyWithCallReply(ctx, reply);
         reply_free(reply);
         return NULL;
     }
@@ -162,6 +163,7 @@ char* get(CTX *ctx, const STR * key, size_t *len) {
     res[*len] = '\0';
     return(res);
 }
+
 // ZENROOM.RESET
 int zenroom_reset_rediscmd(CTX *ctx, STR **argv, int argc) {
 	if (argc != 1) return RedisModule_WrongArity(ctx);
@@ -176,6 +178,7 @@ int zenroom_reset_rediscmd(CTX *ctx, STR **argv, int argc) {
 	reply_ok(ctx, "OK zenroom.reset");
 	return REDISMODULE_OK;
 }
+
 // ZENROOM.DEBUG <int>
 int zenroom_debug_rediscmd(CTX *ctx, STR **argv, int argc) {
 	const char *arg; size_t arg_len;
