@@ -196,6 +196,17 @@ int zenroom_debug_rediscmd(CTX *ctx, STR **argv, int argc) {
 	reply_ok(ctx, "OK zenroom.debug");
 	return REDISMODULE_OK;
 }
+
+// ZENROOM.VERSION
+int zenroom_version_rediscmd(CTX *ctx, STR **argv, int argc) {
+	(void)argv;
+	if (argc != 1) return RedisModule_WrongArity(ctx);
+	char r[256];
+	snprintf(r,255,"OK zenroom.version %s",VERSION);
+	reply_ok(ctx, r);
+	return REDISMODULE_OK;
+}
+
 // ZENROOM.EXEC <script> [<keys> <data>]
 int zenroom_exec_rediscmd(CTX *ctx, STR **argv, int argc) {
 	// we must have at least 2 args
@@ -305,6 +316,11 @@ int RedisModule_OnLoad(CTX *ctx) {
 	//
 	if (RedisModule_CreateCommand(ctx, "zenroom.debug",
 	                              zenroom_debug_rediscmd,
+	                              "", 0, 0, 0) == REDISMODULE_ERR)
+		return REDISMODULE_ERR;
+	//
+	if (RedisModule_CreateCommand(ctx, "zenroom.version",
+	                              zenroom_version_rediscmd,
 	                              "", 0, 0, 0) == REDISMODULE_ERR)
 		return REDISMODULE_ERR;
 
