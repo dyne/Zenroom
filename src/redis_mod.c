@@ -133,8 +133,8 @@ zenroom_t *zen_redis_init() {
 	}
 	//////////////////// end of create
 
-	// lua_gc(L, LUA_GCCOLLECT, 0);
-	// lua_gc(L, LUA_GCCOLLECT, 0);
+	lua_gc(L, LUA_GCCOLLECT, 0);
+	lua_gc(L, LUA_GCCOLLECT, 0);
 	// allow further requires
 	// zen_require_override(L,1);
 
