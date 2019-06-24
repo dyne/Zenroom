@@ -23,7 +23,7 @@ BRANCH := $(shell git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
 HASH := $(shell git rev-parse --short HEAD)
 CFLAGS  += -I. -I../lib/lua53/src -I../lib/milagro-crypto-c/include -Wall -Wextra
 SOURCES := \
-	jutils.o zenroom.o zen_error.o \
+	cli.o jutils.o zenroom.o zen_error.o \
 	lua_functions.o lua_modules.o lualibs_detected.o \
 	json.o json_strbuf.o json_fpconv.o \
 	base58.o cmsgpack.o \
