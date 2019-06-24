@@ -46,5 +46,6 @@ javascript-npm: apply-patches lua53 milagro embed-lua
 	make -C src js
 	@mkdir -p build/npm
 	@cp -v src/zenroom.js build/npm/
+	@cp -v src/zenroom.wasm build/npm/
 	@echo "module.exports = ZR();" >> build/npm/zenroom.js
 
