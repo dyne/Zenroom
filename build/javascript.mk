@@ -37,7 +37,7 @@ javascript-npm: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
 javascript-npm: ldflags += -s INVOKE_RUN=0 \
 						   -s EXPORT_NAME="'ZR'" \
 						   -s MODULARIZE=1 \
-						   -s FILESYSTEM=0 \
+						   -s FILESYSTEM=1 \
 						   -s NODEJS_CATCH_EXIT=0 \
 						   -s ALLOW_MEMORY_GROWTH=1 \
 						   -s WARN_UNALIGNED=1 --memory-init-file 0
