@@ -40,7 +40,9 @@ javascript-npm: ldflags += -s INVOKE_RUN=0 \
 						   -s FILESYSTEM=1 \
 						   -s NODEJS_CATCH_EXIT=0 \
 						   -s ALLOW_MEMORY_GROWTH=1 \
-						   -s WARN_UNALIGNED=1 --memory-init-file 0
+						   -s WARN_UNALIGNED=1 --memory-init-file 0 \
+						   -s EXIT_RUNTIME=1 \
+						   -s WASM=1
 javascript-npm: apply-patches lua53 milagro embed-lua
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src js
