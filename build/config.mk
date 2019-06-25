@@ -3,6 +3,7 @@
 pwd := $(shell pwd)
 mil := ${pwd}/build/milagro
 extras := ${pwd}/docs/demo
+npm := ${pwd}/build/npm
 
 # --------
 # defaults
