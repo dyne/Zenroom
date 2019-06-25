@@ -39,7 +39,7 @@ On this page you can download our software, ready for use. For less technical ex
 
 <li class="fas fa-code"><a href="https://zenroom.dyne.org/api">Zenroom scripting API</a></li>
 
-<li class="far fa-graduation-cap"><a href="https://zenroom.dyne.org/whitepaper">Zenroom Whitepaper</a></li>
+<li class="far fa-graduation-cap"><a href="https://files.dyne.org/zenroom/Zenroom_Whitepaper.pdf">Zenroom Whitepaper</a></li>
 
 <li class="far fa-cogs"><a href="https://github.com/DECODEproject/zenroom/wiki">Online Wiki</a></li>
 
