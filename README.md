@@ -10,20 +10,23 @@ Zencode is the name of the language executed by Zenroom: it is simple to underst
 
 Zencode is a Domain Specific Language whose design is informed by pilot use-cases in the [DECODE Project](https://decodeproject.eu).
 
-To know more, read our blog post <a href="https://decodeproject.eu/blog/smart-contracts-english-speaker">"Smart contracts for the English speaker"</a>.
+On this page you can download our software, ready for use. For less technical explanations see the links below:
+- [Why Zenroom? Algorithmic Sovereignty](https://decodeproject.eu/blog/algorithmic-sovereignty-decode)
+- [Zenroom does what? Smart contracts for the English speaker](https://decodeproject.eu/blog/smart-contracts-english-speaker)
+- [How zenroom does it? Cryptographic data integrity in a multiplatform environment](https://decodeproject.eu/blog/cryptographic-data-integrity-multiplatform-environment)
 
-## Latest stable release is 0.9:
+## Latest stable release is 0.10:
 <ul class="center">
 
-<li class="fab fa-node-js"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.9-javascript.zip">Javscript (nodeJS and WASM)</a></li>
+<li class="fab fa-node-js"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.10-javascript.zip">Javscript (nodeJS and WASM)</a></li>
 
-<li class="fab fa-linux"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.9-linux.zip">Linux (ARM and x86)</a></li>
+<li class="fab fa-linux"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.10-linux.zip">Linux (ARM and x86)</a></li>
 
-<li class="fab fa-windows"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.9-windows.zip">Windows (EXE and DLL)</li>
+<li class="fab fa-windows"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.10-windows.zip">Windows (EXE and DLL)</li>
 
-<li class="fab fa-apple"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.9-apple.zip">Apple (OSX and iOS)</li>
+<li class="fab fa-apple"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.10-apple.zip">Apple (OSX and iOS)</li>
 
-<li class="far fa-file-archive"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.9.tar.gz">Source Code</a></li>
+<li class="far fa-file-archive"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.10.tar.gz">Source Code</a></li>
 
 <li class="fab fa-github"><a href="https://github.com/decodeproject/zenroom">Git repository</a></li>
 
@@ -38,7 +41,6 @@ To know more, read our blog post <a href="https://decodeproject.eu/blog/smart-co
 
 <li class="far fa-graduation-cap"><a href="https://zenroom.dyne.org/whitepaper">Zenroom Whitepaper</a></li>
 
-
 <li class="far fa-cogs"><a href="https://github.com/DECODEproject/zenroom/wiki">Online Wiki</a></li>
 
 <li class="fas fa-history"><a href="https://files.dyne.org/zenroom/ChangeLog.txt">History of changes</a></li>
@@ -48,7 +50,8 @@ To know more, read our blog post <a href="https://decodeproject.eu/blog/smart-co
 
 <ul class="center">
 <li class="far fa-hand-point-right"><a href="https://zenroom.dyne.org/demo">Online Demo</a></li>
-<li class="far fa-fighter-jet"><a href="https://hub.docker.com/r/dyne/zenroom">:whale: Docker image</a></li>
+<li class="far fa-whale"><a href="https://hub.docker.com/r/dyne/zenroom">Docker image</a></li>
+<li class="far fa-puzzle-piece"><a href="https://hub.docker.com/r/dyne/zenroom-redis">Redis module</a></li>
 </ul>
 
 ## Language bindings
@@ -66,7 +69,7 @@ This API can be called in similar ways from a variety of languages and in partic
 <li><a href="https://www.npmjs.com/package/zenroom">Javascript NPM package</a></li>
 <li><a href="https://github.com/DECODEproject/zenroom-py">Python language bindings</a></li>
 <li><a href="https://github.com/DECODEproject/zenroom-go">Go language bindings</a></li>
-<li>Java (JNI) and SWIG (universal) bindings inside source</li>
+<li><b>Redis</b> module implementation for in-memory database encryption</li>
 </ul>
 
 ## Mission

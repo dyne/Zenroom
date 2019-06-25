@@ -1,5 +1,14 @@
 # Zenroom ChangeLog
 
+## 0.10
+### June 2019
+
+Internal refactoring, code cleanup and memory optimization. Fully
+deterministic random implementation for blockchain usage. Various
+fixes and improvements for the error reporting output. Fixes to the
+iOS native library. Improved python3 and JS bindings. Progress on the
+uni-kernel ARM Cortex port.
+
 ## 0.9
 ### March 2019
 
