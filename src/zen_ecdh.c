@@ -94,6 +94,10 @@ extern zenroom_t *Z; // accessed to check random_seed configuration
     keyring:keygen()
 */
 
+// from zen_random.c
+extern void rng_seed(csprng *rng);
+extern void rng_round(csprng *rng);
+
 ecdh* ecdh_new(lua_State *L, const char *curve) {
 	HERE();
 	ecdh *e = ecdh_new_curve(L, curve);
@@ -110,22 +114,7 @@ ecdh* ecdh_new(lua_State *L, const char *curve) {
 	// it can be cleanly collected by the GC as well it can be
 	// saved transparently in the global state
 	e->rng = zen_memory_alloc(sizeof(csprng));
-	if(Z->random_seed) {
-		SAFE(Z->random_seed);
-		RAND_seed(e->rng, Z->random_seed_len, Z->random_seed);
-	} else {
-		char *tmp = zen_memory_alloc(256);
-		randombytes(tmp,252);
-		// using time() from milagro
-		unsign32 ttmp = GET_TIME();
-		tmp[252] = (ttmp >> 24) & 0xff;
-		tmp[253] = (ttmp >> 16) & 0xff;
-		tmp[254] = (ttmp >>  8) & 0xff;
-		tmp[255] =  ttmp & 0xff;
-		RAND_seed(e->rng,256,tmp);
-		zen_memory_free(tmp);
-	}
-
+	rng_seed(e->rng);
 	luaL_getmetatable(L, "zenroom.ecdh");
 	lua_setmetatable(L, -2);
 	return(e);
@@ -162,7 +151,9 @@ static int ecdh_new_keygen(lua_State *L) {
 	ecdh *e = ecdh_new(L, curve); SAFE(e);
 	e->pubkey = o_new(L,e->publen +0x0f); SAFE(e->pubkey);
 	e->seckey = o_new(L,e->seclen +0x0f); SAFE(e->seckey);
+	SAFE(e->rng);
 	(*e->ECP__KEY_PAIR_GENERATE)(e->rng,e->seckey,e->pubkey);
+	rng_round(e->rng);
 	HEREecdh(e);
 	lua_pop(L, 1);
 	lua_pop(L, 1);
@@ -195,6 +186,7 @@ static int ecdh_keygen(lua_State *L) {
 	octet *pk = o_new(L,e->publen +0x0f); SAFE(pk);
 	octet *sk = o_new(L,e->seclen +0x0f); SAFE(sk);
 	(*e->ECP__KEY_PAIR_GENERATE)(e->rng,sk,pk);
+	rng_round(e->rng);
 	e->pubkey = pk;
 	e->seckey = sk;
 	HEREecdh(e);
@@ -381,6 +373,7 @@ static int ecdh_dsa_sign(lua_State *L) {
 	// for K's generation see also RFC6979
 	// ECP_BLS383_SP_DSA(int sha,csprng *RNG,octet *K,octet *S,octet *F,octet *C,octet *D)
 	(*e->ECP__SP_DSA)(     64,     e->rng,     NULL, e->seckey,    f,      c,      d );
+	rng_round(e->rng);
 	return 2;
 }
 

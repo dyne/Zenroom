@@ -18,8 +18,7 @@
 
 local elg = { _VERSION = 'crypto_elgamal.lua 1.0' }
 
-local random = RNG.new()
-local function rand() return INT.new(random, ECP.order()) end
+local function rand() return INT.new(RNG.new(), ECP.order()) end
 
 function elg.keygen()
    local d = rand()

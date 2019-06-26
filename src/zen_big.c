@@ -255,6 +255,7 @@ static int lua_biginfo(lua_State *L) {
     @return a new Big number
     @function BIG.new(octet)
 */
+extern void rng_round(csprng *rng);
 static int newbig(lua_State *L) {
 	HERE();
 	void *ud;
@@ -266,11 +267,11 @@ static int newbig(lua_State *L) {
 		if(ud) { // random with modulus
 			big *modulus = (big*)ud; SAFE(modulus);
 			BIG_randomnum(res->val,modulus->val,rng);
-			return 1;
 		} else { // random without modulus
 			BIG_random(res->val, rng);
-			return 1;
 		}
+		rng_round(rng);
+		return 1;
 	}
 
 	// number argument, import

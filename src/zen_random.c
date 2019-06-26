@@ -54,6 +54,35 @@
 
 extern zenroom_t *Z;
 
+void rng_seed(RNG *rng) {
+	if(Z->random_seed) {
+		if(!Z->random_generator) {
+			// TODO: feed minimum 128 bytes
+			RAND_seed(rng, Z->random_seed_len, Z->random_seed);
+			// Z->random_generator is allocated only once and freed in
+			// zen_teardown, lasts for the whole execution
+			Z->random_generator = zen_memory_alloc(sizeof(csprng)+8);
+			memcpy(Z->random_generator, rng, sizeof(csprng));
+		} else
+			memcpy(rng, Z->random_generator, sizeof(csprng));
+	} else {
+		char *tmp = zen_memory_alloc(256);
+		randombytes(tmp,252);
+		// using time() from milagro
+		unsign32 ttmp = (unsign32)time(NULL);
+		tmp[252] = (ttmp >> 24) & 0xff;
+		tmp[253] = (ttmp >> 16) & 0xff;
+		tmp[254] = (ttmp >>  8) & 0xff;
+		tmp[255] =  ttmp & 0xff;
+		RAND_seed(rng,256,tmp);
+		zen_memory_free(tmp);
+	}
+}
+void rng_round(RNG *rng) {
+	if(Z->random_generator) // save RNG state
+		memcpy(Z->random_generator, rng, sizeof(csprng));
+}
+
 RNG* rng_new(lua_State *L) {
 	HERE();
     RNG *rng = (RNG*)lua_newuserdata(L, sizeof(csprng));
@@ -62,22 +91,7 @@ RNG* rng_new(lua_State *L) {
 	    return NULL; }
     luaL_getmetatable(L, "zenroom.rng");
     lua_setmetatable(L, -2);
-
-    if(Z->random_seed) {
-	    SAFE(Z->random_seed);
-	    RAND_seed(rng, Z->random_seed_len, Z->random_seed);
-    } else {
-	    char *tmp = zen_memory_alloc(256);
-	    randombytes(tmp,252);
-	    // using time() from milagro
-	    unsign32 ttmp = (unsign32)time(NULL);
-	    tmp[252] = (ttmp >> 24) & 0xff;
-	    tmp[253] = (ttmp >> 16) & 0xff;
-	    tmp[254] = (ttmp >>  8) & 0xff;
-	    tmp[255] =  ttmp & 0xff;
-	    RAND_seed(rng,256,tmp);
-	    zen_memory_free(tmp);
-    }
+    rng_seed(rng);
 	return(rng);
 }
 
@@ -108,6 +122,7 @@ int rng_oct(lua_State *L) {
 	lua_Number n = lua_tonumberx(L, 2, &tn);
 	octet *o = o_new(L,(int)n); SAFE(o);
 	OCT_rand(o,rng,(int)n);
+	rng_round(rng);
 	return 1;
 }
 
@@ -123,6 +138,7 @@ int rng_big(lua_State *L) {
 	RNG *rng = rng_arg(L,1); SAFE(rng);
 	big *res = big_new(L); big_init(res); SAFE(res);
 	BIG_random(res->val, rng);
+	rng_round(rng);
 	return(1);
 }
 
@@ -139,6 +155,7 @@ static int rng_modbig(lua_State *L) {
 	big *modulus = big_arg(L,2); SAFE(modulus);	
 	big *res = big_new(L); big_init(res); SAFE(res);
 	BIG_randomnum(res->val,modulus->val,rng);
+	rng_round(rng);
 	return(1);
 }
 

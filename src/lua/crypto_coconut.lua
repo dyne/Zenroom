@@ -54,8 +54,7 @@ end
 
 
 -- random generator init
-local random = RNG.new()
-local function rand() return INT.new(random,o) end
+local function rand() return INT.new(RNG.new(),o) end
 
 -- local zero-knowledge proof verifications
 local function make_pi_s(gamma, cm, k, r, m)

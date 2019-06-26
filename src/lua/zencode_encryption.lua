@@ -19,7 +19,6 @@
 -- Zencode implementation to encrypt and decrypt AES GCM messages
 -- uses random IV and sha256 by default
 
-local random = RNG.new()
 local order = ECP.order()
 local G = ECP.generator()
 local KDF_rounds = 10000
@@ -100,7 +99,7 @@ end)
 
 When("I create my new keypair", function()
 		ZEN.assert(ACK.whoami, "No identity specified for own keypair")
-		local key = INT.new(random,order)
+		local key = INT.new(RNG.new(),order)
 		local kp = { public = key * G,
 					 private = key }
 		OUT[ACK.whoami] = export(kp, 'ecdh_keypair', hex)
@@ -138,7 +137,7 @@ When("I use '' key to encrypt the output", function(keyname)
 								   text = ACK.draft.text,
 								   data = hex(ACK.draft.data) })
 		local cipher = { }
-		cipher.iv = random:octet(16)
+		cipher.iv = RNG.new():octet(16)
 		cipher.text, cipher.checksum =
 		   ECDH.aesgcm_encrypt(session, message, cipher.iv, "Zencode")
 		cipher.encoding = "hex"

@@ -93,6 +93,7 @@ static int zen_init_pmain(lua_State *L) { // protected mode init
 	Z->stderr_len = 0;
 	Z->userdata = NULL;
 	Z->errorlevel = get_debug();
+	Z->random_generator = NULL;
 	Z->random_seed = NULL;
 	Z->random_seed_len = 0;
 
@@ -175,6 +176,11 @@ void zen_teardown(zenroom_t *Z) {
 		if(umm_integrity_check())
 			func(Z->lua,"HEAP integrity checks passed.");
 		umm_info(Z->mem->heap); }
+	// stateful RNG instance for deterministic mode
+	if(Z->random_generator) {
+		zen_memory_free(Z->random_generator);
+		Z->random_generator = NULL;
+	}
 	// save pointers inside Z to free after L and Z
 	if(Z->lua) {
 		func(Z->lua, "lua gc and close...");

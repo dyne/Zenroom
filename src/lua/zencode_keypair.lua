@@ -7,13 +7,12 @@
 
 -- crypto setup
 -- TODO: review scoping, make local or into finite-state machine
-random = RNG.new()
 order = ECP.order()
 G = ECP.generator()
 KDF_rounds = 10000
 
 local ecdh_keygen = function()
-   local key = INT.new(random,order)
+   local key = INT.new(RNG.new(),order)
    return { private = key,
 			public = key * G }
 end

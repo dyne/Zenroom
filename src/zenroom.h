@@ -87,6 +87,7 @@ typedef struct {
 	size_t stderr_len;
 	size_t stderr_pos;
 
+	void *random_generator; // cast to RNG
 	char *random_seed;
 	size_t random_seed_len;
 
