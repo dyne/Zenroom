@@ -121,13 +121,16 @@ int main(int argc, char **argv) {
 			interactive = 1;
 			break;
 		case 'k':
-			snprintf(keysfile,511,"%s",optarg);
+			snprintf(keysfile,MAX_STRING-1,"%s",optarg);
 			break;
 		case 'a':
-			snprintf(datafile,511,"%s",optarg);
+			snprintf(datafile,MAX_STRING-1,"%s",optarg);
 			break;
 		case 'c':
-			snprintf(conffile,511,"%s",optarg);
+			snprintf(conffile,MAX_STRING-1,"%s",optarg);
+			break;
+		case 'S':
+			snprintf(rngseed,MAX_STRING-1,"%s",optarg);
 			break;
 		case 'u':
 			unprotected = 1;
@@ -141,7 +144,7 @@ int main(int argc, char **argv) {
 		}
 	}
 	for (index = optind; index < argc; index++) {
-		snprintf(scriptfile,511,"%s",argv[index]);
+		snprintf(scriptfile,MAX_STRING-1,"%s",argv[index]);
 	}
 
 	if(keysfile[0]!='\0') {
