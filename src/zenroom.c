@@ -502,6 +502,10 @@ int zenroom_exec_rng_tobuf(char *script, char *conf, char *keys,
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
 	_random_seed = random_seed ? (random_seed[0] == '\0') ? NULL : random_seed : NULL;
+	if(!_random_seed) {
+		error(NULL, "%s called with empty random seed",__func__);
+		return EXIT_FAILURE; }
+
 	Z = zen_init(c, k, d);
 	if(!Z) {
 		error(L, "Initialisation failed.");
@@ -571,6 +575,10 @@ int zencode_exec_rng_tobuf(char *script, char *conf, char *keys,
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
 	_random_seed = random_seed ? (random_seed[0] == '\0') ? NULL : random_seed : NULL;
+	if(!_random_seed) {
+		error(NULL, "%s called with empty random seed",__func__);
+		return EXIT_FAILURE; }
+
 	Z = zen_init(c, k, d);
 	if(!Z) {
 		error(L, "Initialisation failed.");
