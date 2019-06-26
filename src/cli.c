@@ -69,6 +69,8 @@ static const struct sock_fprog  strict = {
 
 
 #ifndef LIBRARY
+
+extern void zen_setenv(lua_State *L, char *key, char *val);
 extern void load_file(char *dst, FILE *fd);
 
 int main(int argc, char **argv) {
@@ -76,6 +78,7 @@ int main(int argc, char **argv) {
 	char scriptfile[MAX_STRING];
 	char keysfile[MAX_STRING];
 	char datafile[MAX_STRING];
+	char rngseed[MAX_STRING];
 	char script[MAX_FILE];
 	// char conf[MAX_FILE];
 	char keys[MAX_FILE];
@@ -91,14 +94,15 @@ int main(int argc, char **argv) {
 
 	int   zencode             = 0;
 
-	const char *short_options = "hdic:k:a:p:uz";
+	const char *short_options = "hdic:k:a:S:p:uz";
 	const char *help          =
-		"Usage: zenroom [-dh] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ -z ] [ [ -p ] script.lua ]\n";
+		"Usage: zenroom [-dh] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ -S seed ] [ -z ] [ [ -p ] script.lua ]\n";
 	int pid, status, retval;
 	conffile   [0] = '\0';
 	scriptfile [0] = '\0';
 	keysfile   [0] = '\0';
 	datafile   [0] = '\0';
+	rngseed    [0] = '\0';
 	data       [0] = '\0';
 	keys       [0] = '\0';
 	// conf[0] = '\0';
@@ -216,10 +220,19 @@ int main(int argc, char **argv) {
 		func(NULL, script);
 	}
 
+
+	if(rngseed[0] != '\0') {
+		act(NULL, "deterministic mode (random seed provided)");
+		Z->random_seed = rngseed; // TODO: parse to import (hex?)
+		Z->random_seed_len = strlen(rngseed);
+		// export the random_seed buffer to Lua
+		zen_setenv(Z->lua, "RANDOM_SEED", Z->random_seed);
+	}
+
 #if DEBUG == 1
 	if(unprotected) { // avoid seccomp in all cases
 		int res;
-		act(NULL, "starting execution (unprotected mode)");
+		act(NULL, "unprotected mode (debug build)");
 		if(zencode)
 			res = zen_exec_zencode(Z, script);
 		else
