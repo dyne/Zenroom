@@ -194,19 +194,19 @@ When("I create a new petition ''", function(uid)
 						 scores = { pos = { left = ECP.infinity(), right = ECP.infinity() },
 									neg = { left = ECP.infinity(), right = ECP.infinity() } } }
 		OUT.petition = export(ACK.petition, 'petition', hex)
-		-- generate an ECDH signature of the JSON encoding using the
+		-- generate an ECDH signature of the (encoded) petition using the
 		-- credential keys
-		ecdh = ECDH.new()
-		ecdh:private(ACK.cred_kp.private)
-		ACK.petition_ecdh_sign = { ecdh:sign(JSON.encode(OUT.petition)) }
-		OUT.petition_ecdh_sign = map(ACK.petition_ecdh_sign, hex)
+		-- ecdh = ECDH.new()
+		-- ecdh:private(ACK.cred_kp.private)
+		-- ACK.petition_ecdh_sign = { ecdh:sign(MSG.pack(OUT.petition)) }
+		-- OUT.petition_ecdh_sign = map(ACK.petition_ecdh_sign, hex)
 end)
 
 Given("I receive a new petition request", function()
 		 ZEN.assert(type(IN.petition) == 'table',
 					"Petition not found")
-		 ZEN.assert(type(IN.petition_ecdh_sign) == 'table',
-					"Signature not found in petition")
+		 -- ZEN.assert(type(IN.petition_ecdh_sign) == 'table',
+		 -- 			"Signature not found in petition")
 		 ZEN.assert(type(IN.proof) == 'table',
 					"Credential proof not found in petition ")
 		 ACK.petition = import(IN.petition, 'petition')
