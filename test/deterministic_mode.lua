@@ -1,5 +1,7 @@
 -- to be executed using -S or _rng_ functions
 
+print("Checks for deterministic operations")
+
 rng = RNG.new()
 
 first = rng:octet(16)
@@ -7,32 +9,35 @@ second = rng:octet(16)
 
 -- subsequent executions lead to different results
 assert( first ~= second )
-print(first)
-print(second)
+I.print({ first = first })
+I.print({ second = second })
 
 -- new initialization doesn't resets from first
 rng = RNG.new()
 third = rng:octet(16)
 assert( first ~= third )
-print(third)
+I.print({ third = third })
 
-print("ECP checks for deterministic operations")
-print(ECP.order())
 i = INT.new(rng, ECP.order())
-I.print({i})
+I.print({big_random = i})
 
 -- ECDH
 ecdh = ECDH.keygen()
-print(ecdh:private())
-print(ecdh:public())
-I.print(ecdh:sign("Hello World!"))
+I.print({ ecdh_keys = { sec = ecdh:private(),
+						pub = ecdh:public() } })
 ecdh2 = ECDH.new()
 ecdh2:keygen()
-print(ecdh2:private())
-print(ecdh2:public())
+I.print({ ecdh_keys = { sec = ecdh2:private(),
+						pub = ecdh2:public() } })
+assert(ecdh2:private() ~= ecdh:private())
+assert(ecdh2:public() ~= ecdh:public())
+c, d = ecdh:sign("Hello World!")
+I.print({ ecdh_sign = { c = c, d = d } })
+-- will check if same on next execution
 
 -- ElGamal
 -- d = INT.new(rng, ECP.order())
 -- g = d * ECP.generator()
 d, g = ELGAMAL.keygen()
-I.print({ d, g })
+I.print({ elg_keys = { d = d,
+					   g = g }})

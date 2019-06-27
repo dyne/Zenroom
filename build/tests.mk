@@ -11,7 +11,8 @@ himem-tests = \
 # ${1} test/gc.lua && \
 # ${1} test/calls.lua && \
 
-
+determinism-tests = \
+	test/deterministic_random_test.sh ${1}
 
 lowmem-tests = \
 		@${1} test/vararg.lua && \
@@ -79,6 +80,7 @@ check-osx: test-exec := ${pwd}/src/zenroom.command
 check-osx:
 	${test-exec} test/constructs.lua
 	$(call lowmem-tests,${test-exec-lowmem})
+	$(call determinism-tests,${test-exec-lowmem})
 	$(call crypto-tests,${test-exec-lowmem})
 	$(call shell-tests,${test-exec-lowmem})
 	@echo "----------------"
@@ -90,6 +92,7 @@ check-shared: test-exec := ${pwd}/src/zenroom-shared
 check-shared:
 	${test-exec} test/constructs.lua
 	$(call lowmem-tests,${test-exec-lowmem})
+	$(call determinism-tests,${test-exec-lowmem})
 	$(call crypto-tests,${test-exec-lowmem})
 	$(call shell-tests,${test-exec-lowmem})
 	@echo "----------------"
@@ -102,6 +105,7 @@ check-static: test-exec-lowmem := ${pwd}/src/zenroom-static
 check-static:
 	${test-exec} test/constructs.lua
 	$(call lowmem-tests,${test-exec-lowmem})
+	$(call determinism-tests,${test-exec-lowmem})
 	$(call crypto-tests,${test-exec-lowmem})
 	$(call shell-tests,${test-exec-lowmem})
 	@echo "----------------"
@@ -120,6 +124,7 @@ check-js:
 check-debug: test-exec-lowmem := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom-shared -u -d
 check-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom-shared -u -d
 check-debug:
+	$(call determinism-tests,${test-exec-lowmem})
 	$(call lowmem-tests,${test-exec-lowmem})
 	$(call crypto-tests,${test-exec})
 	@echo "----------------"
@@ -128,6 +133,7 @@ check-debug:
 
 check-crypto: test-exec := ./src/zenroom-shared
 check-crypto:
+	$(call determinism-tests,${test-exec-lowmem})
 	$(call crypto-tests,${test-exec})
 	@echo "-----------------------"
 	@echo "All CRYPTO tests passed"
@@ -136,6 +142,7 @@ check-crypto:
 
 check-crypto-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom-shared -u -d
 check-crypto-debug:
+	$(call determinism-tests,${test-exec-lowmem})
 	$(call crypto-tests,${test-exec})
 	$(call shell-tests,${test-exec-lowmem})
 
