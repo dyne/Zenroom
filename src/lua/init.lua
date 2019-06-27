@@ -49,8 +49,6 @@ O = OCTET -- alias
 
 INSIDE = require('inspect')
 I = INSIDE -- alias
-SCHEMA = require('zenroom_schema')
-S = SCHEMA -- alias
 RNG    = require('zenroom_rng')
 ECDH   = require('zenroom_ecdh')
 LAMBDA = require('functional')
@@ -68,7 +66,7 @@ COCONUT = require('crypto_coconut')
 -- Zencode language interpreter
 -- global class
 ZEN = require('zencode')
--- data schemas
+-- import/export schema helpers
 require('zencode_schemas')
 -- basic keypair functions
 -- require('zencode_keypair')
@@ -106,21 +104,6 @@ function map(data, fun)
    return(out)
 end
 
--- validate against a schema
-function validate(data, schema)
-   if(type(data) ~= "table") then
-	  error("validate() first argument is "..type(data)..": cannot process validation") return end
-   if(type(schema) ~= "function") then
-	  error("validate() second argument is "..type(schema)..": invalid schema for validation") return end
-   local err = SCHEMA.CheckSchema(data,schema)
-   if err then
-	  if(data.schema) then error("Schema error: "..data.schema..
-								 "\n    "..S.print(err)) end
-	  I.print(data)
-	  return false
-   end
-   return true
-end
 
 function help(module)
    if module == nil then
@@ -142,24 +125,15 @@ function help(module)
    end
 end
 
-function read_json(data, validation)
+function read_json(data)
    if not data then
 	  error("read_json() missing data")
-	  -- os.exit()
    end
    out,res = JSON.decode(data)
    if not out then
 	  if res then
-		 error("read_json() invalid json")
-		 error(res)
-		 -- os.exit()
+		 error("read_json() invalid json: ".. res)
 	  end
-   else
-	  if validation ~= nil then
-		 -- operate schema validation if argument is present
-		 assert(validate(out, validation), "read_json() invalid schema")
-	  end
-	  return out
    end
 end
 function write_json(data)

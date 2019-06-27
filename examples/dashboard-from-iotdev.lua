@@ -3,7 +3,6 @@
 -- curve used
 curve = 'ed25519'
 
--- data schemas
 -- read and validate data
 keys = JSON.decode(KEYS)
 data = JSON.decode(DATA)

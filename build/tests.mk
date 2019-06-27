@@ -24,7 +24,6 @@ lowmem-tests = \
 		${1} test/events.lua && \
 		${1} test/code.lua && \
 		${1} test/locals.lua && \
-		${1} test/schema.lua && \
 		${1} test/tables.lua
 
 crypto-tests = \
