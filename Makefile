@@ -121,7 +121,7 @@ clean:
 	rm -rf ${pwd}/lib/milagro-crypto-c/CMakeFiles
 	make clean -C src
 	rm -f ${extras}/index.*
-	rm -f ${npm}
+	rm -rf ${npm}
 
 clean-src:
 	make clean -C src
