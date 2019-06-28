@@ -53,8 +53,10 @@ musl: ${SOURCES}
 linux: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom-shared ${LDFLAGS} ${LDADD}
 
+# available vars to identify the build:
+# ${ARCH} ${VERSION} ${BRANCH} ${HASH}
 linux-lib: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o libzenroom-${ARCH}-${VERSION}-${BRANCH}-${HASH}.so ${LDFLAGS} ${LDADD}
+	${CC} ${CFLAGS} ${SOURCES} -o libzenroom-${ARCH}-${VERSION}.so ${LDFLAGS} ${LDADD}
 
 redis: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o redis_zenroom.so-${ARCH}.so ${LDFLAGS} ${LDADD}

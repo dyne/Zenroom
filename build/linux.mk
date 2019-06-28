@@ -58,6 +58,12 @@ linux-lib: apply-patches lua53 milagro embed-lua
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src linux-lib
 
+linux-lib-debug: cflags += -shared -DLIBRARY
+linux-lib-debug: apply-patches lua53 milagro embed-lua
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	make -C src linux-lib
+
+
 linux-redis: cflags += -shared -DLIBRARY
 linux-redis: apply-patches lua53 milagro embed-lua
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
