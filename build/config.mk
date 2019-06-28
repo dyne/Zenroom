@@ -37,6 +37,9 @@ ldadd += ${milib}/libamcl_core.a
 
 # ------------------------
 # target specific settings
+ifneq (,$(findstring debug,$(MAKECMDGOALS)))
+cflags += -O1 -ggdb ${cflags_protection} -DDEBUG=1 -Wstack-usage=4096
+endif
 
 ifneq (,$(findstring win,$(MAKECMDGOALS)))
 gcc := x86_64-w64-mingw32-gcc
