@@ -49,7 +49,7 @@ static const char *lua_print_format(lua_State *L,
 // output without exceeding its length. Return 1 if output buffer was
 // configured so calling function can decide if to proceed with other
 // prints (stdout) or not
-static int lua_print_stdout_tobuf(lua_State *L) {
+static int lua_print_stdout_tobuf(lua_State *L, char newline) {
 	SAFE(Z);
 	if(Z->stdout_buf && (Z->stdout_pos < Z->stdout_len)) {
 		int i;
@@ -62,7 +62,7 @@ static int lua_print_stdout_tobuf(lua_State *L) {
 			if(i>1) { out[Z->stdout_pos]='\t'; Z->stdout_pos++; }
 			snprintf(out+Z->stdout_pos,
 					Z->stdout_len - Z->stdout_pos,
-					"%s\n", s);
+					"%s%c", s, newline);
 			Z->stdout_pos+=len+1;
 			lua_pop(L, 1);
 		}
@@ -70,7 +70,7 @@ static int lua_print_stdout_tobuf(lua_State *L) {
 	}
 	return 0;
 }
-static int lua_print_stderr_tobuf(lua_State *L) {
+static int lua_print_stderr_tobuf(lua_State *L, char newline) {
 	SAFE(Z);
 	if(Z->stderr_buf && (Z->stderr_pos < Z->stderr_len)) {
 		int i;
@@ -83,7 +83,7 @@ static int lua_print_stderr_tobuf(lua_State *L) {
 			if(i>1) { out[Z->stderr_pos]='\t'; Z->stderr_pos++; }
 			snprintf(out+Z->stderr_pos,
 					Z->stderr_len - Z->stderr_pos,
-					"%s\n", s);
+					"%s%c", s, newline);
 			Z->stderr_pos+=len+1;
 			lua_pop(L, 1);
 		}
@@ -97,7 +97,7 @@ static int lua_print_stderr_tobuf(lua_State *L) {
 static char out[MAX_STRING];
 
 static int zen_print (lua_State *L) {
-	if( lua_print_stdout_tobuf(L) ) return 0;
+	if( lua_print_stdout_tobuf(L,' ') ) return 0;
 
 	size_t pos = 0;
 	size_t len = 0;
@@ -116,7 +116,7 @@ static int zen_print (lua_State *L) {
 }
 
 static int zen_error (lua_State *L) {
-	if( lua_print_stderr_tobuf(L) ) return 0;
+	if( lua_print_stderr_tobuf(L,' ') ) return 0;
 	size_t pos = 0;
 	size_t len = 0;
 	int n = lua_gettop(L);  /* number of arguments */
@@ -135,7 +135,7 @@ static int zen_error (lua_State *L) {
 }
 
 static int zen_warn (lua_State *L) {
-	if( lua_print_stderr_tobuf(L) ) return 0;
+	if( lua_print_stderr_tobuf(L,' ') ) return 0;
 	size_t pos = 0;
 	size_t len = 0;
 	int n = lua_gettop(L);  /* number of arguments */
@@ -194,7 +194,7 @@ static int zen_iowrite (lua_State *L)
 
 
 static int zen_print (lua_State *L) {
-	if( lua_print_stdout_tobuf(L) ) return 0;
+	if( lua_print_stdout_tobuf(L,'\n') ) return 0;
 
 	int status = 1;
 	size_t len = 0;
@@ -215,8 +215,30 @@ static int zen_print (lua_State *L) {
 	return 0;
 }
 
+// print without an ending newline
+static int zen_write (lua_State *L) {
+	if( lua_print_stdout_tobuf(L,' ') ) return 0;
+
+	int status = 1;
+	size_t len = 0;
+	int n = lua_gettop(L);  /* number of arguments */
+	int i, w;
+	lua_getglobal(L, "tostring");
+	for (i=1; i<=n; i++) {
+		const char *s = lua_print_format(L, i, &len);
+		if(i>1)
+			w = write(STDOUT_FILENO, "\t", 1);
+		(void)w;
+		status = status &&
+			(write(STDOUT_FILENO, s,  len) == (int)len);
+		lua_pop(L, 1);  /* pop result */
+	}
+	(void)w;
+	return 0;
+}
+
 static int zen_warn (lua_State *L) {
-	if( lua_print_stderr_tobuf(L) ) return 0;
+	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
 
 	int status = 1;
 	size_t len = 0;
@@ -242,7 +264,7 @@ static int zen_warn (lua_State *L) {
 static int zen_error (lua_State *L) {
 	int n = lua_gettop(L);  /* number of arguments */
 	int w;
-	if( lua_print_stderr_tobuf(L) ) return 0;
+	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
 
 	int status = 1;
 	size_t len = 0;
@@ -275,33 +297,6 @@ static int zen_error (lua_State *L) {
 	return 0;
 }
 
-static int zen_iowrite (lua_State *L) {
-	int nargs = lua_gettop(L) +1;
-	int status = 1;
-	int arg = 0;
-	for (; nargs--; arg++) {
-		if (lua_type(L, arg) == LUA_TNUMBER) {
-			char nrep[64];
-			snprintf(nrep, 64, LUA_NUMBER_FMT, lua_tonumber(L, arg));
-			/* optimization: could be done exactly as for strings */
-			status = status &&
-				write(STDOUT_FILENO, nrep, strlen(nrep)) > 0;
-		} else {
-			size_t l;
-			const char *s = lua_tolstring(L, arg, &l);
-			status = status && (write(STDOUT_FILENO, s, sizeof(char)) == sizeof(char));
-		}
-	}
-	if (!status) {
-		lua_pushnil(L);
-		lua_pushfstring(L, "%s", strerror(errno));
-		lua_pushinteger(L, errno);
-		return 3;
-	}
-	lua_pushboolean(L, 1);
-	return 1;
-}
-
 #endif
 
 static int zen_trim(lua_State* L) {
@@ -326,6 +321,7 @@ void zen_add_io(lua_State *L) {
 	// override print() and io.write()
 	static const struct luaL_Reg custom_print [] =
 		{ {"print", zen_print},
+		  {"write", zen_write},
 		  {"error", zen_error},
 		  {"warn", zen_warn},
 		  {"trim", zen_trim},
@@ -335,7 +331,7 @@ void zen_add_io(lua_State *L) {
 	lua_pop(L, 1);
 
 	static const struct luaL_Reg custom_iowrite [] =
-		{ {"write", zen_iowrite}, {NULL, NULL} };
+		{ {"write", zen_write}, {NULL, NULL} };
 	lua_getglobal(L, "io");
 	luaL_setfuncs(L, custom_iowrite, 0);
 	lua_pop(L, 1);
