@@ -67,9 +67,9 @@ I.print(m)
 print("t:"..type(t).." i:"..type(i).." m:"..type(m))
 
 -- test known values
-m2 = { homeTown = "TWV0cm8gQ2l0eQ==",
-	   secretBase = "U3VwZXIgdG93ZXI=",
-	   squadName = "U3VwZXIgaGVybyBzcXVhZA==" }
+m2 = { homeTown = "b64:TWV0cm8gQ2l0eQ==",
+	   secretBase = "b64:U3VwZXIgdG93ZXI=",
+	   squadName = "b64:U3VwZXIgaGVybyBzcXVhZA==" }
 assert(m.homeTown   == m2.homeTown)
 assert(m.secretBase == m2.secretBase)
 assert(m.squadName  == m2.squadName)

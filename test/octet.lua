@@ -67,9 +67,7 @@ print '== ECP import/export'
 rng = RNG.new()
 left = INT.new(rng,ECP.order()) * ECP.generator() -- ECP point aka pub key
 b64 = left:octet():base64()
--- print(b64)
 right = base64(b64)
--- print(right:base64())
 dotest(left:octet(),right)
 print '== JSON import/export'
 function jsontest(f,reason)

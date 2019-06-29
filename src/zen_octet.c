@@ -82,13 +82,17 @@ static int getlen_base58(int len) {	return( ((3+(5*(len/3))) & ~0x03)+0x0f ); }
 int is_base64(const char *in) {
 	if(!in) { return 0; }
 	int c;
-	for(c=0; in[c]!='\0'; c++) {
+	// check b64: header
+	if(in[0]!='b' || in[1]!='6' || in[2]!='4' || in[3]!=':') return 0;
+	// check all valid characters
+	for(c=4; in[c]!='\0'; c++) {
 		if (!(isalnum(in[c])
 		      || '+' == in[c]
 		      || '=' == in[c]
 		      || '/' == in[c])) {
 			return 0; }
 	}
+	if(c%4 != 0) return 0; // always multiple of 4
 	return c;
 }
 extern const int8_t b58digits_map[];
@@ -289,7 +293,7 @@ static int lua_is_base64(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "string expected");
 	int len = is_base64(s);
-	if(!len) {
+	if(len<4) {
 		lua_pushboolean(L, 0);
 		func(L, "string is not a valid base64 sequence");
 		return 1; }
@@ -338,8 +342,8 @@ static int from_base64(lua_State *L) {
 		lerror(L, "base64 string contains invalid characters");
 		return 0; }
 	int nlen = len + len + len; // getlen_base64(len);
-	octet *o = o_new(L, nlen);
-	OCT_frombase64(o,(char*)s);
+	octet *o = o_new(L, nlen+4); // 4 byte header
+	OCT_frombase64(o,(char*)s+4);
 	return 1;
 }
 
@@ -528,8 +532,9 @@ static int to_base64 (lua_State *L) {
 		return 0; }
 	int newlen;
 	newlen = getlen_base64(o->len);
-	char *b = zen_memory_alloc(newlen);
-	OCT_tobase64(b,o);
+	char *b = zen_memory_alloc(newlen+4);
+	b[0]='b';b[1]='6';b[2]='4';b[3]=':';
+	OCT_tobase64(b+4,o);
 //	b[newlen] = '\0';
 	lua_pushstring(L,b);
 	zen_memory_free(b);
