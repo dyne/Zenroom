@@ -94,9 +94,9 @@ int main(int argc, char **argv) {
 
 	int   zencode             = 0;
 
-	const char *short_options = "hdic:k:a:S:p:uz";
+	const char *short_options = "hd:ic:k:a:S:p:uz";
 	const char *help          =
-		"Usage: zenroom [-dh] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ -S seed ] [ -z ] [ [ -p ] script.lua ]\n";
+		"Usage: zenroom [-h] [ -d lvl ] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ -S seed ] [ -z ] [ [ -p ] script.lua ]\n";
 	int pid, status, retval;
 	conffile   [0] = '\0';
 	scriptfile [0] = '\0';
@@ -109,13 +109,11 @@ int main(int argc, char **argv) {
 	script[0] = '\0';
 	int verbosity = 1;
 
-	notice(NULL, "Zenroom v%s - crypto language restricted VM",VERSION);
-	act(NULL, "Copyright (C) 2017-2019 Dyne.org foundation");
 	while((opt = getopt(argc, argv, short_options)) != -1) {
 		switch(opt) {
 		case 'd':
-			verbosity = 3;
-			set_debug(3);
+			verbosity = atoi(optarg);
+			set_debug(verbosity);
 			break;
 		case 'h':
 			fprintf(stdout,"%s",help);
@@ -147,17 +145,22 @@ int main(int argc, char **argv) {
 		default:  error(0,help); return EXIT_FAILURE;
 		}
 	}
+	if(verbosity) {
+		notice(NULL, "Zenroom v%s - crypto language restricted VM",VERSION);
+		act(NULL, "Copyright (C) 2017-2019 Dyne.org foundation");
+	}
+
 	for (index = optind; index < argc; index++) {
 		snprintf(scriptfile,MAX_STRING-1,"%s",argv[index]);
 	}
 
 	if(keysfile[0]!='\0') {
-		act(NULL, "reading KEYS from file: %s", keysfile);
+		if(verbosity) act(NULL, "reading KEYS from file: %s", keysfile);
 		load_file(keys, fopen(keysfile, "r"));
 	}
 
-	if(datafile[0]!='\0') {
-		act(NULL, "reading DATA from file: %s", datafile);
+	if(datafile[0]!='\0' && verbosity) {
+		if(verbosity) act(NULL, "reading DATA from file: %s", datafile);
 		load_file(data, fopen(datafile, "r"));
 	}
 
@@ -176,7 +179,7 @@ int main(int argc, char **argv) {
 		zen_add_function(L, repl_read, "read");
 		zen_add_function(L, repl_write, "write");
 		int res;
-		notice(NULL, "Interactive console, press ctrl-d to quit.");
+		if(verbosity) notice(NULL, "Interactive console, press ctrl-d to quit.");
 		res = repl_loop(cli);
 		if(res)
 			// quits on ctrl-D
@@ -187,22 +190,22 @@ int main(int argc, char **argv) {
 	if(scriptfile[0]!='\0') {
 		////////////////////////////////////
 		// load a file as script and execute
-		notice(NULL, "reading Zencode from file: %s", scriptfile);
+		if(verbosity) notice(NULL, "reading Zencode from file: %s", scriptfile);
 		load_file(script, fopen(scriptfile, "rb"));
 	} else {
 		////////////////////////
 		// get another argument from stdin
-		act(NULL, "reading Zencode from stdin");
+		if(verbosity) act(NULL, "reading Zencode from stdin");
 		load_file(script, stdin);
 		func(NULL, "%s\n--",script);
 	}
 
 	// configuration from -c or default
 	if(conffile[0]!='\0')
-		act(NULL, "selected configuration: %s",conffile);
+		if(verbosity) act(NULL, "selected configuration: %s",conffile);
 	// load_file(conf, fopen(conffile, "r"));
 	else
-		act(NULL, "using default configuration");
+		if(verbosity) act(NULL, "using default configuration");
 
 	zenroom_t *Z;
 	set_debug(verbosity);
@@ -216,13 +219,13 @@ int main(int argc, char **argv) {
 
 	// configure to parse Lua or Zencode
 	if(zencode) {
-		notice(NULL, "Direct Zencode execution");
+		if(verbosity) notice(NULL, "Direct Zencode execution");
 		func(NULL, script);
 	}
 
 
 	if(rngseed[0] != '\0') {
-		act(NULL, "deterministic mode (random seed provided)");
+		if(verbosity) act(NULL, "deterministic mode (random seed provided)");
 		Z->random_seed = rngseed; // TODO: parse to import (hex?)
 		Z->random_seed_len = strlen(rngseed);
 		// export the random_seed buffer to Lua
@@ -232,7 +235,7 @@ int main(int argc, char **argv) {
 #if DEBUG == 1
 	if(unprotected) { // avoid seccomp in all cases
 		int res;
-		act(NULL, "unprotected mode (debug build)");
+		if(verbosity) act(NULL, "unprotected mode (debug build)");
 		if(zencode)
 			res = zen_exec_zencode(Z, script);
 		else
@@ -261,7 +264,7 @@ int main(int argc, char **argv) {
 			return EXIT_FAILURE;
 		}
 #   endif /* ARCH_LINUX */
-		act(NULL, "starting execution.");
+		if(verbosity) act(NULL, "starting execution.");
 		if(zencode) {
 			if( zen_exec_zencode(Z, script) ) return EXIT_FAILURE;
 		} else {
@@ -276,7 +279,7 @@ int main(int argc, char **argv) {
 	if (WIFEXITED(status)) {
 		retval = WEXITSTATUS(status);
 		if (retval == 0)
-			notice(NULL, "Execution completed.");
+			if(verbosity) notice(NULL, "Execution completed.");
 	} else if (WIFSIGNALED(status)) {
 		notice(NULL, "Execution interrupted by signal %d.", WTERMSIG(status));
 	}

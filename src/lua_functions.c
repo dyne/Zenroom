@@ -102,7 +102,7 @@ void load_file(char *dst, FILE *fd) {
 		offset += bytes;
 	}
 	if(fd!=stdin) fclose(fd);
-	act(0, "loaded file (%u bytes)", offset);
+	if(get_debug())	act(0, "loaded file (%u bytes)", offset);
 }
 #endif
 
