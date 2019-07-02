@@ -153,7 +153,7 @@ static int zen_warn (lua_State *L) {
 	return 0;
 }
 
-static int zen_iowrite (lua_State *L) {
+static int zen_write (lua_State *L) {
 	size_t pos = 0;
 	int nargs = lua_gettop(L) +1;
 	int arg = 0;
@@ -185,7 +185,7 @@ static int zen_warn (lua_State *L)
     return 1;
 }
 
-static int zen_iowrite (lua_State *L)
+static int zen_write (lua_State *L)
 {
     return 1;
 }
