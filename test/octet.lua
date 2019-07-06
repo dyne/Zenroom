@@ -1,4 +1,3 @@
-print()
 print '= OCTET FIRST CLASS CITIZEN TESTS'
 print()
 
@@ -25,6 +24,7 @@ hash = HASH.new()
 right = OCTET.string([[Minim quis typewriter ut. Deep v ut man braid neutra culpa in officia consectetur tousled art party stumptown yuccie. Elit lo-fi pour-over woke venmo keffiyeh in normcore enim sunt labore williamsburg flexitarian. Tumblr distillery fanny pack, banjo tacos vaporware keffiyeh.]])
 teststr = right:string()
 test64  = right:base64()
+testU64 = right:url64()
 test58  = right:base58()
 testhex = right:hex()
 
@@ -46,6 +46,12 @@ print '== test base64 import/export'
 left = OCTET.base64(test64)
 dotest(left, right)
 dotest(left:base64(), test64)
+dotest(hash:process(left), hash:process(right))
+
+print '== test url64 import/export'
+left = OCTET.url64(testU64)
+dotest(left, right)
+dotest(left:url64(), testU64)
 dotest(hash:process(left), hash:process(right))
 
 print '== test base58 import/export'
@@ -78,6 +84,7 @@ function jsontest(f,reason)
 end
 jsontest(hex,"hex")
 jsontest(base58,"base58")
+jsontest(url64,"url64")
 jsontest(base64,"base64")
 -- jsontest(bin,"bin") -- TODO: fix
 
@@ -98,6 +105,7 @@ end
 jsoncryptotest('hex')
 jsoncryptotest('base58')
 jsoncryptotest('base64')
+jsoncryptotest('url64')
 -- jsoncryptotest('bin') -- TODO: fix
 print '= OK'
 

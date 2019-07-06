@@ -60,6 +60,17 @@ function base64(data)
    elseif iszen(t) then return data:octet():base64() -- any zenroom type to octet
    end
 end
+function url64(data)
+   local t = type(data)
+   if(t == "string") then
+	  if O.is_url64(data) then return O.from_url64(data)
+	  else return O.from_str(data):url64() end
+   elseif(t == "number") then return data
+   elseif(t == "table") then return data
+   elseif(t == "zenroom.octet") then return data:url64()
+   elseif iszen(t) then return data:octet():url64() -- any zenroom type to octet
+   end
+end
 function base58(data)
    local t = type(data)
    if(t == "string") then

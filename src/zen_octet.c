@@ -52,6 +52,7 @@
 #include <amcl.h>
 
 #include <zenroom.h>
+#include <encoding.h>
 #include <zen_memory.h>
 #include <zen_octet.h>
 #include <zen_big.h>
@@ -95,6 +96,7 @@ int is_base64(const char *in) {
 	if(c%4 != 0) return 0; // always multiple of 4
 	return c;
 }
+
 extern const int8_t b58digits_map[];
 int is_base58(const char *in) {
 	if(!in) {
@@ -300,6 +302,19 @@ static int lua_is_base64(lua_State *L) {
 	lua_pushboolean(L, 1);
 	return 1;
 }
+
+static int lua_is_url64(lua_State *L) {
+	const char *s = lua_tostring(L, 1);
+	luaL_argcheck(L, s != NULL, 1, "string expected");
+	int len = is_url64(s);
+	if(len<4) {
+		lua_pushboolean(L, 0);
+		func(L, "string is not a valid base64 sequence");
+		return 1; }
+	lua_pushboolean(L, 1);
+	return 1;
+}
+
 static int lua_is_base58(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "string expected");
@@ -344,6 +359,21 @@ static int from_base64(lua_State *L) {
 	int nlen = len + len + len; // getlen_base64(len);
 	octet *o = o_new(L, nlen+4); // 4 byte header
 	OCT_frombase64(o,(char*)s+4);
+	return 1;
+}
+
+static int from_url64(lua_State *L) {
+	const char *s = lua_tostring(L, 1);
+	luaL_argcheck(L, s != NULL, 1, "base64 string expected");
+	int len = is_url64(s);
+	if(!len) {
+		lerror(L, "url64 string contains invalid characters");
+		return 0; }
+	int nlen = B64decode_len(len);
+	func(L,"U64 decode len: %u -> %u",len,nlen);
+	octet *o = o_new(L, nlen+4); // 4 byte header
+	o->len = U64decode(o->val,(char*)s+4); // skip header
+	func(L,"u64 return len: %u",o->len);
 	return 1;
 }
 
@@ -536,6 +566,21 @@ static int to_base64 (lua_State *L) {
 	b[0]='b';b[1]='6';b[2]='4';b[3]=':';
 	OCT_tobase64(b+4,o);
 //	b[newlen] = '\0';
+	lua_pushstring(L,b);
+	zen_memory_free(b);
+	return 1;
+}
+
+static int to_url64 (lua_State *L) {
+	octet *o = o_arg(L,1);	SAFE(o);
+	if(!o->len || !o->val) {
+		lerror(L, "base64 cannot encode an empty string");
+		return 0; }
+	int newlen;
+	newlen = B64encode_len(o->len);
+	char *b = zen_memory_alloc(newlen+4);
+	b[0]='u';b[1]='6';b[2]='4';b[3]=':';
+	U64encode(b+4,o->val,o->len);
 	lua_pushstring(L,b);
 	zen_memory_free(b);
 	return 1;
@@ -771,17 +816,19 @@ int luaopen_octet(lua_State *L) {
 		{"concat",concat_n},
 		{"xor",   xor_n},
 		{"is_base64", lua_is_base64},
+		{"is_url64", lua_is_url64},
 		{"is_base58", lua_is_base58},
 		{"is_hex", lua_is_hex},
 		{"is_bin", lua_is_bin},
-
 		{"from_base64",from_base64},
+		{"from_url64",from_url64},
 		{"from_base58",from_base58},
 		{"from_string",from_string},
 		{"from_str",   from_string},
 		{"from_hex",   from_hex},
 		{"from_bin",   from_bin},
 		{"base64",from_base64},
+		{"url64",from_url64},
 		{"base58",from_base58},
 		{"string",from_string},
 		{"str",   from_string},
@@ -789,6 +836,7 @@ int luaopen_octet(lua_State *L) {
 		{"bin",   from_bin},
 		{"to_hex"   , to_hex},
 		{"to_base64", to_base64},
+		{"to_url64",  to_url64},
 		{"to_base58", to_base58},
 		{"to_string", to_string},
 		{"to_str",    to_string},
@@ -801,6 +849,7 @@ int luaopen_octet(lua_State *L) {
 	const struct luaL_Reg octet_methods[] = {
 		{"hex"   , to_hex},
 		{"base64", to_base64},
+		{"url64",  to_url64},
 		{"base58", to_base58},
 		{"string", to_string},
 		{"str",    to_string},
