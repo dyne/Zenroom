@@ -63,8 +63,10 @@ void rng_seed(RNG *rng) {
 			// zen_teardown, lasts for the whole execution
 			Z->random_generator = zen_memory_alloc(sizeof(csprng)+8);
 			memcpy(Z->random_generator, rng, sizeof(csprng));
-		} else
+		} else {
 			memcpy(rng, Z->random_generator, sizeof(csprng));
+		}
+#ifndef ARCH_CORTEX
 	} else {
 		char *tmp = zen_memory_alloc(256);
 		randombytes(tmp,252);
@@ -76,6 +78,7 @@ void rng_seed(RNG *rng) {
 		tmp[255] =  ttmp & 0xff;
 		RAND_seed(rng,256,tmp);
 		zen_memory_free(tmp);
+#endif
 	}
 }
 void rng_round(RNG *rng) {

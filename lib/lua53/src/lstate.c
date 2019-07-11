@@ -37,15 +37,6 @@
 #endif
 
 
-/*
-** a macro to help the creation of a unique random seed when a state is
-** created; the seed is used to randomize hashes.
-*/
-#if !defined(luai_makeseed)
-#include <time.h>
-#define luai_makeseed()		cast(unsigned int, time(NULL))
-#endif
-
 
 
 /*

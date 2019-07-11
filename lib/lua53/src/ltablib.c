@@ -248,7 +248,7 @@ typedef unsigned int IdxT;
 
 /* size of 'e' measured in number of 'unsigned int's */
 #define sof(e)		(sizeof(e) / sizeof(unsigned int))
-
+#error "non deterministic randomize pivot"
 /*
 ** Use 'time' and 'clock' as sources of "randomness". Because we don't
 ** know the types 'clock_t' and 'time_t', we cannot cast them to
