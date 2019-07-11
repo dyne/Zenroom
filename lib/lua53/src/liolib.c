@@ -307,26 +307,6 @@ static int f_lines (lua_State *L) {
 }
 
 
-static int io_lines (lua_State *L) {
-  int toclose;
-  if (lua_isnone(L, 1)) lua_pushnil(L);  /* at least one argument */
-  if (lua_isnil(L, 1)) {  /* no file name? */
-    lua_getfield(L, LUA_REGISTRYINDEX, IO_INPUT);  /* get default input */
-    lua_replace(L, 1);  /* put it at index 1 */
-    tofile(L);  /* check that it's a valid file handle */
-    toclose = 0;  /* do not close it after iteration */
-  }
-  else {  /* open a new file */
-    const char *filename = luaL_checkstring(L, 1);
-    opencheck(L, filename, "r");
-    lua_replace(L, 1);  /* put file at index 1 */
-    toclose = 1;  /* close it after iteration */
-  }
-  aux_lines(L, toclose);
-  return 1;
-}
-
-
 /*
 ** {======================================================
 ** READ
@@ -571,6 +551,8 @@ static int io_readline (lua_State *L) {
 /* }====================================================== */
 
 
+#ifndef ARCH_CORTEX
+
 static int g_write (lua_State *L, FILE *f, int arg) {
   int nargs = lua_gettop(L) - arg;
   int status = 1;
@@ -594,6 +576,7 @@ static int g_write (lua_State *L, FILE *f, int arg) {
   else return luaL_fileresult(L, status, NULL);
 }
 
+#endif
 
 static int io_write (lua_State *L) {
   return g_write(L, getiofile(L, IO_OUTPUT), 1);
