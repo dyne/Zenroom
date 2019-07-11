@@ -149,7 +149,7 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	lua_pushlightuserdata(L, NULL); /* 2nd argument */
 	int status = lua_pcall(L,2,1,0);
 	if(status != LUA_OK) {
-		error(L,"%s: %s", __func__, "Lua initialization failed");
+		error(L,"%s: %s (%u)", __func__, "Lua initialization failed",status);
 		return NULL;
 	}
 	lua_gc(L, LUA_GCCOLLECT, 0);
