@@ -4,6 +4,41 @@
 #ifdef ARCH_CORTEX
 extern unsigned int _start_heap;
 // #define NULL (((void *)0))
+//
+//
+
+
+/**  XXX Temporary proxy until these dependencies are resolved **/
+int _isatty(int fd)
+{
+    (void)fd;
+    return 0;
+}
+
+int _read(int fd, void *buf, size_t len)
+{
+    return -1;
+}
+
+int _write(int fd, const void *buf, size_t len)
+{
+    return -1;
+}
+
+int _lseek(int fd, int off, int whence)
+{
+    return 0;
+}
+
+int _fstat(int fd, void *st)
+{
+    return -1;
+}
+
+int _close(int fd)
+{
+    return 0;
+}
 
 
 void abort(void)
