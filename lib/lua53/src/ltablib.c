@@ -235,7 +235,7 @@ static int unpack (lua_State *L) {
 /* type for array indices */
 typedef unsigned int IdxT;
 
-
+#define l_randomizePivot() 0xFFFFFFFF
 /*
 ** Produce a "random" 'unsigned int' to randomize pivot choice. This
 ** macro is used only when 'sort' detects a big imbalance in the result
