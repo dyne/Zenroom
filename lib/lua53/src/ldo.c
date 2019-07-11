@@ -139,9 +139,13 @@ int luaD_rawrunprotected (lua_State *L, Pfunc f, void *ud) {
   lj.status = LUA_OK;
   lj.previous = L->errorJmp;  /* chain new error handler */
   L->errorJmp = &lj;
+#ifdef ARCH_CORTEX
+  (*f)(L, ud);
+#else
   LUAI_TRY(L, &lj,
     (*f)(L, ud);
   );
+#endif
   L->errorJmp = lj.previous;  /* restore old error handler */
   L->nCcalls = oldnCcalls;
   return lj.status;
