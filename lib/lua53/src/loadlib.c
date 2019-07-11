@@ -425,53 +425,6 @@ static const char *pushnexttemplate (lua_State *L, const char *path) {
 }
 
 
-static const char *searchpath (lua_State *L, const char *name,
-                                             const char *path,
-                                             const char *sep,
-                                             const char *dirsep) {
-  luaL_Buffer msg;  /* to build error message */
-  luaL_buffinit(L, &msg);
-  if (*sep != '\0')  /* non-empty separator? */
-    name = luaL_gsub(L, name, sep, dirsep);  /* replace it by 'dirsep' */
-  while ((path = pushnexttemplate(L, path)) != NULL) {
-    const char *filename = luaL_gsub(L, lua_tostring(L, -1),
-                                     LUA_PATH_MARK, name);
-    lua_remove(L, -2);  /* remove path template */
-    if (readable(filename))  /* does file exist and is readable? */
-      return filename;  /* return that file name */
-    lua_pushfstring(L, "\n\tno file '%s'", filename);
-    lua_remove(L, -2);  /* remove file name */
-    luaL_addvalue(&msg);  /* concatenate error msg. entry */
-  }
-  luaL_pushresult(&msg);  /* create error message */
-  return NULL;  /* not found */
-}
-
-
-static int ll_searchpath (lua_State *L) {
-  const char *f = searchpath(L, luaL_checkstring(L, 1),
-                                luaL_checkstring(L, 2),
-                                luaL_optstring(L, 3, "."),
-                                luaL_optstring(L, 4, LUA_DIRSEP));
-  if (f != NULL) return 1;
-  else {  /* error message is on top of the stack */
-    lua_pushnil(L);
-    lua_insert(L, -2);
-    return 2;  /* return nil + error message */
-  }
-}
-
-
-static const char *findfile (lua_State *L, const char *name,
-                                           const char *pname,
-                                           const char *dirsep) {
-  const char *path;
-  lua_getfield(L, lua_upvalueindex(1), pname);
-  path = lua_tostring(L, -1);
-  if (path == NULL)
-    luaL_error(L, "'package.%s' must be a string", pname);
-  return searchpath(L, name, path, ".", dirsep);
-}
 
 
 static int checkload (lua_State *L, int stat, const char *filename) {
@@ -510,45 +463,6 @@ static int loadfunc (lua_State *L, const char *filename, const char *modname) {
   }
   openfunc = lua_pushfstring(L, LUA_POF"%s", modname);
   return lookforfunc(L, filename, openfunc);
-}
-
-
-static int searcher_C (lua_State *L) {
-  const char *name = luaL_checkstring(L, 1);
-  const char *filename = findfile(L, name, "cpath", LUA_CSUBSEP);
-  if (filename == NULL) return 1;  /* module not found in this path */
-  return checkload(L, (loadfunc(L, filename, name) == 0), filename);
-}
-
-
-static int searcher_Croot (lua_State *L) {
-  const char *filename;
-  const char *name = luaL_checkstring(L, 1);
-  const char *p = strchr(name, '.');
-  int stat;
-  if (p == NULL) return 0;  /* is root */
-  lua_pushlstring(L, name, p - name);
-  filename = findfile(L, lua_tostring(L, -1), "cpath", LUA_CSUBSEP);
-  if (filename == NULL) return 1;  /* root not found */
-  if ((stat = loadfunc(L, filename, name)) != 0) {
-    if (stat != ERRFUNC)
-      return checkload(L, 0, filename);  /* real error */
-    else {  /* open function not found */
-      lua_pushfstring(L, "\n\tno module '%s' in file '%s'", name, filename);
-      return 1;
-    }
-  }
-  lua_pushstring(L, filename);  /* will be 2nd argument to module */
-  return 2;
-}
-
-
-static int searcher_preload (lua_State *L) {
-  const char *name = luaL_checkstring(L, 1);
-  lua_getfield(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
-  if (lua_getfield(L, -1, name) == LUA_TNIL)  /* not found? */
-    lua_pushfstring(L, "\n\tno field package.preload['%s']", name);
-  return 1;
 }
 
 
