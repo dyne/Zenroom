@@ -78,19 +78,6 @@ typedef struct LG {
   { size_t t = cast(size_t, e); \
     memcpy(b + p, &t, sizeof(t)); p += sizeof(t); }
 
-static unsigned int makeseed (lua_State *L) {
-  char buff[4 * sizeof(size_t)];
-  unsigned int h = luai_makeseed();
-  int p = 0;
-  addbuff(buff, p, L);  /* heap variable */
-  addbuff(buff, p, &h);  /* local variable */
-  addbuff(buff, p, luaO_nilobject);  /* global variable */
-  addbuff(buff, p, &lua_newstate);  /* public function */
-  lua_assert(p == sizeof(buff));
-  return luaS_hash(buff, p, h);
-}
-
-
 /*
 ** set GCdebt to a new value keeping the value (totalbytes + GCdebt)
 ** invariant (and avoiding underflows in 'totalbytes')
@@ -308,7 +295,7 @@ LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud) {
   g->frealloc = f;
   g->ud = ud;
   g->mainthread = L;
-  g->seed = makeseed(L);
+  g->seed = 0x42424242; // constant 
   g->gcrunning = 0;  /* no GC while building state */
   g->GCestimate = 0;
   g->strt.size = g->strt.nuse = 0;
