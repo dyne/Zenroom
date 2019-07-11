@@ -240,24 +240,6 @@ static LStream *newfile (lua_State *L) {
 }
 
 
-static void opencheck (lua_State *L, const char *fname, const char *mode) {
-  LStream *p = newfile(L);
-  p->f = fopen(fname, mode);
-  if (p->f == NULL)
-    luaL_error(L, "cannot open file '%s' (%s)", fname, strerror(errno));
-}
-
-
-static int io_open (lua_State *L) {
-  const char *filename = luaL_checkstring(L, 1);
-  const char *mode = luaL_optstring(L, 2, "r");
-  LStream *p = newfile(L);
-  const char *md = mode;  /* to traverse/check mode */
-  luaL_argcheck(L, l_checkmode(md), 2, "invalid mode");
-  p->f = fopen(filename, mode);
-  return (p->f == NULL) ? luaL_fileresult(L, 0, filename) : 1;
-}
-
 
 /*
 ** function to close 'popen' files
@@ -295,31 +277,8 @@ static FILE *getiofile (lua_State *L, const char *findex) {
 }
 
 
-static int g_iofile (lua_State *L, const char *f, const char *mode) {
-  if (!lua_isnoneornil(L, 1)) {
-    const char *filename = lua_tostring(L, 1);
-    if (filename)
-      opencheck(L, filename, mode);
-    else {
-      tofile(L);  /* check that it's a valid file handle */
-      lua_pushvalue(L, 1);
-    }
-    lua_setfield(L, LUA_REGISTRYINDEX, f);
-  }
-  /* return current value */
-  lua_getfield(L, LUA_REGISTRYINDEX, f);
-  return 1;
-}
 
 
-static int io_input (lua_State *L) {
-  return g_iofile(L, IO_INPUT, "r");
-}
-
-
-static int io_output (lua_State *L) {
-  return g_iofile(L, IO_OUTPUT, "w");
-}
 
 
 static int io_readline (lua_State *L);
@@ -693,17 +652,6 @@ static int f_flush (lua_State *L) {
 ** functions for 'io' library
 */
 static const luaL_Reg iolib[] = {
-//  {"close", io_close},
-  {"flush", io_flush},
-  {"input", io_input},
-  {"lines", io_lines},
-//  {"open", io_open},
-  {"output", io_output},
-//  {"popen", io_popen},
-  {"read", io_read},
-//  {"tmpfile", io_tmpfile},
-//  {"type", io_type},
-  {"write", io_write},
   {NULL, NULL}
 };
 
@@ -712,15 +660,6 @@ static const luaL_Reg iolib[] = {
 ** methods for file handles
 */
 static const luaL_Reg flib[] = {
-  // {"close", io_close},
-  // {"flush", f_flush},
-  // {"lines", f_lines},
-  // {"read", f_read},
-  // {"seek", f_seek},
-  // {"setvbuf", f_setvbuf},
-  // {"write", f_write},
-  // {"__gc", f_gc},
-  // {"__tostring", f_tostring},
   {NULL, NULL}
 };
 

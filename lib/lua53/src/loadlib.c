@@ -492,13 +492,6 @@ static int checkload (lua_State *L, int stat, const char *filename) {
 }
 
 
-static int searcher_Lua (lua_State *L) {
-  const char *filename;
-  const char *name = luaL_checkstring(L, 1);
-  filename = findfile(L, name, "path", LUA_LSUBSEP);
-  if (filename == NULL) return 1;  /* module not found in this path */
-  return checkload(L, (luaL_loadfile(L, filename) == LUA_OK), filename);
-}
 
 
 /*
@@ -626,7 +619,7 @@ static int ll_require (lua_State *L) {
 ** 'module' function
 ** =======================================================
 */
-#if defined(LUA_COMPAT_MODULE)
+#if 0 // defined(LUA_COMPAT_MODULE)
 
 /*
 ** changes the environment variable of calling function
@@ -706,11 +699,6 @@ static int ll_seeall (lua_State *L) {
 
 
 static const luaL_Reg pk_funcs[] = {
-  {"loadlib", ll_loadlib},
-  {"searchpath", ll_searchpath},
-#if defined(LUA_COMPAT_MODULE)
-  {"seeall", ll_seeall},
-#endif
   /* placeholders */
   {"preload", NULL},
   {"cpath", NULL},
@@ -723,31 +711,12 @@ static const luaL_Reg pk_funcs[] = {
 
 static const luaL_Reg ll_funcs[] = {
 #if defined(LUA_COMPAT_MODULE)
-  {"module", ll_module},
+  // {"module", ll_module},
 #endif
   {"require", ll_require},
   {NULL, NULL}
 };
 
-
-static void createsearcherstable (lua_State *L) {
-  static const lua_CFunction searchers[] =
-    {searcher_preload, searcher_Lua, searcher_C, searcher_Croot, NULL};
-  int i;
-  /* create 'searchers' table */
-  lua_createtable(L, sizeof(searchers)/sizeof(searchers[0]) - 1, 0);
-  /* fill it with predefined searchers */
-  for (i=0; searchers[i] != NULL; i++) {
-    lua_pushvalue(L, -2);  /* set 'package' as upvalue for all searchers */
-    lua_pushcclosure(L, searchers[i], 1);
-    lua_rawseti(L, -2, i+1);
-  }
-#if defined(LUA_COMPAT_LOADERS)
-  lua_pushvalue(L, -1);  /* make a copy of 'searchers' table */
-  lua_setfield(L, -3, "loaders");  /* put it in field 'loaders' */
-#endif
-  lua_setfield(L, -2, "searchers");  /* put it in field 'searchers' */
-}
 
 
 /*
@@ -767,7 +736,6 @@ static void createclibstable (lua_State *L) {
 LUAMOD_API int luaopen_package (lua_State *L) {
   createclibstable(L);
   luaL_newlib(L, pk_funcs);  /* create 'package' table */
-  createsearcherstable(L);
   /* set paths */
   setpath(L, "path", LUA_PATH_VAR, LUA_PATH_DEFAULT);
   setpath(L, "cpath", LUA_CPATH_VAR, LUA_CPATH_DEFAULT);
