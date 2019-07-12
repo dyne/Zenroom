@@ -167,7 +167,7 @@ static const char *zen_lua_findtable (lua_State *L, int idx,
 }
 
 void zen_add_class(lua_State *L, char *name,
-                  const luaL_Reg *class, const luaL_Reg *methods) {
+                  const luaL_Reg *_class, const luaL_Reg *methods) {
 	char classmeta[512];
 	snprintf(classmeta,511,"zenroom.%s", name);
 	luaL_newmetatable(L, classmeta);
@@ -194,5 +194,5 @@ void zen_add_class(lua_State *L, char *name,
 	// in lua 5.1 was: luaL_pushmodule(L,name,1);
 
 	lua_insert(L,-1);
-	luaL_setfuncs(L,class,0);
+	luaL_setfuncs(L,_class,0);
 }
