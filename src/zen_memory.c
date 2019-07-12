@@ -76,8 +76,8 @@ extern zen_mem_t *MEM;
 
 // Global HEAP pointer in the STACK
 zen_mem_t *umm_memory_init(size_t S) {
-	zen_mem_t *mem = malloc(sizeof(zen_mem_t));
-	mem->heap = zen_memalign(S, 8);
+	zen_mem_t *mem = (zen_mem_t*)malloc(sizeof(zen_mem_t));
+	mem->heap = (char*)zen_memalign(S, 8);
 	mem->heap_size = S;
 	mem->malloc = umm_malloc;
 	mem->realloc = umm_realloc;
@@ -91,7 +91,7 @@ zen_mem_t *umm_memory_init(size_t S) {
 }
 
 zen_mem_t *libc_memory_init() {
-	zen_mem_t *mem = malloc(sizeof(zen_mem_t));
+	zen_mem_t *mem = (zen_mem_t*)malloc(sizeof(zen_mem_t));
 	mem->heap = NULL;
 	mem->heap_size = 0;
 	mem->malloc = malloc;

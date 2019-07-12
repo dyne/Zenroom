@@ -41,7 +41,7 @@ void set_debug(int lev);
 int get_debug();
 
 void notice(lua_State *L, const char *format, ...);
-void func(lua_State *L, const char *format, ...);
+void func(void *L, const char *format, ...);
 void error(lua_State *L, const char *format, ...);
 void act(lua_State *L, const char *format, ...);
 void warning(lua_State *L, const char *format, ...);

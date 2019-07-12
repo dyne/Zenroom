@@ -97,7 +97,7 @@ void notice(lua_State *L, const char *format, ...) {
   va_end(arg);
 }
 
-void func(lua_State *L, const char *format, ...) {
+void func(void *L, const char *format, ...) {
 	(void)L;
   if(verbosity>=FUNC) {
     va_list arg;

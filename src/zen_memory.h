@@ -23,7 +23,7 @@
 
 // header to inject our own memory allocation functions
 
-void *zen_memory_alloc(size_t size);
+char *zen_memory_alloc(size_t size);
 void *zen_memory_realloc(void *ptr, size_t size);
 void  zen_memory_free(void *ptr);
 void *system_alloc(size_t size);

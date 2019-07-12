@@ -201,10 +201,10 @@ int main(int argc, char **argv) {
 	}
 
 	// configuration from -c or default
-	if(conffile[0]!='\0')
+	if(conffile[0]!='\0') {
 		if(verbosity) act(NULL, "selected configuration: %s",conffile);
 	// load_file(conf, fopen(conffile, "r"));
-	else
+	} else
 		if(verbosity) act(NULL, "using default configuration");
 
 	zenroom_t *Z;
@@ -229,7 +229,7 @@ int main(int argc, char **argv) {
 		Z->random_seed = rngseed; // TODO: parse to import (hex?)
 		Z->random_seed_len = strlen(rngseed);
 		// export the random_seed buffer to Lua
-		zen_setenv(Z->lua, "RANDOM_SEED", Z->random_seed);
+		zen_setenv((lua_State*)Z->lua, "RANDOM_SEED", Z->random_seed);
 	}
 
 #if DEBUG == 1

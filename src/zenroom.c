@@ -82,7 +82,7 @@ static int zen_lua_panic (lua_State *L) {
 
 static int zen_init_pmain(lua_State *L) { // protected mode init
 	// create the zenroom_t global context
-	Z = system_alloc(sizeof(zenroom_t));
+	Z = (zenroom_t*)system_alloc(sizeof(zenroom_t));
 	Z->lua = L;
 	Z->mem = MEM;
 	Z->stdout_buf = NULL;
@@ -209,7 +209,7 @@ int zen_exec_zencode(zenroom_t *Z, const char *script) {
 		      __func__);
 		return 1; }
 	int ret;
-	lua_State* L = Z->lua;
+	lua_State* L = (lua_State*)Z->lua;
 	// introspection on code being executed
 	char zscript[MAX_STRING];
 	snprintf(zscript,MAX_STRING-1,
@@ -234,7 +234,7 @@ int zen_exec_script(zenroom_t *Z, const char *script) {
 				__func__);
 		return 1; }
 	int ret;
-	lua_State* L = Z->lua;
+	lua_State* L = (lua_State*)Z->lua;
 	// introspection on code being executed
 	zen_setenv(L,"CODE",(char*)script);
 	ret = luaL_dostring(L, script);
@@ -273,7 +273,7 @@ int zencode_exec(char *script, char *conf, char *keys,
 	if(!Z) {
 		error(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
-	L = Z->lua;
+	L = (lua_State*)Z->lua;
 	if(!L) {
 		error(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
@@ -326,7 +326,7 @@ int zenroom_exec(char *script, char *conf, char *keys,
 	if(!Z) {
 		error(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
-	L = Z->lua;
+	L = (lua_State*)Z->lua;
 	if(!L) {
 		error(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
@@ -384,7 +384,7 @@ int zencode_exec_tobuf(char *script, char *conf, char *keys,
 	if(!Z) {
 		error(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
-	L = Z->lua;
+	L = (lua_State*)Z->lua;
 	if(!L) {
 		error(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
@@ -447,7 +447,7 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys,
 	if(!Z) {
 		error(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
-	L = Z->lua;
+	L = (lua_State*)Z->lua;
 	if(!L) {
 		error(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
@@ -516,7 +516,7 @@ int zenroom_exec_rng_tobuf(char *script, char *conf, char *keys,
 	if(!Z) {
 		error(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
-	L = Z->lua;
+	L = (lua_State*)Z->lua;
 	if(!L) {
 		error(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
@@ -589,7 +589,7 @@ int zencode_exec_rng_tobuf(char *script, char *conf, char *keys,
 	if(!Z) {
 		error(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
-	L = Z->lua;
+	L = (lua_State*)Z->lua;
 	if(!L) {
 		error(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
