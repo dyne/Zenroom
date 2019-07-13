@@ -36,6 +36,8 @@ cortex-arm:	apply-patches cortex-lua53 milagro embed-lua
 linux-debug: cflags += -O1 -ggdb ${cflags_protection} -DDEBUG=1 -Wstack-usage=4096
 linux-debug: linux
 
+linux-c++: linux
+
 linux-jemalloc: linux
 
 linux-debug-jemalloc: cflags += -O1 -ggdb ${cflags_protection} -DDEBUG=1 -Wstack-usage=4096

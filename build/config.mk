@@ -87,6 +87,10 @@ milagro_cmake_flags += -DCMAKE_SYSTEM_PROCESSOR="arm" -DCMAKE_CROSSCOMPILING=1 -
 milagro_cmake_flags += -DCMAKE_OSX_SYSROOT="/" -DCMAKE_OSX_DEPLOYMENT_TARGET=""
 endif
 
+ifneq (,$(findstring c++,$(MAKECMDGOALS)))
+gcc := g++
+endif
+
 ifneq (,$(findstring musl,$(MAKECMDGOALS)))
 gcc := musl-gcc
 cflags := -Os -static -Wall -std=gnu99 -fPIC ${cflags_protection} -D'ARCH=\"MUSL\"' -D__MUSL__ -DARCH_MUSL
