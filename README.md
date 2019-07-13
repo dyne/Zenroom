@@ -18,15 +18,15 @@ On this page you can download our software, ready for use. For less technical ex
 ## Latest stable release is 0.10:
 <ul class="center">
 
-<li class="fab fa-node-js"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.10-javascript.zip">Javscript (nodeJS and WASM)</a></li>
+<li class="fab fa-node-js"><a href="https://files.dyne.org/zenroom/releases/">Javscript (nodeJS and WASM)</a></li>
 
-<li class="fab fa-linux"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.10-linux.zip">Linux (ARM and x86)</a></li>
+<li class="fab fa-linux"><a href="https://files.dyne.org/zenroom/releases/">Linux (ARM and x86)</a></li>
 
-<li class="fab fa-windows"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.10-windows.zip">Windows (EXE and DLL)</li>
+<li class="fab fa-windows"><a href="https://files.dyne.org/zenroom/releases/">Windows (EXE and DLL)</li>
 
-<li class="fab fa-apple"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.10-apple.zip">Apple (OSX and iOS)</li>
+<li class="fab fa-apple"><a href="https://files.dyne.org/zenroom/releases/">Apple (OSX and iOS)</li>
 
-<li class="far fa-file-archive"><a href="https://files.dyne.org/zenroom/releases/Zenroom-0.10.tar.gz">Source Code</a></li>
+<li class="far fa-file-archive"><a href="https://files.dyne.org/zenroom/releases/">Source Code</a></li>
 
 <li class="fab fa-github"><a href="https://github.com/decodeproject/zenroom">Git repository</a></li>
 
