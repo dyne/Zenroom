@@ -25,15 +25,20 @@ J.decode = function(str)
    -- TODO: investigate this behavior
    assert(str,      "JSON.decode error decoding nil string")
    assert(str ~= "","JSON.decode error decoding empty string")
+   assert(type(str) == "string", "JSON.decode error unsopported type: "..type(str))
    local t = JSON.raw_decode(str)
    local i = t
    assert(t, "JSON.decode error decoding string:\n"..str)
    return i,t
 end
 
--- no problem found in encode
 J.encode = function(tab)
-   return JSON.raw_encode(tab)
+   return
+	  JSON.raw_encode(
+		 -- process encodes zencode types
+		 I.process(tab)
+	  )
+   -- return JSON.raw_encode(tab)
 end
 
 return J

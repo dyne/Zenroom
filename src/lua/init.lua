@@ -38,8 +38,6 @@ function iszen(n)
    return false
 end
 
-JSON = require('zenroom_json')
-
 require('msgpack')
 MSG = msgpack
 msgpack = nil -- rename default global
@@ -49,6 +47,8 @@ O = OCTET -- alias
 
 INSIDE = require('inspect')
 I = INSIDE -- alias
+
+JSON = require('zenroom_json')
 RNG    = require('zenroom_rng')
 ECDH   = require('zenroom_ecdh')
 LAMBDA = require('functional')
@@ -90,6 +90,10 @@ end
 -- switch to deterministic (sorted) table iterators
 _G["pairs"]  = LAMBDA.pairs
 _G["ipairs"] = LAMBDA.pairs
+
+-- default encoding base64url (RFC4648)
+-- this is the fastest and most portable encoder in zenroom
+_G["ENCODING"] = url64
 
 -- map values in place, sort tables by keys for deterministic order
 function map(data, fun)

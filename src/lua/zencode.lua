@@ -174,6 +174,12 @@ function zencode.debug()
    I.print({OUT = OUT})
 end
 
+function zencode.debug_json()
+   write(JSON.encode({ IN = IN,
+					   ACK = ACK,
+					   OUT = OUT }))
+end
+
 function zencode.assert(condition, errmsg)
    if condition then return true end
    error(errmsg) -- prints zencode backtrace

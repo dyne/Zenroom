@@ -294,7 +294,7 @@ end
 
 function Inspector:putValue(v)
   local tv = type(v)
-
+  enc = ENCODING or url64
   if tv == 'string' then
     self:puts(smartQuote(escape(v)))
   elseif tv == 'number' or tv == 'boolean' or tv == 'nil' or
@@ -304,17 +304,21 @@ function Inspector:putValue(v)
     self:putTable(v)
   elseif iszen(tv) then
 	 if tv == "zenroom.octet" then
-		self:puts("octet[" .. #v .. "] " .. v:hex())
+		self:puts("octet[" .. #v .. "] " .. enc(v))
 	 elseif tv == "zenroom.big" then
-		self:puts("int[] " .. v:octet():hex())
+		local i = v:octet()
+		self:puts("int[" .. #i.. "] " .. enc(i))
 	 elseif tv == "zenroom.ecp" then
-		self:puts("ecp[] " .. v:octet():hex())
+		local i = v:octet()
+		self:puts("ecp[" .. #i.. "] " .. enc(i))
 	 elseif tv == "zenroom.ecp2" then
-		self:puts("ecp2[] ".. v:octet():hex())
+		local i = v:octet()
+		self:puts("ecp2[" ..#i.. "] ".. enc(i))
 	 elseif tv == "zenroom.fp12" then
-		self:puts("fp12[] ".. v:octet():hex())
+		local i = v:octet()
+		self:puts("fp12[" ..#i.. "] ".. enc(i))
 	 else
-		self:puts(v:octet():hex())
+		self:puts(enc(v:octet()))
 	 end
   else
     self:puts('<',tv,' ',self:getId(v),'>')
@@ -328,7 +332,7 @@ function inspect.inspect(root, options)
 
   local depth   = options.depth   or math.huge
   local newline = options.newline or '\n'
-  local indent  = options.indent  or '  '
+  local indent  = options.indent  or '    '
   local process = options.process
 
   if process then
@@ -351,25 +355,32 @@ function inspect.inspect(root, options)
   return table.concat(inspector.buffer)
 end
 
--- facilitation wrapper
+-- conversion wrapper for zenroom types
+function inspect.encode(item)
+   enc = ENCODING or hex
+   t = type(item)
+   if t == "zenroom.octet" then
+	  return enc(item)
+   elseif iszen(t) then
+	  return enc(item:octet())
+   else
+	  return item
+   end
+end
+
+-- apply conversion wrapper to all values of a table
+function inspect.process(item)
+   return processRecursive(inspect.encode, item, {}, {})
+end
+
 -- this way one can simply prefix an i. to print
 function inspect.print(root, options)
-   t = type(root)
-   if t == "zenroom.ecp" then
-	  print(inspect.inspect(root:table(), options))
-	  return root
-   end
    print(inspect.inspect(root, options))
    return root
 end
 -- facilitation wrapper
 -- this way one can simply prefix an i. to print
 function inspect.warn(root, options)
-   t = type(root)
-   if t == "zenroom.ecp" then
-	  warn(inspect.inspect(root:table(), options))
-	  return root
-   end
    warn(inspect.inspect(root, options))
    return root
 end
