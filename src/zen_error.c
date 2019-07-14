@@ -42,6 +42,7 @@
 int lerror(lua_State *L, const char *fmt, ...) {
 	va_list argp;
 	va_start(argp, fmt);
+	error(0,fmt,argp);
 	luaL_where(L, 1);
 	lua_pushvfstring(L, fmt, argp);
 	va_end(argp);

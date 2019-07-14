@@ -26,8 +26,6 @@
 
 int lerror(lua_State *L, const char *fmt, ...);
 
-void *zalloc(lua_State *L, size_t size);
-
 #define ERROR() error(0, "Error in %s",__func__)
 #define SAFE(x) if(!x) lerror(L, "NULL variable in %s",__func__)
 
