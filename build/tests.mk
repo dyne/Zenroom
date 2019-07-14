@@ -120,8 +120,8 @@ check-js:
 	@echo "All tests passed for JS binary build"
 	@echo "----------------"
 
-check-debug: test-exec-lowmem := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom-shared -u -d
-check-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom-shared -u -d
+check-debug: test-exec-lowmem := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom-shared -u -d 3
+check-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom-shared -u -d 3
 check-debug:
 	$(call determinism-tests,${test-exec-lowmem})
 	$(call lowmem-tests,${test-exec-lowmem})
@@ -139,7 +139,7 @@ check-crypto:
 	@echo "-----------------------"
 
 
-check-crypto-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom-shared -u -d
+check-crypto-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom-shared -u -d 3
 check-crypto-debug:
 	$(call determinism-tests,${test-exec-lowmem})
 	$(call crypto-tests,${test-exec})
