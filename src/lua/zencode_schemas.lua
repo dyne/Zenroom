@@ -18,35 +18,42 @@
 
 -- Zencode data schemas for validation
 
-ZEN.get = function(conv, obj, key)
+-- init schemas
+ZEN.schemas = { }
+ZEN.add_schema = function(arr)
+   for k,v in ipairs(arr) do
+	  ZEN.schemas[k] = v
+   end
+end
+
+-- TODO: return the prefix of an encoded string if found
+ZEN.prefix = function(str)
+   t = type(str)
+   if t ~= "string" then return nil end
+   if str:sub(4,4) ~= ":" then return nil end
+   return str:sub(1,3)
+end
+
+ZEN.get = function(obj, key, conversion)
+   local conv = conversion or OCTET.new
    ZEN.assert(type(key) == "string", "Invalid key in object conversion")
    ZEN.assert(obj, "Object not found for conversion")
    ZEN.assert(obj[key], "Key not found in object conversion: "..key)
-   local res
-   if conv then res = conv(obj[key])
-   else res = obj[key] end
+   ZEN.assert(ZEN.prefix(obj[key]), "Encoding prefix missing in conversion: "..key)
+   -- if conv then
+   res = conv( obj[key] )
+   -- else res = obj[key] end
    assert(res, "Error converting object key: ".. key)
    return res
 end
 
+
+-- import function to have recursion of nested data structures
+-- according to their stated schema
 function import(obj, sname)
    ZEN.assert(sname, "Import error: schema is nil")
    ZEN.assert(obj, "Import error: obj is nil ("..sname..")")
    local s = ZEN.schemas[sname]
-   ZEN.assert(s ~= nil, "Import error: schema not found '"..sname.."'")
-   return s.import(obj)
-end
-function export(obj, sname, conv)
-   ZEN.assert(obj, "Export error: obj is nil")
-   ZEN.assert(type(sname) == "string", "Export error: invalid schema string")
-   ZEN.assert(type(conv) == "function", "Export error: invalid conversion function")
-   local s = ZEN.schemas[sname]
-   ZEN.assert(s ~= nil, "Export error: schema not found '"..sname.."'")
-   local out = s.export(obj, conv)
-   ZEN.assert(out, "Export error: returned nil for schema '"..sname.."'")
-   out.encoding = 'hex' -- hardcoded
-   out.curve = 'bls383'
-   out.schema = sname
-   out.zenroom = VERSION
-   return out
+   ZEN.assert(type(s) == 'function', "Import error: schema not found '"..sname.."'")
+   return s(obj)
 end

@@ -47,19 +47,22 @@ function ZEN.data.add(_data, key, value)
    return _data
 end
 
-function ZEN.data.conjoin(_data, section, key, value)
-   if _data[section] then
+function ZEN.data.conjoin(_data, key, value, section)
+   portion = { }
+   if section and _data[section] then
       portion = _data[section]
-   else
-      portion = { }
    end
    if value['schema'] then
       ZEN.assert(validate(value, schemas[value.schema]),
-				 "conjoin(): invalid data format for "..section.."."..key..
-					" (schema: "..value.schema..")")
+   				 "conjoin(): invalid data format for "..section.."."..key..
+   					" (schema: "..value.schema..")")
    end
    portion[key] = value
-   _data[section] = portion
+   if section then
+   	  _data[section] = portion
+   else
+   	  table.insert(_data, portion)
+   end
    return _data
 end
 
@@ -73,84 +76,47 @@ function ZEN.data.disjoin(_data, section, key)
    return _data
 end
 
--- checks that a data section contains a key (no check on value)
-function ZEN.data.check(_data, section, key)
-   -- _data = _data or _G['data']
-   portion = _data[section] -- L.property(section)(_data)
-   if not portion then
-      error("ZEN.data.check(): '"..section.."' data not found") end
-   if key then
-      if not portion[key] then
-         error("ZEN.data.check(): '"..key..
-			   "' not found in '"..section.."' data") end
-      if type(portion) == "table" then
-         if portion[key].schema then
-            ZEN.assert(validate(portion[key], schemas[portion[key].schema]),
-					   "ZEN.data.check(): invalid data format for "..section.."."..key..
-						  " (schema: "..portion[key].schema..")");
-         end
-      end
-      return(portion[key])
-   else
-      if type(portion) == "table" then
-         if portion.schema then
-            ZEN.assert(validate(portion, schemas[portion.schema]),
-					   "ZEN.data.check(): invalid data format for "..section..
-						  " (schema: "..portion.schema..")");
-            return(portion)
-         end
-      end
-   end
-end
-
 
 -- most used functions
 Then("print all data", function()
-        -- local _data = OUT or ZEN.data.load()
-        local t = type(OUT)
-        if t == "table" then
-           write_json(OUT)
-        elseif iszen(t) or t == "string" then
-           print(OUT)
-        end
+		OUT = ACK
 end)
 f_hello = function(nam) ACK.whoami = nam end
 Given("I introduce myself as ''", f_hello)
 Given("I am known as ''", f_hello)
+Given("I have a ''", function(sc)
+		 local obj = IN[sc]
+		 ZEN.assert(obj, "Data not found: '"..sc.."'")
+		 xxx(2,"importing data '"..sc.."'")
+		 ACK[sc] = import(obj,sc)
+end)
+Given("I have inside '' a ''", function(k, sc) 
+		 local obj = IN[k]
+		 obj = obj[sc]
+		 ZEN.assert(obj, "Data not found: '"..k.."' containing '"..sc.."'")
+		 xxx(2,"importing data '"..k.."' with schema '"..sc.."'")
+		 ACK[sc] = import(obj,sc)
+end)
+Given("I have my ''", function(sc) 
+		 local obj = IN[ACK.whoami]
+		 if obj[sc] then obj = obj[sc] end
+		 ZEN.assert(obj, "Data not found: '"..ACK.whoami.."' containing '"..sc.."'")
+		 ACK[sc] = import(obj,sc)
+end)
+Given("my keys have ''", function(sc)
+		 local obj
+		 if ACK.whoami then
+			obj = IN.KEYS[ACK.whoami]
+		 else obj = IN.KEYS end
+		 if obj[sc] then obj = obj[sc] end -- nested object inside name
+		 ZEN.assert(obj, "Keys not found: '"..sc.."'")
+		 ACK[sc] = import(obj,sc)
+end)
 
 -- debug functions
 Given("print debug info", function() ZEN.debug() end)
 When("print debug info", function() ZEN.debug() end)
 Then("print debug info", function() ZEN.debug() end)
-
-f_havedata = function (section,key)
-   -- _G['data'] = ZEN.check(JSON.decode(DATA),dataname)
-   -- local _data = IN or ZEN.data.load()
-   if key then
-      ZEN.data.check(IN,section,key)
-   else
-      ZEN.data.check(IN,section)
-   end
-   -- _data = data or JSON.decode(DATA)
-   -- section = _data[dataname] -- L.property(dataname)(_data)
-   -- ZEN.assert(validate(section,schemas[dataname]),
-   --         "Invalid data format for "..dataname)
-   -- -- explicit global states
-   selection = section
-end
-
-Given("I have a '' ''", f_havedata)
-Given("I have a ''", f_havedata)
-
-
-f_datakeyvalue = function(section,key,value)
-   --   local _data = IN or ZEN.data.load()
-   k = ZEN.data.check(IN,section,key)
-   ZEN.assert(k == value, section.." data key "..key.."="..k.." instead of "..value)
-   ACK[section] = IN[section]
-end
-Given("I have a '' '' ''", f_datakeyvalue)
-Given("data '' field '' contains ''", f_datakeyvalue)
 
 f_datarm = function (section)
    --   local _data = IN or ZEN.data.load()
@@ -210,31 +176,23 @@ end)
 
 When("I remove '' from data", f_datarm)
 
-f_justprint =  function (what)
-   ZEN.assert(OUT[what], "Cannot print, data not found: "..what)
-   write_json({ [what] = OUT[what] })
+local function _print_the_data(what)
+   ZEN.assert(ACK[what], "Cannot print, data not found: "..what)
+   OUT[what] = ACK[what]
 end
-Then("print data ''", f_justprint)
-
-Then("print '' inside ''", function (what, section)
-        -- local _data = OUT or ZEN.data.load()
-        ZEN.assert(OUT[what], "Cannot print, data not found: "..what)
-        local t = type(OUT[what])
-        write_json({ [section] = OUT[what] })
+Then("print data ''", _print_the_data)
+Then("print the ''", _print_the_data)
+Then("print my ''", function(what)
+		ZEN.assert(ACK.whoami, "No identity specified")
+		ZEN.assert(ACK[what], "Cannot print, data not found: "..what)
+		local t = OUT[ACK.whoami] or { }
+		t[what] = ACK[what]
+		OUT[ACK.whoami] = t
 end)
-
-Then("print '' ''", function (what, section)
-        -- local _data = OUT or ZEN.data.load()
-        local sub = ZEN.data.check(OUT,section)
-        local t = type(sub)
-        if t == "table" then write_json(sub)
-        elseif iszen(t) or t == "string" then
-           print(sub)
-        else
-           error("Cannot print '"..what.."'.'"..section.."' data type: "..t)
-        end
+Then("print my data", function()
+		ZEN.assert(ACK.whoami, "No identity specified")
+		OUT[ACK.whoami] = ACK[ACK.whoami]
 end)
-
-Then("print string ''", function(s)
-        print(s)
+Then("print '' ''", function (sect, what)
+		OUT[sect] = what
 end)

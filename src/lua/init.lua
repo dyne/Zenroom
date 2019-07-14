@@ -129,6 +129,7 @@ function help(module)
    end
 end
 
+-- TODO: deprecated, to be removed
 function read_json(data)
    if not data then
 	  error("read_json() missing data")

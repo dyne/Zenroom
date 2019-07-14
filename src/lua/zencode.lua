@@ -26,8 +26,14 @@ local zencode = {
    verbosity = 0
 }
 
+-- Zencode HEAP globals
+IN = { } -- import global DATA from json
+IN.KEYS = { } -- import global KEYS from json
+ACK = ACK or { }
+OUT = OUT or { }
+
 -- debugging facility
-local function xxx(n,s)
+function xxx(n,s)
    if zencode.verbosity > n then
 	  warn(s) end
 end
@@ -165,6 +171,7 @@ function zencode:run()
 		 error(_G.ZEN_traceback)
 	  end
    end
+   if type(OUT) == 'table' then print(JSON.encode(OUT)) end
 end
 
 function zencode.debug()
@@ -182,9 +189,9 @@ end
 
 function zencode.assert(condition, errmsg)
    if condition then return true end
-   error(errmsg) -- prints zencode backtrace
    ZEN.debug() -- prints all data in memory
-   assert(false)
+   error(errmsg) -- prints zencode backtrace
+   assert(false, "Execution aborted.")
 end
 
 zencode.validate = function(obj, objschema, errmsg)
@@ -215,11 +222,4 @@ end
 -- _G["When"]     = when_step
 -- _G["Then"]     = then_step
 
--- init schemas
-zencode.schemas = { }
-function zencode.add_schema(arr)
-   for k,v in ipairs(arr) do
-	  zencode.schemas[k] = v
-   end
-end
 return zencode

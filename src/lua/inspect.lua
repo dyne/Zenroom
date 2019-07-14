@@ -355,7 +355,7 @@ function inspect.inspect(root, options)
   return table.concat(inspector.buffer)
 end
 
--- conversion wrapper for zenroom types
+-- conversion wrappers for zenroom types
 function inspect.encode(item)
    enc = ENCODING or hex
    t = type(item)
