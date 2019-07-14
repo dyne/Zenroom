@@ -30,18 +30,7 @@
 #include <json_strbuf.h>
 
 #include <zen_memory.h>
-
-static void die(const char *fmt, ...)
-{
-    va_list arg;
-
-    va_start(arg, fmt);
-    vfprintf(stderr, fmt, arg);
-    va_end(arg);
-    fprintf(stderr, "\n");
-
-    exit(-1);
-}
+#include <zen_error.h>
 
 void strbuf_init(strbuf_t *s, int len)
 {
@@ -62,7 +51,7 @@ void strbuf_init(strbuf_t *s, int len)
 
     s->buf = (char *)zen_memory_alloc(size);
     if (!s->buf)
-        die("Out of memory");
+        lerror(NULL,"Out of memory");
 
     strbuf_ensure_null(s);
 }
@@ -73,7 +62,7 @@ strbuf_t *strbuf_new(int len)
 
     s = (strbuf_t*)zen_memory_alloc(sizeof(strbuf_t));
     if (!s)
-        die("Out of memory");
+        lerror(NULL,"Out of memory");
 
     strbuf_init(s, len);
 
@@ -88,7 +77,7 @@ void strbuf_set_increment(strbuf_t *s, int increment)
     /* Increment > 0:  Linear buffer growth rate
      * Increment < -1: Exponential buffer growth rate */
     if (increment == 0 || increment == -1)
-        die("BUG: Invalid string increment");
+        lerror(NULL,"BUG: Invalid string increment");
 
     s->increment = increment;
 }
@@ -138,7 +127,7 @@ static int calculate_new_size(strbuf_t *s, int len)
     int reqsize, newsize;
 
     if (len <= 0)
-        die("BUG: Invalid strbuf length requested");
+        lerror(NULL,"BUG: Invalid strbuf length requested");
 
     /* Ensure there is room for optional NULL termination */
     reqsize = len + 1;
@@ -177,7 +166,7 @@ void strbuf_resize(strbuf_t *s, int len)
     s->size = newsize;
     s->buf = (char *)zen_memory_realloc(s->buf, s->size);
     if (!s->buf)
-        die("Out of memory");
+        lerror(NULL,"Out of memory");
     s->reallocs++;
 }
 
@@ -213,7 +202,7 @@ void strbuf_append_fmt(strbuf_t *s, int len, const char *fmt, ...)
     va_end(arg);
 
     if (fmt_len < 0)
-        die("BUG: Unable to convert number");  /* This should never happen.. */
+        lerror(NULL,"BUG: Unable to convert number");  /* This should never happen.. */
 
     s->length += fmt_len;
 }
@@ -242,7 +231,7 @@ void strbuf_append_fmt_retry(strbuf_t *s, const char *fmt, ...)
         if (fmt_len <= empty_len)
             break;  /* SUCCESS */
         if (t > 0)
-            die("BUG: length of formatted string changed");
+            lerror(NULL,"BUG: length of formatted string changed");
 
         strbuf_resize(s, s->length + fmt_len);
     }

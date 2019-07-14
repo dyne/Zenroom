@@ -46,12 +46,14 @@
 #include <json_strbuf.h>
 #include "json_fpconv.h"
 
+#include <zen_error.h>
+
 #ifndef CJSON_MODNAME
 #define CJSON_MODNAME   "cjson"
 #endif
 
 #ifndef CJSON_VERSION
-#define CJSON_VERSION   "2.1devel"
+#define CJSON_VERSION   "2.1zenroom"
 #endif
 
 #ifdef _MSC_VER
@@ -202,7 +204,7 @@ static json_config_t *json_fetch_config(lua_State *l)
 
     cfg = (json_config_t *)lua_touserdata(l, lua_upvalueindex(1));
     if (!cfg)
-        luaL_error(l, "BUG: Unable to fetch CJSON configuration");
+        lerror(l, "BUG: Unable to fetch CJSON configuration");
 
     return cfg;
 }
@@ -333,7 +335,7 @@ void json_verify_invalid_number_setting(lua_State *l, int *setting)
 {
     if (*setting == 1) {
         *setting = 0;
-        luaL_error(l, "Infinity, NaN, and/or hexadecimal numbers are not supported.");
+        lerror(l, "Infinity, NaN, and/or hexadecimal numbers are not supported.");
     }
 }
 #else
@@ -455,8 +457,8 @@ static void json_encode_exception(lua_State *l, json_config_t *cfg, strbuf_t *js
 {
     if (!cfg->encode_keep_buffer)
         strbuf_free(json);
-    luaL_error(l, "Cannot serialise %s: %s",
-                  lua_typename(l, lua_type(l, lindex)), reason);
+    lerror(l, "Cannot serialise %s: %s",
+          lua_typename(l, lua_type(l, lindex)), reason);
 }
 
 /* json_append_string args:
@@ -545,7 +547,7 @@ static void json_check_encode_depth(lua_State *l, json_config_t *cfg,
      * value) and push a string for a potential error message.
      *
      * Unlike "decode", the key and value are still on the stack when
-     * lua_checkstack() is called.  Hence an extra slot for luaL_error()
+     * lua_checkstack() is called.  Hence an extra slot for lerror()
      * below is required just in case the next check to lua_checkstack()
      * fails.
      *
@@ -557,7 +559,7 @@ static void json_check_encode_depth(lua_State *l, json_config_t *cfg,
     if (!cfg->encode_keep_buffer)
         strbuf_free(json);
 
-    luaL_error(l, "Cannot serialise, excessive nesting (%d)",
+    lerror(l, "Cannot serialise, excessive nesting (%d)",
                current_depth);
 }
 
@@ -1108,7 +1110,7 @@ static void json_next_token(json_parse_t *json, json_token_t *token)
  * The only supported exception is the temporary parser string
  * json->tmp struct.
  * json and token should exist on the stack somewhere.
- * luaL_error() will long_jmp and release the stack */
+ * lerror() will long_jmp and release the stack */
 static void json_throw_parse_error(lua_State *l, json_parse_t *json,
                                    const char *exp, json_token_t *token)
 {
@@ -1122,7 +1124,7 @@ static void json_throw_parse_error(lua_State *l, json_parse_t *json,
         found = json_token_type_name[token->type];
 
     /* Note: token->index is 0 based, display starting from 1 */
-    luaL_error(l, "Expected %s but found %s at character %d",
+    lerror(l, "Expected %s but found %s at character %d",
                exp, found, token->index + 1);
 }
 
@@ -1141,7 +1143,7 @@ static void json_decode_descend(lua_State *l, json_parse_t *json, int slots)
     }
 
     strbuf_free(json->tmp);
-    luaL_error(l, "Found too many nested data structures (%d) at character %d",
+    lerror(l, "Found too many nested data structures (%d) at character %d",
         json->current_depth, json->ptr - json->data);
 }
 
@@ -1282,7 +1284,7 @@ static int json_decode(lua_State *l)
      * character is guaranteed to be ASCII (at worst: '"'). This is
      * still enough to detect whether the wrong encoding is in use. */
     if (json_len >= 2 && (!json.data[0] || !json.data[1]))
-        luaL_error(l, "JSON parser does not support UTF-16 or UTF-32");
+        lerror(l, "JSON parser does not support UTF-16 or UTF-32");
 
     /* Ensure the temporary buffer can hold the entire string.
      * This means we no longer need to do length checks since the decoded
@@ -1350,7 +1352,7 @@ static int json_protect_conversion(lua_State *l)
 
     /* Since we are not using a custom error handler, the only remaining
      * errors are memory related */
-    return luaL_error(l, "Memory allocation error in CJSON protected call");
+    return lerror(l, "Memory allocation error in CJSON protected call");
 }
 
 /* Return cjson module table */
