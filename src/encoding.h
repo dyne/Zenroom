@@ -23,10 +23,10 @@
 
 int is_url64(const char *in);
 
-int B64decode_len(int len);
+int B64decoded_len(int len);
 int U64decode(char *dest, const char *src);
 
-int B64encode_len(int len);
+int B64encoded_len(int len);
 void U64encode(char *dest, const char *src, int len);
 
 

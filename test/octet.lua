@@ -107,6 +107,23 @@ jsoncryptotest('base58')
 jsoncryptotest('base64')
 jsoncryptotest('url64')
 -- jsoncryptotest('bin') -- TODO: fix
+
+function encodingcryptotest(conv)
+   ENCODING = _G[conv]
+   ikp = COCONUT.ca_keygen()
+   jkp = JSON.encode(ikp)
+   kp = JSON.decode(jkp) 
+   I.print(ikp)
+   I.print(kp)
+--   I.print(OCTET.from_url64(kp.verify.alpha))
+   a = ECP2.new(kp.verify.alpha)
+   b = ECP2.new(kp.verify.beta)
+   assert(ikp.verify.alpha == a, "Error reconverting ECP2 point with encoding "..conv);
+   assert(ikp.verify.beta  == b, "Error reconverting ECP2 point with encoding "..conv);
+end
+encodingcryptotest('hex')
+-- encodingcryptotest('base64')
+encodingcryptotest('url64')
+-- encodingcryptotest('bin')
+
 print '= OK'
-
-

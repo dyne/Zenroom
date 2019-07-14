@@ -40,9 +40,9 @@ static const unsigned char asciitable[256] = {
 static const char alpha_U64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 static const char alpha_B64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-int B64encode_len(int len) { return ((((len + 2) / 3) <<2) + 1); }
+int B64encoded_len(int len) { return ((((len + 2) / 3) <<2) + 1); }
 
-int B64decode_len(int len) { return ((len + 3) >> 2) * 3; }
+int B64decoded_len(int len) { return ((len + 3) >> 2) * 3; }
 
 // assumes null terminated string
 // no padding equals check (no modulo 4)

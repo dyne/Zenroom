@@ -172,8 +172,13 @@ octet* o_arg(lua_State *L,int n) {
 			return 0; }
 		// note here implicit conversion is only made from hex
 		// TODO: this could be a zenroom configuration setting
-		int hlen = is_hex(str);
-		if(hlen>0) { // import from a HEX encoded string
+		int hlen;
+		if((hlen = is_url64(str))>0) { // import from U64 encoded string
+			int declen = B64decoded_len(hlen);
+			func(L,"octet argument is_url64 len %u -> %u",hlen, declen);
+			o = o_new(L, declen); SAFE(o);
+			o->len = U64decode(o->val, &str[4]); // skip u64: prefix
+		} else if((hlen = is_hex(str))>0) { // import from a HEX encoded string
 			o = o_new(L, hlen); SAFE(o);
 			OCT_fromHex(o, (char*)str);
 		} else {
@@ -259,11 +264,18 @@ excessing data. Octets cannot be resized.
 @return octet newly instantiated octet
 */
 static int newoctet (lua_State *L) {
+	const char *s = lua_tostring(L, 1);
+	octet *o;
+	if(s) {
+		// implicit conversion from string using o_arg
+		octet *arg = o_arg(L,1);
+		o = o_dup(L,arg);
+		return 1; }
 	const int len = luaL_optinteger(L, 1, MAX_OCTET);
 	if(!len) {
 		lerror(L, "octet created with zero length");
 		return 0; }
-	octet *o = o_new(L,len);
+	o = o_new(L,len);
 	SAFE(o);
 	OCT_empty(o);
 	return 1;  /* new userdatum is already on the stack */
@@ -369,9 +381,9 @@ static int from_url64(lua_State *L) {
 	if(!len) {
 		lerror(L, "url64 string contains invalid characters");
 		return 0; }
-	int nlen = B64decode_len(len);
+	int nlen = B64decoded_len(len);
 	func(L,"U64 decode len: %u -> %u",len,nlen);
-	octet *o = o_new(L, nlen+4); // 4 byte header
+	octet *o = o_new(L, nlen);
 	o->len = U64decode(o->val,(char*)s+4); // skip header
 	func(L,"u64 return len: %u",o->len);
 	return 1;
@@ -577,7 +589,7 @@ static int to_url64 (lua_State *L) {
 		lerror(L, "base64 cannot encode an empty string");
 		return 0; }
 	int newlen;
-	newlen = B64encode_len(o->len);
+	newlen = B64encoded_len(o->len);
 	char *b = zen_memory_alloc(newlen+4);
 	b[0]='u';b[1]='6';b[2]='4';b[3]=':';
 	U64encode(b+4,o->val,o->len);
