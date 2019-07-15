@@ -85,20 +85,20 @@ f_hello = function(nam) ACK.whoami = nam end
 Given("I introduce myself as ''", f_hello)
 Given("I am known as ''", f_hello)
 Given("I have a ''", function(sc)
-		 local obj = IN[sc]
+		 local obj = IN[sc] or IN.KEYS[sc]
 		 ZEN.assert(obj, "Data not found: '"..sc.."'")
-		 xxx(2,"importing data '"..sc.."'")
+		 -- xxx(2,"importing data '"..sc.."'")
 		 ACK[sc] = import(obj,sc)
 end)
 Given("I have inside '' a ''", function(k, sc) 
-		 local obj = IN[k]
+		 local obj = IN[k] or IN.KEYS[k]
 		 obj = obj[sc]
 		 ZEN.assert(obj, "Data not found: '"..k.."' containing '"..sc.."'")
-		 xxx(2,"importing data '"..k.."' with schema '"..sc.."'")
+		 -- xxx(2,"importing data '"..k.."' with schema '"..sc.."'")
 		 ACK[sc] = import(obj,sc)
 end)
-Given("I have my ''", function(sc) 
-		 local obj = IN[ACK.whoami]
+Given("I have my ''", function(sc)
+		 local obj = IN[ACK.whoami] or IN.KEYS[ACK.whoami]
 		 if obj[sc] then obj = obj[sc] end
 		 ZEN.assert(obj, "Data not found: '"..ACK.whoami.."' containing '"..sc.."'")
 		 ACK[sc] = import(obj,sc)
