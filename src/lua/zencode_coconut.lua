@@ -169,23 +169,25 @@ When("I generate a credential proof", function()
 			  COCONUT.aggregate_keys(ACK.verifiers),
 			  ACK.credentials, ACK.credential_keypair.private)
 end)
-Given("I verify the credential proof is correct", function()
+When("I verify the credential proof is correct", function()
         ZEN.assert(ACK.credential_proof, "No valid credential proof found")
         ZEN.assert(ACK.verifiers, "Verifier of aggregated issuer keys not found")
         ZEN.assert(
-           COCONUT.verify_creds(ACK.verifiers, ACK.credential_proof),
+           COCONUT.verify_creds(
+			  COCONUT.aggregate_keys(ACK.verifiers),
+			  ACK.credential_proof),
            "Credential proof does not validate")
 end)
 
 
 
 
-      -- petition
+-- petition
 ZEN.add_schema({
 	  petition_scores = function(obj)
 		 local res = { pos = { left = ECP.infinity(), right = ECP.infinity() },
 					   neg = { left = ECP.infinity(), right = ECP.infinity() } }
-		 if obj.pos.left  ~= "Infinity" then res.pos.left  = get(obj.pos, 'left', ECP.new)  end
+		 if obj.pos.left  ~= "Infinity" then res.pos.left  = get(obj.pos, 'left', ECP.new) end
 		 if obj.pos.right ~= "Infinity" then res.pos.right = get(obj.pos, 'right', ECP.new) end
 		 if obj.neg.left  ~= "Infinity" then res.neg.left  = get(obj.neg, 'left', ECP.new) end
 		 if obj.neg.right ~= "Infinity" then res.neg.right = get(obj.neg, 'right', ECP.new) end
@@ -202,8 +204,8 @@ ZEN.add_schema({
    -- end },
 
 	  petition = function(obj)
-		 local res = { uid = get(obj, 'uid'),
-					   owner = get(obj, 'owner', ECP,new),
+		 local res = { uid = obj['uid'], -- get(obj, 'uid', str),
+					   owner = get(obj, 'owner', ECP.new),
 					   scores = import(obj.scores, 'petition_scores') }
 		 if type(obj.vkeys) == 'table' then res.vkeys = import(obj.vkeys, 'issue_verify') end
 		 if type(obj.list) == 'table' then
@@ -234,12 +236,14 @@ ZEN.add_schema({
 })
 
 
-When("I create a new petition ''", function(uid)
-		ACK.petition = { uid = uid,
-						 owner = ACK.cred_kp.public,
-						 scores = { pos = { left = ECP.infinity(), right = ECP.infinity() },
-									neg = { left = ECP.infinity(), right = ECP.infinity() } } }
-		OUT.petition = export(ACK.petition, 'petition', hex)
+When("I generate a new petition ''", function(uid)
+		ACK.petition = 
+		   { uid = uid,
+			 owner = ACK.credential_keypair.public,
+			 scores = { pos = { left = "Infinity",       -- ECP.infinity()
+								right = "Infinity" },    -- ECP.infinity()
+						neg = { left = "Infinity",       -- ECP.infinity()
+								right = "Infinity" } } } -- ECP.infinity()
 		-- generate an ECDH signature of the (encoded) petition using the
 		-- credential keys
 		-- ecdh = ECDH.new()
@@ -248,20 +252,7 @@ When("I create a new petition ''", function(uid)
 		-- OUT.petition_ecdh_sign = map(ACK.petition_ecdh_sign, hex)
 end)
 
-Given("I receive a new petition request", function()
-		 ZEN.assert(type(IN.petition) == 'table',
-					"Petition not found")
-		 -- ZEN.assert(type(IN.petition_ecdh_sign) == 'table',
-		 -- 			"Signature not found in petition")
-		 ZEN.assert(type(IN.proof) == 'table',
-					"Credential proof not found in petition ")
-		 ACK.petition = import(IN.petition, 'petition')
-		 ACK.petition_ecdh_sign = map(IN.petition_ecdh_sign, hex)
-		 ACK.petition_credential = import(IN.proof, 'theta')
-end)
-
-When("I verify the new petition to be valid", function()
-        -- ZEN.debug()
+When("I verify the new petition to be empty", function()
         ZEN.assert(ECP.isinf(ACK.petition.scores.pos.left),
                    "Invalid new petition: positive left score is not zero")
         ZEN.assert(ECP.isinf(ACK.petition.scores.pos.right),
@@ -270,34 +261,22 @@ When("I verify the new petition to be valid", function()
                    "Invalid new petition: negative left score is not zero")
         ZEN.assert(ECP.isinf(ACK.petition.scores.neg.right),
                    "Invalid new petition: negative right score is not zero")
-		ZEN.assert(
-		   COCONUT.verify_creds(ACK.verifier,
-								ACK.petition_credential),
-		   "Credential proof not valid in new petition")
-        -- TODO: check ECDH signature
-		OUT.petition = export(ACK.petition, 'petition', hex)
 end)
 
 When("I sign the petition ''", function(uid)
-        ZEN.assert(ACK.verifier, "Verifier of aggregated issuer keys not found")
-		ZEN.assert(ACK.cred_kp.private, "Credential private key not found")
-		ZEN.assert(ACK.sigma, "Signed credential not found")
+        ZEN.assert(ACK.verifiers, "Verifier of aggregated issuer keys not found")
+		ZEN.assert(ACK.credential_keypair.private,
+				   "Credential private key not found")
+		ZEN.assert(ACK.credentials, "Signed credential not found")
 		local Theta
 		local zeta
-		Theta, zeta = COCONUT.prove_cred_petition(ACK.verifier, ACK.sigma, 
-												  ACK.cred_kp.private, uid)
-		OUT.petition_signature = { }
-		OUT.petition_signature.proof = export(Theta, 'theta', hex)
-		OUT.petition_signature.uid_signature = hex(zeta)
-		OUT.petition_signature.uid_petition = uid
-		OUT.verifier = nil
-end)
-
-Given("I receive a signature", function()
-		 ZEN.assert(type(IN.petition_signature) == 'table',
-					"Petition signature not found")
-		 ACK.petition_signature = import(IN.petition_signature,
-										 'petition_signature')
+		Theta, zeta = COCONUT.prove_cred_petition(
+		   COCONUT.aggregate_keys(ACK.verifiers),
+		   ACK.credentials, 
+		   ACK.credential_keypair.private, uid)
+		ACK.petition_signature = { proof = Theta,
+								   uid_signature = zeta,
+								   uid_petition = uid }
 end)
 
 Given("I receive a petition", function()
