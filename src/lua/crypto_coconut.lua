@@ -195,6 +195,7 @@ end
 function coco.verify_creds(vk, Theta)
    ZEN.assert(vk, "COCONUT.verify_creds called with empty verifier")
    ZEN.assert(Theta, "COCONUT.verify_creds valled with empty proof")
+   if #vk == 1 then vk = vk[1] end -- single element in array
    -- verify pi_v
    local Aw = Theta.kappa * Theta.pi_v.c
 	  + g2 * Theta.pi_v.rr

@@ -23,13 +23,13 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'Alice'
-		 and I have my keypair
-		 and I have a signed credential
+		 and my keys have 'credential_keypair'
+		 and my keys have 'credentials'
 		 and I use the verification key by 'MadHatter'
-		 When I aggregate all the verification keys
-		 and I generate a credential proof
-		 and I create a new petition 'To betray the Queen'
-		 Then print all data
+		 When I generate a credential proof
+		 and I generate a new petition 'To betray the Queen'
+		 Then print the 'credential_proof'
+		 and print the 'petition'
 ]])
 ZEN:run()
 EOF
@@ -41,10 +41,12 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I use the verification key by 'MadHatter'
-		 and I receive a new petition request
-		 When I aggregate all the verification keys
-		 and I verify the new petition to be valid
-		 Then print all data
+		 and I have a 'credential_proof'
+		 and I have a 'petition'
+		 When I verify the credential proof is correct
+		 and I verify the new petition to be empty
+		 Then print the 'petition'
+		 and print the 'verifiers'
 ]])
 ZEN:run()
 EOF
@@ -56,25 +58,25 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'Alice'
-		 and I have my keypair
-		 and I have a signed credential
+		 and I have my 'credential_keypair'
+		 and I have my 'credentials'
 		 and I use the verification key by 'MadHatter'
-		 When I aggregate all the verification keys
-		 and I sign the petition 'To betray the Queen'
-		 Then print all data
+		 When I sign the petition 'To betray the Queen'
+		 Then print the 'petition_signature'
 ]])
 ZEN:run()
 EOF
-
+return 0
 scenario="Count a signature on petition (increase scores)"
 echo $scenario
 cat <<EOF | zenroom -a petition_signature.json -k petition.json | tee /tmp/petition.json
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
-		 Given that I receive a signature
-		 and I receive a petition
-		 When a valid petition signature is counted
+		 Given that I have a 'petition_signature'
+		 and I have a 'petition'
+		 and I use the verification key by 'MadHatter'
+		 When I verify the petition signature to be valid
 		 Then print all data
 ]])
 ZEN:run()
@@ -89,12 +91,11 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'Strawman'
-		 and I have my keypair
-		 and I have a signed credential
+		 and I have my 'credential_keypair'
+		 and I have my 'credentials'
 		 and I use the verification key by 'MadHatter'
-		 When I aggregate all the verification keys
-		 and I sign the petition 'To betray the Queen'
-		 Then print all data
+		 When I sign the petition 'To betray the Queen'
+		 Then print the 'petition_signature'
 ]])
 ZEN:run()
 EOF
@@ -123,12 +124,11 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'Lionheart'
-		 and I have my keypair
-		 and I have a signed credential
+		 and I have my 'credential_keypair'
+		 and I have my 'credentials'
 		 and I use the verification key by 'MadHatter'
-		 When I aggregate all the verification keys
-		 and I sign the petition 'To betray the Queen'
-		 Then print all data
+		 When I sign the petition 'To betray the Queen'
+		 Then print the 'petition_signature'
 ]])
 ZEN:run()
 EOF
