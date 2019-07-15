@@ -66,7 +66,7 @@ Scenario 'coconut': $scenario
 ]])
 ZEN:run()
 EOF
-return 0
+
 scenario="Count a signature on petition (increase scores)"
 echo $scenario
 cat <<EOF | zenroom -a petition_signature.json -k petition.json | tee /tmp/petition.json
@@ -76,13 +76,16 @@ Scenario 'coconut': $scenario
 		 Given that I have a 'petition_signature'
 		 and I have a 'petition'
 		 and I use the verification key by 'MadHatter'
-		 When I verify the petition signature to be valid
-		 Then print all data
+		 When I verify the signature proof is correct
+		 and the signature is not a duplicate
+		 and the signature is just one more
+		 and I add the signature to the petition
+		 Then print the 'petition'
 ]])
 ZEN:run()
 EOF
 mv /tmp/petition.json .
-
+return 0
 
 scenario="Sign a petition #2 (produce a proof of signature)"
 echo $scenario

@@ -27,9 +27,8 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 Given that I am known as 'MadHatter'
-and my keys have 'issue_keypair'
-When I publish my verification key
-Then print my data
+and my keys have 'ca_keypair'
+Then print my 'ca_verify'
 ]])
 ZEN:run()
 EOF
@@ -98,7 +97,7 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'MadHatter'
-		 and my keys have 'issue_keypair'
+		 and my keys have 'ca_keypair'
 		 and I have a 'credential_signature_request'
 		 When I am ready
 		 and I sign the credential
@@ -147,7 +146,7 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'MadHatter'
-		 and my keys have 'issue_keypair'
+		 and my keys have 'ca_keypair'
 		 and I have a 'credential_signature_request'
 		 When I am ready
 		 and I sign the credential
@@ -196,7 +195,7 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'MadHatter'
-		 and my keys have 'issue_keypair'
+		 and my keys have 'ca_keypair'
 		 and I have a 'credential_signature_request'
 		 When I am ready
 		 and I sign the credential

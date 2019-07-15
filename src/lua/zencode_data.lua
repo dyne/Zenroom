@@ -75,7 +75,9 @@ function ZEN.data.disjoin(_data, section, key)
    _data[section] = out
    return _data
 end
-
+When("I remove '' from ''", function(key, coll)
+		ACK = ZEN.data.disjoin(ACK, coll, key)
+end)
 
 -- most used functions
 Then("print all data", function()
@@ -182,12 +184,34 @@ local function _print_the_data(what)
 end
 Then("print data ''", _print_the_data)
 Then("print the ''", _print_the_data)
+
+
+local function flatten()
+   local flat = { }
+   local function inner_flatten(arr)
+	  for k,v in ipairs(arr) do
+		 if type(v) == "table" then
+			flat[k] = v
+			inner_flatten(v)
+		 elseif(type(k) == "string") then
+			flat[k] = v
+		 end
+	  end
+   end
+   inner_flatten(ACK)
+   ACK.flat = flat
+end
 Then("print my ''", function(what)
 		ZEN.assert(ACK.whoami, "No identity specified")
-		ZEN.assert(ACK[what], "Cannot print, data not found: "..what)
-		local t = OUT[ACK.whoami] or { }
-		t[what] = ACK[what]
-		OUT[ACK.whoami] = t
+		got = ACK[what]
+		if not got then
+		   flatten()
+		   got = ACK.flat[what]
+		end
+		ZEN.assert(got, "Cannot print, data not found: "..what)
+		local tmp = OUT[ACK.whoami] or { }
+		tmp[what] = got
+		OUT[ACK.whoami] = tmp
 end)
 Then("print my data", function()
 		ZEN.assert(ACK.whoami, "No identity specified")

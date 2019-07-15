@@ -41,38 +41,37 @@ When("I create my new keypair", f_keygen)
 -- issuer authority kepair operations
 ZEN.add_schema({
 	  -- certificate authority (ca) / issuer keypair
-      issue_sign = function(obj)
+      ca_sign = function(obj)
               return { x = get(obj, 'x', INT.new),
                        y = get(obj, 'y', INT.new) }
 	  end,
-      issue_verify = function(obj)
+      ca_verify = function(obj)
 		 return { alpha = get(obj, 'alpha', ECP2.new),
 				  beta  = get(obj, 'beta', ECP2.new) }
 	  end,
-	  issue_keypair = function(obj) -- recursive import
-		 return { sign   = import(obj.sign,'issue_sign'),
-				  verify = import(obj.verify,'issue_verify') }
+	  ca_keypair = function(obj) -- recursive import
+		 return { ca_sign   = import(obj.ca_sign,'ca_sign'),
+				  ca_verify = import(obj.ca_verify,'ca_verify') }
 	  end
 })
 local function f_ca_keygen()
-   kp = COCONUT.ca_keygen()
-   kp.schema = 'issue_keypair'
-   ACK[ACK.whoami or 'anonymous'] = kp
+   sk, vk = COCONUT.ca_keygen()   
+   ACK[ACK.whoami or 'anonymous'] = { ca_sign = sk,
+									  ca_verify = vk }
 end
 When("I create my new issuer keypair", f_ca_keygen)
 When("I create my new authority keypair", f_ca_keygen)
-f_issue_keypair = function(keyname)
+f_ca_keypair = function(keyname)
    ZEN.assert(keyname or ACK.whoami, "Cannot identify the issuer keypair to use")
-   ACK.issue_keypair = import(IN.KEYS[keyname or ACK.whoami], 'issue_keypair')
+   ACK.ca_keypair = import(IN.KEYS[keyname or ACK.whoami], 'ca_keypair')
 end
-Given("I have '' issuer keypair", f_issue_keypair)
-Given("I have my issuer keypair", f_issue_keypair)
+Given("I have '' issuer keypair", f_ca_keypair)
+Given("I have my issuer keypair", f_ca_keypair)
 When("I publish my verification key", function()
         ZEN.assert(ACK.whoami, "Cannot identify the issuer")
-        ZEN.assert(ACK.issue_keypair.verify,
+        ZEN.assert(ACK.ca_keypair.ca_verify,
 				   "Issuer verification key not found")
-		ACK[ACK.whoami] = { verify = ACK.issue_keypair.verify,
-							schema = 'issue_verify' }
+		ACK[ACK.whoami].ca_verify = ACK.ca_keypair.ca_verify
 end)
 
 -- request credential signatures
@@ -112,16 +111,16 @@ ZEN.add_schema({
 	  -- aggsigma: aggregated signatures of ca issuers
 	  credentials = function(obj)
 		 return { h = get(obj, 'h', ECP.new),
-				  s = get(obj, 's', ECP.new) } end
+				  s = get(obj, 's', ECP.new) } end,
 })
 When("I sign the credential", function()
 		ZEN.assert(ACK.whoami, "Issuer is not known")
         ZEN.assert(ACK.credential_signature_request, "No valid signature request found.")
-        ZEN.assert(ACK.issue_keypair.sign, "No valid issuer signature keys found.")
+        ZEN.assert(ACK.ca_keypair.ca_sign, "No valid issuer signature keys found.")
         ACK.credential_signature = 
-           COCONUT.blind_sign(ACK.issue_keypair.sign,
+           COCONUT.blind_sign(ACK.ca_keypair.ca_sign,
                               ACK.credential_signature_request)
-		ACK.verify = ACK.issue_keypair.verify
+		ACK.verify = ACK.ca_keypair.ca_verify
 end)
 When("I aggregate the credential in ''", function(dest)
         -- check the blocking state _sigmatilde
@@ -145,37 +144,37 @@ ZEN.add_schema({
 				  pi_v = map(obj.pi_v, INT.new), -- TODO map wrappers
 				  sigma_prime = map(obj.sigma_prime, ECP.new) } end
 })
+-- takes from IN or IN.KEYS a ca.ca_verify.alpha/beta struct and sums
+-- it to ACK.verifiers
 Given("I use the verification key by ''", function(ca)
-         if not ACK.verifiers then ACK.verifiers = { } end -- array
-		 if IN[ca] and type(IN[ca].verify) == 'table' then
-			table.insert(ACK.verifiers, import(IN[ca].verify,'issue_verify'))
-		 elseif IN.KEYS[ca] and type(IN.KEYS[ca].verify) == 'table' then
-			table.insert(ACK.verifiers, import(IN.KEYS[ca].verify,'issue_verify'))
-		 else
-			ZEN.assert(false,"Verification key not found for issuer: "..ca)
+		 vk = IN[ca].ca_verify or IN.KEYS[ca].ca_verify
+		 ZEN.assert(vk, "Issuer verification keys not found: "..ca)
+		 ivk = import(vk, 'ca_verify')
+         if not ACK.verifiers then
+			ACK.verifiers = { alpha = ivk.alpha,
+							  beta  = ivk.beta }
+		 else -- aggregate_keys
+			ACK.verifiers.alpha = ACK.verifiers.alpha + ivk.alpha
+			ACK.verifiers.beta  = ACK.verifiers.beta  + ivk.beta
 		 end
 end)
-When("I aggregate all the verification keys", function()
-        ZEN.assert(#ACK.aggkeys, "No verification keys have been selected")
-		OUT.verifier = export(ACK.verifier, 'issue_verify', hex)
-end)
+
 When("I generate a credential proof", function()
-        ZEN.assert(#ACK.verifiers > 0, "No verification keys are in use")
+        ZEN.assert(ACK.verifiers, "No issuer verification keys are selected")
 		ZEN.assert(ACK.credential_keypair.private,
 				   "Credential private key not found")
 		ZEN.assert(ACK.credentials, "Credentials not found")
 		ACK.credential_proof =
-		   COCONUT.prove_creds(
-			  COCONUT.aggregate_keys(ACK.verifiers),
-			  ACK.credentials, ACK.credential_keypair.private)
+		   COCONUT.prove_creds(ACK.verifiers,
+							   ACK.credentials,
+							   ACK.credential_keypair.private)
 end)
 When("I verify the credential proof is correct", function()
         ZEN.assert(ACK.credential_proof, "No valid credential proof found")
         ZEN.assert(ACK.verifiers, "Verifier of aggregated issuer keys not found")
         ZEN.assert(
-           COCONUT.verify_creds(
-			  COCONUT.aggregate_keys(ACK.verifiers),
-			  ACK.credential_proof),
+           COCONUT.verify_creds(ACK.verifiers,
+								ACK.credential_proof),
            "Credential proof does not validate")
 end)
 
@@ -207,7 +206,7 @@ ZEN.add_schema({
 		 local res = { uid = obj['uid'], -- get(obj, 'uid', str),
 					   owner = get(obj, 'owner', ECP.new),
 					   scores = import(obj.scores, 'petition_scores') }
-		 if type(obj.vkeys) == 'table' then res.vkeys = import(obj.vkeys, 'issue_verify') end
+		 if type(obj.vkeys) == 'table' then res.vkeys = import(obj.vkeys, 'ca_verify') end
 		 if type(obj.list) == 'table' then
 			res.list = { }
 			for k,v in ipairs(obj.list) do res.list[k] = true end
@@ -216,9 +215,9 @@ ZEN.add_schema({
 			   end,
 
 	 petition_signature = function(obj)
-		   return { proof = import(obj.proof, 'theta'),
+		   return { proof = import(obj.proof, 'credential_proof'),
 					uid_signature = get(obj, 'uid_signature', ECP.new),
-					uid_petition = get(obj, 'uid_petition') }
+					uid_petition = obj['uid_petition'] } 
 		end,
 
 	 petition_tally = function(obj)
@@ -271,7 +270,7 @@ When("I sign the petition ''", function(uid)
 		local Theta
 		local zeta
 		Theta, zeta = COCONUT.prove_cred_petition(
-		   COCONUT.aggregate_keys(ACK.verifiers),
+		   ACK.verifiers,
 		   ACK.credentials, 
 		   ACK.credential_keypair.private, uid)
 		ACK.petition_signature = { proof = Theta,
@@ -279,30 +278,47 @@ When("I sign the petition ''", function(uid)
 								   uid_petition = uid }
 end)
 
-Given("I receive a petition", function()
-		 if type(IN.petition) == 'table' then
-			ACK.petition = import(IN.petition, 'petition')
-			ACK.verifier = import(IN.verifier, 'issue_verify')
-		 elseif type(IN.KEYS.petition) == 'table' then
-			ACK.petition = import(IN.KEYS.petition, 'petition')
-			ACK.verifier = import(IN.KEYS.verifier, 'issue_verify')
-		 else
-			ZEN.assert(false, "Petition not found")
-		 end
-end)
-
-When("a valid petition signature is counted", function()
-		ZEN.assert(ACK.petition_signature, "Petition signature not found")
-		ZEN.assert(ACK.petition, "Petition not found")
-        ZEN.assert(ACK.verifier, "Verifier of aggregated issuer keys not found")
-		ZEN.assert(ACK.petition_signature.uid_petition ==
-				   ACK.petition.uid, "Petition and signature do not match")
+When("I verify the signature proof is correct", function()
 		ZEN.assert(
-		   COCONUT.verify_cred_petition(ACK.verifier,
+		   COCONUT.verify_cred_petition(ACK.verifiers,
 										ACK.petition_signature.proof,
 										ACK.petition_signature.uid_signature,
 										ACK.petition_signature.uid_petition),
 		   "Petition signature is invalid")
+end)
+
+When("the signature is not a duplicate", function()
+		local k = ACK.petition_signature.uid_signature
+		if type(ACK.petition.list) == 'table' then
+		   ZEN.assert(
+			  ACK.petition.list[k] == nil,
+			  "Duplicate petition signature detected")
+		   ACK.petition.list[k] = true
+		else
+		   ACK.petition.list = { }
+		   ACK.petition.list[k] = true
+		end
+end)
+
+When("the signature is just one more", function()
+		-- verify that the signature is +1 (no other value supported)
+		ACK.petition_signature.one =
+		   COCONUT.prove_sign_petition(ACK.petition.owner, BIG.new(1))
+		ZEN.assert(COCONUT.verify_sign_petition(ACK.petition.owner,
+												ACK.petition_signature.one),
+				   "Coconut petition signature adds more than one signature")
+end)
+When("I add the signature to the petition", function()
+		-- add the signature to the petition count
+		local ps = ACK.petition.scores
+		local ss = ACK.petition_signature.one
+		ps.pos.left  = ps.pos.left  + ss.pos.left
+		ps.pos.right = ps.pos.right + ss.pos.right
+		ps.neg.left  = ps.neg.left  + ss.neg.left
+		ps.neg.right = ps.neg.right + ss.neg.right
+end)
+
+When("a valid petition signature is counted", function()
 		-- check for duplicate signatures
 		local k = hex(ACK.petition_signature.uid_signature)
 		if type(ACK.petition.list) == 'table' then
@@ -327,7 +343,7 @@ When("a valid petition signature is counted", function()
 		ps.neg.right = ps.neg.right + ss.neg.right
 		OUT.petition = export(ACK.petition, 'petition', hex)
 		OUT.petition.scores = export(ps, 'petition_scores', hex)
-		OUT.verifier = export(ACK.verifier, 'issue_verify', hex)
+		OUT.verifier = export(ACK.verifier, 'ca_verify', hex)
 end)
 
 Given("I receive a tally", function()

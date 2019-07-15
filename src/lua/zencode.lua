@@ -31,6 +31,15 @@ IN = { } -- import global DATA from json
 IN.KEYS = { } -- import global KEYS from json
 ACK = ACK or { }
 OUT = OUT or { }
+-- index metametod to facilitate cascade indexing
+-- local mt = { }
+-- mt.__index = function(t, k)
+--    local v = {}
+--    setmetatable(v, mt)
+--    rawset(t, k, v)
+--    return v
+-- end
+-- setmetatable(OUT,mt)
 
 -- debugging facility
 function xxx(n,s)
@@ -192,19 +201,6 @@ function zencode.assert(condition, errmsg)
    ZEN.debug() -- prints all data in memory
    error(errmsg) -- prints zencode backtrace
    assert(false, "Execution aborted.")
-end
-
-zencode.validate = function(obj, objschema, errmsg)
-   zencode.assert(type(obj) == 'table', "ZEN:validate called with an invalid object (not a table)")
-   zencode.assert(type(objschema) == 'string', "ZEN:validate called with invalid schema (not a function)")
-   -- sc = objschema
-   -- zencode.assert(sc ~= nil, errmsg .. " - schema function '"..objschema.."' is not defined")
-   -- zencode.assert(type(sc) == "function", errmsg .. " - schema '"..objschema.."' is not a function")
-   zencode.assert(obj ~= nil,
-				  "Object not found in schema validation - "..errmsg)
-   if validate(obj, objschema, errmsg) then return true end
-   error(errmsg)
-   assert(false)
 end
 
 _G["Given"] = function(text, fn)

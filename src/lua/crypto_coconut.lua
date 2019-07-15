@@ -99,8 +99,7 @@ function coco.ca_keygen()
    local vk = { alpha = g2 * x,
                 beta  = g2 * y  }
    -- return keypair
-   return { sign = sk,
-            verify = vk }
+   return sk, vk
 end
 
 function coco.aggregate_keys(keys)
@@ -113,9 +112,7 @@ function coco.aggregate_keys(keys)
 	  end
    end
    -- return aggkeys
-   return { schema = 'coconut_aggkeys',
-			version = coco._VERSION,
-			alpha = agg_alpha,
+   return { alpha = agg_alpha,
 			beta = agg_beta }
 end
 
