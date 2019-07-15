@@ -110,16 +110,16 @@ jsoncryptotest('url64')
 
 function encodingcryptotest(conv)
    ENCODING = _G[conv]
-   ikp = COCONUT.ca_keygen()
-   jkp = JSON.encode(ikp)
-   kp = JSON.decode(jkp) 
-   I.print(ikp)
-   I.print(kp)
+   sk, pk = COCONUT.ca_keygen()
+   jkp = JSON.encode(pk)
+   ckp = JSON.decode(jkp)
+   I.print(jkp)
+   I.print(ckp)
 --   I.print(OCTET.from_url64(kp.verify.alpha))
-   a = ECP2.new(kp.verify.alpha)
-   b = ECP2.new(kp.verify.beta)
-   assert(ikp.verify.alpha == a, "Error reconverting ECP2 point with encoding "..conv);
-   assert(ikp.verify.beta  == b, "Error reconverting ECP2 point with encoding "..conv);
+   a = ECP2.new(ckp.alpha)
+   b = ECP2.new(ckp.beta)
+   assert(pk.alpha == a, "Error reconverting ECP2 point with encoding "..conv);
+   assert(pk.beta  == b, "Error reconverting ECP2 point with encoding "..conv);
 end
 encodingcryptotest('hex')
 -- encodingcryptotest('base64')

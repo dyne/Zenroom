@@ -17,7 +17,9 @@ cred_keypair = { private = d,
 				 public = gamma }
 secret = cred_keypair.private -- "Some sort of secret credential"
 -- simple credential test
-ca_keypair = COCONUT.ca_keygen()
+local sk, pk
+sk, pk = COCONUT.ca_keygen()
+ca_keypair = { verify = pk, sign = sk }
 Lambda = COCONUT.prepare_blind_sign(cred_keypair.public, secret)
 sigmatilde = COCONUT.blind_sign(ca_keypair.sign, Lambda)
 aggsigma = COCONUT.aggregate_creds(cred_keypair.private, {sigmatilde})
@@ -29,8 +31,10 @@ print('[ok] test Coconut')
 print('')
 
 -- Multiple CAs sign
-ca2_keypair = COCONUT.ca_keygen()
-ca3_keypair = COCONUT.ca_keygen()
+sk, pk = COCONUT.ca_keygen()
+ca2_keypair = { verify = pk, sign = sk }
+sk, pk = COCONUT.ca_keygen()
+ca3_keypair = { verify = pk, sign = sk }
 ca_aggkeys = COCONUT.aggregate_keys({ca_keypair.verify,
 									 ca2_keypair.verify,
 									 ca3_keypair.verify})
