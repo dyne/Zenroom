@@ -310,7 +310,11 @@ function Inspector:putValue(v)
 		self:puts("int[" .. #i.. "] " .. enc(i))
 	 elseif tv == "zenroom.ecp" then
 		local i = v:octet()
-		self:puts("ecp[" .. #i.. "] " .. enc(i))
+		if v == ECP.infinity() then
+		   self:puts("ecp[" .. #i.. "] " .. "(Infinity)")
+		else
+		   self:puts("ecp[" .. #i.. "] " .. enc(i))
+		end
 	 elseif tv == "zenroom.ecp2" then
 		local i = v:octet()
 		self:puts("ecp2[" ..#i.. "] ".. enc(i))
@@ -362,7 +366,8 @@ function inspect.encode(item)
    if t == "zenroom.octet" then
 	  return enc(item)
    elseif iszen(t) then
-	  return enc(item:octet())
+	  if t == "zenroom.ecp" and ECP.isinf(item) then
+		 return "Infinity" else return enc(item:octet()) end
    else
 	  return item
    end
