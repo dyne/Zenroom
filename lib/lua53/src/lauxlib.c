@@ -700,11 +700,12 @@ static int skipcomment (LoadF *lf, int *cp) {
 }
 
 
+#if 0
+
 typedef struct LoadS {
   const char *s;
   size_t size;
 } LoadS;
-
 
 static const char *getS (lua_State *L, void *ud, size_t *size) {
   LoadS *ls = (LoadS *)ud;
@@ -724,6 +725,8 @@ LUALIB_API int luaL_loadbufferx (lua_State *L, const char *buff, size_t size,
   return lua_load(L, getS, &ls, name, mode);
 }
 
+
+#endif
 
 LUALIB_API int luaL_loadstring (lua_State *L, const char *s) {
   return luaL_loadbuffer(L, s, strlen(s), s);

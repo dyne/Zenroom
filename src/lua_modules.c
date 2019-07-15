@@ -29,10 +29,6 @@
 #include <zenroom.h>
 #include <zen_error.h>
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#endif
-
 extern int lualibs_load_all_detected(lua_State *L);
 extern int lua_cjson_safe_new(lua_State *l);
 // extern int lua_cjson_new(lua_State *l);
@@ -68,6 +64,30 @@ luaL_Reg lualibs[] = {
 	{NULL, NULL}
 };
 
+// moved from lua's lauxlib.c
+typedef struct LoadS {
+	const char *s;
+	size_t size;
+} LoadS;
+
+
+static const char *getS (lua_State *L, void *ud, size_t *size) {
+	LoadS *ls = (LoadS *)ud;
+	(void)L;  /* not used */
+	if (ls->size == 0) return NULL;
+	*size = ls->size;
+	ls->size = 0;
+	return ls->s;
+}
+
+
+LUALIB_API int luaL_loadbufferx (lua_State *L, const char *buff, size_t size,
+                                 const char *name, const char *mode) {
+	LoadS ls;
+	ls.s = buff;
+	ls.size = size;
+	return lua_load(L, getS, &ls, name, mode);
+}
 
 int zen_load_string(lua_State *L, const char *code,
                     size_t size, const char *name) {
@@ -75,7 +95,7 @@ int zen_load_string(lua_State *L, const char *code,
 #ifdef LUA_COMPILED
 	res = luaL_loadbufferx(L,code,size,name,"b");
 #else
-	res = luaL_loadbuffer(L,code,size,name);
+	res = luaL_loadbufferx(L,code,size,name,NULL);
 #endif
 	switch (res) {
 	case LUA_OK: { // func(L, "%s OK %s",__func__,name);
@@ -91,128 +111,8 @@ int zen_load_string(lua_State *L, const char *code,
 	return(res);
 }
 
-#ifdef __EMSCRIPTEN__
-
-#define luaL_loadfile(L,f)	luaL_loadfilex(L,f,NULL)
-
-typedef struct LoadF {
-  int n;  /* number of pre-read characters */
-  FILE *f;  /* file being read */
-  char buff[BUFSIZ];  /* area for reading file */
-} LoadF;
-
-
-static const char *getF (lua_State *L, void *ud, size_t *size) {
-  LoadF *lf = (LoadF *)ud;
-  (void)L;  /* not used */
-  if (lf->n > 0) {  /* are there pre-read characters to be read? */
-    *size = lf->n;  /* return them (chars already in buffer) */
-    lf->n = 0;  /* no more pre-read characters */
-  }
-  else {  /* read a block from file */
-    /* 'fread' can return > 0 *and* set the EOF flag. If next call to
-       'getF' called 'fread', it might still wait for user input.
-       The next check avoids this problem. */
-    if (feof(lf->f)) return NULL;
-    *size = fread(lf->buff, 1, sizeof(lf->buff), lf->f);  /* read block */
-  }
-  return lf->buff;
-}
-
-static int errfile (lua_State *L, const char *what, int fnameindex) {
-  const char *serr = strerror(errno);
-  const char *filename = lua_tostring(L, fnameindex) + 1;
-  lua_pushfstring(L, "cannot %s %s: %s", what, filename, serr);
-  lua_remove(L, fnameindex);
-  return LUA_ERRFILE;
-}
-
-
-static int skipBOM (LoadF *lf) {
-  const char *p = "\xEF\xBB\xBF";  /* UTF-8 BOM mark */
-  int c;
-  lf->n = 0;
-  do {
-    c = getc(lf->f);
-    if (c == EOF || c != *(const unsigned char *)p++) return c;
-    lf->buff[lf->n++] = c;  /* to be read by the parser */
-  } while (*p != '\0');
-  lf->n = 0;  /* prefix matched; discard it */
-  return getc(lf->f);  /* return next character */
-}
-
-
-/*
-** reads the first character of file 'f' and skips an optional BOM mark
-** in its beginning plus its first line if it starts with '#'. Returns
-** true if it skipped the first line.  In any case, '*cp' has the
-** first "valid" character of the file (after the optional BOM and
-** a first-line comment).
-*/
-static int skipcomment (LoadF *lf, int *cp) {
-  int c = *cp = skipBOM(lf);
-  if (c == '#') {  /* first line is a comment (Unix exec. file)? */
-    do {  /* skip first line */
-      c = getc(lf->f);
-    } while (c != EOF && c != '\n');
-    *cp = getc(lf->f);  /* skip end-of-line, if present */
-    return 1;  /* there was a comment */
-  }
-  else return 0;  /* no comment */
-}
-
-LUALIB_API int luaL_loadfilex (lua_State *L, const char *filename,
-                                             const char *mode) {
-  LoadF lf;
-  int status, readstatus;
-  int c;
-  int fnameindex = lua_gettop(L) + 1;  /* index of filename on the stack */
-  if (filename == NULL) {
-    lua_pushliteral(L, "=stdin");
-    lf.f = stdin;
-  }
-  else {
-    lua_pushfstring(L, "@%s", filename);
-    lf.f = fopen(filename, "r");
-    if (lf.f == NULL) return errfile(L, "open", fnameindex);
-  }
-  if (skipcomment(&lf, &c))  /* read initial portion */
-    lf.buff[lf.n++] = '\n';  /* add line to correct line numbers */
-  if (c == LUA_SIGNATURE[0] && filename) {  /* binary file? */
-    lf.f = freopen(filename, "rb", lf.f);  /* reopen in binary mode */
-    if (lf.f == NULL) return errfile(L, "reopen", fnameindex);
-    skipcomment(&lf, &c);  /* re-read initial portion */
-  }
-  if (c != EOF)
-    lf.buff[lf.n++] = c;  /* 'c' is the first character of the stream */
-  status = lua_load(L, getF, &lf, lua_tostring(L, -1), mode);
-  readstatus = ferror(lf.f);
-  if (filename) fclose(lf.f);  /* close file (even in case of errors) */
-  if (readstatus) {
-    lua_settop(L, fnameindex);  /* ignore results from 'lua_load' */
-    return errfile(L, "read", fnameindex);
-  }
-  lua_remove(L, fnameindex);
-  return status;
-}
-
-
-
-#endif
-
 int zen_exec_extension(lua_State *L, zen_extension_t *p) {
 	SAFE(p); HEREs(p->name);
-#ifdef __EMSCRIPTEN__
-	if(p->code) {
-		// HEREs(p->code);
-		if(luaL_loadfile(L, p->code)==0) {
-			if(lua_pcall(L, 0, LUA_MULTRET, 0) == LUA_OK) {
-				func(L,"loaded %s", p->name);
-				return 1;
-			}
-		}
-	}
-#else
 	if(zen_load_string(L, p->code, *p->size, p->name)
 	   ==LUA_OK) {
 		// func(L,"%s %s", __func__, p->name);
@@ -222,7 +122,6 @@ int zen_exec_extension(lua_State *L, zen_extension_t *p) {
 		func(L,"loaded %s", p->name);
 		return 1;
 	}
-#endif
 	error(L, "%s", lua_tostring(L, -1));
 	lerror(L,"%s %s",__func__,p->name); // quits with SIGABRT
 	fflush(stderr);
