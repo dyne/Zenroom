@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="400px"
+   height="400px"
+   viewBox="0 0 400 400"
+   version="1.1"
+   id="svg27"
+   sodipodi:docname="zenroom_white.svg"
+   inkscape:export-filename="/home/puria/src/node-red-contrib-zenroom/icons/zenroom.png"
+   inkscape:export-xdpi="14.4"
+   inkscape:export-ydpi="14.4"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)">
+  <metadata
+     id="metadata31">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>Garden</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1916"
+     inkscape:window-height="1032"
+     id="namedview29"
+     showgrid="false"
+     inkscape:zoom="0.59"
+     inkscape:cx="8.4745763"
+     inkscape:cy="200"
+     inkscape:window-x="0"
+     inkscape:window-y="20"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="Garden" />
+  <!-- Generator: Sketch 50.2 (55047) - http://www.bohemiancoding.com/sketch -->
+  <title
+     id="title2">Garden</title>
+  <desc
+     id="desc4">Created with Sketch.</desc>
+  <defs
+     id="defs6" />
+  <g
+     id="Garden"
+     stroke="none"
+     stroke-width="1"
+     fill="none"
+     fill-rule="evenodd">
+    <g
+       id="Group"
+       transform="translate(49.000000, 66.000000)">
+      <path
+         d="M30,201 L254,201"
+         id="Line"
+         stroke="#979797"
+         stroke-width="10"
+         stroke-linecap="square"
+         style="stroke:#ffffff;stroke-opacity:1" />
+      <path
+         d="M48,231 L254,231"
+         id="path9"
+         stroke="#979797"
+         stroke-width="10"
+         stroke-linecap="square"
+         style="stroke:#ffffff;stroke-opacity:1" />
+      <path
+         d="M45.1393975,40 L48.0686904,30 L222,30 L227,30 L227,40 L222,40 L45.5318471,40 L45.1393975,40 Z"
+         id="Combined-Shape"
+         fill="#979797"
+         style="fill:#ffffff;fill-opacity:1" />
+      <path
+         d="M 23.882256,179.74476 116.06448,124.35609 209.43326,68.254468"
+         id="path12"
+         inkscape:connector-curvature="0"
+         style="stroke:#ffffff;stroke-width:10;stroke-linecap:square;stroke-opacity:1"
+         sodipodi:nodetypes="ccc" />
+      <path
+         d="M69,199 L238.573897,96.9811544"
+         id="path14"
+         stroke="#979797"
+         stroke-width="10"
+         stroke-linecap="square"
+         style="stroke:#ffffff;stroke-opacity:1" />
+      <path
+         d="M36.3515187,70 L39.2298336,60 L39.4768114,60 L237.438533,60 L242.351519,60 L242.351519,70 L237.438533,70 L39.4768114,70 L36.3515187,70 Z"
+         id="path16"
+         fill="#979797"
+         style="fill:#ffffff;fill-opacity:1" />
+      <rect
+         id="Rectangle-2"
+         fill="#5C5C5C"
+         x="284"
+         y="213"
+         width="55"
+         height="10"
+         style="fill:#ffffff;fill-opacity:1" />
+      <rect
+         id="Rectangle"
+         fill="#5C5C5C"
+         x="269"
+         y="166"
+         width="10"
+         height="105"
+         style="fill:#ffffff;fill-opacity:1" />
+      <polyline
+         id="Path-2"
+         stroke="#5C5C5C"
+         stroke-width="10"
+         points="83 5 209.275556 5 271 120 189.022222 171 264 171"
+         style="stroke:#ffffff;stroke-opacity:1" />
+      <polyline
+         id="Path-4"
+         stroke="#5C5C5C"
+         stroke-width="10"
+         points="92 95 0 150 60 261 265 261"
+         style="stroke:#ffffff;stroke-opacity:1" />
+      <polygon
+         id="polygon22"
+         fill="#5C5C5C"
+         points="27.5636399 100 30.4929328 90 257 90 257 100"
+         style="fill:#ffffff;fill-opacity:1" />
+      <polygon
+         id="Combined-Shape-Copy"
+         fill="#5C5C5C"
+         points="54 10 56.9292929 0 93.4363601 1.42108547e-14 93.4363601 10"
+         style="fill:#ffffff;fill-opacity:1" />
+    </g>
+  </g>
+</svg>
