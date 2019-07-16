@@ -31,6 +31,36 @@ IN = { } -- import global DATA from json
 IN.KEYS = { } -- import global KEYS from json
 ACK = ACK or { }
 OUT = OUT or { }
+
+function zencode:flatten(MEM)
+   local flat = { }
+   local function inner_flatten(arr)
+	  for k,v in ipairs(arr) do
+		 if type(v) == "table" then
+			flat[k] = v
+			inner_flatten(v)
+		 elseif(type(k) == "string") then
+			flat[k] = v
+		 end
+	  end
+   end
+   inner_flatten(MEM)
+   MEM.flat = flat
+end
+
+function zencode:find(WHERE,what)
+   zencode:trace('zenroom:find')
+   local got = WHERE[what]
+   if not got then
+	  if not WHERE.flat then
+		 zencode:flatten(WHERE)
+	  end
+	  got = WHERE.flat[what]
+   end
+   ZEN.assert(got, "Data not found: "..what)
+   return got
+end
+
 -- index metametod to facilitate cascade indexing
 -- local mt = { }
 -- mt.__index = function(t, k)
@@ -56,17 +86,24 @@ function zencode:begin(verbosity)
    return true
 end
 
+function zencode:iscomment(b)
+   local x = string.char(b:byte(1))
+   if x == '#' then
+	  return true
+   else return false
+end end
+function zencode:isempty(b)
+   if b == nil or b == '' then
+	   return true
+   else return false
+end end
+
 function zencode:step(text)
-   if text == nil or text == '' then 
-	  return false end
-   local m = text:match("(%w+)(.+)")
-   -- check if no word just whitespace
-   if m == nil or m == '' then
-	  error("Zencode keyword empty: "..text)
-	  error(_G.ZEN_traceback)
-	  return false end
-   -- case insensitive match of first word
-   local prefix = m:lower()
+   if ZEN:isempty(text) then return true end
+   if ZEN:iscomment(text) then return true end
+   -- first word
+   local chomp = string.char(text:byte(1,4096))
+   local prefix = chomp:match("(%w+)(.+)"):lower()
    local defs -- parse in what phase are we
    -- TODO: use state machine
    if prefix == 'given' then
@@ -80,11 +117,14 @@ function zencode:step(text)
       defs = self.current_step
    elseif prefix == 'and'   then
       defs = self.current_step
+   elseif prefix == 'scenario' then
+      self.current_step = self.given_steps
+      defs = self.current_step
    end
    if not defs then
-      error("Zencode invalid: "..text)
-	  error(_G.ZEN_traceback)
-      return false
+		 error("Zencode invalid: "..text)
+		 error(_G.ZEN_traceback)
+		 return false
    end
    for pattern,func in pairs(defs) do
       if (type(func) ~= "function") then
@@ -94,12 +134,12 @@ function zencode:step(text)
       end
 	  -- support simplified notation for arg match
 	  local pat = string.gsub(pattern,"''","'(.-)'")
-	  xxx(1,"pattern: "..pat)
       local res = string.match(text, pat)
       if res then
+		 xxx(1,"EXEC: "..pat)
 		 local args = {} -- handle multiple arguments in same string
 		 for arg in string.gmatch(text,"'(.-)'") do
-			xxx(1,"arg: "..arg)
+			xxx(1,"+ARG: "..arg)
 			table.insert(args,arg)
 		 end
 		 self.id = self.id + 1
@@ -135,14 +175,15 @@ function zencode:parse(text)
    -- lowercase match
    if first:match("(%w+)(.+)"):lower() == "scenario" then
 	  local scenario = string.match(first, "'(.-)'")
-	  require("zencode_"..scenario)
-	  scenario_found = true
-	  _G['ZEN_traceback'] = _G['ZEN_traceback']..
-		 "   | Scenario "..scenario.."\n"
-	  xxx(2, "Scenario: "..scenario)
+	  if scenario ~= "" then
+		 require("zencode_"..scenario)
+		 scenario_found = true
+		 ZEN:trace("   | Scenario "..scenario)
+	  end
+	  -- xxx(2, "Scenario: "..scenario)
    end
    if not scenario_found then -- print a small warning
-	  warn("No scenario found in first line of Zencode")
+	  xxx(1,"No scenario found in first line of Zencode")
    end
    for line in self:newline_iter(text) do
 	  -- skip first if scenario is found
@@ -155,15 +196,15 @@ function zencode:parse(text)
    end
 end
 
+function zencode:trace(src)
+   -- take current line of zencode
+   _G['ZEN_traceback'] = _G['ZEN_traceback']..
+	  "    -> ".. src:gsub("^%s*", "") .."\n"
+end
 function zencode:run()
-   if self.verbosity > 1 then
-      warn("Zencode MATCHES:")
-      I.warn(self.matches)
-   end
+   -- xxx(2,"Zencode MATCHES:")
+   -- xxx(2,self.matches)
    for i,x in ipairs(self.matches) do
-	  -- xxx(1,table.unpack(x))
-	  _G['ZEN_traceback'] = _G['ZEN_traceback']..
-		 "    -> ".. x.source:gsub("^%s*", "") .."\n"
 	  IN = { } -- import global DATA from json
 	  if DATA then IN = JSON.decode(DATA) end
 	  IN.KEYS = { } -- import global KEYS from json
@@ -177,14 +218,16 @@ function zencode:run()
       local ok, err = pcall(x.hook,table.unpack(x.args))
       if not ok then
 		 error(err)
-		 error(_G.ZEN_traceback)
+		 -- error(_G.ZEN_traceback)
 	  end
    end
    if type(OUT) == 'table' then print(JSON.encode(OUT)) end
 end
 
 function zencode.debug()
-   error("Zencode debug states")
+   print(" _______")
+   print("|  DEBUG:")
+   -- one print after another to sort deterministic
    I.print({IN = IN})
    I.print({ACK = ACK})
    I.print({OUT = OUT})
@@ -198,7 +241,7 @@ end
 
 function zencode.assert(condition, errmsg)
    if condition then return true end
-   ZEN.debug() -- prints all data in memory
+   -- ZEN.debug() -- prints all data in memory
    error(errmsg) -- prints zencode backtrace
    assert(false, "Execution aborted.")
 end

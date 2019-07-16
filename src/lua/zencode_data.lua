@@ -22,6 +22,12 @@
 -- data        (root, decoded from DATA in Given)
 -- selection   (currently selected portion of root)
 
+Given("I find ''",function(what)
+		 local found = ZEN:find(IN,what)
+		 ACK[what] = found
+end)
+
+-- old deprecated, now using IN->ACK->OUT
 ZEN.data = { }
 
 function ZEN.data.load()
@@ -185,34 +191,17 @@ end
 Then("print data ''", _print_the_data)
 Then("print the ''", _print_the_data)
 
-
-local function flatten()
-   local flat = { }
-   local function inner_flatten(arr)
-	  for k,v in ipairs(arr) do
-		 if type(v) == "table" then
-			flat[k] = v
-			inner_flatten(v)
-		 elseif(type(k) == "string") then
-			flat[k] = v
-		 end
-	  end
-   end
-   inner_flatten(ACK)
-   ACK.flat = flat
-end
+-- PRINT MY: put in output under my identifier (whoami)
 Then("print my ''", function(what)
 		ZEN.assert(ACK.whoami, "No identity specified")
-		got = ACK[what]
-		if not got then
-		   flatten()
-		   got = ACK.flat[what]
-		end
+		local got = ZEN:find(what)
 		ZEN.assert(got, "Cannot print, data not found: "..what)
+		-- put in output under my name
 		local tmp = OUT[ACK.whoami] or { }
 		tmp[what] = got
 		OUT[ACK.whoami] = tmp
 end)
+-- 
 Then("print my data", function()
 		ZEN.assert(ACK.whoami, "No identity specified")
 		OUT[ACK.whoami] = ACK[ACK.whoami]
