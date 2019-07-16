@@ -386,7 +386,7 @@ end
 -- facilitation wrapper
 -- this way one can simply prefix an i. to print
 function inspect.warn(root, options)
-   warn(inspect.inspect(root, options))
+   act(inspect.inspect(root, options))
    return root
 end
 
