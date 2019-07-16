@@ -85,18 +85,11 @@ int main(int argc, char **argv) {
 	char data[MAX_FILE];
 	int opt, index;
 	int   interactive         = 0;
-#if DEBUG == 1
-	int   unprotected         = 1;
-#else
-	int   unprotected         = 0;
-#endif
-	(void)unprotected; // remove warning
-
 	int   zencode             = 0;
 
-	const char *short_options = "hd:ic:k:a:S:p:uz";
+	const char *short_options = "hd:ic:k:a:S:p:z";
 	const char *help          =
-		"Usage: zenroom [-h] [ -d lvl ] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ -S seed ] [ -z ] [ [ -p ] script.lua ]\n";
+		"Usage: zenroom [-h] [ -d lvl ] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ -S seed ] [ -u ] [ -z ] [ script.lua ]\n";
 	int pid, status, retval;
 	conffile   [0] = '\0';
 	scriptfile [0] = '\0';
@@ -133,9 +126,6 @@ int main(int argc, char **argv) {
 			break;
 		case 'S':
 			snprintf(rngseed,MAX_STRING-1,"%s",optarg);
-			break;
-		case 'u':
-			unprotected = 1;
 			break;
 		case 'z':
 			zencode = 1;
@@ -233,17 +223,15 @@ int main(int argc, char **argv) {
 	}
 
 #if DEBUG == 1
-	if(unprotected) { // avoid seccomp in all cases
-		int res;
-		if(verbosity) act(NULL, "unprotected mode (debug build)");
-		if(zencode)
-			res = zen_exec_zencode(Z, script);
-		else
-			res = zen_exec_script(Z, script);			
-		zen_teardown(Z);
-		if(res) return EXIT_FAILURE;
-		else return EXIT_SUCCESS;
-	}
+	int res;
+	if(verbosity) act(NULL, "unprotected mode (debug build)");
+	if(zencode)
+		res = zen_exec_zencode(Z, script);
+	else
+		res = zen_exec_script(Z, script);
+	zen_teardown(Z);
+	if(res) return EXIT_FAILURE;
+	else return EXIT_SUCCESS;
 #endif
 
 #if (defined(ARCH_WIN) || defined(DISABLE_FORK)) || defined(ARCH_CORTEX)
