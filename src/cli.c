@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
 	// conf[0] = '\0';
 	script[0] = '\0';
 	int verbosity = 1;
-
+	set_color(1);
 	while((opt = getopt(argc, argv, short_options)) != -1) {
 		switch(opt) {
 		case 'd':

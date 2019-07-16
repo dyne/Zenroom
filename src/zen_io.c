@@ -239,13 +239,35 @@ static int zen_write (lua_State *L) {
 
 static int zen_warn (lua_State *L) {
 	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
-
 	int status = 1;
 	size_t len = 0;
 	int n = lua_gettop(L);  /* number of arguments */
 	int i, w;
 	lua_getglobal(L, "tostring");
 	w = write(STDERR_FILENO, "[W] ",4* sizeof(char));
+	(void)w;
+	for (i=1; i<=n; i++) {
+		const char *s = lua_print_format(L, i, &len);
+		if(i>1)
+			w = write(STDERR_FILENO, "\t",sizeof(char));
+		(void)w;
+		status = status &&
+			(write(STDERR_FILENO, s, len) == (int)len);
+		lua_pop(L, 1);  /* pop result */
+	}
+	w = write(STDERR_FILENO,"\n",sizeof(char));
+	(void)w;
+	return 0;
+}
+
+static int zen_act (lua_State *L) {
+	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
+	int status = 1;
+	size_t len = 0;
+	int n = lua_gettop(L);  /* number of arguments */
+	int i, w;
+	lua_getglobal(L, "tostring");
+	w = write(STDERR_FILENO, " .  ",4* sizeof(char));
 	(void)w;
 	for (i=1; i<=n; i++) {
 		const char *s = lua_print_format(L, i, &len);
@@ -324,6 +346,7 @@ void zen_add_io(lua_State *L) {
 		  {"write", zen_write},
 		  {"error", zen_error},
 		  {"warn", zen_warn},
+		  {"act", zen_act},
 		  {"trim", zen_trim},
 		  {NULL, NULL} };
 	lua_getglobal(L, "_G");

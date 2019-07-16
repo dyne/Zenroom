@@ -39,6 +39,7 @@
 
 void set_debug(int lev);
 int get_debug();
+void set_color(int on);
 
 void notice(lua_State *L, const char *format, ...);
 void func(void *L, const char *format, ...);

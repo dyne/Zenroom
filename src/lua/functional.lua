@@ -1408,12 +1408,12 @@ function _.compose(...)
   local f = _.reverse {...}
   return function (...)
 		local first, _temp = true
-		for i, func in ipairs(f) do
+		for i, fun in ipairs(f) do
 			if first then
 				first = false
-				_temp = func(...)
+				_temp = fun(...)
 			else
-				_temp = func(_temp)
+				_temp = fun(_temp)
 			end
 		end
 		return _temp

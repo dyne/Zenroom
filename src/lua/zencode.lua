@@ -44,37 +44,29 @@ function zencode:flatten(MEM)
 		 end
 	  end
    end
-   inner_flatten(MEM)
-   MEM.flat = flat
+   inner_flatten(_G[MEM])
+   _G[MEM].flat = flat
 end
 
 function zencode:find(WHERE,what)
    zencode:trace('zenroom:find')
-   local got = WHERE[what]
+   local got = _G[WHERE][what]
    if not got then
-	  if not WHERE.flat then
+	  -- caching since IN is immutable and also ACK becomes immutable
+	  -- after we enter the When block
+	  if not _G[WHERE].flat then
 		 zencode:flatten(WHERE)
 	  end
-	  got = WHERE.flat[what]
+	  got = _G[WHERE].flat[what]
    end
    ZEN.assert(got, "Data not found: "..what)
    return got
 end
 
--- index metametod to facilitate cascade indexing
--- local mt = { }
--- mt.__index = function(t, k)
---    local v = {}
---    setmetatable(v, mt)
---    rawset(t, k, v)
---    return v
--- end
--- setmetatable(OUT,mt)
-
 -- debugging facility
 function xxx(n,s)
-   if zencode.verbosity > n then
-	  warn(s) end
+   if zencode.verbosity >= n then
+	  act(s) end
 end
 function zencode:begin(verbosity)
    if verbosity > 0 then
@@ -120,6 +112,11 @@ function zencode:step(text)
    elseif prefix == 'scenario' then
       self.current_step = self.given_steps
       defs = self.current_step
+	  local scenario = string.match(text, "'(.-)'")
+	  if scenario ~= "" then
+		 require("zencode_"..scenario)
+		 ZEN:trace("   | Scenario "..scenario)
+	  end
    end
    if not defs then
 		 error("Zencode invalid: "..text)
@@ -136,10 +133,10 @@ function zencode:step(text)
 	  local pat = string.gsub(pattern,"''","'(.-)'")
       local res = string.match(text, pat)
       if res then
-		 xxx(1,"EXEC: "..pat)
+		 act("EXEC: "..pat)
 		 local args = {} -- handle multiple arguments in same string
 		 for arg in string.gmatch(text,"'(.-)'") do
-			xxx(1,"+ARG: "..arg)
+			act("+arg: "..arg)
 			table.insert(args,arg)
 		 end
 		 self.id = self.id + 1
@@ -169,30 +166,8 @@ function zencode:parse(text)
    if  #text < 16 then
 	  warn("Zencode text too short to parse")
 	  return false end
-   local scenario_found = false
-   first = self:newline_iter(text)() -- iterators return functions
-   --for first in self:newline_iter(text) do
-   -- lowercase match
-   if first:match("(%w+)(.+)"):lower() == "scenario" then
-	  local scenario = string.match(first, "'(.-)'")
-	  if scenario ~= "" then
-		 require("zencode_"..scenario)
-		 scenario_found = true
-		 ZEN:trace("   | Scenario "..scenario)
-	  end
-	  -- xxx(2, "Scenario: "..scenario)
-   end
-   if not scenario_found then -- print a small warning
-	  xxx(1,"No scenario found in first line of Zencode")
-   end
    for line in self:newline_iter(text) do
-	  -- skip first if scenario is found
-	  if scenario_found == true then 
-		 scenario_found = false
-	  else
-      -- xxx(0,line)
-		 self:step(line)
-	  end
+	  self:step(line)
    end
 end
 

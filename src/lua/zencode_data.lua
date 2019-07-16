@@ -18,71 +18,9 @@
 
 -- Zencode statements to manage data
 
--- GLOBALS:
--- data        (root, decoded from DATA in Given)
--- selection   (currently selected portion of root)
-
 Given("I find ''",function(what)
-		 local found = ZEN:find(IN,what)
+		 local found = ZEN:find('IN',what)
 		 ACK[what] = found
-end)
-
--- old deprecated, now using IN->ACK->OUT
-ZEN.data = { }
-
-function ZEN.data.load()
-   local _data
-   if DATA then -- global set by zenroom
-      _data = JSON.decode(DATA)
-   else
-      _data = { }
-   end
-   return _data
-end
-
-function ZEN.data.add(_data, key, value)
-   if _data[key] then
-      error("ZEN.data.add(): DATA already contains '"..key.."' key")
-   end
-   if value['schema'] then
-      ZEN.assert(validate(value, schemas[value['schema']]),
-                 "ZEN.data.add(): invalid data format for "..key..
-                    " (schema: "..value['schema']..")", value)
-   end
-   _data[key] = value
-   return _data
-end
-
-function ZEN.data.conjoin(_data, key, value, section)
-   portion = { }
-   if section and _data[section] then
-      portion = _data[section]
-   end
-   if value['schema'] then
-      ZEN.assert(validate(value, schemas[value.schema]),
-   				 "conjoin(): invalid data format for "..section.."."..key..
-   					" (schema: "..value.schema..")")
-   end
-   portion[key] = value
-   if section then
-   	  _data[section] = portion
-   else
-   	  table.insert(_data, portion)
-   end
-   return _data
-end
-
-function ZEN.data.disjoin(_data, section, key)
-   portion = _data[section] -- L.property(section)(_data)
-   local out = {}
-   L.map(portion, function(k,v)
-            if k ~= key then
-               out[k] = v end end)
-   _data[section] = out
-   return _data
-end
-When("I remove '' from ''", function(key, coll)
-		ACK = ZEN.data.disjoin(ACK, coll, key)
 end)
 
 -- most used functions
@@ -94,7 +32,7 @@ Given("I introduce myself as ''", f_hello)
 Given("I am known as ''", f_hello)
 Given("I have a ''", function(sc)
 		 local obj = IN[sc] or IN.KEYS[sc]
-		 ZEN.assert(obj, "Data not found: '"..sc.."'")
+		 ZEN.assert(obj, "Object not found: '"..sc.."'")
 		 -- xxx(2,"importing data '"..sc.."'")
 		 ACK[sc] = import(obj,sc)
 end)
@@ -181,8 +119,6 @@ Given("declares also to be ''", function(decl)
          if not ACK.declared then ACK.declared = decl
          else ACK.declared = ACK.declared .." and ".. decl end
 end)
-
-When("I remove '' from data", f_datarm)
 
 local function _print_the_data(what)
    ZEN.assert(ACK[what], "Cannot print, data not found: "..what)
