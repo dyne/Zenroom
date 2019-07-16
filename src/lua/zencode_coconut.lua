@@ -124,6 +124,7 @@ When("I sign the credential", function()
 		ACK.ca_verify = ACK.ca_keypair.ca_verify
 end)
 When("I aggregate the credential in ''", function(dest)
+		-- TODO: expose the accumulator to zencode
         -- check the blocking state _sigmatilde
 		-- ZEN.assert(ACK.verify, "Verification keys from issuer not found")
         ZEN.assert(ACK.credential_signature, "Credential issuer signatures not found")
@@ -145,20 +146,29 @@ ZEN.add_schema({
 				  pi_v = map(obj.pi_v, INT.new), -- TODO map wrappers
 				  sigma_prime = map(obj.sigma_prime, ECP.new) } end
 })
+When("I aggregate verifiers from ''", function(ca_verify)
+		if ACK[ca_verify].alpha then
+		   ACK.verifiers = ACK[ca_verify]
+		else
+		   -- TODO: aggregate all array
+		end
+end)
+
 -- takes from IN or IN.KEYS a ca.ca_verify.alpha/beta struct and sums
 -- it to ACK.verifiers
-Given("I use the verification key by ''", function(ca)
-		 vk = IN[ca].ca_verify or IN.KEYS[ca].ca_verify
-		 ZEN.assert(vk, "Issuer verification keys not found: "..ca)
-		 ivk = ZEN:valid('ca_verify', vk)
-         if not ACK.verifiers then
-			ACK.verifiers = { alpha = ivk.alpha,
-							  beta  = ivk.beta }
-		 else -- aggregate_keys
-			ACK.verifiers.alpha = ACK.verifiers.alpha + ivk.alpha
-			ACK.verifiers.beta  = ACK.verifiers.beta  + ivk.beta
-		 end
-end)
+-- Given("I use the verification key by ''", function(ca)
+
+-- 		 ZEN.assert(ACK.verifiers,
+-- 					"CA verification keys not found: "..ca)
+-- 		 ivk = ZEN:valid('ca_verify', vk)
+--          if not ACK.verifiers then
+-- 			ACK.verifiers = { alpha = ivk.alpha,
+-- 							  beta  = ivk.beta }
+-- 		 else -- aggregate_keys
+-- 			ACK.verifiers.alpha = ACK.verifiers.alpha + ivk.alpha
+-- 			ACK.verifiers.beta  = ACK.verifiers.beta  + ivk.beta
+-- 		 end
+-- end)
 
 When("I generate a credential proof", function()
         ZEN.assert(ACK.verifiers, "No issuer verification keys are selected")

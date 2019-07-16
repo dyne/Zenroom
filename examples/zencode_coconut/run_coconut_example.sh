@@ -115,7 +115,7 @@ ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'Alice'
 		 and I have my valid 'credential_keypair'
-		 and I have inside 'MadHatter' a 'credential_signature'
+		 and I have inside 'MadHatter' a valid 'credential_signature'
 		 When I aggregate the credential in 'credentials'
 		 Then print my 'credential_keypair'
 		 and print my 'credentials'
@@ -123,7 +123,7 @@ Scenario 'coconut': $scenario
 ZEN:run()
 EOF
 mv /tmp/alice.keys . # restore to avoid overwrite 
-return 0
+
 scenario="Request a credential blind signature"
 echo $scenario
 cat <<EOF | zenroom -k strawman.keys | tee strawman_blindsign_request.json
@@ -131,7 +131,7 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'Strawman'
-		 and my keys have 'credential_keypair'
+		 and I have my valid 'credential_keypair'
 		 When I generate a credential signature request
 		 Then print the 'credential_signature_request'
 ]])
@@ -145,12 +145,12 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'MadHatter'
-		 and my keys have 'ca_keypair'
-		 and I have a 'credential_signature_request'
-		 When I am ready
-		 and I sign the credential
+		 and I have my valid 'ca_keypair'
+		 and I have a valid 'credential_signature_request'
+		 When I sign the credential
 		 Then print my 'credential_signature'
-		 and print my 'verify'
+		 and print my 'ca_verify'
+
 ]])
 ZEN:run()
 EOF
@@ -163,8 +163,8 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'Strawman'
-		 and my keys have 'credential_keypair'
-		 and I have inside 'MadHatter' a 'credential_signature'
+		 and I have my valid 'credential_keypair'
+		 and I have inside 'MadHatter' a valid 'credential_signature'
 		 When I aggregate the credential in 'credentials'
 		 Then print my 'credential_keypair'
 		 and print my 'credentials'
@@ -180,7 +180,7 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'Lionheart'
-		 and my keys have 'credential_keypair'
+		 and I have my valid 'credential_keypair'
 		 When I generate a credential signature request
 		 Then print the 'credential_signature_request'
 ]])
@@ -194,12 +194,11 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'MadHatter'
-		 and my keys have 'ca_keypair'
-		 and I have a 'credential_signature_request'
-		 When I am ready
-		 and I sign the credential
+		 and I have my valid 'ca_keypair'
+		 and I have a valid 'credential_signature_request'
+		 When I sign the credential
 		 Then print my 'credential_signature'
-		 and print my 'verify'
+		 and print my 'ca_verify'
 ]])
 ZEN:run()
 EOF
@@ -212,8 +211,8 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'Lionheart'
-		 and my keys have 'credential_keypair'
-		 and I have inside 'MadHatter' a 'credential_signature'
+		 and I have my valid 'credential_keypair'
+		 and I have inside 'MadHatter' a valid 'credential_signature'
 		 When I aggregate the credential in 'credentials'
 		 Then print my 'credential_keypair'
 		 and print my 'credentials'
@@ -232,15 +231,15 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'Alice'
-		 and my keys have 'credential_keypair'
-		 and my keys have 'credentials'
-		 and I use the verification key by 'MadHatter'
-		 When I generate a credential proof
+		 and I have my valid 'credential_keypair'
+		 and I have my valid 'credentials'
+		 and I have inside 'MadHatter' a valid 'ca_verify'
+		 When I aggregate verifiers from 'ca_verify'
+		 and I generate a credential proof
 		 Then print the 'credential_proof'
 ]])
 ZEN:run()
 EOF
-
 
 # Dev note: this checks if theta contains the statement, and returns a boolean VerifyCred(vk, Θ, φ0) 
 scenario="Verify a blind proof of the credentials"
@@ -249,10 +248,12 @@ cat <<EOF | zenroom -k alice_proof.json -a madhatter_verification.keys
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
-		 Given that my keys have 'credential_proof'
-		 and I use the verification key by 'MadHatter'
-		 When I verify the credential proof is correct
+		 Given I have a valid 'credential_proof'
+		 and I have inside 'MadHatter' a valid 'ca_verify'
+		 When I aggregate verifiers from 'ca_verify'
+		 and I verify the credential proof is correct		 
 		 Then print 'result' 'OK'
+		 and debug
 ]])
 ZEN:run()
 EOF

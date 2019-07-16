@@ -41,12 +41,19 @@ OUT = OUT or { }
 -- MEM += { name = obj }
 function zencode:push(name, obj, where)
    WHERE = where or 'ACK'
-   ZEN:trace("[F] push() "..name.." "..type(obj).." "..WHERE)
+   ZEN:trace("f   push() "..name.." "..type(obj).." "..WHERE)
    ZEN.assert(obj, "Object not found: ".. name)
    local MEM = _G[WHERE]
    ZEN.assert(MEM, "Memory not found: ".. WHERE)
-   ZEN.assert(not MEM[name], "Cannot overwrite object: "..WHERE.."."..name)
-   MEM[name] = obj
+   if MEM[name] then -- already existing, create an array
+	  if type(MEM[name]) ~= "table" then
+		 MEM[name] = { MEM[name] }
+	  end
+	  table.insert(MEM[name], obj)
+   else
+	  -- ZEN.assert(not MEM[name], "Cannot overwrite object: "..WHERE.."."..name)
+	  MEM[name] = obj
+   end
    _G[WHERE] = MEM
 end
 
@@ -57,7 +64,7 @@ end
 -- MEM += { whoami += { name = obj } }
 function zencode:mypush(name, obj, where)
    WHERE = where or 'ACK'
-   ZEN:trace("[F] mypush() "..name.." "..type(obj).." "..WHERE)
+   ZEN:trace("f   mypush() "..name.." "..type(obj).." "..WHERE)
    ZEN.assert(_G['ACK'].whoami, "No identity specified")
    ZEN.assert(obj, "Object not found: ".. name)
    local MEM = _G[WHERE]
@@ -89,7 +96,7 @@ end
 -- returns any object called 'what' found anywhere in WHERE
 function zencode:find(what, where)
    WHERE = where or 'IN'
-   ZEN:trace("[F] find() "..what.." "..WHERE)
+   ZEN:trace("f   find() "..what.." "..WHERE)
    local got = _G[WHERE][what]
    if not got then
 	  local flat = zencode:flatten(WHERE)
@@ -130,10 +137,9 @@ function zencode:step(text)
    if ZEN:isempty(text) then return true end
    if ZEN:iscomment(text) then return true end
    -- first word
-   local chomp = string.char(text:byte(1,4096))
+   local chomp = string.char(text:byte(1,1024))
    local prefix = chomp:match("(%w+)(.+)"):lower()
    local defs -- parse in what phase are we
-   -- TODO: use state machine
    if prefix == 'given' then
       self.current_step = self.given_steps
       defs = self.current_step
@@ -151,28 +157,26 @@ function zencode:step(text)
 	  local scenario = string.match(text, "'(.-)'")
 	  if scenario ~= "" then
 		 require("zencode_"..scenario)
-		 ZEN:trace("   | Scenario "..scenario)
+		 ZEN:trace("|   Scenario "..scenario)
 	  end
-   end
-   if not defs then
-		 error("Zencode invalid: "..text)
-		 error(_G.ZEN_traceback)
+   else -- defs = nil end
+	    -- if not defs then
+		 error("Zencode invalid: "..chomp)
 		 return false
    end
    for pattern,func in pairs(defs) do
       if (type(func) ~= "function") then
          error("Zencode function missing: "..pattern)
-		 error(_G.ZEN_traceback)
          return false
       end
 	  -- support simplified notation for arg match
 	  local pat = string.gsub(pattern,"''","'(.-)'")
       local res = string.match(text, pat)
       if res then
-		 act("EXEC: "..pat)
+		 xxx(3,"EXEC: "..pat)
 		 local args = {} -- handle multiple arguments in same string
 		 for arg in string.gmatch(text,"'(.-)'") do
-			act("+arg: "..arg)
+			xxx(3,"+arg: "..arg)
 			table.insert(args,arg)
 		 end
 		 self.id = self.id + 1
@@ -211,7 +215,8 @@ end
 function zencode:trace(src)
    -- take current line of zencode
    _G['ZEN_traceback'] = _G['ZEN_traceback']..
-	  "    ".. trim(src) .."\n"
+	  trim(src)
+	  .."\n"
 	  -- "    -> ".. src:gsub("^%s*", "") .."\n"
 end
 function zencode:run()
@@ -222,18 +227,13 @@ function zencode:run()
 	  if DATA then IN = JSON.decode(DATA) end
 	  IN.KEYS = { } -- import global KEYS from json
 	  if KEYS then IN.KEYS = JSON.decode(KEYS) end
-	  -- clean ACK and OUT tables
-	  -- ACK = ACK or { }
-	  -- OUT = OUT or { }
-	  -- unprotected call (quit on error):
-      --   x.hook(table.unpack(x.args))
-	  -- protected call (doesn't exits on errors)
-	  ZEN:trace(x.source)
+	  ZEN:trace("->  "..trim(x.source))
       local ok, err = pcall(x.hook,table.unpack(x.args))
       if not ok then
-		 print ''
 		 ZEN:trace("[!] "..err)
-		 error("ERROR: "..trim(x.source))
+		 ZEN:trace("---")
+		 error(trim(x.source))
+		 -- clean the traceback
 		 _G['ZEN_traceback'] = ""
 	  end
    end
@@ -259,11 +259,11 @@ end
 function zencode.assert(condition, errmsg)
    if condition then return true end
    -- ZEN.debug() -- prints all data in memory
-   ZEN:trace(errmsg)
+   ZEN:trace("ERR "..errmsg)
    -- print ''
    -- error(errmsg) -- prints zencode backtrace
    -- print ''
-   assert(false, "Execution aborted.")
+   -- assert(false, "Execution aborted.")
 end
 
 _G["Given"] = function(text, fn)

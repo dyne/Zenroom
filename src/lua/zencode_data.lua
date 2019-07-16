@@ -37,6 +37,13 @@ Given("I have my valid ''",function(name)
 		 local obj = ZEN:find(name,'IN') -- TODO: :myfind
 		 ZEN:push(name, ZEN:valid(name, obj))
 end)
+-- IN->ACK named import
+Given("I have inside '' a valid ''",function(section, name)
+		 local obj = ZEN:find(section,'IN')
+		 ZEN.assert(obj[name], "Object not found: "..section.."["..name.."]")
+		 ZEN:push(name, ZEN:valid(name,obj[name]))
+end)
+
 
 Then("print all data", function() OUT = ACK end)
 Then("print my data", function()
@@ -51,7 +58,9 @@ end)
 Then("print my ''", function(key)
 		ZEN:mypush(key,ACK[key],'OUT')
 end)
-
+Then("print '' ''", function(key, val)
+		OUT[key] = val
+end)
 f_hello = function(nam) ZEN:push('whoami', nam) end
 Given("I introduce myself as ''", f_hello)
 Given("I am known as ''", f_hello)
