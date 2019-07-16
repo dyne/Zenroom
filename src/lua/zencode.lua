@@ -45,19 +45,16 @@ function zencode:flatten(MEM)
 	  end
    end
    inner_flatten(_G[MEM])
-   _G[MEM].flat = flat
+   return flat
 end
 
+-- fail when nothing found
 function zencode:find(WHERE,what)
    zencode:trace('zenroom:find')
    local got = _G[WHERE][what]
    if not got then
-	  -- caching since IN is immutable and also ACK becomes immutable
-	  -- after we enter the When block
-	  if not _G[WHERE].flat then
-		 zencode:flatten(WHERE)
-	  end
-	  got = _G[WHERE].flat[what]
+	  local flat = zencode:flatten(WHERE)
+	  got = flat[what]
    end
    ZEN.assert(got, "Data not found: "..what)
    return got
