@@ -29,10 +29,10 @@ ZEN.add_schema({
 })
 -- credential keypair operations
 local function f_keygen()
-   local kp = { }
-   kp.private, kp.public = ELGAMAL.keygen()
-   ACK[ACK.whoami] = kp
-   ACK[ACK.whoami].schema = 'credential_keypair'
+   local t = { }
+   t.sk, t.pk = ELGAMAL.keygen()
+   ZEN:push('credential_keypair', { public = t.pk,
+									private = t.sk })
 end
 When("I create my new credential keypair", f_keygen)
 When("I create my new credential request keypair", f_keygen)
@@ -50,20 +50,21 @@ ZEN.add_schema({
 				  beta  = get(obj, 'beta', ECP2.new) }
 	  end,
 	  ca_keypair = function(obj) -- recursive import
-		 return { ca_sign   = import(obj.ca_sign,'ca_sign'),
-				  ca_verify = import(obj.ca_verify,'ca_verify') }
+		 return { ca_sign   = ZEN:valid('ca_sign', obj.ca_sign),
+				  ca_verify = ZEN:valid('ca_verify', obj.ca_verify) }
 	  end
 })
 local function f_ca_keygen()
-   sk, vk = COCONUT.ca_keygen()   
-   ACK[ACK.whoami or 'anonymous'] = { ca_sign = sk,
-									  ca_verify = vk }
+   local t = { }
+   t.sk, t.vk = COCONUT.ca_keygen()
+   ZEN:push('ca_keypair', { ca_sign = t.sk,
+							ca_verify = t.vk })
 end
 When("I create my new issuer keypair", f_ca_keygen)
 When("I create my new authority keypair", f_ca_keygen)
 f_ca_keypair = function(keyname)
    ZEN.assert(keyname or ACK.whoami, "Cannot identify the issuer keypair to use")
-   ACK.ca_keypair = import(IN.KEYS[keyname or ACK.whoami], 'ca_keypair')
+   ACK.ca_keypair = ZEN:valid('ca_keypair', IN.KEYS[keyname or ACK.whoami])
 end
 Given("I have '' issuer keypair", f_ca_keypair)
 Given("I have my issuer keypair", f_ca_keypair)
@@ -91,15 +92,15 @@ ZEN.add_schema({
 		return req
 	  end
 })
-f_blindsign_req = function()
-   ZEN.assert(ACK.credential_keypair.private,
-			  "Private key not found in credential keypair")
-   ACK['credential_signature_request'] = COCONUT.prepare_blind_sign(
-	  ACK.credential_keypair.public, ACK.credential_keypair.private)
-   ACK['credential_signature_request'].schema = 'credential_signature_request'
-end -- synonyms
-When("I generate a credential signature request", f_blindsign_req)
-When("I request a blind signature of my keypair", f_blindsign_req)
+
+When("I generate a credential signature request", function()
+		ZEN.assert(ACK.credential_keypair.private,
+				   "Private key not found in credential keypair")
+		ZEN:push('credential_signature_request',
+				 COCONUT.prepare_blind_sign(ACK.credential_keypair.public,
+											ACK.credential_keypair.private))
+end) -- synonyms
+
 
 -- issuer's signature of credentials
 ZEN.add_schema({
@@ -120,7 +121,7 @@ When("I sign the credential", function()
         ACK.credential_signature = 
            COCONUT.blind_sign(ACK.ca_keypair.ca_sign,
                               ACK.credential_signature_request)
-		ACK.verify = ACK.ca_keypair.ca_verify
+		ACK.ca_verify = ACK.ca_keypair.ca_verify
 end)
 When("I aggregate the credential in ''", function(dest)
         -- check the blocking state _sigmatilde
@@ -149,7 +150,7 @@ ZEN.add_schema({
 Given("I use the verification key by ''", function(ca)
 		 vk = IN[ca].ca_verify or IN.KEYS[ca].ca_verify
 		 ZEN.assert(vk, "Issuer verification keys not found: "..ca)
-		 ivk = import(vk, 'ca_verify')
+		 ivk = ZEN:valid('ca_verify', vk)
          if not ACK.verifiers then
 			ACK.verifiers = { alpha = ivk.alpha,
 							  beta  = ivk.beta }
@@ -205,8 +206,8 @@ ZEN.add_schema({
 	  petition = function(obj)
 		 local res = { uid = obj['uid'], -- get(obj, 'uid', str),
 					   owner = get(obj, 'owner', ECP.new),
-					   scores = import(obj.scores, 'petition_scores') }
-		 if type(obj.vkeys) == 'table' then res.vkeys = import(obj.vkeys, 'ca_verify') end
+					   scores = ZEN:valid('petition_scores',obj.scores) }
+		 if type(obj.vkeys) == 'table' then res.vkeys = ZEN:valid('ca_verify',obj.vkeys) end
 		 if type(obj.list) == 'table' then
 			res.list = { }
 			for k,v in ipairs(obj.list) do res.list[k] = true end
@@ -215,9 +216,9 @@ ZEN.add_schema({
 			   end,
 
 	 petition_signature = function(obj)
-		   return { proof = import(obj.proof, 'credential_proof'),
-					uid_signature = get(obj, 'uid_signature', ECP.new),
-					uid_petition = obj['uid_petition'] } 
+		return { proof = ZEN:valid('credential_proof',obj.proof),
+				 uid_signature = get(obj, 'uid_signature', ECP.new),
+				 uid_petition = obj['uid_petition'] } 
 		end,
 
 	 petition_tally = function(obj)
@@ -349,7 +350,7 @@ end)
 Given("I receive a tally", function()
 		 -- TODO: find tally in DATA and KEYS
 		 ZEN.assert(type(IN.KEYS.tally) == 'table', "Tally not found")
-		 ACK.tally = import(IN.KEYS.tally, 'petition_tally')
+		 ACK.tally = ZEN:valid('petition_tally',IN.KEYS.tally)
 end)
 
 When("I tally the petition", function()

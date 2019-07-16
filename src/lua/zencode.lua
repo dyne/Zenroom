@@ -23,7 +23,8 @@ local zencode = {
    current_step = nil,
    id = 0,
    matches = {},
-   verbosity = 0
+   verbosity = 0,
+   schemas = { }
 }
 
 -- Zencode HEAP globals
@@ -32,6 +33,43 @@ IN.KEYS = { } -- import global KEYS from json
 ACK = ACK or { }
 OUT = OUT or { }
 
+
+-- ZEN:push(name, obj [,MEM])
+--
+-- moves 'obj' inside MEM.name
+--
+-- MEM += { name = obj }
+function zencode:push(name, obj, where)
+   WHERE = where or 'ACK'
+   ZEN:trace("[F] push() "..name.." "..type(obj).." "..WHERE)
+   ZEN.assert(obj, "Object not found: ".. name)
+   local MEM = _G[WHERE]
+   ZEN.assert(MEM, "Memory not found: ".. WHERE)
+   ZEN.assert(not MEM[name], "Cannot overwrite object: "..WHERE.."."..name)
+   MEM[name] = obj
+   _G[WHERE] = MEM
+end
+
+-- ZEN:mypush(name, obj [,MEM])
+--
+-- moves 'obj' inside MEM.whoami.name
+--
+-- MEM += { whoami += { name = obj } }
+function zencode:mypush(name, obj, where)
+   WHERE = where or 'ACK'
+   ZEN:trace("[F] mypush() "..name.." "..type(obj).." "..WHERE)
+   ZEN.assert(_G['ACK'].whoami, "No identity specified")
+   ZEN.assert(obj, "Object not found: ".. name)
+   local MEM = _G[WHERE]
+   ZEN.assert(MEM, "Memory not found: ".. WHERE)
+   local me = MEM[ACK.whoami]
+   if not me then me = { } end
+   me[name] = obj
+   MEM[ACK.whoami] = me
+   _G[WHERE] = MEM
+end
+
+-- returns a flat associative table of all objects in MEM
 function zencode:flatten(MEM)
    local flat = { }
    local function inner_flatten(arr)
@@ -48,9 +86,10 @@ function zencode:flatten(MEM)
    return flat
 end
 
--- fail when nothing found
-function zencode:find(WHERE,what)
-   zencode:trace('zenroom:find')
+-- returns any object called 'what' found anywhere in WHERE
+function zencode:find(what, where)
+   WHERE = where or 'IN'
+   ZEN:trace("[F] find() "..what.." "..WHERE)
    local got = _G[WHERE][what]
    if not got then
 	  local flat = zencode:flatten(WHERE)
@@ -144,8 +183,9 @@ function zencode:step(text)
 						prefix = prefix,
 						regexp = pat,
 						hook = func       })
-		 _G['ZEN_traceback'] = _G['ZEN_traceback']..
-			"    -> ".. text:gsub("^%s*", "") .. " ("..#args.." args)\n"
+		 -- this is parsing, not execution, hence tracing isn't useful
+		 -- _G['ZEN_traceback'] = _G['ZEN_traceback']..
+		 -- 	"    -> ".. text:gsub("^%s*", "") .. " ("..#args.." args)\n"
 	  end
    end
 end
@@ -171,7 +211,8 @@ end
 function zencode:trace(src)
    -- take current line of zencode
    _G['ZEN_traceback'] = _G['ZEN_traceback']..
-	  "    -> ".. src:gsub("^%s*", "") .."\n"
+	  "    ".. trim(src) .."\n"
+	  -- "    -> ".. src:gsub("^%s*", "") .."\n"
 end
 function zencode:run()
    -- xxx(2,"Zencode MATCHES:")
@@ -182,21 +223,25 @@ function zencode:run()
 	  IN.KEYS = { } -- import global KEYS from json
 	  if KEYS then IN.KEYS = JSON.decode(KEYS) end
 	  -- clean ACK and OUT tables
-	  ACK = ACK or { }
-	  OUT = OUT or { }
+	  -- ACK = ACK or { }
+	  -- OUT = OUT or { }
 	  -- unprotected call (quit on error):
       --   x.hook(table.unpack(x.args))
 	  -- protected call (doesn't exits on errors)
+	  ZEN:trace(x.source)
       local ok, err = pcall(x.hook,table.unpack(x.args))
       if not ok then
-		 error(err)
-		 -- error(_G.ZEN_traceback)
+		 print ''
+		 ZEN:trace("[!] "..err)
+		 error("ERROR: "..trim(x.source))
+		 _G['ZEN_traceback'] = ""
 	  end
    end
    if type(OUT) == 'table' then print(JSON.encode(OUT)) end
 end
 
 function zencode.debug()
+   -- TODO: print to stderr
    print(" _______")
    print("|  DEBUG:")
    -- one print after another to sort deterministic
@@ -214,7 +259,10 @@ end
 function zencode.assert(condition, errmsg)
    if condition then return true end
    -- ZEN.debug() -- prints all data in memory
-   error(errmsg) -- prints zencode backtrace
+   ZEN:trace(errmsg)
+   -- print ''
+   -- error(errmsg) -- prints zencode backtrace
+   -- print ''
    assert(false, "Execution aborted.")
 end
 

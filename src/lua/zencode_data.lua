@@ -18,51 +18,48 @@
 
 -- Zencode statements to manage data
 
-Given("I find ''",function(what)
-		 local found = ZEN:find('IN',what)
-		 ACK[what] = found
+-- IN->ACK non-validated import 
+Given("I have ''",function(key)
+		 ZEN:push(key, ZEN:find(key, 'IN'))
+end)
+Given("I have my ''",function(key)
+		 ZEN.assert(ACK.whoami, "No identity specified")
+		 ZEN:push(key, ZEN:find(key, 'IN')) -- TODO: :myfind
+end)
+-- IN->ACK validated import
+Given("I have a valid ''",function(name)
+		 local obj = ZEN:find(name,'IN')
+		 ZEN:push(name, ZEN:valid(name,obj))
+end)
+-- IN->ACK validated personal import
+Given("I have my valid ''",function(name)
+		 ZEN.assert(ACK.whoami, "No identity specified")
+		 local obj = ZEN:find(name,'IN') -- TODO: :myfind
+		 ZEN:push(name, ZEN:valid(name, obj))
 end)
 
--- most used functions
-Then("print all data", function()
-		OUT = ACK
+Then("print all data", function() OUT = ACK end)
+Then("print my data", function()
+		ZEN.assert(ACK.whoami, "No identity specified")
+		OUT[ACK.whoami] = ACK
+		OUT[ACK.whoami].whoami = nil
 end)
-f_hello = function(nam) ACK.whoami = nam end
+Then("print the ''", function(key)
+		ZEN:push(key,ACK[key],'OUT')
+end)
+-- PRINT MY: put in output under my identifier (whoami)
+Then("print my ''", function(key)
+		ZEN:mypush(key,ACK[key],'OUT')
+end)
+
+f_hello = function(nam) ZEN:push('whoami', nam) end
 Given("I introduce myself as ''", f_hello)
 Given("I am known as ''", f_hello)
-Given("I have a ''", function(sc)
-		 local obj = IN[sc] or IN.KEYS[sc]
-		 ZEN.assert(obj, "Object not found: '"..sc.."'")
-		 -- xxx(2,"importing data '"..sc.."'")
-		 ACK[sc] = import(obj,sc)
-end)
-Given("I have inside '' a ''", function(k, sc) 
-		 local obj = IN[k] or IN.KEYS[k]
-		 obj = obj[sc]
-		 ZEN.assert(obj, "Data not found: '"..k.."' containing '"..sc.."'")
-		 -- xxx(2,"importing data '"..k.."' with schema '"..sc.."'")
-		 ACK[sc] = import(obj,sc)
-end)
-Given("I have my ''", function(sc)
-		 local obj = IN[ACK.whoami] or IN.KEYS[ACK.whoami]
-		 if obj[sc] then obj = obj[sc] end
-		 ZEN.assert(obj, "Data not found: '"..ACK.whoami.."' containing '"..sc.."'")
-		 ACK[sc] = import(obj,sc)
-end)
-Given("my keys have ''", function(sc)
-		 local obj
-		 if ACK.whoami then
-			obj = IN.KEYS[ACK.whoami]
-		 else obj = IN.KEYS end
-		 if obj[sc] then obj = obj[sc] end -- nested object inside name
-		 ZEN.assert(obj, "Keys not found: '"..sc.."'")
-		 ACK[sc] = import(obj,sc)
-end)
 
 -- debug functions
-Given("print debug info", function() ZEN.debug() end)
-When("print debug info", function() ZEN.debug() end)
-Then("print debug info", function() ZEN.debug() end)
+Given("debug", function() ZEN.debug() end)
+When("debug", function() ZEN.debug() end)
+Then("debug", function() ZEN.debug() end)
 
 f_datarm = function (section)
    --   local _data = IN or ZEN.data.load()
@@ -118,30 +115,4 @@ Given("declares also to be ''", function(decl)
          -- declaration
          if not ACK.declared then ACK.declared = decl
          else ACK.declared = ACK.declared .." and ".. decl end
-end)
-
-local function _print_the_data(what)
-   ZEN.assert(ACK[what], "Cannot print, data not found: "..what)
-   OUT[what] = ACK[what]
-end
-Then("print data ''", _print_the_data)
-Then("print the ''", _print_the_data)
-
--- PRINT MY: put in output under my identifier (whoami)
-Then("print my ''", function(what)
-		ZEN.assert(ACK.whoami, "No identity specified")
-		local got = ZEN:find(what)
-		ZEN.assert(got, "Cannot print, data not found: "..what)
-		-- put in output under my name
-		local tmp = OUT[ACK.whoami] or { }
-		tmp[what] = got
-		OUT[ACK.whoami] = tmp
-end)
--- 
-Then("print my data", function()
-		ZEN.assert(ACK.whoami, "No identity specified")
-		OUT[ACK.whoami] = ACK[ACK.whoami]
-end)
-Then("print '' ''", function (sect, what)
-		OUT[sect] = what
 end)

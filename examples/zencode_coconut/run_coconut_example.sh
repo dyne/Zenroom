@@ -27,8 +27,8 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 Given that I am known as 'MadHatter'
-and my keys have 'ca_keypair'
-Then print my 'ca_verify'
+and I have my valid 'ca_verify'
+Then print my data
 ]])
 ZEN:run()
 EOF
@@ -83,7 +83,7 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'Alice'
-		 and my keys have 'credential_keypair'
+		 and I have my valid 'credential_keypair'
 		 When I generate a credential signature request
 		 Then print the 'credential_signature_request'
 ]])
@@ -97,12 +97,11 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'MadHatter'
-		 and my keys have 'ca_keypair'
-		 and I have a 'credential_signature_request'
-		 When I am ready
-		 and I sign the credential
+		 and I have my valid 'ca_keypair'
+		 and I have a valid 'credential_signature_request'
+		 When I sign the credential
 		 Then print my 'credential_signature'
-		 and print my 'verify'
+		 and print my 'ca_verify'
 ]])
 ZEN:run()
 EOF
@@ -115,7 +114,7 @@ ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario
 		 Given that I am known as 'Alice'
-		 and my keys have 'credential_keypair'
+		 and I have my valid 'credential_keypair'
 		 and I have inside 'MadHatter' a 'credential_signature'
 		 When I aggregate the credential in 'credentials'
 		 Then print my 'credential_keypair'
@@ -124,7 +123,7 @@ Scenario 'coconut': $scenario
 ZEN:run()
 EOF
 mv /tmp/alice.keys . # restore to avoid overwrite 
-
+return 0
 scenario="Request a credential blind signature"
 echo $scenario
 cat <<EOF | zenroom -k strawman.keys | tee strawman_blindsign_request.json
@@ -228,7 +227,7 @@ mv /tmp/lionheart.keys . # restore to avoid overwrite
 # Dev note: this generates theta (❖ ProveCred(vk, m, φ0) → (Θ, φ0):
 scenario="Generate a blind proof of the credentials"
 echo $scenario
-cat <<EOF | zenroom -k alice.keys -a madhatter_verification.keys | tee alice_proof.json | json_pp
+cat <<EOF | zenroom -k alice.keys -a madhatter_verification.keys | tee alice_proof.json
 ZEN:begin($verbose)
 ZEN:parse([[
 Scenario 'coconut': $scenario

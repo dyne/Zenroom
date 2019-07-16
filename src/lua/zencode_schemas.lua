@@ -19,8 +19,9 @@
 -- Zencode data schemas for validation
 
 -- init schemas
-ZEN.schemas = { }
 ZEN.add_schema = function(arr)
+   -- TODO: check overwrite / duplicate as this will avoid scenarios
+   -- to have namespace clashes
    for k,v in ipairs(arr) do
 	  ZEN.schemas[k] = v
    end
@@ -50,7 +51,7 @@ end
 
 -- import function to have recursion of nested data structures
 -- according to their stated schema
-function import(obj, sname)
+function ZEN:valid(sname, obj)
    ZEN.assert(sname, "Import error: schema is nil")
    ZEN.assert(obj, "Import error: obj is nil ("..sname..")")
    local s = ZEN.schemas[sname]

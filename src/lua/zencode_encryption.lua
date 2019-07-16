@@ -92,7 +92,7 @@ end)
 Given("I have my keypair", function()
          ZEN.assert(type(IN.KEYS[ACK.whoami]) == "table",
 					"Keypair not found for: "..ACK.whoami)
-		 local kp = import(IN.KEYS[ACK.whoami], 'ecdh_keypair')
+		 local kp = ZEN:valid('ecdh_keypair', IN.KEYS[ACK.whoami])
          ACK.pubkey = kp.public
          ACK.privkey = kp.private
 end)
@@ -149,7 +149,7 @@ end)
 
 Given("I receive an encrypted message", function()
 		 ZEN.assert(IN.aes_gcm, "No encrypted message found in input")
-		 ACK.aes_gcm = import(IN.aes_gcm, 'aes_gcm')
+		 ACK.aes_gcm = ZEN:valid('aes_gcm', IN.aes_gcm)
 end)
 
 When("I decrypt the message", function()

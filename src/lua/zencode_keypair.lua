@@ -27,7 +27,7 @@ f_havekey = function (keytype, keyname)
 	  ACK[name] = { }
 	  ACK[name][keytype] = ZEN.get(ECP.new, keypair, keytype)
    else
-	  ACK[name] = import(keypair, "ecdh_keypair")
+	  ACK[name] = ZEN:valid("ecdh_keypair", keypair)
    end
 end
 
