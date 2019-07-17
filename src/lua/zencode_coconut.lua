@@ -146,6 +146,10 @@ ZEN.add_schema({
 				  pi_v = map(obj.pi_v, INT.new), -- TODO map wrappers
 				  sigma_prime = map(obj.sigma_prime, ECP.new) } end
 })
+
+-- aggregated verifiers schema is same as a single ca_verify
+ZEN.add_schema({verifiers = ZEN.schemas['ca_verify']})
+
 When("I aggregate verifiers from ''", function(ca_verify)
 		if ACK[ca_verify].alpha then
 		   ACK.verifiers = ACK[ca_verify]
@@ -153,22 +157,6 @@ When("I aggregate verifiers from ''", function(ca_verify)
 		   -- TODO: aggregate all array
 		end
 end)
-
--- takes from IN or IN.KEYS a ca.ca_verify.alpha/beta struct and sums
--- it to ACK.verifiers
--- Given("I use the verification key by ''", function(ca)
-
--- 		 ZEN.assert(ACK.verifiers,
--- 					"CA verification keys not found: "..ca)
--- 		 ivk = ZEN:valid('ca_verify', vk)
---          if not ACK.verifiers then
--- 			ACK.verifiers = { alpha = ivk.alpha,
--- 							  beta  = ivk.beta }
--- 		 else -- aggregate_keys
--- 			ACK.verifiers.alpha = ACK.verifiers.alpha + ivk.alpha
--- 			ACK.verifiers.beta  = ACK.verifiers.beta  + ivk.beta
--- 		 end
--- end)
 
 When("I generate a credential proof", function()
         ZEN.assert(ACK.verifiers, "No issuer verification keys are selected")
@@ -195,24 +183,12 @@ end)
 -- petition
 ZEN.add_schema({
 	  petition_scores = function(obj)
-		 local res = { pos = { left = ECP.infinity(), right = ECP.infinity() },
-					   neg = { left = ECP.infinity(), right = ECP.infinity() } }
-		 if obj.pos.left  ~= "Infinity" then res.pos.left  = get(obj.pos, 'left', ECP.new) end
-		 if obj.pos.right ~= "Infinity" then res.pos.right = get(obj.pos, 'right', ECP.new) end
-		 if obj.neg.left  ~= "Infinity" then res.neg.left  = get(obj.neg, 'left', ECP.new) end
-		 if obj.neg.right ~= "Infinity" then res.neg.right = get(obj.neg, 'right', ECP.new) end
-		 return res
+		 return({
+			   pos = { left  = get(obj.pos, 'left', ECP.new),
+					   right = get(obj.pos, 'right', ECP.new) },
+			   neg = { left  = get(obj.neg, 'left', ECP.new),
+					   right = get(obj.neg, 'right', ECP.new) } })
 	  end,
-   -- export = function(obj)
-   --    local res = { pos = { left = "Infinity", right = "Infinity" },
-   --               neg = { left = "Infinity", right = "Infinity" } }
-   --    if not ECP.isinf(obj.pos.left)  then res.pos.left  = get(conv, obj.pos, 'left') end
-   --    if not ECP.isinf(obj.pos.right) then res.pos.right = get(conv, obj.pos, 'right') end
-   --    if not ECP.isinf(obj.neg.left)  then res.neg.left  = get(conv, obj.neg, 'left') end
-   --    if not ECP.isinf(obj.neg.right) then res.neg.right = get(conv, obj.neg, 'right') end
-   --    return res
-   -- end },
-
 	  petition = function(obj)
 		 local res = { uid = obj['uid'], -- get(obj, 'uid', str),
 					   owner = get(obj, 'owner', ECP.new),
@@ -224,7 +200,6 @@ ZEN.add_schema({
 		 end
 		 return res
 			   end,
-
 	 petition_signature = function(obj)
 		return { proof = ZEN:valid('credential_proof',obj.proof),
 				 uid_signature = get(obj, 'uid_signature', ECP.new),
@@ -233,11 +208,9 @@ ZEN.add_schema({
 
 	 petition_tally = function(obj)
 		   local dec = { }
-		   if obj.dec.neg ~= "Infinity" then dec.neg = get(obj.dec, 'neg', ECP.new)
-		   else dec.neg = ECP.infinity() end
-		   if obj.dec.pos ~= "Infinity" then dec.pos = get(obj.dec, 'pos', ECP.new)
-		   else dec.pos = ECP.infinity() end
-		   return { uid = get(obj, 'uid'),
+		   dec.neg = get(obj.dec, 'neg', ECP.new)
+		   dec.pos = get(obj.dec, 'pos', ECP.new)
+		   return { uid = uid, -- get(obj, 'uid'),
 					c = get(obj, 'c', INT.new),
 					dec = dec,
 					rx = get(obj, 'rx', INT.new) }
@@ -246,14 +219,15 @@ ZEN.add_schema({
 })
 
 
-When("I generate a new petition ''", function(uid)
-		ACK.petition = 
-		   { uid = uid,
-			 owner = ACK.credential_keypair.public,
-			 scores = { pos = { left = "Infinity",       -- ECP.infinity()
-								right = "Infinity" },    -- ECP.infinity()
-						neg = { left = "Infinity",       -- ECP.infinity()
-								right = "Infinity" } } } -- ECP.infinity()
+When("I generate a petition ''", function(uid)
+		ZEN:push('petition', 
+				 { uid = uid,
+				   owner = ACK.credential_keypair.public,
+				   scores = { pos = { left = "Infinity",       -- ECP.infinity()
+									  right = "Infinity" },    -- ECP.infinity()
+							  neg = { left = "Infinity",       -- ECP.infinity()
+									  right = "Infinity" } }
+		}) -- ECP.infinity()
 		-- generate an ECDH signature of the (encoded) petition using the
 		-- credential keys
 		-- ecdh = ECDH.new()
@@ -284,9 +258,10 @@ When("I sign the petition ''", function(uid)
 		   ACK.verifiers,
 		   ACK.credentials, 
 		   ACK.credential_keypair.private, uid)
-		ACK.petition_signature = { proof = Theta,
-								   uid_signature = zeta,
-								   uid_petition = uid }
+		ZEN:push('petition_signature',
+				 { proof = Theta,
+				   uid_signature = zeta,
+				   uid_petition = uid })
 end)
 
 When("I verify the signature proof is correct", function()
@@ -298,8 +273,9 @@ When("I verify the signature proof is correct", function()
 		   "Petition signature is invalid")
 end)
 
-When("the signature is not a duplicate", function()
-		local k = ACK.petition_signature.uid_signature
+When("the petition signature is not a duplicate", function()
+		enc = ENCODING or u64
+		local k = enc(ACK.petition_signature.uid_signature)
 		if type(ACK.petition.list) == 'table' then
 		   ZEN.assert(
 			  ACK.petition.list[k] == nil,
@@ -311,7 +287,7 @@ When("the signature is not a duplicate", function()
 		end
 end)
 
-When("the signature is just one more", function()
+When("the petition signature is just one more", function()
 		-- verify that the signature is +1 (no other value supported)
 		ACK.petition_signature.one =
 		   COCONUT.prove_sign_petition(ACK.petition.owner, BIG.new(1))
@@ -319,70 +295,33 @@ When("the signature is just one more", function()
 												ACK.petition_signature.one),
 				   "Coconut petition signature adds more than one signature")
 end)
+
 When("I add the signature to the petition", function()
 		-- add the signature to the petition count
-		local ps = ACK.petition.scores
-		local ss = ACK.petition_signature.one
-		ps.pos.left  = ps.pos.left  + ss.pos.left
-		ps.pos.right = ps.pos.right + ss.pos.right
-		ps.neg.left  = ps.neg.left  + ss.neg.left
-		ps.neg.right = ps.neg.right + ss.neg.right
-end)
-
-When("a valid petition signature is counted", function()
-		-- check for duplicate signatures
-		local k = hex(ACK.petition_signature.uid_signature)
-		if type(ACK.petition.list) == 'table' then
-		   ZEN.assert(
-			  ACK.petition.list[k] == nil,
-			  "Duplicate petition signature detected")
-		   ACK.petition.list[k] = true
-		else
-		   ACK.petition.list = { }
-		   ACK.petition.list[k] = true
-		end
-		-- verify that the signature is +1 (no other value supported)
-		local psign = COCONUT.prove_sign_petition(ACK.petition.owner, BIG.new(1))
-		ZEN.assert(COCONUT.verify_sign_petition(ACK.petition.owner, psign),
-				   "Coconut petition signature internal error")
-		-- add the signature to the petition count
-		local ps = ACK.petition.scores
-		local ss = psign.scores
-		ps.pos.left  = ps.pos.left  + ss.pos.left
-		ps.pos.right = ps.pos.right + ss.pos.right
-		ps.neg.left  = ps.neg.left  + ss.neg.left
-		ps.neg.right = ps.neg.right + ss.neg.right
-		OUT.petition = export(ACK.petition, 'petition', hex)
-		OUT.petition.scores = export(ps, 'petition_scores', hex)
-		OUT.verifier = export(ACK.verifier, 'ca_verify', hex)
-end)
-
-Given("I receive a tally", function()
-		 -- TODO: find tally in DATA and KEYS
-		 ZEN.assert(type(IN.KEYS.tally) == 'table', "Tally not found")
-		 ACK.tally = ZEN:valid('petition_tally',IN.KEYS.tally)
+		local scores = ACK.petition.scores
+		local psign  = ACK.petition_signature.one
+		scores.pos.left =  scores.pos.left  + psign.scores.pos.left
+		scores.pos.right = scores.pos.right + psign.scores.pos.right
+		scores.neg.left =  scores.neg.left  + psign.scores.neg.left
+		scores.neg.right = scores.neg.right + psign.scores.neg.right
+		-- TODO: ZEN:push({'petition' ,'scores'}
+		ACK.petition.scores = scores
 end)
 
 When("I tally the petition", function()
-        ZEN.assert(ACK.cred_kp.private,
+        ZEN.assert(ACK.credential_keypair.private,
 				   "Private key not found in credential keypair")
 		ZEN.assert(ACK.petition, "Petition not found")
-		ACK.tally = COCONUT.prove_tally_petition(
-		   ACK.cred_kp.private, ACK.petition.scores)
-		OUT.petition = export(ACK.petition, 'petition', hex)
-		OUT.petition.list = nil -- save space
-		ACK.tally.uid = ACK.petition.uid
-		OUT.tally = export(ACK.tally, 'petition_tally', hex)
+		ACK.petition_tally = COCONUT.prove_tally_petition(
+		   ACK.credential_keypair.private, ACK.petition.scores)
+		ACK.petition_tally.uid = ACK.petition.uid
 end)
 
 When("I count the petition results", function()
 		ZEN.assert(ACK.petition, "Petition not found")
-		ZEN.assert(ACK.tally, "Tally not found")
-		ZEN.assert(ACK.tally.uid == ACK.petition.uid,
+		ZEN.assert(ACK.petition_tally, "Tally not found")
+		ZEN.assert(ACK.petition_tally.uid == ACK.petition.uid,
 				   "Tally does not correspond to petition")
-		OUT = { }
-		local res = COCONUT.count_signatures_petition(ACK.petition.scores, ACK.tally)
-		-- handle no signatures correctly: res.pos is nil hence result: 0
-		if res.pos then OUT.result = res.pos else OUT.result = 0 end
-		OUT.uid = ACK.petition.uid
+		ACK.results = COCONUT.count_signatures_petition(
+		   ACK.petition.scores, ACK.petition_tally)
 end)

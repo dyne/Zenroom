@@ -171,12 +171,12 @@ function zencode:step(text)
       end
 	  -- support simplified notation for arg match
 	  local pat = string.gsub(pattern,"''","'(.-)'")
-      local res = string.match(text, pat)
-      if res then
-		 xxx(3,"EXEC: "..pat)
+	  if string.match(text, pat) then
+		 -- xxx(3,"EXEC: "..pat)
 		 local args = {} -- handle multiple arguments in same string
 		 for arg in string.gmatch(text,"'(.-)'") do
-			xxx(3,"+arg: "..arg)
+			-- xxx(3,"+arg: "..arg)
+			arg = string.gsub(arg, ' ', '_')
 			table.insert(args,arg)
 		 end
 		 self.id = self.id + 1
@@ -215,8 +215,7 @@ end
 function zencode:trace(src)
    -- take current line of zencode
    _G['ZEN_traceback'] = _G['ZEN_traceback']..
-	  trim(src)
-	  .."\n"
+	  trim(src).."\n"
 	  -- "    -> ".. src:gsub("^%s*", "") .."\n"
 end
 function zencode:run()
@@ -237,7 +236,12 @@ function zencode:run()
 		 _G['ZEN_traceback'] = ""
 	  end
    end
-   if type(OUT) == 'table' then print(JSON.encode(OUT)) end
+   ZEN:trace("--- Zencode execution completed")
+   if type(OUT) == 'table' then
+	  ZEN:trace("<<< Encoding { OUT } to \"JSON\"")
+	  print(JSON.encode(OUT))
+	  ZEN:trace(">>> Encoding successful")
+   end
 end
 
 function zencode.debug()

@@ -162,11 +162,11 @@ local function makePath(path, ...)
 end
 
 local function processRecursive(process, item, path, visited)
-
     if item == nil then return nil end
     if visited[item] then return visited[item] end
 
     local processed = process(item, path)
+
     if type(processed) == 'table' then
       local processedCopy = {}
       visited[item] = processedCopy
@@ -174,6 +174,7 @@ local function processRecursive(process, item, path, visited)
 
       for k,v in pairs(processed) do
         processedKey = processRecursive(process, k, makePath(path, k, inspect.KEY), visited)
+
         if processedKey ~= nil then
           processedCopy[processedKey] = processRecursive(process, v, makePath(path, processedKey), visited)
         end
@@ -294,6 +295,7 @@ end
 
 function Inspector:putValue(v)
   local tv = type(v)
+
   enc = ENCODING or url64
   if tv == 'string' then
     self:puts(smartQuote(escape(v)))
@@ -310,8 +312,10 @@ function Inspector:putValue(v)
 		self:puts("int[" .. #i.. "] " .. enc(i))
 	 elseif tv == "zenroom.ecp" then
 		local i = v:octet()
-		if v == ECP.infinity() then
-		   self:puts("ecp[" .. #i.. "] " .. "(Infinity)")
+		if v == "Infinity" then
+		   self:puts("ecp[...] " .. "(Infinity)")
+		elseif v == ECP.infinity() then
+		   self:puts("ecp[...] " .. "(Infinity)")
 		else
 		   self:puts("ecp[" .. #i.. "] " .. enc(i))
 		end
@@ -361,13 +365,16 @@ end
 
 -- conversion wrappers for zenroom types
 function inspect.encode(item)
-   enc = ENCODING or hex
+   enc = ENCODING or u64
    t = type(item)
    if t == "zenroom.octet" then
 	  return enc(item)
    elseif iszen(t) then
 	  if t == "zenroom.ecp" and ECP.isinf(item) then
-		 return "Infinity" else return enc(item:octet()) end
+	  	 return "Infinity"
+	  else
+	  	 return enc(item:octet())
+	  end
    else
 	  return item
    end

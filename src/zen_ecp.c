@@ -130,6 +130,15 @@ static int lua_new_ecp(lua_State *L) {
 		return 1; }
 #endif
 
+	// Support string argument for the representation of "Infinity"
+	size_t linf;
+	char *inf = lua_tolstring(L, 1, &linf);
+	if(inf && linf==8) // strlen("Infinity")
+		if(strcmp(inf, "Infinity")==0) {
+			ecp *e = ecp_new(L); SAFE(e);
+			ECP_inf(&e->val);
+			return 1;
+		}
 	// We protect well this entrypoint since parsing any input is at risk
 	// Milagro's _fromOctet() uses ECP_BLS383_set(ECP_BLS383 *P,BIG_384_29 x)
 	// then converts the BIG to an FP modulo using FP_BLS383_nres.

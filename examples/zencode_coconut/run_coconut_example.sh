@@ -253,7 +253,6 @@ Scenario 'coconut': $scenario
 		 When I aggregate verifiers from 'ca_verify'
 		 and I verify the credential proof is correct		 
 		 Then print 'result' 'OK'
-		 and debug
 ]])
 ZEN:run()
 EOF

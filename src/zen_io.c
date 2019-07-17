@@ -283,9 +283,15 @@ static int zen_act (lua_State *L) {
 	return 0;
 }
 
+// lua_error from lapi.c
+// #include <lapi.h>
+// api_checknelems(L, 1);
+// luaG_errormsg(L);
+
 static int zen_error (lua_State *L) {
 	int n = lua_gettop(L);  /* number of arguments */
 	int w;
+
 	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
 
 	int status = 1;
@@ -313,7 +319,7 @@ static int zen_error (lua_State *L) {
 		w = write(STDERR_FILENO, "[!] ",4* sizeof(char));
 		w = write(STDERR_FILENO, zencode_line, zencode_line_len);
 	}
-	lua_pop(L,1);
+	lua_pop(L,1); // lua_getglobal ZEN_tracebak
 
     (void)w;
 	return 0;
