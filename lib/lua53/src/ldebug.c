@@ -13,6 +13,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "lua.h"
 
@@ -638,6 +639,18 @@ const char *luaG_addinfo (lua_State *L, const char *msg, TString *src,
 
 
 l_noret luaG_errormsg (lua_State *L) {
+
+	// output the zencode line if active
+	int w;
+	lua_getglobal(L,"ZEN_traceback");
+	size_t zencode_line_len;
+	const char *zencode_line = lua_tolstring(L,6,&zencode_line_len);
+	if(zencode_line) {
+		w = write(STDERR_FILENO, "[!] ",4* sizeof(char));
+		w = write(STDERR_FILENO, zencode_line, zencode_line_len);
+	}
+	lua_pop(L,1);
+
   if (L->errfunc != 0) {  /* is there an error handling function? */
     StkId errfunc = restorestack(L, L->errfunc);
     setobjs2s(L, L->top, L->top - 1);  /* move argument */
@@ -645,6 +658,7 @@ l_noret luaG_errormsg (lua_State *L) {
     L->top++;  /* assume EXTRA_STACK */
     luaD_callnoyield(L, L->top - 2, 1);  /* call it */
   }
+
   luaD_throw(L, LUA_ERRRUN);
 }
 

@@ -45,14 +45,19 @@ msgpack = nil -- rename default global
 OCTET  = require('zenroom_octet')
 O = OCTET -- alias
 
+LAMBDA = require('functional')
+L = LAMBDA -- alias
+
+-- switch to deterministic (sorted) table iterators
+_G["pairs"]  = LAMBDA.pairs
+_G["ipairs"] = LAMBDA.pairs
+
 INSIDE = require('inspect')
 I = INSIDE -- alias
 
 JSON = require('zenroom_json')
 RNG    = require('zenroom_rng')
 ECDH   = require('zenroom_ecdh')
-LAMBDA = require('functional')
-L = LAMBDA -- alias
 FP12   = require('fp12')
 BIG    = require('zenroom_big')
 INT = BIG -- alias
@@ -86,10 +91,6 @@ function content(var)
 	  INSIDE.print(var)
    end
 end
-
--- switch to deterministic (sorted) table iterators
-_G["pairs"]  = LAMBDA.pairs
-_G["ipairs"] = LAMBDA.pairs
 
 -- default encoding base64url (RFC4648)
 -- this is the fastest and most portable encoder in zenroom
