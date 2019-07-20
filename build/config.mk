@@ -72,7 +72,7 @@ ld := arm-none-eabi-ld
 system := Generic
 ldadd += -lm
 cflags_protection := ""
-cflags := ${cflags_protection} -DARCH_CORTEX -O3 -Wall -Wextra -pedantic -std=gnu99 -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb-interwork -Wstack-usage=1024 -DLIBRARY -Os -Wno-main -ffreestanding -nostartfiles -ggdb
+cflags := ${cflags_protection} -DARCH_CORTEX -Og -ggdb -Wall -Wextra -pedantic -std=gnu99 -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb-interwork -Wstack-usage=1024 -DLIBRARY -Wno-main -ffreestanding -nostartfiles
 milagro_cmake_flags += -DCMAKE_SYSTEM_PROCESSOR="arm" -DCMAKE_CROSSCOMPILING=1 -DCMAKE_C_COMPILER_WORKS=1
 ldflags+=-mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb-interwork -Wstack-usage=1024 -Wno-main -ffreestanding -T cortex_m.ld -nostartfiles -Wl,-gc-sections -ggdb
 endif
