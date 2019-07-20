@@ -217,6 +217,8 @@ int zen_lua_init(lua_State *L) {
 		if (strcasecmp(p->name, "init") == 0)
 			return zen_exec_extension(L,p);
 	}
+	lua_gc(L, LUA_GCCOLLECT, 0);
+	lua_gc(L, LUA_GCCOLLECT, 0);
 	lerror(L,"Error loading lua init script");
 	return 0;
 }
