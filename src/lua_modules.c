@@ -69,8 +69,6 @@ typedef struct LoadS {
 	const char *s;
 	size_t size;
 } LoadS;
-
-
 static const char *getS (lua_State *L, void *ud, size_t *size) {
 	LoadS *ls = (LoadS *)ud;
 	(void)L;  /* not used */
@@ -78,6 +76,29 @@ static const char *getS (lua_State *L, void *ud, size_t *size) {
 	*size = ls->size;
 	ls->size = 0;
 	return ls->s;
+}
+// moved from lua's liolib.c
+static const luaL_Reg iolib[] = {
+	{NULL, NULL}
+};
+static const luaL_Reg flib[] = {
+	{NULL, NULL}
+};
+static void createmeta (lua_State *L) {
+	luaL_newmetatable(L, LUA_FILEHANDLE);  /* create metatable for file handles */
+	lua_pushvalue(L, -1);  /* push metatable */
+	lua_setfield(L, -2, "__index");  /* metatable.__index = metatable */
+	luaL_setfuncs(L, flib, 0);  /* add file methods to new metatable */
+	lua_pop(L, 1);  /* pop new metatable */
+}
+LUAMOD_API int luaopen_io (lua_State *L) {
+	luaL_newlib(L, iolib);  /* new module */
+	createmeta(L);
+	/* create (and set) default files */
+	// createstdfile(L, stdin, IO_INPUT, "stdin");
+	// createstdfile(L, stdout, IO_OUTPUT, "stdout");
+	// createstdfile(L, stderr, NULL, "stderr");
+	return 1;
 }
 
 
