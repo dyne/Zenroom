@@ -28,7 +28,8 @@ javascript-wasm: ldflags += -s WASM=1 \
 	-s MODULARIZE=1 \
 	-s ALLOW_MEMORY_GROWTH=1 \
 	-s WARN_UNALIGNED=1 \
-	-s EXPORT_NAME="'ZR'"
+	-s EXPORT_NAME="'ZR'" \
+	--no-heap-copy
 javascript-wasm: apply-patches lua53 milagro embed-lua
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src js

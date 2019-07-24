@@ -15,6 +15,7 @@ docs/pub
 docs/fonts
 lib/musl
 src/zenroom.js
+src/zenroom.js.mem
 src/zenroom.wasm
 src/zenroom-shared
 build/Zenroom-*
