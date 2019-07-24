@@ -1,14 +1,24 @@
 # TODO: improve flags according to
 # https://github.com/kripken/emscripten/blob/master/src/settings.js
-javascript-node: cflags += -DARCH_JS -D'ARCH=\"JS\"' -D MAX_STRING=128000
-javascript-node: ldflags += -s WASM=0 \
+
+javascript-demo: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
+javascript-demo: ldflags += -s WASM=1 --shell-file ${extras}/shell_minimal.html
+javascript-demo: apply-patches lua53 milagro embed-lua
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	make -C src js-demo
+	@mkdir -p build/demo
+	@cp -v docs/demo/index.* build/demo/
+	@cp -v docs/demo/*.js build/demo/
+
+javascript-asmjs: cflags += -DARCH_JS -D'ARCH=\"JS\"' -D MAX_STRING=128000
+javascript-asmjs: ldflags += -s WASM=0 \
 	-s MEM_INIT_METHOD=1
-javascript-node: apply-patches lua53 milagro embed-lua
+javascript-asmjs: apply-patches lua53 milagro embed-lua
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src js
-	@mkdir -p build/nodejs
-	@cp -v src/zenroom.js 	  build/nodejs/
-	@cp -v src/zenroom.js.mem build/nodejs/
+	@mkdir -p build/asmjs
+	@cp -v src/zenroom.js 	  build/asmjs/
+	@cp -v src/zenroom.js.mem build/asmjs/
 
 javascript-rn: cflags += -DARCH_JS -D'ARCH=\"JS\"' -D MAX_STRING=128000
 javascript-rn: ldflags += -s WASM=0 \
@@ -28,15 +38,6 @@ javascript-rn: apply-patches lua53 milagro embed-lua
 	sed -i 's/;ENVIRONMENT_IS_WEB=[^;]*;/;ENVIRONMENT_IS_WEB=false;/g' src/zenroom.js
 	@mkdir -p build/rnjs
 	@cp -v src/zenroom.js 	  build/rnjs/
-
-javascript-demo: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
-javascript-demo: ldflags += -s WASM=1 --shell-file ${extras}/shell_minimal.html
-javascript-demo: apply-patches lua53 milagro embed-lua
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-	make -C src js-demo
-	@mkdir -p build/demo
-	@cp -v docs/demo/index.* build/demo/
-	@cp -v docs/demo/*.js build/demo/
 
 javascript-npm: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
 javascript-npm: ldflags += -s WASM=1 \
