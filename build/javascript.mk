@@ -20,6 +20,22 @@ javascript-asmjs: apply-patches lua53 milagro embed-lua
 	@cp -v src/zenroom.js 	  build/asmjs/
 	@cp -v src/zenroom.js.mem build/asmjs/
 
+javascript-wasm: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
+javascript-wasm: ldflags += -s WASM=1 \
+	-s INVOKE_RUN=0 \
+	-s EXIT_RUNTIME=1 \
+	-s NODEJS_CATCH_EXIT=0 \
+	-s MODULARIZE=1 \
+	-s ALLOW_MEMORY_GROWTH=1 \
+	-s WARN_UNALIGNED=1 \
+	-s EXPORT_NAME="'ZR'"
+javascript-wasm: apply-patches lua53 milagro embed-lua
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	make -C src js
+	@mkdir -p build/wasm
+	@cp -v src/zenroom.js build/wasm/
+	@cp -v src/zenroom.wasm build/wasm/
+
 javascript-rn: cflags += -DARCH_JS -D'ARCH=\"JS\"' -D MAX_STRING=128000
 javascript-rn: ldflags += -s WASM=0 \
 	-s MODULARIZE=1 \
@@ -39,19 +55,8 @@ javascript-rn: apply-patches lua53 milagro embed-lua
 	@mkdir -p build/rnjs
 	@cp -v src/zenroom.js 	  build/rnjs/
 
-javascript-npm: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
-javascript-npm: ldflags += -s WASM=1 \
-	-s INVOKE_RUN=0 \
-	-s EXIT_RUNTIME=1 \
-	-s NODEJS_CATCH_EXIT=0 \
-	-s MODULARIZE=1 \
-	-s ALLOW_MEMORY_GROWTH=1 \
-	-s WARN_UNALIGNED=1 \
-	-s EXPORT_NAME="'ZR'"
-javascript-npm: apply-patches lua53 milagro embed-lua
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-	make -C src js
+javascript-npm: javascript-wasm
 	@mkdir -p build/npm
-	@cp -v src/zenroom.js build/npm/
-	@cp -v src/zenroom.wasm build/npm/
+	@cp -v build/wasm/zenroom.js build/npm/
+	@cp -v build/wasm/zenroom.wasm build/npm/
 	@echo "module.exports = ZR();" >> build/npm/zenroom.js

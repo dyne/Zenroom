@@ -114,8 +114,12 @@ for t in $targets; do
 			prepdir $dir
 			# download
 			download zenroom-react build/rnjs/zenroom.js $dir/zenroom-react.js
-			download zenroom-nodejs src/zenroom.js       $dir/zenroom.js
-			download zenroom-nodejs src/zenroom.js.mem   $dir/zenroom.js.mem
+			mkdir -p $dir/wasm
+			download zenroom-wasm build/wasm/zenroom.js     $dir/wasm/zenroom.js
+			download zenroom-wasm build/wasm/zenroom.wasm   $dir/wasm/zenroom.wasm
+			mkdir -p $dir/asmjs
+			download zenroom-asmjs build/asmjs/zenroom.js       $dir/asmjs/zenroom.js
+			download zenroom-asmjs build/asmjs/zenroom.js.mem   $dir/asmjs/zenroom.js.mem
 			mkdir -p $dir/webassembly
 			download zenroom-demo docs/demo/index.data   $dir/webassembly/index.data
 			download zenroom-demo docs/demo/index.js     $dir/webassembly/index.js

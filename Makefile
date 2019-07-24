@@ -26,7 +26,7 @@ test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
 
 all:
 	@echo "Choose a target:"
-	@echo "- javascript-asmjs, javascript-npm, javascript-rn, javascript-demo (need EMSDK env)"
+	@echo "- javascript-asmjs, javascript-wasm, javascript-rn, javascript-demo (need EMSDK env)"
 	@echo "- linux, linux-lib, linux-clang, linux-debug"
 	@echo "- linux-python, linux-java        (language bindings)"
 	@echo "- osx, osx-python2/3, ios-armv7, ios-arm64, ios-sim (need Apple/OSX)"
@@ -121,9 +121,10 @@ clean:
 	rm -rf ${pwd}/lib/milagro-crypto-c/CMakeFiles
 	make clean -C src
 	rm -f ${extras}/index.*
-	rm -rf ${npm}
 	rm -rf ${pwd}/build/asmjs
+	rm -rf ${pwd}/build/wasm
 	rm -rf ${pwd}/build/rnjs
+	rm -rf ${pwd}/build/npm
 
 clean-src:
 	make clean -C src
