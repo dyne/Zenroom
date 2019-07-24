@@ -39,6 +39,7 @@ javascript-wasm: apply-patches lua53 milagro embed-lua
 
 javascript-rn: cflags += -DARCH_JS -D'ARCH=\"JS\"' -D MAX_STRING=128000
 javascript-rn: ldflags += -s WASM=0 \
+	-s ENVIRONMENT=\"'shell'\" \
 	-s MODULARIZE=1 \
 	-s LEGACY_VM_SUPPORT=1 \
 	-s ASSERTIONS=1 \
@@ -49,10 +50,6 @@ javascript-rn: apply-patches lua53 milagro embed-lua
 	sed -i 's/require("crypto")/require(".\/crypto")/g' src/zenroom.js
 	sed -i 's/require("[^\.]/console.log("/g' src/zenroom.js
 	sed -i 's/console.warn.bind/console.log.bind/g' src/zenroom.js
-	sed -i 's/;ENVIRONMENT_IS_SHELL=[^;]*;/;ENVIRONMENT_IS_SHELL=true;/g' src/zenroom.js
-	sed -i 's/;ENVIRONMENT_IS_NODE=[^;]*;/;ENVIRONMENT_IS_NODE=false;/g' src/zenroom.js
-	sed -i 's/;ENVIRONMENT_IS_WORKER=[^;]*;/;ENVIRONMENT_IS_WORKER=false;/g' src/zenroom.js
-	sed -i 's/;ENVIRONMENT_IS_WEB=[^;]*;/;ENVIRONMENT_IS_WEB=false;/g' src/zenroom.js
 	@mkdir -p build/rnjs
 	@cp -v src/zenroom.js 	  build/rnjs/
 
