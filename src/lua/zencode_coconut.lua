@@ -18,6 +18,11 @@
 
 -- COCONUT implementation in Zencode
 
+-- ELGAMAL = require('crypto_elgamal') <- inside crypto_coconut
+COCONUT = require_once('crypto_coconut')
+
+
+-- convenient alias
 local get = ZEN.get
 
 

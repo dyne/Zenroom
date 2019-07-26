@@ -22,6 +22,10 @@
 -- re-randomization, and multiple unlinkable selective attribute
 -- revelations. For information about usage see
 -- https://zenroom.dyne.org and https://decodeproject.eu
+ECP     = require_once('zenroom_ecp')
+ELGAMAL = require_once('crypto_elgamal')
+ECP2    = require_once('zenroom_ecp2')
+FP12    = require_once('fp12')
 
 
 local coco = {

@@ -2,6 +2,8 @@ print()
 print '= ELLIPTIC CURVE ARITHMETIC OPERATIONS TESTS FOR BLS383'
 print()
 
+ECP = require_once('zenroom_ecp')
+
 -- test values found in milagro's vector files
 ecp1 = ECP.new(
    BIG.new(hex '01A8C7F0F24078E5F6073ED2B85FEEA9869B8B07008D44FD60316F9CD04E0C87A914D8BE9EFE54C5967E2F38E9E209F7'),

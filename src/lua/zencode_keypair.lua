@@ -42,18 +42,6 @@ end
 When("I create a new keypair as ''", f_keygen)
 When("I create my new keypair", f_keygen)
 
--- f_keyrm = function (keytype)
---    ZEN.assert([keytype],
--- 			  "Keypair "..keypair.." does not contain element: ".. keytype)
---    if kp[keytype] then
--- 	  local out = {}
--- 	  L.map(kp,function(k,v)
--- 			   if k ~= keytype then
--- 				  out[k] = v end end)
--- 	  keyring[keypair] = out
---    end
--- end
-
 When("I remove the '' key", f_keyrm)
 
 When("I import '' keypair into my keyring", function(kp)

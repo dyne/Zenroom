@@ -2,6 +2,8 @@ print''
 print '= CURVE PAIRING OPERATIONS TESTS FOR BLS383'
 print''
 
+ECP = require_once('zenroom_ecp')
+ECP2 = require_once('zenroom_ecp2')
 
 G1 = ECP.generator()
 G2 = ECP2.generator()

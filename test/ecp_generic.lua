@@ -2,6 +2,8 @@ print()
 print "= ELLIPTIC CURVE ARITHMETIC OPERATIONS TESTS FOR GENERIC TRANSFORMATIONS"
 print()
 
+ECP = require_once('zenroom_ecp')
+
 rng = RNG.new()
 g1 = ECP.generator()
 o = ECP.order()

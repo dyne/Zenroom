@@ -70,6 +70,8 @@ dotest(hash:process(left), hash:process(right))
 -- print '= OK'
 
 print '== ECP import/export'
+ECP = require_once('zenroom_ecp')
+
 rng = RNG.new()
 left = INT.new(rng,ECP.order()) * ECP.generator() -- ECP point aka pub key
 b64 = left:octet():base64()
@@ -77,7 +79,7 @@ right = base64(b64)
 dotest(left:octet(),right)
 print '== JSON import/export'
 function jsontest(f,reason)
-   str = JSON.encode({public = f(left)})
+   local str = JSON.encode({public = f(left)})
    right = JSON.decode(str)
    dotest(left:octet(),f(right['public']),reason)
    ECP.new(f(right['public'])) -- test if ecp point on curve
@@ -88,13 +90,15 @@ jsontest(url64,"url64")
 jsontest(base64,"base64")
 -- jsontest(bin,"bin") -- TODO: fix
 
+COCONUT = require_once('crypto_coconut')
+
 -- more testing using crypto verification of pub/priv keypair
 function jsoncryptotest(f)
    local key = {}
    key.private = INT.new(rng,ECP.order())
    key.public = key.private * ECP.G()
-   str = JSON.encode({private = _G[f](key.private)})
-   dstr = L.property('private')(JSON.decode(str))
+   local str = JSON.encode({private = _G[f](key.private)})
+   dstr = JSON.decode(str).private
    doct = _G[f](dstr)
    assert(doct == key.private, "Error importing to OCTET from "..f..":\n"
 			 .._G[f](doct).."\n".._G[f](key.private))

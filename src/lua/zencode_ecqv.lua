@@ -95,7 +95,6 @@ When("I verify the implicit certificate ''", function(verif)
 		-- we only know how to verify declarations with certificates
 		-- ZEN.assert(obj == "declaration" and verif == "certificate",
 		-- 	   "Cannot verify "..obj.." with "..verif)
-		-- certificate = L.property(verif)(JSON.decode(DATA))
 		init_keyring('declaration_keypair')
 		data = data or ZEN.data.load()
 		certificate = data[verif]

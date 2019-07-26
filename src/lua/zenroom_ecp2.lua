@@ -17,6 +17,7 @@
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 local ecp2 = require'ecp2'
+require'fp12' -- FP12 implicit
 
 function ecp2.hashtopoint(s)
    return ecp2.mapit(sha512(s))

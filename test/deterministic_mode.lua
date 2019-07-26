@@ -1,5 +1,8 @@
 -- to be executed using -S or _rng_ functions
 
+ECP = require_once'zenroom_ecp'
+ELGAMAL = require_once'crypto_elgamal'
+
 print("Checks for deterministic operations")
 
 rng = RNG.new()

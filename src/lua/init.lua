@@ -19,38 +19,20 @@
 -- init script embedded at compile time.  executed in
 -- zen_load_extensions(L) usually after zen_init()
 
--- override type to recognize zenroom's types
-luatype = type
-function type(var)
-   local simple = luatype(var)
-   if simple == "userdata" then
-	  if getmetatable(var).__name then
-		 return(getmetatable(var).__name)
-	  else
-		 return("unknown")
-	  end
-   else return(simple) end
-end
-function iszen(n)
-   for c in n:gmatch("zenroom") do
-	  return true
-   end
-   return false
-end
 
-require('msgpack')
-MSG = msgpack
-msgpack = nil -- rename default global
+-- default encoding base64url (RFC4648)
+-- this is the fastest and most portable encoder in zenroom
+_G["ENCODING"] = url64
+
+-- require('msgpack')
+-- MSG = msgpack
+-- msgpack = nil -- rename default global
+
+
+require('zenroom_common')
 
 OCTET  = require('zenroom_octet')
 O = OCTET -- alias
-
-LAMBDA = require('functional')
-L = LAMBDA -- alias
-
--- switch to deterministic (sorted) table iterators
-_G["pairs"]  = LAMBDA.pairs
-_G["ipairs"] = LAMBDA.pairs
 
 INSIDE = require('inspect')
 I = INSIDE -- alias
@@ -58,15 +40,11 @@ I = INSIDE -- alias
 JSON = require('zenroom_json')
 RNG    = require('zenroom_rng')
 ECDH   = require('zenroom_ecdh')
-FP12   = require('fp12')
 BIG    = require('zenroom_big')
 INT = BIG -- alias
 HASH   = require('zenroom_hash')
-ECP    = require('zenroom_ecp')
-ECP2   = require('zenroom_ecp2')
 H = HASH -- alias
-ELGAMAL = require('crypto_elgamal')
-COCONUT = require('crypto_coconut')
+-- ECP    = require('zenroom_ecp')
 
 -- Zencode language interpreter
 -- global class
@@ -84,72 +62,3 @@ require('zencode_data')
 -- coconut credentials
 -- require('zencode_coconut')
 
-function content(var)
-   if type(var) == "zenroom.octet" then
-	  INSIDE.print(var:array())
-   else
-	  INSIDE.print(var)
-   end
-end
-
--- default encoding base64url (RFC4648)
--- this is the fastest and most portable encoder in zenroom
-_G["ENCODING"] = url64
-
--- map values in place, sort tables by keys for deterministic order
-function map(data, fun)
-   if(type(data) ~= "table") then
-	  error "map() first argument is not a table"
-	  return nil end
-   if(type(fun) ~= "function") then
-	  error "map() second argument is not a function"
-	  return nil end
-   out = {}
-   L.map(data,function(k,v) out[k] = fun(v) end)
-   return(out)
-end
-
-
-function help(module)
-   if module == nil then
-	  print("usage: help(module)")
-	  print("example > help(octet)")
-	  print("example > help(ecdh)")
-	  print("example > help(ecp)")
-	  return
-   end
-   for k,v in pairs(module) do
-	  if type(v)~='table' and string.sub(k,1,1)~='_' then
-		 print("class method: "..k)
-	  end
-   end
-   if module.new == nil then return end
-   local inst = module.new()
-   for s,f in pairs(getmetatable(inst)) do
-	  if(string.sub(s,1,2)~='__') then print("object method: "..s) end
-   end
-end
-
--- TODO: deprecated, to be removed
-function read_json(data)
-   if not data then
-	  error("read_json() missing data")
-   end
-   out,res = JSON.decode(data)
-   if not out then
-	  if res then
-		 error("read_json() invalid json: ".. res)
-	  end
-   end
-end
-function write_json(data)
-   t = type(data)
-   if(t == "zenroom.ecp") then
-	  print(JSON.encode(data:table()))
-	  return
-   else
-	  print(JSON.encode(data))
-   end
-end
-json_write = write_json
-json_read = read_json

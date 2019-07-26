@@ -253,7 +253,6 @@ do   -- assume at least 32 bits
   end
 end
 
-
 do print("testing 'format %a %A'")
   local function matchhexa (n)
     local s = string.format("%a", n)

@@ -1,4 +1,6 @@
 
+COCONUT = require_once('crypto_coconut')
+
 -- elgamal
 m = INT.new(sha256(str("Some sort of secret")))
 

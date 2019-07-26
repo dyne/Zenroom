@@ -2,6 +2,9 @@ print()
 print '= ELLIPTIC CURVE DIFFIE-HELLMAN ALGORITHM TESTS'
 print()
 
+ECDH = require'zenroom_ecdh'
+ECP = require'zenroom_ecp'
+
 secret = str([[
 Minim quis typewriter ut. Deep v ut man braid neutra culpa in officia consectetur tousled art party stumptown yuccie. Elit lo-fi pour-over woke venmo keffiyeh in normcore enim sunt labore williamsburg flexitarian. Tumblr distillery fanny pack, banjo tacos vaporware keffiyeh.
 ]])
