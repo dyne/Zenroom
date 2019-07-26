@@ -365,7 +365,7 @@ end
 
 -- conversion wrappers for zenroom types
 function inspect.encode(item)
-   enc = ENCODING or u64
+   enc = ENCODING or url64
    t = type(item)
    if t == "zenroom.octet" then
 	  return enc(item)

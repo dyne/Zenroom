@@ -6,17 +6,17 @@ curve = 'ed25519'
 -- read and validate data
 keys = JSON.decode(KEYS)
 data = JSON.decode(DATA)
-
-header = MSG.unpack(base64(data.header):str())
+header = JSON.decode(data.header)
 
 community_key = ECDH.new(curve)
-community_key:private(base64(keys.community_seckey))
+community_key:private(url64(keys.community_seckey))
 
-session = community_key:session(base64(header.device_pubkey))
+session = community_key:session(url64(header.device_pubkey))
 
 decode = { header = header }
 decode.text, decode.checksum =
-   ECDH.aead_decrypt(session, base64(data.text), base64(header.iv), base64(data.header))
+   ECDH.aead_decrypt(session, url64(data.text), url64(header.iv), url64(data.header))
 
-print(JSON.encode(MSG.unpack(decode.text:str())))
+output = JSON.decode(decode.text)
+I.print(output)
 

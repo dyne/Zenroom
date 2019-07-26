@@ -19,8 +19,8 @@ cipher.text, cipher.checksum =
 					 cipher.iv, cipher.header)
 
 -- I.print(cipher)
-output = map(cipher, hex)
-print(JSON.encode(output))
+-- output = map(cipher, hex)
+print(JSON.encode(cipher))
 
 ------- receiver's stage
 -- pin in again provided, kdf is ran so secret is there

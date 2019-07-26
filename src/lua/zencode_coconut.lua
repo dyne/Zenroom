@@ -279,7 +279,7 @@ When("I verify the signature proof is correct", function()
 end)
 
 When("the petition signature is not a duplicate", function()
-		enc = ENCODING or u64
+		enc = ENCODING or url64
 		local k = enc(ACK.petition_signature.uid_signature)
 		if type(ACK.petition.list) == 'table' then
 		   ZEN.assert(

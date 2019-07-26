@@ -25,26 +25,25 @@ payload['data']      = DATA
 -- curve type are transmitted in clear inside the header, which is
 -- authenticated (AEAD)
 header = {}
-header['device_pubkey'] = devkey:public():base64()
+header['device_pubkey'] = devkey:public():url64()
 header['community_id'] = keys['community_id']
 iv = RNG.new():octet(16)
-header['iv'] = iv:base64()
+header['iv'] = iv:url64()
 
 -- content( header ) -- uncomment for debug
 
 -- The output is a table with crypto contents which is standard for
 -- zenroom's functions encrypt/decrypt: .checksum .header .iv .text
-local session = devkey:session(base64(keys.community_pubkey))
-local head = str(MSG.pack(header))
+local session = devkey:session(url64(keys.community_pubkey))
+local head = url64(JSON.encode(header))
 local out = { header = head }
 out.text, out.checksum = 
-   ECDH.aead_encrypt(session, str(MSG.pack(payload)), iv, head)
+   ECDH.aead_encrypt(session, url64(JSON.encode(payload)), iv, head)
 
-output = map(out, base64)
-output.zenroom = VERSION
-output.encoding = 'base64'
-output.curve = curve
+-- output = map(out, url64)
+out.zenroom = VERSION
+out.curve = curve
 -- content(output) -- uncomment for debug
-print( JSON.encode( output ) ) -- map(output, base64) ) )
+print( JSON.encode( out ) ) -- map(output, url64) ) )
 
 

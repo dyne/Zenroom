@@ -5,8 +5,8 @@ keyring:keygen()
 -- export the keypair to json
 export = JSON.encode(
    {
-      public  = keyring: public():base64(),
-	  private = keyring:private():base64()
+      public  = keyring: public():url64(),
+	  private = keyring:private():url64()
    }
 )
 print(export)

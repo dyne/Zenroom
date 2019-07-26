@@ -10,20 +10,10 @@ superheroes = JSON.decode(DATA)
 
 -- iterate through the members array and print
 -- out only names. ipairs is very unelegand
-print "procedural boredom"
-for k,v in ipairs(superheroes['members']) do
-   INSIDE.print(LAMBDA.at(v,"name"))
-end
+print "import from JSON"
+I.print(superheroes)
 
-print "lambda fun."
--- let's try the functional / scheme way of doing things ;^)
-INSIDE.print(
-   LAMBDA.chain(superheroes['members'])
-   :pluck("name")
-   :value()
-)
+print "flatten tree"
+superflat = flatten(superheroes)
+I.print(superflat)
 
--- print out the json
--- print(
---    json.encode(superheroes['members'])
--- )

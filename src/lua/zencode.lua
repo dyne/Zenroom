@@ -76,6 +76,7 @@ function zencode:mypush(name, obj, where)
    _G[WHERE] = MEM
 end
 
+-- TODO: realign with global flatten in zenroom_common
 -- returns a flat associative table of all objects in MEM
 function zencode:flatten(MEM)
    local flat = { }

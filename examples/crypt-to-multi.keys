@@ -1,14 +1,14 @@
 {
    "keyring" : {
-      "public" : "BHMjcDM/aljpi8pNxFQ436R6F3J+kaB/Xk1kAVFPmkoLVyeFltDZPgiIYRquh+m2IfvPioBfet7YCd5vVXYoRTk=",
-      "secret" : "ChW5qi5y//ISDIHKx5Fvxl+XY8IyDGVBHUfELp3PqJQ="
+      "secret" : "u64:A0srPssE93kYLxt7KyvG0glfMTqTzuAE1jq-XU3obsg",
+      "public" : "u64:BCnxGd5-5ne3PCwGYomZHdjCw_qOPXVup3MaAorBb8nQUlOHHZUs6J620s3GVi-lF0REKYjVsjZ6mNpBGbR5tto"
    },
    "recipients" : {
-      "paulus" : "BBUw6Nr3A30cN65maERvAk1cEv2Ji6Vs80kSlpodOC0SCtM8ucaS7e+s158uVMSr3BsvIXVspBeafiL8Qb3kcgc=",
-      "mayo" : "BHqBoQ2WJ3/FGVNTXzdIc+K/HzNx05bWzEhn8m58FvSsaqWVdH52jI6fQWdkdjnbqVKCJGmbjA/OCJ+IKHbiySI=",
-      "mark" : "BFgkjrRMvN+wkJ6qA4UvMaNlYBvl37C9cNYGkqOE4w43AUzkEzcyIIdE6BrgOEUEVefhOOnO6SCBQMgXHXJUUPY=",
-      "francesca" : "BCo102mVybieKMyhex8tnVtFM5+Wo1oP02k8JVwKF9OLIjw7w0LmofItbuAcfWl9rcoe++XLI3sySZnqljIfeyU=",
-      "jim" : "BEs1jeqL0nVwFi7OmG4YdtlWuKADyOvZR4XHpLAEswg8ONPXQHvwJ8+PkHkphoORfSjk2045bMdYkwboU4FdG2Y=",
-      "jaromil" : "BBZYJtHvFg0vGCxPROAWrThcGZ+vFZJj86k+uncjvbm4DysIg7cWS3J6GrcJKCY55Uf40m2KfBwfaT+T7TTO1e8="
+      "mayo" : "u64:BED8B7LmwMd3GgrGbmJaujbAR2KWlUo1t1TED8x7RUMEbwwnDOk96plIFaOYSAB29ha5MlB4HSoeD5zqLG6Hl20",
+      "jaromil" : "u64:BAKlgEzzKD0NpPP14h__9ty_hI1zji43QD42mjN6SvKPboEvrjzQhwJiAmw_K-n_LP9FaD0Dm7tV39R9VGuGRCo",
+      "francesca" : "u64:BFVYrP53CouzEthTW56V4gDC3jsCbESsY2kaKsUtMYKDBmqu5j9oRllQiEtdQe9wsbwR268CNgETTCAh3cYcyfA",
+      "paulus" : "u64:BGnVZB54xZnLkTi4qXdk_VfkWHb3dZt6P2NIp3rGtZQDMy2RQwcGaFwcsa2TNOq2OvPh7KDVGb63lq-xyzBiGCc",
+      "mark" : "u64:BClD-4aepiSr_CdGN4id1TiLjmJ9e-USwN2W9A_yHGRtHIuKU6KTxYjx4I6OUk7WVULt6o8p3qZF1svBLl6XapU",
+      "jim" : "u64:BHSq50Wi3qt6xvSMxj-itEZvcL_pEj5mEVZLzhGvEv35f8qfdxJQfQjmgP1Nx_lBUVwpkGsH3jJRVyhCb1ufz3A"
    }
 }

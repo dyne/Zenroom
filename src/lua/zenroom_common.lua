@@ -76,6 +76,10 @@ end
 -- generates problems leading to the pairs for loop in function above.
 _G["pairs"]  = _pairs
 _G["ipairs"] = _pairs
+
+------------------------------
+-- FUNCTIONAL LANGUAGE HELPERS
+----------------------------------------
 -- stateless map mostly for internal use
 function _map(t, f, ...)
    -- safety
@@ -102,6 +106,25 @@ function map(data, fun)
    _map(data,function(k,v) out[k] = fun(v) end)
    return(out)
 end
+
+
+-- returns a flat associative table of all objects in 'const'
+function flatten(const)
+   local flat = { }
+   local function inner_flatten(arr)
+	  for k,v in pairs(arr) do
+		 if type(v) == "table" then
+			flat[k] = v
+			inner_flatten(v)
+		 elseif(type(k) == "string") then
+			flat[k] = v
+		 end
+	  end
+   end
+   inner_flatten(const)
+   return flat
+end
+
 
 function help(module)
    if module == nil then

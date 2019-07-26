@@ -4,6 +4,7 @@
 -- specification SEC 4 v1.0 retrieved from www.secg.org
 
 -- setup
+ECP = require_once'zenroom_ecp'
 random = RNG.new()
 order = ECP.order()
 G = ECP.generator()

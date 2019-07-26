@@ -1,8 +1,7 @@
 {
-    "text": "+7J5vjjzhVRizTkWzvvKkj1pvEPRLsldJJQ1ARcQ3gr8eAFQuXWe8lePNIZorz/txZWOUfMRQ9U=",
-    "header": "g6Jpdrg3ZmdFeklSQUpBTlErUDRjWUpvWVVBPT2sY29tbXVuaXR5X2lkrXNtYXJ0Y2l0aXplbnOtZGV2aWNlX3B1YmtledlYQkRXcUpycjNzWXBlcit2bm12aDAxSGNGdjI0Zmt1UFRkMnZsOFFaZ2c5ZDVjWHFvS2d5NEk1N3VpUDFjUlZtQXlSOVFreWhQbHNNMXBNQVhlT3UxOGQ4PQ==",
-    "curve": "ed25519",
-    "encoding": "base64",
-    "checksum": "HSEqItcDHgHnlpiyRJZ63A==",
-    "zenroom": "0.9"
+   "header" : "u64:eyJpdiI6InU2NDpYTTR5WHlXcUtCTS1KZWhXTG9YNU5RIiwiZGV2aWNlX3B1YmtleSI6InU2NDpCRFp2MWR2TzliU256b2QyZGFOWk5falllWmFFdmdNLTg5RzY5VjNhLXlVUk83Q05va0hZYk5kZjNhZ1M0aF9TZzlZbEl5c003eG4zRmFNR0RiLVVDVGciLCJjb21tdW5pdHlfaWQiOiJzbWFydGNpdGl6ZW5zIn0",
+   "curve" : "ed25519",
+   "zenroom" : "0.10",
+   "checksum" : "u64:Qo-InjuZ8rfmT29ditLsVA",
+   "text" : "u64:d8bVHnYeECE9WOo_Z1jZ57E7r0yowa87Z0ZYjZqnKqnehtaSGhwnl2yIqDEpSC514r6rJwyh5bBWVutscJic0jo"
 }
