@@ -18,12 +18,30 @@
 
 local J = require('json')
 
+
+-- automatic conversion to string using prefix (for use in JSON.decode)
+function J.autoconv(data)
+   local t = type(data)
+   if(t == "string") and data ~= "" then
+	  if string.sub(data,1,3) == 'u64' and O.is_url64(data) then
+		 -- return decoded string format for JSON.decode
+		 return O.from_url64(data):string()
+	  else -- its already a string
+		 return data
+	  end
+   elseif iszen(t) then
+	  return data:str()
+   else
+	  error("JSON.autoconf failed "..t.." conversion")
+   end
+end
+
 J.decode = function(str)
    assert(str,      "JSON.decode error decoding nil string")
-   assert(str ~= "","JSON.decode error decoding empty string")
-   assert(type(str) == "string", "JSON.decode error unsopported type: "..type(str))
-   local t = JSON.raw_decode(str)
-   assert(t, "JSON.decode error decoding string:\n"..str)
+   -- assert(str ~= "","JSON.decode error decoding empty string")
+   -- assert(type(str) == "string", "JSON.decode error unsopported type: "..type(str))
+   local t = JSON.raw_decode(JSON.autoconv(str))
+   assert(t, "JSON.decode error decoding type: "..type(str))
    -- fixes strange behavior of tables returned
    -- second value returned should be used
    -- first one becomes a string after first transformation
