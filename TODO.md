@@ -17,6 +17,12 @@ memory managers (so far umm) but this is not REENTRANT: it prevents
 the concurrent allocation of multiple zenroom instances and in general
 is bad practice.
 
+## Forward chaining expert system development tool
+
+https://github.com/pakozm/lua-faces
+
+
+
 
 ## Deterministic Random in the Checker
 
