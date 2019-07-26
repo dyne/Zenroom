@@ -24,7 +24,7 @@ HASH := $(shell git rev-parse --short HEAD)
 CFLAGS  += -I. -I../lib/lua53/src -I../lib/milagro-crypto-c/include -Wall -Wextra
 SOURCES := \
 	cli.o jutils.o zenroom.o zen_error.o \
-	lua_functions.o lua_modules.o lualibs_detected.o \
+	lua_functions.o lua_modules.o lualibs_detected.o lua_shims.o \
 	json.o json_strbuf.o json_fpconv.o \
 	encoding.o base58.o cmsgpack.o \
 	umm_malloc.o zen_memory.o \

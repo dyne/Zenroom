@@ -1,6 +1,6 @@
 /*  Zenroom (DECODE project)
  *
- *  (c) Copyright 2017-2018 Dyne.org foundation
+ *  (c) Copyright 2017-2019 Dyne.org foundation
  *  designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This source code is free software; you can redistribute it and/or
@@ -28,6 +28,13 @@
 
 #include <zenroom.h>
 #include <zen_error.h>
+
+// defined in lua_shims.c
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+LUALIB_API int (luaL_loadfilex) (lua_State *L, const char *filename, const char *mode);
+#define luaL_loadfile(L,f)     luaL_loadfilex(L,f,NULL)
+#endif
 
 extern int lualibs_load_all_detected(lua_State *L);
 extern int lua_cjson_safe_new(lua_State *l);
@@ -66,51 +73,7 @@ luaL_Reg lualibs[] = {
 	{NULL, NULL}
 };
 
-// moved from lua's lauxlib.c
-typedef struct LoadS {
-	const char *s;
-	size_t size;
-} LoadS;
-static const char *getS (lua_State *L, void *ud, size_t *size) {
-	LoadS *ls = (LoadS *)ud;
-	(void)L;  /* not used */
-	if (ls->size == 0) return NULL;
-	*size = ls->size;
-	ls->size = 0;
-	return ls->s;
-}
-// moved from lua's liolib.c
-static const luaL_Reg iolib[] = {
-	{NULL, NULL}
-};
-static const luaL_Reg flib[] = {
-	{NULL, NULL}
-};
-static void createmeta (lua_State *L) {
-	luaL_newmetatable(L, LUA_FILEHANDLE);  /* create metatable for file handles */
-	lua_pushvalue(L, -1);  /* push metatable */
-	lua_setfield(L, -2, "__index");  /* metatable.__index = metatable */
-	luaL_setfuncs(L, flib, 0);  /* add file methods to new metatable */
-	lua_pop(L, 1);  /* pop new metatable */
-}
-LUAMOD_API int luaopen_io (lua_State *L) {
-	luaL_newlib(L, iolib);  /* new module */
-	createmeta(L);
-	/* create (and set) default files */
-	// createstdfile(L, stdin, IO_INPUT, "stdin");
-	// createstdfile(L, stdout, IO_OUTPUT, "stdout");
-	// createstdfile(L, stderr, NULL, "stderr");
-	return 1;
-}
 
-
-LUALIB_API int luaL_loadbufferx (lua_State *L, const char *buff, size_t size,
-                                 const char *name, const char *mode) {
-	LoadS ls;
-	ls.s = buff;
-	ls.size = size;
-	return lua_load(L, getS, &ls, name, mode);
-}
 
 int zen_load_string(lua_State *L, const char *code,
                     size_t size, const char *name) {
@@ -136,6 +99,17 @@ int zen_load_string(lua_State *L, const char *code,
 
 int zen_exec_extension(lua_State *L, zen_extension_t *p) {
 	SAFE(p); HEREs(p->name);
+#ifdef __EMSCRIPTEN__
+	if(p->code) {
+		// HEREs(p->code);
+		if(luaL_loadfile(L, p->code)==0) {
+			if(lua_pcall(L, 0, LUA_MULTRET, 0) == LUA_OK) {
+				func(L,"loaded %s", p->name);
+				return 1;
+			}
+		}
+	}
+#else
 	if(zen_load_string(L, p->code, *p->size, p->name)
 	   ==LUA_OK) {
 		// func(L,"%s %s", __func__, p->name);
@@ -145,6 +119,7 @@ int zen_exec_extension(lua_State *L, zen_extension_t *p) {
 		func(L,"loaded %s", p->name);
 		return 1;
 	}
+#endif
 	error(L, "%s", lua_tostring(L, -1));
 	lerror(L,"%s %s",__func__,p->name); // quits with SIGABRT
 	fflush(stderr);
