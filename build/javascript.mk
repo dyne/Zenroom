@@ -2,7 +2,9 @@
 # https://github.com/kripken/emscripten/blob/master/src/settings.js
 
 javascript-demo: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
-javascript-demo: ldflags += -s WASM=1 --shell-file ${extras}/shell_minimal.html
+javascript-demo: ldflags += -s WASM=1 \
+	-s ASSERTIONS=1 \
+	--shell-file ${extras}/shell_minimal.html
 javascript-demo: apply-patches lua53 milagro embed-lua
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src js-demo
@@ -12,7 +14,8 @@ javascript-demo: apply-patches lua53 milagro embed-lua
 
 javascript-asmjs: cflags += -DARCH_JS -D'ARCH=\"JS\"' -D MAX_STRING=128000
 javascript-asmjs: ldflags += -s WASM=0 \
-	-s MEM_INIT_METHOD=1
+	-s ASSERTIONS=1 \
+	--memory-init-file 1
 javascript-asmjs: apply-patches lua53 milagro embed-lua
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src js
@@ -29,6 +32,7 @@ javascript-wasm: ldflags += -s WASM=1 \
 	-s ALLOW_MEMORY_GROWTH=1 \
 	-s WARN_UNALIGNED=1 \
 	-s EXPORT_NAME="'ZR'" \
+	-s ASSERTIONS=1 \
 	--no-heap-copy
 javascript-wasm: apply-patches lua53 milagro embed-lua
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
@@ -43,7 +47,8 @@ javascript-rn: ldflags += -s WASM=0 \
 	-s MODULARIZE=1 \
 	-s LEGACY_VM_SUPPORT=1 \
 	-s ASSERTIONS=1 \
-	-s EXIT_RUNTIME=1
+	-s EXIT_RUNTIME=1 \
+	--memory-init-file 0
 javascript-rn: apply-patches lua53 milagro embed-lua
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src js
