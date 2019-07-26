@@ -154,8 +154,10 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	}
 	lua_gc(L, LUA_GCCOLLECT, 0);
 	lua_gc(L, LUA_GCCOLLECT, 0);
-	// allow further requires
+
+	// uncomment to restrict further requires
 	// zen_require_override(L,1);
+
 	// load arguments if present
 	if(data) {
 		func(L, "declaring global: DATA");
