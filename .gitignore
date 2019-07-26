@@ -14,6 +14,8 @@ docs/test
 docs/pub
 docs/fonts
 lib/musl
+src/zenroom.js
+src/zenroom.js.mem
 src/zenroom.wasm
 src/zenroom-shared
 build/Zenroom-*
@@ -29,6 +31,7 @@ build/python3
 build/*go
 build/*java
 build/*x86
+build/*npm
 # generated files by milagro
 lib/milagro-crypto-c/AMCLConfig.cmake
 lib/milagro-crypto-c/AMCLConfigVersion.cmake

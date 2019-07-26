@@ -15,7 +15,7 @@ wget https://sdk.dyne.org:4443/view/decode/job/zenroom-python/lastSuccessfulBuil
 popd
 
 # javascript-demo
-push wasm
+push demo
 wget https://sdk.dyne.org:4443/view/decode/job/zenroom-demo/lastSuccessfulBuild/artifact/docs/demo/index.data
 wget https://sdk.dyne.org:4443/view/decode/job/zenroom-demo/lastSuccessfulBuild/artifact/docs/demo/index.html
 wget https://sdk.dyne.org:4443/view/decode/job/zenroom-demo/lastSuccessfulBuild/artifact/docs/demo/index.js
@@ -25,10 +25,15 @@ popd
 push reactnative
 wget https://sdk.dyne.org:4443/view/decode/job/zenroom-react/lastSuccessfulBuild/artifact/build/rnjs/zenroom.js
 popd
-# nodejs
-push nodejs
-wget https://sdk.dyne.org:4443/view/decode/job/zenroom-nodejs/lastSuccessfulBuild/artifact/src/zenroom.js
-wget https://sdk.dyne.org:4443/view/decode/job/zenroom-nodejs/lastSuccessfulBuild/artifact/src/zenroom.js.mem
+# asmjs
+push asmjs
+wget https://sdk.dyne.org:4443/view/decode/job/zenroom-asmjs/lastSuccessfulBuild/artifact/build/asmjs/zenroom.js
+wget https://sdk.dyne.org:4443/view/decode/job/zenroom-asmjs/lastSuccessfulBuild/artifact/build/asmjs/zenroom.js.mem
+popd
+# wasm
+push wasm
+wget https://sdk.dyne.org:4443/view/decode/job/zenroom-wasm/lastSuccessfulBuild/artifact/build/wasm/zenroom.js
+wget https://sdk.dyne.org:4443/view/decode/job/zenroom-wasm/lastSuccessfulBuild/artifact/build/wasm/zenroom.wasm
 popd
 
 # linux	

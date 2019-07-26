@@ -121,6 +121,7 @@ clean:
 	rm -f zenroom-shared
 	rm -f zenroom.js
 	rm -f zenroom.js.mem
+	rm -f zenroom.wasm
 	rm -f zenroom.html
 
 .c.o:
