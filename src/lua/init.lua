@@ -23,42 +23,17 @@
 -- default encoding base64url (RFC4648)
 -- this is the fastest and most portable encoder in zenroom
 _G["ENCODING"] = url64
-
--- require('msgpack')
--- MSG = msgpack
--- msgpack = nil -- rename default global
-
-
+ZEN = { assert = assert } -- zencode shim when not loaded
 require('zenroom_common')
-
-OCTET  = require('zenroom_octet')
-O = OCTET -- alias
-
 INSIDE = require('inspect')
-I = INSIDE -- alias
-
-JSON = require('zenroom_json')
+OCTET  = require('zenroom_octet')
+JSON   = require('zenroom_json')
 RNG    = require('zenroom_rng')
 ECDH   = require('zenroom_ecdh')
 BIG    = require('zenroom_big')
-INT = BIG -- alias
 HASH   = require('zenroom_hash')
-H = HASH -- alias
--- ECP    = require('zenroom_ecp')
-
--- Zencode language interpreter
--- global class
-ZEN = require('zencode')
--- import/export schema helpers
-require('zencode_schemas')
--- basic keypair functions
--- require('zencode_keypair')
--- base data functions
-require('zencode_data')
--- base encryption functions
--- require('zencode_aesgcm')
--- implicit certificates
--- require('zencode_ecqv')
--- coconut credentials
--- require('zencode_coconut')
+O   = OCTET  -- alias
+INT = BIG    -- alias
+H   = HASH   -- alias
+I   = INSIDE -- alias
 

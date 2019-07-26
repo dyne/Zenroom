@@ -119,6 +119,11 @@ function zencode:begin(verbosity)
    end
    _G.ZEN_traceback = "Zencode traceback:\n"
    self.current_step = self.given_steps
+   ZEN = require('zencode')
+   -- import/export schema helpers
+   require('zencode_schemas')
+   -- base data functions
+   require('zencode_data')
    return true
 end
 
