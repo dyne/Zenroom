@@ -9,8 +9,6 @@ secret = str([[
 Minim quis typewriter ut. Deep v ut man braid neutra culpa in officia consectetur tousled art party stumptown yuccie. Elit lo-fi pour-over woke venmo keffiyeh in normcore enim sunt labore williamsburg flexitarian. Tumblr distillery fanny pack, banjo tacos vaporware keffiyeh.
 ]])
 
-rng = RNG.new()
-
 function test_curve (name)
    print ('  ' .. name)
    alice = ECDH.new(name)
@@ -22,7 +20,7 @@ function test_curve (name)
    assert(ask == alice:private()) -- compare octects
 
    -- AES-GCM encryption
-   iv = rng:octet(16)
+   iv = O.random(16)
    -- iv = octet.hex('00000000000000000000000000000000')
    header = octet.string('This is the header!')
 
@@ -53,11 +51,11 @@ test_curve('secp256k1')
 print ''
 print('  DSA SIGN/VERIFY')
 
-random = RNG.new()
 G = ECP.generator()
-local skey = INT.new(rng,modulo)
-function ecp_keygen(rng,modulo)
-   local key = INT.new(rng,modulo)
+modulo = ECP.order()
+local skey = INT.modrand(modulo)
+function ecp_keygen(modulo)
+   local key = INT.modrand(modulo)
    return { private = key,
 			public = key * G }
 end

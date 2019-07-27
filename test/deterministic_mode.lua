@@ -5,10 +5,8 @@ ELGAMAL = require_once'crypto_elgamal'
 
 print("Checks for deterministic operations")
 
-rng = RNG.new()
-
-first = rng:octet(16)
-second = rng:octet(16)
+first = O.random(16)
+second = O.random(16)
 
 -- subsequent executions lead to different results
 assert( first ~= second )
@@ -16,12 +14,11 @@ I.print({ first = first })
 I.print({ second = second })
 
 -- new initialization doesn't resets from first
-rng = RNG.new()
-third = rng:octet(16)
+third = O.random(16)
 assert( first ~= third )
 I.print({ third = third })
 
-i = INT.new(rng, ECP.order())
+i = INT.modrand(ECP.order())
 I.print({big_random = i})
 
 -- ECDH

@@ -9,9 +9,8 @@ G1 = ECP.generator()
 G2 = ECP2.generator()
 r = ECP.order()
 
-rng = RNG.new()
 -- return a random big number modulus curve order
-function R() return rng:modbig(r) end
+function R() return INT.modrand(r) end
 
 print("Multiplication of ECP1 generator and curve order is infinite")
 inf = G1 * r

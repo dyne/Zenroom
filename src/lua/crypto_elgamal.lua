@@ -18,16 +18,14 @@
 
 local elg = { _VERSION = 'crypto_elgamal.lua 1.0' }
 
-local function rand() return INT.new(RNG.new(), ECP.order()) end
-
 function elg.keygen()
-   local d = rand()
+   local d = INT.modrand(ECP.order())
    local gamma = d * ECP.generator()
    return d, gamma
 end
 
 function elg.encrypt(gamma, m, h)
-   local k = rand()
+   local k = INT.modrand(ECP.order())
    local a = k * ECP.generator()
    -- TODO: argument checking and explicit ECP conversion
    -- if type(gamma) == "string" then

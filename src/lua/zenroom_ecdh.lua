@@ -42,7 +42,7 @@ end
 function ecdh.encrypt(alice, bob, msg, header)
    warn("ecdh.decrypt() use of this function is DEPRECATED");
    local key = prepare_session(alice,bob)
-   local iv = RNG.new():octet(16)
+   local iv = O.random(16)
    -- convert strings to octets
    local omsg, ohead
    if(type(msg) == "string") then

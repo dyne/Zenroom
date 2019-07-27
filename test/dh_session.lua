@@ -5,15 +5,14 @@ print ""
 ECP = require'zenroom_ecp'
 
 ecdh = ECDH.new('bls383')
-rng = RNG.new()
 
 g1 = ECP.generator()
 o = ECP.order()
 
-sk1 = INT.new(rng,o)
+sk1 = INT.modrand(o)
 pk1 = sk1 * g1
 
-sk2 = INT.new(rng,o)
+sk2 = INT.modrand(o)
 pk2 = sk2 * g1
 
 sp1ecp = pk1 * sk2 -- ECP only

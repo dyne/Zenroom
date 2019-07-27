@@ -15,8 +15,7 @@ end
 
 
 print '=== compare different sizes same content'
-rng = RNG.new()
-randright = sha256(rng:octet(48))
+randright = sha256(O.random(48))
 left = INT.new(randright)
 equals(randright,left, "INT.new octet")
 
