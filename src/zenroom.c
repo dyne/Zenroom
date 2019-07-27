@@ -70,6 +70,9 @@ extern void zen_setenv(lua_State *L, char *key, char *val);
 extern void zen_add_function(lua_State *L, lua_CFunction func,
 		const char *func_name);
 
+// prototype from zen_random.c
+extern void* rng_alloc();
+
 // single instance globals
 zenroom_t *Z = NULL;   // zenroom STACK
 zen_mem_t *MEM = NULL; // zenroom HEAP
@@ -152,6 +155,10 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 		error(L,"%s: %s (%u)", __func__, "Lua initialization failed",status);
 		return NULL;
 	}
+
+	// initialize the random generator
+	Z->random_generator = rng_alloc();
+
 	lua_gc(L, LUA_GCCOLLECT, 0);
 	lua_gc(L, LUA_GCCOLLECT, 0);
 

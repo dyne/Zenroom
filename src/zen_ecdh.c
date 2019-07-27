@@ -42,7 +42,7 @@
 //  @module ECDH
 //  @author Denis "Jaromil" Roio, Enrico Zimuel
 //  @license GPLv3
-//  @copyright Dyne.org foundation 2017-2018
+//  @copyright Dyne.org foundation 2017-2019
 
 
 #include <lua.h>
@@ -82,8 +82,10 @@ extern zenroom_t *Z; // accessed to check random_seed configuration
 
     Supported curves: BLS383, ED25519, GOLDILOCKS, SECP256K1
 
-    Please note curve selection is only supported in ECDH, while only
-    BLS383 is supported for @{ECP}/@{ECP2} arithmetics.
+    Please note curve selection is only supported in ECDH. The curve
+    BLS383 is the only one supported for @{ECP}/@{ECP2} arithmetics:
+    it is the default to grant compatibility between ECDH.public() and
+    @{ECP} points.
 
     @param curve[opt=BLS383] elliptic curve to be used
     @return a new ECDH keyring
@@ -93,10 +95,6 @@ extern zenroom_t *Z; // accessed to check random_seed configuration
     -- generate a keypair
     keyring:keygen()
 */
-
-// from zen_random.c
-extern void rng_seed(csprng *rng);
-extern void rng_round(csprng *rng);
 
 ecdh* ecdh_new(lua_State *L, const char *curve) {
 	HERE();
@@ -113,8 +111,6 @@ ecdh* ecdh_new(lua_State *L, const char *curve) {
 	// TODO: make it a newuserdata object in LUA space so that
 	// it can be cleanly collected by the GC as well it can be
 	// saved transparently in the global state
-	e->rng = zen_memory_alloc(sizeof(csprng));
-	rng_seed(e->rng);
 	luaL_getmetatable(L, "zenroom.ecdh");
 	lua_setmetatable(L, -2);
 	return(e);
@@ -129,7 +125,6 @@ int ecdh_destroy(lua_State *L) {
 	HERE();
 	ecdh *e = ecdh_arg(L,1);
 	SAFE(e);
-	if(e->rng) zen_memory_free(e->rng);
 	// FREE(r->pubkey);
 	// FREE(r->privkey);
 	return 0;
@@ -151,9 +146,7 @@ static int ecdh_new_keygen(lua_State *L) {
 	ecdh *e = ecdh_new(L, curve); SAFE(e);
 	e->pubkey = o_new(L,e->publen +0x0f); SAFE(e->pubkey);
 	e->seckey = o_new(L,e->seclen +0x0f); SAFE(e->seckey);
-	SAFE(e->rng);
-	(*e->ECP__KEY_PAIR_GENERATE)(e->rng,e->seckey,e->pubkey);
-	rng_round(e->rng);
+	(*e->ECP__KEY_PAIR_GENERATE)(Z->random_generator,e->seckey,e->pubkey);
 	HEREecdh(e);
 	lua_pop(L, 1);
 	lua_pop(L, 1);
@@ -185,8 +178,7 @@ static int ecdh_keygen(lua_State *L) {
 		ERROR(); KEYPROT(e->curve,"public key"); }
 	octet *pk = o_new(L,e->publen +0x0f); SAFE(pk);
 	octet *sk = o_new(L,e->seclen +0x0f); SAFE(sk);
-	(*e->ECP__KEY_PAIR_GENERATE)(e->rng,sk,pk);
-	rng_round(e->rng);
+	(*e->ECP__KEY_PAIR_GENERATE)(Z->random_generator,sk,pk);
 	e->pubkey = pk;
 	e->seckey = sk;
 	HEREecdh(e);
@@ -333,8 +325,7 @@ static int ecdh_private(lua_State *L) {
 	if(e->seckey!=NULL) {
 		ERROR(); KEYPROT(e->curve, "private key"); }
 	e->seckey = o_arg(L, 2); SAFE(e->seckey);
-
-	octet *pk = o_new(L,e->publen); SAFE(pk);
+	octet *pk = o_new(L,e->publen+0x0f); SAFE(pk);
 	(*e->ECP__KEY_PAIR_GENERATE)(NULL,e->seckey,pk);
 	int res;
 	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(pk);
@@ -342,6 +333,7 @@ static int ecdh_private(lua_State *L) {
 		ERROR();
 		return lerror(L, "Invalid public key generation."); }
 	e->pubkey = pk;
+	HEREecdh(e);
 	return 1;
 }
 
@@ -372,8 +364,7 @@ static int ecdh_dsa_sign(lua_State *L) {
 	// either pass an RNG or K already randomised
 	// for K's generation see also RFC6979
 	// ECP_BLS383_SP_DSA(int sha,csprng *RNG,octet *K,octet *S,octet *F,octet *C,octet *D)
-	(*e->ECP__SP_DSA)(     64,     e->rng,     NULL, e->seckey,    f,      c,      d );
-	rng_round(e->rng);
+	(*e->ECP__SP_DSA)(     64,     Z->random_generator,     NULL, e->seckey,    f,      c,      d );
 	return 2;
 }
 

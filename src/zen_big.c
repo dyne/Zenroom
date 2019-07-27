@@ -35,7 +35,6 @@
 #include <zen_memory.h>
 #include <zen_big.h>
 #include <zen_ecp_bls383.h> // TODO: abstract to support multiple curves
-#include <zen_random.h>
 
 /// <h1>Big Number Arithmetic (BIG)</h1>
 //
@@ -47,6 +46,8 @@
 //  @author Denis "Jaromil" Roio
 //  @license GPLv3
 //  @copyright Dyne.org foundation 2017-2018
+
+extern zenroom_t *Z;
 
 extern int octet_to_hex(lua_State *L);
 
@@ -259,20 +260,21 @@ extern void rng_round(csprng *rng);
 static int newbig(lua_State *L) {
 	HERE();
 	void *ud;
-	ud = luaL_testudata(L, 1, "zenroom.rng");
+	// kept for backward compat with zenroom 0.9
+	ud = luaL_testudata(L, 2, "zenroom.big");
 	if(ud) {
-		RNG *rng = (RNG*)ud; SAFE(rng);
+		HEREs("use of RNG deprecated");
 		big *res = big_new(L); big_init(res); SAFE(res);
-		ud = luaL_testudata(L, 2, "zenroom.big");
-		if(ud) { // random with modulus
-			big *modulus = (big*)ud; SAFE(modulus);
-			BIG_randomnum(res->val,modulus->val,rng);
-		} else { // random without modulus
-			BIG_random(res->val, rng);
-		}
-		rng_round(rng);
+		// random with modulus
+		big *modulus = (big*)ud; SAFE(modulus);
+		BIG_randomnum(res->val,modulus->val,Z->random_generator);
 		return 1;
 	}
+
+	// TODO number argument, modulus
+	// int tn;
+	// lua_Number n = lua_tonumberx(L,2,&tn);
+	// if(tn) {
 
 	// number argument, import
 	int tn;
@@ -291,6 +293,9 @@ static int newbig(lua_State *L) {
 	_octet_to_big(L, c,o);
 	return 1;
 }
+
+// TODO: simple random() method using BIG_random()
+//       and randmodulo using BIG_randomnum
 
 octet *new_octet_from_big(lua_State *L, big *c) {
 	int i;
@@ -484,6 +489,13 @@ static int big_modsub(lua_State *L) {
 	return 1;
 }
 
+static int big_modrand(lua_State *L) {
+	big *modulus = big_arg(L,1); SAFE(modulus);	
+	big *res = big_new(L); big_init(res); SAFE(res);
+	BIG_randomnum(res->val,modulus->val,Z->random_generator);
+	return(1);
+}
+
 static int big_mul(lua_State *L) {
 	big *l = big_arg(L,1); SAFE(l);
 	void *ud = luaL_testudata(L, 2, "zenroom.ecp");
@@ -668,6 +680,7 @@ int luaopen_big(lua_State *L) {
 		{"modsqr",big_modsqr},
 		{"modneg",big_modneg},
 		{"modsub",big_modsub},
+		{"modrand",big_modrand},
 		{"modinv",big_modinv},
 		{"jacobi",big_jacobi},
 		{"monty",big_monty},

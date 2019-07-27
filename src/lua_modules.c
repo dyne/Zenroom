@@ -54,7 +54,6 @@ extern int luaopen_ecp(lua_State *L);
 extern int luaopen_ecp2(lua_State *L);
 extern int luaopen_fp12(lua_State *L);
 extern int luaopen_big(lua_State *L);
-extern int luaopen_rng(lua_State *L);
 extern int luaopen_hash(lua_State *L);
 
 // really loaded in lib/lua53/linit.c
@@ -172,8 +171,6 @@ int zen_require(lua_State *L) {
 		luaL_requiref(L, s, luaopen_big, 1); }
 	else if(strcasecmp(s, "fp12")  ==0) {
 		luaL_requiref(L, s, luaopen_fp12, 1); }
-	else if(strcasecmp(s, "rng")  ==0) {
-		luaL_requiref(L, s, luaopen_rng, 1); }
 	else if(strcasecmp(s, "hash")  ==0) {
 		luaL_requiref(L, s, luaopen_hash, 1); }	
 	else if(strcasecmp(s, "json")  ==0) {

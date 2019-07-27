@@ -45,16 +45,25 @@
 
 #include <time.h>
 
+#include <amcl.h>
+
+// easier name (csprng comes from amcl.h in milagro)
+#define RNG csprng
+
 #include <zenroom.h>
-#include <zen_octet.h>
-#include <zen_random.h>
 #include <zen_memory.h>
-#include <zen_big.h>
 #include <randombytes.h>
 
 extern zenroom_t *Z;
 
-void rng_seed(RNG *rng) {
+void* rng_alloc() {
+	HERE();
+	RNG *rng = (RNG*)zen_memory_alloc(sizeof(csprng));
+	if(!rng) {
+		lerror(NULL, "Error allocating new random number generator in %s",__func__);
+		return NULL; }
+
+	// random seed provided externally 
 	if(Z->random_seed) {
 		if(!Z->random_generator) {
 			// TODO: feed minimum 128 bytes
@@ -68,6 +77,7 @@ void rng_seed(RNG *rng) {
 		}
 #ifndef ARCH_CORTEX
 	} else {
+		// gather system random using randombytes()
 		char *tmp = zen_memory_alloc(256);
 		randombytes(tmp,252);
 		// using time() from milagro
@@ -80,100 +90,5 @@ void rng_seed(RNG *rng) {
 		zen_memory_free(tmp);
 #endif
 	}
-}
-void rng_round(RNG *rng) {
-	if(Z->random_generator) // save RNG state
-		memcpy(Z->random_generator, rng, sizeof(csprng));
-}
-
-RNG* rng_new(lua_State *L) {
-	HERE();
-    RNG *rng = (RNG*)lua_newuserdata(L, sizeof(csprng));
-    if(!rng) {
-	    lerror(L, "Error allocating new random number generator in %s",__func__);
-	    return NULL; }
-    luaL_getmetatable(L, "zenroom.rng");
-    lua_setmetatable(L, -2);
-    rng_seed(rng);
 	return(rng);
-}
-
-RNG* rng_arg(lua_State *L, int n) {
-	void *ud = luaL_checkudata(L, n, "zenroom.rng");
-	luaL_argcheck(L, ud != NULL, n, "rng class expected");	
-	return((RNG*)ud);
-}
-
-static int newrng(lua_State *L) {
-	HERE();
-    RNG *rng = rng_new(L); SAFE(rng);
-    return 1;
-}
-
-/***
-    Create a new @{OCTET} of given lenght filled with random data.
-
-    @param int length of random material in bytes
-    @function octet(int)
-    @usage
-    rng = RNG.new()
-    print(rng:octet(32))
-*/
-int rng_oct(lua_State *L) {
-	RNG *rng = rng_arg(L,1); SAFE(rng);
-	int tn;
-	lua_Number n = lua_tonumberx(L, 2, &tn);
-	octet *o = o_new(L,(int)n); SAFE(o);
-	OCT_rand(o,rng,(int)n);
-	rng_round(rng);
-	return 1;
-}
-
-/***
-    Create a new @{BIG} of default @{ECP} curve length filled with random data.
-
-    @function big()
-    @usage
-    -- example to print a new BIG random number encoded in base64
-    print( RNG.new():big():base64() )
-*/
-int rng_big(lua_State *L) {
-	RNG *rng = rng_arg(L,1); SAFE(rng);
-	big *res = big_new(L); big_init(res); SAFE(res);
-	BIG_random(res->val, rng);
-	rng_round(rng);
-	return(1);
-}
-
-/***
-   Returns a random @{BIG} of default @{ECP} curve length reduced to
-   a modulus (another BIG number) and removing bias.
-
-   @function modbig(modulus)
-   @param modulus limit the big number to this modulus
-   @return a new randomg @{BIG} number
-*/
-static int rng_modbig(lua_State *L) {
-	RNG *rng = rng_arg(L,1); SAFE(rng);
-	big *modulus = big_arg(L,2); SAFE(modulus);	
-	big *res = big_new(L); big_init(res); SAFE(res);
-	BIG_randomnum(res->val,modulus->val,rng);
-	rng_round(rng);
-	return(1);
-}
-
-int luaopen_rng(lua_State *L) {
-	const struct luaL_Reg rng_class[] = {
-		{"new",newrng},
-		{NULL,NULL}
-	};
-	const struct luaL_Reg rng_methods[] = {
-		{"octet", rng_oct},
-		{"oct", rng_oct},
-		{"big", rng_big},
-		{"modbig", rng_modbig},
-		{NULL,NULL}
-	};
-	zen_add_class(L, "rng", rng_class, rng_methods);
-	return 1;
 }

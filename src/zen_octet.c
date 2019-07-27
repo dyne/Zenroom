@@ -59,6 +59,8 @@
 
 #include <zen_ecp.h>
 
+extern zenroom_t *Z;
+
 // from base58.c
 extern int b58tobin(void *bin, size_t *binszp, const char *b58, size_t b58sz);
 extern int b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz);
@@ -784,6 +786,14 @@ static int max(lua_State *L) {
 	return 1;
 }
 
+static int new_random(lua_State *L) {
+	int tn;
+	lua_Number n = lua_tonumberx(L, 1, &tn); SAFE(n);
+	octet *o = o_new(L,(int)n); SAFE(o);
+	OCT_rand(o,Z->random_generator,(int)n);
+	return 1;
+}
+
 
 static int popcount64b(uint64_t x) {
     //types and constants
@@ -854,7 +864,7 @@ int luaopen_octet(lua_State *L) {
 		{"to_str",    to_string},
 		{"to_array",  to_array},
 		{"to_bin",    to_bin},
-
+		{"random",  new_random},
 		{"hamming", hamming_distance},
 		{NULL,NULL}
 	};
