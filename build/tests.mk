@@ -141,9 +141,9 @@ check-crypto:
 
 check-crypto-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom-shared -d 3
 check-crypto-debug:
-	$(call determinism-tests,${test-exec-lowmem})
+	$(call determinism-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
-	$(call shell-tests,${test-exec-lowmem})
+	$(call shell-tests,${test-exec})
 
 #	./test/integration_asymmetric_crypto.sh ${test-exec}
 
