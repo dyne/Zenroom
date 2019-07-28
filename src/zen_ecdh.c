@@ -228,24 +228,23 @@ static int ecdh_checkpub(lua_State *L) {
 */
 static int ecdh_session(lua_State *L) {
 	HERE();
-	octet *pubkey, *seckey;
 	ecdh *e = ecdh_arg(L,1); SAFE(e);
-	pubkey = o_arg(L,2); SAFE(pubkey);
-	void *u = luaL_testudata(L, 3, "zenroom.big");
-	if(u) {
-		seckey = o_arg(L,3); SAFE(seckey);
-	} else {
-		SAFE(e->seckey);
-		seckey = e->seckey;
-	}
+	if(!e->seckey) {
+		lerror(L,"%s: secret key not found in 1st argument");
+		return 0; }
+	ecdh *p = ecdh_arg(L,2); SAFE(p);
+	if(!p->pubkey) {
+		lerror(L,"%s: public key not found in 2nd argument");
+		return 0; }
 	int res;
-	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(pubkey);
+	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(p->pubkey);
 	if(res<0) {
-		lerror(L, "%s: argument found, but is an invalid key",__func__);
+		lerror(L, "%s: public key found invalid in 2nd argument",
+		       __func__);
 		return 0; }
 	octet *kdf = o_new(L,e->hash); SAFE(kdf);
 	octet *ses = o_new(L,e->keysize); SAFE(ses);
-	(*e->ECP__SVDP_DH)(seckey,pubkey,ses);
+	(*e->ECP__SVDP_DH)(e->seckey,p->pubkey,ses);
 	// process via KDF2
 	// https://github.com/milagro-crypto/milagro-crypto-c/issues/285	
 	// here the NULL could be a salt (TODO: global?)
