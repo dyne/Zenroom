@@ -64,6 +64,10 @@ I.print({ octlen = #skey})
 I.print({ intlen = #INT.new(skey)})
 local pkey = INT.new(skey):mod(ECP.order()) * G
 
+ptest = ECDH.new('bls383')
+ptest:public(pkey)
+assert(ptest:public() == pkey, "ECDH and ECP public import/export differs")
+
 ecdh = ECDH.new('bls383')
 ecdh:private(skey)
 I.print({ ECP = skey,

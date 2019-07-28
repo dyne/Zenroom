@@ -278,8 +278,16 @@ static int ecdh_public(lua_State *L) {
 		if(res<0) {
 			ERROR();
 			return lerror(L, "Public key found, but invalid."); }
-		// succesfully return public key stored in keyring
-		o_dup(L,e->pubkey);
+		// Export public key to octet.  This is like o_dup but skips
+		// first byte since that is used internally by Milagro as a
+		// prefix for Montgomery (2) or non-Montgomery curves (4)
+		octet *n = o_new(L, e->publen);
+		OCT_clear(n); n->len = e->pubkey->len-1;
+		if(n->len>n->max) n->len = n->max;
+		int i;
+		for(i=0; i<n->len; i++)
+			n->val[i] = e->pubkey->val[i+1];
+//		o_dup(L,e->pubkey);
 		return 1;
 	}
 	// has an argument: public key to set
@@ -287,13 +295,20 @@ static int ecdh_public(lua_State *L) {
 		ERROR();
 		KEYPROT(e->curve, "public key"); }
 	octet *o = o_arg(L, 2); SAFE(o);
-	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(o);
+	func(L, "%s: valid key",__func__);
+	// succesfully set the new public key, add a header byte for
+	// Milagro
+	e->pubkey = o_new(L, o->len+2); // max is len+1
+	OCT_clear(e->pubkey); e->pubkey->len = o->len+1;
+	int i;
+	for(i=1; i<=e->pubkey->len; i++)
+		e->pubkey->val[i] = o->val[i-1];
+	e->pubkey->val[0] = 4; // non-montgomery
+	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(e->pubkey);
 	if(res<0) {
 		ERROR();
 		return lerror(L, "Public key argument is invalid."); }
-	func(L, "%s: valid key",__func__);
-	// succesfully set the new public key
-	e->pubkey = o;
+
 	return 0;
 }
 
@@ -324,13 +339,13 @@ static int ecdh_private(lua_State *L) {
 	if(e->seckey!=NULL) {
 		ERROR(); KEYPROT(e->curve, "private key"); }
 	e->seckey = o_arg(L, 2); SAFE(e->seckey);
-	octet *pk = o_new(L,e->publen+0x0f); SAFE(pk);
+	octet *pk = o_new(L,e->publen); SAFE(pk);
 	(*e->ECP__KEY_PAIR_GENERATE)(NULL,e->seckey,pk);
 	int res;
-	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(pk);
-	if(res<0) {
-		ERROR();
-		return lerror(L, "Invalid public key generation."); }
+	// res = (*e->ECP__PUBLIC_KEY_VALIDATE)(pk);
+	// if(res<0) {
+	// 	ERROR();
+	// 	return lerror(L, "Invalid public key generation."); }
 	e->pubkey = pk;
 	HEREecdh(e);
 	return 1;

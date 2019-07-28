@@ -98,11 +98,13 @@ int _octet_to_big(lua_State *L, big *dst, octet *src) {
 			BIG_dshl(dst->dval,8);
 			dst->dval[0] += (int)(unsigned char) src->val[i];
 		}
+//		dst->dval[0] += (int)(unsigned char) src->val[i];
 	} else {
 		lerror(L,"Cannot import BIG number");
 		return(0);
 	}
-	dst->len = i;
+	// set to curve's MODLEN by d/big_init()
+	// dst->len = i;
 	return(i);
 }
 
