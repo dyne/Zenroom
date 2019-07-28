@@ -23,14 +23,14 @@ function test_curve (name)
    iv = O.random(16)
    -- iv = octet.hex('00000000000000000000000000000000')
    ciphermsg = { header = octet.string('This is the header!') }
-   session = alice:session(bob:public())
+   session = alice:session(bob)
    ciphermsg.text, ciphermsg.checksum =
 	  ECDH.aead_encrypt(session, secret, iv, ciphermsg.header)
 
    print ('AES-GCM encrypt : '  .. ciphermsg.text:url64())
    print ('AES-GCM checksum : ' .. ciphermsg.checksum:url64())
 
-   session = bob:session(alice:public())
+   session = bob:session(alice)
    decode = { header = ciphermsg.header }
    decode.text, decode.checksum =
 	  ECDH.aead_decrypt(session, ciphermsg.text, iv, decode.header)
