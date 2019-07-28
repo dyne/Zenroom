@@ -97,7 +97,7 @@ typedef struct {
 } zenroom_t;
 
 
-zenroom_t *zen_init(const char *conf, char *keys, char *data);
+zenroom_t *zen_init(const char *conf, char *keys, char *data, char *seed);
 int  zen_exec_script(zenroom_t *Z, const char *script);
 int  zen_exec_zencode(zenroom_t *Z, const char *script);
 void zen_teardown(zenroom_t *zenroom);

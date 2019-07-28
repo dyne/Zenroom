@@ -128,7 +128,7 @@ static int zen_init_pmain(lua_State *L) { // protected mode init
 	return(LUA_OK);
 }
 
-zenroom_t *zen_init(const char *conf, char *keys, char *data) {
+zenroom_t *zen_init(const char *conf, char *keys, char *data, char *seed) {
 	(void) conf;
 	lua_State *L = NULL;
 	if(conf) {
@@ -156,6 +156,10 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 		return NULL;
 	}
 
+	if(seed && seed[0] != '\0') {
+		Z->random_seed = seed;
+		Z->random_seed_len = strlen(seed);
+	}
 	// initialize the random generator
 	Z->random_generator = rng_alloc();
 
@@ -278,7 +282,7 @@ int zencode_exec(char *script, char *conf, char *keys,
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
-	Z = zen_init(c, k, d);
+	Z = zen_init(c, k, d, NULL);
 	if(!Z) {
 		error(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
@@ -331,7 +335,7 @@ int zenroom_exec(char *script, char *conf, char *keys,
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
-	Z = zen_init(c, k, d);
+	Z = zen_init(c, k, d, NULL);
 	if(!Z) {
 		error(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
@@ -389,7 +393,7 @@ int zencode_exec_tobuf(char *script, char *conf, char *keys,
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
-	Z = zen_init(c, k, d);
+	Z = zen_init(c, k, d, NULL);
 	if(!Z) {
 		error(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
@@ -452,7 +456,7 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys,
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
-	Z = zen_init(c, k, d);
+	Z = zen_init(c, k, d, NULL);
 	if(!Z) {
 		error(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
@@ -521,7 +525,7 @@ int zenroom_exec_rng_tobuf(char *script, char *conf, char *keys,
 		error(NULL, "%s called with empty random seed",__func__);
 		return EXIT_FAILURE; }
 
-	Z = zen_init(c, k, d);
+	Z = zen_init(c, k, d, _random_seed);
 	if(!Z) {
 		error(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
@@ -535,8 +539,6 @@ int zenroom_exec_rng_tobuf(char *script, char *conf, char *keys,
 	Z->stdout_len = stdout_len;
 	Z->stderr_buf = stderr_buf;
 	Z->stderr_len = stderr_len;
-	Z->random_seed = _random_seed;
-	Z->random_seed_len = random_seed_len;
 	// export the random_seed buffer to Lua
 	zen_setenv(L, "RANDOM_SEED", Z->random_seed);
 
@@ -594,7 +596,7 @@ int zencode_exec_rng_tobuf(char *script, char *conf, char *keys,
 		error(NULL, "%s called with empty random seed",__func__);
 		return EXIT_FAILURE; }
 
-	Z = zen_init(c, k, d);
+	Z = zen_init(c, k, d, _random_seed);
 	if(!Z) {
 		error(L, "Initialisation failed.");
 		return EXIT_FAILURE; }

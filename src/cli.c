@@ -161,7 +161,8 @@ int main(int argc, char **argv) {
 		cli = zen_init(
 				conffile[0]?conffile:NULL,
 				keys[0]?keys:NULL,
-				data[0]?data:NULL);
+				data[0]?data:NULL,
+				rngseed);
 		lua_State *L = (lua_State*)cli->lua;
 
 		// print function
@@ -197,12 +198,15 @@ int main(int argc, char **argv) {
 	} else
 		if(verbosity) act(NULL, "using default configuration");
 
+	char *random_seed; 
+
 	zenroom_t *Z;
 	set_debug(verbosity);
 	Z = zen_init(
 			(conffile[0])?conffile:NULL,
 			(keys[0])?keys:NULL,
-			(data[0])?data:NULL);
+			(data[0])?data:NULL,
+			rngseed);
 	if(!Z) {
 		error(NULL, "Initialisation failed.");
 		return EXIT_FAILURE; }
@@ -214,13 +218,6 @@ int main(int argc, char **argv) {
 	}
 
 
-	if(rngseed[0] != '\0') {
-		if(verbosity) act(NULL, "deterministic mode (random seed provided)");
-		Z->random_seed = rngseed; // TODO: parse to import (hex?)
-		Z->random_seed_len = strlen(rngseed);
-		// export the random_seed buffer to Lua
-		zen_setenv((lua_State*)Z->lua, "RANDOM_SEED", Z->random_seed);
-	}
 
 #if DEBUG == 1
 	int res;

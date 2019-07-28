@@ -65,6 +65,7 @@ void* rng_alloc() {
 
 	// random seed provided externally 
 	if(Z->random_seed) {
+		act(NULL,"Random seed is external, deterministic execution");
 		if(!Z->random_generator) {
 			// TODO: feed minimum 128 bytes
 			RAND_seed(rng, Z->random_seed_len, Z->random_seed);
