@@ -11,7 +11,7 @@ Minim quis typewriter ut. Deep v ut man braid neutra culpa in officia consectetu
 
 function test_curve (name)
    print ('  ' .. name)
-   alice = ECDH.new(name)
+   alice = ECDH.new(name) -- ed25519
    apk,ask = alice:keygen()
    bob = ECDH.new(name)
    bpk,bsk = bob:keygen()

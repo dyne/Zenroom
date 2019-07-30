@@ -45,8 +45,12 @@ recipient = ECDH.new('$curve')
 recipient:public(hex(data['pubkey']))
 sender = ECDH.new('$curve')
 sender:private(hex(keys['private']))
-enc = ECDH.encrypt(sender,recipient,str(data['message']),sender:public())
-print(JSON.encode(map(enc,hex)))
+iv = O.random(16)
+ciphermsg = { header = sender:public():hex() }
+session = sender:session(recipient)
+ciphermsg.text, ciphermsg.checksum =
+    ECDH.aead_encrypt(session, str(secret), iv, ciphermsg.header)
+print(JSON.encode(ciphermsg))
 EOF
 }
 
@@ -59,9 +63,13 @@ data = JSON.decode(DATA)
 recipient = ECDH.new('$curve')
 recipient:private(hex(keys['private']))
 sender = ECDH.new('$curve')
-sender:public(hex(data['header']))
-dec = ECDH.decrypt(recipient,sender,map(data,hex))
-print(dec.text:string())
+-- header is the public key of sender
+decode = { header = hex(data['header']) }
+sender:public(decode.header)
+session = recipient:session(sender)
+decode.text, decode.checksum =
+    ECDH.aead_decrypt(session, ciphermsg.text, iv, decode.header)
+print(decode.text:str())
 EOF
 }
 
@@ -76,9 +84,9 @@ for curve in $curves; do
 			[[ "$p" = "$pp" ]] && continue
 			from=$p
 			to=$pp
-			# print "ENCRYPT $from -> $to"
+			print "ENCRYPT $from -> $to"
 			test_encrypt $p $pp
-			# cat $tmp/from-$from-to-$to-cryptomsg.json | json_pp
+			cat $tmp/from-$from-to-$to-cryptomsg.json
 		done
 	done
 
