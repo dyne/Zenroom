@@ -23,7 +23,7 @@ for name,pubkey in pairs(keys.recipients) do
    -- calculate the session key
    pub = url64(pubkey)
    session = keyring:session(pub)
-   iv = RNG.new():octet(16)
+   iv = O.random(16)
 
    out = { header = "encoded using zenroom " .. VERSION}
    -- encrypt the message with the session key

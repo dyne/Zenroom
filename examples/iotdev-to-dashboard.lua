@@ -27,7 +27,7 @@ payload['data']      = DATA
 header = {}
 header['device_pubkey'] = devkey:public():url64()
 header['community_id'] = keys['community_id']
-iv = RNG.new():octet(16)
+iv = O.random(16)
 header['iv'] = iv:url64()
 
 -- content( header ) -- uncomment for debug

@@ -2,8 +2,6 @@
 
 -- This example demonstrates how to take a secret and encrypt it using
 -- a single password, even a small 4 digit PIN.
-   
-rng = RNG.new()
 
 secrets = JSON.decode(KEYS)
 
@@ -13,7 +11,7 @@ hash = HASH.new("sha256")
 key = ECDH.pbkdf2(hash, secrets.pin, secrets.salt, secrets.kdf_iterations, 32)
 
 local cipher = { header = str("my header"),
-				 iv = rng:octet(16) }
+				 iv = O.random(16) }
 cipher.text, cipher.checksum =
    ECDH.aead_encrypt(key, secrets.text,
 					 cipher.iv, cipher.header)
