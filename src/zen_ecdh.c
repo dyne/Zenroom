@@ -278,16 +278,7 @@ static int ecdh_public(lua_State *L) {
 		if(res<0) {
 			ERROR();
 			return lerror(L, "Public key found, but invalid."); }
-		// Export public key to octet.  This is like o_dup but skips
-		// first byte since that is used internally by Milagro as a
-		// prefix for Montgomery (2) or non-Montgomery curves (4)
-		octet *n = o_new(L, e->publen);
-		OCT_clear(n); n->len = e->pubkey->len-1;
-		if(n->len>n->max) n->len = n->max;
-		int i;
-		for(i=0; i<n->len; i++)
-			n->val[i] = e->pubkey->val[i+1];
-//		o_dup(L,e->pubkey);
+		o_dup(L,e->pubkey);
 		return 1;
 	}
 	// has an argument: public key to set
@@ -299,11 +290,7 @@ static int ecdh_public(lua_State *L) {
 	// succesfully set the new public key, add a header byte for
 	// Milagro
 	e->pubkey = o_new(L, o->len+2); // max is len+1
-	OCT_clear(e->pubkey); e->pubkey->len = o->len+1;
-	int i;
-	for(i=1; i<=e->pubkey->len; i++)
-		e->pubkey->val[i] = o->val[i-1];
-	e->pubkey->val[0] = 4; // non-montgomery
+	OCT_copy(e->pubkey, o);
 	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(e->pubkey);
 	if(res<0) {
 		ERROR();
@@ -312,6 +299,30 @@ static int ecdh_public(lua_State *L) {
 	return 0;
 }
 
+// TODO: manage to export the ECDH public key in ECP format
+static int ecdh_ecp(lua_State *L) {
+	HERE();
+	int res;
+	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
+	if(!e->pubkey) {
+		ERROR();
+		return lerror(L, "Public key is not found in keyring.");
+	}
+	res = (e->ECP__PUBLIC_KEY_VALIDATE)(e->pubkey);
+	if(res<0) {
+		ERROR();
+		return lerror(L, "Public key found, but invalid."); }
+	// Export public key to octet.  This is like o_dup but skips
+	// first byte since that is used internally by Milagro as a
+	// prefix for Montgomery (2) or non-Montgomery curves (4)
+	int i;
+	octet *n = o_new(L, e->publen);
+	OCT_clear(n); n->len = e->pubkey->len-1;
+	if(n->len>n->max) n->len = n->max;
+	for(i=0; i<n->len; i++)
+		n->val[i] = e->pubkey->val[i+1];
+	return 1;
+}
 
 /**
    Imports or exports the private key from an ECDH keyring. This method
@@ -341,7 +352,7 @@ static int ecdh_private(lua_State *L) {
 	e->seckey = o_arg(L, 2); SAFE(e->seckey);
 	octet *pk = o_new(L,e->publen); SAFE(pk);
 	(*e->ECP__KEY_PAIR_GENERATE)(NULL,e->seckey,pk);
-	int res;
+	// int res;
 	// res = (*e->ECP__PUBLIC_KEY_VALIDATE)(pk);
 	// if(res<0) {
 	// 	ERROR();
@@ -621,7 +632,8 @@ static int ecdh_pbkdf2(lua_State *L) {
 	{"pbkdf2", ecdh_pbkdf2}, \
 	{"pbkdf", ecdh_pbkdf2}, \
 	{"sign", ecdh_dsa_sign}, \
-	{"verify", ecdh_dsa_verify}
+	{"verify", ecdh_dsa_verify}, \
+	{"ecp", ecdh_ecp}
 
 
 
