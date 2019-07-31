@@ -215,15 +215,16 @@ static int ecdh_checkpub(lua_State *L) {
 
 /**
    Generate a Diffie-Hellman shared session key. This function uses
-   two keyrings to calculate a shared key, then process it through
-   KDF2 to make it ready for use in @{keyring:aead_encrypt}. This is
-   compliant with the IEEE-1363 Diffie-Hellman shared secret
-   specification for asymmetric key encryption.
+   two keyrings to calculate a shared key, then process it internally
+   through @{keyring:kdf2} to make it ready for use in
+   @{keyring:aead_encrypt}. This is compliant with the IEEE-1363
+   Diffie-Hellman shared secret specification for asymmetric key
+   encryption.
 
    @param keyring containing the public key to be used
    @function keyring:session(keyring)
    @treturn[1] octet KDF2 hashed session key ready for @{keyring:aead_encrypt}
-   @treturn[1] octet a @{BIG} number result of (private * public) % curve_order
+   @treturn[1] octet a @{BIG} number result of (private * public) % curve_order (before KDF2)
    @see keyring:aead_encrypt
 */
 static int ecdh_session(lua_State *L) {
@@ -255,11 +256,12 @@ static int ecdh_session(lua_State *L) {
 }
 
 /**
-   Imports or exports the public key from an ECDH keyring. This method
-   functions in two ways: without argument it returns the public key
-   of a keyring, or if an octet argument is provided it imports it as
-   public key inside the keyring, but it refuses to overwrite and
-   returns an error if a public key is already present.
+   Imports or exports the public key from an ECDH keyring. This is a
+   get/set method working both ways: without argument it returns the
+   public key of a keyring, or if an octet argument is provided it
+   imports it as public key inside the keyring if its a valid @{ECP}.
+   If the keyring has a public key already, it will refuse to
+   overwrite it and return an error.
 
    @param key[opt] octet of a public key to be imported
    @function keyring:public(key)
@@ -270,14 +272,8 @@ static int ecdh_public(lua_State *L) {
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	if(lua_isnoneornil(L, 2)) {
 		if(!e->pubkey) {
-			ERROR();
-			return lerror(L, "Public key is not found in keyring.");
-		}
-		// export public key to octet
-		res = (e->ECP__PUBLIC_KEY_VALIDATE)(e->pubkey);
-		if(res<0) {
-			ERROR();
-			return lerror(L, "Public key found, but invalid."); }
+			lua_pushnil(L);
+			return 1; }
 		o_dup(L,e->pubkey);
 		return 1;
 	}
@@ -287,8 +283,6 @@ static int ecdh_public(lua_State *L) {
 		KEYPROT(e->curve, "public key"); }
 	octet *o = o_arg(L, 2); SAFE(o);
 	func(L, "%s: valid key",__func__);
-	// succesfully set the new public key, add a header byte for
-	// Milagro
 	e->pubkey = o_new(L, o->len+2); // max is len+1
 	OCT_copy(e->pubkey, o);
 	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(e->pubkey);
@@ -325,12 +319,12 @@ static int ecdh_ecp(lua_State *L) {
 }
 
 /**
-   Imports or exports the private key from an ECDH keyring. This method
-   functions in two ways: without argument it returns the private key
-   of a keyring, or if an octet argument is provided it imports it as
-   private  key inside the keyring and generates a public key for it. If
-   a private key is already present in the keyring it refuses to
-   overwrite and returns an error.
+   Imports or exports the private key from an ECDH keyring. This is a
+   get/set method working both ways: without argument it returns the
+   private key of a keyring, or if an @{octet} argument is provided it
+   imports it as private key inside the keyring and generates a public
+   key for it. If the keyring contains already any key, it will refuse
+   to overwrite them and return an error.
 
    @param key[opt] octet of a private key to be imported
    @function keyring:private(key)
@@ -341,8 +335,8 @@ static int ecdh_private(lua_State *L) {
 	if(lua_isnoneornil(L, 2)) {
 		// no argument: return stored key
 		if(!e->seckey) {
-			ERROR();
-			return lerror(L, "Private key is not found in keyring."); }
+			lua_pushnil(L);
+			return 1; }
 		// export public key to octet
 		o_dup(L, e->seckey);
 		return 1;
@@ -352,11 +346,6 @@ static int ecdh_private(lua_State *L) {
 	e->seckey = o_arg(L, 2); SAFE(e->seckey);
 	octet *pk = o_new(L,e->publen); SAFE(pk);
 	(*e->ECP__KEY_PAIR_GENERATE)(NULL,e->seckey,pk);
-	// int res;
-	// res = (*e->ECP__PUBLIC_KEY_VALIDATE)(pk);
-	// if(res<0) {
-	// 	ERROR();
-	// 	return lerror(L, "Invalid public key generation."); }
 	e->pubkey = pk;
 	HEREecdh(e);
 	return 1;
