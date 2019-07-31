@@ -202,9 +202,8 @@ static int ecdh_checkpub(lua_State *L) {
 	HERE();
 	ecdh *e = ecdh_arg(L,1); SAFE(e);
 	octet *pk = NULL;
-	if(lua_isnoneornil(L, 2)) {
-		if(!e->pubkey) {
-			return lerror(L, "Public key not found."); }
+	if(lua_isnoneornil(L, 2)) { // no 2nd arg, use keyring
+		if(!e->pubkey) { lua_pushnil(L); return(1); }
 		pk = e->pubkey;
 	} else
 		pk = o_arg(L, 2); SAFE(pk);
@@ -521,20 +520,18 @@ static int ecdh_hash(lua_State *L) {
 
    @param key an octet containing the key to compute the HMAC
    @param data an octet containing the message to compute the HMAC
-   @param len[opt=keyring->hash bytes] length of HMAC or default
-   @function keyring:hmac(key, data, len)
-   @return a new octet containing the computer HMAC or false on failure
+   @function keyring:hmac(key, data)
+   @return a new octet containing the computed HMAC or false on failure
 */
 static int ecdh_hmac(lua_State *L) {
 	HERE();
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	octet *k = o_arg(L, 2);     SAFE(k);
 	octet *in = o_arg(L, 3);    SAFE(in);
-	// length defaults to hash bytes
-	const int len = luaL_optinteger(L, 4, e->hash);
-	octet *out = o_new(L, len); SAFE(out);
-	if(!HMAC(e->hash, in, k, len, out)) {
-		error(L, "%s: hmac (%u bytes) failed.", len);
+	// length defaults to hash bytes (e->hash = 32 = sha256)
+	octet *out = o_new(L, e->hash+1); SAFE(out);
+	if(!HMAC(e->hash, in, k, e->hash, out)) {
+		error(L, "%s: hmac (%u bytes) failed.", e->hash);
 		lua_pop(L, 1);
 		lua_pushboolean(L,0);
 	}
@@ -630,6 +627,8 @@ static int ecdh_pbkdf2(lua_State *L) {
 	{"pbkdf", ecdh_pbkdf2}, \
 	{"sign", ecdh_dsa_sign}, \
 	{"verify", ecdh_dsa_verify}, \
+	{"hmac", ecdh_hmac}, \
+	{"hash", ecdh_hash}, \
 	{"ecp", ecdh_ecp}
 
 
@@ -644,8 +643,6 @@ int luaopen_ecdh(lua_State *L) {
 		{"aesgcm_decrypt", ecdh_aead_decrypt},
 		{"aes_encrypt",    ecdh_aead_encrypt},
 		{"aes_decrypt",    ecdh_aead_decrypt},
-		{"hash", ecdh_hash},
-		{"hmac", ecdh_hmac},
 		{"session", ecdh_session},
 		COMMON_METHODS,
 		{NULL,NULL}};

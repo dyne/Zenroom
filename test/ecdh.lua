@@ -82,5 +82,7 @@ print(d)
 ecdh2 = ECDH.new()
 ecdh2:private(skey)
 assert(ecdh2:verify(m,signature), "ECDH verify failed")
+assert(not ecdh2:verify(m..".",signature), "ECDH verify failed")
+
 print "OK"
 -- vk, sk = ecdh:keygen()
