@@ -325,6 +325,14 @@ function Inspector:putValue(v)
 	 elseif tv == "zenroom.fp12" then
 		local i = v:octet()
 		self:puts("fp12[" ..#i.. "] ".. enc(i))
+	 elseif tv == "zenroom.ecdh" then
+		local pk = v:public()
+		local sk = v:private()
+		if not pk and not sk then self:puts("ecdh keyring is empty\n")
+		else
+		   if pk then self:puts("ecdh.public["..#pk.."] ".. enc(pk).."\n") end
+		   if sk then self:puts("ecdh.private["..#sk.."] ".. enc(sk).."\n") end
+		end
 	 else
 		self:puts(enc(v:octet()))
 	 end
