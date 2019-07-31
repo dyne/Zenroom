@@ -2,7 +2,7 @@
 ARTICLE := Zenroom_Cryptolang_Whitepaper
 DEST := pub
 
-all: webnomad api
+all: api
 
 readme:
 	echo "<markdown>" > views/index.html

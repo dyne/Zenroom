@@ -24,7 +24,7 @@
 //
 //  ECDH encryption and ECDSA signing functionalities are provided by
 //  this module. New keyring instances are instantiated by calling the
-//  new() method, keys can be imported using the 
+//  new() method, keys can be imported using the
 //
 //  <code>
 //  Alice = ECDH.new()
@@ -75,25 +75,24 @@ extern zenroom_t *Z; // accessed to check random_seed configuration
 /// Global ECDH functions
 // @section ECDH.globals
 
-/***
-    Create a new ECDH encryption keyring using a specified curve or
-    BLS383 by default if omitted. The ECDH keyring created will
-    offer methods to interact with other keyrings.
+/**
+   Create a new ECDH encryption keyring using a specified curve
+   ('BLS383' by default).
 
-    Supported curves: BLS383, ED25519, GOLDILOCKS, SECP256K1
+   A keyring object will be returned implementing ECDH methods.
 
-    Please note curve selection is only supported in ECDH. The curve
-    BLS383 is the only one supported for @{ECP}/@{ECP2} arithmetics:
-    it is the default to grant compatibility between ECDH.public() and
-    @{ECP} points.
+   Supported curves: 'BLS383', 'ED25519', 'GOLDILOCKS', 'SECP256K1'
 
-    @param curve[opt=BLS383] elliptic curve to be used
-    @return a new ECDH keyring
-    @function new(curve)
-    @usage
-    keyring = ECDH.new()
-    -- generate a keypair
-    keyring:keygen()
+   @param curve[opt=BLS383] name of elliptic curve to use
+   @return a new keyring
+   @function ECDH.new(curve)
+   @usage
+   keyring = ECDH.new()
+   -- generate a keypair
+   keypair = keyring:keygen()
+   I.print(keypair)
+   [[{ public = oct[] .... ,
+       private = oct[] .... }]]
 */
 
 ecdh* ecdh_new(lua_State *L, const char *curve) {
@@ -162,8 +161,7 @@ static int ecdh_new_keygen(lua_State *L) {
 
    Keys generated are both returned and stored inside the
    keyring. They can also be retrieved later using the
-   <code>:public()</code> and <code>:private()</code> methods if
-   necessary.
+   @{public} and @{private} methods.
 
    @function keyring:keygen()
    @treturn[1] OCTET public key
@@ -188,7 +186,7 @@ static int ecdh_keygen(lua_State *L) {
 	return 1;
 }
 
-/**
+/*
    Validate an ECDH public key. Any octet can be a private key, but
    public keys aren't random and checking them is the only validation
    possible.
@@ -214,7 +212,7 @@ static int ecdh_checkpub(lua_State *L) {
 	return 1;
 }
 
-/**
+/*
    Generate a Diffie-Hellman shared session key. This function uses
    two keyrings to calculate a shared key, then process it internally
    through @{keyring:kdf2} to make it ready for use in
@@ -248,7 +246,7 @@ static int ecdh_session(lua_State *L) {
 	octet *ses = o_new(L,e->keysize); SAFE(ses);
 	(*e->ECP__SVDP_DH)(e->seckey,p->pubkey,ses);
 	// process via KDF2
-	// https://github.com/milagro-crypto/milagro-crypto-c/issues/285	
+	// https://github.com/milagro-crypto/milagro-crypto-c/issues/285
 	// here the NULL could be a salt (TODO: global?)
 	// its used internally by KDF2 as 'p' in the hash function
 	//         ehashit(sha,z,counter,p,&H,0);
@@ -257,10 +255,12 @@ static int ecdh_session(lua_State *L) {
 }
 
 /**
-   Imports or exports the public key from an ECDH keyring. This is a
-   get/set method working both ways: without argument it returns the
-   public key of a keyring, or if an octet argument is provided it
-   imports it as public key inside the keyring if its a valid @{ECP}.
+   Imports a public key inside an ECDH keyring.
+
+   This is a get/set method working both ways: without argument it
+   returns the public key of a keyring, or if an @{OCTET} argument is
+   provided and is a valid public key it is imported.
+
    If the keyring has a public key already, it will refuse to
    overwrite it and return an error.
 
@@ -320,12 +320,15 @@ static int ecdh_ecp(lua_State *L) {
 }
 
 /**
-   Imports or exports the private key from an ECDH keyring. This is a
-   get/set method working both ways: without argument it returns the
-   private key of a keyring, or if an @{OCTET} argument is provided it
-   imports it as private key inside the keyring and generates a public
-   key for it. If the keyring contains already any key, it will refuse
-   to overwrite them and return an error.
+   Imports a private key inside an ECDH keyring.
+
+   This is a get/set method working both ways: without argument it
+   returns the private key of a keyring, or if an @{OCTET} argument is
+   provided it is imported as private key inside the keyring and used
+   to derivate its corresponding public key.
+
+   If the keyring contains already any key, it will refuse to
+   overwrite them and return an error.
 
    @param key[opt] octet of a private key to be imported
    @function keyring:private(key)
@@ -354,9 +357,8 @@ static int ecdh_private(lua_State *L) {
 
 /**
    Elliptic Curve Digital Signature Algorithm (ECDSA) signing
-   function. This method uses the private key inside a keyring to
-   sign a message, returning two parameters 'r' and 's' representing
-   the signature. The parameters can be used in @{keyring:verify}.
+   function. This method uses the private key inside a keyring to sign
+   a message, returning a signature to be used in @{keyring:verify}.
 
    @param message string or @{OCTET} message to sign
    @function keyring:sign(message)
@@ -423,7 +425,7 @@ static int ecdh_dsa_verify(lua_State *L) {
 	return 1;
 }
 
-/**
+/*
    AES-GCM encrypt with Additional Data (AEAD) encrypts and
    authenticate a plaintext to a ciphtertext. Function compatible with
    IEEE P802.1 specification. Errors out if encryption fails, else
@@ -460,7 +462,7 @@ static int ecdh_aead_encrypt(lua_State *L) {
 	return 2;
 }
 
-/**
+/*
    AES-GCM decrypt with Additional Data (AEAD) decrypts and
    authenticate a plaintext to a ciphtertext . Compatible with IEEE
    P802.1 specification.
@@ -499,10 +501,20 @@ static int ecdh_aead_decrypt(lua_State *L) {
    with the cyphertext and a checksum that is accepted by @{decrypt}.
 
    @param keyring recipient keyring containing the public key
-   @param message octet input text encrypted for secrecy
+   @param message octet input text to be encrypted for secrecy
    @param header octet input header authenticated for integrity
    @function keyring:encrypt(keyring, message, header)
-   @return table ciphertext table with message, checksum, iv, header and public key
+   @treturn ciphertext
+*/
+
+/** Results of @{keyring:encrypt}
+    @table keyring:ciphertext
+    @usage
+    { message = "encrypted text",          -- @{OCTET}
+      checksum = "control checksum",       -- @{OCTET} of 16 bytes
+      iv = "random IV",                    -- @{OCTET} of 16 bytes
+      header = "clear text header",        -- @{OCTET} often encoded JSON table
+      public key = "sender's public key"}  -- @{OCTET} representation of @{ECP}
 */
 
 static int ecdh_simple_encrypt(lua_State *L) {
