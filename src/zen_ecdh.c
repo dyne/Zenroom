@@ -176,14 +176,16 @@ static int ecdh_keygen(lua_State *L) {
 		ERROR(); KEYPROT(e->curve,"private key"); }
 	if(e->pubkey) {
 		ERROR(); KEYPROT(e->curve,"public key"); }
+	// return a table
+	lua_createtable(L, 0, 2);
 	octet *pk = o_new(L,e->publen +0x0f); SAFE(pk);
+	lua_setfield(L, -2, "public");
 	octet *sk = o_new(L,e->seclen +0x0f); SAFE(sk);
+	lua_setfield(L, -2, "private");
 	(*e->ECP__KEY_PAIR_GENERATE)(Z->random_generator,sk,pk);
 	e->pubkey = pk;
 	e->seckey = sk;
-	HEREecdh(e);
-//	HEREoct(pk); HEREoct(sk);
-	return 2;
+	return 1;
 }
 
 /**
