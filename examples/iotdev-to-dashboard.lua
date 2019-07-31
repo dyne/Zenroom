@@ -34,7 +34,9 @@ header['iv'] = iv:url64()
 
 -- The output is a table with crypto contents which is standard for
 -- zenroom's functions encrypt/decrypt: .checksum .header .iv .text
-local session = devkey:session(url64(keys.community_pubkey))
+local pub = ECDH.new(curve)
+pub:public(url64(keys.community_pubkey))
+local session = devkey:session(pub)
 local head = url64(JSON.encode(header))
 local out = { header = head }
 out.text, out.checksum = 

@@ -10,8 +10,9 @@ header = JSON.decode(data.header)
 
 community_key = ECDH.new(curve)
 community_key:private(url64(keys.community_seckey))
-
-session = community_key:session(url64(header.device_pubkey))
+local pub = ECDH.new(curve)
+pub:public(url64(header.device_pubkey))
+session = community_key:session(pub)
 
 decode = { header = header }
 decode.text, decode.checksum =

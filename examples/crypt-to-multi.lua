@@ -21,7 +21,8 @@ res = {}
 -- loop through all recipients
 for name,pubkey in pairs(keys.recipients) do
    -- calculate the session key
-   pub = url64(pubkey)
+   local pub = ECDH.new('ed25519')
+   pub:public(url64(pubkey))
    session = keyring:session(pub)
    iv = O.random(16)
 
