@@ -76,11 +76,11 @@ assert(ecdh:private() == skey, "ECDH and ECP private key import reports incongru
 -- 		  ECDH = ecdh:ecp() })
 -- assert(ecdh:ecp() == pkey:octet(), "ECDH and ECP public key calculation gives different results")
 local m = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-c, d = ecdh:sign(m)
+signature = ecdh:sign(m)
 print(c)
 print(d)
 ecdh2 = ECDH.new()
 ecdh2:private(skey)
-assert(ecdh2:verify(m,c,d), "ECDH verify failed")
+assert(ecdh2:verify(m,signature), "ECDH verify failed")
 print "OK"
 -- vk, sk = ecdh:keygen()

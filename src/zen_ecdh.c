@@ -370,27 +370,30 @@ static int ecdh_private(lua_State *L) {
 
    @param message string or @{OCTET} message to sign
    @function keyring:sign(message)
-   @treturn[1] octet containing the first signature parameter (r)
-   @treturn[1] octet containing the second signature parameter (s)
+   @return table containing signature parameters octets (r,s)
    @usage
    ecdh = ECDH.keygen() -- generate keys or import them
    m = "Message to be signed"
-   r,s = ecdh:sign(m)
-   assert( ecdh:verify(m,r,s) )
+   signature = ecdh:sign(m)
+   assert( ecdh:verify(m,signature) )
 */
 
 static int ecdh_dsa_sign(lua_State *L) {
 	HERE();
 	ecdh *e = ecdh_arg(L,1); SAFE(e);
 	octet *f = o_arg(L,2); SAFE(f);
-	octet *c = o_new(L,64); SAFE(c);
-	octet *d = o_new(L,64); SAFE(d);
-	// IEEE ECDSA Signature, C and D are signature on F using private key S
+	// return a table
+	lua_createtable(L, 0, 2);
+	octet *r = o_new(L,64); SAFE(r);
+	lua_setfield(L, -2, "r");
+	octet *s = o_new(L,64); SAFE(s);
+	lua_setfield(L, -2, "s");
+	// IEEE ECDSA Signature, R and S are signature on F using private key S
 	// either pass an RNG or K already randomised
 	// for K's generation see also RFC6979
 	// ECP_BLS383_SP_DSA(int sha,csprng *RNG,octet *K,octet *S,octet *F,octet *C,octet *D)
-	(*e->ECP__SP_DSA)(     64,     Z->random_generator,     NULL, e->seckey,    f,      c,      d );
-	return 2;
+	(*e->ECP__SP_DSA)(     64,     Z->random_generator,     NULL, e->seckey,    f,      r,      s );
+	return 1;
 }
 
 
@@ -401,9 +404,8 @@ static int ecdh_dsa_sign(lua_State *L) {
    returned as 'r' and 's' in this same order by @{keyring:sign}.
 
    @param message the message whose signature has to be verified
-   @param r the first signature parameter
-   @param s the second signature paramter
-   @function keyring:verify(message,r,s)
+   @param signature the signature table returned by @{keyring:sign}
+   @function keyring:verify(message,signature)
    @return true if the signature is OK, or false if not.
    @see keyring:sign
 */
@@ -413,9 +415,13 @@ static int ecdh_dsa_verify(lua_State *L) {
     // IEEE1363 ECDSA Signature Verification. Signature C and D on F
     // is verified using public key W
 	octet *f = o_arg(L,2); SAFE(f);
-	octet *c = o_arg(L,3); SAFE(c);
-	octet *d = o_arg(L,4); SAFE(d);
-	int res = (*e->ECP__VP_DSA)(64, e->pubkey, f, c, d);
+	// take a table as argument, gather r and s from its keys
+	if(lua_type(L, 3) != LUA_TTABLE) {
+		ERROR(); lerror(L,"signature argument invalid: not a table"); }
+	lua_getfield(L, 3, "r"); lua_getfield(L, 3, "s"); // -2 stack
+	octet *r = o_arg(L,-2); SAFE(r);
+	octet *s = o_arg(L,-1); SAFE(s);
+	int res = (*e->ECP__VP_DSA)(64, e->pubkey, f, r, s);
 	if(res <0) // ECDH_INVALID in milagro/include/ecdh.h.in (!?!)
 		// TODO: maybe suggest fixing since there seems to be
 		// no criteria between ERROR (used in the first check
