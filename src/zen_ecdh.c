@@ -422,6 +422,7 @@ static int ecdh_dsa_verify(lua_State *L) {
 		lua_pushboolean(L, 1);
 	return 1;
 }
+
 /**
    AES-GCM encrypt with Additional Data (AEAD) encrypts and
    authenticate a plaintext to a ciphtertext. Function compatible with
@@ -484,12 +485,126 @@ static int ecdh_aead_decrypt(lua_State *L) {
 	octet *in = o_arg(L, 2); SAFE(in);
 	octet *iv = o_arg(L, 3); SAFE(iv);
 	octet *h = o_arg(L, 4); SAFE(h);
-
 	// output is padded to next word
 	octet *out = o_new(L, in->len+16); SAFE(out);
 	octet *t2 = o_new(L,32); SAFE(t2); // measured empirically is 16
 	AES_GCM_DECRYPT(k, iv, h, in, out, t2);
 	return 2;
+}
+
+/**
+   Simple method for AES-GCM encryption with Additional Data (AEAD),
+   compatible with IEEE P802.1 specification. Takes a keyring object
+   for the public key and a table of parameters. Returns also a table
+   with the cyphertext and a checksum that is accepted by @{decrypt}.
+
+   @param keyring recipient keyring containing the public key
+   @param message octet input text encrypted for secrecy
+   @param header octet input header authenticated for integrity
+   @function keyring:encrypt(keyring, message, header)
+   @return table ciphertext table with message, checksum, iv, header and public key
+*/
+
+static int ecdh_simple_encrypt(lua_State *L) {
+	HERE();
+	ecdh *s =  ecdh_arg(L, 1); SAFE(s);
+	if(!s->seckey) {
+		lerror(L,"%s: private key not found in sender keyring",__func__);
+		return 0; }
+	ecdh *r =  ecdh_arg(L, 2); SAFE(r);
+	if(!r->pubkey) {
+		lerror(L,"%s: public key not found in recipient keyring",__func__);
+		return 0; }
+	if( (*s->ECP__PUBLIC_KEY_VALIDATE)(r->pubkey) < 0) { // validate by sender
+		lerror(L, "%s: invalid public key in recipient keyring", __func__);
+		return 0; }
+	octet *ses = o_new(L,s->keysize); SAFE(ses);
+	lua_pop(L,1); // pop the session (used internally)
+	(*s->ECP__SVDP_DH)(s->seckey,r->pubkey,ses);
+	octet *kdf = o_new(L,s->hash); SAFE(kdf);
+	lua_pop(L,1); // pop the KDF result (used internally)
+	KDF2(s->hash,ses,NULL,s->hash,kdf);
+	// gather more arguments
+	octet *in = o_arg(L, 3); SAFE(in); // secret to be encrypted
+	octet *h =  o_arg(L, 4); SAFE(h); // header provided
+	// prepare to return a table
+	lua_createtable(L, 0, 5);
+	octet *iv = o_new(L,16); SAFE(iv); // generate random IV
+	OCT_rand(iv,Z->random_generator,16);
+	lua_setfield(L,-2, "iv");
+	octet *out = o_new(L, in->len+16); SAFE(out); // 16bytes padding
+	lua_setfield(L, -2, "message");
+	octet *checksum = o_new(L, 32); SAFE (checksum);
+	lua_setfield(L, -2, "checksum");
+	AES_GCM_ENCRYPT(kdf, iv, h, in, out, checksum);
+	o_dup(L,h); lua_setfield(L, -2, "header");
+	o_dup(L,s->pubkey); lua_setfield(L, -2, "pubkey");
+	return 1;
+}
+
+/**
+   Simple method for AES-GCM decrypt with Additional Data
+   (AEAD). Takes a table as returned by @{keyring:encrypt} containing
+   message, checksum, header, IV and the sender's pubkey.  Returns an
+   octet containing the decrypted message or error if any problem
+   arises (invalid checksum etc.). Compatible with IEEE P802.1
+   specification.
+
+   @param ciphertext table with message, checksum, iv, header and public key
+   @return octet containing the decrypted message
+   @function keyring:decrypt(ciphertext)
+*/
+
+static int ecdh_simple_decrypt(lua_State *L) {
+	HERE();
+	ecdh *e = ecdh_arg(L, 1); SAFE(e);
+	if(!e->seckey) {
+		lerror(L,"%s: private key not found in keyring",__func__);
+		return 0; }
+	// take a table as argument, gather r and s from its keys
+	if(lua_type(L, 2) != LUA_TTABLE) {
+		ERROR(); lerror(L,"%s argument invalid: not a table",__func__);
+		return 0;}
+	lua_getfield(L,2, "message");   // -5
+	lua_getfield(L,2, "checksum"); // -4
+	lua_getfield(L,2, "iv");      // -3
+	lua_getfield(L,2, "header"); // -2
+	lua_getfield(L,2, "pubkey");// -1
+	octet *msg = o_arg(L,-5); SAFE(msg);
+	octet *chk = o_arg(L,-4); SAFE(chk);
+	if(chk->len != 16) {
+		lerror(L,"%s invalid checksum argument length",__func__);
+		return 0; }
+	octet *iv = o_arg(L,-3);  SAFE(iv);
+	if(iv->len != 16) {
+		lerror(L,"%s invalid IV argument length",__func__);
+		return 0; }
+	octet *head = o_arg(L,-2); SAFE(head);
+	octet *pubkey = o_arg(L,-1); SAFE(pubkey);
+	if( (*e->ECP__PUBLIC_KEY_VALIDATE)(pubkey) < 0) { // validate public key
+		lerror(L, "%s: invalid public key in ciphertext", __func__);
+		return 0; }
+	// calculate session
+	octet *ses = o_new(L,e->keysize); SAFE(ses);
+	lua_pop(L,1); // pop the session (used internally)
+	(*e->ECP__SVDP_DH)(e->seckey,pubkey,ses);
+	octet *kdf = o_new(L,e->hash); SAFE(kdf);
+	lua_pop(L,1); // pop the KDF result (used internally)
+	KDF2(e->hash,ses,NULL,e->hash,kdf);
+	// output is padded to next word
+	octet *out = o_new(L, msg->len+16); SAFE(out);
+	octet *outchk = o_new(L,32); SAFE(outchk); // measured empirically is 16
+	lua_pop(L,1); // pop the checksum (checked internally)
+	AES_GCM_DECRYPT(kdf, iv, head, msg, out, outchk);
+	// check equality of checksums
+	int i, eq = 1;
+	for (i=0; i<chk->len; i++)
+		if (chk->val[i]!=outchk->val[i]) eq = 0;
+	if(!eq) {
+		lerror(L,"%s error in decryption, checksum mismatch",__func__);
+		lua_pop(L,1); // the out octet is still in stack
+		return 0; }
+	return 1;
 }
 
 /**
@@ -545,10 +660,9 @@ static int ecdh_hmac(lua_State *L) {
    generates a new key from an existing key applying an octet of key
    derivation parameters.
 
-   @param parameters[opt=nil] octet of key derivation parameters (can be <code>nil</code>)
+   @param hash initialized @{hash} or @{ecdh} object
    @param key octet of the key to be transformed
-   @param length[opt=key length] integer indicating the new length (default same as input key)
-   @function keyring:kdf2(parameters, key, length)
+   @function keyring:kdf2(key)
    @return a new octet containing the derived key
 */
 
@@ -602,12 +716,23 @@ static int ecdh_pbkdf2(lua_State *L) {
 		return 0;
 	}
 	octet *k = o_arg(L, 2); SAFE(k);
-	octet *s = o_arg(L, 3); SAFE(s);
-	// default iterations 1000
-	const int iter = luaL_optinteger(L, 4, 1000);
-	// keylen is length of input key
-	const int keylen = luaL_optinteger(L, 5, k->len);
-
+	int iter, keylen;
+	octet *s;
+	// take a table as argument with salt, iterations and length parameters
+	if(lua_type(L, 3) == LUA_TTABLE) {
+		lua_getfield(L, 3, "salt");
+		lua_getfield(L, 3, "iterations");
+		lua_getfield(L, 3, "length"); // -3
+		s = o_arg(L,-3); SAFE(s);
+		// default iterations 5000
+		iter = luaL_optinteger(L,-2, 5000);
+		keylen = luaL_optinteger(L,-1,k->len);
+	} else {
+		s = o_arg(L, 3); SAFE(s);
+		iter = luaL_optinteger(L, 4, 5000);
+		// keylen is length of input key
+		keylen = luaL_optinteger(L, 5, k->len);
+	}
 	octet *out = o_new(L, keylen); SAFE(out);
 
 	// TODO: OPTIMIZATION: reuse the initialized hash* structure in
@@ -649,6 +774,8 @@ int luaopen_ecdh(lua_State *L) {
 	const struct luaL_Reg ecdh_methods[] = {
 		{"keygen",ecdh_keygen},
 		{"session",ecdh_session},
+		{"encrypt",ecdh_simple_encrypt},
+		{"decrypt",ecdh_simple_decrypt},
 		COMMON_METHODS,
 		{"__gc", ecdh_destroy},
 		{NULL,NULL}
