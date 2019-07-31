@@ -62,7 +62,7 @@ function math.frexp(x) end
 ---
 -- The value `HUGE_VAL`, a value larger than or equal to any other
 -- numerical value.
--- function math.huge end
+function math.huge() end
 -- * `math.HUGE_VAL`: math.HUGE_VAL
 
 ---
@@ -92,7 +92,7 @@ function math.modf(x) end
 
 ---
 -- The value of *pi*.
--- function math.pi end
+function math.pi() end
 -- * `math.pi`: math.pi
 
 ---

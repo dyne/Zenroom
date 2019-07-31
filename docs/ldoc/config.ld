@@ -25,13 +25,11 @@ template=true
 backtick_references=false
 file={
 	'../../src/zen_octet.c',
-	'../../src/zen_random.c',
 	'../../src/zen_hash.c',
 	'../../src/zen_ecdh.c',
 	'../../src/zen_ecp.c',
 	'../../src/zen_ecp2.c',
 	'../../src/zen_big.c',
-	'../../src/lua/functional.lua',
 	'math.lua',
 	'string.lua',
 	'table.lua',

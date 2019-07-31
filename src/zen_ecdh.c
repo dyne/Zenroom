@@ -322,7 +322,7 @@ static int ecdh_ecp(lua_State *L) {
 /**
    Imports or exports the private key from an ECDH keyring. This is a
    get/set method working both ways: without argument it returns the
-   private key of a keyring, or if an @{octet} argument is provided it
+   private key of a keyring, or if an @{OCTET} argument is provided it
    imports it as private key inside the keyring and generates a public
    key for it. If the keyring contains already any key, it will refuse
    to overwrite them and return an error.
@@ -660,7 +660,7 @@ static int ecdh_hmac(lua_State *L) {
    generates a new key from an existing key applying an octet of key
    derivation parameters.
 
-   @param hash initialized @{hash} or @{ecdh} object
+   @param hash initialized @{HASH} or @{ECDH} object
    @param key octet of the key to be transformed
    @function keyring:kdf2(key)
    @return a new octet containing the derived key

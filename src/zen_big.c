@@ -252,13 +252,12 @@ static int lua_biginfo(lua_State *L) {
 }
 
 /***
-    Create a new Big number. Import the value from an @{OCTET} argument; or create a random one if argument is an @{RNG} and, optionally, modulo it to a second argument.
+    Create a new Big number. If an argument is present, import it as @{OCTET} and initialise it with its value.
 
-    @param[opt] octet value or a random number generator
+    @param[opt] octet value
     @return a new Big number
     @function BIG.new(octet)
 */
-extern void rng_round(csprng *rng);
 static int newbig(lua_State *L) {
 	HERE();
 	void *ud;
