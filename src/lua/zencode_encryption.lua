@@ -115,7 +115,7 @@ When("I export all keys", function()
 		if ACK.pubkey then OUT[ACK.whoami].public = hex(ACK.pubkey) end
 		if ACK.privkey then OUT[ACK.whoami].private = hex(ACK.privkey) end
 		if type(ACK.keys) == 'table' then
-		   for k,v in ipairs(ACK.keys) do
+		   for k,v in sort_ipairs(ACK.keys) do
 			  OUT[k] = hex(v)
 		   end
 		end

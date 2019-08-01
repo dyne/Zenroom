@@ -74,8 +74,8 @@ end
 -- are anyway unnecessary corner cases in zenroom, which exits cleanly
 -- and signaling a stack overflow. Please report back if this
 -- generates problems leading to the pairs for loop in function above.
-_G["pairs"]  = _pairs
-_G["ipairs"] = _pairs
+_G["sort_pairs"]  = _pairs
+_G["sort_ipairs"] = _pairs
 
 ------------------------------
 -- FUNCTIONAL LANGUAGE HELPERS

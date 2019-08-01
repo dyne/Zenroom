@@ -201,7 +201,7 @@ ZEN.add_schema({
 		 if type(obj.vkeys) == 'table' then res.vkeys = ZEN:valid('ca_verify',obj.vkeys) end
 		 if type(obj.list) == 'table' then
 			res.list = { }
-			for k,v in ipairs(obj.list) do res.list[k] = true end
+			for k,v in sort_ipairs(obj.list) do res.list[k] = true end
 		 end
 		 return res
 			   end,

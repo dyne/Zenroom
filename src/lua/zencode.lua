@@ -222,7 +222,7 @@ end
 function zencode:run()
    -- xxx(2,"Zencode MATCHES:")
    -- xxx(2,self.matches)
-   for i,x in ipairs(self.matches) do
+   for i,x in sort_ipairs(self.matches) do
 	  IN = { } -- import global DATA from json
 	  if DATA then IN = JSON.decode(DATA) end
 	  IN.KEYS = { } -- import global KEYS from json
