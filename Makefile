@@ -79,26 +79,22 @@ zlib:
 	pwd="${pwd}" make -C ${pwd}/build/zlib -f ZenMakefile
 
 android-lua53:
-	CC=${gcc} CFLAGS="${cflags} \
-		-DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE" \
+	CC=${gcc} CFLAGS="${cflags} ${lua_cflags}" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
 	make -C ${pwd}/lib/lua53/src ${platform}
 
 musl-lua53:
-	CC=${gcc} CFLAGS="${cflags} \
-		-DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE" \
+	CC=${gcc} CFLAGS="${cflags} ${lua_cflags}" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
 	make -C ${pwd}/lib/lua53/src ${platform}
 
 lua53:
-	CC=${gcc} CFLAGS="${cflags} \
-	-DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE" \
+	CC=${gcc} CFLAGS="${cflags} ${lua_cflags}" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
 	make -C ${pwd}/lib/lua53/src ${platform}
 
 cortex-lua53:
-	CC=${gcc} CFLAGS="${cflags} \
-	-DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE -DLUA_BAREBONE" \
+	CC=${gcc} CFLAGS="${cflags} ${lua_cflags} -DLUA_BAREBONE" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
 	make -C ${pwd}/lib/lua53/src ${platform}
 
