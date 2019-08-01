@@ -12,12 +12,12 @@ Minim quis typewriter ut. Deep v ut man braid neutra culpa in officia consectetu
 function test_curve (name)
    print ('  ' .. name)
    alice = ECDH.new(name) -- ed25519
-   apk,ask = alice:keygen()
+   ak = alice:keygen()
    bob = ECDH.new(name)
-   bpk,bsk = bob:keygen()
+   bk = bob:keygen()
 
-   assert(ask:hex() == alice:private():hex()) -- compare strings
-   assert(ask == alice:private()) -- compare octects
+   assert(ak.private:hex() == alice:private():hex()) -- compare strings
+   assert(ak.private == alice:private()) -- compare octects
 
    -- AES-GCM encryption
    iv = O.random(16)
