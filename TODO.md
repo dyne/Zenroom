@@ -17,9 +17,46 @@ memory managers (so far umm) but this is not REENTRANT: it prevents
 the concurrent allocation of multiple zenroom instances and in general
 is bad practice.
 
-## Forward chaining expert system development tool
+## Benchmarking
+
+extend redroom for in-memory benchmarks
+
+prime number discovery using crypto primitives:
+https://github.com/pakozm/lua-happy-prime-numbers/blob/master/happy_primes.lua
+
+## Add-ons
+
+### Symbolic Calculus
+
+https://github.com/pakozm/SymLua
+
+### RPI integration
+
+https://github.com/pakozm/BrickPi_Lua
+
+### Zencode spell correction
+
+https://github.com/pakozm/lua-spell-correct
+
+### Forward chaining expert system development tool
 
 https://github.com/pakozm/lua-faces
+
+### microservice server
+https://github.com/raksoras/luaw
+
+### socks5 client
+see lua socks5 ngx
+
+### nanomsg
+
+https://github.com/pakozm/xemsg
+
+### message passing interface standard (MPI)
+
+https://en.wikipedia.org/wiki/Message_Passing_Interface
+
+https://github.com/jzrake/lua-mpi
 
 
 
