@@ -38,7 +38,11 @@ ldadd += ${milib}/libamcl_core.a
 # ------------------------
 # target specific settings
 ifneq (,$(findstring debug,$(MAKECMDGOALS)))
-cflags += -O1 -ggdb ${cflags_protection} -DDEBUG=1 -Wstack-usage=4096
+cflags := -Og -ggdb -DDEBUG=1 -Wstack-usage=4096
+endif
+
+ifneq (,$(findstring profile,$(MAKECMDGOALS)))
+cflags := -Og -ggdb -pg -DDEBUG=1 -Wstack-usage=4096
 endif
 
 ifneq (,$(findstring win,$(MAKECMDGOALS)))

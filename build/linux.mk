@@ -33,8 +33,9 @@ cortex-arm:	apply-patches cortex-lua53 milagro embed-lua
 	CC=${gcc} AR="${ar}" OBJCOPY="${objcopy}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src cortex-arm
 
-linux-debug: cflags += -O1 -ggdb ${cflags_protection} -DDEBUG=1 -Wstack-usage=4096
 linux-debug: linux
+
+linux-profile: linux
 
 linux-c++: linux
 
