@@ -84,10 +84,11 @@ int main(int argc, char **argv) {
 	char keys[MAX_FILE];
 	char data[MAX_FILE];
 	int opt, index;
+	int unprotected;
 	int   interactive         = 0;
 	int   zencode             = 0;
 
-	const char *short_options = "hd:ic:k:a:S:p:z";
+	const char *short_options = "hd:ic:k:a:S:p:uz";
 	const char *help          =
 		"Usage: zenroom [-h] [ -d lvl ] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ -S seed ] [ -u ] [ -z ] [ script.lua ]\n";
 	int pid, status, retval;
@@ -101,6 +102,7 @@ int main(int argc, char **argv) {
 	// conf[0] = '\0';
 	script[0] = '\0';
 	int verbosity = 1;
+	unprotected = 0;
 	set_color(1);
 	while((opt = getopt(argc, argv, short_options)) != -1) {
 		switch(opt) {
@@ -126,6 +128,9 @@ int main(int argc, char **argv) {
 			break;
 		case 'S':
 			snprintf(rngseed,MAX_STRING-1,"%s",optarg);
+			break;
+		case 'u':
+			unprotected = 1;
 			break;
 		case 'z':
 			zencode = 1;
@@ -238,35 +243,43 @@ int main(int argc, char **argv) {
 		if( zen_exec_script(Z, script) ) return EXIT_FAILURE;
 
 #else /* POSIX */
-	if (fork() == 0) {
-#   ifdef ARCH_LINUX /* LINUX engages SECCOMP. */
-		if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) {
-			fprintf(stderr, "Cannot set no_new_privs: %m.\n");
-			return EXIT_FAILURE;
-		}
-		if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &strict)) {
-			fprintf(stderr, "Cannot install seccomp filter: %m.\n");
-			return EXIT_FAILURE;
-		}
-#   endif /* ARCH_LINUX */
-		if(verbosity) act(NULL, "starting execution.");
+	if (unprotected) {
 		if(zencode) {
 			if( zen_exec_zencode(Z, script) ) return EXIT_FAILURE;
 		} else {
-			if( zen_exec_script(Z, script) ) return EXIT_FAILURE;
+			if( zen_exec_script(Z, script) ) return EXIT_FAILURE;		
 		}
-		return EXIT_SUCCESS;
-	}
-	do {
-		pid = wait(&status);
-	} while(pid == -1);
+	} else {
+		if (fork() == 0) {
+#   ifdef ARCH_LINUX /* LINUX engages SECCOMP. */
+			if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) {
+				fprintf(stderr, "Cannot set no_new_privs: %m.\n");
+				return EXIT_FAILURE;
+			}
+			if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &strict)) {
+				fprintf(stderr, "Cannot install seccomp filter: %m.\n");
+				return EXIT_FAILURE;
+			}
+#   endif /* ARCH_LINUX */
+			if(verbosity) act(NULL, "starting execution.");
+			if(zencode) {
+				if( zen_exec_zencode(Z, script) ) return EXIT_FAILURE;
+			} else {
+				if( zen_exec_script(Z, script) ) return EXIT_FAILURE;
+			}
+			return EXIT_SUCCESS;
+		}
+		do {
+			pid = wait(&status);
+		} while(pid == -1);
 
-	if (WIFEXITED(status)) {
-		retval = WEXITSTATUS(status);
-		if (retval == 0)
-			if(verbosity) notice(NULL, "Execution completed.");
-	} else if (WIFSIGNALED(status)) {
-		notice(NULL, "Execution interrupted by signal %d.", WTERMSIG(status));
+		if (WIFEXITED(status)) {
+			retval = WEXITSTATUS(status);
+			if (retval == 0)
+				if(verbosity) notice(NULL, "Execution completed.");
+		} else if (WIFSIGNALED(status)) {
+			notice(NULL, "Execution interrupted by signal %d.", WTERMSIG(status));
+		}
 	}
 #endif /* POSIX */
 
