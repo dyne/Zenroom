@@ -40,8 +40,8 @@
 //  'Bob'.
 //
 //  @module ECDH
-//  @author Denis "Jaromil" Roio, Enrico Zimuel
-//  @license GPLv3
+//  @author Denis "Jaromil" Roio
+//  @license AGPLv3
 //  @copyright Dyne.org foundation 2017-2019
 
 
@@ -619,7 +619,7 @@ static int ecdh_simple_decrypt(lua_State *L) {
 	return 1;
 }
 
-/**
+/*
    Hash an octet into a new octet. Use the keyring's hash function to
    hash an octet string and return a new one containing the hash of
    the string.

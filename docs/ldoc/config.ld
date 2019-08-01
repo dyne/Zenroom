@@ -28,9 +28,7 @@ file={
 	'../../src/zen_hash.c',
 	'../../src/zen_ecdh.c',
 	'../../src/zen_ecp.c',
-	'../../src/zen_ecp2.c',
 	'../../src/zen_big.c',
-	'math.lua',
 	'string.lua',
 	'table.lua',
 }
@@ -38,8 +36,6 @@ dir='../pub/api'
 -- readme='../../README.md'
 topics={
 	'Syntax',
-	'Functional',
-	'Schema',
 	'StateMachine',
 	'Embed',
 }
@@ -47,8 +43,6 @@ topics={
 style='css'
 kind_names={topic='Tutorials',script='Programs'}
 examples = {
-    '../../examples/hello.lua',
-    '../../examples/json-tables.lua',
     '../../examples/keygen.lua',
 	'../../examples/crypt-to-multi.lua',
 }

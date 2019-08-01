@@ -34,8 +34,8 @@
 //
 // @module HASH
 // @author Denis "Jaromil" Roio
-// @license GPLv3
-// @copyright Dyne.org foundation 2017-2018
+// @license AGPLv3
+// @copyright Dyne.org foundation 2017-2019
 
 #include <lua.h>
 #include <lualib.h>

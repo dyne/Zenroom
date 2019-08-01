@@ -44,7 +44,7 @@
 //
 //  @module BIG
 //  @author Denis "Jaromil" Roio
-//  @license GPLv3
+//  @license AGPLv3
 //  @copyright Dyne.org foundation 2017-2018
 
 extern zenroom_t *Z;

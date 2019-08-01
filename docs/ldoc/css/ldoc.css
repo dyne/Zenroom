@@ -32,10 +32,8 @@ dt strong {
 }
 
 code {
-  background: #fdfdfd;
   border-radius: 3px;
   padding: 1px 3px;
-  border: 1px solid #ddd;
 }
 
 h1 code {
