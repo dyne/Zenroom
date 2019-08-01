@@ -129,8 +129,8 @@ W. Celes and L.H. de Figueiredo (lua), Mike Scott and Kealan McCusker
 (lua-cjson), Daan Sprenkels (randombytes), Luke-jr (base58), Salvatore
 Sanfilippo (cmsgpack)
 
-Lua extensions written and documented by: Roland Yonaba (moses),
-Enrique García Cota (inspect).
+Some Lua extensions included are written by: Kyle Conroy
+(statemachine), Enrique García Cota (inspect).
 
 Zenroom is Licensed under the terms of the Affero GNU Public License as
 published by the Free Software Foundation; either version 3 of the
