@@ -39,6 +39,8 @@ typedef struct {
 	hash256 *sha256;
 	hash384 *sha384;
 	hash512 *sha512;
+	sha3 *sha3_256; // SHA3 aka keccak with 32 bytes
+	sha3 *sha3_512; // SHA3 aka keccak with 64 bytes
 	// ...
 } hash;
 

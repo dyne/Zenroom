@@ -75,18 +75,37 @@ hash* hash_new(lua_State *L, const char *hashtype) {
 	h->sha256 = NULL; h->sha384 = NULL; h->sha512 = NULL;
 	if(hashtype) strncpy(ht,hashtype,15);
 	else         strncpy(ht,"sha256",15);
-	if(strcasecmp(hashtype,"sha256") == 0) {
+	if(strncasecmp(hashtype,"sha256",6) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 32;
 		h->algo = _SHA256;
-		h->sha256 = zen_memory_alloc(sizeof(hash256));
+		h->sha256 = (hash256*)zen_memory_alloc(sizeof(hash256));
 		HASH256_init(h->sha256);
-	} else if(strcasecmp(hashtype,"sha512") == 0) {
+	} else if(strncasecmp(hashtype,"sha384",6) == 0) {
+		strncpy(h->name,hashtype,15);
+		h->len = 48;
+		h->algo = _SHA384;
+		h->sha384 = (hash384*)zen_memory_alloc(sizeof(hash384));
+		HASH384_init(h->sha384);
+	} else if(strncasecmp(hashtype,"sha512",6) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 64;
 		h->algo = _SHA512;
-		h->sha512 = zen_memory_alloc(sizeof(hash512));
+		h->sha512 = (hash512*)zen_memory_alloc(sizeof(hash512));
 		HASH512_init(h->sha512);
+	} else if(strncasecmp(hashtype,"sha3_256",7) == 0) {
+		strncpy(h->name,hashtype,15);
+		h->len = 32;
+		h->algo = _SHA3_256;
+		h->sha3_256 = (sha3*)zen_memory_alloc(sizeof(sha3));
+		SHA3_init(h->sha3_256, h->len);
+	} else if(strncasecmp(hashtype,"sha3_512",7) == 0) {
+		strncpy(h->name,hashtype,15);
+		h->len = 64;
+		h->algo = _SHA3_512;
+		h->sha3_512 = (sha3*)zen_memory_alloc(sizeof(sha3));
+		SHA3_init(h->sha3_512, h->len);
+
 	} // ... TODO: other hashes
 	else {
 		lerror(L, "Hash algorithm not known: %s", hashtype);
@@ -132,16 +151,33 @@ static int hash_process(lua_State *L) {
 	octet *o = o_arg(L,2); SAFE(o);
 	HEREs(h->name);
 	if(h->algo == _SHA256) {
-		int i; octet *res = o_new(L,33); SAFE(res);
+		int i; octet *res = o_new(L,h->len); SAFE(res);
 		for(i=0;i<o->len;i++) HASH256_process(h->sha256,o->val[i]);
 		HASH256_hash(h->sha256,res->val);
 		res->len = h->len;
+	} else if(h->algo == _SHA384) {
+		int i; octet *res = o_new(L,h->len); SAFE(res);
+		for(i=0;i<o->len;i++) HASH384_process(h->sha384,o->val[i]);
+		HASH384_hash(h->sha384,res->val);
+		res->len = h->len;
 	} else if(h->algo == _SHA512) {
-		int i; octet *res = o_new(L,65); SAFE(res);
+		int i; octet *res = o_new(L,h->len); SAFE(res);
 		for(i=0;i<o->len;i++) HASH512_process(h->sha512,o->val[i]);
 		HASH512_hash(h->sha512,res->val);
 		res->len = h->len;
-	}
+	} else if(h->algo == _SHA3_256) {
+		int i; octet *res = o_new(L,h->len); SAFE(res);
+		for(i=0;i<o->len;i++) SHA3_process(h->sha3_256,o->val[i]);
+		SHA3_hash(h->sha3_256,res->val);
+		res->len = h->len;
+	} else if(h->algo == _SHA3_512) {
+		int i; octet *res = o_new(L,h->len); SAFE(res);
+		for(i=0;i<o->len;i++) SHA3_process(h->sha3_512,o->val[i]);
+		SHA3_hash(h->sha3_512,res->val);
+		res->len = h->len;
+	} else {
+		lerror(L,"Error in HASH object configuration: algo not found");
+		return 0; }
 	return 1;
 }
 		
