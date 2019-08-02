@@ -26,7 +26,16 @@ function J.autoconv(data)
 	  if string.sub(data,1,3) == 'u64' and O.is_url64(data) then
 		 -- return decoded string format for JSON.decode
 		 return O.from_url64(data):string()
-	  else -- its already a string
+	  elseif string.sub(data,1,3) == 'b64' and O.is_base64(data) then
+		 -- return decoded string format for JSON.decode
+		 return O.from_base64(data):string()
+	  elseif string.sub(data,1,3) == 'hex' and O.is_hex(data) then
+		 -- return decoded string format for JSON.decode
+		 return O.from_hex(data):string()
+	  elseif string.sub(data,1,3) == 'bin' and O.is_bin(data) then
+		 -- return decoded string format for JSON.decode
+		 return O.from_bin(data):string()
+	  else -- its already a string (we suppose, this is not deterministic)
 		 return data
 	  end
    elseif iszen(t) then
