@@ -25,6 +25,7 @@ template=true
 backtick_references=false
 file={
 	'../../src/zen_octet.c',
+	'../../src/lua/inspect.lua',
 	'../../src/zen_hash.c',
 	'../../src/zen_ecdh.c',
 	'../../src/zen_ecp.c',

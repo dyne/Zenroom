@@ -1,3 +1,13 @@
+--- <h1>Data inspection facility</h1>
+--
+-- The INSPECT class provides a number of functions to ease
+-- development and debugging. It mainly consists of an advanced
+-- @{print} function that can represent complex data structures (Lua
+-- tables) and tag their encoding formats and size.  Another @{spy}
+-- function prints the same as pass-through.
+--
+-- @module INSPECT
+
 local inspect ={
   _VERSION = 'inspect.lua 3.1.0',
   _URL     = 'http://github.com/kikito/inspect.lua',
@@ -393,19 +403,31 @@ function inspect.process(item)
    return processRecursive(inspect.encode, item, {}, {})
 end
 
--- this way one can simply prefix an i. to print
+--- Print all contents of a table in a tree representation, works with
+-- complex data structures and prints to STDOUT.
+--
+-- @function INSPECT.print(object)
+-- @param object complex table data structure
 function inspect.print(root, options)
    print(inspect.inspect(root, options))
    return root
 end
--- facilitation wrapper
--- this way one can simply prefix an i. to print
+
+--- Print all contents of a table to STDERR. Works same way as @{print}.
+--
+-- @function INSPECT.warn(object)
+-- @param object complex table data structure
 function inspect.warn(root, options)
    act(inspect.inspect(root, options))
    return root
 end
 
--- alias to the spy() function (clojurism from timbre)
+--- Print all contents of a table to STDERR and return same object as
+--- passthrough. Works same way as @{print}.
+--
+-- @function INSPECT.spy(object)
+-- @param object complex table data structure
+-- @return object itself (passthrough for nesting)
 inspect.spy = inspect.warn
 
 setmetatable(inspect, { __call = function(_, ...) return inspect.print(...) end })
