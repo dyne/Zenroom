@@ -25,7 +25,7 @@ right = OCTET.string([[Minim quis typewriter ut. Deep v ut man braid neutra culp
 teststr = right:string()
 test64  = right:base64()
 testU64 = right:url64()
-test58  = right:base58()
+-- test58  = right:base58()
 testhex = right:hex()
 
 print '== test octet copy'
@@ -54,11 +54,11 @@ dotest(left, right)
 dotest(left:url64(), testU64)
 dotest(hash:process(left), hash:process(right))
 
-print '== test base58 import/export'
-left = OCTET.base58(test58)
-dotest(left, right)
-dotest(left:base58(), test58)
-dotest(hash:process(left), hash:process(right))
+-- print '== test base58 import/export'
+-- left = OCTET.base58(test58)
+-- dotest(left, right)
+-- dotest(left:base58(), test58)
+-- dotest(hash:process(left), hash:process(right))
 
 
 print '== test hex import/export'
@@ -84,7 +84,7 @@ function jsontest(f,reason)
    ECP.new(f(right['public'])) -- test if ecp point on curve
 end
 jsontest(hex,"hex")
-jsontest(base58,"base58")
+-- jsontest(base58,"base58")
 jsontest(url64,"url64")
 jsontest(base64,"base64")
 -- jsontest(bin,"bin") -- TODO: fix
@@ -106,7 +106,7 @@ function jsoncryptotest(f)
 			 .._G[f](dint).."\n".._G[f](key.private))
 end
 jsoncryptotest('hex')
-jsoncryptotest('base58')
+-- jsoncryptotest('base58')
 jsoncryptotest('base64')
 jsoncryptotest('url64')
 -- jsoncryptotest('bin') -- TODO: fix

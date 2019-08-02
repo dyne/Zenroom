@@ -28,12 +28,27 @@
 //  known at the time of instantiation. It is possible to create OCTET
 //  instances using the new() method:
 //
-//  <code>message = octet.new(64) -- creates a 64 bytes long octet</code>
+//  <code>message = OCTET.new(64) -- creates a 64 bytes long octet</code>
 //
-//  Octets can export their contents to portable formats as sequences
-//  of @{base64} or @{base58} or @{hex} strings just using their
-//  appropriate methods. They can also be exported to Lua's @{array}
-//  format.
+//  The code above fills all 64 bytes with zeroes; to initialise with
+//  random data is possible to use the @{OCTET.random} function:
+//
+//  <code>random = OCTET.random(32) -- creates a 32 bytes random octet</code>
+//
+//  Octets can export their contents to a simple @{string} or more
+//  portable encodings as sequences of @{url64}, @{base64}, @{hex} or
+//  even @{bin} as sequences of binary 0 and 1. They can also be
+//  exported to Lua's @{array} format with one element per byte.
+//
+//  @usage
+//  -- import a string as octet using the shortcut function str()
+//  hello = str("Hello, World!")
+//  -- print in various encoding formats
+//  print(hello:string()) -- print octet as string
+//  print(hello:hex())    -- print octet as hexadecimal sequence
+//  print(hello:base64()) -- print octet as base64
+//  print(hello:url64())  -- print octet as base64 url (preferred)
+//  print(hello:bin())    -- print octet as a sequence of 0 and 1
 //
 //  @module OCTET
 //  @author Denis "Jaromil" Roio
@@ -62,8 +77,8 @@
 extern zenroom_t *Z;
 
 // from base58.c
-extern int b58tobin(void *bin, size_t *binszp, const char *b58, size_t b58sz);
-extern int b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz);
+// extern int b58tobin(void *bin, size_t *binszp, const char *b58, size_t b58sz);
+// extern int b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz);
 
 // from zenroom types that are convertible to octet
 // they don't do any internal memory allocation
@@ -78,7 +93,7 @@ static int _max(int x, int y) { if(x > y) return x;	else return y; }
 // decoded string
 #include <ctype.h>
 static int getlen_base64(int len) {	return( ((3+(4*(len/3))) & ~0x03)+0x0f ); }
-static int getlen_base58(int len) {	return( ((3+(5*(len/3))) & ~0x03)+0x0f ); }
+// static int getlen_base58(int len) {	return( ((3+(5*(len/3))) & ~0x03)+0x0f ); }
 
 // assumes null terminated string
 // returns 0 if not base else length of base encoded string
@@ -99,22 +114,22 @@ int is_base64(const char *in) {
 	return c;
 }
 
-extern const int8_t b58digits_map[];
-int is_base58(const char *in) {
-	if(!in) {
-		HEREs("null string in is_base58");
-		return 0; }
-	int c;
-	for(c=0; in[c]!='\0'; c++) {
-		if(b58digits_map[(int8_t)in[c]]==-1) {
-			func(NULL,"invalid base58 digit");
-			return 0; }
-		if(in[c] & 0x80) {
-			func(NULL,"high-bit set on invalid digit");
-			return 0; }
-	}
-	return c;
-}
+// extern const int8_t b58digits_map[];
+// int is_base58(const char *in) {
+// 	if(!in) {
+// 		HEREs("null string in is_base58");
+// 		return 0; }
+// 	int c;
+// 	for(c=0; in[c]!='\0'; c++) {
+// 		if(b58digits_map[(int8_t)in[c]]==-1) {
+// 			func(NULL,"invalid base58 digit");
+// 			return 0; }
+// 		if(in[c] & 0x80) {
+// 			func(NULL,"high-bit set on invalid digit");
+// 			return 0; }
+// 	}
+// 	return c;
+// }
 
 int is_hex(const char *in) {
 	if(!in) { ERROR(); return 0; }
@@ -243,12 +258,12 @@ int o_destroy(lua_State *L) {
 	return 0;
 }
 
-/// Global Octet Functions
+/// Global OCTET Functions
 // @section OCTET
 //
-// So called "global functions" are all prefixed by <b>octet.</b>,
-// operate on one or more octet objects and always return a new octet
-// resulting from the operation.
+// The "global OCTET functions" are all prefixed by <b>OCTET.</b>
+// (please note the separator is a "." dot) and always return a new
+// octet resulting from the operation.
 //
 // This is a difference with "object methods" listed in the next
 // section which are operating on the octet itself, doing "in place"
@@ -262,7 +277,7 @@ omitted. All operations exceeding the octet's size will truncate
 excessing data. Octets cannot be resized.
 
 @function OCTET.new(length)
-@int[opt=4096] length maximum length in bytes
+@int[opt=64] length maximum length in bytes
 @return octet newly instantiated octet
 */
 static int newoctet (lua_State *L) {
@@ -273,7 +288,7 @@ static int newoctet (lua_State *L) {
 		octet *arg = o_arg(L,1);
 		o = o_dup(L,arg);
 		return 1; }
-	const int len = luaL_optinteger(L, 1, MAX_OCTET);
+	const int len = luaL_optinteger(L, 1, 64);
 	if(!len) {
 		lerror(L, "octet created with zero length");
 		return 0; }
@@ -329,17 +344,17 @@ static int lua_is_url64(lua_State *L) {
 	return 1;
 }
 
-static int lua_is_base58(lua_State *L) {
-	const char *s = lua_tostring(L, 1);
-	luaL_argcheck(L, s != NULL, 1, "string expected");
-	int len = is_base58(s);
-	if(!len) {
-		lua_pushboolean(L, 0);
-		func(L, "string is not a valid base58 sequence");
-		return 1; }
-	lua_pushboolean(L, 1);
-	return 1;
-}
+// static int lua_is_base58(lua_State *L) {
+// 	const char *s = lua_tostring(L, 1);
+// 	luaL_argcheck(L, s != NULL, 1, "string expected");
+// 	int len = is_base58(s);
+// 	if(!len) {
+// 		lua_pushboolean(L, 0);
+// 		func(L, "string is not a valid base58 sequence");
+// 		return 1; }
+// 	lua_pushboolean(L, 1);
+// 	return 1;
+// }
 static int lua_is_hex(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "string expected");
@@ -391,28 +406,28 @@ static int from_url64(lua_State *L) {
 	return 1;
 }
 
-static int from_base58(lua_State *L) {
-	const char *s = lua_tostring(L, 1);
-	luaL_argcheck(L, s != NULL, 1, "base58 string expected");
-	int len = is_base58(s);
-	if(!len) {
-		lerror(L, "base58 string contains invalid characters");
-		return 0; }
-	size_t binmax = len + len + len;
-	size_t binlen = binmax;
-	char *dst = zen_memory_alloc(binmax);
-	if(!b58tobin(dst, &binlen, s, len)) {
-		zen_memory_free(dst);
-		lerror(L,"Error in conversion from base58 for string: %s",s);
-		return 0; }
-	octet *o = o_new(L, binlen);
-	o->len = binlen;
-	// b58tobin returns its result at the _end_ of buf!!!
-	int l,r;
-	for(l=binlen, r=binmax; l>=0; l--, r--) o->val[l] = dst[r];
-	zen_memory_free(dst);
-	return 1;
-}
+// static int from_base58(lua_State *L) {
+// 	const char *s = lua_tostring(L, 1);
+// 	luaL_argcheck(L, s != NULL, 1, "base58 string expected");
+// 	int len = is_base58(s);
+// 	if(!len) {
+// 		lerror(L, "base58 string contains invalid characters");
+// 		return 0; }
+// 	size_t binmax = len + len + len;
+// 	size_t binlen = binmax;
+// 	char *dst = zen_memory_alloc(binmax);
+// 	if(!b58tobin(dst, &binlen, s, len)) {
+// 		zen_memory_free(dst);
+// 		lerror(L,"Error in conversion from base58 for string: %s",s);
+// 		return 0; }
+// 	octet *o = o_new(L, binlen);
+// 	o->len = binlen;
+// 	// b58tobin returns its result at the _end_ of buf!!!
+// 	int l,r;
+// 	for(l=binlen, r=binmax; l>=0; l--, r--) o->val[l] = dst[r];
+// 	zen_memory_free(dst);
+// 	return 1;
+// }
 
 static int from_string(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
@@ -536,18 +551,23 @@ static int concat_n(lua_State *L) {
 
 
 /// Object Methods
-// @type octet
+// @type OCTET
 //
 // This section lists methods that can be called as members of the
-// 'octet' objects, using a semicolon notation instead of a
+// <b>OCTET:</b> objects, using a ":" semicolon notation instead of a
 // dot. Example synopsis:
 //
 // <pre class="example">
-// octet:<span class="global">method</span>(<span class="string">args</span>)
+// random = OCTET.random(32) -- global OCTET constructor using the dot
+// print( random:<span class="global">hex</span>() ) -- method call on the created object using the colon
 // </pre>
 //
-// Octet contents are never changed: the methods always return a new
-// octet with the requested changes applied.
+// In the example above we create a new "random" OCTET variable with
+// 32 bytes of randomness, then call the ":hex()" method on it to print
+// it out as an hexadecimal sequence.
+//
+// The contents of an octet object are never changed this way: methods
+// always return a new octet with the requested changes applied.
 //
 
 /***
@@ -601,7 +621,7 @@ static int to_url64 (lua_State *L) {
 }
 
 
-/***
+/*
 Print an octet in base58 notation.
 
 This encoding uses the same alphabet as Bitcoin addresses. Why base58 instead of standard base64 encoding?
@@ -614,27 +634,27 @@ This encoding uses the same alphabet as Bitcoin addresses. Why base58 instead of
     @function octet:base58()
     @return a string representing the octet's contents in base58
 */
-static int to_base58(lua_State *L) {
-	octet *o = o_arg(L,1);	SAFE(o);
-	if(!o->len || !o->val) {
-		lerror(L, "base64 cannot encode an empty octet");
-		return 0; }
-	if(o->len < 3) {
-		// there is a bug in luke-jr's implementation of base58 (fixed
-		// in bitcoin-core) when encoding strings smaller than 3 bytes
-		// the 'j' counter being unsigned and initialised at size-2 in
-		// the carry inner loop flips to 18446744073709551615
-		lerror(L,"base58 cannot encode octets smaller than 3 bytes");
-		return 0; }
-	int newlen = getlen_base58(o->len);
-	char *b = zen_memory_alloc(newlen);
-	size_t b58len = newlen;
-	b58enc(b, &b58len, o->val, o->len);
-	// b[b58len] = '\0'; // already present, but for safety
-	lua_pushlstring(L,b,b58len-1);
-	zen_memory_free(b);
-	return 1;
-}
+// static int to_base58(lua_State *L) {
+// 	octet *o = o_arg(L,1);	SAFE(o);
+// 	if(!o->len || !o->val) {
+// 		lerror(L, "base64 cannot encode an empty octet");
+// 		return 0; }
+// 	if(o->len < 3) {
+// 		// there is a bug in luke-jr's implementation of base58 (fixed
+// 		// in bitcoin-core) when encoding strings smaller than 3 bytes
+// 		// the 'j' counter being unsigned and initialised at size-2 in
+// 		// the carry inner loop flips to 18446744073709551615
+// 		lerror(L,"base58 cannot encode octets smaller than 3 bytes");
+// 		return 0; }
+// 	int newlen = getlen_base58(o->len);
+// 	char *b = zen_memory_alloc(newlen);
+// 	size_t b58len = newlen;
+// 	b58enc(b, &b58len, o->val, o->len);
+// 	// b[b58len] = '\0'; // already present, but for safety
+// 	lua_pushlstring(L,b,b58len-1);
+// 	zen_memory_free(b);
+// 	return 1;
+// }
 
 /***
     Converts an octet into an array of bytes, compatible with Lua's transformations on <a href="https://www.lua.org/pil/11.1.html">arrays</a>.
@@ -664,7 +684,7 @@ static int to_array(lua_State *L) {
 /***
     Print an octet as string.
 
-    @function octet:string()
+    @function octet:str()
     @return a string representing the octet's contents
 */
 static int to_string(lua_State *L) {
@@ -718,8 +738,7 @@ static int to_bin(lua_State *L) {
 }
 
 /***
-    Pad an octet with leading zeroes up to indicated length or its
-    maximum size.
+    Pad an octet with leading zeroes up to indicated length or its maximum size.
 
     @int[opt=octet:max] length pad to this size, will use maximum octet size if omitted
     @return new octet padded at length
@@ -839,19 +858,19 @@ int luaopen_octet(lua_State *L) {
 		{"xor",   xor_n},
 		{"is_base64", lua_is_base64},
 		{"is_url64", lua_is_url64},
-		{"is_base58", lua_is_base58},
+//		{"is_base58", lua_is_base58},
 		{"is_hex", lua_is_hex},
 		{"is_bin", lua_is_bin},
 		{"from_base64",from_base64},
 		{"from_url64",from_url64},
-		{"from_base58",from_base58},
+//		{"from_base58",from_base58},
 		{"from_string",from_string},
 		{"from_str",   from_string},
 		{"from_hex",   from_hex},
 		{"from_bin",   from_bin},
 		{"base64",from_base64},
 		{"url64",from_url64},
-		{"base58",from_base58},
+//		{"base58",from_base58},
 		{"string",from_string},
 		{"str",   from_string},
 		{"hex",   from_hex},
@@ -859,7 +878,7 @@ int luaopen_octet(lua_State *L) {
 		{"to_hex"   , to_hex},
 		{"to_base64", to_base64},
 		{"to_url64",  to_url64},
-		{"to_base58", to_base58},
+//		{"to_base58", to_base58},
 		{"to_string", to_string},
 		{"to_str",    to_string},
 		{"to_array",  to_array},
@@ -872,7 +891,7 @@ int luaopen_octet(lua_State *L) {
 		{"hex"   , to_hex},
 		{"base64", to_base64},
 		{"url64",  to_url64},
-		{"base58", to_base58},
+//		{"base58", to_base58},
 		{"string", to_string},
 		{"str",    to_string},
 		{"array",  to_array},
