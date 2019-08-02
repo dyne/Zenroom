@@ -151,6 +151,7 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data, char *seed) {
 	lua_pushinteger(L, 0);  /* 1st argument */
 	lua_pushlightuserdata(L, NULL); /* 2nd argument */
 	int status = lua_pcall(L,2,1,0);
+	// int status = zen_init_pmain(L);
 	if(status != LUA_OK) {
 		error(L,"%s: %s (%u)", __func__, "Lua initialization failed",status);
 		return NULL;
@@ -207,7 +208,6 @@ void zen_teardown(zenroom_t *Z) {
 	if(MEM) {
 		if(Z) (*MEM->free)(Z);
 		(*MEM->free)(MEM);
-		func(NULL,"teardown completed");
 		return; }
 	warning(NULL,"MEM not found");
 	if(Z) free(Z);
