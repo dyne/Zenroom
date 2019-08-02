@@ -4,7 +4,11 @@ himem-tests = \
  @${1} test/sort.lua && \
  ${1} test/literals.lua && \
  ${1} test/pm.lua && \
- ${1} test/nextvar.lua
+ ${1} test/nextvar.lua && \
+ ${1} test/gc.lua && \
+ ${1} test/calls.lua && \
+ ${1} test/constructs.lua && \
+ ${1} test/cjson-test.lua
 
 ## GC tests break memory management with umm
 # in particular steps (2)
@@ -24,7 +28,8 @@ lowmem-tests = \
 		${1} test/events.lua && \
 		${1} test/code.lua && \
 		${1} test/locals.lua && \
-		${1} test/tables.lua
+		${1} test/tables.lua && \
+	    ${1} test/coroutine.lua
 
 crypto-tests = \
 	@${1} test/octet.lua && \
@@ -90,6 +95,7 @@ check-shared: test-exec-lowmem := ${pwd}/src/zenroom-shared
 check-shared: test-exec := ${pwd}/src/zenroom-shared
 check-shared:
 	${test-exec} test/constructs.lua
+	$(call himem-tests,${test-exec})
 	$(call lowmem-tests,${test-exec-lowmem})
 	$(call determinism-tests,${test-exec-lowmem})
 	$(call crypto-tests,${test-exec-lowmem})

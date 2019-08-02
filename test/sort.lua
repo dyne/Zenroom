@@ -248,14 +248,14 @@ perm{1,2,3,3,5}
 perm{1,2,3,4,5,6}
 perm{2,2,3,3,5,6}
 
-function timesort (a, n, func, msg, pre)
-  local x = os.clock()
-  table.sort(a, func)
-  x = (os.clock() - x) * 1000
-  pre = pre or ""
-  print(string.format("%ssorting %d %s elements in %.2f msec.", pre, n, msg, x))
-  check(a, func)
-end
+-- function timesort (a, n, func, msg, pre)
+--   local x = os.clock()
+--   table.sort(a, func)
+--   x = (os.clock() - x) * 1000
+--   pre = pre or ""
+--   print(string.format("%ssorting %d %s elements in %.2f msec.", pre, n, msg, x))
+--   check(a, func)
+-- end
 
 limit = 50000
 if _soft then limit = 5000 end
@@ -265,27 +265,27 @@ for i=1,limit do
   a[i] = math.random()
 end
 
-timesort(a, limit, nil, "random")
+-- timesort(a, limit, nil, "random")
 
-timesort(a, limit, nil, "sorted", "re-")
+-- timesort(a, limit, nil, "sorted", "re-")
 
 a = {}
 for i=1,limit do
   a[i] = math.random()
 end
 
-x = os.clock(); i=0
-table.sort(a, function(x,y) i=i+1; return y<x end)
-x = (os.clock() - x) * 1000
-print(string.format("Invert-sorting other %d elements in %.2f msec., with %i comparisons",
-      limit, x, i))
-check(a, function(x,y) return y<x end)
+-- x = os.clock(); i=0
+-- table.sort(a, function(x,y) i=i+1; return y<x end)
+-- x = (os.clock() - x) * 1000
+-- print(string.format("Invert-sorting other %d elements in %.2f msec., with %i comparisons",
+--       limit, x, i))
+-- check(a, function(x,y) return y<x end)
 
 
 table.sort{}  -- empty array
 
 for i=1,limit do a[i] = false end
-timesort(a, limit,  function(x,y) return nil end, "equal")
+-- timesort(a, limit,  function(x,y) return nil end, "equal")
 
 for i,v in pairs(a) do assert(v == false) end
 

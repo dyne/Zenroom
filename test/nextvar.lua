@@ -250,17 +250,17 @@ end
 assert(n.n == 9000)
 a = nil
 
-do   -- clear global table
-  local a = {}
-  for n,v in pairs(_G) do a[n]=v end
-  for n,v in pairs(a) do
-    if not package.loaded[n] and type(v) ~= "function" and
-       not string.find(n, "^[%u_]") then
-     _G[n] = nil
-    end
-    collectgarbage()
-  end
-end
+-- do   -- clear global table
+--   local a = {}
+--   for n,v in pairs(_G) do a[n]=v end
+--   for n,v in pairs(a) do
+--     if not package.loaded[n] and type(v) ~= "function" and
+--        not string.find(n, "^[%u_]") then
+--      _G[n] = nil
+--     end
+--     collectgarbage()
+--   end
+-- end
 
 
 -- 

@@ -43,14 +43,14 @@ DATA = [[
 ]]
 
 print 'import'
--- i = {}
-t,i = JSON.decode(DATA)
--- i = t
+i = {}
+t = JSON.decode(DATA)
+i = t
 print("t:"..type(t).." i:"..type(i))
 
-print 'table clone'
--- i = t -- table.deepcopy(t)
-print("t:"..type(t).." i:"..type(i))
+-- print 'table clone'
+-- i = table.deepcopy(t)
+-- print("t:"..type(t).." i:"..type(i))
 
 
 print 'inspect i'

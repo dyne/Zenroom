@@ -5,7 +5,7 @@
 -- Note: The output of this script is easier to read with "less -S"
 
 -- local json = require "cjson_full"
--- local json_safe = require "json"
+local json_safe = JSON -- require "json"
 local unpack = table.unpack
 
 local function json_encode_output_type(value)
@@ -102,7 +102,7 @@ local cjson_tests = {
     -- Test API variables
     { "Check module name, version",
       function () return json._NAME, json._VERSION end, { },
-      true, { "cjson", "2.1devel" } },
+      true, { "cjson", "2.1zenroom" } },
 
     -- Test decoding simple types
     { "Decode string",

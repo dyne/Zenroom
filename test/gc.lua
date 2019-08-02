@@ -121,43 +121,43 @@ a:test()
 do local f = function () end end
 
 
-print("functions with errors")
-prog = [[
-do
-  a = 10;
-  function foo(x,y)
-    a = sin(a+0.456-0.23e-12);
-    return function (z) return sin(%x+z) end
-  end
-  local x = function (w) a=a+w; end
-end
-]]
-do
-  local step = 1
-  if _soft then step = 13 end
-  for i=1, string.len(prog), step do
-    for j=i, string.len(prog), step do
-      pcall(load(string.sub(prog, i, j), ""))
-    end
-  end
-end
+-- print("functions with errors")
+-- prog = [[
+-- do
+--   a = 10;
+--   function foo(x,y)
+--     a = sin(a+0.456-0.23e-12);
+--     return function (z) return sin(%x+z) end
+--   end
+--   local x = function (w) a=a+w; end
+-- end
+-- ]]
+-- do
+--   local step = 1
+--   if _soft then step = 13 end
+--   for i=1, string.len(prog), step do
+--     for j=i, string.len(prog), step do
+--       pcall(load(string.sub(prog, i, j), ""))
+--     end
+--   end
+-- end
 
-foo = nil
-print('long strings')
-x = "01234567890123456789012345678901234567890123456789012345678901234567890123456789"
-assert(string.len(x)==80)
-s = ''
-n = 0
-k = math.min(300, (math.maxinteger // 80) // 2)
-while n < k do s = s..x; n=n+1; j=tostring(n)  end
-assert(string.len(s) == k*80)
-s = string.sub(s, 1, 10000)
-s, i = string.gsub(s, '(%d%d%d%d)', '')
-assert(i==10000 // 4)
-s = nil
-x = nil
+-- foo = nil
+-- print('long strings')
+-- x = "01234567890123456789012345678901234567890123456789012345678901234567890123456789"
+-- assert(string.len(x)==80)
+-- s = ''
+-- n = 0
+-- k = math.min(300, (math.maxinteger // 80) // 2)
+-- while n < k do s = s..x; n=n+1; j=tostring(n)  end
+-- assert(string.len(s) == k*80)
+-- s = string.sub(s, 1, 10000)
+-- s, i = string.gsub(s, '(%d%d%d%d)', '')
+-- assert(i==10000 // 4)
+-- s = nil
+-- x = nil
 
-assert(_G["while"] == 234)
+-- assert(_G["while"] == 234)
 
 
 print("steps")
@@ -341,43 +341,43 @@ GC()
 
 
 -- testing errors during GC
-do
-collectgarbage("stop")   -- stop collection
-local u = {}
-local s = {}; setmetatable(s, {__mode = 'k'})
-setmetatable(u, {__gc = function (o)
-  local i = s[o]
-  s[i] = true
-  assert(not s[i - 1])   -- check proper finalization order
-  if i == 8 then error("here") end   -- error during GC
-end})
+-- do
+-- collectgarbage("stop")   -- stop collection
+-- local u = {}
+-- local s = {}; setmetatable(s, {__mode = 'k'})
+-- setmetatable(u, {__gc = function (o)
+--   local i = s[o]
+--   s[i] = true
+--   assert(not s[i - 1])   -- check proper finalization order
+--   if i == 8 then error("here") end   -- error during GC
+-- end})
 
-for i = 6, 10 do
-  local n = setmetatable({}, getmetatable(u))
-  s[n] = i
-end
+-- for i = 6, 10 do
+--   local n = setmetatable({}, getmetatable(u))
+--   s[n] = i
+-- end
 
-assert(not pcall(collectgarbage))
-for i = 8, 10 do assert(s[i]) end
+-- assert(not pcall(collectgarbage))
+-- for i = 8, 10 do assert(s[i]) end
 
-for i = 1, 5 do
-  local n = setmetatable({}, getmetatable(u))
-  s[n] = i
-end
+-- for i = 1, 5 do
+--   local n = setmetatable({}, getmetatable(u))
+--   s[n] = i
+-- end
 
-collectgarbage()
-for i = 1, 10 do assert(s[i]) end
+-- collectgarbage()
+-- for i = 1, 10 do assert(s[i]) end
 
-getmetatable(u).__gc = false
+-- getmetatable(u).__gc = false
 
 
 -- __gc errors with non-string messages
-setmetatable({}, {__gc = function () error{} end})
-local a, b = pcall(collectgarbage)
-assert(not a and type(b) == "string" and string.find(b, "error in __gc"))
+-- setmetatable({}, {__gc = function () error{} end})
+-- local a, b = pcall(collectgarbage)
+-- assert(not a and type(b) == "string" and string.find(b, "error in __gc"))
 
-end
-print '+'
+-- end
+-- print '+'
 
 
 -- testing userdata
@@ -442,9 +442,9 @@ assert(m==10)
 
 
 -- errors during collection
-u = setmetatable({}, {__gc = function () error "!!!" end})
-u = nil
-assert(not pcall(collectgarbage))
+-- u = setmetatable({}, {__gc = function () error "!!!" end})
+-- u = nil
+-- assert(not pcall(collectgarbage))
 
 
 if not _soft then
