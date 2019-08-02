@@ -45,8 +45,8 @@ J.decode = function(str)
    -- fixes strange behavior of tables returned
    -- second value returned should be used
    -- first one becomes a string after first transformation
-   -- TODO: investigate this behavior
-   return t,t
+   -- TODO: investigate this behavior, returning one now since seems fixed
+   return t
 end
 
 J.encode = function(tab)

@@ -1,13 +1,11 @@
 -- override type to recognize zenroom's types
 luatype = type
-function type(var)
+_G['type'] = function(var)
    local simple = luatype(var)
    if simple == "userdata" then
-	  if getmetatable(var).__name then
-		 return(getmetatable(var).__name)
-	  else
-		 return("unknown")
-	  end
+	  local meta = getmetatable(var)
+	  if meta then return(meta.__name)
+	  else return("unknown") end
    else return(simple) end
 end
 function iszen(n)
@@ -88,7 +86,7 @@ function _map(t, f, ...)
    -- if #t == 0  then return {} end
 
    local _t = {}
-   for index,value in _pairs(t) do
+   for index,value in sort_pairs(t) do
 	  local k, kv, v = index, f(index,value,...)
 	  _t[v and kv or k] = v or kv
    end
