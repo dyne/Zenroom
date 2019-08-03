@@ -107,7 +107,7 @@ void zen_teardown(zenroom_t *zenroom);
 #ifndef MAX_STRING
 #define MAX_STRING 20480 // max 20KiB strings
 #endif
-#define MAX_OCTET 20480 // max 20KiB octets
+#define MAX_OCTET 4000000 // max 4MiB for octets
 
 #define LUA_BASELIBNAME "_G"
 

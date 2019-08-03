@@ -153,10 +153,13 @@ int is_bin(const char *in) {
 
 // REMEMBER: newuserdata already pushes the object in lua's stack
 octet* o_new(lua_State *L, const int size) {
-	if(size<=0) return NULL;
-	if(size>MAX_FILE) {
+	if(size<=0) {
+		error(L, "Cannot create octet, size zero or less");
+		lerror(L, "execution aborted");
+		return NULL; }
+	if(size>MAX_OCTET) {
 		error(L, "Cannot create octet, size too big: %u", size);
-		lerror(L, "operation aborted");
+		lerror(L, "execution aborted");
 		return NULL; }
 	octet *o = (octet *)lua_newuserdata(L, sizeof(octet));
 	if(!o) {
@@ -233,7 +236,7 @@ octet* o_arg(lua_State *L,int n) {
 	// if executing here, something is pushed into Lua's stack
 	// but this is an internal function to gather arguments, so
 	// should be popped before returning the new octet
-	if(o->len>MAX_FILE) {
+	if(o->len>MAX_OCTET) {
 		error(L, "argument %u octet too long: %u bytes",n,o->len);
 		lerror(L, "operation aborted");
 		return NULL; }
@@ -281,21 +284,21 @@ excessing data. Octets cannot be resized.
 @return octet newly instantiated octet
 */
 static int newoctet (lua_State *L) {
-	const char *s = lua_tostring(L, 1);
 	octet *o;
-	if(s) {
-		// implicit conversion from string using o_arg
-		octet *arg = o_arg(L,1);
-		o = o_dup(L,arg);
-		return 1; }
-	const int len = luaL_optinteger(L, 1, 64);
-	if(!len) {
-		lerror(L, "octet created with zero length");
-		return 0; }
-	o = o_new(L,len);
-	SAFE(o);
+	size_t len = luaL_optnumber(L, 1, 0);
+	o = o_new(L,len); SAFE(o);
 	OCT_empty(o);
 	return 1;  /* new userdatum is already on the stack */
+}
+
+static int filloctet(lua_State *L) {
+	int i;
+	octet *o = o_arg(L,1); SAFE(o);
+	octet *fill = o_arg(L,2); SAFE(fill);
+	for(i=0; i<o->max; i++)
+		o->val[i] = fill->val[i % fill->len];
+	o->len = o->max;
+	return 0;
 }
 
 /***
@@ -470,11 +473,11 @@ static int from_hex(lua_State *L) {
 	// luaL_argcheck(L, s != NULL, 1, "hex string sequence expected");
 	int len = is_hex(s);
 	func(L,"hex string sequence length: %u",len);
-	if(!len || len>MAX_STRING*2) {
-		error(L, "invalid hex sequence size: %u", len);
+	if(!len || len>MAX_STRING<<1) { // *2 hex tuples
+		error(L, "hex sequence too long: %u bytes", len<<1);
 		lua_pushboolean(L,0);
 		return 1; }
-	octet *o = o_new(L, len); // can be halved
+	octet *o = o_new(L, len); // TODO: can be halved
 	int i, j;
 	for(i=0, j=0; s[j]!=0; i++, j+=2)
 		o->val[i] = (hextable[(short)s[j]]<<4) + hextable[(short)s[j+1]];
@@ -784,8 +787,8 @@ static int eq(lua_State *L) {
 		lua_pushboolean(L, 0);
 		return 1; }
 	int i;
-	for (i=0; i<x->len; i++) {
-		if (x->val[i]!=y->val[i]) {
+	for (i=0; i<x->len; i++) { // xor
+		if (x->val[i] ^ y->val[i]) {
 			lua_pushboolean(L, 0);
 			return 1; }
 	}
@@ -888,6 +891,7 @@ int luaopen_octet(lua_State *L) {
 		{NULL,NULL}
 	};
 	const struct luaL_Reg octet_methods[] = {
+		{"fill"  , filloctet},
 		{"hex"   , to_hex},
 		{"base64", to_base64},
 		{"url64",  to_url64},
