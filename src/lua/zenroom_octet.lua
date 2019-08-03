@@ -83,7 +83,27 @@ end
 
 -- serialize an array containing any type of cryptographic numbers
 octet.serialize = function(arr)
-   concat = O.new()
+   total = 0
+   map(arr, function(a) 
+		  t = type(a)
+		  -- supported lua native types
+		  if(t == "string") then total = total + #a return
+		  elseif not iszen(t) then
+			 error("OCTET.serialize: unsupported type: "..t)
+		  end
+		  if(t == "zenroom.octet") then
+			 total = total + #a
+		  elseif(t == "zenroom.big"
+					or
+					t == "zenroom.ecp"
+					or
+				 t == "zenroom.ecp2") then
+			 total = total + #a:octet()
+		  else
+			 error("OCTET.serialize: unsupported zenroom type: "..t)
+		  end
+   end)
+   concat = O.new(total)
    map(arr,function(e)
 		  t = type(e)
 		  -- supported lua native types
