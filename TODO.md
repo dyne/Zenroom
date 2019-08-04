@@ -26,6 +26,24 @@ https://github.com/pakozm/lua-happy-prime-numbers/blob/master/happy_primes.lua
 
 ## Add-ons
 
+### BLS12-381
+
+https://github.com/apache/incubator-milagro-crypto-c/issues/16
+
+https://github.com/ethereum/eth2.0-specs/blob/dev/specs/bls_signature.md
+
+https://github.com/pairingwg/bls_standard
+
+https://github.com/sigp/milagro_bls/
+
+https://github.com/lovesh
+
+### master/slave states for scripting isolation
+
+https://github.com/keplerproject/rings/blob/master/src/rings.c
+
+maybe also useful for redroom
+
 ### Symbolic Calculus
 
 https://github.com/pakozm/SymLua
