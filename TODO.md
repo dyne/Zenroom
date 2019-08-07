@@ -26,6 +26,12 @@ https://github.com/pakozm/lua-happy-prime-numbers/blob/master/happy_primes.lua
 
 ## Add-ons
 
+### threshold and BLS-SSS
+
+https://github.com/dashpay/dips/blob/master/dip-0006/bls_m-of-n_threshold_scheme_and_dkg.md
+
+https://blog.dash.org/secret-sharing-and-threshold-signatures-with-bls-954d1587b5f
+
 ### BLS12-381
 
 https://github.com/apache/incubator-milagro-crypto-c/issues/16
