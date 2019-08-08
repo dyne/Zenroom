@@ -72,7 +72,7 @@ var ZR = (function() {
 
     const loadCoconutExamples = (e) => {
         const name = $(e.target).attr('id');
-        const base_url = "https://raw.githubusercontent.com/DECODEproject/dddc-pilot-contracts/master/src/"
+        const base_url = "https://raw.githubusercontent.com/DECODEproject/dddc-pilot-contracts/v1.0/src/"
         const editor = $('#zencode')[0].env.editor
         editor.setValue("")
         $.get(base_url + name, value => {
