@@ -1,7 +1,7 @@
 -- introspective script to compile a list of completion terms
 
 local modules = { 
-   ["OCTET"] = OCTET, ["octet"] = OCTET.new(),
+   ["OCTET"] = OCTET, ["octet"] = OCTET.new(8),
    ["ECDH"] = ECDH, ["ecdh"] = ECDH.new(),
 --   ["ECP"] = ECP, ["ecp"] = ECP.new(ECP.generator()),
    ["BIG"] = BIG, ["big"] = BIG.new(1),
