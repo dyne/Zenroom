@@ -24,87 +24,141 @@ local zencode = {
    id = 0,
    matches = {},
    verbosity = 0,
-   schemas = { }
+   schemas = { },
+   OK = true -- set false by asserts
 }
 
 -- Zencode HEAP globals
-IN = { } -- import global DATA from json
-IN.KEYS = { } -- import global KEYS from json
-ACK = ACK or { }
-OUT = OUT or { }
+IN = { }         -- Given processing, import global DATA from json
+IN.KEYS = { }    -- Given processing, import global KEYS from json
+TMP = TMP or { } -- Given processing, temp buffer for ack*->validate->push*
+ACK = ACK or { } -- When processing,  destination for push*
+OUT = OUT or { } -- print out
+
+-- Zencode init traceback
+_G['ZEN_traceback'] = "Zencode traceback:\n"
 
 
--- ZEN:push(name, obj [,MEM])
---
--- moves 'obj' inside MEM.name
---
--- MEM += { name = obj }
-function zencode:push(name, obj, where)
-   WHERE = where or 'ACK'
-   ZEN:trace("f   push() "..name.." "..type(obj).." "..WHERE)
+function zencode:ack(name, object)
+   local obj = object or TMP[name]
    ZEN.assert(obj, "Object not found: ".. name)
-   local MEM = _G[WHERE]
-   ZEN.assert(MEM, "Memory not found: ".. WHERE)
-   if MEM[name] then -- already existing, create an array
-	  if type(MEM[name]) ~= "table" then
-		 MEM[name] = { MEM[name] }
+   ZEN:trace("f   pick() "..name.." "..type(obj))
+   if ACK[name] then -- already existing, create an array
+	  if type(ACK[name]) ~= "table" then
+		 ACK[name] = { ACK[name] }
 	  end
-	  table.insert(MEM[name], obj)
+	  table.insert(ACK[name], obj)
    else
-	  -- ZEN.assert(not MEM[name], "Cannot overwrite object: "..WHERE.."."..name)
-	  MEM[name] = obj
+	  ACK[name] = obj
    end
-   _G[WHERE] = MEM
+   -- delete the record from TMP if necessary
+   if not object then TMP[name] = nil end
+   return(ZEN.OK)
 end
 
--- ZEN:mypush(name, obj [,MEM])
---
--- moves 'obj' inside MEM.whoami.name
---
--- MEM += { whoami += { name = obj } }
-function zencode:mypush(name, obj, where)
-   WHERE = where or 'ACK'
-   ZEN:trace("f   mypush() "..name.." "..type(obj).." "..WHERE)
-   ZEN.assert(_G['ACK'].whoami, "No identity specified")
+function zencode:ackmy(name, object)
+   local obj = object or TMP[name]
+   ZEN:trace("f   pushmy() "..name.." "..type(obj))
+   ZEN.assert(ACK.whoami, "No identity specified")
    ZEN.assert(obj, "Object not found: ".. name)
-   local MEM = _G[WHERE]
-   ZEN.assert(MEM, "Memory not found: ".. WHERE)
-   local me = MEM[ACK.whoami]
-   if not me then me = { } end
-   me[name] = obj
-   MEM[ACK.whoami] = me
-   _G[WHERE] = MEM
+   local me = ACK.whoami
+   if not ACK[me] then ACK[me] = { } end
+   ACK[me][name] = obj
+   if not object then tmp[name] = nil end
+   return(ZEN.OK)
 end
 
--- TODO: realign with global flatten in zenroom_common
--- returns a flat associative table of all objects in MEM
-function zencode:flatten(MEM)
-   local flat = { }
-   local function inner_flatten(arr)
-	  for k,v in ipairs(arr) do
-		 if type(v) == "table" then
-			flat[k] = v
-			inner_flatten(v)
-		 elseif(type(k) == "string") then
-			flat[k] = v
-		 end
+function zencode:validate(name)
+   ZEN.assert(name, "Import error: schema name is nil")
+   ZEN.assert(TMP[name], "Import error: object not found in TMP["..name.."]")
+   local s = ZEN.schemas[name]
+   ZEN.assert(s, "Import error: schema not found: "..name)
+   ZEN.assert(type(s) == 'function', "Import error: schema is not a function: "..name)
+   local res = s(TMP[name])
+   ZEN.assert(res, "Schema validation failed: "..name)
+   TMP[name] = res -- overwrite
+   return(ZEN.OK)
+end
+
+function zencode:validate_recur(obj, name)
+   ZEN.assert(name, "ZEN:validate_recur error: schema name is nil")
+   ZEN.assert(obj, "ZEN:validate_recur error: object is nil")
+   local s = ZEN.schemas[name]
+   ZEN.assert(s, "ZEN:validate_recur error: schema not found: "..name)
+   ZEN.assert(type(s) == 'function', "ZEN:validate_recur error: schema is not a function: "..name)
+   local res = s(obj)
+   ZEN.assert(res, "Schema validation failed: "..name)
+   return(res)
+end
+
+-- returns any object called 'what' found anywhere inside IN.*
+function zencode:pick(what)
+   ZEN:trace("f   find() "..what)
+   local got = IN.KEYS[what] -- try IN.KEYS
+   if got then
+      ZEN:trace("f   find() found IN.KEYS."..what)
+	  goto gotit
+   end
+   -- try KEYS.*.what (TODO: exclude ACK.whoami)
+   for k,v in pairs(IN.KEYS) do
+      if type(v) == "table" and v[what] then
+         got = v[what]
+         ZEN:trace("f   find() found IN.KEYS."..k.."."..what)
+         goto gotit
 	  end
    end
-   inner_flatten(_G[MEM])
-   return flat
+   -- try IN
+   got = IN[what]
+   if got then
+      ZEN:trace("f   find() found IN."..what)
+      goto gotit
+   end
+   -- try IN.*.what (TODO: exclude KEYS and ACK.whoami)
+   for k,v in pairs(IN) do
+      if type(v) == "table" and v[what] then
+         got = v[what]
+         ZEN:trace("f   find() found IN."..k.."."..what)
+         goto gotit
+      end
+   end
+   -- fail: not found
+   ZEN.assert(false, "Cannot find "..what.." anywhere")
+   TMP[what] = nil
+   ::gotit::
+   TMP[what] = got
+   return(ZEN.OK)
 end
 
--- returns any object called 'what' found anywhere in WHERE
-function zencode:find(what, where)
-   WHERE = where or 'IN'
-   ZEN:trace("f   find() "..what.." "..WHERE)
-   local got = _G[WHERE][what]
-   if not got then
-	  local flat = zencode:flatten(WHERE)
-	  got = flat[what]
+-- returns any object 'what' in IN.KEYS[ACK.whoami] or IN[ACK.whoami]
+function zencode:pickmy(what)
+   ZEN.assert(ACK.whoami, "No identity specified")
+   ZEN:trace("f   pickmy() "..what.." as "..ACK.whoami)
+   local me = IN.KEYS[ACK.whoami]
+   local got = nil
+   if me then
+	  ZEN:trace("f   pickmy() found "..ACK.whoami.." in KEYS")
+	  goto gotme
    end
-   ZEN.assert(got, "Data not found: "..what)
-   return got
+   me = IN[ACK.whoami]
+   if me then
+	  ZEN:trace("f   pickmy() found "..ACK.whoami.." in HEAP root")
+	  goto gotme
+   end
+   ZEN.assert(false, "Cannot find "..ACK.whoami.." anywhere")
+   ::gotme::
+   got = me[what]
+   if got then goto gotit end -- easy
+   for k,v in pairs(me) do -- search 1 deeper
+      if type(v) == "table" and v[what] then
+         got = v[what]
+         ZEN:trace("f   pickmy() found IN."..k.."."..what)
+         goto gotit
+      end
+   end
+   ZEN.assert(got, "Cannot find "..what.." for "..ACK.whoami)   
+   ::gotit::
+   TMP[what] = got
+   return(ZEN.OK)
 end
 
 -- debugging facility
@@ -117,7 +171,6 @@ function zencode:begin(verbosity)
       xxx(2,"Zencode debug verbosity: "..verbosity)
       self.verbosity = verbosity
    end
-   _G.ZEN_traceback = "Zencode traceback:\n"
    self.current_step = self.given_steps
    return true
 end
@@ -218,6 +271,7 @@ function zencode:trace(src)
    _G['ZEN_traceback'] = _G['ZEN_traceback']..
 	  trim(src).."\n"
 	  -- "    -> ".. src:gsub("^%s*", "") .."\n"
+   -- act(src) TODO: print also debug when verbosity is high
 end
 function zencode:run()
    -- xxx(2,"Zencode MATCHES:")
@@ -265,6 +319,7 @@ function zencode.assert(condition, errmsg)
    if condition then return true end
    -- ZEN.debug() -- prints all data in memory
    ZEN:trace("ERR "..errmsg)
+   ZEN.OK = false
    -- print ''
    -- error(errmsg) -- prints zencode backtrace
    -- print ''

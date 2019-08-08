@@ -19,29 +19,33 @@
 -- Zencode statements to manage data
 
 -- IN->ACK non-validated import 
-Given("I have ''",function(key)
-		 ZEN:push(key, ZEN:find(key, 'IN'))
+Given("I have ''",function(name)
+		 ZEN:pick(name)
+		 ZEN:ack(name)
 end)
-Given("I have my ''",function(key)
-		 ZEN.assert(ACK.whoami, "No identity specified")
-		 ZEN:push(key, ZEN:find(key, 'IN')) -- TODO: :myfind
+Given("I have my ''",function(name)
+		 ZEN:pickmy(name)
+		 ZEN:ack(name)
 end)
 -- IN->ACK validated import
 Given("I have a valid ''",function(name)
-		 local obj = ZEN:find(name,'IN')
-		 ZEN:push(name, ZEN:valid(name,obj))
+		 ZEN:pick(name)
+		 ZEN:validate(name)
+		 ZEN:ack(name)
 end)
 -- IN->ACK validated personal import
 Given("I have my valid ''",function(name)
-		 ZEN.assert(ACK.whoami, "No identity specified")
-		 local obj = ZEN:find(name,'IN') -- TODO: :myfind
-		 ZEN:push(name, ZEN:valid(name, obj))
+		 ZEN:pickmy(name)
+		 ZEN:validate(name)
+		 ZEN:ack(name)
 end)
+
 -- IN->ACK named import
 Given("I have inside '' a valid ''",function(section, name)
-		 local obj = ZEN:find(section,'IN')
-		 ZEN.assert(obj[name], "Object not found: "..section.."["..name.."]")
-		 ZEN:push(name, ZEN:valid(name,obj[name]))
+		 -- TODO: ZEN:pickinside
+		 ZEN:pick(name)
+		 ZEN:validate(name)
+		 ZEN:ack(name)
 end)
 
 
@@ -52,16 +56,19 @@ Then("print my data", function()
 		OUT[ACK.whoami].whoami = nil
 end)
 Then("print the ''", function(key)
-		ZEN:push(key,ACK[key],'OUT')
+		OUT[key] = ACK[key]
 end)
 -- PRINT MY: put in output under my identifier (whoami)
 Then("print my ''", function(key)
-		ZEN:mypush(key,ACK[key],'OUT')
+		if not OUT[ACK.whoami] then OUT[ACK.whoami] = { } end
+		OUT[ACK.whoami][key] = ACK[key]
 end)
 Then("print '' ''", function(key, val)
 		OUT[key] = val
 end)
-f_hello = function(nam) ZEN:push('whoami', nam) end
+f_hello = function(nam)
+   ACK.whoami = nam
+end
 Given("I introduce myself as ''", f_hello)
 Given("I am known as ''", f_hello)
 

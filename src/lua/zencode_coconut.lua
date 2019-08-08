@@ -36,7 +36,7 @@ ZEN.add_schema({
 local function f_keygen()
    local t = { }
    t.sk, t.pk = ELGAMAL.keygen()
-   ZEN:push('credential_keypair', { public = t.pk,
+   ZEN:ack('credential_keypair', { public = t.pk,
 									private = t.sk })
 end
 When("I create my new credential keypair", f_keygen)
@@ -55,14 +55,14 @@ ZEN.add_schema({
 				  beta  = get(obj, 'beta', ECP2.new) }
 	  end,
 	  ca_keypair = function(obj) -- recursive import
-		 return { ca_sign   = ZEN:valid('ca_sign', obj.ca_sign),
-				  ca_verify = ZEN:valid('ca_verify', obj.ca_verify) }
+		 return { ca_sign   = ZEN:validate_recur(obj.ca_sign, 'ca_sign'),
+				  ca_verify = ZEN:validate_recur(obj.ca_verify, 'ca_verify') }
 	  end
 })
 local function f_ca_keygen()
    local t = { }
    t.sk, t.vk = COCONUT.ca_keygen()
-   ZEN:push('ca_keypair', { ca_sign = t.sk,
+   ZEN:ack('ca_keypair', { ca_sign = t.sk,
 							ca_verify = t.vk })
 end
 When("I create my new issuer keypair", f_ca_keygen)
@@ -101,7 +101,7 @@ ZEN.add_schema({
 When("I generate a credential signature request", function()
 		ZEN.assert(ACK.credential_keypair.private,
 				   "Private key not found in credential keypair")
-		ZEN:push('credential_signature_request',
+		ZEN:ack('credential_signature_request',
 				 COCONUT.prepare_blind_sign(ACK.credential_keypair.public,
 											ACK.credential_keypair.private))
 end) -- synonyms
@@ -225,7 +225,7 @@ ZEN.add_schema({
 
 
 When("I generate a petition ''", function(uid)
-		ZEN:push('petition', 
+		ZEN:ack('petition', 
 				 { uid = uid,
 				   owner = ACK.credential_keypair.public,
 				   scores = { pos = { left = "Infinity",       -- ECP.infinity()
@@ -263,7 +263,7 @@ When("I sign the petition ''", function(uid)
 		   ACK.verifiers,
 		   ACK.credentials, 
 		   ACK.credential_keypair.private, uid)
-		ZEN:push('petition_signature',
+		ZEN:ack('petition_signature',
 				 { proof = Theta,
 				   uid_signature = zeta,
 				   uid_petition = uid })
