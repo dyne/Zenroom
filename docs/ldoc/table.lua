@@ -1,5 +1,6 @@
---- manipulating Lua tables.
--- @module table
+--- <h1>Table operations</h1>
+-- Standard Lua data structure manipulation on maps (key/value) and arrays.
+-- @module Table
 
 local table = {}
 

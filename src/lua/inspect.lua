@@ -1,4 +1,4 @@
---- <h1>Data inspection facility</h1>
+--- <h1>Debug inspection facility</h1>
 --
 -- The INSPECT class provides a number of functions to ease
 -- development and debugging. It mainly consists of an advanced

@@ -16,6 +16,43 @@
 -- You should have received a copy of the GNU Affero General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+--- <h1>Zencode language parser</h1>
+--
+-- Zencode is a <a
+-- href="https://en.wikipedia.org/wiki/Domain-specific_language">Domain
+-- Specific Language (DSL)</a> made to be understood by humans and
+-- inspired by <a
+-- href="https://en.wikipedia.org/wiki/Behavior-driven_development">Behavior
+-- Driven Development (BDD)</a> and <a
+-- href="https://en.wikipedia.org/wiki/Domain-driven_design">Domain
+-- Driven Design (DDD)</a>.
+--
+-- The Zenroom VM is capable of parsing specific scenarios written in
+-- Zencode and execute high-level cryptographic operations described
+-- in them; this is to facilitate the integration of complex
+-- operations in software and the non-literate understanding of what a
+-- distributed application does. A generic Zencode looks like this:
+--
+-- <code>
+-- Given that I am known as 'Alice'
+--
+-- When I create my new keypair
+--
+-- Then print my data
+-- </code>
+--
+-- This section doesn't provide the documentation on how to write
+-- Zencode, but illustrates the internals on how the Zencode parser is
+-- made and how it integrates with the Zenroom memory model. It serves
+-- as a reference documentation on functions used to write parsers for
+-- new Zencode scenarios in Zenroom's Lua.
+--
+--  @module ZEN
+--  @author Denis "Jaromil" Roio
+--  @license AGPLv3
+--  @copyright Dyne.org foundation 2018-2019
+
+
 local zencode = {
    given_steps = {},
    when_steps = {},
@@ -38,60 +75,23 @@ OUT = OUT or { } -- print out
 -- Zencode init traceback
 _G['ZEN_traceback'] = "Zencode traceback:\n"
 
+--- Given block (IN read-only memory)
+-- @section Given
 
-function zencode:ack(name, object)
-   local obj = object or TMP[name]
-   ZEN.assert(obj, "Object not found: ".. name)
-   ZEN:trace("f   pick() "..name.." "..type(obj))
-   if ACK[name] then -- already existing, create an array
-	  if type(ACK[name]) ~= "table" then
-		 ACK[name] = { ACK[name] }
-	  end
-	  table.insert(ACK[name], obj)
-   else
-	  ACK[name] = obj
-   end
-   -- delete the record from TMP if necessary
-   if not object then TMP[name] = nil end
-   return(ZEN.OK)
-end
+---
+-- Declare 'my own' name that will refer all uses of the 'my' pronoun
+-- to structures contained under this name.
+--
+-- @function ZEN:Iam(name)
 
-function zencode:ackmy(name, object)
-   local obj = object or TMP[name]
-   ZEN:trace("f   pushmy() "..name.." "..type(obj))
-   ZEN.assert(ACK.whoami, "No identity specified")
-   ZEN.assert(obj, "Object not found: ".. name)
-   local me = ACK.whoami
-   if not ACK[me] then ACK[me] = { } end
-   ACK[me][name] = obj
-   if not object then tmp[name] = nil end
-   return(ZEN.OK)
-end
-
-function zencode:validate(name)
-   ZEN.assert(name, "Import error: schema name is nil")
-   ZEN.assert(TMP[name], "Import error: object not found in TMP["..name.."]")
-   local s = ZEN.schemas[name]
-   ZEN.assert(s, "Import error: schema not found: "..name)
-   ZEN.assert(type(s) == 'function', "Import error: schema is not a function: "..name)
-   local res = s(TMP[name])
-   ZEN.assert(res, "Schema validation failed: "..name)
-   TMP[name] = res -- overwrite
-   return(ZEN.OK)
-end
-
-function zencode:validate_recur(obj, name)
-   ZEN.assert(name, "ZEN:validate_recur error: schema name is nil")
-   ZEN.assert(obj, "ZEN:validate_recur error: object is nil")
-   local s = ZEN.schemas[name]
-   ZEN.assert(s, "ZEN:validate_recur error: schema not found: "..name)
-   ZEN.assert(type(s) == 'function', "ZEN:validate_recur error: schema is not a function: "..name)
-   local res = s(obj)
-   ZEN.assert(res, "Schema validation failed: "..name)
-   return(res)
-end
-
--- returns any object called 'what' found anywhere inside IN.*
+---
+-- Pick a generic data structure from the <b>IN</b> memory
+-- space. Looks for named data on the first and second level and makes
+-- it ready for @{validate} or @{ack}.
+--
+-- @function ZEN:pick(name)
+-- @param name string descriptor of the data object
+-- @return true or false
 function zencode:pick(what)
    ZEN:trace("f   find() "..what)
    local got = IN.KEYS[what] -- try IN.KEYS
@@ -129,7 +129,15 @@ function zencode:pick(what)
    return(ZEN.OK)
 end
 
--- returns any object 'what' in IN.KEYS[ACK.whoami] or IN[ACK.whoami]
+---
+-- Pick 'my own' data structure contained under a key of the currently
+-- defined 'whoami' name at the root of the <b>IN</b> memory
+-- space. Looks for named data on the first and second level
+-- underneath IN[whoami] and makes it ready for @{validate} or @{ack}.
+--
+-- @function ZEN:pickmy(name)
+-- @param name string descriptor of the data object
+-- @return true or false
 function zencode:pickmy(what)
    ZEN.assert(ACK.whoami, "No identity specified")
    ZEN:trace("f   pickmy() "..what.." as "..ACK.whoami)
@@ -160,6 +168,117 @@ function zencode:pickmy(what)
    TMP[what] = got
    return(ZEN.OK)
 end
+
+---
+-- Optional step inside the <b>Given</b> block to execute schema
+-- validation on the last data structure selected by @{pick}.
+--
+-- @function ZEN:validate(name)
+-- @param name string descriptor of the data object
+-- @return true or false
+function zencode:validate(name)
+   ZEN.assert(name, "Import error: schema name is nil")
+   ZEN.assert(TMP[name], "Import error: object not found in TMP["..name.."]")
+   local s = ZEN.schemas[name]
+   ZEN.assert(s, "Import error: schema not found: "..name)
+   ZEN.assert(type(s) == 'function', "Import error: schema is not a function: "..name)
+   local res = s(TMP[name])
+   ZEN.assert(res, "Schema validation failed: "..name)
+   TMP[name] = res -- overwrite
+   return(ZEN.OK)
+end
+
+function zencode:validate_recur(obj, name)
+   ZEN.assert(name, "ZEN:validate_recur error: schema name is nil")
+   ZEN.assert(obj, "ZEN:validate_recur error: object is nil")
+   local s = ZEN.schemas[name]
+   ZEN.assert(s, "ZEN:validate_recur error: schema not found: "..name)
+   ZEN.assert(type(s) == 'function', "ZEN:validate_recur error: schema is not a function: "..name)
+   local res = s(obj)
+   ZEN.assert(res, "Schema validation failed: "..name)
+   return(res)
+end
+
+---
+-- Final step inside the <b>Given</b> block towards the <b>When</b>:
+-- pass on a data structure into the ACK memory space, ready for
+-- processing.  It must follow @{pick} and optionally @{validate}.
+--
+-- @function ZEN:ack(name, object)
+-- @param name string descriptor of the data object
+-- @param object[opt] passed here or implicitly taken from last @{pick} or @{validate} calls 
+function zencode:ack(name, object)
+   local obj = object or TMP[name]
+   ZEN.assert(obj, "Object not found: ".. name)
+   ZEN:trace("f   pick() "..name.." "..type(obj))
+   if ACK[name] then -- already existing, create an array
+	  if type(ACK[name]) ~= "table" then
+		 ACK[name] = { ACK[name] }
+	  end
+	  table.insert(ACK[name], obj)
+   else
+	  ACK[name] = obj
+   end
+   -- delete the record from TMP if necessary
+   if not object then TMP[name] = nil end
+   return(ZEN.OK)
+end
+
+function zencode:ackmy(name, object)
+   local obj = object or TMP[name]
+   ZEN:trace("f   pushmy() "..name.." "..type(obj))
+   ZEN.assert(ACK.whoami, "No identity specified")
+   ZEN.assert(obj, "Object not found: ".. name)
+   local me = ACK.whoami
+   if not ACK[me] then ACK[me] = { } end
+   ACK[me][name] = obj
+   if not object then tmp[name] = nil end
+   return(ZEN.OK)
+end
+
+--- When block (ACK read-write memory)
+-- @section When
+
+---
+-- Draft a new text made of a simple string: convert it to @{OCTET}
+-- and append it to ACK.draft.
+--
+-- @function ZEN:draft(string)
+-- @param string any string to be appended as draft
+function ZEN:draft(s)
+   if not ACK.draft then
+	  ACK.draft = str(s)
+   else
+	  ACK.draft = ACK.draft .. str(s)
+   end
+end
+
+
+---
+-- Compare equality of two data objects (TODO)
+-- @function ZEN:eq(first, second)
+
+---
+-- Check that the first object is greater than the second (TODO)
+-- @function ZEN:gt(first, second)
+
+---
+-- Check that the first object is lesser than the second (TODO)
+-- @function ZEN:lt(first, second)
+
+
+--- Then block (OUT write-only memory)
+-- @section Then
+
+---
+-- Move a generic data structure from ACK to OUT memory space, ready
+-- for its final JSON encoding and print out.
+-- @function ZEN:out(name)
+
+---
+-- Move 'my own' data structure from ACK to OUT.whoami memory space,
+-- ready for its final JSON encoding and print out.
+-- @function ZEN:outmy(name)
 
 -- debugging facility
 function xxx(n,s)

@@ -1,5 +1,6 @@
---- string operations like searching and matching.
--- @module string
+--- <h1>String operations</h1>
+-- Standard Lua string manipulation like searching and matching.
+-- @module String
 
 local string = {}
 
