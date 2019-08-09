@@ -16,31 +16,30 @@
 -- You should have received a copy of the GNU Affero General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
--- Zencode statements to manage data
 
--- IN->ACK non-validated import 
-Given("I have ''",function(name)
-		 ZEN:pick(name)
-		 ZEN:ack(name)
-end)
-Given("I have my ''",function(name)
-		 ZEN:pickmy(name)
-		 ZEN:ack(name)
-end)
--- IN->ACK validated import
+
+--- Zencode data internals
+
+-- the main security concern in this Zencode module is that no data
+-- passes without validation from IN to ACK or from inline input.
+
+-- GIVEN
+
+Given("I introduce myself as ''", function(name) ZEN:Iam(name) end)
+Given("I am known as ''", function(name) ZEN:Iam(name) end)
+
 Given("I have a valid ''",function(name)
 		 ZEN:pick(name)
 		 ZEN:validate(name)
 		 ZEN:ack(name)
 end)
--- IN->ACK validated personal import
+
 Given("I have my valid ''",function(name)
 		 ZEN:pickmy(name)
 		 ZEN:validate(name)
 		 ZEN:ack(name)
 end)
 
--- IN->ACK named import
 Given("I have inside '' a valid ''",function(section, name)
 		 -- TODO: ZEN:pickinside
 		 ZEN:pick(name)
@@ -48,87 +47,64 @@ Given("I have inside '' a valid ''",function(section, name)
 		 ZEN:ack(name)
 end)
 
+Given("I set '' to ''", function(k,v)
+		 ZEN.assert(not TMP[k], "Cannot overwrite TMP["..k.."]")
+		 TMP[k] = JSON.autoconv(v)
+end)
 
-Then("print all data", function() OUT = ACK end)
+-- this enforces identity of schema with key name
+Given("the '' is valid", function(k)
+		 ZEN:validate(k)
+		 ZEN:ack(k)
+end)
+
+--- WHEN
+
+When("I draft the string ''", function(s) ZEN:draft(s) end)
+
+
+--- THEN
+
+Then("print '' ''", function(k,v)
+		OUT[k] = v
+end)
+
+Then("print all data", function()
+		OUT = ACK
+		OUT.whoami = nil
+end)
 Then("print my data", function()
-		ZEN.assert(ACK.whoami, "No identity specified")
+		ZEN:Iam() -- sanity checks
 		OUT[ACK.whoami] = ACK
 		OUT[ACK.whoami].whoami = nil
 end)
+Then("print my ''", function(obj)
+		ZEN:Iam()
+		ZEN.assert(ACK[obj], "Data not found in ACK: "..obj)
+		if not OUT[ACK.whoami] then OUT[ACK.whoami] = { } end
+		OUT[ACK.whoami][obj] = ACK[obj]
+end)
+Then("print my draft", function()
+		ZEN:draft() -- sanity checks
+		OUT[ACK.whoami] = { draft = ACK.draft:string() }
+end)
+Then("print as '' my draft", function(conv)
+		ZEN:draft()
+		OUT[ACK.whoami] = { draft = ZEN:convert(ACK.draft, conv) }
+end)
+Then("print as '' my ''", function(conv,obj)
+		ZEN:draft()
+		OUT[ACK.whoami] = { draft = ZEN:convert(ACK[obj], conv) }
+end)
+
 Then("print the ''", function(key)
 		OUT[key] = ACK[key]
 end)
--- PRINT MY: put in output under my identifier (whoami)
-Then("print my ''", function(key)
-		if not OUT[ACK.whoami] then OUT[ACK.whoami] = { } end
-		OUT[ACK.whoami][key] = ACK[key]
+Then("print as '' the ''", function(conv, obj)
+		OUT[obj] = ZEN:convert(ACK[obj], conv)
 end)
-Then("print '' ''", function(key, val)
-		OUT[key] = val
-end)
-f_hello = function(nam)
-   ACK.whoami = nam
-end
-Given("I introduce myself as ''", f_hello)
-Given("I am known as ''", f_hello)
 
 -- debug functions
 Given("debug", function() ZEN.debug() end)
-When("debug", function() ZEN.debug() end)
-Then("debug", function() ZEN.debug() end)
-
-f_datarm = function (section)
-   --   local _data = IN or ZEN.data.load()
-   if not IN          then error("No data loaded") end
-   if not selection   then error("No data selected") end
-   if not section     then error("Specify the data portion to remove") end
-   OUT = ZEN.data.disjoin(IN, selection, section)
-end
-
-When("I declare that I am ''", function(decl)
-		-- declaration
-		if not ACK.declared then ACK.declared = decl
-		else ACK.declared = ACK.declared .." and ".. decl end
-end)
-
-When("I declare to '' that I am ''",function (auth,decl)
-        -- declaration
-        if not ACK.declared then ACK.declared = decl
-        else ACK.declared = ACK.declared .." and ".. decl end
-        -- authority
-        ACK.authority = auth
-end)
-
-When("I include the text ''", function(text)
-		if not ACK.draft then ACK.draft = { } end
-		if ACK.draft.text then
-			  ACK.draft.text = ACK.draft.text.."\n"..text
-		else
-		   ACK.draft.text = text
-		end
-end)
-
-When("I include the hex data ''", function(data)
-		if not ACK.draft then ACK.draft = { } end
-		ZEN.assert(IN[data], "Data not found in input: "..data)
-		ACK.draft.data = hex(IN[data])
-end)
-
-When("I include myself as sender", function(data)
-		ZEN.assert(ACK.whoami, "No identity specified")
-		if not ACK.draft then ACK.draft = { } end
-		ACK.draft.from = ACK.whoami
-end)
-
-Given("that '' declares to be ''",function(who, decl)
-         -- declaration
-         if not ACK.declared then ACK.declared = decl
-         else ACK.declared = ACK.declared .." and ".. decl end
-         ACK.whois = who
-end)
-Given("declares also to be ''", function(decl)
-         ZEN.assert(ACK.who ~= "", "The subject making the declaration is unknown")
-         -- declaration
-         if not ACK.declared then ACK.declared = decl
-         else ACK.declared = ACK.declared .." and ".. decl end
-end)
+When("debug",  function() ZEN.debug() end)
+Then("debug",  function() ZEN.debug() end)

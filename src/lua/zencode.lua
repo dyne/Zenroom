@@ -83,6 +83,17 @@ _G['ZEN_traceback'] = "Zencode traceback:\n"
 -- to structures contained under this name.
 --
 -- @function ZEN:Iam(name)
+-- @param name own name to be saved in ACK.whoami
+function zencode:Iam(name)
+   if name then
+	  ZEN.assert(not ACK.whoami, "Identity already defined in ACK.whoami")
+	  ZEN.assert(type(name) == "string", "Own name not a string")
+	  ACK.whoami = name
+   else
+	  ZEN.assert(ACK.whoami, "No identity specified in ACK.whoami")
+   end
+   return(ZEN.OK)
+end
 
 ---
 -- Pick a generic data structure from the <b>IN</b> memory
@@ -245,12 +256,18 @@ end
 --
 -- @function ZEN:draft(string)
 -- @param string any string to be appended as draft
-function ZEN:draft(s)
-   if not ACK.draft then
-	  ACK.draft = str(s)
-   else
-	  ACK.draft = ACK.draft .. str(s)
+function zencode:draft(s)
+   if s then
+	  ZEN.assert(type(s) == "string", "Provided draft is not a string")
+	  if not ACK.draft then
+		 ACK.draft = str(s)
+	  else
+		 ACK.draft = ACK.draft .. str(s)
+	  end
+   else -- no arg: sanity checks
+	  ZEN.assert(ACK.draft, "No draft found in ACK.draft")
    end
+   return(ZEN.OK)
 end
 
 
@@ -279,6 +296,28 @@ end
 -- Move 'my own' data structure from ACK to OUT.whoami memory space,
 -- ready for its final JSON encoding and print out.
 -- @function ZEN:outmy(name)
+
+---
+-- Convert a generic data element to the desired format (argument name
+-- provided as string), or use CONF.encoding when called without
+-- argument
+--
+-- @function ZEN:convert(object, format)
+-- @param object data element to be converted
+-- @param format string descriptor of format to convert to
+-- @return object converted to format
+function zencode:convert(object, format)
+   if format == "string" then
+	  fun = str -- from zenroom_octet.lua
+   else	  
+	  fun = _G[format]
+   end
+   ZEN.assert(fun, "Conversion format not found: "..format)
+   ZEN.assert(type(fun) == "function",
+			  "Conversion format is not a function: "..format)
+   return fun(object)
+end
+
 
 -- debugging facility
 function xxx(n,s)
@@ -349,7 +388,7 @@ function zencode:step(text)
 		 local args = {} -- handle multiple arguments in same string
 		 for arg in string.gmatch(text,"'(.-)'") do
 			-- xxx(3,"+arg: "..arg)
-			arg = string.gsub(arg, ' ', '_')
+			arg = string.gsub(arg, ' ', '_') -- NBSP
 			table.insert(args,arg)
 		 end
 		 self.id = self.id + 1
