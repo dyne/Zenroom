@@ -41,8 +41,10 @@ crypto-tests = \
 	${1} test/ecp_bls383.lua && \
 	${1} test/ecp_generic.lua && \
 	${1} test/pair_bls383.lua && \
-	${1} test/coconut_test.lua
-
+	${1} test/coconut_test.lua && \
+	cd test/zencode_coconut &&    \
+	./run_coconut_example.sh;     \
+	./run_petition_example.sh; cd -
 
 shell-tests = \
 	test/octet-json.sh ${1} && \
