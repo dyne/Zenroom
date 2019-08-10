@@ -36,8 +36,9 @@ ZEN.add_schema({
 local function f_keygen()
    local t = { }
    t.sk, t.pk = ELGAMAL.keygen()
-   ZEN:ack('credential_keypair', { public = t.pk,
+   ZEN:pick('credential_keypair', { public = t.pk,
 									private = t.sk })
+   ZEN:ack('credential_keypair')
 end
 When("I create my new credential keypair", f_keygen)
 When("I create my new credential request keypair", f_keygen)
@@ -62,23 +63,12 @@ ZEN.add_schema({
 local function f_ca_keygen()
    local t = { }
    t.sk, t.vk = COCONUT.ca_keygen()
-   ZEN:ack('ca_keypair', { ca_sign = t.sk,
+   ZEN:pick('ca_keypair', { ca_sign = t.sk,
 							ca_verify = t.vk })
+   ZEN:ack('ca_keypair')
 end
 When("I create my new issuer keypair", f_ca_keygen)
 When("I create my new authority keypair", f_ca_keygen)
-f_ca_keypair = function(keyname)
-   ZEN.assert(keyname or ACK.whoami, "Cannot identify the issuer keypair to use")
-   ACK.ca_keypair = ZEN:valid('ca_keypair', IN.KEYS[keyname or ACK.whoami])
-end
-Given("I have '' issuer keypair", f_ca_keypair)
-Given("I have my issuer keypair", f_ca_keypair)
-When("I publish my verification key", function()
-        ZEN.assert(ACK.whoami, "Cannot identify the issuer")
-        ZEN.assert(ACK.ca_keypair.ca_verify,
-				   "Issuer verification key not found")
-		ACK[ACK.whoami].ca_verify = ACK.ca_keypair.ca_verify
-end)
 
 -- request credential signatures
 ZEN.add_schema({
@@ -101,9 +91,10 @@ ZEN.add_schema({
 When("I generate a credential signature request", function()
 		ZEN.assert(ACK.credential_keypair.private,
 				   "Private key not found in credential keypair")
-		ZEN:ack('credential_signature_request',
+		ZEN:pick('credential_signature_request',
 				 COCONUT.prepare_blind_sign(ACK.credential_keypair.public,
 											ACK.credential_keypair.private))
+		ZEN:ack('credential_signature_request')
 end) -- synonyms
 
 
@@ -123,7 +114,7 @@ When("I sign the credential", function()
 		ZEN.assert(ACK.whoami, "Issuer is not known")
         ZEN.assert(ACK.credential_signature_request, "No valid signature request found.")
         ZEN.assert(ACK.ca_keypair.ca_sign, "No valid issuer signature keys found.")
-        ACK.credential_signature = 
+        ACK.credential_signature =
            COCONUT.blind_sign(ACK.ca_keypair.ca_sign,
                               ACK.credential_signature_request)
 		ACK.ca_verify = ACK.ca_keypair.ca_verify
@@ -208,7 +199,7 @@ ZEN.add_schema({
 	 petition_signature = function(obj)
 		return { proof = ZEN:valid('credential_proof',obj.proof),
 				 uid_signature = get(obj, 'uid_signature', ECP.new),
-				 uid_petition = obj['uid_petition'] } 
+				 uid_petition = obj['uid_petition'] }
 		end,
 
 	 petition_tally = function(obj)
@@ -225,7 +216,7 @@ ZEN.add_schema({
 
 
 When("I generate a petition ''", function(uid)
-		ZEN:ack('petition', 
+		ZEN:pick('petition',
 				 { uid = uid,
 				   owner = ACK.credential_keypair.public,
 				   scores = { pos = { left = "Infinity",       -- ECP.infinity()
@@ -233,6 +224,7 @@ When("I generate a petition ''", function(uid)
 							  neg = { left = "Infinity",       -- ECP.infinity()
 									  right = "Infinity" } }
 		}) -- ECP.infinity()
+		ZEN:ack('petition')
 		-- generate an ECDH signature of the (encoded) petition using the
 		-- credential keys
 		-- ecdh = ECDH.new()
@@ -261,12 +253,13 @@ When("I sign the petition ''", function(uid)
 		local zeta
 		Theta, zeta = COCONUT.prove_cred_petition(
 		   ACK.verifiers,
-		   ACK.credentials, 
+		   ACK.credentials,
 		   ACK.credential_keypair.private, uid)
-		ZEN:ack('petition_signature',
+		ZEN:pick('petition_signature',
 				 { proof = Theta,
 				   uid_signature = zeta,
 				   uid_petition = uid })
+		ZEN:ack('petition_signature')
 end)
 
 When("I verify the signature proof is correct", function()

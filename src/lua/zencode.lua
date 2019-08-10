@@ -92,7 +92,7 @@ function zencode:Iam(name)
    else
 	  ZEN.assert(ACK.whoami, "No identity specified in ACK.whoami")
    end
-   return(ZEN.OK)
+   assert(ZEN.OK)
 end
 
 ---
@@ -100,14 +100,17 @@ end
 -- space. Looks for named data on the first and second level and makes
 -- it ready for @{validate} or @{ack}.
 --
--- @function ZEN:pick(name)
+-- @function ZEN:pick(name, data)
 -- @param name string descriptor of the data object
+-- @param data[opt] optional data object (default search inside IN.*)
 -- @return true or false
-function zencode:pick(what)
-   ZEN:trace("f   find() "..what)
+function zencode:pick(what, obj)
+   if obj then -- object provided by argument
+	  TMP[what] = obj
+	  return(ZEN.OK)
+   end
    local got = IN.KEYS[what] -- try IN.KEYS
    if got then
-      ZEN:trace("f   find() found IN.KEYS."..what)
 	  goto gotit
    end
    -- try KEYS.*.what (TODO: exclude ACK.whoami)
@@ -137,7 +140,7 @@ function zencode:pick(what)
    TMP[what] = nil
    ::gotit::
    TMP[what] = got
-   return(ZEN.OK)
+   assert(ZEN.OK)
 end
 
 ---
@@ -177,7 +180,7 @@ function zencode:pickmy(what)
    ZEN.assert(got, "Cannot find "..what.." for "..ACK.whoami)   
    ::gotit::
    TMP[what] = got
-   return(ZEN.OK)
+   assert(ZEN.OK)
 end
 
 ---
@@ -196,7 +199,7 @@ function zencode:validate(name)
    local res = s(TMP[name])
    ZEN.assert(res, "Schema validation failed: "..name)
    TMP[name] = res -- overwrite
-   return(ZEN.OK)
+   assert(ZEN.OK)
 end
 
 function zencode:validate_recur(obj, name)
@@ -217,11 +220,10 @@ end
 --
 -- @function ZEN:ack(name, object)
 -- @param name string descriptor of the data object
--- @param object[opt] passed here or implicitly taken from last @{pick} or @{validate} calls 
-function zencode:ack(name, object)
-   local obj = object or TMP[name]
+function zencode:ack(name)
+   ZEN:validate(name)
+   local obj = TMP[name]
    ZEN.assert(obj, "Object not found: ".. name)
-   ZEN:trace("f   pick() "..name.." "..type(obj))
    if ACK[name] then -- already existing, create an array
 	  if type(ACK[name]) ~= "table" then
 		 ACK[name] = { ACK[name] }
@@ -232,7 +234,7 @@ function zencode:ack(name, object)
    end
    -- delete the record from TMP if necessary
    if not object then TMP[name] = nil end
-   return(ZEN.OK)
+   assert(ZEN.OK)
 end
 
 function zencode:ackmy(name, object)
@@ -244,7 +246,7 @@ function zencode:ackmy(name, object)
    if not ACK[me] then ACK[me] = { } end
    ACK[me][name] = obj
    if not object then tmp[name] = nil end
-   return(ZEN.OK)
+   assert(ZEN.OK)
 end
 
 --- When block (ACK read-write memory)
@@ -267,7 +269,7 @@ function zencode:draft(s)
    else -- no arg: sanity checks
 	  ZEN.assert(ACK.draft, "No draft found in ACK.draft")
    end
-   return(ZEN.OK)
+   assert(ZEN.OK)
 end
 
 
@@ -463,6 +465,7 @@ function zencode.debug()
    print("|  DEBUG:")
    -- one print after another to sort deterministic
    I.print({IN = IN})
+   I.print({TMP = TMP})
    I.print({ACK = ACK})
    I.print({OUT = OUT})
 end

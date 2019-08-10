@@ -2,6 +2,12 @@
 
 # Coconut paper: https://arxiv.org/pdf/1802.07344.pdf
 
+echo
+echo "=========================================="
+echo "= COCONUT INTEGRATION TESTS - PETITION"
+echo "=========================================="
+echo
+
 verbose=1
 
 alias zenroom='../../src/zenroom-shared'

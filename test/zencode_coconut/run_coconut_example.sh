@@ -2,6 +2,12 @@
 
 # Comments use names from the Coconut paper: https://arxiv.org/pdf/1802.07344.pdf
 
+echo
+echo "=========================================="
+echo "= COCONUT INTEGRATION TESTS - CREDENTIALS"
+echo "=========================================="
+echo
+
 verbose=1
 
 alias zenroom='../../src/zenroom-shared'

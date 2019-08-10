@@ -39,12 +39,15 @@ ZEN.get = function(obj, key, conversion)
    local conv = conversion or OCTET.new
    ZEN.assert(type(key) == "string", "Invalid key in object conversion")
    ZEN.assert(obj, "Object not found for conversion")
-   ZEN.assert(obj[key], "Key not found in object conversion: "..key)
-   ZEN.assert(ZEN.prefix(obj[key]), "Encoding prefix missing in conversion: "..key)
-   -- if conv then
-   res = conv( obj[key] )
-   -- else res = obj[key] end
-   assert(res, "Error converting object key: ".. key)
+   local k = obj[key]
+   ZEN.assert(k, "Key not found in object conversion: "..key)
+   local res
+   if(type(k) == "string") then
+	  -- ZEN.assert(ZEN.prefix(obj[key]), "Encoding prefix missing in conversion: "..key)
+	  res = conv(k)
+	  ZEN.assert(conv(k), "Error converting object key: ".. key)
+   else res = k end
+   assert(ZEN.OK)
    return res
 end
 
