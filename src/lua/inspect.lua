@@ -306,7 +306,7 @@ end
 function Inspector:putValue(v)
   local tv = type(v)
 
-  enc = ENCODING or url64
+  enc = CONF.encoding or url64
   if tv == 'string' then
     self:puts(smartQuote(escape(v)))
   elseif tv == 'number' or tv == 'boolean' or tv == 'nil' or
@@ -383,7 +383,7 @@ end
 
 -- conversion wrappers for zenroom types
 function inspect.encode(item)
-   enc = ENCODING or url64
+   enc = CONF.encoding or url64
    t = type(item)
    if t == "zenroom.octet" then
 	  return enc(item)

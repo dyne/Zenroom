@@ -173,7 +173,7 @@ function zencode:pickmy(what)
    for k,v in pairs(me) do -- search 1 deeper
       if type(v) == "table" and v[what] then
          got = v[what]
-         ZEN:trace("f   pickmy() found IN."..k.."."..what)
+         ZEN:trace("f   pickmy() found IN.*."..k.."."..what)
          goto gotit
       end
    end
@@ -496,10 +496,5 @@ end
 _G["Then"] = function(text, fn)
    zencode.then_steps[text] = fn
 end
-
--- _G["Before"]   = before_step
--- _G["Given"]    = given_step
--- _G["When"]     = when_step
--- _G["Then"]     = then_step
 
 return zencode

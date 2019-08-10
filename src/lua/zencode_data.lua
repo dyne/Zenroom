@@ -30,20 +30,22 @@ Given("I am known as ''", function(name) ZEN:Iam(name) end)
 
 Given("I have a valid ''",function(name)
 		 ZEN:pick(name)
-		 ZEN:validate(name)
 		 ZEN:ack(name)
 end)
 
 Given("I have my valid ''",function(name)
 		 ZEN:pickmy(name)
-		 ZEN:validate(name)
+		 ZEN:ack(name)
+end)
+
+Given("I have my ''",function(name)
+		 ZEN:pickmy(name)
 		 ZEN:ack(name)
 end)
 
 Given("I have inside '' a valid ''",function(section, name)
 		 -- TODO: ZEN:pickinside
 		 ZEN:pick(name)
-		 ZEN:validate(name)
 		 ZEN:ack(name)
 end)
 
@@ -54,7 +56,6 @@ end)
 
 -- this enforces identity of schema with key name
 Given("the '' is valid", function(k)
-		 ZEN:validate(k)
 		 ZEN:ack(k)
 end)
 
