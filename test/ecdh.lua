@@ -54,6 +54,24 @@ test_curve('secp256k1')
 -- test_curve('bn254cx')
 -- test_curve('fp256bn')
 
+function test_simple_curve (name)
+   print ('  ' .. name)
+   local alice = ECDH.keygen(name) -- ed25519
+   local bob   = ECDH.keygen(name)
+
+   ciphermsg = alice:encrypt(bob, secret, str('This is the header!'))
+   print ('Simple AES-GCM checksum : ' .. ciphermsg.checksum:url64())
+
+   local decode = bob:decrypt(ciphermsg)
+   assert(secret == decode, "Secret differs from de/coded text")
+   print ('Simple AES-GCM on ' .. name .. ' OK')
+end
+
+test_simple_curve('ed25519')
+test_simple_curve('bls383')
+test_simple_curve('goldilocks')
+test_simple_curve('secp256k1')
+
 print ''
 print('  DSA SIGN/VERIFY')
 
