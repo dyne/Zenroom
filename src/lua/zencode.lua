@@ -95,6 +95,28 @@ function zencode:Iam(name)
    assert(ZEN.OK)
 end
 
+-- local function used inside ZEN:pick*
+-- try obj.*.what (TODO: exclude KEYS and ACK.whoami)
+local function inside_pick(obj, what)
+   ZEN.assert(obj, "ZEN:pick object is nil")
+   ZEN.assert(type(obj) == "table", "ZEN:pick object is not a table")
+   ZEN.assert(type(what) == "string", "ZEN:pick object index is not a string")
+   local got = obj[what]
+   if got then
+	  -- ZEN:ftrace("inside_pick found "..what.." at object root")
+	  goto gotit
+   end
+   for k,v in pairs(obj) do -- search 1 deeper
+      if type(v) == "table" and v[what] then
+         got = v[what]
+         -- ZEN:ftrace("inside_pick found "..k.."."..what)
+         break
+      end
+   end
+   ::gotit::
+   return got
+end
+
 ---
 -- Pick a generic data structure from the <b>IN</b> memory
 -- space. Looks for named data on the first and second level and makes
@@ -109,38 +131,12 @@ function zencode:pick(what, obj)
 	  TMP[what] = obj
 	  return(ZEN.OK)
    end
-   local got = IN.KEYS[what] -- try IN.KEYS
-   if got then
-	  goto gotit
-   end
-   -- try KEYS.*.what (TODO: exclude ACK.whoami)
-   for k,v in pairs(IN.KEYS) do
-      if type(v) == "table" and v[what] then
-         got = v[what]
-         ZEN:trace("f   find() found IN.KEYS."..k.."."..what)
-         goto gotit
-	  end
-   end
-   -- try IN
-   got = IN[what]
-   if got then
-      ZEN:trace("f   find() found IN."..what)
-      goto gotit
-   end
-   -- try IN.*.what (TODO: exclude KEYS and ACK.whoami)
-   for k,v in pairs(IN) do
-      if type(v) == "table" and v[what] then
-         got = v[what]
-         ZEN:trace("f   find() found IN."..k.."."..what)
-         goto gotit
-      end
-   end
-   -- fail: not found
-   ZEN.assert(false, "Cannot find "..what.." anywhere")
-   TMP[what] = nil
-   ::gotit::
+   local got
+   got = inside_pick(IN.KEYS, what) or inside_pick(IN,what)
+   ZEN.assert(got, "Cannot find "..what.." anywhere")
    TMP[what] = got
    assert(ZEN.OK)
+   ZEN:ftrace("pick found "..what)
 end
 
 ---
@@ -154,33 +150,41 @@ end
 -- @return true or false
 function zencode:pickmy(what)
    ZEN.assert(ACK.whoami, "No identity specified")
-   ZEN:trace("f   pickmy() "..what.." as "..ACK.whoami)
-   local me = IN.KEYS[ACK.whoami]
-   local got = nil
-   if me then
-	  ZEN:trace("f   pickmy() found "..ACK.whoami.." in KEYS")
-	  goto gotme
-   end
-   me = IN[ACK.whoami]
-   if me then
-	  ZEN:trace("f   pickmy() found "..ACK.whoami.." in HEAP root")
-	  goto gotme
-   end
-   ZEN.assert(false, "Cannot find "..ACK.whoami.." anywhere")
-   ::gotme::
-   got = me[what]
-   if got then goto gotit end -- easy
-   for k,v in pairs(me) do -- search 1 deeper
-      if type(v) == "table" and v[what] then
-         got = v[what]
-         ZEN:trace("f   pickmy() found IN.*."..k.."."..what)
-         goto gotit
-      end
-   end
+   local got
+   local me
+   me = inside_pick(IN.KEYS, ACK.whoami) or inside_pick(IN, ACK.whoami)
+   ZEN.assert(me, "Cannot find "..ACK.whoami.." anywhere")
+   got = inside_pick(me, what)
    ZEN.assert(got, "Cannot find "..what.." for "..ACK.whoami)   
-   ::gotit::
    TMP[what] = got
    assert(ZEN.OK)
+   ZEN:ftrace("pickmy found "..what.." for "..ACK.whoami)
+end
+
+---
+-- Pick a data structure named 'what' contained under a 'section' key
+-- of the at the root of the <b>IN</b> memory space. Looks for named
+-- data at the first and second level underneath IN[section] and moves
+-- it to TMP[what][section], ready for @{validate} or @{ack}. If
+-- TMP[what] exists already, every new entry is added as a key/value
+--
+-- @function ZEN:pickin(section, name)
+-- @param section string descriptor of the section containing the data
+-- @param name string descriptor of the data object
+-- @return true or false
+function zencode:pickin(section, what)
+   ZEN.assert(section, "No section specified")
+   local root -- section
+   local got  -- what
+   root = inside_pick(IN.KEYS,section) or inside_pick(IN, section)
+   ZEN.assert(root, "Cannot find "..section.." anywhere")
+   got = inside_pick(root, what)
+   ZEN.assert(got, "Cannot find "..what.." inside "..section)   
+   if not TMP[what] then TMP[what] = { } end
+   -- TODO: check all corner cases to make sure TMP[what] is a k/v map
+   TMP[what] = got
+   assert(ZEN.OK)
+   ZEN:ftrace("pickin found "..what.." in "..section)
 end
 
 ---
@@ -192,14 +196,17 @@ end
 -- @return true or false
 function zencode:validate(name)
    ZEN.assert(name, "Import error: schema name is nil")
-   ZEN.assert(TMP[name], "Import error: object not found in TMP["..name.."]")
+   local got = inside_pick(TMP,name)
+   ZEN.assert(got, "Import error: object not found in TMP.*."..name)
    local s = ZEN.schemas[name]
    ZEN.assert(s, "Import error: schema not found: "..name)
    ZEN.assert(type(s) == 'function', "Import error: schema is not a function: "..name)
-   local res = s(TMP[name])
+   ZEN:ftrace("validate "..name)
+   local res = s(got)
    ZEN.assert(res, "Schema validation failed: "..name)
    TMP[name] = res -- overwrite
    assert(ZEN.OK)
+   ZEN:ftrace("validation passed for "..name)
 end
 
 function zencode:validate_recur(obj, name)
@@ -208,6 +215,7 @@ function zencode:validate_recur(obj, name)
    local s = ZEN.schemas[name]
    ZEN.assert(s, "ZEN:validate_recur error: schema not found: "..name)
    ZEN.assert(type(s) == 'function', "ZEN:validate_recur error: schema is not a function: "..name)
+   ZEN:ftrace("validate_recur "..name)
    local res = s(obj)
    ZEN.assert(res, "Schema validation failed: "..name)
    return(res)
@@ -223,15 +231,29 @@ end
 function zencode:ack(name)
    ZEN:validate(name)
    local obj = TMP[name]
+   local t
    ZEN.assert(obj, "Object not found: ".. name)
-   if ACK[name] then -- already existing, create an array
-	  if type(ACK[name]) ~= "table" then
-		 ACK[name] = { ACK[name] }
-	  end
-	  table.insert(ACK[name], obj)
-   else
+   if not ACK[name] then -- assign in ACK the single object
 	  ACK[name] = obj
+	  goto done
    end
+   -- ACK[name] already holds an object
+   t = type(ACK[name])
+   -- not a table?
+   if t ~= 'table' then -- convert single object to array
+	  ACK[name] = { ACK[name] }
+	  table.insert(ACK[name], obj)
+	  goto done
+   end
+   -- it is a table already
+   if isarray(ACK[name]) then -- plain array
+	  table.insert(ACK[name], obj)
+	  goto done
+   else -- associative map
+	  table.insert(ACK[name], obj) -- TODO:
+	  goto done
+   end
+   ::done::
    -- delete the record from TMP if necessary
    if not object then TMP[name] = nil end
    assert(ZEN.OK)
@@ -433,6 +455,16 @@ function zencode:trace(src)
 	  -- "    -> ".. src:gsub("^%s*", "") .."\n"
    -- act(src) TODO: print also debug when verbosity is high
 end
+
+-- trace function execution also on success
+function zencode:ftrace(src)
+   -- take current line of zencode
+   _G['ZEN_traceback'] = _G['ZEN_traceback']..
+	  "f   ZEN:"..trim(src).."\n"
+   -- "    -> ".. src:gsub("^%s*", "") .."\n"
+   -- act(src) TODO: print also debug when verbosity is high
+end
+
 function zencode:run()
    -- xxx(2,"Zencode MATCHES:")
    -- xxx(2,self.matches)

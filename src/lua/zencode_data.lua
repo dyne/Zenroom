@@ -44,8 +44,7 @@ Given("I have my ''",function(name)
 end)
 
 Given("I have inside '' a valid ''",function(section, name)
-		 -- TODO: ZEN:pickinside
-		 ZEN:pick(name)
+		 ZEN:pickin(section, name)
 		 ZEN:ack(name)
 end)
 
