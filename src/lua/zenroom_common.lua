@@ -105,24 +105,16 @@ function map(data, fun)
    return(out)
 end
 
-
--- returns a flat associative table of all objects in 'const'
-function flatten(const)
-   local flat = { }
-   local function inner_flatten(arr)
-	  for k,v in pairs(arr) do
-		 if type(v) == "table" then
-			flat[k] = v
-			inner_flatten(v)
-		 elseif(type(k) == "string") then
-			flat[k] = v
-		 end
-	  end
+function isarray(obj)
+   assert(obj, "isarray() called on a nil object")
+   assert(type(obj), "isarray() argument is not a table")
+   for k, v in pairs(obj) do
+	  -- check that all keys are numbers
+	  -- don't check sparse ratio (cjson's lua_array_length)
+	  if type(k) ~= "number" then return false end
    end
-   inner_flatten(const)
-   return flat
+   return true
 end
-
 
 function help(module)
    if module == nil then
@@ -143,3 +135,22 @@ function help(module)
 	  if(string.sub(s,1,2)~='__') then print("object method: "..s) end
    end
 end
+
+-- UNUSED:
+-- returns a flat associative table of all objects in 'const'
+function flatten(const)
+   local flat = { }
+   local function inner_flatten(arr)
+	  for k,v in pairs(arr) do
+		 if type(v) == "table" then
+			flat[k] = v
+			inner_flatten(v)
+		 elseif(type(k) == "string") then
+			flat[k] = v
+		 end
+	  end
+   end
+   inner_flatten(const)
+   return flat
+end
+
