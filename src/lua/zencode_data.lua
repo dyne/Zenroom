@@ -34,12 +34,12 @@ Given("I have a valid ''",function(name)
 end)
 
 Given("I have my valid ''",function(name)
-		 ZEN:pickmy(name)
+		 ZEN:pickin(ACK.whoami, name)
 		 ZEN:ack(name)
 end)
 
 Given("I have my ''",function(name)
-		 ZEN:pickmy(name)
+		 ZEN:pickin(ACK.whoami, name)
 		 ZEN:ack(name)
 end)
 

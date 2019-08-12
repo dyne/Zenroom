@@ -128,37 +128,19 @@ end
 -- @return true or false
 function zencode:pick(what, obj)
    if obj then -- object provided by argument
-	  TMP[what] = obj
+	  TMP = { data = obj,
+			  root = nil,
+			  schema = what }
 	  return(ZEN.OK)
    end
    local got
    got = inside_pick(IN.KEYS, what) or inside_pick(IN,what)
    ZEN.assert(got, "Cannot find "..what.." anywhere")
-   TMP[what] = got
+   TMP = { root = nil,
+		   data = got,
+		   schema = what }
    assert(ZEN.OK)
    ZEN:ftrace("pick found "..what)
-end
-
----
--- Pick 'my own' data structure contained under a key of the currently
--- defined 'whoami' name at the root of the <b>IN</b> memory
--- space. Looks for named data on the first and second level
--- underneath IN[whoami] and makes it ready for @{validate} or @{ack}.
---
--- @function ZEN:pickmy(name)
--- @param name string descriptor of the data object
--- @return true or false
-function zencode:pickmy(what)
-   ZEN.assert(ACK.whoami, "No identity specified")
-   local got
-   local me
-   me = inside_pick(IN.KEYS, ACK.whoami) or inside_pick(IN, ACK.whoami)
-   ZEN.assert(me, "Cannot find "..ACK.whoami.." anywhere")
-   got = inside_pick(me, what)
-   ZEN.assert(got, "Cannot find "..what.." for "..ACK.whoami)   
-   TMP[what] = got
-   assert(ZEN.OK)
-   ZEN:ftrace("pickmy found "..what.." for "..ACK.whoami)
 end
 
 ---
@@ -180,9 +162,10 @@ function zencode:pickin(section, what)
    ZEN.assert(root, "Cannot find "..section.." anywhere")
    got = inside_pick(root, what)
    ZEN.assert(got, "Cannot find "..what.." inside "..section)   
-   if not TMP[what] then TMP[what] = { } end
    -- TODO: check all corner cases to make sure TMP[what] is a k/v map
-   TMP[what] = got
+   TMP = { root = section,
+		   data = got,
+		   schema = what }
    assert(ZEN.OK)
    ZEN:ftrace("pickin found "..what.." in "..section)
 end
@@ -195,16 +178,18 @@ end
 -- @param name string descriptor of the data object
 -- @return true or false
 function zencode:validate(name)
-   ZEN.assert(name, "Import error: schema name is nil")
-   local got = inside_pick(TMP,name)
-   ZEN.assert(got, "Import error: object not found in TMP.*."..name)
-   local s = ZEN.schemas[name]
-   ZEN.assert(s, "Import error: schema not found: "..name)
-   ZEN.assert(type(s) == 'function', "Import error: schema is not a function: "..name)
+   ZEN.assert(name, "ZEN:validate error: argument is nil")
+   ZEN.assert(TMP, "ZEN:validate error: TMP is nil")
+   ZEN.assert(TMP.schema == name, "ZEN:validate() TMP does not contain "..name)
+   local got = TMP.data -- inside_pick(TMP,name)
+   ZEN.assert(TMP.data, "ZEN:validate error: data not found in TMP for schema "..name)
+   local s = ZEN.schemas[TMP.schema]
+   ZEN.assert(s, "ZEN:validate error: "..name.." schema not found")
+   ZEN.assert(type(s) == 'function', "ZEN:validate error: schema is not a function for "..name)
    ZEN:ftrace("validate "..name)
-   local res = s(got)
-   ZEN.assert(res, "Schema validation failed: "..name)
-   TMP[name] = res -- overwrite
+   local res = s(TMP.data) -- ignore root
+   ZEN.assert(res, "ZEN:validate error: schema validation failed for "..name)
+   TMP.valid = res -- overwrite
    assert(ZEN.OK)
    ZEN:ftrace("validation passed for "..name)
 end
@@ -229,10 +214,10 @@ end
 -- @function ZEN:ack(name, object)
 -- @param name string descriptor of the data object
 function zencode:ack(name)
-   ZEN:validate(name)
-   local obj = TMP[name]
+   ZEN:validate(name) -- never ACK anything if not validated
+   local obj = TMP.valid
    local t
-   ZEN.assert(obj, "Object not found: ".. name)
+   ZEN.assert(obj, "No valid object found: ".. name)
    if not ACK[name] then -- assign in ACK the single object
 	  ACK[name] = obj
 	  goto done
@@ -254,8 +239,8 @@ function zencode:ack(name)
 	  goto done
    end
    ::done::
-   -- delete the record from TMP if necessary
-   if not object then TMP[name] = nil end
+   -- delete the record from TMP
+   TMP = nil
    assert(ZEN.OK)
 end
 
