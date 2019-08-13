@@ -36,17 +36,17 @@ ZEN.prefix = function(str)
 end
 
 ZEN.get = function(obj, key, conversion)
-   local conv = conversion or CONF.encoding
+   conversion = conversion or CONF.encoding
    ZEN.assert(type(key) == "string", "Invalid key in object conversion")
    ZEN.assert(obj, "Object not found for conversion")
    local k = obj[key]
    ZEN.assert(k, "Key not found in object conversion: "..key)
    local res
    if(type(k) == "string") then
-	  -- ZEN.assert(ZEN.prefix(obj[key]), "Encoding prefix missing in conversion: "..key)
-	  res = conv(k)
-	  ZEN.assert(conv(k), "Error converting object key: ".. key)
-   else res = k end
+	  res = ZEN:convert(k, conversion)
+   else
+	  res = k
+   end
    assert(ZEN.OK)
    return res
 end

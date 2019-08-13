@@ -318,14 +318,13 @@ end
 -- @param format string descriptor of format to convert to
 -- @return object converted to format
 function zencode:convert(object, format)
+   local fun = format or CONF.encoding
    if format == "string" then
 	  fun = str -- from zenroom_octet.lua
-   else	  
-	  fun = _G[format]
    end
-   ZEN.assert(fun, "Conversion format not found: "..format)
+   ZEN.assert(fun, "Conversion format not found")
    ZEN.assert(type(fun) == "function",
-			  "Conversion format is not a function: "..format)
+			  "Conversion format is not a function: "..type(fun))
    return fun(object)
 end
 
@@ -386,7 +385,7 @@ function zencode:step(text)
 		 error("Zencode invalid: "..text)
 		 return false
    end
-   -- xxx(2, "-----")
+
    -- TODO: optimize and write a faster function in C
    -- support simplified notation for arg match
    local tt = string.gsub(text,"'(.-)'","''")
@@ -425,18 +424,16 @@ end
 
 
 -- returns an iterator for newline termination
--- TODO: optimize
 function zencode:newline_iter(text)
    s = trim(text) -- implemented in zen_io.c
    if s:sub(-1)~="\n" then s=s.."\n" end
    return s:gmatch("(.-)\n") -- iterators return functions
 end
 
--- TODO: improve parsing for strings starting with newline, missing scenarios etc.
 function zencode:parse(text)
-   -- if  #text < 16 then
-   -- 	  warn("Zencode text too short to parse")
-   -- 	  return false end
+   if  #text < 9 then -- strlen("and debug") == 9
+   	  warn("Zencode text too short to parse")
+   	  return false end
    for line in self:newline_iter(text) do
 	  self:step(line)
    end

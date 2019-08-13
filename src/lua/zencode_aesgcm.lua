@@ -16,30 +16,25 @@
 -- You should have received a copy of the GNU Affero General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
--- default to our favorite curve
+-- make sure relevant defaults are there
 CONF.curve = CONF.curve or 'goldilocks'
+CONF.encoding = CONF.encoding or url64
+CONF.encoding_prefix = CONF.encoding_prefix or 'u64'
 
 local _ecdh = ECDH.new(CONF.curve) -- used for validation
 
--- TODO: auto conversion from string prefix not just u64
 ZEN.add_schema({
 	  -- keypair (ECDH)
 	  public = function(obj)
 		 local o = obj.public or obj -- fix recursive schema check
-		 if type(o) == "string" then o = OCTET.from_url64(o) end
-		 ZEN.assert(_ecdh:checkpub(o), "Public key is not a valid point on curve: "..CONF.curve)
+		 if type(o) == "string" then o = ZEN:convert(o) end
+		 ZEN.assert(_ecdh:checkpub(o),
+					"Public key is not a valid point on curve: "..CONF.curve)
 		 return o
 	  end,
       keypair = function(obj)
-		 local pk = obj.public
-		 if type(pk) == "string" then pk = OCTET.from_url64(obj.public) end
-		 ZEN.assert(_ecdh:checkpub(pk),
-					"Public key is not a valid point on curve: "..CONF.curve)
-		 local sk = obj.private
-		 if type(sk) == "string" then sk = OCTET.from_url64(obj.private) end
-         return { public  = pk,
-				  -- ZEN:validate_recur(obj, 'public'), -- get(obj, 'public', ECDH.checkpub),
-                  private = sk }
+         return { public  = ZEN:validate_recur(obj, 'public'),
+                  private = ZEN.get(obj, 'private') }
 	  end,
 	  secret_message = function(obj)
 		 local ver = obj.zenroom
