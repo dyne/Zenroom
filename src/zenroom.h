@@ -102,6 +102,7 @@ int  zen_exec_script(zenroom_t *Z, const char *script);
 int  zen_exec_zencode(zenroom_t *Z, const char *script);
 void zen_teardown(zenroom_t *zenroom);
 
+#define MAX_LINE 1024 // 1KiB maximum length for a newline terminated line (Zencode)
 #define UMM_HEAP (64*1024) // 64KiB (masked with 0x7fff)
 #define MAX_FILE (1024*1024) // load max 1MB files
 #ifndef MAX_STRING

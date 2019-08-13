@@ -28,7 +28,7 @@ SOURCES := \
 	json.o json_strbuf.o json_fpconv.o \
 	encoding.o cmsgpack.o \
 	umm_malloc.o zen_memory.o \
-	zen_io.o repl.o \
+	zen_io.o zen_parse.o repl.o \
 	zen_octet.o zen_ecp.o zen_ecp2.o zen_big.o \
 	zen_fp12.o zen_random.o zen_hash.o \
 	zen_ecdh.o zen_ecdh_factory.o \

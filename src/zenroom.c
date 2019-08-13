@@ -53,6 +53,8 @@ extern int zen_lua_init(lua_State *L);
 
 // prototypes from zen_io.c
 extern void zen_add_io(lua_State *L);
+// prototypes from zen_parse.c
+extern void zen_add_parse(lua_State *L);
 
 // prototypes from zen_memory.c
 extern zen_mem_t *libc_memory_init();
@@ -120,6 +122,7 @@ static int zen_init_pmain(lua_State *L) { // protected mode init
 	luaL_openlibs(L);
 	// load our own openlibs and extensions
 	zen_add_io(L);
+	zen_add_parse(L);
 	zen_require_override(L,0);
 	if(!zen_lua_init(L)) {
 		error(L,"%s: %s", __func__, "initialisation of lua scripts failed");
