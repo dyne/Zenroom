@@ -37,14 +37,22 @@ ZEN.add_schema({
                   private = ZEN.get(obj, 'private') }
 	  end,
 	  secret_message = function(obj)
-		 local ver = obj.zenroom
-		 local curve = obj.curve
 		 return { checksum = ZEN.get(obj, 'checksum'),
 				  header   = ZEN.get(obj, 'header'),
 				  iv       = ZEN.get(obj, 'iv'),
 				  message  = ZEN.get(obj, 'message'),
 				  pubkey   = ZEN.get(obj, 'pubkey'),
-				  zenroom  = ver, curve = curve }
+				  scenario = ZEN.get(obj, 'scenario', str),
+				  zenroom  = ZEN.get(obj, 'zenroom', str),
+				  curve    = ZEN.get(obj, 'curve', str) }
+	  end,
+	  signed_message = function(obj)
+		 return { r = ZEN.get(obj, 'r'),
+				  s = ZEN.get(obj, 's'),
+				  text = ZEN.get(obj, 'text', str),
+				  scenario = ZEN.get(obj, 'scenario', str),
+				  zenroom  = ZEN.get(obj, 'zenroom', str),
+				  curve    = ZEN.get(obj, 'curve', str) }
 	  end
 })
 
@@ -79,11 +87,35 @@ When("I decrypt the '' as ''", function(src,dst)
 		ZEN.assert(ACK.keypair, "Keyring not found")
 		ZEN.assert(ACK.keypair.private, "Private key not found in keyring")
 		ZEN.assert(ACK[src], "Ciphertext not found")
-		if VERSION ~= ACK[src].zenroom then
+		if VERSION ~= ACK[src].zenroom:str() then
 		   warn("Ciphertext was not produced with running version of Zenroom: "
-				   ..ACK[src].zenroom.. " (running "..VERSION..")")
+				   ..ACK[src].zenroom:str().. " (running "..VERSION..")")
 		end
-		local recpt = ECDH.new(ACK[src].curve or CONF.curve)
+		local recpt = ECDH.new(ACK[src].curve:str() or CONF.curve)
 		recpt:private(ACK.keypair.private)
 		ACK[dst] = recpt:decrypt(ACK[src])
+end)
+
+-- sign a message and verify
+When("I sign the draft as ''", function(dst)
+		ZEN.assert(ACK.keypair, "Keyring not found")
+		ZEN.assert(ACK.keypair.private, "Private key not found in keyring")
+		local dsa = ECDH.new(CONF.curve)
+		dsa:private(ACK.keypair.private)
+		ACK[dst] = dsa:sign(ACK.draft)
+		-- include contextual information
+		ACK[dst].text = ACK.draft:string()
+		ACK[dst].zenroom = VERSION
+		ACK[dst].curve = CONF.curve
+		ACK[dst].scenario = ZEN.scenario
+end)
+
+When("I verify the '' is authentic", function(msg)
+		ZEN.assert(ACK.public, "Public key not found")
+		local dsa = ECDH.new(CONF.curve)
+		dsa:public(ACK.public)
+		local sm = ACK[msg]
+		ZEN.assert(sm, "Signed message not found: "..msg)
+		ZEN.assert(dsa:verify(sm.text,{ r = sm.r, s = sm.s }),
+				   "The signature is not authentic")
 end)
