@@ -486,6 +486,7 @@ end
 
 function zencode.debug()
    -- TODO: print to stderr
+   print(ZEN_traceback)
    print(" _______")
    print("|  DEBUG:")
    -- one print after another to sort deterministic
