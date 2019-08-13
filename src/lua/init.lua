@@ -20,10 +20,6 @@
 -- zen_load_extensions(L) usually after zen_init()
 
 
--- default encoding base64url (RFC4648)
--- this is the fastest and most portable encoder in zenroom
-_G["CONF"] = { encoding = url64,
-			   encoding_prefix = 'u64' }
 -- ZEN = { assert = assert } -- zencode shim when not loaded
 require('zenroom_common')
 INSIDE = require('inspect')
@@ -47,3 +43,13 @@ require('zencode_data')
 -- scenarios can only implement "When ..." steps
 _G["Given"] = nil
 _G["Then"]  = nil
+
+-----------
+-- defaults
+_G["CONF"] = {
+   -- encoding base64url (RFC4648) is the fastest and most portable in zenroom
+   encoding = url64,
+   encoding_prefix = 'u64',
+   -- goldilocks is our favorite ECDH/DSA curve
+   curve = 'goldilocks'
+}

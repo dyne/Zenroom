@@ -36,7 +36,7 @@ ZEN.prefix = function(str)
 end
 
 ZEN.get = function(obj, key, conversion)
-   local conv = conversion or OCTET.new
+   local conv = conversion or CONF.encoding
    ZEN.assert(type(key) == "string", "Invalid key in object conversion")
    ZEN.assert(obj, "Object not found for conversion")
    local k = obj[key]

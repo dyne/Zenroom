@@ -180,6 +180,7 @@ end
 function zencode:validate(name)
    ZEN.assert(name, "ZEN:validate error: argument is nil")
    ZEN.assert(TMP, "ZEN:validate error: TMP is nil")
+   ZEN.assert(TMP.schema, "ZEN:validate error: TMP.schema is nil")
    ZEN.assert(TMP.schema == name, "ZEN:validate() TMP does not contain "..name)
    local got = TMP.data -- inside_pick(TMP,name)
    ZEN.assert(TMP.data, "ZEN:validate error: data not found in TMP for schema "..name)
@@ -485,6 +486,7 @@ function zencode.debug()
    I.print({TMP = TMP})
    I.print({ACK = ACK})
    I.print({OUT = OUT})
+   I.print({Schemas = ZEN.schemas})
 end
 
 function zencode.debug_json()
