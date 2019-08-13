@@ -104,7 +104,7 @@ void zen_teardown(zenroom_t *zenroom);
 
 #define MAX_LINE 1024 // 1KiB maximum length for a newline terminated line (Zencode)
 #define UMM_HEAP (64*1024) // 64KiB (masked with 0x7fff)
-#define MAX_FILE (1024*1024) // load max 1MB files
+#define MAX_FILE 2048000 // load max 2MiB files
 #ifndef MAX_STRING
 #define MAX_STRING 20480 // max 20KiB strings
 #endif
