@@ -51,7 +51,7 @@ int is_url64(const char *in) {
 	if(!in) { return 0; }
 	register int c;
 	// check u64: header
-	if(in[0]!='u' || in[1]!='6' || in[2]!='4' || in[3]!=':') return 0;
+	// if(in[0]!='u' || in[1]!='6' || in[2]!='4' || in[3]!=':') return 0;
     // check all valid characters
 	unsigned char *bufin = (unsigned char *)in+4;
 	for(c=0; bufin[c] != '\0'; c++)

@@ -119,3 +119,9 @@ end)
 Given("debug", function() ZEN.debug() end)
 When("debug",  function() ZEN.debug() end)
 Then("debug",  function() ZEN.debug() end)
+
+-- basic encoding schemas
+ZEN.add_schema({
+	  base64 = function(obj) return ZEN:convert(obj, OCTET.from_base64) end,
+	  url64  = function(obj) return ZEN:convert(obj, OCTET.from_url64)  end
+})
