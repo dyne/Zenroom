@@ -396,7 +396,7 @@ static int from_base64(lua_State *L) {
 
 static int from_url64(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
-	luaL_argcheck(L, s != NULL, 1, "base64 string expected");
+	luaL_argcheck(L, s != NULL, 1, "url64 string expected");
 	int len = is_url64(s);
 	if(!len) {
 		lerror(L, "url64 string contains invalid characters");
