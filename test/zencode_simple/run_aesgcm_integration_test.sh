@@ -10,7 +10,7 @@ echo $scenario
 cat <<EOF | zenroom | tee alice.keys
 ZEN:begin($verbose)
 ZEN:parse([[
-Scenario 'aesgcm': $scenario
+Scenario 'simple': $scenario
 Given that I am known as 'Alice'
 When I create my new keypair
 Then print my data
@@ -23,7 +23,7 @@ echo $scenario
 cat <<EOF | zenroom -k alice.keys | tee alice.pub
 ZEN:begin($verbose)
 ZEN:parse([[
-Scenario 'aesgcm': $scenario
+Scenario 'simple': $scenario
 Given that I am known as 'Alice'
 and I have my 'public' key
 Then print my data
@@ -37,7 +37,7 @@ echo $scenario
 cat <<EOF | zenroom | tee bob.keys
 ZEN:begin($verbose)
 ZEN:parse([[
-Scenario 'aesgcm': $scenario
+Scenario 'simple': $scenario
 Given that I am known as 'Bob'
 When I create my new keypair
 Then print my data
@@ -50,7 +50,7 @@ echo $scenario
 cat <<EOF | zenroom -k bob.keys | tee bob.pub
 ZEN:begin($verbose)
 ZEN:parse([[
-Scenario 'aesgcm': $scenario
+Scenario 'simple': $scenario
 Given that I am known as 'Bob'
 and I have my 'public' key
 Then print my data
@@ -61,7 +61,7 @@ EOF
 scenario="Alice encrypts a message for Bob"
 echo $scenario
 cat <<EOF | zenroom -z -d$verbose -k alice.keys -a bob.pub | tee alice_to_bob.json
-Scenario 'aesgcm': $scenario
+Scenario 'simple': $scenario
 Given that I am known as 'Alice'
 and I have my 'keypair'
 and I have inside 'Bob' a valid 'public' key
@@ -73,21 +73,26 @@ EOF
 scenario="Bob decrypts the message from Alice"
 echo $scenario
 cat <<EOF | zenroom -z -d$verbose -k bob.keys -a alice_to_bob.json
-Scenario 'aesgcm': $scenario
+Scenario 'simple': $scenario
 Given that I am known as 'Bob'
 and I have my valid 'keypair'
 and I have a valid 'secret message'
 When I decrypt the 'secret message' as 'clear text'
 Then print as 'string' the 'clear text'
+and print as 'string' the 'header' inside 'secret message'
 EOF
+
 return 0
+
+# TODO: multiple recipients zencode
+
 # join in array: [ { alice = { public = "..." } }, { bob = { public = "..." } } ]
 jq -s '.' *.pub > recipients.pub
 
 scenario="Alice encrypts a message for Bob"
 echo $scenario
 cat <<EOF | zenroom -z -d$verbose -k alice.keys -a recipients.pub | tee alice_to_bob.json
-Scenario 'aesgcm': $scenario
+Scenario 'simple': $scenario
 Given that I am known as 'Alice'
 and I create a table 'recipients'
 and I have inside 'Bob' a valid 'public' key

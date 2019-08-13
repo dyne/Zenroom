@@ -15,6 +15,10 @@ function iszen(n)
    return false
 end
 
+-- debugging facility
+function xxx(n,s)
+   if ZEN.verbosity or CONF.debug >= n then act(s) end
+end
 
 -- global
 _G["REQUIRED"] = { }

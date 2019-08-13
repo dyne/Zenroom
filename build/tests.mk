@@ -44,7 +44,11 @@ crypto-tests = \
 	${1} test/coconut_test.lua && \
 	cd test/zencode_coconut &&    \
 	./run_coconut_example.sh;     \
-	./run_petition_example.sh; cd -
+	./run_petition_example.sh; cd -; \
+	cd test/zencode_simple &&    \
+	./run_aesgcm_integration_test.sh; cd -
+
+
 
 shell-tests = \
 	test/octet-json.sh ${1} && \
