@@ -186,7 +186,7 @@ ZEN.add_schema({
 					   right = get(obj.neg, 'right', ECP.new) } })
 	  end,
 	  petition = function(obj)
-		 local res = { uid = obj['uid'], -- get(obj, 'uid', str),
+		 local res = { uid = get(obj,'uid'),
 					   owner = get(obj, 'owner', ECP.new),
 					   scores = ZEN:valid('petition_scores',obj.scores) }
 		 if type(obj.vkeys) == 'table' then res.vkeys = ZEN:valid('ca_verify',obj.vkeys) end
@@ -206,7 +206,7 @@ ZEN.add_schema({
 		   local dec = { }
 		   dec.neg = get(obj.dec, 'neg', ECP.new)
 		   dec.pos = get(obj.dec, 'pos', ECP.new)
-		   return { uid = uid, -- get(obj, 'uid'),
+		   return { uid = get(obj,'uid'),
 					c = get(obj, 'c', INT.new),
 					dec = dec,
 					rx = get(obj, 'rx', INT.new) }
