@@ -466,12 +466,13 @@ function zencode:run()
 	  if KEYS then IN.KEYS = JSON.decode(KEYS) end
 	  ZEN:trace("->  "..trim(x.source))
       local ok, err = pcall(x.hook,table.unpack(x.args))
-      if not ok then
-		 ZEN:trace("[!] "..err)
-		 ZEN:trace("---")
-		 error(trim(x.source))
-		 -- clean the traceback
-		 _G['ZEN_traceback'] = ""
+      if not ok or not ZEN.OK then
+	  	 ZEN:trace("[!] "..err)
+	  	 ZEN:trace("---")
+	  	 error(trim(x.source)) -- prints ZEN_traceback
+	  	 -- clean the traceback
+	  	 _G['ZEN_traceback'] = ""
+		 assert(false)
 	  end
    end
    ZEN:trace("--- Zencode execution completed")
