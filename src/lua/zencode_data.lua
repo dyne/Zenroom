@@ -91,10 +91,14 @@ Then("print my draft", function()
 		ZEN:draft() -- sanity checks
 		OUT[ACK.whoami] = { draft = ACK.draft:string() }
 end)
-Then("print as '' my draft", function(conv)
-		ZEN:draft()
-		OUT[ACK.whoami] = { draft = ZEN:convert(ACK.draft, conv) }
-end)
+
+function _print_my_draft_as(conv)
+   ZEN:draft()
+   OUT[ACK.whoami] = { draft = ZEN:convert(ACK.draft, conv) }
+end
+Then("print as '' my draft", _print_mydraft_as)
+Then("print my draft as ''", _print_mydraft_as)
+
 Then("print as '' my ''", function(conv,obj)
 		ZEN:draft()
 		OUT[ACK.whoami] = { draft = ZEN:convert(ACK[obj], conv) }
