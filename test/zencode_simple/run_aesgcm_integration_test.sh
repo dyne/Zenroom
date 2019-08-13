@@ -7,55 +7,39 @@ alias zenroom='../../src/zenroom-shared'
 
 scenario="Alice generate a keypair"
 echo $scenario
-cat <<EOF | zenroom | tee alice.keys
-ZEN:begin($verbose)
-ZEN:parse([[
+cat <<EOF | zenroom -z -d$verbose | tee alice.keys
 Scenario 'simple': $scenario
 Given that I am known as 'Alice'
 When I create my new keypair
 Then print my data
-]])
-ZEN:run()
 EOF
 
 scenario="Alice publishes her public key"
 echo $scenario
-cat <<EOF | zenroom -k alice.keys | tee alice.pub
-ZEN:begin($verbose)
-ZEN:parse([[
+cat <<EOF | zenroom -z -d$verbose -k alice.keys | tee alice.pub
 Scenario 'simple': $scenario
 Given that I am known as 'Alice'
 and I have my 'public' key
 Then print my data
-]])
-ZEN:run()
 EOF
 
 
 scenario="Bob generate a keypair"
 echo $scenario
-cat <<EOF | zenroom | tee bob.keys
-ZEN:begin($verbose)
-ZEN:parse([[
+cat <<EOF | zenroom -z -d$verbose | tee bob.keys
 Scenario 'simple': $scenario
 Given that I am known as 'Bob'
 When I create my new keypair
 Then print my data
-]])
-ZEN:run()
 EOF
 
 scenario="Bob publishes his public key"
 echo $scenario
-cat <<EOF | zenroom -k bob.keys | tee bob.pub
-ZEN:begin($verbose)
-ZEN:parse([[
+cat <<EOF | zenroom -z -d$verbose -k bob.keys | tee bob.pub
 Scenario 'simple': $scenario
 Given that I am known as 'Bob'
 and I have my 'public' key
 Then print my data
-]])
-ZEN:run()
 EOF
 
 scenario="Alice encrypts a message for Bob"
