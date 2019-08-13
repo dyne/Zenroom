@@ -20,8 +20,8 @@ else z="$1"; fi
 # chose among profiling tools
 zenroom() {	
 	if command -v perf; then
-		perf stat -B $z $*
-		# perf record -a $z $*
+		# perf stat -B $z $*
+		perf record $z $*
 		# perf report
 	else
 		time $z $*
@@ -66,4 +66,4 @@ EOF
 encrypt 4    # 4K
 encrypt 500  # .5M
 encrypt 1000  # 1M
-encrypt 1500  # 1.5M
+# encrypt 1500  # 1.5M

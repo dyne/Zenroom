@@ -213,7 +213,7 @@ end
 -- pass on a data structure into the ACK memory space, ready for
 -- processing.  It must follow @{pick} and optionally @{validate}.
 --
--- @function ZEN:ack(name, object)
+-- @function ZEN:ack(name)
 -- @param name string descriptor of the data object
 function zencode:ack(name)
    ZEN:validate(name) -- never ACK anything if not validated
@@ -315,7 +315,7 @@ end
 --
 -- @function ZEN:convert(object, format)
 -- @param object data element to be converted
--- @param format string descriptor of format to convert to
+-- @param format pointer to a converter function
 -- @return object converted to format
 function zencode:convert(object, format)
    local fun = format or CONF.encoding
@@ -461,7 +461,15 @@ function zencode:run()
    -- xxx(2,self.matches)
    for i,x in sort_ipairs(self.matches) do
 	  IN = { } -- import global DATA from json
-	  if DATA then IN = JSON.decode(DATA) end
+	  if DATA then
+		 -- if plain array conjoin into associative
+		 local _in = JSON.decode(DATA)
+		 if _in and isarray(_in) then -- conjoin array
+			for i,c in ipairs(_in) do
+			   for k,v in pairs(c) do IN[k] = v end
+			end
+		 else IN = _in or { } end
+	  end
 	  IN.KEYS = { } -- import global KEYS from json
 	  if KEYS then IN.KEYS = JSON.decode(KEYS) end
 	  ZEN:trace("->  "..trim(x.source))
@@ -470,7 +478,9 @@ function zencode:run()
       if not ok or not ZEN.OK then
 	  	 if err then ZEN:trace("[!] "..err) end
 	  	 error(trim(x.source)) -- prints ZEN_traceback
-		 ZEN:debug()
+		 -- if CONF.verbosity > 2 then
+			ZEN:debug()
+		 -- end
 	  	 -- clean the traceback
 	  	 _G['ZEN_traceback'] = ""
 		 assert(false)

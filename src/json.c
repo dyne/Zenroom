@@ -947,6 +947,8 @@ static void json_next_string_token(json_parse_t *json, json_token_t *token)
         /* Append normal character or translated single character
          * Unicode escapes are handled above */
         strbuf_append_char_unsafe(json->tmp, ch);
+        // can hardly optimize the above, which is an inline of:
+        // json->tmp->buf[json->tmp->length++] = ch;
         json->ptr++;
     }
     json->ptr++;    /* Eat final quote (") */

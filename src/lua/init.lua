@@ -51,5 +51,6 @@ _G["CONF"] = {
    encoding = url64,
    encoding_prefix = 'u64',
    -- goldilocks is our favorite ECDH/DSA curve
-   curve = 'goldilocks'
+   curve = 'goldilocks',
+   verbosity = 1
 }
