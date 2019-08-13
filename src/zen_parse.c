@@ -23,10 +23,13 @@
 
 // #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 // #include <errno.h>
 // #include <jutils.h>
 
-// #include <zenroom.h>
+#include <zenroom.h>
+#include <zen_error.h>
+#include <jutils.h>
 
 #include <lua.h>
 #include <lualib.h>
@@ -36,7 +39,7 @@
 static int lua_parse_prefix(lua_State* L) { 
 	const char *line;
 	size_t size;
-	line = luaL_checklstring(L,1,&size);
+	line = luaL_checklstring(L,1,&size); SAFE(line);
 	register unsigned short int c;
 	unsigned short fspace = 0;
 	// skip space in front
@@ -51,6 +54,32 @@ static int lua_parse_prefix(lua_State* L) {
 	}
 	if(c==size || c==MAX_LINE) lua_pushnil(L);
 	else lua_pushlstring(L,&low[fspace],c-fspace);
+	return 1;
+}
+
+// internal use, trims the string to a provided destination which is
+// pre-allocated
+static void trimto(char *dest, const char *src, const size_t len) {
+	register unsigned short int c;
+	register unsigned short int d;
+	for(c=0; c<len && isspace(src[c]); c++); // skip front space
+	for(d=0; c<len; c++, d++) dest[d] = src[c];
+	dest[d] = '\0'; // null termination
+}
+static int lua_strcasecmp(lua_State *L) {
+	const char *a, *b;
+	size_t la, lb;
+	char ta[MAX_LINE], tb[MAX_LINE];
+	a = luaL_checklstring(L,1,&la); SAFE(a);
+	b = luaL_checklstring(L,2,&lb); SAFE(b);
+	if(la>MAX_LINE) lerror(L, "strcasecmp: arg #1 MAX_LINE limit hit");
+	if(lb>MAX_LINE) lerror(L, "strcasecmp: arg #2 MAX_LINE limit hit");
+	trimto(ta, a, la);
+	trimto(tb, b, lb);
+	if( strcasecmp(ta,tb) == 0 )
+		lua_pushboolean(L,1);
+	else
+		lua_pushboolean(L,0);
 	return 1;
 }
 
@@ -77,6 +106,7 @@ void zen_add_parse(lua_State *L) {
 	// override print() and io.write()
 	static const struct luaL_Reg custom_parser [] =
 		{ {"parse_prefix", lua_parse_prefix},
+		  {"strcasecmp", lua_strcasecmp},
 		  {"trim", lua_trim_string},
 		  {NULL, NULL} };
 	lua_getglobal(L, "_G");

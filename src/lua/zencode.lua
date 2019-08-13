@@ -62,6 +62,7 @@ local zencode = {
    matches = {},
    verbosity = 0,
    schemas = { },
+   scenario = nil;
    OK = true -- set false by asserts
 }
 
@@ -329,11 +330,10 @@ function zencode:convert(object, format)
 end
 
 
--- debugging facility
-function xxx(n,s)
-   if zencode.verbosity >= n then
-	  act(s) end
-end
+
+---------------------------------------------------------------
+-- ZENCODE PARSER
+
 function zencode:begin(verbosity)
    if verbosity > 0 then
       xxx(2,"Zencode debug verbosity: "..verbosity)
@@ -358,9 +358,9 @@ end end
 function zencode:step(text)
    if ZEN:isempty(text) then return true end
    if ZEN:iscomment(text) then return true end
-   -- first word
-   local chomp = string.char(text:byte(1,1024))
-   local prefix = chomp:match("(%w+)(.+)"):lower()
+   -- max length for single zencode line is #define MAX_LINE
+   -- hard-coded inside zenroom.h
+   local prefix = parse_prefix(text)
    local defs -- parse in what phase are we
    if prefix == 'given' then
       self.current_step = self.given_steps
@@ -376,29 +376,36 @@ function zencode:step(text)
    elseif prefix == 'scenario' then
       self.current_step = self.given_steps
       defs = self.current_step
-	  local scenario = string.match(text, "'(.-)'")
-	  if scenario ~= "" then
-		 require("zencode_"..scenario)
-		 ZEN:trace("|   Scenario "..scenario)
+	  ZEN.scenario = string.match(text, "'(.-)'")
+	  if ZEN.scenario ~= "" then
+		 require("zencode_"..ZEN.scenario)
+		 ZEN:trace("|   Scenario "..ZEN.scenario)
 	  end
    else -- defs = nil end
 	    -- if not defs then
-		 error("Zencode invalid: "..chomp)
+		 error("Zencode invalid: "..text)
 		 return false
    end
+   -- xxx(2, "-----")
+   -- TODO: optimize and write a faster function in C
+   -- support simplified notation for arg match
+   local tt = string.gsub(text,"'(.-)'","''")
+   tt = string.gsub(tt:lower(),"when " ,"", 1)
+   tt = string.gsub(tt,"then " ,"", 1)
+   tt = string.gsub(tt,"given ","", 1)
+   tt = string.gsub(tt,"and "  ,"", 1)
+   tt = string.gsub(tt,"that "  ,"", 1)
+
    for pattern,func in pairs(defs) do
       if (type(func) ~= "function") then
          error("Zencode function missing: "..pattern)
          return false
       end
-	  -- support simplified notation for arg match
-	  local pat = string.gsub(pattern,"''","'(.-)'")
-	  if string.match(text, pat) then
-		 -- xxx(3,"EXEC: "..pat)
+	  if strcasecmp(tt,pattern) then
 		 local args = {} -- handle multiple arguments in same string
 		 for arg in string.gmatch(text,"'(.-)'") do
-			-- xxx(3,"+arg: "..arg)
-			arg = string.gsub(arg, ' ', '_') -- NBSP
+			-- xxx(2,"+arg: "..arg)
+			arg = string.gsub(arg, ' ', '_')
 			table.insert(args,arg)
 		 end
 		 self.id = self.id + 1
@@ -406,18 +413,19 @@ function zencode:step(text)
 					  { id = self.id,
 						args = args,
 						source = text,
-						prefix = prefix,
-						regexp = pat,
+						-- prefix = prefix,
+						-- regexp = pattern,
 						hook = func       })
-		 -- this is parsing, not execution, hence tracing isn't useful
+		 -- this is parsing, not execution: tracing isn't useful
 		 -- _G['ZEN_traceback'] = _G['ZEN_traceback']..
-		 -- 	"    -> ".. text:gsub("^%s*", "") .. " ("..#args.." args)\n"
+		 -- "-> "..text:gsub("^%s*", "").." ("..#args.." args)\n"
 	  end
    end
 end
 
 
 -- returns an iterator for newline termination
+-- TODO: optimize
 function zencode:newline_iter(text)
    s = trim(text) -- implemented in zen_io.c
    if s:sub(-1)~="\n" then s=s.."\n" end
@@ -426,9 +434,9 @@ end
 
 -- TODO: improve parsing for strings starting with newline, missing scenarios etc.
 function zencode:parse(text)
-   if  #text < 16 then
-	  warn("Zencode text too short to parse")
-	  return false end
+   -- if  #text < 16 then
+   -- 	  warn("Zencode text too short to parse")
+   -- 	  return false end
    for line in self:newline_iter(text) do
 	  self:step(line)
    end
