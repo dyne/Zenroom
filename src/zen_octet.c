@@ -170,7 +170,7 @@ octet* o_new(lua_State *L, const int size) {
 	o->val = zen_memory_alloc(size +0x0f);
 	o->len = 0;
 	o->max = size;
-	func(L, "new octet (%u bytes)",size);
+	// func(L, "new octet (%u bytes)",size);
 	return(o);
 }
 
@@ -402,10 +402,10 @@ static int from_url64(lua_State *L) {
 		lerror(L, "url64 string contains invalid characters");
 		return 0; }
 	int nlen = B64decoded_len(len);
-	func(L,"U64 decode len: %u -> %u",len,nlen);
+	// func(L,"U64 decode len: %u -> %u",len,nlen);
 	octet *o = o_new(L, nlen);
 	o->len = U64decode(o->val,(char*)s+4); // skip header
-	func(L,"u64 return len: %u",o->len);
+	// func(L,"u64 return len: %u",o->len);
 	return 1;
 }
 

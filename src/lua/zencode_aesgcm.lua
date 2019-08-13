@@ -42,11 +42,14 @@ ZEN.add_schema({
                   private = sk }
 	  end,
 	  secret_message = function(obj)
+		 local ver = obj.zenroom
+		 local curve = obj.curve
 		 return { checksum = ZEN.get(obj, 'checksum'),
 				  header   = ZEN.get(obj, 'header'),
 				  iv       = ZEN.get(obj, 'iv'),
 				  message  = ZEN.get(obj, 'message'),
-				  pubkey   = ZEN.get(obj, 'pubkey') }
+				  pubkey   = ZEN.get(obj, 'pubkey'),
+				  zenroom  = ver, curve = curve }
 	  end
 })
 
@@ -63,16 +66,29 @@ When("I generate my keys", f_keygen)
 
 -- encrypt to a single public key
 When("I encrypt the draft as ''", function(msg)
+		ZEN.assert(ACK.keypair, "Keyring not found")
+		ZEN.assert(ACK.keypair.private, "Private key not found in keyring")
 		local from = ECDH.new(CONF.curve)
 		from:private(ACK.keypair.private)
 		local to = ECDH.new(CONF.curve)
+		ZEN.assert(ACK.public, "Public key not found")
 		to:public(ACK.public)
 		ACK[msg] = from:encrypt(to, ACK.draft, str('empty'))
+		-- include contextual information
+		ACK[msg].zenroom = VERSION
+		ACK[msg].curve = CONF.curve
+		ACK[msg].scenario = ZEN.scenario
 end)
 
 When("I decrypt the '' as ''", function(src,dst)
-		ZEN:pick(src)
-		local recpt = ECDH.new(CONF.curve)
+		ZEN.assert(ACK.keypair, "Keyring not found")
+		ZEN.assert(ACK.keypair.private, "Private key not found in keyring")
+		ZEN.assert(ACK[src], "Ciphertext not found")
+		if VERSION ~= ACK[src].zenroom then
+		   warn("Ciphertext was not produced with running version of Zenroom: "
+				   ..ACK[src].zenroom.. " (running "..VERSION..")")
+		end
+		local recpt = ECDH.new(ACK[src].curve or CONF.curve)
 		recpt:private(ACK.keypair.private)
 		ACK[dst] = recpt:decrypt(ACK[src])
 end)
