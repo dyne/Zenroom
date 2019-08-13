@@ -3,7 +3,7 @@
 
 verbose=1
 
-alias zenroom='../../src/zenroom-shared'
+alias zenroom="$1"
 
 scenario="Alice generate a keypair"
 echo $scenario

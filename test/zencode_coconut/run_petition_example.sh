@@ -10,7 +10,7 @@ echo
 
 verbose=1
 
-alias zenroom='../../src/zenroom-shared'
+alias zenroom="$1"
 
 # this example presumes that run_credential_example.sh was already ran
 # succesfully in order to create credential keypairs and sign them,

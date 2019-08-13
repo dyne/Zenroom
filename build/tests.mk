@@ -43,10 +43,11 @@ crypto-tests = \
 	${1} test/pair_bls383.lua && \
 	${1} test/coconut_test.lua && \
 	cd test/zencode_coconut &&    \
-	./run_coconut_example.sh;     \
-	./run_petition_example.sh; cd -; \
+	./run_coconut_example.sh ../../${1} &&    \
+	./run_petition_example.sh ../../${1};cd -; \
 	cd test/zencode_simple &&    \
-	./run_aesgcm_integration_test.sh; cd -
+	./run_aesgcm_integration_test.sh ../../${1} && \
+	./run_ecdsa_integration_test.sh ../../${1}; cd -;
 
 
 

@@ -10,7 +10,7 @@ echo
 
 verbose=1
 
-alias zenroom='../../src/zenroom-shared'
+alias zenroom="$1"
 
 scenario="Generate credential issuer keypair"
 echo $scenario
