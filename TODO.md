@@ -11,11 +11,14 @@ for position, for instance ECP multiplication needs to have the BIG
 number always as second argument. Instead of returning error we should
 check the type and reposition the arguments accordingly.
 
-reentrant memory model: zen_mem is now a static variable in zen_memory
-because it needs to be referred from internal models of different
-memory managers (so far umm) but this is not REENTRANT: it prevents
-the concurrent allocation of multiple zenroom instances and in general
-is bad practice.
+## Low-hanging
+
+- memory locking with controls at switch Given (r/o) -> When (r/w) -> Then (w/o)
+- variable wiping with content overwriting in GC
+- DATA and KEYS wiping in Zencode
+- adopt finite state machine in Zencode parser
+- wipe previous memory block in Zencode
+- load multiple scenarios, build `documentation` scenario with ZEN.callback
 
 ## Benchmarking
 
@@ -23,6 +26,23 @@ extend redroom for in-memory benchmarks
 
 prime number discovery using crypto primitives:
 https://github.com/pakozm/lua-happy-prime-numbers/blob/master/happy_primes.lua
+
+using perf-tool:
+```
+perf record zenroom $*
+perf report
+```
+
+### Optimizations
+
+Take DATA inside Zencode without parsing from JSON
+- fast detect if JSON: `[` or `{` as first char
+- fast detect of type by 3 char prefix: `u64:` or `b64:`
+- read into IN with name of prefix (data schema)
+- insure that parsing to ACK implies only one memcpy to octet
+
+
+
 
 ## Add-ons
 
