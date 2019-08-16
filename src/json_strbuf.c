@@ -29,6 +29,7 @@
 
 #include <json_strbuf.h>
 
+#include <jutils.h>
 #include <zen_memory.h>
 #include <zen_error.h>
 
@@ -198,7 +199,7 @@ void strbuf_append_fmt(strbuf_t *s, int len, const char *fmt, ...)
     strbuf_ensure_empty_length(s, len);
 
     va_start(arg, fmt);
-    fmt_len = vsnprintf(s->buf + s->length, len, fmt, arg);
+    fmt_len = z_vsnprintf(s->buf + s->length, len, fmt, arg);
     va_end(arg);
 
     if (fmt_len < 0)
@@ -225,7 +226,7 @@ void strbuf_append_fmt_retry(strbuf_t *s, const char *fmt, ...)
          * trailing NULL */
         empty_len = strbuf_empty_length(s);
         /* Add 1 since there is also space to store the terminating NULL. */
-        fmt_len = vsnprintf(s->buf + s->length, empty_len + 1, fmt, arg);
+        fmt_len = z_vsnprintf(s->buf + s->length, empty_len + 1, fmt, arg);
         va_end(arg);
 
         if (fmt_len <= empty_len)

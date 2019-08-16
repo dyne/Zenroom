@@ -434,14 +434,14 @@ static int ecp_table(lua_State *L) {
 	lua_pop(L,1); _fp_to_big(x, &e->val.x);
 	o = new_octet_from_big(L,x);
 	lua_pop(L,1);
-	push_octet_to_hex_string(o);
+	push_octet_to_hex_string(L,o);
 	lua_setfield(L,2,"x");
 	// y
 	y = big_new(L); big_init(y);
 	lua_pop(L,1); _fp_to_big(y, &e->val.y);
 	o = new_octet_from_big(L,y);
 	lua_pop(L,1);
-	push_octet_to_hex_string(o);
+	push_octet_to_hex_string(L,o);
 	lua_setfield(L,2,"y");
 	return 1;
 }
@@ -454,7 +454,7 @@ static int ecp_output(lua_State *L) {
 	octet *o = o_new(L,e->totlen + 0x0f);
 	SAFE(o); lua_pop(L,1);
 	_ecp_to_octet(o,e);
-	push_octet_to_hex_string(o);
+	push_octet_to_hex_string(L,o);
 	return 1;
 }
 

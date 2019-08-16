@@ -124,14 +124,6 @@ int zen_setenv(lua_State *L, char *key, char *val) {
 	return 0;
 }
 
-int zen_add_package(lua_State *L, char *name, lua_CFunction func) {
-	lua_register(L,name,func);
-	char cmd[MAX_STRING];
-	snprintf(cmd,MAX_STRING,
-	         "table.insert(package.searchers, 2, %s",name);
-	return luaL_dostring(L,cmd);
-}
-
 void zen_add_function(lua_State *L,
                       lua_CFunction func,
                       const char *func_name) {
@@ -169,7 +161,7 @@ static const char *zen_lua_findtable (lua_State *L, int idx,
 void zen_add_class(lua_State *L, char *name,
                   const luaL_Reg *_class, const luaL_Reg *methods) {
 	char classmeta[512];
-	snprintf(classmeta,511,"zenroom.%s", name);
+	z_snprintf(classmeta,511,"zenroom.%s", name);
 	luaL_newmetatable(L, classmeta);
 	lua_pushstring(L, "__index");
 	lua_pushvalue(L, -2);  /* pushes the metatable */

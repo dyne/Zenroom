@@ -35,6 +35,7 @@
 
 #include <json_fpconv.h>
 
+#include <jutils.h>
 #include <zen_memory.h>
 
 /* Lua CJSON assumes the locale is the same for all threads within a
@@ -184,10 +185,10 @@ int fpconv_g_fmt(char *str, double num, int precision)
 
     /* Pass through when decimal point character is dot. */
     if (locale_decimal_point == '.')
-        return snprintf(str, FPCONV_G_FMT_BUFSIZE, fmt, num);
+        return z_snprintf(str, FPCONV_G_FMT_BUFSIZE, fmt, num);
 
     /* snprintf() to a buffer then translate for other decimal point characters */
-    len = snprintf(buf, FPCONV_G_FMT_BUFSIZE, fmt, num);
+    len = z_snprintf(buf, FPCONV_G_FMT_BUFSIZE, fmt, num);
 
     /* Copy into target location. Translate decimal point if required */
     b = buf;

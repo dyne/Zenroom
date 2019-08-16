@@ -21,9 +21,13 @@
 #include <android/log.h>
 #endif
 
+// fast sprintf variant
+#define STB_SPRINTF_IMPLEMENTATION 1
+#define STB_SPRINTF_NOFLOAT 1
+#define STB_SPRINTF_DECORATE(name) z_##name
+#include <stb_sprintf.h>
+
 #include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
@@ -50,9 +54,8 @@ const char* ANSI_RESET   = "\x1b[0m";
 		  ci sono le funzioni chiamate */
 #define WARN 1 /* ... blkbblbl */
 
-char msg[MAX_STRING];
-
 extern zenroom_t *Z;
+static char msg[MAX_STRING];
 
 static int verbosity = 1;
 void set_debug(int lev) {
@@ -78,9 +81,9 @@ static void _printf(char *pfx, char *msg) {
 		if(Z->stderr_buf) {
 			char *err = Z->stderr_buf;
 			size_t len = strlen(msg);
-			snprintf(err+Z->stderr_pos,
-			         Z->stderr_len-Z->stderr_pos,
-			         "%s %s\n", pfx,msg);
+			z_snprintf(err+Z->stderr_pos,
+			           Z->stderr_len-Z->stderr_pos,
+			           "%s %s\n", pfx,msg);
 			Z->stderr_pos+=len+5;
 			return;
 		}
@@ -114,7 +117,7 @@ void notice(lua_State *L, const char *format, ...) {
 	(void)L;
   va_list arg;
   va_start(arg, format);
-  vsnprintf(msg, MAX_STRING, format, arg);
+  z_vsnprintf(msg, MAX_STRING, format, arg);
   _printf("[*]", msg);
   va_end(arg);
 }
@@ -124,7 +127,7 @@ void func(void *L, const char *format, ...) {
   if(verbosity>=FUNC) {
     va_list arg;
     va_start(arg, format);
-    vsnprintf(msg, MAX_STRING, format, arg);
+    z_vsnprintf(msg, MAX_STRING, format, arg);
     _printf("[F]", msg);
     va_end(arg);
   }
@@ -134,7 +137,7 @@ void error(lua_State *L, const char *format, ...) {
 	(void)L;
   va_list arg;
   va_start(arg, format);
-  vsnprintf(msg, MAX_STRING, format, arg);
+  z_vsnprintf(msg, MAX_STRING, format, arg);
   _printf("[!]", msg);
   va_end(arg);
   if(Z) Z->errorlevel = 3;
@@ -146,7 +149,7 @@ void act(lua_State *L, const char *format, ...) {
   va_list arg;
   va_start(arg, format);
   
-  vsnprintf(msg, MAX_STRING, format, arg);
+  z_vsnprintf(msg, MAX_STRING, format, arg);
   _printf(" . ", msg);
   va_end(arg);
 }
@@ -156,7 +159,7 @@ void warning(lua_State *L, const char *format, ...) {
   if(verbosity>=WARN) {
     va_list arg;
     va_start(arg, format);
-    vsnprintf(msg, MAX_STRING, format, arg);
+    z_vsnprintf(msg, MAX_STRING, format, arg);
     _printf("[W]", msg);
     va_end(arg);
     if(Z) Z->errorlevel = 2;

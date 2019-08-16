@@ -46,6 +46,7 @@
 #include <json_strbuf.h>
 #include "json_fpconv.h"
 
+#include <jutils.h>
 #include <zen_error.h>
 
 #ifndef CJSON_MODNAME
@@ -232,7 +233,7 @@ static int json_integer_option(lua_State *l, int optindex, int *setting,
 
     if (!lua_isnil(l, optindex)) {
         value = luaL_checkinteger(l, optindex);
-        snprintf(errmsg, sizeof(errmsg), "expected integer between %d and %d", min, max);
+        z_snprintf(errmsg, sizeof(errmsg), "expected integer between %d and %d", min, max);
         luaL_argcheck(l, min <= value && value <= max, 1, errmsg);
         *setting = value;
     }

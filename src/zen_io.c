@@ -60,7 +60,7 @@ static int lua_print_stdout_tobuf(lua_State *L, char newline) {
 		for (i=1; i<=n; i++) {
 			const char *s = lua_print_format(L, i, &len);
 			if(i>1) { out[Z->stdout_pos]='\t'; Z->stdout_pos++; }
-			snprintf(out+Z->stdout_pos,
+			z_snprintf(out+Z->stdout_pos,
 					Z->stdout_len - Z->stdout_pos,
 					"%s%c", s, newline);
 			Z->stdout_pos+=len+1;
@@ -81,7 +81,7 @@ static int lua_print_stderr_tobuf(lua_State *L, char newline) {
 		for (i=1; i<=n; i++) {
 			const char *s = lua_print_format(L, i, &len);
 			if(i>1) { out[Z->stderr_pos]='\t'; Z->stderr_pos++; }
-			snprintf(out+Z->stderr_pos,
+			z_snprintf(out+Z->stderr_pos,
 					Z->stderr_len - Z->stderr_pos,
 					"%s%c", s, newline);
 			Z->stderr_pos+=len+1;
@@ -107,7 +107,7 @@ static int zen_print (lua_State *L) {
 	for (i=1; i<=n; i++) {
 		const char *s = lua_print_format(L, i, &len);
 		if (i>1) { out[pos]='\t'; pos++; }
-		snprintf(out+pos,MAX_STRING-pos,"%s",s);
+		z_snprintf(out+pos,MAX_STRING-pos,"%s",s);
 		pos+=len;
 		lua_pop(L, 1);  /* pop result */
 	}
@@ -126,7 +126,7 @@ static int zen_error (lua_State *L) {
 	for (i=1; i<=n; i++) {
 		const char *s = lua_print_format(L, i, &len);
 		if (i>1) { out[pos]='\t'; pos++; }
-		snprintf(out+pos,MAX_STRING-pos,"%s",s);
+		z_snprintf(out+pos,MAX_STRING-pos,"%s",s);
 		pos+=len;
 		lua_pop(L, 1);  /* pop result */
 	}
@@ -145,7 +145,7 @@ static int zen_warn (lua_State *L) {
 	for (i=1; i<=n; i++) {
 		const char *s = lua_print_format(L, i, &len);
 		if (i>1) { out[pos]='\t'; pos++; }
-		snprintf(out+pos,MAX_STRING-pos,"%s",s);
+		z_snprintf(out+pos,MAX_STRING-pos,"%s",s);
 		pos+=len;
 		lua_pop(L, 1);  /* pop result */
 	}
@@ -164,7 +164,7 @@ static int zen_act (lua_State *L) {
 	for (i=1; i<=n; i++) {
 		const char *s = lua_print_format(L, i, &len);
 		if (i>1) { out[pos]='\t'; pos++; }
-		snprintf(out+pos,MAX_STRING-pos,"%s",s);
+		z_snprintf(out+pos,MAX_STRING-pos,"%s",s);
 		pos+=len;
 		lua_pop(L, 1);  /* pop result */
 	}
@@ -180,7 +180,7 @@ static int zen_write (lua_State *L) {
 		size_t len;
 		const char *s = lua_tolstring(L, arg, &len);
 		if (arg>1) { out[pos]='\t'; pos++; }
-		snprintf(out+pos,MAX_STRING-pos,"%s",s);
+		z_snprintf(out+pos,MAX_STRING-pos,"%s",s);
 		pos+=len;
 	}
 	EM_ASM_({Module.print(UTF8ToString($0))}, out);

@@ -114,6 +114,20 @@ int is_base64(const char *in) {
 	return c;
 }
 
+inline void push_octet_to_hex_string(lua_State *L, octet *o) {
+	int odlen = o->len<<1;
+	char *s = zen_memory_alloc(odlen+1);
+	register int i;
+	register unsigned char ch;
+	for (i=0; i<o->len; i++) {
+		ch=o->val[i]; z_sprintf(&s[i<<1],"%02x", ch);
+	}
+	s[odlen] = '\0';
+	lua_pushstring(L,s);
+	zen_memory_free(s);
+	return;
+}
+
 // extern const int8_t b58digits_map[];
 // int is_base58(const char *in) {
 // 	if(!in) {
@@ -712,7 +726,7 @@ This is the default format when `print()` is used on an octet.
 */
 int to_hex(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
-	push_octet_to_hex_string(o);
+	push_octet_to_hex_string(L, o);
 	return 1;
 }
 

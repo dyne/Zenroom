@@ -391,7 +391,7 @@ static int big_to_hex(lua_State *L) {
 	octet *o = new_octet_from_big(L,a);
     //o_new(L,a->len); SAFE(o);
 	lua_pop(L,1); // _big_to_octet(o,a);
-	push_octet_to_hex_string(o);
+	push_octet_to_hex_string(L,o);
 	return 1;
 }
 

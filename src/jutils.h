@@ -1,6 +1,6 @@
 /*  Jaromil's utility collection
  *
- *  (c) Copyright 2001-2006 Denis Rojo <jaromil@dyne.org>
+ *  (c) Copyright 2001-2019 Denis Rojo <jaromil@dyne.org>
  *
  * This source code is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Public License as published 
@@ -20,10 +20,9 @@
 #ifndef __JUTILS_H__
 #define __JUTILS_H__
 
+#include <stdlib.h>
 #include <stdio.h>
 
-#include <stdlib.h>
-#include <stdarg.h>
 #include <time.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -50,5 +49,11 @@ void warning(lua_State *L, const char *format, ...);
 double dtime();
 
 void jsleep(int sec, long nsec);
+
+// from stb_sprintf.h
+int z_sprintf(char *buf, char const *fmt, ...);
+int z_snprintf(char *buf, int count, char const *fmt, ...);
+int z_vsprintf(char *buf, char const *fmt, va_list va);
+int z_vsnprintf(char *buf, int count, char const *fmt, va_list va);
 
 #endif
