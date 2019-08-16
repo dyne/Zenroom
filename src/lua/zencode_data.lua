@@ -27,6 +27,7 @@
 
 Given("I introduce myself as ''", function(name) ZEN:Iam(name) end)
 Given("I am known as ''", function(name) ZEN:Iam(name) end)
+Given("I am ''", function(name) ZEN:Iam(name) end)
 
 local have_a = function(name)
    ZEN:pick(name)
@@ -41,8 +42,6 @@ local have_my = function(name)
 end
 Given("I have my valid ''", have_my)
 Given("I have my ''", have_my)
-Given("I have my '' key", have_my)
-Given("I have my valid '' key", have_my)
 
 local have_in = function(s, n)
    ZEN:pickin(s, n)

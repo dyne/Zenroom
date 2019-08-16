@@ -56,7 +56,7 @@ encrypt() {
 Scenario 'simple': $scenario
 Given that I am known as 'Alice'
 and I have my 'keypair'
-and I have inside 'Bob' a valid 'public' key
+and I have inside 'Bob' a valid 'public key'
 and I have a 'url64'
 When I encrypt the 'url64' as 'secret message'
 Then print the 'secret message'

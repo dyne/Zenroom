@@ -19,7 +19,7 @@ echo $scenario
 cat <<EOF | zenroom -z -d$verbose -k alice.keys | tee alice.pub
 Scenario 'simple': $scenario
 Given that I am known as 'Alice'
-and I have my 'public' key
+and I have my 'public key'
 Then print my data
 EOF
 
@@ -38,7 +38,7 @@ echo $scenario
 cat <<EOF | zenroom -z -d$verbose -k bob.keys | tee bob.pub
 Scenario 'simple': $scenario
 Given that I am known as 'Bob'
-and I have my 'public' key
+and I have my 'public key'
 Then print my data
 EOF
 
@@ -48,7 +48,7 @@ cat <<EOF | zenroom -z -d$verbose -k alice.keys -a bob.pub | tee alice_to_bob.js
 Scenario 'simple': $scenario
 Given that I am known as 'Alice'
 and I have my 'keypair'
-and I have inside 'Bob' a valid 'public' key
+and I have inside 'Bob' a valid 'public key'
 When I draft the string 'This is my secret message to Bob'
 and I encrypt the draft as 'secret message'
 Then print the 'secret message'
@@ -79,7 +79,7 @@ cat <<EOF | zenroom -z -d$verbose -k alice.keys -a recipients.pub | tee alice_to
 Scenario 'simple': $scenario
 Given that I am known as 'Alice'
 and I create a table 'recipients'
-and I have inside 'Bob' a valid 'public' key
+and I have inside 'Bob' a valid 'public key'
 and I add it to 'recipients'
 When I draft the string 'This is my secret message to you'
 and I encrypt the draft for all 'recipients' as 'secret message'

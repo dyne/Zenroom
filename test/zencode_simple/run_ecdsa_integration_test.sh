@@ -27,7 +27,7 @@ echo $scenario
 cat <<EOF | zenroom -z -d$verbose -k alice.pub -a alice_signs_to_bob.json
 Scenario 'simple': $scenario
 Given that I am known as 'Bob'
-and I have inside 'Alice' a valid 'public' key
+and I have inside 'Alice' a valid 'public key'
 and I have a draft inside 'Alice'
 and I have a valid 'signed message'
 When I verify the 'signed message' is authentic
