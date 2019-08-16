@@ -84,13 +84,13 @@ int main(int argc, char **argv) {
 	char keys[MAX_FILE];
 	char data[MAX_FILE];
 	int opt, index;
-	int unprotected;
+	int protected;
 	int   interactive         = 0;
 	int   zencode             = 0;
 
-	const char *short_options = "hd:ic:k:a:S:p:uz";
+	const char *short_options = "hd:ic:k:a:S:pz";
 	const char *help          =
-		"Usage: zenroom [-h] [ -d lvl ] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ -S seed ] [ -u ] [ -z ] [ script.lua ]\n";
+		"Usage: zenroom [-h] [ -d lvl ] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ -S seed ] [ -p ] [ -z ] [ script.lua ]\n";
 	int pid, status, retval;
 	conffile   [0] = '\0';
 	scriptfile [0] = '\0';
@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
 	// conf[0] = '\0';
 	script[0] = '\0';
 	int verbosity = 1;
-	unprotected = 0;
+	protected = 0;
 	set_color(1);
 	while((opt = getopt(argc, argv, short_options)) != -1) {
 		switch(opt) {
@@ -129,8 +129,8 @@ int main(int argc, char **argv) {
 		case 'S':
 			snprintf(rngseed,MAX_STRING-1,"%s",optarg);
 			break;
-		case 'u':
-			unprotected = 1;
+		case 'p':
+			protected = 1;
 			break;
 		case 'z':
 			zencode = 1;
@@ -226,7 +226,7 @@ int main(int argc, char **argv) {
 
 #if DEBUG == 1
 	int res;
-	if(verbosity) act(NULL, "unprotected mode (debug build)");
+	if(protected) act(NULL, "protected mode (seccomp isolation) not available in debug build");
 	if(zencode)
 		res = zen_exec_zencode(Z, script);
 	else
@@ -243,13 +243,14 @@ int main(int argc, char **argv) {
 		if( zen_exec_script(Z, script) ) return EXIT_FAILURE;
 
 #else /* POSIX */
-	if (unprotected) {
+	if (!protected) {
 		if(zencode) {
 			if( zen_exec_zencode(Z, script) ) return EXIT_FAILURE;
 		} else {
 			if( zen_exec_script(Z, script) ) return EXIT_FAILURE;		
 		}
 	} else {
+		act(NULL, "protected mode (seccomp isolation) activated");
 		if (fork() == 0) {
 #   ifdef ARCH_LINUX /* LINUX engages SECCOMP. */
 			if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) {
