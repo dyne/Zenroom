@@ -42,18 +42,15 @@ crypto-tests = \
 	${1} test/ecp_generic.lua && \
 	${1} test/pair_bls383.lua && \
 	${1} test/coconut_test.lua && \
-	cd test/zencode_coconut &&    \
-	./run_coconut_example.sh ../../${1} &&    \
-	./run_petition_example.sh ../../${1};cd -; \
+	test/octet-json.sh ${1} && \
+	test/integration_asymmetric_crypto.sh ${1} && \
 	cd test/zencode_simple &&    \
 	./run_aesgcm_integration_test.sh ../../${1} && \
-	./run_ecdsa_integration_test.sh ../../${1}; cd -;
+	./run_ecdsa_integration_test.sh ../../${1}; cd -; \
+	cd test/zencode_coconut &&    \
+	./run_coconut_example.sh ../../${1} &&    \
+	./run_petition_example.sh ../../${1}; cd -;
 
-
-
-shell-tests = \
-	test/octet-json.sh ${1} && \
-	test/integration_asymmetric_crypto.sh ${1}
 
 # ${1} test/closure.lua && \
 
@@ -86,40 +83,34 @@ check:
 	@echo "\t check-osx, check-shared, check-static, check-js"
 	@echo "\t check-debug, check-crypto, debug-crypto"
 
-check-osx: test-exec-lowmem := ${pwd}/src/zenroom.command
-check-osx: test-exec := ${pwd}/src/zenroom.command
+check-osx: test-exec := ./src/zenroom.command
 check-osx:
 	${test-exec} test/constructs.lua
-	$(call lowmem-tests,${test-exec-lowmem})
-	$(call determinism-tests,${test-exec-lowmem})
-	$(call crypto-tests,${test-exec-lowmem})
-	$(call shell-tests,${test-exec-lowmem})
+	$(call lowmem-tests,${test-exec})
+	$(call determinism-tests,${test-exec})
+	$(call crypto-tests,${test-exec})
 	@echo "----------------"
 	@echo "All tests passed for SHARED binary build"
 	@echo "----------------"
 
-check-shared: test-exec-lowmem := ${pwd}/src/zenroom-shared
-check-shared: test-exec := ${pwd}/src/zenroom-shared
+check-shared: test-exec := ./src/zenroom-shared
 check-shared:
 	${test-exec} test/constructs.lua
 	$(call himem-tests,${test-exec})
-	$(call lowmem-tests,${test-exec-lowmem})
-	$(call determinism-tests,${test-exec-lowmem})
-	$(call crypto-tests,${test-exec-lowmem})
-	$(call shell-tests,${test-exec-lowmem})
+	$(call lowmem-tests,${test-exec})
+	$(call determinism-tests,${test-exec})
+	$(call crypto-tests,${test-exec})
 	@echo "----------------"
 	@echo "All tests passed for SHARED binary build"
 	@echo "----------------"
 
 
-check-static: test-exec := ${pwd}/src/zenroom-static
-check-static: test-exec-lowmem := ${pwd}/src/zenroom-static
+check-static: test-exec := ./src/zenroom-static
 check-static:
 	${test-exec} test/constructs.lua
-	$(call lowmem-tests,${test-exec-lowmem})
-	$(call determinism-tests,${test-exec-lowmem})
-	$(call crypto-tests,${test-exec-lowmem})
-	$(call shell-tests,${test-exec-lowmem})
+	$(call lowmem-tests,${test-exec})
+	$(call determinism-tests,${test-exec})
+	$(call crypto-tests,${test-exec})
 	@echo "----------------"
 	@echo "All tests passed for STATIC binary build"
 	@echo "----------------"
@@ -133,11 +124,10 @@ check-js:
 	@echo "All tests passed for JS binary build"
 	@echo "----------------"
 
-check-debug: test-exec-lowmem := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom-shared -d 3
 check-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom-shared -d 3
 check-debug:
-	$(call determinism-tests,${test-exec-lowmem})
-	$(call lowmem-tests,${test-exec-lowmem})
+	$(call determinism-tests,${test-exec})
+	$(call lowmem-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
 	@echo "----------------"
 	@echo "All tests passed for DEBUG binary build"
@@ -145,7 +135,7 @@ check-debug:
 
 check-crypto: test-exec := ./src/zenroom-shared
 check-crypto:
-	$(call determinism-tests,${test-exec-lowmem})
+	$(call determinism-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
 	@echo "-----------------------"
 	@echo "All CRYPTO tests passed"
@@ -156,7 +146,6 @@ check-crypto-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/ze
 check-crypto-debug:
 	$(call determinism-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
-	$(call shell-tests,${test-exec})
 
 #	./test/integration_asymmetric_crypto.sh ${test-exec}
 
