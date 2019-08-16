@@ -23,7 +23,7 @@
 
 // fast sprintf variant
 #define STB_SPRINTF_IMPLEMENTATION 1
-#define STB_SPRINTF_NOFLOAT 1
+// #define STB_SPRINTF_NOFLOAT 1
 #define STB_SPRINTF_DECORATE(name) z_##name
 #include <stb_sprintf.h>
 
