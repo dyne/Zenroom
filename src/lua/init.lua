@@ -28,10 +28,14 @@ JSON   = require('zenroom_json')
 ECDH   = require('zenroom_ecdh')
 BIG    = require('zenroom_big')
 HASH   = require('zenroom_hash')
+MACHINE = require('statemachine')
+
 O   = OCTET  -- alias
 INT = BIG    -- alias
 H   = HASH   -- alias
 I   = INSIDE -- alias
+V   = require('semver')
+VERSION = V(VERSION)
 
 ZEN = require('zencode')
 
