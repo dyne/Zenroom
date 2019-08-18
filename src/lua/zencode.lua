@@ -67,16 +67,16 @@ local zencode = {
 }
 
 zencode.machine = MACHINE.create({
-	  initial = 'feature_',
+	  initial = 'feature',
 	  events = {
-		 { name = 'rule_',     from = { 'feature_', 'rule_' }, to = 'rule_' },
-		 { name = 'scenario_', from = { 'feature_', 'rule_' }, to = 'scenario_' },
-		 { name = 'given_',    from =   'scenario_',          to = 'given_' },
-		 { name = 'when_',     from =   'given_',             to = 'when_' },
-		 { name = 'then_',     from = { 'given_', 'when_' },  to = 'then_' },
-		 { name = 'and_',      from =   'given_',             to = 'given_' },
-		 { name = 'and_',      from =   'when_',              to = 'when_' },
-		 { name = 'and_',      from =   'then_',              to = 'then_' }
+		 { name = 'enter_rule',     from = { 'feature', 'rule' }, to = 'rule' },
+		 { name = 'enter_scenario', from = { 'feature', 'rule' }, to = 'scenario' },
+		 { name = 'enter_given',    from =   'scenario',          to = 'given' },
+		 { name = 'enter_when',     from =   'given',             to = 'when' },
+		 { name = 'enter_then',     from = { 'given', 'when' },  to = 'then' },
+		 { name = 'enter_and',      from =   'given',             to = 'given' },
+		 { name = 'enter_and',      from =   'when',              to = 'when' },
+		 { name = 'enter_and',      from =   'then',              to = 'then' }
 	  }
 })
 
@@ -380,30 +380,30 @@ function zencode:step(text)
    local defs -- parse in what phase are we
    ZEN.OK = true
    if prefix == 'given' then
-	  ZEN.assert(ZEN.machine:given_(), text.."\n    "..
+	  ZEN.assert(ZEN.machine:enter_given(), text.."\n    "..
 					"Invalid transition from "
 					..ZEN.machine.current.." to Given block")
       self.current_step = self.given_steps
       defs = self.current_step
    elseif prefix == 'when'  then
-	  ZEN.assert(ZEN.machine:when_(), text.."\n    "..
+	  ZEN.assert(ZEN.machine:enter_when(), text.."\n    "..
 					"Invalid transition from "
 					..ZEN.machine.current.."to When block")
       self.current_step = self.when_steps
       defs = self.current_step
    elseif prefix == 'then'  then
-	  ZEN.assert(ZEN.machine:then_(), text.."\n    "..
+	  ZEN.assert(ZEN.machine:enter_then(), text.."\n    "..
 					"Invalid transition from "
 					..ZEN.machine.current.." to Then block")
       self.current_step = self.then_steps
       defs = self.current_step
    elseif prefix == 'and'   then
-	  ZEN.assert(ZEN.machine:and_(), text.."\n    "..
+	  ZEN.assert(ZEN.machine:enter_and(), text.."\n    "..
 					"Invalid transition from "
 					..ZEN.machine.current.." to And block")
       defs = self.current_step
    elseif prefix == 'scenario' then
-	  ZEN.assert(ZEN.machine:scenario_(), text.."\n    "..
+	  ZEN.assert(ZEN.machine:enter_scenario(), text.."\n    "..
 					"Invalid transition from "
 					..ZEN.machine.current.." to Scenario block")
       self.current_step = self.given_steps
@@ -413,6 +413,11 @@ function zencode:step(text)
 		 require("zencode_"..ZEN.scenario)
 		 ZEN:trace("|   Scenario "..ZEN.scenario)
 	  end
+   elseif prefix == 'rule' then
+	  ZEN.assert(ZEN.machine:enter_rule(), text.."\n    "..
+					"Invalid transition from "
+					..ZEN.machine.current.." to Rule block")
+	  -- TODO: rule to set version of zencode
    else -- defs = nil end
 	    -- if not defs then
 		 ZEN.assert("Zencode invalid: "..text)
