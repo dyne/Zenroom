@@ -66,12 +66,27 @@ local zencode = {
    OK = true -- set false by asserts
 }
 
+zencode.machine = MACHINE.create({
+	  initial = 'feature_',
+	  events = {
+		 { name = 'rule_',     from = { 'feature_', 'rule_' }, to = 'rule_' },
+		 { name = 'scenario_', from = { 'feature_', 'rule_' }, to = 'scenario_' },
+		 { name = 'given_',    from =   'scenario_',          to = 'given_' },
+		 { name = 'when_',     from =   'given_',             to = 'when_' },
+		 { name = 'then_',     from = { 'given_', 'when_' },  to = 'then_' },
+		 { name = 'and_',      from =   'given_',             to = 'given_' },
+		 { name = 'and_',      from =   'when_',              to = 'when_' },
+		 { name = 'and_',      from =   'then_',              to = 'then_' }
+	  }
+})
+
 -- Zencode HEAP globals
 IN = { }         -- Given processing, import global DATA from json
 IN.KEYS = { }    -- Given processing, import global KEYS from json
 TMP = TMP or { } -- Given processing, temp buffer for ack*->validate->push*
 ACK = ACK or { } -- When processing,  destination for push*
 OUT = OUT or { } -- print out
+AST = AST or { } -- AST of parsed Zencode
 
 -- Zencode init traceback
 _G['ZEN_traceback'] = "Zencode traceback:\n"
@@ -177,23 +192,25 @@ end
 --
 -- @function ZEN:validate(name)
 -- @param name string descriptor of the data object
+-- @param schema[opt] string descriptor of the schema to validate
 -- @return true or false
-function zencode:validate(name)
+function zencode:validate(name, schema)
+   schema = schema or TMP.schema or name -- if no schema then coincides with name
    ZEN.assert(name, "ZEN:validate error: argument is nil")
    ZEN.assert(TMP, "ZEN:validate error: TMP is nil")
-   ZEN.assert(TMP.schema, "ZEN:validate error: TMP.schema is nil")
-   ZEN.assert(TMP.schema == name, "ZEN:validate() TMP does not contain "..name)
+   -- ZEN.assert(TMP.schema, "ZEN:validate error: TMP.schema is nil")
+   -- ZEN.assert(TMP.schema == name, "ZEN:validate() TMP does not contain "..name)
    local got = TMP.data -- inside_pick(TMP,name)
    ZEN.assert(TMP.data, "ZEN:validate error: data not found in TMP for schema "..name)
-   local s = ZEN.schemas[TMP.schema]
-   ZEN.assert(s, "ZEN:validate error: "..name.." schema not found")
-   ZEN.assert(type(s) == 'function', "ZEN:validate error: schema is not a function for "..name)
-   ZEN:ftrace("validate "..name)
+   local s = ZEN.schemas[schema]
+   ZEN.assert(s, "ZEN:validate error: "..schema.." schema not found")
+   ZEN.assert(type(s) == 'function', "ZEN:validate error: schema is not a function for "..schema)
+   ZEN:ftrace("validate "..name.. " with schema "..schema)
    local res = s(TMP.data) -- ignore root
-   ZEN.assert(res, "ZEN:validate error: schema validation failed for "..name)
+   ZEN.assert(res, "ZEN:validate error: validation failed for "..name.." with schema "..schema)
    TMP.valid = res -- overwrite
    assert(ZEN.OK)
-   ZEN:ftrace("validation passed for "..name)
+   ZEN:ftrace("validation passed for "..name.. " with schema "..schema)
 end
 
 function zencode:validate_recur(obj, name)
@@ -211,15 +228,18 @@ end
 ---
 -- Final step inside the <b>Given</b> block towards the <b>When</b>:
 -- pass on a data structure into the ACK memory space, ready for
--- processing.  It must follow @{pick} and optionally @{validate}.
+-- processing.  It requires the data to be present in TMP[name] and
+-- typically follows a @{pick}. In some cases it is used inside a
+-- <b>When</b> block following the inline insertion of data from
+-- zencode.
 --
 -- @function ZEN:ack(name)
--- @param name string descriptor of the data object
+-- @param name string key of the data object in TMP[name]
 function zencode:ack(name)
-   ZEN:validate(name) -- never ACK anything if not validated
    local obj = TMP.valid
-   local t
    ZEN.assert(obj, "No valid object found: ".. name)
+   assert(ZEN.OK)
+   local t
    if not ACK[name] then -- assign in ACK the single object
 	  ACK[name] = obj
 	  goto done
@@ -241,8 +261,6 @@ function zencode:ack(name)
 	  goto done
    end
    ::done::
-   -- delete the record from TMP
-   TMP = nil
    assert(ZEN.OK)
 end
 
@@ -353,7 +371,6 @@ function zencode:isempty(b)
 	   return true
    else return false
 end end
-
 function zencode:step(text)
    if ZEN:isempty(text) then return true end
    if ZEN:iscomment(text) then return true end
@@ -361,18 +378,34 @@ function zencode:step(text)
    -- hard-coded inside zenroom.h
    local prefix = parse_prefix(text)
    local defs -- parse in what phase are we
+   ZEN.OK = true
    if prefix == 'given' then
+	  ZEN.assert(ZEN.machine:given_(), text.."\n    "..
+					"Invalid transition from "
+					..ZEN.machine.current.." to Given block")
       self.current_step = self.given_steps
       defs = self.current_step
    elseif prefix == 'when'  then
+	  ZEN.assert(ZEN.machine:when_(), text.."\n    "..
+					"Invalid transition from "
+					..ZEN.machine.current.."to When block")
       self.current_step = self.when_steps
       defs = self.current_step
    elseif prefix == 'then'  then
+	  ZEN.assert(ZEN.machine:then_(), text.."\n    "..
+					"Invalid transition from "
+					..ZEN.machine.current.." to Then block")
       self.current_step = self.then_steps
       defs = self.current_step
    elseif prefix == 'and'   then
+	  ZEN.assert(ZEN.machine:and_(), text.."\n    "..
+					"Invalid transition from "
+					..ZEN.machine.current.." to And block")
       defs = self.current_step
    elseif prefix == 'scenario' then
+	  ZEN.assert(ZEN.machine:scenario_(), text.."\n    "..
+					"Invalid transition from "
+					..ZEN.machine.current.." to Scenario block")
       self.current_step = self.given_steps
       defs = self.current_step
 	  ZEN.scenario = string.match(text, "'(.-)'")
@@ -382,8 +415,11 @@ function zencode:step(text)
 	  end
    else -- defs = nil end
 	    -- if not defs then
-		 error("Zencode invalid: "..text)
-		 return false
+		 ZEN.assert("Zencode invalid: "..text)
+   end
+   if not ZEN.OK then
+	  print(ZEN_traceback)
+	  assert(ZEN.OK)
    end
 
    -- TODO: optimize and write a faster function in C

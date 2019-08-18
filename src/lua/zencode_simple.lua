@@ -63,50 +63,36 @@ local function f_keygen()
    kp = ecdh:keygen()
    ZEN:pick('keypair', { public_key = kp.public,
 						 private_key = kp.private })
+   ZEN:validate('keypair')
    ZEN:ack('keypair')
 end
 When("I create my new keypair", f_keygen)
 When("I generate my keys", f_keygen)
 
 -- encrypt to a single public key
-When("I encrypt the draft as ''", function(msg)
+When("I encrypt the '' to '' for ''", function(what, msg, recpt)
 		ZEN.assert(ACK.keypair, "Keyring not found")
 		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
+		ZEN.assert(ACK[what], "Data to encrypt not found in "..what)
 		local from = ECDH.new(CONF.curve)
 		from:private(ACK.keypair.private_key)
 		local to = ECDH.new(CONF.curve)
-		ZEN.assert(ACK.public_key, "Public key not found")
-		to:public(ACK.public_key)
-		ACK[msg] = from:encrypt(to, ACK.draft, str('empty'))
-		-- include contextual information
-		ACK[msg].zenroom = VERSION
-		ACK[msg].curve = CONF.curve
-		ACK[msg].scenario = ZEN.scenario
-end)
-
--- encrypt to a single public key
-When("I encrypt the '' as ''", function(what, msg)
-		ZEN.assert(ACK.keypair, "Keyring not found")
-		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
-		local from = ECDH.new(CONF.curve)
-		from:private(ACK.keypair.private_key)
-		local to = ECDH.new(CONF.curve)
-		ZEN.assert(ACK.public_key, "Public key not found")
-		to:public(ACK.public_key)
+		ZEN.assert(ACK[recpt], "Public key not found")
+		to:public(ACK[recpt])
 		ACK[msg] = from:encrypt(to, ACK[what], str('empty'))
 		-- include contextual information
-		ACK[msg].zenroom = VERSION
+		ACK[msg].zenroom = VERSION.original
 		ACK[msg].curve = CONF.curve
 		ACK[msg].scenario = ZEN.scenario
 end)
 
-When("I decrypt the '' as ''", function(src,dst)
+When("I decrypt the '' to ''", function(src,dst)
 		ZEN.assert(ACK.keypair, "Keyring not found")
 		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
 		ZEN.assert(ACK[src], "Ciphertext not found")
-		if VERSION ~= ACK[src].zenroom:str() then
+		if VERSION.original ~= ACK[src].zenroom:str() then
 		   warn("Ciphertext was not produced with running version of Zenroom: "
-				   ..ACK[src].zenroom:str().. " (running "..VERSION..")")
+				   ..ACK[src].zenroom:str().. " (running "..VERSION.original..")")
 		end
 		local recpt = ECDH.new(ACK[src].curve:str() or CONF.curve)
 		recpt:private(ACK.keypair.private_key)
@@ -122,7 +108,7 @@ When("I sign the draft as ''", function(dst)
 		ACK[dst] = dsa:sign(ACK.draft)
 		-- include contextual information
 		ACK[dst].text = ACK.draft:string()
-		ACK[dst].zenroom = VERSION
+		ACK[dst].zenroom = VERSION.original
 		ACK[dst].curve = CONF.curve
 		ACK[dst].scenario = ZEN.scenario
 end)

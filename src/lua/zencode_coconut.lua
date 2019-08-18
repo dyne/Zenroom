@@ -38,6 +38,7 @@ local function f_keygen()
    t.sk, t.pk = ELGAMAL.keygen()
    ZEN:pick('credential_keypair', { public = t.pk,
 									private = t.sk })
+   ZEN:validate('credential_keypair')
    ZEN:ack('credential_keypair')
 end
 When("I create my new credential keypair", f_keygen)
@@ -65,6 +66,7 @@ local function f_ca_keygen()
    t.sk, t.vk = COCONUT.ca_keygen()
    ZEN:pick('ca_keypair', { ca_sign = t.sk,
 							ca_verify = t.vk })
+   ZEN:validate('ca_keypair')
    ZEN:ack('ca_keypair')
 end
 When("I create my new issuer keypair", f_ca_keygen)
@@ -94,6 +96,7 @@ When("I generate a credential signature request", function()
 		ZEN:pick('credential_signature_request',
 				 COCONUT.prepare_blind_sign(ACK.credential_keypair.public,
 											ACK.credential_keypair.private))
+		ZEN:validate('credential_signature_request')
 		ZEN:ack('credential_signature_request')
 end) -- synonyms
 
@@ -224,7 +227,8 @@ When("I generate a petition ''", function(uid)
 							  neg = { left = "Infinity",       -- ECP.infinity()
 									  right = "Infinity" } }
 		}) -- ECP.infinity()
-		ZEN:ack('petition')
+ 		ZEN:validate('petition')
+ 		ZEN:ack('petition')
 		-- generate an ECDH signature of the (encoded) petition using the
 		-- credential keys
 		-- ecdh = ECDH.new()
@@ -259,6 +263,7 @@ When("I sign the petition ''", function(uid)
 				 { proof = Theta,
 				   uid_signature = zeta,
 				   uid_petition = uid })
+		ZEN:validate('petition_signature')
 		ZEN:ack('petition_signature')
 end)
 

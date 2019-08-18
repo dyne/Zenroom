@@ -31,39 +31,76 @@ Given("I am ''", function(name) ZEN:Iam(name) end)
 
 local have_a = function(name)
    ZEN:pick(name)
+   ZEN:validate(name)
    ZEN:ack(name)
+   TMP = nil -- TODO: wipe
 end
 Given("I have a valid ''", have_a)
 Given("I have a ''", have_a)
 
 local have_my = function(name)
    ZEN:pickin(ACK.whoami, name)
+   ZEN:validate(name)
    ZEN:ack(name)
+   TMP = nil
 end
 Given("I have my valid ''", have_my)
 Given("I have my ''", have_my)
 
-local have_in = function(s, n)
+local have_in_a = function(s, n)
    ZEN:pickin(s, n)
+   ZEN:validate(n)
    ZEN:ack(n)
+   ZEN:ack(s) -- save it also in ACK.section
+   TMP = nil
 end
-Given("I have inside '' a valid ''", have_in)
-Given("I have inside '' a valid '' key", have_in)
+Given("I have inside '' a valid ''", have_in_a)
+Given("I have inside '' a ''", have_in_a)
+-- inverse order of args
+local have_a_in = function(n, s)
+   ZEN:pickin(s, n)
+   ZEN:validate(n)
+   ZEN:ack(n)
+   ZEN:ack(s) -- save it also in ACK.section
+   TMP = nil
+end
+Given("I have a valid '' inside ''", have_a_in)
+Given("I have a valid '' in ''",     have_a_in)
+Given("I have a valid '' from ''",   have_a_in)
+Given("I have a '' inside ''",       have_a_in)
+Given("I have a '' in ''",           have_a_in)
+Given("I have a '' from ''",         have_a_in)
+
 
 Given("I set '' to ''", function(k,v)
 		 ZEN.assert(not TMP[k], "Cannot overwrite TMP["..k.."]")
-		 TMP[k] = JSON.autoconv(v)
+		 TMP[k] = ZEN:convert(v)
 end)
 
 -- this enforces identity of schema with key name
 Given("the '' is valid", function(k)
+		 ZEN:validate(k)
 		 ZEN:ack(k)
+		 TMP = nil
 end)
 
 --- WHEN
 
 When("I draft the string ''", function(s) ZEN:draft(s) end)
 
+-- TODO:
+When("I set '' as '' with ''", function(dest, format, content) end)
+When("I append '' as '' to ''", function(content, format, dest) end)
+When("I write '' as '' in ''", function(content, dest) end)
+-- implicit conversion as string
+When("I set '' to ''", function(dest, content) end)
+When("I append '' to ''", function(content, dest) end)
+When("I write '' in ''", function(content, dest)
+		ZEN:pick(dest, content)
+		ZEN:validate(dest, 'str')
+		ZEN:ack(dest)
+		TMP = nil
+end)
 
 --- THEN
 
@@ -122,5 +159,6 @@ Then("debug",  function() ZEN.debug() end)
 -- basic encoding schemas
 ZEN.add_schema({
 	  base64 = function(obj) return ZEN:convert(obj, OCTET.from_base64) end,
-	  url64  = function(obj) return ZEN:convert(obj, OCTET.from_url64)  end
+	  url64  = function(obj) return ZEN:convert(obj, OCTET.from_url64)  end,
+	  str =    function(obj) return ZEN:convert(obj, OCTET.from_string) end
 })

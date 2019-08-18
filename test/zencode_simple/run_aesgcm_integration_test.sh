@@ -48,9 +48,9 @@ cat <<EOF | zenroom -z -d$verbose -k alice.keys -a bob.pub | tee alice_to_bob.js
 Scenario 'simple': $scenario
 Given that I am known as 'Alice'
 and I have my 'keypair'
-and I have inside 'Bob' a valid 'public key'
-When I draft the string 'This is my secret message to Bob'
-and I encrypt the draft as 'secret message'
+and I have a 'public key' from 'Bob'
+When I write 'This is my secret message.' in 'draft'
+and I encrypt the 'draft' to 'secret message' for 'Bob'
 Then print the 'secret message'
 EOF
 
@@ -61,7 +61,7 @@ Scenario 'simple': $scenario
 Given that I am known as 'Bob'
 and I have my valid 'keypair'
 and I have a valid 'secret message'
-When I decrypt the 'secret message' as 'clear text'
+When I decrypt the 'secret message' to 'clear text'
 Then print as 'string' the 'clear text'
 and print as 'string' the 'header' inside 'secret message'
 EOF
