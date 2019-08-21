@@ -55,7 +55,7 @@ int zencode_exec_rng_tobuf(char *script, char *conf, char *keys,
                            char *stderr_buf, size_t stderr_len,
                            char *random_seed, size_t random_seed_len);
 
-void set_debug(int lev);
+extern void set_debug(int lev);
 
 ////////////////////////////////////////
 

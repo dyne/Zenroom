@@ -20,6 +20,7 @@
 
 #include <stdio.h>
 #include <errno.h>
+#include <string.h>
 #include <jutils.h>
 #include <lua.h>
 #include <lualib.h>
@@ -129,6 +130,9 @@ int nop(lua_State *L) {
 	lerror(L,"illegal instruction: require");
 	return 0; }
 
+#ifndef S_SPLINT_S
+// src/lua_modules.c:139:15: Parse Error. Attempting to continue.
+
 int zen_require(lua_State *L) {
 	SAFE(L);
 	size_t len;
@@ -136,8 +140,7 @@ int zen_require(lua_State *L) {
 	// HEREs(s);
 	if(!s) return 0;
 	// require classic lua libs
-	for (luaL_Reg *p = lualibs;
-	     p->name != NULL; ++p) {
+	for (luaL_Reg *p = lualibs; p->name != NULL; ++p) {
 		if (strcmp(p->name, s) == 0) {
 			// HEREp(p->func);
 			luaL_requiref(L, p->name, p->func, 1);
@@ -202,6 +205,7 @@ int zen_require_override(lua_State *L, const int restricted) {
 	lua_pop(L, 1);
 	return 1;
 }
+#endif
 
 // load the src/lua/init.lua
 int zen_lua_init(lua_State *L) {

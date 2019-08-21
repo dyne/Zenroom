@@ -140,11 +140,11 @@ static const char *zen_lua_findtable (lua_State *L, int idx,
 	do {
 		e = strchr(fname, '.');
 		if (e == NULL) e = fname + strlen(fname);
-		lua_pushlstring(L, fname, e - fname);
+		lua_pushlstring(L, fname, (size_t)(e - fname));
 		if (lua_rawget(L, -2) == LUA_TNIL) {  /* no such field? */
 			lua_pop(L, 1);  /* remove this nil */
 			lua_createtable(L, 0, (*e == '.' ? 1 : szhint)); /* new table for field */
-			lua_pushlstring(L, fname, e - fname);
+			lua_pushlstring(L, fname, (size_t)(e - fname));
 			lua_pushvalue(L, -2);
 			lua_settable(L, -4);  /* set new table into field */
 		}

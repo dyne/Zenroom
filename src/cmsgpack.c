@@ -924,7 +924,7 @@ LUALIB_API int luaopen_cmsgpack(lua_State *L) {
     luaopen_create(L);
 
 // #if LUA_VERSION_NUM < 502
-//     /* Register name globally for 5.1 */
+//     // Register name globally for 5.1
 //     lua_pushvalue(L, -1);
 //     lua_setglobal(L, LUACMSGPACK_NAME);
 // #endif
@@ -945,7 +945,7 @@ LUALIB_API int luaopen_cmsgpack_safe(lua_State *L) {
     }
 
 // #if LUA_VERSION_NUM < 502
-//     /* Register name globally for 5.1 */
+//     // Register name globally for 5.1
 //     lua_pushvalue(L, -1);
 //     lua_setglobal(L, LUACMSGPACK_SAFE_NAME);
 // #endif

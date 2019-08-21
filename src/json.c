@@ -1406,7 +1406,7 @@ int lua_cjson_safe_new(lua_State *l)
 
     lua_cjson_new(l);
 
-    // /* Fix new() method */
+    // Fix new() method
     lua_pushcfunction(l, lua_cjson_safe_new);
     lua_setfield(l, -2, "new");
 
@@ -1424,7 +1424,7 @@ CJSON_EXPORT int luaopen_cjson(lua_State *l)
     lua_cjson_new(l);
 
 // #ifdef ENABLE_CJSON_GLOBAL
-//     /* Register a global "cjson" table. */
+//     // Register a global "cjson" table.
 //     lua_pushvalue(l, -1);
 //     lua_setglobal(l, CJSON_MODNAME);
 // #endif
