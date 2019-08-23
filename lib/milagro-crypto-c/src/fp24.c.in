@@ -94,7 +94,7 @@ void FP24_YYY_one(FP24_YYY *w)
 /* SU= 16 */
 int FP24_YYY_equals(FP24_YYY *x,FP24_YYY *y)
 {
-    if (FP8_YYY_equals(&(x->a),&(y->a)) && FP8_YYY_equals(&(x->b),&(y->b)) && FP8_YYY_equals(&(x->b),&(y->b)))
+    if (FP8_YYY_equals(&(x->a),&(y->a)) && FP8_YYY_equals(&(x->b),&(y->b)) && FP8_YYY_equals(&(x->c),&(y->c)))
         return 1;
     return 0;
 }

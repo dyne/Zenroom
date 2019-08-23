@@ -96,7 +96,7 @@ void FP12_YYY_one(FP12_YYY *w)
 /* SU= 16 */
 int FP12_YYY_equals(FP12_YYY *x,FP12_YYY *y)
 {
-    if (FP4_YYY_equals(&(x->a),&(y->a)) && FP4_YYY_equals(&(x->b),&(y->b)) && FP4_YYY_equals(&(x->b),&(y->b)))
+    if (FP4_YYY_equals(&(x->a),&(y->a)) && FP4_YYY_equals(&(x->b),&(y->b)) && FP4_YYY_equals(&(x->c),&(y->c)))
         return 1;
     return 0;
 }
