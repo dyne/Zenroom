@@ -40,10 +40,10 @@ all: shared
 
 js: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
 js: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o zenroom.js ${LDFLAGS} ${LDADD} --embed-file lua@/
+	${CC} ${CFLAGS} ${SOURCES} -o zenroom.js ${LDFLAGS} ${LDADD} ${JSEXT}
 
 js-demo: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o ../docs/demo/index.html ${LDFLAGS} ${LDADD} --preload-file lua@/
+	${CC} ${CFLAGS} ${SOURCES} -o ../docs/demo/index.html ${LDFLAGS} ${LDADD} ${JSEXT}
 
 # static: LDADD  += /usr/lib/${ARCH}-linux-musl/libc.a
 # using default path for non-native installs of musl
