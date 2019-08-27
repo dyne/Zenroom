@@ -73,7 +73,7 @@ zencode.machine = MACHINE.create({
 		 { name = 'enter_scenario', from = { 'feature', 'rule' }, to = 'scenario' },
 		 { name = 'enter_given',    from =   'scenario',          to = 'given' },
 		 { name = 'enter_when',     from =   'given',             to = 'when' },
-		 { name = 'enter_then',     from = { 'given', 'when' },  to = 'then' },
+		 { name = 'enter_then',     from = { 'given', 'when' },   to = 'then' },
 		 { name = 'enter_and',      from =   'given',             to = 'given' },
 		 { name = 'enter_and',      from =   'when',              to = 'when' },
 		 { name = 'enter_and',      from =   'then',              to = 'then' }
@@ -518,13 +518,7 @@ function zencode:run()
       local ok, err = pcall(x.hook,table.unpack(x.args))
       if not ok or not ZEN.OK then
 	  	 if err then ZEN:trace("[!] "..err) end
-	  	 error(trim(x.source)) -- prints ZEN_traceback
-		 -- if CONF.verbosity > 2 then
-			ZEN:debug()
-		 -- end
-	  	 -- clean the traceback
-	  	 _G['ZEN_traceback'] = ""
-		 assert(false)
+		 fatal(x.source) -- traceback print inside
 	  end
    end
    ZEN:trace("--- Zencode execution completed")
@@ -538,20 +532,18 @@ end
 function zencode.debug()
    -- TODO: print to stderr
    print(ZEN_traceback)
-   print(" _______")
-   print("|  DEBUG:")
-   -- one print after another to sort deterministic
-   I.print({IN = IN})
-   I.print({TMP = TMP})
-   I.print({ACK = ACK})
-   I.print({OUT = OUT})
-   I.print({Schemas = ZEN.schemas})
+   I.print({ HEAP = { IN = IN,
+					  TMP = TMP,
+					  ACK = ACK,
+					  OUT = OUT }})
 end
 
 function zencode.debug_json()
-   write(JSON.encode({ IN = IN,
-					   ACK = ACK,
-					   OUT = OUT }))
+   write(JSON.encode({ TRACE = ZEN_traceback,
+                       HEAP = { IN = IN,
+                                TMP = TMP,
+                                ACK = ACK,
+                                OUT = OUT }}))
 end
 
 function zencode.assert(condition, errmsg)
@@ -559,6 +551,7 @@ function zencode.assert(condition, errmsg)
    -- ZEN.debug() -- prints all data in memory
    ZEN:trace("ERR "..errmsg)
    ZEN.OK = false
+   error(errmsg, 3)
    -- print ''
    -- error(errmsg) -- prints zencode backtrace
    -- print ''

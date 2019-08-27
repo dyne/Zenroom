@@ -19,6 +19,17 @@
 -- init script embedded at compile time.  executed in
 -- zen_load_extensions(L) usually after zen_init()
 
+-- -- remap fatal and error
+function fatal(msg)
+	  if type(msg) == "string" then warn(trim(msg),2) end
+	  debug.traceback()
+--	  if ZEN_traceback ~= "" then ZEN:debug() end
+	  ZEN:debug()
+	  msg = msg or "fatal error"
+	  error(msg,2)
+end
+
+-- error = zen_error -- from zen_io
 
 -- ZEN = { assert = assert } -- zencode shim when not loaded
 require('zenroom_common')

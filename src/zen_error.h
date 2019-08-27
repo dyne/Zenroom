@@ -25,6 +25,7 @@
 #include <lua.h>
 
 int lerror(lua_State *L, const char *fmt, ...);
+int zencode_traceback(lua_State *L);
 
 #define ERROR() error(0, "Error in %s",__func__)
 #define SAFE(x) if(!x) lerror(L, "NULL variable in %s",__func__)

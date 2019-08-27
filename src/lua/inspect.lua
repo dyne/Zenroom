@@ -418,7 +418,7 @@ end
 -- @function INSPECT.warn(object)
 -- @param object complex table data structure
 function inspect.warn(root, options)
-   act(inspect.inspect(root, options))
+   warn(inspect.inspect(root, options))
    return root
 end
 

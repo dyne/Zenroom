@@ -351,12 +351,21 @@ static int zen_error (lua_State *L) {
 
 #endif
 
+
+extern void lua_fatal(lua_State *L);
+static int zen_fatal(lua_State *L) {
+	// zencode_traceback(L);
+	lua_fatal(L);
+	return 0; // unreachable code
+}
+
 void zen_add_io(lua_State *L) {
 	// override print() and io.write()
 	static const struct luaL_Reg custom_print [] =
 		{ {"print", zen_print},
 		  {"write", zen_write},
-		  {"error", zen_error},
+//		  {"error", zen_error},
+		  {"zen_fatal", zen_fatal},
 		  {"warn", zen_warn},
 		  {"act", zen_act},
 		  {NULL, NULL} };

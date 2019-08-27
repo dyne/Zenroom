@@ -37,8 +37,6 @@
 #include <jutils.h>
 #include <zenroom.h>
 
-
-
 int lerror(lua_State *L, const char *fmt, ...) {
 	va_list argp;
 	va_start(argp, fmt);
@@ -50,33 +48,16 @@ int lerror(lua_State *L, const char *fmt, ...) {
 	return lua_error(L);
 }
 
-// #define UMM 2
-// #define MEMMANAGER UMM
-// extern void *zen_memory_alloc(size_t size);
-// // our own LUA aware memory allocation function
-// void *zalloc(lua_State *L, size_t size) {
-// 	if(!size) {
-// 		lerror(L, "zero length allocation.");
-// 		return NULL; }
-// 	void *mem;
-// #if MEMMANAGER == UMM
-// 	mem = zen_memory_alloc(size);
-// #else // fallback to standard libc posix memalign
-// # if defined(_WIN32)
-// 	mem = __mingw_aligned_malloc(size, 16);
-// 	if(!mem) {
-// 		lerror(L, "error in memory allocation.");
-// 		return NULL; }
-// # else
-// 	int res;
-// 	res = posix_memalign(&mem, 16, size);
-// 	if(res == ENOMEM) {
-// 		lerror(L, "insufficient memory to allocate %u bytes.", size);
-// 		return NULL; }
-// 	if(res == EINVAL) {
-// 		lerror(L, "invalid memory alignment at 16 bytes.");
-// 		return NULL; }
-// # endif
-// #endif
-// 	return(mem);
-// }
+int zencode_traceback(lua_State *L) {
+    // output the zencode traceback lines
+	int w; (void)w;
+	lua_getglobal(L,"ZEN_traceback");
+	size_t zencode_line_len;
+	const char *zencode_line = lua_tolstring(L,lua_gettop(L),&zencode_line_len);
+	if(zencode_line_len) {
+		w = write(STDERR_FILENO, "[!] ",4* sizeof(char));
+		w = write(STDERR_FILENO, zencode_line, zencode_line_len);
+	}
+	lua_pop(L,1);
+	return 0;
+}
