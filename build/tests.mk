@@ -31,6 +31,11 @@ lowmem-tests = \
 		${1} test/tables.lua && \
 	    ${1} test/coroutine.lua
 
+# ECP arithmetic test vectors from milagro, removed from normal tests
+# since in zenroom built without debug is not allowed to import an ECP
+# from x/y coords.
+# 	${1} test/ecp_bls383.lua && \
+
 crypto-tests = \
 	@${1} test/octet.lua && \
 	${1} test/hash.lua && \
@@ -38,7 +43,6 @@ crypto-tests = \
 	${1} test/dh_session.lua && \
 	${1} test/ecdh_aes-gcm_vectors.lua && \
 	${1} test/big_bls383.lua && \
-	${1} test/ecp_bls383.lua && \
 	${1} test/ecp_generic.lua && \
 	${1} test/pair_bls383.lua && \
 	${1} test/coconut_test.lua && \
@@ -144,6 +148,11 @@ check-crypto:
 
 check-crypto-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom-shared -d 3
 check-crypto-debug:
+	$(call determinism-tests,${test-exec})
+	$(call crypto-tests,${test-exec})
+
+check-crypto-static: test-exec := ./src/zenroom-static
+check-crypto-static:
 	$(call determinism-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
 
