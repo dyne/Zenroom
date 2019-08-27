@@ -86,9 +86,9 @@ static void precompute(gcm *g,uchar *H)
 static void gf2mul(gcm *g)
 {
     /* gf2m mul - Z=H*X mod 2^128 */
-    int i,j,m,k;
+    register int i,j,m,k;
     unsign32 P[4];
-    unsign32 b;
+    register unsign32 b;
 
     P[0]=P[1]=P[2]=P[3]=0;
     j=8;
