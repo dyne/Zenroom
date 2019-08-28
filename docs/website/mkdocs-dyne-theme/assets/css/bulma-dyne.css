@@ -1,0 +1,38 @@
+ul {
+	text-decoration: none;
+}
+
+.menu-list a {
+	display: inline-block;
+}
+
+.navbar-item img {
+	display: inline-block;
+	vertical-align: -moz-middle-with-baseline;
+}
+
+/* easier colors from bulma */
+.white{color:#fff!important}
+.black{color:#0a0a0a!important}
+.light{color:#f5f5f5!important}
+.dark{color:#363636!important}
+.primary{color:#00d1b2!important}
+.turq{color:#00d1b2!important}
+.link{color:#3273dc!important}
+.blue-dark{color:#3273dc!important}
+.info{color:#209cee!important}
+.blue-light{color:#209cee!important}
+.success{color:#23d160!important}
+.warning{color:#ffdd57!important}
+.danger{color:#ff3860!important}
+.black-bis{color:#121212!important}
+.black-ter{background-color:#242424!important}
+.grey-darker{color:#363636!important}
+.grey{color:#7a7a7a!important}
+.grey-light{color:#b5b5b5!important}
+.grey-lighter{color:#dbdbdb!important}
+.white-ter{color:#f5f5f5!important}
+
+.navbar.has-shadow {
+	box-shadow: 5px 4px 5px 0 #f5f5f5;
+}

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>{{ page.title }} - {{ config.site_name }}</title>
+		<meta name="description" content="{{ config.site_description }}" />
+		<meta name="keywords" content="{{ config.keywords }}" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta property="og:title" content="{{ page.title }}" />
+		<meta property="og:description" content="{{ config.site_description }}" />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="{{ config.site_url }}" />
+		<meta name="twitter:card" content="summary_large_image">
+		<meta name="twitter:site" content="@DyneOrg">
+		<meta name="twitter:title" content="{{ page.title }}">
+		<meta name="twitter:description" content="{{ config.site_description }}">
+
+		<link rel="stylesheet" href="{{ base_url }}/assets/css/bulma.min.css">
+		<link rel="stylesheet" href="{{ base_url }}/assets/css/bulma-dyne.css">
+
+		<link rel="stylesheet" href="//cdn.materialdesignicons.com/3.7.95/css/materialdesignicons.min.css">
+		{% for furl in config.extra_css %}
+		<link rel="stylesheet" href="{{ furl }}">
+		{% endfor %}
+
+	</head>
+	<body>
+		{% include 'partials/navbar.html' %}
+		<section class="section">
+			<div class="container">
+				<div class="columns">
+					<div class="column is-one-quarter">
+						{% include 'partials/sidebar.html' %}
+					</div>
+					<div class="column">
+						<div class="content">
+							{% block content %} {{ page.content }} {% endblock content %}
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		{% include 'partials/footer.html' %}
+		{% for furl in config.extra_javascript %}
+		<script type="text/javascript" src="{{ furl }}"></script>
+		{% endfor %}
+		{% if config.extra.drift_handle %} {% include 'partials/drift.html' %} {% endif %}
+	</body>
+</html>

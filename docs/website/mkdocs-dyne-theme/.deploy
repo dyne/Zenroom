@@ -1,0 +1,20 @@
+#!/usr/bin/env zsh
+
+command -v mkdocs || {
+	echo "mkdocs not found, aborting."
+	return 1 }
+
+theme=mkdocs-dyne-theme
+
+# check if theme is a symlink then solve target for deploy
+if [[ -L $theme && -d $theme ]]; then
+	echo "theme symlink detected, suspending for deploy"
+	target=`readlink -f $theme`
+	rm $theme
+	cp -ra $target ./$theme
+	mkdocs gh-deploy
+	rm -rf $theme.bck && mv $theme $theme.bck
+	ln -s $target $theme
+else
+	mkdocs gh-deploy
+fi

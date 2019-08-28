@@ -1,0 +1,32 @@
+site_name: Zenroom
+site_url: https://decodeproject.github.io/zenroom
+repo_url: https://github.com/decodeproject/zenroom
+site_author: Jaromil
+site_description: 'Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them.'
+copyright: 'Copyright (C) 2019 by the <a href="https://dyne.org">Dyne.org foundation</a>. The source code is licensed <a href="https://www.gnu.org/licenses/agpl-3.0.en.html">AGPLv3</a>.'
+keywords: crypto, security, iot, blockchain
+
+extra:
+  links:
+    releases: https://files.dyne.org/zenroom
+    docker: https://github.com/dyne/docker-dyne-software/tree/master/zenroom
+    wiki: https://github.com/decodeproject/zenroom/wiki
+  drift_handle: s64nd7w43g53
+  nav:
+    subtitle: Portable, secure, independent crypto language
+    logo: /img/zenroom_logo.jpg
+    og_image_large: /img/zenroom_logo.jpg
+
+plugins: []
+
+extra_css:
+  - //fonts.googleapis.com/css?family=Montserrat&display=swap
+  - css/custom.css
+
+markdown_extensions:
+  - admonition
+  - codehilite
+
+theme:
+  name: null
+  custom_dir: 'mkdocs-dyne-theme/'
