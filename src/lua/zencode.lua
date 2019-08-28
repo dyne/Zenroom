@@ -412,11 +412,21 @@ function zencode:step(text)
 	  if ZEN.scenario ~= "" then
 		 require("zencode_"..ZEN.scenario)
 		 ZEN:trace("|   Scenario "..ZEN.scenario)
+		 act("config scenario: "..ZEN.scenario)
 	  end
    elseif prefix == 'rule' then
 	  ZEN.assert(ZEN.machine:enter_rule(), text.."\n    "..
 					"Invalid transition from "
 					..ZEN.machine.current.." to Rule block")
+	  -- process rules immediately
+	  local rule = split(text, "%S+") -- may be optimised
+	  if rule[2] == 'check' and rule[3] == 'version' then
+		 act("Zencode version check >= "..rule[4])
+		 -- TODO: check version of running VM
+	  elseif rule[2] == 'set' and rule[4] then
+		 act("config rule: "..rule[3].." = "..rule[4])
+		 CONF[rule[3]] = tonumber(rule[4]) or rule[4]
+	  end
 	  -- TODO: rule to set version of zencode
    else -- defs = nil end
 	    -- if not defs then
@@ -426,7 +436,8 @@ function zencode:step(text)
 	  print(ZEN_traceback)
 	  assert(ZEN.OK)
    end
-
+   -- nothing further to parse
+   if not defs then return false end
    -- TODO: optimize and write a faster function in C
    -- support simplified notation for arg match
    local tt = string.gsub(text,"'(.-)'","''")
