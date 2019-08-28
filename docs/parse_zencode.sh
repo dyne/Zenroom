@@ -21,7 +21,7 @@ print $(_parse data then
 		_parse coconut when) | jq -s . > $tmp
 
 # TODO: see if transformation below needed, else just print $tmp
-cat <<EOF | zenroom -a $tmp
+cat <<EOF | zenroom -a $tmp | json2yaml -
 raw_docs = JSON.decode(DATA)
 tbl = { }
 for k,v in ipairs(raw_docs) do
@@ -29,6 +29,6 @@ for k,v in ipairs(raw_docs) do
   	    tbl[k] = v
 	end
 end
-I.print(tbl)
+write(JSON.encode(tbl))
 EOF
 rm $tmp
