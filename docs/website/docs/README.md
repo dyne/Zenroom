@@ -6,7 +6,7 @@ Zenroom is a brand new virtual machine for fast cryptographic operations on Elli
 
 Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them.
 
-<a href="https://github.com/DECODEproject/zenroom/tree/master/test/zencode_coconut"><img src="/img/coconut_credential-en.jpg" width="92%"></a>
+<a href="https://github.com/DECODEproject/zenroom/tree/master/test/zencode_coconut"><img src="img/coconut_credential-en.jpg" width="92%"></a>
 
 Zencode is a Domain Specific Language whose design is informed by pilot use-cases in the [DECODE Project](https://decodeproject.eu).
 
@@ -71,7 +71,7 @@ This API can be called in similar ways from a variety of languages and in partic
 
 Zenroom executes smart contracts written in Lua or in Zencode: a [plain English-like Domain Specific Language](https://decodeproject.eu/blog/smart-contracts-english-speaker).
 
-<img src="/img/zencode_diagram.png" alt="Zencode documentation diagram" width="92%"></a>
+<img src="img/zencode_diagram.png" alt="Zencode documentation diagram" width="92%"></a>
 
 ```yaml
 data:
