@@ -301,7 +301,7 @@ end
 
 
 ---
--- Compare equality of two data objects (TODO)
+-- Compare equality of two data objects (TODO: octet, ECP, etc.)
 -- @function ZEN:eq(first, second)
 
 ---
@@ -336,14 +336,20 @@ end
 -- @param format pointer to a converter function
 -- @return object converted to format
 function zencode:convert(object, format)
+   -- CONF { encoding = <function 1>,
+   --        encoding_prefix = "u64"  }
    local fun = format or CONF.encoding
-   if format == "string" then
-	  fun = str -- from zenroom_octet.lua
+   -- functions mapped from zenroom_octet.lua
+   if     CONF.encoding == 'u64'    then fun = url64
+   elseif CONF.encoding == 'b64'    then fun = base64
+   elseif CONF.encoding == 'hex'    then fun = hex
+   elseif CONF.encoding == 'string' then fun = str
+   elseif CONF.encoding == 'str'    then fun = str
+   else ZEN.assert(fun, "Conversion format not found")
    end
-   ZEN.assert(fun, "Conversion format not found")
    ZEN.assert(type(fun) == "function",
-			  "Conversion format is not a function: "..type(fun))
-   return fun(object)
+   			  "Conversion format is not a function: "..type(fun))
+   return fun(object) -- TODO: protected call
 end
 
 
