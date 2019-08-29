@@ -3,30 +3,39 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>Zenroom - crypto language VM - Zenroom</title>
+		<title>The Zenroom VM ... - Zenroom</title>
 		<meta name="description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
 		<meta name="keywords" content="crypto, security, iot, blockchain" />
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-		<meta property="og:title" content="Zenroom - crypto language VM" />
+		<meta property="og:title" content="The Zenroom VM ..." />
 		<meta property="og:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
 		<meta property="og:type" content="website" />
-		<meta property="og:url" content="https://decodeproject.github.io/zenroom" />
+		<meta property="og:url" content="https://dev.zenroom.org" />
 		<meta name="twitter:card" content="summary_large_image">
 		<meta name="twitter:site" content="@DyneOrg">
-		<meta name="twitter:title" content="Zenroom - crypto language VM">
+		<meta name="twitter:title" content="The Zenroom VM ...">
 		<meta name="twitter:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them.">
 
 		<link rel="stylesheet" href="./assets/css/bulma.min.css">
 		<link rel="stylesheet" href="./assets/css/bulma-dyne.css">
+		<link rel="stylesheet" href="./assets/css/materialdesignicons.min.css">
 
-		<link rel="stylesheet" href="//cdn.materialdesignicons.com/3.7.95/css/materialdesignicons.min.css">
 		
-		<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Montserrat&display=swap">
+		<script type="text/javascript" src="./js/cash.min.js"></script>
 		
-		<link rel="stylesheet" href="css/custom.css">
+
+		
+		<link rel="stylesheet" href="./css/montserrat.css">
+		
+		<link rel="stylesheet" href="./css/custom.css">
+		
+
+		
+
 		
 
 	</head>
+
 	<body>
 		<nav class="navbar has-shadow is-transparent">
     <div class="navbar-brand">
@@ -45,7 +54,7 @@
 	<div id="navbarExampleTransparentExample" class="navbar-menu">
         <div class="navbar-start">
 			<div class="navbar-item">
-				Portable, secure, independent crypto language
+				Zenroom: portable, secure and independent crypto language
 			</div>
 		</div>
 	</div>
@@ -56,8 +65,43 @@
          
          
          <a class="navbar-item" href="">
-         Zenroom - crypto language VM
+         The Zenroom VM ...
          </a>
+         
+         
+         
+         <a class="navbar-item" href="encrypt/">
+         Web Encryption Demo
+         </a>
+         
+         
+         
+         <a class="navbar-item" href="zencode/">
+         Write smart contracts in human language
+         </a>
+         
+         
+         
+         <div class="navbar-item has-dropdown is-hoverable">
+         <a class="navbar-link" href="">
+         Wiki
+         </a>
+         <div class="navbar-dropdown is-boxed">
+         
+         <a class="navbar-item" href="wiki/how-to-build/">
+         How to build
+         </a>
+         
+         <a class="navbar-item" href="wiki/how-to-embed/">
+         How to embed
+         </a>
+         
+         <a class="navbar-item" href="wiki/how-to-exec/">
+         How to execute Zenroom scripts
+         </a>
+         
+         </div>
+         </div>
          
          
          </div>
@@ -93,13 +137,16 @@
         <span class="mdi mdi-fire has-text-danger"></span> Quick Links</h1>
     <ul class="menu-list" style="list-style: none">
         
-        <li><span class="mdi mdi-github-circle"></span><a href="https://github.com/decodeproject/zenroom/">Source Code</a></li>
+        <li><span class="mdi mdi-home"></span><a href="https://zenroom.org">Home</a></li>
         
         
-        <li><span class="mdi mdi-history"></span><a href="https://files.dyne.org/zenroom">Latest Release</a></li>
+        <li><span class="mdi mdi-download"></span><a href="">Download</a></li>
         
         
-        <li><span class="mdi mdi-docker"></span><a href="https://github.com/dyne/docker-dyne-software/tree/master/zenroom">Docker</a></li>
+        <li><span class="mdi mdi-github-circle"></span><a href="https://github.com/decodeproject/Zenroom/">Source Code</a></li>
+        
+        
+        <li><span class="mdi mdi-docker"></span><a href="#docker">Docker</a></li>
         
         
         
@@ -113,7 +160,7 @@
     <ul class="menu-list">
         
         <li>
-            <a href="#zenroom-crypto-language-vm">Zenroom - crypto language VM</a>
+            <a href="#the-zenroom-vm">The Zenroom VM ...</a>
             
                 
   <ul>
@@ -123,14 +170,34 @@
     
       <li><a href="#documentation">Documentation</a></li>
       
+  <ul>
+    
+      <li><a href="#programming">Programming</a></li>
+      
+    
+      <li><a href="#usage">Usage</a></li>
+      
+    
+  </ul>
+
     
       <li><a href="#playground">Playground</a></li>
       
+  <ul>
     
-      <li><a href="#bindings">Bindings</a></li>
+      <li><a href="#online">Online</a></li>
       
     
-      <li><a href="#language">Language</a></li>
+      <li><a href="#apps">Apps</a></li>
+      
+    
+      <li><a href="#docker">Docker</a></li>
+      
+    
+  </ul>
+
+    
+      <li><a href="#bindings">Bindings</a></li>
       
     
       <li><a href="#mission">Mission</a></li>
@@ -149,49 +216,67 @@
 					</div>
 					<div class="column">
 						<div class="content">
-							 <h1 id="zenroom-crypto-language-vm">Zenroom - crypto language VM</h1>
+							 <h1 id="the-zenroom-vm">The Zenroom VM ...</h1>
 <p><a href="http://www.dyne.org"><img alt="software by Dyne.org" src="https://zenroom.dyne.org/img/software_by_dyne.png" /></a></p>
-<p>Zenroom is a brand new virtual machine for fast cryptographic operations on Elliptic Curves. The Zenroom VM has no external dependencies, includes a cutting edge selection tools and builds a small executable ready to run on: desktop, embedded, mobile, cloud and browsers (webassembly). It also compiles unikernel (without Linux).</p>
-<p>Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them.</p>
-<p><a href="https://github.com/DECODEproject/zenroom/tree/master/test/zencode_coconut"><img src="img/coconut_credential-en.jpg" width="92%"></a></p>
-<p>Zencode is a Domain Specific Language whose design is informed by pilot use-cases in the <a href="https://decodeproject.eu">DECODE Project</a>.</p>
-<p>On this page you can download our software, ready for use. For less technical explanations see the links below:</p>
-<ul>
-<li><a href="https://decodeproject.eu/blog/algorithmic-sovereignty-decode">Why Zenroom? Algorithmic Sovereignty</a></li>
-<li><a href="https://decodeproject.eu/blog/smart-contracts-english-speaker">Zenroom does what? Smart contracts for the English speaker</a></li>
-<li><a href="https://decodeproject.eu/blog/cryptographic-data-integrity-multiplatform-environment">How zenroom does it? Cryptographic data integrity in a multiplatform environment</a></li>
-</ul>
+<p>Zenroom is a secure-isolated interpreter of both Lua and its own
+Zencode DSL languages to execute fast cryptographic operations on
+Elliptic Curves.</p>
+<p>The Zenroom VM is very small, has no external dependencies and is
+ready to run on any platform: desktop, embedded, mobile, cloud and
+even web browsers.</p>
+<p>Zencode is the name of the language executed by Zenroom: it is simple
+to understand and can process large data structures while operating
+cryptographic transformations on them.</p>
+<p><img alt="Credential example" src="img/coconut_credential-en.jpg" /></p>
+<p>This website is intended for a technical audience; more documentation is
+available on:</p>
+<p><span class="mdi mdi-home"></span> Website: <a href="https://zenroom.org">Zenroom.org</a></p>
+<p><span class="mdi mdi-school"></span> Whitepaper: <a href="https://files.dyne.org/zenroom/Zenroom_Whitepaper.pdf">Zencode by Denis Roio (Ph.D)</a></p>
+<p><span class="mdi mdi-hand"></span> Blog post: <a href="https://decodeproject.eu/blog/algorithmic-sovereignty-decode">Why Zenroom? Algorithmic Sovereignty</a></p>
+<p><span class="mdi mdi-vote"></span> Blog post: <a href="https://decodeproject.eu/blog/smart-contracts-english-speaker">Zenroom does what? Smart contracts for the English speaker</a></p>
+<p><span class="mdi mdi-puzzle"></span> Blog post: <a href="https://decodeproject.eu/blog/cryptographic-data-integrity-multiplatform-environment">Cryptographic data integrity in a multiplatform environment</a></p>
 <h2 id="download">Download</h2>
-<ul>
-<li><a href="https://files.dyne.org/zenroom">Files.dyne.org/Zenroom</a></li>
-</ul>
-<p>Available targets: </p>
-<ul>
-<li>Portable source code (C99)</li>
-<li>Javascript (WebAssembly)</li>
-<li>Linux (Android, ARM and x86)</li>
-<li>Windows (EXE and DLL)</li>
-<li>Apple (OSX and iOS)</li>
-</ul>
+<p><span class="mdi mdi-target"></span>
+Available targets: Portable source code (C99), <strong>Javascript</strong> (WebAssembly), <strong>Linux</strong> (Android, ARM and x86), <strong>Windows</strong> (EXE and DLL), <strong>Apple</strong> (OSX and iOS)</p>
+<p><span class="mdi mdi-download"></span>
+Download from <a href="https://files.dyne.org/zenroom">files.dyne.org/zenroom</a></p>
+<p><span class="mdi mdi-history"></span>
+Read the <a href="https://files.dyne.org/zenroom/ChangeLog.txt">history of changes</a></p>
+<p>Anyone planning to use Zenroom to store and access secrets should not
+use the latest development version in Git, but use instead the stable
+releases on files.dyne.org.</p>
+<p>Before releasing we make sure Zenroom works as expected by running
+various tests, plus we note down all changes in the log above.</p>
+<p>The development version in Git should only be used by contributors to
+report bugs, test new features and develop patches.</p>
 <h2 id="documentation">Documentation</h2>
-<ul class="center" style="list-style:none">
-
-<li class="mdi mdi-code-braces"> <a href="https://zenroom.dyne.org/api">Zenroom scripting API</a></li>
-
-<li class="mdi mdi-school"> <a href="https://files.dyne.org/zenroom/Zenroom_Whitepaper.pdf">Zenroom Whitepaper</a></li>
-
-<li class="mdi mdi-cogs"> <a href="https://github.com/DECODEproject/zenroom/wiki">Online Wiki</a></li>
-
-<li class="mdi mdi-history"> <a href="https://files.dyne.org/zenroom/ChangeLog.txt">History of changes</a></li>
-</ul>
-
+<h3 id="programming">Programming</h3>
+<p><span class="mdi mdi-flag"></span>
+<a href="zencode">Zencode: programming smart contracts in human language</a></p>
+<p><span class="mdi mdi-code-braces"></span>
+<a href="lua">Zenroom scripting in Lua: reference documentation</a></p>
+<h3 id="usage">Usage</h3>
+<p><span class="mdi mdi-run"></span>
+<a href="wiki/how-to-exec">How to execute scripts with Zenroom</a></p>
+<p><span class="mdi mdi-package"></span>
+<a href="wiki/how-to-embed">How to embed Zenroom in your application</a></p>
+<p><span class="mdi mdi-cogs"></span>
+<a href="wiki/how-to-build">How to build Zenroom from the source code</a></p>
 <h2 id="playground">Playground</h2>
-<ul class="center" style="list-style:none">
-<li class="mdi mdi-hand-pointing-right"> <a href="https://zenroom.dyne.org/demo">Online Demo</a></li>
-<li class="mdi mdi-docker"> <a href="https://hub.docker.com/r/dyne/zenroom">Docker image</a></li>
-<li class="mdi mdi-puzzle"> <a href="https://hub.docker.com/r/dyne/zenroom-redis">Redis module</a></li>
-</ul>
-
+<h3 id="online">Online</h3>
+<p><span class="mdi mdi-hand-pointing-right"></span>
+<a href="https://zenroom.dyne.org/demo">Online interactive demo</a></p>
+<p><span class="mdi mdi-web"></span>
+<a href="encrypt">Web encryption demonstration and benchmark</a></p>
+<h3 id="apps">Apps</h3>
+<p><span class="mdi mdi-network"></span>
+<a href="https://redroom.dyne.org">Redroom: fast execution of Zencode in Redis</a></p>
+<p><span class="mdi mdi-eye"></span>
+<a href="https://redroom.dyne.org">Sawroom: blockchain integration with Sawtooth</a></p>
+<h3 id="docker">Docker</h3>
+<p><span class="mdi mdi-docker"></span>
+<a href="https://github.com/dyne/docker-dyne-software/tree/master/zenroom">Docker build files</a>
+(dyne/zenroom:latest)</p>
 <h2 id="bindings">Bindings</h2>
 <p>Zenroom is designed to be embedded inside host applications and used from its very simple interface to execute code on an input and return an output of the transformation. The embedding API is:</p>
 <div class="codehilite"><pre><span class="kt">int</span> <span class="nf">zenroom_exec</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">script</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">conf</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">keys</span><span class="p">,</span>
@@ -207,71 +292,17 @@
 <li><b>Redis</b> module implementation for in-memory database encryption</li>
 </ul>
 
-<h2 id="language">Language</h2>
-<p>Zenroom executes smart contracts written in Lua or in Zencode: a <a href="https://decodeproject.eu/blog/smart-contracts-english-speaker">plain English-like Domain Specific Language</a>.</p>
-<p><img src="img/zencode_diagram.png" alt="Zencode documentation diagram" width="92%"></a></p>
-<div class="codehilite"><pre><span class="l-Scalar-Plain">data</span><span class="p-Indicator">:</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">then</span><span class="p-Indicator">:</span> <span class="s">&#39;print</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">then</span><span class="p-Indicator">:</span> <span class="s">&#39;print</span><span class="nv"> </span><span class="s">all</span><span class="nv"> </span><span class="s">data&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">then</span><span class="p-Indicator">:</span> <span class="s">&#39;print</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">data&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">then</span><span class="p-Indicator">:</span> <span class="s">&#39;print</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">then</span><span class="p-Indicator">:</span> <span class="s">&#39;print</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">draft&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">then</span><span class="p-Indicator">:</span> <span class="s">&#39;print</span><span class="nv"> </span><span class="s">as</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">draft&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">then</span><span class="p-Indicator">:</span> <span class="s">&#39;print</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">draft</span><span class="nv"> </span><span class="s">as</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">then</span><span class="p-Indicator">:</span> <span class="s">&#39;print</span><span class="nv"> </span><span class="s">as</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">then</span><span class="p-Indicator">:</span> <span class="s">&#39;print</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">then</span><span class="p-Indicator">:</span> <span class="s">&#39;print</span><span class="nv"> </span><span class="s">as</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">then</span><span class="p-Indicator">:</span> <span class="s">&#39;print</span><span class="nv"> </span><span class="s">as</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">inside</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">then</span><span class="p-Indicator">:</span> <span class="nv">debug</span><span class="p-Indicator">}</span>
-<span class="l-Scalar-Plain">basic</span><span class="p-Indicator">:</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">create</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">new</span><span class="nv"> </span><span class="s">keypair&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">generate</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">keys&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">encrypt</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">for</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">decrypt</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">sign</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">draft</span><span class="nv"> </span><span class="s">as</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">verify</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">authentic&#39;</span><span class="p-Indicator">}</span>
-<span class="l-Scalar-Plain">coconut</span><span class="p-Indicator">:</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">create</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">new</span><span class="nv"> </span><span class="s">credential</span><span class="nv"> </span><span class="s">keypair&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">create</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">new</span><span class="nv"> </span><span class="s">credential</span><span class="nv"> </span><span class="s">request</span><span class="nv"> </span><span class="s">keypair&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">create</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">new</span><span class="nv"> </span><span class="s">keypair&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">create</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">new</span><span class="nv"> </span><span class="s">issuer</span><span class="nv"> </span><span class="s">keypair&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">create</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">new</span><span class="nv"> </span><span class="s">authority</span><span class="nv"> </span><span class="s">keypair&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">generate</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">credential</span><span class="nv"> </span><span class="s">signature</span><span class="nv"> </span><span class="s">request&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">sign</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">credential&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">aggregate</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">credential</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">aggregate</span><span class="nv"> </span><span class="s">verifiers</span><span class="nv"> </span><span class="s">from</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">generate</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">credential</span><span class="nv"> </span><span class="s">proof&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">verify</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">credential</span><span class="nv"> </span><span class="s">proof</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">correct&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">generate</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">petition</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">verify</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">new</span><span class="nv"> </span><span class="s">petition</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">be</span><span class="nv"> </span><span class="s">empty&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">sign</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">petition</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">verify</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">signature</span><span class="nv"> </span><span class="s">proof</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">correct&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;the</span><span class="nv"> </span><span class="s">petition</span><span class="nv"> </span><span class="s">signature</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">not</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">duplicate&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;the</span><span class="nv"> </span><span class="s">petition</span><span class="nv"> </span><span class="s">signature</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">just</span><span class="nv"> </span><span class="s">one</span><span class="nv"> </span><span class="s">more&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">add</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">signature</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">petition&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">tally</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">petition&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">count</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">petition</span><span class="nv"> </span><span class="s">results&#39;</span><span class="p-Indicator">}</span>
-</pre></div>
-
-
 <h2 id="mission">Mission</h2>
 <p>Zenroom is software in <strong>BETA stage</strong> and is part of the <a href="https://decodeproject.eu">DECODE project</a> about data commons and <a href="https://www.youtube.com/watch?v=RvBRbwBm_nQ">technological sovereignty</a>. Our effort is that of improving people's awareness of how their data is processed by algorithms, as well facilitate the work of developers to create along <a href="https://decodeproject.eu/publications/privacy-design-strategies-decode-architecture">privacy by design principles</a>.</p>
-<p><a href="https://decodeproject.eu">
-<img src="https://zenroom.dyne.org/img/decode.svg" width="54%"
-    alt="DECODE project"></a></p>
+<p><a href="https://decodeproject.eu"><img alt="DECODE project" src="img/decode.svg" /></a></p>
 <p>This software aims to make it easy and less error-prone to write <strong>portable</strong> scripts using <strong>end-to-end encryption</strong> inside isolated environments that can be easily made <strong>interoperable</strong>. Basic crypto functions provided include primitives to manage <strong>a/symmetric keys, key derivation, hashing and signing functionalities</strong>.</p>
 <p>Zenroom is software inspired by the <a href="http://langsec.org">language-theoretical security</a> research, it allows to expresses cryptographic operations in a readable scripting language that has no access to the calling process, underlying operating system or filesystem.</p>
-<p><a href="http://langsec.org/occupy/">
-<img src="https://zenroom.dyne.org/img/InputLanguages.jpg" class="pic"
-    alt="No more Turing Completion!" target="_blank"></a></p>
+<p><a href="http://langsec.org/occupy/"><img alt="No more Turing Completion!" src="img/InputLanguages.jpg" /></a></p>
 <p>Zenroom's <strong>restricted execution environment</strong> is a sort of <a href="https://en.wikipedia.org/wiki/Sandbox_%28computer_security%29">sandbox</a> whose parser is based on LUA's <a href="https://en.wikipedia.org/wiki/Syntax-directed_translation">syntax-direct translation</a> and has coarse-grained control of computations and memory. The Zenroom VM is designed to "brittle" and exit execution returning a meaningful message on any error.</p>
 <p>Zenroom's documentation and examples are being written to encourage a <a href="https://en.wikipedia.org/wiki/Declarative_programming">declarative</a> approach to scripting, providing functional tools to manipulate efficiently even complex data structures.</p>
-<p><a href="http://langsec.org/occupy/">
-<img src="https://zenroom.dyne.org/img/FullRecognition.jpg" class="pic"
-    alt="Full Recognition Before Processing!" target="_blank"></a></p>
+<p><a href="http://langsec.org/occupy/"><img alt="Full Recognition Before Processing!" src="img/FullRecognition.jpg" /></a></p>
 <p>The main use case for Zenroom is that of <strong>distributed computing</strong> of untrusted code where advanced cryptographic functions are required, for instance it can be used as a distributed ledger implementation (also known as <strong>blockchain smart contracts</strong>).</p>
-<p><img src="https://zenroom.dyne.org/img/ec_logo.png" class="pic"
-    alt="Project funded by the European Commission"></p>
+<p><img alt="Project funded by the European Commission" src="img/ec_logo.png" /></p>
 <p>This project is receiving funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement nr. 732546 (DECODE).</p>
 <h2 id="acknowledgements">Acknowledgements</h2>
 <p>Copyright (C) 2017-2019 by Dyne.org foundation, Amsterdam</p>
@@ -317,17 +348,17 @@ implied.  See <a href="LICENSE.txt">the License</a>.</p>
 		<footer class="footer">
 	<div class="content has-text-centered">
 		<p>	<strong>Zenroom</strong> is Copyright (C) 2019 by the <a href="https://dyne.org">Dyne.org foundation</a>. The source code is licensed <a href="https://www.gnu.org/licenses/agpl-3.0.en.html">AGPLv3</a>. </p>
-		<div class="columns is-gapless">
-			<div class="column is-one-fifth">
-				<img src="assets/img/eu-flag.png"></div>
-			<p class="column is-three-quarters">
-			This project received funding from the European Union’s
-			Horizon 2020 research and innovation programme under grant
-			agreement nr. .</p>
-		</div>
+		<!-- <div class="columns is-gapless">
+			 <div class="column is-one-fifth">
+			 <img src="assets/img/eu-flag.png"></div>
+			 <p class="column is-three-quarters"> -->
+		
+		<p>Funded by the European Union’s Horizon 2020 research and
+			innovation program, grant nr. 732546 (DECODE).</p>
+		
+		<!-- </div> -->
 	</div>
 </footer>
-		
 		 <!-- Start of Async Drift Code -->
 <script>
  "use strict";
@@ -358,6 +389,7 @@ implied.  See <a href="LICENSE.txt">the License</a>.</p>
  }();
  drift.SNIPPET_VERSION = '0.3.1';
  drift.load('s64nd7w43g53');
-</script> 
+</script>      
+		
 	</body>
 </html>

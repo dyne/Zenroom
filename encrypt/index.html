@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Web Encryption Demo - Zenroom</title>
+		<meta name="description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
+		<meta name="keywords" content="crypto, security, iot, blockchain" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta property="og:title" content="Web Encryption Demo" />
+		<meta property="og:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="https://dev.zenroom.org" />
+		<meta name="twitter:card" content="summary_large_image">
+		<meta name="twitter:site" content="@DyneOrg">
+		<meta name="twitter:title" content="Web Encryption Demo">
+		<meta name="twitter:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them.">
+
+		<link rel="stylesheet" href="../assets/css/bulma.min.css">
+		<link rel="stylesheet" href="../assets/css/bulma-dyne.css">
+		<link rel="stylesheet" href="../assets/css/materialdesignicons.min.css">
+
+		
+		<script type="text/javascript" src="../js/cash.min.js"></script>
+		
+
+		
+		<link rel="stylesheet" href="../css/montserrat.css">
+		
+		<link rel="stylesheet" href="../css/custom.css">
+		
+
+		
+		<script type="text/javascript" src="../js/encrypt.js"></script>
+        
+
+		
+
+	</head>
+
+	<body>
+		<nav class="navbar has-shadow is-transparent">
+    <div class="navbar-brand">
+        <a class="navbar-item" href="/">
+			
+			<img src="/img/zenroom_logo.jpg">
+			
+        </a>
+        <!-- <div class="navbar-burger burger" data-target="navbarExampleTransparentExample">
+             <span></span>
+             <span></span>
+             <span></span>
+             </div> -->
+    </div>
+	
+	<div id="navbarExampleTransparentExample" class="navbar-menu">
+        <div class="navbar-start">
+			<div class="navbar-item">
+				Zenroom: portable, secure and independent crypto language
+			</div>
+		</div>
+	</div>
+	
+	<!-- 
+		 <div id="navbarExampleTransparentExample" class="navbar-menu">
+         <div class="navbar-start">
+         
+         
+         <a class="navbar-item" href="">
+         The Zenroom VM ...
+         </a>
+         
+         
+         
+         <a class="navbar-item" href="encrypt/">
+         Web Encryption Demo
+         </a>
+         
+         
+         
+         <a class="navbar-item" href="zencode/">
+         Write smart contracts in human language
+         </a>
+         
+         
+         
+         <div class="navbar-item has-dropdown is-hoverable">
+         <a class="navbar-link" href="">
+         Wiki
+         </a>
+         <div class="navbar-dropdown is-boxed">
+         
+         <a class="navbar-item" href="wiki/how-to-build/">
+         How to build
+         </a>
+         
+         <a class="navbar-item" href="wiki/how-to-embed/">
+         How to embed
+         </a>
+         
+         <a class="navbar-item" href="wiki/how-to-exec/">
+         How to execute Zenroom scripts
+         </a>
+         
+         </div>
+         </div>
+         
+         
+         </div>
+	-->
+        <div class="navbar-end">
+            <div class="navbar-item">
+                <div class="field is-grouped">
+                    <!-- TODO: demo button
+						 <p class="control">
+                         <a class="button is-primary" href="">
+                         <span class="icon">
+                         <i class="mdi mdi-download"></i>
+                         </span>
+                         <span>Download</span>
+                         </a>
+						 </p> -->
+                    <p class="control">
+                        <a href="https://dyne.org">
+                            <img src="https://img.shields.io/badge/made%20with%20%E2%9D%A4%20by-Dyne.org-turquoise.svg?style=for-the-badge&logo=gnu" alt="Made with love by Dyne.org" title="We are free to share code and we code to share Freedom"></a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+		<section class="section">
+			<div class="container">
+				<div class="columns">
+					<div class="column is-one-quarter">
+						<aside class="menu">
+    
+    <h1 class="menu-label">
+        <span class="mdi mdi-fire has-text-danger"></span> Quick Links</h1>
+    <ul class="menu-list" style="list-style: none">
+        
+        <li><span class="mdi mdi-home"></span><a href="https://zenroom.org">Home</a></li>
+        
+        
+        <li><span class="mdi mdi-download"></span><a href="">Download</a></li>
+        
+        
+        <li><span class="mdi mdi-github-circle"></span><a href="https://github.com/decodeproject/Zenroom/">Source Code</a></li>
+        
+        
+        <li><span class="mdi mdi-docker"></span><a href="#docker">Docker</a></li>
+        
+        
+        
+    </ul>
+    
+
+    <hr width="20%">
+
+    <h1 class="menu-label">
+        <span class="mdi mdi-format-list-numbered has-text-primary"></span> Table of Contents</h1>
+    <ul class="menu-list">
+        
+        <li>
+            <a href="#web-encryption-demo">Web Encryption Demo</a>
+            
+                
+  <ul>
+    
+      <li><a href="#zencode-contract">Zencode contract</a></li>
+      
+  <ul>
+    
+      <li><a href="#alice-keypair">Alice keypair</a></li>
+      
+    
+      <li><a href="#bob-public-key">Bob public key</a></li>
+      
+    
+  </ul>
+
+    
+      <li><a href="#upload-file">Upload file</a></li>
+      
+    
+  </ul>
+
+            
+        </li>
+        
+    </ul>
+</aside>
+					</div>
+					<div class="column">
+						<div class="content">
+							 <h1 id="web-encryption-demo">Web Encryption Demo</h1>
+<p>Demo of in-browser asymmetric AES-GCM encryption.</p>
+<p>Zencode Smart Contract in human language (WASM-web build)</p>
+<p>For more information see <a href="https://zenroom.org">Zenroom.org</a>.</p>
+<p><a href="encrypt.js">Code for this example</a></p>
+<h2 id="zencode-contract">Zencode contract</h2>
+<p><pre id="encrypt_contract"></pre></p>
+<h3 id="alice-keypair">Alice keypair</h3>
+<p><code id="alice"></code></p>
+<h3 id="bob-public-key">Bob public key</h3>
+<p><code id="bob"></code></p>
+<hr />
+<h2 id="upload-file">Upload file</h2>
+<p>Select a file on the local harddisk.</p>
+<p>Nothing will be uploaded to any server.</p>
+<p>Files are encrypted on the fly inside the browser.</p>
+<p><form method="post" enctype="multipart/form-data">
+    <input type="file" name="rawfile" />
+    <input type="submit" value="Upload File" name="submit" />
+  </form>
+  <hr/>
+  <div>Speed: <span id="speed"></span> ms</div>
+  <hr/>
+  <small><code id="result"></code></small></p>
+<script async type="text/javascript" src="zenroom.js"></script> 
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<footer class="footer">
+	<div class="content has-text-centered">
+		<p>	<strong>Zenroom</strong> is Copyright (C) 2019 by the <a href="https://dyne.org">Dyne.org foundation</a>. The source code is licensed <a href="https://www.gnu.org/licenses/agpl-3.0.en.html">AGPLv3</a>. </p>
+		<!-- <div class="columns is-gapless">
+			 <div class="column is-one-fifth">
+			 <img src="assets/img/eu-flag.png"></div>
+			 <p class="column is-three-quarters"> -->
+		
+		<p>Funded by the European Union’s Horizon 2020 research and
+			innovation program, grant nr. 732546 (DECODE).</p>
+		
+		<!-- </div> -->
+	</div>
+</footer>
+		 <!-- Start of Async Drift Code -->
+<script>
+ "use strict";
+
+ !function() {
+	 var t = window.driftt = window.drift = window.driftt || [];
+	 if (!t.init) {
+		 if (t.invoked) return void (window.console && console.error &&
+									 console.error("Drift snippet included twice."));
+		 t.invoked = !0, t.methods = [ "identify", "config", "track", "reset",
+									   "debug", "show", "ping", "page", "hide", "off", "on" ],
+							   t.factory = function(e) {
+								   return function() {
+									   var n = Array.prototype.slice.call(arguments);
+									   return n.unshift(e), t.push(n), t;
+								   };
+							   }, t.methods.forEach(function(e) {
+								   t[e] = t.factory(e);
+							   }), t.load = function(t) {
+								   var e = 3e5, n = Math.ceil(new Date() / e) * e, o =
+									   document.createElement("script");
+								   o.type = "text/javascript", o.async = !0, o.crossorigin = "anonymous",
+									   o.src = "https://js.driftt.com/include/" + n + "/" + t + ".js";
+								   var i = document.getElementsByTagName("script")[0];
+								   i.parentNode.insertBefore(o, i);
+							   };
+	 }
+ }();
+ drift.SNIPPET_VERSION = '0.3.1';
+ drift.load('s64nd7w43g53');
+</script>      
+		
+	</body>
+</html>

@@ -1,0 +1,582 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Zenroom LUA</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Zenroom</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Global_ECDH_functions">Global ECDH functions </a></li>
+<li><a href="#Class_keyring">Class keyring </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/OCTET.html">OCTET</a></li>
+  <li><a href="../modules/HASH.html">HASH</a></li>
+  <li><strong>ECDH</strong></li>
+  <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><a href="../modules/String.html">String</a></li>
+  <li><a href="../modules/Table.html">Table</a></li>
+  <li><a href="../modules/INSPECT.html">INSPECT</a></li>
+  <li><a href="../modules/ZEN.html">ZEN</a></li>
+  <li><a href="../modules/BIG.html">BIG</a></li>
+</ul>
+<h2>Tutorials</h2>
+<ul class="nowrap">
+  <li><a href="../tutorials/Syntax.html">Syntax</a></li>
+  <li><a href="../tutorials/StateMachine.html">StateMachine</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/keygen.lua.html">keygen.lua</a></li>
+  <li><a href="../examples/crypt-to-multi.lua.html">crypt-to-multi.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>ECDH</code></h1>
+<p>
+
+<h1>Elliptic Curve Diffie-Hellman encryption (ECDH)</h1>
+
+
+<p>  Asymmetric public/private key encryption technologies.</p>
+</p>
+<p>  ECDH encryption and ECDSA signing functionalities are provided by
+  this module. New keyring instances are instantiated by calling the
+  new() method, keys can be imported using the</p>
+
+<p>  <code>
+  Alice = ECDH.new()
+  Bob = ECDH.new()
+  </code></p>
+
+<p>  One can create more keyrings in the same script and call them with
+  meaningful variable names to help making code more
+  understandable. Each keyring instance offers methods prefixed with
+  a double-colon that operate on arguments as well keys contained by
+  the keyring: this way scripting can focus on the identities
+  represented by each keyring, giving them names as 'Alice' or
+  'Bob'.</p>
+    <h3>Info:</h3>
+    <ul>
+        <li><strong>Copyright</strong>: Dyne.org foundation 2017-2019</li>
+        <li><strong>License</strong>: AGPLv3</li>
+        <li><strong>Author</strong>: Denis "Jaromil" Roio</li>
+    </ul>
+
+
+<h2><a href="#Global_ECDH_functions">Global ECDH functions </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#new">new (curve)</a></td>
+	<td class="summary">Create a new ECDH encryption keyring using a specified curve
+   ('BLS383' by default).</td>
+	</tr>
+</table>
+<h2><a href="#Class_keyring">Class keyring </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#keyring:keygen">keyring:keygen ()</a></td>
+	<td class="summary">Generate an ECDH public/private key pair for a keyring</p>
+
+<p>   Keys generated are both returned and stored inside the
+   keyring.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#keyring:public">keyring:public (key)</a></td>
+	<td class="summary">Imports a public key inside an ECDH keyring.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#keyring:private">keyring:private (key)</a></td>
+	<td class="summary">Imports a private key inside an ECDH keyring.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#keyring:sign">keyring:sign (message)</a></td>
+	<td class="summary">Elliptic Curve Digital Signature Algorithm (ECDSA) signing
+   function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#keyring:verify">keyring:verify (message, signature)</a></td>
+	<td class="summary">Elliptic Curve Digital Signature Algorithm (ECDSA) verification
+   function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#keyring:encrypt">keyring:encrypt (keyring, message, header)</a></td>
+	<td class="summary">Simple method for AES-GCM encryption with Additional Data (AEAD),
+   compatible with IEEE P802.1 specification.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#keyring:ciphertext">keyring:ciphertext</a></td>
+	<td class="summary">Results of <a href="../modules/ECDH.html#keyring:encrypt">keyring:encrypt</a></td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#keyring:decrypt">keyring:decrypt (ciphertext)</a></td>
+	<td class="summary">Simple method for AES-GCM decrypt with Additional Data
+   (AEAD).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#keyring:hmac">keyring:hmac (key, data)</a></td>
+	<td class="summary">Compute the HMAC of a message using a key.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#keyring:kdf2">keyring:kdf2 (hash, key)</a></td>
+	<td class="summary">Key Derivation Function (KDF2).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#keyring:pbkdf2">keyring:pbkdf2 (key, salt, iterations, length)</a></td>
+	<td class="summary">Password Based Key Derivation Function (PBKDF2).</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="Global_ECDH_functions"></a>Global ECDH functions </h2>
+
+
+
+
+    <dl class="function">
+    <dt>
+    <a name = "new"></a>
+    <strong>new (curve)</strong>
+    </dt>
+    <dd>
+    Create a new ECDH encryption keyring using a specified curve
+   ('BLS383' by default). </p>
+
+<p>   A keyring object will be returned implementing ECDH methods.</p>
+
+<p>   Supported curves: 'BLS383', 'ED25519', 'GOLDILOCKS', 'SECP256K1'
+(curve)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">curve</span>
+        [opt=BLS383] name of elliptic curve to use
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new keyring
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">keyring = ECDH.new()
+<span class="comment">-- generate a keypair
+</span>keypair = keyring:keygen()
+I.<span class="global">print</span>(keypair)
+<span class="string">[[{ public = oct[] .... ,
+    private = oct[] .... }]]</span></pre>
+    </ul>
+
+</dd>
+</dl>
+    <h2><a name="Class_keyring"></a>Class keyring </h2>
+
+        Instance Methods
+    <dl class="function">
+    <dt>
+    <a name = "keyring:keygen"></a>
+    <strong>keyring:keygen ()</strong>
+    </dt>
+    <dd>
+    Generate an ECDH public/private key pair for a keyring</p>
+
+<p>   Keys generated are both returned and stored inside the
+   keyring.  They can also be retrieved later using the
+   <a href="../modules/ECDH.html#keyring:public">public</a> and <a href="../modules/ECDH.html#keyring:private">private</a> methods.
+()
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+           <span class="types"><span class="type">OCTET</span></span>
+        public key</li>
+        <li>
+           <span class="types"><span class="type">OCTET</span></span>
+        private key</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "keyring:public"></a>
+    <strong>keyring:public (key)</strong>
+    </dt>
+    <dd>
+    Imports a public key inside an ECDH keyring. </p>
+
+<p>   This is a get/set method working both ways: without argument it
+   returns the public key of a keyring, or if an <a href="../modules/OCTET.html#">OCTET</a> argument is
+   provided and is a valid public key it is imported.</p>
+
+<p>   If the keyring has a public key already, it will refuse to
+   overwrite it and return an error.
+(key)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+        [opt] octet of a public key to be imported
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "keyring:private"></a>
+    <strong>keyring:private (key)</strong>
+    </dt>
+    <dd>
+    Imports a private key inside an ECDH keyring. </p>
+
+<p>   This is a get/set method working both ways: without argument it
+   returns the private key of a keyring, or if an <a href="../modules/OCTET.html#">OCTET</a> argument is
+   provided it is imported as private key inside the keyring and used
+   to derivate its corresponding public key.</p>
+
+<p>   If the keyring contains already any key, it will refuse to
+   overwrite them and return an error.
+(key)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+        [opt] octet of a private key to be imported
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "keyring:sign"></a>
+    <strong>keyring:sign (message)</strong>
+    </dt>
+    <dd>
+    Elliptic Curve Digital Signature Algorithm (ECDSA) signing
+   function.  This method uses the private key inside a keyring to sign
+   a message, returning a signature to be used in <a href="../modules/ECDH.html#keyring:verify">keyring:verify</a>.
+(message)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">message</span>
+         string or <a href="../modules/OCTET.html#">OCTET</a> message to sign
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table containing signature parameters octets (r,s)
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">ecdh = ECDH.keygen() <span class="comment">-- generate keys or import them
+</span>m = <span class="string">"Message to be signed"</span>
+signature = ecdh:sign(m)
+<span class="global">assert</span>( ecdh:verify(m,signature) )</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "keyring:verify"></a>
+    <strong>keyring:verify (message, signature)</strong>
+    </dt>
+    <dd>
+    Elliptic Curve Digital Signature Algorithm (ECDSA) verification
+   function.  This method uses the public key iside a keyring to verify
+   a message, returning true or false. The signature parameters are
+   returned as 'r' and 's' in this same order by <a href="../modules/ECDH.html#keyring:sign">keyring:sign</a>.
+(message,signature)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">message</span>
+         the message whose signature has to be verified
+        </li>
+        <li><span class="parameter">signature</span>
+         the signature table returned by <a href="../modules/ECDH.html#keyring:sign">keyring:sign</a>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true if the signature is OK, or false if not.
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/ECDH.html#keyring:sign">keyring:sign</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "keyring:encrypt"></a>
+    <strong>keyring:encrypt (keyring, message, header)</strong>
+    </dt>
+    <dd>
+    Simple method for AES-GCM encryption with Additional Data (AEAD),
+   compatible with IEEE P802.1 specification.  Takes a keyring object
+   for the public key and a table of parameters. Returns also a table
+   with the cyphertext and a checksum that is accepted by <a href="../modules/ECDH.html#keyring:decrypt">decrypt</a>.
+(keyring, message, header)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">keyring</span>
+         recipient keyring containing the public key
+        </li>
+        <li><span class="parameter">message</span>
+         octet input text to be encrypted for secrecy
+        </li>
+        <li><span class="parameter">header</span>
+         octet input header authenticated for integrity
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="../modules/ECDH.html#keyring:ciphertext">ciphertext</a></span>
+
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "keyring:ciphertext"></a>
+    <strong>keyring:ciphertext</strong>
+    </dt>
+    <dd>
+    Results of <a href="../modules/ECDH.html#keyring:encrypt">keyring:encrypt</a>
+
+
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">{ message = <span class="string">"encrypted text"</span>,          <span class="comment">-- <a href="../modules/OCTET.html#">OCTET</a>
+</span>  checksum = <span class="string">"control checksum"</span>,       <span class="comment">-- <a href="../modules/OCTET.html#">OCTET</a> of 16 bytes
+</span>  iv = <span class="string">"random IV"</span>,                    <span class="comment">-- <a href="../modules/OCTET.html#">OCTET</a> of 16 bytes
+</span>  header = <span class="string">"clear text header"</span>,        <span class="comment">-- <a href="../modules/OCTET.html#">OCTET</a> often encoded JSON table
+</span>  public key = <span class="string">"sender's public key"</span>}  <span class="comment">-- <a href="../modules/OCTET.html#">OCTET</a> representation of <a href="../modules/ECP.html#">ECP</a></span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "keyring:decrypt"></a>
+    <strong>keyring:decrypt (ciphertext)</strong>
+    </dt>
+    <dd>
+    Simple method for AES-GCM decrypt with Additional Data
+   (AEAD).  Takes a table as returned by <a href="../modules/ECDH.html#keyring:encrypt">keyring:encrypt</a> containing
+   message, checksum, header, IV and the sender's pubkey.  Returns an
+   octet containing the decrypted message or error if any problem
+   arises (invalid checksum etc.). Compatible with IEEE P802.1
+   specification.
+(ciphertext)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ciphertext</span>
+         table with message, checksum, iv, header and public key
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        octet containing the decrypted message
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "keyring:hmac"></a>
+    <strong>keyring:hmac (key, data)</strong>
+    </dt>
+    <dd>
+    Compute the HMAC of a message using a key.  This method takes any
+   data and any key material to comput an HMAC of the same length of
+   the hash bytes of the keyring.
+(key, data)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+         an octet containing the key to compute the HMAC
+        </li>
+        <li><span class="parameter">data</span>
+         an octet containing the message to compute the HMAC
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new octet containing the computed HMAC or false on failure
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "keyring:kdf2"></a>
+    <strong>keyring:kdf2 (hash, key)</strong>
+    </dt>
+    <dd>
+    Key Derivation Function (KDF2).  Key derivation is used to
+   strengthen keys against bruteforcing: they impose a number of
+   costly computations to be iterated on the key. This function
+   generates a new key from an existing key applying an octet of key
+   derivation parameters.
+(key)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">hash</span>
+         initialized <a href="../modules/HASH.html#">HASH</a> or <a href="../modules/ECDH.html#">ECDH</a> object
+        </li>
+        <li><span class="parameter">key</span>
+         octet of the key to be transformed
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new octet containing the derived key
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "keyring:pbkdf2"></a>
+    <strong>keyring:pbkdf2 (key, salt, iterations, length)</strong>
+    </dt>
+    <dd>
+    Password Based Key Derivation Function (PBKDF2).  This function
+   generates a new key from an existing key applying a salt and number
+   of iterations.
+(key, salt, iterations, length)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+         octet of the key to be transformed
+        </li>
+        <li><span class="parameter">salt</span>
+         octet containing a salt to be used in transformation
+        </li>
+        <li><span class="parameter">iterations</span>
+        [opt=1000] number of iterations to be applied
+        </li>
+        <li><span class="parameter">length</span>
+        [opt=key length] integer indicating the new length (default same as input key)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new octet containing the derived key
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/ECDH.html#keyring:kdf2">keyring:kdf2</a>
+    </ul>
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.3</a></i>
+<i style="float:right;">Last updated 2019-08-29 21:25:00 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
+]==]
+

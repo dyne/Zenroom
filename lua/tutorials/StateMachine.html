@@ -1,0 +1,292 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Zenroom LUA</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Zenroom</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+
+
+<h2>Tutorials</h2>
+<ul class="nowrap">
+  <li><a href="../tutorials/Syntax.html">Syntax</a></li>
+  <li><strong>StateMachine</strong></li>
+</ul>
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/OCTET.html">OCTET</a></li>
+  <li><a href="../modules/HASH.html">HASH</a></li>
+  <li><a href="../modules/ECDH.html">ECDH</a></li>
+  <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><a href="../modules/String.html">String</a></li>
+  <li><a href="../modules/Table.html">Table</a></li>
+  <li><a href="../modules/INSPECT.html">INSPECT</a></li>
+  <li><a href="../modules/ZEN.html">ZEN</a></li>
+  <li><a href="../modules/BIG.html">BIG</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/keygen.lua.html">keygen.lua</a></li>
+  <li><a href="../examples/crypt-to-multi.lua.html">crypt-to-multi.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+
+
+<h1 id="state-machine-extension">State Machine extension</h1>
+
+
+<p>Zenroom may optionally include a simple extension to implement finite state machines logics in a straightforward way.</p>
+
+
+<p>In its simplest form, create a standalone state machine using:</p>
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode lua"><code class="sourceCode lua"><a class="sourceLine" id="cb1-1" title="1">machine <span class="op">=</span> <span class="fu">require</span> <span class="st">&quot;statemachine&quot;</span></a>
+<a class="sourceLine" id="cb1-2" title="2"></a>
+<a class="sourceLine" id="cb1-3" title="3"><span class="kw">local</span> fsm <span class="op">=</span> machine<span class="op">.</span>create<span class="op">({</span></a>
+<a class="sourceLine" id="cb1-4" title="4">  initial <span class="op">=</span> <span class="st">&#39;green&#39;</span><span class="op">,</span></a>
+<a class="sourceLine" id="cb1-5" title="5">  events <span class="op">=</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb1-6" title="6">    <span class="op">{</span> name <span class="op">=</span> <span class="st">&#39;warn&#39;</span><span class="op">,</span>  from <span class="op">=</span> <span class="st">&#39;green&#39;</span><span class="op">,</span>  to <span class="op">=</span> <span class="st">&#39;yellow&#39;</span> <span class="op">},</span></a>
+<a class="sourceLine" id="cb1-7" title="7">    <span class="op">{</span> name <span class="op">=</span> <span class="st">&#39;panic&#39;</span><span class="op">,</span> from <span class="op">=</span> <span class="st">&#39;yellow&#39;</span><span class="op">,</span> to <span class="op">=</span> <span class="st">&#39;red&#39;</span>    <span class="op">},</span></a>
+<a class="sourceLine" id="cb1-8" title="8">    <span class="op">{</span> name <span class="op">=</span> <span class="st">&#39;calm&#39;</span><span class="op">,</span>  from <span class="op">=</span> <span class="st">&#39;red&#39;</span><span class="op">,</span>    to <span class="op">=</span> <span class="st">&#39;yellow&#39;</span> <span class="op">},</span></a>
+<a class="sourceLine" id="cb1-9" title="9">    <span class="op">{</span> name <span class="op">=</span> <span class="st">&#39;clear&#39;</span><span class="op">,</span> from <span class="op">=</span> <span class="st">&#39;yellow&#39;</span><span class="op">,</span> to <span class="op">=</span> <span class="st">&#39;green&#39;</span>  <span class="op">}</span></a>
+<a class="sourceLine" id="cb1-10" title="10"><span class="op">}})</span></a></code></pre></div>
+
+
+<p>… will create an object with a method for each event:</p>
+
+
+<ul>
+<li>fsm:warn() - transition from ‘green’ to ‘yellow’</li>
+<li>fsm:panic() - transition from ‘yellow’ to ‘red’</li>
+<li>fsm:calm() - transition from ‘red’ to ‘yellow’</li>
+<li>fsm:clear() - transition from ‘yellow’ to ‘green’</li>
+</ul>
+
+
+<p>along with the following members:</p>
+
+
+<ul>
+<li>fsm.current - contains the current state</li>
+<li>fsm.currentTransitioningEvent - contains the current event that is in a transition.</li>
+<li>fsm:is(s) - return true if state <code>s</code> is the current state</li>
+<li>fsm:can(e) - return true if event <code>e</code> can be fired in the current state</li>
+<li>fsm:cannot(e) - return true if event <code>e</code> cannot be fired in the current state</li>
+</ul>
+
+
+<h1 id="multiple-from-and-to-states-for-a-single-event">Multiple ‘from’ and ‘to’ states for a single event</h1>
+
+
+<p>If an event is allowed <strong>from</strong> multiple states, and always transitions to the same state, then simply provide an array of states in the <code>from</code> attribute of an event. However, if an event is allowed from multiple states, but should transition <strong>to</strong> a different state depending on the current state, then provide multiple event entries with the same name:</p>
+
+
+<div class="sourceCode" id="cb2"><pre class="sourceCode lua"><code class="sourceCode lua"><a class="sourceLine" id="cb2-1" title="1">machine <span class="op">=</span> <span class="fu">require</span> <span class="st">&quot;statemachine&quot;</span></a>
+<a class="sourceLine" id="cb2-2" title="2"></a>
+<a class="sourceLine" id="cb2-3" title="3"><span class="kw">local</span> fsm <span class="op">=</span> machine<span class="op">.</span>create<span class="op">({</span></a>
+<a class="sourceLine" id="cb2-4" title="4">  initial <span class="op">=</span> <span class="st">&#39;hungry&#39;</span><span class="op">,</span></a>
+<a class="sourceLine" id="cb2-5" title="5">  events <span class="op">=</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb2-6" title="6">    <span class="op">{</span> name <span class="op">=</span> <span class="st">&#39;eat&#39;</span><span class="op">,</span>  from <span class="op">=</span> <span class="st">&#39;hungry&#39;</span><span class="op">,</span>                                to <span class="op">=</span> <span class="st">&#39;satisfied&#39;</span> <span class="op">},</span></a>
+<a class="sourceLine" id="cb2-7" title="7">    <span class="op">{</span> name <span class="op">=</span> <span class="st">&#39;eat&#39;</span><span class="op">,</span>  from <span class="op">=</span> <span class="st">&#39;satisfied&#39;</span><span class="op">,</span>                             to <span class="op">=</span> <span class="st">&#39;full&#39;</span>      <span class="op">},</span></a>
+<a class="sourceLine" id="cb2-8" title="8">    <span class="op">{</span> name <span class="op">=</span> <span class="st">&#39;eat&#39;</span><span class="op">,</span>  from <span class="op">=</span> <span class="st">&#39;full&#39;</span><span class="op">,</span>                                  to <span class="op">=</span> <span class="st">&#39;sick&#39;</span>      <span class="op">},</span></a>
+<a class="sourceLine" id="cb2-9" title="9">    <span class="op">{</span> name <span class="op">=</span> <span class="st">&#39;rest&#39;</span><span class="op">,</span> from <span class="op">=</span> <span class="op">{</span><span class="st">&#39;hungry&#39;</span><span class="op">,</span> <span class="st">&#39;satisfied&#39;</span><span class="op">,</span> <span class="st">&#39;full&#39;</span><span class="op">,</span> <span class="st">&#39;sick&#39;</span><span class="op">},</span> to <span class="op">=</span> <span class="st">&#39;hungry&#39;</span>    <span class="op">},</span></a>
+<a class="sourceLine" id="cb2-10" title="10"><span class="op">}})</span></a></code></pre></div>
+
+
+<p>This example will create an object with 2 event methods:</p>
+
+
+<ul>
+<li>fsm:eat()</li>
+<li>fsm:rest()</li>
+</ul>
+
+
+<p>The <code>rest</code> event will always transition to the <code>hungry</code> state, while the <code>eat</code> event will transition to a state that is dependent on the current state.</p>
+
+
+<blockquote>
+<blockquote>
+<p>NOTE: The <code>rest</code> event could use a wildcard ’*’ for the ‘from’ state if it should be allowed from any current state.</p>
+</blockquote>
+
+<p></blockquote></p>
+
+<blockquote>
+<blockquote>
+<p>NOTE: The <code>rest</code> event in the above example can also be specified as multiple events with the same name if you prefer the verbose approach.</p>
+</blockquote>
+
+<p></blockquote></p>
+
+<h1 id="callbacks">Callbacks</h1>
+
+
+<p>4 callbacks are available if your state machine has methods using the following naming conventions:</p>
+
+
+<ul>
+<li>onbefore<strong>event</strong> - fired before the event</li>
+<li>onleave<strong>state</strong> - fired when leaving the old state</li>
+<li>onenter<strong>state</strong> - fired when entering the new state</li>
+<li>onafter<strong>event</strong> - fired after the event</li>
+</ul>
+
+
+<p>You can affect the event in 3 ways:</p>
+
+
+<ul>
+<li>return <code>false</code> from an <code>onbeforeevent</code> handler to cancel the event.</li>
+<li>return <code>false</code> from an <code>onleavestate</code> handler to cancel the event.</li>
+<li>return <code>ASYNC</code> from an <code>onleavestate</code> or <code>onenterstate</code> handler to perform an asynchronous state transition (see next section)</li>
+</ul>
+
+
+<p>For convenience, the 2 most useful callbacks can be shortened:</p>
+
+
+<ul>
+<li>on<strong>event</strong> - convenience shorthand for onafter<strong>event</strong></li>
+<li>on<strong>state</strong> - convenience shorthand for onenter<strong>state</strong></li>
+</ul>
+
+
+<p>In addition, a generic <code>onstatechange()</code> callback can be used to call a single function for <em>all</em> state changes:</p>
+
+
+<p>All callbacks will be passed the same arguments:</p>
+
+
+<ul>
+<li><strong>self</strong></li>
+<li><strong>event</strong> name</li>
+<li><strong>from</strong> state</li>
+<li><strong>to</strong> state</li>
+<li><em>(followed by any arguments you passed into the original event method)</em></li>
+</ul>
+
+
+<p>Callbacks can be specified when the state machine is first created:</p>
+
+
+<div class="sourceCode" id="cb3"><pre class="sourceCode lua"><code class="sourceCode lua"><a class="sourceLine" id="cb3-1" title="1">machine <span class="op">=</span> <span class="fu">require</span> <span class="st">&quot;statemachine&quot;</span></a>
+<a class="sourceLine" id="cb3-2" title="2"></a>
+<a class="sourceLine" id="cb3-3" title="3"><span class="kw">local</span> fsm <span class="op">=</span> machine<span class="op">.</span>create<span class="op">({</span></a>
+<a class="sourceLine" id="cb3-4" title="4">  initial <span class="op">=</span> <span class="st">&#39;green&#39;</span><span class="op">,</span></a>
+<a class="sourceLine" id="cb3-5" title="5">  events <span class="op">=</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb3-6" title="6">    <span class="op">{</span> name <span class="op">=</span> <span class="st">&#39;warn&#39;</span><span class="op">,</span>  from <span class="op">=</span> <span class="st">&#39;green&#39;</span><span class="op">,</span>  to <span class="op">=</span> <span class="st">&#39;yellow&#39;</span> <span class="op">},</span></a>
+<a class="sourceLine" id="cb3-7" title="7">    <span class="op">{</span> name <span class="op">=</span> <span class="st">&#39;panic&#39;</span><span class="op">,</span> from <span class="op">=</span> <span class="st">&#39;yellow&#39;</span><span class="op">,</span> to <span class="op">=</span> <span class="st">&#39;red&#39;</span>    <span class="op">},</span></a>
+<a class="sourceLine" id="cb3-8" title="8">    <span class="op">{</span> name <span class="op">=</span> <span class="st">&#39;calm&#39;</span><span class="op">,</span>  from <span class="op">=</span> <span class="st">&#39;red&#39;</span><span class="op">,</span>    to <span class="op">=</span> <span class="st">&#39;yellow&#39;</span> <span class="op">},</span></a>
+<a class="sourceLine" id="cb3-9" title="9">    <span class="op">{</span> name <span class="op">=</span> <span class="st">&#39;clear&#39;</span><span class="op">,</span> from <span class="op">=</span> <span class="st">&#39;yellow&#39;</span><span class="op">,</span> to <span class="op">=</span> <span class="st">&#39;green&#39;</span>  <span class="op">}</span></a>
+<a class="sourceLine" id="cb3-10" title="10">  <span class="op">},</span></a>
+<a class="sourceLine" id="cb3-11" title="11">  callbacks <span class="op">=</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb3-12" title="12">    onpanic <span class="op">=</span>  <span class="kw">function</span><span class="op">(</span>self<span class="op">,</span> event<span class="op">,</span> from<span class="op">,</span> to<span class="op">,</span> msg<span class="op">)</span> <span class="fu">print</span><span class="op">(</span><span class="st">&#39;panic! &#39;</span> <span class="op">..</span> msg<span class="op">)</span>    <span class="cf">end</span><span class="op">,</span></a>
+<a class="sourceLine" id="cb3-13" title="13">    onclear <span class="op">=</span>  <span class="kw">function</span><span class="op">(</span>self<span class="op">,</span> event<span class="op">,</span> from<span class="op">,</span> to<span class="op">,</span> msg<span class="op">)</span> <span class="fu">print</span><span class="op">(</span><span class="st">&#39;thanks to &#39;</span> <span class="op">..</span> msg<span class="op">)</span> <span class="cf">end</span><span class="op">,</span></a>
+<a class="sourceLine" id="cb3-14" title="14">    ongreen <span class="op">=</span>  <span class="kw">function</span><span class="op">(</span>self<span class="op">,</span> event<span class="op">,</span> from<span class="op">,</span> to<span class="op">)</span>      <span class="fu">print</span><span class="op">(</span><span class="st">&#39;green light&#39;</span><span class="op">)</span>       <span class="cf">end</span><span class="op">,</span></a>
+<a class="sourceLine" id="cb3-15" title="15">    onyellow <span class="op">=</span> <span class="kw">function</span><span class="op">(</span>self<span class="op">,</span> event<span class="op">,</span> from<span class="op">,</span> to<span class="op">)</span>      <span class="fu">print</span><span class="op">(</span><span class="st">&#39;yellow light&#39;</span><span class="op">)</span>      <span class="cf">end</span><span class="op">,</span></a>
+<a class="sourceLine" id="cb3-16" title="16">    onred <span class="op">=</span>    <span class="kw">function</span><span class="op">(</span>self<span class="op">,</span> event<span class="op">,</span> from<span class="op">,</span> to<span class="op">)</span>      <span class="fu">print</span><span class="op">(</span><span class="st">&#39;red light&#39;</span><span class="op">)</span>         <span class="cf">end</span><span class="op">,</span></a>
+<a class="sourceLine" id="cb3-17" title="17">  <span class="op">}</span></a>
+<a class="sourceLine" id="cb3-18" title="18"><span class="op">})</span></a>
+<a class="sourceLine" id="cb3-19" title="19"></a>
+<a class="sourceLine" id="cb3-20" title="20">fsm<span class="op">:</span>warn<span class="op">()</span></a>
+<a class="sourceLine" id="cb3-21" title="21">fsm<span class="op">:</span>panic<span class="op">(</span><span class="st">&#39;killer bees&#39;</span><span class="op">)</span></a>
+<a class="sourceLine" id="cb3-22" title="22">fsm<span class="op">:</span>calm<span class="op">()</span></a>
+<a class="sourceLine" id="cb3-23" title="23">fsm<span class="op">:</span>clear<span class="op">(</span><span class="st">&#39;sedatives in the honey pots&#39;</span><span class="op">)</span></a>
+<a class="sourceLine" id="cb3-24" title="24"><span class="op">...</span></a></code></pre></div>
+
+
+<p>Additionally, they can be added and removed from the state machine at any time:</p>
+
+
+<div class="sourceCode" id="cb4"><pre class="sourceCode lua"><code class="sourceCode lua"><a class="sourceLine" id="cb4-1" title="1">fsm<span class="op">.</span>ongreen       <span class="op">=</span> <span class="kw">nil</span></a>
+<a class="sourceLine" id="cb4-2" title="2">fsm<span class="op">.</span>onyellow      <span class="op">=</span> <span class="kw">nil</span></a>
+<a class="sourceLine" id="cb4-3" title="3">fsm<span class="op">.</span>onred         <span class="op">=</span> <span class="kw">nil</span></a>
+<a class="sourceLine" id="cb4-4" title="4">fsm<span class="op">.</span>onstatechange <span class="op">=</span> <span class="kw">function</span><span class="op">(</span>self<span class="op">,</span> event<span class="op">,</span> from<span class="op">,</span> to<span class="op">)</span> <span class="fu">print</span><span class="op">(</span>to<span class="op">)</span> <span class="cf">end</span></a></code></pre></div>
+
+
+<p>or</p>
+
+
+<div class="sourceCode" id="cb5"><pre class="sourceCode lua"><code class="sourceCode lua"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">function</span> fsm<span class="op">:</span>onstatechange<span class="op">(</span>event<span class="op">,</span> from<span class="op">,</span> to<span class="op">)</span> <span class="fu">print</span><span class="op">(</span>to<span class="op">)</span> <span class="cf">end</span></a></code></pre></div>
+
+
+<h1 id="initialization-options">Initialization Options</h1>
+
+
+<p>How the state machine should initialize can depend on your application requirements, so the library provides a number of simple options.</p>
+
+
+<p>By default, if you dont specify any initial state, the state machine will be in the <code>'none'</code> state and you would need to provide an event to take it out of this state:</p>
+
+
+<div class="sourceCode" id="cb6"><pre class="sourceCode lua"><code class="sourceCode lua"><a class="sourceLine" id="cb6-1" title="1">machine <span class="op">=</span> <span class="fu">require</span> <span class="st">&quot;statemachine&quot;</span></a>
+<a class="sourceLine" id="cb6-2" title="2"></a>
+<a class="sourceLine" id="cb6-3" title="3"><span class="kw">local</span> fsm <span class="op">=</span> machine<span class="op">.</span>create<span class="op">({</span></a>
+<a class="sourceLine" id="cb6-4" title="4">  events <span class="op">=</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb6-5" title="5">    <span class="op">{</span> name <span class="op">=</span> <span class="st">&#39;startup&#39;</span><span class="op">,</span> from <span class="op">=</span> <span class="st">&#39;none&#39;</span><span class="op">,</span>  to <span class="op">=</span> <span class="st">&#39;green&#39;</span> <span class="op">},</span></a>
+<a class="sourceLine" id="cb6-6" title="6">    <span class="op">{</span> name <span class="op">=</span> <span class="st">&#39;panic&#39;</span><span class="op">,</span>   from <span class="op">=</span> <span class="st">&#39;green&#39;</span><span class="op">,</span> to <span class="op">=</span> <span class="st">&#39;red&#39;</span>   <span class="op">},</span></a>
+<a class="sourceLine" id="cb6-7" title="7">    <span class="op">{</span> name <span class="op">=</span> <span class="st">&#39;calm&#39;</span><span class="op">,</span>    from <span class="op">=</span> <span class="st">&#39;red&#39;</span><span class="op">,</span>   to <span class="op">=</span> <span class="st">&#39;green&#39;</span> <span class="op">},</span></a>
+<a class="sourceLine" id="cb6-8" title="8"><span class="op">}})</span></a>
+<a class="sourceLine" id="cb6-9" title="9"></a>
+<a class="sourceLine" id="cb6-10" title="10"><span class="fu">print</span><span class="op">(</span>fsm<span class="op">.</span>current<span class="op">)</span> <span class="co">-- &quot;none&quot;</span></a>
+<a class="sourceLine" id="cb6-11" title="11">fsm<span class="op">:</span>startup<span class="op">()</span></a>
+<a class="sourceLine" id="cb6-12" title="12"><span class="fu">print</span><span class="op">(</span>fsm<span class="op">.</span>current<span class="op">)</span> <span class="co">-- &quot;green&quot;</span></a></code></pre></div>
+
+
+<p>If you specify the name of your initial event (as in all the earlier examples), then an implicit <code>startup</code> event will be created for you and fired when the state machine is constructed.</p>
+
+
+<div class="sourceCode" id="cb7"><pre class="sourceCode lua"><code class="sourceCode lua"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">local</span> machine <span class="op">=</span> <span class="fu">require</span> <span class="st">&quot;statemachine&quot;</span></a>
+<a class="sourceLine" id="cb7-2" title="2"></a>
+<a class="sourceLine" id="cb7-3" title="3"><span class="kw">local</span> fsm <span class="op">=</span> machine<span class="op">.</span>create<span class="op">({</span></a>
+<a class="sourceLine" id="cb7-4" title="4">  inital <span class="op">=</span> <span class="st">&#39;green&#39;</span><span class="op">,</span></a>
+<a class="sourceLine" id="cb7-5" title="5">  events <span class="op">=</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb7-6" title="6">    <span class="op">{</span> name <span class="op">=</span> <span class="st">&#39;panic&#39;</span><span class="op">,</span>   from <span class="op">=</span> <span class="st">&#39;green&#39;</span><span class="op">,</span> to <span class="op">=</span> <span class="st">&#39;red&#39;</span>   <span class="op">},</span></a>
+<a class="sourceLine" id="cb7-7" title="7">    <span class="op">{</span> name <span class="op">=</span> <span class="st">&#39;calm&#39;</span><span class="op">,</span>    from <span class="op">=</span> <span class="st">&#39;red&#39;</span><span class="op">,</span>   to <span class="op">=</span> <span class="st">&#39;green&#39;</span> <span class="op">},</span></a>
+<a class="sourceLine" id="cb7-8" title="8"><span class="op">}})</span></a>
+<a class="sourceLine" id="cb7-9" title="9"><span class="fu">print</span><span class="op">(</span>fsm<span class="op">.</span>current<span class="op">)</span> <span class="co">-- &quot;green&quot;</span></a></code></pre></div>
+
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.3</a></i>
+<i style="float:right;">Last updated 2019-08-29 21:25:00 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
+]==]
+

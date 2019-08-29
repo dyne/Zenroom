@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>How to embed - Zenroom</title>
+		<meta name="description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
+		<meta name="keywords" content="crypto, security, iot, blockchain" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta property="og:title" content="How to embed" />
+		<meta property="og:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="https://dev.zenroom.org" />
+		<meta name="twitter:card" content="summary_large_image">
+		<meta name="twitter:site" content="@DyneOrg">
+		<meta name="twitter:title" content="How to embed">
+		<meta name="twitter:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them.">
+
+		<link rel="stylesheet" href="../../assets/css/bulma.min.css">
+		<link rel="stylesheet" href="../../assets/css/bulma-dyne.css">
+		<link rel="stylesheet" href="../../assets/css/materialdesignicons.min.css">
+
+		
+		<script type="text/javascript" src="../../js/cash.min.js"></script>
+		
+
+		
+		<link rel="stylesheet" href="../../css/montserrat.css">
+		
+		<link rel="stylesheet" href="../../css/custom.css">
+		
+
+		
+
+		
+
+	</head>
+
+	<body>
+		<nav class="navbar has-shadow is-transparent">
+    <div class="navbar-brand">
+        <a class="navbar-item" href="/">
+			
+			<img src="/img/zenroom_logo.jpg">
+			
+        </a>
+        <!-- <div class="navbar-burger burger" data-target="navbarExampleTransparentExample">
+             <span></span>
+             <span></span>
+             <span></span>
+             </div> -->
+    </div>
+	
+	<div id="navbarExampleTransparentExample" class="navbar-menu">
+        <div class="navbar-start">
+			<div class="navbar-item">
+				Zenroom: portable, secure and independent crypto language
+			</div>
+		</div>
+	</div>
+	
+	<!-- 
+		 <div id="navbarExampleTransparentExample" class="navbar-menu">
+         <div class="navbar-start">
+         
+         
+         <a class="navbar-item" href="">
+         The Zenroom VM ...
+         </a>
+         
+         
+         
+         <a class="navbar-item" href="encrypt/">
+         Web Encryption Demo
+         </a>
+         
+         
+         
+         <a class="navbar-item" href="zencode/">
+         Write smart contracts in human language
+         </a>
+         
+         
+         
+         <div class="navbar-item has-dropdown is-hoverable">
+         <a class="navbar-link" href="">
+         Wiki
+         </a>
+         <div class="navbar-dropdown is-boxed">
+         
+         <a class="navbar-item" href="wiki/how-to-build/">
+         How to build
+         </a>
+         
+         <a class="navbar-item" href="wiki/how-to-embed/">
+         How to embed
+         </a>
+         
+         <a class="navbar-item" href="wiki/how-to-exec/">
+         How to execute Zenroom scripts
+         </a>
+         
+         </div>
+         </div>
+         
+         
+         </div>
+	-->
+        <div class="navbar-end">
+            <div class="navbar-item">
+                <div class="field is-grouped">
+                    <!-- TODO: demo button
+						 <p class="control">
+                         <a class="button is-primary" href="">
+                         <span class="icon">
+                         <i class="mdi mdi-download"></i>
+                         </span>
+                         <span>Download</span>
+                         </a>
+						 </p> -->
+                    <p class="control">
+                        <a href="https://dyne.org">
+                            <img src="https://img.shields.io/badge/made%20with%20%E2%9D%A4%20by-Dyne.org-turquoise.svg?style=for-the-badge&logo=gnu" alt="Made with love by Dyne.org" title="We are free to share code and we code to share Freedom"></a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+		<section class="section">
+			<div class="container">
+				<div class="columns">
+					<div class="column is-one-quarter">
+						<aside class="menu">
+    
+    <h1 class="menu-label">
+        <span class="mdi mdi-fire has-text-danger"></span> Quick Links</h1>
+    <ul class="menu-list" style="list-style: none">
+        
+        <li><span class="mdi mdi-home"></span><a href="https://zenroom.org">Home</a></li>
+        
+        
+        <li><span class="mdi mdi-download"></span><a href="">Download</a></li>
+        
+        
+        <li><span class="mdi mdi-github-circle"></span><a href="https://github.com/decodeproject/Zenroom/">Source Code</a></li>
+        
+        
+        <li><span class="mdi mdi-docker"></span><a href="#docker">Docker</a></li>
+        
+        
+        
+    </ul>
+    
+
+    <hr width="20%">
+
+    <h1 class="menu-label">
+        <span class="mdi mdi-format-list-numbered has-text-primary"></span> Table of Contents</h1>
+    <ul class="menu-list">
+        
+        <li>
+            <a href="#embedding-zenroom">Embedding Zenroom</a>
+            
+        </li>
+        
+    </ul>
+</aside>
+					</div>
+					<div class="column">
+						<div class="content">
+							 <h2 id="embedding-zenroom">Embedding Zenroom</h2>
+<p>Zenroom is designed to facilitate embedding into other native applications and high-level scripting languages. The stable releases distribute compiled library components for Apple/iOS and Google/Android platforms, as well MS/Windows DLL. Golang bindings and a Jupyter kernel are also in experimental phase.</p>
+<p>To call Zenroom from an host program is very simple, since there isn't an API of calls, but a single call to execute scripts and return their results. The call is called <code>zenroom_exec</code> and prints results to the "stderr/stdout" terminal output. Its prototype is common to all libraries:</p>
+<div class="codehilite"><pre><span class="kt">int</span> <span class="nf">zenroom_exec</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">script</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">conf</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">keys</span><span class="p">,</span>
+                 <span class="kt">char</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span> <span class="kt">int</span> <span class="n">verbosity</span><span class="p">);</span>
+</pre></div>
+
+
+<p>The input buffers are all read-only, here their functions:
+- <code>script</code>: a long string containing the script to be executed
+- <code>conf</code>: a short configuration string (for now only <code>umm</code> supported as value)
+- <code>keys</code>: a string often JSON formatted that contains keys (sensitive information)
+- <code>data</code>: a string (also JSON formatted) that contains data
+- <code>verbosity</code>: a number from 1 to 3 activating more debugging messages</p>
+<p>In addition to this function there is another one that copies results (error messages and printed output) inside memory buffers:</p>
+<div class="codehilite"><pre><span class="kt">int</span> <span class="nf">zenroom_exec_tobuf</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">script</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">conf</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">keys</span><span class="p">,</span>
+                       <span class="kt">char</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span> <span class="kt">int</span> <span class="n">verbosity</span><span class="p">,</span>
+                       <span class="kt">char</span> <span class="o">*</span><span class="n">stdout_buf</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">stdout_len</span><span class="p">,</span>
+                       <span class="kt">char</span> <span class="o">*</span><span class="n">stderr_buf</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">stderr_len</span><span class="p">);</span>
+</pre></div>
+
+
+<p>In addition to the previously explained arguments, the new ones are:
+- <code>stdout_buf</code>: pre-allocated buffer by the caller where to copy stdout
+- <code>stdout_len</code>: maximum length of the pre-allocated stdout buffer
+- <code>stderr_buf</code>: pre-allocated buffer by the called where to copy stderr
+- <code>stderr_len</code>: maximum length of the pre-allocated stderr buffer</p>
+<p>At last a third call is provided not to execute the script, but to obtain its JSON formatted Abstract Syntax Tree (AST) inside a provided buffer:</p>
+<div class="codehilite"><pre><span class="kt">int</span> <span class="nf">zenroom_parse_ast</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">script</span><span class="p">,</span> <span class="kt">int</span> <span class="n">verbosity</span><span class="p">,</span>
+                      <span class="kt">char</span> <span class="o">*</span><span class="n">stdout_buf</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">stdout_len</span><span class="p">,</span>
+                      <span class="kt">char</span> <span class="o">*</span><span class="n">stderr_buf</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">stderr_len</span><span class="p">);</span>
+</pre></div> 
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<footer class="footer">
+	<div class="content has-text-centered">
+		<p>	<strong>Zenroom</strong> is Copyright (C) 2019 by the <a href="https://dyne.org">Dyne.org foundation</a>. The source code is licensed <a href="https://www.gnu.org/licenses/agpl-3.0.en.html">AGPLv3</a>. </p>
+		<!-- <div class="columns is-gapless">
+			 <div class="column is-one-fifth">
+			 <img src="assets/img/eu-flag.png"></div>
+			 <p class="column is-three-quarters"> -->
+		
+		<p>Funded by the European Union’s Horizon 2020 research and
+			innovation program, grant nr. 732546 (DECODE).</p>
+		
+		<!-- </div> -->
+	</div>
+</footer>
+		 <!-- Start of Async Drift Code -->
+<script>
+ "use strict";
+
+ !function() {
+	 var t = window.driftt = window.drift = window.driftt || [];
+	 if (!t.init) {
+		 if (t.invoked) return void (window.console && console.error &&
+									 console.error("Drift snippet included twice."));
+		 t.invoked = !0, t.methods = [ "identify", "config", "track", "reset",
+									   "debug", "show", "ping", "page", "hide", "off", "on" ],
+							   t.factory = function(e) {
+								   return function() {
+									   var n = Array.prototype.slice.call(arguments);
+									   return n.unshift(e), t.push(n), t;
+								   };
+							   }, t.methods.forEach(function(e) {
+								   t[e] = t.factory(e);
+							   }), t.load = function(t) {
+								   var e = 3e5, n = Math.ceil(new Date() / e) * e, o =
+									   document.createElement("script");
+								   o.type = "text/javascript", o.async = !0, o.crossorigin = "anonymous",
+									   o.src = "https://js.driftt.com/include/" + n + "/" + t + ".js";
+								   var i = document.getElementsByTagName("script")[0];
+								   i.parentNode.insertBefore(o, i);
+							   };
+	 }
+ }();
+ drift.SNIPPET_VERSION = '0.3.1';
+ drift.load('s64nd7w43g53');
+</script>      
+		
+	</body>
+</html>

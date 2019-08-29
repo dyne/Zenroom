@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>How to build - Zenroom</title>
+		<meta name="description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
+		<meta name="keywords" content="crypto, security, iot, blockchain" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta property="og:title" content="How to build" />
+		<meta property="og:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="https://dev.zenroom.org" />
+		<meta name="twitter:card" content="summary_large_image">
+		<meta name="twitter:site" content="@DyneOrg">
+		<meta name="twitter:title" content="How to build">
+		<meta name="twitter:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them.">
+
+		<link rel="stylesheet" href="../../assets/css/bulma.min.css">
+		<link rel="stylesheet" href="../../assets/css/bulma-dyne.css">
+		<link rel="stylesheet" href="../../assets/css/materialdesignicons.min.css">
+
+		
+		<script type="text/javascript" src="../../js/cash.min.js"></script>
+		
+
+		
+		<link rel="stylesheet" href="../../css/montserrat.css">
+		
+		<link rel="stylesheet" href="../../css/custom.css">
+		
+
+		
+
+		
+
+	</head>
+
+	<body>
+		<nav class="navbar has-shadow is-transparent">
+    <div class="navbar-brand">
+        <a class="navbar-item" href="/">
+			
+			<img src="/img/zenroom_logo.jpg">
+			
+        </a>
+        <!-- <div class="navbar-burger burger" data-target="navbarExampleTransparentExample">
+             <span></span>
+             <span></span>
+             <span></span>
+             </div> -->
+    </div>
+	
+	<div id="navbarExampleTransparentExample" class="navbar-menu">
+        <div class="navbar-start">
+			<div class="navbar-item">
+				Zenroom: portable, secure and independent crypto language
+			</div>
+		</div>
+	</div>
+	
+	<!-- 
+		 <div id="navbarExampleTransparentExample" class="navbar-menu">
+         <div class="navbar-start">
+         
+         
+         <a class="navbar-item" href="">
+         The Zenroom VM ...
+         </a>
+         
+         
+         
+         <a class="navbar-item" href="encrypt/">
+         Web Encryption Demo
+         </a>
+         
+         
+         
+         <a class="navbar-item" href="zencode/">
+         Write smart contracts in human language
+         </a>
+         
+         
+         
+         <div class="navbar-item has-dropdown is-hoverable">
+         <a class="navbar-link" href="">
+         Wiki
+         </a>
+         <div class="navbar-dropdown is-boxed">
+         
+         <a class="navbar-item" href="wiki/how-to-build/">
+         How to build
+         </a>
+         
+         <a class="navbar-item" href="wiki/how-to-embed/">
+         How to embed
+         </a>
+         
+         <a class="navbar-item" href="wiki/how-to-exec/">
+         How to execute Zenroom scripts
+         </a>
+         
+         </div>
+         </div>
+         
+         
+         </div>
+	-->
+        <div class="navbar-end">
+            <div class="navbar-item">
+                <div class="field is-grouped">
+                    <!-- TODO: demo button
+						 <p class="control">
+                         <a class="button is-primary" href="">
+                         <span class="icon">
+                         <i class="mdi mdi-download"></i>
+                         </span>
+                         <span>Download</span>
+                         </a>
+						 </p> -->
+                    <p class="control">
+                        <a href="https://dyne.org">
+                            <img src="https://img.shields.io/badge/made%20with%20%E2%9D%A4%20by-Dyne.org-turquoise.svg?style=for-the-badge&logo=gnu" alt="Made with love by Dyne.org" title="We are free to share code and we code to share Freedom"></a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+		<section class="section">
+			<div class="container">
+				<div class="columns">
+					<div class="column is-one-quarter">
+						<aside class="menu">
+    
+    <h1 class="menu-label">
+        <span class="mdi mdi-fire has-text-danger"></span> Quick Links</h1>
+    <ul class="menu-list" style="list-style: none">
+        
+        <li><span class="mdi mdi-home"></span><a href="https://zenroom.org">Home</a></li>
+        
+        
+        <li><span class="mdi mdi-download"></span><a href="">Download</a></li>
+        
+        
+        <li><span class="mdi mdi-github-circle"></span><a href="https://github.com/decodeproject/Zenroom/">Source Code</a></li>
+        
+        
+        <li><span class="mdi mdi-docker"></span><a href="#docker">Docker</a></li>
+        
+        
+        
+    </ul>
+    
+
+    <hr width="20%">
+
+    <h1 class="menu-label">
+        <span class="mdi mdi-format-list-numbered has-text-primary"></span> Table of Contents</h1>
+    <ul class="menu-list">
+        
+        <li>
+            <a href="#build-instructions">Build instructions</a>
+            
+        </li>
+        
+        <li>
+            <a href="#build-instructions-for-mobile-libraries">Build instructions for Mobile libraries</a>
+            
+                
+  <ul>
+    
+      <li><a href="#ios">iOS</a></li>
+      
+    
+      <li><a href="#android">Android</a></li>
+      
+    
+  </ul>
+
+            
+        </li>
+        
+    </ul>
+</aside>
+					</div>
+					<div class="column">
+						<div class="content">
+							 <p>Welcome to the Zenroom documentation wiki!</p>
+<h1 id="build-instructions">Build instructions</h1>
+<p>This section is optional for those who want to build this software from source. The following build instructions contain generic information meant for an expert audience.</p>
+<p>The Zenroom compiles the same sourcecode to run on Linux in the form of 2 different POSIX compatible ELF binary formats using GCC (linking shared libraries) or musl-libc (fully static) targeting both X86 and ARM architectures. It also compiles to a Windows 64-bit native and fully static executable. At last, it compiles to Javascript/Webassembly using the LLVM based emscripten SDK. To recapitulate some Makefile targets:</p>
+<ol>
+<li><code>make shared</code> its the simpliest, builds a shared executable linked to a system-wide libc, libm and libpthread (mostly for debugging)</li>
+<li><code>make static</code> builds a fully static executable linked to musl-libc (to be operated on embedded platforms)</li>
+<li><code>make javascript-node</code>, <code>make javascript-wasm</code> (need EMSDK env) builds different flavors of Javascript modules to be operated from a browser or NodeJS (for client side operations)</li>
+<li><code>make win</code> builds a Windows 64bit executable with no DLL dependancy, containing the LUA interpreter and all crypto functions (for client side operations on windows desktops)</li>
+<li><code>make javascript-demo</code> creates in the <code>docs/demo</code> folder a simple web page with a REPL and some boilerplate code to show how to use the WebAssembly binary (visible online <a href="https://zenroom.dyne.org/demo">here</a>)</li>
+</ol>
+<p>Remember that if after cloning this source code from git, one should do:</p>
+<div class="codehilite"><pre><span class="n">git</span> <span class="n">submodule</span> <span class="n">update</span> <span class="o">--</span><span class="n">init</span> <span class="o">--</span><span class="n">recursive</span>
+</pre></div>
+
+
+<p>Then first build the shared executable environment:</p>
+<div class="codehilite"><pre><span class="n">make</span> <span class="n">shared</span>
+</pre></div>
+
+
+<p>To run tests:</p>
+<div class="codehilite"><pre><span class="n">make</span> <span class="n">check</span><span class="o">-</span><span class="n">shared</span>
+</pre></div>
+
+
+<p>To build the static environment:</p>
+<div class="codehilite"><pre><span class="n">make</span> <span class="n">bootstrap</span>
+<span class="n">make</span> <span class="k">static</span>
+<span class="n">make</span> <span class="n">check</span><span class="o">-</span><span class="k">static</span>
+</pre></div>
+
+
+<p>For the Javascript and WebAssembly modules the Zenroom provides various targets provided by emscripten which must be installed and loaded in the environment according to the emsdk's instructions :</p>
+<div class="codehilite"><pre><span class="n">make</span> <span class="n">javascript</span><span class="o">-</span><span class="n">node</span>
+<span class="n">make</span> <span class="n">javascript</span><span class="o">-</span><span class="n">wasm</span>
+<span class="n">make</span> <span class="n">javascript</span><span class="o">-</span><span class="n">demo</span>
+</pre></div>
+
+
+<p>NB. for the <code>javascript-demo</code> target the generated files should be served by a http server and not directly opened in a browser eg.</p>
+<div class="codehilite"><pre><span class="nv">$ </span>make javascript-demo
+<span class="nv">$ </span><span class="nb">cd </span>docs/demo
+<span class="nv">$ </span>python3 -m http.server
+</pre></div>
+
+
+<h1 id="build-instructions-for-mobile-libraries">Build instructions for Mobile libraries</h1>
+<h3 id="ios">iOS</h3>
+<p>You need to have install <code>Xcode</code> with the <code>commandline-tools</code></p>
+<p>There are 3 different targets <code>ios-sim</code> <code>ios-armv7</code> <code>ios-arm64</code> these targets creates an static library with the correct architecture (x86_64, ARMV7, ARM64).</p>
+<p>Finally once done all the libraries there is a final target <code>ios-fat</code> that put them together creating a fat-binary that you can include into your app. </p>
+<p>Or you can just use the <code>build-ios.sh</code> that does all the steps for you!</p>
+<p>For using the library just copy <code>zenroom.a</code> somewhere in your project and include the zenroom.h file.</p>
+<h3 id="android">Android</h3>
+<p>You need to have installed <code>android-sdk</code> (if you have Android Studio installed is already there) and set the <code>ANDROID_HOME</code> variable.</p>
+<p>Also you need to install NDK inside the android-sdk using the Android Studio -&gt; Tools -&gt; Android -&gt; SDK Manager</p>
+<p>Finally use the <code>builld-android.sh</code> script (be sure that the ANDROID_HOME environment var is set) and you will have at the end <code>libzenroom-arm.so</code> and libzenroom-x86.so</p>
+<p>To use it in your project just drop <code>src/Zenroom.java</code> inside your codebase and the put the <code>*.so</code> as following:</p>
+<div class="codehilite"><pre><span class="n">src</span><span class="o">/</span>
+    <span class="n">main</span><span class="o">/</span>
+         <span class="n">java</span><span class="o">/</span>
+         <span class="n">jniLibs</span><span class="o">/</span>
+                 <span class="n">x86</span><span class="o">/</span> 
+                      <span class="n">libzenroom</span><span class="p">.</span><span class="n">so</span>
+                 <span class="n">armeabi</span><span class="o">/</span> 
+                      <span class="n">libzenroom</span><span class="p">.</span><span class="n">so</span>
+</pre></div> 
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<footer class="footer">
+	<div class="content has-text-centered">
+		<p>	<strong>Zenroom</strong> is Copyright (C) 2019 by the <a href="https://dyne.org">Dyne.org foundation</a>. The source code is licensed <a href="https://www.gnu.org/licenses/agpl-3.0.en.html">AGPLv3</a>. </p>
+		<!-- <div class="columns is-gapless">
+			 <div class="column is-one-fifth">
+			 <img src="assets/img/eu-flag.png"></div>
+			 <p class="column is-three-quarters"> -->
+		
+		<p>Funded by the European Union’s Horizon 2020 research and
+			innovation program, grant nr. 732546 (DECODE).</p>
+		
+		<!-- </div> -->
+	</div>
+</footer>
+		 <!-- Start of Async Drift Code -->
+<script>
+ "use strict";
+
+ !function() {
+	 var t = window.driftt = window.drift = window.driftt || [];
+	 if (!t.init) {
+		 if (t.invoked) return void (window.console && console.error &&
+									 console.error("Drift snippet included twice."));
+		 t.invoked = !0, t.methods = [ "identify", "config", "track", "reset",
+									   "debug", "show", "ping", "page", "hide", "off", "on" ],
+							   t.factory = function(e) {
+								   return function() {
+									   var n = Array.prototype.slice.call(arguments);
+									   return n.unshift(e), t.push(n), t;
+								   };
+							   }, t.methods.forEach(function(e) {
+								   t[e] = t.factory(e);
+							   }), t.load = function(t) {
+								   var e = 3e5, n = Math.ceil(new Date() / e) * e, o =
+									   document.createElement("script");
+								   o.type = "text/javascript", o.async = !0, o.crossorigin = "anonymous",
+									   o.src = "https://js.driftt.com/include/" + n + "/" + t + ".js";
+								   var i = document.getElementsByTagName("script")[0];
+								   i.parentNode.insertBefore(o, i);
+							   };
+	 }
+ }();
+ drift.SNIPPET_VERSION = '0.3.1';
+ drift.load('s64nd7w43g53');
+</script>      
+		
+	</body>
+</html>

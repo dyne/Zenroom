@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>How to execute Zenroom scripts - Zenroom</title>
+		<meta name="description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
+		<meta name="keywords" content="crypto, security, iot, blockchain" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta property="og:title" content="How to execute Zenroom scripts" />
+		<meta property="og:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="https://dev.zenroom.org" />
+		<meta name="twitter:card" content="summary_large_image">
+		<meta name="twitter:site" content="@DyneOrg">
+		<meta name="twitter:title" content="How to execute Zenroom scripts">
+		<meta name="twitter:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them.">
+
+		<link rel="stylesheet" href="../../assets/css/bulma.min.css">
+		<link rel="stylesheet" href="../../assets/css/bulma-dyne.css">
+		<link rel="stylesheet" href="../../assets/css/materialdesignicons.min.css">
+
+		
+		<script type="text/javascript" src="../../js/cash.min.js"></script>
+		
+
+		
+		<link rel="stylesheet" href="../../css/montserrat.css">
+		
+		<link rel="stylesheet" href="../../css/custom.css">
+		
+
+		
+
+		
+
+	</head>
+
+	<body>
+		<nav class="navbar has-shadow is-transparent">
+    <div class="navbar-brand">
+        <a class="navbar-item" href="/">
+			
+			<img src="/img/zenroom_logo.jpg">
+			
+        </a>
+        <!-- <div class="navbar-burger burger" data-target="navbarExampleTransparentExample">
+             <span></span>
+             <span></span>
+             <span></span>
+             </div> -->
+    </div>
+	
+	<div id="navbarExampleTransparentExample" class="navbar-menu">
+        <div class="navbar-start">
+			<div class="navbar-item">
+				Zenroom: portable, secure and independent crypto language
+			</div>
+		</div>
+	</div>
+	
+	<!-- 
+		 <div id="navbarExampleTransparentExample" class="navbar-menu">
+         <div class="navbar-start">
+         
+         
+         <a class="navbar-item" href="">
+         The Zenroom VM ...
+         </a>
+         
+         
+         
+         <a class="navbar-item" href="encrypt/">
+         Web Encryption Demo
+         </a>
+         
+         
+         
+         <a class="navbar-item" href="zencode/">
+         Write smart contracts in human language
+         </a>
+         
+         
+         
+         <div class="navbar-item has-dropdown is-hoverable">
+         <a class="navbar-link" href="">
+         Wiki
+         </a>
+         <div class="navbar-dropdown is-boxed">
+         
+         <a class="navbar-item" href="wiki/how-to-build/">
+         How to build
+         </a>
+         
+         <a class="navbar-item" href="wiki/how-to-embed/">
+         How to embed
+         </a>
+         
+         <a class="navbar-item" href="wiki/how-to-exec/">
+         How to execute Zenroom scripts
+         </a>
+         
+         </div>
+         </div>
+         
+         
+         </div>
+	-->
+        <div class="navbar-end">
+            <div class="navbar-item">
+                <div class="field is-grouped">
+                    <!-- TODO: demo button
+						 <p class="control">
+                         <a class="button is-primary" href="">
+                         <span class="icon">
+                         <i class="mdi mdi-download"></i>
+                         </span>
+                         <span>Download</span>
+                         </a>
+						 </p> -->
+                    <p class="control">
+                        <a href="https://dyne.org">
+                            <img src="https://img.shields.io/badge/made%20with%20%E2%9D%A4%20by-Dyne.org-turquoise.svg?style=for-the-badge&logo=gnu" alt="Made with love by Dyne.org" title="We are free to share code and we code to share Freedom"></a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+		<section class="section">
+			<div class="container">
+				<div class="columns">
+					<div class="column is-one-quarter">
+						<aside class="menu">
+    
+    <h1 class="menu-label">
+        <span class="mdi mdi-fire has-text-danger"></span> Quick Links</h1>
+    <ul class="menu-list" style="list-style: none">
+        
+        <li><span class="mdi mdi-home"></span><a href="https://zenroom.org">Home</a></li>
+        
+        
+        <li><span class="mdi mdi-download"></span><a href="">Download</a></li>
+        
+        
+        <li><span class="mdi mdi-github-circle"></span><a href="https://github.com/decodeproject/Zenroom/">Source Code</a></li>
+        
+        
+        <li><span class="mdi mdi-docker"></span><a href="#docker">Docker</a></li>
+        
+        
+        
+    </ul>
+    
+
+    <hr width="20%">
+
+    <h1 class="menu-label">
+        <span class="mdi mdi-format-list-numbered has-text-primary"></span> Table of Contents</h1>
+    <ul class="menu-list">
+        
+        <li>
+            <a href="#how-to-execute-zenroom-scripts">How to execute Zenroom scripts</a>
+            
+                
+  <ul>
+    
+      <li><a href="#commandline">Commandline</a></li>
+      
+  <ul>
+    
+      <li><a href="#interactive-console">Interactive console</a></li>
+      
+    
+      <li><a href="#hashbang-executable-script">Hashbang executable script</a></li>
+      
+    
+  </ul>
+
+    
+      <li><a href="#javascript">Javascript</a></li>
+      
+  <ul>
+    
+      <li><a href="#update-dic-2018">Update Dic 2018</a></li>
+      
+    
+      <li><a href="#data-string">Data string</a></li>
+      
+    
+      <li><a href="#keys-string">Keys string</a></li>
+      
+    
+  </ul>
+
+    
+  </ul>
+
+            
+        </li>
+        
+    </ul>
+</aside>
+					</div>
+					<div class="column">
+						<div class="content">
+							 <h1 id="how-to-execute-zenroom-scripts">How to execute Zenroom scripts</h1>
+<p>This section explains how to invoke the Zenroom to execute scripts in various situations: from commandline, from javascript and various other languages.</p>
+<p>Javascript has its own way to call <code>zenroom_exec(...)</code> without losing all the context for execution.</p>
+<p>Other languages are recommended to <code>exec()</code> the Zenroom in a separate process and gather its <code>stdout</code> and its return value (1 on error and 0 on success). </p>
+<h2 id="commandline">Commandline</h2>
+<p>From <strong>command-line</strong> the Zenroom is operated passing files as
+arguments:</p>
+<div class="codehilite"><pre><span class="n">Usage</span><span class="o">:</span> <span class="n">zenroom</span> <span class="o">[-</span><span class="n">dh</span><span class="o">]</span> <span class="o">[-</span><span class="n">c</span> <span class="n">config</span><span class="o">]</span> <span class="o">[-</span><span class="n">k</span> <span class="n">KEYS</span><span class="o">]</span> <span class="o">[-</span><span class="n">a</span> <span class="n">DATA</span><span class="o">]</span> <span class="o">[</span> <span class="n">SCRIPT</span><span class="o">.</span><span class="na">lua</span> <span class="o">|</span> <span class="o">-</span> <span class="o">]</span>
+</pre></div>
+
+
+<p>The <code>-d</code> flag activates more verbose output for debugging.</p>
+<p>The <code>SCRIPT.lua</code> can be the path to a script or a single dash (<code>-</code>) to instruct zenroom to process the script piped from <code>stdin</code>.</p>
+<h3 id="interactive-console">Interactive console</h3>
+<p>Just executing <code>zenroom</code> will open an interactive console with limited functionalities, which is capable to parse finite instruction blocks on each line. To facilitate editing of lines is possible to prefix it with readline using the <code>rlwrap zenroom</code> command instead.</p>
+<p>The content of the KEYS, DATA and SCRIPT files cannot exceed 500KB.</p>
+<p>Try:</p>
+<div class="codehilite"><pre>./zenroom-static      <span class="o">[</span>enter<span class="o">]</span>
+print<span class="o">(</span><span class="s2">&quot;Hello World!&quot;</span><span class="o">)</span> <span class="o">[</span>enter<span class="o">]</span>
+                      <span class="o">[</span>Ctrl-D<span class="o">]</span> to quit
+</pre></div>
+
+
+<p>Will print Zenroom's execution details on <code>stderr</code> and the "Hello World!" string on <code>stdout</code>.</p>
+<h3 id="hashbang-executable-script">Hashbang executable script</h3>
+<p>Zenroom also supports being used as an "hashbang" interpreter at the beginning of executable scripts. Just use:</p>
+<div class="codehilite"><pre><span class="c">#!/usr/bin/env zenroom-static -</span>
+</pre></div>
+
+
+<p>in the header, please note the final dash which is pretty important to tell zenroom to process the script from <code>stdin</code>.</p>
+<h2 id="javascript">Javascript</h2>
+<h3 id="update-dic-2018">Update Dic 2018</h3>
+<p>For <strong>javascript</strong> :tada: now a npm module is available on https://www.npmjs.com/package/zenroom</p>
+<hr />
+<p>From <strong>javascript</strong> the function <code>zenroom_exec()</code> is exposed with four arguments: four strings and one number from 1 to 3 indicating the verbosity of output on the console.</p>
+<p>This is the prototype of the javascript function:</p>
+<div class="codehilite"><pre><span class="kr">const</span> <span class="nx">zenroom</span> <span class="o">=</span> <span class="p">(</span><span class="nx">script_file</span><span class="p">,</span> <span class="nx">conf_file</span><span class="o">=</span><span class="kc">null</span><span class="p">,</span> <span class="nx">keys_file</span><span class="o">=</span><span class="kc">null</span><span class="p">,</span>
+                 <span class="nx">data_file</span><span class="o">=</span><span class="kc">null</span><span class="p">,</span> <span class="nx">verbosity</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Only the <code>script_file</code> argument is mandatory, other arguments can be omitted, then defaults are used. For example after a <code>make js</code> build we can invoke the zenroom in <code>src/zenroom.js</code> creating such a script:</p>
+<div class="codehilite"><pre><span class="kr">const</span> <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span>
+<span class="kr">const</span> <span class="nx">zenroom_module</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+<span class="kr">const</span> <span class="nx">zenroom</span> <span class="o">=</span> <span class="p">(</span><span class="nx">script_file</span><span class="p">,</span> <span class="nx">conf_file</span><span class="o">=</span><span class="kc">null</span><span class="p">,</span> <span class="nx">keys_file</span><span class="o">=</span><span class="kc">null</span><span class="p">,</span> 
+                 <span class="nx">data_file</span><span class="o">=</span><span class="kc">null</span><span class="p">,</span> <span class="nx">verbosity</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kr">const</span> <span class="nx">enc</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">encoding</span><span class="o">:</span> <span class="s1">&#39;utf8&#39;</span> <span class="p">}</span>
+  <span class="kr">const</span> <span class="nx">script</span> <span class="o">=</span> <span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span><span class="p">(</span><span class="nx">script_file</span><span class="p">,</span> <span class="nx">enc</span><span class="p">)</span>
+  <span class="kr">const</span> <span class="nx">conf</span> <span class="o">=</span> <span class="p">(</span><span class="nx">conf_file</span><span class="p">)</span> <span class="o">?</span> <span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span><span class="p">(</span><span class="nx">conf_file</span><span class="p">,</span> <span class="nx">env</span><span class="p">)</span> <span class="o">:</span> <span class="kc">null</span>
+  <span class="kr">const</span> <span class="nx">keys</span> <span class="o">=</span> <span class="p">(</span><span class="nx">keys_file</span><span class="p">)</span> <span class="o">?</span> <span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span><span class="p">(</span><span class="nx">keys_file</span><span class="p">,</span> <span class="nx">env</span><span class="p">)</span> <span class="o">:</span> <span class="kc">null</span>
+  <span class="kr">const</span> <span class="nx">data</span> <span class="o">=</span> <span class="p">(</span><span class="nx">data_file</span><span class="p">)</span> <span class="o">?</span> <span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span><span class="p">(</span><span class="nx">data_file</span><span class="p">,</span> <span class="nx">env</span><span class="p">)</span> <span class="o">:</span> <span class="kc">null</span>
+  <span class="k">return</span> <span class="nx">zenroom_module</span><span class="p">.</span><span class="nx">ccall</span><span class="p">(</span><span class="s1">&#39;zenroom_exec&#39;</span><span class="p">,</span> <span class="s1">&#39;number&#39;</span><span class="p">,</span>
+                              <span class="p">[</span><span class="s1">&#39;string&#39;</span><span class="p">,</span> <span class="s1">&#39;string&#39;</span><span class="p">,</span> <span class="s1">&#39;string&#39;</span><span class="p">,</span> <span class="s1">&#39;string&#39;</span><span class="p">,</span> <span class="s1">&#39;number&#39;</span><span class="p">],</span>
+                              <span class="p">[</span><span class="nx">script</span><span class="p">,</span> <span class="nx">conf</span><span class="p">,</span> <span class="nx">keys</span><span class="p">,</span> <span class="nx">data</span><span class="p">,</span> <span class="nx">verbosity</span><span class="p">])</span>
+<span class="p">}</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;[JS] zenroom_exec %s %s&quot;</span><span class="p">,</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+<span class="nx">zenroom</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+</pre></div>
+
+
+<p>If the above script is saved in <code>zenroom_exec.js</code> then on the commandline it can be invoked with the path to <code>zenroom.js</code> as first parameter and the path to a script as second parameter:</p>
+<div class="codehilite"><pre>nodejs src/zenroom.js zenroom_exec.js examples/hello.lua
+</pre></div>
+
+
+<p>The contents of the three strings cannot exceed 500KB in size.</p>
+<h3 id="data-string">Data string</h3>
+<p>The <code>data</code> is a simple string, but can be also a json map used to pass multiple arguments and complex data structures. Its contents can be accessed by the <code>script</code> using the global variable <code>DATA</code> (all uppercase).</p>
+<p>For example create a json file containing a map (this can be a string
+passed from javascript)</p>
+<div class="codehilite"><pre><span class="p">{</span>
+    <span class="nt">&quot;secret&quot;</span><span class="p">:</span> <span class="s2">&quot;zen and the art of programming&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;salt&quot;</span><span class="p">:</span> <span class="s2">&quot;OU9Qxl3xfClMeiCz&quot;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Then run <code>zenroon -a arguments.json</code> and pass the following script as
+final argument, or pipe from stdin or passed as a string argument to
+<code>zenroom_exec()</code> from javascript:</p>
+<div class="codehilite"><pre><span class="n">i</span> <span class="o">=</span> <span class="nb">require</span> <span class="s2">&quot;</span><span class="s">inspect&quot;</span>
+<span class="n">json</span> <span class="o">=</span> <span class="nb">require</span> <span class="s2">&quot;</span><span class="s">json&quot;</span>
+<span class="n">args</span> <span class="o">=</span> <span class="n">json</span><span class="p">.</span><span class="n">decode</span><span class="p">(</span><span class="n">DATA</span><span class="p">)</span>
+<span class="c1">-- args is now a lua table containing values for each args.argname</span>
+<span class="n">i</span><span class="p">.</span><span class="n">print</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+</pre></div>
+
+
+<h3 id="keys-string">Keys string</h3>
+<p>The <code>keys</code> is also a simple string passed from arguments, separated from DATA since its access permission from caller may be different due to specific privacy restrinctions that may be adopted on the variable. It is accessed by the <code>script</code> using the global variable <code>KEYS</code>.</p>
+<p>So for instance if we want to encrypt a secret message for multiple
+recipients who have provided us with their public keys, one would load
+this example keyfile:</p>
+<div class="codehilite"><pre><span class="p">{</span>
+    <span class="nt">&quot;keyring&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;public&quot;</span><span class="p">:</span><span class="s2">&quot;GoTdVYbTWEoZ4KtCeMghV7UcpJyhvny1QjVPf8K4oi1i&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;secret&quot;</span><span class="p">:</span><span class="s2">&quot;9PSbkNgsbgPnX3hM19MHVMpp2mzvmHcXCcz6iV8r7RyZ&quot;</span>
+    <span class="p">},</span>
+    <span class="nt">&quot;recipients&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;jaromil&quot;</span><span class="p">:</span> <span class="s2">&quot;A1g6CwFobiMEq6uj4kPxfouLw1Vxk4utZ2W5z17dnNkv&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;francesca&quot;</span><span class="p">:</span> <span class="s2">&quot;CQ9DE4E5Ag2e71dUW2STYbwseLLnmY1F9pR85gLWkEC6&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;jimb&quot;</span><span class="p">:</span> <span class="s2">&quot;FNUdjaPchQsxSjzSbPsMNVPA2v1XUhNPazStSRmVcTwu&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;mark&quot;</span><span class="p">:</span> <span class="s2">&quot;9zxrLG7kwheF3FMa852r3bZ4NEmowYhxdTj3kVfoipPV&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;paulus&quot;</span><span class="p">:</span> <span class="s2">&quot;2LbUdFSu9mkvtVE6GuvtJxiFnUWBWdYjK2Snq4VhnzpB&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;mayo&quot;</span><span class="p">:</span> <span class="s2">&quot;5LrSGTwmnBFvm3MekxSxE9KWVENdSPtcmx3RZbktRiXc&quot;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>And then with this code encrypt a message to all recipients:</p>
+<div class="codehilite"><pre><span class="n">secret</span><span class="o">=</span><span class="s2">&quot;</span><span class="s">this is a secret that noone knows&quot;</span>
+<span class="c1">-- this should be a random string every time</span>
+<span class="n">nonce</span><span class="o">=</span><span class="s2">&quot;</span><span class="s">eishai7Queequot7pooc3eiC7Ohthoh1&quot;</span>
+
+<span class="n">json</span> <span class="o">=</span> <span class="nb">require</span> <span class="s2">&quot;</span><span class="s">json&quot;</span>
+<span class="n">crypto</span> <span class="o">=</span> <span class="nb">require</span> <span class="s2">&quot;</span><span class="s">crypto&quot;</span>
+
+<span class="n">keys</span> <span class="o">=</span> <span class="n">json</span><span class="p">.</span><span class="n">decode</span><span class="p">(</span><span class="n">KEYS</span><span class="p">)</span>
+
+<span class="n">res</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span><span class="n">pubkey</span> <span class="k">in</span> <span class="nb">pairs</span><span class="p">(</span><span class="n">keys</span><span class="p">.</span><span class="n">recipients</span><span class="p">)</span> <span class="k">do</span>
+   <span class="n">k</span> <span class="o">=</span> <span class="n">crypto</span><span class="p">.</span><span class="n">exchange_session_x25519</span><span class="p">(</span>
+      <span class="n">crypto</span><span class="p">.</span><span class="n">decode_b58</span><span class="p">(</span><span class="n">keys</span><span class="p">.</span><span class="n">keyring</span><span class="p">.</span><span class="n">secret</span><span class="p">),</span>
+      <span class="n">crypto</span><span class="p">.</span><span class="n">decode_b58</span><span class="p">(</span><span class="n">pubkey</span><span class="p">))</span>
+   <span class="n">enc</span> <span class="o">=</span> <span class="n">crypto</span><span class="p">.</span><span class="n">encrypt_norx</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">nonce</span><span class="p">,</span><span class="n">secret</span><span class="p">)</span>
+   <span class="c1">-- insert in results</span>
+   <span class="n">res</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">=</span><span class="n">crypto</span><span class="p">.</span><span class="n">encode_b58</span><span class="p">(</span><span class="n">enc</span><span class="p">)</span>
+<span class="k">end</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="p">.</span><span class="n">encode</span><span class="p">(</span><span class="n">res</span><span class="p">))</span>
+</pre></div>
+
+
+<p>The above script  will print out the encrypted message for each recipient reorganised in a similar json structure:</p>
+<div class="codehilite"><pre><span class="p">{</span>
+   <span class="nt">&quot;jaromil&quot;</span> <span class="p">:</span> <span class="s2">&quot;Ha8185xZoiMiJhfquKRHvtT6vZPWifGaXmD4gxjyfHV9ASNaJF2Xq85NCmeyy4hWLGns4MTbPsRmZ2H7uJh9vEuWt&quot;</span><span class="p">,</span>
+   <span class="nt">&quot;mark&quot;</span> <span class="p">:</span> <span class="s2">&quot;13nhCBWKbPAYyhJXD7aeHtiFKb89fycBnoKy2nosJdSqfS2vhhHqBvVKb2oasiga9P3UyaEJZQdyYRfiBBKEswdmQ&quot;</span><span class="p">,</span>
+   <span class="nt">&quot;francesca&quot;</span> <span class="p">:</span> <span class="s2">&quot;7ro9u2ViXjp3AaLzvve4E4ebZNoBPLtxAja8wd8YNn51TD9LjMXNGsRvm85UQ2vmhdTeJuvcmBvz5WuFkdgh3kQxH&quot;</span><span class="p">,</span>
+   <span class="nt">&quot;mayo&quot;</span> <span class="p">:</span> <span class="s2">&quot;FAjQSYXZdZz3KRuw1MX4aLSjky6kbpRdXdAzhx1YeQxu3JiGDD7GUFK2rhbUfD3i5cEc3tU1RBpoK5NCoWbf2reZc&quot;</span><span class="p">,</span>
+   <span class="nt">&quot;jimb&quot;</span> <span class="p">:</span> <span class="s2">&quot;7gb5SLYieoFsP4jYfaPM46Vm4XUP2jbCUnkFRQfwNrnJfqaew5VpwqjbNbLJrqGsgJJ995bP2867nYLcn96wuMDMw&quot;</span><span class="p">,</span>
+   <span class="nt">&quot;paulus&quot;</span> <span class="p">:</span> <span class="s2">&quot;8SGBpRjZ21pgYZhXmy7uWGNEEN7wnHkrWtHEKeh7uCJgsDKtoGZHPk29itCV6oRxPbbiWEuN9Sm83jeZ1vinwQyXM&quot;</span>
+<span class="p">}</span>
+</pre></div> 
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<footer class="footer">
+	<div class="content has-text-centered">
+		<p>	<strong>Zenroom</strong> is Copyright (C) 2019 by the <a href="https://dyne.org">Dyne.org foundation</a>. The source code is licensed <a href="https://www.gnu.org/licenses/agpl-3.0.en.html">AGPLv3</a>. </p>
+		<!-- <div class="columns is-gapless">
+			 <div class="column is-one-fifth">
+			 <img src="assets/img/eu-flag.png"></div>
+			 <p class="column is-three-quarters"> -->
+		
+		<p>Funded by the European Union’s Horizon 2020 research and
+			innovation program, grant nr. 732546 (DECODE).</p>
+		
+		<!-- </div> -->
+	</div>
+</footer>
+		 <!-- Start of Async Drift Code -->
+<script>
+ "use strict";
+
+ !function() {
+	 var t = window.driftt = window.drift = window.driftt || [];
+	 if (!t.init) {
+		 if (t.invoked) return void (window.console && console.error &&
+									 console.error("Drift snippet included twice."));
+		 t.invoked = !0, t.methods = [ "identify", "config", "track", "reset",
+									   "debug", "show", "ping", "page", "hide", "off", "on" ],
+							   t.factory = function(e) {
+								   return function() {
+									   var n = Array.prototype.slice.call(arguments);
+									   return n.unshift(e), t.push(n), t;
+								   };
+							   }, t.methods.forEach(function(e) {
+								   t[e] = t.factory(e);
+							   }), t.load = function(t) {
+								   var e = 3e5, n = Math.ceil(new Date() / e) * e, o =
+									   document.createElement("script");
+								   o.type = "text/javascript", o.async = !0, o.crossorigin = "anonymous",
+									   o.src = "https://js.driftt.com/include/" + n + "/" + t + ".js";
+								   var i = document.getElementsByTagName("script")[0];
+								   i.parentNode.insertBefore(o, i);
+							   };
+	 }
+ }();
+ drift.SNIPPET_VERSION = '0.3.1';
+ drift.load('s64nd7w43g53');
+</script>      
+		
+	</body>
+</html>
