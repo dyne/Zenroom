@@ -1,32 +1,22 @@
-.PHONY: article
+.PHONY: article website preview
 ARTICLE := Zenroom_Cryptolang_Whitepaper
 DEST := pub
 
-all: api
+all: api website
 
-readme:
-	echo "<markdown>" > views/index.html
-	cat ../README.md >> views/index.html
-	echo "</markdown>" >> views/index.html
+website:
+	@if ! [ -r website/docs/js/zenroom.js -o -r website/docs/js/zenroom.wasm ]; then curl https://sdk.dyne.org:4443/view/zenroom/job/zenroom-web/lastSuccessfulBuild/artifact/build/web/zenroom.wasm https://sdk.dyne.org:4443/view/zenroom/job/zenroom-web/lastSuccessfulBuild/artifact/build/web/zenroom.js https://sdk.dyne.org:4443/view/zenroom/job/zenroom-web/lastSuccessfulBuild/artifact/build/web/zenroom.data -o website/docs/js/zenroom.wasm -o website/docs/js/zenroom.js -o website/docs/js/zenroom.data; fi
+	@mkdir -p website/docs/encrypt && cp -v website/docs/js/* website/docs/encrypt/
+	@cd website && mkdocs build
 
-preview: DEST := test
-preview: views readme
-	./webnomad/preview
+# @cp -v ../examples/zencode_crypt_web/index.html website/docs/encrypt.html
+# @cp -v ../examples/zencode_crypt_web/index.js website/docs/encrypt.js
 
-webnomad: DEST := pub
-webnomad: views readme
-	./webnomad/render
+preview:
+	cd website && ./mkdocs-dyne-theme/.preview
 
-article: article/views
-	mkdir -p ${DEST}/whitepaper
-	cd article && ./writedown/render pdf
-	cp article/pub/${ARTICLE}.pdf ${DEST}
-	mkdir -p ${DEST}/whitepaper
-	pdf2htmlEX ${DEST}/${ARTICLE}.pdf ${DEST}/whitepaper/index.html
+deploy:
+	cd website && ./mkdocs-dyne-theme/.deploy
 
 api:
 	make -C ldoc
-
-upload:
-	rsync -Pr pub/* files.dyne.org:/srv/www/zenroom.dyne.org
-	rsync -Pr demo files.dyne.org:/srv/www/zenroom.dyne.org/

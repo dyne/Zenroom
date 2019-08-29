@@ -1,4 +1,4 @@
-# Zenroom - crypto language VM
+# The Zenroom VM ...
 
 [![software by Dyne.org](https://zenroom.dyne.org/img/software_by_dyne.png)](http://www.dyne.org)
 
@@ -6,12 +6,13 @@ Zenroom is a brand new virtual machine for fast cryptographic operations on Elli
 
 Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them.
 
-<a href="https://github.com/DECODEproject/zenroom/tree/master/test/zencode_coconut"><img src="img/coconut_credential-en.jpg" width="92%"></a>
+![Credential example](img/coconut_credential-en.jpg)
 
 Zencode is a Domain Specific Language whose design is informed by pilot use-cases in the [DECODE Project](https://decodeproject.eu).
 
 On this page you can download our software, ready for use. For less technical explanations see the links below:
 
+- [The Zencode Whitepaper by Denis "Jaromil" Roio](https://files.dyne.org/zenroom/Zenroom_Whitepaper.pdf)
 - [Why Zenroom? Algorithmic Sovereignty](https://decodeproject.eu/blog/algorithmic-sovereignty-decode)
 - [Zenroom does what? Smart contracts for the English speaker](https://decodeproject.eu/blog/smart-contracts-english-speaker)
 - [How zenroom does it? Cryptographic data integrity in a multiplatform environment](https://decodeproject.eu/blog/cryptographic-data-integrity-multiplatform-environment)
@@ -32,9 +33,7 @@ Available targets:
 
 <ul class="center" style="list-style:none">
 
-<li class="mdi mdi-code-braces"> <a href="https://zenroom.dyne.org/api">Zenroom scripting API</a></li>
-
-<li class="mdi mdi-school"> <a href="https://files.dyne.org/zenroom/Zenroom_Whitepaper.pdf">Zenroom Whitepaper</a></li>
+<li class="mdi mdi-code-braces"> <a href="https://zenroom.dyne.org/api">LUA script API</a></li>
 
 <li class="mdi mdi-cogs"> <a href="https://github.com/DECODEproject/zenroom/wiki">Online Wiki</a></li>
 
@@ -45,6 +44,7 @@ Available targets:
 
 <ul class="center" style="list-style:none">
 <li class="mdi mdi-hand-pointing-right"> <a href="https://zenroom.dyne.org/demo">Online Demo</a></li>
+<li class="mdi mdi-web"> <a href="encrypt">Web Encryption</a></li>
 <li class="mdi mdi-docker"> <a href="https://hub.docker.com/r/dyne/zenroom">Docker image</a></li>
 <li class="mdi mdi-puzzle"> <a href="https://hub.docker.com/r/dyne/zenroom-redis">Redis module</a></li>
 </ul>
@@ -71,7 +71,7 @@ This API can be called in similar ways from a variety of languages and in partic
 
 Zenroom executes smart contracts written in Lua or in Zencode: a [plain English-like Domain Specific Language](https://decodeproject.eu/blog/smart-contracts-english-speaker).
 
-<img src="img/zencode_diagram.png" alt="Zencode documentation diagram" width="92%"></a>
+![Zencode documentation diagram](img/zencode_diagram.png)
 
 ```yaml
 data:
@@ -121,32 +121,23 @@ coconut:
 
 Zenroom is software in **BETA stage** and is part of the [DECODE project](https://decodeproject.eu) about data commons and [technological sovereignty](https://www.youtube.com/watch?v=RvBRbwBm_nQ). Our effort is that of improving people's awareness of how their data is processed by algorithms, as well facilitate the work of developers to create along [privacy by design principles](https://decodeproject.eu/publications/privacy-design-strategies-decode-architecture).
 
-<a href="https://decodeproject.eu">
-<img src="https://zenroom.dyne.org/img/decode.svg" width="54%"
-	alt="DECODE project"></a>
+[![DECODE project](img/decode.svg)](https://decodeproject.eu)
 
 This software aims to make it easy and less error-prone to write **portable** scripts using **end-to-end encryption** inside isolated environments that can be easily made **interoperable**. Basic crypto functions provided include primitives to manage **a/symmetric keys, key derivation, hashing and signing functionalities**.
 
 Zenroom is software inspired by the [language-theoretical security](http://langsec.org) research, it allows to expresses cryptographic operations in a readable scripting language that has no access to the calling process, underlying operating system or filesystem.
 
-<a href="http://langsec.org/occupy/">
-<img src="https://zenroom.dyne.org/img/InputLanguages.jpg" class="pic"
-	alt="No more Turing Completion!" target="_blank"></a>
+[![No more Turing Completion!](img/InputLanguages.jpg)](http://langsec.org/occupy/)
 
 Zenroom's **restricted execution environment** is a sort of [sandbox](https://en.wikipedia.org/wiki/Sandbox_%28computer_security%29) whose parser is based on LUA's [syntax-direct translation](https://en.wikipedia.org/wiki/Syntax-directed_translation) and has coarse-grained control of computations and memory. The Zenroom VM is designed to "brittle" and exit execution returning a meaningful message on any error.
 
 Zenroom's documentation and examples are being written to encourage a [declarative](https://en.wikipedia.org/wiki/Declarative_programming) approach to scripting, providing functional tools to manipulate efficiently even complex data structures.
 
-
-<a href="http://langsec.org/occupy/">
-<img src="https://zenroom.dyne.org/img/FullRecognition.jpg" class="pic"
-	alt="Full Recognition Before Processing!" target="_blank"></a>
-
+[![Full Recognition Before Processing!](img/FullRecognition.jpg)](http://langsec.org/occupy/)
 
 The main use case for Zenroom is that of **distributed computing** of untrusted code where advanced cryptographic functions are required, for instance it can be used as a distributed ledger implementation (also known as **blockchain smart contracts**).
 
-<img src="https://zenroom.dyne.org/img/ec_logo.png" class="pic"
-	alt="Project funded by the European Commission">
+![Project funded by the European Commission](img/ec_logo.png)
 
 This project is receiving funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement nr. 732546 (DECODE).
 

@@ -1,0 +1,43 @@
+extra_javascript: js/encrypt.js
+
+# Web Encryption Demo
+  
+Demo of in-browser asymmetric AES-GCM encryption.
+
+Zencode Smart Contract in human language (WASM-web build)
+
+For more information see [Zenroom.org](https://zenroom.org).
+
+[Code for this example](encrypt.js)
+
+## Zencode contract
+<pre id="encrypt_contract"></pre>
+
+### Alice keypair
+
+<code id="alice"></code>
+
+### Bob public key
+
+<code id="bob"></code>
+
+------------------------
+
+## Upload file
+
+Select a file on the local harddisk.
+
+Nothing will be uploaded to any server.
+
+Files are encrypted on the fly inside the browser.
+
+  <form method="post" enctype="multipart/form-data">
+    <input type="file" name="rawfile" />
+    <input type="submit" value="Upload File" name="submit" />
+  </form>
+  <hr/>
+  <div>Speed: <span id="speed"></span> ms</div>
+  <hr/>
+  <small><code id="result"></code></small>
+
+<script async type="text/javascript" src="zenroom.js"></script>
