@@ -2,52 +2,100 @@
 
 [![software by Dyne.org](https://zenroom.dyne.org/img/software_by_dyne.png)](http://www.dyne.org)
 
-Zenroom is a brand new virtual machine for fast cryptographic operations on Elliptic Curves. The Zenroom VM has no external dependencies, includes a cutting edge selection tools and builds a small executable ready to run on: desktop, embedded, mobile, cloud and browsers (webassembly). It also compiles unikernel (without Linux).
+Zenroom is a secure-isolated interpreter of both Lua and its own
+Zencode DSL languages to execute fast cryptographic operations on
+Elliptic Curves.
 
-Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them.
+The Zenroom VM is very small, has no external dependencies and is
+ready to run on any platform: desktop, embedded, mobile, cloud and
+even web browsers.
+
+Zencode is the name of the language executed by Zenroom: it is simple
+to understand and can process large data structures while operating
+cryptographic transformations on them.
 
 ![Credential example](img/coconut_credential-en.jpg)
 
-Zencode is a Domain Specific Language whose design is informed by pilot use-cases in the [DECODE Project](https://decodeproject.eu).
+This website is intended for a technical audience; more documentation is
+available on:
 
-On this page you can download our software, ready for use. For less technical explanations see the links below:
+<span class="mdi mdi-home"></span> Website: [Zenroom.org](https://zenroom.org)
 
-- [The Zencode Whitepaper by Denis "Jaromil" Roio](https://files.dyne.org/zenroom/Zenroom_Whitepaper.pdf)
-- [Why Zenroom? Algorithmic Sovereignty](https://decodeproject.eu/blog/algorithmic-sovereignty-decode)
-- [Zenroom does what? Smart contracts for the English speaker](https://decodeproject.eu/blog/smart-contracts-english-speaker)
-- [How zenroom does it? Cryptographic data integrity in a multiplatform environment](https://decodeproject.eu/blog/cryptographic-data-integrity-multiplatform-environment)
+<span class="mdi mdi-school"></span> Whitepaper: [Zencode by Denis Roio (Ph.D)](https://files.dyne.org/zenroom/Zenroom_Whitepaper.pdf)
+
+<span class="mdi mdi-hand"></span> Blog post: [Why Zenroom? Algorithmic Sovereignty](https://decodeproject.eu/blog/algorithmic-sovereignty-decode)
+
+<span class="mdi mdi-vote"></span> Blog post: [Zenroom does what? Smart contracts for the English speaker](https://decodeproject.eu/blog/smart-contracts-english-speaker)
+
+<span class="mdi mdi-puzzle"></span> Blog post: [Cryptographic data integrity in a multiplatform environment](https://decodeproject.eu/blog/cryptographic-data-integrity-multiplatform-environment)
 
 ## Download
 
-- [Files.dyne.org/Zenroom](https://files.dyne.org/zenroom)
+<span class="mdi mdi-target"></span>
+Available targets: Portable source code (C99), **Javascript** (WebAssembly), **Linux** (Android, ARM and x86), **Windows** (EXE and DLL), **Apple** (OSX and iOS)
 
-Available targets: 
+<span class="mdi mdi-download"></span>
+Download from [files.dyne.org/zenroom](https://files.dyne.org/zenroom)
 
-- Portable source code (C99)
-- Javascript (WebAssembly)
-- Linux (Android, ARM and x86)
-- Windows (EXE and DLL)
-- Apple (OSX and iOS)
+<span class="mdi mdi-history"></span>
+Read the [history of changes](https://files.dyne.org/zenroom/ChangeLog.txt)
+
+Anyone planning to use Zenroom to store and access secrets should not
+use the latest development version in Git, but use instead the stable
+releases on files.dyne.org.
+
+Before releasing we make sure Zenroom works as expected by running
+various tests, plus we note down all changes in the log above.
+
+The development version in Git should only be used by contributors to
+report bugs, test new features and develop patches.
 
 ## Documentation
 
-<ul class="center" style="list-style:none">
+### Programming
 
-<li class="mdi mdi-code-braces"> <a href="https://zenroom.dyne.org/api">LUA script API</a></li>
+<span class="mdi mdi-flag"></span>
+[Zencode: programming smart contracts in human language](zencode)
 
-<li class="mdi mdi-cogs"> <a href="https://github.com/DECODEproject/zenroom/wiki">Online Wiki</a></li>
+<span class="mdi mdi-code-braces"></span>
+[Zenroom scripting in Lua: reference documentation](lua)
 
-<li class="mdi mdi-history"> <a href="https://files.dyne.org/zenroom/ChangeLog.txt">History of changes</a></li>
-</ul>
+### Usage
+
+<span class="mdi mdi-run"></span>
+[How to execute scripts with Zenroom](wiki/how-to-exec)
+
+<span class="mdi mdi-package"></span>
+[How to embed Zenroom in your application](wiki/how-to-embed)
+
+<span class="mdi mdi-cogs"></span>
+[How to build Zenroom from the source code](wiki/how-to-build)
+
 
 ## Playground
 
-<ul class="center" style="list-style:none">
-<li class="mdi mdi-hand-pointing-right"> <a href="https://zenroom.dyne.org/demo">Online Demo</a></li>
-<li class="mdi mdi-web"> <a href="encrypt">Web Encryption</a></li>
-<li class="mdi mdi-docker"> <a href="https://hub.docker.com/r/dyne/zenroom">Docker image</a></li>
-<li class="mdi mdi-puzzle"> <a href="https://hub.docker.com/r/dyne/zenroom-redis">Redis module</a></li>
-</ul>
+### Online
+
+<span class="mdi mdi-hand-pointing-right"></span>
+[Online interactive demo](https://zenroom.dyne.org/demo)
+
+<span class="mdi mdi-web"></span>
+[Web encryption demonstration and benchmark](encrypt)
+
+### Apps
+
+<span class="mdi mdi-network"></span>
+[Redroom: fast execution of Zencode in Redis](https://redroom.dyne.org)
+
+<span class="mdi mdi-eye"></span>
+[Sawroom: blockchain integration with Sawtooth](https://redroom.dyne.org)
+
+### Docker
+
+<span class="mdi mdi-docker"></span>
+[Docker build files](https://github.com/dyne/docker-dyne-software/tree/master/zenroom)
+(dyne/zenroom:latest)
+
 
 ## Bindings
 
@@ -67,55 +115,6 @@ This API can be called in similar ways from a variety of languages and in partic
 <li><b>Redis</b> module implementation for in-memory database encryption</li>
 </ul>
 
-## Language
-
-Zenroom executes smart contracts written in Lua or in Zencode: a [plain English-like Domain Specific Language](https://decodeproject.eu/blog/smart-contracts-english-speaker).
-
-![Zencode documentation diagram](img/zencode_diagram.png)
-
-```yaml
-data:
-  - {then: 'print '''' '''''}
-  - {then: 'print all data'}
-  - {then: 'print my data'}
-  - {then: 'print my '''''}
-  - {then: 'print my draft'}
-  - {then: 'print as '''' my draft'}
-  - {then: 'print my draft as '''''}
-  - {then: 'print as '''' my '''''}
-  - {then: 'print the '''''}
-  - {then: 'print as '''' the '''''}
-  - {then: 'print as '''' the '''' inside '''''}
-  - {then: debug}
-basic:
-  - {when: 'I create my new keypair'}
-  - {when: 'I generate my keys'}
-  - {when: 'I encrypt the '''' to '''' for '''''}
-  - {when: 'I decrypt the '''' to '''''}
-  - {when: 'I sign the draft as '''''}
-  - {when: 'I verify the '''' is authentic'}
-coconut:
-  - {when: 'I create my new credential keypair'}
-  - {when: 'I create my new credential request keypair'}
-  - {when: 'I create my new keypair'}
-  - {when: 'I create my new issuer keypair'}
-  - {when: 'I create my new authority keypair'}
-  - {when: 'I generate a credential signature request'}
-  - {when: 'I sign the credential'}
-  - {when: 'I aggregate the credential in '''''}
-  - {when: 'I aggregate verifiers from '''''}
-  - {when: 'I generate a credential proof'}
-  - {when: 'I verify the credential proof is correct'}
-  - {when: 'I generate a petition '''''}
-  - {when: 'I verify the new petition to be empty'}
-  - {when: 'I sign the petition '''''}
-  - {when: 'I verify the signature proof is correct'}
-  - {when: 'the petition signature is not a duplicate'}
-  - {when: 'the petition signature is just one more'}
-  - {when: 'I add the signature to the petition'}
-  - {when: 'I tally the petition'}
-  - {when: 'I count the petition results'}
-```
 
 ## Mission
 

@@ -13,6 +13,9 @@ build/luazen
 docs/test
 docs/pub
 docs/fonts
+docs/website/site
+docs/website/docs/lua
+docs/website/docs/wiki
 lib/musl
 src/zenroom.js
 src/zenroom.js.mem

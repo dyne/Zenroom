@@ -10,8 +10,8 @@ extra:
   h2020: 732546 (DECODE)
   links:
     homepage: https://zenroom.org
-    releases: https://files.dyne.org/zenroom
-    docker: https://github.com/dyne/docker-dyne-software/tree/master/zenroom
+    download: '#download'
+    docker: '#docker'
     wiki: https://github.com/decodeproject/zenroom/wiki
   drift_handle: s64nd7w43g53
   nav:

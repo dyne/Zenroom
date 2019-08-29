@@ -6,6 +6,5 @@ all: wiki
 
 ## select wiki pages
 wiki:
-	pandoc -f markdown -t html ../wiki/Embed.md > Embed
 	pandoc -f markdown -t html ../wiki/Syntax.md > Syntax
 	pandoc -f markdown -t html ../wiki/StateMachine.md > StateMachine
