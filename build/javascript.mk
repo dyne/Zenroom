@@ -4,14 +4,15 @@
 javascript-demo: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
 javascript-demo: ldflags += -s WASM=1 \
 	-s ASSERTIONS=1 \
-	--shell-file ${extras}/shell_minimal.html
+	--shell-file ${website}/demo/shell_minimal.html
 javascript-demo: apply-patches lua53 milagro embed-lua
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	JSEXT="--preload-file lua@/" \
-	make -C src js-demo
+	JSOUT="${website}/demo/index.html" \
+	make -C src js
 	@mkdir -p build/demo
-	@cp -v docs/demo/index.* build/demo/
-	@cp -v docs/demo/*.js build/demo/
+	@cp -v ${website}/demo/index.* build/demo/
+	@cp -v ${website}/demo/*.js    build/demo/
 
 javascript-web: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
 javascript-web: ldflags += -s WASM=1 -s ASSERTIONS=1
@@ -23,6 +24,7 @@ javascript-web: apply-patches lua53 milagro embed-lua
 	@cp -v src/zenroom.js   build/web/
 	@cp -v src/zenroom.data build/web/
 	@cp -v src/zenroom.wasm build/web/
+	@cp -v build/web/* ${website}/js/
 
 javascript-asmjs: cflags += -DARCH_JS -D'ARCH=\"JS\"' -D MAX_STRING=128000
 javascript-asmjs: ldflags += -s WASM=0 \

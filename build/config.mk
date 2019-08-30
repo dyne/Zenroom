@@ -2,7 +2,7 @@
 
 pwd := $(shell pwd)
 mil := ${pwd}/build/milagro
-extras := ${pwd}/docs/demo
+website := ${pwd}/docs/website/docs
 
 # --------
 # defaults
