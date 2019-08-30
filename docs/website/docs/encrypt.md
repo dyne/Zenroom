@@ -40,4 +40,4 @@ Files are encrypted on the fly inside the browser.
   <hr/>
   <small><code id="result"></code></small>
 
-<script async type="text/javascript" src="zenroom.js"></script>
+<script async type="text/javascript" src="../js/zenroom.js"></script>

@@ -72,7 +72,7 @@ Then print the 'secret message'
         Module.ccall('zencode_exec',
                      'number',
                      ['string', 'string', 'string', 'string', 'number'],
-                     [code, null, keys, data, 0]);
+                     [code, null, keys, data, 1]);
         t1 = performance.now()
         $('#speed').html(t1-t0)
     }
@@ -91,7 +91,8 @@ var Module = {
     printErr: function(text) {
         // if (arguments.length > 1)
         //     text = Array.prototype.slice.call(arguments).join(' ')
-        console.error(text)
+		if(text[2]=='!') console.error(text)
+        else console.log(text)
     },
     exec_ok: () => {},
     exec_error: () => {},

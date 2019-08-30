@@ -1,6 +1,8 @@
 # TODO: improve flags according to
 # https://github.com/kripken/emscripten/blob/master/src/settings.js
 
+MAX_STRING := 8000 # 512000 # 128000
+
 javascript-demo: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
 javascript-demo: ldflags += -s WASM=1 \
 	-s ASSERTIONS=1 \
@@ -14,8 +16,13 @@ javascript-demo: apply-patches lua53 milagro embed-lua
 	@cp -v ${website}/demo/index.* build/demo/
 	@cp -v ${website}/demo/*.js    build/demo/
 
-javascript-web: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
-javascript-web: ldflags += -s WASM=1 -s ASSERTIONS=1
+javascript-web: cflags  += -O3 -fno-exceptions -fno-rtti
+javascript-web: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -DMAX_JSBUF=3072000 \
+	-s WASM_OBJECT_FILES=0
+javascript-web: ldflags += -s WASM=1 -s ASSERTIONS=1 \
+	-s TOTAL_MEMORY=32768000 \
+	-s WASM_OBJECT_FILES=0 --llvm-lto 0 \
+	-s DISABLE_EXCEPTION_CATCHING=1
 javascript-web: apply-patches lua53 milagro embed-lua
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	JSEXT="--preload-file lua@/" \
@@ -25,6 +32,7 @@ javascript-web: apply-patches lua53 milagro embed-lua
 	@cp -v src/zenroom.data build/web/
 	@cp -v src/zenroom.wasm build/web/
 	@cp -v build/web/* ${website}/js/
+	@cp -v build/web/zenroom.data ${website}/encrypt/
 
 javascript-asmjs: cflags += -DARCH_JS -D'ARCH=\"JS\"' -D MAX_STRING=128000
 javascript-asmjs: ldflags += -s WASM=0 \

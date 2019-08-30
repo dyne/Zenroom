@@ -11,6 +11,7 @@ api:
 # output is website/site
 website:
 	@if ! [ -r website/docs/js/zenroom.js -o -r website/docs/js/zenroom.wasm ]; then curl https://sdk.dyne.org:4443/view/zenroom/job/zenroom-web/lastSuccessfulBuild/artifact/build/web/zenroom.wasm https://sdk.dyne.org:4443/view/zenroom/job/zenroom-web/lastSuccessfulBuild/artifact/build/web/zenroom.js https://sdk.dyne.org:4443/view/zenroom/job/zenroom-web/lastSuccessfulBuild/artifact/build/web/zenroom.data -o website/docs/js/zenroom.wasm -o website/docs/js/zenroom.js -o website/docs/js/zenroom.data; fi
+	@mkdir -p website/docs/encrypt && cp -v website/docs/js/zenroom.data website/docs/encrypt/
 	@mkdir -p website/docs/wiki
 	@cp -v wiki/Build.md website/docs/wiki/how-to-build.md
 	@cp -v wiki/Execute.md website/docs/wiki/how-to-exec.md
