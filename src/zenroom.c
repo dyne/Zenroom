@@ -215,6 +215,7 @@ void zen_teardown(zenroom_t *Z) {
 	if(Z) free(Z);
 }
 
+static char zscript[MAX_ZENCODE];
 int zen_exec_zencode(zenroom_t *Z, const char *script) {
 	if(!Z) {
 		error(NULL,"%s: Zenroom context is NULL.",__func__);
@@ -226,8 +227,7 @@ int zen_exec_zencode(zenroom_t *Z, const char *script) {
 	int ret;
 	lua_State* L = (lua_State*)Z->lua;
 	// introspection on code being executed
-	char zscript[MAX_STRING];
-	snprintf(zscript,MAX_STRING-1,
+	z_snprintf(zscript,MAX_ZENCODE-1,
 	         "ZEN:begin(%u)\nZEN:parse([[\n%s\n]])\nZEN:run()\n",
 	         Z->errorlevel, script);
 	zen_setenv(L,"CODE",(char*)zscript);

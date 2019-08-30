@@ -35,6 +35,7 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
+static char low[MAX_LINE]; // 1KB max for a single zencode line
 // parse the first word until the first space, returns a new string
 static int lua_parse_prefix(lua_State* L) { 
 	const char *line;
@@ -46,7 +47,6 @@ static int lua_parse_prefix(lua_State* L) {
 	for(c=0; c<size && c<MAX_LINE && c<USHRT_MAX; c++) {
 		if( !isspace(line[c]) ) break;
 		fspace++; }
-	char low[MAX_LINE];
 	for(; c<size && c<MAX_LINE && c<USHRT_MAX; c++) {
 		if( isspace(line[c]) ) {
 			low[c] = '\0'; break; }
@@ -66,10 +66,11 @@ static void trimto(char *dest, const char *src, const size_t len) {
 	for(d=0; c<len; c++, d++) dest[d] = src[c];
 	dest[d] = '\0'; // null termination
 }
+static char ta[MAX_LINE];
+static char tb[MAX_LINE];
 static int lua_strcasecmp(lua_State *L) {
 	const char *a, *b;
 	size_t la, lb;
-	char ta[MAX_LINE], tb[MAX_LINE];
 	a = luaL_checklstring(L,1,&la); SAFE(a);
 	b = luaL_checklstring(L,2,&lb); SAFE(b);
 	if(la>MAX_LINE) lerror(L, "strcasecmp: arg #1 MAX_LINE limit hit");

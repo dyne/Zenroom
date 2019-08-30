@@ -104,15 +104,29 @@ void zen_teardown(zenroom_t *zenroom);
 
 #define MAX_LINE 1024 // 1KiB maximum length for a newline terminated line (Zencode)
 #define UMM_HEAP (64*1024) // 64KiB (masked with 0x7fff)
-#define MAX_FILE 2048000 // load max 2MiB files
-#ifndef MAX_STRING
-#define MAX_STRING 20480 // max 20KiB strings
+
+#ifndef MAX_ZENCODE_LINE
+#define MAX_ZENCODE_LINE 512
 #endif
-#define MAX_OCTET 4000000 // max 4MiB for octets
+#ifndef MAX_ZENCODE // maximum size of a zencode script
+#define MAX_ZENCODE 16384
+#endif
+
+#ifndef MAX_FILE // for cli.c
+#define MAX_FILE 2048000 // load max 2MiB files
+#endif
+
+#ifndef MAX_STRING // mostly for cli.c
+#define MAX_STRING 4096 // 20480 // max 20KiB strings
+#endif
+
+#ifndef MAX_OCTET
+#define MAX_OCTET 4096000 // max 4MiB for octets
+#endif
 
 #define LUA_BASELIBNAME "_G"
 
-#define ZEN_BITS 8
+#define ZEN_BITS 32
 #ifndef SIZE_MAX
 #if ZEN_BITS == 32
 #define SIZE_MAX 4294967296
