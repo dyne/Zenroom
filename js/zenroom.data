@@ -1,469 +1,3 @@
-The files in this directory are "pure" LUA extensions statically
-compiled as binaries and loaded inside zenroom as strings. This is
-because the Zenroom cannot access the filesystem.
-
-The extensions are compiled into C headers by the Makefile target
-'embed-lua' which needs to be run manually in case of addition of new
-extensions. Then 'make embed-lua' will create lualib_*.c files inside
-the src/ directory. To complete inclusion they should be added at the
-beginning of the lua_functions.c files (inside the #include directive
-as if they'd be headers) and at the end of the file by the
-lsb_load_string() taking them as string arguments.
-
--- This file is part of Zenroom (https://zenroom.dyne.org)
---
--- Copyright (C) 2018-2019 Dyne.org foundation
--- Coconut implementation by Alberto Sonnino and Denis Roio
---
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU Affero General Public License as
--- published by the Free Software Foundation, either version 3 of the
--- License, or (at your option) any later version.
---
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU Affero General Public License for more details.
---
--- You should have received a copy of the GNU Affero General Public License
--- along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-
--- Coconut is a selective disclosure credential scheme for Attribute
--- Based Credentials (ABC) supporting public and private attributes,
--- re-randomization, and multiple unlinkable selective attribute
--- revelations. For information about usage see
--- https://zenroom.dyne.org and https://decodeproject.eu
-ECP     = require_once('zenroom_ecp')
-ELGAMAL = require_once('crypto_elgamal')
-ECP2    = require_once('zenroom_ecp2')
-FP12    = require_once('fp12')
-
-
-local coco = {
-   _VERSION = 'crypto_coconut.lua 1.0',
-   _URL = 'https://zenroom.dyne.org',
-   _DESCRIPTION = 'Attribute-based credential system supporting multiple unlinkable private attribute revelations',
-   _LICENSE = [[
-Licensed under the terms of the GNU Public License as published by
-the Free Software Foundation; either version 3 of the License, or
-(at your option) any later version.  Unless required by applicable
-law or agreed to in writing, software distributed under the License
-is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-CONDITIONS OF ANY KIND, either express or implied.
-]]
-}
-
-local g1 = ECP.generator() -- return value
-local g2 = ECP2.generator() -- return value
-local o  = ECP.order() -- return value
-
--- stateful challenge hardcoded string
-local hs = ECP.hashtopoint(str([[
-Developed for the DECODE project
-]] .. coco._LICENSE))
-local challenge = g1:octet() .. g2:octet() .. hs:octet()
-function coco.to_challenge(list)
-   -- assert(coco.challenge, "COCONUT secret challenge not set")
-   return INT.new( sha256( challenge .. OCTET.serialize(list)))
-end
-
-
--- random generator init
-local function rand() return INT.modrand(o) end
-
--- local zero-knowledge proof verifications
-local function make_pi_s(gamma, cm, k, r, m)
-   local h = ECP.hashtopoint(cm)
-   local wk = rand()
-   local wm = rand()
-   local wr = rand()
-   local Aw = g1 * wk
-   local Bw = gamma * wk + h * wm
-   local Cw = g1 * wr + hs * wm
-   local c = coco.to_challenge({ cm, h, Aw, Bw, Cw })
-   local rk = wk:modsub(c * k, o)
-   local rm = wm:modsub(c * m, o)
-   local rr = wr:modsub(c * r, o)
-   -- return Lambda
-   return { c  = c,
-			rk = rk,
-			rm = rm,
-			rr = rr }
-end
-
-function coco.verify_pi_s(l)
-   local h = ECP.hashtopoint(l.cm)
-   local Aw = l.c.a * l.pi_s.c
-	  + g1 * l.pi_s.rk
-   local Bw = l.c.b * l.pi_s.c
-	  + l.public * l.pi_s.rk
-	  + h * l.pi_s.rm
-   local Cw = l.cm * l.pi_s.c
-	  + g1 * l.pi_s.rr
-	  + hs * l.pi_s.rm
-   -- return a bool for assert
-   return l.pi_s.c == coco.to_challenge({ l.cm, h, Aw, Bw, Cw })
-end
-
--- Public Coconut API
-function coco.ca_keygen()
-   local x = rand()
-   local y = rand()
-   local sk = { x = x,
-                y = y  }
-   local vk = { alpha = g2 * x,
-                beta  = g2 * y  }
-   -- return keypair
-   return sk, vk
-end
-
-function coco.aggregate_keys(keys)
-   local agg_alpha = keys[1].alpha
-   local agg_beta  = keys[1].beta
-   if #keys > 1 then
-	  for i = 2, #keys do
-		 agg_alpha = agg_alpha + keys[i].alpha
-		 agg_beta  = agg_beta  + keys[i].beta
-	  end
-   end
-   -- return aggkeys
-   return { alpha = agg_alpha,
-			beta = agg_beta }
-end
-
-function coco.prepare_blind_sign(gamma, secret)
-   local m = INT.new(sha256(secret))
-   local r = rand()
-   local cm = g1 * r + hs * m
-   local h = ECP.hashtopoint(cm)
-   local a, b, k = ELGAMAL.encrypt(gamma, m, h)
-   local c = {a = a, b = b}
-   local pi_s = make_pi_s(gamma, cm, k, r, m)
-   -- return Lambda
-   return { cm   = cm,
-            c    = c,
-            pi_s = pi_s,
-			public = gamma }
-end
-
-function coco.blind_sign(sk, Lambda)
-   ZEN.assert(coco.verify_pi_s(Lambda),
-			  'Zero knowledge proof does not verify (Lambda.pi_s)')
-   local h = ECP.hashtopoint(Lambda.cm)
-   local a_tilde = Lambda.c.a * sk.y
-   local b_tilde = h * sk.x + Lambda.c.b * sk.y
-   -- sigma tilde
-   return { h = h,
-            a_tilde = a_tilde,
-            b_tilde = b_tilde  }
-end
-
-function coco.aggregate_creds(d, sigma_tilde)
-   local agg_s = ELGAMAL.decrypt(d,
-								 sigma_tilde[1].a_tilde,
-								 sigma_tilde[1].b_tilde)
-   if #sigma_tilde > 1 then
-      for i = 2, #sigma_tilde do
-         agg_s = agg_s + ELGAMAL.decrypt(d,
-										 sigma_tilde[i].a_tilde,
-										 sigma_tilde[i].b_tilde)
-      end
-   end
-   -- aggregated sigma
-   return { h = sigma_tilde[1].h,
-            s = agg_s }
-end
-
-function coco.prove_creds(vk, sigma, secret)
-   ZEN.assert(vk, "COCONUT.prove_creds called with empty verifier")
-   ZEN.assert(sigma, "COCONUT.prove_creds called with empty credential")
-   ZEN.assert(secret, "COCONUT.prove_creds called with empty secret")
-
-   local m = INT.new(sha256(secret))
-   local r = rand()
-   local r_prime = rand()
-   local sigma_prime = { h_prime = sigma.h * r_prime,
-                         s_prime = sigma.s * r_prime  }
-   local kappa = vk.alpha + vk.beta * m + g2 * r
-   local nu = sigma_prime.h_prime * r
-   -- make pi_v
-   local wm = rand()
-   local wr = rand()
-   local Aw = vk.alpha + g2 * wr + vk.beta * wm
-   local Bw = sigma_prime.h_prime * wr
-   local ch = coco.to_challenge({ vk.alpha, vk.beta, Aw, Bw })
-   local pi_v = { c = ch,
-				  rm = wm:modsub(m * ch, o),
-				  rr = wr:modsub(r * ch, o)  }
-   -- return Theta
-   local Theta = {
-      kappa = kappa,
-      nu = nu,
-      sigma_prime = sigma_prime,
-      pi_v = pi_v }
-   return Theta
-end
-
-function coco.verify_creds(vk, Theta)
-   ZEN.assert(vk, "COCONUT.verify_creds called with empty verifier")
-   ZEN.assert(Theta, "COCONUT.verify_creds valled with empty proof")
-   if #vk == 1 then vk = vk[1] end -- single element in array
-   -- verify pi_v
-   local Aw = Theta.kappa * Theta.pi_v.c
-	  + g2 * Theta.pi_v.rr
-	  + vk.alpha * INT.new(1):modsub(Theta.pi_v.c, o)
-	  + vk.beta * Theta.pi_v.rm
-   local Bw = Theta.nu * Theta.pi_v.c
-	  + Theta.sigma_prime.h_prime * Theta.pi_v.rr
-   -- check zero knowledge proof
-   ZEN.assert(Theta.pi_v.c == coco.to_challenge({vk.alpha, vk.beta, Aw, Bw}),
-			  "Credential proof does not verify (wrong challenge)")
-   ZEN.assert(not Theta.sigma_prime.h_prime:isinf(),
-			  "Credential proof does not verify (sigma.h is infinite)")
-   ZEN.assert(ECP2.miller(Theta.kappa, Theta.sigma_prime.h_prime)
-				 == ECP2.miller(g2, Theta.sigma_prime.s_prime + Theta.nu),
-			  "Credential proof does not verify (miller loop error)")
-   return true
-end
-
------------
--- petition
-
-function coco.prove_cred_petition(vk, sigma, secret, uid)
-   local m = INT.new(sha256(secret))
-   local o = ECP.order()
-   local r = rand()
-   -- local m = INT.new(sha256(secret))
-   -- material
-   local r_prime = rand()
-   local sigma_prime = { h_prime = sigma.h * r_prime,
-						 s_prime = sigma.s * r_prime  }
-   local kappa = vk.alpha
-	  + vk.beta * m
-	  + g2 * r
-   local nu = sigma_prime.h_prime * r
-   local zeta = m * ECP.hashtopoint(str(uid))
-   -- proof --
-   -- create the witnessess
-   local wm = rand()
-   local wr = rand()
-   -- compute the witnessess commitments
-   local Aw = g2 * wr
-	  + vk.alpha
-	  + vk.beta * wm
-   local Bw = sigma_prime.h_prime * wr
-   local Cw = wm * ECP.hashtopoint(uid)
-   -- create the challenge
-   local c = COCONUT.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw })
-   -- create responses
-   local rm = wm:modsub(m * c, o)
-   local rr = wr:modsub(r * c, o)
-   local pi_v = { c = c,
-				  rm = rm,
-				  rr = rr }
-   local Theta = {
-      kappa = kappa,
-      nu = nu,
-      sigma_prime = sigma_prime,
-      pi_v = pi_v }
-   return Theta, zeta
-end
-
-function coco.verify_cred_petition(vk, Theta, zeta, uid)
-   local kappa = Theta.kappa
-   local nu = Theta.nu
-   local sigma_prime = Theta.sigma_prime
-   local c = Theta.pi_v.c
-   local rm = Theta.pi_v.rm
-   local rr = Theta.pi_v.rr
-   -- verify proof --
-   -- recompute witnessess commitments
-   local Aw = kappa * c
-	  + g2 * rr
-	  + vk.alpha * INT.new(1):modsub(c,ECP.order())
-	  + vk.beta * rm
-   local Bw = nu * c + sigma_prime.h_prime * rr
-   local Cw = rm*ECP.hashtopoint(uid) + zeta*c
-   -- compute the challenge prime
-   ZEN.assert(c == COCONUT.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw }),
-			  "verify_cred_petition: invalid challenge")
-   -- verify signature --
-   ZEN.assert(not sigma_prime.h_prime:isinf(),
-			  "verify_cred_petition: sigma_prime.h points at infinite")
-   ZEN.assert(ECP2.miller(kappa, sigma_prime.h_prime)
-				 == ECP2.miller(g2, sigma_prime.s_prime + nu),
-			  "verify_cred_petition: miller loop fails")
-   return true
-end
-
--- takes an array of bigs and a curve order (modulo)
-function coco.lagrange_interpolation(indexes)
-   ZEN.assert(type(indexes) == "table", "Lagrange interpolation argument is not an array")
-   local l = {}
-   local numerator
-   local denominator
-   for i in indexes do
-	  numerator = BIG.new(1)
-	  denominator = BIG.new(1)
-	  for j in indexes do
-		 if (j ~= i)
-		 then
-            numerator = numerator:modmul(x:modsub(j,o),o)
-            denominator = denominator:modmul(i:modsub(j,o),o)
-		 end
-		 l[#l+1] = numerator:modmul(denominator:modinv(o),o)
-	  end
-   end
-   return l
-end
-
-function coco.prove_sign_petition(pub, m)
-   -- sign == vote
-   local k = rand()
-   -- vote encryption
-   local enc_v = { left = g1 * k,
-				   right = pub * k + hs * m }
-   -- opposite of vote encryption
-   local enc_v_neg = { left = enc_v.left:negative(),
-					   right = enc_v.right:negative() + hs }
-   -- commitment to the vote
-   local r1 = rand()
-   local r2 = r1:modmul(BIG.new(1):modsub(m,o), o)
-   local cv = g1 * m + hs * r1
-
-   -- proof
-   -- create the witnesess
-   local wk = rand()
-   local wm = rand()
-   local wr1 = rand()
-   local wr2 = rand()
-   -- compute the witnessess commitments
-   local Aw = g1*wk
-   local Bw = pub*wk + hs*wm
-   local Cw = g1*wm + hs*wr1
-   local Dw = cv*wm + hs*wr2
-   -- create the challenge
-   local c = COCONUT.to_challenge({enc_v.left, enc_v.right,
-								   cv, Aw, Bw, Cw, Dw}) % o
-   -- create responses
-   local rk = wk:modsub(c*k, o)
-   local rm = wm:modsub(c*m, o)
-   local rr1 = wr1:modsub(c*r1, o)
-   local rr2 = wr2:modsub(c*r2, o)
-   local pi_vote = { c = c,
-					 rk = rk,
-					 rm = rm,
-					 rr1 = rr1,
-					 rr2 = rr2 }
-
-   -- signature's Theta
-   return { scores = { pos = enc_v,
-					   neg = enc_v_neg }, -- left/right tuples
-			cv = cv, -- ecp
-			pi_vote = pi_vote } -- pi
-end
-
-function coco.verify_sign_petition(pub, theta)
-   -- recompute witnessess commitment
-   local scores = theta.scores.pos -- only positive, not negative?
-   local Aw = g1 * theta.pi_vote.rk
-	  + scores.left * theta.pi_vote.c
-   local Bw = pub * theta.pi_vote.rk
-	  + hs * theta.pi_vote.rm
-	  + scores.right * theta.pi_vote.c
-   local Cw = g1 * theta.pi_vote.rm
-	  + hs * theta.pi_vote.rr1
-	  + theta.cv * theta.pi_vote.c
-   local Dw = theta.cv * theta.pi_vote.rm
-	  + hs * theta.pi_vote.rr2
-	  + theta.cv * theta.pi_vote.c
-   -- verify challenge
-   ZEN.assert(theta.pi_vote.c == COCONUT.to_challenge(
-				 {scores.left, scores.right,
-				  theta.cv, Aw, Bw, Cw, Dw }),
-			  "verify_sign_petition: challenge fails")
-   return true
-end
-
-function coco.prove_tally_petition(sk, scores)
-   local wx = rand()
-   local Aw = { wx:modneg(o) * scores.pos.left,
-				wx:modneg(o) * scores.neg.left  }
-   local c = COCONUT.to_challenge(Aw)
-   local rx = wx:modsub(c*sk, o)
-   local dec = { pos = scores.pos.left * sk:modneg(o),
-				 neg = scores.neg.left * sk:modneg(o) }
-   -- return pi_tally
-   return { dec = dec,
-			rx = rx,
-			c = c    }
-end
-
-function coco.verify_tally_petition(scores, pi_tally)
-   local rxneg = pi_tally.rx:modneg(o)
-   local Aw = { rxneg*scores.pos.left + pi_tally.c * pi_tally.dec.pos,
-				rxneg*scores.neg.left + pi_tally.c * pi_tally.dec.neg  }
-   ZEN.assert(pi_tally.c == COCONUT.to_challenge(Aw),
-			  "verify_tally_petition: challenge fails")
-   return true
-end
-
-function coco.count_signatures_petition(scores, pi_tally)
-   local restab = { }
-   for idx=-100,100 do
-	  restab[hex(BIG.new(idx) * hs)] = idx
-   end
-   local res = { pos = scores.pos.right + pi_tally.dec.pos,
-				 neg = scores.neg.right + pi_tally.dec.neg  }
-   return { pos = restab[hex(res.pos)],
-			neg = restab[hex(res.neg)]  }
-end
-return coco
--- This file is part of Zenroom (https://zenroom.dyne.org)
---
--- Copyright (C) 2018-2019 Dyne.org foundation
--- El-Gamal implementation by Alberto Sonnino and Denis Roio
---
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU Affero General Public License as
--- published by the Free Software Foundation, either version 3 of the
--- License, or (at your option) any later version.
---
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU Affero General Public License for more details.
---
--- You should have received a copy of the GNU Affero General Public License
--- along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-local elg = { _VERSION = 'crypto_elgamal.lua 1.0' }
-
-function elg.keygen()
-   local d = INT.modrand(ECP.order())
-   local gamma = d * ECP.generator()
-   return d, gamma
-end
-
-function elg.encrypt(gamma, m, h)
-   local k = INT.modrand(ECP.order())
-   local a = k * ECP.generator()
-   -- TODO: argument checking and explicit ECP conversion
-   -- if type(gamma) == "string" then
-   -- 	  g = ECP.new(gamma) -- explicit conversion to ECP
-   -- else g = gamma end -- other conversions are implicit
-   local b = gamma * k
-	  +
-	  h * m
-   return a, b, k
-end
-
-function elg.decrypt(d, a, b)
-   return b - a * d
-end
-
-return elg
 -- This file is part of Zenroom (https://zenroom.dyne.org)
 --
 -- Copyright (C) 2018-2019 Dyne.org foundation
@@ -482,59 +16,302 @@ return elg
 -- You should have received a copy of the GNU Affero General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
--- init script embedded at compile time.  executed in
--- zen_load_extensions(L) usually after zen_init()
+local ecdh = require'ecdh'
 
--- -- remap fatal and error
-function fatal(msg)
-	  if type(msg) == "string" then warn(trim(msg),2) end
-	  debug.traceback()
---	  if ZEN_traceback ~= "" then ZEN:debug() end
-	  ZEN:debug()
-	  msg = msg or "fatal error"
-	  error(msg,2)
+function prepare_session(keyring, pub) -- internal function
+   local kr
+   if (type(keyring) == "zenroom.ecdh") then
+	  kr = keyring
+   else
+	  error("encrypt error: arg #1 type not known ("..type(keyring)..") expected an ECDH keyring object")
+   end
+   local pk
+   if (type(pub) == "zenroom.ecdh") then
+	  pk = pub:public()
+   elseif (type(pub) == "zenroom.octet") then
+	  pk = pub
+   else
+	  error("encrypt error: arg #2 type not known ("..type(pub)..") expected an ECDH keyring or OCTET object")
+   end
+   return(kr:session(pk))
 end
 
--- error = zen_error -- from zen_io
 
--- ZEN = { assert = assert } -- zencode shim when not loaded
-require('zenroom_common')
-INSIDE = require('inspect')
-OCTET  = require('zenroom_octet')
-JSON   = require('zenroom_json')
-ECDH   = require('zenroom_ecdh')
-BIG    = require('zenroom_big')
-HASH   = require('zenroom_hash')
-MACHINE = require('statemachine')
+-- encrypt with default AES-GCM technique, returns base58 encoded
+-- values into a table containing: .text .iv .checksum .header
+function ecdh.encrypt(alice, bob, msg, header)
+   warn("ecdh.decrypt() use of this function is DEPRECATED");
+   local key = prepare_session(alice,bob)
+   local iv = O.random(16)
+   -- convert strings to octets
+   local omsg, ohead
+   if(type(msg) == "string") then
+	  omsg = str(msg) else omsg = msg end
+   if(type(header) == "string") then
+	  ohead = str(header) else ohead = header end
+   local cypher = {header = ohead, iv = iv}
+   cypher.text, cypher.checksum = ecdh.aead_encrypt(key,omsg,iv,ohead)
+   return(cypher)
+end
 
-O   = OCTET  -- alias
-INT = BIG    -- alias
-H   = HASH   -- alias
-I   = INSIDE -- alias
-V   = require('semver')
-VERSION = V(VERSION)
+function ecdh.decrypt(alice, bob, cypher)
+   warn("ecdh.decrypt() use of this function is DEPRECATED");
+   local key = prepare_session(alice,bob)
+   local decode = {header = cypher.header}
+   decode.text, decode.checksum =
+	  ecdh.aead_decrypt(key,
+				   cypher.text,
+				   cypher.iv,
+				   cypher.header)
+   if(cypher.checksum ~= decode.checksum) then
+	  error("decrypt error: header checksum mismatch")
+   end
+   return(decode)
+end
 
-ZEN = require('zencode')
+return ecdh
+-- This file is part of Zenroom (https://zenroom.dyne.org)
+--
+-- Copyright (C) 2018-2019 Dyne.org foundation
+-- designed, written and maintained by Denis Roio <jaromil@dyne.org>
+--
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU Affero General Public License as
+-- published by the Free Software Foundation, either version 3 of the
+-- License, or (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU Affero General Public License for more details.
+--
+-- You should have received a copy of the GNU Affero General Public License
+-- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
--- import/export schema helpers
-require('zencode_schemas')
--- base data functions
-require('zencode_data')
+local hash = require'hash'
 
--- scenarios can only implement "When ..." steps
-_G["Given"] = nil
-_G["Then"]  = nil
+-- when using facility functions, global hashers are created only once
+SHA256 = nil
+SHA512 = nil
+function sha256(data)
+   if SHA256==nil then SHA256 = hash.new('sha256') end -- optimization
+   return SHA256:process(data)
+end
+function sha512(data)
+   if SHA512==nil then SHA512 = hash.new('sha512') end -- optimization
+   return SHA512:process(data)
+end
 
------------
--- defaults
-_G["CONF"] = {
-   -- encoding base64url (RFC4648) is the fastest and most portable in zenroom
-   encoding = url64,
-   encoding_prefix = 'u64',
-   -- goldilocks is our favorite ECDH/DSA curve
-   curve = 'goldilocks',
-   verbosity = 1
-}
+return hash
+The files in this directory are "pure" LUA extensions statically
+compiled as binaries and loaded inside zenroom as strings. This is
+because the Zenroom cannot access the filesystem.
+
+The extensions are compiled into C headers by the Makefile target
+'embed-lua' which needs to be run manually in case of addition of new
+extensions. Then 'make embed-lua' will create lualib_*.c files inside
+the src/ directory. To complete inclusion they should be added at the
+beginning of the lua_functions.c files (inside the #include directive
+as if they'd be headers) and at the end of the file by the
+lsb_load_string() taking them as string arguments.
+
+local fp = require'fp'
+
+return fp
+-- This file is part of Zenroom (https://zenroom.dyne.org)
+--
+-- Copyright (C) 2018-2019 Dyne.org foundation
+-- designed, written and maintained by Denis Roio <jaromil@dyne.org>
+--
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU Affero General Public License as
+-- published by the Free Software Foundation, either version 3 of the
+-- License, or (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU Affero General Public License for more details.
+--
+-- You should have received a copy of the GNU Affero General Public License
+-- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+local ecp2 = require'ecp2'
+require'fp12' -- FP12 implicit
+
+function ecp2.hashtopoint(s)
+   return ecp2.mapit(sha512(s))
+end
+
+return ecp2
+-- override type to recognize zenroom's types
+luatype = type
+_G['type'] = function(var)
+   local simple = luatype(var)
+   if simple == "userdata" then
+	  local meta = getmetatable(var)
+	  if meta then return(meta.__name)
+	  else return("unknown") end
+   else return(simple) end
+end
+function iszen(n)
+   for c in n:gmatch("zenroom") do
+	  return true
+   end
+   return false
+end
+
+-- debugging facility
+function xxx(n,s)
+   if ZEN.verbosity or CONF.debug >= n then act(s) end
+end
+
+-- global
+_G["REQUIRED"] = { }
+-- avoid duplicating requires (internal includes)
+function require_once(ninc)
+   local class = REQUIRED[ninc]
+   if type(class) == "table" then return class end
+   -- new require
+   class = require(ninc)
+   if type(class) == "table" then REQUIRED[ninc] = class end
+   return class
+end
+
+function content(var)
+   if type(var) == "zenroom.octet" then
+	  INSIDE.print(var:array())
+   else
+	  INSIDE.print(var)
+   end
+end
+
+
+-- sorted iterator for deterministic ordering of tables
+-- from: https://www.lua.org/pil/19.3.html
+_G["lua_pairs"]  = _G["pairs"]
+_G["lua_ipairs"] = _G["ipairs"]
+function _pairs(t)
+   local a = {}
+   for n in lua_pairs(t) do table.insert(a, n) end
+   table.sort(a)
+   local i = 0      -- iterator variable
+   local iter = function ()   -- iterator function
+	  i = i + 1
+	  if a[i] == nil then return nil
+	  else return a[i], t[a[i]]
+	  end
+   end
+   return iter
+end
+function _ipairs(t)
+   local a = {}
+   for n in lua_ipairs(t) do table.insert(a, n) end
+   table.sort(a)
+   local i = 0      -- iterator variable
+   local iter = function ()   -- iterator function
+	  i = i + 1
+	  if a[i] == nil then return nil
+	  else return a[i]
+	  end
+   end
+   return iter
+end
+-- Switch to deterministic (sorted) table iterators: this breaks lua
+-- tests in particular those stressing i/pairs and pack/unpack, which
+-- are anyway unnecessary corner cases in zenroom, which exits cleanly
+-- and signaling a stack overflow. Please report back if this
+-- generates problems leading to the pairs for loop in function above.
+_G["sort_pairs"]  = _pairs
+_G["sort_ipairs"] = _pairs
+
+------------------------------
+-- FUNCTIONAL LANGUAGE HELPERS
+----------------------------------------
+-- stateless map mostly for internal use
+function _map(t, f, ...)
+   -- safety
+   if not (type(t) == "table") then return {} end
+   if t == nil then return {} end
+   -- if #t == 0  then return {} end
+
+   local _t = {}
+   for index,value in sort_pairs(t) do
+	  local k, kv, v = index, f(index,value,...)
+	  _t[v and kv or k] = v or kv
+   end
+   return _t
+end
+-- map values in place, sort tables by keys for deterministic order
+function map(data, fun)
+   if(type(data) ~= "table") then
+	  error "map() first argument is not a table"
+	  return nil end
+   if(type(fun) ~= "function") then
+	  error "map() second argument is not a function"
+	  return nil end
+   out = {}
+   _map(data,function(k,v) out[k] = fun(v) end)
+   return(out)
+end
+
+function isarray(obj)
+   assert(obj, "isarray() called on a nil object")
+   assert(type(obj), "isarray() argument is not a table")
+   for k, v in pairs(obj) do
+	  -- check that all keys are numbers
+	  -- don't check sparse ratio (cjson's lua_array_length)
+	  if type(k) ~= "number" then return false end
+   end
+   return true
+end
+
+function help(module)
+   if module == nil then
+	  print("usage: help(module)")
+	  print("example > help(octet)")
+	  print("example > help(ecdh)")
+	  print("example > help(ecp)")
+	  return
+   end
+   for k,v in pairs(module) do
+	  if type(v)~='table' and string.sub(k,1,1)~='_' then
+		 print("class method: "..k)
+	  end
+   end
+   if module.new == nil then return end
+   local inst = module.new()
+   for s,f in pairs(getmetatable(inst)) do
+	  if(string.sub(s,1,2)~='__') then print("object method: "..s) end
+   end
+end
+
+-- UNUSED:
+-- returns a flat associative table of all objects in 'const'
+function flatten(const)
+   local flat = { }
+   local function inner_flatten(arr)
+	  for k,v in pairs(arr) do
+		 if type(v) == "table" then
+			flat[k] = v
+			inner_flatten(v)
+		 elseif(type(k) == "string") then
+			flat[k] = v
+		 end
+	  end
+   end
+   inner_flatten(const)
+   return flat
+end
+
+-- strtok equivalent:
+-- strsplit("rule check version 1.0.0","%S+")
+-- TODO: optimize in C using strtok
+function split(str,pat)
+   local tbl = {}
+   str:gsub(pat, function(x) tbl[#tbl+1]=x end)
+   return tbl
+end
 --- <h1>Debug inspection facility</h1>
 --
 -- The INSPECT class provides a number of functions to ease
@@ -971,942 +748,6 @@ setmetatable(inspect, { __call = function(_, ...) return inspect.print(...) end 
 
 return inspect
 
-local semver = {
-   _VERSION     = '1.2.2',
-   _DESCRIPTION = 'semver for Lua',
-   _URL         = 'https://github.com/kikito/semver.lua',
-   _LICENSE     = [[
-    MIT LICENSE
-
-    Copyright (c) 2015 Enrique García Cota
-    Copyright (c) 2019 Dyne.org foundation
-
-    Permission is hereby granted, free of charge, to any person obtaining a
-    copy of tother software and associated documentation files (the
-    "Software"), to deal in the Software without restriction, including
-    without limitation the rights to use, copy, modify, merge, publish,
-    distribute, sublicense, and/or sell copies of the Software, and to
-    permit persons to whom the Software is furnished to do so, subject to
-    the following conditions:
-
-    The above copyright notice and tother permission notice shall be included
-    in all copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  ]]
-}
-
-local function checkPositiveInteger(number, name)
-   assert(number >= 0, name .. ' must be a valid positive number')
-   assert(math.floor(number) == number, name .. ' must be an integer')
-end
-
-local function present(value)
-   return value and value ~= ''
-end
-
--- splitByDot("a.bbc.d") == {"a", "bbc", "d"}
-local function splitByDot(str)
-   str = str or ""
-   local t, count = {}, 0
-   str:gsub("([^%.]+)", function(c)
-			   count = count + 1
-			   t[count] = c
-   end)
-   return t
-end
-
-local function parsePrereleaseAndBuildWithSign(str)
-   local prereleaseWithSign, buildWithSign = str:match("^(-[^+]+)(+.+)$")
-   if not (prereleaseWithSign and buildWithSign) then
-	  prereleaseWithSign = str:match("^(-.+)$")
-	  buildWithSign      = str:match("^(+.+)$")
-   end
-   assert(prereleaseWithSign or buildWithSign, ("The parameter %q must begin with + or - to denote a prerelease or a build"):format(str))
-   return prereleaseWithSign, buildWithSign
-end
-
-local function parsePrerelease(prereleaseWithSign)
-   if prereleaseWithSign then
-	  local prerelease = prereleaseWithSign:match("^-(%w[%.%w-]*)$")
-	  assert(prerelease, ("The prerelease %q is not a slash followed by alphanumerics, dots and slashes"):format(prereleaseWithSign))
-	  return prerelease
-   end
-end
-
-local function parseBuild(buildWithSign)
-   if buildWithSign then
-	  local build = buildWithSign:match("^%+(%w[%.%w-]*)$")
-	  assert(build, ("The build %q is not a + sign followed by alphanumerics, dots and slashes"):format(buildWithSign))
-	  return build
-   end
-end
-
-local function parsePrereleaseAndBuild(str)
-   if not present(str) then return nil, nil end
-
-   local prereleaseWithSign, buildWithSign = parsePrereleaseAndBuildWithSign(str)
-
-   local prerelease = parsePrerelease(prereleaseWithSign)
-   local build = parseBuild(buildWithSign)
-
-   return prerelease, build
-end
-
-local function parseVersion(str)
-   local sMajor, sMinor, sPatch, sPrereleaseAndBuild = str:match("^(%d+)%.?(%d*)%.?(%d*)(.-)$")
-   assert(type(sMajor) == 'string', ("Could not extract version number(s) from %q"):format(str))
-   local major, minor, patch = tonumber(sMajor), tonumber(sMinor), tonumber(sPatch)
-   local prerelease, build = parsePrereleaseAndBuild(sPrereleaseAndBuild)
-   return major, minor, patch, prerelease, build
-end
-
-
--- return 0 if a == b, -1 if a < b, and 1 if a > b
-local function compare(a,b)
-   return a == b and 0 or a < b and -1 or 1
-end
-
-local function compareIds(myId, otherId)
-   if myId == otherId then return  0
-   elseif not myId    then return -1
-   elseif not otherId then return  1
-   end
-
-   local selfNumber, otherNumber = tonumber(myId), tonumber(otherId)
-
-   if selfNumber and otherNumber then -- numerical comparison
-	  return compare(selfNumber, otherNumber)
-	  -- numericals are always smaller than alphanums
-   elseif selfNumber then
-	  return -1
-   elseif otherNumber then
-	  return 1
-   else
-	  return compare(myId, otherId) -- alphanumerical comparison
-   end
-end
-
-local function smallerIdList(myIds, otherIds)
-   local myLength = #myIds
-   local comparison
-
-   for i=1, myLength do
-	  comparison = compareIds(myIds[i], otherIds[i])
-	  if comparison ~= 0 then
-		 return comparison == -1
-	  end
-	  -- if comparison == 0, continue loop
-   end
-
-   return myLength < #otherIds
-end
-
-local function smallerPrerelease(mine, other)
-   if mine == other or not mine then return false
-   elseif not other then return true
-   end
-
-   return smallerIdList(splitByDot(mine), splitByDot(other))
-end
-
-local methods = {}
-
-function methods:nextMajor()
-   return semver(self.major + 1, 0, 0)
-end
-function methods:nextMinor()
-   return semver(self.major, self.minor + 1, 0)
-end
-function methods:nextPatch()
-   return semver(self.major, self.minor, self.patch + 1)
-end
-
-local mt = { __index = methods }
-function mt:__eq(other)
-   return self.major == other.major and
-	  self.minor == other.minor and
-	  self.patch == other.patch and
-	  self.prerelease == other.prerelease
-   -- notice that build is ignored for precedence in semver 2.0.0
-end
-function mt:__lt(other)
-   if self.major ~= other.major then return self.major < other.major end
-   if self.minor ~= other.minor then return self.minor < other.minor end
-   if self.patch ~= other.patch then return self.patch < other.patch end
-   return smallerPrerelease(self.prerelease, other.prerelease)
-   -- notice that build is ignored for precedence in semver 2.0.0
-end
--- This works like the "pessimisstic operator" in Rubygems.
--- if a and b are versions, a ^ b means "b is backwards-compatible with a"
--- in other words, "it's safe to upgrade from a to b"
-function mt:__pow(other)
-   if self.major == 0 then
-	  return self == other
-   end
-   return self.major == other.major and
-	  self.minor <= other.minor
-end
-
-local function new(major, minor, patch, prerelease, build)
-   assert(major, "At least one parameter is needed")
-   local result = { }
-   if type(major) == 'string' then
-	  result.original = major
-	  major,minor,patch,prerelease,build = parseVersion(major)
-   end
-   patch = patch or 0
-   minor = minor or 0
-
-   checkPositiveInteger(major, "major")
-   checkPositiveInteger(minor, "minor")
-   checkPositiveInteger(patch, "patch")
-
-   result.major = major
-   result.minor = minor
-   result.patch = patch
-   result.prerelease = prerelease
-   result.build = build
-   return setmetatable(result, mt)
-end
-
-setmetatable(semver, { __call = function(_, ...) return new(...) end })
-semver._VERSION= semver(semver._VERSION)
-
-return semver
-local machine = {}
-machine.__index = machine
-
-local NONE = "none"
-local ASYNC = "async"
-
-local function call_handler(handler, params)
-  if handler then
-    return handler(unpack(params))
-  end
-end
-
-local function create_transition(name)
-  local can, to, from, params
-
-  local function transition(self, ...)
-    if self.asyncState == NONE then
-      can, to = self:can(name)
-      from = self.current
-      params = { self, name, from, to, ...}
-
-      if not can then return false end
-      self.currentTransitioningEvent = name
-
-      local beforeReturn = call_handler(self["onbefore" .. name], params)
-      local leaveReturn = call_handler(self["onleave" .. from], params)
-
-      if beforeReturn == false or leaveReturn == false then
-        return false
-      end
-
-      self.asyncState = name .. "WaitingOnLeave"
-
-      if leaveReturn ~= ASYNC then
-        transition(self, ...)
-      end
-      
-      return true
-    elseif self.asyncState == name .. "WaitingOnLeave" then
-      self.current = to
-
-      local enterReturn = call_handler(self["onenter" .. to] or self["on" .. to], params)
-
-      self.asyncState = name .. "WaitingOnEnter"
-
-      if enterReturn ~= ASYNC then
-        transition(self, ...)
-      end
-      
-      return true
-    elseif self.asyncState == name .. "WaitingOnEnter" then
-      call_handler(self["onafter" .. name] or self["on" .. name], params)
-      call_handler(self["onstatechange"], params)
-      self.asyncState = NONE
-      self.currentTransitioningEvent = nil
-      return true
-    else
-    	if string.find(self.asyncState, "WaitingOnLeave") or string.find(self.asyncState, "WaitingOnEnter") then
-    		self.asyncState = NONE
-    		transition(self, ...)
-    		return true
-    	end
-    end
-
-    self.currentTransitioningEvent = nil
-    return false
-  end
-
-  return transition
-end
-
-local function add_to_map(map, event)
-  if type(event.from) == 'string' then
-    map[event.from] = event.to
-  else
-    for _, from in ipairs(event.from) do
-      map[from] = event.to
-    end
-  end
-end
-
-function machine.create(options)
-  assert(options.events)
-
-  local fsm = {}
-  setmetatable(fsm, machine)
-
-  fsm.options = options
-  fsm.current = options.initial or 'none'
-  fsm.asyncState = NONE
-  fsm.events = {}
-
-  for _, event in ipairs(options.events or {}) do
-    local name = event.name
-    fsm[name] = fsm[name] or create_transition(name)
-    fsm.events[name] = fsm.events[name] or { map = {} }
-    add_to_map(fsm.events[name].map, event)
-  end
-  
-  for name, callback in pairs(options.callbacks or {}) do
-    fsm[name] = callback
-  end
-
-  return fsm
-end
-
-function machine:is(state)
-  return self.current == state
-end
-
-function machine:can(e)
-  local event = self.events[e]
-  local to = event and event.map[self.current] or event.map['*']
-  return to ~= nil, to
-end
-
-function machine:cannot(e)
-  return not self:can(e)
-end
-
-function machine:todot(filename)
-  local dotfile = io.open(filename,'w')
-  dotfile:write('digraph {\n')
-  local transition = function(event,from,to)
-    dotfile:write(string.format('%s -> %s [label=%s];\n',from,to,event))
-  end
-  for _, event in pairs(self.options.events) do
-    if type(event.from) == 'table' then
-      for _, from in ipairs(event.from) do
-        transition(event.name,from,event.to)
-      end
-    else
-      transition(event.name,event.from,event.to)
-    end
-  end
-  dotfile:write('}\n')
-  dotfile:close()
-end
-
-function machine:transition(event)
-  if self.currentTransitioningEvent == event then
-    return self[self.currentTransitioningEvent](self)
-  end
-end
-
-function machine:cancelTransition(event)
-  if self.currentTransitioningEvent == event then
-    self.asyncState = NONE
-    self.currentTransitioningEvent = nil
-  end
-end
-
-machine.NONE = NONE
-machine.ASYNC = ASYNC
-
-return machine
--- This file is part of Zenroom (https://zenroom.dyne.org)
---
--- Copyright (C) 2018-2019 Dyne.org foundation
--- designed, written and maintained by Denis Roio <jaromil@dyne.org>
---
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU Affero General Public License as
--- published by the Free Software Foundation, either version 3 of the
--- License, or (at your option) any later version.
---
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU Affero General Public License for more details.
---
--- You should have received a copy of the GNU Affero General Public License
--- along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
---- <h1>Zencode language parser</h1>
---
--- Zencode is a <a
--- href="https://en.wikipedia.org/wiki/Domain-specific_language">Domain
--- Specific Language (DSL)</a> made to be understood by humans and
--- inspired by <a
--- href="https://en.wikipedia.org/wiki/Behavior-driven_development">Behavior
--- Driven Development (BDD)</a> and <a
--- href="https://en.wikipedia.org/wiki/Domain-driven_design">Domain
--- Driven Design (DDD)</a>.
---
--- The Zenroom VM is capable of parsing specific scenarios written in
--- Zencode and execute high-level cryptographic operations described
--- in them; this is to facilitate the integration of complex
--- operations in software and the non-literate understanding of what a
--- distributed application does. A generic Zencode looks like this:
---
--- <code>
--- Given that I am known as 'Alice'
---
--- When I create my new keypair
---
--- Then print my data
--- </code>
---
--- This section doesn't provide the documentation on how to write
--- Zencode, but illustrates the internals on how the Zencode parser is
--- made and how it integrates with the Zenroom memory model. It serves
--- as a reference documentation on functions used to write parsers for
--- new Zencode scenarios in Zenroom's Lua.
---
---  @module ZEN
---  @author Denis "Jaromil" Roio
---  @license AGPLv3
---  @copyright Dyne.org foundation 2018-2019
-
-
-local zencode = {
-   given_steps = {},
-   when_steps = {},
-   then_steps = {},
-   current_step = nil,
-   id = 0,
-   matches = {},
-   verbosity = 0,
-   schemas = { },
-   scenario = nil;
-   OK = true -- set false by asserts
-}
-
-zencode.machine = MACHINE.create({
-	  initial = 'feature',
-	  events = {
-		 { name = 'enter_rule',     from = { 'feature', 'rule' }, to = 'rule' },
-		 { name = 'enter_scenario', from = { 'feature', 'rule' }, to = 'scenario' },
-		 { name = 'enter_given',    from =   'scenario',          to = 'given' },
-		 { name = 'enter_when',     from =   'given',             to = 'when' },
-		 { name = 'enter_then',     from = { 'given', 'when' },   to = 'then' },
-		 { name = 'enter_and',      from =   'given',             to = 'given' },
-		 { name = 'enter_and',      from =   'when',              to = 'when' },
-		 { name = 'enter_and',      from =   'then',              to = 'then' }
-	  }
-})
-
--- Zencode HEAP globals
-IN = { }         -- Given processing, import global DATA from json
-IN.KEYS = { }    -- Given processing, import global KEYS from json
-TMP = TMP or { } -- Given processing, temp buffer for ack*->validate->push*
-ACK = ACK or { } -- When processing,  destination for push*
-OUT = OUT or { } -- print out
-AST = AST or { } -- AST of parsed Zencode
-
--- Zencode init traceback
-_G['ZEN_traceback'] = "Zencode traceback:\n"
-
---- Given block (IN read-only memory)
--- @section Given
-
----
--- Declare 'my own' name that will refer all uses of the 'my' pronoun
--- to structures contained under this name.
---
--- @function ZEN:Iam(name)
--- @param name own name to be saved in ACK.whoami
-function zencode:Iam(name)
-   if name then
-	  ZEN.assert(not ACK.whoami, "Identity already defined in ACK.whoami")
-	  ZEN.assert(type(name) == "string", "Own name not a string")
-	  ACK.whoami = name
-   else
-	  ZEN.assert(ACK.whoami, "No identity specified in ACK.whoami")
-   end
-   assert(ZEN.OK)
-end
-
--- local function used inside ZEN:pick*
--- try obj.*.what (TODO: exclude KEYS and ACK.whoami)
-local function inside_pick(obj, what)
-   ZEN.assert(obj, "ZEN:pick object is nil")
-   ZEN.assert(type(obj) == "table", "ZEN:pick object is not a table")
-   ZEN.assert(type(what) == "string", "ZEN:pick object index is not a string")
-   local got = obj[what]
-   if got then
-	  -- ZEN:ftrace("inside_pick found "..what.." at object root")
-	  goto gotit
-   end
-   for k,v in pairs(obj) do -- search 1 deeper
-      if type(v) == "table" and v[what] then
-         got = v[what]
-         -- ZEN:ftrace("inside_pick found "..k.."."..what)
-         break
-      end
-   end
-   ::gotit::
-   return got
-end
-
----
--- Pick a generic data structure from the <b>IN</b> memory
--- space. Looks for named data on the first and second level and makes
--- it ready for @{validate} or @{ack}.
---
--- @function ZEN:pick(name, data)
--- @param name string descriptor of the data object
--- @param data[opt] optional data object (default search inside IN.*)
--- @return true or false
-function zencode:pick(what, obj)
-   if obj then -- object provided by argument
-	  TMP = { data = obj,
-			  root = nil,
-			  schema = what }
-	  return(ZEN.OK)
-   end
-   local got
-   got = inside_pick(IN.KEYS, what) or inside_pick(IN,what)
-   ZEN.assert(got, "Cannot find "..what.." anywhere")
-   TMP = { root = nil,
-		   data = got,
-		   schema = what }
-   assert(ZEN.OK)
-   ZEN:ftrace("pick found "..what)
-end
-
----
--- Pick a data structure named 'what' contained under a 'section' key
--- of the at the root of the <b>IN</b> memory space. Looks for named
--- data at the first and second level underneath IN[section] and moves
--- it to TMP[what][section], ready for @{validate} or @{ack}. If
--- TMP[what] exists already, every new entry is added as a key/value
---
--- @function ZEN:pickin(section, name)
--- @param section string descriptor of the section containing the data
--- @param name string descriptor of the data object
--- @return true or false
-function zencode:pickin(section, what)
-   ZEN.assert(section, "No section specified")
-   local root -- section
-   local got  -- what
-   root = inside_pick(IN.KEYS,section) or inside_pick(IN, section)
-   ZEN.assert(root, "Cannot find "..section.." anywhere")
-   got = inside_pick(root, what)
-   ZEN.assert(got, "Cannot find "..what.." inside "..section)   
-   -- TODO: check all corner cases to make sure TMP[what] is a k/v map
-   TMP = { root = section,
-		   data = got,
-		   schema = what }
-   assert(ZEN.OK)
-   ZEN:ftrace("pickin found "..what.." in "..section)
-end
-
----
--- Optional step inside the <b>Given</b> block to execute schema
--- validation on the last data structure selected by @{pick}.
---
--- @function ZEN:validate(name)
--- @param name string descriptor of the data object
--- @param schema[opt] string descriptor of the schema to validate
--- @return true or false
-function zencode:validate(name, schema)
-   schema = schema or TMP.schema or name -- if no schema then coincides with name
-   ZEN.assert(name, "ZEN:validate error: argument is nil")
-   ZEN.assert(TMP, "ZEN:validate error: TMP is nil")
-   -- ZEN.assert(TMP.schema, "ZEN:validate error: TMP.schema is nil")
-   -- ZEN.assert(TMP.schema == name, "ZEN:validate() TMP does not contain "..name)
-   local got = TMP.data -- inside_pick(TMP,name)
-   ZEN.assert(TMP.data, "ZEN:validate error: data not found in TMP for schema "..name)
-   local s = ZEN.schemas[schema]
-   ZEN.assert(s, "ZEN:validate error: "..schema.." schema not found")
-   ZEN.assert(type(s) == 'function', "ZEN:validate error: schema is not a function for "..schema)
-   ZEN:ftrace("validate "..name.. " with schema "..schema)
-   local res = s(TMP.data) -- ignore root
-   ZEN.assert(res, "ZEN:validate error: validation failed for "..name.." with schema "..schema)
-   TMP.valid = res -- overwrite
-   assert(ZEN.OK)
-   ZEN:ftrace("validation passed for "..name.. " with schema "..schema)
-end
-
-function zencode:validate_recur(obj, name)
-   ZEN.assert(name, "ZEN:validate_recur error: schema name is nil")
-   ZEN.assert(obj, "ZEN:validate_recur error: object is nil")
-   local s = ZEN.schemas[name]
-   ZEN.assert(s, "ZEN:validate_recur error: schema not found: "..name)
-   ZEN.assert(type(s) == 'function', "ZEN:validate_recur error: schema is not a function: "..name)
-   ZEN:ftrace("validate_recur "..name)
-   local res = s(obj)
-   ZEN.assert(res, "Schema validation failed: "..name)
-   return(res)
-end
-
----
--- Final step inside the <b>Given</b> block towards the <b>When</b>:
--- pass on a data structure into the ACK memory space, ready for
--- processing.  It requires the data to be present in TMP[name] and
--- typically follows a @{pick}. In some cases it is used inside a
--- <b>When</b> block following the inline insertion of data from
--- zencode.
---
--- @function ZEN:ack(name)
--- @param name string key of the data object in TMP[name]
-function zencode:ack(name)
-   local obj = TMP.valid
-   ZEN.assert(obj, "No valid object found: ".. name)
-   assert(ZEN.OK)
-   local t
-   if not ACK[name] then -- assign in ACK the single object
-	  ACK[name] = obj
-	  goto done
-   end
-   -- ACK[name] already holds an object
-   t = type(ACK[name])
-   -- not a table?
-   if t ~= 'table' then -- convert single object to array
-	  ACK[name] = { ACK[name] }
-	  table.insert(ACK[name], obj)
-	  goto done
-   end
-   -- it is a table already
-   if isarray(ACK[name]) then -- plain array
-	  table.insert(ACK[name], obj)
-	  goto done
-   else -- associative map
-	  table.insert(ACK[name], obj) -- TODO:
-	  goto done
-   end
-   ::done::
-   assert(ZEN.OK)
-end
-
-function zencode:ackmy(name, object)
-   local obj = object or TMP[name]
-   ZEN:trace("f   pushmy() "..name.." "..type(obj))
-   ZEN.assert(ACK.whoami, "No identity specified")
-   ZEN.assert(obj, "Object not found: ".. name)
-   local me = ACK.whoami
-   if not ACK[me] then ACK[me] = { } end
-   ACK[me][name] = obj
-   if not object then tmp[name] = nil end
-   assert(ZEN.OK)
-end
-
---- When block (ACK read-write memory)
--- @section When
-
----
--- Draft a new text made of a simple string: convert it to @{OCTET}
--- and append it to ACK.draft.
---
--- @function ZEN:draft(string)
--- @param string any string to be appended as draft
-function zencode:draft(s)
-   if s then
-	  ZEN.assert(type(s) == "string", "Provided draft is not a string")
-	  if not ACK.draft then
-		 ACK.draft = str(s)
-	  else
-		 ACK.draft = ACK.draft .. str(s)
-	  end
-   else -- no arg: sanity checks
-	  ZEN.assert(ACK.draft, "No draft found in ACK.draft")
-   end
-   assert(ZEN.OK)
-end
-
-
----
--- Compare equality of two data objects (TODO)
--- @function ZEN:eq(first, second)
-
----
--- Check that the first object is greater than the second (TODO)
--- @function ZEN:gt(first, second)
-
----
--- Check that the first object is lesser than the second (TODO)
--- @function ZEN:lt(first, second)
-
-
---- Then block (OUT write-only memory)
--- @section Then
-
----
--- Move a generic data structure from ACK to OUT memory space, ready
--- for its final JSON encoding and print out.
--- @function ZEN:out(name)
-
----
--- Move 'my own' data structure from ACK to OUT.whoami memory space,
--- ready for its final JSON encoding and print out.
--- @function ZEN:outmy(name)
-
----
--- Convert a generic data element to the desired format (argument name
--- provided as string), or use CONF.encoding when called without
--- argument
---
--- @function ZEN:convert(object, format)
--- @param object data element to be converted
--- @param format pointer to a converter function
--- @return object converted to format
-function zencode:convert(object, format)
-   local fun = format or CONF.encoding
-   if format == "string" then
-	  fun = str -- from zenroom_octet.lua
-   end
-   ZEN.assert(fun, "Conversion format not found")
-   ZEN.assert(type(fun) == "function",
-			  "Conversion format is not a function: "..type(fun))
-   return fun(object)
-end
-
-
-
----------------------------------------------------------------
--- ZENCODE PARSER
-
-function zencode:begin(verbosity)
-   if verbosity > 0 then
-      xxx(2,"Zencode debug verbosity: "..verbosity)
-      self.verbosity = verbosity
-   end
-   self.current_step = self.given_steps
-   return true
-end
-
-function zencode:iscomment(b)
-   local x = string.char(b:byte(1))
-   if x == '#' then
-	  return true
-   else return false
-end end
-function zencode:isempty(b)
-   if b == nil or b == '' then
-	   return true
-   else return false
-end end
-function zencode:step(text)
-   if ZEN:isempty(text) then return true end
-   if ZEN:iscomment(text) then return true end
-   -- max length for single zencode line is #define MAX_LINE
-   -- hard-coded inside zenroom.h
-   local prefix = parse_prefix(text)
-   local defs -- parse in what phase are we
-   ZEN.OK = true
-   if prefix == 'given' then
-	  ZEN.assert(ZEN.machine:enter_given(), text.."\n    "..
-					"Invalid transition from "
-					..ZEN.machine.current.." to Given block")
-      self.current_step = self.given_steps
-      defs = self.current_step
-   elseif prefix == 'when'  then
-	  ZEN.assert(ZEN.machine:enter_when(), text.."\n    "..
-					"Invalid transition from "
-					..ZEN.machine.current.."to When block")
-      self.current_step = self.when_steps
-      defs = self.current_step
-   elseif prefix == 'then'  then
-	  ZEN.assert(ZEN.machine:enter_then(), text.."\n    "..
-					"Invalid transition from "
-					..ZEN.machine.current.." to Then block")
-      self.current_step = self.then_steps
-      defs = self.current_step
-   elseif prefix == 'and'   then
-	  ZEN.assert(ZEN.machine:enter_and(), text.."\n    "..
-					"Invalid transition from "
-					..ZEN.machine.current.." to And block")
-      defs = self.current_step
-   elseif prefix == 'scenario' then
-	  ZEN.assert(ZEN.machine:enter_scenario(), text.."\n    "..
-					"Invalid transition from "
-					..ZEN.machine.current.." to Scenario block")
-      self.current_step = self.given_steps
-      defs = self.current_step
-	  ZEN.scenario = string.match(text, "'(.-)'")
-	  if ZEN.scenario ~= "" then
-		 require("zencode_"..ZEN.scenario)
-		 ZEN:trace("|   Scenario "..ZEN.scenario)
-	  end
-   elseif prefix == 'rule' then
-	  ZEN.assert(ZEN.machine:enter_rule(), text.."\n    "..
-					"Invalid transition from "
-					..ZEN.machine.current.." to Rule block")
-	  -- TODO: rule to set version of zencode
-   else -- defs = nil end
-	    -- if not defs then
-		 ZEN.assert("Zencode invalid: "..text)
-   end
-   if not ZEN.OK then
-	  print(ZEN_traceback)
-	  assert(ZEN.OK)
-   end
-
-   -- TODO: optimize and write a faster function in C
-   -- support simplified notation for arg match
-   local tt = string.gsub(text,"'(.-)'","''")
-   tt = string.gsub(tt:lower(),"when " ,"", 1)
-   tt = string.gsub(tt,"then " ,"", 1)
-   tt = string.gsub(tt,"given ","", 1)
-   tt = string.gsub(tt,"and "  ,"", 1)
-   tt = string.gsub(tt,"that "  ,"", 1)
-
-   for pattern,func in pairs(defs) do
-      if (type(func) ~= "function") then
-         error("Zencode function missing: "..pattern)
-         return false
-      end
-	  if strcasecmp(tt,pattern) then
-		 local args = {} -- handle multiple arguments in same string
-		 for arg in string.gmatch(text,"'(.-)'") do
-			-- xxx(2,"+arg: "..arg)
-			arg = string.gsub(arg, ' ', '_')
-			table.insert(args,arg)
-		 end
-		 self.id = self.id + 1
-		 table.insert(self.matches,
-					  { id = self.id,
-						args = args,
-						source = text,
-						-- prefix = prefix,
-						-- regexp = pattern,
-						hook = func       })
-		 -- this is parsing, not execution: tracing isn't useful
-		 -- _G['ZEN_traceback'] = _G['ZEN_traceback']..
-		 -- "-> "..text:gsub("^%s*", "").." ("..#args.." args)\n"
-	  end
-   end
-end
-
-
--- returns an iterator for newline termination
-function zencode:newline_iter(text)
-   s = trim(text) -- implemented in zen_io.c
-   if s:sub(-1)~="\n" then s=s.."\n" end
-   return s:gmatch("(.-)\n") -- iterators return functions
-end
-
-function zencode:parse(text)
-   if  #text < 9 then -- strlen("and debug") == 9
-   	  warn("Zencode text too short to parse")
-   	  return false end
-   for line in self:newline_iter(text) do
-	  self:step(line)
-   end
-end
-
-function zencode:trace(src)
-   -- take current line of zencode
-   _G['ZEN_traceback'] = _G['ZEN_traceback']..
-	  trim(src).."\n"
-	  -- "    -> ".. src:gsub("^%s*", "") .."\n"
-   -- act(src) TODO: print also debug when verbosity is high
-end
-
--- trace function execution also on success
-function zencode:ftrace(src)
-   -- take current line of zencode
-   _G['ZEN_traceback'] = _G['ZEN_traceback']..
-	  "f   ZEN:"..trim(src).."\n"
-   -- "    -> ".. src:gsub("^%s*", "") .."\n"
-   -- act(src) TODO: print also debug when verbosity is high
-end
-
-function zencode:run()
-   -- xxx(2,"Zencode MATCHES:")
-   -- xxx(2,self.matches)
-   for i,x in sort_ipairs(self.matches) do
-	  IN = { } -- import global DATA from json
-	  if DATA then
-		 -- if plain array conjoin into associative
-		 local _in = JSON.decode(DATA)
-		 if _in and isarray(_in) then -- conjoin array
-			for i,c in ipairs(_in) do
-			   for k,v in pairs(c) do IN[k] = v end
-			end
-		 else IN = _in or { } end
-	  end
-	  IN.KEYS = { } -- import global KEYS from json
-	  if KEYS then IN.KEYS = JSON.decode(KEYS) end
-	  ZEN:trace("->  "..trim(x.source))
-	  ZEN.OK = true
-      local ok, err = pcall(x.hook,table.unpack(x.args))
-      if not ok or not ZEN.OK then
-	  	 if err then ZEN:trace("[!] "..err) end
-		 fatal(x.source) -- traceback print inside
-	  end
-   end
-   ZEN:trace("--- Zencode execution completed")
-   if type(OUT) == 'table' then
-	  ZEN:trace("<<< Encoding { OUT } to \"JSON\"")
-	  print(JSON.encode(OUT))
-	  ZEN:trace(">>> Encoding successful")
-   end
-end
-
-function zencode.debug()
-   -- TODO: print to stderr
-   print(ZEN_traceback)
-   I.print({ HEAP = { IN = IN,
-					  TMP = TMP,
-					  ACK = ACK,
-					  OUT = OUT }})
-end
-
-function zencode.debug_json()
-   write(JSON.encode({ TRACE = ZEN_traceback,
-                       HEAP = { IN = IN,
-                                TMP = TMP,
-                                ACK = ACK,
-                                OUT = OUT }}))
-end
-
-function zencode.assert(condition, errmsg)
-   if condition then return true end
-   -- ZEN.debug() -- prints all data in memory
-   ZEN:trace("ERR "..errmsg)
-   ZEN.OK = false
-   error(errmsg, 3)
-   -- print ''
-   -- error(errmsg) -- prints zencode backtrace
-   -- print ''
-   -- assert(false, "Execution aborted.")
-end
-
-_G["Given"] = function(text, fn)
-   zencode.given_steps[text] = fn
-end
-_G["When"] = function(text, fn)
-   zencode.when_steps[text] = fn
-end
-_G["Then"] = function(text, fn)
-   zencode.then_steps[text] = fn
-end
-
-return zencode
 -- This file is part of Zenroom (https://zenroom.dyne.org)
 --
 -- Copyright (C) 2018-2019 Dyne.org foundation
@@ -2255,152 +1096,234 @@ end)
 -- You should have received a copy of the GNU Affero General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+-- init script embedded at compile time.  executed in
+-- zen_load_extensions(L) usually after zen_init()
 
-
---- Zencode data internals
-
--- the main security concern in this Zencode module is that no data
--- passes without validation from IN to ACK or from inline input.
-
--- GIVEN
-
-Given("I introduce myself as ''", function(name) ZEN:Iam(name) end)
-Given("I am known as ''", function(name) ZEN:Iam(name) end)
-Given("I am ''", function(name) ZEN:Iam(name) end)
-
-local have_a = function(name)
-   ZEN:pick(name)
-   ZEN:validate(name)
-   ZEN:ack(name)
-   TMP = nil -- TODO: wipe
+-- -- remap fatal and error
+function fatal(msg)
+	  if type(msg) == "string" then warn(trim(msg),2) end
+	  debug.traceback()
+--	  if ZEN_traceback ~= "" then ZEN:debug() end
+	  ZEN:debug()
+	  msg = msg or "fatal error"
+	  error(msg,2)
 end
-Given("I have a valid ''", have_a)
-Given("I have a ''", have_a)
 
-local have_my = function(name)
-   ZEN:pickin(ACK.whoami, name)
-   ZEN:validate(name)
-   ZEN:ack(name)
-   TMP = nil
+-- error = zen_error -- from zen_io
+
+-- ZEN = { assert = assert } -- zencode shim when not loaded
+require('zenroom_common')
+INSIDE = require('inspect')
+OCTET  = require('zenroom_octet')
+JSON   = require('zenroom_json')
+ECDH   = require('zenroom_ecdh')
+BIG    = require('zenroom_big')
+HASH   = require('zenroom_hash')
+MACHINE = require('statemachine')
+
+O   = OCTET  -- alias
+INT = BIG    -- alias
+H   = HASH   -- alias
+I   = INSIDE -- alias
+V   = require('semver')
+VERSION = V(VERSION)
+
+ZEN = require('zencode')
+
+-- import/export schema helpers
+require('zencode_schemas')
+-- base data functions
+require('zencode_data')
+
+-- scenarios can only implement "When ..." steps
+_G["Given"] = nil
+_G["Then"]  = nil
+
+-----------
+-- defaults
+_G["CONF"] = {
+   -- encoding base64url (RFC4648) is the fastest and most portable in zenroom
+   encoding = url64,
+   encoding_prefix = 'u64',
+   -- goldilocks is our favorite ECDH/DSA curve
+   curve = 'goldilocks',
+   verbosity = 1
+}
+-- This file is part of Zenroom (https://zenroom.dyne.org)
+--
+-- Copyright (C) 2018-2019 Dyne.org foundation
+-- designed, written and maintained by Denis Roio <jaromil@dyne.org>
+--
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU Affero General Public License as
+-- published by the Free Software Foundation, either version 3 of the
+-- License, or (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU Affero General Public License for more details.
+--
+-- You should have received a copy of the GNU Affero General Public License
+-- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+local octet = require'octet'
+
+--- implicit convertion functions going both ways
+-- if input is an encoded string, will become an octet
+-- if input is a non-encoded string, it will become a base64 string
+-- if input is an octet, will become an encoded string
+function hex(data)
+   local t = type(data)
+   if(t == "string") then
+	  if O.is_hex(data) then return O.from_hex(data)
+	  else return O.from_str(data):hex() end
+   elseif(t == "number") then return data
+   elseif(t == "table") then return data
+   elseif(t == "zenroom.octet") then return data:hex()
+   elseif iszen(t) then return data:octet():hex() -- any zenroom type to octet
+   end
 end
-Given("I have my valid ''", have_my)
-Given("I have my ''", have_my)
-
-local have_in_a = function(s, n)
-   ZEN:pickin(s, n)
-   ZEN:validate(n)
-   ZEN:ack(n)
-   ZEN:ack(s) -- save it also in ACK.section
-   TMP = nil
+function str(data)
+   if    (type(data) == "string")        then return octet.from_string(data)
+   elseif(type(data) == "zenroom.octet") then return data:string()
+   end
 end
-Given("I have inside '' a valid ''", have_in_a)
-Given("I have inside '' a ''", have_in_a)
--- inverse order of args
-local have_a_in = function(n, s)
-   ZEN:pickin(s, n)
-   ZEN:validate(n)
-   ZEN:ack(n)
-   ZEN:ack(s) -- save it also in ACK.section
-   TMP = nil
+function bin(data)
+   local t = type(data)
+   if(t == "string") then
+	  if O.is_bin(data) then return O.from_bin(data)
+	  else return O.from_str(data):bin() end
+   elseif(t == "number") then return data
+   elseif(t == "table") then return data
+   elseif(t == "zenroom.octet") then return data:bin()
+   elseif iszen(t) then return data:octet():bin() -- any zenroom type to octet
+   end
 end
-Given("I have a valid '' inside ''", have_a_in)
-Given("I have a valid '' in ''",     have_a_in)
-Given("I have a valid '' from ''",   have_a_in)
-Given("I have a '' inside ''",       have_a_in)
-Given("I have a '' in ''",           have_a_in)
-Given("I have a '' from ''",         have_a_in)
-
-
-Given("I set '' to ''", function(k,v)
-		 ZEN.assert(not TMP[k], "Cannot overwrite TMP["..k.."]")
-		 TMP[k] = ZEN:convert(v)
-end)
-
--- this enforces identity of schema with key name
-Given("the '' is valid", function(k)
-		 ZEN:validate(k)
-		 ZEN:ack(k)
-		 TMP = nil
-end)
-
---- WHEN
-
-When("I draft the string ''", function(s) ZEN:draft(s) end)
-
--- TODO:
-When("I set '' as '' with ''", function(dest, format, content) end)
-When("I append '' as '' to ''", function(content, format, dest) end)
-When("I write '' as '' in ''", function(content, dest) end)
--- implicit conversion as string
-When("I set '' to ''", function(dest, content) end)
-When("I append '' to ''", function(content, dest) end)
-When("I write '' in ''", function(content, dest)
-		ZEN:pick(dest, content)
-		ZEN:validate(dest, 'str')
-		ZEN:ack(dest)
-		TMP = nil
-end)
-
---- THEN
-
-Then("print '' ''", function(k,v)
-		OUT[k] = v
-end)
-
-Then("print all data", function()
-		OUT = ACK
-		OUT.whoami = nil
-end)
-Then("print my data", function()
-		ZEN:Iam() -- sanity checks
-		OUT[ACK.whoami] = ACK
-		OUT[ACK.whoami].whoami = nil
-end)
-Then("print my ''", function(obj)
-		ZEN:Iam()
-		ZEN.assert(ACK[obj], "Data not found in ACK: "..obj)
-		if not OUT[ACK.whoami] then OUT[ACK.whoami] = { } end
-		OUT[ACK.whoami][obj] = ACK[obj]
-end)
-Then("print my draft", function()
-		ZEN:draft() -- sanity checks
-		OUT[ACK.whoami] = { draft = ACK.draft:string() }
-end)
-
-function _print_my_draft_as(conv)
-   ZEN:draft()
-   OUT[ACK.whoami] = { draft = ZEN:convert(ACK.draft, conv) }
+function base64(data)
+   local t = type(data)
+   if(t == "string") then
+	  if O.is_base64(data) then return O.from_base64(data)
+	  else return O.from_str(data):base64() end
+   elseif(t == "number") then return data
+   elseif(t == "table") then return data
+   elseif(t == "zenroom.octet") then return data:base64()
+   elseif iszen(t) then return data:octet():base64() -- any zenroom type to octet
+   end
 end
-Then("print as '' my draft", _print_mydraft_as)
-Then("print my draft as ''", _print_mydraft_as)
+function url64(data)
+   local t = type(data)
+   if(t == "string") then
+	  if O.is_url64(data) then return O.from_url64(data)
+	  else return O.from_str(data):url64() end
+   elseif(t == "number") then return data
+   elseif(t == "table") then return data
+   elseif(t == "zenroom.octet") then return data:url64()
+   elseif iszen(t) then return data:octet():url64() -- any zenroom type to octet
+   end
+end
+function base58(data)
+   local t = type(data)
+   if(t == "string") then
+	  if O.is_base58(data) then return O.from_base58(data)
+	  else return O.from_str(data):base58() end
+   elseif(t == "zenroom.octet") then return data:base58()
+   elseif iszen(t) then return data:octet():base58() -- any zenroom type to octet
+   end
+end
 
-Then("print as '' my ''", function(conv,obj)
-		ZEN:draft()
-		OUT[ACK.whoami] = { draft = ZEN:convert(ACK[obj], conv) }
-end)
+-- serialize an array containing any type of cryptographic numbers
+octet.serialize = function(arr)
+   total = 0
+   map(arr, function(a) 
+		  t = type(a)
+		  -- supported lua native types
+		  if(t == "string") then total = total + #a return
+		  elseif not iszen(t) then
+			 error("OCTET.serialize: unsupported type: "..t)
+		  end
+		  if(t == "zenroom.octet") then
+			 total = total + #a
+		  elseif(t == "zenroom.big"
+					or
+					t == "zenroom.ecp"
+					or
+				 t == "zenroom.ecp2") then
+			 total = total + #a:octet()
+		  else
+			 error("OCTET.serialize: unsupported zenroom type: "..t)
+		  end
+   end)
+   concat = O.new(total)
+   map(arr,function(e)
+		  t = type(e)
+		  -- supported lua native types
+		  if(t == "string") then concat = concat .. str(e) return
+		  elseif not iszen(t) then
+			 error("OCTET.serialize: unsupported type: "..t)
+		  end
+		  if(t == "zenroom.octet") then
+			 concat = concat .. e
+		  elseif(t == "zenroom.big"
+				 or
+				 t == "zenroom.ecp"
+				 or
+				 t == "zenroom.ecp2") then
+			 concat = concat .. e:octet()
+		  else
+			 error("OCTET.serialize: unsupported zenroom type: "..t)
+		  end
+   end)
+   return concat
+end
 
-Then("print the ''", function(key)
-		OUT[key] = ACK[key]
-end)
-Then("print as '' the ''", function(conv, obj)
-		OUT[obj] = ZEN:convert(ACK[obj], conv)
-end)
-Then("print as '' the '' inside ''", function(conv, obj, section)
-		ZEN.assert(ACK[section][obj], "Not found "..obj.." inside "..section)
-		OUT[obj] = ZEN:convert(ACK[section][obj], conv)
-end)
+function zero(len)    return octet.new(len):zero(len) end
 
--- debug functions
-Given("debug", function() ZEN.debug() end)
-When("debug",  function() ZEN.debug() end)
-Then("debug",  function() ZEN.debug() end)
+return octet
+-- This file is part of Zenroom (https://zenroom.dyne.org)
+--
+-- Copyright (C) 2018-2019 Dyne.org foundation
+-- El-Gamal implementation by Alberto Sonnino and Denis Roio
+--
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU Affero General Public License as
+-- published by the Free Software Foundation, either version 3 of the
+-- License, or (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU Affero General Public License for more details.
+--
+-- You should have received a copy of the GNU Affero General Public License
+-- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
--- basic encoding schemas
-ZEN.add_schema({
-	  base64 = function(obj) return ZEN:convert(obj, OCTET.from_base64) end,
-	  url64  = function(obj) return ZEN:convert(obj, OCTET.from_url64)  end,
-	  str =    function(obj) return ZEN:convert(obj, OCTET.from_string) end
-})
+local elg = { _VERSION = 'crypto_elgamal.lua 1.0' }
+
+function elg.keygen()
+   local d = INT.modrand(ECP.order())
+   local gamma = d * ECP.generator()
+   return d, gamma
+end
+
+function elg.encrypt(gamma, m, h)
+   local k = INT.modrand(ECP.order())
+   local a = k * ECP.generator()
+   -- TODO: argument checking and explicit ECP conversion
+   -- if type(gamma) == "string" then
+   -- 	  g = ECP.new(gamma) -- explicit conversion to ECP
+   -- else g = gamma end -- other conversions are implicit
+   local b = gamma * k
+	  +
+	  h * m
+   return a, b, k
+end
+
+function elg.decrypt(d, a, b)
+   return b - a * d
+end
+
+return elg
 -- This file is part of Zenroom (https://zenroom.dyne.org)
 --
 -- Copyright (C) 2018-2019 Dyne.org foundation
@@ -2570,660 +1493,6 @@ end)
 -- You should have received a copy of the GNU Affero General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
--- Zencode implementation to encrypt and decrypt AES GCM messages
--- uses random IV and sha256 by default
-
-local order = ECP.order()
-local G = ECP.generator()
-local KDF_rounds = 10000
-local get = ZEN.get
-
-
-ZEN.add_schema(
-   {
-	  aes_gcm =
-		{ import = function(obj)
-			 return { checksum = get(O.from_hex, obj, 'checksum'),
-					  iv = get(O.from_hex, obj, 'iv'),
-					  text = get(O.from_hex, obj, 'text'), -- may be MSGpack
-					  encoding = obj.encoding,
-					  curve = obj.curve,
-					  pubkey = get(ECP.new, obj, 'pubkey') } end,
-		  export = function(obj,conv)
-			 return { checksum = conv(obj.checksum),
-					  iv = conv(obj.iv),
-					  text = conv(obj.text),
-					  encoding = obj.encoding,
-					  curve = obj.curve,
-					  pubkey = conv(obj.pubkey) } end,
-		},
-
-	 ecdh_keypair =
-		{ import = function(obj)
-			 return { private = get(INT.new, obj, 'private'),
-					  public = get(ECP.new, obj, 'public') } end,
-		  export = function(obj, conv)
-			 return map(obj, conv) end
-		},
-
-	 encryption_draft =
-		{ import = function(obj)
-			 return { from = get(O.from_string, obj, 'from'),
-					  text = get(O.from_string, obj, 'text'),
-					  data = get(O.from_hex, obj, 'data') }
-			 end,
-		  export = function(obj, conv)
-			 return { from = str(obj.from),
-					  text = str(obj.text),
-					  data = conv(obj.data) }
-			 end
-		}
-})
-
-Given("I have the public key by ''", function(who)
-		 if not ACK.keys then ACK.keys = { } end
-		 if IN.KEYS[who] then
-			ACK.keys[who] = get(ECP.new, IN.KEYS, who)
-		 elseif IN[who] then
-			ACK.keys[who] = get(ECP.new, IN, who)
-		 else
-			ZEN.assert(false, "Public key not found: "..who)
-		 end
-end)
-
-Given("I have my public key", function()
-         ZEN.assert(type(IN.KEYS[ACK.whoami]) == "table",
-					"Public key not found for: "..ACK.whoami)
-         ACK.pubkey = get(ECP.new, IN.KEYS[ACK.whoami], 'public')
-end)
-
-Given("I have my private key", function()
-         ZEN.assert(type(IN.KEYS[ACK.whoami]) == "table",
-					"Private key not found for: "..ACK.whoami)
-         ACK.privkey = get(O.from_hex, IN.KEYS[ACK.whoami], 'private')
-end)
-
-Given("I have my keypair", function()
-         ZEN.assert(type(IN.KEYS[ACK.whoami]) == "table",
-					"Keypair not found for: "..ACK.whoami)
-		 local kp = ZEN:valid('ecdh_keypair', IN.KEYS[ACK.whoami])
-         ACK.pubkey = kp.public
-         ACK.privkey = kp.private
-end)
-
-When("I create my new keypair", function()
-		ZEN.assert(ACK.whoami, "No identity specified for own keypair")
-		local key = INT.new(RNG.new(),order)
-		local kp = { public = key * G,
-					 private = key }
-		OUT[ACK.whoami] = export(kp, 'ecdh_keypair', hex)
-end)
-
-When("I export my public key", function()
-		ZEN.assert(ACK.whoami, "No identity specified")
-		OUT[ACK.whoami] = hex(ACK.pubkey)
-end)
-
-When("I export all keys", function()
-		OUT[ACK.whoami] = { }
-		if ACK.pubkey then OUT[ACK.whoami].public = hex(ACK.pubkey) end
-		if ACK.privkey then OUT[ACK.whoami].private = hex(ACK.privkey) end
-		if type(ACK.keys) == 'table' then
-		   for k,v in sort_ipairs(ACK.keys) do
-			  OUT[k] = hex(v)
-		   end
-		end
-end)	  
-		   
-
-When("I use '' key to encrypt the output", function(keyname)
-		ZEN.assert(ACK.draft, "No draft to encrypt found")
-		ZEN.assert(ACK.whoami, "No identity specified")
-		local pk = ACK.keys[keyname]
-		ZEN.assert(pk, "Public key not found in keyring: "..keyname)
-		local sk = ACK.privkey
-		ZEN.assert(sk, "Private key not found for: "..ACK.whoami)
-		
-		local session = ECDH.kdf2(HASH.new('sha256'), pk * sk)
-
-		-- compose the cipher message
-		local message = MSG.pack({ from = ACK.draft.from,
-								   text = ACK.draft.text,
-								   data = hex(ACK.draft.data) })
-		local cipher = { }
-		cipher.iv = RNG.new():octet(16)
-		cipher.text, cipher.checksum =
-		   ECDH.aesgcm_encrypt(session, message, cipher.iv, "Zencode")
-		cipher.encoding = "hex"
-		cipher.curve = "bls383"
-		cipher.schema = "aes_gcm"
-		cipher.pubkey = ACK.pubkey
-		OUT.aes_gcm = export(cipher, 'aes_gcm', hex)
-end)
-
-Given("I receive an encrypted message", function()
-		 ZEN.assert(IN.aes_gcm, "No encrypted message found in input")
-		 ACK.aes_gcm = ZEN:valid('aes_gcm', IN.aes_gcm)
-end)
-
-When("I decrypt the message", function()
-		ZEN.assert(ACK.aes_gcm, "No encrypted message received")
-		local cipher = ACK.aes_gcm
-
-		ZEN.assert(ACK.privkey, "No private key found in keyring")
-		local sk = ACK.privkey
-
-		local session = ECDH.kdf2(HASH.new('sha256'), cipher.pubkey * sk)
-		-- local checksum = { received = cipher.checksum) }
-		local decode = { }
-		decode.text, decode.checksum =
-		   ECDH.aead_decrypt(session, cipher.text, cipher.iv, "Zencode")
-		ZEN.assert(decode.checksum == cipher.checksum,
-				   "Checksum mismatch when decrypting ciphertext")
-		OUT = MSG.unpack(decode.text:str())
-end)
--- Zencode statements to manage pub/priv keypairs
-
--- GLOBALS:
--- keyring: straight from JSON.decode(KEYS)
--- keypair: section in keyring
--- keypair_name: current section in keyring
-
--- crypto setup
--- TODO: review scoping, make local or into finite-state machine
-order = ECP.order()
-G = ECP.generator()
-KDF_rounds = 10000
-
-local ecdh_keygen = function()
-   local key = INT.new(RNG.new(),order)
-   return { private = key,
-			public = key * G }
-end
-
-f_havekey = function (keytype, keyname)
-   local name = keyname or ACK.whoami
-   local keypair = IN.KEYS[name]
-   ZEN.assert(keypair, "Keypair not found: "..name)
-   if keytype then
-	  local key = keypair[keytype]
-	  ZEN.assert(key, "Key not found for keypair "..name..": "..keytype)	  
-	  ACK[name] = { }
-	  ACK[name][keytype] = ZEN.get(ECP.new, keypair, keytype)
-   else
-	  ACK[name] = ZEN:valid("ecdh_keypair", keypair)
-   end
-end
-
-Given("I have the '' key '' in keyring", f_havekey)
-Given("I have my '' key in keyring", f_havekey)
-Given("I have my keypair", f_havekey)
-
-f_keygen = function (keyname)
-   ACK[keyname or ACK.whoami] = map(ecdh_keygen(),hex)
-end
-
-When("I create a new keypair as ''", f_keygen)
-When("I create my new keypair", f_keygen)
-
-When("I remove the '' key", f_keyrm)
-
-When("I import '' keypair into my keyring", function(kp)
-		init_keyring()
-		data = data or JSON.decode(DATA)
-		if not data[kp] then
-		   error("Keypair '"..kp.."' not found in DATA")
-		end
-		ZEN.data.add(keyring,kp,data[kp])
-end)
-
-Then("print my keyring", function()
-		write_json(OUT[whoami])
-end)
-Then("print keypair ''", function(kp)
-		write_json({ [keypair] = keyring[keypair]})
-end)
--- This file is part of Zenroom (https://zenroom.dyne.org)
---
--- Copyright (C) 2018-2019 Dyne.org foundation
--- designed, written and maintained by Denis Roio <jaromil@dyne.org>
---
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU Affero General Public License as
--- published by the Free Software Foundation, either version 3 of the
--- License, or (at your option) any later version.
---
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU Affero General Public License for more details.
---
--- You should have received a copy of the GNU Affero General Public License
--- along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
--- Zencode data schemas for validation
-
--- init schemas
-ZEN.add_schema = function(arr)
-   -- TODO: check overwrite / duplicate as this will avoid scenarios
-   -- to have namespace clashes
-   for k,v in pairs(arr) do
-	  ZEN.schemas[k] = v
-   end
-end
-
--- TODO: return the prefix of an encoded string if found
-ZEN.prefix = function(str)
-   t = type(str)
-   if t ~= "string" then return nil end
-   if str:sub(4,4) ~= ":" then return nil end
-   return str:sub(1,3)
-end
-
-ZEN.get = function(obj, key, conversion)
-   conversion = conversion or CONF.encoding
-   ZEN.assert(type(key) == "string", "Invalid key in object conversion")
-   ZEN.assert(obj, "Object not found for conversion")
-   local k = obj[key]
-   ZEN.assert(k, "Key not found in object conversion: "..key)
-   local res
-   if(type(k) == "string") then
-	  res = ZEN:convert(k, conversion)
-   else
-	  res = k
-   end
-   assert(ZEN.OK)
-   return res
-end
-
-
--- import function to have recursion of nested data structures
--- according to their stated schema
-function ZEN:valid(sname, obj)
-   ZEN.assert(sname, "Import error: schema name is nil")
-   ZEN.assert(obj, "Import error: object is nil '"..sname.."'")
-   local s = ZEN.schemas[sname]
-   ZEN.assert(s, "Import error: schema not found '"..sname.."'")
-   ZEN.assert(type(s) == 'function', "Import error: schema is not a function '"..sname.."'")
-   return s(obj)
-end
--- This file is part of Zenroom (https://zenroom.dyne.org)
---
--- Copyright (C) 2018-2019 Dyne.org foundation
--- designed, written and maintained by Denis Roio <jaromil@dyne.org>
---
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU Affero General Public License as
--- published by the Free Software Foundation, either version 3 of the
--- License, or (at your option) any later version.
---
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU Affero General Public License for more details.
---
--- You should have received a copy of the GNU Affero General Public License
--- along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
--- make sure relevant defaults are there
-CONF.curve = CONF.curve or 'goldilocks'
-CONF.encoding = CONF.encoding or url64
-CONF.encoding_prefix = CONF.encoding_prefix or 'u64'
-
-local _ecdh = ECDH.new(CONF.curve) -- used for validation
-
-ZEN.add_schema({
-	  -- keypair (ECDH)
-	  public_key = function(obj)
-		 local o = obj.public_key or obj -- fix recursive schema check
-		 if type(o) == "string" then o = ZEN:convert(o) end
-		 ZEN.assert(_ecdh:checkpub(o),
-					"Public key is not a valid point on curve: "..CONF.curve)
-		 return o
-	  end,
-      keypair = function(obj)
-         return { public_key  = ZEN:validate_recur(obj, 'public_key'),
-                  private_key = ZEN.get(obj, 'private_key') }
-	  end,
-	  secret_message = function(obj)
-		 return { checksum = ZEN.get(obj, 'checksum'),
-				  header   = ZEN.get(obj, 'header'),
-				  iv       = ZEN.get(obj, 'iv'),
-				  message  = ZEN.get(obj, 'message'),
-				  pubkey   = ZEN.get(obj, 'pubkey'),
-				  scenario = ZEN.get(obj, 'scenario', str),
-				  zenroom  = ZEN.get(obj, 'zenroom', str),
-				  curve    = ZEN.get(obj, 'curve', str) }
-	  end,
-	  signed_message = function(obj)
-		 return { r = ZEN.get(obj, 'r'),
-				  s = ZEN.get(obj, 's'),
-				  text = ZEN.get(obj, 'text', str),
-				  scenario = ZEN.get(obj, 'scenario', str),
-				  zenroom  = ZEN.get(obj, 'zenroom', str),
-				  curve    = ZEN.get(obj, 'curve', str) }
-	  end
-})
-
--- generate keypair
-local function f_keygen()
-   local kp
-   local ecdh = ECDH.new(CONF.curve)
-   kp = ecdh:keygen()
-   ZEN:pick('keypair', { public_key = kp.public,
-						 private_key = kp.private })
-   ZEN:validate('keypair')
-   ZEN:ack('keypair')
-end
-When("I create my new keypair", f_keygen)
-When("I generate my keys", f_keygen)
-
--- encrypt to a single public key
-When("I encrypt the '' to '' for ''", function(what, msg, recpt)
-		ZEN.assert(ACK.keypair, "Keyring not found")
-		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
-		ZEN.assert(ACK[what], "Data to encrypt not found in "..what)
-		local from = ECDH.new(CONF.curve)
-		from:private(ACK.keypair.private_key)
-		local to = ECDH.new(CONF.curve)
-		ZEN.assert(ACK[recpt], "Public key not found")
-		to:public(ACK[recpt])
-		ACK[msg] = from:encrypt(to, ACK[what], str('empty'))
-		-- include contextual information
-		ACK[msg].zenroom = VERSION.original
-		ACK[msg].curve = CONF.curve
-		ACK[msg].scenario = ZEN.scenario
-end)
-
-When("I decrypt the '' to ''", function(src,dst)
-		ZEN.assert(ACK.keypair, "Keyring not found")
-		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
-		ZEN.assert(ACK[src], "Ciphertext not found")
-		if VERSION.original ~= ACK[src].zenroom:str() then
-		   warn("Ciphertext was not produced with running version of Zenroom: "
-				   ..ACK[src].zenroom:str().. " (running "..VERSION.original..")")
-		end
-		local recpt = ECDH.new(ACK[src].curve:str() or CONF.curve)
-		recpt:private(ACK.keypair.private_key)
-		ACK[dst] = recpt:decrypt(ACK[src])
-end)
-
--- sign a message and verify
-When("I sign the draft as ''", function(dst)
-		ZEN.assert(ACK.keypair, "Keyring not found")
-		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
-		local dsa = ECDH.new(CONF.curve)
-		dsa:private(ACK.keypair.private_key)
-		ACK[dst] = dsa:sign(ACK.draft)
-		-- include contextual information
-		ACK[dst].text = ACK.draft:string()
-		ACK[dst].zenroom = VERSION.original
-		ACK[dst].curve = CONF.curve
-		ACK[dst].scenario = ZEN.scenario
-end)
-
-When("I verify the '' is authentic", function(msg)
-		ZEN.assert(ACK.public_key, "Public key not found")
-		local dsa = ECDH.new(CONF.curve)
-		dsa:public(ACK.public_key)
-		local sm = ACK[msg]
-		ZEN.assert(sm, "Signed message not found: "..msg)
-		ZEN.assert(dsa:verify(sm.text,{ r = sm.r, s = sm.s }),
-				   "The signature is not authentic")
-end)
-local big = require'big'
-
-return big
--- override type to recognize zenroom's types
-luatype = type
-_G['type'] = function(var)
-   local simple = luatype(var)
-   if simple == "userdata" then
-	  local meta = getmetatable(var)
-	  if meta then return(meta.__name)
-	  else return("unknown") end
-   else return(simple) end
-end
-function iszen(n)
-   for c in n:gmatch("zenroom") do
-	  return true
-   end
-   return false
-end
-
--- debugging facility
-function xxx(n,s)
-   if ZEN.verbosity or CONF.debug >= n then act(s) end
-end
-
--- global
-_G["REQUIRED"] = { }
--- avoid duplicating requires (internal includes)
-function require_once(ninc)
-   local class = REQUIRED[ninc]
-   if type(class) == "table" then return class end
-   -- new require
-   class = require(ninc)
-   if type(class) == "table" then REQUIRED[ninc] = class end
-   return class
-end
-
-function content(var)
-   if type(var) == "zenroom.octet" then
-	  INSIDE.print(var:array())
-   else
-	  INSIDE.print(var)
-   end
-end
-
-
--- sorted iterator for deterministic ordering of tables
--- from: https://www.lua.org/pil/19.3.html
-_G["lua_pairs"]  = _G["pairs"]
-_G["lua_ipairs"] = _G["ipairs"]
-function _pairs(t)
-   local a = {}
-   for n in lua_pairs(t) do table.insert(a, n) end
-   table.sort(a)
-   local i = 0      -- iterator variable
-   local iter = function ()   -- iterator function
-	  i = i + 1
-	  if a[i] == nil then return nil
-	  else return a[i], t[a[i]]
-	  end
-   end
-   return iter
-end
-function _ipairs(t)
-   local a = {}
-   for n in lua_ipairs(t) do table.insert(a, n) end
-   table.sort(a)
-   local i = 0      -- iterator variable
-   local iter = function ()   -- iterator function
-	  i = i + 1
-	  if a[i] == nil then return nil
-	  else return a[i]
-	  end
-   end
-   return iter
-end
--- Switch to deterministic (sorted) table iterators: this breaks lua
--- tests in particular those stressing i/pairs and pack/unpack, which
--- are anyway unnecessary corner cases in zenroom, which exits cleanly
--- and signaling a stack overflow. Please report back if this
--- generates problems leading to the pairs for loop in function above.
-_G["sort_pairs"]  = _pairs
-_G["sort_ipairs"] = _pairs
-
-------------------------------
--- FUNCTIONAL LANGUAGE HELPERS
-----------------------------------------
--- stateless map mostly for internal use
-function _map(t, f, ...)
-   -- safety
-   if not (type(t) == "table") then return {} end
-   if t == nil then return {} end
-   -- if #t == 0  then return {} end
-
-   local _t = {}
-   for index,value in sort_pairs(t) do
-	  local k, kv, v = index, f(index,value,...)
-	  _t[v and kv or k] = v or kv
-   end
-   return _t
-end
--- map values in place, sort tables by keys for deterministic order
-function map(data, fun)
-   if(type(data) ~= "table") then
-	  error "map() first argument is not a table"
-	  return nil end
-   if(type(fun) ~= "function") then
-	  error "map() second argument is not a function"
-	  return nil end
-   out = {}
-   _map(data,function(k,v) out[k] = fun(v) end)
-   return(out)
-end
-
-function isarray(obj)
-   assert(obj, "isarray() called on a nil object")
-   assert(type(obj), "isarray() argument is not a table")
-   for k, v in pairs(obj) do
-	  -- check that all keys are numbers
-	  -- don't check sparse ratio (cjson's lua_array_length)
-	  if type(k) ~= "number" then return false end
-   end
-   return true
-end
-
-function help(module)
-   if module == nil then
-	  print("usage: help(module)")
-	  print("example > help(octet)")
-	  print("example > help(ecdh)")
-	  print("example > help(ecp)")
-	  return
-   end
-   for k,v in pairs(module) do
-	  if type(v)~='table' and string.sub(k,1,1)~='_' then
-		 print("class method: "..k)
-	  end
-   end
-   if module.new == nil then return end
-   local inst = module.new()
-   for s,f in pairs(getmetatable(inst)) do
-	  if(string.sub(s,1,2)~='__') then print("object method: "..s) end
-   end
-end
-
--- UNUSED:
--- returns a flat associative table of all objects in 'const'
-function flatten(const)
-   local flat = { }
-   local function inner_flatten(arr)
-	  for k,v in pairs(arr) do
-		 if type(v) == "table" then
-			flat[k] = v
-			inner_flatten(v)
-		 elseif(type(k) == "string") then
-			flat[k] = v
-		 end
-	  end
-   end
-   inner_flatten(const)
-   return flat
-end
-
--- This file is part of Zenroom (https://zenroom.dyne.org)
---
--- Copyright (C) 2018-2019 Dyne.org foundation
--- designed, written and maintained by Denis Roio <jaromil@dyne.org>
---
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU Affero General Public License as
--- published by the Free Software Foundation, either version 3 of the
--- License, or (at your option) any later version.
---
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU Affero General Public License for more details.
---
--- You should have received a copy of the GNU Affero General Public License
--- along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-local ecdh = require'ecdh'
-
-function prepare_session(keyring, pub) -- internal function
-   local kr
-   if (type(keyring) == "zenroom.ecdh") then
-	  kr = keyring
-   else
-	  error("encrypt error: arg #1 type not known ("..type(keyring)..") expected an ECDH keyring object")
-   end
-   local pk
-   if (type(pub) == "zenroom.ecdh") then
-	  pk = pub:public()
-   elseif (type(pub) == "zenroom.octet") then
-	  pk = pub
-   else
-	  error("encrypt error: arg #2 type not known ("..type(pub)..") expected an ECDH keyring or OCTET object")
-   end
-   return(kr:session(pk))
-end
-
-
--- encrypt with default AES-GCM technique, returns base58 encoded
--- values into a table containing: .text .iv .checksum .header
-function ecdh.encrypt(alice, bob, msg, header)
-   warn("ecdh.decrypt() use of this function is DEPRECATED");
-   local key = prepare_session(alice,bob)
-   local iv = O.random(16)
-   -- convert strings to octets
-   local omsg, ohead
-   if(type(msg) == "string") then
-	  omsg = str(msg) else omsg = msg end
-   if(type(header) == "string") then
-	  ohead = str(header) else ohead = header end
-   local cypher = {header = ohead, iv = iv}
-   cypher.text, cypher.checksum = ecdh.aead_encrypt(key,omsg,iv,ohead)
-   return(cypher)
-end
-
-function ecdh.decrypt(alice, bob, cypher)
-   warn("ecdh.decrypt() use of this function is DEPRECATED");
-   local key = prepare_session(alice,bob)
-   local decode = {header = cypher.header}
-   decode.text, decode.checksum =
-	  ecdh.aead_decrypt(key,
-				   cypher.text,
-				   cypher.iv,
-				   cypher.header)
-   if(cypher.checksum ~= decode.checksum) then
-	  error("decrypt error: header checksum mismatch")
-   end
-   return(decode)
-end
-
-return ecdh
--- This file is part of Zenroom (https://zenroom.dyne.org)
---
--- Copyright (C) 2018-2019 Dyne.org foundation
--- designed, written and maintained by Denis Roio <jaromil@dyne.org>
---
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU Affero General Public License as
--- published by the Free Software Foundation, either version 3 of the
--- License, or (at your option) any later version.
---
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU Affero General Public License for more details.
---
--- You should have received a copy of the GNU Affero General Public License
--- along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 local ecp = require'ecp'
 
 function ecp.hashtopoint(s)
@@ -3231,293 +1500,6 @@ function ecp.hashtopoint(s)
 end
 
 return ecp
--- This file is part of Zenroom (https://zenroom.dyne.org)
---
--- Copyright (C) 2018-2019 Dyne.org foundation
--- designed, written and maintained by Denis Roio <jaromil@dyne.org>
---
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU Affero General Public License as
--- published by the Free Software Foundation, either version 3 of the
--- License, or (at your option) any later version.
---
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU Affero General Public License for more details.
---
--- You should have received a copy of the GNU Affero General Public License
--- along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-local ecp2 = require'ecp2'
-require'fp12' -- FP12 implicit
-
-function ecp2.hashtopoint(s)
-   return ecp2.mapit(sha512(s))
-end
-
-return ecp2
-local fp = require'fp'
-
-return fp
--- This file is part of Zenroom (https://zenroom.dyne.org)
---
--- Copyright (C) 2018-2019 Dyne.org foundation
--- designed, written and maintained by Denis Roio <jaromil@dyne.org>
---
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU Affero General Public License as
--- published by the Free Software Foundation, either version 3 of the
--- License, or (at your option) any later version.
---
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU Affero General Public License for more details.
---
--- You should have received a copy of the GNU Affero General Public License
--- along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-local hash = require'hash'
-
--- when using facility functions, global hashers are created only once
-SHA256 = nil
-SHA512 = nil
-function sha256(data)
-   if SHA256==nil then SHA256 = hash.new('sha256') end -- optimization
-   return SHA256:process(data)
-end
-function sha512(data)
-   if SHA512==nil then SHA512 = hash.new('sha512') end -- optimization
-   return SHA512:process(data)
-end
-
-return hash
--- This file is part of Zenroom (https://zenroom.dyne.org)
---
--- Copyright (C) 2018-2019 Dyne.org foundation
--- designed, written and maintained by Denis Roio <jaromil@dyne.org>
---
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU Affero General Public License as
--- published by the Free Software Foundation, either version 3 of the
--- License, or (at your option) any later version.
---
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU Affero General Public License for more details.
---
--- You should have received a copy of the GNU Affero General Public License
--- along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-local J = require('json')
-
-
--- automatic conversion to string using prefix (for use in JSON.decode)
-function J.autoconv(data)
-   local t = type(data)
-   if(t == "string") and data ~= "" then
-	  if string.sub(data,1,3) == 'u64' and O.is_url64(data) then
-		 -- return decoded string format for JSON.decode
-		 return O.from_url64(data):string()
-	  elseif string.sub(data,1,3) == 'b64' and O.is_base64(data) then
-		 -- return decoded string format for JSON.decode
-		 return O.from_base64(data):string()
-	  elseif string.sub(data,1,3) == 'hex' and O.is_hex(data) then
-		 -- return decoded string format for JSON.decode
-		 return O.from_hex(data):string()
-	  elseif string.sub(data,1,3) == 'bin' and O.is_bin(data) then
-		 -- return decoded string format for JSON.decode
-		 return O.from_bin(data):string()
-	  else -- its already a string (we suppose, this is not deterministic)
-		 return data
-	  end
-   elseif iszen(t) then
-	  return data:str()
-   else
-	  error("JSON.autoconf failed "..t.." conversion")
-   end
-end
-
-J.decode = function(str)
-   assert(str,      "JSON.decode error decoding nil string")
-   -- assert(str ~= "","JSON.decode error decoding empty string")
-   -- assert(type(str) == "string", "JSON.decode error unsopported type: "..type(str))
-   local t = JSON.raw_decode(JSON.autoconv(str))
-   assert(t, "JSON.decode error decoding type: "..type(str))
-   -- fixes strange behavior of tables returned
-   -- second value returned should be used
-   -- first one becomes a string after first transformation
-   -- TODO: investigate this behavior, returning one now since seems fixed
-   return t
-end
-
-J.encode = function(tab)
-   return
-	  JSON.raw_encode(
-		 -- process encodes zencode types
-		 I.process(tab)
-	  )
-   -- return JSON.raw_encode(tab)
-end
-
-return J
--- This file is part of Zenroom (https://zenroom.dyne.org)
---
--- Copyright (C) 2018-2019 Dyne.org foundation
--- designed, written and maintained by Denis Roio <jaromil@dyne.org>
---
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU Affero General Public License as
--- published by the Free Software Foundation, either version 3 of the
--- License, or (at your option) any later version.
---
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU Affero General Public License for more details.
---
--- You should have received a copy of the GNU Affero General Public License
--- along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-local octet = require'octet'
-
---- implicit convertion functions going both ways
--- if input is an encoded string, will become an octet
--- if input is a non-encoded string, it will become a base64 string
--- if input is an octet, will become an encoded string
-function hex(data)
-   local t = type(data)
-   if(t == "string") then
-	  if O.is_hex(data) then return O.from_hex(data)
-	  else return O.from_str(data):hex() end
-   elseif(t == "number") then return data
-   elseif(t == "table") then return data
-   elseif(t == "zenroom.octet") then return data:hex()
-   elseif iszen(t) then return data:octet():hex() -- any zenroom type to octet
-   end
-end
-function str(data)
-   if    (type(data) == "string")        then return octet.from_string(data)
-   elseif(type(data) == "zenroom.octet") then return data:string()
-   end
-end
-function bin(data)
-   local t = type(data)
-   if(t == "string") then
-	  if O.is_bin(data) then return O.from_bin(data)
-	  else return O.from_str(data):bin() end
-   elseif(t == "number") then return data
-   elseif(t == "table") then return data
-   elseif(t == "zenroom.octet") then return data:bin()
-   elseif iszen(t) then return data:octet():bin() -- any zenroom type to octet
-   end
-end
-function base64(data)
-   local t = type(data)
-   if(t == "string") then
-	  if O.is_base64(data) then return O.from_base64(data)
-	  else return O.from_str(data):base64() end
-   elseif(t == "number") then return data
-   elseif(t == "table") then return data
-   elseif(t == "zenroom.octet") then return data:base64()
-   elseif iszen(t) then return data:octet():base64() -- any zenroom type to octet
-   end
-end
-function url64(data)
-   local t = type(data)
-   if(t == "string") then
-	  if O.is_url64(data) then return O.from_url64(data)
-	  else return O.from_str(data):url64() end
-   elseif(t == "number") then return data
-   elseif(t == "table") then return data
-   elseif(t == "zenroom.octet") then return data:url64()
-   elseif iszen(t) then return data:octet():url64() -- any zenroom type to octet
-   end
-end
-function base58(data)
-   local t = type(data)
-   if(t == "string") then
-	  if O.is_base58(data) then return O.from_base58(data)
-	  else return O.from_str(data):base58() end
-   elseif(t == "zenroom.octet") then return data:base58()
-   elseif iszen(t) then return data:octet():base58() -- any zenroom type to octet
-   end
-end
-
--- serialize an array containing any type of cryptographic numbers
-octet.serialize = function(arr)
-   total = 0
-   map(arr, function(a) 
-		  t = type(a)
-		  -- supported lua native types
-		  if(t == "string") then total = total + #a return
-		  elseif not iszen(t) then
-			 error("OCTET.serialize: unsupported type: "..t)
-		  end
-		  if(t == "zenroom.octet") then
-			 total = total + #a
-		  elseif(t == "zenroom.big"
-					or
-					t == "zenroom.ecp"
-					or
-				 t == "zenroom.ecp2") then
-			 total = total + #a:octet()
-		  else
-			 error("OCTET.serialize: unsupported zenroom type: "..t)
-		  end
-   end)
-   concat = O.new(total)
-   map(arr,function(e)
-		  t = type(e)
-		  -- supported lua native types
-		  if(t == "string") then concat = concat .. str(e) return
-		  elseif not iszen(t) then
-			 error("OCTET.serialize: unsupported type: "..t)
-		  end
-		  if(t == "zenroom.octet") then
-			 concat = concat .. e
-		  elseif(t == "zenroom.big"
-				 or
-				 t == "zenroom.ecp"
-				 or
-				 t == "zenroom.ecp2") then
-			 concat = concat .. e:octet()
-		  else
-			 error("OCTET.serialize: unsupported zenroom type: "..t)
-		  end
-   end)
-   return concat
-end
-
-function zero(len)    return octet.new(len):zero(len) end
-
-return octet
--- This file is part of Zenroom (https://zenroom.dyne.org)
---
--- Copyright (C) 2018-2019 Dyne.org foundation
--- designed, written and maintained by Denis Roio <jaromil@dyne.org>
---
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU Affero General Public License as
--- published by the Free Software Foundation, either version 3 of the
--- License, or (at your option) any later version.
---
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU Affero General Public License for more details.
---
--- You should have received a copy of the GNU Affero General Public License
--- along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-local rng = require'rng'
-
--- global facility function
-function random(len) return RNG.new():octet(len) end
-
-return rng
 --[[ deepcopy.lua
     
     Deep-copy function for Lua - v0.2
@@ -3943,3 +1925,1815 @@ do
         end
     end
 end
+-- This file is part of Zenroom (https://zenroom.dyne.org)
+--
+-- Copyright (C) 2018-2019 Dyne.org foundation
+-- designed, written and maintained by Denis Roio <jaromil@dyne.org>
+--
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU Affero General Public License as
+-- published by the Free Software Foundation, either version 3 of the
+-- License, or (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU Affero General Public License for more details.
+--
+-- You should have received a copy of the GNU Affero General Public License
+-- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+-- make sure relevant defaults are there
+CONF.curve = CONF.curve or 'goldilocks'
+CONF.encoding = CONF.encoding or url64
+CONF.encoding_prefix = CONF.encoding_prefix or 'u64'
+
+local _ecdh = ECDH.new(CONF.curve) -- used for validation
+
+ZEN.add_schema({
+	  -- keypair (ECDH)
+	  public_key = function(obj)
+		 local o = obj.public_key or obj -- fix recursive schema check
+		 if type(o) == "string" then o = ZEN:convert(o) end
+		 ZEN.assert(_ecdh:checkpub(o),
+					"Public key is not a valid point on curve: "..CONF.curve)
+		 return o
+	  end,
+      keypair = function(obj)
+         return { public_key  = ZEN:validate_recur(obj, 'public_key'),
+                  private_key = ZEN.get(obj, 'private_key') }
+	  end,
+	  secret_message = function(obj)
+		 return { checksum = ZEN.get(obj, 'checksum'),
+				  header   = ZEN.get(obj, 'header'),
+				  iv       = ZEN.get(obj, 'iv'),
+				  message  = ZEN.get(obj, 'message'),
+				  pubkey   = ZEN.get(obj, 'pubkey'),
+				  scenario = ZEN.get(obj, 'scenario', str),
+				  zenroom  = ZEN.get(obj, 'zenroom', str),
+				  curve    = ZEN.get(obj, 'curve', str) }
+	  end,
+	  signed_message = function(obj)
+		 return { r = ZEN.get(obj, 'r'),
+				  s = ZEN.get(obj, 's'),
+				  text = ZEN.get(obj, 'text', str),
+				  scenario = ZEN.get(obj, 'scenario', str),
+				  zenroom  = ZEN.get(obj, 'zenroom', str),
+				  curve    = ZEN.get(obj, 'curve', str) }
+	  end
+})
+
+-- generate keypair
+local function f_keygen()
+   local kp
+   local ecdh = ECDH.new(CONF.curve)
+   kp = ecdh:keygen()
+   ZEN:pick('keypair', { public_key = kp.public,
+						 private_key = kp.private })
+   ZEN:validate('keypair')
+   ZEN:ack('keypair')
+end
+When("I create my new keypair", f_keygen)
+When("I generate my keys", f_keygen)
+
+-- encrypt to a single public key
+When("I encrypt the '' to '' for ''", function(what, msg, recpt)
+		ZEN.assert(ACK.keypair, "Keyring not found")
+		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
+		ZEN.assert(ACK[what], "Data to encrypt not found in "..what)
+		local from = ECDH.new(CONF.curve)
+		from:private(ACK.keypair.private_key)
+		local to = ECDH.new(CONF.curve)
+		ZEN.assert(ACK[recpt], "Public key not found")
+		to:public(ACK[recpt])
+		ACK[msg] = from:encrypt(to, ACK[what], str('empty'))
+		-- include contextual information
+		ACK[msg].zenroom = VERSION.original
+		ACK[msg].curve = CONF.curve
+		ACK[msg].scenario = ZEN.scenario
+end)
+
+When("I decrypt the '' to ''", function(src,dst)
+		ZEN.assert(ACK.keypair, "Keyring not found")
+		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
+		ZEN.assert(ACK[src], "Ciphertext not found")
+		if VERSION.original ~= ACK[src].zenroom:str() then
+		   warn("Ciphertext was not produced with running version of Zenroom: "
+				   ..ACK[src].zenroom:str().. " (running "..VERSION.original..")")
+		end
+		local recpt = ECDH.new(ACK[src].curve:str() or CONF.curve)
+		recpt:private(ACK.keypair.private_key)
+		ACK[dst] = recpt:decrypt(ACK[src])
+end)
+
+-- sign a message and verify
+When("I sign the draft as ''", function(dst)
+		ZEN.assert(ACK.keypair, "Keyring not found")
+		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
+		local dsa = ECDH.new(CONF.curve)
+		dsa:private(ACK.keypair.private_key)
+		ACK[dst] = dsa:sign(ACK.draft)
+		-- include contextual information
+		ACK[dst].text = ACK.draft:string()
+		ACK[dst].zenroom = VERSION.original
+		ACK[dst].curve = CONF.curve
+		ACK[dst].scenario = ZEN.scenario
+end)
+
+When("I verify the '' is authentic", function(msg)
+		ZEN.assert(ACK.public_key, "Public key not found")
+		local dsa = ECDH.new(CONF.curve)
+		dsa:public(ACK.public_key)
+		local sm = ACK[msg]
+		ZEN.assert(sm, "Signed message not found: "..msg)
+		ZEN.assert(dsa:verify(sm.text,{ r = sm.r, s = sm.s }),
+				   "The signature is not authentic")
+end)
+-- This file is part of Zenroom (https://zenroom.dyne.org)
+--
+-- Copyright (C) 2018-2019 Dyne.org foundation
+-- designed, written and maintained by Denis Roio <jaromil@dyne.org>
+--
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU Affero General Public License as
+-- published by the Free Software Foundation, either version 3 of the
+-- License, or (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU Affero General Public License for more details.
+--
+-- You should have received a copy of the GNU Affero General Public License
+-- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+--- <h1>Zencode language parser</h1>
+--
+-- Zencode is a <a
+-- href="https://en.wikipedia.org/wiki/Domain-specific_language">Domain
+-- Specific Language (DSL)</a> made to be understood by humans and
+-- inspired by <a
+-- href="https://en.wikipedia.org/wiki/Behavior-driven_development">Behavior
+-- Driven Development (BDD)</a> and <a
+-- href="https://en.wikipedia.org/wiki/Domain-driven_design">Domain
+-- Driven Design (DDD)</a>.
+--
+-- The Zenroom VM is capable of parsing specific scenarios written in
+-- Zencode and execute high-level cryptographic operations described
+-- in them; this is to facilitate the integration of complex
+-- operations in software and the non-literate understanding of what a
+-- distributed application does. A generic Zencode looks like this:
+--
+-- <code>
+-- Given that I am known as 'Alice'
+--
+-- When I create my new keypair
+--
+-- Then print my data
+-- </code>
+--
+-- This section doesn't provide the documentation on how to write
+-- Zencode, but illustrates the internals on how the Zencode parser is
+-- made and how it integrates with the Zenroom memory model. It serves
+-- as a reference documentation on functions used to write parsers for
+-- new Zencode scenarios in Zenroom's Lua.
+--
+--  @module ZEN
+--  @author Denis "Jaromil" Roio
+--  @license AGPLv3
+--  @copyright Dyne.org foundation 2018-2019
+
+
+local zencode = {
+   given_steps = {},
+   when_steps = {},
+   then_steps = {},
+   current_step = nil,
+   id = 0,
+   matches = {},
+   verbosity = 0,
+   schemas = { },
+   scenario = nil;
+   OK = true -- set false by asserts
+}
+
+zencode.machine = MACHINE.create({
+	  initial = 'feature',
+	  events = {
+		 { name = 'enter_rule',     from = { 'feature', 'rule' }, to = 'rule' },
+		 { name = 'enter_scenario', from = { 'feature', 'rule' }, to = 'scenario' },
+		 { name = 'enter_given',    from =   'scenario',          to = 'given' },
+		 { name = 'enter_when',     from =   'given',             to = 'when' },
+		 { name = 'enter_then',     from = { 'given', 'when' },   to = 'then' },
+		 { name = 'enter_and',      from =   'given',             to = 'given' },
+		 { name = 'enter_and',      from =   'when',              to = 'when' },
+		 { name = 'enter_and',      from =   'then',              to = 'then' }
+	  }
+})
+
+-- Zencode HEAP globals
+IN = { }         -- Given processing, import global DATA from json
+IN.KEYS = { }    -- Given processing, import global KEYS from json
+TMP = TMP or { } -- Given processing, temp buffer for ack*->validate->push*
+ACK = ACK or { } -- When processing,  destination for push*
+OUT = OUT or { } -- print out
+AST = AST or { } -- AST of parsed Zencode
+
+-- Zencode init traceback
+_G['ZEN_traceback'] = "Zencode traceback:\n"
+
+--- Given block (IN read-only memory)
+-- @section Given
+
+---
+-- Declare 'my own' name that will refer all uses of the 'my' pronoun
+-- to structures contained under this name.
+--
+-- @function ZEN:Iam(name)
+-- @param name own name to be saved in ACK.whoami
+function zencode:Iam(name)
+   if name then
+	  ZEN.assert(not ACK.whoami, "Identity already defined in ACK.whoami")
+	  ZEN.assert(type(name) == "string", "Own name not a string")
+	  ACK.whoami = name
+   else
+	  ZEN.assert(ACK.whoami, "No identity specified in ACK.whoami")
+   end
+   assert(ZEN.OK)
+end
+
+-- local function used inside ZEN:pick*
+-- try obj.*.what (TODO: exclude KEYS and ACK.whoami)
+local function inside_pick(obj, what)
+   ZEN.assert(obj, "ZEN:pick object is nil")
+   ZEN.assert(type(obj) == "table", "ZEN:pick object is not a table")
+   ZEN.assert(type(what) == "string", "ZEN:pick object index is not a string")
+   local got = obj[what]
+   if got then
+	  -- ZEN:ftrace("inside_pick found "..what.." at object root")
+	  goto gotit
+   end
+   for k,v in pairs(obj) do -- search 1 deeper
+      if type(v) == "table" and v[what] then
+         got = v[what]
+         -- ZEN:ftrace("inside_pick found "..k.."."..what)
+         break
+      end
+   end
+   ::gotit::
+   return got
+end
+
+---
+-- Pick a generic data structure from the <b>IN</b> memory
+-- space. Looks for named data on the first and second level and makes
+-- it ready for @{validate} or @{ack}.
+--
+-- @function ZEN:pick(name, data)
+-- @param name string descriptor of the data object
+-- @param data[opt] optional data object (default search inside IN.*)
+-- @return true or false
+function zencode:pick(what, obj)
+   if obj then -- object provided by argument
+	  TMP = { data = obj,
+			  root = nil,
+			  schema = what }
+	  return(ZEN.OK)
+   end
+   local got
+   got = inside_pick(IN.KEYS, what) or inside_pick(IN,what)
+   ZEN.assert(got, "Cannot find "..what.." anywhere")
+   TMP = { root = nil,
+		   data = got,
+		   schema = what }
+   assert(ZEN.OK)
+   ZEN:ftrace("pick found "..what)
+end
+
+---
+-- Pick a data structure named 'what' contained under a 'section' key
+-- of the at the root of the <b>IN</b> memory space. Looks for named
+-- data at the first and second level underneath IN[section] and moves
+-- it to TMP[what][section], ready for @{validate} or @{ack}. If
+-- TMP[what] exists already, every new entry is added as a key/value
+--
+-- @function ZEN:pickin(section, name)
+-- @param section string descriptor of the section containing the data
+-- @param name string descriptor of the data object
+-- @return true or false
+function zencode:pickin(section, what)
+   ZEN.assert(section, "No section specified")
+   local root -- section
+   local got  -- what
+   root = inside_pick(IN.KEYS,section) or inside_pick(IN, section)
+   ZEN.assert(root, "Cannot find "..section.." anywhere")
+   got = inside_pick(root, what)
+   ZEN.assert(got, "Cannot find "..what.." inside "..section)   
+   -- TODO: check all corner cases to make sure TMP[what] is a k/v map
+   TMP = { root = section,
+		   data = got,
+		   schema = what }
+   assert(ZEN.OK)
+   ZEN:ftrace("pickin found "..what.." in "..section)
+end
+
+---
+-- Optional step inside the <b>Given</b> block to execute schema
+-- validation on the last data structure selected by @{pick}.
+--
+-- @function ZEN:validate(name)
+-- @param name string descriptor of the data object
+-- @param schema[opt] string descriptor of the schema to validate
+-- @return true or false
+function zencode:validate(name, schema)
+   schema = schema or TMP.schema or name -- if no schema then coincides with name
+   ZEN.assert(name, "ZEN:validate error: argument is nil")
+   ZEN.assert(TMP, "ZEN:validate error: TMP is nil")
+   -- ZEN.assert(TMP.schema, "ZEN:validate error: TMP.schema is nil")
+   -- ZEN.assert(TMP.schema == name, "ZEN:validate() TMP does not contain "..name)
+   local got = TMP.data -- inside_pick(TMP,name)
+   ZEN.assert(TMP.data, "ZEN:validate error: data not found in TMP for schema "..name)
+   local s = ZEN.schemas[schema]
+   ZEN.assert(s, "ZEN:validate error: "..schema.." schema not found")
+   ZEN.assert(type(s) == 'function', "ZEN:validate error: schema is not a function for "..schema)
+   ZEN:ftrace("validate "..name.. " with schema "..schema)
+   local res = s(TMP.data) -- ignore root
+   ZEN.assert(res, "ZEN:validate error: validation failed for "..name.." with schema "..schema)
+   TMP.valid = res -- overwrite
+   assert(ZEN.OK)
+   ZEN:ftrace("validation passed for "..name.. " with schema "..schema)
+end
+
+function zencode:validate_recur(obj, name)
+   ZEN.assert(name, "ZEN:validate_recur error: schema name is nil")
+   ZEN.assert(obj, "ZEN:validate_recur error: object is nil")
+   local s = ZEN.schemas[name]
+   ZEN.assert(s, "ZEN:validate_recur error: schema not found: "..name)
+   ZEN.assert(type(s) == 'function', "ZEN:validate_recur error: schema is not a function: "..name)
+   ZEN:ftrace("validate_recur "..name)
+   local res = s(obj)
+   ZEN.assert(res, "Schema validation failed: "..name)
+   return(res)
+end
+
+---
+-- Final step inside the <b>Given</b> block towards the <b>When</b>:
+-- pass on a data structure into the ACK memory space, ready for
+-- processing.  It requires the data to be present in TMP[name] and
+-- typically follows a @{pick}. In some cases it is used inside a
+-- <b>When</b> block following the inline insertion of data from
+-- zencode.
+--
+-- @function ZEN:ack(name)
+-- @param name string key of the data object in TMP[name]
+function zencode:ack(name)
+   local obj = TMP.valid
+   ZEN.assert(obj, "No valid object found: ".. name)
+   assert(ZEN.OK)
+   local t
+   if not ACK[name] then -- assign in ACK the single object
+	  ACK[name] = obj
+	  goto done
+   end
+   -- ACK[name] already holds an object
+   t = type(ACK[name])
+   -- not a table?
+   if t ~= 'table' then -- convert single object to array
+	  ACK[name] = { ACK[name] }
+	  table.insert(ACK[name], obj)
+	  goto done
+   end
+   -- it is a table already
+   if isarray(ACK[name]) then -- plain array
+	  table.insert(ACK[name], obj)
+	  goto done
+   else -- associative map
+	  table.insert(ACK[name], obj) -- TODO:
+	  goto done
+   end
+   ::done::
+   assert(ZEN.OK)
+end
+
+function zencode:ackmy(name, object)
+   local obj = object or TMP[name]
+   ZEN:trace("f   pushmy() "..name.." "..type(obj))
+   ZEN.assert(ACK.whoami, "No identity specified")
+   ZEN.assert(obj, "Object not found: ".. name)
+   local me = ACK.whoami
+   if not ACK[me] then ACK[me] = { } end
+   ACK[me][name] = obj
+   if not object then tmp[name] = nil end
+   assert(ZEN.OK)
+end
+
+--- When block (ACK read-write memory)
+-- @section When
+
+---
+-- Draft a new text made of a simple string: convert it to @{OCTET}
+-- and append it to ACK.draft.
+--
+-- @function ZEN:draft(string)
+-- @param string any string to be appended as draft
+function zencode:draft(s)
+   if s then
+	  ZEN.assert(type(s) == "string", "Provided draft is not a string")
+	  if not ACK.draft then
+		 ACK.draft = str(s)
+	  else
+		 ACK.draft = ACK.draft .. str(s)
+	  end
+   else -- no arg: sanity checks
+	  ZEN.assert(ACK.draft, "No draft found in ACK.draft")
+   end
+   assert(ZEN.OK)
+end
+
+
+---
+-- Compare equality of two data objects (TODO: octet, ECP, etc.)
+-- @function ZEN:eq(first, second)
+
+---
+-- Check that the first object is greater than the second (TODO)
+-- @function ZEN:gt(first, second)
+
+---
+-- Check that the first object is lesser than the second (TODO)
+-- @function ZEN:lt(first, second)
+
+
+--- Then block (OUT write-only memory)
+-- @section Then
+
+---
+-- Move a generic data structure from ACK to OUT memory space, ready
+-- for its final JSON encoding and print out.
+-- @function ZEN:out(name)
+
+---
+-- Move 'my own' data structure from ACK to OUT.whoami memory space,
+-- ready for its final JSON encoding and print out.
+-- @function ZEN:outmy(name)
+
+---
+-- Convert a generic data element to the desired format (argument name
+-- provided as string), or use CONF.encoding when called without
+-- argument
+--
+-- @function ZEN:convert(object, format)
+-- @param object data element to be converted
+-- @param format pointer to a converter function
+-- @return object converted to format
+function zencode:convert(object, format)
+   -- CONF { encoding = <function 1>,
+   --        encoding_prefix = "u64"  }
+   local fun = format or CONF.encoding
+   -- functions mapped from zenroom_octet.lua
+   if     CONF.encoding == 'u64'    then fun = url64
+   elseif CONF.encoding == 'b64'    then fun = base64
+   elseif CONF.encoding == 'hex'    then fun = hex
+   elseif CONF.encoding == 'string' then fun = str
+   elseif CONF.encoding == 'str'    then fun = str
+   else ZEN.assert(fun, "Conversion format not found")
+   end
+   ZEN.assert(type(fun) == "function",
+   			  "Conversion format is not a function: "..type(fun))
+   return fun(object) -- TODO: protected call
+end
+
+
+
+---------------------------------------------------------------
+-- ZENCODE PARSER
+
+function zencode:begin(verbosity)
+   if verbosity > 0 then
+      xxx(2,"Zencode debug verbosity: "..verbosity)
+      self.verbosity = verbosity
+   end
+   self.current_step = self.given_steps
+   return true
+end
+
+function zencode:iscomment(b)
+   local x = string.char(b:byte(1))
+   if x == '#' then
+	  return true
+   else return false
+end end
+function zencode:isempty(b)
+   if b == nil or b == '' then
+	   return true
+   else return false
+end end
+function zencode:step(text)
+   if ZEN:isempty(text) then return true end
+   if ZEN:iscomment(text) then return true end
+   -- max length for single zencode line is #define MAX_LINE
+   -- hard-coded inside zenroom.h
+   local prefix = parse_prefix(text)
+   local defs -- parse in what phase are we
+   ZEN.OK = true
+   if prefix == 'given' then
+	  ZEN.assert(ZEN.machine:enter_given(), text.."\n    "..
+					"Invalid transition from "
+					..ZEN.machine.current.." to Given block")
+      self.current_step = self.given_steps
+      defs = self.current_step
+   elseif prefix == 'when'  then
+	  ZEN.assert(ZEN.machine:enter_when(), text.."\n    "..
+					"Invalid transition from "
+					..ZEN.machine.current.."to When block")
+      self.current_step = self.when_steps
+      defs = self.current_step
+   elseif prefix == 'then'  then
+	  ZEN.assert(ZEN.machine:enter_then(), text.."\n    "..
+					"Invalid transition from "
+					..ZEN.machine.current.." to Then block")
+      self.current_step = self.then_steps
+      defs = self.current_step
+   elseif prefix == 'and'   then
+	  ZEN.assert(ZEN.machine:enter_and(), text.."\n    "..
+					"Invalid transition from "
+					..ZEN.machine.current.." to And block")
+      defs = self.current_step
+   elseif prefix == 'scenario' then
+	  ZEN.assert(ZEN.machine:enter_scenario(), text.."\n    "..
+					"Invalid transition from "
+					..ZEN.machine.current.." to Scenario block")
+      self.current_step = self.given_steps
+      defs = self.current_step
+	  ZEN.scenario = string.match(text, "'(.-)'")
+	  if ZEN.scenario ~= "" then
+		 require("zencode_"..ZEN.scenario)
+		 ZEN:trace("|   Scenario "..ZEN.scenario)
+		 act("config scenario: "..ZEN.scenario)
+	  end
+   elseif prefix == 'rule' then
+	  ZEN.assert(ZEN.machine:enter_rule(), text.."\n    "..
+					"Invalid transition from "
+					..ZEN.machine.current.." to Rule block")
+	  -- process rules immediately
+	  local rule = split(text, "%S+") -- may be optimised
+	  if rule[2] == 'check' and rule[3] == 'version' then
+		 act("Zencode version check >= "..rule[4])
+		 -- TODO: check version of running VM
+	  elseif rule[2] == 'set' and rule[4] then
+		 act("config rule: "..rule[3].." = "..rule[4])
+		 CONF[rule[3]] = tonumber(rule[4]) or rule[4]
+	  end
+	  -- TODO: rule to set version of zencode
+   else -- defs = nil end
+	    -- if not defs then
+		 ZEN.assert("Zencode invalid: "..text)
+   end
+   if not ZEN.OK then
+	  print(ZEN_traceback)
+	  assert(ZEN.OK)
+   end
+   -- nothing further to parse
+   if not defs then return false end
+   -- TODO: optimize and write a faster function in C
+   -- support simplified notation for arg match
+   local tt = string.gsub(text,"'(.-)'","''")
+   tt = string.gsub(tt:lower(),"when " ,"", 1)
+   tt = string.gsub(tt,"then " ,"", 1)
+   tt = string.gsub(tt,"given ","", 1)
+   tt = string.gsub(tt,"and "  ,"", 1)
+   tt = string.gsub(tt,"that "  ,"", 1)
+
+   for pattern,func in pairs(defs) do
+      if (type(func) ~= "function") then
+         error("Zencode function missing: "..pattern)
+         return false
+      end
+	  if strcasecmp(tt,pattern) then
+		 local args = {} -- handle multiple arguments in same string
+		 for arg in string.gmatch(text,"'(.-)'") do
+			-- xxx(2,"+arg: "..arg)
+			arg = string.gsub(arg, ' ', '_')
+			table.insert(args,arg)
+		 end
+		 self.id = self.id + 1
+		 table.insert(self.matches,
+					  { id = self.id,
+						args = args,
+						source = text,
+						-- prefix = prefix,
+						-- regexp = pattern,
+						hook = func       })
+		 -- this is parsing, not execution: tracing isn't useful
+		 -- _G['ZEN_traceback'] = _G['ZEN_traceback']..
+		 -- "-> "..text:gsub("^%s*", "").." ("..#args.." args)\n"
+	  end
+   end
+end
+
+
+-- returns an iterator for newline termination
+function zencode:newline_iter(text)
+   s = trim(text) -- implemented in zen_io.c
+   if s:sub(-1)~="\n" then s=s.."\n" end
+   return s:gmatch("(.-)\n") -- iterators return functions
+end
+
+function zencode:parse(text)
+   if  #text < 9 then -- strlen("and debug") == 9
+   	  warn("Zencode text too short to parse")
+   	  return false end
+   for line in self:newline_iter(text) do
+	  self:step(line)
+   end
+end
+
+function zencode:trace(src)
+   -- take current line of zencode
+   _G['ZEN_traceback'] = _G['ZEN_traceback']..
+	  trim(src).."\n"
+	  -- "    -> ".. src:gsub("^%s*", "") .."\n"
+   -- act(src) TODO: print also debug when verbosity is high
+end
+
+-- trace function execution also on success
+function zencode:ftrace(src)
+   -- take current line of zencode
+   _G['ZEN_traceback'] = _G['ZEN_traceback']..
+	  "f   ZEN:"..trim(src).."\n"
+   -- "    -> ".. src:gsub("^%s*", "") .."\n"
+   -- act(src) TODO: print also debug when verbosity is high
+end
+
+function zencode:run()
+   -- xxx(2,"Zencode MATCHES:")
+   -- xxx(2,self.matches)
+   for i,x in sort_ipairs(self.matches) do
+	  IN = { } -- import global DATA from json
+	  if DATA then
+		 -- if plain array conjoin into associative
+		 local _in = JSON.decode(DATA)
+		 if _in and isarray(_in) then -- conjoin array
+			for i,c in ipairs(_in) do
+			   for k,v in pairs(c) do IN[k] = v end
+			end
+		 else IN = _in or { } end
+	  end
+	  IN.KEYS = { } -- import global KEYS from json
+	  if KEYS then IN.KEYS = JSON.decode(KEYS) end
+	  ZEN:trace("->  "..trim(x.source))
+	  ZEN.OK = true
+      local ok, err = pcall(x.hook,table.unpack(x.args))
+      if not ok or not ZEN.OK then
+	  	 if err then ZEN:trace("[!] "..err) end
+		 fatal(x.source) -- traceback print inside
+	  end
+   end
+   ZEN:trace("--- Zencode execution completed")
+   if type(OUT) == 'table' then
+	  ZEN:trace("<<< Encoding { OUT } to \"JSON\"")
+	  print(JSON.encode(OUT))
+	  ZEN:trace(">>> Encoding successful")
+   end
+end
+
+function zencode.debug()
+   -- TODO: print to stderr
+   print(ZEN_traceback)
+   I.print({ HEAP = { IN = IN,
+					  TMP = TMP,
+					  ACK = ACK,
+					  OUT = OUT }})
+end
+
+function zencode.debug_json()
+   write(JSON.encode({ TRACE = ZEN_traceback,
+                       HEAP = { IN = IN,
+                                TMP = TMP,
+                                ACK = ACK,
+                                OUT = OUT }}))
+end
+
+function zencode.assert(condition, errmsg)
+   if condition then return true end
+   -- ZEN.debug() -- prints all data in memory
+   ZEN:trace("ERR "..errmsg)
+   ZEN.OK = false
+   error(errmsg, 3)
+   -- print ''
+   -- error(errmsg) -- prints zencode backtrace
+   -- print ''
+   -- assert(false, "Execution aborted.")
+end
+
+_G["Given"] = function(text, fn)
+   zencode.given_steps[text] = fn
+end
+_G["When"] = function(text, fn)
+   zencode.when_steps[text] = fn
+end
+_G["Then"] = function(text, fn)
+   zencode.then_steps[text] = fn
+end
+
+return zencode
+local big = require'big'
+
+return big
+-- This file is part of Zenroom (https://zenroom.dyne.org)
+--
+-- Copyright (C) 2018-2019 Dyne.org foundation
+-- Coconut implementation by Alberto Sonnino and Denis Roio
+--
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU Affero General Public License as
+-- published by the Free Software Foundation, either version 3 of the
+-- License, or (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU Affero General Public License for more details.
+--
+-- You should have received a copy of the GNU Affero General Public License
+-- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+-- Coconut is a selective disclosure credential scheme for Attribute
+-- Based Credentials (ABC) supporting public and private attributes,
+-- re-randomization, and multiple unlinkable selective attribute
+-- revelations. For information about usage see
+-- https://zenroom.dyne.org and https://decodeproject.eu
+ECP     = require_once('zenroom_ecp')
+ELGAMAL = require_once('crypto_elgamal')
+ECP2    = require_once('zenroom_ecp2')
+FP12    = require_once('fp12')
+
+
+local coco = {
+   _VERSION = 'crypto_coconut.lua 1.0',
+   _URL = 'https://zenroom.dyne.org',
+   _DESCRIPTION = 'Attribute-based credential system supporting multiple unlinkable private attribute revelations',
+   _LICENSE = [[
+Licensed under the terms of the GNU Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.  Unless required by applicable
+law or agreed to in writing, software distributed under the License
+is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.
+]]
+}
+
+local g1 = ECP.generator() -- return value
+local g2 = ECP2.generator() -- return value
+local o  = ECP.order() -- return value
+
+-- stateful challenge hardcoded string
+local hs = ECP.hashtopoint(str([[
+Developed for the DECODE project
+]] .. coco._LICENSE))
+local challenge = g1:octet() .. g2:octet() .. hs:octet()
+function coco.to_challenge(list)
+   -- assert(coco.challenge, "COCONUT secret challenge not set")
+   return INT.new( sha256( challenge .. OCTET.serialize(list)))
+end
+
+
+-- random generator init
+local function rand() return INT.modrand(o) end
+
+-- local zero-knowledge proof verifications
+local function make_pi_s(gamma, cm, k, r, m)
+   local h = ECP.hashtopoint(cm)
+   local wk = rand()
+   local wm = rand()
+   local wr = rand()
+   local Aw = g1 * wk
+   local Bw = gamma * wk + h * wm
+   local Cw = g1 * wr + hs * wm
+   local c = coco.to_challenge({ cm, h, Aw, Bw, Cw })
+   local rk = wk:modsub(c * k, o)
+   local rm = wm:modsub(c * m, o)
+   local rr = wr:modsub(c * r, o)
+   -- return Lambda
+   return { c  = c,
+			rk = rk,
+			rm = rm,
+			rr = rr }
+end
+
+function coco.verify_pi_s(l)
+   local h = ECP.hashtopoint(l.cm)
+   local Aw = l.c.a * l.pi_s.c
+	  + g1 * l.pi_s.rk
+   local Bw = l.c.b * l.pi_s.c
+	  + l.public * l.pi_s.rk
+	  + h * l.pi_s.rm
+   local Cw = l.cm * l.pi_s.c
+	  + g1 * l.pi_s.rr
+	  + hs * l.pi_s.rm
+   -- return a bool for assert
+   return l.pi_s.c == coco.to_challenge({ l.cm, h, Aw, Bw, Cw })
+end
+
+-- Public Coconut API
+function coco.ca_keygen()
+   local x = rand()
+   local y = rand()
+   local sk = { x = x,
+                y = y  }
+   local vk = { alpha = g2 * x,
+                beta  = g2 * y  }
+   -- return keypair
+   return sk, vk
+end
+
+function coco.aggregate_keys(keys)
+   local agg_alpha = keys[1].alpha
+   local agg_beta  = keys[1].beta
+   if #keys > 1 then
+	  for i = 2, #keys do
+		 agg_alpha = agg_alpha + keys[i].alpha
+		 agg_beta  = agg_beta  + keys[i].beta
+	  end
+   end
+   -- return aggkeys
+   return { alpha = agg_alpha,
+			beta = agg_beta }
+end
+
+function coco.prepare_blind_sign(gamma, secret)
+   local m = INT.new(sha256(secret))
+   local r = rand()
+   local cm = g1 * r + hs * m
+   local h = ECP.hashtopoint(cm)
+   local a, b, k = ELGAMAL.encrypt(gamma, m, h)
+   local c = {a = a, b = b}
+   local pi_s = make_pi_s(gamma, cm, k, r, m)
+   -- return Lambda
+   return { cm   = cm,
+            c    = c,
+            pi_s = pi_s,
+			public = gamma }
+end
+
+function coco.blind_sign(sk, Lambda)
+   ZEN.assert(coco.verify_pi_s(Lambda),
+			  'Zero knowledge proof does not verify (Lambda.pi_s)')
+   local h = ECP.hashtopoint(Lambda.cm)
+   local a_tilde = Lambda.c.a * sk.y
+   local b_tilde = h * sk.x + Lambda.c.b * sk.y
+   -- sigma tilde
+   return { h = h,
+            a_tilde = a_tilde,
+            b_tilde = b_tilde  }
+end
+
+function coco.aggregate_creds(d, sigma_tilde)
+   local agg_s = ELGAMAL.decrypt(d,
+								 sigma_tilde[1].a_tilde,
+								 sigma_tilde[1].b_tilde)
+   if #sigma_tilde > 1 then
+      for i = 2, #sigma_tilde do
+         agg_s = agg_s + ELGAMAL.decrypt(d,
+										 sigma_tilde[i].a_tilde,
+										 sigma_tilde[i].b_tilde)
+      end
+   end
+   -- aggregated sigma
+   return { h = sigma_tilde[1].h,
+            s = agg_s }
+end
+
+function coco.prove_creds(vk, sigma, secret)
+   ZEN.assert(vk, "COCONUT.prove_creds called with empty verifier")
+   ZEN.assert(sigma, "COCONUT.prove_creds called with empty credential")
+   ZEN.assert(secret, "COCONUT.prove_creds called with empty secret")
+
+   local m = INT.new(sha256(secret))
+   local r = rand()
+   local r_prime = rand()
+   local sigma_prime = { h_prime = sigma.h * r_prime,
+                         s_prime = sigma.s * r_prime  }
+   local kappa = vk.alpha + vk.beta * m + g2 * r
+   local nu = sigma_prime.h_prime * r
+   -- make pi_v
+   local wm = rand()
+   local wr = rand()
+   local Aw = vk.alpha + g2 * wr + vk.beta * wm
+   local Bw = sigma_prime.h_prime * wr
+   local ch = coco.to_challenge({ vk.alpha, vk.beta, Aw, Bw })
+   local pi_v = { c = ch,
+				  rm = wm:modsub(m * ch, o),
+				  rr = wr:modsub(r * ch, o)  }
+   -- return Theta
+   local Theta = {
+      kappa = kappa,
+      nu = nu,
+      sigma_prime = sigma_prime,
+      pi_v = pi_v }
+   return Theta
+end
+
+function coco.verify_creds(vk, Theta)
+   ZEN.assert(vk, "COCONUT.verify_creds called with empty verifier")
+   ZEN.assert(Theta, "COCONUT.verify_creds valled with empty proof")
+   if #vk == 1 then vk = vk[1] end -- single element in array
+   -- verify pi_v
+   local Aw = Theta.kappa * Theta.pi_v.c
+	  + g2 * Theta.pi_v.rr
+	  + vk.alpha * INT.new(1):modsub(Theta.pi_v.c, o)
+	  + vk.beta * Theta.pi_v.rm
+   local Bw = Theta.nu * Theta.pi_v.c
+	  + Theta.sigma_prime.h_prime * Theta.pi_v.rr
+   -- check zero knowledge proof
+   ZEN.assert(Theta.pi_v.c == coco.to_challenge({vk.alpha, vk.beta, Aw, Bw}),
+			  "Credential proof does not verify (wrong challenge)")
+   ZEN.assert(not Theta.sigma_prime.h_prime:isinf(),
+			  "Credential proof does not verify (sigma.h is infinite)")
+   ZEN.assert(ECP2.miller(Theta.kappa, Theta.sigma_prime.h_prime)
+				 == ECP2.miller(g2, Theta.sigma_prime.s_prime + Theta.nu),
+			  "Credential proof does not verify (miller loop error)")
+   return true
+end
+
+-----------
+-- petition
+
+function coco.prove_cred_petition(vk, sigma, secret, uid)
+   local m = INT.new(sha256(secret))
+   local o = ECP.order()
+   local r = rand()
+   -- local m = INT.new(sha256(secret))
+   -- material
+   local r_prime = rand()
+   local sigma_prime = { h_prime = sigma.h * r_prime,
+						 s_prime = sigma.s * r_prime  }
+   local kappa = vk.alpha
+	  + vk.beta * m
+	  + g2 * r
+   local nu = sigma_prime.h_prime * r
+   local zeta = m * ECP.hashtopoint(str(uid))
+   -- proof --
+   -- create the witnessess
+   local wm = rand()
+   local wr = rand()
+   -- compute the witnessess commitments
+   local Aw = g2 * wr
+	  + vk.alpha
+	  + vk.beta * wm
+   local Bw = sigma_prime.h_prime * wr
+   local Cw = wm * ECP.hashtopoint(uid)
+   -- create the challenge
+   local c = COCONUT.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw })
+   -- create responses
+   local rm = wm:modsub(m * c, o)
+   local rr = wr:modsub(r * c, o)
+   local pi_v = { c = c,
+				  rm = rm,
+				  rr = rr }
+   local Theta = {
+      kappa = kappa,
+      nu = nu,
+      sigma_prime = sigma_prime,
+      pi_v = pi_v }
+   return Theta, zeta
+end
+
+function coco.verify_cred_petition(vk, Theta, zeta, uid)
+   local kappa = Theta.kappa
+   local nu = Theta.nu
+   local sigma_prime = Theta.sigma_prime
+   local c = Theta.pi_v.c
+   local rm = Theta.pi_v.rm
+   local rr = Theta.pi_v.rr
+   -- verify proof --
+   -- recompute witnessess commitments
+   local Aw = kappa * c
+	  + g2 * rr
+	  + vk.alpha * INT.new(1):modsub(c,ECP.order())
+	  + vk.beta * rm
+   local Bw = nu * c + sigma_prime.h_prime * rr
+   local Cw = rm*ECP.hashtopoint(uid) + zeta*c
+   -- compute the challenge prime
+   ZEN.assert(c == COCONUT.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw }),
+			  "verify_cred_petition: invalid challenge")
+   -- verify signature --
+   ZEN.assert(not sigma_prime.h_prime:isinf(),
+			  "verify_cred_petition: sigma_prime.h points at infinite")
+   ZEN.assert(ECP2.miller(kappa, sigma_prime.h_prime)
+				 == ECP2.miller(g2, sigma_prime.s_prime + nu),
+			  "verify_cred_petition: miller loop fails")
+   return true
+end
+
+-- takes an array of bigs and a curve order (modulo)
+function coco.lagrange_interpolation(indexes)
+   ZEN.assert(type(indexes) == "table", "Lagrange interpolation argument is not an array")
+   local l = {}
+   local numerator
+   local denominator
+   for i in indexes do
+	  numerator = BIG.new(1)
+	  denominator = BIG.new(1)
+	  for j in indexes do
+		 if (j ~= i)
+		 then
+            numerator = numerator:modmul(x:modsub(j,o),o)
+            denominator = denominator:modmul(i:modsub(j,o),o)
+		 end
+		 l[#l+1] = numerator:modmul(denominator:modinv(o),o)
+	  end
+   end
+   return l
+end
+
+function coco.prove_sign_petition(pub, m)
+   -- sign == vote
+   local k = rand()
+   -- vote encryption
+   local enc_v = { left = g1 * k,
+				   right = pub * k + hs * m }
+   -- opposite of vote encryption
+   local enc_v_neg = { left = enc_v.left:negative(),
+					   right = enc_v.right:negative() + hs }
+   -- commitment to the vote
+   local r1 = rand()
+   local r2 = r1:modmul(BIG.new(1):modsub(m,o), o)
+   local cv = g1 * m + hs * r1
+
+   -- proof
+   -- create the witnesess
+   local wk = rand()
+   local wm = rand()
+   local wr1 = rand()
+   local wr2 = rand()
+   -- compute the witnessess commitments
+   local Aw = g1*wk
+   local Bw = pub*wk + hs*wm
+   local Cw = g1*wm + hs*wr1
+   local Dw = cv*wm + hs*wr2
+   -- create the challenge
+   local c = COCONUT.to_challenge({enc_v.left, enc_v.right,
+								   cv, Aw, Bw, Cw, Dw}) % o
+   -- create responses
+   local rk = wk:modsub(c*k, o)
+   local rm = wm:modsub(c*m, o)
+   local rr1 = wr1:modsub(c*r1, o)
+   local rr2 = wr2:modsub(c*r2, o)
+   local pi_vote = { c = c,
+					 rk = rk,
+					 rm = rm,
+					 rr1 = rr1,
+					 rr2 = rr2 }
+
+   -- signature's Theta
+   return { scores = { pos = enc_v,
+					   neg = enc_v_neg }, -- left/right tuples
+			cv = cv, -- ecp
+			pi_vote = pi_vote } -- pi
+end
+
+function coco.verify_sign_petition(pub, theta)
+   -- recompute witnessess commitment
+   local scores = theta.scores.pos -- only positive, not negative?
+   local Aw = g1 * theta.pi_vote.rk
+	  + scores.left * theta.pi_vote.c
+   local Bw = pub * theta.pi_vote.rk
+	  + hs * theta.pi_vote.rm
+	  + scores.right * theta.pi_vote.c
+   local Cw = g1 * theta.pi_vote.rm
+	  + hs * theta.pi_vote.rr1
+	  + theta.cv * theta.pi_vote.c
+   local Dw = theta.cv * theta.pi_vote.rm
+	  + hs * theta.pi_vote.rr2
+	  + theta.cv * theta.pi_vote.c
+   -- verify challenge
+   ZEN.assert(theta.pi_vote.c == COCONUT.to_challenge(
+				 {scores.left, scores.right,
+				  theta.cv, Aw, Bw, Cw, Dw }),
+			  "verify_sign_petition: challenge fails")
+   return true
+end
+
+function coco.prove_tally_petition(sk, scores)
+   local wx = rand()
+   local Aw = { wx:modneg(o) * scores.pos.left,
+				wx:modneg(o) * scores.neg.left  }
+   local c = COCONUT.to_challenge(Aw)
+   local rx = wx:modsub(c*sk, o)
+   local dec = { pos = scores.pos.left * sk:modneg(o),
+				 neg = scores.neg.left * sk:modneg(o) }
+   -- return pi_tally
+   return { dec = dec,
+			rx = rx,
+			c = c    }
+end
+
+function coco.verify_tally_petition(scores, pi_tally)
+   local rxneg = pi_tally.rx:modneg(o)
+   local Aw = { rxneg*scores.pos.left + pi_tally.c * pi_tally.dec.pos,
+				rxneg*scores.neg.left + pi_tally.c * pi_tally.dec.neg  }
+   ZEN.assert(pi_tally.c == COCONUT.to_challenge(Aw),
+			  "verify_tally_petition: challenge fails")
+   return true
+end
+
+function coco.count_signatures_petition(scores, pi_tally)
+   local restab = { }
+   for idx=-100,100 do
+	  restab[hex(BIG.new(idx) * hs)] = idx
+   end
+   local res = { pos = scores.pos.right + pi_tally.dec.pos,
+				 neg = scores.neg.right + pi_tally.dec.neg  }
+   return { pos = restab[hex(res.pos)],
+			neg = restab[hex(res.neg)]  }
+end
+return coco
+-- This file is part of Zenroom (https://zenroom.dyne.org)
+--
+-- Copyright (C) 2018-2019 Dyne.org foundation
+-- designed, written and maintained by Denis Roio <jaromil@dyne.org>
+--
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU Affero General Public License as
+-- published by the Free Software Foundation, either version 3 of the
+-- License, or (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU Affero General Public License for more details.
+--
+-- You should have received a copy of the GNU Affero General Public License
+-- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+-- Zencode data schemas for validation
+
+-- init schemas
+ZEN.add_schema = function(arr)
+   -- TODO: check overwrite / duplicate as this will avoid scenarios
+   -- to have namespace clashes
+   for k,v in pairs(arr) do
+	  ZEN.schemas[k] = v
+   end
+end
+
+-- TODO: return the prefix of an encoded string if found
+ZEN.prefix = function(str)
+   t = type(str)
+   if t ~= "string" then return nil end
+   if str:sub(4,4) ~= ":" then return nil end
+   return str:sub(1,3)
+end
+
+ZEN.get = function(obj, key, conversion)
+   conversion = conversion or CONF.encoding
+   ZEN.assert(type(key) == "string", "Invalid key in object conversion")
+   ZEN.assert(obj, "Object not found for conversion")
+   local k = obj[key]
+   ZEN.assert(k, "Key not found in object conversion: "..key)
+   local res
+   if(type(k) == "string") then
+	  res = ZEN:convert(k, conversion)
+   else
+	  res = k
+   end
+   assert(ZEN.OK)
+   return res
+end
+
+
+-- import function to have recursion of nested data structures
+-- according to their stated schema
+function ZEN:valid(sname, obj)
+   ZEN.assert(sname, "Import error: schema name is nil")
+   ZEN.assert(obj, "Import error: object is nil '"..sname.."'")
+   local s = ZEN.schemas[sname]
+   ZEN.assert(s, "Import error: schema not found '"..sname.."'")
+   ZEN.assert(type(s) == 'function', "Import error: schema is not a function '"..sname.."'")
+   return s(obj)
+end
+-- This file is part of Zenroom (https://zenroom.dyne.org)
+--
+-- Copyright (C) 2018-2019 Dyne.org foundation
+-- designed, written and maintained by Denis Roio <jaromil@dyne.org>
+--
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU Affero General Public License as
+-- published by the Free Software Foundation, either version 3 of the
+-- License, or (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU Affero General Public License for more details.
+--
+-- You should have received a copy of the GNU Affero General Public License
+-- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+local J = require('json')
+
+
+-- automatic conversion to string using prefix (for use in JSON.decode)
+function J.autoconv(data)
+   local t = type(data)
+   if(t == "string") and data ~= "" then
+	  if string.sub(data,1,3) == 'u64' and O.is_url64(data) then
+		 -- return decoded string format for JSON.decode
+		 return O.from_url64(data):string()
+	  elseif string.sub(data,1,3) == 'b64' and O.is_base64(data) then
+		 -- return decoded string format for JSON.decode
+		 return O.from_base64(data):string()
+	  elseif string.sub(data,1,3) == 'hex' and O.is_hex(data) then
+		 -- return decoded string format for JSON.decode
+		 return O.from_hex(data):string()
+	  elseif string.sub(data,1,3) == 'bin' and O.is_bin(data) then
+		 -- return decoded string format for JSON.decode
+		 return O.from_bin(data):string()
+	  else -- its already a string (we suppose, this is not deterministic)
+		 return data
+	  end
+   elseif iszen(t) then
+	  return data:str()
+   else
+	  error("JSON.autoconf failed "..t.." conversion")
+   end
+end
+
+J.decode = function(str)
+   assert(str,      "JSON.decode error decoding nil string")
+   -- assert(str ~= "","JSON.decode error decoding empty string")
+   -- assert(type(str) == "string", "JSON.decode error unsopported type: "..type(str))
+   local t = JSON.raw_decode(JSON.autoconv(str))
+   assert(t, "JSON.decode error decoding type: "..type(str))
+   -- fixes strange behavior of tables returned
+   -- second value returned should be used
+   -- first one becomes a string after first transformation
+   -- TODO: investigate this behavior, returning one now since seems fixed
+   return t
+end
+
+J.encode = function(tab)
+   return
+	  JSON.raw_encode(
+		 -- process encodes zencode types
+		 I.process(tab)
+	  )
+   -- return JSON.raw_encode(tab)
+end
+
+return J
+local semver = {
+   _VERSION     = '1.2.2',
+   _DESCRIPTION = 'semver for Lua',
+   _URL         = 'https://github.com/kikito/semver.lua',
+   _LICENSE     = [[
+    MIT LICENSE
+
+    Copyright (c) 2015 Enrique García Cota
+    Copyright (c) 2019 Dyne.org foundation
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of tother software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is furnished to do so, subject to
+    the following conditions:
+
+    The above copyright notice and tother permission notice shall be included
+    in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  ]]
+}
+
+local function checkPositiveInteger(number, name)
+   assert(number >= 0, name .. ' must be a valid positive number')
+   assert(math.floor(number) == number, name .. ' must be an integer')
+end
+
+local function present(value)
+   return value and value ~= ''
+end
+
+-- splitByDot("a.bbc.d") == {"a", "bbc", "d"}
+local function splitByDot(str)
+   str = str or ""
+   local t, count = {}, 0
+   str:gsub("([^%.]+)", function(c)
+			   count = count + 1
+			   t[count] = c
+   end)
+   return t
+end
+
+local function parsePrereleaseAndBuildWithSign(str)
+   local prereleaseWithSign, buildWithSign = str:match("^(-[^+]+)(+.+)$")
+   if not (prereleaseWithSign and buildWithSign) then
+	  prereleaseWithSign = str:match("^(-.+)$")
+	  buildWithSign      = str:match("^(+.+)$")
+   end
+   assert(prereleaseWithSign or buildWithSign, ("The parameter %q must begin with + or - to denote a prerelease or a build"):format(str))
+   return prereleaseWithSign, buildWithSign
+end
+
+local function parsePrerelease(prereleaseWithSign)
+   if prereleaseWithSign then
+	  local prerelease = prereleaseWithSign:match("^-(%w[%.%w-]*)$")
+	  assert(prerelease, ("The prerelease %q is not a slash followed by alphanumerics, dots and slashes"):format(prereleaseWithSign))
+	  return prerelease
+   end
+end
+
+local function parseBuild(buildWithSign)
+   if buildWithSign then
+	  local build = buildWithSign:match("^%+(%w[%.%w-]*)$")
+	  assert(build, ("The build %q is not a + sign followed by alphanumerics, dots and slashes"):format(buildWithSign))
+	  return build
+   end
+end
+
+local function parsePrereleaseAndBuild(str)
+   if not present(str) then return nil, nil end
+
+   local prereleaseWithSign, buildWithSign = parsePrereleaseAndBuildWithSign(str)
+
+   local prerelease = parsePrerelease(prereleaseWithSign)
+   local build = parseBuild(buildWithSign)
+
+   return prerelease, build
+end
+
+local function parseVersion(str)
+   local sMajor, sMinor, sPatch, sPrereleaseAndBuild = str:match("^(%d+)%.?(%d*)%.?(%d*)(.-)$")
+   assert(type(sMajor) == 'string', ("Could not extract version number(s) from %q"):format(str))
+   local major, minor, patch = tonumber(sMajor), tonumber(sMinor), tonumber(sPatch)
+   local prerelease, build = parsePrereleaseAndBuild(sPrereleaseAndBuild)
+   return major, minor, patch, prerelease, build
+end
+
+
+-- return 0 if a == b, -1 if a < b, and 1 if a > b
+local function compare(a,b)
+   return a == b and 0 or a < b and -1 or 1
+end
+
+local function compareIds(myId, otherId)
+   if myId == otherId then return  0
+   elseif not myId    then return -1
+   elseif not otherId then return  1
+   end
+
+   local selfNumber, otherNumber = tonumber(myId), tonumber(otherId)
+
+   if selfNumber and otherNumber then -- numerical comparison
+	  return compare(selfNumber, otherNumber)
+	  -- numericals are always smaller than alphanums
+   elseif selfNumber then
+	  return -1
+   elseif otherNumber then
+	  return 1
+   else
+	  return compare(myId, otherId) -- alphanumerical comparison
+   end
+end
+
+local function smallerIdList(myIds, otherIds)
+   local myLength = #myIds
+   local comparison
+
+   for i=1, myLength do
+	  comparison = compareIds(myIds[i], otherIds[i])
+	  if comparison ~= 0 then
+		 return comparison == -1
+	  end
+	  -- if comparison == 0, continue loop
+   end
+
+   return myLength < #otherIds
+end
+
+local function smallerPrerelease(mine, other)
+   if mine == other or not mine then return false
+   elseif not other then return true
+   end
+
+   return smallerIdList(splitByDot(mine), splitByDot(other))
+end
+
+local methods = {}
+
+function methods:nextMajor()
+   return semver(self.major + 1, 0, 0)
+end
+function methods:nextMinor()
+   return semver(self.major, self.minor + 1, 0)
+end
+function methods:nextPatch()
+   return semver(self.major, self.minor, self.patch + 1)
+end
+
+local mt = { __index = methods }
+function mt:__eq(other)
+   return self.major == other.major and
+	  self.minor == other.minor and
+	  self.patch == other.patch and
+	  self.prerelease == other.prerelease
+   -- notice that build is ignored for precedence in semver 2.0.0
+end
+function mt:__lt(other)
+   if self.major ~= other.major then return self.major < other.major end
+   if self.minor ~= other.minor then return self.minor < other.minor end
+   if self.patch ~= other.patch then return self.patch < other.patch end
+   return smallerPrerelease(self.prerelease, other.prerelease)
+   -- notice that build is ignored for precedence in semver 2.0.0
+end
+-- This works like the "pessimisstic operator" in Rubygems.
+-- if a and b are versions, a ^ b means "b is backwards-compatible with a"
+-- in other words, "it's safe to upgrade from a to b"
+function mt:__pow(other)
+   if self.major == 0 then
+	  return self == other
+   end
+   return self.major == other.major and
+	  self.minor <= other.minor
+end
+
+local function new(major, minor, patch, prerelease, build)
+   assert(major, "At least one parameter is needed")
+   local result = { }
+   if type(major) == 'string' then
+	  result.original = major
+	  major,minor,patch,prerelease,build = parseVersion(major)
+   end
+   patch = patch or 0
+   minor = minor or 0
+
+   checkPositiveInteger(major, "major")
+   checkPositiveInteger(minor, "minor")
+   checkPositiveInteger(patch, "patch")
+
+   result.major = major
+   result.minor = minor
+   result.patch = patch
+   result.prerelease = prerelease
+   result.build = build
+   return setmetatable(result, mt)
+end
+
+setmetatable(semver, { __call = function(_, ...) return new(...) end })
+semver._VERSION= semver(semver._VERSION)
+
+return semver
+-- This file is part of Zenroom (https://zenroom.dyne.org)
+--
+-- Copyright (C) 2018-2019 Dyne.org foundation
+-- designed, written and maintained by Denis Roio <jaromil@dyne.org>
+--
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU Affero General Public License as
+-- published by the Free Software Foundation, either version 3 of the
+-- License, or (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU Affero General Public License for more details.
+--
+-- You should have received a copy of the GNU Affero General Public License
+-- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+local rng = require'rng'
+
+-- global facility function
+function random(len) return RNG.new():octet(len) end
+
+return rng
+local machine = {}
+machine.__index = machine
+
+local NONE = "none"
+local ASYNC = "async"
+
+local function call_handler(handler, params)
+  if handler then
+    return handler(unpack(params))
+  end
+end
+
+local function create_transition(name)
+  local can, to, from, params
+
+  local function transition(self, ...)
+    if self.asyncState == NONE then
+      can, to = self:can(name)
+      from = self.current
+      params = { self, name, from, to, ...}
+
+      if not can then return false end
+      self.currentTransitioningEvent = name
+
+      local beforeReturn = call_handler(self["onbefore" .. name], params)
+      local leaveReturn = call_handler(self["onleave" .. from], params)
+
+      if beforeReturn == false or leaveReturn == false then
+        return false
+      end
+
+      self.asyncState = name .. "WaitingOnLeave"
+
+      if leaveReturn ~= ASYNC then
+        transition(self, ...)
+      end
+      
+      return true
+    elseif self.asyncState == name .. "WaitingOnLeave" then
+      self.current = to
+
+      local enterReturn = call_handler(self["onenter" .. to] or self["on" .. to], params)
+
+      self.asyncState = name .. "WaitingOnEnter"
+
+      if enterReturn ~= ASYNC then
+        transition(self, ...)
+      end
+      
+      return true
+    elseif self.asyncState == name .. "WaitingOnEnter" then
+      call_handler(self["onafter" .. name] or self["on" .. name], params)
+      call_handler(self["onstatechange"], params)
+      self.asyncState = NONE
+      self.currentTransitioningEvent = nil
+      return true
+    else
+    	if string.find(self.asyncState, "WaitingOnLeave") or string.find(self.asyncState, "WaitingOnEnter") then
+    		self.asyncState = NONE
+    		transition(self, ...)
+    		return true
+    	end
+    end
+
+    self.currentTransitioningEvent = nil
+    return false
+  end
+
+  return transition
+end
+
+local function add_to_map(map, event)
+  if type(event.from) == 'string' then
+    map[event.from] = event.to
+  else
+    for _, from in ipairs(event.from) do
+      map[from] = event.to
+    end
+  end
+end
+
+function machine.create(options)
+  assert(options.events)
+
+  local fsm = {}
+  setmetatable(fsm, machine)
+
+  fsm.options = options
+  fsm.current = options.initial or 'none'
+  fsm.asyncState = NONE
+  fsm.events = {}
+
+  for _, event in ipairs(options.events or {}) do
+    local name = event.name
+    fsm[name] = fsm[name] or create_transition(name)
+    fsm.events[name] = fsm.events[name] or { map = {} }
+    add_to_map(fsm.events[name].map, event)
+  end
+  
+  for name, callback in pairs(options.callbacks or {}) do
+    fsm[name] = callback
+  end
+
+  return fsm
+end
+
+function machine:is(state)
+  return self.current == state
+end
+
+function machine:can(e)
+  local event = self.events[e]
+  local to = event and event.map[self.current] or event.map['*']
+  return to ~= nil, to
+end
+
+function machine:cannot(e)
+  return not self:can(e)
+end
+
+function machine:todot(filename)
+  local dotfile = io.open(filename,'w')
+  dotfile:write('digraph {\n')
+  local transition = function(event,from,to)
+    dotfile:write(string.format('%s -> %s [label=%s];\n',from,to,event))
+  end
+  for _, event in pairs(self.options.events) do
+    if type(event.from) == 'table' then
+      for _, from in ipairs(event.from) do
+        transition(event.name,from,event.to)
+      end
+    else
+      transition(event.name,event.from,event.to)
+    end
+  end
+  dotfile:write('}\n')
+  dotfile:close()
+end
+
+function machine:transition(event)
+  if self.currentTransitioningEvent == event then
+    return self[self.currentTransitioningEvent](self)
+  end
+end
+
+function machine:cancelTransition(event)
+  if self.currentTransitioningEvent == event then
+    self.asyncState = NONE
+    self.currentTransitioningEvent = nil
+  end
+end
+
+machine.NONE = NONE
+machine.ASYNC = ASYNC
+
+return machine
+-- This file is part of Zenroom (https://zenroom.dyne.org)
+--
+-- Copyright (C) 2018-2019 Dyne.org foundation
+-- designed, written and maintained by Denis Roio <jaromil@dyne.org>
+--
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU Affero General Public License as
+-- published by the Free Software Foundation, either version 3 of the
+-- License, or (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU Affero General Public License for more details.
+--
+-- You should have received a copy of the GNU Affero General Public License
+-- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+
+--- Zencode data internals
+
+-- the main security concern in this Zencode module is that no data
+-- passes without validation from IN to ACK or from inline input.
+
+-- GIVEN
+
+Given("I introduce myself as ''", function(name) ZEN:Iam(name) end)
+Given("I am known as ''", function(name) ZEN:Iam(name) end)
+Given("I am ''", function(name) ZEN:Iam(name) end)
+
+local have_a = function(name)
+   ZEN:pick(name)
+   ZEN:validate(name)
+   ZEN:ack(name)
+   TMP = nil -- TODO: wipe
+end
+Given("I have a valid ''", have_a)
+Given("I have a ''", have_a)
+
+local have_my = function(name)
+   ZEN:pickin(ACK.whoami, name)
+   ZEN:validate(name)
+   ZEN:ack(name)
+   TMP = nil
+end
+Given("I have my valid ''", have_my)
+Given("I have my ''", have_my)
+
+local have_in_a = function(s, n)
+   ZEN:pickin(s, n)
+   ZEN:validate(n)
+   ZEN:ack(n)
+   ZEN:ack(s) -- save it also in ACK.section
+   TMP = nil
+end
+Given("I have inside '' a valid ''", have_in_a)
+Given("I have inside '' a ''", have_in_a)
+-- inverse order of args
+local have_a_in = function(n, s)
+   ZEN:pickin(s, n)
+   ZEN:validate(n)
+   ZEN:ack(n)
+   ZEN:ack(s) -- save it also in ACK.section
+   TMP = nil
+end
+Given("I have a valid '' inside ''", have_a_in)
+Given("I have a valid '' in ''",     have_a_in)
+Given("I have a valid '' from ''",   have_a_in)
+Given("I have a '' inside ''",       have_a_in)
+Given("I have a '' in ''",           have_a_in)
+Given("I have a '' from ''",         have_a_in)
+
+
+Given("I set '' to ''", function(k,v)
+		 ZEN.assert(not TMP[k], "Cannot overwrite TMP["..k.."]")
+		 TMP[k] = ZEN:convert(v)
+end)
+
+-- this enforces identity of schema with key name
+Given("the '' is valid", function(k)
+		 ZEN:validate(k)
+		 ZEN:ack(k)
+		 TMP = nil
+end)
+
+--- WHEN
+
+When("I draft the string ''", function(s) ZEN:draft(s) end)
+
+-- TODO:
+When("I set '' as '' with ''", function(dest, format, content) end)
+When("I append '' as '' to ''", function(content, format, dest) end)
+When("I write '' as '' in ''", function(content, dest) end)
+-- implicit conversion as string
+When("I set '' to ''", function(dest, content) end)
+When("I append '' to ''", function(content, dest) end)
+When("I write '' in ''", function(content, dest)
+		ZEN:pick(dest, content)
+		ZEN:validate(dest, 'str')
+		ZEN:ack(dest)
+		TMP = nil
+end)
+
+--- THEN
+
+Then("print '' ''", function(k,v)
+		OUT[k] = v
+end)
+
+Then("print all data", function()
+		OUT = ACK
+		OUT.whoami = nil
+end)
+Then("print my data", function()
+		ZEN:Iam() -- sanity checks
+		OUT[ACK.whoami] = ACK
+		OUT[ACK.whoami].whoami = nil
+end)
+Then("print my ''", function(obj)
+		ZEN:Iam()
+		ZEN.assert(ACK[obj], "Data not found in ACK: "..obj)
+		if not OUT[ACK.whoami] then OUT[ACK.whoami] = { } end
+		OUT[ACK.whoami][obj] = ACK[obj]
+end)
+Then("print my draft", function()
+		ZEN:draft() -- sanity checks
+		OUT[ACK.whoami] = { draft = ACK.draft:string() }
+end)
+
+function _print_my_draft_as(conv)
+   ZEN:draft()
+   OUT[ACK.whoami] = { draft = ZEN:convert(ACK.draft, conv) }
+end
+Then("print as '' my draft", _print_mydraft_as)
+Then("print my draft as ''", _print_mydraft_as)
+
+Then("print as '' my ''", function(conv,obj)
+		ZEN:draft()
+		OUT[ACK.whoami] = { draft = ZEN:convert(ACK[obj], conv) }
+end)
+
+Then("print the ''", function(key)
+		OUT[key] = ACK[key]
+end)
+Then("print as '' the ''", function(conv, obj)
+		OUT[obj] = ZEN:convert(ACK[obj], conv)
+end)
+Then("print as '' the '' inside ''", function(conv, obj, section)
+		ZEN.assert(ACK[section][obj], "Not found "..obj.." inside "..section)
+		OUT[obj] = ZEN:convert(ACK[section][obj], conv)
+end)
+
+-- debug functions
+Given("debug", function() ZEN.debug() end)
+When("debug",  function() ZEN.debug() end)
+Then("debug",  function() ZEN.debug() end)
+
+-- basic encoding schemas
+ZEN.add_schema({
+	  base64 = function(obj) return ZEN:convert(obj, OCTET.from_base64) end,
+	  url64  = function(obj) return ZEN:convert(obj, OCTET.from_url64)  end,
+	  str =    function(obj) return ZEN:convert(obj, OCTET.from_string) end
+})

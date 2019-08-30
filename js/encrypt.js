@@ -43,6 +43,7 @@ Then print the 'secret message'
             e.preventDefault()
 
             const file = document.querySelector('[type=file]').files[0]
+			if(file.size > 409600) { alert('File size too big'); return; }
             const reader = new FileReader();
             reader.onloadend = evt => {
                 if (evt.target.readyState == FileReader.DONE) {
@@ -72,7 +73,7 @@ Then print the 'secret message'
         Module.ccall('zencode_exec',
                      'number',
                      ['string', 'string', 'string', 'string', 'number'],
-                     [code, null, keys, data, 0]);
+                     [code, null, keys, data, 1]);
         t1 = performance.now()
         $('#speed').html(t1-t0)
     }
@@ -91,7 +92,11 @@ var Module = {
     printErr: function(text) {
         // if (arguments.length > 1)
         //     text = Array.prototype.slice.call(arguments).join(' ')
-        console.error(text)
+		if(text.charAt(1)=='!') console.error(text)
+		else if(text.charAt(1)=='F') console.debug(text)
+		else if(text.charAt(1)=='W') console.warn(text)
+		else if(text.charAt(1)=='*') console.info(text)
+        else console.log(text)
     },
     exec_ok: () => {},
     exec_error: () => {},
