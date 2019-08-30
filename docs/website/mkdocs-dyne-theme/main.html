@@ -18,13 +18,26 @@
 
 		<link rel="stylesheet" href="{{ base_url }}/assets/css/bulma.min.css">
 		<link rel="stylesheet" href="{{ base_url }}/assets/css/bulma-dyne.css">
+		<link rel="stylesheet" href="{{ base_url }}/assets/css/materialdesignicons.min.css">
 
-		<link rel="stylesheet" href="//cdn.materialdesignicons.com/3.7.95/css/materialdesignicons.min.css">
-		{% for furl in config.extra_css %}
-		<link rel="stylesheet" href="{{ furl }}">
+		{% for furl in config.extra_javascript %}
+		<script type="text/javascript" src="{{ base_url }}/{{ furl }}"></script>
 		{% endfor %}
 
+		{% for furl in config.extra_css %}
+		<link rel="stylesheet" href="{{ base_url }}/{{ furl }}">
+		{% endfor %}
+
+		{% if page and page.meta and page.meta.extra_javascript %}
+		<script type="text/javascript" src="{{base_url}}/{{ page.meta.extra_javascript }}"></script>
+        {% endif %}
+
+		{% if page and page.meta and page.meta.extra_css %}
+		<link rel="stylesheet" href="{{base_url }}/{{ page.meta.extra_css }}"></script>
+        {% endif %}
+
 	</head>
+
 	<body>
 		{% include 'partials/navbar.html' %}
 		<section class="section">
@@ -42,9 +55,7 @@
 			</div>
 		</section>
 		{% include 'partials/footer.html' %}
-		{% for furl in config.extra_javascript %}
-		<script type="text/javascript" src="{{ furl }}"></script>
-		{% endfor %}
-		{% if config.extra.drift_handle %} {% include 'partials/drift.html' %} {% endif %}
+		{% if config.extra.drift_handle %} {% include 'partials/drift.html' %}      {% endif %}
+		{% if config.extra.ganalytics %}   {% include 'partials/ganalytics.html' %} {% endif %}
 	</body>
 </html>

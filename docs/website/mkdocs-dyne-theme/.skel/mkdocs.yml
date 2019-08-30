@@ -28,6 +28,7 @@ extra_css:
 markdown_extensions:
   - admonition
   - codehilite
+  - meta
 
 theme:
   name: null

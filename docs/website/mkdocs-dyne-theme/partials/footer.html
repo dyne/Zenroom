@@ -1,13 +1,14 @@
 <footer class="footer">
 	<div class="content has-text-centered">
 		<p>	<strong>{{ config.site_name }}</strong> is {{ config.copyright }} </p>
-		<div class="columns is-gapless">
-			<div class="column is-one-fifth">
-				<img src="assets/img/eu-flag.png"></div>
-			<p class="column is-three-quarters">
-			This project received funding from the European Union’s
-			Horizon 2020 research and innovation programme under grant
-			agreement nr. {{ config.extra.h2020 }}.</p>
-		</div>
+		<!-- <div class="columns is-gapless">
+			 <div class="column is-one-fifth">
+			 <img src="assets/img/eu-flag.png"></div>
+			 <p class="column is-three-quarters"> -->
+		{% if config.extra.h2020 %}
+		<p>Funded by the European Union’s Horizon 2020 research and
+			innovation program, grant nr. {{ config.extra.h2020 }}.</p>
+		{% endif %}
+		<!-- </div> -->
 	</div>
 </footer>

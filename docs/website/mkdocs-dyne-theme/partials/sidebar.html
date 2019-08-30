@@ -3,11 +3,14 @@
     <h1 class="menu-label">
         <span class="mdi mdi-fire has-text-danger"></span> Quick Links</h1>
     <ul class="menu-list" style="list-style: none">
+        {% if config.extra.links.homepage %}
+        <li><span class="mdi mdi-home"></span><a href="{{ config.extra.links.homepage }}">Home</a></li>
+        {% endif %}
+        {% if config.extra.links.download %}
+        <li><span class="mdi mdi-download"></span><a href="{{ config.extra.links.releases }}">Download</a></li>
+        {% endif %}
         {% if config.repo_url %}
         <li><span class="mdi mdi-github-circle"></span><a href="{{ config.repo_url }}">Source Code</a></li>
-        {% endif %}
-        {% if config.extra.links.releases %}
-        <li><span class="mdi mdi-history"></span><a href="{{ config.extra.links.releases }}">Latest Release</a></li>
         {% endif %}
         {% if config.extra.links.docker %}
         <li><span class="mdi mdi-docker"></span><a href="{{ config.extra.links.docker }}">Docker</a></li>
