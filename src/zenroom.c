@@ -68,7 +68,7 @@ extern int umm_integrity_check();
 
 // prototypes from lua_functions.c
 extern void load_file(char *dst, FILE *fd);
-extern void zen_setenv(lua_State *L, char *key, char *val);
+extern int zen_setenv(lua_State *L, char *key, char *val);
 extern void zen_add_function(lua_State *L, lua_CFunction func,
 		const char *func_name);
 

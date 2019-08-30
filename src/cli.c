@@ -70,7 +70,7 @@ static const struct sock_fprog  strict = {
 
 #ifndef LIBRARY
 
-extern void zen_setenv(lua_State *L, char *key, char *val);
+extern int zen_setenv(lua_State *L, char *key, char *val);
 extern void load_file(char *dst, FILE *fd);
 
 int main(int argc, char **argv) {
