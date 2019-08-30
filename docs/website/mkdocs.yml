@@ -16,8 +16,8 @@ extra:
   drift_handle: s64nd7w43g53
   nav:
     subtitle: 'Zenroom: portable, secure and independent crypto language'
-    logo: /img/zenroom_logo.jpg
-    og_image_large: /img/zenroom_logo.jpg
+    logo: img/zenroom_logo.jpg
+    og_image_large: img/zenroom_logo.jpg
 
 plugins: []
 

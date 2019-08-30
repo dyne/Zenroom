@@ -1,20 +1,20 @@
-# The Zenroom VM ...
+# Zenroom crypto VM
 
-[![software by Dyne.org](https://zenroom.dyne.org/img/software_by_dyne.png)](http://www.dyne.org)
+![Zenroom logo](img/zenroom_logo-sm.jpg)
 
-Zenroom is a secure-isolated interpreter of both Lua and its own
-Zencode DSL languages to execute fast cryptographic operations on
-Elliptic Curves.
+Zenroom is a **secure language interpreter** of both Lua and its own
+Zencode language to execute fast cryptographic operations using
+elliptic curve arithmetics.
 
-The Zenroom VM is very small, has no external dependencies and is
-ready to run on any platform: desktop, embedded, mobile, cloud and
-even web browsers.
+The Zenroom VM is very small, has **no external dependency**, is fully
+deterministic and ready to run **end-to-end encryption** on any platform:
+desktop, embedded, mobile, cloud and even web browsers.
 
-Zencode is the name of the language executed by Zenroom: it is simple
+**Zencode** is the name of the language executed by Zenroom: it is simple
 to understand and can process large data structures while operating
 cryptographic transformations on them.
 
-![Credential example](img/coconut_credential-en.jpg)
+[![software by Dyne.org](https://zenroom.dyne.org/img/software_by_dyne.png)](http://www.dyne.org)
 
 This website is intended for a technical audience; more documentation is
 available on:
@@ -41,8 +41,8 @@ Download from [files.dyne.org/zenroom](https://files.dyne.org/zenroom)
 Read the [history of changes](https://files.dyne.org/zenroom/ChangeLog.txt)
 
 Anyone planning to use Zenroom to store and access secrets should not
-use the latest development version in Git, but use instead the stable
-releases on files.dyne.org.
+use the latest development version in Git, but **use the stable
+releases on files.dyne.org**.
 
 Before releasing we make sure Zenroom works as expected by running
 various tests, plus we note down all changes in the log above.
@@ -52,7 +52,14 @@ report bugs, test new features and develop patches.
 
 ## Documentation
 
-### Programming
+<script type='text/javascript' src='https://www.openhub.net/p/zenroom/widgets/project_factoids_stats?format=js'></script>
+
+### How to program
+
+Zenroom brings simplicity to distributed systems development and
+allows programmers to work in parallel. System integrators need just
+to adopt the VM embedding it in their application, security
+researchers and cryptographers can provide Zencode or Lua scripts.
 
 <span class="mdi mdi-flag"></span>
 [Zencode: programming smart contracts in human language](zencode)
@@ -60,7 +67,7 @@ report bugs, test new features and develop patches.
 <span class="mdi mdi-code-braces"></span>
 [Zenroom scripting in Lua: reference documentation](lua)
 
-### Usage
+### How to adopt
 
 <span class="mdi mdi-run"></span>
 [How to execute scripts with Zenroom](wiki/how-to-exec)
@@ -116,36 +123,23 @@ This API can be called in similar ways from a variety of languages and in partic
 </ul>
 
 
-## Mission
 
-Zenroom is software in **BETA stage** and is part of the [DECODE project](https://decodeproject.eu) about data commons and [technological sovereignty](https://www.youtube.com/watch?v=RvBRbwBm_nQ). Our effort is that of improving people's awareness of how their data is processed by algorithms, as well facilitate the work of developers to create along [privacy by design principles](https://decodeproject.eu/publications/privacy-design-strategies-decode-architecture).
-
-[![DECODE project](img/decode.svg)](https://decodeproject.eu)
-
-This software aims to make it easy and less error-prone to write **portable** scripts using **end-to-end encryption** inside isolated environments that can be easily made **interoperable**. Basic crypto functions provided include primitives to manage **a/symmetric keys, key derivation, hashing and signing functionalities**.
-
-Zenroom is software inspired by the [language-theoretical security](http://langsec.org) research, it allows to expresses cryptographic operations in a readable scripting language that has no access to the calling process, underlying operating system or filesystem.
-
-[![No more Turing Completion!](img/InputLanguages.jpg)](http://langsec.org/occupy/)
-
-Zenroom's **restricted execution environment** is a sort of [sandbox](https://en.wikipedia.org/wiki/Sandbox_%28computer_security%29) whose parser is based on LUA's [syntax-direct translation](https://en.wikipedia.org/wiki/Syntax-directed_translation) and has coarse-grained control of computations and memory. The Zenroom VM is designed to "brittle" and exit execution returning a meaningful message on any error.
-
-Zenroom's documentation and examples are being written to encourage a [declarative](https://en.wikipedia.org/wiki/Declarative_programming) approach to scripting, providing functional tools to manipulate efficiently even complex data structures.
-
-[![Full Recognition Before Processing!](img/FullRecognition.jpg)](http://langsec.org/occupy/)
-
-The main use case for Zenroom is that of **distributed computing** of untrusted code where advanced cryptographic functions are required, for instance it can be used as a distributed ledger implementation (also known as **blockchain smart contracts**).
-
-![Project funded by the European Commission](img/ec_logo.png)
-
-This project is receiving funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement nr. 732546 (DECODE).
 
 
 ## Acknowledgements
 
-Copyright (C) 2017-2019 by Dyne.org foundation, Amsterdam
+![Project funded by the European Commission](img/ec_logo.png)
 
-Designed, written and maintained by Denis Roio <jaromil@dyne.org>
+The Zenroom VM and the Zencode language are proudly developed in
+Europe and have receiving funding from the European Union’s Horizon
+2020 research and innovation programme under grant agreement
+nr. 732546 (DECODE).
+
+[![DECODE project](img/decode.jpg)](https://decodeproject.eu)
+
+Zenroom is Copyright (C) 2017-2019 by Dyne.org foundation, Amsterdam
+
+Designed, written and maintained by Denis "Jaromil" Roio
 
 With contributions by Puria Nafisi Azizi and Daniele Lacamera.
 
