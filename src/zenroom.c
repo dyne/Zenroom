@@ -189,9 +189,11 @@ void zen_teardown(zenroom_t *Z) {
 
 	func(Z->lua,"Zenroom teardown.");
 	if(Z->mem->heap) {
-		if(umm_integrity_check())
-			func(Z->lua,"HEAP integrity checks passed.");
-		umm_info(Z->mem->heap); }
+		free(Z->mem->heap);
+		// if(umm_integrity_check())
+		// 	func(Z->lua,"HEAP integrity checks passed.");
+		// umm_info(Z->mem->heap);
+	}
 	// stateful RNG instance for deterministic mode
 	if(Z->random_generator) {
 		zen_memory_free(Z->random_generator);

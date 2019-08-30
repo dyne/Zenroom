@@ -17,10 +17,10 @@ javascript-demo: apply-patches lua53 milagro embed-lua
 	@cp -v ${website}/demo/*.js    build/demo/
 
 javascript-web: cflags  += -O3 -fno-exceptions -fno-rtti
-javascript-web: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -DMAX_JSBUF=3072000 \
+javascript-web: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' \
 	-s WASM_OBJECT_FILES=0
 javascript-web: ldflags += -s WASM=1 -s ASSERTIONS=1 \
-	-s TOTAL_MEMORY=32768000 \
+	-s TOTAL_MEMORY=65536000 \
 	-s WASM_OBJECT_FILES=0 --llvm-lto 0 \
 	-s DISABLE_EXCEPTION_CATCHING=1
 javascript-web: apply-patches lua53 milagro embed-lua

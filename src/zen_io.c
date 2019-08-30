@@ -149,6 +149,8 @@ static int lua_print_stderr_tobuf(lua_State *L, char newline) {
 	return 0;
 }
 
+// optimized printing functions for wasm
+// these are about double the speed than the normal stdout/stderr wrapper
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #ifndef MAX_JSBUF
