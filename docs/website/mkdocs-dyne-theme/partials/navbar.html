@@ -1,17 +1,12 @@
 <nav class="navbar has-shadow is-transparent">
     <div class="navbar-brand">
-        <a class="navbar-item" href="/">
+        <a class="navbar-item" href="{{ base_url }}">
 			{%if config.extra.nav.logo %}
-			<img src="{{ config.extra.nav.logo }}">
+			<img src="{{ base_url }}/{{ config.extra.nav.logo }}">
 			{%else%}
             <h1 class="title">{{ config.site_name }}</h1>
 			{%endif%}
         </a>
-        <!-- <div class="navbar-burger burger" data-target="navbarExampleTransparentExample">
-             <span></span>
-             <span></span>
-             <span></span>
-             </div> -->
     </div>
 	{%if config.extra.nav.subtitle %}
 	<div id="navbarExampleTransparentExample" class="navbar-menu">
@@ -22,46 +17,13 @@
 		</div>
 	</div>
 	{%endif%}
-	<!-- 
-		 <div id="navbarExampleTransparentExample" class="navbar-menu">
-         <div class="navbar-start">
-         {% for nav_item in nav %}
-         {% if nav_item.children %}
-         <div class="navbar-item has-dropdown is-hoverable">
-         <a class="navbar-link" href="{{ nav_item.url }}">
-         {{ nav_item.title }}
-         </a>
-         <div class="navbar-dropdown is-boxed">
-         {% for nav_item in nav_item.children %}
-         <a class="navbar-item" href="{{ nav_item.url }}">
-         {{ nav_item.title }}
-         </a>
-         {% endfor %}
-         </div>
-         </div>
-         {% else %}
-         <a class="navbar-item" href="{{ nav_item.url }}">
-         {{ nav_item.title }}
-         </a>
-         {% endif %}
-         {% endfor %}
-         </div>
-	-->
         <div class="navbar-end">
             <div class="navbar-item">
                 <div class="field is-grouped">
-                    <!-- TODO: demo button
-						 <p class="control">
-                         <a class="button is-primary" href="{{ config.extra.download }}">
-                         <span class="icon">
-                         <i class="mdi mdi-download"></i>
-                         </span>
-                         <span>Download</span>
-                         </a>
-						 </p> -->
                     <p class="control">
                         <a href="https://dyne.org">
-                            <img src="https://img.shields.io/badge/made%20with%20%E2%9D%A4%20by-Dyne.org-turquoise.svg?style=for-the-badge&logo=gnu" alt="Made with love by Dyne.org" title="We are free to share code and we code to share Freedom"></a>
+							<!-- https://img.shields.io/badge/made%20with%20%E2%9D%A4%20by-Dyne.org-turquoise.svg?style=for-the-badge&logo=gnu -->
+                            <img src="{{ base_url }}/assets/img/made_by_dyne.svg" alt="Made with love by Dyne.org" title="We are free to share code and we code to share Freedom"></a>
                     </p>
                 </div>
             </div>
