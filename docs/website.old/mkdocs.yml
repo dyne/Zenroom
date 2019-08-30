@@ -1,9 +1,0 @@
-site_name: Zenroom - restricted execution crypto language
-site_description: "Secure language for cryptographic distributed computing: restricted execution environment for blockchain smart-contracts and end-to-end crypto applications supporting native builds and javascript."
-site_author: Jaromil, DECODE project
-theme: 'windmill'
-repo_url: https://github.com/DECODEproject/zenroom
-pages:
-  - Introduction: index.md
-  - Design principles: design.md
-  - API: api.md
