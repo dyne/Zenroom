@@ -43,6 +43,7 @@ Then print the 'secret message'
             e.preventDefault()
 
             const file = document.querySelector('[type=file]').files[0]
+			if(file.size > 409600) { alert('File size too big'); return; }
             const reader = new FileReader();
             reader.onloadend = evt => {
                 if (evt.target.readyState == FileReader.DONE) {

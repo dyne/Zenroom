@@ -25,7 +25,7 @@ For more information see [Zenroom.org](https://zenroom.org).
 
 ## Upload file
 
-Select a file on the local harddisk.
+Select a file on the local harddisk of maximum size 400KiB.
 
 Nothing will be uploaded to any server.
 
