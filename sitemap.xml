@@ -2,32 +2,32 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
      <loc>https://dev.zenroom.org/</loc>
-     <lastmod>2019-08-29</lastmod>
+     <lastmod>2019-08-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
      <loc>https://dev.zenroom.org/encrypt/</loc>
-     <lastmod>2019-08-29</lastmod>
+     <lastmod>2019-08-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
      <loc>https://dev.zenroom.org/zencode/</loc>
-     <lastmod>2019-08-29</lastmod>
+     <lastmod>2019-08-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
      <loc>https://dev.zenroom.org/wiki/how-to-build/</loc>
-     <lastmod>2019-08-29</lastmod>
+     <lastmod>2019-08-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
      <loc>https://dev.zenroom.org/wiki/how-to-embed/</loc>
-     <lastmod>2019-08-29</lastmod>
+     <lastmod>2019-08-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
      <loc>https://dev.zenroom.org/wiki/how-to-exec/</loc>
-     <lastmod>2019-08-29</lastmod>
+     <lastmod>2019-08-30</lastmod>
      <changefreq>daily</changefreq>
     </url>
 </urlset>
