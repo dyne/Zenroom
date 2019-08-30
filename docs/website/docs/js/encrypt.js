@@ -91,7 +91,10 @@ var Module = {
     printErr: function(text) {
         // if (arguments.length > 1)
         //     text = Array.prototype.slice.call(arguments).join(' ')
-		if(text[2]=='!') console.error(text)
+		if(text.charAt(1)=='!') console.error(text)
+		else if(text.charAt(1)=='F') console.debug(text)
+		else if(text.charAt(1)=='W') console.warn(text)
+		else if(text.charAt(1)=='*') console.info(text)
         else console.log(text)
     },
     exec_ok: () => {},
