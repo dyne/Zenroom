@@ -55,7 +55,9 @@ const char* ANSI_RESET   = "\x1b[0m";
 #define WARN 1 /* ... blkbblbl */
 
 extern zenroom_t *Z;
-static char msg[MAX_STRING];
+char pfx[MAX_STRING];
+
+extern int zen_write_err_va(const char *fmt, va_list va);
 
 static int verbosity = 1;
 void set_debug(int lev) {
@@ -71,99 +73,54 @@ int get_debug() {
   return(verbosity);
 }
 
-static void _printf(char *pfx, char *msg) {
-	if(!pfx) return;
-	if(!msg) return;
-#ifdef __ANDROID__
-	__android_log_print(ANDROID_LOG_VERBOSE, "KZK", "%s -- %s", pfx, msg);
-#endif
-	if(Z)
-		if(Z->stderr_buf) {
-			char *err = Z->stderr_buf;
-			size_t len = strlen(msg);
-			z_snprintf(err+Z->stderr_pos,
-			           Z->stderr_len-Z->stderr_pos,
-			           "%s %s\n", pfx,msg);
-			Z->stderr_pos+=len+5;
-			return;
-		}
-	// fallback in any case
-	if(color) {
-		const char *col = ANSI_RESET;
-		switch(pfx[1]) {
-		case '!': col = ANSI_RED;    break;
-		case 'F': col = ANSI_BLUE;   break; 
-		case 'W': col = ANSI_YELLOW; break;
-		case '*': col = ANSI_GREEN;  break;
-		}
-		fprintf(stderr,"%s%s%s %s\n",col,pfx,ANSI_RESET,msg);
-	} else
-		fprintf(stderr,"%s %s\n",pfx,msg);
-}
-
-// static void _printline(zenroom_t *Z, lua_State *L) {
-// 	if(!Z || !L) return;
-// 	lua_Debug ar;
-// 	if(lua_getstack(L, 1, &ar) && lua_getinfo(L, "nSl", &ar)) {
-// 		char err[MAX_STRING];
-// 		snprintf(err,MAX_STRING-1,"%s:%u: ERROR",
-// 		         ar.short_src, ar.currentline);
-// 		_printf(Z,"[!]",err);
-// 	} else
-// 		_printf(Z,"[!]","[UKNOWN STACK]:?: ERROR");
-// }
-
 void notice(lua_State *L, const char *format, ...) {
 	(void)L;
   va_list arg;
+  z_snprintf(pfx, MAX_STRING-1, "%s[*]%s %s\n",ANSI_GREEN,ANSI_RESET,format);
   va_start(arg, format);
-  z_vsnprintf(msg, MAX_STRING, format, arg);
-  _printf("[*]", msg);
+  zen_write_err_va(pfx, arg);
   va_end(arg);
 }
 
 void func(void *L, const char *format, ...) {
 	(void)L;
-  if(verbosity>=FUNC) {
-    va_list arg;
-    va_start(arg, format);
-    z_vsnprintf(msg, MAX_STRING, format, arg);
-    _printf("[F]", msg);
-    va_end(arg);
-  }
+	if(verbosity>=FUNC) {
+		va_list arg;
+		z_snprintf(pfx, MAX_STRING-1, "[D] %s\n",format);
+		va_start(arg, format);
+		zen_write_err_va(pfx, arg);
+		va_end(arg);
+	}
 }
 
 void error(lua_State *L, const char *format, ...) {
 	(void)L;
-  va_list arg;
-  va_start(arg, format);
-  z_vsnprintf(msg, MAX_STRING, format, arg);
-  _printf("[!]", msg);
-  va_end(arg);
-  if(Z) Z->errorlevel = 3;
-  // exit(1); // calls teardown (signal 11) TODO: check if OK with seccomp
+	if(!format) return;
+	va_list arg;
+	z_snprintf(pfx, MAX_STRING-1, "%s[!]%s %s\n",ANSI_RED,ANSI_RESET,format);
+	va_start(arg, format);
+	zen_write_err_va(pfx, arg);
+	va_end(arg);
+	if(Z) Z->errorlevel = 3;
+	// exit(1); // calls teardown (signal 11) TODO: check if OK with seccomp
 }
 
 void act(lua_State *L, const char *format, ...) {
 	(void)L;
-  va_list arg;
-  va_start(arg, format);
-  
-  z_vsnprintf(msg, MAX_STRING, format, arg);
-  _printf(" . ", msg);
-  va_end(arg);
+	va_list arg;
+	z_snprintf(pfx, MAX_STRING-1, " .  %s\n",format);
+	va_start(arg, format);
+	zen_write_err_va(pfx, arg);
+	va_end(arg);
 }
 
 void warning(lua_State *L, const char *format, ...) {
-	(void)L;
-  if(verbosity>=WARN) {
-    va_list arg;
-    va_start(arg, format);
-    z_vsnprintf(msg, MAX_STRING, format, arg);
-    _printf("[W]", msg);
-    va_end(arg);
-    if(Z) Z->errorlevel = 2;
-  }
+	va_list arg;
+	z_snprintf(pfx, MAX_STRING-1, "%s[W]%s %s\n",ANSI_YELLOW,ANSI_RESET,format);
+	va_start(arg, format);
+	zen_write_err_va(pfx, arg);
+	va_end(arg);
+	if(Z) Z->errorlevel = 2;
 }
 
 

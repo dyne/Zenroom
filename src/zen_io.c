@@ -30,8 +30,66 @@
 
 extern zenroom_t *Z;
 
-// passes the string to be printed through the 'tosting' function
-// inside lua, taking care of some sanitization and conversions
+int zen_write_err_va(const char *fmt, va_list va) {
+#ifdef __ANDROID__
+	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", "%s -- %s", pfx, msg);
+	__android_log_print(ANDROID_LOG_VERBOSE, "KZK", fmt, va); // TODO: test
+#endif
+	size_t len = 0;
+	if(!Z) len = vfprintf(stderr,fmt,va); // no init yet, print to stderr
+	if(!len && Z->stderr_buf) { // print to configured buffer
+		char *err = Z->stderr_buf;
+		len = z_vsnprintf(err+Z->stderr_pos,
+		                  Z->stderr_len-Z->stderr_pos,
+		                  fmt, va);
+		Z->stderr_pos+=len;
+	}
+	if(!len) len = vfprintf(stderr,fmt,va); // fallback no configured buffer
+	return len;
+}
+
+int zen_write_out_va(const char *fmt, va_list va) {
+	size_t len = 0;
+	if(!Z) len = vfprintf(stdout,fmt,va);
+	if(!len && Z->stdout_buf) {
+		char *out = Z->stdout_buf;
+		len = z_vsnprintf(out+Z->stdout_pos,
+		                  Z->stdout_len-Z->stdout_pos,
+		                  fmt, va);
+		Z->stdout_pos+=len;
+	}
+	if(!len) len = vfprintf(stdout,fmt,va);
+	return len;
+}
+
+int zen_write_err(const char *fmt, ...) {
+#ifdef __ANDROID__
+	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", "%s -- %s", pfx, msg);
+	__android_log_print(ANDROID_LOG_VERBOSE, "KZK", fmt, va); // TODO: test
+#endif
+	va_list arg;
+	size_t len;
+	va_start(arg,fmt);
+	len = zen_write_err_va(fmt,arg);
+	va_end(arg);
+	return len;
+}
+
+int zen_write_out(const char *fmt, ...) {
+#ifdef __ANDROID__
+	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", "%s -- %s", pfx, msg);
+	__android_log_print(ANDROID_LOG_VERBOSE, "KZK", fmt, va); // TODO: test
+#endif
+	va_list arg;
+	size_t len;
+	va_start(arg,fmt);
+	len = zen_write_out_va(fmt,arg);
+	va_end(arg);
+	return len;
+}
+
+// passes the string to be printed through the 'tostring'
+// meta-function configured in Lua, taking care of conversions
 static const char *lua_print_format(lua_State *L,
 		int pos, size_t *len) {
 	const char *s;
@@ -54,37 +112,36 @@ static int lua_print_stdout_tobuf(lua_State *L, char newline) {
 	if(Z->stdout_buf && (Z->stdout_pos < Z->stdout_len)) {
 		int i;
 		int n = lua_gettop(L);  /* number of arguments */
-		char *out = (char*)Z->stdout_buf;
 		size_t len;
+		const char *s;
 		lua_getglobal(L, "tostring");
 		for (i=1; i<=n; i++) {
-			const char *s = lua_print_format(L, i, &len);
-			if(i>1) { out[Z->stdout_pos]='\t'; Z->stdout_pos++; }
-			z_snprintf(out+Z->stdout_pos,
-					Z->stdout_len - Z->stdout_pos,
-					"%s%c", s, newline);
-			Z->stdout_pos+=len+1;
+			s = lua_print_format(L, i, &len);
+			if(i>1) 
+				zen_write_out("\t%s%c",s,newline);
+			else
+				zen_write_out("%s%c",s,newline);
 			lua_pop(L, 1);
 		}
 		return 1;
 	}
 	return 0;
 }
+
 static int lua_print_stderr_tobuf(lua_State *L, char newline) {
 	SAFE(Z);
 	if(Z->stderr_buf && (Z->stderr_pos < Z->stderr_len)) {
 		int i;
 		int n = lua_gettop(L);  /* number of arguments */
-		char *out = (char*)Z->stderr_buf;
 		size_t len;
+		const char *s;
 		lua_getglobal(L, "tostring");
 		for (i=1; i<=n; i++) {
-			const char *s = lua_print_format(L, i, &len);
-			if(i>1) { out[Z->stderr_pos]='\t'; Z->stderr_pos++; }
-			z_snprintf(out+Z->stderr_pos,
-					Z->stderr_len - Z->stderr_pos,
-					"%s%c", s, newline);
-			Z->stderr_pos+=len+1;
+			s = lua_print_format(L, i, &len);
+			if(i>1) 
+				zen_write_err("\t%s%c",s,newline);
+			else
+				zen_write_err("%s%c",s,newline);
 			lua_pop(L, 1);
 		}
 		return 1;
@@ -94,79 +151,20 @@ static int lua_print_stderr_tobuf(lua_State *L, char newline) {
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
-static char out[MAX_STRING];
-
+#ifndef MAX_JSBUF
+#define MAX_JSBUF 4096000 // 4MiB
+#endif
+static char out[MAX_JSBUF];
 static int zen_print (lua_State *L) {
-	if( lua_print_stdout_tobuf(L,' ') ) return 0;
-
 	size_t pos = 0;
-	size_t len = 0;
-	int n = lua_gettop(L);  /* number of arguments */
-	int i;
-	lua_getglobal(L, "tostring");
-	for (i=1; i<=n; i++) {
-		const char *s = lua_print_format(L, i, &len);
-		if (i>1) { out[pos]='\t'; pos++; }
-		z_snprintf(out+pos,MAX_STRING-pos,"%s",s);
+	int nargs = lua_gettop(L) +1;
+	int arg = 0;
+	for (; nargs--; arg++) {
+		size_t len;
+		const char *s = lua_tolstring(L, arg, &len);
+		if (arg>1) { out[pos]='\t'; pos++; }
+		z_snprintf(out+pos,MAX_JSBUF-pos,"%s",s);
 		pos+=len;
-		lua_pop(L, 1);  /* pop result */
-	}
-	EM_ASM_({Module.print(UTF8ToString($0))}, out);
-	return 0;
-}
-
-static int zen_error (lua_State *L) {
-	if( lua_print_stderr_tobuf(L,' ') ) return 0;
-	size_t pos = 0;
-	size_t len = 0;
-	int n = lua_gettop(L);  /* number of arguments */
-	int i;
-	lua_getglobal(L, "tostring");
-	out[0] = '['; out[1] = '!';	out[2] = ']'; out[3] = ' ';	pos = 4;
-	for (i=1; i<=n; i++) {
-		const char *s = lua_print_format(L, i, &len);
-		if (i>1) { out[pos]='\t'; pos++; }
-		z_snprintf(out+pos,MAX_STRING-pos,"%s",s);
-		pos+=len;
-		lua_pop(L, 1);  /* pop result */
-	}
-	EM_ASM_({Module.print(UTF8ToString($0))}, out);
-	return 0;
-}
-
-static int zen_warn (lua_State *L) {
-	if( lua_print_stderr_tobuf(L,' ') ) return 0;
-	size_t pos = 0;
-	size_t len = 0;
-	int n = lua_gettop(L);  /* number of arguments */
-	int i;
-	lua_getglobal(L, "tostring");
-	out[0] = '['; out[1] = 'W';	out[2] = ']'; out[3] = ' ';	pos = 4;
-	for (i=1; i<=n; i++) {
-		const char *s = lua_print_format(L, i, &len);
-		if (i>1) { out[pos]='\t'; pos++; }
-		z_snprintf(out+pos,MAX_STRING-pos,"%s",s);
-		pos+=len;
-		lua_pop(L, 1);  /* pop result */
-	}
-	EM_ASM_({Module.print(UTF8ToString($0))}, out);
-	return 0;
-}
-
-static int zen_act (lua_State *L) {
-	if( lua_print_stderr_tobuf(L,' ') ) return 0;
-	size_t pos = 0;
-	size_t len = 0;
-	int n = lua_gettop(L);  /* number of arguments */
-	int i;
-	lua_getglobal(L, "tostring");
-	out[0] = ' '; out[1] = '.';	out[2] = ' '; out[3] = ' ';	pos = 4;
-	for (i=1; i<=n; i++) {
-		const char *s = lua_print_format(L, i, &len);
-		if (i>1) { out[pos]='\t'; pos++; }
-		z_snprintf(out+pos,MAX_STRING-pos,"%s",s);
-		pos+=len;
-		lua_pop(L, 1);  /* pop result */
 	}
 	EM_ASM_({Module.print(UTF8ToString($0))}, out);
 	return 0;
@@ -180,12 +178,66 @@ static int zen_write (lua_State *L) {
 		size_t len;
 		const char *s = lua_tolstring(L, arg, &len);
 		if (arg>1) { out[pos]='\t'; pos++; }
-		z_snprintf(out+pos,MAX_STRING-pos,"%s",s);
+		z_snprintf(out+pos,MAX_JSBUF-pos,"%s",s);
 		pos+=len;
 	}
 	EM_ASM_({Module.print(UTF8ToString($0))}, out);
 	lua_pushboolean(L, 1);
 	return 1;
+}
+
+static int zen_error (lua_State *L) {
+	size_t pos = 0;
+	size_t len = 0;
+	int n = lua_gettop(L);  /* number of arguments */
+	int i;
+	lua_getglobal(L, "tostring");
+	out[0] = '['; out[1] = '!';	out[2] = ']'; out[3] = ' ';	pos = 4;
+	for (i=1; i<=n; i++) {
+		const char *s = lua_print_format(L, i, &len);
+		if (i>1) { out[pos]='\t'; pos++; }
+		z_snprintf(out+pos,MAX_JSBUF-pos,"%s",s);
+		pos+=len;
+		lua_pop(L, 1);  /* pop result */
+	}
+	EM_ASM_({Module.printErr(UTF8ToString($0))}, out);
+	return 0;
+}
+
+static int zen_warn (lua_State *L) {
+	size_t pos = 0;
+	size_t len = 0;
+	int n = lua_gettop(L);  /* number of arguments */
+	int i;
+	lua_getglobal(L, "tostring");
+	out[0] = '['; out[1] = 'W';	out[2] = ']'; out[3] = ' ';	pos = 4;
+	for (i=1; i<=n; i++) {
+		const char *s = lua_print_format(L, i, &len);
+		if (i>1) { out[pos]='\t'; pos++; }
+		z_snprintf(out+pos,MAX_JSBUF-pos,"%s",s);
+		pos+=len;
+		lua_pop(L, 1);  /* pop result */
+	}
+	EM_ASM_({Module.printErr(UTF8ToString($0))}, out);
+	return 0;
+}
+
+static int zen_act (lua_State *L) {
+	size_t pos = 0;
+	size_t len = 0;
+	int n = lua_gettop(L);  /* number of arguments */
+	int i;
+	lua_getglobal(L, "tostring");
+	out[0] = ' '; out[1] = '.';	out[2] = ' '; out[3] = ' ';	pos = 4;
+	for (i=1; i<=n; i++) {
+		const char *s = lua_print_format(L, i, &len);
+		if (i>1) { out[pos]='\t'; pos++; }
+		z_snprintf(out+pos,MAX_JSBUF-pos,"%s",s);
+		pos+=len;
+		lua_pop(L, 1);  /* pop result */
+	}
+	EM_ASM_({Module.printErr(UTF8ToString($0))}, out);
+	return 0;
 }
 
 #elif defined(ARCH_CORTEX)
