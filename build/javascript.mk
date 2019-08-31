@@ -31,7 +31,9 @@ javascript-web: apply-patches lua53 milagro embed-lua
 	@cp -v src/zenroom.js   build/web/
 	@cp -v src/zenroom.data build/web/
 	@cp -v src/zenroom.wasm build/web/
+	@mkdir -p ${website}/js
 	@cp -v build/web/* ${website}/js/
+	@mkdir -p ${website}/encrypt
 	@cp -v build/web/zenroom.data ${website}/encrypt/
 
 javascript-asmjs: cflags += -DARCH_JS -D'ARCH=\"JS\"' -D MAX_STRING=128000
