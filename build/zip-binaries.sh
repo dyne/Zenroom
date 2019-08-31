@@ -89,8 +89,8 @@ for t in $targets; do
 		linux)
 			prepdir $dir
 			# download  (TODO: destination rename)
-			download zenroom-static-armhf src/zenroom-static zenroom.arm
-			download zenroom-static-amd64 src/zenroom-static zenroom.x86
+			download zenroom-static-armhf src/zenroom zenroom.arm
+			download zenroom-static-amd64 src/zenroom zenroom.x86
 			download zenroom-shared-android-x86 src/zenroom.so zenroom-android-x86.so
 			download zenroom-shared-android-arm src/zenroom.so zenroom-android-arm.so
 			mkdir -p $dir/python2

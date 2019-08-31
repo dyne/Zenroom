@@ -22,18 +22,14 @@ ARCH=$(shell uname -m)
 # include platform specific configurations pattern-matching target labels
 include ${pwd}/build/config.mk
 
-test-exec := ${pwd}/src/zenroom-shared -c ${pwd}/test/decode-test.conf
-
 all:
 	@echo "Choose a target:"
-	@echo "- javascript-asmjs, javascript-wasm, javascript-rn, javascript-demo (need EMSDK env)"
 	@echo "- linux, linux-lib, linux-clang, linux-debug"
-	@echo "- linux-python, linux-java        (language bindings)"
+	@echo "- javascript-web, javascript-wasm, javascript-demo, etc. (need EMSDK)"
+	@echo "- linux-python2, linux-python3, linux-go (language bindings)"
 	@echo "- osx, osx-python2/3, ios-armv7, ios-arm64, ios-sim (need Apple/OSX)"
 	@echo "- win, win-dll	(cross-compile using MINGW on Linux)"
 	@echo "- musl, musl-local, musl-system   (full static build)"
-	@echo "- docker-build, docker-release"
-
 	@echo "for android and ios see scripts in build/"
 
 # if ! [ -r build/luac ]; then ${gcc} -I${luasrc} -o build/luac ${luasrc}/luac.c ${luasrc}/liblua.a -lm; fi

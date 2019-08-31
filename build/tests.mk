@@ -97,7 +97,7 @@ check-osx:
 	@echo "All tests passed for SHARED binary build"
 	@echo "----------------"
 
-check-shared: test-exec := ./src/zenroom-shared
+check-shared: test-exec := ./src/zenroom
 check-shared:
 	${test-exec} test/constructs.lua
 	$(call himem-tests,${test-exec})
@@ -109,7 +109,7 @@ check-shared:
 	@echo "----------------"
 
 
-check-static: test-exec := ./src/zenroom-static
+check-static: test-exec := ./src/zenroom
 check-static:
 	${test-exec} test/constructs.lua
 	$(call lowmem-tests,${test-exec})
@@ -128,7 +128,7 @@ check-js:
 	@echo "All tests passed for JS binary build"
 	@echo "----------------"
 
-check-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom-shared -d 3
+check-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom -d 3
 check-debug:
 	$(call determinism-tests,${test-exec})
 	$(call lowmem-tests,${test-exec})
@@ -137,7 +137,7 @@ check-debug:
 	@echo "All tests passed for DEBUG binary build"
 	@echo "----------------"
 
-check-crypto: test-exec := ./src/zenroom-shared
+check-crypto: test-exec := ./src/zenroom
 check-crypto:
 	$(call determinism-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
@@ -146,13 +146,8 @@ check-crypto:
 	@echo "-----------------------"
 
 
-check-crypto-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom-shared -d 3
+check-crypto-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom -d 3
 check-crypto-debug:
-	$(call determinism-tests,${test-exec})
-	$(call crypto-tests,${test-exec})
-
-check-crypto-static: test-exec := ./src/zenroom-static
-check-crypto-static:
 	$(call determinism-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
 

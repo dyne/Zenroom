@@ -46,10 +46,10 @@ js: ${SOURCES}
 # static: LDADD  += /usr/lib/${ARCH}-linux-musl/libc.a
 # using default path for non-native installs of musl
 musl: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o zenroom-static ${LDFLAGS} ${LDADD}
+	${CC} ${CFLAGS} ${SOURCES} -o zenroom ${LDFLAGS} ${LDADD}
 
 linux: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o zenroom-shared ${LDFLAGS} ${LDADD}
+	${CC} ${CFLAGS} ${SOURCES} -o zenroom ${LDFLAGS} ${LDADD}
 
 # available vars to identify the build:
 # ${ARCH} ${VERSION} ${BRANCH} ${HASH}
@@ -64,9 +64,6 @@ python: ${SOURCES}
 
 go: ${SOURCES}
 	${LD} -shared ${SOURCES} zen_go.o -o libzenroomgo.so ${LDFLAGS} ${LDADD}
-
-java: ${SOURCES}
-	${LD} -shared ${SOURCES} zen_java.o -o zenroom-java-linux.so ${LDFLAGS} ${LDADD}
 
 osx: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom.command ${LDFLAGS} ${LDADD}
