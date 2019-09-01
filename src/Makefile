@@ -36,8 +36,6 @@ SOURCES := \
 	cortex_m.o \
 	redis_mod.o
 
-all: shared
-
 # js: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
 js: JSOUT ?= zenroom.js
 js: ${SOURCES}

@@ -1,0 +1,18 @@
+{
+  "startOnLoad": true,
+  "flowchart": {
+    "useMaxWidth": false,
+    "htmlLabels": true
+  },
+  "sequence": {
+    "useMaxWidth": true,
+    "height": 40,
+    "actorMargin": 200,
+    "mirrorActors": true,
+    "bottomMarginAdj": 1
+  },
+  "theme": "default",
+  "themeCSS": 
+"rect.note { width: 34em; stroke: none }"
+
+}

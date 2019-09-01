@@ -7,7 +7,54 @@ cryptographic operations in a readable domain-specific language called
 
 For an explanation of the innovation brought by Zencode see this blog post: [Smart contracts for the English speaker](https://decodeproject.eu/blog/smart-contracts-english-speaker).
 
-A Zencode contract operates on data in 3 phases: 1: Given -> 2: When -> 3: Then
+Now to learn this very simple language, lets dive into some examples.
+
+Keep in mind that statements in yellow boxes are actual Zencode being executed.
+
+## Symmetric encryption
+
+This is a simple tecnique to hide a secret using a common password known to all people.
+
+Let's imagine two people who want to communicate secretly: Alice and Bob.
+
+![Zencode to encrypt with password](img/aes_crypt.svg)
+
+Here the Zencode is executed three times:
+
+1. Alice generates a strong random password
+2. Alice encrypts a message using this password
+3. Bob decrypts the message using the password
+
+Of course the password must be communicated to Bob and that's the
+dangerous part, since it could be stolen at the moment is told.
+
+## Asymmetric encryption
+
+To solve this problem we have [asymmetric encryption (or public key
+cryptography)](https://en.wikipedia.org/wiki/Public-key_cryptography)
+which relies on the creation of keypairs (public and private) both by
+Alice and Bob.
+
+Fortunately its pretty simple to do using Zencode.
+
+### Key generation and exchange
+
+![Zencode to generate asymmetric keypairs](img/ecdh_keygen.svg)
+
+After both Alice and Bob have their own keypairs and they both know
+each other public key we can move forward to do asymmetric encryption
+and signatures.
+
+### Public-key Encryption (ECDH)
+
+![Zencode to encrypt using asymmetric keypairs](img/ecdh_crypt.svg)
+
+### Public-key Signature (ECDSA)
+
+
+## Memory model
+
+By now should be clear that a Zencode contract operates on data in 3 phases: 1: **Given** -> 2: **When** -> 3: **Then**
 
 1. reads an input
 2. processes its contents
@@ -16,6 +63,8 @@ A Zencode contract operates on data in 3 phases: 1: Given -> 2: When -> 3: Then
 The 3 separate blocks of code also correspond to 3 memory areas.
 
 ![Zencode documentation diagram](img/zencode_diagram.png)
+
+## List of statements
 
 ```yaml
 data:
