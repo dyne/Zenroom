@@ -31,9 +31,12 @@ cortex-arm:	apply-patches cortex-lua53 milagro embed-lua
 	CC=${gcc} AR="${ar}" OBJCOPY="${objcopy}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src cortex-arm
 
-linux-debug: linux
+linux-debug: apply-patches lua53 milagro embed-lua
+	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	make -C src linux
+	@cp -v src/zenroom build/zenroom
 
-linux-profile: linux
+linux-profile: linux-debug
 
 linux-c++: linux
 
