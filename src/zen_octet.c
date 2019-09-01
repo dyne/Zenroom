@@ -353,7 +353,7 @@ static int lua_is_url64(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "string expected");
 	int len = is_url64(s);
-	if(len<4) {
+	if(len<3) {
 		lua_pushboolean(L, 0);
 		func(L, "string is not a valid base64 sequence");
 		return 1; }

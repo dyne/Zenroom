@@ -105,7 +105,6 @@ int _fp_to_big(big *dst, FP *src) {
     @see ECP:octet
 */
 static int lua_new_ecp(lua_State *L) {
-
 	// unsafe parsing into BIG, only necessary for tests
 	// deactivate when not running tests
 #ifdef DEBUG
@@ -130,20 +129,13 @@ static int lua_new_ecp(lua_State *L) {
 		return 1; }
 #endif
 
-	// Support string argument for the representation of "Infinity"
-	size_t linf;
-	char *inf = lua_tolstring(L, 1, &linf);
-	if(inf && linf==8) // strlen("Infinity")
-		if(strcmp(inf, "Infinity")==0) {
-			ecp *e = ecp_new(L); SAFE(e);
-			ECP_inf(&e->val);
-			return 1;
-		}
 	// We protect well this entrypoint since parsing any input is at risk
 	// Milagro's _fromOctet() uses ECP_BLS383_set(ECP_BLS383 *P,BIG_384_29 x)
 	// then converts the BIG to an FP modulo using FP_BLS383_nres.
 	octet *o = o_arg(L,1); SAFE(o);
 	ecp *e = ecp_new(L); SAFE(e);
+	if(o->len == 2 && o->val[0] == SCHAR_MAX && o->val[1] == SCHAR_MAX) {
+		ECP_inf(&e->val); return 1; } // ECP Infinity
 	if(o->len > e->totlen) { // quick and dirty safety
 		lua_pop(L,1);
 		error(L,"Octet length %u instead of %u bytes",o->len,e->totlen);
@@ -153,7 +145,7 @@ static int lua_new_ecp(lua_State *L) {
 	if(res<0) { // test in Milagro's ecdh_*.h ECP_*_PUBLIC_KEY_VALIDATE
 		lua_pop(L,1);
 		error(L,"ECP point validation returns %i",res);
-		lerror(L,"Octet is not a valid public key (point is not on this curve)");
+		lerror(L,"Octet is not a valid ECP (point is not on this curve)");
 		return 0; }
 	if(! ECP_fromOctet(&e->val, o) ) {
 		lua_pop(L,1);
@@ -368,7 +360,11 @@ static int ecp_eq(lua_State *L) {
 
 // use shared internally with octet o_arg()
 int _ecp_to_octet(octet *o, ecp *e) {
-	ECP_toOctet(o, &e->val);
+	if (ECP_isinf(&e->val)) { // Infinity
+		o->val[0] = SCHAR_MAX; o->val[1] = SCHAR_MAX;
+		o->val[3] = 0x0; o->len = 2;
+	} else
+		ECP_toOctet(o, &e->val);
 	return(1);
 }
 /***
@@ -448,8 +444,10 @@ static int ecp_table(lua_State *L) {
 
 static int ecp_output(lua_State *L) {
 	ecp *e = ecp_arg(L,1); SAFE(e);
-	if (ECP_isinf(&e->val)) {
-		lua_pushstring(L,"Infinity");
+	if (ECP_isinf(&e->val)) { // Infinity
+		octet *o = o_new(L,3); SAFE(o);
+		o->val[0] = SCHAR_MAX; o->val[1] = SCHAR_MAX;
+		o->val[3] = 0x0; o->len = 2;
 		return 1; }
 	octet *o = o_new(L,e->totlen + 0x0f);
 	SAFE(o); lua_pop(L,1);

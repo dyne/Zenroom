@@ -205,6 +205,18 @@ static int ecp2_affine(lua_State *L) {
 }
 
 /***
+    Returns a new ECP2 infinity point that is definitely not on the curve.
+
+    @function infinity()
+    @return ECP2 pointing to infinity (out of the curve).
+*/
+static int ecp2_get_infinity(lua_State *L) {
+	ecp2 *e = ecp2_new(L); SAFE(e);
+	ECP2_inf(&e->val);
+	return 1;
+}
+
+/***
     Returns true if an ECP2 coordinate points to infinity (out of the curve) and false otherwise.
 
     @function isinf()
@@ -383,6 +395,8 @@ int luaopen_ecp2(lua_State *L) {
 		{"generator",ecp2_generator},
 		{"G",ecp2_generator},
 		{"mapit",ecp2_mapit},
+		{"inf",ecp2_get_infinity},
+		{"infinity",ecp2_get_infinity},
 		// basic pairing function & aliases
 		{"pair",ecp2_millerloop},
 		{"loop",ecp2_millerloop},
