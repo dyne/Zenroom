@@ -17,8 +17,8 @@ cat <<EOF | zenroom -z -d$verbose -k alice.keys | tee alice_signs_to_bob.json
 Scenario 'simple': $scenario
 Given that I am known as 'Alice'
 and I have my 'keypair'
-When I draft the string 'This is my signed message to Bob'
-and I sign the draft as 'signed message'
+When I write 'This is my signed message to Bob.' in 'draft'
+and I sign the 'draft' as 'signed message'
 Then print my 'signed message'
 EOF
 

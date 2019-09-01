@@ -54,14 +54,26 @@ and I encrypt the 'draft' to 'secret message' for 'Bob'
 Then print the 'secret message'
 EOF
 
+scenario="Bob gathers public keys in his keyring"
+echo $scenario
+cat <<EOF | zenroom -z -k bob.keys -a alice.pub |tee bob.keyring | json_pp
+Scenario 'simple'
+Given that I am 'Bob'
+and I have my valid 'keypair'
+and I have a 'public key' from 'Alice'
+Then print my 'keypair'
+and print the 'public key'
+EOF
+
 scenario="Bob decrypts the message from Alice"
 echo $scenario
-cat <<EOF | zenroom -z -d$verbose -k bob.keys -a alice_to_bob.json
+cat <<EOF | zenroom -z -d$verbose -k bob.keyring -a alice_to_bob.json
 Scenario 'simple': $scenario
 Given that I am known as 'Bob'
 and I have my valid 'keypair'
+and I have a 'public key' from 'Alice'
 and I have a valid 'secret message'
-When I decrypt the 'secret message' to 'clear text'
+When I decrypt the 'secret message' from 'Alice' to 'clear text'
 Then print as 'string' the 'clear text'
 and print as 'string' the 'header' inside 'secret message'
 EOF
