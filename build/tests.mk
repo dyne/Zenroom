@@ -49,6 +49,7 @@ crypto-tests = \
 	test/octet-json.sh ${1} && \
 	test/integration_asymmetric_crypto.sh ${1} && \
 	cd test/zencode_simple &&    \
+	./run_symmetric_integration_test.sh ../../${1} && \
 	./run_aesgcm_integration_test.sh ../../${1} && \
 	./run_ecdsa_integration_test.sh ../../${1}; cd -; \
 	cd test/zencode_coconut &&    \
