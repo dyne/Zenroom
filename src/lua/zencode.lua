@@ -62,16 +62,16 @@ local zencode = {
    matches = {},
    verbosity = 0,
    schemas = { },
-   scenario = nil;
+   scenario = 'basic';
    OK = true -- set false by asserts
 }
 
 zencode.machine = MACHINE.create({
-	  initial = 'feature',
+	  initial = 'init',
 	  events = {
-		 { name = 'enter_rule',     from = { 'feature', 'rule' }, to = 'rule' },
-		 { name = 'enter_scenario', from = { 'feature', 'rule' }, to = 'scenario' },
-		 { name = 'enter_given',    from =   'scenario',          to = 'given' },
+		 { name = 'enter_rule',     from = { 'init', 'rule' }, to = 'rule' },
+		 { name = 'enter_scenario', from = { 'init', 'rule' }, to = 'scenario' },
+		 { name = 'enter_given',    from = { 'init', 'rule', 'scenario' }, to = 'given' },
 		 { name = 'enter_when',     from =   'given',             to = 'when' },
 		 { name = 'enter_then',     from = { 'given', 'when' },   to = 'then' },
 		 { name = 'enter_and',      from =   'given',             to = 'given' },
@@ -115,9 +115,11 @@ end
 -- try obj.*.what (TODO: exclude KEYS and ACK.whoami)
 local function inside_pick(obj, what)
    ZEN.assert(obj, "ZEN:pick object is nil")
-   ZEN.assert(type(obj) == "table", "ZEN:pick object is not a table")
+   -- ZEN.assert(I.spy(type(obj)) == "table", "ZEN:pick object is not a table")
    ZEN.assert(type(what) == "string", "ZEN:pick object index is not a string")
-   local got = obj[what]
+   local got
+   if type(obj) == 'string' then  got = obj
+   else got = obj[what] end
    if got then
 	  -- ZEN:ftrace("inside_pick found "..what.." at object root")
 	  goto gotit
@@ -225,6 +227,14 @@ function zencode:validate_recur(obj, name)
    return(res)
 end
 
+function zencode:ack_table(key,val)
+   ZEN.assert(TMP.valid, "No valid object found in TMP")
+   ZEN.assert(type(key) == 'string',"ZEN:table_add arg #1 is not a string")
+   ZEN.assert(type(val) == 'string',"ZEN:table_add arg #2 is not a string")
+   if not ACK[key] then ACK[key] = { } end
+   ACK[key][val] = TMP.valid
+end
+
 ---
 -- Final step inside the <b>Given</b> block towards the <b>When</b>:
 -- pass on a data structure into the ACK memory space, ready for
@@ -327,29 +337,60 @@ end
 -- @function ZEN:outmy(name)
 
 ---
--- Convert a generic data element to the desired format (argument name
--- provided as string), or use CONF.encoding when called without
--- argument
+-- Convert a data object to the desired format (argument name provided
+-- as string), or use CONF.encoding when called without argument
 --
--- @function ZEN:convert(object, format)
+-- @function ZEN:export(object, format)
 -- @param object data element to be converted
 -- @param format pointer to a converter function
 -- @return object converted to format
-function zencode:convert(object, format)
+function zencode:export(object, format)
    -- CONF { encoding = <function 1>,
    --        encoding_prefix = "u64"  }
-   local fun = format or CONF.encoding
-   -- functions mapped from zenroom_octet.lua
-   if     CONF.encoding == 'u64'    then fun = url64
-   elseif CONF.encoding == 'b64'    then fun = base64
-   elseif CONF.encoding == 'hex'    then fun = hex
-   elseif CONF.encoding == 'string' then fun = str
-   elseif CONF.encoding == 'str'    then fun = str
-   else ZEN.assert(fun, "Conversion format not found")
+   ZEN.assert(object, "ZEN:export object not found")
+   ZEN.assert(iszen(type(object)), "ZEN:export called on a ".. type(object))
+   local conv_f = nil
+   local ft = type(format)
+   if format and ft == 'function' then conv_f = format goto ok end
+   if format and ft == 'string' then conv_f = get_encoding(format) goto ok end
+   conv_f = CONF.encoding_fun -- fallback to configured conversion function
+   ::ok::
+   ZEN.assert(conv_f , "ZEN:export conversion function not configured")
+   return conv_f(object) -- TODO: protected call
+end
+
+---
+-- Import a generic data element from the tagged format, or use
+-- CONF.encoding
+--
+-- @function ZEN:import(object)
+-- @param object data element to be read
+-- @return object read
+function zencode:import(object)
+   ZEN.assert(object, "ZEN:import object is nil")
+   local t = type(object)
+   if iszen(t) then
+	  warn("ZEN:import object already converted to "..t)
+	  return t
    end
-   ZEN.assert(type(fun) == "function",
-   			  "Conversion format is not a function: "..type(fun))
-   return fun(object) -- TODO: protected call
+   ZEN.assert(t == 'string', "ZEN:import object is not a string: "..t)
+   -- OK, convert
+   if string.sub(object,1,3) == 'u64' and O.is_url64(object) then
+	  -- return decoded string format for JSON.decode
+	  return O.from_url64(object)
+   elseif string.sub(object,1,3) == 'b64' and O.is_base64(object) then
+	  -- return decoded string format for JSON.decode
+	  return O.from_base64(object)
+   elseif string.sub(object,1,3) == 'hex' and O.is_hex(object) then
+	  -- return decoded string format for JSON.decode
+	  return O.from_hex(object)
+   elseif string.sub(object,1,3) == 'bin' and O.is_bin(object) then
+	  -- return decoded string format for JSON.decode
+	  return O.from_bin(object)
+   end
+   ZEN:wtrace("import implicit conversion from string: " ..object)
+   return O.from_string(object)
+   -- error("ZEN:import failed conversion from "..t, 3)
 end
 
 
@@ -386,32 +427,23 @@ function zencode:step(text)
    local defs -- parse in what phase are we
    ZEN.OK = true
    if prefix == 'given' then
-	  ZEN.assert(ZEN.machine:enter_given(), text.."\n    "..
-					"Invalid transition from "
-					..ZEN.machine.current.." to Given block")
+	  ZEN.assert(ZEN.machine:enter_given(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.." to Given block")
       self.current_step = self.given_steps
       defs = self.current_step
+	  ZEN:trace("|   Scenario "..ZEN.scenario)
    elseif prefix == 'when'  then
-	  ZEN.assert(ZEN.machine:enter_when(), text.."\n    "..
-					"Invalid transition from "
-					..ZEN.machine.current.."to When block")
+	  ZEN.assert(ZEN.machine:enter_when(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.."to When block")
       self.current_step = self.when_steps
       defs = self.current_step
    elseif prefix == 'then'  then
-	  ZEN.assert(ZEN.machine:enter_then(), text.."\n    "..
-					"Invalid transition from "
-					..ZEN.machine.current.." to Then block")
+	  ZEN.assert(ZEN.machine:enter_then(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.." to Then block")
       self.current_step = self.then_steps
       defs = self.current_step
    elseif prefix == 'and'   then
-	  ZEN.assert(ZEN.machine:enter_and(), text.."\n    "..
-					"Invalid transition from "
-					..ZEN.machine.current.." to And block")
+	  ZEN.assert(ZEN.machine:enter_and(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.." to And block")
       defs = self.current_step
    elseif prefix == 'scenario' then
-	  ZEN.assert(ZEN.machine:enter_scenario(), text.."\n    "..
-					"Invalid transition from "
-					..ZEN.machine.current.." to Scenario block")
+	  ZEN.assert(ZEN.machine:enter_scenario(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.." to Scenario block")
       self.current_step = self.given_steps
       defs = self.current_step
 	  ZEN.scenario = string.match(text, "'(.-)'")
@@ -425,13 +457,20 @@ function zencode:step(text)
 					"Invalid transition from "
 					..ZEN.machine.current.." to Rule block")
 	  -- process rules immediately
-	  local rule = split(text, "%S+") -- may be optimised
+	  local rule = strtok(text) -- TODO: optimise in C (see zenroom_common)
 	  if rule[2] == 'check' and rule[3] == 'version' then
 		 act("Zencode version check >= "..rule[4])
 		 -- TODO: check version of running VM
+	  elseif rule[2] == 'load' and rule[3] then
+		 act("zencode extension: "..rule[3])
+		 require("zencode_"..rule[3])
 	  elseif rule[2] == 'set' and rule[4] then
-		 act("config rule: "..rule[3].." = "..rule[4])
-		 CONF[rule[3]] = tonumber(rule[4]) or rule[4]
+		 act("rule set: "..rule[3].." = "..rule[4])
+		 if rule[3] == 'encoding' then
+			set_encoding(rule[4])
+		 else
+			CONF[rule[3]] = tonumber(rule[4]) or rule[4]
+		 end
 	  end
 	  -- TODO: rule to set version of zencode
    else -- defs = nil end
@@ -455,7 +494,7 @@ function zencode:step(text)
 
    for pattern,func in pairs(defs) do
       if (type(func) ~= "function") then
-         error("Zencode function missing: "..pattern)
+         error("Zencode function missing: "..pattern, 2)
          return false
       end
 	  if strcasecmp(tt,pattern) then
@@ -470,12 +509,7 @@ function zencode:step(text)
 					  { id = self.id,
 						args = args,
 						source = text,
-						-- prefix = prefix,
-						-- regexp = pattern,
 						hook = func       })
-		 -- this is parsing, not execution: tracing isn't useful
-		 -- _G['ZEN_traceback'] = _G['ZEN_traceback']..
-		 -- "-> "..text:gsub("^%s*", "").." ("..#args.." args)\n"
 	  end
    end
 end
@@ -514,6 +548,15 @@ function zencode:ftrace(src)
    -- act(src) TODO: print also debug when verbosity is high
 end
 
+-- log zencode warning in traceback
+function zencode:wtrace(src)
+   -- take current line of zencode
+   _G['ZEN_traceback'] = _G['ZEN_traceback']..
+	  "w   ZEN:"..trim(src).."\n"
+   -- "    -> ".. src:gsub("^%s*", "") .."\n"
+   -- act(src) TODO: print also debug when verbosity is high
+end
+
 function zencode:run()
    -- xxx(2,"Zencode MATCHES:")
    -- xxx(2,self.matches)
@@ -521,15 +564,20 @@ function zencode:run()
 	  IN = { } -- import global DATA from json
 	  if DATA then
 		 -- if plain array conjoin into associative
-		 local _in = JSON.decode(DATA)
-		 if _in and isarray(_in) then -- conjoin array
-			for i,c in ipairs(_in) do
-			   for k,v in pairs(c) do IN[k] = v end
-			end
-		 else IN = _in or { } end
+		 IN = JSON.decode(DATA) or { }
+		 -- TODO: load the setup
+		 IN.zenroom = nil
+
+		 -- if _in and isarray(_in) then -- conjoin array
+		 -- 	for i,c in ipairs(_in) do
+		 -- 	   for k,v in pairs(c) do IN[k] = v end
+		 -- 	end
+		 -- else IN = _in or { } end
 	  end
 	  IN.KEYS = { } -- import global KEYS from json
-	  if KEYS then IN.KEYS = JSON.decode(KEYS) end
+	  if KEYS then IN.KEYS = JSON.decode(KEYS) or { } end
+	  -- TODO: compare the setup raise error if different
+	  IN.KEYS.zenroom = nil
 	  ZEN:trace("->  "..trim(x.source))
 	  ZEN.OK = true
       local ok, err = pcall(x.hook,table.unpack(x.args))
@@ -540,6 +588,12 @@ function zencode:run()
    end
    ZEN:trace("--- Zencode execution completed")
    if type(OUT) == 'table' then
+	  ZEN:trace("+++ Adding setup information to { OUT }")
+	  OUT.zenroom = { }
+	  OUT.zenroom.version = VERSION.original
+	  OUT.zenroom.curve = CONF.curve
+	  OUT.zenroom.scenario = ZEN.scenario
+	  OUT.zenroom.encoding = CONF.encoding
 	  ZEN:trace("<<< Encoding { OUT } to \"JSON\"")
 	  print(JSON.encode(OUT))
 	  ZEN:trace(">>> Encoding successful")
@@ -548,11 +602,11 @@ end
 
 function zencode.debug()
    -- TODO: print to stderr
-   print(ZEN_traceback)
-   I.print({ HEAP = { IN = IN,
-					  TMP = TMP,
-					  ACK = ACK,
-					  OUT = OUT }})
+   warn(ZEN_traceback)
+   I.warn({ HEAP = { IN = IN,
+					TMP = TMP,
+					ACK = ACK,
+					OUT = OUT }})
 end
 
 function zencode.debug_json()

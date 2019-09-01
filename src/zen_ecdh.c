@@ -545,7 +545,7 @@ static int ecdh_simple_encrypt(lua_State *L) {
 	OCT_rand(iv,Z->random_generator,16);
 	lua_setfield(L,-2, "iv");
 	octet *out = o_new(L, in->len+16); SAFE(out); // 16bytes padding
-	lua_setfield(L, -2, "message");
+	lua_setfield(L, -2, "text");
 	octet *checksum = o_new(L, 32); SAFE (checksum);
 	lua_setfield(L, -2, "checksum");
 	AES_GCM_ENCRYPT(kdf, iv, h, in, out, checksum);
@@ -577,7 +577,7 @@ static int ecdh_simple_decrypt(lua_State *L) {
 	if(lua_type(L, 2) != LUA_TTABLE) {
 		ERROR(); lerror(L,"%s argument invalid: not a table",__func__);
 		return 0;}
-	lua_getfield(L,2, "message");   // -5
+	lua_getfield(L,2, "text");   // -5
 	lua_getfield(L,2, "checksum"); // -4
 	lua_getfield(L,2, "iv");      // -3
 	lua_getfield(L,2, "header"); // -2

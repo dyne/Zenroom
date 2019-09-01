@@ -62,10 +62,9 @@ _G["Then"]  = nil
 -----------
 -- defaults
 _G["CONF"] = {
-   -- encoding base64url (RFC4648) is the fastest and most portable in zenroom
-   encoding = url64,
-   encoding_prefix = 'u64',
    -- goldilocks is our favorite ECDH/DSA curve
    curve = 'goldilocks',
    verbosity = 1
 }
+-- encoding base64url (RFC4648) is the fastest and most portable in zenroom
+set_encoding('url64')

@@ -23,8 +23,18 @@
 -- the main security concern in this Zencode module is that no data
 -- passes without validation from IN to ACK or from inline input.
 
+
+-- basic encoding schemas
+ZEN.add_schema({
+	  base64 = function(obj) return ZEN:convert(obj, OCTET.from_base64) end,
+	  url64  = function(obj) return ZEN:convert(obj, OCTET.from_url64)  end,
+	  str =    function(obj) return ZEN:convert(obj, OCTET.from_string) end,
+	  secret = function(obj) return ZEN:import(obj) end
+})
+
 -- GIVEN
 
+Given("nothing", function() ZEN.assert(not DATA and not KEYS, "Unused data passed as input") end)
 Given("I introduce myself as ''", function(name) ZEN:Iam(name) end)
 Given("I am known as ''", function(name) ZEN:Iam(name) end)
 Given("I am ''", function(name) ZEN:Iam(name) end)
@@ -69,7 +79,13 @@ Given("I have a valid '' in ''",     have_a_in)
 Given("I have a valid '' from ''",   have_a_in)
 Given("I have a '' inside ''",       have_a_in)
 Given("I have a '' in ''",           have_a_in)
-Given("I have a '' from ''",         have_a_in)
+-- public keys for keyring arrays
+Given("I have a '' from ''", function(k, f)
+		 ZEN:pickin(f, k)
+		 ZEN:validate(k)
+		 ZEN:ack_table(k, f)
+		 TMP = nil
+end)
 
 
 Given("I set '' to ''", function(k,v)
@@ -91,15 +107,18 @@ When("I draft the string ''", function(s) ZEN:draft(s) end)
 -- TODO:
 When("I set '' as '' with ''", function(dest, format, content) end)
 When("I append '' as '' to ''", function(content, format, dest) end)
-When("I write '' as '' in ''", function(content, dest) end)
+-- When("I write '' as '' in ''", function(content, dest) end)
 -- implicit conversion as string
 When("I set '' to ''", function(dest, content) end)
-When("I append '' to ''", function(content, dest) end)
+When("I append '' to ''", function(content, dest)
+		ACK[dest] = ACK[dest] .. ZEN:import(content)
+end)
 When("I write '' in ''", function(content, dest)
-		ZEN:pick(dest, content)
-		ZEN:validate(dest, 'str')
-		ZEN:ack(dest)
-		TMP = nil
+		ACK[dest] = ZEN:import(content) -- O.from_string
+end)
+
+When("I create a random ''", function(s)
+		ACK[s] = OCTET.random(256) -- TODO: right now hardcoded 256 byte random secrets
 end)
 
 --- THEN
@@ -144,21 +163,15 @@ Then("print the ''", function(key)
 		OUT[key] = ACK[key]
 end)
 Then("print as '' the ''", function(conv, obj)
-		OUT[obj] = ZEN:convert(ACK[obj], conv)
+		OUT[obj] = ZEN:export(ACK[obj], conv)
 end)
 Then("print as '' the '' inside ''", function(conv, obj, section)
-		ZEN.assert(ACK[section][obj], "Not found "..obj.." inside "..section)
-		OUT[obj] = ZEN:convert(ACK[section][obj], conv)
+		local src = ACK[section][obj]
+		ZEN.assert(src, "Not found "..obj.." inside "..section)
+		OUT[obj] = ZEN:export(src, conv)
 end)
 
 -- debug functions
 Given("debug", function() ZEN.debug() end)
 When("debug",  function() ZEN.debug() end)
 Then("debug",  function() ZEN.debug() end)
-
--- basic encoding schemas
-ZEN.add_schema({
-	  base64 = function(obj) return ZEN:convert(obj, OCTET.from_base64) end,
-	  url64  = function(obj) return ZEN:convert(obj, OCTET.from_url64)  end,
-	  str =    function(obj) return ZEN:convert(obj, OCTET.from_string) end
-})

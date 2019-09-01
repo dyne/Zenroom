@@ -8,11 +8,48 @@ _G['type'] = function(var)
 	  else return("unknown") end
    else return(simple) end
 end
+-- TODO: optimise in C
 function iszen(n)
    for c in n:gmatch("zenroom") do
 	  return true
    end
    return false
+end
+
+function get_encoding(what)
+   if     what == 'u64' or what == 'url64' then return url64
+   elseif what == 'b64' or what =='base64' then return base64
+   elseif what == 'hex' then return hex
+   elseif what == 'str' or what == 'string' then return str
+   end
+   return nil
+end
+function set_encoding(what)
+   -- functions mapped from zenroom_octet.lua
+   CONF.encoding = 'switching'
+   CONF.encoding_fun = nil
+   if     what == 'u64' or what == 'url64' then
+	  CONF.encoding = 'url64'
+	  CONF.encoding_fun = url64
+	  CONF.encoding_pfx = 'u64'
+   elseif what == 'b64'    then
+	  CONF.encoding = 'base64'
+	  CONF.encoding_fun = base64
+	  CONF.encoding_pfx = 'b64'
+   elseif what == 'hex'    then
+	  CONF.encoding = 'hex'
+	  CONF.encoding_fun = hex
+	  CONF.encoding_pfx = 'hex'
+   elseif what == 'string' or what == 'str' then
+	  CONF.encoding = 'string'
+	  CONF.encoding_fun = str
+	  CON.encoding_pfx = 'str'
+   end
+   if CONF.encoding_fun then return true
+   else
+	  warn("Conversion format not found: "..what)
+	  return false
+   end
 end
 
 -- debugging facility
@@ -161,8 +198,9 @@ end
 -- strtok equivalent:
 -- strsplit("rule check version 1.0.0","%S+")
 -- TODO: optimize in C using strtok
-function split(str,pat)
+function split(src,pat)
    local tbl = {}
-   str:gsub(pat, function(x) tbl[#tbl+1]=x end)
+   src:gsub(pat, function(x) tbl[#tbl+1]=x end)
    return tbl
 end
+function strtok(src) return split(src, "%S+") end

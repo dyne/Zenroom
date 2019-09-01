@@ -27,7 +27,7 @@ ZEN.add_schema({
 	  -- keypair (ECDH)
 	  public_key = function(obj)
 		 local o = obj.public_key or obj -- fix recursive schema check
-		 if type(o) == "string" then o = ZEN:convert(o) end
+		 if type(o) == "string" then o = ZEN:import(o) end
 		 ZEN.assert(_ecdh:checkpub(o),
 					"Public key is not a valid point on curve: "..CONF.curve)
 		 return o
@@ -40,19 +40,12 @@ ZEN.add_schema({
 		 return { checksum = ZEN.get(obj, 'checksum'),
 				  header   = ZEN.get(obj, 'header'),
 				  iv       = ZEN.get(obj, 'iv'),
-				  message  = ZEN.get(obj, 'message'),
-				  pubkey   = ZEN.get(obj, 'pubkey'),
-				  scenario = ZEN.get(obj, 'scenario', str),
-				  zenroom  = ZEN.get(obj, 'zenroom', str),
-				  curve    = ZEN.get(obj, 'curve', str) }
+				  text     = ZEN.get(obj, 'text') }
 	  end,
 	  signed_message = function(obj)
 		 return { r = ZEN.get(obj, 'r'),
 				  s = ZEN.get(obj, 's'),
-				  text = ZEN.get(obj, 'text', str),
-				  scenario = ZEN.get(obj, 'scenario', str),
-				  zenroom  = ZEN.get(obj, 'zenroom', str),
-				  curve    = ZEN.get(obj, 'curve', str) }
+				  text = ZEN.get(obj, 'text') }
 	  end
 })
 
@@ -69,48 +62,71 @@ end
 When("I create my new keypair", f_keygen)
 When("I generate my keys", f_keygen)
 
+-- encrypt with a header and secret
+When("I encrypt the '' and '' to '' with ''", function(what, hdr, msg, sec)
+		ZEN.assert(ACK[what], "Data to encrypt not found in "..what)
+		local secret = ACK[sec]
+		ZEN.assert(secret, "Secret to encrypt not found in "..sec)
+		secret = ECDH.kdf2(HASH.new('sha256'),secret) -- KDF2 sha256 on all secrets
+		-- secret is always 32 bytes long, safe for direct aead_decrypt
+		ZEN.assert(ACK[hdr], "Header not found in "..hdr)
+		ACK[msg] = { header = ACK[hdr],
+					 iv = O.random(16) }
+		ACK[msg].text, ACK[msg].checksum = 
+		   ECDH.aead_encrypt(secret, ACK[what], ACK[msg].iv, ACK[hdr])
+		-- include contextual information
+end)
+
+-- decrypt with a secret
+When("I decrypt the '' to '' with ''", function(what, msg, sec)
+		local enc = ACK[what]
+		ZEN.assert(enc, "Data to decrypt not found in "..what)
+		local secret = ACK[sec]
+		ZEN.assert(secret, "Secret to decrypt not found in "..sec)
+		secret = ECDH.kdf2(HASH.new('sha256'),secret) -- KDF2 sha256 on all secrets
+		-- secret is always 32 bytes long, safe for direct aead_decrypt
+		ACK[msg] = { header = enc.header }
+		local checksum
+		ACK[msg].text, checksum = 
+		   ECDH.aead_decrypt(secret, enc.text, enc.iv, enc.header)
+		ZEN.assert(checksum == enc.checksum,
+				   "Decryption error: authentication failure, checksum mismatch")
+end)
+
 -- encrypt to a single public key
 When("I encrypt the '' to '' for ''", function(what, msg, recpt)
 		ZEN.assert(ACK.keypair, "Keyring not found")
 		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
 		ZEN.assert(ACK[what], "Data to encrypt not found in "..what)
+		ZEN.assert(type(ACK.public_key) == 'table', "Public keys not found in keyring")
 		local from = ECDH.new(CONF.curve)
 		from:private(ACK.keypair.private_key)
 		local to = ECDH.new(CONF.curve)
-		ZEN.assert(ACK[recpt], "Public key not found")
-		to:public(ACK[recpt])
+		ZEN.assert(ACK.public_key[recpt], "Public key not found for: "..recpt)
+		to:public(ACK.public_key[recpt])
 		ACK[msg] = from:encrypt(to, ACK[what], str('empty'))
-		-- include contextual information
-		ACK[msg].zenroom = VERSION.original
-		ACK[msg].curve = CONF.curve
-		ACK[msg].scenario = ZEN.scenario
 end)
 
-When("I decrypt the '' to ''", function(src,dst)
+When("I decrypt the '' from '' to ''", function(src,frm,dst)
 		ZEN.assert(ACK.keypair, "Keyring not found")
 		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
+		ZEN.assert(ACK.public_key[frm], "Public key not found: "..frm)
 		ZEN.assert(ACK[src], "Ciphertext not found")
-		if VERSION.original ~= ACK[src].zenroom:str() then
-		   warn("Ciphertext was not produced with running version of Zenroom: "
-				   ..ACK[src].zenroom:str().. " (running "..VERSION.original..")")
-		end
-		local recpt = ECDH.new(ACK[src].curve:str() or CONF.curve)
+		local recpt = ECDH.new(CONF.curve)
 		recpt:private(ACK.keypair.private_key)
+		ACK[src].pubkey = ACK.public_key[frm]
 		ACK[dst] = recpt:decrypt(ACK[src])
 end)
 
 -- sign a message and verify
-When("I sign the draft as ''", function(dst)
+When("I sign the '' as ''", function(doc, dst)
 		ZEN.assert(ACK.keypair, "Keyring not found")
 		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
 		local dsa = ECDH.new(CONF.curve)
 		dsa:private(ACK.keypair.private_key)
-		ACK[dst] = dsa:sign(ACK.draft)
+		ACK[dst] = dsa:sign(I.spy(ACK[doc]))
 		-- include contextual information
-		ACK[dst].text = ACK.draft:string()
-		ACK[dst].zenroom = VERSION.original
-		ACK[dst].curve = CONF.curve
-		ACK[dst].scenario = ZEN.scenario
+		ACK[dst].text = ACK[doc]
 end)
 
 When("I verify the '' is authentic", function(msg)

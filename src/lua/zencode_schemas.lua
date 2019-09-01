@@ -36,18 +36,22 @@ ZEN.prefix = function(str)
 end
 
 ZEN.get = function(obj, key, conversion)
-   conversion = conversion or CONF.encoding
-   ZEN.assert(type(key) == "string", "Invalid key in object conversion")
-   ZEN.assert(obj, "Object not found for conversion")
+   ZEN.assert(obj, "ZEN.get no object found")
+   ZEN.assert(type(key) == "string", "ZEN.get key is not a string")
+   ZEN.assert(not conversion or type(conversion) == 'function',
+			  "ZEN.get invalid conversion function")
    local k = obj[key]
    ZEN.assert(k, "Key not found in object conversion: "..key)
-   local res
-   if(type(k) == "string") then
-	  res = ZEN:convert(k, conversion)
-   else
-	  res = k
-   end
-   assert(ZEN.OK)
+   local res = nil
+   local t = type(k)
+   if iszen(t) and conversion then res = conversion(k) goto ok end
+   if iszen(t) and not conversion then res = k goto ok end
+   if t == 'string' and conversion == str then res = k goto ok end
+   if t == 'string' and conversion and conversion ~= str then
+	  res = conversion(ZEN:import(k)) goto ok end
+   if t == 'string' and not conversion then res = ZEN:import(k) goto ok end
+   ::ok::
+   assert(ZEN.OK and res)
    return res
 end
 

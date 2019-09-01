@@ -316,35 +316,37 @@ function Inspector:putValue(v)
     self:putTable(v)
   elseif iszen(tv) then
 	 if tv == "zenroom.octet" then
-		self:puts("octet[" .. #v .. "] " .. enc(v))
+		self:puts("octet[" .. #v .. "] " .. ZEN:export(v))
 	 elseif tv == "zenroom.big" then
 		local i = v:octet()
-		self:puts("int[" .. #i.. "] " .. enc(i))
+		self:puts("int[" .. #i.. "] " .. ZEN:export(i))
 	 elseif tv == "zenroom.ecp" then
 		local i = v:octet()
-		if v == "Infinity" then
-		   self:puts("ecp[...] " .. "(Infinity)")
-		elseif v == ECP.infinity() then
-		   self:puts("ecp[...] " .. "(Infinity)")
+		if v == "Infinity" or v == ECP.infinity() then
+		   self:puts("ecp[...] (Infinity)")
 		else
-		   self:puts("ecp[" .. #i.. "] " .. enc(i))
+		   self:puts("ecp[" .. #i.. "] " .. ZEN:export(i))
 		end
 	 elseif tv == "zenroom.ecp2" then
 		local i = v:octet()
-		self:puts("ecp2[" ..#i.. "] ".. enc(i))
+		if v == "Infinity" or v == ECP2.infinity() then
+		   self:puts("ecp[...] (Infinity)")
+		else
+		   self:puts("ecp2[" ..#i.. "] ".. ZEN:export(i))
+		end
 	 elseif tv == "zenroom.fp12" then
 		local i = v:octet()
-		self:puts("fp12[" ..#i.. "] ".. enc(i))
+		self:puts("fp12[" ..#i.. "] ".. ZEN:export(i))
 	 elseif tv == "zenroom.ecdh" then
 		local pk = v:public()
 		local sk = v:private()
 		if not pk and not sk then self:puts("ecdh keyring is empty\n")
 		else
-		   if pk then self:puts("ecdh.public["..#pk.."] ".. enc(pk).."\n") end
-		   if sk then self:puts("ecdh.private["..#sk.."] ".. enc(sk).."\n") end
+		   if pk then self:puts("ecdh.public["..#pk.."] ".. ZEN:export(pk).."\n") end
+		   if sk then self:puts("ecdh.private["..#sk.."] ".. ZEN:export(sk).."\n") end
 		end
 	 else
-		self:puts(enc(v:octet()))
+		self:puts(ZEN:export(v:octet()))
 	 end
   else
     self:puts('<',tv,' ',self:getId(v),'>')
@@ -383,16 +385,15 @@ end
 
 -- conversion wrappers for zenroom types
 function inspect.encode(item)
-   enc = CONF.encoding or url64
    t = type(item)
-   if t == "zenroom.octet" then
-	  return enc(item)
-   elseif iszen(t) then
-	  if t == "zenroom.ecp" and ECP.isinf(item) then
-	  	 return "Infinity"
-	  else
-	  	 return enc(item:octet())
-	  end
+   if iszen(t) then
+	  return ZEN:export(item)
+   -- elseif iszen(t) then
+   -- 	  if t == "zenroom.ecp" and ECP.isinf(item) then
+   -- 	  	 return "Infinity"
+   -- 	  else
+   -- 	  	 return ZEN:export(item)
+   -- 	  end
    else
 	  return item
    end
