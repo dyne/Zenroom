@@ -177,8 +177,6 @@ When("I verify the credential proof is correct", function()
 end)
 
 
-
-
 -- petition
 ZEN.add_schema({
 	  petition_scores = function(obj)
@@ -220,14 +218,15 @@ ZEN.add_schema({
 
 When("I generate a petition ''", function(uid)
 		ZEN:pick('petition',
-				 { uid = uid,
+				 { uid = ZEN:import(uid),
 				   owner = ACK.credential_keypair.public,
-				   scores = { pos = { left = "Infinity",       -- ECP.infinity()
-									  right = "Infinity" },    -- ECP.infinity()
-							  neg = { left = "Infinity",       -- ECP.infinity()
-									  right = "Infinity" } }
-		}) -- ECP.infinity()
- 		ZEN:validate('petition')
+				   scores = { pos = { left = ECP.infinity(),
+									  right = ECP.infinity() },
+							  neg = { left = ECP.infinity(),
+									  right = ECP.infinity()  } }
+		})
+		-- pass validation by hand since we just created it
+		TMP.valid = TMP.data
  		ZEN:ack('petition')
 		-- generate an ECDH signature of the (encoded) petition using the
 		-- credential keys
@@ -277,8 +276,7 @@ When("I verify the signature proof is correct", function()
 end)
 
 When("the petition signature is not a duplicate", function()
-		enc = CONF.encoding or url64
-		local k = enc(ACK.petition_signature.uid_signature)
+		local k = ZEN:export(ACK.petition_signature.uid_signature)
 		if type(ACK.petition.list) == 'table' then
 		   ZEN.assert(
 			  ACK.petition.list[k] == nil,
