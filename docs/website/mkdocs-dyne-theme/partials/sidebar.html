@@ -6,8 +6,13 @@
         {% if config.extra.links.homepage %}
         <li><span class="mdi mdi-home"></span><a href="{{ config.extra.links.homepage }}">Home</a></li>
         {% endif %}
+
+        {% if config.extra.links.documentation %}
+        <li><span class="mdi mdi-book-open-page-variant"></span><a href="{{ config.extra.links.documentation }}">Documentation</a></li>
+        {% endif %}
+
         {% if config.extra.links.download %}
-        <li><span class="mdi mdi-download"></span><a href="{{ config.extra.links.releases }}">Download</a></li>
+        <li><span class="mdi mdi-download"></span><a href="{{ config.extra.links.download }}">Download</a></li>
         {% endif %}
         {% if config.repo_url %}
         <li><span class="mdi mdi-github-circle"></span><a href="{{ config.repo_url }}">Source Code</a></li>
@@ -18,8 +23,17 @@
         {% if config.extra.links.quickstart %}
         <li><span class="mdi mdi-school"></span><a href="{{ config.extra.links.quickstart }}">Quick Start Guide</a></li>
         {% endif %}
+
+        {% if config.extra.links.changelog %}
+        <li><span class="mdi mdi-history"></span><a href="{{ config.extra.links.changelog }}">Log of changes</a></li>
+        {% endif %}
+
+        {% if config.extra.links.wiki %}
+        <li><span class="mdi mdi-account-edit"></span><a href="{{ config.extra.links.wiki }}">Wiki</a></li>
+        {% endif %}
+
         {% if config.extra.links.forum %}
-        <li><span class="mdi mdi-forum"></span><a href="{{ config.extra.links.forum }}">Mailing list / Forum</a></li>
+        <li><span class="mdi mdi-forum"></span><a href="{{ config.extra.links.forum }}">Forum</a></li>
         {% endif %}
     </ul>
     {% endif %}

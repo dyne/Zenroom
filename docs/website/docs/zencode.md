@@ -61,7 +61,7 @@ session key to encrypt the password.
 There is also the possibility to add an authenticated clear text
 header to the message, using an additional line of Zencode:
 
-```
+```cucumber
 When I write 'my secret for you' in 'message'
 and I write 'an authenticated message' in 'header'
 ```

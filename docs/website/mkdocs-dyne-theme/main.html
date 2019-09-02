@@ -5,7 +5,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>{{ page.title }} - {{ config.site_name }}</title>
 		<meta name="description" content="{{ config.site_description }}" />
-		<meta name="keywords" content="{{ config.keywords }}" />
+		<meta name="keywords" content="{{ config.extra.keywords }}" />
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<meta property="og:title" content="{{ page.title }}" />
 		<meta property="og:description" content="{{ config.site_description }}" />
@@ -19,6 +19,7 @@
 		<link rel="stylesheet" href="{{ base_url }}/assets/css/bulma.min.css">
 		<link rel="stylesheet" href="{{ base_url }}/assets/css/bulma-dyne.css">
 		<link rel="stylesheet" href="{{ base_url }}/assets/css/materialdesignicons.min.css">
+		<link rel="stylesheet" href="{{ base_url }}/assets/css/codehilite.css">
 
 		{% for furl in config.extra_javascript %}
 		<script type="text/javascript" src="{{ base_url }}/{{ furl }}"></script>
@@ -47,6 +48,21 @@
 						{% include 'partials/sidebar.html' %}
 					</div>
 					<div class="column">
+						{% if page.ancestors %}
+						<nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
+							<ul>
+								<li><a href="{{ base_url }}">{{config.site_name}}</a></li>
+								{% for doc in page.ancestors %}
+								{% if doc.link %}
+								<li><a href="{{ doc.link }}">{{ doc.title }}</a></li>
+								{% else %}
+								<li>{{ doc.title }}</li>
+								{% endif %}
+								{% endfor %}
+								<li class="is-active">{{ page.title }}</li>
+							</ul>
+						</nav>
+						{% endif %}
 						<div class="content">
 							{% block content %} {{ page.content }} {% endblock content %}
 						</div>
