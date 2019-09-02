@@ -49,8 +49,34 @@ and signatures.
 
 ![Zencode to encrypt using asymmetric keypairs](img/ecdh_crypt.svg)
 
+In this basic example the session key for encryption is made combining
+the private key of Alice and the public key of Bob (or
+viceversa).
+
+Reusing keys is not really considered secure, but by combining the
+first symmetric key example and this one is possible to generate a
+random password, use it to encrypt the message and then use the
+session key to encrypt the password.
+
+There is also the possibility to add an authenticated clear text
+header to the message, using an additional line of Zencode:
+
+```
+When I write 'my secret for you' in 'message'
+and I write 'an authenticated message' in 'header'
+```
+
+The decryption will always check that the header hasn't changed,
+maintaining the integrity of the string which may contain important
+public information that accompany the secret.
+
 ### Public-key Signature (ECDSA)
 
+![Zencode to sign using asymmetric keypairs](img/ecdsa_sign.svg)
+
+In this example Alice uses her private key to sign and authenticate a
+message. Bob or anyone else can use Alice's public key to prove that
+the integrity of the message is kept intact and that she signed it.
 
 ## Memory model
 
