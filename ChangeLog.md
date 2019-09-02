@@ -1,7 +1,6 @@
 # Zenroom ChangeLog
 
-## 0.10
-### June 2019
+## Current development (last update June 2019)
 
 Internal refactoring, code cleanup and memory optimization. Fully
 deterministic random implementation for blockchain usage. Various
@@ -9,8 +8,7 @@ fixes and improvements for the error reporting output. Fixes to the
 iOS native library. Improved python3 and JS bindings. Progress on the
 uni-kernel ARM Cortex port.
 
-## 0.9
-### March 2019
+## 0.9 (March 2019)
 
 Completed high-level language implementation of Zencode and underlying
 zero-knowledge proof credential system Coconut, Elgamal and homomorphic
@@ -21,8 +19,7 @@ and portability. Removed many unused libraries, Schema refactoring.
 Working builds for python2/3, nodejs/wasm, golang, Android and iOS.
 Native integration in the mobile react-native app for DDDC petitions. 
 
-## 0.8.1
-### November 2018
+## 0.8.1 (November 2018)
 
 Several fixes and improvements to the arithmetics and language
 constructions for EC and PAIR operations, deeper testing with
@@ -33,8 +30,7 @@ improve the security when executing malicious code.  Working examples
 now include an implicit certificate scheme (ECQV) and a working
 ElGamal encryption scheme inside Coconut's implementation.
 
-## 0.8.0
-### October 2018
+## 0.8.0 (October 2018)
 
 New Elliptic Curve Arithmetics (ECP2) with Twisted Curve Pairings
 (Miller-Loop). Hamming distance measurements on OCTET
@@ -46,13 +42,11 @@ React-Native. Language bindings for Go lang, Python version 2
 and 3. Zenroom virtual machine language design improvements to build
 and documentation, object introspection.
 
-## 0.7.1
-### September 2018
+## 0.7.1 (September 2018)
 
 Fixes to all Javascript builds.
 
-## 0.7.0
-### August 2018
+## 0.7.0 (August 2018)
 
 Adopted AES-GCM as default encryption method, downgraded CBC as weak.
 Fixes to the exposed API for complete usage in Zenroom-studio.  Added
@@ -72,8 +66,7 @@ ElGamal with ZKP using ECP primitives. Started ECP2 twisted curve
 implementation. Improved build system; added python, java and esp32
 targets. Updated API documentation.
 
-## 0.6.0
-### June 2018
+## 0.6.0 (June 2018)
 
 Implemented arithmetic operations on elliptic curve points (ECP)
 as cryptographic primitives to implement new schemes.
@@ -96,8 +89,7 @@ Exposed more public calls on zenroom.h for usage as a library
 Added contributed scripts for iOS, Android and Go shared builds.
 
 
-## 0.5.0
-### April 2018
+## 0.5.0 (April 2018)
 
 Fully adopted Milagro-crypto-C as underlying crypto library,
 abandoning luazen at least for now. Refactored the API and language
@@ -124,8 +116,7 @@ tests. Half-baked RSA implementation may be abandoned in the future
 unless use-cases arise.
 
 
-## 0.4 (ALPHA)
-### March 2018
+## 0.4 (ALPHA) (March 2018)
 
 Major improvements to standard Lua direct-syntax compatibility, port
 to emscripten, osx and win targets. Documentation using LDoc and
@@ -133,19 +124,16 @@ website. Support for cjson and other embedded extensions. First
 binary release, enters ALPHA stage.
 
 
-## 0.3 (Prototype)
-### February 2018
+## 0.3 (Prototype) (February 2018)
 
 Build fixes for various architecture targets. Milagro integration,
 test suites, continuous integration setup.
 
-## 0.2
-### December 2017
+## 0.2 (December 2017)
 
 Whitepaper and improved Lua support.
 Adopted luazen in place of luanacha.
 
-## 0.1 (POC)
-### November 2017
+## 0.1 (November 2017)
 
 Proof of concept based on lua_sandbox

@@ -1,4 +1,4 @@
-# Zenroom crypto VM
+# Documentation
 
 ![Zenroom logo](img/zenroom_logo-sm.jpg)
 
@@ -19,9 +19,13 @@ cryptographic transformations on them.
 This website is intended for a technical audience; more documentation is
 available on:
 
+<span class="big">
 <span class="mdi mdi-home"></span> Website: [Zenroom.org](https://zenroom.org)
+</span>
 
+<span class="big">
 <span class="mdi mdi-school"></span> Whitepaper: [Zencode by Denis Roio (Ph.D)](https://files.dyne.org/zenroom/Zenroom_Whitepaper.pdf)
+</span>
 
 <span class="mdi mdi-hand"></span> Blog post: [Why Zenroom? Algorithmic Sovereignty](https://decodeproject.eu/blog/algorithmic-sovereignty-decode)
 
@@ -29,16 +33,20 @@ available on:
 
 <span class="mdi mdi-puzzle"></span> Blog post: [Cryptographic data integrity in a multiplatform environment](https://decodeproject.eu/blog/cryptographic-data-integrity-multiplatform-environment)
 
-## Download
+# Download
 
 <span class="mdi mdi-target"></span>
 Available targets: Portable source code (C99), **Javascript** (WebAssembly), **Linux** (Android, ARM and x86), **Windows** (EXE and DLL), **Apple** (OSX and iOS)
 
+<span class="big">
 <span class="mdi mdi-download"></span>
 Download from [files.dyne.org/zenroom](https://files.dyne.org/zenroom)
+</span>
 
+<span class="big">
 <span class="mdi mdi-history"></span>
 Read the [history of changes](https://files.dyne.org/zenroom/ChangeLog.txt)
+</span>
 
 Anyone planning to use Zenroom to store and access secrets should not
 use the latest development version in Git, but **use the stable
@@ -50,83 +58,85 @@ various tests, plus we note down all changes in the log above.
 The development version in Git should only be used by contributors to
 report bugs, test new features and develop patches.
 
-## Documentation
+# Guides
 
-<script type='text/javascript' src='https://www.openhub.net/p/zenroom/widgets/project_factoids_stats?format=js'></script>
+<iframe src='https://www.openhub.net/p/zenroom/widgets/project_factoids_stats' scrolling='no' marginHeight='0' marginWidth='0' style='height: 220px; width: 370px; border: none'></iframe>
 
-### How to program
+Zenroom is actively and concisely documented focusing on three main usage aspects:
+
+- How to program using its human friendly Zencode language
+- How to implement new encryption scenarios using Lua scripting (similar to Mathematica)
+- How to adopt the Zenroom VM embedding it into host applications (covering all platforms)
+
+The following sections provide links to documentation for each named aspect.
+
+## How to program
 
 Zenroom brings simplicity to distributed systems development and
 allows programmers to work in parallel. System integrators need just
 to adopt the VM embedding it in their application, security
 researchers and cryptographers can provide Zencode or Lua scripts.
 
+<span class="big">
 <span class="mdi mdi-flag"></span>
 [Zencode: programming smart contracts in human language](zencode)
+</span>
 
+<span class="big">
+<span class="mdi mdi-math-compass"></span>
+[Crypto scheme implementation using Zenroom and Lua](crypto)
+</span>
+
+<span class="big">
 <span class="mdi mdi-code-braces"></span>
 [Zenroom scripting in Lua: reference documentation](lua)
+</span>
 
-### How to adopt
+## How to adopt
 
+<span class="big">
 <span class="mdi mdi-run"></span>
 [How to execute scripts with Zenroom](wiki/how-to-exec)
+</span>
 
+<span class="big">
 <span class="mdi mdi-package"></span>
 [How to embed Zenroom in your application](wiki/how-to-embed)
+</span>
 
+<span class="big">
 <span class="mdi mdi-cogs"></span>
 [How to build Zenroom from the source code](wiki/how-to-build)
+</span>
 
+# Playground
 
-## Playground
+## Online
 
-### Online
-
+<span class="big">
 <span class="mdi mdi-hand-pointing-right"></span>
-[Online interactive demo](https://zenroom.dyne.org/demo)
+[Online interactive demo](demo)
+</span>
 
+<span class="big">
 <span class="mdi mdi-web"></span>
 [Web encryption demonstration and benchmark](encrypt)
+</span>
 
-### Apps
+## Apps
 
+<span class="big">
 <span class="mdi mdi-network"></span>
 [Redroom: fast execution of Zencode in Redis](https://redroom.dyne.org)
+</span>
 
+<span class="big">
 <span class="mdi mdi-eye"></span>
 [Sawroom: blockchain integration with Sawtooth](https://redroom.dyne.org)
-
-### Docker
-
-<span class="mdi mdi-docker"></span>
-[Docker build files](https://github.com/dyne/docker-dyne-software/tree/master/zenroom)
-(dyne/zenroom:latest)
+</span>
 
 
-## Bindings
-
-Zenroom is designed to be embedded inside host applications and used from its very simple interface to execute code on an input and return an output of the transformation. The embedding API is:
-
-```c
-int zenroom_exec(char *script, char *conf, char *keys,
-                 char *data, int verbosity);
-```
-
-This API can be called in similar ways from a variety of languages and in particular four wrappers already facilitate its usage:
-
-<ul class="center">
-<li><a href="https://www.npmjs.com/package/zenroom">Javascript NPM package</a></li>
-<li><a href="https://github.com/DECODEproject/zenroom-py">Python language bindings</a></li>
-<li><a href="https://github.com/DECODEproject/zenroom-go">Go language bindings</a></li>
-<li><b>Redis</b> module implementation for in-memory database encryption</li>
-</ul>
-
-
-
-
-
-## Acknowledgements
+# Acknowledgements
 
 ![Project funded by the European Commission](img/ec_logo.png)
 

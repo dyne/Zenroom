@@ -1,4 +1,4 @@
-# Write smart contracts in human language
+# Smart contracts in human language
 
 Zenroom is software inspired by the [language-theoretical
 security](http://langsec.org) research and it allows to express
@@ -11,7 +11,7 @@ Now to learn this very simple language, lets dive into some examples.
 
 Keep in mind that statements in yellow boxes are actual Zencode being executed.
 
-## Symmetric encryption
+# Symmetric encryption
 
 This is a simple tecnique to hide a secret using a common password known to all people.
 
@@ -28,7 +28,7 @@ Here the Zencode is executed three times:
 Of course the password must be communicated to Bob and that's the
 dangerous part, since it could be stolen at the moment is told.
 
-## Asymmetric encryption
+# Asymmetric encryption
 
 To solve this problem we have [asymmetric encryption (or public key
 cryptography)](https://en.wikipedia.org/wiki/Public-key_cryptography)
@@ -37,7 +37,7 @@ Alice and Bob.
 
 Fortunately its pretty simple to do using Zencode.
 
-### Key generation and exchange
+## Key generation and exchange
 
 ![Zencode to generate asymmetric keypairs](img/ecdh_keygen.svg)
 
@@ -45,7 +45,7 @@ After both Alice and Bob have their own keypairs and they both know
 each other public key we can move forward to do asymmetric encryption
 and signatures.
 
-### Public-key Encryption (ECDH)
+## Public-key Encryption (ECDH)
 
 ![Zencode to encrypt using asymmetric keypairs](img/ecdh_crypt.svg)
 
@@ -70,7 +70,7 @@ The decryption will always check that the header hasn't changed,
 maintaining the integrity of the string which may contain important
 public information that accompany the secret.
 
-### Public-key Signature (ECDSA)
+## Public-key Signature (ECDSA)
 
 ![Zencode to sign using asymmetric keypairs](img/ecdsa_sign.svg)
 
@@ -78,7 +78,7 @@ In this example Alice uses her private key to sign and authenticate a
 message. Bob or anyone else can use Alice's public key to prove that
 the integrity of the message is kept intact and that she signed it.
 
-## Memory model
+# Memory model
 
 By now should be clear that a Zencode contract operates on data in 3 phases: 1: **Given** -> 2: **When** -> 3: **Then**
 
@@ -90,7 +90,7 @@ The 3 separate blocks of code also correspond to 3 memory areas.
 
 ![Zencode documentation diagram](img/zencode_diagram.png)
 
-## List of statements
+# List of statements
 
 ```yaml
 data:

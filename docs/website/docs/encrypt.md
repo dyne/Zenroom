@@ -8,22 +8,24 @@ Zencode Smart Contract in human language (WASM-web build)
 
 For more information see [Zenroom.org](https://zenroom.org).
 
-[Code for this example](encrypt.js)
+<span class="big"> <span class="mdi mdi-code-braces"></span> [Code for this example](code)</span>
 
-## Zencode contract
+# Zencode contract
+
 <pre id="encrypt_contract"></pre>
 
-### Alice keypair
+
+## Alice keypair
 
 <code id="alice"></code>
 
-### Bob public key
+## Bob public key
 
 <code id="bob"></code>
 
 ------------------------
 
-## Upload file
+# Upload file
 
 Select a file on the local harddisk of maximum size 400KiB.
 
