@@ -3,22 +3,23 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>Zenroom crypto VM - Zenroom</title>
+		<title>Documentation - Zenroom docs</title>
 		<meta name="description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
 		<meta name="keywords" content="crypto, security, iot, blockchain" />
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-		<meta property="og:title" content="Zenroom crypto VM" />
+		<meta property="og:title" content="Documentation" />
 		<meta property="og:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
 		<meta property="og:type" content="website" />
 		<meta property="og:url" content="https://dev.zenroom.org" />
 		<meta name="twitter:card" content="summary_large_image">
 		<meta name="twitter:site" content="@DyneOrg">
-		<meta name="twitter:title" content="Zenroom crypto VM">
+		<meta name="twitter:title" content="Documentation">
 		<meta name="twitter:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them.">
 
 		<link rel="stylesheet" href="./assets/css/bulma.min.css">
 		<link rel="stylesheet" href="./assets/css/bulma-dyne.css">
 		<link rel="stylesheet" href="./assets/css/materialdesignicons.min.css">
+		<link rel="stylesheet" href="./assets/css/codehilite.css">
 
 		
 		<script type="text/javascript" src="./js/cash.min.js"></script>
@@ -79,16 +80,28 @@
         
         <li><span class="mdi mdi-home"></span><a href="https://zenroom.org">Home</a></li>
         
+
         
-        <li><span class="mdi mdi-download"></span><a href="">Download</a></li>
+        <li><span class="mdi mdi-book-open-page-variant"></span><a href="https://dev.zenroom.org">Documentation</a></li>
+        
+		
+        
+        <li><span class="mdi mdi-download"></span><a href="/#download">Download</a></li>
         
         
         <li><span class="mdi mdi-github-circle"></span><a href="https://github.com/decodeproject/Zenroom/">Source Code</a></li>
         
         
-        <li><span class="mdi mdi-docker"></span><a href="#docker">Docker</a></li>
         
+
         
+        <li><span class="mdi mdi-history"></span><a href="/changelog">Log of changes</a></li>
+        
+
+        
+        <li><span class="mdi mdi-account-edit"></span><a href="https://github.com/decodeproject/zenroom/wiki">Wiki</a></li>
+        
+
         
     </ul>
     
@@ -100,16 +113,19 @@
     <ul class="menu-list">
         
         <li>
-            <a href="#zenroom-crypto-vm">Zenroom crypto VM</a>
+            <a href="#documentation">Documentation</a>
+            
+        </li>
+        
+        <li>
+            <a href="#download">Download</a>
+            
+        </li>
+        
+        <li>
+            <a href="#guides">Guides</a>
             
                 
-  <ul>
-    
-      <li><a href="#download">Download</a></li>
-      
-    
-      <li><a href="#documentation">Documentation</a></li>
-      
   <ul>
     
       <li><a href="#how-to-program">How to program</a></li>
@@ -120,9 +136,13 @@
     
   </ul>
 
-    
-      <li><a href="#playground">Playground</a></li>
-      
+            
+        </li>
+        
+        <li>
+            <a href="#playground">Playground</a>
+            
+                
   <ul>
     
       <li><a href="#online">Online</a></li>
@@ -131,20 +151,13 @@
       <li><a href="#apps">Apps</a></li>
       
     
-      <li><a href="#docker">Docker</a></li>
-      
-    
   </ul>
 
-    
-      <li><a href="#bindings">Bindings</a></li>
-      
-    
-      <li><a href="#acknowledgements">Acknowledgements</a></li>
-      
-    
-  </ul>
-
+            
+        </li>
+        
+        <li>
+            <a href="#acknowledgements">Acknowledgements</a>
             
         </li>
         
@@ -152,8 +165,9 @@
 </aside>
 					</div>
 					<div class="column">
+						
 						<div class="content">
-							 <h1 id="zenroom-crypto-vm">Zenroom crypto VM</h1>
+							 <h1 id="documentation">Documentation</h1>
 <p><img alt="Zenroom logo" src="img/zenroom_logo-sm.jpg" /></p>
 <p>Zenroom is a <strong>secure language interpreter</strong> of both Lua and its own
 Zencode language to execute fast cryptographic operations using
@@ -167,18 +181,26 @@ cryptographic transformations on them.</p>
 <p><a href="http://www.dyne.org"><img alt="software by Dyne.org" src="https://zenroom.dyne.org/img/software_by_dyne.png" /></a></p>
 <p>This website is intended for a technical audience; more documentation is
 available on:</p>
-<p><span class="mdi mdi-home"></span> Website: <a href="https://zenroom.org">Zenroom.org</a></p>
-<p><span class="mdi mdi-school"></span> Whitepaper: <a href="https://files.dyne.org/zenroom/Zenroom_Whitepaper.pdf">Zencode by Denis Roio (Ph.D)</a></p>
+<p><span class="big">
+<span class="mdi mdi-home"></span> Website: <a href="https://zenroom.org">Zenroom.org</a>
+</span></p>
+<p><span class="big">
+<span class="mdi mdi-school"></span> Whitepaper: <a href="https://files.dyne.org/zenroom/Zenroom_Whitepaper.pdf">Zencode by Denis Roio (Ph.D)</a>
+</span></p>
 <p><span class="mdi mdi-hand"></span> Blog post: <a href="https://decodeproject.eu/blog/algorithmic-sovereignty-decode">Why Zenroom? Algorithmic Sovereignty</a></p>
 <p><span class="mdi mdi-vote"></span> Blog post: <a href="https://decodeproject.eu/blog/smart-contracts-english-speaker">Zenroom does what? Smart contracts for the English speaker</a></p>
 <p><span class="mdi mdi-puzzle"></span> Blog post: <a href="https://decodeproject.eu/blog/cryptographic-data-integrity-multiplatform-environment">Cryptographic data integrity in a multiplatform environment</a></p>
-<h2 id="download">Download</h2>
+<h1 id="download">Download</h1>
 <p><span class="mdi mdi-target"></span>
 Available targets: Portable source code (C99), <strong>Javascript</strong> (WebAssembly), <strong>Linux</strong> (Android, ARM and x86), <strong>Windows</strong> (EXE and DLL), <strong>Apple</strong> (OSX and iOS)</p>
-<p><span class="mdi mdi-download"></span>
-Download from <a href="https://files.dyne.org/zenroom">files.dyne.org/zenroom</a></p>
-<p><span class="mdi mdi-history"></span>
-Read the <a href="https://files.dyne.org/zenroom/ChangeLog.txt">history of changes</a></p>
+<p><span class="big">
+<span class="mdi mdi-download"></span>
+Download from <a href="https://files.dyne.org/zenroom">files.dyne.org/zenroom</a>
+</span></p>
+<p><span class="big">
+<span class="mdi mdi-history"></span>
+Read the <a href="https://files.dyne.org/zenroom/ChangeLog.txt">history of changes</a>
+</span></p>
 <p>Anyone planning to use Zenroom to store and access secrets should not
 use the latest development version in Git, but <strong>use the stable
 releases on files.dyne.org</strong>.</p>
@@ -186,56 +208,66 @@ releases on files.dyne.org</strong>.</p>
 various tests, plus we note down all changes in the log above.</p>
 <p>The development version in Git should only be used by contributors to
 report bugs, test new features and develop patches.</p>
-<h2 id="documentation">Documentation</h2>
-<script type='text/javascript' src='https://www.openhub.net/p/zenroom/widgets/project_factoids_stats?format=js'></script>
+<h1 id="guides">Guides</h1>
+<iframe src='https://www.openhub.net/p/zenroom/widgets/project_factoids_stats' scrolling='no' marginHeight='0' marginWidth='0' style='height: 220px; width: 370px; border: none'></iframe>
 
-<h3 id="how-to-program">How to program</h3>
+<p>Zenroom is actively and concisely documented focusing on three main usage aspects:</p>
+<ul>
+<li>How to program using its human friendly Zencode language</li>
+<li>How to implement new encryption scenarios using Lua scripting (similar to Mathematica)</li>
+<li>How to adopt the Zenroom VM embedding it into host applications (covering all platforms)</li>
+</ul>
+<p>The following sections provide links to documentation for each named aspect.</p>
+<h2 id="how-to-program">How to program</h2>
 <p>Zenroom brings simplicity to distributed systems development and
 allows programmers to work in parallel. System integrators need just
 to adopt the VM embedding it in their application, security
 researchers and cryptographers can provide Zencode or Lua scripts.</p>
-<p><span class="mdi mdi-flag"></span>
-<a href="zencode">Zencode: programming smart contracts in human language</a></p>
-<p><span class="mdi mdi-code-braces"></span>
-<a href="lua">Zenroom scripting in Lua: reference documentation</a></p>
-<h3 id="how-to-adopt">How to adopt</h3>
-<p><span class="mdi mdi-run"></span>
-<a href="wiki/how-to-exec">How to execute scripts with Zenroom</a></p>
-<p><span class="mdi mdi-package"></span>
-<a href="wiki/how-to-embed">How to embed Zenroom in your application</a></p>
-<p><span class="mdi mdi-cogs"></span>
-<a href="wiki/how-to-build">How to build Zenroom from the source code</a></p>
-<h2 id="playground">Playground</h2>
-<h3 id="online">Online</h3>
-<p><span class="mdi mdi-hand-pointing-right"></span>
-<a href="https://zenroom.dyne.org/demo">Online interactive demo</a></p>
-<p><span class="mdi mdi-web"></span>
-<a href="encrypt">Web encryption demonstration and benchmark</a></p>
-<h3 id="apps">Apps</h3>
-<p><span class="mdi mdi-network"></span>
-<a href="https://redroom.dyne.org">Redroom: fast execution of Zencode in Redis</a></p>
-<p><span class="mdi mdi-eye"></span>
-<a href="https://redroom.dyne.org">Sawroom: blockchain integration with Sawtooth</a></p>
-<h3 id="docker">Docker</h3>
-<p><span class="mdi mdi-docker"></span>
-<a href="https://github.com/dyne/docker-dyne-software/tree/master/zenroom">Docker build files</a>
-(dyne/zenroom:latest)</p>
-<h2 id="bindings">Bindings</h2>
-<p>Zenroom is designed to be embedded inside host applications and used from its very simple interface to execute code on an input and return an output of the transformation. The embedding API is:</p>
-<div class="codehilite"><pre><span class="kt">int</span> <span class="nf">zenroom_exec</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">script</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">conf</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">keys</span><span class="p">,</span>
-                 <span class="kt">char</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span> <span class="kt">int</span> <span class="n">verbosity</span><span class="p">);</span>
-</pre></div>
-
-
-<p>This API can be called in similar ways from a variety of languages and in particular four wrappers already facilitate its usage:</p>
-<ul class="center">
-<li><a href="https://www.npmjs.com/package/zenroom">Javascript NPM package</a></li>
-<li><a href="https://github.com/DECODEproject/zenroom-py">Python language bindings</a></li>
-<li><a href="https://github.com/DECODEproject/zenroom-go">Go language bindings</a></li>
-<li><b>Redis</b> module implementation for in-memory database encryption</li>
-</ul>
-
-<h2 id="acknowledgements">Acknowledgements</h2>
+<p><span class="big">
+<span class="mdi mdi-flag"></span>
+<a href="zencode">Zencode: programming smart contracts in human language</a>
+</span></p>
+<p><span class="big">
+<span class="mdi mdi-math-compass"></span>
+<a href="crypto">Crypto scheme implementation using Zenroom and Lua</a>
+</span></p>
+<p><span class="big">
+<span class="mdi mdi-code-braces"></span>
+<a href="lua">Zenroom scripting in Lua: reference documentation</a>
+</span></p>
+<h2 id="how-to-adopt">How to adopt</h2>
+<p><span class="big">
+<span class="mdi mdi-run"></span>
+<a href="wiki/how-to-exec">How to execute scripts with Zenroom</a>
+</span></p>
+<p><span class="big">
+<span class="mdi mdi-package"></span>
+<a href="wiki/how-to-embed">How to embed Zenroom in your application</a>
+</span></p>
+<p><span class="big">
+<span class="mdi mdi-cogs"></span>
+<a href="wiki/how-to-build">How to build Zenroom from the source code</a>
+</span></p>
+<h1 id="playground">Playground</h1>
+<h2 id="online">Online</h2>
+<p><span class="big">
+<span class="mdi mdi-hand-pointing-right"></span>
+<a href="demo">Online interactive demo</a>
+</span></p>
+<p><span class="big">
+<span class="mdi mdi-web"></span>
+<a href="encrypt">Web encryption demonstration and benchmark</a>
+</span></p>
+<h2 id="apps">Apps</h2>
+<p><span class="big">
+<span class="mdi mdi-network"></span>
+<a href="https://redroom.dyne.org">Redroom: fast execution of Zencode in Redis</a>
+</span></p>
+<p><span class="big">
+<span class="mdi mdi-eye"></span>
+<a href="https://redroom.dyne.org">Sawroom: blockchain integration with Sawtooth</a>
+</span></p>
+<h1 id="acknowledgements">Acknowledgements</h1>
 <p><img alt="Project funded by the European Commission" src="img/ec_logo.png" /></p>
 <p>The Zenroom VM and the Zencode language are proudly developed in
 Europe and have receiving funding from the European Union’s Horizon
@@ -284,7 +316,7 @@ implied.  See <a href="LICENSE.txt">the License</a>.</p>
 		</section>
 		<footer class="footer">
 	<div class="content has-text-centered">
-		<p>	<strong>Zenroom</strong> is Copyright (C) 2019 by the <a href="https://dyne.org">Dyne.org foundation</a>. The source code is licensed <a href="https://www.gnu.org/licenses/agpl-3.0.en.html">AGPLv3</a>. </p>
+		<p>	<strong>Zenroom docs</strong> is Copyright (C) 2019 by the <a href="https://dyne.org">Dyne.org foundation</a>. The source code is licensed <a href="https://www.gnu.org/licenses/agpl-3.0.en.html">AGPLv3</a>. </p>
 		<!-- <div class="columns is-gapless">
 			 <div class="column is-one-fifth">
 			 <img src="assets/img/eu-flag.png"></div>
@@ -296,37 +328,7 @@ implied.  See <a href="LICENSE.txt">the License</a>.</p>
 		<!-- </div> -->
 	</div>
 </footer>
-		 <!-- Start of Async Drift Code -->
-<script>
- "use strict";
-
- !function() {
-	 var t = window.driftt = window.drift = window.driftt || [];
-	 if (!t.init) {
-		 if (t.invoked) return void (window.console && console.error &&
-									 console.error("Drift snippet included twice."));
-		 t.invoked = !0, t.methods = [ "identify", "config", "track", "reset",
-									   "debug", "show", "ping", "page", "hide", "off", "on" ],
-							   t.factory = function(e) {
-								   return function() {
-									   var n = Array.prototype.slice.call(arguments);
-									   return n.unshift(e), t.push(n), t;
-								   };
-							   }, t.methods.forEach(function(e) {
-								   t[e] = t.factory(e);
-							   }), t.load = function(t) {
-								   var e = 3e5, n = Math.ceil(new Date() / e) * e, o =
-									   document.createElement("script");
-								   o.type = "text/javascript", o.async = !0, o.crossorigin = "anonymous",
-									   o.src = "https://js.driftt.com/include/" + n + "/" + t + ".js";
-								   var i = document.getElementsByTagName("script")[0];
-								   i.parentNode.insertBefore(o, i);
-							   };
-	 }
- }();
- drift.SNIPPET_VERSION = '0.3.1';
- drift.load('s64nd7w43g53');
-</script>      
+		
 		
 	</body>
 </html>

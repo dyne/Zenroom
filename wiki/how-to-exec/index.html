@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>How to execute Zenroom scripts - Zenroom</title>
+		<title>How to execute Zenroom scripts - Zenroom docs</title>
 		<meta name="description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
 		<meta name="keywords" content="crypto, security, iot, blockchain" />
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -19,6 +19,7 @@
 		<link rel="stylesheet" href="../../assets/css/bulma.min.css">
 		<link rel="stylesheet" href="../../assets/css/bulma-dyne.css">
 		<link rel="stylesheet" href="../../assets/css/materialdesignicons.min.css">
+		<link rel="stylesheet" href="../../assets/css/codehilite.css">
 
 		
 		<script type="text/javascript" src="../../js/cash.min.js"></script>
@@ -79,16 +80,28 @@
         
         <li><span class="mdi mdi-home"></span><a href="https://zenroom.org">Home</a></li>
         
+
         
-        <li><span class="mdi mdi-download"></span><a href="">Download</a></li>
+        <li><span class="mdi mdi-book-open-page-variant"></span><a href="https://dev.zenroom.org">Documentation</a></li>
+        
+		
+        
+        <li><span class="mdi mdi-download"></span><a href="/#download">Download</a></li>
         
         
         <li><span class="mdi mdi-github-circle"></span><a href="https://github.com/decodeproject/Zenroom/">Source Code</a></li>
         
         
-        <li><span class="mdi mdi-docker"></span><a href="#docker">Docker</a></li>
         
+
         
+        <li><span class="mdi mdi-history"></span><a href="/changelog">Log of changes</a></li>
+        
+
+        
+        <li><span class="mdi mdi-account-edit"></span><a href="https://github.com/decodeproject/zenroom/wiki">Wiki</a></li>
+        
+
         
     </ul>
     
@@ -143,6 +156,19 @@
 </aside>
 					</div>
 					<div class="column">
+						
+						<nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
+							<ul>
+								<li><a href="../..">Zenroom docs</a></li>
+								
+								
+								<li>Wiki</li>
+								
+								
+								<li class="is-active">How to execute Zenroom scripts</li>
+							</ul>
+						</nav>
+						
 						<div class="content">
 							 <h1 id="how-to-execute-zenroom-scripts">How to execute Zenroom scripts</h1>
 <p>This section explains how to invoke the Zenroom to execute scripts in various situations: from commandline, from javascript and various other languages.</p>
@@ -297,7 +323,7 @@ this example keyfile:</p>
 		</section>
 		<footer class="footer">
 	<div class="content has-text-centered">
-		<p>	<strong>Zenroom</strong> is Copyright (C) 2019 by the <a href="https://dyne.org">Dyne.org foundation</a>. The source code is licensed <a href="https://www.gnu.org/licenses/agpl-3.0.en.html">AGPLv3</a>. </p>
+		<p>	<strong>Zenroom docs</strong> is Copyright (C) 2019 by the <a href="https://dyne.org">Dyne.org foundation</a>. The source code is licensed <a href="https://www.gnu.org/licenses/agpl-3.0.en.html">AGPLv3</a>. </p>
 		<!-- <div class="columns is-gapless">
 			 <div class="column is-one-fifth">
 			 <img src="assets/img/eu-flag.png"></div>
@@ -309,37 +335,7 @@ this example keyfile:</p>
 		<!-- </div> -->
 	</div>
 </footer>
-		 <!-- Start of Async Drift Code -->
-<script>
- "use strict";
-
- !function() {
-	 var t = window.driftt = window.drift = window.driftt || [];
-	 if (!t.init) {
-		 if (t.invoked) return void (window.console && console.error &&
-									 console.error("Drift snippet included twice."));
-		 t.invoked = !0, t.methods = [ "identify", "config", "track", "reset",
-									   "debug", "show", "ping", "page", "hide", "off", "on" ],
-							   t.factory = function(e) {
-								   return function() {
-									   var n = Array.prototype.slice.call(arguments);
-									   return n.unshift(e), t.push(n), t;
-								   };
-							   }, t.methods.forEach(function(e) {
-								   t[e] = t.factory(e);
-							   }), t.load = function(t) {
-								   var e = 3e5, n = Math.ceil(new Date() / e) * e, o =
-									   document.createElement("script");
-								   o.type = "text/javascript", o.async = !0, o.crossorigin = "anonymous",
-									   o.src = "https://js.driftt.com/include/" + n + "/" + t + ".js";
-								   var i = document.getElementsByTagName("script")[0];
-								   i.parentNode.insertBefore(o, i);
-							   };
-	 }
- }();
- drift.SNIPPET_VERSION = '0.3.1';
- drift.load('s64nd7w43g53');
-</script>      
+		
 		
 	</body>
 </html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Source code of Web Encryption Demo - Zenroom docs</title>
+		<meta name="description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
+		<meta name="keywords" content="crypto, security, iot, blockchain" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta property="og:title" content="Source code of Web Encryption Demo" />
+		<meta property="og:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="https://dev.zenroom.org" />
+		<meta name="twitter:card" content="summary_large_image">
+		<meta name="twitter:site" content="@DyneOrg">
+		<meta name="twitter:title" content="Source code of Web Encryption Demo">
+		<meta name="twitter:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them.">
+
+		<link rel="stylesheet" href="../../assets/css/bulma.min.css">
+		<link rel="stylesheet" href="../../assets/css/bulma-dyne.css">
+		<link rel="stylesheet" href="../../assets/css/materialdesignicons.min.css">
+		<link rel="stylesheet" href="../../assets/css/codehilite.css">
+
+		
+		<script type="text/javascript" src="../../js/cash.min.js"></script>
+		
+
+		
+		<link rel="stylesheet" href="../../css/montserrat.css">
+		
+		<link rel="stylesheet" href="../../css/custom.css">
+		
+
+		
+
+		
+
+	</head>
+
+	<body>
+		<nav class="navbar has-shadow is-transparent">
+    <div class="navbar-brand">
+        <a class="navbar-item" href="../..">
+			
+			<img src="../../img/zenroom_logo.jpg">
+			
+        </a>
+    </div>
+	
+	<div id="navbarExampleTransparentExample" class="navbar-menu">
+        <div class="navbar-start">
+			<div class="navbar-item">
+				Zenroom: portable, secure and independent crypto language
+			</div>
+		</div>
+	</div>
+	
+        <div class="navbar-end">
+            <div class="navbar-item">
+                <div class="field is-grouped">
+                    <p class="control">
+                        <a href="https://dyne.org">
+							<!-- https://img.shields.io/badge/made%20with%20%E2%9D%A4%20by-Dyne.org-turquoise.svg?style=for-the-badge&logo=gnu -->
+                            <img src="../../assets/img/made_by_dyne.svg" alt="Made with love by Dyne.org" title="We are free to share code and we code to share Freedom"></a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+		<section class="section">
+			<div class="container">
+				<div class="columns">
+					<div class="column is-one-quarter">
+						<aside class="menu">
+    
+    <h1 class="menu-label">
+        <span class="mdi mdi-fire has-text-danger"></span> Quick Links</h1>
+    <ul class="menu-list" style="list-style: none">
+        
+        <li><span class="mdi mdi-home"></span><a href="https://zenroom.org">Home</a></li>
+        
+
+        
+        <li><span class="mdi mdi-book-open-page-variant"></span><a href="https://dev.zenroom.org">Documentation</a></li>
+        
+		
+        
+        <li><span class="mdi mdi-download"></span><a href="/#download">Download</a></li>
+        
+        
+        <li><span class="mdi mdi-github-circle"></span><a href="https://github.com/decodeproject/Zenroom/">Source Code</a></li>
+        
+        
+        
+
+        
+        <li><span class="mdi mdi-history"></span><a href="/changelog">Log of changes</a></li>
+        
+
+        
+        <li><span class="mdi mdi-account-edit"></span><a href="https://github.com/decodeproject/zenroom/wiki">Wiki</a></li>
+        
+
+        
+    </ul>
+    
+
+    <hr width="20%">
+
+    <h1 class="menu-label">
+        <span class="mdi mdi-format-list-numbered has-text-primary"></span> Table of Contents</h1>
+    <ul class="menu-list">
+        
+        <li>
+            <a href="#source-code-of-web-encryption-demo">Source code of Web Encryption Demo</a>
+            
+        </li>
+        
+    </ul>
+</aside>
+					</div>
+					<div class="column">
+						
+						<nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
+							<ul>
+								<li><a href="../..">Zenroom docs</a></li>
+								
+								
+								<li>Encrypt</li>
+								
+								
+								<li class="is-active">Source code of Web Encryption Demo</li>
+							</ul>
+						</nav>
+						
+						<div class="content">
+							 <h1 id="source-code-of-web-encryption-demo">Source code of Web Encryption Demo</h1>
+<p><a href="encrypt">See the working example</a></p>
+<div class="codehilite"><pre><span class="c1">// This javascript code is Public Domain</span>
+
+<span class="kd">var</span> <span class="nx">zencodeResults</span> <span class="o">=</span> <span class="p">[];</span>
+
+<span class="kd">var</span> <span class="nx">ZC</span> <span class="o">=</span> <span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">let</span> <span class="nx">bobKeys</span> <span class="o">=</span> <span class="kc">null</span>
+    <span class="kd">let</span> <span class="nx">aliceKeys</span> <span class="o">=</span> <span class="kc">null</span>
+    <span class="kd">let</span> <span class="nx">t0</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="kd">let</span> <span class="nx">t1</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="kd">let</span> <span class="nx">zencode_encrypt_contract</span> <span class="o">=</span> <span class="err">`</span><span class="nx">Scenario</span> <span class="s1">&#39;simple&#39;</span><span class="o">:</span> <span class="nx">Alice</span> <span class="nx">sends</span> <span class="nx">a</span> <span class="nx">secret</span> <span class="nx">to</span> <span class="nx">Bob</span>
+<span class="nx">Given</span> <span class="nx">that</span> <span class="nx">I</span> <span class="nx">am</span> <span class="nx">known</span> <span class="nx">as</span> <span class="s1">&#39;Alice&#39;</span>
+<span class="nx">and</span> <span class="nx">I</span> <span class="nx">have</span> <span class="nx">my</span> <span class="s1">&#39;keypair&#39;</span>
+<span class="nx">and</span> <span class="nx">I</span> <span class="nx">have</span> <span class="nx">inside</span> <span class="s1">&#39;Bob&#39;</span> <span class="nx">a</span> <span class="nx">valid</span> <span class="s1">&#39;public key&#39;</span>
+<span class="nx">and</span> <span class="nx">I</span> <span class="nx">have</span> <span class="nx">a</span> <span class="s1">&#39;base64&#39;</span>
+<span class="nx">When</span> <span class="nx">I</span> <span class="nx">encrypt</span> <span class="nx">the</span> <span class="s1">&#39;base64&#39;</span> <span class="nx">to</span> <span class="s1">&#39;secret message&#39;</span> <span class="k">for</span> <span class="s1">&#39;Bob&#39;</span>
+<span class="nx">Then</span> <span class="nx">print</span> <span class="nx">the</span> <span class="s1">&#39;secret message&#39;</span>
+<span class="err">`</span>
+    <span class="kr">const</span> <span class="nx">init</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nx">setupForm</span><span class="p">()</span>
+        <span class="c1">// show the contract</span>
+        <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#encrypt_contract&#39;</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span><span class="nx">zencode_encrypt_contract</span><span class="p">)</span>
+
+        <span class="c1">// generate the keypairs</span>
+        <span class="nx">zencode</span><span class="p">(</span><span class="err">`</span><span class="nx">Scenario</span> <span class="s1">&#39;simple&#39;</span><span class="o">:</span> <span class="nx">$scenario</span>
+                 <span class="nx">Given</span> <span class="nx">that</span> <span class="nx">I</span> <span class="nx">am</span> <span class="nx">known</span> <span class="nx">as</span> <span class="s1">&#39;Bob&#39;</span>
+                 <span class="nx">When</span> <span class="nx">I</span> <span class="nx">create</span> <span class="nx">my</span> <span class="k">new</span> <span class="nx">keypair</span>
+                 <span class="nx">Then</span> <span class="nx">print</span> <span class="nx">my</span> <span class="nx">data</span><span class="err">`</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">)</span>
+        <span class="nx">bobKeys</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">zencodeResults</span><span class="p">.</span><span class="nx">pop</span><span class="p">())</span>
+        <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#bob&quot;</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">({</span><span class="nx">Bob</span><span class="o">:</span> <span class="p">{</span> <span class="nx">public_key</span><span class="o">:</span> <span class="nx">bobKeys</span><span class="p">.</span><span class="nx">Bob</span><span class="p">.</span><span class="nx">keypair</span><span class="p">.</span><span class="nx">public_key</span><span class="p">}}))</span>
+        <span class="nx">zencode</span><span class="p">(</span><span class="err">`</span><span class="nx">Scenario</span> <span class="s1">&#39;simple&#39;</span><span class="o">:</span> <span class="nx">$scenario</span>
+                 <span class="nx">Given</span> <span class="nx">that</span> <span class="nx">I</span> <span class="nx">am</span> <span class="nx">known</span> <span class="nx">as</span> <span class="s1">&#39;Alice&#39;</span>
+                 <span class="nx">When</span> <span class="nx">I</span> <span class="nx">create</span> <span class="nx">my</span> <span class="k">new</span> <span class="nx">keypair</span>
+                 <span class="nx">Then</span> <span class="nx">print</span> <span class="nx">my</span> <span class="nx">data</span><span class="err">`</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">)</span>
+        <span class="nx">aliceKeys</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">zencodeResults</span><span class="p">.</span><span class="nx">pop</span><span class="p">())</span>
+        <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#alice&quot;</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">aliceKeys</span><span class="p">))</span>
+    <span class="p">};</span>
+
+    <span class="kr">const</span> <span class="nx">setupForm</span> <span class="o">=</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="kr">const</span> <span class="nx">form</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">&#39;form&#39;</span><span class="p">)</span>
+
+        <span class="nx">form</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;submit&#39;</span><span class="p">,</span> <span class="nx">e</span> <span class="o">=&gt;</span> <span class="p">{</span>
+            <span class="nx">e</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">()</span>
+
+            <span class="kr">const</span> <span class="nx">file</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">&#39;[type=file]&#39;</span><span class="p">).</span><span class="nx">files</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span><span class="p">(</span><span class="nx">file</span><span class="p">.</span><span class="nx">size</span> <span class="o">&gt;</span> <span class="mi">409600</span><span class="p">)</span> <span class="p">{</span> <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;File size too big&#39;</span><span class="p">);</span> <span class="k">return</span><span class="p">;</span> <span class="p">}</span>
+            <span class="kr">const</span> <span class="nx">reader</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">FileReader</span><span class="p">();</span>
+            <span class="nx">reader</span><span class="p">.</span><span class="nx">onloadend</span> <span class="o">=</span> <span class="nx">evt</span> <span class="o">=&gt;</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">evt</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">readyState</span> <span class="o">==</span> <span class="nx">FileReader</span><span class="p">.</span><span class="nx">DONE</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">encrypt</span><span class="p">(</span><span class="nx">evt</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">result</span><span class="p">)</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+            <span class="nx">reader</span><span class="p">.</span><span class="nx">readAsText</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="s2">&quot;UTF-8&quot;</span><span class="p">)</span>
+        <span class="p">})</span>
+    <span class="p">}</span>
+
+    <span class="kr">const</span> <span class="nx">encrypt</span> <span class="o">=</span> <span class="p">(</span><span class="nx">rawContent</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+        <span class="kr">const</span> <span class="nx">content</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">{</span> <span class="nx">base64</span><span class="o">:</span> <span class="nx">btoa</span><span class="p">(</span><span class="nx">unescape</span><span class="p">(</span><span class="nb">encodeURIComponent</span><span class="p">(</span><span class="nx">rawContent</span><span class="p">)))</span> <span class="p">},</span>
+            <span class="p">{</span> <span class="nx">Bob</span><span class="o">:</span> <span class="p">{</span> <span class="nx">public_key</span><span class="o">:</span> <span class="nx">bobKeys</span><span class="p">.</span><span class="nx">Bob</span><span class="p">.</span><span class="nx">keypair</span><span class="p">.</span><span class="nx">public_key</span> <span class="p">}}</span>
+        <span class="p">]</span>
+
+        <span class="nx">zencode</span><span class="p">(</span><span class="nx">zencode_encrypt_contract</span><span class="p">,</span>
+                <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">aliceKeys</span><span class="p">),</span>
+                <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">content</span><span class="p">))</span>
+
+        <span class="nx">$</span><span class="p">(</span><span class="s2">&quot;#result&quot;</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span><span class="nx">zencodeResults</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="kr">const</span> <span class="nx">zencode</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">code</span><span class="p">,</span> <span class="nx">keys</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">zencodeResults</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="nx">t0</span> <span class="o">=</span> <span class="nx">performance</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span>
+        <span class="nx">Module</span><span class="p">.</span><span class="nx">ccall</span><span class="p">(</span><span class="s1">&#39;zencode_exec&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;number&#39;</span><span class="p">,</span>
+                     <span class="p">[</span><span class="s1">&#39;string&#39;</span><span class="p">,</span> <span class="s1">&#39;string&#39;</span><span class="p">,</span> <span class="s1">&#39;string&#39;</span><span class="p">,</span> <span class="s1">&#39;string&#39;</span><span class="p">,</span> <span class="s1">&#39;number&#39;</span><span class="p">],</span>
+                     <span class="p">[</span><span class="nx">code</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="nx">keys</span><span class="p">,</span> <span class="nx">data</span><span class="p">,</span> <span class="mi">1</span><span class="p">]);</span>
+        <span class="nx">t1</span> <span class="o">=</span> <span class="nx">performance</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span>
+        <span class="nx">$</span><span class="p">(</span><span class="s1">&#39;#speed&#39;</span><span class="p">).</span><span class="nx">html</span><span class="p">(</span><span class="nx">t1</span><span class="o">-</span><span class="nx">t0</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="nx">init</span><span class="o">:</span> <span class="nx">init</span>
+    <span class="p">}</span>
+<span class="p">})();</span>
+
+<span class="kd">var</span> <span class="nx">Module</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">preRun</span><span class="o">:</span> <span class="p">[],</span>
+    <span class="nx">postRun</span><span class="o">:</span> <span class="p">[],</span>
+
+    <span class="nx">print</span><span class="o">:</span> <span class="nx">text</span> <span class="o">=&gt;</span> <span class="p">{</span> <span class="nx">zencodeResults</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">text</span><span class="p">)</span> <span class="p">},</span>
+
+    <span class="nx">printErr</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">text</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// pretty printing Zenroom messages on JS console</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">text</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">==</span><span class="s1">&#39;!&#39;</span><span class="p">)</span> <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">text</span><span class="p">)</span>
+        <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">text</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">==</span><span class="s1">&#39;F&#39;</span><span class="p">)</span> <span class="nx">console</span><span class="p">.</span><span class="nx">debug</span><span class="p">(</span><span class="nx">text</span><span class="p">)</span>
+        <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">text</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">==</span><span class="s1">&#39;W&#39;</span><span class="p">)</span> <span class="nx">console</span><span class="p">.</span><span class="nx">warn</span><span class="p">(</span><span class="nx">text</span><span class="p">)</span>
+        <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">text</span><span class="p">.</span><span class="nx">charAt</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">==</span><span class="s1">&#39;*&#39;</span><span class="p">)</span> <span class="nx">console</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="nx">text</span><span class="p">)</span>
+        <span class="k">else</span> <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">text</span><span class="p">)</span>
+    <span class="p">},</span>
+
+    <span class="nx">exec_ok</span><span class="o">:</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{},</span>
+    <span class="nx">exec_error</span><span class="o">:</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{},</span>
+    <span class="nx">onRuntimeInitialized</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span> <span class="nx">ZC</span><span class="p">.</span><span class="nx">init</span><span class="p">()</span> <span class="p">}</span>
+<span class="p">}</span>
+</pre></div> 
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<footer class="footer">
+	<div class="content has-text-centered">
+		<p>	<strong>Zenroom docs</strong> is Copyright (C) 2019 by the <a href="https://dyne.org">Dyne.org foundation</a>. The source code is licensed <a href="https://www.gnu.org/licenses/agpl-3.0.en.html">AGPLv3</a>. </p>
+		<!-- <div class="columns is-gapless">
+			 <div class="column is-one-fifth">
+			 <img src="assets/img/eu-flag.png"></div>
+			 <p class="column is-three-quarters"> -->
+		
+		<p>Funded by the European Union’s Horizon 2020 research and
+			innovation program, grant nr. 732546 (DECODE).</p>
+		
+		<!-- </div> -->
+	</div>
+</footer>
+		
+		
+	</body>
+</html>

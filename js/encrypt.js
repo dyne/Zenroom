@@ -1,3 +1,5 @@
+// This javascript code is Public Domain
+
 var zencodeResults = [];
 
 var ZC = (function() {
@@ -14,27 +16,24 @@ When I encrypt the 'base64' to 'secret message' for 'Bob'
 Then print the 'secret message'
 `
     const init = function() {
-        generateKeys()
         setupForm()
+		// show the contract
         $('#encrypt_contract').html(zencode_encrypt_contract)
 
-    };
-
-    const generateKeys = () => {
+		// generate the keypairs
         zencode(`Scenario 'simple': $scenario
                  Given that I am known as 'Bob'
                  When I create my new keypair
                  Then print my data`, null, null)
         bobKeys = JSON.parse(zencodeResults.pop())
         $("#bob").html(JSON.stringify({Bob: { public_key: bobKeys.Bob.keypair.public_key}}))
-
         zencode(`Scenario 'simple': $scenario
                  Given that I am known as 'Alice'
                  When I create my new keypair
                  Then print my data`, null, null)
         aliceKeys = JSON.parse(zencodeResults.pop())
         $("#alice").html(JSON.stringify(aliceKeys))
-    }
+    };
 
     const setupForm = () => {
         const form = document.querySelector('form')
@@ -86,21 +85,19 @@ Then print the 'secret message'
 var Module = {
     preRun: [],
     postRun: [],
-    print: text => {
-        zencodeResults.push(text)
-    },
+
+    print: text => { zencodeResults.push(text) },
+
     printErr: function(text) {
-        // if (arguments.length > 1)
-        //     text = Array.prototype.slice.call(arguments).join(' ')
+		// pretty printing Zenroom messages on JS console
 		if(text.charAt(1)=='!') console.error(text)
 		else if(text.charAt(1)=='F') console.debug(text)
 		else if(text.charAt(1)=='W') console.warn(text)
 		else if(text.charAt(1)=='*') console.info(text)
         else console.log(text)
     },
+
     exec_ok: () => {},
     exec_error: () => {},
-    onRuntimeInitialized: function () {
-        ZC.init()
-    }
+    onRuntimeInitialized: function () { ZC.init() }
 }

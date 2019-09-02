@@ -6,12 +6,22 @@
      <changefreq>daily</changefreq>
     </url>
     <url>
+     <loc>https://dev.zenroom.org/changelog/</loc>
+     <lastmod>2019-09-02</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    <url>
      <loc>https://dev.zenroom.org/encrypt/</loc>
      <lastmod>2019-09-02</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
      <loc>https://dev.zenroom.org/zencode/</loc>
+     <lastmod>2019-09-02</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    <url>
+     <loc>https://dev.zenroom.org/encrypt/code/</loc>
      <lastmod>2019-09-02</lastmod>
      <changefreq>daily</changefreq>
     </url>

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Zenroom ChangeLog - Zenroom docs</title>
+		<meta name="description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
+		<meta name="keywords" content="crypto, security, iot, blockchain" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta property="og:title" content="Zenroom ChangeLog" />
+		<meta property="og:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="https://dev.zenroom.org" />
+		<meta name="twitter:card" content="summary_large_image">
+		<meta name="twitter:site" content="@DyneOrg">
+		<meta name="twitter:title" content="Zenroom ChangeLog">
+		<meta name="twitter:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them.">
+
+		<link rel="stylesheet" href="../assets/css/bulma.min.css">
+		<link rel="stylesheet" href="../assets/css/bulma-dyne.css">
+		<link rel="stylesheet" href="../assets/css/materialdesignicons.min.css">
+		<link rel="stylesheet" href="../assets/css/codehilite.css">
+
+		
+		<script type="text/javascript" src="../js/cash.min.js"></script>
+		
+
+		
+		<link rel="stylesheet" href="../css/montserrat.css">
+		
+		<link rel="stylesheet" href="../css/custom.css">
+		
+
+		
+
+		
+
+	</head>
+
+	<body>
+		<nav class="navbar has-shadow is-transparent">
+    <div class="navbar-brand">
+        <a class="navbar-item" href="..">
+			
+			<img src="../img/zenroom_logo.jpg">
+			
+        </a>
+    </div>
+	
+	<div id="navbarExampleTransparentExample" class="navbar-menu">
+        <div class="navbar-start">
+			<div class="navbar-item">
+				Zenroom: portable, secure and independent crypto language
+			</div>
+		</div>
+	</div>
+	
+        <div class="navbar-end">
+            <div class="navbar-item">
+                <div class="field is-grouped">
+                    <p class="control">
+                        <a href="https://dyne.org">
+							<!-- https://img.shields.io/badge/made%20with%20%E2%9D%A4%20by-Dyne.org-turquoise.svg?style=for-the-badge&logo=gnu -->
+                            <img src="../assets/img/made_by_dyne.svg" alt="Made with love by Dyne.org" title="We are free to share code and we code to share Freedom"></a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+		<section class="section">
+			<div class="container">
+				<div class="columns">
+					<div class="column is-one-quarter">
+						<aside class="menu">
+    
+    <h1 class="menu-label">
+        <span class="mdi mdi-fire has-text-danger"></span> Quick Links</h1>
+    <ul class="menu-list" style="list-style: none">
+        
+        <li><span class="mdi mdi-home"></span><a href="https://zenroom.org">Home</a></li>
+        
+
+        
+        <li><span class="mdi mdi-book-open-page-variant"></span><a href="https://dev.zenroom.org">Documentation</a></li>
+        
+		
+        
+        <li><span class="mdi mdi-download"></span><a href="/#download">Download</a></li>
+        
+        
+        <li><span class="mdi mdi-github-circle"></span><a href="https://github.com/decodeproject/Zenroom/">Source Code</a></li>
+        
+        
+        
+
+        
+        <li><span class="mdi mdi-history"></span><a href="/changelog">Log of changes</a></li>
+        
+
+        
+        <li><span class="mdi mdi-account-edit"></span><a href="https://github.com/decodeproject/zenroom/wiki">Wiki</a></li>
+        
+
+        
+    </ul>
+    
+
+    <hr width="20%">
+
+    <h1 class="menu-label">
+        <span class="mdi mdi-format-list-numbered has-text-primary"></span> Table of Contents</h1>
+    <ul class="menu-list">
+        
+        <li>
+            <a href="#zenroom-changelog">Zenroom ChangeLog</a>
+            
+                
+  <ul>
+    
+      <li><a href="#current-development-last-update-june-2019">Current development (last update June 2019)</a></li>
+      
+    
+      <li><a href="#09-march-2019">0.9 (March 2019)</a></li>
+      
+    
+      <li><a href="#081-november-2018">0.8.1 (November 2018)</a></li>
+      
+    
+      <li><a href="#080-october-2018">0.8.0 (October 2018)</a></li>
+      
+    
+      <li><a href="#071-september-2018">0.7.1 (September 2018)</a></li>
+      
+    
+      <li><a href="#070-august-2018">0.7.0 (August 2018)</a></li>
+      
+    
+      <li><a href="#060-june-2018">0.6.0 (June 2018)</a></li>
+      
+    
+      <li><a href="#050-april-2018">0.5.0 (April 2018)</a></li>
+      
+    
+      <li><a href="#04-alpha-march-2018">0.4 (ALPHA) (March 2018)</a></li>
+      
+    
+      <li><a href="#03-prototype-february-2018">0.3 (Prototype) (February 2018)</a></li>
+      
+    
+      <li><a href="#02-december-2017">0.2 (December 2017)</a></li>
+      
+    
+      <li><a href="#01-november-2017">0.1 (November 2017)</a></li>
+      
+    
+  </ul>
+
+            
+        </li>
+        
+    </ul>
+</aside>
+					</div>
+					<div class="column">
+						
+						<div class="content">
+							 <h1 id="zenroom-changelog">Zenroom ChangeLog</h1>
+<h2 id="current-development-last-update-june-2019">Current development (last update June 2019)</h2>
+<p>Internal refactoring, code cleanup and memory optimization. Fully
+deterministic random implementation for blockchain usage. Various
+fixes and improvements for the error reporting output. Fixes to the
+iOS native library. Improved python3 and JS bindings. Progress on the
+uni-kernel ARM Cortex port.</p>
+<h2 id="09-march-2019">0.9 (March 2019)</h2>
+<p>Completed high-level language implementation of Zencode and underlying
+zero-knowledge proof credential system Coconut, Elgamal and homomorphic
+encryption. Overall improvements to primitives and to AES-GCM crypto.
+Full implementation of authentication and secure petition signing.
+Several bug fixes and improvements targeting reliability, error reporting
+and portability. Removed many unused libraries, Schema refactoring.
+Working builds for python2/3, nodejs/wasm, golang, Android and iOS.
+Native integration in the mobile react-native app for DDDC petitions. </p>
+<h2 id="081-november-2018">0.8.1 (November 2018)</h2>
+<p>Several fixes and improvements to the arithmetics and language
+constructions for EC and PAIR operations, deeper testing with
+Coconut's work in progress implementation lead to several fixes. New
+working targets for Go and python 2/3 bindings and fixes to existing
+iOS and Android. Overall cleanup of the build system and first stab to
+improve the security when executing malicious code.  Working examples
+now include an implicit certificate scheme (ECQV) and a working
+ElGamal encryption scheme inside Coconut's implementation.</p>
+<h2 id="080-october-2018">0.8.0 (October 2018)</h2>
+<p>New Elliptic Curve Arithmetics (ECP2) with Twisted Curve Pairings
+(Miller-Loop). Hamming distance measurements on OCTET
+(bitwise). Example of ECP based ElGamal implementation of omomorphic
+encryption over integers for petition and tally, with
+verifications. Default encryption now AES-GCM with AEAD authenticated
+headers, examples using a public random IV. Support for Javascript's
+React-Native. Language bindings for Go lang, Python version 2
+and 3. Zenroom virtual machine language design improvements to build
+and documentation, object introspection.</p>
+<h2 id="071-september-2018">0.7.1 (September 2018)</h2>
+<p>Fixes to all Javascript builds.</p>
+<h2 id="070-august-2018">0.7.0 (August 2018)</h2>
+<p>Adopted AES-GCM as default encryption method, downgraded CBC as weak.
+Fixes to the exposed API for complete usage in Zenroom-studio.  Added
+seccomp kernel-level protection and insured unikernel functionality
+with provable isolation from network and filesystem access. Added
+language bindings, a Python module is now provided.</p>
+<p>Switched to BLS383 curve for ECP operations and upgraded Milagro to
+version 4.12.0. Implemented arithmetic operations on BIG numbers and
+improved the language design around ECP, ECDH and OCTET. Exposed and
+improved objects for HASH and RNG. Added curves GOLDILOCKS and
+SECP256K1 for use in ECDH and Base58 for OCTET. Added support for
+MSGPACK binary serialization format.</p>
+<p>Updated tests and examples, added new simple implementation for
+ElGamal with ZKP using ECP primitives. Started ECP2 twisted curve
+implementation. Improved build system; added python, java and esp32
+targets. Updated API documentation.</p>
+<h2 id="060-june-2018">0.6.0 (June 2018)</h2>
+<p>Implemented arithmetic operations on elliptic curve points (ECP)
+as cryptographic primitives to implement new schemes.</p>
+<p>Modularised ECDH class/factory implementation to support multiple
+curve types.</p>
+<p>Support for multiple memory managers (still not fully reentrant),
+improved use of memory (and reflexivity), better constructors in
+scripts.</p>
+<p>Further progress on syntax in relation to use-cases (DECODE D3.5).</p>
+<p>Abstract Syntax Tree parsing of smart rules and rendering to
+JSON (based on lpeglabels and lua-parser).</p>
+<p>Exposed more public calls on zenroom.h for usage as a library
+(stdout/stderr to memory).</p>
+<p>Added contributed scripts for iOS, Android and Go shared builds.</p>
+<h2 id="050-april-2018">0.5.0 (April 2018)</h2>
+<p>Fully adopted Milagro-crypto-C as underlying crypto library,
+abandoning luazen at least for now. Refactored the API and language
+approach to adopt a more object-oriented posture towards first-class
+citizen data objects (octets) and keyrings. Full ECDH implementation
+with support for multiple curve types.</p>
+<p>Direct-syntax interpreter upgraded to Lua 5.3; dropped dependency from
+lua_sandbox effectively cleaning up large portions of code.</p>
+<p>Improved support for javascript; implemented a cryptographically
+secure random generator linked to different RNG functions provided by
+native platforms. Added build targets for Android and iOS, improved JS
+support both for NodeJS and WASM targets.</p>
+<p>Adopted an embedded memory-manager (umm) optionally enabled at
+runtime, achieving significant speed improvements, reduction of
+resources used and full control on memory allocation; adopted a
+function pointer mechanism to easily include different memory managers
+in the future.</p>
+<p>Updated documentation accordingly with more examples and
+tests. Half-baked RSA implementation may be abandoned in the future
+unless use-cases arise.</p>
+<h2 id="04-alpha-march-2018">0.4 (ALPHA) (March 2018)</h2>
+<p>Major improvements to standard Lua direct-syntax compatibility, port
+to emscripten, osx and win targets. Documentation using LDoc and
+website. Support for cjson and other embedded extensions. First
+binary release, enters ALPHA stage.</p>
+<h2 id="03-prototype-february-2018">0.3 (Prototype) (February 2018)</h2>
+<p>Build fixes for various architecture targets. Milagro integration,
+test suites, continuous integration setup.</p>
+<h2 id="02-december-2017">0.2 (December 2017)</h2>
+<p>Whitepaper and improved Lua support.
+Adopted luazen in place of luanacha.</p>
+<h2 id="01-november-2017">0.1 (November 2017)</h2>
+<p>Proof of concept based on lua_sandbox</p> 
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<footer class="footer">
+	<div class="content has-text-centered">
+		<p>	<strong>Zenroom docs</strong> is Copyright (C) 2019 by the <a href="https://dyne.org">Dyne.org foundation</a>. The source code is licensed <a href="https://www.gnu.org/licenses/agpl-3.0.en.html">AGPLv3</a>. </p>
+		<!-- <div class="columns is-gapless">
+			 <div class="column is-one-fifth">
+			 <img src="assets/img/eu-flag.png"></div>
+			 <p class="column is-three-quarters"> -->
+		
+		<p>Funded by the European Union’s Horizon 2020 research and
+			innovation program, grant nr. 732546 (DECODE).</p>
+		
+		<!-- </div> -->
+	</div>
+</footer>
+		
+		
+	</body>
+</html>
