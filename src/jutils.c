@@ -3,7 +3,7 @@
  *  (c) Copyright 2001-2019 Denis Rojo <jaromil@dyne.org>
  *
  * This source code is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Public License as published 
+ * modify it under the terms of the GNU Public License as published
  * by the Free Software Foundation; either version 2 of the License,
  * or (at your option) any later version.
  *
@@ -115,6 +115,7 @@ void act(lua_State *L, const char *format, ...) {
 }
 
 void warning(lua_State *L, const char *format, ...) {
+        (void) L;
 	va_list arg;
 	z_snprintf(pfx, MAX_STRING-1, "%s[W]%s %s\n",ANSI_YELLOW,ANSI_RESET,format);
 	va_start(arg, format);
