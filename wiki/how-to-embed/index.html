@@ -3,17 +3,17 @@
 	<head>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>How to embed - Zenroom docs</title>
+		<title>Embedding Zenroom - Zenroom docs</title>
 		<meta name="description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
 		<meta name="keywords" content="crypto, security, iot, blockchain" />
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-		<meta property="og:title" content="How to embed" />
+		<meta property="og:title" content="Embedding Zenroom" />
 		<meta property="og:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
 		<meta property="og:type" content="website" />
 		<meta property="og:url" content="https://dev.zenroom.org" />
 		<meta name="twitter:card" content="summary_large_image">
 		<meta name="twitter:site" content="@DyneOrg">
-		<meta name="twitter:title" content="How to embed">
+		<meta name="twitter:title" content="Embedding Zenroom">
 		<meta name="twitter:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them.">
 
 		<link rel="stylesheet" href="../../assets/css/bulma.min.css">
@@ -84,7 +84,7 @@
         
         <li><span class="mdi mdi-book-open-page-variant"></span><a href="https://dev.zenroom.org">Documentation</a></li>
         
-		
+
         
         <li><span class="mdi mdi-download"></span><a href="/#download">Download</a></li>
         
@@ -117,6 +117,26 @@
             
         </li>
         
+        <li>
+            <a href="#language-bindings">Language bindings</a>
+            
+                
+  <ul>
+    
+      <li><a href="#jvascript">Jvascript</a></li>
+      
+    
+      <li><a href="#python">Python</a></li>
+      
+    
+      <li><a href="#golang">Golang</a></li>
+      
+    
+  </ul>
+
+            
+        </li>
+        
     </ul>
 </aside>
 					</div>
@@ -130,12 +150,12 @@
 								<li>Wiki</li>
 								
 								
-								<li class="is-active">How to embed</li>
+								<li class="is-active">Embedding Zenroom</li>
 							</ul>
 						</nav>
 						
 						<div class="content">
-							 <h2 id="embedding-zenroom">Embedding Zenroom</h2>
+							 <h1 id="embedding-zenroom">Embedding Zenroom</h1>
 <p>Zenroom is designed to facilitate embedding into other native applications and high-level scripting languages. The stable releases distribute compiled library components for Apple/iOS and Google/Android platforms, as well MS/Windows DLL. Golang bindings and a Jupyter kernel are also in experimental phase.</p>
 <p>To call Zenroom from an host program is very simple, since there isn't an API of calls, but a single call to execute scripts and return their results. The call is called <code>zenroom_exec</code> and prints results to the "stderr/stdout" terminal output. Its prototype is common to all libraries:</p>
 <div class="codehilite"><pre><span class="kt">int</span> <span class="nf">zenroom_exec</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">script</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">conf</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">keys</span><span class="p">,</span>
@@ -166,7 +186,25 @@
 <div class="codehilite"><pre><span class="kt">int</span> <span class="nf">zenroom_parse_ast</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">script</span><span class="p">,</span> <span class="kt">int</span> <span class="n">verbosity</span><span class="p">,</span>
                       <span class="kt">char</span> <span class="o">*</span><span class="n">stdout_buf</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">stdout_len</span><span class="p">,</span>
                       <span class="kt">char</span> <span class="o">*</span><span class="n">stderr_buf</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">stderr_len</span><span class="p">);</span>
-</pre></div> 
+</pre></div>
+
+
+<h1 id="language-bindings">Language bindings</h1>
+<p>-This API can be called in similar ways from a variety of languages and wrappers that already facilitate its usage.</p>
+<h2 id="jvascript">Jvascript</h2>
+<p><a href="https://www.npmjs.com/package/zenroom">Javascript NPM package</a></p>
+<div class="codehilite"><pre><span class="n">npm</span> <span class="n">install</span> <span class="n">zenroom</span>
+</pre></div>
+
+
+<h2 id="python">Python</h2>
+<p><a href="https://github.com/DECODEproject/zenroom-py">Python language bindings</a></p>
+<div class="codehilite"><pre><span class="n">pip</span> <span class="n">install</span> <span class="n">zenroom</span>
+</pre></div>
+
+
+<h2 id="golang">Golang</h2>
+<p><a href="https://github.com/DECODEproject/zenroom-go">Go language bindings</a></p> 
 						</div>
 					</div>
 				</div>
