@@ -269,8 +269,6 @@ int main(int argc, char **argv) {
 	} else
 		if(verbosity) act(NULL, "using default configuration");
 
-	char *random_seed; 
-
 	zenroom_t *Z;
 	set_debug(verbosity);
 	Z = zen_init(
@@ -313,7 +311,7 @@ int main(int argc, char **argv) {
 		if(zencode) {
 			if( zen_exec_zencode(Z, script) ) return EXIT_FAILURE;
 		} else {
-			if( zen_exec_script(Z, script) ) return EXIT_FAILURE;		
+			if( zen_exec_script(Z, script) ) return EXIT_FAILURE;
 		}
 	} else {
 		act(NULL, "protected mode (seccomp isolation) activated");
