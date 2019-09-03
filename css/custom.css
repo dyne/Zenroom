@@ -1,12 +1,13 @@
 body {
-	font-family: 'Montserrat'
+	font-family: 'Montserrat';
+	font-size: 1.2em;
 }
 
 .big {
 	font-size: 1.5em
 }
 
-.content h1 {
-	font-size: 2.5em
-}
+.content h1 { font-size: 2.5em }
+.content h2 { font-size: 2.2em }
+.content h3 { font-size: 1.8em }
 

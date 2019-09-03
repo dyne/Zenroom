@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Crypto modeling with Zenroom and Lua - Zenroom docs</title>
+		<meta name="description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
+		<meta name="keywords" content="crypto, security, iot, blockchain" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta property="og:title" content="Crypto modeling with Zenroom and Lua" />
+		<meta property="og:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="https://dev.zenroom.org" />
+		<meta name="twitter:card" content="summary_large_image">
+		<meta name="twitter:site" content="@DyneOrg">
+		<meta name="twitter:title" content="Crypto modeling with Zenroom and Lua">
+		<meta name="twitter:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them.">
+
+		<link rel="stylesheet" href="../assets/css/bulma.min.css">
+		<link rel="stylesheet" href="../assets/css/bulma-dyne.css">
+		<link rel="stylesheet" href="../assets/css/materialdesignicons.min.css">
+		<link rel="stylesheet" href="../assets/css/codehilite.css">
+
+		
+		<script type="text/javascript" src="../js/cash.min.js"></script>
+		
+
+		
+		<link rel="stylesheet" href="../css/montserrat.css">
+		
+		<link rel="stylesheet" href="../css/custom.css">
+		
+
+		
+
+		
+
+	</head>
+
+	<body>
+		<nav class="navbar has-shadow is-transparent">
+    <div class="navbar-brand">
+        <a class="navbar-item" href="..">
+			
+			<img src="../img/zenroom_logo.jpg">
+			
+        </a>
+    </div>
+	
+	<div id="navbarExampleTransparentExample" class="navbar-menu">
+        <div class="navbar-start">
+			<div class="navbar-item">
+				Zenroom: portable, secure and independent crypto language
+			</div>
+		</div>
+	</div>
+	
+        <div class="navbar-end">
+            <div class="navbar-item">
+                <div class="field is-grouped">
+                    <p class="control">
+                        <a href="https://dyne.org">
+							<!-- https://img.shields.io/badge/made%20with%20%E2%9D%A4%20by-Dyne.org-turquoise.svg?style=for-the-badge&logo=gnu -->
+                            <img src="../assets/img/made_by_dyne.svg" alt="Made with love by Dyne.org" title="We are free to share code and we code to share Freedom"></a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+		<section class="section">
+			<div class="container">
+				<div class="columns">
+					<div class="column is-one-quarter">
+						<aside class="menu">
+    
+    <h1 class="menu-label">
+        <span class="mdi mdi-fire has-text-danger"></span> Quick Links</h1>
+    <ul class="menu-list" style="list-style: none">
+        
+        <li><span class="mdi mdi-home"></span><a href="https://zenroom.org">Home</a></li>
+        
+
+        
+        <li><span class="mdi mdi-book-open-page-variant"></span><a href="https://dev.zenroom.org">Documentation</a></li>
+        
+
+        
+        <li><span class="mdi mdi-download"></span><a href="/#download">Download</a></li>
+        
+        
+        <li><span class="mdi mdi-github-circle"></span><a href="https://github.com/decodeproject/Zenroom/">Source Code</a></li>
+        
+        
+        
+
+        
+        <li><span class="mdi mdi-history"></span><a href="/changelog">Log of changes</a></li>
+        
+
+        
+        <li><span class="mdi mdi-account-edit"></span><a href="https://github.com/decodeproject/zenroom/wiki">Wiki</a></li>
+        
+
+        
+    </ul>
+    
+
+    <hr width="20%">
+
+    <h1 class="menu-label">
+        <span class="mdi mdi-format-list-numbered has-text-primary"></span> Table of Contents</h1>
+    <ul class="menu-list">
+        
+        <li>
+            <a href="#crypto-modeling-with-zenroom-and-lua">Crypto modeling with Zenroom and Lua</a>
+            
+                
+  <ul>
+    
+      <li><a href="#short-path-from-math-to-production">Short path from math to production</a></li>
+      
+  <ul>
+    
+      <li><a href="#elgamal">ElGamal</a></li>
+      
+    
+      <li><a href="#ecqv">ECQV</a></li>
+      
+  <ul>
+    
+      <li><a href="#mathematical-formula">Mathematical Formula</a></li>
+      
+    
+      <li><a href="#zenroom-implementation">Zenroom Implementation</a></li>
+      
+    
+  </ul>
+
+    
+  </ul>
+
+    
+      <li><a href="#elliptic-curve-point-arithmetics">Elliptic Curve Point arithmetics</a></li>
+      
+    
+  </ul>
+
+            
+        </li>
+        
+        <li>
+            <a href="#basic-advantages">Basic advantages</a>
+            
+        </li>
+        
+    </ul>
+</aside>
+					</div>
+					<div class="column">
+						
+						<div class="content">
+							 <h1 id="crypto-modeling-with-zenroom-and-lua">Crypto modeling with Zenroom and Lua</h1>
+<p>The Zenroom VM uses the Lua direct-syntax parser to securely interpret
+and execute operations including complex arithmetics on Elliptic Curve
+primitives <a href="../lua/modules/ECP.html">ECP module</a> as well Pairing
+operations on twisted curves (ECP2).</p>
+<p>The resulting scripting language is a restricted Lua dialect without
+any external extension, customised to resemble as much as possible the
+scripting language used by cryptographers in software as for instance
+Mathematica.</p>
+<p>With Zenroom we want to lower the friction that cryptographers face
+when implementing a new crypto models. One can see this software as a
+sort of templating system bridging the work of cryptographers and
+programmers.</p>
+<p>The <a href="https://files.dyne.org/zenroom/Zenroom_Whitepaper.pdf">Zencode
+Whitepaper</a>
+explains in depth the reasons and the approach taken in Zenroom.</p>
+<p>The intended audience of this documentation chapter are cryptoraphers:
+here we offer offers a brief demonstration of possibilities and
+pointers to useful examples on how to implement new cryptographic
+schemes.</p>
+<h2 id="short-path-from-math-to-production">Short path from math to production</h2>
+<p>Examples speak more than a thousand words. We will dive into one
+implementation to make it evident how easy is to go from an academic
+paper offering the mathematical formulation of a cryptographic model
+to a portable implementation running efficiently on any platform.</p>
+<h3 id="elgamal">ElGamal</h3>
+<p>As a basic introduction to this language we propose the implementation
+of <a href="https://en.wikipedia.org/wiki/ElGamal_encryption">ElGamal encryption
+system</a> widely used
+in homomorphic encryption, the code below makes use of the <a href="../lua/modules/ECP.html">ECP
+arithmetics</a> provided by Zenroom.</p>
+<div class="codehilite"><pre><span class="n">ECP</span> <span class="o">=</span> <span class="nb">require</span><span class="p">(</span><span class="s1">&#39;</span><span class="s">ECP&#39;</span><span class="p">)</span>
+
+<span class="k">function</span> <span class="nc">ElGamal</span><span class="p">.</span><span class="nf">keygen</span><span class="p">()</span>
+   <span class="kd">local</span> <span class="n">d</span> <span class="o">=</span> <span class="n">INT</span><span class="p">.</span><span class="n">modrand</span><span class="p">(</span><span class="n">ECP</span><span class="p">.</span><span class="n">order</span><span class="p">())</span>
+   <span class="kd">local</span> <span class="n">gamma</span> <span class="o">=</span> <span class="n">d</span> <span class="o">*</span> <span class="n">ECP</span><span class="p">.</span><span class="n">generator</span><span class="p">()</span>
+   <span class="k">return</span> <span class="n">d</span><span class="p">,</span> <span class="n">gamma</span>
+<span class="k">end</span>
+
+<span class="k">function</span> <span class="nc">ElGamal</span><span class="p">.</span><span class="nf">encrypt</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+   <span class="kd">local</span> <span class="n">k</span> <span class="o">=</span> <span class="n">INT</span><span class="p">.</span><span class="n">modrand</span><span class="p">(</span><span class="n">ECP</span><span class="p">.</span><span class="n">order</span><span class="p">())</span>
+   <span class="kd">local</span> <span class="n">a</span> <span class="o">=</span> <span class="n">k</span> <span class="o">*</span> <span class="n">ECP</span><span class="p">.</span><span class="n">generator</span><span class="p">()</span>
+   <span class="kd">local</span> <span class="n">b</span> <span class="o">=</span> 
+    <span class="n">gamma</span> <span class="o">*</span> <span class="n">k</span>
+    <span class="o">+</span>
+    <span class="n">h</span> <span class="o">*</span> <span class="n">m</span>
+   <span class="k">return</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">k</span>
+<span class="k">end</span>
+
+<span class="k">function</span> <span class="nc">ElGamal</span><span class="p">.</span><span class="nf">decrypt</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+   <span class="k">return</span> <span class="n">b</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">d</span>
+<span class="k">end</span>
+</pre></div>
+
+
+<h3 id="ecqv">ECQV</h3>
+<p>For a practical example we will now use the Zenroom implementation of
+the <a href="https://www.secg.org/sec4-1.0.pdf">Elliptic Curve Qu-Vanstone
+(ECQV)</a> scheme also known as
+"<a href="https://en.wikipedia.org/wiki/Implicit_certificate">Implicit
+Certificate</a>" and
+widely used by Blackberry technologies.</p>
+<h4 id="mathematical-formula">Mathematical Formula</h4>
+<p><img alt="ECQV mathematical formula" src="../img/ecqv.png" /></p>
+<h4 id="zenroom-implementation">Zenroom Implementation</h4>
+<div class="codehilite"><pre><span class="n">ECP</span> <span class="o">=</span> <span class="nb">require</span><span class="p">(</span><span class="s1">&#39;</span><span class="s">ECP&#39;</span><span class="p">)</span>
+<span class="n">G</span> <span class="o">=</span> <span class="n">ECP</span><span class="p">.</span><span class="n">generator</span><span class="p">()</span>
+<span class="k">function</span> <span class="nf">rand</span><span class="p">()</span> <span class="c1">-- random modulo</span>
+    <span class="k">return</span> <span class="n">BIG</span><span class="p">.</span><span class="n">modrand</span><span class="p">(</span><span class="n">ECP</span><span class="p">.</span><span class="n">order</span><span class="p">())</span>
+<span class="k">end</span>
+<span class="c1">-- make a request for certification</span>
+<span class="n">ku</span> <span class="o">=</span> <span class="n">BIG</span><span class="p">.</span><span class="n">modrand</span><span class="p">(</span><span class="n">ECP</span><span class="p">.</span><span class="n">order</span><span class="p">())</span>
+<span class="n">Ru</span> <span class="o">=</span> <span class="n">G</span> <span class="o">*</span> <span class="n">ku</span>
+<span class="c1">-- keypair for CA</span>
+<span class="n">dCA</span> <span class="o">=</span> <span class="n">BIG</span><span class="p">.</span><span class="n">modrand</span><span class="p">(</span><span class="n">ECP</span><span class="p">.</span><span class="n">order</span><span class="p">())</span> <span class="c1">-- private</span>
+<span class="n">QCA</span> <span class="o">=</span> <span class="n">G</span> <span class="o">*</span> <span class="n">dCA</span>       <span class="c1">-- public (known to Alice)</span>
+<span class="c1">-- from here the CA has received the request</span>
+<span class="n">k</span> <span class="o">=</span> <span class="n">BIG</span><span class="p">.</span><span class="n">modrand</span><span class="p">(</span><span class="n">ECP</span><span class="p">.</span><span class="n">order</span><span class="p">())</span>
+<span class="n">kG</span> <span class="o">=</span> <span class="n">G</span> <span class="o">*</span> <span class="n">k</span>
+<span class="c1">-- public key reconstruction data</span>
+<span class="n">Pu</span> <span class="o">=</span> <span class="n">Ru</span> <span class="o">+</span> <span class="n">kG</span>
+<span class="n">declaration</span> <span class="o">=</span>
+    <span class="p">{</span> <span class="n">public</span> <span class="o">=</span> <span class="n">Pu</span><span class="p">:</span><span class="n">octet</span><span class="p">(),</span>
+      <span class="n">requester</span> <span class="o">=</span> <span class="n">str</span><span class="p">(</span><span class="s2">&quot;</span><span class="s">Alice&quot;</span><span class="p">),</span>
+      <span class="n">statement</span> <span class="o">=</span> <span class="n">str</span><span class="p">(</span><span class="s2">&quot;</span><span class="s">I am stuck in Wonderland.&quot;</span><span class="p">)</span> <span class="p">}</span>
+<span class="n">declhash</span> <span class="o">=</span> <span class="n">sha256</span><span class="p">(</span><span class="n">OCTET</span><span class="p">.</span><span class="n">serialize</span><span class="p">(</span><span class="n">declaration</span><span class="p">))</span>
+<span class="n">hash</span> <span class="o">=</span> <span class="n">BIG</span><span class="p">.</span><span class="n">new</span><span class="p">(</span><span class="n">declhash</span><span class="p">,</span> <span class="n">ECP</span><span class="p">.</span><span class="n">order</span><span class="p">())</span>
+<span class="c1">-- private key reconstruction data</span>
+<span class="n">r</span> <span class="o">=</span> <span class="p">(</span><span class="n">hash</span> <span class="o">*</span> <span class="n">k</span> <span class="o">+</span> <span class="n">dCA</span><span class="p">)</span> <span class="o">%</span> <span class="n">ECP</span><span class="p">.</span><span class="n">order</span><span class="p">()</span>
+<span class="c1">-- verified by the requester, receiving r,Certu</span>
+<span class="n">du</span> <span class="o">=</span> <span class="p">(</span><span class="n">r</span> <span class="o">+</span> <span class="n">hash</span> <span class="o">*</span> <span class="n">ku</span><span class="p">)</span> <span class="o">%</span> <span class="n">ECP</span><span class="p">.</span><span class="n">order</span><span class="p">()</span>
+<span class="n">Qu</span> <span class="o">=</span> <span class="n">Pu</span> <span class="o">*</span> <span class="n">hash</span> <span class="o">+</span> <span class="n">QCA</span>
+<span class="nb">assert</span><span class="p">(</span><span class="n">Qu</span> <span class="o">==</span> <span class="n">G</span> <span class="o">*</span> <span class="n">du</span><span class="p">)</span>
+</pre></div>
+
+
+<h2 id="elliptic-curve-point-arithmetics">Elliptic Curve Point arithmetics</h2>
+<p>The brief demonstration above shows how easy it can be to implement a
+cryptographic scheme in Zenroom's Lua dialect, which gives immediately
+the advantage of a frictionless deployement on all targets covered by
+our VM.</p>
+<p>Arithmetic operations also involving <a href="../lua/modules/ECP.html">Elliptic Curve Points
+(ECP)</a> are applied using simple operators on
+<a href="../lua/modules/BIG.html">BIG integers</a>.</p>
+<p>All this is possible without worrying about library dependencies, OS
+versioning, interpeter availability etc.</p>
+<h1 id="basic-advantages">Basic advantages</h1>
+<p>Putting the mathematical formula and the code side by side while using
+the same variable names greatly helps to review the correctness of the
+implementation.</p>
+<p>The tooling inherited from Zenroom allows to swiftly build test
+coverage and benchmarks.</p>
+<p>Future Zenroom developments will improve the provability of the
+calculations and their results, as well provide testing techniques as
+fuzzing: this will automatically benefit all implementations.</p>
+<p>Cryptographers can work independently from programmers, by modeling
+their formulas using their best known tools and then provide the
+script as a payload to be uploaded inside the VM.</p>
+<p>System integrators can work on <a href="embed">embedding Zenroom as a VM</a>
+without worring about cryptographic libraries APIs and moving
+dependencies required by the cryptographic implementations.</p>
+<p>All in all, by using Zenroom your cryptographic model implementation
+is ready for an accellerating future where crypto technologies will
+grow in diversity and possibilities!</p> 
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<footer class="footer">
+	<div class="content has-text-centered">
+		<p>	<strong>Zenroom docs</strong> is Copyright (C) 2019 by the <a href="https://dyne.org">Dyne.org foundation</a>. The source code is licensed <a href="https://www.gnu.org/licenses/agpl-3.0.en.html">AGPLv3</a>. </p>
+		<!-- <div class="columns is-gapless">
+			 <div class="column is-one-fifth">
+			 <img src="assets/img/eu-flag.png"></div>
+			 <p class="column is-three-quarters"> -->
+		
+		<p>Funded by the European Union’s Horizon 2020 research and
+			innovation program, grant nr. 732546 (DECODE).</p>
+		
+		<!-- </div> -->
+	</div>
+</footer>
+		
+		   <script>
+
+ (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	 (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+						  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+ })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ ga('create', 'UA-1857256-5', 'auto');
+ ga('send', 'pageview');
+
+</script> 
+	</body>
+</html>
