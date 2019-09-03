@@ -45,7 +45,7 @@ Download from [files.dyne.org/zenroom](https://files.dyne.org/zenroom)
 
 <span class="big">
 <span class="mdi mdi-history"></span>
-Read the [history of changes](changelog)
+[History of changes](changelog)
 </span>
 
 Anyone planning to use Zenroom to store and access secrets should not
@@ -136,7 +136,7 @@ researchers and cryptographers can provide Zencode or Lua scripts.
 </span>
 
 
-# Acknowledgements
+# Credits
 
 ![Project funded by the European Commission](img/ec_logo.png)
 

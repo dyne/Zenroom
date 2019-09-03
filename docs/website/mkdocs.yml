@@ -8,6 +8,7 @@ copyright: 'Copyright (C) 2019 by the <a href="https://dyne.org">Dyne.org founda
 extra:
   h2020: 732546 (DECODE)
   keywords: crypto, security, iot, blockchain
+  ganalytics: 'UA-1857256-5'
   links:
     homepage: https://zenroom.org
     documentation: https://dev.zenroom.org
