@@ -57,6 +57,7 @@ javascript-wasm: ldflags += -s WASM=1 \
 	-s ALLOW_MEMORY_GROWTH=1 \
 	-s WARN_UNALIGNED=1 \
 	-s EXPORT_NAME="'ZR'" \
+	-s FILESYSTEM=1 \
 	-s ASSERTIONS=1 \
 	--no-heap-copy
 javascript-wasm: apply-patches lua53 milagro embed-lua
