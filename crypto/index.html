@@ -170,27 +170,24 @@ any external extension, customised to resemble as much as possible the
 scripting language used by cryptographers in software as for instance
 Mathematica.</p>
 <p>With Zenroom we want to lower the friction that cryptographers face
-when implementing a new crypto models. One can see this software as a
+when implementing new crypto models. One can see this software as a
 sort of templating system bridging the work of cryptographers and
 programmers.</p>
 <p>The <a href="https://files.dyne.org/zenroom/Zenroom_Whitepaper.pdf">Zencode
 Whitepaper</a>
-explains in depth the reasons and the approach taken in Zenroom.</p>
-<p>The intended audience of this documentation chapter are cryptoraphers:
-here we offer offers a brief demonstration of possibilities and
-pointers to useful examples on how to implement new cryptographic
-schemes.</p>
+explains in depth the issues at stake.</p>
+<p>The intended audience of this documentation chapter are
+cryptographers.</p>
 <h2 id="short-path-from-math-to-production">Short path from math to production</h2>
-<p>Examples speak more than a thousand words. We will dive into one
-implementation to make it evident how easy is to go from an academic
+<p>Examples speak more than a thousand words. We will dive into two
+implementations to make it evident how easy is to go from an academic
 paper offering the mathematical formulation of a cryptographic model
 to a portable implementation running efficiently on any platform.</p>
 <h3 id="elgamal">ElGamal</h3>
-<p>As a basic introduction to this language we propose the implementation
-of <a href="https://en.wikipedia.org/wiki/ElGamal_encryption">ElGamal encryption
-system</a> widely used
-in homomorphic encryption, the code below makes use of the <a href="../lua/modules/ECP.html">ECP
-arithmetics</a> provided by Zenroom.</p>
+<p>As a basic introduction we propose the implementation of <a href="https://en.wikipedia.org/wiki/ElGamal_encryption">ElGamal
+encryption system</a>
+widely used in homomorphic encryption, the code below makes use of the
+<a href="../lua/modules/ECP.html">ECP arithmetics</a> provided by Zenroom.</p>
 <div class="codehilite"><pre><span class="n">ECP</span> <span class="o">=</span> <span class="nb">require</span><span class="p">(</span><span class="s1">&#39;</span><span class="s">ECP&#39;</span><span class="p">)</span>
 
 <span class="k">function</span> <span class="nc">ElGamal</span><span class="p">.</span><span class="nf">keygen</span><span class="p">()</span>
@@ -215,6 +212,7 @@ arithmetics</a> provided by Zenroom.</p>
 </pre></div>
 
 
+<p>One can play around with this code already, using our <a href="demo">online demo</a>.</p>
 <h3 id="ecqv">ECQV</h3>
 <p>For a practical example we will now use the Zenroom implementation of
 the <a href="https://www.secg.org/sec4-1.0.pdf">Elliptic Curve Qu-Vanstone
