@@ -120,9 +120,8 @@ check-static:
 	@echo "All tests passed for STATIC binary build"
 	@echo "----------------"
 
-check-js: test-exec := nodejs ${pwd}/test/zenroom_exec.js ${pwd}/src/zenroom.js
+check-js: test-exec := nodejs ${pwd}/test/zenroom_exec.js ${pwd}/src/zenroom
 check-js:
-	cp src/zenroom.js.mem .
 	$(call lowmem-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
 	@echo "----------------"
