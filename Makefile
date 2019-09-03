@@ -18,6 +18,9 @@
 
 pwd := $(shell pwd)
 ARCH=$(shell uname -m)
+PREFIX ?= /usr/local
+# VERSION is set in src/Makefile
+# DESTDIR is supported by install target
 
 # include platform specific configurations pattern-matching target labels
 include ${pwd}/build/config.mk
@@ -105,6 +108,19 @@ check-milagro: milagro
 # -------------------
 # Test suites for all platforms
 include ${pwd}/build/tests.mk
+
+install: destbin=${DESTDIR}${PREFIX}/bin/zenroom
+install: destdocs=${DESTDIR}${PREFIX}/share/zenroom
+install:
+	install -p -s src/zenroom ${destbin}
+	install -d ${destdocs}/docs
+	if [ -d docs/website/site ]; then cd docs/website/site && cp -ra * ${destdocs}/docs/; cd -; fi
+	install -d ${destdocs}/examples
+	cp -ra examples/* ${destdocs}/examples/
+	if [ -d docs/Zencode_Whitepaper.pdf ]; then cp -ra docs/Zencode_Whitepaper.pdf ${destdocs}/; fi
+	cp README.md ${destdocs}/README.txt
+	cp LICENSE.txt ${destdocs}/LICENSE.txt
+	cp ChangeLog.md ${destdocs}/ChangeLog.txt
 
 clean:
 	make clean -C ${pwd}/lib/lua53/src
