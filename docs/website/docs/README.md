@@ -24,7 +24,7 @@ available on:
 </span>
 
 <span class="big">
-<span class="mdi mdi-school"></span> Whitepaper: [Zencode by Denis Roio (Ph.D)](https://files.dyne.org/zenroom/Zenroom_Whitepaper.pdf)
+<span class="mdi mdi-school"></span> Whitepaper: [Zencode by Jaromil](https://files.dyne.org/zenroom/Zenroom_Whitepaper.pdf)
 </span>
 
 <span class="mdi mdi-hand"></span> Blog post: [Why Zenroom? Algorithmic Sovereignty](https://decodeproject.eu/blog/algorithmic-sovereignty-decode)

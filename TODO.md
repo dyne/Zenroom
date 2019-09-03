@@ -11,14 +11,37 @@ for position, for instance ECP multiplication needs to have the BIG
 number always as second argument. Instead of returning error we should
 check the type and reposition the arguments accordingly.
 
+
+## Review
+
+IV fine - if key is always different IV is not needed
+for reusal of the key then IV needs to be random (or a counter)
+
+
+RNG -> fortuna
+
+ECDH keylen 16<k>64
+
+ecdh_aead_encrypt limit key size to 32 bytes (256 bit)
+accepted values to aes: 128 192 256
+
+
+
+https://github.com/DECODEproject/Zenroom/blob/master/lib/milagro-crypto-c/src/ecdh.c.in#L71
+
+co-factor of a curve
+instead of checking always if point is part of curve
+multiple of co-factors 
+
+
 ## Low-hanging
 
 - memory locking with controls at switch Given (r/o) -> When (r/w) -> Then (w/o)
 - variable wiping with content overwriting in GC
 - DATA and KEYS wiping in Zencode
-- adopt finite state machine in Zencode parser
+X adopt finite state machine in Zencode parser
 - wipe previous memory block in Zencode
-- load multiple scenarios, build `documentation` scenario with ZEN.callback
+X load multiple scenarios, build `documentation` scenario with ZEN.callback
 
 ## Benchmarking
 
@@ -38,8 +61,8 @@ perf report
 Take DATA inside Zencode without parsing from JSON
 - fast detect if JSON: `[` or `{` as first char
 - fast detect of type by 3 char prefix: `u64:` or `b64:`
-- read into IN with name of prefix (data schema)
-- insure that parsing to ACK implies only one memcpy to octet
+X read into IN with name of prefix (data schema)
+X insure that parsing to ACK implies only one memcpy to octet
 
 
 

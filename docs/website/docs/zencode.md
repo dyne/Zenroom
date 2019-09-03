@@ -80,15 +80,17 @@ the integrity of the message is kept intact and that she signed it.
 
 # Memory model
 
-By now should be clear that a Zencode contract operates on data in 3 phases: 1: **Given** -> 2: **When** -> 3: **Then**
+Zencode contracts operate in 3 phases:
 
-1. reads an input
-2. processes its contents
-3. prints out the results
+1. **Given** - validates the input
+2. **When** - processes the contents
+3. **Then** - prints out the results
 
-The 3 separate blocks of code also correspond to 3 memory areas.
+The 3 separate blocks of code also correspond to 3 separate memory areas, sealed by some security measures.
 
 ![Zencode documentation diagram](img/zencode_diagram.png)
+
+All data processed has first to pass the validation phase according to scenario specific data schemas.
 
 # List of statements
 
