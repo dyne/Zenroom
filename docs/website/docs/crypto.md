@@ -11,33 +11,30 @@ scripting language used by cryptographers in software as for instance
 Mathematica.
 
 With Zenroom we want to lower the friction that cryptographers face
-when implementing a new crypto models. One can see this software as a
+when implementing new crypto models. One can see this software as a
 sort of templating system bridging the work of cryptographers and
 programmers.
 
 The [Zencode
 Whitepaper](https://files.dyne.org/zenroom/Zenroom_Whitepaper.pdf)
-explains in depth the reasons and the approach taken in Zenroom.
+explains in depth the issues at stake.
 
-The intended audience of this documentation chapter are cryptoraphers:
-here we offer offers a brief demonstration of possibilities and
-pointers to useful examples on how to implement new cryptographic
-schemes.
+The intended audience of this documentation chapter are
+cryptographers.
 
 ## Short path from math to production
 
-Examples speak more than a thousand words. We will dive into one
-implementation to make it evident how easy is to go from an academic
+Examples speak more than a thousand words. We will dive into two
+implementations to make it evident how easy is to go from an academic
 paper offering the mathematical formulation of a cryptographic model
 to a portable implementation running efficiently on any platform.
 
 ### ElGamal
 
-As a basic introduction to this language we propose the implementation
-of [ElGamal encryption
-system](https://en.wikipedia.org/wiki/ElGamal_encryption) widely used
-in homomorphic encryption, the code below makes use of the [ECP
-arithmetics](lua/modules/ECP.html) provided by Zenroom.
+As a basic introduction we propose the implementation of [ElGamal
+encryption system](https://en.wikipedia.org/wiki/ElGamal_encryption)
+widely used in homomorphic encryption, the code below makes use of the
+[ECP arithmetics](lua/modules/ECP.html) provided by Zenroom.
 
 ```lua
 ECP = require('ECP')
@@ -63,6 +60,7 @@ function ElGamal.decrypt(d, a, b)
 end
 ```
 
+One can play around with this code already, using our [online demo](demo).
 
 ### ECQV
 
