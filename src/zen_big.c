@@ -40,7 +40,9 @@
 //
 // Base arithmetical operations on big numbers.
 //
-// The values of each number can be imported using big:hex() and big:base64() methods.
+// Most operators are overloaded and can be used on BIG numbers as if they would be natural. Multiplications by @{ECP} curve points are also possible using ECP as first argument.
+//
+// For explanations and example usage see <a href="https://dev.zenroom.org/crypto">dev.zenroom.org/crypto</a>.
 //
 //  @module BIG
 //  @author Denis "Jaromil" Roio
@@ -295,9 +297,6 @@ static int newbig(lua_State *L) {
 	return 1;
 }
 
-// TODO: simple random() method using BIG_random()
-//       and randmodulo using BIG_randomnum
-
 octet *new_octet_from_big(lua_State *L, big *c) {
 	int i;
 	octet *o;
@@ -490,6 +489,16 @@ static int big_modsub(lua_State *L) {
 	return 1;
 }
 
+
+
+/***
+    Generate a random Big number whose ceiling is defined by the modulo to another number.
+
+    @param modulo another BIG number, usually @{ECP.order} 
+    @return a new Big number
+    @function BIG.modrand(modulo)
+*/
+
 static int big_modrand(lua_State *L) {
 	big *modulus = big_arg(L,1); SAFE(modulus);	
 	big *res = big_new(L); big_init(res); SAFE(res);
@@ -583,6 +592,15 @@ static int big_div(lua_State *L) {
 	return 1;
 }
 
+
+/***
+    Multiply a BIG number by another BIG while ceiling the operation to a modulo to avoid excessive results. This operation is to be preferred to the simple overladed operator '*' in most cases where such a multiplication takes place. It may replace '*' in the future as a simplification.
+
+    @param coefficient another BIG number
+    @param modulo usually @{ECP.order} 
+    @return a new Big number
+    @function BIG.modmul(coefficient, modulo)
+*/
 static int big_modmul(lua_State *L) {
 	big *y = big_arg(L, 1); SAFE(y);
 	big *z = big_arg(L, 2); SAFE(z);

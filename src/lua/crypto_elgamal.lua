@@ -27,10 +27,6 @@ end
 function elg.encrypt(gamma, m, h)
    local k = INT.modrand(ECP.order())
    local a = k * ECP.generator()
-   -- TODO: argument checking and explicit ECP conversion
-   -- if type(gamma) == "string" then
-   -- 	  g = ECP.new(gamma) -- explicit conversion to ECP
-   -- else g = gamma end -- other conversions are implicit
    local b = gamma * k
 	  +
 	  h * m
