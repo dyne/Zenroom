@@ -1,19 +1,19 @@
 # Smart contracts in human language
 
 Zenroom is software inspired by the [language-theoretical
-security](http://langsec.org) research and it allows to express
+security](http://langsec.org) research which allows expression of
 cryptographic operations in a readable domain-specific language called
 **Zencode**.
 
-For an explanation of the innovation brought by Zencode see this blog post: [Smart contracts for the English speaker](https://decodeproject.eu/blog/smart-contracts-english-speaker).
+For an explanation of the innovation brought by Zencode, see this blog post: [Smart contracts for the English speaker](https://decodeproject.eu/blog/smart-contracts-english-speaker).
 
-Now to learn this very simple language, lets dive into some examples.
+Now, to learn this very simple language, lets dive into some examples.
 
 Keep in mind that statements in yellow boxes are actual Zencode being executed.
 
 # Symmetric encryption
 
-This is a simple tecnique to hide a secret using a common password known to all people.
+This is a simple tecnique to hide a secret, using a common password known to all people.
 
 Let's imagine two people who want to communicate secretly: Alice and Bob.
 
@@ -35,28 +35,28 @@ cryptography)](https://en.wikipedia.org/wiki/Public-key_cryptography)
 which relies on the creation of keypairs (public and private) both by
 Alice and Bob.
 
-Fortunately its pretty simple to do using Zencode.
+Fortunately, it is pretty simple to do this using Zencode.
 
 ## Key generation and exchange
 
 ![Zencode to generate asymmetric keypairs](img/ecdh_keygen.svg)
 
-After both Alice and Bob have their own keypairs and they both know
-each other public key we can move forward to do asymmetric encryption
+After both Alice and Bob have their own keypairs, and they both know
+eachother's public key, we can move forward to do asymmetric encryption
 and signatures.
 
 ## Public-key Encryption (ECDH)
 
 ![Zencode to encrypt using asymmetric keypairs](img/ecdh_crypt.svg)
 
-In this basic example the session key for encryption is made combining
+In this basic example, the session key for encryption is made by combining
 the private key of Alice and the public key of Bob (or
 viceversa).
 
-Reusing keys is not really considered secure, but by combining the
-first symmetric key example and this one is possible to generate a
-random password, use it to encrypt the message and then use the
-session key to encrypt the password.
+Reusing keys is not really considered secure. However, by combining the
+first symmetric key example and this one, it is possible to generate a
+random password. The random password is used to encrypt the message and the session key is used
+to encrypt the password.
 
 There is also the possibility to add an authenticated clear text
 header to the message, using an additional line of Zencode:
@@ -75,12 +75,12 @@ public information that accompany the secret.
 ![Zencode to sign using asymmetric keypairs](img/ecdsa_sign.svg)
 
 In this example Alice uses her private key to sign and authenticate a
-message. Bob or anyone else can use Alice's public key to prove that
+message. Bob, or anyone else, can use Alice's public key to prove that
 the integrity of the message is kept intact and that she signed it.
 
 # Memory model
 
-By now should be clear that a Zencode contract operates on data in 3 phases: 1: **Given** -> 2: **When** -> 3: **Then**
+By now it should be clear that a Zencode contract operates on data in 3 phases: 1: **Given** -> 2: **When** -> 3: **Then**
 
 1. reads an input
 2. processes its contents
