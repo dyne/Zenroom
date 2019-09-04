@@ -352,10 +352,10 @@ function zencode:export(object, format)
    local conv_f = nil
    local ft = type(format)
    if format and ft == 'function' then conv_f = format goto ok end
-   if format and ft == 'string' then conv_f = get_encoding(format) goto ok end
-   conv_f = CONF.encoding_fun -- fallback to configured conversion function
+   if format and ft == 'string' then conv_f = get_encoding(format).fun goto ok end
+   conv_f = CONF.output.encoding.fun -- fallback to configured conversion function
    ::ok::
-   ZEN.assert(conv_f , "ZEN:export conversion function not configured")
+   ZEN.assert(type(conv_f) == 'function' , "ZEN:export conversion function not configured")
    return conv_f(object) -- TODO: protected call
 end
 
@@ -387,6 +387,8 @@ function zencode:import(object)
    elseif string.sub(object,1,3) == 'bin' and O.is_bin(object) then
 	  -- return decoded string format for JSON.decode
 	  return O.from_bin(object)
+   -- elseif CONF.input.encoding.fun then
+   -- 	  return CONF.input.encoding.fun(object)
    end
    ZEN:wtrace("import implicit conversion from string: " ..object)
    return O.from_string(object)
@@ -457,22 +459,7 @@ function zencode:step(text)
 					"Invalid transition from "
 					..ZEN.machine.current.." to Rule block")
 	  -- process rules immediately
-	  local rule = strtok(text) -- TODO: optimise in C (see zenroom_common)
-	  if rule[2] == 'check' and rule[3] == 'version' then
-		 act("Zencode version check >= "..rule[4])
-		 -- TODO: check version of running VM
-	  elseif rule[2] == 'load' and rule[3] then
-		 act("zencode extension: "..rule[3])
-		 require("zencode_"..rule[3])
-	  elseif rule[2] == 'set' and rule[4] then
-		 act("rule set: "..rule[3].." = "..rule[4])
-		 if rule[3] == 'encoding' then
-			set_encoding(rule[4])
-		 else
-			CONF[rule[3]] = tonumber(rule[4]) or rule[4]
-		 end
-	  end
-	  -- TODO: rule to set version of zencode
+	  set_rule(text)
    else -- defs = nil end
 	    -- if not defs then
 		 ZEN.assert("Zencode invalid: "..text)
@@ -558,26 +545,16 @@ function zencode:wtrace(src)
 end
 
 function zencode:run()
-   -- xxx(2,"Zencode MATCHES:")
-   -- xxx(2,self.matches)
+   -- HEAP setup
+   IN = { } -- import global DATA from json
+   if DATA then
+	  -- if plain array conjoin into associative
+	  IN = CONF.input.format.fun(DATA) or { }
+   end
+   IN.KEYS = { } -- import global KEYS from json
+   if KEYS then IN.KEYS = CONF.input.format.fun(KEYS) or { } end
+   -- EXEC zencode
    for i,x in sort_ipairs(self.matches) do
-	  IN = { } -- import global DATA from json
-	  if DATA then
-		 -- if plain array conjoin into associative
-		 IN = JSON.decode(DATA) or { }
-		 -- TODO: load the setup
-		 IN.zenroom = nil
-
-		 -- if _in and isarray(_in) then -- conjoin array
-		 -- 	for i,c in ipairs(_in) do
-		 -- 	   for k,v in pairs(c) do IN[k] = v end
-		 -- 	end
-		 -- else IN = _in or { } end
-	  end
-	  IN.KEYS = { } -- import global KEYS from json
-	  if KEYS then IN.KEYS = JSON.decode(KEYS) or { } end
-	  -- TODO: compare the setup raise error if different
-	  IN.KEYS.zenroom = nil
 	  ZEN:trace("->  "..trim(x.source))
 	  ZEN.OK = true
       local ok, err = pcall(x.hook,table.unpack(x.args))
@@ -586,6 +563,7 @@ function zencode:run()
 		 fatal(x.source) -- traceback print inside
 	  end
    end
+   -- PRINT output
    ZEN:trace("--- Zencode execution completed")
    if type(OUT) == 'table' then
 	  ZEN:trace("+++ Adding setup information to { OUT }")
@@ -593,9 +571,9 @@ function zencode:run()
 	  OUT.zenroom.version = VERSION.original
 	  OUT.zenroom.curve = CONF.curve
 	  OUT.zenroom.scenario = ZEN.scenario
-	  OUT.zenroom.encoding = CONF.encoding
-	  ZEN:trace("<<< Encoding { OUT } to \"JSON\"")
-	  print(JSON.encode(OUT))
+	  OUT.zenroom.encoding = CONF.output.encoding.name
+	  ZEN:trace("<<< Encoding { OUT } to "..CONF.output.format.name)
+	  print(CONF.output.format.fun(OUT))
 	  ZEN:trace(">>> Encoding successful")
    end
 end

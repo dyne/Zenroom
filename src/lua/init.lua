@@ -36,6 +36,7 @@ require('zenroom_common')
 INSIDE = require('inspect')
 OCTET  = require('zenroom_octet')
 JSON   = require('zenroom_json')
+CBOR   = require('zenroom_cbor')
 ECDH   = require('zenroom_ecdh')
 BIG    = require('zenroom_big')
 HASH   = require('zenroom_hash')
@@ -64,7 +65,12 @@ _G["Then"]  = nil
 _G["CONF"] = {
    -- goldilocks is our favorite ECDH/DSA curve
    curve = 'goldilocks',
-   verbosity = 1
+   verbosity = 1,
+   input = { encoding = get_encoding('url64'),
+			 format = get_format('json') },
+   output = { encoding = get_encoding('url64'),
+			  format = get_format('json') }
 }
 -- encoding base64url (RFC4648) is the fastest and most portable in zenroom
-set_encoding('url64')
+-- set_encoding('url64')
+-- set_format('json')

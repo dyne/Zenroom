@@ -16,42 +16,70 @@ function iszen(n)
    return false
 end
 
+-- gets a string and returns the associated function, string and prefix
 function get_encoding(what)
-   if     what == 'u64' or what == 'url64' then return url64
-   elseif what == 'b64' or what =='base64' then return base64
-   elseif what == 'hex' then return hex
-   elseif what == 'str' or what == 'string' then return str
+   if what == 'u64' or what == 'url64' then
+	  return { fun = url64,
+			   name = 'url64',
+			   pfx = 'u64' }
+   elseif what == 'b64' or what =='base64' then
+	  return { fun = base64,
+			   name = 'base64',
+			   pfx = 'b64' }
+   elseif what == 'hex' then
+	  return { fun = hex,
+			   name = 'hex',
+			   pfx = 'hex' }
+   elseif what == 'str' or what == 'string' then
+	  return { fun = str,
+			   name = 'string',
+			   pfx = 'str' }
+   else
+	  warn("Conversion encoding not supported: "..what)
    end
    return nil
 end
+function get_format(what)
+   if what == 'json' or what == 'JSON' then
+	  return { fun = JSON.auto,
+			   name = 'json' }
+   elseif what == 'cbor' or what == 'CBOR' then
+	  return { fun = CBOR.auto,
+			   name = 'cbor' }
+   else
+	  warn("Conversion format not supported: "..what)
+   end
+   return nil
+end
+
 function set_encoding(what)
    -- functions mapped from zenroom_octet.lua
    CONF.encoding = 'switching'
    CONF.encoding_fun = nil
-   if     what == 'u64' or what == 'url64' then
-	  CONF.encoding = 'url64'
-	  CONF.encoding_fun = url64
-	  CONF.encoding_pfx = 'u64'
-   elseif what == 'b64'    then
-	  CONF.encoding = 'base64'
-	  CONF.encoding_fun = base64
-	  CONF.encoding_pfx = 'b64'
-   elseif what == 'hex'    then
-	  CONF.encoding = 'hex'
-	  CONF.encoding_fun = hex
-	  CONF.encoding_pfx = 'hex'
-   elseif what == 'string' or what == 'str' then
-	  CONF.encoding = 'string'
-	  CONF.encoding_fun = str
-	  CON.encoding_pfx = 'str'
-   end
+   CONF.encoding_fun, CONF.encoding, CONF.encoding_pfx = get_encoding(what)
    if CONF.encoding_fun then return true
    else
-	  warn("Conversion format not found: "..what)
+	  warn("Conversion encoding not supported: "..what)
 	  return false
    end
 end
-
+function set_format(what)
+   CONF.format = 'switching'
+   CONF.format_fun = nil
+   if what == 'json' or what == 'JSON' then
+	  CONF.format = 'json'
+	  CONF.format_fun = JSON.auto
+   elseif what == 'cbor' or what == 'CBOR' then
+	  CONF.format = 'cbor'
+	  CONF.format_fun = CBOR.auto
+   end
+   if CONF.encoding_fun then return true
+   else
+	  warn("Conversion format not supported: "..what)
+	  return false
+   end
+end
+	  
 -- debugging facility
 function xxx(n,s)
    if ZEN.verbosity or CONF.debug >= n then act(s) end
@@ -204,3 +232,41 @@ function split(src,pat)
    return tbl
 end
 function strtok(src) return split(src, "%S+") end
+
+-- TODO: investigate use of lua-faces
+function set_rule(text)
+   local res = false
+   local rule = strtok(text) -- TODO: optimise in C (see zenroom_common)
+   if rule[2] == 'check' and rule[3] == 'version' then
+      act("Zencode version check >= "..rule[4])
+      -- TODO: check version of running VM
+	  -- elseif rule[2] == 'load' and rule[3] then
+	  --     act("zencode extension: "..rule[3])
+	  --     require("zencode_"..rule[3])
+   elseif rule[2] == 'input' and rule[3] and rule[4] then
+      -- rule input encoding|format ''
+      if rule[3] == 'encoding' then
+         CONF.input.encoding = get_encoding(rule[4])
+		 res = true and CONF.input.encoding
+      elseif rule[3] == 'format' then
+		 CONF.input.format = get_format(rule[4])
+         res = true and CONF.input.format
+      end
+   elseif rule[2] == 'output' and rule[3] and rule[4] then
+      -- rule input encoding|format ''
+      if rule[3] == 'encoding' then
+         CONF.output.encoding = get_encoding(rule[4])
+		 res = true and CONF.output.encoding
+      elseif rule[3] == 'format' then
+		 CONF.output.format = get_format(rule[4])
+         res = true and CONF.output.format
+      end
+   elseif rule[2] == 'set' and rule[4] then
+      act("rule set: "..rule[3].." = "..rule[4])
+      CONF[rule[3]] = tonumber(rule[4]) or rule[4]
+      res = true and CONF[rule[3]]
+   end
+   if not res then error("Rule invalid: "..text, 3)
+   else act(text) end
+   return res
+end

@@ -46,11 +46,11 @@ function J.autoconv(data)
 end
 
 J.decode = function(str)
-   assert(str,      "JSON.decode error decoding nil string")
+   if not str then error("JSON.decode error decoding nil string", 2) end
    -- assert(str ~= "","JSON.decode error decoding empty string")
    -- assert(type(str) == "string", "JSON.decode error unsopported type: "..type(str))
    local t = JSON.raw_decode(JSON.autoconv(str))
-   assert(t, "JSON.decode error decoding type: "..type(str))
+   if not t then error("JSON.decode error decoding type: "..type(str), 2) end
    -- fixes strange behavior of tables returned
    -- second value returned should be used
    -- first one becomes a string after first transformation
@@ -65,6 +65,20 @@ J.encode = function(tab)
 		 I.process(tab)
 	  )
    -- return JSON.raw_encode(tab)
+end
+
+J.auto = function(obj)
+   local t = type(obj)
+   if t == 'table' then
+	  -- export table to JSON
+	  return JSON.encode(obj)
+   elseif t == 'string' then
+	  -- import JSON string to table
+	  return JSON.decode(obj)
+   else
+	  error("JSON.auto unrecognised input type: "..t, 3)
+	  return nil
+   end
 end
 
 return J
