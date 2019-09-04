@@ -158,9 +158,10 @@ Go bindings by Christian Espinoza and Samuel Mulube.
 JS bindings by Jordi Coscolla and Puria.
 
 Special thanks to Francesca Bria for leading the DECODE project and to
-George Danezis, Ola Bini, Mark de Villiers, Ivan J., Alberto Sonnino,
-Richard Stallman, Enrico Zimuel, Jim Barritt and Andrea D'Intino for
-their expert reviews.
+George Danezis, Ola Bini, Mark de Villiers, Ivan Jelincic, Alberto
+Sonnino, Richard Stallman, Enrico Zimuel, Jim Barritt, Samuel Mulube,
+Nina Boelsums, Andrea D'Intino and Sofía Celi for their expert
+reviews.
 
 This software includes software components by: R. Ierusalimschy,
 W. Celes and L.H. de Figueiredo (lua), Mike Scott and Kealan McCusker
