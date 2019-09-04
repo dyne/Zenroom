@@ -236,7 +236,7 @@ function set_rule(text)
    local res = false
    local rule = strtok(text) -- TODO: optimise in C (see zenroom_common)
    if rule[2] == 'check' and rule[3] == 'version' and rule[4] then
-	  if not SEMVER then SEMVER = require('semver') end
+	  SEMVER = require_once('semver')
 	  local ver = SEMVER(rule[4])
 	  if ver == VERSION then
 		 act("Zencode version match: "..VERSION.original)

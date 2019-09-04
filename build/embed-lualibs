@@ -49,7 +49,11 @@ for i in ${(f)libs}; do
 	print         >>  ${dst}
 	print "// $i" >>  ${dst}
 	xxd -i ${n}   >>  ${dst}
-	sed -i 's/^unsigned/const unsigned/' ${dst}
+	if [[ "`uname`" =~ "BSD" ]]; then
+	    sed -i "" 's/^unsigned/const unsigned/' ${dst}
+	else
+	    sed -i 's/^unsigned/const unsigned/' ${dst}
+	fi
 	print         >>  ${dst}
 	popd
 	rm -rf $tmp
