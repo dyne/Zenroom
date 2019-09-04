@@ -214,14 +214,15 @@ public information that accompany the secret.</p>
 message. Bob or anyone else can use Alice's public key to prove that
 the integrity of the message is kept intact and that she signed it.</p>
 <h1 id="memory-model">Memory model</h1>
-<p>By now should be clear that a Zencode contract operates on data in 3 phases: 1: <strong>Given</strong> -&gt; 2: <strong>When</strong> -&gt; 3: <strong>Then</strong></p>
+<p>Zencode contracts operate in 3 phases:</p>
 <ol>
-<li>reads an input</li>
-<li>processes its contents</li>
-<li>prints out the results</li>
+<li><strong>Given</strong> - validates the input</li>
+<li><strong>When</strong> - processes the contents</li>
+<li><strong>Then</strong> - prints out the results</li>
 </ol>
-<p>The 3 separate blocks of code also correspond to 3 memory areas.</p>
+<p>The 3 separate blocks of code also correspond to 3 separate memory areas, sealed by some security measures.</p>
 <p><img alt="Zencode documentation diagram" src="../img/zencode_diagram.png" /></p>
+<p>All data processed has first to pass the validation phase according to scenario specific data schemas.</p>
 <h1 id="list-of-statements">List of statements</h1>
 <div class="codehilite"><pre><span class="l-Scalar-Plain">data</span><span class="p-Indicator">:</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">then</span><span class="p-Indicator">:</span> <span class="s">&#39;print</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>

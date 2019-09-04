@@ -165,10 +165,10 @@
 and execute operations including complex arithmetics on Elliptic Curve
 primitives <a href="../lua/modules/ECP.html">ECP module</a> as well Pairing
 operations on twisted curves (ECP2).</p>
-<p>The resulting scripting language is a restricted Lua dialect without
-any external extension, customised to resemble as much as possible the
-scripting language used by cryptographers in software as for instance
-Mathematica.</p>
+<p>The resulting scripting language is a <a href="/lua">restricted Lua dialect</a>
+without any external extension, customised to resemble as much as
+possible the scripting language used by cryptographers in software as
+for instance Mathematica.</p>
 <p>With Zenroom we want to lower the friction that cryptographers face
 when implementing new crypto models. One can see this software as a
 sort of templating system bridging the work of cryptographers and
@@ -180,9 +180,9 @@ explains in depth the issues at stake.</p>
 cryptographers.</p>
 <h2 id="short-path-from-math-to-production">Short path from math to production</h2>
 <p>Examples speak more than a thousand words. We will dive into two
-implementations to make it evident how easy is to go from an academic
-paper offering the mathematical formulation of a cryptographic model
-to a portable implementation running efficiently on any platform.</p>
+implementations to make it evident how easy is to <strong>go from an
+academic paper to a portable implementation</strong> running efficiently on
+any platform.</p>
 <h3 id="elgamal">ElGamal</h3>
 <p>As a basic introduction we propose the implementation of <a href="https://en.wikipedia.org/wiki/ElGamal_encryption">ElGamal
 encryption system</a>
@@ -212,7 +212,7 @@ widely used in homomorphic encryption, the code below makes use of the
 </pre></div>
 
 
-<p>One can play around with this code already, using our <a href="demo">online demo</a>.</p>
+<p>One can play around with this code already, using our <a href="/demo">online demo</a>.</p>
 <h3 id="ecqv">ECQV</h3>
 <p>For a practical example we will now use the Zenroom implementation of
 the <a href="https://www.secg.org/sec4-1.0.pdf">Elliptic Curve Qu-Vanstone
@@ -259,29 +259,29 @@ widely used by Blackberry technologies.</p>
 cryptographic scheme in Zenroom's Lua dialect, which gives immediately
 the advantage of a frictionless deployement on all targets covered by
 our VM.</p>
-<p>Arithmetic operations also involving <a href="../lua/modules/ECP.html">Elliptic Curve Points
+<p>Arithmetic operations also involving <a href="/lua/modules/ECP.html">Elliptic Curve Points
 (ECP)</a> are applied using simple operators on
-<a href="../lua/modules/BIG.html">BIG integers</a>.</p>
+<a href="/lua/modules/BIG.html">BIG integers</a>.</p>
 <p>All this is possible without worrying about library dependencies, OS
 versioning, interpeter availability etc.</p>
 <h1 id="basic-advantages">Basic advantages</h1>
-<p>Putting the mathematical formula and the code side by side while using
+<p>Putting the <strong>mathematical formula and the code side by side</strong> while using
 the same variable names greatly helps to review the correctness of the
 implementation.</p>
 <p>The tooling inherited from Zenroom allows to swiftly build test
 coverage and benchmarks.</p>
-<p>Future Zenroom developments will improve the provability of the
-calculations and their results, as well provide testing techniques as
+<p>Future Zenroom developments will improve the <strong>provability of the
+calculations and their results</strong>, as well provide testing techniques as
 fuzzing: this will automatically benefit all implementations.</p>
-<p>Cryptographers can work independently from programmers, by modeling
+<p><strong>Cryptographers can work independently from programmers</strong>, by modeling
 their formulas using their best known tools and then provide the
 script as a payload to be uploaded inside the VM.</p>
-<p>System integrators can work on <a href="embed">embedding Zenroom as a VM</a>
+<p>System integrators can work on <a href="/wiki/how-to-embed">embedding Zenroom as a VM</a>
 without worring about cryptographic libraries APIs and moving
 dependencies required by the cryptographic implementations.</p>
 <p>All in all, by using Zenroom your cryptographic model implementation
-is ready for an accellerating future where crypto technologies will
-grow in diversity and possibilities!</p> 
+is <strong>ready for an accellerating future where crypto technologies will
+grow in diversity and possibilities</strong>!</p> 
 						</div>
 					</div>
 				</div>
