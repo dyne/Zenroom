@@ -445,11 +445,9 @@ static int ecdh_dsa_verify(lua_State *L) {
 static int ecdh_aead_encrypt(lua_State *L) {
 	HERE();
 	octet *k =  o_arg(L, 1); SAFE(k);
-	// check if key is a power of two byte length, as well not bigger
-	// than 64 bytes and not smaller than 16 bytes
-	if(!(k->len && !(k->len & (k->len - 1))) ||
-	   (k->len > 64 && k->len < 16) ) {
-		error(L,"ECDH.aead_encrypt accepts only keys of ^2 length (16,32,64), this is %u", k->len);
+        // AES key size nk can be 16, 24 or 32 bytes
+	if(k->len > 32 || k->len < 16) {
+		error(L,"ECDH.aead_encrypt accepts only keys of 16,24,32, this is %u", k->len);
 		lerror(L,"ECDH encryption aborted");
 		return 0; }
 	octet *in = o_arg(L, 2); SAFE(in);
