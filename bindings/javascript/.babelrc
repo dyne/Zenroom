@@ -1,0 +1,28 @@
+{
+	"presets": [
+		[
+			"@babel/preset-env",
+			{
+				useBuiltIns: "usage", // or "entry"
+				corejs: 3,
+				"targets": {
+					"browsers": [
+						"last 2 versions"
+					]
+				}
+			}
+		],
+		"@babel/preset-react"
+	],
+	"ignore": [
+		"dist",
+		"zenroom"
+	],
+	"env": {
+		"test": {
+			"plugins": [
+				"istanbul"
+			],
+		}
+	}
+}
