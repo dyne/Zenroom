@@ -7,7 +7,7 @@
 
 cd ../
 
-for VERSION in 3.5.0 3.5.1 3.5.2 3.5.3 3.5.4 3.5.5 3.5.6 3.6.0 3.6.1 3.6.2 3.6.3 3.6.4 3.6.5 3.6.6 3.6.7 3.6.8 3.7.0 3.7.1 3.7.2 3.7.3
+for VERSION in 3.5.0 3.5.1 3.5.2 3.5.3 3.5.4 3.5.5 3.5.6 3.6.0 3.6.1 3.6.2 3.6.3 3.6.4 3.6.5 3.6.6 3.6.7 3.6.8 3.6.9 3.7.0 3.7.1 3.7.2 3.7.3 3.7.4
 do
   make clean
   PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -s $VERSION
@@ -21,8 +21,7 @@ do
     ;;
   esac
   SAFE_DIR_VERSION=$(echo $VERSION|tr . _)
-  PYTHON_PACKAGE="build/python3/$SAFE_DIR_VERSION"
-  mkdir -p "$PYTHON_PACKAGE"
-  touch "$PYTHON_PACKAGE/__init__.py"
+  PYTHON_PACKAGE="bindings/python3/zenroom/libs/$(uname)/$SAFE_DIR_VERSION"
+  mkdir -p $PYTHON_PACKAGE
   mv "build/python3/_zenroom.so" $PYTHON_PACKAGE
 done
