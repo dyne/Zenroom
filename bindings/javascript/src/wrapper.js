@@ -1,3 +1,6 @@
+import 'core-js/stable'
+import 'regenerator-runtime/runtime'
+
 const C = require('../dist/lib/zenroom')
 
 /* istanbul ignore next */
@@ -284,17 +287,131 @@ const zenroom = (function () {
     return this
   }
 
+  /**
+   * This method allows the configuration of your call by passing one
+   * configuration option object. You can use the chain methods after this anyway.
+   *
+   * If some attribute is already set, those will be overwritten by the new options
+   *
+   * The following options are available:
+   * <ul>
+   *   <li><strong>script</strong></li>
+   *   <li><strong>keys</strong></li>
+   *   <li><strong>conf</strong></li>
+   *   <li><strong>data</strong></li>
+   *   <li><strong>print</strong></li>
+   *   <li><strong>success</strong></li>
+   *   <li><strong>error</strong></li>
+   *   <li><strong>verbosity</strong></li>
+   * </ul>
+   *
+   * @example <caption>Example usage of `init()`</caption>
+   * // returns zenroom
+   * import zenroom from 'zenroom'
+   * // or without ES6 syntax
+   * // const zenroom = require('zenroom').default
+   *
+   * const encrypt_secret_to_many = {
+   *  script: `keyring = ECDH.new()
+   *            secret = str(DATA)
+   *            keys = JSON.decode(KEYS)
+   *            keyring:private( base64(keys.keyring.secret) )
+   *            res = {}
+   *            for name,pubkey in pairs(keys.recipients) do
+   *              pub = base64(pubkey)
+   *              enc = ECDH.encrypt(keyring,pub,secret,keyring:public())
+   *              res[name] = str( MSG.pack( map(enc,base64) ) ):base64()
+   *            end
+   *            print(JSON.encode(res))`,
+   *
+   *  keys: {
+   *      keyring : {
+   *        public : "BHMjcDM/aljpi8pNxFQ436R6F3J+kaB/Xk1kAVFPmkoLVyeFltDZPgiIYRquh+m2IfvPioBfet7YCd5vVXYoRTk=",
+   *        secret : "ChW5qi5y//ISDIHKx5Fvxl+XY8IyDGVBHUfELp3PqJQ="
+   *      },
+   *      recipients : {
+   *        paulus : "BBUw6Nr3A30cN65maERvAk1cEv2Ji6Vs80kSlpodOC0SCtM8ucaS7e+s158uVMSr3BsvIXVspBeafiL8Qb3kcgc=",
+   *        mayo : "BHqBoQ2WJ3/FGVNTXzdIc+K/HzNx05bWzEhn8m58FvSsaqWVdH52jI6fQWdkdjnbqVKCJGmbjA/OCJ+IKHbiySI=",
+   *        mark : "BFgkjrRMvN+wkJ6qA4UvMaNlYBvl37C9cNYGkqOE4w43AUzkEzcyIIdE6BrgOEUEVefhOOnO6SCBQMgXHXJUUPY=",
+   *        francesca : "BCo102mVybieKMyhex8tnVtFM5+Wo1oP02k8JVwKF9OLIjw7w0LmofItbuAcfWl9rcoe++XLI3sySZnqljIfeyU=",
+   *        jim : "BEs1jeqL0nVwFi7OmG4YdtlWuKADyOvZR4XHpLAEswg8ONPXQHvwJ8+PkHkphoORfSjk2045bMdYkwboU4FdG2Y=",
+   *        jaromil : "BBZYJtHvFg0vGCxPROAWrThcGZ+vFZJj86k+uncjvbm4DysIg7cWS3J6GrcJKCY55Uf40m2KfBwfaT+T7TTO1e8="
+   *      }
+   *  },
+   *
+   *  data: 'This is a secret message.'
+   * }
+   *
+   *
+   * zenroom.init(encrypt_secret_to_many).zenroom_exec()
+   *
+   * @returns {object} the zenroom module
+   */
+  const init = function (options) {
+    /* istanbul ignore next */
+    self.options = Object.assign(self.options, options) || {}
 
-  (function () {
+    script(self.options.script || '')
+    keys(self.options.keys || null)
+    conf(self.options.conf || null)
+    data(self.options.data || null)
+    print(self.options.print || (text => console.log(text)))
+    success(self.options.success || new Function()) // eslint-disable-line no-new-func
+    error(self.options.error || new Function()) // eslint-disable-line no-new-func
+    verbosity(self.options.verbosity || 1)
+
+    return this
+  }
+
+  const __setup = function () {
     print(self.print || (text => console.log(text)))
     success(self.success || (() => {}))
     error(self.error || (() => {}))
-  })()
+  }
 
+  /**
+   * Reset the setted options already provided and cleans up the zenroom module
+   *
+   * It is usually the last method of the chain, but like the other methods returns
+   * the zenroom module itself, so can be used for other calls if you need to make more
+   * executions in a row
+   *
+   * @example <caption>Example usage of `reset()`</caption>
+   * // returns zenroom
+   * import zenroom from 'zenroom'
+   * // or without ES6 syntax
+   * // const zenroom = require('zenroom').default
+   *
+   * const script = 'print("hello")';
+   * zenroom.script(script)
+   *        .zenroom_exec()    // This runs the script
+   *        .reset()
+   *        .zenroom_exec()    // This does not run the script anymore
+   *
+   * @returns {object} the zenroom module
+   */
+  const reset = function () {
+    self = {}
+    self.options = {}
+    __setup()
+    return this
+  }
+
+  __setup()
 
   return {
+    script,
+    keys,
+    conf,
+    data,
+    print,
+    success,
+    verbosity,
     zenroom_exec,
     zencode_exec,
+    error,
+    init,
+    reset,
     __debug
   }
 })()
