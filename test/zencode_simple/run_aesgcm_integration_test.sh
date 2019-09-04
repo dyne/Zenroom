@@ -47,8 +47,8 @@ echo $scenario
 cat <<EOF | zenroom -z -d$verbose -k alice.keys -a bob.pub | tee alice_to_bob.json
 Scenario 'simple': $scenario
 Given that I am known as 'Alice'
-and I have my 'keypair'
-and I have a 'public key' from 'Bob'
+and I have my valid 'keypair'
+and I have a valid 'public key' from 'Bob'
 When I write 'This is my secret message.' in 'draft'
 and I encrypt the 'draft' to 'secret message' for 'Bob'
 Then print the 'secret message'
@@ -93,7 +93,7 @@ Given that I am known as 'Alice'
 and I create a table 'recipients'
 and I have inside 'Bob' a valid 'public key'
 and I add it to 'recipients'
-When I draft the string 'This is my secret message to you'
-and I encrypt the draft for all 'recipients' as 'secret message'
+When I write 'This is my secret message to you' in 'draft'
+and I encrypt the 'draft' for all 'recipients' as 'secret message'
 Then print the 'secret message'
 EOF

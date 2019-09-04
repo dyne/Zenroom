@@ -39,23 +39,34 @@ Given("I introduce myself as ''", function(name) ZEN:Iam(name) end)
 Given("I am known as ''", function(name) ZEN:Iam(name) end)
 Given("I am ''", function(name) ZEN:Iam(name) end)
 
-local have_a = function(name)
+local have_a_valid = function(name)
    ZEN:pick(name)
    ZEN:validate(name)
    ZEN:ack(name)
    TMP = nil -- TODO: wipe
 end
-Given("I have a valid ''", have_a)
-Given("I have a ''", have_a)
+Given("I have a valid ''", have_a_valid)
+Given("I have a ''", function(name)
+		 ZEN:pick(name)
+		 TMP.valid = ZEN:import(TMP.data)
+		 ZEN:ack(name)
+		 TMP = nil -- TODO: wipe
+end)
 
 local have_my = function(name)
+   ZEN.assert(ACK.whoami, "No identity specified, use: Given I am ...")
    ZEN:pickin(ACK.whoami, name)
    ZEN:validate(name)
    ZEN:ack(name)
    TMP = nil
 end
 Given("I have my valid ''", have_my)
-Given("I have my ''", have_my)
+Given("I have my ''", function(name)
+		 ZEN:pickin(ACK.whoami, name)
+		 TMP.valid = ZEN:import(TMP.data)
+		 ZEN:ack(name)
+		 TMP = nil
+end)
 
 local have_in_a = function(s, n)
    ZEN:pickin(s, n)
@@ -79,13 +90,16 @@ Given("I have a valid '' in ''",     have_a_in)
 Given("I have a valid '' from ''",   have_a_in)
 Given("I have a '' inside ''",       have_a_in)
 Given("I have a '' in ''",           have_a_in)
+
 -- public keys for keyring arrays
-Given("I have a '' from ''", function(k, f)
-		 ZEN:pickin(f, k)
-		 ZEN:validate(k)
-		 ZEN:ack_table(k, f)
-		 TMP = nil
-end)
+local have_a_from = function(k, f)
+   ZEN:pickin(f, k)
+   ZEN:validate(k)
+   ZEN:ack_table(k, f)
+   TMP = nil
+end
+Given("I have a '' from ''", have_a_from)
+Given("I have a valid '' from ''", have_a_from)
 
 
 Given("I set '' to ''", function(k,v)
@@ -118,7 +132,7 @@ When("I write '' in ''", function(content, dest)
 end)
 
 When("I create a random ''", function(s)
-		ACK[s] = OCTET.random(256) -- TODO: right now hardcoded 256 byte random secrets
+		ACK[s] = OCTET.random(64) -- TODO: right now hardcoded 256 byte random secrets
 end)
 
 --- THEN

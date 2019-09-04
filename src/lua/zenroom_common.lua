@@ -223,8 +223,6 @@ function flatten(const)
    return flat
 end
 
--- strtok equivalent:
--- strsplit("rule check version 1.0.0","%S+")
 -- TODO: optimize in C using strtok
 function split(src,pat)
    local tbl = {}
@@ -237,8 +235,22 @@ function strtok(src) return split(src, "%S+") end
 function set_rule(text)
    local res = false
    local rule = strtok(text) -- TODO: optimise in C (see zenroom_common)
-   if rule[2] == 'check' and rule[3] == 'version' then
-      act("Zencode version check >= "..rule[4])
+   if rule[2] == 'check' and rule[3] == 'version' and rule[4] then
+	  if not SEMVER then SEMVER = require('semver') end
+	  local ver = SEMVER(rule[4])
+	  if ver == VERSION then
+		 act("Zencode version match: "..VERSION.original)
+		 res = true
+	  elseif ver < VERSION then
+		 error("Zencode written for an older version: "
+				 ..ver.original.." < "..VERSION.original, 2)
+	  elseif ver > VERSION then
+		 error("Zencode written for a newer version: "
+					..ver.original.." > "..VERSION.original, 2)
+	  else
+		 error("Version check error: "..rule[4])
+	  end
+	  ZEN.checks.version = res
       -- TODO: check version of running VM
 	  -- elseif rule[2] == 'load' and rule[3] then
 	  --     act("zencode extension: "..rule[3])
@@ -262,7 +274,6 @@ function set_rule(text)
          res = true and CONF.output.format
       end
    elseif rule[2] == 'set' and rule[4] then
-      act("rule set: "..rule[3].." = "..rule[4])
       CONF[rule[3]] = tonumber(rule[4]) or rule[4]
       res = true and CONF[rule[3]]
    end

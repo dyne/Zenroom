@@ -62,14 +62,15 @@ local zencode = {
    matches = {},
    verbosity = 0,
    schemas = { },
-   scenario = 'basic';
+   checks = { }, -- version, scenario checked, etc.
+   scenario = 'simple';
    OK = true -- set false by asserts
 }
 
 zencode.machine = MACHINE.create({
 	  initial = 'init',
 	  events = {
-		 { name = 'enter_rule',     from = { 'init', 'rule' }, to = 'rule' },
+		 { name = 'enter_rule',     from = { 'init', 'rule', 'scenario' }, to = 'rule' },
 		 { name = 'enter_scenario', from = { 'init', 'rule' }, to = 'scenario' },
 		 { name = 'enter_given',    from = { 'init', 'rule', 'scenario' }, to = 'given' },
 		 { name = 'enter_when',     from =   'given',             to = 'when' },
@@ -153,7 +154,7 @@ function zencode:pick(what, obj)
    end
    local got
    got = inside_pick(IN.KEYS, what) or inside_pick(IN,what)
-   ZEN.assert(got, "Cannot find "..what.." anywhere")
+   ZEN.assert(got, "Cannot find '"..what.."' anywhere")
    TMP = { root = nil,
 		   data = got,
 		   schema = what }
@@ -177,9 +178,9 @@ function zencode:pickin(section, what)
    local root -- section
    local got  -- what
    root = inside_pick(IN.KEYS,section) or inside_pick(IN, section)
-   ZEN.assert(root, "Cannot find "..section.." anywhere")
+   ZEN.assert(root, "Cannot find '"..section.."' when looking for '"..what.."'")
    got = inside_pick(root, what)
-   ZEN.assert(got, "Cannot find "..what.." inside "..section)   
+   ZEN.assert(got, "Cannot find '"..what.."' inside '"..section.."'")   
    -- TODO: check all corner cases to make sure TMP[what] is a k/v map
    TMP = { root = section,
 		   data = got,
@@ -373,6 +374,7 @@ function zencode:import(object)
 	  warn("ZEN:import object already converted to "..t)
 	  return t
    end
+   ZEN.assert(t ~= 'table', "ZEN:import table is impossible: object needs to be 'valid'")
    ZEN.assert(t == 'string', "ZEN:import object is not a string: "..t)
    -- OK, convert
    if string.sub(object,1,3) == 'u64' and O.is_url64(object) then
@@ -428,11 +430,18 @@ function zencode:step(text)
    local prefix = parse_prefix(text)
    local defs -- parse in what phase are we
    ZEN.OK = true
+
+   -- given block, may also skip scenario
    if prefix == 'given' then
 	  ZEN.assert(ZEN.machine:enter_given(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.." to Given block")
       self.current_step = self.given_steps
       defs = self.current_step
-	  ZEN:trace("|   Scenario "..ZEN.scenario)
+	  if not ZEN.checks.scenario then
+		 require_once("zencode_"..ZEN.scenario)
+		 ZEN.checks.scenario = true
+	  end
+
+	  -- when, then, and blocks
    elseif prefix == 'when'  then
 	  ZEN.assert(ZEN.machine:enter_when(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.."to When block")
       self.current_step = self.when_steps
@@ -444,16 +453,18 @@ function zencode:step(text)
    elseif prefix == 'and'   then
 	  ZEN.assert(ZEN.machine:enter_and(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.." to And block")
       defs = self.current_step
+
    elseif prefix == 'scenario' then
 	  ZEN.assert(ZEN.machine:enter_scenario(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.." to Scenario block")
-      self.current_step = self.given_steps
-      defs = self.current_step
-	  ZEN.scenario = string.match(text, "'(.-)'")
-	  if ZEN.scenario ~= "" then
-		 require("zencode_"..ZEN.scenario)
-		 ZEN:trace("|   Scenario "..ZEN.scenario)
-		 act("config scenario: "..ZEN.scenario)
+	  -- string.gmatch to cut away text after the colon
+	  local scenarios = strtok(I.spy(string.match(text, "[^:]+")))
+	  for k,scen in ipairs(scenarios) do
+		 if k ~= 1 then -- skip prefix
+			require_once("zencode_"..trimq(scen))
+			ZEN:trace("Scenario "..scen)
+		 end
 	  end
+	  ZEN.checks.scenario = true
    elseif prefix == 'rule' then
 	  ZEN.assert(ZEN.machine:enter_rule(), text.."\n    "..
 					"Invalid transition from "
@@ -520,8 +531,15 @@ end
 
 function zencode:trace(src)
    -- take current line of zencode
-   _G['ZEN_traceback'] = _G['ZEN_traceback']..
-	  trim(src).."\n"
+   local tr = trim(src)
+   -- TODO: ugly but ok for now
+   if string.sub(tr,1,1) == '[' then
+	  _G['ZEN_traceback'] = _G['ZEN_traceback']..trim(src).."\n"
+
+   else
+	  _G['ZEN_traceback'] = _G['ZEN_traceback']..
+		 " .  "..trim(src).."\n"
+   end
 	  -- "    -> ".. src:gsub("^%s*", "") .."\n"
    -- act(src) TODO: print also debug when verbosity is high
 end
@@ -530,7 +548,7 @@ end
 function zencode:ftrace(src)
    -- take current line of zencode
    _G['ZEN_traceback'] = _G['ZEN_traceback']..
-	  "f   ZEN:"..trim(src).."\n"
+	  " D  ZEN:"..trim(src).."\n"
    -- "    -> ".. src:gsub("^%s*", "") .."\n"
    -- act(src) TODO: print also debug when verbosity is high
 end
@@ -539,12 +557,16 @@ end
 function zencode:wtrace(src)
    -- take current line of zencode
    _G['ZEN_traceback'] = _G['ZEN_traceback']..
-	  "w   ZEN:"..trim(src).."\n"
+	  " W  ZEN:"..trim(src).."\n"
    -- "    -> ".. src:gsub("^%s*", "") .."\n"
    -- act(src) TODO: print also debug when verbosity is high
 end
 
 function zencode:run()
+   -- runtime checks
+   if not ZEN.checks.version then
+	  warn("Zencode is missing version check, please add: rule check version N.N.N")
+   end
    -- HEAP setup
    IN = { } -- import global DATA from json
    if DATA then
@@ -555,7 +577,7 @@ function zencode:run()
    if KEYS then IN.KEYS = CONF.input.format.fun(KEYS) or { } end
    -- EXEC zencode
    for i,x in sort_ipairs(self.matches) do
-	  ZEN:trace("->  "..trim(x.source))
+	  ZEN:trace(trim(x.source))
 	  ZEN.OK = true
       local ok, err = pcall(x.hook,table.unpack(x.args))
       if not ok or not ZEN.OK then
