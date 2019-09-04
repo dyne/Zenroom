@@ -8,10 +8,10 @@
   "license": "AGPL-3.0",
   "scripts": {
     "lint": "npx standard",
-    "build": "cd ../../zenroom && make javascript-npm",
-    "clean": "rimraf dist/lib && cd ../../zenroom && make clean",
+    "build": "cd ../.. && make javascript-npm",
+    "clean": "rimraf dist/lib && cd ../.. && make clean",
     "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
-    "pretranspile": "yarn build && mkdirp dist/lib && cp -v ../../zenroom/build/npm/z* dist/lib",
+    "pretranspile": "yarn build && mkdirp dist/lib && cp -v ../../build/npm/z* dist/lib",
     "transpile": "babel src -d dist",
     "test": "node index.js && nyc --require @babel/register mocha",
     "test:html": "nyc report --reporter=html yarn test",
