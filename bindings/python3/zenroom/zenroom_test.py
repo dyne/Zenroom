@@ -44,7 +44,6 @@ Then print all data
     """
 
     result = zenroom.zencode_exec(contract)
-    print(result)
     assert result
     assert "public" in result.stdout
     assert "private" in result.stdout
