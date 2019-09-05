@@ -14,7 +14,7 @@ class ZenroomResult:
     def __init__(self, stdout=None, stderr=None):
         self.out = stdout.decode().replace('\x00', '').strip()
         self.err = stderr.decode().replace('\x00', '')
-    
+
     @property
     def stdout(self):
         return self.out
