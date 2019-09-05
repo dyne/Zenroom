@@ -1,0 +1,5 @@
+rule check version 1.0.0
+Scenario simple: Generate a random secret
+Given nothing
+When I create a random 'secret'
+Then print the 'secret'

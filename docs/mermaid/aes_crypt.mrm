@@ -1,13 +1,13 @@
 sequenceDiagram
 	participant A as Anon1
 	participant B as Anon2	
-    Note over A,B: Given nothing<br/>When I create a random 'secret'<br/>Then print the 'secret'
-	A->>A: generate a secret password
-    A--xB: send the symmetric password
-	Note over A,B: Given I have a 'secret'<br/>When I write 'confidential message' in 'message'<br/>and I encrypt the 'message' to 'secret message' with 'secret'<br/>Then print the 'secret message'
-	A->>A: encrypt a secret message using the password
-    A--xB: send the message to be decrypted
-    Note over A,B: Given i have a 'secret'<br/>and i have a 'secret message'<br/>When I decrypt the 'secret message' to 'message' with 'secret'<br/>then print as 'string' the 'text' inside 'message'
-    B->>B: decrypt the message with the password
+#    Note over A,B: Given nothing<br/>When I create a random 'secret'<br/>Then print the 'secret'
+	A->>A: 1. I generate a strong random secret
+    A--xB: Then save the secret output and send it
+#	Note over A,B: Given I have a 'secret'<br/>When I write 'confidential message' in 'message'<br/>and I encrypt the 'message' to 'secret message' with 'secret'<br/>Then print the 'secret message'
+	A->>A: 2. I encrypt a message using this secret
+    A--xB: Then save the secret message and send it
+#    Note over A,B: Given i have a 'secret'<br/>and i have a 'secret message'<br/>When I decrypt the 'secret message' to 'message' with 'secret'<br/>then print as 'string' the 'text' inside 'message'
+    B->>B: 3. Who has my secret can decrypt the secret message
 
 	

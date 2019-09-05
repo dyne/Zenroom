@@ -63,35 +63,35 @@ When("I create my new keypair", f_keygen)
 When("I generate my keys", f_keygen)
 
 -- encrypt with a header and secret
-When("I encrypt the '' to '' with ''", function(_in, _out, _key)
-		local header = ACK.header or 'empty'
-		local input = ACK[_in]or ZEN:import(_in, true)
-		local secret = ACK[_key] or ZEN:import(_key, true)
-		ZEN.assert(input or secret, "Input or secret arguments invalid")
-
-		secret = ECDH.kdf2(HASH.new('sha256'),secret) -- KDF2 sha256 on all secrets
-		-- secret is always 32 bytes long, safe for direct aead_decrypt
-		ACK[_out] = { header = header,
-					  iv = O.random(32) }
-		ACK[_out].text, ACK[_out].checksum =
-		   ECDH.aead_encrypt(secret, input, ACK[_out].iv, header)
-		-- include contextual information
+When("I encrypt the message with the secret", function()
+		ZEN.assert(ACK.message, "Data to encrypt not found: message")
+		ZEN.assert(ACK.secret, "Secret used to encrypt not found: secret")
+		-- KDF2 sha256 on all secrets
+		local secret = ECDH.kdf2(HASH.new('sha256'),ACK.secret)
+		ACK.secret_message = { header = ACK.header or 'empty',
+							   iv = O.random(32) }
+		ACK.secret_message.text, ACK.secret_message.checksum =
+		   ECDH.aead_encrypt(secret, ACK.message,
+							 ACK.secret_message.iv,
+							 ACK.secret_message.header)
 end)
 
 -- decrypt with a secret
-When("I decrypt the '' to '' with ''", function(_in, _out, _key)
-        local input = ACK[_in]
-        local secret = ACK[_key] or ZEN:import(_key, true)
-        ZEN.assert(input and secret, "Input or secret arguments invalid")
+When("I decrypt the secret message with the secret", function()
+		ZEN.assert(ACK.secret, "Secret used to decrypt not found: secret")
+		ZEN.assert(ACK.secret_message,
+				   "Secret data to decrypt not found: secret message")
 
-        secret = ECDH.kdf2(HASH.new('sha256'),secret)
+        local secret = ECDH.kdf2(HASH.new('sha256'),ACK.secret)
         -- KDF2 sha256 on all secrets, this way the
         -- secret is always 256 bits, safe for direct aead_decrypt
-        ACK[_out] = { header = input.header }
-        local checksum
-        ACK[_out].text, checksum =
-           ECDH.aead_decrypt(secret, input.text, input.iv, input.header)
-        ZEN.assert(checksum == input.checksum,
+        ACK.message = { header = ACK.secret_message.header }
+        ACK.message.text, ACK.checksum =
+           ECDH.aead_decrypt(secret,
+							 ACK.secret_message.text,
+							 ACK.secret_message.iv,
+							 ACK.message.header)
+        ZEN.assert(ACK.checksum == ACK.secret_message.checksum,
                    "Decryption error: authentication failure, checksum mismatch")
 end)
 

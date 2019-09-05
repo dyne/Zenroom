@@ -2,14 +2,14 @@ sequenceDiagram
     participant A as Alice
     participant B as Bob
 	
-	Note over A,B: Given that I am known as 'Alice'<br/>When I create my new keypair<br/>Then print my data
+#	Note over A,B: Given that I am known as 'Alice'<br/>When I create my new keypair<br/>Then print my data
     A->>A: generate own keypair
-	Note over A,B: Given that I am known as 'Alice'<br/>and I have my 'public key'<br/>Then print my data
-    A->>A: prepare the public key	
+#	Note over A,B: Given that I am known as 'Alice'<br/>and I have my 'public key'<br/>Then print my data
+    A->>A: publish the public key	
     A--xB: send the public key
-    Note over A,B: Given that I am known as 'Bob'<br/>When I create my new keypair<br/>Then print my data
+#    Note over A,B: Given that I am known as 'Bob'<br/>When I create my new keypair<br/>Then print my data
     B->>B: generate own keypair
-	Note over A,B: Given that I am known as 'Bob'<br/>and I have my 'public key'<br/>Then print my data
-    B->>B: prepare the public key	
+#	Note over A,B: Given that I am known as 'Bob'<br/>and I have my 'public key'<br/>Then print my data
+    B->>B: publish the public key	
     B--xA: send the public key
 

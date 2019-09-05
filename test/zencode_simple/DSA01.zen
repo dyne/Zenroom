@@ -1,0 +1,7 @@
+rule check version 1.0.0
+Scenario 'simple': Alice signs a message for Bob
+Given that I am known as 'Alice'
+and I have my valid 'keypair'
+When I write 'This is my signed message to Bob.' in 'draft'
+and I sign the 'draft' as 'signed message'
+Then print my 'signed message'

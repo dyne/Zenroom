@@ -1,0 +1,8 @@
+rule check version 1.0.0
+Scenario 'simple': Bob verifies the signature from Alice
+Given that I am known as 'Bob'
+and I have inside 'Alice' a valid 'public key'
+and I have a valid 'signed message'
+When I verify the 'signed message' is authentic
+Then print 'signature' 'correct'
+and print as 'string' the 'text' inside 'signed message'

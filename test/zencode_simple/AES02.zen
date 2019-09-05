@@ -1,0 +1,4 @@
+Scenario 'simple': Alice publishes her public key
+Given that I am known as 'Alice'
+and I have my valid 'public key'
+Then print my data
