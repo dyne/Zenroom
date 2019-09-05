@@ -1,8 +1,6 @@
 import logging
 from multiprocessing import Manager, Process
-
 from capturer import CaptureOutput
-
 from .zenroom_swig import zenroom_exec_tobuf, zencode_exec_tobuf, zencode_exec_rng_tobuf, zenroom_exec_rng_tobuf
 
 __MAX_STRING__ = 1048576
@@ -12,23 +10,29 @@ class ZenroomException(Exception):
     pass
 
 
-def _sanitize_output(out, err):
-    out = out.decode().replace('\x00', '').strip()
-    err = err.decode().replace('\x00', '')
-    return out, err
+class ZenroomResult:
+    def __init__(self, stdout=None, stderr=None):
+        self.out = stdout.decode().replace('\x00', '').strip()
+        self.err = stderr.decode().replace('\x00', '')
+    
+    @property
+    def stdout(self):
+        return self.out
+
+    @property
+    def stderr(self):
+        return self.err
+
+    def has_error(self):
+        return True if self.err else False
 
 
 def _execute(func, result, args):
     args['stdout_buf'] = bytearray(__MAX_STRING__)
     args['stderr_buf'] = bytearray(__MAX_STRING__)
     func(*args.values())
-
-    sanitized_output = _sanitize_output(args['stdout_buf'], args['stderr_buf'])
-    result.put(sanitized_output)
+    result.put(ZenroomResult(args['stdout_buf'], args['stderr_buf']))
     result.task_done()
-    if (sanitized_output[1]):
-        logging.error(sanitized_output[1])
-        print(sanitized_output[1])
 
 
 def _zen_call(func, arguments):
@@ -39,7 +43,7 @@ def _zen_call(func, arguments):
         p.start()
         p.join()
     if result.empty():
-        raise ZenroomException(capturer.get_lines())
+        raise ZenroomException(capturer.get_text())
 
     return result.get()
 
