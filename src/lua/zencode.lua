@@ -81,6 +81,7 @@ zencode.machine = MACHINE.create({
 	  }
 })
 
+
 -- Zencode HEAP globals
 IN = { }         -- Given processing, import global DATA from json
 IN.KEYS = { }    -- Given processing, import global KEYS from json
@@ -91,6 +92,18 @@ AST = AST or { } -- AST of parsed Zencode
 
 -- Zencode init traceback
 _G['ZEN_traceback'] = "Zencode traceback:\n"
+
+-- global
+_G["REQUIRED"] = { }
+-- avoid duplicating requires (internal includes)
+function require_once(ninc)
+   local class = REQUIRED[ninc]
+   if type(class) == "table" then return class end
+   -- new require
+   class = require(ninc)
+   if type(class) == "table" then REQUIRED[ninc] = class end
+   return class
+end
 
 --- Given block (IN read-only memory)
 -- @section Given
@@ -111,6 +124,7 @@ function zencode:Iam(name)
    end
    assert(ZEN.OK)
 end
+
 
 -- local function used inside ZEN:pick*
 -- try obj.*.what (TODO: exclude KEYS and ACK.whoami)
@@ -367,7 +381,7 @@ end
 -- @function ZEN:import(object)
 -- @param object data element to be read
 -- @return object read
-function zencode:import(object)
+function zencode:import(object, secured)
    ZEN.assert(object, "ZEN:import object is nil")
    local t = type(object)
    if iszen(t) then
@@ -392,8 +406,12 @@ function zencode:import(object)
    -- elseif CONF.input.encoding.fun then
    -- 	  return CONF.input.encoding.fun(object)
    end
-   ZEN:wtrace("import implicit conversion from string: " ..object)
-   return O.from_string(object)
+   if not secured then
+	  ZEN:wtrace("import implicit conversion from string: " ..object)
+	  return O.from_string(object)
+   end
+   error("Import secured to fail on untagged object",1)
+   return nil
    -- error("ZEN:import failed conversion from "..t, 3)
 end
 

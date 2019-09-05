@@ -51,9 +51,7 @@ VERSION = V(VERSION)
 
 ZEN = require('zencode')
 
--- import/export schema helpers
-require('zencode_schemas')
--- base data functions
+-- base data functions and schemas
 require('zencode_data')
 
 -- scenarios can only implement "When ..." steps
@@ -64,6 +62,10 @@ _G["Then"]  = nil
 -- defaults
 _G["CONF"] = {
    -- goldilocks is our favorite ECDH/DSA curve
+   -- other choices here include secp256k1 or ed25519 or bls383
+   -- beware this choice affects only the ECDH object
+   -- and ECDH public keys cannot function as ECP
+   -- because of IANA 7303
    curve = 'goldilocks',
    verbosity = 1,
    input = { encoding = get_encoding('url64'),

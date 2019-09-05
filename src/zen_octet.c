@@ -355,7 +355,7 @@ static int lua_is_url64(lua_State *L) {
 	int len = is_url64(s);
 	if(len<3) {
 		lua_pushboolean(L, 0);
-		func(L, "string is not a valid base64 sequence");
+		func(L, "string is not a valid url64 sequence");
 		return 1; }
 	lua_pushboolean(L, 1);
 	return 1;
@@ -625,7 +625,7 @@ static int to_base64 (lua_State *L) {
 static int to_url64 (lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
 	if(!o->len || !o->val) {
-		lerror(L, "base64 cannot encode an empty string");
+		lerror(L, "url64 cannot encode an empty string");
 		return 0; }
 	int newlen;
 	newlen = B64encoded_len(o->len);

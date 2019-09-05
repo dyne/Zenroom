@@ -24,7 +24,7 @@ Scenario 'simple'
 Given I have a 'secret'
 When I write 'a very short but very very confidential message' in 'message'
 and I write 'this is the header' in 'header'
-and I encrypt the 'message' and 'header' to 'secret message' with 'secret'
+and I encrypt the 'message' to 'secret message' with 'secret'
 Then print the 'secret message'
 EOF
 
@@ -61,7 +61,7 @@ Scenario 'simple'
 Given I have a 'secret'
 When I write 'a very short but very very confidential message' in 'message'
 and I write 'this is the header' in 'header'
-and I encrypt the 'message' and 'header' to 'secret message' with 'secret'
+and I encrypt the 'message' to 'secret message' with 'secret'
 Then print the 'secret message'
 EOF
 

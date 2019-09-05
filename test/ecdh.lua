@@ -61,7 +61,7 @@ function test_simple_curve (name)
 
    ciphermsg = alice:encrypt(bob, secret, str('This is the header!'))
    print ('Simple AES-GCM checksum : ' .. ciphermsg.checksum:url64())
-
+   ciphermsg.pubkey = alice:public()
    local decode = bob:decrypt(ciphermsg)
    assert(secret == decode, "Secret differs from de/coded text")
    print ('Simple AES-GCM on ' .. name .. ' OK')

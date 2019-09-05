@@ -30,6 +30,10 @@ function get_encoding(what)
 	  return { fun = hex,
 			   name = 'hex',
 			   pfx = 'hex' }
+   elseif what == 'bin' or what == 'binary' then
+	  return { fun = bin,
+			   name = 'binary',
+			   pfx = 'bin' }
    elseif what == 'str' or what == 'string' then
 	  return { fun = str,
 			   name = 'string',
@@ -51,50 +55,10 @@ function get_format(what)
    end
    return nil
 end
-
-function set_encoding(what)
-   -- functions mapped from zenroom_octet.lua
-   CONF.encoding = 'switching'
-   CONF.encoding_fun = nil
-   CONF.encoding_fun, CONF.encoding, CONF.encoding_pfx = get_encoding(what)
-   if CONF.encoding_fun then return true
-   else
-	  warn("Conversion encoding not supported: "..what)
-	  return false
-   end
-end
-function set_format(what)
-   CONF.format = 'switching'
-   CONF.format_fun = nil
-   if what == 'json' or what == 'JSON' then
-	  CONF.format = 'json'
-	  CONF.format_fun = JSON.auto
-   elseif what == 'cbor' or what == 'CBOR' then
-	  CONF.format = 'cbor'
-	  CONF.format_fun = CBOR.auto
-   end
-   if CONF.encoding_fun then return true
-   else
-	  warn("Conversion format not supported: "..what)
-	  return false
-   end
-end
 	  
 -- debugging facility
 function xxx(n,s)
    if ZEN.verbosity or CONF.debug >= n then act(s) end
-end
-
--- global
-_G["REQUIRED"] = { }
--- avoid duplicating requires (internal includes)
-function require_once(ninc)
-   local class = REQUIRED[ninc]
-   if type(class) == "table" then return class end
-   -- new require
-   class = require(ninc)
-   if type(class) == "table" then REQUIRED[ninc] = class end
-   return class
 end
 
 function content(var)

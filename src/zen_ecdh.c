@@ -508,11 +508,10 @@ static int ecdh_aead_decrypt(lua_State *L) {
 /** Results of @{keyring:encrypt}
     @table keyring:ciphertext
     @usage
-    { message = "encrypted text",          -- @{OCTET}
+    { text = "encrypted text",             -- @{OCTET}
       checksum = "control checksum",       -- @{OCTET} of 16 bytes
       iv = "random IV",                    -- @{OCTET} of 16 bytes
       header = "clear text header",        -- @{OCTET} often encoded JSON table
-      public key = "sender's public key"}  -- @{OCTET} representation of @{ECP}
 */
 
 static int ecdh_simple_encrypt(lua_State *L) {
@@ -548,19 +547,18 @@ static int ecdh_simple_encrypt(lua_State *L) {
 	lua_setfield(L, -2, "checksum");
 	AES_GCM_ENCRYPT(kdf, iv, h, in, out, checksum);
 	o_dup(L,h); lua_setfield(L, -2, "header");
-	o_dup(L,s->pubkey); lua_setfield(L, -2, "pubkey");
 	return 1;
 }
 
 /**
    Simple method for AES-GCM decrypt with Additional Data
    (AEAD). Takes a table as returned by @{keyring:encrypt} containing
-   message, checksum, header, IV and the sender's pubkey.  Returns an
+   text, checksum, header, IV and the sender's pubkey.  Returns an
    octet containing the decrypted message or error if any problem
    arises (invalid checksum etc.). Compatible with IEEE P802.1
    specification.
 
-   @param ciphertext table with message, checksum, iv, header and public key
+   @param ciphertext table with text, checksum, iv, header and pubkey
    @return octet containing the decrypted message
    @function keyring:decrypt(ciphertext)
 */

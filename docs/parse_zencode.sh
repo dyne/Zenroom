@@ -16,7 +16,9 @@ function _parse() {
 }
 
 tmp=`mktemp`
-print $(_parse data then
+print $(_parse given given
+		_parse when when
+		_parse then then
 		_parse simple when
 		_parse coconut when) | jq -s . > $tmp
 # TODO: see if transformation below needed, else just print $tmp

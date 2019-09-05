@@ -44,13 +44,14 @@ EOF
 
 scenario="Alice encrypts a message for Bob"
 echo $scenario
-cat <<EOF | zenroom -z -d$verbose -k alice.keys -a bob.pub | tee alice_to_bob.json
+cat <<EOF | zenroom -d3 -z -d$verbose -k alice.keys -a bob.pub | tee alice_to_bob.json
 Scenario 'simple': $scenario
 Given that I am known as 'Alice'
 and I have my valid 'keypair'
 and I have a valid 'public key' from 'Bob'
-When I write 'This is my secret message.' in 'draft'
-and I encrypt the 'draft' to 'secret message' for 'Bob'
+When I write 'This is my secret message.' in 'message'
+and I write 'This is the header' in 'header'
+and I encrypt the message for 'Bob'
 Then print the 'secret message'
 EOF
 
@@ -60,7 +61,7 @@ cat <<EOF | zenroom -z -k bob.keys -a alice.pub |tee bob.keyring | json_pp
 Scenario 'simple'
 Given that I am 'Bob'
 and I have my valid 'keypair'
-and I have a 'public key' from 'Alice'
+and I have a valid 'public key' from 'Alice'
 Then print my 'keypair'
 and print the 'public key'
 EOF
@@ -71,10 +72,10 @@ cat <<EOF | zenroom -z -d$verbose -k bob.keyring -a alice_to_bob.json
 Scenario 'simple': $scenario
 Given that I am known as 'Bob'
 and I have my valid 'keypair'
-and I have a 'public key' from 'Alice'
+and I have a valid 'public key' from 'Alice'
 and I have a valid 'secret message'
-When I decrypt the 'secret message' from 'Alice' to 'clear text'
-Then print as 'string' the 'clear text'
+When I decrypt the secret message from 'Alice'
+Then print as 'string' the 'message'
 and print as 'string' the 'header' inside 'secret message'
 EOF
 
