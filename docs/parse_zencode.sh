@@ -21,6 +21,7 @@ print $(_parse given given
 		_parse then then
 		_parse simple when
 		_parse coconut when) | jq -s . > $tmp
+
 # TODO: see if transformation below needed, else just print $tmp
 cat <<EOF | zenroom -a $tmp
 raw_docs = JSON.decode(DATA)

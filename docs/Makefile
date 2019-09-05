@@ -20,8 +20,9 @@ website:
 	@cp -v wiki/Execute.md website/docs/wiki/how-to-exec.md
 	@cp -v wiki/Embed.md website/docs/wiki/how-to-embed.md
 	@cp -v ../ChangeLog.md website/docs/changelog.md
-	../build/esh website/petition.esh R=../examples/zencode_petition > website/docs/petition.md
-	../build/esh website/zencode.esh V=${VERSION} > website/docs/zencode.md
+	../build/esh website/petition.esh R=../test/zencode_coconut > \
+		../test/zencode_coconut/README.txt
+	../build/esh website/zencode.esh > website/docs/zencode.md
 	@cd website && mkdocs build
 
 map:

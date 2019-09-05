@@ -131,7 +131,7 @@ When("I sign the '' as ''", function(doc, dst)
 		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
 		local dsa = ECDH.new(CONF.curve)
 		dsa:private(ACK.keypair.private_key)
-		ACK[dst] = dsa:sign(I.spy(ACK[doc]))
+		ACK[dst] = dsa:sign(ACK[doc])
 		-- include contextual information
 		ACK[dst].text = ACK[doc]
 end)
