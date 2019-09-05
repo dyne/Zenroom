@@ -1,0 +1,366 @@
+#!/bin/sh
+# vim: set ts=4:
+#---help---
+# USAGE:
+#   esh [options] [--] <input> [<variable>...]
+#   esh <-h | -V>
+#
+# Process and evaluate an ESH template.
+#
+# ARGUMENTS:
+#   <input>        Path of the template file or "-" to read from STDIN.
+#   <variable>     Variable(s) specified as <name>=<value> to pass into the
+#                  template (the have higher priority than environment
+#                  variables).
+#
+# OPTIONS:
+#   -d             Don't evaluate template, just dump a shell script.
+#   -o <file>      Output file or "-" for STDOUT. Defaults to "-".
+#   -s <shell>     Command name or path of the shell to use for template
+#                  evaluation. It must not contain spaces.
+#                  Defaults to "/bin/sh".
+#   -h             Show this help message and exit.
+#   -V             Print version and exit.
+#
+# ENVIRONMENT:
+#   ESH_AWK        Command name of path of the awk program to use.
+#                  It must not contain spaces. Defaults to "awk".
+#   ESH_MAX_DEPTH  Maximum include depth. Defaults to 3.
+#   ESH_SHELL      Same as -s.
+#
+# EXIT STATUS:
+#    0             Clean exit, no error has encountered.
+#    1             Generic error.
+#   10             Invalid usage.
+#   11             ESH syntax error.
+#   12             Include error: file not found.
+#   13             Include error: exceeded max include depth (ESH_MAX_DEPTH).
+#
+# Please report bugs at <https://github.com/jirutka/esh/issues>.
+#---help---
+set -eu
+
+readonly PROGNAME='esh'
+readonly VERSION='0.3.0'
+readonly SCRIPTPATH="$0"
+
+AWK_CONVERTER=$(cat <<'AWK'
+function fail(code, msg) {
+	state = "ERROR"
+	# FIXME: /dev/stderr is not portable
+	printf("%s: %s\n", line_info(), msg) > "/dev/stderr"
+	exit code
+}
+function line_info() {
+	return FILENAME ? (filenames[depth] ":" linenos[depth]) : "(init)"  # (init) if inside BEGIN
+}
+# IMPORTANT: This is the only function that should print a newline.
+function puts(str) {
+	print(line_info()) > MAP_FILE
+	print(str)
+}
+function fputs(str) {
+	printf("%s", str)
+}
+function trim(str) {
+	gsub(/^[ \t\r\n]+|[ \t\r\n]+$/, "", str)
+	return str
+}
+function read(len,  _str) {
+	if (len == "") {
+		_str = buff
+		buff = ""
+	} else if (len > 0) {
+		_str = substr(buff, 1, len)
+		buff = substr(buff, len + 1, length(buff))
+	}
+	return _str
+}
+function skip(len) {
+	buff = substr(buff, len + 1, length(buff))
+}
+function flush(len,  _str) {
+	_str = read(len)
+
+	if (state == "TEXT") {
+		gsub("'", "'\\''", _str)
+	}
+	if (state != "COMMENT") {
+		fputs(_str)
+	}
+}
+function file_exists(filename,  _junk) {
+	if ((getline _junk < filename) >= 0) {
+		close(filename)
+		return 1
+	}
+	return 0
+}
+function dirname(path) {
+	return sub(/\/[^\/]+\/*$/, "/", path) ? path : ""
+}
+function include(filename) {
+	if (index(filename, "/") != 1) {  # if does not start with "/"
+		filename = dirname(filenames[depth]) filename
+	}
+	if (!file_exists(filename)) {
+		fail(12, "cannot include " filename ": not a file or not readable")
+	}
+	if (depth > MAX_DEPTH) {
+		fail(13, "cannot include " filename ": exceeded maximum depth of " MAX_DEPTH)
+	}
+	buffs[depth] = buff
+	states[depth] = state
+	filenames[depth + 1] = filename
+	depth++
+
+	init()
+	while ((getline buff < filename) > 0) {
+		if (print_nl && state != "COMMENT") {
+			puts("")
+		}
+		process_line()
+	}
+	end_text()
+	close(filename)
+
+	depth--
+	buff = buffs[depth]
+	state = states[depth]
+}
+function init() {
+	buff = ""
+	linenos[depth] = 0
+	print_nl = 0
+	start_text()
+}
+function start_text() {
+	puts("")
+	fputs("printf '%s' '")
+	state = "TEXT"
+}
+function end_text() {
+	if (state != "TEXT") { return }
+	puts("'  #< " line_info())
+	state = "UNDEF"
+}
+function process_line() {
+	linenos[depth]++
+
+	while (buff != "") {
+		print_nl = 1
+
+		if (state == "TEXT" && match(buff, /<%/)) {
+			flush(RSTART - 1)  # print buff before "<%"
+			skip(2)  # skip "<%"
+
+			flag = substr(buff, 1, 1)
+			if (flag != "%") {
+				end_text()
+			}
+			if (flag == "%") {  # <%%
+				skip(1)
+				fputs("<%")
+			} else if (flag == "=") {  # <%=
+				skip(1)
+				fputs("__print ")
+				state = "TAG"
+			} else if (flag == "+") {  # <%+
+				if (!match(buff, /[^%]%>/)) {
+					fail(11, "syntax error: <%+ must be closed on the same line")
+				}
+				filename = trim(substr(buff, 2, match(buff, /.-?%>/) - 1))
+				skip(RSTART)
+				include(filename)
+				state = "TAG"
+			} else if (flag == "#") {  # <%#
+				state = "COMMENT"
+			} else {
+				state = "TAG"
+			}
+		} else if (state != "TEXT" && match(buff, /%>/)) {
+			flag = RSTART > 1 ? substr(buff, RSTART - 1, 1) : ""
+
+			if (flag == "%") {  # %%>
+				flush(RSTART - 2)
+				skip(1)
+				flush(2)
+			} else if (flag == "-") {  # -%>
+				flush(RSTART - 2)
+				skip(3)
+				print_nl = 0
+			} else {  # %>
+				flush(RSTART - 1)
+				skip(2)
+			}
+			if (flag != "%") {
+				start_text()
+			}
+		} else {
+			flush()
+		}
+	}
+}
+BEGIN {
+	FS = ""
+	depth = 0
+
+	puts("#!" (SHELL ~ /\// ? SHELL : "/usr/bin/env " SHELL))
+	puts("set -eu")
+	puts("if ( set -o pipefail 2>/dev/null ); then set -o pipefail; fi")
+	puts("__print() { printf '%s' \"$*\"; }")
+
+	split(VARS, _lines, /\n/)
+	for (_i in _lines) {
+		puts(_lines[_i])
+	}
+	init()
+}
+{
+	if (NR == 1) {
+		filenames[0] = FILENAME  # this var is not defined in BEGIN so we must do it here
+	}
+	buff = $0
+	process_line()
+
+	if (print_nl && state != "COMMENT") {
+		puts("")
+	}
+}
+END {
+	end_text()
+}
+AWK
+)
+AWK_ERR_FILTER=$(cat <<'AWK'
+function line_info(lno,  _line, _i) {
+	while ((getline _line < MAPFILE) > 0 && _i++ < lno) { }
+	close(MAPFILE)
+	return _line
+}
+{
+	if (match($0, "^" SRCFILE ":( line)? ?[0-9]+:") && match(substr($0, 1, RLENGTH), /[0-9]+:$/)) {
+		lno = substr($0, RSTART, RLENGTH - 1) + 0
+		msg = substr($0, RSTART + RLENGTH + 1)  # v-- some shells duplicate filename
+		msg = index(msg, SRCFILE ":") == 1 ? substr(msg, length(SRCFILE) + 3) : msg
+		print(line_info(lno) ": " msg)
+	} else if ($0 != "") {
+		print($0)
+	}
+}
+AWK
+)
+readonly AWK_CONVERTER AWK_ERR_FILTER
+
+print_help() {
+	sed -En '/^#---help---/,/^#---help---/p' "$SCRIPTPATH" | sed -E 's/^# ?//; 1d;$d;'
+}
+
+filter_shell_stderr() {
+	$ESH_AWK \
+		-v SRCFILE="$1" \
+		-v MAPFILE="$2" \
+		-- "$AWK_ERR_FILTER"
+}
+
+evaluate() {
+	local srcfile="$1"
+	local mapfile="$2"
+
+	# This FD redirection magic is for swapping stdout/stderr back and forth.
+	exec 3>&1
+	{ set +e; $ESH_SHELL "$srcfile" 2>&1 1>&3; echo $? >>"$mapfile"; } \
+		| filter_shell_stderr "$srcfile" "$mapfile" >&2
+	exec 3>&-
+
+	return $(tail -n 1 "$mapfile")
+}
+
+convert() {
+	local input="$1"
+	local vars="$2"
+	local map_file="${3:-"/dev/null"}"
+
+	$ESH_AWK \
+		-v MAX_DEPTH="$ESH_MAX_DEPTH" \
+		-v SHELL="$ESH_SHELL" \
+		-v MAP_FILE="$map_file" \
+		-v VARS="$vars" \
+		-- "$AWK_CONVERTER" "$input"
+}
+
+process() {
+	local input="$1"
+	local vars="$2"
+	local evaluate="${3:-yes}"
+	local ret=0 tmpfile mapfile
+
+	if [ "$evaluate" = yes ]; then
+		tmpfile=$(mktemp)
+		mapfile=$(mktemp)
+
+		convert "$input" "$vars" "$mapfile" > "$tmpfile" || ret=$?
+		test $ret -ne 0 || evaluate "$tmpfile" "$mapfile" || ret=$?
+
+		rm -f "$tmpfile" "$mapfile"
+	else
+		convert "$input" "$vars" || ret=$?
+	fi
+	return $ret
+}
+
+: ${ESH_AWK:="awk"}
+: ${ESH_MAX_DEPTH:=3}
+: ${ESH_SHELL:="/bin/sh"}
+EVALUATE='yes'
+OUTPUT=''
+
+while getopts ':dho:s:V' OPT; do
+	case "$OPT" in
+		d) EVALUATE=no;;
+		h) print_help; exit 0;;
+		o) OUTPUT="$OPTARG";;
+		s) ESH_SHELL="$OPTARG";;
+		V) echo "$PROGNAME $VERSION"; exit 0;;
+		'?') echo "$PROGNAME: unknown option: -$OPTARG" >&2; exit 10;;
+	esac
+done
+shift $(( OPTIND - 1 ))
+
+if [ $# -eq 0 ]; then
+	printf "$PROGNAME: %s\n\n" 'missing argument <input>' >&2
+	print_help >&2
+	exit 10
+fi
+
+INPUT="$1"; shift
+[ "$INPUT" != '-' ] || INPUT=''
+if [ "$INPUT" ] && ! [ -f "$INPUT" -a -r "$INPUT" ]; then
+	echo "$PROGNAME: can't read $INPUT: not a file or not readable" >&2; exit 10
+fi
+
+# Validate arguments.
+for arg in "$@"; do
+	case "$arg" in
+		*=*) ;;
+		*) echo "$PROGNAME: illegal argument: $arg" >&2; exit 10;;
+	esac
+done
+
+# Format variables into shell variable assignments.
+vars=''; for item in "$@"; do
+	vars="$vars\n${item%%=*}='$(
+		printf %s "${item#*=}" | $ESH_AWK "{ gsub(/'/, \"'\\\\\\\''\"); print }"
+	)'"
+done
+
+export ESH="$0"
+
+if [ "${OUTPUT#-}" ]; then
+	tmpfile="$(mktemp)"
+	trap "rm -f '$tmpfile'" EXIT HUP INT TERM
+	process "$INPUT" "$vars" "$EVALUATE" > "$tmpfile"
+	mv "$tmpfile" "$OUTPUT"
+else
+	process "$INPUT" "$vars" "$EVALUATE"
+fi

@@ -1,0 +1,5 @@
+Scenario 'coconut': "Count the petition results: any Citizen can count the petition as long as they have the 'tally'"
+Given that I receive a petition
+and I receive a tally
+When I count the petition results
+Then print all data
