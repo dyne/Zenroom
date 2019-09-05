@@ -1,0 +1,73 @@
+when:
+  - {when: 'I append '''' to '''''}
+  - {when: 'I write '''' in '''''}
+  - {when: 'I set '''' to '''''}
+  - {when: 'I create a random '''''}
+  - {when: 'I create a random array of '''' elements'}
+  - {when: 'I create a random '''' bit array of '''' elements'}
+  - {when: 'I set '''' as '''' with '''''}
+  - {when: 'I append '''' as '''' to '''''}
+  - {when: 'I write '''' as '''' in '''''}
+coconut:
+  - {when: 'I create my new credential keypair'}
+  - {when: 'I create my new credential request keypair'}
+  - {when: 'I create my new keypair'}
+  - {when: 'I create my new issuer keypair'}
+  - {when: 'I create my new authority keypair'}
+  - {when: 'I generate a credential signature request'}
+  - {when: 'I sign the credential'}
+  - {when: 'I aggregate the credential in '''''}
+  - {when: 'I aggregate verifiers from '''''}
+  - {when: 'I generate a credential proof'}
+  - {when: 'I verify the credential proof is correct'}
+  - {when: 'I generate a petition '''''}
+  - {when: 'I verify the new petition to be empty'}
+  - {when: 'I sign the petition '''''}
+  - {when: 'I verify the signature proof is correct'}
+  - {when: 'the petition signature is not a duplicate'}
+  - {when: 'the petition signature is just one more'}
+  - {when: 'I add the signature to the petition'}
+  - {when: 'I tally the petition'}
+  - {when: 'I count the petition results'}
+simple:
+  - {when: 'I create my new keypair'}
+  - {when: 'I generate my keys'}
+  - {when: 'I encrypt the message with the secret'}
+  - {when: 'I decrypt the secret message with the secret'}
+  - {when: 'I encrypt the message for '''''}
+  - {when: 'I decrypt the secret message from '''''}
+  - {when: 'I sign the '''' as '''''}
+  - {when: 'I verify the '''' is authentic'}
+given:
+  - {given: nothing}
+  - {given: 'I introduce myself as '''''}
+  - {given: 'I am known as '''''}
+  - {given: 'I am '''''}
+  - {given: 'I have a valid '''''}
+  - {given: 'I have a '''''}
+  - {given: 'I have my valid '''''}
+  - {given: 'I have my '''''}
+  - {given: 'I have inside '''' a valid '''''}
+  - {given: 'I have inside '''' a '''''}
+  - {given: 'I have a valid '''' inside '''''}
+  - {given: 'I have a valid '''' in '''''}
+  - {given: 'I have a valid '''' from '''''}
+  - {given: 'I have a '''' inside '''''}
+  - {given: 'I have a '''' in '''''}
+  - {given: 'I have a '''' from '''''}
+  - {given: 'I have a valid '''' from '''''}
+  - {given: 'I set '''' to '''''}
+  - {given: 'the '''' is valid'}
+then:
+  - {then: 'print '''' '''''}
+  - {then: 'print all data'}
+  - {then: 'print my data'}
+  - {then: 'print all my data'}
+  - {then: 'print my '''''}
+  - {then: 'print as '''' my '''''}
+  - {then: 'print my '''' as '''''}
+  - {then: 'print the '''''}
+  - {then: 'print as '''' the '''''}
+  - {then: 'print the '''' as '''''}
+  - {then: 'print as '''' the '''' inside '''''}
+  - {then: 'print the '''' as '''' inside '''''}

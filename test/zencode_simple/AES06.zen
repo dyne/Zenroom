@@ -1,3 +1,4 @@
+Rule check version 1.0.0
 Scenario 'simple': Bob gathers public keys in his keyring
 Given that I am 'Bob'
 and I have my valid 'keypair'

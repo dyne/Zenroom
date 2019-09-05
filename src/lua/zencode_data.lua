@@ -26,9 +26,15 @@
 
 -- init schemas
 ZEN.add_schema = function(arr)
+   local _illegal_schemas = { -- const
+	  array = true,
+	  whoami = true
+   }
    -- TODO: check overwrite / duplicate as this will avoid scenarios
    -- to have namespace clashes
    for k,v in pairs(arr) do
+	  ZEN.assert(not ZEN.schemas[k], "Add schema denied, already registered schema: "..k)
+	  ZEN.assert(not _illegal_schemas[k], "Add schema denied, reserver name: "..k)
 	  ZEN.schemas[k] = v
    end
 end
@@ -78,7 +84,6 @@ ZEN.add_schema({
 	  base64 = function(obj) return ZEN:convert(obj, OCTET.from_base64) end,
 	  url64  = function(obj) return ZEN:convert(obj, OCTET.from_url64)  end,
 	  str =    function(obj) return ZEN:convert(obj, OCTET.from_string) end,
-	  secret = function(obj) return ZEN:import(obj) end
 })
 
 -- refer basic scenario implementations for data

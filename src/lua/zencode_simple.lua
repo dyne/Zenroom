@@ -42,10 +42,10 @@ ZEN.add_schema({
 				  iv       = ZEN.get(obj, 'iv'),
 				  text     = ZEN.get(obj, 'text') }
 	  end,
-	  signed_message = function(obj)
+	  signature = function(obj)
 		 return { r = ZEN.get(obj, 'r'),
-				  s = ZEN.get(obj, 's'),
-				  text = ZEN.get(obj, 'text') }
+				  s = ZEN.get(obj, 's') }
+--				  text = ZEN.get(obj, 'text') }
 	  end
 })
 
@@ -126,14 +126,13 @@ When("I decrypt the secret message from ''", function(_key)
 end)
 
 -- sign a message and verify
-When("I sign the '' as ''", function(doc, dst)
+When("I make the signature of the ''", function(doc)
 		ZEN.assert(ACK.keypair, "Keyring not found")
 		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
 		local dsa = ECDH.new(CONF.curve)
 		dsa:private(ACK.keypair.private_key)
-		ACK[dst] = dsa:sign(ACK[doc])
+		ACK.signature = dsa:sign(ACK[doc])
 		-- include contextual information
-		ACK[dst].text = ACK[doc]
 end)
 
 When("I verify the '' is authentic", function(msg)

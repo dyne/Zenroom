@@ -266,5 +266,5 @@ the integrity of the message is kept intact and that she signed it.
 # Full list of statements
 
 ```yaml
-<%= "$(./parse_zencode.sh | json2yaml -)" %>
+<%= "$(cat zencode_utterances.yaml)" %>
 ```

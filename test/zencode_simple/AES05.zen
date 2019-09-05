@@ -1,3 +1,4 @@
+Rule check version 1.0.0
 Scenario 'simple': Alice encrypts a message for Bob
 Given that I am known as 'Alice'
 and I have my valid 'keypair'

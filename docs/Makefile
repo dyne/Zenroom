@@ -26,7 +26,7 @@ website:
 	@cd website && mkdocs build
 
 map:
-	./parse_zencode.sh | json2yaml -
+	./parse_zencode.sh | json2yaml - > zencode_utterances.yaml
 
 preview:
 	cd website && ./mkdocs-dyne-theme/.preview

@@ -191,11 +191,19 @@ function zencode:pickin(section, what)
    ZEN.assert(section, "No section specified")
    local root -- section
    local got  -- what
-   root = inside_pick(IN.KEYS,section) or inside_pick(IN, section)
-   ZEN.assert(root, "Cannot find '"..section.."' when looking for '"..what.."'")
-   got = inside_pick(root, what)
+   root = inside_pick(IN.KEYS,section)
+   if root then --    IN KEYS
+	  got = inside_pick(root, what)
+	  if got then goto found end
+   end
+   root = inside_pick(IN,section)
+   if root then --    IN
+	  got = inside_pick(root, what)
+	  if got then goto found end
+   end
    ZEN.assert(got, "Cannot find '"..what.."' inside '"..section.."'")   
    -- TODO: check all corner cases to make sure TMP[what] is a k/v map
+   ::found::
    TMP = { root = section,
 		   data = got,
 		   schema = what }
@@ -254,9 +262,9 @@ end
 -- Final step inside the <b>Given</b> block towards the <b>When</b>:
 -- pass on a data structure into the ACK memory space, ready for
 -- processing.  It requires the data to be present in TMP[name] and
--- typically follows a @{pick}. In some cases it is used inside a
--- <b>When</b> block following the inline insertion of data from
--- zencode.
+-- typically follows a @{pick}. In some restricted cases it is used
+-- inside a <b>When</b> block following the inline insertion of data
+-- from zencode.
 --
 -- @function ZEN:ack(name)
 -- @param name string key of the data object in TMP[name]
@@ -282,7 +290,7 @@ function zencode:ack(name)
 	  table.insert(ACK[name], obj)
 	  goto done
    else -- associative map
-	  table.insert(ACK[name], obj) -- TODO:
+	  table.insert(ACK[name], obj) -- TODO: associative map insertion
 	  goto done
    end
    ::done::
