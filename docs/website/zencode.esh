@@ -179,8 +179,6 @@ the integrity of the message is kept intact and that she signed it.
 
 # List of statements
 
-## <%= $V %>
-
 ```yaml
 <%= echo "$(./parse_zencode.sh | json2yaml -)" %>
 ```
