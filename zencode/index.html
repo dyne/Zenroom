@@ -200,7 +200,7 @@ cryptographic operations in a readable domain-specific language called
 <p>Data provided as input (from <strong>data</strong> and <strong>keys</strong>) is all imported
 automatically from JSON or CBOR binary formats.</p>
 <p>Here below a dense representation of the main operations available.</p>
-<p>Self introduction (affects <strong>my</strong> statements)</p>
+<p><strong>Self introduction</strong> (affects "<strong>my</strong>" statements)</p>
 <div class="codehilite"><pre><span class="l-Scalar-Plain">given</span><span class="p-Indicator">:</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="nv">nothing</span><span class="p-Indicator">}</span> <span class="c1"># checks input is really empty</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">introduce</span><span class="nv"> </span><span class="s">myself</span><span class="nv"> </span><span class="s">as</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span> <span class="c1"># open a section { &quot;WhoAmI&quot;: ... }</span>
@@ -209,7 +209,7 @@ automatically from JSON or CBOR binary formats.</p>
 </pre></div>
 
 
-<p>Import available data</p>
+<p><strong>Import given data</strong></p>
 <div class="codehilite"><pre>  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span> <span class="c1"># import data named without validation</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span> <span class="c1"># import data named under my section without validation</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">inside</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span> <span class="c1"># import data from inside a section</span>
@@ -219,7 +219,7 @@ automatically from JSON or CBOR binary formats.</p>
 </pre></div>
 
 
-<p>Import only <strong>valid</strong> data (schemas are set by the <strong>scenario</strong>)</p>
+<p><strong>Import only "valid" data</strong> (schemas are set by the "<strong>scenario</strong>")</p>
 <div class="codehilite"><pre>  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">valid</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span> <span class="c1"># import data named validated with same name schema</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">valid</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span> <span class="c1"># import data named validated under my section</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">inside</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">valid</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span> <span class="c1"># import validated data from inside a section </span>
@@ -339,6 +339,38 @@ Alice and Bob.</p>
 <p>After both Alice and Bob have their own keypairs and they both know
 each other public key we can move forward to do asymmetric encryption
 and signatures.</p>
+<p><strong>1.a Alice keygen</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario &#39;simple&#39;: Alice generate a keypair</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;Alice&#39;</span>
+<span class="k">When </span><span class="nf">I create my new keypair</span>
+<span class="k">Then </span><span class="nf">print my data</span>
+</pre></div>
+
+
+<p><strong>2.a Alice pubkey</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario &#39;simple&#39;: Alice publishes her public key</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;Alice&#39;</span>
+<span class="nf">and I have my valid &#39;public key&#39;</span>
+<span class="k">Then </span><span class="nf">print my data</span>
+</pre></div>
+
+
+<p><strong>1.b Bob keygen</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario &#39;simple&#39;: Bob generate a keypair</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;Bob&#39;</span>
+<span class="k">When </span><span class="nf">I create my new keypair</span>
+<span class="k">Then </span><span class="nf">print my data</span>
+</pre></div>
+
+
+<p><strong>2.b Bob pubkey</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario &#39;simple&#39;: Bob publishes his public key</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;Bob&#39;</span>
+<span class="nf">and I have my valid &#39;public key&#39;</span>
+<span class="k">Then </span><span class="nf">print my data</span>
+</pre></div>
+
+
 <h2 id="public-key-encryption-ecdh">Public-key Encryption (ECDH)</h2>
 <div class="codehilite"><pre>  <span class="c1"># if a &#39;header&#39; is set will authenticate to destination</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">encrypt</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">for</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
@@ -347,15 +379,43 @@ and signatures.</p>
 
 
 <p><img alt="Zencode to encrypt using asymmetric keypairs" src="../img/ecdh_crypt.svg" /></p>
+<p><strong>1. Alice encrypts the message using Bob's public key</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario &#39;simple&#39;: Alice encrypts a message for Bob</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;Alice&#39;</span>
+<span class="nf">and I have my valid &#39;keypair&#39;</span>
+<span class="nf">and I have a valid &#39;public key&#39; from &#39;Bob&#39;</span>
+<span class="k">When </span><span class="nf">I write &#39;This is my secret message.&#39; in &#39;message&#39;</span>
+<span class="nf">and I write &#39;This is the header&#39; in &#39;header&#39;</span>
+<span class="nf">and I encrypt the message for &#39;Bob&#39;</span>
+<span class="k">Then </span><span class="nf">print the &#39;secret message&#39;</span>
+</pre></div>
+
+
+<p><strong>2. Bob prepares a keyring with Alice's public key</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario &#39;simple&#39;: Bob gathers public keys in his keyring</span>
+<span class="k">Given </span><span class="nf">that I am &#39;Bob&#39;</span>
+<span class="nf">and I have my valid &#39;keypair&#39;</span>
+<span class="nf">and I have a valid &#39;public key&#39; from &#39;Alice&#39;</span>
+<span class="k">Then </span><span class="nf">print my &#39;keypair&#39;</span>
+<span class="nf">and print the &#39;public key&#39;</span>
+</pre></div>
+
+
+<p><strong>3. Bob decrypts the message using Alice's public key</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario &#39;simple&#39;: Bob decrypts the message from Alice</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;Bob&#39;</span>
+<span class="nf">and I have my valid &#39;keypair&#39;</span>
+<span class="nf">and I have a valid &#39;public key&#39; from &#39;Alice&#39;</span>
+<span class="nf">and I have a valid &#39;secret message&#39;</span>
+<span class="k">When </span><span class="nf">I decrypt the secret message from &#39;Alice&#39;</span>
+<span class="k">Then </span><span class="nf">print as &#39;string&#39; the &#39;message&#39;</span>
+<span class="nf">and print as &#39;string&#39; the &#39;header&#39; inside &#39;secret message&#39;</span>
+</pre></div>
+
+
 <p>In this basic example the session key for encryption is made combining
 the private key of Alice and the public key of Bob (or
 viceversa).</p>
-<p>Reusing keys is not really considered secure, but by combining the
-first symmetric key example and this one is possible to generate a
-random password, use it to encrypt the message and then use the
-session key to encrypt the password.</p>
-<p>There is also the possibility to add an authenticated clear text
-header to the message, using an additional line of Zencode:</p>
 <div class="codehilite"><pre><span class="k">When </span><span class="nf">I write &#39;my secret for you&#39; in &#39;message&#39;</span>
 <span class="nf">and I write &#39;an authenticated message&#39; in &#39;header&#39;</span>
 </pre></div>
@@ -371,6 +431,31 @@ public information that accompany the secret.</p>
 
 
 <p><img alt="Zencode to sign using asymmetric keypairs" src="../img/ecdsa_sign.svg" /></p>
+<p>Here we continue assuming that the keyrings are already prepared with
+public/private keypairs and the public keypair of the correspondent.</p>
+<p><strong>1. Alice signs a message for Bob</strong></p>
+<div class="codehilite"><pre><span class="nf">rule check version </span><span class="s">1.0.0</span><span class="nf"></span>
+<span class="nf">Scenario &#39;simple&#39;: Alice signs a message for Bob</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;Alice&#39;</span>
+<span class="nf">and I have my valid &#39;keypair&#39;</span>
+<span class="k">When </span><span class="nf">I write &#39;This is my signed message to Bob.&#39; in &#39;draft&#39;</span>
+<span class="nf">and I sign the &#39;draft&#39; as &#39;signed message&#39;</span>
+<span class="k">Then </span><span class="nf">print my &#39;signed message&#39;</span>
+</pre></div>
+
+
+<p><strong>1. Bob verifies the signed message from Alice</strong></p>
+<div class="codehilite"><pre><span class="nf">rule check version </span><span class="s">1.0.0</span><span class="nf"></span>
+<span class="nf">Scenario &#39;simple&#39;: Bob verifies the signature from Alice</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;Bob&#39;</span>
+<span class="nf">and I have inside &#39;Alice&#39; a valid &#39;public key&#39;</span>
+<span class="nf">and I have a valid &#39;signed message&#39;</span>
+<span class="k">When </span><span class="nf">I verify the &#39;signed message&#39; is authentic</span>
+<span class="k">Then </span><span class="nf">print &#39;signature&#39; &#39;correct&#39;</span>
+<span class="nf">and print as &#39;string&#39; the &#39;text&#39; inside &#39;signed message&#39;</span>
+</pre></div>
+
+
 <p>In this example Alice uses her private key to sign and authenticate a
 message. Bob or anyone else can use Alice's public key to prove that
 the integrity of the message is kept intact and that she signed it.</p>
