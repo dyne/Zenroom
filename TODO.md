@@ -126,8 +126,6 @@ https://en.wikipedia.org/wiki/Message_Passing_Interface
 https://github.com/jzrake/lua-mpi
 
 
-
-
 ## Deterministic Random in the Checker
 
 take an external rng buffer filled with random by the caller
