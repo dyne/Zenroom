@@ -24,152 +24,72 @@
 -- passes without validation from IN to ACK or from inline input.
 
 
+-- init schemas
+ZEN.add_schema = function(arr)
+   local _illegal_schemas = { -- const
+	  array = true,
+	  whoami = true
+   }
+   -- TODO: check overwrite / duplicate as this will avoid scenarios
+   -- to have namespace clashes
+   for k,v in pairs(arr) do
+	  ZEN.assert(not ZEN.schemas[k], "Add schema denied, already registered schema: "..k)
+	  ZEN.assert(not _illegal_schemas[k], "Add schema denied, reserver name: "..k)
+	  ZEN.schemas[k] = v
+   end
+end
+
+-- TODO: return the prefix of an encoded string if found
+ZEN.prefix = function(str)
+   t = type(str)
+   if t ~= "string" then return nil end
+   if str:sub(4,4) ~= ":" then return nil end
+   return str:sub(1,3)
+end
+
+ZEN.get = function(obj, key, conversion)
+   ZEN.assert(obj, "ZEN.get no object found")
+   ZEN.assert(type(key) == "string", "ZEN.get key is not a string")
+   ZEN.assert(not conversion or type(conversion) == 'function',
+			  "ZEN.get invalid conversion function")
+   local k = obj[key]
+   ZEN.assert(k, "Key not found in object conversion: "..key)
+   local res = nil
+   local t = type(k)
+   if iszen(t) and conversion then res = conversion(k) goto ok end
+   if iszen(t) and not conversion then res = k goto ok end
+   if t == 'string' and conversion == str then res = k goto ok end
+   if t == 'string' and conversion and conversion ~= str then
+	  res = conversion(ZEN:import(k)) goto ok end
+   if t == 'string' and not conversion then res = ZEN:import(k) goto ok end
+   ::ok::
+   assert(ZEN.OK and res)
+   return res
+end
+
+
+-- import function to have recursion of nested data structures
+-- according to their stated schema
+function ZEN:valid(sname, obj)
+   ZEN.assert(sname, "Import error: schema name is nil")
+   ZEN.assert(obj, "Import error: object is nil '"..sname.."'")
+   local s = ZEN.schemas[sname]
+   ZEN.assert(s, "Import error: schema not found '"..sname.."'")
+   ZEN.assert(type(s) == 'function', "Import error: schema is not a function '"..sname.."'")
+   return s(obj)
+end
+
 -- basic encoding schemas
 ZEN.add_schema({
 	  base64 = function(obj) return ZEN:convert(obj, OCTET.from_base64) end,
 	  url64  = function(obj) return ZEN:convert(obj, OCTET.from_url64)  end,
 	  str =    function(obj) return ZEN:convert(obj, OCTET.from_string) end,
-	  secret = function(obj) return ZEN:import(obj) end
 })
 
--- GIVEN
-
-Given("nothing", function() ZEN.assert(not DATA and not KEYS, "Unused data passed as input") end)
-Given("I introduce myself as ''", function(name) ZEN:Iam(name) end)
-Given("I am known as ''", function(name) ZEN:Iam(name) end)
-Given("I am ''", function(name) ZEN:Iam(name) end)
-
-local have_a = function(name)
-   ZEN:pick(name)
-   ZEN:validate(name)
-   ZEN:ack(name)
-   TMP = nil -- TODO: wipe
-end
-Given("I have a valid ''", have_a)
-Given("I have a ''", have_a)
-
-local have_my = function(name)
-   ZEN:pickin(ACK.whoami, name)
-   ZEN:validate(name)
-   ZEN:ack(name)
-   TMP = nil
-end
-Given("I have my valid ''", have_my)
-Given("I have my ''", have_my)
-
-local have_in_a = function(s, n)
-   ZEN:pickin(s, n)
-   ZEN:validate(n)
-   ZEN:ack(n)
-   ZEN:ack(s) -- save it also in ACK.section
-   TMP = nil
-end
-Given("I have inside '' a valid ''", have_in_a)
-Given("I have inside '' a ''", have_in_a)
--- inverse order of args
-local have_a_in = function(n, s)
-   ZEN:pickin(s, n)
-   ZEN:validate(n)
-   ZEN:ack(n)
-   ZEN:ack(s) -- save it also in ACK.section
-   TMP = nil
-end
-Given("I have a valid '' inside ''", have_a_in)
-Given("I have a valid '' in ''",     have_a_in)
-Given("I have a valid '' from ''",   have_a_in)
-Given("I have a '' inside ''",       have_a_in)
-Given("I have a '' in ''",           have_a_in)
--- public keys for keyring arrays
-Given("I have a '' from ''", function(k, f)
-		 ZEN:pickin(f, k)
-		 ZEN:validate(k)
-		 ZEN:ack_table(k, f)
-		 TMP = nil
-end)
-
-
-Given("I set '' to ''", function(k,v)
-		 ZEN.assert(not TMP[k], "Cannot overwrite TMP["..k.."]")
-		 TMP[k] = ZEN:convert(v)
-end)
-
--- this enforces identity of schema with key name
-Given("the '' is valid", function(k)
-		 ZEN:validate(k)
-		 ZEN:ack(k)
-		 TMP = nil
-end)
-
---- WHEN
-
-When("I draft the string ''", function(s) ZEN:draft(s) end)
-
--- TODO:
-When("I set '' as '' with ''", function(dest, format, content) end)
-When("I append '' as '' to ''", function(content, format, dest) end)
--- When("I write '' as '' in ''", function(content, dest) end)
--- implicit conversion as string
-When("I set '' to ''", function(dest, content) end)
-When("I append '' to ''", function(content, dest)
-		ACK[dest] = ACK[dest] .. ZEN:import(content)
-end)
-When("I write '' in ''", function(content, dest)
-		ACK[dest] = ZEN:import(content) -- O.from_string
-end)
-
-When("I create a random ''", function(s)
-		ACK[s] = OCTET.random(256) -- TODO: right now hardcoded 256 byte random secrets
-end)
-
---- THEN
-
-Then("print '' ''", function(k,v)
-		OUT[k] = v
-end)
-
-Then("print all data", function()
-		OUT = ACK
-		OUT.whoami = nil
-end)
-Then("print my data", function()
-		ZEN:Iam() -- sanity checks
-		OUT[ACK.whoami] = ACK
-		OUT[ACK.whoami].whoami = nil
-end)
-Then("print my ''", function(obj)
-		ZEN:Iam()
-		ZEN.assert(ACK[obj], "Data not found in ACK: "..obj)
-		if not OUT[ACK.whoami] then OUT[ACK.whoami] = { } end
-		OUT[ACK.whoami][obj] = ACK[obj]
-end)
-Then("print my draft", function()
-		ZEN:draft() -- sanity checks
-		OUT[ACK.whoami] = { draft = ACK.draft:string() }
-end)
-
-function _print_my_draft_as(conv)
-   ZEN:draft()
-   OUT[ACK.whoami] = { draft = ZEN:convert(ACK.draft, conv) }
-end
-Then("print as '' my draft", _print_mydraft_as)
-Then("print my draft as ''", _print_mydraft_as)
-
-Then("print as '' my ''", function(conv,obj)
-		ZEN:draft()
-		OUT[ACK.whoami] = { draft = ZEN:convert(ACK[obj], conv) }
-end)
-
-Then("print the ''", function(key)
-		OUT[key] = ACK[key]
-end)
-Then("print as '' the ''", function(conv, obj)
-		OUT[obj] = ZEN:export(ACK[obj], conv)
-end)
-Then("print as '' the '' inside ''", function(conv, obj, section)
-		local src = ACK[section][obj]
-		ZEN.assert(src, "Not found "..obj.." inside "..section)
-		OUT[obj] = ZEN:export(src, conv)
-end)
+-- refer basic scenario implementations for data
+require_once('zencode_given')
+require_once('zencode_when')
+require_once('zencode_then')
 
 -- debug functions
 Given("debug", function() ZEN.debug() end)

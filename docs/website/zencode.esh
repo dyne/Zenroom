@@ -1,0 +1,270 @@
+# Smart contracts in human language
+
+Zenroom is software inspired by the [language-theoretical
+security](http://langsec.org) research and it allows to express
+cryptographic operations in a readable domain-specific language called
+**Zencode**.
+
+For an explanation of the innovation brought by Zencode see this blog post: [Smart contracts for the English speaker](https://decodeproject.eu/blog/smart-contracts-english-speaker).
+
+Now to learn this very simple language, lets dive into some examples.
+
+Keep in mind that statements in yellow boxes are actual Zencode being executed.
+
+# Memory model
+
+Zencode contracts operate in 3 phases:
+
+1. **Given** - validates the input
+2. **When** - processes the contents
+3. **Then** - prints out the results
+
+The 3 separate blocks of code also correspond to 3 separate memory areas, sealed by some security measures.
+
+![Zencode documentation diagram](img/zencode_diagram.png)
+
+All data processed has first to pass the validation phase according to scenario specific data schemas.
+
+**Good Practice**: start your Zencode noting down the Zenroom version you are using!
+
+```
+rule check version 1.0.0
+```
+
+## Given
+
+Data provided as input (from **data** and **keys**) is all imported
+automatically from JSON or CBOR binary formats.
+
+Here below a dense representation of the main operations available.
+
+**Self introduction** (affects "**my**" statements)
+```yaml
+given:
+  - {given: nothing} # checks input is really empty
+  - {given: 'I introduce myself as '''''} # open a section { "WhoAmI": ... }
+  - {given: 'I am known as '''''} # same as above
+  - {given: 'I am '''''} # same as above
+```
+
+**Import given data**
+```yaml
+  - {given: 'I have a '''''} # import data named without validation
+  - {given: 'I have my '''''} # import data named under my section without validation
+  - {given: 'I have inside '''' a '''''} # import data from inside a section
+  - {given: 'I have a '''' inside '''''} # different statement, invert order of arguments
+  - {given: 'I have a '''' in '''''}     # courtesy synonyms ...
+  - {given: 'I have a '''' from '''''}   # ... are the same
+```
+
+**Import only "valid" data** (schemas are set by the "**scenario**")
+```yaml
+  - {given: 'I have a valid '''''} # import data named validated with same name schema
+  - {given: 'I have my valid '''''} # import data named validated under my section
+  - {given: 'I have inside '''' a valid '''''} # import validated data from inside a section 
+  - {given: 'I have a valid '''' inside '''''} # same as above, inverted order of arguments
+  - {given: 'I have a valid '''' in '''''} # same as above
+  - {given: 'I have a valid '''' from '''''} # same as above (courtesy synonyms)
+  - {given: 'the '''' is valid'} # validate an already imported data object
+```
+
+Settings:
+```txt
+rule input encoding [ url64 | base64 | hex | bin ]
+rule input format [ json | cbor ]
+```
+
+## When
+
+Processing data is done in the when block. Also scenarios add statements to this block.
+
+Without extensions, these are the basic functions available
+
+```yaml
+when:
+  - {when: 'I append '''' to '''''}
+  - {when: 'I write '''' in '''''}
+  - {when: 'I set '''' to '''''}
+  - {when: 'I create a random '''''}
+  - {when: 'I create a random array of '''' elements'}
+  - {when: 'I create a random '''' bit array of '''' elements'}
+  - {when: 'I set '''' as '''' with '''''}
+  - {when: 'I append '''' as '''' to '''''}
+  - {when: 'I write '''' as '''' in '''''}
+```
+
+## Then
+
+Output is all exported in JSON or CBOR
+
+```yaml
+then:
+  - {then: 'print '''' '''''}
+  - {then: 'print all data'}
+  - {then: 'print my data'}
+  - {then: 'print my data'}
+  - {then: 'print my '''''}
+  - {then: 'print as '''' my '''''}
+  - {then: 'print my '''' as '''''}
+  - {then: 'print the '''''}
+  - {then: 'print as '''' the '''''}
+  - {then: 'print as '''' the '''' inside '''''}
+```
+
+Settings:
+```txt
+rule output encoding [ url64 | base64 | hex | bin ]
+rule output format [ json | cbor ]
+```
+# Symmetric encryption 
+
+This is a simple tecnique to hide a secret using a common password known to all people.
+
+```yaml
+# a `message` must be set and will be used as encryption input 
+# if a `header` is set will authenticate to destination
+  - {when: 'I encrypt the message with '''''}
+  - {when: 'I decrypt the secret message with '''''}
+# encryption output is returned in `secret message`
+```
+
+Let's imagine I want to share a secret with someone and send secret messages encrypted with it:
+
+![Zencode to encrypt with password](img/aes_crypt.svg)
+
+I will need 3 Zencode contracts executed at different times:
+
+**1. I generate a strong random secret**
+```cucumber
+<%= "$(cat ../test/zencode_simple/SYM01.zen)" %>
+```
+-> then save the secret output and send it
+
+**2. I encrypt a message using this secret**
+```cucumber
+<%= "$(cat ../test/zencode_simple/SYM02.zen)" %>
+```
+-> then save the secret message and send it
+
+**3. Who has my secret can decrypt the secret message**
+```cucumber
+<%= "$(cat ../test/zencode_simple/SYM03.zen)" %>
+```
+
+Of course the secret must be known by all participats and that's the
+dangerous part, since it could be stolen at the moment is told.
+
+We solve this problem using public-key cryptography, also known as a-symmetric encryption.
+
+# Asymmetric encryption
+
+To solve this problem we have [asymmetric encryption (or public key
+cryptography)](https://en.wikipedia.org/wiki/Public-key_cryptography)
+which relies on the creation of keypairs (public and private) both by
+Alice and Bob.
+
+Fortunately its pretty simple to do using Zencode.
+
+## Key generation and exchange
+
+```yaml
+  - {when: 'I create my new keypair'}
+  - {when: 'I generate my keys'}
+```
+
+![Zencode to generate asymmetric keypairs](img/ecdh_keygen.svg)
+
+After both Alice and Bob have their own keypairs and they both know
+each other public key we can move forward to do asymmetric encryption
+and signatures.
+
+**1.a Alice keygen**
+```cucumber
+<%= "$(cat ../test/zencode_simple/AES01.zen)" %>
+```
+
+**2.a Alice pubkey**
+```cucumber
+<%= "$(cat ../test/zencode_simple/AES02.zen)" %>
+```
+
+**1.b Bob keygen**
+```cucumber
+<%= "$(cat ../test/zencode_simple/AES03.zen)" %>
+```
+
+**2.b Bob pubkey**
+```cucumber
+<%= "$(cat ../test/zencode_simple/AES04.zen)" %>
+```
+
+## Public-key Encryption (ECDH)
+
+```yaml
+  # if a 'header' is set will authenticate to destination
+  - {when: 'I encrypt the '''' to '''' for '''''}
+  - {when: 'I decrypt the '''' from '''' to '''''}
+```
+
+![Zencode to encrypt using asymmetric keypairs](img/ecdh_crypt.svg)
+
+
+**1. Alice encrypts the message using Bob's public key**
+```cucumber
+<%= "$(cat ../test/zencode_simple/AES05.zen)" %>
+```
+
+**2. Bob prepares a keyring with Alice's public key**
+```cucumber
+<%= "$(cat ../test/zencode_simple/AES06.zen)" %>
+```
+
+**3. Bob decrypts the message using Alice's public key**
+```cucumber
+<%= "$(cat ../test/zencode_simple/AES07.zen)" %>
+```
+
+In this basic example the session key for encryption is made combining
+the private key of Alice and the public key of Bob (or
+viceversa).
+
+```cucumber
+When I write 'my secret for you' in 'message'
+and I write 'an authenticated message' in 'header'
+```
+
+The decryption will always check that the header hasn't changed,
+maintaining the integrity of the string which may contain important
+public information that accompany the secret.
+
+## Public-key Signature (ECDSA)
+
+```yaml
+  - {when: 'I sign the '''' as '''''}
+  - {when: 'I verify the '''' is authentic'}
+```
+
+![Zencode to sign using asymmetric keypairs](img/ecdsa_sign.svg)
+
+Here we continue assuming that the keyrings are already prepared with
+public/private keypairs and the public keypair of the correspondent.
+
+**1. Alice signs a message for Bob**
+```cucumber
+<%= "$(cat ../test/zencode_simple/DSA01.zen)" %>
+```
+
+**1. Bob verifies the signed message from Alice**
+```cucumber
+<%= "$(cat ../test/zencode_simple/DSA02.zen)" %>
+```
+
+In this example Alice uses her private key to sign and authenticate a
+message. Bob or anyone else can use Alice's public key to prove that
+the integrity of the message is kept intact and that she signed it.
+
+# Full list of statements
+
+```yaml
+<%= "$(cat zencode_utterances.yaml)" %>
+```

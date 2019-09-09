@@ -1,0 +1,9 @@
+Scenario 'coconut': "Citizen creates a new petition, using his own key, the credential and the credential issuer's public"
+Given that I am known as 'identifier'
+and I have my keypair
+and I have a signed credential
+and I use the verification key by 'issuer_identifier'
+When I aggregate all the verification keys
+and I generate a credential proof
+and I create a new petition 'petition'
+Then print all data

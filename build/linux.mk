@@ -15,6 +15,14 @@ musl-system: apply-patches lua53 embed-lua milagro
 	CC=${gcc} AR="${ar}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src musl
 
+bsd: cflags := -O3 ${cflags_protection} -fPIE -fPIC -DARCH_BSD
+bsd: ldadd += -lm
+bsd: apply-patches lua53 milagro embed-lua
+	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+		make -C src linux
+		@cp -v src/zenroom build/zenroom
+
+
 linux: cflags := -O3 ${cflags_protection} -fPIE -fPIC
 linux: apply-patches lua53 milagro embed-lua
 	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \

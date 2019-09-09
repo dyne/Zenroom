@@ -5,10 +5,10 @@ and execute operations including complex arithmetics on Elliptic Curve
 primitives [ECP module](lua/modules/ECP.html) as well Pairing
 operations on twisted curves (ECP2).
 
-The resulting scripting language is a restricted Lua dialect without
-any external extension, customised to resemble as much as possible the
-scripting language used by cryptographers in software as for instance
-Mathematica.
+The resulting scripting language is a [restricted Lua dialect](/lua)
+without any external extension, customised to resemble as much as
+possible the scripting language used by cryptographers in software as
+for instance Mathematica.
 
 With Zenroom we want to lower the friction that cryptographers face
 when implementing new crypto models. One can see this software as a
@@ -25,9 +25,9 @@ cryptographers.
 ## Short path from math to production
 
 Examples speak more than a thousand words. We will dive into two
-implementations to make it evident how easy is to go from an academic
-paper offering the mathematical formulation of a cryptographic model
-to a portable implementation running efficiently on any platform.
+implementations to make it evident how easy is to **go from an
+academic paper to a portable implementation** running efficiently on
+any platform.
 
 ### ElGamal
 
@@ -60,7 +60,7 @@ function ElGamal.decrypt(d, a, b)
 end
 ```
 
-One can play around with this code already, using our [online demo](demo).
+One can play around with this code already, using our [online demo](/demo).
 
 ### ECQV
 
@@ -116,35 +116,35 @@ the advantage of a frictionless deployement on all targets covered by
 our VM.
 
 Arithmetic operations also involving [Elliptic Curve Points
-(ECP)](lua/modules/ECP.html) are applied using simple operators on
-[BIG integers](lua/modules/BIG.html).
+(ECP)](/lua/modules/ECP.html) are applied using simple operators on
+[BIG integers](/lua/modules/BIG.html).
 
 All this is possible without worrying about library dependencies, OS
 versioning, interpeter availability etc.
 
 # Basic advantages
 
-Putting the mathematical formula and the code side by side while using
+Putting the **mathematical formula and the code side by side** while using
 the same variable names greatly helps to review the correctness of the
 implementation.
 
 The tooling inherited from Zenroom allows to swiftly build test
 coverage and benchmarks.
 
-Future Zenroom developments will improve the provability of the
-calculations and their results, as well provide testing techniques as
+Future Zenroom developments will improve the **provability of the
+calculations and their results**, as well provide testing techniques as
 fuzzing: this will automatically benefit all implementations.
 
-Cryptographers can work independently from programmers, by modeling
+**Cryptographers can work independently from programmers**, by modeling
 their formulas using their best known tools and then provide the
 script as a payload to be uploaded inside the VM.
 
-System integrators can work on [embedding Zenroom as a VM](embed)
+System integrators can work on [embedding Zenroom as a VM](/wiki/how-to-embed)
 without worring about cryptographic libraries APIs and moving
 dependencies required by the cryptographic implementations.
 
 All in all, by using Zenroom your cryptographic model implementation
-is ready for an accellerating future where crypto technologies will
-grow in diversity and possibilities!
+is **ready for an accellerating future where crypto technologies will
+grow in diversity and possibilities**!
 
 

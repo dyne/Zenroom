@@ -16,11 +16,12 @@
 #  along with this program.  If not, see
 #  <http://www.gnu.org/licenses/>.
 
+ZENROOM_VERSION := 1.0.0
 CC?=gcc
-VERSION := $(shell cat ../VERSION)
 ARCH := $(shell uname -m)
 BRANCH := $(shell git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
 HASH := $(shell git rev-parse --short HEAD)
+VERSION := ${ZENROOM_VERSION}+${HASH}
 CFLAGS  += -I. -I../lib/lua53/src -I../lib/milagro-crypto-c/include -Wall -Wextra
 SOURCES := \
 	cli.o jutils.o zenroom.o zen_error.o \

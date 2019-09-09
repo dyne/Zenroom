@@ -20,7 +20,14 @@ website:
 	@cp -v wiki/Execute.md website/docs/wiki/how-to-exec.md
 	@cp -v wiki/Embed.md website/docs/wiki/how-to-embed.md
 	@cp -v ../ChangeLog.md website/docs/changelog.md
+	@cp -v zencode_diagram.png website/docs/img
+	../build/esh website/petition.esh R=../test/zencode_coconut > \
+		../test/zencode_coconut/README.txt
+	../build/esh website/zencode.esh > website/docs/zencode.md
 	@cd website && mkdocs build
+
+map:
+	./parse_zencode.sh | json2yaml - > zencode_utterances.yaml
 
 preview:
 	cd website && ./mkdocs-dyne-theme/.preview

@@ -26,7 +26,7 @@ for name,pubkey in pairs(keys.recipients) do
    session = keyring:session(pub)
    iv = O.random(16)
 
-   out = { header = "encoded using zenroom " .. VERSION}
+   out = { header = "encoded using zenroom " .. VERSION.original}
    -- encrypt the message with the session key
    out.text, out.checksum = 
 	  ECDH.aead_encrypt(session, secret, iv, out.header)

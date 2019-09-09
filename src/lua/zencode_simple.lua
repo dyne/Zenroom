@@ -42,10 +42,10 @@ ZEN.add_schema({
 				  iv       = ZEN.get(obj, 'iv'),
 				  text     = ZEN.get(obj, 'text') }
 	  end,
-	  signed_message = function(obj)
+	  signature = function(obj)
 		 return { r = ZEN.get(obj, 'r'),
-				  s = ZEN.get(obj, 's'),
-				  text = ZEN.get(obj, 'text') }
+				  s = ZEN.get(obj, 's') }
+--				  text = ZEN.get(obj, 'text') }
 	  end
 })
 
@@ -63,70 +63,76 @@ When("I create my new keypair", f_keygen)
 When("I generate my keys", f_keygen)
 
 -- encrypt with a header and secret
-When("I encrypt the '' and '' to '' with ''", function(what, hdr, msg, sec)
-		ZEN.assert(ACK[what], "Data to encrypt not found in "..what)
-		local secret = ACK[sec]
-		ZEN.assert(secret, "Secret to encrypt not found in "..sec)
-		secret = ECDH.kdf2(HASH.new('sha256'),secret) -- KDF2 sha256 on all secrets
-		-- secret is always 32 bytes long, safe for direct aead_decrypt
-		ZEN.assert(ACK[hdr], "Header not found in "..hdr)
-		ACK[msg] = { header = ACK[hdr],
-					 iv = O.random(16) }
-		ACK[msg].text, ACK[msg].checksum = 
-		   ECDH.aead_encrypt(secret, ACK[what], ACK[msg].iv, ACK[hdr])
-		-- include contextual information
+When("I encrypt the message with the secret", function()
+		ZEN.assert(ACK.message, "Data to encrypt not found: message")
+		ZEN.assert(ACK.secret, "Secret used to encrypt not found: secret")
+		-- KDF2 sha256 on all secrets
+		local secret = ECDH.kdf2(HASH.new('sha256'),ACK.secret)
+		ACK.secret_message = { header = ACK.header or 'empty',
+							   iv = O.random(32) }
+		ACK.secret_message.text, ACK.secret_message.checksum =
+		   ECDH.aead_encrypt(secret, ACK.message,
+							 ACK.secret_message.iv,
+							 ACK.secret_message.header)
 end)
 
 -- decrypt with a secret
-When("I decrypt the '' to '' with ''", function(what, msg, sec)
-		local enc = ACK[what]
-		ZEN.assert(enc, "Data to decrypt not found in "..what)
-		local secret = ACK[sec]
-		ZEN.assert(secret, "Secret to decrypt not found in "..sec)
-		secret = ECDH.kdf2(HASH.new('sha256'),secret) -- KDF2 sha256 on all secrets
-		-- secret is always 32 bytes long, safe for direct aead_decrypt
-		ACK[msg] = { header = enc.header }
-		local checksum
-		ACK[msg].text, checksum = 
-		   ECDH.aead_decrypt(secret, enc.text, enc.iv, enc.header)
-		ZEN.assert(checksum == enc.checksum,
-				   "Decryption error: authentication failure, checksum mismatch")
+When("I decrypt the secret message with the secret", function()
+		ZEN.assert(ACK.secret, "Secret used to decrypt not found: secret")
+		ZEN.assert(ACK.secret_message,
+				   "Secret data to decrypt not found: secret message")
+
+        local secret = ECDH.kdf2(HASH.new('sha256'),ACK.secret)
+        -- KDF2 sha256 on all secrets, this way the
+        -- secret is always 256 bits, safe for direct aead_decrypt
+        ACK.message = { header = ACK.secret_message.header }
+        ACK.message.text, ACK.checksum =
+           ECDH.aead_decrypt(secret,
+							 ACK.secret_message.text,
+							 ACK.secret_message.iv,
+							 ACK.message.header)
+        ZEN.assert(ACK.checksum == ACK.secret_message.checksum,
+                   "Decryption error: authentication failure, checksum mismatch")
 end)
 
 -- encrypt to a single public key
-When("I encrypt the '' to '' for ''", function(what, msg, recpt)
-		ZEN.assert(ACK.keypair, "Keyring not found")
-		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
-		ZEN.assert(ACK[what], "Data to encrypt not found in "..what)
-		ZEN.assert(type(ACK.public_key) == 'table', "Public keys not found in keyring")
+When("I encrypt the message for ''", function(_key)
+		ZEN.assert(ACK.keypair, "Keys not found: keypair")
+		ZEN.assert(ACK.keypair.private_key, "Private key not found in keypair")
+		ZEN.assert(ACK.message, "Data to encrypt not found: message")
+		ZEN.assert(type(ACK.public_key) == 'table',
+				   "Public keys not found in keyring")
+		ZEN.assert(ACK.public_key[_key], "Public key not found for: ".._key)
+		local header = ACK.header or 'empty'
 		local from = ECDH.new(CONF.curve)
 		from:private(ACK.keypair.private_key)
 		local to = ECDH.new(CONF.curve)
-		ZEN.assert(ACK.public_key[recpt], "Public key not found for: "..recpt)
-		to:public(ACK.public_key[recpt])
-		ACK[msg] = from:encrypt(to, ACK[what], str('empty'))
+		to:public(ACK.public_key[_key])
+		ACK.secret_message =
+		   from:encrypt(to, ACK.message, header)
 end)
 
-When("I decrypt the '' from '' to ''", function(src,frm,dst)
+
+When("I decrypt the secret message from ''", function(_key)
 		ZEN.assert(ACK.keypair, "Keyring not found")
 		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
-		ZEN.assert(ACK.public_key[frm], "Public key not found: "..frm)
-		ZEN.assert(ACK[src], "Ciphertext not found")
+		ZEN.assert(ACK.secret_message, "Data to decrypt not found: secret_message")
+		ZEN.assert(ACK.public_key[_key],
+				   "Key to decrypt not found: public key[".._key.."])")
 		local recpt = ECDH.new(CONF.curve)
 		recpt:private(ACK.keypair.private_key)
-		ACK[src].pubkey = ACK.public_key[frm]
-		ACK[dst] = recpt:decrypt(ACK[src])
+		ACK.secret_message.pubkey = ACK.public_key[_key]
+		ACK.message = recpt:decrypt(ACK.secret_message)
 end)
 
 -- sign a message and verify
-When("I sign the '' as ''", function(doc, dst)
+When("I make the signature of the ''", function(doc)
 		ZEN.assert(ACK.keypair, "Keyring not found")
 		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
 		local dsa = ECDH.new(CONF.curve)
 		dsa:private(ACK.keypair.private_key)
-		ACK[dst] = dsa:sign(I.spy(ACK[doc]))
+		ACK.signature = dsa:sign(ACK[doc])
 		-- include contextual information
-		ACK[dst].text = ACK[doc]
 end)
 
 When("I verify the '' is authentic", function(msg)

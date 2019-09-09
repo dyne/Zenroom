@@ -84,8 +84,8 @@ static int lua_strcasecmp(lua_State *L) {
 	return 1;
 }
 
-// trim whitespace in front and at end of string
-static int lua_trim_string(lua_State* L) {
+// trim whitespace or single quote in front and at end of string
+static int lua_trim_spaces(lua_State* L) {
 	const char* front;
 	const char* end;
 	size_t size;
@@ -103,12 +103,32 @@ static int lua_trim_string(lua_State* L) {
 	return 1;
 }
 
+// trim whitespace or single quote in front and at end of string
+static int lua_trim_quotes(lua_State* L) {
+	const char* front;
+	const char* end;
+	size_t size;
+	front = luaL_checklstring(L,1,&size);
+	end = &front[size - 1];
+	while (size && (isspace(*front) || *front == '\'')) {
+		size--;
+		front++;
+	}
+	while (size && (isspace(*end) || *end == '\'')) {
+		size--;
+		end--;
+	}
+	lua_pushlstring(L,front,(size_t)(end - front) + 1);
+	return 1;
+}
+
 void zen_add_parse(lua_State *L) {
 	// override print() and io.write()
 	static const struct luaL_Reg custom_parser [] =
 		{ {"parse_prefix", lua_parse_prefix},
 		  {"strcasecmp", lua_strcasecmp},
-		  {"trim", lua_trim_string},
+		  {"trim", lua_trim_spaces},
+		  {"trimq", lua_trim_quotes},
 		  {NULL, NULL} };
 	lua_getglobal(L, "_G");
 	luaL_setfuncs(L, custom_parser, 0);  // for Lua versions 5.2 or greater

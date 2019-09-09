@@ -46,7 +46,7 @@ int zen_setenv(lua_State *L, char *key, char *val) {
 		warning(L, "setenv: NULL string detected");
 		return 1; }
 	if(val[0]=='\0') {
-		warning(L, "setenv: empty string detected");
+		warning(L, "setenv: empty value for key: %s", key);
 		return 1; }
 	lua_pushstring(L, val);
 	lua_setglobal(L, key);

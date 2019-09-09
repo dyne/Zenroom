@@ -1,0 +1,9 @@
+rule check version 1.0.0
+Scenario 'simple': Bob verifies the signature from Alice
+Given that I am known as 'Bob'
+and I have inside 'Alice' a valid 'public key'
+and I have a valid 'signature' inside 'Alice'
+and I have a 'draft' inside 'Alice'
+When I verify the 'signature' of the 'draft' is by 'Alice'
+Then print 'signature' 'correct'
+and print as 'string' the 'draft'

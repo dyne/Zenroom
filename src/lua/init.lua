@@ -36,6 +36,7 @@ require('zenroom_common')
 INSIDE = require('inspect')
 OCTET  = require('zenroom_octet')
 JSON   = require('zenroom_json')
+CBOR   = require('zenroom_cbor')
 ECDH   = require('zenroom_ecdh')
 BIG    = require('zenroom_big')
 HASH   = require('zenroom_hash')
@@ -50,9 +51,7 @@ VERSION = V(VERSION)
 
 ZEN = require('zencode')
 
--- import/export schema helpers
-require('zencode_schemas')
--- base data functions
+-- base data functions and schemas
 require('zencode_data')
 
 -- scenarios can only implement "When ..." steps
@@ -63,8 +62,17 @@ _G["Then"]  = nil
 -- defaults
 _G["CONF"] = {
    -- goldilocks is our favorite ECDH/DSA curve
+   -- other choices here include secp256k1 or ed25519 or bls383
+   -- beware this choice affects only the ECDH object
+   -- and ECDH public keys cannot function as ECP
+   -- because of IANA 7303
    curve = 'goldilocks',
-   verbosity = 1
+   verbosity = 1,
+   input = { encoding = get_encoding('url64'),
+			 format = get_format('json') },
+   output = { encoding = get_encoding('url64'),
+			  format = get_format('json') }
 }
 -- encoding base64url (RFC4648) is the fastest and most portable in zenroom
-set_encoding('url64')
+-- set_encoding('url64')
+-- set_format('json')
