@@ -36,19 +36,19 @@ simple:
   - {when: 'I decrypt the secret message with the secret'}
   - {when: 'I encrypt the message for '''''}
   - {when: 'I decrypt the secret message from '''''}
-  - {when: 'I sign the '''' as '''''}
+  - {when: 'I make the signature of the '''''}
   - {when: 'I verify the '''' is authentic'}
 given:
   - {given: nothing}
   - {given: 'I introduce myself as '''''}
   - {given: 'I am known as '''''}
   - {given: 'I am '''''}
-  - {given: 'I have a valid '''''}
   - {given: 'I have a '''''}
-  - {given: 'I have my valid '''''}
   - {given: 'I have my '''''}
-  - {given: 'I have inside '''' a valid '''''}
+  - {given: 'I have a valid '''''}
+  - {given: 'I have my valid '''''}
   - {given: 'I have inside '''' a '''''}
+  - {given: 'I have inside '''' a valid '''''}
   - {given: 'I have a valid '''' inside '''''}
   - {given: 'I have a valid '''' in '''''}
   - {given: 'I have a valid '''' from '''''}
@@ -56,7 +56,6 @@ given:
   - {given: 'I have a '''' in '''''}
   - {given: 'I have a '''' from '''''}
   - {given: 'I have a valid '''' from '''''}
-  - {given: 'I set '''' to '''''}
   - {given: 'the '''' is valid'}
 then:
   - {then: 'print '''' '''''}

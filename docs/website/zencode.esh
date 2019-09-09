@@ -154,7 +154,7 @@ I will need 3 Zencode contracts executed at different times:
 Of course the secret must be known by all participats and that's the
 dangerous part, since it could be stolen at the moment is told.
 
-This problem is solver using public-key cryptography, also known as a-symmetric encryption.
+We solve this problem using public-key cryptography, also known as a-symmetric encryption.
 
 # Asymmetric encryption
 
