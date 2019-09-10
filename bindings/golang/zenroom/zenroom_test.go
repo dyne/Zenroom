@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/DECODEproject/zenroom-go"
+	"github.com/DECODEproject/Zenroom/bindings/golang/zenroom"
 )
 
 func TestBasicCall(t *testing.T) {
