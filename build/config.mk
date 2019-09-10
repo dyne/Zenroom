@@ -81,6 +81,21 @@ milagro_cmake_flags += -DCMAKE_SYSTEM_PROCESSOR="arm" -DCMAKE_CROSSCOMPILING=1 -
 ldflags+=-mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb-interwork -Wstack-usage=1024 -Wno-main -ffreestanding -T cortex_m.ld -nostartfiles -Wl,-gc-sections -ggdb
 endif
 
+
+ifneq (,$(findstring aarch64,$(MAKECMDGOALS)))
+gcc := aarch64-linux-gnu-gcc
+ar  := aarch64-linux-gnu-ar
+objcopy := aarch64-linux-gnu-objcopy
+ranlib := aarch64-linux-gnu-ranlib
+ld := aarch64-linux-gnu-ld
+system := Generic
+ldadd += -lm
+cflags_protection := ""
+cflags := ${cflags_protection} -DARCH_CORTEX -Og -ggdb -Wall -Wextra -pedantic -std=gnu99 -Wstack-usage=1024 -DLIBRARY -Wno-main -ffreestanding -nostartfiles
+milagro_cmake_flags += -DCMAKE_SYSTEM_PROCESSOR="arm" -DCMAKE_CROSSCOMPILING=1 -DCMAKE_C_COMPILER_WORKS=1
+ldflags+=-mthumb -mlittle-endian -mthumb-interwork -Wstack-usage=1024 -Wno-main -ffreestanding -T aarch64_m.ld -nostartfiles -Wl,-gc-sections -ggdb
+endif
+
 ifneq (,$(findstring redis,$(MAKECMDGOALS)))
 cflags := ${cflags_protection} -DARCH_REDIS -Wall -std=gnu99
 cflags += -O1 -ggdb -DDEBUG=1

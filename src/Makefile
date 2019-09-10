@@ -100,7 +100,7 @@ ios-lib: ${SOURCES}
 android-arm android-x86: ${SOURCES} zenroom_jni.o
 	${CC} ${CFLAGS} ${SOURCES} zenroom_jni.o -o zenroom.so ${LDFLAGS} ${LDADD}
 
-cortex-arm: ${SOURCES}
+arm: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom.elf ${LDFLAGS} ${LDADD}
 	${OBJCOPY} -O binary zenroom.elf zenroom.bin
 
