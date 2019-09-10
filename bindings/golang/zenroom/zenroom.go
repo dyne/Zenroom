@@ -18,7 +18,7 @@ import (
 	"unsafe"
 
 	// dummy import to include binary in dependencies
-	_ "github.com/DECODEproject/Zenroom/tree/bindings/bindings/golang/lib"
+	_ "github.com/DECODEproject/Zenroom/bindings/golang/zenroom/lib"
 )
 
 // maxString is zenroom defined buffer MAX_STRING size
