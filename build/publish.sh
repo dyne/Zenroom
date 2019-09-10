@@ -10,6 +10,16 @@ activate_python () {
 	. venv/bin/activate
 }
 
+activate_javascript () {
+	git clone https://github.com/emscripten-core/emsdk.git
+	cd emsdk
+	./emsdk install sdk-1.38.31-64bit
+	./emsdk activate --embedded sdk-1.38.31-64bit
+	source ./emsdk_env.sh
+	cd ..
+}
+
+
 parse_version () {
 	make -pn -f ../src/Makefile > /tmp/make.db.txt 2>/dev/null
 	while read var assign value; do
@@ -32,10 +42,27 @@ publish_python () {
 	pip install wheel
 	pip install twine
 	python3 setup.py publish
+	deactivate
+}
+
+publish_javascript () {
+	cd ../bindings/javascript
+	activate_javascript
+	yarn
+	yarn version --new-version $VERSION
+	yarn transpile
+	yarn run doc:api
+	yarn release
+	rm -rf emsdk
 }
 
 parse_version
-echo -e "Publishing ${OK}${VERSION}${NC} for ${OK}Python${NC}"
+echo -e "Publishing ${OK}${VERSION}${NC} for ${OK}Python${NC} over pypi.org"
 echo
 
-publish_python
+# publish_python
+
+echo -e "Publishing ${OK}${VERSION}${NC} for ${OK}Javascript${NC} over npm"
+echo
+
+publish_javascript
