@@ -1,0 +1,9 @@
+Scenario 'coconut': "To run by citizen and store the output as credential.json"
+Given that I am known as 'identifier'
+and I have my valid 'credential keypair'
+# TODO: a valid '' from ''
+# then aggregate all in ack_table
+and I have a valid 'credential'
+When I aggregate the credential in 'credentials'
+Then print my 'credentials'
+and print my 'credential keypair'

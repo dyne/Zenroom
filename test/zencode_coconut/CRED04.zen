@@ -1,5 +1,5 @@
 Scenario 'coconut': "Publish the credential issuer verification key"
-Given that I am known as 'issuer_identifier'
-and I have my issuer keypair
+Given that I am known as 'issuer identifier'
+and I have my valid 'ca verify'
 When I publish my issuer verification key
-Then print all data
+Then print my data

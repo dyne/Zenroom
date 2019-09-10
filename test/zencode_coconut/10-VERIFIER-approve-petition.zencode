@@ -1,6 +1,0 @@
-Scenario 'coconut': "Approve the creation of a petition: executed by a Citizen, using several keys"
-Given that I use the verification key by 'issuer_identifier'
-and I receive a new petition request
-When I aggregate all the verification keys
-and I verify the new petition to be valid
-Then print all data

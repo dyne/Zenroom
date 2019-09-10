@@ -1,0 +1,9 @@
+Scenario 'coconut': "To run by citizen and send the result blindproof_credential.json to the verifier/checker"
+Given that I am known as 'identifier'
+and I have my valid 'credential keypair'
+and I have a valid 'ca_verify' from 'issuer identifier'
+and I have my valid 'credentials'
+When I aggregate all 'ca verify'
+# TODO: ca_verify -> verification key
+and I create a credential proof
+Then print the 'credential proof'

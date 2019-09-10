@@ -1,0 +1,6 @@
+Scenario 'coconut': "To run by the checker and prints OK in stout if verified"
+Given that I have a valid 'ca_verify' from 'issuer_identifier'
+and I have a valid 'credential proof'
+When I aggregate all 'ca_verify'
+and I verify the credential proof is correct
+Then print 'Success' 'OK' as 'string'

@@ -1,0 +1,7 @@
+Scenario 'coconut': "To run after the request keypair is stored (keypair.keys)"
+Given that I am known as 'identifier'
+and I have my valid 'credential keypair'
+When I create a credential signature request
+Then print my 'credential signature request'
+
+

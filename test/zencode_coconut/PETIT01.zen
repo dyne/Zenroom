@@ -1,0 +1,9 @@
+Scenario 'coconut': "Citizen creates a new petition, using his own key, the credential and the credential issuer's public"
+Given that I am known as 'identifier'
+and I have my valid 'credential keypair'
+and I have my valid 'credentials'
+and I have a valid 'ca verify' from 'issuer_identifier'
+When I aggregate all 'ca verify'
+and I create a credential proof
+and I create a petition 'poll'
+Then print all data

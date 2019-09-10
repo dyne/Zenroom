@@ -1,5 +1,0 @@
-Scenario 'coconut': "Add a petition to the ledger (count): here the petition signature created by the citizen is aggregated with the petition and written to the ledger, no encryption is used"
-Given that I receive a signature
-and I receive a petition
-When a valid petition signature is counted
-Then print all data

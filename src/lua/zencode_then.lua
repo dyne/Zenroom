@@ -22,6 +22,11 @@ Then("print '' ''", function(k,v)
 		OUT[k] = ZEN:import(v, false)
 end)
 
+
+Then("print '' '' as ''", function(k,v,s)
+		OUT[k] = ZEN:export( ZEN:import(v, false), s)
+end)
+
 Then("print all data", function()
 		OUT = ACK
 		OUT.whoami = nil
