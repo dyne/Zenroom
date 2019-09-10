@@ -128,11 +128,14 @@ clean:
 	rm -f ${pwd}/lib/milagro-crypto-c/CMakeCache.txt
 	rm -rf ${pwd}/lib/milagro-crypto-c/CMakeFiles
 	make clean -C src
+	make clean -C bindings
 	rm -f ${extras}/index.*
 	rm -rf ${pwd}/build/asmjs
 	rm -rf ${pwd}/build/wasm
 	rm -rf ${pwd}/build/rnjs
 	rm -rf ${pwd}/build/npm
+	rm -f ${pwd}/build/swig_wrap.c
+	rm -f ${pwd}/.python-version
 
 clean-src:
 	make clean -C src
