@@ -93,6 +93,6 @@ linux-python3: apply-patches lua53 milagro embed-lua
 linux-go: apply-patches lua53 milagro embed-lua
 	swig -go -cgo -intgosize 32 ${pwd}/build/swig.i
 	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c -o src/zen_go.o
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-	make -C src go
-	@mkdir -p ${pwd}/build/go && cp -v ${pwd}/src/libzenroomgo.so ${pwd}/build/go
+	CC=${gcc} LD=${ld} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+		make -C src go
+	cp -v ${pwd}/src/libzenroomgo.so ${pwd}/bindings/golang/lib/

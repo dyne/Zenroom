@@ -1,5 +1,7 @@
 // interface for language bindings
 // see swig.org
+
+#ifdef SWIGPYTHON
 %include <pybuffer.i>
 %pybuffer_mutable_binary(char *stdout_buf, size_t stdout_len);
 %pybuffer_mutable_binary(char *stderr_buf, size_t stderr_len);
@@ -15,6 +17,7 @@ system = platform.system()
 zenroom_path = os.path.join(os.path.dirname(__file__), "libs", system, python_version)
 sys.path.append(zenroom_path)
 %}
+#endif  /* SWIGPYTHON */
 
 %module zenroom
 %{
