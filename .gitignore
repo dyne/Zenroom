@@ -10,6 +10,7 @@ config.status
 build/lua_sandbox*
 build/luazen
 .env
+.python-version
 docs/test
 docs/pub
 docs/fonts
