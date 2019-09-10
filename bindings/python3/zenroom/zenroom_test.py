@@ -59,24 +59,22 @@ def test_broken_script():
 
 
 def test_broken_zencode():
-    contract = """Scenario 'coconut': "broken"
-    When I
-    """
-    result = zenroom.zencode_exec(contract, verbosity=3)
-    assert result.stderr
-    assert "{}" == result.stdout
+    with pytest.raises(ZenroomException) as e:
+        contract = """Scenario 'coconut': "broken"
+        When I
+        """
+        result = zenroom.zencode_exec(contract, verbosity=3)
+        assert result.stderr
+        assert "{}" == result.stdout
 
 
 def test_create_petition_with_rng():
     script = """Scenario 'coconut': "Citizen creates a new petition"
-    Given I have inside 'issuer identifier' a valid 'ca_verify'
-    and I have a valid 'credential proof'
-    and I have a valid 'petition'
-    When I aggregate verifiers from 'ca_verify'
-    and I verify the credential proof is correct
-    and I verify the new petition to be empty
-    Then print the 'petition'
-    and print the 'verifiers'
+Given that I use the verification key by 'issuer_identifier'
+and I receive a new petition request
+When I aggregate all the verification keys
+and I verify the new petition to be valid
+Then print all data
     """
     keys = '{"issuer_identifier": {"ca_verify": {"alpha": "u64:CTkI_DudfVF9QbyRQjfue_ajdLGmeP5Ednd_j5efcy-WFUmEgqHpxYaAgvGTqcppCly7HNt_qBIzJk9IdlR_RBBEqebNV6jPqudNqGKTwcTo2B806nYRuCEnL97hj7xgDtXNSHu3bf57eEAE2vEcPPmamBHajNtLzRMmM74YwmYwtqZ-F-N2-RliXexESTMQBN8YdWoawA548_S6Ait6sphvrIw4E-Tu2Ti5uDFEYUJ7Muwus8fB0QHB3djmPaiA", "beta": "u64:DhlbAie3DM8ZLfPeg9lU02koN5J0mHqDkY10nO0bMvIevMRsRnoztEOId5MllVSeVEgLkhykaDO7ZO50O9TE-5Php7f5XtyWntl0KwGOLzoH3zvdQ2yBl6WHZpBWk7rmAw6KBAQ3IeDWbZ_-pd7I-IyaXh4KI8X2h7v6aqZ1OKWHgMkqmFZfLUmsfmxppqw3Idr5CTqsnttuwFpyLrUv86pbsQ2jCuicCcVFlRMs0Nsf_wKidyVdnkC73cpsnKWQ"}}}'
     data = ' {"credential_proof": {"kappa": "u64:Ekm_B59fBdzG3FBEEBtpIu4weaT_luV0sFG8zVZi0TWgxQicy9SL8Tr7NhoiCiS1SIk_HOnqQ8GXtNTAlUXg13R4E9rejKRJw30TF0AGJ6qDduZUPzvwvkiwjxXVvdqoNd30J4wQpcEkhIn03XABIVlOKVjIKPJxwZa3SXWsSsbKMrR0PdZi69-gAaReIjkKSiiYmWsrk7TVujObpQWN9q6hrRK8jyQ1y_epb-lOqDD_D-wv8av1MnsTjHZkt6IG", "nu": "u64:BEELrHoEpGEtmjAsJyQEqar3Sf4NyzmW4IipWCa8S23rFM9vMLl_GDUypI8GPcxLRBJBNFwSF2dY1cxcplFrm9rcM5hBrc5R8wv-QzWojMKCH8bL1JIO1vmILhdsbcimSQ", "pi_v": {"c": "u64:eWVEdfGaITBeGttVMcpF4vttK0rXoV-s2M1uIT-naxI", "rm": "u64:Y6Hk8MDpkdhzmrjTAPuNrgadB9KZQ2Llo7pLoNGPI9U", "rr": "u64:4I9cla6nDJ7AkLVYF33KzOPZK5Ovps6DS0TlX_fcFWU"}, "sigma_prime": {"h_prime": "u64:BBs1WW358uQYckW_DotJ8qefvlQwCX67UKUqvJdC_G7Y064lnDIafza4EgsMBARaIggd4Xg7qZCfkZzjQpfSgKBOIGyc2gUjOEAiZEvDCqbIAJEzzuF_3bVR0-NKNHGXKQ", "s_prime": "u64:BCCFu9VkSz4FiS3090o4zlHWQGnpa3dHurPUhErctBvIJ8CrWeeO6rwgrmgoYKf96ybErbDiphKlh2SIipDPEyVUQxRiNquRWXbJG8rIGUjBHNZ6Z97YOnFf0BCn9icVyA"}}, "petition": {"owner": "u64:BAnXgbjfC-25YaXPjT68wpxxcHWMYMzVdvq8W12fhJR0_l55MtQHLXjjYliES8DDiz9dTXc_5n-8bIFptRiwTPnheJlmE6JBawm4t6GYI7JMjcwwB0Uh4KfD6OunqRm2_w", "scores": {"neg": {"left": "Infinity", "right": "Infinity"}, "pos": {"left": "Infinity", "right": "Infinity"}}, "uid": "u64:tion"}}'
