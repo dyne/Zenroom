@@ -3,7 +3,7 @@
   "version": "0.9.5",
   "description": "wrapper of Zenroom, a secure and small virtual machine for crypto language processing",
   "main": "index.js",
-  "repository": "https://github.com/puria/zenroomjs.git",
+  "repository": "https://github.com/DECODEproject/Zenroom.git",
   "author": "Puria Nafisi Azizi <puria@dyne.org>",
   "license": "AGPL-3.0",
   "scripts": {

@@ -36,13 +36,15 @@ def test_keygen():
 
 
 def test_zencode():
-    contract = """Scenario 'coconut': "To run over the mobile wallet the first time and store the output as keypair.keys"
+    contract = """Scenario coconut petition
+rule check version 1.0
 Given that I am known as 'identifier'
 When I create my new keypair
 Then print all data
     """
 
     result = zenroom.zencode_exec(contract)
+    print(result)
     assert result
     assert "public" in result.stdout
     assert "private" in result.stdout
