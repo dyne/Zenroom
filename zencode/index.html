@@ -78,11 +78,7 @@
         <span class="mdi mdi-fire has-text-danger"></span> Quick Links</h1>
     <ul class="menu-list" style="list-style: none">
         
-        <li><span class="mdi mdi-home"></span><a href="https://zenroom.org">Home</a></li>
-        
 
-        
-        <li><span class="mdi mdi-book-open-page-variant"></span><a href="https://dev.zenroom.org">Documentation</a></li>
         
 
         
@@ -155,6 +151,20 @@
       
     
       <li><a href="#public-key-signature-ecdsa">Public-key Signature (ECDSA)</a></li>
+      
+    
+  </ul>
+
+            
+        </li>
+        
+        <li>
+            <a href="#zero-knowledge-proofs">Zero Knowledge Proofs</a>
+            
+                
+  <ul>
+    
+      <li><a href="#attribute-based-credentials">Attribute Based Credentials</a></li>
       
     
   </ul>
@@ -322,7 +332,7 @@ automatically from JSON or CBOR binary formats.</p>
 
 <p>Of course the secret must be known by all participats and that's the
 dangerous part, since it could be stolen at the moment is told.</p>
-<p>This problem is solver using public-key cryptography, also known as a-symmetric encryption.</p>
+<p>We solve this problem using public-key cryptography, also known as a-symmetric encryption.</p>
 <h1 id="asymmetric-encryption">Asymmetric encryption</h1>
 <p>To solve this problem we have <a href="https://en.wikipedia.org/wiki/Public-key_cryptography">asymmetric encryption (or public key
 cryptography)</a>
@@ -340,7 +350,8 @@ Alice and Bob.</p>
 each other public key we can move forward to do asymmetric encryption
 and signatures.</p>
 <p><strong>1.a Alice keygen</strong></p>
-<div class="codehilite"><pre><span class="nf">Scenario &#39;simple&#39;: Alice generate a keypair</span>
+<div class="codehilite"><pre><span class="nf">Rule check version </span><span class="s">1.0.0</span><span class="nf"></span>
+<span class="nf">Scenario &#39;simple&#39;: Alice generate a keypair</span>
 <span class="k">Given </span><span class="nf">that I am known as &#39;Alice&#39;</span>
 <span class="k">When </span><span class="nf">I create my new keypair</span>
 <span class="k">Then </span><span class="nf">print my data</span>
@@ -348,7 +359,8 @@ and signatures.</p>
 
 
 <p><strong>2.a Alice pubkey</strong></p>
-<div class="codehilite"><pre><span class="nf">Scenario &#39;simple&#39;: Alice publishes her public key</span>
+<div class="codehilite"><pre><span class="nf">Rule check version </span><span class="s">1.0.0</span><span class="nf"></span>
+<span class="nf">Scenario &#39;simple&#39;: Alice publishes her public key</span>
 <span class="k">Given </span><span class="nf">that I am known as &#39;Alice&#39;</span>
 <span class="nf">and I have my valid &#39;public key&#39;</span>
 <span class="k">Then </span><span class="nf">print my data</span>
@@ -356,7 +368,8 @@ and signatures.</p>
 
 
 <p><strong>1.b Bob keygen</strong></p>
-<div class="codehilite"><pre><span class="nf">Scenario &#39;simple&#39;: Bob generate a keypair</span>
+<div class="codehilite"><pre><span class="nf">Rule check version </span><span class="s">1.0.0</span><span class="nf"></span>
+<span class="nf">Scenario &#39;simple&#39;: Bob generate a keypair</span>
 <span class="k">Given </span><span class="nf">that I am known as &#39;Bob&#39;</span>
 <span class="k">When </span><span class="nf">I create my new keypair</span>
 <span class="k">Then </span><span class="nf">print my data</span>
@@ -364,7 +377,8 @@ and signatures.</p>
 
 
 <p><strong>2.b Bob pubkey</strong></p>
-<div class="codehilite"><pre><span class="nf">Scenario &#39;simple&#39;: Bob publishes his public key</span>
+<div class="codehilite"><pre><span class="nf">Rule check version </span><span class="s">1.0.0</span><span class="nf"></span>
+<span class="nf">Scenario &#39;simple&#39;: Bob publishes his public key</span>
 <span class="k">Given </span><span class="nf">that I am known as &#39;Bob&#39;</span>
 <span class="nf">and I have my valid &#39;public key&#39;</span>
 <span class="k">Then </span><span class="nf">print my data</span>
@@ -380,7 +394,8 @@ and signatures.</p>
 
 <p><img alt="Zencode to encrypt using asymmetric keypairs" src="../img/ecdh_crypt.svg" /></p>
 <p><strong>1. Alice encrypts the message using Bob's public key</strong></p>
-<div class="codehilite"><pre><span class="nf">Scenario &#39;simple&#39;: Alice encrypts a message for Bob</span>
+<div class="codehilite"><pre><span class="nf">Rule check version </span><span class="s">1.0.0</span><span class="nf"></span>
+<span class="nf">Scenario &#39;simple&#39;: Alice encrypts a message for Bob</span>
 <span class="k">Given </span><span class="nf">that I am known as &#39;Alice&#39;</span>
 <span class="nf">and I have my valid &#39;keypair&#39;</span>
 <span class="nf">and I have a valid &#39;public key&#39; from &#39;Bob&#39;</span>
@@ -392,7 +407,8 @@ and signatures.</p>
 
 
 <p><strong>2. Bob prepares a keyring with Alice's public key</strong></p>
-<div class="codehilite"><pre><span class="nf">Scenario &#39;simple&#39;: Bob gathers public keys in his keyring</span>
+<div class="codehilite"><pre><span class="nf">Rule check version </span><span class="s">1.0.0</span><span class="nf"></span>
+<span class="nf">Scenario &#39;simple&#39;: Bob gathers public keys in his keyring</span>
 <span class="k">Given </span><span class="nf">that I am &#39;Bob&#39;</span>
 <span class="nf">and I have my valid &#39;keypair&#39;</span>
 <span class="nf">and I have a valid &#39;public key&#39; from &#39;Alice&#39;</span>
@@ -402,7 +418,8 @@ and signatures.</p>
 
 
 <p><strong>3. Bob decrypts the message using Alice's public key</strong></p>
-<div class="codehilite"><pre><span class="nf">Scenario &#39;simple&#39;: Bob decrypts the message from Alice</span>
+<div class="codehilite"><pre><span class="nf">Rule check version </span><span class="s">1.0.0</span><span class="nf"></span>
+<span class="nf">Scenario &#39;simple&#39;: Bob decrypts the message from Alice</span>
 <span class="k">Given </span><span class="nf">that I am known as &#39;Bob&#39;</span>
 <span class="nf">and I have my valid &#39;keypair&#39;</span>
 <span class="nf">and I have a valid &#39;public key&#39; from &#39;Alice&#39;</span>
@@ -434,13 +451,14 @@ public information that accompany the secret.</p>
 <p>Here we continue assuming that the keyrings are already prepared with
 public/private keypairs and the public keypair of the correspondent.</p>
 <p><strong>1. Alice signs a message for Bob</strong></p>
-<div class="codehilite"><pre><span class="nf">rule check version </span><span class="s">1.0.0</span><span class="nf"></span>
+<div class="codehilite"><pre><span class="nf">Rule check version </span><span class="s">1.0.0</span><span class="nf"></span>
 <span class="nf">Scenario &#39;simple&#39;: Alice signs a message for Bob</span>
 <span class="k">Given </span><span class="nf">that I am known as &#39;Alice&#39;</span>
 <span class="nf">and I have my valid &#39;keypair&#39;</span>
 <span class="k">When </span><span class="nf">I write &#39;This is my signed message to Bob.&#39; in &#39;draft&#39;</span>
-<span class="nf">and I sign the &#39;draft&#39; as &#39;signed message&#39;</span>
-<span class="k">Then </span><span class="nf">print my &#39;signed message&#39;</span>
+<span class="nf">and I make the signature of the &#39;draft&#39;</span>
+<span class="k">Then </span><span class="nf">print my &#39;signature&#39;</span>
+<span class="nf">and print my &#39;draft&#39;</span>
 </pre></div>
 
 
@@ -449,16 +467,142 @@ public/private keypairs and the public keypair of the correspondent.</p>
 <span class="nf">Scenario &#39;simple&#39;: Bob verifies the signature from Alice</span>
 <span class="k">Given </span><span class="nf">that I am known as &#39;Bob&#39;</span>
 <span class="nf">and I have inside &#39;Alice&#39; a valid &#39;public key&#39;</span>
-<span class="nf">and I have a valid &#39;signed message&#39;</span>
-<span class="k">When </span><span class="nf">I verify the &#39;signed message&#39; is authentic</span>
+<span class="nf">and I have a valid &#39;signature&#39; inside &#39;Alice&#39;</span>
+<span class="nf">and I have a &#39;draft&#39; inside &#39;Alice&#39;</span>
+<span class="k">When </span><span class="nf">I verify the &#39;signature&#39; of the &#39;draft&#39; is by &#39;Alice&#39;</span>
 <span class="k">Then </span><span class="nf">print &#39;signature&#39; &#39;correct&#39;</span>
-<span class="nf">and print as &#39;string&#39; the &#39;text&#39; inside &#39;signed message&#39;</span>
+<span class="nf">and print as &#39;string&#39; the &#39;draft&#39;</span>
 </pre></div>
 
 
 <p>In this example Alice uses her private key to sign and authenticate a
 message. Bob or anyone else can use Alice's public key to prove that
 the integrity of the message is kept intact and that she signed it.</p>
+<h1 id="zero-knowledge-proofs">Zero Knowledge Proofs</h1>
+<p>One powerful feature of Zenroom is the implementation of the <a href="https://arxiv.org/pdf/1802.07344.pdf">Coconut
+crypto scheme</a>. This novel
+scheme supports several features based on pairing elliptic curve
+arithmetics and in particular:</p>
+<ul>
+<li>non-interactive zero knowedge proofs (also known as ZK, ZKP or ZK-Snarks)</li>
+<li>threshold credentials with multiple decentralised issuers</li>
+<li>homomorphic encryption for numeric counters</li>
+</ul>
+<p>These are all very useful features for architectures based on the
+decentralisation of trust, typical of DLT and blockchain based
+systems, as well for off-line and non-interactive authentication.</p>
+<p>The Zencode language leverages two main use cases of this crypto
+scheme and two more will be implemented in the future.</p>
+<ol>
+<li>Attribute Based Credentials (ABC) where issuer verification keys
+   represent specific credentials</li>
+<li>A Petition system based on ABC and homomorphic encryption</li>
+<li>(WIP) Anonymous proxy validation scheme</li>
+<li>(WIP) Token thumbler to privately transfer numeric assets</li>
+</ol>
+<p>The main feature of ZKP based cryptography is that one can use
+credentials to create untreaceable public proofs for authenticating or
+signing a petition etc.</p>
+<p>The validity of ZK proofs can be witnesses by anyone without even
+knowing who is being authenticated: just knowing the proof and the
+credential (the public verification key of the credential issuer).</p>
+<h2 id="attribute-based-credentials">Attribute Based Credentials</h2>
+<p><img alt="Alice in Wonderland" src="../img/alice_with_cards-sm.jpg" /></p>
+<p>Let's now imagine 3 different subjects for our scenarios:</p>
+<ol>
+<li><strong>Wonderland</strong> is an open space, all inhabitants can witness the validity of <strong>credential proofs</strong></li>
+<li><strong>Alice</strong> just arrived in Wonderland: she will make <strong>credential signature requests</strong>, hold the signed <strong>credentials</strong> and use them to produce <strong>proofs</strong></li>
+<li><strong>Mad Hatter</strong> is a well known <strong>credential issuer</strong> in Wonderland: he receives <strong>credential signature requests</strong> and decides if to sign them. Once signed, <strong>credentials</strong> can be used to produce <strong>proofs</strong>.</li>
+</ol>
+<p>Credential proofs are different at every use, so Alice can use signed
+credentials in her possession to produce proofs, but cannot be
+followed by her trail of proofs. Alice can produce an infinite number
+of them and leave them around: like in a chest at the entrance of a
+room, for anyone to witness their validity without even meeting Alice
+or knowing who she is.</p>
+<p><img alt="Zencode for attribute based credentials" src="../img/zkp_abc.svg" /></p>
+<p>1- <strong>Alice</strong> generates her <strong>credential keypair</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;identifier&#39;</span>
+<span class="k">When </span><span class="nf">I create my new keypair</span>
+<span class="k">Then </span><span class="nf">print my data</span>
+</pre></div>
+
+
+<p>2- <strong>MadHatter</strong> generates an <strong>issuer keypair</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;issuer identifier&#39;</span>
+<span class="k">When </span><span class="nf">I create my new issuer keypair</span>
+<span class="k">Then </span><span class="nf">print my &#39;issuer keypair&#39;</span>
+</pre></div>
+
+
+<p>2a <strong>MadHatter</strong> publishes the <strong>verification key</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;issuer identifier&#39;</span>
+<span class="nf">and I have my valid &#39;ca verify&#39;</span>
+<span class="k">When </span><span class="nf">I publish my issuer verification key</span>
+<span class="k">Then </span><span class="nf">print my data</span>
+</pre></div>
+
+
+<p>3- <strong>Alice</strong> sends her <strong>credential signature request</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;identifier&#39;</span>
+<span class="nf">and I have my valid &#39;credential keypair&#39;</span>
+<span class="k">When </span><span class="nf">I create a credential signature request</span>
+<span class="k">Then </span><span class="nf">print my &#39;credential signature request&#39;</span>
+</pre></div>
+
+
+<p>4- <strong>MadHatter</strong> decides to sign a <strong>credential signature request</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;issuer_identifier&#39;</span>
+<span class="nf">and I have my valid &#39;issuer keypair&#39;</span>
+<span class="nf">and I have a valid &#39;credential signature request&#39;</span>
+<span class="k">When </span><span class="nf">I sign the credential</span>
+<span class="k">Then </span><span class="nf">print the &#39;credential&#39;</span>
+<span class="nf">and print the &#39;ca verify&#39;</span>
+</pre></div>
+
+
+<p>5- <strong>Alice</strong> receives and aggregates the signed <strong>credential</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;identifier&#39;</span>
+<span class="nf">and I have my valid &#39;credential keypair&#39;</span>
+<span class="nf">and I have a valid &#39;credential&#39;</span>
+<span class="k">When </span><span class="nf">I aggregate the credential in &#39;credentials&#39;</span>
+<span class="k">Then </span><span class="nf">print my &#39;credentials&#39;</span>
+<span class="nf">and print my &#39;credential keypair&#39;</span>
+</pre></div>
+
+
+<hr />
+<p>At this point <strong>Alice</strong> is in possession of <strong>credentials</strong> allowing
+her to produce a <strong>proof</strong> any time she wants.</p>
+<hr />
+<p>6- <strong>Alice</strong> show the <strong>credential proof</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;identifier&#39;</span>
+<span class="nf">and I have my valid &#39;credential keypair&#39;</span>
+<span class="nf">and I have a valid &#39;ca_verify&#39; from &#39;issuer identifier&#39;</span>
+<span class="nf">and I have my valid &#39;credentials&#39;</span>
+<span class="k">When </span><span class="nf">I aggregate all &#39;ca verify&#39;</span>
+<span class="nf">and I create a credential proof</span>
+<span class="k">Then </span><span class="nf">print the &#39;credential proof&#39;</span>
+</pre></div>
+
+
+<p>7- Anyone can verify the <strong>credential proof</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
+<span class="k">Given </span><span class="nf">that I have a valid &#39;ca_verify&#39; from &#39;issuer_identifier&#39;</span>
+<span class="nf">and I have a valid &#39;credential proof&#39;</span>
+<span class="k">When </span><span class="nf">I aggregate all &#39;ca_verify&#39;</span>
+<span class="nf">and I verify the credential proof is correct</span>
+<span class="k">Then </span><span class="nf">print &#39;Success&#39; &#39;OK&#39; as &#39;string&#39;</span>
+</pre></div>
+
+
 <h1 id="full-list-of-statements">Full list of statements</h1>
 <div class="codehilite"><pre><span class="l-Scalar-Plain">when</span><span class="p-Indicator">:</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">append</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
@@ -476,20 +620,20 @@ the integrity of the message is kept intact and that she signed it.</p>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">create</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">new</span><span class="nv"> </span><span class="s">keypair&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">create</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">new</span><span class="nv"> </span><span class="s">issuer</span><span class="nv"> </span><span class="s">keypair&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">create</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">new</span><span class="nv"> </span><span class="s">authority</span><span class="nv"> </span><span class="s">keypair&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">generate</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">credential</span><span class="nv"> </span><span class="s">signature</span><span class="nv"> </span><span class="s">request&#39;</span><span class="p-Indicator">}</span>
+  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">create</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">credential</span><span class="nv"> </span><span class="s">signature</span><span class="nv"> </span><span class="s">request&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">sign</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">credential&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">aggregate</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">credential</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">aggregate</span><span class="nv"> </span><span class="s">verifiers</span><span class="nv"> </span><span class="s">from</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">generate</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">credential</span><span class="nv"> </span><span class="s">proof&#39;</span><span class="p-Indicator">}</span>
+  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">aggregate</span><span class="nv"> </span><span class="s">all</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
+  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">create</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">credential</span><span class="nv"> </span><span class="s">proof&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">verify</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">credential</span><span class="nv"> </span><span class="s">proof</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">correct&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">generate</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">petition</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
+  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">create</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">petition</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">verify</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">new</span><span class="nv"> </span><span class="s">petition</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">be</span><span class="nv"> </span><span class="s">empty&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">sign</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">petition</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
+  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">create</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">petition</span><span class="nv"> </span><span class="s">signature</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">verify</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">signature</span><span class="nv"> </span><span class="s">proof</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">correct&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;the</span><span class="nv"> </span><span class="s">petition</span><span class="nv"> </span><span class="s">signature</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">not</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">duplicate&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;the</span><span class="nv"> </span><span class="s">petition</span><span class="nv"> </span><span class="s">signature</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">just</span><span class="nv"> </span><span class="s">one</span><span class="nv"> </span><span class="s">more&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">add</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">signature</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">petition&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">tally</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">petition&#39;</span><span class="p-Indicator">}</span>
+  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">create</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">petition</span><span class="nv"> </span><span class="s">tally&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">count</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">petition</span><span class="nv"> </span><span class="s">results&#39;</span><span class="p-Indicator">}</span>
 <span class="l-Scalar-Plain">simple</span><span class="p-Indicator">:</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">create</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">new</span><span class="nv"> </span><span class="s">keypair&#39;</span><span class="p-Indicator">}</span>
@@ -498,30 +642,25 @@ the integrity of the message is kept intact and that she signed it.</p>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">decrypt</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">secret</span><span class="nv"> </span><span class="s">message</span><span class="nv"> </span><span class="s">with</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">secret&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">encrypt</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">message</span><span class="nv"> </span><span class="s">for</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">decrypt</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">secret</span><span class="nv"> </span><span class="s">message</span><span class="nv"> </span><span class="s">from</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">sign</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">as</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
+  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">make</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">signature</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">verify</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">authentic&#39;</span><span class="p-Indicator">}</span>
 <span class="l-Scalar-Plain">given</span><span class="p-Indicator">:</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="nv">nothing</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">introduce</span><span class="nv"> </span><span class="s">myself</span><span class="nv"> </span><span class="s">as</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">am</span><span class="nv"> </span><span class="s">known</span><span class="nv"> </span><span class="s">as</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">am</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">valid</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">valid</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">inside</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">valid</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">inside</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">valid</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">inside</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">valid</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">valid</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">from</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
+  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">valid</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
+  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">valid</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">inside</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
+  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">valid</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">inside</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">from</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">valid</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">from</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">set</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;the</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">valid&#39;</span><span class="p-Indicator">}</span>
 <span class="l-Scalar-Plain">then</span><span class="p-Indicator">:</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">then</span><span class="p-Indicator">:</span> <span class="s">&#39;print</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
+  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">then</span><span class="p-Indicator">:</span> <span class="s">&#39;print</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">as</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">then</span><span class="p-Indicator">:</span> <span class="s">&#39;print</span><span class="nv"> </span><span class="s">all</span><span class="nv"> </span><span class="s">data&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">then</span><span class="p-Indicator">:</span> <span class="s">&#39;print</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">data&#39;</span><span class="p-Indicator">}</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">then</span><span class="p-Indicator">:</span> <span class="s">&#39;print</span><span class="nv"> </span><span class="s">all</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">data&#39;</span><span class="p-Indicator">}</span>

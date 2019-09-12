@@ -78,11 +78,7 @@
         <span class="mdi mdi-fire has-text-danger"></span> Quick Links</h1>
     <ul class="menu-list" style="list-style: none">
         
-        <li><span class="mdi mdi-home"></span><a href="https://zenroom.org">Home</a></li>
-        
 
-        
-        <li><span class="mdi mdi-book-open-page-variant"></span><a href="https://dev.zenroom.org">Documentation</a></li>
         
 
         
@@ -123,7 +119,7 @@
                 
   <ul>
     
-      <li><a href="#jvascript">Jvascript</a></li>
+      <li><a href="#javascript">Javascript</a></li>
       
     
       <li><a href="#python">Python</a></li>
@@ -191,20 +187,51 @@
 
 <h1 id="language-bindings">Language bindings</h1>
 <p>-This API can be called in similar ways from a variety of languages and wrappers that already facilitate its usage.</p>
-<h2 id="jvascript">Jvascript</h2>
+<h2 id="javascript">Javascript</h2>
 <p><a href="https://www.npmjs.com/package/zenroom">Javascript NPM package</a></p>
+<p>💾 Installation</p>
 <div class="codehilite"><pre><span class="n">npm</span> <span class="n">install</span> <span class="n">zenroom</span>
 </pre></div>
 
 
+<p>🎮 Quick Usage</p>
+<div class="codehilite"><pre><span class="kr">import</span> <span class="nx">zenroom</span> <span class="nx">from</span> <span class="s1">&#39;zenroom&#39;</span>
+
+<span class="kr">const</span> <span class="nx">script</span> <span class="o">=</span> <span class="err">`</span><span class="nx">print</span><span class="p">(</span><span class="s2">&quot;Hello World!&quot;</span><span class="p">)</span><span class="err">`</span>
+<span class="nx">zenroom</span><span class="p">.</span><span class="nx">script</span><span class="p">(</span><span class="nx">script</span><span class="p">).</span><span class="nx">zenroom_exec</span><span class="p">()</span>
+
+<span class="c1">// prints in the console.log &quot;Hello World!&quot;</span>
+</pre></div>
+
+
 <h2 id="python">Python</h2>
-<p><a href="https://github.com/DECODEproject/zenroom-py">Python language bindings</a></p>
+<p><a href="https://pypi.org/project/zenroom/">Python language bindings</a></p>
+<p>💾 Installation</p>
 <div class="codehilite"><pre><span class="n">pip</span> <span class="n">install</span> <span class="n">zenroom</span>
 </pre></div>
 
 
+<p>🎮 Quick Usage</p>
+<div class="codehilite"><pre><span class="kn">from</span> <span class="nn">zenroom</span> <span class="kn">import</span> <span class="n">zenroom</span>
+
+<span class="n">script</span> <span class="o">=</span> <span class="s">&quot;print(&#39;Hello world!&#39;)&quot;</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">zenroom</span><span class="o">.</span><span class="n">zenroom_exec</span><span class="p">(</span><span class="n">script</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span> <span class="c"># guess what</span>
+</pre></div>
+
+
 <h2 id="golang">Golang</h2>
-<p><a href="https://github.com/DECODEproject/zenroom-go">Go language bindings</a></p> 
+<p><a href="https://godoc.org/github.com/DECODEproject/Zenroom/bindings/golang/zenroom">Go language bindings</a></p>
+<p>💾 Installation</p>
+<div class="codehilite"><pre><span class="kn">import</span> <span class="s">&quot;github.com/DECODEproject/Zenroom/bindings/golang/zenroom&quot;</span>
+</pre></div>
+
+
+<p>🎮 Quick Usage</p>
+<div class="codehilite"><pre><span class="nx">script</span> <span class="o">:=</span> <span class="p">[]</span><span class="nb">byte</span><span class="p">(</span><span class="s">`print(&quot;Hello World!&quot;)`</span><span class="p">)</span>
+<span class="nx">res</span><span class="p">,</span> <span class="nx">_</span> <span class="o">:=</span> <span class="nx">zenroom</span><span class="p">.</span><span class="nx">Exec</span><span class="p">(</span><span class="nx">script</span><span class="p">)</span>
+<span class="nx">fmt</span><span class="p">.</span><span class="nx">Println</span><span class="p">(</span><span class="nb">string</span><span class="p">(</span><span class="nx">res</span><span class="p">))</span>
+</pre></div> 
 						</div>
 					</div>
 				</div>
