@@ -5,11 +5,110 @@ security](http://langsec.org) research and it allows to express
 cryptographic operations in a readable domain-specific language called
 **Zencode**.
 
-For an explanation of the innovation brought by Zencode see this blog post: [Smart contracts for the English speaker](https://decodeproject.eu/blog/smart-contracts-english-speaker).
+See the [Zencode Whitepaper](https://files.dyne.org/zenroom/Zencode_Whitepaper.pdf).
 
-Now to learn this very simple language, lets dive into some examples.
+Or this blog post: [Smart contracts for the English speaker](https://decodeproject.eu/blog/smart-contracts-english-speaker).
 
-Keep in mind that statements in yellow boxes are actual Zencode being executed.
+Now lets dive into some examples to learn this very simple language. Be mindful: boxes contain executable Zencode.
+
+# Attribute Based Credentials
+
+![Alice in Wonderland](img/alice_with_cards-sm.jpg)
+
+Let's now imagine 3 different subjects for our scenarios:
+
+1. **Mad Hatter** is a well known **issuer** in Wonderland
+2. **Wonderland** is an open space, all inhabitants can check the validity of **proofs**
+3. **Alice** just arrived: will request a **signature** by an **issuer** to create **proofs**
+3. **Mad Hatter** may accept to sign them
+
+When in possession of **credentials**, Alice can enter any room in
+Wonderland and drop a **proof** in the chest at its entrance. This
+proof can be verified by anyone without knowing this is Alice.
+
+Alice cannot be followed by her trail of proofs. Alice can produce an
+infinite number of proofs for anyone to witness their validity without
+even knowing who she is.
+
+![Zencode for attribute based credentials](img/zkp_abc.svg)
+
+1- **Alice** generates her **credential keypair**
+```cucumber
+<%= "$(cat ../test/zencode_coconut/CRED01.zen)" %>
+```
+2- **MadHatter** generates an **issuer keypair**
+```cucumber
+<%= "$(cat ../test/zencode_coconut/CRED03.zen)" %>
+```
+2a **MadHatter** publishes the **verification key**
+```cucumber
+<%= "$(cat ../test/zencode_coconut/CRED04.zen)" %>
+```
+3- **Alice** sends her **credential signature request**
+```cucumber
+<%= "$(cat ../test/zencode_coconut/CRED02.zen)" %>
+```
+4- **MadHatter** decides to sign a **credential signature request**
+```cucumber
+<%= "$(cat ../test/zencode_coconut/CRED05.zen)" %>
+```
+5- **Alice** receives and aggregates the signed **credential**
+```cucumber
+<%= "$(cat ../test/zencode_coconut/CRED06.zen)" %>
+```
+
+-----
+
+At this point **Alice** is in possession of **credentials** allowing
+her to produce a **proof** any time she wants.
+
+-----
+
+6- **Alice** show the **credential proof**
+```cucumber
+<%= "$(cat ../test/zencode_coconut/CRED07.zen)" %>
+```
+
+7- Anyone can verify the **credential proof**
+```cucumber
+<%= "$(cat ../test/zencode_coconut/CRED08.zen)" %>
+```
+
+# Zero Knowledge Proofs
+
+One powerful feature of Zenroom is the implementation of the [Coconut
+crypto scheme](https://arxiv.org/pdf/1802.07344.pdf). This novel
+scheme supports several features based on pairing elliptic curve
+arithmetics and in particular:
+
+- non-interactive zero knowedge proofs (also known as ZK, ZKP or ZK-Snarks)
+- threshold credentials with multiple decentralised issuers
+- homomorphic encryption for numeric counters
+
+These are all very useful features for architectures based on the
+decentralisation of trust, typical of DLT and blockchain based
+systems, as well for off-line and non-interactive authentication.
+
+The Zencode language leverages two main use cases of this crypto
+scheme and two more will be implemented in the future.
+
+1. Attribute Based Credentials (ABC) where issuer verification keys
+   represent specific credentials
+2. A Petition system based on ABC and homomorphic encryption
+3. (WIP) Anonymous proxy validation scheme
+4. (WIP) Token thumbler to privately transfer numeric assets
+
+The main feature of ZKP based cryptography is that one can use
+credentials to create untreaceable public proofs for authenticating or
+signing a petition etc.
+
+The validity of ZK proofs can be witnesses by anyone without even
+knowing who is being authenticated: just knowing the proof and the
+credential (the public verification key of the credential issuer).
+
+
+
+
 
 # Memory model
 
@@ -31,44 +130,49 @@ All data processed has first to pass the validation phase according to scenario 
 rule check version 1.0.0
 ```
 
+
+
 ## Given
 
+### Self introduction
+
+This affects **my** statements
+
+```cucumber
+Given I introduce myself as ''
+Given I am known as ''
+Given I am ''
+Given I have my ''
+Given I have my valid ''
+```
+
 Data provided as input (from **data** and **keys**) is all imported
-automatically from JSON or CBOR binary formats.
+automatically from **JSON** or [CBOR](https://tools.ietf.org/html/rfc7049) binary formats.
 
-Here below a dense representation of the main operations available.
+Scenarios can add Schema for specific data validation mapped to **words** like: **signature**, **proof** or **secret**.
 
-**Self introduction** (affects "**my**" statements)
-```yaml
-given:
-  - {given: nothing} # checks input is really empty
-  - {given: 'I introduce myself as '''''} # open a section { "WhoAmI": ... }
-  - {given: 'I am known as '''''} # same as above
-  - {given: 'I am '''''} # same as above
+
+**Data input**
+```cucumber
+Given I have a ''
+Given I have a valid ''
+Given I have a '' inside ''
+Given I have a valid '' inside ''
+Given I have a '' from ''
+Given I have a valid '' from ''
+Given the '' is valid
 ```
 
-**Import given data**
-```yaml
-  - {given: 'I have a '''''} # import data named without validation
-  - {given: 'I have my '''''} # import data named under my section without validation
-  - {given: 'I have inside '''' a '''''} # import data from inside a section
-  - {given: 'I have a '''' inside '''''} # different statement, invert order of arguments
-  - {given: 'I have a '''' in '''''}     # courtesy synonyms ...
-  - {given: 'I have a '''' from '''''}   # ... are the same
+or check emptyness:
+
+```cucumber
+Given nothing
 ```
 
-**Import only "valid" data** (schemas are set by the "**scenario**")
-```yaml
-  - {given: 'I have a valid '''''} # import data named validated with same name schema
-  - {given: 'I have my valid '''''} # import data named validated under my section
-  - {given: 'I have inside '''' a valid '''''} # import validated data from inside a section 
-  - {given: 'I have a valid '''' inside '''''} # same as above, inverted order of arguments
-  - {given: 'I have a valid '''' in '''''} # same as above
-  - {given: 'I have a valid '''' from '''''} # same as above (courtesy synonyms)
-  - {given: 'the '''' is valid'} # validate an already imported data object
-```
+When **valid** is specified then extra checks are made on input value,
+mostly according to the **scenario**
 
-Settings:
+**Settings**
 ```txt
 rule input encoding [ url64 | base64 | hex | bin ]
 rule input format [ json | cbor ]
@@ -266,100 +370,6 @@ the integrity of the message is kept intact and that she signed it.
 
 
 
-
-
-# Zero Knowledge Proofs
-
-One powerful feature of Zenroom is the implementation of the [Coconut
-crypto scheme](https://arxiv.org/pdf/1802.07344.pdf). This novel
-scheme supports several features based on pairing elliptic curve
-arithmetics and in particular:
-
-- non-interactive zero knowedge proofs (also known as ZK, ZKP or ZK-Snarks)
-- threshold credentials with multiple decentralised issuers
-- homomorphic encryption for numeric counters
-
-These are all very useful features for architectures based on the
-decentralisation of trust, typical of DLT and blockchain based
-systems, as well for off-line and non-interactive authentication.
-
-The Zencode language leverages two main use cases of this crypto
-scheme and two more will be implemented in the future.
-
-1. Attribute Based Credentials (ABC) where issuer verification keys
-   represent specific credentials
-2. A Petition system based on ABC and homomorphic encryption
-3. (WIP) Anonymous proxy validation scheme
-4. (WIP) Token thumbler to privately transfer numeric assets
-
-The main feature of ZKP based cryptography is that one can use
-credentials to create untreaceable public proofs for authenticating or
-signing a petition etc.
-
-The validity of ZK proofs can be witnesses by anyone without even
-knowing who is being authenticated: just knowing the proof and the
-credential (the public verification key of the credential issuer).
-
-## Attribute Based Credentials
-
-![Alice in Wonderland](img/alice_with_cards-sm.jpg)
-
-Let's now imagine 3 different subjects for our scenarios:
-
-1. **Wonderland** is an open space, all inhabitants can witness the validity of **credential proofs**
-2. **Alice** just arrived in Wonderland: she will make **credential signature requests**, hold the signed **credentials** and use them to produce **proofs**
-3. **Mad Hatter** is a well known **credential issuer** in Wonderland: he receives **credential signature requests** and decides if to sign them. Once signed, **credentials** can be used to produce **proofs**.
-
-Credential proofs are different at every use, so Alice can use signed
-credentials in her possession to produce proofs, but cannot be
-followed by her trail of proofs. Alice can produce an infinite number
-of them and leave them around: like in a chest at the entrance of a
-room, for anyone to witness their validity without even meeting Alice
-or knowing who she is.
-
-![Zencode for attribute based credentials](img/zkp_abc.svg)
-
-1- **Alice** generates her **credential keypair**
-```cucumber
-<%= "$(cat ../test/zencode_coconut/CRED01.zen)" %>
-```
-2- **MadHatter** generates an **issuer keypair**
-```cucumber
-<%= "$(cat ../test/zencode_coconut/CRED03.zen)" %>
-```
-2a **MadHatter** publishes the **verification key**
-```cucumber
-<%= "$(cat ../test/zencode_coconut/CRED04.zen)" %>
-```
-3- **Alice** sends her **credential signature request**
-```cucumber
-<%= "$(cat ../test/zencode_coconut/CRED02.zen)" %>
-```
-4- **MadHatter** decides to sign a **credential signature request**
-```cucumber
-<%= "$(cat ../test/zencode_coconut/CRED05.zen)" %>
-```
-5- **Alice** receives and aggregates the signed **credential**
-```cucumber
-<%= "$(cat ../test/zencode_coconut/CRED06.zen)" %>
-```
-
------
-
-At this point **Alice** is in possession of **credentials** allowing
-her to produce a **proof** any time she wants.
-
------
-
-6- **Alice** show the **credential proof**
-```cucumber
-<%= "$(cat ../test/zencode_coconut/CRED07.zen)" %>
-```
-
-7- Anyone can verify the **credential proof**
-```cucumber
-<%= "$(cat ../test/zencode_coconut/CRED08.zen)" %>
-```
 
 
 # Full list of statements
