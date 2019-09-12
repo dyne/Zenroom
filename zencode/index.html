@@ -118,6 +118,16 @@
         </li>
         
         <li>
+            <a href="#attribute-based-credentials">Attribute Based Credentials</a>
+            
+        </li>
+        
+        <li>
+            <a href="#zero-knowledge-proofs">Zero Knowledge Proofs</a>
+            
+        </li>
+        
+        <li>
             <a href="#memory-model">Memory model</a>
             
                 
@@ -125,6 +135,13 @@
     
       <li><a href="#given">Given</a></li>
       
+  <ul>
+    
+      <li><a href="#self-introduction">Self introduction</a></li>
+      
+    
+  </ul>
+
     
       <li><a href="#when">When</a></li>
       
@@ -163,20 +180,6 @@
         </li>
         
         <li>
-            <a href="#zero-knowledge-proofs">Zero Knowledge Proofs</a>
-            
-                
-  <ul>
-    
-      <li><a href="#attribute-based-credentials">Attribute Based Credentials</a></li>
-      
-    
-  </ul>
-
-            
-        </li>
-        
-        <li>
             <a href="#full-list-of-statements">Full list of statements</a>
             
         </li>
@@ -192,9 +195,135 @@
 security</a> research and it allows to express
 cryptographic operations in a readable domain-specific language called
 <strong>Zencode</strong>.</p>
-<p>For an explanation of the innovation brought by Zencode see this blog post: <a href="https://decodeproject.eu/blog/smart-contracts-english-speaker">Smart contracts for the English speaker</a>.</p>
-<p>Now to learn this very simple language, lets dive into some examples.</p>
-<p>Keep in mind that statements in yellow boxes are actual Zencode being executed.</p>
+<p>See the <a href="https://files.dyne.org/zenroom/Zencode_Whitepaper.pdf">Zencode Whitepaper</a>.</p>
+<p>Or this blog post: <a href="https://decodeproject.eu/blog/smart-contracts-english-speaker">Smart contracts for the English speaker</a>.</p>
+<p>Now lets dive into some examples to learn this very simple language. Be mindful: boxes contain executable Zencode.</p>
+<h1 id="attribute-based-credentials">Attribute Based Credentials</h1>
+<p><img alt="Alice in Wonderland" src="../img/alice_with_cards-sm.jpg" /></p>
+<p>Let's now imagine 3 different subjects for our scenarios:</p>
+<ol>
+<li><strong>Mad Hatter</strong> is a well known <strong>issuer</strong> in Wonderland</li>
+<li><strong>Wonderland</strong> is an open space, all inhabitants can check the validity of <strong>proofs</strong></li>
+<li><strong>Alice</strong> just arrived: will request a <strong>signature</strong> by an <strong>issuer</strong> to create <strong>proofs</strong></li>
+<li><strong>Mad Hatter</strong> may accept to sign them</li>
+</ol>
+<p>When in possession of <strong>credentials</strong>, Alice can enter any room in
+Wonderland and drop a <strong>proof</strong> in the chest at its entrance. This
+proof can be verified by anyone without knowing this is Alice.</p>
+<p>Alice cannot be followed by her trail of proofs. Alice can produce an
+infinite number of proofs for anyone to witness their validity without
+even knowing who she is.</p>
+<p><img alt="Zencode for attribute based credentials" src="../img/zkp_abc.svg" /></p>
+<p>1- <strong>Alice</strong> generates her <strong>credential keypair</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;identifier&#39;</span>
+<span class="k">When </span><span class="nf">I create my new keypair</span>
+<span class="k">Then </span><span class="nf">print my data</span>
+</pre></div>
+
+
+<p>2- <strong>MadHatter</strong> generates an <strong>issuer keypair</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;MadHatter&#39;</span>
+<span class="k">When </span><span class="nf">I create my new issuer keypair</span>
+<span class="k">Then </span><span class="nf">print my &#39;issuer keypair&#39;</span>
+</pre></div>
+
+
+<p>2a <strong>MadHatter</strong> publishes the <strong>verification key</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;MadHatter&#39;</span>
+<span class="nf">and I have my valid &#39;ca verify&#39;</span>
+<span class="k">When </span><span class="nf">I publish my issuer verification key</span>
+<span class="k">Then </span><span class="nf">print my data</span>
+</pre></div>
+
+
+<p>3- <strong>Alice</strong> sends her <strong>credential signature request</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;identifier&#39;</span>
+<span class="nf">and I have my valid &#39;credential keypair&#39;</span>
+<span class="k">When </span><span class="nf">I create a credential signature request</span>
+<span class="k">Then </span><span class="nf">print my &#39;credential signature request&#39;</span>
+</pre></div>
+
+
+<p>4- <strong>MadHatter</strong> decides to sign a <strong>credential signature request</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;issuer_identifier&#39;</span>
+<span class="nf">and I have my valid &#39;issuer keypair&#39;</span>
+<span class="nf">and I have a valid &#39;credential signature request&#39;</span>
+<span class="k">When </span><span class="nf">I sign the credential</span>
+<span class="k">Then </span><span class="nf">print the &#39;credential&#39;</span>
+<span class="nf">and print the &#39;ca verify&#39;</span>
+</pre></div>
+
+
+<p>5- <strong>Alice</strong> receives and aggregates the signed <strong>credential</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;identifier&#39;</span>
+<span class="nf">and I have my valid &#39;credential keypair&#39;</span>
+<span class="nf">and I have a valid &#39;credential&#39;</span>
+<span class="k">When </span><span class="nf">I aggregate the credential in &#39;credentials&#39;</span>
+<span class="k">Then </span><span class="nf">print my &#39;credentials&#39;</span>
+<span class="nf">and print my &#39;credential keypair&#39;</span>
+</pre></div>
+
+
+<hr />
+<p>At this point <strong>Alice</strong> is in possession of <strong>credentials</strong> allowing
+her to produce a <strong>proof</strong> any time she wants.</p>
+<hr />
+<p>6- <strong>Alice</strong> show the <strong>credential proof</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;identifier&#39;</span>
+<span class="nf">and I have my valid &#39;credential keypair&#39;</span>
+<span class="nf">and I have a valid &#39;ca_verify&#39; from &#39;MadHatter&#39;</span>
+<span class="nf">and I have my valid &#39;credentials&#39;</span>
+<span class="k">When </span><span class="nf">I aggregate all &#39;ca verify&#39;</span>
+<span class="nf">and I create a credential proof</span>
+<span class="k">Then </span><span class="nf">print the &#39;credential proof&#39;</span>
+</pre></div>
+
+
+<p>7- Anyone can verify the <strong>credential proof</strong></p>
+<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
+<span class="k">Given </span><span class="nf">that I have a valid &#39;ca_verify&#39; from &#39;issuer_identifier&#39;</span>
+<span class="nf">and I have a valid &#39;credential proof&#39;</span>
+<span class="k">When </span><span class="nf">I aggregate all &#39;ca_verify&#39;</span>
+<span class="nf">and I verify the credential proof is correct</span>
+<span class="k">Then </span><span class="nf">print &#39;Success&#39; &#39;OK&#39; as &#39;string&#39;</span>
+</pre></div>
+
+
+<h1 id="zero-knowledge-proofs">Zero Knowledge Proofs</h1>
+<p>One powerful feature of Zenroom is the implementation of the <a href="https://arxiv.org/pdf/1802.07344.pdf">Coconut
+crypto scheme</a>. This novel
+scheme supports several features based on pairing elliptic curve
+arithmetics and in particular:</p>
+<ul>
+<li>non-interactive zero knowedge proofs (also known as ZK, ZKP or ZK-Snarks)</li>
+<li>threshold credentials with multiple decentralised issuers</li>
+<li>homomorphic encryption for numeric counters</li>
+</ul>
+<p>These are all very useful features for architectures based on the
+decentralisation of trust, typical of DLT and blockchain based
+systems, as well for off-line and non-interactive authentication.</p>
+<p>The Zencode language leverages two main use cases of this crypto
+scheme and two more will be implemented in the future.</p>
+<ol>
+<li>Attribute Based Credentials (ABC) where issuer verification keys
+   represent specific credentials</li>
+<li>A Petition system based on ABC and homomorphic encryption</li>
+<li>(WIP) Anonymous proxy validation scheme</li>
+<li>(WIP) Token thumbler to privately transfer numeric assets</li>
+</ol>
+<p>The main feature of ZKP based cryptography is that one can use
+credentials to create untreaceable public proofs for authenticating or
+signing a petition etc.</p>
+<p>The validity of ZK proofs can be witnesses by anyone without even
+knowing who is being authenticated: just knowing the proof and the
+credential (the public verification key of the credential issuer).</p>
 <h1 id="memory-model">Memory model</h1>
 <p>Zencode contracts operate in 3 phases:</p>
 <ol>
@@ -211,40 +340,38 @@ cryptographic operations in a readable domain-specific language called
 
 
 <h2 id="given">Given</h2>
+<h3 id="self-introduction">Self introduction</h3>
+<p>This affects <strong>my</strong> statements</p>
+<div class="codehilite"><pre><span class="k">Given </span><span class="nf">I introduce myself as &#39;&#39;</span>
+<span class="k">Given </span><span class="nf">I am known as &#39;&#39;</span>
+<span class="k">Given </span><span class="nf">I am &#39;&#39;</span>
+<span class="k">Given </span><span class="nf">I have my &#39;&#39;</span>
+<span class="k">Given </span><span class="nf">I have my valid &#39;&#39;</span>
+</pre></div>
+
+
 <p>Data provided as input (from <strong>data</strong> and <strong>keys</strong>) is all imported
-automatically from JSON or CBOR binary formats.</p>
-<p>Here below a dense representation of the main operations available.</p>
-<p><strong>Self introduction</strong> (affects "<strong>my</strong>" statements)</p>
-<div class="codehilite"><pre><span class="l-Scalar-Plain">given</span><span class="p-Indicator">:</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="nv">nothing</span><span class="p-Indicator">}</span> <span class="c1"># checks input is really empty</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">introduce</span><span class="nv"> </span><span class="s">myself</span><span class="nv"> </span><span class="s">as</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span> <span class="c1"># open a section { &quot;WhoAmI&quot;: ... }</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">am</span><span class="nv"> </span><span class="s">known</span><span class="nv"> </span><span class="s">as</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span> <span class="c1"># same as above</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">am</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span> <span class="c1"># same as above</span>
+automatically from <strong>JSON</strong> or <a href="https://tools.ietf.org/html/rfc7049">CBOR</a> binary formats.</p>
+<p>Scenarios can add Schema for specific data validation mapped to <strong>words</strong> like: <strong>signature</strong>, <strong>proof</strong> or <strong>secret</strong>.</p>
+<p><strong>Data input</strong></p>
+<div class="codehilite"><pre><span class="k">Given </span><span class="nf">I have a &#39;&#39;</span>
+<span class="k">Given </span><span class="nf">I have a valid &#39;&#39;</span>
+<span class="k">Given </span><span class="nf">I have a &#39;&#39; inside &#39;&#39;</span>
+<span class="k">Given </span><span class="nf">I have a valid &#39;&#39; inside &#39;&#39;</span>
+<span class="k">Given </span><span class="nf">I have a &#39;&#39; from &#39;&#39;</span>
+<span class="k">Given </span><span class="nf">I have a valid &#39;&#39; from &#39;&#39;</span>
+<span class="k">Given </span><span class="nf">the &#39;&#39; is valid</span>
 </pre></div>
 
 
-<p><strong>Import given data</strong></p>
-<div class="codehilite"><pre>  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span> <span class="c1"># import data named without validation</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span> <span class="c1"># import data named under my section without validation</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">inside</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span> <span class="c1"># import data from inside a section</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">inside</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span> <span class="c1"># different statement, invert order of arguments</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>     <span class="c1"># courtesy synonyms ...</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">from</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>   <span class="c1"># ... are the same</span>
+<p>or check emptyness:</p>
+<div class="codehilite"><pre><span class="k">Given </span><span class="nf">nothing</span>
 </pre></div>
 
 
-<p><strong>Import only "valid" data</strong> (schemas are set by the "<strong>scenario</strong>")</p>
-<div class="codehilite"><pre>  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">valid</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span> <span class="c1"># import data named validated with same name schema</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">valid</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span> <span class="c1"># import data named validated under my section</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">inside</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">valid</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span> <span class="c1"># import validated data from inside a section </span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">valid</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">inside</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span> <span class="c1"># same as above, inverted order of arguments</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">valid</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span> <span class="c1"># same as above</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">have</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">valid</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">from</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span> <span class="c1"># same as above (courtesy synonyms)</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">given</span><span class="p-Indicator">:</span> <span class="s">&#39;the</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">valid&#39;</span><span class="p-Indicator">}</span> <span class="c1"># validate an already imported data object</span>
-</pre></div>
-
-
-<p>Settings:</p>
+<p>When <strong>valid</strong> is specified then extra checks are made on input value,
+mostly according to the <strong>scenario</strong></p>
+<p><strong>Settings</strong></p>
 <div class="codehilite"><pre><span class="n">rule</span> <span class="n">input</span> <span class="n">encoding</span> <span class="p">[</span> <span class="n">url64</span> <span class="o">|</span> <span class="n">base64</span> <span class="o">|</span> <span class="n">hex</span> <span class="o">|</span> <span class="n">bin</span> <span class="p">]</span>
 <span class="n">rule</span> <span class="n">input</span> <span class="n">format</span> <span class="p">[</span> <span class="n">json</span> <span class="o">|</span> <span class="n">cbor</span> <span class="p">]</span>
 </pre></div>
@@ -482,131 +609,6 @@ public/private keypairs and the public keypair of the correspondent.</p>
 <p>In this example Alice uses her private key to sign and authenticate a
 message. Bob or anyone else can use Alice's public key to prove that
 the integrity of the message is kept intact and that she signed it.</p>
-<h1 id="zero-knowledge-proofs">Zero Knowledge Proofs</h1>
-<p>One powerful feature of Zenroom is the implementation of the <a href="https://arxiv.org/pdf/1802.07344.pdf">Coconut
-crypto scheme</a>. This novel
-scheme supports several features based on pairing elliptic curve
-arithmetics and in particular:</p>
-<ul>
-<li>non-interactive zero knowedge proofs (also known as ZK, ZKP or ZK-Snarks)</li>
-<li>threshold credentials with multiple decentralised issuers</li>
-<li>homomorphic encryption for numeric counters</li>
-</ul>
-<p>These are all very useful features for architectures based on the
-decentralisation of trust, typical of DLT and blockchain based
-systems, as well for off-line and non-interactive authentication.</p>
-<p>The Zencode language leverages two main use cases of this crypto
-scheme and two more will be implemented in the future.</p>
-<ol>
-<li>Attribute Based Credentials (ABC) where issuer verification keys
-   represent specific credentials</li>
-<li>A Petition system based on ABC and homomorphic encryption</li>
-<li>(WIP) Anonymous proxy validation scheme</li>
-<li>(WIP) Token thumbler to privately transfer numeric assets</li>
-</ol>
-<p>The main feature of ZKP based cryptography is that one can use
-credentials to create untreaceable public proofs for authenticating or
-signing a petition etc.</p>
-<p>The validity of ZK proofs can be witnesses by anyone without even
-knowing who is being authenticated: just knowing the proof and the
-credential (the public verification key of the credential issuer).</p>
-<h2 id="attribute-based-credentials">Attribute Based Credentials</h2>
-<p><img alt="Alice in Wonderland" src="../img/alice_with_cards-sm.jpg" /></p>
-<p>Let's now imagine 3 different subjects for our scenarios:</p>
-<ol>
-<li><strong>Wonderland</strong> is an open space, all inhabitants can witness the validity of <strong>credential proofs</strong></li>
-<li><strong>Alice</strong> just arrived in Wonderland: she will make <strong>credential signature requests</strong>, hold the signed <strong>credentials</strong> and use them to produce <strong>proofs</strong></li>
-<li><strong>Mad Hatter</strong> is a well known <strong>credential issuer</strong> in Wonderland: he receives <strong>credential signature requests</strong> and decides if to sign them. Once signed, <strong>credentials</strong> can be used to produce <strong>proofs</strong>.</li>
-</ol>
-<p>Credential proofs are different at every use, so Alice can use signed
-credentials in her possession to produce proofs, but cannot be
-followed by her trail of proofs. Alice can produce an infinite number
-of them and leave them around: like in a chest at the entrance of a
-room, for anyone to witness their validity without even meeting Alice
-or knowing who she is.</p>
-<p><img alt="Zencode for attribute based credentials" src="../img/zkp_abc.svg" /></p>
-<p>1- <strong>Alice</strong> generates her <strong>credential keypair</strong></p>
-<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
-<span class="k">Given </span><span class="nf">that I am known as &#39;identifier&#39;</span>
-<span class="k">When </span><span class="nf">I create my new keypair</span>
-<span class="k">Then </span><span class="nf">print my data</span>
-</pre></div>
-
-
-<p>2- <strong>MadHatter</strong> generates an <strong>issuer keypair</strong></p>
-<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
-<span class="k">Given </span><span class="nf">that I am known as &#39;issuer identifier&#39;</span>
-<span class="k">When </span><span class="nf">I create my new issuer keypair</span>
-<span class="k">Then </span><span class="nf">print my &#39;issuer keypair&#39;</span>
-</pre></div>
-
-
-<p>2a <strong>MadHatter</strong> publishes the <strong>verification key</strong></p>
-<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
-<span class="k">Given </span><span class="nf">that I am known as &#39;issuer identifier&#39;</span>
-<span class="nf">and I have my valid &#39;ca verify&#39;</span>
-<span class="k">When </span><span class="nf">I publish my issuer verification key</span>
-<span class="k">Then </span><span class="nf">print my data</span>
-</pre></div>
-
-
-<p>3- <strong>Alice</strong> sends her <strong>credential signature request</strong></p>
-<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
-<span class="k">Given </span><span class="nf">that I am known as &#39;identifier&#39;</span>
-<span class="nf">and I have my valid &#39;credential keypair&#39;</span>
-<span class="k">When </span><span class="nf">I create a credential signature request</span>
-<span class="k">Then </span><span class="nf">print my &#39;credential signature request&#39;</span>
-</pre></div>
-
-
-<p>4- <strong>MadHatter</strong> decides to sign a <strong>credential signature request</strong></p>
-<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
-<span class="k">Given </span><span class="nf">that I am known as &#39;issuer_identifier&#39;</span>
-<span class="nf">and I have my valid &#39;issuer keypair&#39;</span>
-<span class="nf">and I have a valid &#39;credential signature request&#39;</span>
-<span class="k">When </span><span class="nf">I sign the credential</span>
-<span class="k">Then </span><span class="nf">print the &#39;credential&#39;</span>
-<span class="nf">and print the &#39;ca verify&#39;</span>
-</pre></div>
-
-
-<p>5- <strong>Alice</strong> receives and aggregates the signed <strong>credential</strong></p>
-<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
-<span class="k">Given </span><span class="nf">that I am known as &#39;identifier&#39;</span>
-<span class="nf">and I have my valid &#39;credential keypair&#39;</span>
-<span class="nf">and I have a valid &#39;credential&#39;</span>
-<span class="k">When </span><span class="nf">I aggregate the credential in &#39;credentials&#39;</span>
-<span class="k">Then </span><span class="nf">print my &#39;credentials&#39;</span>
-<span class="nf">and print my &#39;credential keypair&#39;</span>
-</pre></div>
-
-
-<hr />
-<p>At this point <strong>Alice</strong> is in possession of <strong>credentials</strong> allowing
-her to produce a <strong>proof</strong> any time she wants.</p>
-<hr />
-<p>6- <strong>Alice</strong> show the <strong>credential proof</strong></p>
-<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
-<span class="k">Given </span><span class="nf">that I am known as &#39;identifier&#39;</span>
-<span class="nf">and I have my valid &#39;credential keypair&#39;</span>
-<span class="nf">and I have a valid &#39;ca_verify&#39; from &#39;issuer identifier&#39;</span>
-<span class="nf">and I have my valid &#39;credentials&#39;</span>
-<span class="k">When </span><span class="nf">I aggregate all &#39;ca verify&#39;</span>
-<span class="nf">and I create a credential proof</span>
-<span class="k">Then </span><span class="nf">print the &#39;credential proof&#39;</span>
-</pre></div>
-
-
-<p>7- Anyone can verify the <strong>credential proof</strong></p>
-<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
-<span class="k">Given </span><span class="nf">that I have a valid &#39;ca_verify&#39; from &#39;issuer_identifier&#39;</span>
-<span class="nf">and I have a valid &#39;credential proof&#39;</span>
-<span class="k">When </span><span class="nf">I aggregate all &#39;ca_verify&#39;</span>
-<span class="nf">and I verify the credential proof is correct</span>
-<span class="k">Then </span><span class="nf">print &#39;Success&#39; &#39;OK&#39; as &#39;string&#39;</span>
-</pre></div>
-
-
 <h1 id="full-list-of-statements">Full list of statements</h1>
 <div class="codehilite"><pre><span class="l-Scalar-Plain">when</span><span class="p-Indicator">:</span>
   <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">append</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
