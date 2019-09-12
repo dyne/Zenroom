@@ -1,4 +1,4 @@
-Scenario 'coconut': "Publish the credential issuer verification key"
+Scenario coconut
 Given that I am known as 'issuer identifier'
 and I have my valid 'ca verify'
 When I publish my issuer verification key

@@ -1,5 +1,4 @@
 Scenario coconut
-# rule check version 1.0
 Given that I am known as 'identifier'
 When I create my new keypair
 Then print my data
