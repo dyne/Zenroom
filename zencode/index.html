@@ -123,7 +123,7 @@
                 
   <ul>
     
-      <li><a href="#try-it-on-your-system">Try it on your system</a></li>
+      <li><a href="#centralized-credential-issuance">Centralized credential issuance</a></li>
       
     
   </ul>
@@ -198,7 +198,7 @@
 <p>Zenroom is software inspired by the <a href="http://langsec.org">language-theoretical security</a> research and it allows to express cryptographic operations in a readable domain-specific language called <strong>Zencode</strong>.</p>
 <p>For the theoretical background see the <a href="https://files.dyne.org/zenroom/Zencode_Whitepaper.pdf">Zencode Whitepaper</a>.</p>
 <p>For an introduction see this blog post: <a href="https://decodeproject.eu/blog/smart-contracts-english-speaker">Smart contracts for the English speaker</a>.</p>
-<p>Here we go with <span class="big"><strong>tutorial to learn the Zencode language!</strong></span></p>
+<p>Here we go with the <span class="big"><strong>tutorial to learn the Zencode language!</strong></span></p>
 <h1 id="attribute-based-credentials">Attribute Based Credentials</h1>
 <p><img alt="Alice in Wonderland" src="../img/alice_with_cards-sm.jpg" /></p>
 <p>Attribute Based Credentials are a powerful and complex feature
@@ -286,17 +286,7 @@ from now on:</p>
 <p><img alt="Zencode flow for ABC" src="../img/zkp_abc_flow.svg" /></p>
 <p>To add more detail, the sequence is:</p>
 <p><img alt="Zencode sequence for ABC" src="../img/zkp_abc.svg" /></p>
-<p>1 <strong>Alice</strong> generates her <strong>credential keypair</strong>
-<table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
-<tr><td> - </td><td><pre>
-Scenario coconut: credential keygen
-Given that I am known as 'Alice'
-When I create the credential keypair
-Then print my 'credential keypair'
-</pre></td>
-<td>credential_keypair</td>
-</tr></table></p>
-<p>2 <strong>MadHatter</strong> generates an <strong>issuer keypair</strong>
+<p>1 <strong>MadHatter</strong> generates an <strong>issuer keypair</strong>
 <table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
 <tr><td> - </td><td><pre>
 Scenario coconut: issuer keygen
@@ -306,7 +296,7 @@ Then print my 'issuer keypair'
 </pre></td>
 <td>issuer_keypair</td>
 </tr></table></p>
-<p>2a <strong>MadHatter</strong> publishes the <strong>verification key</strong>
+<p>1a <strong>MadHatter</strong> publishes the <strong>verification key</strong>
 <table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
 <tr><td> issuer_keypair </td><td><pre>
 Scenario coconut: publish verifier
@@ -315,6 +305,16 @@ and I have my valid 'verifier'
 Then print my 'verifier'
 </pre></td>
 <td>issuer_verifier</td>
+</tr></table></p>
+<p>2 <strong>Alice</strong> generates her <strong>credential keypair</strong>
+<table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
+<tr><td> - </td><td><pre>
+Scenario coconut: credential keygen
+Given that I am known as 'Alice'
+When I create the credential keypair
+Then print my 'credential keypair'
+</pre></td>
+<td>credential_keypair</td>
 </tr></table></p>
 <p>3 <strong>Alice</strong> sends her <strong>credential signature request</strong>
 <table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
@@ -353,10 +353,43 @@ and print my 'credential keypair'
 </pre></td>
 <td>credential</td>
 </tr></table></p>
-<h2 id="try-it-on-your-system">Try it on your system</h2>
+<h2 id="centralized-credential-issuance">Centralized credential issuance</h2>
+<p>Lets see how flexible is Zencode.</p>
+<p>The flow described above is for a fully decentralized issuance of
+<strong>credentials</strong> where only the <strong>Holder</strong> is in possession of the
+<strong>credential keypair</strong> needed to produce a <strong>credential proof</strong>.</p>
+<p>But let's immagine a much more simple use-case for a more centralized
+system where the <strong>Issuer</strong> provides the <strong>Holder</strong> with everything
+ready to go to produce zero knowledge credential proofs.</p>
+<p>The implementation is very, very simple: just line up all the <strong>When</strong>
+blocks where the different operations are done at different times and
+print the results all together!</p>
+<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;Issuer&#39;</span>
+<span class="k">When </span><span class="nf">I create the issuer keypair</span>
+<span class="nf">and I create the credential keypair</span>
+<span class="nf">and I create the credential request</span>
+<span class="nf">and I create the credential signature</span>
+<span class="nf">and I create the credentials</span>
+<span class="k">Then </span><span class="nf">print the &#39;credentials&#39;</span>
+<span class="nf">and print the &#39;credential keypair&#39;</span>
+</pre></div>
+
+
+<p>This will produce <strong>credentials</strong> that anyone can take and run. Just
+beware that in this simplified version of ABC the <strong>Issuer</strong> may
+maliciously keep the <strong>credential keypair</strong> and impersonate the
+<strong>Holder</strong>.</p>
 <p><span class="big">
-<span class="mdi mdi-cogs"></span> <a href="/examples/shell_scripts">Shell Script Examples</a>
+<span class="mdi mdi-lightbulb-on-outline"></span>
+<b>Try it on your system!</b>
 </span></p>
+<p>Impatient to give it a spin? run Zencode scripts locally to see what
+are the files produced!</p>
+<p>Make sure that Zenroom is installed on your PC
+and then go to the...</p>
+<p><span class="big"> <span class="mdi mdi-cogs"></span> <a href="/examples/shell_scripts">Shell Script
+Examples</a> </span></p>
 <h1 id="zero-knowledge-proofs">Zero Knowledge Proofs</h1>
 <p>There is more to this of course: Zencode supports several features
 based on pairing elliptic curve arithmetics and in particular:</p>
