@@ -1,5 +1,5 @@
 Scenario 'coconut': "Approve the creation of a petition: executed by a Citizen, using several keys"
-Given that I have a valid 'ca verify' from 'issuer_identifier'
+Given that I have a valid 'ca verify' from 'MadHatter'
 and I have a valid 'credential proof'
 and I have a valid 'petition'
 When I aggregate all 'ca verify'

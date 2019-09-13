@@ -1,5 +1,5 @@
 Scenario coconut
-Given that I am known as 'issuer identifier'
+Given that I am known as 'MadHatter'
 and I have my valid 'ca verify'
 When I publish my issuer verification key
 Then print my data

@@ -1,4 +1,4 @@
 Scenario coconut
-Given that I am known as 'issuer identifier'
+Given that I am known as 'MadHatter'
 When I create my new issuer keypair
 Then print my 'issuer keypair'

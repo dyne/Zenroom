@@ -1,5 +1,5 @@
 Scenario coconut
-Given that I am known as 'identifier'
+Given that I am known as 'Alice'
 and I have my valid 'credential keypair'
 When I create a credential signature request
 Then print my 'credential signature request'

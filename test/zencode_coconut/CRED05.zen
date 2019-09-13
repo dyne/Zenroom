@@ -1,5 +1,5 @@
 Scenario coconut
-Given that I am known as 'issuer_identifier'
+Given that I am known as 'MadHatter'
 and I have my valid 'issuer keypair'
 and I have a valid 'credential signature request'
 When I sign the credential

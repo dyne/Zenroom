@@ -1,4 +1,4 @@
 Scenario coconut
-Given that I am known as 'identifier'
+Given that I am known as 'Alice'
 When I create my new keypair
 Then print my data

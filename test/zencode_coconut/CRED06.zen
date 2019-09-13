@@ -1,5 +1,5 @@
 Scenario coconut
-Given that I am known as 'identifier'
+Given that I am known as 'Alice'
 and I have my valid 'credential keypair'
 and I have a valid 'credential'
 When I aggregate the credential in 'credentials'

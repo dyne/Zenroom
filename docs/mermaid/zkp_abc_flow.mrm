@@ -1,0 +1,14 @@
+graph LR
+	  iSIG --> holder
+	  holder --> hCRED((credential))
+	  subgraph Sign
+	  		   iKP>issuer keypair] --> issuer(MadHatter)
+			   hRQ --> issuer
+			   issuer --> iSIG[signature]
+	  end
+	  subgraph Request
+	  		   holder(Alice) --> hKP>credential keypair]
+			   hKP --> hRQ[request]
+	  end
+
+	  		   	  

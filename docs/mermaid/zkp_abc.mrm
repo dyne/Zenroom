@@ -2,11 +2,9 @@ sequenceDiagram
 	participant A as Alice
 	participant M as MadHatter
 	participant W as Wonderland
-	A->>A: 1- create a credential keypair
-	M->>M: 2- create a issuer keypair
-	M->>W: 2a- publish the verification key
-	A->>M: 3- send a credential signature request
-	M->>A: 4- sign and send back the credential
-	A->>A: 5- aggregate the signed credentials
-	A--xW: 6- anonymously show the credential proof
-	W->>W: 7- anyone can verify the proof
+	A->>A: 1 create a credential keypair
+	M->>M: 2 create a issuer keypair
+	M->>W: 2a publish the verification key
+	A->>M: 3 send a credential signature request
+	M->>A: 4 sign and send back the credential
+	A->>A: 5 aggregate the signed credentials

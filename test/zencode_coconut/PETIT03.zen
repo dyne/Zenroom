@@ -1,8 +1,8 @@
 Scenario 'coconut': "Sign petition: the Citizen signs the petition, with his own keys, aggregating it with the credential and with the Credential Issuer public key"
-Given I am 'identifier'
+Given I am 'Alice'
 and I have my valid 'credential keypair'
 and I have a valid 'credentials'
-and I have a valid 'ca verify' from 'issuer_identifier'
+and I have a valid 'ca verify' from 'MadHatter'
 When I aggregate all 'ca verify'
 and I create a petition signature 'poll'
 Then print the 'petition signature'
