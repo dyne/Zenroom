@@ -36,7 +36,7 @@ zenroom -k ci_keypair.keys -a blind_signature.req -z $pfx/CRED05.zen | tee ci_si
 
 
 # -aggregate-credential-signature
-# this generates sigma (AggCred(σ1, . . . , σt) → (σ):) 
+# this generates sigma (AggCred(σ1, . . . , σt) → (σ):)
 zenroom -k keypair.keys -a ci_signed_credential.json -z $pfx/CRED06.zen | tee credential.json
 
 # -prove-credential
@@ -44,5 +44,5 @@ zenroom -k keypair.keys -a ci_signed_credential.json -z $pfx/CRED06.zen | tee cr
 zenroom -k credential.json -a ci_verify_keypair.keys -z $pfx/CRED07.zen | tee blindproof_credential.json
 
 # -VERIFIER-verify-credential
-# returns a boolean VerifyCred(vk, Θ, φ0) 
+# returns a boolean VerifyCred(vk, Θ, φ0)
 zenroom -k blindproof_credential.json -a ci_verify_keypair.keys -z $pfx/CRED08.zen
