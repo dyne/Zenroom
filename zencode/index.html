@@ -128,7 +128,7 @@
         </li>
         
         <li>
-            <a href="#memory-model">Memory model</a>
+            <a href="#syntax-and-memory-model">Syntax and Memory model</a>
             
                 
   <ul>
@@ -195,88 +195,26 @@
 security</a> research and it allows to express
 cryptographic operations in a readable domain-specific language called
 <strong>Zencode</strong>.</p>
-<p>See the <a href="https://files.dyne.org/zenroom/Zencode_Whitepaper.pdf">Zencode Whitepaper</a>.</p>
-<p>Or this blog post: <a href="https://decodeproject.eu/blog/smart-contracts-english-speaker">Smart contracts for the English speaker</a>.</p>
-<p>Now lets dive into some examples to learn this very simple language. Be mindful: boxes contain executable Zencode.</p>
+<p>For the theoretical background see the <a href="https://files.dyne.org/zenroom/Zencode_Whitepaper.pdf">Zencode Whitepaper</a>.</p>
+<p>For an introduction see this blog post: <a href="https://decodeproject.eu/blog/smart-contracts-english-speaker">Smart contracts for the English speaker</a>.</p>
+<p>Here we proceed with some examples to learn the Zencode language.</p>
 <h1 id="attribute-based-credentials">Attribute Based Credentials</h1>
 <p><img alt="Alice in Wonderland" src="../img/alice_with_cards-sm.jpg" /></p>
-<p>Let's now imagine 3 different subjects for our scenarios:</p>
+<p>Let's imagine 3 different subjects for our scenarios:</p>
 <ol>
 <li><strong>Mad Hatter</strong> is a well known <strong>issuer</strong> in Wonderland</li>
-<li><strong>Wonderland</strong> is an open space, all inhabitants can check the validity of <strong>proofs</strong></li>
-<li><strong>Alice</strong> just arrived: will request a <strong>signature</strong> by an <strong>issuer</strong> to create <strong>proofs</strong></li>
-<li><strong>Mad Hatter</strong> may accept to sign them</li>
+<li><strong>Wonderland</strong> is an open space (a blockchain!) and all inhabitants can check the validity of <strong>proofs</strong></li>
+<li><strong>Alice</strong> just arrived: to create <strong>proofs</strong> she'll request a <strong>credential</strong> to <strong>MadHatter</strong> </li>
 </ol>
-<p>When in possession of <strong>credentials</strong>, Alice can enter any room in
-Wonderland and drop a <strong>proof</strong> in the chest at its entrance. This
-proof can be verified by anyone without knowing this is Alice.</p>
-<p>Alice cannot be followed by her trail of proofs. Alice can produce an
-infinite number of proofs for anyone to witness their validity without
-even knowing who she is.</p>
-<p><img alt="Zencode for attribute based credentials" src="../img/zkp_abc.svg" /></p>
-<p>1- <strong>Alice</strong> generates her <strong>credential keypair</strong></p>
+<p>When <strong>Alice</strong> is in possession of <strong>credentials</strong> then she can
+create a <strong>proof</strong> any time she wants using as input:</p>
+<ul>
+<li>the credentials</li>
+<li>her credential keypair</li>
+<li>the verifier by MadHatter</li>
+</ul>
 <div class="codehilite"><pre><span class="nf">Scenario coconut</span>
-<span class="k">Given </span><span class="nf">that I am known as &#39;identifier&#39;</span>
-<span class="k">When </span><span class="nf">I create my new keypair</span>
-<span class="k">Then </span><span class="nf">print my data</span>
-</pre></div>
-
-
-<p>2- <strong>MadHatter</strong> generates an <strong>issuer keypair</strong></p>
-<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
-<span class="k">Given </span><span class="nf">that I am known as &#39;MadHatter&#39;</span>
-<span class="k">When </span><span class="nf">I create my new issuer keypair</span>
-<span class="k">Then </span><span class="nf">print my &#39;issuer keypair&#39;</span>
-</pre></div>
-
-
-<p>2a <strong>MadHatter</strong> publishes the <strong>verification key</strong></p>
-<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
-<span class="k">Given </span><span class="nf">that I am known as &#39;MadHatter&#39;</span>
-<span class="nf">and I have my valid &#39;ca verify&#39;</span>
-<span class="k">When </span><span class="nf">I publish my issuer verification key</span>
-<span class="k">Then </span><span class="nf">print my data</span>
-</pre></div>
-
-
-<p>3- <strong>Alice</strong> sends her <strong>credential signature request</strong></p>
-<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
-<span class="k">Given </span><span class="nf">that I am known as &#39;identifier&#39;</span>
-<span class="nf">and I have my valid &#39;credential keypair&#39;</span>
-<span class="k">When </span><span class="nf">I create a credential signature request</span>
-<span class="k">Then </span><span class="nf">print my &#39;credential signature request&#39;</span>
-</pre></div>
-
-
-<p>4- <strong>MadHatter</strong> decides to sign a <strong>credential signature request</strong></p>
-<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
-<span class="k">Given </span><span class="nf">that I am known as &#39;issuer_identifier&#39;</span>
-<span class="nf">and I have my valid &#39;issuer keypair&#39;</span>
-<span class="nf">and I have a valid &#39;credential signature request&#39;</span>
-<span class="k">When </span><span class="nf">I sign the credential</span>
-<span class="k">Then </span><span class="nf">print the &#39;credential&#39;</span>
-<span class="nf">and print the &#39;ca verify&#39;</span>
-</pre></div>
-
-
-<p>5- <strong>Alice</strong> receives and aggregates the signed <strong>credential</strong></p>
-<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
-<span class="k">Given </span><span class="nf">that I am known as &#39;identifier&#39;</span>
-<span class="nf">and I have my valid &#39;credential keypair&#39;</span>
-<span class="nf">and I have a valid &#39;credential&#39;</span>
-<span class="k">When </span><span class="nf">I aggregate the credential in &#39;credentials&#39;</span>
-<span class="k">Then </span><span class="nf">print my &#39;credentials&#39;</span>
-<span class="nf">and print my &#39;credential keypair&#39;</span>
-</pre></div>
-
-
-<hr />
-<p>At this point <strong>Alice</strong> is in possession of <strong>credentials</strong> allowing
-her to produce a <strong>proof</strong> any time she wants.</p>
-<hr />
-<p>6- <strong>Alice</strong> show the <strong>credential proof</strong></p>
-<div class="codehilite"><pre><span class="nf">Scenario coconut</span>
-<span class="k">Given </span><span class="nf">that I am known as &#39;identifier&#39;</span>
+<span class="k">Given </span><span class="nf">that I am known as &#39;Alice&#39;</span>
 <span class="nf">and I have my valid &#39;credential keypair&#39;</span>
 <span class="nf">and I have a valid &#39;ca_verify&#39; from &#39;MadHatter&#39;</span>
 <span class="nf">and I have my valid &#39;credentials&#39;</span>
@@ -286,9 +224,37 @@ her to produce a <strong>proof</strong> any time she wants.</p>
 </pre></div>
 
 
-<p>7- Anyone can verify the <strong>credential proof</strong></p>
+<p>All these "things" (credential and proofs) are data structures that can be used as input and received as output of Zencode functions. For instance a <strong>proof</strong> can be print in JSON format and looks a bit list this:</p>
+<div class="codehilite"><pre><span class="p">{</span>
+   <span class="nt">&quot;credential_proof&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;pi_v&quot;</span> <span class="p">:</span> <span class="p">{</span>
+         <span class="nt">&quot;c&quot;</span> <span class="p">:</span> <span class="s2">&quot;u64:tBrCGawWYEAi55_hHIPq0JT3OaapOebSHVW0GhjJcAk&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;rr&quot;</span> <span class="p">:</span> <span class="s2">&quot;u64:J7R3FXsI2dcfyZRCqWA8fDYijG39P16LvGpX90wtCWw&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;rm&quot;</span> <span class="p">:</span> <span class="s2">&quot;u64:QoG-28CNTAY3Ir4SQqVoK1ZpTlzOnXxX6Xtq5KMIxpo&quot;</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;nu&quot;</span> <span class="p">:</span> <span class="s2">&quot;u64:BA77WYvBRsc53uAyrqTjuUdptJPZbcTlzr9icizm0...&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;sigma_prime&quot;</span> <span class="p">:</span> <span class="p">{</span>
+         <span class="nt">&quot;h_prime&quot;</span> <span class="p">:</span> <span class="s2">&quot;u64:BB9AM5xjWPxsZ47zh1WAmFymru66W6YuK...&quot;</span><span class="p">,</span>
+         <span class="nt">&quot;s_prime&quot;</span> <span class="p">:</span> <span class="s2">&quot;u64:BAGYNM6JO0wRAGE87_-bQVuhUXeEoeJrh...&quot;</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;kappa&quot;</span> <span class="p">:</span> <span class="s2">&quot;u64:GFVYsudbHOJNzPl3ZL0_VzB_DRvrPKF26OCZR9...&quot;</span>
+   <span class="p">},</span>
+   <span class="nt">&quot;zenroom&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;scenario&quot;</span> <span class="p">:</span> <span class="s2">&quot;coconut&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;encoding&quot;</span> <span class="p">:</span> <span class="s2">&quot;url64&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;version&quot;</span> <span class="p">:</span> <span class="s2">&quot;1.0.0&quot;</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Anyone can verify proofs using as input:</p>
+<ul>
+<li>the proof</li>
+<li>the verifier by MadHatter</li>
+</ul>
 <div class="codehilite"><pre><span class="nf">Scenario coconut</span>
-<span class="k">Given </span><span class="nf">that I have a valid &#39;ca_verify&#39; from &#39;issuer_identifier&#39;</span>
+<span class="k">Given </span><span class="nf">that I have a valid &#39;ca_verify&#39; from &#39;MadHatter&#39;</span>
 <span class="nf">and I have a valid &#39;credential proof&#39;</span>
 <span class="k">When </span><span class="nf">I aggregate all &#39;ca_verify&#39;</span>
 <span class="nf">and I verify the credential proof is correct</span>
@@ -296,35 +262,119 @@ her to produce a <strong>proof</strong> any time she wants.</p>
 </pre></div>
 
 
+<p>What is so special about these proofs? Well!  Alice cannot be followed
+by her trail of proofs: <strong>she can produce an infinite number of
+proofs, always different from one another</strong>, for anyone to recognise
+the credential without even knowing who she is.</p>
+<p>Imagine that once <strong>Alice</strong> is holding <strong>credentials</strong> she can enter
+any room in Wonderland and drop a <strong>proof</strong> in the chest at its
+entrance: this proof can be verified by anyone without disclosing
+Alice's identity.</p>
+<p>The flow described above is pretty simple, but the steps to setup the
+<strong>credential</strong> are a bit more complex:</p>
+<p><img alt="Zencode flow for ABC" src="../img/zkp_abc_flow.svg" /></p>
+<p>To add more detail, the sequence is:</p>
+<p><img alt="Zencode sequence for ABC" src="../img/zkp_abc.svg" /></p>
+<p>1 <strong>Alice</strong> generates her <strong>credential keypair</strong>
+<table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
+<tr><td> - </td><td><pre>
+Scenario coconut
+Given that I am known as 'Alice'
+When I create my new keypair
+Then print my data
+</pre></td>
+<td>credential_keypair</td>
+</tr></table></p>
+<p>2 <strong>MadHatter</strong> generates an <strong>issuer keypair</strong>
+<table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
+<tr><td> - </td><td><pre>
+Scenario coconut
+Given that I am known as 'MadHatter'
+When I create my new issuer keypair
+Then print my 'issuer keypair'
+</pre></td>
+<td>issuer_keypair</td>
+</tr></table></p>
+<p>2a <strong>MadHatter</strong> publishes the <strong>verification key</strong>
+<table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
+<tr><td> issuer_keypair </td><td><pre>
+Scenario coconut
+Given that I am known as 'MadHatter'
+and I have my valid 'ca verify'
+When I publish my issuer verification key
+Then print my data
+</pre></td>
+<td>issuer_verifier</td>
+</tr></table></p>
+<p>3 <strong>Alice</strong> sends her <strong>credential signature request</strong>
+<table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
+<tr><td> credential_keypair </td><td><pre>
+Scenario coconut
+Given that I am known as 'Alice'
+and I have my valid 'credential keypair'
+When I create a credential signature request
+Then print my 'credential signature request'
+</pre></td>
+<td>credential_request</td>
+</tr></table></p>
+<p>4 <strong>MadHatter</strong> decides to sign a <strong>credential signature request</strong>
+<table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
+<tr><td> credential_request<br/>issuer_keypair </td><td><pre>
+Scenario coconut
+Given that I am known as 'MadHatter'
+and I have my valid 'issuer keypair'
+and I have a valid 'credential signature request'
+When I sign the credential
+Then print the 'credential'
+and print the 'ca verify'
+</pre></td>
+<td>issuer_signature</td>
+</tr></table></p>
+<p>5 <strong>Alice</strong> receives and aggregates the signed <strong>credential</strong>
+<table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
+<tr><td> issuer_signature<br/>credential_keypair </td><td><pre>
+Scenario coconut
+Given that I am known as 'Alice'
+and I have my valid 'credential keypair'
+and I have a valid 'credential'
+When I aggregate the credential in 'credentials'
+Then print my 'credentials'
+and print my 'credential keypair'
+</pre></td>
+<td>credential</td>
+</tr></table></p>
+<hr />
 <h1 id="zero-knowledge-proofs">Zero Knowledge Proofs</h1>
-<p>One powerful feature of Zenroom is the implementation of the <a href="https://arxiv.org/pdf/1802.07344.pdf">Coconut
-crypto scheme</a>. This novel
-scheme supports several features based on pairing elliptic curve
-arithmetics and in particular:</p>
+<p>Attribute Based Credentials are a powerful and complex feature
+implemented using the <a href="https://arxiv.org/pdf/1802.07344.pdf">Coconut crypto
+scheme</a>. We started this chapter
+with one of the most complex functionalities available in Zencode to
+show <strong>how useful can be Zencode in making things simple</strong>.</p>
+<p>There is more to this of course: the Coconut scheme supports several
+features based on pairing elliptic curve arithmetics and in
+particular:</p>
 <ul>
-<li>non-interactive zero knowedge proofs (also known as ZK, ZKP or ZK-Snarks)</li>
+<li>non-interactive zero knowedge proofs (also known as ZKP or ZK-Snarks)</li>
 <li>threshold credentials with multiple decentralised issuers</li>
 <li>homomorphic encryption for numeric counters</li>
 </ul>
 <p>These are all very useful features for architectures based on the
-decentralisation of trust, typical of DLT and blockchain based
-systems, as well for off-line and non-interactive authentication.</p>
-<p>The Zencode language leverages two main use cases of this crypto
-scheme and two more will be implemented in the future.</p>
+decentralisation of trust, typical of <strong>DLT and blockchain based
+systems, as well for off-line and non-interactive authentication</strong>.</p>
+<p>The Zencode language leverages two main scenarios, more will be
+implemented in the future.</p>
 <ol>
 <li>Attribute Based Credentials (ABC) where issuer verification keys
    represent specific credentials</li>
 <li>A Petition system based on ABC and homomorphic encryption</li>
-<li>(WIP) Anonymous proxy validation scheme</li>
-<li>(WIP) Token thumbler to privately transfer numeric assets</li>
 </ol>
-<p>The main feature of ZKP based cryptography is that one can use
-credentials to create untreaceable public proofs for authenticating or
-signing a petition etc.</p>
-<p>The validity of ZK proofs can be witnesses by anyone without even
-knowing who is being authenticated: just knowing the proof and the
-credential (the public verification key of the credential issuer).</p>
-<h1 id="memory-model">Memory model</h1>
+<p>Three more are in the work and they are:</p>
+<ol>
+<li>Anonymous proxy validation scheme</li>
+<li>Token thumbler to privately transfer numeric assets</li>
+<li>Private credential revokation</li>
+</ol>
+<h1 id="syntax-and-memory-model">Syntax and Memory model</h1>
 <p>Zencode contracts operate in 3 phases:</p>
 <ol>
 <li><strong>Given</strong> - validates the input</li>
@@ -334,7 +384,8 @@ credential (the public verification key of the credential issuer).</p>
 <p>The 3 separate blocks of code also correspond to 3 separate memory areas, sealed by some security measures.</p>
 <p><img alt="Zencode documentation diagram" src="../img/zencode_diagram.png" /></p>
 <p>All data processed has first to pass the validation phase according to scenario specific data schemas.</p>
-<p><strong>Good Practice</strong>: start your Zencode noting down the Zenroom version you are using!</p>
+<p><span class="mdi mdi-lightbulb-on-outline"></span>
+<strong>Good Practice</strong>: start your Zencode noting down the Zenroom version you are using!</p>
 <div class="codehilite"><pre><span class="n">rule</span> <span class="n">check</span> <span class="n">version</span> <span class="mf">1.0.0</span>
 </pre></div>
 
