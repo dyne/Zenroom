@@ -135,6 +135,13 @@ researchers and cryptographers can provide Zencode or Lua scripts.
 [Sawroom: blockchain integration with Sawtooth](https://redroom.dyne.org)
 </span>
 
+## Benchmarks
+
+<span class="big">
+<span class="mdi mdi-cloud-alert"></span>
+[Random quality measurements](random)
+</span>
+
 
 # Credits
 

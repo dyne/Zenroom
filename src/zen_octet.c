@@ -851,7 +851,7 @@ static int popcount64b(uint64_t x) {
 }
 #define min(a, b)   ((a) < (b) ? (a) : (b))
 // compare bit by bit two arrays and returns the hamming distance
-static int hamming_distance(lua_State *L) {
+static int popcount_hamming_distance(lua_State *L) {
 	int distance, c, nlen;
 	octet *left = o_arg(L,1); SAFE(left);
 	octet *right = o_arg(L,2); SAFE(right);
@@ -863,6 +863,29 @@ static int hamming_distance(lua_State *L) {
 	r=(uint64_t*)right->val;
 	for(c=0;c<nlen;c++)
 		distance += popcount64b(  l[c] ^ r[c] );
+	lua_pushinteger(L,distance);
+	return 1;
+}
+
+static int bitshift_hamming_distance(lua_State *L) {
+	register uint32_t distance;
+	register uint8_t x;
+	register int c;
+	octet *left = o_arg(L,1); SAFE(left);
+	octet *right = o_arg(L,2); SAFE(right);
+	// same length of octets needed
+	if(left->len != right->len) {
+		error(L, "Cannot measure hamming distance of octets of different lengths");
+		lerror(L, "execution aborted");
+	}
+	distance = 0;
+	for(c=0;c<left->len;c++) {
+		x = left->val[c] ^ right->val[c];
+		while(x > 0) {
+			distance += x & 1;
+			x >>= 1;
+		}
+	}
 	lua_pushinteger(L,distance);
 	return 1;
 }
@@ -901,7 +924,8 @@ int luaopen_octet(lua_State *L) {
 		{"to_array",  to_array},
 		{"to_bin",    to_bin},
 		{"random",  new_random},
-		{"hamming", hamming_distance},
+		{"hamming", bitshift_hamming_distance},
+		{"popcount_hamming", popcount_hamming_distance},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg octet_methods[] = {
@@ -918,7 +942,9 @@ int luaopen_octet(lua_State *L) {
 		{"pad", pad},
 		{"zero", zero},
 		{"max", max},
-		{"hamming", hamming_distance},
+		{"hamming", bitshift_hamming_distance},
+		{"popcount_hamming", popcount_hamming_distance},
+
 		// idiomatic operators
 		{"__len",size},
 		{"__concat",concat_n},
