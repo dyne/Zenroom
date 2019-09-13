@@ -36,6 +36,11 @@
      <changefreq>daily</changefreq>
     </url>
     <url>
+     <loc>https://dev.zenroom.org/examples/shell_scripts/</loc>
+     <lastmod>2019-09-13</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    <url>
      <loc>https://dev.zenroom.org/wiki/how-to-build/</loc>
      <lastmod>2019-09-13</lastmod>
      <changefreq>daily</changefreq>

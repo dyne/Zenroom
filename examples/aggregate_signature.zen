@@ -1,0 +1,7 @@
+Scenario coconut: aggregate signature
+Given that I am known as 'Alice'
+and I have my valid 'credential keypair'
+and I have a valid 'credential signature'
+When I create the credentials
+Then print my 'credentials'
+and print my 'credential keypair'

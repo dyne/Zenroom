@@ -1,0 +1,8 @@
+Scenario coconut: sign petition
+Given I am 'Alice'
+and I have my valid 'credential keypair'
+and I have a valid 'credentials'
+and I have a valid 'verifier' from 'MadHatter'
+When I aggregate the verifiers
+and I create the petition signature 'poll'
+Then print the 'petition signature'

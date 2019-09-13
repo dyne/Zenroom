@@ -1,0 +1,9 @@
+Scenario 'coconut'
+Given that I am known as 'Alice'
+and I have my valid 'credential keypair'
+and I have my valid 'credentials'
+and I have a valid 'ca verify' from 'MadHatter'
+When I aggregate all 'ca verify'
+and I create a credential proof
+and I create a petition 'poll'
+Then print all data

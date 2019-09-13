@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Shell script examples - Zenroom docs</title>
+		<meta name="description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
+		<meta name="keywords" content="crypto, security, iot, blockchain" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta property="og:title" content="Shell script examples" />
+		<meta property="og:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="https://dev.zenroom.org" />
+		<meta name="twitter:card" content="summary_large_image">
+		<meta name="twitter:site" content="@DyneOrg">
+		<meta name="twitter:title" content="Shell script examples">
+		<meta name="twitter:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them.">
+
+		<link rel="stylesheet" href="../../assets/css/bulma.min.css">
+		<link rel="stylesheet" href="../../assets/css/bulma-dyne.css">
+		<link rel="stylesheet" href="../../assets/css/materialdesignicons.min.css">
+		<link rel="stylesheet" href="../../assets/css/codehilite.css">
+
+		
+		<script type="text/javascript" src="../../js/cash.min.js"></script>
+		
+
+		
+		<link rel="stylesheet" href="../../css/montserrat.css">
+		
+		<link rel="stylesheet" href="../../css/custom.css">
+		
+
+		
+
+		
+
+	</head>
+
+	<body>
+		<nav class="navbar has-shadow is-transparent">
+    <div class="navbar-brand">
+        <a class="navbar-item" href="../..">
+			
+			<img src="../../img/zenroom_logo.jpg">
+			
+        </a>
+    </div>
+	
+	<div id="navbarExampleTransparentExample" class="navbar-menu">
+        <div class="navbar-start">
+			<div class="navbar-item">
+				Zenroom: portable, secure and independent crypto language
+			</div>
+		</div>
+	</div>
+	
+        <div class="navbar-end">
+            <div class="navbar-item">
+                <div class="field is-grouped">
+                    <p class="control">
+                        <a href="https://dyne.org">
+							<!-- https://img.shields.io/badge/made%20with%20%E2%9D%A4%20by-Dyne.org-turquoise.svg?style=for-the-badge&logo=gnu -->
+                            <img src="../../assets/img/made_by_dyne.svg" alt="Made with love by Dyne.org" title="We are free to share code and we code to share Freedom"></a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+		<section class="section">
+			<div class="container">
+				<div class="columns">
+					<div class="column is-one-quarter">
+						<aside class="menu">
+    
+    <h1 class="menu-label">
+        <span class="mdi mdi-fire has-text-danger"></span> Quick Links</h1>
+    <ul class="menu-list" style="list-style: none">
+        
+        <li><span class="mdi mdi-home"></span><a href="https://zenroom.org">Home</a></li>
+        
+
+        
+        <li><span class="mdi mdi-book-open-page-variant"></span><a href="https://dev.zenroom.org">Documentation</a></li>
+        
+
+        
+        <li><span class="mdi mdi-download"></span><a href="/#download">Download</a></li>
+        
+        
+        <li><span class="mdi mdi-github-circle"></span><a href="https://github.com/decodeproject/Zenroom/">Source Code</a></li>
+        
+        
+        
+
+        
+        <li><span class="mdi mdi-history"></span><a href="/changelog">Log of changes</a></li>
+        
+
+        
+        <li><span class="mdi mdi-account-edit"></span><a href="https://github.com/decodeproject/zenroom/wiki">Wiki</a></li>
+        
+
+        
+    </ul>
+    
+
+    <hr width="20%">
+
+    <h1 class="menu-label">
+        <span class="mdi mdi-format-list-numbered has-text-primary"></span> Table of Contents</h1>
+    <ul class="menu-list">
+        
+        <li>
+            <a href="#shell-script-examples">Shell script examples</a>
+            
+        </li>
+        
+        <li>
+            <a href="#credential-flow">Credential flow</a>
+            
+                
+  <ul>
+    
+      <li><a href="#setup">Setup</a></li>
+      
+    
+  </ul>
+
+            
+        </li>
+        
+    </ul>
+</aside>
+					</div>
+					<div class="column">
+						
+						<nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
+							<ul>
+								<li><a href="../..">Zenroom docs</a></li>
+								
+								
+								<li>Examples</li>
+								
+								
+								<li class="is-active">Shell script examples</li>
+							</ul>
+						</nav>
+						
+						<div class="content">
+							 <h1 id="shell-script-examples">Shell script examples</h1>
+<p>This page lists various examples ready to cut and paste into a
+terminal where Zenroom is installed, to test running it and examine
+the files created.</p>
+<p>To run them make sure the "zenroom" executable is in your $PATH or
+insert an alias at the beginning of each script like:</p>
+<div class="codehilite"><pre><span class="n">alias</span> <span class="n">zenroom</span><span class="o">=</span><span class="s">&quot;./src/zenroom&quot;</span>
+</pre></div>
+
+
+<h1 id="credential-flow">Credential flow</h1>
+<p>This script demonstrates the flow of <a href="/zencode/#attribute-based-credentials">Attribute Based Credentials</a></p>
+<h2 id="setup">Setup</h2>
+<p>Cut, paste and run in a terminal the script below:</p>
+<div class="codehilite"><pre><span class="c">#!/bin/sh</span>
+<span class="nb">set</span> -e
+<span class="c">#</span>
+cat <span class="s">&lt;&lt; EOF | zenroom -z                                                  &gt;  credential_keypair.json</span>
+<span class="s">Scenario coconut: credential keygen</span>
+<span class="s">Given that I am known as &#39;Alice&#39;</span>
+<span class="s">When I create the credential keypair</span>
+<span class="s">Then print my &#39;credential keypair&#39;</span>
+<span class="s">EOF</span>
+cat <span class="s">&lt;&lt; EOF | zenroom -z                                                  &gt;  issuer_keypair.json</span>
+<span class="s">Scenario coconut: issuer keygen</span>
+<span class="s">Given that I am known as &#39;MadHatter&#39;</span>
+<span class="s">When I create the issuer keypair</span>
+<span class="s">Then print my &#39;issuer keypair&#39;</span>
+<span class="s">EOF</span>
+cat <span class="s">&lt;&lt; EOF | zenroom -z   -k issuer_keypair.json                         &gt;  verifier.json</span>
+<span class="s">Scenario coconut: publish verifier</span>
+<span class="s">Given that I am known as &#39;MadHatter&#39;</span>
+<span class="s">and I have my valid &#39;verifier&#39;</span>
+<span class="s">Then print my &#39;verifier&#39;</span>
+<span class="s">EOF</span>
+cat <span class="s">&lt;&lt; EOF | zenroom -z   -k credential_keypair.json                     &gt;  request.json</span>
+<span class="s">Scenario coconut: create request</span>
+<span class="s">Given that I am known as &#39;Alice&#39;</span>
+<span class="s">and I have my valid &#39;credential keypair&#39;</span>
+<span class="s">When I create the credential request</span>
+<span class="s">Then print my &#39;credential request&#39;</span>
+<span class="s">EOF</span>
+cat <span class="s">&lt;&lt; EOF | zenroom -z   -k issuer_keypair.json      -a request.json    &gt;  signature.json</span>
+<span class="s">Scenario coconut: issuer sign</span>
+<span class="s">Given that I am known as &#39;MadHatter&#39;</span>
+<span class="s">and I have my valid &#39;issuer keypair&#39;</span>
+<span class="s">and I have a valid &#39;credential request&#39;</span>
+<span class="s">When I create the credential signature</span>
+<span class="s">Then print the &#39;credential signature&#39;</span>
+<span class="s">and print the &#39;verifier&#39;</span>
+<span class="s">EOF</span>
+cat <span class="s">&lt;&lt; EOF | zenroom -z   -k credential_keypair.json  -a signature.json  &gt;  credential.json</span>
+<span class="s">Scenario coconut: aggregate signature</span>
+<span class="s">Given that I am known as &#39;Alice&#39;</span>
+<span class="s">and I have my valid &#39;credential keypair&#39;</span>
+<span class="s">and I have a valid &#39;credential signature&#39;</span>
+<span class="s">When I create the credentials</span>
+<span class="s">Then print my &#39;credentials&#39;</span>
+<span class="s">and print my &#39;credential keypair&#39;</span>
+<span class="s">EOF</span>
+</pre></div>
+
+
+<p>Now examine the .json files created at your fingertips.</p> 
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<footer class="footer">
+	<div class="content has-text-centered">
+		<p>	<strong>Zenroom docs</strong> is Copyright (C) 2019 by the <a href="https://dyne.org">Dyne.org foundation</a>. The source code is licensed <a href="https://www.gnu.org/licenses/agpl-3.0.en.html">AGPLv3</a>. </p>
+		<!-- <div class="columns is-gapless">
+			 <div class="column is-one-fifth">
+			 <img src="assets/img/eu-flag.png"></div>
+			 <p class="column is-three-quarters"> -->
+		
+		<p>Funded by the European Union’s Horizon 2020 research and
+			innovation program, grant nr. 732546 (DECODE).</p>
+		
+		<!-- </div> -->
+	</div>
+</footer>
+		
+		   <script>
+
+ (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	 (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+						  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+ })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ ga('create', 'UA-1857256-5', 'auto');
+ ga('send', 'pageview');
+
+</script> 
+	</body>
+</html>

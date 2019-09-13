@@ -1,0 +1,9 @@
+Scenario coconut: aggregate petition signature
+Given that I have a valid 'petition signature'
+and I have a valid 'petition'
+and I have a valid 'verifiers'
+When the petition signature is not a duplicate
+and the petition signature is just one more
+and I add the signature to the petition
+Then print the 'petition'
+and print the 'verifiers'
