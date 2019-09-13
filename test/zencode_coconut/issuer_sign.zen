@@ -1,0 +1,7 @@
+Scenario coconut: issuer sign
+Given that I am known as 'MadHatter'
+and I have my valid 'issuer keypair'
+and I have a valid 'credential request'
+When I create the credential signature
+Then print the 'credential signature'
+and print the 'verifier'

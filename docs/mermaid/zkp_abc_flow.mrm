@@ -1,14 +1,20 @@
 graph LR
-	  iSIG --> holder
-	  holder --> hCRED((credential))
 	  subgraph Sign
-	  		   iKP>issuer keypair] --> issuer(MadHatter)
-			   hRQ --> issuer
-			   issuer --> iSIG[signature]
+	  		   iKP>issuer keypair] --- I(Issuer)
+			   hRQ --> I
+			   I --> iSIG
+	  end
+	  subgraph Blockchain
+	  		   iKP --> Verifier
+			   Proof
 	  end
 	  subgraph Request
-	  		   holder(Alice) --> hKP>credential keypair]
+	  		   H --> hKP> credential keypair ]
 			   hKP --> hRQ[request]
 	  end
+	  iSIG[signature] --> H(Holder)
+	  H --> CRED(( Credential ))
+	  CRED --> Proof
+	  Proof --> Anyone
+      Verifier --> Anyone
 
-	  		   	  

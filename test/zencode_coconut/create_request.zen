@@ -1,0 +1,5 @@
+Scenario coconut: create request
+Given that I am known as 'Alice'
+and I have my valid 'credential keypair'
+When I create the credential request
+Then print my 'credential request'

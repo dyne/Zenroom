@@ -1,6 +1,0 @@
-Scenario coconut
-Given that I have a valid 'ca_verify' from 'MadHatter'
-and I have a valid 'credential proof'
-When I aggregate all 'ca_verify'
-and I verify the credential proof is correct
-Then print 'Success' 'OK' as 'string'

@@ -1,8 +1,0 @@
-Scenario coconut
-Given that I am known as 'Alice'
-and I have my valid 'credential keypair'
-and I have a valid 'ca_verify' from 'MadHatter'
-and I have my valid 'credentials'
-When I aggregate all 'ca verify'
-and I create a credential proof
-Then print the 'credential proof'

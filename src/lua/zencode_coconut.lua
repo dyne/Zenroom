@@ -33,49 +33,45 @@ ZEN.add_schema({
                   private = get(obj, 'private', INT.new) } end
 })
 -- credential keypair operations
-local function f_keygen()
-   local t = { }
-   t.sk, t.pk = ELGAMAL.keygen()
-   ZEN:pick('credential_keypair', { public = t.pk,
-									private = t.sk })
-   ZEN:validate('credential_keypair')
-   ZEN:ack('credential_keypair')
-end
-When("I create my new credential keypair", f_keygen)
-When("I create my new credential request keypair", f_keygen)
-When("I create my new keypair", f_keygen)
+When("I create the credential keypair", function()
+		local t = { }
+		t.sk, t.pk = ELGAMAL.keygen()
+		ZEN:pick('credential_keypair', { public = t.pk,
+										 private = t.sk })
+		ZEN:validate('credential_keypair')
+		ZEN:ack('credential_keypair')
+end)
 
 -- issuer authority kepair operations
 ZEN.add_schema({
 	  -- certificate authority (ca) / issuer keypair
-      ca_sign = function(obj)
+      issuer_sign = function(obj)
               return { x = get(obj, 'x', INT.new),
                        y = get(obj, 'y', INT.new) }
 	  end,
-      ca_verify = function(obj)
+      verifier = function(obj)
 		 return { alpha = get(obj, 'alpha', ECP2.new),
 				  beta  = get(obj, 'beta', ECP2.new) }
 	  end,
 	  issuer_keypair = function(obj) -- recursive import
-		 return { ca_sign   = ZEN:validate_recur(obj.ca_sign, 'ca_sign'),
-				  ca_verify = ZEN:validate_recur(obj.ca_verify, 'ca_verify') }
+		 return { issuer_sign   = ZEN:validate_recur(obj.issuer_sign, 'issuer_sign'),
+				  verifier = ZEN:validate_recur(obj.verifier, 'verifier') }
 	  end
 })
-local function f_ca_keygen()
-   local t = { }
-   t.sk, t.vk = COCONUT.ca_keygen()
-   ZEN:pick('issuer_keypair', { ca_sign = t.sk,
-							ca_verify = t.vk })
-   ZEN:validate('issuer_keypair')
-   ZEN:ack('issuer_keypair')
-end
-When("I create my new issuer keypair", f_ca_keygen)
-When("I create my new authority keypair", f_ca_keygen)
+
+When("I create the issuer keypair", function()
+		local t = { }
+		t.sk, t.vk = COCONUT.ca_keygen()
+		ZEN:pick('issuer_keypair', { issuer_sign = t.sk,
+									 verifier = t.vk })
+		ZEN:validate('issuer_keypair')
+		ZEN:ack('issuer_keypair')
+end)
 
 -- request credential signatures
 ZEN.add_schema({
      -- lambda
-	  credential_signature_request = function(obj)
+	  credential_request = function(obj)
 		local req = { c = { a = get(obj.c, 'a', ECP.new),
 							b = get(obj.c, 'b', ECP.new) },
 					  pi_s = { rr = get(obj.pi_s, 'rr', INT.new),
@@ -85,26 +81,26 @@ ZEN.add_schema({
 					  cm = get(obj, 'cm', ECP.new),
 					  public = get(obj, 'public', ECP.new) }
 		ZEN.assert(COCONUT.verify_pi_s(req),
-                   "Error in credential signature request: proof is invalid (verify_pi_s)")
+                   "Error in credential request: proof is invalid (verify_pi_s)")
 		return req
 	  end
 })
 
-When("I create a credential signature request", function()
+When("I create the credential request", function()
 		ZEN.assert(ACK.credential_keypair.private,
 				   "Private key not found in credential keypair")
-		ZEN:pick('credential_signature_request',
+		ZEN:pick('credential_request',
 				 COCONUT.prepare_blind_sign(ACK.credential_keypair.public,
 											ACK.credential_keypair.private))
-		ZEN:validate('credential_signature_request')
-		ZEN:ack('credential_signature_request')
+		ZEN:validate('credential_request')
+		ZEN:ack('credential_request')
 end)
 
 
 -- issuer's signature of credentials
 ZEN.add_schema({
 	  -- sigmatilde
-	  credential = function(obj)
+	  credential_signature = function(obj)
 		 return { h = get(obj, 'h', ECP.new),
 				  b_tilde = get(obj, 'b_tilde', ECP.new),
 				  a_tilde = get(obj, 'a_tilde', ECP.new) } end,
@@ -113,27 +109,22 @@ ZEN.add_schema({
 		 return { h = get(obj, 'h', ECP.new),
 				  s = get(obj, 's', ECP.new) } end,
 })
-When("I sign the credential", function()
+When("I create the credential signature", function()
 		ZEN.assert(ACK.whoami, "Issuer is not known")
-        ZEN.assert(ACK.credential_signature_request, "No valid signature request found.")
-        ZEN.assert(ACK.issuer_keypair.ca_sign, "No valid issuer signature keys found.")
-        ACK.credential =
-           COCONUT.blind_sign(ACK.issuer_keypair.ca_sign,
-                              ACK.credential_signature_request)
-		ACK.ca_verify = ACK.issuer_keypair.ca_verify
+        ZEN.assert(ACK.credential_request, "No valid signature request found.")
+        ZEN.assert(ACK.issuer_keypair.issuer_sign, "No valid issuer signature keys found.")
+        ACK.credential_signature =
+           COCONUT.blind_sign(ACK.issuer_keypair.issuer_sign,
+                              ACK.credential_request)
+		ACK.verifier = ACK.issuer_keypair.verifier
 end)
-When("I aggregate the credential in ''", function(dest)
-		-- TODO: expose the accumulator to zencode
-        -- check the blocking state _sigmatilde
-		-- ZEN.assert(ACK.verify, "Verification keys from issuer not found")
-        ZEN.assert(ACK.credential, "Credential issuer signatures not found")
+When("I create the credentials", function()
+        ZEN.assert(ACK.credential_signature, "Credential signature not found")
         ZEN.assert(ACK.credential_keypair.private, "Credential private key not found")
         -- prepare output with an aggregated sigma credential
         -- requester signs the sigma with private key
-		-- TODO: for added security check sigmatilde with an ECDH
-		-- signature before aggregating into credential
-        ACK[dest] = COCONUT.aggregate_creds(
-		   ACK.credential_keypair.private, { ACK.credential })
+        ACK.credentials = COCONUT.aggregate_creds(
+		   ACK.credential_keypair.private, { ACK.credential_signature })
 end)
 
 
@@ -146,18 +137,18 @@ ZEN.add_schema({
 				  sigma_prime = map(obj.sigma_prime, ECP.new) } end
 })
 
--- aggregated verifiers schema is same as a single ca_verify
-ZEN.add_schema({verifiers = ZEN.schemas['ca_verify']})
+-- aggregated verifiers schema is same as a single verifier
+ZEN.add_schema({verifiers = ZEN.schemas['verifier']})
 
-When("I aggregate all ''", function(ca_verify)
-		for k,v in pairs(ACK[ca_verify]) do
-		-- if ACK[ca_verify].alpha then
+When("I aggregate the verifiers", function()
+		for k,v in pairs(ACK.verifier) do
+		-- if ACK.verifier.alpha then
 		   ACK.verifiers = v
 		end
 		-- TODO: aggregate all array
 end)
 
-When("I create a credential proof", function()
+When("I create the credential proof", function()
         ZEN.assert(ACK.verifiers, "No issuer verification keys are selected")
 		ZEN.assert(ACK.credential_keypair.private,
 				   "Credential private key not found")
@@ -167,7 +158,7 @@ When("I create a credential proof", function()
 							   ACK.credentials,
 							   ACK.credential_keypair.private)
 end)
-When("I verify the credential proof is correct", function()
+When("I verify the credential proof", function()
         ZEN.assert(ACK.credential_proof, "No valid credential proof found")
         ZEN.assert(ACK.verifiers, "Verifier of aggregated issuer keys not found")
         ZEN.assert(
@@ -190,7 +181,7 @@ ZEN.add_schema({
 		 local res = { uid = get(obj,'uid'),
 					   owner = get(obj, 'owner', ECP.new),
 					   scores = ZEN:valid('petition_scores',obj.scores) }
-		 if type(obj.vkeys) == 'table' then res.vkeys = ZEN:valid('ca_verify',obj.vkeys) end
+		 if type(obj.vkeys) == 'table' then res.vkeys = ZEN:valid('verifier',obj.vkeys) end
 		 if type(obj.list) == 'table' then
 			res.list = { }
 			for k,v in sort_ipairs(obj.list) do res.list[k] = true end
@@ -216,7 +207,7 @@ ZEN.add_schema({
 })
 
 
-When("I create a petition ''", function(uid)
+When("I create the petition ''", function(uid)
 		ZEN:pick('petition',
 				 { uid = ZEN:import(uid),
 				   owner = ACK.credential_keypair.public,
@@ -247,7 +238,7 @@ When("I verify the new petition to be empty", function()
                    "Invalid new petition: negative right score is not zero")
 end)
 
-When("I create a petition signature ''", function(uid)
+When("I create the petition signature ''", function(uid)
         ZEN.assert(ACK.verifiers, "Verifier of aggregated issuer keys not found")
 		ZEN.assert(ACK.credential_keypair.private,
 				   "Credential private key not found")

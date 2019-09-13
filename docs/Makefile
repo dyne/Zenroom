@@ -21,7 +21,8 @@ website:
 	@cp -v wiki/Embed.md website/docs/wiki/how-to-embed.md
 	@cp -v ../ChangeLog.md website/docs/changelog.md
 	@cp -v zencode_diagram.png website/docs/img
-	../build/esh website/zencode.esh > website/docs/zencode.md
+	@cp -v ../test/zencode_coconut/*.zen website/docs/examples/
+	@cp -v ../test/zencode_simple/*.zen website/docs/examples/
 	@cd website && mkdocs build
 
 map:
