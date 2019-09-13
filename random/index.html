@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Random quality measurements - Zenroom docs</title>
+		<meta name="description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
+		<meta name="keywords" content="crypto, security, iot, blockchain" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta property="og:title" content="Random quality measurements" />
+		<meta property="og:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them." />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="https://dev.zenroom.org" />
+		<meta name="twitter:card" content="summary_large_image">
+		<meta name="twitter:site" content="@DyneOrg">
+		<meta name="twitter:title" content="Random quality measurements">
+		<meta name="twitter:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them.">
+
+		<link rel="stylesheet" href="../assets/css/bulma.min.css">
+		<link rel="stylesheet" href="../assets/css/bulma-dyne.css">
+		<link rel="stylesheet" href="../assets/css/materialdesignicons.min.css">
+		<link rel="stylesheet" href="../assets/css/codehilite.css">
+
+		
+		<script type="text/javascript" src="../js/cash.min.js"></script>
+		
+
+		
+		<link rel="stylesheet" href="../css/montserrat.css">
+		
+		<link rel="stylesheet" href="../css/custom.css">
+		
+
+		
+
+		
+
+	</head>
+
+	<body>
+		<nav class="navbar has-shadow is-transparent">
+    <div class="navbar-brand">
+        <a class="navbar-item" href="..">
+			
+			<img src="../img/zenroom_logo.jpg">
+			
+        </a>
+    </div>
+	
+	<div id="navbarExampleTransparentExample" class="navbar-menu">
+        <div class="navbar-start">
+			<div class="navbar-item">
+				Zenroom: portable, secure and independent crypto language
+			</div>
+		</div>
+	</div>
+	
+        <div class="navbar-end">
+            <div class="navbar-item">
+                <div class="field is-grouped">
+                    <p class="control">
+                        <a href="https://dyne.org">
+							<!-- https://img.shields.io/badge/made%20with%20%E2%9D%A4%20by-Dyne.org-turquoise.svg?style=for-the-badge&logo=gnu -->
+                            <img src="../assets/img/made_by_dyne.svg" alt="Made with love by Dyne.org" title="We are free to share code and we code to share Freedom"></a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+		<section class="section">
+			<div class="container">
+				<div class="columns">
+					<div class="column is-one-quarter">
+						<aside class="menu">
+    
+    <h1 class="menu-label">
+        <span class="mdi mdi-fire has-text-danger"></span> Quick Links</h1>
+    <ul class="menu-list" style="list-style: none">
+        
+        <li><span class="mdi mdi-home"></span><a href="https://zenroom.org">Home</a></li>
+        
+
+        
+        <li><span class="mdi mdi-book-open-page-variant"></span><a href="https://dev.zenroom.org">Documentation</a></li>
+        
+
+        
+        <li><span class="mdi mdi-download"></span><a href="/#download">Download</a></li>
+        
+        
+        <li><span class="mdi mdi-github-circle"></span><a href="https://github.com/decodeproject/Zenroom/">Source Code</a></li>
+        
+        
+        
+
+        
+        <li><span class="mdi mdi-history"></span><a href="/changelog">Log of changes</a></li>
+        
+
+        
+        <li><span class="mdi mdi-account-edit"></span><a href="https://github.com/decodeproject/zenroom/wiki">Wiki</a></li>
+        
+
+        
+    </ul>
+    
+
+    <hr width="20%">
+
+    <h1 class="menu-label">
+        <span class="mdi mdi-format-list-numbered has-text-primary"></span> Table of Contents</h1>
+    <ul class="menu-list">
+        
+        <li>
+            <a href="#random-quality-measurements">Random quality measurements</a>
+            
+                
+  <ul>
+    
+      <li><a href="#pseudo-random-generator-prng">Pseudo-random generator (PRNG)</a></li>
+      
+    
+      <li><a href="#hamming-distance-frequency">Hamming distance frequency</a></li>
+      
+    
+      <li><a href="#measure-your-system">Measure your system</a></li>
+      
+    
+  </ul>
+
+            
+        </li>
+        
+    </ul>
+</aside>
+					</div>
+					<div class="column">
+						
+						<div class="content">
+							 <h1 id="random-quality-measurements">Random quality measurements</h1>
+<p>Obviously random is very important when doing cryptography.</p>
+<p>Zenroom accept a random seed when called or retreives one
+automatically from the host system.</p>
+<p><strong>Zenroom is fully deterministic</strong>: if the same random seed is
+provided then all results of trasformations will be exactly the same,
+except for the sorting order of elements in its output, which must be
+sorted by the caller with a constant algorithm.</p>
+<p>If the random seed is not provided at call time then Zenroom does its
+best to gather a good quality random seed from the host system. This
+works well on Windows, OSX, GNU/Linux as well Android and iOS; but
+beware that <strong>when running in Javascript random is very weak</strong>.</p>
+<h2 id="pseudo-random-generator-prng">Pseudo-random generator (PRNG)</h2>
+<p>Cryptographic strenght is added to any random seed by Zenroom's
+pseudo-random generator (PRNG) which is an <a href="ftp://ftp.rsasecurity.com/pub/pdfs/bull-1.pdf">old RSA
+standard</a> basically
+consisting of:</p>
+<div class="codehilite"><pre><span class="n">Unguessable</span> <span class="n">seed</span> <span class="o">-&gt;</span> <span class="n">SHA</span> <span class="o">-&gt;</span> <span class="n">PRNG</span> <span class="n">internal</span> <span class="n">state</span> <span class="o">-&gt;</span> <span class="n">SHA</span> <span class="o">-&gt;</span> <span class="n">random</span> <span class="n">numbers</span>
+</pre></div>
+
+
+<hr />
+<p>This is a rather old PRNG and will soon be substituted with <a href="https://en.wikipedia.org/wiki/Fortuna_(PRNG)">the
+Fortuna PRNG</a> in
+forthcoming versions.</p>
+<h2 id="hamming-distance-frequency">Hamming distance frequency</h2>
+<p>As a reference indicator of results here we provide a graph that shows
+the <a href="https://en.wikipedia.org/wiki/Hamming_distance">Hamming distance</a>
+measuring how many different bits are there between each new random
+776 bit long octets. This benchmark was run on a PC running haveged
+and gathering good quality random from system events:</p>
+<p><img alt="Hamming distance random benchmark" src="../img/random_hamming_gnuplot.png" /></p>
+<p>Here are represented four different random generation methods which
+are commonly used in cryptographic transformations. It is noticeable
+that the most common average distance is <strong>between 380 and 400 bits</strong>
+for all of them.</p>
+<h2 id="measure-your-system">Measure your system</h2>
+<p>To have a value estimation on the system you are currently running
+Zenroom, run this simple lua script:</p>
+<div class="codehilite"><pre><span class="nb">print</span><span class="p">(</span> <span class="n">BENCH</span><span class="p">.</span><span class="n">random_hamming_freq</span><span class="p">()</span> <span class="p">)</span>
+</pre></div>
+
+
+<p>Then compare the number returned: if much lower than 350 then you
+should worry about the quality of random on your current system.</p> 
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<footer class="footer">
+	<div class="content has-text-centered">
+		<p>	<strong>Zenroom docs</strong> is Copyright (C) 2019 by the <a href="https://dyne.org">Dyne.org foundation</a>. The source code is licensed <a href="https://www.gnu.org/licenses/agpl-3.0.en.html">AGPLv3</a>. </p>
+		<!-- <div class="columns is-gapless">
+			 <div class="column is-one-fifth">
+			 <img src="assets/img/eu-flag.png"></div>
+			 <p class="column is-three-quarters"> -->
+		
+		<p>Funded by the European Union’s Horizon 2020 research and
+			innovation program, grant nr. 732546 (DECODE).</p>
+		
+		<!-- </div> -->
+	</div>
+</footer>
+		
+		   <script>
+
+ (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	 (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+						  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+ })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ ga('create', 'UA-1857256-5', 'auto');
+ ga('send', 'pageview');
+
+</script> 
+	</body>
+</html>
