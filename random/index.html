@@ -118,7 +118,7 @@
                 
   <ul>
     
-      <li><a href="#pseudo-random-generator-prng">Pseudo-random generator (PRNG)</a></li>
+      <li><a href="#pseudo-random-generator">Pseudo-random generator</a></li>
       
     
       <li><a href="#hamming-distance-frequency">Hamming distance frequency</a></li>
@@ -150,7 +150,7 @@ sorted by the caller with a constant algorithm.</p>
 best to gather a good quality random seed from the host system. This
 works well on Windows, OSX, GNU/Linux as well Android and iOS; but
 beware that <strong>when running in Javascript random is very weak</strong>.</p>
-<h2 id="pseudo-random-generator-prng">Pseudo-random generator (PRNG)</h2>
+<h2 id="pseudo-random-generator">Pseudo-random generator</h2>
 <p>Cryptographic strenght is added to any random seed by Zenroom's
 pseudo-random generator (PRNG) which is an <a href="ftp://ftp.rsasecurity.com/pub/pdfs/bull-1.pdf">old RSA
 standard</a> basically
@@ -167,8 +167,8 @@ forthcoming versions.</p>
 <p>As a reference indicator of results here we provide a graph that shows
 the <a href="https://en.wikipedia.org/wiki/Hamming_distance">Hamming distance</a>
 measuring how many different bits are there between each new random
-776 bit long octets. This benchmark was run on a PC running haveged
-and gathering good quality random from system events:</p>
+776 bit long octets. This benchmark was run on a PC gathering entropy
+from system events:</p>
 <p><img alt="Hamming distance random benchmark" src="../img/random_hamming_gnuplot.png" /></p>
 <p>Here are represented four different random generation methods which
 are commonly used in cryptographic transformations. It is noticeable

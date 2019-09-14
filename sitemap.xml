@@ -2,62 +2,62 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
      <loc>https://dev.zenroom.org/</loc>
-     <lastmod>2019-09-13</lastmod>
+     <lastmod>2019-09-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
      <loc>https://dev.zenroom.org/changelog/</loc>
-     <lastmod>2019-09-13</lastmod>
+     <lastmod>2019-09-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
      <loc>https://dev.zenroom.org/crypto/</loc>
-     <lastmod>2019-09-13</lastmod>
+     <lastmod>2019-09-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
      <loc>https://dev.zenroom.org/encrypt/</loc>
-     <lastmod>2019-09-13</lastmod>
+     <lastmod>2019-09-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
      <loc>https://dev.zenroom.org/petition/</loc>
-     <lastmod>2019-09-13</lastmod>
+     <lastmod>2019-09-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
      <loc>https://dev.zenroom.org/random/</loc>
-     <lastmod>2019-09-13</lastmod>
+     <lastmod>2019-09-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
      <loc>https://dev.zenroom.org/zencode/</loc>
-     <lastmod>2019-09-13</lastmod>
+     <lastmod>2019-09-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
      <loc>https://dev.zenroom.org/encrypt/code/</loc>
-     <lastmod>2019-09-13</lastmod>
+     <lastmod>2019-09-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
      <loc>https://dev.zenroom.org/examples/shell_scripts/</loc>
-     <lastmod>2019-09-13</lastmod>
+     <lastmod>2019-09-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
      <loc>https://dev.zenroom.org/wiki/how-to-build/</loc>
-     <lastmod>2019-09-13</lastmod>
+     <lastmod>2019-09-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
      <loc>https://dev.zenroom.org/wiki/how-to-embed/</loc>
-     <lastmod>2019-09-13</lastmod>
+     <lastmod>2019-09-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
      <loc>https://dev.zenroom.org/wiki/how-to-exec/</loc>
-     <lastmod>2019-09-13</lastmod>
+     <lastmod>2019-09-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
 </urlset>
