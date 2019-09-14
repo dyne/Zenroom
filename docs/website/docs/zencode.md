@@ -8,7 +8,6 @@ For an introduction see this blog post: [Smart contracts for the English speaker
 
 Here we go with the <span class="big">**tutorial to learn the Zencode language!**</span>
 
-
 # Attribute Based Credentials
 
 ![Alice in Wonderland](img/alice_with_cards-sm.jpg)
@@ -70,6 +69,8 @@ What is so special about these proofs? Well!  Alice cannot be followed
 by her trail of proofs: **she can produce an infinite number of
 proofs, always different from one another**, for anyone to recognise
 the credential without even knowing who she is.
+
+![even the MadHatter is surprised](img/madhatter.jpg)
 
 Imagine that once **Alice** is holding **credentials** she can enter
 any room in Wonderland and drop a **proof** in the chest at its

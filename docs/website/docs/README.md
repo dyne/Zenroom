@@ -3,14 +3,14 @@
 ![Zenroom logo](img/zenroom_logo-sm.jpg)
 
 Zenroom is a **secure language interpreter** of both Lua and its own
-Zencode language to execute fast cryptographic operations using
+[Zencode](zencode) language to execute fast cryptographic operations using
 elliptic curve arithmetics.
 
 The Zenroom VM is very small, has **no external dependency**, is fully
 deterministic and ready to run **end-to-end encryption** on any platform:
 desktop, embedded, mobile, cloud and even web browsers.
 
-**Zencode** is the name of the language executed by Zenroom: it is simple
+[Zencode](zencode) is the name of the language executed by Zenroom: it is simple
 to understand and can process large data structures while operating
 cryptographic transformations on them.
 
@@ -36,7 +36,13 @@ available on:
 # Download
 
 <span class="mdi mdi-target"></span>
-Available targets: Portable source code (C99), **Javascript** (WebAssembly), **Linux** (Android, ARM and x86), **Windows** (EXE and DLL), **Apple** (OSX and iOS)
+Available targets:
+
+- Portable source code (C99)
+- **Javascript** (WebAssembly)
+- **Linux** (Android, ARM and x86)
+- **Windows** (EXE and DLL)
+- **Apple** (OSX and iOS)
 
 <span class="big">
 <span class="mdi mdi-download"></span>

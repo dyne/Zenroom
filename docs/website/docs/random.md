@@ -15,7 +15,7 @@ best to gather a good quality random seed from the host system. This
 works well on Windows, OSX, GNU/Linux as well Android and iOS; but
 beware that **when running in Javascript random is very weak**.
 
-## Pseudo-random generator (PRNG)
+## Pseudo-random generator
 
 Cryptographic strenght is added to any random seed by Zenroom's
 pseudo-random generator (PRNG) which is an [old RSA
@@ -35,8 +35,8 @@ forthcoming versions.
 As a reference indicator of results here we provide a graph that shows
 the [Hamming distance](https://en.wikipedia.org/wiki/Hamming_distance)
 measuring how many different bits are there between each new random
-776 bit long octets. This benchmark was run on a PC running haveged
-and gathering good quality random from system events:
+776 bit long octets. This benchmark was run on a PC gathering entropy
+from system events:
 
 ![Hamming distance random benchmark](img/random_hamming_gnuplot.png)
 
