@@ -1,6 +1,0 @@
-Scenario 'coconut': "Close the petition, formally 'the tally': this contract adds the final block to the ledger, making it impossible to sign petition after this has happened. It's also impossible to count the signatures without having the petition tallied"
-Given that I am 'identifier'
-and I have my valid 'credential keypair'
-and I have a valid 'petition'
-When I create a petition tally
-Then print all data

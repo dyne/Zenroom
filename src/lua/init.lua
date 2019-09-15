@@ -40,6 +40,7 @@ CBOR   = require('zenroom_cbor')
 ECDH   = require('zenroom_ecdh')
 BIG    = require('zenroom_big')
 HASH   = require('zenroom_hash')
+BENCH  = require('zenroom_bench')
 MACHINE = require('statemachine')
 
 O   = OCTET  -- alias

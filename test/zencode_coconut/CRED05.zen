@@ -1,8 +1,0 @@
-Scenario coconut
-Given that I am known as 'issuer_identifier'
-and I have my valid 'issuer keypair'
-and I have a valid 'credential signature request'
-When I sign the credential
-Then print the 'credential'
-and print the 'ca verify'
-

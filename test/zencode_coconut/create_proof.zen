@@ -1,0 +1,8 @@
+Scenario coconut: create proof
+Given that I am known as 'Alice'
+and I have my valid 'credential keypair'
+and I have a valid 'verifier' from 'MadHatter'
+and I have my valid 'credentials'
+When I aggregate the verifiers
+and I create the credential proof
+Then print the 'credential proof'

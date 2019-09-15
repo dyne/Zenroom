@@ -1,7 +1,0 @@
-Scenario coconut
-Given that I am known as 'identifier'
-and I have my valid 'credential keypair'
-and I have a valid 'credential'
-When I aggregate the credential in 'credentials'
-Then print my 'credentials'
-and print my 'credential keypair'

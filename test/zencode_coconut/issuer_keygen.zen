@@ -1,0 +1,4 @@
+Scenario coconut: issuer keygen
+Given that I am known as 'MadHatter'
+When I create the issuer keypair
+Then print my 'issuer keypair'

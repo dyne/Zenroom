@@ -1,4 +1,4 @@
-Scenario 'coconut': "Add a petition to the ledger (count): here the petition signature created by the citizen is aggregated with the petition and written to the ledger, no encryption is used"
+Scenario coconut: aggregate petition signature
 Given that I have a valid 'petition signature'
 and I have a valid 'petition'
 and I have a valid 'verifiers'

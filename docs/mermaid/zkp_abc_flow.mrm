@@ -1,0 +1,20 @@
+graph LR
+	  subgraph Sign
+	  		   iKP>issuer keypair] --- I(Issuer)
+			   hRQ --> I
+			   I --> iSIG
+	  end
+	  subgraph Blockchain
+	  		   iKP --> Verifier
+			   Proof
+	  end
+	  subgraph Request
+	  		   H --> hKP> credential keypair ]
+			   hKP --> hRQ[request]
+	  end
+	  iSIG[signature] --> H(Holder)
+	  H --> CRED(( Credential ))
+	  CRED --> Proof
+	  Proof --> Anyone
+      Verifier --> Anyone
+
