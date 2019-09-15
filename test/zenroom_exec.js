@@ -18,12 +18,11 @@ const zenroomExec = function(script, conf = null, keys = null, data = null, verb
       'number',
       ['string', 'string', 'string', 'string', 'number'],
       [script, conf, keys, data, verbosity]
-    )   
-  })  
+    )
+  })
 }
 
 const zenroom = function(script_file, conf_file=null, keys_file=null, data_file=process.argv[4], verbosity=1) {
-	// process.stderr._write = function(chunk, encoding, callback) { callback() }
   const enc = { encoding: 'utf8' }
   const script = fs.readFileSync(script_file, enc)
   const conf = (conf_file) ? fs.readFileSync(conf_file, enc) : null

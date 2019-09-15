@@ -85,7 +85,7 @@ crypto-tests = \
 
 check:
 	@echo "Test target 'check' supports various modes, please specify one:"
-	@echo "\t check-osx, check-shared, check-static, check-js"
+	@echo "\t check-osx, check-shared, check-static, check-js check-py"
 	@echo "\t check-debug, check-crypto, debug-crypto"
 
 check-osx: test-exec := ./src/zenroom.command
@@ -126,6 +126,14 @@ check-js:
 	$(call crypto-tests,${test-exec})
 	@echo "----------------"
 	@echo "All tests passed for JS binary build"
+	@echo "----------------"
+
+check-py: test-exec := python ${pwd}/test/zenroom_exec.py ${pwd}
+check-py:
+	$(call lowmem-tests,${test-exec})
+	$(call crypto-tests,${test-exec})
+	@echo "----------------"
+	@echo "All tests passed for PYTHON build"
 	@echo "----------------"
 
 check-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom -d 3

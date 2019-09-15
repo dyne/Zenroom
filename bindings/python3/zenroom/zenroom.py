@@ -27,7 +27,7 @@ class ZenroomResult:
         return True if self.err else False
 
     def __str__(self):
-        return f"STDOUT: {self.stdout}\nSTDERR: {self.stderr}"
+        return "STDOUT: %s\nSTDERR: %s" % (self.stdout, self.stderr)
 
 
 def _execute(func, result, args):

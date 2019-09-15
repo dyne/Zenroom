@@ -60,7 +60,7 @@ parse_version
 echo -e "Publishing ${OK}${VERSION}${NC} for ${OK}Python${NC} over pypi.org"
 echo
 
-# publish_python
+publish_python
 
 echo -e "Publishing ${OK}${VERSION}${NC} for ${OK}Javascript${NC} over npm"
 echo
