@@ -100,4 +100,4 @@ linux-go: apply-patches lua53 milagro embed-lua
 	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c -o src/zen_go.o
 	CC=${gcc} LD=${ld} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src go
-	cp -v ${pwd}/src/libzenroomgo.so ${pwd}/bindings/golang/lib/
+	cp -v ${pwd}/src/libzenroomgo.so ${pwd}/bindings/golang/zenroom/lib/

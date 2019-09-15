@@ -85,7 +85,7 @@ func WithVerbosity(verbosity int) Option {
 	}
 }
 
-// Exec is our primary public API method, and it is here that we call Zenroom's
+// ZenroomExec is our primary public API method, and it is here that we call Zenroom's
 // zenroom_exec_tobuf function. This method attempts to pass a required script,
 // and some optional extra parameters to the Zenroom virtual machine, where
 // cryptographic operations are performed with the result being returned to the
@@ -97,7 +97,7 @@ func WithVerbosity(verbosity int) Option {
 //
 // Returns the output of the execution of the Zenroom virtual machine, or an
 // error.
-func Exec(script []byte, options ...Option) ([]byte, error) {
+func ZenroomExec(script []byte, options ...Option) ([]byte, error) {
 	var (
 		cScript                   *C.char
 		optKeys, optData, optConf *C.char
@@ -140,6 +140,74 @@ func Exec(script []byte, options ...Option) ([]byte, error) {
 	defer C.free(unsafe.Pointer(stderr))
 
 	res := C.zenroom_exec_tobuf(
+		cScript,
+		optConf, optKeys, optData, C.int(conf.Verbosity),
+		stdout, maxString,
+		stderr, maxString,
+	)
+
+	if res != 0 {
+		return nil, fmt.Errorf("error calling zenroom: %s ", C.GoString(stderr))
+	}
+
+	return C.GoBytes(unsafe.Pointer(stdout), C.int(C.strlen(stdout))), nil
+}
+
+// ZencodeExec is our primary public API method, and it is here that we call Zenroom's
+// zencode_exec_tobuf function. This method attempts to pass a required script,
+// and some optional extra parameters to the Zenroom virtual machine, where
+// cryptographic operations are performed with the result being returned to the
+// caller. The method signature has been tweaked slightly from the original
+// function defined by Zenroom; rather than making all parameters required,
+// instead we have just included as a required parameter the input SCRIPT, while
+// all other properties must be supplied via one of the previously defined
+// Option helpers.
+//
+// Returns the output of the execution of the Zenroom virtual machine, or an
+// error.
+func ZencodeExec(script []byte, options ...Option) ([]byte, error) {
+	var (
+		cScript                   *C.char
+		optKeys, optData, optConf *C.char
+	)
+
+	// capture the required script parameter
+	if script == nil {
+		return nil, fmt.Errorf("missing required script to process")
+	}
+	cScript = (*C.char)(unsafe.Pointer(&script[0]))
+
+	// set up our default config
+	conf := &config{
+		Conf:      "",
+		Verbosity: 1,
+	}
+
+	// and now we iterate through our options, to update our config object
+	for _, option := range options {
+		option(conf)
+	}
+
+	if conf.Keys != nil {
+		optKeys = (*C.char)(unsafe.Pointer(&conf.Keys[0]))
+	}
+
+	if conf.Data != nil {
+		optData = (*C.char)(unsafe.Pointer(&conf.Data[0]))
+	}
+
+	if conf.Conf != "" {
+		optConf = C.CString(conf.Conf)
+		defer C.free(unsafe.Pointer(optConf))
+	}
+
+	// create empty strings to capture zenroom's output
+	stdout := emptyString(maxString)
+	stderr := emptyString(maxString)
+	defer C.free(unsafe.Pointer(stdout))
+	defer C.free(unsafe.Pointer(stderr))
+
+	res := C.zencode_exec_tobuf(
 		cScript,
 		optConf, optKeys, optData, C.int(conf.Verbosity),
 		stdout, maxString,
