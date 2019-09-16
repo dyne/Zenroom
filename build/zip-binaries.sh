@@ -35,6 +35,8 @@ function checkbin() {
 
 function copyexamples() {
 	rsync -raX ../examples $1/
+	rsync -raX ../docs/website/site $1/
+	cp -v ../docs/Zencode_Whitepaper.pdf $1/
 }
 
 function download() {
@@ -73,16 +75,17 @@ for t in $targets; do
 			download zenroom-apple-ios build/zenroom-ios-armv7.a
 			download zenroom-apple-ios build/zenroom-ios-x86_64.a
 			download zenroom-apple-osx  src/zenroom.command
-			download zenroom-python-apple-osx build/python2/_zenroom.so py2_osx_zenroom.so
-			mkdir -p $dir/python2 && mv py2_osx_zenroom.so $dir/python2/_zenroom.so
-			download zenroom-python-apple-osx build/python3/_zenroom.so py3_osx_zenroom.so
-			mkdir -p $dir/python3 && mv py3_osx_zenroom.so $dir/python3/_zenroom.so
+			# download zenroom-python-apple-osx build/python2/_zenroom.so py2_osx_zenroom.so
+			# mkdir -p $dir/python2 && mv py2_osx_zenroom.so $dir/python2/_zenroom.so
+			download zenroom-python-apple-osx build/zenroom-python3.tar.gz zenroom-osx-python3.tar.gz
+			mkdir -p $dir && pushd $dir && tar xfz ../zenroom-osx-python3.tar.gz; popd
+			# mkdir -p $dir/python3 && mv py3_osx_zenroom.so $dir/python3/_zenroom.so
 			# pack
 			checkbin zenroom.command $dir
 			checkbin zenroom-ios-arm64.a $dir
 			checkbin zenroom-ios-armv7.a $dir
 			checkbin zenroom-ios-x86_64.a $dir
-			checkbin zenroom-wrapper.py $dir/python2
+			# checkbin zenroom-wrapper.py $dir/python2
 			checkbin zenroom-wrapper.py $dir/python3
 			copyexamples $dir
 			continue ;;
@@ -93,20 +96,18 @@ for t in $targets; do
 			download zenroom-static-amd64 src/zenroom zenroom.x86
 			download zenroom-shared-android-x86 src/zenroom.so zenroom-android-x86.so
 			download zenroom-shared-android-arm src/zenroom.so zenroom-android-arm.so
-			mkdir -p $dir/python2
-			download zenroom-python build/python2/_zenroom.so $dir/python2/_zenroom.so
+			# mkdir -p $dir/python2
+			# download zenroom-python build/python2/_zenroom.so $dir/python2/_zenroom.so
 			mkdir -p $dir/python3
-			# list taken from build/python3.sh - please update me!
-			for v in 3.5.0 3.5.1 3.5.2 3.5.3 3.5.4 3.5.5 3.5.6 3.6.0 3.6.1 3.6.2 3.6.3 3.6.4 3.6.5 3.6.6 3.6.7 3.6.8 3.7.0 3.7.1 3.7.2; do
-				download zenroom-python build/python3/_zenroom_${v}.so $dir/python3/_zenroom_${v}.so
-			done
+			download zenroom-python build/zenroom-python3.tar.gz zenroom-linux-python3.tar.gz
+			mkdir -p $dir && pushd $dir && tar xfz ../zenroom-linux-python3.tar.gz; popd
 			# pack
 			checkbin zenroom.x86 $dir
 			checkbin zenroom.arm $dir
 			checkbin zenroom-android-x86.so $dir
 			checkbin zenroom-android-arm.so $dir
 			# checkbin go            $dir
-			checkbin zenroom-wrapper.py $dir/python2
+			# checkbin zenroom-wrapper.py $dir/python2
 			checkbin zenroom-wrapper.py $dir/python3
 			copyexamples $dir
 			continue ;;
@@ -114,16 +115,10 @@ for t in $targets; do
 			prepdir $dir
 			# download
 			download zenroom-react build/rnjs/zenroom.js $dir/zenroom-react.js
-			mkdir -p $dir/wasm
-			download zenroom-wasm build/wasm/zenroom.js     $dir/wasm/zenroom.js
-			download zenroom-wasm build/wasm/zenroom.wasm   $dir/wasm/zenroom.wasm
-			mkdir -p $dir/asmjs
-			download zenroom-asmjs build/asmjs/zenroom.js       $dir/asmjs/zenroom.js
-			download zenroom-asmjs build/asmjs/zenroom.js.mem   $dir/asmjs/zenroom.js.mem
-			mkdir -p $dir/webassembly
-			download zenroom-demo docs/demo/index.data   $dir/webassembly/index.data
-			download zenroom-demo docs/demo/index.js     $dir/webassembly/index.js
-			download zenroom-demo docs/demo/index.wasm   $dir/webassembly/index.wasm
+			mkdir -p $dir/web
+			download zenroom-web build/web/zenroom.data   $dir/web/zenroom.data
+			download zenroom-web build/web/zenroom.js     $dir/web/zenroom.js
+			download zenroom-web build/web/zenroom.wasm   $dir/web/zenroom.wasm
 			# pack
 			checkbin zenroom_exec.js $dir
 			copyexamples $dir

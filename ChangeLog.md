@@ -1,12 +1,16 @@
 # Zenroom ChangeLog
 
-## Current development (last update June 2019)
+## 1.0.0 (September 2019)
 
-Internal refactoring, code cleanup and memory optimization. Fully
-deterministic random implementation for blockchain usage. Various
-fixes and improvements for the error reporting output. Fixes to the
-iOS native library. Improved python3 and JS bindings. Progress on the
-uni-kernel ARM Cortex port.
+Final refactoring and code cleanup with many optimizations.
+
+Complete call API and full Zencode syntax for simple and coconut
+scenarios. Rule configurability for input/output (JSON or CBOR) and
+semantic versioning contract checks. Fully deterministic random
+engine. Several improvements to the error reporting output and fixes
+to the iOS native library. Bindings included in source, improved and
+released on pypi and npm. Documentation included and online at
+dev.zenroom.org
 
 ## 0.9 (March 2019)
 
