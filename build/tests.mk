@@ -45,9 +45,13 @@ crypto-tests = \
 	${1} test/big_bls383.lua && \
 	${1} test/ecp_generic.lua && \
 	${1} test/pair_bls383.lua && \
-	${1} test/coconut_test.lua && \
+	${1} test/coconut_test.lua
+
+crypto-integration = \
 	test/octet-json.sh ${1} && \
-	test/integration_asymmetric_crypto.sh ${1} && \
+	test/integration_asymmetric_crypto.sh ${1}
+
+zencode-integration = \
 	cd test/zencode_simple &&    \
 	./run_symmetric_integration_test.sh ../../${1} && \
 	./run_aesgcm_integration_test.sh ../../${1} && \
@@ -85,7 +89,7 @@ crypto-tests = \
 
 check:
 	@echo "Test target 'check' supports various modes, please specify one:"
-	@echo "\t check-osx, check-shared, check-static, check-js check-py"
+	@echo "\t check-linux, check-osx, check-js check-py"
 	@echo "\t check-debug, check-crypto, debug-crypto"
 
 check-osx: test-exec := ./src/zenroom.command
@@ -94,31 +98,25 @@ check-osx:
 	$(call lowmem-tests,${test-exec})
 	$(call determinism-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
+	$(call crypto-integration,${test-exec})
+	$(call zencode-integration,${test-exec})
 	@echo "----------------"
-	@echo "All tests passed for SHARED binary build"
+	@echo "All tests passed for OSX binary build"
 	@echo "----------------"
 
-check-shared: test-exec := ./src/zenroom
-check-shared:
+check-linux: test-exec := ./src/zenroom
+check-linux:
 	${test-exec} test/constructs.lua
 	$(call himem-tests,${test-exec})
 	$(call lowmem-tests,${test-exec})
 	$(call determinism-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
+	$(call crypto-integration,${test-exec})
+	$(call zencode-integration,${test-exec})
 	@echo "----------------"
-	@echo "All tests passed for SHARED binary build"
+	@echo "All tests passed for LINUX binary build"
 	@echo "----------------"
 
-
-check-static: test-exec := ./src/zenroom
-check-static:
-	${test-exec} test/constructs.lua
-	$(call lowmem-tests,${test-exec})
-	$(call determinism-tests,${test-exec})
-	$(call crypto-tests,${test-exec})
-	@echo "----------------"
-	@echo "All tests passed for STATIC binary build"
-	@echo "----------------"
 
 check-js: test-exec := nodejs ${pwd}/test/zenroom_exec.js ${pwd}/src/zenroom
 check-js:
@@ -149,6 +147,8 @@ check-crypto: test-exec := ./src/zenroom
 check-crypto:
 	$(call determinism-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
+	$(call crypto-integration,${test-exec})
+	$(call zencode-integration,${test-exec})
 	@echo "-----------------------"
 	@echo "All CRYPTO tests passed"
 	@echo "-----------------------"

@@ -30,5 +30,4 @@ command -v pyenv > /dev/null && {
 	  esac
 	  echo
 	done
-	return 0
 }
