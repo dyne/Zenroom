@@ -2,7 +2,7 @@ import setuptools
 import os
 import sys
 
-with open(os.path.join('..', 'VERSION')) as version_file:
+with open(os.path.join('../..', 'VERSION')) as version_file:
     VERSION = version_file.read().strip()
 
 if sys.argv[-1] == "publish":

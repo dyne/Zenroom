@@ -20,6 +20,8 @@ pwd := $(shell pwd)
 ARCH=$(shell uname -m)
 PREFIX ?= /usr/local
 # VERSION is set in src/Makefile
+VERSION := $(shell awk '/ZENROOM_VERSION :=/ { print $$3; exit }' src/Makefile | tee VERSION)
+
 # DESTDIR is supported by install target
 
 # include platform specific configurations pattern-matching target labels

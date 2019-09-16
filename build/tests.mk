@@ -128,7 +128,7 @@ check-js:
 	@echo "All tests passed for JS binary build"
 	@echo "----------------"
 
-check-py: test-exec := python ${pwd}/test/zenroom_exec.py ${pwd}
+check-py: test-exec := python3 ${pwd}/test/zenroom_exec.py ${pwd}
 check-py:
 	$(call lowmem-tests,${test-exec})
 	$(call crypto-tests,${test-exec})

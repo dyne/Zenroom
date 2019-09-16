@@ -82,7 +82,7 @@ linux-lib-debug: apply-patches lua53 milagro embed-lua
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src linux-lib
 
-PYV := $(shell python -c "import platform;print(platform.python_version().replace('.', '_'))");
+PYV := $(shell python3 -c "import platform;print(platform.python_version().replace('.', '_'))");
 UNAME := $(shell uname)
 
 linux-python3: apply-patches lua53 milagro embed-lua
