@@ -417,15 +417,36 @@ implemented in the future.</p>
 </ol>
 <h1 id="symmetric-encryption">Symmetric encryption</h1>
 <p>This is a simple tecnique to hide a secret using a common password known to all people.</p>
-<div class="codehilite"><pre><span class="c1"># a `message` must be set and will be used as encryption input </span>
-<span class="c1"># if a `header` is set will authenticate to destination</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">encrypt</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">message</span><span class="nv"> </span><span class="s">with</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">decrypt</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">secret</span><span class="nv"> </span><span class="s">message</span><span class="nv"> </span><span class="s">with</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-<span class="c1"># encryption output is returned in `secret message`</span>
+<p>The algorithm used is
+<a href="https://en.wikipedia.org/wiki/Galois/Counter_Mode">AES-GCM</a> with an optional authenticated header (<a href="https://en.wikipedia.org/wiki/Authenticated_encryption">AEAD</a>)</p>
+<p>It is applied using 3 arguments:</p>
+<ul>
+<li><code>message</code> is the object to be encrypted</li>
+<li><code>secret</code> is the secret password used to encrypt</li>
+<li><code>header</code> (optional) the authenticated header</li>
+</ul>
+<p>The arguments must be already given at the moment of using the when
+block:</p>
+<div class="codehilite"><pre><span class="k">When </span><span class="nf">I encrypt the secret message &#39;whisper&#39; with &#39;my password&#39;</span>
 </pre></div>
 
 
-<p>Let's imagine I want to share a secret with someone and send secret messages encrypted with it:</p>
+<p>The output is returned in <code>secret message</code> and it looks like:</p>
+<div class="codehilite"><pre><span class="p">{</span><span class="nt">&quot;secret_message&quot;</span><span class="p">:</span>
+<span class="p">{</span><span class="nt">&quot;iv&quot;</span><span class="p">:</span><span class="s2">&quot;u64:aeBQ9CrdLfg24_QhtTJ0c1eEamvprfoOiVVbcfuyUFM&quot;</span><span class="p">,</span>
+<span class="nt">&quot;header&quot;</span><span class="p">:</span><span class="s2">&quot;u64:dGhpc19pc190aGVfaGVhZGVy&quot;</span><span class="p">,</span>
+<span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="s2">&quot;u64:DaOlZtRNS-j9671noYQuN0c-PrxdhbjSZVQLYdNw-5W-rA5Gd36bNUm01srnleY&quot;</span><span class="p">,</span>
+<span class="nt">&quot;checksum&quot;</span><span class="p">:</span><span class="s2">&quot;u64:ewKri7ghI3nO0bPJtwZcbA&quot;</span><span class="p">},</span>
+<span class="nt">&quot;zenroom&quot;</span><span class="p">:{</span><span class="nt">&quot;curve&quot;</span><span class="p">:</span><span class="s2">&quot;goldilocks&quot;</span><span class="p">,</span><span class="nt">&quot;encoding&quot;</span><span class="p">:</span><span class="s2">&quot;url64&quot;</span><span class="p">,</span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">}}</span>
+</pre></div>
+
+
+<p>To decode make sure to have that secret password and that a valid <code>secret message</code> is given, then use:</p>
+<div class="codehilite"><pre><span class="k">When </span><span class="nf">I decrypt the secret message with &#39;my password&#39;</span>
+</pre></div>
+
+
+<p>So let's imagine I want to share a secret with someone and send secret messages encrypted with it:</p>
 <p><img alt="Zencode to encrypt with password" src="../img/aes_crypt.svg" /></p>
 <p>I will need 3 Zencode contracts executed at different times:</p>
 <p><strong>1. I generate a strong random secret</strong></p>
@@ -442,9 +463,9 @@ implemented in the future.</p>
 <div class="codehilite"><pre><span class="nf">rule check version </span><span class="s">1.0.0</span><span class="nf"></span>
 <span class="nf">Scenario simple: Encrypt a message with the secret</span>
 <span class="k">Given </span><span class="nf">I have a &#39;secret&#39;</span>
-<span class="k">When </span><span class="nf">I write &#39;a very short but very very confidential message&#39; in &#39;message&#39;</span>
+<span class="k">When </span><span class="nf">I write &#39;a very short but very very confidential message&#39; in &#39;whisper&#39;</span>
 <span class="nf">and I write &#39;this is the header&#39; in &#39;header&#39;</span>
-<span class="nf">and I encrypt the message with the secret</span>
+<span class="nf">and I encrypt the secret message &#39;whisper&#39; with &#39;secret&#39;</span>
 <span class="k">Then </span><span class="nf">print the &#39;secret message&#39;</span>
 </pre></div>
 
@@ -455,7 +476,7 @@ implemented in the future.</p>
 <span class="nf">Scenario simple: Decrypt the message with the secret</span>
 <span class="k">Given </span><span class="nf">i have a &#39;secret&#39;</span>
 <span class="nf">and i have a valid &#39;secret message&#39;</span>
-<span class="k">When </span><span class="nf">I decrypt the secret message with the secret</span>
+<span class="k">When </span><span class="nf">I decrypt the secret message with &#39;secret&#39;</span>
 <span class="k">Then </span><span class="nf">print as &#39;string&#39; the &#39;text&#39; inside &#39;message&#39;</span>
 <span class="nf">and print as &#39;string&#39; the &#39;header&#39; inside &#39;message&#39;</span>
 </pre></div>
@@ -463,19 +484,43 @@ implemented in the future.</p>
 
 <p>Of course the secret must be known by all participats and that's the
 dangerous part, since it could be stolen at the moment is told.</p>
-<p>We solve this problem using public-key cryptography, also known as a-symmetric encryption.</p>
+<p>We solve this problem using <strong>public-key cryptography</strong>, also known as a-symmetric encryption, explained in the next section.</p>
 <h1 id="asymmetric-encryption">Asymmetric encryption</h1>
-<p>To solve this problem we have <a href="https://en.wikipedia.org/wiki/Public-key_cryptography">asymmetric encryption (or public key
+<p>We use <a href="https://en.wikipedia.org/wiki/Public-key_cryptography">asymmetric encryption (or public key
 cryptography)</a>
-which relies on the creation of keypairs (public and private) both by
-Alice and Bob.</p>
-<p>Fortunately its pretty simple to do using Zencode.</p>
+when we want to introduce the possession of keypairs (public and private) both by
+Alice and Bob: this way there is no need for a single secret to be known to both.</p>
+<p>Fortunately it is pretty simple to do using Zencode in 2 steps</p>
+<ul>
+<li>Key generation and exchange (<a href="https://en.wikipedia.org/wiki/Key_exchange">SETUP</a>)</li>
+<li>Public-key Encryption or signature (<a href="https://en.wikipedia.org/wiki/Elliptic-curve_Diffie%E2%80%93Hellman">ECDH</a> and <a href="https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm">ECDSA</a>)</li>
+</ul>
 <h2 id="key-generation-and-exchange">Key generation and exchange</h2>
-<div class="codehilite"><pre>  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">create</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">new</span><span class="nv"> </span><span class="s">keypair&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">generate</span><span class="nv"> </span><span class="s">my</span><span class="nv"> </span><span class="s">keys&#39;</span><span class="p-Indicator">}</span>
+<p>In this phase each participant will create his/her own keypair, store it and communicate the public key to the other.</p>
+<p>The statement to generate a keypair (public and private keys) is simple:</p>
+<div class="codehilite"><pre><span class="k">When </span><span class="nf">I create the keypair</span>
 </pre></div>
 
 
+<p>It will produce something like this:</p>
+<div class="codehilite"><pre><span class="s2">&quot;Alice&quot;</span><span class="err">:</span> <span class="p">{</span>
+   <span class="nt">&quot;keypair&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;private_key&quot;</span><span class="p">:</span> <span class="s2">&quot;u64:F_NaS3Y6Xw6BW...&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;public_key&quot;</span><span class="p">:</span> <span class="s2">&quot;u64:BLG0OGDwzP_gY41TZgGpUB4lTYCgpx9BJVScxSQAfwqEi...&quot;</span>
+   <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Where the public key is usually a longer octet and actually an <a href="/lua/modules/ECP.html">Elliptic Curve Point</a> coordinate.</p>
+<p>There is nothing preventing an host application to separate these JSON
+fields and store them in any secure way.</p>
+<p>Here we demonstrate how to create keypairs as well separate them using
+Zencode:</p>
+<ul>
+<li>2 contracts to create Alice and Bob keypairs</li>
+<li>2 contracts to separate the public key from the private key for each</li>
+</ul>
 <p><img alt="Zencode to generate asymmetric keypairs" src="../img/ecdh_keygen.svg" /></p>
 <p>After both Alice and Bob have their own keypairs and they both know
 each other public key we can move forward to do asymmetric encryption
@@ -484,7 +529,7 @@ and signatures.</p>
 <div class="codehilite"><pre><span class="nf">Rule check version </span><span class="s">1.0.0</span><span class="nf"></span>
 <span class="nf">Scenario &#39;simple&#39;: Alice generate a keypair</span>
 <span class="k">Given </span><span class="nf">that I am known as &#39;Alice&#39;</span>
-<span class="k">When </span><span class="nf">I create my new keypair</span>
+<span class="k">When </span><span class="nf">I create the keypair</span>
 <span class="k">Then </span><span class="nf">print my data</span>
 </pre></div>
 
@@ -502,7 +547,7 @@ and signatures.</p>
 <div class="codehilite"><pre><span class="nf">Rule check version </span><span class="s">1.0.0</span><span class="nf"></span>
 <span class="nf">Scenario &#39;simple&#39;: Bob generate a keypair</span>
 <span class="k">Given </span><span class="nf">that I am known as &#39;Bob&#39;</span>
-<span class="k">When </span><span class="nf">I create my new keypair</span>
+<span class="k">When </span><span class="nf">I create the keypair</span>
 <span class="k">Then </span><span class="nf">print my data</span>
 </pre></div>
 
@@ -517,12 +562,38 @@ and signatures.</p>
 
 
 <h2 id="public-key-encryption-ecdh">Public-key Encryption (ECDH)</h2>
-<div class="codehilite"><pre>  <span class="c1"># if a &#39;header&#39; is set will authenticate to destination</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">encrypt</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">for</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">decrypt</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">from</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
+<p>Public key encryption is similar to the <a href="#asymmetric-encryption">asymmetric
+encryption</a> explained in the previous section,
+with a difference: the <code>for</code> clause indicates the public key of the
+recipient.</p>
+<p>Before getting to the encryption 2 other objects must be given:</p>
+<ul>
+<li><code>keypair</code> is one's own public and private keys</li>
+<li><code>public key</code> from the intended recipient</li>
+</ul>
+<p>So a typical <code>Given</code> section preparing for encryption looks like:</p>
+<div class="codehilite"><pre><span class="k">Given </span><span class="nf">that I am known as &#39;Alice&#39;</span>
+<span class="nf">and I have my valid &#39;keypair&#39;</span>
+<span class="nf">and I have a valid &#39;public key&#39; from &#39;Bob&#39;</span>
 </pre></div>
 
 
+<p>which accepts an input like:</p>
+<div class="codehilite"><pre><span class="p">[</span>
+  <span class="p">{</span><span class="nt">&quot;Bob&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;public_key&quot;</span><span class="p">:</span><span class="s2">&quot;u64:BGF59uMP0DkHoTjMT...&quot;</span><span class="p">}</span> <span class="p">},</span>
+  <span class="p">{</span><span class="nt">&quot;Alice&quot;</span><span class="p">:</span> <span class="p">{</span> <span class="nt">&quot;keypair&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;private_key&quot;</span><span class="p">:</span> <span class="s2">&quot;u64:F_NaS3Y6Xw6BW...&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;public_key&quot;</span><span class="p">:</span> <span class="s2">&quot;u64:BLG0OGDwzP_gY41TZgGpUB4lTYCgpx9BJVScxSQAfwqEi...&quot;</span> <span class="p">}</span> <span class="p">}</span> <span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+
+
+<p>then the Zencode contract continues with the line:</p>
+<div class="codehilite"><pre><span class="k">When </span><span class="nf">I encrypt the secret message &#39;whisper&#39; for &#39;Bob&#39;</span>
+</pre></div>
+
+
+<p>which encrypts and stores results in <code>secret message</code>; also in this case <code>header</code> may be given, then is included in the encryption as an authenticated clear-text section.</p>
 <p><img alt="Zencode to encrypt using asymmetric keypairs" src="../img/ecdh_crypt.svg" /></p>
 <p><strong>1. Alice encrypts the message using Bob's public key</strong></p>
 <div class="codehilite"><pre><span class="nf">Rule check version </span><span class="s">1.0.0</span><span class="nf"></span>
@@ -573,11 +644,34 @@ viceversa).</p>
 maintaining the integrity of the string which may contain important
 public information that accompany the secret.</p>
 <h2 id="public-key-signature-ecdsa">Public-key Signature (ECDSA)</h2>
-<div class="codehilite"><pre>  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">sign</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">as</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="s">&#39;</span><span class="p-Indicator">}</span>
-  <span class="p-Indicator">-</span> <span class="p-Indicator">{</span><span class="nv">when</span><span class="p-Indicator">:</span> <span class="s">&#39;I</span><span class="nv"> </span><span class="s">verify</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="se">&#39;&#39;&#39;&#39;</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">authentic&#39;</span><span class="p-Indicator">}</span>
+<p>Public-key signing allows to verify the integrity of a message by
+knowing the public key of all those who have signed it.</p>
+<p>It is very useful when in need of authenticating documents: any change
+to the content of a document, even one single bit, will make the
+verification fail, showing that something has been tampered with.</p>
+<p>The one signing only needs his/her own keypair, so the key setup will
+be made by the lines:</p>
+<div class="codehilite"><pre><span class="k">Given </span><span class="nf">that I am known as &#39;Alice&#39;</span>
+<span class="nf">and I have my valid &#39;keypair&#39;</span>
 </pre></div>
 
 
+<p>then assuming that the document to sign is in <code>draft</code>, Alice can
+proceed signing it with:</p>
+<div class="codehilite"><pre><span class="nf">and I create the signature of &#39;draft&#39;</span>
+</pre></div>
+
+
+<p>which will produce a new object <code>signature</code> to be printed along the
+draft: the original message stays intact and the signature is detached.</p>
+<p>On the other side Bob will need Alice's public key to verify the
+signature with the line:</p>
+<div class="codehilite"><pre><span class="k">When </span><span class="nf">I verify the &#39;draft&#39; is signed by &#39;Alice&#39;</span>
+</pre></div>
+
+
+<p>which will fail in case the signature is invalid or the document has
+been tampered with.</p>
 <p><img alt="Zencode to sign using asymmetric keypairs" src="../img/ecdsa_sign.svg" /></p>
 <p>Here we continue assuming that the keyrings are already prepared with
 public/private keypairs and the public keypair of the correspondent.</p>
@@ -587,7 +681,7 @@ public/private keypairs and the public keypair of the correspondent.</p>
 <span class="k">Given </span><span class="nf">that I am known as &#39;Alice&#39;</span>
 <span class="nf">and I have my valid &#39;keypair&#39;</span>
 <span class="k">When </span><span class="nf">I write &#39;This is my signed message to Bob.&#39; in &#39;draft&#39;</span>
-<span class="nf">and I make the signature of the &#39;draft&#39;</span>
+<span class="nf">and I create the signature of &#39;draft&#39;</span>
 <span class="k">Then </span><span class="nf">print my &#39;signature&#39;</span>
 <span class="nf">and print my &#39;draft&#39;</span>
 </pre></div>
@@ -597,11 +691,11 @@ public/private keypairs and the public keypair of the correspondent.</p>
 <div class="codehilite"><pre><span class="nf">rule check version </span><span class="s">1.0.0</span><span class="nf"></span>
 <span class="nf">Scenario &#39;simple&#39;: Bob verifies the signature from Alice</span>
 <span class="k">Given </span><span class="nf">that I am known as &#39;Bob&#39;</span>
-<span class="nf">and I have inside &#39;Alice&#39; a valid &#39;public key&#39;</span>
-<span class="nf">and I have a valid &#39;signature&#39; inside &#39;Alice&#39;</span>
-<span class="nf">and I have a &#39;draft&#39; inside &#39;Alice&#39;</span>
-<span class="k">When </span><span class="nf">I verify the &#39;signature&#39; of the &#39;draft&#39; is by &#39;Alice&#39;</span>
-<span class="k">Then </span><span class="nf">print &#39;signature&#39; &#39;correct&#39;</span>
+<span class="nf">and I have a valid &#39;public key&#39; from &#39;Alice&#39;</span>
+<span class="nf">and I have a valid &#39;signature&#39; from &#39;Alice&#39;</span>
+<span class="nf">and I have a &#39;draft&#39;</span>
+<span class="k">When </span><span class="nf">I verify the &#39;draft&#39; is signed by &#39;Alice&#39;</span>
+<span class="k">Then </span><span class="nf">print &#39;signature&#39; &#39;correct&#39; as &#39;string&#39;</span>
 <span class="nf">and print as &#39;string&#39; the &#39;draft&#39;</span>
 </pre></div>
 
