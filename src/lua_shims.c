@@ -27,7 +27,12 @@
 #include <lauxlib.h>
 #include <ldo.h>
 
-void lua_fatal(lua_State *L) { luaD_throw(L, LUA_ERRRUN); }
+extern int EXITCODE;
+
+void lua_fatal(lua_State *L) {
+	EXITCODE = 1;
+	luaD_throw(L, LUA_ERRRUN);
+}
 
 // moved from lua's lauxlib.c
 typedef struct LoadS {

@@ -30,6 +30,8 @@
 #include <zenroom.h>
 #include <zen_error.h>
 
+extern int EXITCODE;
+
 // defined in lua_shims.c
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -188,12 +190,25 @@ int zen_require(lua_State *L) {
 	return 1;
 }
 
+
+int zen_exitcode(lua_State *L) {
+	int tn;
+	lua_Number n = lua_tonumberx(L,1,&tn);
+	if(tn)
+		EXITCODE = (int)n;
+	else
+		EXITCODE = -1;
+	return 0;
+}
+
 int zen_require_override(lua_State *L, const int restricted) {
 	static const struct luaL_Reg custom_require [] =
-		{ {"require", zen_require },
+		{ {"exitcode", zen_exitcode },
+		  {"require",  zen_require },
 		  {NULL, NULL} };
 	static const struct luaL_Reg custom_require_restricted [] =
-		{ {"require", nop },
+		{ {"exitcode", zen_exitcode },
+		  {"require",  nop },
 		  {NULL, NULL} };
 
 	lua_getglobal(L, "_G");

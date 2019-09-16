@@ -77,6 +77,8 @@ extern void* rng_alloc();
 // single instance globals
 zenroom_t *Z = NULL;   // zenroom STACK
 zen_mem_t *MEM = NULL; // zenroom HEAP
+int EXITCODE = 1; // start from error state
+
 
 static int zen_lua_panic (lua_State *L) {
 	lua_writestringerror("PANIC: unprotected error in call to Lua API (%s)\n",
@@ -270,7 +272,6 @@ int zencode_exec(char *script, char *conf, char *keys,
 	// stores the script file and configuration
 	zenroom_t *Z = NULL;
 	lua_State *L = NULL;
-	int return_code = EXIT_FAILURE; // return error by default
 	int r;
 
 	if(!script) {
@@ -306,7 +307,6 @@ int zencode_exec(char *script, char *conf, char *keys,
 		zen_teardown(Z);
 		return EXIT_FAILURE;
 	}
-	return_code = EXIT_SUCCESS; // return success
 
 #ifdef __EMSCRIPTEN__
 	EM_ASM({Module.exec_ok();});
@@ -314,7 +314,7 @@ int zencode_exec(char *script, char *conf, char *keys,
 
 	func(L, "Zenroom operations completed.");
 	zen_teardown(Z);
-	return(return_code);
+	return(EXITCODE);
 }
 
 int zenroom_exec(char *script, char *conf, char *keys,
@@ -323,7 +323,6 @@ int zenroom_exec(char *script, char *conf, char *keys,
 	// stores the script file and configuration
 	zenroom_t *Z = NULL;
 	lua_State *L = NULL;
-	int return_code = EXIT_FAILURE; // return error by default
 	int r;
 
 	if(!script) {
@@ -359,7 +358,6 @@ int zenroom_exec(char *script, char *conf, char *keys,
 		zen_teardown(Z);
 		return EXIT_FAILURE;
 	}
-	return_code = EXIT_SUCCESS; // return success
 
 #ifdef __EMSCRIPTEN__
 	EM_ASM({Module.exec_ok();});
@@ -367,7 +365,7 @@ int zenroom_exec(char *script, char *conf, char *keys,
 
 	func(L, "Zenroom operations completed.");
 	zen_teardown(Z);
-	return(return_code);
+	return(EXITCODE);
 }
 
 
@@ -381,7 +379,6 @@ int zencode_exec_tobuf(char *script, char *conf, char *keys,
 	zenroom_t *Z = NULL;
 	lua_State *L = NULL;
 
-	int return_code = EXIT_FAILURE; // return error by default
 	int r;
 
 	if(!script) {
@@ -423,7 +420,6 @@ int zencode_exec_tobuf(char *script, char *conf, char *keys,
 		zen_teardown(Z);
 		return EXIT_FAILURE;
 	}
-	return_code = EXIT_SUCCESS; // return success
 
 #ifdef __EMSCRIPTEN__
 	EM_ASM({Module.exec_ok();});
@@ -431,7 +427,7 @@ int zencode_exec_tobuf(char *script, char *conf, char *keys,
 
 	func(L, "Zenroom operations completed.");
 	zen_teardown(Z);
-	return(return_code);
+	return(EXITCODE);
 }
 
 
@@ -444,7 +440,6 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys,
 	zenroom_t *Z = NULL;
 	lua_State *L = NULL;
 
-	int return_code = EXIT_FAILURE; // return error by default
 	int r;
 
 	if(!script) {
@@ -486,7 +481,6 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys,
 		zen_teardown(Z);
 		return EXIT_FAILURE;
 	}
-	return_code = EXIT_SUCCESS; // return success
 
 #ifdef __EMSCRIPTEN__
 	EM_ASM({Module.exec_ok();});
@@ -494,7 +488,7 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys,
 
 	func(L, "Zenroom operations completed.");
 	zen_teardown(Z);
-	return(return_code);
+	return(EXITCODE);
 }
 
 
@@ -508,7 +502,6 @@ int zenroom_exec_rng_tobuf(char *script, char *conf, char *keys,
 	zenroom_t *Z = NULL;
 	lua_State *L = NULL;
 	char *_random_seed = NULL;
-	int return_code = EXIT_FAILURE; // return error by default
 	int r;
 
 	if(!script) {
@@ -557,7 +550,6 @@ int zenroom_exec_rng_tobuf(char *script, char *conf, char *keys,
 		zen_teardown(Z);
 		return EXIT_FAILURE;
 	}
-	return_code = EXIT_SUCCESS; // return success
 
 #ifdef __EMSCRIPTEN__
 	EM_ASM({Module.exec_ok();});
@@ -565,7 +557,7 @@ int zenroom_exec_rng_tobuf(char *script, char *conf, char *keys,
 
 	func(L, "Zenroom operations completed.");
 	zen_teardown(Z);
-	return(return_code);
+	return(EXITCODE);
 }
 
 
@@ -579,7 +571,6 @@ int zencode_exec_rng_tobuf(char *script, char *conf, char *keys,
 	zenroom_t *Z = NULL;
 	lua_State *L = NULL;
 	char *_random_seed = NULL;
-	int return_code = EXIT_FAILURE; // return error by default
 	int r;
 
 	if(!script) {
@@ -630,13 +621,13 @@ int zencode_exec_rng_tobuf(char *script, char *conf, char *keys,
 		zen_teardown(Z);
 		return EXIT_FAILURE;
 	}
-	return_code = EXIT_SUCCESS; // return success
 
 #ifdef __EMSCRIPTEN__
 	EM_ASM({Module.exec_ok();});
 #endif
 
+
 	func(L, "Zenroom operations completed.");
 	zen_teardown(Z);
-	return(return_code);
+	return(EXITCODE);
 }

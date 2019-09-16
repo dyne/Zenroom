@@ -456,7 +456,7 @@ function zencode:step(text)
    local prefix = parse_prefix(text)
    local defs -- parse in what phase are we
    ZEN.OK = true
-
+   exitcode(0)
    -- given block, may also skip scenario
    if prefix == 'given' then
 	  ZEN.assert(ZEN.machine:enter_given(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.." to Given block")
@@ -503,6 +503,7 @@ function zencode:step(text)
    end
    if not ZEN.OK then
 	  print(ZEN_traceback)
+	  exitcode(1)
 	  assert(ZEN.OK)
    end
    -- nothing further to parse
@@ -605,6 +606,7 @@ function zencode:run()
    for i,x in sort_ipairs(self.matches) do
 	  ZEN:trace(trim(x.source))
 	  ZEN.OK = true
+	  exitcode(0)
       local ok, err = pcall(x.hook,table.unpack(x.args))
       if not ok or not ZEN.OK then
 	  	 if err then ZEN:trace("[!] "..err) end
@@ -648,6 +650,7 @@ function zencode.assert(condition, errmsg)
    -- ZEN.debug() -- prints all data in memory
    ZEN:trace("ERR "..errmsg)
    ZEN.OK = false
+   exitcode(1);
    error(errmsg, 3)
    -- print ''
    -- error(errmsg) -- prints zencode backtrace
