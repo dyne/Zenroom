@@ -59,30 +59,29 @@ local function f_keygen()
    ZEN:validate('keypair')
    ZEN:ack('keypair')
 end
-When("I create my new keypair", f_keygen)
-When("I generate my keys", f_keygen)
+When("I create the keypair", f_keygen)
 
 -- encrypt with a header and secret
-When("I encrypt the message with the secret", function()
-		ZEN.assert(ACK.message, "Data to encrypt not found: message")
-		ZEN.assert(ACK.secret, "Secret used to encrypt not found: secret")
+When("I encrypt the secret message '' with ''", function(msg, sec)
+		ZEN.assert(ACK[msg], "Data to encrypt not found: message")
+		ZEN.assert(ACK[sec], "Secret used to encrypt not found: "..sec)
 		-- KDF2 sha256 on all secrets
-		local secret = ECDH.kdf2(HASH.new('sha256'),ACK.secret)
+		local secret = ECDH.kdf2(HASH.new('sha256'),ACK[sec])
 		ACK.secret_message = { header = ACK.header or 'empty',
 							   iv = O.random(32) }
 		ACK.secret_message.text, ACK.secret_message.checksum =
-		   ECDH.aead_encrypt(secret, ACK.message,
+		   ECDH.aead_encrypt(secret, ACK[msg],
 							 ACK.secret_message.iv,
 							 ACK.secret_message.header)
 end)
 
 -- decrypt with a secret
-When("I decrypt the secret message with the secret", function()
-		ZEN.assert(ACK.secret, "Secret used to decrypt not found: secret")
+When("I decrypt the secret message with ''", function(sec)
+		ZEN.assert(ACK[sec], "Secret used to decrypt not found: secret")
 		ZEN.assert(ACK.secret_message,
 				   "Secret data to decrypt not found: secret message")
 
-        local secret = ECDH.kdf2(HASH.new('sha256'),ACK.secret)
+        local secret = ECDH.kdf2(HASH.new('sha256'),ACK[sec])
         -- KDF2 sha256 on all secrets, this way the
         -- secret is always 256 bits, safe for direct aead_decrypt
         ACK.message = { header = ACK.secret_message.header }
@@ -126,7 +125,7 @@ When("I decrypt the secret message from ''", function(_key)
 end)
 
 -- sign a message and verify
-When("I make the signature of the ''", function(doc)
+When("I create the signature of ''", function(doc)
 		ZEN.assert(ACK.keypair, "Keyring not found")
 		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
 		local dsa = ECDH.new(CONF.curve)
@@ -135,12 +134,13 @@ When("I make the signature of the ''", function(doc)
 		-- include contextual information
 end)
 
-When("I verify the '' is authentic", function(msg)
-		ZEN.assert(ACK.public_key, "Public key not found")
+When("I verify the '' is signed by ''", function(msg, by)
+		ZEN.assert(ACK.public_key[by], "Public key by "..by.." not found")
+		ZEN.assert(ACK.signature[by], "Signature by "..by.." not found")
 		local dsa = ECDH.new(CONF.curve)
-		dsa:public(ACK.public_key)
+		dsa:public(ACK.public_key[by])
 		local sm = ACK[msg]
 		ZEN.assert(sm, "Signed message not found: "..msg)
-		ZEN.assert(dsa:verify(sm.text,{ r = sm.r, s = sm.s }),
+		ZEN.assert(dsa:verify(sm,ACK.signature[by]),
 				   "The signature is not authentic")
 end)

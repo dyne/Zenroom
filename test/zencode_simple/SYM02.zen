@@ -1,7 +1,7 @@
 rule check version 1.0.0
 Scenario simple: Encrypt a message with the secret
 Given I have a 'secret'
-When I write 'a very short but very very confidential message' in 'message'
+When I write 'a very short but very very confidential message' in 'whisper'
 and I write 'this is the header' in 'header'
-and I encrypt the message with the secret
+and I encrypt the secret message 'whisper' with 'secret'
 Then print the 'secret message'

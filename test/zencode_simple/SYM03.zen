@@ -2,6 +2,6 @@ rule check version 1.0.0
 Scenario simple: Decrypt the message with the secret
 Given i have a 'secret'
 and i have a valid 'secret message'
-When I decrypt the secret message with the secret
+When I decrypt the secret message with 'secret'
 Then print as 'string' the 'text' inside 'message'
 and print as 'string' the 'header' inside 'message'

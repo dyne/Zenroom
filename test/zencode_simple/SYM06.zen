@@ -4,6 +4,6 @@ rule output format cbor
 Scenario 'simple': Decrypt the message with the secret
 given i have a 'secret'
 and i have a valid 'secret message'
-When I decrypt the secret message with the secret
+When I decrypt the secret message with 'secret'
 then print as 'string' the 'text' inside 'message'
 and print as 'string' the 'header' inside 'message'

@@ -1,7 +1,7 @@
 Rule check version 1.0.0
 Scenario 'simple': Alice generate a keypair
 Given that I am known as 'Alice'
-When I create my new keypair
+When I create the keypair
 Then print my data
 
 

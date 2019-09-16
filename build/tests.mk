@@ -51,6 +51,11 @@ crypto-integration = \
 	test/octet-json.sh ${1} && \
 	test/integration_asymmetric_crypto.sh ${1}
 
+zencode-tests = \
+	@${1} test/zencode_find.lua && \
+	${1} test/zencode_data.lua
+
+
 zencode-integration = \
 	cd test/zencode_simple &&    \
 	./run_symmetric_integration_test.sh ../../${1} && \
@@ -98,6 +103,7 @@ check-osx:
 	$(call lowmem-tests,${test-exec})
 	$(call determinism-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
+	$(call zencode-tests,${test-exec})
 	$(call crypto-integration,${test-exec})
 	$(call zencode-integration,${test-exec})
 	@echo "----------------"
@@ -111,6 +117,7 @@ check-linux:
 	$(call lowmem-tests,${test-exec})
 	$(call determinism-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
+	$(call zencode-tests,${test-exec})
 	$(call crypto-integration,${test-exec})
 	$(call zencode-integration,${test-exec})
 	@echo "----------------"
@@ -122,6 +129,7 @@ check-js: test-exec := nodejs ${pwd}/test/zenroom_exec.js ${pwd}/src/zenroom
 check-js:
 	$(call lowmem-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
+	$(call zencode-tests,${test-exec})
 	@echo "----------------"
 	@echo "All tests passed for JS binary build"
 	@echo "----------------"
@@ -130,6 +138,7 @@ check-py: test-exec := python3 ${pwd}/test/zenroom_exec.py ${pwd}
 check-py:
 	$(call lowmem-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
+	$(call zencode-tests,${test-exec})
 	@echo "----------------"
 	@echo "All tests passed for PYTHON build"
 	@echo "----------------"
@@ -139,6 +148,7 @@ check-debug:
 	$(call determinism-tests,${test-exec})
 	$(call lowmem-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
+	$(call zencode-tests,${test-exec})
 	@echo "----------------"
 	@echo "All tests passed for DEBUG binary build"
 	@echo "----------------"
@@ -147,6 +157,7 @@ check-crypto: test-exec := ./src/zenroom
 check-crypto:
 	$(call determinism-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
+	$(call zencode-tests,${test-exec})
 	$(call crypto-integration,${test-exec})
 	$(call zencode-integration,${test-exec})
 	@echo "-----------------------"
@@ -158,6 +169,8 @@ check-crypto-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/ze
 check-crypto-debug:
 	$(call determinism-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
+	$(call zencode-tests,${test-exec})
+
 
 #	./test/integration_asymmetric_crypto.sh ${test-exec}
 

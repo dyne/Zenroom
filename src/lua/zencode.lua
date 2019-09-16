@@ -73,10 +73,13 @@ zencode.machine = MACHINE.create({
 		 { name = 'enter_rule',     from = { 'init', 'rule', 'scenario' }, to = 'rule' },
 		 { name = 'enter_scenario', from = { 'init', 'rule' }, to = 'scenario' },
 		 { name = 'enter_given',    from = { 'init', 'rule', 'scenario' }, to = 'given' },
-		 { name = 'enter_when',     from =   'given',             to = 'when' },
-		 { name = 'enter_then',     from = { 'given', 'when' },   to = 'then' },
+		 { name = 'enter_given',    from =   'given',             to = 'given' },
 		 { name = 'enter_and',      from =   'given',             to = 'given' },
+		 { name = 'enter_when',     from =   'given',             to = 'when' },
+		 { name = 'enter_when',     from =   'when',              to = 'when' },
 		 { name = 'enter_and',      from =   'when',              to = 'when' },
+		 { name = 'enter_then',     from = { 'given', 'when' },   to = 'then' },
+		 { name = 'enter_then',     from =   'then',              to = 'then' },
 		 { name = 'enter_and',      from =   'then',              to = 'then' }
 	  }
 })
@@ -499,7 +502,9 @@ function zencode:step(text)
 	  set_rule(text)
    else -- defs = nil end
 	    -- if not defs then
-		 ZEN.assert("Zencode invalid: "..text)
+		 exitcode(1)
+		 error("Zencode invalid: "..text)
+		 ZEN.OK = false
    end
    if not ZEN.OK then
 	  print(ZEN_traceback)
@@ -522,7 +527,7 @@ function zencode:step(text)
          error("Zencode function missing: "..pattern, 2)
          return false
       end
-	  if strcasecmp(tt,pattern) then
+	  if strcasecmp(tt, string.gsub(pattern,"that "  ,"", 1)) then
 		 local args = {} -- handle multiple arguments in same string
 		 for arg in string.gmatch(text,"'(.-)'") do
 			-- xxx(2,"+arg: "..arg)

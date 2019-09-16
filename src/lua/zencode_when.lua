@@ -36,6 +36,12 @@ When("I create a random ''", function(s)
 		ACK[s] = OCTET.random(64) -- TODO: right now hardcoded 256 bit random secrets
 end)
 
+When("I verify '' is equal to ''", function(l,r)
+		ZEN.assert(ACK[l] == ACK[r],
+				   "When comparison failed: objects are not equal: "
+					  ..l.." == "..r)
+end)
+
 When("I create a random array of '' elements", function(s)
 		ACK.array = { }
 		for i = s,1,-1 do

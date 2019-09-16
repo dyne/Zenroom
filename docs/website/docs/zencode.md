@@ -223,15 +223,40 @@ Three more are in the work and they are:
 
 This is a simple tecnique to hide a secret using a common password known to all people.
 
-```yaml
-# a `message` must be set and will be used as encryption input 
-# if a `header` is set will authenticate to destination
-  - {when: 'I encrypt the message with '''''}
-  - {when: 'I decrypt the secret message with '''''}
-# encryption output is returned in `secret message`
+The algorithm used is
+[AES-GCM](https://en.wikipedia.org/wiki/Galois/Counter_Mode) with an optional authenticated header ([AEAD](https://en.wikipedia.org/wiki/Authenticated_encryption))
+
+It is applied using 3 arguments:
+
+- `message` is the object to be encrypted
+- `secret` is the secret password used to encrypt
+- `header` (optional) the authenticated header
+
+The arguments must be already given at the moment of using the when
+block:
+
+```cucumber
+When I encrypt the secret message 'whisper' with 'my password'
 ```
 
-Let's imagine I want to share a secret with someone and send secret messages encrypted with it:
+The output is returned in `secret message` and it looks like:
+
+```json
+{"secret_message":
+{"iv":"u64:aeBQ9CrdLfg24_QhtTJ0c1eEamvprfoOiVVbcfuyUFM",
+"header":"u64:dGhpc19pc190aGVfaGVhZGVy",
+"text":"u64:DaOlZtRNS-j9671noYQuN0c-PrxdhbjSZVQLYdNw-5W-rA5Gd36bNUm01srnleY",
+"checksum":"u64:ewKri7ghI3nO0bPJtwZcbA"},
+"zenroom":{"curve":"goldilocks","encoding":"url64","version":"1.0.0"}}
+```
+
+To decode make sure to have that secret password and that a valid `secret message` is given, then use:
+
+```cucumber
+When I decrypt the secret message with 'my password'
+```
+
+So let's imagine I want to share a secret with someone and send secret messages encrypted with it:
 
 ![Zencode to encrypt with password](img/aes_crypt.svg)
 
@@ -257,23 +282,52 @@ I will need 3 Zencode contracts executed at different times:
 Of course the secret must be known by all participats and that's the
 dangerous part, since it could be stolen at the moment is told.
 
-We solve this problem using public-key cryptography, also known as a-symmetric encryption.
+We solve this problem using **public-key cryptography**, also known as a-symmetric encryption, explained in the next section.
 
 # Asymmetric encryption
 
-To solve this problem we have [asymmetric encryption (or public key
+We use [asymmetric encryption (or public key
 cryptography)](https://en.wikipedia.org/wiki/Public-key_cryptography)
-which relies on the creation of keypairs (public and private) both by
-Alice and Bob.
+when we want to introduce the possession of keypairs (public and private) both by
+Alice and Bob: this way there is no need for a single secret to be known to both.
 
-Fortunately its pretty simple to do using Zencode.
+Fortunately it is pretty simple to do using Zencode in 2 steps
+
+- Key generation and exchange ([SETUP](https://en.wikipedia.org/wiki/Key_exchange))
+- Public-key Encryption or signature ([ECDH](https://en.wikipedia.org/wiki/Elliptic-curve_Diffie%E2%80%93Hellman) and [ECDSA](https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm))
 
 ## Key generation and exchange
 
-```yaml
-  - {when: 'I create my new keypair'}
-  - {when: 'I generate my keys'}
+In this phase each participant will create his/her own keypair, store it and communicate the public key to the other.
+
+The statement to generate a keypair (public and private keys) is simple:
+
+```cucumber
+When I create the keypair
 ```
+
+It will produce something like this:
+
+```json
+"Alice": {
+   "keypair": {
+      "private_key": "u64:F_NaS3Y6Xw6BW...",
+      "public_key": "u64:BLG0OGDwzP_gY41TZgGpUB4lTYCgpx9BJVScxSQAfwqEi..."
+   }
+}
+```
+
+Where the public key is usually a longer octet and actually an [Elliptic Curve Point](/lua/modules/ECP.html) coordinate.
+
+There is nothing preventing an host application to separate these JSON
+fields and store them in any secure way.
+
+Here we demonstrate how to create keypairs as well separate them using
+Zencode:
+
+- 2 contracts to create Alice and Bob keypairs
+- 2 contracts to separate the public key from the private key for each
+
 
 ![Zencode to generate asymmetric keypairs](img/ecdh_keygen.svg)
 
@@ -303,11 +357,42 @@ and signatures.
 
 ## Public-key Encryption (ECDH)
 
-```yaml
-  # if a 'header' is set will authenticate to destination
-  - {when: 'I encrypt the '''' to '''' for '''''}
-  - {when: 'I decrypt the '''' from '''' to '''''}
+Public key encryption is similar to the [asymmetric
+encryption](#asymmetric-encryption) explained in the previous section,
+with a difference: the `for` clause indicates the public key of the
+recipient.
+
+Before getting to the encryption 2 other objects must be given:
+
+- `keypair` is one's own public and private keys
+- `public key` from the intended recipient
+
+So a typical `Given` section preparing for encryption looks like:
+
+```cucumber
+Given that I am known as 'Alice'
+and I have my valid 'keypair'
+and I have a valid 'public key' from 'Bob'
 ```
+
+which accepts an input like:
+
+```json
+[
+  {"Bob": {"public_key":"u64:BGF59uMP0DkHoTjMT..."} },
+  {"Alice": { "keypair": {
+      "private_key": "u64:F_NaS3Y6Xw6BW...",
+      "public_key": "u64:BLG0OGDwzP_gY41TZgGpUB4lTYCgpx9BJVScxSQAfwqEi..." } } }
+]
+```
+
+then the Zencode contract continues with the line:
+
+```cucumber
+When I encrypt the secret message 'whisper' for 'Bob'
+```
+
+which encrypts and stores results in `secret message`; also in this case `header` may be given, then is included in the encryption as an authenticated clear-text section.
 
 ![Zencode to encrypt using asymmetric keypairs](img/ecdh_crypt.svg)
 
@@ -342,10 +427,41 @@ public information that accompany the secret.
 
 ## Public-key Signature (ECDSA)
 
-```yaml
-  - {when: 'I sign the '''' as '''''}
-  - {when: 'I verify the '''' is authentic'}
+Public-key signing allows to verify the integrity of a message by
+knowing the public key of all those who have signed it.
+
+It is very useful when in need of authenticating documents: any change
+to the content of a document, even one single bit, will make the
+verification fail, showing that something has been tampered with.
+
+The one signing only needs his/her own keypair, so the key setup will
+be made by the lines:
+
+```cucumber
+Given that I am known as 'Alice'
+and I have my valid 'keypair'
 ```
+
+then assuming that the document to sign is in `draft`, Alice can
+proceed signing it with:
+
+```cucumber
+and I create the signature of 'draft'
+```
+
+which will produce a new object `signature` to be printed along the
+draft: the original message stays intact and the signature is detached.
+
+On the other side Bob will need Alice's public key to verify the
+signature with the line:
+
+```cucumber
+When I verify the 'draft' is signed by 'Alice'
+```
+
+which will fail in case the signature is invalid or the document has
+been tampered with.
+
 
 ![Zencode to sign using asymmetric keypairs](img/ecdsa_sign.svg)
 

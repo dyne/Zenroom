@@ -50,36 +50,29 @@ Given("I have my valid ''", function(name)
 		 TMP = { }
 end)
 
+Given("I have a '' inside ''", function(n, s)
+		 ZEN:pickin(s, n)
+		 TMP.valid = ZEN:import(TMP.data)
+		 ZEN:ack(n)
+		 ZEN:ack(s) -- save it also in ACK.section
+		 TMP = { }
+end)
 
-local have_a_in = function(n, s)
-   ZEN:pickin(s, n)
-   TMP.valid = ZEN:import(TMP.data)
-   ZEN:ack(n)
-   ZEN:ack(s) -- save it also in ACK.section
-   TMP = { }
-end
-Given("I have a '' inside ''",       have_a_in)
-
-local have_a_valid_in = function(n, s)
-   ZEN:pickin(s, n)
-   ZEN:validate(n)
-   ZEN:ack(n)
-   ZEN:ack(s) -- save it also in ACK.section
-   TMP = { }
-end
-
--- 
-Given("I have a valid '' inside ''", have_a_valid_in)
+Given("I have a valid '' inside ''", function(n, s)
+		 ZEN:pickin(s, n)
+		 ZEN:validate(n)
+		 ZEN:ack(n)
+		 ZEN:ack(s) -- save it also in ACK.section
+		 TMP = { }
+end)
 
 -- public keys for keyring arrays
-local have_a_from = function(k, f)
-   ZEN:pickin(f, k)
-   ZEN:validate(k)
-   ZEN:ack_table(k, f)
-   TMP = nil
-end
-Given("I have a '' from ''", have_a_from)
-Given("I have a valid '' from ''", have_a_from)
+Given("I have a valid '' from ''", function(k, f)
+		 ZEN:pickin(f, k)
+		 ZEN:validate(k)
+		 ZEN:ack_table(k, f)
+		 TMP = nil
+end)
 
 -- TODO: this enforces identity of schema with key name
 Given("the '' is valid", function(k)
