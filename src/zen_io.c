@@ -31,10 +31,10 @@
 extern zenroom_t *Z;
 
 int zen_write_err_va(const char *fmt, va_list va) {
-#ifdef __ANDROID__
-	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", "%s -- %s", pfx, msg);
-	__android_log_print(ANDROID_LOG_VERBOSE, "KZK", fmt, va); // TODO: test
-#endif
+// #ifdef __ANDROID__
+// 	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", "%s -- %s", pfx, msg);
+// 	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", fmt, va); // TODO: test
+// #endif
 	size_t len = 0;
 	if(!Z) len = vfprintf(stderr,fmt,va); // no init yet, print to stderr
 	if(!len && Z->stderr_buf) { // print to configured buffer
@@ -63,10 +63,10 @@ int zen_write_out_va(const char *fmt, va_list va) {
 }
 
 int zen_write_err(const char *fmt, ...) {
-#ifdef __ANDROID__
-	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", "%s -- %s", pfx, msg);
-	__android_log_print(ANDROID_LOG_VERBOSE, "KZK", fmt, va); // TODO: test
-#endif
+// #ifdef __ANDROID__
+// 	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", "%s -- %s", pfx, msg);
+// 	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", fmt, va); // TODO: test
+// #endif
 	va_list arg;
 	size_t len;
 	va_start(arg,fmt);
@@ -76,10 +76,10 @@ int zen_write_err(const char *fmt, ...) {
 }
 
 int zen_write_out(const char *fmt, ...) {
-#ifdef __ANDROID__
-	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", "%s -- %s", pfx, msg);
-	__android_log_print(ANDROID_LOG_VERBOSE, "KZK", fmt, va); // TODO: test
-#endif
+// #ifdef __ANDROID__
+// 	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", "%s -- %s", pfx, msg);
+// 	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", fmt, va); // TODO: test
+// #endif
 	va_list arg;
 	size_t len;
 	va_start(arg,fmt);
