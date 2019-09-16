@@ -70,15 +70,26 @@ var ZR = (function() {
         return false;
     }
 
-    const loadCoconutExamples = (e) => {
+
+    const loadZencodeExamples = (e) => {
         const name = $(e.target).attr('id');
-        const base_url = "https://raw.githubusercontent.com/DECODEproject/dddc-pilot-contracts/v1.0/src/"
+        const base_url = "https://raw.githubusercontent.com/DECODEproject/zenroom/master/test/zencode_simple/"
         const editor = $('#zencode')[0].env.editor
         editor.setValue("")
         $.get(base_url + name, value => {
             editor.setValue(value)
         })
-    };
+    }
+
+    const loadCoconutExamples = (e) => {
+        const name = $(e.target).attr('id');
+        const base_url = "https://raw.githubusercontent.com/DECODEproject/zenroom/master/test/zencode_coconut/"
+        const editor = $('#zencode')[0].env.editor
+        editor.setValue("")
+        $.get(base_url + name, value => {
+            editor.setValue(value)
+        })
+    }
 
     const setupCodeEditor = editor => {
         editor.setOptions({
@@ -185,7 +196,8 @@ var ZR = (function() {
     const init = function() {
        layoutInit()
        $(".examples").on('click', e => loadExamples(e))
-       $(".coconut").on('click', e => loadCoconutExamples(e))
+	   $(".zencode").on('click', e => loadZencodeExamples(e))
+       // $(".coconut").on('click', e => loadCoconutExamples(e))
     };
 
     const addAutocompletionWord = word => {
