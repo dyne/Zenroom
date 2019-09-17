@@ -8,287 +8,79 @@ For an introduction see this blog post: [Smart contracts for the English speaker
 
 Here we go with the <span class="big">**tutorial to learn the Zencode language!**</span>
 
-# Attribute Based Credentials
+# Syntax and Memory model
 
-![Alice in Wonderland](img/alice_with_cards-sm.jpg)
+Zencode contracts operate in 3 phases:
 
-Attribute Based Credentials are a powerful and complex feature
-implemented using the [Coconut crypto
-scheme](https://arxiv.org/pdf/1802.07344.pdf). We start this tutorial
-with the most complex functionality available in Zenroom to show how
-the Zencode language really simplifies it all.
+1. **Given** - validates the input
+2. **When** - processes the contents
+3. **Then** - prints out the results
 
-Let's imagine 3 different subjects for our scenarios:
+The 3 separate blocks of code also correspond to 3 separate memory areas, sealed by security measures.
 
-1. **Mad Hatter** is a well known **issuer** in Wonderland
-2. **Wonderland** is an open space (a blockchain!) and all inhabitants can check the validity of **proofs**
-3. **Alice** just arrived: to create **proofs** she'll request a **credential** to the issuer **MadHatter** 
+If any single line in a Zencode contract fails, Zenroom stops executing and returns the error.
 
-When **Alice** is in possession of **credentials** then she can
-create a **proof** any time she wants using as input:
+![Zencode documentation diagram](img/zencode_diagram.png)
 
-- the **credentials**
-- her **credential keypair**
-- the **verifier** by MadHatter
-```cucumber
-{! examples/create_proof.zen !}
-```
+All data processed has first to pass the validation phase according to scenario specific data schemas.
 
-All these "things" (credentials, proofs, etc.) are data structures that can be used as input and received as output of Zencode functions. For instance a **proof** can be print in **JSON** format and looks a bit list this:
-
-```json
-{
-   "credential_proof" : {
-      "pi_v" : {
-         "c" : "u64:tBrCGawWYEAi55_hHIPq0JT3OaapOebSHVW0GhjJcAk",
-         "rr" : "u64:J7R3FXsI2dcfyZRCqWA8fDYijG39P16LvGpX90wtCWw",
-         "rm" : "u64:QoG-28CNTAY3Ir4SQqVoK1ZpTlzOnXxX6Xtq5KMIxpo"
-      },
-      "nu" : "u64:BA77WYvBRsc53uAyrqTjuUdptJPZbcTlzr9icizm0...",
-      "sigma_prime" : {
-         "h_prime" : "u64:BB9AM5xjWPxsZ47zh1WAmFymru66W6YuK...",
-         "s_prime" : "u64:BAGYNM6JO0wRAGE87_-bQVuhUXeEoeJrh..."
-      },
-      "kappa" : "u64:GFVYsudbHOJNzPl3ZL0_VzB_DRvrPKF26OCZR9..."
-   },
-   "zenroom" : {
-      "scenario" : "coconut", "encoding" : "url64", "version" : "1.0.0"
-   }
-}
-```
-
-Anyone can verify proofs using as input:
-
-- the **credential proof**
-- the **verifier** by MadHatter
-```cucumber
-{! examples/verify_proof.zen !}
-```
-
-What is so special about these proofs? Well!  Alice cannot be followed
-by her trail of proofs: **she can produce an infinite number of
-proofs, always different from one another**, for anyone to recognise
-the credential without even knowing who she is.
-
-![even the MadHatter is surprised](img/madhatter.jpg)
-
-Imagine that once **Alice** is holding **credentials** she can enter
-any room in Wonderland and drop a **proof** in the chest at its
-entrance: this proof can be verified by anyone without disclosing
-Alice's identity.
-
-The flow described above is pretty simple, but the steps to setup the
-**credential** are a bit more complex. Lets start using real names
-from now on:
-
-- Alice is a credential **Holder**
-- MadHatter is a credential **Issuer**
-- Wonderland is a public **Blockchain**
-- Anyone is any peer connected to the blockchain
-
-![Zencode flow for ABC](img/zkp_abc_flow.svg)
-
-To add more detail, the sequence is:
-
-![Zencode sequence for ABC](img/zkp_abc.svg)
-
-
-1 **MadHatter** generates an **issuer keypair**
-<table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
-<tr><td> - </td><td><pre>
-{! examples/issuer_keygen.zen !}
-</pre></td>
-<td>issuer_keypair</td>
-</tr></table>
-
-1a **MadHatter** publishes the **verification key**
-<table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
-<tr><td> issuer_keypair </td><td><pre>
-{! examples/publish_verifier.zen !}
-</pre></td>
-<td>issuer_verifier</td>
-</tr></table>
-
-2 **Alice** generates her **credential keypair**
-<table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
-<tr><td> - </td><td><pre>
-{! examples/credential_keygen.zen !}
-</pre></td>
-<td>credential_keypair</td>
-</tr></table>
-
-3 **Alice** sends her **credential signature request**
-<table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
-<tr><td> credential_keypair </td><td><pre>
-{! examples/create_request.zen !}
-</pre></td>
-<td>credential_request</td>
-</tr></table>
-
-4 **MadHatter** decides to sign a **credential signature request**
-<table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
-<tr><td> credential_request<br/>issuer_keypair </td><td><pre>
-{! examples/issuer_sign.zen !}
-</pre></td>
-<td>issuer_signature</td>
-</tr></table>
-
-5 **Alice** receives and aggregates the signed **credential**
-<table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
-<tr><td> issuer_signature<br/>credential_keypair </td><td><pre>
-{! examples/aggregate_signature.zen !}
-</pre></td>
-<td>credential</td>
-</tr></table>
-
-
-## Centralized credential issuance
-
-Lets see how flexible is Zencode.
-
-The flow described above is for a fully decentralized issuance of
-**credentials** where only the **Holder** is in possession of the
-**credential keypair** needed to produce a **credential proof**.
-
-But let's immagine a much more simple use-case for a more centralized
-system where the **Issuer** provides the **Holder** with everything
-ready to go to produce zero knowledge credential proofs.
-
-The implementation is very, very simple: just line up all the **When**
-blocks where the different operations are done at different times and
-print the results all together!
-
-```cucumber
-Scenario coconut
-Given that I am known as 'Issuer'
-When I create the issuer keypair
-and I create the credential keypair
-and I create the credential request
-and I create the credential signature
-and I create the credentials
-Then print the 'credentials'
-and print the 'credential keypair'
-```
-
-This will produce **credentials** that anyone can take and run. Just
-beware that in this simplified version of ABC the **Issuer** may
-maliciously keep the **credential keypair** and impersonate the
-**Holder**.
-
-
-
-<span class="big">
 <span class="mdi mdi-lightbulb-on-outline"></span>
-<b>Try it on your system!</b>
-</span>
+**Good Practice**: start your Zencode noting down the Zenroom version you are using!
 
-Impatient to give it a spin? run Zencode scripts locally to see what
-are the files produced!
-
-Make sure that Zenroom is installed on your PC
-and then go to the...
-
-<span class="big"> <span class="mdi mdi-cogs"></span> [Shell Script
-Examples](/examples/shell_scripts) </span>
-
-
-# Zero Knowledge Proofs
-
-There is more to this of course: Zencode supports several features
-based on pairing elliptic curve arithmetics and in particular:
-
-- non-interactive zero knowedge proofs (also known as ZKP or ZK-Snarks)
-- threshold credentials with multiple decentralised issuers
-- homomorphic encryption for numeric counters
-
-These are all very useful features for architectures based on the
-decentralisation of trust, typical of **DLT and blockchain based
-systems, as well for off-line and non-interactive authentication**.
-
-The Zencode language leverages two main scenarios, more will be
-implemented in the future.
-
-1. Attribute Based Credentials (ABC) where issuer verification keys
-   represent specific credentials
-2. A Petition system based on ABC and homomorphic encryption
-
-Three more are in the work and they are:
-
-1. Anonymous proxy validation scheme
-2. Token thumbler to privately transfer numeric assets
-3. Private credential revokation
+```
+rule check version 1.0.0
+```
 
 
 # Symmetric encryption 
 
-This is a simple tecnique to hide a secret using a common password known to all people.
+This is a simple tecnique to hide a secret using a common password known to all participants.
 
 The algorithm used is
-[AES-GCM](https://en.wikipedia.org/wiki/Galois/Counter_Mode) with an optional authenticated header ([AEAD](https://en.wikipedia.org/wiki/Authenticated_encryption))
+[AES-GCM](https://en.wikipedia.org/wiki/Galois/Counter_Mode) with a random IV and an optional authenticated header ([AEAD](https://en.wikipedia.org/wiki/Authenticated_encryption))
 
-It is applied using 3 arguments:
+The encryption is applied using 3 arguments:
 
-- `message` is the object to be encrypted
-- `secret` is the secret password used to encrypt
-- `header` (optional) the authenticated header
+- `password` can be any string (or file) used to lock and unlock the secret
+- `message` can be any string (or file) to be encrypted and decrypted
+- `header` is a fixed name and optional argument to indicate an authenticated header
 
-The arguments must be already given at the moment of using the when
-block:
+These 3 arguments can be written or imported, but must given before using the `I encrypt` block:
 
 ```cucumber
-When I encrypt the secret message 'whisper' with 'my password'
+{! examples/SYM02.zen !}
 ```
 
 The output is returned in `secret message` and it looks like:
 
 ```json
-{"secret_message":
-{"iv":"u64:aeBQ9CrdLfg24_QhtTJ0c1eEamvprfoOiVVbcfuyUFM",
-"header":"u64:dGhpc19pc190aGVfaGVhZGVy",
-"text":"u64:DaOlZtRNS-j9671noYQuN0c-PrxdhbjSZVQLYdNw-5W-rA5Gd36bNUm01srnleY",
-"checksum":"u64:ewKri7ghI3nO0bPJtwZcbA"},
-"zenroom":{"curve":"goldilocks","encoding":"url64","version":"1.0.0"}}
+{"secret_message":{"iv":"u64:-tU2gbox9kATCeC2k_zkhYM-PBA3IzvN7HtfyVXdzB4",
+	"header":"u64:dGhpc19pc19mb3JfQm9i",
+	"text":"u64:cw4M3FBO3zaPRAB26d6y8SMPGgAo_0AmJUrhg5dmKwoEB7BWLAAD_A2h",
+	"checksum":"u64:UugLrIuxRX46BETc1-XkrA"}}
 ```
 
 To decode make sure to have that secret password and that a valid `secret message` is given, then use:
 
 ```cucumber
-When I decrypt the secret message with 'my password'
+{! examples/SYM03.zen !}
 ```
 
 So let's imagine I want to share a secret with someone and send secret messages encrypted with it:
 
 ![Zencode to encrypt with password](img/aes_crypt.svg)
 
-I will need 3 Zencode contracts executed at different times:
+Of course the password must be known by all participats and that's the
+dangerous part, since it could be stolen.
 
-**1. I generate a strong random secret**
-```cucumber
-{! examples/SYM01.zen !}
-```
--> then save the secret output and send it
-
-**2. I encrypt a message using this secret**
-```cucumber
-{! examples/SYM02.zen !}
-```
--> then save the secret message and send it
-
-**3. Who has my secret can decrypt the secret message**
-```cucumber
-{! examples/SYM03.zen !}
-```
-
-Of course the secret must be known by all participats and that's the
-dangerous part, since it could be stolen at the moment is told.
-
-We solve this problem using **public-key cryptography**, also known as a-symmetric encryption, explained in the next section.
+We mitigate this risk using **public-key cryptography**, also known as
+**a-symmetric encryption**, explained below.
 
 # Asymmetric encryption
 
 We use [asymmetric encryption (or public key
 cryptography)](https://en.wikipedia.org/wiki/Public-key_cryptography)
-when we want to introduce the possession of keypairs (public and private) both by
+when we want to introduce the possession of **keypairs** (public and private) both by
 Alice and Bob: this way there is no need for a single secret to be known to both.
 
 Fortunately it is pretty simple to do using Zencode in 2 steps
@@ -482,28 +274,224 @@ In this example Alice uses her private key to sign and authenticate a
 message. Bob or anyone else can use Alice's public key to prove that
 the integrity of the message is kept intact and that she signed it.
 
-# Syntax and Memory model
 
-Zencode contracts operate in 3 phases:
 
-1. **Given** - validates the input
-2. **When** - processes the contents
-3. **Then** - prints out the results
+# Attribute Based Credentials
 
-The 3 separate blocks of code also correspond to 3 separate memory areas, sealed by some security measures.
+![Alice in Wonderland](img/alice_with_cards-sm.jpg)
 
-![Zencode documentation diagram](img/zencode_diagram.png)
+Attribute Based Credentials are a powerful and complex feature
+implemented using the [Coconut crypto
+scheme](https://arxiv.org/pdf/1802.07344.pdf). This is the most
+complex functionality available in Zenroom and it will show how the
+Zencode language really simplifies it.
 
-All data processed has first to pass the validation phase according to scenario specific data schemas.
+Let's imagine 3 different subjects for our scenarios:
 
+1. **Mad Hatter** is a well known **issuer** in Wonderland
+2. **Wonderland** is an open space (a blockchain!) and all inhabitants can check the validity of **proofs**
+3. **Alice** just arrived: to create **proofs** she'll request a **credential** to the issuer **MadHatter** 
+
+When **Alice** is in possession of **credentials** then she can
+create a **proof** any time she wants using as input:
+
+- the **credentials**
+- her **credential keypair**
+- the **verifier** by MadHatter
+```cucumber
+{! examples/create_proof.zen !}
+```
+
+All these "things" (credentials, proofs, etc.) are data structures that can be used as input and received as output of Zencode functions. For instance a **proof** can be print in **JSON** format and looks a bit list this:
+
+```json
+{
+   "credential_proof" : {
+      "pi_v" : {
+         "c" : "u64:tBrCGawWYEAi55_hHIPq0JT3OaapOebSHVW0GhjJcAk",
+         "rr" : "u64:J7R3FXsI2dcfyZRCqWA8fDYijG39P16LvGpX90wtCWw",
+         "rm" : "u64:QoG-28CNTAY3Ir4SQqVoK1ZpTlzOnXxX6Xtq5KMIxpo"
+      },
+      "nu" : "u64:BA77WYvBRsc53uAyrqTjuUdptJPZbcTlzr9icizm0...",
+      "sigma_prime" : {
+         "h_prime" : "u64:BB9AM5xjWPxsZ47zh1WAmFymru66W6YuK...",
+         "s_prime" : "u64:BAGYNM6JO0wRAGE87_-bQVuhUXeEoeJrh..."
+      },
+      "kappa" : "u64:GFVYsudbHOJNzPl3ZL0_VzB_DRvrPKF26OCZR9..."
+   },
+   "zenroom" : {
+      "scenario" : "coconut", "encoding" : "url64", "version" : "1.0.0"
+   }
+}
+```
+
+Anyone can verify proofs using as input:
+
+- the **credential proof**
+- the **verifier** by MadHatter
+```cucumber
+{! examples/verify_proof.zen !}
+```
+
+What is so special about these proofs? Well!  Alice cannot be followed
+by her trail of proofs: **she can produce an infinite number of
+proofs, always different from one another**, for anyone to recognise
+the credential without even knowing who she is.
+
+![even the MadHatter is surprised](img/madhatter.jpg)
+
+Imagine that once **Alice** is holding **credentials** she can enter
+any room in Wonderland and drop a **proof** in the chest at its
+entrance: this proof can be verified by anyone without disclosing
+Alice's identity.
+
+The flow described above is pretty simple, but the steps to setup the
+**credential** are a bit more complex. Lets start using real names
+from now on:
+
+- Alice is a credential **Holder**
+- MadHatter is a credential **Issuer**
+- Wonderland is a public **Blockchain**
+- Anyone is any peer connected to the blockchain
+
+![Zencode flow for ABC](img/zkp_abc_flow.svg)
+
+To add more detail, the sequence is:
+
+![Zencode sequence for ABC](img/zkp_abc.svg)
+
+
+1 **MadHatter** generates an **issuer keypair**
+<table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
+<tr><td> - </td><td><pre>
+{! examples/issuer_keygen.zen !}
+</pre></td>
+<td>issuer_keypair</td>
+</tr></table>
+
+1a **MadHatter** publishes the **verification key**
+<table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
+<tr><td> issuer_keypair </td><td><pre>
+{! examples/publish_verifier.zen !}
+</pre></td>
+<td>issuer_verifier</td>
+</tr></table>
+
+2 **Alice** generates her **credential keypair**
+<table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
+<tr><td> - </td><td><pre>
+{! examples/credential_keygen.zen !}
+</pre></td>
+<td>credential_keypair</td>
+</tr></table>
+
+3 **Alice** sends her **credential signature request**
+<table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
+<tr><td> credential_keypair </td><td><pre>
+{! examples/create_request.zen !}
+</pre></td>
+<td>credential_request</td>
+</tr></table>
+
+4 **MadHatter** decides to sign a **credential signature request**
+<table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
+<tr><td> credential_request<br/>issuer_keypair </td><td><pre>
+{! examples/issuer_sign.zen !}
+</pre></td>
+<td>issuer_signature</td>
+</tr></table>
+
+5 **Alice** receives and aggregates the signed **credential**
+<table><tr><th>Input</th><th>Zencode</th><th>Output</th></tr>
+<tr><td> issuer_signature<br/>credential_keypair </td><td><pre>
+{! examples/aggregate_signature.zen !}
+</pre></td>
+<td>credential</td>
+</tr></table>
+
+
+## Centralized credential issuance
+
+Lets see how flexible is Zencode.
+
+The flow described above is for a fully decentralized issuance of
+**credentials** where only the **Holder** is in possession of the
+**credential keypair** needed to produce a **credential proof**.
+
+But let's immagine a much more simple use-case for a more centralized
+system where the **Issuer** provides the **Holder** with everything
+ready to go to produce zero knowledge credential proofs.
+
+The implementation is very, very simple: just line up all the **When**
+blocks where the different operations are done at different times and
+print the results all together!
+
+```cucumber
+Scenario coconut
+Given that I am known as 'Issuer'
+When I create the issuer keypair
+and I create the credential keypair
+and I create the credential request
+and I create the credential signature
+and I create the credentials
+Then print the 'credentials'
+and print the 'credential keypair'
+```
+
+This will produce **credentials** that anyone can take and run. Just
+beware that in this simplified version of ABC the **Issuer** may
+maliciously keep the **credential keypair** and impersonate the
+**Holder**.
+
+
+
+<span class="big">
 <span class="mdi mdi-lightbulb-on-outline"></span>
-**Good Practice**: start your Zencode noting down the Zenroom version you are using!
+<b>Try it on your system!</b>
+</span>
 
-```
-rule check version 1.0.0
-```
+Impatient to give it a spin? run Zencode scripts locally to see what
+are the files produced!
+
+Make sure that Zenroom is installed on your PC
+and then go to the...
+
+<span class="big">
+<span class="mdi mdi-web"></span> [Online Interactive Demo](/demo)
+
+<span class="big">
+<span class="mdi mdi-cogs"></span> [Shell Script Examples](/examples/shell_scripts)
 
 
+
+# Zero Knowledge Proofs
+
+There is more to this of course: Zencode supports several features
+based on pairing elliptic curve arithmetics and in particular:
+
+- non-interactive zero knowedge proofs (also known as ZKP or ZK-Snarks)
+- threshold credentials with multiple decentralised issuers
+- homomorphic encryption for numeric counters
+
+These are all very useful features for architectures based on the
+decentralisation of trust, typical of **DLT and blockchain based
+systems, as well for off-line and non-interactive authentication**.
+
+The Zencode language leverages two main scenarios, more will be
+implemented in the future.
+
+1. Attribute Based Credentials (ABC) where issuer verification keys
+   represent specific credentials
+2. A Petition system based on ABC and homomorphic encryption
+
+Three more are in the work and they are:
+
+1. Anonymous proxy validation scheme
+2. Token thumbler to privately transfer numeric assets
+3. Private credential revokation
+
+
+# Import, validate and transform data
 
 ## Given
 

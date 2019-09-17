@@ -1,13 +1,10 @@
 sequenceDiagram
 	participant A as Anon1
 	participant B as Anon2	
-#    Note over A,B: Given nothing<br/>When I create a random 'secret'<br/>Then print the 'secret'
-	A->>A: 1. I generate a strong random secret
-    A->>B: Then save the secret output and send it
-#	Note over A,B: Given I have a 'secret'<br/>When I write 'confidential message' in 'message'<br/>and I encrypt the 'message' to 'secret message' with 'secret'<br/>Then print the 'secret message'
-	A->>A: 2. I encrypt a message using this secret
-    A->>B: Then save the secret message and send it
-#    Note over A,B: Given i have a 'secret'<br/>and i have a 'secret message'<br/>When I decrypt the 'secret message' to 'message' with 'secret'<br/>then print as 'string' the 'text' inside 'message'
-    B->>B: 3. Who has my secret can decrypt the secret message
+	A->>A: Think of a secret password
+    A->>B: Tell the password to a friend
+	A->>A: Encrypt a secret message with the password
+    A->>B: Send the secret message to the friend
+    B->>B: Decrypts the secret message with the password
 
 	

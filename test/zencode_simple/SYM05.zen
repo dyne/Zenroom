@@ -2,8 +2,9 @@ rule check version 1.0.0
 rule input format cbor
 rule output format cbor
 Scenario 'simple': [CBOR] Encrypt a message with the secret
-Given I have a 'secret'
-When I write 'a very short but very very confidential message' in 'whisper'
-and I write 'this is the header' in 'header'
-and I encrypt the secret message 'whisper' with 'secret'
+Given nothing
+When I write 'my secret word' in 'password'
+and I write 'a very short but very confidential message' in 'whisper'
+and I write 'for your eyes only' in 'header'
+and I encrypt the secret message 'whisper' with 'password'
 Then print the 'secret message'
