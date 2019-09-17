@@ -34,8 +34,7 @@ SOURCES := \
 	zen_fp12.o zen_random.o zen_hash.o \
 	zen_ecdh.o zen_ecdh_factory.o \
 	randombytes.o \
-	cortex_m.o \
-	redis_mod.o
+	cortex_m.o
 
 # js: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
 js: JSOUT ?= zenroom.js
@@ -71,7 +70,7 @@ win-exe: LDFLAGS += -static
 win-exe: ${SOURCES}
 	./stamp-exe.sh
 	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.exe zenroom.res ${SOURCES} ${LDADD}
-	x86_64-w64-mingw32-strip zenroom.exe
+#x86_64-w64-mingw32-strip zenroom.exe
 
 win-dll: CFLAGS += -DLIBRARY
 win-dll: LDFLAGS += -shared
