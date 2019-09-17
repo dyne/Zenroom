@@ -27,7 +27,11 @@ command -v pyenv > /dev/null && {
 	  Darwin)
 		make -s osx-python3 || exit 1
 		;;
-	  esac
-	  echo
+	esac
+	SAFE_DIR_VERSION=$(echo $VERSION|tr . _)
+	PYTHON_PACKAGE="bindings/python3/zenroom/libs/$(uname)/$SAFE_DIR_VERSION"
+	mkdir -p $PYTHON_PACKAGE
+	cp -v "src/_zenroom.so" $PYTHON_PACKAGE
+	echo
 	done
 }
