@@ -61,7 +61,7 @@ echo -e "Publishing ${OK}${VERSION}${NC} for ${OK}Python${NC} over pypi.org"
 echo
 
 publish_python
-CD $BUILD_PATH
+cd $BUILD_PATH
 
 echo -e "Publishing ${OK}${VERSION}${NC} for ${OK}Javascript${NC} over npm"
 echo
