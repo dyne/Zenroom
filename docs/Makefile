@@ -23,6 +23,8 @@ website:
 	@cp -v zencode_diagram.png website/docs/img
 	@cp -v ../test/zencode_coconut/*.zen website/docs/examples/
 	@cp -v ../test/zencode_simple/*.zen website/docs/examples/
+	@cp -v ../test/zencode_simple/*.keys website/docs/examples/
+	@cp -v ../test/zencode_simple/*.data website/docs/examples/
 	@cd website && mkdocs build
 
 map:
