@@ -58,7 +58,7 @@ var ZR = (function() {
 
     const loadExamples = (e) => {
         const name = $(e.target).attr('id')
-        const extensions = {'#code': '.lua', '#data': '.data', '#keys': '.keys'}
+        const extensions = {'#lua': '.lua', '#data': '.data', '#keys': '.keys'}
         const base_url = "https://raw.githubusercontent.com/DECODEproject/zenroom/master/examples/"
         for (var e in extensions) {
             const editor = $(e)[0].env.editor
@@ -73,12 +73,15 @@ var ZR = (function() {
 
     const loadZencodeExamples = (e) => {
         const name = $(e.target).attr('id');
+        const extensions = {'#zencode': '.zen', '#data': '.data', '#keys': '.keys'}
         const base_url = "https://raw.githubusercontent.com/DECODEproject/zenroom/master/test/zencode_simple/"
-        const editor = $('#zencode')[0].env.editor
-        editor.setValue("")
-        $.get(base_url + name, value => {
-            editor.setValue(value)
-        })
+        for (var e in extensions) {
+            const editor = $(e)[0].env.editor
+            editor.setValue("")
+            $.get(base_url + name + extensions[e], value => {
+                editor.setValue(value)
+            })
+        }
     }
 
     const loadCoconutExamples = (e) => {
