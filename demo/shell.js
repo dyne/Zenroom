@@ -24,7 +24,7 @@ var ZR = (function() {
                     isClosable: false,
                 }, {
                     type: 'component',
-                    title: 'CODE',
+                    title: 'LUA',
                     componentName: 'CodeEditor',
                     componentState: { label: 'code' },
                     isClosable: false,

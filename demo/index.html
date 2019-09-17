@@ -18,25 +18,28 @@
   <script src="//rawgit.com/caldwell/renderjson/master/renderjson.js"></script>
   <script src="./shell.js"></script>
   <style>
-  body { font-family: Montserrat, sans-serif; font-size: 14px; }
-  #output { font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro", monospace; overflow: auto; padding: 5px; }
-  #zenbar .navbar-start a.navbar-item::before { content: " "; height: 10px; width: 10px; background-color: #33e986; margin-right: 10px; display: inline-block; }
-  #zenbar .navbar-start a.navbar-item:hover::before { background-color: #ff00ff; }
-  .lm_header .lm_tab { font-family: Montserrat; font-size: 14px; height: 21px; }
-  .lm_header .lm_controls>li, .icon { height: 28px; width: 28px; }
-  .lm_controls > li { background-size: 15px; }
-  .renderjson                { background-color: transparent; height: 100%;}
-  .renderjson a              { text-decoration: none; }
-  .renderjson .disclosure    { color: crimson; }
-  .renderjson .syntax        { color: grey; }
-  .renderjson .string        { color: red; }
-  .renderjson .number        { color: cyan; padding:0; font-size: inherit; background-color: transparent; height: auto; }
-  .renderjson .boolean       { color: plum; }
-  .renderjson .key           { color: lightblue; }
-  .renderjson .keyword       { color: lightgoldenrodyellow; }
-  .renderjson .object.syntax { color: lightseagreen; }
-  .renderjson .array.syntax  { color: lightsalmon; }
-  #timing { height: auto; position: relative; bottom: 6px; margin-left: 4px; }
+   body { font-family: Montserrat, sans-serif; font-size: 14px; }
+   #output { font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro", monospace; overflow: auto; padding: 5px; }
+   #zenbar .navbar-start a.navbar-item::before { content: " "; height: 10px; width: 10px; background-color: #33e986; margin-right: 10px; display: inline-block; }
+   #zenbar .navbar-start a.navbar-item:hover::before { background-color: #ff00ff; }
+   #zenbar .navbar-item { padding-left: 1em; padding-right: 1em; }
+   #zenbar .navbar-item img { padding-left: 1em; padding-right: 2em; }
+   .navbar-item .examples { background-color: #efefef }
+   .lm_header .lm_tab { font-family: Montserrat; font-size: 14px; height: 21px; }
+   .lm_header .lm_controls>li, .icon { height: 28px; width: 28px; }
+   .lm_controls > li { background-size: 15px; }
+   .renderjson                { background-color: transparent; height: 100%;}
+   .renderjson a              { text-decoration: none; }
+   .renderjson .disclosure    { color: crimson; }
+   .renderjson .syntax        { color: grey; }
+   .renderjson .string        { color: red; }
+   .renderjson .number        { color: cyan; padding:0; font-size: inherit; background-color: transparent; height: auto; }
+   .renderjson .boolean       { color: plum; }
+   .renderjson .key           { color: lightblue; }
+   .renderjson .keyword       { color: lightgoldenrodyellow; }
+   .renderjson .object.syntax { color: lightseagreen; }
+   .renderjson .array.syntax  { color: lightsalmon; }
+   #timing { height: auto; position: relative; bottom: 6px; margin-left: 4px; }
   </style>
 </head>
 
@@ -65,10 +68,10 @@
   <div class="container is-fluid">
     <nav class="navbar" role="navigation" aria-label="main navigation">
       <div class="navbar-brand">
-        <a class="navbar-item" href="https://zenroom.dyne.org/">
-          <img src="/img/decode.svg" width="112" height="28">
+        <a class="navbar-item" href="https://dev.zenroom.org/">
+		  Zenroom <img src="/img/zenroom_logo-sm.jpg"> <!-- width="112" height="28"> -->
+		  secure crypto language VM - in-browser demo 
         </a>
-
         <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="zenbar">
           <span aria-hidden="true"></span>
           <span aria-hidden="true"></span>
@@ -82,12 +85,12 @@
             software by <img src="/img/dyne-big.png" height="28" alt="Dyne.org" />
           </a>
 
-          <a class="navbar-item" href="https://milagro.apache.org/">
-            powered by <img src="/img/milagro.svg" height="28" alt="Milagro" />
-          </a>
-        </div>
+          <!-- <a class="navbar-item" href="https://milagro.apache.org/"> -->
+          <!--   powered by <img src="/img/milagro.svg" height="28" alt="Milagro" /> -->
+          <!-- </a> -->
+        <!-- </div> -->
 
-        <div class="navbar-end">
+        <!-- <div class="navbar-end"> -->
           <div class="navbar-item has-dropdown is-hoverable">
               <a class="navbar-link">
                 Examples
@@ -113,11 +116,11 @@
                 <a class="navbar-item examples" id="dashboard-from-iotdev">Receive and decode IoT sensor messages</a>
               </div>
             </div>
-          <div class="navbar-item">
-            <div class="buttons">
-              <input id="umm" class="form-check-input" type="checkbox" value="">&nbsp; minimal memory manager (64KiB max)
-            </div>
-          </div>
+			<!-- <div class="navbar-item">
+				 <div class="buttons">
+				 <input id="umm" class="form-check-input" type="checkbox" value="">&nbsp; minimal memory manager (64KiB max)
+				 </div>
+				 </div> -->
         </div>
       </div>
     </nav>
