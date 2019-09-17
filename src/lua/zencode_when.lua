@@ -42,14 +42,14 @@ When("I verify '' is equal to ''", function(l,r)
 					  ..l.." == "..r)
 end)
 
-When("I create a random array of '' elements", function(s)
+When("I create the array of '' random objects", function(s)
 		ACK.array = { }
 		for i = s,1,-1 do
 		   table.insert(ACK.array,OCTET.random(64))
 		end
 end)
 
-When("I create a random '' bit array of '' elements", function(bits, s)
+When("I create the array of '' random objects of '' bits", function(s, bits)
 		ACK.array = { }
 		for i = s,1,-1 do
 		   table.insert(ACK.array,OCTET.random(bits/8))

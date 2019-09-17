@@ -1,0 +1,5 @@
+rule check version 1.0.0
+Scenario simple: Generate a random password
+Given nothing
+When I create the array of '32' random objects of '256' bits
+Then print the 'array'

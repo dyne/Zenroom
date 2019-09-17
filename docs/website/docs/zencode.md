@@ -95,7 +95,7 @@ In this phase each participant will create his/her own keypair, store it and com
 The statement to generate a keypair (public and private keys) is simple:
 
 ```cucumber
-When I create the keypair
+{! examples/AES01.zen !}
 ```
 
 It will produce something like this:
@@ -127,47 +127,58 @@ After both Alice and Bob have their own keypairs and they both know
 each other public key we can move forward to do asymmetric encryption
 and signatures.
 
-**1.a Alice keygen**
 ```cucumber
 {! examples/AES01.zen !}
 ```
+<span class="mdi mdi-arrow-down"></span>
+<span class="mdi mdi-arrow-down"></span>
+<span class="mdi mdi-arrow-down"></span>
+<span class="mdi mdi-arrow-down"></span>
 
-**2.a Alice pubkey**
+```json
+"Alice": {
+   "keypair": {
+      "private_key": "u64:F_NaS3Y6Xw6BW...",
+      "public_key": "u64:BLG0OGDwzP_gY41TZgGpUB4lTYCgpx9BJVScxSQAfwqEi..."
+   }
+}
+```
+
+<span class="mdi mdi-arrow-down"></span>
+<span class="mdi mdi-arrow-down"></span>
+<span class="mdi mdi-arrow-down"></span>
+<span class="mdi mdi-arrow-down"></span>
+
 ```cucumber
 {! examples/AES02.zen !}
 ```
 
-**1.b Bob keygen**
-```cucumber
-{! examples/AES03.zen !}
+<span class="mdi mdi-arrow-down"></span>
+<span class="mdi mdi-arrow-down"></span>
+<span class="mdi mdi-arrow-down"></span>
+<span class="mdi mdi-arrow-down"></span>
+
+```json
+"Alice": {
+   "public_key": "u64:BLG0OGDwzP_gY41TZgGpUB4lTYCgpx9BJVScxSQAfwqEi..."
+}
 ```
 
-**2.b Bob pubkey**
-```cucumber
-{! examples/AES04.zen !}
-```
+The advantage of using Zencode here is the use of the `valid` keyword which effectively parses the `public key` object and verifies it as valid, in this case as being a valid point on the elliptic curve in use. This greatly reduces the possibility of common mistakes.
 
 ## Public-key Encryption (ECDH)
 
 Public key encryption is similar to the [asymmetric
 encryption](#asymmetric-encryption) explained in the previous section,
-with a difference: the `for` clause indicates the public key of the
-recipient.
+with a difference: the `from` and `for` clauses indicating the public
+key of the recipient.
 
 Before getting to the encryption 2 other objects must be given:
 
 - `keypair` is one's own public and private keys
 - `public key` from the intended recipient
 
-So a typical `Given` section preparing for encryption looks like:
-
-```cucumber
-Given that I am known as 'Alice'
-and I have my valid 'keypair'
-and I have a valid 'public key' from 'Bob'
-```
-
-which accepts an input like:
+So with an input separated between DATA and KEYS or grouped together in an array like:
 
 ```json
 [
@@ -178,10 +189,14 @@ which accepts an input like:
 ]
 ```
 
-then the Zencode contract continues with the line:
+<span class="mdi mdi-arrow-down"></span>
+<span class="mdi mdi-arrow-down"></span>
+<span class="mdi mdi-arrow-down"></span>
+<span class="mdi mdi-arrow-down"></span>
+
 
 ```cucumber
-When I encrypt the secret message 'whisper' for 'Bob'
+{! examples/AES05.zen !}
 ```
 
 which encrypts and stores results in `secret message`; also in this case `header` may be given, then is included in the encryption as an authenticated clear-text section.

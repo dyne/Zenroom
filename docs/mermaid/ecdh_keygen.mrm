@@ -1,15 +1,8 @@
 sequenceDiagram
     participant A as Alice
     participant B as Bob
-	
-#	Note over A,B: Given that I am known as 'Alice'<br/>When I create my new keypair<br/>Then print my data
-    A->>A: generate own keypair
-#	Note over A,B: Given that I am known as 'Alice'<br/>and I have my 'public key'<br/>Then print my data
-    A->>A: publish the public key	
-    A->>B: send the public key
-#    Note over A,B: Given that I am known as 'Bob'<br/>When I create my new keypair<br/>Then print my data
-    B->>B: generate own keypair
-#	Note over A,B: Given that I am known as 'Bob'<br/>and I have my 'public key'<br/>Then print my data
-    B->>B: publish the public key	
-    B->>A: send the public key
+    A->>A: create the keypair
+    A->>B: publish the public key	
+    B->>B: create the keypair
+    B->>A: publish the public key	
 
