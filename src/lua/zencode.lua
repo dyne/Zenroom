@@ -503,7 +503,7 @@ function zencode:step(text)
    else -- defs = nil end
 	    -- if not defs then
 		 exitcode(1)
-		 error("Zencode invalid: "..text)
+		 error("Zencode pattern not found: "..text, 2)
 		 ZEN.OK = false
    end
    if not ZEN.OK then
@@ -522,12 +522,13 @@ function zencode:step(text)
    tt = string.gsub(tt,"and "  ,"", 1)
    tt = string.gsub(tt,"that "  ,"", 1)
 
+   local match = false
    for pattern,func in pairs(defs) do
       if (type(func) ~= "function") then
          error("Zencode function missing: "..pattern, 2)
          return false
       end
-	  if strcasecmp(tt, string.gsub(pattern,"that "  ,"", 1)) then
+      if strcasecmp(tt, string.gsub(pattern,"that "  ,"", 1)) then
 		 local args = {} -- handle multiple arguments in same string
 		 for arg in string.gmatch(text,"'(.-)'") do
 			-- xxx(2,"+arg: "..arg)
@@ -540,8 +541,16 @@ function zencode:step(text)
 						args = args,
 						source = text,
 						hook = func       })
+		 match = true
 	  end
    end
+   if not match then
+	  exitcode(1)
+	  error("Zencode pattern not found: "..text, 2)
+	  ZEN.OK = false
+	  return false
+   end
+   return true
 end
 
 
