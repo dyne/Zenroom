@@ -38,6 +38,7 @@ lowmem-tests = \
 
 crypto-tests = \
 	@${1} test/octet.lua && \
+	${1} test/octet_conversion.lua && \
 	${1} test/hash.lua && \
 	${1} test/ecdh.lua && \
 	${1} test/dh_session.lua && \

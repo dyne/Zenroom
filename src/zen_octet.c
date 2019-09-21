@@ -155,14 +155,16 @@ int is_hex(const char *in) {
 	return c;
 }
 
+// return total string length including spaces
 int is_bin(const char *in) {
 	if(!in) { ERROR(); return 0; }
-	int c;
+	register int c;
+	register int len = 0;
 	for(c=0; in[c]!='\0'; c++) {
-		if (in[c]!='0' && in[c]!='1') {
-			return 0; }
+		if (in[c]!='0' && in[c]!='1' && !isspace(in[c])) return 0;
+		len++;
 	}
-	return c;
+	return len; 
 }
 
 // REMEMBER: newuserdata already pushes the object in lua's stack
@@ -507,28 +509,41 @@ static int from_hex(lua_State *L) {
 	return 1;
 }
 
+// I'm quite happy about this: its fast and secure. It can just be
+// made more elegant.
 static int from_bin(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "binary string sequence expected");
-	int len = is_bin(s);
-	int bytes = len/8; // TODO: check that len is mult of 8 (no carry)
-	if(!len || bytes>MAX_STRING) {
-		error(L, "invalid binary sequence size: %u", bytes);
+	const int len = is_bin(s);
+	if(!len || len>MAX_STRING) {
+		error(L, "invalid binary sequence size: %u", len);
 		lerror(L, "operation aborted");
 		return 0; }
-	octet *o = o_new(L, bytes+1);
-	int i,j;
-	uint8_t b;
-	for(i=0; i<len; i+=8) {
-		b = 0x0;
-		for(j=0;j<8;++j) {
-			if(s[i+j]=='1') b = b | 0x1;
-			b <<= 1;
+	octet *o = o_new(L, len+4); // destination
+	const char *S = (s[3]==':')?s+4:s; // jump prefix
+	register int p; // position in whole string
+	register int i; // increased only when 1 or 0 is found
+	register int d; // increased only added to dest
+	register int j; // bytemask counter
+	volatile uint8_t b = 0x0; // bytemask
+	for(p=0, j=0, i=0, d=0; p<len; p++, S++) {
+		if(isspace(*S)) continue;
+		if(j<7) { // add to bytemask
+			if(*S=='1') b = b | 0x1;
+			b = b<<1;
+			j++;
+		} else { // reset bytemask and shift left
+			o->val[d] = b;
+			b = 0x0;
+			j = 0;
+			d++;
+			if(*S=='1') b = b | 0x1;
+			b = b<<1;
 		}
-		o->val[i/8] = b>>1;
+		i++;
 	}
-	o->val[bytes] = 0x0;
-	o->len = bytes;
+	o->val[d] = 0x0;
+	o->len = d;
 	return 1;
 }
 
