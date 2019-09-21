@@ -486,7 +486,7 @@ function zencode:step(text)
    elseif prefix == 'scenario' then
 	  ZEN.assert(ZEN.machine:enter_scenario(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.." to Scenario block")
 	  -- string.gmatch to cut away text after the colon
-	  local scenarios = strtok(I.spy(string.match(text, "[^:]+")))
+	  local scenarios = strtok(string.match(text, "[^:]+"))
 	  for k,scen in ipairs(scenarios) do
 		 if k ~= 1 then -- skip prefix
 			require_once("zencode_"..trimq(scen))
