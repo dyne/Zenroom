@@ -404,7 +404,11 @@ static int from_base64(lua_State *L) {
 		return 0; }
 	int nlen = len + len + len; // getlen_base64(len);
 	octet *o = o_new(L, nlen+4); // 4 byte header
-	OCT_frombase64(o,(char*)s+4);
+	if(s[0]=='b' && s[1]=='6' && s[2]=='4' && s[3]==':') { 
+		OCT_frombase64(o,(char*)s+4);
+	} else {
+		OCT_frombase64(o,(char*)s);
+	}
 	return 1;
 }
 
@@ -417,8 +421,12 @@ static int from_url64(lua_State *L) {
 		return 0; }
 	int nlen = B64decoded_len(len);
 	// func(L,"U64 decode len: %u -> %u",len,nlen);
-	octet *o = o_new(L, nlen);
-	o->len = U64decode(o->val,(char*)s+4); // skip header
+	octet *o = o_new(L, nlen+4);
+	if(s[0]=='u' && s[1]=='6' && s[2]=='4' && s[3]==':') { 
+		o->len = U64decode(o->val,(char*)s+4); // skip header
+	} else {
+		o->len = U64decode(o->val,(char*)s);
+	}
 	// func(L,"u64 return len: %u",o->len);
 	return 1;
 }
