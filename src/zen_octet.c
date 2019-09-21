@@ -497,7 +497,7 @@ static int from_hex(lua_State *L) {
 	// luaL_argcheck(L, s != NULL, 1, "hex string sequence expected");
 	int len = is_hex(s);
 	func(L,"hex string sequence length: %u",len);
-	if(!len || len>MAX_STRING<<1) { // *2 hex tuples
+	if(!len || len>MAX_FILE<<1) { // *2 hex tuples
 		error(L, "hex sequence too long: %u bytes", len<<1);
 		lua_pushboolean(L,0);
 		return 1; }
@@ -515,7 +515,7 @@ static int from_bin(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "binary string sequence expected");
 	const int len = is_bin(s);
-	if(!len || len>MAX_STRING) {
+	if(!len || len>MAX_FILE) {
 		error(L, "invalid binary sequence size: %u", len);
 		lerror(L, "operation aborted");
 		return 0; }
