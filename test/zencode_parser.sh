@@ -1,7 +1,10 @@
 #!/usr/bin/env zsh
 
-echo "==========================="
-echo "Zencode syntax parser tests"
+echo "============================="
+echo " ZENCODE SYNTAX PARSER TESTS"
+echo "============================="
+echo "ERRORS ARE OK IN THIS SECTION"
+
 alias zenroom="${1:-./src/zenroom}"
 set -e
 
@@ -51,4 +54,8 @@ Then print 'Success' 'OK'
 EOF
 [[ $? == 0 ]] && return 1
 
-echo 'OK'
+echo " END OF SYNTAX PARSERS TESTS"
+echo "============================="
+echo " NO MORE ERRORS SHOULD APPEAR"
+echo
+echo

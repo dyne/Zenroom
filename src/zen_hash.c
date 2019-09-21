@@ -24,7 +24,9 @@
 // 'digest' or 'checksum'.
 //
 // HASH objects can be generated from a number of implemented
-// algorithms: `sha256` and `sha512`.
+// algorithms: `sha256` and `sha512` are stable and pass NIST vector
+// tests. There are also `sha384`, `sha3_256` and `sha3_512` with
+// experimental implementations that aren't passing NIST vector tests.
 //
 // objects are instantiated using @{HASH:new} and then provide the
 // method @{HASH:process} that takes an input @{OCTET} and then
