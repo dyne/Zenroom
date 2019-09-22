@@ -294,10 +294,18 @@ static int ecdh_public(lua_State *L) {
 	return 0;
 }
 
-// TODO: manage to export the ECDH public key in ECP format
-static int ecdh_ecp(lua_State *L) {
+
+/**
+   Returns X and Y coordinates of the public key inside an ECDH keyring.
+
+   @function keyring:public(key)
+   @treturn[1] OCTET coordinate X of public key
+   @treturn[1] OCTET coordinate Y of public key
+
+*/
+static int ecdh_pub_xy(lua_State *L) {
 	HERE();
-	int res;
+	short res;
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
 	if(!e->pubkey) {
 		ERROR();
@@ -310,13 +318,24 @@ static int ecdh_ecp(lua_State *L) {
 	// Export public key to octet.  This is like o_dup but skips
 	// first byte since that is used internally by Milagro as a
 	// prefix for Montgomery (2) or non-Montgomery curves (4)
-	int i;
-	octet *n = o_new(L, e->publen);
-	OCT_clear(n); n->len = e->pubkey->len-1;
-	if(n->len>n->max) n->len = n->max;
-	for(i=0; i<n->len; i++)
-		n->val[i] = e->pubkey->val[i+1];
-	return 1;
+	register int i;
+	octet *x = o_new(L, e->fieldsize+1);
+	for(i=0; i < e->fieldsize; i++)
+		x->val[i] = e->pubkey->val[i+1]; // +1 skips first byte
+	x->val[e->fieldsize+1] = 0x0;
+	x->len = e->fieldsize;
+	res = 1;
+	if(e->pubkey->len > e->fieldsize<<1) { // make sure y is there:
+										   // could be omitted in
+										   // montgomery notation
+		octet *y = o_new(L, e->fieldsize+1);
+		for(i=0; i < e->fieldsize; i++)
+			y->val[i] = e->pubkey->val[e->fieldsize+i+1]; // +1 skips first byte
+		y->val[e->fieldsize+1] = 0x0;
+		y->len = e->fieldsize;
+		res = 2;
+	}
+	return(res);
 }
 
 /**
@@ -380,11 +399,18 @@ static int ecdh_dsa_sign(lua_State *L) {
 	lua_setfield(L, -2, "r");
 	octet *s = o_new(L,64); SAFE(s);
 	lua_setfield(L, -2, "s");
-	// IEEE ECDSA Signature, R and S are signature on F using private key S
-	// either pass an RNG or K already randomised
-	// for K's generation see also RFC6979
-	// ECP_BLS383_SP_DSA(int sha,csprng *RNG,octet *K,octet *S,octet *F,octet *C,octet *D)
-	(*e->ECP__SP_DSA)(     64,     Z->random_generator,     NULL, e->seckey,    f,      r,      s );
+	// IEEE ECDSA Signature, R and S are signature on F using private
+	// key S. One can either pass an RNG or have K already
+	// provide. For a correct K's generation see also RFC6979, however
+	// this argument is provided here mostly for testing purposes with
+	// pre-calculated vectors.
+	if(lua_isnoneornil(L, 3)) {
+		// ECP_BLS383_SP_DSA(int sha,csprng *RNG,octet *K,octet *S,octet *F,octet *C,octet *D)
+		(*e->ECP__SP_DSA)( 64, Z->random_generator,  NULL, e->seckey,    f,      r,      s );
+	} else {
+		octet *k = o_arg(L,3); SAFE(k);
+		(*e->ECP__SP_DSA)( 64, NULL,                 k,    e->seckey,    f,      r,      s );
+	}
 	return 1;
 }
 
@@ -762,7 +788,7 @@ static int ecdh_pbkdf2(lua_State *L) {
 	{"verify", ecdh_dsa_verify}, \
 	{"hmac", ecdh_hmac}, \
 	{"hash", ecdh_hash}, \
-	{"ecp", ecdh_ecp}
+	{"public_xy", ecdh_pub_xy}
 
 
 
