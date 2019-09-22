@@ -393,22 +393,28 @@ static int ecdh_dsa_sign(lua_State *L) {
 	HERE();
 	ecdh *e = ecdh_arg(L,1); SAFE(e);
 	octet *f = o_arg(L,2); SAFE(f);
-	// return a table
-	lua_createtable(L, 0, 2);
-	octet *r = o_new(L,64); SAFE(r);
-	lua_setfield(L, -2, "r");
-	octet *s = o_new(L,64); SAFE(s);
-	lua_setfield(L, -2, "s");
 	// IEEE ECDSA Signature, R and S are signature on F using private
 	// key S. One can either pass an RNG or have K already
 	// provide. For a correct K's generation see also RFC6979, however
 	// this argument is provided here mostly for testing purposes with
 	// pre-calculated vectors.
 	if(lua_isnoneornil(L, 3)) {
+		// return a table
+		lua_createtable(L, 0, 2);
+		octet *r = o_new(L,64); SAFE(r);
+		lua_setfield(L, -2, "r");
+		octet *s = o_new(L,64); SAFE(s);
+		lua_setfield(L, -2, "s");
 		// ECP_BLS383_SP_DSA(int sha,csprng *RNG,octet *K,octet *S,octet *F,octet *C,octet *D)
 		(*e->ECP__SP_DSA)( 64, Z->random_generator,  NULL, e->seckey,    f,      r,      s );
 	} else {
 		octet *k = o_arg(L,3); SAFE(k);
+		// return a table
+		lua_createtable(L, 0, 2);
+		octet *r = o_new(L,64); SAFE(r);
+		lua_setfield(L, -2, "r");
+		octet *s = o_new(L,64); SAFE(s);
+		lua_setfield(L, -2, "s");
 		(*e->ECP__SP_DSA)( 64, NULL,                 k,    e->seckey,    f,      r,      s );
 	}
 	return 1;

@@ -41,6 +41,7 @@ crypto-tests = \
 	${1} test/octet_conversion.lua && \
 	${1} test/hash.lua && \
 	${1} test/ecdh.lua && \
+	${1} test/ecdsa_vectors.lua && \
 	${1} test/dh_session.lua && \
 	${1} test/ecdh_aes-gcm_vectors.lua && \
 	${1} test/big_bls383.lua && \
