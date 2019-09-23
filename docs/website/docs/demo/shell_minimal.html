@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css">
   <link rel="stylesheet" href="//golden-layout.com/files/latest/css/goldenlayout-base.css" />
   <link rel="stylesheet" href="//golden-layout.com/files/latest/css/goldenlayout-light-theme.css" />
-  
+
   <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Montserrat:300,500">
   <script defer src="//use.fontawesome.com/releases/v5.5.0/js/all.js"></script>
   <script src="//code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -26,7 +26,7 @@
    #zenbar .navbar-item img { padding-left: 1em; padding-right: 2em; }
    .navbar-item .examples { background-color: #efefef }
    .lm_header .lm_tab { font-family: Montserrat; font-size: 14px; height: 21px; }
-   .lm_header .lm_controls>li, .icon { height: 28px; width: 28px; }
+   .lm_header .lm_controls>li, .icon { height: 28px; width: 32px; }
    .lm_controls > li { background-size: 15px; }
    .renderjson                { background-color: transparent; height: 100%;}
    .renderjson a              { text-decoration: none; }
@@ -40,14 +40,16 @@
    .renderjson .object.syntax { color: lightseagreen; }
    .renderjson .array.syntax  { color: lightsalmon; }
    #timing { height: auto; position: relative; bottom: 6px; margin-left: 4px; }
+   #play-button { font-size:18px; right:14px; opacity: .6 }
+   #play-button svg { margin-left: 2px; }
   </style>
 </head>
 
 <body>
   <template type="text/html" id="play-button-template">
-    <li title="Run (⌘ + Enter)">
+    <li title="Run (⌘/Ctrl + Enter)" id="play-button">
       <span class="icon has-text-success">
-        <i class="fas fa-play-circle"></i>
+        RUN   <i class="fas fa-play-circle"></i>
       </span>
     </li>
   </template>
@@ -69,8 +71,8 @@
     <nav class="navbar" role="navigation" aria-label="main navigation">
       <div class="navbar-brand">
         <a class="navbar-item" href="https://dev.zenroom.org/">
-		  Zenroom <img src="/img/zenroom_logo-sm.jpg"> <!-- width="112" height="28"> -->
-		  secure crypto language VM - in-browser demo 
+          Zenroom <img src="/img/zenroom_logo-sm.jpg"> <!-- width="112" height="28"> -->
+          secure crypto language VM - in-browser demo 
         </a>
         <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="zenbar">
           <span aria-hidden="true"></span>
@@ -85,26 +87,20 @@
             software by <img src="/img/dyne-big.png" height="28" alt="Dyne.org" />
           </a>
 
-          <!-- <a class="navbar-item" href="https://milagro.apache.org/"> -->
-          <!--   powered by <img src="/img/milagro.svg" height="28" alt="Milagro" /> -->
-          <!-- </a> -->
-        <!-- </div> -->
-
-        <!-- <div class="navbar-end"> -->
           <div class="navbar-item has-dropdown is-hoverable">
               <a class="navbar-link">
                 Examples
               </a>
-  
+
               <div class="navbar-dropdown">
                 <a class="navbar-item zencode" id="RNG01">Generate many random cryptographic objects</a>
                 <a class="navbar-item zencode" id="SYM02">Encrypt a message using a password</a>
                 <a class="navbar-item zencode" id="SYM03">Decrypt a secret message using a password</a>
                 <a class="navbar-item zencode" id="AES01">Generate a keypair</a>
-				<a class="navbar-item zencode" id="AES05">Encrypt a message for a public key recipient</a>
-				<a class="navbar-item zencode" id="AES07">Decrypt a secret message using a-symmetric encryption</a>
-				<a class="navbar-item zencode" id="DSA01">Sign a message using public-key encryption</a>
-				<a class="navbar-item zencode" id="DSA02">Verify a signature using public-key encryption</a>
+                <a class="navbar-item zencode" id="AES05">Encrypt a message for a public key recipient</a>
+                <a class="navbar-item zencode" id="AES07">Decrypt a secret message using a-symmetric encryption</a>
+                <a class="navbar-item zencode" id="DSA01">Sign a message using public-key encryption</a>
+                <a class="navbar-item zencode" id="DSA02">Verify a signature using public-key encryption</a>
                 <hr class="navbar-divider">
                 <a class="navbar-item examples" id="hello">Hello world in hex and base64</a>
                 <a class="navbar-item examples" id="keygen">Generate a new pair of public / privatekeys</a>
@@ -115,11 +111,6 @@
                 <a class="navbar-item examples" id="dashboard-from-iotdev">Receive and decode IoT sensor messages</a>
               </div>
             </div>
-			<!-- <div class="navbar-item">
-				 <div class="buttons">
-				 <input id="umm" class="form-check-input" type="checkbox" value="">&nbsp; minimal memory manager (64KiB max)
-				 </div>
-				 </div> -->
         </div>
       </div>
     </nav>
