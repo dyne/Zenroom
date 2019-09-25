@@ -2,8 +2,9 @@ import setuptools
 import os
 import sys
 
-with open(os.path.join('../..', 'VERSION')) as version_file:
-    VERSION = version_file.read().strip()
+#with open(os.path.join('../..', 'VERSION')) as version_file:
+#    VERSION = version_file.read().strip()
+VERSION="1.0.7rc0"
 
 if sys.argv[-1] == "publish":
     #os.system(f"git tag -a {VERSION}")

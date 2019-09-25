@@ -36,7 +36,7 @@ only been tested under Python 3.
 
 Zenroom itself does have good cross platform functionality, so if you are
 interested in finding out more about the functionalities offered by Zenroom,
-then please visit the website linked to above to find out more.
+then please visit the website (https://dev.zenroom.org/) find out more.
 
 
 <details>
@@ -57,20 +57,27 @@ pip install zenroom
 ```
 
 **NOTE** - the above command attempts to install the zenroom package, pulling in
-the Zenroom VM as a precompiled binary, so will only work on Linux (amd64)
+the Zenroom VM as a precompiled binary, so will only work on Linux (amd64) and macOS
 machines.
 
 
 ***
 ## 🎮 Usage
 
-Two main calls are exposed, one to run `zencode` and one for `zenroom scripts`.
+Two main calls are exposed `zencode_exec` and `zenroom_exec`, one to run
+`zencode` and one for `zenroom scripts` as names suggest.
+The names follow the standard Zenroom naming as per Zenroom documentation.
 
 If you don't know what `zencode` is, you can start with this blogpost
 https://decodeproject.eu/blog/smart-contracts-english-speaker
 
-A good set of examples of `zencode` contracts could be found here
-https://github.com/DECODEproject/dddc-pilot-contracts 
+A good set of examples of `zencode` contracts could be found
+(https://github.com/DECODEproject/Zenroom/tree/master/test/zencode_simple)[here]
+and
+(https://github.com/DECODEproject/Zenroom/tree/master/test/zencode_coconut)[here].
+
+The complete documentation about `zencode` is available on
+http://dev.zenroom.org/zencode
 
 ### ZENCODE
 
@@ -85,11 +92,9 @@ When I create my new keypair
 Then print all data
     """
 
-result, errors = zenroom.zencode_exec(contract)
-print(result)
+result = zenroom.zencode_exec(contract)
+print(result.stdout)
 ```
-
-**NOTE** The result is in `bytes` and not string if you want a string you want to `.decode()` it
 
 The zencode function accepts the following:
 
@@ -101,7 +106,8 @@ The zencode function accepts the following:
 
 Returns
 
- * tuple: The output from Zenroom expressed as a byte string, the eventual errors generated as a string
+ * an object (#ZenroomResult)[ZenroomResult] that is a facility to access the `stdout` and `stderr`
+   result from the execution of the script
 
 ### ZENROOM SCRIPTS
 
@@ -116,7 +122,46 @@ print(output)
 
 The same arguments and the same result are applied as the `zencode` call.
 
-***
+### ZenroomResult
+
+This is a facility object that allows to acces the output result of the
+execution of zen{code,room}_exec commands.
+
+Each time zenroom and zencode are executed stdout and stderr will be filled
+accordingly and a code is returned (`0` for success and `1` if errored).
+
+The following methods and properties are available:
+
+#### stdout
+
+This property contains all the output printing from the script/zencode run
+
+#### stderr
+
+This property contains all the content going to stderr that contains debug info
+and or stacktrace of the script/zencode run
+
+#### has_error()
+
+Returns `True` or `False` based on the return code of the zen{room,code}_exec calls
+
+#### get_warnings()
+
+Filters the warning messages from the `stderr`
+
+#### get_errors()
+
+Filters the error messages from the `stderr`
+
+#### get_debug()
+
+Filters the debug messages from the `stderr`
+
+#### get_info()
+
+Filters the info messages from the `stderr`
+
+
 ## 📋 Testing
 
 Tests are made wuth pytests, just run 

@@ -1,5 +1,5 @@
+import os
 import json
-
 import pytest
 
 from zenroom import zenroom
@@ -35,16 +35,16 @@ def test_keygen():
     assert "private" in result
 
 
-def test_zencode():
-    contract = """Scenario coconut petition
-rule check version 1.0
-Given that I am known as 'identifier'
-When I create my new keypair
-Then print all data
-    """
+def test_stderr_grep():
+    script = "print()"
+    output = zenroom.zenroom_exec(script, verbosity=3)
+    assert '[D] Zenroom operations completed.' in output.get_debug()
 
+
+def test_zencode():
+    with open(os.path.join('../../test/zencode_coconut/credential_keygen.zen')) as contract_file:
+        contract = contract_file.read().strip()
     result = zenroom.zencode_exec(contract)
-    print(result)
     assert result
     assert "public" in result.stdout
     assert "private" in result.stdout
@@ -64,32 +64,22 @@ def test_broken_zencode():
         When I
         """
         result = zenroom.zencode_exec(contract, verbosity=3)
-        assert result.stderr
+        assert "love" == result.stderr
         assert "{}" == result.stdout
 
 
 def test_create_petition_with_rng():
-    script = """Scenario 'coconut': "Citizen creates a new petition"
-Given that I use the verification key by 'issuer_identifier'
-and I receive a new petition request
-When I aggregate all the verification keys
-and I verify the new petition to be valid
-Then print all data
-    """
-    keys = '{"issuer_identifier": {"ca_verify": {"alpha": "u64:CTkI_DudfVF9QbyRQjfue_ajdLGmeP5Ednd_j5efcy-WFUmEgqHpxYaAgvGTqcppCly7HNt_qBIzJk9IdlR_RBBEqebNV6jPqudNqGKTwcTo2B806nYRuCEnL97hj7xgDtXNSHu3bf57eEAE2vEcPPmamBHajNtLzRMmM74YwmYwtqZ-F-N2-RliXexESTMQBN8YdWoawA548_S6Ait6sphvrIw4E-Tu2Ti5uDFEYUJ7Muwus8fB0QHB3djmPaiA", "beta": "u64:DhlbAie3DM8ZLfPeg9lU02koN5J0mHqDkY10nO0bMvIevMRsRnoztEOId5MllVSeVEgLkhykaDO7ZO50O9TE-5Php7f5XtyWntl0KwGOLzoH3zvdQ2yBl6WHZpBWk7rmAw6KBAQ3IeDWbZ_-pd7I-IyaXh4KI8X2h7v6aqZ1OKWHgMkqmFZfLUmsfmxppqw3Idr5CTqsnttuwFpyLrUv86pbsQ2jCuicCcVFlRMs0Nsf_wKidyVdnkC73cpsnKWQ"}}}'
-    data = ' {"credential_proof": {"kappa": "u64:Ekm_B59fBdzG3FBEEBtpIu4weaT_luV0sFG8zVZi0TWgxQicy9SL8Tr7NhoiCiS1SIk_HOnqQ8GXtNTAlUXg13R4E9rejKRJw30TF0AGJ6qDduZUPzvwvkiwjxXVvdqoNd30J4wQpcEkhIn03XABIVlOKVjIKPJxwZa3SXWsSsbKMrR0PdZi69-gAaReIjkKSiiYmWsrk7TVujObpQWN9q6hrRK8jyQ1y_epb-lOqDD_D-wv8av1MnsTjHZkt6IG", "nu": "u64:BEELrHoEpGEtmjAsJyQEqar3Sf4NyzmW4IipWCa8S23rFM9vMLl_GDUypI8GPcxLRBJBNFwSF2dY1cxcplFrm9rcM5hBrc5R8wv-QzWojMKCH8bL1JIO1vmILhdsbcimSQ", "pi_v": {"c": "u64:eWVEdfGaITBeGttVMcpF4vttK0rXoV-s2M1uIT-naxI", "rm": "u64:Y6Hk8MDpkdhzmrjTAPuNrgadB9KZQ2Llo7pLoNGPI9U", "rr": "u64:4I9cla6nDJ7AkLVYF33KzOPZK5Ovps6DS0TlX_fcFWU"}, "sigma_prime": {"h_prime": "u64:BBs1WW358uQYckW_DotJ8qefvlQwCX67UKUqvJdC_G7Y064lnDIafza4EgsMBARaIggd4Xg7qZCfkZzjQpfSgKBOIGyc2gUjOEAiZEvDCqbIAJEzzuF_3bVR0-NKNHGXKQ", "s_prime": "u64:BCCFu9VkSz4FiS3090o4zlHWQGnpa3dHurPUhErctBvIJ8CrWeeO6rwgrmgoYKf96ybErbDiphKlh2SIipDPEyVUQxRiNquRWXbJG8rIGUjBHNZ6Z97YOnFf0BCn9icVyA"}}, "petition": {"owner": "u64:BAnXgbjfC-25YaXPjT68wpxxcHWMYMzVdvq8W12fhJR0_l55MtQHLXjjYliES8DDiz9dTXc_5n-8bIFptRiwTPnheJlmE6JBawm4t6GYI7JMjcwwB0Uh4KfD6OunqRm2_w", "scores": {"neg": {"left": "Infinity", "right": "Infinity"}, "pos": {"left": "Infinity", "right": "Infinity"}}, "uid": "u64:tion"}}'
+    with open(os.path.join('../../test/zencode_coconut/credential_keygen.zen')) as contract_file:
+        script= contract_file.read().strip()
 
     results = []
     for _ in range(LOAD_FATIGUE):
         result = zenroom.zencode_exec_rng(
             script=script,
-            data=data,
-            keys=keys,
             random_seed=bytearray("random_se3d", "utf=8"),
         )
         sorted_result = json.dumps(json.loads(result.stdout), sort_keys=True)
         results.append(sorted_result)
-        print(sorted_result)
     assert len(set(results)) == 1
 
 
@@ -113,11 +103,8 @@ def test_random():
 
 
 def test_load_test():
-    contract = """Scenario 'coconut': "To run over the mobile wallet the first time and store the output as keypair.keys"
-    Given that I am known as 'identifier'
-    When I create my new keypair
-    Then print all data
-        """
+    with open(os.path.join('../../test/zencode_coconut/credential_keygen.zen')) as contract_file:
+        contract = contract_file.read().strip()
 
     for _ in range(LOAD_FATIGUE):
         print(f"#{_} CONTRACT")
@@ -126,14 +113,13 @@ def test_load_test():
 
 
 def test_load_script():
-    contract = """-- 0 for silent logging
+    with open(os.path.join('../../test/zencode_coconut/credential_keygen.zen')) as contract_file:
+        contract = contract_file.read().strip()
+    script = f"""-- 0 for silent logging
 ZEN:begin(0)
 
 ZEN:parse([[
-Scenario 'coconut': "To run over the mobile wallet the first time and store the output as keypair.keys"
-Given that I am known as 'identifier'
-When I create my new keypair
-Then print all data
+{contract}
 ]])
 
 ZEN:run()
@@ -141,7 +127,7 @@ ZEN:run()
 
     for _ in range(LOAD_FATIGUE):
         print(f"#{_} CONTRACT")
-        result = zenroom.zenroom_exec(contract)
+        result = zenroom.zenroom_exec(script)
         assert "private" in result.stdout
 
 

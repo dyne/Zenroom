@@ -17,10 +17,10 @@ Then print the 'secret message'
 `
     const init = function() {
         setupForm()
-		// show the contract
+        // show the contract
         $('#encrypt_contract').html(zencode_encrypt_contract)
 
-		// generate the keypairs
+        // generate the keypairs
         zencode(`Scenario 'simple': $scenario
                  Given that I am known as 'Bob'
                  When I create my new keypair
@@ -42,7 +42,7 @@ Then print the 'secret message'
             e.preventDefault()
 
             const file = document.querySelector('[type=file]').files[0]
-			if(file.size > 409600) { alert('File size too big'); return; }
+            if(file.size > 409600) { alert('File size too big'); return; }
             const reader = new FileReader();
             reader.onloadend = evt => {
                 if (evt.target.readyState == FileReader.DONE) {
@@ -89,11 +89,11 @@ var Module = {
     print: text => { zencodeResults.push(text) },
 
     printErr: function(text) {
-		// pretty printing Zenroom messages on JS console
-		if(text.charAt(1)=='!') console.error(text)
-		else if(text.charAt(1)=='F') console.debug(text)
-		else if(text.charAt(1)=='W') console.warn(text)
-		else if(text.charAt(1)=='*') console.info(text)
+        // pretty printing Zenroom messages on JS console
+        if(text.charAt(1)=='!') console.error(text)
+        else if(text.charAt(1)=='F') console.debug(text)
+        else if(text.charAt(1)=='W') console.warn(text)
+        else if(text.charAt(1)=='*') console.info(text)
         else console.log(text)
     },
 
