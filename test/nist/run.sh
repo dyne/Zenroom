@@ -6,19 +6,22 @@ echo "============================="
 
 alias zenroom="${1:-../../src/zenroom}"
 
-
+num=0
 check() {
 	tmp=`mktemp`
 	echo -n $1 > $tmp
 	echo "== $1 ShortMsg"
-	zenroom -a ${1}ShortMsg.rsp -k $tmp check_rsp.lua
+	num=`zenroom -a ${1}ShortMsg.rsp -k $tmp check_rsp.lua`
 	echo "== $1 LongMsg"
-	zenroom -a ${1}LongMsg.rsp  -k $tmp check_rsp.lua
+	num=$(( $num + `zenroom -a ${1}LongMsg.rsp  -k $tmp check_rsp.lua`))
 	rm -f $tmp
 }
 
 check "SHA256"
-check "SHA512"
+print "Number of SHA256 executed: $num"
+# num=0
+# check "SHA512"
+# print "Number of SHA512 executed: $num"
 
 # TODO: fix sha384 match to nist vectors
 # check "SHA384"

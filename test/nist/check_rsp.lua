@@ -27,3 +27,4 @@ for line in ZEN:newline_iter(DATA) do
 	  end
    end
 end
+print(nr)
