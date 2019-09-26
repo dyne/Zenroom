@@ -25,6 +25,7 @@ website:
 	@cp -v ../test/zencode_simple/*.zen website/docs/examples/
 	@cp -v ../test/zencode_simple/*.keys website/docs/examples/
 	@cp -v ../test/zencode_simple/*.data website/docs/examples/
+	@cp -v ../examples/*.keys ../examples/*.data ../examples/*.lua website/docs/examples/
 	@cd website && mkdocs build
 
 map:
