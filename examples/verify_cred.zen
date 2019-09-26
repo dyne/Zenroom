@@ -1,0 +1,7 @@
+Scenario coconut: verify credentials
+Given that I have a valid 'verifier' from 'MadHatter'
+and I have a valid 'credentials'
+When I aggregate the verifiers
+and I verify the credentials
+and debug
+Then print 'Success' 'OK' as 'string'

@@ -58,8 +58,8 @@ var ZR = (function() {
 
     const loadExamples = (e) => {
         const name = $(e.target).attr('id')
-        const extensions = {'#lua': '.lua', '#data': '.data', '#keys': '.keys'}
-        const base_url = "https://raw.githubusercontent.com/DECODEproject/zenroom/master/examples/"
+        const extensions = {'#code': '.lua', '#data': '.data', '#keys': '.keys'}
+        const base_url = "/examples/"
         for (var e in extensions) {
             const editor = $(e)[0].env.editor
             editor.setValue("")

@@ -1,0 +1,14 @@
+{
+   "keyring" : {
+      "secret" : "u64:A0srPssE93kYLxt7KyvG0glfMTqTzuAE1jq-XU3obsg",
+      "public" : "u64:BCnxGd5-5ne3PCwGYomZHdjCw_qOPXVup3MaAorBb8nQUlOHHZUs6J620s3GVi-lF0REKYjVsjZ6mNpBGbR5tto"
+   },
+   "recipients" : {
+      "mayo" : "u64:BED8B7LmwMd3GgrGbmJaujbAR2KWlUo1t1TED8x7RUMEbwwnDOk96plIFaOYSAB29ha5MlB4HSoeD5zqLG6Hl20",
+      "jaromil" : "u64:BAKlgEzzKD0NpPP14h__9ty_hI1zji43QD42mjN6SvKPboEvrjzQhwJiAmw_K-n_LP9FaD0Dm7tV39R9VGuGRCo",
+      "francesca" : "u64:BFVYrP53CouzEthTW56V4gDC3jsCbESsY2kaKsUtMYKDBmqu5j9oRllQiEtdQe9wsbwR268CNgETTCAh3cYcyfA",
+      "paulus" : "u64:BGnVZB54xZnLkTi4qXdk_VfkWHb3dZt6P2NIp3rGtZQDMy2RQwcGaFwcsa2TNOq2OvPh7KDVGb63lq-xyzBiGCc",
+      "mark" : "u64:BClD-4aepiSr_CdGN4id1TiLjmJ9e-USwN2W9A_yHGRtHIuKU6KTxYjx4I6OUk7WVULt6o8p3qZF1svBLl6XapU",
+      "jim" : "u64:BHSq50Wi3qt6xvSMxj-itEZvcL_pEj5mEVZLzhGvEv35f8qfdxJQfQjmgP1Nx_lBUVwpkGsH3jJRVyhCb1ufz3A"
+   }
+}
