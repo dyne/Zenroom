@@ -1,23 +1,23 @@
 # Random quality measurements
 
-Obviously random is very important when doing cryptography.
+Obviously, randomness is very important when doing cryptography.
 
-Zenroom accept a random seed when called or retreives one
+Zenroom accepts a random seed when called or retrieves one
 automatically from the host system.
 
 **Zenroom is fully deterministic**: if the same random seed is
-provided then all results of trasformations will be exactly the same,
+provided then all results of transformations will be exactly the same,
 except for the sorting order of elements in its output, which must be
 sorted by the caller with a constant algorithm.
 
-If the random seed is not provided at call time then Zenroom does its
+If the random seed is not provided at call time, then Zenroom does its
 best to gather a good quality random seed from the host system. This
 works well on Windows, OSX, GNU/Linux as well Android and iOS; but
 beware that **when running in Javascript random is very weak**.
 
 ## Pseudo-random generator
 
-Cryptographic strenght is added to any random seed by Zenroom's
+Cryptographic strength is added to any random seed by Zenroom's
 pseudo-random generator (PRNG) which is an [old RSA
 standard](ftp://ftp.rsasecurity.com/pub/pdfs/bull-1.pdf) basically
 consisting of:
@@ -56,4 +56,3 @@ print( BENCH.random_hamming_freq() )
 
 Then compare the number returned: if much lower than 350 then you
 should worry about the quality of random on your current system.
-

@@ -7,7 +7,7 @@ operations on twisted curves (ECP2).
 
 The resulting scripting language is a [restricted Lua dialect](/lua)
 without any external extension, customised to resemble as much as
-possible the scripting language used by cryptographers in software as
+possible the scripting language used by cryptographers in software, as
 for instance Mathematica.
 
 With Zenroom we want to lower the friction that cryptographers face
@@ -33,7 +33,7 @@ any platform.
 
 As a basic introduction we propose the implementation of [ElGamal
 encryption system](https://en.wikipedia.org/wiki/ElGamal_encryption)
-widely used in homomorphic encryption, the code below makes use of the
+widely used in homomorphic encryption. The code below makes use of the
 [ECP arithmetics](lua/modules/ECP.html) provided by Zenroom.
 
 ```lua
@@ -48,7 +48,7 @@ end
 function ElGamal.encrypt(gamma, m, h)
    local k = INT.modrand(ECP.order())
    local a = k * ECP.generator()
-   local b = 
+   local b =
 	gamma * k
 	+
 	h * m
@@ -60,7 +60,7 @@ function ElGamal.decrypt(d, a, b)
 end
 ```
 
-One can play around with this code already, using our [online demo](/demo).
+One can play around with this code already by using our [online demo](/demo).
 
 ### ECQV
 
@@ -112,7 +112,7 @@ assert(Qu == G * du)
 
 The brief demonstration above shows how easy it can be to implement a
 cryptographic scheme in Zenroom's Lua dialect, which gives immediately
-the advantage of a frictionless deployement on all targets covered by
+the advantage of a frictionless deployment on all targets covered by
 our VM.
 
 Arithmetic operations also involving [Elliptic Curve Points
@@ -120,7 +120,7 @@ Arithmetic operations also involving [Elliptic Curve Points
 [BIG integers](/lua/modules/BIG.html).
 
 All this is possible without worrying about library dependencies, OS
-versioning, interpeter availability etc.
+versioning, interpreter's availability etc.
 
 # Basic advantages
 
@@ -140,11 +140,9 @@ their formulas using their best known tools and then provide the
 script as a payload to be uploaded inside the VM.
 
 System integrators can work on [embedding Zenroom as a VM](/wiki/how-to-embed)
-without worring about cryptographic libraries APIs and moving
+without worrying about cryptographic libraries APIs and moving
 dependencies required by the cryptographic implementations.
 
 All in all, by using Zenroom your cryptographic model implementation
 is **ready for an accellerating future where crypto technologies will
 grow in diversity and possibilities**!
-
-

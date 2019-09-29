@@ -21,4 +21,4 @@ Continue to the [developer website](https://dev.zenroom.org/)
 or
 
 Visit the [product website](http://zenroom.org/) for a friendly
-introduction to the love we put in craftmanship.
+introduction to the love we put in craftsmanship.

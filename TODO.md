@@ -31,7 +31,7 @@ https://github.com/DECODEproject/Zenroom/blob/master/lib/milagro-crypto-c/src/ec
 
 co-factor of a curve
 instead of checking always if point is part of curve
-multiple of co-factors 
+multiple of co-factors
 
 
 ## Low-hanging
@@ -171,7 +171,7 @@ i.e.
 /* Generator point on G1 */
 extern const BIG_384_29 CURVE_Gx_BLS383; /**< x-coordinate of generator point in group G1  */
 extern const BIG_384_29 CURVE_Gy_BLS383; /**< y-coordinate of generator point in group G1  */
-should become a const ECP 
+should become a const ECP
 
 about DBIG: no need to expose
 they result from big multiplications between big numbers
@@ -186,7 +186,7 @@ each curve has a different infinity point
 
 TODO: do all ecp2 (new namespace)
 
-TODO: pair.h 
+TODO: pair.h
 extern void PAIR_ZZZ_fexp(FP12_YYY *x);
 extern void PAIR_ZZZ_ate(FP12_YYY *r,ECP2_ZZZ *P,ECP_ZZZ *Q);
 possibly extern int PAIR_ZZZ_GTmember(FP12_YYY *x);
