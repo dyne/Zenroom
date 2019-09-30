@@ -1,7 +1,7 @@
 extra_javascript: js/encrypt.js
 
 # Web Encryption Demo
-  
+
 Demo of in-browser asymmetric AES-GCM encryption.
 
 Zencode Smart Contract in human language (WASM-web build)
@@ -27,7 +27,7 @@ For more information see [Zenroom.org](https://zenroom.org).
 
 # Upload file
 
-Select a file on the local harddisk of maximum size 400KiB.
+Select a file on the local hard disk of maximum size 400KiB.
 
 Nothing will be uploaded to any server.
 

@@ -32,9 +32,9 @@ rule check version 1.0.0
 ```
 
 
-# Symmetric encryption 
+# Symmetric encryption
 
-This is a simple tecnique to hide a secret using a common password known to all participants.
+This is a simple technique to hide a secret using a common password known to all participants.
 
 The algorithm used is
 [AES-GCM](https://en.wikipedia.org/wiki/Galois/Counter_Mode) with a random IV and an optional authenticated header ([AEAD](https://en.wikipedia.org/wiki/Authenticated_encryption))
@@ -70,7 +70,7 @@ So let's imagine I want to share a secret with someone and send secret messages 
 
 ![Zencode to encrypt with password](img/aes_crypt.svg)
 
-Of course the password must be known by all participats and that's the
+Of course the password must be known by all participants and that's the
 dangerous part, since it could be stolen.
 
 We mitigate this risk using **public-key cryptography**, also known as
@@ -221,7 +221,7 @@ which encrypts and stores results in `secret message`; also in this case `header
 
 In this basic example the session key for encryption is made combining
 the private key of Alice and the public key of Bob (or
-viceversa).
+vice versa).
 
 ```cucumber
 When I write 'my secret for you' in 'message'
@@ -305,7 +305,7 @@ Let's imagine 3 different subjects for our scenarios:
 
 1. **Mad Hatter** is a well known **issuer** in Wonderland
 2. **Wonderland** is an open space (a blockchain!) and all inhabitants can check the validity of **proofs**
-3. **Alice** just arrived: to create **proofs** she'll request a **credential** to the issuer **MadHatter** 
+3. **Alice** just arrived: to create **proofs** she'll request a **credential** to the issuer **MadHatter**
 
 When **Alice** is in possession of **credentials** then she can
 create a **proof** any time she wants using as input:
@@ -433,7 +433,7 @@ The flow described above is for a fully decentralized issuance of
 **credentials** where only the **Holder** is in possession of the
 **credential keypair** needed to produce a **credential proof**.
 
-But let's immagine a much more simple use-case for a more centralized
+But let's imagine a much more simple use-case for a more centralized
 system where the **Issuer** provides the **Holder** with everything
 ready to go to produce zero knowledge credential proofs.
 
@@ -484,7 +484,7 @@ and then go to the...
 There is more to this of course: Zencode supports several features
 based on pairing elliptic curve arithmetics and in particular:
 
-- non-interactive zero knowedge proofs (also known as ZKP or ZK-Snarks)
+- non-interactive zero knowledge proofs (also known as ZKP or ZK-Snarks)
 - threshold credentials with multiple decentralised issuers
 - homomorphic encryption for numeric counters
 
@@ -503,7 +503,7 @@ Three more are in the work and they are:
 
 1. Anonymous proxy validation scheme
 2. Token thumbler to privately transfer numeric assets
-3. Private credential revokation
+3. Private credential revocation
 
 
 # Import, validate and transform data
@@ -539,7 +539,7 @@ Given I have a valid '' from ''
 Given the '' is valid
 ```
 
-or check emptyness:
+or check emptiness:
 
 ```cucumber
 Given nothing
