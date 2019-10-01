@@ -63,9 +63,9 @@ end
 
 function content(var)
    if type(var) == "zenroom.octet" then
-	  INSIDE.print(var:array())
+	  INSPECT.print(var:array())
    else
-	  INSIDE.print(var)
+	  INSPECT.print(var)
    end
 end
 

@@ -33,7 +33,7 @@ end
 
 -- ZEN = { assert = assert } -- zencode shim when not loaded
 require('zenroom_common')
-INSIDE = require('inspect')
+INSPECT = require('inspect')
 OCTET  = require('zenroom_octet')
 JSON   = require('zenroom_json')
 CBOR   = require('zenroom_cbor')
@@ -46,7 +46,7 @@ MACHINE = require('statemachine')
 O   = OCTET  -- alias
 INT = BIG    -- alias
 H   = HASH   -- alias
-I   = INSIDE -- alias
+I   = INSPECT -- alias
 V   = require('semver')
 VERSION = V(VERSION)
 
