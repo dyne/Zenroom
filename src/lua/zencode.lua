@@ -416,6 +416,8 @@ function zencode:import(object, secured)
 	  return O.from_bin(object)
    -- elseif CONF.input.encoding.fun then
    -- 	  return CONF.input.encoding.fun(object)
+   elseif string.sub(object,1,3) == 'str' then
+	  return O.from_string(object)
    end
    if not secured then
 	  ZEN:wtrace("import implicit conversion from string: " ..object)
