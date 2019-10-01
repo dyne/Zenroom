@@ -14,6 +14,13 @@ osx-python3: apply-patches lua53 milagro embed-lua
 		make -C src python
 	@mkdir -p ${pwd}/build/python3 && cp -v ${pwd}/src/_zenroom.so ${pwd}/build/python3
 
+osx-go: apply-patches lua53 milagro embed-lua
+	swig -go -cgo -intgosize 32 ${pwd}/build/swig.i
+	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c -o src/zen_go.o
+	CC=${gcc} LD=${ld} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+		make -C src go
+	cp -v ${pwd}/src/libzenroomgo.so ${pwd}/bindings/golang/zenroom/lib/
+
 ios-lib:
 	TARGET=${ARCH} AR=${ar} CC=${gcc} CFLAGS="${cflags}" make -C src ios-lib
 	cp -v src/zenroom-ios-${ARCH}.a build/
