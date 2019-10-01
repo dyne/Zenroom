@@ -222,7 +222,7 @@
 
 
 <h1 id="symmetric-encryption">Symmetric encryption</h1>
-<p>This is a simple tecnique to hide a secret using a common password known to all participants.</p>
+<p>This is a simple technique to hide a secret using a common password known to all participants.</p>
 <p>The algorithm used is
 <a href="https://en.wikipedia.org/wiki/Galois/Counter_Mode">AES-GCM</a> with a random IV and an optional authenticated header (<a href="https://en.wikipedia.org/wiki/Authenticated_encryption">AEAD</a>)</p>
 <p>The encryption is applied using 3 arguments:</p>
@@ -262,7 +262,7 @@
 
 <p>So let's imagine I want to share a secret with someone and send secret messages encrypted with it:</p>
 <p><img alt="Zencode to encrypt with password" src="../img/aes_crypt.svg" /></p>
-<p>Of course the password must be known by all participats and that's the
+<p>Of course the password must be known by all participants and that's the
 dangerous part, since it could be stolen.</p>
 <p>We mitigate this risk using <strong>public-key cryptography</strong>, also known as
 <strong>a-symmetric encryption</strong>, explained below.</p>
@@ -428,7 +428,7 @@ key of the recipient.</p>
 
 <p>In this basic example the session key for encryption is made combining
 the private key of Alice and the public key of Bob (or
-viceversa).</p>
+vice versa).</p>
 <div class="codehilite"><pre><span class="k">When </span><span class="nf">I write &#39;my secret for you&#39; in &#39;message&#39;</span>
 <span class="nf">and I write &#39;an authenticated message&#39; in &#39;header&#39;</span>
 </pre></div>
@@ -508,7 +508,7 @@ Zencode language really simplifies it.</p>
 <ol>
 <li><strong>Mad Hatter</strong> is a well known <strong>issuer</strong> in Wonderland</li>
 <li><strong>Wonderland</strong> is an open space (a blockchain!) and all inhabitants can check the validity of <strong>proofs</strong></li>
-<li><strong>Alice</strong> just arrived: to create <strong>proofs</strong> she'll request a <strong>credential</strong> to the issuer <strong>MadHatter</strong> </li>
+<li><strong>Alice</strong> just arrived: to create <strong>proofs</strong> she'll request a <strong>credential</strong> to the issuer <strong>MadHatter</strong></li>
 </ol>
 <p>When <strong>Alice</strong> is in possession of <strong>credentials</strong> then she can
 create a <strong>proof</strong> any time she wants using as input:</p>
@@ -657,7 +657,7 @@ and print my 'credential keypair'
 <p>The flow described above is for a fully decentralized issuance of
 <strong>credentials</strong> where only the <strong>Holder</strong> is in possession of the
 <strong>credential keypair</strong> needed to produce a <strong>credential proof</strong>.</p>
-<p>But let's immagine a much more simple use-case for a more centralized
+<p>But let's imagine a much more simple use-case for a more centralized
 system where the <strong>Issuer</strong> provides the <strong>Holder</strong> with everything
 ready to go to produce zero knowledge credential proofs.</p>
 <p>The implementation is very, very simple: just line up all the <strong>When</strong>
@@ -695,7 +695,7 @@ and then go to the...</p>
 <p>There is more to this of course: Zencode supports several features
 based on pairing elliptic curve arithmetics and in particular:</p>
 <ul>
-<li>non-interactive zero knowedge proofs (also known as ZKP or ZK-Snarks)</li>
+<li>non-interactive zero knowledge proofs (also known as ZKP or ZK-Snarks)</li>
 <li>threshold credentials with multiple decentralised issuers</li>
 <li>homomorphic encryption for numeric counters</li>
 </ul>
@@ -713,7 +713,7 @@ implemented in the future.</p>
 <ol>
 <li>Anonymous proxy validation scheme</li>
 <li>Token thumbler to privately transfer numeric assets</li>
-<li>Private credential revokation</li>
+<li>Private credential revocation</li>
 </ol>
 <h1 id="import-validate-and-transform-data">Import, validate and transform data</h1>
 <h2 id="given">Given</h2>
@@ -741,7 +741,7 @@ automatically from <strong>JSON</strong> or <a href="https://tools.ietf.org/html
 </pre></div>
 
 
-<p>or check emptyness:</p>
+<p>or check emptiness:</p>
 <div class="codehilite"><pre><span class="k">Given </span><span class="nf">nothing</span>
 </pre></div>
 
