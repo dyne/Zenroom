@@ -62,7 +62,8 @@ J.encode = function(tab)
    return
 	  JSON.raw_encode(
 		 -- process encodes zencode types
-		 I.process(tab)
+		 -- it is part of inspect.lua
+		 INSPECT.process(tab)
 	  )
    -- return JSON.raw_encode(tab)
 end
