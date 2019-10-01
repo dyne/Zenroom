@@ -3,7 +3,7 @@
 # test deterministic results across computations of petition contracts
 # with same random seed - requires json-sort-cli from npm
 
-pfx=src
+pfx=.
 seed="0c0ccdb5d2e702eab5472932409ad64c0c0ccdb5d2e702eab5472932409ad64c0c0ccdb5d2e702eab5472932409ad64c0c0ccdb5d2e702eab5472932409ad64c0c0ccdb5d2e702eab5472932409ad64c0c0ccdb5d2e702eab5472932409ad64c"
 
 zenroom                                                            -z $pfx/credential_keygen.zen		             > keypair.keys
@@ -36,14 +36,14 @@ sig=(petition_signature.json petition_signature2.json petition_signature3.json)
 inc=(petition_increase.json petition_increase2.json petition_increase3.json)
 
 for i in $req; do
-	jsonsort $i
+	#jsonsort $i
 	sha512sum $i
 done
 for i in $sig; do
-	jsonsort $i
+	#jsonsort $i
 	sha512sum $i
 done
 for i in $inc; do
-	jsonsort $i
+	#jsonsort $i
 	sha512sum $i
 done
