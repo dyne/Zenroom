@@ -24,9 +24,9 @@ zenroom -S $seed -k credential.json            -a ci_verify_keypair.keys    -z $
 zenroom -S $seed -k credential.json            -a ci_verify_keypair.keys    -z $pfx/sign_petition.zen        	             > petition_signature2.json
 zenroom -S $seed -k credential.json            -a ci_verify_keypair.keys    -z $pfx/sign_petition.zen              	     > petition_signature3.json
 
-zenroom -S $seed -k petition.json              -a petition_signature.json   -z $pfx/12-LEDGER-add-signed-petition.zencode             > petition_increase.json
-zenroom -S $seed -k petition.json              -a petition_signature.json   -z $pfx/12-LEDGER-add-signed-petition.zencode             > petition_increase2.json
-zenroom -S $seed -k petition.json              -a petition_signature.json   -z $pfx/12-LEDGER-add-signed-petition.zencode             > petition_increase3.json
+zenroom -S $seed -k petition.json              -a petition_signature.json   -z $pfx/aggregate_petition_signature.zen            > petition_increase.json
+zenroom -S $seed -k petition.json              -a petition_signature.json   -z $pfx/aggregate_petition_signature.zen            > petition_increase2.json
+zenroom -S $seed -k petition.json              -a petition_signature.json   -z $pfx/aggregate_petition_signature.zen           > petition_increase3.json
 
 zenroom -k credential.json            -a petition_increase.json    -z $pfx/tally_petition.zen			              > tally.json
 zenroom -k tally.json                 -a petition_increase.json    -z $pfx/count_petition.zen
