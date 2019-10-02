@@ -40,17 +40,20 @@ before_install:
 
 script:
 - mkdir -p build
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make osx-debug && make check-osx; fi
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make clean && cd lib/milagro-crypto-c && git clean -fd && cd - ;fi
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make osx; fi
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make osx-python3; fi
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make clean && cd lib/milagro-crypto-c && git clean -fd && cd - ;fi
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make ios-armv7; fi
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make clean && cd lib/milagro-crypto-c && git clean -fd && cd - ;fi
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make ios-arm64; fi
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make clean && cd lib/milagro-crypto-c && git clean -fd && cd - ;fi
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make ios-sim; fi
-- if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make ios-fat; fi
+- |
+    if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+         make osx-debug && make check-osx
+         make clean && cd lib/milagro-crypto-c && git clean -fd && cd -
+         make osx
+         make osx-python3
+         make clean && cd lib/milagro-crypto-c && git clean -fd && cd -
+         make ios-armv7
+         make clean && cd lib/milagro-crypto-c && git clean -fd && cd -
+         make ios-arm64
+         make clean && cd lib/milagro-crypto-c && git clean -fd && cd -
+         make ios-sim
+         make ios-fat
+    fi
 # - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make static && make check-milagro && make check-static && cp -v src/zenroom-static build/zenroom.x86; fi
 # - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make clean && cd lib/milagro-crypto-c && git clean -fd && cd - ;fi
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make win     && cp -v src/zenroom.exe build/ ; fi
