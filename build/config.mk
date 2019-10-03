@@ -96,6 +96,20 @@ milagro_cmake_flags += -DCMAKE_SYSTEM_PROCESSOR="arm" -DCMAKE_CROSSCOMPILING=1 -
 ldflags+=-mthumb -mlittle-endian -mthumb-interwork -Wstack-usage=1024 -Wno-main -ffreestanding -T aarch64_m.ld -nostartfiles -Wl,-gc-sections -ggdb
 endif
 
+ifneq (,$(findstring riscv64,$(MAKECMDGOALS)))
+gcc := riscv64-linux-gnu-gcc
+ar  := riscv64-linux-gnu-ar
+objcopy := riscv64-linux-gnu-objcopy
+ranlib := riscv64-linux-gnu-ranlib
+ld := riscv64-linux-gnu-ld
+system := Generic
+ldadd += -lm
+cflags_protection := ""
+cflags := ${cflags_protection} -Og -ggdb -Wall -Wextra -pedantic -std=gnu99
+milagro_cmake_flags += -DCMAKE_CROSSCOMPILING=1 -DCMAKE_C_COMPILER_WORKS=1
+ldflags += -Wstack-usage=1024
+endif
+
 ifneq (,$(findstring redis,$(MAKECMDGOALS)))
 cflags := ${cflags_protection} -DARCH_REDIS -Wall -std=gnu99
 cflags += -O1 -ggdb -DDEBUG=1
