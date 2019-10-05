@@ -286,7 +286,14 @@ static int ecdh_public(lua_State *L) {
 	func(L, "%s: valid key",__func__);
 	e->pubkey = o_new(L, o->len+2); // max is len+1
 	OCT_copy(e->pubkey, o);
-	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(e->pubkey);
+	res = (*e->ECP__PUBLIC_KEY_VALIDATE)(e->pubkey); // try as-is
+	if(res<0) { // try adding prefix
+		func(L,"ECDH public key import second try adding 0x04 prefix");
+		for(int i=e->pubkey->len-1; i>0; i--) // shr 1 bytes in octet
+			e->pubkey->val[i] = e->pubkey->val[i-1];
+		e->pubkey->val[0] = 0x04;
+		res = (*e->ECP__PUBLIC_KEY_VALIDATE)(e->pubkey); // try again
+	}
 	if(res<0) {
 		ERROR();
 		return lerror(L, "Public key argument is invalid."); }
@@ -423,7 +430,7 @@ static int ecdh_dsa_sign(lua_State *L) {
 
 /**
    Elliptic Curve Digital Signature Algorithm (ECDSA) verification
-   function. This method uses the public key iside a keyring to verify
+   function. This method uses the public key inside a keyring to verify
    a message, returning true or false. The signature parameters are
    returned as 'r' and 's' in this same order by @{keyring:sign}.
 
@@ -439,12 +446,26 @@ static int ecdh_dsa_verify(lua_State *L) {
     // IEEE1363 ECDSA Signature Verification. Signature C and D on F
     // is verified using public key W
 	octet *f = o_arg(L,2); SAFE(f);
+	octet *r = NULL;
+	octet *s = NULL;
 	// take a table as argument, gather r and s from its keys
-	if(lua_type(L, 3) != LUA_TTABLE) {
-		ERROR(); lerror(L,"signature argument invalid: not a table"); }
-	lua_getfield(L, 3, "r"); lua_getfield(L, 3, "s"); // -2 stack
-	octet *r = o_arg(L,-2); SAFE(r);
-	octet *s = o_arg(L,-1); SAFE(s);
+	// TODO: take an octet and split it
+	// void *ud = luaL_checkudata(L, 3, "zenroom.octet");
+	// if(ud) { // break octet in two r,s
+	// 	octet *tmp = o_arg(L,3); SAFE(tmp);
+	// 	r = o_dup(L,tmp); SAFE(r);
+	// 	s = o_new(L,32); SAFE(s);
+	// 	lua_pop(L,2); // pop r,s used internally
+	// 	OCT_chop(r,s,32); // truncates r to 32 bytes and places the rest in s
+	// } else
+	if(lua_type(L, 3) == LUA_TTABLE) {
+		lua_getfield(L, 3, "r");
+		lua_getfield(L, 3, "s"); // -2 stack
+		r = o_arg(L,-2); SAFE(r);
+		s = o_arg(L,-1); SAFE(s);
+	} else {
+		ERROR(); lerror(L,"signature argument invalid: not a table");
+	}
 	int res = (*e->ECP__VP_DSA)(64, e->pubkey, f, r, s);
 	if(res <0) // ECDH_INVALID in milagro/include/ecdh.h.in (!?!)
 		// TODO: maybe suggest fixing since there seems to be
