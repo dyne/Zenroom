@@ -37,8 +37,8 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 	   || strcasecmp(curve,"ed25519")==0
 	   || strcasecmp(curve,"25519")  ==0) {
 		e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
-		e->keysize = EGS_ED25519*2; // public key size
-		e->fieldsize = EFS_ED25519; 
+		e->keysize = EGS_ED25519; // public key size
+		e->fieldsize = EFS_ED25519;
 		e->rng = NULL;
 		e->hash = HASH_TYPE_ED25519;
 		e->ECP__KEY_PAIR_GENERATE = ECP_ED25519_KEY_PAIR_GENERATE;
@@ -51,7 +51,7 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 
 	} else if(strcasecmp(curve,"bls383")==0) {
 			e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
-			e->keysize = EGS_BLS383*2;
+			e->keysize = EGS_BLS383;
 			e->fieldsize = EFS_BLS383;
 			e->rng = NULL;
 			e->hash = HASH_TYPE_BLS383;
@@ -65,7 +65,7 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 
 	} else if(strcasecmp(curve,"goldilocks")==0) {
 		e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
-		e->keysize = EGS_GOLDILOCKS*2;
+		e->keysize = EGS_GOLDILOCKS;
 		e->fieldsize = EFS_GOLDILOCKS;
 		e->rng = NULL;
 		e->hash = HASH_TYPE_GOLDILOCKS;
