@@ -81,21 +81,6 @@ milagro_cmake_flags += -DCMAKE_SYSTEM_PROCESSOR="arm" -DCMAKE_CROSSCOMPILING=1 -
 ldflags+=-mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb-interwork -Wstack-usage=1024 -Wno-main -ffreestanding -T cortex_m.ld -nostartfiles -Wl,-gc-sections -ggdb
 endif
 
-
-ifneq (,$(findstring aarch64,$(MAKECMDGOALS)))
-gcc := aarch64-linux-gnu-gcc
-ar  := aarch64-linux-gnu-ar
-objcopy := aarch64-linux-gnu-objcopy
-ranlib := aarch64-linux-gnu-ranlib
-ld := aarch64-linux-gnu-ld
-system := Generic
-ldadd += -lm
-cflags_protection := ""
-cflags := ${cflags_protection} -DARCH_CORTEX -Og -ggdb -Wall -Wextra -pedantic -std=gnu99 -Wstack-usage=1024 -DLIBRARY -Wno-main -ffreestanding -nostartfiles
-milagro_cmake_flags += -DCMAKE_SYSTEM_PROCESSOR="arm" -DCMAKE_CROSSCOMPILING=1 -DCMAKE_C_COMPILER_WORKS=1
-ldflags+=-mthumb -mlittle-endian -mthumb-interwork -Wstack-usage=1024 -Wno-main -ffreestanding -T aarch64_m.ld -nostartfiles -Wl,-gc-sections -ggdb
-endif
-
 ifneq (,$(findstring riscv64,$(MAKECMDGOALS)))
 gcc := riscv64-linux-gnu-gcc
 ar  := riscv64-linux-gnu-ar
@@ -158,7 +143,6 @@ cflags += -fPIC ${cflags_protection} -DLIBRARY -D'ARCH=\"LINUX\"' -DARCH_LINUX -
 cflags += -DLUA_USE_DLOPEN -I${ndk}/sysroot/usr/include
 system := Android
 android := 18
-milagro_cmake_flags += -DCMAKE_SYSTEM_NAME=${system} -DCMAKE_ANDROID_NDK=${ndk} -DCMAKE_ANDROID_API=${android}
 endif
 
 ifneq (,$(findstring android-arm,$(MAKECMDGOALS)))
@@ -166,6 +150,7 @@ target = arm-linux-androideabi
 ld = ${toolchain}/bin/${target}-link
 sysroot = ${ndk}/platforms/android-${android}/arch-arm
 cflags += -D__ANDROID_API__=${android} -I${ndk}/sysroot/usr/include/arm-linux-androideabi --target=armv7-none-linux-androideabi --gcc-toolchain=${ndk}/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64 --sysroot=${sysroot}
+milagro_cmake_flags += -DCMAKE_SYSTEM_NAME=${system} -DCMAKE_ANDROID_NDK=${ndk} -DCMAKE_ANDROID_API=${android}
 endif
 
 ifneq (,$(findstring android-x86,$(MAKECMDGOALS)))
@@ -173,6 +158,16 @@ target = x86
 ld = ${toolchain}/bin/${target}-link
 sysroot = ${ndk}/platforms/android-${android}/arch-x86
 cflags += -D__ANDROID_API__=${android} -I${ndk}/sysroot/usr/include/i686-linux-android --target=i686-linux-android --gcc-toolchain=${ndk}/toolchains/${target}-4.9/prebuilt/linux-x86_64 --sysroot=${sysroot}
+milagro_cmake_flags += -DCMAKE_SYSTEM_NAME=${system} -DCMAKE_ANDROID_NDK=${ndk} -DCMAKE_ANDROID_API=${android}
+endif
+
+ifneq (,$(findstring android-aarch64,$(MAKECMDGOALS)))
+target = aarch64-linux-android
+ld = ${toolchain}/bin/${target}-link
+android := 21
+sysroot = ${ndk}/platforms/android-${android}/arch-arm64
+cflags += -D__ANDROID_API__=${android} -I${ndk}/sysroot/usr/include/aarch64-linux-android --target=aarch64-linux-android21 --gcc-toolchain=${ndk}/toolchains/aarch64-linux-android-4.9/prebuilt/linux-x86_64 --sysroot=${sysroot}
+milagro_cmake_flags += -DCMAKE_SYSTEM_NAME=${system} -DCMAKE_ANDROID_NDK=${ndk} -DCMAKE_ANDROID_API=${android} -DCMAKE_SYSTEM_PROCESSOR=aarch64
 endif
 
 ifneq (,$(findstring osx,$(MAKECMDGOALS)))
