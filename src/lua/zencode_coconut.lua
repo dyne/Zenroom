@@ -245,14 +245,15 @@ When("I create the petition signature ''", function(uid)
 		ZEN.assert(ACK.credentials, "Signed credential not found")
 		local Theta
 		local zeta
+		local ack_uid = ZEN:import(uid)
 		Theta, zeta = COCONUT.prove_cred_petition(
 		   ACK.verifiers,
 		   ACK.credentials,
-		   ACK.credential_keypair.private, uid)
+		   ACK.credential_keypair.private, ack_uid)
 		ZEN:pick('petition_signature',
 				 { proof = Theta,
 				   uid_signature = zeta,
-				   uid_petition = uid })
+				   uid_petition = ack_uid })
 		ZEN:validate('petition_signature')
 		ZEN:ack('petition_signature')
 end)
