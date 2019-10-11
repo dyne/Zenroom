@@ -56,14 +56,14 @@ publish_javascript () {
 	rm -rf emsdk
 }
 
-parse_version
-echo -e "Publishing ${OK}${VERSION}${NC} for ${OK}Python${NC} over pypi.org"
-echo
+# parse_version
+# echo -e "Publishing ${OK}${VERSION}${NC} for ${OK}Python${NC} over pypi.org"
+# echo
 
-publish_python
-cd $BUILD_PATH
+# publish_python
+# cd $BUILD_PATH
 
-echo -e "Publishing ${OK}${VERSION}${NC} for ${OK}Javascript${NC} over npm"
-echo
+# echo -e "Publishing ${OK}${VERSION}${NC} for ${OK}Javascript${NC} over npm"
+# echo
 
-publish_javascript
+# publish_javascript
