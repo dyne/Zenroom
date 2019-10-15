@@ -85,11 +85,9 @@ When I create my new keypair
 Then print all data
     """
 
-result, errors = zenroom.zencode_exec(contract)
-print(result)
+result = zenroom.zencode_exec(contract)
+print(result.stdout)
 ```
-
-**NOTE** The result is in `bytes` and not string if you want a string you want to `.decode()` it
 
 The zencode function accepts the following:
 
@@ -101,7 +99,8 @@ The zencode function accepts the following:
 
 Returns
 
- * tuple: The output from Zenroom expressed as a byte string, the eventual errors generated as a string
+ * ZenroomResult: The output is an object that holds two attributes `stdout` and `stderr`
+ 
 
 ### ZENROOM SCRIPTS
 
@@ -109,9 +108,9 @@ Returns
 from zenroom import zenroom
 
 script = "print('Hello world')"
-output, errors = zenroom.zenroom_exec(script)
+stdout = zenroom.zenroom_exec(script=script)
 
-print(output)
+print(output.stdout) # guess what
 ```
 
 The same arguments and the same result are applied as the `zencode` call.
