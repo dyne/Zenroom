@@ -1,7 +1,8 @@
 import 'core-js/stable'
 import 'regenerator-runtime/runtime'
 
-const C = require('../dist/lib/zenroom')
+import Zenroom from '../dist/lib/zenroom.js'
+const C = Zenroom()
 
 /* istanbul ignore next */
 const zenroomExec = (script, conf = null, keys = null, data = null, verbosity = 1) => {

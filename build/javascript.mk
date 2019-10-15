@@ -21,6 +21,7 @@ javascript-web: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' \
 	-s WASM_OBJECT_FILES=0
 javascript-web: ldflags += -s WASM=1 -s ASSERTIONS=1 \
 	-s TOTAL_MEMORY=65536000 \
+	-s ENVIRONMENT=\"'web,node'\" \
 	-s WASM_OBJECT_FILES=0 --llvm-lto 0 \
 	-s DISABLE_EXCEPTION_CATCHING=1
 javascript-web: apply-patches lua53 milagro embed-lua
@@ -36,27 +37,11 @@ javascript-web: apply-patches lua53 milagro embed-lua
 	@mkdir -p ${website}/encrypt
 	@cp -v build/web/zenroom.data ${website}/encrypt/
 
-javascript-asmjs: cflags += -DARCH_JS -D'ARCH=\"JS\"' -D MAX_STRING=128000
-javascript-asmjs: ldflags += -s WASM=0 \
-	-s ASSERTIONS=1 \
-	--memory-init-file 1
-javascript-asmjs: apply-patches lua53 milagro embed-lua
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-	JSEXT="--embed-file lua@/" \
-	make -C src js
-	@mkdir -p build/asmjs
-	@cp -v src/zenroom.js 	  build/asmjs/
-	@cp -v src/zenroom.js.mem build/asmjs/
-
 javascript-wasm: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
-javascript-wasm: ldflags += -s WASM=1 \
-	-s INVOKE_RUN=0 \
-	-s EXIT_RUNTIME=1 \
-	-s NODEJS_CATCH_EXIT=0 \
+javascript-wasm: ldflags += -s ENVIRONMENT=\"'web,node,shell'\" \
 	-s MODULARIZE=1 \
 	-s ALLOW_MEMORY_GROWTH=1 \
 	-s WARN_UNALIGNED=1 \
-	-s EXPORT_NAME="'ZR'" \
 	-s FILESYSTEM=1 \
 	-s ASSERTIONS=1 \
 	--no-heap-copy
@@ -86,27 +71,3 @@ javascript-rn: apply-patches lua53 milagro embed-lua
 	@mkdir -p build/rnjs
 	@cp -v src/zenroom.js 	  build/rnjs/
 
-javascript-npm: javascript-wasm
-	@mkdir -p build/npm
-	@cp -v build/wasm/zenroom.js build/npm/
-	@cp -v build/wasm/zenroom.wasm build/npm/
-	@echo "module.exports = ZR();" >> build/npm/zenroom.js
-
-javascript-wasm-web: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
-javascript-wasm-web: ldflags += -s WASM=1 \
-	-s ENVIRONMENT=\"'web'\" \
-	-s INVOKE_RUN=0 \
-	-s EXIT_RUNTIME=1 \
-	-s NODEJS_CATCH_EXIT=0 \
-	-s MODULARIZE=1 \
-	-s ALLOW_MEMORY_GROWTH=1 \
-	-s WARN_UNALIGNED=1 \
-	-s EXPORT_NAME="'ZR'" \
-	--no-heap-copy
-javascript-wasm-web: apply-patches lua53 milagro embed-lua
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-	JSEXT="--embed-file lua@/" \
-	make -C src js
-	@mkdir -p build/wasm-web
-	@cp -v src/zenroom.js build/wasm-web/
-	@cp -v src/zenroom.wasm build/wasm-web/

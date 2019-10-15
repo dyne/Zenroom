@@ -1,6 +1,6 @@
 {
   "name": "zenroom",
-  "version": "1.0.0+29c2050",
+  "version": "1.0.0",
   "description": "wrapper of Zenroom, a secure and small virtual machine for crypto language processing",
   "main": "index.js",
   "repository": "https://github.com/DECODEproject/Zenroom.git",
@@ -8,24 +8,24 @@
   "license": "AGPL-3.0",
   "scripts": {
     "lint": "npx standard",
-    "build": "cd ../.. && make clean && make javascript-npm",
+    "build": "cd ../.. && make javascript-wasm",
     "clean": "rimraf dist/lib && cd ../.. && make clean",
     "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
-    "pretranspile": "yarn build && mkdirp dist/lib && cp -v ../../build/npm/z* dist/lib",
-    "transpile": "babel src -d dist",
+    "pretranspile": "mkdirp dist/lib && cp -v ../../build/wasm/z* dist/lib",
+    "transpile": "npx babel src -d dist",
     "test": "node index.js && nyc --require @babel/register mocha",
     "test:html": "nyc report --reporter=html yarn test",
     "test:watch": "yarn test --watch",
     "doc": "documentation serve src/wrapper.js --shallow",
     "doc:api": "documentation readme src/wrapper.js -s ':honeybee: API' --shallow --markdown-toc false",
-    "release": "release-it"
+    "release": "release-it --no-requireCleanWorkingDir"
   },
   "files": [
     "dist"
   ],
   "devDependencies": {
-    "@babel/cli": "^7.2.0",
-    "@babel/core": "^7.2.0",
+    "@babel/cli": "^7.6.4",
+    "@babel/core": "^7.6.4",
     "@babel/preset-env": "^7.2.0",
     "@babel/preset-react": "^7.0.0",
     "@babel/register": "^7.0.0",
@@ -46,6 +46,7 @@
     "standard": "^12.0.1"
   },
   "dependencies": {
+    "@babel/node": "^7.6.3",
     "core-js": "^3.1.4",
     "regenerator-runtime": "*"
   },
