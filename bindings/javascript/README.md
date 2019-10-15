@@ -12,7 +12,6 @@
 <h4 align="center">
 Zenroomjs provides a javascript wrapper of <a href="https://zenroom.dyne.org">Zenroom</a>, a secure and small virtual machine for crypto language processing.
 </h4>
-  
 <p align="center">
   <a href="https://travis-ci.com/DECODEproject/zenroomjs">
     <img src="https://travis-ci.com/DECODEproject/zenroomjs.svg?branch=master" alt="Build Status">
