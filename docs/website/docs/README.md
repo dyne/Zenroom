@@ -115,6 +115,23 @@ researchers and cryptographers can provide Zencode or Lua scripts.
 [How to build Zenroom from the source code](wiki/how-to-build)
 </span>
 
+<span class="big">
+<span class="mdi mdi-nodejs"></span>
+[Zenroom with JavaScript: node.js (part 1)](https://www.dyne.org/using-zenroom-with-javascript-nodejs-part1)
+</span>
+
+<span class="big">
+<span class="mdi mdi-language-javascript"></span>
+[Zenroom with JavaScript: browser (part 2)](https://www.dyne.org/make-with-zenroom-and-javascript-part-2)
+</span>
+
+<span class="big">
+<span class="mdi mdi-react"></span>
+[Zenroom with JavaScript: React (part 3)](https://www.dyne.org/make-with-zenroom-and-javascript-part-3)
+</span>
+
+
+
 # Playground
 
 ## Online
