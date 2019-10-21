@@ -30,8 +30,12 @@
 ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 	ecdh *e = NULL;
 	char curve[16];
-	if(cname) strncpy(curve,cname,15);
-	else      strncpy(curve,"ed25519",15);
+	if(cname) {
+               strncpy(curve,cname,15);
+        } else {
+               strncpy(curve,"ed25519",15);
+        }
+
 	HEREs(curve);
 	if(strcasecmp(curve,"ec25519")   ==0
 	   || strcasecmp(curve,"ed25519")==0
@@ -91,11 +95,13 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 		e->ECP__SP_DSA = ECP_SECP256K1_SP_DSA;
 		e->ECP__VP_DSA = ECP_SECP256K1_VP_DSA;
 
-	} else {
-		error(L, "%s: curve not found: %s",__func__,curve);
-		return NULL;
-	}
+       } else {
+               error(L, "%s: curve not found: %s",__func__,curve);
+               return NULL;
+       }
 	strncpy(e->curve,curve,15);
+// TODO: where is this set?
+// TODO: this is missing for the other curves...
 #if CURVETYPE_ED25519==MONTGOMERY
 	strcpy(e->type,"montgomery");
 #elif CURVETYPE_ED25519==WEIERSTRASS

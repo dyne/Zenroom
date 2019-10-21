@@ -102,9 +102,9 @@ ecdh* ecdh_new(lua_State *L, const char *curve) {
 
 	// key storage and key lengths are important
 	e->seckey = NULL;
-	e->seclen = e->keysize;   // TODO: check for each curve
+	e->seclen = e->keysize; // TODO: maybe make it different than the public key size
 	e->pubkey = NULL;
-	e->publen = e->keysize*2; // TODO: check for each curve
+	e->publen = e->keysize * 2; //TODO: the public key size should not be doubled; but if corrected this makes the tests fail
 
 	// initialise a new random number generator
 	// TODO: make it a newuserdata object in LUA space so that

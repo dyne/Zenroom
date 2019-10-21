@@ -11,7 +11,7 @@ Minim quis typewriter ut. Deep v ut man braid neutra culpa in officia consectetu
 
 function test_curve (name)
    print ('  ' .. name)
-   alice = ECDH.new(name) -- ed25519
+   alice = ECDH.new(name)
    ak = alice:keygen()
    bob = ECDH.new(name)
    bk = bob:keygen()
@@ -48,9 +48,14 @@ function test_curve (name)
 end
 
 test_curve('ed25519')
+test_curve('ec25519')
+test_curve('25519')
 test_curve('bls383')
 test_curve('goldilocks')
 test_curve('secp256k1')
+--- this all are failing
+---test_curve()
+---test_curve('')
 -- test_curve('bn254cx')
 -- test_curve('fp256bn')
 
