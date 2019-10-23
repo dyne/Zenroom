@@ -180,15 +180,16 @@ static int ecdh_keygen(lua_State *L) {
 	octet *sk = o_new(L,e->seclen +0x0f); SAFE(sk);
 	lua_setfield(L, -2, "private");
 	(*e->ECP__KEY_PAIR_GENERATE)(Z->random_generator,sk,pk);
-	e->pubkey = pk;
 	e->seckey = sk;
+	e->pubkey = pk;
 	return 1;
 }
 
 /*
-   Validate an ECDH public key. Any octet can be a private key, but
-   public keys aren't random and checking them is the only validation
-   possible.
+   Validate an ECDH public key.
+   This is done by:
+   1. Checking that it is not the point at infinity
+   2. Validating that it is on the correct group.
 
    @param key the input public key octet to be validated
    @function keyring:checkpub(key)
@@ -217,7 +218,8 @@ static int ecdh_checkpub(lua_State *L) {
    through @{keyring:kdf2} to make it ready for use in
    @{keyring:aead_encrypt}. This is compliant with the IEEE-1363
    Diffie-Hellman shared secret specification for asymmetric key
-   encryption.
+   encryption. It can be found here:
+   https://perso.telecom-paristech.fr/guilley/recherche/cryptoprocesseurs/ieee/00891000.pdf, section 6.2
 
    @param keyring containing the public key to be used
    @function keyring:session(keyring)
@@ -249,6 +251,7 @@ static int ecdh_session(lua_State *L) {
 	// here the NULL could be a salt (TODO: global?)
 	// its used internally by KDF2 as 'p' in the hash function
 	//         ehashit(sha,z,counter,p,&H,0);
+        // TODO: this probably needs some domain separation
 	KDF2(e->hash,ses,NULL,e->hash,kdf);
 	return 2;
 }
