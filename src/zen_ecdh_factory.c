@@ -41,7 +41,7 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 	   || strcasecmp(curve,"ed25519")==0
 	   || strcasecmp(curve,"25519")  ==0) {
 		e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
-		e->keysize = EGS_ED25519; // public key size
+		e->secretkeysize = EGS_ED25519; // public key size
 		e->fieldsize = EFS_ED25519;
 		e->rng = NULL;
 		e->hash = HASH_TYPE_ED25519;
@@ -55,7 +55,7 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 
 	} else if(strcasecmp(curve,"bls383")==0) {
 			e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
-			e->keysize = EGS_BLS383;
+			e->secretkeysize = EGS_BLS383;
 			e->fieldsize = EFS_BLS383;
 			e->rng = NULL;
 			e->hash = HASH_TYPE_BLS383;
@@ -69,7 +69,7 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 
 	} else if(strcasecmp(curve,"goldilocks")==0) {
 		e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
-		e->keysize = EGS_GOLDILOCKS;
+		e->secretkeysize = EGS_GOLDILOCKS;
 		e->fieldsize = EFS_GOLDILOCKS;
 		e->rng = NULL;
 		e->hash = HASH_TYPE_GOLDILOCKS;
@@ -83,7 +83,7 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 
 	} else if(strcasecmp(curve,"secp256k1")==0) {
 		e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
-		e->keysize = EGS_SECP256K1*2;
+		e->secretkeysize = EGS_SECP256K1*2;
 		e->fieldsize = EFS_SECP256K1;
 		e->rng = NULL;
 		e->hash = HASH_TYPE_SECP256K1;
@@ -113,6 +113,6 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 #endif
 	func(NULL,"ECDH new curve %s",e->curve);
 	func(NULL,"ECDH type %s",e->type);
-	func(NULL,"ECDH keysize[%u] fieldsize[%u]",e->keysize,e->fieldsize);
+	func(NULL,"ECDH keysize[%u] fieldsize[%u]",e->secretkeysize,e->fieldsize);
 	return e;
 }
