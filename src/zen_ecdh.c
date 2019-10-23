@@ -102,9 +102,8 @@ ecdh* ecdh_new(lua_State *L, const char *curve) {
 
 	// key storage and key lengths are important
 	e->seckey = NULL;
-	e->seclen = e->secretkeysize;
 	e->pubkey = NULL;
-	e->publen = e->secretkeysize *2; // The public key size is half of this size; but this length is for the generation of the signature as well
+	e->publen = e->seclen *2; // The public key size is half of this size; but this length is for the generation of the signature as well
 
 	// initialise a new random number generator
 	// TODO: make it a newuserdata object in LUA space so that
@@ -243,7 +242,7 @@ static int ecdh_session(lua_State *L) {
 		       __func__);
 		return 0; }
 	octet *kdf = o_new(L,e->hash); SAFE(kdf);
-	octet *ses = o_new(L,e->secretkeysize); SAFE(ses);
+	octet *ses = o_new(L,e->seclen); SAFE(ses);
 	(*e->ECP__SVDP_DH)(e->seckey,p->pubkey,ses);
 	// process via KDF2
 	// https://github.com/milagro-crypto/milagro-crypto-c/issues/285
@@ -580,7 +579,7 @@ static int ecdh_simple_encrypt(lua_State *L) {
 	if( (*s->ECP__PUBLIC_KEY_VALIDATE)(r->pubkey) < 0) { // validate by sender
 		lerror(L, "%s: invalid public key in recipient keyring", __func__);
 		return 0; }
-	octet *ses = o_new(L,s->secretkeysize); SAFE(ses);
+	octet *ses = o_new(L,s->seclen); SAFE(ses);
 	lua_pop(L,1); // pop the session (used internally)
 	(*s->ECP__SVDP_DH)(s->seckey,r->pubkey,ses);
 	octet *kdf = o_new(L,s->hash); SAFE(kdf);
@@ -646,7 +645,7 @@ static int ecdh_simple_decrypt(lua_State *L) {
 		lerror(L, "%s: invalid public key in ciphertext", __func__);
 		return 0; }
 	// calculate session
-	octet *ses = o_new(L,e->secretkeysize); SAFE(ses);
+	octet *ses = o_new(L,e->seclen); SAFE(ses);
 	lua_pop(L,1); // pop the session (used internally)
 	(*e->ECP__SVDP_DH)(e->seckey,pubkey,ses);
 	octet *kdf = o_new(L,e->hash); SAFE(kdf);
