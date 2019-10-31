@@ -73,6 +73,7 @@ extern void zen_add_function(lua_State *L, lua_CFunction func,
 
 // prototype from zen_random.c
 extern void* rng_alloc();
+extern void zen_add_random(lua_State *L);
 
 // single instance globals
 zenroom_t *Z = NULL;   // zenroom STACK
@@ -124,6 +125,7 @@ static int zen_init_pmain(lua_State *L) { // protected mode init
 	// load our own openlibs and extensions
 	zen_add_io(L);
 	zen_add_parse(L);
+	zen_add_random(L);
 	zen_require_override(L,0);
 	if(!zen_lua_init(L)) {
 		error(L,"%s: %s", __func__, "initialisation of lua scripts failed");

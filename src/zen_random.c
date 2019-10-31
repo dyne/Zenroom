@@ -93,3 +93,39 @@ void* rng_alloc() {
 	}
 	return(rng);
 }
+
+
+static int rng_uint8(lua_State *L) {
+	uint8_t res = RAND_byte(Z->random_generator);
+	lua_pushinteger(L, (lua_Integer)res);
+	return(1);
+}
+
+static int rng_uint16(lua_State *L) {
+	uint16_t res =
+		RAND_byte(Z->random_generator)
+		| (uint32_t) RAND_byte(Z->random_generator) << 8;
+	lua_pushinteger(L, (lua_Integer)res);
+	return(1);
+}
+
+static int rng_int32(lua_State *L) {
+	uint32_t res =
+		RAND_byte(Z->random_generator)
+		| (uint32_t) RAND_byte(Z->random_generator) << 8
+		| (uint32_t) RAND_byte(Z->random_generator) << 16
+		| (uint32_t) RAND_byte(Z->random_generator) << 24;
+	lua_pushinteger(L, (lua_Integer)res);
+	return(1);
+}
+
+void zen_add_random(lua_State *L) {
+	static const struct luaL_Reg rng_base [] =
+		{ {"random_int8",  rng_uint8  },
+		  {"random_int16", rng_uint16 },
+		  {"random_int32", rng_int32 },
+		  {NULL, NULL} };
+	lua_getglobal(L, "_G");
+	luaL_setfuncs(L, rng_base, 0);
+	lua_pop(L, 1);
+}
