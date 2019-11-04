@@ -415,6 +415,7 @@ static int ecdh_dsa_sign(lua_State *L) {
 		octet *s = o_new(L,64); SAFE(s);
 		lua_setfield(L, -2, "s");
 		// ECP_BLS383_SP_DSA(int sha,csprng *RNG,octet *K,octet *S,octet *F,octet *C,octet *D)
+                // TODO: in the case of eddsa for goldilocks, the sha should be 114
 		(*e->ECP__SP_DSA)( 64, Z->random_generator,  NULL, e->seckey,    f,      r,      s );
 	} else {
 		octet *k = o_arg(L,3); SAFE(k);
@@ -424,6 +425,7 @@ static int ecdh_dsa_sign(lua_State *L) {
 		lua_setfield(L, -2, "r");
 		octet *s = o_new(L,64); SAFE(s);
 		lua_setfield(L, -2, "s");
+                // TODO: in the case of eddsa for goldilocks, the sha should be 114
 		(*e->ECP__SP_DSA)( 64, NULL,                 k,    e->seckey,    f,      r,      s );
 	}
 	return 1;
@@ -488,7 +490,7 @@ static int ecdh_dsa_verify(lua_State *L) {
    checksum the integrity of the accompanying plaintext, to be
    compared with the one obtained by @{aead_decrypt}.
 
-   @param key AES key octet (must be 8, 16, 32 or 64 bytes long)
+   @param key AES key octet (must be 16, 24 or 32 bytes long)
    @param message input text in an octet
    @param iv initialization vector (can be random each time)
    @param header clear text, authenticated for integrity (checksum)
@@ -497,6 +499,7 @@ static int ecdh_dsa_verify(lua_State *L) {
    @treturn[1] octet containing the authentication tag (checksum)
 */
 
+// TODO: RFC specifies AES-GCM only for 128 and 256, should we include 192?
 static int ecdh_aead_encrypt(lua_State *L) {
 	HERE();
 	octet *k =  o_arg(L, 1); SAFE(k);
@@ -506,6 +509,12 @@ static int ecdh_aead_encrypt(lua_State *L) {
 		lerror(L,"ECDH encryption aborted");
 		return 0; }
 	octet *in = o_arg(L, 2); SAFE(in);
+        // TODO: the following values have a fixed max and min size.
+        // Should we include?
+        // the couple key/iv should be random if key is reused
+        // TODO: the length should be 96. Should we check this?
+        // TODO: it might be wise to provide a safe way to generate it:
+        // following RFC5116
 	octet *iv = o_arg(L, 3); SAFE(iv);
 	octet *h =  o_arg(L, 4); SAFE(h);
 	// output is padded to next word
@@ -533,7 +542,7 @@ static int ecdh_aead_decrypt(lua_State *L) {
 	HERE();
 	octet *k = o_arg(L, 1); SAFE(k);
 	if(!(k->len && !(k->len & (k->len - 1))) ||
-	   (k->len > 64 && k->len < 16) ) {
+	   (k->len > 32 && k->len < 16) ) {
 		error(L,"ECDH.aead_decrypt accepts only keys of ^2 length (16,32,64), this is %u", k->len);
 		lerror(L,"ECDH decryption aborted");
 		return 0; }
@@ -593,11 +602,13 @@ static int ecdh_simple_encrypt(lua_State *L) {
 	octet *h =  o_arg(L, 4); SAFE(h); // header provided
 	// prepare to return a table
 	lua_createtable(L, 0, 5);
+        // TODO: why 16?
 	octet *iv = o_new(L,16); SAFE(iv); // generate random IV
 	OCT_rand(iv,Z->random_generator,16);
 	lua_setfield(L,-2, "iv");
 	octet *out = o_new(L, in->len+16); SAFE(out); // 16bytes padding
 	lua_setfield(L, -2, "text");
+        // TODO: why 32?
 	octet *checksum = o_new(L, 32); SAFE (checksum);
 	lua_setfield(L, -2, "checksum");
 	AES_GCM_ENCRYPT(kdf, iv, h, in, out, checksum);
@@ -704,6 +715,8 @@ static int ecdh_hash(lua_State *L) {
 static int ecdh_hmac(lua_State *L) {
 	HERE();
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
+        // TODO: the key length should be checked as well. Should be less
+        // than the lenght of the block
 	octet *k = o_arg(L, 2);     SAFE(k);
 	octet *in = o_arg(L, 3);    SAFE(in);
 	// length defaults to hash bytes (e->hash = 32 = sha256)
@@ -734,6 +747,7 @@ static int ecdh_kdf2(lua_State *L) {
 	int hashlen = 0;
 	if(luaL_testudata(L, 1, "zenroom.ecdh")) {
 		ecdh *e = ecdh_arg(L,1); SAFE(e);
+                // TODO: why it is assinged here the hash?
 		hashlen = e->hash;
 	} else if(luaL_testudata(L, 1, "zenroom.hash")) {
 		hash *h = hash_arg(L,1); SAFE(h);
