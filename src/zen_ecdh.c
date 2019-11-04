@@ -814,6 +814,8 @@ static int ecdh_pbkdf2(lua_State *L) {
 
 	// TODO: OPTIMIZATION: reuse the initialized hash* structure in
 	// hmac->ehashit instead of milagro's
+        // TODO: according to RFC2898, s should have a size of 8
+        // c should be a positive integer
 	PBKDF2(hashlen, k, s, iter, keylen, out);
 	return 1;
 }
