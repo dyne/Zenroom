@@ -76,7 +76,10 @@ int get_debug() {
 void notice(lua_State *L, const char *format, ...) {
 	(void)L;
   va_list arg;
-  z_snprintf(pfx, MAX_STRING-1, "%s[*]%s %s\n",ANSI_GREEN,ANSI_RESET,format);
+  if(color)
+	  z_snprintf(pfx, MAX_STRING-1, "%s[*]%s %s\n",ANSI_GREEN,ANSI_RESET,format);
+  else
+	  z_snprintf(pfx, MAX_STRING-1, "[*] %s\n",format);
   va_start(arg, format);
   zen_write_err_va(pfx, arg);
   va_end(arg);
@@ -97,7 +100,10 @@ void error(lua_State *L, const char *format, ...) {
 	(void)L;
 	if(!format) return;
 	va_list arg;
-	z_snprintf(pfx, MAX_STRING-1, "%s[!]%s %s\n",ANSI_RED,ANSI_RESET,format);
+	if(color)
+		z_snprintf(pfx, MAX_STRING-1, "%s[!]%s %s\n",ANSI_RED,ANSI_RESET,format);
+	else
+		z_snprintf(pfx, MAX_STRING-1, "[!] %s\n",format);
 	va_start(arg, format);
 	zen_write_err_va(pfx, arg);
 	va_end(arg);
@@ -117,7 +123,10 @@ void act(lua_State *L, const char *format, ...) {
 void warning(lua_State *L, const char *format, ...) {
         (void) L;
 	va_list arg;
-	z_snprintf(pfx, MAX_STRING-1, "%s[W]%s %s\n",ANSI_YELLOW,ANSI_RESET,format);
+	if(color)
+		z_snprintf(pfx, MAX_STRING-1, "%s[W]%s %s\n",ANSI_YELLOW,ANSI_RESET,format);
+	else
+		z_snprintf(pfx, MAX_STRING-1, "[W] %s\n",format);
 	va_start(arg, format);
 	zen_write_err_va(pfx, arg);
 	va_end(arg);
