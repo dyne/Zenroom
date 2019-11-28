@@ -242,6 +242,7 @@ int zen_exec_zencode(zenroom_t *Z, const char *script) {
 		fflush(stderr);
 		return ret;
 	}
+	notice(L, "Script executed:\n%s",script);
 	return 0;
 }
 
