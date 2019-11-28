@@ -39,7 +39,6 @@ typedef struct {
 	                   octet *M,octet *c,octet *d);
 	int (*ECP__VP_DSA)(int h,octet *W,octet *M,octet *c,octet *d);
 	csprng *rng;
-	int keysize;
 	int fieldsize;
 	int hash; // hash type is also bytes length of hash
 	char curve[16]; // just short names

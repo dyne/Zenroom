@@ -102,9 +102,8 @@ ecdh* ecdh_new(lua_State *L, const char *curve) {
 
 	// key storage and key lengths are important
 	e->seckey = NULL;
-	e->seclen = e->keysize;   // TODO: check for each curve
 	e->pubkey = NULL;
-	e->publen = e->keysize*2; // TODO: check for each curve
+	e->publen = e->seclen *2; // The public key size is half of this size; but this length is for the generation of the signature as well
 
 	// initialise a new random number generator
 	// TODO: make it a newuserdata object in LUA space so that
@@ -181,15 +180,16 @@ static int ecdh_keygen(lua_State *L) {
 	octet *sk = o_new(L,e->seclen +0x0f); SAFE(sk);
 	lua_setfield(L, -2, "private");
 	(*e->ECP__KEY_PAIR_GENERATE)(Z->random_generator,sk,pk);
-	e->pubkey = pk;
 	e->seckey = sk;
+	e->pubkey = pk;
 	return 1;
 }
 
 /*
-   Validate an ECDH public key. Any octet can be a private key, but
-   public keys aren't random and checking them is the only validation
-   possible.
+   Validate an ECDH public key.
+   This is done by:
+   1. Checking that it is not the point at infinity
+   2. Validating that it is on the correct group.
 
    @param key the input public key octet to be validated
    @function keyring:checkpub(key)
@@ -218,7 +218,8 @@ static int ecdh_checkpub(lua_State *L) {
    through @{keyring:kdf2} to make it ready for use in
    @{keyring:aead_encrypt}. This is compliant with the IEEE-1363
    Diffie-Hellman shared secret specification for asymmetric key
-   encryption.
+   encryption. It can be found here:
+   https://perso.telecom-paristech.fr/guilley/recherche/cryptoprocesseurs/ieee/00891000.pdf, section 6.2
 
    @param keyring containing the public key to be used
    @function keyring:session(keyring)
@@ -243,13 +244,14 @@ static int ecdh_session(lua_State *L) {
 		       __func__);
 		return 0; }
 	octet *kdf = o_new(L,e->hash); SAFE(kdf);
-	octet *ses = o_new(L,e->keysize); SAFE(ses);
+	octet *ses = o_new(L,e->seclen); SAFE(ses);
 	(*e->ECP__SVDP_DH)(e->seckey,p->pubkey,ses);
 	// process via KDF2
 	// https://github.com/milagro-crypto/milagro-crypto-c/issues/285
 	// here the NULL could be a salt (TODO: global?)
 	// its used internally by KDF2 as 'p' in the hash function
 	//         ehashit(sha,z,counter,p,&H,0);
+        // TODO: this probably needs some domain separation
 	KDF2(e->hash,ses,NULL,e->hash,kdf);
 	return 2;
 }
@@ -413,6 +415,7 @@ static int ecdh_dsa_sign(lua_State *L) {
 		octet *s = o_new(L,64); SAFE(s);
 		lua_setfield(L, -2, "s");
 		// ECP_BLS383_SP_DSA(int sha,csprng *RNG,octet *K,octet *S,octet *F,octet *C,octet *D)
+                // TODO: in the case of eddsa for goldilocks, the sha should be 114
 		(*e->ECP__SP_DSA)( 64, Z->random_generator,  NULL, e->seckey,    f,      r,      s );
 	} else {
 		octet *k = o_arg(L,3); SAFE(k);
@@ -422,6 +425,7 @@ static int ecdh_dsa_sign(lua_State *L) {
 		lua_setfield(L, -2, "r");
 		octet *s = o_new(L,64); SAFE(s);
 		lua_setfield(L, -2, "s");
+                // TODO: in the case of eddsa for goldilocks, the sha should be 114
 		(*e->ECP__SP_DSA)( 64, NULL,                 k,    e->seckey,    f,      r,      s );
 	}
 	return 1;
@@ -486,7 +490,7 @@ static int ecdh_dsa_verify(lua_State *L) {
    checksum the integrity of the accompanying plaintext, to be
    compared with the one obtained by @{aead_decrypt}.
 
-   @param key AES key octet (must be 8, 16, 32 or 64 bytes long)
+   @param key AES key octet (must be 16, 24 or 32 bytes long)
    @param message input text in an octet
    @param iv initialization vector (can be random each time)
    @param header clear text, authenticated for integrity (checksum)
@@ -495,6 +499,7 @@ static int ecdh_dsa_verify(lua_State *L) {
    @treturn[1] octet containing the authentication tag (checksum)
 */
 
+// TODO: RFC specifies AES-GCM only for 128 and 256, should we include 192?
 static int ecdh_aead_encrypt(lua_State *L) {
 	HERE();
 	octet *k =  o_arg(L, 1); SAFE(k);
@@ -504,6 +509,12 @@ static int ecdh_aead_encrypt(lua_State *L) {
 		lerror(L,"ECDH encryption aborted");
 		return 0; }
 	octet *in = o_arg(L, 2); SAFE(in);
+        // TODO: the following values have a fixed max and min size.
+        // Should we include?
+        // the couple key/iv should be random if key is reused
+        // TODO: the length should be 96. Should we check this?
+        // TODO: it might be wise to provide a safe way to generate it:
+        // following RFC5116
 	octet *iv = o_arg(L, 3); SAFE(iv);
 	octet *h =  o_arg(L, 4); SAFE(h);
 	// output is padded to next word
@@ -531,7 +542,7 @@ static int ecdh_aead_decrypt(lua_State *L) {
 	HERE();
 	octet *k = o_arg(L, 1); SAFE(k);
 	if(!(k->len && !(k->len & (k->len - 1))) ||
-	   (k->len > 64 && k->len < 16) ) {
+	   (k->len > 32 && k->len < 16) ) {
 		error(L,"ECDH.aead_decrypt accepts only keys of ^2 length (16,32,64), this is %u", k->len);
 		lerror(L,"ECDH decryption aborted");
 		return 0; }
@@ -580,7 +591,7 @@ static int ecdh_simple_encrypt(lua_State *L) {
 	if( (*s->ECP__PUBLIC_KEY_VALIDATE)(r->pubkey) < 0) { // validate by sender
 		lerror(L, "%s: invalid public key in recipient keyring", __func__);
 		return 0; }
-	octet *ses = o_new(L,s->keysize); SAFE(ses);
+	octet *ses = o_new(L,s->seclen); SAFE(ses);
 	lua_pop(L,1); // pop the session (used internally)
 	(*s->ECP__SVDP_DH)(s->seckey,r->pubkey,ses);
 	octet *kdf = o_new(L,s->hash); SAFE(kdf);
@@ -591,11 +602,13 @@ static int ecdh_simple_encrypt(lua_State *L) {
 	octet *h =  o_arg(L, 4); SAFE(h); // header provided
 	// prepare to return a table
 	lua_createtable(L, 0, 5);
+        // TODO: why 16?
 	octet *iv = o_new(L,16); SAFE(iv); // generate random IV
 	OCT_rand(iv,Z->random_generator,16);
 	lua_setfield(L,-2, "iv");
 	octet *out = o_new(L, in->len+16); SAFE(out); // 16bytes padding
 	lua_setfield(L, -2, "text");
+        // TODO: why 32?
 	octet *checksum = o_new(L, 32); SAFE (checksum);
 	lua_setfield(L, -2, "checksum");
 	AES_GCM_ENCRYPT(kdf, iv, h, in, out, checksum);
@@ -646,7 +659,7 @@ static int ecdh_simple_decrypt(lua_State *L) {
 		lerror(L, "%s: invalid public key in ciphertext", __func__);
 		return 0; }
 	// calculate session
-	octet *ses = o_new(L,e->keysize); SAFE(ses);
+	octet *ses = o_new(L,e->seclen); SAFE(ses);
 	lua_pop(L,1); // pop the session (used internally)
 	(*e->ECP__SVDP_DH)(e->seckey,pubkey,ses);
 	octet *kdf = o_new(L,e->hash); SAFE(kdf);
@@ -702,6 +715,8 @@ static int ecdh_hash(lua_State *L) {
 static int ecdh_hmac(lua_State *L) {
 	HERE();
 	ecdh *e = ecdh_arg(L, 1);	SAFE(e);
+        // TODO: the key length should be checked as well. Should be less
+        // than the lenght of the block
 	octet *k = o_arg(L, 2);     SAFE(k);
 	octet *in = o_arg(L, 3);    SAFE(in);
 	// length defaults to hash bytes (e->hash = 32 = sha256)
@@ -732,6 +747,7 @@ static int ecdh_kdf2(lua_State *L) {
 	int hashlen = 0;
 	if(luaL_testudata(L, 1, "zenroom.ecdh")) {
 		ecdh *e = ecdh_arg(L,1); SAFE(e);
+                // TODO: why it is assinged here the hash?
 		hashlen = e->hash;
 	} else if(luaL_testudata(L, 1, "zenroom.hash")) {
 		hash *h = hash_arg(L,1); SAFE(h);
@@ -798,6 +814,8 @@ static int ecdh_pbkdf2(lua_State *L) {
 
 	// TODO: OPTIMIZATION: reuse the initialized hash* structure in
 	// hmac->ehashit instead of milagro's
+        // TODO: according to RFC2898, s should have a size of 8
+        // c should be a positive integer
 	PBKDF2(hashlen, k, s, iter, keylen, out);
 	return 1;
 }

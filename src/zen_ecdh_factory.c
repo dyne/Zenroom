@@ -30,14 +30,18 @@
 ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 	ecdh *e = NULL;
 	char curve[16];
-	if(cname) strncpy(curve,cname,15);
-	else      strncpy(curve,"ed25519",15);
+	if(cname) {
+               strncpy(curve,cname,15);
+        } else {
+               strncpy(curve,"ed25519",15);
+        }
+
 	HEREs(curve);
 	if(strcasecmp(curve,"ec25519")   ==0
 	   || strcasecmp(curve,"ed25519")==0
 	   || strcasecmp(curve,"25519")  ==0) {
 		e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
-		e->keysize = EGS_ED25519; // public key size
+		e->seclen = EGS_ED25519; // public key size
 		e->fieldsize = EFS_ED25519;
 		e->rng = NULL;
 		e->hash = HASH_TYPE_ED25519;
@@ -51,7 +55,7 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 
 	} else if(strcasecmp(curve,"bls383")==0) {
 			e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
-			e->keysize = EGS_BLS383;
+			e->seclen = EGS_BLS383;
 			e->fieldsize = EFS_BLS383;
 			e->rng = NULL;
 			e->hash = HASH_TYPE_BLS383;
@@ -65,7 +69,7 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 
 	} else if(strcasecmp(curve,"goldilocks")==0) {
 		e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
-		e->keysize = EGS_GOLDILOCKS;
+		e->seclen = EGS_GOLDILOCKS;
 		e->fieldsize = EFS_GOLDILOCKS;
 		e->rng = NULL;
 		e->hash = HASH_TYPE_GOLDILOCKS;
@@ -79,7 +83,7 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 
 	} else if(strcasecmp(curve,"secp256k1")==0) {
 		e = (ecdh*)lua_newuserdata(L, sizeof(ecdh));
-		e->keysize = EGS_SECP256K1*2;
+		e->seclen = EGS_SECP256K1*2;
 		e->fieldsize = EFS_SECP256K1;
 		e->rng = NULL;
 		e->hash = HASH_TYPE_SECP256K1;
@@ -91,11 +95,13 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 		e->ECP__SP_DSA = ECP_SECP256K1_SP_DSA;
 		e->ECP__VP_DSA = ECP_SECP256K1_VP_DSA;
 
-	} else {
-		error(L, "%s: curve not found: %s",__func__,curve);
-		return NULL;
-	}
+       } else {
+               error(L, "%s: curve not found: %s",__func__,curve);
+               return NULL;
+       }
 	strncpy(e->curve,curve,15);
+// TODO: where is this set?
+// TODO: this is missing for the other curves...
 #if CURVETYPE_ED25519==MONTGOMERY
 	strcpy(e->type,"montgomery");
 #elif CURVETYPE_ED25519==WEIERSTRASS
@@ -107,6 +113,6 @@ ecdh *ecdh_new_curve(lua_State *L, const char *cname) {
 #endif
 	func(NULL,"ECDH new curve %s",e->curve);
 	func(NULL,"ECDH type %s",e->type);
-	func(NULL,"ECDH keysize[%u] fieldsize[%u]",e->keysize,e->fieldsize);
+	func(NULL,"ECDH sec/pub len[%u] fieldsize[%u]",e->seclen,e->fieldsize);
 	return e;
 }
