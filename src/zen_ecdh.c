@@ -594,13 +594,16 @@ static int ecdh_simple_encrypt(lua_State *L) {
 	if(!s->seckey) {
 		lerror(L,"%s: private key not found in sender keyring",__func__);
 		return 0; }
+
 	ecdh *r =  ecdh_arg(L, 2); SAFE(r);
 	if(!r->pubkey) {
 		lerror(L,"%s: public key not found in recipient keyring",__func__);
 		return 0; }
+
 	if( (*s->ECP__PUBLIC_KEY_VALIDATE)(r->pubkey) < 0) { // validate by sender
 		lerror(L, "%s: invalid public key in recipient keyring", __func__);
 		return 0; }
+
 	octet *ses = o_new(L,s->seclen); SAFE(ses);
 	lua_pop(L,1); // pop the session (used internally)
 	(*s->ECP__SVDP_DH)(s->seckey,r->pubkey,ses);
@@ -612,15 +615,17 @@ static int ecdh_simple_encrypt(lua_State *L) {
 	octet *h =  o_arg(L, 4); SAFE(h); // header provided
 	// prepare to return a table
 	lua_createtable(L, 0, 5);
-        // TODO: why 16?
-	octet *iv = o_new(L,16); SAFE(iv); // generate random IV
+
+	octet *iv = o_new(L,16); SAFE(iv); // generate random IV. The minimum lenght should be 12
 	OCT_rand(iv,Z->random_generator,16);
+
 	lua_setfield(L,-2, "iv");
 	octet *out = o_new(L, in->len+16); SAFE(out); // 16bytes padding
 	lua_setfield(L, -2, "text");
-        // TODO: why 32?
-	octet *checksum = o_new(L, 32); SAFE (checksum);
+
+	octet *checksum = o_new(L, 32); SAFE (checksum); // The minimum lenght should be 16
 	lua_setfield(L, -2, "checksum");
+
 	AES_GCM_ENCRYPT(kdf, iv, h, in, out, checksum);
 	o_dup(L,h); lua_setfield(L, -2, "header");
 	return 1;
@@ -659,10 +664,12 @@ static int ecdh_simple_decrypt(lua_State *L) {
 	if(chk->len != 16) {
 		lerror(L,"%s invalid checksum argument length",__func__);
 		return 0; }
+
 	octet *iv = o_arg(L,-3);  SAFE(iv);
-	if(iv->len != 16) {
+	if(iv->len < 12) {
 		lerror(L,"%s invalid IV argument length",__func__);
 		return 0; }
+
 	octet *head = o_arg(L,-2); SAFE(head);
 	octet *pubkey = o_arg(L,-1); SAFE(pubkey);
 	if( (*e->ECP__PUBLIC_KEY_VALIDATE)(pubkey) < 0) { // validate public key
@@ -679,9 +686,11 @@ static int ecdh_simple_decrypt(lua_State *L) {
 	octet *out = o_new(L, msg->len+16); SAFE(out);
 	octet *outchk = o_new(L,32); SAFE(outchk); // measured empirically is 16
 	lua_pop(L,1); // pop the checksum (checked internally)
+
 	AES_GCM_DECRYPT(kdf, iv, head, msg, out, outchk);
 	// check equality of checksums
 	int i, eq = 1;
+        // TODO: this needs a constant time comparison
 	for (i=0; i<chk->len; i++)
 		if (chk->val[i]!=outchk->val[i]) eq = 0;
 	if(!eq) {
