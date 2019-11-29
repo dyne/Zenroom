@@ -252,6 +252,7 @@ static int ecdh_session(lua_State *L) {
 	// its used internally by KDF2 as 'p' in the hash function
 	//         ehashit(sha,z,counter,p,&H,0);
         // TODO: this probably needs some domain separation
+        // TODO: explain the salt and hash domain
 	KDF2(e->hash,ses,NULL,e->hash,kdf);
 	return 2;
 }
@@ -407,26 +408,24 @@ static int ecdh_dsa_sign(lua_State *L) {
 	// provide. For a correct K's generation see also RFC6979, however
 	// this argument is provided here mostly for testing purposes with
 	// pre-calculated vectors.
+        int max_size = 64;
 	if(lua_isnoneornil(L, 3)) {
 		// return a table
 		lua_createtable(L, 0, 2);
-		octet *r = o_new(L,64); SAFE(r);
+		octet *r = o_new(L,max_size); SAFE(r);
 		lua_setfield(L, -2, "r");
-		octet *s = o_new(L,64); SAFE(s);
+		octet *s = o_new(L,max_size); SAFE(s);
 		lua_setfield(L, -2, "s");
-		// ECP_BLS383_SP_DSA(int sha,csprng *RNG,octet *K,octet *S,octet *F,octet *C,octet *D)
-                // TODO: in the case of eddsa for goldilocks, the sha should be 114
-		(*e->ECP__SP_DSA)( 64, Z->random_generator,  NULL, e->seckey,    f,      r,      s );
+		(*e->ECP__SP_DSA)( max_size, Z->random_generator,  NULL, e->seckey,    f,      r,      s );
 	} else {
 		octet *k = o_arg(L,3); SAFE(k);
 		// return a table
 		lua_createtable(L, 0, 2);
-		octet *r = o_new(L,64); SAFE(r);
+		octet *r = o_new(L,max_size); SAFE(r);
 		lua_setfield(L, -2, "r");
-		octet *s = o_new(L,64); SAFE(s);
+		octet *s = o_new(L,max_size); SAFE(s);
 		lua_setfield(L, -2, "s");
-                // TODO: in the case of eddsa for goldilocks, the sha should be 114
-		(*e->ECP__SP_DSA)( 64, NULL,                 k,    e->seckey,    f,      r,      s );
+		(*e->ECP__SP_DSA)( max_size, NULL,                 k,    e->seckey,    f,      r,      s );
 	}
 	return 1;
 }
@@ -470,7 +469,8 @@ static int ecdh_dsa_verify(lua_State *L) {
 	} else {
 		ERROR(); lerror(L,"signature argument invalid: not a table");
 	}
-	int res = (*e->ECP__VP_DSA)(64, e->pubkey, f, r, s);
+        int max_size = 64;
+	int res = (*e->ECP__VP_DSA)(max_size, e->pubkey, f, r, s);
 	if(res <0) // ECDH_INVALID in milagro/include/ecdh.h.in (!?!)
 		// TODO: maybe suggest fixing since there seems to be
 		// no criteria between ERROR (used in the first check
