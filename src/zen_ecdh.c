@@ -768,7 +768,6 @@ static int ecdh_kdf2(lua_State *L) {
 	int hashlen = 0;
 	if(luaL_testudata(L, 1, "zenroom.ecdh")) {
 		ecdh *e = ecdh_arg(L,1); SAFE(e);
-                // TODO: why it is assinged here the hash?
 		hashlen = e->hash;
 	} else if(luaL_testudata(L, 1, "zenroom.hash")) {
 		hash *h = hash_arg(L,1); SAFE(h);
