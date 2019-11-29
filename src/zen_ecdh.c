@@ -492,14 +492,16 @@ static int ecdh_dsa_verify(lua_State *L) {
 
    @param key AES key octet (must be 16, 24 or 32 bytes long)
    @param message input text in an octet
-   @param iv initialization vector (can be random each time)
+   @param iv initialization vector. If the key is reused several times,
+          this param should be random, so the iv/key is different every time.
+          Follow RFC5116, section 3.1 for recommendations
    @param header clear text, authenticated for integrity (checksum)
+   @param tag the authenticated tag. As per RFC5116, this should be 16 bytes
+          long
    @function aead_encrypt(key, message, iv, h)
    @treturn[1] octet containing the output ciphertext
    @treturn[1] octet containing the authentication tag (checksum)
 */
-
-// TODO: RFC specifies AES-GCM only for 128 and 256, should we include 192?
 static int ecdh_aead_encrypt(lua_State *L) {
 	HERE();
 	octet *k =  o_arg(L, 1); SAFE(k);
@@ -509,17 +511,18 @@ static int ecdh_aead_encrypt(lua_State *L) {
 		lerror(L,"ECDH encryption aborted");
 		return 0; }
 	octet *in = o_arg(L, 2); SAFE(in);
-        // TODO: the following values have a fixed max and min size.
-        // Should we include?
-        // the couple key/iv should be random if key is reused
-        // TODO: the length should be 96. Should we check this?
-        // TODO: it might be wise to provide a safe way to generate it:
-        // following RFC5116
+
 	octet *iv = o_arg(L, 3); SAFE(iv);
+        if (iv->len < 12) {
+		error(L,"ECDH.aead_encrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
+		lerror(L,"ECDH encryption aborted");
+		return 0; }
+
 	octet *h =  o_arg(L, 4); SAFE(h);
 	// output is padded to next word
 	octet *out = o_new(L, in->len+16); SAFE(out);
-	octet *t = o_new(L, 32); SAFE (t);
+
+	octet *t = o_new(L, 16); SAFE (t);
 	AES_GCM_ENCRYPT(k, iv, h, in, out, t);
 	return 2;
 }
@@ -541,18 +544,25 @@ static int ecdh_aead_encrypt(lua_State *L) {
 static int ecdh_aead_decrypt(lua_State *L) {
 	HERE();
 	octet *k = o_arg(L, 1); SAFE(k);
-	if(!(k->len && !(k->len & (k->len - 1))) ||
-	   (k->len > 32 && k->len < 16) ) {
-		error(L,"ECDH.aead_decrypt accepts only keys of ^2 length (16,32,64), this is %u", k->len);
+	if(k->len > 32 || k->len < 16) {
+		error(L,"ECDH.aead_decrypt accepts only keys of 16,24,32, this is %u", k->len);
 		lerror(L,"ECDH decryption aborted");
 		return 0; }
+
 	octet *in = o_arg(L, 2); SAFE(in);
+
 	octet *iv = o_arg(L, 3); SAFE(iv);
+        if (iv->len < 12) {
+		error(L,"ECDH.aead_decrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
+		lerror(L,"ECDH decryption aborted");
+		return 0; }
+
 	octet *h = o_arg(L, 4); SAFE(h);
 	// output is padded to next word
 	octet *out = o_new(L, in->len+16); SAFE(out);
-	octet *t2 = o_new(L,32); SAFE(t2); // measured empirically is 16
-	AES_GCM_DECRYPT(k, iv, h, in, out, t2);
+	octet *t2 = o_new(L,16); SAFE(t2);
+
+        AES_GCM_DECRYPT(k, iv, h, in, out, t2);
 	return 2;
 }
 
