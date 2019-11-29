@@ -724,7 +724,8 @@ static int ecdh_hash(lua_State *L) {
 /**
    Compute the HMAC of a message using a key. This method takes any
    data and any key material to comput an HMAC of the same length of
-   the hash bytes of the keyring.
+   the hash bytes of the keyring. This function works in accordance with
+   RFC2104.
 
    @param key an octet containing the key to compute the HMAC
    @param data an octet containing the message to compute the HMAC
@@ -740,6 +741,7 @@ static int ecdh_hmac(lua_State *L) {
 	octet *in = o_arg(L, 3);    SAFE(in);
 	// length defaults to hash bytes (e->hash = 32 = sha256)
 	octet *out = o_new(L, e->hash+1); SAFE(out);
+
 	if(!HMAC(e->hash, in, k, e->hash, out)) {
 		error(L, "%s: hmac (%u bytes) failed.", e->hash);
 		lua_pop(L, 1);
