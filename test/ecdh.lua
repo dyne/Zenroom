@@ -11,6 +11,7 @@ Minim quis typewriter ut. Deep v ut man braid neutra culpa in officia consectetu
 
 function test_curve (name)
    print ('  ' .. name)
+
    alice = ECDH.new(name)
    ak = alice:keygen()
    bob = ECDH.new(name)
@@ -54,8 +55,8 @@ test_curve('bls383')
 test_curve('goldilocks')
 test_curve('secp256k1')
 --- this all are failing
----test_curve()
----test_curve('')
+--test_curve()
+--test_curve('')
 -- test_curve('bn254cx')
 -- test_curve('fp256bn')
 
@@ -77,8 +78,11 @@ test_simple_curve('bls383')
 test_simple_curve('goldilocks')
 test_simple_curve('secp256k1')
 
+--TODO: this is missing to test on other curves
 print ''
 print('  DSA SIGN/VERIFY')
+
+print('bls383')
 
 local skey = OCTET.random(32)
 I.print({ skey_len = #skey})
@@ -100,6 +104,7 @@ assert(ecdh:private() == skey, "ECDH and ECP private key import reports incongru
 -- assert(ecdh:ecp() == pkey:octet(), "ECDH and ECP public key calculation gives different results")
 local m = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
 signature = ecdh:sign(m)
+
 ecdh2 = ECDH.new()
 ecdh2:private(skey)
 assert(ecdh2:verify(m,signature), "ECDH verify failed")

@@ -252,6 +252,7 @@ static int ecdh_session(lua_State *L) {
 	// its used internally by KDF2 as 'p' in the hash function
 	//         ehashit(sha,z,counter,p,&H,0);
         // TODO: this probably needs some domain separation
+        // TODO: explain the salt and hash domain
 	KDF2(e->hash,ses,NULL,e->hash,kdf);
 	return 2;
 }
@@ -407,26 +408,24 @@ static int ecdh_dsa_sign(lua_State *L) {
 	// provide. For a correct K's generation see also RFC6979, however
 	// this argument is provided here mostly for testing purposes with
 	// pre-calculated vectors.
+        int max_size = 64;
 	if(lua_isnoneornil(L, 3)) {
 		// return a table
 		lua_createtable(L, 0, 2);
-		octet *r = o_new(L,64); SAFE(r);
+		octet *r = o_new(L,max_size); SAFE(r);
 		lua_setfield(L, -2, "r");
-		octet *s = o_new(L,64); SAFE(s);
+		octet *s = o_new(L,max_size); SAFE(s);
 		lua_setfield(L, -2, "s");
-		// ECP_BLS383_SP_DSA(int sha,csprng *RNG,octet *K,octet *S,octet *F,octet *C,octet *D)
-                // TODO: in the case of eddsa for goldilocks, the sha should be 114
-		(*e->ECP__SP_DSA)( 64, Z->random_generator,  NULL, e->seckey,    f,      r,      s );
+		(*e->ECP__SP_DSA)( max_size, Z->random_generator,  NULL, e->seckey,    f,      r,      s );
 	} else {
 		octet *k = o_arg(L,3); SAFE(k);
 		// return a table
 		lua_createtable(L, 0, 2);
-		octet *r = o_new(L,64); SAFE(r);
+		octet *r = o_new(L,max_size); SAFE(r);
 		lua_setfield(L, -2, "r");
-		octet *s = o_new(L,64); SAFE(s);
+		octet *s = o_new(L,max_size); SAFE(s);
 		lua_setfield(L, -2, "s");
-                // TODO: in the case of eddsa for goldilocks, the sha should be 114
-		(*e->ECP__SP_DSA)( 64, NULL,                 k,    e->seckey,    f,      r,      s );
+		(*e->ECP__SP_DSA)( max_size, NULL,                 k,    e->seckey,    f,      r,      s );
 	}
 	return 1;
 }
@@ -470,7 +469,8 @@ static int ecdh_dsa_verify(lua_State *L) {
 	} else {
 		ERROR(); lerror(L,"signature argument invalid: not a table");
 	}
-	int res = (*e->ECP__VP_DSA)(64, e->pubkey, f, r, s);
+        int max_size = 64;
+	int res = (*e->ECP__VP_DSA)(max_size, e->pubkey, f, r, s);
 	if(res <0) // ECDH_INVALID in milagro/include/ecdh.h.in (!?!)
 		// TODO: maybe suggest fixing since there seems to be
 		// no criteria between ERROR (used in the first check
@@ -492,14 +492,16 @@ static int ecdh_dsa_verify(lua_State *L) {
 
    @param key AES key octet (must be 16, 24 or 32 bytes long)
    @param message input text in an octet
-   @param iv initialization vector (can be random each time)
+   @param iv initialization vector. If the key is reused several times,
+          this param should be random, so the iv/key is different every time.
+          Follow RFC5116, section 3.1 for recommendations
    @param header clear text, authenticated for integrity (checksum)
+   @param tag the authenticated tag. As per RFC5116, this should be 16 bytes
+          long
    @function aead_encrypt(key, message, iv, h)
    @treturn[1] octet containing the output ciphertext
    @treturn[1] octet containing the authentication tag (checksum)
 */
-
-// TODO: RFC specifies AES-GCM only for 128 and 256, should we include 192?
 static int ecdh_aead_encrypt(lua_State *L) {
 	HERE();
 	octet *k =  o_arg(L, 1); SAFE(k);
@@ -509,17 +511,18 @@ static int ecdh_aead_encrypt(lua_State *L) {
 		lerror(L,"ECDH encryption aborted");
 		return 0; }
 	octet *in = o_arg(L, 2); SAFE(in);
-        // TODO: the following values have a fixed max and min size.
-        // Should we include?
-        // the couple key/iv should be random if key is reused
-        // TODO: the length should be 96. Should we check this?
-        // TODO: it might be wise to provide a safe way to generate it:
-        // following RFC5116
+
 	octet *iv = o_arg(L, 3); SAFE(iv);
+        if (iv->len < 12) {
+		error(L,"ECDH.aead_encrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
+		lerror(L,"ECDH encryption aborted");
+		return 0; }
+
 	octet *h =  o_arg(L, 4); SAFE(h);
 	// output is padded to next word
 	octet *out = o_new(L, in->len+16); SAFE(out);
-	octet *t = o_new(L, 32); SAFE (t);
+
+	octet *t = o_new(L, 16); SAFE (t);
 	AES_GCM_ENCRYPT(k, iv, h, in, out, t);
 	return 2;
 }
@@ -541,18 +544,25 @@ static int ecdh_aead_encrypt(lua_State *L) {
 static int ecdh_aead_decrypt(lua_State *L) {
 	HERE();
 	octet *k = o_arg(L, 1); SAFE(k);
-	if(!(k->len && !(k->len & (k->len - 1))) ||
-	   (k->len > 32 && k->len < 16) ) {
-		error(L,"ECDH.aead_decrypt accepts only keys of ^2 length (16,32,64), this is %u", k->len);
+	if(k->len > 32 || k->len < 16) {
+		error(L,"ECDH.aead_decrypt accepts only keys of 16,24,32, this is %u", k->len);
 		lerror(L,"ECDH decryption aborted");
 		return 0; }
+
 	octet *in = o_arg(L, 2); SAFE(in);
+
 	octet *iv = o_arg(L, 3); SAFE(iv);
+        if (iv->len < 12) {
+		error(L,"ECDH.aead_decrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
+		lerror(L,"ECDH decryption aborted");
+		return 0; }
+
 	octet *h = o_arg(L, 4); SAFE(h);
 	// output is padded to next word
 	octet *out = o_new(L, in->len+16); SAFE(out);
-	octet *t2 = o_new(L,32); SAFE(t2); // measured empirically is 16
-	AES_GCM_DECRYPT(k, iv, h, in, out, t2);
+	octet *t2 = o_new(L,16); SAFE(t2);
+
+        AES_GCM_DECRYPT(k, iv, h, in, out, t2);
 	return 2;
 }
 
@@ -584,13 +594,16 @@ static int ecdh_simple_encrypt(lua_State *L) {
 	if(!s->seckey) {
 		lerror(L,"%s: private key not found in sender keyring",__func__);
 		return 0; }
+
 	ecdh *r =  ecdh_arg(L, 2); SAFE(r);
 	if(!r->pubkey) {
 		lerror(L,"%s: public key not found in recipient keyring",__func__);
 		return 0; }
+
 	if( (*s->ECP__PUBLIC_KEY_VALIDATE)(r->pubkey) < 0) { // validate by sender
 		lerror(L, "%s: invalid public key in recipient keyring", __func__);
 		return 0; }
+
 	octet *ses = o_new(L,s->seclen); SAFE(ses);
 	lua_pop(L,1); // pop the session (used internally)
 	(*s->ECP__SVDP_DH)(s->seckey,r->pubkey,ses);
@@ -602,15 +615,17 @@ static int ecdh_simple_encrypt(lua_State *L) {
 	octet *h =  o_arg(L, 4); SAFE(h); // header provided
 	// prepare to return a table
 	lua_createtable(L, 0, 5);
-        // TODO: why 16?
-	octet *iv = o_new(L,16); SAFE(iv); // generate random IV
+
+	octet *iv = o_new(L,16); SAFE(iv); // generate random IV. The minimum lenght should be 12
 	OCT_rand(iv,Z->random_generator,16);
+
 	lua_setfield(L,-2, "iv");
 	octet *out = o_new(L, in->len+16); SAFE(out); // 16bytes padding
 	lua_setfield(L, -2, "text");
-        // TODO: why 32?
-	octet *checksum = o_new(L, 32); SAFE (checksum);
+
+	octet *checksum = o_new(L, 32); SAFE (checksum); // The minimum lenght should be 16
 	lua_setfield(L, -2, "checksum");
+
 	AES_GCM_ENCRYPT(kdf, iv, h, in, out, checksum);
 	o_dup(L,h); lua_setfield(L, -2, "header");
 	return 1;
@@ -649,10 +664,12 @@ static int ecdh_simple_decrypt(lua_State *L) {
 	if(chk->len != 16) {
 		lerror(L,"%s invalid checksum argument length",__func__);
 		return 0; }
+
 	octet *iv = o_arg(L,-3);  SAFE(iv);
-	if(iv->len != 16) {
+	if(iv->len < 12) {
 		lerror(L,"%s invalid IV argument length",__func__);
 		return 0; }
+
 	octet *head = o_arg(L,-2); SAFE(head);
 	octet *pubkey = o_arg(L,-1); SAFE(pubkey);
 	if( (*e->ECP__PUBLIC_KEY_VALIDATE)(pubkey) < 0) { // validate public key
@@ -669,9 +686,11 @@ static int ecdh_simple_decrypt(lua_State *L) {
 	octet *out = o_new(L, msg->len+16); SAFE(out);
 	octet *outchk = o_new(L,32); SAFE(outchk); // measured empirically is 16
 	lua_pop(L,1); // pop the checksum (checked internally)
+
 	AES_GCM_DECRYPT(kdf, iv, head, msg, out, outchk);
 	// check equality of checksums
 	int i, eq = 1;
+        // TODO: this needs a constant time comparison
 	for (i=0; i<chk->len; i++)
 		if (chk->val[i]!=outchk->val[i]) eq = 0;
 	if(!eq) {
@@ -705,7 +724,8 @@ static int ecdh_hash(lua_State *L) {
 /**
    Compute the HMAC of a message using a key. This method takes any
    data and any key material to comput an HMAC of the same length of
-   the hash bytes of the keyring.
+   the hash bytes of the keyring. This function works in accordance with
+   RFC2104.
 
    @param key an octet containing the key to compute the HMAC
    @param data an octet containing the message to compute the HMAC
@@ -721,6 +741,7 @@ static int ecdh_hmac(lua_State *L) {
 	octet *in = o_arg(L, 3);    SAFE(in);
 	// length defaults to hash bytes (e->hash = 32 = sha256)
 	octet *out = o_new(L, e->hash+1); SAFE(out);
+
 	if(!HMAC(e->hash, in, k, e->hash, out)) {
 		error(L, "%s: hmac (%u bytes) failed.", e->hash);
 		lua_pop(L, 1);
@@ -747,7 +768,6 @@ static int ecdh_kdf2(lua_State *L) {
 	int hashlen = 0;
 	if(luaL_testudata(L, 1, "zenroom.ecdh")) {
 		ecdh *e = ecdh_arg(L,1); SAFE(e);
-                // TODO: why it is assinged here the hash?
 		hashlen = e->hash;
 	} else if(luaL_testudata(L, 1, "zenroom.hash")) {
 		hash *h = hash_arg(L,1); SAFE(h);
