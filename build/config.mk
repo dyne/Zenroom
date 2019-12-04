@@ -62,7 +62,14 @@ ar  := ar
 ranlib := ranlib
 ld := ld
 system := Windows
-cflags := ${cflags_protection} -D'ARCH=\"WIN\"' -DARCH_WIN -O3 -Wall -Wextra -pedantic -std=gnu99
+cflags := -g -O0 -mthreads -D'ARCH=\"WIN\"' -DARCH_WIN -Wall -Wextra -pedantic -std=gnu99
+ldadd := ${pwd}/lib/lua53/src/liblua.a
+ldadd += ${milib}/amcl_curve_ED25519.lib
+ldadd += ${milib}/amcl_curve_BLS383.lib
+ldadd += ${milib}/amcl_pairing_BLS383.lib
+ldadd += ${milib}/amcl_curve_GOLDILOCKS.lib
+ldadd += ${milib}/amcl_curve_SECP256K1.lib
+ldadd += ${milib}/amcl_core.lib
 ldadd += -l:libm.a -l:libpthread.a -lssp
 endif
 
