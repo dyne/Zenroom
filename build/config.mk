@@ -51,7 +51,7 @@ ar  := x86_64-w64-mingw32-ar
 ranlib := x86_64-w64-mingw32-ranlib
 ld := x86_64-w64-mingw32-ld
 system := Windows
-cflags := ${cflags_protection} -D'ARCH=\"WIN\"' -DARCH_WIN -O3 -Wall -Wextra -pedantic -std=gnu99
+cflags := -g -O0 -mthreads -D'ARCH=\"WIN\"' -DARCH_WIN -Wall -Wextra -pedantic -std=gnu99
 ldflags := -L/usr/x86_64-w64-mingw32/lib
 ldadd += -l:libm.a -l:libpthread.a -lssp
 endif
