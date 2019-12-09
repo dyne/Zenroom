@@ -171,7 +171,7 @@
 						
 						<div class="content">
 							 <h1 id="documentation">Documentation</h1>
-<p><img alt="Zenroom logo" src="img/zenroom_logo-sm.jpg" /></p>
+<p><img alt="Zenroom logo" src="img/zenroom_logotype.png" /></p>
 <p>Zenroom is a <strong>secure language interpreter</strong> of both Lua and its own
 <a href="zencode">Zencode</a> language to execute fast cryptographic operations using
 elliptic curve arithmetics.</p>
@@ -181,18 +181,23 @@ desktop, embedded, mobile, cloud and even web browsers.</p>
 <p><a href="zencode">Zencode</a> is the name of the language executed by Zenroom: it is simple
 to understand and can process large data structures while operating
 cryptographic transformations on them.</p>
-<p><a href="http://www.dyne.org"><img alt="software by Dyne.org" src="https://zenroom.dyne.org/img/software_by_dyne.png" /></a></p>
-<p>This website is intended for a technical audience; more documentation is
-available on:</p>
+<p><a href="http://www.dyne.org"><img alt="software by Dyne.org" src="https://files.dyne.org/software_by_dyne.png" /></a></p>
+<p>This documentation focuses on 3 main use cases:</p>
+<ol>
+<li><a href="#how-to-program">How to program Zencode</a> using human language</li>
+<li><a href="/crypto">How cryptographers can work</a> using <a href="/lua">Lua</a> scripting</li>
+<li><a href="#how-to-adopt">How to adopt Zenroom</a> embedding it in your application</li>
+</ol>
+<p>More documentation is available on:</p>
 <p><span class="big">
 <span class="mdi mdi-home"></span> Website: <a href="https://zenroom.org">Zenroom.org</a>
 </span></p>
 <p><span class="big">
-<span class="mdi mdi-school"></span> Whitepaper: <a href="https://files.dyne.org/zenroom/Zenroom_Whitepaper.pdf">Zencode by Jaromil</a>
+<span class="mdi mdi-school"></span> Whitepaper: <a href="https://files.dyne.org/zenroom/Zenroom_Whitepaper.pdf">Zencode</a> by Jaromil
 </span></p>
+<p><span class="mdi mdi-vote"></span> Blog post: <a href="https://decodeproject.eu/blog/smart-contracts-english-speaker">Smart contracts for the English speaker</a></p>
+<p><span class="mdi mdi-puzzle"></span> Blog post: <a href="https://decodeproject.eu/blog/cryptographic-data-integrity-multiplatform-environment">Data integrity in a multiplatform environment</a></p>
 <p><span class="mdi mdi-hand"></span> Blog post: <a href="https://decodeproject.eu/blog/algorithmic-sovereignty-decode">Why Zenroom? Algorithmic Sovereignty</a></p>
-<p><span class="mdi mdi-vote"></span> Blog post: <a href="https://decodeproject.eu/blog/smart-contracts-english-speaker">Zenroom does what? Smart contracts for the English speaker</a></p>
-<p><span class="mdi mdi-puzzle"></span> Blog post: <a href="https://decodeproject.eu/blog/cryptographic-data-integrity-multiplatform-environment">Cryptographic data integrity in a multiplatform environment</a></p>
 <h1 id="download">Download</h1>
 <p><span class="mdi mdi-target"></span>
 Available targets:</p>
@@ -211,6 +216,8 @@ Download from <a href="https://files.dyne.org/zenroom">files.dyne.org/zenroom</a
 <span class="mdi mdi-history"></span>
 <a href="changelog">History of changes</a>
 </span></p>
+<iframe src='https://www.openhub.net/p/zenroom/widgets/project_factoids_stats' scrolling='no' marginHeight='0' marginWidth='0' style='height: 220px; width: 370px; border: none'></iframe>
+
 <p>Anyone planning to use Zenroom to store and access secrets should not
 use the latest development version in Git, but <strong>use the stable
 releases on files.dyne.org</strong>.</p>
@@ -219,15 +226,6 @@ various tests, plus we note down all changes in the log above.</p>
 <p>The development version in Git should only be used by contributors to
 report bugs, test new features and develop patches.</p>
 <h1 id="guides">Guides</h1>
-<iframe src='https://www.openhub.net/p/zenroom/widgets/project_factoids_stats' scrolling='no' marginHeight='0' marginWidth='0' style='height: 220px; width: 370px; border: none'></iframe>
-
-<p>Zenroom is actively and concisely documented focusing on three main usage aspects:</p>
-<ul>
-<li>How to program using its human friendly Zencode language</li>
-<li>How to implement new encryption scenarios using Lua scripting (similar to Mathematica)</li>
-<li>How to adopt the Zenroom VM embedding it into host applications (covering all platforms)</li>
-</ul>
-<p>The following sections provide links to documentation for each named aspect.</p>
 <h2 id="how-to-program">How to program</h2>
 <p>Zenroom brings simplicity to distributed systems development and
 allows programmers to work in parallel. System integrators need just
@@ -257,6 +255,18 @@ researchers and cryptographers can provide Zencode or Lua scripts.</p>
 <p><span class="big">
 <span class="mdi mdi-cogs"></span>
 <a href="wiki/how-to-build">How to build Zenroom from the source code</a>
+</span></p>
+<p><span class="big">
+<span class="mdi mdi-nodejs"></span>
+<a href="https://www.dyne.org/using-zenroom-with-javascript-nodejs-part1">Zenroom with JavaScript: node.js (part 1)</a>
+</span></p>
+<p><span class="big">
+<span class="mdi mdi-language-javascript"></span>
+<a href="https://www.dyne.org/make-with-zenroom-and-javascript-part-2">Zenroom with JavaScript: browser (part 2)</a>
+</span></p>
+<p><span class="big">
+<span class="mdi mdi-react"></span>
+<a href="https://www.dyne.org/make-with-zenroom-and-javascript-part-3">Zenroom with JavaScript: React (part 3)</a>
 </span></p>
 <h1 id="playground">Playground</h1>
 <h2 id="online">Online</h2>

@@ -209,9 +209,9 @@ end
 
 function content(var)
    if type(var) == "zenroom.octet" then
-	  INSIDE.print(var:array())
+	  INSPECT.print(var:array())
    else
-	  INSIDE.print(var)
+	  INSPECT.print(var)
    end
 end
 
@@ -1075,14 +1075,15 @@ When("I create the petition signature ''", function(uid)
 		ZEN.assert(ACK.credentials, "Signed credential not found")
 		local Theta
 		local zeta
+		local ack_uid = ZEN:import(uid)
 		Theta, zeta = COCONUT.prove_cred_petition(
 		   ACK.verifiers,
 		   ACK.credentials,
-		   ACK.credential_keypair.private, uid)
+		   ACK.credential_keypair.private, ack_uid)
 		ZEN:pick('petition_signature',
 				 { proof = Theta,
 				   uid_signature = zeta,
-				   uid_petition = uid })
+				   uid_petition = ack_uid })
 		ZEN:validate('petition_signature')
 		ZEN:ack('petition_signature')
 end)
@@ -1182,7 +1183,7 @@ end
 
 -- ZEN = { assert = assert } -- zencode shim when not loaded
 require('zenroom_common')
-INSIDE = require('inspect')
+INSPECT = require('inspect')
 OCTET  = require('zenroom_octet')
 JSON   = require('zenroom_json')
 CBOR   = require('zenroom_cbor')
@@ -1195,7 +1196,7 @@ MACHINE = require('statemachine')
 O   = OCTET  -- alias
 INT = BIG    -- alias
 H   = HASH   -- alias
-I   = INSIDE -- alias
+I   = INSPECT -- alias
 V   = require('semver')
 VERSION = V(VERSION)
 
@@ -3381,6 +3382,8 @@ function zencode:import(object, secured)
 	  return O.from_bin(object)
    -- elseif CONF.input.encoding.fun then
    -- 	  return CONF.input.encoding.fun(object)
+   elseif string.sub(object,1,3) == 'str' then
+	  return O.from_string(object)
    end
    if not secured then
 	  ZEN:wtrace("import implicit conversion from string: " ..object)
@@ -3875,6 +3878,7 @@ function coco.prove_cred_petition(vk, sigma, secret, uid)
    local m = INT.new(sha256(secret))
    local o = ECP.order()
    local r = rand()
+   local octuid = ZEN:import(uid)
    -- local m = INT.new(sha256(secret))
    -- material
    local r_prime = rand()
@@ -3884,7 +3888,7 @@ function coco.prove_cred_petition(vk, sigma, secret, uid)
 	  + vk.beta * m
 	  + g2 * r
    local nu = sigma_prime.h_prime * r
-   local zeta = m * ECP.hashtopoint(str(uid))
+   local zeta = m * ECP.hashtopoint(octuid)
    -- proof --
    -- create the witnessess
    local wm = rand()
@@ -3894,7 +3898,7 @@ function coco.prove_cred_petition(vk, sigma, secret, uid)
 	  + vk.alpha
 	  + vk.beta * wm
    local Bw = sigma_prime.h_prime * wr
-   local Cw = wm * ECP.hashtopoint(uid)
+   local Cw = wm * ECP.hashtopoint(octuid)
    -- create the challenge
    local c = COCONUT.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw })
    -- create responses
@@ -3918,6 +3922,7 @@ function coco.verify_cred_petition(vk, Theta, zeta, uid)
    local c = Theta.pi_v.c
    local rm = Theta.pi_v.rm
    local rr = Theta.pi_v.rr
+   local octuid = ZEN:import(uid)
    -- verify proof --
    -- recompute witnessess commitments
    local Aw = kappa * c
@@ -3925,7 +3930,7 @@ function coco.verify_cred_petition(vk, Theta, zeta, uid)
 	  + vk.alpha * INT.new(1):modsub(c,ECP.order())
 	  + vk.beta * rm
    local Bw = nu * c + sigma_prime.h_prime * rr
-   local Cw = rm*ECP.hashtopoint(uid) + zeta*c
+   local Cw = rm*ECP.hashtopoint(octuid) + zeta*c
    -- compute the challenge prime
    ZEN.assert(c == COCONUT.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw }),
 			  "verify_cred_petition: invalid challenge")
@@ -4125,7 +4130,8 @@ J.encode = function(tab)
    return
 	  JSON.raw_encode(
 		 -- process encodes zencode types
-		 I.process(tab)
+		 -- it is part of inspect.lua
+		 INSPECT.process(tab)
 	  )
    -- return JSON.raw_encode(tab)
 end
