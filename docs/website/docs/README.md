@@ -1,6 +1,6 @@
 # Documentation
 
-![Zenroom logo](img/zenroom_logo-sm.jpg)
+![Zenroom logo](img/zenroom_logotype.png)
 
 Zenroom is a **secure language interpreter** of both Lua and its own
 [Zencode](zencode) language to execute fast cryptographic operations using
@@ -14,24 +14,31 @@ desktop, embedded, mobile, cloud and even web browsers.
 to understand and can process large data structures while operating
 cryptographic transformations on them.
 
-[![software by Dyne.org](https://zenroom.dyne.org/img/software_by_dyne.png)](http://www.dyne.org)
+[![software by Dyne.org](https://files.dyne.org/software_by_dyne.png)](http://www.dyne.org)
 
-This website is intended for a technical audience; more documentation is
-available on:
+This documentation focuses on 3 main use cases:
+
+1. [How to program Zencode](#how-to-program) using human language
+2. [How cryptographers can work](/crypto) using [Lua](/lua) scripting
+3. [How to adopt Zenroom](#how-to-adopt) embedding it in your application
+
+More documentation is available on:
 
 <span class="big">
 <span class="mdi mdi-home"></span> Website: [Zenroom.org](https://zenroom.org)
 </span>
 
 <span class="big">
-<span class="mdi mdi-school"></span> Whitepaper: [Zencode by Jaromil](https://files.dyne.org/zenroom/Zenroom_Whitepaper.pdf)
+<span class="mdi mdi-school"></span> Whitepaper: [Zencode](https://files.dyne.org/zenroom/Zenroom_Whitepaper.pdf) by Jaromil
 </span>
+
+<span class="mdi mdi-vote"></span> Blog post: [Smart contracts for the English speaker](https://decodeproject.eu/blog/smart-contracts-english-speaker)
+
+<span class="mdi mdi-puzzle"></span> Blog post: [Data integrity in a multiplatform environment](https://decodeproject.eu/blog/cryptographic-data-integrity-multiplatform-environment)
 
 <span class="mdi mdi-hand"></span> Blog post: [Why Zenroom? Algorithmic Sovereignty](https://decodeproject.eu/blog/algorithmic-sovereignty-decode)
 
-<span class="mdi mdi-vote"></span> Blog post: [Zenroom does what? Smart contracts for the English speaker](https://decodeproject.eu/blog/smart-contracts-english-speaker)
 
-<span class="mdi mdi-puzzle"></span> Blog post: [Cryptographic data integrity in a multiplatform environment](https://decodeproject.eu/blog/cryptographic-data-integrity-multiplatform-environment)
 
 # Download
 
@@ -54,6 +61,8 @@ Download from [files.dyne.org/zenroom](https://files.dyne.org/zenroom)
 [History of changes](changelog)
 </span>
 
+<iframe src='https://www.openhub.net/p/zenroom/widgets/project_factoids_stats' scrolling='no' marginHeight='0' marginWidth='0' style='height: 220px; width: 370px; border: none'></iframe>
+
 Anyone planning to use Zenroom to store and access secrets should not
 use the latest development version in Git, but **use the stable
 releases on files.dyne.org**.
@@ -66,15 +75,6 @@ report bugs, test new features and develop patches.
 
 # Guides
 
-<iframe src='https://www.openhub.net/p/zenroom/widgets/project_factoids_stats' scrolling='no' marginHeight='0' marginWidth='0' style='height: 220px; width: 370px; border: none'></iframe>
-
-Zenroom is actively and concisely documented focusing on three main usage aspects:
-
-- How to program using its human friendly Zencode language
-- How to implement new encryption scenarios using Lua scripting (similar to Mathematica)
-- How to adopt the Zenroom VM embedding it into host applications (covering all platforms)
-
-The following sections provide links to documentation for each named aspect.
 
 ## How to program
 
