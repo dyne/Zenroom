@@ -69,8 +69,8 @@
     <nav class="navbar" role="navigation" aria-label="main navigation">
       <div class="navbar-brand">
         <a class="navbar-item" href="https://dev.zenroom.org/">
-		  Zenroom <img src="/img/zenroom_logo-sm.jpg"> <!-- width="112" height="28"> -->
-		  secure crypto language VM - in-browser demo 
+          Zenroom <img src="/img/zenroom_logo-sm.jpg"> <!-- width="112" height="28"> -->
+          secure crypto language VM - in-browser demo 
         </a>
         <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="zenbar">
           <span aria-hidden="true"></span>
@@ -95,16 +95,15 @@
               <a class="navbar-link">
                 Examples
               </a>
-  
               <div class="navbar-dropdown">
                 <a class="navbar-item zencode" id="RNG01">Generate many random cryptographic objects</a>
                 <a class="navbar-item zencode" id="SYM02">Encrypt a message using a password</a>
                 <a class="navbar-item zencode" id="SYM03">Decrypt a secret message using a password</a>
                 <a class="navbar-item zencode" id="AES01">Generate a keypair</a>
-				<a class="navbar-item zencode" id="AES05">Encrypt a message for a public key recipient</a>
-				<a class="navbar-item zencode" id="AES07">Decrypt a secret message using a-symmetric encryption</a>
-				<a class="navbar-item zencode" id="DSA01">Sign a message using public-key encryption</a>
-				<a class="navbar-item zencode" id="DSA02">Verify a signature using public-key encryption</a>
+                <a class="navbar-item zencode" id="AES05">Encrypt a message for a public key recipient</a>
+                <a class="navbar-item zencode" id="AES07">Decrypt a secret message using a-symmetric encryption</a>
+                <a class="navbar-item zencode" id="DSA01">Sign a message using public-key encryption</a>
+                <a class="navbar-item zencode" id="DSA02">Verify a signature using public-key encryption</a>
                 <hr class="navbar-divider">
                 <a class="navbar-item examples" id="hello">Hello world in hex and base64</a>
                 <a class="navbar-item examples" id="keygen">Generate a new pair of public / privatekeys</a>
@@ -115,18 +114,34 @@
                 <a class="navbar-item examples" id="dashboard-from-iotdev">Receive and decode IoT sensor messages</a>
               </div>
             </div>
-			<!-- <div class="navbar-item">
-				 <div class="buttons">
-				 <input id="umm" class="form-check-input" type="checkbox" value="">&nbsp; minimal memory manager (64KiB max)
-				 </div>
-				 </div> -->
+            <!-- <div class="navbar-item">
+                 <div class="buttons">
+                 <input id="umm" class="form-check-input" type="checkbox" value="">&nbsp; minimal memory manager (64KiB max)
+                 </div>
+                 </div> -->
         </div>
       </div>
     </nav>
   </div>
-  <section id="ide">
+  <section id="ide"></section>
+  <div class="modal is-active">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+      <header class="modal-card-head">
+        <p class="modal-card-title">Disclaimer</p>
+        <button class="delete close" aria-label="close"></button>
+      </header>
+      <section class="modal-card-body">
+Zenroom is Copyright (C) 2017-2019 by the Dyne.org foundation, Amsterdam
+For the original source-code and documentation go to <a href="https://zenroom.org">zenroom.org</a>
+This notice must be displayed and explicitly agreed by any user on boot.
+      </section>
+      <footer class="modal-card-foot">
+        <button class="button is-success close">I'm aware</button>
+      </footer>
+    </div>
+  </div>
 
-  </section>
   {{{ SCRIPT }}}
   <script>
     ZR.init()
@@ -135,6 +150,7 @@
           $(".navbar-burger").toggleClass("is-active");
           $(".navbar-menu").toggleClass("is-active");
       });
+      $(".close").on('click', ()=>{ $(".modal").removeClass("is-active")})
     });
   </script>
 </body>
