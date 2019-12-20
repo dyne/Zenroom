@@ -1,6 +1,6 @@
 /* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Copyright (C) 2017-2019 Dyne.org foundation
+ * Copyright (C) 2017-2020 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -206,9 +206,21 @@ int main(int argc, char **argv) {
 		default:  error(0,help); return EXIT_FAILURE;
 		}
 	}
+
 	if(verbosity) {
-		notice(NULL, "Zenroom v%s - crypto language restricted VM",VERSION);
-		act(NULL, "Copyright (C) 2017-2019 Dyne.org foundation");
+		notice(NULL, "Zenroom v%s - secure crypto language VM",VERSION);
+		act(NULL, "Zenroom is Copyright (C) 2017-2020 by the Dyne.org foundation");
+		act(NULL, "For the original source code and documentation go to https://zenroom.org");
+		act(NULL, "Zenroom is free software: you can redistribute it and/or modify");
+		act(NULL, "it under the terms of the GNU Affero General Public License as");
+		act(NULL, "published by the Free Software Foundation, either version 3 of the");
+		act(NULL, "License, or (at your option) any later version.");
+		act(NULL, "Zenroom is distributed in the hope that it will be useful,");
+		act(NULL, "but WITHOUT ANY WARRANTY; without even the implied warranty of");
+		act(NULL, "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the");
+		act(NULL, "GNU Affero General Public License for more details.");
+		act(NULL, "You should have received a copy of the GNU Affero General Public License");
+		act(NULL, "along with this program.  If not, see http://www.gnu.org/licenses/");
 	}
 
 	for (index = optind; index < argc; index++) {
