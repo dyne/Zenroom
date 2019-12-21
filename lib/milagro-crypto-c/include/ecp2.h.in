@@ -36,6 +36,7 @@
 
 typedef struct
 {
+//    int inf; /**< Infinity Flag */
     FP2_YYY x;   /**< x-coordinate of point */
     FP2_YYY y;   /**< y-coordinate of point */
     FP2_YYY z;   /**< z-coordinate of point */

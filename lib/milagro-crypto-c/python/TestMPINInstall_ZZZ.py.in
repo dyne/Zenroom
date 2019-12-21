@@ -1,0 +1,406 @@
+#!/usr/bin/env python3
+
+"""
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+"""
+import os
+import unittest
+import hashlib
+import mpin_ZZZ
+
+
+class TestMPIN(unittest.TestCase):
+    """Tests M-Pin crypto code"""
+
+    def setUp(self):
+
+        self.mpin_id = b'alice@milagro.com'
+
+        # Hash value of MPIN_ID
+        self.hash_mpin_id = mpin_ZZZ.hash_id(
+            mpin_ZZZ.HASH_TYPE_ZZZ, self.mpin_id)
+
+        # Assign a seed value
+        seed_hex = "78d0fb6705ce77dee47d03eb5b9c5d30"
+        self.seed = bytes.fromhex(seed_hex)
+
+        self.date = 16238
+
+    def test_1(self):
+        """test_1 Good PIN and good token"""
+        PIN1 = 1234
+        PIN2 = 1234
+
+        # random number generator
+        rng = mpin_ZZZ.create_csprng(self.seed)
+
+        # Generate Client master secret share for MILAGRO and Customer
+        rtn, ms1 = mpin_ZZZ.random_generate(rng)
+        self.assertEqual(rtn, 0)
+        rtn, ms2 = mpin_ZZZ.random_generate(rng)
+        self.assertEqual(rtn, 0)
+
+        # Generate server secret shares
+        rtn, ss1 = mpin_ZZZ.get_server_secret(ms1)
+        self.assertEqual(rtn, 0)
+        rtn, ss2 = mpin_ZZZ.get_server_secret(ms2)
+        self.assertEqual(rtn, 0)
+
+        # Combine server secret shares
+        rtn, server_secret = mpin_ZZZ.recombine_G2(ss1, ss2)
+        self.assertEqual(rtn, 0)
+
+        # Generate client secret shares
+        rtn, cs1 = mpin_ZZZ.get_client_secret(ms1, self.hash_mpin_id)
+        self.assertEqual(rtn, 0)
+        rtn, cs2 = mpin_ZZZ.get_client_secret(ms2, self.hash_mpin_id)
+        self.assertEqual(rtn, 0)
+
+        # Combine client secret shares
+        rtn, client_secret = mpin_ZZZ.recombine_G1(cs1, cs2)
+        self.assertEqual(rtn, 0)
+
+        # Generate Time Permit shares
+        rtn, tp1 = mpin_ZZZ.get_client_permit(
+            mpin_ZZZ.HASH_TYPE_ZZZ, self.date, ms1, self.hash_mpin_id)
+        self.assertEqual(rtn, 0)
+        rtn, tp2 = mpin_ZZZ.get_client_permit(
+            mpin_ZZZ.HASH_TYPE_ZZZ, self.date, ms2, self.hash_mpin_id)
+        self.assertEqual(rtn, 0)
+
+        # Combine Time Permit shares
+        rtn, time_permit = mpin_ZZZ.recombine_G1(tp1, tp2)
+        self.assertEqual(rtn, 0)
+
+        # Client extracts PIN from secret to create Token
+        rtn, token = mpin_ZZZ.extract_pin(
+            mpin_ZZZ.HASH_TYPE_ZZZ, self.mpin_id, PIN1, client_secret)
+        self.assertEqual(rtn, 0)
+
+        # Client first pass
+        rtn, x, u, ut, sec = mpin_ZZZ.client_1(
+            mpin_ZZZ.HASH_TYPE_ZZZ, self.date, self.mpin_id, rng, None, PIN2, token, time_permit)
+        self.assertEqual(rtn, 0)
+
+        # Server calculates H(ID) and H(T|H(ID))
+        HID, HTID = mpin_ZZZ.server_1(
+            mpin_ZZZ.HASH_TYPE_ZZZ, self.date, self.mpin_id)
+
+        # Server generates Random number Y and sends it to Client
+        rtn, y = mpin_ZZZ.random_generate(rng)
+        self.assertEqual(rtn, 0)
+
+        # Client second pass
+        rtn, v = mpin_ZZZ.client_2(x, y, sec)
+        self.assertEqual(rtn, 0)
+
+        # Server second pass
+        rtn, E, F = mpin_ZZZ.server_2(
+            self.date, HID, HTID, y, server_secret, u, ut, v, None)
+        self.assertEqual(rtn, 0)
+
+    def test_2(self):
+        """test_2 Bad PIN and good token"""
+        PIN1 = 1234
+        PIN2 = 2000
+
+        # random number generator
+        rng = mpin_ZZZ.create_csprng(self.seed)
+
+        # Generate Client master secret share for MILAGRO and Customer
+        rtn, ms1 = mpin_ZZZ.random_generate(rng)
+        self.assertEqual(rtn, 0)
+        rtn, ms2 = mpin_ZZZ.random_generate(rng)
+        self.assertEqual(rtn, 0)
+
+        # Generate server secret shares
+        rtn, ss1 = mpin_ZZZ.get_server_secret(ms1)
+        self.assertEqual(rtn, 0)
+        rtn, ss2 = mpin_ZZZ.get_server_secret(ms2)
+        self.assertEqual(rtn, 0)
+
+        # Combine server secret shares
+        rtn, server_secret = mpin_ZZZ.recombine_G2(ss1, ss2)
+        self.assertEqual(rtn, 0)
+
+        # Generate client secret shares
+        rtn, cs1 = mpin_ZZZ.get_client_secret(ms1, self.hash_mpin_id)
+        self.assertEqual(rtn, 0)
+        rtn, cs2 = mpin_ZZZ.get_client_secret(ms2, self.hash_mpin_id)
+        self.assertEqual(rtn, 0)
+
+        # Combine client secret shares
+        rtn, client_secret = mpin_ZZZ.recombine_G1(cs1, cs2)
+        self.assertEqual(rtn, 0)
+
+        # Generate Time Permit shares
+        rtn, tp1 = mpin_ZZZ.get_client_permit(
+            mpin_ZZZ.HASH_TYPE_ZZZ, self.date, ms1, self.hash_mpin_id)
+        self.assertEqual(rtn, 0)
+        rtn, tp2 = mpin_ZZZ.get_client_permit(
+            mpin_ZZZ.HASH_TYPE_ZZZ, self.date, ms2, self.hash_mpin_id)
+        self.assertEqual(rtn, 0)
+
+        # Combine Time Permit shares
+        rtn, time_permit = mpin_ZZZ.recombine_G1(tp1, tp2)
+        self.assertEqual(rtn, 0)
+
+        # Client extracts PIN from secret to create Token
+        rtn, token = mpin_ZZZ.extract_pin(
+            mpin_ZZZ.HASH_TYPE_ZZZ, self.mpin_id, PIN1, client_secret)
+        self.assertEqual(rtn, 0)
+
+        # Client first pass
+        rtn, x, u, ut, sec = mpin_ZZZ.client_1(
+            mpin_ZZZ.HASH_TYPE_ZZZ, self.date, self.mpin_id, rng, None, PIN2, token, time_permit)
+        self.assertEqual(rtn, 0)
+
+        # Server calculates H(ID) and H(T|H(ID))
+        HID, HTID = mpin_ZZZ.server_1(
+            mpin_ZZZ.HASH_TYPE_ZZZ, self.date, self.mpin_id)
+
+        # Server generates Random number Y and sends it to Client
+        rtn, y = mpin_ZZZ.random_generate(rng)
+        self.assertEqual(rtn, 0)
+
+        # Client second pass
+        rtn, v = mpin_ZZZ.client_2(x, y, sec)
+        self.assertEqual(rtn, 0)
+
+        # Server second pass
+        rtn, E, F = mpin_ZZZ.server_2(
+            self.date, HID, HTID, y, server_secret, u, ut, v, None)
+        self.assertEqual(rtn, -19)
+
+    def test_3(self):
+        """test_2 Good PIN and bad token"""
+        PIN1 = 1234
+        PIN2 = 1234
+
+        # random number generator
+        rng = mpin_ZZZ.create_csprng(self.seed)
+
+        # Generate Client master secret share for MILAGRO and Customer
+        rtn, ms1 = mpin_ZZZ.random_generate(rng)
+        self.assertEqual(rtn, 0)
+        rtn, ms2 = mpin_ZZZ.random_generate(rng)
+        self.assertEqual(rtn, 0)
+
+        # Generate server secret shares
+        rtn, ss1 = mpin_ZZZ.get_server_secret(ms1)
+        self.assertEqual(rtn, 0)
+        rtn, ss2 = mpin_ZZZ.get_server_secret(ms2)
+        self.assertEqual(rtn, 0)
+
+        # Combine server secret shares
+        rtn, server_secret = mpin_ZZZ.recombine_G2(ss1, ss2)
+        self.assertEqual(rtn, 0)
+
+        # Generate client secret shares
+        rtn, cs1 = mpin_ZZZ.get_client_secret(ms1, self.hash_mpin_id)
+        self.assertEqual(rtn, 0)
+        rtn, cs2 = mpin_ZZZ.get_client_secret(ms2, self.hash_mpin_id)
+        self.assertEqual(rtn, 0)
+
+        # Combine client secret shares
+        rtn, client_secret = mpin_ZZZ.recombine_G1(cs1, cs2)
+        self.assertEqual(rtn, 0)
+
+        # Generate Time Permit shares
+        rtn, tp1 = mpin_ZZZ.get_client_permit(
+            mpin_ZZZ.HASH_TYPE_ZZZ, self.date, ms1, self.hash_mpin_id)
+        self.assertEqual(rtn, 0)
+        rtn, tp2 = mpin_ZZZ.get_client_permit(
+            mpin_ZZZ.HASH_TYPE_ZZZ, self.date, ms2, self.hash_mpin_id)
+        self.assertEqual(rtn, 0)
+
+        # Combine Time Permit shares
+        rtn, time_permit = mpin_ZZZ.recombine_G1(tp1, tp2)
+        self.assertEqual(rtn, 0)
+
+        # Client extracts PIN from secret to create Token
+        rtn, token = mpin_ZZZ.extract_pin(
+            mpin_ZZZ.HASH_TYPE_ZZZ, self.mpin_id, PIN1, client_secret)
+        self.assertEqual(rtn, 0)
+
+        # Client first pass
+        rtn, x, u, ut, sec = mpin_ZZZ.client_1(
+            mpin_ZZZ.HASH_TYPE_ZZZ, self.date, self.mpin_id, rng, None, PIN2, token, time_permit)
+        self.assertEqual(rtn, 0)
+
+        # Server calculates H(ID) and H(T|H(ID))
+        HID, HTID = mpin_ZZZ.server_1(
+            mpin_ZZZ.HASH_TYPE_ZZZ, self.date, self.mpin_id)
+
+        # Server generates Random number Y and sends it to Client
+        rtn, y = mpin_ZZZ.random_generate(rng)
+        self.assertEqual(rtn, 0)
+
+        # Client second pass
+        rtn, v = mpin_ZZZ.client_2(x, y, sec)
+        self.assertEqual(rtn, 0)
+
+        # Server second pass
+        # v is equal to ut to model a bad token
+        rtn, E, F = mpin_ZZZ.server_2(
+            self.date, HID, HTID, y, server_secret, u, ut, ut, None)
+        self.assertEqual(rtn, -19)
+
+    def test_4(self):
+        """test_4 Make sure all client secret are unique"""
+        # random number generator
+        rng = mpin_ZZZ.create_csprng(self.seed)
+
+        # Generate master secret share
+        rtn, ms1 = mpin_ZZZ.random_generate(rng)
+        self.assertEqual(rtn, 0)
+
+        s = set()
+        match = 0
+        for i in range(1, 1000):
+            rand_val = os.urandom(32)
+            hash_mpin_id = mpin_ZZZ.hash_id(mpin_ZZZ.HASH_TYPE_ZZZ, rand_val)
+
+            # Generate client secret shares
+            rtn, cs1 = mpin_ZZZ.get_client_secret(ms1, hash_mpin_id)
+            self.assertEqual(rtn, 0)
+            cs1Hex = cs1.hex()
+            if cs1Hex in s:
+                match = 1
+            self.assertEqual(match, 0)
+            s.add(cs1Hex)
+
+    def test_5(self):
+        """test_5 Make sure all one time passwords are random i.e. they should collide"""
+        # random number generator
+        rng = mpin_ZZZ.create_csprng(self.seed)
+
+        s = set()
+        match = 0
+        for i in range(1, 10000):
+            OTP = mpin_ZZZ.generate_otp(rng)
+            if OTP in s:
+                # print i
+                match = 1
+            s.add(OTP)
+        self.assertEqual(match, 1)
+
+    def test_6(self):
+        """test_6 Make sure all random values are random i.e. they should collide"""
+        # random number generator
+        rng = mpin_ZZZ.create_csprng(self.seed)
+
+        # Generate 4 byte random number
+        s = set()
+        match = 0
+        for i in range(1, 208900):
+            random = mpin_ZZZ.generate_random(rng, 4)
+            if random in s:
+                match = 1
+                break
+            s.add(random)
+        self.assertEqual(match, 1)
+
+    def test_7(self):
+        """test_7 AES-GCM: Successful encryption and decryption"""
+
+        # Generate key
+        key = os.urandom(mpin_ZZZ.AESKEY_ZZZ)
+
+        # Generate 12 byte IV
+        iv = os.urandom(mpin_ZZZ.IVL)
+
+        # Generate a 32 byte random header
+        header = os.urandom(32)
+
+        # Plaintext input
+        plaintext1 = b"A test message"
+
+        ciphertext, tag1 = mpin_ZZZ.aes_gcm_encrypt(
+            key, iv, header, plaintext1)
+
+        plaintext2, tag2 = mpin_ZZZ.aes_gcm_decrypt(
+            key, iv, header, ciphertext)
+
+        self.assertEqual(tag1, tag2)
+        self.assertEqual(plaintext1, plaintext2)
+
+    def test_8(self):
+        """test_8 AES-GCM: Failed encryption and decryption by changing a ciphertext byte"""
+
+        # Generate key
+        key = os.urandom(mpin_ZZZ.AESKEY_ZZZ)
+
+        # Generate 12 byte IV
+        iv = os.urandom(mpin_ZZZ.IVL)
+
+        # Generate a 32 byte random header
+        header = os.urandom(32)
+
+        # Plaintext input
+        plaintext1 = b"A test message"
+
+        ciphertext, tag1 = mpin_ZZZ.aes_gcm_encrypt(
+            key, iv, header, plaintext1)
+
+        ciphertext_hex = ciphertext.hex()
+        new = list(ciphertext_hex)
+        new[0] = "a" if (new[0] != "a") else "b"
+        ciphertext_bad_hex = ''.join(new)
+        ciphertext_bad = bytes.fromhex(ciphertext_bad_hex)
+
+        plaintext2, tag2 = mpin_ZZZ.aes_gcm_decrypt(
+            key, iv, header, ciphertext_bad)
+
+        self.assertNotEqual(tag1, tag2)
+        self.assertNotEqual(plaintext1, plaintext2)
+
+    def test_9(self):
+        """test_9 AES-GCM: Failed encryption and decryption by changing a header byte"""
+
+        # Generate key
+        key = os.urandom(mpin_ZZZ.AESKEY_ZZZ)
+
+        # Generate 12 byte IV
+        iv = os.urandom(mpin_ZZZ.IVL)
+
+        # Generate a 32 byte random header
+        header = os.urandom(32)
+
+        # Plaintext input
+        plaintext1 = b"A test message"
+
+        ciphertext, tag1 = mpin_ZZZ.aes_gcm_encrypt(
+            key, iv, header, plaintext1)
+
+        header_hex = header.hex()
+        new = list(header_hex)
+        new[0] = "a" if (new[0] != "a") else "b"
+        header_bad_hex = ''.join(new)
+        header_bad = bytes.fromhex(header_bad_hex)
+
+        plaintext2, tag2 = mpin_ZZZ.aes_gcm_decrypt(
+            key, iv, header_bad, ciphertext)
+
+        self.assertNotEqual(tag1, tag2)
+        self.assertEqual(plaintext1, plaintext2)
+
+
+if __name__ == '__main__':
+    # Run tests
+    unittest.main()

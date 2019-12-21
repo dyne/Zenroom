@@ -1,3 +1,22 @@
+/*
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+*/
+
 #include "arch.h"
 #include "fp_BLS381.h"
 
@@ -16,6 +35,7 @@ const BIG_384_29 R2modp_BLS381= {0x15BEF7AE,0x1031CD0E,0x2DD93E8,0x9226323,0xE6E
 const chunk MConst_BLS381= 0x1FFCFFFD;
 const BIG_384_29 Fra_BLS381= {0x12235FB8,0x83BAF6C,0x19E04F63,0x1D4A7AC7,0xB9C4F67,0x1EBC25D,0x1D3DEC91,0x1FA797AB,0x1F0FD603,0x1016068,0x108C6FAD,0x5760CCF,0x104D3BF0,0xC};
 const BIG_384_29 Frb_BLS381= {0xDDC4AF3,0x7BC5093,0x1B1FB08B,0x1AB5829A,0x3C5F282,0x764B8FB,0xDBFB032,0x10F6D8F6,0x1854A147,0x1118FCFD,0x23A7A40,0xD89C065,0xFC3E2B3,0x0};
+
 #endif
 
 #if CHUNK==64
@@ -25,4 +45,5 @@ const BIG_384_58 R2modp_BLS381= {0x20639A1D5BEF7AEL,0x1244C6462DD93E8L,0x22D09B5
 const chunk MConst_BLS381= 0x1F3FFFCFFFCFFFDL;
 const BIG_384_58 Fra_BLS381= {0x10775ED92235FB8L,0x3A94F58F9E04F63L,0x3D784BAB9C4F67L,0x3F4F2F57D3DEC91L,0x202C0D1F0FD603L,0xAEC199F08C6FADL,0x1904D3BF0L};
 const BIG_384_58 Frb_BLS381= {0xF78A126DDC4AF3L,0x356B0535B1FB08BL,0xEC971F63C5F282L,0x21EDB1ECDBFB032L,0x2231F9FB854A147L,0x1B1380CA23A7A40L,0xFC3E2B3L};
+
 #endif

@@ -22,6 +22,7 @@ under the License.
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "pbc_support.h"
 
@@ -110,7 +111,17 @@ void mhashit(int sha,int n,octet *x,octet *w)
     {
         OCT_jbyte(w,0,w->max-hlen);
         OCT_jbytes(w,hh,hlen);
+
+//        OCT_jbytes(w,hh,hlen);
+//        OCT_jbyte(w,0,w->max-hlen);
     }
+}
+
+unsign32 today(void)
+{
+    /* return time in slots since epoch */
+    unsign32 ti=(unsign32)time(NULL);
+    return (uint32_t)(ti/(60*TIME_SLOT_MINUTES));
 }
 
 /* Hash the M-Pin transcript - new */
@@ -134,6 +145,11 @@ void HASH_ALL(int sha,octet *HID,octet *xID,octet *xCID,octet *SEC,octet *Y,octe
 void HASH_ID(int sha,octet *ID,octet *HID)
 {
     mhashit(sha,0,ID,HID);
+}
+
+unsign32 GET_TIME(void)
+{
+    return (unsign32)time(NULL);
 }
 
 /* AES-GCM Encryption of octets, K is key, H is header,

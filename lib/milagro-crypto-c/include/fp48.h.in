@@ -1,28 +1,21 @@
 /*
-	Licensed to the Apache Software Foundation (ASF) under one
-	or more contributor license agreements.  See the NOTICE file
-	distributed with this work for additional information
-	regarding copyright ownership.  The ASF licenses this file
-	to you under the Apache License, Version 2.0 (the
-	"License"); you may not use this file except in compliance
-	with the License.  You may obtain a copy of the License at
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
 
-	http://www.apache.org/licenses/LICENSE-2.0
+  http://www.apache.org/licenses/LICENSE-2.0
 
-	Unless required by applicable law or agreed to in writing,
-	software distributed under the License is distributed on an
-	"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-	KIND, either express or implied.  See the License for the
-	specific language governing permissions and limitations
-	under the License.
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
 */
-
-/**
- * @file fp48_YYY.h
- * @author Mike Scott
- * @brief FP48 Header File
- *
- */
 
 #ifndef FP48_YYY_H
 #define FP48_YYY_H
@@ -30,7 +23,7 @@
 #include "fp16_YYY.h"
 
 /**
-	@brief FP48 Structure - towered over three FP12
+	@brief FP12 Structure - towered over three FP16
 */
 
 typedef struct
@@ -38,6 +31,7 @@ typedef struct
     FP16_YYY a; /**< first part of FP12 */
     FP16_YYY b; /**< second part of FP12 */
     FP16_YYY c; /**< third part of FP12 */
+    int type;   /**< Type */
 } FP48_YYY;
 
 extern const BIG_XXX Fra_YYY; /**< real part of BN curve Frobenius Constant */
@@ -67,6 +61,13 @@ extern void FP48_YYY_copy(FP48_YYY *x,FP48_YYY *y);
 	@param x FP48 instance to be set to one
  */
 extern void FP48_YYY_one(FP48_YYY *x);
+
+/**	@brief Set FP48 to zero
+ *
+	@param x FP48 instance to be set to zero
+ */
+extern void FP48_YYY_zero(FP48_YYY *x);
+
 /**	@brief Tests for equality of two FP48s
  *
 	@param x FP48 instance to be compared
@@ -108,15 +109,20 @@ extern void FP48_YYY_usqr(FP48_YYY *x,FP48_YYY *y);
 	@param y FP48 instance
  */
 extern void FP48_YYY_sqr(FP48_YYY *x,FP48_YYY *y);
-/**	@brief Fast multiplication of an FP48 by an FP48 that arises from an ATE pairing line function
+/**	@brief Fast multiplication of two sparse FP24s that arises from ATE pairing line functions
  *
-	Here the multiplier has a special form that can be exploited
 	@param x FP48 instance, on exit = x*y
 	@param y FP48 instance, of special form
-	@param t D_TYPE or M_TYPE twist
  */
-extern void FP48_YYY_smul(FP48_YYY *x,FP48_YYY *y,int t);
-/**	@brief Multiplication of two FP48s
+extern void FP48_YYY_smul(FP48_YYY *x,FP48_YYY *y);
+
+/**	@brief Fast multiplication of what may be sparse multiplicands
+ *
+	@param x FP48 instance, on exit = x*y
+	@param y FP48 instance, of special form
+ */
+extern void FP48_YYY_ssmul(FP48_YYY *x,FP48_YYY *y);
+/**	@brief Full unconditional Multiplication of two FP24s
  *
 	@param x FP48 instance, on exit = x*y
 	@param y FP48 instance, the multiplier

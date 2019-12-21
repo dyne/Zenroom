@@ -6,5 +6,5 @@ includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
 Name: amcl
 Description: AMCL is a standards compliant C cryptographic library designed to support the Internet of Things (IoT).
 Version: @AMCL_VERSION@
-Libs: -L${libdir} -l@AMCL_PRIVATE_LIBS@
+Libs: -L${libdir} @AMCL_PRIVATE_LIBS@
 Cflags: -I${includedir}

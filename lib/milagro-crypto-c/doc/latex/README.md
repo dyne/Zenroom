@@ -1,3 +1,0 @@
-To build documentation;
-
-make

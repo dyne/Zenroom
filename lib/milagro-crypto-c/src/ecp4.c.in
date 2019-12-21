@@ -48,6 +48,7 @@ static void ECP4_ZZZ_cmove(ECP4_ZZZ *P,ECP4_ZZZ *Q,int d)
     FP4_YYY_cmove(&(P->x),&(Q->x),d);
     FP4_YYY_cmove(&(P->y),&(Q->y),d);
     FP4_YYY_cmove(&(P->z),&(Q->z),d);
+
 }
 
 /* return 1 if b==c, no branching */
@@ -124,10 +125,12 @@ int ECP4_ZZZ_equals(ECP4_ZZZ *P,ECP4_ZZZ *Q)
 /* extract x, y from point P */
 int ECP4_ZZZ_get(FP4_YYY *x,FP4_YYY *y,ECP4_ZZZ *P)
 {
-    if (ECP4_ZZZ_isinf(P)) return -1;
-    ECP4_ZZZ_affine(P);
-    FP4_YYY_copy(y,&(P->y));
-    FP4_YYY_copy(x,&(P->x));
+    ECP4_ZZZ W;
+    ECP4_ZZZ_copy(&W,P);
+    ECP4_ZZZ_affine(&W);
+    if (ECP4_ZZZ_isinf(&W)) return -1;
+    FP4_YYY_copy(y,&(W.y));
+    FP4_YYY_copy(x,&(W.x));
     return 0;
 }
 
@@ -215,6 +218,7 @@ int ECP4_ZZZ_fromOctet(ECP4_ZZZ *Q,octet *W)
     FP2_YYY_copy(&(qy.a),&pa);
     FP2_YYY_copy(&(qy.b),&pb);
 
+
     if (ECP4_ZZZ_set(Q,&qx,&qy)) return 1;
     return 0;
 }
@@ -264,6 +268,7 @@ int ECP4_ZZZ_set(ECP4_ZZZ *P,FP4_YYY *x,FP4_YYY *y)
         return 0;
     }
 
+//   P->inf=0;
     FP4_YYY_copy(&(P->x),x);
     FP4_YYY_copy(&(P->y),y);
 
@@ -329,7 +334,6 @@ int ECP4_ZZZ_dbl(ECP4_ZZZ *P)
     FP4_YYY_imul(&t2,&t2,3*CURVE_B_I_ZZZ);	//t2.imul(3*ROM.CURVE_B_I);
 #if SEXTIC_TWIST_ZZZ==M_TYPE
     FP4_YYY_times_i(&t2);
-    //FP4_YYY_norm(&t2);
 #endif
 
     FP4_YYY_mul(&x3,&t2,&(P->z));	//x3.mul(z);
@@ -348,7 +352,7 @@ int ECP4_ZZZ_dbl(ECP4_ZZZ *P)
 
     FP4_YYY_mul(&t1,&(P->x),&iy);		//t1.mul(iy);						//
 
-    FP4_YYY_norm(&t0);			//x.norm();
+    FP4_YYY_norm(&t0);				//x.norm();
     FP4_YYY_mul(&(P->x),&t0,&t1);	//x.mul(t1);
     FP4_YYY_add(&(P->x),&(P->x),&(P->x));	//x.add(x);       //(y^2-9bz^2)xy2
 
@@ -380,7 +384,7 @@ int ECP4_ZZZ_add(ECP4_ZZZ *P,ECP4_ZZZ *Q)
     FP4_YYY_sub(&t3,&t3,&t4);		//t3.sub(t4);
     FP4_YYY_norm(&t3);				//t3.norm();
 #if SEXTIC_TWIST_ZZZ==D_TYPE
-    FP4_YYY_times_i(&t3);			//t3.mul_ip();
+    FP4_YYY_times_i(&t3);			//t3.mul_ip();  //t3=(X1+Y1)(X2+Y2)-(X1.X2+Y1.Y2) = X1.Y2+X2.Y1
 #endif
 
     FP4_YYY_add(&t4,&(P->y),&(P->z));	//t4.add(z);
@@ -396,7 +400,7 @@ int ECP4_ZZZ_add(ECP4_ZZZ *P,ECP4_ZZZ *Q)
     FP4_YYY_sub(&t4,&t4,&x3);		//t4.sub(x3);
     FP4_YYY_norm(&t4);				//t4.norm();
 #if SEXTIC_TWIST_ZZZ==D_TYPE
-    FP4_YYY_times_i(&t4);			//t4.mul_ip();
+    FP4_YYY_times_i(&t4);			//t4.mul_ip(); //t4=(Y1+Z1)(Y2+Z2) - (Y1.Y2+Z1.Z2) = Y1.Z2+Y2.Z1
 #endif
 
     FP4_YYY_add(&x3,&(P->x),&(P->z));	//x3.add(z);
@@ -442,6 +446,7 @@ int ECP4_ZZZ_add(ECP4_ZZZ *P,ECP4_ZZZ *Q)
     FP4_YYY_mul(&z3,&z3,&t4);		//z3.mul(t4);
     FP4_YYY_add(&(P->z),&z3,&t0);		//z3.add(t0);
 
+
     FP4_YYY_norm(&(P->x));			//x.norm();
     FP4_YYY_norm(&(P->y));			//y.norm();
     FP4_YYY_norm(&(P->z));			//z.norm();
@@ -453,9 +458,10 @@ int ECP4_ZZZ_add(ECP4_ZZZ *P,ECP4_ZZZ *Q)
 /* SU= 16 */
 void ECP4_ZZZ_sub(ECP4_ZZZ *P,ECP4_ZZZ *Q)
 {
-    ECP4_ZZZ_neg(Q);
-    ECP4_ZZZ_add(P,Q);
-    ECP4_ZZZ_neg(Q);
+    ECP4_ZZZ NQ;
+    ECP4_ZZZ_copy(&NQ,Q);
+    ECP4_ZZZ_neg(&NQ);
+    ECP4_ZZZ_add(P,&NQ);
 }
 
 
@@ -477,7 +483,6 @@ void ECP4_ZZZ_mul(ECP4_ZZZ *P,BIG_XXX e)
     sign8 w[1+(NLEN_XXX*BASEBITS_XXX+3)/4];
 
     if (ECP4_ZZZ_isinf(P)) return;
-    ECP4_ZZZ_affine(P);
 
     /* precompute table */
 
@@ -591,6 +596,7 @@ void ECP4_ZZZ_frob(ECP4_ZZZ *P,FP2_YYY F[3],int n)
 /* Side channel attack secure */
 // Bos & Costello https://eprint.iacr.org/2013/458.pdf
 // Faz-Hernandez & Longa & Sanchez  https://eprint.iacr.org/2013/158.pdf
+
 void ECP4_ZZZ_mul8(ECP4_ZZZ *P,ECP4_ZZZ Q[8],BIG_XXX u[8])
 {
     int i,j,k,nb,pb1,pb2,bt;
@@ -606,11 +612,10 @@ void ECP4_ZZZ_mul8(ECP4_ZZZ *P,ECP4_ZZZ Q[8],BIG_XXX u[8])
 
     for (i=0; i<8; i++)
     {
-        ECP4_ZZZ_affine(&Q[i]);
         BIG_XXX_copy(t[i],u[i]);
     }
 
-    // Precomputed table
+// Precomputed table
     ECP4_ZZZ_copy(&T1[0],&Q[0]); // Q[0]
     ECP4_ZZZ_copy(&T1[1],&T1[0]);
     ECP4_ZZZ_add(&T1[1],&Q[1]);	// Q[0]+Q[1]
@@ -627,7 +632,7 @@ void ECP4_ZZZ_mul8(ECP4_ZZZ *P,ECP4_ZZZ Q[8],BIG_XXX u[8])
     ECP4_ZZZ_copy(&T1[7],&T1[3]);
     ECP4_ZZZ_add(&T1[7],&Q[3]);	// Q[0]+Q[1]+Q[2]+Q[3]
 
-    //  Use Frobenius
+//  Use Frobenius
 
     for (i=0; i<8; i++)
     {
@@ -635,7 +640,7 @@ void ECP4_ZZZ_mul8(ECP4_ZZZ *P,ECP4_ZZZ Q[8],BIG_XXX u[8])
         ECP4_ZZZ_frob(&T2[i],X,4);
     }
 
-    // Make them odd
+// Make them odd
     pb1=1-BIG_XXX_parity(t[0]);
     BIG_XXX_inc(t[0],pb1);
     BIG_XXX_norm(t[0]);
@@ -644,7 +649,7 @@ void ECP4_ZZZ_mul8(ECP4_ZZZ *P,ECP4_ZZZ Q[8],BIG_XXX u[8])
     BIG_XXX_inc(t[4],pb2);
     BIG_XXX_norm(t[4]);
 
-    // Number of bits
+// Number of bits
     BIG_XXX_zero(mt);
     for (i=0; i<8; i++)
     {
@@ -652,7 +657,7 @@ void ECP4_ZZZ_mul8(ECP4_ZZZ *P,ECP4_ZZZ Q[8],BIG_XXX u[8])
     }
     nb=1+BIG_XXX_nbits(mt);
 
-    // Sign pivot
+// Sign pivot
     s1[nb-1]=1;
     s2[nb-1]=1;
     for (i=0; i<nb-1; i++)
@@ -664,7 +669,7 @@ void ECP4_ZZZ_mul8(ECP4_ZZZ *P,ECP4_ZZZ Q[8],BIG_XXX u[8])
     }
 
 
-    // Recoded exponents
+// Recoded exponents
     for (i=0; i<nb; i++)
     {
         w1[i]=0;
@@ -694,7 +699,7 @@ void ECP4_ZZZ_mul8(ECP4_ZZZ *P,ECP4_ZZZ Q[8],BIG_XXX u[8])
         }
     }
 
-    // Main loop
+// Main loop
     ECP4_ZZZ_select(P,T1,2*w1[nb-1]+1);
     ECP4_ZZZ_select(&W,T2,2*w2[nb-1]+1);
     ECP4_ZZZ_add(P,&W);
@@ -707,7 +712,7 @@ void ECP4_ZZZ_mul8(ECP4_ZZZ *P,ECP4_ZZZ Q[8],BIG_XXX u[8])
         ECP4_ZZZ_add(P,&W);
     }
 
-    // apply corrections
+// apply corrections
     ECP4_ZZZ_copy(&W,P);
     ECP4_ZZZ_sub(&W,&Q[0]);
     ECP4_ZZZ_cmove(P,&W,pb1);
@@ -816,3 +821,4 @@ void ECP4_ZZZ_generator(ECP4_ZZZ *G)
 
     ECP4_ZZZ_set(G,&X,&Y);
 }
+

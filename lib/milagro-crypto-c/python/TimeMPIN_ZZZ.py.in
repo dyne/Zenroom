@@ -1,0 +1,371 @@
+#!/usr/bin/env python3
+
+"""
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+"""
+
+import json
+import sys
+import timeit
+import warnings
+import mpin_ZZZ
+
+warnings.filterwarnings("ignore")
+
+
+def time_func(stmt, n=10, setup='from __main__ import *'):
+    t = timeit.Timer(stmt, setup)
+    total_time = t.timeit(n)
+    iter_time = total_time / n
+    iter_per_sec = n / total_time
+    print("func:{} nIter:{} total_time:{} iter_time:{} iter_per_sec: %s".format(
+        stmt, n, total_time, iter_time, iter_per_sec))
+
+
+nIter = 100
+
+if __name__ == "__main__":
+    # Print hex values
+    DEBUG = False
+
+    ONE_PASS = False
+    TIME_PERMITS = True
+    MPIN_FULL = True
+    PIN_ERROR = True
+
+    if TIME_PERMITS:
+        date = mpin_ZZZ.today()
+    else:
+        date = 0
+
+    # Seed
+    seedHex = "b75e7857fa17498c333d3c8d42e10f8c3cb8a66f7a84d85f86cd5acb537fa211"
+    seed = seedHex.decode("hex")
+
+    # random number generator
+    rng = mpin_ZZZ.create_csprng(seed)
+
+    # Identity
+    mpin_id = "alice@milagro.com"
+
+    # Hash mpin_id
+    hash_mpin_id = mpin_ZZZ.hash_id(mpin_ZZZ.HASH_TYPE_ZZZ, mpin_id)
+    if DEBUG:
+        print("mpin_id: {}".format(mpin_id.hex()))
+        print("hash_mpin_id: {}".format(hash_mpin_id.hex()))
+
+    mpin_id = mpin_id
+
+    # Generate master secret for MILAGRO and Customer
+    time_func('rtn, ms1 = mpin_ZZZ.random_generate(rng)', nIter)
+    rtn, ms1 = mpin_ZZZ.random_generate(rng)
+    if rtn != 0:
+        print("random_generate(rng) Error {}".format(rtn))
+    rtn, ms2 = mpin_ZZZ.random_generate(rng)
+    if rtn != 0:
+        print("random_generate(rng) Error {}".format(rtn))
+    if DEBUG:
+        print("ms1: {}".format(ms1.hex())
+        print("ms2: {}".format(ms2.hex())
+
+    # Generate server secret shares
+    time_func('rtn, ss1 = mpin_ZZZ.get_server_secret(ms1)', nIter)
+    rtn, ss1=mpin_ZZZ.get_server_secret(ms1)
+    if rtn != 0:
+        print("get_server_secret(ms1) Error {}".format(rtn))
+    rtn, ss2=mpin_ZZZ.get_server_secret(ms2)
+    if rtn != 0:
+        print("get_server_secret(ms2) Error {}".format(rtn))
+    if DEBUG:
+        print("ss1: {}".format(ss1.hex()))
+        print("ss2: {}".format(ss2.hex()))
+
+    # Combine server secret shares
+    time_func('rtn, server_secret = mpin_ZZZ.recombine_G2(ss1, ss2)', nIter)
+    rtn, server_secret=mpin_ZZZ.recombine_G2(ss1, ss2)
+    if rtn != 0:
+        print("recombine_G2(ss1, ss2) Error {}".format(rtn))
+    if DEBUG:
+        print("server_secret: {}".format(mpin_ZZZ.server_secret.hex()))
+
+    # Generate client secret shares
+    time_func('rtn, cs1 = mpin_ZZZ.get_client_secret(ms1, hash_mpin_id)', nIter)
+    rtn, cs1=mpin_ZZZ.get_client_secret(ms1, hash_mpin_id)
+    if rtn != 0:
+        print("get_client_secret(ms1, hash_mpin_id) Error {}".format(rtn))
+    rtn, cs2=mpin_ZZZ.get_client_secret(ms2, hash_mpin_id)
+    if rtn != 0:
+        print("get_client_secret(ms2, hash_mpin_id) Error {}".format(rtn))
+    if DEBUG:
+        print("cs1: {}".format(cs1.hex()))
+        print("cs2: {}".format(cs2.hex()))
+
+    # Combine client secret shares
+    time_func('rtn, client_secret = mpin_ZZZ.recombine_G1(cs1, cs2)', nIter)
+    rtn, client_secret=mpin_ZZZ.recombine_G1(cs1, cs2)
+    if rtn != 0:
+        print("recombine_G1(cs1, cs2) Error {}".format(rtn))
+    print("Client Secret: {}".format(client_secret.hex()))
+
+    # Generate Time Permit shares
+    if DEBUG:
+        print("Date {}".format(date))
+    time_func(
+        'rtn, tp1 = mpin_ZZZ.get_client_permit(mpin_ZZZ.HASH_TYPE_ZZZ, date, ms1, hash_mpin_id)',
+        nIter)
+    rtn, tp1=mpin_ZZZ.get_client_permit(
+        mpin_ZZZ.HASH_TYPE_ZZZ, date, ms1, hash_mpin_id)
+    if rtn != 0:
+        print("get_client_permit(mpin_ZZZ.HASH_TYPE_ZZZ, date, ms1, hash_mpin_id) Error {}".format(rtn))
+    rtn, tp2=mpin_ZZZ.get_client_permit(
+        mpin_ZZZ.HASH_TYPE_ZZZ, date, ms2, hash_mpin_id)
+    if rtn != 0:
+        print("get_client_permit(mpin_ZZZ.HASH_TYPE_ZZZ, date, ms2, hash_mpin_id) Error {}".format(rtn))
+    if DEBUG:
+        print("tp1: {}".format(tp1.hex()))
+        print("tp2: {}".format(tp2.hex()))
+
+    # Combine Time Permit shares
+    rtn, time_permit=mpin_ZZZ.recombine_G1(tp1, tp2)
+    if rtn != 0:
+        print("recombine_G1(tp1, tp2) Error {}".format(rtn))
+    if DEBUG:
+        print("time_permit: {}".format(time_permit.hex()))
+
+    # Client extracts PIN from secret to create Token
+    PIN=1234
+    time_func(
+        'rtn, token = mpin_ZZZ.extract_pin(mpin_ZZZ.HASH_TYPE_ZZZ, mpin_id, PIN, client_secret)',
+        nIter)
+    rtn, token=mpin_ZZZ.extract_pin(
+        mpin_ZZZ.HASH_TYPE_ZZZ, mpin_id, PIN, client_secret)
+    if rtn != 0:
+        print(
+    "extract_pin(mpin_ZZZ.HASH_TYPE_ZZZ, mpin_id, PIN, token) Error {}".format(rtn))
+    print("Token: {}".format(token.hex())
+
+    if ONE_PASS:
+        print("M-Pin One Pass")
+        PIN=1234
+        time_func('epoch_time = mpin_ZZZ.get_time()', nIter)
+        epoch_time=mpin_ZZZ.get_time()
+        if DEBUG:
+            print("epoch_time {}".format(epoch_time))
+
+        # Client precomputation
+        if MPIN_FULL:
+            time_func(
+                'rtn, pc1, pc2 = mpin_ZZZ.precompute(token, hash_mpin_id)',
+                nIter)
+            rtn, pc1, pc2=mpin_ZZZ.precompute(token, hash_mpin_id)
+
+        # Client MPIN
+        time_func(
+            'rtn, x, u, ut, v, y = mpin_ZZZ.client(mpin_ZZZ.HASH_TYPE_ZZZ, date, mpin_id, rng, None, PIN, token, time_permit, None, epoch_time)',
+            nIter)
+        rtn, x, u, ut, v, y=mpin_ZZZ.client(
+            mpin_ZZZ.HASH_TYPE_ZZZ, date, mpin_id, rng, None, PIN, token, time_permit, None, epoch_time)
+        if rtn != 0:
+            print("MPIN_CLIENT ERROR {}".format(rtn))
+
+        # Client sends Z=r.ID to Server
+        if MPIN_FULL:
+            time_func(
+                'rtn, r, Z = mpin_ZZZ.get_G1_multiple(rng, 1, None, hash_mpin_id)',
+                nIter)
+            rtn, r, Z=mpin_ZZZ.get_G1_multiple(rng, 1, None, hash_mpin_id)
+
+        # Server MPIN
+        time_func(
+            'rtn, HID, HTID, E, F, y2 = mpin_ZZZ.server(mpin_ZZZ.HASH_TYPE_ZZZ, date, server_secret, u, ut, v, mpin_id, None, epoch_time, None)',
+            nIter)
+        rtn, HID, HTID, E, F, y2=mpin_ZZZ.server(
+            mpin_ZZZ.HASH_TYPE_ZZZ, date, server_secret, u, ut, v, mpin_id, None, epoch_time, None)
+        if DEBUG:
+            print("y2 ", y2.hex())
+        if rtn != 0:
+            print("ERROR: {} is not authenticated".format(mpin_id))
+            if PIN_ERROR:
+                time_func('err = mpin_ZZZ.kangaroo(E, F)', nIter)
+                err=mpin_ZZZ.kangaroo(E, F)
+                print("Client PIN error {} ".format(err))
+            raise SystemExit(0)
+        else:
+            print("SUCCESS: {} is authenticated".format(mpin_id))
+
+        if date:
+            prHID=HTID
+        else:
+            prHID=HID
+            ut=None
+
+        # Server sends T=w.ID to client
+        if MPIN_FULL:
+            time_func(
+                'rtn, w, T = mpin_ZZZ.get_G1_multiple(rng, 0, None, prHID)',
+                nIter)
+            rtn, w, T=mpin_ZZZ.get_G1_multiple(rng, 0, None, prHID)
+            if rtn != 0:
+                print("ERROR: Generating T {}".format(rtn))
+
+        if MPIN_FULL:
+            time_func(
+                'HM = mpin_ZZZ.hash_all(mpin_ZZZ.HASH_TYPE_ZZZ, hash_mpin_id, u, ut, v, y, Z, T)',
+                nIter)
+            HM=mpin_ZZZ.hash_all(
+                mpin_ZZZ.HASH_TYPE_ZZZ, hash_mpin_id, u, ut, v, y, Z, T)
+
+            time_func(
+                'rtn, client_aes_key = mpin_ZZZ.client_key(mpin_ZZZ.HASH_TYPE_ZZZ, pc1, pc2, PIN, r, x, HM, T)',
+                nIter)
+            rtn, client_aes_key=mpin_ZZZ.client_key(
+                mpin_ZZZ.HASH_TYPE_ZZZ, pc1, pc2, PIN, r, x, HM, T)
+            if rtn != 0:
+                print("ERROR: Generating client_aes_key {}".format(rtn))
+            print("Client AES Key: {}".format(client_aes_key.hex()))
+
+            rtn, server_aes_key=mpin_ZZZ.server_key(
+                mpin_ZZZ.HASH_TYPE_ZZZ, Z, server_secret, w, HM, HID, u, ut)
+            if rtn != 0:
+                print("ERROR: Generating server_aes_key {}".format(rtn))
+            print("Server AES Key: {}".format(server_aes_key.hex()))
+
+    else:
+        print("M-Pin Three Pass")
+        PIN=1234
+        if MPIN_FULL:
+            time_func(
+                'rtn, pc1, pc2 = mpin_ZZZ.precompute(token, hash_mpin_id)',
+                nIter)
+            rtn, pc1, pc2=mpin_ZZZ.precompute(token, hash_mpin_id)
+            if rtn != 0:
+                print("precompute(token, hash_mpin_id) ERROR {}".format(rtn))
+
+        # Client first pass
+        time_func(
+            'rtn, x, u, ut, sec = mpin_ZZZ.client_1(mpin_ZZZ.HASH_TYPE_ZZZ, date, mpin_id, rng, None, PIN, token, time_permit)',
+            nIter)
+        rtn, x, u, ut, sec=mpin_ZZZ.client_1(
+            mpin_ZZZ.HASH_TYPE_ZZZ, date, mpin_id, rng, None, PIN, token, time_permit)
+        if rtn != 0:
+            print("client_1  ERROR {}".format(rtn))
+        if DEBUG:
+            print("x: {}".format(x.hex()))
+
+        # Server calculates H(ID) and H(T|H(ID)) (if time permits enabled),
+        # and maps them to points on the curve HID and HTID resp.
+        time_func(
+            'HID, HTID = mpin_ZZZ.server_1(mpin_ZZZ.HASH_TYPE_ZZZ, date, mpin_id)',
+            nIter)
+        HID, HTID=mpin_ZZZ.server_1(mpin_ZZZ.HASH_TYPE_ZZZ, date, mpin_id)
+
+        # Server generates Random number y and sends it to Client
+        time_func('rtn, y = mpin_ZZZ.random_generate(rng)', nIter)
+        rtn, y=mpin_ZZZ.random_generate(rng)
+        if rtn != 0:
+            print("random_generate(rng) Error {}".format(rtn))
+
+        # Client second pass
+        time_func('rtn, v = mpin_ZZZ.client_2(x, y, sec)', nIter)
+        rtn, v=mpin_ZZZ.client_2(x, y, sec)
+        if rtn != 0:
+            print("client_2(x, y, sec) Error {}".format(rtn))
+
+        # Server second pass
+        time_func(
+            'rtn, E, F = mpin_ZZZ.server_2(date, HID, HTID, y, server_secret, u, ut, v, None)',
+            nIter)
+        rtn, E, F=mpin_ZZZ.server_2(
+            date, HID, HTID, y, server_secret, u, ut, v, None)
+        if rtn != 0:
+            print("ERROR: {} is not authenticated".format(mpin_id))
+            if PIN_ERROR:
+                time_func('err = mpin_ZZZ.kangaroo(E, F)', nIter)
+                err=mpin_ZZZ.kangaroo(E, F)
+                print("Client PIN error {} ".format(err))
+            raise SystemExit(0)
+        else:
+            print("SUCCESS: {} is authenticated".format(mpin_id))
+
+        # Client sends Z=r.ID to Server
+        if MPIN_FULL:
+            rtn, r, Z=mpin_ZZZ.get_G1_multiple(rng, 1, None, hash_mpin_id)
+            if rtn != 0:
+                print("ERROR: Generating Z {}".format(rtn))
+
+        if date:
+            prHID=HTID
+        else:
+            prHID=HID
+            ut=None
+
+        # Server sends T=w.ID to client
+        if MPIN_FULL:
+            time_func(
+                'rtn, w, T = mpin_ZZZ.get_G1_multiple(rng, 0, None, prHID)',
+                nIter)
+            rtn, w, T=mpin_ZZZ.get_G1_multiple(rng, 0, None, prHID)
+            if rtn != 0:
+                print("ERROR: Generating T {}".format(rtn))
+
+            time_func(
+                'HM = mpin_ZZZ.hash_all(mpin_ZZZ.HASH_TYPE_ZZZ, hash_mpin_id, u, ut, v, y, Z, T)',
+                nIter)
+            HM=mpin_ZZZ.hash_all(
+                mpin_ZZZ.HASH_TYPE_ZZZ, hash_mpin_id, u, ut, v, y, Z, T)
+
+            time_func(
+                'rtn, client_aes_key = mpin_ZZZ.client_key(mpin_ZZZ.HASH_TYPE_ZZZ, pc1, pc2, PIN, r, x, HM, T)',
+                nIter)
+            rtn, client_aes_key=mpin_ZZZ.client_key(
+                mpin_ZZZ.HASH_TYPE_ZZZ, pc1, pc2, PIN, r, x, HM, T)
+            if rtn != 0:
+                print("ERROR: Generating client_aes_key {}".format(rtn))
+            print("Client AES Key: {}".format(client_aes_key.hex()))
+
+            time_func(
+                'rtn, server_aes_key = mpin_ZZZ.server_key(mpin_ZZZ.HASH_TYPE_ZZZ, Z, server_secret, w, HM, HID, u, ut)',
+                nIter)
+            rtn, server_aes_key=mpin_ZZZ.server_key(
+                mpin_ZZZ.HASH_TYPE_ZZZ, Z, server_secret, w, HM, HID, u, ut)
+            if rtn != 0:
+                print("ERROR: Generating server_aes_key {}".format(rtn))
+            print("Server AES Key: {}".format(server_aes_key.hex()))
+
+    if MPIN_FULL:
+        plaintext="A test message"
+        print("message to encrypt: ", plaintext)
+        header_hex="1554a69ecbf04e507eb6985a234613246206c85f8af73e61ab6e2382a26f457d"
+        header=header_hex.decode("hex")
+        iv_hex="2b213af6b0edf6972bf996fb"
+        iv=iv_hex.decode("hex")
+        time_func(
+            'ciphertext, tag = mpin_ZZZ.aes_gcm_encrypt(client_aes_key, iv, header, plaintext)',
+            nIter)
+        ciphertext, tag=mpin_ZZZ.aes_gcm_encrypt(
+            client_aes_key, iv, header, plaintext)
+        print("ciphertext ", ciphertext.hex())
+        print("tag1 ", tag.hex())
+
+        time_func(
+            'plaintext2, tag2 = mpin_ZZZ.aes_gcm_decrypt(server_aes_key, iv, header, ciphertext)',
+            nIter)
+        plaintext2, tag2=mpin_ZZZ.aes_gcm_decrypt(
+            server_aes_key, iv, header, ciphertext)
+        print("decrypted message: ".format(plaintext2))
+        print("tag2 {}".format(tag2.hex()))

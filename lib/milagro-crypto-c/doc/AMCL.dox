@@ -7,13 +7,11 @@
 
  AMCL is a standards compliant C cryptographic library with no external dependencies, specifically designed to support the Internet of Things (IoT).
 
- For a detailed explanation about this library please read: <a href="AMCL.pdf">AMCL.pdf</a>
-
  AMCL is provided in *C* language but includes a <a href="https://www.python.org">Python</a> wrapper.for some components as an aid for development work.
 
   \section homepage Project page
   The official project page is hosted at 
-	<a href="http://milagro.apache.org/">Apache Milagro (incubating)</a>
+	<a href="http://milagro.apache.org/docs/milagro-intro/">Apache Milagro (incubating)</a>
 
   \section license License
 
@@ -233,7 +231,7 @@ In order to build the documentation <a href="http://www.stack.nl/~dimitri/doxyge
 <ol type="disc">
   <li>mkdir target\\build</li>
   <li>cd target\\build</li>
-  <li>cmake -G "MinGW Makefiles" ..\\..</li>
+  <li>cmake -G "MinGW Makefiles" -D WORD_SIZE=64 ..\\..</li>
   <li>mingw32-make</li>
   <li>mingw32-make test</li>
   <li>mingw32-make doc</li>
@@ -252,7 +250,7 @@ My Computer -> Properties -> Advanced > Environment Variables
 <p>The build can be configured using by setting flags on the command line i.e.</p>
 
 <ol type="disc">
-  <li>cmake -G "MinGW Makefiles" -DWORD_LENGTH=32 ../..</li>
+  <li>cmake -G "MinGW Makefiles"  -D WORD_SIZE=64  -D BUILD_PYTHON=on ..\\..</li>
 </ol>
 
 <h2>Uninstall software</h2>
@@ -269,7 +267,7 @@ My Computer -> Properties -> Advanced > Environment Variables
   <li>sudo mingw32-make package</li>
 </ul>
 
-<p>In order for this to work <a href="http://nsis.sourceforge.net/Download">NSSI</a> has
+<p>In order for this to work <a href="https://nsis.sourceforge.io">NSIS</a> has
 to have been installed</p>
 
 */

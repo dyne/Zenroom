@@ -104,7 +104,7 @@ foreach(curve ${AMCL_CURVE})
   amcl_curve_test(${curve} test_big_arithmetics_${BD} test_big_arithmetics_XXX.c.in amcl_curve_${TC} "SUCCESS" "big/test_vector_big.txt")
   amcl_curve_test(${curve} test_big_consistency_${BD} test_big_consistency_XXX.c.in amcl_curve_${TC} "SUCCESS")
   amcl_curve_test(${curve} test_ecc_${TC}             test_ecc_ZZZ.c.in             amcl_curve_${TC} "SUCCESS")
-  amcl_curve_test(${curve} test_fp_arithmetics_${TF}  test_fp_arithmetics_YYY.c.in  amcl_curve_${TC} "SUCCESS" "fp/test_vector_${TF}.txt")
+  # TODO amcl_curve_test(${curve} test_fp_arithmetics_${TF}  test_fp_arithmetics_YYY.c.in  amcl_curve_${TC} "SUCCESS" "fp/test_vector_${TF}.txt")
 
   if(NOT ${TC} MATCHES "^NUMS[0-9]+E$")
     amcl_curve_test(${curve} test_ecp_arithmetics_${TC} test_ecp_arithmetics_ZZZ.c.in amcl_curve_${TC} "SUCCESS" "ecp/test_vector_${TC}.txt")
@@ -143,19 +143,19 @@ foreach(curve ${AMCL_CURVE})
   # Pairing Friendly Curve Tests
   ################################################
   if(NOT ${PF} STREQUAL "NOT")
-    amcl_curve_test(${curve} test_fp2_arithmetics_${TC}  test_fp2_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp2/test_vector_${TC}.txt")
-    amcl_curve_test(${curve} test_fp4_arithmetics_${TC}  test_fp4_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp4/test_vector_${TC}.txt")
+    # TODO amcl_curve_test(${curve} test_fp2_arithmetics_${TC}  test_fp2_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp2/test_vector_${TC}.txt")
+    # TODO amcl_curve_test(${curve} test_fp4_arithmetics_${TC}  test_fp4_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp4/test_vector_${TC}.txt")
     if(CS STREQUAL "128")
-      amcl_curve_test(${curve} test_fp12_arithmetics_${TC}  test_fp12_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp12/test_vector_${TC}.txt")
+      # TODO amcl_curve_test(${curve} test_fp12_arithmetics_${TC}  test_fp12_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp12/test_vector_${TC}.txt")
       amcl_curve_test(${curve} test_ecp2_arithmetics_${TC} test_ecp2_arithmetics_ZZZ.c.in amcl_pairing_${TC} "SUCCESS" "ecp2/test_vector_${TC}.txt")
     elseif(CS STREQUAL "192")
-      amcl_curve_test(${curve} test_fp8_arithmetics_${TC}  test_fp8_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp8/test_vector_${TC}.txt")
-      amcl_curve_test(${curve} test_fp24_arithmetics_${TC}  test_fp24_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp24/test_vector_${TC}.txt")
+      # TODO amcl_curve_test(${curve} test_fp8_arithmetics_${TC}  test_fp8_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp8/test_vector_${TC}.txt")
+      # TODO amcl_curve_test(${curve} test_fp24_arithmetics_${TC}  test_fp24_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp24/test_vector_${TC}.txt")
       amcl_curve_test(${curve} test_ecp4_arithmetics_${TC} test_ecp4_arithmetics_ZZZ.c.in amcl_pairing_${TC} "SUCCESS" "ecp4/test_vector_${TC}.txt")
     elseif(CS STREQUAL "256")
-      amcl_curve_test(${curve} test_fp8_arithmetics_${TC}  test_fp8_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp8/test_vector_${TC}.txt")
-      amcl_curve_test(${curve} test_fp16_arithmetics_${TC}  test_fp16_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp16/test_vector_${TC}.txt")
-      amcl_curve_test(${curve} test_fp48_arithmetics_${TC}  test_fp48_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp48/test_vector_${TC}.txt")
+      # TODO amcl_curve_test(${curve} test_fp8_arithmetics_${TC}  test_fp8_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp8/test_vector_${TC}.txt")
+      # TODO amcl_curve_test(${curve} test_fp16_arithmetics_${TC}  test_fp16_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp16/test_vector_${TC}.txt")
+      # TODO amcl_curve_test(${curve} test_fp48_arithmetics_${TC}  test_fp48_arithmetics_YYY.c.in  amcl_pairing_${TC} "SUCCESS" "fp48/test_vector_${TC}.txt")
       amcl_curve_test(${curve} test_ecp8_arithmetics_${TC} test_ecp8_arithmetics_ZZZ.c.in amcl_pairing_${TC} "SUCCESS" "ecp8/test_vector_${TC}.txt")
     endif(CS STREQUAL "128")
     amcl_curve_test(${curve} test_pair_${TC}             test_pair_ZZZ.c.in             amcl_pairing_${TC} "SUCCESS")
@@ -186,7 +186,10 @@ foreach(curve ${AMCL_CURVE})
       amcl_curve_test(${curve} test_mpinfull_onepass_${TC}  test_mpinfull_onepass_ZZZ.c.in  amcl_mpin_${TC} "SUCCESS")
       amcl_curve_test(${curve} test_mpinfull_random_${TC}   test_mpinfull_random_ZZZ.c.in   amcl_mpin_${TC} "SUCCESS")
       if(curve STREQUAL "BN254CX")
-	     amcl_curve_test(${curve} test_mpin_vectors_${TC}    test_mpin_vectors_ZZZ.c.in      amcl_mpin_${TC} "SUCCESS" "mpin/BN254_CX.txt")
+	     amcl_curve_test(${curve} test_mpin_vectors_dta_${TC}    test_mpin_vectors_dta_ZZZ.c.in      amcl_mpin_${TC} "SUCCESS" "mpin/BN254_CX.txt")
+      endif()
+      if(curve STREQUAL "BLS381")
+	     amcl_curve_test(${curve} test_mpin_vectors_${TC}    test_mpin_vectors_ZZZ.c.in      amcl_mpin_${TC} "SUCCESS" "mpin/BLS381.txt")
       endif()
     endif()
 
@@ -201,6 +204,14 @@ foreach(curve ${AMCL_CURVE})
       amcl_curve_test(${curve} test_wcc_bad_receiver_key_${TC} test_wcc_bad_receiver_key_ZZZ.c.in amcl_wcc_${TC} "SUCCESS")
     endif()
 
+    ################################################
+    # BLS Tests
+    ################################################
+    if(BUILD_BLS)
+      amcl_curve_test(${curve} test_bls_${TC} test_bls_ZZZ.c.in amcl_bls_${TC} "SUCCESS")
+      amcl_curve_test(${curve} test_bls_sss_${TC} test_bls_sss_ZZZ.c.in amcl_bls_${TC} "SUCCESS")      
+    endif()
+    
   endif()
 endforeach()
 
@@ -213,6 +224,7 @@ foreach(level ${AMCL_RSA})
 
   amcl_rsa_test(${level} test_big_arithmetics_${BD} test_big_arithmetics_XXX.c.in amcl_rsa_${TFF} "SUCCESS" "big/test_vector_big.txt")
   amcl_rsa_test(${level} test_big_consistency_${BD} test_big_consistency_XXX.c.in amcl_rsa_${TFF} "SUCCESS")
+  amcl_rsa_test(${level} test_ff_consistency_${TFF}  test_ff_consistency_WWW.c.in  amcl_rsa_${TFF} "SUCCESS")
   amcl_rsa_test(${level} test_rsa_${TFF}            test_rsa_WWW.c.in             amcl_rsa_${TFF} "SUCCESS")
 endforeach()
 
@@ -251,4 +263,28 @@ if(BUILD_X509)
 
     endforeach()
   endforeach()
+endif()
+
+################################################
+# Paillier Tests
+################################################
+
+if(BUILD_PAILLIER)
+  set(deps "amcl_core;amcl_paillier")
+
+  foreach(level 2048 4096)
+    amcl_rsa_field(BD "${level}")
+    amcl_rsa_field(TFF "${level}")
+
+    amcl_rsa_test(${level} test_big_arithmetics_${BD} test_big_arithmetics_XXX.c.in "${deps}" "SUCCESS" "big/test_vector_big.txt")
+    amcl_rsa_test(${level} test_big_consistency_${BD} test_big_consistency_XXX.c.in "${deps}" "SUCCESS")
+    amcl_rsa_test(${level} test_ff_consistency_${TFF} test_ff_consistency_WWW.c.in  "${deps}" "SUCCESS")
+  endforeach()
+
+  amcl_test(test_paillier_consistency test_paillier_consistency.c "${deps}" "SUCCESS")
+  amcl_test(test_paillier_decrypt test_paillier_decrypt.c "${deps}" "SUCCESS" "paillier/decrypt.txt")
+  amcl_test(test_paillier_encrypt test_paillier_encrypt.c "${deps}" "SUCCESS" "paillier/encrypt.txt")
+  amcl_test(test_paillier_add test_paillier_add.c "${deps}" "SUCCESS" "paillier/add.txt")
+  amcl_test(test_paillier_mult test_paillier_mult.c "${deps}" "SUCCESS" "paillier/mult.txt")
+  amcl_test(test_paillier_keygen test_paillier_keygen.c "${deps}" "SUCCESS" "paillier/keygen.txt")
 endif()

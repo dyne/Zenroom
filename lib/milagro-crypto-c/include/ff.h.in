@@ -181,11 +181,11 @@ extern void FF_WWW_mul(BIG_XXX *x,BIG_XXX *y,BIG_XXX *z,int n);
 /**	@brief Reduce FF mod a modulus
  *
 	This is slow
-	@param x FF instance to be reduced mod m - on exit = x mod m
-	@param m FF modulus
+	@param x FF instance to be reduced mod p - on exit = x mod p
+	@param p FF modulus
 	@param n size of FF in BIGs
  */
-extern void FF_WWW_mod(BIG_XXX *x,BIG_XXX *m,int n);
+extern void FF_WWW_mod(BIG_XXX *x,BIG_XXX *p,int n);
 /**	@brief Square an FF
  *
 	Uses Karatsuba method internally
@@ -211,6 +211,13 @@ extern void FF_WWW_dmod(BIG_XXX *x,BIG_XXX *y,BIG_XXX *z,int n);
 	@param n size of FF in BIGs
  */
 extern void FF_WWW_invmodp(BIG_XXX *x,BIG_XXX *y,BIG_XXX *z,int n);
+/** @brief Invert an FF mod 2^(n*BIGBITS)
+ *
+ * @param U FF instance, on exit 1/a mod 2^(n*BIGBITS)
+ * @param a FF instance
+ * @param n size of FF in BIGs
+ */
+extern void FF_WWW_invmod2m(BIG_XXX U[],BIG_XXX a[],int n);
 /**	@brief Create an FF from a random number generator
  *
 	@param x FF instance, on exit x is a random number of length n BIGs with most significant bit a 1
@@ -226,44 +233,68 @@ extern void FF_WWW_random(BIG_XXX *x,csprng *R,int n);
 	@param n size of FF in BIGs
  */
 extern void FF_WWW_randomnum(BIG_XXX *x,BIG_XXX *y,csprng *R,int n);
-/**	@brief Calculate r=x^e mod m, side channel resistant
+/**	@brief Calculate r=x^e mod p, side channel resistant
  *
 	@param r FF instance, on exit = x^e mod p
 	@param x FF instance
 	@param e FF exponent
-	@param m FF modulus
+	@param p FF modulus
 	@param n size of FF in BIGs
+	@param en size of the exponent in BIGs
  */
-extern void FF_WWW_skpow(BIG_XXX *r,BIG_XXX *x,BIG_XXX * e,BIG_XXX *m,int n);
-/**	@brief Calculate r=x^e mod m, side channel resistant
+extern void FF_WWW_skpow(BIG_XXX *r,BIG_XXX *x,BIG_XXX * e,BIG_XXX *p,int n, int en);
+/**	@brief Calculate r=x^e mod p, side channel resistant
  *
 	For short BIG exponent
 	@param r FF instance, on exit = x^e mod p
 	@param x FF instance
 	@param e BIG exponent
-	@param m FF modulus
+	@param p FF modulus
 	@param n size of FF in BIGs
  */
-extern void FF_WWW_skspow(BIG_XXX *r,BIG_XXX *x,BIG_XXX e,BIG_XXX *m,int n);
-/**	@brief Calculate r=x^e mod m
+extern void FF_WWW_skspow(BIG_XXX *r,BIG_XXX *x,BIG_XXX e,BIG_XXX *p,int n);
+/**	@brief Calculate r=x^e.y^f mod p for big e and f, side channel resistant
+ *
+	@param r  FF instance, on exit = x^e.y^f mod p
+	@param x  FF instance
+	@param e  FF exponent
+	@param y  FF instance
+	@param f  FF exponent
+	@param p  FF modulus
+	@param n  size of FF in BIGs
+	@param en size of the exponent in BIGs
+ */
+extern void FF_WWW_skpow2(BIG_XXX *r,BIG_XXX *x, BIG_XXX *e, BIG_XXX *y, BIG_XXX *f, BIG_XXX *p, int n, int en);
+/**	@brief Calculate r=x^e mod p
  *
 	For very short integer exponent
-	@param r FF instance, on exit = x^e mod p
-	@param x FF instance
-	@param e integer exponent
-	@param m FF modulus
-	@param n size of FF in BIGs
+	@param r  FF instance, on exit = x^e mod p
+	@param x  FF instance
+	@param e  integer exponent
+	@param p  FF modulus
+	@param n  size of FF in BIGs
  */
-extern void FF_WWW_power(BIG_XXX *r,BIG_XXX *x,int e,BIG_XXX *m,int n);
-/**	@brief Calculate r=x^e mod m
+extern void FF_WWW_power(BIG_XXX *r,BIG_XXX *x,int e,BIG_XXX *p,int n);
+/**	@brief Calculate r=x^e mod p
  *
 	@param r FF instance, on exit = x^e mod p
 	@param x FF instance
 	@param e FF exponent
+	@param p FF modulus
+	@param n size of FF in BIGs
+ */
+extern void FF_WWW_pow(BIG_XXX *r,BIG_XXX *x,BIG_XXX *e,BIG_XXX *p,int n);
+/**	@brief Calculate r=x^e.y^f mod m
+ *
+	@param r FF instance, on exit = x^e.y^f mod p
+	@param x FF instance
+	@param e BIG exponent
+	@param y FF instance
+	@param f BIG exponent
 	@param m FF modulus
 	@param n size of FF in BIGs
  */
-extern void FF_WWW_pow(BIG_XXX *r,BIG_XXX *x,BIG_XXX *e,BIG_XXX *m,int n);
+extern void FF_WWW_pow2(BIG_XXX *r,BIG_XXX *x,BIG_XXX e,BIG_XXX *y,BIG_XXX f,BIG_XXX *m,int n);
 /**	@brief Test if an FF has factor in common with integer s
  *
 	@param x FF instance to be tested
@@ -281,16 +312,15 @@ extern int FF_WWW_cfactor(BIG_XXX *x,sign32 s,int n);
 	@return 1 if x is (almost certainly) prime, else return 0
  */
 extern int FF_WWW_prime(BIG_XXX *x,csprng *R,int n);
-/**	@brief Calculate r=x^e.y^f mod m
+/**	@brief Combine rp and rq using the Chinese Remainder Theorem
  *
-	@param r FF instance, on exit = x^e.y^f mod p
-	@param x FF instance
-	@param e BIG exponent
-	@param y FF instance
-	@param f BIG exponent
-	@param m FF modulus
-	@param n size of FF in BIGs
+	@param r  FF instance, on exit the solution of the system
+	@param rp FF instance, solution modulo p
+	@param rq FF instance, solution modulo q
+	@param p  FF instance, MUST be coprime with q
+	@param q  FF instance, MUST be coprime with p
+	@param n size of p and q in BIGs
  */
-extern void FF_WWW_pow2(BIG_XXX *r,BIG_XXX *x,BIG_XXX e,BIG_XXX *y,BIG_XXX f,BIG_XXX *m,int n);
+extern void FF_WWW_crt(BIG_XXX *r, BIG_XXX *rp, BIG_XXX *rq, BIG_XXX *p, BIG_XXX *q, int n);
 
 #endif

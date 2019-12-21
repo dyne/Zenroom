@@ -1,26 +1,26 @@
+/*
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+*/
 /**
  * @file test_fp_arithmetics.c
  * @author Alessandro Budroni
  * @brief Test for aritmetics with FP
  *
- * LICENSE
- *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
  */
 
 
@@ -395,37 +395,40 @@ int main(int argc, char** argv)
             }
         }
         // Test s-multiplication for D-TYPE
-        if (!strncmp(line,FP12smuldtypeline, strlen(FP12smuldtypeline)))
-        {
-            len = strlen(FP12smuldtypeline);
-            linePtr = line + len;
-            read_FP12_YYY(&FP12smul_dtype,linePtr);
-            FP12_YYY_copy(&FP12aux1,FP_12);
-            FP12_YYY_smul(&FP12aux1,&FP_12_smul_y_dtype,D_TYPE);
-            FP12_YYY_reduce(&FP12aux1);
-            FP12_YYY_norm(&FP12aux1);
-            if(!FP12_YYY_equals(&FP12aux1,&FP12smul_dtype))
+        /*
+            if (!strncmp(line,FP12smuldtypeline, strlen(FP12smuldtypeline)))
             {
-                printf("ERROR computing s-multiplication for D-TYPE, line %d\n",i);
-                exit(EXIT_FAILURE);
+                len = strlen(FP12smuldtypeline);
+                linePtr = line + len;
+                read_FP12_YYY(&FP12smul_dtype,linePtr);
+                FP12_YYY_copy(&FP12aux1,FP_12);
+                FP12_YYY_smul(&FP12aux1,&FP_12_smul_y_dtype,D_TYPE);
+                FP12_YYY_reduce(&FP12aux1);
+                FP12_YYY_norm(&FP12aux1);
+                if(!FP12_YYY_equals(&FP12aux1,&FP12smul_dtype))
+                {
+                    printf("ERROR computing s-multiplication for D-TYPE, line %d\n",i);
+                    exit(EXIT_FAILURE);
+                }
             }
-        }
-        // Test s-multiplication for M-TYPE
-        if (!strncmp(line,FP12smulmtypeline, strlen(FP12smulmtypeline)))
-        {
-            len = strlen(FP12smulmtypeline);
-            linePtr = line + len;
-            read_FP12_YYY(&FP12smul_mtype,linePtr);
-            FP12_YYY_copy(&FP12aux1,FP_12);
-            FP12_YYY_smul(&FP12aux1,&FP_12_smul_y_mtype,M_TYPE);
-            FP12_YYY_reduce(&FP12aux1);
-            FP12_YYY_norm(&FP12aux1);
-            if(!FP12_YYY_equals(&FP12aux1,&FP12smul_mtype))
+
+            // Test s-multiplication for M-TYPE
+            if (!strncmp(line,FP12smulmtypeline, strlen(FP12smulmtypeline)))
             {
-                printf("ERROR computing s-multiplication for M-TYPE, line %d\n",i);
-                exit(EXIT_FAILURE);
+                len = strlen(FP12smulmtypeline);
+                linePtr = line + len;
+                read_FP12_YYY(&FP12smul_mtype,linePtr);
+                FP12_YYY_copy(&FP12aux1,FP_12);
+                FP12_YYY_smul(&FP12aux1,&FP_12_smul_y_mtype,M_TYPE);
+                FP12_YYY_reduce(&FP12aux1);
+                FP12_YYY_norm(&FP12aux1);
+                if(!FP12_YYY_equals(&FP12aux1,&FP12smul_mtype))
+                {
+                    printf("ERROR computing s-multiplication for M-TYPE, line %d\n",i);
+                    exit(EXIT_FAILURE);
+                }
             }
-        }
+        */
         // Test inverse fuction
         if (!strncmp(line,FP12invline, strlen(FP12invline)))
         {
@@ -529,10 +532,6 @@ int main(int argc, char** argv)
             FP4_YYY_norm(&FP4aux1);
             if(!FP4_YYY_equals(&FP4aux1,&FP12compows))
             {
-                FP4_YYY_output(&FP4aux1);
-                printf("\n\n");
-                FP4_YYY_output(&FP12compows);
-                printf("\n\n");
                 printf("ERROR testing function FP12_compow with small integer, line %d\n",i);
                 exit(EXIT_FAILURE);
             }

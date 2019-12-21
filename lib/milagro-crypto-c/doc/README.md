@@ -3,8 +3,6 @@
 
 ./AMCL.dox            Main page of the documentation.
 
-./latex 	      Source files to generate AMCL.pdf 
-
 To generate the documentation type: make doc
 
 This will generate the directories

@@ -60,6 +60,9 @@ extern void HASH(int h,octet *I,octet *O);
 	@return 0 for bad parameters, else 1
  */
 extern int HMAC(int h,octet *M,octet *K,int len,octet *tag);
+
+/*extern void KDF1(octet *,int,octet *);*/
+
 /**	@brief Key Derivation Function - generates key K from inputs Z and P
  *
 	IEEE-1363 KDF2 Key Derivation Function. Uses SHA256 internally.

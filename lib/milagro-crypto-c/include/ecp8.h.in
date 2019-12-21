@@ -1,29 +1,21 @@
 /*
-	Licensed to the Apache Software Foundation (ASF) under one
-	or more contributor license agreements.  See the NOTICE file
-	distributed with this work for additional information
-	regarding copyright ownership.  The ASF licenses this file
-	to you under the Apache License, Version 2.0 (the
-	"License"); you may not use this file except in compliance
-	with the License.  You may obtain a copy of the License at
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
 
-	http://www.apache.org/licenses/LICENSE-2.0
+  http://www.apache.org/licenses/LICENSE-2.0
 
-	Unless required by applicable law or agreed to in writing,
-	software distributed under the License is distributed on an
-	"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-	KIND, either express or implied.  See the License for the
-	specific language governing permissions and limitations
-	under the License.
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
 */
-
-/**
- * @file ecp8_ZZZ.h
- * @author Mike Scott
- * @brief ECP8 Header File
- *
- */
-
 
 #ifndef ECP8_ZZZ_H
 #define ECP8_ZZZ_H
@@ -42,6 +34,7 @@ extern const BIG_XXX Frb_YYY; /**< imaginary part of BN curve Frobenius Constant
 
 typedef struct
 {
+//    int inf; /**< Infinity Flag */
     FP8_YYY x;   /**< x-coordinate of point */
     FP8_YYY y;   /**< y-coordinate of point */
     FP8_YYY z;	/**< z-coordinate of point */
@@ -90,20 +83,17 @@ extern const BIG_XXX CURVE_Pybbb_ZZZ; /**< imaginary part of y-coordinate of gen
 	@return 1 if infinity, else returns 0
  */
 extern int ECP8_ZZZ_isinf(ECP8_ZZZ *P);
-
 /**	@brief Copy ECP8 point to another ECP8 point
  *
 	@param P ECP8 instance, on exit = Q
 	@param Q ECP8 instance to be copied
  */
 extern void ECP8_ZZZ_copy(ECP8_ZZZ *P,ECP8_ZZZ *Q);
-
 /**	@brief Set ECP8 to point-at-infinity
  *
 	@param P ECP8 instance to be set to infinity
  */
 extern void ECP8_ZZZ_inf(ECP8_ZZZ *P);
-
 /**	@brief Tests for equality of two ECP8s
  *
 	@param P ECP8 instance to be compared
@@ -129,7 +119,6 @@ extern void ECP8_ZZZ_affine(ECP8_ZZZ *P);
 	@return -1 if P is point-at-infinity, else 0
  */
 extern int ECP8_ZZZ_get(FP8_YYY *x,FP8_YYY *y,ECP8_ZZZ *P);
-
 /**	@brief Formats and outputs an ECP8 point to the console, converted to affine coordinates
  *
 	@param P ECP8 instance to be printed
@@ -144,7 +133,6 @@ extern void ECP8_ZZZ_output(ECP8_ZZZ *P);
 	@param P ECP8 instance to be converted to an octet string
  */
 extern void ECP8_ZZZ_toOctet(octet *S,ECP8_ZZZ *P);
-
 /**	@brief Creates an ECP8 point from an octet string
  *
 	The octet string is in the form x|y
@@ -154,7 +142,6 @@ extern void ECP8_ZZZ_toOctet(octet *S,ECP8_ZZZ *P);
 	return 1 if octet string corresponds to a point on the curve, else 0
  */
 extern int ECP8_ZZZ_fromOctet(ECP8_ZZZ *P,octet *S);
-
 /**	@brief Calculate Right Hand Side of curve equation y^2=f(x)
  *
 	Function f(x)=x^3+Ax+B
@@ -163,7 +150,6 @@ extern int ECP8_ZZZ_fromOctet(ECP8_ZZZ *P,octet *S);
 	@param x FP8 instance
  */
 extern void ECP8_ZZZ_rhs(FP8_YYY *r,FP8_YYY *x);
-
 /**	@brief Set ECP8 to point(x,y) given x and y
  *
 	Point P set to infinity if no such point on the curve.
@@ -173,7 +159,6 @@ extern void ECP8_ZZZ_rhs(FP8_YYY *r,FP8_YYY *x);
 	@return 1 if point exists, else 0
  */
 extern int ECP8_ZZZ_set(ECP8_ZZZ *P,FP8_YYY *x,FP8_YYY *y);
-
 /**	@brief Set ECP to point(x,[y]) given x
  *
 	Point P set to infinity if no such point on the curve. Otherwise y coordinate is calculated from x.
@@ -182,7 +167,6 @@ extern int ECP8_ZZZ_set(ECP8_ZZZ *P,FP8_YYY *x,FP8_YYY *y);
 	@return 1 if point exists, else 0
  */
 extern int ECP8_ZZZ_setx(ECP8_ZZZ *P,FP8_YYY *x);
-
 /**	@brief Negation of an ECP8 point
  *
 	@param P ECP8 instance, on exit = -P
@@ -200,21 +184,18 @@ extern void ECP8_ZZZ_reduce(ECP8_ZZZ *P);
 	@param P ECP8 instance, on exit =2*P
  */
 extern int ECP8_ZZZ_dbl(ECP8_ZZZ *P);
-
 /**	@brief Adds ECP8 instance Q to ECP8 instance P
  *
 	@param P ECP8 instance, on exit =P+Q
 	@param Q ECP8 instance to be added to P
  */
 extern int ECP8_ZZZ_add(ECP8_ZZZ *P,ECP8_ZZZ *Q);
-
 /**	@brief Subtracts ECP instance Q from ECP8 instance P
  *
 	@param P ECP8 instance, on exit =P-Q
 	@param Q ECP8 instance to be subtracted from P
  */
 extern void ECP8_ZZZ_sub(ECP8_ZZZ *P,ECP8_ZZZ *Q);
-
 /**	@brief Multiplies an ECP8 instance P by a BIG, side-channel resistant
  *
 	Uses fixed sized windows.
@@ -249,6 +230,7 @@ extern void ECP8_ZZZ_frob(ECP8_ZZZ *P,FP2_YYY F[3],int n);
 	@param b BIG array of 4 multipliers
  */
 extern void ECP8_ZZZ_mul16(ECP8_ZZZ *P,ECP8_ZZZ *Q,BIG_XXX *b);
+
 
 /**	@brief Maps random BIG to curve point of correct order
  *

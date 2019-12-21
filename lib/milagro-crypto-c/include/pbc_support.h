@@ -41,6 +41,22 @@ under the License.
  */
 extern void mhashit(int sha,int n,octet *x,octet *w);
 
+/**	@brief Supply today's date as days from the epoch
+ *
+	@return today's date, as number of days elapsed since the epoch
+ */
+unsign32 today(void);
+/** @brief Hash the session transcript
+ 	@param h is the hash type
+	@param I is the hashed input client ID = H(ID)
+	@param U is the client output = x.H(ID)
+	@param CU is the client output = x.(H(ID)+H(T|H(ID)))
+	@param Y is the server challenge
+	@param V is the client part response
+	@param R is the client part response
+	@param W is the server part response
+	@param H the output is the hash of all of the above that apply
+*/
 void HASH_ALL(int h,octet *I,octet *U,octet *CU,octet *Y,octet *V,octet *R,octet *W,octet *H);
 /**	@brief Hash an M-Pin Identity to an octet string
  *

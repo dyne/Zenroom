@@ -347,6 +347,16 @@ extern void BIG_XXX_dshl(DBIG_XXX x,int s);
 	@param s Number of bits to shift
  */
 extern void BIG_XXX_shr(BIG_XXX x,int s);
+
+/**	@brief Fast time-critical combined shift by 1 bit, subtract and normalise
+ *
+	@param r BIG number normalised output
+	@param a BIG number to be subtracted from
+	@param m BIG number to be shifted and subtracted
+	@return sign of r
+ */
+extern int BIG_XXX_ssn(BIG_XXX r,BIG_XXX a, BIG_XXX m);
+
 /**	@brief Fast shifts a BIG right by a small number of bits - input must be normalised, output will be normalised
  *
 	The number of bits to be shifted must be less than BASEBITS
@@ -475,6 +485,17 @@ extern void BIG_XXX_random(BIG_XXX x,csprng *r);
 	@param r A pointer to a Cryptographically Secure Random Number Generator
  */
 extern void BIG_XXX_randomnum(BIG_XXX x,BIG_XXX n,csprng *r);
+/**	brief  return NAF (Non-Adjacent-Form) value as +/- 1, 3 or 5, inputs must be normalised
+ *
+	Given x and 3*x extracts NAF value from given bit position, and returns number of bits processed, and number of trailing zeros detected if any
+	param x BIG number
+	param x3 BIG number, three times x
+	param i bit position
+	param nbs pointer to integer returning number of bits processed
+	param nzs pointer to integer returning number of trailing 0s
+	return + or - 1, 3 or 5
+*/
+
 /**	@brief  Calculate x=y*z mod n
  *
 	Slow method for modular multiplication
@@ -531,6 +552,14 @@ extern void BIG_XXX_invmodp(BIG_XXX x,BIG_XXX y,BIG_XXX n);
 	@param m new truncated size
 */
 extern void BIG_XXX_mod2m(BIG_XXX x,int m);
+
+/** @brief Calculate x=x mod 2^m
+ *
+	Truncation
+	@param x DBIG number, on reduced mod 2^m
+	@param m new truncated size
+*/
+extern void BIG_XXX_dmod2m(DBIG_XXX x,int m);
 
 /**	@brief Calculates a*b+c+*d
  *

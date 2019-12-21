@@ -11,7 +11,6 @@ else()
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Generating documentation with Doxygen" VERBATIM)
 
-  file(COPY ${PROJECT_SOURCE_DIR}/doc/AMCL.pdf  DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/html/")
 endif()
 
 

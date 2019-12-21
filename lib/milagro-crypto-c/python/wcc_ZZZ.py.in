@@ -1,0 +1,442 @@
+#!/usr/bin/env python3
+
+"""
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+"""
+
+
+"""
+wcc
+
+This module use cffi to access the c functions in the WCC library.
+
+There is also an example usage program in this file.
+
+"""
+import cffi
+import platform
+
+ffi = cffi.FFI()
+ffi.cdef("""
+typedef struct {
+unsigned int ira[21];  /* random number...   */
+int rndptr;   /* ...array & pointer */
+unsigned int borrow;
+int pool_ptr;
+char pool[32];    /* random pool */
+} csprng;
+
+typedef struct
+{
+  int len;
+  int max;
+  char *val;
+} octet;
+
+extern void CREATE_CSPRNG(csprng *R,octet *S);
+extern void KILL_CSPRNG(csprng *R);
+
+extern int WCC_ZZZ_RANDOM_GENERATE(csprng *RNG,octet* S);
+extern void WCC_ZZZ_Hq(int sha, octet *A,octet *B,octet *C,octet *D,octet *h);
+extern void HASH_ID(int sha, octet *,octet *);
+extern int WCC_ZZZ_GET_G2_MULTIPLE(octet *S,octet *HID,octet *VG2);
+extern int WCC_ZZZ_GET_G1_MULTIPLE(octet *S,octet *HID,octet *VG1);
+extern int WCC_ZZZ_SENDER_KEY(int sha, octet *xOct, octet *piaOct, octet *pibOct, octet *PbG2Oct, octet *PgG1Oct, octet *AKeyG1Oct, octet *IdBOct, octet *AESKeyOct);
+extern int WCC_ZZZ_RECEIVER_KEY(int sha, octet *yOct, octet *wOct,  octet *piaOct, octet *pibOct, octet *PaG1Oct, octet *PgG1Oct, octet *BKeyG2Oct, octet *IdAOct, octet *AESKeyOct);
+extern void AES_GCM_ENCRYPT(octet *K,octet *IV,octet *H,octet *P,octet *C,octet *T);
+extern void AES_GCM_DECRYPT(octet *K,octet *IV,octet *H,octet *C,octet *P,octet *T);
+extern int WCC_ZZZ_RECOMBINE_G1(octet *,octet *,octet *);
+extern int WCC_ZZZ_RECOMBINE_G2(octet *,octet *,octet *);
+
+""")
+
+if (platform.system() == 'Windows'):
+    libamcl_wcc_ZZZ = ffi.dlopen("libamcl_wcc_ZZZ.dll")
+    libamcl_core = ffi.dlopen("libamcl_core.dll")
+elif (platform.system() == 'Darwin'):
+    libamcl_wcc_ZZZ = ffi.dlopen("libamcl_wcc_ZZZ.dylib")
+    libamcl_core = ffi.dlopen("libamcl_core.dylib")
+else:
+    libamcl_wcc_ZZZ = ffi.dlopen("libamcl_wcc_ZZZ.so")
+    libamcl_core = ffi.dlopen("libamcl_core.so")
+
+# Group Size
+PGS = @NB@
+# Field Size
+PFS = @NB@
+
+CURVE_SECURITY = @CS@
+
+if CURVE_SECURITY == 128:
+    G2 = 4 * PFS
+    HASH_TYPE_ZZZ = 32
+    AESKEY_ZZZ = 16
+
+if CURVE_SECURITY == 192:
+    G2 = 8 * PFS
+    HASH_TYPE_ZZZ = 48
+    AESKEY_ZZZ = 24
+
+if CURVE_SECURITY == 256:
+    G2 = 16 * PFS
+    HASH_TYPE_ZZZ = 64
+    AESKEY_ZZZ = 32
+
+G1 = 2 * PFS + 1
+
+# AES-GCM IV length
+IVL = 12
+
+
+def to_hex(octet_value):
+    """Converts an octet type into a string
+
+    Add all the values in an octet into an array. This arrays is then
+    converted to a string and hex encoded.
+
+    Args::
+
+        octet_value. An octet pointer type
+
+    Returns::
+
+        String
+
+    Raises:
+        Exception
+    """
+    i = 0
+    val = []
+    while i < octet_value.len:
+        val.append(octet_value.val[i])
+        i = i + 1
+    out = b''
+    for x in val:
+        out = out + x
+    return out.hex()
+
+
+if __name__ == "__main__":
+    # Print hex values
+    DEBUG = False
+
+    # Seed
+    seed_hex = "78d0fb6705ce77dee47d03eb5b9c5d30"
+    seed = bytes.fromhex(seed_hex)
+
+    # Master Secret Shares
+    MS1 = ffi.new("octet*")
+    MS1val = ffi.new("char []", PGS)
+    MS1[0].val = MS1val
+    MS1[0].max = PGS
+    MS1[0].len = PGS
+
+    MS2 = ffi.new("octet*")
+    MS2val = ffi.new("char []", PGS)
+    MS2[0].val = MS2val
+    MS2[0].max = PGS
+    MS2[0].len = PGS
+
+    # Alice Identity
+    alice_id = input("Please enter Alice's identity:")
+    alice_id_b = alice_id.encode("utf-8")
+    IdA = ffi.new("octet*")
+    IdAval = ffi.new("char [%s]" % len(alice_id_b), alice_id_b)
+    IdA[0].val = IdAval
+    IdA[0].max = len(alice_id_b)
+    IdA[0].len = len(alice_id_b)
+
+    # Hash value of IdA
+    HIdA = ffi.new("octet*")
+    HIdAval = ffi.new("char []", PFS)
+    HIdA[0].val = HIdAval
+    HIdA[0].max = PFS
+    HIdA[0].len = PFS
+
+    # Bob Identity
+    bob_id = input("Please enter Bob's identity:")
+    bob_id_b = bob_id.encode("utf-8")
+    IdB = ffi.new("octet*")
+    IdBval = ffi.new("char [%s]" % len(bob_id_b), bob_id_b)
+    IdB[0].val = IdBval
+    IdB[0].max = len(bob_id_b)
+    IdB[0].len = len(bob_id_b)
+
+    # Hash value of IdB
+    HIdB = ffi.new("octet*")
+    HIdBval = ffi.new("char []", PFS)
+    HIdB[0].val = HIdBval
+    HIdB[0].max = PFS
+    HIdB[0].len = PFS
+
+    # Sender keys
+    A1KeyG1 = ffi.new("octet*")
+    A1KeyG1val = ffi.new("char []", G1)
+    A1KeyG1[0].val = A1KeyG1val
+    A1KeyG1[0].max = G1
+    A1KeyG1[0].len = G1
+
+    A2KeyG1 = ffi.new("octet*")
+    A2KeyG1val = ffi.new("char []", G1)
+    A2KeyG1[0].val = A2KeyG1val
+    A2KeyG1[0].max = G1
+    A2KeyG1[0].len = G1
+
+    AKeyG1 = ffi.new("octet*")
+    AKeyG1val = ffi.new("char []", G1)
+    AKeyG1[0].val = AKeyG1val
+    AKeyG1[0].max = G1
+    AKeyG1[0].len = G1
+
+    # Receiver keys
+    B1KeyG2 = ffi.new("octet*")
+    B1KeyG2val = ffi.new("char []", G2)
+    B1KeyG2[0].val = B1KeyG2val
+    B1KeyG2[0].max = G2
+    B1KeyG2[0].len = G2
+
+    B2KeyG2 = ffi.new("octet*")
+    B2KeyG2val = ffi.new("char []", G2)
+    B2KeyG2[0].val = B2KeyG2val
+    B2KeyG2[0].max = G2
+    B2KeyG2[0].len = G2
+
+    BKeyG2 = ffi.new("octet*")
+    BKeyG2val = ffi.new("char []", G2)
+    BKeyG2[0].val = BKeyG2val
+    BKeyG2[0].max = G2
+    BKeyG2[0].len = G2
+
+    # AES Keys
+    KEY1 = ffi.new("octet*")
+    KEY1val = ffi.new("char []", AESKEY_ZZZ)
+    KEY1[0].val = KEY1val
+    KEY1[0].max = AESKEY_ZZZ
+    KEY1[0].len = AESKEY_ZZZ
+
+    KEY2 = ffi.new("octet*")
+    KEY2val = ffi.new("char []", AESKEY_ZZZ)
+    KEY2[0].val = KEY2val
+    KEY2[0].max = AESKEY_ZZZ
+    KEY2[0].len = AESKEY_ZZZ
+
+    X = ffi.new("octet*")
+    Xval = ffi.new("char []", PGS)
+    X[0].val = Xval
+    X[0].max = PGS
+    X[0].len = PGS
+
+    Y = ffi.new("octet*")
+    Yval = ffi.new("char []", PGS)
+    Y[0].val = Yval
+    Y[0].max = PGS
+    Y[0].len = PGS
+
+    W = ffi.new("octet*")
+    Wval = ffi.new("char []", PGS)
+    W[0].val = Wval
+    W[0].max = PGS
+    W[0].len = PGS
+
+    PIA = ffi.new("octet*")
+    PIAval = ffi.new("char []", PGS)
+    PIA[0].val = PIAval
+    PIA[0].max = PGS
+    PIA[0].len = PGS
+
+    PIB = ffi.new("octet*")
+    PIBval = ffi.new("char []", PGS)
+    PIB[0].val = PIBval
+    PIB[0].max = PGS
+    PIB[0].len = PGS
+
+    PaG1 = ffi.new("octet*")
+    PaG1val = ffi.new("char []", G1)
+    PaG1[0].val = PaG1val
+    PaG1[0].max = G1
+    PaG1[0].len = G1
+
+    PgG1 = ffi.new("octet*")
+    PgG1val = ffi.new("char []", G1)
+    PgG1[0].val = PgG1val
+    PgG1[0].max = G1
+    PgG1[0].len = G1
+
+    PbG2 = ffi.new("octet*")
+    PbG2val = ffi.new("char []", G2)
+    PbG2[0].val = PbG2val
+    PbG2[0].max = G2
+    PbG2[0].len = G2
+
+    # Assign a seed value
+    SEED = ffi.new("octet*")
+    SEEDval = ffi.new("char [%s]" % len(seed), seed)
+    SEED[0].val = SEEDval
+    SEED[0].len = len(seed)
+    SEED[0].max = len(seed)
+    if DEBUG:
+        print("SEED: %s" % to_hex(SEED))
+
+    # random number generator
+    RNG = ffi.new("csprng*")
+    libamcl_core.CREATE_CSPRNG(RNG, SEED)
+
+    # Hash IdA
+    libamcl_core.HASH_ID(HASH_TYPE_ZZZ, IdA, HIdA)
+    if DEBUG:
+        print("IdA: {}".format(to_hex(IdA)))
+        print("HIdA: {}".format(to_hex(HIdA)))
+
+    # Hash IdB
+    libamcl_core.HASH_ID(HASH_TYPE_ZZZ, IdB, HIdB)
+    if DEBUG:
+        print("IdB: {}".format(to_hex(IdB)))
+        print("HIdB: {}".format(to_hex(HIdB)))
+
+    # Generate master secret for MILAGRO and Customer
+    rtn = libamcl_wcc_ZZZ.WCC_ZZZ_RANDOM_GENERATE(RNG, MS1)
+    if rtn != 0:
+        print("libamcl_wcc_ZZZ.WCC_ZZZ_RANDOM_GENERATE(RNG,MS1) Error {}".format(rtn))
+    rtn = libamcl_wcc_ZZZ.WCC_ZZZ_RANDOM_GENERATE(RNG, MS2)
+    if rtn != 0:
+        print("libamcl_wcc_ZZZ.WCC_ZZZ_RANDOM_GENERATE(RNG,MS2) Error {}".format(rtn))
+    if DEBUG:
+        print("MS1: {}".format(to_hex(MS1)))
+        print("MS2: {}".format(to_hex(MS2)))
+
+    # Generate Alice's sender key shares
+    rtn = libamcl_wcc_ZZZ.WCC_ZZZ_GET_G1_MULTIPLE(MS1, HIdA, A1KeyG1)
+    if rtn != 0:
+        print(
+            "libamcl_wcc_ZZZ.WCC_ZZZ_GET_G1_MULTIPLE(MS1,HIdA,A1KeyG1) Error {}".format(rtn))
+    rtn = libamcl_wcc_ZZZ.WCC_ZZZ_GET_G1_MULTIPLE(MS2, HIdA, A2KeyG1)
+    if rtn != 0:
+        print(
+            "libamcl_wcc_ZZZ.WCC_ZZZ_GET_G1_MULTIPLE(MS2,HIdA,A2KeyG1) Error {}".format(rtn))
+    if DEBUG:
+        print("A1KeyG1: {}".format(to_hex(A1KeyG1)))
+        print("A2KeyG1: {}".format(to_hex(A2KeyG1)))
+
+    # Combine Alices's sender key shares
+    rtn = libamcl_wcc_ZZZ.WCC_ZZZ_RECOMBINE_G1(A1KeyG1, A2KeyG1, AKeyG1)
+    if rtn != 0:
+        print(
+            "libamcl_wcc_ZZZ.WCC_ZZZ_RECOMBINE_G1(A1KeyG1, A2KeyG1, AKeyG1) Error {}".format(rtn))
+    print("AKeyG1: {}".format(to_hex(AKeyG1)))
+
+    # Generate Bob's receiver secret key shares
+    rtn = libamcl_wcc_ZZZ.WCC_ZZZ_GET_G2_MULTIPLE(MS1, HIdB, B1KeyG2)
+    if rtn != 0:
+        print(
+            "libamcl_wcc_ZZZ.WCC_ZZZ_GET_G2_MULTIPLE(MS1,HIdB,B1KeyG2) Error {}".format(rtn))
+    rtn = libamcl_wcc_ZZZ.WCC_ZZZ_GET_G2_MULTIPLE(MS2, HIdB, B2KeyG2)
+    if rtn != 0:
+        print(
+            "libamcl_wcc_ZZZ.WCC_ZZZ_GET_G2_MULTIPLE(MS2,HIdB,B2KeyG2) Error {}".format(rtn))
+    if DEBUG:
+        print("B1KeyG2: {}".format(to_hex(B1KeyG2)))
+        print("B2KeyG2: {}".format(to_hex(B2KeyG2)))
+
+    # Combine Bobs's receiver secret key shares
+    rtn = libamcl_wcc_ZZZ.WCC_ZZZ_RECOMBINE_G2(B1KeyG2, B2KeyG2, BKeyG2)
+    if rtn != 0:
+        print(
+            "libamcl_wcc_ZZZ.WCC_ZZZ_RECOMBINE_G2(B1KeyG2, B2KeyG2, BKeyG2) Error {}".format(rtn))
+    print("BKeyG2: {}".format(to_hex(BKeyG2)))
+
+    rtn = libamcl_wcc_ZZZ.WCC_ZZZ_RANDOM_GENERATE(RNG, X)
+    if rtn != 0:
+        print("libamcl_wcc_ZZZ.WCC_ZZZ_RANDOM_GENERATE(RNG,X) Error {}".format(rtn))
+    if DEBUG:
+        print("X: {}".format(to_hex(X)))
+
+    rtn = libamcl_wcc_ZZZ.WCC_ZZZ_GET_G1_MULTIPLE(X, HIdA, PaG1)
+    if rtn != 0:
+        print(
+            "libamcl_wcc_ZZZ.WCC_ZZZ_GET_G1_MULTIPLE(X,HIdA,PaG1) Error {}".format(rtn))
+    if DEBUG:
+        print("PaG1: {}".format(to_hex(PaG1)))
+
+    rtn = libamcl_wcc_ZZZ.WCC_ZZZ_RANDOM_GENERATE(RNG, W)
+    if rtn != 0:
+        print("libamcl_wcc_ZZZ.WCC_ZZZ_RANDOM_GENERATE(RNG,W) Error {}".format(rtn))
+    if DEBUG:
+        print("W: {}".format(to_hex(W)))
+
+    rtn = libamcl_wcc_ZZZ.WCC_ZZZ_GET_G1_MULTIPLE(W, HIdA, PgG1)
+    if rtn != 0:
+        print(
+            "libamcl_wcc_ZZZ.WCC_ZZZ_GET_G1_MULTIPLE(W, HIdA, PgG1) Error {}".format(rtn))
+    if DEBUG:
+        print("PgG1: {}".format(to_hex(PgG1)))
+
+    rtn = libamcl_wcc_ZZZ.WCC_ZZZ_RANDOM_GENERATE(RNG, Y)
+    if rtn != 0:
+        print("libamcl_wcc_ZZZ.WCC_ZZZ_RANDOM_GENERATE(RNG,Y) Error {}".format(rtn))
+    if DEBUG:
+        print("Y: {}".format(to_hex(Y)))
+
+    rtn = libamcl_wcc_ZZZ.WCC_ZZZ_GET_G2_MULTIPLE(Y, HIdB, PbG2)
+    if rtn != 0:
+        print(
+            "libamcl_wcc_ZZZ.WCC_ZZZ_GET_G2_MULTIPLE(Y, HIdB, PbG2) Error {}".format(rtn))
+    if DEBUG:
+        print("PbG2: {}".format(to_hex(PbG2)))
+
+    # PIA = Hq(PaG1,PbG2,PgG1,IdB)
+    libamcl_wcc_ZZZ.WCC_ZZZ_Hq(HASH_TYPE_ZZZ, PaG1, PbG2, PgG1, IdB, PIA)
+    if DEBUG:
+        print("PIA: {}".format(to_hex(PIA)))
+
+    # PIB = Hq(PbG2,PaG1,PgG1,IdA)
+    libamcl_wcc_ZZZ.WCC_ZZZ_Hq(HASH_TYPE_ZZZ, PbG2, PaG1, PgG1, IdA, PIB)
+    if DEBUG:
+        print("PIB: {}".format(to_hex(PIB)))
+
+    # Alice calculates AES Key
+    rtn = libamcl_wcc_ZZZ.WCC_ZZZ_SENDER_KEY(
+        HASH_TYPE_ZZZ,
+        X,
+        PIA,
+        PIB,
+        PbG2,
+        PgG1,
+        AKeyG1,
+        IdB,
+        KEY1)
+    if rtn != 0:
+        print("libamcl_wcc_ZZZ.WCC_ZZZ_SENDER_KEY(HASH_TYPE_ZZZ, X, PIA, PIB, PbG2, PgG1, AKeyG1, IdB, KEY1) Error {}".format(rtn))
+    print("{}'s AES Key: {}".format(alice_id, to_hex(KEY1)))
+
+    # Bob calculates AES Key
+    rtn = libamcl_wcc_ZZZ.WCC_ZZZ_RECEIVER_KEY(
+        HASH_TYPE_ZZZ,
+        Y,
+        W,
+        PIA,
+        PIB,
+        PaG1,
+        PgG1,
+        BKeyG2,
+        IdA,
+        KEY2)
+    if rtn != 0:
+        print("libamcl_wcc_ZZZ.WCC_ZZZ_RECEIVER_KEY(HASH_TYPE_ZZZ, Y, W, PIA, PIB, PaG1, PgG1, BKeyG2, IdA, KEY2) Error {}".format(rtn))
+    print("{}'s AES Key: {}".format(bob_id, to_hex(KEY2)))
+
+    libamcl_core.KILL_CSPRNG(RNG)

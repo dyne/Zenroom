@@ -21,90 +21,6 @@ under the License.
 
 #include "ff_WWW.h"
 
-/* Arazi and Qi inversion mod 256 */
-static int invmod256(int a)
-{
-    int U,t1,t2,b,c;
-    t1=0;
-    c=(a>>1)&1;
-    t1+=c;
-    t1&=1;
-    t1=2-t1;
-    t1<<=1;
-    U=t1+1;
-
-    // i=2
-    b=a&3;
-    t1=U*b;
-    t1>>=2;
-    c=(a>>2)&3;
-    t2=(U*c)&3;
-    t1+=t2;
-    t1*=U;
-    t1&=3;
-    t1=4-t1;
-    t1<<=2;
-    U+=t1;
-
-    // i=4
-    b=a&15;
-    t1=U*b;
-    t1>>=4;
-    c=(a>>4)&15;
-    t2=(U*c)&15;
-    t1+=t2;
-    t1*=U;
-    t1&=15;
-    t1=16-t1;
-    t1<<=4;
-    U+=t1;
-
-    return U;
-}
-
-/* a=1/a mod 2^BIGBITS. This is very fast! */
-void BIG_XXX_invmod2m(BIG_XXX a)
-{
-    int i;
-    BIG_XXX U,t1,b,c;
-    BIG_XXX_zero(U);
-    BIG_XXX_inc(U,invmod256(BIG_XXX_lastbits(a,8)));
-    for (i=8; i<BIGBITS_XXX; i<<=1)
-    {
-        BIG_XXX_norm(U);
-        BIG_XXX_copy(b,a);
-        BIG_XXX_mod2m(b,i);   // bottom i bits of a
-
-        BIG_XXX_smul(t1,U,b);
-        BIG_XXX_shr(t1,i); // top i bits of U*b
-
-        BIG_XXX_copy(c,a);
-        BIG_XXX_shr(c,i);
-        BIG_XXX_mod2m(c,i); // top i bits of a
-
-        BIG_XXX_smul(b,U,c);
-        BIG_XXX_mod2m(b,i);  // bottom i bits of U*c
-
-        BIG_XXX_add(t1,t1,b);
-        BIG_XXX_norm(t1);
-        BIG_XXX_smul(b,t1,U);
-        BIG_XXX_copy(t1,b);  // (t1+b)*U
-        BIG_XXX_mod2m(t1,i);                // bottom i bits of (t1+b)*U
-
-        BIG_XXX_one(b);
-        BIG_XXX_shl(b,i);
-        BIG_XXX_sub(t1,b,t1);
-        BIG_XXX_norm(t1);
-
-        BIG_XXX_shl(t1,i);
-
-        BIG_XXX_add(U,U,t1);
-    }
-    BIG_XXX_copy(a,U);
-    BIG_XXX_norm(a);
-    BIG_XXX_mod2m(a,BIGBITS_XXX);
-}
-
 /* x=y */
 void FF_WWW_copy(BIG_XXX x[],BIG_XXX y[],int n)
 {
@@ -475,7 +391,7 @@ static void FF_WWW_karmul_upper(BIG_XXX z[],BIG_XXX x[],BIG_XXX y[],BIG_XXX t[],
     FF_WWW_rdec(t,0,z,n,n);              /* t=t-a1b1  */
     FF_WWW_rinc(z,nd2,z,0,nd2);   /* z[nd2-n]+=l(a0b0) = h(a0b0)+l(t)-l(a1b1)  */
     FF_WWW_rdec(z,nd2,t,0,nd2);   /* z[nd2-n]=h(a0b0)+l(t)-l(a1b1)-l(t-a1b1)=h(a0b0) */
-    FF_WWW_rnorm(z,0,-n);                    /* a0b0 now in z - truncate it */
+    FF_WWW_rnorm(z,0,-n);					/* a0b0 now in z - truncate it */
     FF_WWW_rdec(t,0,z,0,n);         /* (a0+a1)(b0+b1) - a0b0 */
     FF_WWW_rinc(z,nd2,t,0,n);
 
@@ -490,8 +406,6 @@ void FF_WWW_mul(BIG_XXX z[],BIG_XXX x[],BIG_XXX y[],int n)
 #else
     BIG_XXX t[2*n];
 #endif
-    // FF_norm(x,n); /* change here */
-    // FF_norm(y,n); /* change here */
     FF_WWW_karmul(z,0,x,0,y,0,t,0,n);
 }
 
@@ -503,8 +417,6 @@ static void FF_WWW_lmul(BIG_XXX z[],BIG_XXX x[],BIG_XXX y[],int n)
 #else
     BIG_XXX t[2*n];
 #endif
-    // FF_norm(x,n); /* change here */
-    // FF_norm(y,n); /* change here */
     FF_WWW_karmul_lower(z,0,x,0,y,0,t,0,n);
 }
 
@@ -543,7 +455,6 @@ void FF_WWW_sqr(BIG_XXX z[],BIG_XXX x[],int n)
 #else
     BIG_XXX t[2*n];
 #endif
-    // FF_norm(x,n);  /* change here */
     FF_WWW_karsqr(z,0,x,0,t,0,n);
 }
 
@@ -559,10 +470,8 @@ static void FF_WWW_reduce(BIG_XXX r[],BIG_XXX T[],BIG_XXX N[],BIG_XXX ND[],int n
     BIG_XXX m[n];
 #endif
     FF_WWW_sducopy(r,T,n);  /* keep top half of T */
-    //FF_norm(T,n); /* change here */
     FF_WWW_karmul_lower(m,0,T,0,ND,0,t,0,n);  /* m=T.(1/N) mod R */
 
-    //FF_norm(N,n);  /* change here */
     FF_WWW_karmul_upper(T,N,m,t,n);  /* T=mN */
     FF_WWW_sducopy(m,T,n);
 
@@ -627,7 +536,7 @@ void FF_WWW_invmodp(BIG_XXX r[],BIG_XXX a[],BIG_XXX p[],int n)
     FF_WWW_copy(x1,one,n);
     FF_WWW_zero(x2,n);
 
-// reduce n in here as well!
+    // reduce n in here as well!
     while (FF_WWW_comp(u,one,n)!=0 && FF_WWW_comp(v,one,n)!=0)
     {
         while (FF_WWW_parity(u)==0)
@@ -726,7 +635,7 @@ static void FF_WWW_redc(BIG_XXX a[],BIG_XXX m[],BIG_XXX ND[],int n)
 }
 
 /* U=1/a mod 2^m - Arazi & Qi */
-static void FF_WWW_invmod2m(BIG_XXX U[],BIG_XXX a[],int n)
+void FF_WWW_invmod2m(BIG_XXX U[],BIG_XXX a[],int n)
 {
     int i;
 #ifndef C99
@@ -858,7 +767,7 @@ static void FF_WWW_modsqr(BIG_XXX z[],BIG_XXX x[],BIG_XXX p[],BIG_XXX ND[],int n
 }
 
 /* r=x^e mod p using side-channel resistant Montgomery Ladder, for large e */
-void FF_WWW_skpow(BIG_XXX r[],BIG_XXX x[],BIG_XXX e[],BIG_XXX p[],int n)
+void FF_WWW_skpow(BIG_XXX r[],BIG_XXX x[],BIG_XXX e[],BIG_XXX p[],int n, int en)
 {
     int i,b;
 #ifndef C99
@@ -873,7 +782,7 @@ void FF_WWW_skpow(BIG_XXX r[],BIG_XXX x[],BIG_XXX e[],BIG_XXX p[],int n)
     FF_WWW_nres(R0,p,n);
     FF_WWW_nres(R1,p,n);
 
-    for (i=8*MODBYTES_XXX*n-1; i>=0; i--)
+    for (i=8*MODBYTES_XXX*en-1; i>=0; i--)
     {
         b=BIG_XXX_bit(e[i/BIGBITS_XXX],i%BIGBITS_XXX);
         FF_WWW_modmul(r,R0,R1,p,ND,n);
@@ -912,6 +821,47 @@ void FF_WWW_skspow(BIG_XXX r[],BIG_XXX x[],BIG_XXX e,BIG_XXX p[],int n)
         FF_WWW_cswap(R0,R1,b,n);
     }
     FF_WWW_copy(r,R0,n);
+    FF_WWW_redc(r,p,ND,n);
+}
+
+/* r=x^e*y^f mod p - side channel resistant */
+void FF_WWW_skpow2(BIG_XXX r[],BIG_XXX x[], BIG_XXX e[], BIG_XXX y[], BIG_XXX f[], BIG_XXX p[], int n, int en) {
+    int i,eb,fb;
+#ifndef C99
+    BIG_XXX xn[FFLEN_WWW],yn[FFLEN_WWW],xy[FFLEN_WWW],w[FFLEN_WWW],ND[FFLEN_WWW];
+#else
+    BIG_XXX xn[n],yn[n],xy[n],w[n],ND[n];
+#endif
+
+    FF_WWW_invmod2m(ND,p,n);
+
+    FF_WWW_copy(xn,x,n);
+    FF_WWW_copy(yn,y,n);
+    FF_WWW_nres(xn,p,n);
+    FF_WWW_nres(yn,p,n);
+    FF_WWW_modmul(xy,xn,yn,p,ND,n);
+    FF_WWW_one(w,n);
+    FF_WWW_nres(w,p,n);
+    FF_WWW_one(r,n);
+    FF_WWW_nres(r,p,n);
+
+    for (i=8*MODBYTES_XXX*en-1; i>=0; i--)
+    {
+        eb=BIG_XXX_bit(e[i/BIGBITS_XXX],i%BIGBITS_XXX);
+        fb=BIG_XXX_bit(f[i/BIGBITS_XXX],i%BIGBITS_XXX);
+
+        FF_WWW_cswap(w, xn, eb & (eb ^ fb), n);
+        FF_WWW_cswap(w, yn, fb & (eb ^ fb), n);
+        FF_WWW_cswap(w, xy, eb & fb, n);
+
+        FF_WWW_modsqr(r,r,p,ND,n);
+        FF_WWW_modmul(r,w,r,p,ND,n);
+
+        FF_WWW_cswap(w, xn, eb & (eb ^ fb), n);
+        FF_WWW_cswap(w, yn, fb & (eb ^ fb), n);
+        FF_WWW_cswap(w, xy, eb & fb, n);
+    }
+
     FF_WWW_redc(r,p,ND,n);
 }
 
@@ -1102,34 +1052,31 @@ int FF_WWW_prime(BIG_XXX p[],csprng *rng,int n)
     return 1;
 }
 
-/*
-BIG P[4]= {{0x1670957,0x1568CD3C,0x2595E5,0xEED4F38,0x1FC9A971,0x14EF7E62,0xA503883,0x9E1E05E,0xBF59E3},{0x1844C908,0x1B44A798,0x3A0B1E7,0xD1B5B4E,0x1836046F,0x87E94F9,0x1D34C537,0xF7183B0,0x46D07},{0x17813331,0x19E28A90,0x1473A4D6,0x1CACD01F,0x1EEA8838,0xAF2AE29,0x1F85292A,0x1632585E,0xD945E5},{0x919F5EF,0x1567B39F,0x19F6AD11,0x16CE47CF,0x9B36EB1,0x35B7D3,0x483B28C,0xCBEFA27,0xB5FC21}};
-
-int main()
+/* Chinese Remainder Theorem to reconstruct results mod pq*/
+void FF_WWW_crt(BIG_XXX *r, BIG_XXX *rp, BIG_XXX *rq, BIG_XXX *p, BIG_XXX *q, int n)
 {
-	int i;
-	BIG p[4],e[4],x[4],r[4];
-	csprng rng;
-	char raw[100];
-	for (i=0;i<100;i++) raw[i]=i;
-    RAND_seed(&rng,100,raw);
+#ifndef C99
+    BIG_XXX pq[FFLEN_WWW], invp[HFLEN_WWW], c[FFLEN_WWW], a[FFLEN_WWW], b[2*FFLEN_WWW];
+#else
+    BIG_XXX pq[2*n], invp[n], c[2*n], a[2*n], b[4*n];
+#endif
 
+    FF_WWW_mul(pq, p, q, n);
 
-	FF_init(x,3,4);
+    // c = p * (p^-1 mod q)
+    FF_WWW_invmodp(invp, p, q, n);
+    FF_WWW_mul(c, p, invp, n);
 
-	FF_copy(p,P,4);
-	FF_copy(e,p,4);
-	FF_dec(e,1,4);
-	FF_norm(e,4);
+    // a = (rq - rp) mod pq
+    FF_WWW_copy(a, pq, 2*n);
+    FF_WWW_sub(a, a, rp, n);
+    FF_WWW_add(a, a, rq, n);
 
+    // (ac + rp) mod pq
+    FF_WWW_mul(b, a, c, 2*n);
+    FF_WWW_dmod(a, b, pq, 2*n);
 
-
-	printf("p= ");FF_output(p,4); printf("\n");
-	if (FF_prime(p,&rng,4)) printf("p is a prime\n");
-	printf("e= ");FF_output(e,4); printf("\n");
-
-	FF_skpow(r,x,e,p,4);
-	printf("r= ");FF_output(r,4); printf("\n");
+    FF_WWW_dscopy(r, rp, n);
+    FF_WWW_add(r, r, a, 2*n);
+    FF_WWW_mod(r, pq, 2*n);
 }
-
-*/

@@ -302,3 +302,4 @@ extern void FP4_YYY_div_2i(FP4_YYY *x);
 extern void FP4_YYY_div2(FP4_YYY *x,FP4_YYY *y);
 
 #endif
+

@@ -142,8 +142,8 @@ void BIG_XXX_toBytes(char *b,BIG_XXX a)
 {
     int i;
     BIG_XXX c;
-    BIG_XXX_norm(a);
     BIG_XXX_copy(c,a);
+    BIG_XXX_norm(c);
     for (i=MODBYTES_XXX-1; i>=0; i--)
     {
         b[i]=c[0]&0xff;
@@ -858,7 +858,7 @@ void BIG_XXX_dshl(DBIG_XXX a,int k)
 
 }
 
-/* General shift rightof a by k bits */
+/* General shift right of a by k bits */
 /* a MUST be normalised */
 /* SU= 32 */
 void BIG_XXX_shr(BIG_XXX a,int k)
@@ -871,6 +871,33 @@ void BIG_XXX_shr(BIG_XXX a,int k)
     if (NLEN_XXX>m)  a[NLEN_XXX-m-1]=a[NLEN_XXX-1]>>n;
     for (i=NLEN_XXX-m; i<NLEN_XXX; i++) a[i]=0;
 
+}
+
+/* Fast combined shift, subtract and norm. Return sign of result */
+int BIG_XXX_ssn(BIG_XXX r,BIG_XXX a,BIG_XXX m)
+{
+    int i,n=NLEN_XXX-1;
+    chunk carry;
+    m[0]=(m[0]>>1)|((m[1]<<(BASEBITS_XXX-1))&BMASK_XXX);
+    r[0]=a[0]-m[0];
+    carry=r[0]>>BASEBITS_XXX;
+    r[0]&=BMASK_XXX;
+
+    for (i=1; i<n; i++)
+    {
+        m[i]=(m[i]>>1)|((m[i+1]<<(BASEBITS_XXX-1))&BMASK_XXX);
+        r[i]=a[i]-m[i]+carry;
+        carry=r[i]>>BASEBITS_XXX;
+        r[i]&=BMASK_XXX;
+    }
+
+    m[n]>>=1;
+    r[n]=a[n]-m[n]+carry;
+#ifdef DEBUG_NORM
+    r[MPV_XXX]=1;
+    r[MNV_XXX]=0;
+#endif
+    return ((r[n]>>(CHUNK-1))&1);
 }
 
 /* Faster shift right of a by k bits. Return shifted out part */
@@ -1013,12 +1040,14 @@ int BIG_XXX_dcomp(DBIG_XXX a,DBIG_XXX b)
 int BIG_XXX_nbits(BIG_XXX a)
 {
     int bts,k=NLEN_XXX-1;
+    BIG_XXX t;
     chunk c;
-    BIG_XXX_norm(a);
-    while (k>=0 && a[k]==0) k--;
+    BIG_XXX_copy(t,a);
+    BIG_XXX_norm(t);
+    while (k>=0 && t[k]==0) k--;
     if (k<0) return 0;
     bts=BASEBITS_XXX*k;
-    c=a[k];
+    c=t[k];
     while (c!=0)
     {
         c/=2;
@@ -1031,12 +1060,14 @@ int BIG_XXX_nbits(BIG_XXX a)
 int BIG_XXX_dnbits(DBIG_XXX a)
 {
     int bts,k=DNLEN_XXX-1;
+    DBIG_XXX t;
     chunk c;
-    BIG_XXX_dnorm(a);
-    while (k>=0 && a[k]==0) k--;
+    BIG_XXX_dcopy(t,a);
+    BIG_XXX_dnorm(t);
+    while (k>=0 && t[k]==0) k--;
     if (k<0) return 0;
     bts=BASEBITS_XXX*k;
-    c=a[k];
+    c=t[k];
     while (c!=0)
     {
         c/=2;
@@ -1048,10 +1079,12 @@ int BIG_XXX_dnbits(DBIG_XXX a)
 
 /* Set b=b mod c */
 /* SU= 16 */
-void BIG_XXX_mod(BIG_XXX b,BIG_XXX c)
+void BIG_XXX_mod(BIG_XXX b,BIG_XXX c1)
 {
     int k=0;
     BIG_XXX r; /**/
+    BIG_XXX c;
+    BIG_XXX_copy(c,c1);
 
     BIG_XXX_norm(b);
     if (BIG_XXX_comp(b,c)<0)
@@ -1067,7 +1100,7 @@ void BIG_XXX_mod(BIG_XXX b,BIG_XXX c)
     {
         BIG_XXX_fshr(c,1);
 
-        // constant time...
+// constant time...
         BIG_XXX_sub(r,b,c);
         BIG_XXX_norm(r);
         BIG_XXX_cmove(b,r,1-((r[NLEN_XXX-1]>>(CHUNK-1))&1));
@@ -1100,7 +1133,7 @@ void BIG_XXX_dmod(BIG_XXX a,DBIG_XXX b,BIG_XXX c)
     while (k>0)
     {
         BIG_XXX_dshr(m,1);
-        // constant time...
+// constant time...
         BIG_XXX_dsub(r,b,m);
         BIG_XXX_dnorm(r);
         BIG_XXX_dcmove(b,r,1-((r[DNLEN_XXX-1]>>(CHUNK-1))&1));
@@ -1112,6 +1145,7 @@ void BIG_XXX_dmod(BIG_XXX a,DBIG_XXX b,BIG_XXX c)
 
 /* Set a=b/c,  b is destroyed. Slow but rarely used. */
 /* SU= 136 */
+
 void BIG_XXX_ddiv(BIG_XXX a,DBIG_XXX b,BIG_XXX c)
 {
     int d,k=0;
@@ -1236,6 +1270,7 @@ void BIG_XXX_random(BIG_XXX m,csprng *rng)
 }
 
 /* get random BIG from rng, modulo q. Done one bit at a time, so its portable */
+
 void BIG_XXX_randomnum(BIG_XXX m,BIG_XXX q,csprng *rng)
 {
     int i,b,j=0,r=0;
@@ -1262,9 +1297,12 @@ void BIG_XXX_randomnum(BIG_XXX m,BIG_XXX q,csprng *rng)
 
 /* Set r=a*b mod m */
 /* SU= 96 */
-void BIG_XXX_modmul(BIG_XXX r,BIG_XXX a,BIG_XXX b,BIG_XXX m)
+void BIG_XXX_modmul(BIG_XXX r,BIG_XXX a1,BIG_XXX b1,BIG_XXX m)
 {
     DBIG_XXX d;
+    BIG_XXX a,b;
+    BIG_XXX_copy(a,a1);
+    BIG_XXX_copy(b,b1);
     BIG_XXX_mod(a,m);
     BIG_XXX_mod(b,m);
 
@@ -1274,9 +1312,11 @@ void BIG_XXX_modmul(BIG_XXX r,BIG_XXX a,BIG_XXX b,BIG_XXX m)
 
 /* Set a=a*a mod m */
 /* SU= 88 */
-void BIG_XXX_modsqr(BIG_XXX r,BIG_XXX a,BIG_XXX m)
+void BIG_XXX_modsqr(BIG_XXX r,BIG_XXX a1,BIG_XXX m)
 {
     DBIG_XXX d;
+    BIG_XXX a;
+    BIG_XXX_copy(a,a1);
     BIG_XXX_mod(a,m);
     BIG_XXX_sqr(d,a);
     BIG_XXX_dmod(r,d,m);
@@ -1284,18 +1324,24 @@ void BIG_XXX_modsqr(BIG_XXX r,BIG_XXX a,BIG_XXX m)
 
 /* Set r=-a mod m */
 /* SU= 16 */
-void BIG_XXX_modneg(BIG_XXX r,BIG_XXX a,BIG_XXX m)
+void BIG_XXX_modneg(BIG_XXX r,BIG_XXX a1,BIG_XXX m)
 {
+    BIG_XXX a;
+    BIG_XXX_copy(a,a1);
     BIG_XXX_mod(a,m);
     BIG_XXX_sub(r,m,a);
 }
 
 /* Set a=a/b mod m */
 /* SU= 136 */
-void BIG_XXX_moddiv(BIG_XXX r,BIG_XXX a,BIG_XXX b,BIG_XXX m)
+void BIG_XXX_moddiv(BIG_XXX r,BIG_XXX a1,BIG_XXX b1,BIG_XXX m)
 {
     DBIG_XXX d;
     BIG_XXX z;
+    BIG_XXX a,b;
+    BIG_XXX_copy(a,a1);
+    BIG_XXX_copy(b,b1);
+
     BIG_XXX_mod(a,m);
     BIG_XXX_invmodp(z,b,m);
 
@@ -1339,6 +1385,90 @@ int BIG_XXX_jacobi(BIG_XXX a,BIG_XXX p)
     }
     if (m==0) return 1;
     else return -1;
+}
+
+/* Arazi and Qi inversion mod 256 */
+static int invmod256(int a)
+{
+    int U,t1,t2,b,c;
+    t1=0;
+    c=(a>>1)&1;
+    t1+=c;
+    t1&=1;
+    t1=2-t1;
+    t1<<=1;
+    U=t1+1;
+
+// i=2
+    b=a&3;
+    t1=U*b;
+    t1>>=2;
+    c=(a>>2)&3;
+    t2=(U*c)&3;
+    t1+=t2;
+    t1*=U;
+    t1&=3;
+    t1=4-t1;
+    t1<<=2;
+    U+=t1;
+
+// i=4
+    b=a&15;
+    t1=U*b;
+    t1>>=4;
+    c=(a>>4)&15;
+    t2=(U*c)&15;
+    t1+=t2;
+    t1*=U;
+    t1&=15;
+    t1=16-t1;
+    t1<<=4;
+    U+=t1;
+
+    return U;
+}
+
+/* a=1/a mod 2^BIGBITS. This is very fast! */
+void BIG_XXX_invmod2m(BIG_XXX a)
+{
+    int i;
+    BIG_XXX U,t1,b,c;
+    BIG_XXX_zero(U);
+    BIG_XXX_inc(U,invmod256(BIG_XXX_lastbits(a,8)));
+    for (i=8; i<BIGBITS_XXX; i<<=1)
+    {
+        BIG_XXX_norm(U);
+        BIG_XXX_copy(b,a);
+        BIG_XXX_mod2m(b,i);   // bottom i bits of a
+
+        BIG_XXX_smul(t1,U,b);
+        BIG_XXX_shr(t1,i); // top i bits of U*b
+
+        BIG_XXX_copy(c,a);
+        BIG_XXX_shr(c,i);
+        BIG_XXX_mod2m(c,i); // top i bits of a
+
+        BIG_XXX_smul(b,U,c);
+        BIG_XXX_mod2m(b,i);  // bottom i bits of U*c
+
+        BIG_XXX_add(t1,t1,b);
+        BIG_XXX_norm(t1);
+        BIG_XXX_smul(b,t1,U);
+        BIG_XXX_copy(t1,b);  // (t1+b)*U
+        BIG_XXX_mod2m(t1,i);				// bottom i bits of (t1+b)*U
+
+        BIG_XXX_one(b);
+        BIG_XXX_shl(b,i);
+        BIG_XXX_sub(t1,b,t1);
+        BIG_XXX_norm(t1);
+
+        BIG_XXX_shl(t1,i);
+
+        BIG_XXX_add(U,U,t1);
+    }
+    BIG_XXX_copy(a,U);
+    BIG_XXX_norm(a);
+    BIG_XXX_mod2m(a,BIGBITS_XXX);
 }
 
 /* Set r=1/a mod p. Binary method */
@@ -1412,11 +1542,26 @@ void BIG_XXX_mod2m(BIG_XXX x,int m)
     int i,wd,bt;
     chunk msk;
     BIG_XXX_norm(x);
+
     wd=m/BASEBITS_XXX;
     bt=m%BASEBITS_XXX;
     msk=((chunk)1<<bt)-1;
     x[wd]&=msk;
     for (i=wd+1; i<NLEN_XXX; i++) x[i]=0;
+}
+
+/* set x = x mod 2^m */
+void BIG_XXX_dmod2m(DBIG_XXX x,int m)
+{
+    int i,wd,bt;
+    chunk msk;
+    BIG_XXX_norm(x);
+
+    wd=m/BASEBITS_XXX;
+    bt=m%BASEBITS_XXX;
+    msk=((chunk)1<<bt)-1;
+    x[wd]&=msk;
+    for (i=wd+1; i<DNLEN_XXX; i++) x[i]=0;
 }
 
 // new

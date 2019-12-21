@@ -1,26 +1,26 @@
+/*
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+*/
 /**
  * @file test_mpin_bad_pin_ZZZ.c
  * @author Kealan McCusker
  * @brief Test function for bad PIN in MPIN
  *
- * LICENSE
- *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
  */
 
 /* Test good token and incorrect PIN with D-TA */
@@ -107,7 +107,7 @@ int main()
     PIN2 = 1237;
 
     /* Assign the End-User an ID */
-    char* user = "testuser@miracl.com";
+    char* user = "alice@milagro.com";
     OCT_jstring(&ID,user);
     printf("CLIENT: ID %s\n", user);
 
@@ -127,7 +127,7 @@ int main()
     HASH_ID(HASH_TYPE_ZZZ,&ID,&HCID);
     OCT_output(&HCID);
 
-    /* Generate Client master secret for MIRACL and Customer */
+    /* Generate Client master secret for MILAGRO and Customer */
     rtn = MPIN_ZZZ_RANDOM_GENERATE(&RNG,&MS1);
     if (rtn != 0)
     {
@@ -140,7 +140,7 @@ int main()
         printf("MPIN_ZZZ_RANDOM_GENERATE(&RNG,&MS2) Error %d\n", rtn);
         return 1;
     }
-    printf("MASTER SECRET MIRACL:= 0x");
+    printf("MASTER SECRET MILAGRO:= 0x");
     OCT_output(&MS1);
     printf("MASTER SECRET CUSTOMER:= 0x");
     OCT_output(&MS2);

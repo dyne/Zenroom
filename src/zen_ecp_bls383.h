@@ -58,7 +58,7 @@
 #define ECP_mul(d,b) ECP_BLS383_mul(d,b)
 #define ECP_equals(l,r) ECP_BLS383_equals(l,r)
 #define ECP_fromOctet(d,o) ECP_BLS383_fromOctet(d, o)
-#define ECP_toOctet(o,d) ECP_BLS383_toOctet(o,d)
+#define ECP_toOctet(o,d,b) ECP_BLS383_toOctet(o,d,b)
 #define ECP_generator(e) ECP_BLS383_generator(e)
 #define ECP_mapit(q,w) ECP_BLS383_mapit(q,w)
 #define ECP_validate(o) ECP_BLS383_PUBLIC_KEY_VALIDATE(o)

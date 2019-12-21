@@ -1,26 +1,26 @@
+/*
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+*/
 /**
  * @file test_fp_arithmetics_YYY.c
  * @author Alessandro Budroni
  * @brief Test for aritmetics with FP_YYY
  *
- * LICENSE
- *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
  */
 
 #include <stdio.h>
@@ -94,11 +94,11 @@ int main(int argc, char** argv)
     FP_YYY FPexp;
     const char* FPexpline = "FPexp = ";
 
-// Set to zero
+    // Set to zero
     FP_YYY_zero(&FP_1);
     FP_YYY_zero(&FP_2);
 
-// Testing equal function and set zero function
+    // Testing equal function and set zero function
     if(!FP_YYY_equals(&FP_1,&FP_2) || !FP_YYY_iszilch(&FP_1) || !FP_YYY_iszilch(&FP_2))
     {
         printf("ERROR comparing FPs or setting FP to zero\n");
@@ -115,21 +115,21 @@ int main(int argc, char** argv)
     while (fgets(line, LINE_LEN, fp) != NULL)
     {
         i++;
-// Read first FP_YYY
+        // Read first FP_YYY
         if (!strncmp(line,FP_1line, strlen(FP_1line)))
         {
             len = strlen(FP_1line);
             linePtr = line + len;
             read_FP_YYY(&FP_1,linePtr);
         }
-// Read second FP
+        // Read second FP
         if (!strncmp(line,FP_2line, strlen(FP_2line)))
         {
             len = strlen(FP_2line);
             linePtr = line + len;
             read_FP_YYY(&FP_2,linePtr);
         }
-// Addition test
+        // Addition test
         if (!strncmp(line,FPaddline, strlen(FPaddline)))
         {
             len = strlen(FPaddline);
@@ -163,7 +163,7 @@ int main(int argc, char** argv)
                 exit(EXIT_FAILURE);
             }
         }
-// Subtraction test
+        // Subtraction test
         if (!strncmp(line,FPsubline, strlen(FPsubline)))
         {
             len = strlen(FPsubline);
@@ -179,7 +179,7 @@ int main(int argc, char** argv)
                 exit(EXIT_FAILURE);
             }
         }
-// Reduce first FP
+        // Reduce first FP
         if (!strncmp(line,FP_1nresline, strlen(FP_1nresline)))
         {
             len = strlen(FP_1nresline);
@@ -188,17 +188,11 @@ int main(int argc, char** argv)
             FP_YYY_copy(&supp,&FP_1);
             if(!FP_YYY_equals(&supp,&FP_1nres))
             {
-                printf("comp ");
-                FP_YYY_output(&supp);
-                printf("\n\n");
-                printf("read ");
-                FP_YYY_output(&FP_1nres);
-                printf("\n\n");
                 printf("ERROR Converts from BIG_XXX integer to n-residue form, line %d\n",i);
                 exit(EXIT_FAILURE);
             }
         }
-// Reduce second FP
+        // Reduce second FP
         if (!strncmp(line,FP_2nresline, strlen(FP_2nresline)))
         {
             len = strlen(FP_2nresline);
@@ -207,17 +201,11 @@ int main(int argc, char** argv)
             FP_YYY_copy(&supp,&FP_2);
             if(!FP_YYY_equals(&supp,&FP_2nres))
             {
-                printf("comp ");
-                FP_YYY_output(&supp);
-                printf("\n\n");
-                printf("read ");
-                FP_YYY_output(&FP_2nres);
-                printf("\n\n");
                 printf("ERROR Converts from BIG_XXX integer to n-residue form, line %d\n",i);
                 exit(EXIT_FAILURE);
             }
         }
-// Multiplication modulo
+        // Multiplication modulo
         if (!strncmp(line,FPmulmodline, strlen(FPmulmodline)))
         {
             len = strlen(FPmulmodline);
@@ -231,17 +219,11 @@ int main(int argc, char** argv)
             FP_YYY_reduce(&supp);
             if(!FP_YYY_equals(&supp,&FPmulmod))
             {
-                printf("comp ");
-                FP_YYY_output(&supp);
-                printf("\n\n");
-                printf("read ");
-                FP_YYY_output(&FPmulmod);
-                printf("\n\n");
                 printf("ERROR in multiplication and reduction by Modulo, line %d\n",i);
                 exit(EXIT_FAILURE);
             }
         }
-// Small multiplication
+        // Small multiplication
         if (!strncmp(line,FPsmallmulline, strlen(FPsmallmulline)))
         {
             len = strlen(FPsmallmulline);
@@ -265,12 +247,6 @@ int main(int argc, char** argv)
                 FP_YYY_norm(&supp1);
                 if(!FP_YYY_equals(&supp,&supp1))
                 {
-                    printf("comp1 ");
-                    FP_YYY_output(&supp);
-                    printf("\n\n");
-                    printf("comp2 ");
-                    FP_YYY_output(&supp1);
-                    printf("\n\n");
                     printf("ERROR in small multiplication or addition, line %d, multiplier %d\n",i,j);
                     exit(EXIT_FAILURE);
                 }
@@ -279,20 +255,11 @@ int main(int argc, char** argv)
             FP_YYY_reduce(&supp1);
             if(!FP_YYY_equals(&supp,&FPsmallmul) | !FP_YYY_equals(&supp1,&supp))
             {
-                printf("comp1 ");
-                FP_YYY_output(&supp);
-                printf("\n\n");
-                printf("comp2 ");
-                FP_YYY_output(&supp1);
-                printf("\n\n");
-                printf("read  ");
-                FP_YYY_output(&FPsmallmul);
-                printf("\n\n");
                 printf("ERROR in small multiplication, line %d\n",i);
                 exit(EXIT_FAILURE);
             }
         }
-// Square and square root
+        // Square and square root
         if (!strncmp(line,FPsqrline, strlen(FPsqrline)))
         {
             len = strlen(FPsqrline);
@@ -303,27 +270,18 @@ int main(int argc, char** argv)
             FP_YYY_reduce(&supp);
             if(!FP_YYY_equals(&supp,&FPsqr))
             {
-                printf("supp ");
-                FP_YYY_output(&supp);
-                printf("\n\n");
-                printf("read ");
-                FP_YYY_output(&FPsqr);
-                printf("\n\n");
                 printf("ERROR in squaring FP, line %d\n",i);
                 exit(EXIT_FAILURE);
             }
-            /*FP_nres(&supp,supp);
-            FP_sqrt(supp,supp);
-            FP_redc(supp,&supp);
-            if(!FP_YYY_equals(supp,FP_1))
+            FP_YYY_sqrt(&supp,&supp);
+            FP_YYY_neg(&supp1,&supp);
+            if(!(FP_YYY_equals(&supp,&FP_1) || FP_YYY_equals(&supp1,&FP_1)))
             {
-                printf("supp ");FP_YYY_output(supp);printf("\n\n");
-                printf("read ");FP_YYY_output(FP_1);printf("\n\n");
                 printf("ERROR square/square root consistency FP, line %d\n",i);
                 exit(EXIT_FAILURE);
-            }*/
+            }
         }
-// Reducing Modulo
+        // Reducing Modulo
         if (!strncmp(line,FPreduceline, strlen(FPreduceline)))
         {
             len = strlen(FPreduceline);
@@ -333,17 +291,11 @@ int main(int argc, char** argv)
             FP_YYY_reduce(&supp);
             if(!FP_YYY_equals(&supp,&FPreduce))
             {
-                printf("comp ");
-                FP_YYY_output(&supp);
-                printf("\n\n");
-                printf("read ");
-                FP_YYY_output(&FPreduce);
-                printf("\n\n");
                 printf("ERROR in reducing FP, line %d\n",i);
                 exit(EXIT_FAILURE);
             }
         }
-// Negative an FP
+        // Negative an FP
         if (!strncmp(line,FPnegline, strlen(FPnegline)))
         {
             len = strlen(FPnegline);
@@ -355,17 +307,11 @@ int main(int argc, char** argv)
             FP_YYY_norm(&supp);
             if(!FP_YYY_equals(&supp,&FPneg))
             {
-                printf("comp ");
-                FP_YYY_output(&supp);
-                printf("\n\n");
-                printf("read ");
-                FP_YYY_output(&FPneg);
-                printf("\n\n");
                 printf("ERROR in computing FP_neg, line %d\n",i);
                 exit(EXIT_FAILURE);
             }
         }
-// Division by 2
+        // Division by 2
         if (!strncmp(line,FPdiv2line, strlen(FPdiv2line)))
         {
             len = strlen(FPdiv2line);
@@ -375,17 +321,11 @@ int main(int argc, char** argv)
             FP_YYY_div2(&supp,&supp);
             if(!FP_YYY_equals(&supp,&FPdiv2))
             {
-                printf("comp ");
-                FP_YYY_output(&supp);
-                printf("\n\n");
-                printf("read ");
-                FP_YYY_output(&FPdiv2);
-                printf("\n\n");
                 printf("ERROR in division by 2, line %d\n",i);
                 exit(EXIT_FAILURE);
             }
         }
-// Inverse Modulo and FP_one
+        // Inverse Modulo and FP_one
         if (!strncmp(line,FPinvline, strlen(FPinvline)))
         {
             len = strlen(FPinvline);
@@ -397,12 +337,6 @@ int main(int argc, char** argv)
             FP_YYY_reduce(&supp);
             if(!FP_YYY_equals(&supp,&FPinv))
             {
-                printf("comp ");
-                FP_YYY_output(&supp);
-                printf("\n\n");
-                printf("read ");
-                FP_YYY_output(&FPinv);
-                printf("\n\n");
                 printf("ERROR computing inverse modulo, line %d\n",i);
                 exit(EXIT_FAILURE);
             }
@@ -412,40 +346,30 @@ int main(int argc, char** argv)
             FP_YYY_reduce(&supp1);
             if(!FP_YYY_equals(&supp,&supp1))
             {
-                printf("comp1 ");
-                FP_YYY_output(&supp);
-                printf("\n\n");
-                printf("comp2 ");
-                FP_YYY_output(&supp1);
-                printf("\n\n");
                 printf("ERROR multipling FP and its inverse, line %d\n",i);
                 exit(EXIT_FAILURE);
             }
         }
-// modular exponentiation
-        if (!strncmp(line,FPexpline, strlen(FPexpline)))
-        {
-            len = strlen(FPexpline);
-            linePtr = line + len;
-            read_FP_YYY(&FPexp,linePtr);
-            FP_YYY_copy(&supp,&FP_1);
-            FP_YYY_reduce(&supp);
-            FP_YYY_redc(bigsupp,&FP_2);
-            BIG_XXX_norm(bigsupp);
-            FP_YYY_pow(&supp,&supp,bigsupp);
-            FP_YYY_reduce(&supp);
-            if(!FP_YYY_equals(&supp,&FPexp))
+        // modular exponentiation
+        /*
+            if (!strncmp(line,FPexpline, strlen(FPexpline)))
             {
-                printf("supp ");
-                FP_YYY_output(&supp);
-                printf("\n\n");
-                printf("read ");
-                FP_YYY_output(&FPexp);
-                printf("\n\n");
-                printf("ERROR in modular exponentiation, line %d\n",i);
-                exit(EXIT_FAILURE);
+                len = strlen(FPexpline);
+                linePtr = line + len;
+                read_FP_YYY(&FPexp,linePtr);
+                FP_YYY_copy(&supp,&FP_1);
+                FP_YYY_reduce(&supp);
+                FP_YYY_redc(bigsupp,&FP_2);
+                BIG_XXX_norm(bigsupp);
+                FP_YYY_pow(&supp,&supp,bigsupp);
+                FP_YYY_reduce(&supp);
+                if(!FP_YYY_equals(&supp,&FPexp))
+                {
+                    printf("ERROR in modular exponentiation, line %d\n",i);
+                    exit(EXIT_FAILURE);
+                }
             }
-        }
+        */
     }
     fclose(fp);
 

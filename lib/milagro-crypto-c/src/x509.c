@@ -121,9 +121,25 @@ static octet RSASHA512= {9,sizeof(rsasha512),(char *)rsasha512};
 static unsigned char cn[3]= {0x55,0x04,0x06};
 static octet CN= {3,sizeof(cn),(char *)cn};
 
+// stateName
+// static char sn[3]= {0x55,0x04,0x08};
+// static octet SN= {3,sizeof(sn),sn};
+
+// localName
+// static char ln[3]= {0x55,0x04,0x07};
+// static octet LN= {3,sizeof(ln),ln};
+
 // orgName
 static unsigned char on[3]= {0x55,0x04,0x0A};
 static octet ON= {3,sizeof(on),(char *)on};
+
+// unitName
+// static char un[3]= {0x55,0x04,0x0B};
+// static octet UN= {3,sizeof(un),un};
+
+// myName
+// static char mn[3]= {0x55,0x04,0x03};
+// static octet MN= {3,sizeof(mn),mn};
 
 // emailName
 static unsigned char en[9]= {0x2a,0x86,0x48,0x86,0xf7,0x0d,0x01,0x09,0x01};
@@ -206,7 +222,7 @@ pktype X509_extract_cert_sig(octet *sc,octet *sig)
 
     sj=j+len; // Needed to jump over signature OID
 
-    // dive in to extract OID
+// dive in to extract OID
     len=getalen(OID,sc->val,j);
     if (len<0) return ret;
     j+=skip(len);
@@ -424,9 +440,9 @@ pktype X509_extract_public_key(octet *c,octet *key)
     if (len<0) return ret;
     j+=skip(len);
 
-    // ** Maybe dive in and check Public Key OIDs here?
-    // ecpublicKey & prime256v1, secp384r1 or secp521r1 for ECC
-    // rsapublicKey for RSA
+// ** Maybe dive in and check Public Key OIDs here?
+// ecpublicKey & prime256v1, secp384r1 or secp521r1 for ECC
+// rsapublicKey for RSA
 
     sj=j+len;
 
@@ -479,7 +495,7 @@ pktype X509_extract_public_key(octet *c,octet *key)
     j++;
     len--; // skip bit shift (hopefully 0!)
 
-    // extract key
+// extract key
     if (ret.type==ECC)
     {
         key->len=len;

@@ -101,13 +101,12 @@ set_if_unset(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib)
 log(CMAKE_INSTALL_PREFIX)
 
 ### Options ###
-option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
+option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 log(BUILD_SHARED_LIBS)
 
-option(BUILD_BENCHMARKS  "Build benchmarks"       OFF)
-option(BUILD_DOCS        "Build docs"             OFF)
-option(BUILD_EXAMPLES    "Build examples"         OFF)
-option(BUILD_TESTING     "Build tests"         OFF)
+option(BUILD_BENCHMARKS  "Build benchmarks"       ON)
+option(BUILD_DOCS        "Build docs"             ON)
+option(BUILD_EXAMPLES    "Build examples"         ON)
 cmake_dependent_option(BUILD_PYTHON "Build Python" OFF "BUILD_SHARED_LIBS" OFF)
 log(BUILD_BENCHMARKS)
 log(BUILD_DOCS)
@@ -115,12 +114,16 @@ log(BUILD_EXAMPLES)
 log(BUILD_PYTHON)
 log(BUILD_TESTING) # added by 'include(CTest)'
 
-option(BUILD_MPIN    "Build MPIN"    ON)
-option(BUILD_WCC     "Build WCC"     ON)
-option(BUILD_X509    "BUild X509"    ON)
+option(BUILD_MPIN     "Build MPIN"     ON)
+option(BUILD_WCC      "Build WCC"      ON)
+option(BUILD_X509     "BUild X509"     ON)
+option(BUILD_BLS      "Build BLS"      ON)
+option(BUILD_PAILLIER "Build Paillier" OFF)
 log(BUILD_MPIN)
 log(BUILD_WCC)
 log(BUILD_X509)
+log(BUILD_BLS)
+log(BUILD_PAILLIER)
 
 option(DEBUG_REDUCE "Print debug message for field reduction" OFF)
 option(DEBUG_NORM "Detect digit overflow" OFF)
@@ -130,9 +133,7 @@ log(DEBUG_NORM)
 log(GET_STATS)
 
 ### /include subdir ###
-set(AMCL_INCLUDE_SUBDIR "" CACHE STRING "Subdir of 'include' to install headers in")
-set(INSTALL_INCLUDESUBDIR "${CMAKE_INSTALL_INCLUDEDIR}/${AMCL_INCLUDE_SUBDIR}")
-log(AMCL_INCLUDE_SUBDIR)
+set(INSTALL_INCLUDESUBDIR "${CMAKE_INSTALL_INCLUDEDIR}/amcl")
 log(CMAKE_INSTALL_INCLUDEDIR)
 log(INSTALL_INCLUDESUBDIR)
 
@@ -171,7 +172,7 @@ endif()
 ### PBC ###
 if(BUILD_MPIN OR BUILD_WCC)
   set(PBC_TIME_PERMIT_TESTS 10 CACHE STRING "Number of days in the future to test M-PIN/WCC time permits")
-  set(PBC_RANDOM_TESTS 10 CACHE STRING "Number of random M-PIN/WCC tests")
+  set(PBC_RANDOM_TESTS 5 CACHE STRING "Number of random M-PIN/WCC tests")
   log(PBC_TIME_PERMIT_TESTS)
   log(PBC_RANDOM_TESTS)
 endif()
@@ -226,7 +227,7 @@ install(FILES
   DESTINATION ${INSTALL_INCLUDESUBDIR}
 )
 
-if (BUILD_MPIN OR BUILD_WCC)
+if (BUILD_MPIN OR BUILD_WCC OR BUILD_BLS)
   amcl_configure_file_core(include/config_test.h.in include/config_test.h amcl_core_pbc_GEN_HDRS)
 
   target_sources(amcl_core PRIVATE src/pbc_support.c)
@@ -291,6 +292,62 @@ if(BUILD_X509)
 
   install(FILES
     include/x509.h
+    DESTINATION ${INSTALL_INCLUDESUBDIR}
+  )
+endif()
+
+##################################################
+# AMCL_PAILLIER Library
+##################################################
+
+if(BUILD_PAILLIER)
+  foreach(level 2048 4096)
+    amcl_rsa_field(BD "${level}")
+    amcl_rsa_field(TFF "${level}")
+
+    amcl_configure_file_rsa(include/config_big.h.in include/config_big_${BD}.h "${level}" amcl_paillier_GEN_HDRS)
+    amcl_configure_file_rsa(include/config_ff.h.in  include/config_ff_${TFF}.h "${level}" amcl_paillier_GEN_HDRS)
+    amcl_configure_file_rsa(include/big.h.in        include/big_${BD}.h        "${level}" amcl_paillier_GEN_HDRS)
+    amcl_configure_file_rsa(include/ff.h.in         include/ff_${TFF}.h        "${level}" amcl_paillier_GEN_HDRS)
+
+    amcl_configure_file_rsa(src/big.c.in src/big_${BD}.c  "${level}" amcl_paillier_GEN_SRCS)
+    amcl_configure_file_rsa(src/ff.c.in  src/ff_${TFF}.c  "${level}" amcl_paillier_GEN_SRCS)
+  endforeach()
+
+  list(APPEND amcl_paillier_GEN_HDRS include/paillier.h)
+  list(APPEND amcl_paillier_GEN_SRCS src/paillier.c)
+
+  message(STATUS "Build libamcl_paillier")
+  add_library(amcl_paillier
+    ${amcl_paillier_GEN_SRCS}
+  )
+  list(APPEND AMCL_LIBRARIES amcl_paillier)
+
+  set_target_properties(amcl_paillier PROPERTIES
+    EXPORT_NAME paillier
+    VERSION ${AMCL_VERSION}
+    SOVERSION ${AMCL_SOVERSION}
+  )
+
+  target_include_directories(amcl_paillier PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/incldue>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  )
+
+  target_link_libraries(amcl_paillier PUBLIC
+    amcl_core
+  )
+
+  install(TARGETS amcl_paillier
+    EXPORT AMCLTargets
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  )
+
+  install(FILES
+    ${amcl_paillier_GEN_HDRS}
     DESTINATION ${INSTALL_INCLUDESUBDIR}
   )
 endif()
@@ -600,6 +657,60 @@ if(BUILD_WCC)
 endif()
 
 ##################################################
+# AMCL_BLS_*** Libraries
+##################################################
+if(BUILD_BLS)
+  foreach(curve ${AMCL_CURVE})
+    amcl_curve_field(TC "${curve}")
+    amcl_curve_field(CS "${curve}")
+
+    if(TARGET amcl_pairing_${TC})
+      if(CS STREQUAL "128")
+        amcl_configure_file_curve(include/bls.h.in include/bls_${TC}.h "${curve}" amcl_bls_${TC}_GEN_HDRS)
+        amcl_configure_file_curve(src/bls.c.in     src/bls_${TC}.c     "${curve}" amcl_bls_${TC}_GEN_SRCS)
+      else(CS STREQUAL "128")
+        amcl_configure_file_curve(include/bls${CS}.h.in include/bls${CS}_${TC}.h "${curve}" amcl_bls_${TC}_GEN_HDRS)
+        amcl_configure_file_curve(src/bls${CS}.c.in     src/bls${CS}_${TC}.c     "${curve}" amcl_bls_${TC}_GEN_SRCS)
+      endif(CS STREQUAL "128")
+
+      message(STATUS "Build libamcl_bls_${TC}")
+      add_library(amcl_bls_${TC}
+        ${amcl_bls_${TC}_GEN_SRCS}
+      )
+      list(APPEND AMCL_LIBRARIES amcl_bls_${TC})
+
+      set_target_properties(amcl_bls_${TC} PROPERTIES
+        EXPORT_NAME bls_${TC}
+        VERSION ${AMCL_VERSION}
+        SOVERSION ${AMCL_SOVERSION}
+      )
+
+      target_include_directories(amcl_bls_${TC} PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+      )
+
+      target_link_libraries(amcl_bls_${TC} PUBLIC
+        amcl_pairing_${TC}
+      )
+
+      install(TARGETS amcl_bls_${TC}
+        EXPORT AMCLTargets
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      )
+
+      install(FILES
+        ${amcl_bls_${TC}_GEN_HDRS}
+        DESTINATION ${INSTALL_INCLUDESUBDIR}
+      )
+    endif()
+  endforeach()
+endif()
+
+##################################################
 # pkgconfig
 ##################################################
 foreach(lib ${AMCL_LIBRARIES})
@@ -671,12 +782,12 @@ endif()
 
 if(BUILD_PYTHON)
   message(STATUS "Build Python wrappers")
-  add_subdirectory(wrappers/python)
+  add_subdirectory(python)
 endif()
 
-#if(BUILD_TESTING)
-#  message(STATUS "Build tests")
-#  add_subdirectory(test)
-#endif()
+if(BUILD_TESTING)
+  message(STATUS "Build tests")
+  add_subdirectory(test)
+endif()
 
 include(CPackConfig.cmake)

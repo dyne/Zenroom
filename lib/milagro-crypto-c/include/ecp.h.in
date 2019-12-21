@@ -104,6 +104,8 @@ extern const BIG_XXX CURVE_BB_ZZZ[4][4]; /**< BN curve constant for GS decomposi
 
 typedef struct
 {
+//    int inf; /**< Infinity Flag - not needed for Edwards representation */
+
     FP_YYY x; /**< x-coordinate of point */
 #if CURVETYPE_ZZZ!=MONTGOMERY
     FP_YYY y; /**< y-coordinate of point. Not needed for Montgomery representation */
@@ -254,17 +256,21 @@ extern void ECP_ZZZ_output(ECP_ZZZ * P);
 extern void ECP_ZZZ_rawoutput(ECP_ZZZ * P);
 
 /**	@brief Formats and outputs an ECP point to an octet string
- *
-	The octet string is created in the standard form 04|x|y, except for Montgomery curve in which case it is 06|x
-	Here x (and y) are the x and y coordinates in big-endian base 256 form.
+	The octet string is normally in the standard form 0x04|x|y
+	Here x (and y) are the x and y coordinates in left justified big-endian base 256 form.
+	For Montgomery curve it is 0x06|x
+	If c is true, only the x coordinate is provided as in 0x2|x if y is even, or 0x3|x if y is odd
+	@param c compression required, true or false
 	@param S output octet string
 	@param P ECP instance to be converted to an octet string
  */
-extern void ECP_ZZZ_toOctet(octet *S,ECP_ZZZ *P);
+extern void ECP_ZZZ_toOctet(octet *S,ECP_ZZZ *P,bool c);
 /**	@brief Creates an ECP point from an octet string
  *
-	The octet string is in the standard form 0x04|x|y, except for Montgomery curve in which case it is 0x06|x
+	The octet string is normally in the standard form 0x04|x|y
 	Here x (and y) are the x and y coordinates in left justified big-endian base 256 form.
+	For Montgomery curve it is 0x06|x
+	If in compressed form only the x coordinate is provided as in 0x2|x if y is even, or 0x3|x if y is odd
 	@param P ECP instance to be created from the octet string
 	@param S input octet string
 	return 1 if octet string corresponds to a point on the curve, else 0

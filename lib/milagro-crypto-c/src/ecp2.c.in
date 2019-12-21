@@ -128,10 +128,12 @@ void ECP2_ZZZ_affine(ECP2_ZZZ *P)
 /* SU= 16 */
 int ECP2_ZZZ_get(FP2_YYY *x,FP2_YYY *y,ECP2_ZZZ *P)
 {
-    if (ECP2_ZZZ_isinf(P)) return -1;
-    ECP2_ZZZ_affine(P);
-    FP2_YYY_copy(y,&(P->y));
-    FP2_YYY_copy(x,&(P->x));
+    ECP2_ZZZ W;
+    ECP2_ZZZ_copy(&W,P);
+    ECP2_ZZZ_affine(&W);
+    if (ECP2_ZZZ_isinf(&W)) return -1;
+    FP2_YYY_copy(y,&(W.y));
+    FP2_YYY_copy(x,&(W.x));
     return 0;
 }
 
@@ -364,6 +366,7 @@ int ECP2_ZZZ_add(ECP2_ZZZ *P,ECP2_ZZZ *Q)
     FP2_YYY_mul(&t2,&(P->z),&(Q->z));	//t2.mul(Q.z);
     FP2_YYY_add(&t3,&(P->x),&(P->y));	//t3.add(y);
     FP2_YYY_norm(&t3);				//t3.norm();          //t3=X1+Y1
+
     FP2_YYY_add(&t4,&(Q->x),&(Q->y));	//t4.add(Q.y);
     FP2_YYY_norm(&t4);				//t4.norm();			//t4=X2+Y2
     FP2_YYY_mul(&t3,&t3,&t4);		//t3.mul(t4);						//t3=(X1+Y1)(X2+Y2)
@@ -409,6 +412,7 @@ int ECP2_ZZZ_add(ECP2_ZZZ *P,ECP2_ZZZ *Q)
     FP2_YYY_imul(&t2,&t2,b3);		//t2.imul(b);
 #if SEXTIC_TWIST_ZZZ==M_TYPE
     FP2_YYY_mul_ip(&t2);
+    FP2_YYY_norm(&t2);
 #endif
     FP2_YYY_add(&z3,&t1,&t2);		//z3.add(t2);
     FP2_YYY_norm(&z3);				//z3.norm();
@@ -440,9 +444,10 @@ int ECP2_ZZZ_add(ECP2_ZZZ *P,ECP2_ZZZ *Q)
 /* SU= 16 */
 void ECP2_ZZZ_sub(ECP2_ZZZ *P,ECP2_ZZZ *Q)
 {
-    ECP2_ZZZ_neg(Q);
-    ECP2_ZZZ_add(P,Q);
-    ECP2_ZZZ_neg(Q);
+    ECP2_ZZZ NQ;
+    ECP2_ZZZ_copy(&NQ,Q);
+    ECP2_ZZZ_neg(&NQ);
+    ECP2_ZZZ_add(P,&NQ);
 }
 
 /* P*=e */
@@ -456,8 +461,6 @@ void ECP2_ZZZ_mul(ECP2_ZZZ *P,BIG_XXX e)
     sign8 w[1+(NLEN_XXX*BASEBITS_XXX+3)/4];
 
     if (ECP2_ZZZ_isinf(P)) return;
-    ECP2_ZZZ_affine(P);
-
 
     /* precompute table */
 
@@ -525,6 +528,7 @@ void ECP2_ZZZ_frob(ECP2_ZZZ *P,FP2_YYY *X)
     FP2_YYY_mul(&(P->x),&X2,&(P->x));
     FP2_YYY_mul(&(P->y),&X2,&(P->y));
     FP2_YYY_mul(&(P->y),X,&(P->y));
+
 }
 
 
@@ -543,10 +547,9 @@ void ECP2_ZZZ_mul4(ECP2_ZZZ *P,ECP2_ZZZ Q[4],BIG_XXX u[4])
     for (i=0; i<4; i++)
     {
         BIG_XXX_copy(t[i],u[i]);
-        ECP2_ZZZ_affine(&Q[i]);
     }
 
-    // Precomputed table
+// Precomputed table
     ECP2_ZZZ_copy(&T[0],&Q[0]); // Q[0]
     ECP2_ZZZ_copy(&T[1],&T[0]);
     ECP2_ZZZ_add(&T[1],&Q[1]);	// Q[0]+Q[1]
@@ -563,12 +566,12 @@ void ECP2_ZZZ_mul4(ECP2_ZZZ *P,ECP2_ZZZ Q[4],BIG_XXX u[4])
     ECP2_ZZZ_copy(&T[7],&T[3]);
     ECP2_ZZZ_add(&T[7],&Q[3]);	// Q[0]+Q[1]+Q[2]+Q[3]
 
-    // Make it odd
+// Make it odd
     pb=1-BIG_XXX_parity(t[0]);
     BIG_XXX_inc(t[0],pb);
     BIG_XXX_norm(t[0]);
 
-    // Number of bits
+// Number of bits
     BIG_XXX_zero(mt);
     for (i=0; i<4; i++)
     {
@@ -576,7 +579,7 @@ void ECP2_ZZZ_mul4(ECP2_ZZZ *P,ECP2_ZZZ Q[4],BIG_XXX u[4])
     }
     nb=1+BIG_XXX_nbits(mt);
 
-    // Sign pivot
+// Sign pivot
     s[nb-1]=1;
     for (i=0; i<nb-1; i++)
     {
@@ -584,7 +587,7 @@ void ECP2_ZZZ_mul4(ECP2_ZZZ *P,ECP2_ZZZ Q[4],BIG_XXX u[4])
         s[i]=2*BIG_XXX_parity(t[0])-1;
     }
 
-    // Recoded exponent
+// Recoded exponent
     for (i=0; i<nb; i++)
     {
         w[i]=0;
@@ -601,7 +604,7 @@ void ECP2_ZZZ_mul4(ECP2_ZZZ *P,ECP2_ZZZ Q[4],BIG_XXX u[4])
         }
     }
 
-    // Main loop
+// Main loop
     ECP2_ZZZ_select(P,T,2*w[nb-1]+1);
     for (i=nb-2; i>=0; i--)
     {
@@ -610,7 +613,7 @@ void ECP2_ZZZ_mul4(ECP2_ZZZ *P,ECP2_ZZZ Q[4],BIG_XXX u[4])
         ECP2_ZZZ_add(P,&W);
     }
 
-    // apply correction
+// apply correction
     ECP2_ZZZ_copy(&W,P);
     ECP2_ZZZ_sub(&W,&Q[0]);
     ECP2_ZZZ_cmove(P,&W,pb);
@@ -716,48 +719,6 @@ void ECP2_ZZZ_generator(ECP2_ZZZ *G)
     FP_YYY_rcopy(&(wx.b),CURVE_Pxb_ZZZ);
     FP_YYY_rcopy(&(wy.a),CURVE_Pya_ZZZ);
     FP_YYY_rcopy(&(wy.b),CURVE_Pyb_ZZZ);
+
     ECP2_ZZZ_set(G,&wx,&wy);
 }
-
-/*
-
-int main()
-{
-	int i;
-	ECP2_ZZZ G,P;
-	ECP2_ZZZ *W;
-	FP2_YYY x,y,w,z,f;
-	BIG_XXX r,xa,xb,ya,yb;
-
-	BIG_XXX_rcopy(xa,CURVE_Pxa_ZZZ);
-	BIG_XXX_rcopy(xb,CURVE_Pxb_ZZZ);
-	BIG_XXX_rcopy(ya,CURVE_Pya_ZZZ);
-	BIG_XXX_rcopy(yb,CURVE_Pyb_ZZZ);
-
-	FP2_YYY_from_BIGs(&x,xa,xb);
-	FP2_YYY_from_BIGs(&y,ya,yb);
-	ECP2_ZZZ_set(&G,&x,&y);
-	if (G.inf) printf("Failed to set - point not on curve\n");
-	else printf("set success\n");
-
-	ECP2_ZZZ_output(&G);
-
-//	BIG_XXX_copy(r,CURVE_Order_ZZZ);
-	BIG_XXX_rcopy(r,Modulus_YYY);
-
-	ECP2_ZZZ_copy(&P,&G);
-
-	ECP2_ZZZ_mul(&P,r);
-
-	ECP2_ZZZ_output(&P);
-
-	FP2_YYY_gfc(&f,12);
-
-	ECP2_ZZZ_frob(&G,&f);
-
-	ECP2_ZZZ_output(&G);
-
-	return 0;
-}
-
-*/

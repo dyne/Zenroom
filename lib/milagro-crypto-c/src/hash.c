@@ -583,19 +583,19 @@ int main()
 
 	SHA3_init(&SHA3,SHA3_HASH256);
     for (i=0;test512[i]!=0;i++) SHA3_process(&SHA3,test512[i]);
-    SHA3_hash(&sh512,digest);
+    SHA3_hash(&SHA3,digest);
     for (i=0;i<32;i++) printf("%02x",(unsigned char)digest[i]);
     printf("\n");
 
 	SHA3_init(&SHA3,SHA3_HASH512);
     for (i=0;test512[i]!=0;i++) SHA3_process(&SHA3,test512[i]);
-    SHA3_hash(&sh512,digest);
+    SHA3_hash(&SHA3,digest);
     for (i=0;i<64;i++) printf("%02x",(unsigned char)digest[i]);
     printf("\n");
 
 	SHA3_init(&SHA3,SHAKE256);
     for (i=0;test512[i]!=0;i++) SHA3_process(&SHA3,test512[i]);
-    SHA3_shake(&sh512,digest,72);
+    SHA3_shake(&SHA3,digest,72);
     for (i=0;i<72;i++) printf("%02x",(unsigned char)digest[i]);
     printf("\n");
 

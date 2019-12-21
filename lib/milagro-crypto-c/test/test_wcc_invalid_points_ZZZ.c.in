@@ -1,26 +1,26 @@
+/*
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+*/
 /**
  * @file test_wcc_invalid_points.c
  * @author Samuele Andreoli
  * @brief Test WCC handling of invalid points
  *
- * LICENSE
- *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
  */
 
 /* Test WCC with invalid, random generated, points */
@@ -129,7 +129,7 @@ int main()
     WCC_ZZZ_RANDOM_GENERATE(&RNG,&MS);
 
     // Alice's ID
-    OCT_jstring(&IdA,"alice@miracl.com");
+    OCT_jstring(&IdA,"alice@milagro.com");
 
     // Hash Alice's Id
     HASH_ID(HASH_TYPE_ZZZ,&IdA,&HIdA);
@@ -138,7 +138,7 @@ int main()
     WCC_ZZZ_GET_G1_MULTIPLE(&MS,&HIdA,&AKeyG1);
 
     // Bob's ID
-    OCT_jstring(&IdB,"bob@miracl.com");
+    OCT_jstring(&IdB,"bob@milagro.com");
 
     // Hash Bob's Id
     HASH_ID(HASH_TYPE_ZZZ,&IdB,&HIdB);

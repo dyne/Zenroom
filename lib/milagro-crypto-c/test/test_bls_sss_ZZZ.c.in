@@ -1,0 +1,244 @@
+/*
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+*/
+
+// smoke test for BLS SSS
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "config_curve_ZZZ.h"
+#include "randapi.h"
+
+#if CURVE_SECURITY_ZZZ == 128
+#include "bls_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 192
+#include "bls192_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 256
+#include "bls256_ZZZ.h"
+#endif
+
+// Support multiple security levels
+#if CURVE_SECURITY_ZZZ == 128
+#define G2LEN 4*BFS_ZZZ
+#elif CURVE_SECURITY_ZZZ == 192
+#define G2LEN 8*BFS_ZZZ
+#elif CURVE_SECURITY_ZZZ == 256
+#define G2LEN 16*BFS_ZZZ
+#endif
+
+int test(csprng *RNG)
+{
+    int rc;
+    int n=4;
+    int k=3;
+
+    char m[2000];
+    octet M = {0,sizeof(m),m};
+
+    char ski[BGS_ZZZ];
+    octet SKI = {0,sizeof(ski),ski};
+    char pki[G2LEN];
+    octet PKI = {0,sizeof(pki),pki};
+
+    char sko[BGS_ZZZ];
+    octet SKO = {sizeof(sko),sizeof(sko),sko};
+    char skr[BGS_ZZZ];
+    octet SKR = {sizeof(skr),sizeof(skr),skr};
+
+    char sigi[BFS_ZZZ+1];
+    octet SIGI = {0,sizeof(sigi),sigi};
+    char sigr[BFS_ZZZ+1];
+    octet SIGR = {0,sizeof(sigr),sigr};
+
+    // Secret shares
+    char x[n][BGS_ZZZ];
+    octet X[n];
+    char y[n][BGS_ZZZ];
+    octet Y[n];
+
+    for(int i=0; i<n; i++)
+    {
+        memset(&y[i], 0, sizeof(y[i]));
+        Y[i].max = BGS_ZZZ;
+        Y[i].len = BGS_ZZZ;
+        Y[i].val = y[i];
+        memset(&x[i], 0, sizeof(x[i]));
+        X[i].max = BGS_ZZZ;
+        X[i].len = BGS_ZZZ;
+        X[i].val = x[i];
+    }
+
+    // Generate key pair
+    BLS_ZZZ_KEY_PAIR_GENERATE(RNG,&SKI,&PKI);
+
+    printf("Private key SKI: ");
+    OCT_output(&SKI);
+    printf("Public key PKI: ");
+    OCT_output(&PKI);
+    printf("\n");
+
+    // Sign the message
+    BLS_ZZZ_SIGN(&SIGI,&M,&SKI);
+
+    printf("SIGI: ");
+    OCT_output(&SIGI);
+
+    // Verify signature
+    rc=BLS_ZZZ_VERIFY(&SIGI,&M,&PKI);
+    if (rc!=BLS_OK)
+    {
+        printf("Test Failed Invalid Signature\n");
+        return 1;
+    }
+    printf("Test Passed valid signature is valid\n");
+
+    // Make shares of BLS secret key
+    rc = BLS_ZZZ_MAKE_SHARES(k, n, RNG, X, Y, &SKI, &SKO);
+    if (rc!=BLS_OK)
+    {
+        printf("Test Failed BLS_ZZZ_MAKE_SHARES\n");
+        return 1;
+    }
+    printf("Test Passed BLS_ZZZ_MAKE_SHARES\n");
+
+    for(int i=0; i<n; i++)
+    {
+        printf("X[%d] ", i);
+        OCT_output(&X[i]);
+        printf("Y[%d] ", i);
+        OCT_output(&Y[i]);
+    }
+
+    printf("SKO: ");
+    OCT_output(&SKO);
+
+    if (!OCT_comp(&SKI,&SKO))
+    {
+        printf("Test Failed SKI != SKO\n");
+        return 1;
+    }
+    printf("Test Passed SKI == SKO\n");
+
+    // Recover BLS secret key
+    rc = BLS_ZZZ_RECOVER_SECRET(k, X, Y, &SKR);
+    if (rc!=BLS_OK)
+    {
+        printf("Test Failed BLS_ZZZ_RECOVER_SECRET\n");
+        return 1;
+    }
+    printf("Test Passed BLS_ZZZ_RECOVER_SECRET\n");
+    printf("SKR: ");
+    OCT_output(&SKR);
+
+    if (!OCT_comp(&SKR,&SKO))
+    {
+        printf("Test Failed SKR != SKO\n");
+        return 1;
+    }
+    printf("Test Passed SKR == SKO\n");
+
+    // Generate public keys and signatures using shares
+    char pks[n][G2LEN];
+    octet PKS[n];
+    char sigs[n][BFS_ZZZ+1];
+    octet SIGS[n];
+    for(int i=0; i<n; i++)
+    {
+        memset(&sigs[i], 0, sizeof(sigs[i]));
+        SIGS[i].max = BFS_ZZZ+1;
+        SIGS[i].len = BFS_ZZZ+1;
+        SIGS[i].val = sigs[i];
+        memset(&PKS[i], 0, sizeof(PKS[i]));
+        PKS[i].max = G2LEN;
+        PKS[i].len = G2LEN;
+        PKS[i].val = pks[i];
+        BLS_ZZZ_KEY_PAIR_GENERATE(NULL,&Y[i],&PKS[i]);
+        BLS_ZZZ_SIGN(&SIGS[i],&M,&Y[i]);
+    }
+
+    for(int i=0; i<n; i++)
+    {
+        printf("PKS[%d] ", i);
+        OCT_output(&PKS[i]);
+    }
+
+    for(int i=0; i<n; i++)
+    {
+        printf("SIGS[%d] ", i);
+        OCT_output(&SIGS[i]);
+    }
+    printf("\n\n");
+
+    // Recover BLS signature
+    rc = BLS_ZZZ_RECOVER_SIGNATURE(k, X, SIGS, &SIGR);
+    if (rc!=BLS_OK)
+    {
+        printf("Test Failed BLS_ZZZ_RECOVER_SIGNATURE\n");
+        return 1;
+    }
+    printf("Test Passed BLS_ZZZ_RECOVER_SIGNATURE\n");
+    printf("SIGR: ");
+    OCT_output(&SIGR);
+
+    if (!OCT_comp(&SIGR,&SIGI))
+    {
+        printf("Test Failed SIGR != SIGI\n");
+        return 1;
+    }
+    printf("Test Passed SIGR == SIGI\n");
+
+    return 0;
+}
+
+
+int main()
+{
+#ifdef DEBUG
+    printf("%d bit build\n",CHUNK);
+#endif
+
+    char* seedHex = "78d0fb6705ce77dee47d03eb5b9c5d30";
+    char seed[16] = {0};
+    octet SEED = {sizeof(seed),sizeof(seed),seed};
+
+    // CSPRNG
+    csprng RNG;
+
+    // fake random source
+    OCT_fromHex(&SEED,seedHex);
+    printf("SEED: ");
+    OCT_output(&SEED);
+
+    // initialise strong RNG
+    CREATE_CSPRNG(&RNG,&SEED);
+
+    printf("\nTest BLS SSS for curve ZZZ\n");
+    if (!test(&RNG))
+    {
+        printf("SUCCESS\n");
+    }
+    else
+    {
+        printf("FAILURE\n");
+    }
+
+    KILL_CSPRNG(&RNG);
+}
+
+

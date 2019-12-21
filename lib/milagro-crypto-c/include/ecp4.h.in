@@ -1,29 +1,21 @@
 /*
-	Licensed to the Apache Software Foundation (ASF) under one
-	or more contributor license agreements.  See the NOTICE file
-	distributed with this work for additional information
-	regarding copyright ownership.  The ASF licenses this file
-	to you under the Apache License, Version 2.0 (the
-	"License"); you may not use this file except in compliance
-	with the License.  You may obtain a copy of the License at
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
 
-	http://www.apache.org/licenses/LICENSE-2.0
+  http://www.apache.org/licenses/LICENSE-2.0
 
-	Unless required by applicable law or agreed to in writing,
-	software distributed under the License is distributed on an
-	"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-	KIND, either express or implied.  See the License for the
-	specific language governing permissions and limitations
-	under the License.
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
 */
-
-/**
- * @file ecp4_ZZZ.h
- * @author Mike Scott
- * @brief ECP4 Header File
- *
- */
-
 
 #ifndef ECP4_ZZZ_H
 #define ECP4_ZZZ_H
@@ -38,9 +30,10 @@
 
 typedef struct
 {
+//   int inf; /**< Infinity Flag */
     FP4_YYY x;   /**< x-coordinate of point */
     FP4_YYY y;   /**< y-coordinate of point */
-    FP4_YYY z;	 /**< z-coordinate of point */
+    FP4_YYY z;   /**< z-coordinate of point */
 } ECP4_ZZZ;
 
 
@@ -78,20 +71,17 @@ extern const BIG_XXX CURVE_Pybb_ZZZ; /**< imaginary part of y-coordinate of gene
 	@return 1 if infinity, else returns 0
  */
 extern int ECP4_ZZZ_isinf(ECP4_ZZZ *P);
-
 /**	@brief Copy ECP4 point to another ECP4 point
  *
 	@param P ECP4 instance, on exit = Q
 	@param Q ECP4 instance to be copied
  */
 extern void ECP4_ZZZ_copy(ECP4_ZZZ *P,ECP4_ZZZ *Q);
-
 /**	@brief Set ECP4 to point-at-infinity
  *
 	@param P ECP4 instance to be set to infinity
  */
 extern void ECP4_ZZZ_inf(ECP4_ZZZ *P);
-
 /**	@brief Tests for equality of two ECP4s
  *
 	@param P ECP4 instance to be compared
@@ -115,7 +105,6 @@ extern void ECP4_ZZZ_affine(ECP4_ZZZ *P);
 	@return -1 if P is point-at-infinity, else 0
  */
 extern int ECP4_ZZZ_get(FP4_YYY *x,FP4_YYY *y,ECP4_ZZZ *P);
-
 /**	@brief Formats and outputs an ECP4 point to the console, converted to affine coordinates
  *
 	@param P ECP4 instance to be printed
@@ -130,7 +119,6 @@ extern void ECP4_ZZZ_output(ECP4_ZZZ *P);
 	@param P ECP4 instance to be converted to an octet string
  */
 extern void ECP4_ZZZ_toOctet(octet *S,ECP4_ZZZ *P);
-
 /**	@brief Creates an ECP4 point from an octet string
  *
 	The octet string is in the form x|y
@@ -140,7 +128,6 @@ extern void ECP4_ZZZ_toOctet(octet *S,ECP4_ZZZ *P);
 	return 1 if octet string corresponds to a point on the curve, else 0
  */
 extern int ECP4_ZZZ_fromOctet(ECP4_ZZZ *P,octet *S);
-
 /**	@brief Calculate Right Hand Side of curve equation y^2=f(x)
  *
 	Function f(x)=x^3+Ax+B
@@ -149,7 +136,6 @@ extern int ECP4_ZZZ_fromOctet(ECP4_ZZZ *P,octet *S);
 	@param x FP4 instance
  */
 extern void ECP4_ZZZ_rhs(FP4_YYY *r,FP4_YYY *x);
-
 /**	@brief Set ECP4 to point(x,y) given x and y
  *
 	Point P set to infinity if no such point on the curve.
@@ -159,7 +145,6 @@ extern void ECP4_ZZZ_rhs(FP4_YYY *r,FP4_YYY *x);
 	@return 1 if point exists, else 0
  */
 extern int ECP4_ZZZ_set(ECP4_ZZZ *P,FP4_YYY *x,FP4_YYY *y);
-
 /**	@brief Set ECP to point(x,[y]) given x
  *
 	Point P set to infinity if no such point on the curve. Otherwise y coordinate is calculated from x.
@@ -168,7 +153,6 @@ extern int ECP4_ZZZ_set(ECP4_ZZZ *P,FP4_YYY *x,FP4_YYY *y);
 	@return 1 if point exists, else 0
  */
 extern int ECP4_ZZZ_setx(ECP4_ZZZ *P,FP4_YYY *x);
-
 /**	@brief Negation of an ECP4 point
  *
 	@param P ECP4 instance, on exit = -P
@@ -186,21 +170,18 @@ extern void ECP4_ZZZ_reduce(ECP4_ZZZ *P);
 	@param P ECP4 instance, on exit =2*P
  */
 extern int ECP4_ZZZ_dbl(ECP4_ZZZ *P);
-
 /**	@brief Adds ECP4 instance Q to ECP4 instance P
  *
 	@param P ECP4 instance, on exit =P+Q
 	@param Q ECP4 instance to be added to P
  */
 extern int ECP4_ZZZ_add(ECP4_ZZZ *P,ECP4_ZZZ *Q);
-
 /**	@brief Subtracts ECP instance Q from ECP4 instance P
  *
 	@param P ECP4 instance, on exit =P-Q
 	@param Q ECP4 instance to be subtracted from P
  */
 extern void ECP4_ZZZ_sub(ECP4_ZZZ *P,ECP4_ZZZ *Q);
-
 /**	@brief Multiplies an ECP4 instance P by a BIG, side-channel resistant
  *
 	Uses fixed sized windows.
@@ -231,10 +212,11 @@ extern void ECP4_ZZZ_frob(ECP4_ZZZ *P,FP2_YYY F[3],int n);
 /**	@brief Calculates P=Sigma b[i]*Q[i] for i=0 to 7
  *
 	@param P ECP4 instance, on exit = Sigma b[i]*Q[i] for i=0 to 7
-	@param Q ECP4 array of 8 points
-	@param b BIG array of 8 multipliers
+	@param Q ECP4 array of 4 points
+	@param b BIG array of 4 multipliers
  */
 extern void ECP4_ZZZ_mul8(ECP4_ZZZ *P,ECP4_ZZZ *Q,BIG_XXX *b);
+
 
 /**	@brief Maps random BIG to curve point of correct order
  *

@@ -26,8 +26,6 @@ under the License.
 /* Line function */
 static void PAIR_ZZZ_line(FP48_YYY *v,ECP8_ZZZ *A,ECP8_ZZZ *B,FP_YYY *Qx,FP_YYY *Qy)
 {
-    //FP2_YYY t;
-
     FP8_YYY X1,Y1,T1,T2;
     FP8_YYY XX,YY,ZZ,YZ;
     FP16_YYY a,b,c;
@@ -86,6 +84,7 @@ static void PAIR_ZZZ_line(FP48_YYY *v,ECP8_ZZZ *A,ECP8_ZZZ *B,FP_YYY *Qx,FP_YYY 
     else
     {
         /* addition */
+
         FP8_YYY_copy(&X1,&(A->x));		//FP8_YYY X1=new FP8_YYY(A.getx());    // X1
         FP8_YYY_copy(&Y1,&(A->y));		//FP8_YYY Y1=new FP8_YYY(A.gety());    // Y1
         FP8_YYY_copy(&T1,&(A->z));		//FP8_YYY T1=new FP8_YYY(A.getz());    // Z1
@@ -106,6 +105,7 @@ static void PAIR_ZZZ_line(FP48_YYY *v,ECP8_ZZZ *A,ECP8_ZZZ *B,FP_YYY *Qx,FP_YYY 
         FP8_YYY_times_i(&X1);
         FP8_YYY_norm(&X1);
 #endif
+
         FP8_YYY_mul(&T1,&T1,&(B->y));	//T1.mul(B.gety());       // T1=(X1-Z1.X2).Y2
 
         FP8_YYY_copy(&T2,&Y1);			//T2.copy(Y1);            // T2=Y1-Z1.Y2
@@ -129,53 +129,149 @@ static void PAIR_ZZZ_line(FP48_YYY *v,ECP8_ZZZ *A,ECP8_ZZZ *B,FP_YYY *Qx,FP_YYY 
     }
 
     FP48_YYY_from_FP16s(v,&a,&b,&c);
+    v->type=AMCL_FP_SPARSER;
 }
 
-/* Optimal R-ate pairing r=e(P,Q) */
-void PAIR_ZZZ_ate(FP48_YYY *r,ECP8_ZZZ *P,ECP_ZZZ *Q)
+/* prepare ate parameter, n=6u+2 (BN) or n=u (BLS), n3=3*n */
+int PAIR_ZZZ_nbits(BIG_XXX n3,BIG_XXX n)
 {
-    BIG_XXX x,n,n3;
-    FP_YYY Qx,Qy;
-    int i,j,nb,bt;
-    ECP8_ZZZ A;
-    FP48_YYY lv;
-
+    BIG_XXX x;
     BIG_XXX_rcopy(x,CURVE_Bnx_ZZZ);
 
     BIG_XXX_copy(n,x);
-
+    BIG_XXX_norm(n);
     BIG_XXX_pmul(n3,n,3);
     BIG_XXX_norm(n3);
 
-    FP_YYY_copy(&Qx,&(Q->x));
-    FP_YYY_copy(&Qy,&(Q->y));
+    return BIG_XXX_nbits(n3);
+}
 
-    ECP8_ZZZ_copy(&A,P);
-    FP48_YYY_one(r);
-    nb=BIG_XXX_nbits(n3);  // n3
+/*
+	For multi-pairing, product of n pairings
+	1. Declare FP24 array of length number of bits in Ate parameter
+	2. Initialise this array by calling PAIR_initmp()
+	3. Accumulate each pairing by calling PAIR_another() n times
+	4. Call PAIR_miller()
+	5. Call final exponentiation PAIR_fexp()
+*/
 
-    j=0;
-    /* Main Miller Loop */
+/* prepare for multi-pairing */
+void PAIR_ZZZ_initmp(FP48_YYY r[])
+{
+    int i;
+    for (i=ATE_BITS_ZZZ-1; i>=0; i--)
+        FP48_YYY_one(&r[i]);
+    return;
+}
+
+/* basic Miller loop */
+void PAIR_ZZZ_miller(FP48_YYY *res,FP48_YYY r[])
+{
+    int i;
+    FP48_YYY_one(res);
+    for (i=ATE_BITS_ZZZ-1; i>=1; i--)
+    {
+        FP48_YYY_sqr(res,res);
+        FP48_YYY_ssmul(res,&r[i]);
+    }
+
+#if SIGN_OF_X_ZZZ==NEGATIVEX
+    FP48_YYY_conj(res,res);
+#endif
+    FP48_YYY_ssmul(res,&r[0]);
+    return;
+}
+
+/* Accumulate another set of line functions for n-pairing */
+void PAIR_ZZZ_another(FP48_YYY r[],ECP8_ZZZ* PV,ECP_ZZZ* QV)
+{
+    int i,nb,bt;
+    BIG_XXX n,n3;
+    FP48_YYY lv,lv2;
+    ECP8_ZZZ A,NP,P;
+    ECP_ZZZ Q;
+    FP_YYY Qx,Qy;
+
+    nb=PAIR_ZZZ_nbits(n3,n);
+
+    ECP8_ZZZ_copy(&P,PV);
+    ECP_ZZZ_copy(&Q,QV);
+
+    ECP8_ZZZ_affine(&P);
+    ECP_ZZZ_affine(&Q);
+
+    FP_YYY_copy(&Qx,&(Q.x));
+    FP_YYY_copy(&Qy,&(Q.y));
+
+    ECP8_ZZZ_copy(&A,&P);
+    ECP8_ZZZ_copy(&NP,&P);
+    ECP8_ZZZ_neg(&NP);
+
     for (i=nb-2; i>=1; i--)
     {
-        j++;
-        FP48_YYY_sqr(r,r);
         PAIR_ZZZ_line(&lv,&A,&A,&Qx,&Qy);
-        FP48_YYY_smul(r,&lv,SEXTIC_TWIST_ZZZ);
-        bt= BIG_XXX_bit(n3,i)-BIG_XXX_bit(n,i);
+
+        bt=BIG_XXX_bit(n3,i)-BIG_XXX_bit(n,i); // bt=BIG_bit(n,i);
         if (bt==1)
         {
-            PAIR_ZZZ_line(&lv,&A,P,&Qx,&Qy);
-            FP48_YYY_smul(r,&lv,SEXTIC_TWIST_ZZZ);
+            PAIR_ZZZ_line(&lv2,&A,&P,&Qx,&Qy);
+            FP48_YYY_smul(&lv,&lv2);
         }
         if (bt==-1)
         {
-            ECP8_ZZZ_neg(P);
-            PAIR_ZZZ_line(&lv,&A,P,&Qx,&Qy);
-            FP48_YYY_smul(r,&lv,SEXTIC_TWIST_ZZZ);
-            ECP8_ZZZ_neg(P);
+            PAIR_ZZZ_line(&lv2,&A,&NP,&Qx,&Qy);
+            FP48_YYY_smul(&lv,&lv2);
         }
+        FP48_YYY_ssmul(&r[i],&lv);
+    }
+}
 
+/* Optimal R-ate pairing r=e(P,Q) */
+void PAIR_ZZZ_ate(FP48_YYY *r,ECP8_ZZZ *P1,ECP_ZZZ *Q1)
+{
+    BIG_XXX n,n3;
+    FP_YYY Qx,Qy;
+    int i,nb,bt;
+    ECP8_ZZZ A,NP,P;
+    ECP_ZZZ Q;
+    FP48_YYY lv,lv2;
+
+    nb=PAIR_ZZZ_nbits(n3,n);
+
+    ECP8_ZZZ_copy(&P,P1);
+    ECP_ZZZ_copy(&Q,Q1);
+
+    ECP8_ZZZ_affine(&P);
+    ECP_ZZZ_affine(&Q);
+
+
+    FP_YYY_copy(&Qx,&(Q.x));
+    FP_YYY_copy(&Qy,&(Q.y));
+
+    ECP8_ZZZ_copy(&A,&P);
+    ECP8_ZZZ_copy(&NP,&P);
+    ECP8_ZZZ_neg(&NP);
+
+    FP48_YYY_one(r);
+
+    /* Main Miller Loop */
+    for (i=nb-2; i>=1; i--)
+    {
+        FP48_YYY_sqr(r,r);
+        PAIR_ZZZ_line(&lv,&A,&A,&Qx,&Qy);
+
+        bt= BIG_XXX_bit(n3,i)-BIG_XXX_bit(n,i);  // BIG_bit(n,i);
+        if (bt==1)
+        {
+            PAIR_ZZZ_line(&lv2,&A,&P,&Qx,&Qy);
+            FP48_YYY_smul(&lv,&lv2);
+        }
+        if (bt==-1)
+        {
+            PAIR_ZZZ_line(&lv2,&A,&NP,&Qx,&Qy);
+            FP48_YYY_smul(&lv,&lv2);
+        }
+        FP48_YYY_ssmul(r,&lv);
     }
 
 #if SIGN_OF_X_ZZZ==NEGATIVEX
@@ -185,63 +281,69 @@ void PAIR_ZZZ_ate(FP48_YYY *r,ECP8_ZZZ *P,ECP_ZZZ *Q)
 }
 
 /* Optimal R-ate double pairing e(P,Q).e(R,S) */
-void PAIR_ZZZ_double_ate(FP48_YYY *r,ECP8_ZZZ *P,ECP_ZZZ *Q,ECP8_ZZZ *R,ECP_ZZZ *S)
+void PAIR_ZZZ_double_ate(FP48_YYY *r,ECP8_ZZZ *P1,ECP_ZZZ *Q1,ECP8_ZZZ *R1,ECP_ZZZ *S1)
 {
-    BIG_XXX x,n,n3;
+    BIG_XXX n,n3;
     FP_YYY Qx,Qy,Sx,Sy;
     int i,nb,bt;
-    ECP8_ZZZ A,B;
-    FP48_YYY lv;
+    ECP8_ZZZ A,B,NP,NR,P,R;
+    ECP_ZZZ Q,S;
+    FP48_YYY lv,lv2;
 
-    BIG_XXX_rcopy(x,CURVE_Bnx_ZZZ);
-    BIG_XXX_copy(n,x);
-    BIG_XXX_pmul(n3,n,3);
-    BIG_XXX_norm(n3);
+    nb=PAIR_ZZZ_nbits(n3,n);
 
-    FP_YYY_copy(&Qx,&(Q->x));
-    FP_YYY_copy(&Qy,&(Q->y));
+    ECP8_ZZZ_copy(&P,P1);
+    ECP_ZZZ_copy(&Q,Q1);
 
-    FP_YYY_copy(&Sx,&(S->x));
-    FP_YYY_copy(&Sy,&(S->y));
+    ECP8_ZZZ_affine(&P);
+    ECP_ZZZ_affine(&Q);
 
-    ECP8_ZZZ_copy(&A,P);
-    ECP8_ZZZ_copy(&B,R);
+    ECP8_ZZZ_copy(&R,R1);
+    ECP_ZZZ_copy(&S,S1);
+
+    ECP8_ZZZ_affine(&R);
+    ECP_ZZZ_affine(&S);
+
+    FP_YYY_copy(&Qx,&(Q.x));
+    FP_YYY_copy(&Qy,&(Q.y));
+
+    FP_YYY_copy(&Sx,&(S.x));
+    FP_YYY_copy(&Sy,&(S.y));
+
+    ECP8_ZZZ_copy(&A,&P);
+    ECP8_ZZZ_copy(&B,&R);
+    ECP8_ZZZ_copy(&NP,&P);
+    ECP8_ZZZ_neg(&NP);
+    ECP8_ZZZ_copy(&NR,&R);
+    ECP8_ZZZ_neg(&NR);
+
     FP48_YYY_one(r);
-    nb=BIG_XXX_nbits(n3);
 
     /* Main Miller Loop */
     for (i=nb-2; i>=1; i--)
     {
         FP48_YYY_sqr(r,r);
         PAIR_ZZZ_line(&lv,&A,&A,&Qx,&Qy);
-        FP48_YYY_smul(r,&lv,SEXTIC_TWIST_ZZZ);
+        PAIR_ZZZ_line(&lv2,&B,&B,&Sx,&Sy);
+        FP48_YYY_smul(&lv,&lv2);
+        FP48_YYY_ssmul(r,&lv);
 
-        PAIR_ZZZ_line(&lv,&B,&B,&Sx,&Sy);
-        FP48_YYY_smul(r,&lv,SEXTIC_TWIST_ZZZ);
-
-        bt=BIG_XXX_bit(n3,i)-BIG_XXX_bit(n,i);
+        bt=BIG_XXX_bit(n3,i)-BIG_XXX_bit(n,i); // bt=BIG_bit(n,i);
         if (bt==1)
         {
-            PAIR_ZZZ_line(&lv,&A,P,&Qx,&Qy);
-            FP48_YYY_smul(r,&lv,SEXTIC_TWIST_ZZZ);
-
-            PAIR_ZZZ_line(&lv,&B,R,&Sx,&Sy);
-            FP48_YYY_smul(r,&lv,SEXTIC_TWIST_ZZZ);
+            PAIR_ZZZ_line(&lv,&A,&P,&Qx,&Qy);
+            PAIR_ZZZ_line(&lv2,&B,&R,&Sx,&Sy);
+            FP48_YYY_smul(&lv,&lv2);
+            FP48_YYY_ssmul(r,&lv);
         }
         if (bt==-1)
         {
-            ECP8_ZZZ_neg(P);
-            PAIR_ZZZ_line(&lv,&A,P,&Qx,&Qy);
-            FP48_YYY_smul(r,&lv,SEXTIC_TWIST_ZZZ);
-            ECP8_ZZZ_neg(P);
-            ECP8_ZZZ_neg(R);
-            PAIR_ZZZ_line(&lv,&B,R,&Sx,&Sy);
-            FP48_YYY_smul(r,&lv,SEXTIC_TWIST_ZZZ);
-            ECP8_ZZZ_neg(R);
+            PAIR_ZZZ_line(&lv,&A,&NP,&Qx,&Qy);
+            PAIR_ZZZ_line(&lv2,&B,&NR,&Sx,&Sy);
+            FP48_YYY_smul(&lv,&lv2);
+            FP48_YYY_ssmul(r,&lv);
         }
     }
-
-
 
 #if SIGN_OF_X_ZZZ==NEGATIVEX
     FP48_YYY_conj(r,r);
@@ -275,7 +377,13 @@ void PAIR_ZZZ_fexp(FP48_YYY *r)
 
     FP48_YYY_mul(r,&t7);
 
-    // f^e0.f^e1^p.f^e2^p^2.. .. f^e14^p^14.f^e15^p^15
+//    if (FP48_YYY_isunity(r))
+//    {
+//        FP48_YYY_zero(r);
+//        return;
+//    }
+
+// f^e0.f^e1^p.f^e2^p^2.. .. f^e14^p^14.f^e15^p^15
 
     FP48_YYY_usqr(&t7,r);			// t7=f^2
     FP48_YYY_pow(&t1,&t7,x);		// t1=f^2u
@@ -426,7 +534,8 @@ void PAIR_ZZZ_fexp(FP48_YYY *r)
 /* GLV method */
 static void glv(BIG_XXX u[2],BIG_XXX e)
 {
-    // -(x^8).P = (Beta.x,y)
+
+// -(x^8).P = (Beta.x,y)
 
     BIG_XXX x,x2,q;
     BIG_XXX_rcopy(x,CURVE_Bnx_ZZZ);
@@ -442,6 +551,7 @@ static void glv(BIG_XXX u[2],BIG_XXX e)
 
     BIG_XXX_rcopy(q,CURVE_Order_ZZZ);
     BIG_XXX_sub(u[1],q,u[1]);
+
 
     return;
 }
@@ -494,8 +604,8 @@ void PAIR_ZZZ_G1mul(ECP_ZZZ *P,BIG_XXX e)
     BIG_XXX_rcopy(q,CURVE_Order_ZZZ);
     glv(u,e);
 
-    ECP_ZZZ_affine(P);
     ECP_ZZZ_copy(&Q,P);
+    ECP_ZZZ_affine(&Q);
     FP_YYY_rcopy(&cru,CURVE_Cru_ZZZ);
     FP_YYY_mul(&(Q.x),&(Q.x),&cru);
 
@@ -540,8 +650,6 @@ void PAIR_ZZZ_G2mul(ECP8_ZZZ *P,BIG_XXX e)
 
     BIG_XXX_rcopy(y,CURVE_Order_ZZZ);
     gs(u,e);
-
-    ECP8_ZZZ_affine(P);
 
     ECP8_ZZZ_copy(&Q[0],P);
     for (i=1; i<16; i++)
@@ -616,6 +724,10 @@ void PAIR_ZZZ_GTpow(FP48_YYY *f,BIG_XXX e)
 
 #ifdef HAS_MAIN
 
+using namespace std;
+using namespace ZZZ;
+
+
 // g++ -O2 pair256_BLS48.cpp ecp8_BLS48.cpp fp48_BLS48.cpp fp16_BLS48.cpp fp8_BLS48.cpp fp4_BLS48.cpp fp2_BLS48.cpp ecp_BLS48.cpp fp_BLS48.cpp big_B560_29.cpp rom_curve_BLS48.cpp rom_field_BLS48.cpp rand.cpp hash.cpp oct.cpp -o pair256_BLS48.exe
 
 int main()
@@ -623,25 +735,25 @@ int main()
     int i;
     char byt[32];
     csprng rng;
-    BIG_XXX xa,xb,ya,yb,w,a,b,t1,q,u[2],v[4],m,r,xx,x2,x4,p;
-    ECP8_ZZZ P,G;
-    ECP_ZZZ Q,R;
-    FP48_YYY g,gp;
-    FP16_YYY t,c,cp,cpm1,cpm2;
-    FP8_YYY X,Y;
-    FP2_YYY x,y,f,Aa,Bb;
-    FP_YYY cru;
+    BIG xa,xb,ya,yb,w,a,b,t1,q,u[2],v[4],m,r,xx,x2,x4,p;
+    ECP8 P,G;
+    ECP Q,R;
+    FP48 g,gp;
+    FP16 t,c,cp,cpm1,cpm2;
+    FP8 X,Y;
+    FP2 x,y,f,Aa,Bb;
+    FP cru;
 
     for (i=0; i<32; i++)
         byt[i]=i+9;
     RAND_seed(&rng,32,byt);
 
-    BIG_XXX_rcopy(r,CURVE_Order);
-    BIG_XXX_rcopy(p,Modulus);
+    BIG_rcopy(r,CURVE_Order);
+    BIG_rcopy(p,Modulus);
 
 
-    BIG_XXX_rcopy(xa,CURVE_Gx_ZZZ);
-    BIG_XXX_rcopy(ya,CURVE_Gy_ZZZ);
+    BIG_rcopy(xa,CURVE_Gx_ZZZ);
+    BIG_rcopy(ya,CURVE_Gy_ZZZ);
 
     ECP_ZZZ_set(&Q,xa,ya);
     if (Q.inf) printf("Failed to set - point not on curve\n");
@@ -651,80 +763,82 @@ int main()
     ECP_ZZZ_output(&Q);
     printf("\n");
 
-    ECP8_ZZZ_generator(&P);
+    ECP8_generator(&P);
 
     if (P.inf) printf("Failed to set - point not on curve\n");
     else printf("G2 set success\n");
 
-    BIG_XXX_rcopy(a,Fra);
-    BIG_XXX_rcopy(b,Frb);
-    FP2_YYY_from_BIGs(&f,a,b);
+    BIG_rcopy(a,Fra);
+    BIG_rcopy(b,Frb);
+    FP2_from_BIGs(&f,a,b);
 
     PAIR_ZZZ_ate(&g,&P,&Q);
 
     printf("gb= ");
-    FP48_YYY_output(&g);
+    FP48_output(&g);
     printf("\n");
     PAIR_ZZZ_fexp(&g);
 
     printf("g= ");
-    FP48_YYY_output(&g);
+    FP48_output(&g);
     printf("\n");
 
     ECP_ZZZ_copy(&R,&Q);
     ECP8_copy(&G,&P);
 
-    ECP8_ZZZ_dbl(&G);
-    ECP_ZZZ_dbl(&R);
-    ECP_ZZZ_affine(&R);
+    ECP8_dbl(&G);
+    ECP_dbl(&R);
+    ECP_affine(&R);
 
     PAIR_ZZZ_ate(&g,&G,&Q);
     PAIR_ZZZ_fexp(&g);
 
     printf("g1= ");
-    FP48_YYY_output(&g);
+    FP48_output(&g);
     printf("\n");
 
     PAIR_ZZZ_ate(&g,&P,&R);
     PAIR_ZZZ_fexp(&g);
 
     printf("g2= ");
-    FP48_YYY_output(&g);
+    FP48_output(&g);
     printf("\n");
 
 
     PAIR_ZZZ_G1mul(&Q,r);
     printf("rQ= ");
-    ECP_ZZZ_output(&Q);
+    ECP_output(&Q);
     printf("\n");
 
     PAIR_ZZZ_G2mul(&P,r);
     printf("rP= ");
-    ECP8_ZZZ_output(&P);
+    ECP8_output(&P);
     printf("\n");
 
     PAIR_ZZZ_GTpow(&g,r);
     printf("g^r= ");
-    FP48_YYY_output(&g);
+    FP48_output(&g);
     printf("\n");
 
 
-    BIG_XXX_randomnum(w,r,&rng);
+    BIG_randomnum(w,r,&rng);
 
-    FP48_YYY_copy(&gp,&g);
+    FP48_copy(&gp,&g);
 
     PAIR_ZZZ_GTpow(&g,w);
 
-    FP48_YYY_trace(&t,&g);
+    FP48_trace(&t,&g);
 
     printf("g^r=  ");
-    FP16_YYY_output(&t);
+    FP16_output(&t);
     printf("\n");
 
     FP48_compow(&t,&gp,w,r);
 
     printf("t(g)= ");
-    FP16_YYY_output(&t);
+    FP16_output(&t);
     printf("\n");
+
 }
+
 #endif

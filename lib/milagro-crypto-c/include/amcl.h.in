@@ -57,6 +57,13 @@
 #define D_TYPE 0
 #define M_TYPE 1
 
+#define AMCL_FP_ZERO 0
+#define AMCL_FP_UNITY 1
+#define AMCL_FP_SPARSER 2
+#define AMCL_FP_SPARSE 3
+#define AMCL_FP_DENSE 4
+
+
 /**
  * @brief SHA256 hash function instance */
 typedef struct
@@ -466,7 +473,7 @@ extern void  SHA3_squeeze(sha3 *H,char *h,int len);
  *
 	@param A an instance of the AMCL_AES
 	@param m is the new active mode of operation (ECB, CBC, OFB, CFB etc)
-	@param iv the new Initialization Vector
+	@param iv the new Initialisation Vector
  */
 extern void AES_reset(amcl_aes *A,int m,char *iv);
 /**	@brief Extract chaining vector from AMCL_AES instance
@@ -481,7 +488,7 @@ extern void AES_getreg(amcl_aes *A,char * f);
 	@param m is the active mode of operation (ECB, CBC, OFB, CFB etc)
 	@param n is the key length in bytes, 16, 24 or 32
 	@param k the AES key as an array of 16 bytes
-	@param iv the Initialization Vector
+	@param iv the Initialisation Vector
 	@return 0 for invalid n
  */
 extern int AES_init(amcl_aes *A,int m,int n,char *k,char *iv);
@@ -524,7 +531,7 @@ extern void AES_end(amcl_aes *A);
 	@param G an instance AES-GCM
 	@param nk is the key length in bytes, 16, 24 or 32
 	@param k the AES key as an array of 16 bytes
-	@param n the number of bytes in the Initialization Vector (IV)
+	@param n the number of bytes in the Initialisation Vector (IV)
 	@param iv the IV
  */
 extern void GCM_init(gcm *G,int nk,char *k,int n,char *iv);

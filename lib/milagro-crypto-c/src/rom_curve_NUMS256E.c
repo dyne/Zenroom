@@ -1,3 +1,22 @@
+/*
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+*/
+
 #include "arch.h"
 #include "ecp_NUMS256E.h"
 
@@ -39,4 +58,5 @@ const BIG_256_56 CURVE_B_NUMS256E= {0xFFFFFFFFFFC355L,0xFFFFFFFFFFFFFFL,0xFFFFFF
 const BIG_256_56 CURVE_Order_NUMS256E= {0x47B190EEDD4AF5L,0x5AA52F59439B1AL,0x4195L,0x0L,0x40000000L};
 const BIG_256_56 CURVE_Gx_NUMS256E= {0xDEC0902EED13DAL,0x8A0EE3083586A0L,0x5F69209BD60C39L,0x6AEA237DCD1E3DL,0x8A7514FBL};
 const BIG_256_56 CURVE_Gy_NUMS256E= {0xA616E7798A89E6L,0x61D810856ED32FL,0xD9A64B8010715FL,0xD9D925C7CE9665L,0x44D53E9FL};
+
 #endif

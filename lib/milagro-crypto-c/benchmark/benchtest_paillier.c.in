@@ -1,0 +1,313 @@
+/*
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+*/
+
+/*
+   Benchmark Paillier crypto system.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include "randapi.h"
+#include "paillier.h"
+#include "amcl.h"
+#include "arch.h"
+
+#define MIN_TIME 5.0
+#define MIN_ITERS 10
+#define NTHREADS 2
+
+// https://sourceforge.net/p/predef/wiki/Compilers/
+static void print_compiler_info()
+{
+#if defined(__clang__)
+    printf("Compiler:\t\tclang (%s)\n", __clang_version__);
+#elif defined(__GNUC_PATCHLEVEL__)
+    printf("Compiler:\t\tgcc (%d.%d.%d)\n", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+#elif defined(__GNUC_MINOR__)
+    printf("Compiler:\t\tgcc (%d.%d)\n", __GNUC__, __GNUC_MINOR__);
+#elif defined(__INTEL_COMPILER)
+    printf("Compiler:\t\tIntel C/C++ (%d)\n", __INTEL_COMPILER);
+#elif defined(_MSC_FULL_VER)
+    printf("Compiler:\tMicrosoft C/C++ (%d)\n", _MSC_FULL_VER);
+#elif defined(__CC_ARM)
+    printf("Compiler:\t\tARM C/C++ (%d)\n", __ARMCC_VERSION);
+#else
+    printf("Compiler:\t\tUnknown"\n);
+#endif
+}
+
+#if defined(__ANDROID__)
+#include <android/api-level.h>
+#endif
+
+// https://sourceforge.net/p/predef/wiki/Architectures/
+// https://sourceforge.net/p/predef/wiki/OperatingSystems/
+static void print_platform_info()
+{
+#if defined(__linux__)
+    printf("Target platform:\tLinux ");
+    
+#if defined(__x86_64__)
+    printf("(64-bit)\n");
+#else
+    printf("(32-bit)\n");
+#endif
+
+#if defined(__ANDROID__)
+    printf("Target platform:\tAndroid %d\n", __ANDROID_API__);
+#endif
+
+#elif defined(_WIN64)
+    printf("Target platform:\tWindows (64-bit)\n");
+#elif defined(_WIN32)
+    printf("Target platform:\tWindows (32-bit)\n");
+#elif defined(__APPLE__)
+    printf("Target platform:\tMac OS\n");
+#else
+    printf("Target platform:\tUnknown\n");
+#endif
+}
+
+
+static void print_paillier_configuration()
+{
+    printf("Project Version:\t@BUILD_VERSION@\n");    
+    printf("CFLAGS:\t\t\t@CMAKE_C_FLAGS@\n");
+    printf("Build type:\t\t@CMAKE_BUILD_TYPE@\n");    
+    printf("AMCL Version:\t\t@AMCL_VERSION_MAJOR@.@AMCL_VERSION_MINOR@.@AMCL_VERSION_PATCH@\n");
+    printf("AMCL Detected OS:\t@OS@\n");
+    printf("AMCL CHUNK:\t\t%d\n", CHUNK);
+}
+
+static void print_system_info()
+{
+    printf("Configuration info\n");
+    printf("==================\n");
+    print_platform_info();
+    print_compiler_info();
+    print_paillier_configuration();
+    printf("\n");
+}
+
+
+int paillier(csprng *RNG)
+{
+    int iterations;
+    clock_t start;
+    double elapsed;
+
+    // Key material
+    PAILLIER_private_key PRIV;
+    PAILLIER_public_key PUB;
+
+    // Plaintext to encrypt
+    char ptin[NTHREADS][FS_2048];
+    octet PTIN[NTHREADS];
+    char ptout[NTHREADS][FS_2048];
+    octet PTOUT[NTHREADS];
+
+    // Constant value for multiplication
+    char ptko[NTHREADS][FS_2048];
+    octet PTK[NTHREADS];
+
+    // Encrypted PTIN values
+    char cto[NTHREADS][FS_4096];
+    octet CT[NTHREADS];
+
+    // Homomorphic multiplicaton of plaintext by a constant ciphertext
+    char cta[NTHREADS][FS_4096];
+    octet CTA[NTHREADS];
+
+    // Homomorphic addition of ciphertext
+    char cto3[FS_4096] = {0};
+    octet CT3 = {0,sizeof(cto3),cto3};
+
+    // Output plaintext of addition of homomorphic multiplication values
+    char pto3[FS_2048] = {0};
+    octet PT3 = {sizeof(pto3),sizeof(pto3),pto3};
+
+    // Expected ouput is 26 / 0x1a i.e. 2*3 + 4*5
+    int values[NTHREADS] = {2,4};
+    int kvalues[NTHREADS] = {3,5};
+
+    print_system_info();
+
+    // Initialize octets
+    for(int i=0; i<NTHREADS; i++)
+    {
+        PTIN[i].max = FS_2048;
+        PTIN[i].val = ptin[i];
+        OCT_clear(&PTIN[i]);
+
+        PTOUT[i].max = FS_2048;
+        PTOUT[i].val = ptout[i];
+        OCT_clear(&PTOUT[i]);
+
+        PTK[i].max = FS_2048;
+        PTK[i].val = ptko[i];
+        OCT_clear(&PTIN[i]);
+
+        CT[i].max = FS_4096;
+        CT[i].val = cto[i];
+        OCT_clear(&PTIN[i]);
+
+        CTA[i].max = FS_4096;
+        CTA[i].val = cta[i];
+        OCT_clear(&PTIN[i]);
+    }
+
+    printf("Timing info\n");
+    printf("===========\n");
+    
+    // Generating public/private key pair
+    iterations=0;
+    start=clock();
+    do
+    {
+        PAILLIER_KEY_PAIR(RNG, NULL, NULL,&PUB, &PRIV);
+        iterations++;
+        elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
+    }
+    while (elapsed<MIN_TIME || iterations<MIN_ITERS);
+    elapsed=1000.0*elapsed/iterations;
+    printf("PAILLIER_KEY_PAIR\t%8d iterations\t",iterations);
+    printf("%8.2lf ms per iteration\n",elapsed);
+
+    // Set plaintext values
+    for(int i=0; i<NTHREADS; i++)
+    {
+        BIG_1024_58 pt[FFLEN_2048];
+        FF_2048_init(pt, values[i],FFLEN_2048);
+        FF_2048_toOctet(&PTIN[i], pt, FFLEN_2048);
+
+        BIG_1024_58 ptk[FFLEN_2048];
+        FF_2048_init(ptk, kvalues[i],FFLEN_2048);
+        FF_2048_toOctet(&PTK[i], ptk, FFLEN_2048);
+    }
+
+    // Encrypt plaintext
+    iterations=0;
+    start=clock();
+    do
+    {
+        PAILLIER_ENCRYPT(RNG, &PUB, &PTIN[0], &CT[0], NULL);
+        iterations++;
+        elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
+    }
+    while (elapsed<MIN_TIME || iterations<MIN_ITERS);
+    elapsed=1000.0*elapsed/iterations;
+    printf("PAILLIER_ENCRYPT\t%8d iterations\t",iterations);
+    printf("%8.2lf ms per iteration\n",elapsed);
+
+    PAILLIER_ENCRYPT(RNG, &PUB, &PTIN[1], &CT[1], NULL);
+
+    // Multiple by constant
+    iterations=0;
+    start=clock();
+    do
+    {
+        PAILLIER_MULT(&PUB, &CT[0], &PTK[0], &CTA[0]);
+        iterations++;
+        elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
+    }
+    while (elapsed<MIN_TIME || iterations<MIN_ITERS);
+    elapsed=1000.0*elapsed/iterations;
+    printf("PAILLIER_MULT\t\t%8d iterations\t",iterations);
+    printf("%8.2lf ms per iteration\n",elapsed);
+
+    PAILLIER_MULT(&PUB, &CT[1], &PTK[1], &CTA[1]);
+
+    // Homomorphic addition
+    iterations=0;
+    start=clock();
+    do
+    {
+        PAILLIER_ADD(&PUB, &CTA[0], &CTA[1], &CT3);
+        iterations++;
+        elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
+    }
+    while (elapsed<MIN_TIME || iterations<MIN_ITERS);
+    elapsed=1000.0*elapsed/iterations;
+    printf("PAILLIER_ADD\t\t%8d iterations\t",iterations);
+    printf("%8.2lf ms per iteration\n",elapsed);
+
+    // Homomorphic addition
+    iterations=0;
+    start=clock();
+    do
+    {
+        PAILLIER_DECRYPT(&PRIV, &CT3, &PT3);
+        iterations++;
+        elapsed=(clock()-start)/(double)CLOCKS_PER_SEC;
+    }
+    while (elapsed<MIN_TIME || iterations<MIN_ITERS);
+    elapsed=1000.0*elapsed/iterations;
+    printf("PAILLIER_DECRYPT\t%8d iterations\t",iterations);
+    printf("%8.2lf ms per iteration\n\n",elapsed);
+
+    printf("Size info\n");
+    printf("=========\n");
+    
+    printf("public key n\t%d bytes\n",  FS_2048);
+    printf("public key g\t%d bytes\n",  FS_2048);
+    printf("secret key lp\t%d bytes\n", HFS_2048);
+    printf("secret key lq\t%d bytes\n", HFS_2048);
+    printf("secret key mp\t%d bytes\n", HFS_2048);
+    printf("secret key mq\t%d bytes\n", HFS_2048);
+    printf("ciphertext\t%d bytes\n", FS_4096);
+
+#ifdef DEBUG
+    printf("PT3: ");
+    OCT_output(&PT3);
+    printf("\n");
+#endif
+
+    // Clean sensitive memory
+    PAILLIER_PRIVATE_KEY_KILL(&PRIV);
+
+    OCT_clear(&PT3);
+    for(int i=0; i<NTHREADS; i++)
+    {
+        OCT_clear(&PTIN[i]);
+        OCT_clear(&PTOUT[i]);
+    }
+    return 0;
+}
+
+int main()
+{
+    char* seedHex = "78d0fb6705ce77dee47d03eb5b9c5d30";
+    char seed[16] = {0};
+    octet SEED = {sizeof(seed),sizeof(seed),seed};
+
+    // CSPRNG
+    csprng RNG;
+
+    // fake random source
+    OCT_fromHex(&SEED,seedHex);
+
+    // initialise strong RNG
+    CREATE_CSPRNG(&RNG,&SEED);
+
+    paillier(&RNG);
+
+    KILL_CSPRNG(&RNG);
+}

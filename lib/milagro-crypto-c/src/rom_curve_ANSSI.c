@@ -1,3 +1,22 @@
+/*
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+*/
+
 #include "arch.h"
 #include "ecp_ANSSI.h"
 
@@ -10,7 +29,6 @@
 #endif
 
 #if CHUNK==32
-
 const int CURVE_Cof_I_ANSSI= 1;
 const BIG_256_28 CURVE_Cof_ANSSI= {0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0};
 const int CURVE_A_ANSSI= -3;
@@ -22,7 +40,6 @@ const BIG_256_28 CURVE_Gy_ANSSI= {0x4062CFB,0x115A155,0x4C9E183,0xC307E8E,0xF8C2
 #endif
 
 #if CHUNK==64
-
 const int CURVE_Cof_I_ANSSI= 1;
 const BIG_256_56 CURVE_Cof_ANSSI= {0x1L,0x0L,0x0L,0x0L,0x0L};
 const int CURVE_A_ANSSI= -3;
@@ -32,3 +49,4 @@ const BIG_256_56 CURVE_Order_ANSSI= {0xFDD459C6D655E1L,0x67E140D2BF941FL,0xE8CE4
 const BIG_256_56 CURVE_Gx_ANSSI= {0xC97A2DD98F5CFFL,0xD2DCAF98B70164L,0x4749D423958C27L,0x56C139EB31183DL,0xB6B3D4C3L};
 const BIG_256_56 CURVE_Gy_ANSSI= {0x115A1554062CFBL,0xC307E8E4C9E183L,0xF0F3ECEF8C2701L,0xC8B204911F9271L,0x6142E0F7L};
 #endif
+

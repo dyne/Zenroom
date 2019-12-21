@@ -14,4 +14,4 @@ script:
   - make -f Makefile.docker buildall
 
 after_success:
-  - coveralls-lcov /home/travis/build/milagro-crypto/milagro-crypto-c/target/LINUX_64BIT_COVERAGE/coverage/amcl.info
+  - coveralls-lcov /home/travis/build/apache/incubator-milagro-crypto-c/target/LINUX_64BIT_COVERAGE/coverage/amcl.info

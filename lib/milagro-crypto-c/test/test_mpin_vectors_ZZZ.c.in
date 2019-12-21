@@ -1,27 +1,21 @@
-/**
- * @file test_mpin_vectors_ZZZ.c
- * @author Alessandro Budroni
- * @brief Test mpin with test vectors
- *
- * LICENSE
- *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
+/*
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -72,86 +66,125 @@ int main(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
-    int i = 0, len = 0, rtn = 0;
+    int len = 0;
+    int errorCode = 0;
     FILE *fp;
 
     char line[LINE_LEN];
     char * linePtr = NULL;
 
-    char ms1[PFS_ZZZ];
-    octet MS1= {0,sizeof(ms1),ms1};
+    int applyVector=0;
+
+    // Do not use time permits
+    int date = 0;
+
+    const char* TESTline = "TEST = ";
+    int testNo;
+    const char* CURVEline = "CURVE = ";
+
+    // Master Secret
+    char ms1Golden[PFS_ZZZ];
+    octet MS1Golden= {0,sizeof(ms1Golden),ms1Golden};
     const char* MS1line = "MS1 = ";
-    char ms2[PFS_ZZZ];
-    octet MS2= {0,sizeof(ms2),ms2};
+    char ms2Golden[PFS_ZZZ];
+    octet MS2Golden= {0,sizeof(ms2Golden),ms2Golden};
     const char* MS2line = "MS2 = ";
-    char ss1[G2LEN], rtss1[G2LEN];
-    octet SS1= {0,sizeof(ss1),ss1}, rtSS1= {0,sizeof(rtss1),rtss1};
+
+    // Server Secret
+    char ss1[G2LEN];
+    octet SS1= {0,sizeof(ss1),ss1};
+    char ss1Golden[G2LEN];
+    octet SS1Golden= {0,sizeof(ss1Golden),ss1Golden};
     const char* SS1line = "SS1 = ";
-    char ss2[G2LEN], rtss2[G2LEN];
-    octet SS2= {0,sizeof(ss2),ss2}, rtSS2= {0,sizeof(rtss2),rtss2};
+
+    char ss2[G2LEN];
+    octet SS2= {0,sizeof(ss2),ss2};
+    char ss2Golden[G2LEN];
+    octet SS2Golden= {0,sizeof(ss2Golden),ss2Golden};
     const char* SS2line = "SS2 = ";
-    int DATE = 0;
-    const char* DATEline = "DATE = ";
+
+    char ss[G2LEN];
+    octet SS= {0,sizeof(ss),ss};
+    char ssGolden[G2LEN];
+    octet SSGolden= {0,sizeof(ssGolden),ssGolden};
+    const char* SSline = "SS = ";
+
+    // MPIN Id
+    char mpinidGolden[300+1];
+    octet MPINIdGolden= {0,sizeof(mpinidGolden),mpinidGolden};
+    const char* MPINIdline = "MPINId = ";
+
+    // PIN1 creates token
     int PIN1 = 0;
     const char* PIN1line = "PIN1 = ";
+
+    // PIN2 used for authentication
     int PIN2 = 0;
     const char* PIN2line = "PIN2 = ";
-    char server_secret[G2LEN], rt_server_secret[G2LEN];
-    octet SERVER_SECRET= {0,sizeof(server_secret),server_secret}, rtSERVER_SECRET= {0,sizeof(rt_server_secret),rt_server_secret};
-    const char* SERVER_SECRETline = "SERVER_SECRET = ";
-    char tp1[2*PFS_ZZZ+1], rttp1[2*PFS_ZZZ+1];
-    octet TP1= {0,sizeof(tp1),tp1}, rtTP1= {0,sizeof(rttp1),rttp1};
-    const char* TP1line = "TP1 = ";
-    char tp2[2*PFS_ZZZ+1], rttp2[2*PFS_ZZZ+1];
-    octet TP2= {0,sizeof(tp2),tp2}, rtTP2= {0,sizeof(rttp2),rttp2};
-    const char* TP2line = "TP2 = ";
-    char cs1[2*PFS_ZZZ+1], rtcs1[2*PFS_ZZZ+1];
-    octet CS1= {0,sizeof(cs1),cs1}, rtCS1= {0,sizeof(rtcs1),rtcs1};
+
+    // Client Secret
+    char cs1Golden[2*PFS_ZZZ+1];
+    octet CS1Golden= {0,sizeof(cs1Golden),cs1Golden};
     const char* CS1line = "CS1 = ";
-    char cs2[2*PFS_ZZZ+1], rtcs2[2*PFS_ZZZ+1];
-    octet CS2= {0,sizeof(cs2),cs2}, rtCS2= {0,sizeof(rtcs2),rtcs2};
+
+    char cs2[2*PFS_ZZZ+1];
+    octet CS2= {0,sizeof(cs2),cs2};
+    char cs2Golden[2*PFS_ZZZ+1];
+    octet CS2Golden= {0,sizeof(cs2Golden),cs2Golden};
     const char* CS2line = "CS2 = ";
-    char client_secret[2*PFS_ZZZ+1], rtclient_secret[2*PFS_ZZZ+1];
-    octet CLIENT_SECRET= {0,sizeof(client_secret),client_secret}, rtCLIENT_SECRET= {0,sizeof(rtclient_secret),rtclient_secret};
-    const char* CLIENT_SECRETline = "CLIENT_SECRET = ";
-    char hash_mpin_id_hex[PFS_ZZZ], rthash_mpin_id_hex[PFS_ZZZ];
-    octet HASH_MPIN_ID_HEX= {0,sizeof(hash_mpin_id_hex),hash_mpin_id_hex}, rtHASH_MPIN_ID_HEX= {0,sizeof(rthash_mpin_id_hex),rthash_mpin_id_hex};
-    const char* HASH_MPIN_ID_HEXline = "HASH_MPIN_ID_HEX = ";
-    char time_permit[2*PFS_ZZZ+1], rttime_permit[2*PFS_ZZZ+1];
-    octet TIME_PERMIT= {0,sizeof(time_permit),time_permit}, rtTIME_PERMIT= {0,sizeof(rttime_permit),rttime_permit};
-    const char* TIME_PERMITline = "TIME_PERMIT = ";
-    char mpin_id_hex[300+1];
-    octet MPIN_ID_HEX= {0,sizeof(mpin_id_hex),mpin_id_hex};
-    const char* MPIN_ID_HEXline = "MPIN_ID_HEX = ";
+
+    char cs1[2*PFS_ZZZ+1];
+    octet CS1= {0,sizeof(cs1),cs1};
+    char csGolden[2*PFS_ZZZ+1];
+    octet CSGolden= {0,sizeof(csGolden),csGolden};
+    const char* CSline = "CS = ";
+
+    // Token
     char token[2*PFS_ZZZ+1];
     octet TOKEN= {0,sizeof(token),token};
+    char tokenGolden[2*PFS_ZZZ+1];
+    octet TOKENGolden= {0,sizeof(tokenGolden),tokenGolden};
     const char* TOKENline = "TOKEN = ";
-    int SERVER_OUTPUT = 0;
-    const char* SERVER_OUTPUTline = "SERVER_OUTPUT = ";
-    char u[2*PFS_ZZZ+1], rtu[2*PFS_ZZZ+1];
-    octet U= {0,sizeof(u),u}, rtU= {0,sizeof(rtu),rtu};
+
+    // X
+    char xGolden[PFS_ZZZ];
+    octet XGolden= {0,sizeof(xGolden),xGolden};
+    const char* Xline = "X = ";
+
+    // Commitment
+    char u[2*PFS_ZZZ+1];
+    octet U= {0,sizeof(u),u};
+    char uGolden[2*PFS_ZZZ+1];
+    octet UGolden= {0,sizeof(uGolden),uGolden};
     const char* Uline = "U = ";
+
+    // Y
+    char yGolden[PFS_ZZZ];
+    octet YGolden= {0,sizeof(yGolden),yGolden};
+    const char* Yline = "Y = ";
+
+    // V
     char v[2*PFS_ZZZ+1];
     octet V= {0,sizeof(v),v};
+    char vGolden[2*PFS_ZZZ+1];
+    octet VGolden= {0,sizeof(vGolden),vGolden};
     const char* Vline = "V = ";
-    char y[PFS_ZZZ];
-    octet Y= {0,sizeof(y),y};
-    const char* Yline = "Y = ";
-    char x[PFS_ZZZ];
-    octet X= {0,sizeof(x),x};
-    const char* Xline = "X = ";
-    char ut[2*PFS_ZZZ+1], rtut[2*PFS_ZZZ+1];
-    octet UT= {0,sizeof(ut),ut}, rtUT= {0,sizeof(rtut),rtut};
-    const char* UTline = "UT = ";
-    char sec[2*PFS_ZZZ+1], rtsec[2*PFS_ZZZ+1];
-    octet SEC= {0,sizeof(sec),sec}, rtSEC= {0,sizeof(rtsec),rtsec};
-    const char* SECline = "SEC = ";
-    char hid[2*PFS_ZZZ+1], htid[2*PFS_ZZZ+1];
-    octet HID= {0,sizeof(hid), hid}, HTID= {0,sizeof(htid),htid};
-    char e[GTLEN];
-    octet E= {0,sizeof(e),e};
-    char f[GTLEN];
-    octet F= {0,sizeof(f),f};
+
+    // Authentication result
+    int AuthResultGolden = 0;
+    const char* AuthResultline = "AuthResult = ";
+
+    // Hash MPINId to integer
+    char hiid[PFS_ZZZ];
+    octet HiId= {0,sizeof(hiid),hiid};
+
+    // Hash MPINId to point
+    char hpid[2*PFS_ZZZ+1];
+    octet HpId= {0,sizeof(hpid),hpid};
+
+    // Unused parameters
+    octet *pUT=NULL,*pHTID=NULL,*pPERMIT=NULL,*pE=NULL,*pF=NULL;
+    csprng* RNG=NULL;
 
     fp = fopen(argv[1], "r");
     if (fp == NULL)
@@ -162,338 +195,336 @@ int main(int argc, char** argv)
 
     while (fgets(line, LINE_LEN, fp) != NULL)
     {
-        i++;
-// Read MS1
+        // Read TEST Number
+        if (!strncmp(line,TESTline, strlen(TESTline)))
+        {
+            len = strlen(TESTline);
+            linePtr = line + len;
+            sscanf(linePtr,"%d\n",&testNo);
+#ifdef DEBUG
+            printf("TEST = %d\n",testNo);
+#endif
+        }
+        // Read Curve
+        if (!strncmp(line,CURVEline, strlen(CURVEline)))
+        {
+            len = strlen(CURVEline);
+            linePtr = line + len;
+#ifdef DEBUG
+            printf("CURVE = %s",linePtr);
+#endif
+        }
+        // Read MS1
         if (!strncmp(line,MS1line, strlen(MS1line)))
         {
             len = strlen(MS1line);
             linePtr = line + len;
-            read_OCTET(&MS1,linePtr);
+            read_OCTET(&MS1Golden,linePtr);
+#ifdef DEBUG
+            printf("MS1 = ");
+            OCT_output(&MS1Golden);
+#endif
         }
-// Read MS2
+        // Read MS2
         if (!strncmp(line,MS2line, strlen(MS2line)))
         {
             len = strlen(MS2line);
             linePtr = line + len;
-            read_OCTET(&MS2,linePtr);
+            read_OCTET(&MS2Golden,linePtr);
+#ifdef DEBUG
+            printf("MS2 = ");
+            OCT_output(&MS2Golden);
+#endif
         }
-// Read SS1
+        // Read SS1
         if (!strncmp(line,SS1line, strlen(SS1line)))
         {
             len = strlen(SS1line);
             linePtr = line + len;
-            read_OCTET(&SS1,linePtr);
-// Generate first server secret shares
-            rtn = MPIN_ZZZ_GET_SERVER_SECRET(&MS1,&rtSS1);
-            if (rtn != 0)
-            {
-                printf("ERROR MPIN_ZZZ_GET_SERVER_SECRET(&MS1,&SS1), %d, line %d\n", rtn,i);
-                exit(EXIT_FAILURE);
-            }
-            else if (!OCT_comp(&rtSS1,&SS1))
-            {
-                printf("rtSS1: 0x");
-                OCT_output(&rtSS1);
-                printf("  SS1: 0x");
-                OCT_output(&SS1);
-                printf("ERROR generating server secret, line %d\n",i);
-                exit(EXIT_FAILURE);
-            }
+            read_OCTET(&SS1Golden,linePtr);
+#ifdef DEBUG
+            printf("SS1 = ");
+            OCT_output(&SS1Golden);
+#endif
         }
-// Read SS2
+        // Read SS2
         if (!strncmp(line,SS2line, strlen(SS2line)))
         {
             len = strlen(SS2line);
             linePtr = line + len;
-            read_OCTET(&SS2,linePtr);
-// Generate second server secret shares
-            rtn = MPIN_ZZZ_GET_SERVER_SECRET(&MS2,&rtSS2);
-            if (rtn != 0)
-            {
-                printf("ERROR MPIN_ZZZ_GET_SERVER_SECRET(&MS1,&SS2), %d, line %d\n", rtn,i);
-                exit(EXIT_FAILURE);
-            }
-            else if (!OCT_comp(&rtSS2,&SS2))
-            {
-                printf("ERROR generating server secret, line %d\n",i);
-                exit(EXIT_FAILURE);
-            }
+            read_OCTET(&SS2Golden,linePtr);
+#ifdef DEBUG
+            printf("SS2 = ");
+            OCT_output(&SS2Golden);
+#endif
         }
-// Read SERVER_SECRET
-        if (!strncmp(line,SERVER_SECRETline, strlen(SERVER_SECRETline)))
+        // Read SS
+        if (!strncmp(line,SSline, strlen(SSline)))
         {
-            len = strlen(SERVER_SECRETline);
+            len = strlen(SSline);
             linePtr = line + len;
-            read_OCTET(&SERVER_SECRET,linePtr);
-// Recombine server secret
-            rtn = MPIN_ZZZ_RECOMBINE_G2(&SS1, &SS2, &rtSERVER_SECRET);
-            if (rtn != 0)
-            {
-                printf("MPIN_ZZZ_RECOMBINE_G2(&SS1, &SS2, &SERVER_SECRET) Error %d, line %d\n", rtn,i);
-                exit(EXIT_FAILURE);
-            }
-            else if (!OCT_comp(&SERVER_SECRET,&rtSERVER_SECRET))
-            {
-                printf("ERROR recombining server secret, line %d\n",i);
-                exit(EXIT_FAILURE);
-            }
+            read_OCTET(&SSGolden,linePtr);
+#ifdef DEBUG
+            printf("SS = ");
+            OCT_output(&SSGolden);
+#endif
         }
-// Read MPIN_ID_HEX
-        if (!strncmp(line,MPIN_ID_HEXline, strlen(MPIN_ID_HEXline)))
+        // Read MPINId
+        if (!strncmp(line,MPINIdline, strlen(MPINIdline)))
         {
-            len = strlen(MPIN_ID_HEXline);
+            len = strlen(MPINIdline);
             linePtr = line + len;
-            read_OCTET(&MPIN_ID_HEX,linePtr);
+            read_OCTET(&MPINIdGolden,linePtr);
+#ifdef DEBUG
+            printf("MPINId = ");
+            OCT_output(&MPINIdGolden);
+#endif
         }
-// Read HASH_MPIN_ID_HEX
-        if (!strncmp(line,HASH_MPIN_ID_HEXline, strlen(HASH_MPIN_ID_HEXline)))
-        {
-            len = strlen(HASH_MPIN_ID_HEXline);
-            linePtr = line + len;
-            read_OCTET(&HASH_MPIN_ID_HEX,linePtr);
-// Hash MPIN_ID
-            HASH_ID(HASH_TYPE_ZZZ,&MPIN_ID_HEX,&rtHASH_MPIN_ID_HEX);
-            if (!OCT_comp(&HASH_MPIN_ID_HEX,&rtHASH_MPIN_ID_HEX))
-            {
-                printf("ERROR hashing identity, line %d\n",i);
-                exit(EXIT_FAILURE);
-            }
-        }
-// Read CS1
-        if (!strncmp(line,CS1line, strlen(CS1line)))
-        {
-            len = strlen(CS1line);
-            linePtr = line + len;
-            read_OCTET(&CS1,linePtr);
-// Generate first client secret shares
-            rtn = MPIN_ZZZ_GET_CLIENT_SECRET(&MS1,&HASH_MPIN_ID_HEX,&rtCS1);
-            if (rtn != 0)
-            {
-                printf("MPIN_ZZZ_GET_CLIENT_SECRET(&MS1,&HASH_MPIN_ID_HEX,&CS1) Error %d, line %d\n", rtn,i);
-                exit(EXIT_FAILURE);
-            }
-            if (!OCT_comp(&CS1,&rtCS1))
-            {
-                printf("ERROR generating client share, line %d\n",i);
-                exit(EXIT_FAILURE);
-            }
-        }
-// Read CS2
-        if (!strncmp(line,CS2line, strlen(CS2line)))
-        {
-            len = strlen(CS2line);
-            linePtr = line + len;
-            read_OCTET(&CS2,linePtr);
-// Generate second client secret shares
-            rtn = MPIN_ZZZ_GET_CLIENT_SECRET(&MS2,&HASH_MPIN_ID_HEX,&rtCS2);
-            if (rtn != 0)
-            {
-                printf("MPIN_ZZZ_GET_CLIENT_SECRET(&MS2,&HASH_MPIN_ID_HEX,&CS1) Error %d, line %d\n", rtn,i);
-                exit(EXIT_FAILURE);
-            }
-            if (!OCT_comp(&CS2,&rtCS2))
-            {
-                printf("ERROR generating client share, line %d\n",i);
-                exit(EXIT_FAILURE);
-            }
-        }
-// Read CLIENT_SECRET
-        if (!strncmp(line,CLIENT_SECRETline, strlen(CLIENT_SECRETline)))
-        {
-            len = strlen(CLIENT_SECRETline);
-            linePtr = line + len;
-            read_OCTET(&CLIENT_SECRET,linePtr);
-// Combine client secret shares : TOKEN is the full client secret
-            rtn = MPIN_ZZZ_RECOMBINE_G1(&CS1, &CS2, &rtCLIENT_SECRET);
-            if (rtn != 0)
-            {
-                printf("MPIN_ZZZ_RECOMBINE_G1(&CS1, &CS2, &rtCLIENT_SECRET) Error %d, line %d\n",rtn,i);
-                exit(EXIT_FAILURE);
-            }
-            if (!OCT_comp(&CLIENT_SECRET,&rtCLIENT_SECRET))
-            {
-                printf("ERROR generating CLIENT_SECRET, line %d\n",i);
-                exit(EXIT_FAILURE);
-            }
-        }
-// Read DATE
-        if (!strncmp(line,DATEline, strlen(DATEline)))
-        {
-            len = strlen(DATEline);
-            linePtr = line + len;
-            sscanf(linePtr,"%d\n",&DATE);
-        }
-// Read PIN1
+        // Read PIN1
         if (!strncmp(line,PIN1line, strlen(PIN1line)))
         {
             len = strlen(PIN1line);
             linePtr = line + len;
             sscanf(linePtr,"%d\n",&PIN1);
+#ifdef DEBUG
+            printf("PIN1 = %d\n", PIN1);
+#endif
         }
-// Read PIN2
+        // Read PIN2
         if (!strncmp(line,PIN2line, strlen(PIN2line)))
         {
             len = strlen(PIN2line);
             linePtr = line + len;
             sscanf(linePtr,"%d\n",&PIN2);
+#ifdef DEBUG
+            printf("PIN2 = %d\n", PIN2);
+#endif
         }
-// Read TP1
-        if (!strncmp(line,TP1line, strlen(TP1line)))
+        // Read CS1
+        if (!strncmp(line,CS1line, strlen(CS1line)))
         {
-            len = strlen(TP1line);
+            len = strlen(CS1line);
             linePtr = line + len;
-            read_OCTET(&TP1,linePtr);
-// Generate first Time Permit
-            rtn = MPIN_ZZZ_GET_CLIENT_PERMIT(HASH_TYPE_ZZZ,DATE,&MS1,&HASH_MPIN_ID_HEX,&rtTP1);
-            if (rtn != 0)
-            {
-                printf("MPIN_ZZZ_GET_CLIENT_PERMIT((HASH_TYPE_ZZZ,DATE,&MS1,&HASH_MPIN_ID_HEX,&TP1) Error %d, line %d\n",rtn,i);
-                exit(EXIT_FAILURE);
-            }
-            if (!OCT_comp(&TP1,&rtTP1))
-            {
-                printf("ERROR generating TIME PERMIT, line %d\n",i);
-                exit(EXIT_FAILURE);
-            }
+            read_OCTET(&CS1Golden,linePtr);
+#ifdef DEBUG
+            printf("CS1 = ");
+            OCT_output(&CS1Golden);
+#endif
         }
-// Read TP2
-        if (!strncmp(line,TP2line, strlen(TP2line)))
+        // Read CS2
+        if (!strncmp(line,CS2line, strlen(CS2line)))
         {
-            len = strlen(TP2line);
+            len = strlen(CS2line);
             linePtr = line + len;
-            read_OCTET(&TP2,linePtr);
-// Generate second Time Permit
-            rtn = MPIN_ZZZ_GET_CLIENT_PERMIT(HASH_TYPE_ZZZ,DATE,&MS2,&HASH_MPIN_ID_HEX,&rtTP2);
-            if (rtn != 0)
-            {
-                printf("MPIN_ZZZ_GET_CLIENT_PERMIT((HASH_TYPE_ZZZ,DATE,&MS1,&HASH_MPIN_ID_HEX,&TP2) Error %d, line %d\n",rtn,i);
-                exit(EXIT_FAILURE);
-            }
-            if (!OCT_comp(&TP2,&rtTP2))
-            {
-                printf("ERROR generating TIME PERMIT, line %d\n",i);
-                exit(EXIT_FAILURE);
-            }
+            read_OCTET(&CS2Golden,linePtr);
+#ifdef DEBUG
+            printf("CS2 = ");
+            OCT_output(&CS2Golden);
+#endif
         }
-// Read TIME_PERMIT
-        if (!strncmp(line,TIME_PERMITline, strlen(TIME_PERMITline)))
+        // Read CS
+        if (!strncmp(line,CSline, strlen(CSline)))
         {
-            len = strlen(TIME_PERMITline);
+            len = strlen(CSline);
             linePtr = line + len;
-            read_OCTET(&TIME_PERMIT,linePtr);
-// Combine Time Permits
-            rtn = MPIN_ZZZ_RECOMBINE_G1(&TP1, &TP2, &rtTIME_PERMIT);
-            if (rtn != 0)
-            {
-                printf("MPIN_ZZZ_RECOMBINE_G1(&TP1, &TP2, &rtTIME_PERMIT) Error %d, line %d\n",rtn,i);
-                exit(EXIT_FAILURE);
-            }
-            if (!OCT_comp(&TIME_PERMIT,&rtTIME_PERMIT))
-            {
-                printf("ERROR combining TIME PERMITs, line %d\n",i);
-                exit(EXIT_FAILURE);
-            }
+            read_OCTET(&CSGolden,linePtr);
+#ifdef DEBUG
+            printf("CS = ");
+            OCT_output(&CSGolden);
+#endif
         }
-// Read TOKEN
+        // Read TOKEN
         if (!strncmp(line,TOKENline, strlen(TOKENline)))
         {
             len = strlen(TOKENline);
             linePtr = line + len;
-            read_OCTET(&TOKEN,linePtr);
-// Client extracts PIN1 from secret to create Token
-            rtn = MPIN_ZZZ_EXTRACT_PIN(HASH_TYPE_ZZZ,&MPIN_ID_HEX, PIN1, &rtCLIENT_SECRET);
-            if (rtn != 0)
-            {
-                printf("MPIN_ZZZ_EXTRACT_PIN( &ID, PIN, &TOKEN) Error %d, line %d\n",rtn,i);
-                exit(EXIT_FAILURE);
-            }
-            if (!OCT_comp(&TOKEN,&rtCLIENT_SECRET))
-            {
-                printf("ERROR extracting PIN from CLIENT SECRET, line %d\n",i);
-                exit(EXIT_FAILURE);
-            }
+            read_OCTET(&TOKENGolden,linePtr);
+#ifdef DEBUG
+            printf("TOKEN = ");
+            OCT_output(&TOKENGolden);
+#endif
         }
-// Read X
+        // Read X
         if (!strncmp(line,Xline, strlen(Xline)))
         {
             len = strlen(Xline);
             linePtr = line + len;
-            read_OCTET(&X,linePtr);
+            read_OCTET(&XGolden,linePtr);
+#ifdef DEBUG
+            printf("X = ");
+            OCT_output(&XGolden);
+#endif
         }
-// Read U
+        // Read U
         if (!strncmp(line,Uline, strlen(Uline)))
         {
             len = strlen(Uline);
             linePtr = line + len;
-            read_OCTET(&U,linePtr);
+            read_OCTET(&UGolden,linePtr);
+#ifdef DEBUG
+            printf("U = ");
+            OCT_output(&UGolden);
+#endif
         }
-// Read UT
-        if (!strncmp(line,UTline, strlen(UTline)))
-        {
-            len = strlen(UTline);
-            linePtr = line + len;
-            read_OCTET(&UT,linePtr);
-        }
-// Read SEC
-        if (!strncmp(line,SECline, strlen(SECline)))
-        {
-            len = strlen(SECline);
-            linePtr = line + len;
-            read_OCTET(&SEC,linePtr);
-// Client first pass
-            rtn = MPIN_ZZZ_CLIENT_1(HASH_TYPE_ZZZ,DATE,&MPIN_ID_HEX,NULL,&X,PIN2,&TOKEN,&rtSEC,&rtU,&rtUT,&TIME_PERMIT);
-            if (rtn != 0)
-            {
-                printf("MPIN_ZZZ_CLIENT_1 ERROR %d, line %d\n",rtn,i);
-                exit(EXIT_FAILURE);
-            }
-            else if (!OCT_comp(&U,&rtU) || !OCT_comp(&UT,&rtUT) || !OCT_comp(&SEC,&rtSEC))
-            {
-                printf("ERROR performing CLIENT FIRST PASS, line %d\n",i);
-                exit(EXIT_FAILURE);
-            }
-        }
-// Read V
-        if (!strncmp(line,Vline, strlen(Vline)))
-        {
-            len = strlen(Vline);
-            linePtr = line + len;
-            read_OCTET(&V,linePtr);
-        }
-// Read Y
+        // Read Y
         if (!strncmp(line,Yline, strlen(Yline)))
         {
             len = strlen(Yline);
             linePtr = line + len;
-            read_OCTET(&Y,linePtr);
+            read_OCTET(&YGolden,linePtr);
+#ifdef DEBUG
+            printf("Y = ");
+            OCT_output(&YGolden);
+#endif
         }
-// Read SERVER_OUTPUT
-        if (!strncmp(line,SERVER_OUTPUTline, strlen(SERVER_OUTPUTline)))
+        // Read V
+        if (!strncmp(line,Vline, strlen(Vline)))
         {
-            len = strlen(SERVER_OUTPUTline);
+            len = strlen(Vline);
             linePtr = line + len;
-            sscanf(linePtr,"%d\n",&SERVER_OUTPUT);
-// Server calculates H(ID) and H(T|H(ID)) (if time permits enabled), and maps them to points on the curve HID and HTID resp.
+            read_OCTET(&VGolden,linePtr);
+#ifdef DEBUG
+            printf("V = ");
+            OCT_output(&VGolden);
+#endif
+        }
+        // Read AuthResult
+        if (!strncmp(line,AuthResultline, strlen(AuthResultline)))
+        {
+            len = strlen(AuthResultline);
+            linePtr = line + len;
+            sscanf(linePtr,"%d\n",&AuthResultGolden);
+            applyVector=1;
+#ifdef DEBUG
+            printf("AuthResult = %d\n", AuthResultGolden);
+#endif
+        }
 
-            MPIN_ZZZ_SERVER_1(HASH_TYPE_ZZZ,DATE,&MPIN_ID_HEX,&HID,&HTID);
-// Client second pass
-            rtn = MPIN_ZZZ_CLIENT_2(&X,&Y,&rtSEC);
-            if (rtn != 0)
+        if (applyVector)
+        {
+            applyVector=0;
+
+            // DTA Issues Server secrets
+            errorCode = MPIN_ZZZ_GET_SERVER_SECRET(&MS1Golden,&SS1);
+            if (errorCode != 0)
             {
-                printf("MPIN_ZZZ_CLIENT_2(&X,&Y,&SEC) Error %d, line %d\n",rtn,i);
+                printf("ERROR SS1 Test %d Error Code %d\n", testNo,errorCode);
                 exit(EXIT_FAILURE);
             }
-            if (!OCT_comp(&V,&rtSEC))
+            else if (!OCT_comp(&SS1Golden,&SS1))
             {
-                printf("ERROR performing CLIENT SECOND PASS, line %d\n",i);
+                printf("ERROR SS1 Test %d\n", testNo);
                 exit(EXIT_FAILURE);
             }
-// Server second pass
-            rtn = MPIN_ZZZ_SERVER_2(DATE,&HID,&HTID,&Y,&SERVER_SECRET,&U,&UT,&V,&E,&F,NULL);
 
-            if (rtn != SERVER_OUTPUT)
+            errorCode = MPIN_ZZZ_GET_SERVER_SECRET(&MS2Golden,&SS2);
+            if (errorCode != 0)
             {
-                printf("ERROR performing SERVER SECOND PASS, line %d\n",i);
+                printf("ERROR SS2 Test %d Error Code %d\n", testNo,errorCode);
+                exit(EXIT_FAILURE);
+            }
+            else if (!OCT_comp(&SS2Golden,&SS2))
+            {
+                printf("ERROR SS2 Test %d\n", testNo);
+                exit(EXIT_FAILURE);
+            }
+
+            errorCode = MPIN_ZZZ_RECOMBINE_G2(&SS1Golden, &SS2Golden, &SS);
+            if (errorCode != 0)
+            {
+                printf("ERROR SS Test %d Error Code %d\n", testNo,errorCode);
+                exit(EXIT_FAILURE);
+            }
+            else if (!OCT_comp(&SSGolden,&SS))
+            {
+                printf("ERROR SS Test %d\n", testNo);
+                exit(EXIT_FAILURE);
+            }
+
+            // DTA Issues Client secrets
+            HASH_ID(HASH_TYPE_ZZZ,&MPINIdGolden,&HiId);
+            errorCode = MPIN_ZZZ_GET_CLIENT_SECRET(&MS1Golden,&HiId,&CS1);
+            if (errorCode != 0)
+            {
+                printf("ERROR CS1 Test %d Error Code %d\n", testNo,errorCode);
+                exit(EXIT_FAILURE);
+            }
+            else if (!OCT_comp(&CS1Golden,&CS1))
+            {
+                printf("ERROR CS1 Test %d\n", testNo);
+                exit(EXIT_FAILURE);
+            }
+
+            errorCode = MPIN_ZZZ_GET_CLIENT_SECRET(&MS2Golden,&HiId,&CS2);
+            if (errorCode != 0)
+            {
+                printf("ERROR CS2 Test %d Error Code %d\n", testNo,errorCode);
+                exit(EXIT_FAILURE);
+            }
+            else if (!OCT_comp(&CS2Golden,&CS2))
+            {
+                printf("ERROR CS2 Test %d\n", testNo);
+                exit(EXIT_FAILURE);
+            }
+
+            errorCode = MPIN_ZZZ_RECOMBINE_G1(&CS1Golden, &CS2Golden, &TOKEN);
+            if (errorCode != 0)
+            {
+                printf("ERROR CS Test %d Error Code %d\n", testNo,errorCode);
+                exit(EXIT_FAILURE);
+            }
+            else if (!OCT_comp(&CSGolden,&TOKEN))
+            {
+                printf("ERROR CS Test %d\n", testNo);
+                exit(EXIT_FAILURE);
+            }
+
+            errorCode = MPIN_ZZZ_EXTRACT_PIN(HASH_TYPE_ZZZ,&MPINIdGolden,PIN1,&TOKEN);
+            if (errorCode != 0)
+            {
+                printf("ERROR TOKEN Test %d Error Code %d\n", testNo,errorCode);
+                exit(EXIT_FAILURE);
+            }
+            else if (!OCT_comp(&TOKENGolden,&TOKEN))
+            {
+                printf("ERROR TOKEN Test %d\n", testNo);
+                exit(EXIT_FAILURE);
+            }
+
+            // Client enters PIN to recreate client secret and generate commitment U
+            errorCode = MPIN_ZZZ_CLIENT_1(HASH_TYPE_ZZZ,date,&MPINIdGolden,RNG,&XGolden,PIN2,&TOKEN,&V,&U,pUT,pPERMIT);
+            if (errorCode != 0)
+            {
+                printf("ERROR CLIENT 1 Test %d Error Code %d\n", testNo,errorCode);
+                exit(EXIT_FAILURE);
+            }
+            else if (!OCT_comp(&UGolden,&U))
+            {
+                printf("ERROR U Test %d\n", testNo);
+                exit(EXIT_FAILURE);
+            }
+
+            // Server calculates sha256(ID) and maps this values to a point on the curve
+            MPIN_ZZZ_SERVER_1(HASH_TYPE_ZZZ,date,&MPINIdGolden,&HpId,pHTID);
+
+            // Client calculates V = -(x+y)*V
+            errorCode = MPIN_ZZZ_CLIENT_2(&XGolden,&YGolden,&V);
+            if (errorCode != 0)
+            {
+                printf("ERROR CLIENT 2 Test %d Error Code %d\n", testNo,errorCode);
+                exit(EXIT_FAILURE);
+            }
+            else if (!OCT_comp(&VGolden,&V))
+            {
+                printf("ERROR V Test %d\n", testNo);
+                exit(EXIT_FAILURE);
+            }
+
+            // Server authenticates clients based on V value
+            errorCode=MPIN_ZZZ_SERVER_2(date,&HpId,pHTID,&YGolden,&SSGolden,&UGolden,pUT,&VGolden,pE,pF,NULL);
+            if (errorCode != AuthResultGolden)
+            {
+                printf("ERROR SERVER 2 Test %d Error Code %d AuthResult %d\n", testNo,errorCode,AuthResultGolden);
                 exit(EXIT_FAILURE);
             }
         }

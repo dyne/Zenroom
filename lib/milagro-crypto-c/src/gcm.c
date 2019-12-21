@@ -86,9 +86,9 @@ static void precompute(gcm *g,uchar *H)
 static void gf2mul(gcm *g)
 {
     /* gf2m mul - Z=H*X mod 2^128 */
-    register int i,j,m,k;
+    int i,j,m,k;
     unsign32 P[4];
-    register unsign32 b;
+    unsign32 b;
 
     P[0]=P[1]=P[2]=P[3]=0;
     j=8;
@@ -363,7 +363,7 @@ int main()
 	char T[16];   // Tag
 	char K[16];   // AES Key
 	char H[64];   // Header - to be included in Authentication, but not encrypted
-	char N[100];   // IV - Initialization vector
+	char N[100];   // IV - Initialisation vector
 	char M[100];  // Plaintext to be encrypted/authenticated
 	char C[100];  // Ciphertext
 	char P[100];  // Recovered Plaintext

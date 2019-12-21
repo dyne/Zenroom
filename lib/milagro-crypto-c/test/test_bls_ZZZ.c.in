@@ -1,0 +1,298 @@
+/*
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+*/
+
+// smoke test for BLS
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "config_curve_ZZZ.h"
+#include "randapi.h"
+
+#if CURVE_SECURITY_ZZZ == 128
+#include "bls_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 192
+#include "bls192_ZZZ.h"
+#elif CURVE_SECURITY_ZZZ == 256
+#include "bls256_ZZZ.h"
+#endif
+
+// Support multiple security levels
+#if CURVE_SECURITY_ZZZ == 128
+#define G2LEN 4*BFS_ZZZ
+#elif CURVE_SECURITY_ZZZ == 192
+#define G2LEN 8*BFS_ZZZ
+#elif CURVE_SECURITY_ZZZ == 256
+#define G2LEN 16*BFS_ZZZ
+#endif
+
+
+int test(csprng *RNG)
+{
+    int rc;
+
+    char m[2000];
+    octet M = {0,sizeof(m),m};
+
+    char sk1[BGS_ZZZ];
+    octet SK1 = {0,sizeof(sk1),sk1};
+    char pktmp[G2LEN];
+    octet PKTMP = {0,sizeof(pktmp),pktmp};
+    char pk1[G2LEN];
+    octet PK1 = {0,sizeof(pk1),pk1};
+    char sig1[BFS_ZZZ+1];
+    octet SIG1 = {0,sizeof(sig1),sig1};
+
+    char sk2[BGS_ZZZ];
+    octet SK2 = {0,sizeof(sk2),sk2};
+    char pk2[G2LEN];
+    octet PK2 = {0,sizeof(pk2),pk2};
+    char sig2[BFS_ZZZ+1];
+    octet SIG2 = {0,sizeof(sig2),sig2};
+
+    char sk3[BGS_ZZZ];
+    octet SK3 = {0,sizeof(sk3),sk3};
+    char pk3[G2LEN];
+    octet PK3 = {0,sizeof(pk3),pk3};
+    char sig3[BFS_ZZZ+1];
+    octet SIG3 = {0,sizeof(sig3),sig3};
+
+    // Aggregated signature and public keys
+    char pk[G2LEN];
+    octet PK = {0,sizeof(pk),pk};
+    char sig[BFS_ZZZ+1];
+    octet SIG = {0,sizeof(sig),sig};
+
+    // Generate key pairs
+    BLS_ZZZ_KEY_PAIR_GENERATE(RNG,&SK1,&PKTMP);
+    BLS_ZZZ_KEY_PAIR_GENERATE(RNG,&SK2,&PK2);
+    BLS_ZZZ_KEY_PAIR_GENERATE(RNG,&SK3,&PK3);
+
+    // Generate PK2 using external secret key
+    BLS_ZZZ_KEY_PAIR_GENERATE(NULL,&SK1,&PK1);
+
+    if (!OCT_comp(&PKTMP,&PK1))
+    {
+        printf("FAILURE OCT_comp(&PKTMP,&PK1)\n");
+        return 1;
+    }
+
+    printf("Private key SK1: ");
+    OCT_output(&SK1);
+    printf("Public key PKTMP: ");
+    OCT_output(&PKTMP);
+    printf("Public key PK1: ");
+    OCT_output(&PK1);
+    printf("Private key SK2: ");
+    OCT_output(&SK2);
+    printf("Public key PK2: ");
+    OCT_output(&PK2);
+    printf("Private key SK3: ");
+    OCT_output(&SK2);
+    printf("Public key PK3: ");
+    OCT_output(&PK2);
+    printf("\n");
+
+    OCT_jstring(&M,"test message");
+
+    // Sign the message
+    BLS_ZZZ_SIGN(&SIG1,&M,&SK1);
+    BLS_ZZZ_SIGN(&SIG2,&M,&SK2);
+    BLS_ZZZ_SIGN(&SIG3,&M,&SK3);
+
+    printf("SIG1: ");
+    OCT_output(&SIG1);
+    printf("SIG2: ");
+    OCT_output(&SIG2);
+    printf("SIG3: ");
+    OCT_output(&SIG3);
+    printf("\n");
+
+    // Verify signature
+    rc=BLS_ZZZ_VERIFY(&SIG1,&M,&PK1);
+    if (rc==BLS_OK)
+    {
+        printf("Test Passed valid Signature / message\n");
+    }
+    else
+    {
+        printf("Test Failed valid Signature / message\n");
+        return 1;
+    }
+
+    // Verify signature
+    rc=BLS_ZZZ_VERIFY(&SIG2,&M,&PK2);
+    if (rc==BLS_OK)
+    {
+        printf("Test Passed valid Signature / message\n");
+    }
+    else
+    {
+        printf("Test Failed valid Signature / message\n");
+        return 1;
+    }
+
+    // Verify signature
+    rc=BLS_ZZZ_VERIFY(&SIG3,&M,&PK3);
+    if (rc==BLS_OK)
+    {
+        printf("Test Passed valid Signature / message\n");
+    }
+    else
+    {
+        printf("Test Failed valid Signature / message\n");
+        return 1;
+    }
+
+    // Add Public keys
+    rc = BLS_ZZZ_ADD_G2(&PK1,&PK2,&PK);
+    if (rc!=BLS_OK)
+    {
+        printf("ERROR BLS_ZZZ_ADD_G2 errorCode : %d\n", rc);
+        return 1;
+    }
+    rc = BLS_ZZZ_ADD_G2(&PK,&PK3,&PK);
+    if (rc!=BLS_OK)
+    {
+        printf("ERROR BLS_ZZZ_ADD_G2 errorCode : %d\n", rc);
+        return 1;
+    }
+    printf("Public key PK: ");
+    OCT_output(&PK);
+    printf("\n");
+
+    // Add signatures
+    rc = BLS_ZZZ_ADD_G1(&SIG1,&SIG2,&SIG);
+    if (rc!=BLS_OK)
+    {
+        printf("ERROR BLS_ZZZ_ADD_G1 errorCode : %d\n", rc);
+        return 1;
+    }
+
+    // Verify aggregated signature. This should fail.
+    rc=BLS_ZZZ_VERIFY(&SIG,&M,&PK);
+    if (rc==BLS_FAIL)
+    {
+        printf("Test Passed invalid signature SIG = SIG1 + SIG2 \n");
+    }
+    else
+    {
+        printf("Test Failed invalid signature SIG = SIG1 + SIG2 \n");
+        return 1;
+    }
+
+    rc = BLS_ZZZ_ADD_G1(&SIG,&SIG3,&SIG);
+    if (rc!=BLS_OK)
+    {
+        printf("ERROR BLS_ZZZ_ADD_G1 errorCode : %d\n", rc);
+        return 1;
+    }
+    printf("SIG: ");
+    OCT_output(&SIG);
+    printf("\n");
+
+    // Verify aggregated signature.
+    rc=BLS_ZZZ_VERIFY(&SIG,&M,&PK);
+    if (rc==BLS_OK)
+    {
+        printf("Test Passed valid Signature SIG = SIG1 + SIG2 + SIG3\n");
+    }
+    else
+    {
+        printf("Test Failed valid Signature SIG = SIG1 + SIG2 + SIG3\n");
+        return 1;
+    }
+
+
+    // change the message
+    M.val[0]='Z';
+    printf("message %s\n", M.val);
+    rc=BLS_ZZZ_VERIFY(&SIG1,&M,&PK1);
+    if (rc==BLS_FAIL)
+    {
+        printf("Test Passed valid signature / invalid message\n");
+    }
+    else
+    {
+        printf("Test Failed valid signature / invalid message\n");
+        return 1;
+    }
+
+
+    // Change the signature
+    M.val[0]='t';
+    SIG1.val[0]=5;
+    printf("message %s\n", M.val);
+    printf("Signature SIG1: ");
+    OCT_output(&SIG1);
+    rc=BLS_ZZZ_VERIFY(&SIG1,&M,&PK1);
+    if (rc==BLS_INVALID_G1)
+    {
+        printf("Test Passed invalid signature / valid message\n");
+    }
+    else
+    {
+        printf("Test Failed invalid signature / valid message\n");
+        return 1;
+    }
+
+    /* clear memory */
+    OCT_clear(&SK1);
+    OCT_clear(&SK2);
+    OCT_clear(&SK3);
+
+    return 0;
+}
+
+
+int main()
+{
+#ifdef DEBUG
+    printf("%d bit build\n",CHUNK);
+#endif
+
+    char* seedHex = "78d0fb6705ce77dee47d03eb5b9c5d30";
+    char seed[16] = {0};
+    octet SEED = {sizeof(seed),sizeof(seed),seed};
+
+    // CSPRNG
+    csprng RNG;
+
+    // fake random source
+    OCT_fromHex(&SEED,seedHex);
+    printf("SEED: ");
+    OCT_output(&SEED);
+
+    // initialise strong RNG
+    CREATE_CSPRNG(&RNG,&SEED);
+
+    printf("\nTest BLS for curve ZZZ\n");
+    if (!test(&RNG))
+    {
+        printf("SUCCESS\n");
+    }
+    else
+    {
+        printf("FAILURE\n");
+    }
+
+    KILL_CSPRNG(&RNG);
+}
+
+

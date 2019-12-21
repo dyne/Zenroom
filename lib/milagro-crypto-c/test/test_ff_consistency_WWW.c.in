@@ -1,0 +1,287 @@
+/*
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+*/
+/**
+ * @file test_big_consistency.c
+ * @author Samuele Andreoli
+ * @brief Test for consistency of FF_WWW
+ *
+ */
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "arch.h"
+#include "amcl.h"
+#include "utils.h"
+#include "ff_WWW.h"
+
+#define FS_WWW  MODBYTES_XXX*FFLEN_WWW
+#define HFS_WWW MODBYTES_XXX*HFLEN_WWW
+
+char *Phex = "cc44dc413faedf280f429f57881d48047e6041b16774b3074e81c6d2b2753269e61db41fb6a1bddc43f4257c49724f1d2678df0fc4d05032d228037c6580ed4b35001f1c01d788c1a5e2dfd3f676b25646d7df23d62bff478c5875327ca47b0145153fb316ad2289687fbc6fc113dca2d592e9761dd0d60577a1551c1cd37c29";
+char *Qhex = "f68a619af0db4e19ed9c32569b25650e4cd9d9b3949bad18ce58c77770413e823c92dea3eb0a0a41425b2a0ba4e329c42d89bba26548ec3544a9798c887a0e1bb419e73374202505ada6b63c63ba9af2b10ab7c80efe4bf752cb951e6c8a763d6fa6430c23547f2e671303bc3e9591f45696f25c2da64939ff2346f636581e0d";
+
+int main()
+{
+
+    int i;
+    char seed[256];
+    csprng RNG;
+
+    char oct[FS_WWW];
+    octet OCT = {0,FS_WWW,oct};
+
+    BIG_XXX A[HFLEN_WWW], B[HFLEN_WWW], C[HFLEN_WWW], D[HFLEN_WWW];
+    BIG_XXX F[FFLEN_WWW], G[FFLEN_WWW], H[FFLEN_WWW], L[FFLEN_WWW], P[FFLEN_WWW], Q[FFLEN_WWW], N[FFLEN_WWW];
+
+    /* Fake random source */
+    RAND_clean(&RNG);
+    for (i=0; i<256; i++) seed[i]=(char)i;
+    RAND_seed(&RNG,256,seed);
+
+    /* Testing general equality and equality to zero */
+    FF_WWW_zero(A, HFLEN_WWW);
+    FF_WWW_zero(B, HFLEN_WWW);
+
+    if(FF_WWW_comp(A,B,HFLEN_WWW) || !FF_WWW_iszilch(A, HFLEN_WWW))
+    {
+        printf("ERROR comparing or setting to zero\n");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Test parity */
+    FF_WWW_one(A,HFLEN_WWW);
+    if (!FF_WWW_parity(A) || FF_WWW_parity(B))
+    {
+        printf("ERROR checking parity\n");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Test last bits */
+    FF_WWW_init(A,0xF8,HFLEN_WWW);
+    if(FF_WWW_lastbits(A,8) != 0xF8 || FF_WWW_lastbits(A,12) != 0xF8)
+    {
+        printf("ERROR checking last bits\n");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Testing copy*/
+    FF_WWW_random(F,&RNG,FFLEN_WWW);
+    FF_WWW_copy(G,F,FFLEN_WWW);
+    if(FF_WWW_comp(G,F,FFLEN_WWW))
+    {
+        printf("ERROR testing copy\n");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Testing addition, subtraction */
+    for (i=0; i<10; i++)
+    {
+        FF_WWW_random(F,&RNG,FFLEN_WWW);
+        FF_WWW_random(G,&RNG,FFLEN_WWW);
+        FF_WWW_copy(H,G,FFLEN_WWW);
+
+        FF_WWW_add(G,G,F,FFLEN_WWW);
+        FF_WWW_sub(G,G,F,FFLEN_WWW);
+        FF_WWW_sub(F,F,F,FFLEN_WWW);
+        if(FF_WWW_comp(G,H,FFLEN_WWW) || !FF_WWW_iszilch(F,FFLEN_WWW))
+        {
+            printf("ERROR testing addition/subtraction\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    FF_WWW_one(A,HFLEN_WWW);
+    FF_WWW_zero(B,HFLEN_WWW);
+
+    FF_WWW_add(C,A,B,HFLEN_WWW);
+    FF_WWW_add(B,B,B,HFLEN_WWW);
+    if(FF_WWW_comp(A,C,HFLEN_WWW) || !FF_WWW_iszilch(B,HFLEN_WWW))
+    {
+        printf("ERROR testing addition/subtraction\n");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Testing increment/decrement */
+    for (i=0; i<10; i++)
+    {
+        FF_WWW_random(F,&RNG,FFLEN_WWW);
+        FF_WWW_copy(H,F,FFLEN_WWW);
+
+        FF_WWW_inc(F,10,FFLEN_WWW);
+        FF_WWW_dec(F,10,FFLEN_WWW);
+        if(FF_WWW_comp(F,H,FFLEN_WWW))
+        {
+            printf("ERROR testing addition/subtraction\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    FF_WWW_zero(A,HFLEN_WWW);
+
+    FF_WWW_inc(A,0,HFLEN_WWW);
+    if(!FF_WWW_iszilch(A,HFLEN_WWW))
+    {
+        printf("ERROR testing addition/subtraction\n");
+        exit(EXIT_FAILURE);
+    }
+
+    FF_WWW_dec(A,0,HFLEN_WWW);
+    if(!FF_WWW_iszilch(A,HFLEN_WWW))
+    {
+        printf("ERROR testing addition/subtraction\n");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Testing shifts */
+    FF_WWW_one(A,HFLEN_WWW);
+    FF_WWW_init(B,2,HFLEN_WWW);
+    FF_WWW_one(C,HFLEN_WWW);
+
+    FF_WWW_shl(A,HFLEN_WWW);
+    if(FF_WWW_comp(A,B,HFLEN_WWW))
+    {
+        printf("ERROR testing shifts\n");
+        exit(EXIT_FAILURE);
+    }
+
+    FF_WWW_shr(A,HFLEN_WWW);
+    if(FF_WWW_comp(A,C,HFLEN_WWW))
+    {
+        printf("ERROR testing shifts\n");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Testing octet conversions */
+    for (i=0; i<10; i++)
+    {
+        OCT_clear(&OCT);
+
+        FF_WWW_random(F,&RNG,FFLEN_WWW);
+        FF_WWW_copy(H,F,FFLEN_WWW);
+
+        FF_WWW_toOctet(&OCT,F,FFLEN_WWW);
+        FF_WWW_zero(F,FFLEN_WWW);
+        FF_WWW_fromOctet(F,&OCT,FFLEN_WWW);
+
+        if(FF_WWW_comp(F,H,FFLEN_WWW))
+        {
+            printf("ERROR testing octet conversion\n");
+            exit(EXIT_FAILURE);
+        }
+
+        OCT_clear(&OCT);
+
+        FF_WWW_random(A,&RNG,HFLEN_WWW);
+        FF_WWW_copy(C,A,HFLEN_WWW);
+
+        FF_WWW_toOctet(&OCT,A,HFLEN_WWW);
+        FF_WWW_zero(A,HFLEN_WWW);
+        FF_WWW_fromOctet(A,&OCT,HFLEN_WWW);
+
+        if(FF_WWW_comp(A,C,HFLEN_WWW))
+        {
+            printf("ERROR testing octet conversion\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    /* Testing multiplication/square */
+    for (i=0; i<10; i++)
+    {
+        FF_WWW_random(A,&RNG,HFLEN_WWW);
+
+        FF_WWW_mul(F,A,A,HFLEN_WWW);
+        FF_WWW_sqr(G,A,HFLEN_WWW);
+
+        // Normalise for comparison
+        FF_WWW_norm(F,FFLEN_WWW);
+        FF_WWW_norm(G,FFLEN_WWW);
+
+        if(FF_WWW_comp(F,G,FFLEN_WWW))
+        {
+            printf("ERROR testing multiplication/square");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    /* Read P and Q primes from hex */
+    OCT_fromHex(&OCT, Phex);
+    OCT_pad(&OCT,FS_WWW);
+    FF_WWW_fromOctet(P,&OCT,FFLEN_WWW);
+
+    OCT_fromHex(&OCT, Qhex);
+    OCT_pad(&OCT,FS_WWW);
+    FF_WWW_fromOctet(Q,&OCT,FFLEN_WWW);
+
+    /* Testing inverse modulo P */
+    FF_WWW_one(C,HFLEN_WWW);
+    for (i=0; i< 10; i++)
+    {
+        FF_WWW_random(A,&RNG, HFLEN_WWW);
+        FF_WWW_mod(A,P,HFLEN_WWW);
+        FF_WWW_copy(B,A,HFLEN_WWW);
+
+        FF_WWW_invmodp(B,B,P,HFLEN_WWW);
+        FF_WWW_mul(F,A,B,HFLEN_WWW);
+        FF_WWW_mod(F,P,FFLEN_WWW);
+
+        if(FF_WWW_comp(C,F,HFLEN_WWW))
+        {
+            printf("ERROR testing inverse modulo p");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    /* Testing CRT */
+    FF_WWW_mul(N,P,Q,HFLEN_WWW);
+
+    for (i=0; i<10; i++)
+    {
+        FF_WWW_random(A,&RNG,HFLEN_WWW);
+        FF_WWW_random(B,&RNG,HFLEN_WWW);
+
+        FF_WWW_mul(H,A,B,HFLEN_WWW);
+        FF_WWW_mod(H,N,FFLEN_WWW);
+
+        FF_WWW_copy(C,A,HFLEN_WWW);
+        FF_WWW_copy(D,B,HFLEN_WWW);
+        FF_WWW_mod(A,P,HFLEN_WWW);
+        FF_WWW_mod(B,P,HFLEN_WWW);
+        FF_WWW_mod(C,Q,HFLEN_WWW);
+        FF_WWW_mod(D,Q,HFLEN_WWW);
+
+        FF_WWW_mul(F,A,B,HFLEN_WWW);
+        FF_WWW_mod(F,P,FFLEN_WWW);
+
+        FF_WWW_mul(G,C,D,HFLEN_WWW);
+        FF_WWW_mod(G,Q,FFLEN_WWW);
+
+        FF_WWW_crt(L,F,G,P,Q,HFLEN_WWW);
+
+        if(FF_WWW_comp(L,H,HFLEN_WWW))
+        {
+            printf("ERROR testing crt");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    printf("SUCCESS TEST CONSISTENCY OF FF_WWW PASSED\n");
+    exit(EXIT_SUCCESS);
+}

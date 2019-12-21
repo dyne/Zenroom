@@ -49,6 +49,7 @@ void OCT_output_string(octet *w)
         ch=w->val[i];
         printf("%c",ch);
     }
+    /*  printf("\n"); */
 }
 
 /* Convert C string to octet format - truncates if no room  */
@@ -81,17 +82,18 @@ int OCT_comp(octet *x,octet *y)
     return 1;
 }
 
-/* check are first n bytes the same */
+/* check are first n bytes the same (in constant time) */
 
 int OCT_ncomp(octet *x,octet *y,int n)
 {
-    int i;
+    int i,res=0;
     if (n>y->len || n>x->len) return 0;
     for (i=0; i<n; i++)
     {
-        if (x->val[i]!=y->val[i]) return 0;
+        res|=(int)(x->val[i]^y->val[i]);
     }
-    return 1;
+    if (res==0) return 1;
+    return 0;
 }
 
 /* Shift octet to the left by n bytes. Leftmost bytes disappear  */
@@ -293,7 +295,6 @@ void OCT_frombase64(octet *w,char *b)
             /* don't put in leading zeros */
             w->val[k++]=ptr[i];
         }
-
     }
     w->len=k;
 }
@@ -398,27 +399,3 @@ void OCT_toStr(octet *src,char *dst)
     }
 }
 
-/* Test program
-#include <stdio.h>
-#include "amcl.h"
-
-char test[]="abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
-
-int main()
-{
-	char gm[100],gn[100],t[100];
-    octet m={0,sizeof(gm),gm};
-    octet n={0,sizeof(gn),gn};
-
-	OCT_jbytes(&m,test,strlen(test));
-	OCT_output(&m);
-
-	OCT_tobase64(t,&m);
-	printf(t); printf("\n");
-
-	OCT_frombase64(&n,t);
-	OCT_output(&n);
-
-    return 0;
-}
-*/

@@ -1,28 +1,21 @@
 /*
-	Licensed to the Apache Software Foundation (ASF) under one
-	or more contributor license agreements.  See the NOTICE file
-	distributed with this work for additional information
-	regarding copyright ownership.  The ASF licenses this file
-	to you under the Apache License, Version 2.0 (the
-	"License"); you may not use this file except in compliance
-	with the License.  You may obtain a copy of the License at
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
 
-	http://www.apache.org/licenses/LICENSE-2.0
+  http://www.apache.org/licenses/LICENSE-2.0
 
-	Unless required by applicable law or agreed to in writing,
-	software distributed under the License is distributed on an
-	"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-	KIND, either express or implied.  See the License for the
-	specific language governing permissions and limitations
-	under the License.
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
 */
-
-/**
- * @file fp24_YYY.h
- * @author Mike Scott
- * @brief FP24 Header File
- *
- */
 
 #ifndef FP24_YYY_H
 #define FP24_YYY_H
@@ -30,7 +23,7 @@
 #include "fp8_YYY.h"
 
 /**
-	@brief FP24 Structure - towered over three FP8
+	@brief FP12 Structure - towered over three FP8
 */
 
 typedef struct
@@ -38,6 +31,7 @@ typedef struct
     FP8_YYY a; /**< first part of FP12 */
     FP8_YYY b; /**< second part of FP12 */
     FP8_YYY c; /**< third part of FP12 */
+    int type;  /**< Type */
 } FP24_YYY;
 
 extern const BIG_XXX Fra_YYY; /**< real part of BN curve Frobenius Constant */
@@ -67,6 +61,13 @@ extern void FP24_YYY_copy(FP24_YYY *x,FP24_YYY *y);
 	@param x FP24 instance to be set to one
  */
 extern void FP24_YYY_one(FP24_YYY *x);
+
+/**	@brief Set FP24 to zero
+ *
+	@param x FP24 instance to be set to zero
+ */
+extern void FP24_YYY_zero(FP24_YYY *x);
+
 /**	@brief Tests for equality of two FP24s
  *
 	@param x FP24 instance to be compared
@@ -108,20 +109,26 @@ extern void FP24_YYY_usqr(FP24_YYY *x,FP24_YYY *y);
 	@param y FP24 instance
  */
 extern void FP24_YYY_sqr(FP24_YYY *x,FP24_YYY *y);
-/**	@brief Fast multiplication of an FP24 by an FP24 that arises from an ATE pairing line function
+/**	@brief Fast multiplication of two sparse FP24s that arises from ATE pairing line functions
  *
-	Here the multiplier has a special form that can be exploited
 	@param x FP24 instance, on exit = x*y
 	@param y FP24 instance, of special form
-	@param t D_TYPE or M_TYPE twist
  */
-extern void FP24_YYY_smul(FP24_YYY *x,FP24_YYY *y,int t);
-/**	@brief Multiplication of two FP24s
+extern void FP24_YYY_smul(FP24_YYY *x,FP24_YYY *y);
+
+/**	@brief Fast multiplication of what may be sparse multiplicands
+ *
+	@param x FP24 instance, on exit = x*y
+	@param y FP24 instance, of special form
+ */
+extern void FP24_YYY_ssmul(FP24_YYY *x,FP24_YYY *y);
+/**	@brief Full unconditional Multiplication of two FP24s
  *
 	@param x FP24 instance, on exit = x*y
 	@param y FP24 instance, the multiplier
  */
 extern void FP24_YYY_mul(FP24_YYY *x,FP24_YYY *y);
+
 /**	@brief Inverting an FP24
  *
 	@param x FP24 instance, on exit = 1/y
@@ -158,7 +165,7 @@ extern void FP24_YYY_compow(FP8_YYY *c,FP24_YYY *x,BIG_XXX e,BIG_XXX r);
 /**	@brief Calculate Pi x[i]^b[i] for i=0 to 7, side-channel resistant
  *
 	@param r FP24 instance, on exit = Pi x[i]^b[i] for i=0 to 7
-	@param x FP24 array with 8 FP24s
+	@param x FP24 array with 4 FP24s
 	@param b BIG array of 4 exponents
  */
 extern void FP24_YYY_pow8(FP24_YYY *r,FP24_YYY *x,BIG_XXX *b);

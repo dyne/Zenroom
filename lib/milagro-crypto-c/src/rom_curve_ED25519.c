@@ -1,3 +1,22 @@
+/*
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+*/
+
 #include "arch.h"
 #include "ecp_ED25519.h"
 
@@ -5,6 +24,7 @@
 
 #if CHUNK==16
 /* Ed25519 Curve */
+
 const int CURVE_Cof_I_ED25519= 8;
 const BIG_256_13 CURVE_Cof_ED25519= {0x8,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0};
 const int CURVE_A_ED25519= -1;
@@ -25,6 +45,8 @@ const BIG_256_29 CURVE_B_ED25519= {0x135978A3,0xF5A6E50,0x10762ADD,0x149A82,0x1E
 const BIG_256_29 CURVE_Order_ED25519= {0x1CF5D3ED,0x9318D2,0x1DE73596,0x1DF3BD45,0x14D,0x0,0x0,0x0,0x100000};
 const BIG_256_29 CURVE_Gx_ED25519= {0xF25D51A,0xAB16B04,0x969ECB2,0x198EC12A,0xDC5C692,0x1118FEEB,0xFFB0293,0x1A79ADCA,0x216936};
 const BIG_256_29 CURVE_Gy_ED25519= {0x6666658,0x13333333,0x19999999,0xCCCCCCC,0x6666666,0x13333333,0x19999999,0xCCCCCCC,0x666666};
+
+
 #endif
 
 #if CHUNK==64
@@ -37,5 +59,6 @@ const BIG_256_56 CURVE_B_ED25519= {0xEB4DCA135978A3L,0xA4D4141D8AB75L,0x797779E8
 const BIG_256_56 CURVE_Order_ED25519= {0x12631A5CF5D3EDL,0xF9DEA2F79CD658L,0x14DEL,0x0L,0x10000000L};
 const BIG_256_56 CURVE_Gx_ED25519= {0x562D608F25D51AL,0xC7609525A7B2C9L,0x31FDD6DC5C692CL,0xCD6E53FEC0A4E2L,0x216936D3L};
 const BIG_256_56 CURVE_Gy_ED25519= {0x66666666666658L,0x66666666666666L,0x66666666666666L,0x66666666666666L,0x66666666L};
+
 #endif
 

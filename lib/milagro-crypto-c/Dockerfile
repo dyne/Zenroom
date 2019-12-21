@@ -1,30 +1,24 @@
-FROM ubuntu:latest
+FROM ubuntu:bionic
 
-RUN dpkg --add-architecture i386 \
-    && apt-get update && apt-get install -y --no-install-recommends \
-    astyle \
-    ca-certificates \
+RUN dpkg --add-architecture i386
+
+# add repositories cache
+RUN apt-get update -y
+
+# install packages
+RUN apt-get install -y \
+    build-essential \
     cmake \
     doxygen \
-    doxygen-latex \
-    g++ \
-    g++-multilib \
-    gcc \
-    git \
-    lcov \
-    make \
-    mingw-w64 \
     parallel \
-    python-pip \
-    python-setuptools\
-    wine-stable \
+    mingw-w64 \
     wine64 \
     wine32 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
-    && pip install \
-    autopep8 \
-    cffi \
-    wheel
+    lcov \
+    python3-dev \
+    python3-pip \
+    gcc-multilib
+
+RUN pip3 install cffi autopep8
 
 CMD ["/bin/bash"]

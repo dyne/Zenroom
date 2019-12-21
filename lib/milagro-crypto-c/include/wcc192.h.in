@@ -18,15 +18,15 @@
 */
 
 /**
- * @file wcc_ZZZ.h
+ * @file wcc192_ZZZ.h
  * @author Mike Scott
  * @author Kealan McCusker
  * @brief WCC Header File
  *
  */
 
-#ifndef WCC_ZZZ_H
-#define WCC_ZZZ_H
+#ifndef WCC192_ZZZ_H
+#define WCC192_ZZZ_H
 
 #include "pair192_ZZZ.h"
 #include "pbc_support.h"

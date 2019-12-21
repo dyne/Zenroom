@@ -1,29 +1,21 @@
-/**
- * @file wcc_ZZZ.c
- * @author Mike Scott
- * @author Kealan McCusker
- * @date 28th April 2016
- * @brief AMCL Wang / Chow Choo (WCC) definitions
- *
- * LICENSE
- *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
+/*
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -83,7 +75,7 @@ int WCC_ZZZ_GET_G1_MULTIPLE(octet *S,octet *HID,octet *VG1)
     BIG_XXX_fromBytes(s,S->val);
     PAIR_ZZZ_G1mul(&P,s);
 
-    ECP_ZZZ_toOctet(VG1,&P);
+    ECP_ZZZ_toOctet(VG1,&P,false);
     return 0;
 }
 
@@ -182,7 +174,7 @@ int WCC_ZZZ_SENDER_KEY(int sha, octet *xOct, octet *piaOct, octet *pibOct, octet
 
     // x.PgG1
     PAIR_ZZZ_G1mul(&PgG1,x);
-    ECP_ZZZ_toOctet(&xPgG1Oct,&PgG1);
+    ECP_ZZZ_toOctet(&xPgG1Oct,&PgG1,false);
 
     // Generate AES Key : K=H(k,x.PgG1)
     FP24_YYY_trace(&c,&g);
@@ -283,7 +275,7 @@ int WCC_ZZZ_RECEIVER_KEY(int sha, octet *yOct, octet *wOct,  octet *piaOct, octe
 
     // w.PaG1
     PAIR_ZZZ_G1mul(&PaG1,w);
-    ECP_ZZZ_toOctet(&wPaG1Oct,&PaG1);
+    ECP_ZZZ_toOctet(&wPaG1Oct,&PaG1,false);
 
     // Generate AES Key: K=H(k,w.PaG1)
     FP24_YYY_trace(&c,&g);
@@ -347,7 +339,7 @@ int WCC_ZZZ_RECOMBINE_G1(octet *R1,octet *R2,octet *R)
     if (res==0)
     {
         ECP_ZZZ_add(&P,&T);
-        ECP_ZZZ_toOctet(R,&P);
+        ECP_ZZZ_toOctet(R,&P,false);
     }
     return res;
 }

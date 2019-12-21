@@ -19,6 +19,7 @@ under the License.
 
 /* AMCL Weierstrass elliptic curve functions over FP2 */
 
+//#include <iostream>
 #include "ecp8_ZZZ.h"
 
 
@@ -124,10 +125,12 @@ int ECP8_ZZZ_equals(ECP8_ZZZ *P,ECP8_ZZZ *Q)
 /* extract x, y from point P */
 int ECP8_ZZZ_get(FP8_YYY *x,FP8_YYY *y,ECP8_ZZZ *P)
 {
-    if (ECP8_ZZZ_isinf(P)) return -1;
-    ECP8_ZZZ_affine(P);
-    FP8_YYY_copy(y,&(P->y));
-    FP8_YYY_copy(x,&(P->x));
+    ECP8_ZZZ W;
+    ECP8_ZZZ_copy(&W,P);
+    ECP8_ZZZ_affine(&W);
+    if (ECP8_ZZZ_isinf(&W)) return -1;
+    FP8_YYY_copy(y,&(W.y));
+    FP8_YYY_copy(x,&(W.x));
     return 0;
 }
 
@@ -447,7 +450,7 @@ int ECP8_ZZZ_add(ECP8_ZZZ *P,ECP8_ZZZ *Q)
     FP8_YYY_sub(&t3,&t3,&t4);		//t3.sub(t4);
     FP8_YYY_norm(&t3);				//t3.norm();
 #if SEXTIC_TWIST_ZZZ==D_TYPE
-    FP8_YYY_times_i(&t3);			//t3.mul_ip();
+    FP8_YYY_times_i(&t3);			//t3.mul_ip();  //t3=(X1+Y1)(X2+Y2)-(X1.X2+Y1.Y2) = X1.Y2+X2.Y1
 #endif
 
     FP8_YYY_add(&t4,&(P->y),&(P->z));	//t4.add(z);
@@ -463,7 +466,7 @@ int ECP8_ZZZ_add(ECP8_ZZZ *P,ECP8_ZZZ *Q)
     FP8_YYY_sub(&t4,&t4,&x3);		//t4.sub(x3);
     FP8_YYY_norm(&t4);				//t4.norm();
 #if SEXTIC_TWIST_ZZZ==D_TYPE
-    FP8_YYY_times_i(&t4);			//t4.mul_ip();
+    FP8_YYY_times_i(&t4);			//t4.mul_ip(); //t4=(Y1+Z1)(Y2+Z2) - (Y1.Y2+Z1.Z2) = Y1.Z2+Y2.Z1
 #endif
 
     FP8_YYY_add(&x3,&(P->x),&(P->z));	//x3.add(z);
@@ -521,9 +524,10 @@ int ECP8_ZZZ_add(ECP8_ZZZ *P,ECP8_ZZZ *Q)
 /* SU= 16 */
 void ECP8_ZZZ_sub(ECP8_ZZZ *P,ECP8_ZZZ *Q)
 {
-    ECP8_ZZZ_neg(Q);
-    ECP8_ZZZ_add(P,Q);
-    ECP8_ZZZ_neg(Q);
+    ECP8_ZZZ NQ;
+    ECP8_ZZZ_copy(&NQ,Q);
+    ECP8_ZZZ_neg(&NQ);
+    ECP8_ZZZ_add(P,&NQ);
 }
 
 
@@ -545,7 +549,7 @@ void ECP8_ZZZ_mul(ECP8_ZZZ *P,BIG_XXX e)
     sign8 w[1+(NLEN_XXX*BASEBITS_XXX+3)/4];
 
     if (ECP8_ZZZ_isinf(P)) return;
-    ECP8_ZZZ_affine(P);
+
     /* precompute table */
 
     ECP8_ZZZ_copy(&Q,P);
@@ -695,10 +699,9 @@ void ECP8_ZZZ_mul16(ECP8_ZZZ *P,ECP8_ZZZ Q[16],BIG_XXX u[16])
 
     for (i=0; i<16; i++)
     {
-        ECP8_ZZZ_affine(&Q[i]);
         BIG_XXX_copy(t[i],u[i]);
     }
-    // Precomputed table
+// Precomputed table
     ECP8_ZZZ_copy(&T1[0],&Q[0]); // Q[0]
     ECP8_ZZZ_copy(&T1[1],&T1[0]);
     ECP8_ZZZ_add(&T1[1],&Q[1]);	// Q[0]+Q[1]
@@ -715,7 +718,7 @@ void ECP8_ZZZ_mul16(ECP8_ZZZ *P,ECP8_ZZZ Q[16],BIG_XXX u[16])
     ECP8_ZZZ_copy(&T1[7],&T1[3]);
     ECP8_ZZZ_add(&T1[7],&Q[3]);	// Q[0]+Q[1]+Q[2]+Q[3]
 
-    //  Use Frobenius
+//  Use Frobenius
 
     for (i=0; i<8; i++)
     {
@@ -729,7 +732,7 @@ void ECP8_ZZZ_mul16(ECP8_ZZZ *P,ECP8_ZZZ Q[16],BIG_XXX u[16])
         ECP8_ZZZ_frob(&T4[i],X,4);
     }
 
-    // Make them odd
+// Make them odd
     pb1=1-BIG_XXX_parity(t[0]);
     BIG_XXX_inc(t[0],pb1);
     BIG_XXX_norm(t[0]);
@@ -746,7 +749,7 @@ void ECP8_ZZZ_mul16(ECP8_ZZZ *P,ECP8_ZZZ Q[16],BIG_XXX u[16])
     BIG_XXX_inc(t[12],pb4);
     BIG_XXX_norm(t[12]);
 
-    // Number of bits
+// Number of bits
     BIG_XXX_zero(mt);
     for (i=0; i<16; i++)
     {
@@ -754,7 +757,7 @@ void ECP8_ZZZ_mul16(ECP8_ZZZ *P,ECP8_ZZZ Q[16],BIG_XXX u[16])
     }
     nb=1+BIG_XXX_nbits(mt);
 
-    // Sign pivot
+// Sign pivot
     s1[nb-1]=1;
     s2[nb-1]=1;
     s3[nb-1]=1;
@@ -772,7 +775,7 @@ void ECP8_ZZZ_mul16(ECP8_ZZZ *P,ECP8_ZZZ Q[16],BIG_XXX u[16])
     }
 
 
-    // Recoded exponents
+// Recoded exponents
     for (i=0; i<nb; i++)
     {
         w1[i]=0;
@@ -828,7 +831,7 @@ void ECP8_ZZZ_mul16(ECP8_ZZZ *P,ECP8_ZZZ Q[16],BIG_XXX u[16])
         }
     }
 
-    // Main loop
+// Main loop
     ECP8_ZZZ_select(P,T1,2*w1[nb-1]+1);
     ECP8_ZZZ_select(&W,T2,2*w2[nb-1]+1);
     ECP8_ZZZ_add(P,&W);
@@ -850,7 +853,7 @@ void ECP8_ZZZ_mul16(ECP8_ZZZ *P,ECP8_ZZZ Q[16],BIG_XXX u[16])
         ECP8_ZZZ_add(P,&W);
     }
 
-    // apply corrections
+// apply corrections
     ECP8_ZZZ_copy(&W,P);
     ECP8_ZZZ_sub(&W,&Q[0]);
     ECP8_ZZZ_cmove(P,&W,pb1);
@@ -966,7 +969,7 @@ void ECP8_ZZZ_mapit(ECP8_ZZZ *Q,octet *W)
 
 }
 
-// ECP8 Get Group Generator
+// ECP$ Get Group Generator
 
 void ECP8_ZZZ_generator(ECP8_ZZZ *G)
 {

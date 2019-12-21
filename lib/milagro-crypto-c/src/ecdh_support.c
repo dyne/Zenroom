@@ -129,6 +129,9 @@ void ehashit(int sha,octet *p,int n,octet *x,octet *w,int pad)
         {
             OCT_jbyte(w,0,pad-hlen);
             OCT_jbytes(w,hh,hlen);
+
+//            OCT_jbytes(w,hh,hlen);
+//            OCT_jbyte(w,0,pad-hlen);
         }
     }
     return;
@@ -155,7 +158,7 @@ int HMAC(int sha,octet *m,octet *k,int olen,octet *tag)
     if (hlen>32) b=128;
     else b=64;
 
-    if (olen<4) return 0;
+    if (olen<4 /*|| olen>hlen*/) return 0;
 
     if (k->len > b) ehashit(sha,k,-1,NULL,&K0,0);
     else            OCT_copy(&K0,k);
@@ -176,9 +179,6 @@ int HMAC(int sha,octet *m,octet *k,int olen,octet *tag)
     return 1;
 }
 
-/* Key Derivation Functions */
-/* Input octet z */
-/* Output key of length olen */
 void KDF2(int sha,octet *z,octet *p,int olen,octet *key)
 {
     /* NOTE: the parameter olen is the length of the output k in bytes */
