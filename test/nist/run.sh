@@ -19,12 +19,18 @@ check() {
 
 check "SHA256"
 print "Number of SHA256 executed: $num"
-# num=0
-# check "SHA512"
-# print "Number of SHA512 executed: $num"
+num=0
+check "SHA512"
+print "Number of SHA512 executed: $num"
 
 # TODO: fix sha384 match to nist vectors
-# check "SHA384"
+# num=0
+#check "SHA384"
+#print "Number of SHA384 executed: $num"
+
 # TODO: fix sha3_* match to nist vectors
+# num=0
 # check "SHA3_256"
+# print "Number of SHA3_256 executed: $num"
+
 # check "SHA3_512"

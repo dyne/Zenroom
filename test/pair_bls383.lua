@@ -30,12 +30,19 @@ assert(g1 == g2)
 
 print("Test that miller(sQ,P) = miller(Q,P)^s, s random")
 g2 = ECP2.miller( Q1, P1)^s
+-- print("rand: " .. bin(s))
 assert(g1 == g2)
 
 print("Test that miller(Q,P1+P2) = miller(Q,P1).e(Q,P2)")
 P2 = P1 * s
 g1 = ECP2.miller( Q1, P1 + P2 )
 g2 = ECP2.miller( Q1, P1) * ECP2.miller( Q1, P2)
+assert(g1 == g2)
+
+print("Test that miller(Q1+Q2,P1) = miller(Q1,P1).e(Q2,P1)")
+Q2 = G2 * s
+g1 = ECP2.miller(Q1+Q2,P1)
+g2 = ECP2.miller(Q1,P1) * ECP2.miller(Q2,P1)
 assert(g1 == g2)
 
 print''
