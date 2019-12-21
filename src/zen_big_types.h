@@ -25,6 +25,11 @@
 #include <fp12_BLS383.h>
 // cascades includes for big_ fp_ fp2_ and fp4_
 
+
+// from milagro's pair_BLS383.h
+extern void PAIR_BLS383_GTpow(FP12_BLS383 *x,BIG_384_29 b);
+
+
 // instance is in rom_field_XXX.c and included by fp_XXX.h
 #define Modulus Modulus_BLS383
 #define CURVE_Gx CURVE_Gx_BLS383
@@ -137,7 +142,7 @@
 /* #define FP12_add(d, l, r) FP12_BLS383_add(d, l, r)
 #define FP12_sub(d, l, r) FP12_BLS383_sub(d, l, r) */
 #define FP12_div2(d, s) FP12_BLS383_div2(d,s)
-#define FP12_pow(r, x, b) FP12_BLS383_pow(r,x,b)
+#define FP12_GTpow(x, b) PAIR_BLS383_GTpow(x,b)
 // #define FP12_pinpow(r, x, b) FP12_BLS383_pinpow(r,x,b)
 
 // #define FP12_sqrt(d,s) FP12_BLS383_sqrt(d,s)
