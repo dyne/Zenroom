@@ -76,7 +76,7 @@ win-dll: CFLAGS += -DLIBRARY
 win-dll: LDFLAGS += -shared
 win-dll: ${SOURCES}
 	./stamp-exe.sh
-	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.dll zenroom.res ${SOURCES} ${LDADD} -Wl,--out-implib,zenroom_dll.a
+	${CC} ${CFLAGS} ${LDFLAGS} -o zenroom.dll zenroom.res ${SOURCES} ${LDADD} -Wl,--out-implib,libzenroom_dll.lib
 
 cyg-exe: LDFLAGS += -static
 cyg-exe: ${SOURCES}
