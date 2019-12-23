@@ -46,7 +46,7 @@ crypto-tests = \
 	${1} test/ecdh_aes-gcm_vectors.lua && \
 	${1} test/big_bls383.lua && \
 	${1} test/ecp_generic.lua && \
-	${1} test/pair_bls383.lua && \
+	${1} test/bls_pairing.lua && \
 	${1} test/coconut_test.lua
 
 crypto-integration = \

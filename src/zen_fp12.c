@@ -144,6 +144,7 @@ int luaopen_fp12(lua_State *L) {
 		// idiomatic operators
 		fp12_common_methods,
 		{"octet",fp12_to_octet},
+		{"pow",fp12_pow},
 		{"__mul",fp12_mul},
 		{"__eq",fp12_eq},
 		{"__gc", fp12_destroy},
