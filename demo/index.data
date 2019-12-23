@@ -848,7 +848,6 @@ return inspect
 
 -- COCONUT implementation in Zencode
 
--- ELGAMAL = require('crypto_elgamal') <- inside crypto_coconut
 COCONUT = require_once('crypto_coconut')
 
 
@@ -864,10 +863,10 @@ ZEN.add_schema({
 })
 -- credential keypair operations
 When("I create the credential keypair", function()
-		local t = { }
-		t.sk, t.pk = ELGAMAL.keygen()
-		ZEN:pick('credential_keypair', { public = t.pk,
-										 private = t.sk })
+		-- sk = rand, pk = G * sk
+		local tmp = { private = INT.modrand(ECP.order()) }
+		tmp.public = ECP.generator() * tmp.private
+		ZEN:pick('credential_keypair', tmp)
 		ZEN:validate('credential_keypair')
 		ZEN:ack('credential_keypair')
 end)
@@ -1189,6 +1188,8 @@ JSON   = require('zenroom_json')
 CBOR   = require('zenroom_cbor')
 ECDH   = require('zenroom_ecdh')
 BIG    = require('zenroom_big')
+ECP    = require('zenroom_ecp')
+ECP2   = require('zenroom_ecp2')
 HASH   = require('zenroom_hash')
 BENCH  = require('zenroom_bench')
 MACHINE = require('statemachine')
@@ -1197,6 +1198,7 @@ O   = OCTET  -- alias
 INT = BIG    -- alias
 H   = HASH   -- alias
 I   = INSPECT -- alias
+PAIR = ECP2  -- alias
 V   = require('semver')
 VERSION = V(VERSION)
 
@@ -1360,46 +1362,6 @@ end
 function zero(len)    return octet.new(len):zero(len) end
 
 return octet
--- This file is part of Zenroom (https://zenroom.dyne.org)
---
--- Copyright (C) 2018-2019 Dyne.org foundation
--- El-Gamal implementation by Alberto Sonnino and Denis Roio
---
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU Affero General Public License as
--- published by the Free Software Foundation, either version 3 of the
--- License, or (at your option) any later version.
---
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU Affero General Public License for more details.
---
--- You should have received a copy of the GNU Affero General Public License
--- along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-local elg = { _VERSION = 'crypto_elgamal.lua 1.0' }
-
-function elg.keygen()
-   local d = INT.modrand(ECP.order())
-   local gamma = d * ECP.generator()
-   return d, gamma
-end
-
-function elg.encrypt(gamma, m, h)
-   local k = INT.modrand(ECP.order())
-   local a = k * ECP.generator()
-   local b = gamma * k
-	  +
-	  h * m
-   return a, b, k
-end
-
-function elg.decrypt(d, a, b)
-   return b - a * d
-end
-
-return elg
 -- This file is part of Zenroom (https://zenroom.dyne.org)
 --
 -- Copyright (C) 2018-2019 Dyne.org foundation
@@ -3656,7 +3618,7 @@ local big = require'big'
 return big
 -- This file is part of Zenroom (https://zenroom.dyne.org)
 --
--- Copyright (C) 2018-2019 Dyne.org foundation
+-- Copyright (C) 2018-2020 Dyne.org foundation
 -- Coconut implementation by Alberto Sonnino and Denis Roio
 --
 -- This program is free software: you can redistribute it and/or modify
@@ -3679,13 +3641,10 @@ return big
 -- revelations. For information about usage see
 -- https://zenroom.dyne.org and https://decodeproject.eu
 ECP     = require_once('zenroom_ecp')
-ELGAMAL = require_once('crypto_elgamal')
 ECP2    = require_once('zenroom_ecp2')
-FP12    = require_once('fp12')
-
 
 local coco = {
-   _VERSION = 'crypto_coconut.lua 1.0',
+   _VERSION = 'crypto_coconut.lua 1.1',
    _URL = 'https://zenroom.dyne.org',
    _DESCRIPTION = 'Attribute-based credential system supporting multiple unlinkable private attribute revelations',
    _LICENSE = [[
@@ -3778,14 +3737,16 @@ end
 
 function coco.prepare_blind_sign(gamma, secret)
    local m = INT.new(sha256(secret))
+   -- ElGamal commitment
    local r = rand()
-   local cm = g1 * r + hs * m
-   local h = ECP.hashtopoint(cm)
-   local a, b, k = ELGAMAL.encrypt(gamma, m, h)
-   local c = {a = a, b = b}
-   local pi_s = make_pi_s(gamma, cm, k, r, m)
+   local commit = g1 * r + hs * m
+   local k = rand()
+   local c = { a = g1 * k,
+			   b = gamma * k + ECP.hashtopoint(commit) * m }
+   -- calculate zero knowledge proofs
+   local pi_s = make_pi_s(gamma, commit, k, r, m)
    -- return Lambda
-   return { cm   = cm,
+   return { cm   = commit,
             c    = c,
             pi_s = pi_s,
 			public = gamma }
@@ -3803,15 +3764,15 @@ function coco.blind_sign(sk, Lambda)
             b_tilde = b_tilde  }
 end
 
-function coco.aggregate_creds(d, sigma_tilde)
-   local agg_s = ELGAMAL.decrypt(d,
-								 sigma_tilde[1].a_tilde,
-								 sigma_tilde[1].b_tilde)
+function coco.aggregate_creds(sk, sigma_tilde)
+   local agg_s =
+	  -- ElGamal verify commitment
+	  sigma_tilde[1].b_tilde - sigma_tilde[1].a_tilde * sk
+
    if #sigma_tilde > 1 then
       for i = 2, #sigma_tilde do
-         agg_s = agg_s + ELGAMAL.decrypt(d,
-										 sigma_tilde[i].a_tilde,
-										 sigma_tilde[i].b_tilde)
+         agg_s = agg_s +
+			sigma_tilde[i].b_tilde - sigma_tilde[i].a_tilde * sk
       end
    end
    -- aggregated sigma

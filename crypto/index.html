@@ -125,6 +125,12 @@
       <li><a href="#elgamal">ElGamal</a></li>
       
     
+      <li><a href="#bls-signatures">BLS signatures</a></li>
+      
+    
+      <li><a href="#one-round-tripartite-shared-secret">One-round tripartite shared secret</a></li>
+      
+    
       <li><a href="#ecqv">ECQV</a></li>
       
   <ul>
@@ -150,7 +156,7 @@
         </li>
         
         <li>
-            <a href="#basic-advantages">Basic advantages</a>
+            <a href="#main-advantages-of-this-approach">Main advantages of this approach</a>
             
         </li>
         
@@ -185,34 +191,88 @@ academic paper to a portable implementation</strong> running efficiently on
 any platform.</p>
 <h3 id="elgamal">ElGamal</h3>
 <p>As a basic introduction we propose the implementation of <a href="https://en.wikipedia.org/wiki/ElGamal_encryption">ElGamal
-encryption system</a>
-widely used in homomorphic encryption. The code below makes use of the
-<a href="../lua/modules/ECP.html">ECP arithmetics</a> provided by Zenroom.</p>
-<div class="codehilite"><pre><span class="n">ECP</span> <span class="o">=</span> <span class="nb">require</span><span class="p">(</span><span class="s1">&#39;</span><span class="s">ECP&#39;</span><span class="p">)</span>
-
-<span class="k">function</span> <span class="nc">ElGamal</span><span class="p">.</span><span class="nf">keygen</span><span class="p">()</span>
-   <span class="kd">local</span> <span class="n">d</span> <span class="o">=</span> <span class="n">INT</span><span class="p">.</span><span class="n">modrand</span><span class="p">(</span><span class="n">ECP</span><span class="p">.</span><span class="n">order</span><span class="p">())</span>
-   <span class="kd">local</span> <span class="n">gamma</span> <span class="o">=</span> <span class="n">d</span> <span class="o">*</span> <span class="n">ECP</span><span class="p">.</span><span class="n">generator</span><span class="p">()</span>
-   <span class="k">return</span> <span class="n">d</span><span class="p">,</span> <span class="n">gamma</span>
-<span class="k">end</span>
-
-<span class="k">function</span> <span class="nc">ElGamal</span><span class="p">.</span><span class="nf">encrypt</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
-   <span class="kd">local</span> <span class="n">k</span> <span class="o">=</span> <span class="n">INT</span><span class="p">.</span><span class="n">modrand</span><span class="p">(</span><span class="n">ECP</span><span class="p">.</span><span class="n">order</span><span class="p">())</span>
-   <span class="kd">local</span> <span class="n">a</span> <span class="o">=</span> <span class="n">k</span> <span class="o">*</span> <span class="n">ECP</span><span class="p">.</span><span class="n">generator</span><span class="p">()</span>
-   <span class="kd">local</span> <span class="n">b</span> <span class="o">=</span>
-    <span class="n">gamma</span> <span class="o">*</span> <span class="n">k</span>
-    <span class="o">+</span>
-    <span class="n">h</span> <span class="o">*</span> <span class="n">m</span>
-   <span class="k">return</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">k</span>
-<span class="k">end</span>
-
-<span class="k">function</span> <span class="nc">ElGamal</span><span class="p">.</span><span class="nf">decrypt</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
-   <span class="k">return</span> <span class="n">b</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">d</span>
-<span class="k">end</span>
+encryption
+system</a>. The code
+below makes use of the <a href="../lua/modules/ECP.html">ECP arithmetics</a>
+provided by Zenroom to produce ElGamal commitments useful to
+zero-knowledge proofs.</p>
+<div class="codehilite"><pre><span class="n">G</span> <span class="o">=</span> <span class="n">ECP</span><span class="p">.</span><span class="n">generator</span><span class="p">()</span>
+<span class="n">O</span> <span class="o">=</span> <span class="n">ECP</span><span class="p">.</span><span class="n">order</span><span class="p">()</span>
+<span class="n">salt</span> <span class="o">=</span> <span class="n">ECP</span><span class="p">.</span><span class="n">hashtopoint</span><span class="p">(</span><span class="s2">&quot;</span><span class="s">Constant random string&quot;</span><span class="p">)</span>
+<span class="n">secret</span> <span class="o">=</span> <span class="n">INT</span><span class="p">.</span><span class="n">new</span><span class="p">(</span><span class="n">sha256</span><span class="p">(</span><span class="s2">&quot;</span><span class="s">Secret message to be hashed to a number&quot;</span><span class="p">))</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">INT</span><span class="p">.</span><span class="n">modrand</span><span class="p">(</span><span class="n">O</span><span class="p">)</span>
+<span class="n">commitment</span> <span class="o">=</span> <span class="n">G</span> <span class="o">*</span> <span class="n">r</span> <span class="o">+</span> <span class="n">salt</span> <span class="o">*</span> <span class="n">secret</span>
+<span class="c1">-- keygen</span>
+<span class="n">seckey</span> <span class="o">=</span> <span class="n">INT</span><span class="p">.</span><span class="n">modrand</span><span class="p">(</span><span class="n">O</span><span class="p">)</span>
+<span class="n">pubkey</span> <span class="o">=</span> <span class="n">seckey</span> <span class="o">*</span> <span class="n">G</span>
+<span class="c1">-- sign</span>
+<span class="n">k</span> <span class="o">=</span> <span class="n">INT</span><span class="p">.</span><span class="n">modrand</span><span class="p">(</span><span class="n">O</span><span class="p">)</span>
+<span class="n">cipher</span> <span class="o">=</span> <span class="p">{</span> <span class="n">a</span> <span class="o">=</span> <span class="n">G</span> <span class="o">*</span> <span class="n">k</span><span class="p">,</span>
+           <span class="n">b</span> <span class="o">=</span> <span class="n">pubkey</span> <span class="o">*</span> <span class="n">k</span> <span class="o">+</span> <span class="n">commitment</span> <span class="o">*</span> <span class="n">secret</span> <span class="p">}</span>
+<span class="c1">-- verify</span>
+<span class="nb">assert</span><span class="p">(</span><span class="n">cipher</span><span class="p">.</span><span class="n">b</span> <span class="o">-</span> <span class="n">cipher</span><span class="p">.</span><span class="n">a</span> <span class="o">*</span> <span class="n">seckey</span>
+          <span class="o">==</span>
+       <span class="n">commitment</span> <span class="o">*</span> <span class="n">secret</span><span class="p">)</span>
 </pre></div>
 
 
 <p>One can play around with this code already by using our <a href="/demo">online demo</a>.</p>
+<h3 id="bls-signatures">BLS signatures</h3>
+<p>The pairing property of some elliptiv curves can be exploited for
+short signatures as defined by <a href="https://en.wikipedia.org/wiki/Boneh%E2%80%93Lynn%E2%80%93Shacham">Boneh-Lynn-Schacham
+(BLS)</a>
+in 2001.</p>
+<p>Here the Zenroom implementation:</p>
+<div class="codehilite"><pre><span class="n">msg</span> <span class="o">=</span> <span class="n">str</span><span class="p">(</span><span class="s2">&quot;</span><span class="s">This is the authenticated message&quot;</span><span class="p">)</span>
+<span class="n">G1</span> <span class="o">=</span> <span class="n">ECP</span><span class="p">.</span><span class="n">generator</span><span class="p">()</span>
+<span class="n">G2</span> <span class="o">=</span> <span class="n">ECP2</span><span class="p">.</span><span class="n">generator</span><span class="p">()</span>
+<span class="n">O</span>  <span class="o">=</span> <span class="n">ECP</span><span class="p">.</span><span class="n">order</span><span class="p">()</span>
+<span class="c1">-- keygen: δ = r.O ; γ = δ.G2</span>
+<span class="n">sk</span> <span class="o">=</span> <span class="n">INT</span><span class="p">.</span><span class="n">modrand</span><span class="p">(</span><span class="n">O</span><span class="p">)</span>
+<span class="n">pk</span> <span class="o">=</span> <span class="n">G2</span> <span class="o">*</span> <span class="n">sk</span>
+<span class="c1">-- sign: σ = δ * ( H(msg)*G1 )</span>
+<span class="n">sm</span> <span class="o">=</span> <span class="n">ECP</span><span class="p">.</span><span class="n">hashtopoint</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="o">*</span> <span class="n">sk</span>
+<span class="c1">-- verify: ε(γ,H(msg)) == ε(G2,σ)</span>
+<span class="n">hm</span> <span class="o">=</span> <span class="n">ECP</span><span class="p">.</span><span class="n">hashtopoint</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+<span class="nb">assert</span><span class="p">(</span> <span class="n">ECP2</span><span class="p">.</span><span class="n">miller</span><span class="p">(</span><span class="n">pk</span><span class="p">,</span> <span class="n">hm</span><span class="p">)</span> <span class="o">==</span> <span class="n">ECP2</span><span class="p">.</span><span class="n">miller</span><span class="p">(</span><span class="n">G2</span><span class="p">,</span> <span class="n">sm</span><span class="p">),</span>
+        <span class="s2">&quot;</span><span class="s">Signature doesn&#39;t validates&quot;</span><span class="p">)</span>
+</pre></div>
+
+
+<h3 id="one-round-tripartite-shared-secret">One-round tripartite shared secret</h3>
+<p>This secret sharing protocol uses BLS curve pairing in a rather simple way, it was first described by Antonine Joux in the paper <a href="http://cgi.di.uoa.gr/~aggelos/crypto/page4/assets/joux-tripartite.pdf">A One Round Protocol for Tripartite Diffie–Hellman</a> (2000).</p>
+<p>Here the Zenroom demonstration of the protocol:</p>
+<div class="codehilite"><pre><span class="c1">-- Joux’s one-round Tripartite Diffie-Hellman</span>
+<span class="c1">-- Setup</span>
+<span class="kd">local</span> <span class="n">G1</span> <span class="o">=</span> <span class="n">ECP</span><span class="p">.</span><span class="n">generator</span><span class="p">()</span>
+<span class="kd">local</span> <span class="n">G2</span> <span class="o">=</span> <span class="n">ECP2</span><span class="p">.</span><span class="n">generator</span><span class="p">()</span>
+<span class="kd">local</span> <span class="n">O</span>  <span class="o">=</span> <span class="n">ECP</span><span class="p">.</span><span class="n">order</span><span class="p">()</span>
+<span class="c1">-- Parties A,B,C generate random a,b,c ∈ Zr</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">INT</span><span class="p">.</span><span class="n">modrand</span><span class="p">(</span><span class="n">O</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">INT</span><span class="p">.</span><span class="n">modrand</span><span class="p">(</span><span class="n">O</span><span class="p">)</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">INT</span><span class="p">.</span><span class="n">modrand</span><span class="p">(</span><span class="n">O</span><span class="p">)</span>
+<span class="c1">-- Parties A,B,C broadcast to all aG, bG, cG</span>
+<span class="n">aG1</span> <span class="o">=</span> <span class="n">G1</span> <span class="o">*</span> <span class="n">a</span>
+<span class="n">aG2</span> <span class="o">=</span> <span class="n">G2</span> <span class="o">*</span> <span class="n">a</span>
+<span class="n">bG1</span> <span class="o">=</span> <span class="n">G1</span> <span class="o">*</span> <span class="n">b</span>
+<span class="n">bG2</span> <span class="o">=</span> <span class="n">G2</span> <span class="o">*</span> <span class="n">b</span>
+<span class="n">cG1</span> <span class="o">=</span> <span class="n">G1</span> <span class="o">*</span> <span class="n">c</span>
+<span class="n">cG2</span> <span class="o">=</span> <span class="n">G2</span> <span class="o">*</span> <span class="n">c</span>
+<span class="c1">-- Theoretical proof of ε(G, G)^abc</span>
+<span class="n">K</span>  <span class="o">=</span> <span class="n">ECP2</span><span class="p">.</span><span class="n">miller</span><span class="p">(</span><span class="n">G2</span><span class="p">,</span>  <span class="n">G1</span><span class="p">)</span>  <span class="o">^</span> <span class="p">(</span> <span class="n">a</span><span class="p">:</span><span class="n">modmul</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="n">O</span><span class="p">):</span><span class="n">modmul</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="n">O</span><span class="p">)</span> <span class="p">)</span>
+<span class="c1">-- A computes KA = ε(bG, cG)^a</span>
+<span class="n">KA</span> <span class="o">=</span> <span class="n">ECP2</span><span class="p">.</span><span class="n">miller</span><span class="p">(</span><span class="n">bG2</span><span class="p">,</span> <span class="n">cG1</span><span class="p">)</span> <span class="o">^</span> <span class="n">a</span>
+<span class="c1">-- B computes KB = ε(aG, cG)^b</span>
+<span class="n">KB</span> <span class="o">=</span> <span class="n">ECP2</span><span class="p">.</span><span class="n">miller</span><span class="p">(</span><span class="n">aG2</span><span class="p">,</span> <span class="n">cG1</span><span class="p">)</span> <span class="o">^</span> <span class="n">b</span>
+<span class="c1">-- C computes KC = ε(aG, bG)^c</span>
+<span class="n">KC</span> <span class="o">=</span> <span class="n">ECP2</span><span class="p">.</span><span class="n">miller</span><span class="p">(</span><span class="n">aG2</span><span class="p">,</span> <span class="n">bG1</span><span class="p">)</span> <span class="o">^</span> <span class="n">c</span>
+<span class="c1">-- Shared key is K = KA = KB = KC</span>
+<span class="nb">assert</span><span class="p">(</span><span class="n">K</span> <span class="o">==</span> <span class="n">KA</span><span class="p">)</span>
+<span class="nb">assert</span><span class="p">(</span><span class="n">K</span> <span class="o">==</span> <span class="n">KB</span><span class="p">)</span>
+<span class="nb">assert</span><span class="p">(</span><span class="n">K</span> <span class="o">==</span> <span class="n">KC</span><span class="p">)</span>
+</pre></div>
+
+
 <h3 id="ecqv">ECQV</h3>
 <p>For a practical example we will now use the Zenroom implementation of
 the <a href="https://www.secg.org/sec4-1.0.pdf">Elliptic Curve Qu-Vanstone
@@ -223,8 +283,7 @@ widely used by Blackberry technologies.</p>
 <h4 id="mathematical-formula">Mathematical Formula</h4>
 <p><img alt="ECQV mathematical formula" src="../img/ecqv.png" /></p>
 <h4 id="zenroom-implementation">Zenroom Implementation</h4>
-<div class="codehilite"><pre><span class="n">ECP</span> <span class="o">=</span> <span class="nb">require</span><span class="p">(</span><span class="s1">&#39;</span><span class="s">ECP&#39;</span><span class="p">)</span>
-<span class="n">G</span> <span class="o">=</span> <span class="n">ECP</span><span class="p">.</span><span class="n">generator</span><span class="p">()</span>
+<div class="codehilite"><pre><span class="n">G</span> <span class="o">=</span> <span class="n">ECP</span><span class="p">.</span><span class="n">generator</span><span class="p">()</span>
 <span class="k">function</span> <span class="nf">rand</span><span class="p">()</span> <span class="c1">-- random modulo</span>
     <span class="k">return</span> <span class="n">BIG</span><span class="p">.</span><span class="n">modrand</span><span class="p">(</span><span class="n">ECP</span><span class="p">.</span><span class="n">order</span><span class="p">())</span>
 <span class="k">end</span>
@@ -264,7 +323,7 @@ our VM.</p>
 <a href="/lua/modules/BIG.html">BIG integers</a>.</p>
 <p>All this is possible without worrying about library dependencies, OS
 versioning, interpreter's availability etc.</p>
-<h1 id="basic-advantages">Basic advantages</h1>
+<h1 id="main-advantages-of-this-approach">Main advantages of this approach</h1>
 <p>Putting the <strong>mathematical formula and the code side by side</strong> while using
 the same variable names greatly helps to review the correctness of the
 implementation.</p>
