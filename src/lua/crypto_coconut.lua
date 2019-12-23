@@ -1,6 +1,6 @@
 -- This file is part of Zenroom (https://zenroom.dyne.org)
 --
--- Copyright (C) 2018-2019 Dyne.org foundation
+-- Copyright (C) 2018-2020 Dyne.org foundation
 -- Coconut implementation by Alberto Sonnino and Denis Roio
 --
 -- This program is free software: you can redistribute it and/or modify
@@ -23,13 +23,10 @@
 -- revelations. For information about usage see
 -- https://zenroom.dyne.org and https://decodeproject.eu
 ECP     = require_once('zenroom_ecp')
-ELGAMAL = require_once('crypto_elgamal')
 ECP2    = require_once('zenroom_ecp2')
-FP12    = require_once('fp12')
-
 
 local coco = {
-   _VERSION = 'crypto_coconut.lua 1.0',
+   _VERSION = 'crypto_coconut.lua 1.1',
    _URL = 'https://zenroom.dyne.org',
    _DESCRIPTION = 'Attribute-based credential system supporting multiple unlinkable private attribute revelations',
    _LICENSE = [[
@@ -122,14 +119,16 @@ end
 
 function coco.prepare_blind_sign(gamma, secret)
    local m = INT.new(sha256(secret))
+   -- ElGamal commitment
    local r = rand()
-   local cm = g1 * r + hs * m
-   local h = ECP.hashtopoint(cm)
-   local a, b, k = ELGAMAL.encrypt(gamma, m, h)
-   local c = {a = a, b = b}
-   local pi_s = make_pi_s(gamma, cm, k, r, m)
+   local commit = g1 * r + hs * m
+   local k = rand()
+   local c = { a = g1 * k,
+			   b = gamma * k + ECP.hashtopoint(commit) * m }
+   -- calculate zero knowledge proofs
+   local pi_s = make_pi_s(gamma, commit, k, r, m)
    -- return Lambda
-   return { cm   = cm,
+   return { cm   = commit,
             c    = c,
             pi_s = pi_s,
 			public = gamma }
@@ -147,15 +146,15 @@ function coco.blind_sign(sk, Lambda)
             b_tilde = b_tilde  }
 end
 
-function coco.aggregate_creds(d, sigma_tilde)
-   local agg_s = ELGAMAL.decrypt(d,
-								 sigma_tilde[1].a_tilde,
-								 sigma_tilde[1].b_tilde)
+function coco.aggregate_creds(sk, sigma_tilde)
+   local agg_s =
+	  -- ElGamal verify commitment
+	  sigma_tilde[1].b_tilde - sigma_tilde[1].a_tilde * sk
+
    if #sigma_tilde > 1 then
       for i = 2, #sigma_tilde do
-         agg_s = agg_s + ELGAMAL.decrypt(d,
-										 sigma_tilde[i].a_tilde,
-										 sigma_tilde[i].b_tilde)
+         agg_s = agg_s +
+			sigma_tilde[i].b_tilde - sigma_tilde[i].a_tilde * sk
       end
    end
    -- aggregated sigma

@@ -2,8 +2,6 @@ print()
 print '= ELLIPTIC CURVE ARITHMETIC OPERATIONS TESTS FOR ED25519'
 print()
 
-ecp = require'ecp'
-
 -- test values found in milagro's vector_ED25519.txt
 ecp1 = ecp.new(
    octet.from_hex('77B7CB8C1B285FBD40D9BC49D3DA20489CC18272EEDDD057E7120E1DE38A3B5C'),

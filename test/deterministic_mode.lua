@@ -1,8 +1,5 @@
 -- to be executed using -S or _rng_ functions
 
-ECP = require_once'zenroom_ecp'
-ELGAMAL = require_once'crypto_elgamal'
-
 print("Checks for deterministic operations")
 
 first = O.random(16)
@@ -34,10 +31,3 @@ assert(ecdh2:public() ~= ecdh:public())
 c, d = ecdh:sign("Hello World!")
 I.print({ ecdh_sign = { c = c, d = d } })
 -- will check if same on next execution
-
--- ElGamal
--- d = INT.new(rng, ECP.order())
--- g = d * ECP.generator()
-d, g = ELGAMAL.keygen()
-I.print({ elg_keys = { d = d,
-					   g = g }})

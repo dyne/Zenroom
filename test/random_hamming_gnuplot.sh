@@ -25,7 +25,6 @@ function render() {
 mkdir -p $R
 function script() {
 	cat <<EOF > $R/$1.lua
-ECP = require'zenroom_ecp'
 g1 = ECP.generator()
 o = ECP.order()
 local new = $2

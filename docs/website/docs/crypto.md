@@ -32,35 +32,95 @@ any platform.
 ### ElGamal
 
 As a basic introduction we propose the implementation of [ElGamal
-encryption system](https://en.wikipedia.org/wiki/ElGamal_encryption)
-widely used in homomorphic encryption. The code below makes use of the
-[ECP arithmetics](lua/modules/ECP.html) provided by Zenroom.
+encryption
+system](https://en.wikipedia.org/wiki/ElGamal_encryption). The code
+below makes use of the [ECP arithmetics](lua/modules/ECP.html)
+provided by Zenroom to produce ElGamal commitments useful to
+zero-knowledge proofs.
 
 ```lua
-ECP = require('ECP')
-
-function ElGamal.keygen()
-   local d = INT.modrand(ECP.order())
-   local gamma = d * ECP.generator()
-   return d, gamma
-end
-
-function ElGamal.encrypt(gamma, m, h)
-   local k = INT.modrand(ECP.order())
-   local a = k * ECP.generator()
-   local b =
-	gamma * k
-	+
-	h * m
-   return a, b, k
-end
-
-function ElGamal.decrypt(d, a, b)
-   return b - a * d
-end
+G = ECP.generator()
+O = ECP.order()
+salt = ECP.hashtopoint("Constant random string")
+secret = INT.new(sha256("Secret message to be hashed to a number"))
+r = INT.modrand(O)
+commitment = G * r + salt * secret
+-- keygen
+seckey = INT.modrand(O)
+pubkey = seckey * G
+-- sign
+k = INT.modrand(O)
+cipher = { a = G * k,
+		   b = pubkey * k + commitment * secret }
+-- verify
+assert(cipher.b - cipher.a * seckey
+	      ==
+	   commitment * secret)
 ```
 
 One can play around with this code already by using our [online demo](/demo).
+
+### BLS signatures
+
+The pairing property of some elliptiv curves can be exploited for
+short signatures as defined by [Boneh-Lynn-Schacham
+(BLS)](https://en.wikipedia.org/wiki/Boneh%E2%80%93Lynn%E2%80%93Shacham)
+in 2001.
+
+Here the Zenroom implementation:
+
+```lua
+msg = str("This is the authenticated message")
+G1 = ECP.generator()
+G2 = ECP2.generator()
+O  = ECP.order()
+-- keygen: δ = r.O ; γ = δ.G2
+sk = INT.modrand(O)
+pk = G2 * sk
+-- sign: σ = δ * ( H(msg)*G1 )
+sm = ECP.hashtopoint(msg) * sk
+-- verify: ε(γ,H(msg)) == ε(G2,σ)
+hm = ECP.hashtopoint(msg)
+assert( ECP2.miller(pk, hm) == ECP2.miller(G2, sm),
+        "Signature doesn't validates")
+```
+
+### One-round tripartite shared secret
+
+This secret sharing protocol uses BLS curve pairing in a rather simple way, it was first described by Antonine Joux in the paper [A One Round Protocol for Tripartite Diffie–Hellman](http://cgi.di.uoa.gr/~aggelos/crypto/page4/assets/joux-tripartite.pdf) (2000).
+
+Here the Zenroom demonstration of the protocol:
+
+```lua
+-- Joux’s one-round Tripartite Diffie-Hellman
+-- Setup
+local G1 = ECP.generator()
+local G2 = ECP2.generator()
+local O  = ECP.order()
+-- Parties A,B,C generate random a,b,c ∈ Zr
+a = INT.modrand(O)
+b = INT.modrand(O)
+c = INT.modrand(O)
+-- Parties A,B,C broadcast to all aG, bG, cG
+aG1 = G1 * a
+aG2 = G2 * a
+bG1 = G1 * b
+bG2 = G2 * b
+cG1 = G1 * c
+cG2 = G2 * c
+-- Theoretical proof of ε(G, G)^abc
+K  = ECP2.miller(G2,  G1)  ^ ( a:modmul(b,O):modmul(c,O) )
+-- A computes KA = ε(bG, cG)^a
+KA = ECP2.miller(bG2, cG1) ^ a
+-- B computes KB = ε(aG, cG)^b
+KB = ECP2.miller(aG2, cG1) ^ b
+-- C computes KC = ε(aG, bG)^c
+KC = ECP2.miller(aG2, bG1) ^ c
+-- Shared key is K = KA = KB = KC
+assert(K == KA)
+assert(K == KB)
+assert(K == KC)
+```
 
 ### ECQV
 
@@ -78,7 +138,6 @@ widely used by Blackberry technologies.
 #### Zenroom Implementation
 
 ```lua
-ECP = require('ECP')
 G = ECP.generator()
 function rand() -- random modulo
 	return BIG.modrand(ECP.order())
@@ -122,7 +181,7 @@ Arithmetic operations also involving [Elliptic Curve Points
 All this is possible without worrying about library dependencies, OS
 versioning, interpreter's availability etc.
 
-# Basic advantages
+# Main advantages of this approach
 
 Putting the **mathematical formula and the code side by side** while using
 the same variable names greatly helps to review the correctness of the

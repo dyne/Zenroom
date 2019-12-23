@@ -70,7 +70,6 @@ dotest(hash:process(left), hash:process(right))
 -- print '= OK'
 
 print '== ECP import/export'
-ECP = require_once('zenroom_ecp')
 
 left = INT.new(rng,ECP.order()) * ECP.generator() -- ECP point aka pub key
 b64 = left:octet():base64()

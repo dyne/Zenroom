@@ -3,21 +3,16 @@ COCONUT = require_once('crypto_coconut')
 
 -- elgamal
 m = INT.new(sha256(str("Some sort of secret")))
-
 hs = ECP.hashtopoint(str("anystring"))
-d, gamma = ELGAMAL.keygen()
-a, b, k = ELGAMAL.encrypt(gamma, m, hs)
-dec = ELGAMAL.decrypt(d, a, b)
-assert(dec == hs * m, 'El-Gamal encryption not working')
-print('')
-print('[ok] test El-Gamal')
-print('')
+d = INT.modrand(ECP.order())
+gamma = ECP.generator() * d
 
 -- A single CA signs
 -- generate the keys of the credential
-cred_keypair = { private = d,
-				 public = gamma }
+cred_keypair = { private = INT.modrand(ECP.order()) }
+cred_keypair.public = ECP.generator() * cred_keypair.private
 secret = cred_keypair.private -- "Some sort of secret credential"
+
 -- simple credential test
 local sk, pk
 sk, pk = COCONUT.ca_keygen()
@@ -57,8 +52,8 @@ print('')
 -- PETITION
 local UID = "petition unique identifier"
 issuer = cred_keypair -- reuse the signed credential keypair for the issuer
-voter = { } -- create a new signed credential keypair for the voter
-voter.private, voter.public = ELGAMAL.keygen()
+voter = { private = INT.modrand(ECP.order()) } -- create a new signed credential keypair for the voter
+voter.public = ECP.generator() * voter.private
 Lambda = COCONUT.prepare_blind_sign(voter.public, voter.private)
 sigma_tilde1 = COCONUT.blind_sign(ca_keypair.sign, Lambda)
 sigma_tilde2 = COCONUT.blind_sign(ca2_keypair.sign, Lambda)

@@ -177,9 +177,11 @@ nr. 732546 (DECODE).
 
 [![DECODE project](img/decode.jpg)](https://decodeproject.eu)
 
-Zenroom is Copyright (C) 2017-2019 by Dyne.org foundation, Amsterdam
+Zenroom is Copyright (C) 2017-2020 by the Dyne.org foundation
+For the original source code and documentation go to https://zenroom.org
+This notice must be displayed and explicitly agreed by any user at boot.
 
-Designed, written and maintained by Denis "Jaromil" Roio
+Zenroom is designed, written and maintained by Denis "Jaromil" Roio
 
 With contributions by Puria Nafisi Azizi and Daniele Lacamera.
 

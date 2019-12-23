@@ -18,7 +18,6 @@
 
 -- COCONUT implementation in Zencode
 
--- ELGAMAL = require('crypto_elgamal') <- inside crypto_coconut
 COCONUT = require_once('crypto_coconut')
 
 
@@ -34,10 +33,10 @@ ZEN.add_schema({
 })
 -- credential keypair operations
 When("I create the credential keypair", function()
-		local t = { }
-		t.sk, t.pk = ELGAMAL.keygen()
-		ZEN:pick('credential_keypair', { public = t.pk,
-										 private = t.sk })
+		-- sk = rand, pk = G * sk
+		local tmp = { private = INT.modrand(ECP.order()) }
+		tmp.public = ECP.generator() * tmp.private
+		ZEN:pick('credential_keypair', tmp)
 		ZEN:validate('credential_keypair')
 		ZEN:ack('credential_keypair')
 end)

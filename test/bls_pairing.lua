@@ -20,9 +20,6 @@ print''
 print '= TEST BLS CURVE PAIRING OPERATIONS'
 print''
 
-ECP = require_once('zenroom_ecp')
-ECP2 = require_once('zenroom_ecp2')
-
 G1 = ECP.generator()
 G2 = ECP2.generator()
 O = ECP.order()
@@ -72,9 +69,6 @@ print("Test BLS Signatures")
 -- σ = δ * ( H(m)*G1 )
 -- assume: ε(δ*G2, H(m)) == ε(G2, δ*H(m))
 -- check:  ε(γ, H(m))    == ε(G2, σ)
-
-ECP = require'zenroom_ecp'
-ECP2 = require'zenroom_ecp2'
 
 msg = str("This is the secret message")
 

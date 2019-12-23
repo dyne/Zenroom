@@ -2,8 +2,6 @@ print ""
 print "= ECDH and ECP session tests"
 print ""
 
-ECP = require'zenroom_ecp'
-
 ecdh = ECDH.new('bls383')
 
 g1 = ECP.generator()
