@@ -76,8 +76,10 @@ _G["CONF"] = {
    input = { encoding = get_encoding('url64'),
 			 format = get_format('json') },
    output = { encoding = get_encoding('url64'),
-			  format = get_format('json') }
+			  format = get_format('json') },
+   parser = { strict_match = true }
 }
+
 -- encoding base64url (RFC4648) is the fastest and most portable in zenroom
 -- set_encoding('url64')
 -- set_format('json')

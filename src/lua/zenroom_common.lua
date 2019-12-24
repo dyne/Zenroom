@@ -220,6 +220,7 @@ function set_rule(text)
 	  --     act("zencode extension: "..rule[3])
 	  --     require("zencode_"..rule[3])
    elseif rule[2] == 'input' and rule[3] and rule[4] then
+
       -- rule input encoding|format ''
       if rule[3] == 'encoding' then
          CONF.input.encoding = get_encoding(rule[4])
@@ -228,7 +229,9 @@ function set_rule(text)
 		 CONF.input.format = get_format(rule[4])
          res = true and CONF.input.format
       end
+
    elseif rule[2] == 'output' and rule[3] and rule[4] then
+
       -- rule input encoding|format ''
       if rule[3] == 'encoding' then
          CONF.output.encoding = get_encoding(rule[4])
@@ -237,9 +240,18 @@ function set_rule(text)
 		 CONF.output.format = get_format(rule[4])
          res = true and CONF.output.format
       end
+
+   elseif rule[2] == 'unknown' and rule[3] then
+	  if rule[3] == 'ignore' then
+		 CONF.parser.strict_match = false
+		 res = true
+	  end
+
    elseif rule[2] == 'set' and rule[4] then
+
       CONF[rule[3]] = tonumber(rule[4]) or rule[4]
       res = true and CONF[rule[3]]
+
    end
    if not res then error("Rule invalid: "..text, 3)
    else act(text) end

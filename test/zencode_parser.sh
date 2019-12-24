@@ -24,6 +24,17 @@ When I create the issuer keypair
 Then print my 'issuer keypair'
 EOF
 
+
+cat << EOF | zenroom -z
+rule check version 1.0.0
+rule unknown ignore
+Scenario coconut: issuer keygen
+Given that I am known as 'MadHatter'
+When I create the issuer keypair
+and I don't know what I am doing
+Then print my 'issuer keypair'
+EOF
+
 set +e
 # force error: check processing stop
 
@@ -51,6 +62,16 @@ Scenario coconut: issuer keygen
 Given that I am known as 'MadHatter'
 Given 0YOUI4qhIeXmIpyK
 Then print 'Success' 'OK'
+EOF
+[[ $? == 0 ]] && return 1
+
+cat << EOF | zenroom -z
+rule check version 1.0.0
+Scenario coconut: issuer keygen
+Given that I am known as 'MadHatter'
+When I create the issuer keypair
+and this should fail or 'rule unknown ignore'
+Then print my 'issuer keypair'
 EOF
 [[ $? == 0 ]] && return 1
 

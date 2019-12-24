@@ -4,7 +4,7 @@ print'===================='
 
 require'zencode_simple'
 require'zencode_coconut'
-
+CONF.output.encoding = get_encoding('base64')
 IN = { 
    test = "root element OK",
    tree = { treetest = "tree element OK" },
@@ -22,10 +22,11 @@ ZEN:pickin('Bob','public_key')
 print'= Zencode pick(), pickmy() and pickin() OK'
 
 
-ZEN:validate('issuer keypair')
+ZEN:validate('issuer_keypair')
 print'= Zencode validate() OK'
-ZEN:ack('issuer keypair')
--- ZEN:ack('test')
--- ZEN:ack('treetest')
--- ZEN:ack('public')
+ZEN:ack('issuer_keypair')
+ZEN:ack('test')
+ZEN:ack('treetest')
+ZEN:ack('public')
+ZEN:debug()
 print'= Zencode ack() OK'

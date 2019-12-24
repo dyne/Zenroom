@@ -546,11 +546,15 @@ function zencode:step(text)
 		 match = true
 	  end
    end
-   if not match then
+
+   if not match and CONF.parser.strict_match then
 	  exitcode(1)
 	  error("Zencode pattern not found: "..text, 2)
 	  ZEN.OK = false
 	  return false
+   end
+   if not match then
+	  warn("Ignored unknown zencode line: "..text)
    end
    return true
 end
