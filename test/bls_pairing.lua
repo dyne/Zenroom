@@ -27,38 +27,58 @@ O = ECP.order()
 -- return a random big number modulus curve order
 function R() return INT.modrand(O) end
 
+print("G1 size:  "..#(G1*R()):octet())
+print("G2 size:  "..#(G2*R()):octet())
+print("Ate size: "..#PAIR.ate( G2*R(), G1*R()):octet())
+
 print("Multiplication of ECP1 generator and curve order is infinite")
 inf = G1 * O
 assert(inf:isinf())
 
-print("Pick a random point in G1")
+print("Test miller(rQ,P) == miller(Q,rP) == miller(Q,P)^r")
+Q = G2 * R()
+P = G1 * R()
+r = R()
+g1 = PAIR.ate( Q*r, P)
+g2 = PAIR.ate( Q,   P*r)
+assert(g1 == g2)
+g2 = PAIR.ate( Q, P)^r
+assert(g1 == g2)
+
+print("Test that miller(Q,P1+P2+P3) = miller(Q,P1).e(Q,P2).e(Q,P3)")
+Q  = G2 * R()
 P1 = G1 * R()
+P2 = G1 * R()
+P3 = G1 * R()
+assert( PAIR.ate( Q, P1 + P2 + P3)
+		   ==
+		   PAIR.ate( Q, P1) * PAIR.ate( Q, P2) * PAIR.ate(Q, P3) )
+-- check failures
+assert( PAIR.ate( Q, P1 + P2 + P3)
+		   ~=
+		   PAIR.ate( Q, P1) * PAIR.ate( Q, P1) * PAIR.ate(Q, P1) )
+assert( PAIR.ate( Q, P1 + P2 + P3)
+		   ~=
+		   PAIR.ate( Q, P2) * PAIR.ate( Q, P2) * PAIR.ate(Q, P2) )
+assert( PAIR.ate( Q, P1 + P2 + P3)
+		   ~=
+		   PAIR.ate( Q, P3) * PAIR.ate( Q, P3) * PAIR.ate(Q, P3) )
+--
 
-print("Pick a random point in G2 (ECP2 multuplication)")
-Q1 = G2 * R()
-
-print("Test that miller(sQ,P) = miller(Q,sP), s random")
-s = R()
-g1 = ECP2.miller( Q1*s, P1)
-g2 = ECP2.miller( Q1,   P1*s)
+print("Test that miller(Q1+Q2+Q3,P1) = miller(Q1,P1).e(Q2,P1).e(Q3,P1)")
+P  = G1 * R()
+q1 = R()
+Q1 = G2 * q1
+q2 = R()
+Q2 = G2 * q2
+q3 = R()
+Q3 = G2 * q3
+g1 = PAIR.ate(Q1+Q2+Q3,P)
+g2 = PAIR.ate(Q1,P) * PAIR.ate(Q2,P) * PAIR.ate(Q3,P)
 assert(g1 == g2)
 
-print("Test that miller(sQ,P) = miller(Q,P)^s, s random")
-g2 = ECP2.miller( Q1, P1)^s
--- print("rand: " .. bin(s))
-assert(g1 == g2)
-
-print("Test that miller(Q,P1+P2) = miller(Q,P1).e(Q,P2)")
-P2 = P1 * s
-g1 = ECP2.miller( Q1, P1 + P2 )
-g2 = ECP2.miller( Q1, P1) * ECP2.miller( Q1, P2)
-assert(g1 == g2)
-
-print("Test that miller(Q1+Q2,P1) = miller(Q1,P1).e(Q2,P1)")
-Q2 = G2 * s
-g1 = ECP2.miller(Q1+Q2,P1)
-g2 = ECP2.miller(Q1,P1) * ECP2.miller(Q2,P1)
-assert(g1 == g2)
+print("Test that miller(Q1+Q2,P) != miller(Q1+Q2,R)")
+assert(PAIR.ate(Q1+Q2,P) ~= PAIR.ate(Q1+Q2,G1*R()))
 
 
 
@@ -85,12 +105,12 @@ sm = ECP.hashtopoint(msg) * sk
 -- verify
 -- e(γ,H(m)) == e(G2,σ)
 hm = ECP.hashtopoint(msg)
-assert( ECP2.miller(pk, hm) == ECP2.miller(G2, sm),
+assert( PAIR.ate(pk, hm) == PAIR.ate(G2, sm),
         "BLS Signature doesn't validates")
 
 -- check verify fails on wrong sig
 hm = ECP.hashtopoint(msg..str("!!"))
-assert( ECP2.miller(pk, hm) ~= ECP2.miller(G2, sm),
+assert( PAIR.ate(pk, hm) ~= PAIR.ate(G2, sm),
         "BLS Signature validates incorrectly")
 
 print("Test tripartite shared secret")
@@ -110,10 +130,13 @@ bG1 = G1 * b
 bG2 = G2 * b
 cG1 = G1 * c
 cG2 = G2 * c
-K  = ECP2.miller(G2, G1)   ^( a:modmul(b,O):modmul(c,O) )
-KA = ECP2.miller(bG2, cG1) ^a
-KB = ECP2.miller(aG2, cG1) ^b
-KC = ECP2.miller(aG2, bG1) ^c
+K  = PAIR.ate(G2, G1)   ^( a:modmul(b,O):modmul(c,O) )
+KA =         PAIR.ate(bG2, cG1) ^a
+assert(KA == PAIR.ate(cG2, bG1) ^a)
+KB =         PAIR.ate(aG2, cG1) ^b
+assert(KB == PAIR.ate(cG2, aG1) ^b)
+KC =         PAIR.ate(aG2, bG1) ^c
+assert(KC == PAIR.ate(bG2, aG1) ^c)
 assert(K == KA, "BLS tripartite shared secret fails (A)")
 assert(K == KB, "BLS tripartite shared secret fails (B)")
 assert(K == KC, "BLS tripartite shared secret fails (C)")

@@ -50,6 +50,7 @@ INT = BIG    -- alias
 H   = HASH   -- alias
 I   = INSPECT -- alias
 PAIR = ECP2  -- alias
+PAIR.ate = ECP2.miller --alias
 V   = require('semver')
 VERSION = V(VERSION)
 
