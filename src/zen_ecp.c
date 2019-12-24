@@ -58,13 +58,15 @@
 #include <zen_memory.h>
 #include <lua_functions.h>
 
+const chunk *ORDER = (chunk*)CURVE_Order;
+
 ecp* ecp_new(lua_State *L) {
 	ecp *e = (ecp *)lua_newuserdata(L, sizeof(ecp));
 	if(!e) {
 		lerror(L, "Error allocating new ecp in %s",__func__);
 		return NULL; }
-	strcpy(e->curve,"bls383");
-	strcpy(e->type,"weierstrass");
+	strcpy(e->curve,CURVE_NAME);
+	strcpy(e->type,CURVE_TYPE);
 	e->biglen = sizeof(BIG);
 	e->totlen = (MODBYTES*2)+1; // length of ECP.new(rng:modbig(o),0):octet()
 	BIG_copy(e->order, (chunk*)CURVE_Order);

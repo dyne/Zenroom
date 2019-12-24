@@ -130,7 +130,7 @@ bG1 = G1 * b
 bG2 = G2 * b
 cG1 = G1 * c
 cG2 = G2 * c
-K  = PAIR.ate(G2, G1)   ^( a:modmul(b,O):modmul(c,O) )
+K  = PAIR.ate(G2, G1)   ^( a * b * c )
 KA =         PAIR.ate(bG2, cG1) ^a
 assert(KA == PAIR.ate(cG2, bG1) ^a)
 KB =         PAIR.ate(aG2, cG1) ^b

@@ -15,7 +15,7 @@ assert(a == b)
 -- test mod_inverse
 i = INT.modrand(ECP.order())
 inv = i:modinv(ECP.order())
-assert(i:modmul(inv, ECP.order()) == BIG.new(1), 'Error in mod_inverse (gcd based)')
+assert(i * inv == BIG.new(1), 'Error in mod_inverse (gcd based)')
 
 -- test additive homomorphic property
 m = { } -- m int mod order
@@ -37,7 +37,7 @@ assert(R == r*g1, "Error in additive homomorphic property")
 wk = INT.modrand(o)
 k = INT.modrand(o)
 c = INT.modrand(o)
-rk = wk:modsub(c * k, o)
+rk = wk - c * k
 -- rk = (wk - c*k) % o -- error when not using modsub
 Aw1 = g1 * wk
 Aw2 = (g1*k) * c + g1 * rk

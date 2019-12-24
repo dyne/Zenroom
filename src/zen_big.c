@@ -36,6 +36,9 @@
 #include <zen_big.h>
 #include <zen_ecp_bls383.h> // TODO: abstract to support multiple curves
 
+// defined at compile time in zen_ecp.c for specific BLS
+extern const chunk *ORDER;
+
 /// <h1>Big Number Arithmetic (BIG)</h1>
 //
 // Base arithmetical operations on big numbers.
@@ -449,7 +452,15 @@ static int big_sub(lua_State *L) {
 		// 	lerror(L,"Subtraction error: arg1 smaller than arg2");
 		// 	return 0; }
 		big_init(d);
-		BIG_sub(d->val, l->val, r->val);
+		if(BIG_comp(l->val,r->val)<0) {
+			BIG t;
+			BIG_sub(t, r->val, l->val);
+			BIG_mod(d->val, ORDER);
+			BIG_sub(d->val, ORDER, t);
+		} else {
+			BIG_sub(d->val, l->val, r->val);
+			BIG_mod(d->val, ORDER);
+		}
 		BIG_norm(d->val);
 	}
 	return 1;
@@ -525,10 +536,11 @@ static int big_mul(lua_State *L) {
 		return 0; }
 	// BIG_norm(l->val); BIG_norm(r->val);
 	big *d = big_new(L); SAFE(d);
-	dbig_init(d); // assume it always returns a double big
+	big_init(d);
+	// dbig_init(d); // assume it always returns a double big
 	// BIG_dzero(d->dval);
-	BIG_mul(d->dval,l->val,r->val);
-	BIG_dnorm(d->dval);
+	BIG_modmul(d->val, l->val, r->val, (chunk*)ORDER);
+	BIG_norm(d->val);
 	return 1;
 }
 
@@ -604,18 +616,30 @@ static int big_div(lua_State *L) {
 static int big_modmul(lua_State *L) {
 	big *y = big_arg(L, 1); SAFE(y);
 	big *z = big_arg(L, 2); SAFE(z);
-	big *n = big_arg(L, 3); SAFE(n);
-	if(y->doublesize || z->doublesize || n->doublesize) {
-		lerror(L,"modmul not supported on double big numbers");
-		return 0; }
-	BIG t1, t2;
-	BIG_copy(t1,y->val);
-	BIG_copy(t2,z->val);
-	big *x = big_new(L); SAFE(x);
-	big_init(x);
-	BIG_modmul(x->val, t1, t2, n->val);
-	BIG_norm(x->val);
-	return 1;
+	big *n = luaL_testudata(L, 3, "zenroom.big");
+	if(n) {
+		if(y->doublesize || z->doublesize || n->doublesize) {
+			lerror(L,"modmul not supported on double big numbers");
+			return 0; }
+		BIG t1, t2;
+		BIG_copy(t1,y->val);
+		BIG_copy(t2,z->val);
+		big *x = big_new(L); SAFE(x);
+		big_init(x);
+		BIG_modmul(x->val, t1, t2, n->val);
+		BIG_norm(x->val);
+		return 1;
+	} else {
+		// modulo default ORDER from ECP
+		BIG t1, t2;
+		BIG_copy(t1,y->val);
+		BIG_copy(t2,z->val);
+		big *x = big_new(L); SAFE(x);
+		big_init(x);
+		BIG_modmul(x->val, t1, t2, (chunk*)ORDER);
+		BIG_norm(x->val);
+		return 1;
+	}
 }
 
 static int big_moddiv(lua_State *L) {

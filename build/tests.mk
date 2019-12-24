@@ -34,7 +34,8 @@ lowmem-tests = \
 # ECP arithmetic test vectors from milagro, removed from normal tests
 # since in zenroom built without debug is not allowed to import an ECP
 # from x/y coords.
-# 	${1} test/ecp_bls383.lua && \
+# ${1} test/ecp_bls383.lua && \
+# ${1} test/big_bls383.lua && \
 
 crypto-tests = \
 	@${1} test/octet.lua && \
@@ -44,7 +45,6 @@ crypto-tests = \
 	${1} test/ecdsa_vectors.lua && \
 	${1} test/dh_session.lua && \
 	${1} test/ecdh_aes-gcm_vectors.lua && \
-	${1} test/big_bls383.lua && \
 	${1} test/ecp_generic.lua && \
 	${1} test/elgamal.lua && \
 	${1} test/bls_pairing.lua && \

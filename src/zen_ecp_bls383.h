@@ -1,6 +1,6 @@
 // Zenroom ECP module
 //
-// (c) Copyright 2017-2018 Dyne.org foundation
+// (c) Copyright 2017-2020 Dyne.org foundation
 // designed, written and maintained by Denis Roio <jaromil@dyne.org>
 //
 // This program is free software: you can redistribute it and/or
@@ -31,6 +31,8 @@
 #include <zen_big_types.h>
 #include <zen_ecp.h>
 
+#define CURVE_NAME "bls383"
+#define CURVE_TYPE "weierstrass"
 #define CURVE_A CURVE_A_BLS383
 #define CURVE_B Curve_B_BLS383
 #define CURVE_B_I CURVE_B_I_BLS383

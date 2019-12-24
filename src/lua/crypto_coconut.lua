@@ -67,9 +67,9 @@ local function make_pi_s(gamma, cm, k, r, m)
    local Bw = gamma * wk + h * wm
    local Cw = g1 * wr + hs * wm
    local c = coco.to_challenge({ cm, h, Aw, Bw, Cw })
-   local rk = wk:modsub(c * k, o)
-   local rm = wm:modsub(c * m, o)
-   local rr = wr:modsub(c * r, o)
+   local rk = wk - c * k
+   local rm = wm - c * m
+   local rr = wr - c * r
    -- return Lambda
    return { c  = c,
 			rk = rk,
@@ -181,8 +181,8 @@ function coco.prove_creds(vk, sigma, secret)
    local Bw = sigma_prime.h_prime * wr
    local ch = coco.to_challenge({ vk.alpha, vk.beta, Aw, Bw })
    local pi_v = { c = ch,
-				  rm = wm:modsub(m * ch, o),
-				  rr = wr:modsub(r * ch, o)  }
+				  rm = wm - m * ch,
+				  rr = wr - r * ch }
    -- return Theta
    local Theta = {
       kappa = kappa,
@@ -199,7 +199,7 @@ function coco.verify_creds(vk, Theta)
    -- verify pi_v
    local Aw = Theta.kappa * Theta.pi_v.c
 	  + g2 * Theta.pi_v.rr
-	  + vk.alpha * INT.new(1):modsub(Theta.pi_v.c, o)
+	  + vk.alpha * (INT.new(1) - Theta.pi_v.c)
 	  + vk.beta * Theta.pi_v.rm
    local Bw = Theta.nu * Theta.pi_v.c
 	  + Theta.sigma_prime.h_prime * Theta.pi_v.rr
@@ -245,8 +245,8 @@ function coco.prove_cred_petition(vk, sigma, secret, uid)
    -- create the challenge
    local c = COCONUT.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw })
    -- create responses
-   local rm = wm:modsub(m * c, o)
-   local rr = wr:modsub(r * c, o)
+   local rm = wm - m * c
+   local rr = wr - r * c
    local pi_v = { c = c,
 				  rm = rm,
 				  rr = rr }
@@ -270,7 +270,7 @@ function coco.verify_cred_petition(vk, Theta, zeta, uid)
    -- recompute witnessess commitments
    local Aw = kappa * c
 	  + g2 * rr
-	  + vk.alpha * INT.new(1):modsub(c,ECP.order())
+	  + vk.alpha * (INT.new(1) - c)
 	  + vk.beta * rm
    local Bw = nu * c + sigma_prime.h_prime * rr
    local Cw = rm*ECP.hashtopoint(octuid) + zeta*c
@@ -298,10 +298,10 @@ function coco.lagrange_interpolation(indexes)
 	  for j in indexes do
 		 if (j ~= i)
 		 then
-            numerator = numerator:modmul(x:modsub(j,o),o)
-            denominator = denominator:modmul(i:modsub(j,o),o)
+            numerator = numerator * (x - j)
+            denominator = denominator * (i - j)
 		 end
-		 l[#l+1] = numerator:modmul(denominator:modinv(o),o)
+		 l[#l+1] = numerator * denominator:modinv(o)
 	  end
    end
    return l
@@ -318,7 +318,7 @@ function coco.prove_sign_petition(pub, m)
 					   right = enc_v.right:negative() + hs }
    -- commitment to the vote
    local r1 = rand()
-   local r2 = r1:modmul(BIG.new(1):modsub(m,o), o)
+   local r2 = r1 * (BIG.new(1) - m)
    local cv = g1 * m + hs * r1
 
    -- proof
@@ -336,10 +336,10 @@ function coco.prove_sign_petition(pub, m)
    local c = COCONUT.to_challenge({enc_v.left, enc_v.right,
 								   cv, Aw, Bw, Cw, Dw}) % o
    -- create responses
-   local rk = wk:modsub(c*k, o)
-   local rm = wm:modsub(c*m, o)
-   local rr1 = wr1:modsub(c*r1, o)
-   local rr2 = wr2:modsub(c*r2, o)
+   local rk = wk - c * k
+   local rm = wm - c * m
+   local rr1 = wr1 - c * r1
+   local rr2 = wr2 - c * r2
    local pi_vote = { c = c,
 					 rk = rk,
 					 rm = rm,
@@ -380,7 +380,7 @@ function coco.prove_tally_petition(sk, scores)
    local Aw = { wx:modneg(o) * scores.pos.left,
 				wx:modneg(o) * scores.neg.left  }
    local c = COCONUT.to_challenge(Aw)
-   local rx = wx:modsub(c*sk, o)
+   local rx = wx - c * sk
    local dec = { pos = scores.pos.left * sk:modneg(o),
 				 neg = scores.neg.left * sk:modneg(o) }
    -- return pi_tally
