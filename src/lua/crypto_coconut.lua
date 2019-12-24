@@ -59,7 +59,7 @@ local function rand() return INT.modrand(o) end
 
 -- local zero-knowledge proof verifications
 local function make_pi_s(gamma, cm, k, r, m)
-   local h = ECP.hashtopoint(cm)
+   local h = cm
    local wk = rand()
    local wm = rand()
    local wr = rand()
@@ -78,7 +78,7 @@ local function make_pi_s(gamma, cm, k, r, m)
 end
 
 function coco.verify_pi_s(l)
-   local h = ECP.hashtopoint(l.cm)
+   local h = l.cm
    local Aw = l.c.a * l.pi_s.c
 	  + g1 * l.pi_s.rk
    local Bw = l.c.b * l.pi_s.c
@@ -124,7 +124,7 @@ function coco.prepare_blind_sign(gamma, secret)
    local commit = g1 * r + hs * m
    local k = rand()
    local c = { a = g1 * k,
-			   b = gamma * k + ECP.hashtopoint(commit) * m }
+			   b = gamma * k + commit * m }
    -- calculate zero knowledge proofs
    local pi_s = make_pi_s(gamma, commit, k, r, m)
    -- return Lambda
@@ -137,7 +137,7 @@ end
 function coco.blind_sign(sk, Lambda)
    ZEN.assert(coco.verify_pi_s(Lambda),
 			  'Zero knowledge proof does not verify (Lambda.pi_s)')
-   local h = ECP.hashtopoint(Lambda.cm)
+   local h = Lambda.cm
    local a_tilde = Lambda.c.a * sk.y
    local b_tilde = h * sk.x + Lambda.c.b * sk.y
    -- sigma tilde
