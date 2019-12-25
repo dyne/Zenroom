@@ -7,10 +7,10 @@ ecdh = ECDH.new('bls383')
 g1 = ECP.generator()
 o = ECP.order()
 
-sk1 = INT.modrand(o)
+sk1 = INT.random()
 pk1 = sk1 * g1
 
-sk2 = INT.modrand(o)
+sk2 = INT.random()
 pk2 = sk2 * g1
 
 sp1ecp = pk1 * sk2 -- ECP only

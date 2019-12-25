@@ -25,15 +25,15 @@ G = ECP.generator()
 O = ECP.order()
 salt = ECP.hashtopoint("Constant random string")
 secret = INT.new(sha256("Message to be authenticated"))
-r = INT.modrand(O)
+r = INT.random()
 commitment = G * r + salt * secret
 
 -- keygen
-seckey = INT.modrand(O)
+seckey = INT.random()
 pubkey = G * seckey
 
 -- sign
-k = INT.modrand(O)
+k = INT.random()
 cipher = { a = G * k,
 		   b = pubkey * k + commitment * secret }
 
@@ -48,7 +48,7 @@ print''
 ---------------
 -- homomorphism
 -- A and B keygen 
-A = { sk = INT.modrand(O) }
+A = { sk = INT.random() }
 A.pk = G * A.sk
 -- pick two random ECP points
 m1 = ECP.random()
@@ -58,10 +58,10 @@ ms = m1 + m2
 mm = m1 * INT.new(2)
 mu = m1 - m2
 -- encrypt values
-r = INT.modrand(O)
+r = INT.random()
 M1 = { c1 = G * r }
 M1.c2 = A.pk * r + m1
-r = INT.modrand(O)
+r = INT.random()
 M2 = { c1 = G * r }
 M2.c2 = A.pk * r + m2
 -- check decryption of values
@@ -79,7 +79,7 @@ assert(MU.C2 - MU.C1 * A.sk == mu)
 MM = { C1 = M1.c1 * INT.new(2),
 	   C2 = M1.c2 * INT.new(2) }
 assert(MM.C2 - MM.C1 * A.sk == mm)
-c = INT.modrand(O)
+c = INT.random()
 MM = { C1 = M1.c1 * c,
 	   C2 = M1.c2 * c }
 mm = m1 * c

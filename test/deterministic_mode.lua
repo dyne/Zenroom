@@ -15,7 +15,7 @@ third = O.random(16)
 assert( first ~= third )
 I.print({ third = third })
 
-i = INT.modrand(ECP.order())
+i = INT.random()
 I.print({big_random = i})
 
 -- ECDH

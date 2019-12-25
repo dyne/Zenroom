@@ -34,7 +34,7 @@ ZEN.add_schema({
 -- credential keypair operations
 When("I create the credential keypair", function()
 		-- sk = rand, pk = G * sk
-		local tmp = { private = INT.modrand(ECP.order()) }
+		local tmp = { private = INT.random() }
 		tmp.public = ECP.generator() * tmp.private
 		ZEN:pick('credential_keypair', tmp)
 		ZEN:validate('credential_keypair')

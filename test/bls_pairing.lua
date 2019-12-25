@@ -25,7 +25,7 @@ G2 = ECP2.generator()
 O = ECP.order()
 
 -- return a random big number modulus curve order
-function R() return INT.modrand(O) end
+function R() return INT.random() end
 
 print("G1 size:  "..#(G1*R()):octet())
 print("G2 size:  "..#(G2*R()):octet())
@@ -95,7 +95,7 @@ msg = str("This is the secret message")
 -- keygen
 -- δ = r.O
 -- γ = δ.G2
-sk = INT.modrand(O)
+sk = INT.random()
 pk = G2 * sk
 
 -- sign
@@ -121,9 +121,9 @@ print("Test tripartite shared secret")
 -- C computes KC = e(aG, bG)^c
 -- Shared key is K = KA = KB = KC = e(G, G)^abc
 
-a = INT.modrand(O)
-b = INT.modrand(O)
-c = INT.modrand(O)
+a = INT.random()
+b = INT.random()
+c = INT.random()
 aG1 = G1 * a
 aG2 = G2 * a
 bG1 = G1 * b

@@ -39,33 +39,29 @@ CONDITIONS OF ANY KIND, either express or implied.
 ]]
 }
 
-local g1 = ECP.generator() -- return value
-local g2 = ECP2.generator() -- return value
-local o  = ECP.order() -- return value
+local G1 = ECP.generator() -- return value
+local G2 = ECP2.generator() -- return value
+local O  = ECP.order() -- return value
 
 -- stateful challenge hardcoded string
 local hs = ECP.hashtopoint(str([[
 Developed for the DECODE project
 ]] .. coco._LICENSE))
-local challenge = g1:octet() .. g2:octet() .. hs:octet()
+local challenge = G1:octet() .. G2:octet() .. hs:octet()
 function coco.to_challenge(list)
    -- assert(coco.challenge, "COCONUT secret challenge not set")
    return INT.new( sha256( challenge .. OCTET.serialize(list)))
 end
 
-
--- random generator init
-local function rand() return INT.modrand(o) end
-
 -- local zero-knowledge proof verifications
 local function make_pi_s(gamma, cm, k, r, m)
    local h = cm
-   local wk = rand()
-   local wm = rand()
-   local wr = rand()
-   local Aw = g1 * wk
+   local wk = INT.random()
+   local wm = INT.random()
+   local wr = INT.random()
+   local Aw = G1 * wk
    local Bw = gamma * wk + h * wm
-   local Cw = g1 * wr + hs * wm
+   local Cw = G1 * wr + hs * wm
    local c = coco.to_challenge({ cm, h, Aw, Bw, Cw })
    local rk = wk - c * k
    local rm = wm - c * m
@@ -80,12 +76,12 @@ end
 function coco.verify_pi_s(l)
    local h = l.cm
    local Aw = l.c.a * l.pi_s.c
-	  + g1 * l.pi_s.rk
+	  + G1 * l.pi_s.rk
    local Bw = l.c.b * l.pi_s.c
 	  + l.public * l.pi_s.rk
 	  + h * l.pi_s.rm
    local Cw = l.cm * l.pi_s.c
-	  + g1 * l.pi_s.rr
+	  + G1 * l.pi_s.rr
 	  + hs * l.pi_s.rm
    -- return a bool for assert
    return l.pi_s.c == coco.to_challenge({ l.cm, h, Aw, Bw, Cw })
@@ -93,12 +89,12 @@ end
 
 -- Public Coconut API
 function coco.ca_keygen()
-   local x = rand()
-   local y = rand()
+   local x = INT.random()
+   local y = INT.random()
    local sk = { x = x,
                 y = y  }
-   local vk = { alpha = g2 * x,
-                beta  = g2 * y  }
+   local vk = { alpha = G2 * x,
+                beta  = G2 * y  }
    -- return keypair
    return sk, vk
 end
@@ -120,10 +116,10 @@ end
 function coco.prepare_blind_sign(gamma, secret)
    local m = INT.new(sha256(secret))
    -- ElGamal commitment
-   local r = rand()
-   local commit = g1 * r + hs * m
-   local k = rand()
-   local c = { a = g1 * k,
+   local r = INT.random()
+   local commit = G1 * r + hs * m
+   local k = INT.random()
+   local c = { a = G1 * k,
 			   b = gamma * k + commit * m }
    -- calculate zero knowledge proofs
    local pi_s = make_pi_s(gamma, commit, k, r, m)
@@ -168,16 +164,16 @@ function coco.prove_creds(vk, sigma, secret)
    ZEN.assert(secret, "COCONUT.prove_creds called with empty secret")
 
    local m = INT.new(sha256(secret))
-   local r = rand()
-   local r_prime = rand()
+   local r = INT.random()
+   local r_prime = INT.random()
    local sigma_prime = { h_prime = sigma.h * r_prime,
                          s_prime = sigma.s * r_prime  }
-   local kappa = vk.alpha + vk.beta * m + g2 * r
+   local kappa = vk.alpha + vk.beta * m + G2 * r
    local nu = sigma_prime.h_prime * r
    -- make pi_v
-   local wm = rand()
-   local wr = rand()
-   local Aw = vk.alpha + g2 * wr + vk.beta * wm
+   local wm = INT.random()
+   local wr = INT.random()
+   local Aw = vk.alpha + G2 * wr + vk.beta * wm
    local Bw = sigma_prime.h_prime * wr
    local ch = coco.to_challenge({ vk.alpha, vk.beta, Aw, Bw })
    local pi_v = { c = ch,
@@ -198,7 +194,7 @@ function coco.verify_creds(vk, Theta)
    if #vk == 1 then vk = vk[1] end -- single element in array
    -- verify pi_v
    local Aw = Theta.kappa * Theta.pi_v.c
-	  + g2 * Theta.pi_v.rr
+	  + G2 * Theta.pi_v.rr
 	  + vk.alpha * (INT.new(1) - Theta.pi_v.c)
 	  + vk.beta * Theta.pi_v.rm
    local Bw = Theta.nu * Theta.pi_v.c
@@ -209,7 +205,7 @@ function coco.verify_creds(vk, Theta)
    ZEN.assert(not Theta.sigma_prime.h_prime:isinf(),
 			  "Credential proof does not verify (sigma.h is infinite)")
    ZEN.assert(ECP2.miller(Theta.kappa, Theta.sigma_prime.h_prime)
-				 == ECP2.miller(g2, Theta.sigma_prime.s_prime + Theta.nu),
+				 == ECP2.miller(G2, Theta.sigma_prime.s_prime + Theta.nu),
 			  "Credential proof does not verify (miller loop error)")
    return true
 end
@@ -219,25 +215,24 @@ end
 
 function coco.prove_cred_petition(vk, sigma, secret, uid)
    local m = INT.new(sha256(secret))
-   local o = ECP.order()
-   local r = rand()
+   local r = INT.random()
    local octuid = ZEN:import(uid)
    -- local m = INT.new(sha256(secret))
    -- material
-   local r_prime = rand()
+   local r_prime = INT.random()
    local sigma_prime = { h_prime = sigma.h * r_prime,
 						 s_prime = sigma.s * r_prime  }
    local kappa = vk.alpha
 	  + vk.beta * m
-	  + g2 * r
+	  + G2 * r
    local nu = sigma_prime.h_prime * r
    local zeta = m * ECP.hashtopoint(octuid)
    -- proof --
    -- create the witnessess
-   local wm = rand()
-   local wr = rand()
+   local wm = INT.random()
+   local wr = INT.random()
    -- compute the witnessess commitments
-   local Aw = g2 * wr
+   local Aw = G2 * wr
 	  + vk.alpha
 	  + vk.beta * wm
    local Bw = sigma_prime.h_prime * wr
@@ -269,7 +264,7 @@ function coco.verify_cred_petition(vk, Theta, zeta, uid)
    -- verify proof --
    -- recompute witnessess commitments
    local Aw = kappa * c
-	  + g2 * rr
+	  + G2 * rr
 	  + vk.alpha * (INT.new(1) - c)
 	  + vk.beta * rm
    local Bw = nu * c + sigma_prime.h_prime * rr
@@ -281,7 +276,7 @@ function coco.verify_cred_petition(vk, Theta, zeta, uid)
    ZEN.assert(not sigma_prime.h_prime:isinf(),
 			  "verify_cred_petition: sigma_prime.h points at infinite")
    ZEN.assert(ECP2.miller(kappa, sigma_prime.h_prime)
-				 == ECP2.miller(g2, sigma_prime.s_prime + nu),
+				 == ECP2.miller(G2, sigma_prime.s_prime + nu),
 			  "verify_cred_petition: miller loop fails")
    return true
 end
@@ -301,7 +296,7 @@ function coco.lagrange_interpolation(indexes)
             numerator = numerator * (x - j)
             denominator = denominator * (i - j)
 		 end
-		 l[#l+1] = numerator * denominator:modinv(o)
+		 l[#l+1] = numerator * denominator:modinv(O)
 	  end
    end
    return l
@@ -309,32 +304,32 @@ end
 
 function coco.prove_sign_petition(pub, m)
    -- sign == vote
-   local k = rand()
+   local k = INT.random()
    -- vote encryption
-   local enc_v = { left = g1 * k,
+   local enc_v = { left = G1 * k,
 				   right = pub * k + hs * m }
    -- opposite of vote encryption
    local enc_v_neg = { left = enc_v.left:negative(),
 					   right = enc_v.right:negative() + hs }
    -- commitment to the vote
-   local r1 = rand()
+   local r1 = INT.random()
    local r2 = r1 * (BIG.new(1) - m)
-   local cv = g1 * m + hs * r1
+   local cv = G1 * m + hs * r1
 
    -- proof
    -- create the witnesess
-   local wk = rand()
-   local wm = rand()
-   local wr1 = rand()
-   local wr2 = rand()
+   local wk = INT.random()
+   local wm = INT.random()
+   local wr1 = INT.random()
+   local wr2 = INT.random()
    -- compute the witnessess commitments
-   local Aw = g1*wk
+   local Aw = G1*wk
    local Bw = pub*wk + hs*wm
-   local Cw = g1*wm + hs*wr1
+   local Cw = G1*wm + hs*wr1
    local Dw = cv*wm + hs*wr2
    -- create the challenge
    local c = COCONUT.to_challenge({enc_v.left, enc_v.right,
-								   cv, Aw, Bw, Cw, Dw}) % o
+								   cv, Aw, Bw, Cw, Dw}) % O
    -- create responses
    local rk = wk - c * k
    local rm = wm - c * m
@@ -356,12 +351,12 @@ end
 function coco.verify_sign_petition(pub, theta)
    -- recompute witnessess commitment
    local scores = theta.scores.pos -- only positive, not negative?
-   local Aw = g1 * theta.pi_vote.rk
+   local Aw = G1 * theta.pi_vote.rk
 	  + scores.left * theta.pi_vote.c
    local Bw = pub * theta.pi_vote.rk
 	  + hs * theta.pi_vote.rm
 	  + scores.right * theta.pi_vote.c
-   local Cw = g1 * theta.pi_vote.rm
+   local Cw = G1 * theta.pi_vote.rm
 	  + hs * theta.pi_vote.rr1
 	  + theta.cv * theta.pi_vote.c
    local Dw = theta.cv * theta.pi_vote.rm
@@ -376,13 +371,13 @@ function coco.verify_sign_petition(pub, theta)
 end
 
 function coco.prove_tally_petition(sk, scores)
-   local wx = rand()
-   local Aw = { wx:modneg(o) * scores.pos.left,
-				wx:modneg(o) * scores.neg.left  }
+   local wx = INT.random()
+   local Aw = { wx:modneg(O) * scores.pos.left,
+				wx:modneg(O) * scores.neg.left  }
    local c = COCONUT.to_challenge(Aw)
    local rx = wx - c * sk
-   local dec = { pos = scores.pos.left * sk:modneg(o),
-				 neg = scores.neg.left * sk:modneg(o) }
+   local dec = { pos = scores.pos.left * sk:modneg(O),
+				 neg = scores.neg.left * sk:modneg(O) }
    -- return pi_tally
    return { dec = dec,
 			rx = rx,
@@ -390,7 +385,7 @@ function coco.prove_tally_petition(sk, scores)
 end
 
 function coco.verify_tally_petition(scores, pi_tally)
-   local rxneg = pi_tally.rx:modneg(o)
+   local rxneg = pi_tally.rx:modneg(O)
    local Aw = { rxneg*scores.pos.left + pi_tally.c * pi_tally.dec.pos,
 				rxneg*scores.neg.left + pi_tally.c * pi_tally.dec.neg  }
    ZEN.assert(pi_tally.c == COCONUT.to_challenge(Aw),

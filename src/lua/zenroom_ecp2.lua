@@ -23,4 +23,8 @@ function ecp2.hashtopoint(s)
    return ecp2.mapit(sha512(s))
 end
 
+function ecp2.random()
+   return ecp2.mapit(OCTET.random(64))
+end
+
 return ecp2

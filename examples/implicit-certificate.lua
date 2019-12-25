@@ -5,21 +5,20 @@
 
 -- setup
 ECP = require_once'zenroom_ecp'
-order = ECP.order()
 G = ECP.generator()
 
 -- typical EC key generation on G1
 -- take a random big integer modulo curve order
 -- and multiply it by the curve generator
 
-function keygen(modulo)
-   local key = INT.modrand(modulo)
+function keygen()
+   local key = INT.random()
    return { private = key,
    			public = key * G }
 end
 
 -- generate the certification request
-certreq = keygen(order)
+certreq = keygen()
 -- certreq.private is preserved in a safe place
 -- certreq.public is sent to the CA along with a declaration
 declaration = { requester = "Alice",
@@ -32,10 +31,10 @@ I.print(declaration)
 
 -- --> CA receives from Requester
 -- keypair for CA (known to everyone as the Mad Hatter)
-CA = keygen(order)
+CA = keygen()
 
 -- from here the CA has received the request
-certkey = keygen(order)
+certkey = keygen()
 -- certkey.private is sent to requester
 -- certkey.public is broadcasted
 
@@ -57,7 +56,7 @@ certpriv = (CERThash * certkey.private + CA.private)
 
 -- Alice has received from the CA the certpriv and CERT
 -- which can be used to create a new CERTprivate key
-CERTprivate = (CERThash * certreq.private + certpriv) % order
+CERTprivate = (CERThash * certreq.private + certpriv) % ECP.order()
 
 -- Anyone may receive the certpub and CERThash and, knowing the CA
 -- public key, can recover the same CERTpublic key from them

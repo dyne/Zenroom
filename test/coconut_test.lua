@@ -4,12 +4,12 @@ COCONUT = require_once('crypto_coconut')
 -- elgamal
 m = INT.new(sha256(str("Some sort of secret")))
 hs = ECP.hashtopoint(str("anystring"))
-d = INT.modrand(ECP.order())
+d = INT.random()
 gamma = ECP.generator() * d
 
 -- A single CA signs
 -- generate the keys of the credential
-cred_keypair = { private = INT.modrand(ECP.order()) }
+cred_keypair = { private = INT.random() }
 cred_keypair.public = ECP.generator() * cred_keypair.private
 secret = cred_keypair.private -- "Some sort of secret credential"
 
@@ -52,7 +52,7 @@ print('')
 -- PETITION
 local UID = "petition unique identifier"
 issuer = cred_keypair -- reuse the signed credential keypair for the issuer
-voter = { private = INT.modrand(ECP.order()) } -- create a new signed credential keypair for the voter
+voter = { private = INT.random() } -- create a new signed credential keypair for the voter
 voter.public = ECP.generator() * voter.private
 Lambda = COCONUT.prepare_blind_sign(voter.public, voter.private)
 sigma_tilde1 = COCONUT.blind_sign(ca_keypair.sign, Lambda)

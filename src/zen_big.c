@@ -209,7 +209,7 @@ int big_init(big *n) {
 		return 0; }
 	if(!n->val && !n->dval) {
 		size_t size = sizeof(BIG);
-		n->val = zen_memory_alloc(size);
+		n->val = (int*)zen_memory_alloc(size);
 		n->doublesize = 0;
 		n->len = MODBYTES;
 		return(size);
@@ -224,7 +224,7 @@ int dbig_init(big *n) {
 	size_t size = sizeof(DBIG); //sizeof(DBIG); // modbytes * 2, aka n->len<<1
 	if(n->val && !n->doublesize) {
 		n->doublesize = 1;
-		n->dval = zen_memory_alloc(size);
+		n->dval = (int*)zen_memory_alloc(size);
 		// extend from big to double big
 		BIG_dscopy(n->dval,n->val);
 		zen_memory_free(n->val);
@@ -232,7 +232,7 @@ int dbig_init(big *n) {
 	}
 	if(!n->val || !n->dval) {
 		n->doublesize = 1;
-		n->dval = zen_memory_alloc(size);
+		n->dval = (int*)zen_memory_alloc(size);
 		n->len = MODBYTES<<1;
 		return(size);
 	}
@@ -455,11 +455,11 @@ static int big_sub(lua_State *L) {
 		if(BIG_comp(l->val,r->val)<0) {
 			BIG t;
 			BIG_sub(t, r->val, l->val);
-			BIG_mod(d->val, ORDER);
-			BIG_sub(d->val, ORDER, t);
+			BIG_mod(d->val, (chunk*)ORDER);
+			BIG_sub(d->val, (chunk*)ORDER, t);
 		} else {
 			BIG_sub(d->val, l->val, r->val);
-			BIG_mod(d->val, ORDER);
+			BIG_mod(d->val, (chunk*)ORDER);
 		}
 		BIG_norm(d->val);
 	}
@@ -514,6 +514,19 @@ static int big_modrand(lua_State *L) {
 	big *modulus = big_arg(L,1); SAFE(modulus);	
 	big *res = big_new(L); big_init(res); SAFE(res);
 	BIG_randomnum(res->val,modulus->val,Z->random_generator);
+	return(1);
+}
+
+/***
+    Generate a random Big number whose ceiling is the order of the curve.
+
+    @return a new Big number
+    @function BIG.random()
+*/
+
+static int big_random(lua_State *L) {
+	big *res = big_new(L); big_init(res); SAFE(res);
+	BIG_randomnum(res->val,(chunk*)ORDER,Z->random_generator);
 	return(1);
 }
 
@@ -724,6 +737,7 @@ int luaopen_big(lua_State *L) {
 		{"modneg",big_modneg},
 		{"modsub",big_modsub},
 		{"modrand",big_modrand},
+		{"random",big_random},
 		{"modinv",big_modinv},
 		{"jacobi",big_jacobi},
 		{"monty",big_monty},
