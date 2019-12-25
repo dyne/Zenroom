@@ -31,6 +31,8 @@ for k,v in ipairs(raw_docs) do
   	    tbl[k] = v
 	end
 end
-write(JSON.encode(tbl))
+print("URL64: "..OCTET.from_string(CBOR.encode(tbl)):url64())
+print("JSON:  "..JSON.encode(tbl))
 EOF
 rm $tmp
+

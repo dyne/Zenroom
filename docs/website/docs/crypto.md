@@ -109,7 +109,7 @@ bG2 = G2 * b
 cG1 = G1 * c
 cG2 = G2 * c
 -- Theoretical proof of ε(G, G)^abc
-K  = ECP2.miller(G2,  G1)  ^ ( a:modmul(b,O):modmul(c,O) )
+K  = ECP2.miller(G2,  G1)  ^ ( a * b * c )
 -- A computes KA = ε(bG, cG)^a
 KA = ECP2.miller(bG2, cG1) ^ a
 -- B computes KB = ε(aG, cG)^b

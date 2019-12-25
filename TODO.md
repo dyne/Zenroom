@@ -11,6 +11,84 @@ for position, for instance ECP multiplication needs to have the BIG
 number always as second argument. Instead of returning error we should
 check the type and reposition the arguments accordingly.
 
+## Multi Part Computing
+
+this is the best introduction into the mechanism of secure multi party
+computing with split shares:
+
+   [1]https://blog.trailofbits.com/2019/10/04/multi-party-computation-on-machine-learning/
+
+   and this are interesting serious libraries for implementation:
+
+   [2]https://github.com/lschoe/mpyc
+
+   and everything that "unbound" does:
+
+   [3]https://www.unboundtech.com/cryptocurrency-protection-mpc-threshold-signing/
+
+   [4]https://github.com/unbound-tech/blockchain-crypto-mpc
+
+
+     """
+     multi-part computing, shamir secret sharing for signing
+
+     shamir splits as multiplication factors on a curve point
+
+     A mul a point with her share -> Am
+     B mul Am with his share -> Secret
+
+     secret never recomposed, fully distributed computation
+     """
+
+
+## post-DECODE
+
+https://github.com/fnuecke/eris
+
+https://github.com/trezor/trezor-firmware
+
+lua orchestration
+
+3 different crypto setups
+- cloud
+- hardware wallets
+- blockchain -> crypto conditions
+
+https://tools.ietf.org/html/draft-thomas-crypto-conditions-04
+
+metadata + business logic (oracle)
+https://github.com/pakozm/lua-faces
+
+
+distributed computing
+https://github.com/briansmith/ring
+"traveling virtual machines and secure enclaves"
+smart agent concept
+
+
+
+x86 crypto core
+https://github.com/herumi/mcl
+wolfssl
+
+
+zencode mod example
+https://gist.github.com/jpopesculian/bcbe046cd77064085b5b27e2ddfc6a03
+
+lisp
+https://github.com/SquidDev/urn
+
+## BLS Multi-signature
+
+https://docs.rs/indy-crypto/0.4.1/indy_crypto/bls/struct.Bls.html
+
+https://github.com/hyperledger/ursa/blob/master/libursa/src/signatures/bls.rs
+
+https://crypto.stanford.edu/~dabo/pubs/papers/BLSmultisig.html
+
+https://eprint.iacr.org/2018/483
+
+
 
 ## Review
 
