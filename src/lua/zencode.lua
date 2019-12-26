@@ -18,39 +18,33 @@
 
 --- <h1>Zencode language parser</h1>
 --
--- Zencode is a <a
--- href="https://en.wikipedia.org/wiki/Domain-specific_language">Domain
--- Specific Language (DSL)</a> made to be understood by humans and
--- inspired by <a
--- href="https://en.wikipedia.org/wiki/Behavior-driven_development">Behavior
--- Driven Development (BDD)</a> and <a
--- href="https://en.wikipedia.org/wiki/Domain-driven_design">Domain
--- Driven Design (DDD)</a>.
+-- <a href="https://dev.zenroom.org/zencode/">Zencode</a> is a Domain
+-- Specific Language (DSL) made to be understood by humans. Its
+-- purpose is detailed in <a
+-- href="https://files.dyne.org/zenroom/Zencode_Whitepaper.pdf">the
+-- Zencode Whitepaper</a> and DECODE EU project.
+--
+-- @module ZEN
+--
+-- @author Denis "Jaromil" Roio
+-- @license AGPLv3
+-- @copyright Dyne.org foundation 2018-2020
 --
 -- The Zenroom VM is capable of parsing specific scenarios written in
 -- Zencode and execute high-level cryptographic operations described
 -- in them; this is to facilitate the integration of complex
 -- operations in software and the non-literate understanding of what a
--- distributed application does. A generic Zencode looks like this:
---
--- <code>
--- Given that I am known as 'Alice'
---
--- When I create my new keypair
---
--- Then print my data
--- </code>
+-- distributed application does.
 --
 -- This section doesn't provide the documentation on how to write
--- Zencode, but illustrates the internals on how the Zencode parser is
--- made and how it integrates with the Zenroom memory model. It serves
--- as a reference documentation on functions used to write parsers for
--- new Zencode scenarios in Zenroom's Lua.
+-- Zencode. Refer to the links above to learn it. This documentation
+-- continues to illustrate internals: how the Zencode direct-syntax
+-- parser is made, how it integrates in the Zenroom memory model.
+
+-- This is also the reference implementation to learn how to code
+-- Zencode simple scenario using Zeroom's Lua.
 --
---  @module ZEN
---  @author Denis "Jaromil" Roio
---  @license AGPLv3
---  @copyright Dyne.org foundation 2018-2019
+-- @module ZEN
 
 
 local zencode = {
@@ -574,18 +568,17 @@ function zencode:parse(text)
    for line in self:newline_iter(text) do
 	  self:step(line)
    end
+   collectgarbage'collect'
 end
 
 function zencode:trace(src)
    -- take current line of zencode
    local tr = trim(src)
-   -- TODO: ugly but ok for now
+   -- TODO: tabbing, ugly but ok for now
    if string.sub(tr,1,1) == '[' then
-	  _G['ZEN_traceback'] = _G['ZEN_traceback']..trim(src).."\n"
-
+	  _G['ZEN_traceback'] = _G['ZEN_traceback']..tr.."\n"
    else
-	  _G['ZEN_traceback'] = _G['ZEN_traceback']..
-		 " .  "..trim(src).."\n"
+	  _G['ZEN_traceback'] = _G['ZEN_traceback'].." .  "..tr.."\n"
    end
 	  -- "    -> ".. src:gsub("^%s*", "") .."\n"
    -- act(src) TODO: print also debug when verbosity is high
@@ -624,7 +617,7 @@ function zencode:run()
    if KEYS then IN.KEYS = CONF.input.format.fun(KEYS) or { } end
    -- EXEC zencode
    for i,x in sort_ipairs(self.matches) do
-	  ZEN:trace(trim(x.source))
+	  ZEN:trace(x.source)
 	  ZEN.OK = true
 	  exitcode(0)
       local ok, err = pcall(x.hook,table.unpack(x.args))
