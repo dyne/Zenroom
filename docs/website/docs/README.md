@@ -197,9 +197,10 @@ reviews.
 
 This software includes software components by: R. Ierusalimschy,
 W. Celes and L.H. de Figueiredo (lua), Mike Scott and Kealan McCusker
-(milagro-crypto-c), Ralph Hempel (umm_malloc), Mark Pulford
-(lua-cjson), Daan Sprenkels (randombytes), Salvatore Sanfilippo
-(cmsgpack)
+(milagro-crypto-c), Mark Pulford (lua-cjson), Daan Sprenkels
+(randombytes), Salvatore Sanfilippo (cmsgpack), Tilen Majerle (lwmem),
+Sean Barrett (stb_c_lexer), Jeff Roberts (stb_sprintf), Kim Alvefur
+(cbor)
 
 Some Lua extensions included are written by: Kyle Conroy
 (statemachine), Enrique García Cota (inspect and semver).
@@ -208,7 +209,7 @@ Zenroom is Licensed under the terms of the Affero GNU Public License as
 published by the Free Software Foundation; either version 3 of the
 License, or (at your option) any later version.
 
-Software contained include Lua 5.3, Copyright (C) 1994-2017 Lua.org,
+Software contained include Lua 5.3.5, Copyright (C) 1994-2019 Lua.org,
 PUC-Rio licensed with an MIT style license. Also included Milagro,
 Copyright 2016 MIRACL UK Ltd licensed with the Apache License, Version
 2.0 (the "License").
