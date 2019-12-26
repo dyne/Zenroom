@@ -357,10 +357,6 @@ int main(int argc, char **argv) {
 	}
 #endif /* POSIX */
 
-	// report experimental memory manager
-	// if((strcmp(conffile,"umm")==0) && zen_heap) {
-	// 	lua_gc(L, LUA_GCCOLLECT, 0);
-	// }
 	zen_teardown(Z);
 	return EXIT_SUCCESS;
 }

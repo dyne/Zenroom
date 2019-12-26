@@ -23,14 +23,17 @@
 #include <jutils.h>
 
 #include <zenroom.h>
-#include <umm_malloc.h>
+
+// global memory manager in zenroom.c
+extern zen_mem_t *MEM;
 
 #ifdef USE_JEMALLOC
 #define JEMALLOC_NO_DEMANGLE
 #include <jemalloc/jemalloc.h>
 #endif
 
-extern void *umm_info(void*);
+#define LWMEM_CFG_OS 0
+#include <lwmem.h>
 
 void *zen_memalign(const size_t size, const size_t align) {
 	void *mem = NULL;
@@ -69,31 +72,8 @@ void *zen_memalign(const size_t size, const size_t align) {
 	return(mem);
 }
 
-// global memory manager saved here
-// TODO: this is not reentrant (see also umm_malloc.c)
-// zen_mem_t *zen_mem;
-extern zen_mem_t *MEM;
-
-// Global HEAP pointer in the STACK
-zen_mem_t *umm_memory_init(size_t S) {
-	zen_mem_t *mem = (zen_mem_t*)malloc(sizeof(zen_mem_t));
-	mem->heap = (char*)zen_memalign(S, 8);
-	mem->heap_size = S;
-	mem->malloc = umm_malloc;
-	mem->realloc = umm_realloc;
-	mem->free = umm_free;
-	mem->sys_malloc = malloc;
-	mem->sys_realloc = realloc;
-	mem->sys_free = free;
-	umm_init(mem->heap, mem->heap_size);
-	return mem;
-	// pointers saved in umm_malloc.c (stack)
-}
-
 zen_mem_t *libc_memory_init() {
 	zen_mem_t *mem = (zen_mem_t*)malloc(sizeof(zen_mem_t));
-	mem->heap = NULL;
-	mem->heap_size = 0;
 	mem->malloc = malloc;
 	mem->realloc = realloc;
 	mem->free = free;
@@ -103,11 +83,10 @@ zen_mem_t *libc_memory_init() {
 	return mem;
 }
 
+
 #ifdef USE_JEMALLOC
 zen_mem_t *jemalloc_memory_init() {
 	zen_mem_t *mem = je_malloc(sizeof(zen_mem_t));
-	mem->heap = NULL;
-	mem->heap_size = 0;
 	mem->malloc = je_malloc;
 	mem->realloc = je_realloc;
 	mem->free = je_free;
@@ -126,6 +105,24 @@ void *system_realloc(void *ptr, size_t size) { return (*MEM->sys_realloc)(ptr, s
 void  system_free(void *ptr) { (*MEM->sys_free)(ptr); }
 
 
+
+lwmem_region_t regions[] = { { 0x0, 0x0 } };
+#define LWMEM_BLOCK_SIZE 8192000 // 8MB
+
+// Global HEAP pointer in the STACK
+zen_mem_t *lw_memory_init() {
+	zen_mem_t *mem = (zen_mem_t*)malloc(sizeof(zen_mem_t));
+	mem->malloc = lwmem_malloc;
+	mem->realloc = lwmem_realloc;
+	mem->free = lwmem_free;
+	mem->sys_malloc = malloc;
+	mem->sys_realloc = realloc;
+	mem->sys_free = free;
+	regions[0].start_addr = zen_memalign(LWMEM_BLOCK_SIZE, 8);
+	regions[0].size = LWMEM_BLOCK_SIZE;
+	lwmem_assignmem(regions, 1); // sizeof(regions) / sizeof(regions[0]));
+	return mem;
+}
 
 /**
  * Implementation of the memory allocator for the Lua state.

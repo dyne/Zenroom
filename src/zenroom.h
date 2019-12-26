@@ -51,8 +51,6 @@ typedef struct {
 	void* (*sys_malloc)(size_t size);
 	void* (*sys_realloc)(void *ptr, size_t size);
 	void  (*sys_free)(void *ptr);
-	char  *heap;
-	size_t heap_size;
 } zen_mem_t;
 
 // zenroom context, also available as "_Z" global in lua space
@@ -84,7 +82,6 @@ int  zen_exec_zencode(zenroom_t *Z, const char *script);
 void zen_teardown(zenroom_t *zenroom);
 
 #define MAX_LINE 1024 // 1KiB maximum length for a newline terminated line (Zencode)
-#define UMM_HEAP (64*1024) // 64KiB (masked with 0x7fff)
 
 #ifndef MAX_ZENCODE_LINE
 #define MAX_ZENCODE_LINE 512

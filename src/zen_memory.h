@@ -29,9 +29,8 @@ void  zen_memory_free(void *ptr);
 void *system_alloc(size_t size);
 void *system_realloc(void *ptr, size_t size);
 void  system_free(void *ptr);
-// TODO: calloc
-#define free(p) zen_memory_free(p)
-#define malloc(p) zen_memory_alloc(p)
-#define realloc(p, s) zen_memory_realloc(p, s)
+
+// supported memory managers: lwmem, jemalloc, system
+typedef enum { LW, JE, SYS } mmtype;
 
 #endif

@@ -63,13 +63,11 @@ extern int zen_conf_parse(const char *configuration);
 
 // prototypes from zen_memory.c
 extern zen_mem_t *libc_memory_init();
+extern zen_mem_t *lw_memory_init();
 #ifdef USE_JEMALLOC
 extern zen_mem_t *jemalloc_memory_init();
 #endif
-extern zen_mem_t *umm_memory_init(size_t size);
 extern void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
-extern void *umm_info(void*);
-extern int umm_integrity_check();
 
 // prototypes from lua_functions.c
 extern int zen_setenv(lua_State *L, char *key, char *val);
@@ -88,7 +86,7 @@ int EXITCODE = 1; // start from error state
 // configured globals by zen_config
 extern char *zconf_rngseed_str;
 extern int   zconf_rngseed_len;
-
+extern mmtype zconf_memmg;
 
 static int zen_lua_panic (lua_State *L) {
 	lua_writestringerror("PANIC: unprotected error in call to Lua API (%s)\n",
@@ -146,12 +144,19 @@ static int zen_init_pmain(lua_State *L) { // protected mode init
 zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	(void) conf;
 	lua_State *L = NULL;
-#ifdef USE_JEMALLOC
-	MEM = jemalloc_memory_init();
-#else
-	MEM = libc_memory_init();
-#endif
 	if(conf) zen_conf_parse(conf);
+
+	switch(zconf_memmg) {
+	case LW:
+		notice(NULL,"Memory manager selected: lightweight");
+		MEM = lw_memory_init();
+		break;
+	default:
+		act(NULL,"System memory manager in use");
+		MEM = libc_memory_init();
+		break;
+		// TODO: JE for jemalloc
+	}
 
 	L = lua_newstate(zen_memory_manager, MEM);
 	if(!L) {
@@ -176,7 +181,7 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 			Z->random_seed_len = hex2buf(Z->random_seed, &zconf_rngseed_str[2]);
 		}
 		// free buffer allocated in zen_config
-		zen_memory_free(zconf_rngseed_str); zconf_rngseed_len = 0;
+		free(zconf_rngseed_str); zconf_rngseed_len = 0;
 	}
 	// initialize the random generator
 	Z->random_generator = rng_alloc();
@@ -203,12 +208,7 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 void zen_teardown(zenroom_t *Z) {
 
 	func(Z->lua,"Zenroom teardown.");
-	if(Z->mem->heap) {
-		free(Z->mem->heap);
-		// if(umm_integrity_check())
-		// 	func(Z->lua,"HEAP integrity checks passed.");
-		// umm_info(Z->mem->heap);
-	}
+
 	// stateful RNG instance for deterministic mode
 	if(Z->random_generator) {
 		zen_memory_free(Z->random_generator);
