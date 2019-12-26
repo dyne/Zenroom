@@ -192,7 +192,6 @@ var ZR = (function() {
         layout.registerComponent('OUTPUT', setupOutputComponent)
         layout.on('stackCreated', bindAutoFocus)
         layout.on('stackCreated', addControls)
-        layout.on('stateChanged', () => localStorage.setItem('savedState', JSON.stringify(layout.toConfig())))
         layout.init()
     }
 

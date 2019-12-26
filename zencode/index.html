@@ -233,11 +233,14 @@
 </ul>
 <p>These 3 arguments can be written or imported, but must given before using the <code>I encrypt</code> block:</p>
 <div class="codehilite"><pre><span class="nf">Scenario simple: Encrypt a message with the password</span>
-<span class="k">Given </span><span class="nf">nothing </span><span class="c"># no input is given to this contract</span><span class="nf"></span>
+<span class="k">Given </span><span class="nf">nothing</span>
+<span class="c"># only inline input, no KEYS or DATA passed</span><span class="nf"></span>
 <span class="k">When </span><span class="nf">I write &#39;my secret word&#39; in &#39;password&#39;</span>
 <span class="nf">and I write &#39;a very short but very confidential message&#39; in &#39;whisper&#39;</span>
 <span class="nf">and I write &#39;for your eyes only&#39; in &#39;header&#39;</span>
+<span class="c"># header is implicitly used when encrypt</span><span class="nf"></span>
 <span class="nf">and I encrypt the secret message &#39;whisper&#39; with &#39;password&#39;</span>
+<span class="c"># anything introduced by &#39;the&#39; becomes a new variable</span><span class="nf"></span>
 <span class="k">Then </span><span class="nf">print the &#39;secret message&#39;</span>
 </pre></div>
 

@@ -47,7 +47,7 @@
   <li><a href="../modules/String.html">String</a></li>
   <li><a href="../modules/Table.html">Table</a></li>
   <li><a href="../modules/INSPECT.html">INSPECT</a></li>
-  <li><strong>ZEN</strong></li>
+  <li><strong>lua.zencode</strong></li>
   <li><a href="../modules/BIG.html">BIG</a></li>
 </ul>
 <h2>Tutorials</h2>
@@ -65,7 +65,7 @@
 
 <div id="content">
 
-<h1>Module <code>ZEN</code></h1>
+<h1>Module <code>lua.zencode</code></h1>
 <p>
 
 <h1>Zencode language parser</h1>
@@ -78,9 +78,16 @@
  purpose is detailed in <a
  href="https://files.dyne.org/zenroom/Zencode_Whitepaper.pdf">the
  Zencode Whitepaper</a> and DECODE EU project.</p>
-    <h3>Info:</h3>
-    <ul>
-        <li><strong>Copyright</strong>:  Dyne.org foundation 2018-2020</p>
+
+<p> An example of Zencode looks like this:</p>
+
+<p> <code>
+ Given that I am known as 'Alice'</p>
+
+<p> When I create my new keypair</p>
+
+<p> Then print my data
+ </code></p>
 
 <p> The Zenroom VM is capable of parsing specific scenarios written in
  Zencode and execute high-level cryptographic operations described
@@ -91,36 +98,33 @@
 <p> This section doesn't provide the documentation on how to write
  Zencode. Refer to the links above to learn it. This documentation
  continues to illustrate internals: how the Zencode direct-syntax
- parser is made, how it integrates in the Zenroom memory model.</li>
-        <li><strong>License</strong>: AGPLv3</li>
-        <li><strong>Author</strong>: Denis "Jaromil" Roio</li>
-    </ul>
+ parser is made, how it integrates in the Zenroom memory model.</p>
 
 
 <h2><a href="#Given_block__IN_read_only_memory_">Given block (IN read-only memory) </a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#Iam">Iam (name)</a></td>
+	<td class="name" nowrap><a href="#ZEN:Iam">ZEN:Iam (name)</a></td>
 	<td class="summary">Declare 'my own' name that will refer all uses of the 'my' pronoun
  to structures contained under this name.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#pick">pick (name, data)</a></td>
+	<td class="name" nowrap><a href="#ZEN:pick">ZEN:pick (name, data)</a></td>
 	<td class="summary">Pick a generic data structure from the <b>IN</b> memory
  space.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#pickin">pickin (section, name)</a></td>
+	<td class="name" nowrap><a href="#ZEN:pickin">ZEN:pickin (section, name)</a></td>
 	<td class="summary">Pick a data structure named 'what' contained under a 'section' key
  of the at the root of the <b>IN</b> memory space.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#validate">validate (name, schema)</a></td>
+	<td class="name" nowrap><a href="#ZEN:validate">ZEN:validate (name, schema)</a></td>
 	<td class="summary">Optional step inside the <b>Given</b> block to execute schema
- validation on the last data structure selected by <a href="../modules/ZEN.html#pick">pick</a>.</td>
+ validation on the last data structure selected by <a href="../modules/lua.zencode.html#ZEN:pick">pick</a>.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#ack">ack (name)</a></td>
+	<td class="name" nowrap><a href="#ZEN:ack">ZEN:ack (name)</a></td>
 	<td class="summary">Final step inside the <b>Given</b> block towards the <b>When</b>:
  pass on a data structure into the ACK memory space, ready for
  processing.</td>
@@ -129,47 +133,47 @@
 <h2><a href="#When_block__ACK_read_write_memory_">When block (ACK read-write memory) </a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#draft">draft (string)</a></td>
+	<td class="name" nowrap><a href="#ZEN:draft">ZEN:draft (string)</a></td>
 	<td class="summary">Draft a new text made of a simple string: convert it to <a href="../modules/OCTET.html#">OCTET</a>
  and append it to ACK.draft.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#eq">eq ()</a></td>
+	<td class="name" nowrap><a href="#ZEN:eq">ZEN:eq ()</a></td>
 	<td class="summary">Compare equality of two data objects (TODO: octet, ECP, etc.)</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#gt">gt ()</a></td>
+	<td class="name" nowrap><a href="#ZEN:gt">ZEN:gt ()</a></td>
 	<td class="summary">Check that the first object is greater than the second (TODO)</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#lt">lt ()</a></td>
+	<td class="name" nowrap><a href="#ZEN:lt">ZEN:lt ()</a></td>
 	<td class="summary">Check that the first object is lesser than the second (TODO)</td>
 	</tr>
 </table>
 <h2><a href="#Then_block__OUT_write_only_memory_">Then block (OUT write-only memory) </a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#out">out ()</a></td>
+	<td class="name" nowrap><a href="#ZEN:out">ZEN:out ()</a></td>
 	<td class="summary">Move a generic data structure from ACK to OUT memory space, ready
  for its final JSON encoding and print out.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#outmy">outmy ()</a></td>
+	<td class="name" nowrap><a href="#ZEN:outmy">ZEN:outmy ()</a></td>
 	<td class="summary">Move 'my own' data structure from ACK to OUT.whoami memory space,
  ready for its final JSON encoding and print out.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#export">export (object, format)</a></td>
+	<td class="name" nowrap><a href="#ZEN:export">ZEN:export (object, format)</a></td>
 	<td class="summary">Convert a data object to the desired format (argument name provided
  as string), or use CONF.encoding when called without argument</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#import">import (object)</a></td>
+	<td class="name" nowrap><a href="#ZEN:import">ZEN:import (object)</a></td>
 	<td class="summary">Import a generic data element from the tagged format, or use
  CONF.encoding</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#zencode:begin">zencode:begin (verbosity)</a></td>
+	<td class="name" nowrap><a href="#begin">begin (verbosity)</a></td>
 	<td class="summary">ZENCODE PARSER</td>
 	</tr>
 </table>
@@ -185,8 +189,8 @@
 
     <dl class="function">
     <dt>
-    <a name = "Iam"></a>
-    <strong>Iam (name)</strong>
+    <a name = "ZEN:Iam"></a>
+    <strong>ZEN:Iam (name)</strong>
     </dt>
     <dd>
     Declare 'my own' name that will refer all uses of the 'my' pronoun
@@ -206,13 +210,13 @@
 
 </dd>
     <dt>
-    <a name = "pick"></a>
-    <strong>pick (name, data)</strong>
+    <a name = "ZEN:pick"></a>
+    <strong>ZEN:pick (name, data)</strong>
     </dt>
     <dd>
     Pick a generic data structure from the <b>IN</b> memory
  space.  Looks for named data on the first and second level and makes
- it ready for <a href="../modules/ZEN.html#validate">validate</a> or <a href="../modules/ZEN.html#ack">ack</a>.
+ it ready for <a href="../modules/lua.zencode.html#ZEN:validate">validate</a> or <a href="../modules/lua.zencode.html#ZEN:ack">ack</a>.
 (name, data)
 
 
@@ -237,14 +241,14 @@
 
 </dd>
     <dt>
-    <a name = "pickin"></a>
-    <strong>pickin (section, name)</strong>
+    <a name = "ZEN:pickin"></a>
+    <strong>ZEN:pickin (section, name)</strong>
     </dt>
     <dd>
     Pick a data structure named 'what' contained under a 'section' key
  of the at the root of the <b>IN</b> memory space.  Looks for named
  data at the first and second level underneath IN[section] and moves
- it to TMP[what][section], ready for <a href="../modules/ZEN.html#validate">validate</a> or <a href="../modules/ZEN.html#ack">ack</a>. If
+ it to TMP[what][section], ready for <a href="../modules/lua.zencode.html#ZEN:validate">validate</a> or <a href="../modules/lua.zencode.html#ZEN:ack">ack</a>. If
  TMP[what] exists already, every new entry is added as a key/value
 (section, name)
 
@@ -270,12 +274,12 @@
 
 </dd>
     <dt>
-    <a name = "validate"></a>
-    <strong>validate (name, schema)</strong>
+    <a name = "ZEN:validate"></a>
+    <strong>ZEN:validate (name, schema)</strong>
     </dt>
     <dd>
     Optional step inside the <b>Given</b> block to execute schema
- validation on the last data structure selected by <a href="../modules/ZEN.html#pick">pick</a>. (name)
+ validation on the last data structure selected by <a href="../modules/lua.zencode.html#ZEN:pick">pick</a>. (name)
 
 
     <h3>Parameters:</h3>
@@ -299,14 +303,14 @@
 
 </dd>
     <dt>
-    <a name = "ack"></a>
-    <strong>ack (name)</strong>
+    <a name = "ZEN:ack"></a>
+    <strong>ZEN:ack (name)</strong>
     </dt>
     <dd>
     Final step inside the <b>Given</b> block towards the <b>When</b>:
  pass on a data structure into the ACK memory space, ready for
  processing.   It requires the data to be present in TMP[name] and
- typically follows a <a href="../modules/ZEN.html#pick">pick</a>. In some restricted cases it is used
+ typically follows a <a href="../modules/lua.zencode.html#ZEN:pick">pick</a>. In some restricted cases it is used
  inside a <b>When</b> block following the inline insertion of data
  from zencode.
 (name)
@@ -332,8 +336,8 @@
 
     <dl class="function">
     <dt>
-    <a name = "draft"></a>
-    <strong>draft (string)</strong>
+    <a name = "ZEN:draft"></a>
+    <strong>ZEN:draft (string)</strong>
     </dt>
     <dd>
     Draft a new text made of a simple string: convert it to <a href="../modules/OCTET.html#">OCTET</a>
@@ -353,8 +357,8 @@
 
 </dd>
     <dt>
-    <a name = "eq"></a>
-    <strong>eq ()</strong>
+    <a name = "ZEN:eq"></a>
+    <strong>ZEN:eq ()</strong>
     </dt>
     <dd>
     Compare equality of two data objects (TODO: octet, ECP, etc.) (first, second)
@@ -367,8 +371,8 @@
 
 </dd>
     <dt>
-    <a name = "gt"></a>
-    <strong>gt ()</strong>
+    <a name = "ZEN:gt"></a>
+    <strong>ZEN:gt ()</strong>
     </dt>
     <dd>
     Check that the first object is greater than the second (TODO) (first, second)
@@ -381,8 +385,8 @@
 
 </dd>
     <dt>
-    <a name = "lt"></a>
-    <strong>lt ()</strong>
+    <a name = "ZEN:lt"></a>
+    <strong>ZEN:lt ()</strong>
     </dt>
     <dd>
     Check that the first object is lesser than the second (TODO) (first, second)
@@ -402,8 +406,8 @@
 
     <dl class="function">
     <dt>
-    <a name = "out"></a>
-    <strong>out ()</strong>
+    <a name = "ZEN:out"></a>
+    <strong>ZEN:out ()</strong>
     </dt>
     <dd>
     Move a generic data structure from ACK to OUT memory space, ready
@@ -417,8 +421,8 @@
 
 </dd>
     <dt>
-    <a name = "outmy"></a>
-    <strong>outmy ()</strong>
+    <a name = "ZEN:outmy"></a>
+    <strong>ZEN:outmy ()</strong>
     </dt>
     <dd>
     Move 'my own' data structure from ACK to OUT.whoami memory space,
@@ -432,8 +436,8 @@
 
 </dd>
     <dt>
-    <a name = "export"></a>
-    <strong>export (object, format)</strong>
+    <a name = "ZEN:export"></a>
+    <strong>ZEN:export (object, format)</strong>
     </dt>
     <dd>
     Convert a data object to the desired format (argument name provided
@@ -461,8 +465,8 @@
 
 </dd>
     <dt>
-    <a name = "import"></a>
-    <strong>import (object)</strong>
+    <a name = "ZEN:import"></a>
+    <strong>ZEN:import (object)</strong>
     </dt>
     <dd>
     Import a generic data element from the tagged format, or use
@@ -487,8 +491,8 @@
 
 </dd>
     <dt>
-    <a name = "zencode:begin"></a>
-    <strong>zencode:begin (verbosity)</strong>
+    <a name = "begin"></a>
+    <strong>begin (verbosity)</strong>
     </dt>
     <dd>
     ZENCODE PARSER
@@ -515,7 +519,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.3</a></i>
-<i style="float:right;">Last updated 2019-12-26 19:52:00 </i>
+<i style="float:right;">Last updated 2019-12-26 19:36:38 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
