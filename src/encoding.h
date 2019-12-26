@@ -21,6 +21,8 @@
 #ifndef __ENCODING_H__
 #define __ENCODING_H__
 
+int hex2buf(char *dst, char *hex);
+
 int is_url64(const char *in);
 
 int B64decoded_len(int len);
