@@ -24,38 +24,19 @@
 /////////////////////////////////////////
 // high level api: one simple call
 
-int zenroom_exec(char *script, char *conf, char *keys,
-                 char *data, int verbosity);
+int zenroom_exec(char *script, char *conf, char *keys, char *data);
 
-int zencode_exec(char *script, char *conf, char *keys,
-                 char *data, int verbosity);
+int zencode_exec(char *script, char *conf, char *keys, char *data);
 
 // in case buffers should be used instead of stdout/err file
 // descriptors, this call defines where to print out the output and
 // the maximum sizes allowed for it. Output is NULL terminated.
-int zenroom_exec_tobuf(char *script, char *conf, char *keys,
-                       char *data, int verbosity,
+int zenroom_exec_tobuf(char *script, char *conf, char *keys, char *data,
                        char *stdout_buf, size_t stdout_len,
                        char *stderr_buf, size_t stderr_len);
-int zencode_exec_tobuf(char *script, char *conf, char *keys,
-                       char *data, int verbosity,
+int zencode_exec_tobuf(char *script, char *conf, char *keys, char *data,
                        char *stdout_buf, size_t stdout_len,
                        char *stderr_buf, size_t stderr_len);
-
-// deterministic random calls for host applications providing their
-// own seed for the RNG
-int zenroom_exec_rng_tobuf(char *script, char *conf, char *keys,
-                           char *data, int verbosity,
-                           char *stdout_buf, size_t stdout_len,
-                           char *stderr_buf, size_t stderr_len,
-                           char *random_seed, size_t random_seed_len);
-int zencode_exec_rng_tobuf(char *script, char *conf, char *keys,
-                           char *data, int verbosity,
-                           char *stdout_buf, size_t stdout_len,
-                           char *stderr_buf, size_t stderr_len,
-                           char *random_seed, size_t random_seed_len);
-
-extern void set_debug(int lev);
 
 ////////////////////////////////////////
 
@@ -97,7 +78,7 @@ typedef struct {
 } zenroom_t;
 
 
-zenroom_t *zen_init(const char *conf, char *keys, char *data, char *seed);
+zenroom_t *zen_init(const char *conf, char *keys, char *data);
 int  zen_exec_script(zenroom_t *Z, const char *script);
 int  zen_exec_zencode(zenroom_t *Z, const char *script);
 void zen_teardown(zenroom_t *zenroom);

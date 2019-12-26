@@ -65,7 +65,7 @@ void* rng_alloc() {
 
 	// random seed provided externally 
 	if(Z->random_seed) {
-		act(NULL,"Random seed is external, deterministic execution");
+		act(Z->lua,"Random seed is external, deterministic execution");
 		if(!Z->random_generator) {
 			// TODO: feed minimum 128 bytes
 			RAND_seed(rng, Z->random_seed_len, Z->random_seed);
@@ -124,6 +124,10 @@ void zen_add_random(lua_State *L) {
 		{ {"random_int8",  rng_uint8  },
 		  {"random_int16", rng_uint16 },
 		  {"random_int32", rng_int32 },
+		  {"random8",  rng_uint8  },
+		  {"random16", rng_uint16 },
+		  {"random32", rng_int32 },
+		  {"random",  rng_uint16  },
 		  {NULL, NULL} };
 	lua_getglobal(L, "_G");
 	luaL_setfuncs(L, rng_base, 0);

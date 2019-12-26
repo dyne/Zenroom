@@ -65,6 +65,10 @@ static const struct sock_fprog  strict = {
 	.len = (unsigned short)( sizeof strict_filter / sizeof strict_filter[0] ),
 	.filter = (struct sock_filter *)strict_filter
 };
+
+// configure seccomp activation
+extern int zconf_seccomp;
+
 #endif
 
 
@@ -150,7 +154,6 @@ int main(int argc, char **argv) {
 	char keys[MAX_FILE];
 	char data[MAX_FILE];
 	int opt, index;
-	int protected;
 	int   interactive         = 0;
 	int   zencode             = 0;
 
@@ -168,7 +171,6 @@ int main(int argc, char **argv) {
 	// conf[0] = '\0';
 	script[0] = '\0';
 	int verbosity = 1;
-	protected = 0;
 	set_color(1);
 	while((opt = getopt(argc, argv, short_options)) != -1) {
 		switch(opt) {
@@ -194,9 +196,6 @@ int main(int argc, char **argv) {
 			break;
 		case 'S':
 			snprintf(rngseed,MAX_STRING-1,"%s",optarg);
-			break;
-		case 'p':
-			protected = 1;
 			break;
 		case 'z':
 			zencode = 1;
@@ -244,8 +243,7 @@ int main(int argc, char **argv) {
 		cli = zen_init(
 				conffile[0]?conffile:NULL,
 				keys[0]?keys:NULL,
-				data[0]?data:NULL,
-				rngseed);
+				data[0]?data:NULL);
 		lua_State *L = (lua_State*)cli->lua;
 
 		// print function
@@ -276,7 +274,7 @@ int main(int argc, char **argv) {
 
 	// configuration from -c or default
 	if(conffile[0]!='\0') {
-		if(verbosity) act(NULL, "selected configuration: %s",conffile);
+		if(verbosity) act(NULL, "configuration: %s",conffile);
 	// load_file(conf, fopen(conffile, "r"));
 	} else
 		if(verbosity) act(NULL, "using default configuration");
@@ -286,8 +284,7 @@ int main(int argc, char **argv) {
 	Z = zen_init(
 			(conffile[0])?conffile:NULL,
 			(keys[0])?keys:NULL,
-			(data[0])?data:NULL,
-			rngseed);
+			(data[0])?data:NULL);
 	if(!Z) {
 		error(NULL, "Initialisation failed.");
 		return EXIT_FAILURE; }
@@ -302,7 +299,7 @@ int main(int argc, char **argv) {
 
 #if DEBUG == 1
 	int res;
-	if(protected) act(NULL, "protected mode (seccomp isolation) not available in debug build");
+	if(zconf_seccomp) act(NULL, "protected mode (seccomp isolation) not available in debug build");
 	if(zencode)
 		res = zen_exec_zencode(Z, script);
 	else
@@ -319,7 +316,7 @@ int main(int argc, char **argv) {
 		if( zen_exec_script(Z, script) ) return EXIT_FAILURE;
 
 #else /* POSIX */
-	if (!protected) {
+	if (!zconf_seccomp) {
 		if(zencode) {
 			if( zen_exec_zencode(Z, script) ) return EXIT_FAILURE;
 		} else {

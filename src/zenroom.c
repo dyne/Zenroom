@@ -47,6 +47,9 @@
 #include <zenroom.h>
 #include <zen_memory.h>
 
+// hex2oct used to import hex sequence into rng seed
+#include <encoding.h>
+
 // prototypes from lua_modules.c
 extern int zen_require_override(lua_State *L, const int restricted);
 extern int zen_lua_init(lua_State *L);
@@ -81,6 +84,10 @@ extern void zen_add_random(lua_State *L);
 zenroom_t *Z = NULL;   // zenroom STACK
 zen_mem_t *MEM = NULL; // zenroom HEAP
 int EXITCODE = 1; // start from error state
+
+// configured globals by zen_config
+extern char *zconf_rngseed_str;
+extern int   zconf_rngseed_len;
 
 
 static int zen_lua_panic (lua_State *L) {
@@ -136,7 +143,7 @@ static int zen_init_pmain(lua_State *L) { // protected mode init
 	return(LUA_OK);
 }
 
-zenroom_t *zen_init(const char *conf, char *keys, char *data, char *seed) {
+zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	(void) conf;
 	lua_State *L = NULL;
 #ifdef USE_JEMALLOC
@@ -162,9 +169,14 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data, char *seed) {
 		return NULL;
 	}
 
-	if(seed && seed[0] != '\0') {
-		Z->random_seed = seed;
-		Z->random_seed_len = strlen(seed);
+	// use RNGseed from configuration if present (deterministic mode)
+	if(zconf_rngseed_str && zconf_rngseed_len > 0) {
+		if(zconf_rngseed_str[0] == '0' && zconf_rngseed_str[1] == 'x') {
+			Z->random_seed = zen_memory_alloc(zconf_rngseed_len / 2);
+			Z->random_seed_len = hex2buf(Z->random_seed, &zconf_rngseed_str[2]);
+		}
+		// free buffer allocated in zen_config
+		zen_memory_free(zconf_rngseed_str); zconf_rngseed_len = 0;
 	}
 	// initialize the random generator
 	Z->random_generator = rng_alloc();
@@ -268,34 +280,26 @@ int zen_exec_script(zenroom_t *Z, const char *script) {
 }
 
 
-int zencode_exec(char *script, char *conf, char *keys,
-		char *data, int verbosity) {
-	// the sandbox context (can be initialised only once)
-	// stores the script file and configuration
-	zenroom_t *Z = NULL;
-	lua_State *L = NULL;
+int zencode_exec(char *script, char *conf, char *keys, char *data) {
 	int r;
 
 	if(!script) {
-		error(L, "NULL string as script for zenroom_exec()");
+		error(NULL, "NULL string as script for zenroom_exec()");
 		return EXIT_FAILURE; }
 	if(script[0] == '\0') {
-		error(L, "Empty string as script for zenroom_exec()");
+		error(NULL, "Empty string as script for zenroom_exec()");
 		return EXIT_FAILURE; }
-
-	set_debug(verbosity);
 
 	char *c, *k, *d;
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
-	Z = zen_init(c, k, d, NULL);
+	Z = zen_init(c, k, d);
 	if(!Z) {
-		error(L, "Initialisation failed.");
+		error(NULL, "Initialisation failed.");
 		return EXIT_FAILURE; }
-	L = (lua_State*)Z->lua;
-	if(!L) {
-		error(L, "Initialisation failed.");
+	if(!Z->lua) {
+		error(NULL, "Initialisation failed.");
 		return EXIT_FAILURE; }
 
 	r = zen_exec_zencode(Z, script);
@@ -304,7 +308,7 @@ int zencode_exec(char *script, char *conf, char *keys,
 		EM_ASM({Module.exec_error();});
 #endif
 		//		error(r);
-		error(L, "Error detected. Execution aborted.");
+		error(Z->lua, "Error detected. Execution aborted.");
 
 		zen_teardown(Z);
 		return EXIT_FAILURE;
@@ -314,39 +318,33 @@ int zencode_exec(char *script, char *conf, char *keys,
 	EM_ASM({Module.exec_ok();});
 #endif
 
-	func(L, "Zenroom operations completed.");
+	func(Z->lua, "Zenroom operations completed.");
 	zen_teardown(Z);
 	return(EXITCODE);
 }
 
-int zenroom_exec(char *script, char *conf, char *keys,
-		char *data, int verbosity) {
+int zenroom_exec(char *script, char *conf, char *keys, char *data) {
 	// the sandbox context (can be initialised only once)
 	// stores the script file and configuration
-	zenroom_t *Z = NULL;
-	lua_State *L = NULL;
 	int r;
 
 	if(!script) {
-		error(L, "NULL string as script for zenroom_exec()");
+		error(NULL, "NULL string as script for zenroom_exec()");
 		return EXIT_FAILURE; }
 	if(script[0] == '\0') {
-		error(L, "Empty string as script for zenroom_exec()");
+		error(NULL, "Empty string as script for zenroom_exec()");
 		return EXIT_FAILURE; }
-
-	set_debug(verbosity);
 
 	char *c, *k, *d;
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
-	Z = zen_init(c, k, d, NULL);
+	Z = zen_init(c, k, d);
 	if(!Z) {
-		error(L, "Initialisation failed.");
+		error(NULL, "Initialisation failed.");
 		return EXIT_FAILURE; }
-	L = (lua_State*)Z->lua;
-	if(!L) {
-		error(L, "Initialisation failed.");
+	if(!Z->lua) {
+		error(NULL, "Initialisation failed.");
 		return EXIT_FAILURE; }
 
 	r = zen_exec_script(Z, script);
@@ -355,7 +353,7 @@ int zenroom_exec(char *script, char *conf, char *keys,
 		EM_ASM({Module.exec_error();});
 #endif
 		//		error(r);
-		error(L, "Error detected. Execution aborted.");
+		error(Z->lua, "Error detected. Execution aborted.");
 
 		zen_teardown(Z);
 		return EXIT_FAILURE;
@@ -365,15 +363,14 @@ int zenroom_exec(char *script, char *conf, char *keys,
 	EM_ASM({Module.exec_ok();});
 #endif
 
-	func(L, "Zenroom operations completed.");
+	func(Z->lua, "Zenroom operations completed.");
 	zen_teardown(Z);
 	return(EXITCODE);
 }
 
 
 
-int zencode_exec_tobuf(char *script, char *conf, char *keys,
-		char *data, int verbosity,
+int zencode_exec_tobuf(char *script, char *conf, char *keys, char *data,
 		char *stdout_buf, size_t stdout_len,
 		char *stderr_buf, size_t stderr_len) {
 	// the sandbox context (can be initialised only once)
@@ -390,13 +387,11 @@ int zencode_exec_tobuf(char *script, char *conf, char *keys,
 		error(L, "Empty string as script for zenroom_exec()");
 		return EXIT_FAILURE; }
 
-	set_debug(verbosity);
-
 	char *c, *k, *d;
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
-	Z = zen_init(c, k, d, NULL);
+	Z = zen_init(c, k, d);
 	if(!Z) {
 		error(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
@@ -433,8 +428,7 @@ int zencode_exec_tobuf(char *script, char *conf, char *keys,
 }
 
 
-int zenroom_exec_tobuf(char *script, char *conf, char *keys,
-		char *data, int verbosity,
+int zenroom_exec_tobuf(char *script, char *conf, char *keys, char *data,
 		char *stdout_buf, size_t stdout_len,
 		char *stderr_buf, size_t stderr_len) {
 	// the sandbox context (can be initialised only once)
@@ -451,13 +445,11 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys,
 		error(L, "Empty string as script for zenroom_exec()");
 		return EXIT_FAILURE; }
 
-	set_debug(verbosity);
-
 	char *c, *k, *d;
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
-	Z = zen_init(c, k, d, NULL);
+	Z = zen_init(c, k, d);
 	if(!Z) {
 		error(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
@@ -493,143 +485,3 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys,
 	return(EXITCODE);
 }
 
-
-int zenroom_exec_rng_tobuf(char *script, char *conf, char *keys,
-                       char *data, int verbosity,
-                       char *stdout_buf, size_t stdout_len,
-                       char *stderr_buf, size_t stderr_len,
-                       char *random_seed, size_t random_seed_len) {
-	// the sandbox context (can be initialised only once)
-	// stores the script file and configuration
-	zenroom_t *Z = NULL;
-	lua_State *L = NULL;
-	char *_random_seed = NULL;
-	int r;
-
-	if(!script) {
-		error(L, "NULL string as script for zenroom_exec()");
-		return EXIT_FAILURE; }
-	if(script[0] == '\0') {
-		error(L, "Empty string as script for zenroom_exec()");
-		return EXIT_FAILURE; }
-
-	set_debug(verbosity);
-
-	char *c, *k, *d;
-	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
-	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
-	d = data ? (data[0] == '\0') ? NULL : data : NULL;
-	_random_seed = random_seed ? (random_seed[0] == '\0') ? NULL : random_seed : NULL;
-	if(!_random_seed) {
-		error(NULL, "%s called with empty random seed",__func__);
-		return EXIT_FAILURE; }
-
-	Z = zen_init(c, k, d, _random_seed);
-	if(!Z) {
-		error(L, "Initialisation failed.");
-		return EXIT_FAILURE; }
-	L = (lua_State*)Z->lua;
-	if(!L) {
-		error(L, "Initialisation failed.");
-		return EXIT_FAILURE; }
-
-	// setup stdout and stderr buffers
-	Z->stdout_buf = stdout_buf;
-	Z->stdout_len = stdout_len;
-	Z->stderr_buf = stderr_buf;
-	Z->stderr_len = stderr_len;
-	// export the random_seed buffer to Lua
-	zen_setenv(L, "RANDOM_SEED", Z->random_seed);
-
-	r = zen_exec_script(Z, script);
-	if(r) {
-#ifdef __EMSCRIPTEN__
-		EM_ASM({Module.exec_error();});
-#endif
-		//		error(r);
-		error(L, "Error detected. Execution aborted.");
-
-		zen_teardown(Z);
-		return EXIT_FAILURE;
-	}
-
-#ifdef __EMSCRIPTEN__
-	EM_ASM({Module.exec_ok();});
-#endif
-
-	func(L, "Zenroom operations completed.");
-	zen_teardown(Z);
-	return(EXITCODE);
-}
-
-
-int zencode_exec_rng_tobuf(char *script, char *conf, char *keys,
-                           char *data, int verbosity,
-                           char *stdout_buf, size_t stdout_len,
-                           char *stderr_buf, size_t stderr_len,
-                           char *random_seed, size_t random_seed_len) {
-	// the sandbox context (can be initialised only once)
-	// stores the script file and configuration
-	zenroom_t *Z = NULL;
-	lua_State *L = NULL;
-	char *_random_seed = NULL;
-	int r;
-
-	if(!script) {
-		error(L, "NULL string as script for zenroom_exec()");
-		return EXIT_FAILURE; }
-	if(script[0] == '\0') {
-		error(L, "Empty string as script for zenroom_exec()");
-		return EXIT_FAILURE; }
-
-	set_debug(verbosity);
-
-	char *c, *k, *d;
-	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
-	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
-	d = data ? (data[0] == '\0') ? NULL : data : NULL;
-	_random_seed = random_seed ? (random_seed[0] == '\0') ? NULL : random_seed : NULL;
-	if(!_random_seed) {
-		error(NULL, "%s called with empty random seed",__func__);
-		return EXIT_FAILURE; }
-
-	Z = zen_init(c, k, d, _random_seed);
-	if(!Z) {
-		error(L, "Initialisation failed.");
-		return EXIT_FAILURE; }
-	L = (lua_State*)Z->lua;
-	if(!L) {
-		error(L, "Initialisation failed.");
-		return EXIT_FAILURE; }
-
-	// setup stdout and stderr buffers
-	Z->stdout_buf = stdout_buf;
-	Z->stdout_len = stdout_len;
-	Z->stderr_buf = stderr_buf;
-	Z->stderr_len = stderr_len;
-	Z->random_seed = _random_seed;
-	Z->random_seed_len = random_seed_len;
-	// export the random_seed buffer to Lua
-	zen_setenv(L, "RANDOM_SEED", Z->random_seed);
-
-	r = zen_exec_zencode(Z, script);
-	if(r) {
-#ifdef __EMSCRIPTEN__
-		EM_ASM({Module.exec_error();});
-#endif
-		//		error(r);
-		error(L, "Error detected. Execution aborted.");
-
-		zen_teardown(Z);
-		return EXIT_FAILURE;
-	}
-
-#ifdef __EMSCRIPTEN__
-	EM_ASM({Module.exec_ok();});
-#endif
-
-
-	func(L, "Zenroom operations completed.");
-	zen_teardown(Z);
-	return(EXITCODE);
-}

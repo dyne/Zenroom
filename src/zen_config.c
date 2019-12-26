@@ -30,7 +30,7 @@
 #define STB_C_LEX_C_DECIMAL_FLOATS  N
 #define STB_C_LEX_C99_HEX_FLOATS    N
 #define STB_C_LEX_C_IDENTIFIERS     Y
-#define STB_C_LEX_C_DQ_STRINGS      N
+#define STB_C_LEX_C_DQ_STRINGS      Y
 #define STB_C_LEX_C_SQ_STRINGS      N
 #define STB_C_LEX_C_CHARS           N
 #define STB_C_LEX_C_COMMENTS        N
@@ -69,8 +69,12 @@ extern void set_color(int on);
 
 #include <stb_c_lexer.h>
 
-typedef enum { NIL, VERBOSE, COLOR } zconf;
-zconf curconf = NIL;
+typedef enum { NIL, VERBOSE, COLOR, SECCOMP,RNGSEED } zconf;
+static zconf curconf = NIL;
+
+int zconf_seccomp = 0;
+char *zconf_rngseed_str = NULL;
+int   zconf_rngseed_len = 0;
 
 int zen_conf_parse(const char *configuration) {
 	(void)stb__strchr;            // avoid compiler warnings
@@ -89,24 +93,42 @@ int zen_conf_parse(const char *configuration) {
 		}
 		// rather simple finite state machine using zconf enum
 		switch (lex.token) {
+			// first token parsed, set enum for value
 		case CLEX_id:
-			if(strcmp(lex.string,"debug")==0)   { curconf = VERBOSE; break; }
-			if(strcmp(lex.string,"verbose")==0) { curconf = VERBOSE; break; }
-			if(strcmp(lex.string,"color")==0)   { curconf = COLOR;  break; }
+			if(strcasecmp(lex.string,"debug")  ==0) { curconf = VERBOSE; break; }
+			if(strcasecmp(lex.string,"verbose")==0) { curconf = VERBOSE; break; }
+			if(strcasecmp(lex.string,"color")  ==0) { curconf = COLOR;   break; }
+			if(strcasecmp(lex.string,"seccomp")  ==0) { curconf = SECCOMP;   break; }
+			if(strcasecmp(lex.string,"rngseed")  ==0) { curconf = RNGSEED;   break; }
 			warning(NULL,"unrecognised configuration: %s",lex.string);
 			curconf = NIL; break;
+			// int value set based on current enum
 		case CLEX_intlit:
 			if(curconf==VERBOSE) { set_debug  (lex.int_number); break; }
-			if(curconf==COLOR)  { set_color  (lex.int_number); break; }
+			if(curconf==COLOR)   { set_color  (lex.int_number); break; }
+			if(curconf==SECCOMP) { zconf_seccomp = lex.int_number; break; }
 			system_free(lexbuf);
 			error(NULL,"invalid configuration");
 			return 0;
+		case CLEX_dqstring:
+			if(curconf==RNGSEED) {
+				zconf_rngseed_len = lex.string_len;
+				// quotes have been stripped, copy string and null terminate
+				zconf_rngseed_str = zen_memory_alloc(lex.string_len+1);
+				memcpy(zconf_rngseed_str, lex.string, lex.string_len);
+				lex.string[lex.string_len] = 0x0;
+				break; }
+			system_free(lexbuf);
+			error(NULL,"invalid configuration");
+			return 0;
+
 		default:
 			if(lex.token == ',') { curconf = NIL; break; }
 			if(lex.token == '=' && curconf == NIL) {
 				warning(NULL,"undefined config variable");
 				break; }
 			if(lex.token == '=' && curconf != NIL) break; // OK
+			if(lex.token == '"' && curconf != NIL) break; // OK
 			error(NULL,"%s: invalid string in configuration: %c",__func__, lex.token);
 			system_free(lexbuf);
 			return 0;
