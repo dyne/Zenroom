@@ -76,7 +76,8 @@ _G["CONF"] = {
    input = { encoding = get_encoding('url64'),
 			 format = get_format('json') },
    output = { encoding = get_encoding('url64'),
-			  format = get_format('json') },
+			  format = get_format('json'),
+			  versioning = false },
    parser = { strict_match = true }
 }
 

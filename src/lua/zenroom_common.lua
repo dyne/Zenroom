@@ -221,6 +221,9 @@ function set_rule(text)
       elseif rule[3] == 'format' then
 		 CONF.output.format = get_format(rule[4])
          res = true and CONF.output.format
+      elseif rule[3] == 'versioning' then
+		 CONF.output.versioning = true
+         res = true
       end
 
    elseif rule[2] == 'unknown' and rule[3] then

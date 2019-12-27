@@ -630,11 +630,13 @@ function zencode:run()
    ZEN:trace("--- Zencode execution completed")
    if type(OUT) == 'table' then
 	  ZEN:trace("+++ Adding setup information to { OUT }")
-	  OUT.zenroom = { }
-	  OUT.zenroom.version = VERSION.original
-	  OUT.zenroom.curve = CONF.curve
-	  OUT.zenroom.scenario = ZEN.scenario
-	  OUT.zenroom.encoding = CONF.output.encoding.name
+	  if CONF.output.versioning == true then
+		 OUT.zenroom = { }
+		 OUT.zenroom.version = VERSION.original
+		 OUT.zenroom.curve = CONF.curve
+		 OUT.zenroom.scenario = ZEN.scenario
+		 OUT.zenroom.encoding = CONF.output.encoding.name
+	  end
 	  ZEN:trace("<<< Encoding { OUT } to "..CONF.output.format.name)
 	  print(CONF.output.format.fun(OUT))
 	  ZEN:trace(">>> Encoding successful")
