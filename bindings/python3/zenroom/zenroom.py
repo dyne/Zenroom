@@ -1,7 +1,7 @@
 import logging
 from multiprocessing import Manager, Process
 from capturer import CaptureOutput
-from .zenroom_swig import zenroom_exec_tobuf, zencode_exec_tobuf, zencode_exec_rng_tobuf, zenroom_exec_rng_tobuf
+from .zenroom_swig import zenroom_exec_tobuf, zencode_exec_tobuf
 
 __MAX_STRING__ = 1048576
 
@@ -51,7 +51,7 @@ def _zen_call(func, arguments):
     return result.get()
 
 
-def zencode_exec(script, keys=None, data=None, conf='', verbosity=1):
+def zencode_exec(script, keys=None, data=None, conf=None):
 
     """Invoke Zenroom, capturing and returning the output as a byte string
     This function is the primary method we expose from this wrapper library,
@@ -64,15 +64,14 @@ def zencode_exec(script, keys=None, data=None, conf='', verbosity=1):
         keys (str): Optional byte string containing keys which Zenroom will use
         data (str): Optional byte string containing data upon which Zenroom will operate
         conf (str): Optional byte string containing conf data for Zenroom
-        verbosity (int): Optional int which controls Zenroom's log verbosity ranging from 1 (least verbose) up to 3 (most verbose)
     Returns:
             tuple: The output from Zenroom expressed as a byte string, the eventual errors generated as a string
     """
-    args = dict(script=script, conf=conf, keys=keys, data=data, verbosity=verbosity, stdout_buf=None, stderr_buf=None)
+    args = dict(script=script, conf=conf, keys=keys, data=data, stdout_buf=None, stderr_buf=None)
     return _zen_call(zencode_exec_tobuf, args)
 
 
-def zenroom_exec(script, keys=None, data=None, conf=None, verbosity=1):
+def zenroom_exec(script, keys=None, data=None, conf=None):
 
     """Invoke Zenroom, capturing and returning the output as a byte string
     This function is the primary method we expose from this wrapper library,
@@ -85,26 +84,8 @@ def zenroom_exec(script, keys=None, data=None, conf=None, verbosity=1):
         keys (str): Optional byte string containing keys which Zenroom will use
         data (str): Optional byte string containing data upon which Zenroom will operate
         conf (str): Optional byte string containing conf data for Zenroom
-        verbosity (int): Optional int which controls Zenroom's log verbosity ranging from 1 (least verbose) up to 3 (most verbose)
     Returns:
             bytes: The output from Zenroom expressed as a byte string
     """
-    args = dict(script=script, conf=conf, keys=keys, data=data, verbosity=verbosity, stdout_buf=None, stderr_buf=None)
+    args = dict(script=script, conf=conf, keys=keys, data=data, stdout_buf=None, stderr_buf=None)
     return _zen_call(zenroom_exec_tobuf, args)
-
-
-def zenroom_exec_rng(script, random_seed, keys=None, data=None, conf=None, verbosity=1):
-    args = dict(script=script, conf=conf, keys=keys, data=data, verbosity=verbosity, stdout_buf=None, stderr_buf=None, random_seed=random_seed)
-    return _zen_call(zenroom_exec_rng_tobuf, args)
-
-
-def zencode_exec_rng(script, random_seed, keys=None, data=None, conf=None, verbosity=1):
-    args = dict(script=str(script),
-                conf=conf,
-                keys=str(keys),
-                data=str(data),
-                verbosity=int(verbosity),
-                stdout_buf=None,
-                stderr_buf=None,
-                random_seed=random_seed)
-    return _zen_call(zencode_exec_rng_tobuf, args)
