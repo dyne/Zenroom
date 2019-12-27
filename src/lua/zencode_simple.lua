@@ -123,6 +123,8 @@ When("I decrypt the secret message from ''", function(_key)
 												  ACK.secret_message.text,
 												  ACK.secret_message.iv,
 												  ACK.secret_message.header)
+		ZEN.assert(checksum == ACK.secret_message.checksum,
+				   "Failed verification of integrity for secret message")
 end)
 
 -- sign a message and verify
