@@ -9,17 +9,15 @@
 recipients={'jaromil','francesca','jim','mark','paulus','mayo'}
 keys={}
 for i,name in ipairs(recipients) do
-   kk = ECDH.new('ed25519')
-   kk:keygen()
-   keys[name] = kk:public():url64()
+   kk = ECDH.keygen()
+   keys[name] = kk.public:url64()
 end
 
 
-keyring = ECDH.new('ed25519')
-keyring:keygen()
+keyring = ECDH.keygen()
 
 keypairs = JSON.encode({
-	  keyring={public=keyring:public():url64(),
-			   secret=keyring:private():url64()},
+	  keyring={public=keyring.public:url64(),
+			   secret=keyring.private:url64()},
 	  recipients=keys})
 print(keypairs)
