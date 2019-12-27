@@ -14,7 +14,7 @@ export TIME='\t%E real,\t%U user,\t%S sys,\t%K amem,\t%M mmem'
 verbose=1
 
 if [ "$1" = "" ]; then
-	z="../../src/zenroom-shared"
+	z="../../src/zenroom"
 else z="$1"; fi
 
 # chose among profiling tools
@@ -42,7 +42,7 @@ create_file() {
 	out=test_"$1"KiB.json
 	dd if=/dev/urandom bs=1024 count="$1" 2>/dev/null \
 		| base64 -w0 | tr -d '=' | tr '/+' '_-' \
-		| jq -Rsj '. | { url64: . }' | jq -s . - bob.pub \
+		| jq -Rsj '. | { message: . }' | jq -s . - bob.pub \
 										  > test_"$1"KiB.json
 	echo "$out"
 }
@@ -51,19 +51,21 @@ encrypt() {
 	in=`create_file $1`
 	scenario="Alice encrypts a $1KiB file for Bob"
 	echo $scenario
-	cat <<EOF | zenroom -z -d$verbose -k alice.keys -a $in \
+	cat <<EOF | zenroom -c memmanager=\"sys\" -z -d$verbose -k alice.keys -a $in \
 		> alice_to_bob.json
 Scenario 'simple': $scenario
+rule input untagged
 Given that I am known as 'Alice'
-and I have my 'keypair'
-and I have inside 'Bob' a valid 'public key'
-and I have a 'url64'
-When I encrypt the 'url64' as 'secret message'
+and I have my valid 'keypair'
+and I have a valid 'public key' from 'Bob'
+and I have a 'message'
+When I encrypt the message for 'Bob'
 Then print the 'secret message'
 EOF
 }
 
 encrypt 4    # 4K
-encrypt 500  # .5M
-encrypt 1000  # 1M
+encrypt 10
+# encrypt 500  # .5M
+#encrypt 1000  # 1M
 # encrypt 1500  # 1.5M

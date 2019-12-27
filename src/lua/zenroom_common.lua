@@ -201,15 +201,18 @@ function set_rule(text)
 	  -- elseif rule[2] == 'load' and rule[3] then
 	  --     act("zencode extension: "..rule[3])
 	  --     require("zencode_"..rule[3])
-   elseif rule[2] == 'input' and rule[3] and rule[4] then
+   elseif rule[2] == 'input' and rule[3] then
 
       -- rule input encoding|format ''
-      if rule[3] == 'encoding' then
+      if rule[3] == 'encoding' and rule[4] then
          CONF.input.encoding = get_encoding(rule[4])
 		 res = true and CONF.input.encoding
-      elseif rule[3] == 'format' then
+      elseif rule[3] == 'format' and rule[4] then
 		 CONF.input.format = get_format(rule[4])
          res = true and CONF.input.format
+	  elseif rule[3] == 'untagged' then
+		 res = true
+		 CONF.input.tagged = false
       end
 
    elseif rule[2] == 'output' and rule[3] and rule[4] then

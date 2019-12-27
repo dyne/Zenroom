@@ -27,7 +27,7 @@ Given("I am ''", function(name) ZEN:Iam(name) end)
 Given("I have a ''", function(name)
 		 ZEN:pick(name)
 		 TMP.valid = true
-		 TMP.data = ZEN:import(TMP.data, true)
+		 TMP.data = ZEN:import(TMP.data, CONF.input.tagged)
 		 ZEN:ack(name)
 		 TMP = { }
 end)
@@ -35,7 +35,7 @@ Given("I have my ''", function(name)
 		 ZEN.assert(ACK.whoami, "No identity specified, use: Given I am ...")
 		 ZEN:pickin(ACK.whoami, name)
 		 TMP.valid = true
-		 TMP.data = ZEN:import(TMP.data, true)
+		 TMP.data = ZEN:import(TMP.data, CONF.input.tagged)
 		 ZEN:ack(name)
 		 TMP = { }
 end)
@@ -64,7 +64,7 @@ end)
 Given("I have a '' inside ''", function(n, s)
 		 ZEN:pickin(s, n)
 		 TMP.valid = true
-		 TMP.data = ZEN:import(TMP.data, true)
+		 TMP.data = ZEN:import(TMP.data, CONF.input.tagged)
 		 ZEN:ack(n)
 		 ZEN:ack(s) -- save it also in ACK.section
 		 TMP = { }
@@ -72,7 +72,7 @@ end)
 Given("I have inside '' a ''", function(s, n)
 		 ZEN:pickin(s, n)
 		 TMP.valid = true
-		 TMP.data = ZEN:import(TMP.data, true)
+		 TMP.data = ZEN:import(TMP.data, CONF.input.tagged)
 		 ZEN:ack(n)
 		 ZEN:ack(s) -- save it also in ACK.section
 		 TMP = { }
