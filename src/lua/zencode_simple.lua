@@ -99,13 +99,16 @@ When("I encrypt the message for ''", function(_key)
 		ZEN.assert(type(ACK.public_key) == 'table',
 				   "Public keys not found in keyring")
 		ZEN.assert(ACK.public_key[_key], "Public key not found for: ".._key)
-		local header = ACK.header or 'empty'
-		local from = ECDH.new(CONF.curve)
-		from:private(ACK.keypair.private_key)
-		local to = ECDH.new(CONF.curve)
-		to:public(ACK.public_key[_key])
-		ACK.secret_message =
-		   from:encrypt(to, ACK.message, header)
+		local private = ACK.keypair.private_key
+		local key = ECDH.session(ACK.keypair.private_key, ACK.public_key[_key])
+		ACK.secret_message = { header = ACK.header or 'empty',
+							   iv = O.random(32) }
+		ACK.secret_message.text,
+		ACK.secret_message.checksum =
+		   ECDH.aead_encrypt(key,
+							 ACK.message,
+							 ACK.secret_message.iv,
+							 ACK.secret_message.header)
 end)
 
 
@@ -115,29 +118,25 @@ When("I decrypt the secret message from ''", function(_key)
 		ZEN.assert(ACK.secret_message, "Data to decrypt not found: secret_message")
 		ZEN.assert(ACK.public_key[_key],
 				   "Key to decrypt not found: public key[".._key.."])")
-		local recpt = ECDH.new(CONF.curve)
-		recpt:private(ACK.keypair.private_key)
-		ACK.secret_message.pubkey = ACK.public_key[_key]
-		ACK.message = recpt:decrypt(ACK.secret_message)
+		local session = ECDH.session(ACK.keypair.private_key, ACK.public_key[_key])
+		ACK.message, checksum = ECDH.aead_decrypt(session,
+												  ACK.secret_message.text,
+												  ACK.secret_message.iv,
+												  ACK.secret_message.header)
 end)
 
 -- sign a message and verify
 When("I create the signature of ''", function(doc)
 		ZEN.assert(ACK.keypair, "Keyring not found")
 		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
-		local dsa = ECDH.new(CONF.curve)
-		dsa:private(ACK.keypair.private_key)
-		ACK.signature = dsa:sign(ACK[doc])
+		ACK.signature = ECDH.sign(ACK.keypair.private_key, ACK[doc])
 		-- include contextual information
 end)
 
 When("I verify the '' is signed by ''", function(msg, by)
 		ZEN.assert(ACK.public_key[by], "Public key by "..by.." not found")
 		ZEN.assert(ACK.signature[by], "Signature by "..by.." not found")
-		local dsa = ECDH.new(CONF.curve)
-		dsa:public(ACK.public_key[by])
-		local sm = ACK[msg]
-		ZEN.assert(sm, "Signed message not found: "..msg)
-		ZEN.assert(dsa:verify(sm,ACK.signature[by]),
+		ZEN.assert(ACK[msg], "Signed message not found: "..msg)
+		ZEN.assert(ECDH.verify(ACK.public_key[by], ACK[msg], ACK.signature[by]),
 				   "The signature is not authentic")
 end)

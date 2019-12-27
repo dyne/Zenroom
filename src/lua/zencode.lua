@@ -160,7 +160,8 @@ function zencode:pick(what, obj)
    if obj then -- object provided by argument
 	  TMP = { data = obj,
 			  root = nil,
-			  schema = what }
+			  schema = what,
+			  valid = false }
 	  return(ZEN.OK)
    end
    local got
@@ -168,6 +169,7 @@ function zencode:pick(what, obj)
    ZEN.assert(got, "Cannot find '"..what.."' anywhere")
    TMP = { root = nil,
 		   data = got,
+		   valid = false,
 		   schema = what }
    assert(ZEN.OK)
    ZEN:ftrace("pick found "..what)
@@ -203,6 +205,7 @@ function zencode:pickin(section, what)
    ::found::
    TMP = { root = section,
 		   data = got,
+		   valid = false,
 		   schema = what }
    assert(ZEN.OK)
    ZEN:ftrace("pickin found "..what.." in "..section)
@@ -230,8 +233,9 @@ function zencode:validate(name, schema)
    ZEN:ftrace("validate "..name.. " with schema "..schema)
    local res = s(TMP.data) -- ignore root
    ZEN.assert(res, "ZEN:validate error: validation failed for "..name.." with schema "..schema)
-   TMP.valid = res -- overwrite
+   TMP.data = res -- overwrite
    assert(ZEN.OK)
+   TMP.valid = true
    ZEN:ftrace("validation passed for "..name.. " with schema "..schema)
 end
 
@@ -252,7 +256,7 @@ function zencode:ack_table(key,val)
    ZEN.assert(type(key) == 'string',"ZEN:table_add arg #1 is not a string")
    ZEN.assert(type(val) == 'string',"ZEN:table_add arg #2 is not a string")
    if not ACK[key] then ACK[key] = { } end
-   ACK[key][val] = TMP.valid
+   ACK[key][val] = TMP.data
 end
 
 ---
@@ -266,28 +270,26 @@ end
 -- @function ZEN:ack(name)
 -- @param name string key of the data object in TMP[name]
 function zencode:ack(name)
-   local obj = TMP.valid
-   ZEN.assert(obj, "No valid object found: ".. name)
+   ZEN.assert(TMP.data and TMP.valid, "No valid object found: ".. name)
    assert(ZEN.OK)
-   local t
+   local t = type(ACK[name])
    if not ACK[name] then -- assign in ACK the single object
-	  ACK[name] = obj
+	  ACK[name] = TMP.data
 	  goto done
    end
    -- ACK[name] already holds an object
-   t = type(ACK[name])
    -- not a table?
    if t ~= 'table' then -- convert single object to array
 	  ACK[name] = { ACK[name] }
-	  table.insert(ACK[name], obj)
+	  table.insert(ACK[name], TMP.data)
 	  goto done
    end
    -- it is a table already
    if isarray(ACK[name]) then -- plain array
-	  table.insert(ACK[name], obj)
+	  table.insert(ACK[name], TMP.data)
 	  goto done
    else -- associative map
-	  table.insert(ACK[name], obj) -- TODO: associative map insertion
+	  table.insert(ACK[name], TMP.data) -- TODO: associative map insertion
 	  goto done
    end
    ::done::
@@ -295,14 +297,13 @@ function zencode:ack(name)
 end
 
 function zencode:ackmy(name, object)
-   local obj = object or TMP[name]
+   local obj = object or TMP.data
    ZEN:trace("f   pushmy() "..name.." "..type(obj))
    ZEN.assert(ACK.whoami, "No identity specified")
    ZEN.assert(obj, "Object not found: ".. name)
    local me = ACK.whoami
    if not ACK[me] then ACK[me] = { } end
    ACK[me][name] = obj
-   if not object then tmp[name] = nil end
    assert(ZEN.OK)
 end
 
@@ -385,6 +386,7 @@ end
 --
 -- @function ZEN:import(object)
 -- @param object data element to be read
+-- @param secured block implicit conversion from untagget string
 -- @return object read
 function zencode:import(object, secured)
    ZEN.assert(object, "ZEN:import object is nil")
@@ -414,7 +416,7 @@ function zencode:import(object, secured)
 	  return O.from_string(object)
    end
    if not secured then
-	  ZEN:wtrace("import implicit conversion from string: " ..object)
+	  ZEN:wtrace("import implicit conversion from string ("..#object.." bytes)")
 	  return O.from_string(object)
    end
    error("Import secured to fail on untagged object",1)
@@ -471,10 +473,12 @@ function zencode:step(text)
 	  ZEN.assert(ZEN.machine:enter_when(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.."to When block")
       self.current_step = self.when_steps
       defs = self.current_step
+	  collectgarbage()
    elseif prefix == 'then'  then
 	  ZEN.assert(ZEN.machine:enter_then(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.." to Then block")
       self.current_step = self.then_steps
       defs = self.current_step
+	  collectgarbage()
    elseif prefix == 'and'   then
 	  ZEN.assert(ZEN.machine:enter_and(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.." to And block")
       defs = self.current_step

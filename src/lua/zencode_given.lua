@@ -26,22 +26,20 @@ Given("I am ''", function(name) ZEN:Iam(name) end)
 
 Given("I have a ''", function(name)
 		 ZEN:pick(name)
-		 TMP.valid = ZEN:import(TMP.data)
+		 TMP.valid = true
+		 TMP.data = ZEN:import(TMP.data, true)
 		 ZEN:ack(name)
 		 TMP = { }
 end)
 Given("I have my ''", function(name)
+		 ZEN.assert(ACK.whoami, "No identity specified, use: Given I am ...")
 		 ZEN:pickin(ACK.whoami, name)
-		 TMP.valid = ZEN:import(TMP.data)
+		 TMP.valid = true
+		 TMP.data = ZEN:import(TMP.data, true)
 		 ZEN:ack(name)
 		 TMP = { }
 end)
-Given("I have a valid ''", function(name)
-		 ZEN:pick(name)
-		 ZEN:validate(name)
-		 ZEN:ack(name)
-		 TMP = { }
-end)
+
 Given("I have my valid ''", function(name)
 		 ZEN.assert(ACK.whoami, "No identity specified, use: Given I am ...")
 		 ZEN:pickin(ACK.whoami, name)
@@ -50,14 +48,44 @@ Given("I have my valid ''", function(name)
 		 TMP = { }
 end)
 
+Given("I have a valid ''", function(name)
+		 ZEN:pick(name)
+		 ZEN:validate(name)
+		 ZEN:ack(name)
+		 TMP = { }
+end)
+Given("the '' is valid", function(name)
+		 ZEN:pick(name)
+		 ZEN:validate(name)
+		 ZEN:ack(name)
+		 TMP = { }
+end)
+
 Given("I have a '' inside ''", function(n, s)
 		 ZEN:pickin(s, n)
-		 TMP.valid = ZEN:import(TMP.data)
+		 TMP.valid = true
+		 TMP.data = ZEN:import(TMP.data, true)
+		 ZEN:ack(n)
+		 ZEN:ack(s) -- save it also in ACK.section
+		 TMP = { }
+end)
+Given("I have inside '' a ''", function(s, n)
+		 ZEN:pickin(s, n)
+		 TMP.valid = true
+		 TMP.data = ZEN:import(TMP.data, true)
 		 ZEN:ack(n)
 		 ZEN:ack(s) -- save it also in ACK.section
 		 TMP = { }
 end)
 
+
+Given("I have inside '' a valid ''", function(s, n)
+		 ZEN:pickin(s, n)
+		 ZEN:validate(n)
+		 ZEN:ack(n)
+		 ZEN:ack(s) -- save it also in ACK.section
+		 TMP = { }
+end)
 Given("I have a valid '' inside ''", function(n, s)
 		 ZEN:pickin(s, n)
 		 ZEN:validate(n)
@@ -67,17 +95,10 @@ Given("I have a valid '' inside ''", function(n, s)
 end)
 
 -- public keys for keyring arrays
-Given("I have a valid '' from ''", function(k, f)
-		 ZEN:pickin(f, k)
-		 ZEN:validate(k)
-		 ZEN:ack_table(k, f)
-		 TMP = nil
-end)
-
--- TODO: this enforces identity of schema with key name
-Given("the '' is valid", function(k)
-		 ZEN:validate(k)
-		 ZEN:ack(k)
-		 TMP = nil
+Given("I have a valid '' from ''", function(n, s)
+		 ZEN:pickin(s, n)
+		 ZEN:validate(n)
+		 ZEN:ack_table(n, s)
+		 TMP = { }
 end)
 
