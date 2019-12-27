@@ -83,7 +83,7 @@ contract = """Scenario 'coconut': "To run over the mobile wallet the first time 
 Given that I am known as 'identifier'
 When I create my new keypair
 Then print all data
-    """
+"""
 
 result = zenroom.zencode_exec(contract)
 print(result.stdout)
@@ -100,7 +100,6 @@ The zencode function accepts the following:
 Returns
 
  * ZenroomResult: The output is an object that holds two attributes `stdout` and `stderr`
- 
 
 ### ZENROOM SCRIPTS
 
@@ -108,9 +107,9 @@ Returns
 from zenroom import zenroom
 
 script = "print('Hello world')"
-stdout = zenroom.zenroom_exec(script=script)
+result = zenroom.zenroom_exec(script)
 
-print(output.stdout) # guess what
+print(result.stdout)
 ```
 
 The same arguments and the same result are applied as the `zencode` call.

@@ -51,7 +51,7 @@ def _zen_call(func, arguments):
     return result.get()
 
 
-def zencode_exec(script, keys=None, data=None, conf=None, verbosity=1):
+def zencode_exec(script, keys=None, data=None, conf='', verbosity=1):
 
     """Invoke Zenroom, capturing and returning the output as a byte string
     This function is the primary method we expose from this wrapper library,
@@ -99,11 +99,11 @@ def zenroom_exec_rng(script, random_seed, keys=None, data=None, conf=None, verbo
 
 
 def zencode_exec_rng(script, random_seed, keys=None, data=None, conf=None, verbosity=1):
-    args = dict(script=script,
+    args = dict(script=str(script),
                 conf=conf,
-                keys=keys,
-                data=data,
-                verbosity=verbosity,
+                keys=str(keys),
+                data=str(data),
+                verbosity=int(verbosity),
                 stdout_buf=None,
                 stderr_buf=None,
                 random_seed=random_seed)

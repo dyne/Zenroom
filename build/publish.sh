@@ -33,16 +33,19 @@ parse_version () {
 }
 
 publish_python () {
-	./python_build.sh
+#	./python_build.sh
+	cd ../bindings
+	wget https://sdk.dyne.org:4443/view/zenroom/job/zenroom-python/lastSuccessfulBuild/artifact/build/zenroom-python3.tar.gz
+	tar xzvf zenroom-python3.tar.gz  python3/zenroom/libs/Linux/
 	cd ../bindings/python3
-	python3 -m venv venv
+	python3.7 -m venv venv
 	activate_python
 	pip install --upgrade pip
 	pip install -e .
 	pip install wheel
 	pip install twine
-	python3 setup.py publish
-	deactivate
+	python3.7 setup.py publish
+#	deactivate
 }
 
 publish_javascript () {
@@ -56,14 +59,14 @@ publish_javascript () {
 	rm -rf emsdk
 }
 
-# parse_version
-# echo -e "Publishing ${OK}${VERSION}${NC} for ${OK}Python${NC} over pypi.org"
-# echo
+parse_version
+echo -e "Publishing ${OK}${VERSION}${NC} for ${OK}Python${NC} over pypi.org"
+echo
 
-# publish_python
-# cd $BUILD_PATH
+publish_python
+cd $BUILD_PATH
 
-# echo -e "Publishing ${OK}${VERSION}${NC} for ${OK}Javascript${NC} over npm"
-# echo
+echo -e "Publishing ${OK}${VERSION}${NC} for ${OK}Javascript${NC} over npm"
+echo
 
-# publish_javascript
+publish_javascript
