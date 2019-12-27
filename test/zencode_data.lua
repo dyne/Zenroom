@@ -9,6 +9,7 @@ DATA = [[
 ZEN:begin(3)
 ZEN:parse([[
 rule check version 1.0.0
+rule input untagged
 Given I have a 'inside' inside 'first'
 and I have a 'third'
 When I write 'first.inside' in 'test'
