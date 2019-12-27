@@ -5,25 +5,25 @@ import Zenroom from '../dist/lib/zenroom.js'
 const C = Zenroom()
 
 /* istanbul ignore next */
-const zenroomExec = (script, conf = null, keys = null, data = null, verbosity = 1) => {
+const zenroomExec = (script, conf = null, keys = null, data = null) => {
   C.then(Module => {
     Module.ccall(
       'zenroom_exec',
       'number',
-      ['string', 'string', 'string', 'string', 'number'],
-      [script, conf, keys, data, verbosity]
+      ['string', 'string', 'string', 'string'],
+      [script, conf, keys, data]
     )
   })
 }
 
 /* istanbul ignore next */
-const zencodeExec = (script, conf = null, keys = null, data = null, verbosity = 1) => {
+const zencodeExec = (script, conf = null, keys = null, data = null) => {
   C.then(Module => {
     Module.ccall(
       'zencode_exec',
       'number',
-      ['string', 'string', 'string', 'string', 'number'],
-      [script, conf, keys, data, verbosity]
+      ['string', 'string', 'string', 'string'],
+      [script, conf, keys, data]
     )
   })
 }
@@ -216,33 +216,6 @@ const zenroom = (function () {
   }
 
   /**
-   * Set the verbosity of the stderr messages outputted by the zenroom virtual machine
-   *
-   * As per now the set of accepted value:
-   *
-   * <ul>
-   * <li>1 = INFO</li>
-   * <li>2 = DEBUG</li>
-   * </ul>
-   *
-   * @example <caption>Example usage of `verbosity()`</caption>
-   * // returns zenroom
-   * import zenroom from 'zenroom'
-   * // or without ES6 syntax
-   * // const zenroom = require('zenroom').default
-   *
-   * const script = 'print("hello")'
-   * zenroom.script(script).verbosity(2).zenroom_exec()
-   *
-   * @param {number} verbosity
-   * @returns {object} the zenroom module
-   */
-  const verbosity = function (verbosity) {
-    self.verbosity = verbosity
-    return this
-  }
-
-  /**
    * Execute the zenroom vm (using the previously setted options)
    *
    * It is usually the last method of the chain, but like the other methods returns
@@ -261,7 +234,7 @@ const zenroom = (function () {
    * @returns {object} the zenroom module
    */
   const zenroom_exec = function () {
-    zenroomExec(self.script, self.conf, self.keys, self.data, self.verbosity)
+    zenroomExec(self.script, self.conf, self.keys, self.data)
     return this
   }
 
@@ -284,7 +257,7 @@ const zenroom = (function () {
    * @returns {object} the zenroom module
    */
   const zencode_exec = function () {
-    zencodeExec(self.script, self.conf, self.keys, self.data, self.verbosity)
+    zencodeExec(self.script, self.conf, self.keys, self.data)
     return this
   }
 
@@ -359,7 +332,6 @@ const zenroom = (function () {
     print(self.options.print || (text => console.log(text)))
     success(self.options.success || new Function()) // eslint-disable-line no-new-func
     error(self.options.error || new Function()) // eslint-disable-line no-new-func
-    verbosity(self.options.verbosity || 1)
 
     return this
   }
@@ -407,7 +379,6 @@ const zenroom = (function () {
     data,
     print,
     success,
-    verbosity,
     zenroom_exec,
     zencode_exec,
     error,
