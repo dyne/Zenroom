@@ -43,10 +43,11 @@ embed-lua:
 	@echo "Embedding all files in src/lua"
 	./build/embed-lualibs ${lua_embed_opts}
 	@echo "File generated: src/lualibs_detected.c"
-	@echo "Must commit to git if modified, see git diff."
 
-apply-patches:
-	${pwd}/build/apply-patches
+src/zen_ecdh_factory.c:
+	${pwd}/build/codegen_ecdh_factory.sh GOLDILOCKS
+
+apply-patches: src/zen_ecdh_factory.c
 
 # build targets for javascript (emscripten)
 include ${pwd}/build/javascript.mk
