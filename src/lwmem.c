@@ -49,7 +49,7 @@
  *
  * \note            This value can be a power of `2`. Usually alignment of `4` bytes fits to all processors.
  */
-#define LWMEM_ALIGN_NUM                 ((size_t)2)
+#define LWMEM_ALIGN_NUM                 ((size_t)4)
 
 #define LWMEM_MEMSET                    memset
 #define LWMEM_MEMCPY                    memcpy
