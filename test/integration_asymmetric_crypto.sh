@@ -5,9 +5,9 @@
     return 1
 }
 zen=($*)
-zen=${zen:-./src/zenroom-shared}
+zen=${zen:-./src/zenroom}
 # echo "using: $zen"
-curves=(ed25519 bls383 goldilocks secp256k1)
+curves=(goldilocks)
 secret="This is the secret message that is sent among people."
 ppl=(zora vuk mira darko)
 
@@ -17,12 +17,7 @@ tmp=`mktemp -d`
 generate() {
     for p in $ppl; do
         cat <<EOF | $zen > $tmp/$p-keys.json 2>/dev/null
-keys = ECDH.new('$curve')
-keys:keygen()
-keypair = JSON.encode({
-      public=keys:public():hex(),
-      private=keys:private():hex()})
-print(keypair)
+print( JSON.encode(map(ECDH.keygen(), hex)) )
 EOF
         cat <<EOF | $zen -k $tmp/$p-keys.json > $tmp/$p-envelop.json 2>/dev/null
 keys = JSON.decode(KEYS)
@@ -41,16 +36,16 @@ test_encrypt() {
                      > $tmp/from-$from-to-$to-cryptomsg.json 2>/dev/null
 keys = JSON.decode(KEYS)
 data = JSON.decode(DATA)
-recipient = ECDH.new('$curve')
-recipient:public(hex(data['pubkey']))
-sender = ECDH.new('$curve')
-sender:private(hex(keys['private']))
+recipient = { }
+recipient.public = hex(data.pubkey)
+sender = { }
+sender.private = hex(keys.private)
 iv = O.random(16)
 ciphermsg =
   { header =
-      url64(JSON.encode({ public = sender:public(),
+      url64(JSON.encode({ public = ECDH.pubgen(sender.private),
 	  	    		     iv = iv })) }
-session = sender:session(recipient)
+session = ECDH.session(sender.private, recipient.public)
 ciphermsg.text, ciphermsg.checksum =
     ECDH.aead_encrypt(session,
 	 str('$secret'), iv,
@@ -65,13 +60,13 @@ test_decrypt() {
     cat <<EOF | $zen -k $tmp/$to-keys.json -a $tmp/from-$from-to-$to-cryptomsg.json 2>/dev/null
 keys = JSON.decode(KEYS)
 data = JSON.decode(DATA)
-recipient = ECDH.new('$curve')
-recipient:private(hex(keys['private']))
-sender = ECDH.new('$curve')
+recipient = { }
+recipient.private = hex(keys.private)
+sender = { }
 -- header is the public key of sender
 decode = { header = JSON.decode(url64(data.header)) }
-sender:public(decode.header.public)
-session = recipient:session(sender)
+sender.public = decode.header.public
+session = ECDH.session(recipient.private, sender.public)
 decode.text, decode.checksum =
     ECDH.aead_decrypt(session, url64(data.text), decode.header.iv, data.header)
 print(decode.text:str())

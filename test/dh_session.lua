@@ -2,8 +2,6 @@ print ""
 print "= ECDH and ECP session tests"
 print ""
 
-ecdh = ECDH.new('bls383')
-
 g1 = ECP.generator()
 o = ECP.order()
 
@@ -17,14 +15,13 @@ sp1ecp = pk1 * sk2 -- ECP only
 sp2ecp = pk2 * sk1 -- ECP only
 assert(sp1ecp == sp2ecp, "Fail ECP session calculation (multiplication)")
 
-sp1ecpkdf = I.spy(ecdh:kdf(sp1ecp))
-sp2ecpkdf = I.spy(ecdh:kdf(sp2ecp))
+sp1ecpkdf = KDF(sp1ecp)
+sp2ecpkdf = KDF(sp2ecp)
 assert(sp1ecpkdf == sp2ecpkdf, "Fail KDF over ECP multiplication")
 
-assert(ecdh:kdf(pk1 * sk2) == ecdh:kdf(pk2 * sk1), "Fail KDF+ECPmul implicit transformation")
+assert(KDF(pk1 * sk2) == KDF(pk2 * sk1), "Fail KDF+ECPmul implicit transformation")
 
-hash = HASH.new('sha256')
-assert(ECDH.kdf(hash, pk1*sk2) == ECDH.kdf(hash, pk2 * sk1), "Fail KDF+ECPmul with explicit HASH")
+assert(KDF(pk1*sk2) == KDF(pk2 * sk1), "Fail KDF+ECPmul with explicit HASH")
 
 -- TODO: equal results by ECDH session and ECP multiplication?
 -- fails perhaps because of use of PAIR_G1mul?

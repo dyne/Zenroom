@@ -21,13 +21,25 @@ local hash = require'hash'
 -- when using facility functions, global hashers are created only once
 SHA256 = nil
 SHA512 = nil
-function sha256(data)
-   if SHA256==nil then SHA256 = hash.new('sha256') end -- optimization
-   return SHA256:process(data)
+local function init(bits)
+   local h
+   if bits == 256 or bits == 32 then
+	  if SHA256==nil then SHA256 = hash.new('sha256') end
+	  h = SHA256
+   elseif bits == 512 or bits == 64 then
+	  if SHA512==nil then SHA512 = hash.new('sha512') end
+	  h = SHA512
+   else
+	  error("HASH bits not supported: "..bits)
+   end
+   return h
 end
-function sha512(data)
-   if SHA512==nil then SHA512 = hash.new('sha512') end -- optimization
-   return SHA512:process(data)
+
+function sha256(data) return init(256):process(data) end
+function sha512(data) return init(512):process(data) end
+function KDF(data, bits)
+   local b = bits or 256
+   return init(b):kdf2(data)
 end
 
 return hash

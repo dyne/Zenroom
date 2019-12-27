@@ -39,6 +39,8 @@
 // @license AGPLv3
 // @copyright Dyne.org foundation 2017-2019
 
+#include <ecdh_support.h>
+
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
@@ -52,7 +54,6 @@
 #include <zen_memory.h>
 #include <zen_big.h>
 #include <zen_hash.h>
-
 
 /**
    Create a new hash object of a selected algorithm (sha256 or
@@ -182,14 +183,133 @@ static int hash_process(lua_State *L) {
 		return 0; }
 	return 1;
 }
+
+/**
+   Compute the HMAC of a message using a key. This method takes any
+   data and any key material to comput an HMAC of the same length of
+   the hash bytes of the keyring. This function works in accordance with
+   RFC2104.
+
+   @param key an octet containing the key to compute the HMAC
+   @param data an octet containing the message to compute the HMAC
+   @function keyring:hmac(key, data)
+   @return a new octet containing the computed HMAC or false on failure
+*/
+static int hash_hmac(lua_State *L) {
+	hash *h   = hash_arg(L,1); SAFE(h);
+	octet *k  = o_arg(L, 2);     SAFE(k);
+	octet *in = o_arg(L, 3);    SAFE(in);
+	// length defaults to hash bytes (SHA256 = 32 = sha256)
+	octet *out;
+	if(h->algo == _SHA256) {
+		out = o_new(L, SHA256+1); SAFE(out);
+		//       hash    m   k  outlen  out
+		if(!HMAC(SHA256, in, k, SHA256, out)) {
+			error(L, "%s: hmac (%u bytes) failed.", SHA256);
+			lua_pop(L, 1);
+			lua_pushboolean(L,0);
+		}
+	} else if(h->algo == _SHA512) {
+		out = o_new(L, SHA512+1); SAFE(out);
+		//       hash    m   k  outlen  out
+		if(!HMAC(SHA512, in, k, SHA512, out)) {
+			error(L, "%s: hmac (%u bytes) failed.", SHA512);
+			lua_pop(L, 1);
+			lua_pushboolean(L,0);
+		}
+	} else {
+		lerror(L, "HMAC is only supported for hash SHA256 or SHA512");
+		return 0;
+	}
+	return 1;
+}
+
+
+/**
+   Key Derivation Function (KDF2). Key derivation is used to
+   strengthen keys against bruteforcing: they impose a number of
+   costly computations to be iterated on the key. This function
+   generates a new key from an existing key applying an octet of key
+   derivation parameters.
+
+   @param hash initialized @{HASH} or @{ECDH} object
+   @param key octet of the key to be transformed
+   @function keyring:kdf2(key)
+   @return a new octet containing the derived key
+*/
+
+static int hash_kdf2(lua_State *L) {
+	hash *h = hash_arg(L,1); SAFE(h);
+	octet *in = o_arg(L, 2); SAFE(in);
+	// output keylen is length of hash
+	octet *out = o_new(L, h->len+0x0f); SAFE(out);
+	KDF2(h->len, in, NULL , h->len, out);
+	return 1;
+}
+
+
+/**
+   Password Based Key Derivation Function (PBKDF2). This function
+   generates a new key from an existing key applying a salt and number
+   of iterations.
+
+   @param key octet of the key to be transformed
+   @param salt octet containing a salt to be used in transformation
+   @param iterations[opt=1000] number of iterations to be applied
+   @param length[opt=key length] integer indicating the new length (default same as input key)
+   @function keyring:pbkdf2(key, salt, iterations, length)
+   @return a new octet containing the derived key
+
+   @see keyring:kdf2
+*/
+
+static int hash_pbkdf2(lua_State *L) {
+	hash *h = hash_arg(L,1); SAFE(h);
+	octet *k = o_arg(L, 2); SAFE(k);
+	int iter, keylen;
+	octet *s;
+	// take a table as argument with salt, iterations and length parameters
+	if(lua_type(L, 3) == LUA_TTABLE) {
+		lua_getfield(L, 3, "salt");
+		lua_getfield(L, 3, "iterations");
+		lua_getfield(L, 3, "length"); // -3
+		s = o_arg(L,-3); SAFE(s);
+		// default iterations 5000
+		iter = luaL_optinteger(L,-2, 5000);
+		keylen = luaL_optinteger(L,-1,k->len);
+	} else {
+		s = o_arg(L, 3); SAFE(s);
+		iter = luaL_optinteger(L, 4, 5000);
+		// keylen is length of input key
+		keylen = luaL_optinteger(L, 5, k->len);
+	}
+	octet *out = o_new(L, keylen); SAFE(out);
+
+	// TODO: OPTIMIZATION: reuse the initialized hash* structure in
+	// hmac->ehashit instead of milagro's
+        // TODO: according to RFC2898, s should have a size of 8
+        // c should be a positive integer
+	PBKDF2(h->len, k, s, iter, keylen, out);
+	return 1;
+}
 		
 int luaopen_hash(lua_State *L) {
 	const struct luaL_Reg hash_class[] = {
 		{"new",lua_new_hash},
+		{"hmac",hash_hmac},
+		{"kdf2", hash_kdf2},
+		{"kdf", hash_kdf2},
+		{"pbkdf2", hash_pbkdf2},
+		{"pbkdf", hash_pbkdf2},
 		{NULL,NULL}};
 	const struct luaL_Reg hash_methods[] = {
 		{"process",hash_process},
 		{"do",hash_process},
+		{"hmac",hash_hmac},
+		{"kdf2", hash_kdf2},
+		{"kdf", hash_kdf2},
+		{"pbkdf2", hash_pbkdf2},
+		{"pbkdf", hash_pbkdf2},
 		{"__gc", hash_destroy},
 		{NULL,NULL}
 	};

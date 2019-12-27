@@ -10,11 +10,6 @@ himem-tests = \
  ${1} test/constructs.lua && \
  ${1} test/cjson-test.lua
 
-## GC tests break memory management with umm
-# in particular steps (2)
-# ${1} test/gc.lua && \
-# ${1} test/calls.lua && \
-
 determinism-tests = \
 	test/deterministic_random_test.sh ${1}
 
@@ -36,13 +31,13 @@ lowmem-tests = \
 # from x/y coords.
 # ${1} test/ecp_bls383.lua && \
 # ${1} test/big_bls383.lua && \
+# ${1} test/ecdsa_vectors.lua && \
 
 crypto-tests = \
 	@${1} test/octet.lua && \
 	${1} test/octet_conversion.lua && \
 	${1} test/hash.lua && \
 	${1} test/ecdh.lua && \
-	${1} test/ecdsa_vectors.lua && \
 	${1} test/dh_session.lua && \
 	${1} test/ecdh_aes-gcm_vectors.lua && \
 	${1} test/ecp_generic.lua && \

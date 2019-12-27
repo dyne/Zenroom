@@ -17,7 +17,7 @@ print "= test octets and keyring saves in json DATA"
 cat <<EOF > /tmp/zenroom_temp_check.lua
 ecc = ECDH.keygen()
 right = str("$tstr")
-pk = ecc:public()
+pk = ecc.public
 dump = JSON.encode({teststr="$tstr",
                     pubkey=pk:base64(),
 	                test64=right:base64(),
@@ -36,7 +36,6 @@ echo "== checking import/export and hashes"
 cat <<EOF > /tmp/zenroom_temp_check.lua
 test = JSON.decode(DATA)
 assert(test.teststr == "$tstr")
-ecc = ECDH.new()
 left = str("$tstr")
 right = base64(test.test64)
 assert(left == right)
@@ -48,7 +47,7 @@ assert(sha512(left):base64() == test.testhash)
 assert(sha512(right):base64() == test.testhash)
 print "== check the pubkey"
 left = base64(test.pubkey)
-assert(ecc:checkpub(left))
+assert(ECDH.pubcheck(left))
 EOF
 
 grind \

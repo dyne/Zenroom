@@ -6,8 +6,6 @@ print()
 -- http://www.ieee802.org/1/files/public/docs2011/bn-randall-test-vectors-0511-v1.pdf
 
 function Test(t)
-   curve = ECDH.new('goldilocks')
-
    print ("Test vector: " .. t.name)
    out, tag_out = ECDH.aead_encrypt(hex(t.key), hex(t.msg), hex(t.iv), hex(t.header))
 

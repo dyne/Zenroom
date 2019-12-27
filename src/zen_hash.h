@@ -24,6 +24,9 @@
 #include <lua.h>
 #include <amcl.h>
 
+#define SHA256 32
+#define SHA512 64
+
 #define _SHA256 2
 #define _SHA384 3
 #define _SHA512 5

@@ -21,14 +21,12 @@ CONF.curve = CONF.curve or 'goldilocks'
 CONF.encoding = CONF.encoding or url64
 CONF.encoding_prefix = CONF.encoding_prefix or 'u64'
 
-local _ecdh = ECDH.new(CONF.curve) -- used for validation
-
 ZEN.add_schema({
 	  -- keypair (ECDH)
 	  public_key = function(obj)
 		 local o = obj.public_key or obj -- fix recursive schema check
 		 if type(o) == "string" then o = ZEN:import(o) end
-		 ZEN.assert(_ecdh:checkpub(o),
+		 ZEN.assert(ECDH.pubcheck(o),
 					"Public key is not a valid point on curve: "..CONF.curve)
 		 return o
 	  end,
@@ -52,8 +50,7 @@ ZEN.add_schema({
 -- generate keypair
 local function f_keygen()
    local kp
-   local ecdh = ECDH.new(CONF.curve)
-   kp = ecdh:keygen()
+   kp = ECDH.keygen()
    ZEN:pick('keypair', { public_key = kp.public,
 						 private_key = kp.private })
    ZEN:validate('keypair')
@@ -66,7 +63,7 @@ When("I encrypt the secret message '' with ''", function(msg, sec)
 		ZEN.assert(ACK[msg], "Data to encrypt not found: message")
 		ZEN.assert(ACK[sec], "Secret used to encrypt not found: "..sec)
 		-- KDF2 sha256 on all secrets
-		local secret = ECDH.kdf2(HASH.new('sha256'),ACK[sec])
+		local secret = KDF(ACK[sec])
 		ACK.secret_message = { header = ACK.header or 'empty',
 							   iv = O.random(32) }
 		ACK.secret_message.text, ACK.secret_message.checksum =
@@ -81,7 +78,7 @@ When("I decrypt the secret message with ''", function(sec)
 		ZEN.assert(ACK.secret_message,
 				   "Secret data to decrypt not found: secret message")
 
-        local secret = ECDH.kdf2(HASH.new('sha256'),ACK[sec])
+        local secret = KDF(ACK[sec])
         -- KDF2 sha256 on all secrets, this way the
         -- secret is always 256 bits, safe for direct aead_decrypt
         ACK.message = { header = ACK.secret_message.header }

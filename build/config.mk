@@ -4,8 +4,15 @@ pwd := $(shell pwd)
 mil := ${pwd}/build/milagro
 website := ${pwd}/docs/website/docs
 
-# --------
-# defaults
+# ------------
+# lua settings
+luasrc := ${pwd}/lib/lua53/src
+ldadd := ${pwd}/lib/lua53/src/liblua.a
+lua_embed_opts := ""
+lua_cflags := -DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE -DLUA_COMPAT_BITLIB
+
+# ----------------
+# zenroom defaults
 gcc := gcc
 ar := ar
 ranlib := ranlib
@@ -15,24 +22,17 @@ cflags := -O2 ${cflags_protection}
 musl := ${pwd}/build/musl
 platform := posix
 
-# ------------
-# lua settings
-luasrc := ${pwd}/lib/lua53/src
-ldadd := ${pwd}/lib/lua53/src/liblua.a
-lua_embed_opts := ""
-lua_cflags := -DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE -DLUA_COMPAT_BITLIB
-
 # ----------------
 # milagro settings
 rsa_bits := ""
-ecc_curves := ED25519,BLS383,GOLDILOCKS,SECP256K1
-milagro_cmake_flags := -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DBUILD_DOCS=OFF -DBUILD_BENCHMARKS=OFF -DBUILD_EXAMPLES=OFF -DWORD_SIZE=32 -DBUILD_PAILLIER=OFF -DBUILD_X509=OFF -DBUILD_WCC=OFF -DBUILD_MPIN=OFF -DAMCL_CURVE=${ecc_curves} -DAMCL_RSA=${rsa_bits} -DCMAKE_SHARED_LIBRARY_LINK_FLAGS="" -DC99=1 -DPAIRING_FRIENDLY_BLS383='BLS' -DCOMBA=1
+# other ecdh curves := ED25519,BLS383,SECP256K1 ...
+ecdh_curve := GOLDILOCKS
+ecp_curve  := BLS383
+milagro_cmake_flags := -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DBUILD_DOCS=OFF -DBUILD_BENCHMARKS=OFF -DBUILD_EXAMPLES=OFF -DWORD_SIZE=32 -DBUILD_PAILLIER=OFF -DBUILD_X509=OFF -DBUILD_WCC=OFF -DBUILD_MPIN=OFF -DAMCL_CURVE=${ecdh_curve},${ecp_curve} -DAMCL_RSA=${rsa_bits} -DCMAKE_SHARED_LIBRARY_LINK_FLAGS="" -DC99=1 -DPAIRING_FRIENDLY_BLS383='BLS' -DCOMBA=1
 milib := ${pwd}/lib/milagro-crypto-c/lib
-ldadd += ${milib}/libamcl_curve_ED25519.a
 ldadd += ${milib}/libamcl_curve_BLS383.a
 ldadd += ${milib}/libamcl_pairing_BLS383.a
 ldadd += ${milib}/libamcl_curve_GOLDILOCKS.a
-ldadd += ${milib}/libamcl_curve_SECP256K1.a
 ldadd += ${milib}/libamcl_core.a
 
 # ------------------------
