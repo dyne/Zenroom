@@ -76,6 +76,7 @@ int zconf_seccomp = 0;
 char *zconf_rngseed_str = NULL;
 int   zconf_rngseed_len = 0;
 mmtype zconf_memmg = SYS;
+int  zconf_memwipe = 0;
 
 int zen_conf_parse(const char *configuration) {
 	(void)stb__strchr;            // avoid compiler warnings

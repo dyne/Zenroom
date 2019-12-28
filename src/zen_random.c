@@ -55,10 +55,14 @@
 #include <randombytes.h>
 
 extern zenroom_t *Z;
+extern zen_mem_t *MEM;
+// small buffer pre-filled with random, used at runtime by some
+// internal functions esp. to wipe out memory (lstring.c)
+char *runtime_random256 = NULL;
 
 void* rng_alloc() {
 	HERE();
-	RNG *rng = (RNG*)zen_memory_alloc(sizeof(csprng));
+	RNG *rng = (RNG*)(*MEM->malloc)(sizeof(csprng));
 	if(!rng) {
 		lerror(NULL, "Error allocating new random number generator in %s",__func__);
 		return NULL; }
@@ -71,7 +75,7 @@ void* rng_alloc() {
 			RAND_seed(rng, Z->random_seed_len, Z->random_seed);
 			// Z->random_generator is allocated only once and freed in
 			// zen_teardown, lasts for the whole execution
-			Z->random_generator = zen_memory_alloc(sizeof(csprng)+8);
+			Z->random_generator = (*MEM->malloc)(sizeof(csprng)+8);
 			memcpy(Z->random_generator, rng, sizeof(csprng));
 		} else {
 			memcpy(rng, Z->random_generator, sizeof(csprng));
@@ -79,7 +83,7 @@ void* rng_alloc() {
 #ifndef ARCH_CORTEX
 	} else {
 		// gather system random using randombytes()
-		char *tmp = zen_memory_alloc(256);
+		char *tmp = (*MEM->malloc)(256);
 		randombytes(tmp,252);
 		// using time() from milagro
 		unsign32 ttmp = (unsign32)time(NULL);
@@ -88,7 +92,7 @@ void* rng_alloc() {
 		tmp[254] = (ttmp >>  8) & 0xff;
 		tmp[255] =  ttmp & 0xff;
 		RAND_seed(rng,256,tmp);
-		zen_memory_free(tmp);
+		(*MEM->free)(tmp);
 #endif
 	}
 	return(rng);
@@ -132,4 +136,13 @@ void zen_add_random(lua_State *L) {
 	lua_getglobal(L, "_G");
 	luaL_setfuncs(L, rng_base, 0);
 	lua_pop(L, 1);
+
+	{ // pre-fill runtime_random
+		// used in
+		register int i;
+		runtime_random256 = system_alloc(256);
+		char *p = runtime_random256;
+		for(i=0;i<256;i++,p++) *p = RAND_byte(Z->random_generator);
+	}
+
 }

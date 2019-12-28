@@ -71,6 +71,7 @@ extern int zconf_seccomp;
 
 #endif
 
+extern zenroom_t *Z;
 
 #ifndef LIBRARY
 
@@ -239,12 +240,11 @@ int main(int argc, char **argv) {
 	if(interactive) {
 		////////////////////////////////////
 		// start an interactive repl console
-		zenroom_t *cli;
-		cli = zen_init(
-				conffile[0]?conffile:NULL,
-				keys[0]?keys:NULL,
-				data[0]?data:NULL);
-		lua_State *L = (lua_State*)cli->lua;
+		zen_init(
+			conffile[0]?conffile:NULL,
+			keys[0]?keys:NULL,
+			data[0]?data:NULL);
+		lua_State *L = (lua_State*)Z->lua;
 
 		// print function
 		zen_add_function(L, repl_flush, "flush");
@@ -252,10 +252,10 @@ int main(int argc, char **argv) {
 		zen_add_function(L, repl_write, "write");
 		int res;
 		if(verbosity) notice(NULL, "Interactive console, press ctrl-d to quit.");
-		res = repl_loop(cli);
+		res = repl_loop(Z);
 		if(res)
 			// quits on ctrl-D
-			zen_teardown(cli);
+			zen_teardown(Z);
 		return(res);
 	}
 
@@ -279,8 +279,7 @@ int main(int argc, char **argv) {
 	} else
 		if(verbosity) act(NULL, "using default configuration");
 
-	zenroom_t *Z;
-	set_debug(verbosity);
+	// set_debug(verbosity);
 	Z = zen_init(
 			(conffile[0])?conffile:NULL,
 			(keys[0])?keys:NULL,

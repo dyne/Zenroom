@@ -269,6 +269,10 @@ void luaE_freethread (lua_State *L, lua_State *L1) {
   luaM_free(L, l);
 }
 
+#include "../../milagro-crypto-c/include/amcl.h"
+#include "../../../src/zenroom.h"
+
+extern zenroom_t *Z;
 
 LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud) {
   int i;
@@ -286,7 +290,11 @@ LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud) {
   g->frealloc = f;
   g->ud = ud;
   g->mainthread = L;
-  g->seed = 0x42424242; // constant 
+  // g->seed = 0x42424242; // constant uint32 to be overwritten
+  g->seed = RAND_byte(Z->random_generator)
+      | (uint32_t) RAND_byte(Z->random_generator) << 8
+      | (uint32_t) RAND_byte(Z->random_generator) << 16
+      | (uint32_t) RAND_byte(Z->random_generator) << 24;
   g->gcrunning = 0;  /* no GC while building state */
   g->GCestimate = 0;
   g->strt.size = g->strt.nuse = 0;

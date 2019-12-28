@@ -87,6 +87,7 @@ int EXITCODE = 1; // start from error state
 extern char *zconf_rngseed_str;
 extern int   zconf_rngseed_len;
 extern mmtype zconf_memmg;
+extern int  zconf_memwipe;
 
 static int zen_lua_panic (lua_State *L) {
 	lua_writestringerror("PANIC: unprotected error in call to Lua API (%s)\n",
@@ -95,21 +96,6 @@ static int zen_lua_panic (lua_State *L) {
 }
 
 static int zen_init_pmain(lua_State *L) { // protected mode init
-	// create the zenroom_t global context
-	Z = (zenroom_t*)system_alloc(sizeof(zenroom_t));
-	Z->lua = L;
-	Z->mem = MEM;
-	Z->stdout_buf = NULL;
-	Z->stdout_pos = 0;
-	Z->stdout_len = 0;
-	Z->stderr_buf = NULL;
-	Z->stderr_pos = 0;
-	Z->stderr_len = 0;
-	Z->userdata = NULL;
-	Z->errorlevel = get_debug();
-	Z->random_generator = NULL;
-	Z->random_seed = NULL;
-	Z->random_seed_len = 0;
 
 	//Set zenroom context as a global in lua
 	//this will be freed on lua_close
@@ -132,7 +118,9 @@ static int zen_init_pmain(lua_State *L) { // protected mode init
 	// load our own openlibs and extensions
 	zen_add_io(L);
 	zen_add_parse(L);
+
 	zen_add_random(L);
+
 	zen_require_override(L,0);
 	if(!zen_lua_init(L)) {
 		error(L,"%s: %s", __func__, "initialisation of lua scripts failed");
@@ -141,10 +129,10 @@ static int zen_init_pmain(lua_State *L) { // protected mode init
 	return(LUA_OK);
 }
 
+// initializes globals: MEM, Z, L (in this order)
+// zen_init_pmain is the Lua routine executed in protected mode
 zenroom_t *zen_init(const char *conf, char *keys, char *data) {
-	(void) conf;
-	lua_State *L = NULL;
-	if(conf) zen_conf_parse(conf);
+	if(conf) zen_conf_parse(conf); // minimal stb parsing
 
 	switch(zconf_memmg) {
 	case LW:
@@ -158,26 +146,25 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 		// TODO: JE for jemalloc
 	}
 
-	L = lua_newstate(zen_memory_manager, MEM);
-	if(!L) {
-		error(L,"%s: %s", __func__, "Lua newstate creation failed");
-		return NULL;
-	}
-	lua_atpanic(L, &zen_lua_panic); // as done in lauxlib luaL_newstate
-	lua_pushcfunction(L, &zen_init_pmain);  /* to call in protected mode */
-	lua_pushinteger(L, 0);  /* 1st argument */
-	lua_pushlightuserdata(L, NULL); /* 2nd argument */
-	int status = lua_pcall(L,2,1,0);
-	// int status = zen_init_pmain(L);
-	if(status != LUA_OK) {
-		error(L,"%s: %s (%u)", __func__, "Lua initialization failed",status);
-		return NULL;
-	}
+	// create the zenroom_t global context
+	Z = (zenroom_t*)(*MEM->malloc)(sizeof(zenroom_t));
+	Z->mem = MEM;
+	Z->stdout_buf = NULL;
+	Z->stdout_pos = 0;
+	Z->stdout_len = 0;
+	Z->stderr_buf = NULL;
+	Z->stderr_pos = 0;
+	Z->stderr_len = 0;
+	Z->userdata = NULL;
+	Z->errorlevel = get_debug();
+	Z->random_generator = NULL;
+	Z->random_seed = NULL;
+	Z->random_seed_len = 0;
 
 	// use RNGseed from configuration if present (deterministic mode)
 	if(zconf_rngseed_str && zconf_rngseed_len > 0) {
 		if(zconf_rngseed_str[0] == '0' && zconf_rngseed_str[1] == 'x') {
-			Z->random_seed = zen_memory_alloc(zconf_rngseed_len / 2);
+			Z->random_seed = malloc(zconf_rngseed_len / 2);
 			Z->random_seed_len = hex2buf(Z->random_seed, &zconf_rngseed_str[2]);
 		}
 		// free buffer allocated in zen_config
@@ -186,22 +173,39 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	// initialize the random generator
 	Z->random_generator = rng_alloc();
 
-	lua_gc(L, LUA_GCCOLLECT, 0);
-	lua_gc(L, LUA_GCCOLLECT, 0);
+	Z->lua = lua_newstate(zen_memory_manager, MEM);
+	if(!Z->lua) {
+		error(Z->lua,"%s: %s", __func__, "Lua newstate creation failed");
+		return NULL;
+	}
+
+	lua_atpanic(Z->lua, &zen_lua_panic); // as done in lauxlib luaL_newstate
+	lua_pushcfunction(Z->lua, &zen_init_pmain);  /* to call in protected mode */
+	lua_pushinteger(Z->lua, 0);  /* 1st argument */
+	lua_pushlightuserdata(Z->lua, NULL); /* 2nd argument */
+	int status = lua_pcall(Z->lua,2,1,0);
+	// int status = zen_init_pmain(L);
+	if(status != LUA_OK) {
+		error(Z->lua,"%s: %s (%u)", __func__, "Lua initialization failed",status);
+		return NULL;
+	}
+
+	lua_gc(Z->lua, LUA_GCCOLLECT, 0);
+	lua_gc(Z->lua, LUA_GCCOLLECT, 0);
 
 	// uncomment to restrict further requires
 	// zen_require_override(L,1);
 
 	// load arguments if present
 	if(data) {
-		func(L, "declaring global: DATA");
-		zen_setenv(L,"DATA",data);
+		func(Z->lua, "declaring global: DATA");
+		zen_setenv(Z->lua,"DATA",data);
 	}
 	if(keys) {
-		func(L, "declaring global: KEYS");
-		zen_setenv(L,"KEYS",keys);
+		func(Z->lua, "declaring global: KEYS");
+		zen_setenv(Z->lua,"KEYS",keys);
 	}
-	return Z;
+	return(Z);
 }
 
 
@@ -211,7 +215,7 @@ void zen_teardown(zenroom_t *Z) {
 
 	// stateful RNG instance for deterministic mode
 	if(Z->random_generator) {
-		zen_memory_free(Z->random_generator);
+		system_free(Z->random_generator);
 		Z->random_generator = NULL;
 	}
 	// save pointers inside Z to free after L and Z
@@ -254,7 +258,7 @@ int zen_exec_zencode(zenroom_t *Z, const char *script) {
 		fflush(stderr);
 		return ret;
 	}
-	notice(L, "Script executed:\n%s",script);
+	notice(L, "Script successfully executed:\n\n%s",script);
 	return 0;
 }
 
@@ -276,6 +280,7 @@ int zen_exec_script(zenroom_t *Z, const char *script) {
 		fflush(stderr);
 		return ret;
 	}
+	notice(L, "Script successfully executed:\n\n%s",script);
 	return 0;
 }
 
