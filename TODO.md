@@ -11,6 +11,32 @@ for position, for instance ECP multiplication needs to have the BIG
 number always as second argument. Instead of returning error we should
 check the type and reposition the arguments accordingly.
 
+## XML encode/decode
+
+- https://github.com/n1tehawk/LuaXML
+- https://github.com/Cluain/Lua-Simple-XML-Parser
+- https://github.com/Phrogz/SLAXML (also supports DOM)
+- https://github.com/manoelcampos/xml2lua
+
+
+## Table iteration
+
+so far done in lua, could be optimized in C?
+
+```c
+lua_getglobal(L, "level");
+lua_pushnil(L);
+
+while(lua_next(L, -2)) {  // <== here is your mistake
+    if(lua_isnumber(L, -1)) {
+        int i = (int)lua_tonumber(L, -1);
+        //use number
+    }
+    lua_pop(L, 1);
+}
+lua_pop(L, 1);
+```
+
 ## Multi Part Computing
 
 this is the best introduction into the mechanism of secure multi party
