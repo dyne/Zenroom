@@ -2,4 +2,5 @@ Scenario coconut: count petition
 Given that I have a valid 'petition'
 and I have a valid 'petition tally'
 When I count the petition results
-Then print the 'results'
+Then print the 'petition results'
+and print as 'string' the 'uid' inside 'petition'

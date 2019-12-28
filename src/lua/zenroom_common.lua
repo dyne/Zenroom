@@ -245,3 +245,17 @@ function set_rule(text)
    else act(text) end
    return res
 end
+
+-- assert all values in table are converted to zenroom types
+-- used in zencode when transitioning out of given memory
+function zenguard(tbl)
+   for k,v in next,tbl,nil do
+	  if luatype(v) == 'table' then
+		 zenguard(v)
+	  else
+		 ZEN.assert
+		 (iszen(type(v)),
+		  "Variable "..k.." has unconverted value type: "..type(v))
+	  end
+   end
+end

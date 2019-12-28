@@ -17,7 +17,6 @@
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 -- make sure relevant defaults are there
-CONF.curve = CONF.curve or 'goldilocks'
 CONF.encoding = CONF.encoding or url64
 CONF.encoding_prefix = CONF.encoding_prefix or 'u64'
 
@@ -27,7 +26,7 @@ ZEN.add_schema({
 		 local o = obj.public_key or obj -- fix recursive schema check
 		 if type(o) == "string" then o = ZEN:import(o) end
 		 ZEN.assert(ECDH.pubcheck(o),
-					"Public key is not a valid point on curve: "..CONF.curve)
+					"Public key is not a valid point on curve")
 		 return o
 	  end,
       keypair = function(obj)

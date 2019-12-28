@@ -29,33 +29,34 @@ end)
 
 Then("print all data", function()
 		OUT = ACK
-		OUT.whoami = nil
 end)
 Then("print my data", function() ZEN:Iam() -- sanity checks
-		OUT[ACK.whoami] = ACK
-		OUT[ACK.whoami].whoami = nil
+		OUT[WHO] = ACK
 end)
 Then("print all my data", function() ZEN:Iam() 
-		OUT[ACK.whoami] =
-		ACK OUT[ACK.whoami].whoami = nil end)
+		OUT[WHO] = ACK
+end)
 Then("print my ''", function(obj) ZEN:Iam()
 		ZEN.assert(ACK[obj], "Data not found in ACK: "..obj)
-		if not OUT[ACK.whoami] then OUT[ACK.whoami] = { } end
-		OUT[ACK.whoami][obj] = ACK[obj]
+		if not OUT[WHO] then OUT[WHO] = { } end
+		OUT[WHO][obj] = ACK[obj]
 end)
 
 Then("print as '' my ''", function(conv,obj)		ZEN:Iam()
 		ZEN.assert(ACK[obj], "My data: "..obj.." not found to print: "..conv)
-		OUT[ACK.whoami] = { draft = ZEN:export(ACK[obj], conv) }
+		OUT[WHO] = { draft = ZEN:export(ACK[obj], conv) }
 end)
 Then("print my '' as ''", function(obj,conv)		ZEN:Iam()
 		ZEN.assert(ACK[obj], "My data: "..obj.." not found to print: "..conv)
-		OUT[ACK.whoami] = { draft = ZEN:export(ACK[obj], conv) }
+		OUT[WHO] = { draft = ZEN:export(ACK[obj], conv) }
 end)
 
 Then("print the ''", function(key)
-		ZEN.assert(ACK[key], "Data to print not found: "..key)
-		OUT[key] = ACK[key] end)
+		if not OUT[key] then
+		   ZEN.assert(ACK[key], "Data to print not found: "..key)
+		   OUT[key] = ACK[key]
+		end
+end)
 
 Then("print as '' the ''", function(conv, obj) OUT[obj] = ZEN:export(ACK[obj], conv) end)
 Then("print the '' as ''", function(obj, conv) OUT[obj] = ZEN:export(ACK[obj], conv) end)

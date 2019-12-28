@@ -86,6 +86,7 @@ TMP = TMP or { } -- Given processing, temp buffer for ack*->validate->push*
 ACK = ACK or { } -- When processing,  destination for push*
 OUT = OUT or { } -- print out
 AST = AST or { } -- AST of parsed Zencode
+WHO = nil
 
 -- Zencode init traceback
 _G['ZEN_traceback'] = "Zencode traceback:\n"
@@ -110,21 +111,21 @@ end
 -- to structures contained under this name.
 --
 -- @function ZEN:Iam(name)
--- @param name own name to be saved in ACK.whoami
+-- @param name own name to be saved in WHO
 function zencode:Iam(name)
    if name then
-	  ZEN.assert(not ACK.whoami, "Identity already defined in ACK.whoami")
+	  ZEN.assert(not WHO, "Identity already defined in WHO")
 	  ZEN.assert(type(name) == "string", "Own name not a string")
-	  ACK.whoami = name
+	  WHO = name
    else
-	  ZEN.assert(ACK.whoami, "No identity specified in ACK.whoami")
+	  ZEN.assert(WHO, "No identity specified in WHO")
    end
    assert(ZEN.OK)
 end
 
 
 -- local function used inside ZEN:pick*
--- try obj.*.what (TODO: exclude KEYS and ACK.whoami)
+-- try obj.*.what (TODO: exclude KEYS and WHO)
 local function inside_pick(obj, what)
    ZEN.assert(obj, "ZEN:pick object is nil")
    -- ZEN.assert(I.spy(type(obj)) == "table", "ZEN:pick object is not a table")
@@ -299,9 +300,9 @@ end
 function zencode:ackmy(name, object)
    local obj = object or TMP.data
    ZEN:trace("f   pushmy() "..name.." "..type(obj))
-   ZEN.assert(ACK.whoami, "No identity specified")
+   ZEN.assert(WHO, "No identity specified")
    ZEN.assert(obj, "Object not found: ".. name)
-   local me = ACK.whoami
+   local me = WHO
    if not ACK[me] then ACK[me] = { } end
    ACK[me][name] = obj
    assert(ZEN.OK)
@@ -473,12 +474,10 @@ function zencode:step(text)
 	  ZEN.assert(ZEN.machine:enter_when(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.."to When block")
       self.current_step = self.when_steps
       defs = self.current_step
-	  collectgarbage()
    elseif prefix == 'then'  then
 	  ZEN.assert(ZEN.machine:enter_then(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.." to Then block")
       self.current_step = self.then_steps
       defs = self.current_step
-	  collectgarbage()
    elseif prefix == 'and'   then
 	  ZEN.assert(ZEN.machine:enter_and(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.." to And block")
       defs = self.current_step
@@ -511,6 +510,7 @@ function zencode:step(text)
 	  exitcode(1)
 	  assert(ZEN.OK)
    end
+
    -- nothing further to parse
    if not defs then return false end
    -- TODO: optimize and write a faster function in C
@@ -540,6 +540,7 @@ function zencode:step(text)
 					  { id = self.id,
 						args = args,
 						source = text,
+						section = strtok(text)[1]:lower(),
 						hook = func       })
 		 match = true
 	  end
@@ -554,6 +555,7 @@ function zencode:step(text)
    if not match then
 	  warn("Ignored unknown zencode line: "..text)
    end
+
    return true
 end
 
@@ -622,6 +624,19 @@ function zencode:run()
    -- EXEC zencode
    for i,x in sort_ipairs(self.matches) do
 	  ZEN:trace(x.source)
+
+	  -- HEAP integrity guard
+	  if CONF.heapguard then
+		 if x.section == 'then' or x.section == 'when' then
+			-- delete IN memory
+			IN.KEYS = { }
+			IN = { }
+			collectgarbage'collect'
+			-- guard ACK's contents on section switch
+			zenguard(ACK)
+		 end
+	  end
+
 	  ZEN.OK = true
 	  exitcode(0)
       local ok, err = pcall(x.hook,table.unpack(x.args))
@@ -637,9 +652,7 @@ function zencode:run()
 	  if CONF.output.versioning == true then
 		 OUT.zenroom = { }
 		 OUT.zenroom.version = VERSION.original
-		 OUT.zenroom.curve = CONF.curve
 		 OUT.zenroom.scenario = ZEN.scenario
-		 OUT.zenroom.encoding = CONF.output.encoding.name
 	  end
 	  ZEN:trace("<<< Encoding { OUT } to "..CONF.output.format.name)
 	  print(CONF.output.format.fun(OUT))
@@ -671,10 +684,6 @@ function zencode.assert(condition, errmsg)
    ZEN.OK = false
    exitcode(1);
    error(errmsg, 3)
-   -- print ''
-   -- error(errmsg) -- prints zencode backtrace
-   -- print ''
-   -- assert(false, "Execution aborted.")
 end
 
 _G["Given"] = function(text, fn)

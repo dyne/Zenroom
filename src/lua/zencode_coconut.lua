@@ -109,7 +109,7 @@ ZEN.add_schema({
 				  s = get(obj, 's', ECP.new) } end,
 })
 When("I create the credential signature", function()
-		ZEN.assert(ACK.whoami, "Issuer is not known")
+		ZEN.assert(WHO, "Issuer is not known")
         ZEN.assert(ACK.credential_request, "No valid signature request found.")
         ZEN.assert(ACK.issuer_keypair.issuer_sign, "No valid issuer signature keys found.")
         ACK.credential_signature =
@@ -183,14 +183,16 @@ ZEN.add_schema({
 		 if type(obj.vkeys) == 'table' then res.vkeys = ZEN:valid('verifier',obj.vkeys) end
 		 if type(obj.list) == 'table' then
 			res.list = { }
-			for k,v in sort_ipairs(obj.list) do res.list[k] = true end
+			for k,v in sort_ipairs(obj.list) do
+			   table.insert(res.list,ZEN:import(v))
+			end
 		 end
 		 return res
 	  end,
 	 petition_signature = function(obj)
 		return { proof = ZEN:valid('credential_proof',obj.proof),
 				 uid_signature = get(obj, 'uid_signature', ECP.new),
-				 uid_petition = obj['uid_petition'] }
+				 uid_petition = get(obj, 'uid_petition') }
 	 end,
 	 
 	 petition_tally = function(obj)
@@ -275,7 +277,8 @@ When("the petition signature is not a duplicate", function()
 		   ACK.petition.list[k] = true
 		else
 		   ACK.petition.list = { }
-		   ACK.petition.list[k] = true
+		   table.insert(ACK.petition.list,
+						get(ACK.petition_signature, 'uid_signature', ECP.new))
 		end
 end)
 
@@ -314,6 +317,6 @@ When("I count the petition results", function()
 		ZEN.assert(ACK.petition_tally, "Tally not found")
 		ZEN.assert(ACK.petition_tally.uid == ACK.petition.uid,
 				   "Tally does not correspond to petition")
-		ACK.results = COCONUT.count_signatures_petition(
-		   ACK.petition.scores, ACK.petition_tally)
+		OUT.petition_results = COCONUT.count_signatures_petition(
+		   ACK.petition.scores, ACK.petition_tally).pos
 end)

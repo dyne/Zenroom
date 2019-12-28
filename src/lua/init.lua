@@ -71,7 +71,6 @@ _G["CONF"] = {
    -- beware this choice affects only the ECDH object
    -- and ECDH public keys cannot function as ECP
    -- because of IANA 7303
-   curve = 'goldilocks',
    verbosity = 1,
    input = { encoding = get_encoding('url64'),
 			 format = get_format('json'),
@@ -79,7 +78,8 @@ _G["CONF"] = {
    output = { encoding = get_encoding('url64'),
 			  format = get_format('json'),
 			  versioning = false },
-   parser = { strict_match = true }
+   parser = { strict_match = true },
+   heapguard = true
 }
 
 -- encoding base64url (RFC4648) is the fastest and most portable in zenroom

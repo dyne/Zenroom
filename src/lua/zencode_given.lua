@@ -32,8 +32,8 @@ Given("I have a ''", function(name)
 		 TMP = { }
 end)
 Given("I have my ''", function(name)
-		 ZEN.assert(ACK.whoami, "No identity specified, use: Given I am ...")
-		 ZEN:pickin(ACK.whoami, name)
+		 ZEN.assert(WHO, "No identity specified, use: Given I am ...")
+		 ZEN:pickin(WHO, name)
 		 TMP.valid = true
 		 TMP.data = ZEN:import(TMP.data, CONF.input.tagged)
 		 ZEN:ack(name)
@@ -41,8 +41,8 @@ Given("I have my ''", function(name)
 end)
 
 Given("I have my valid ''", function(name)
-		 ZEN.assert(ACK.whoami, "No identity specified, use: Given I am ...")
-		 ZEN:pickin(ACK.whoami, name)
+		 ZEN.assert(WHO, "No identity specified, use: Given I am ...")
+		 ZEN:pickin(WHO, name)
 		 ZEN:validate(name)
 		 ZEN:ack(name)
 		 TMP = { }
