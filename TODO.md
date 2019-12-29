@@ -18,6 +18,11 @@ check the type and reposition the arguments accordingly.
 - https://github.com/Phrogz/SLAXML (also supports DOM)
 - https://github.com/manoelcampos/xml2lua
 
+## memory managers
+
+- https://github.com/emeryberger/Malloc-Implementations
+- ftp://gee.cs.oswego.edu/pub/misc/malloc.c excellent
+- google perftools
 
 ## Table iteration
 
