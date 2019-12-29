@@ -65,7 +65,7 @@ include ${pwd}/build/osx.mk
 include ${pwd}/build/docker.mk
 
 # experimental target for xtensa embedded boards
-esp32: apply-patches lua53 milagro
+esp32: apply-patches milagro lua53
 	CC=${pwd}/build/xtensa-esp32-elf/bin/xtensa-esp32-elf-${gcc} \
 	LD=${pwd}/build/xtensa-esp32-elf/bin/xtensa-esp32-elf-ld \
 	CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \

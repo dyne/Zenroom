@@ -1,4 +1,4 @@
-osx: apply-patches lua53 milagro embed-lua
+osx: apply-patches milagro lua53 embed-lua
 	CC=${gcc} LD=${ld} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src osx
 	@cp -v ${pwd}/src/zenroom.command ${pwd}/build
@@ -6,7 +6,7 @@ osx: apply-patches lua53 milagro embed-lua
 osx-debug: cflags := -O1 -ggdb ${cflags_protection} -DDEBUG=1
 osx-debug: osx
 
-osx-python3: apply-patches lua53 milagro embed-lua
+osx-python3: apply-patches milagro lua53 embed-lua
 	swig -python -py3 ${pwd}/build/swig.i
 	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c \
 		-o src/zen_python.o
@@ -14,7 +14,7 @@ osx-python3: apply-patches lua53 milagro embed-lua
 		make -C src python
 	@mkdir -p ${pwd}/build/python3 && cp -v ${pwd}/src/_zenroom.so ${pwd}/build/python3
 
-osx-go: apply-patches lua53 milagro embed-lua
+osx-go: apply-patches milagro lua53 embed-lua
 	swig -go -cgo -intgosize 32 ${pwd}/build/swig.i
 	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c -o src/zen_go.o
 	CC=${gcc} LD=${ld} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
@@ -35,7 +35,7 @@ ios-armv7: SDK := $(shell xcrun --sdk iphoneos --show-sdk-path 2>/dev/null)
 ios-armv7: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM -DARCH_OSX
 ios-armv7: ldflags := -lm
 ios-armv7: platform := ios
-ios-armv7: apply-patches lua53 milagro embed-lua ios-lib
+ios-armv7: apply-patches milagro lua53 embed-lua ios-lib
 
 ios-arm64: ARCH := arm64
 ios-arm64: OS := iphoneos
@@ -47,7 +47,7 @@ ios-arm64: SDK := $(shell xcrun --sdk iphoneos --show-sdk-path 2>/dev/null)
 ios-arm64: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM -DARCH_OSX
 ios-arm64: ldflags := -lm
 ios-arm64: platform := ios
-ios-arm64: apply-patches lua53 milagro embed-lua ios-lib
+ios-arm64: apply-patches milagro lua53 embed-lua ios-lib
 
 ios-sim: ARCH := x86_64
 ios-sim: OS := iphonesimulator
@@ -59,7 +59,7 @@ ios-sim: SDK := $(shell xcrun --sdk iphonesimulator --show-sdk-path 2>/dev/null)
 ios-sim: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM -DARCH_OSX
 ios-sim: ldflags := -lm
 ios-sim: platform := ios
-ios-sim: apply-patches lua53 milagro embed-lua ios-lib
+ios-sim: apply-patches milagro lua53 embed-lua ios-lib
 
 ios-fat:
 	lipo -create build/zenroom-ios-x86_64.a build/zenroom-ios-arm64.a build/zenroom-ios-armv7.a -output build/zenroom-ios.a
