@@ -20,6 +20,25 @@
 -- GIVEN
 
 Given("nothing", function() ZEN.assert(not DATA and not KEYS, "Unused data passed as input") end)
+Given("all data", function()
+		 ZEN.assert(CONF.input.encoding.fun, "No input encoding rule found")
+		 local fun = CONF.input.encoding.fun
+		 ZEN:assert(luatype(fun) == 'function', "Conversion is not a valid function")
+		 local function conv(intab)
+			for k, v in next,intab,nil do
+			   if luatype(v) == "table" then
+				  ACK[k] = conv(v) -- was just table.copy
+			   else
+				  ACK[k] = fun(v)
+			   end
+			end
+		 end
+		 conv(IN)
+end)
+-- TODO: Given all valid data
+-- convert and import data only when is known by schema and passes validation
+-- ignore all other data structures that are not known by schema or don't pass validation
+
 Given("I introduce myself as ''", function(name) ZEN:Iam(name) end)
 Given("I am known as ''", function(name) ZEN:Iam(name) end)
 Given("I am ''", function(name) ZEN:Iam(name) end)
