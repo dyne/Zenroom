@@ -124,6 +124,7 @@ extern void PAIR_BLS383_GTpow(FP12_BLS383 *x,BIG_384_29 b);
 #define BIG_dnbits(d) BIG_384_29_dnbits(d)
 
 #define FP FP_BLS383
+#define FP_nres(f,b) FP_BLS383_nres(f,b)
 #define FP_copy(d,s) FP_BLS383_copy(d,s)
 #define FP_redc(x,y) FP_BLS383_redc(x,y)
 #define FP_reduce(x) FP_BLS383_reduce(x)

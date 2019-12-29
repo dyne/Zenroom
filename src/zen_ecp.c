@@ -65,11 +65,8 @@ ecp* ecp_new(lua_State *L) {
 	if(!e) {
 		lerror(L, "Error allocating new ecp in %s",__func__);
 		return NULL; }
-	strcpy(e->curve,CURVE_NAME);
-	strcpy(e->type,CURVE_TYPE);
-	e->biglen = sizeof(BIG);
+	e->halflen = sizeof(BIG);
 	e->totlen = (MODBYTES*2)+1; // length of ECP.new(rng:modbig(o),0):octet()
-	BIG_copy(e->order, (chunk*)CURVE_Order);
 	luaL_getmetatable(L, "zenroom.ecp");
 	lua_setmetatable(L, -2);
 	return(e);
@@ -85,10 +82,29 @@ ecp* ecp_dup(lua_State *L, ecp* in) {
 	ECP_copy(&e->val, &in->val);
 	return(e);
 }
+
+extern int zconf_memwipe; // zenroom_config
+extern char *runtime_random256; // zen_random
 int ecp_destroy(lua_State *L) {
 	HERE();
 	ecp *e = ecp_arg(L,1);
 	SAFE(e);
+	if(zconf_memwipe && runtime_random256) { // zenroom memory wipe configuration
+		func(L,"   ecp wipe");
+		BIG m; // from big random, using pre-calculated runtime random
+		int len = BIGLEN;
+		register int i, b,j=0,r=0;
+		for(i=0; i<len; i++) {
+			if (j==0)
+				r=runtime_random256[i+33%256];
+			else r>>=1;
+			b=r&1; BIG_shl(m,1);
+			m[0]+=b; j++; j&=7;
+		}
+		FP_nres(&e->val.x, m);
+		FP_copy(&e->val.y, &e->val.x);
+		FP_copy(&e->val.z, &e->val.x);
+	}
 	return 0;
 }
 
@@ -198,7 +214,7 @@ static int ecp_order(lua_State *L) {
 	// BIG is an array of int32_t on chunk 32 (see rom_curve)
 
 	// curve order is ready-only so we need a copy for norm() to work
-	BIG_copy(res->val,(chunk*)CURVE_Order);
+	BIG_copy(res->val,(chunk*)ORDER);
 	return 1;
 }
 
@@ -420,13 +436,6 @@ static int ecp_table(lua_State *L) {
 	ecp *e = ecp_arg(L, 1); SAFE(e);
 	octet *o;
 	ECP_affine(&e->val);
-	lua_newtable(L);
-	lua_pushstring(L,e->curve);
-	lua_setfield(L,2,"curve");
-	lua_pushstring(L,"hex");
-	lua_setfield(L,2,"encoding");
-	lua_pushstring(L,VERSION);
-	lua_setfield(L,2,"zenroom");
 	big *x,*y;
 	x = big_new(L); big_init(x);
 	lua_pop(L,1); _fp_to_big(x, &e->val.x);

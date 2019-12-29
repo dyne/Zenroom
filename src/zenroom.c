@@ -175,7 +175,7 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 
 	Z->lua = lua_newstate(zen_memory_manager, MEM);
 	if(!Z->lua) {
-		error(Z->lua,"%s: %s", __func__, "Lua newstate creation failed");
+		error(NULL,"%s: %s", __func__, "Lua newstate creation failed");
 		return NULL;
 	}
 
@@ -190,9 +190,13 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 		return NULL;
 	}
 
-	lua_gc(Z->lua, LUA_GCCOLLECT, 0);
-	lua_gc(Z->lua, LUA_GCCOLLECT, 0);
+	if(zconf_memwipe)
+		act(Z->lua,"Memory wipe active");
 
+	lua_gc(Z->lua, LUA_GCCOLLECT, 0);
+	lua_gc(Z->lua, LUA_GCCOLLECT, 0);
+	act(Z->lua,"Memory in use: %u KB",
+	    lua_gc(Z->lua,LUA_GCCOUNT,0));
 	// uncomment to restrict further requires
 	// zen_require_override(L,1);
 
@@ -208,16 +212,20 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	return(Z);
 }
 
-
+extern char *runtime_random256;
 void zen_teardown(zenroom_t *Z) {
 
-	func(Z->lua,"Zenroom teardown.");
+	notice(Z->lua,"Zenroom teardown.");
+	act(Z->lua,"Memory used: %u KB",
+	    lua_gc(Z->lua,LUA_GCCOUNT,0));
 
 	// stateful RNG instance for deterministic mode
 	if(Z->random_generator) {
 		system_free(Z->random_generator);
 		Z->random_generator = NULL;
 	}
+	if(runtime_random256)
+		system_free(runtime_random256);
 	// save pointers inside Z to free after L and Z
 	if(Z->lua) {
 		func(Z->lua, "lua gc and close...");

@@ -85,3 +85,5 @@ _G["CONF"] = {
 -- encoding base64url (RFC4648) is the fastest and most portable in zenroom
 -- set_encoding('url64')
 -- set_format('json')
+
+collectgarbage'collect'

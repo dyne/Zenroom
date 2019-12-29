@@ -36,7 +36,7 @@ static const int32_t hextable[] = {
 
 // takes zero terminated hex string, requires pre-allocation of dst,
 // returns len in bytes
-int hex2buf(char *dst, char *hex) {
+int hex2buf(char *dst, const char *hex) {
 	register int i, j;
 	for(i=0, j=0; hex[j]!=0; i++, j+=2)
 		dst[i] = (hextable[(short)hex[j]]<<4) + hextable[(short)hex[j+1]];

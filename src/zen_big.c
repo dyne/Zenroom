@@ -165,6 +165,8 @@ big *big_dup(lua_State *L, big *s) {
 	return(n);
 }
 
+extern int zconf_memwipe; // zenroom_config
+extern char *runtime_random256; // zen_random
 int big_destroy(lua_State *L) {
 	HERE();
 	big *c = big_arg(L,1);
@@ -172,6 +174,18 @@ int big_destroy(lua_State *L) {
 		if(c->dval) zen_memory_free(c->dval);
 		if(c->val) warning(L,"found leftover buffer while freeing double big");
 	} else {
+		if(zconf_memwipe && runtime_random256) { // zenroom memory wipe configuration
+			func(L,"   big wipe");
+			int len = BIGLEN;
+			register int i, b,j=0,r=0;
+			for(i=0; i<len; i++) {
+				if (j==0)
+					r=runtime_random256[i+44%256];
+				else r>>=1;
+				b=r&1; BIG_shl(c->val,1);
+				c->val[0]+=b; j++; j&=7;
+			}
+		}
 		if(c->val) zen_memory_free(c->val);
 		if(c->dval) warning(L,"found leftover buffer while freeing big");
 	}

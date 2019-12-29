@@ -58,7 +58,7 @@ extern zenroom_t *Z;
 extern zen_mem_t *MEM;
 // small buffer pre-filled with random, used at runtime by some
 // internal functions esp. to wipe out memory (lstring.c)
-char *runtime_random256 = NULL;
+uint8_t *runtime_random256 = NULL;
 
 void* rng_alloc() {
 	HERE();
@@ -123,6 +123,19 @@ static int rng_int32(lua_State *L) {
 	return(1);
 }
 
+static int rng_rr256(lua_State *L) {
+	lua_newtable(L);
+	int c = 256;
+	int idx = 0;
+	while(c--) {
+		lua_pushnumber(L,idx+1);
+		lua_pushinteger(L,runtime_random256[idx]);
+		lua_settable(L,-3);
+		idx++;
+	}
+	return 1;
+}
+
 void zen_add_random(lua_State *L) {
 	static const struct luaL_Reg rng_base [] =
 		{ {"random_int8",  rng_uint8  },
@@ -132,6 +145,7 @@ void zen_add_random(lua_State *L) {
 		  {"random16", rng_uint16 },
 		  {"random32", rng_int32 },
 		  {"random",  rng_uint16  },
+		  {"runtime_random256", rng_rr256 },
 		  {NULL, NULL} };
 	lua_getglobal(L, "_G");
 	luaL_setfuncs(L, rng_base, 0);
@@ -141,7 +155,7 @@ void zen_add_random(lua_State *L) {
 		// used in
 		register int i;
 		runtime_random256 = system_alloc(256);
-		char *p = runtime_random256;
+		register uint8_t *p = runtime_random256;
 		for(i=0;i<256;i++,p++) *p = RAND_byte(Z->random_generator);
 	}
 

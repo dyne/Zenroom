@@ -32,12 +32,8 @@
 #define  BIG  BIG_384_29
 
 typedef struct {
-	char curve[16];
-	char type[16];
-	int  biglen; // length in bytes of a reduced coordinate
-	int  totlen; // length of a serialized octet
-
-	BIG  order;
+	size_t halflen; // length in bytes of a reduced coordinate
+	size_t totlen; // length of a serialized octet
 	ECP  val;
 	// TODO: the values above make it necessary to propagate the
 	// visibility on the specific curve point types to the rest of the
@@ -50,10 +46,8 @@ ecp* ecp_new(lua_State *L);
 ecp* ecp_arg(lua_State *L,int n);
 
 typedef struct {
-	char curve[16];
-	char type[16];
-	int totlen;
-	BIG  order;
+	size_t halflen;
+	size_t totlen;
 	ECP2  val;
 	// TODO: the values above make it necessary to propagate the
 	// visibility on the specific curve point types to the rest of the

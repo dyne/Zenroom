@@ -163,7 +163,7 @@ void luaS_remove (lua_State *L, TString *ts) {
 	  char *s = getstr(ts);
 	  size_t l = tsslen(ts);
 	  register int i;
-	  for(i=0;i<l;i++) s[i] = runtime_random256[i%256];
+	  for(i=0;i<l;i++) s[i] = runtime_random256[i+22%256];
   }
 }
 

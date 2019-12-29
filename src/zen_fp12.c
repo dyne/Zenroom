@@ -69,10 +69,39 @@ fp12 *fp12_dup(lua_State *L, fp12 *s) {
 	return(n);
 }
 
+extern int zconf_memwipe; // zenroom_config
+extern char *runtime_random256; // zen_random
 int fp12_destroy(lua_State *L) {
 	HERE();
 	fp12 *c = fp12_arg(L,1);
 	SAFE(c);
+	if(zconf_memwipe && runtime_random256) { // zenroom memory wipe configuration
+		func(L,"   fp12 wipe");
+		BIG m; // from big random, using pre-calculated runtime random
+		int len = BIGLEN;
+		register int i, b,j=0,r=0;
+		for(i=0; i<len; i++) {
+			if (j==0)
+				r=runtime_random256[i+66%256];
+			else r>>=1;
+			b=r&1; BIG_shl(m,1);
+			m[0]+=b; j++; j&=7;
+		}
+		FP *fp = &c->val.a.a.a;
+		FP_nres(fp, m);
+		FP_copy(&c->val.a.a.b, fp);
+		FP_copy(&c->val.a.b.a, fp);
+		FP_copy(&c->val.a.b.a, fp);
+		FP_copy(&c->val.b.a.a, fp);
+		FP_copy(&c->val.b.a.b, fp);
+		FP_copy(&c->val.b.b.a, fp);
+		FP_copy(&c->val.b.b.b, fp);
+		FP_copy(&c->val.c.a.a, fp);
+		FP_copy(&c->val.c.a.b, fp);
+		FP_copy(&c->val.c.b.a, fp);
+		FP_copy(&c->val.c.b.b, fp);
+	}
+
 	return 0;
 }
 

@@ -69,7 +69,7 @@ extern void set_color(int on);
 
 #include <stb_c_lexer.h>
 
-typedef enum { NIL, VERBOSE, COLOR, SECCOMP, RNGSEED, MEMMGR } zconf;
+typedef enum { NIL, VERBOSE, COLOR, SECCOMP, RNGSEED, MEMMGR, MEMWIPE } zconf;
 static zconf curconf = NIL;
 
 int zconf_seccomp = 0;
@@ -103,6 +103,7 @@ int zen_conf_parse(const char *configuration) {
 			if(strcasecmp(lex.string,"seccomp")  ==0) { curconf = SECCOMP;   break; }
 			if(strcasecmp(lex.string,"rngseed")  ==0) { curconf = RNGSEED;   break; }
 			if(strcasecmp(lex.string,"memmanager") ==0) { curconf = MEMMGR;   break; }
+			if(strcasecmp(lex.string,"memwipe") ==0) { curconf = MEMWIPE;   break; }
 			warning(NULL,"unrecognised configuration: %s",lex.string);
 			curconf = NIL; break;
 			// int value set based on current enum
@@ -110,6 +111,7 @@ int zen_conf_parse(const char *configuration) {
 			if(curconf==VERBOSE) { set_debug  (lex.int_number); break; }
 			if(curconf==COLOR)   { set_color  (lex.int_number); break; }
 			if(curconf==SECCOMP) { zconf_seccomp = lex.int_number; break; }
+			if(curconf==MEMWIPE) { zconf_memwipe = lex.int_number; break; }
 			free(lexbuf);
 			error(NULL,"invalid configuration");
 			return 0;
@@ -120,8 +122,7 @@ int zen_conf_parse(const char *configuration) {
 				zconf_rngseed_str = malloc(lex.string_len+1);
 				memcpy(zconf_rngseed_str, lex.string, lex.string_len);
 				lex.string[lex.string_len] = 0x0;
-				break; }
-			if(curconf==MEMMGR) {
+			} else if(curconf==MEMMGR) {
 				if(strcasecmp(lex.string,"lw")==0) zconf_memmg = LW;
 				else if(strcasecmp(lex.string,"je")==0) zconf_memmg = JE;
 				else if(strcasecmp(lex.string,"sys")==0) zconf_memmg = SYS;
@@ -130,8 +131,8 @@ int zen_conf_parse(const char *configuration) {
 					error(NULL,"invalid configuration");
 					return 0;
 				}
-				break;
 			}
+			break;
 		default:
 			if(lex.token == ',') { curconf = NIL; break; }
 			if(lex.token == '=' && curconf == NIL) {
