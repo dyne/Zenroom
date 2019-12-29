@@ -50,6 +50,11 @@ crypto-integration = \
 	cd test/nist && ./run.sh ../../${1}; cd -; \
 	test/integration_asymmetric_crypto.sh ${1}
 
+# TODO: complete with tamale and date
+lua-modules = \
+	@${1} test/faces.lua && \
+	${1} test/slaxml.lua
+
 zencode-tests = \
 	@${1} test/zencode_find.lua && \
 	${1} test/zencode_data.lua
@@ -102,6 +107,7 @@ check-osx:
 	${test-exec} test/constructs.lua
 	$(call lowmem-tests,${test-exec})
 	$(call determinism-tests,${test-exec})
+	$(call lua-modules,${test-exec})
 	$(call crypto-tests,${test-exec})
 	$(call zencode-tests,${test-exec})
 	$(call crypto-integration,${test-exec})
@@ -115,6 +121,7 @@ check-linux:
 	${test-exec} test/constructs.lua
 	$(call himem-tests,${test-exec})
 	$(call lowmem-tests,${test-exec})
+	$(call lua-modules,${test-exec})
 	$(call determinism-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
 	$(call zencode-tests,${test-exec})
@@ -145,13 +152,14 @@ check-py:
 
 check-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom -d 3
 check-debug:
-	$(call determinism-tests,${test-exec})
 	$(call lowmem-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
 	$(call zencode-tests,${test-exec})
 	@echo "----------------"
 	@echo "All tests passed for DEBUG binary build"
 	@echo "----------------"
+
+# $(call determinism-tests,${test-exec})
 
 check-crypto: test-exec := ./src/zenroom
 check-crypto:

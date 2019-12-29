@@ -11,6 +11,20 @@ for position, for instance ECP multiplication needs to have the BIG
 number always as second argument. Instead of returning error we should
 check the type and reposition the arguments accordingly.
 
+## New crypto
+
+- ECDAA https://github.com/xaptum/ecdaa (milagro based)
+  Direct Anonymous Attestation (DAA) and Schnorr sigs
+
+- ECQV revisit algo and tests
+
+- threshold and BLS-SSS
+  https://github.com/dashpay/dips/blob/master/dip-0006/bls_m-of-n_threshold_scheme_and_dkg.md
+  https://blog.dash.org/secret-sharing-and-threshold-signatures-with-bls-954d1587b5f
+
+
+
+
 ## XML encode/decode
 
 - https://github.com/n1tehawk/LuaXML
@@ -146,10 +160,11 @@ multiple of co-factors
 ## Low-hanging
 
 - memory locking with controls at switch Given (r/o) -> When (r/w) -> Then (w/o)
-- variable wiping with content overwriting in GC
+X data integrity conversion check on stepping out of Given
+X variable wiping with content overwriting in GC
 - DATA and KEYS wiping in Zencode
 X adopt finite state machine in Zencode parser
-- wipe previous memory block in Zencode
+X wipe previous memory block in Zencode
 X load multiple scenarios, build `documentation` scenario with ZEN.callback
 
 ## Benchmarking
@@ -233,15 +248,6 @@ https://github.com/pakozm/xemsg
 https://en.wikipedia.org/wiki/Message_Passing_Interface
 
 https://github.com/jzrake/lua-mpi
-
-
-## Deterministic Random in the Checker
-
-take an external rng buffer filled with random by the caller
-
-provide zencode with random from this pool and move the index forward
-
-return an error when the random is exhausted and more is needed
 
 
 ## Coconut notes
@@ -439,11 +445,8 @@ X Document api with luadoc http://keplerproject.github.io/luadoc/
 
 ## Crypto
 
-^ Build a usable ABC implementation (maybe compatible with coconut
+X Build a usable ABC implementation (maybe compatible with coconut
   and/or IRMA?)
-
-- see if ECDAA is any useful https://github.com/xaptum/ecdaa
-  has Direct Anonymous Attestation (DAA) and Schnorr sigs
 
 - Reproduce tor's new onion address scheme
   (see tor-dam/pkg/damlib/crypto_25519.go)

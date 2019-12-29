@@ -199,11 +199,12 @@ This software includes software components by: R. Ierusalimschy,
 W. Celes and L.H. de Figueiredo (lua), Mike Scott and Kealan McCusker
 (milagro-crypto-c), Mark Pulford (lua-cjson), Daan Sprenkels
 (randombytes), Salvatore Sanfilippo (cmsgpack), Tilen Majerle (lwmem),
-Sean Barrett (stb_c_lexer), Jeff Roberts (stb_sprintf), Kim Alvefur
-(cbor)
+Sean Barrett (stb_c_lexer), Jeff Roberts (stb_sprintf), Kim Alvefur (cbor)
 
 Some Lua extensions included are written by: Kyle Conroy
-(statemachine), Enrique García Cota (inspect and semver).
+(statemachine), Enrique García Cota (inspect and semver), Jas Latrix
+and Thijs Schreijer (date), Francisco Zamora-Martinez (faces), Gavin
+Kistner (slaxml), Scott Vokes (tamale)
 
 Zenroom is Licensed under the terms of the Affero GNU Public License as
 published by the Free Software Foundation; either version 3 of the
