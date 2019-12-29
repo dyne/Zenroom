@@ -22,7 +22,7 @@
 #define __ZEN_BIG_H__
 
 #define BIGSIZE 384
-#include <zen_big_types.h>
+#include <zen_big_factory.h>
 
 typedef struct {
 	char name[16];

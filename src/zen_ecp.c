@@ -48,7 +48,7 @@
 #include <lauxlib.h>
 
 #include <zen_ecp.h>
-#include <zen_ecp_bls383.h>
+#include <zen_ecp_factory.h>
 
 #include <jutils.h>
 #include <zen_error.h>

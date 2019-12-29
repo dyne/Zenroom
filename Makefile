@@ -45,9 +45,15 @@ embed-lua:
 	@echo "File generated: src/lualibs_detected.c"
 
 src/zen_ecdh_factory.c:
-	${pwd}/build/codegen_ecdh_factory.sh GOLDILOCKS
+	${pwd}/build/codegen_ecdh_factory.sh ${ecdh_curve}
 
-apply-patches: src/zen_ecdh_factory.c
+src/zen_ecp_factory.c:
+	${pwd}/build/codegen_ecp_factory.sh ${ecp_curve}
+
+src/zen_big_factory.c:
+	${pwd}/build/codegen_ecp_factory.sh ${ecp_curve}
+
+apply-patches: src/zen_ecdh_factory.c src/zen_ecp_factory.c src/zen_big_factory.c
 
 # build targets for javascript (emscripten)
 include ${pwd}/build/javascript.mk
@@ -146,6 +152,7 @@ clean:
 	rm -f ${pwd}/.python-version
 
 clean-src:
+	rm -f src/zen_ecdh_factory.c src/zen_ecp_factory.c src/zen_big_factory.c
 	make clean -C src
 
 distclean:

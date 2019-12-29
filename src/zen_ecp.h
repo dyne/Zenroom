@@ -21,15 +21,7 @@
 #ifndef __ZEN_ECP_H__
 #define __ZEN_ECP_H__
 
-// should abstract this away
-// #include <fp12_BLS383.h>
-#include <ecp2_BLS383.h>
-#include <ecp_BLS383.h>
-#define ECP ECP_BLS383
-#define ECP2 ECP2_BLS383
-// #pragma message "BIGnum CHUNK size: 32bit"
-#include <big_384_29.h>
-#define  BIG  BIG_384_29
+#include <zen_ecp_factory.h>
 
 typedef struct {
 	size_t halflen; // length in bytes of a reduced coordinate

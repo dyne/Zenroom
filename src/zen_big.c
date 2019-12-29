@@ -34,7 +34,7 @@
 #include <zen_octet.h>
 #include <zen_memory.h>
 #include <zen_big.h>
-#include <zen_ecp_bls383.h> // TODO: abstract to support multiple curves
+#include <zen_ecp_factory.h>
 
 // defined at compile time in zen_ecp.c for specific BLS
 extern const chunk *ORDER;
