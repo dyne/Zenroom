@@ -459,6 +459,7 @@ function zencode:step(text)
    local defs -- parse in what phase are we
    ZEN.OK = true
    exitcode(0)
+
    -- given block, may also skip scenario
    if prefix == 'given' then
 	  ZEN.assert(ZEN.machine:enter_given(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.." to Given block")
@@ -519,7 +520,7 @@ function zencode:step(text)
    tt = string.gsub(tt:lower(),"when " ,"", 1)
    tt = string.gsub(tt,"then " ,"", 1)
    tt = string.gsub(tt,"given ","", 1)
-   tt = string.gsub(tt,"and "  ,"", 1)
+   tt = string.gsub(tt,"and "  ,"", 1) -- TODO: expunge only first 'and'
    tt = string.gsub(tt,"that "  ,"", 1)
 
    local match = false
@@ -528,6 +529,12 @@ function zencode:step(text)
          error("Zencode function missing: "..pattern, 2)
          return false
       end
+
+	  -- I.warn({ prefix = strtok(text)[1]:lower(),
+	  -- 		   pattern = pattern,
+	  -- 		   tt = tt,
+	  -- 		   text = text })
+
       if strcasecmp(tt, string.gsub(pattern,"that "  ,"", 1)) then
 		 local args = {} -- handle multiple arguments in same string
 		 for arg in string.gmatch(text,"'(.-)'") do
@@ -544,6 +551,7 @@ function zencode:step(text)
 						hook = func       })
 		 match = true
 	  end
+	  if match then break end
    end
 
    if not match and CONF.parser.strict_match then

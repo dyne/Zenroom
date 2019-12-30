@@ -85,11 +85,6 @@ ZEN.add_schema({
 	  str =    function(obj) return ZEN:convert(obj, OCTET.from_string) end,
 })
 
--- refer basic scenario implementations for data
-require_once('zencode_given')
-require_once('zencode_when')
-require_once('zencode_then')
-
 -- debug functions
 Given("debug", function() ZEN.debug() end)
 When("debug",  function() ZEN.debug() end)

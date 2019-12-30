@@ -56,9 +56,14 @@ VERSION = V(VERSION)
 
 ZEN = require('zencode')
 
--- base data functions and schemas
+-- base zencode functions and schemas
 require('zencode_data')
+require('zencode_given')
+require('zencode_when')
+require('zencode_then')
+require('zencode_eval')
 
+-- scenario are loaded on-demand
 -- scenarios can only implement "When ..." steps
 _G["Given"] = nil
 _G["Then"]  = nil

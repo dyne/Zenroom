@@ -127,12 +127,30 @@ ZEN.add_schema({
 			table.insert(_t, fun(v))
 		 end
 		 return _t
+	  end,
+	  array_ecp = function(obj)
+		 ZEN.assert( isarray(obj) , "Not a valid array")
+		 local fun = CONF.input.encoding.fun
+		 ZEN.assert( luatype(fun) == 'function', "Conversion is not a valid function")
+		 local _t = { }
+		 for k,v in ipairs(obj) do
+			table.insert(_t, ECP.new(fun(v)))
+		 end
+		 return _t
 	  end
+
 })
 
 Given("I have a valid array in ''", function(a)
 		 ZEN:pick(a)
 		 ZEN:validate(a,'array')
+		 ZEN:ack(a)
+		 TMP = { }
+end)
+
+Given("I have a valid array of '' in ''", function(t,a)
+		 ZEN:pick(a)
+		 ZEN:validate(a,'array_'..t:lower())
 		 ZEN:ack(a)
 		 TMP = { }
 end)

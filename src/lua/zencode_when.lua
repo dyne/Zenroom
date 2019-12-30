@@ -57,13 +57,52 @@ When("I create the array of '' random objects of '' bits", function(s, bits)
 		end
 end)
 
+When("I create the array of '' random curve points", function(s)
+		ACK.array = { }
+		for i = s,1,-1 do
+		   table.insert(ACK.array,ECP.random())
+		end
+end)
+
+
+When("I create the aggregation of array ''", function(arr)
+		local A = ACK[arr]
+		ZEN.assert(A, "Object not found: "..arr)
+		local count = isarray(A)
+		ZEN.assert( count > 0, "Object is not an array: "..arr)
+		if type(A[1]) == 'zenroom.ecp' then -- TODO: check all elements
+		   xxx(3, "Computing sum of "..count.." ECP") 
+		   ACK.aggregation = ECP.generator()
+		   for k,v in next,A,nil do
+			  if not ACK.aggregation then ACK.aggregation = v
+			  else ACK.aggregation = ACK.aggregation + v end
+		   end
+		else -- TODO: more aggregators for INT and ECP2
+		   error("Unknown aggregation for type: "..type(A[1]))
+		end
+end)
+
+When("I create the '' hashes of objects in array ''", function(what, arr)
+		local F = _G[what]
+		ZEN.assert(luatype(F.hashtopoint) == 'function',
+				   "Hash type "..what.." is invalid (no hashtopoint)")
+        local A = ACK[arr]
+        ZEN.assert(A, "Object not found: "..arr)
+        local count = isarray(A)
+        ZEN.assert( count > 0, "Object is not an array: "..arr)
+        ACK.hashes = { }
+        for k,v in sort_ipairs(A) do
+		   ACK.hashes[k] = F.hashtopoint(v)
+        end
+end)
+
 When("I rename the '' to ''", function(old,new)
 		ZEN.assert(ACK[old], "Object not found: "..old)
 		ACK[new] = ACK[old]
 		ACK[old] = nil
 end)
 
-When("I pick the random object in ''", function(arr)
+When("I pick the random object in array ''", function(arr)
 		local A = ACK[arr]
 		ZEN.assert(A, "Object not found: "..arr)
 		local count = isarray(A)
@@ -72,7 +111,7 @@ When("I pick the random object in ''", function(arr)
 		ACK.random_object = A[r]
 end)
 
-When("I remove the '' from ''", function(ele,arr)
+When("I remove the '' from array ''", function(ele,arr)
 		local E = ACK[ele]
 		ZEN.assert(E, "Element not found: "..ele)
 		local A = ACK[arr]
@@ -84,30 +123,31 @@ When("I remove the '' from ''", function(ele,arr)
 		ACK[arr] = O
 end)
 
-When("I insert the '' in ''", function(ele,arr)
+When("I insert the '' in array ''", function(ele,arr)
 		ZEN.assert(ACK[ele], "Element not found: "..ele)
 		ZEN.assert(ACK[arr], "Array not found: "..arr)
 		table.insert(ACK[arr], ACK[ele])
 end)
 
-When("the '' is not found in ''", function(ele, arr)
+When("the '' is not found in array ''", function(ele, arr)
 		ZEN.assert(ACK[ele], "Element not found: "..ele)
 		ZEN.assert(ACK[arr], "Array not found: "..arr)
 		for k,v in next,ACK[arr],nil do
-		   ZEN.assert(v ~= E, "Element '"..ele.."' is contained inside array: "..arr)
+		   ZEN.assert(v ~= ACK[ele], "Element '"..ele.."' is contained inside array: "..arr)
 		end
 end)
 
 
-When("the '' is found in ''", function(ele, arr)
+When("the '' is found in array ''", function(ele, arr)
 		ZEN.assert(ACK[ele], "Element not found: "..ele)
 		ZEN.assert(ACK[arr], "Array not found: "..arr)
 		local found = false
 		for k,v in next,ACK[arr],nil do
-		   if v == E then found = true end
+		   if v == ACK[ele] then found = true end
 		end
 		ZEN.assert(found, "Element '"..ele.."' is not found inside array: "..arr)
 end)
+
 
 -- TODO:
 -- When("I set '' as '' with ''", function(dest, format, content) end)
