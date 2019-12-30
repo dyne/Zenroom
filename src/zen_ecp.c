@@ -382,7 +382,7 @@ int _ecp_to_octet(octet *o, ecp *e) {
 		o->val[0] = SCHAR_MAX; o->val[1] = SCHAR_MAX;
 		o->val[3] = 0x0; o->len = 2;
 	} else
-		ECP_toOctet(o, &e->val, 0);
+		ECP_toOctet(o, &e->val, 1);
 	return(1);
 }
 /***
