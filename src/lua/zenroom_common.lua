@@ -139,14 +139,16 @@ function map(data, fun)
 end
 
 function isarray(obj)
-   assert(obj, "isarray() called on a nil object")
-   assert(type(obj), "isarray() argument is not a table")
+   if not obj then error("isarray() called on a nil object",2) end
+   if luatype(obj) ~= 'table' then error("isarray() argument is not a table",2) end
+   local count = 0
    for k, v in pairs(obj) do
 	  -- check that all keys are numbers
 	  -- don't check sparse ratio (cjson's lua_array_length)
-	  if type(k) ~= "number" then return false end
+	  if luatype(k) ~= "number" then return 0 end
+	  count = count + 1
    end
-   return true
+   return count
 end
 
 function help(module)

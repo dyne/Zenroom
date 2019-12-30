@@ -117,3 +117,22 @@ Given("I have a valid '' from ''", function(n, s)
 		 TMP = { }
 end)
 
+ZEN.add_schema({
+	  array = function(obj)
+		 ZEN.assert( isarray(obj) , "Not a valid array")
+		 local fun = CONF.input.encoding.fun
+		 ZEN.assert( luatype(fun) == 'function', "Conversion is not a valid function")
+		 local _t = { }
+		 for k,v in ipairs(obj) do
+			table.insert(_t, fun(v))
+		 end
+		 return _t
+	  end
+})
+
+Given("I have a valid array in ''", function(a)
+		 ZEN:pick(a)
+		 ZEN:validate(a,'array')
+		 ZEN:ack(a)
+		 TMP = { }
+end)

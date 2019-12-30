@@ -51,9 +51,62 @@ end)
 
 When("I create the array of '' random objects of '' bits", function(s, bits)
 		ACK.array = { }
+		local bytes = math.ceil(bits/8)
 		for i = s,1,-1 do
-		   table.insert(ACK.array,OCTET.random(bits/8))
+		   table.insert(ACK.array,OCTET.random(bytes))
 		end
+end)
+
+When("I rename the '' to ''", function(old,new)
+		ZEN.assert(ACK[old], "Object not found: "..old)
+		ACK[new] = ACK[old]
+		ACK[old] = nil
+end)
+
+When("I pick the random object in ''", function(arr)
+		local A = ACK[arr]
+		ZEN.assert(A, "Object not found: "..arr)
+		local count = isarray(A)
+		ZEN.assert( count > 0, "Object is not an array: "..arr)
+		local r = random_int16() % count
+		ACK.random_object = A[r]
+end)
+
+When("I remove the '' from ''", function(ele,arr)
+		local E = ACK[ele]
+		ZEN.assert(E, "Element not found: "..ele)
+		local A = ACK[arr]
+		ZEN.assert(A, "Array not found: "..arr)
+		local O = { }
+		for k,v in next,A,nil do
+		   if v ~= E then table.insert(O,v) end
+		end
+		ACK[arr] = O
+end)
+
+When("I insert the '' in ''", function(ele,arr)
+		ZEN.assert(ACK[ele], "Element not found: "..ele)
+		ZEN.assert(ACK[arr], "Array not found: "..arr)
+		table.insert(ACK[arr], ACK[ele])
+end)
+
+When("the '' is not found in ''", function(ele, arr)
+		ZEN.assert(ACK[ele], "Element not found: "..ele)
+		ZEN.assert(ACK[arr], "Array not found: "..arr)
+		for k,v in next,ACK[arr],nil do
+		   ZEN.assert(v ~= E, "Element '"..ele.."' is contained inside array: "..arr)
+		end
+end)
+
+
+When("the '' is found in ''", function(ele, arr)
+		ZEN.assert(ACK[ele], "Element not found: "..ele)
+		ZEN.assert(ACK[arr], "Array not found: "..arr)
+		local found = false
+		for k,v in next,ACK[arr],nil do
+		   if v == E then found = true end
+		end
+		ZEN.assert(found, "Element '"..ele.."' is not found inside array: "..arr)
 end)
 
 -- TODO:

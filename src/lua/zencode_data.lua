@@ -27,7 +27,6 @@
 -- init schemas
 ZEN.add_schema = function(arr)
    local _illegal_schemas = { -- const
-	  array = true,
 	  whoami = true
    }
    -- TODO: check overwrite / duplicate as this will avoid scenarios
