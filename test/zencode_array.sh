@@ -59,6 +59,17 @@ EOF
 # 'x == ECP.hashtopoint(y)'
 
 
+cat <<EOF | zenroom -z -a $t/arr.json | json_pp
+rule input encoding url64
+rule output encoding url64
+Given I have a valid array in 'bonnetjes'
+When for each 'bonnetjes' create the array using 'sha256(x)'
+Then print the 'array'
+and print the 'bonnetjes'
+EOF
+# 'x == ECP.hashtopoint(y)'
+
+
 rm -f $t/*
 rmdir $t
 # When I check 'hashes' and 'bonnetjes'
