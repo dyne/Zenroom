@@ -26,8 +26,7 @@ CFLAGS  += -I. -I../lib/lua53/src -I../lib/milagro-crypto-c/include -Wall -Wextr
 SOURCES := \
 	cli.o jutils.o zenroom.o zen_error.o \
 	lua_functions.o lua_modules.o lualibs_detected.o lua_shims.o \
-	json.o json_strbuf.o json_fpconv.o \
-	encoding.o cmsgpack.o \
+	encoding.o \
 	zen_memory.o lwmem.o \
 	zen_io.o zen_parse.o repl.o zen_config.o \
 	zen_octet.o zen_ecp.o zen_ecp2.o zen_big.o \

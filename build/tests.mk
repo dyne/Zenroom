@@ -8,7 +8,7 @@ himem-tests = \
  ${1} test/gc.lua && \
  ${1} test/calls.lua && \
  ${1} test/constructs.lua && \
- ${1} test/cjson-test.lua
+ ${1} test/json.lua
 
 determinism-tests = \
 	test/deterministic_random_test.sh ${1}
