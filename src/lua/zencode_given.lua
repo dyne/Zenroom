@@ -84,16 +84,14 @@ Given("I have a '' inside ''", function(n, s)
 		 ZEN:pickin(s, n)
 		 TMP.valid = true
 		 TMP.data = ZEN:import(TMP.data, CONF.input.tagged)
-		 ZEN:ack(n)
-		 ZEN:ack(s) -- save it also in ACK.section
+		 ZEN:ack(s) -- save it in ACK.s.n
 		 TMP = { }
 end)
 Given("I have inside '' a ''", function(s, n)
 		 ZEN:pickin(s, n)
 		 TMP.valid = true
 		 TMP.data = ZEN:import(TMP.data, CONF.input.tagged)
-		 ZEN:ack(n)
-		 ZEN:ack(s) -- save it also in ACK.section
+		 ZEN:ack(s) -- save it in ACK.s.n
 		 TMP = { }
 end)
 
@@ -101,15 +99,13 @@ end)
 Given("I have inside '' a valid ''", function(s, n)
 		 ZEN:pickin(s, n)
 		 ZEN:validate(n)
-		 ZEN:ack(n)
-		 ZEN:ack(s) -- save it also in ACK.section
+		 ZEN:ack(s) -- save it in ACK.s.n
 		 TMP = { }
 end)
 Given("I have a valid '' inside ''", function(n, s)
 		 ZEN:pickin(s, n)
 		 ZEN:validate(n)
-		 ZEN:ack(n)
-		 ZEN:ack(s) -- save it also in ACK.section
+		 ZEN:ack(s) -- save it in ACK.s.n
 		 TMP = { }
 end)
 

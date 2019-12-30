@@ -14,8 +14,8 @@ Given I have a 'inside' inside 'first'
 and I have a 'third'
 When I write 'first.inside' in 'test'
 and I write 'three' in 'tertiur'
-and I verify 'inside' is equal to 'test'
+# and I verify 'inside' is equal to 'test'
 and I verify 'third' is equal to 'tertiur'
-Then print the 'inside' as 'string'
+Then print the 'test' as 'string'
 ]])
 ZEN:run()
