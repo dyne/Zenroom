@@ -17,6 +17,46 @@ function iszen(n)
 end
 
 -- gets a string and returns the associated function, string and prefix
+function input_encoding(what)
+   if what == 'u64' or what == 'url64' then
+	  return { fun = function(data)
+				  if O.is_url64(data) then return O.from_url64(data)
+				  else error("Failed conversion to url64: "..what,2)
+					 end end,
+			   name = 'url64',
+			   pfx = 'u64' }
+   elseif what == 'b64' or what =='base64' then
+	  return { fun = function(data)
+				  if O.is_base64(data) then return O.from_base64(data)
+				  else error("Failed conversion to base64: "..what,2)
+					 end end,
+			   name = 'base64',
+			   pfx = 'b64' }
+   elseif what == 'hex' then
+	  return { fun = function(data)
+				  if O.is_hex(data) then return O.from_hex(data)
+				  else error("Failed conversion to hex: "..what,2)
+				  end end,
+			   name = 'hex',
+			   pfx = 'hex' }
+   elseif what == 'bin' or what == 'binary' then
+	  return { fun = function(data)
+				  if O.is_bin(data) then return O.from_bin(data)
+				  else error("Failed conversion to bin: "..what,2)
+					 end end,
+			   name = 'binary',
+			   pfx = 'bin' }
+   -- elseif what == 'str' or what == 'string' then
+   -- 	  return { fun = str,
+   -- 			   name = 'string',
+   -- 			   pfx = 'str' }
+   else
+	  warn("Conversion encoding not supported: "..what)
+   end
+   return nil
+end
+
+-- gets a string and returns the associated function, string and prefix
 function get_encoding(what)
    if what == 'u64' or what == 'url64' then
 	  return { fun = url64,
@@ -43,6 +83,8 @@ function get_encoding(what)
    end
    return nil
 end
+
+
 function get_format(what)
    if what == 'json' or what == 'JSON' then
 	  return { fun = JSON.auto,
@@ -79,26 +121,22 @@ function _pairs(t)
    for n in lua_pairs(t) do table.insert(a, n) end
    table.sort(a)
    local i = 0      -- iterator variable
-   local iter = function ()   -- iterator function
+   return function ()   -- iterator function
 	  i = i + 1
-	  if a[i] == nil then return nil
-	  else return a[i], t[a[i]]
-	  end
+	  -- if a[i] == nil then return nil
+	  return a[i], t[a[i]]
    end
-   return iter
 end
 function _ipairs(t)
    local a = {}
    for n in lua_ipairs(t) do table.insert(a, n) end
    table.sort(a)
    local i = 0      -- iterator variable
-   local iter = function ()   -- iterator function
+   return function ()   -- iterator function
 	  i = i + 1
-	  if a[i] == nil then return nil
-	  else return a[i]
-	  end
+	  -- if a[i] == nil then return nil
+	  return a[i]
    end
-   return iter
 end
 -- Switch to deterministic (sorted) table iterators: this breaks lua
 -- tests in particular those stressing i/pairs and pack/unpack, which
@@ -207,7 +245,7 @@ function set_rule(text)
 
       -- rule input encoding|format ''
       if rule[3] == 'encoding' and rule[4] then
-         CONF.input.encoding = get_encoding(rule[4])
+         CONF.input.encoding = input_encoding(rule[4])
 		 res = true and CONF.input.encoding
       elseif rule[3] == 'format' and rule[4] then
 		 CONF.input.format = get_format(rule[4])

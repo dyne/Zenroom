@@ -72,7 +72,7 @@ _G["CONF"] = {
    -- and ECDH public keys cannot function as ECP
    -- because of IANA 7303
    verbosity = 1,
-   input = { encoding = get_encoding('url64'),
+   input = { encoding = input_encoding('url64'),
 			 format = get_format('json'),
 			 tagged = true },
    output = { encoding = get_encoding('url64'),
