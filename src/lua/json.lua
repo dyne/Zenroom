@@ -78,7 +78,7 @@ local function encode_table(val, stack)
       error("invalid table: sparse array")
     end
     -- Encode
-    for i, v in ipairs(val) do
+    for i, v in sort_ipairs(val) do
       table.insert(res, encode(v, stack))
     end
     stack[val] = nil
@@ -86,7 +86,7 @@ local function encode_table(val, stack)
 
   else
     -- Treat as an object
-    for k, v in pairs(val) do
+    for k, v in sort_pairs(val) do
       if type(k) ~= "string" then
         error("invalid table: mixed or invalid key types")
       end
@@ -132,7 +132,14 @@ end
 
 
 function json.raw_encode(val)
-  return ( encode(val) )
+   return(encode(val))
+   -- sort
+   -- local out = "{ "
+   -- for k,v in sort_pairs(val) do
+   -- 	  out = out .. '"'..k..'": '
+   -- 	  out = out .. encode(v)..","
+   -- end
+   -- return(out:sub(1,-2) .. "}")
 end
 
 
