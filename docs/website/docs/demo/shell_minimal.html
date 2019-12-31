@@ -18,15 +18,16 @@
   <script src="//rawgit.com/caldwell/renderjson/master/renderjson.js"></script>
   <script src="./shell.js"></script>
   <style>
-   body { font-family: Montserrat, sans-serif; font-size: 14px; }
-   #output { font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro", monospace; overflow: auto; padding: 5px; }
+   body { font-family: Montserrat, sans-serif; font-size: 16px; }
+   #logs, #output { font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro", monospace; overflow: auto; padding: 5px; }
+   #logs { overflow: scroll }
    #zenbar .navbar-start a.navbar-item::before { content: " "; height: 10px; width: 10px; background-color: #33e986; margin-right: 10px; display: inline-block; }
    #zenbar .navbar-start a.navbar-item:hover::before { background-color: #ff00ff; }
    #zenbar .navbar-item { padding-left: 1em; padding-right: 1em; }
    #zenbar .navbar-item img { padding-left: 1em; padding-right: 2em; }
    .navbar-item .examples { background-color: #efefef }
    .lm_header .lm_tab { font-family: Montserrat; font-size: 14px; height: 21px; }
-   .lm_header .lm_controls>li, .icon { height: 28px; width: 28px; }
+   .lm_header .lm_controls>li, .icon { height: 28px; width: 40px; }
    .lm_controls > li { background-size: 15px; }
    .renderjson                { background-color: transparent; height: 100%;}
    .renderjson a              { text-decoration: none; }
@@ -40,14 +41,16 @@
    .renderjson .object.syntax { color: lightseagreen; }
    .renderjson .array.syntax  { color: lightsalmon; }
    #timing { height: auto; position: relative; bottom: 6px; margin-left: 4px; }
+   #play-button { font-size:18px; right:14px; opacity: .6 }
+￼  #play-button svg { margin-left: 2px; }
   </style>
 </head>
 
 <body>
   <template type="text/html" id="play-button-template">
-    <li title="Run (⌘ + Enter)">
+    <li title="Run (⌘/Ctrl + Enter)">
       <span class="icon has-text-success">
-        <i class="fas fa-play-circle"></i>
+        RUN <i class="fas fa-play-circle"></i>
       </span>
     </li>
   </template>

@@ -66,7 +66,7 @@
 	lerror(L, "Zenroom won't overwrite. Use a .new() instance.");
 
 // from zen_ecdh_factory.h to setup function pointers
-extern int ecdh_init(ecdh *e);
+extern void ecdh_init(ecdh *e);
 
 extern zenroom_t *Z; // accessed to check random_seed configuration
 

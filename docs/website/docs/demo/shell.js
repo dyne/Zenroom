@@ -47,10 +47,18 @@ var ZR = (function() {
                         isClosable: false,
                     }]
                 }, {
-                    type: 'component',
-                    componentName: 'OUTPUT',
-                    componentState: { label: 'output' },
-                    isClosable: false,
+                    type: 'stack',
+                    content: [{
+                        type: 'component',
+                        componentName: 'OUTPUT',
+                        componentState: { label: 'output' },
+                        isClosable: false,
+                    }, {
+                        type: 'component',
+                        componentName: 'LOGS',
+                        componentState: { label: 'logs' },
+                        isClosable: false,
+                    }]
                 }]
             }]
         }]
@@ -148,6 +156,10 @@ var ZR = (function() {
         })
     }
 
+    const setupLogsComponent = function(container, state) {
+        container.getElement().html(`<div style="height:88%" id="${state.label}"></div>`)
+    }
+
     const bindAutoFocus = function(stack) {
         stack.on('activeContentItemChanged', item => {
             const state = item.container.getState()
@@ -157,7 +169,7 @@ var ZR = (function() {
         });
     }
 
-    const clearOutput = () => $("#output").html('');
+    const clearOutput = () => $("#output,#logs").html('');
 
     const addControls = function(stack) {
         const component = stack.contentItems[0]
@@ -190,6 +202,7 @@ var ZR = (function() {
         layout.registerComponent('JsonEditor', setupJsonEditorComponent)
         layout.registerComponent('ZencodeEditor', setupZencodeEditorComponent)
         layout.registerComponent('OUTPUT', setupOutputComponent)
+        layout.registerComponent('LOGS', setupLogsComponent)
         layout.on('stackCreated', bindAutoFocus)
         layout.on('stackCreated', addControls)
         layout.init()
@@ -210,8 +223,8 @@ var ZR = (function() {
         $.get('https://raw.githubusercontent.com/DECODEproject/zenroom/master/docs/completions.lua', data => {
             Module.ccall('zenroom_exec', 
                          'number',
-                         ['string', 'string', 'string', 'string', 'number'],
-                         [data, null, null, null, 3]);
+                         ['string', 'string', 'string', 'string'],
+                         [data, null, null, null]);
             Module['print'] = (function() {
                 return function(text) {
                     if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
@@ -250,19 +263,20 @@ var ZR = (function() {
         })
     }
 
-    const execute_zenroom = function(code) {
+    const execute_zenroom = function(code, zencode) {
         const keys = ace.edit("keys").getValue() || null
         const data = ace.edit("data").getValue() || null
-        const conf = $('#umm').attr('checked') ? 'umm' : null
+        // const conf = $('#umm').attr('checked') ? 'umm' : null
+        const conf = `verbose 3`
         outputBuffer = []
         clearOutput()
         let t0 = performance.now()
-        Module.ccall('zenroom_exec', 
+        Module.ccall(zencode ? 'zencode_exec' : 'zenroom_exec',
                          'number',
-                         ['string', 'string', 'string', 'string', 'number'],
-                         [code, conf, keys, data, 3]);
+                         ['string', 'string', 'string', 'string'],
+                         [code, conf, keys, data]);
         let t1 = performance.now()
-        console.log(t1-t0, 'ms')
+        // console.log(t1-t0, 'ms')
         flushOutput()
         $('#timing').html(Math.ceil(t1-t0) + 'ms')
         $('#output')[0].scrollTop = $('#output')[0].scrollHeight
@@ -271,17 +285,7 @@ var ZR = (function() {
     const zenroom = function() {
         const activeEditor = layout.root.getItemsById('container')[0].getActiveContentItem().container.getState().label
         let code = ace.edit(activeEditor).getValue()
-        if (activeEditor == 'zencode') {
-            code = `
-ZEN:begin(0)
-ZEN:parse([[
-${code}
-]])
-ZEN:run()
-            `
-            console.log(code)
-        }
-        execute_zenroom(code)
+        execute_zenroom(code, (activeEditor==='zencode'))
     }
 
     return {
@@ -306,7 +310,7 @@ var Module = {
             $(`<span class='has-background-danger'>${text}</span><br>`).appendTo("#output")
             return
         }
-        console.error(text)
+        $(`<span>${text}</span><br>`).appendTo("#logs")
     },
     exec_ok: () => {},
     exec_error: () => {},
