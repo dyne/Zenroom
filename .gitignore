@@ -3,6 +3,7 @@
 src/lualibs_detected.c
 CMakeCache.*
 CMakeFiles
+lib/milagro-crypto-c/CPackConfig.cmake
 CPack*
 CTest*
 config.log

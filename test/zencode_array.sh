@@ -53,7 +53,7 @@ Given I have a valid array in 'bonnetjes'
 and I have a valid array of 'ECP' in 'hashes'
 # When I pick the random object in array 'hashes'
 # and I remove the 'random object' from array 'hashes'
-When for each x='hashes' y='bonnetjes' is true 'x == ECP.hashtopoint(y)'
+When for each x in 'hashes' y in 'bonnetjes' is true 'x == ECP.hashtopoint(y)'
 Then print the 'hashes'
 EOF
 # 'x == ECP.hashtopoint(y)'
@@ -63,7 +63,7 @@ cat <<EOF | zenroom -z -a $t/arr.json | json_pp
 rule input encoding url64
 rule output encoding url64
 Given I have a valid array in 'bonnetjes'
-When for each 'bonnetjes' create the array using 'sha256(x)'
+When for each x in 'bonnetjes' create the array using 'sha256(x)'
 Then print the 'array'
 and print the 'bonnetjes'
 EOF

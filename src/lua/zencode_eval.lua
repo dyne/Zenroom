@@ -72,7 +72,7 @@ return ]]..lfun
    else return nil end
 end
 
-When("for each x='' y='' is true ''", function(X, Y, cond)
+When("for each x in '' y in '' is true ''", function(X, Y, cond)
 		ZEN.assert(isarray(ACK[X]), "Array X not found: "..X)
 		ZEN.assert(isarray(ACK[Y]), "Array Y not found: "..Y)
 		ZEN.eval_condition(cond) -- check
@@ -85,7 +85,7 @@ When("for each x='' y='' is true ''", function(X, Y, cond)
 					  "Checked condition failed on arr["..c.."]: " ..cond)
 		end
 end)
-When("for each '' create the array using ''", function(arr,fun)
+When("for each x in '' create the array using ''", function(arr,fun)
 		ZEN.assert(isarray(ACK[arr]), "Array not found: "..arr)
 		ZEN.eval_function(fun) -- check
 		local c = 0
@@ -95,6 +95,3 @@ When("for each '' create the array using ''", function(arr,fun)
 		   table.insert(ACK.array, ZEN.eval_function(fun,{x=v}))
 		end
 end)
-
--- TODO: # When for each x in 'bonnetjes' create the array of 'ECP.hashtopoint(x)'
--- for column (array) derivation

@@ -62,6 +62,7 @@ zencode-tests = \
 
 zencode-integration = \
 	./test/zencode_parser.sh && \
+	./test/zencode_array.sh && \
 	cd test/zencode_simple &&    \
 	./run_symmetric_integration_test.sh ../../${1} && \
 	./run_aesgcm_integration_test.sh ../../${1} && \
