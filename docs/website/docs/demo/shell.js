@@ -305,12 +305,14 @@ var Module = {
         }
     })(),
     printErr: function(text) {
+        let bg = ''
+        let elements = '#logs'
         if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
-        if (text.startsWith('[!]')) {
-            $(`<span class='has-background-danger'>${text}</span><br>`).appendTo("#output")
-            return
-        }
-        $(`<span>${text}</span><br>`).appendTo("#logs")
+        if (text.startsWith('[!]')) bg = 'has-background-danger has-text-light'
+        if (text.startsWith('[W]')) bg = 'has-background-warning'
+        if (bg) elements = '#logs, #output'
+
+        $(`<span class="${bg}">${text}</span><br>`).appendTo(elements)
     },
     exec_ok: () => {},
     exec_error: () => {},
