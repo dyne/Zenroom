@@ -90,7 +90,7 @@ print("Test BLS Signatures")
 -- assume: ε(δ*G2, H(m)) == ε(G2, δ*H(m))
 -- check:  ε(γ, H(m))    == ε(G2, σ)
 
-msg = str("This is the secret message")
+msg = str("This is the authenticated message")
 
 -- keygen
 -- δ = r.O

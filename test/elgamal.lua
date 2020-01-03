@@ -24,9 +24,9 @@ print''
 G = ECP.generator()
 O = ECP.order()
 salt = ECP.hashtopoint("Constant random string")
-secret = INT.new(sha256("Message to be authenticated"))
+message = INT.new(sha256("Message to be authenticated"))
 r = INT.random()
-commitment = G * r + salt * secret
+commitment = G * r + salt * message
 
 -- keygen
 seckey = INT.random()
@@ -35,12 +35,12 @@ pubkey = G * seckey
 -- sign
 k = INT.random()
 cipher = { a = G * k,
-		   b = pubkey * k + commitment * secret }
+		   b = pubkey * k + commitment * message }
 
 -- verify
 assert(cipher.b - cipher.a * seckey
 		  ==
-		  commitment * secret, "ELGAMAL failure")
+		  commitment * message, "ELGAMAL failure")
 
 print('ELGAMAL SIGNATURE OK')
 print''
