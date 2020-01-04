@@ -181,12 +181,18 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 
 	lua_atpanic(Z->lua, &zen_lua_panic); // as done in lauxlib luaL_newstate
 	lua_pushcfunction(Z->lua, &zen_init_pmain);  /* to call in protected mode */
-	lua_pushinteger(Z->lua, 0);  /* 1st argument */
-	lua_pushlightuserdata(Z->lua, NULL); /* 2nd argument */
-	int status = lua_pcall(Z->lua,2,1,0);
-	// int status = zen_init_pmain(L);
+	// lua_pushinteger(Z->lua, 0);  /* 1st argument */
+	// lua_pushlightuserdata(Z->lua, NULL); /* 2nd argument */
+	                    // ctx     args ret errfunc
+	int status = lua_pcall(Z->lua, 0,   1,  0);
+
 	if(status != LUA_OK) {
-		error(Z->lua,"%s: %s (%u)", __func__, "Lua initialization failed",status);
+		char *_err = (status == LUA_ERRRUN) ? "Runtime error at initialization" :
+			(status == LUA_ERRMEM) ? "Memory allocation error at initalization" :
+			(status == LUA_ERRERR) ? "Error handler fault at initalization" :
+			"Unknown error at initalization";
+		error(Z->lua,"%s: %s\n    %s", __func__, _err,
+		      lua_tostring(Z->lua,1)); // lua's traceback string
 		return NULL;
 	}
 
