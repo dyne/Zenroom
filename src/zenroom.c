@@ -268,6 +268,8 @@ int zen_exec_zencode(zenroom_t *Z, const char *script) {
 	zen_setenv(L,"CODE",(char*)zscript);
 	ret = luaL_dostring(L, zscript);
 	if(ret) {
+		error(L, "Zencode execution error");
+		error(L, "Script:\n%s", zscript);
 		error(L, "%s", lua_tostring(L, -1));
 		fflush(stderr);
 		return ret;
