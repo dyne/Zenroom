@@ -6,7 +6,7 @@ local ASYNC = "async"
 
 local function call_handler(handler, params)
   if handler then
-    return handler(unpack(params))
+    return handler(table.unpack(params))
   end
 end
 
