@@ -215,76 +215,9 @@ function split(src,pat)
    src:gsub(pat, function(x) tbl[#tbl+1]=x end)
    return tbl
 end
-function strtok(src) return split(src, "%S+") end
-
--- TODO: investigate use of lua-faces
-function set_rule(text)
-   local res = false
-   local rule = strtok(text) -- TODO: optimise in C (see zenroom_common)
-   if rule[2] == 'check' and rule[3] == 'version' and rule[4] then
-	  SEMVER = require_once('semver')
-	  local ver = SEMVER(rule[4])
-	  if ver == VERSION then
-		 act("Zencode version match: "..VERSION.original)
-		 res = true
-	  elseif ver < VERSION then
-		 error("Zencode written for an older version: "
-				 ..ver.original.." < "..VERSION.original, 2)
-	  elseif ver > VERSION then
-		 error("Zencode written for a newer version: "
-					..ver.original.." > "..VERSION.original, 2)
-	  else
-		 error("Version check error: "..rule[4])
-	  end
-	  ZEN.checks.version = res
-      -- TODO: check version of running VM
-	  -- elseif rule[2] == 'load' and rule[3] then
-	  --     act("zencode extension: "..rule[3])
-	  --     require("zencode_"..rule[3])
-   elseif rule[2] == 'input' and rule[3] then
-
-      -- rule input encoding|format ''
-      if rule[3] == 'encoding' and rule[4] then
-         CONF.input.encoding = input_encoding(rule[4])
-		 res = true and CONF.input.encoding
-      elseif rule[3] == 'format' and rule[4] then
-		 CONF.input.format = get_format(rule[4])
-         res = true and CONF.input.format
-	  elseif rule[3] == 'untagged' then
-		 res = true
-		 CONF.input.tagged = false
-      end
-
-   elseif rule[2] == 'output' and rule[3] and rule[4] then
-
-      -- rule input encoding|format ''
-      if rule[3] == 'encoding' then
-         CONF.output.encoding = get_encoding(rule[4])
-		 res = true and CONF.output.encoding
-      elseif rule[3] == 'format' then
-		 CONF.output.format = get_format(rule[4])
-         res = true and CONF.output.format
-      elseif rule[3] == 'versioning' then
-		 CONF.output.versioning = true
-         res = true
-      end
-
-   elseif rule[2] == 'unknown' and rule[3] then
-	  if rule[3] == 'ignore' then
-		 CONF.parser.strict_match = false
-		 res = true
-	  end
-
-   elseif rule[2] == 'set' and rule[4] then
-
-      CONF[rule[3]] = tonumber(rule[4]) or rule[4]
-      res = true and CONF[rule[3]]
-
-   end
-   if not res then error("Rule invalid: "..text, 3)
-   else act(text) end
-   return res
-end
+function strtok(src)
+   if not src then return { } end
+   return split(src, "%S+") end
 
 -- assert all values in table are converted to zenroom types
 -- used in zencode when transitioning out of given memory

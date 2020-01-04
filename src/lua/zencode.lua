@@ -51,21 +51,69 @@ local zencode = {
    given_steps = {},
    when_steps = {},
    then_steps = {},
-   current_step = nil,
    id = 0,
-   matches = {},
+   AST = {},
    verbosity = 0,
    schemas = { },
-   checks = { }, -- version, scenario checked, etc.
-   scenario = 'simple';
+   checks = { version = false }, -- version, scenario checked, etc.
    OK = true -- set false by asserts
 }
+
+function sentence(self, event, from, to, msg)
+   local prefix = parse_prefix(msg)
+   local reg
+   ZEN.OK = false
+   if prefix == 'and' then
+	  reg = ZEN[ZEN.machine.current.."_steps"]
+   else
+    reg = ZEN[prefix.."_steps"]
+   end
+   ZEN.assert(reg, "Steps register not found: "..prefix.."_steps")
+   for pattern,func in pairs(reg) do
+	  if (type(func) ~= "function") then
+		 error("Zencode function missing: "..pattern, 2)
+		 return false
+	  end
+	  -- TODO: optimize in c
+	  -- remove '' contents, lower everything, expunge prefixes
+	  local tt = string.gsub(msg,"'(.-)'","''")
+	  tt = string.gsub(tt:lower() ,"when " ,"", 1)
+	  tt = string.gsub(tt,"then " ,"", 1)
+	  tt = string.gsub(tt,"given ","", 1)
+	  tt = string.gsub(tt,"and "  ,"", 1) -- TODO: expunge only first 'and'
+	  tt = string.gsub(tt,"that " ,"", 1)
+	  if strcasecmp(tt, pattern) then
+		 local args = {} -- handle multiple arguments in same string
+		 for arg in string.gmatch(msg,"'(.-)'") do
+			-- xxx(2,"+arg: "..arg)
+			arg = string.gsub(arg, ' ', '_')
+			table.insert(args,arg)
+		 end
+		 ZEN.id = ZEN.id + 1
+		 -- AST data prototype
+		 table.insert(ZEN.AST,
+					  { id = ZEN.id, -- ordered number
+						args = args,  -- array of vars
+						source = msg, -- source text
+						section = strtok(msg)[1]:lower(),
+						hook = func       }) -- function
+		 ZEN.OK = true
+		 break
+	  end
+   end
+   if not ZEN.OK and CONF.parser.strict_match then
+	  print(ZEN_traceback)
+   	  exitcode(1)
+   	  error("Zencode pattern not found: "..msg, 2)
+   	  return false
+   end
+end
 
 zencode.machine = MACHINE.create({
 	  initial = 'init',
 	  events = {
 		 { name = 'enter_rule',     from = { 'init', 'rule', 'scenario' }, to = 'rule' },
-		 { name = 'enter_scenario', from = { 'init', 'rule' }, to = 'scenario' },
+		 { name = 'enter_scenario', from = { 'init', 'rule', 'scenario' }, to = 'scenario' },
 		 { name = 'enter_given',    from = { 'init', 'rule', 'scenario' }, to = 'given' },
 		 { name = 'enter_given',    from =   'given',             to = 'given' },
 		 { name = 'enter_and',      from =   'given',             to = 'given' },
@@ -75,9 +123,29 @@ zencode.machine = MACHINE.create({
 		 { name = 'enter_then',     from = { 'given', 'when' },   to = 'then' },
 		 { name = 'enter_then',     from =   'then',              to = 'then' },
 		 { name = 'enter_and',      from =   'then',              to = 'then' }
+	  },
+	  callbacks = {
+		 onscenario = function(self, event, from, to, msg)
+			-- first word until the colon
+			local scenarios = strtok(string.match(msg, "[^:]+"))
+			for k,scen in ipairs(scenarios) do
+			   if k ~= 1 then -- skip first (prefix)
+				  require_once("zencode_"..trimq(scen))
+				  ZEN:trace("Scenario "..scen)
+				  return
+			   end
+			end
+		 end,
+		 onrule = function(self, event, from, to, msg)
+			-- process rules immediately
+			set_rule(msg)
+		 end,
+		 ongiven = sentence,
+		 onwhen  = sentence,
+		 onthen  = sentence,
+		 onand = sentence
 	  }
 })
-
 
 -- Zencode HEAP globals
 IN = { }         -- Given processing, import global DATA from json
@@ -103,328 +171,74 @@ function require_once(ninc)
    return class
 end
 
---- Given block (IN read-only memory)
--- @section Given
-
----
--- Declare 'my own' name that will refer all uses of the 'my' pronoun
--- to structures contained under this name.
---
--- @function ZEN:Iam(name)
--- @param name own name to be saved in WHO
-function zencode:Iam(name)
-   if name then
-	  ZEN.assert(not WHO, "Identity already defined in WHO")
-	  ZEN.assert(type(name) == "string", "Own name not a string")
-	  WHO = name
-   else
-	  ZEN.assert(WHO, "No identity specified in WHO")
-   end
-   assert(ZEN.OK)
-end
-
-
--- local function used inside ZEN:pick*
--- try obj.*.what (TODO: exclude KEYS and WHO)
-local function inside_pick(obj, what)
-   ZEN.assert(obj, "ZEN:pick object is nil")
-   -- ZEN.assert(I.spy(type(obj)) == "table", "ZEN:pick object is not a table")
-   ZEN.assert(type(what) == "string", "ZEN:pick object index is not a string")
-   local got
-   if type(obj) == 'string' then  got = obj
-   else got = obj[what] end
-   if got then
-	  -- ZEN:ftrace("inside_pick found "..what.." at object root")
-	  goto gotit
-   end
-   for k,v in pairs(obj) do -- search 1 deeper
-      if type(v) == "table" and v[what] then
-         got = v[what]
-         -- ZEN:ftrace("inside_pick found "..k.."."..what)
-         break
-      end
-   end
-   ::gotit::
-   return got
-end
-
----
--- Pick a generic data structure from the <b>IN</b> memory
--- space. Looks for named data on the first and second level and makes
--- it ready for @{validate} or @{ack}.
---
--- @function ZEN:pick(name, data)
--- @param name string descriptor of the data object
--- @param data[opt] optional data object (default search inside IN.*)
--- @return true or false
-function zencode:pick(what, obj)
-   if obj then -- object provided by argument
-	  TMP = { data = obj,
-			  root = nil,
-			  schema = what,
-			  valid = false }
-	  return(ZEN.OK)
-   end
-   local got
-   got = inside_pick(IN.KEYS, what) or inside_pick(IN,what)
-   ZEN.assert(got, "Cannot find '"..what.."' anywhere")
-   TMP = { root = nil,
-		   data = got,
-		   valid = false,
-		   schema = what }
-   assert(ZEN.OK)
-   ZEN:ftrace("pick found "..what)
-end
-
----
--- Pick a data structure named 'what' contained under a 'section' key
--- of the at the root of the <b>IN</b> memory space. Looks for named
--- data at the first and second level underneath IN[section] and moves
--- it to TMP[what][section], ready for @{validate} or @{ack}. If
--- TMP[what] exists already, every new entry is added as a key/value
---
--- @function ZEN:pickin(section, name)
--- @param section string descriptor of the section containing the data
--- @param name string descriptor of the data object
--- @return true or false
-function zencode:pickin(section, what)
-   ZEN.assert(section, "No section specified")
-   local root -- section
-   local got  -- what
-   root = inside_pick(IN.KEYS,section)
-   if root then --    IN KEYS
-	  got = inside_pick(root, what)
-	  if got then goto found end
-   end
-   root = inside_pick(IN,section)
-   if root then --    IN
-	  got = inside_pick(root, what)
-	  if got then goto found end
-   end
-   ZEN.assert(got, "Cannot find '"..what.."' inside '"..section.."'")   
-   -- TODO: check all corner cases to make sure TMP[what] is a k/v map
-   ::found::
-   TMP = { root = section,
-		   data = got,
-		   valid = false,
-		   schema = what }
-   assert(ZEN.OK)
-   ZEN:ftrace("pickin found "..what.." in "..section)
-end
-
----
--- Optional step inside the <b>Given</b> block to execute schema
--- validation on the last data structure selected by @{pick}.
---
--- @function ZEN:validate(name)
--- @param name string descriptor of the data object
--- @param schema[opt] string descriptor of the schema to validate
--- @return true or false
-function zencode:validate(name, schema)
-   schema = schema or TMP.schema or name -- if no schema then coincides with name
-   ZEN.assert(name, "ZEN:validate error: argument is nil")
-   ZEN.assert(TMP, "ZEN:validate error: TMP is nil")
-   -- ZEN.assert(TMP.schema, "ZEN:validate error: TMP.schema is nil")
-   -- ZEN.assert(TMP.schema == name, "ZEN:validate() TMP does not contain "..name)
-   local got = TMP.data -- inside_pick(TMP,name)
-   ZEN.assert(TMP.data, "ZEN:validate error: data not found in TMP for schema "..name)
-   local s = ZEN.schemas[schema]
-   ZEN.assert(s, "ZEN:validate error: "..schema.." schema not found")
-   ZEN.assert(type(s) == 'function', "ZEN:validate error: schema is not a function for "..schema)
-   ZEN:ftrace("validate "..name.. " with schema "..schema)
-   local res = s(TMP.data) -- ignore root
-   ZEN.assert(res, "ZEN:validate error: validation failed for "..name.." with schema "..schema)
-   TMP.data = res -- overwrite
-   assert(ZEN.OK)
-   TMP.valid = true
-   ZEN:ftrace("validation passed for "..name.. " with schema "..schema)
-end
-
-function zencode:validate_recur(obj, name)
-   ZEN.assert(name, "ZEN:validate_recur error: schema name is nil")
-   ZEN.assert(obj, "ZEN:validate_recur error: object is nil")
-   local s = ZEN.schemas[name]
-   ZEN.assert(s, "ZEN:validate_recur error: schema not found: "..name)
-   ZEN.assert(type(s) == 'function', "ZEN:validate_recur error: schema is not a function: "..name)
-   ZEN:ftrace("validate_recur "..name)
-   local res = s(obj)
-   ZEN.assert(res, "Schema validation failed: "..name)
-   return(res)
-end
-
-function zencode:ack_table(key,val)
-   ZEN.assert(TMP.valid, "No valid object found in TMP")
-   ZEN.assert(type(key) == 'string',"ZEN:table_add arg #1 is not a string")
-   ZEN.assert(type(val) == 'string',"ZEN:table_add arg #2 is not a string")
-   if not ACK[key] then ACK[key] = { } end
-   ACK[key][val] = TMP.data
-end
-
----
--- Final step inside the <b>Given</b> block towards the <b>When</b>:
--- pass on a data structure into the ACK memory space, ready for
--- processing.  It requires the data to be present in TMP[name] and
--- typically follows a @{pick}. In some restricted cases it is used
--- inside a <b>When</b> block following the inline insertion of data
--- from zencode.
---
--- @function ZEN:ack(name)
--- @param name string key of the data object in TMP[name]
-function zencode:ack(name)
-   ZEN.assert(TMP.data and TMP.valid, "No valid object found: ".. name)
-   assert(ZEN.OK)
-   local t = type(ACK[name])
-   if not ACK[name] then -- assign in ACK the single object
-	  ACK[name] = TMP.data
-	  goto done
-   end
-   -- ACK[name] already holds an object
-   -- not a table?
-   if t ~= 'table' then -- convert single object to array
-	  ACK[name] = { ACK[name] }
-	  table.insert(ACK[name], TMP.data)
-	  goto done
-   end
-   -- it is a table already
-   if isarray(ACK[name]) then -- plain array
-	  table.insert(ACK[name], TMP.data)
-	  goto done
-   else -- associative map
-	  table.insert(ACK[name], TMP.data) -- TODO: associative map insertion
-	  goto done
-   end
-   ::done::
-   assert(ZEN.OK)
-end
-
-function zencode:ackmy(name, object)
-   local obj = object or TMP.data
-   ZEN:trace("f   pushmy() "..name.." "..type(obj))
-   ZEN.assert(WHO, "No identity specified")
-   ZEN.assert(obj, "Object not found: ".. name)
-   local me = WHO
-   if not ACK[me] then ACK[me] = { } end
-   ACK[me][name] = obj
-   assert(ZEN.OK)
-end
-
---- When block (ACK read-write memory)
--- @section When
-
----
--- Draft a new text made of a simple string: convert it to @{OCTET}
--- and append it to ACK.draft.
---
--- @function ZEN:draft(string)
--- @param string any string to be appended as draft
-function zencode:draft(s)
-   if s then
-	  ZEN.assert(type(s) == "string", "Provided draft is not a string")
-	  if not ACK.draft then
-		 ACK.draft = str(s)
+-- TODO: investigate use of lua-faces
+function set_rule(text)
+   local res = false
+   local rule = strtok(text) -- TODO: optimise in C (see zenroom_common)
+   if rule[2] == 'check' and rule[3] == 'version' and rule[4] then
+	  SEMVER = require_once('semver')
+	  local ver = SEMVER(rule[4])
+	  if ver == VERSION then
+		 act("Zencode version match: "..VERSION.original)
+		 res = true
+	  elseif ver < VERSION then
+		 error("Zencode written for an older version: "
+				 ..ver.original.." < "..VERSION.original, 2)
+	  elseif ver > VERSION then
+		 error("Zencode written for a newer version: "
+					..ver.original.." > "..VERSION.original, 2)
 	  else
-		 ACK.draft = ACK.draft .. str(s)
+		 error("Version check error: "..rule[4])
 	  end
-   else -- no arg: sanity checks
-	  ZEN.assert(ACK.draft, "No draft found in ACK.draft")
+	  ZEN.checks.version = res
+      -- TODO: check version of running VM
+	  -- elseif rule[2] == 'load' and rule[3] then
+	  --     act("zencode extension: "..rule[3])
+	  --     require("zencode_"..rule[3])
+   elseif rule[2] == 'input' and rule[3] then
+
+      -- rule input encoding|format ''
+      if rule[3] == 'encoding' and rule[4] then
+         CONF.input.encoding = input_encoding(rule[4])
+		 res = true and CONF.input.encoding
+      elseif rule[3] == 'format' and rule[4] then
+		 CONF.input.format = get_format(rule[4])
+         res = true and CONF.input.format
+	  elseif rule[3] == 'untagged' then
+		 res = true
+		 CONF.input.tagged = false
+      end
+
+   elseif rule[2] == 'output' and rule[3] and rule[4] then
+
+      -- rule input encoding|format ''
+      if rule[3] == 'encoding' then
+         CONF.output.encoding = get_encoding(rule[4])
+		 res = true and CONF.output.encoding
+      elseif rule[3] == 'format' then
+		 CONF.output.format = get_format(rule[4])
+         res = true and CONF.output.format
+      elseif rule[3] == 'versioning' then
+		 CONF.output.versioning = true
+         res = true
+      end
+
+   elseif rule[2] == 'unknown' and rule[3] then
+	  if rule[3] == 'ignore' then
+		 CONF.parser.strict_match = false
+		 res = true
+	  end
+
+   elseif rule[2] == 'set' and rule[4] then
+
+      CONF[rule[3]] = tonumber(rule[4]) or rule[4]
+      res = true and CONF[rule[3]]
+
    end
-   assert(ZEN.OK)
+   if not res then error("Rule invalid: "..text, 3)
+   else act(text) end
+   return res
 end
-
-
----
--- Compare equality of two data objects (TODO: octet, ECP, etc.)
--- @function ZEN:eq(first, second)
-
----
--- Check that the first object is greater than the second (TODO)
--- @function ZEN:gt(first, second)
-
----
--- Check that the first object is lesser than the second (TODO)
--- @function ZEN:lt(first, second)
-
-
---- Then block (OUT write-only memory)
--- @section Then
-
----
--- Move a generic data structure from ACK to OUT memory space, ready
--- for its final JSON encoding and print out.
--- @function ZEN:out(name)
-
----
--- Move 'my own' data structure from ACK to OUT.whoami memory space,
--- ready for its final JSON encoding and print out.
--- @function ZEN:outmy(name)
-
----
--- Convert a data object to the desired format (argument name provided
--- as string), or use CONF.encoding when called without argument
---
--- @function ZEN:export(object, format)
--- @param object data element to be converted
--- @param format pointer to a converter function
--- @return object converted to format
-function zencode:export(object, format)
-   -- CONF { encoding = <function 1>,
-   --        encoding_prefix = "u64"  }
-   ZEN.assert(object, "ZEN:export object not found")
-   ZEN.assert(iszen(type(object)), "ZEN:export called on a ".. type(object))
-   local conv_f = nil
-   local ft = type(format)
-   if format and ft == 'function' then conv_f = format goto ok end
-   if format and ft == 'string' then conv_f = get_encoding(format).fun goto ok end
-   conv_f = CONF.output.encoding.fun -- fallback to configured conversion function
-   ::ok::
-   ZEN.assert(type(conv_f) == 'function' , "ZEN:export conversion function not configured")
-   return conv_f(object) -- TODO: protected call
-end
-
----
--- Import a generic data element from the tagged format, or use
--- CONF.encoding
---
--- @function ZEN:import(object)
--- @param object data element to be read
--- @param secured block implicit conversion from untagget string
--- @return object read
-function zencode:import(object, secured)
-   ZEN.assert(object, "ZEN:import object is nil")
-   local t = type(object)
-   if iszen(t) then
-	  warn("ZEN:import object already converted to "..t)
-	  return t
-   end
-   ZEN.assert(t ~= 'table', "ZEN:import table is impossible: object needs to be 'valid'")
-   ZEN.assert(t == 'string', "ZEN:import object is not a string: "..t)
-   -- OK, convert
-   if string.sub(object,1,3) == 'u64' and O.is_url64(object) then
-	  -- return decoded string format for JSON.decode
-	  return O.from_url64(object)
-   elseif string.sub(object,1,3) == 'b64' and O.is_base64(object) then
-	  -- return decoded string format for JSON.decode
-	  return O.from_base64(object)
-   elseif string.sub(object,1,3) == 'hex' and O.is_hex(object) then
-	  -- return decoded string format for JSON.decode
-	  return O.from_hex(object)
-   elseif string.sub(object,1,3) == 'bin' and O.is_bin(object) then
-	  -- return decoded string format for JSON.decode
-	  return O.from_bin(object)
-   -- elseif CONF.input.encoding.fun then
-   -- 	  return CONF.input.encoding.fun(object)
-   elseif string.sub(object,1,3) == 'str' then
-	  return O.from_string(object)
-   end
-   if not secured then
-	  ZEN:wtrace("import implicit conversion from string ("..#object.." bytes)")
-	  return O.from_string(object)
-   end
-   error("Import secured to fail on untagged object",1)
-   return nil
-   -- error("ZEN:import failed conversion from "..t, 3)
-end
-
 
 
 ---------------------------------------------------------------
@@ -435,7 +249,6 @@ function zencode:begin(verbosity)
       xxx(2,"Zencode debug verbosity: "..verbosity)
       self.verbosity = verbosity
    end
-   self.current_step = self.given_steps
    return true
 end
 
@@ -450,120 +263,23 @@ function zencode:isempty(b)
 	   return true
    else return false
 end end
-function zencode:step(text)
+function zencode:parse_step(text)
    if ZEN:isempty(text) then return true end
    if ZEN:iscomment(text) then return true end
    -- max length for single zencode line is #define MAX_LINE
    -- hard-coded inside zenroom.h
    local prefix = parse_prefix(text)
+   ZEN.assert(prefix, "Invalid Zencode text: "..text)
    local defs -- parse in what phase are we
    ZEN.OK = true
    exitcode(0)
-
-   -- given block, may also skip scenario
-   if prefix == 'given' then
-	  ZEN.assert(ZEN.machine:enter_given(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.." to Given block")
-      self.current_step = self.given_steps
-      defs = self.current_step
-	  if not ZEN.checks.scenario then
-		 require_once("zencode_"..ZEN.scenario)
-		 ZEN.checks.scenario = true
-	  end
-
-	  -- when, then, and blocks
-   elseif prefix == 'when'  then
-	  ZEN.assert(ZEN.machine:enter_when(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.."to When block")
-      self.current_step = self.when_steps
-      defs = self.current_step
-   elseif prefix == 'then'  then
-	  ZEN.assert(ZEN.machine:enter_then(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.." to Then block")
-      self.current_step = self.then_steps
-      defs = self.current_step
-   elseif prefix == 'and'   then
-	  ZEN.assert(ZEN.machine:enter_and(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.." to And block")
-      defs = self.current_step
-
-   elseif prefix == 'scenario' then
-	  ZEN.assert(ZEN.machine:enter_scenario(), text.."\n    ".."Invalid transition from "..ZEN.machine.current.." to Scenario block")
-	  -- string.gmatch to cut away text after the colon
-	  local scenarios = strtok(string.match(text, "[^:]+"))
-	  for k,scen in ipairs(scenarios) do
-		 if k ~= 1 then -- skip prefix
-			require_once("zencode_"..trimq(scen))
-			ZEN:trace("Scenario "..scen)
-		 end
-	  end
-	  ZEN.checks.scenario = true
-   elseif prefix == 'rule' then
-	  ZEN.assert(ZEN.machine:enter_rule(), text.."\n    "..
-					"Invalid transition from "
-					..ZEN.machine.current.." to Rule block")
-	  -- process rules immediately
-	  set_rule(text)
-   else -- defs = nil end
-	    -- if not defs then
-		 exitcode(1)
-		 error("Zencode pattern not found: "..text, 2)
-		 ZEN.OK = false
-   end
-   if not ZEN.OK then
-	  print(ZEN_traceback)
-	  exitcode(1)
-	  assert(ZEN.OK)
-   end
-
-   -- nothing further to parse
-   if not defs then return false end
-   -- TODO: optimize and write a faster function in C
-   -- support simplified notation for arg match
-   local tt = string.gsub(text,"'(.-)'","''")
-   tt = string.gsub(tt:lower(),"when " ,"", 1)
-   tt = string.gsub(tt,"then " ,"", 1)
-   tt = string.gsub(tt,"given ","", 1)
-   tt = string.gsub(tt,"and "  ,"", 1) -- TODO: expunge only first 'and'
-   tt = string.gsub(tt,"that "  ,"", 1)
-
-   local match = false
-   for pattern,func in pairs(defs) do
-      if (type(func) ~= "function") then
-         error("Zencode function missing: "..pattern, 2)
-         return false
-      end
-
-	  -- I.warn({ prefix = strtok(text)[1]:lower(),
-	  -- 		   pattern = pattern,
-	  -- 		   tt = tt,
-	  -- 		   text = text })
-
-      if strcasecmp(tt, string.gsub(pattern,"that "  ,"", 1)) then
-		 local args = {} -- handle multiple arguments in same string
-		 for arg in string.gmatch(text,"'(.-)'") do
-			-- xxx(2,"+arg: "..arg)
-			arg = string.gsub(arg, ' ', '_')
-			table.insert(args,arg)
-		 end
-		 self.id = self.id + 1
-		 table.insert(self.matches,
-					  { id = self.id,
-						args = args,
-						source = text,
-						section = strtok(text)[1]:lower(),
-						hook = func       })
-		 match = true
-	  end
-	  if match then break end
-   end
-
-   if not match and CONF.parser.strict_match then
-	  exitcode(1)
-	  error("Zencode pattern not found: "..text, 2)
-	  ZEN.OK = false
-	  return false
-   end
-   if not match then
-	  warn("Ignored unknown zencode line: "..text)
-   end
-
+   -- try to enter the machine state named in prefix
+   -- xxx(3,"Zencode machine enter_"..prefix..": "..text)
+   local fm = ZEN.machine["enter_"..prefix]
+   ZEN.assert(fm,"Invalid Zencode prefix: "..prefix)
+   ZEN.assert(fm(ZEN.machine, text), text.."\n    "..
+				 "Invalid transition from "
+				 ..ZEN.machine.current.." to Rule block")
    return true
 end
 
@@ -580,7 +296,7 @@ function zencode:parse(text)
    	  warn("Zencode text too short to parse")
    	  return false end
    for line in self:newline_iter(text) do
-	  self:step(line)
+	  self:parse_step(line)
    end
    collectgarbage'collect'
 end
@@ -595,7 +311,6 @@ function zencode:trace(src)
 	  _G['ZEN_traceback'] = _G['ZEN_traceback'].." .  "..tr.."\n"
    end
 	  -- "    -> ".. src:gsub("^%s*", "") .."\n"
-   -- act(src) TODO: print also debug when verbosity is high
 end
 
 -- trace function execution also on success
@@ -604,7 +319,6 @@ function zencode:ftrace(src)
    _G['ZEN_traceback'] = _G['ZEN_traceback']..
 	  " D  ZEN:"..trim(src).."\n"
    -- "    -> ".. src:gsub("^%s*", "") .."\n"
-   -- act(src) TODO: print also debug when verbosity is high
 end
 
 -- log zencode warning in traceback
@@ -613,7 +327,6 @@ function zencode:wtrace(src)
    _G['ZEN_traceback'] = _G['ZEN_traceback']..
 	  " W  ZEN:"..trim(src).."\n"
    -- "    -> ".. src:gsub("^%s*", "") .."\n"
-   -- act(src) TODO: print also debug when verbosity is high
 end
 
 function zencode:run()
@@ -630,7 +343,7 @@ function zencode:run()
    IN.KEYS = { } -- import global KEYS from json
    if KEYS then IN.KEYS = CONF.input.format.fun(KEYS) or { } end
    -- EXEC zencode
-   for i,x in sort_ipairs(self.matches) do
+   for i,x in sort_ipairs(self.AST) do
 	  ZEN:trace(x.source)
 
 	  -- HEAP integrity guard
@@ -660,7 +373,7 @@ function zencode:run()
 	  if CONF.output.versioning == true then
 		 OUT.zenroom = { }
 		 OUT.zenroom.version = VERSION.original
-		 OUT.zenroom.scenario = ZEN.scenario
+		 -- OUT.zenroom.scenario = ZEN.scenario
 	  end
 	  ZEN:trace("<<< Encoding { OUT } to "..CONF.output.format.name)
 	  print(CONF.output.format.fun(OUT))
@@ -669,7 +382,6 @@ function zencode:run()
 end
 
 function zencode.debug()
-   -- TODO: print to stderr
    warn(ZEN_traceback)
    I.warn({ HEAP = { IN = IN,
 					TMP = TMP,
@@ -692,16 +404,6 @@ function zencode.assert(condition, errmsg)
    ZEN.OK = false
    exitcode(1);
    error(errmsg, 3)
-end
-
-_G["Given"] = function(text, fn)
-   zencode.given_steps[text] = fn
-end
-_G["When"] = function(text, fn)
-   zencode.when_steps[text] = fn
-end
-_G["Then"] = function(text, fn)
-   zencode.then_steps[text] = fn
 end
 
 return zencode
