@@ -53,61 +53,44 @@ local zencode = {
    then_steps = {},
    id = 0,
    AST = {},
-   verbosity = 0,
    schemas = { },
    checks = { version = false }, -- version, scenario checked, etc.
    OK = true -- set false by asserts
 }
 
-function sentence(self, event, from, to, msg)
-   local prefix = parse_prefix(msg)
-   local reg
-   ZEN.OK = false
-   if prefix == 'and' then
-	  reg = ZEN[ZEN.machine.current.."_steps"]
-   else
-    reg = ZEN[prefix.."_steps"]
+require('zenroom_ast')
+
+function zencode:parse(text)
+   if  #text < 9 then -- strlen("and debug") == 9
+   	  warn("Zencode text too short to parse")
+   	  return false end
+   -- xxx(3,text)
+   for line in zencode_newline_iter(text) do
+	  if zencode_isempty(line) then goto continue end
+	  if zencode_iscomment(line) then goto continue end
+	  -- max length for single zencode line is #define MAX_LINE
+	  -- hard-coded inside zenroom.h
+	  local prefix = parse_prefix(line)
+	  self.assert(prefix, "Invalid Zencode line: "..line)
+	  local defs -- parse in what phase are we
+	  self.OK = true
+	  exitcode(0)
+	  -- try to enter the machine state named in prefix
+	  -- xxx(3,"Zencode machine enter_"..prefix..": "..text)
+	  local fm = self.machine["enter_"..prefix]
+	  self.assert(fm,"Invalid Zencode prefix: "..prefix)
+	  self.assert(fm(self.machine, { msg = line, Z = self }), line.."\n    "..
+					 "Invalid transition from "
+					 ..self.machine.current.." to Rule block")
+	  ::continue::
    end
-   ZEN.assert(reg, "Steps register not found: "..prefix.."_steps")
-   for pattern,func in pairs(reg) do
-	  if (type(func) ~= "function") then
-		 error("Zencode function missing: "..pattern, 2)
-		 return false
-	  end
-	  -- TODO: optimize in c
-	  -- remove '' contents, lower everything, expunge prefixes
-	  local tt = string.gsub(msg,"'(.-)'","''")
-	  tt = string.gsub(tt:lower() ,"when " ,"", 1)
-	  tt = string.gsub(tt,"then " ,"", 1)
-	  tt = string.gsub(tt,"given ","", 1)
-	  tt = string.gsub(tt,"and "  ,"", 1) -- TODO: expunge only first 'and'
-	  tt = string.gsub(tt,"that " ,"", 1)
-	  if strcasecmp(tt, pattern) then
-		 local args = {} -- handle multiple arguments in same string
-		 for arg in string.gmatch(msg,"'(.-)'") do
-			-- xxx(2,"+arg: "..arg)
-			arg = string.gsub(arg, ' ', '_')
-			table.insert(args,arg)
-		 end
-		 ZEN.id = ZEN.id + 1
-		 -- AST data prototype
-		 table.insert(ZEN.AST,
-					  { id = ZEN.id, -- ordered number
-						args = args,  -- array of vars
-						source = msg, -- source text
-						section = strtok(msg)[1]:lower(),
-						hook = func       }) -- function
-		 ZEN.OK = true
-		 break
-	  end
-   end
-   if not ZEN.OK and CONF.parser.strict_match then
-	  print(ZEN_traceback)
-   	  exitcode(1)
-   	  error("Zencode pattern not found: "..msg, 2)
-   	  return false
-   end
+   collectgarbage'collect'
+   return true
 end
+
+
+-- set_sentence
+-- set_rule
 
 zencode.machine = MACHINE.create({
 	  initial = 'init',
@@ -125,9 +108,10 @@ zencode.machine = MACHINE.create({
 		 { name = 'enter_and',      from =   'then',              to = 'then' }
 	  },
 	  callbacks = {
+		 -- msg is a table: { msg = "string", Z = ZEN (self) }
 		 onscenario = function(self, event, from, to, msg)
 			-- first word until the colon
-			local scenarios = strtok(string.match(msg, "[^:]+"))
+			local scenarios = strtok(string.match(msg.msg, "[^:]+"))
 			for k,scen in ipairs(scenarios) do
 			   if k ~= 1 then -- skip first (prefix)
 				  require_once("zencode_"..trimq(scen))
@@ -140,10 +124,11 @@ zencode.machine = MACHINE.create({
 			-- process rules immediately
 			set_rule(msg)
 		 end,
-		 ongiven = sentence,
-		 onwhen  = sentence,
-		 onthen  = sentence,
-		 onand = sentence
+		 -- set_sentence from zencode_ast
+		 ongiven = set_sentence,
+		 onwhen  = set_sentence,
+		 onthen  = set_sentence,
+		 onand = set_sentence
 	  }
 })
 
@@ -159,147 +144,11 @@ WHO = nil
 -- Zencode init traceback
 _G['ZEN_traceback'] = "Zencode traceback:\n"
 
--- global
-_G["REQUIRED"] = { }
--- avoid duplicating requires (internal includes)
-function require_once(ninc)
-   local class = REQUIRED[ninc]
-   if type(class) == "table" then return class end
-   -- new require
-   class = require(ninc)
-   if type(class) == "table" then REQUIRED[ninc] = class end
-   return class
-end
-
--- TODO: investigate use of lua-faces
-function set_rule(text)
-   local res = false
-   local rule = strtok(text) -- TODO: optimise in C (see zenroom_common)
-   if rule[2] == 'check' and rule[3] == 'version' and rule[4] then
-	  SEMVER = require_once('semver')
-	  local ver = SEMVER(rule[4])
-	  if ver == VERSION then
-		 act("Zencode version match: "..VERSION.original)
-		 res = true
-	  elseif ver < VERSION then
-		 error("Zencode written for an older version: "
-				 ..ver.original.." < "..VERSION.original, 2)
-	  elseif ver > VERSION then
-		 error("Zencode written for a newer version: "
-					..ver.original.." > "..VERSION.original, 2)
-	  else
-		 error("Version check error: "..rule[4])
-	  end
-	  ZEN.checks.version = res
-      -- TODO: check version of running VM
-	  -- elseif rule[2] == 'load' and rule[3] then
-	  --     act("zencode extension: "..rule[3])
-	  --     require("zencode_"..rule[3])
-   elseif rule[2] == 'input' and rule[3] then
-
-      -- rule input encoding|format ''
-      if rule[3] == 'encoding' and rule[4] then
-         CONF.input.encoding = input_encoding(rule[4])
-		 res = true and CONF.input.encoding
-      elseif rule[3] == 'format' and rule[4] then
-		 CONF.input.format = get_format(rule[4])
-         res = true and CONF.input.format
-	  elseif rule[3] == 'untagged' then
-		 res = true
-		 CONF.input.tagged = false
-      end
-
-   elseif rule[2] == 'output' and rule[3] and rule[4] then
-
-      -- rule input encoding|format ''
-      if rule[3] == 'encoding' then
-         CONF.output.encoding = get_encoding(rule[4])
-		 res = true and CONF.output.encoding
-      elseif rule[3] == 'format' then
-		 CONF.output.format = get_format(rule[4])
-         res = true and CONF.output.format
-      elseif rule[3] == 'versioning' then
-		 CONF.output.versioning = true
-         res = true
-      end
-
-   elseif rule[2] == 'unknown' and rule[3] then
-	  if rule[3] == 'ignore' then
-		 CONF.parser.strict_match = false
-		 res = true
-	  end
-
-   elseif rule[2] == 'set' and rule[4] then
-
-      CONF[rule[3]] = tonumber(rule[4]) or rule[4]
-      res = true and CONF[rule[3]]
-
-   end
-   if not res then error("Rule invalid: "..text, 3)
-   else act(text) end
-   return res
-end
-
 
 ---------------------------------------------------------------
 -- ZENCODE PARSER
 
-function zencode:begin(verbosity)
-   if verbosity > 0 then
-      xxx(2,"Zencode debug verbosity: "..verbosity)
-      self.verbosity = verbosity
-   end
-   return true
-end
-
-function zencode:iscomment(b)
-   local x = string.char(b:byte(1))
-   if x == '#' then
-	  return true
-   else return false
-end end
-function zencode:isempty(b)
-   if b == nil or b == '' then
-	   return true
-   else return false
-end end
-function zencode:parse_step(text)
-   if ZEN:isempty(text) then return true end
-   if ZEN:iscomment(text) then return true end
-   -- max length for single zencode line is #define MAX_LINE
-   -- hard-coded inside zenroom.h
-   local prefix = parse_prefix(text)
-   ZEN.assert(prefix, "Invalid Zencode text: "..text)
-   local defs -- parse in what phase are we
-   ZEN.OK = true
-   exitcode(0)
-   -- try to enter the machine state named in prefix
-   -- xxx(3,"Zencode machine enter_"..prefix..": "..text)
-   local fm = ZEN.machine["enter_"..prefix]
-   ZEN.assert(fm,"Invalid Zencode prefix: "..prefix)
-   ZEN.assert(fm(ZEN.machine, text), text.."\n    "..
-				 "Invalid transition from "
-				 ..ZEN.machine.current.." to Rule block")
-   return true
-end
-
-
--- returns an iterator for newline termination
-function zencode:newline_iter(text)
-   s = trim(text) -- implemented in zen_io.c
-   if s:sub(-1)~="\n" then s=s.."\n" end
-   return s:gmatch("(.-)\n") -- iterators return functions
-end
-
-function zencode:parse(text)
-   if  #text < 9 then -- strlen("and debug") == 9
-   	  warn("Zencode text too short to parse")
-   	  return false end
-   for line in self:newline_iter(text) do
-	  self:parse_step(line)
-   end
-   collectgarbage'collect'
-end
+function zencode:begin() return true end
 
 function zencode:trace(src)
    -- take current line of zencode

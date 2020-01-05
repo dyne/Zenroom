@@ -100,7 +100,7 @@ end
 	  
 -- debugging facility
 function xxx(n,s)
-   if ZEN.verbosity or CONF.debug >= n then act(s) end
+   if CONF.verbosity or CONF.debug >= n then act(s) end
 end
 
 function content(var)
@@ -210,13 +210,14 @@ function help(module)
 end
 
 -- TODO: optimize in C using strtok
-function split(src,pat)
+local function split(src,pat)
    local tbl = {}
    src:gsub(pat, function(x) tbl[#tbl+1]=x end)
    return tbl
 end
 function strtok(src)
    if not src then return { } end
+   ZEN.assert(luatype(src) == "string", "strtok error: argument is not a string")
    return split(src, "%S+") end
 
 -- assert all values in table are converted to zenroom types

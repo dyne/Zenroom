@@ -29,6 +29,18 @@ function fatal(msg)
 	  error(msg,2)
 end
 
+-- global
+_G["REQUIRED"] = { }
+-- avoid duplicating requires (internal includes)
+function require_once(ninc)
+   local class = REQUIRED[ninc]
+   if type(class) == "table" then return class end
+   -- new require
+   class = require(ninc)
+   if type(class) == "table" then REQUIRED[ninc] = class end
+   return class
+end
+
 -- error = zen_error -- from zen_io
 
 -- ZEN = { assert = assert } -- zencode shim when not loaded
@@ -55,6 +67,7 @@ V   = require('semver')
 VERSION = V(VERSION)
 
 ZEN = require('zencode')
+-- requires zencode_ast
 
 -- base zencode functions and schemas
 require('zencode_data')

@@ -111,12 +111,17 @@ local function encode_number(val)
   return string.format("%.14g", val)
 end
 
+local function encode_function(val)
+   -- return hex function address as string
+   return '"' .. strtok(tostring(val))[2] .. '"'
+end
 
 local type_func_map = {
   [ "nil"     ] = encode_nil,
   [ "table"   ] = encode_table,
   [ "string"  ] = encode_string,
   [ "number"  ] = encode_number,
+  [ "function"] = encode_function,
   [ "boolean" ] = tostring,
 }
 
