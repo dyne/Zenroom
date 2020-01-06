@@ -7,10 +7,10 @@
 -- 	if field then return [field]; end
 -- 	return mod;
 -- end
-local dostring = function (s)
-	local ok, f = pcall(loadstring or load, s); -- luacheck: read globals loadstring
-	if ok and f then return f(); end
-end
+-- local dostring = function (s)
+-- 	local ok, f = pcall(loadstring or load, s); -- luacheck: read globals loadstring
+-- 	if ok and f then return f(); end
+-- end
 
 local setmetatable = setmetatable;
 local getmetatable = getmetatable;
@@ -47,8 +47,6 @@ end
 if s_unpack and s_unpack(">I2", "\1\2\3\4") ~= 0x102 then
 	s_unpack = nil;
 end
-
-local _ENV = nil; -- luacheck: ignore 211
 
 local encoder = {};
 
@@ -287,8 +285,10 @@ function encoder.ordered_map(t, opts)
 	return integer(#map, 160) .. t_concat(map);
 end
 
-encoder["function"] = function ()
-	error "can't encode function";
+-- stringify the function hex address
+encoder['function'] = function(f)
+   local val = strtok(tostring(f))[2]
+   return integer(#val, 64) .. val
 end
 
 -- Decoder
