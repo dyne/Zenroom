@@ -140,7 +140,6 @@ clean:
 	make clean -C ${pwd}/lib/lua53/src
 	make clean -C ${pwd}/lib/milagro-crypto-c
 	rm -f ${pwd}/lib/milagro-crypto-c/CMakeCache.txt
-	rm -f ${pwd}/lib/milagro-crypto-c/CPackConfig.cmake
 	rm -rf ${pwd}/lib/milagro-crypto-c/CMakeFiles
 	make clean -C src
 	make clean -C bindings
