@@ -1,6 +1,6 @@
 /* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Copyright (C) 2017-2019 Dyne.org foundation
+ * Copyright (C) 2017-2020 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -50,6 +50,9 @@
 // hex2oct used to import hex sequence into rng seed
 #include <encoding.h>
 
+// prototypes from zen_octet.c
+extern void push_buffer_to_octet(lua_State *L, char *p, size_t len);
+
 // prototypes from lua_modules.c
 extern int zen_require_override(lua_State *L, const int restricted);
 extern int zen_lua_init(lua_State *L);
@@ -84,8 +87,7 @@ zen_mem_t *MEM = NULL; // zenroom HEAP
 int EXITCODE = 1; // start from error state
 
 // configured globals by zen_config
-extern char *zconf_rngseed_str;
-extern int   zconf_rngseed_len;
+extern char zconf_rngseed[(RANDOM_SEED_LEN*2)+4];
 extern mmtype zconf_memmg;
 extern int  zconf_memwipe;
 
@@ -158,17 +160,14 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	Z->userdata = NULL;
 	Z->errorlevel = get_debug();
 	Z->random_generator = NULL;
-	Z->random_seed = NULL;
-	Z->random_seed_len = 0;
+	Z->random_seed[0] = 0x0; // flag for external rngseed
 
 	// use RNGseed from configuration if present (deterministic mode)
-	if(zconf_rngseed_str && zconf_rngseed_len > 0) {
-		if(zconf_rngseed_str[0] == '0' && zconf_rngseed_str[1] == 'x') {
-			Z->random_seed = malloc(zconf_rngseed_len / 2);
-			Z->random_seed_len = hex2buf(Z->random_seed, &zconf_rngseed_str[2]);
-		}
-		// free buffer allocated in zen_config
-		free(zconf_rngseed_str); zconf_rngseed_len = 0;
+	if(zconf_rngseed[0] != 0x0) {
+		// short p = 0;
+		// if(zconf_rngseed[0] == '0' && zconf_rngseed[1] == 'x') p += 2;
+		// hex2buf(Z->random_seed, &zconf_rngseed[p]);
+		hex2buf(Z->random_seed, zconf_rngseed);
 	}
 	// initialize the random generator
 	Z->random_generator = rng_alloc();
@@ -205,6 +204,10 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	    lua_gc(Z->lua,LUA_GCCOUNT,0));
 	// uncomment to restrict further requires
 	// zen_require_override(L,1);
+
+	// expose the random seed for optional determinism
+	push_buffer_to_octet(Z->lua, Z->random_seed, RANDOM_SEED_LEN);
+	lua_setglobal(Z->lua, "RNGSEED");
 
 	// load arguments if present
 	if(data) {

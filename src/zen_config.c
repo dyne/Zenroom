@@ -1,6 +1,6 @@
 /* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Copyright (C) 2019 Dyne.org foundation
+ * Copyright (C) 2019-2020 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -73,8 +73,7 @@ typedef enum { NIL, VERBOSE, COLOR, SECCOMP, RNGSEED, MEMMGR, MEMWIPE } zconf;
 static zconf curconf = NIL;
 
 int zconf_seccomp = 0;
-char *zconf_rngseed_str = NULL;
-int   zconf_rngseed_len = 0;
+char zconf_rngseed[(RANDOM_SEED_LEN*2)+4]; // 0x and terminating \0
 mmtype zconf_memmg = SYS;
 int  zconf_memwipe = 0;
 
@@ -87,6 +86,7 @@ int zen_conf_parse(const char *configuration) {
 	stb_lexer lex;
 	char *lexbuf = (char*)malloc(MAX_CONFIG);
 	stb_c_lexer_init(&lex, configuration, configuration+len, lexbuf, MAX_CONFIG);
+	zconf_rngseed[0] = '\0'; // set zero rngseed as config flag
 	while (stb_c_lexer_get_token(&lex)) {
 		if (lex.token == CLEX_parse_error) {
 			error(NULL,"%s: error parsing configuration: %s", __func__, configuration);
@@ -117,11 +117,15 @@ int zen_conf_parse(const char *configuration) {
 			return 0;
 		case CLEX_dqstring:
 			if(curconf==RNGSEED) {
-				zconf_rngseed_len = lex.string_len;
+				if(lex.string_len != RANDOM_SEED_LEN *2) { // hex doubles size
+					free(lexbuf);
+					error(NULL,"Invalid length of random seed: %u (must be %u)",
+					      lex.string_len/2, RANDOM_SEED_LEN);
+				}
 				// quotes have been stripped, copy string and null terminate
-				zconf_rngseed_str = malloc(lex.string_len+1);
-				memcpy(zconf_rngseed_str, lex.string, lex.string_len);
-				lex.string[lex.string_len] = 0x0;
+				memcpy(zconf_rngseed, lex.string, RANDOM_SEED_LEN*2);
+				zconf_rngseed[(RANDOM_SEED_LEN*2)] = 0x0;
+
 			} else if(curconf==MEMMGR) {
 				if(strcasecmp(lex.string,"lw")==0) zconf_memmg = LW;
 				else if(strcasecmp(lex.string,"je")==0) zconf_memmg = JE;

@@ -1,6 +1,6 @@
 /* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Copyright (C) 2017-2019 Dyne.org foundation
+ * Copyright (C) 2017-2020 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -266,6 +266,15 @@ octet *o_dup(lua_State *L, octet *o) {
 	SAFE(n);
 	OCT_copy(n,o);
 	return(n);
+}
+
+void push_buffer_to_octet(lua_State *L, char *p, size_t len) {
+	octet* o = o_new(L, len); SAFE(o);
+	// newuserdata already pushes the object in lua's stack
+	// memcpy(o->val, p, len);
+	register uint32_t i;
+	for (i=0; i<len; i++) o->val[i] = p[i];
+	o->len = len;
 }
 
 

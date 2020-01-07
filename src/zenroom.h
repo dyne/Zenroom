@@ -53,6 +53,8 @@ typedef struct {
 	void  (*sys_free)(void *ptr);
 } zen_mem_t;
 
+#define RANDOM_SEED_LEN 256
+
 // zenroom context, also available as "_Z" global in lua space
 // contents are opaque in lua and available only as lightuserdata
 typedef struct {
@@ -67,8 +69,7 @@ typedef struct {
 	size_t stderr_pos;
 
 	void *random_generator; // cast to RNG
-	char *random_seed;
-	size_t random_seed_len;
+	char random_seed[RANDOM_SEED_LEN];
 
 	int errorlevel;
 	void *userdata; // anything passed at init (reserved for caller)

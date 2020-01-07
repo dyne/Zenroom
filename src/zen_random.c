@@ -1,6 +1,6 @@
 /* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Copyright (C) 2017-2019 Dyne.org foundation
+ * Copyright (C) 2017-2020 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -68,33 +68,25 @@ void* rng_alloc() {
 		return NULL; }
 
 	// random seed provided externally 
-	if(Z->random_seed) {
+	if(Z->random_seed[0]) {
 		act(Z->lua,"Random seed is external, deterministic execution");
-		if(!Z->random_generator) {
-			// TODO: feed minimum 128 bytes
-			RAND_seed(rng, Z->random_seed_len, Z->random_seed);
-			// Z->random_generator is allocated only once and freed in
-			// zen_teardown, lasts for the whole execution
-			Z->random_generator = (*MEM->malloc)(sizeof(csprng)+8);
-			memcpy(Z->random_generator, rng, sizeof(csprng));
-		} else {
-			memcpy(rng, Z->random_generator, sizeof(csprng));
-		}
 #ifndef ARCH_CORTEX
 	} else {
 		// gather system random using randombytes()
-		char *tmp = (*MEM->malloc)(256);
-		randombytes(tmp,252);
+		randombytes(Z->random_seed,RANDOM_SEED_LEN-4);
 		// using time() from milagro
 		unsign32 ttmp = (unsign32)time(NULL);
-		tmp[252] = (ttmp >> 24) & 0xff;
-		tmp[253] = (ttmp >> 16) & 0xff;
-		tmp[254] = (ttmp >>  8) & 0xff;
-		tmp[255] =  ttmp & 0xff;
-		RAND_seed(rng,256,tmp);
-		(*MEM->free)(tmp);
-#endif
+		Z->random_seed[252] = (ttmp >> 24) & 0xff;
+		Z->random_seed[253] = (ttmp >> 16) & 0xff;
+		Z->random_seed[254] = (ttmp >>  8) & 0xff;
+		Z->random_seed[255] =  ttmp & 0xff;
 	}
+#endif
+	// RAND_seed is destructive, preserve seed here
+	char tseed[RANDOM_SEED_LEN];
+	memcpy(tseed,Z->random_seed,RANDOM_SEED_LEN);
+	RAND_seed(rng, RANDOM_SEED_LEN, tseed);
+	// return into Z->random_generator
 	return(rng);
 }
 
