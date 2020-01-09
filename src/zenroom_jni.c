@@ -20,7 +20,7 @@ JNIEXPORT jstring JNICALL Java_decode_zenroom_Zenroom_zenroom
     size_t  errorSize = 1024 * 128;
     char *z_error = (char*)malloc(errorSize * sizeof(char));
 
-    int ret = zenroom_exec_tobuf(script, NULL, keys, data, 3, z_output, outputSize, z_error, errorSize);
+    int ret = zenroom_exec_tobuf(script, conf, keys, data, z_output, outputSize, z_error, errorSize);
 
 #ifdef __ANDROID__
 __android_log_print(ANDROID_LOG_VERBOSE, "Zenroom", "len %i", strlen(z_output));
