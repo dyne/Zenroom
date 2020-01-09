@@ -171,6 +171,20 @@ static int zen_print (lua_State *L) {
 	EM_ASM_({Module.print(UTF8ToString($0))}, out);
 	return 0;
 }
+static int zen_printerr (lua_State *L) {
+	size_t pos = 0;
+	int nargs = lua_gettop(L) +1;
+	int arg = 0;
+	for (; nargs--; arg++) {
+		size_t len;
+		const char *s = lua_tolstring(L, arg, &len);
+		if (arg>1) { out[pos]='\t'; pos++; }
+		z_snprintf(out+pos,MAX_JSBUF-pos,"%s",s);
+		pos+=len;
+	}
+	EM_ASM_({Module.printErr(UTF8ToString($0))}, out);
+	return 0;
+}
 
 static int zen_write (lua_State *L) {
 	size_t pos = 0;
@@ -248,6 +262,11 @@ static int zen_print (lua_State *L)
     return 1;
 }
 
+static int zen_printerr(lua_State *L)
+{
+	return 1;
+}
+
 static int zen_error (lua_State *L)
 {
     return 1;
@@ -290,6 +309,29 @@ static int zen_print (lua_State *L) {
 	}
 	w = write(STDOUT_FILENO,"\n",sizeof(char));
     (void)w;
+	return 0;
+}
+
+// print to stderr without raising errors
+static int zen_printerr(lua_State *L) {
+	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
+
+	int status = 1;
+	size_t len = 0;
+	int n = lua_gettop(L);  /* number of arguments */
+	int i, w;
+	lua_getglobal(L, "tostring");
+	for (i=1; i<=n; i++) {
+		const char *s = lua_print_format(L, i, &len);
+		if(i>1)
+			w = write(STDERR_FILENO, "\t", 1);
+		(void)w;
+		status = status &&
+			(write(STDERR_FILENO, s,  len) == (int)len);
+		lua_pop(L, 1);  /* pop result */
+	}
+	w = write(STDERR_FILENO,"\n",sizeof(char));
+	(void)w;
 	return 0;
 }
 
@@ -417,6 +459,7 @@ void zen_add_io(lua_State *L) {
 	// override print() and io.write()
 	static const struct luaL_Reg custom_print [] =
 		{ {"print", zen_print},
+		  {"printerr", zen_printerr},
 		  {"write", zen_write},
 //		  {"error", zen_error},
 		  {"zen_fatal", zen_fatal},

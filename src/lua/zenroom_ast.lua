@@ -117,8 +117,7 @@ function set_rule(text)
 		 CONF.input.tagged = false
       end
 
-   elseif rule[2] == 'output' and rule[3] and rule[4] then
-
+   elseif rule[2] == 'output' and rule[3] then
       -- rule input encoding|format ''
       if rule[3] == 'encoding' then
          CONF.output.encoding = get_encoding(rule[4])
@@ -129,7 +128,10 @@ function set_rule(text)
       elseif rule[3] == 'versioning' then
 		 CONF.output.versioning = true
          res = true
-      end
+      elseif strcasecmp(rule[3],'ast') then
+		 CONF.output.AST = true
+		 res = true
+	  end
 
    elseif rule[2] == 'unknown' and rule[3] then
 	  if rule[3] == 'ignore' then

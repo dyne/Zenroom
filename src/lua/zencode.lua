@@ -228,6 +228,15 @@ function zencode:run()
 	  ZEN:trace("<<< Encoding { OUT } to "..CONF.output.format.name)
 	  print(CONF.output.format.fun(OUT))
 	  ZEN:trace(">>> Encoding successful")
+   else -- this should never occur in zencode, OUT is always a table
+	  ZEN:trace("<<< Printing OUT (plain format, not a table)")
+	  print(OUT)
+   end
+   -- print the AST to stderr
+   if CONF.output.AST == true then
+	  printerr("#+AST_BEGIN")
+	  printerr(CONF.output.format.fun(ZEN.AST))
+	  printerr("#+AST_END")
    end
 end
 
