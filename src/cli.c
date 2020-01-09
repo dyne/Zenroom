@@ -66,12 +66,12 @@ static const struct sock_fprog  strict = {
 	.filter = (struct sock_filter *)strict_filter
 };
 
-// configure seccomp activation
-extern int zconf_seccomp;
-
 #endif
 
 extern zenroom_t *Z;
+
+// configure seccomp activation
+extern int zconf_seccomp;
 
 #ifndef LIBRARY
 
