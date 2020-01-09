@@ -1,6 +1,6 @@
 -- This file is part of Zenroom (https://zenroom.dyne.org)
 --
--- Copyright (C) 2018-2019 Dyne.org foundation
+-- Copyright (C) 2018-2020 Dyne.org foundation
 -- designed, written and maintained by Denis Roio <jaromil@dyne.org>
 --
 -- This program is free software: you can redistribute it and/or modify
@@ -79,7 +79,8 @@ function zencode:parse(text)
 	  -- xxx(3,"Zencode machine enter_"..prefix..": "..text)
 	  local fm = self.machine["enter_"..prefix]
 	  self.assert(fm,"Invalid Zencode prefix: "..prefix)
-	  self.assert(fm(self.machine, { msg = line, Z = self }), line.."\n    "..
+	  self.assert(fm(self.machine, { msg = line, Z = self }),
+				  line.."\n    "..
 					 "Invalid transition from "
 					 ..self.machine.current.." to Rule block")
 	  ::continue::

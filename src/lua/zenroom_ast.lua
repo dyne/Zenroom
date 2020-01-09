@@ -1,3 +1,20 @@
+-- This file is part of Zenroom (https://zenroom.dyne.org)
+--
+-- Copyright (C) 2018-2020 Dyne.org foundation
+-- designed, written and maintained by Denis Roio <jaromil@dyne.org>
+--
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU Affero General Public License as
+-- published by the Free Software Foundation, either version 3 of the
+-- License, or (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU Affero General Public License for more details.
+--
+-- You should have received a copy of the GNU Affero General Public License
+-- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 function zencode_iscomment(b)
    local x = string.char(b:byte(1))
@@ -18,15 +35,9 @@ function zencode_newline_iter(text)
 end
 
 function set_sentence(self, event, from, to, ctx)
-   local prefix = parse_prefix(ctx.msg)
-   local reg
+   local reg = ctx.Z[self.current.."_steps"]
    ctx.Z.OK = false
-   if prefix == 'and' then
-	  reg = ctx.Z[ctx.Z.machine.current.."_steps"]
-   else
-    reg = ctx.Z[prefix.."_steps"]
-   end
-   ZEN.assert(reg, "Steps register not found: "..prefix.."_steps")
+   ZEN.assert(reg, "Steps register not found: "..self.current.."_steps")
    for pattern,func in pairs(reg) do
 	  if (type(func) ~= "function") then
 		 error("Zencode function missing: "..pattern, 2)
@@ -53,7 +64,7 @@ function set_sentence(self, event, from, to, ctx)
 					  { id = ctx.Z.id, -- ordered number
 						args = args,  -- array of vars
 						source = ctx.msg, -- source text
-						section = strtok(ctx.msg)[1]:lower(),
+						section = self.current,
 						hook = func       }) -- function
 		 ctx.Z.OK = true
 		 break
