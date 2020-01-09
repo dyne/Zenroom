@@ -15,6 +15,8 @@ publish_python () {
 	cd ../bindings
 	wget https://sdk.dyne.org:4443/view/zenroom/job/zenroom-python/lastSuccessfulBuild/artifact/build/zenroom-python3.tar.gz
 	tar xzvf zenroom-python3.tar.gz  python3/zenroom/libs/Linux/
+	tar xzvf zenroom-python3.tar.gz  python3/zenroom/libs/Darwin/
+	tar xzvf zenroom-python3.tar.gz  python3/zenroom/zenroom_swig.py
 	cd ../bindings/python3
 	python3.7 -m venv venv
 	activate_python
