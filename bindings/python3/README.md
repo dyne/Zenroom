@@ -150,7 +150,11 @@ Originally designed and written by Sam Mulube.
 
 Designed, written and maintained by Puria Nafisi Azizi. 
 
-<img src="https://zenroom.dyne.org/img/ec_logo.png" class="pic" alt="Project funded by the European Commission">
+Software contained include sources taken from [pytest](https://github.com/pytest-dev/pytest/).
+
+
+<img src="https://dev.zenroom.org/img/ec_logo.png" alt="Project funded by the European Commission" height="80px"> 
+<br><br>
 
 This project is receiving funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement nr. 732546 (DECODE).
 

@@ -1,6 +1,7 @@
-import logging
-from multiprocessing import Manager, Process
-from capturer import CaptureOutput
+import os
+from multiprocessing import Pool
+
+from .capture import Capture
 from .zenroom_swig import zenroom_exec_tobuf, zencode_exec_tobuf
 
 __MAX_STRING__ = 1048576
@@ -30,28 +31,43 @@ class ZenroomResult:
         return "STDOUT: %s\nSTDERR: %s" % (self.stdout, self.stderr)
 
 
-def _execute(func, result, args):
-    args['stdout_buf'] = bytearray(__MAX_STRING__)
-    args['stderr_buf'] = bytearray(__MAX_STRING__)
-    func(*args.values())
-    result.put(ZenroomResult(args['stdout_buf'], args['stderr_buf']))
-    result.task_done()
+def _execute(func, args):
+    try:
+        args.setdefault('stdout_buf', bytearray(__MAX_STRING__))
+        args.setdefault('stderr_buf', bytearray(__MAX_STRING__))
+        func(*args.values())
+        return ZenroomResult(args['stdout_buf'], args['stderr_buf'])
+    except Exception as e:
+        raise ZenroomException()
 
 
-def _zen_call(func, arguments):
-    with CaptureOutput() as capturer:
-        m = Manager()
-        result = m.Queue()
-        p = Process(target=_execute, args=(func, result, arguments))
-        p.start()
-        p.join()
-    if result.empty():
-        raise ZenroomException(capturer.get_text())
-
-    return result.get()
+def returner(result):
+    return result
 
 
-def zencode_exec(script, keys=None, data=None, conf=None):
+def _zen_call(func, script, conf, keys, data):
+    c = Capture()
+    arguments = dict(script=script.encode(),
+                     conf=conf.encode() if conf else None,
+                     keys=keys.encode() if keys else None,
+                     data=data.encode() if data else None)
+    try:
+        pool = Pool(2)
+        try:
+            result = pool.apply_async(_execute, args=(func, arguments), callback=returner)
+            return result.get(timeout=1)
+        # except TimeoutError:
+        #     pass
+        except Exception:
+            pass
+        pool.join()
+    except Exception as p:
+        raise ZenroomException(c.snap()) from p
+
+        # raise ZenroomException(c.snap())
+
+
+def zencode_exec(script: str, keys: str = None, data: str = None, conf: str = None):
 
     """Invoke Zenroom, capturing and returning the output as a byte string
     This function is the primary method we expose from this wrapper library,
@@ -67,12 +83,10 @@ def zencode_exec(script, keys=None, data=None, conf=None):
     Returns:
             tuple: The output from Zenroom expressed as a byte string, the eventual errors generated as a string
     """
-    args = dict(script=script, conf=conf, keys=keys, data=data, stdout_buf=None, stderr_buf=None)
-    return _zen_call(zencode_exec_tobuf, args)
+    return _zen_call(zencode_exec_tobuf, script, conf, keys, data)
 
 
-def zenroom_exec(script, keys=None, data=None, conf=None):
-
+def zenroom_exec(script: str, keys: str = None, data: str = None, conf: str = None):
     """Invoke Zenroom, capturing and returning the output as a byte string
     This function is the primary method we expose from this wrapper library,
     which attempts to make Zenroom slightly simpler to call from Python. This
@@ -87,5 +101,5 @@ def zenroom_exec(script, keys=None, data=None, conf=None):
     Returns:
             bytes: The output from Zenroom expressed as a byte string
     """
-    args = dict(script=script, conf=conf, keys=keys, data=data, stdout_buf=None, stderr_buf=None)
-    return _zen_call(zenroom_exec_tobuf, args)
+    return _zen_call(zenroom_exec_tobuf, script, conf, keys, data)
+

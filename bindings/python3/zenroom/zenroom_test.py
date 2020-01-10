@@ -17,17 +17,7 @@ def test_basic():
 
 def test_keygen():
     script = """
-    -- generate a simple keyring
-    keyring = ECDH.new()
-    keyring:keygen()
-    -- export the keypair to json
-    export = JSON.encode(
-       {
-          public  = keyring: public():base64(),
-          private = keyring:private():base64()
-       }
-    )
-    print(export)
+    print( JSON.encode(map(ECDH.keygen(), hex)) )
     """
     output = zenroom.zenroom_exec(script)
     result = json.loads(output.stdout)
@@ -54,15 +44,16 @@ def test_broken_script():
     with pytest.raises(ZenroomException) as e:
         script = "print('"
         output = zenroom.zenroom_exec(script)
+        print(str(e))
         assert e
         assert "line 1" in e
 
 
 def test_broken_zencode():
     with pytest.raises(ZenroomException) as e:
-        contract = """Scenario 'coconut': "broken"
-        When I
-        """
+        contract = """Scenario coconut: 'coconut'
+When I"""
+        conf = "color:0\ndebug:1"
         result = zenroom.zencode_exec(contract)
         assert result.stderr
         assert "{}" == result.stdout
@@ -109,7 +100,7 @@ def test_data():
     assert "3" == result.stdout
 
 
-def test_tally_count():
+def st_tally_count():
     contract = """Scenario 'coconut': "count"
     Given that I have a valid 'petition'
     and I have a valid 'petition_tally'
