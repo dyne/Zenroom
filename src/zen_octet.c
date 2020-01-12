@@ -74,6 +74,8 @@
 
 #include <zen_ecp.h>
 
+#include <math.h> // for log2 in entropy calculation
+
 extern zenroom_t *Z;
 
 // from base58.c
@@ -853,6 +855,42 @@ static int new_random(lua_State *L) {
 	return 1;
 }
 
+static int entropy(lua_State *L) {
+	octet *o = o_arg(L,1); SAFE(o);
+	register int i; // register
+	// byte frequency table
+	char *bfreq = zen_memory_alloc(0xff);
+	memset(bfreq,0x0,0xff);
+	// probability of recurring for each byte
+	float *bprob = (float*)zen_memory_alloc(sizeof(float)*0xff);
+	memset(bprob,0x0,sizeof(float)*0xff);
+	// calculate freqency of byte values
+	register char *p = o->val;
+	for(i=0; i<o->len; i++, p++) bfreq[(uint8_t)*p]++;
+	// calculate prbability of byte values
+	float freq = 0.0;
+	float entropy = 0.0;
+	register uint8_t num = 0; // register
+	float *f;
+	for(i=0; i < 0xff; i++, p++) {
+		if(bfreq[i] == 0x0) continue;
+		num++;
+		freq = (float)bfreq[i];
+		f = &bprob[i];
+		*f = freq / (float)o->len;
+		entropy += *f * log2(*f);
+	}
+	// free work buffers
+	zen_memory_free(bfreq);
+	zen_memory_free(bprob);
+	// return entropy ratio, max and bits
+	float bits = -1.0 * entropy;
+	float entmax = log2(num);
+	lua_pushnumber(L, (lua_Number) (bits / entmax)); // ratio
+	lua_pushnumber(L, (lua_Number) entmax ); // max
+	lua_pushnumber(L, (lua_Number) bits);
+	return(3);
+}
 
 static int popcount64b(uint64_t x) {
     //types and constants
@@ -947,6 +985,7 @@ int luaopen_octet(lua_State *L) {
 		{"to_array",  to_array},
 		{"to_bin",    to_bin},
 		{"random",  new_random},
+		{"entropy", entropy},
 		{"hamming", bitshift_hamming_distance},
 		{"popcount_hamming", popcount_hamming_distance},
 		{NULL,NULL}
@@ -965,6 +1004,7 @@ int luaopen_octet(lua_State *L) {
 		{"pad", pad},
 		{"zero", zero},
 		{"max", max},
+		{"entropy", entropy},
 		{"hamming", bitshift_hamming_distance},
 		{"popcount_hamming", popcount_hamming_distance},
 
