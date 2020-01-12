@@ -27,6 +27,7 @@
 
 #include <zenroom.h>
 #include <zen_error.h>
+#include <zen_octet.h>
 
 extern zenroom_t *Z;
 
@@ -338,23 +339,12 @@ static int zen_printerr(lua_State *L) {
 // print without an ending newline
 static int zen_write (lua_State *L) {
 	if( lua_print_stdout_tobuf(L,' ') ) return 0;
-
-	int status = 1;
-	size_t len = 0;
-	int n = lua_gettop(L);  /* number of arguments */
-	int i, w;
-	lua_getglobal(L, "tostring");
-	for (i=1; i<=n; i++) {
-		const char *s = lua_print_format(L, i, &len);
-		if(i>1)
-			w = write(STDOUT_FILENO, "\t", 1);
-		(void)w;
-		status = status &&
-			(write(STDOUT_FILENO, s,  len) == (int)len);
-		lua_pop(L, 1);  /* pop result */
-	}
-	(void)w;
-	return 0;
+	octet *o = o_arg(L, 1); SAFE(o);
+	short res;
+	int w;
+	w = write(STDOUT_FILENO, o->val, o->len);
+	res = (w == o->len) ? 0 : 1;
+	return(res);
 }
 
 static int zen_warn (lua_State *L) {
