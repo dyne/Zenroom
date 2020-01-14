@@ -1,5 +1,15 @@
 local bench = { }
 
+bench.entropy = function()
+   act("Benchmark: entropy of random generators (Shannon ratios)")
+   -- use standard ECP size
+   local s = #ECP.random():octet()
+   print("OCTET: \t "..OCTET.random(s):entropy())
+   print("BIG:   \t "..BIG.random():octet():entropy())
+   print("ECP:   \t "..ECP.random():octet():entropy())
+   print("ECP2:  \t "..ECP2.random():octet():entropy())
+end
+
 bench.random_hamming_freq = function (s, q)
    local _s = s or 97
    local _q = q or 5000
