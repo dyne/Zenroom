@@ -7,6 +7,10 @@
 %pybuffer_mutable_binary(char *stdout_buf, size_t stdout_len);
 %pybuffer_mutable_binary(char *stderr_buf, size_t stderr_len);
 
+%begin %{	
+#define SWIG_PYTHON_STRICT_BYTE_CHAR	
+%}
+
 %pythonbegin %{
 import os
 import platform
