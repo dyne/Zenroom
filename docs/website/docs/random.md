@@ -15,6 +15,45 @@ best to gather a good quality random seed from the host system. This
 works well on Windows, OSX, GNU/Linux as well Android and iOS; but
 beware that **when running in Javascript random is very weak**.
 
+## Measure your system
+
+To have a value estimation on the system you are currently running
+Zenroom, run the LUA command `BENCH.entropy()` and compare these
+results:
+
+```
+ .  Benchmark: entropy of random generators (Shannon ratios)
+SEED: 	 0.9772232
+PRNG: 	 0.9737687
+OCTET: 	 0.9880916
+BIG:   	 0.9885069
+ECP:   	 0.9880916
+ECP2:  	 0.9810042
+```
+
+The `SEED` value is the one gathered from the underlying system or
+passed by the host application calling Zenroom.
+
+The `PRNG` is the value yield by the "pseudo" random generator which
+is processing the SEED to produce a deterministic series of random
+values based on it.
+
+Given 1.0 is the ideal maximum for entropy, all values yield on your
+system should be close to the ones above, indicating a sane amount of
+entropy for cryptographic operations and in particular key generation.
+
+### FIPS140-2 compliancy
+
+Zenroom can be proven to comply with the [Federal Information
+Processing Standard (FIPS) Publication
+140-2](https://en.wikipedia.org/wiki/FIPS_140-2) launching the
+`./test/random_rngtest_fips140-2.sh` test on a system where
+`rng-tools` are installed.
+
+This script will feed 1000 blocks, each consisting of 2500 bytes long
+random sequences and print the results given by the test program
+`rngtest`.
+
 ## Pseudo-random generator
 
 In order to generate key material, it is often needed to have a random
@@ -79,14 +118,3 @@ are commonly used in cryptographic transformations. It is noticeable
 that the most common average distance is **between 380 and 400 bits**
 for all of them.
 
-## Measure your system
-
-To have a value estimation on the system you are currently running
-Zenroom, run this simple lua script:
-
-```lua
-print( BENCH.random_hamming_freq() )
-```
-
-Then compare the number returned: if much lower than 350 then you
-should worry about the quality of random on your current system.
