@@ -48,9 +48,9 @@ def returner(result):
 def _zen_call(func, script, conf, keys, data):
     c = Capture()
     arguments = dict(script=script.encode(),
-                     conf=conf.encode() if conf else None,
-                     keys=keys.encode() if keys else None,
-                     data=data.encode() if data else None)
+                     conf=conf,
+                     keys=keys,
+                     data=data)
     try:
         pool = Pool(2)
         try:
