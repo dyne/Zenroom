@@ -712,11 +712,11 @@ static int to_array(lua_State *L) {
 		return 0; }
 	lua_newtable(L);
 	// luaL_checkstack(L,1, "in octet:to_array()");
-	int c = o->len;
-	int idx = 0;
+	register int c = o->len;
+	register int idx = 0;
 	while(c--) {
 		lua_pushnumber(L,idx+1);
-		lua_pushinteger(L,o->val[idx]);
+		lua_pushnumber(L,o->val[idx]);
 		lua_settable(L,-3);
 		idx++;
 	}
@@ -855,6 +855,27 @@ static int new_random(lua_State *L) {
 	return 1;
 }
 
+static int entropy_bytefreq(lua_State *L) {
+	octet *o = o_arg(L,1); SAFE(o);
+	register int i; // register
+	// byte frequency table
+	char *bfreq = zen_memory_alloc(0xff);
+	memset(bfreq,0x0,0xff);
+	// calculate freqency of byte values
+	register char *p = o->val;
+	for(i=0; i<o->len; i++, p++) bfreq[(uint8_t)*p]++;
+	lua_newtable(L);
+	register int c;
+	p = bfreq;
+	for(c=0;c<0xff;c++,p++) {
+		lua_pushnumber(L,c+1);
+		lua_pushnumber(L,*p);
+		lua_settable(L,-3);
+	}
+	zen_memory_free(bfreq);
+	return 1;
+}
+
 static int entropy(lua_State *L) {
 	octet *o = o_arg(L,1); SAFE(o);
 	register int i; // register
@@ -867,7 +888,7 @@ static int entropy(lua_State *L) {
 	// calculate freqency of byte values
 	register char *p = o->val;
 	for(i=0; i<o->len; i++, p++) bfreq[(uint8_t)*p]++;
-	// calculate prbability of byte values
+	// calculate proability of byte values
 	float freq = 0.0;
 	float entropy = 0.0;
 	register uint8_t num = 0; // register
@@ -986,6 +1007,7 @@ int luaopen_octet(lua_State *L) {
 		{"to_bin",    to_bin},
 		{"random",  new_random},
 		{"entropy", entropy},
+		{"bytefreq", entropy_bytefreq},
 		{"hamming", bitshift_hamming_distance},
 		{"popcount_hamming", popcount_hamming_distance},
 		{NULL,NULL}
@@ -1005,6 +1027,7 @@ int luaopen_octet(lua_State *L) {
 		{"zero", zero},
 		{"max", max},
 		{"entropy", entropy},
+		{"bytefreq", entropy_bytefreq},
 		{"hamming", bitshift_hamming_distance},
 		{"popcount_hamming", popcount_hamming_distance},
 
