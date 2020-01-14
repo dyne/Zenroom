@@ -2,6 +2,8 @@ local bench = { }
 
 bench.entropy = function()
    act("Benchmark: entropy of random generators (Shannon ratios)")
+   print("SEED: \t ".. RNGSEED:entropy())
+   print("PRNG: \t ".. OCTET.random(256):entropy())
    -- use standard ECP size
    local s = #ECP.random():octet()
    print("OCTET: \t "..OCTET.random(s):entropy())
