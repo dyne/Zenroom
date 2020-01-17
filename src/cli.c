@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <getopt.h>
 #include <ctype.h>
 
 #if (defined ARCH_LINUX) || (defined ARCH_OSX) || (defined ARCH_BSD)
