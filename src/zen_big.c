@@ -300,11 +300,12 @@ static int newbig(lua_State *L) {
 	int tn;
 	lua_Number n = lua_tonumberx(L,1,&tn);
 	if(tn) {
+		if((int)n==0)
+			lerror(L,"Cannot create INT with value 0 (zero), use placeholder");
 		big *c = big_new(L); SAFE(c);
 		big_init(c);
 		BIG_zero(c->val);
-		BIG_inc(c->val, n);
-		BIG_norm(c->val);
+		BIG_inc(c->val, (int)n);
 		return 1; }
 
 	// octet argument, import
