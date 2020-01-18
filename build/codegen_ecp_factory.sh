@@ -128,6 +128,8 @@ extern void PAIR_${CN}_GTpow(FP12_${CN} *x,BIG_${BS} b);
 #define DBIGLEN DNLEN_${BS}
 #define BIG_zero(b) BIG_${BS}_zero(b)
 #define BIG_fromBytesLen(b,v,l) BIG_${BS}_fromBytesLen(b,v,l)
+#define BIG_iszilch(b) BIG_${BS}_iszilch(b)
+#define BIG_diszilch(b) BIG_${BS}_diszilch(b)
 #define BIG_inc(b,n) BIG_${BS}_inc(b,n)
 #define BIG_norm(b) BIG_${BS}_norm(b)
 #define BIG_nbits(b) BIG_${BS}_nbits(b)

@@ -32,7 +32,7 @@ typedef struct {
 	chunk *dval;
 	// BIG  val;
 	// DBIG dval;
-	int doublesize;
+	bool doublesize;
 } big;
 
 // new or dup already push the object in LUA's stack
@@ -48,6 +48,5 @@ int dbig_init(big *n);
 
 // internal conversion from d/big to octet
 octet *new_octet_from_big(lua_State *L, big *c);
-int _big_to_octet(octet *o, big *c);
 
 #endif
