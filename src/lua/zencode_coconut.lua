@@ -77,7 +77,7 @@ ZEN.add_schema({
 							   rm = get(obj.pi_s, 'rm', INT.new),
 							   rk = get(obj.pi_s, 'rk', INT.new),
 							   c =  get(obj.pi_s, 'c',  INT.new)  },
-					  cm = get(obj, 'cm', ECP.new),
+					  commit = get(obj, 'commit', ECP.new),
 					  public = get(obj, 'public', ECP.new) }
 		ZEN.assert(COCONUT.verify_pi_s(req),
                    "Error in credential request: proof is invalid (verify_pi_s)")

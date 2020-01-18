@@ -54,15 +54,14 @@ function coco.to_challenge(list)
 end
 
 -- local zero-knowledge proof verifications
-local function make_pi_s(gamma, cm, k, r, m)
-   local h = cm
+local function make_pi_s(gamma, commit, k, r, m)
    local wk = INT.random()
    local wm = INT.random()
    local wr = INT.random()
    local Aw = G1 * wk
-   local Bw = gamma * wk + h * wm
+   local Bw = gamma * wk + commit * wm
    local Cw = G1 * wr + hs * wm
-   local c = coco.to_challenge({ cm, h, Aw, Bw, Cw })
+   local c = coco.to_challenge({ commit, Aw, Bw, Cw })
    local rk = wk - c * k
    local rm = wm - c * m
    local rr = wr - c * r
@@ -74,17 +73,16 @@ local function make_pi_s(gamma, cm, k, r, m)
 end
 
 function coco.verify_pi_s(l)
-   local h = l.cm
    local Aw = l.c.a * l.pi_s.c
 	  + G1 * l.pi_s.rk
    local Bw = l.c.b * l.pi_s.c
 	  + l.public * l.pi_s.rk
-	  + h * l.pi_s.rm
-   local Cw = l.cm * l.pi_s.c
+	  + l.commit * l.pi_s.rm
+   local Cw = l.commit * l.pi_s.c
 	  + G1 * l.pi_s.rr
 	  + hs * l.pi_s.rm
    -- return a bool for assert
-   return l.pi_s.c == coco.to_challenge({ l.cm, h, Aw, Bw, Cw })
+   return l.pi_s.c == coco.to_challenge({ l.commit, Aw, Bw, Cw })
 end
 
 -- Public Coconut API
@@ -124,7 +122,7 @@ function coco.prepare_blind_sign(gamma, secret)
    -- calculate zero knowledge proofs
    local pi_s = make_pi_s(gamma, commit, k, r, m)
    -- return Lambda
-   return { cm   = commit,
+   return { commit = commit,
             c    = c,
             pi_s = pi_s,
 			public = gamma }
@@ -133,7 +131,7 @@ end
 function coco.blind_sign(sk, Lambda)
    ZEN.assert(coco.verify_pi_s(Lambda),
 			  'Zero knowledge proof does not verify (Lambda.pi_s)')
-   local h = Lambda.cm
+   local h = Lambda.commit
    local a_tilde = Lambda.c.a * sk.y
    local b_tilde = h * sk.x + Lambda.c.b * sk.y
    -- sigma tilde
@@ -395,12 +393,14 @@ end
 
 function coco.count_signatures_petition(scores, pi_tally)
    local restab = { }
-   for idx=-100,100 do
-	  restab[hex(BIG.new(idx) * hs)] = idx
+   for idx=1,1000 do
+	  -- if idx ~= 0 then -- not zero
+	  restab[(BIG.new(idx) * hs):octet():hex()] = idx
+	  -- end
    end
    local res = { pos = scores.pos.right + pi_tally.dec.pos,
 				 neg = scores.neg.right + pi_tally.dec.neg  }
-   return { pos = restab[hex(res.pos)],
-			neg = restab[hex(res.neg)]  }
+   return { pos = restab[res.pos:octet():hex()],
+			neg = restab[res.neg:octet():hex()]  }
 end
 return coco
