@@ -392,8 +392,11 @@ static int big_to_int(lua_State *L) {
 	octet *o = new_octet_from_big(L,a); SAFE(o);
 	lua_pop(L,1);
 	int32_t res;
-	res = o->val[0] | (uint32_t)o->val[1] << 8
-			| (uint32_t)o->val[2] << 16 | (uint32_t)o->val[3] << 24;
+	res = o->val[0];
+	if(o->len > 1) res = res <<8  | (uint32_t)o->val[1];
+	if(o->len > 2) res = res <<16 | (uint32_t)o->val[2];
+	if(o->len > 3) res = res <<24 | (uint32_t)o->val[3];
+	if(o->len > 4) warning(L,"Number conversion bigger than 32bit, BIG truncated to 4 bytes");
 	lua_pushinteger(L, (lua_Integer) res);
 	return(1);
 }
