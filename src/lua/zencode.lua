@@ -54,40 +54,12 @@ local zencode = {
    id = 0,
    AST = {},
    schemas = { },
+   eval_cache = { }, -- zencode_eval if...then conditions
    checks = { version = false }, -- version, scenario checked, etc.
    OK = true -- set false by asserts
 }
 
 require('zenroom_ast')
-
-function zencode:parse(text)
-   if  #text < 9 then -- strlen("and debug") == 9
-   	  warn("Zencode text too short to parse")
-   	  return false end
-   -- xxx(3,text)
-   for line in zencode_newline_iter(text) do
-	  if zencode_isempty(line) then goto continue end
-	  if zencode_iscomment(line) then goto continue end
-	  -- max length for single zencode line is #define MAX_LINE
-	  -- hard-coded inside zenroom.h
-	  local prefix = parse_prefix(line)
-	  self.assert(prefix, "Invalid Zencode line: "..line)
-	  local defs -- parse in what phase are we
-	  self.OK = true
-	  exitcode(0)
-	  -- try to enter the machine state named in prefix
-	  -- xxx(3,"Zencode machine enter_"..prefix..": "..text)
-	  local fm = self.machine["enter_"..prefix]
-	  self.assert(fm,"Invalid Zencode prefix: "..prefix)
-	  self.assert(fm(self.machine, { msg = line, Z = self }),
-				  line.."\n    "..
-					 "Invalid transition from "
-					 ..self.machine.current.." to Rule block")
-	  ::continue::
-   end
-   collectgarbage'collect'
-   return true
-end
 
 
 -- set_sentence
@@ -155,6 +127,7 @@ function zencode:begin()
    self.id = 0
    self.AST = {}
    self.schemas = { }
+   self.eval_cache = { }
    self.checks = { version = false } -- version, scenario checked, etc.
    self.OK = true -- set false by asserts
 
@@ -172,6 +145,36 @@ function zencode:begin()
    _G['ZEN_traceback'] = "Zencode traceback:\n"
    self.machine = new_state_machine()
 return true
+end
+
+
+function zencode:parse(text)
+   if  #text < 9 then -- strlen("and debug") == 9
+   	  warn("Zencode text too short to parse")
+   	  return false end
+   -- xxx(3,text)
+   for line in zencode_newline_iter(text) do
+	  if zencode_isempty(line) then goto continue end
+	  if zencode_iscomment(line) then goto continue end
+	  -- max length for single zencode line is #define MAX_LINE
+	  -- hard-coded inside zenroom.h
+	  local prefix = parse_prefix(line)
+	  self.assert(prefix, "Invalid Zencode line: "..line)
+	  local defs -- parse in what phase are we
+	  self.OK = true
+	  exitcode(0)
+	  -- try to enter the machine state named in prefix
+	  -- xxx(3,"Zencode machine enter_"..prefix..": "..text)
+	  local fm = self.machine["enter_"..prefix]
+	  self.assert(fm,"Invalid Zencode prefix: "..prefix)
+	  self.assert(fm(self.machine, { msg = line, Z = self }),
+				  line.."\n    "..
+					 "Invalid transition from "
+					 ..self.machine.current.." to Rule block")
+	  ::continue::
+   end
+   collectgarbage'collect'
+   return true
 end
 
 function zencode:trace(src)

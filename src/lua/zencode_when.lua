@@ -82,7 +82,7 @@ When("I create the aggregation of ''", function(arr)
 		end
 end)
 
-When("I create the '' hashes of objects in array ''", function(what, arr)
+When("I create the hash to point '' of each object in ''", function(what, arr)
 		local F = _G[what]
 		ZEN.assert(luatype(F.hashtopoint) == 'function',
 				   "Hash type "..what.." is invalid (no hashtopoint)")
@@ -102,7 +102,7 @@ When("I rename the '' to ''", function(old,new)
 		ACK[old] = nil
 end)
 
-When("I pick the random object in array ''", function(arr)
+When("I pick the random object in ''", function(arr)
 		local A = ACK[arr]
 		ZEN.assert(A, "Object not found: "..arr)
 		local count = isarray(A)
@@ -111,11 +111,12 @@ When("I pick the random object in array ''", function(arr)
 		ACK.random_object = A[r]
 end)
 
-When("I remove the '' from array ''", function(ele,arr)
+When("I remove the '' from ''", function(ele,arr)
 		local E = ACK[ele]
 		ZEN.assert(E, "Element not found: "..ele)
 		local A = ACK[arr]
 		ZEN.assert(A, "Array not found: "..arr)
+		ZEN.assert( isarray(A) > 0, "Object is not an array: "..arr)
 		local O = { }
 		for k,v in next,A,nil do
 		   if v ~= E then table.insert(O,v) end
@@ -123,13 +124,13 @@ When("I remove the '' from array ''", function(ele,arr)
 		ACK[arr] = O
 end)
 
-When("I insert the '' in array ''", function(ele,arr)
+When("I insert the '' in ''", function(ele,arr)
 		ZEN.assert(ACK[ele], "Element not found: "..ele)
 		ZEN.assert(ACK[arr], "Array not found: "..arr)
 		table.insert(ACK[arr], ACK[ele])
 end)
 
-When("the '' is not found in array ''", function(ele, arr)
+When("the '' is not found in ''", function(ele, arr)
 		ZEN.assert(ACK[ele], "Element not found: "..ele)
 		ZEN.assert(ACK[arr], "Array not found: "..arr)
 		for k,v in next,ACK[arr],nil do
@@ -138,7 +139,7 @@ When("the '' is not found in array ''", function(ele, arr)
 end)
 
 
-When("the '' is found in array ''", function(ele, arr)
+When("the '' is found in ''", function(ele, arr)
 		ZEN.assert(ACK[ele], "Element not found: "..ele)
 		ZEN.assert(ACK[arr], "Array not found: "..arr)
 		local found = false
