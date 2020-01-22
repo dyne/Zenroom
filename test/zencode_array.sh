@@ -18,11 +18,11 @@ cat <<EOF | zenroom -z -a $t/arr.json
 rule input encoding url64
 rule output encoding hex
 Given I have a valid array in 'bonnetjes'
-When I pick the random object in array 'bonnetjes'
+When I pick the random object in 'bonnetjes'
 and I rename the 'random object' to 'lucky one'
-and I remove the 'lucky one' from array 'bonnetjes'
+and I remove the 'lucky one' from 'bonnetjes'
 # redundant check
-and the 'lucky one' is not found in array 'bonnetjes'
+and the 'lucky one' is not found in 'bonnetjes'
 Then print the 'lucky one'
 and print the 'bonnetjes'
 EOF
@@ -32,7 +32,7 @@ rule output encoding url64
 Given nothing
 When I create the array of '32' random curve points
 and I rename the 'array' to 'curve points'
-and I create the aggregation of array 'curve points'
+and I create the aggregation of 'curve points'
 Then print the 'aggregation'
 EOF
 
@@ -41,8 +41,8 @@ cat <<EOF | zenroom -z -a $t/arr.json | tee $t/ecp.json
 rule input encoding url64
 rule output encoding url64
 Given I have a valid array in 'bonnetjes'
-When I create the 'ECP' hashes of objects in array 'bonnetjes'
-# When for each x in 'bonnetjes' create the array of 'ECP.hashtopoint(x)'
+When I create the hash to point 'ECP' of each object in 'bonnetjes'
+# When for each x in 'bonnetjes' create the of 'ECP.hashtopoint(x)'
 Then print the 'hashes'
 EOF
 

@@ -51,9 +51,9 @@ local zencode = {
    given_steps = {},
    when_steps = {},
    then_steps = {},
+   schemas = { },
    id = 0,
    AST = {},
-   schemas = { },
    eval_cache = { }, -- zencode_eval if...then conditions
    checks = { version = false }, -- version, scenario checked, etc.
    OK = true -- set false by asserts
@@ -126,7 +126,6 @@ _G['ZEN_traceback'] = "Zencode traceback:\n"
 function zencode:begin()
    self.id = 0
    self.AST = {}
-   self.schemas = { }
    self.eval_cache = { }
    self.checks = { version = false } -- version, scenario checked, etc.
    self.OK = true -- set false by asserts
