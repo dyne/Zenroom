@@ -6,7 +6,7 @@ DATA = [[
 ]
 ]]
 
-ZEN:begin(3)
+ZEN:begin()
 ZEN:parse([[
 rule check version 1.0.0
 rule input untagged
@@ -17,5 +17,17 @@ and I write 'three' in 'tertiur'
 # and I verify 'inside' is equal to 'test'
 and I verify 'third' is equal to 'tertiur'
 Then print the 'test' as 'string'
+]])
+ZEN:run()
+
+DATA = nil
+
+ZEN:begin()
+ZEN:parse([[
+rule check version 1.0.0
+Given nothing
+When I create the array of '64' random curve points
+and I create the aggregation of 'array'
+Then print the 'aggregation'
 ]])
 ZEN:run()

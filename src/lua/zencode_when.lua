@@ -65,7 +65,7 @@ When("I create the array of '' random curve points", function(s)
 end)
 
 
-When("I create the aggregation of array ''", function(arr)
+When("I create the aggregation of ''", function(arr)
 		local A = ACK[arr]
 		ZEN.assert(A, "Object not found: "..arr)
 		local count = isarray(A)

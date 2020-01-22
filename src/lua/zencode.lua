@@ -93,45 +93,48 @@ end
 -- set_sentence
 -- set_rule
 
-zencode.machine = MACHINE.create({
-	  initial = 'init',
-	  events = {
-		 { name = 'enter_rule',     from = { 'init', 'rule', 'scenario' }, to = 'rule' },
-		 { name = 'enter_scenario', from = { 'init', 'rule', 'scenario' }, to = 'scenario' },
-		 { name = 'enter_given',    from = { 'init', 'rule', 'scenario' }, to = 'given' },
-		 { name = 'enter_given',    from =   'given',             to = 'given' },
-		 { name = 'enter_and',      from =   'given',             to = 'given' },
-		 { name = 'enter_when',     from =   'given',             to = 'when' },
-		 { name = 'enter_when',     from =   'when',              to = 'when' },
-		 { name = 'enter_and',      from =   'when',              to = 'when' },
-		 { name = 'enter_then',     from = { 'given', 'when' },   to = 'then' },
-		 { name = 'enter_then',     from =   'then',              to = 'then' },
-		 { name = 'enter_and',      from =   'then',              to = 'then' }
-	  },
-	  callbacks = {
-		 -- msg is a table: { msg = "string", Z = ZEN (self) }
-		 onscenario = function(self, event, from, to, msg)
-			-- first word until the colon
-			local scenarios = strtok(string.match(msg.msg, "[^:]+"))
-			for k,scen in ipairs(scenarios) do
-			   if k ~= 1 then -- skip first (prefix)
-				  require_once("zencode_"..trimq(scen))
-				  ZEN:trace("Scenario "..scen)
-				  return
+local function new_state_machine()
+   local machine = MACHINE.create({
+		 initial = 'init',
+		 events = {
+			{ name = 'enter_rule',     from = { 'init', 'rule', 'scenario' }, to = 'rule' },
+			{ name = 'enter_scenario', from = { 'init', 'rule', 'scenario' }, to = 'scenario' },
+			{ name = 'enter_given',    from = { 'init', 'rule', 'scenario' }, to = 'given' },
+			{ name = 'enter_given',    from =   'given',             to = 'given' },
+			{ name = 'enter_and',      from =   'given',             to = 'given' },
+			{ name = 'enter_when',     from =   'given',             to = 'when' },
+			{ name = 'enter_when',     from =   'when',              to = 'when' },
+			{ name = 'enter_and',      from =   'when',              to = 'when' },
+			{ name = 'enter_then',     from = { 'given', 'when' },   to = 'then' },
+			{ name = 'enter_then',     from =   'then',              to = 'then' },
+			{ name = 'enter_and',      from =   'then',              to = 'then' }
+		 },
+		 callbacks = {
+			-- msg is a table: { msg = "string", Z = ZEN (self) }
+			onscenario = function(self, event, from, to, msg)
+			   -- first word until the colon
+			   local scenarios = strtok(string.match(msg.msg, "[^:]+"))
+			   for k,scen in ipairs(scenarios) do
+				  if k ~= 1 then -- skip first (prefix)
+					 require_once("zencode_"..trimq(scen))
+					 ZEN:trace("Scenario "..scen)
+					 return
+				  end
 			   end
-			end
-		 end,
-		 onrule = function(self, event, from, to, msg)
-			-- process rules immediately
-			set_rule(msg)
-		 end,
-		 -- set_sentence from zencode_ast
-		 ongiven = set_sentence,
-		 onwhen  = set_sentence,
-		 onthen  = set_sentence,
-		 onand = set_sentence
-	  }
+			end,
+			onrule = function(self, event, from, to, msg)
+			   -- process rules immediately
+			   set_rule(msg)
+			end,
+			-- set_sentence from zencode_ast
+			ongiven = set_sentence,
+			onwhen  = set_sentence,
+			onthen  = set_sentence,
+			onand = set_sentence
+		 }
 })
+   return machine
+end
 
 -- Zencode HEAP globals
 IN = { }         -- Given processing, import global DATA from json
@@ -141,15 +144,35 @@ ACK = ACK or { } -- When processing,  destination for push*
 OUT = OUT or { } -- print out
 AST = AST or { } -- AST of parsed Zencode
 WHO = nil
-
--- Zencode init traceback
 _G['ZEN_traceback'] = "Zencode traceback:\n"
+
 
 
 ---------------------------------------------------------------
 -- ZENCODE PARSER
 
-function zencode:begin() return true end
+function zencode:begin()
+   self.id = 0
+   self.AST = {}
+   self.schemas = { }
+   self.checks = { version = false } -- version, scenario checked, etc.
+   self.OK = true -- set false by asserts
+
+   -- Reset HEAP
+   self.machine = { }
+   IN = { }         -- Given processing, import global DATA from json
+   IN.KEYS = { }    -- Given processing, import global KEYS from json
+   TMP = { } -- Given processing, temp buffer for ack*->validate->push*
+   ACK = { } -- When processing,  destination for push*
+   OUT = { } -- print out
+   AST = { } -- AST of parsed Zencode
+   WHO = nil
+   collectgarbage'collect'
+   -- Zencode init traceback
+   _G['ZEN_traceback'] = "Zencode traceback:\n"
+   self.machine = new_state_machine()
+return true
+end
 
 function zencode:trace(src)
    -- take current line of zencode
