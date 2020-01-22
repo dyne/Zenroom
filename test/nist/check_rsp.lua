@@ -9,7 +9,7 @@
 hash = HASH.new(KEYS)
 local test = { }
 local nr = 0
-for line in ZEN:newline_iter(DATA) do
+for line in zencode_newline_iter(DATA) do
    local rule = strtok(line)
    -- I.print(rule)
    if #rule > 0 then
