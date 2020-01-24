@@ -23,13 +23,13 @@ Then print the 'secret message'
 		// generate the keypairs
         zencode(`Scenario 'simple': $scenario
                  Given that I am known as 'Bob'
-                 When I create my new keypair
+                 When I create the keypair
                  Then print my data`, null, null)
         bobKeys = JSON.parse(zencodeResults.pop())
         $("#bob").html(JSON.stringify({Bob: { public_key: bobKeys.Bob.keypair.public_key}}))
         zencode(`Scenario 'simple': $scenario
                  Given that I am known as 'Alice'
-                 When I create my new keypair
+                 When I create the keypair
                  Then print my data`, null, null)
         aliceKeys = JSON.parse(zencodeResults.pop())
         $("#alice").html(JSON.stringify(aliceKeys))
