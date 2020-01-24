@@ -402,31 +402,37 @@ function ZEN:import(object, secured)
    ZEN.assert(object, "ZEN:import object is nil")
    local t = type(object)
    if iszen(t) then
-	  warn("ZEN:import object already converted to "..t)
-	  return t
+      warn("ZEN:import object already converted to "..t)
+      return t
    end
    ZEN.assert(t ~= 'table', "ZEN:import table is impossible: object needs to be 'valid'")
    ZEN.assert(t == 'string', "ZEN:import object is not a string: "..t)
    -- OK, convert
-   if string.sub(object,1,3) == 'u64' and O.is_url64(object) then
-	  -- return decoded string format for JSON.decode
-	  return O.from_url64(object)
-   elseif string.sub(object,1,3) == 'b64' and O.is_base64(object) then
-	  -- return decoded string format for JSON.decode
-	  return O.from_base64(object)
-   elseif string.sub(object,1,3) == 'hex' and O.is_hex(object) then
-	  -- return decoded string format for JSON.decode
-	  return O.from_hex(object)
-   elseif string.sub(object,1,3) == 'bin' and O.is_bin(object) then
-	  -- return decoded string format for JSON.decode
-	  return O.from_bin(object)
-   -- elseif CONF.input.encoding.fun then
-   -- 	  return CONF.input.encoding.fun(object)
-   elseif string.sub(object,1,3) == 'str' then
-	  return O.from_string(object)
+   if string.sub(object,4,4) == ':' then
+	  if string.sub(object,1,3) == 'u64' and O.is_url64(object) then
+		 -- return decoded string format for JSON.decode
+		 return O.from_url64(object)
+	  elseif string.sub(object,1,3) == 'b64' and O.is_base64(object) then
+		 -- return decoded string format for JSON.decode
+		 return O.from_base64(object)
+	  elseif string.sub(object,1,3) == 'hex' and O.is_hex(string.sub(object,5)) then
+		 -- return decoded string format for JSON.decode
+		 return O.from_hex(string.sub(object,5))
+	  elseif string.sub(object,1,3) == 'bin' and O.is_bin(object) then
+		 -- return decoded string format for JSON.decode
+		 return O.from_bin(object)
+		 -- elseif CONF.input.encoding.fun then
+		 --     return CONF.input.encoding.fun(object)
+	  elseif string.sub(object,1,3) == 'str' then
+		 return O.from_string(object)
+	  elseif string.sub(object,1,3) == 'num' then
+		 return tonumber(object)
+	  end
    end
    if not secured then
 	  ZEN:wtrace("import implicit conversion from string ("..#object.." bytes)")
+	  local num = tonumber(object)
+	  if num then return num end
 	  return O.from_string(object)
    end
    error("Import secured to fail on untagged object",1)

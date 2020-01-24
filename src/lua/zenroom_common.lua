@@ -224,12 +224,12 @@ function strtok(src)
 -- used in zencode when transitioning out of given memory
 function zenguard(tbl)
    for k,v in next,tbl,nil do
+	  local ok = false
 	  if luatype(v) == 'table' then
 		 zenguard(v)
 	  else
-		 ZEN.assert
-		 (iszen(type(v)),
-		  "Variable "..k.." has unconverted value type: "..type(v))
+		 ok = iszen(type(v)) or tonumber(v)
+		 ZEN.assert(ok,"Variable "..k.." has unconverted value type: "..type(v))
 	  end
    end
 end

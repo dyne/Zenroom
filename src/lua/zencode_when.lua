@@ -23,6 +23,10 @@ When("I append '' to ''", function(content, dest)
 		ZEN.assert(not ZEN.schemas[dest], "When denied, schema collision detected: "..dest)
 		ACK[dest] = ACK[dest] .. ZEN:import(content)
 end)
+When("I append '' to '' formatted as ''", function(content, dest, format)
+		ZEN.assert(not ZEN.schemas[dest], "When denied, schema collision detected: "..dest)
+		ACK[dest] = ACK[dest] .. ZEN:import(format..":"..content) -- add prefix
+end)
 When("I write '' in ''", function(content, dest)
 		ZEN.assert(not ZEN.schemas[dest], "When denied, schema collision detected: "..dest)
 		ACK[dest] = ZEN:import(content) -- O.from_string
@@ -31,17 +35,63 @@ When("I set '' to ''", function(dest, content)
 		ZEN.assert(not ZEN.schemas[dest], "When denied, schema collision detected: "..dest)
 		ACK[dest] = ZEN:import(content) -- O.from_string
 end)
+When("I set '' to '' formatted as ''", function(dest, content, format)
+		ZEN.assert(not ZEN.schemas[dest], "When denied, schema collision detected: "..dest)
+		ACK[dest] = ZEN:import(I.spy(format..":"..content)) -- add prefix
+end)
 When("I create a random ''", function(s)
 		ZEN.assert(not ZEN.schemas[s], "When denied, schema collision detected: "..s)
 		ACK[s] = OCTET.random(64) -- TODO: right now hardcoded 256 bit random secrets
 end)
 
+-- generic comparison using overloaded __eq on any value
 When("I verify '' is equal to ''", function(l,r)
 		ZEN.assert(ACK[l] == ACK[r],
 				   "When comparison failed: objects are not equal: "
 					  ..l.." == "..r)
 end)
 
+-- numericals
+When("I set '' to '' base ''", function(dest, content, base)
+		ZEN.assert(not ACK[dest], "When denied, schema collision detected: "..dest)
+		local bas = tonumber(base)
+		ZEN.assert(bas, "Invalid numerical conversion for base: "..base)
+		local num = tonumber(content,bas)
+		ZEN.assert(num, "Invalid numerical conversion for value: "..content)
+		ACK[dest] = num
+end)
+
+local function numcheck(left, right)
+   local al = ACK[left]
+   ZEN.assert(al, "Object not found for left argument: "..left)
+   if type(al) == "zenroom.octet" then al = BIG.new(al):integer() end
+   local l = tonumber(al)
+   ZEN.assert(l, "Invalid numerical in left argument: "..type(al))
+   local ar = ACK[right]
+   ZEN.assert(ar, "Object not found for right argument: "..right)
+   if type(ar) == "zenroom.octet" then ar = BIG.new(ar):integer() end
+   local r = tonumber(ar)
+   ZEN.assert(r, "Invalid numerical in right argument: "..type(ar))
+   return l, r
+end
+When("number '' is less than ''", function(left, right)
+		local l, r = numcheck(left, right)
+		ZEN.assert(l < r, "Failed comparison: "..l.." is not less than "..r)
+end)
+When("number '' is less or equal than ''", function(left, right)
+		local l, r = numcheck(left, right)
+		ZEN.assert(l <= r, "Failed comparison: "..l.." is not less than "..r)
+end)
+When("number '' is more than ''", function(left, right)
+		local l, r = numcheck(left, right)
+		ZEN.assert(l > r, "Failed comparison: "..l.." is not less than "..r)
+end)
+When("number '' is more or equal than ''", function(left, right)
+		local l, r = numcheck(left, right)
+		ZEN.assert(l >= r, "Failed comparison: "..l.." is not less than "..r)
+end)
+
+-- array operations
 When("I create the array of '' random objects", function(s)
 		ACK.array = { }
 		for i = s,1,-1 do

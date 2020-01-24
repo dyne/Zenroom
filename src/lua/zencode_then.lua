@@ -18,6 +18,10 @@
 
 --- THEN
 
+Then("print ''", function(v)
+		table.insert(OUT, v) -- raw string
+end)
+
 Then("print '' ''", function(k,v)
 		OUT[k] = ZEN:import(v, false)
 end)

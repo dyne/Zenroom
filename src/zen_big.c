@@ -401,10 +401,7 @@ static int big_to_int(lua_State *L) {
 	return(1);
 }
 
-static int big_eq(lua_State *L) {
-	big *l = big_arg(L,1); SAFE(l);
-	big *r = big_arg(L,2); SAFE(r);
-	// BIG_comp requires external normalization
+static int _compare_bigs(lua_State *L, big *l, big *r) {
 	int res;
 	checkalldouble(l,r);
 	if(l->doublesize || r->doublesize) {
@@ -417,7 +414,33 @@ static int big_eq(lua_State *L) {
 		BIG_norm(r->val);
 		res = BIG_comp(l->val,r->val);
 	}
+	return(res);
+}
+static int big_eq(lua_State *L) {
+	big *l = big_arg(L,1); SAFE(l);
+	big *r = big_arg(L,2); SAFE(r);
+	// BIG_comp requires external normalization
+	int res = _compare_bigs(L,l,r);
+	// -1 if x<y, 0 if x=y, 1 if x>y
 	lua_pushboolean(L, (res==0)?1:0);
+	return 1;
+}
+static int big_lt(lua_State *L) {
+	big *l = big_arg(L,1); SAFE(l);
+	big *r = big_arg(L,2); SAFE(r);
+	// BIG_comp requires external normalization
+	int res = _compare_bigs(L,l,r);
+	// -1 if x<y, 0 if x=y, 1 if x>y
+	lua_pushboolean(L, (res<0)?1:0);
+	return 1;
+}
+static int big_lte(lua_State *L) {
+	big *l = big_arg(L,1); SAFE(l);
+	big *r = big_arg(L,2); SAFE(r);
+	// BIG_comp requires external normalization
+	int res = _compare_bigs(L,l,r);
+	// -1 if x<y, 0 if x=y, 1 if x>y
+	lua_pushboolean(L, (res<0)?1:(res==0)?1:0);
 	return 1;
 }
 
@@ -752,25 +775,21 @@ int luaopen_big(lua_State *L) {
 		// idiomatic operators
 		{"octet",luabig_to_octet},
 		{"hex",big_to_hex},
-		{"add",  big_add},
 		{"__add",big_add},
-		{"sub",  big_sub},
 		{"__sub",big_sub},
-		{"mul",  big_mul},
 		{"__mul",big_mul},
-		{"mod",  big_mod},
 		{"__mod",big_mod},
-		{"div",  big_div},
 		{"__div",big_div},
-		{"sqr",big_sqr},
-		{"eq",  big_eq},
 		{"__eq",big_eq},
+		{"__lt",big_lt},
+		{"__lte",big_lte},
 		{"__concat",big_concat},
 		{"bits",big_bits},
 		{"bytes",big_bytes},
 		{"int",big_to_int},
 		{"integer",big_to_int},
 		{"__len",big_bytes},
+		{"sqr",big_sqr},
 		{"modmul",big_modmul},
 		{"moddiv",big_moddiv},
 		{"modsqr",big_modsqr},
