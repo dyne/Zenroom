@@ -242,6 +242,33 @@ Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/G
 
 #### print
 
+Set the print_err callback to customize
+the behaviour of the print_err calls made to stderr
+by default it prints to the console.error
+
+Type: [Function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function)
+
+##### Examples
+
+Example usage of `print_err()`
+
+
+```javascript
+// returns zenroom
+import zenroom from 'zenroom'
+// or without ES6 syntax
+// const zenroom = require('zenroom').default
+
+const savedLines = []
+const print_errFunction = (text) => { savedLines.push(text) }
+const script = 'print("hello")'
+zenroom.print_err(print_errFunction).script(script).zenroom_exec()
+```
+
+Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** the zenroom module
+
+#### print
+
 Set the print callback to customize
 the behaviour of the print calls made to stdout
 by default it prints to the console.log
@@ -313,38 +340,6 @@ const script = 'print("hello")';
 zenroom.script(script).error(()=>{
    pleaseRunSomeOtherMethodAfterError()
 }).zenroom_exec()
-```
-
-Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** the zenroom module
-
-#### verbosity
-
-Set the verbosity of the stderr messages outputted by the zenroom virtual machine
-
-As per now the set of accepted value:
-
-<ul>
-<li>1 = INFO</li>
-<li>2 = DEBUG</li>
-</ul>
-
-##### Parameters
-
--   `verbosity` **[number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)** 
-
-##### Examples
-
-Example usage of `verbosity()`
-
-
-```javascript
-// returns zenroom
-import zenroom from 'zenroom'
-// or without ES6 syntax
-// const zenroom = require('zenroom').default
-
-const script = 'print("hello")'
-zenroom.script(script).verbosity(2).zenroom_exec()
 ```
 
 Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** the zenroom module
