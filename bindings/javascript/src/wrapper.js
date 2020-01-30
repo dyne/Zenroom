@@ -138,6 +138,34 @@ const zenroom = (function () {
   }
 
   /**
+   * Set the print_err callback to customize
+   * the behaviour of the print_err calls made to stderr
+   * by default it prints to the console.error
+   *
+   * @example <caption>Example usage of `print_err()`</caption>
+   * // returns zenroom
+   * import zenroom from 'zenroom'
+   * // or without ES6 syntax
+   * // const zenroom = require('zenroom').default
+   *
+   * const savedLines = []
+   * const print_errFunction = (text) => { savedLines.push(text) }
+   * const script = 'print("hello")'
+   * zenroom.print_err(print_errFunction).script(script).zenroom_exec()
+   *
+   * @callback print
+   * @returns {object} the zenroom module
+   */
+  const print_err = function (e) {
+    self.print_err = e
+    C.then(Module => {
+      Module.print_err = text => self.print_err(text)
+    })
+
+    return this
+  }
+
+  /**
    * Set the print callback to customize
    * the behaviour of the print calls made to stdout
    * by default it prints to the console.log
@@ -330,6 +358,7 @@ const zenroom = (function () {
     conf(self.options.conf || null)
     data(self.options.data || null)
     print(self.options.print || (text => console.log(text)))
+    print_err(self.options.print_err || (text => console.error(text)))
     success(self.options.success || new Function()) // eslint-disable-line no-new-func
     error(self.options.error || new Function()) // eslint-disable-line no-new-func
 
@@ -338,6 +367,7 @@ const zenroom = (function () {
 
   const __setup = function () {
     print(self.print || (text => console.log(text)))
+    print_err(self.print_err || (text => console.error(text)))
     success(self.success || (() => {}))
     error(self.error || (() => {}))
   }
@@ -378,6 +408,7 @@ const zenroom = (function () {
     conf,
     data,
     print,
+    print_err,
     success,
     zenroom_exec,
     zencode_exec,
@@ -388,4 +419,4 @@ const zenroom = (function () {
   }
 })()
 
-export default zenroom
+module.exports = zenroom
