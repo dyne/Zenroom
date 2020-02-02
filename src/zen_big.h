@@ -21,7 +21,6 @@
 #ifndef __ZEN_BIG_H__
 #define __ZEN_BIG_H__
 
-#define BIGSIZE 384
 #include <zen_big_factory.h>
 
 typedef struct {
