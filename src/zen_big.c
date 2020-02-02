@@ -125,7 +125,7 @@ big* big_new(lua_State *L) {
 	strcpy(c->name,"big384");
 	// c->len = modbytes;
 	c->chunksize = CHUNK;
-	c->doublesize = false;
+	c->doublesize = 0;
 	c->val = NULL;
 	c->dval = NULL;
 	return(c);

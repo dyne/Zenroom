@@ -32,7 +32,7 @@ typedef struct {
 	chunk *dval;
 	// BIG  val;
 	// DBIG dval;
-	bool doublesize;
+	short doublesize;
 } big;
 
 // new or dup already push the object in LUA's stack
