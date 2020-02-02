@@ -70,6 +70,9 @@ include ${pwd}/build/osx.mk
 # build docker images and releasing
 include ${pwd}/build/docker.mk
 
+# build luarock module
+include ${pwd}/build/luarock.mk
+
 # experimental target for xtensa embedded boards
 esp32: apply-patches milagro lua53
 	CC=${pwd}/build/xtensa-esp32-elf/bin/xtensa-esp32-elf-${gcc} \
@@ -135,6 +138,12 @@ install:
 	cp README.md ${destdocs}/README.txt
 	cp LICENSE.txt ${destdocs}/LICENSE.txt
 	cp ChangeLog.md ${destdocs}/ChangeLog.txt
+
+install-lua: destlib=${LIBDIR}
+install-lua:
+	mkdir -p ${destlib}
+	cp src/octet.so ${destlib}
+	cp src/ecdh.so ${destlib}
 
 clean:
 	make clean -C ${pwd}/lib/lua53/src

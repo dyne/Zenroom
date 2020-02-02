@@ -53,6 +53,10 @@ linux: ${SOURCES}
 linux-lib: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o libzenroom-${ARCH}-${VERSION}.so ${LDFLAGS} ${LDADD}
 
+luarock: ${SOURCES}
+	${CC} ${CFLAGS} ${SOURCES} -o octet.so ${LDFLAGS} ${LDADD}
+	${CC} ${CFLAGS} ${SOURCES} -o ecdh.so ${LDFLAGS} ${LDADD}
+
 redis: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o redis_zenroom.so-${ARCH}.so ${LDFLAGS} ${LDADD}
 
