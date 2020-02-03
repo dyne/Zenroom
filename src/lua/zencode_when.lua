@@ -51,6 +51,24 @@ When("I verify '' is equal to ''", function(l,r)
 					  ..l.." == "..r)
 end)
 
+-- hashing single strings
+When("I create the hash of ''", function(s)
+		local src = ACK[s]
+		ZEN.assert(src, "Object not found: "..s)
+		ACK.hash = sha256(src)
+end)
+
+When("I create the hash of '' using ''", function(s,h)
+		local src = ACK[s]
+		ZEN.assert(src, "Object not found: "..s)
+		if strcasecmp(h,'sha256') then		   
+		   ACK.hash = sha256(src)
+		elseif strcasecmp(h,'sha512') then
+		   ACK.hash = sha512(src)
+		end
+		ZEN.assert(ACK.hash, "Invalid hash: "..h)
+end)
+
 -- numericals
 When("I set '' to '' base ''", function(dest, content, base)
 		ZEN.assert(not ACK[dest], "When denied, schema collision detected: "..dest)
