@@ -46,7 +46,6 @@ Given("I am ''", function(name) ZEN:Iam(name) end)
 Given("I have a ''", function(name)
 		 ZEN:pick(name)
 		 TMP.valid = true
-		 TMP.data = ZEN:import(TMP.data, CONF.input.tagged)
 		 ZEN:ack(name)
 		 TMP = { }
 end)
@@ -54,7 +53,6 @@ Given("I have my ''", function(name)
 		 ZEN.assert(WHO, "No identity specified, use: Given I am ...")
 		 ZEN:pickin(WHO, name)
 		 TMP.valid = true
-		 TMP.data = ZEN:import(TMP.data, CONF.input.tagged)
 		 ZEN:ack(name)
 		 TMP = { }
 end)
@@ -83,14 +81,12 @@ end)
 Given("I have a '' inside ''", function(n, s)
 		 ZEN:pickin(s, n)
 		 TMP.valid = true
-		 TMP.data = ZEN:import(TMP.data, CONF.input.tagged)
 		 ZEN:ack(s) -- save it in ACK.s.n
 		 TMP = { }
 end)
 Given("I have inside '' a ''", function(s, n)
 		 ZEN:pickin(s, n)
 		 TMP.valid = true
-		 TMP.data = ZEN:import(TMP.data, CONF.input.tagged)
 		 ZEN:ack(s) -- save it in ACK.s.n
 		 TMP = { }
 end)
@@ -142,14 +138,30 @@ ZEN.add_schema({
 })
 
 Given("I have a valid array in ''", function(a)
-		 ZEN:pick(a)
+		 local got -- local impl of ZEN:pick for array
+		 got = IN.KEYS[a] or IN[a]
+		 ZEN.assert(got, "Cannot find '"..a.."' anywhere")
+		 ZEN.assert(type(got) == 'table', "Object is not an array: "..a)
+		 TMP = { root = nil,
+				 data = got,
+				 valid = false,
+				 schema = 'array' }
+		 assert(ZEN.OK)
 		 ZEN:validate(a,'array')
 		 ZEN:ack(a)
 		 TMP = { }
 end)
 
 Given("I have a valid array of '' in ''", function(t,a)
-		 ZEN:pick(a)
+		 local got -- local impl of ZEN:pick for array
+		 got = IN.KEYS[a] or IN[a]
+		 ZEN.assert(got, "Cannot find '"..a.."' anywhere")
+		 ZEN.assert(type(got) == 'table', "Object is not an array: "..a)
+		 TMP = { root = nil,
+				 data = got,
+				 valid = false,
+				 schema = 'array' }
+		 assert(ZEN.OK)
 		 ZEN:validate(a,'array_'..t:lower())
 		 ZEN:ack(a)
 		 TMP = { }

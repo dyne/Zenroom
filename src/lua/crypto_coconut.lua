@@ -214,7 +214,6 @@ end
 function coco.prove_cred_petition(vk, sigma, secret, uid)
    local m = INT.new(sha256(secret))
    local r = INT.random()
-   local octuid = ZEN:import(uid)
    -- local m = INT.new(sha256(secret))
    -- material
    local r_prime = INT.random()
@@ -224,7 +223,7 @@ function coco.prove_cred_petition(vk, sigma, secret, uid)
 	  + vk.beta * m
 	  + G2 * r
    local nu = sigma_prime.h_prime * r
-   local zeta = m * ECP.hashtopoint(octuid)
+   local zeta = m * ECP.hashtopoint(uid)
    -- proof --
    -- create the witnessess
    local wm = INT.random()
@@ -234,7 +233,7 @@ function coco.prove_cred_petition(vk, sigma, secret, uid)
 	  + vk.alpha
 	  + vk.beta * wm
    local Bw = sigma_prime.h_prime * wr
-   local Cw = wm * ECP.hashtopoint(octuid)
+   local Cw = wm * ECP.hashtopoint(uid)
    -- create the challenge
    local c = COCONUT.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw })
    -- create responses
@@ -258,7 +257,6 @@ function coco.verify_cred_petition(vk, Theta, zeta, uid)
    local c = Theta.pi_v.c
    local rm = Theta.pi_v.rm
    local rr = Theta.pi_v.rr
-   local octuid = ZEN:import(uid)
    -- verify proof --
    -- recompute witnessess commitments
    local Aw = kappa * c
@@ -266,7 +264,7 @@ function coco.verify_cred_petition(vk, Theta, zeta, uid)
 	  + vk.alpha * (INT.new(1) - c)
 	  + vk.beta * rm
    local Bw = nu * c + sigma_prime.h_prime * rr
-   local Cw = rm*ECP.hashtopoint(octuid) + zeta*c
+   local Cw = rm*ECP.hashtopoint(uid) + zeta*c
    -- compute the challenge prime
    ZEN.assert(c == COCONUT.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw }),
 			  "verify_cred_petition: invalid challenge")

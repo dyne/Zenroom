@@ -12,6 +12,7 @@ ZEN:begin()
 ZEN:parse([[
 rule check version 1.0.0
 rule input untagged
+rule input encoding string
 Given I have a 'inside' inside 'first'
 and I have a 'third'
 When I write 'first.inside' in 'test'

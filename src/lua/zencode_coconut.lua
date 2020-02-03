@@ -210,7 +210,7 @@ ZEN.add_schema({
 
 When("I create the petition ''", function(uid)
 		ZEN:pick('petition',
-				 { uid = ZEN:import(uid),
+				 { uid = ZEN:import(uid, O.from_string),
 				   owner = ACK.credential_keypair.public,
 				   scores = { pos = { left = ECP.infinity(),
 									  right = ECP.infinity() },
@@ -218,7 +218,7 @@ When("I create the petition ''", function(uid)
 									  right = ECP.infinity()  } }
 		})
 		-- pass validation by hand since we just created it
-		TMP.valid = TMP.data
+		TMP.valid = true
  		ZEN:ack('petition')
 		-- generate an ECDH signature of the (encoded) petition using the
 		-- credential keys
@@ -246,7 +246,7 @@ When("I create the petition signature ''", function(uid)
 		ZEN.assert(ACK.credentials, "Signed credential not found")
 		local Theta
 		local zeta
-		local ack_uid = ZEN:import(uid)
+		local ack_uid = ZEN:import(uid, O.from_string)
 		Theta, zeta = COCONUT.prove_cred_petition(
 		   ACK.verifiers,
 		   ACK.credentials,

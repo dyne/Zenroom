@@ -27,17 +27,23 @@ When("I append '' to '' formatted as ''", function(content, dest, format)
 		ZEN.assert(not ZEN.schemas[dest], "When denied, schema collision detected: "..dest)
 		ACK[dest] = ACK[dest] .. ZEN:import(format..":"..content) -- add prefix
 end)
+
+-- hardcoded import encoding from_string
 When("I write '' in ''", function(content, dest)
 		ZEN.assert(not ZEN.schemas[dest], "When denied, schema collision detected: "..dest)
-		ACK[dest] = ZEN:import(content) -- O.from_string
+		ACK[dest] = ZEN:import(content, O.from_string)
 end)
 When("I set '' to ''", function(dest, content)
 		ZEN.assert(not ZEN.schemas[dest], "When denied, schema collision detected: "..dest)
-		ACK[dest] = ZEN:import(content) -- O.from_string
+		ACK[dest] = ZEN:import(content, O.from_string)
 end)
 When("I set '' to '' formatted as ''", function(dest, content, format)
 		ZEN.assert(not ZEN.schemas[dest], "When denied, schema collision detected: "..dest)
-		ACK[dest] = ZEN:import(I.spy(format..":"..content)) -- add prefix
+		ACK[dest] = ZEN:import(content, input_encoding(format).fun)
+end)
+When("I set '' to '' as ''", function(dest, content, format)
+		ZEN.assert(not ZEN.schemas[dest], "When denied, schema collision detected: "..dest)
+		ACK[dest] = ZEN:import(content, input_encoding(format).fun)
 end)
 When("I create a random ''", function(s)
 		ZEN.assert(not ZEN.schemas[s], "When denied, schema collision detected: "..s)

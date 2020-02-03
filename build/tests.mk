@@ -56,13 +56,14 @@ lua-modules = \
 	${1} test/slaxml.lua
 
 zencode-tests = \
-	@${1} test/zencode_find.lua && \
+	@${1} test/zencode_numericals.lua && \
 	${1} test/zencode_data.lua
 
 
 zencode-integration = \
 	./test/zencode_parser.sh && \
 	./test/zencode_array.sh && \
+	./test/zencode_enchash.sh && \
 	cd test/zencode_simple &&    \
 	./run_symmetric_integration_test.sh ../../${1} && \
 	./run_aesgcm_integration_test.sh ../../${1} && \

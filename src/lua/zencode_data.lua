@@ -178,7 +178,7 @@ function ZEN:pick(what, obj)
    got = inside_pick(IN.KEYS, what) or inside_pick(IN,what)
    ZEN.assert(got, "Cannot find '"..what.."' anywhere")
    TMP = { root = nil,
-		   data = got,
+		   data = ZEN:import(got),
 		   valid = false,
 		   schema = what }
    assert(ZEN.OK)
@@ -214,7 +214,7 @@ function ZEN:pickin(section, what)
    -- TODO: check all corner cases to make sure TMP[what] is a k/v map
    ::found::
    TMP = { root = section,
-		   data = got,
+		   data = ZEN:import(got),
 		   valid = false,
 		   schema = what }
    assert(ZEN.OK)
@@ -396,49 +396,55 @@ end
 --
 -- @function ZEN:import(object)
 -- @param object data element to be read
--- @param secured block implicit conversion from untagget string
+-- @param fun function to be used for conversion
 -- @return object read
-function ZEN:import(object, secured)
+function ZEN:import(object, fun)
    ZEN.assert(object, "ZEN:import object is nil")
    local t = type(object)
    if iszen(t) then
       warn("ZEN:import object already converted to "..t)
       return t
    end
-   ZEN.assert(t ~= 'table', "ZEN:import table is impossible: object needs to be 'valid'")
-   ZEN.assert(t == 'string', "ZEN:import object is not a string: "..t)
-   -- OK, convert
-   if string.sub(object,4,4) == ':' then
-	  if string.sub(object,1,3) == 'u64' and O.is_url64(object) then
-		 -- return decoded string format for JSON.decode
-		 return O.from_url64(object)
-	  elseif string.sub(object,1,3) == 'b64' and O.is_base64(object) then
-		 -- return decoded string format for JSON.decode
-		 return O.from_base64(object)
-	  elseif string.sub(object,1,3) == 'hex' and O.is_hex(string.sub(object,5)) then
-		 -- return decoded string format for JSON.decode
-		 return O.from_hex(string.sub(object,5))
-	  elseif string.sub(object,1,3) == 'bin' and O.is_bin(object) then
-		 -- return decoded string format for JSON.decode
-		 return O.from_bin(object)
-		 -- elseif CONF.input.encoding.fun then
-		 --     return CONF.input.encoding.fun(object)
-	  elseif string.sub(object,1,3) == 'str' then
-		 return O.from_string(object)
-	  elseif string.sub(object,1,3) == 'num' then
-		 return tonumber(object)
+   -- ZEN.assert(t ~= 'table', "ZEN:import table is impossible: object needs to be 'valid'")
+   -- ZEN.assert(t == 'string', "ZEN:import object is not a string: "..t)
+   if fun then
+	  ZEN:wtrace("using hard-coded import function")
+	  return fun(object)
+   elseif t == 'table' then
+	  return object
+   elseif CONF.input.tagged then
+	  -- OK, convert
+	  if string.sub(object,4,4) == ':' then
+		 if string.sub(object,1,3) == 'u64' and O.is_url64(object) then
+			-- return decoded string format for JSON.decode
+			return O.from_url64(object)
+		 elseif string.sub(object,1,3) == 'b64' and O.is_base64(object) then
+			-- return decoded string format for JSON.decode
+			return O.from_base64(object)
+		 elseif string.sub(object,1,3) == 'hex' and O.is_hex(string.sub(object,5)) then
+			-- return decoded string format for JSON.decode
+			return O.from_hex(string.sub(object,5))
+		 elseif string.sub(object,1,3) == 'bin' and O.is_bin(object) then
+			-- return decoded string format for JSON.decode
+			return O.from_bin(object)
+			-- elseif CONF.input.encoding.fun then
+			--     return CONF.input.encoding.fun(object)
+		 elseif string.sub(object,1,3) == 'str' then
+			return O.from_string(object)
+		 elseif string.sub(object,1,3) == 'num' then
+			return tonumber(object)
+		 end
+	  else
+		 error("Import secured to fail on untagged object",1)
 	  end
-   end
-   if not secured then
+   else
+	  local num = tonumber(object) -- is a Lua number?
+	  if num then return num end -- then return it
 	  ZEN:wtrace("import implicit conversion from string ("..#object.." bytes)")
-	  local num = tonumber(object)
-	  if num then return num end
-	  return O.from_string(object)
+	  ZEN:wtrace("using configured import function: "..CONF.input.encoding.name)
+	  return CONF.input.encoding.fun(object) -- use conversion rule
    end
-   error("Import secured to fail on untagged object",1)
    return nil
-   -- error("ZEN:import failed conversion from "..t, 3)
 end
-
 
 
