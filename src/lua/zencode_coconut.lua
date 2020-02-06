@@ -132,8 +132,12 @@ ZEN.add_schema({
 	  credential_proof = function(obj)
 		 return { nu = get(obj, 'nu', ECP.new),
 				  kappa = get(obj, 'kappa', ECP2.new),
-				  pi_v = map(obj.pi_v, INT.new), -- TODO map wrappers
-				  sigma_prime = map(obj.sigma_prime, ECP.new) } end
+				  pi_v = { c = get(obj.pi_v, 'c', INT.new),
+						   rm = get(obj.pi_v, 'rm', INT.new),
+						   rr = get(obj.pi_v, 'rr', INT.new) },
+				  sigma_prime = { h_prime = get(obj.sigma_prime, 'h_prime', ECP.new),
+								  s_prime = get(obj.sigma_prime, 's_prime', ECP.new) } }
+	  end
 })
 
 -- aggregated verifiers schema is same as a single verifier

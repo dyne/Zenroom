@@ -92,7 +92,7 @@ _G["CONF"] = {
    verbosity = 1,
    input = { encoding = input_encoding('url64'),
 			 format = get_format('json'),
-			 tagged = true },
+			 tagged = false },
    output = { encoding = get_encoding('url64'),
 			  format = get_format('json'),
 			  versioning = false },

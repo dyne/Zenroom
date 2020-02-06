@@ -19,10 +19,10 @@ ecc = ECDH.keygen()
 right = str("$tstr")
 pk = ecc.public
 dump = JSON.encode({teststr="$tstr",
-                    pubkey=pk:base64(),
-	                test64=right:base64(),
- 					testhex=right:hex(),
-					testhash=sha512(right):base64()})
+                    pubkey=base64(pk),
+	                test64=base64(right),
+ 					testhex=hex(right),
+					testhash=base64(sha512(right))})
 print(dump)
 EOF
 
@@ -36,16 +36,16 @@ echo "== checking import/export and hashes"
 cat <<EOF > /tmp/zenroom_temp_check.lua
 test = JSON.decode(DATA)
 assert(test.teststr == "$tstr")
-left = str("$tstr")
+left = O.from_str("$tstr")
 right = base64(test.test64)
 assert(left == right)
-right = str(test.teststr)
+right = O.from_str(test.teststr)
 assert(left == right)
-right = hex(test.testhex)
+right = O.from_hex(test.testhex)
 assert(left == right)
-assert(sha512(left):base64() == test.testhash)
-assert(sha512(right):base64() == test.testhash)
-print "== check the pubkey"
+assert(base64(sha512(left))  == test.testhash)
+assert(base64(sha512(right)) == test.testhash)
+print("== check the pubkey")
 left = base64(test.pubkey)
 assert(ECDH.pubcheck(left))
 EOF

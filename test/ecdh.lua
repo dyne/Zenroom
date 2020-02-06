@@ -29,7 +29,7 @@ decode.text, decode.checksum =
 
 assert(decode.checksum == ciphermsg.checksum,
 	   "Checksum differs when de/coding")
-assert(secret == decode.text, "Secret differs from de/coded text")
+assert(secret == decode.text:str(), "Secret differs from de/coded text")
 assert(ciphermsg.header == decode.header, "Header differs from de/coded text" )
 print 'decipher message:'
 print(decode.header:string())

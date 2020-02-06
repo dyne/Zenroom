@@ -208,14 +208,14 @@ octet* o_arg(lua_State *L,int n) {
 			error(L, "invalid string size: %u", len);
 			lerror(L,"failed implicit conversion from string to octet");
 			return 0; }
-		// note here implicit conversion is only made from hex
-		// TODO: this could be a zenroom configuration setting
+		// note here implicit conversion is only made from u64 and hex
+		// TODO: convert from more string encodings cascading is_* funcs
 		int hlen;
 		if((hlen = is_url64(str))>0) { // import from U64 encoded string
 			int declen = B64decoded_len(hlen);
 			func(L,"octet argument is_url64 len %u -> %u",hlen, declen);
 			o = o_new(L, declen); SAFE(o);
-			o->len = U64decode(o->val, &str[4]); // skip u64: prefix
+			o->len = U64decode(o->val, str);
 		} else if((hlen = is_hex(str))>0) { // import from a HEX encoded string
 			o = o_new(L, hlen); SAFE(o);
 			OCT_fromHex(o, (char*)str);
@@ -423,12 +423,8 @@ static int from_base64(lua_State *L) {
 		lerror(L, "base64 string contains invalid characters");
 		return 0; }
 	int nlen = len + len + len; // getlen_base64(len);
-	octet *o = o_new(L, nlen+4); // 4 byte header
-	if(s[0]=='b' && s[1]=='6' && s[2]=='4' && s[3]==':') { 
-		OCT_frombase64(o,(char*)s+4);
-	} else {
-		OCT_frombase64(o,(char*)s);
-	}
+	octet *o = o_new(L, nlen); // 4 byte header
+	OCT_frombase64(o,(char*)s);
 	return 1;
 }
 
@@ -441,12 +437,8 @@ static int from_url64(lua_State *L) {
 		return 0; }
 	int nlen = B64decoded_len(len);
 	// func(L,"U64 decode len: %u -> %u",len,nlen);
-	octet *o = o_new(L, nlen+4);
-	if(s[0]=='u' && s[1]=='6' && s[2]=='4' && s[3]==':') { 
-		o->len = U64decode(o->val,(char*)s+4); // skip header
-	} else {
-		o->len = U64decode(o->val,(char*)s);
-	}
+	octet *o = o_new(L, nlen);
+	o->len = U64decode(o->val,(char*)s);
 	// func(L,"u64 return len: %u",o->len);
 	return 1;
 }
@@ -522,7 +514,7 @@ static int from_bin(lua_State *L) {
 		lerror(L, "operation aborted");
 		return 0; }
 	octet *o = o_new(L, len+4); // destination
-	const char *S = (s[3]==':')?s+4:s; // jump prefix
+	register char *S = s;
 	register int p; // position in whole string
 	register int i; // increased only when 1 or 0 is found
 	register int d; // increased only added to dest
@@ -638,10 +630,8 @@ static int to_base64 (lua_State *L) {
 		return 0; }
 	int newlen;
 	newlen = getlen_base64(o->len);
-	char *b = zen_memory_alloc(newlen+4);
-	b[0]='b';b[1]='6';b[2]='4';b[3]=':';
-	OCT_tobase64(b+4,o);
-//	b[newlen] = '\0';
+	char *b = zen_memory_alloc(newlen);
+	OCT_tobase64(b,o);
 	lua_pushstring(L,b);
 	zen_memory_free(b);
 	return 1;
@@ -654,9 +644,9 @@ static int to_url64 (lua_State *L) {
 		return 0; }
 	int newlen;
 	newlen = B64encoded_len(o->len);
-	char *b = zen_memory_alloc(newlen+4);
-	b[0]='u';b[1]='6';b[2]='4';b[3]=':';
-	U64encode(b+4,o->val,o->len);
+	char *b = zen_memory_alloc(newlen);
+	// b[0]='u';b[1]='6';b[2]='4';b[3]=':';
+	U64encode(b,o->val,o->len);
 	lua_pushstring(L,b);
 	zen_memory_free(b);
 	return 1;

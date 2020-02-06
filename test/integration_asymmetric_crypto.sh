@@ -57,18 +57,18 @@ EOF
 test_decrypt() {
     from=$1
     to=$2
-    cat <<EOF | $zen -k $tmp/$to-keys.json -a $tmp/from-$from-to-$to-cryptomsg.json 2>/dev/null
+    cat <<EOF | $zen -k $tmp/$to-keys.json -a $tmp/from-$from-to-$to-cryptomsg.json
 keys = JSON.decode(KEYS)
 data = JSON.decode(DATA)
 recipient = { }
 recipient.private = hex(keys.private)
 sender = { }
 -- header is the public key of sender
-decode = { header = JSON.decode(url64(data.header)) }
-sender.public = decode.header.public
+decode = { header = JSON.decode(data.header) }
+sender.public = O.from_url64(decode.header.public)
 session = ECDH.session(recipient.private, sender.public)
 decode.text, decode.checksum =
-    ECDH.aead_decrypt(session, url64(data.text), decode.header.iv, data.header)
+    ECDH.aead_decrypt(session, O.from_url64(data.text), O.from_url64(decode.header.iv), data.header)
 print(decode.text:str())
 EOF
 }

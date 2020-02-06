@@ -25,7 +25,7 @@ When("I append '' to ''", function(content, dest)
 end)
 When("I append '' to '' formatted as ''", function(content, dest, format)
 		ZEN.assert(not ZEN.schemas[dest], "When denied, schema collision detected: "..dest)
-		ACK[dest] = ACK[dest] .. ZEN:import(format..":"..content) -- add prefix
+		ACK[dest] = ACK[dest] .. ZEN:import(content, input_encoding(format).fun) -- add prefix
 end)
 
 -- hardcoded import encoding from_string

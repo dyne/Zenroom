@@ -19,43 +19,13 @@
 local J = require('json')
 
 
--- automatic conversion to string using prefix (for use in JSON.decode)
-function J.autoconv(data)
-   local t = type(data)
-   if(t == "string") and data ~= "" then
-	  if string.sub(data,1,3) == 'u64' and O.is_url64(data) then
-		 -- return decoded string format for JSON.decode
-		 return O.from_url64(data):string()
-	  elseif string.sub(data,1,3) == 'b64' and O.is_base64(data) then
-		 -- return decoded string format for JSON.decode
-		 return O.from_base64(data):string()
-	  elseif string.sub(data,1,3) == 'hex' and O.is_hex(data) then
-		 -- return decoded string format for JSON.decode
-		 return O.from_hex(data):string()
-	  elseif string.sub(data,1,3) == 'bin' and O.is_bin(data) then
-		 -- return decoded string format for JSON.decode
-		 return O.from_bin(data):string()
-	  else -- its already a string (we suppose, this is not deterministic)
-		 return data
-	  end
-   elseif iszen(t) then
-	  return data:str()
-   else
-	  error("JSON.autoconf failed "..t.." conversion")
-   end
-end
-
-J.decode = function(str)
-   if not str then error("JSON.decode error decoding nil string", 2) end
+J.decode = function(data)
+   if not data then error("JSON.decode error decoding nil string", 2) end
    -- assert(str ~= "","JSON.decode error decoding empty string")
    -- assert(type(str) == "string", "JSON.decode error unsopported type: "..type(str))
-   local t = JSON.raw_decode(JSON.autoconv(str))
-   if not t then error("JSON.decode error decoding type: "..type(str), 2) end
-   -- fixes strange behavior of tables returned
-   -- second value returned should be used
-   -- first one becomes a string after first transformation
-   -- TODO: investigate this behavior, returning one now since seems fixed
-   return t
+   local res = JSON.raw_decode( str(data) )
+   if not res then error("JSON.decode error decoding type: "..t, 2) end
+   return res
 end
 
 J.encode = function(tab)

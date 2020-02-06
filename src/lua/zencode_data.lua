@@ -89,14 +89,20 @@ ZEN.get = function(obj, key, conversion)
    ZEN.assert(k, "Key not found in object conversion: "..key)
    local res = nil
    local t = type(k)
+
    if iszen(t) and conversion then res = conversion(k) goto ok end
    if iszen(t) and not conversion then res = k goto ok end
    if t == 'string' and conversion == str then res = k goto ok end
    if t == 'string' and conversion and conversion ~= str then
-	  res = conversion(ZEN:import(k)) goto ok end
-   if t == 'string' and not conversion then res = ZEN:import(k) goto ok end
+	  res = ZEN:import(k, conversion) goto ok end
+   if t == 'string' and not conversion then
+	  res = ZEN:import(k)
+	  warn("Implicit import of "..k.." ("..t..")")
+	  goto ok
+   end
+
    ::ok::
-   assert(ZEN.OK and res)
+   assert(ZEN.OK and res, "ZEN.get on invalid key: "..key.." ("..t..")")
    return res
 end
 
@@ -390,6 +396,9 @@ function ZEN:export(object, format)
    return conv_f(object) -- TODO: protected call
 end
 
+local function pfx(o) return string.sub(o,1,3) end
+local function buf(o) return string.sub(o,5) end
+
 ---
 -- Import a generic data element from the tagged format, or use
 -- CONF.encoding
@@ -408,31 +417,30 @@ function ZEN:import(object, fun)
    -- ZEN.assert(t ~= 'table', "ZEN:import table is impossible: object needs to be 'valid'")
    -- ZEN.assert(t == 'string', "ZEN:import object is not a string: "..t)
    if fun then
-	  ZEN:wtrace("using hard-coded import function")
-	  return fun(object)
+	  return(fun(object))
    elseif t == 'table' then
 	  return object
    elseif CONF.input.tagged then
 	  -- OK, convert
 	  if string.sub(object,4,4) == ':' then
-		 if string.sub(object,1,3) == 'u64' and O.is_url64(object) then
+		 if pfx(object) == 'u64' then
 			-- return decoded string format for JSON.decode
-			return O.from_url64(object)
-		 elseif string.sub(object,1,3) == 'b64' and O.is_base64(object) then
+			return O.from_url64(buf(object))
+		 elseif pfx(object) == 'b64' then
 			-- return decoded string format for JSON.decode
-			return O.from_base64(object)
-		 elseif string.sub(object,1,3) == 'hex' and O.is_hex(string.sub(object,5)) then
+			return O.from_base64(buf(object))
+		 elseif pfx(object) == 'hex' then
 			-- return decoded string format for JSON.decode
-			return O.from_hex(string.sub(object,5))
-		 elseif string.sub(object,1,3) == 'bin' and O.is_bin(object) then
+			return O.from_hex(buf(object))
+		 elseif pfx(object) == 'bin' then
 			-- return decoded string format for JSON.decode
-			return O.from_bin(object)
+			return O.from_bin(buf(object))
 			-- elseif CONF.input.encoding.fun then
 			--     return CONF.input.encoding.fun(object)
-		 elseif string.sub(object,1,3) == 'str' then
-			return O.from_string(object)
-		 elseif string.sub(object,1,3) == 'num' then
-			return tonumber(object)
+		 elseif pfx(object) == 'str' then
+			return O.from_string(buf(object))
+		 elseif pfx(object) == 'num' then
+			return tonumber(buf(object))
 		 end
 	  else
 		 error("Import secured to fail on untagged object",1)
@@ -440,6 +448,7 @@ function ZEN:import(object, fun)
    else
 	  local num = tonumber(object) -- is a Lua number?
 	  if num then return num end -- then return it
+
 	  ZEN:wtrace("import implicit conversion from string ("..#object.." bytes)")
 	  ZEN:wtrace("using configured import function: "..CONF.input.encoding.name)
 	  return CONF.input.encoding.fun(object) -- use conversion rule

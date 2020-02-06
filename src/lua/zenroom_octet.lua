@@ -34,10 +34,32 @@ function hex(data)
    end
 end
 function str(data)
-   if    (type(data) == "string")        then return octet.from_string(data)
-   elseif(type(data) == "zenroom.octet") then return data:string()
+   local t = type(data)
+   if(t == "string") and data ~= "" then
+	  if OCTET.is_url64(data) then
+		 -- return decoded string format for JSON.decode
+		 return OCTET.from_url64(data):str()
+	  elseif OCTET.is_base64(data) then
+		 -- return decoded string format for JSON.decode
+		 return OCTET.from_base64(data):str()
+	  elseif OCTET.is_hex(data) then
+		 -- return decoded string format for JSON.decode
+		 return OCTET.from_hex(data):str()
+	  elseif OCTET.is_bin(data) then
+		 -- return decoded string format for JSON.decode
+		 return OCTET.from_bin(data):str()
+	  else -- its already a string (we suppose, this is not deterministic)
+		 return data
+	  end
+   elseif t == 'zenroom.octet' then
+	  return data:str()
+   elseif iszen(t) then
+	  return data:octet():str()
+   else
+	  error("automatic str() conversion failed for type: "..t)
    end
 end
+
 function bin(data)
    local t = type(data)
    if(t == "string") then
