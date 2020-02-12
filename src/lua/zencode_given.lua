@@ -81,7 +81,7 @@ end)
 Given("I have a '' inside ''", function(n, s)
 		 ZEN:pickin(s, n)
 		 TMP.valid = true
-		 ZEN:ack(s) -- save it in ACK.s.n
+		 ZEN:ack(n) -- save it in ACK.n
 		 TMP = { }
 end)
 Given("I have inside '' a ''", function(s, n)
