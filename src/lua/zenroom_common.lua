@@ -21,35 +21,46 @@ function input_encoding(what)
    if what == 'u64' or what == 'url64' then
 	  return { fun = function(data)
 				  if O.is_url64(data) then return O.from_url64(data)
-				  else error("Failed import from url64: "..what,2)
+				  else error("Failed import from url64: "..what,3)
 					 end end,
 			   name = 'url64',
+			   check = O.is_url64,
 			   pfx = 'u64' }
    elseif what == 'b64' or what =='base64' then
 	  return { fun = function(data)
 				  if O.is_base64(data) then return O.from_base64(data)
-				  else error("Failed import from base64: "..what,2)
+				  else error("Failed import from base64: "..what,3)
 					 end end,
 			   name = 'base64',
+			   check = O.is_base64,
 			   pfx = 'b64' }
    elseif what == 'hex' then
 	  return { fun = function(data)
 				  if O.is_hex(data) then return O.from_hex(data)
-				  else error("Failed import from hex: "..what,2)
+				  else error("Failed import from hex: "..what,3)
 				  end end,
 			   name = 'hex',
+			   check = O.is_hex,
 			   pfx = 'hex' }
    elseif what == 'bin' or what == 'binary' then
 	  return { fun = function(data)
 				  if O.is_bin(data) then return O.from_bin(data)
-				  else error("Failed import from bin: "..what,2)
+				  else error("Failed import from bin: "..what,3)
 					 end end,
 			   name = 'binary',
+			   check = O.is_bin,
 			   pfx = 'bin' }
    elseif what == 'str' or what == 'string' then
    	  return { fun = O.from_string,
+			   check = function(_) return true end,
    			   name = 'string',
    			   pfx = 'str' }
+   elseif what == 'num' or what == 'number' then
+	  return { fun = tonumber,
+			   check = function(a) if tonumber(a) ~= nil then
+					 return true else return false end,
+			   name = 'number',
+			   pfx = 'num' }
    else
 	  warn("Conversion encoding not supported: "..what)
    end
