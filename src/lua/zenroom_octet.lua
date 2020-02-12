@@ -112,6 +112,7 @@ octet.serialize = function(arr)
 		  t = type(a)
 		  -- supported lua native types
 		  if(t == "string") then total = total + #a return
+		  elseif(t == "number") then total = total + #tostring(a) return
 		  elseif not iszen(t) then
 			 error("OCTET.serialize: unsupported type: "..t)
 		  end
@@ -131,7 +132,8 @@ octet.serialize = function(arr)
    map(arr,function(e)
 		  t = type(e)
 		  -- supported lua native types
-		  if(t == "string") then concat = concat .. str(e) return
+		  if(t == "string") then concat = concat .. O.from_str(e) return
+		  elseif(t == "number") then concat = concat .. O.from_str(tostring(e)) return
 		  elseif not iszen(t) then
 			 error("OCTET.serialize: unsupported type: "..t)
 		  end

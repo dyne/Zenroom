@@ -97,10 +97,9 @@ ZEN.get = function(obj, key, conversion)
 	  res = ZEN:import(k, conversion) goto ok end
    if t == 'string' and not conversion then
 	  res = ZEN:import(k)
-	  warn("Implicit import of "..k.." ("..t..")")
 	  goto ok
    end
-
+   if t == 'number' then res = k end
    ::ok::
    assert(ZEN.OK and res, "ZEN.get on invalid key: "..key.." ("..t..")")
    return res
