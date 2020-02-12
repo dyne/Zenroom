@@ -40,8 +40,8 @@ ZEN.add_schema({
 				  text     = ZEN.get(obj, 'text') }
 	  end,
 	  signature = function(obj)
-		 return { r = ZEN.get(obj, 'r'),
-				  s = ZEN.get(obj, 's') }
+		 return { r = ZEN.get(obj, 'r', INT.new),
+				  s = ZEN.get(obj, 's', INT.new) }
 --				  text = ZEN.get(obj, 'text') }
 	  end
 })
@@ -130,14 +130,34 @@ end)
 When("I create the signature of ''", function(doc)
 		ZEN.assert(ACK.keypair, "Keyring not found")
 		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
-		ACK.signature = ECDH.sign(ACK.keypair.private_key, ACK[doc])
+		local obj = ACK[doc]
+		ZEN.assert(obj, "Object not found: "..doc)
+		local t = type(obj)
+		if t == 'table' then
+		   local s = ECDH.sign(ACK.keypair.private_key, OCTET.serialize(obj))
+		   ACK[doc].signature = s
+		else
+		   ACK.signature = ECDH.sign(ACK.keypair.private_key, obj)
+		end
 		-- include contextual information
 end)
 
 When("I verify the '' is signed by ''", function(msg, by)
 		ZEN.assert(ACK.public_key[by], "Public key by "..by.." not found")
-		ZEN.assert(ACK.signature[by], "Signature by "..by.." not found")
-		ZEN.assert(ACK[msg], "Signed message not found: "..msg)
-		ZEN.assert(ECDH.verify(ACK.public_key[by], ACK[msg], ACK.signature[by]),
-				   "The signature is not authentic")
+		local obj = ACK[msg]
+		ZEN.assert(obj, "Object not found: "..msg)
+		local t = type(obj)
+		local sign
+		if t == 'table' then
+		   sign = obj.signature
+		   ZEN.assert(sign, "Signature by "..by.." not found")
+		   obj.signature = nil
+		   ZEN.assert(ECDH.verify(ACK.public_key[by], OCTET.serialize(obj), sign),
+					  "The signature is not authentic")
+		else
+		   sign = ACK.signature[by]
+		   ZEN.assert(sign, "Signature by "..by.." not found")
+		   ZEN.assert(ECDH.verify(ACK.public_key[by], obj, sign),
+					  "The signature is not authentic")
+		end
 end)
