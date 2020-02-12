@@ -85,34 +85,48 @@ When("I set '' to '' base ''", function(dest, content, base)
 		ACK[dest] = num
 end)
 
+-- check a tuple of numbers before comparison, convert from octet if necessary
 local function numcheck(left, right)
-   local al = ACK[left]
-   ZEN.assert(al, "Object not found for left argument: "..left)
-   if type(al) == "zenroom.octet" then al = BIG.new(al):integer() end
+   local al, ar
+   ZEN.assert(left, "numcheck left object not found")
+   if type(left) == "zenroom.octet" then al = BIG.new(left):integer()
+   else al = left end
    local l = tonumber(al)
-   ZEN.assert(l, "Invalid numerical in left argument: "..type(al))
-   local ar = ACK[right]
-   ZEN.assert(ar, "Object not found for right argument: "..right)
-   if type(ar) == "zenroom.octet" then ar = BIG.new(ar):integer() end
+   ZEN.assert(l, "Invalid numcheck left argument: "..type(left))
+
+   ZEN.assert(right, "numcheck right object not found")
+   if type(right) == "zenroom.octet" then ar = BIG.new(right):integer()
+   else ar = right end
    local r = tonumber(ar)
-   ZEN.assert(r, "Invalid numerical in right argument: "..type(ar))
+   ZEN.assert(r, "Invalid numerical in right argument: "..type(right))
    return l, r
 end
 When("number '' is less than ''", function(left, right)
-		local l, r = numcheck(left, right)
+		local l, r = numcheck(ACK[left], ACK[right])
 		ZEN.assert(l < r, "Failed comparison: "..l.." is not less than "..r)
 end)
 When("number '' is less or equal than ''", function(left, right)
-		local l, r = numcheck(left, right)
-		ZEN.assert(l <= r, "Failed comparison: "..l.." is not less than "..r)
+		local l, r = numcheck(ACK[left], ACK[right])
+		ZEN.assert(l <= r, "Failed comparison: "..l.." is not less or equal than "..r)
 end)
 When("number '' is more than ''", function(left, right)
-		local l, r = numcheck(left, right)
-		ZEN.assert(l > r, "Failed comparison: "..l.." is not less than "..r)
+		local l, r = numcheck(ACK[left], ACK[right])
+		ZEN.assert(l > r, "Failed comparison: "..l.." is not more than "..r)
 end)
 When("number '' is more or equal than ''", function(left, right)
-		local l, r = numcheck(left, right)
-		ZEN.assert(l >= r, "Failed comparison: "..l.." is not less than "..r)
+		local l, r = numcheck(ACK[left], ACK[right])
+		ZEN.assert(l >= r, "Failed comparison: "..l.." is not more or equal than "..r)
+end)
+When("'' in '' is more than '' in ''", function(ele, left, ere, right)
+		ZEN.assert(ACK[left], "Object not found: "..left)
+		local lo = ACK[left][ele]
+		ZEN.assert(lo, "Number not found: "..left.."."..ele)
+		ZEN.assert(ACK[right], "Object not found: "..right)
+		local ro = ACK[right][ere]
+		ZEN.assert(ro, "Number not found: "..right.."."..ere)
+		local l, r = numcheck(lo, ro)
+		ZEN.assert(l > r, "Failed comparison: "..left.."."..ele..
+					  " is not more than "..right.."."..ere)
 end)
 
 -- array operations
