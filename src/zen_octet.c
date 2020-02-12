@@ -469,13 +469,16 @@ static int from_url64(lua_State *L) {
 static int from_string(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "string expected");
-	int len = strlen(s);
+	const int len = strlen(s);
+	// STRING SIZE CHECK before import to OCTET
 	if(!len || len>MAX_STRING) {
 		error(L, "%s: invalid string size: %u", __func__,len);
 		lerror(L, "operation aborted");
 		return 0; }
 	octet *o = o_new(L, len);
-	OCT_jstring(o, (char*)s);
+	register int i = 0;
+	for(i=0;s[i];i++) o->val[i]=s[i];
+	o->len = i;
 	return 1;
 }
 
@@ -514,7 +517,7 @@ static int from_bin(lua_State *L) {
 		lerror(L, "operation aborted");
 		return 0; }
 	octet *o = o_new(L, len+4); // destination
-	register char *S = s;
+	register char *S = (char*)s;
 	register int p; // position in whole string
 	register int i; // increased only when 1 or 0 is found
 	register int d; // increased only added to dest
