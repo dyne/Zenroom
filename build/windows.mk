@@ -3,6 +3,10 @@ win: apply-patches milagro lua53 embed-lua
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src win-exe
 
+win-debug: apply-patches milagro lua53 embed-lua
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+		make -C src win-exe
+
 win-dll: apply-patches milagro lua53 embed-lua
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		 make -C src win-dll
