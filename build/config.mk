@@ -37,13 +37,6 @@ ldadd += ${milib}/libamcl_core.a
 
 # ------------------------
 # target specific settings
-ifneq (,$(findstring debug,$(MAKECMDGOALS)))
-cflags := -Og -ggdb -DDEBUG=1 -Wstack-usage=4096 -Wall -std=c99 -pedantic
-endif
-
-ifneq (,$(findstring profile,$(MAKECMDGOALS)))
-cflags := -Og -ggdb -pg -DDEBUG=1 -Wstack-usage=4096
-endif
 
 ifneq (,$(findstring win,$(MAKECMDGOALS)))
 gcc := x86_64-w64-mingw32-gcc
@@ -51,7 +44,7 @@ ar  := x86_64-w64-mingw32-ar
 ranlib := x86_64-w64-mingw32-ranlib
 ld := x86_64-w64-mingw32-ld
 system := Windows
-cflags := -g -O0 -mthreads -D'ARCH=\"WIN\"' -DARCH_WIN -Wall -Wextra -pedantic -std=gnu99
+cflags := -mthreads -D'ARCH=\"WIN\"' -DARCH_WIN
 ldflags := -L/usr/x86_64-w64-mingw32/lib
 ldadd += -l:libm.a -l:libpthread.a -lssp
 endif
@@ -62,7 +55,7 @@ ar  := ar
 ranlib := ranlib
 ld := ld
 system := Windows
-cflags := -g -O0 -mthreads -D'ARCH=\"WIN\"' -DARCH_WIN -Wall -Wextra -pedantic -std=gnu99
+cflags := -mthreads -D'ARCH=\"WIN\"' -DARCH_WIN
 ldadd := ${pwd}/lib/lua53/src/liblua.a
 ldadd += ${milib}/amcl_curve_ED25519.lib
 ldadd += ${milib}/amcl_curve_BLS383.lib
@@ -83,7 +76,7 @@ ld := arm-none-eabi-ld
 system := Generic
 ldadd += -lm
 cflags_protection := ""
-cflags := ${cflags_protection} -DARCH_CORTEX -Og -ggdb -Wall -Wextra -pedantic -std=gnu99 -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb-interwork -Wstack-usage=1024 -DLIBRARY -Wno-main -ffreestanding -nostartfiles
+cflags := ${cflags_protection} -DARCH_CORTEX -mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb-interwork -Wstack-usage=1024 -DLIBRARY -Wno-main -ffreestanding -nostartfiles
 milagro_cmake_flags += -DCMAKE_SYSTEM_PROCESSOR="arm" -DCMAKE_CROSSCOMPILING=1 -DCMAKE_C_COMPILER_WORKS=1
 ldflags+=-mcpu=cortex-m4 -mthumb -mlittle-endian -mthumb-interwork -Wstack-usage=1024 -Wno-main -ffreestanding -T cortex_m.ld -nostartfiles -Wl,-gc-sections -ggdb
 endif
@@ -97,13 +90,13 @@ ld := riscv64-linux-gnu-ld
 system := Generic
 ldadd += -lm
 cflags_protection := ""
-cflags := ${cflags_protection} -Og -ggdb -Wall -Wextra -pedantic -std=gnu99
+cflags := ${cflags_protection}
 milagro_cmake_flags += -DCMAKE_CROSSCOMPILING=1 -DCMAKE_C_COMPILER_WORKS=1
 ldflags += -Wstack-usage=1024
 endif
 
 ifneq (,$(findstring redis,$(MAKECMDGOALS)))
-cflags := ${cflags_protection} -DARCH_REDIS -Wall -std=gnu99
+cflags := ${cflags_protection} -DARCH_REDIS
 cflags += -O1 -ggdb -DDEBUG=1
 endif
 
@@ -118,7 +111,7 @@ endif
 
 ifneq (,$(findstring musl,$(MAKECMDGOALS)))
 gcc := musl-gcc
-cflags := -Os -static -Wall -std=gnu99 -fPIC ${cflags_protection} -D'ARCH=\"MUSL\"' -D__MUSL__ -DARCH_MUSL
+cflags := -Os -static -std=gnu99 -fPIC ${cflags_protection} -D'ARCH=\"MUSL\"' -D__MUSL__ -DARCH_MUSL
 ldflags := -static
 system := Linux
 endif
@@ -219,6 +212,14 @@ ldadd += ${ldadd} -nostdlib -Wl,--start-group -lmain -lc -Wl,--end-group -lgcc
 endif
 
 
+
+ifneq (,$(findstring debug,$(MAKECMDGOALS)))
+cflags += -Og -ggdb -DDEBUG=1 -Wstack-usage=4096 -Wall -Wextra -std=c99 -pedantic
+endif
+
+ifneq (,$(findstring profile,$(MAKECMDGOALS)))
+cflags += -Og -ggdb -pg -DDEBUG=1 -Wstack-usage=4096
+endif
 
 # ifneq (,$(findstring ios,$(MAKECMDGOALS)))
 # gcc := $(shell xcrun --sdk iphoneos -f gcc 2>/dev/null)
