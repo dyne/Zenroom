@@ -33,8 +33,8 @@ bench.random_kdf = function()
    act("Benchmark: KDF2 SHA256 and SHA512 on random")
    -- KDF2 input can be any, output
    local r = O.random(64)
-   ECDH.kdf2(HASH.new('SHA256'),r)
-   ECDH.kdf2(HASH.new('SHA512'),r)
+   HASH.kdf2(HASH.new('SHA256'),r)
+   HASH.kdf2(HASH.new('SHA512'),r)
 end
 
 
