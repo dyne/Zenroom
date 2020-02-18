@@ -27,3 +27,6 @@ or
 
 Visit the [product website](http://zenroom.org/) for a friendly
 introduction to the love we put in craftsmanship.
+
+**Zenroom is licensed as AGPLv3; we are happy to discuss dual-licensing on a commercial base.**
+
