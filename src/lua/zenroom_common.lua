@@ -57,8 +57,9 @@ function input_encoding(what)
    			   pfx = 'str' }
    elseif what == 'num' or what == 'number' then
 	  return { fun = tonumber,
-			   check = function(a) if tonumber(a) ~= nil then
-					 return true else return false end,
+			   check = function(_) return true end,
+			   -- check = function(a) if tonumber(a) ~= nil then
+			   -- 		 return true else return false end,
 			   name = 'number',
 			   pfx = 'num' }
    else
