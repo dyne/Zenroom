@@ -100,12 +100,12 @@ void load_file(char *dst, FILE *fd) {
 		func(0, "size of file: %u",file_size);
 	}
 
-	firstline = system_alloc(MAX_STRING);
+	firstline = malloc(MAX_STRING);
 	// skip shebang on firstline
 	if(!fgets(firstline, MAX_STRING, fd)) {
 		if(errno==0) { // file is empty
 			error(0, "Error reading, file is empty");
-			if(firstline) system_free(firstline);
+			if(firstline) free(firstline);
 			exit(1); }
 		error(0, "Error reading first line: %s", strerror(errno));
 		exit(1); }
@@ -140,14 +140,14 @@ void load_file(char *dst, FILE *fd) {
 			if(ferror(fd)) {
 				error(0, "Error in %s: %s",__func__,strerror(errno));
 				fclose(fd);
-				if(firstline) system_free(firstline);
+				if(firstline) free(firstline);
 				exit(1); }
 		}
 		offset += bytes;
 	}
 	if(fd!=stdin) fclose(fd);
 	if(get_debug())	act(0, "loaded file (%u bytes)", offset);
-	if(firstline) system_free(firstline);
+	if(firstline) free(firstline);
 }
 
 static char *conffile = NULL;
@@ -160,26 +160,26 @@ static char *keys = NULL;
 static char *data = NULL;
 
 int cli_alloc_buffers() {
-	conffile = system_alloc(MAX_STRING);
-	scriptfile = system_alloc(MAX_STRING);
-	keysfile = system_alloc(MAX_STRING);
-	datafile = system_alloc(MAX_STRING);
-	rngseed = system_alloc(MAX_STRING);
-	script = system_alloc(MAX_FILE);
-	keys = system_alloc(MAX_FILE);
-	data = system_alloc(MAX_FILE);
+	conffile = malloc(MAX_STRING);
+	scriptfile = malloc(MAX_STRING);
+	keysfile = malloc(MAX_STRING);
+	datafile = malloc(MAX_STRING);
+	rngseed = malloc(MAX_STRING);
+	script = malloc(MAX_FILE);
+	keys = malloc(MAX_FILE);
+	data = malloc(MAX_FILE);
 	return(1);
 }
 
 int cli_free_buffers() {
-	system_free(conffile);
-	system_free(scriptfile);
-	system_free(keysfile);
-	system_free(datafile);
-	system_free(rngseed);
-	system_free(script);
-	system_free(keys);
-	system_free(data);
+	free(conffile);
+	free(scriptfile);
+	free(keysfile);
+	free(datafile);
+	free(rngseed);
+	free(script);
+	free(keys);
+	free(data);
 	return(1);
 }
 

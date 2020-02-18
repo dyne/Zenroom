@@ -22,7 +22,6 @@
 #include <ctype.h>
 #include <jutils.h>
 #include <zenroom.h>
-#include <zen_memory.h>
 
 #include <lua.h>
 #include <lauxlib.h>
@@ -35,12 +34,12 @@ extern int zen_exec_script(zenroom_t *Z, const char *script);
 
 int repl_read(lua_State *lua) {
 	char *line = NULL;
-	line = system_alloc(MAX_STRING);
+	line = malloc(MAX_STRING);
 	size_t len =0;
 	len = read(STDIN_FILENO, line, MAX_STRING);
 	line[len] = '\0';
 	lua_pushlstring(lua, line, len);
-	system_free(line);
+	free(line);
 	return 1;
 }
 
@@ -75,14 +74,14 @@ size_t repl_prompt(int ret, char *line) {
 
 int repl_loop(zenroom_t *Z) {
 	char *line = NULL;
-	line = system_alloc(MAX_STRING);
+	line = malloc(MAX_STRING);
 	if(!Z) return EXIT_FAILURE;
 	int ret =0;
 	while(repl_prompt(ret, line)) {
 		ret = zen_exec_script(Z, line);
 		if(ret) break;
 	}
-	system_free(line);
+	free(line);
 	return(ret);
 }
 
