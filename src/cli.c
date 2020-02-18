@@ -80,7 +80,7 @@ extern int zen_setenv(lua_State *L, char *key, char *val);
 
 // This function exits the process on failure.
 void load_file(char *dst, FILE *fd) {
-	char firstline[MAX_STRING];
+	char *firstline = NULL;
 	long file_size = 0L;
 	size_t offset = 0;
 	size_t bytes = 0;
@@ -99,10 +99,13 @@ void load_file(char *dst, FILE *fd) {
 			exit(1); }
 		func(0, "size of file: %u",file_size);
 	}
+
+	firstline = system_alloc(MAX_STRING);
 	// skip shebang on firstline
 	if(!fgets(firstline, MAX_STRING, fd)) {
 		if(errno==0) { // file is empty
 			error(0, "Error reading, file is empty");
+			if(firstline) system_free(firstline);
 			exit(1); }
 		error(0, "Error reading first line: %s", strerror(errno));
 		exit(1); }
@@ -137,27 +140,55 @@ void load_file(char *dst, FILE *fd) {
 			if(ferror(fd)) {
 				error(0, "Error in %s: %s",__func__,strerror(errno));
 				fclose(fd);
+				if(firstline) system_free(firstline);
 				exit(1); }
 		}
 		offset += bytes;
 	}
 	if(fd!=stdin) fclose(fd);
 	if(get_debug())	act(0, "loaded file (%u bytes)", offset);
+	if(firstline) system_free(firstline);
+}
+
+static char *conffile = NULL;
+static char *scriptfile = NULL;
+static char *keysfile = NULL;
+static char *datafile = NULL;
+static char *rngseed = NULL;
+static char *script = NULL;
+static char *keys = NULL;
+static char *data = NULL;
+
+int cli_alloc_buffers() {
+	conffile = system_alloc(MAX_STRING);
+	scriptfile = system_alloc(MAX_STRING);
+	keysfile = system_alloc(MAX_STRING);
+	datafile = system_alloc(MAX_STRING);
+	rngseed = system_alloc(MAX_STRING);
+	script = system_alloc(MAX_FILE);
+	keys = system_alloc(MAX_FILE);
+	data = system_alloc(MAX_FILE);
+	return(1);
+}
+
+int cli_free_buffers() {
+	system_free(conffile);
+	system_free(scriptfile);
+	system_free(keysfile);
+	system_free(datafile);
+	system_free(rngseed);
+	system_free(script);
+	system_free(keys);
+	system_free(data);
+	return(1);
 }
 
 int main(int argc, char **argv) {
-	char conffile[MAX_STRING];
-	char scriptfile[MAX_STRING];
-	char keysfile[MAX_STRING];
-	char datafile[MAX_STRING];
-	char rngseed[MAX_STRING];
-	char script[MAX_FILE];
-	// char conf[MAX_FILE];
-	char keys[MAX_FILE];
-	char data[MAX_FILE];
 	int opt, index;
 	int   interactive         = 0;
 	int   zencode             = 0;
+
+	cli_alloc_buffers();
 
 	const char *short_options = "hd:ic:k:a:S:pz";
 	const char *help          =
@@ -182,6 +213,7 @@ int main(int argc, char **argv) {
 			break;
 		case 'h':
 			fprintf(stdout,"%s",help);
+			cli_free_buffers();
 			return EXIT_SUCCESS;
 			break;
 		case 'i':
@@ -203,8 +235,8 @@ int main(int argc, char **argv) {
 			zencode = 1;
 			interactive = 0;
 			break;
-		case '?': error(0,help); return EXIT_FAILURE;
-		default:  error(0,help); return EXIT_FAILURE;
+		case '?': error(0,help); cli_free_buffers(); return EXIT_FAILURE;
+		default:  error(0,help); cli_free_buffers(); return EXIT_FAILURE;
 		}
 	}
 
@@ -257,6 +289,7 @@ int main(int argc, char **argv) {
 		if(res)
 			// quits on ctrl-D
 			zen_teardown(Z);
+		cli_free_buffers();
 		return(res);
 	}
 
@@ -287,6 +320,7 @@ int main(int argc, char **argv) {
 			(data[0])?data:NULL);
 	if(!Z) {
 		error(NULL, "Initialisation failed.");
+		cli_free_buffers();
 		return EXIT_FAILURE; }
 
 	// configure to parse Lua or Zencode
@@ -294,8 +328,6 @@ int main(int argc, char **argv) {
 		if(verbosity) notice(NULL, "Direct Zencode execution");
 		func(NULL, script);
 	}
-
-
 
 #if DEBUG == 1
 	int res;
@@ -305,22 +337,22 @@ int main(int argc, char **argv) {
 	else
 		res = zen_exec_script(Z, script);
 	zen_teardown(Z);
-	if(res) return EXIT_FAILURE;
-	else return EXIT_SUCCESS;
+	if(res) { cli_free_buffers(); return EXIT_FAILURE; }
+	else { cli_free_buffers(); return EXIT_SUCCESS; }
 #endif
 
 #if (defined(ARCH_WIN) || defined(DISABLE_FORK)) || defined(ARCH_CORTEX) || defined(ARCH_BSD)
 	if(zencode)
-		if( zen_exec_zencode(Z, script) ) return EXIT_FAILURE;
+		if( zen_exec_zencode(Z, script) ) { cli_free_buffers(); return EXIT_FAILURE; }
 	else
-		if( zen_exec_script(Z, script) ) return EXIT_FAILURE;
+		if( zen_exec_script(Z, script) ) { cli_free_buffers(); return EXIT_FAILURE; }
 
 #else /* POSIX */
 	if (!zconf_seccomp) {
 		if(zencode) {
-			if( zen_exec_zencode(Z, script) ) return EXIT_FAILURE;
+			if( zen_exec_zencode(Z, script) ) { cli_free_buffers(); return EXIT_FAILURE; }
 		} else {
-			if( zen_exec_script(Z, script) ) return EXIT_FAILURE;
+			if( zen_exec_script(Z, script) ) { cli_free_buffers(); return EXIT_FAILURE; }
 		}
 	} else {
 		act(NULL, "protected mode (seccomp isolation) activated");
@@ -328,19 +360,22 @@ int main(int argc, char **argv) {
 #   ifdef ARCH_LINUX /* LINUX engages SECCOMP. */
 			if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) {
 				fprintf(stderr, "Cannot set no_new_privs: %m.\n");
+				cli_free_buffers();
 				return EXIT_FAILURE;
 			}
 			if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &strict)) {
 				fprintf(stderr, "Cannot install seccomp filter: %m.\n");
+				cli_free_buffers();
 				return EXIT_FAILURE;
 			}
 #   endif /* ARCH_LINUX */
 			if(verbosity) act(NULL, "starting execution.");
 			if(zencode) {
-				if( zen_exec_zencode(Z, script) ) return EXIT_FAILURE;
+				if( zen_exec_zencode(Z, script) ) { cli_free_buffers(); return EXIT_FAILURE; }
 			} else {
-				if( zen_exec_script(Z, script) ) return EXIT_FAILURE;
+				if( zen_exec_script(Z, script) ) { cli_free_buffers(); return EXIT_FAILURE; }
 			}
+			cli_free_buffers();
 			return EXIT_SUCCESS;
 		}
 		do {
@@ -358,6 +393,7 @@ int main(int argc, char **argv) {
 #endif /* POSIX */
 
 	zen_teardown(Z);
+	cli_free_buffers();
 	return EXIT_SUCCESS;
 }
 #endif
