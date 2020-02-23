@@ -179,10 +179,10 @@ function coco.prove_creds(vk, sigma, secret)
 				  rr = wr - r * ch }
    -- return Theta
    local Theta = {
-      kappa = kappa,
-      nu = nu,
-      sigma_prime = sigma_prime,
-      pi_v = pi_v }
+      kappa = kappa, -- ECP2
+      nu = nu,       -- ECP
+      sigma_prime = sigma_prime, -- ECP tuple
+      pi_v = pi_v } -- INTs
    return Theta
 end
 

@@ -447,10 +447,13 @@ function ZEN:import(object, fun)
    else
 	  local num = tonumber(object) -- is a Lua number?
 	  if num then return num end -- then return it
-
-	  ZEN:wtrace("import implicit conversion from string ("..#object.." bytes)")
-	  ZEN:wtrace("using configured import function: "..CONF.input.encoding.name)
-	  return CONF.input.encoding.fun(object) -- use conversion rule
+	  ZEN.assert(CONF.input.encoding, "CONF.input.encoding: no default conversion configured")
+	  if CONF.input.encoding.check(object) then
+		 ZEN:wtrace("import using configured function: "..CONF.input.encoding.name)
+		 return CONF.input.encoding.fun(object) -- use conversion rule
+	  end
+	  -- ZEN:wtrace("import implicit conversion from string ("..#object.." bytes)")
+	  -- return O.from_string(object)
    end
    return nil
 end
