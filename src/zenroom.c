@@ -266,8 +266,7 @@ int zen_exec_zencode(zenroom_t *Z, const char *script) {
 	lua_State* L = (lua_State*)Z->lua;
 	// introspection on code being executed
 	z_snprintf(zscript,MAX_ZENCODE-1,
-	         "ZEN:begin(%u)\nZEN:parse([[\n%s\n]])\nZEN:run()\n",
-	         Z->errorlevel, script);
+	         "ZEN:begin()\nZEN:parse([[\n%s\n]])\nZEN:run()\n", script);
 	zen_setenv(L,"CODE",(char*)zscript);
 	ret = luaL_dostring(L, zscript);
 	if(ret) {
@@ -277,7 +276,8 @@ int zen_exec_zencode(zenroom_t *Z, const char *script) {
 		fflush(stderr);
 		return ret;
 	}
-	notice(L, "Script successfully executed:\n\n%s",script);
+	if(Z->errorlevel > 1)
+		notice(L, "Script successfully executed:\n\n%s",script);
 	return 0;
 }
 
@@ -299,7 +299,8 @@ int zen_exec_script(zenroom_t *Z, const char *script) {
 		fflush(stderr);
 		return ret;
 	}
-	notice(L, "Script successfully executed:\n\n%s",script);
+	if(Z->errorlevel > 1)
+		notice(L, "Script successfully executed:\n\n%s",script);
 	return 0;
 }
 
