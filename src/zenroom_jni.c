@@ -20,21 +20,24 @@ JNIEXPORT jstring JNICALL Java_decode_zenroom_Zenroom_zenroom
     size_t  errorSize = 1024 * 128;
     char *z_error = (char*)malloc(errorSize * sizeof(char));
 
-    int ret = zenroom_exec_tobuf(script, conf, keys, data, z_output, outputSize, z_error, errorSize);
+    int ret = zencode_exec_tobuf(script, conf, keys, data, z_output, outputSize, z_error, errorSize);
 
 #ifdef __ANDROID__
-__android_log_print(ANDROID_LOG_VERBOSE, "Zenroom", "len %i", strlen(z_output));
-__android_log_print(ANDROID_LOG_VERBOSE, "Zenroom", "output %s", z_output);
+// __android_log_print(ANDROID_LOG_VERBOSE, "Zenroom", "len %i", strlen(z_output));
+// __android_log_print(ANDROID_LOG_VERBOSE, "Zenroom", "output %s", z_output);
 
-__android_log_print(ANDROID_LOG_VERBOSE, "Zenroom", "len %i", strlen(z_error));
-__android_log_print(ANDROID_LOG_VERBOSE, "Zenroom", "error %s", z_error);
+__android_log_print(ANDROID_LOG_WARN, "Zenroom", "len %i", strlen(z_error));
+__android_log_print(ANDROID_LOG_WARN, "Zenroom", "error %s", z_error);
 #endif
-    
+
+    free(z_error);
     (*env)->ReleaseStringUTFChars(env, jni_script, script);
     (*env)->ReleaseStringUTFChars(env, jni_conf, conf);
     (*env)->ReleaseStringUTFChars(env, jni_keys, keys);
     (*env)->ReleaseStringUTFChars(env, jni_data, data);
 
     result = (*env)->NewStringUTF(env, z_output);
+    free(z_output);
+
     return result;
 }
