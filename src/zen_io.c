@@ -162,14 +162,12 @@ static int zen_print (lua_State *L) {
 	size_t pos = 0;
 	int nargs = lua_gettop(L) +1;
 	int arg = 0;
+	char *s;
 	for (; nargs--; arg++) {
 		size_t len;
-		const char *s = lua_tolstring(L, arg, &len);
-		if (arg>1) { out[pos]='\t'; pos++; }
-		z_snprintf(out+pos,MAX_JSBUF-pos,"%s",s);
-		pos+=len;
+		s = lua_tolstring(L, arg, &len);
 	}
-	EM_ASM_({Module.print(UTF8ToString($0))}, out);
+	EM_ASM_({Module.print(UTF8ToString($0))}, s);
 	return 0;
 }
 static int zen_printerr (lua_State *L) {
