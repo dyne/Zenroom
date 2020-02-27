@@ -70,7 +70,7 @@ extern void ecdh_init(ecdh *e);
 
 extern zenroom_t *Z; // accessed to check random_seed configuration
 
-ecdh *ECDH = NULL;
+static ecdh ECDH;
 
 /// Global ECDH functions
 // @section ECDH.globals
@@ -112,14 +112,13 @@ int ecdh_destroy(lua_State *L) {
    @treturn[1] OCTET private key
 */
 static int ecdh_keygen(lua_State *L) {
-	SAFE(ECDH);
 	// return a table
 	lua_createtable(L, 0, 2);
-	octet *pk = o_new(L,ECDH->fieldsize*2 +1); SAFE(pk);
+	octet *pk = o_new(L,ECDH.fieldsize*2 +1); SAFE(pk);
 	lua_setfield(L, -2, "public");
-	octet *sk = o_new(L,ECDH->fieldsize); SAFE(sk);
+	octet *sk = o_new(L,ECDH.fieldsize); SAFE(sk);
 	lua_setfield(L, -2, "private");
-	(*ECDH->ECP__KEY_PAIR_GENERATE)(Z->random_generator,sk,pk);
+	(*ECDH.ECP__KEY_PAIR_GENERATE)(Z->random_generator,sk,pk);
 	return 1;
 }
 
@@ -135,9 +134,8 @@ static int ecdh_keygen(lua_State *L) {
 */
 
 static int ecdh_pubcheck(lua_State *L) {
-	SAFE(ECDH);
 	octet *pk = o_arg(L, 1); SAFE(pk);
-	if((*ECDH->ECP__PUBLIC_KEY_VALIDATE)(pk)==0)
+	if((*ECDH.ECP__PUBLIC_KEY_VALIDATE)(pk)==0)
 		lua_pushboolean(L, 1);
 	else
 		lua_pushboolean(L, 0);
@@ -160,19 +158,18 @@ static int ecdh_pubcheck(lua_State *L) {
    @see keyring:aead_encrypt
 */
 static int ecdh_session(lua_State *L) {
-	SAFE(ECDH);
 	octet *f = o_arg(L,1); SAFE(f);
 	octet *s = o_arg(L,2); SAFE(s);
 	octet *sk, *pk;
-	pk = (*ECDH->ECP__PUBLIC_KEY_VALIDATE)(s)==0 ? s :
-		(*ECDH->ECP__PUBLIC_KEY_VALIDATE)(f)==0 ? f : NULL;
+	pk = (*ECDH.ECP__PUBLIC_KEY_VALIDATE)(s)==0 ? s :
+		(*ECDH.ECP__PUBLIC_KEY_VALIDATE)(f)==0 ? f : NULL;
 	if(!pk) {
 		lerror(L, "%s: public key not found in any argument", __func__);
 		return 0; }
 	sk = (pk==s) ? f : s;
 	octet *kdf = o_new(L,SHA256); SAFE(kdf);
 	octet *ses = o_new(L,SHA256); SAFE(ses);
-	(*ECDH->ECP__SVDP_DH)(sk,pk,ses);
+	(*ECDH.ECP__SVDP_DH)(sk,pk,ses);
 	// NULL would be used internally by KDF2 as 'p' in the hash
 	// function ehashit(sha,z,counter,p,&H,0);
 	KDF2(SHA256,ses,NULL,SHA256,kdf);
@@ -189,9 +186,8 @@ static int ecdh_session(lua_State *L) {
 
 */
 static int ecdh_pub_xy(lua_State *L) {
-	SAFE(ECDH);
 	octet *pk = o_arg(L, 1); SAFE(pk);
-	if((*ECDH->ECP__PUBLIC_KEY_VALIDATE)(pk)!=0) {
+	if((*ECDH.ECP__PUBLIC_KEY_VALIDATE)(pk)!=0) {
 		return lerror(L, "Invalid public key passed as argument");
 	}
 	// Export public key to octet.  This is like o_dup but skips
@@ -199,20 +195,20 @@ static int ecdh_pub_xy(lua_State *L) {
 	// prefix for Montgomery (2) or non-Montgomery curves (4)
 	int res;
 	register int i;
-	octet *x = o_new(L, ECDH->fieldsize+1);
-	for(i=0; i < ECDH->fieldsize; i++)
+	octet *x = o_new(L, ECDH.fieldsize+1);
+	for(i=0; i < ECDH.fieldsize; i++)
 		x->val[i] = pk->val[i+1]; // +1 skips first byte
-	x->val[ECDH->fieldsize+1] = 0x0;
-	x->len = ECDH->fieldsize;
+	x->val[ECDH.fieldsize+1] = 0x0;
+	x->len = ECDH.fieldsize;
 	res = 1;
-	if(pk->len > ECDH->fieldsize<<1) { // make sure y is there:
+	if(pk->len > ECDH.fieldsize<<1) { // make sure y is there:
 		                               // could be omitted in
 		                               // montgomery notation
-		octet *y = o_new(L, ECDH->fieldsize+1);
-		for(i=0; i < ECDH->fieldsize; i++)
-			y->val[i] = pk->val[ECDH->fieldsize+i+1]; // +1 skips first byte
-		y->val[ECDH->fieldsize+1] = 0x0;
-		y->len = ECDH->fieldsize;
+		octet *y = o_new(L, ECDH.fieldsize+1);
+		for(i=0; i < ECDH.fieldsize; i++)
+			y->val[i] = pk->val[ECDH.fieldsize+i+1]; // +1 skips first byte
+		y->val[ECDH.fieldsize+1] = 0x0;
+		y->len = ECDH.fieldsize;
 		res = 2;
 	}
 	return(res);
@@ -233,12 +229,11 @@ static int ecdh_pub_xy(lua_State *L) {
    @function ECDH.pubgen(key)
 */
 static int ecdh_pubgen(lua_State *L) {
-	SAFE(ECDH);
 	octet *sk = o_arg(L, 1); SAFE(sk);
-	octet *pk = o_new(L,ECDH->fieldsize*2 +1); SAFE(pk);
+	octet *pk = o_new(L,ECDH.fieldsize*2 +1); SAFE(pk);
 	// If RNG is NULL then the private key is provided externally in S
 	// otherwise it is generated randomly internally
-	(*ECDH->ECP__KEY_PAIR_GENERATE)(NULL,sk,pk);
+	(*ECDH.ECP__KEY_PAIR_GENERATE)(NULL,sk,pk);
 	return 1;
 }
 
@@ -259,7 +254,6 @@ static int ecdh_pubgen(lua_State *L) {
 */
 
 static int ecdh_dsa_sign(lua_State *L) {
-	SAFE(ECDH);
 	octet *sk = o_arg(L,1); SAFE(sk);
 	octet *m = o_arg(L,2); SAFE(m);
 	// IEEE ECDSA Signature, R and S are signature on F using private
@@ -275,7 +269,7 @@ static int ecdh_dsa_sign(lua_State *L) {
 		lua_setfield(L, -2, "r");
 		octet *s = o_new(L,max_size); SAFE(s);
 		lua_setfield(L, -2, "s");
-		(*ECDH->ECP__SP_DSA)( max_size, Z->random_generator, NULL, sk, m, r, s);
+		(*ECDH.ECP__SP_DSA)( max_size, Z->random_generator, NULL, sk, m, r, s);
 	} else {
 		octet *k = o_arg(L,3); SAFE(k);
 		// return a table
@@ -284,7 +278,7 @@ static int ecdh_dsa_sign(lua_State *L) {
 		lua_setfield(L, -2, "r");
 		octet *s = o_new(L,max_size); SAFE(s);
 		lua_setfield(L, -2, "s");
-		(*ECDH->ECP__SP_DSA)( max_size, NULL, k, sk, m, r, s );
+		(*ECDH.ECP__SP_DSA)( max_size, NULL, k, sk, m, r, s );
 	}
 	return 1;
 }
@@ -303,7 +297,6 @@ static int ecdh_dsa_sign(lua_State *L) {
    @see ECDH.sign
 */
 static int ecdh_dsa_verify(lua_State *L) {
-	SAFE(ECDH);
     // IEEE1363 ECDSA Signature Verification. Signature C and D on F
     // is verified using public key W
 	octet *pk = o_arg(L,1); SAFE(pk);
@@ -329,7 +322,7 @@ static int ecdh_dsa_verify(lua_State *L) {
 		ERROR(); lerror(L,"signature argument invalid: not a table");
 	}
 	int max_size = 64;
-	int res = (*ECDH->ECP__VP_DSA)(max_size, pk, m, r, s);
+	int res = (*ECDH.ECP__VP_DSA)(max_size, pk, m, r, s);
 	if(res <0) // ECDH_INVALID in milagro/include/ecdh.h.in (!?!)
 		// TODO: maybe suggest fixing since there seems to be
 		// no criteria between ERROR (used in the first check
@@ -453,8 +446,7 @@ int luaopen_ecdh(lua_State *L) {
 	 };
 
 
-	ECDH = system_alloc(sizeof(ecdh));
-	ecdh_init(ECDH);
+	ecdh_init(&ECDH);
 
 	zen_add_class(L, "ecdh", ecdh_class, ecdh_methods);
 	return 1;
