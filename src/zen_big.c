@@ -34,7 +34,7 @@
 #include <zen_octet.h>
 #include <zen_memory.h>
 #include <zen_big.h>
-#include <zen_ecp_factory.h>
+#include <zen_ecp_factory.h> // for CURVE_Order
 
 // defined at compile time in zen_ecp.c for specific BLS
 extern const chunk *ORDER;
@@ -482,11 +482,11 @@ static int big_sub(lua_State *L) {
 		if(BIG_comp(l->val,r->val)<0) {
 			BIG t;
 			BIG_sub(t, r->val, l->val);
-			BIG_mod(d->val, (chunk*)ORDER);
-			BIG_sub(d->val, (chunk*)ORDER, t);
+			BIG_mod(d->val, (chunk*)CURVE_Order);
+			BIG_sub(d->val, (chunk*)CURVE_Order, t);
 		} else {
 			BIG_sub(d->val, l->val, r->val);
-			BIG_mod(d->val, (chunk*)ORDER);
+			BIG_mod(d->val, (chunk*)CURVE_Order);
 		}
 		BIG_norm(d->val);
 	}
@@ -553,7 +553,7 @@ static int big_modrand(lua_State *L) {
 
 static int big_random(lua_State *L) {
 	big *res = big_new(L); big_init(res); SAFE(res);
-	BIG_randomnum(res->val,(chunk*)ORDER,Z->random_generator);
+	BIG_randomnum(res->val,(chunk*)CURVE_Order,Z->random_generator);
 	return(1);
 }
 
@@ -579,7 +579,7 @@ static int big_mul(lua_State *L) {
 	big_init(d);
 	// dbig_init(d); // assume it always returns a double big
 	// BIG_dzero(d->dval);
-	BIG_modmul(d->val, l->val, r->val, (chunk*)ORDER);
+	BIG_modmul(d->val, l->val, r->val, (chunk*)CURVE_Order);
 	BIG_norm(d->val);
 	return 1;
 }
@@ -676,7 +676,7 @@ static int big_modmul(lua_State *L) {
 		BIG_copy(t2,z->val);
 		big *x = big_new(L); SAFE(x);
 		big_init(x);
-		BIG_modmul(x->val, t1, t2, (chunk*)ORDER);
+		BIG_modmul(x->val, t1, t2, (chunk*)CURVE_Order);
 		BIG_norm(x->val);
 		return 1;
 	}

@@ -58,8 +58,6 @@
 #include <zen_memory.h>
 #include <lua_functions.h>
 
-const chunk *ORDER = (chunk*)CURVE_Order;
-
 ecp* ecp_new(lua_State *L) {
 	ecp *e = (ecp *)lua_newuserdata(L, sizeof(ecp));
 	if(!e) {
@@ -214,7 +212,7 @@ static int ecp_order(lua_State *L) {
 	// BIG is an array of int32_t on chunk 32 (see rom_curve)
 
 	// curve order is ready-only so we need a copy for norm() to work
-	BIG_copy(res->val,(chunk*)ORDER);
+	BIG_copy(res->val,(chunk*)CURVE_Order);
 	return 1;
 }
 
