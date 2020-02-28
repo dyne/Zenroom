@@ -174,6 +174,17 @@ check-crypto:
 	@echo "All CRYPTO tests passed"
 	@echo "-----------------------"
 
+check-crypto-lw: test-exec := ./src/zenroom -c memmanager=\"lw\"
+check-crypto-lw:
+	$(call determinism-tests,${test-exec})
+	$(call crypto-tests,${test-exec})
+	$(call zencode-tests,${test-exec})
+	$(call crypto-integration,${test-exec})
+	$(call zencode-integration,${test-exec})
+	@echo "-----------------------"
+	@echo "All CRYPTO tests passed with lw memory manager"
+	@echo "-----------------------"
+
 
 check-crypto-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom -d 3
 check-crypto-debug:
