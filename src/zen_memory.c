@@ -124,6 +124,10 @@ zen_mem_t *lw_memory_init() {
 	return mem;
 }
 
+void lw_memory_free() {
+	if(regions[0].start_addr) free(regions[0].start_addr);
+}
+
 /**
  * Implementation of the memory allocator for the Lua state.
  *

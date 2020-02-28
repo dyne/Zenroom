@@ -67,6 +67,7 @@ extern int zen_conf_parse(const char *configuration);
 // prototypes from zen_memory.c
 extern zen_mem_t *libc_memory_init();
 extern zen_mem_t *lw_memory_init();
+extern void lw_memory_free();
 #ifdef USE_JEMALLOC
 extern zen_mem_t *jemalloc_memory_init();
 #endif
@@ -230,7 +231,7 @@ void zen_teardown(zenroom_t *Z) {
 
 	// stateful RNG instance for deterministic mode
 	if(Z->random_generator) {
-		system_free(Z->random_generator);
+		zen_memory_free(Z->random_generator);
 		Z->random_generator = NULL;
 	}
 	if(runtime_random256)
@@ -247,7 +248,8 @@ void zen_teardown(zenroom_t *Z) {
 
 	if(MEM) {
 		if(Z) (*MEM->free)(Z);
-		(*MEM->free)(MEM);
+		free(MEM);
+		lw_memory_free();
 		return; }
 	warning(NULL,"MEM not found");
 	if(Z) free(Z);
