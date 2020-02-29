@@ -281,12 +281,12 @@ void push_buffer_to_octet(lua_State *L, char *p, size_t len) {
 
 
 extern int zconf_memwipe; // zenroom_config
-extern char *runtime_random256; // zen_random
+extern char runtime_random256[256]; // zen_random
 int o_destroy(lua_State *L) {
 	void *ud = luaL_testudata(L, 1, "zenroom.octet");
 	if(ud) {
 		octet *o = (octet*)ud;
-		if(zconf_memwipe && runtime_random256) { // zenroom memory wipe configuration
+		if(zconf_memwipe) { // zenroom memory wipe configuration
 			register int i;
 			for(i=0;i<o->len;i++) o->val[i] = runtime_random256[i+11%256];
 		}

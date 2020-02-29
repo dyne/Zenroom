@@ -70,12 +70,12 @@ fp12 *fp12_dup(lua_State *L, fp12 *s) {
 }
 
 extern int zconf_memwipe; // zenroom_config
-extern char *runtime_random256; // zen_random
+extern char runtime_random256[256]; // zen_random
 int fp12_destroy(lua_State *L) {
 	HERE();
 	fp12 *c = fp12_arg(L,1);
 	SAFE(c);
-	if(zconf_memwipe && runtime_random256) { // zenroom memory wipe configuration
+	if(zconf_memwipe) { // zenroom memory wipe configuration
 		func(L,"   fp12 wipe");
 		BIG m; // from big random, using pre-calculated runtime random
 		int len = BIGLEN;

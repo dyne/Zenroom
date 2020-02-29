@@ -92,12 +92,12 @@ ecp2* ecp2_dup(lua_State *L, ecp2* in) {
 }
 
 extern int zconf_memwipe; // zenroom_config
-extern char *runtime_random256; // zen_random
+extern char runtime_random256[256]; // zen_random
 int ecp2_destroy(lua_State *L) {
 	HERE();
 	ecp2 *e = ecp2_arg(L,1);
 	SAFE(e);
-	if(zconf_memwipe && runtime_random256) { // zenroom memory wipe configuration
+	if(zconf_memwipe) { // zenroom memory wipe configuration
 		func(L,"   ecp2 wipe");
 		BIG m; // from big random, using pre-calculated runtime random
 		int len = BIGLEN;

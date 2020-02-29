@@ -222,7 +222,7 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	return(Z);
 }
 
-extern char *runtime_random256;
+extern char runtime_random256[256];
 void zen_teardown(zenroom_t *Z) {
 
 	notice(Z->lua,"Zenroom teardown.");
@@ -234,8 +234,7 @@ void zen_teardown(zenroom_t *Z) {
 		zen_memory_free(Z->random_generator);
 		Z->random_generator = NULL;
 	}
-	if(runtime_random256)
-		system_free(runtime_random256);
+
 	// save pointers inside Z to free after L and Z
 	if(Z->lua) {
 		func(Z->lua, "lua gc and close...");
