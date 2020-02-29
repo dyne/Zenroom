@@ -107,7 +107,7 @@ void  system_free(void *ptr) { (*MEM->sys_free)(ptr); }
 
 
 lwmem_region_t regions[] = { { 0x0, 0x0 } };
-#define LWMEM_BLOCK_SIZE 8192000 // 8MB
+#define LWMEM_BLOCK_SIZE 4096000 // 8192000 // 8MB
 
 // Global HEAP pointer in the STACK
 zen_mem_t *lw_memory_init() {
