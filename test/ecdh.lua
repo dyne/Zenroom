@@ -2,7 +2,7 @@ print()
 print '= ELLIPTIC CURVE DIFFIE-HELLMAN ALGORITHM TESTS'
 print()
 
-secret = str([[
+secret = O.from_str([[
 Minim quis typewriter ut. Deep v ut man braid neutra culpa in officia consectetur tousled art party stumptown yuccie. Elit lo-fi pour-over woke venmo keffiyeh in normcore enim sunt labore williamsburg flexitarian. Tumblr distillery fanny pack, banjo tacos vaporware keffiyeh.
 ]])
 
@@ -12,13 +12,18 @@ bob = ECDH.keygen()
 -- AES-GCM encryption
 iv = O.random(16)
 -- iv = octet.hex('00000000000000000000000000000000')
-ciphermsg = { header = octet.string('This is the header!') }
+ciphermsg = { header = O.from_string('This is the header!') }
 session = ECDH.session(alice.private, bob.public)
+I.print({ session = session,
+		  iv = iv,
+		  secret = secret,
+		  header = ciphermsg.header })
 ciphermsg.text, ciphermsg.checksum =
    ECDH.aead_encrypt(session, secret, iv, ciphermsg.header)
 
-print ('AES-GCM encrypt : '  .. ciphermsg.text:url64())
-print ('AES-GCM checksum : ' .. ciphermsg.checksum:url64())
+-- I.print(ciphermsg)
+-- print ('AES-GCM encrypt : '  .. ciphermsg.text:url64())
+-- print ('AES-GCM checksum : ' .. ciphermsg.checksum:url64())
 
 session = ECDH.session(bob.private, alice.public)
 decode = { header = ciphermsg.header }
@@ -29,7 +34,7 @@ decode.text, decode.checksum =
 
 assert(decode.checksum == ciphermsg.checksum,
 	   "Checksum differs when de/coding")
-assert(secret == decode.text:str(), "Secret differs from de/coded text")
+assert(secret == decode.text, "Secret differs from de/coded text")
 assert(ciphermsg.header == decode.header, "Header differs from de/coded text" )
 print 'decipher message:'
 print(decode.header:string())
@@ -38,7 +43,7 @@ print(decode.text:string())
 print ''
 print('  DSA SIGN/VERIFY')
 
-local m = str([[
+local m = O.from_str([[
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
 eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
 minim veniam, quis nostrud exercitation ullamco laboris nisi ut
@@ -48,7 +53,7 @@ pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
 culpa qui officia deserunt mollit anim id est laborum.]])
 sig = ECDH.sign(alice.private, m)
 assert(ECDH.verify(alice.public, m, sig), "ECDH verify failed")
-assert(not ECDH.verify(alice.public, m..str("bug"),sig), "ECDH verify failed")
+assert(not ECDH.verify(alice.public, m..O.from_str("bug"),sig), "ECDH verify failed")
 
 print "OK"
 -- vk, sk = ecdh:keygen()

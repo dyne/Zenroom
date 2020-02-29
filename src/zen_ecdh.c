@@ -60,6 +60,7 @@
 #include <zen_memory.h>
 #include <zen_hash.h>
 #include <zen_ecdh.h>
+#include <zen_big_factory.h>
 
 #define KEYPROT(alg,key)	  \
 	error(L, "%s engine has already a %s set:",alg,key); \
@@ -160,15 +161,17 @@ static int ecdh_pubcheck(lua_State *L) {
 static int ecdh_session(lua_State *L) {
 	octet *f = o_arg(L,1); SAFE(f);
 	octet *s = o_arg(L,2); SAFE(s);
-	octet *sk, *pk;
-	pk = (*ECDH.ECP__PUBLIC_KEY_VALIDATE)(s)==0 ? s :
-		(*ECDH.ECP__PUBLIC_KEY_VALIDATE)(f)==0 ? f : NULL;
+	octet *sk = NULL;
+	octet *pk = NULL;
+	// ECDH_OK is 0 in milagro's ecdh.h.in 
+	pk = (*ECDH.ECP__PUBLIC_KEY_VALIDATE)(s)== 0 ? s : NULL;
+	if(!pk) pk = (*ECDH.ECP__PUBLIC_KEY_VALIDATE)(f)== 0 ? f : NULL;
 	if(!pk) {
 		lerror(L, "%s: public key not found in any argument", __func__);
 		return 0; }
 	sk = (pk==s) ? f : s;
 	octet *kdf = o_new(L,SHA256); SAFE(kdf);
-	octet *ses = o_new(L,SHA256); SAFE(ses);
+	octet *ses = o_new(L,64); SAFE(ses); // modbytes of ecdh curve
 	(*ECDH.ECP__SVDP_DH)(sk,pk,ses);
 	// NULL would be used internally by KDF2 as 'p' in the hash
 	// function ehashit(sha,z,counter,p,&H,0);

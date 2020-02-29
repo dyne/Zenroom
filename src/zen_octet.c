@@ -181,11 +181,14 @@ octet* o_new(lua_State *L, const int size) {
 		return NULL; }
 	octet *o = (octet *)lua_newuserdata(L, sizeof(octet));
 	if(!o) {
-		lerror(L, "Error allocating new octet in %s",__func__);
+		lerror(L, "Error allocating new userdata for octet");
 		return NULL; }
 	luaL_getmetatable(L, "zenroom.octet");
 	lua_setmetatable(L, -2);
 	o->val = zen_memory_alloc(size +0x0f);
+	if(!o->val) {
+		lerror(L, "Error allocating new octet of %u bytes",size);
+		return NULL; }
 	o->len = 0;
 	o->max = size;
 	// func(L, "new octet (%u bytes)",size);
