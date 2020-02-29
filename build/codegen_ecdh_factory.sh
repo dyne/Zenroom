@@ -18,9 +18,7 @@ cat <<EOF > src/zen_ecdh_factory.c
 #include <ecdh_${CN}.h>
 
 void ecdh_init(ecdh *ECDH) {
-	ECDH->seclen = EGS_${CN}; // public key size
 	ECDH->fieldsize = EFS_${CN};
-	ECDH->rng = NULL;
 	ECDH->hash = HASH_TYPE_${CN};
 	ECDH->ECP__KEY_PAIR_GENERATE = ECP_${CN}_KEY_PAIR_GENERATE;
 	ECDH->ECP__PUBLIC_KEY_VALIDATE	= ECP_${CN}_PUBLIC_KEY_VALIDATE;
