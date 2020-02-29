@@ -74,7 +74,7 @@ static zconf curconf = NIL;
 
 int zconf_seccomp = 0;
 char zconf_rngseed[(RANDOM_SEED_LEN*2)+4]; // 0x and terminating \0
-mmtype zconf_memmg = SYS;
+mmtype zconf_memmg = LW;
 int  zconf_memwipe = 0;
 
 int zen_conf_parse(const char *configuration) {
