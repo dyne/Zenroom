@@ -149,11 +149,11 @@ const zenroom = (function () {
    * // const zenroom = require('zenroom').default
    *
    * const savedLines = []
-   * const print_errFunction = (text) => { savedLines.push(text) }
+   * const print_err_fn = (text) => { savedLines.push(text) }
    * const script = 'print("hello")'
-   * zenroom.print_err(print_errFunction).script(script).zenroom_exec()
+   * zenroom.print_err(print_err_fn).script(script).zenroom_exec()
    *
-   * @callback print
+   * @callback print_err
    * @returns {object} the zenroom module
    */
   const print_err = function (e) {
