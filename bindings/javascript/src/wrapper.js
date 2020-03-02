@@ -90,7 +90,7 @@ const zenroom = (function () {
   /**
    * Set the conf before your zenroom execution
    *
-   * by now the only conf available is the string `umm` that sets the minimal memory manager (64KiB max)
+   * all the available configuration are available [here](https://github.com/DECODEproject/Zenroom/blob/master/src/zen_config.c#L99-L104)
    *
    * @example <caption>Example usage of `conf()`</caption>
    * // returns zenroom
@@ -99,7 +99,7 @@ const zenroom = (function () {
    * // const zenroom = require('zenroom').default
    *
    * const script = 'print("hello")'
-   * const conf = 'umm'
+   * const conf = 'debug=1,memwipe=0'
    * zenroom.script(script).conf(conf).zenroom_exec()
    *
    * @param {string} conf the string of configuration to be set
@@ -304,7 +304,6 @@ const zenroom = (function () {
    *   <li><strong>print</strong></li>
    *   <li><strong>success</strong></li>
    *   <li><strong>error</strong></li>
-   *   <li><strong>verbosity</strong></li>
    * </ul>
    *
    * @example <caption>Example usage of `init()`</caption>
