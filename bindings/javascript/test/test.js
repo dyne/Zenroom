@@ -1,41 +1,22 @@
 import { expect } from 'chai'
 import sinon from 'sinon'
 import zenroom from '../src/wrapper'
+const capcon = require('capture-console')
 var assert = require('assert')
 
-const encrypt_secret_to_many = {
-  script: `
-  keyring = ECDH.new('ED25519')
-  secret = str(DATA)
-  keys = JSON.decode(KEYS)
-  keyring:private( base64(keys.keyring.secret) )
-  res = {}
-  for name,pubkey in pairs(keys.recipients) do
-     pub = base64(pubkey)
-     session = keyring:session(pub)
-     iv = RNG.new():octet(16)
-     out = { header = "encoded using zenroom " .. VERSION}
-     out.text, out.checksum = 
-      ECDH.aead_encrypt(session, secret, iv, out.header)
-     res[name] = str( MSG.pack( map(out,base64) ) ):base64()
-  end
-  print(JSON.encode(res))
+const encrypt_secret_to = {
+  script: `Rule check version 1.0.0
+Scenario 'simple': Alice encrypts a message for Bob
+Given that I am known as 'Alice'
+and I have my valid 'keypair'
+and I have a valid 'public key' from 'Bob'
+When I write 'This is my secret message.' in 'message'
+and I write 'This is the header' in 'header'
+and I encrypt the message for 'Bob'
+Then print the 'secret message'
   `,
-  keys: {
-    "keyring" : {
-       "public" : "BHMjcDM/aljpi8pNxFQ436R6F3J+kaB/Xk1kAVFPmkoLVyeFltDZPgiIYRquh+m2IfvPioBfet7YCd5vVXYoRTk=",
-       "secret" : "ChW5qi5y//ISDIHKx5Fvxl+XY8IyDGVBHUfELp3PqJQ="
-    },
-    "recipients" : {
-       "paulus" : "BBUw6Nr3A30cN65maERvAk1cEv2Ji6Vs80kSlpodOC0SCtM8ucaS7e+s158uVMSr3BsvIXVspBeafiL8Qb3kcgc=",
-       "mayo" : "BHqBoQ2WJ3/FGVNTXzdIc+K/HzNx05bWzEhn8m58FvSsaqWVdH52jI6fQWdkdjnbqVKCJGmbjA/OCJ+IKHbiySI=",
-       "mark" : "BFgkjrRMvN+wkJ6qA4UvMaNlYBvl37C9cNYGkqOE4w43AUzkEzcyIIdE6BrgOEUEVefhOOnO6SCBQMgXHXJUUPY=",
-       "francesca" : "BCo102mVybieKMyhex8tnVtFM5+Wo1oP02k8JVwKF9OLIjw7w0LmofItbuAcfWl9rcoe++XLI3sySZnqljIfeyU=",
-       "jim" : "BEs1jeqL0nVwFi7OmG4YdtlWuKADyOvZR4XHpLAEswg8ONPXQHvwJ8+PkHkphoORfSjk2045bMdYkwboU4FdG2Y=",
-       "jaromil" : "BBZYJtHvFg0vGCxPROAWrThcGZ+vFZJj86k+uncjvbm4DysIg7cWS3J6GrcJKCY55Uf40m2KfBwfaT+T7TTO1e8="
-    }
-  },
-  data: 'This is a secret message.'
+  keys: { 'zenroom': { 'curve': 'goldilocks', 'encoding': 'url64', 'version': '1.0.0+53387e8', 'scenario': 'simple' }, 'Alice': { 'keypair': { 'public_key': 'u64:BCYfOkN2YUXJxGYToRt3Z1ESg_niBQ1DZbwI8lZnX04KmR4tYjL5zy40u5FZvtoi93GWvIQYalusL4KsgfOt73UrO2vixOztl2pzkhBh6HVBWiLRTXtCb_HaIZFGyqxMF_hMI30ZWzsSgKgiZsb-YQw', 'private_key': 'u64:Ok51-tVCCCFCC4FOj6SgL0KPjHxELqDN8aEtODCo0LDcIHxy5T8k2Ns79zn2n23a_qszfGE5g5A' } } },
+  data: { 'zenroom': { 'curve': 'goldilocks', 'encoding': 'url64', 'version': '1.0.0+53387e8', 'scenario': 'simple' }, 'Bob': { 'public_key': 'u64:BGx9Of0O2se9j6hLtgSc-2qo_mdaMhRgoMGtvNFC72xLMm-oGTpRkavl1gzpv1wi_KMpZNEIef6fDUfDR0UrPyPE5kKhbOAqX4jwHFkO0HbRNNeOwe-KZtiXiDQ60iOOt5dogqu5QqULVaiP2Q9PBsI' } }
 }
 
 describe('Zenroom module', function () {
@@ -43,7 +24,7 @@ describe('Zenroom module', function () {
     zenroom.reset()
     this.clog = sinon.spy(console, 'log')
     this.cerr = sinon.spy(console, 'error')
-    setTimeout(done, 200);
+    setTimeout(done, 200)
   })
 
   afterEach(function () {
@@ -52,13 +33,81 @@ describe('Zenroom module', function () {
     zenroom.reset()
   })
 
+  it('should stringify data with strings', function () {
+    let result
+    const option = {
+      data: 'hello',
+      script: 'print(DATA)',
+      print: (text) => { result = text }
+    }
+    zenroom.init(option).zenroom_exec()
+    assert(result, option.data)
+  })
+
+  it('should stringify data with object literals', function () {
+    let result
+    const option = {
+      data: { 'a': 1 },
+      script: 'print(JSON.encode(DATA))',
+      print: (text) => { result = text }
+    }
+    zenroom.init(option).zenroom_exec()
+    assert(result, option.data)
+  })
+
+  it('should stringify keys with strings', function () {
+    let result
+    const option = {
+      keys: 'hello',
+      script: 'print(KEYS)',
+      print: (text) => { result = text }
+    }
+    zenroom.init(option).zenroom_exec()
+    assert(result, option.keys)
+  })
+
+  it('should stringify keys with object literals', function () {
+    let result
+    const option = {
+      keys: { 'a': 1 },
+      script: 'print(JSON.encode(KEYS))',
+      print: (text) => { result = text }
+    }
+    zenroom.init(option).zenroom_exec()
+    assert(result, option.keys)
+  })
+
+  it('should stringify undefined with keys correctly', function () {
+    let result
+    const option = {
+      keys: undefined,
+      script: 'print(KEYS)',
+      print: (text) => { result = text }
+    }
+    zenroom.init(option).zenroom_exec()
+    assert(typeof result, 'string')
+    assert(result === '')
+  })
+
+  it('should stringify null with keys correctly', function () {
+    let result
+    const option = {
+      keys: null,
+      script: 'print(KEYS)',
+      print: (text) => { result = text }
+    }
+    zenroom.init(option).zenroom_exec()
+    assert(typeof result, 'string')
+    assert(result === '')
+  })
+
   it('should import work and be an object', function () {
     assert(zenroom)
   })
 
   it('should zenroom have exposed all public method', function () {
     const z = zenroom.init()
-    expect(z).to.be.an('object').to.have.all.keys('conf data zenroom_exec zencode_exec error init keys print success script __debug reset'.split(' '))
+    expect(z).to.be.an('object').to.have.all.keys('conf data zenroom_exec zencode_exec error init keys print print_err success script __debug reset'.split(' '))
   })
 
   it('should zenroom initialize script', function () {
@@ -77,15 +126,46 @@ describe('Zenroom module', function () {
     expect(console.log.calledOnce).to.be.true
   })
 
-  it('should zenroom execute correctly with data and keys', function () {
+  it('should zenroom execute correctly with data', function () {
+    let result
     zenroom
-      .script(encrypt_secret_to_many.script)
-      .keys(encrypt_secret_to_many.keys)
-      .data(encrypt_secret_to_many.data)
+      .data(encrypt_secret_to.data)
+      .script(`print(JSON.encode(DATA))`)
+      .print(text => { result = text })
       .zenroom_exec()
-    const result = JSON.parse(console.log.args[0][0])
-    expect(result).to.have.all.keys('paulus mayo mark jim jaromil francesca'.split(' '))
-    expect(console.log.calledOnce).to.be.true
+    expect(JSON.parse(JSON.parse(result))).to.have.all.keys('zenroom Bob'.split(' '))
+  })
+
+  it('should zenroom execute correctly with keys', function () {
+    let result
+    zenroom
+      .keys(encrypt_secret_to.keys)
+      .script(`print(JSON.encode(KEYS))`)
+      .print(text => { result = text })
+      .zenroom_exec()
+    expect(JSON.parse(JSON.parse(result))).to.have.all.keys('zenroom Alice'.split(' '))
+  })
+
+  it('should zenroom execute correctly with string DATA', function () {
+    let result
+    const str = 'daoisj daosijd äåöó²³2ö³óœ²ö³óœ'
+    zenroom
+      .data(str)
+      .script(`print(DATA)`)
+      .print(text => { result = text })
+      .zenroom_exec()
+    assert(str === result)
+  })
+
+  it('should zenroom execute correctly with string KEYS', function () {
+    let result
+    const str = 'daoisj daosijd äåöó²³2ö³óœ²ö³óœ'
+    zenroom
+      .keys(str)
+      .script(`print(KEYS)`)
+      .print(text => { result = text })
+      .zenroom_exec()
+    assert(str === result)
   })
 
   it('should script method work correctly', function () {
@@ -131,8 +211,8 @@ describe('Zenroom module', function () {
   })
 
   it('should execute the reset correctly', function () {
-    let options = zenroom.init(encrypt_secret_to_many).__debug()
-    expect(options.data).to.be.equal(encrypt_secret_to_many.data)
+    let options = zenroom.init(encrypt_secret_to).__debug()
+    expect(JSON.parse(options.data)).to.have.all.keys(Object.keys(encrypt_secret_to.data))
     options = zenroom.reset().__debug()
     expect(options.data).to.be.equal(undefined)
     expect(options.error).to.not.throw()
@@ -160,14 +240,13 @@ describe('Zenroom module', function () {
   it('should create a correct keygen', () => {
     const script = `
     -- generate a simple keyring
-    keyring = ECDH.new()
-    keyring:keygen()
+    keyring = ECDH.keygen()
     
     -- export the keypair to json
     export = JSON.encode(
        {
-          public  = keyring: public():base64(),
-          private = keyring:private():base64()
+          public  = base64(keyring.public),
+          private = base64(keyring.private)
        }
     )
     print(export)
@@ -178,47 +257,51 @@ describe('Zenroom module', function () {
   })
 
   it(`sohuld create correct keygen with zencode`, () => {
+    let result
     const zencode = `
-    Scenario 'coconut': "To run over the mobile wallet the first time and store the output as keypair.keys"
-    Given that I am known as 'identifier'
-    When I create my new keypair
-    Then print all data
+    Rule check version 1.0.0
+Scenario 'simple': Bob generate a keypair
+Given that I am known as 'Bob'
+When I create the keypair
+Then print my data
     `
-    zenroom.script(zencode).zencode_exec()
-    const result = JSON.parse(console.log.args[0][0])
-    expect(result).to.have.all.keys('identifier')
-    expect(result.identifier).to.have.all.keys('public private curve encoding schema zenroom'.split(' '))
+    zenroom.script(zencode).print(output => { result = JSON.parse(output) }).zencode_exec()
+    expect(result).to.have.all.keys('Bob')
+    expect(result.Bob.keypair).to.have.all.keys('public_key private_key'.split(' '))
   })
 
   it(`should broke whith a broken zencode`, () => {
-    zenroom.script(`apokspoas`).zencode_exec()
-    const result = console.log.args[0][0]
-    expect(console.log.called).to.be.true
-    expect(result).to.be.equal('[W] Zencode text too short to parse')
+    let stderr = capcon.captureStderr(function scope () {
+      zenroom.script(`apokspoas`).zencode_exec()
+    })
+    expect(stderr).to.have.string(`[!] [string "ZEN:begin()..."]:2: Invalid Zencode line: apokspoas
+[!] Error detected. Execution aborted.`)
   })
 
   it(`should broke whith a broken zencode and call the error callback`, () => {
     let errorExecuted = false
-    zenroom.init({
-      script: 'broken script on purpose',
-      error: () => { errorExecuted = true }
-    }).zencode_exec()
-    const result = console.log.args[0][0]
-    expect(result).to.be.equal('[W] No scenario found in first line of Zencode')
-    expect(errorExecuted).to.be.false
+    let stderr = capcon.captureStderr(function scope () {
+      zenroom.init({
+        script: 'broken script on purpose',
+        error: () => { errorExecuted = true }
+      }).zencode_exec()
+    })
+    expect(stderr).to.have.string('[!] [string "ZEN:begin()..."]:2: Invalid Zencode prefix: broken')
+    expect(stderr).to.have.string('[!] Error detected. Execution aborted.')
+    expect(errorExecuted).to.be.true
   })
 
   it(`should correctly count a tallied petition`, () => {
-    const contract = `Scenario 'coconut': "Count the petition results: any Citizen can count the petition as long as they have the 'tally'"
-    Given that I receive a petition
-    and I receive a tally
+    let result
+    const contract = `Scenario coconut: count petition
+    Given that I have a valid 'petition'
+    and I have a valid 'petition tally'
     When I count the petition results
-    Then print all data`
-    const data = {"verifier":{"alpha":"44ea1a84d36924acbf83bd4b53059b63dc5697990f456f0dbcd3dd29eaaa92e903f85828a9d8ff7bf6bdbf9515aa477f004b8c01db0df3e1d2689028d1204b0eb8acec26c2bfdef075b8c00dd1c4098ad759d88a6e5e14b4a8abbca316d50a2c1f7ede0ce19bc2a98af56210b5ab2c3238700db985564b8c0bdd4d999167e64feef014cc34713dd8dd7464a62b9c743f168e873866b434b90e3d758f8a03e7f778dfb7103d174f76be1bf6ec68aea9b6e8a8c266fc4ee71e1ac99b0d7f9de19d","zenroom":"0.10","curve":"bls383","beta":"53750ebd2642ad839e631dd58fd3467ae253f9cb197348acd418cd281f079eefa1374694bf9af9ee2788d4facb0027c64761f0324e9ea5b368fe5d3ccce40226385353f21ecf2db0ecdf656fe71381c67a33f452cae5822458b6387940d605052385419c4ce15781ecf1efeac9e4ab14314d29611b4be1e041af035d1252e5a2b2e995701d4336278888965ab456a4d728fa343100b6e858242b6661a3239744e03c9bbad7f19f9e72d831add5a23e7ecd8b7b84892dfe7343fbf2e2c9820cf9","encoding":"hex","schema":"issue_verify"},"petition":{"schema":"petition","scores":{"pos":{"left":"043944905aa1040a08018a17016325b6b14179d4edad14834c611805d841e60d7c2001de7b9d10b100162a7c7ff2b6b77e530a8f365f0266eed93660983a410502a58c41a99db0c6a2dd423b3773158d2cdb83c57154a0091453c80e43f4e1edfb","right":"044208118ae8eb9805d9634fd81f9ffbf06714bdf8000c5f709309ae71abd9896300fbd133f8eae766e071e54258387f0d41b74b8c9d7f3f35975c2ba0148fe2189841a2254557ca9be29f4517ab095772bd83352c7d55834a8df61f583cad75ea"},"zenroom":"0.10","curve":"bls383","neg":{"left":"043944905aa1040a08018a17016325b6b14179d4edad14834c611805d841e60d7c2001de7b9d10b100162a7c7ff2b6b77e025ac75f05a907c6c7374d2be5a98d81fb21048355b4de6eceef7cc9f64b97c79f0879b835c47c17866f0f2090c8c2b0","right":"04270b066337f935acfae701a89b051de2262bbc89dc66cecbe2c8c36b1b5ab604ad2d693b5011f4360a2768538d1e7fb63d2750a8dd5744102db212e4f842d0b7c0e52e62c31aaa1e6d82a419ec01b3ca77d802707442130f753b91e2fc1b819d"},"encoding":"hex","schema":"petition_scores"},"owner":"042a67cbac82b3e6c98516650cf3be60e8a9b2de33a3b48f15243fcbd5e8a8697a06a4158e21f44d0abf6a83414896a61a4292787022f5fa229f79fd1c6c4d1d12f84654b5dd40a05adc6e63a0111688a61b1aa829a22f753374f6cc8b0229c030","zenroom":"0.10","curve":"bls383","list":{"0411963c6efa4d89f955fb5fa642914ec5fdd45f06090ef91b97977fa6b062829f906605e753cd64f9bd7c53ccec78215c4d61734af501506a15d8ec3779874183f3b52a8dad7e5b9d824a9a71ae60e7a0e4288b2b0e37f477b52babf62779f969":true},"encoding":"hex","uid":"petition"}}
-    const keys = {"petition":{"zenroom":"0.10","scores":{"encoding":"hex","pos":{"left":"043944905aa1040a08018a17016325b6b14179d4edad14834c611805d841e60d7c2001de7b9d10b100162a7c7ff2b6b77e530a8f365f0266eed93660983a410502a58c41a99db0c6a2dd423b3773158d2cdb83c57154a0091453c80e43f4e1edfb","right":"044208118ae8eb9805d9634fd81f9ffbf06714bdf8000c5f709309ae71abd9896300fbd133f8eae766e071e54258387f0d41b74b8c9d7f3f35975c2ba0148fe2189841a2254557ca9be29f4517ab095772bd83352c7d55834a8df61f583cad75ea"},"zenroom":"0.10","schema":"petition_scores","neg":{"left":"043944905aa1040a08018a17016325b6b14179d4edad14834c611805d841e60d7c2001de7b9d10b100162a7c7ff2b6b77e025ac75f05a907c6c7374d2be5a98d81fb21048355b4de6eceef7cc9f64b97c79f0879b835c47c17866f0f2090c8c2b0","right":"04270b066337f935acfae701a89b051de2262bbc89dc66cecbe2c8c36b1b5ab604ad2d693b5011f4360a2768538d1e7fb63d2750a8dd5744102db212e4f842d0b7c0e52e62c31aaa1e6d82a419ec01b3ca77d802707442130f753b91e2fc1b819d"},"curve":"bls383"},"encoding":"hex","curve":"bls383","owner":"042a67cbac82b3e6c98516650cf3be60e8a9b2de33a3b48f15243fcbd5e8a8697a06a4158e21f44d0abf6a83414896a61a4292787022f5fa229f79fd1c6c4d1d12f84654b5dd40a05adc6e63a0111688a61b1aa829a22f753374f6cc8b0229c030","schema":"petition","uid":"petition"},"tally":{"zenroom":"0.10","encoding":"hex","schema":"petition_tally","curve":"bls383","dec":{"neg":"04270b066337f935acfae701a89b051de2262bbc89dc66cecbe2c8c36b1b5ab604ad2d693b5011f4360a2768538d1e7fb6183e05ec87542aa572bb9adf27a7c1ccdfc817ca304afaf33eaf13e77d5f712a02b43cb91622721c64fb8b81898f2f0e","pos":"04270b066337f935acfae701a89b051de2262bbc89dc66cecbe2c8c36b1b5ab604ad2d693b5011f4360a2768538d1e7fb63d2750a8dd5744102db212e4f842d0b7c0e52e62c31aaa1e6d82a419ec01b3ca77d802707442130f753b91e2fc1b819d"},"uid":"petition","c":"650ce8460c8dfea188c6d39b30b3f5d70263fb5223ad9cd1b2c079f381222971","rx":"1dd316314adf32dc5ad906c611318fd5ca34e2cf3a1b663c3fad1fa4dc30f56e"}}
-    zenroom.script(contract).data(data).keys(keys).zencode_exec()
-    const result = JSON.parse(console.log.args[7][0])
-    expect(result).to.have.all.keys('result uid'.split(' '))
-    expect(result.result).to.be.equal(1)
+    Then print the 'petition results'
+    and print as 'string' the 'uid' inside 'petition'`
+    const data = { 'petition': { 'list': ['AwUH_Rlj8Bcus2fSIq43TMQrsH6pkkwo3SU8j80QHy0DtY_MdRvKzy7EUWb2MCRANauVQU5wTovHTus'], 'owner': 'AgOeMqZ9U8x-Y2MpZW_7ol2ypzMVJ8R5GgRHDN28QzAmmqK0EoHn_6EDC1is_w6p6GGbAfbUet2iwXU', 'scores': { 'neg': { 'left': 'AwhTBQereoQOA6HZ4GxNvgAlZUniqs2o0VcEPVOEXtRWb8qnGAB82oUNWKnpVs2GxnNAGWyfSObRFD4', 'right': 'AwdPb0fDAr2uaNhnTXeLTxe88ANaNlt6m6ZvWEr82_RdRz1H-Kry8AXh4ezFFWZmh9nKZK-7Jg6S3lw' }, 'pos': { 'left': 'AghTBQereoQOA6HZ4GxNvgAlZUniqs2o0VcEPVOEXtRWb8qnGAB82oUNWKnpVs2GxnNAGWyfSObRFD4', 'right': 'AgPB7BJ1-wG8YaK-1M7h7WRCYhqxu7AYhjzFE0l9rUb746hjYbcjYiPaxWAbf8RQtLOvC7omLiyW0fo' } }, 'uid': 'cG9sbA' }, 'verifiers': { 'alpha': 'A9Qek4uE84c81vE1Ql737u8RGyfWXn3gTmM2W954sInwrVz-KHtufk6J7Yyj8LTNS6AWIeS9CxoXuQEo3PQYBlWsLbCrjOASQIb7g4vcC2gKk63HKA-EkEnbw11tZFZbL9d13PII3A_dhD7Qh-IJid_Q_sYTXVwSO0W5LgNOpdRSXVbWHxDDF6hpm1uRPOYcDzeVp0L_xVu1F7rcFs3iNZln06NQOruBHaoSm3jpBYafD5wd0-C_Mhf35NaaNtjGPgBbiFx-UJmtwyjolsk9kgNDPgvDPqcGbfpo1yZg9IrZjFMrWpFFXQ', 'beta': 'AwIuF4zyuGX4O6HQAdpkAAxqAf6DAaXDyCy_992ccO-kpc3RqJVh7st3wQBOR2N4CfuNrLzOL54_dwV3F4DWwrA759x3Vr0m-c03fGnBUlbqMR1E5bRqymURkzl5jV3ArbQeu7z24EwcYwm3IPmSPmbLjfEJezn8KDsYZl15YiF8M2rO0ORE2F6XcFsjL62NmWWmv7sE15ADLTzbZKsvspQM0Rd7UuM67Ws6lqDfAUxKFP7jBxlSQgR-0TUsCUjzBs-OeSJ9OvzzY_7Rdtqoi1zCkj0Xz8TAzHOVPQ0vykucxdzPRuyD7Q' } }
+    const keys = { 'credential_keypair': { 'private': 'B9UsanWy7fvmQgpM2craxQ97KwKBT2swhjvzoc9ocEa0Pzpg_4I3', 'public': 'AgOeMqZ9U8x-Y2MpZW_7ol2ypzMVJ8R5GgRHDN28QzAmmqK0EoHn_6EDC1is_w6p6GGbAfbUet2iwXU' }, 'petition': { 'list': ['AwUH_Rlj8Bcus2fSIq43TMQrsH6pkkwo3SU8j80QHy0DtY_MdRvKzy7EUWb2MCRANauVQU5wTovHTus'], 'owner': 'AgOeMqZ9U8x-Y2MpZW_7ol2ypzMVJ8R5GgRHDN28QzAmmqK0EoHn_6EDC1is_w6p6GGbAfbUet2iwXU', 'scores': { 'neg': { 'left': 'AwhTBQereoQOA6HZ4GxNvgAlZUniqs2o0VcEPVOEXtRWb8qnGAB82oUNWKnpVs2GxnNAGWyfSObRFD4', 'right': 'AwdPb0fDAr2uaNhnTXeLTxe88ANaNlt6m6ZvWEr82_RdRz1H-Kry8AXh4ezFFWZmh9nKZK-7Jg6S3lw' }, 'pos': { 'left': 'AghTBQereoQOA6HZ4GxNvgAlZUniqs2o0VcEPVOEXtRWb8qnGAB82oUNWKnpVs2GxnNAGWyfSObRFD4', 'right': 'AgPB7BJ1-wG8YaK-1M7h7WRCYhqxu7AYhjzFE0l9rUb746hjYbcjYiPaxWAbf8RQtLOvC7omLiyW0fo' } }, 'uid': 'cG9sbA' }, 'petition_tally': { 'c': 'xTeVns8-JeofKqT5KSX1xtQUB_lyVkUQGJSZpEmJ7yA', 'dec': { 'neg': 'AgdPb0fDAr2uaNhnTXeLTxe88ANaNlt6m6ZvWEr82_RdRz1H-Kry8AXh4ezFFWZmh9nKZK-7Jg6S3lw', 'pos': 'AwdPb0fDAr2uaNhnTXeLTxe88ANaNlt6m6ZvWEr82_RdRz1H-Kry8AXh4ezFFWZmh9nKZK-7Jg6S3lw' }, 'rx': 'BLahbPKzsXDsbjHF2FN18BcIw8T5ZyvBRfU59ZTMye4qOGr3daBw', 'uid': 'cG9sbA' } }
+    zenroom.script(contract).data(data).keys(keys).print(t => { result = JSON.parse(t) }).zencode_exec()
+    expect(result).to.deep.include({ 'petition_results': 1, 'uid': 'poll' })
   })
 })

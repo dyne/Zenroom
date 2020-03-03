@@ -28,6 +28,22 @@ const zencodeExec = (script, conf = null, keys = null, data = null) => {
   })
 }
 
+const stringify = (field) => {
+  if (!field) {
+    return null
+  }
+
+  try {
+    return JSON.stringify(JSON.parse(field))
+  } catch (e) {
+    if (typeof field === 'object') {
+      return JSON.stringify(field)
+    } else if (typeof field === 'string') {
+      return field
+    }
+  }
+}
+
 const zenroom = (function () {
   let self = {}
   self.options = {}
@@ -47,7 +63,7 @@ const zenroom = (function () {
    * // returns zenroom
    * import zenroom from 'zenroom'
    * // or without ES6 syntax
-   * // const zenroom = require('zenroom').default
+   * // const zenroom = require('zenroom')
    *
    * const script = 'print("hello")'
    * zenroom.script(script).zenroom_exec().reset()
@@ -69,7 +85,7 @@ const zenroom = (function () {
    * // returns zenroom
    * import zenroom from 'zenroom'
    * // or without ES6 syntax
-   * // const zenroom = require('zenroom').default
+   * // const zenroom = require('zenroom')
    *
    * const script = `
    *                  keys = JSON.decode(KEYS)
@@ -83,20 +99,47 @@ const zenroom = (function () {
    * @returns {object} the zenroom module
    */
   const keys = function (keys) {
-    self.keys = keys ? JSON.stringify(keys) : null
+    self.keys = stringify(keys)
+    return this
+  }
+
+  /**
+   * Set the data for your zenroom execution
+   *
+   * The data will be available in script as the `DATA` variable
+   *
+   * @example <caption>Example usage of `data()`</caption>
+   * // returns zenroom
+   * import zenroom from 'zenroom'
+   * // or without ES6 syntax
+   * // const zenroom = require('zenroom')
+   *
+   * const script = `
+   *                  data = JSON.decode(DATA)
+   *                  print(data)
+   * `
+   *
+   * const data = {a: 1, b: 2}
+   * zenroom.script(script).data(data).zenroom_exec()
+   *
+   * @param {string} data
+   * @returns {object} the zenroom module
+   */
+  const data = function (data) {
+    self.data = stringify(data)
     return this
   }
 
   /**
    * Set the conf before your zenroom execution
    *
-   * all the available configuration are available [here](https://github.com/DECODEproject/Zenroom/blob/master/src/zen_config.c#L99-L104)
+   * all the available configuration are available [here](https://github.com/DECODEproject/Zenroom/blob/master/src/zen_config.c#L100-L106)
    *
    * @example <caption>Example usage of `conf()`</caption>
    * // returns zenroom
    * import zenroom from 'zenroom'
    * // or without ES6 syntax
-   * // const zenroom = require('zenroom').default
+   * // const zenroom = require('zenroom')
    *
    * const script = 'print("hello")'
    * const conf = 'debug=1,memwipe=0'
@@ -111,33 +154,6 @@ const zenroom = (function () {
   }
 
   /**
-   * Set the data for your zenroom execution
-   *
-   * The data will be available in script as the `DATA` variable
-   *
-   * @example <caption>Example usage of `data()`</caption>
-   * // returns zenroom
-   * import zenroom from 'zenroom'
-   * // or without ES6 syntax
-   * // const zenroom = require('zenroom').default
-   *
-   * const script = `
-   *                  data = JSON.decode(DATA)
-   *                  print(data)
-   * `
-   *
-   * const data = {a: 1, b: 2}
-   * zenroom.script(script).data(data).zenroom_exec()
-   *
-   * @param {string} data
-   * @returns {object} the zenroom module
-   */
-  const data = function (data) {
-    self.data = data
-    return this
-  }
-
-  /**
    * Set the print_err callback to customize
    * the behaviour of the print_err calls made to stderr
    * by default it prints to the console.error
@@ -146,7 +162,7 @@ const zenroom = (function () {
    * // returns zenroom
    * import zenroom from 'zenroom'
    * // or without ES6 syntax
-   * // const zenroom = require('zenroom').default
+   * // const zenroom = require('zenroom')
    *
    * const savedLines = []
    * const print_err_fn = (text) => { savedLines.push(text) }
@@ -174,7 +190,7 @@ const zenroom = (function () {
    * // returns zenroom
    * import zenroom from 'zenroom'
    * // or without ES6 syntax
-   * // const zenroom = require('zenroom').default
+   * // const zenroom = require('zenroom')
    *
    * const savedLines = []
    * const printFunction = (text) => { savedLines.push(text) }
@@ -200,7 +216,7 @@ const zenroom = (function () {
    * // returns zenroom
    * import zenroom from 'zenroom'
    * // or without ES6 syntax
-   * // const zenroom = require('zenroom').default
+   * // const zenroom = require('zenroom')
    *
    * const script = 'print("hello")'
    * zenroom.script(script).success(()=>{
@@ -225,7 +241,7 @@ const zenroom = (function () {
    * // returns zenroom
    * import zenroom from 'zenroom'
    * // or without ES6 syntax
-   * // const zenroom = require('zenroom').default
+   * // const zenroom = require('zenroom')
    *
    * const script = 'print("hello")';
    * zenroom.script(script).error(()=>{
@@ -254,7 +270,7 @@ const zenroom = (function () {
    * // returns zenroom
    * import zenroom from 'zenroom'
    * // or without ES6 syntax
-   * // const zenroom = require('zenroom').default
+   * // const zenroom = require('zenroom')
    *
    * const script = 'print("hello")';
    * zenroom.script(script).zenroom_exec()
@@ -277,7 +293,7 @@ const zenroom = (function () {
    * // returns zenroom
    * import zenroom from 'zenroom'
    * // or without ES6 syntax
-   * // const zenroom = require('zenroom').default
+   * // const zenroom = require('zenroom')
    *
    * const zencode = 'print("hello")';
    * zenroom.script(script).zencode_exec()
@@ -310,7 +326,7 @@ const zenroom = (function () {
    * // returns zenroom
    * import zenroom from 'zenroom'
    * // or without ES6 syntax
-   * // const zenroom = require('zenroom').default
+   * // const zenroom = require('zenroom')
    *
    * const encrypt_secret_to_many = {
    *  script: `keyring = ECDH.new()
@@ -382,7 +398,7 @@ const zenroom = (function () {
    * // returns zenroom
    * import zenroom from 'zenroom'
    * // or without ES6 syntax
-   * // const zenroom = require('zenroom').default
+   * // const zenroom = require('zenroom')
    *
    * const script = 'print("hello")';
    * zenroom.script(script)
