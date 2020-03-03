@@ -140,7 +140,7 @@ Example usage of `script()`
 // returns zenroom
 import zenroom from 'zenroom'
 // or without ES6 syntax
-// const zenroom = require('zenroom').default
+// const zenroom = require('zenroom')
 
 const script = 'print("hello")'
 zenroom.script(script).zenroom_exec().reset()
@@ -167,7 +167,7 @@ Example usage of `keys()`
 // returns zenroom
 import zenroom from 'zenroom'
 // or without ES6 syntax
-// const zenroom = require('zenroom').default
+// const zenroom = require('zenroom')
 
 const script = `
                  keys = JSON.decode(KEYS)
@@ -176,34 +176,6 @@ const script = `
 
 const keys = {a: 1, b: 2}
 zenroom.script(script).keys(keys).zenroom_exec().reset()
-```
-
-Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** the zenroom module
-
-#### conf
-
-Set the conf before your zenroom execution
-
-by now the only conf available is the string `umm` that sets the minimal memory manager (64KiB max)
-
-##### Parameters
-
--   `conf` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** the string of configuration to be set
-
-##### Examples
-
-Example usage of `conf()`
-
-
-```javascript
-// returns zenroom
-import zenroom from 'zenroom'
-// or without ES6 syntax
-// const zenroom = require('zenroom').default
-
-const script = 'print("hello")'
-const conf = 'umm'
-zenroom.script(script).conf(conf).zenroom_exec()
 ```
 
 Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** the zenroom module
@@ -227,7 +199,7 @@ Example usage of `data()`
 // returns zenroom
 import zenroom from 'zenroom'
 // or without ES6 syntax
-// const zenroom = require('zenroom').default
+// const zenroom = require('zenroom')
 
 const script = `
                  data = JSON.decode(DATA)
@@ -240,7 +212,35 @@ zenroom.script(script).data(data).zenroom_exec()
 
 Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** the zenroom module
 
-#### print
+#### conf
+
+Set the conf before your zenroom execution
+
+all the available configuration are available [here](https://github.com/DECODEproject/Zenroom/blob/master/src/zen_config.c#L100-L106)
+
+##### Parameters
+
+-   `conf` **[string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** the string of configuration to be set
+
+##### Examples
+
+Example usage of `conf()`
+
+
+```javascript
+// returns zenroom
+import zenroom from 'zenroom'
+// or without ES6 syntax
+// const zenroom = require('zenroom')
+
+const script = 'print("hello")'
+const conf = 'debug=1,memwipe=0'
+zenroom.script(script).conf(conf).zenroom_exec()
+```
+
+Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** the zenroom module
+
+#### print_err
 
 Set the print_err callback to customize
 the behaviour of the print_err calls made to stderr
@@ -257,12 +257,12 @@ Example usage of `print_err()`
 // returns zenroom
 import zenroom from 'zenroom'
 // or without ES6 syntax
-// const zenroom = require('zenroom').default
+// const zenroom = require('zenroom')
 
 const savedLines = []
-const print_errFunction = (text) => { savedLines.push(text) }
+const print_err_fn = (text) => { savedLines.push(text) }
 const script = 'print("hello")'
-zenroom.print_err(print_errFunction).script(script).zenroom_exec()
+zenroom.print_err(print_err_fn).script(script).zenroom_exec()
 ```
 
 Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** the zenroom module
@@ -284,7 +284,7 @@ Example usage of `print()`
 // returns zenroom
 import zenroom from 'zenroom'
 // or without ES6 syntax
-// const zenroom = require('zenroom').default
+// const zenroom = require('zenroom')
 
 const savedLines = []
 const printFunction = (text) => { savedLines.push(text) }
@@ -309,7 +309,7 @@ Example usage of `success()`
 // returns zenroom
 import zenroom from 'zenroom'
 // or without ES6 syntax
-// const zenroom = require('zenroom').default
+// const zenroom = require('zenroom')
 
 const script = 'print("hello")'
 zenroom.script(script).success(()=>{
@@ -334,7 +334,7 @@ Example usage of `error()`
 // returns zenroom
 import zenroom from 'zenroom'
 // or without ES6 syntax
-// const zenroom = require('zenroom').default
+// const zenroom = require('zenroom')
 
 const script = 'print("hello")';
 zenroom.script(script).error(()=>{
@@ -361,7 +361,7 @@ Example usage of `zenroom_exec()`
 // returns zenroom
 import zenroom from 'zenroom'
 // or without ES6 syntax
-// const zenroom = require('zenroom').default
+// const zenroom = require('zenroom')
 
 const script = 'print("hello")';
 zenroom.script(script).zenroom_exec()
@@ -386,7 +386,7 @@ Example usage of `zencode_exec()`
 // returns zenroom
 import zenroom from 'zenroom'
 // or without ES6 syntax
-// const zenroom = require('zenroom').default
+// const zenroom = require('zenroom')
 
 const zencode = 'print("hello")';
 zenroom.script(script).zencode_exec()
@@ -411,7 +411,6 @@ The following options are available:
   <li><strong>print</strong></li>
   <li><strong>success</strong></li>
   <li><strong>error</strong></li>
-  <li><strong>verbosity</strong></li>
 </ul>
 
 ##### Parameters
@@ -427,7 +426,7 @@ Example usage of `init()`
 // returns zenroom
 import zenroom from 'zenroom'
 // or without ES6 syntax
-// const zenroom = require('zenroom').default
+// const zenroom = require('zenroom')
 
 const encrypt_secret_to_many = {
  script: `keyring = ECDH.new()
@@ -483,7 +482,7 @@ Example usage of `reset()`
 // returns zenroom
 import zenroom from 'zenroom'
 // or without ES6 syntax
-// const zenroom = require('zenroom').default
+// const zenroom = require('zenroom')
 
 const script = 'print("hello")';
 zenroom.script(script)
