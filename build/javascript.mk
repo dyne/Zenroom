@@ -34,8 +34,7 @@ javascript-web: apply-patches milagro lua53 embed-lua
 	@cp -v src/zenroom.wasm build/web/
 	@mkdir -p ${website}/js
 	@cp -v build/web/* ${website}/js/
-	@mkdir -p ${website}/encrypt
-	@cp -v build/web/zenroom.data ${website}/encrypt/
+	@cp -v build/web/zenroom.data ${website}/
 
 javascript-wasm: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
 javascript-wasm: ldflags += -s ENVIRONMENT=\"'web,node,shell'\" \

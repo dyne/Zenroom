@@ -1,0 +1,665 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Zenroom LUA</title>
+    <link rel="stylesheet" href="" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Zenroom</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/OCTET.html">OCTET</a></li>
+  <li><a href="../modules/HASH.html">HASH</a></li>
+  <li><a href="../modules/ECDH.html">ECDH</a></li>
+  <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><strong>String</strong></li>
+  <li><a href="../modules/Table.html">Table</a></li>
+  <li><a href="../modules/INSPECT.html">INSPECT</a></li>
+  <li><a href="../modules/ZEN.html">ZEN</a></li>
+  <li><a href="../modules/BIG.html">BIG</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/keygen.lua.html">keygen.lua</a></li>
+  <li><a href="../examples/crypt-to-multi.lua.html">crypt-to-multi.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>String</code></h1>
+<p>
+
+<h1>String operations</h1>
+
+<p> Standard Lua string manipulation like searching and matching.</p>
+</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#string.byte">string.byte (s, i, j)</a></td>
+	<td class="summary">Returns the internal numerical codes of the characters <code>s[i]</code>, <code>s[i+1]</code>,
+ ..., <code>s[j]</code>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#string.char">string.char (...)</a></td>
+	<td class="summary">Receives zero or more integers.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#string.dump">string.dump (function)</a></td>
+	<td class="summary">Returns a string containing a binary representation of the given
+ function, so that a later <a href="https://www.lua.org/manual/5.1/manual.html#pdf-loadstring">loadstring</a> on this string returns a copy of
+ the function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#string.find">string.find (s, pattern, init, plain)</a></td>
+	<td class="summary">Looks for the first match of <code>pattern</code> in the string <code>s</code>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#string.format">string.format (formatstring, ...)</a></td>
+	<td class="summary">Returns a formatted version of its variable number of arguments following
+ the description given in its first argument (which must be a string).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#string.gmatch">string.gmatch (s, pattern)</a></td>
+	<td class="summary">Returns an iterator function that, each time it is called, returns the
+ next captures from <code>pattern</code> over string <code>s</code>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#string.gsub">string.gsub (s, pattern, repl, n)</a></td>
+	<td class="summary">Returns a copy of <code>s</code> in which all (or the first <code>n</code>, if given)
+ occurrences of the <code>pattern</code> have been replaced by a replacement string
+ specified by <code>repl</code>, which can be a string, a table, or a function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#string.len">string.len (s)</a></td>
+	<td class="summary">Receives a string and returns its length.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#string.lower">string.lower (s)</a></td>
+	<td class="summary">Receives a string and returns a copy of this string with all uppercase
+ letters changed to lowercase.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#string.match">string.match (s, pattern, init)</a></td>
+	<td class="summary">Looks for the first <em>match</em> of <code>pattern</code> in the string <code>s</code>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#string.rep">string.rep (s, n)</a></td>
+	<td class="summary">Returns a string that is the concatenation of <code>n</code> copies of the string
+ <code>s</code>.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#string.reverse">string.reverse (s)</a></td>
+	<td class="summary">Returns a string that is the string <code>s</code> reversed.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#string.sub">string.sub (s, i, j)</a></td>
+	<td class="summary">Returns the substring of <code>s</code> that starts at <code>i</code> and continues until
+ <code>j</code>; <code>i</code> and <code>j</code> can be negative.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#string.upper">string.upper (s)</a></td>
+	<td class="summary">Receives a string and returns a copy of this string with all lowercase
+ letters changed to uppercase.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "string.byte"></a>
+    <strong>string.byte (s, i, j)</strong>
+    </dt>
+    <dd>
+    Returns the internal numerical codes of the characters <code>s[i]</code>, <code>s[i+1]</code>,
+ ..., <code>s[j]</code>.  The default value for <code>i</code> is 1; the default value for <code>j</code>
+ is <code>i</code>.
+ Note that numerical codes are not necessarily portable across platforms.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+
+
+        </li>
+        <li><span class="parameter">i</span>
+
+
+
+        </li>
+        <li><span class="parameter">j</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "string.char"></a>
+    <strong>string.char (...)</strong>
+    </dt>
+    <dd>
+    Receives zero or more integers.  Returns a string with length equal to
+ the number of arguments, in which each character has the internal numerical
+ code equal to its corresponding argument.
+ Note that numerical codes are not necessarily portable across platforms.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "string.dump"></a>
+    <strong>string.dump (function)</strong>
+    </dt>
+    <dd>
+    Returns a string containing a binary representation of the given
+ function, so that a later <a href="https://www.lua.org/manual/5.1/manual.html#pdf-loadstring">loadstring</a> on this string returns a copy of
+ the function.  <code>function</code> must be a Lua function without upvalues.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">function</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "string.find"></a>
+    <strong>string.find (s, pattern, init, plain)</strong>
+    </dt>
+    <dd>
+    Looks for the first match of <code>pattern</code> in the string <code>s</code>.  If it finds a
+ match, then <a href="../modules/String.html#string.find">find</a> returns the indices of <code>s</code> where this occurrence starts
+ and ends; otherwise, it returns nil. A third, optional numerical argument
+ <code>init</code> specifies where to start the search; its default value is 1 and
+ can be negative. A value of true as a fourth, optional argument <code>plain</code>
+ turns off the pattern matching facilities, so the function does a plain
+ "find substring" operation, with no characters in <code>pattern</code> being considered
+ "magic". Note that if <code>plain</code> is given, then <code>init</code> must be given as well.
+ If the pattern has captures, then in a successful match the captured values
+ are also returned, after the two indices.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+
+
+        </li>
+        <li><span class="parameter">pattern</span>
+
+
+
+        </li>
+        <li><span class="parameter">init</span>
+
+
+
+        </li>
+        <li><span class="parameter">plain</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "string.format"></a>
+    <strong>string.format (formatstring, ...)</strong>
+    </dt>
+    <dd>
+    Returns a formatted version of its variable number of arguments following
+ the description given in its first argument (which must be a string).  The
+ format string follows the same rules as the <code>printf</code> family of standard C
+ functions. The only differences are that the options/modifiers <code>*</code>, <code>l</code>,
+ <code>L</code>, <code>n</code>, <code>p</code>, and <code>h</code> are not supported and that there is an extra option,
+ <code>q</code>. The <code>q</code> option formats a string in a form suitable to be safely read
+ back by the Lua interpreter: the string is written between double quotes,
+ and all double quotes, newlines, embedded zeros, and backslashes in the
+ string are correctly escaped when written. For instance, the call</p>
+
+<pre><code> string.format('%q', 'a string with "quotes" and \n new line')
+</code></pre>
+
+<p> will produce the string:</p>
+
+<pre><code> "a string with \"quotes\" and \
+     new line"
+</code></pre>
+
+<p> The options <code>c</code>, <code>d</code>, <code>E</code>, <code>e</code>, <code>f</code>, <code>g</code>, <code>G</code>, <code>i</code>, <code>o</code>, <code>u</code>, <code>X</code>, and
+ <code>x</code> all expect a number as argument, whereas <code>q</code> and <code>s</code> expect a string.
+ This function does not accept string values containing embedded zeros,
+ except as arguments to the <code>q</code> option.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">formatstring</span>
+
+
+
+        </li>
+        <li><span class="parameter">...</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "string.gmatch"></a>
+    <strong>string.gmatch (s, pattern)</strong>
+    </dt>
+    <dd>
+    Returns an iterator function that, each time it is called, returns the
+ next captures from <code>pattern</code> over string <code>s</code>.  If <code>pattern</code> specifies no
+ captures, then the whole match is produced in each call.
+ As an example, the following loop</p>
+
+<pre><code> s = "hello world from Lua"
+ for w in string.gmatch(s, "%a+") do
+   print(w)
+ end
+</code></pre>
+
+<p> will iterate over all the words from string <code>s</code>, printing one per line. The
+ next example collects all pairs <code>key=value</code> from the given string into
+ a table:</p>
+
+<pre><code> t = {}
+ s = "from=world, to=Lua"
+ for k, v in string.gmatch(s, "(%w+)=(%w+)") do
+   t[k] = v
+ end
+</code></pre>
+
+<p> For this function, a '<code>^</code>' at the start of a pattern does not work as an
+ anchor, as this would prevent the iteration.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+
+
+        </li>
+        <li><span class="parameter">pattern</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "string.gsub"></a>
+    <strong>string.gsub (s, pattern, repl, n)</strong>
+    </dt>
+    <dd>
+
+<p>Returns a copy of <code>s</code> in which all (or the first <code>n</code>, if given)
+ occurrences of the <code>pattern</code> have been replaced by a replacement string
+ specified by <code>repl</code>, which can be a string, a table, or a function.  <a href="../modules/String.html#string.gsub">gsub</a>
+ also returns, as its second value, the total number of matches that occurred.</p>
+
+<p> If <code>repl</code> is a string, then its value is used for replacement. The character
+ <code>%</code> works as an escape character: any sequence in <code>repl</code> of the form <code>%n</code>,
+ with <em>n</em> between 1 and 9, stands for the value of the <em>n</em>-th captured
+ substring (see below). The sequence <code>%0</code> stands for the whole match. The
+ sequence <code>%%</code> stands for a single <code>%</code>.</p>
+
+<p> If <code>repl</code> is a table, then the table is queried for every match, using
+ the first capture as the key; if the pattern specifies no captures, then
+ the whole match is used as the key.</p>
+
+<p> If <code>repl</code> is a function, then this function is called every time a match
+ occurs, with all captured substrings passed as arguments, in order; if
+ the pattern specifies no captures, then the whole match is passed as a
+ sole argument.</p>
+
+<p> If the value returned by the table query or by the function call is a
+ string or a number, then it is used as the replacement string; otherwise,
+ if it is false or nil, then there is no replacement (that is, the original
+ match is kept in the string).</p>
+
+<p> Here are some examples:</p>
+<pre><code> x = string.gsub("hello world", "(%w+)", "%1 %1")
+ --&gt; x="hello hello world world"
+ x = string.gsub("hello world", "%w+", "%0 %0", 1)
+ --&gt; x="hello hello world"
+ x = string.gsub("hello world from Lua", "(%w+)%s*(%w+)", "%2 %1")
+ --&gt; x="world hello Lua from"
+ x = string.gsub("home = $HOME, user = $USER", "%$(%w+)", os.getenv)
+ --&gt; x="home = /home/roberto, user = roberto"
+ x = string.gsub("4+5 = $return 4+5$", "%$(.-)%$", function (s)
+       return loadstring(s)()
+     end)
+ --&gt; x="4+5 = 9"
+ local t = {name="lua", version="5.1"}
+ x = string.gsub("$name-$version.tar.gz", "%$(%w+)", t)
+ --&gt; x="lua-5.1.tar.gz"
+</code></pre>
+
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+
+
+        </li>
+        <li><span class="parameter">pattern</span>
+
+
+
+        </li>
+        <li><span class="parameter">repl</span>
+
+
+
+        </li>
+        <li><span class="parameter">n</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "string.len"></a>
+    <strong>string.len (s)</strong>
+    </dt>
+    <dd>
+    Receives a string and returns its length.  The empty string <code>&quot;&quot;</code> has
+ length 0. Embedded zeros are counted, so <code>&quot;a\000bc\000&quot;</code> has length 5.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "string.lower"></a>
+    <strong>string.lower (s)</strong>
+    </dt>
+    <dd>
+    Receives a string and returns a copy of this string with all uppercase
+ letters changed to lowercase.  All other characters are left unchanged. The
+ definition of what an uppercase letter is depends on the current locale.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "string.match"></a>
+    <strong>string.match (s, pattern, init)</strong>
+    </dt>
+    <dd>
+    Looks for the first <em>match</em> of <code>pattern</code> in the string <code>s</code>.  If it
+ finds one, then <a href="../modules/String.html#string.match">match</a> returns the captures from the pattern; otherwise
+ it returns nil. If <code>pattern</code> specifies no captures, then the whole match
+ is returned. A third, optional numerical argument <code>init</code> specifies where
+ to start the search; its default value is 1 and can be negative.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+
+
+        </li>
+        <li><span class="parameter">pattern</span>
+
+
+
+        </li>
+        <li><span class="parameter">init</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "string.rep"></a>
+    <strong>string.rep (s, n)</strong>
+    </dt>
+    <dd>
+    Returns a string that is the concatenation of <code>n</code> copies of the string
+ <code>s</code>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+
+
+        </li>
+        <li><span class="parameter">n</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "string.reverse"></a>
+    <strong>string.reverse (s)</strong>
+    </dt>
+    <dd>
+    Returns a string that is the string <code>s</code> reversed.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "string.sub"></a>
+    <strong>string.sub (s, i, j)</strong>
+    </dt>
+    <dd>
+    Returns the substring of <code>s</code> that starts at <code>i</code> and continues until
+ <code>j</code>; <code>i</code> and <code>j</code> can be negative.  If <code>j</code> is absent, then it is assumed to
+ be equal to -1 (which is the same as the string length). In particular,
+ the call <code>string.sub(s,1,j)</code> returns a prefix of <code>s</code> with length <code>j</code>, and
+ <code>string.sub(s, -i)</code> returns a suffix of <code>s</code> with length <code>i</code>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+
+
+        </li>
+        <li><span class="parameter">i</span>
+
+
+
+        </li>
+        <li><span class="parameter">j</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "string.upper"></a>
+    <strong>string.upper (s)</strong>
+    </dt>
+    <dd>
+    Receives a string and returns a copy of this string with all lowercase
+ letters changed to uppercase.  All other characters are left unchanged. The
+ definition of what a lowercase letter is depends on the current locale.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2020-03-13 12:59:05 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

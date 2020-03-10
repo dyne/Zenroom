@@ -1,0 +1,566 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Zenroom LUA</title>
+    <link rel="stylesheet" href="" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Zenroom</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Class_ecp">Class ecp </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/OCTET.html">OCTET</a></li>
+  <li><a href="../modules/HASH.html">HASH</a></li>
+  <li><a href="../modules/ECDH.html">ECDH</a></li>
+  <li><strong>ECP</strong></li>
+  <li><a href="../modules/String.html">String</a></li>
+  <li><a href="../modules/Table.html">Table</a></li>
+  <li><a href="../modules/INSPECT.html">INSPECT</a></li>
+  <li><a href="../modules/ZEN.html">ZEN</a></li>
+  <li><a href="../modules/BIG.html">BIG</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/keygen.lua.html">keygen.lua</a></li>
+  <li><a href="../examples/crypt-to-multi.lua.html">crypt-to-multi.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>ECP</code></h1>
+<p>
+
+<h1>Elliptic Curve Point Arithmetic (ECP)</h1>
+
+
+<p>  Base arithmetical operations on elliptic curve point coordinates.</p>
+</p>
+<p>  ECP arithmetic operations are provided to implement existing and
+  new encryption schemes: they are elliptic curve cryptographic
+  primitives and work the same across different curves.</p>
+
+<p>  It is possible to create ECP points instances using the <a href="../modules/ECP.html#new">new</a>
+  method. The values of each coordinate can be imported using <a href="../modules/BIG.html#">BIG</a>
+  methods <code>BIG.hex()</code> or <code>BIG.base64()</code>.</p>
+
+<p>  Once ECP numbers are created this way, the arithmetic operations
+  of addition, subtraction and multiplication can be executed
+  normally using overloaded operators (+ - *).</p>
+    <h3>Info:</h3>
+    <ul>
+        <li><strong>Copyright</strong>: Dyne.org foundation 2017-2019</li>
+        <li><strong>License</strong>: AGPLv3</li>
+        <li><strong>Author</strong>: Denis "Jaromil" Roio</li>
+    </ul>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#new">new (coordinates)</a></td>
+	<td class="summary">Create a new ECP point from an <a href="../modules/OCTET.html#">OCTET</a> argument containing its coordinates.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#generator">generator ()</a></td>
+	<td class="summary">Returns the generator of the curve: an ECP point that is multiplied by any <a href="../modules/BIG.html#">BIG</a> number to obtain a correspondent point on the curve.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#infinity">infinity ()</a></td>
+	<td class="summary">Returns a new ECP infinity point that is definitely not on the curve.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#order">order ()</a></td>
+	<td class="summary">Gives the order of the curve, a <a href="../modules/BIG.html#">BIG</a> number contained in an octet.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mapit">mapit (OCTET)</a></td>
+	<td class="summary">Map an <a href="../modules/OCTET.html#">OCTET</a> of exactly 64 bytes length to a point on the curve: the OCTET should be the output of an hash function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#validate">validate (OCTET)</a></td>
+	<td class="summary">Verify that an <a href="../modules/OCTET.html#">OCTET</a> really corresponds to an ECP point on the curve.</td>
+	</tr>
+</table>
+<h2><a href="#Class_ecp">Class ecp </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#ecp:affine">ecp:affine ()</a></td>
+	<td class="summary">Make an existing ECP point affine with its curve</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ecp:isinf">ecp:isinf ()</a></td>
+	<td class="summary">Returns true if an ECP coordinate points to infinity (out of the curve) and false otherwise.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ecp:add">ecp:add (first, second)</a></td>
+	<td class="summary">Add two ECP points to each other (commutative and associative operation).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ecp:sub">ecp:sub (first, second)</a></td>
+	<td class="summary">Subtract an ECP point from another (commutative and associative operation).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ecp:negative">ecp:negative ()</a></td>
+	<td class="summary">Transforms an ECP point into its equivalent negative point on the elliptic curve.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ecp:double">ecp:double ()</a></td>
+	<td class="summary">Transforms an ECP pointo into the double of its value, multiplying it by two.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ecp:mul">ecp:mul (ecp, number)</a></td>
+	<td class="summary">Multiply an ECP point by a <a href="../modules/BIG.html#">BIG</a> number.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ecp:eq">ecp:eq (first, second)</a></td>
+	<td class="summary">Compares two ECP objects and returns true if they indicate the same point on the curve (they are equal) or false otherwise.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ecp:octet">ecp:octet ()</a></td>
+	<td class="summary">Returns an octet containing the coordinate of an ECP point on the curve.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ecp:x">ecp:x ()</a></td>
+	<td class="summary">Gives the X coordinate of the ECP point as a single <a href="../modules/BIG.html#">BIG</a> number.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ecp:y">ecp:y ()</a></td>
+	<td class="summary">Gives the Y coordinate of the ECP point as a single <a href="../modules/BIG.html#">BIG</a> number.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "new"></a>
+    <strong>new (coordinates)</strong>
+    </dt>
+    <dd>
+    Create a new ECP point from an <a href="../modules/OCTET.html#">OCTET</a> argument containing its coordinates. (octet)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">coordinates</span>
+         of the point on the elliptic curve
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new ECP point on the curve
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/ECP.html#ecp:octet">ECP:octet</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "generator"></a>
+    <strong>generator ()</strong>
+    </dt>
+    <dd>
+    Returns the generator of the curve: an ECP point that is multiplied by any <a href="../modules/BIG.html#">BIG</a> number to obtain a correspondent point on the curve. ()
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        ECP point of the curve's generator.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "infinity"></a>
+    <strong>infinity ()</strong>
+    </dt>
+    <dd>
+    Returns a new ECP infinity point that is definitely not on the curve. ()
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        ECP pointing to infinity (out of the curve).
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "order"></a>
+    <strong>order ()</strong>
+    </dt>
+    <dd>
+    Gives the order of the curve, a <a href="../modules/BIG.html#">BIG</a> number contained in an octet. ()
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a <a href="../modules/BIG.html#">BIG</a> number containing the curve's order
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mapit"></a>
+    <strong>mapit (OCTET)</strong>
+    </dt>
+    <dd>
+    Map an <a href="../modules/OCTET.html#">OCTET</a> of exactly 64 bytes length to a point on the curve: the OCTET should be the output of an hash function. (OCTET)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">OCTET</span>
+         resulting from an hash function
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        an ECP that is univocally linked to the input OCTET
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "validate"></a>
+    <strong>validate (OCTET)</strong>
+    </dt>
+    <dd>
+    Verify that an <a href="../modules/OCTET.html#">OCTET</a> really corresponds to an ECP point on the curve. (OCTET)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">OCTET</span>
+         point to be validated
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        bool value: true if valid, false if not valid
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header has-description"><a name="Class_ecp"></a>Class ecp </h2>
+
+          <div class="section-description">
+          Instance Methods
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "ecp:affine"></a>
+    <strong>ecp:affine ()</strong>
+    </dt>
+    <dd>
+    Make an existing ECP point affine with its curve ()
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        ECP point made affine
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "ecp:isinf"></a>
+    <strong>ecp:isinf ()</strong>
+    </dt>
+    <dd>
+    Returns true if an ECP coordinate points to infinity (out of the curve) and false otherwise. ()
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        false if point is on curve, true if its off curve into infinity.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "ecp:add"></a>
+    <strong>ecp:add (first, second)</strong>
+    </dt>
+    <dd>
+    Add two ECP points to each other (commutative and associative operation).  Can be made using the overloaded operator <code>+</code> between two ECP objects just like the would be numbers.
+(first,second)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">first</span>
+         number to be summed
+        </li>
+        <li><span class="parameter">second</span>
+         number to be summed
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        sum resulting from the addition
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "ecp:sub"></a>
+    <strong>ecp:sub (first, second)</strong>
+    </dt>
+    <dd>
+    Subtract an ECP point from another (commutative and associative operation).  Can be made using the overloaded operator <code>-</code> between two ECP objects just like the would be numbers.
+(first,second)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">first</span>
+         number from which the second should be subtracted
+        </li>
+        <li><span class="parameter">second</span>
+         number to use in the subtraction
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        new ECP point resulting from the subtraction
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "ecp:negative"></a>
+    <strong>ecp:negative ()</strong>
+    </dt>
+    <dd>
+    Transforms an ECP point into its equivalent negative point on the elliptic curve. ()
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "ecp:double"></a>
+    <strong>ecp:double ()</strong>
+    </dt>
+    <dd>
+    Transforms an ECP pointo into the double of its value, multiplying it by two.  This works faster than multiplying it an arbitrary number of times.
+()
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "ecp:mul"></a>
+    <strong>ecp:mul (ecp, number)</strong>
+    </dt>
+    <dd>
+    Multiply an ECP point by a <a href="../modules/BIG.html#">BIG</a> number.  Can be made using the overloaded operator <code>*</code>
+(ecp,num)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">ecp</span>
+         point on the elliptic curve to be multiplied
+        </li>
+        <li><span class="parameter">number</span>
+         indicating how many times it should be multiplied
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        new ecp point resulting from the multiplication
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "ecp:eq"></a>
+    <strong>ecp:eq (first, second)</strong>
+    </dt>
+    <dd>
+    Compares two ECP objects and returns true if they indicate the same point on the curve (they are equal) or false otherwise.  It can also be executed by using the <code>==</code> overloaded operator.
+(first,second)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">first</span>
+         ecp point to be compared
+        </li>
+        <li><span class="parameter">second</span>
+         ecp point to be compared
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        bool value: true if equal, false if not equal
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "ecp:octet"></a>
+    <strong>ecp:octet ()</strong>
+    </dt>
+    <dd>
+    Returns an octet containing the coordinate of an ECP point on the curve.  It can be used to export the value of an ECP point into a string, using <a href="../modules/OCTET.html#octet:hex">OCTET:hex</a> or <a href="../modules/OCTET.html#octet:base64">OCTET:base64</a> encapsulation. It can be decoded back to an ECP point using <a href="../modules/ECP.html#new">ECP:new</a>.
+()
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the ECP point as an OCTET sequence
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "ecp:x"></a>
+    <strong>ecp:x ()</strong>
+    </dt>
+    <dd>
+    Gives the X coordinate of the ECP point as a single <a href="../modules/BIG.html#">BIG</a> number. ()
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a BIG number indicating the X coordinate of the point on curve.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "ecp:y"></a>
+    <strong>ecp:y ()</strong>
+    </dt>
+    <dd>
+    Gives the Y coordinate of the ECP point as a single <a href="../modules/BIG.html#">BIG</a> number. ()
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a BIG number indicating the Y coordinate of the point on curve.
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2020-03-13 12:59:05 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

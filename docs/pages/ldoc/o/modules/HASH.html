@@ -1,0 +1,296 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Zenroom LUA</title>
+    <link rel="stylesheet" href="" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Zenroom</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/OCTET.html">OCTET</a></li>
+  <li><strong>HASH</strong></li>
+  <li><a href="../modules/ECDH.html">ECDH</a></li>
+  <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><a href="../modules/String.html">String</a></li>
+  <li><a href="../modules/Table.html">Table</a></li>
+  <li><a href="../modules/INSPECT.html">INSPECT</a></li>
+  <li><a href="../modules/ZEN.html">ZEN</a></li>
+  <li><a href="../modules/BIG.html">BIG</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/keygen.lua.html">keygen.lua</a></li>
+  <li><a href="../examples/crypt-to-multi.lua.html">crypt-to-multi.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>HASH</code></h1>
+<p>
+
+<h1>Cryptographic hash functions</h1>
+
+
+<p> An hash is also known as 'message digest', 'digital fingerprint',
+ 'digest' or 'checksum'.</p>
+</p>
+<p> HASH objects can be generated from a number of implemented
+ algorithms: <code>sha256</code> and <code>sha512</code> are stable and pass NIST vector
+ tests. There are also <code>sha384</code>, <code>sha3_256</code> and <code>sha3_512</code> with
+ experimental implementations that aren't passing NIST vector tests.</p>
+
+<p> objects are instantiated using <a href="../modules/HASH.html#new">HASH:new</a> and then provide the
+ method <a href="../modules/HASH.html#hash:process">HASH:process</a> that takes an input <a href="../modules/OCTET.html#">OCTET</a> and then
+ returns another fixed-size octet that is uniquely matched to the
+ original data. The process is not reversible (the original data
+ cannot be retrieved from an hash).</p>
+    <h3>Info:</h3>
+    <ul>
+        <li><strong>Copyright</strong>: Dyne.org foundation 2017-2019</li>
+        <li><strong>License</strong>: AGPLv3</li>
+        <li><strong>Author</strong>: Denis "Jaromil" Roio</li>
+    </ul>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#new">new (string)</a></td>
+	<td class="summary">Create a new hash object of a selected algorithm (sha256 or
+   sha512).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#hash:process">hash:process (data)</a></td>
+	<td class="summary">Hash an octet into a new octet.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#keyring:hmac">keyring:hmac (key, data)</a></td>
+	<td class="summary">Compute the HMAC of a message using a key.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#keyring:kdf2">keyring:kdf2 (hash, key)</a></td>
+	<td class="summary">Key Derivation Function (KDF2).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#keyring:pbkdf2">keyring:pbkdf2 (key, salt, iterations, length)</a></td>
+	<td class="summary">Password Based Key Derivation Function (PBKDF2).</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "new"></a>
+    <strong>new (string)</strong>
+    </dt>
+    <dd>
+    Create a new hash object of a selected algorithm (sha256 or
+   sha512).  The resulting object can then process any <a href="../modules/OCTET.html#">OCTET</a> into
+   its hashed equivalent.
+(string)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">string</span>
+         indicating the type of hash algorithm
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new hash object ready to process data.
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/HASH.html#hash:process">process</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "hash:process"></a>
+    <strong>hash:process (data)</strong>
+    </dt>
+    <dd>
+    Hash an octet into a new octet.  Use the configured hash function to
+   hash an octet string and return a new one containing its hash.
+(data)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">data</span>
+         octet containing the data to be hashed
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new octet containing the hash of the data
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "keyring:hmac"></a>
+    <strong>keyring:hmac (key, data)</strong>
+    </dt>
+    <dd>
+    Compute the HMAC of a message using a key.  This method takes any
+   data and any key material to comput an HMAC of the same length of
+   the hash bytes of the keyring. This function works in accordance with
+   RFC2104.
+(key, data)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+         an octet containing the key to compute the HMAC
+        </li>
+        <li><span class="parameter">data</span>
+         an octet containing the message to compute the HMAC
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new octet containing the computed HMAC or false on failure
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "keyring:kdf2"></a>
+    <strong>keyring:kdf2 (hash, key)</strong>
+    </dt>
+    <dd>
+    Key Derivation Function (KDF2).  Key derivation is used to
+   strengthen keys against bruteforcing: they impose a number of
+   costly computations to be iterated on the key. This function
+   generates a new key from an existing key applying an octet of key
+   derivation parameters.
+(key)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">hash</span>
+         initialized <a href="../modules/HASH.html#">HASH</a> or <a href="../modules/ECDH.html#">ECDH</a> object
+        </li>
+        <li><span class="parameter">key</span>
+         octet of the key to be transformed
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new octet containing the derived key
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "keyring:pbkdf2"></a>
+    <strong>keyring:pbkdf2 (key, salt, iterations, length)</strong>
+    </dt>
+    <dd>
+    Password Based Key Derivation Function (PBKDF2).  This function
+   generates a new key from an existing key applying a salt and number
+   of iterations.
+(key, salt, iterations, length)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+         octet of the key to be transformed
+        </li>
+        <li><span class="parameter">salt</span>
+         octet containing a salt to be used in transformation
+        </li>
+        <li><span class="parameter">iterations</span>
+        [opt=1000] number of iterations to be applied
+        </li>
+        <li><span class="parameter">length</span>
+        [opt=key length] integer indicating the new length (default same as input key)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new octet containing the derived key
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/HASH.html#keyring:kdf2">keyring:kdf2</a>
+    </ul>
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2020-03-13 12:59:05 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

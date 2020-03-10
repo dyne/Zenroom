@@ -1,0 +1,294 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Zenroom LUA</title>
+    <link rel="stylesheet" href="" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Zenroom</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Class_keyring">Class keyring </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/OCTET.html">OCTET</a></li>
+  <li><a href="../modules/HASH.html">HASH</a></li>
+  <li><strong>ECDH</strong></li>
+  <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><a href="../modules/String.html">String</a></li>
+  <li><a href="../modules/Table.html">Table</a></li>
+  <li><a href="../modules/INSPECT.html">INSPECT</a></li>
+  <li><a href="../modules/ZEN.html">ZEN</a></li>
+  <li><a href="../modules/BIG.html">BIG</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/keygen.lua.html">keygen.lua</a></li>
+  <li><a href="../examples/crypt-to-multi.lua.html">crypt-to-multi.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>ECDH</code></h1>
+<p>
+
+<h1>Elliptic Curve Diffie-Hellman encryption (ECDH)</h1>
+
+
+<p>  Asymmetric public/private key encryption technologies.</p>
+</p>
+<p>  ECDH encryption and ECDSA signing functionalities are provided by
+  this module. New keyring instances are instantiated by calling the
+  new() method, keys can be imported using the</p>
+
+<p>  <code>
+  Alice = ECDH.new()
+  Bob = ECDH.new()
+  </code></p>
+
+<p>  One can create more keyrings in the same script and call them with
+  meaningful variable names to help making code more
+  understandable. Each keyring instance offers methods prefixed with
+  a double-colon that operate on arguments as well keys contained by
+  the keyring: this way scripting can focus on the identities
+  represented by each keyring, giving them names as 'Alice' or
+  'Bob'.</p>
+    <h3>Info:</h3>
+    <ul>
+        <li><strong>Copyright</strong>: Dyne.org foundation 2017-2019</li>
+        <li><strong>License</strong>: AGPLv3</li>
+        <li><strong>Author</strong>: Denis "Jaromil" Roio</li>
+    </ul>
+
+
+<h2><a href="#Class_keyring">Class keyring </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#keyring:keygen">keyring:keygen ()</a></td>
+	<td class="summary">Generate an ECDH public/private key pair for a keyring</p>
+
+<p>   Keys generated are both returned and stored inside the
+   keyring.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#keyring:xy">keyring:xy ()</a></td>
+	<td class="summary">Returns X and Y coordinates of a public key</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#keyring:pubgen">keyring:pubgen (key)</a></td>
+	<td class="summary">Imports a private key inside an ECDH keyring.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#keyring:sign">keyring:sign (message)</a></td>
+	<td class="summary">Elliptic Curve Digital Signature Algorithm (ECDSA) signing
+   function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#keyring:verify">keyring:verify (message, signature)</a></td>
+	<td class="summary">Elliptic Curve Digital Signature Algorithm (ECDSA) verification
+   function.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header has-description"><a name="Class_keyring"></a>Class keyring </h2>
+
+          <div class="section-description">
+          Instance Methods
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "keyring:keygen"></a>
+    <strong>keyring:keygen ()</strong>
+    </dt>
+    <dd>
+    Generate an ECDH public/private key pair for a keyring</p>
+
+<p>   Keys generated are both returned and stored inside the
+   keyring.  They can also be retrieved later using the
+   ??? and ??? methods.
+()
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+           <span class="types"><span class="type">OCTET</span></span>
+        public key</li>
+        <li>
+           <span class="types"><span class="type">OCTET</span></span>
+        private key</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "keyring:xy"></a>
+    <strong>keyring:xy ()</strong>
+    </dt>
+    <dd>
+    Returns X and Y coordinates of a public key (public_key)
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+           <span class="types"><span class="type">OCTET</span></span>
+        coordinate X of public key</li>
+        <li>
+           <span class="types"><span class="type">OCTET</span></span>
+        coordinate Y of public key</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "keyring:pubgen"></a>
+    <strong>keyring:pubgen (key)</strong>
+    </dt>
+    <dd>
+    Imports a private key inside an ECDH keyring. </p>
+
+<p>   This is a get/set method working both ways: without argument it
+   returns the private key of a keyring, or if an <a href="../modules/OCTET.html#">OCTET</a> argument is
+   provided it is imported as private key inside the keyring and used
+   to derivate its corresponding public key.</p>
+
+<p>   If the keyring contains already any key, it will refuse to
+   overwrite them and return an error.
+(key)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+        [opt] octet of a private key to be imported
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "keyring:sign"></a>
+    <strong>keyring:sign (message)</strong>
+    </dt>
+    <dd>
+    Elliptic Curve Digital Signature Algorithm (ECDSA) signing
+   function.  This method uses the private key inside a keyring to sign
+   a message, returning a signature to be used in <a href="../modules/ECDH.html#keyring:verify">keyring:verify</a>.
+(kp.private, message)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">message</span>
+         string or <a href="../modules/OCTET.html#">OCTET</a> message to sign
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table containing signature parameters octets (r,s)
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">kp = ECDH.keygen() <span class="comment">-- generate keys or import them
+</span>m = <span class="string">"Message to be signed"</span>
+signature = ECDH.sign(kp.private, m)
+<span class="global">assert</span>( ECDH.verify(kp.public, m, signature) )</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "keyring:verify"></a>
+    <strong>keyring:verify (message, signature)</strong>
+    </dt>
+    <dd>
+    Elliptic Curve Digital Signature Algorithm (ECDSA) verification
+   function.  This method uses the public key inside a keyring to verify
+   a message, returning true or false. The signature parameters are
+   returned as 'r' and 's' in this same order by <a href="../modules/ECDH.html#keyring:sign">keyring:sign</a>.
+(kp.public, message,signature)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">message</span>
+         the message whose signature has to be verified
+        </li>
+        <li><span class="parameter">signature</span>
+         the signature table returned by <a href="../modules/ECDH.html#keyring:sign">keyring:sign</a>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true if the signature is OK, or false if not.
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="../modules/ECDH.html#keyring:sign">ECDH.sign</a>
+    </ul>
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2020-03-13 12:59:05 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

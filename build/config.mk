@@ -2,7 +2,7 @@
 
 pwd := $(shell pwd)
 mil := ${pwd}/build/milagro
-website := ${pwd}/docs/website/docs
+website := ${pwd}/docs
 
 # ------------
 # lua settings

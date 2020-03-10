@@ -1,8 +1,0 @@
-sequenceDiagram
-    participant A as Alice
-    participant B as Bob
-    A->>A: create the keypair
-    A->>B: publish the public key	
-    B->>B: create the keypair
-    B->>A: publish the public key	
-

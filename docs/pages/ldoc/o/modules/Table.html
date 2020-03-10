@@ -1,0 +1,284 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Zenroom LUA</title>
+    <link rel="stylesheet" href="" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Zenroom</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/OCTET.html">OCTET</a></li>
+  <li><a href="../modules/HASH.html">HASH</a></li>
+  <li><a href="../modules/ECDH.html">ECDH</a></li>
+  <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><a href="../modules/String.html">String</a></li>
+  <li><strong>Table</strong></li>
+  <li><a href="../modules/INSPECT.html">INSPECT</a></li>
+  <li><a href="../modules/ZEN.html">ZEN</a></li>
+  <li><a href="../modules/BIG.html">BIG</a></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/keygen.lua.html">keygen.lua</a></li>
+  <li><a href="../examples/crypt-to-multi.lua.html">crypt-to-multi.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>Table</code></h1>
+<p>
+
+<h1>Table operations</h1>
+
+<p> Standard Lua data structure manipulation on maps (key/value) and arrays.</p>
+</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#table.concat">table.concat (table, sep, i, j)</a></td>
+	<td class="summary">Given an array where all elements are strings or numbers, returns
+ `table[i]..sep..table[i+1] ...</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#table.insert">table.insert (table, pos, value)</a></td>
+	<td class="summary">Inserts element <code>value</code> at position <code>pos</code> in <a href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a>, shifting up
+ other elements to open space, if necessary.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#table.maxn">table.maxn (table)</a></td>
+	<td class="summary">Returns the largest positive numerical index of the given table, or
+ zero if the table has no positive numerical indices.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#table.remove">table.remove (table, pos)</a></td>
+	<td class="summary">Removes from <a href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a> the element at position <code>pos</code>, shifting down other
+ elements to close the space, if necessary.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#table.sort">table.sort (table, comp)</a></td>
+	<td class="summary">Sorts table elements in a given order,
+ <em>in-place</em>, from <code>table[1]</code> to <code>table[n]</code>, where <code>n</code> is the length of the
+ table.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "table.concat"></a>
+    <strong>table.concat (table, sep, i, j)</strong>
+    </dt>
+    <dd>
+    Given an array where all elements are strings or numbers, returns
+ <code>table[i]..sep..table[i+1] ...  sep..table[j]</code>. The default value for
+ <code>sep</code> is the empty string, the default for <code>i</code> is 1, and the default for
+ <code>j</code> is the length of the table. If <code>i</code> is greater than <code>j</code>, returns the
+ empty string.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">table</span>
+
+
+
+        </li>
+        <li><span class="parameter">sep</span>
+
+
+
+        </li>
+        <li><span class="parameter">i</span>
+
+
+
+        </li>
+        <li><span class="parameter">j</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "table.insert"></a>
+    <strong>table.insert (table, pos, value)</strong>
+    </dt>
+    <dd>
+    Inserts element <code>value</code> at position <code>pos</code> in <a href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a>, shifting up
+ other elements to open space, if necessary.  The default value for <code>pos</code> is
+ <code>n+1</code>, where <code>n</code> is the length of the table (see §2.5.5), so that a call
+ <code>table.insert(t,x)</code> inserts <code>x</code> at the end of table <code>t</code>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">table</span>
+
+
+
+        </li>
+        <li><span class="parameter">pos</span>
+
+
+
+        </li>
+        <li><span class="parameter">value</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "table.maxn"></a>
+    <strong>table.maxn (table)</strong>
+    </dt>
+    <dd>
+    Returns the largest positive numerical index of the given table, or
+ zero if the table has no positive numerical indices.  (To do its job this
+ function does a linear traversal of the whole table.)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">table</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "table.remove"></a>
+    <strong>table.remove (table, pos)</strong>
+    </dt>
+    <dd>
+    Removes from <a href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a> the element at position <code>pos</code>, shifting down other
+ elements to close the space, if necessary.  Returns the value of the removed
+ element. The default value for <code>pos</code> is <code>n</code>, where <code>n</code> is the length of the
+ table, so that a call <code>table.remove(t)</code> removes the last element of table
+ <code>t</code>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">table</span>
+
+
+
+        </li>
+        <li><span class="parameter">pos</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "table.sort"></a>
+    <strong>table.sort (table, comp)</strong>
+    </dt>
+    <dd>
+    Sorts table elements in a given order,
+ <em>in-place</em>, from <code>table[1]</code> to <code>table[n]</code>, where <code>n</code> is the length of the
+ table.  If <code>comp</code> is given, then it must be a function that receives two
+ table elements, and returns true when the first is less than the second
+ (so that <code>not comp(a[i+1],a[i])</code> will be true after the sort). If <code>comp</code>
+ is not given, then the '&lt;' operator will be used.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">table</span>
+
+
+
+        </li>
+        <li><span class="parameter">comp</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2020-03-13 12:59:05 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

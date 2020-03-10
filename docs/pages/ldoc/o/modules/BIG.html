@@ -1,0 +1,218 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Zenroom LUA</title>
+    <link rel="stylesheet" href="" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Zenroom</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/OCTET.html">OCTET</a></li>
+  <li><a href="../modules/HASH.html">HASH</a></li>
+  <li><a href="../modules/ECDH.html">ECDH</a></li>
+  <li><a href="../modules/ECP.html">ECP</a></li>
+  <li><a href="../modules/String.html">String</a></li>
+  <li><a href="../modules/Table.html">Table</a></li>
+  <li><a href="../modules/INSPECT.html">INSPECT</a></li>
+  <li><a href="../modules/ZEN.html">ZEN</a></li>
+  <li><strong>BIG</strong></li>
+</ul>
+<h2>Examples</h2>
+<ul class="nowrap">
+  <li><a href="../examples/keygen.lua.html">keygen.lua</a></li>
+  <li><a href="../examples/crypt-to-multi.lua.html">crypt-to-multi.lua</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>BIG</code></h1>
+<p>
+
+<h1>Big Number Arithmetic (BIG)</h1>
+
+
+<p> Base arithmetical operations on big numbers.</p>
+</p>
+<p> Most operators are overloaded and can be used on BIG numbers as if they would be natural. Multiplications by <a href="../modules/ECP.html#">ECP</a> curve points are also possible using ECP as first argument.</p>
+
+<p> For explanations and example usage see <a href="https://dev.zenroom.org/crypto">dev.zenroom.org/crypto</a>.</p>
+    <h3>Info:</h3>
+    <ul>
+        <li><strong>Copyright</strong>: Dyne.org foundation 2017-2018</li>
+        <li><strong>License</strong>: AGPLv3</li>
+        <li><strong>Author</strong>: Denis "Jaromil" Roio</li>
+    </ul>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#new">new ([octet])</a></td>
+	<td class="summary">Create a new Big number.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#modrand">modrand (modulo)</a></td>
+	<td class="summary">Generate a random Big number whose ceiling is defined by the modulo to another number.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#random">random ()</a></td>
+	<td class="summary">Generate a random Big number whose ceiling is the order of the curve.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#modmul">modmul (coefficient, modulo)</a></td>
+	<td class="summary">Multiply a BIG number by another BIG while ceiling the operation to a modulo to avoid excessive results.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "new"></a>
+    <strong>new ([octet])</strong>
+    </dt>
+    <dd>
+    Create a new Big number.  If an argument is present, import it as <a href="../modules/OCTET.html#">OCTET</a> and initialise it with its value.
+(octet)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">octet</span>
+         value
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new Big number
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "modrand"></a>
+    <strong>modrand (modulo)</strong>
+    </dt>
+    <dd>
+    Generate a random Big number whose ceiling is defined by the modulo to another number. (modulo)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">modulo</span>
+         another BIG number, usually <a href="../modules/ECP.html#order">ECP.order</a>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new Big number
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "random"></a>
+    <strong>random ()</strong>
+    </dt>
+    <dd>
+    Generate a random Big number whose ceiling is the order of the curve. ()
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new Big number
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "modmul"></a>
+    <strong>modmul (coefficient, modulo)</strong>
+    </dt>
+    <dd>
+    Multiply a BIG number by another BIG while ceiling the operation to a modulo to avoid excessive results.  This operation is to be preferred to the simple overladed operator '<em>' in most cases where such a multiplication takes place. It may replace '</em>' in the future as a simplification.
+(coefficient, modulo)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">coefficient</span>
+         another BIG number
+        </li>
+        <li><span class="parameter">modulo</span>
+         usually <a href="../modules/ECP.html#order">ECP.order</a>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        a new Big number
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2020-03-13 12:59:05 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
