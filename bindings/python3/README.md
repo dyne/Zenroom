@@ -1,13 +1,15 @@
+# Use Zenroom in Python3
 <p align="center">
   <br/>
   <a href="https://dev.zenroom.org/">
     <img src="https://raw.githubusercontent.com/DECODEproject/Zenroom/master/docs/logo/zenroom_logotype.png" height="140" alt="Zenroom">
   </a>
-  <h1 align="center">
+  <h2 align="center">
     zenroom.py 🐍
     <br>
-    <sub>A Python3 wrapper of <a href="https://zenroom.org">Zenroom</a>, a secure and small virtual machine for crypto language processing</sub>
-  </h1>
+    <sub>A Python3 wrapper of <a href="https://zenroom.org">Zenroom</a>, a secure and small virtual machine for crypto language processing</sub> </h2>
+  
+<br><br>
 
   <a href="https://travis-ci.com/DECODEproject/zenroom-py">
     <img src="https://travis-ci.com/DECODEproject/zenroom-py.svg?branch=master" alt="Build status"/>
@@ -22,9 +24,6 @@
 
 <hr/>
 
-
-Zenroom and Zenroom.py are part of the [DECODE project](https://decodeproject.eu) about data-ownership and
- [technological sovereignty](https://www.youtube.com/watch?v=RvBRbwBm_nQ). Our effort is that of improving people's awareness of how their data is processed by algorithms, as well facilitate the work of developers to create along [privacy by design principles](https://decodeproject.eu/publications/privacy-design-strategies-decode-architecture) using algorithms that can be deployed in any situation without any change.
 
 This library attempts to provide a very simple wrapper around the Zenroom
 (https://zenroom.dyne.org/) crypto virtual machine developed as part of the

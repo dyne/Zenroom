@@ -1,0 +1,6 @@
+
+This document explains the nature of the Zenroom software component for the DECODE Project. It establishes guidelines and requirements for the implementation of an execution engine for a new domain specific language.
+
+DECODE's language is an external DSL implemented using a Syntax-Directed Translation. Its Semantic Model leads to coarse-grained tasks to be executed by the nodes on the peer to peer network.
+
+This is a living document and its latest version can be found on zenroom.dyne.org.

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Zenroom 📝 Documentation</title>
+    <link rel="icon" href="_media/images/favicon.png" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them."
+    />
+    <meta name="keywords" content="crypto, security, iot, blockchain" />
+    <meta property="og:title" content="Zenroom 📝 Documentation" />
+    <meta property="og:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://dev.zenroom.org" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@DyneOrg" />
+    <meta name="twitter:title" content="Zenroom 📝 Documentation" />
+    <meta name="twitter:description" content="Zenroom is a portable and independent virtual machine for secure cryptographic operations. Zencode is the name of the language executed by Zenroom: it is simple to understand and can process large data structures while operating cryptographic transformations on them."
+    />
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/tonsky/FiraCode@1.207/distr/fira_code.css" />
+    <link rel="stylesheet" href="//unpkg.com/vis-network/dist/vis-network.min.css" />
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.css" />
+    <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css" />
+    <link rel="stylesheet" href="_media/css/style.css" />
+    <script src="//cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="//unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+</head>
+
+<body>
+    <div id="app"></div>
+    <div class="bibtex_template">
+        <div class="bibtexVar" id="+BIBTEXKEY+" extra="BIBTEXKEY"></div>
+        <div class="if author" style="font-weight: bold;">
+            <span class="if year">
+            <span class="year"></span>,
+            </span>
+            <span class="author"></span>
+            <span class="if url" style="margin-left: 20px">
+            <a class="url" style="color:black; font-size:10px">(view online)</a>
+          </span>
+        </div>
+        <div style="margin-left: 10px; margin-bottom:5px;">
+            <span class="title"></span>
+        </div>
+    </div>
+    <script>
+        const uuidv41 = () => ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
+
+        window.$docsify = {
+            logo: "_media/images/zenroom_logo.png",
+            formatUpdated: '{MM}/{DD}/{YYYY} {HH}:{mm}',
+            repo: "DECODEproject/Zenroom",
+            relativePath: true,
+            loadSidebar: true,
+            loadNavbar: true,
+            autoHeader: false,
+            name: "zenroom",
+            coverpage: true,
+            auto2top: true,
+            subMaxLevel: 3,
+            maxLevel: 4,
+            ga: 'UA-1857256-5',
+            alias: {
+                '.*?/CHANGELOG': 'https://raw.githubusercontent.com/DECODEproject/Zenroom/master/ChangeLog.md',
+                '.*?/CONTRIBUTING': 'https://raw.githubusercontent.com/DECODEproject/Zenroom/master/Agreement.md',
+                '.*?/TODO': 'https://raw.githubusercontent.com/DECODEproject/Zenroom/master/TODO.md',
+                '.*?/restroom': 'https://raw.githubusercontent.com/dyne/restroom/master/README.md',
+                '.*?/lotionroom': 'https://raw.githubusercontent.com/dyne/lotionroom/master/README.md',
+                '.*?/redroom': 'https://raw.githubusercontent.com/DECODEproject/RedRoom/master/docs/website/docs/README.md',
+                '.*?/sawroom': 'https://raw.githubusercontent.com/DECODEproject/Sawroom/master/website/docs/README.md',
+                '/modules/(.*)': '/_media/ldoc/o/modules/$1',
+                "/.*/_sidebar.md": "/_sidebar.md",
+            },
+            search: {
+                maxAge: 86400000, // Expiration time, the default one day
+                paths: "auto",
+                placeholder: "Type to search"
+            },
+            pagination: {
+                crossChapter: true,
+                crossChapterText: true
+            },
+            remoteMarkdown: {
+                tag: 'remote_include',
+            },
+            markdown: {
+                gfm: true,
+                break: true,
+                renderer: {
+                    code: function(code, lang) {
+                        if (lang === "mermaid") {
+                            return (
+                                '<div class="mermaid">' + mermaid.render('mermaid-svg-' + num++, code) + "</div>"
+                            );
+                        }
+                        // if (lang === "gv") {
+                        //     const dom = window.Docsify.dom
+                        //     var container = dom.create("div");
+                        //     container.id = `gv-${new Date().getTime()}`
+                        //     var data = vis.parseDOTNetwork(code);
+                        //     dom.appendTo(dom.body, container)
+                        //     var network = new vis.Network(container, data);
+                        //     return container.innerHTML;
+                        // }
+                        return this.origin.code.apply(this, arguments);
+                    }
+                }
+            },
+
+
+            plugins: [
+                hook => {
+                    const updated = `<p class="updated"><em><small>Last modified {docsify-updated}</small></em></p>`
+                    const footer = `<footer><span><a href="https://dyne.org" target="_blank" alt="Authors">Dyne.org</a> Foundation &copy; 2017-${new Date().getFullYear()}</span></footer>`
+                    hook.beforeEach(html => html + updated);
+                    hook.afterEach((html, next) => {
+                        next(html + footer)
+                    });
+                },
+
+                hook => {
+                    // citation plugin
+                    hook.afterEach((html, next) => {
+                        const _citRegex = /\[\@(.+?)\]/g;
+                        const root = document.location.href.replace(/#.*/, '')
+                        html = html.replace(_citRegex, `(<a href='${document.location.href}?id=$1'>$1</a>)`)
+                        next(html)
+                    })
+                },
+
+                hook => {
+                    // ldoc fix links
+                    hook.afterEach((content, next) => {
+                        let html = content.replace(/href="\.\.\//gi, `href="`)
+                            .replace(/modules\//gi, `/#/pages/ldoc/o/modules/`)
+                            .replace(/examples\//gi, `/#/pages/ldoc/o/examples/`)
+                            // .replace(/<a href="#/gi, `<a href='${document.location.href}?id=`)
+                            .replace(`<li><a href="index.html">Index</a></li>`,
+                                `<li><a href="/#/pages/ldoc/o/README.md">Index</a></li>`)
+                        next(html)
+                    })
+                },
+                hook => {
+                    const selector = 'pre[data-lang="gv"]'
+                    hook.afterEach((html, next) => {
+                        const dom = window.Docsify.dom
+                        const $ = dom.create('div', html)
+                        if (!$.querySelectorAll) {
+                            return html
+                        }
+                        (dom.findAll($, selector) || []).forEach(function(element) {
+                            if (element.parentNode) {
+                                let container = dom.create('div')
+                                const content = element.childNodes[0].innerText;
+                                dom.appendTo(dom.body, container)
+                                const data = vis.parseDOTNetwork(content);
+                                const network = new vis.Network(container, data)
+                                element.parentNode.replaceChild(container, element)
+
+                            }
+                        })
+                        next($.innerHTML)
+                    })
+                }
+
+
+            ]
+        };
+
+        let num = 0;
+        mermaid.initialize({
+            startOnLoad: false,
+            securityLevel: 'loose',
+            sequence: {
+                // showSequenceNumbers: true,
+                "height": 40,
+                "actorMargin": 200,
+                "mirrorActors": true,
+            },
+            "flowchart": {
+                "htmlLabels": true
+            }
+        });
+    </script>
+    <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
+    <script src="//unpkg.com/docsify/lib/plugins/search.min.js"></script>
+    <script src="//unpkg.com/docsify/lib/plugins/emoji.min.js"></script>
+    <script src="//unpkg.com/docsify-copy-code"></script>
+    <script src="//unpkg.com/docsify-pagination/dist/docsify-pagination.min.js"></script>
+    <script src="//unpkg.com/docsify-remote-markdown/dist/docsify-remote-markdown.min.js"></script>
+    <script src="//code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <script src="//cdn.jsdelivr.net/gh/pcooksey/bibtex-js/src/bibtex_js.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/external-script.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/ga.min.js"></script>
+
+    <script src="//unpkg.com/prismjs/components/prism-json.min.js"></script>
+    <script src="//unpkg.com/prismjs/components/prism-c.min.js"></script>
+    <script src="//unpkg.com/prismjs/components/prism-yaml.min.js"></script>
+    <script src="//unpkg.com/prismjs/components/prism-lua.min.js"></script>
+    <script src="//unpkg.com/prismjs/components/prism-bash.min.js"></script>
+    <script src="//unpkg.com/prismjs/components/prism-python.min.js"></script>
+    <script src="//unpkg.com/prismjs/components/prism-go.min.js"></script>
+    <script src="//unpkg.com/prismjs/components/prism-gherkin.js"></script>
+
+</body>
+
+</html>

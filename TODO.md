@@ -258,7 +258,7 @@ FP12 = pair(ECP1, ECP2)
 then FP12 equals is the only thing needed
 
 
-```
+```lua
 require'ecp'
 mypoint = ecp.hash_to_point(octet)
 mynewbig = big.hash_to_big(13123,123123213,2334)

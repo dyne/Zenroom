@@ -1,0 +1,100 @@
+### [given]
+given:
+  - given: nothing
+  - given: all data
+  - given: I introduce myself as ''
+  - given: I am known as ''
+  - given: I am ''
+  - given: I have a ''
+  - given: I have my ''
+  - given: I have my valid ''
+  - given: I have a valid ''
+  - given: the '' is valid
+  - given: I have a '' inside ''
+  - given: I have inside '' a ''
+  - given: I have inside '' a valid ''
+  - given: I have a valid '' inside ''
+  - given: I have a valid '' from ''
+  - given: I have a valid array in ''
+  - given: I have a valid array of '' in ''
+### [given]
+### [when]
+when:
+  - when: I append '' to ''
+  - when: I append '' to '' formatted as ''
+  - when: I write '' in ''
+  - when: I set '' to ''
+  - when: I set '' to '' formatted as ''
+  - when: I set '' to '' as ''
+  - when: I create a random ''
+  - when: I verify '' is equal to ''
+  - when: I create the hash of ''
+  - when: I create the hash of '' using ''
+  - when: I set '' to '' base ''
+  - when: number '' is less than ''
+  - when: number '' is less or equal than ''
+  - when: number '' is more than ''
+  - when: number '' is more or equal than ''
+  - when: ''''' in '''' is more than '''' in '''''
+  - when: I create the array of '' random objects
+  - when: I create the array of '' random objects of '' bits
+  - when: I create the array of '' random curve points
+  - when: I create the aggregation of ''
+  - when: I create the hash to point '' of each object in ''
+  - when: I rename the '' to ''
+  - when: I pick the random object in ''
+  - when: I remove the '' from ''
+  - when: I insert the '' in ''
+  - when: the '' is not found in ''
+  - when: the '' is found in ''
+  - when: I set '' as '' with ''
+  - when: I append '' as '' to ''
+  - when: I write '' as '' in ''
+### [when]
+### [then]
+then:
+  - then: print ''
+  - then: print '' ''
+  - then: print '' '' as ''
+  - then: print all data
+  - then: print my data
+  - then: print all my data
+  - then: print my ''
+  - then: print as '' my ''
+  - then: print my '' as ''
+  - then: print the ''
+  - then: print as '' the ''
+  - then: print the '' as ''
+  - then: print as '' the '' inside ''
+  - then: print the '' as '' inside ''
+### [then]
+### [simple_when]
+simple:
+  - when: I create the keypair
+  - when: I encrypt the secret message '' with ''
+  - when: I decrypt the secret message with ''
+  - when: I encrypt the message for ''
+  - when: I decrypt the secret message from ''
+  - when: I create the signature of ''
+  - when: I verify the '' is signed by ''
+### [simple_when]
+### [coconut_when]
+coconut:
+  - when: I create the credential keypair
+  - when: I create the issuer keypair
+  - when: I create the credential request
+  - when: I create the credential signature
+  - when: I create the credentials
+  - when: I aggregate the verifiers
+  - when: I create the credential proof
+  - when: I verify the credential proof
+  - when: I create the petition ''
+  - when: I verify the new petition to be empty
+  - when: I create the petition signature ''
+  - when: I verify the signature proof is correct
+  - when: the petition signature is not a duplicate
+  - when: the petition signature is just one more
+  - when: I add the signature to the petition
+  - when: I create a petition tally
+  - when: I count the petition results
+### [coconut_when]

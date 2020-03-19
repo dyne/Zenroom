@@ -3,18 +3,24 @@
 
 MAX_STRING := 8000 # 512000 # 128000
 
+load-emsdk:
+	EMSCRIPTEN="${pwd}/emsdk/upstream/emscripten" \
+	${pwd}/emsdk/emsdk construct_env ${pwd}/build/emsdk_env.sh
+	@echo "run: ${pwd}/build/emsdk_env.sh"
+
 javascript-demo: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
 javascript-demo: ldflags += -s WASM=1 \
 	-s ASSERTIONS=1 \
-	--shell-file ${website}/demo/shell_minimal.html
-javascript-demo: apply-patches milagro lua53 embed-lua
+	--shell-file ${pwd}/build/shell_minimal.html
+javascript-demo: apply-patches load-emsdk milagro lua53 embed-lua
+	@mkdir -p ${pwd}/build/demo
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	JSEXT="--preload-file lua@/" \
-	JSOUT="${website}/demo/index.html" \
+	JSOUT="${pwd}/build/demo/index.html" \
 	make -C src js
-	@mkdir -p build/demo
-	@cp -v ${website}/demo/index.* build/demo/
-	@cp -v ${website}/demo/*.js    build/demo/
+	@cp ${pwd}/build/shell.js ${pwd}/build/shell_minimal.html ${pwd}/build/demo/
+	@mkdir -p ${website}/demo
+	@cp -v ${pwd}/build/demo/* ${website}/demo/
 
 javascript-web: cflags  += -O3 -fno-exceptions -fno-rtti
 javascript-web: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' \
@@ -34,8 +40,7 @@ javascript-web: apply-patches milagro lua53 embed-lua
 	@cp -v src/zenroom.wasm build/web/
 	@mkdir -p ${website}/js
 	@cp -v build/web/* ${website}/js/
-	@mkdir -p ${website}/encrypt
-	@cp -v build/web/zenroom.data ${website}/encrypt/
+	@cp -v build/web/zenroom.data ${website}/
 
 javascript-wasm: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
 javascript-wasm: ldflags += -s ENVIRONMENT=\"'web,node,shell'\" \

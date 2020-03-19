@@ -1,0 +1,422 @@
+:root {
+    --theme-color: #00d1b2;
+    --theme-color-dark: #00d1b2;
+    --text-color-base: #2e2e46;
+    --text-color-secondary: #646473;
+    --text-color-tertiary: #81818e;
+}
+
+body {
+    font-size: 20px;
+    line-height: 32px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    color: var(--text-color-base);
+}
+
+
+.sidebar ul li.active>a {
+    font-weight: 800;
+    border-bottom: 1px solid;
+    border-right: none;
+}
+
+.github-corner svg{
+    height: 60px;
+    width: 60px;
+}
+
+.app-nav li {
+    padding: 5px 10px;
+    background-color: var(--theme-color);
+    color: white;
+    font-weight: bolder;
+}
+
+.app-nav li:hover a {
+    color: white;
+}
+
+canvas {
+    border: 3px solid lightgray;
+    min-height: 400px;
+}
+
+* {
+    text-decoration: none !important;
+}
+
+span.small-caps {
+    font-variant-caps: small-caps;
+    font-size: 24px;
+    line-height: 18px;
+    font-weight: bold;
+}
+
+pre:after {
+    font-size: 0.8rem;
+}
+
+a {
+    transition: all 0.3s linear;
+}
+
+footer {
+    text-align: center;
+    color: var(--text-color-tertiary);
+}
+
+footer span {
+    font-size: 1rem;
+}
+
+.markdown-section p.updated {
+    text-align: right;
+    font-size: 16px;
+    line-height: 16px;
+}
+
+#main.markdown-section .docsify-pagination-container {
+    margin-top: 2em;
+}
+
+
+/****** Sidebar ******/
+
+.app-name-link img {
+    padding: 15px;
+}
+
+.sidebar ul li a {
+    font-size: 15px;
+}
+
+.sidebar ul li a:hover {
+    color: var(--theme-color);
+}
+
+.app-sub-sidebar li:before {
+    display: none;
+}
+
+.sidebar .search .clear-button {
+    cursor: pointer;
+}
+
+
+/****** Sidebar Toggle ******/
+
+.sidebar-toggle {
+    cursor: pointer;
+}
+
+body .sidebar-toggle {
+    background: none;
+    top: 1.5rem;
+    left: calc(300px + 1.5rem);
+    cursor: pointer;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    transition: left 0.25s ease-out;
+}
+
+body .sidebar-toggle span {
+    background-color: var(--theme-color);
+    height: 0.2rem;
+    width: 1.5rem;
+    position: absolute;
+    left: 0;
+    margin: 0;
+    transform-origin: 0;
+    border-radius: 1px;
+}
+
+body.close .sidebar-toggle {
+    transition: left 0.25s ease-out;
+    width: 1.5rem;
+    height: 1.5rem;
+    left: 1.5rem;
+}
+
+body.close .sidebar-toggle span {
+    transform-origin: center;
+}
+
+body .sidebar-toggle span:nth-child(1) {
+    top: 0;
+}
+
+body .sidebar-toggle span:nth-child(2) {
+    top: 0.5rem;
+}
+
+body .sidebar-toggle span:nth-child(3) {
+    top: 1rem;
+}
+
+.sidebar-toggle:hover {
+    opacity: 0.8;
+}
+
+.sidebar-toggle .sidebar-toggle-button:hover {
+    opacity: 1;
+}
+
+@media screen and (max-width: 768px) {
+    body .sidebar-toggle {
+        left: 1rem;
+    }
+    body.close .sidebar-toggle {
+        left: calc(300px + 1.5rem);
+    }
+}
+
+body .sidebar-toggle span {
+    transition: all 0.3s linear;
+    background-color: var(--theme-color);
+    height: 0.25rem;
+    width: 1.5rem;
+    position: absolute;
+    left: 0;
+    margin: 0;
+    transform-origin: 0;
+}
+
+body.close .sidebar-toggle span {
+    transform-origin: center;
+}
+
+body .sidebar-toggle span:nth-child(1) {
+    top: 0;
+}
+
+body .sidebar-toggle span:nth-child(2) {
+    top: 0.65rem;
+}
+
+body .sidebar-toggle span:nth-child(3) {
+    top: 1.25rem;
+}
+
+.sidebar-toggle .sidebar-toggle-button:hover {
+    opacity: 1;
+}
+
+.sidebar-toggle:hover span:nth-child(1) {
+    transform: rotate(45deg);
+    width: 1.75rem;
+}
+
+.sidebar-toggle:hover span:nth-child(2) {
+    opacity: 0;
+}
+
+.sidebar-toggle:hover span:nth-child(3) {
+    transform: rotate(-45deg);
+    width: 1.75rem;
+}
+
+.close .sidebar-toggle:hover span:nth-child(1) {
+    transform: rotate(0);
+    width: 1.5rem;
+    top: 0.65rem;
+}
+
+.close .sidebar-toggle:hover span:nth-child(2) {
+    opacity: 1;
+    transform: rotate(90deg);
+}
+
+.close .sidebar-toggle:hover span:nth-child(3) {
+    transform: rotate(0);
+    width: 1.5rem;
+    top: 0.65rem;
+}
+
+
+/****** Markdown General ******/
+
+.markdown-section {
+    padding: 30px 60px 40px;
+    max-width: 1200px;
+}
+
+.markdown-section h1 {
+    margin: 4rem 0rem 2rem 0;
+}
+
+.markdown-section ol,
+.markdown-section p,
+.markdown-section ul {
+    line-height: 1.9rem;
+    word-spacing: .04rem;
+}
+
+.markdown-section a {
+    text-decoration: none;
+    border-bottom: 0.1rem solid var(--theme-color);
+    transition: all 0.3s ease;
+}
+
+.markdown-section a:hover {
+    border-color: var(--theme-color-dark);
+    color: var(--theme-color-dark);
+}
+
+.markdown-section a.anchor {
+    border: none;
+}
+
+.markdown-section code,
+.markdown-section pre,
+.markdown-section pre>code {
+    font-family: 'Fira Code', monospace !important;
+    font-size: 1rem;
+}
+
+@supports (font-variation-settings: normal) {
+    .markdown-section code,
+    .markdown-section pre>code {
+        font-family: 'Fira Code VF', monospace !important;
+    }
+}
+
+
+/****** Markdown Table ******/
+
+.markdown-section table {
+    display: table;
+}
+
+.markdown-section table tr {
+    border-width: 0.15rem 0;
+    border-style: solid;
+    border-color: #f1f1f2;
+}
+
+.markdown-section table thead tr {
+    text-transform: uppercase;
+    font-size: 90%;
+    border-top: none;
+}
+
+.markdown-section table tbody tr:last-of-type {
+    border-bottom: none;
+}
+
+.markdown-section table tr:nth-child(2n) {
+    background-color: transparent;
+}
+
+.markdown-section table td,
+.markdown-section table th {
+    border: none;
+    padding: 1.1rem 0.5rem;
+    text-align: left;
+}
+
+.markdown-section table td p {
+    margin: 0;
+}
+
+.markdown-section blockquote {
+    margin: 1em 0;
+}
+
+.markdown-section blockquote>p {
+    font-weight: 500;
+}
+
+.markdown-section em,
+.markdown-section blockquote {
+    color: var(--text-color-tertiary);
+}
+
+
+/****** COPY TO CLIPBOARD ******/
+
+.docsify-copy-code-button {
+    font-size: 0.5em !important;
+}
+
+
+/** COVERPAGE **/
+
+section.cover .cover-main img {
+    max-width: 500px;
+    padding-bottom: 20px;
+}
+
+.app-nav li,
+section.cover .cover-main li {
+    box-shadow: 0 3px 1px -2px rgba(0, 0, 0, .2), 0 2px 2px 0 rgba(0, 0, 0, .14), 0 1px 5px 0 rgba(0, 0, 0, .12);
+}
+
+
+section.cover .cover-main li {
+    text-align: left;
+    padding: 20px;
+}
+
+.app-nav li:hover,
+section.cover .cover-main li:hover {
+    box-shadow: 0 6px 6px -3px rgba(0, 0, 0, .2), 0 10px 14px 1px rgba(0, 0, 0, .14), 0 4px 18px 3px rgba(0, 0, 0, .12);
+}
+
+section.cover .cover-main li:hover span,
+section.cover .cover-main li:hover strong {
+    color: var(--theme-color-dark)
+}
+
+section.cover ul {
+    max-width: 680px;
+}
+
+section.cover .cover-main>p:last-child a {
+    font-size: 1.5rem;
+    font-weight: bolder;
+}
+
+section.cover p {
+    margin: 3em 0;
+}
+
+
+/** mermaid **/
+
+#main .mermaid svg {
+    max-width: 100%;
+}
+
+#main .mermaid .node rect,
+#main .mermaid .node circle,
+#main .mermaid .node ellipse,
+#main .mermaid .node polygon,
+#main .mermaid .node path {
+    fill: var(--theme-color-dark);
+    stroke: none;
+}
+
+#main .mermaid text.actor,
+#main .mermaid text.messageText,
+#main .mermaid .node .label {
+    font-family: 'Fira Code';
+    font-weight: bolder;
+    font-size: 14px;
+}
+
+#main .mermaid .actor {
+    stroke: none;
+    fill: var(--theme-color-dark);
+}
+
+#main .mermaid .node .label,
+#main .mermaid text.actor {
+    fill: white;
+    color: white;
+}
+
+#main .mermaid .cluster rect {
+    fill: #f8f8f8 !important;
+    stroke: var(--theme-color) !important;
+}
