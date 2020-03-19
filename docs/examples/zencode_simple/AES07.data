@@ -1,1 +1,1 @@
-{"secret_message":{"iv":"u64:5MI6m0ybTlZZBbC0LExCKA","header":"u64:VGhpc19pc190aGVfaGVhZGVy","text":"u64:f5tvU9zE1alwErFywkjNlJ4ExNb0_MG8oqA","checksum":"u64:-gKb8PCl_1qBYvoVE8iTbw"},"zenroom":{"curve":"goldilocks","encoding":"url64","version":"1.0.0+53387e8","scenario":"simple"}}
+{"secret_message":{"checksum":"bBotkcNzYqgUKjxZQ7n-Nw","header":"VGhpc19pc190aGVfaGVhZGVy","iv":"x7mouzzi8iLrr44rhM1tscXPTM3OB-lt_1CBf1QyXMU","text":"BbNKQRxmS_1ZD_hAm-SX2NY0l9ytBQY2vaU"}}
