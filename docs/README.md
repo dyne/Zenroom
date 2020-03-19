@@ -39,8 +39,8 @@ If everything went well, in the file `keypair.json` you will see something like 
 ## Quicklinks
 
 
-Checkout the [developer website](https://dev.zenroom.org/),  the [product website](http://zenroom.org/) or the [zenCode whitepaper](https://files.dyne.org/zenroom/zenRoom_Whitepaper.pdf)
+Checkout the [developer website](https://dev.zenroom.org/),  the [product website](http://zenroom.org/) or the [Zencode whitepaper](https://files.dyne.org/zenroom/zenroom_whitepaper.pdf)
 
 
 
-**zenRoom is licensed as AGPLv3; we are happy to discuss dual-licensing on a commercial base.**
+**Zenroom is licensed as AGPLv3; we are happy to discuss dual-licensing on a commercial base.**

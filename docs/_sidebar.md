@@ -1,9 +1,9 @@
 
 - Zenroom basics
-- [Getting Started](/)
-- [Zenroom CLI](/pages/how-to-exec.md "Execute") 
-- [Zenroom as a lib](/pages/how-to-embed.md "Embed") 
-- [Browser-encryption demo](/pages/encrypt.md "Browser-encryption demo")
+  - [Getting Started](/)
+  - [Zenroom CLI](/pages/how-to-exec.md "Execute") 
+  - [Zenroom as a lib](/pages/how-to-embed.md "Embed") 
+  - [Browser-encryption demo](/pages/encrypt.md "Browser-encryption demo")
 <!--- to remove https://github.com/DECODEproject/Zenroom/blob/master/docs/website/docs/encrypt.md  ---> 
 
 - Programming 
