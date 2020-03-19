@@ -82,7 +82,7 @@ var ZR = (function() {
     const loadZencodeExamples = (e) => {
         const name = $(e.target).attr('id');
         const extensions = {'#zencode': '.zen', '#data': '.data', '#keys': '.keys'}
-        const base_url = "/examples/"
+        const base_url = "/examples/zencode_simple/"
         for (var e in extensions) {
             const editor = $(e)[0].env.editor
             editor.setValue("")
