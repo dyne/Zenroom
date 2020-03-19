@@ -36,6 +36,6 @@
  - [Changelog](CHANGELOG)
  - [Contributing](CONTRIBUTING)
  - [To-do](TODO)
- - [📄 Zenroom whitepaper](/pages/zenroom_whitepaper.pdf "Zenroom Whitepaper")
+ - [📄 Zenroom whitepaper](/pages/zenroom_whitepaper.pdf ':ignore')
 
 <!--- Java example --->

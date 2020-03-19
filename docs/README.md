@@ -39,7 +39,7 @@ If everything went well, in the file `keypair.json` you will see something like 
 ## Quicklinks
 
 
-Checkout the [developer website](https://dev.zenroom.org/),  the [product website](http://zenroom.org/) or the [Zencode whitepaper](https://files.dyne.org/zenroom/zenroom_whitepaper.pdf)
+Checkout the [developer website](https://dev.zenroom.org/),  the [product website](http://zenroom.org/) or the [Zencode whitepaper](/pages/zenroom_whitepaper.pdf ':ignore')
 
 
 
