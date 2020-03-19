@@ -30,7 +30,7 @@ header.iv = O.random(32):url64()
 
 -- The output is a table with crypto contents which is standard for
 -- zenroom's functions encrypt/decrypt: .checksum .header .iv .text
-local session = ECDH.session(devkey.private, url64(keys.community_pubkey))
+local session = ECDH.session(devkey.private, O.from_url64(keys.community_pubkey))
 local out = { header = url64(JSON.encode(header)) }
 out.text, out.checksum = 
    ECDH.aead_encrypt(KDF(session), JSON.encode(payload), header.iv, out.header)

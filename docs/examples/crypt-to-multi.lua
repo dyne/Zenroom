@@ -20,7 +20,7 @@ res = {}
 for name,pubkey in pairs(keys.recipients) do
    -- calculate the session key
 
-   session = ECDH.session(private, url64(pubkey))
+   session = ECDH.session(private, O.from_url64(pubkey))
    iv = O.random(32)
 
    out = { header = "encoded using zenroom " .. VERSION.original}

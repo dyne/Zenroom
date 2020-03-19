@@ -5,12 +5,12 @@
 
 secrets = JSON.decode(KEYS)
 
-ecdh = ECDH.new()
+keyring = ECDH.keygen()
 
 hash = HASH.new("sha256")
-key = ECDH.pbkdf2(hash, secrets.pin, secrets.salt, secrets.kdf_iterations, 32)
+key = HASH.pbkdf2(hash, secrets.pin, secrets.salt, secrets.kdf_iterations, 32)
 
-local cipher = { header = str("my header"),
+local cipher = { header = O.from_str("my header"),
 				 iv = O.random(16) }
 cipher.text, cipher.checksum =
    ECDH.aead_encrypt(key, secrets.text,
