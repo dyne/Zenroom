@@ -1,0 +1,6 @@
+Scenario coconut: tally petition
+Given that I am 'Alice'
+and I have my valid 'credential keypair'
+and I have a valid 'petition'
+When I create a petition tally
+Then print all data

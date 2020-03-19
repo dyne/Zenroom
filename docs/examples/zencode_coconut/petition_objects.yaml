@@ -1,0 +1,43 @@
+# To be saved on blockchain
+# does not contain personal information
+# except 'petition.owner' is public key of creator
+
+petition:              # scores, owner's public key
+   - uid
+   - owner
+   - scores            # struct
+     pos: left, right
+     neg: left, right
+   - verifier          # struct
+   - list              # array of zetas
+
+petition_tally:        # lambda
+   - uid               # external uuid
+   - c                 # INT
+   dec:                # scores
+     pos: left, right
+     neg: left, right
+   - rx                # INT
+
+
+# Received by the API for authentication
+# does not contain any personal information
+petition_signature:    # theta, zeta (proof)
+   - proof             # theta
+   - uid_signature     # zeta
+   - uid_petition      # external uuid
+
+credential_request:      # lambda
+   - cm                  # ECP
+   - public              # public credential key
+   c: [a, b]             # ECP array
+   pi_s: [rr, rm, rk, c] # INT array
+
+
+# Received by Issuer to sign the credentials
+# does not contain any personal information
+credential_proof:      # tetha
+   - nu                # ECP
+   - kappa             # ECP2
+   - pi_v              # struct
+   - sigma_prime       # struct

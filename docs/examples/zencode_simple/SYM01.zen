@@ -1,0 +1,5 @@
+rule check version 1.0.0
+Scenario simple: Generate a random password
+Given nothing
+When I create a random 'password'
+Then print the 'password'
