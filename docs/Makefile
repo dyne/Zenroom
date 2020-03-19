@@ -24,10 +24,10 @@ deploy: api map website
 
 clean:
 	make -C pages/ldoc clean
-	@rm _media/examples/*.data
-	@rm _media/examples/*.keys
-	@rm _media/examples/*.lua
-	@rm _media/js/zenroom.*
-	@rm _media/zencode_utterances.yaml
-	@rm zenroom.data
+	@rm -f _media/examples/*.data
+	@rm -f _media/examples/*.keys
+	@rm -f _media/examples/*.lua
+	@rm -f _media/js/zenroom.*
+	@rm -f _media/zencode_utterances.yaml
+	@rm -f zenroom.data
 	@echo "Zenroom docs cleaned up"

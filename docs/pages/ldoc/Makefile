@@ -6,4 +6,4 @@ all:
 	@mv ${OUTPUT}/index.html ${OUTPUT}/README.md
 
 clean:
-	@rm -r ${OUTPUT}
+	@rm -fr ${OUTPUT}
