@@ -48,11 +48,13 @@ end)
 
 Then("print as '' my ''", function(conv,obj)		ZEN:Iam()
 		ZEN.assert(ACK[obj], "My data: "..obj.." not found to print: "..conv)
-		OUT[WHO] = { draft = ZEN:export(ACK[obj], conv) }
+		if not OUT[WHO] then OUT[WHO] = { } end
+		OUT[WHO][obj] = ZEN:export(ACK[obj], conv)
 end)
 Then("print my '' as ''", function(obj,conv)		ZEN:Iam()
 		ZEN.assert(ACK[obj], "My data: "..obj.." not found to print: "..conv)
-		OUT[WHO] = { draft = ZEN:export(ACK[obj], conv) }
+		if not OUT[WHO] then OUT[WHO] = { } end
+		OUT[WHO][obj] = ZEN:export(ACK[obj], conv)
 end)
 
 Then("print the ''", function(key)
