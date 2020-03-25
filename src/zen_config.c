@@ -30,7 +30,7 @@
 #define STB_C_LEX_C_DECIMAL_FLOATS  N
 #define STB_C_LEX_C99_HEX_FLOATS    N
 #define STB_C_LEX_C_IDENTIFIERS     Y
-#define STB_C_LEX_C_DQ_STRINGS      Y
+#define STB_C_LEX_C_DQ_STRINGS      N
 #define STB_C_LEX_C_SQ_STRINGS      N
 #define STB_C_LEX_C_CHARS           N
 #define STB_C_LEX_C_COMMENTS        N
@@ -53,7 +53,7 @@
 #define STB_C_LEX_MULTILINE_DSTRINGS   N
 #define STB_C_LEX_MULTILINE_SSTRINGS   N
 #define STB_C_LEX_USE_STDLIB           Y
-#define STB_C_LEX_DOLLAR_IDENTIFIER    N
+#define STB_C_LEX_COLON_IDENTIFIER    Y
 #define STB_C_LEX_FLOAT_NO_DECIMAL     N
 #define STB_C_LEX_DEFINE_ALL_TOKEN_NAMES  N
 #define STB_C_LEX_DISCARD_PREPROCESSOR    Y
@@ -70,7 +70,7 @@ extern void set_color(int on);
 #include <stb_c_lexer.h>
 
 typedef enum { NIL, VERBOSE, COLOR, SECCOMP, RNGSEED, MEMMGR, MEMWIPE } zconf;
-static zconf curconf = NIL;
+static zconf curconf;
 
 int zconf_seccomp = 0;
 char zconf_rngseed[(RANDOM_SEED_LEN*2)+4]; // 0x and terminating \0
@@ -87,12 +87,14 @@ int zen_conf_parse(const char *configuration) {
 	char *lexbuf = (char*)malloc(MAX_CONFIG);
 	stb_c_lexer_init(&lex, configuration, configuration+len, lexbuf, MAX_CONFIG);
 	zconf_rngseed[0] = '\0'; // set zero rngseed as config flag
+	curconf = NIL;
 	while (stb_c_lexer_get_token(&lex)) {
 		if (lex.token == CLEX_parse_error) {
 			error(NULL,"%s: error parsing configuration: %s", __func__, configuration);
 			free(lexbuf);
 			return 0;
 		}
+
 		// rather simple finite state machine using zconf enum
 		switch (lex.token) {
 			// first token parsed, set enum for value
@@ -104,39 +106,52 @@ int zen_conf_parse(const char *configuration) {
 			if(strcasecmp(lex.string,"rngseed")  ==0) { curconf = RNGSEED;   break; }
 			if(strcasecmp(lex.string,"memmanager") ==0) { curconf = MEMMGR;   break; }
 			if(strcasecmp(lex.string,"memwipe") ==0) { curconf = MEMWIPE;   break; }
-			warning(NULL,"unrecognised configuration: %s",lex.string);
-			curconf = NIL; break;
-			// int value set based on current enum
-		case CLEX_intlit:
-			if(curconf==VERBOSE) { set_debug  (lex.int_number); break; }
-			if(curconf==COLOR)   { set_color  (lex.int_number); break; }
-			if(curconf==SECCOMP) { zconf_seccomp = lex.int_number; break; }
-			if(curconf==MEMWIPE) { zconf_memwipe = lex.int_number; break; }
-			free(lexbuf);
-			error(NULL,"invalid configuration");
-			return 0;
-		case CLEX_dqstring:
-			if(curconf==RNGSEED) {
-				if(lex.string_len != RANDOM_SEED_LEN *2) { // hex doubles size
-					free(lexbuf);
-					error(NULL,"Invalid length of random seed: %u (must be %u)",
-					      lex.string_len/2, RANDOM_SEED_LEN);
-				}
-				// quotes have been stripped, copy string and null terminate
-				memcpy(zconf_rngseed, lex.string, RANDOM_SEED_LEN*2);
-				zconf_rngseed[(RANDOM_SEED_LEN*2)] = 0x0;
 
-			} else if(curconf==MEMMGR) {
-				if(strcasecmp(lex.string,"lw")==0) zconf_memmg = LW;
-				else if(strcasecmp(lex.string,"je")==0) zconf_memmg = JE;
-				else if(strcasecmp(lex.string,"sys")==0) zconf_memmg = SYS;
+			if(curconf==MEMMGR) {
+				if(strcasecmp(lex.string,"sys") == 0) zconf_memmg = SYS;
+				else if(strcasecmp(lex.string,"lw") == 0) zconf_memmg = LW;
+				else if(strcasecmp(lex.string,"je") == 0) zconf_memmg = JE;
 				else {
+					error(NULL,"invalid memory manager: %s",lex.string);
 					free(lexbuf);
-					error(NULL,"invalid configuration");
 					return 0;
 				}
+				break;
 			}
-			break;
+
+			if(curconf==RNGSEED) {
+				if( strlen(lex.string)-4 != RANDOM_SEED_LEN *2) { // hex doubles size
+					error(NULL,"Invalid length of random seed: %u (must be %u)",
+					      lex.string_len/2, RANDOM_SEED_LEN);
+					free(lexbuf);
+					return 0;
+				}
+				if(strncasecmp(lex.string, "hex:", 4) != 0) { // hex: prefix needed
+					error(NULL,"Invalid rngseed data prefix (must be hex:)");
+					free(lexbuf);
+					return 0;
+				}
+				// copy string and null terminate
+				memcpy(zconf_rngseed, lex.string+4, RANDOM_SEED_LEN*2);
+				zconf_rngseed[(RANDOM_SEED_LEN*2)] = 0x0;
+				break;
+			}
+			free(lexbuf);
+			error(NULL,"invalid configuration: %s", lex.string);
+			curconf = NIL;
+			return 0;
+
+		case CLEX_intlit:
+			if(curconf==VERBOSE) { set_debug  ( lex.int_number ); break; }
+			if(curconf==COLOR)   { set_color  ( lex.int_number ); break; }
+			if(curconf==SECCOMP) { zconf_seccomp = lex.int_number; break; }
+			if(curconf==MEMWIPE) { zconf_memwipe = lex.int_number; break; }
+
+			free(lexbuf);
+			error(NULL,"invalid integer configuration");
+			curconf = NIL;
+			return 0;
+
 		default:
 			if(lex.token == ',') { curconf = NIL; break; }
 			if(lex.token == '=' && curconf == NIL) {

@@ -15,7 +15,7 @@ print(RNGSEED:hex() .. ";" .. O.random(256):hex())
 EOF
 seed1=`print $run1 | cut -d';' -f 1`
 rand1=`print $run1 | cut -d';' -f 2`
-cat <<EOF | ${exe} -c rngseed=\"$seed1\" | sysread run2
+cat <<EOF | ${exe} -c rngseed=hex:$seed1 | sysread run2
 print(RNGSEED:hex() .. ";" .. O.random(256):hex())
 EOF
 seed2=`print $run2 | cut -d';' -f 1`
@@ -61,8 +61,8 @@ I.print({ ecdh_sign = { c = c, d = d } })
 -- will check if same on next execution
 EOF
 
-first=`${exe} -c rngseed=\"$seed\" $dtmode`
-second=`${exe} -c rngseed=\"$seed\" $dtmode`
+first=`${exe} -c rngseed=hex:$seed $dtmode`
+second=`${exe} -c rngseed=hex:$seed $dtmode`
 # echo "$first"
 
 if [[ "$first" == "$second" ]]; then

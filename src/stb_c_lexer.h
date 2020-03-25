@@ -584,7 +584,7 @@ int stb_c_lexer_get_token(stb_lexer *lexer)
          if (   (*p >= 'a' && *p <= 'z')
              || (*p >= 'A' && *p <= 'Z')
              || *p == '_' || (unsigned char) *p >= 128    // >= 128 is UTF8 char
-             STB_C_LEX_DOLLAR_IDENTIFIER( || *p == '$' ) )
+             STB_C_LEX_COLON_IDENTIFIER( || *p == ':' ) )
          {
             int n = 0;
             lexer->string = lexer->string_storage;
@@ -599,7 +599,7 @@ int stb_c_lexer_get_token(stb_lexer *lexer)
                || (p[n] >= 'A' && p[n] <= 'Z')
                || (p[n] >= '0' && p[n] <= '9') // allow digits in middle of identifier
                || p[n] == '_' || (unsigned char) p[n] >= 128
-                STB_C_LEX_DOLLAR_IDENTIFIER( || p[n] == '$' )
+                STB_C_LEX_COLON_IDENTIFIER( || p[n] == ':' )
             );
             lexer->string[n] = 0;
             return stb__clex_token(lexer, CLEX_id, p, p+n-1);
