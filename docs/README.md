@@ -19,7 +19,11 @@ on them.
 
 
 1. Download the [Zenroom binary](https://zenroom.org/#downloads) that works for your system  
-1. Download the smart contract [credential_keygen.zen](https://raw.githubusercontent.com/DECODEproject/zenRoom/master/test/zencode_coconut/credential_keygen.zen)
+1. Download the smart contract <a href="data:text/plain,Scenario coconut: credential keygen
+Given that I am known as 'Alice'
+When I create the credential keypair
+Then print my 'credential keypair'" 
+download="credential_keygen.zen">credential_keygen.zen</a>  
 1. (On Linux/Mac) Run: `zenroom -z credential_keygen.zen | tee keypair.json` 
 
 If everything went well, in the file `keypair.json` you will see something like this:
@@ -39,8 +43,8 @@ If everything went well, in the file `keypair.json` you will see something like 
 ## Quicklinks
 
 
-Checkout the [developer website](https://dev.zenroom.org/),  the [product website](http://zenroom.org/) or the [zenCode whitepaper](https://files.dyne.org/zenroom/zenRoom_Whitepaper.pdf)
+Checkout Zenroom's [documentation](https://dev.zenroom.org/),  [homepage](http://zenroom.org/), the ["Coconut" smart contracts](https://github.com/DECODEproject/Zenroom/tree/master/test/zencode_coconut) or the [Zencode whitepaper](https://dev.zenroom.org/pages/zenroom_whitepaper.pdf).
 
 
 
-**zenRoom is licensed as AGPLv3; we are happy to discuss dual-licensing on a commercial base.**
+**Zenroom is licensed as AGPLv3, we are happy to discuss dual-licensing on a commercial base.**
