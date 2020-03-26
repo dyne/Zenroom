@@ -76,6 +76,7 @@
                 '.*?/sawroom': 'https://raw.githubusercontent.com/DECODEproject/Sawroom/master/website/docs/README.md',
                 '/modules/(.*)': '/_media/ldoc/o/modules/$1',
                 "/.*/_sidebar.md": "/_sidebar.md",
+                "/.*/_navbar.md": "/_navbar.md",
             },
             search: {
                 maxAge: 86400000, // Expiration time, the default one day
@@ -134,16 +135,22 @@
                     })
                 },
 
-                hook => {
+                (hook, vm) => {
                     // ldoc fix links
                     hook.afterEach((content, next) => {
-                        let html = content.replace(/href="\.\.\//gi, `href="`)
-                            .replace(/modules\//gi, `/#/pages/ldoc/o/modules/`)
-                            .replace(/examples\//gi, `/#/pages/ldoc/o/examples/`)
-                            // .replace(/<a href="#/gi, `<a href='${document.location.href}?id=`)
-                            .replace(`<li><a href="index.html">Index</a></li>`,
-                                `<li><a href="/#/pages/ldoc/o/README.md">Index</a></li>`)
+                        let html = content
+                        if (vm.route.path.startsWith('/pages/ldoc/o/')) {
+                            html = content.replace(/href="\.\.\//gi, `href="`)
+                                .replace(/modules\//gi, `/#/pages/ldoc/o/modules/`)
+                                .replace(/examples\//gi, `/#/pages/ldoc/o/examples/`)
+                                .replace(/href="#/gi, `href="${document.location.href.split("?")[0]}?id=`)
+                                .replace(/name = "/gi, `id = "`)
+                                .replace(`<li><a href="index.html">Index</a></li>`,
+                                    `<li><a href="/#/pages/ldoc/o/README.md">Index</a></li>`)
+                            console.log(html)
+                        }
                         next(html)
+
                     })
                 },
                 hook => {
