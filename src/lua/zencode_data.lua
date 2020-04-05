@@ -39,6 +39,7 @@ end
 ZEN.add_schema({
 	  base64 = function(obj) return ZEN:convert(obj, OCTET.from_base64) end,
 	  url64  = function(obj) return ZEN:convert(obj, OCTET.from_url64)  end,
+	  hex =    function(obj) return ZEN:convert(obj, OCTET.from_hex) end,
 	  str =    function(obj) return ZEN:convert(obj, OCTET.from_string) end,
 })
 
