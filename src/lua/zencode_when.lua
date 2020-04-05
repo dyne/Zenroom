@@ -129,6 +129,13 @@ When("'' in '' is more than '' in ''", function(ele, left, ere, right)
 					  " is not more than "..right.."."..ere)
 end)
 
+-- random and hashing operations
+When("I create the random object of '' bits", function(n)
+   local bits = tonumber(n)
+   ZEN.assert(bits, "Invalid number of bits: "..n)
+   ACK.random_object = OCTET.random( math.ceil(bits/8) )
+end)
+
 -- array operations
 When("I create the array of '' random objects", function(s)
 		ACK.array = { }
@@ -197,6 +204,21 @@ When("I pick the random object in ''", function(arr)
 		ZEN.assert( count > 0, "Object is not an array: "..arr)
 		local r = random_int16() % count
 		ACK.random_object = A[r]
+end)
+
+When("I randomize the '' array", function(arr)
+		local A = ACK[arr]
+		ZEN.assert(A, "Object not found: "..arr)
+		local count = isarray(A)
+		ZEN.assert( count > 0, "Object is not an array: "..arr)
+		local res = { }
+		for i = count,2,-1 do
+		   local r = (random_int16() % (i-1))+1
+		   table.insert(res,A[r]) -- limit 16bit lenght for arrays
+		   table.remove(A, r)
+		end
+		table.insert(res,A[1])
+		ACK[arr] = res
 end)
 
 When("I remove the '' from ''", function(ele,arr)
