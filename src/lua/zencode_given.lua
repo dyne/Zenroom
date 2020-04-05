@@ -166,3 +166,14 @@ Given("I have a valid array of '' in ''", function(t,a)
 		 ZEN:ack(a)
 		 TMP = { }
 end)
+
+Given("I have a valid number in ''", function(n)
+		 local num = tonumber(IN[n])
+		 ZEN.assert(num, "Invalid number in "..n..": "..IN[n])
+		 TMP = { root = nil,
+				 data = num,
+				 valid = type(num) == 'number',
+				 schema = nil }
+		 ZEN:ack(n)
+		 TMP = { }
+end)
