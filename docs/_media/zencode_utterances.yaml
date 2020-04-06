@@ -17,6 +17,7 @@ given:
   - given: I have a valid '' from ''
   - given: I have a valid array in ''
   - given: I have a valid array of '' in ''
+  - given: I have a valid number in ''
 ### [given]
 ### [when]
 when:
@@ -36,6 +37,7 @@ when:
   - when: number '' is more than ''
   - when: number '' is more or equal than ''
   - when: ''''' in '''' is more than '''' in '''''
+  - when: I create the random object of '' bits
   - when: I create the array of '' random objects
   - when: I create the array of '' random objects of '' bits
   - when: I create the array of '' random curve points
@@ -43,6 +45,7 @@ when:
   - when: I create the hash to point '' of each object in ''
   - when: I rename the '' to ''
   - when: I pick the random object in ''
+  - when: I randomize the '' array
   - when: I remove the '' from ''
   - when: I insert the '' in ''
   - when: the '' is not found in ''
@@ -98,3 +101,9 @@ coconut:
   - when: I create a petition tally
   - when: I count the petition results
 ### [coconut_when]
+### [dp3t_when]
+dp3t:
+  - when: I renew the secret day key to a new day
+  - when: I create the ephemeral ids for each moment of the day
+  - when: I create the proximity tracing of infected ids
+### [dp3t_when]

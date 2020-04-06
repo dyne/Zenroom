@@ -34,6 +34,9 @@ echo "### [simple_when]" >> $FILE
 echo "### [coconut_when]" >> $FILE
 print $(_parse coconut when) | yq -y . >> $FILE
 echo "### [coconut_when]" >> $FILE
+echo "### [dp3t_when]" >> $FILE
+print $(_parse dp3t when) | yq -y . >> $FILE
+echo "### [dp3t_when]" >> $FILE
 ##print $(_parse given given
 ##		_parse when when
 ##		_parse then then
