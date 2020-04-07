@@ -45,11 +45,10 @@ When("I create the ephemeral ids for each moment of the day", function()
 		ZEN.assert(type(ACK.moments) == 'number', "Number of moments not found")
 		ACK.ephemeral_ids = { }
 		for i = ACK.moments,1,-1 do
-		   local iv = SHA256:process(tostring(i*1000000)) -- IV = counter * 1000000
 		   local PRF = SHA256:hmac(ACK.secret_day_key, BROADCAST_KEY)
-		   local PRG, checksum = ECDH.aead_encrypt(PRF, PRF, iv, BROADCAST_KEY)
+		   local PRG = AES.ctr(PRF, O.from_number(0), O.from_number(i))
 		   -- BROADCAST_KEY is the authenticated header
-		   table.insert(ACK.ephemeral_ids, checksum) -- use the 16byte checksums
+		   table.insert(ACK.ephemeral_ids, PRG) -- use the 16byte checksums
 		end
 end)
 
@@ -60,11 +59,10 @@ When("I create the proximity tracing of infected ids", function()
 		ACK.proximity_tracing = { }
 		for n,sk in ipairs(ACK.list_of_infected) do
 		   for i = ACK.moments,1,-1 do
-			  local iv = SHA256:process(tostring(i*1000000)) -- IV = counter * 1000000
 			  local PRF = SHA256:hmac(sk, BROADCAST_KEY)
-			  local PRG, checksum = ECDH.aead_encrypt(PRF, PRF, iv, BROADCAST_KEY)
+			  local PRG = AES.ctr(PRF, O.from_number(0), O.from_number(i))
 			  for nn,eph in next, ACK.ephemeral_ids, nil do
-				 if eph == checksum then
+				 if eph == PRG then
 					table.insert(ACK.proximity_tracing, sk)
 				 end
 			  end
