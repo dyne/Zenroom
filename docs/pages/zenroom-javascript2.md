@@ -6,7 +6,7 @@ So we saw before that the way we have to interact from Zenroom to JS is via tran
 
 The output of this operation is a binary `.wasm` file and a `.js` file that we will call glue code. In this glue code there are mostly helper functions to interact with the components inside the wasm file, starting with where to retrieve them and so on.
 
-Zenroom itself exposes two main family of functions to interact with other languages `zenroom_exec` and `zencode_exec` as documented here [https://dev.zenroom.org/wiki/how-to-embed/](https://dev.zenroom.org/wiki/how-to-embed/) that are exactly the functions exported and available in our `.wasm` file.
+Zenroom itself exposes two main family of functions to interact with other languages `zenroom_exec` and `zencode_exec` as documented in [Zenroom as a lib](/pages/how-to-embed) that are exactly the functions exported and available in our `.wasm` file.
 
 Making the WASM working within the browser, months ago was a hard thing, but nowadays a huge effort has spent, and all the new major browsers support it natively.
 
@@ -43,7 +43,7 @@ $ python3 -m http.server
 
 This will serve your pages by default on the 8000 port so point your browser to [http://localhost:8000](http://localhost:8000)
 
-Back to the code, that simply print the emscripten module that you can now interact with like native calls. Documentation on how to interact is available on [https://emscripten.org/docs/porting/connecting\_cpp\_and\_javascript/Interacting-with-code.html?highlight=cwrap#interacting-with-code-ccall-cwrap](https://emscripten.org/docs/porting/connecting_cpp_and_javascript/Interacting-with-code.html?highlight=cwrap#interacting-with-code-ccall-cwrap)
+Back to the code, that simply print the emscripten module that you can now interact with like native calls. Documentation on how to interact is available on [emscripten.org](https://emscripten.org/docs/porting/connecting_cpp_and_javascript/Interacting-with-code.html?highlight=cwrap#interacting-with-code-ccall-cwrap)
 
 You should have seen something like this in your browser inspector:
 
@@ -92,9 +92,9 @@ So `exec_error` and `exec_ok` are callbacks defined in zenroom that are executed
 
 Then obviously `print` is the way we want to see the output, the standard function `console.log` is pretty okay 😉 so we just use that in this case, but sometimes you want to instruct it to print maybe directly on the DOM, that is up to you.
 
-Let’s go now to the next line that is fundamental the `onRuntimeInitialized` [https://emscripten.org/docs/api\_reference/module.html?highlight=onruntime#Module.onRuntimeInitialized](https://emscripten.org/docs/api_reference/module.html?highlight=onruntime#Module.onRuntimeInitialized) is a callback that is executed when everything Wasm-side is okay is something you want always put as a wrapper of your interaction with the wasm module.
+Let’s go now to the next line that is fundamental the `onRuntimeInitialized` [(reference here)](https://emscripten.org/docs/api_reference/module.html?highlight=onruntime#Module.onRuntimeInitialized) is a callback that is executed when everything Wasm-side is okay is something you want always put as a wrapper of your interaction with the wasm module.
 
-Now we are able to define our `cwrap` call as mentioned previously from the emscripten documentation, and define our `zencode_exec` as defined in the [Zenroom’s embed](https://dev.zenroom.org/wiki/how-to-embed/) documentation.
+Now we are able to define our `cwrap` call as mentioned previously from the emscripten documentation, and define our `zencode_exec` as defined in the [Zenroom as a lib](/pages/how-to-embed) documentation.
 
 Briefly we passed to the `zencode_exec` our contract without any of `conf`, `keys` and `data` and with and muted with `0` `verbosity`
 

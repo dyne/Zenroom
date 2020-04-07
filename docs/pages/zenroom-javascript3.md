@@ -7,7 +7,7 @@ We all know, React is one of the most adopted frameworks for client-side nowaday
 
 Anyhow having React working with WASM is not as straightforward as it seems and there are several attempts and several ways to achieve it (try to search on the web: wasm + react)
 
-What we propose here is, in our opinion, the more pragmatic way with less steps freely inspired by [https://medium.com/@marvin\_78330/webassembly-react-and-create-react-app-8b73346c9b65](https://medium.com/@marvin_78330/webassembly-react-and-create-react-app-8b73346c9b65)
+What we propose here is, in our opinion, the more pragmatic way with less steps freely inspired by [Marvin Irwin's articole](https://medium.com/@marvin_78330/webassembly-react-and-create-react-app-8b73346c9b65).
 
 ## 🎮 Let’s get our hands dirty
 
