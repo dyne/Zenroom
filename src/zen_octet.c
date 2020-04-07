@@ -428,7 +428,6 @@ static int from_number(lua_State *L) {
 		lerror(L, "O.from_number input is not a number");
 		return 0; }
 	const uint64_t v = floorf(n);
-	notice(L,"v = %u",v);
 	octet *o = o_new(L, 16);
 	// conversion from int64 to binary
 	// TODO: check endian portability issues
