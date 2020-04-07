@@ -6,7 +6,7 @@
 
 > a tiny and portable virtual machine that integrates in any application to authenticate and restrict access to data and execute human-readable smart contracts.
 > 
-> <cite><a href="https://www.zenroom.org">https://www.zenroom.org</a> The zenroom guru</cite>
+> <cite><a href="https://www.zenroom.org">The zenroom guru</a> </cite>
 
 
 ## 📑 Some RTFM and resources
@@ -60,7 +60,7 @@ Now we need to run the file we just created by simply run
 🎉🎉🎉
 
 
-You’ll find the asciimation here: [https://asciinema.org/a/274518](https://asciinema.org/a/274518)
+You’ll find the asciimation [here](https://asciinema.org/a/274518).
 
 ## 🔥 Let’s complicate it a bit! Let’s run Zencode!
 
@@ -105,7 +105,7 @@ Et voila the result is something like (I prettified for the purpose of readabili
 ```
 
 
-**NB. The documentation of zencode is available** [**here**](https://dev.zenroom.org/zencode/)
+**NB. The documentation of zencode is available** [**here**](/pages/zencode)
 
 
 In the next article we will see how to run the same examples within a browser.
