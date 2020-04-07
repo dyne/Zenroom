@@ -23,10 +23,8 @@ SHA256 = HASH.new('sha256')
 
 ZEN.add_schema({
 	  secret_day_key = function(obj)
-		 local o = obj.public_key or obj -- fix recursive schema check
-		 if type(o) == "string" then o = ZEN:import(o) end
-		 ZEN.assert(#o == 32, "Secret day key has wrong size (not 256 bits)")
-		 return o
+		 ZEN.assert(#obj == 32, "Secret day key has wrong size (not 32 bytes / 256 bits)")
+		 return obj
 	  end
 	  -- TODO:
 	  -- list of infected (array of 32 byte random hashes)
