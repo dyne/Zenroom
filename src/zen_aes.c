@@ -133,10 +133,34 @@ static int gcm_decrypt(lua_State *L) {
 	return 2;
 }
 
+static int ctr_process(lua_State *L) {
+	HERE();
+	amcl_aes a;
+	octet *key = o_arg(L,1); SAFE(key);
+	if(key->len != 16 && key->len != 32) {
+		error(L,"AES.ctr_process accepts only keys of 16 or 32 bytes, this is %u", key->len);
+		lerror(L, "AES-CTR process aborted");
+		return 0; }
+	octet *in = o_arg(L, 2); SAFE(in);
+	octet *iv = o_arg(L, 3); SAFE(iv);
+	if (iv->len < 12) {
+		error(L,"AES.ctr_process accepts an iv of 12 bytes minimum, this is %u", iv->len);
+		lerror(L,"AES-CTR process aborted");
+		return 0; }
+	AES_init(&a, CTR16, key->len, key->val, iv->val);
+	octet *out = o_dup(L, in); SAFE(out);
+	AES_encrypt(&a, out->val);
+	AES_end(&a);
+	return 1;
+}
+
+
 int luaopen_aes(lua_State *L) {
 	const struct luaL_Reg aes_class[] = {
 		{"gcm_encrypt", gcm_encrypt},
 		{"gcm_decrypt", gcm_decrypt},
+		{"ctr_process", ctr_process},
+		{"ctr", ctr_process},
 		{NULL,NULL}};
 	const struct luaL_Reg aes_methods[] = {
 		{NULL,NULL}
