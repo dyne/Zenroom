@@ -137,7 +137,7 @@ endif
 #milagro_cmake_flags += -DCMAKE_ANDROID_STANDALONE_TOOLCHAIN=${ndk} -DCMAKE_SYSTEM_VERSION=26
 
 ifneq (,$(findstring android,$(MAKECMDGOALS)))
-ndk = /opt/android-ndk-r18b
+ndk = ${NDK_HOME}
 toolchain = ${ndk}/toolchains/llvm/prebuilt/linux-x86_64
 gcc = ${toolchain}/bin/clang
 ar = ${toolchain}/bin/llvm-ar
