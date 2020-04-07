@@ -2,7 +2,7 @@
 <br>
 <p align="center">
  <a href="https://dev.zenroom.org/">
-    <img src="https://raw.githubusercontent.com/DECODEproject/Zenroom/master/docs/logo/zenroom_logotype.png" height="140" alt="Zenroom">
+    <img src="https://raw.githubusercontent.com/DECODEproject/Zenroom/master/docs/_media/images/zenroom_logo.png" height="140" alt="Zenroom">
   </a>
 </p>
 <br><br>
