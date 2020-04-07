@@ -47,7 +47,7 @@ ciphermsg =
 	  	    		     iv = iv })) }
 session = ECDH.session(sender.private, recipient.public)
 ciphermsg.text, ciphermsg.checksum =
-    ECDH.aead_encrypt(session,
+    AES.gcm_encrypt(session,
 	 str('$secret'), iv,
 	  ciphermsg.header)
 print(JSON.encode(ciphermsg))
@@ -68,7 +68,7 @@ decode = { header = JSON.decode(data.header) }
 sender.public = O.from_url64(decode.header.public)
 session = ECDH.session(recipient.private, sender.public)
 decode.text, decode.checksum =
-    ECDH.aead_decrypt(session, O.from_url64(data.text), O.from_url64(decode.header.iv), data.header)
+    AES.gcm_decrypt(session, O.from_url64(data.text), O.from_url64(decode.header.iv), data.header)
 print(decode.text:str())
 EOF
 }

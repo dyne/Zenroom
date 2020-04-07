@@ -26,7 +26,7 @@ for name,pubkey in pairs(keys.recipients) do
    out = { header = "encoded using zenroom " .. VERSION.original}
    -- encrypt the message with the session key
    out.text, out.checksum =
-	  ECDH.aead_encrypt(KDF(session), secret, iv, out.header)
+	  AES.gcm_encrypt(KDF(session), secret, iv, out.header)
 
    -- insert results in final json array
    res[name] = url64( JSON.encode(out) )
