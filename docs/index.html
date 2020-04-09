@@ -147,7 +147,6 @@
                                 .replace(/name = "/gi, `id = "`)
                                 .replace(`<li><a href="index.html">Index</a></li>`,
                                     `<li><a href="/#/pages/ldoc/o/README.md">Index</a></li>`)
-                            console.log(html)
                         }
                         next(html)
 
@@ -205,6 +204,8 @@
     <script src="//cdn.jsdelivr.net/gh/pcooksey/bibtex-js/src/bibtex_js.js"></script>
     <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/external-script.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/ga.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/docsify-tabs@1"></script>
+
 
     <script src="//unpkg.com/prismjs/components/prism-json.min.js"></script>
     <script src="//unpkg.com/prismjs/components/prism-c.min.js"></script>

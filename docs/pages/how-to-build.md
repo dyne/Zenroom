@@ -11,20 +11,65 @@ The Zenroom compiles the same sourcecode to run on Linux in the form of 2 differ
 5. `make javascript-demo` creates in the `docs/demo` folder a simple web page with a REPL and some boilerplate code to show how to use the WebAssembly binary (visible online [here](https://zenroom.dyne.org/demo))
 
 Remember that if after cloning this source code from git, one should do:
-```
+```bash
 git submodule update --init --recursive
 ```
 
-Then first build the shared executable environment:
+Then first build the shared executable for your platform:
 
+<!-- tabs:start -->
+
+#### ** Linux **
+
+```bash
+make linux
 ```
-make shared
+
+#### ** macOS **
+
+```bash
+make osx
 ```
+
+#### ** Windows **
+
+```bash
+make win
+```
+
+#### ** BSD **
+```bash
+make bsd
+```
+
+<!-- tabs:end -->
+
+
 To run tests:
 
+<!-- tabs:start -->
+
+#### ** Functional **
+
+```bash
+make check-osx
+make check-linux
 ```
-make check-shared
+
+#### ** Integration **
+
+```bash
+make check-js
+make check-py
 ```
+
+#### **Crypto**
+```bash
+make check-crypto
+make check-crypto-lw
+```
+
+<!-- tabs:end -->
 
 To build the static environment:
 
@@ -34,19 +79,24 @@ make static
 make check-static
 ```
 
-For the Javascript and WebAssembly modules the Zenroom provides various targets provided by emscripten which must be installed and loaded in the environment according to the emsdk's instructions :
+For the Javascript and WebAssembly modules the Zenroom provides various targets provided by emscripten which must be installed and loaded in the environment according to the emsdk's instructions and linked inside the `build` directory of zenroom sources:
 
+```bash
+make javascript-wasm # For the webassembly build node/web
+make javascript-rn   # For react native
 ```
-make javascript-node
-make javascript-wasm
+
+There is another target to create the [`playground`](https://dev.zenroom.org/demo/) locally 
+
+!> for the `javascript-demo` target the generated files should be served by a http server
+
+```bash
 make javascript-demo
+cd docs
+make preview
 ```
-NB. for the `javascript-demo` target the generated files should be served by a http server and not directly opened in a browser eg.
-```
-$ make javascript-demo
-$ cd docs/demo
-$ python3 -m http.server
-```
+
+then point your browser to http://localhost:3000/demo
 
 # Build instructions for Mobile libraries
 
@@ -82,7 +132,3 @@ src/
                  armeabi/ 
                       libzenroom.so
 ```
-
-
-
-
