@@ -2,19 +2,16 @@
 
 This section is optional for those who want to build this software from source. The following build instructions contain generic information meant for an expert audience.
 
-The Zenroom compiles the same sourcecode to run on Linux in the form of 2 different POSIX compatible ELF binary formats using GCC (linking shared libraries) or musl-libc (fully static) targeting both X86 and ARM architectures. It also compiles to a Windows 64-bit native and fully static executable. At last, it compiles to Javascript/Webassembly using the LLVM based emscripten SDK. To recapitulate some Makefile targets:
-
-1. `make shared` its the simpliest, builds a shared executable linked to a system-wide libc, libm and libpthread (mostly for debugging)
-2. `make static` builds a fully static executable linked to musl-libc (to be operated on embedded platforms)
-3. `make javascript-node`, `make javascript-wasm` (need EMSDK env) builds different flavors of Javascript modules to be operated from a browser or NodeJS (for client side operations)
-4. `make win` builds a Windows 64bit executable with no DLL dependancy, containing the LUA interpreter and all crypto functions (for client side operations on windows desktops)
-5. `make javascript-demo` creates in the `docs/demo` folder a simple web page with a REPL and some boilerplate code to show how to use the WebAssembly binary (visible online [here](https://zenroom.dyne.org/demo))
-
-Remember that if after cloning this source code from git, one should do:
+!> After cloning this source code from git, one should do:
 ```bash
 git submodule update --init --recursive
 ```
 
+The Zenroom compiles the same sourcecode to run on Linux in the form of 2 different POSIX compatible ELF binary formats using GCC (linking shared libraries) or musl-libc (fully static) targeting both X86 and ARM architectures.
+It also compiles to a Windows 64-bit native and fully static executable. At last, it compiles to Javascript/Webassembly using the LLVM based emscripten SDK. To recapitulate some Makefile targets:
+
+## Shared builds
+The simpliest, builds a shared executable linked to a system-wide libc, libm and libpthread (mostly for debugging)
 Then first build the shared executable for your platform:
 
 <!-- tabs:start -->
@@ -34,7 +31,7 @@ make osx
 #### ** Windows **
 
 ```bash
-make win
+make win # builds a Windows 64bit executable with no DLL dependancy, containing the LUA interpreter and all crypto functions (for client side operations on windows desktops)
 ```
 
 #### ** BSD **
@@ -71,6 +68,9 @@ make check-crypto-lw
 
 <!-- tabs:end -->
 
+## Static builds
+Builds a fully static executable linked to musl-libc (to be operated on embedded platforms).
+
 To build the static environment:
 
 ```
@@ -79,14 +79,21 @@ make static
 make check-static
 ```
 
+
+## Javascript builds
+
 For the Javascript and WebAssembly modules the Zenroom provides various targets provided by emscripten which must be installed and loaded in the environment according to the emsdk's instructions and linked inside the `build` directory of zenroom sources:
+
+!> (need EMSDK env) builds different flavors of Javascript modules to be operated from a browser or NodeJS
 
 ```bash
 make javascript-wasm # For the webassembly build node/web
 make javascript-rn   # For react native
 ```
 
-There is another target to create the [`playground`](https://dev.zenroom.org/demo/) locally 
+There is another target to create the [`playground`](https://dev.zenroom.org/demo/)
+locally a simple web page with a REPL and some boilerplate code to show how to
+use the WebAssembly binary.
 
 !> for the `javascript-demo` target the generated files should be served by a http server
 
@@ -98,7 +105,7 @@ make preview
 
 then point your browser to http://localhost:3000/demo
 
-# Build instructions for Mobile libraries
+## Build instructions for Mobile libraries
 
 ### iOS
 
