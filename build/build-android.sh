@@ -4,7 +4,7 @@ ANDROID_HOME=${ANDROID_HOME:=~/Android/Sdk}
 export NDK_HOME=${NDK_HOME:=${ANDROID_HOME}/ndk-bundle}
 
 LIB_SRC_PATH=${LIB_SRC_PATH:=${PWD}/src}
-LIB_DST_PATH=${LIB_DST_PATH:=${PWD}/target/android/jniLibs}
+LIB_DST_PATH=${LIB_DST_PATH:=${PWD}/build/target/android/jniLibs}
 
 build () {
 
@@ -23,3 +23,4 @@ fi
 build "x86" "i686-linux-android" "x86"
 build "arm" "arm-linux-androideabi" "armeabi-v7a"
 build "aarch64" "aarch64-linux-android" "arm64-v8a"
+echo "Built Android libs placed under ${LIB_DST_PATH}"
