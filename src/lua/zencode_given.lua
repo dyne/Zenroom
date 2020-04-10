@@ -124,6 +124,14 @@ ZEN.add_schema({
 		 end
 		 return _t
 	  end,
+	  array_string = function(obj)
+		 ZEN.assert( isarray(obj) , "Not a valid array")
+		 local _t = { }
+		 for k,v in ipairs(obj) do
+			table.insert(_t, OCTET.from_string(v))
+		 end
+		 return _t
+	  end,
 	  array_ecp = function(obj)
 		 ZEN.assert( isarray(obj) , "Not a valid array")
 		 local fun = CONF.input.encoding.fun
