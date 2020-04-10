@@ -42,7 +42,7 @@ When("I create the ephemeral ids for each moment of the day", function()
 		ZEN.assert(ACK.secret_day_key, "Secret day key not found")
 		ZEN.assert(type(ACK.moments) == 'number', "Number of moments not found")
 		ACK.ephemeral_ids = { }
-		for i = ACK.moments,1,-1 do
+		for i = 0,ACK.moments,1 do
 		   local PRF = SHA256:hmac(ACK.secret_day_key, BROADCAST_KEY)
 		   local PRG = AES.ctr(PRF, O.from_number(0), O.from_number(i))
 		   -- BROADCAST_KEY is the authenticated header
@@ -56,7 +56,7 @@ When("I create the proximity tracing of infected ids", function()
 		ZEN.assert(type(ACK.ephemeral_ids) == 'table', "List of ephemeral ids not found")
 		ACK.proximity_tracing = { }
 		for n,sk in ipairs(ACK.list_of_infected) do
-		   for i = ACK.moments,1,-1 do
+		   for i = 0,ACK.moments,1 do
 			  local PRF = SHA256:hmac(sk, BROADCAST_KEY)
 			  local PRG = AES.ctr(PRF, O.from_number(0), O.from_number(i))
 			  for nn,eph in next, ACK.ephemeral_ids, nil do
