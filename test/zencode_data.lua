@@ -11,7 +11,6 @@ DATA = [[
 ZEN:begin()
 ZEN:parse([[
 rule check version 1.0.0
-rule input untagged
 rule input encoding string
 Given I have a 'inside' inside 'first'
 and I have a 'third'
@@ -48,6 +47,18 @@ and I pick the random object in 'array'
 and I remove the 'random object' from 'array'
 and the 'random object' is not found in 'array'
 Then print the 'random object'
+]])
+ZEN:run()
+
+
+ZEN:begin()
+ZEN:parse([[
+rule check version 1.0.0
+Given nothing
+When I set 'whole' to 'Zenroom works great' as 'string'
+and I split the leftmost '3' bytes of 'whole'
+Then print the 'leftmost' as 'string'
+and print the 'whole' as 'string'
 ]])
 ZEN:run()
 

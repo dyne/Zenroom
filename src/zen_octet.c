@@ -831,6 +831,18 @@ static int zero(lua_State *L) {
 	return 1;
 }
 
+static int chop(lua_State *L) {
+	octet *src = o_arg(L, 1); SAFE(src);
+	int len = luaL_optnumber(L, 2, 0);
+	if(len >= src->len) {
+		lerror(L, "cannot chop octet of size %i to higher length %i",src->len, len);
+		return 0; }
+	octet *l = o_dup(L, src); SAFE(l);
+	octet *r = o_new(L, src->len - len); SAFE(r);
+	OCT_chop(l, r, len);
+	return 2;
+}
+
 /***
     Compare two octets to see if contents are equal.
 
@@ -997,6 +1009,7 @@ int luaopen_octet(lua_State *L) {
 		{"new",   newoctet},
 		{"concat",concat_n},
 		{"xor",   xor_n},
+		{"chop",  chop},
 		{"is_base64", lua_is_base64},
 		{"is_url64", lua_is_url64},
 //		{"is_base58", lua_is_base58},

@@ -259,6 +259,26 @@ When("the '' is found in ''", function(ele, arr)
 		ZEN.assert(found, "Element '"..ele.."' is not found inside array: "..arr)
 end)
 
+When("I split the rightmost '' bytes of ''", function(len, src)
+		local s = tonumber(len)
+		ZEN.assert(s, "Invalid number arg #1: "..type(len))
+		ZEN.assert(ACK[src], "Element not found: "..src)
+		ZEN.assert(ACK.rightmost ~= nil, "Overwrite error: rightmost")
+		local l,r = OCT.chop(ACK[src],s)
+		ACK.rightmost = r
+		ACK[src] = l
+end)
+
+When("I split the leftmost '' bytes of ''", function(len, src)
+		local s = tonumber(len)
+		ZEN.assert(s, "Invalid number arg #1: "..type(len))
+		ZEN.assert(ACK[src], "Element not found: "..src)
+		ZEN.assert(ACK.leftmost == nil, "Overwrite error: leftmost")
+		print(#src)
+		local l,r = OCTET.chop(ACK[src],s)
+		ACK.leftmost = l
+		ACK[src] = r
+end)
 
 -- TODO:
 -- When("I set '' as '' with ''", function(dest, format, content) end)
