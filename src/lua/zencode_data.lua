@@ -381,10 +381,7 @@ end
 -- @param object data element to be converted
 -- @param format pointer to a converter function
 -- @return object converted to format
-function ZEN:export(object, format)
-   -- CONF { encoding = <function 1>,
-   --        encoding_prefix = "u64"  }
-   ZEN.assert(object, "ZEN:export object not found")
+local function export_arr(object, format)
    ZEN.assert(iszen(type(object)), "ZEN:export called on a ".. type(object))
    local conv_f = nil
    local ft = type(format)
@@ -394,6 +391,19 @@ function ZEN:export(object, format)
    ::ok::
    ZEN.assert(type(conv_f) == 'function' , "ZEN:export conversion function not configured")
    return conv_f(object) -- TODO: protected call
+end
+function ZEN:export(object, format)
+   -- CONF { encoding = <function 1>,
+   --        encoding_prefix = "u64"  }
+   ZEN.assert(object, "ZEN:export object not found")
+   if type(object) == 'table' then
+	  local tres = { }
+	  for k,v in ipairs(object) do -- only flat tables support recursion
+		 table.insert(tres, export_arr(v, format))
+	  end
+	  return tres
+   end
+   return export_arr(object, format)
 end
 
 local function pfx(o) return string.sub(o,1,3) end
