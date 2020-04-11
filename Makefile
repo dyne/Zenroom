@@ -32,7 +32,7 @@ all:
 	@echo "- linux, linux-lib, linux-clang, linux-debug"
 	@echo "- javascript-web, javascript-wasm, javascript-demo, javascript-rn etc. (need EMSDK)"
 	@echo "- linux-python3, linux-go, osx-python3, osx-go (language bindings)"
-	@echo "- osx, ios-lib, ios-armv7, ios-arm64, ios-sim (need Apple/OSX)"
+	@echo "- osx, osx-lib, ios-lib, ios-armv7, ios-arm64, ios-sim (need Apple/OSX)"
 	@echo "- win, win-dll (cross-compile using MINGW on Linux)"
 	@echo "- musl, musl-local, musl-system   (full static build)"
 	@echo "- android-arm android-x86 android-aarch64"

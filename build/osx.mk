@@ -61,5 +61,13 @@ ios-sim: ldflags := -lm
 ios-sim: platform := ios
 ios-sim: apply-patches milagro lua53 embed-lua ios-lib
 
+osx-lib: ARCH := x86_64
+osx-lib: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -DARCH_OSX
+osx-lib: ldflags := -lm
+osx-lib: apply-patches milagro lua53 embed-lua ios-lib
+osx-lib:
+	TARGET=${ARCH} AR=${ar} CC=${gcc} CFLAGS="${cflags}" make -C src ios-lib
+	cp -v src/zenroom-ios-${ARCH}.a build/libzenroom.a
+
 ios-fat:
 	lipo -create build/zenroom-ios-x86_64.a build/zenroom-ios-arm64.a build/zenroom-ios-armv7.a -output build/zenroom-ios.a
