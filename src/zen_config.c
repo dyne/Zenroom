@@ -158,7 +158,6 @@ int zen_conf_parse(const char *configuration) {
 				warning(NULL,"undefined config variable");
 				break; }
 			if(lex.token == '=' && curconf != NIL) break; // OK
-			if(lex.token == '"' && curconf != NIL) break; // OK
 			error(NULL,"%s: invalid string in configuration: %c",__func__, lex.token);
 			free(lexbuf);
 			return 0;

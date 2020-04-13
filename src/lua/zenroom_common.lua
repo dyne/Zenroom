@@ -111,8 +111,11 @@ function get_format(what)
 end
 	  
 -- debugging facility
-function xxx(n,s)
-   if CONF.verbosity or CONF.debug >= n then act(s) end
+function xxx(s, n)
+   n = n or 3
+   if DEBUG >= n then
+	  print("LUA "..s)
+   end
 end
 
 function content(var)

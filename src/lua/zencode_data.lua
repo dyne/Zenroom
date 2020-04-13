@@ -64,12 +64,6 @@ function Then(text, fn)
    ZEN.then_steps[text] = fn
 end
 
-
--- debug functions
-Given("debug", function() ZEN.debug() end)
-When("debug",  function() ZEN.debug() end)
-Then("debug",  function() ZEN.debug() end)
-
 -- the main security concern in this Zencode module is that no data
 -- passes without validation from IN to ACK or from inline input.
 

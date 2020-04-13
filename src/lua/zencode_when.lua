@@ -166,7 +166,6 @@ When("I create the aggregation of ''", function(arr)
 		local count = isarray(A)
 		ZEN.assert( count > 0, "Object is not an array: "..arr)
 		if type(A[1]) == 'zenroom.ecp' then -- TODO: check all elements
-		   xxx(3, "Computing sum of "..count.." ECP") 
 		   ACK.aggregation = ECP.generator()
 		   for k,v in next,A,nil do
 			  if not ACK.aggregation then ACK.aggregation = v
