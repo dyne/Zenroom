@@ -121,21 +121,34 @@ For using the library just copy `zenroom.a` somewhere in your project and includ
 
 ### Android
 
-You need to have installed `android-sdk` (if you have Android Studio installed is already there) and set the `ANDROID_HOME` variable.
+You need to have installed `android-sdk` (if you have Android Studio installed, it is already there) and set the `ANDROID_HOME` variable.
 
-Also you need to install NDK inside the android-sdk using the Android Studio -> Tools -> Android -> SDK Manager
+Also you need to install NDK inside the android-sdk using the Android Studio -> Tools -> Android -> SDK Manager. If you have installed the NDK somewhere else, just set the environment variable NDK_HOME to reflect this.
 
-Finally use the `builld-android.sh` script (be sure that the ANDROID_HOME environment var is set) and you will have at the end `libzenroom-arm.so` and libzenroom-x86.so
-
-To use it in your project just drop `src/Zenroom.java` inside your codebase and the put the `*.so` as following:
+Finally use the `build/build-android.sh` script (if neither `ANDROID_HOME` nor `NDK_HOME` is set, the script will try default install paths of `ANDROID_HOME=~/Android/Sdk` and `NDK_HOME=${ANDROID_HOME}/ndk-bundle`). This will place the Android target libraries in `build/target`
 
 ```
-src/
-    main/
-         java/
-         jniLibs/
-                 x86/ 
-                      libzenroom.so
-                 armeabi/ 
-                      libzenroom.so
+build/target/
+└── android
+    └── jniLibs
+        ├── arm64-v8a
+        │   └── libzenroom.so
+        ├── armeabi-v7a
+        │   └── libzenroom.so
+        └── x86
+            └── libzenroom.so
 ```
+
+To use it in your project just drop `src/Zenroom.java` inside your codebase and the put `jniLibs` and its contents directly into your Android project under `src/main`
+
+```
+src/main/jniLibs/
+├── arm64-v8a
+│   └── libzenroom.so
+├── armeabi-v7a
+│   └── libzenroom.so
+└── x86
+    └── libzenroom.so
+```
+
+
