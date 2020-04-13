@@ -38,8 +38,9 @@ crypto-tests = \
 	${1} test/hash.lua && \
 	${1} test/ecdh.lua && \
 	${1} test/dh_session.lua && \
-	${1} test/ecdh_aes-gcm_vectors.lua && \
+	${1} test/nist/aes_gcm.lua && \
 	${1} test/nist/aes_cbc.lua && \
+	${1} test/nist/aes_ctr.lua && \
 	${1} test/ecp_generic.lua && \
 	${1} test/elgamal.lua && \
 	${1} test/bls_pairing.lua && \

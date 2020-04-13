@@ -50,6 +50,7 @@ OCTET  = require('zenroom_octet')
 JSON   = require('zenroom_json')
 CBOR   = require('zenroom_cbor')
 ECDH   = require('zenroom_ecdh')
+AES    = require('zenroom_aes')
 BIG    = require('zenroom_big')
 ECP    = require('zenroom_ecp')
 ECP2   = require('zenroom_ecp2')
@@ -75,6 +76,7 @@ require('zencode_given')
 require('zencode_when')
 require('zencode_then')
 require('zencode_eval')
+if DEBUG > 0 then require('zencode_debug') end
 
 -- scenario are loaded on-demand
 -- scenarios can only implement "When ..." steps

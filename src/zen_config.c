@@ -74,7 +74,7 @@ static zconf curconf;
 
 int zconf_seccomp = 0;
 char zconf_rngseed[(RANDOM_SEED_LEN*2)+4]; // 0x and terminating \0
-mmtype zconf_memmg = LW;
+mmtype zconf_memmg = SYS;
 int  zconf_memwipe = 0;
 
 int zen_conf_parse(const char *configuration) {
@@ -158,7 +158,6 @@ int zen_conf_parse(const char *configuration) {
 				warning(NULL,"undefined config variable");
 				break; }
 			if(lex.token == '=' && curconf != NIL) break; // OK
-			if(lex.token == '"' && curconf != NIL) break; // OK
 			error(NULL,"%s: invalid string in configuration: %c",__func__, lex.token);
 			free(lexbuf);
 			return 0;

@@ -4,6 +4,8 @@
     --text-color-base: #2e2e46;
     --text-color-secondary: #646473;
     --text-color-tertiary: #81818e;
+    --docsifytabs-border-color: #ededed;
+    --docsifytabs-tab-highlight-color: var(--theme-color);
 }
 
 body {

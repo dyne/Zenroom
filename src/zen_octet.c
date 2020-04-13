@@ -418,6 +418,29 @@ static int lua_is_bin(lua_State *L) {
 	return 1;
 }
 
+// to emulate 128bit counters, de facto truncate integers to 64bit
+typedef struct { uint64_t high, low; } uint128_t;
+static int from_number(lua_State *L) {
+	// number argument, import
+	int tn;
+	lua_Number n = lua_tointegerx(L,1,&tn);
+	if(!tn) {
+		lerror(L, "O.from_number input is not a number");
+		return 0; }
+	const uint64_t v = floorf(n);
+	octet *o = o_new(L, 16);
+	// conversion from int64 to binary
+	// TODO: check endian portability issues
+	register uint8_t i = 0;
+	register char *d = o->val;
+	for(i=0;i<8;i++,d++) *d = 0x0;
+	register char *p = (char*) &v;
+	d+=7;
+	for(i=0;i<8;i++,d--,p++) *d=*p;
+	o->len = 16;
+	return 1;
+}
+
 static int from_base64(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "base64 string expected");
@@ -808,6 +831,18 @@ static int zero(lua_State *L) {
 	return 1;
 }
 
+static int chop(lua_State *L) {
+	octet *src = o_arg(L, 1); SAFE(src);
+	int len = luaL_optnumber(L, 2, 0);
+	if(len >= src->len) {
+		lerror(L, "cannot chop octet of size %i to higher length %i",src->len, len);
+		return 0; }
+	octet *l = o_dup(L, src); SAFE(l);
+	octet *r = o_new(L, src->len - len); SAFE(r);
+	OCT_chop(l, r, len);
+	return 2;
+}
+
 /***
     Compare two octets to see if contents are equal.
 
@@ -974,11 +1009,13 @@ int luaopen_octet(lua_State *L) {
 		{"new",   newoctet},
 		{"concat",concat_n},
 		{"xor",   xor_n},
+		{"chop",  chop},
 		{"is_base64", lua_is_base64},
 		{"is_url64", lua_is_url64},
 //		{"is_base58", lua_is_base58},
 		{"is_hex", lua_is_hex},
 		{"is_bin", lua_is_bin},
+		{"from_number",from_number},
 		{"from_base64",from_base64},
 		{"from_url64",from_url64},
 //		{"from_base58",from_base58},

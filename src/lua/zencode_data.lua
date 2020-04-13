@@ -64,12 +64,6 @@ function Then(text, fn)
    ZEN.then_steps[text] = fn
 end
 
-
--- debug functions
-Given("debug", function() ZEN.debug() end)
-When("debug",  function() ZEN.debug() end)
-Then("debug",  function() ZEN.debug() end)
-
 -- the main security concern in this Zencode module is that no data
 -- passes without validation from IN to ACK or from inline input.
 
@@ -86,7 +80,9 @@ ZEN.get = function(obj, key, conversion)
    ZEN.assert(type(key) == "string", "ZEN.get key is not a string")
    ZEN.assert(not conversion or type(conversion) == 'function',
 			  "ZEN.get invalid conversion function")
-   local k = obj[key]
+   local k
+   if key == "." then k = obj
+   else k = obj[key] end
    ZEN.assert(k, "Key not found in object conversion: "..key)
    local res = nil
    local t = type(k)
@@ -236,23 +232,23 @@ end
 -- @param schema[opt] string descriptor of the schema to validate
 -- @return true or false
 function ZEN:validate(name, schema)
-   schema = schema or TMP.schema or name -- if no schema then coincides with name
+   local schema_name = schema or TMP.schema or name -- if no schema then coincides with name
    ZEN.assert(name, "ZEN:validate error: argument is nil")
    ZEN.assert(TMP, "ZEN:validate error: TMP is nil")
    -- ZEN.assert(TMP.schema, "ZEN:validate error: TMP.schema is nil")
    -- ZEN.assert(TMP.schema == name, "ZEN:validate() TMP does not contain "..name)
-   local got = TMP.data -- inside_pick(TMP,name)
    ZEN.assert(TMP.data, "ZEN:validate error: data not found in TMP for schema "..name)
-   local s = ZEN.schemas[schema]
-   ZEN.assert(s, "ZEN:validate error: "..schema.." schema not found")
-   ZEN.assert(type(s) == 'function', "ZEN:validate error: schema is not a function for "..schema)
-   ZEN:ftrace("validate "..name.. " with schema "..schema)
-   local res = s(TMP.data) -- ignore root
-   ZEN.assert(res, "ZEN:validate error: validation failed for "..name.." with schema "..schema)
-   TMP.data = res -- overwrite
+   local schema_f = ZEN.schemas[schema_name]
+   ZEN.assert(schema_f, "ZEN:validate error: "..schema_name.." schema not found")
+   ZEN.assert(type(schema_f) == 'function',
+			  "ZEN:validate error: schema is not a function for "..schema_name)
+   ZEN:ftrace("validate "..name.. " with schema "..schema_name)
+   TMP.data = schema_f(TMP.data) -- overwrite
+   ZEN.assert(TMP.data, "ZEN:validate error: validation failed for "..name
+				 .." with schema "..schema_name)
    assert(ZEN.OK)
    TMP.valid = true
-   ZEN:ftrace("validation passed for "..name.. " with schema "..schema)
+   ZEN:ftrace("validation passed for "..name.. " with schema "..schema_name)
 end
 
 function ZEN:validate_recur(obj, name)
@@ -381,10 +377,7 @@ end
 -- @param object data element to be converted
 -- @param format pointer to a converter function
 -- @return object converted to format
-function ZEN:export(object, format)
-   -- CONF { encoding = <function 1>,
-   --        encoding_prefix = "u64"  }
-   ZEN.assert(object, "ZEN:export object not found")
+local function export_arr(object, format)
    ZEN.assert(iszen(type(object)), "ZEN:export called on a ".. type(object))
    local conv_f = nil
    local ft = type(format)
@@ -394,6 +387,19 @@ function ZEN:export(object, format)
    ::ok::
    ZEN.assert(type(conv_f) == 'function' , "ZEN:export conversion function not configured")
    return conv_f(object) -- TODO: protected call
+end
+function ZEN:export(object, format)
+   -- CONF { encoding = <function 1>,
+   --        encoding_prefix = "u64"  }
+   ZEN.assert(object, "ZEN:export object not found")
+   if type(object) == 'table' then
+	  local tres = { }
+	  for k,v in ipairs(object) do -- only flat tables support recursion
+		 table.insert(tres, export_arr(v, format))
+	  end
+	  return tres
+   end
+   return export_arr(object, format)
 end
 
 local function pfx(o) return string.sub(o,1,3) end
@@ -416,45 +422,12 @@ function ZEN:import(object, fun)
    end
    -- ZEN.assert(t ~= 'table', "ZEN:import table is impossible: object needs to be 'valid'")
    -- ZEN.assert(t == 'string', "ZEN:import object is not a string: "..t)
-   if fun then
-	  return(fun(object))
-   elseif t == 'table' then
+   if t == 'table' then
 	  return object
-   elseif CONF.input.tagged then
-	  -- OK, convert
-	  if string.sub(object,4,4) == ':' then
-		 if pfx(object) == 'u64' then
-			-- return decoded string format for JSON.decode
-			return O.from_url64(buf(object))
-		 elseif pfx(object) == 'b64' then
-			-- return decoded string format for JSON.decode
-			return O.from_base64(buf(object))
-		 elseif pfx(object) == 'hex' then
-			-- return decoded string format for JSON.decode
-			return O.from_hex(buf(object))
-		 elseif pfx(object) == 'bin' then
-			-- return decoded string format for JSON.decode
-			return O.from_bin(buf(object))
-			-- elseif CONF.input.encoding.fun then
-			--     return CONF.input.encoding.fun(object)
-		 elseif pfx(object) == 'str' then
-			return O.from_string(buf(object))
-		 elseif pfx(object) == 'num' then
-			return tonumber(buf(object))
-		 end
-	  else
-		 error("Import secured to fail on untagged object",1)
-	  end
+   elseif fun then
+	  return(fun(object))
    else
-	  local num = tonumber(object) -- is a Lua number?
-	  if num then return num end -- then return it
-	  ZEN.assert(CONF.input.encoding, "CONF.input.encoding: no default conversion configured")
-	  if CONF.input.encoding.check(object) then
-		 ZEN:wtrace("import using configured function: "..CONF.input.encoding.name)
-		 return CONF.input.encoding.fun(object) -- use conversion rule
-	  end
-	  -- ZEN:wtrace("import implicit conversion from string ("..#object.." bytes)")
-	  -- return O.from_string(object)
+	  return(CONF.input.encoding.fun(object))
    end
    return nil
 end

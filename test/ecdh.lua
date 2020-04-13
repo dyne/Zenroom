@@ -19,7 +19,7 @@ I.print({ session = session,
 		  secret = secret,
 		  header = ciphermsg.header })
 ciphermsg.text, ciphermsg.checksum =
-   ECDH.aead_encrypt(session, secret, iv, ciphermsg.header)
+   AES.gcm_encrypt(session, secret, iv, ciphermsg.header)
 
 -- I.print(ciphermsg)
 -- print ('AES-GCM encrypt : '  .. ciphermsg.text:url64())
@@ -28,7 +28,7 @@ ciphermsg.text, ciphermsg.checksum =
 session = ECDH.session(bob.private, alice.public)
 decode = { header = ciphermsg.header }
 decode.text, decode.checksum =
-   ECDH.aead_decrypt(session, ciphermsg.text, iv, decode.header)
+   AES.gcm_decrypt(session, ciphermsg.text, iv, decode.header)
 
 -- print ('AES-GCM checksum : ' .. ck2:base64())
 

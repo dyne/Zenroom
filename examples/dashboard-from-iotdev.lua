@@ -10,7 +10,7 @@ commsec = O.from_url64(keys.community_seckey)
 devpub = O.from_url64(decode.header.device_pubkey)
 session = ECDH.session(commsec, devpub)
 decode.text, decode.checksum =
-   ECDH.aead_decrypt(KDF(session), O.from_url64(data.text), 
+   AES.gcm_decrypt(KDF(session), O.from_url64(data.text), 
 					 O.from_url64(decode.header.iv), data.header)
 
 assert(data.checksum == data.checksum)

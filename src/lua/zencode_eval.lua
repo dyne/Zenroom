@@ -42,7 +42,7 @@ end]]
 	  env.ECP2 = ECP2
 	  env.PAIR = PAIR
 	  env.INT = INT
-	  env.O = O
+	  env.OCTET = OCTET
 	  return(load(funcond,'condition','t',env)())
    else return nil end
 end
@@ -67,7 +67,7 @@ return ]]..lfun
 	  env.ECP2 = ECP2
 	  env.PAIR = PAIR
 	  env.INT = INT
-	  env.O = O
+	  env.OCTET = OCTET
 	  return(load(funexe,'function','t',env)())
    else return nil end
 end

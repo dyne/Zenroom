@@ -30,11 +30,13 @@ include ${pwd}/build/config.mk
 all:
 	@echo "Choose a target:"
 	@echo "- linux, linux-lib, linux-clang, linux-debug"
-	@echo "- javascript-web, javascript-wasm, javascript-demo, etc. (need EMSDK)"
-	@echo "- linux-python3, linux-go (language bindings)"
-	@echo "- osx, osx-python3, ios-armv7, ios-arm64, ios-sim (need Apple/OSX)"
-	@echo "- win, win-dll	(cross-compile using MINGW on Linux)"
+	@echo "- javascript-web, javascript-wasm, javascript-demo, javascript-rn etc. (need EMSDK)"
+	@echo "- linux-python3, linux-go, osx-python3, osx-go (language bindings)"
+	@echo "- osx, ios-lib, ios-armv7, ios-arm64, ios-sim (need Apple/OSX)"
+	@echo "- win, win-dll (cross-compile using MINGW on Linux)"
 	@echo "- musl, musl-local, musl-system   (full static build)"
+	@echo "- android-arm android-x86 android-aarch64"
+	@echo "- cortex-arm, linux-riscv64, aarch64"
 	@echo "for android and ios see scripts in build/"
 
 # if ! [ -r build/luac ]; then ${gcc} -I${luasrc} -o build/luac ${luasrc}/luac.c ${luasrc}/liblua.a -lm; fi

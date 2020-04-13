@@ -26,6 +26,7 @@ backtick_references=true
 file={
 	'../../../src/zen_octet.c',
 	'../../../src/zen_hash.c',
+	'../../../src/zen_aes.c',
 	'../../../src/zen_ecdh.c',
 	'../../../src/zen_ecp.c',
 	'string.lua',
