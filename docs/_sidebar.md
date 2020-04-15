@@ -8,6 +8,7 @@
 
 - Programming 
   - [Zencode](/pages/zencode.md "Zencode")
+  - [Zencode command list](/pages/zencode-list.md "Zencode command list")
   - [Lua](/pages/lua.md "in Lua")
   - [Lua full reference](/pages/ldoc/o/README.md "in Lua") 
 
