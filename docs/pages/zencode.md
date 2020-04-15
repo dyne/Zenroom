@@ -1,14 +1,16 @@
+
+
 # Smart contracts in human language
 
-Zenroom is software inspired by the [language-theoretical security](http://langsec.org) research and it allows to express cryptographic operations in a readable domain-specific language called **Zencode**.
+Zenroom's development is heavily inspired by the [language-theoretical security](http://langsec.org) research and the [BDD Language](https://en.wikipedia.org/wiki/Behavior-driven_development). 
+
+Zenroom can execute smart contracts written in the  domain-specific language **Zencode**, which reads in a [natural English-like fashion](https://decodeproject.eu/blog/smart-contracts-english-speaker)., and allows to perform cryptographic operations as long as more traditional data manipulation.
 
 For the theoretical background see the [Zencode Whitepaper](https://files.dyne.org/zenroom/Zencode_Whitepaper.pdf).
 
-For an introduction see this blog post: [Smart contracts for the English speaker](https://decodeproject.eu/blog/smart-contracts-english-speaker).
-
 Here we go with the <span class="big">**tutorial to learn the Zencode language!**</span>
 
-# Syntax and Memory model
+# Intro: Syntax and Memory model
 
 Zencode contracts operate in 3 phases:
 
@@ -33,58 +35,12 @@ rule check version 1.0.0
 
 ---
 
-# Symmetric encryption
+# Cryptography 
 
-This is a simple technique to hide a secret using a common password known to all participants.
+A quick run to get you started with cryptography in Zencode.  
 
-The algorithm used is
-[AES-GCM](https://en.wikipedia.org/wiki/Galois/Counter_Mode) with a random IV and an optional authenticated header ([AEAD](https://en.wikipedia.org/wiki/Authenticated_encryption))
 
-The encryption is applied using 3 arguments:
-
-- `password` can be any string (or file) used to lock and unlock the secret
-- `message` can be any string (or file) to be encrypted and decrypted
-- `header` is a fixed name and optional argument to indicate an authenticated header
-
-These 3 arguments can be written or imported, but must given before using the `I encrypt` block:
-
-[](../_media/examples/zencode_simple/SYM02.zen ':include :type=code gherkin')
-
-The output is returned in `secret message` and it looks like:
-
-```json
-{"secret_message":{"iv":"u64:-tU2gbox9kATCeC2k_zkhYM-PBA3IzvN7HtfyVXdzB4",
-	"header":"u64:dGhpc19pc19mb3JfQm9i",
-	"text":"u64:cw4M3FBO3zaPRAB26d6y8SMPGgAo_0AmJUrhg5dmKwoEB7BWLAAD_A2h",
-	"checksum":"u64:UugLrIuxRX46BETc1-XkrA"}}
-```
-
-To decode make sure to have that secret password and that a valid `secret message` is given, then use:
-
-[](../_media/examples/zencode_simple/SYM03.zen ':include :type=code gherkin')
-
-So let's imagine I want to share a secret with someone and send secret messages encrypted with it:
-
-```mermaid
-sequenceDiagram
-        participant A as Anon1
-        participant B as Anon2
-        A->>A: Think of a secret password
-    A->>B: Tell the password to a friend
-        A->>A: Encrypt a secret message with the password
-    A->>B: Send the secret message to the friend
-    B->>B: Decrypts the secret message with the password
-```
-
-Of course the password must be known by all participants and that's the
-dangerous part, since it could be stolen.
-
-We mitigate this risk using **public-key cryptography**, also known as
-**a-symmetric encryption**, explained below.
-
----
-
-# Asymmetric encryption
+## Asymmetric cryptography
 
 We use [asymmetric encryption (or public key
 cryptography)](https://en.wikipedia.org/wiki/Public-key_cryptography)
@@ -96,7 +52,7 @@ Fortunately it is pretty simple to do using Zencode in 2 steps
 - Key generation and exchange ([SETUP](https://en.wikipedia.org/wiki/Key_exchange))
 - Public-key Encryption or signature ([ECDH](https://en.wikipedia.org/wiki/Elliptic-curve_Diffie%E2%80%93Hellman) and [ECDSA](https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm))
 
-## Key generation and exchange
+### Key generation and exchange
 
 In this phase each participant will create his/her own keypair, store it and communicate the public key to the other.
 
@@ -175,7 +131,7 @@ and signatures.
 
 The advantage of using Zencode here is the use of the `valid` keyword which effectively parses the `public key` object and verifies it as valid, in this case as being a valid point on the elliptic curve in use. This greatly reduces the possibility of common mistakes.
 
-## Public-key Encryption (ECDH)
+### Public-key Encryption (ECDH)
 
 Public key encryption is similar to the [asymmetric
 encryption](#asymmetric-encryption) explained in the previous section,
@@ -245,7 +201,7 @@ The decryption will always check that the header hasn't changed,
 maintaining the integrity of the string which may contain important
 public information that accompany the secret.
 
-## Public-key Signature (ECDSA)
+### Public-key Signature (ECDSA)
 
 Public-key signing allows to verify the integrity of a message by
 knowing the public key of all those who have signed it.
@@ -308,21 +264,71 @@ In this example Alice uses her private key to sign and authenticate a
 message. Bob or anyone else can use Alice's public key to prove that
 the integrity of the message is kept intact and that she signed it.
 
+## Symmetric cryptography
+
+This is a simple technique to hide a secret using a common password known to all participants.
+
+The algorithm used is
+[AES-GCM](https://en.wikipedia.org/wiki/Galois/Counter_Mode) with a random IV and an optional authenticated header ([AEAD](https://en.wikipedia.org/wiki/Authenticated_encryption))
+
+The encryption is applied using 3 arguments:
+
+- `password` can be any string (or file) used to lock and unlock the secret
+- `message` can be any string (or file) to be encrypted and decrypted
+- `header` is a fixed name and optional argument to indicate an authenticated header
+
+These 3 arguments can be written or imported, but must given before using the `I encrypt` block:
+
+[](../_media/examples/zencode_simple/SYM02.zen ':include :type=code gherkin')
+
+The output is returned in `secret message` and it looks like:
+
+```json
+{"secret_message":{"iv":"u64:-tU2gbox9kATCeC2k_zkhYM-PBA3IzvN7HtfyVXdzB4",
+	"header":"u64:dGhpc19pc19mb3JfQm9i",
+	"text":"u64:cw4M3FBO3zaPRAB26d6y8SMPGgAo_0AmJUrhg5dmKwoEB7BWLAAD_A2h",
+	"checksum":"u64:UugLrIuxRX46BETc1-XkrA"}}
+```
+
+To decode make sure to have that secret password and that a valid `secret message` is given, then use:
+
+[](../_media/examples/zencode_simple/SYM03.zen ':include :type=code gherkin')
+
+So let's imagine I want to share a secret with someone and send secret messages encrypted with it:
+
+```mermaid
+sequenceDiagram
+        participant A as Anon1
+        participant B as Anon2
+        A->>A: Think of a secret password
+    A->>B: Tell the password to a friend
+        A->>A: Encrypt a secret message with the password
+    A->>B: Send the secret message to the friend
+    B->>B: Decrypts the secret message with the password
+```
+
+Of course the password must be known by all participants and that's the
+dangerous part, since it could be stolen.
+
+We mitigate this risk using **public-key cryptography**, also known as
+**a-symmetric encryption**, explained below.
+
 ---
 
-# Attribute Based Credentials
+# The *Coconut* flow: ZKP and ABC
 
-![Alice in Wonderland](../_media/images/alice_with_cards-sm.jpg)
+In this chapter we'll look at some more advanced cryptography, namely the 'Attribute Based Credentials' and the 'Zero Knowledge Proof': this is powerful and complex feature
+implemented using the [Coconut crypto scheme](https://arxiv.org/pdf/1802.07344.pdf). 
 
-Attribute Based Credentials are a powerful and complex feature
-implemented using the [Coconut crypto
-scheme](https://arxiv.org/pdf/1802.07344.pdf). This is the most
-complex functionality available in Zenroom and it will show how the
-Zencode language really simplifies it.
+'ABC' and 'ZKP' are among the most complex functionality available in Zenroom, this chapter will give an idea one their purpose, how they work and show how Zencode simplifies them greatly.
+
+## Attribute Based Credentials
+
+![Alice in Wonderland](../_media/images/alice_with_cards-sm.jpg) 
 
 Let's imagine 3 different subjects for our scenarios:
 
-1. **Mad Hatter** is a well known **issuer** in Wonderland
+1. **Mad Hatter** is a well known **credential issuer** in Wonderland
 2. **Wonderland** is an open space (a blockchain!) and all inhabitants can check the validity of **proofs**
 3. **Alice** just arrived: to create **proofs** she'll request a **credential** to the issuer **MadHatter**
 
@@ -531,22 +537,7 @@ maliciously keep the **credential keypair** and impersonate the
 **Holder**.
 
 
-
-## Try it on your system!
-
-Impatient to give it a spin? run Zencode scripts locally to see what
-are the files produced!
-
-Make sure that Zenroom is installed on your PC
-and then go to the...
-
-[Online Interactive Demo](/demo)
-
-[Shell Script Examples](/pages/shell_scripts)
-
----
-
-# Zero Knowledge Proofs
+## Zero Knowledge Proofs
 
 There is more to this of course: Zencode supports several features
 based on pairing elliptic curve arithmetics and in particular:
@@ -573,84 +564,3 @@ Three more are in the work and they are:
 3. Private credential revocation
 
 ---
-
-# Import, validate and transform data
-
-## Given
-
-### Self introduction
-
-This affects **my** statements
-
-```gherkin
-   Given I introduce myself as ''
-   Given I am known as ''
-   Given I am ''
-   Given I have my ''
-   Given I have my valid ''
-```
-
-Data provided as input (from **data** and **keys**) is all imported
-automatically from **JSON** or [CBOR](https://tools.ietf.org/html/rfc7049) binary formats.
-
-Scenarios can add Schema for specific data validation mapped to **words** like: **signature**, **proof** or **secret**.
-
-
-**Data input**
-```gherkin
-   Given I have a ''
-   Given I have a valid ''
-   Given I have a '' inside ''
-   Given I have a valid '' inside ''
-   Given I have a '' from ''
-   Given I have a valid '' from ''
-   Given the '' is valid
-```
-
-or check emptiness:
-
-```gherkin
-   Given nothing
-```
-
-all the list of valid `given` statements are:
-
-[](../_media/zencode_utterances.yaml ':include :fragment=given :type=code yaml')
-
-
-When **valid** is specified then extra checks are made on input value,
-mostly according to the **scenario**
-
-**Settings**
-```txt
-rule input encoding [ url64 | base64 | hex | bin ]
-rule input format [ json | cbor ]
-```
-
-## When
-
-Processing data is done in the when block. Also scenarios add statements to this block.
-
-Without extensions, these are the basic functions available
-
-[](../_media/zencode_utterances.yaml ':include :fragment=when :type=code yaml')
-
-with the `simple` extension the following statementa are valid
-
-[](../_media/zencode_utterances.yaml ':include :fragment=simple_when :type=code yaml')
-
-with the `coconut` extension the following statementa are valid
-
-[](../_media/zencode_utterances.yaml ':include :fragment=coconut_when :type=code yaml')
-
-## Then
-
-Output is all exported in JSON or CBOR
-
-[](../_media/zencode_utterances.yaml ':include :fragment=then :type=code yaml')
-
-Settings:
-```txt
-rule output encoding [ url64 | base64 | hex | bin ]
-rule output format [ json | cbor ]
-```
