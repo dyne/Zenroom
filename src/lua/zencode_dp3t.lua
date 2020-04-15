@@ -18,7 +18,7 @@
 
 -- Decentralized Privacy-Preserving Proximity Tracing scenarion in Zencode
 
-BROADCAST_KEY = "Decentralized Privacy-Preserving Proximity Tracing"
+BROADCAST_KEY = "Broadcast key"
 SHA256 = HASH.new('sha256')
 
 ZEN.add_schema({
@@ -38,15 +38,18 @@ When("I renew the secret day key to a new day", function()
 		ACK.secret_day_key = sk
 end)
 
-When("I create the ephemeral ids for each moment of the day", function()
+When("I create the ephemeral ids for today", function()
 		ZEN.assert(ACK.secret_day_key, "Secret day key not found")
-		ZEN.assert(type(ACK.moments) == 'number', "Number of moments not found")
+		ZEN.assert(ACK.broadcast_key, "Broadcast key not found")
+		ZEN.assert(type(ACK.epoch) == 'number', "Epoch length (minutes) not found")
+		local PRF = SHA256:hmac(ACK.secret_day_key, ACK.broadcast_key)
+		local epd = (24*60)/ACK.epoch -- num epochs per day
+		local zero = OCTET.new(epd*16):zero() -- 0 byte buffer
 		ACK.ephemeral_ids = { }
-		for i = 0,ACK.moments,1 do
-		   local PRF = SHA256:hmac(ACK.secret_day_key, BROADCAST_KEY)
-		   local PRG = AES.ctr(PRF, O.from_number(0), O.from_number(i))
-		   -- BROADCAST_KEY is the authenticated header
-		   table.insert(ACK.ephemeral_ids, PRG) -- use the 16byte checksums
+		for i = 0,epd,1 do
+		   local PRG = AES.ctr(PRF, zero, O.from_number(i))
+		   local l,r = OCTET.chop(PRG,16)
+		   table.insert(ACK.ephemeral_ids, l)
 		end
 end)
 
@@ -54,10 +57,11 @@ When("I create the proximity tracing of infected ids", function()
 		ZEN.assert(type(ACK.moments) == 'number', "Number of moments not found")
 		ZEN.assert(type(ACK.list_of_infected) == 'table', "List of infected not found")
 		ZEN.assert(type(ACK.ephemeral_ids) == 'table', "List of ephemeral ids not found")
+		ZEN.assert(ACK.broadcast_key, "Broadcast key not found")
 		ACK.proximity_tracing = { }
 		for n,sk in ipairs(ACK.list_of_infected) do
 		   for i = 0,ACK.moments,1 do
-			  local PRF = SHA256:hmac(sk, BROADCAST_KEY)
+			  local PRF = SHA256:hmac(sk, ACK.broadcast_key)
 			  local PRG = AES.ctr(PRF, O.from_number(0), O.from_number(i))
 			  for nn,eph in next, ACK.ephemeral_ids, nil do
 				 if eph == PRG then
