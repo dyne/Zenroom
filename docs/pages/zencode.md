@@ -1,14 +1,16 @@
+
+
 # Smart contracts in human language
 
-Zenroom is software inspired by the [language-theoretical security](http://langsec.org) research and it allows to express cryptographic operations in a readable domain-specific language called **Zencode**.
+Zenroom's development is heavily inspired by the [language-theoretical security](http://langsec.org) research and the [BDD Language](https://en.wikipedia.org/wiki/Behavior-driven_development). 
+
+Zenroom can execute smart contracts written in the  domain-specific language **Zencode**, which reads in a [natural English-like fashion](https://decodeproject.eu/blog/smart-contracts-english-speaker), and allows to perform cryptographic operations as long as more traditional data manipulation.
 
 For the theoretical background see the [Zencode Whitepaper](https://files.dyne.org/zenroom/Zencode_Whitepaper.pdf).
 
-For an introduction see this blog post: [Smart contracts for the English speaker](https://decodeproject.eu/blog/smart-contracts-english-speaker).
-
 Here we go with the <span class="big">**tutorial to learn the Zencode language!**</span>
 
-# Syntax and Memory model
+# Intro: Syntax and Memory model
 
 Zencode contracts operate in 3 phases:
 
@@ -33,7 +35,208 @@ rule check version 1.0.0
 
 ---
 
-# Symmetric encryption
+# Cryptography 
+
+A quick run to get you started with cryptography in Zencode.  
+
+
+## Asymmetric cryptography
+
+We use [asymmetric encryption (or public key
+cryptography)](https://en.wikipedia.org/wiki/Public-key_cryptography)
+when we want to introduce the possession of **keypairs** (public and private) both by
+Alice and Bob: this way there is no need for a single secret to be known to both.
+
+Fortunately it is pretty simple to do using Zencode in 2 steps
+
+- Key generation and exchange ([SETUP](https://en.wikipedia.org/wiki/Key_exchange))
+- Public-key Encryption or signature ([ECDH](https://en.wikipedia.org/wiki/Elliptic-curve_Diffie%E2%80%93Hellman) and [ECDSA](https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm))
+
+### Key generation and exchange
+
+In this phase each participant will create his/her own keypair, store it and communicate the public key to the other.
+
+The statement to generate a keypair (public and private keys) is simple:
+
+[](../_media/examples/zencode_simple/AES01.zen ':include :type=code gherkin')
+
+It will produce something like this:
+
+```json
+"Alice": {
+   "keypair": {
+      "private_key": "u64:F_NaS3Y6Xw6BW...",
+      "public_key": "u64:BLG0OGDwzP_gY41TZgGpUB4lTYCgpx9BJVScxSQAfwqEi..."
+   }
+}
+```
+
+Where the public key is usually a longer octet and actually an [Elliptic Curve Point](/lua/modules/ECP.html) coordinate.
+
+There is nothing preventing an host application to separate these JSON
+fields and store them in any secure way.
+
+Here we demonstrate how to create keypairs as well separate them using
+Zencode:
+
+- 2 contracts to create Alice and Bob keypairs
+- 2 contracts to separate the public key from the private key for each
+
+```mermaid
+sequenceDiagram
+    participant A as Alice
+    participant B as Bob
+    A->>A: create the keypair
+    A->>B: publish the public key
+    B->>B: create the keypair
+    B->>A: publish the public key
+```
+
+After both Alice and Bob have their own keypairs and they both know
+each other public key we can move forward to do asymmetric encryption
+and signatures.
+
+[](../_media/examples/zencode_simple/AES02.zen ':include :type=code gherkin')
+
+
+```json
+"Alice": {
+   "public_key": "u64:BLG0OGDwzP_gY41TZgGpUB4lTYCgpx9BJVScxSQAfwqEi..."
+}
+```
+
+The advantage of using Zencode here is the use of the `valid` keyword which effectively parses the `public key` object and verifies it as valid, in this case as being a valid point on the elliptic curve in use. This greatly reduces the possibility of common mistakes.
+
+### Public-key Encryption (ECDH)
+
+Public key encryption is similar to the [asymmetric
+encryption](#asymmetric-encryption) explained in the previous section,
+with a difference: the `from` and `for` clauses indicating the public
+key of the recipient.
+
+Before getting to the encryption 2 other objects must be given:
+
+- `keypair` is one's own public and private keys
+- `public key` from the intended recipient
+
+So with an input separated between DATA and KEYS or grouped together in an array like:
+
+```json
+[
+  {"Bob": {"public_key":"u64:BGF59uMP0DkHoTjMT..."} },
+  {"Alice": { "keypair": {
+      "private_key": "u64:F_NaS3Y6Xw6BW...",
+      "public_key": "u64:BLG0OGDwzP_gY41TZgGpUB4lTYCgpx9BJVScxSQAfwqEi..." } } }
+]
+```
+
+[](../_media/examples/zencode_simple/AES05.zen ':include :type=code gherkin')
+
+which encrypts and stores results in `secret message`; also in this case `header` may be given, then is included in the encryption as an authenticated clear-text section.
+
+```mermaid
+sequenceDiagram
+        participant A as Alice
+        participant B as Bob
+    A->>A: prepare the keyring
+    A->>A: encrypt the message
+#    Note over A,B: Given that I am known as 'Alice'<br/>and I have my 'keypair'<br/>and I have a 'public key' from 'Bob'<br/>When I write 'my secret' in 'draft'<br/>and I encrypt the 'draft' to 'secret message' for 'Bob'<br/>Then print the 'secret message'<br/>
+        A->>B: send the secret message
+#       Note over A,B: Given that I am 'Bob'<br/>and I have my valid 'keypair'<br/>and I have a 'public key' from 'Alice'<br/>Then print my 'keypair'<br/>and print the 'public key'
+    B->>B: prepare the keyring
+#       Note over A,B: Given that I am known as 'Bob'<br/>and I have my valid 'keypair'<br/>and I have a 'public key' from 'Alice'<br/>and I have a valid 'secret message'<br/>When I decrypt the 'secret message' from 'Alice' to 'clear text'<br/>Then print as 'string' the 'clear text'<br/>and print the 'header' inside 'secret message'<br/>
+        B->>B: decrypt the message
+```
+
+
+**1. Alice encrypts the message using Bob's public key**
+[](../_media/examples/zencode_simple/AES05.zen ':include :type=code gherkin')
+
+**2. Bob prepares a keyring with Alice's public key**
+[](../_media/examples/zencode_simple/AES06.zen ':include :type=code gherkin')
+
+**3. Bob decrypts the message using Alice's public key**
+[](../_media/examples/zencode_simple/AES07.zen ':include :type=code gherkin')
+
+In this basic example the session key for encryption is made combining
+the private key of Alice and the public key of Bob (or
+vice versa).
+
+```gherkin
+	When I write 'my secret for you' in 'message'
+	and I write 'an authenticated message' in 'header'
+```
+
+The decryption will always check that the header hasn't changed,
+maintaining the integrity of the string which may contain important
+public information that accompany the secret.
+
+### Public-key Signature (ECDSA)
+
+Public-key signing allows to verify the integrity of a message by
+knowing the public key of all those who have signed it.
+
+It is very useful when in need of authenticating documents: any change
+to the content of a document, even one single bit, will make the
+verification fail, showing that something has been tampered with.
+
+The one signing only needs his/her own keypair, so the key setup will
+be made by the lines:
+
+```gherkin
+	Given that I am known as 'Alice'
+	and I have my valid 'keypair'
+```
+
+then assuming that the document to sign is in `draft`, Alice can
+proceed signing it with:
+
+```gherkin
+	and I create the signature of 'draft'
+```
+
+which will produce a new object `signature` to be printed along the
+draft: the original message stays intact and the signature is detached.
+
+On the other side Bob will need Alice's public key to verify the
+signature with the line:
+
+```gherkin
+	When I verify the 'draft' is signed by 'Alice'
+```
+
+which will fail in case the signature is invalid or the document has
+been tampered with.
+
+```mermaid
+sequenceDiagram
+        participant A as Alice
+        participant B as Bob
+#    Note over A,B: Given that I am known as 'Alice'<br/>and I have my 'keypair'<br/>When I write 'This is my signed message to Bob.' in 'draft'<br/>and I sign the 'draft' as 'signed message'<br/>Then print my 'signed message'
+    A->>A: sign the message     as Alice
+        A->>B: send the signed message
+#       Note over A,B: Given that I am 'Bob'<br/>and I have my valid 'keypair'<br/>and I have a 'public key' from 'Alice'<br/>Then print my 'keypair'<br/>and print the 'public key'
+    B->>B: prepare the keyring
+#       Note over A,B: Given that I am known as 'Bob'<br/>and I have inside 'Alice' a valid 'public key'<br/>and I have a draft inside 'Alice'<br/>and I have a valid 'signed message'<br/>When I verify the 'signed message' is authentic<br/>Then print 'signature' 'correct'<br/>and print as 'string' the 'text' inside 'signed message'
+        B->>B: verify the signature by Alice
+```
+
+Here we continue assuming that the keyrings are already prepared with
+public/private keypairs and the public keypair of the correspondent.
+
+**1. Alice signs a message for Bob**
+
+[](../_media/examples/zencode_simple/DSA01.zen ':include :type=code gherkin')
+
+**1. Bob verifies the signed message from Alice**
+
+[](../_media/examples/zencode_simple/DSA02.zen ':include :type=code gherkin')
+
+In this example Alice uses her private key to sign and authenticate a
+message. Bob or anyone else can use Alice's public key to prove that
+the integrity of the message is kept intact and that she signed it.
+
+## Symmetric cryptography
 
 This is a simple technique to hide a secret using a common password known to all participants.
 
@@ -84,245 +287,20 @@ We mitigate this risk using **public-key cryptography**, also known as
 
 ---
 
-# Asymmetric encryption
+# The *Coconut* flow: ZKP and ABC
 
-We use [asymmetric encryption (or public key
-cryptography)](https://en.wikipedia.org/wiki/Public-key_cryptography)
-when we want to introduce the possession of **keypairs** (public and private) both by
-Alice and Bob: this way there is no need for a single secret to be known to both.
+In this chapter we'll look at some more advanced cryptography, namely the 'Attribute Based Credentials' and the 'Zero Knowledge Proof': this is powerful and complex feature
+implemented using the [Coconut crypto scheme](https://arxiv.org/pdf/1802.07344.pdf). 
 
-Fortunately it is pretty simple to do using Zencode in 2 steps
+'ABC' and 'ZKP' are among the most complex functionality available in Zenroom, this chapter will give an idea one their purpose, how they work and show how Zencode simplifies them greatly.
 
-- Key generation and exchange ([SETUP](https://en.wikipedia.org/wiki/Key_exchange))
-- Public-key Encryption or signature ([ECDH](https://en.wikipedia.org/wiki/Elliptic-curve_Diffie%E2%80%93Hellman) and [ECDSA](https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm))
+## Attribute Based Credentials
 
-## Key generation and exchange
-
-In this phase each participant will create his/her own keypair, store it and communicate the public key to the other.
-
-The statement to generate a keypair (public and private keys) is simple:
-
-[](../_media/examples/zencode_simple/AES01.zen ':include :type=code gherkin')
-
-It will produce something like this:
-
-```json
-"Alice": {
-   "keypair": {
-      "private_key": "u64:F_NaS3Y6Xw6BW...",
-      "public_key": "u64:BLG0OGDwzP_gY41TZgGpUB4lTYCgpx9BJVScxSQAfwqEi..."
-   }
-}
-```
-
-Where the public key is usually a longer octet and actually an [Elliptic Curve Point](/lua/modules/ECP.html) coordinate.
-
-There is nothing preventing an host application to separate these JSON
-fields and store them in any secure way.
-
-Here we demonstrate how to create keypairs as well separate them using
-Zencode:
-
-- 2 contracts to create Alice and Bob keypairs
-- 2 contracts to separate the public key from the private key for each
-
-```mermaid
-sequenceDiagram
-    participant A as Alice
-    participant B as Bob
-    A->>A: create the keypair
-    A->>B: publish the public key
-    B->>B: create the keypair
-    B->>A: publish the public key
-```
-
-After both Alice and Bob have their own keypairs and they both know
-each other public key we can move forward to do asymmetric encryption
-and signatures.
-
-[](../_media/examples/zencode_simple/AES01.zen ':include :type=code gherkin')
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-
-```json
-"Alice": {
-   "keypair": {
-      "private_key": "u64:F_NaS3Y6Xw6BW...",
-      "public_key": "u64:BLG0OGDwzP_gY41TZgGpUB4lTYCgpx9BJVScxSQAfwqEi..."
-   }
-}
-```
-
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-
-[](../_media/examples/zencode_simple/AES02.zen ':include :type=code gherkin')
-
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-
-```json
-"Alice": {
-   "public_key": "u64:BLG0OGDwzP_gY41TZgGpUB4lTYCgpx9BJVScxSQAfwqEi..."
-}
-```
-
-The advantage of using Zencode here is the use of the `valid` keyword which effectively parses the `public key` object and verifies it as valid, in this case as being a valid point on the elliptic curve in use. This greatly reduces the possibility of common mistakes.
-
-## Public-key Encryption (ECDH)
-
-Public key encryption is similar to the [asymmetric
-encryption](#asymmetric-encryption) explained in the previous section,
-with a difference: the `from` and `for` clauses indicating the public
-key of the recipient.
-
-Before getting to the encryption 2 other objects must be given:
-
-- `keypair` is one's own public and private keys
-- `public key` from the intended recipient
-
-So with an input separated between DATA and KEYS or grouped together in an array like:
-
-```json
-[
-  {"Bob": {"public_key":"u64:BGF59uMP0DkHoTjMT..."} },
-  {"Alice": { "keypair": {
-      "private_key": "u64:F_NaS3Y6Xw6BW...",
-      "public_key": "u64:BLG0OGDwzP_gY41TZgGpUB4lTYCgpx9BJVScxSQAfwqEi..." } } }
-]
-```
-
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-
-
-[](../_media/examples/zencode_simple/AES05.zen ':include :type=code gherkin')
-
-which encrypts and stores results in `secret message`; also in this case `header` may be given, then is included in the encryption as an authenticated clear-text section.
-
-```mermaid
-sequenceDiagram
-        participant A as Alice
-        participant B as Bob
-    A->>A: prepare the keyring
-    A->>A: encrypt the message
-#    Note over A,B: Given that I am known as 'Alice'<br/>and I have my 'keypair'<br/>and I have a 'public key' from 'Bob'<br/>When I write 'my secret' in 'draft'<br/>and I encrypt the 'draft' to 'secret message' for 'Bob'<br/>Then print the 'secret message'<br/>
-        A->>B: send the secret message
-#       Note over A,B: Given that I am 'Bob'<br/>and I have my valid 'keypair'<br/>and I have a 'public key' from 'Alice'<br/>Then print my 'keypair'<br/>and print the 'public key'
-    B->>B: prepare the keyring
-#       Note over A,B: Given that I am known as 'Bob'<br/>and I have my valid 'keypair'<br/>and I have a 'public key' from 'Alice'<br/>and I have a valid 'secret message'<br/>When I decrypt the 'secret message' from 'Alice' to 'clear text'<br/>Then print as 'string' the 'clear text'<br/>and print the 'header' inside 'secret message'<br/>
-        B->>B: decrypt the message
-```
-
-
-**1. Alice encrypts the message using Bob's public key**
-[](../_media/examples/zencode_simple/AES05.zen ':include :type=code gherkin')
-
-**2. Bob prepares a keyring with Alice's public key**
-[](../_media/examples/zencode_simple/AES06.zen ':include :type=code gherkin')
-
-**3. Bob decrypts the message using Alice's public key**
-[](../_media/examples/zencode_simple/AES07.zen ':include :type=code gherkin')
-
-In this basic example the session key for encryption is made combining
-the private key of Alice and the public key of Bob (or
-vice versa).
-
-```gherkin
-When I write 'my secret for you' in 'message'
-and I write 'an authenticated message' in 'header'
-```
-
-The decryption will always check that the header hasn't changed,
-maintaining the integrity of the string which may contain important
-public information that accompany the secret.
-
-## Public-key Signature (ECDSA)
-
-Public-key signing allows to verify the integrity of a message by
-knowing the public key of all those who have signed it.
-
-It is very useful when in need of authenticating documents: any change
-to the content of a document, even one single bit, will make the
-verification fail, showing that something has been tampered with.
-
-The one signing only needs his/her own keypair, so the key setup will
-be made by the lines:
-
-```gherkin
-Given that I am known as 'Alice'
-and I have my valid 'keypair'
-```
-
-then assuming that the document to sign is in `draft`, Alice can
-proceed signing it with:
-
-```gherkin
-and I create the signature of 'draft'
-```
-
-which will produce a new object `signature` to be printed along the
-draft: the original message stays intact and the signature is detached.
-
-On the other side Bob will need Alice's public key to verify the
-signature with the line:
-
-```gherkin
-When I verify the 'draft' is signed by 'Alice'
-```
-
-which will fail in case the signature is invalid or the document has
-been tampered with.
-
-```mermaid
-sequenceDiagram
-        participant A as Alice
-        participant B as Bob
-#    Note over A,B: Given that I am known as 'Alice'<br/>and I have my 'keypair'<br/>When I write 'This is my signed message to Bob.' in 'draft'<br/>and I sign the 'draft' as 'signed message'<br/>Then print my 'signed message'
-    A->>A: sign the message     as Alice
-        A->>B: send the signed message
-#       Note over A,B: Given that I am 'Bob'<br/>and I have my valid 'keypair'<br/>and I have a 'public key' from 'Alice'<br/>Then print my 'keypair'<br/>and print the 'public key'
-    B->>B: prepare the keyring
-#       Note over A,B: Given that I am known as 'Bob'<br/>and I have inside 'Alice' a valid 'public key'<br/>and I have a draft inside 'Alice'<br/>and I have a valid 'signed message'<br/>When I verify the 'signed message' is authentic<br/>Then print 'signature' 'correct'<br/>and print as 'string' the 'text' inside 'signed message'
-        B->>B: verify the signature by Alice
-```
-
-Here we continue assuming that the keyrings are already prepared with
-public/private keypairs and the public keypair of the correspondent.
-
-**1. Alice signs a message for Bob**
-[](../_media/examples/zencode_simple/DSA01.zen ':include :type=code gherkin')
-
-**1. Bob verifies the signed message from Alice**
-[](../_media/examples/zencode_simple/DSA02.zen ':include :type=code gherkin')
-
-In this example Alice uses her private key to sign and authenticate a
-message. Bob or anyone else can use Alice's public key to prove that
-the integrity of the message is kept intact and that she signed it.
-
----
-
-# Attribute Based Credentials
-
-![Alice in Wonderland](../_media/images/alice_with_cards-sm.jpg)
-
-Attribute Based Credentials are a powerful and complex feature
-implemented using the [Coconut crypto
-scheme](https://arxiv.org/pdf/1802.07344.pdf). This is the most
-complex functionality available in Zenroom and it will show how the
-Zencode language really simplifies it.
+![Alice in Wonderland](../_media/images/alice_with_cards-sm.jpg) 
 
 Let's imagine 3 different subjects for our scenarios:
 
-1. **Mad Hatter** is a well known **issuer** in Wonderland
+1. **Mad Hatter** is a well known **credential issuer** in Wonderland
 2. **Wonderland** is an open space (a blockchain!) and all inhabitants can check the validity of **proofs**
 3. **Alice** just arrived: to create **proofs** she'll request a **credential** to the issuer **MadHatter**
 
@@ -515,14 +493,14 @@ print the results all together!
 
 ```gherkin
 Scenario coconut
-Given that I am known as 'Issuer'
-When I create the issuer keypair
-and I create the credential keypair
-and I create the credential request
-and I create the credential signature
-and I create the credentials
-Then print the 'credentials'
-and print the 'credential keypair'
+	Given that I am known as 'Issuer'
+	When I create the issuer keypair
+	and I create the credential keypair
+	and I create the credential request
+	and I create the credential signature
+	and I create the credentials
+	Then print the 'credentials'
+	and print the 'credential keypair'
 ```
 
 This will produce **credentials** that anyone can take and run. Just
@@ -531,22 +509,7 @@ maliciously keep the **credential keypair** and impersonate the
 **Holder**.
 
 
-
-## Try it on your system!
-
-Impatient to give it a spin? run Zencode scripts locally to see what
-are the files produced!
-
-Make sure that Zenroom is installed on your PC
-and then go to the...
-
-[Online Interactive Demo](/demo)
-
-[Shell Script Examples](/pages/shell_scripts)
-
----
-
-# Zero Knowledge Proofs
+## Zero Knowledge Proofs
 
 There is more to this of course: Zencode supports several features
 based on pairing elliptic curve arithmetics and in particular:
@@ -573,84 +536,3 @@ Three more are in the work and they are:
 3. Private credential revocation
 
 ---
-
-# Import, validate and transform data
-
-## Given
-
-### Self introduction
-
-This affects **my** statements
-
-```gherkin
-   Given I introduce myself as ''
-   Given I am known as ''
-   Given I am ''
-   Given I have my ''
-   Given I have my valid ''
-```
-
-Data provided as input (from **data** and **keys**) is all imported
-automatically from **JSON** or [CBOR](https://tools.ietf.org/html/rfc7049) binary formats.
-
-Scenarios can add Schema for specific data validation mapped to **words** like: **signature**, **proof** or **secret**.
-
-
-**Data input**
-```gherkin
-   Given I have a ''
-   Given I have a valid ''
-   Given I have a '' inside ''
-   Given I have a valid '' inside ''
-   Given I have a '' from ''
-   Given I have a valid '' from ''
-   Given the '' is valid
-```
-
-or check emptiness:
-
-```gherkin
-   Given nothing
-```
-
-all the list of valid `given` statements are:
-
-[](../_media/zencode_utterances.yaml ':include :fragment=given :type=code yaml')
-
-
-When **valid** is specified then extra checks are made on input value,
-mostly according to the **scenario**
-
-**Settings**
-```txt
-rule input encoding [ url64 | base64 | hex | bin ]
-rule input format [ json | cbor ]
-```
-
-## When
-
-Processing data is done in the when block. Also scenarios add statements to this block.
-
-Without extensions, these are the basic functions available
-
-[](../_media/zencode_utterances.yaml ':include :fragment=when :type=code yaml')
-
-with the `simple` extension the following statementa are valid
-
-[](../_media/zencode_utterances.yaml ':include :fragment=simple_when :type=code yaml')
-
-with the `coconut` extension the following statementa are valid
-
-[](../_media/zencode_utterances.yaml ':include :fragment=coconut_when :type=code yaml')
-
-## Then
-
-Output is all exported in JSON or CBOR
-
-[](../_media/zencode_utterances.yaml ':include :fragment=then :type=code yaml')
-
-Settings:
-```txt
-rule output encoding [ url64 | base64 | hex | bin ]
-rule output format [ json | cbor ]
-```
