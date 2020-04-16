@@ -50,6 +50,8 @@ when:
   - when: I insert the '' in ''
   - when: the '' is not found in ''
   - when: the '' is found in ''
+  - when: I split the rightmost '' bytes of ''
+  - when: I split the leftmost '' bytes of ''
   - when: I set '' as '' with ''
   - when: I append '' as '' to ''
   - when: I write '' as '' in ''
@@ -104,6 +106,6 @@ coconut:
 ### [dp3t_when]
 dp3t:
   - when: I renew the secret day key to a new day
-  - when: I create the ephemeral ids for each moment of the day
+  - when: I create the ephemeral ids for today
   - when: I create the proximity tracing of infected ids
 ### [dp3t_when]

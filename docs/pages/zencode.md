@@ -4,7 +4,7 @@
 
 Zenroom's development is heavily inspired by the [language-theoretical security](http://langsec.org) research and the [BDD Language](https://en.wikipedia.org/wiki/Behavior-driven_development). 
 
-Zenroom can execute smart contracts written in the  domain-specific language **Zencode**, which reads in a [natural English-like fashion](https://decodeproject.eu/blog/smart-contracts-english-speaker)., and allows to perform cryptographic operations as long as more traditional data manipulation.
+Zenroom can execute smart contracts written in the  domain-specific language **Zencode**, which reads in a [natural English-like fashion](https://decodeproject.eu/blog/smart-contracts-english-speaker), and allows to perform cryptographic operations as long as more traditional data manipulation.
 
 For the theoretical background see the [Zencode Whitepaper](https://files.dyne.org/zenroom/Zencode_Whitepaper.pdf).
 
@@ -96,32 +96,8 @@ After both Alice and Bob have their own keypairs and they both know
 each other public key we can move forward to do asymmetric encryption
 and signatures.
 
-[](../_media/examples/zencode_simple/AES01.zen ':include :type=code gherkin')
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-
-```json
-"Alice": {
-   "keypair": {
-      "private_key": "u64:F_NaS3Y6Xw6BW...",
-      "public_key": "u64:BLG0OGDwzP_gY41TZgGpUB4lTYCgpx9BJVScxSQAfwqEi..."
-   }
-}
-```
-
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-
 [](../_media/examples/zencode_simple/AES02.zen ':include :type=code gherkin')
 
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
 
 ```json
 "Alice": {
@@ -153,12 +129,6 @@ So with an input separated between DATA and KEYS or grouped together in an array
       "public_key": "u64:BLG0OGDwzP_gY41TZgGpUB4lTYCgpx9BJVScxSQAfwqEi..." } } }
 ]
 ```
-
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-<span class="mdi mdi-arrow-down"></span>
-
 
 [](../_media/examples/zencode_simple/AES05.zen ':include :type=code gherkin')
 
@@ -193,8 +163,8 @@ the private key of Alice and the public key of Bob (or
 vice versa).
 
 ```gherkin
-When I write 'my secret for you' in 'message'
-and I write 'an authenticated message' in 'header'
+	When I write 'my secret for you' in 'message'
+	and I write 'an authenticated message' in 'header'
 ```
 
 The decryption will always check that the header hasn't changed,
@@ -214,15 +184,15 @@ The one signing only needs his/her own keypair, so the key setup will
 be made by the lines:
 
 ```gherkin
-Given that I am known as 'Alice'
-and I have my valid 'keypair'
+	Given that I am known as 'Alice'
+	and I have my valid 'keypair'
 ```
 
 then assuming that the document to sign is in `draft`, Alice can
 proceed signing it with:
 
 ```gherkin
-and I create the signature of 'draft'
+	and I create the signature of 'draft'
 ```
 
 which will produce a new object `signature` to be printed along the
@@ -232,7 +202,7 @@ On the other side Bob will need Alice's public key to verify the
 signature with the line:
 
 ```gherkin
-When I verify the 'draft' is signed by 'Alice'
+	When I verify the 'draft' is signed by 'Alice'
 ```
 
 which will fail in case the signature is invalid or the document has
@@ -255,9 +225,11 @@ Here we continue assuming that the keyrings are already prepared with
 public/private keypairs and the public keypair of the correspondent.
 
 **1. Alice signs a message for Bob**
+
 [](../_media/examples/zencode_simple/DSA01.zen ':include :type=code gherkin')
 
 **1. Bob verifies the signed message from Alice**
+
 [](../_media/examples/zencode_simple/DSA02.zen ':include :type=code gherkin')
 
 In this example Alice uses her private key to sign and authenticate a
@@ -521,14 +493,14 @@ print the results all together!
 
 ```gherkin
 Scenario coconut
-Given that I am known as 'Issuer'
-When I create the issuer keypair
-and I create the credential keypair
-and I create the credential request
-and I create the credential signature
-and I create the credentials
-Then print the 'credentials'
-and print the 'credential keypair'
+	Given that I am known as 'Issuer'
+	When I create the issuer keypair
+	and I create the credential keypair
+	and I create the credential request
+	and I create the credential signature
+	and I create the credentials
+	Then print the 'credentials'
+	and print the 'credential keypair'
 ```
 
 This will produce **credentials** that anyone can take and run. Just

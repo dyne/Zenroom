@@ -13,8 +13,8 @@ key = HASH.pbkdf2(hash, secrets.pin, secrets.salt, secrets.kdf_iterations, 32)
 local cipher = { header = O.from_str("my header"),
 				 iv = O.random(16) }
 cipher.text, cipher.checksum =
-   ECDH.aead_encrypt(key, secrets.text,
-					 cipher.iv, cipher.header)
+   AES.gcm_encrypt(key, secrets.text,
+				   cipher.iv, cipher.header)
 
 -- I.print(cipher)
 -- output = map(cipher, hex)
@@ -25,8 +25,8 @@ print(JSON.encode(cipher))
 
 local decode = { header = cipher.header }
 decode.text, decode.checksum =
-   ECDH.aead_decrypt(key, cipher.text,
-					 cipher.iv, cipher.header)
+   AES.gcm_decrypt(key, cipher.text,
+				   cipher.iv, cipher.header)
 
 -- this needs to be checked, can also be in the host application
 -- if checksums are different then the data integrity is corrupted

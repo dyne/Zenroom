@@ -33,7 +33,7 @@ header.iv = O.random(32):url64()
 local session = ECDH.session(devkey.private, O.from_url64(keys.community_pubkey))
 local out = { header = url64(JSON.encode(header)) }
 out.text, out.checksum = 
-   ECDH.aead_encrypt(KDF(session), JSON.encode(payload), header.iv, out.header)
+   AES.gcm_encrypt(KDF(session), JSON.encode(payload), header.iv, out.header)
 
 -- content(output) -- uncomment for debug
 print( JSON.encode( out ) ) -- map(output, url64) ) )
