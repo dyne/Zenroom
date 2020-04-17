@@ -5,11 +5,10 @@ One of Zenroom's strong points is the quality of the random generation (see [ran
 
 Let's first go the super fast way to test code, entering the [Zenroom web demo](https://dev.zenroom.org/demo/). Copy this code into the *Zencode* tab on the top left of the page: 
 
-```gherkin
-	Given nothing
-	When I create the array of '16' random objects of '32' bits
-	Then print all data
-```
+
+[](../_media/examples/zencode_cookbook/01_randomArrayGeneration.zen ':include :type=code gherkin')
+
+
 
 Then press the *Run▶️* button to execute the script, the result should look like this:
 
@@ -52,24 +51,12 @@ Open *myArray.json* with your text editor, and notice that the array produced wi
  - Each phase can have as many commands as you like, provided that they're on a different line and they begin with the keyword *And* 
 For example, you can rename your array to *'myArray'* by running this script:
 
-```gherkin
-	Given nothing
-	When I create the array of '16' random objects of '32' bits
-	And I rename the 'array' to 'myArray'
-	Then print all data
-```
+[](../_media/examples/zencode_cookbook/02_randomArrayRename.zen ':include :type=code gherkin')
+
 Note that you need to use the **' '** in the line that renames the array, cause you may be generating and renaming a bunch of arrays already, like in this script:
 
-```gherkin
-	Given nothing
-	When I create the array of '2' random objects of '8' bits
-	And I rename the 'array' to 'myTinyArray'
-	And I create the array of '4' random objects of '16' bits
-	And I rename the 'array' to 'myAverageArray'
-	And I create the array of '16' random objects of '64' bits
-	And I rename the 'array' to 'myBigFatArray'
-	Then print all data
-```
+[](../_media/examples/zencode_cookbook/03_randomArrayMultiple.zen ':include :type=code gherkin')
+
 
 The script above will produce an output like this:
 
