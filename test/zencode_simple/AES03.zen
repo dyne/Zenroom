@@ -1,5 +1,5 @@
 Rule check version 1.0.0
 Scenario 'simple': Bob generate a keypair
-Given that I am known as 'Bob'
-When I create the keypair
-Then print my data
+	Given that I am known as 'Bob'
+	When I create the keypair
+	Then print my data
