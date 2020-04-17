@@ -10,7 +10,7 @@ Let's first go the super fast way to test code, entering the [Zenroom web demo](
 
 
 
-Then press the *Run▶️* button to execute the script, the result should look like this:
+Then press the *RUN▶️* button to execute the script, the result should look like this:
 
 ![CreateArrayWebDemo](../_media/images/cookbookCreateArrayWebDemo.png)
 
@@ -21,7 +21,7 @@ We got a nice array here. You can play with the values *'16'* and *'32'*, to see
 Once you're done with your array, it's time to go pro, meaning that we're leaving the web demo and moving to using Zenroom as *command line application* (CLI). 
 
  - The first step is to download a version of Zenroom that works on your system from the [Zenroom downloads](https://zenroom.org/#downloads). 
- - If you're using Linux, you'll want to place Zenroom in /bin or /user/sbin (or just creat a simlink or an alias).
+ - If you're using Linux, you'll want to place Zenroom in `/bin` or `/usr/sbin` (or just creat a simlink or an alias).
  - Third, fire up your favourite text editor, paste the smart contract in it and save it *arrayGenerator.zen*
 
 Now you can let zenroom execute the script by launching the command:
@@ -38,7 +38,7 @@ In the example Zenroom did graciously output first the licensing, then some info
 
 On Linux, you can use: 
 
-```
+```bash
 zenroom -z arrayGenerator.zen | tee myArray.json
 ```
 
@@ -95,5 +95,3 @@ The script above will produce an output like this:
 
 Certainly, at this point, your keen eye has noted something odd in the output...If in the Zencode I generated the arrays sorted by size, why is output sorted differently? Because in Zenroom, my friend,  [Determinism](https://github.com/DECODEproject/Zenroom/blob/master/test/deterministic_random_test.sh) is king, so Zenroom will by default sort the output alphabetically.
 
-
-TBC
