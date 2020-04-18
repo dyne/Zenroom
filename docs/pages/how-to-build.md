@@ -71,14 +71,30 @@ make check-crypto-lw
 ## Static builds
 Builds a fully static executable linked to musl-libc (to be operated on embedded platforms).
 
-To build the static environment:
+As a prerequisite you need the `musl-gcc` binary installed on your machine.
 
-```
-make bootstrap
-make static
-make check-static
+**eg.** on [Devuan](https://devuan.org) you can just
+```bash
+  apt install musl-tools
 ```
 
+To build the static environment with musl installed system wide run:
+
+```bash
+make musl-system
+```
+
+There are also two other targets that looks for the `libc` in other places.
+
+For `/usr/local/musl/lib/libc.a` run
+```bash
+make musl-local
+```
+
+For `/usr/lib/${ARCH}-linux-musl/libc.a`
+```bash
+make musl
+```
 
 ## Javascript builds
 
