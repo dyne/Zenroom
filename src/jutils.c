@@ -48,52 +48,44 @@ const char* ANSI_MAGENTA = "\x1b[35m";
 const char* ANSI_CYAN    = "\x1b[36m";
 const char* ANSI_RESET   = "\x1b[0m";
 
-#define MAX_DEBUG 2
-// #define MAX_STRING 1024
-#define FUNC 2 /* se il debug level e' questo
-		  ci sono le funzioni chiamate */
-#define WARN 1 /* ... blkbblbl */
-
 extern zenroom_t *Z;
 char pfx[MAX_STRING];
 
 extern int zen_write_err_va(const char *fmt, va_list va);
 
 static int verbosity = 1;
+int get_debug() { return(verbosity); }
 void set_debug(int lev) {
   lev = lev<0 ? 0 : lev;
-  lev = lev>MAX_DEBUG ? MAX_DEBUG : lev;
+  lev = lev>3 ? 3 : lev;
   verbosity = lev;
 }
 
 static int color = 0;
 void set_color(int on) { color = on; }
 
-int get_debug() {
-  return(verbosity);
-}
-
 void notice(lua_State *L, const char *format, ...) {
 	(void)L;
-  va_list arg;
-  if(color)
-	  z_snprintf(pfx, MAX_STRING-1, "%s[*]%s %s\n",ANSI_GREEN,ANSI_RESET,format);
-  else
-	  z_snprintf(pfx, MAX_STRING-1, "[*] %s\n",format);
-  va_start(arg, format);
-  zen_write_err_va(pfx, arg);
-  va_end(arg);
+	if(!verbosity) return;
+	va_list arg;
+	if(color)
+		z_snprintf(pfx, MAX_STRING-1, "%s[*]%s %s\n",ANSI_GREEN,ANSI_RESET,format);
+	else
+		z_snprintf(pfx, MAX_STRING-1, "[*] %s\n",format);
+	va_start(arg, format);
+	zen_write_err_va(pfx, arg);
+	va_end(arg);
 }
 
 void func(void *L, const char *format, ...) {
 	(void)L;
-	if(verbosity>=FUNC) {
-		va_list arg;
-		z_snprintf(pfx, MAX_STRING-1, "[D] %s\n",format);
-		va_start(arg, format);
-		zen_write_err_va(pfx, arg);
-		va_end(arg);
-	}
+	if(verbosity<3) return;
+	va_list arg;
+	z_snprintf(pfx, MAX_STRING-1, "[D] %s\n",format);
+	va_start(arg, format);
+	zen_write_err_va(pfx, arg);
+	va_end(arg);
+
 }
 
 void error(lua_State *L, const char *format, ...) {
@@ -113,6 +105,7 @@ void error(lua_State *L, const char *format, ...) {
 
 void act(lua_State *L, const char *format, ...) {
 	(void)L;
+	if(!verbosity) return;
 	va_list arg;
 	z_snprintf(pfx, MAX_STRING-1, " .  %s\n",format);
 	va_start(arg, format);
@@ -121,7 +114,9 @@ void act(lua_State *L, const char *format, ...) {
 }
 
 void warning(lua_State *L, const char *format, ...) {
-        (void) L;
+	(void) L;
+	if(verbosity<2) return;
+
 	va_list arg;
 	if(color)
 		z_snprintf(pfx, MAX_STRING-1, "%s[W]%s %s\n",ANSI_YELLOW,ANSI_RESET,format);

@@ -64,12 +64,6 @@ function Then(text, fn)
    ZEN.then_steps[text] = fn
 end
 
-
--- debug functions
-Given("debug", function() ZEN.debug() end)
-When("debug",  function() ZEN.debug() end)
-Then("debug",  function() ZEN.debug() end)
-
 -- the main security concern in this Zencode module is that no data
 -- passes without validation from IN to ACK or from inline input.
 
@@ -86,7 +80,9 @@ ZEN.get = function(obj, key, conversion)
    ZEN.assert(type(key) == "string", "ZEN.get key is not a string")
    ZEN.assert(not conversion or type(conversion) == 'function',
 			  "ZEN.get invalid conversion function")
-   local k = obj[key]
+   local k
+   if key == "." then k = obj
+   else k = obj[key] end
    ZEN.assert(k, "Key not found in object conversion: "..key)
    local res = nil
    local t = type(k)
@@ -236,23 +232,23 @@ end
 -- @param schema[opt] string descriptor of the schema to validate
 -- @return true or false
 function ZEN:validate(name, schema)
-   schema = schema or TMP.schema or name -- if no schema then coincides with name
+   local schema_name = schema or TMP.schema or name -- if no schema then coincides with name
    ZEN.assert(name, "ZEN:validate error: argument is nil")
    ZEN.assert(TMP, "ZEN:validate error: TMP is nil")
    -- ZEN.assert(TMP.schema, "ZEN:validate error: TMP.schema is nil")
    -- ZEN.assert(TMP.schema == name, "ZEN:validate() TMP does not contain "..name)
-   local got = TMP.data -- inside_pick(TMP,name)
    ZEN.assert(TMP.data, "ZEN:validate error: data not found in TMP for schema "..name)
-   local s = ZEN.schemas[schema]
-   ZEN.assert(s, "ZEN:validate error: "..schema.." schema not found")
-   ZEN.assert(type(s) == 'function', "ZEN:validate error: schema is not a function for "..schema)
-   ZEN:ftrace("validate "..name.. " with schema "..schema)
-   local res = s(TMP.data) -- ignore root
-   ZEN.assert(res, "ZEN:validate error: validation failed for "..name.." with schema "..schema)
-   TMP.data = res -- overwrite
+   local schema_f = ZEN.schemas[schema_name]
+   ZEN.assert(schema_f, "ZEN:validate error: "..schema_name.." schema not found")
+   ZEN.assert(type(schema_f) == 'function',
+			  "ZEN:validate error: schema is not a function for "..schema_name)
+   ZEN:ftrace("validate "..name.. " with schema "..schema_name)
+   TMP.data = schema_f(TMP.data) -- overwrite
+   ZEN.assert(TMP.data, "ZEN:validate error: validation failed for "..name
+				 .." with schema "..schema_name)
    assert(ZEN.OK)
    TMP.valid = true
-   ZEN:ftrace("validation passed for "..name.. " with schema "..schema)
+   ZEN:ftrace("validation passed for "..name.. " with schema "..schema_name)
 end
 
 function ZEN:validate_recur(obj, name)

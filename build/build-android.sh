@@ -1,35 +1,26 @@
 #!/usr/bin/env bash
-export NDK_HOME=$ANDROID_HOME/ndk-bundle/
-export ANDROID_API=21
 
+ANDROID_HOME=${ANDROID_HOME:=~/Android/Sdk}
+export NDK_HOME=${NDK_HOME:=${ANDROID_HOME}/ndk-bundle}
+
+LIB_SRC_PATH=${LIB_SRC_PATH:=${PWD}/src}
+LIB_DST_PATH=${LIB_DST_PATH:=${PWD}/build/target/android/jniLibs}
 
 build () {
-	export NDK_TOOLCHAIN=/tmp/ndk-arch-$ANDROID_API
-	echo "Creating a toolchain for $2 in $NDK_TOOLCHAIN"
-	rm -fr $NDK_TOOLCHAIN;
-	$NDK_HOME/build/tools/make_standalone_toolchain.py --arch $1 --api $ANDROID_API --install-dir $NDK_TOOLCHAIN --stl gnustl
-	export PATH=${NDK_TOOLCHAIN}/${2}/bin:${PATH}:${NDK_TOOLCHAIN}/bin
-	
-	export CC="$2-gcc"
-	export CXX="$2-g++"
-	export RANLIB="$2-ranlib"
-	export LD="$2-ld"
-	export AR="$2-ar"
 
-	#Define the Android API level
-
-	export CFLAGS="-D__ANDROID_API__=$ANDROID_API"
-
+	echo "${0}: Building Android ${2} libs ..."
 	make clean
-	make android
-
-	cp src/zenroom.so libzenroom-$1.so
+	make android-$1
+	mkdir -p ${LIB_DST_PATH}/${3}
+	cp ${LIB_SRC_PATH}/zenroom.so ${LIB_DST_PATH}/${3}/libzenroom.so
 }
 
 if [ ! -d "$NDK_HOME" ]; then
-  echo "ANDROID_HOME environment variable seems to not be setted or NDK is not installed"
+  echo "ANDROID_HOME environment variable seems to not be set or NDK is not installed"
   exit 1
 fi
 
-build "arm" "arm-linux-androideabi"
-build "x86" "i686-linux-android" 
+build "x86" "i686-linux-android" "x86"
+build "arm" "arm-linux-androideabi" "armeabi-v7a"
+build "aarch64" "aarch64-linux-android" "arm64-v8a"
+echo "Built Android libs placed under ${LIB_DST_PATH}"

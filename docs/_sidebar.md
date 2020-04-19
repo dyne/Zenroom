@@ -6,8 +6,12 @@
   - [Browser-encryption demo](/pages/encrypt.md "Browser-encryption demo")
 <!--- to remove https://github.com/DECODEproject/Zenroom/blob/master/docs/website/docs/encrypt.md  ---> 
 
-- Programming 
+- Programming Zencode
   - [Zencode](/pages/zencode.md "Zencode")
+  - [Zencode command list](/pages/zencode-list.md "Zencode command list")
+  - [Zencode cookbook](/pages/zencode-cookbook.md "Zencode cookbook") 
+
+- Programming Lua
   - [Lua](/pages/lua.md "in Lua")
   - [Lua full reference](/pages/ldoc/o/README.md "in Lua") 
 

@@ -18,6 +18,10 @@
 
 
 -- GIVEN
+local function gc()
+   TMP = { }
+   collectgarbage'collect'
+end
 
 Given("nothing", function() ZEN.assert(not DATA and not KEYS, "Unused data passed as input") end)
 Given("all data", function()
@@ -47,14 +51,14 @@ Given("I have a ''", function(name)
 		 ZEN:pick(name)
 		 TMP.valid = true
 		 ZEN:ack(name)
-		 TMP = { }
+		 gc()
 end)
 Given("I have my ''", function(name)
 		 ZEN.assert(WHO, "No identity specified, use: Given I am ...")
 		 ZEN:pickin(WHO, name)
 		 TMP.valid = true
 		 ZEN:ack(name)
-		 TMP = { }
+		 gc()
 end)
 
 Given("I have my valid ''", function(name)
@@ -62,33 +66,33 @@ Given("I have my valid ''", function(name)
 		 ZEN:pickin(WHO, name)
 		 ZEN:validate(name)
 		 ZEN:ack(name)
-		 TMP = { }
+		 gc()
 end)
 
 Given("I have a valid ''", function(name)
 		 ZEN:pick(name)
 		 ZEN:validate(name)
 		 ZEN:ack(name)
-		 TMP = { }
+		 gc()
 end)
 Given("the '' is valid", function(name)
 		 ZEN:pick(name)
 		 ZEN:validate(name)
 		 ZEN:ack(name)
-		 TMP = { }
+		 gc()
 end)
 
 Given("I have a '' inside ''", function(n, s)
 		 ZEN:pickin(s, n)
 		 TMP.valid = true
 		 ZEN:ack(n) -- save it in ACK.n
-		 TMP = { }
+		 gc()
 end)
 Given("I have inside '' a ''", function(s, n)
 		 ZEN:pickin(s, n)
 		 TMP.valid = true
 		 ZEN:ack(s) -- save it in ACK.s.n
-		 TMP = { }
+		 gc()
 end)
 
 
@@ -96,13 +100,13 @@ Given("I have inside '' a valid ''", function(s, n)
 		 ZEN:pickin(s, n)
 		 ZEN:validate(n)
 		 ZEN:ack(s) -- save it in ACK.s.n
-		 TMP = { }
+		 gc()
 end)
 Given("I have a valid '' inside ''", function(n, s)
 		 ZEN:pickin(s, n)
 		 ZEN:validate(n)
-		 ZEN:ack(s) -- save it in ACK.s.n
-		 TMP = { }
+		 ZEN:ack(n) -- save it in ACK.n
+		 gc()
 end)
 
 -- public keys for keyring arrays
@@ -110,7 +114,7 @@ Given("I have a valid '' from ''", function(n, s)
 		 ZEN:pickin(s, n)
 		 ZEN:validate(n)
 		 ZEN:ack_table(n, s)
-		 TMP = { }
+		 gc()
 end)
 
 ZEN.add_schema({
@@ -157,7 +161,7 @@ Given("I have a valid array in ''", function(a)
 		 assert(ZEN.OK)
 		 ZEN:validate(a,'array')
 		 ZEN:ack(a)
-		 TMP = { }
+		 gc()
 end)
 
 Given("I have a valid array of '' in ''", function(t,a)
@@ -172,7 +176,7 @@ Given("I have a valid array of '' in ''", function(t,a)
 		 assert(ZEN.OK)
 		 ZEN:validate(a,'array_'..t:lower())
 		 ZEN:ack(a)
-		 TMP = { }
+		 gc()
 end)
 
 Given("I have a valid number in ''", function(n)
@@ -183,5 +187,5 @@ Given("I have a valid number in ''", function(n)
 				 valid = type(num) == 'number',
 				 schema = nil }
 		 ZEN:ack(n)
-		 TMP = { }
+		 gc()
 end)

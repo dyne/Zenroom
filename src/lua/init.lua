@@ -76,6 +76,7 @@ require('zencode_given')
 require('zencode_when')
 require('zencode_then')
 require('zencode_eval')
+if DEBUG > 0 then require('zencode_debug') end
 
 -- scenario are loaded on-demand
 -- scenarios can only implement "When ..." steps

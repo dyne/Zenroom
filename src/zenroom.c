@@ -179,6 +179,10 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 		return NULL;
 	}
 
+	// expose the debug level
+	lua_pushinteger(Z->lua, Z->errorlevel);
+	lua_setglobal (Z->lua, "DEBUG");
+
 	lua_atpanic(Z->lua, &zen_lua_panic); // as done in lauxlib luaL_newstate
 	lua_pushcfunction(Z->lua, &zen_init_pmain);  /* to call in protected mode */
 	// lua_pushinteger(Z->lua, 0);  /* 1st argument */
