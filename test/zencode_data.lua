@@ -14,8 +14,8 @@ rule check version 1.0.0
 rule input encoding string
 Given I have a 'inside' inside 'first'
 and I have a 'third'
-When I write 'first.inside' in 'test'
-and I write 'three' in 'tertiur'
+When I write string 'first.inside' in 'test'
+and I write string 'three' in 'tertiur'
 and I verify 'third' is equal to 'tertiur'
 Then print the 'test' as 'string'
 ]])

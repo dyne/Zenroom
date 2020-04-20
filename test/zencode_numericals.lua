@@ -7,8 +7,8 @@ ZEN:begin()
 ZEN:parse([[
 rule check version 1.0.0
 Given nothing
-When I set 'left' to '10'
-and I set 'right' to '20'
+When I write number '10' in 'left'
+and I write number '20' in 'right'
 and number 'left' is less or equal than 'right'
 Then print 'OK'
 ]])
@@ -31,8 +31,8 @@ ZEN:begin()
 ZEN:parse([[
 rule check version 1.0.0
 Given nothing
-When I set 'left' to '0a' formatted as 'hex'
-and I set 'right' to '14' formatted as 'hex'
+When I set 'left' to '0a' base '16'
+and I set 'right' to '14' base '16'
 and number 'left' is less than 'right'
 Then print 'OK'
 ]])

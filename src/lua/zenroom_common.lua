@@ -230,10 +230,12 @@ local function split(src,pat)
    src:gsub(pat, function(x) tbl[#tbl+1]=x end)
    return tbl
 end
-function strtok(src)
+function strtok(src, pat)
    if not src then return { } end
+   pat = pat or "%S+"
    ZEN.assert(luatype(src) == "string", "strtok error: argument is not a string")
-   return split(src, "%S+") end
+   return split(src, pat)
+end
 
 -- assert all values in table are converted to zenroom types
 -- used in zencode when transitioning out of given memory

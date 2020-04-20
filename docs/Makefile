@@ -14,7 +14,9 @@ website:
 	@ln -fs _media/js/zenroom.data .
 	@mkdir -p _media/examples
 	@cp -v ../examples/*.keys ../examples/*.data ../examples/*.lua _media/examples/
-	@cp -av ../test/zencode_coconut ../test/zencode_simple _media/examples/
+	@../build/zencode_scenario.sh dp3t
+	@../build/zencode_scenario.sh simple
+	@cp -av ../test/zencode_coconut _media/examples/
 	@cp -v ../bindings/javascript/README.md pages/javascript.md
 	@cp -v ../bindings/python3/README.md pages/python.md
 

@@ -58,18 +58,11 @@ In this phase each participant will create his/her own keypair, store it and com
 
 The statement to generate a keypair (public and private keys) is simple:
 
-[](../_media/examples/zencode_simple/AES01.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_simple/alice_keygen.zen ':include :type=code gherkin')
 
 It will produce something like this:
 
-```json
-"Alice": {
-   "keypair": {
-      "private_key": "u64:F_NaS3Y6Xw6BW...",
-      "public_key": "u64:BLG0OGDwzP_gY41TZgGpUB4lTYCgpx9BJVScxSQAfwqEi..."
-   }
-}
-```
+[](../_media/examples/zencode_simple/alice_keypair.json ':include :type=code json')
 
 Where the public key is usually a longer octet and actually an [Elliptic Curve Point](/lua/modules/ECP.html) coordinate.
 
@@ -96,14 +89,10 @@ After both Alice and Bob have their own keypairs and they both know
 each other public key we can move forward to do asymmetric encryption
 and signatures.
 
-[](../_media/examples/zencode_simple/AES02.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_simple/alice_keypub.zen ':include :type=code gherkin')
 
 
-```json
-"Alice": {
-   "public_key": "u64:BLG0OGDwzP_gY41TZgGpUB4lTYCgpx9BJVScxSQAfwqEi..."
-}
-```
+[](../_media/examples/zencode_simple/alice_pub.json ':include :type=code json')
 
 The advantage of using Zencode here is the use of the `valid` keyword which effectively parses the `public key` object and verifies it as valid, in this case as being a valid point on the elliptic curve in use. This greatly reduces the possibility of common mistakes.
 
@@ -121,14 +110,7 @@ Before getting to the encryption 2 other objects must be given:
 
 So with an input separated between DATA and KEYS or grouped together in an array like:
 
-```json
-[
-  {"Bob": {"public_key":"u64:BGF59uMP0DkHoTjMT..."} },
-  {"Alice": { "keypair": {
-      "private_key": "u64:F_NaS3Y6Xw6BW...",
-      "public_key": "u64:BLG0OGDwzP_gY41TZgGpUB4lTYCgpx9BJVScxSQAfwqEi..." } } }
-]
-```
+[](../_media/examples/zencode_simple/bob_keyring.json ':include :type=code json')
 
 [](../_media/examples/zencode_simple/AES05.zen ':include :type=code gherkin')
 
@@ -150,12 +132,15 @@ sequenceDiagram
 
 
 **1. Alice encrypts the message using Bob's public key**
+
 [](../_media/examples/zencode_simple/AES05.zen ':include :type=code gherkin')
 
 **2. Bob prepares a keyring with Alice's public key**
+
 [](../_media/examples/zencode_simple/AES06.zen ':include :type=code gherkin')
 
 **3. Bob decrypts the message using Alice's public key**
+
 [](../_media/examples/zencode_simple/AES07.zen ':include :type=code gherkin')
 
 In this basic example the session key for encryption is made combining
@@ -255,12 +240,7 @@ These 3 arguments can be written or imported, but must given before using the `I
 
 The output is returned in `secret message` and it looks like:
 
-```json
-{"secret_message":{"iv":"u64:-tU2gbox9kATCeC2k_zkhYM-PBA3IzvN7HtfyVXdzB4",
-	"header":"u64:dGhpc19pc19mb3JfQm9i",
-	"text":"u64:cw4M3FBO3zaPRAB26d6y8SMPGgAo_0AmJUrhg5dmKwoEB7BWLAAD_A2h",
-	"checksum":"u64:UugLrIuxRX46BETc1-XkrA"}}
-```
+[](../_media/examples/zencode_simple/cipher_message.json ':include :type=code json')
 
 To decode make sure to have that secret password and that a valid `secret message` is given, then use:
 

@@ -2,38 +2,16 @@
 
 # https://github.com/DP-3T/documents
 
-# use executable in current directory
-Z=../../src/zenroom
-D=.
+####################
+# common script init
+if ! test -r ../utils.sh; then
+	echo "run executable from its own directory: $0"; exit 1; fi
+. ../utils.sh
+Z="`detect_zenroom_path` `detect_zenroom_conf`"
+####################
 
-if test -r ./zenroom-linux-amd64; then
-	Z=./zenroom-linux-amd64
-	D=./out-dp3t
-elif test -r ./zenroom-osx.command; then
-	Z=./zenroom-osx.command;
-	D=./out-dp3t
-elif test -r ./src/zenroom; then
-	Z=./src/zenroom
-	D=./out-dp3t
-elif test -r ../../src/zenroom; then
-	Z=../../src/zenroom
-	D=./out-dp3t
-fi
 
-if ! test -r $Z; then
-	echo "Zenroom executable not found"
-	echo "download yours from https://files.dyne.org/zenroom/nightly/"
-	exit 1
-fi
-
-alias zenroom=$Z
-chmod +x $Z
-
-echo "Zenroom executable: $Z"
-mkdir -p $D
-echo "destination dir: $D"
-
-cat <<EOF | $Z -z | tee $D/SK1.json
+cat <<EOF | tee dp3t_keygen.zen | $Z -z | tee SK1.json
 rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
@@ -44,7 +22,7 @@ Then print the 'secret day key'
 EOF
 
 
-cat <<EOF | $Z -z -a $D/SK1.json | tee $D/SK2.json
+cat <<EOF | tee dp3t_keyderiv.zen | $Z -z -a SK1.json | tee SK2.json
 scenario 'dp3t': Decentralized Privacy-Preserving Proximity Tracing
 rule check version 1.0.0
 rule input encoding hex
@@ -54,11 +32,7 @@ When I renew the secret day key to a new day
 Then print the 'secret day key'
 EOF
 
-cat <<EOF | tee $D/moments.json
-{ "moments": "8" }
-EOF
-
-cat <<EOF | $Z -z -k $D/SK2.json | tee $D/EphID_2.json
+cat <<EOF | tee dp3t_ephidgen.zen | $Z -z -k SK2.json | tee EphID_2.json
 scenario 'dp3t': Decentralized Privacy-Preserving Proximity Tracing
 rule check version 1.0.0
 rule input encoding hex
@@ -73,7 +47,7 @@ EOF
 
 
 # now generate a test with 40.000 infected SK
-cat <<EOF | $Z -c memmanager=sys -z > $D/SK_infected_40k.json
+cat <<EOF | $Z -z > SK_infected_40k.json
 rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
@@ -84,7 +58,7 @@ Then print the 'list of infected'
 EOF
 
 # extract a few random infected ephemeral ids to simulate proximity
-cat <<EOF | $Z -c memmanager=sys,debug=1 -z -a $D/SK_infected_40k.json | tee $D/EphID_infected.json
+cat <<EOF | $Z -z -a SK_infected_40k.json | tee EphID_infected.json
 scenario 'dp3t'
 rule check version 1.0.0
 rule input encoding hex
@@ -100,7 +74,7 @@ Then print the 'ephemeral ids'
 EOF
 
 # given a list of infected and a list of ephemeral ids 
-cat <<EOF | time $Z -c memmanager=sys,debug=1 -z -a $D/SK_infected_40k.json -k $D/EphID_infected.json
+cat <<EOF | tee dp3t_check.zen | $Z -z -a SK_infected_40k.json -k EphID_infected.json
 scenario 'dp3t'
 rule check version 1.0.0
 rule input encoding hex
