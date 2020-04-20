@@ -25,24 +25,30 @@ EOF
 
 
 
-cat <<EOF | $Z -z -k $D/sk_zero.json 2>/dev/null > $D/ephid_zero.json
+cat <<EOF | $Z -z > $D/ephid_zero.json
 scenario 'dp3t': Decentralized Privacy-Preserving Proximity Tracing
 rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
-Given I have a valid 'secret day key'
-When I set 'epoch' to '15' base '10'
-and I set 'broadcast key' to 'Broadcast key' as 'string'
+Given nothing
+When I set 'secret day key' to '0000000000000000000000000000000000000000000000000000000000000000' as 'hex'
+and I set 'epoch' to '15' base '10'
+and I set 'broadcast key' to '42726f616463617374206b6579' as 'hex'
 and I create the ephemeral ids for today
 Then print the 'ephemeral ids'
 EOF
 
 
-cat <<EOF | $Z -a $D/sk_next.json -k $D/ephid_zero.json 2>/dev/null
-SK = JSON.decode(DATA)
-print("SK: ".. O.new(32):zero():hex())
-print("SK derivation:")
-print(SK.secret_day_key)
+cat <<EOF | $Z -k $D/ephid_zero.json
+SK = O.new(32):zero()
+BK = O.from_string("Broadcast key")
+print("Broadcast Key: ".. BK:hex() .. " (" .. #BK .. " bytes)")
+print("SK: ".. SK:hex())
+SHA256 = HASH.new('sha256')
+print("SK rotate (SHA256):")
+print(SHA256:process(SK))
+print("SK -> PRF (HMAC):")
+print(SHA256:hmac(SK, BK))
 print''
 print("EphIDs derivation (not randomized)")
 for k,v in ipairs(JSON.decode(KEYS).ephemeral_ids) do
@@ -50,21 +56,21 @@ for k,v in ipairs(JSON.decode(KEYS).ephemeral_ids) do
 end
 EOF
 
-cat <<EOF | $Z -z -k $D/sk_zero.json 2>/dev/null > $D/ephid_zero.json
+cat <<EOF | $Z -z > $D/ephid_zero.json
 scenario 'dp3t': Decentralized Privacy-Preserving Proximity Tracing
 rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
-Given I have a valid 'secret day key'
+Given nothing
 When I set 'epoch' to '15' base '10'
+and I set 'secret day key' to '0000000000000000000000000000000000000000000000000000000000000000' as 'hex'
 and I set 'broadcast key' to 'EFBBBF42726f616463617374206b6579' as 'hex'
 and I create the ephemeral ids for today
 Then print the 'ephemeral ids'
 EOF
 
 echo
-cat <<EOF | $Z -a $D/sk_next.json -k $D/ephid_zero.json 2>/dev/null
-SK = JSON.decode(DATA)
+cat <<EOF | $Z -k $D/ephid_zero.json
 print("BOM prefixed Broadcast key: EFBBBF42726f616463617374206b6579")
 print("EphIDs derivation (not randomized)")
 for k,v in ipairs(JSON.decode(KEYS).ephemeral_ids) do

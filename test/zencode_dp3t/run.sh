@@ -15,6 +15,9 @@ elif test -r ./zenroom-osx.command; then
 elif test -r ./src/zenroom; then
 	Z=./src/zenroom
 	D=./out-dp3t
+elif test -r ../../src/zenroom; then
+	Z=../../src/zenroom
+	D=./out-dp3t
 fi
 
 if ! test -r $Z; then
@@ -46,7 +49,7 @@ scenario 'dp3t': Decentralized Privacy-Preserving Proximity Tracing
 rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
-Given I have a valid 'secret day key'
+Given I have a 'secret day key'
 When I renew the secret day key to a new day
 Then print the 'secret day key'
 EOF
@@ -55,14 +58,15 @@ cat <<EOF | tee $D/moments.json
 { "moments": "8" }
 EOF
 
-cat <<EOF | $Z -z -a $D/moments.json -k $D/SK2.json | tee $D/EphID_2.json
+cat <<EOF | $Z -z -k $D/SK2.json | tee $D/EphID_2.json
 scenario 'dp3t': Decentralized Privacy-Preserving Proximity Tracing
 rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
-Given I have a valid 'secret day key'
-and I have a valid number in 'moments'
-When I create the ephemeral ids for each moment of the day
+Given I have a 'secret day key'
+When I write string 'Broadcast key' in 'broadcast key'
+and I write number '180' in 'epoch'
+and I create the ephemeral ids for today
 and I randomize the 'ephemeral ids' array
 Then print the 'ephemeral ids'
 EOF
@@ -80,7 +84,7 @@ Then print the 'list of infected'
 EOF
 
 # extract a few random infected ephemeral ids to simulate proximity
-cat <<EOF | $Z -c memmanager=sys -z -a $D/SK_infected_40k.json | tee $D/EphID_infected.json
+cat <<EOF | $Z -c memmanager=sys,debug=1 -z -a $D/SK_infected_40k.json | tee $D/EphID_infected.json
 scenario 'dp3t'
 rule check version 1.0.0
 rule input encoding hex
@@ -88,34 +92,37 @@ rule output encoding hex
 Given I have a valid array in 'list of infected'
 When I pick the random object in 'list of infected'
 and I rename the 'random object' to 'secret day key'
-and I set 'moments' to '8' base '10'
-and I create the ephemeral ids for each moment of the day
+and I write number '180' in 'epoch'
+and I write string 'Broadcast key' in 'broadcast key'
+and I create the ephemeral ids for today
 # and the 'secret day key' is found in 'list of infected'
 Then print the 'ephemeral ids'
 EOF
 
 # given a list of infected and a list of ephemeral ids 
-cat <<EOF | $Z -c memmanager=sys -z -a $D/SK_infected_40k.json -k $D/EphID_infected.json
+cat <<EOF | time $Z -c memmanager=sys,debug=1 -z -a $D/SK_infected_40k.json -k $D/EphID_infected.json
 scenario 'dp3t'
 rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
 Given I have a valid array in 'list of infected'
 and I have a valid array in 'ephemeral ids'
-When I set 'moments' to '8' base '10'
+When I write number '180' in 'epoch'
+and I write string 'Broadcast key' in 'broadcast key'
 and I create the proximity tracing of infected ids
 Then print the 'proximity tracing'
 EOF
 
 # given a list of infected and a list of ephemeral ids 
-cat <<EOF | $Z -c memmanager=sys -z -a $D/SK_infected_40k.json -k $D/EphID_2.json
-scenario 'dp3t'
-rule check version 1.0.0
-rule input encoding hex
-rule output encoding hex
-Given I have a valid array in 'list of infected'
-and I have a valid array in 'ephemeral ids'
-When I set 'moments' to '8' base '10'
-and I create the proximity tracing of infected ids
-Then print the 'proximity tracing'
-EOF
+# cat <<EOF | $Z -c memmanager=sys -z -a $D/SK_infected_40k.json -k $D/EphID_2.json
+# scenario 'dp3t'
+# rule check version 1.0.0
+# rule input encoding hex
+# rule output encoding hex
+# Given I have a valid array in 'list of infected'
+# and I have a valid array in 'ephemeral ids'
+# When I write number '8' in 'moments'
+# and I write string 'Broadcast key' in 'broadcast key'
+# and I create the proximity tracing of infected ids
+# Then print the 'proximity tracing'
+# EOF
