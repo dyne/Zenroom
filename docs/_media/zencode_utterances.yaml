@@ -23,9 +23,8 @@ given:
 when:
   - when: I append '' to ''
   - when: I append '' to '' formatted as ''
-  - when: I write '' in ''
-  - when: I set '' to ''
-  - when: I set '' to '' formatted as ''
+  - when: I write string '' in ''
+  - when: I write number '' in ''
   - when: I set '' to '' as ''
   - when: I create a random ''
   - when: I verify '' is equal to ''

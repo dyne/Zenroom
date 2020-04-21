@@ -1,9 +1,0 @@
-rule check version 1.0.0
-rule input format cbor
-rule output format cbor
-Scenario 'simple': Decrypt the message with the secret
-	Given I have a valid 'secret message'
-	When I write 'my secret word' in 'password'
-	and I decrypt the secret message with 'password'
-	Then print as 'string' the 'text' inside 'message'
-	and print as 'string' the 'header' inside 'message'

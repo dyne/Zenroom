@@ -1,5 +1,0 @@
-Rule check version 1.0.0
-Scenario 'simple': Bob publishes his public key
-	Given that I am known as 'Bob'
-	and I have my valid 'public key'
-	Then print my data

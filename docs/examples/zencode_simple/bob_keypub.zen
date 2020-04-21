@@ -1,0 +1,4 @@
+Scenario 'simple': Publish the public key
+Given that I am known as 'Bob'
+and I have my valid 'public key'
+Then print my 'public key'

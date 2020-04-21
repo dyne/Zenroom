@@ -11,5 +11,6 @@ R="$PWD/.."
 	exit 1 }
 pushd $R/test/zencode_${scen}
 ./run.sh
-cp -av *zen *json $R/docs/_media/examples/zencode_${scen}
+mkdir -p $R/docs/examples/zencode_${scen}
+cp -av *zen *json $R/docs/examples/zencode_${scen}
 popd
