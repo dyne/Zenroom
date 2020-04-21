@@ -161,13 +161,12 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	Z->userdata = NULL;
 	Z->errorlevel = get_debug();
 	Z->random_generator = NULL;
-	Z->random_seed[0] = 0x0; // flag for external rngseed
+	Z->random_external = 0;
 
 	// use RNGseed from configuration if present (deterministic mode)
 	if(zconf_rngseed[0] != 0x0) {
-		// short p = 0;
-		// if(zconf_rngseed[0] == '0' && zconf_rngseed[1] == 'x') p += 2;
-		// hex2buf(Z->random_seed, &zconf_rngseed[p]);
+		Z->random_external = 1;
+		memset(Z->random_seed, 0x0, 256);
 		hex2buf(Z->random_seed, zconf_rngseed);
 	}
 	// initialize the random generator

@@ -2,6 +2,8 @@
 
 # https://github.com/DP-3T/documents
 
+RNGSEED=hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+
 ####################
 # common script init
 if ! test -r ../utils.sh; then
@@ -46,8 +48,8 @@ Then print the 'ephemeral ids'
 EOF
 
 
-# now generate a test with 40.000 infected SK
-cat <<EOF | $Z -z > SK_infected_40k.json
+# now generate a test with 20.000 infected SK
+cat <<EOF | $Z -z > SK_infected_20k.json
 rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
@@ -58,7 +60,7 @@ Then print the 'list of infected'
 EOF
 
 # extract a few random infected ephemeral ids to simulate proximity
-cat <<EOF | $Z -z -a SK_infected_40k.json | tee EphID_infected.json
+cat <<EOF | $Z -z -a SK_infected_20k.json | tee EphID_infected.json
 scenario 'dp3t'
 rule check version 1.0.0
 rule input encoding hex
@@ -74,7 +76,7 @@ Then print the 'ephemeral ids'
 EOF
 
 # given a list of infected and a list of ephemeral ids 
-cat <<EOF | tee dp3t_check.zen | $Z -z -a SK_infected_40k.json -k EphID_infected.json
+cat <<EOF | tee dp3t_check.zen | $Z -z -a SK_infected_20k.json -k EphID_infected.json
 scenario 'dp3t'
 rule check version 1.0.0
 rule input encoding hex
@@ -88,7 +90,7 @@ Then print the 'proximity tracing'
 EOF
 
 # given a list of infected and a list of ephemeral ids 
-# cat <<EOF | $Z -c memmanager=sys -z -a $D/SK_infected_40k.json -k $D/EphID_2.json
+# cat <<EOF | $Z -c memmanager=sys -z -a $D/SK_infected_20k.json -k $D/EphID_2.json
 # scenario 'dp3t'
 # rule check version 1.0.0
 # rule input encoding hex

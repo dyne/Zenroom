@@ -68,7 +68,7 @@ void* rng_alloc() {
 		return NULL; }
 
 	// random seed provided externally 
-	if(Z->random_seed[0]) {
+	if(Z->random_external) {
 		act(Z->lua,"Random seed is external, deterministic execution");
 #ifndef ARCH_CORTEX
 	} else {

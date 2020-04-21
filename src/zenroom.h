@@ -70,6 +70,7 @@ typedef struct {
 
 	void *random_generator; // cast to RNG
 	char random_seed[RANDOM_SEED_LEN];
+	int random_external; // signal when rngseed is external
 
 	int errorlevel;
 	void *userdata; // anything passed at init (reserved for caller)
