@@ -2,7 +2,7 @@ set -e
 set -o pipefail
 
 detect_zenroom_path() {
-	zenroom_paths=( "$PWD" "$PWD/../../src" "$PWD/src" "/usr/local/bin" )
+	zenroom_paths=( "$PWD" "$PWD/../../src" "$PWD/src" "/usr/local/bin" "$PWD/../.." )
 	zenroom_path="/usr/local/bin/zenroom"
 	case $OSTYPE in
 		linux*)
