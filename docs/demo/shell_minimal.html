@@ -2,170 +2,264 @@
 <html>
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Zenroom online demo</title>
-  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css">
-  <link rel="stylesheet" href="//golden-layout.com/files/latest/css/goldenlayout-base.css" />
-  <link rel="stylesheet" href="//golden-layout.com/files/latest/css/goldenlayout-light-theme.css" />
-  
-  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Montserrat:300,500">
-  <script defer src="//use.fontawesome.com/releases/v5.5.0/js/all.js"></script>
-  <script src="//code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-  <script src="//golden-layout.com/files/latest/js/goldenlayout.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/ace/1.3.1/ace.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/ace/1.3.1/ext-language_tools.js"></script>
-  <script src="//rawgit.com/caldwell/renderjson/master/renderjson.js"></script>
-  <script src="./shell.js"></script>
-  <style>
-   body { font-family: Montserrat, sans-serif; font-size: 16px; }
-   #logs, #output { font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro", monospace; overflow: auto; padding: 5px; }
-   #logs { overflow: scroll }
-   #zenbar .navbar-start a.navbar-item::before { content: " "; height: 10px; width: 10px; background-color: #33e986; margin-right: 10px; display: inline-block; }
-   #zenbar .navbar-start a.navbar-item:hover::before { background-color: #ff00ff; }
-   #zenbar .navbar-item { padding-left: 1em; padding-right: 1em; }
-   #zenbar .navbar-item img { padding-left: 1em; padding-right: 2em; }
-   .navbar-item .examples { background-color: #efefef }
-   .lm_header .lm_tab { font-family: Montserrat; font-size: 14px; height: 21px; }
-   .lm_header .lm_controls>li, .icon { height: 28px; width: 40px; }
-   .lm_controls > li { background-size: 15px; }
-   .renderjson                { background-color: transparent; height: 100%;}
-   .renderjson a              { text-decoration: none; }
-   .renderjson .disclosure    { color: crimson; }
-   .renderjson .syntax        { color: grey; }
-   .renderjson .string        { color: red; }
-   .renderjson .number        { color: cyan; padding:0; font-size: inherit; background-color: transparent; height: auto; }
-   .renderjson .boolean       { color: plum; }
-   .renderjson .key           { color: lightblue; }
-   .renderjson .keyword       { color: lightgoldenrodyellow; }
-   .renderjson .object.syntax { color: lightseagreen; }
-   .renderjson .array.syntax  { color: lightsalmon; }
-   #timing { height: auto; position: relative; bottom: 6px; margin-left: 4px; }
-   #play-button { font-size:18px; right:14px; opacity: .6 }
-￼  #play-button svg { margin-left: 2px; }
-   #main { margin-left: 10px; }
-  </style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Zenroom online demo</title>
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css">
+    <link rel="stylesheet" href="//golden-layout.com/files/latest/css/goldenlayout-base.css" />
+    <link rel="stylesheet" href="//golden-layout.com/files/latest/css/goldenlayout-light-theme.css" />
+
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Montserrat:300,500">
+    <script defer src="//use.fontawesome.com/releases/v5.5.0/js/all.js"></script>
+    <script src="//code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="//golden-layout.com/files/latest/js/goldenlayout.min.js"></script>
+    <script src="//rawgit.com/caldwell/renderjson/master/renderjson.js"></script>
+    <script src="//pagecdn.io/lib/ace/1.4.11/ace.min.js" crossorigin="anonymous"></script>
+    <script src="//pagecdn.io/lib/ace/1.4.11/ext-language_tools.min.js" crossorigin="anonymous"></script>
+    <script src="./shell.js"></script>
+    <style>
+        body {
+            font-family: Montserrat, sans-serif;
+            font-size: 16px;
+        }
+        
+        #logs,
+        #output {
+            font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro", monospace;
+            overflow: auto;
+            padding: 5px;
+        }
+        
+        #logs {
+            overflow: scroll
+        }
+        
+        #zenbar .navbar-start a.navbar-item::before {
+            content: " ";
+            height: 10px;
+            width: 10px;
+            background-color: #33e986;
+            margin-right: 10px;
+            display: inline-block;
+        }
+        
+        #zenbar .navbar-start a.navbar-item:hover::before {
+            background-color: #ff00ff;
+        }
+        
+        #zenbar .navbar-item {
+            padding-left: 1em;
+            padding-right: 1em;
+        }
+        
+        #zenbar .navbar-item img {
+            padding-left: 1em;
+            padding-right: 2em;
+        }
+        
+        .navbar-item .examples {
+            background-color: #efefef
+        }
+        
+        .lm_header .lm_tab {
+            font-family: Montserrat;
+            font-size: 14px;
+            height: 21px;
+        }
+        
+        .lm_header .lm_controls>li,
+        .icon {
+            height: 28px;
+            width: 40px;
+        }
+        
+        .lm_controls>li {
+            background-size: 15px;
+        }
+        
+        .renderjson {
+            background-color: transparent;
+            height: 100%;
+        }
+        
+        .renderjson a {
+            text-decoration: none;
+        }
+        
+        .renderjson .disclosure {
+            color: crimson;
+        }
+        
+        .renderjson .syntax {
+            color: grey;
+        }
+        
+        .renderjson .string {
+            color: red;
+        }
+        
+        .renderjson .number {
+            color: cyan;
+            padding: 0;
+            font-size: inherit;
+            background-color: transparent;
+            height: auto;
+        }
+        
+        .renderjson .boolean {
+            color: plum;
+        }
+        
+        .renderjson .key {
+            color: lightblue;
+        }
+        
+        .renderjson .keyword {
+            color: lightgoldenrodyellow;
+        }
+        
+        .renderjson .object.syntax {
+            color: lightseagreen;
+        }
+        
+        .renderjson .array.syntax {
+            color: lightsalmon;
+        }
+        
+        #timing {
+            height: auto;
+            position: relative;
+            bottom: 6px;
+            margin-left: 4px;
+        }
+        
+        #play-button {
+            font-size: 18px;
+            right: 14px;
+            opacity: .6
+        }
+        
+        ￼ #play-button svg {
+            margin-left: 2px;
+        }
+        
+        #main {
+            margin-left: 10px;
+        }
+    </style>
 </head>
 
 <body>
-  <template type="text/html" id="play-button-template">
+    <template type="text/html" id="play-button-template">
     <li title="Run (⌘/Ctrl + Enter)">
       <span class="icon has-text-success">
         RUN <i class="fas fa-play-circle"></i>
       </span>
     </li>
   </template>
-  <template type="text/html" id="clear-button-template">
+    <template type="text/html" id="clear-button-template">
     <li>
       <span class="icon has-text-grey-light">
         <i class="fas fa-toilet-paper"></i>
       </span>
     </li>
   </template>
-  <template type="text/html" id="copy-button-template">
+    <template type="text/html" id="copy-button-template">
     <li id="copyOutput">
       <span class="icon">
         <i class="fas fa-copy"></i>
       </span>
     </li>
   </template>
-  <div class="container is-fluid ml-10" id="main">
-    <nav class="navbar" role="navigation" aria-label="main navigation">
-      <div class="navbar-brand">
-        <a class="navbar-item" href="https://dev.zenroom.org/">
-          <img src="/_media/images/zenroom_logo.png" alt-"Zenroom">
-          &nbsp; secure crypto language VM - in-browser demo 
-        </a>
-        <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="zenbar">
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-        </a>
-      </div>
+    <div class="container is-fluid ml-10" id="main">
+        <nav class="navbar" role="navigation" aria-label="main navigation">
+            <div class="navbar-brand">
+                <a class="navbar-item" href="https://dev.zenroom.org/">
+                    <img src="/_media/images/zenroom_logo.png" alt- "Zenroom"> &nbsp; secure crypto language VM - in-browser demo
+                </a>
+                <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="zenbar">
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                </a>
+            </div>
 
-      <div id="zenbar" class="navbar-menu">
-        <div class="navbar-start">
-          <a class="navbar-item" href="https://dyne.org/">
+            <div id="zenbar" class="navbar-menu">
+                <div class="navbar-start">
+                    <a class="navbar-item" href="https://dyne.org/">
             software by <img src="/_media/images/dyne-big.png" height="28" alt="Dyne.org" />
           </a>
 
-          <!-- <a class="navbar-item" href="https://milagro.apache.org/"> -->
-          <!--   powered by <img src="/img/milagro.svg" height="28" alt="Milagro" /> -->
-          <!-- </a> -->
-        <!-- </div> -->
+                    <!-- <a class="navbar-item" href="https://milagro.apache.org/"> -->
+                    <!--   powered by <img src="/img/milagro.svg" height="28" alt="Milagro" /> -->
+                    <!-- </a> -->
+                    <!-- </div> -->
 
-        <!-- <div class="navbar-end"> -->
-          <div class="navbar-item has-dropdown is-hoverable">
-              <a class="navbar-link">
+                    <!-- <div class="navbar-end"> -->
+                    <div class="navbar-item has-dropdown is-hoverable">
+                        <a class="navbar-link">
                 Examples
               </a>
-              <div class="navbar-dropdown">
-                <a class="navbar-item zencode" id="RNG01">Generate many random cryptographic objects</a>
-                <a class="navbar-item zencode" id="SYM02">Encrypt a message using a password</a>
-                <a class="navbar-item zencode" id="SYM03">Decrypt a secret message using a password</a>
-                <a class="navbar-item zencode" id="AES01">Generate a keypair</a>
-                <a class="navbar-item zencode" id="AES05">Encrypt a message for a public key recipient</a>
-                <a class="navbar-item zencode" id="AES07">Decrypt a secret message using a-symmetric encryption</a>
-                <a class="navbar-item zencode" id="DSA01">Sign a message using public-key encryption</a>
-                <a class="navbar-item zencode" id="DSA02">Verify a signature using public-key encryption</a>
-                <hr class="navbar-divider">
-                <a class="navbar-item examples" id="hello">Hello world in hex and base64</a>
-                <a class="navbar-item examples" id="keygen">Generate a new pair of public / privatekeys</a>
-                <a class="navbar-item examples" id="symmetric-crypto-pin">Protect a secret using a password</a>
-                <a class="navbar-item examples" id="keygen-multi">Generate a keyring with multiple recipients</a>
-                <a class="navbar-item examples" id="crypt-to-multi">Encrypt a secret to multiple recipients</a>
-                <a class="navbar-item examples" id="iotdev-to-dashboard">IoT sensor encode and send with key</a>
-                <a class="navbar-item examples" id="dashboard-from-iotdev">Receive and decode IoT sensor messages</a>
-              </div>
-            </div>
-            <!-- <div class="navbar-item">
+                        <div class="navbar-dropdown">
+                            <a class="navbar-item example" data-zencode="/examples/zencode_simple/SYM01.zen">Generate many random cryptographic objects</a>
+                            <a class="navbar-item example" data-zencode="/examples/zencode_simple/SYM02.zen">Encrypt a message using a password</a>
+                            <a class="navbar-item example" data-zencode="/examples/zencode_simple/SYM03.zen" data-keys="/examples/zencode_simple/cipher_message.json">Decrypt a secret message using a password</a>
+                            <a class="navbar-item example" data-zencode="/examples/zencode_simple/alice_keygen.zen">Generate a keypair</a>
+                            <a class="navbar-item example" data-zencode="/examples/zencode_simple/AES05.zen" data-data="/examples/zencode_simple/bob_pub.json" data-keys="/examples/zencode_simple/alice_keypair.json">Encrypt a message for a public key recipient</a>
+                            <a class="navbar-item example" data-zencode="/examples/zencode_simple/AES07.zen" data-data="/examples/zencode_simple/alice_to_bob.json" data-keys="/examples/zencode_simple/bob_keyring.json">Decrypt a secret message using a-symmetric encryption</a>
+                            <a class="navbar-item example" data-zencode="/examples/zencode_simple/DSA01.zen" data-data="/examples/zencode_simple/alice_signs_to_bob.json" data-keys="/examples/zencode_simple/alice_keypair.json">Sign a message using public-key encryption</a>
+                            <a class="navbar-item example" data-zencode="/examples/zencode_simple/DSA02.zen" data-data="/examples/zencode_simple/alice_signs_to_bob.json" data-keys="/examples/zencode_simple/alice_pub.json">Verify a signature using public-key encryption</a>
+                            <hr class="navbar-divider">
+                            <a class="navbar-item example" data-lua="/examples/hello.lua">Hello world in hex and base64</a>
+                            <a class="navbar-item example" data-lua="/examples/keygen.lua">Generate a new pair of public / privatekeys</a>
+                            <a class="navbar-item example" data-lua="/examples/symmetric-crypto-pin.lua" data-keys="/examples/symmetric-crypto-pin.keys">Protect a secret using a password</a>
+                            <a class="navbar-item example" data-lua="/examples/keygen-multi.lua">Generate a keyring with multiple recipients</a>
+                            <a class="navbar-item example" data-lua="/examples/crypt-to-multi.lua">Encrypt a secret to multiple recipients</a>
+                            <a class="navbar-item example" data-lua="/examples/iotdev-to-dashboard.lua" data-data="/examples/iotdev-to-dashboard.data" data-keys="/examples/iotdev-to-dashboard.keys">IoT sensor encode and send with key</a>
+                            <a class="navbar-item example" data-lua="/examples/dashboard-from-iotdev.lua" data-data="/examples/dashboard-from-iotdev.data" data-keys="/examples/dashboard-from-iotdev.keys">Receive and decode IoT sensor messages</a>
+                        </div>
+                    </div>
+                    <!-- <div class="navbar-item">
                  <div class="buttons">
                  <input id="umm" class="form-check-input" type="checkbox" value="">&nbsp; minimal memory manager (64KiB max)
                  </div>
                  </div> -->
-        </div>
-      </div>
-    </nav>
-  </div>
-  <section id="ide"></section>
-  <div class="modal is-active">
-    <div class="modal-background"></div>
-    <div class="modal-card">
-      <header class="modal-card-head">
-        <p class="modal-card-title">Disclaimer</p>
-        <button class="delete close" aria-label="close"></button>
-      </header>
-      <section class="modal-card-body">
-		  Zenroom – secure crypto language VM<br/>
-		  Copyright (C) 2017-2020 – <a href="https://dyne.org">Dyne.org foundation</a>, Amsterdam<br/>
-		  For the original source code and documentation go to <a href="https://zenroom.org">zenroom.org</a><br/>
-		  Zenroom is free software: you can redistribute it and/or modify
-		  it under the terms of the GNU Affero General Public License as
-		  published by the Free Software Foundation, either version 3 of the
-		  License, or (at your option) any later version.<br/>
-		  Zenroom is distributed in the hope that it will be useful,
-		  but WITHOUT ANY WARRANTY; without even the implied warranty of
-		  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-		  GNU Affero General Public License for more details.
-		  You should have received a copy of the GNU Affero General Public License
-		  along with this program. If not, see <a href="http://www.gnu.org/licenses/">www.gnu.org/licenses</a>.
-      </section>
-      <footer class="modal-card-foot">
-        <button class="button is-success close">I'm aware</button>
-      </footer>
+                </div>
+            </div>
+        </nav>
     </div>
-  </div>
+    <section id="ide"></section>
+    <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Disclaimer</p>
+                <button class="delete close" aria-label="close"></button>
+            </header>
+            <section class="modal-card-body">
+                Zenroom – secure crypto language VM<br/> Copyright (C) 2017-2020 – <a href="https://dyne.org">Dyne.org foundation</a>, Amsterdam<br/> For the original source code and documentation go to <a href="https://zenroom.org">zenroom.org</a><br/>                Zenroom is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.<br/>                Zenroom is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more details.
+                You should have received a copy of the GNU Affero General Public License along with this program. If not, see <a href="http://www.gnu.org/licenses/">www.gnu.org/licenses</a>.
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button is-success close">I'm aware</button>
+            </footer>
+        </div>
+    </div>
 
-  {{{ SCRIPT }}}
-  <script>
-    ZR.init()
-    $(document).ready(function() {
-      $(".navbar-burger").click(() => {
-          $(".navbar-burger").toggleClass("is-active");
-          $(".navbar-menu").toggleClass("is-active");
-      });
-      $(".close").on('click', ()=>{ $(".modal").removeClass("is-active")})
-    });
-  </script>
+    {{{ SCRIPT }}}
+    <script>
+        ace.config.set("basePath", "https://pagecdn.io/lib/ace/1.4.11/");
+        ZR.init()
+        $(document).ready(function() {
+            $(".navbar-burger").click(() => {
+                $(".navbar-burger").toggleClass("is-active");
+                $(".navbar-menu").toggleClass("is-active");
+            });
+            $(".close").on('click', () => {
+                $(".modal").removeClass("is-active")
+            })
+        });
+    </script>
 </body>
+
 </html>

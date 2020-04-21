@@ -64,42 +64,24 @@ var ZR = (function() {
         }]
     }
 
-    const loadExamples = (e) => {
-        const name = $(e.target).attr('id')
-        const extensions = {'#code': '.lua', '#data': '.data', '#keys': '.keys'}
-        const base_url = "/examples/"
-        for (var e in extensions) {
-            const editor = $(e)[0].env.editor
+    const loadExample = (e) => {
+        const el = $(e.target)
+        const zencode = el.data('zencode') || false
+        const lua = el.data('lua') || false
+        const data = el.data('data') || false
+        const keys = el.data('keys') || false
+        const editors = {'#code': lua, '#data': data, '#keys': keys, "#zencode": zencode}
+        for (const eid in editors) {
+            const url = editors[eid]
+            const editor = $(eid)[0].env.editor
             editor.setValue("")
-            $.get(base_url + name + extensions[e], value => {
-                editor.setValue(value)
-            })
+            if (url) {
+                $.get(editors[eid], value => {
+                    editor.setValue((typeof value === 'string') ? value : JSON.stringify(value))
+                })
+            }
         }
-        return false;
-    }
-
-
-    const loadZencodeExamples = (e) => {
-        const name = $(e.target).attr('id');
-        const extensions = {'#zencode': '.zen', '#data': '.data', '#keys': '.keys'}
-        const base_url = "/examples/zencode_simple/"
-        for (var e in extensions) {
-            const editor = $(e)[0].env.editor
-            editor.setValue("")
-            $.get(base_url + name + extensions[e], value => {
-                editor.setValue(value)
-            })
-        }
-    }
-
-    const loadCoconutExamples = (e) => {
-        const name = $(e.target).attr('id');
-        const base_url = "https://raw.githubusercontent.com/DECODEproject/zenroom/master/test/zencode_coconut/"
-        const editor = $('#zencode')[0].env.editor
-        editor.setValue("")
-        $.get(base_url + name, value => {
-            editor.setValue(value)
-        })
+        return false
     }
 
     const setupCodeEditor = editor => {
@@ -210,9 +192,7 @@ var ZR = (function() {
 
     const init = function() {
        layoutInit()
-       $(".examples").on('click', e => loadExamples(e))
-	   $(".zencode").on('click', e => loadZencodeExamples(e))
-       // $(".coconut").on('click', e => loadCoconutExamples(e))
+       $(".example").on('click', e => loadExample(e))
     };
 
     const addAutocompletionWord = word => {
@@ -220,7 +200,7 @@ var ZR = (function() {
     }
 
     const autocompleteSetup = () => {
-        $.get('https://raw.githubusercontent.com/DECODEproject/zenroom/master/docs/completions.lua', data => {
+        $.get('/completions.lua', data => {
             Module.ccall('zenroom_exec', 
                          'number',
                          ['string', 'string', 'string', 'string'],

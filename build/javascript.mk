@@ -11,16 +11,12 @@ load-emsdk:
 javascript-demo: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
 javascript-demo: ldflags += -s WASM=1 \
 	-s ASSERTIONS=1 \
-	--shell-file ${pwd}/build/shell_minimal.html
+	--shell-file ${website}/demo/shell_minimal.html
 javascript-demo: apply-patches load-emsdk milagro lua53 embed-lua
-	@mkdir -p ${pwd}/build/demo
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	JSEXT="--preload-file lua@/" \
-	JSOUT="${pwd}/build/demo/index.html" \
+	JSOUT="${website}/demo/index.html" \
 	make -C src js
-	@cp ${pwd}/build/shell.js ${pwd}/build/shell_minimal.html ${pwd}/build/demo/
-	@mkdir -p ${website}/demo
-	@cp -v ${pwd}/build/demo/* ${website}/demo/
 
 javascript-web: cflags  += -O3 -fno-exceptions -fno-rtti
 javascript-web: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' \

@@ -38,7 +38,7 @@ var Module = typeof Module !== 'undefined' ? Module : {};
       } else {
         throw 'using preloaded data can only be done on a web page or in a web worker';
       }
-      var PACKAGE_NAME = '/home/puria/src/github.com/DECODEproject/Zenroom/build/demo/index.data';
+      var PACKAGE_NAME = '/home/puria/src/github.com/DECODEproject/Zenroom/docs/demo/index.data';
       var REMOTE_PACKAGE_BASE = 'index.data';
       if (typeof Module['locateFilePackage'] === 'function' && !Module['locateFile']) {
         Module['locateFile'] = Module['locateFilePackage'];
@@ -169,10 +169,10 @@ var Module = typeof Module !== 'undefined' ? Module : {};
             for (var i = 0; i < files.length; ++i) {
               DataRequest.prototype.requests[files[i].filename].onload();
             }
-                Module['removeRunDependency']('datafile_/home/puria/src/github.com/DECODEproject/Zenroom/build/demo/index.data');
+                Module['removeRunDependency']('datafile_/home/puria/src/github.com/DECODEproject/Zenroom/docs/demo/index.data');
 
       };
-      Module['addRunDependency']('datafile_/home/puria/src/github.com/DECODEproject/Zenroom/build/demo/index.data');
+      Module['addRunDependency']('datafile_/home/puria/src/github.com/DECODEproject/Zenroom/docs/demo/index.data');
     
       if (!Module.preloadResults) Module.preloadResults = {};
     
@@ -193,7 +193,7 @@ var Module = typeof Module !== 'undefined' ? Module : {};
     }
   
    }
-   loadPackage({"files": [{"start": 0, "audio": 0, "end": 5846, "filename": "/crypto_elgamal.lua"}, {"start": 5846, "audio": 0, "end": 11431, "filename": "/zencode_ecqv.lua"}, {"start": 11431, "audio": 0, "end": 43232, "filename": "/date.lua"}, {"start": 43232, "audio": 0, "end": 57797, "filename": "/cbor.lua"}, {"start": 57797, "audio": 0, "end": 73428, "filename": "/zencode_data.lua"}, {"start": 73428, "audio": 0, "end": 74942, "filename": "/zenroom_hash.lua"}, {"start": 74942, "audio": 0, "end": 77964, "filename": "/zencode_eval.lua"}, {"start": 77964, "audio": 0, "end": 99365, "filename": "/faces.lua"}, {"start": 99365, "audio": 0, "end": 104410, "filename": "/zenroom_ast.lua"}, {"start": 104410, "audio": 0, "end": 109197, "filename": "/slaxdom.lua"}, {"start": 109197, "audio": 0, "end": 116161, "filename": "/zenroom_common.lua"}, {"start": 116161, "audio": 0, "end": 124973, "filename": "/zencode_when.lua"}, {"start": 124973, "audio": 0, "end": 125007, "filename": "/zenroom_fp.lua"}, {"start": 125007, "audio": 0, "end": 126061, "filename": "/zenroom_ecp2.lua"}, {"start": 126061, "audio": 0, "end": 132223, "filename": "/zencode_simple.lua"}, {"start": 132223, "audio": 0, "end": 132260, "filename": "/zenroom_big.lua"}, {"start": 132260, "audio": 0, "end": 144036, "filename": "/zencode_coconut.lua"}, {"start": 144036, "audio": 0, "end": 145052, "filename": "/zenroom_ecp.lua"}, {"start": 145052, "audio": 0, "end": 149747, "filename": "/zencode_given.lua"}, {"start": 149747, "audio": 0, "end": 150637, "filename": "/zenroom_ecdh.lua"}, {"start": 150637, "audio": 0, "end": 158707, "filename": "/slaxml.lua"}, {"start": 158707, "audio": 0, "end": 161942, "filename": "/init.lua"}, {"start": 161942, "audio": 0, "end": 164611, "filename": "/zencode_then.lua"}, {"start": 164611, "audio": 0, "end": 177267, "filename": "/crypto_coconut.lua"}, {"start": 177267, "audio": 0, "end": 188488, "filename": "/tamale.lua"}, {"start": 188488, "audio": 0, "end": 201444, "filename": "/inspect.lua"}, {"start": 201444, "audio": 0, "end": 203212, "filename": "/zenroom_json.lua"}, {"start": 203212, "audio": 0, "end": 204181, "filename": "/zenroom_rng.lua"}, {"start": 204181, "audio": 0, "end": 213714, "filename": "/zencode.lua"}, {"start": 213714, "audio": 0, "end": 215057, "filename": "/zenroom_cbor.lua"}, {"start": 215057, "audio": 0, "end": 221940, "filename": "/semver.lua"}, {"start": 221940, "audio": 0, "end": 225709, "filename": "/statemachine.lua"}, {"start": 225709, "audio": 0, "end": 236103, "filename": "/json.lua"}, {"start": 236103, "audio": 0, "end": 239426, "filename": "/zenroom_bench.lua"}, {"start": 239426, "audio": 0, "end": 244818, "filename": "/zenroom_octet.lua"}, {"start": 244818, "audio": 0, "end": 245460, "filename": "/README.md"}, {"start": 245460, "audio": 0, "end": 256754, "filename": "/tuple.lua"}], "remote_package_size": 256754, "package_uuid": "a2e897f1-361e-4a2f-9945-3b8329cad62c"});
+   loadPackage({"files": [{"filename": "/crypto_elgamal.lua", "start": 0, "end": 5846, "audio": 0}, {"filename": "/zencode_ecqv.lua", "start": 5846, "end": 11431, "audio": 0}, {"filename": "/date.lua", "start": 11431, "end": 43232, "audio": 0}, {"filename": "/cbor.lua", "start": 43232, "end": 57797, "audio": 0}, {"filename": "/zencode_data.lua", "start": 57797, "end": 72330, "audio": 0}, {"filename": "/zenroom_hash.lua", "start": 72330, "end": 73844, "audio": 0}, {"filename": "/zencode_eval.lua", "start": 73844, "end": 76882, "audio": 0}, {"filename": "/faces.lua", "start": 76882, "end": 98283, "audio": 0}, {"filename": "/zenroom_ast.lua", "start": 98283, "end": 103328, "audio": 0}, {"filename": "/slaxdom.lua", "start": 103328, "end": 108115, "audio": 0}, {"filename": "/zenroom_common.lua", "start": 108115, "end": 115112, "audio": 0}, {"filename": "/zencode_when.lua", "start": 115112, "end": 125060, "audio": 0}, {"filename": "/zenroom_fp.lua", "start": 125060, "end": 125094, "audio": 0}, {"filename": "/zenroom_ecp2.lua", "start": 125094, "end": 126148, "audio": 0}, {"filename": "/zencode_simple.lua", "start": 126148, "end": 132310, "audio": 0}, {"filename": "/zencode_dp3t.lua", "start": 132310, "end": 135323, "audio": 0}, {"filename": "/zenroom_big.lua", "start": 135323, "end": 135360, "audio": 0}, {"filename": "/zencode_coconut.lua", "start": 135360, "end": 147136, "audio": 0}, {"filename": "/zenroom_ecp.lua", "start": 147136, "end": 148152, "audio": 0}, {"filename": "/zencode_debug.lua", "start": 148152, "end": 149419, "audio": 0}, {"filename": "/zencode_given.lua", "start": 149419, "end": 154577, "audio": 0}, {"filename": "/zenroom_ecdh.lua", "start": 154577, "end": 155467, "audio": 0}, {"filename": "/slaxml.lua", "start": 155467, "end": 163537, "audio": 0}, {"filename": "/init.lua", "start": 163537, "end": 166851, "audio": 0}, {"filename": "/zencode_then.lua", "start": 166851, "end": 169520, "audio": 0}, {"filename": "/zenroom_aes.lua", "start": 169520, "end": 170406, "audio": 0}, {"filename": "/crypto_coconut.lua", "start": 170406, "end": 183062, "audio": 0}, {"filename": "/tamale.lua", "start": 183062, "end": 194283, "audio": 0}, {"filename": "/inspect.lua", "start": 194283, "end": 207239, "audio": 0}, {"filename": "/zenroom_json.lua", "start": 207239, "end": 209007, "audio": 0}, {"filename": "/zenroom_rng.lua", "start": 209007, "end": 209976, "audio": 0}, {"filename": "/zencode.lua", "start": 209976, "end": 219509, "audio": 0}, {"filename": "/zenroom_cbor.lua", "start": 219509, "end": 220852, "audio": 0}, {"filename": "/semver.lua", "start": 220852, "end": 227735, "audio": 0}, {"filename": "/statemachine.lua", "start": 227735, "end": 231504, "audio": 0}, {"filename": "/json.lua", "start": 231504, "end": 241898, "audio": 0}, {"filename": "/zenroom_bench.lua", "start": 241898, "end": 245221, "audio": 0}, {"filename": "/zenroom_octet.lua", "start": 245221, "end": 250613, "audio": 0}, {"filename": "/README.md", "start": 250613, "end": 251255, "audio": 0}, {"filename": "/tuple.lua", "start": 251255, "end": 262549, "audio": 0}], "remote_package_size": 262549, "package_uuid": "a5a8c0f1-16fd-41db-b406-970d180d27bb"});
   
   })();
   
@@ -817,8 +817,8 @@ var wasmMemory;
 // In the wasm backend, we polyfill the WebAssembly object,
 // so this creates a (non-native-wasm) table for us.
 var wasmTable = new WebAssembly.Table({
-  'initial': 308,
-  'maximum': 308 + 0,
+  'initial': 314,
+  'maximum': 314 + 0,
   'element': 'anyfunc'
 });
 
@@ -1419,11 +1419,11 @@ function updateGlobalBufferAndViews(buf) {
 }
 
 var STATIC_BASE = 1024,
-    STACK_BASE = 9529152,
+    STACK_BASE = 9529984,
     STACKTOP = STACK_BASE,
-    STACK_MAX = 4286272,
-    DYNAMIC_BASE = 9529152,
-    DYNAMICTOP_PTR = 4286112;
+    STACK_MAX = 4287104,
+    DYNAMIC_BASE = 9529984,
+    DYNAMICTOP_PTR = 4286944;
 
 assert(STACK_BASE % 16 === 0, 'stack must start aligned');
 assert(DYNAMIC_BASE % 16 === 0, 'heap must start aligned');
@@ -1941,11 +1941,11 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  3087: function() {Module.exec_error();},  
- 3145: function() {Module.exec_ok();},  
- 6403: function($0) {Module.print(UTF8ToString($0))},  
- 6436: function($0) {Module.printErr(UTF8ToString($0))},  
- 16168: function($0) {var nodeRandomBytes = function() { return require("crypto").randomBytes; }; var browserRandomBytes = function(n) { var crypto = (self.crypto || self.msCrypto); var QUOTA = 65536; return function(n) { var arr = new Uint8Array(n); for (var i = 0; i < n; i += QUOTA) { crypto.getRandomValues( arr.subarray(i, i + Math.min(n - i, QUOTA))); } return arr; } }; var getRandomBytes = ((typeof self !== 'undefined' && (self.crypto || self.msCrypto)) ? browserRandomBytes : nodeRandomBytes)(); var out = _malloc($0); writeArrayToMemory(getRandomBytes($0), out); return out;}
+  3093: function() {Module.exec_error();},  
+ 3151: function() {Module.exec_ok();},  
+ 6515: function($0) {Module.print(UTF8ToString($0))},  
+ 6548: function($0) {Module.printErr(UTF8ToString($0))},  
+ 16942: function($0) {var nodeRandomBytes = function() { return require("crypto").randomBytes; }; var browserRandomBytes = function(n) { var crypto = (self.crypto || self.msCrypto); var QUOTA = 65536; return function(n) { var arr = new Uint8Array(n); for (var i = 0; i < n; i += QUOTA) { crypto.getRandomValues( arr.subarray(i, i + Math.min(n - i, QUOTA))); } return arr; } }; var getRandomBytes = ((typeof self !== 'undefined' && (self.crypto || self.msCrypto)) ? browserRandomBytes : nodeRandomBytes)(); var out = _malloc($0); writeArrayToMemory(getRandomBytes($0), out); return out;}
 };
 
 function _emscripten_asm_const_iii(code, sigPtr, argbuf) {
@@ -1955,7 +1955,7 @@ function _emscripten_asm_const_iii(code, sigPtr, argbuf) {
 
 
 
-// STATICTOP = STATIC_BASE + 4285248;
+// STATICTOP = STATIC_BASE + 4286080;
 /* global initializers */  __ATINIT__.push({ func: function() { ___wasm_call_ctors() } });
 
 
@@ -4607,7 +4607,7 @@ function _emscripten_asm_const_iii(code, sigPtr, argbuf) {
     }
 
   function _emscripten_get_sbrk_ptr() {
-      return 4286112;
+      return 4286944;
     }
 
   
