@@ -7,13 +7,15 @@ var ZC = (function() {
     let aliceKeys = null
     let t0 = 0
     let t1 = 0
-    let zencode_encrypt_contract = `Scenario 'simple': Alice sends a secret to Bob
-Given that I am known as 'Alice'
-and I have my 'keypair'
-and I have inside 'Bob' a valid 'public key'
-and I have a 'base64'
-When I encrypt the 'base64' to 'secret message' for 'Bob'
-Then print the 'secret message'
+    let zencode_encrypt_contract = `Rule check version 1.0.0
+Scenario 'simple': Alice encrypts a message for Bob
+        Given that I am known as 'Alice'
+        and I have my valid 'keypair'
+        and I have a valid 'public key' from 'Bob'
+        When I write string 'This is my secret message.' in 'message'
+        and I write string 'This is the header' in 'header'
+        and I encrypt the message for 'Bob'
+        Then print the 'secret message'
 `
     const init = function() {
         setupForm()
