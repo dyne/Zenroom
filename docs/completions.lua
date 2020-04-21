@@ -2,10 +2,11 @@
 
 local modules = { 
    ["OCTET"] = OCTET, ["octet"] = OCTET.new(8),
-   ["ECDH"] = ECDH, ["ecdh"] = ECDH.new(),
---   ["ECP"] = ECP, ["ecp"] = ECP.new(ECP.generator()),
+   ["ECDH"] = ECDH, -- ["ecdh"] = ECDH.new(),
+   ["ECP"] = ECP, ["ecp"] = ECP.new(ECP.generator()),
    ["BIG"] = BIG, ["big"] = BIG.new(1),
---   ["RNG"] = RNG, ["rng"] = RNG.new(),
+   ["AES"] = AES,
+   ["I"] = INSPECT,
    ["HASH"] = HASH, ["hash"] = HASH.new() }
 for n,m in pairs(modules) do
    if type(m)=='table' then
