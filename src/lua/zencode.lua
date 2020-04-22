@@ -54,6 +54,7 @@ local zencode = {
    schemas = { },
    id = 0,
    AST = {},
+   traceback = { }, -- execution backtrace
    eval_cache = { }, -- zencode_eval if...then conditions
    checks = { version = false }, -- version, scenario checked, etc.
    OK = true -- set false by asserts
@@ -116,7 +117,7 @@ ACK = ACK or { } -- When processing,  destination for push*
 OUT = OUT or { } -- print out
 AST = AST or { } -- AST of parsed Zencode
 WHO = nil
-_G['ZEN_traceback'] = "Zencode traceback:\n"
+
 
 
 
@@ -129,6 +130,7 @@ function zencode:begin()
    self.eval_cache = { }
    self.checks = { version = false } -- version, scenario checked, etc.
    self.OK = true -- set false by asserts
+   self.traceback = { }
 
    -- Reset HEAP
    self.machine = { }
@@ -141,7 +143,6 @@ function zencode:begin()
    WHO = nil
    collectgarbage'collect'
    -- Zencode init traceback
-   _G['ZEN_traceback'] = "Zencode traceback:\n"
    self.machine = new_state_machine()
 return true
 end
@@ -181,27 +182,22 @@ function zencode:trace(src)
    local tr = trim(src)
    -- TODO: tabbing, ugly but ok for now
    if string.sub(tr,1,1) == '[' then
-	  _G['ZEN_traceback'] = _G['ZEN_traceback']..tr.."\n"
+	  table.insert(self.traceback, tr)
    else
-	  _G['ZEN_traceback'] = _G['ZEN_traceback'].." .  "..tr.."\n"
+	  table.insert(self.traceback, " .  "..tr)
    end
-	  -- "    -> ".. src:gsub("^%s*", "") .."\n"
 end
 
 -- trace function execution also on success
 function zencode:ftrace(src)
    -- take current line of zencode
-   _G['ZEN_traceback'] = _G['ZEN_traceback']..
-	  " D  ZEN:"..trim(src).."\n"
-   -- "    -> ".. src:gsub("^%s*", "") .."\n"
+   table.insert(self.traceback, " D  ZEN:"..trim(src))
 end
 
 -- log zencode warning in traceback
 function zencode:wtrace(src)
    -- take current line of zencode
-   _G['ZEN_traceback'] = _G['ZEN_traceback']..
-	  " W  ZEN:"..trim(src).."\n"
-   -- "    -> ".. src:gsub("^%s*", "") .."\n"
+   table.insert(self.traceback, " W  ZEN:"..trim(src))
 end
 
 function zencode:run()
@@ -266,8 +262,15 @@ function zencode:run()
    end
 end
 
+function zencode.heap()
+   return({ IN = IN,
+			TMP = TMP,
+			ACK = ACK,
+			OUT = OUT })
+end
+
 function zencode.debug()
-   warn(ZEN_traceback)
+   I.warn(ZEN.traceback)
    I.warn({ HEAP = { IN = IN,
 					TMP = TMP,
 					ACK = ACK,
@@ -275,7 +278,7 @@ function zencode.debug()
 end
 
 function zencode.debug_json()
-   write(JSON.encode({ TRACE = ZEN_traceback,
+   write(JSON.encode({ TRACE = ZEN.traceback,
                        HEAP = { IN = IN,
                                 TMP = TMP,
                                 ACK = ACK,

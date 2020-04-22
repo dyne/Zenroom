@@ -273,7 +273,7 @@ When("I verify the signature proof is correct", function()
 end)
 
 When("the petition signature is not a duplicate", function()
-		local k = ZEN:export(ACK.petition_signature.uid_signature)
+		local k = export_obj(ACK.petition_signature.uid_signature)
 		if type(ACK.petition.list) == 'table' then
 		   ZEN.assert(
 			  ACK.petition.list[k] == nil,

@@ -24,6 +24,17 @@ function fatal(msg)
 	  if type(msg) == "string" then warn(trim(msg),2) end
 	  debug.traceback()
 --	  if ZEN_traceback ~= "" then ZEN:debug() end
+	  if DEBUG > 1 then
+		 -- TODO: ZEN:backtrace() and traceback as sorted array
+		 warn(ZEN_traceback)
+	  end
+	  if DEBUG > 2 then
+		 -- TODO: ZEN:dump()
+		 I.warn({ HEAP = { IN = IN,
+						   TMP = TMP,
+						   ACK = ACK,
+						   OUT = OUT }})
+	  end
 	  ZEN:debug()
 	  msg = msg or "fatal error"
 	  error(msg,2)

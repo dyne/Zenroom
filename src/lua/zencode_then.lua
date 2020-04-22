@@ -28,7 +28,7 @@ end)
 
 
 Then("print '' '' as ''", function(k,v,s)
-		OUT[k] = ZEN:export( ZEN:import(v, input_encoding(s).fun), s)
+		OUT[k] = export_obj( ZEN:import(v, input_encoding(s).fun), s)
 end)
 
 Then("print all data", function()
@@ -49,12 +49,12 @@ end)
 Then("print as '' my ''", function(conv,obj)		ZEN:Iam()
 		ZEN.assert(ACK[obj], "My data: "..obj.." not found to print: "..conv)
 		if not OUT[WHO] then OUT[WHO] = { } end
-		OUT[WHO][obj] = ZEN:export(ACK[obj], conv)
+		OUT[WHO][obj] = export_obj(ACK[obj], conv)
 end)
 Then("print my '' as ''", function(obj,conv)		ZEN:Iam()
 		ZEN.assert(ACK[obj], "My data: "..obj.." not found to print: "..conv)
 		if not OUT[WHO] then OUT[WHO] = { } end
-		OUT[WHO][obj] = ZEN:export(ACK[obj], conv)
+		OUT[WHO][obj] = export_obj(ACK[obj], conv)
 end)
 
 Then("print the ''", function(key)
@@ -64,17 +64,17 @@ Then("print the ''", function(key)
 		end
 end)
 
-Then("print as '' the ''", function(conv, obj) OUT[obj] = ZEN:export(ACK[obj], conv) end)
-Then("print the '' as ''", function(obj, conv) OUT[obj] = ZEN:export(ACK[obj], conv) end)
+Then("print as '' the ''", function(conv, obj) OUT[obj] = export_obj(ACK[obj], conv) end)
+Then("print the '' as ''", function(obj, conv) OUT[obj] = export_obj(ACK[obj], conv) end)
 
 Then("print as '' the '' inside ''", function(conv, obj, section)
 		local src = ACK[section][obj]
 		ZEN.assert(src, "Not found "..obj.." inside "..section)
-		OUT[obj] = ZEN:export(src, conv)
+		OUT[obj] = export_obj(src, conv)
 end)
 Then("print the '' as '' inside ''", function(obj, conv, section)
 		local src = ACK[section][obj]
 		ZEN.assert(src, "Not found "..obj.." inside "..section)
-		OUT[obj] = ZEN:export(src, conv)
+		OUT[obj] = export_obj(src, conv)
 end)
 

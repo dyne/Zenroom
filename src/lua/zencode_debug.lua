@@ -18,14 +18,20 @@
 
 -- debug functions
 local function debug_traceback()
-   I.print(ZEN_traceback)
+   for k,v in pairs(ZEN.traceback) do
+	  act(v)
+   end
 end
+Given("backtrace", function() debug_traceback() end)
+When("backtrace", function() debug_traceback() end)
+Then("backtrace", function() debug_traceback() end)
 
 local function debug_heap_dump()
-   I.print(HEAP)
+   I.warn({HEAP = ZEN.heap()})
 end
 
 local function debug_heap_schema()
+   I.schema({SCHEMA = ZEN.heap()})
    -- print only keys without values
 end
 
@@ -35,3 +41,7 @@ end
 Given("debug", function() ZEN.debug() end)
 When("debug",  function() ZEN.debug() end)
 Then("debug",  function() ZEN.debug() end)
+
+Given("schema", function() debug_heap_schema() end)
+When("schema",  function() debug_heap_schema() end)
+Then("schema",  function() debug_heap_schema() end)

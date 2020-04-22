@@ -373,25 +373,25 @@ end
 -- Convert a data object to the desired format (argument name provided
 -- as string), or use CONF.encoding when called without argument
 --
--- @function ZEN:export(object, format)
+-- @function export_obj(object, format)
 -- @param object data element to be converted
 -- @param format pointer to a converter function
 -- @return object converted to format
 local function export_arr(object, format)
-   ZEN.assert(iszen(type(object)), "ZEN:export called on a ".. type(object))
+   ZEN.assert(iszen(type(object)), "export_arr called on a ".. type(object))
    local conv_f = nil
    local ft = type(format)
    if format and ft == 'function' then conv_f = format goto ok end
    if format and ft == 'string' then conv_f = get_encoding(format).fun goto ok end
    conv_f = CONF.output.encoding.fun -- fallback to configured conversion function
    ::ok::
-   ZEN.assert(type(conv_f) == 'function' , "ZEN:export conversion function not configured")
+   ZEN.assert(type(conv_f) == 'function' , "export_arr conversion function not configured")
    return conv_f(object) -- TODO: protected call
 end
-function ZEN:export(object, format)
+function export_obj(object, format)
    -- CONF { encoding = <function 1>,
    --        encoding_prefix = "u64"  }
-   ZEN.assert(object, "ZEN:export object not found")
+   ZEN.assert(object, "export_obj object not found")
    if type(object) == 'table' then
 	  local tres = { }
 	  for k,v in ipairs(object) do -- only flat tables support recursion

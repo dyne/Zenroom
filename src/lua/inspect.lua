@@ -250,11 +250,13 @@ function Inspector:putKey(k)
   self:puts("]")
 end
 
-function Inspector:putTable(t)
+function Inspector:putTable(t, exp)
   if t == inspect.KEY or t == inspect.METATABLE then
     self:puts(tostring(t))
+	-- self:puts("["..#t.."]")
   elseif self:alreadyVisited(t) then
     self:puts('<table ', self:getId(t), '>')
+	-- self:puts("["..#t.."]")
   elseif self.level >= self.depth then
     self:puts('{...}')
   else
@@ -275,7 +277,7 @@ function Inspector:putTable(t)
       for i=1, sequenceLength do
         if count > 0 then self:puts(',') end
         self:puts(' ')
-        self:putValue(t[i])
+        self:putValue(t[i], exp)
         count = count + 1
       end
 
@@ -284,7 +286,7 @@ function Inspector:putTable(t)
         self:tabify()
         self:putKey(k)
         self:puts(' = ')
-        self:putValue(t[k])
+        self:putValue(t[k], exp)
         count = count + 1
       end
 
@@ -292,7 +294,7 @@ function Inspector:putTable(t)
         if count > 0 then self:puts(',') end
         self:tabify()
         self:puts('<metatable> = ')
-        self:putValue(mt)
+        self:putValue(mt, exp)
       end
     end)
 
@@ -306,50 +308,50 @@ function Inspector:putTable(t)
   end
 end
 
-function Inspector:putValue(v)
+function Inspector:putValue(v, exp)
   local tv = type(v)
-
-  enc = CONF.encoding or url64
+  local exporter = exp or export_obj
   if tv == 'string' then
     self:puts(smartQuote(escape(v)))
   elseif tv == 'number' or tv == 'boolean' or tv == 'nil' or
          tv == 'cdata' or tv == 'ctype' then
     self:puts(tostring(v))
   elseif tv == 'table' then
-    self:putTable(v)
+	 if #v > 0 then self:puts("["..#v.."] ") end
+	 self:putTable(v, exporter)
   elseif iszen(tv) then
 	 if tv == "zenroom.octet" then
-		self:puts("octet[" .. #v .. "] " .. ZEN:export(v))
+		self:puts("octet[" .. #v .. "] " .. exporter(v))
 	 elseif tv == "zenroom.big" then
 		local i = v:octet()
-		self:puts("int[" .. #i.. "] " .. ZEN:export(i))
+		self:puts("int[" .. #i.. "] " .. exporter(i))
 	 elseif tv == "zenroom.ecp" then
 		local i = v:octet()
 		if v == "Infinity" or v == ECP.infinity() then
 		   self:puts("ecp[...] (Infinity)")
 		else
-		   self:puts("ecp[" .. #i.. "] " .. ZEN:export(i))
+		   self:puts("ecp[" .. #i.. "] " .. exporter(i))
 		end
 	 elseif tv == "zenroom.ecp2" then
 		local i = v:octet()
 		if v == "Infinity" or v == ECP2.infinity() then
 		   self:puts("ecp[...] (Infinity)")
 		else
-		   self:puts("ecp2[" ..#i.. "] ".. ZEN:export(i))
+		   self:puts("ecp2[" ..#i.. "] ".. exporter(i))
 		end
 	 elseif tv == "zenroom.fp12" then
 		local i = v:octet()
-		self:puts("fp12[" ..#i.. "] ".. ZEN:export(i))
+		self:puts("fp12[" ..#i.. "] ".. exporter(i))
 	 elseif tv == "zenroom.ecdh" then
 		local pk = v:public()
 		local sk = v:private()
 		if not pk and not sk then self:puts("ecdh keyring is empty\n")
 		else
-		   if pk then self:puts("ecdh.public["..#pk.."] ".. ZEN:export(pk).."\n") end
-		   if sk then self:puts("ecdh.private["..#sk.."] ".. ZEN:export(sk).."\n") end
+		   if pk then self:puts("ecdh.public["..#pk.."] ".. exporter(pk).."\n") end
+		   if sk then self:puts("ecdh.private["..#sk.."] ".. exporter(sk).."\n") end
 		end
 	 else
-		self:puts(ZEN:export(v:octet()))
+		self:puts(exporter(v:octet()))
 	 end
   else
     self:puts('<',tv,' ',self:getId(v),'>')
@@ -365,7 +367,7 @@ function inspect.inspect(root, options)
   local newline = options.newline or '\n'
   local indent  = options.indent  or '    '
   local process = options.process
-
+  local schema  = options.schema or false
   if process then
     root = processRecursive(process, root, {}, {})
   end
@@ -381,7 +383,13 @@ function inspect.inspect(root, options)
     tableAppearances = countTableAppearances(root)
   }, Inspector_mt)
 
-  inspector:putValue(root)
+  -- option schema only (don't print contents)
+  if schema then
+	 local _f = function(_)	return("") end
+	 inspector:putValue(root, _f)
+  else
+	 inspector:putValue(root)
+  end
 
   return table.concat(inspector.buffer)
 end
@@ -390,7 +398,7 @@ end
 function inspect.encode(item)
    t = type(item)
    if iszen(t) then
-	  return ZEN:export(item)
+	  return export_obj(item)
    -- elseif iszen(t) then
    -- 	  if t == "zenroom.ecp" and ECP.isinf(item) then
    -- 	  	 return "Infinity"
@@ -414,6 +422,17 @@ end
 -- @param object complex table data structure
 function inspect.print(root, options)
    print(inspect.inspect(root, options))
+   return root
+end
+
+--- Print the prototype (no contents only schema) of a table in a tree
+--- representation, works with complex data structures and prints to
+--- STDOUT.
+--
+-- @function INSPECT.schema(object)
+-- @param object complex table data structure
+function inspect.schema(root, options)
+   warn(inspect.inspect(root, { schema = true }))
    return root
 end
 
