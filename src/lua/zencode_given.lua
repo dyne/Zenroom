@@ -47,6 +47,7 @@ Given("I introduce myself as ''", function(name) ZEN:Iam(name) end)
 Given("I am known as ''", function(name) ZEN:Iam(name) end)
 Given("I am ''", function(name) ZEN:Iam(name) end)
 
+-- TODO: I have a '' as ''
 Given("I have a ''", function(name)
 		 ZEN:pick(name)
 		 TMP.valid = true

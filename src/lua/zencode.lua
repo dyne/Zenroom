@@ -240,6 +240,7 @@ function zencode:run()
 	  	 if err then ZEN:trace("[!] "..err) end
 		 fatal(x.source) -- traceback print inside
 	  end
+	  collectgarbage'collect'
    end
    -- PRINT output
    ZEN:trace("--- Zencode execution completed")
