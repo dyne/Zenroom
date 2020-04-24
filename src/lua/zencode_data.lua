@@ -139,19 +139,17 @@ end
 -- try obj.*.what (TODO: exclude KEYS and WHO)
 local function inside_pick(obj, what)
    ZEN.assert(obj, "ZEN:pick object is nil")
-   -- ZEN.assert(I.spy(type(obj)) == "table", "ZEN:pick object is not a table")
-   ZEN.assert(type(what) == "string", "ZEN:pick object index is not a string")
+   ZEN.assert(luatype(what) == "string",
+			  "ZEN:pick object index is not a string")
    local got
-   if type(obj) == 'string' then  got = obj
+   if luatype(obj) == 'string' then got = obj
    else got = obj[what] end
    if got then
-	  -- ZEN:ftrace("inside_pick found "..what.." at object root")
 	  goto gotit
    end
    for k,v in pairs(obj) do -- search 1 deeper
-      if type(v) == "table" and v[what] then
+      if luatype(v) == "table" and v[what] then
          got = v[what]
-         -- ZEN:ftrace("inside_pick found "..k.."."..what)
          break
       end
    end
@@ -167,8 +165,9 @@ end
 -- @function ZEN:pick(name, data)
 -- @param name string descriptor of the data object
 -- @param data[opt] optional data object (default search inside IN.*)
+-- @param encoding[opt] optional encoding spec (default CONF.input.encoding)
 -- @return true or false
-function ZEN:pick(what, obj)
+function ZEN:pick(what, obj, conv)
    if obj then -- object provided by argument
 	  TMP = { data = obj,
 			  root = nil,
@@ -180,7 +179,7 @@ function ZEN:pick(what, obj)
    got = inside_pick(IN.KEYS, what) or inside_pick(IN,what)
    ZEN.assert(got, "Cannot find '"..what.."' anywhere")
    TMP = { root = nil,
-		   data = ZEN:import(got),
+		   data = ZEN.decode(got, conv),
 		   valid = false,
 		   schema = what }
    assert(ZEN.OK)
@@ -198,7 +197,7 @@ end
 -- @param section string descriptor of the section containing the data
 -- @param name string descriptor of the data object
 -- @return true or false
-function ZEN:pickin(section, what)
+function ZEN:pickin(section, what, conv)
    ZEN.assert(section, "No section specified")
    local root -- section
    local got  -- what
@@ -216,7 +215,7 @@ function ZEN:pickin(section, what)
    -- TODO: check all corner cases to make sure TMP[what] is a k/v map
    ::found::
    TMP = { root = section,
-		   data = ZEN:import(got),
+		   data = ZEN.decode(got, conv),
 		   valid = false,
 		   schema = what }
    assert(ZEN.OK)
@@ -404,6 +403,33 @@ end
 
 local function pfx(o) return string.sub(o,1,3) end
 local function buf(o) return string.sub(o,5) end
+
+---
+-- Decode a format encoded object using the provided decoder or the
+-- default CONF.encoding
+--
+-- @function ZEN.decode(anystr, decoder)
+-- @param anystr data element to be read
+-- @param decoder encoding to be used for conversion
+-- @return octet object decoded
+function ZEN.decode(anystr, decoder)
+   ZEN.assert(anystr, "ZEN:import object is nil")
+   local t = type(anystr)   
+   if iszen(t) then
+      warn("ZEN.decode input already decoded to "..t)
+      return t
+   end
+   ZEN.assert(t == 'string', "ZEN.decode input not a string: "..t)
+   xxx("ZEN.decode string: "..limit(anystr))
+   if decoder then
+	  ZEN.assert(decoder.fun, "ZEN.decode invalid decoder (no fun)")
+	  xxx("ZEN.decode selected decoder: "..decoder.name)
+	  return(decoder.fun(anystr))
+   end
+   -- fallback to configured default
+   xxx("ZEN.decode default decoder: "..CONF.input.encoding.name)
+   return(CONF.input.encoding.fun(anystr))
+end
 
 ---
 -- Import a generic data element from the tagged format, or use
