@@ -45,7 +45,7 @@ function set_sentence(self, event, from, to, ctx)
 	  end
 	  -- TODO: optimize in c
 	  -- remove '' contents, lower everything, expunge prefixes
-	  local tt = string.gsub(ctx.msg,"'(.-)'","''")
+	  local tt = string.gsub(trim(ctx.msg),"'(.-)'","''")
 	  tt = string.gsub(tt:lower() ,"when " ,"", 1)
 	  tt = string.gsub(tt,"then " ,"", 1)
 	  tt = string.gsub(tt,"given ","", 1)
@@ -71,9 +71,9 @@ function set_sentence(self, event, from, to, ctx)
 	  end
    end
    if not ctx.Z.OK and CONF.parser.strict_match then
-	  print(ZEN_traceback)
+	  debug_traceback()
    	  exitcode(1)
-   	  error("Zencode pattern not found: "..ctx.msg, 2)
+   	  error("Zencode pattern not found: "..trim(ctx.msg), 1)
    	  return false
    end
 end
@@ -132,6 +132,8 @@ function set_rule(text)
 		 CONF.output.AST = true
 		 res = true
 	  end
+
+	  -- TODO: rule debug [ format | encoding ]
 
    elseif rule[2] == 'unknown' and rule[3] then
 	  if rule[3] == 'ignore' then

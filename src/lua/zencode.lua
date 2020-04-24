@@ -270,11 +270,14 @@ function zencode.heap()
 end
 
 function zencode.debug()
-   I.warn(ZEN.traceback)
-   I.warn({ HEAP = { IN = IN,
-					TMP = TMP,
-					ACK = ACK,
-					OUT = OUT }})
+   debug_traceback()
+   debug_heap_dump()
+
+   -- I.warn(ZEN.traceback)
+   -- I.warn({ HEAP = { IN = IN,
+   -- 					TMP = TMP,
+   -- 					ACK = ACK,
+   -- 					OUT = OUT }})
 end
 
 function zencode.debug_json()

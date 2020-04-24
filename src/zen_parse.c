@@ -84,7 +84,7 @@ static int lua_strcasecmp(lua_State *L) {
 	return 1;
 }
 
-// trim whitespace or single quote in front and at end of string
+// trim whitespace in front and at end of string
 static int lua_trim_spaces(lua_State* L) {
 	const char* front;
 	const char* end;

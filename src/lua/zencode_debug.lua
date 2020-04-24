@@ -16,10 +16,20 @@
 -- You should have received a copy of the GNU Affero General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+-- limit output of string if too long
+function limit(anystr)
+   local t = luatype(anystr)
+   ZEN.assert(t=='string',"Argument to limit on-screen not a string")
+   if #anystr > 32 then
+	  return(string.sub(anystr,1,32).."..")
+   end
+   return(anystr)
+end
+
 -- debug functions
-local function debug_traceback()
+function debug_traceback()
    for k,v in pairs(ZEN.traceback) do
-	  act(v)
+	  warn(v)
    end
 end
 Given("backtrace", function() debug_traceback() end)
