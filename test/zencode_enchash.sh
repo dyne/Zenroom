@@ -8,7 +8,7 @@ t=`mktemp -d`
 cat <<EOF | zenroom -z | tee $t/hex.json
 rule output encoding hex
 Given nothing
-When I write 'a string to be hashed' in 'source'
+When I write string 'a string to be hashed' in 'source'
 and I create the hash of 'source'
 Then print the 'hash'
 EOF
@@ -27,7 +27,7 @@ EOF
 cat <<EOF | zenroom -z | tee $t/base64.json
 rule output encoding base64
 Given nothing
-When I write 'a string to be hashed' in 'source'
+When I write string 'a string to be hashed' in 'source'
 and I create the hash of 'source' using 'sha512'
 Then print the 'hash'
 EOF
@@ -36,7 +36,7 @@ EOF
 cat <<EOF | zenroom -z | tee $t/url64.json
 rule output encoding url64
 Given nothing
-When I write 'a string to be hashed' in 'source'
+When I write string 'a string to be hashed' in 'source'
 and I create the hash of 'source' using 'sha256'
 Then print the 'hash'
 EOF

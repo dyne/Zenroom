@@ -2,7 +2,7 @@ set -e
 set -o pipefail
 
 detect_zenroom_path() {
-	zenroom_paths=( "$PWD" "$PWD/../../src" "$PWD/src" "/usr/local/bin" "$PWD/../.." )
+	zenroom_paths=( "$PWD" "$PWD/../../src" "$PWD/../src" "$PWD/src" "/usr/local/bin" "$PWD/../.." "$PWD/.." )
 	zenroom_path="/usr/local/bin/zenroom"
 	case $OSTYPE in
 		linux*)
@@ -44,7 +44,9 @@ detect_zenroom_path() {
 		exit 1
 	fi
 	chmod +x $zenroom_path
+	>&2 echo
 	>&2 echo "Zenroom exec: $zenroom_path"
+	>&2 echo
 	echo "$zenroom_path"
 	unset zenroom_paths zenroom_path
 }
