@@ -191,6 +191,22 @@ function map(data, fun)
    return(out)
 end
 
+-- deep recursive map on a tree structure
+-- for usage see test/deepmap.lua
+function deepmap(fun,t,...)
+   assert(luatype(fun) == 'function', "Internal error: deepmap 2nd argument is not a function")
+   assert(luatype(t) == 'table', "Internal error: deepmap 1st argument is not a table")
+   local res = {}
+   for k,v in pairs(t) do
+	  if luatype(v) == 'table' then
+		 res[k] = deepmap(fun, v) -- recursion
+	  else
+		 res[k] = fun(v,...)
+	  end
+   end
+   return setmetatable(res, getmetatable(t))
+end
+
 function isarray(obj)
    if not obj then error("isarray() called on a nil object",2) end
    if luatype(obj) ~= 'table' then error("isarray() argument is not a table",2) end

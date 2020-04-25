@@ -160,9 +160,9 @@ end
 ---
 -- Pick a generic data structure from the <b>IN</b> memory
 -- space. Looks for named data on the first and second level and makes
--- it ready for @{validate} or @{ack}.
+-- it ready in TMP for @{validate} or @{ack}.
 --
--- @function ZEN:pick(name, data)
+-- @function ZEN:pick(name, data, encoding)
 -- @param name string descriptor of the data object
 -- @param data[opt] optional data object (default search inside IN.*)
 -- @param encoding[opt] optional encoding spec (default CONF.input.encoding)
@@ -179,7 +179,7 @@ function ZEN:pick(what, obj, conv)
    got = inside_pick(IN.KEYS, what) or inside_pick(IN,what)
    ZEN.assert(got, "Cannot find '"..what.."' anywhere")
    TMP = { root = nil,
-		   data = ZEN.decode(got, conv),
+		   data = ZEN.decode(got, conv), -- conv may be nil
 		   valid = false,
 		   schema = what }
    assert(ZEN.OK)
@@ -318,30 +318,6 @@ function ZEN:ackmy(name, object)
    assert(ZEN.OK)
 end
 
---- When block (ACK read-write memory)
--- @section When
-
----
--- Draft a new text made of a simple string: convert it to @{OCTET}
--- and append it to ACK.draft.
---
--- @function ZEN:draft(string)
--- @param string any string to be appended as draft
-function ZEN:draft(s)
-   if s then
-	  ZEN.assert(type(s) == "string", "Provided draft is not a string")
-	  if not ACK.draft then
-		 ACK.draft = str(s)
-	  else
-		 ACK.draft = ACK.draft .. str(s)
-	  end
-   else -- no arg: sanity checks
-	  ZEN.assert(ACK.draft, "No draft found in ACK.draft")
-   end
-   assert(ZEN.OK)
-end
-
-
 ---
 -- Compare equality of two data objects (TODO: octet, ECP, etc.)
 -- @function ZEN:eq(first, second)
@@ -413,22 +389,29 @@ local function buf(o) return string.sub(o,5) end
 -- @param decoder encoding to be used for conversion
 -- @return octet object decoded
 function ZEN.decode(anystr, decoder)
-   ZEN.assert(anystr, "ZEN:import object is nil")
+   ZEN.assert(anystr, "ZEN.decode object is nil")
    local t = type(anystr)   
    if iszen(t) then
       warn("ZEN.decode input already decoded to "..t)
       return t
    end
-   ZEN.assert(t == 'string', "ZEN.decode input not a string: "..t)
-   xxx("ZEN.decode string: "..limit(anystr))
+   ZEN.assert(t == 'string' or t == 'table', "ZEN.decode input not a string or table: "..t)
    if decoder then
 	  ZEN.assert(decoder.fun, "ZEN.decode invalid decoder (no fun)")
 	  xxx("ZEN.decode selected decoder: "..decoder.name)
-	  return(decoder.fun(anystr))
+	  if t == 'table' then
+		 return( deepmap(decoder.fun, anystr) )
+	  else
+		 return( decoder.fun(anystr) )
+	  end
    end
    -- fallback to configured default
    xxx("ZEN.decode default decoder: "..CONF.input.encoding.name)
-   return(CONF.input.encoding.fun(anystr))
+   if t == 'table' then
+	  return( deepmap(CONF.input.encoding.fun, anystr))
+   else
+	  return( CONF.input.encoding.fun(anystr) )
+   end
 end
 
 ---

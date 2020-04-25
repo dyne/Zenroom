@@ -36,11 +36,11 @@ Given("backtrace", function() debug_traceback() end)
 When("backtrace", function() debug_traceback() end)
 Then("backtrace", function() debug_traceback() end)
 
-local function debug_heap_dump()
+function debug_heap_dump()
    I.warn({HEAP = ZEN.heap()})
 end
 
-local function debug_heap_schema()
+function debug_heap_schema()
    I.schema({SCHEMA = ZEN.heap()})
    -- print only keys without values
 end
