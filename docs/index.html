@@ -100,6 +100,13 @@
                                 '<div class="mermaid">' + mermaid.render('mermaid-svg-' + num++, code) + "</div>"
                             );
                         }
+                        if (lang === "json") {
+                            let jpp = "";
+                            try {
+                                jpp = JSON.stringify(JSON.parse(code), null, 2);
+                            } catch {}
+                            return this.origin.code(jpp, lang)
+                        }
                         // if (lang === "gv") {
                         //     const dom = window.Docsify.dom
                         //     var container = dom.create("div");
