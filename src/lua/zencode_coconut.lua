@@ -188,7 +188,7 @@ ZEN.add_schema({
 		 if type(obj.list) == 'table' then
 			res.list = { }
 			for k,v in sort_ipairs(obj.list) do
-			   table.insert(res.list,ZEN:import(v))
+			   table.insert(res.list,ECP.new(v))
 			end
 		 end
 		 return res
@@ -257,7 +257,7 @@ When("I create the petition signature ''", function(uid)
 		   ACK.credential_keypair.private, ack_uid)
 		ZEN:pick('petition_signature',
 				 { proof = Theta,
-				   uid_signature = zeta,
+				   uid_signature = zeta, -- ECP
 				   uid_petition = ack_uid })
 		ZEN:validate('petition_signature')
 		ZEN:ack('petition_signature')
@@ -273,17 +273,14 @@ When("I verify the signature proof is correct", function()
 end)
 
 When("the petition signature is not a duplicate", function()
-		local k = export_obj(ACK.petition_signature.uid_signature)
-		if type(ACK.petition.list) == 'table' then
-		   ZEN.assert(
-			  ACK.petition.list[k] == nil,
-			  "Duplicate petition signature detected")
-		   ACK.petition.list[k] = true
-		else
-		   ACK.petition.list = { }
-		   table.insert(ACK.petition.list,
-						get(ACK.petition_signature, 'uid_signature', ECP.new))
-		end
+        if luatype(ACK.petition.list) == 'table' then
+           ZEN.assert(
+			  (not array_contains(ACK.petition.list, ACK.petition_signature.uid_signature)),
+              "Duplicate petition signature detected")
+        else
+           ACK.petition.list = { }
+        end
+        table.insert(ACK.petition.list, ACK.petition_signature.uid_signature)
 end)
 
 When("the petition signature is just one more", function()

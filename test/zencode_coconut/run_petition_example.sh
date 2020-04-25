@@ -6,7 +6,7 @@ set -o pipefail
 # set -x
 # https://coderwall.com/p/fkfaqq/safer-bash-scripts-with-set-euxo-pipefail
 
-alias zenroom="${1:-../../src/zenroom}  -c memwipe=1"
+alias zenroom="${1:-../../src/zenroom}"
 
 pfx=.
 

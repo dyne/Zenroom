@@ -204,6 +204,17 @@ function isarray(obj)
    return count
 end
 
+function array_contains(arr, obj)
+   assert(luatype(arr) == 'table', "Internal error: array_contains argument is not a table")
+   local res = false
+   for k, v in ipairs(obj) do
+	  assert(luatype(k) == 'number', "Internal error: array_contains argument is not an array")
+	  res = res or v == obj
+   end
+   return res
+end
+
+
 function help(module)
    if module == nil then
 	  print("usage: help(module)")
