@@ -10,7 +10,7 @@ For the theoretical background see the [Zencode Whitepaper](https://files.dyne.o
 
 Here we go with the <span class="big">**tutorial to learn the Zencode language!**</span>
 
-# Intro: Syntax and Memory model
+# Introduction
 
 Zencode contracts operate in 3 phases:
 
@@ -35,12 +35,52 @@ rule check version 1.0.0
 
 ---
 
-# Cryptography 
+# Symmetric cryptography
 
-A quick run to get you started with cryptography in Zencode.  
+This is a simple technique to hide a secret using a common password known to all participants.
+
+The algorithm used is
+[AES-GCM](https://en.wikipedia.org/wiki/Galois/Counter_Mode) with a random IV and an optional authenticated header ([AEAD](https://en.wikipedia.org/wiki/Authenticated_encryption))
+
+The encryption is applied using 3 arguments:
+
+- `password` can be any string (or file) used to lock and unlock the secret
+- `message` can be any string (or file) to be encrypted and decrypted
+- `header` is a fixed name and optional argument to indicate an authenticated header
+
+These 3 arguments can be written or imported, but must given before using the `I encrypt` block:
+
+[](../_media/examples/zencode_simple/SYM02.zen ':include :type=code gherkin')
+
+The output is returned in `secret message` and it looks like:
+
+[](../_media/examples/zencode_simple/cipher_message.json ':include :type=code json')
+
+To decode make sure to have that secret password and that a valid `secret message` is given, then use:
+
+[](../_media/examples/zencode_simple/SYM03.zen ':include :type=code gherkin')
+
+So let's imagine I want to share a secret with someone and send secret messages encrypted with it:
+
+```mermaid
+sequenceDiagram
+        participant A as Anon1
+        participant B as Anon2
+        A->>A: Think of a secret password
+    A->>B: Tell the password to a friend
+        A->>A: Encrypt a secret message with the password
+    A->>B: Send the secret message to the friend
+    B->>B: Decrypts the secret message with the password
+```
+
+Of course the password must be known by all participants and that's the
+dangerous part, since it could be stolen.
+
+We mitigate this risk using **public-key cryptography**, also known as
+**a-symmetric encryption**, explained below.
 
 
-## Asymmetric cryptography
+# Asymmetric cryptography
 
 We use [asymmetric encryption (or public key
 cryptography)](https://en.wikipedia.org/wiki/Public-key_cryptography)
@@ -52,7 +92,7 @@ Fortunately it is pretty simple to do using Zencode in 2 steps
 - Key generation and exchange ([SETUP](https://en.wikipedia.org/wiki/Key_exchange))
 - Public-key Encryption or signature ([ECDH](https://en.wikipedia.org/wiki/Elliptic-curve_Diffie%E2%80%93Hellman) and [ECDSA](https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm))
 
-### Key generation and exchange
+## Key generation and exchange
 
 In this phase each participant will create his/her own keypair, store it and communicate the public key to the other.
 
@@ -96,7 +136,7 @@ and signatures.
 
 The advantage of using Zencode here is the use of the `valid` keyword which effectively parses the `public key` object and verifies it as valid, in this case as being a valid point on the elliptic curve in use. This greatly reduces the possibility of common mistakes.
 
-### Public-key Encryption (ECDH)
+## Public-key Encryption (ECDH)
 
 Public key encryption is similar to the [asymmetric
 encryption](#asymmetric-encryption) explained in the previous section,
@@ -156,7 +196,7 @@ The decryption will always check that the header hasn't changed,
 maintaining the integrity of the string which may contain important
 public information that accompany the secret.
 
-### Public-key Signature (ECDSA)
+## Public-key Signature (ECDSA)
 
 Public-key signing allows to verify the integrity of a message by
 knowing the public key of all those who have signed it.
@@ -221,58 +261,35 @@ In this example Alice uses her private key to sign and authenticate a
 message. Bob or anyone else can use Alice's public key to prove that
 the integrity of the message is kept intact and that she signed it.
 
-## Symmetric cryptography
-
-This is a simple technique to hide a secret using a common password known to all participants.
-
-The algorithm used is
-[AES-GCM](https://en.wikipedia.org/wiki/Galois/Counter_Mode) with a random IV and an optional authenticated header ([AEAD](https://en.wikipedia.org/wiki/Authenticated_encryption))
-
-The encryption is applied using 3 arguments:
-
-- `password` can be any string (or file) used to lock and unlock the secret
-- `message` can be any string (or file) to be encrypted and decrypted
-- `header` is a fixed name and optional argument to indicate an authenticated header
-
-These 3 arguments can be written or imported, but must given before using the `I encrypt` block:
-
-[](../_media/examples/zencode_simple/SYM02.zen ':include :type=code gherkin')
-
-The output is returned in `secret message` and it looks like:
-
-[](../_media/examples/zencode_simple/cipher_message.json ':include :type=code json')
-
-To decode make sure to have that secret password and that a valid `secret message` is given, then use:
-
-[](../_media/examples/zencode_simple/SYM03.zen ':include :type=code gherkin')
-
-So let's imagine I want to share a secret with someone and send secret messages encrypted with it:
-
-```mermaid
-sequenceDiagram
-        participant A as Anon1
-        participant B as Anon2
-        A->>A: Think of a secret password
-    A->>B: Tell the password to a friend
-        A->>A: Encrypt a secret message with the password
-    A->>B: Send the secret message to the friend
-    B->>B: Decrypts the secret message with the password
-```
-
-Of course the password must be known by all participants and that's the
-dangerous part, since it could be stolen.
-
-We mitigate this risk using **public-key cryptography**, also known as
-**a-symmetric encryption**, explained below.
-
----
-
-# The *Coconut* flow: ZKP and ABC
+# Zero Knowledge Proof
 
 In this chapter we'll look at some more advanced cryptography, namely the 'Attribute Based Credentials' and the 'Zero Knowledge Proof': this is powerful and complex feature
 implemented using the [Coconut crypto scheme](https://arxiv.org/pdf/1802.07344.pdf). 
 
-'ABC' and 'ZKP' are among the most complex functionality available in Zenroom, this chapter will give an idea one their purpose, how they work and show how Zencode simplifies them greatly.
+Zencode supports several features based on pairing elliptic curve
+arithmetics and in particular:
+
+- non-interactive zero knowledge proofs (also known as ZKP or ZK-Snarks)
+- threshold credentials with multiple decentralised issuers
+- homomorphic encryption for numeric counters
+
+These are all very useful features for architectures based on the
+decentralisation of trust, typical of **DLT and blockchain based
+systems, as well for off-line and non-interactive authentication**.
+
+The Zencode language leverages two main scenarios, more will be
+implemented in the future.
+
+1. Attribute Based Credentials (ABC) where issuer verification keys
+   represent specific credentials
+2. A Petition system based on ABC and homomorphic encryption
+
+Three more are in the work and they are:
+
+1. Anonymous proxy validation scheme
+2. Token thumbler to privately transfer numeric assets
+3. Private credential revocation
+
 
 ## Attribute Based Credentials
 
@@ -489,30 +506,115 @@ maliciously keep the **credential keypair** and impersonate the
 **Holder**.
 
 
-## Zero Knowledge Proofs
 
-There is more to this of course: Zencode supports several features
-based on pairing elliptic curve arithmetics and in particular:
+# Proximity Tracing
 
-- non-interactive zero knowledge proofs (also known as ZKP or ZK-Snarks)
-- threshold credentials with multiple decentralised issuers
-- homomorphic encryption for numeric counters
+Following up [this popular post on how to make decentralized
+privacy-preserving proximity tracing using
+zencode](https://medium.com/@jaromil/decentralized-privacy-preserving-proximity-tracing-cryptography-made-easy-af0a6ae48640)
+this documentation will go through implementation details.
 
-These are all very useful features for architectures based on the
-decentralisation of trust, typical of **DLT and blockchain based
-systems, as well for off-line and non-interactive authentication**.
+The Decentralized Privacy-Preserving Proximity Tracing (DP-3T)
+protocol is described in the [DP-3T
+Whitepaper](https://github.com/DP-3T/documents/).
 
-The Zencode language leverages two main scenarios, more will be
-implemented in the future.
+If you are a mobile app developer or a tech-savvy person in general,
+someone that can read and experiment with a shell script or javascript
+or someone curious enough to know more how applied cryptography works,
+then read on and you’ll be surprised how easy this is.
 
-1. Attribute Based Credentials (ABC) where issuer verification keys
-   represent specific credentials
-2. A Petition system based on ABC and homomorphic encryption
+![Processing and storing of observed ​Ephemeral IDs (artwork by Wouter Lueks)](https://github.com/DP-3T/documents/raw/master/graphics/decentralized_contact_tracing/whitepaper_figureAA_processing_storing_ephIDs.png)
 
-Three more are in the work and they are:
+A software application implementing this scheme shall be capable of computing through 3 basic steps:
 
-1. Anonymous proxy validation scheme
-2. Token thumbler to privately transfer numeric assets
-3. Private credential revocation
+1. Setup the secret day key (SK)
+2. Create a list of Ephemeral IDs (EphIDs)
+3. Check the proximity to “infected” devices
 
----
+The following sections will demonstrate how an application can do that
+by embedding the Zenroom VM and using the special “DP3T” Zencode
+scenario.
+
+## Setup the SK
+
+Execute the following Zencode:
+
+[](../_media/examples/zencode_dp3t/dp3t_keygen.zen ':include :type=code gherkin')
+
+This will output you a brand new “secret day key” (SK):
+
+[](../_media/examples/zencode_dp3t/SK1.json ':include :type=code json')
+
+If you have already created a new SK and want to renew, pass the
+previous SK as input to Zenroom (either DATA or KEYS buffer) and run
+this Zencode:
+
+[](../_media/examples/zencode_dp3t/dp3t_keyderiv.zen ':include :type=code gherkin')
+
+This will output a new SK in the same format but with different content:
+
+[](../_media/examples/zencode_dp3t/SK2.json ':include :type=code json')
+
+## Create the EphIDs
+
+To generate a list of ephemeral IDs (EphIDs) for the day one should
+have a renewed secret day key and an `epoch` number: the minutes
+interval of `ephid` renewal during the day. Here we set `epoch` to
+`180` thus producing 9 ephids and segmenting the day in 8 moments:
+early morning, late morning, lunch, early afternoon, late afternoon,
+dinner, early evening, late evening.
+
+The current secret day key (SK) needs to be passed as input to the
+following script as DATA or INPUT:
+
+[](../_media/examples/zencode_dp3t/dp3t_ephidgen.zen ':include :type=code gherkin')
+
+This will yield 9 EphIDs ready to use as output:
+
+[](../_media/examples/zencode_dp3t/EphID_2.json ':include :type=code json')
+
+This is a randomized array of EphIDs that the mobile application should broadcast at the different moments of the day.
+
+## Check the proximity
+
+Here we assume the mobile application will have received from an
+online server the list of “infected SKs” identifiers, for instance as
+a JSON file. This list will be very big (plausibly 20.000 entries) and
+is truncated here, it will consist of an array of `list of infected`
+secret day keys belonging to individuals willing to run the
+application. For example:
+
+```json
+{
+   "list_of_infected" : [
+      "b2bf0a3038f3810d2b3fbd4f300b3d8827cf5fb0078c3bd3dc65c48481162820",
+      "d843e0cec156f496e11f39f81e40708cf95341dad022a450924decd7e153354c",
+      "64c200f8db42a03f9757529f6415aa452639039f2c92301b640c17b3889b6ccc",
+      "595d59e1ddc733536e9943f29ad066904bb06802cfe8c216bdc9d67d0deb28f9",
+      "e28668b87d50147848385b5adfc010f7fce516e57115220be49214d415a0e451",
+      "3188ab1c837658bd906430d98b41eb3b6012c153282456abbaf622036f4996e9",
+  ...
+}
+```
+
+The mobile application will also have a list of EphIDs that were caught from the ether (broadcasted by other devices) and stored on the phone.
+
+[](../_media/examples/zencode_dp3t/EphID_infected.json ':include :type=code json')
+
+At this point the application will have to execute the following
+Zencode to calculate if it has been in the proximity of any COVID-19
+positive device:
+
+[](../_media/examples/zencode_dp3t/dp3t_check.zen ':include :type=code gherkin')
+
+This code will take a while to run, approx 2 seconds on a i5 2.4Ghz
+CPU and 10 seconds on a phone, requiring approx 4MB of RAM to process
+the `list of infected` array and check them on the `ephemeral ids`
+collected. This script will then output an array of SKs that are
+present in the infection list and that were in the proximity.
+
+[](../_media/examples/zencode_dp3t/SK_proximity.json ':include :type=code json')
+
+As it is visible in this example the SK of a single device (SK) will
+be repeated in case it was in the proximity through different moments
+of the day.

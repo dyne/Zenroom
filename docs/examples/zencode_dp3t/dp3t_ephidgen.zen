@@ -1,0 +1,10 @@
+scenario 'dp3t': Decentralized Privacy-Preserving Proximity Tracing
+rule check version 1.0.0
+rule input encoding hex
+rule output encoding hex
+Given I have a 'secret day key'
+When I write string 'Broadcast key' in 'broadcast key'
+and I write number '180' in 'epoch'
+and I create the ephemeral ids for today
+and I randomize the 'ephemeral ids' array
+Then print the 'ephemeral ids'

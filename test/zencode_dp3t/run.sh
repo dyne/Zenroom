@@ -76,7 +76,7 @@ Then print the 'ephemeral ids'
 EOF
 
 # given a list of infected and a list of ephemeral ids 
-cat <<EOF | tee dp3t_check.zen | $Z -z -a SK_infected_20k.json -k EphID_infected.json
+cat <<EOF | tee dp3t_check.zen | $Z -z -a SK_infected_20k.json -k EphID_infected.json | tee SK_proximity.json
 scenario 'dp3t'
 rule check version 1.0.0
 rule input encoding hex
