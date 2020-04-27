@@ -1,6 +1,6 @@
 # Zenroom crypto VM
 
-![Zenroom logo](https://files.dyne.org/zenroom/logos/zenroom_logotype.png)
+[![Zenroom logo](https://files.dyne.org/zenroom/logos/zenroom_logotype.png)](https://dev.zenroom.org)
 
 Zenroom is a **secure language interpreter** of both Lua and its own
 secure domain specific language (DSL) to execute fast cryptographic
