@@ -116,15 +116,9 @@ int is_base64(const char *in) {
 	return c;
 }
 
-inline void push_octet_to_hex_string(lua_State *L, octet *o) {
-	int odlen = o->len<<1;
-	char *s = zen_memory_alloc(odlen+1);
-	register int i;
-	register unsigned char ch;
-	for (i=0; i<o->len; i++) {
-		ch=o->val[i]; z_sprintf(&s[i<<1],"%02x", ch);
-	}
-	s[odlen] = '\0';
+void push_octet_to_hex_string(lua_State *L, octet *o) {
+	char *s = zen_memory_alloc((o->len<<1)+1); // string len = double +1
+	buf2hex(s, o->val, o->len);
 	lua_pushstring(L,s);
 	zen_memory_free(s);
 	return;
@@ -509,25 +503,18 @@ static int from_string(lua_State *L) {
 }
 
 static int from_hex(lua_State *L) {
-	// const long hextable[] = {
-	// 	[0 ... 255] = -1,
-	// 	['0'] = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-	// 	['A'] = 10, 11, 12, 13, 14, 15,
-	// 	['a'] = 10, 11, 12, 13, 14, 15
-	// };
 	const char *s = lua_tostring(L, 1);
 	if(!s) {
 		error(L, "%s :: invalid argument",__func__);
 		lua_pushboolean(L,0);
 		return 1; }
-	// luaL_argcheck(L, s != NULL, 1, "hex string sequence expected");
 	int len = is_hex(s);
 	func(L,"hex string sequence length: %u",len);
 	if(!len || len>MAX_FILE<<1) { // *2 hex tuples
 		error(L, "hex sequence too long: %u bytes", len<<1);
 		lua_pushboolean(L,0);
 		return 1; }
-	octet *o = o_new(L, len); // TODO: can be halved
+	octet *o = o_new(L, len>>1);
 	o->len = hex2buf(o->val,s);
 	return 1;
 }

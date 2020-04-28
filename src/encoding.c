@@ -19,6 +19,7 @@
  */
 
 #include <inttypes.h>
+#include <stddef.h>
 
 static const int32_t hextable[] = {
 	-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
@@ -41,6 +42,20 @@ int hex2buf(char *dst, const char *hex) {
 	for(i=0, j=0; hex[j]!=0; i++, j+=2)
 		dst[i] = (hextable[(short)hex[j]]<<4) + hextable[(short)hex[j+1]];
 	return(i);
+}
+
+// takes binary buffer and its bytes length, requires pre-allocation
+// of dst string
+static const char hexes[] = "0123456789abcdef";
+void buf2hex(char *dst, const char *buf, const size_t len) {
+	register size_t i;
+	register unsigned char ch;
+	for (i=0; i<len; i++) {
+		ch=buf[i];
+		dst[i<<1]     = hexes[ch>>4];
+		dst[(i<<1)+1] = hexes[ch & 0xf];
+	}
+	dst[len<<1] = 0x0; // null termination
 }
 
 static const unsigned char asciitable[256] = {

@@ -21,7 +21,10 @@
 #ifndef __ENCODING_H__
 #define __ENCODING_H__
 
+#include <stddef.h>
+
 int hex2buf(char *dst, const char *hex);
+void buf2hex(char *dst, const char *buf, const size_t len);
 
 int is_url64(const char *in);
 
