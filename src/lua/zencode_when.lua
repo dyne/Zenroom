@@ -1,6 +1,6 @@
 -- This file is part of Zenroom (https://zenroom.dyne.org)
 --
--- Copyright (C) 2018-2019 Dyne.org foundation
+-- Copyright (C) 2018-2020 Dyne.org foundation
 -- designed, written and maintained by Denis Roio <jaromil@dyne.org>
 --
 -- This program is free software: you can redistribute it and/or modify
@@ -19,20 +19,21 @@
 
 --- WHEN
 
-When("I append '' to ''", function(content, dest)
-		ZEN.assert(not ZEN.schemas[dest], "When denied, schema collision detected: "..dest)
-		ACK[dest] = ACK[dest] .. ZEN:import(content)
+When("I append string '' to ''", function(content, dest)
+		ZEN.assert(not ZEN.schemas[dest], "Append denied, schema collision detected: "..dest)
+		ACK[dest] = ACK[dest] .. O.from_string(content)
 end)
-When("I append '' to '' formatted as ''", function(content, dest, format)
-		ZEN.assert(not ZEN.schemas[dest], "When denied, schema collision detected: "..dest)
-		ACK[dest] = ACK[dest] .. ZEN:import(content, input_encoding(format).fun) -- add prefix
+When("I append '' to '' as ''", function(content, dest, format)
+		ZEN.assert(not ZEN.schemas[dest], "Append denied, schema collision detected: "..dest)
+		ACK[dest] = ACK[dest] .. ZEN.decode(content, input_encoding(format))
 end)
 
--- simplified exception for I write: import encoding from_string
+-- simplified exception for I write: import encoding from_string ...
 When("I write string '' in ''", function(content, dest)
 		ZEN.assert(not ZEN.schemas[dest], "When denied, schema collision detected: "..dest)
 		ACK[dest] = O.from_string(content)
 end)
+-- ... and from a number
 When("I write number '' in ''", function(content, dest)
 		ZEN.assert(not ZEN.schemas[dest], "When denied, schema collision detected: "..dest)
 		-- TODO: detect number base 10
@@ -41,7 +42,7 @@ end)
 
 When("I set '' to '' as ''", function(dest, content, format)
 		ZEN.assert(not ZEN.schemas[dest], "When denied, schema collision detected: "..dest)
-		ACK[dest] = ZEN:import(content, input_encoding(format).fun)
+		ACK[dest] = ZEN.decode(content, input_encoding(format))
 end)
 When("I create a random ''", function(s)
 		ZEN.assert(not ZEN.schemas[s], "When denied, schema collision detected: "..s)

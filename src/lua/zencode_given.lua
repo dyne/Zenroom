@@ -16,6 +16,8 @@
 -- You should have received a copy of the GNU Affero General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+-- TODO: use strict table
+-- https://stevedonovan.github.io/Penlight/api/libraries/pl.strict.html
 
 -- GIVEN
 local function gc()

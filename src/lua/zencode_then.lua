@@ -23,12 +23,12 @@ Then("print ''", function(v)
 end)
 
 Then("print '' ''", function(k,v)
-		OUT[k] = v -- ZEN:import(v, false)
+		OUT[k] = v
 end)
 
 
 Then("print '' '' as ''", function(k,v,s)
-		OUT[k] = export_obj( ZEN:import(v, input_encoding(s).fun), s)
+		OUT[k] = export_obj( ZEN.decode(v, input_encoding(s)), s)
 end)
 
 Then("print all data", function()

@@ -214,7 +214,7 @@ ZEN.add_schema({
 
 When("I create the petition ''", function(uid)
 		ZEN:pick('petition',
-				 { uid = ZEN:import(uid, O.from_string),
+				 { uid = O.from_string(uid),
 				   owner = ACK.credential_keypair.public,
 				   scores = { pos = { left = ECP.infinity(),
 									  right = ECP.infinity() },
@@ -250,7 +250,7 @@ When("I create the petition signature ''", function(uid)
 		ZEN.assert(ACK.credentials, "Signed credential not found")
 		local Theta
 		local zeta
-		local ack_uid = ZEN:import(uid, O.from_string)
+		local ack_uid = O.from_string(uid)
 		Theta, zeta = COCONUT.prove_cred_petition(
 		   ACK.verifiers,
 		   ACK.credentials,

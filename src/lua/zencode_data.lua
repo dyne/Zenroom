@@ -35,30 +35,26 @@ function ZEN.add_schema(arr)
 end
 
 
--- basic encoding schemas
-ZEN.add_schema({
-	  base64 = function(obj) return ZEN:convert(obj, OCTET.from_base64) end,
-	  url64  = function(obj) return ZEN:convert(obj, OCTET.from_url64)  end,
-	  hex =    function(obj) return ZEN:convert(obj, OCTET.from_hex) end,
-	  str =    function(obj) return ZEN:convert(obj, OCTET.from_string) end,
-})
-
+-- -- basic encoding schemas
+-- ZEN.add_schema({
+-- 	  base64 = function(obj) return ZEN:convert(obj, OCTET.from_base64) end,
+-- 	  url64  = function(obj) return ZEN:convert(obj, OCTET.from_url64)  end,
+-- 	  hex =    function(obj) return ZEN:convert(obj, OCTET.from_hex) end,
+-- 	  str =    function(obj) return ZEN:convert(obj, OCTET.from_string) end,
+-- })
 
 -- init statements
 function Given(text, fn)
-   -- xxx(3,"Scenario '"..ZEN.scenario.."' add given statement: "..text)
    ZEN.assert(not ZEN.given_steps[text],
    			  "Conflicting statement loaded by scenario: "..text)
    ZEN.given_steps[text] = fn
 end
 function When(text, fn)
-   -- xxx(3,"Scenario '"..ZEN.scenario.."' add when statement: "..text)
    ZEN.assert(not ZEN.when_steps[text],
    			  "Conflicting statement loaded by scenario: "..text)
    ZEN.when_steps[text] = fn
 end
 function Then(text, fn)
-   -- xxx(3,"Scenario '"..ZEN.scenario.."' add then statement: "..text)
    ZEN.assert(not ZEN.then_steps[text],
    			  "Conflicting statement loaded by scenario : "..text)
    ZEN.then_steps[text] = fn
@@ -75,6 +71,7 @@ ZEN.prefix = function(str)
    return str:sub(1,3)
 end
 
+-- TODO: ZEN.cast to zenroom. type
 ZEN.get = function(obj, key, conversion)
    ZEN.assert(obj, "ZEN.get no object found")
    ZEN.assert(type(key) == "string", "ZEN.get key is not a string")
@@ -86,14 +83,13 @@ ZEN.get = function(obj, key, conversion)
    ZEN.assert(k, "Key not found in object conversion: "..key)
    local res = nil
    local t = type(k)
-
    if iszen(t) and conversion then res = conversion(k) goto ok end
    if iszen(t) and not conversion then res = k goto ok end
    if t == 'string' and conversion == str then res = k goto ok end
    if t == 'string' and conversion and conversion ~= str then
-	  res = ZEN:import(k, conversion) goto ok end
+	  res = conversion(k) goto ok end
    if t == 'string' and not conversion then
-	  res = ZEN:import(k)
+	  res = CONF.input.encoding.fun(k)
 	  goto ok
    end
    if t == 'number' then res = k end
@@ -412,33 +408,6 @@ function ZEN.decode(anystr, decoder)
    else
 	  return( CONF.input.encoding.fun(anystr) )
    end
-end
-
----
--- Import a generic data element from the tagged format, or use
--- CONF.encoding
---
--- @function ZEN:import(object)
--- @param object data element to be read
--- @param fun function to be used for conversion
--- @return object read
-function ZEN:import(object, fun)
-   ZEN.assert(object, "ZEN:import object is nil")
-   local t = type(object)
-   if iszen(t) then
-      warn("ZEN:import object already converted to "..t)
-      return t
-   end
-   -- ZEN.assert(t ~= 'table', "ZEN:import table is impossible: object needs to be 'valid'")
-   -- ZEN.assert(t == 'string', "ZEN:import object is not a string: "..t)
-   if t == 'table' then
-	  return object
-   elseif fun then
-	  return(fun(object))
-   else
-	  return(CONF.input.encoding.fun(object))
-   end
-   return nil
 end
 
 

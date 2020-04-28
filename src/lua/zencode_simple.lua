@@ -24,7 +24,7 @@ ZEN.add_schema({
 	  -- keypair (ECDH)
 	  public_key = function(obj)
 		 local o = obj.public_key or obj -- fix recursive schema check
-		 if type(o) == "string" then o = ZEN:import(o) end
+		 if type(o) == "string" then o = ZEN.decode(o) end
 		 ZEN.assert(ECDH.pubcheck(o),
 					"Public key is not a valid point on curve")
 		 return o
