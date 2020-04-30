@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import sinon from 'sinon'
-import zenroom from '../src/wrapper'
+import zenroom from '../dist/wrapper'
 const capcon = require('capture-console')
 var assert = require('assert')
 

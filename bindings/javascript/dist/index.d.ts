@@ -3,7 +3,7 @@ declare module 'zenroom' {
 	export function success():any;
 	export function error():any;
 	export function print(text: string): any;
-	export function printErr(text:string): any;
+	export function print_err(text:string): any;
 	export function keys(keys: any): any
 	export function data(data: any): any
 	export function conf(conf: string): any;

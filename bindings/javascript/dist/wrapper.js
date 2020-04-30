@@ -1,33 +1,53 @@
-import 'core-js/stable';
-import Zenroom from '../dist/lib/zenroom.js';
+"use strict";
 
-const C = Zenroom();
+require("core-js/modules/es.symbol");
 
+require("core-js/modules/es.symbol.description");
+
+require("core-js/modules/es.symbol.iterator");
+
+require("core-js/modules/es.array.iterator");
+
+require("core-js/modules/es.object.assign");
+
+require("core-js/modules/es.object.to-string");
+
+require("core-js/modules/es.string.iterator");
+
+require("core-js/modules/web.dom-collections.iterator");
+
+require("core-js/stable");
+
+var _zenroom = _interopRequireDefault(require("../dist/lib/zenroom.js"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+var C = (0, _zenroom.default)();
 /* istanbul ignore next */
-const zenroomExec = (script, conf = null, keys = null, data = null) => {
-  C.then((Module) => {
-    Module.ccall(
-      'zenroom_exec',
-      'number',
-      ['string', 'string', 'string', 'string'],
-      [script, conf, keys, data],
-    );
+
+var zenroomExec = function zenroomExec(script) {
+  var conf = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+  var keys = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+  var data = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
+  C.then(function (Module) {
+    Module.ccall('zenroom_exec', 'number', ['string', 'string', 'string', 'string'], [script, conf, keys, data]);
+  });
+};
+/* istanbul ignore next */
+
+
+var zencodeExec = function zencodeExec(script) {
+  var conf = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+  var keys = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+  var data = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : null;
+  C.then(function (Module) {
+    Module.ccall('zencode_exec', 'number', ['string', 'string', 'string', 'string'], [script, conf, keys, data]);
   });
 };
 
-/* istanbul ignore next */
-const zencodeExec = (script, conf = null, keys = null, data = null) => {
-  C.then((Module) => {
-    Module.ccall(
-      'zencode_exec',
-      'number',
-      ['string', 'string', 'string', 'string'],
-      [script, conf, keys, data],
-    );
-  });
-};
-
-const stringify = (field) => {
+var stringify = function stringify(field) {
   if (!field) {
     return null;
   }
@@ -35,22 +55,23 @@ const stringify = (field) => {
   try {
     return JSON.stringify(JSON.parse(field));
   } catch (e) {
-    if (typeof field === 'object') {
+    if (_typeof(field) === 'object') {
       return JSON.stringify(field);
-    } if (typeof field === 'string') {
+    }
+
+    if (typeof field === 'string') {
       return field;
     }
   }
 };
 
-const zenroom = (function () {
-  let self = {};
+var zenroom = function () {
+  var self = {};
   self.options = {};
 
-  const __debug = function () {
+  var __debug = function __debug() {
     return self;
   };
-
   /**
    * Set the zenroom script to run
    *
@@ -70,11 +91,12 @@ const zenroom = (function () {
    * @param {string} script the lua script to be set
    * @returns {zenroom} the zenroom module
    */
-  const script = function (script) {
-    self.script = script;
+
+
+  var script = function script(_script) {
+    self.script = _script;
     return this;
   };
-
   /**
    * Set the keys JSON for you zenroom execution
    *
@@ -97,11 +119,12 @@ const zenroom = (function () {
    * @param {object} keys the keys to be set as an object
    * @returns {object} the zenroom module
    */
-  const keys = function (keys) {
-    self.keys = stringify(keys);
+
+
+  var keys = function keys(_keys) {
+    self.keys = stringify(_keys);
     return this;
   };
-
   /**
    * Set the data for your zenroom execution
    *
@@ -124,11 +147,12 @@ const zenroom = (function () {
    * @param {string} data
    * @returns {object} the zenroom module
    */
-  const data = function (data) {
-    self.data = stringify(data);
+
+
+  var data = function data(_data) {
+    self.data = stringify(_data);
     return this;
   };
-
   /**
    * Set the conf before your zenroom execution
    *
@@ -147,11 +171,12 @@ const zenroom = (function () {
    * @param {string} conf the string of configuration to be set
    * @returns {object} the zenroom module
    */
-  const conf = function (conf) {
-    self.conf = conf;
+
+
+  var conf = function conf(_conf) {
+    self.conf = _conf;
     return this;
   };
-
   /**
    * Set the print_err callback to customize
    * the behaviour of the print_err calls made to stderr
@@ -171,15 +196,17 @@ const zenroom = (function () {
    * @callback print_err
    * @returns {object} the zenroom module
    */
-  const print_err = function (e) {
-    self.print_err = e;
-    C.then((Module) => {
-      Module.print_err = (text) => self.print_err(text);
-    });
 
+
+  var print_err = function print_err(e) {
+    self.print_err = e;
+    C.then(function (Module) {
+      Module.print_err = function (text) {
+        return self.print_err(text);
+      };
+    });
     return this;
   };
-
   /**
    * Set the print callback to customize
    * the behaviour of the print calls made to stdout
@@ -199,15 +226,17 @@ const zenroom = (function () {
    * @callback print
    * @returns {object} the zenroom module
    */
-  const print = function (printFunction) {
-    self.print = printFunction;
-    C.then((Module) => {
-      Module.print = (text) => self.print(text);
-    });
 
+
+  var print = function print(printFunction) {
+    self.print = printFunction;
+    C.then(function (Module) {
+      Module.print = function (text) {
+        return self.print(text);
+      };
+    });
     return this;
   };
-
   /**
    * Set the success callback that is executed after a successful execution of zenroom
    *
@@ -225,14 +254,15 @@ const zenroom = (function () {
    * @callback success
    * @returns {object} the zenroom module
    */
-  const success = function (successCallback) {
+
+
+  var success = function success(successCallback) {
     self.success = successCallback;
-    C.then((Module) => {
+    C.then(function (Module) {
       Module.exec_ok = successCallback;
     });
     return this;
   };
-
   /**
    * Set the error callback that is executed after an unsuccessful execution of zenroom
    *
@@ -250,14 +280,15 @@ const zenroom = (function () {
    * @callback error
    * @returns {object} the zenroom module
    */
-  const error = function (errorCallback) {
+
+
+  var error = function error(errorCallback) {
     self.error = errorCallback;
-    C.then((Module) => {
+    C.then(function (Module) {
       Module.exec_error = errorCallback;
     });
     return this;
   };
-
   /**
    * Execute the zenroom vm (using the previously setted options)
    *
@@ -276,11 +307,12 @@ const zenroom = (function () {
    *
    * @returns {object} the zenroom module
    */
-  const zenroom_exec = function () {
+
+
+  var zenroom_exec = function zenroom_exec() {
     zenroomExec(self.script, self.conf, self.keys, self.data);
     return this;
   };
-
   /**
    * Execute zencode contracts (using the previously setted options)
    *
@@ -299,11 +331,12 @@ const zenroom = (function () {
    *
    * @returns {object} the zenroom module
    */
-  const zencode_exec = function () {
+
+
+  var zencode_exec = function zencode_exec() {
     zencodeExec(self.script, self.conf, self.keys, self.data);
     return this;
   };
-
   /**
    * This method allows the configuration of your call by passing one
    * configuration option object. You can use the chain methods after this anyway.
@@ -363,29 +396,38 @@ const zenroom = (function () {
    *
    * @returns {object} the zenroom module
    */
-  const init = function (options) {
+
+
+  var init = function init(options) {
     /* istanbul ignore next */
     self.options = Object.assign(self.options, options) || {};
-
     script(self.options.script || '');
     keys(self.options.keys || null);
     conf(self.options.conf || null);
     data(self.options.data || null);
-    print(self.options.print || ((text) => console.log(text)));
-    print_err(self.options.print_err || ((text) => console.error(text)));
+    print(self.options.print || function (text) {
+      return console.log(text);
+    });
+    print_err(self.options.print_err || function (text) {
+      return console.error(text);
+    });
     success(self.options.success || new Function()); // eslint-disable-line no-new-func
+
     error(self.options.error || new Function()); // eslint-disable-line no-new-func
 
     return this;
   };
 
-  const __setup = function () {
-    print(self.print || ((text) => console.log(text)));
-    print_err(self.print_err || ((text) => console.error(text)));
-    success(self.success || (() => {}));
-    error(self.error || (() => {}));
+  var __setup = function __setup() {
+    print(self.print || function (text) {
+      return console.log(text);
+    });
+    print_err(self.print_err || function (text) {
+      return console.error(text);
+    });
+    success(self.success || function () {});
+    error(self.error || function () {});
   };
-
   /**
    * Reset the setted options already provided and cleans up the zenroom module
    *
@@ -407,30 +449,34 @@ const zenroom = (function () {
    *
    * @returns {object} the zenroom module
    */
-  const reset = function () {
+
+
+  var reset = function reset() {
     self = {};
     self.options = {};
+
     __setup();
+
     return this;
   };
 
   __setup();
 
   return {
-    script,
-    keys,
-    conf,
-    data,
-    print,
-    print_err,
-    success,
-    zenroom_exec,
-    zencode_exec,
-    error,
-    init,
-    reset,
-    __debug,
+    script: script,
+    keys: keys,
+    conf: conf,
+    data: data,
+    print: print,
+    print_err: print_err,
+    success: success,
+    zenroom_exec: zenroom_exec,
+    zencode_exec: zencode_exec,
+    error: error,
+    init: init,
+    reset: reset,
+    __debug: __debug
   };
-}());
+}();
 
 module.exports = zenroom;
