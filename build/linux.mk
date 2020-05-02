@@ -29,7 +29,7 @@ linux: apply-patches milagro lua53 embed-lua
 		make -C src linux
 		@cp -v src/zenroom build/zenroom
 
-android-arm android-x86 android-aarch64: apply-patches milagro lua53 embed-lua
+android-arm android-x86 android-aarch64 java-x86_64: apply-patches milagro lua53 embed-lua
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	LD="${ld}" RANLIB="${ranlib}" AR="${ar}" \
 		make -C src $@

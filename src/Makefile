@@ -99,7 +99,7 @@ ios-lib: CFLAGS += -D LIBRARY
 ios-lib: ${SOURCES}
 	libtool -static -o zenroom-ios-${TARGET}.a ${SOURCES} $(shell find ../lib -name \*.a) ${LDADD}
 
-android-arm android-x86 android-aarch64: ${SOURCES} zenroom_jni.o
+android-arm android-x86 android-aarch64 java-x86_64 java-x86 java-arm java-aarch64: ${SOURCES} zenroom_jni.o
 	${CC} ${CFLAGS} ${SOURCES} zenroom_jni.o -o zenroom.so ${LDFLAGS} ${LDADD}
 
 arm: ${SOURCES}

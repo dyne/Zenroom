@@ -136,6 +136,14 @@ endif
 # -DCMAKE_ANDROID_NDK=${sysroot}
 #milagro_cmake_flags += -DCMAKE_ANDROID_STANDALONE_TOOLCHAIN=${ndk} -DCMAKE_SYSTEM_VERSION=26
 
+ifneq (,$(findstring java,$(MAKECMDGOALS)))
+jdk = ${JAVA_HOME}
+ldflags += -shared
+cflags += -fPIC ${cflags_protection} -DLIBRARY -D'ARCH=\"LINUX\"' -DARCH_LINUX
+cflags += -DLUA_USE_DLOPEN -I${jdk}/include -I${jdk}/include/linux
+system := Java
+endif
+
 ifneq (,$(findstring android,$(MAKECMDGOALS)))
 ndk = ${NDK_HOME}
 toolchain = ${ndk}/toolchains/llvm/prebuilt/linux-x86_64
