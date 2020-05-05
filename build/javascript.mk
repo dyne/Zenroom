@@ -3,6 +3,8 @@
 
 MAX_STRING := 8000 # 512000 # 128000
 
+EMSCRIPTEN="${pwd}/emsdk/upstream/emscripten"
+
 load-emsdk:
 	EMSCRIPTEN="${pwd}/emsdk/upstream/emscripten" \
 	${pwd}/emsdk/emsdk construct_env ${pwd}/build/emsdk_env.sh
@@ -16,7 +18,7 @@ javascript-demo: apply-patches load-emsdk milagro lua53 embed-lua
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	JSEXT="--preload-file lua@/" \
 	JSOUT="${website}/demo/index.html" \
-	make -C src js
+	make -C src js CC=${EMSCRIPTEN}/emcc
 
 javascript-web: cflags  += -O3 -fno-exceptions -fno-rtti
 javascript-web: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' \
