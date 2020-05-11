@@ -210,6 +210,34 @@ describe('Zenroom module', function () {
     expect(errorExecuted).to.be.true
   })
 
+  it('should print_err work correctly with zencode_exec', function () { 
+    const script = 'broken script for print_err'
+    let stderr = capcon.captureStderr(function scope() {
+      zenroom.script(script).print_err(text => console.error(text)).zencode_exec()
+    })
+    expect(stderr).to.have.string(`[!] [string "ZEN:begin()..."]:2: Invalid Zencode prefix: broken`)
+  })
+
+
+  it('should print_err work correctly with zenroom_exec', function () { 
+    const script = 'broken script for print_err'
+    let stderr = capcon.captureStderr(function scope() {
+      zenroom.script(script).print_err(text => console.error(text)).zenroom_exec()
+    })
+    expect(stderr).to.have.string(`[!] [string "broken script for print_err"]:1: syntax error near 'script'`)
+  })
+
+  it('should print_err work correctly with init', function () { 
+    let stderr = capcon.captureStderr(function scope() {
+      zenroom.init({
+        script: 'broken init print_err',
+        print_err: text => { console.error(text) }
+      }).zenroom_exec()
+    })
+    expect(stderr).to.have.string(`[!] [string "broken init print_err"]:1: syntax error near 'init'`)
+  })
+
+
   it('should execute the reset correctly', function () {
     let options = zenroom.init(encrypt_secret_to).__debug()
     expect(JSON.parse(options.data)).to.have.all.keys(Object.keys(encrypt_secret_to.data))

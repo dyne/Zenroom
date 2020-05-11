@@ -174,7 +174,7 @@ const zenroom = (function () {
   const print_err = function (e) {
     self.print_err = e;
     C.then((Module) => {
-      Module.print_err = (text) => self.print_err(text);
+      Module.printErr = (text) => self.print_err(text);
     });
 
     return this;

@@ -17,7 +17,7 @@
     "test:html": "nyc report --reporter=html yarn test",
     "test:watch": "yarn test --watch",
     "doc": "documentation serve src/wrapper.js --shallow",
-    "doc:api": "documentation readme src/wrapper.js -s ':honeybee: API' --shallow --markdown-toc false",
+    "doc:api": "documentation readme src/wrapper.js -s '⚙️ API' --shallow --markdown-toc false",
     "release": "release-it --no-requireCleanWorkingDir"
   },
   "files": [
@@ -26,29 +26,29 @@
   "devDependencies": {
     "@babel/cli": "^7.6.4",
     "@babel/core": "^7.6.4",
+    "@babel/node": "^7.8.7",
     "@babel/preset-env": "^7.2.0",
     "@babel/preset-react": "^7.0.0",
     "@babel/register": "^7.0.0",
-    "babel-plugin-istanbul": "^5.1.0",
+    "babel-plugin-istanbul": "^6.0.0",
     "babelify": "^10.0.0",
     "capture-console": "^1.0.1",
     "chai": "^4.2.0",
     "codecov": "^3.1.0",
-    "documentation": "^8.1.2",
-    "eslint": "^5.9.0",
-    "eslint-config-airbnb-base": "^13.1.0",
+    "documentation": "^13.0.0",
+    "eslint": "^7.0.0",
+    "eslint-config-airbnb-base": "^14.1.0",
     "eslint-plugin-import": "^2.14.0",
-    "mkdirp": "^0.5.1",
-    "mocha": "^5.2.0",
-    "nyc": "^13.1.0",
-    "release-it": "^8.3.0",
-    "rimraf": "^2.6.2",
-    "sinon": "^7.1.1",
-    "standard": "^12.0.1"
+    "mkdirp": "^1.0.4",
+    "mocha": "^7.1.2",
+    "nyc": "^15.0.1",
+    "release-it": "^13.5.8",
+    "rimraf": "^3.0.2",
+    "sinon": "^9.0.2",
+    "standard": "^14.3.3"
   },
   "dependencies": {
-    "@babel/node": "^7.6.3",
-    "core-js": "^3.1.4",
+    "core-js": "^3.6.5",
     "regenerator-runtime": "*"
   },
   "standard": {
@@ -59,20 +59,18 @@
     ]
   },
   "nyc": {
-    "extends": "@istanbuljs/nyc-config-babel",
     "check-coverage": true,
     "per-file": true,
-    "lines": 99,
-    "statements": 98,
-    "functions": 99,
-    "branches": 99,
+    "lines": 98,
+    "statements": 90,
+    "functions": 90,
+    "branches": 70,
     "cache": true,
     "all": true,
     "include": [
-      "src/**/*.js"
+      "dist/*.js"
     ],
     "exclude": [
-      "dist",
       "zenroom"
     ]
   }

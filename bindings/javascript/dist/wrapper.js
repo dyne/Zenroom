@@ -201,7 +201,7 @@ var zenroom = function () {
   var print_err = function print_err(e) {
     self.print_err = e;
     C.then(function (Module) {
-      Module.print_err = function (text) {
+      Module.printErr = function (text) {
         return self.print_err(text);
       };
     });
