@@ -1,6 +1,6 @@
 {
   "name": "zenroom",
-  "version": "1.1.0",
+  "version": "1.1.1-0",
   "description": "wrapper of Zenroom, a secure and small virtual machine for crypto language processing",
   "main": "index.js",
   "repository": "https://github.com/DECODEproject/Zenroom.git",
@@ -18,7 +18,8 @@
     "test:watch": "yarn test --watch",
     "doc": "documentation serve src/wrapper.js --shallow",
     "doc:api": "documentation readme src/wrapper.js -s '⚙️ API' --shallow --markdown-toc false",
-    "release": "release-it --no-requireCleanWorkingDir"
+    "release": "release-it --no-git.requireCleanWorkingDir",
+    "release:pre": "release-it --no-git.requireCleanWorkingDir --preRelease"
   },
   "files": [
     "dist"

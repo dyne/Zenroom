@@ -1,4 +1,6 @@
-import 'core-js/stable';
+import 'core-js/stable'
+import 'regenerator-runtime/runtime.js'
+
 import Zenroom from '../dist/lib/zenroom.js';
 
 const C = Zenroom();

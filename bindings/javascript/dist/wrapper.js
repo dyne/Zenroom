@@ -18,6 +18,8 @@ require("core-js/modules/web.dom-collections.iterator");
 
 require("core-js/stable");
 
+require("regenerator-runtime/runtime.js");
+
 var _zenroom = _interopRequireDefault(require("../dist/lib/zenroom.js"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
