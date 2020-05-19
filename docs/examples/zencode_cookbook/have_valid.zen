@@ -1,0 +1,6 @@
+rule check version 1.0.0
+scenario 'simple'
+	 Given I am 'Andrea'
+	 and I have my 'keypair'
+	 and debug
+	 Then print the 'keypair'

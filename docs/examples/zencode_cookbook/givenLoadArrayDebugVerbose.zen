@@ -1,0 +1,11 @@
+Given debug
+Given I have a valid array of 'string' inside 'myArray'
+Given debug
+Given I have a valid string inside 'myString'
+Given debug
+Given I have a valid number inside 'myNumber'
+Given debug 
+When I randomize the 'myArray' array
+When debug
+Then print all data
+Then debug
