@@ -10,6 +10,7 @@
   - [Zencode](/pages/zencode.md "Zencode")
   - [Zencode command list](/pages/zencode-list.md "Zencode command list")
   - [Zencode cookbook](/pages/zencode-cookbook.md "Zencode cookbook") 
+  - [Zencode given](/pages/zencode-given.md "Zencode cookbook") 
 
 - Programming Lua
   - [Lua](/pages/lua.md "in Lua")
