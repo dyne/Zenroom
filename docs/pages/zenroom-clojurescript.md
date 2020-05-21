@@ -2,13 +2,7 @@
 
 This article shows how to use Zenroom from ClojureScript using shadow-cljs, by [transducer](https://github.com/transducer/zenroom-cljs-demo/blob/master/blogpost.md).
 
-1. [Part one Zenroom in node.js](https://www.dyne.org/using-zenroom-with-javascript-nodejs-part1/)
-1. [Part two Zenroom in the browser](https://www.dyne.org/using-zenroom-with-javascript-browser-part2/)
-1. [Part three Zenroom in React](https://www.dyne.org/using-zenroom-with-javascript-react-part3/)
-1. Part four Zenroom in commonjs and ES6
-1. [Part five Zenroom in ClojureScript](https://www.dyne.org/using-zenroom-with-clojurescript-part5/)
 
----
 
 ### 💻 npm
 
