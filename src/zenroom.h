@@ -55,6 +55,13 @@ typedef struct {
 
 #define RANDOM_SEED_LEN 256
 
+#include <stdarg.h>
+typedef int (*sprintf_t)( char * buf, char const * fmt, ... );
+typedef int (*snprintf_t)( char * buf, size_t count, char const * fmt, ... );
+typedef int (*vsprintf_t)( char * buf, char const * fmt, va_list va );
+typedef int (*vsnprintf_t)( char * buf, size_t count, char const * fmt, va_list va );
+
+
 // zenroom context, also available as "_Z" global in lua space
 // contents are opaque in lua and available only as lightuserdata
 typedef struct {
@@ -74,6 +81,11 @@ typedef struct {
 
 	int errorlevel;
 	void *userdata; // anything passed at init (reserved for caller)
+
+	sprintf_t sprintf;
+	snprintf_t snprintf;
+	vsprintf_t vsprintf;
+	vsnprintf_t vsnprintf;
 
 } zenroom_t;
 

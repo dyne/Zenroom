@@ -21,12 +21,6 @@
 #include <android/log.h>
 #endif
 
-// fast sprintf variant
-#define STB_SPRINTF_IMPLEMENTATION 1
-// #define STB_SPRINTF_NOFLOAT 1
-#define STB_SPRINTF_DECORATE(name) z_##name
-#include <stb_sprintf.h>
-
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -49,7 +43,7 @@ const char* ANSI_CYAN    = "\x1b[36m";
 const char* ANSI_RESET   = "\x1b[0m";
 
 extern zenroom_t *Z;
-char pfx[MAX_STRING];
+static char pfx[MAX_STRING];
 
 extern int zen_write_err_va(const char *fmt, va_list va);
 
@@ -65,13 +59,13 @@ static int color = 0;
 void set_color(int on) { color = on; }
 
 void notice(lua_State *L, const char *format, ...) {
-	(void)L;
 	if(!verbosity) return;
 	va_list arg;
+	snprintf_t pr = Z ? Z->snprintf : &snprintf;
 	if(color)
-		z_snprintf(pfx, MAX_STRING-1, "%s[*]%s %s\n",ANSI_GREEN,ANSI_RESET,format);
+		(*pr)(pfx, MAX_STRING-1, "%s[*]%s %s\n",ANSI_GREEN,ANSI_RESET,format);
 	else
-		z_snprintf(pfx, MAX_STRING-1, "[*] %s\n",format);
+		(*pr)(pfx, MAX_STRING-1, "[*] %s\n",format);
 	va_start(arg, format);
 	zen_write_err_va(pfx, arg);
 	va_end(arg);
@@ -81,7 +75,8 @@ void func(void *L, const char *format, ...) {
 	(void)L;
 	if(verbosity<3) return;
 	va_list arg;
-	z_snprintf(pfx, MAX_STRING-1, "[D] %s\n",format);
+	snprintf_t pr = Z ? Z->snprintf : &snprintf;
+	(*pr)(pfx, MAX_STRING-1, "[D] %s\n",format);
 	va_start(arg, format);
 	zen_write_err_va(pfx, arg);
 	va_end(arg);
@@ -89,13 +84,13 @@ void func(void *L, const char *format, ...) {
 }
 
 void error(lua_State *L, const char *format, ...) {
-	(void)L;
 	if(!format) return;
 	va_list arg;
+	snprintf_t pr = Z ? Z->snprintf : &snprintf;
 	if(color)
-		z_snprintf(pfx, MAX_STRING-1, "%s[!]%s %s\n",ANSI_RED,ANSI_RESET,format);
+		(*pr)(pfx, MAX_STRING-1, "%s[!]%s %s\n",ANSI_RED,ANSI_RESET,format);
 	else
-		z_snprintf(pfx, MAX_STRING-1, "[!] %s\n",format);
+		(*pr)(pfx, MAX_STRING-1, "[!] %s\n",format);
 	va_start(arg, format);
 	zen_write_err_va(pfx, arg);
 	va_end(arg);
@@ -104,24 +99,24 @@ void error(lua_State *L, const char *format, ...) {
 }
 
 void act(lua_State *L, const char *format, ...) {
-	(void)L;
 	if(!verbosity) return;
 	va_list arg;
-	z_snprintf(pfx, MAX_STRING-1, " .  %s\n",format);
+	snprintf_t pr = Z ? Z->snprintf : &snprintf;
+	(*pr)(pfx, MAX_STRING-1, " .  %s\n",format);
 	va_start(arg, format);
 	zen_write_err_va(pfx, arg);
 	va_end(arg);
 }
 
 void warning(lua_State *L, const char *format, ...) {
-	(void) L;
 	if(verbosity<2) return;
 
 	va_list arg;
+	snprintf_t pr = Z ? Z->snprintf : &snprintf;
 	if(color)
-		z_snprintf(pfx, MAX_STRING-1, "%s[W]%s %s\n",ANSI_YELLOW,ANSI_RESET,format);
+		(*pr)(pfx, MAX_STRING-1, "%s[W]%s %s\n",ANSI_YELLOW,ANSI_RESET,format);
 	else
-		z_snprintf(pfx, MAX_STRING-1, "[W] %s\n",format);
+		(*pr)(pfx, MAX_STRING-1, "[W] %s\n",format);
 	va_start(arg, format);
 	zen_write_err_va(pfx, arg);
 	va_end(arg);

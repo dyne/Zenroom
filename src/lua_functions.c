@@ -31,6 +31,8 @@
 #include <zen_error.h>
 #include <lua_functions.h>
 
+extern zenroom_t *Z;
+
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
@@ -87,33 +89,33 @@ static const char *zen_lua_findtable (lua_State *L, int idx,
 	return NULL;
 }
 
-void zen_add_class(lua_State *L, char *name,
+void zen_add_class(char *name,
                   const luaL_Reg *_class, const luaL_Reg *methods) {
-	char classmeta[512];
-	z_snprintf(classmeta,511,"zenroom.%s", name);
-	luaL_newmetatable(L, classmeta);
-	lua_pushstring(L, "__index");
-	lua_pushvalue(L, -2);  /* pushes the metatable */
-	lua_settable(L, -3);  /* metatable.__index = metatable */
-	luaL_setfuncs(L,methods,0);
+	char classmeta[512] = "zenroom.";
+	strncat(classmeta, name, 511);
+	luaL_newmetatable(Z->lua, classmeta);
+	lua_pushstring(Z->lua, "__index");
+	lua_pushvalue(Z->lua, -2);  /* pushes the metatable */
+	lua_settable(Z->lua, -3);  /* metatable.__index = metatable */
+	luaL_setfuncs(Z->lua,methods,0);
 
-	zen_lua_findtable(L, LUA_REGISTRYINDEX, LUA_LOADED_TABLE, 1);
-	if (lua_getfield(L, -1, name) != LUA_TTABLE) {
+	zen_lua_findtable(Z->lua, LUA_REGISTRYINDEX, LUA_LOADED_TABLE, 1);
+	if (lua_getfield(Z->lua, -1, name) != LUA_TTABLE) {
 		// no LOADED[modname]?
-		lua_pop(L, 1);  // remove previous result
+		lua_pop(Z->lua, 1);  // remove previous result
 		// try global variable (and create one if it does not exist)
-		lua_pushglobaltable(L);
+		lua_pushglobaltable(Z->lua);
 		// TODO: 'sizehint' 1 here is for new() constructor. if more
 		// than one it should be counted on the class
-		if (zen_lua_findtable(L, 0, name, 1) != NULL)
-			luaL_error(L, "name conflict for module '%s'", name);
-		lua_pushvalue(L, -1);
-		lua_setfield(L, -3, name);  /* LOADED[modname] = new table */
+		if (zen_lua_findtable(Z->lua, 0, name, 1) != NULL)
+			luaL_error(Z->lua, "name conflict for module '%s'", name);
+		lua_pushvalue(Z->lua, -1);
+		lua_setfield(Z->lua, -3, name);  /* LOADED[modname] = new table */
 	}
-	lua_remove(L, -2);  /* remove LOADED table */
+	lua_remove(Z->lua, -2);  /* remove LOADED table */
 
 	// in lua 5.1 was: luaL_pushmodule(L,name,1);
 
-	lua_insert(L,-1);
-	luaL_setfuncs(L,_class,0);
+	lua_insert(Z->lua,-1);
+	luaL_setfuncs(Z->lua,_class,0);
 }

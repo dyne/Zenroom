@@ -46,9 +46,16 @@
 
 #include <zenroom.h>
 #include <zen_memory.h>
+#include <zen_config.h>
 
 // hex2oct used to import hex sequence into rng seed
 #include <encoding.h>
+
+// alternative print functions
+#define STB_SPRINTF_IMPLEMENTATION 1
+#define STB_SPRINTF_NOFLOAT 1
+#define STB_SPRINTF_DECORATE(name) z_##name
+#include <stb_sprintf.h>
 
 // prototypes from zen_octet.c
 extern void push_buffer_to_octet(lua_State *L, char *p, size_t len);
@@ -91,6 +98,7 @@ int EXITCODE = 1; // start from error state
 extern char zconf_rngseed[(RANDOM_SEED_LEN*2)+4];
 extern mmtype zconf_memmg;
 extern int  zconf_memwipe;
+extern printftype zconf_printf;
 
 static int zen_lua_panic (lua_State *L) {
 	lua_writestringerror("PANIC: unprotected error in call to Lua API (%s)\n",
@@ -162,6 +170,22 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	Z->errorlevel = get_debug();
 	Z->random_generator = NULL;
 	Z->random_external = 0;
+	switch(zconf_printf) {
+		case STB_PRINTF:
+			Z->sprintf = &z_sprintf;
+			Z->snprintf = &z_snprintf;
+			Z->vsprintf = &z_vsprintf;
+			Z->vsnprintf = &z_vsnprintf;
+			act(NULL,"STB print functions in use");
+			break;
+		default: // LIBC_PRINTF
+			Z->sprintf = &sprintf;
+			Z->snprintf = &snprintf;
+			Z->vsprintf = &vsprintf;
+			Z->vsnprintf = &vsnprintf;
+			func(NULL,"LIBC print functions in use");
+			break;
+	}
 
 	// use RNGseed from configuration if present (deterministic mode)
 	if(zconf_rngseed[0] != 0x0) {
@@ -269,7 +293,7 @@ int zen_exec_zencode(zenroom_t *Z, const char *script) {
 	int ret;
 	lua_State* L = (lua_State*)Z->lua;
 	// introspection on code being executed
-	z_snprintf(zscript,MAX_ZENCODE-1,
+	(*Z->snprintf)(zscript,MAX_ZENCODE-1,
 	         "ZEN:begin()\nZEN:parse([[\n%s\n]])\nZEN:run()\n", script);
 	zen_setenv(L,"CODE",(char*)zscript);
 	ret = luaL_dostring(L, zscript);

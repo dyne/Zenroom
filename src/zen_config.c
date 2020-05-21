@@ -66,16 +66,18 @@ extern void set_color(int on);
 #include <jutils.h>
 #include <zenroom.h>
 #include <zen_memory.h>
+#include <zen_config.h>
 
 #include <stb_c_lexer.h>
 
-typedef enum { NIL, VERBOSE, COLOR, SECCOMP, RNGSEED, MEMMGR, MEMWIPE } zconf;
+typedef enum { NIL, VERBOSE, COLOR, SECCOMP, RNGSEED, MEMMGR, MEMWIPE, PRINTF } zconf;
 static zconf curconf;
 
 int zconf_seccomp = 0;
 char zconf_rngseed[(RANDOM_SEED_LEN*2)+4]; // 0x and terminating \0
 mmtype zconf_memmg = SYS;
 int  zconf_memwipe = 0;
+printftype zconf_printf = SYS;
 
 int zen_conf_parse(const char *configuration) {
 	(void)stb__strchr;            // avoid compiler warnings
@@ -99,13 +101,14 @@ int zen_conf_parse(const char *configuration) {
 		switch (lex.token) {
 			// first token parsed, set enum for value
 		case CLEX_id:
-			if(strcasecmp(lex.string,"debug")  ==0) { curconf = VERBOSE; break; }
+			if(strcasecmp(lex.string,"debug")  ==0) { curconf = VERBOSE; break; } // bool
 			if(strcasecmp(lex.string,"verbose")==0) { curconf = VERBOSE; break; }
-			if(strcasecmp(lex.string,"color")  ==0) { curconf = COLOR;   break; }
-			if(strcasecmp(lex.string,"seccomp")  ==0) { curconf = SECCOMP;   break; }
-			if(strcasecmp(lex.string,"rngseed")  ==0) { curconf = RNGSEED;   break; }
-			if(strcasecmp(lex.string,"memmanager") ==0) { curconf = MEMMGR;   break; }
-			if(strcasecmp(lex.string,"memwipe") ==0) { curconf = MEMWIPE;   break; }
+			if(strcasecmp(lex.string,"color")  ==0) { curconf = COLOR;   break; } // bool
+			if(strcasecmp(lex.string,"seccomp")  ==0) { curconf = SECCOMP;   break; } // bool
+			if(strcasecmp(lex.string,"rngseed")  ==0) { curconf = RNGSEED;   break; } // str
+			if(strcasecmp(lex.string,"memmanager") ==0) { curconf = MEMMGR;   break; } // str
+			if(strcasecmp(lex.string,"memwipe") ==0) { curconf = MEMWIPE;   break; } // bool
+			if(strcasecmp(lex.string,"print") ==0) { curconf = PRINTF;   break; } // str
 
 			if(curconf==MEMMGR) {
 				if(strcasecmp(lex.string,"sys") == 0) zconf_memmg = SYS;
@@ -136,6 +139,18 @@ int zen_conf_parse(const char *configuration) {
 				zconf_rngseed[(RANDOM_SEED_LEN*2)] = 0x0;
 				break;
 			}
+
+			if(curconf==PRINTF) {
+				if(strcasecmp(lex.string,"stb") == 0) zconf_printf = STB_PRINTF;
+				else if(strcasecmp(lex.string,"sys") == 0) zconf_printf = LIBC_PRINTF;
+				else {
+					error(NULL,"invalid print function: %s",lex.string);
+					free(lexbuf);
+					return 0;
+				}
+				break;
+			}
+
 			free(lexbuf);
 			error(NULL,"invalid configuration: %s", lex.string);
 			curconf = NIL;

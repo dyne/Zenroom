@@ -40,7 +40,7 @@ int zen_write_err_va(const char *fmt, va_list va) {
 	if(!Z) len = vfprintf(stderr,fmt,va); // no init yet, print to stderr
 	if(!len && Z->stderr_buf) { // print to configured buffer
 		char *err = Z->stderr_buf;
-		len = z_vsnprintf(err+Z->stderr_pos,
+		len = (*Z->vsnprintf)(err+Z->stderr_pos,
 		                  Z->stderr_len-Z->stderr_pos,
 		                  fmt, va);
 		Z->stderr_pos+=len;
@@ -54,7 +54,7 @@ int zen_write_out_va(const char *fmt, va_list va) {
 	if(!Z) len = vfprintf(stdout,fmt,va);
 	if(!len && Z->stdout_buf) {
 		char *out = Z->stdout_buf;
-		len = z_vsnprintf(out+Z->stdout_pos,
+		len = (*Z->vsnprintf)(out+Z->stdout_pos,
 		                  Z->stdout_len-Z->stdout_pos,
 		                  fmt, va);
 		Z->stdout_pos+=len;
@@ -207,7 +207,7 @@ static int zen_error (lua_State *L) {
 	for (i=1; i<=n; i++) {
 		const char *s = lua_print_format(L, i, &len);
 		if (i>1) { out[pos]='\t'; pos++; }
-		z_snprintf(out+pos,MAX_JSBUF-pos,"%s",s);
+		(*Z->snprintf)(out+pos,MAX_JSBUF-pos,"%s",s);
 		pos+=len;
 		lua_pop(L, 1);  /* pop result */
 	}
@@ -225,7 +225,7 @@ static int zen_warn (lua_State *L) {
 	for (i=1; i<=n; i++) {
 		const char *s = lua_print_format(L, i, &len);
 		if (i>1) { out[pos]='\t'; pos++; }
-		z_snprintf(out+pos,MAX_JSBUF-pos,"%s",s);
+		(*Z->snprintf)(out+pos,MAX_JSBUF-pos,"%s",s);
 		pos+=len;
 		lua_pop(L, 1);  /* pop result */
 	}
@@ -243,7 +243,7 @@ static int zen_act (lua_State *L) {
 	for (i=1; i<=n; i++) {
 		const char *s = lua_print_format(L, i, &len);
 		if (i>1) { out[pos]='\t'; pos++; }
-		z_snprintf(out+pos,MAX_JSBUF-pos,"%s",s);
+		(*Z->snprintf)(out+pos,MAX_JSBUF-pos,"%s",s);
 		pos+=len;
 		lua_pop(L, 1);  /* pop result */
 	}

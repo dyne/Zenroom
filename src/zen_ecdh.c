@@ -451,6 +451,6 @@ int luaopen_ecdh(lua_State *L) {
 
 	ecdh_init(&ECDH);
 
-	zen_add_class(L, "ecdh", ecdh_class, ecdh_methods);
+	zen_add_class("ecdh", ecdh_class, ecdh_methods);
 	return 1;
 }

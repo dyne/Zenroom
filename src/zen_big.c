@@ -802,6 +802,6 @@ int luaopen_big(lua_State *L) {
 		{"__tostring",big_to_hex},
 		{NULL,NULL}
 	};
-	zen_add_class(L, "big", big_class, big_methods);
+	zen_add_class("big", big_class, big_methods);
 	return 1;
 }

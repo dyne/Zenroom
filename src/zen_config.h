@@ -1,6 +1,6 @@
 /* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Copyright (C) 2017-2019 Dyne.org foundation
+ * Copyright (C) 2019-2020 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,16 +18,12 @@
  *
  */
 
-#ifndef __ZEN_MEMORY_H__
-#define __ZEN_MEMORY_H__
+#ifndef __ZEN_CONFIG_H__
+#define __ZEN_CONFIG_H__
 
-// header to inject our own memory allocation functions
-
-char *zen_memory_alloc(size_t size);
-void *zen_memory_realloc(void *ptr, size_t size);
-void  zen_memory_free(void *ptr);
-void *system_alloc(size_t size);
-void *system_realloc(void *ptr, size_t size);
-void  system_free(void *ptr);
+// supported memory managers: lwmem, jemalloc, system
+typedef enum { LW, JE, SYS } mmtype;
+// printf function pointers for zen_config
+typedef enum { LIBC_PRINTF, STB_PRINTF } printftype;
 
 #endif

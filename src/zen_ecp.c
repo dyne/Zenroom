@@ -502,6 +502,6 @@ int luaopen_ecp(lua_State *L) {
 		{"__tostring",ecp_output},
 		{NULL,NULL}
 	};
-	zen_add_class(L, "ecp", ecp_class, ecp_methods);
+	zen_add_class("ecp", ecp_class, ecp_methods);
 	return 1;
 }

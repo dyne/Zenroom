@@ -1060,6 +1060,6 @@ int luaopen_octet(lua_State *L) {
 		{"__tostring",to_hex},
 		{NULL,NULL}
 	};
-	zen_add_class(L, "octet", octet_class, octet_methods);
+	zen_add_class("octet", octet_class, octet_methods);
 	return 1;
 }
