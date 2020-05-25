@@ -207,6 +207,35 @@ EOF
 
 
 
+echo "                                                "
+echo "------------------------------------------------"
+echo "               Script number $n                 "
+echo "------------------------------------------------"
+echo "                                                "
+let n=n+1
+rm -f $tmp
+
+# This loads an object
+cat <<EOF  > $tmp
+  {
+      "myNumber":1000,
+      "myString":"Hello World!",
+      "myArray":[
+         "String1",
+         "String2",
+         "String3"
+      ]
+ }
+EOF
+
+cat <<EOF | tee givenLoadArray1.zen | $Z -z -a $tmp
+Given I have a valid array of 'string' in 'myArray'
+Given I have a valid 'string' in 'myString'
+Given I have a valid number in 'myNumber'
+When I randomize the 'myArray' array
+Then print all data
+EOF
+
 
 echo "-------------------------------------------------------"
 echo "--------------------- old script ----------------------"
