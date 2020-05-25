@@ -76,34 +76,47 @@ end)
 Given("the '' is valid", function(name)
 		 ZEN:pick(name)
 		 ZEN:validate(name)
-		 ZEN:ack(name)
 		 gc()
 end)
 
-Given("I have a '' inside ''", function(n, s)
+Given("I have a '' in ''", function(n, s)
 		 ZEN:pickin(s, n)
 		 TMP.valid = true
-		 ZEN:ack(n) -- save it in ACK.n
+		 ZEN:ack(n) -- save it in ACK.obj
 		 gc()
 end)
-Given("I have inside '' a ''", function(s, n)
+Given("I have in '' a ''", function(s, n)
 		 ZEN:pickin(s, n)
 		 TMP.valid = true
-		 ZEN:ack(s) -- save it in ACK.s.n
+		 ZEN:ack(s) -- save it in ACK.inside.obj
 		 gc()
 end)
 
 
-Given("I have inside '' a valid ''", function(s, n)
+Given("I have in '' a valid ''", function(s, n)
 		 ZEN:pickin(s, n)
 		 ZEN:validate(n)
-		 ZEN:ack(s) -- save it in ACK.s.n
+		 ZEN:ack(s) -- save it in ACK.inside.obj
 		 gc()
 end)
-Given("I have a valid '' inside ''", function(n, s)
+Given("I have a valid '' in ''", function(n, s)
 		 ZEN:pickin(s, n)
 		 ZEN:validate(n)
-		 ZEN:ack(n) -- save it in ACK.n
+		 ZEN:ack(n) -- save it in ACK.obj
+		 gc()
+end)
+
+Given("I have a valid '' named ''", function(s,n)
+		 ZEN:pick(n)
+		 ZEN:validate(n,s)
+		 ZEN:ack(n) -- save it in ACK.obj
+		 gc()
+end)
+
+Given("I have a valid '' named '' in ''", function(s,n,l)
+		 ZEN:pickin(l, n)
+		 ZEN:validate(n,s)
+		 ZEN:ack(n) -- save it in ACK.obj
 		 gc()
 end)
 
@@ -130,7 +143,11 @@ ZEN.add_schema({
 		 ZEN.assert( isarray(obj) , "Not a valid array")
 		 local _t = { }
 		 for k,v in ipairs(obj) do
-			table.insert(_t, OCTET.from_string(v))
+			if type(v) == 'zenroom.octet' then
+			   table.insert(_t, v)
+			else
+			   table.insert(_t, OCTET.from_string(v))
+			end
 		 end
 		 return _t
 	  end,
