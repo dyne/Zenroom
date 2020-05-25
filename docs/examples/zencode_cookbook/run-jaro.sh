@@ -213,11 +213,13 @@ echo "               Script number $n                 "
 echo "------------------------------------------------"
 echo "                                                "
 let n=n+1
+
 rm -f $tmp
 
 # This loads an object
 cat <<EOF  > $tmp
-  {
+{
+  "myObject":{
       "myNumber":1000,
       "myString":"Hello World!",
       "myArray":[
@@ -225,6 +227,7 @@ cat <<EOF  > $tmp
          "String2",
          "String3"
       ]
+   }
  }
 EOF
 

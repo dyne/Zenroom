@@ -1,10 +1,10 @@
 Given debug
-Given I have a valid array of 'string' inside 'myArray'
+Given I have a valid array of 'string' in 'myArray'
 Given debug
-Given I have a valid string inside 'myString'
+Given I have a valid 'string' in 'myString'
 Given debug
-Given I have a valid number inside 'myNumber'
-Given debug 
+Given I have a valid number in 'myNumber'
+Given debug
 When I randomize the 'myArray' array
 When debug
 Then print all data
