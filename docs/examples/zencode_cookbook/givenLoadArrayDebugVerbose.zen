@@ -1,7 +1,7 @@
 Given debug
 Given I have a valid array of 'string' in 'myArray'
 Given debug
-Given I have a valid 'string' in 'myString'
+# Given I have a valid 'string' in 'myString' # ancora rotto 
 Given debug
 Given I have a valid number in 'myNumber'
 Given debug

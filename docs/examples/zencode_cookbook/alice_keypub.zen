@@ -2,35 +2,9 @@ Scenario 'simple'
 Given I am 'Andrea'
 Given I have a valid 'keypair' from 'Alice'
 #-- Given the 'nomeOggetto?' is valid
-Given the 'myObject' is valid
-Given the 'myNumber' is valid
-Given the 'myArray' is valid
-Given the 'myString' is valid
-#-- Given I have a 'nomeOggetto' in 'nomeAltroOggetto'
-#-- l'unico che funziona è: Given I have a 'myArray' in 'myObject'
-Given I have a 'myNumber' in 'myObject'
-Given I have a 'myString' in 'myObject'
+#ROTTO: Given the 'myObject' is valid 
 Given I have a 'myArray' in 'myObject'
-#-- Given I have a 'tipo?' in 'nomeOggetto'
-Given I have a 'array' in 'myObject'
-Given I have a 'array' in 'myArray'
-Given I have a 'number' in 'myObject'
-Given I have a 'number' in 'myNumber'
-Given I have a 'string' in 'myObject'
-Given I have a 'string' in 'myString'
-#-- Given I have a valid array of 'tipo?' in (deve 'myArray'
-Given I have a valid array of 'string' in 'myArray'
-Given I have a valid array of 'string' in 'myObject'
-#-- Given I have a valid array in 'nomeOggetto'
-Given I have a valid array in 'myArray'
-Given I have a valid array in 'myObject'
-#-- Given I have a valid... in 'nomeOggetto'
-Given I have a valid 'string' in 'myString'
-Given I have a valid number in 'myNumber'
-#--
+Given I have a valid 'array string' named 'myArray' inside 'myObject'
+Given I have a valid 'number' named 'myNumber' inside 'myObject'
 And debug
-When I create a random 'url64'
-When I create a random 'number'
-When I create a random 'string'
-When I create a random 'base64'
 Then print all data

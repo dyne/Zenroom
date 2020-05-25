@@ -80,36 +80,23 @@ cat <<EOF  > $tmp
       "myNumber":1000,
       "myString":"Hello World!",
       "myArray":[
-         "String1",
-         "String2",
-         "String3"
+         "String-1-one",
+         "String-2-two",
+         "String-3-three",
+		 "String-4-four",
+		 "String-5-five",
       ]
  }
 EOF
 
 cat <<EOF | tee givenLoadArray1.zen | $Z -z -a $tmp
-Given I have a valid array of 'string' in 'myArray'
-Given I have a valid 'string' in 'myString'
+Given I have a valid 'array string' named 'myArray'   
+# Given I have a valid 'string' in 'myString'  # Questo è ancora rotto
 Given I have a valid number in 'myNumber'
 When I randomize the 'myArray' array
 Then print all data
 EOF
 
-echo "                                                "
-echo "------------------------------------------------"
-echo "               Script number $n                 "
-echo "------------------------------------------------"
-echo "                                                "
-let n=n+1
-
-
-cat <<EOF | tee givenLoadArray2.zen | $Z -z -a $tmp
-Given I have a valid array of 'string' in 'myArray'
-# Given I have a valid 'string' in 'myString'
-# Given I have a valid number in 'myNumber'
-When I randomize the 'myArray' array
-Then print all data
-EOF
 
 echo "                                                "
 echo "------------------------------------------------"
@@ -140,7 +127,7 @@ cat <<EOF | tee givenLoadArrayDebugVerbose.zen | $Z -z -a $tmp | tee givenDebugO
 Given debug
 Given I have a valid array of 'string' in 'myArray'
 Given debug
-Given I have a valid 'string' in 'myString'
+# Given I have a valid 'string' in 'myString' # ancora rotto 
 Given debug
 Given I have a valid number in 'myNumber'
 Given debug
@@ -165,6 +152,22 @@ When I create the keypair
 Then print my data
 EOF
 
+rm -f $tmp
+
+# This loads an object
+cat <<EOF  > $tmp
+{
+  "myObject":{
+      "myNumber":1000,
+      "myString":"Hello World!",
+      "myArray":[
+         "String1-Number-One",
+         "String2-Number-Two",
+         "String3-Number-Three"
+      ]
+   }
+ }
+EOF
 
 cat <<EOF | tee alice_keypub.zen | $Z -z -k alice_keypair.json -a $tmp | tee givenLongOutput.json
 Scenario 'simple'
@@ -172,9 +175,6 @@ Given I am 'Andrea'
 Given I have a valid 'keypair' from 'Alice'
 #-- Given the 'nomeOggetto?' is valid
 Given the 'myObject' is valid
-Given the 'myNumber' is valid
-Given the 'myArray' is valid
-Given the 'myString' is valid
 #-- Given I have a 'nomeOggetto' in 'nomeAltroOggetto'
 #-- l'unico che funziona è: Given I have a 'myArray' in 'myObject'
 Given I have a 'myNumber' in 'myObject'
@@ -214,22 +214,7 @@ echo "------------------------------------------------"
 echo "                                                "
 let n=n+1
 
-rm -f $tmp
 
-# This loads an object
-cat <<EOF  > $tmp
-{
-  "myObject":{
-      "myNumber":1000,
-      "myString":"Hello World!",
-      "myArray":[
-         "String1",
-         "String2",
-         "String3"
-      ]
-   }
- }
-EOF
 
 cat <<EOF | tee givenLoadArray1.zen | $Z -z -a $tmp
 # Given I have a valid array of 'string' in 'myArray'
