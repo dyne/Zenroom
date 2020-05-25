@@ -229,10 +229,11 @@ cat <<EOF  > $tmp
 EOF
 
 cat <<EOF | tee givenLoadArray1.zen | $Z -z -a $tmp
-Given I have a valid array of 'string' in 'myArray'
-Given I have a valid 'string' in 'myString'
-Given I have a valid number in 'myNumber'
-When I randomize the 'myArray' array
+# Given I have a valid array of 'string' in 'myArray'
+# Given I have a valid 'string' in 'myString'
+# Given I have a valid number in 'myNumber'
+# When I randomize the 'myArray' array
+Given I have a valid 'array string' named 'myArray' inside 'myObject'
 Then print all data
 EOF
 
