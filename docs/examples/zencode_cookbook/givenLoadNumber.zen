@@ -1,0 +1,2 @@
+Given I have a valid number in 'myNumber'
+Then print all data
