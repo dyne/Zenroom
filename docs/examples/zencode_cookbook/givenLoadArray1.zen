@@ -1,6 +1,5 @@
-# Given I have a valid array of 'string' in 'myArray'
-# Given I have a valid 'string' in 'myString'
-# Given I have a valid number in 'myNumber'
-# When I randomize the 'myArray' array
-Given I have a valid 'array string' named 'myArray' inside 'myObject'
+Given I have a valid 'array string' named 'myArray'   
+# Given I have a valid 'string' in 'myString'  # Questo è ancora rotto
+Given I have a valid number in 'myNumber'
+When I randomize the 'myArray' array
 Then print all data

@@ -97,6 +97,7 @@ When I randomize the 'myArray' array
 Then print all data
 EOF
 
+cat $tmp > myFlatObject.json
 
 echo "                                                "
 echo "------------------------------------------------"
@@ -321,5 +322,7 @@ scenario 'simple'
 	 and debug
 	 Then print the 'keypair'
 EOF
+
+cat $tmp > myObject.json
 
 rm -f $tmp

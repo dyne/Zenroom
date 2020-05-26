@@ -14,8 +14,24 @@ Z=zenroom
 ####################
 
 
+
 n=0
 tmp=`mktemp`
+
+echo "                                                "
+echo "------------------------------------------------"
+echo "               Script number $n                 "
+echo "------------------------------------------------"
+echo "                                                "
+let n=n+1
+
+cat <<EOF | tee alice_keygen.zen | $Z -z > alice_keypair.json
+Scenario 'simple': Create the keypair
+Given that I am known as 'Alice'
+When I create the keypair
+Then print my data
+EOF
+
 
 echo "                                                "
 echo "------------------------------------------------"
@@ -75,31 +91,29 @@ let n=n+1
 
 
 # This loads an object
-cat <<EOF  > $tmp 
+cat <<EOF  > $tmp
   {
-  "myObject":{
-      "myNumber":1000,
+      "myNumber":12345,
       "myString":"Hello World!",
       "myArray":[
-         "String1",
-         "String2",
-         "String3"
+         "String-1-one",
+         "String-2-two",
+         "String-3-three",
+		 "String-4-four",
+		 "String-5-five"
       ]
-   }
  }
 EOF
 
-cat <<EOF | tee givenLoadArray1.zen | $Z -z -a $tmp
-Given I have a valid array of 'string' inside 'myArray'
-Given I have a valid string inside 'myString'
-Given I have a valid number inside 'myNumber' 
+cat <<EOF | tee givenLoadFlatObject.zen | $Z -z -a $tmp | tee givenLoadFlatObjectOutput.json
+Given I have a valid 'array string' named 'myArray'   
+# Given I have a valid 'string' in 'myString'  # Questo è ancora rotto
+Given I have a valid number in 'myNumber'
 When I randomize the 'myArray' array
 Then print all data
 EOF
 
-cat $tmp > myObject.json
-
-rm -f $tmp
+cat $tmp > myFlatObject.json
 # End of script loading object
 
 echo "                                                "
@@ -109,21 +123,22 @@ echo "------------------------------------------------"
 echo "                                                "
 let n=n+1
 
-
-# This loads an object
-cat <<EOF  > $tmp 
-  {
-  "myObject":{
-      "myNumber":1000,
-      "myString":"Hello World!",
-      "myArray":[
-         "String1",
-         "String2",
-         "String3"
-      ]
-   }
- }
+cat <<EOF | tee givenLoadNumber.zen | $Z -z -a $tmp | tee givenLoadNumberOutput.json
+Given I have a valid number in 'myNumber'
+Then print all data
 EOF
+
+
+
+echo "                                                "
+echo "------------------------------------------------"
+echo "               Script number $n                 "
+echo "               Unused in the manual                 "
+echo "------------------------------------------------"
+echo "                                                "
+let n=n+1
+
+
 
 cat <<EOF | tee givenLoadArray2.zen | $Z -z -a $tmp
 Given I have a valid array of 'string' inside 'myArray'
@@ -133,8 +148,6 @@ When I randomize the 'myArray' array
 Then print all data
 EOF
 
-cat $tmp > myObject.json
-rm -f $tmp
 # End of script loading object
 
 
@@ -145,20 +158,7 @@ echo "------------------------------------------------"
 echo "                                                "
 let n=n+1
 
-# This loads an object
-cat <<EOF  > $tmp 
-  {
-  "myObject":{
-      "myNumber":1000,
-      "myString":"Hello World!",
-      "myArray":[
-         "String1",
-         "String2",
-         "String3"
-      ]
-   }
- }
-EOF
+
 
 cat <<EOF | tee givenLoadArrayDebug.zen | $Z -z -a $tmp | tee givenDebugOutput.json
 Given I have a valid array of 'string' inside 'myArray'
@@ -170,9 +170,6 @@ Then print all data
 EOF
 
 
-cat $tmp > myObject.json
-rm -f $tmp
-# End of script loading object
 
 echo "                                                "
 echo "------------------------------------------------"
@@ -181,20 +178,6 @@ echo "------------------------------------------------"
 echo "                                                "
 let n=n+1
 
-# This loads an object
-cat <<EOF  > $tmp 
-  {
-  "myObject":{
-      "myNumber":1000,
-      "myString":"Hello World!",
-      "myArray":[
-         "String1",
-         "String2",
-         "String3"
-      ]
-   }
- }
-EOF
 
 cat <<EOF | tee givenLoadArrayDebugVerbose.zen | $Z -z -a $tmp | tee givenDebugOutputVerbose.json
 Given debug
@@ -211,9 +194,57 @@ Then debug
 EOF
 
 
-cat $tmp > myObject.json
-rm -f $tmp
-# End of script loading object
+
+echo "                                                "
+echo "------------------------------------------------"
+echo "               Script number $n                 "
+echo "------------------------------------------------"
+echo "                                                "
+let n=n+1
+
+# This loads an object
+cat <<EOF  > $tmp 
+{
+   "myFirstObject":{
+      "myNumber":11223344,
+      "myString":"Hello World!",
+      "myArray":[
+         "String1",
+         "String2",
+         "String3",
+         "String4"
+      ]
+   },
+   "mySecondObject":{
+      "myString":"Oh, hello again!",
+      "myArray":[
+         "anotherString1",
+         "anotherString2",
+         "anotherString3",
+         "anotherString4"
+      ],
+      "myNumber":1234567890
+   },
+   "Alice":{
+      "keypair":{
+         "private_key":"DbjRMCC7fykuUaqYDX_cy_Zs7J0ZC0y9VxBLRcfwIJ63MAZtW4fJ4IxxdUdLNy0ye0-qf0IlRZI",
+         "public_key":"BE39Wu7AXSzSplMd37VhCB094xHqCgvZxMhgaTA7B0Xz4mEIZmoO2FmWiokVXuJ0O9jH9AQD4UBkXiCU4gzYrLQc9VpfB4Qr8rz6jj_UYvC77FiLGc-0jsE4mQfpgLoOspBGcfNyiS8Y50hl8zthKjo"
+      }
+   }
+}
+EOF
+
+cat $tmp > myNestedRepetitveObject.json
+
+cat <<EOF | tee givenLoadRepetitveObject.zen | $Z -z -a $tmp | tee givenLoadRepetitveObjectOutput.json
+Scenario 'simple': let us load some stuff cause it is fun!
+Given I am 'Alice'
+And I have my valid 'keypair'
+And I have a 'myArray' inside 'myFirstObject' 
+And I have a 'myArray' inside 'mySecondObject' 
+Then print all data
+EOF
+
 
 
 echo "                                                "
@@ -223,27 +254,83 @@ echo "------------------------------------------------"
 echo "                                                "
 let n=n+1
 
-cat <<EOF | tee alice_keygen.zen | $Z -z > alice_keypair.json
-Scenario 'simple': Create the keypair
-Given that I am known as 'Alice'
-When I create the keypair
-Then print my data
+cat <<EOF | tee givenLoadRepetitveObjectDebug.zen | $Z -z -a $tmp | tee givenLoadRepetitveObjectDebugOutput.json
+Scenario 'simple': let us load some stuff cause it is fun!
+Given I am 'Alice'
+And I have my valid 'keypair'
+And I have a 'myArray' inside 'myFirstObject' 
+And I have a 'myArray' inside 'mySecondObject' 
+And debug
+Then print all data
+And debug
 EOF
 
+
+
+echo "                                                "
+echo "------------------------------------------------"
+echo "               Script number $n                 "
+echo "------------------------------------------------"
+echo "                                                "
+let n=n+1
+
+rm -f $tmp
 # This loads an object
 cat <<EOF  > $tmp 
-  {
-  "myObject":{
-      "myNumber":1000,
-      "myString":"Hello World!",
-      "myArray":[
+{
+   "myFirstObject":{
+      "myFirstNumber":11223344,
+      "myFirstString":"Hello World!",
+      "myFirstArray":[
          "String1",
          "String2",
-         "String3"
+         "String3",
+         "String4"
       ]
+   },
+   "mySecondObject":{
+      "mySecondString":"Oh, hello again!",
+      "mySecondArray":[
+         "anotherString1",
+         "anotherString2",
+         "anotherString3",
+         "anotherString4"
+      ],
+      "mySecondNumber":1234567890
+   },
+   "Alice":{
+      "keypair":{
+         "private_key":"DbjRMCC7fykuUaqYDX_cy_Zs7J0ZC0y9VxBLRcfwIJ63MAZtW4fJ4IxxdUdLNy0ye0-qf0IlRZI",
+         "public_key":"BE39Wu7AXSzSplMd37VhCB094xHqCgvZxMhgaTA7B0Xz4mEIZmoO2FmWiokVXuJ0O9jH9AQD4UBkXiCU4gzYrLQc9VpfB4Qr8rz6jj_UYvC77FiLGc-0jsE4mQfpgLoOspBGcfNyiS8Y50hl8zthKjo"
+      }
    }
- }
+}
 EOF
+
+cat $tmp > myNestedObject.json
+
+
+
+
+
+cat <<EOF | tee givenLoadNestedObject.zen | $Z -z -a $tmp | tee givenLoadNestedObjectOutput.json
+Scenario 'simple': let us load some stuff cause it is fun!
+Given I am 'Alice'
+And I have my valid 'keypair'
+And I have a 'myFirstArray' inside 'myFirstObject' 
+And I have a 'mySecondArray' inside 'mySecondObject' 
+Then print all data
+EOF
+
+
+
+
+echo "                                                "
+echo "------------------------------------------------"
+echo "               Script number $n                 "
+echo "------------------------------------------------"
+echo "                                                "
+let n=n+1
 
 
 cat <<EOF | tee alice_keypub.zen | $Z -z -k alice_keypair.json -a $tmp | tee givenLongOutput.json
@@ -294,11 +381,16 @@ rm -f $tmp
 
 
 
-
-echo "-------------------------------------------------------"
-echo "--------------------- old script ----------------------"
-echo "-------------------------------------------------------"
-
+let n=0
+echo "                                                "
+echo "------------------------------------------------"
+echo "------------------------------------------------"
+echo "------------------------------------------------"
+echo "------------------------------------------------"
+echo "     OLDER (and invisible) Script number $n     "
+echo "------------------------------------------------"
+echo "                                                "
+let n=n+1
 
 # Invisible script below
 
@@ -316,11 +408,12 @@ if ! test $? == 1; then
 set -e
 
 
-
-echo "-------------------------------------------------------"
-echo "--------------------- old script ----------------------"
-echo "-------------------------------------------------------"
-
+echo "                                                "
+echo "------------------------------------------------"
+echo "               OLDER Script number $n           "
+echo "------------------------------------------------"
+echo "                                                "
+let n=n+1
 
 
 cat <<EOF | tee nothing.zen | $Z -z
@@ -330,10 +423,13 @@ rule check version 1.0.0
 	 Then print the 'random object'
 EOF
 
-echo "-------------------------------------------------------"
-echo "--------------------- old script ----------------------"
-echo "-------------------------------------------------------"
 
+echo "                                                "
+echo "------------------------------------------------"
+echo "               OLDER Script number $n           "
+echo "------------------------------------------------"
+echo "                                                "
+let n=n+1
 
 
 echo '{ "anykey": "anyvalue" }' > $tmp
@@ -345,10 +441,13 @@ rule output encoding string
 	 Then print the 'anykey'
 EOF
 
-echo "-------------------------------------------------------"
-echo "--------------------- old script ----------------------"
-echo "-------------------------------------------------------"
 
+echo "                                                "
+echo "------------------------------------------------"
+echo "               OLDER Script number $n           "
+echo "------------------------------------------------"
+echo "                                                "
+let n=n+1
 
 echo '{ "anykey": "616e7976616c7565" }' > $tmp
 cat <<EOF | tee have.zen | $Z -z -a $tmp
@@ -357,10 +456,13 @@ rule check version 1.0.0
 	 Then print the 'anykey' as 'string'
 EOF
 
-echo "-------------------------------------------------------"
-echo "--------------------- old script ----------------------"
-echo "-------------------------------------------------------"
 
+echo "                                                "
+echo "------------------------------------------------"
+echo "               OLDER Script number $n           "
+echo "------------------------------------------------"
+echo "                                                "
+let n=n+1
 
 
 cat <<EOF  > $tmp  # > tmp.json
