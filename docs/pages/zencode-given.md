@@ -107,7 +107,7 @@ This last is the perfect example to introduce the *debug* operator.
 Looking back at the previous paragraph, you may be wondering what happens exactly inside Zenroom's virtual machine and - more important - how to peep into it. The *Debug* operator addresses this precise issue: it is a wildcard, meaning that it can be used in any phase of the process. You may for example place it at the end of the *Given* phase, in order to see what data has the virtual machine actually imported (using the same dataset): 
 
 
-[](../_media/examples/zencode_cookbook/myNestedObject.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/myFlatObject.json ':include :type=code json')
 
 And the script:
 
@@ -115,14 +115,12 @@ And the script:
 
 
 
-Or if you're a fan of verbosity, you can try with this: 
-
-
-[](../_media/examples/zencode_cookbook/myNestedObject.json ':include :type=code json')
+Or if you're a fan of verbosity, you can try with this script: 
 
 [](../_media/examples/zencode_cookbook/givenLoadArrayDebugVerbose.zen ':include :type=code gherkin')
 
- 
+We won't show the output of the script here as it would fill a couple pages... so many wasted electrons! Looking at this script can otherwise be a good exercise for you to figure out how Zenroom behaves each time a different piece of data is loaded.
+
  
 ##  *Given I am*
 

@@ -159,27 +159,7 @@ echo "                                                "
 let n=n+1
 
 
-
-cat <<EOF | tee givenLoadArrayDebug.zen | $Z -z -a $tmp | tee givenDebugOutput.json
-Given I have a valid array of 'string' inside 'myArray'
-# Given I have a valid string inside 'myString'
-# Given I have a valid number inside 'myNumber'
-Given debug 
-When I randomize the 'myArray' array
-Then print all data
-EOF
-
-
-
-echo "                                                "
-echo "------------------------------------------------"
-echo "               Script number $n                 "
-echo "------------------------------------------------"
-echo "                                                "
-let n=n+1
-
-
-cat <<EOF | tee givenLoadArrayDebugVerbose.zen | $Z -z -a $tmp | tee givenDebugOutputVerbose.json
+cat <<EOF | tee givenLoadArrayDebugVerbose.zen | $Z -z -a myFlatObject.json | tee givenDebugOutputVerbose.json
 Given debug
 Given I have a valid array of 'string' inside 'myArray'
 Given debug
@@ -216,14 +196,14 @@ cat <<EOF  > $tmp
       ]
    },
    "mySecondObject":{
-      "myString":"Oh, hello again!",
+      "myNumber":1234567890,
+	  "myString":"Oh, hello again!",
       "myArray":[
          "anotherString1",
          "anotherString2",
          "anotherString3",
          "anotherString4"
-      ],
-      "myNumber":1234567890
+      ]
    },
    "Alice":{
       "keypair":{
@@ -289,14 +269,14 @@ cat <<EOF  > $tmp
       ]
    },
    "mySecondObject":{
-      "mySecondString":"Oh, hello again!",
+      "mySecondNumber":1234567890,
+	  "mySecondString":"Oh, hello again!",
       "mySecondArray":[
          "anotherString1",
          "anotherString2",
          "anotherString3",
          "anotherString4"
-      ],
-      "mySecondNumber":1234567890
+      ]      
    },
    "Alice":{
       "keypair":{
@@ -375,6 +355,21 @@ EOF
 rm -f $tmp
 # End of script loading object
 
+
+echo "                                                "
+echo "------------------------------------------------"
+echo "               Script number $n                 "
+echo "------------------------------------------------"
+echo "                                                "
+let n=n+1
+
+
+cat <<EOF | tee givenLoadArrayDebug.zen | $Z -z -a myFlatObject.json | tee givenDebugOutput.json
+Given I have a valid array of 'string' inside 'myArray'
+Given debug 
+When I randomize the 'myArray' array
+Then print all data
+EOF
 
 
 
