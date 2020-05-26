@@ -86,6 +86,30 @@ The output should look like this:
 [](../_media/examples/zencode_cookbook/givenLoadNestedObjectOutput.json ':include :type=code json')
 
 
+## Variotions on *Given I have* using a nested JSON file (part 3)
+
+Zencode offers some flexibility in how you can read objects and values, here are some examples. Let's see you want to read this JSON: 
+
+[](../_media/examples/zencode_cookbook/myTripleNestedObject.json ':include :type=code json')
+
+You could this script: 
+
+[](../_media/examples/zencode_cookbook/givenLoadTripleNestedObject.zen ':include :type=code gherkin')
+ 
+
+The output should look like this: 
+
+[](../_media/examples/zencode_cookbook/givenTripleNestedObjectOutput.json ':include :type=code json')
+
+## The valid keyword 
+
+We've been using the keyword *valid* without knowing much about it: the keyword works only in some situations 
+* one
+* two
+* three
+ 
+## Corner case: omonimity
+
 Now let's look at corner cases: what would happen if I load two differently named objects, that contain objects with the same name? Something like this: 
 
 [](../_media/examples/zencode_cookbook/myNestedRepetitveObject.json ':include :type=code json')

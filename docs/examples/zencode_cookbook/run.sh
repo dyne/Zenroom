@@ -141,7 +141,7 @@ let n=n+1
 
 
 cat <<EOF | tee givenLoadArray2.zen | $Z -z -a $tmp
-Given I have a valid array of 'string' inside 'myArray'
+Given I have a valid 'array string' named 'myArray' 
 # Given I have a valid string inside 'myString'
 # Given I have a valid number inside 'myNumber' 
 When I randomize the 'myArray' array
@@ -161,7 +161,7 @@ let n=n+1
 
 cat <<EOF | tee givenLoadArrayDebugVerbose.zen | $Z -z -a myFlatObject.json | tee givenDebugOutputVerbose.json
 Given debug
-Given I have a valid array of 'string' inside 'myArray'
+Given I have a valid array 'array string' names 'myArray'
 Given debug
 Given I have a valid string inside 'myString'
 Given debug
@@ -365,7 +365,7 @@ let n=n+1
 
 
 cat <<EOF | tee givenLoadArrayDebug.zen | $Z -z -a myFlatObject.json | tee givenDebugOutput.json
-Given I have a valid array of 'string' inside 'myArray'
+Given I have a valid 'array string' named 'myArray' 
 Given debug 
 When I randomize the 'myArray' array
 Then print all data
@@ -373,8 +373,59 @@ EOF
 
 
 
+echo "                                                "
+echo "------------------------------------------------"
+echo "               Script number $n                 "
+echo "------------------------------------------------"
+echo "                                                "
+let n=n+1
 
 
+cat <<EOF  > $tmp
+{
+   "myFirstObject":{
+      "myFirstNumber":1,
+      "myFirstArray":[
+         "String1"
+      ]
+   },
+   "mySecondObject":{
+      "mySecondNumber":2,
+      "mySecondArray":[
+         "anotherString1",
+         "anotherString2"
+      ]
+   },
+   "myThirdObject":{
+      "myThirdNumber":3,
+      "myThirdArray":[
+         "oneMoreString1",
+         "oneMoreString2",
+         "oneMoreString3"
+      ]
+   },
+   "myFourthObject":{
+      "myFourthArray":[
+         "oneExtraString1",
+         "oneExtraString2",
+         "oneExtraString3",
+		 "oneExtraString4"
+      ]
+   }
+}
+EOF
+cat $tmp > myTripleNestedObject.json
+
+
+cat <<EOF | tee givenLoadTripleNestedObject.zen | $Z -z -a myTripleNestedObject.json | tee givenTripleNestedObjectOutput.json
+Given I have a valid 'array string' named 'myFirstArray'   
+And I have a valid 'array string' named 'mySecondArray' inside 'mySecondObject'
+And I have a 'myThirdArray' inside 'myThirdObject' 
+And I have a 'myFourthArray'  
+Then print all data
+EOF
+
+rm -f $tmp
 
 let n=0
 echo "                                                "
