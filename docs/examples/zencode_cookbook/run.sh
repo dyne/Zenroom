@@ -314,6 +314,7 @@ let n=n+1
 
 
 cat <<EOF | tee alice_keypub.zen | $Z -z -k alice_keypair.json -a $tmp | tee givenLongOutput.json
+Scenario 'simple' : load stuff
 Given I am 'Andrea'
 Given I have a valid 'keypair' from 'Alice'
 #-- Given the 'nomeOggetto?' is valid
