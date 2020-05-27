@@ -391,7 +391,8 @@ function ZEN.decode(anystr, decoder)
       warn("ZEN.decode input already decoded to "..t)
       return t
    end
-   ZEN.assert(t == 'string' or t == 'table', "ZEN.decode input not a string or table: "..t)
+   ZEN.assert(t == 'string' or t == 'number' or t == 'table',
+			  "ZEN.decode input not a string or number or table: "..t)
    if decoder then
 	  ZEN.assert(decoder.fun, "ZEN.decode invalid decoder (no fun)")
 	  xxx("ZEN.decode selected decoder: "..decoder.name)
@@ -405,6 +406,8 @@ function ZEN.decode(anystr, decoder)
    xxx("ZEN.decode default decoder: "..CONF.input.encoding.name)
    if t == 'table' then
 	  return( deepmap(CONF.input.encoding.fun, anystr))
+   elseif t == 'number' then
+	  return( anystr ) -- kept as lua number
    else
 	  return( CONF.input.encoding.fun(anystr) )
    end

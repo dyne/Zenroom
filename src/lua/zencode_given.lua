@@ -42,12 +42,20 @@ Given("I have a ''", function(name)
 		 gc()
 end)
 
-Given("I have a '' as ''", function(name, enc)
+Given("I have a '' named ''", function(enc, name)
 		 local encoder = input_encoding(enc)
 		 ZEN.assert(encoder, "Invalid input encoding for '"..name.."': "..enc)
 		 ZEN:pick(name, nil, encoder)
 		 TMP.valid = true
 		 ZEN:ack(name)
+		 gc()
+end)
+
+Given("I have a '' named '' in ''", function(enc,n,l)
+		 local encoder = input_encoding(enc)
+		 ZEN:pickin(l, n, encoder)
+		 TMP.valid = true
+		 ZEN:ack(n) -- save it in ACK.obj
 		 gc()
 end)
 
@@ -129,9 +137,13 @@ Given("I have a valid '' from ''", function(n, s)
 end)
 
 ZEN.add_schema({
-	  str = function(obj)
+	  string = function(obj)
 		 ZEN.assert( luatype(obj) == 'string', 'Not a valid string')
 		 return OCTET.from_string(obj)
+	  end,
+	  number = function(obj)
+		 ZEN.assert( luatype(obj) == 'number', 'Not a valid number')
+		 return obj -- lua number internally
 	  end,
 	  array = function(obj)
 		 ZEN.assert( isarray(obj) , "Not a valid array")
