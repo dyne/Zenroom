@@ -1,3 +1,13 @@
+<!-- Unused files
+ 
+givenDebugOutputVerbose.json
+givenLongOutput.json
+ 
+-->
+
+
+
+
 # *Given*: reading and verifying input
 
 The *Given* keyword marks the first phase of Zencode execution, where input is read and processed and some variables are set. More precisely: 

@@ -163,9 +163,9 @@ cat <<EOF | tee givenLoadArrayDebugVerbose.zen | $Z -z -a myFlatObject.json | te
 Given debug
 Given I have a valid 'string array' named 'myArray'
 Given debug
-Given I have a valid string inside 'myString'
+Given I have a valid str named 'myString'
 Given debug
-Given I have a valid number inside 'myNumber'
+Given I have a valid number named 'myNumber'
 Given debug 
 When I randomize the 'myArray' array
 When debug
@@ -386,8 +386,11 @@ cat <<EOF  > $tmp
 {
    "myFirstObject":{
       "myFirstNumber":1,
-      "myFirstArray":[
-         "String1"
+	  "myFirstString":"Hello World!",
+      "myFirstHex": "616e7976616c7565",
+	  "myFirstArray":[
+         "String1",
+		 "String2"
       ]
    },
    "mySecondObject":{
@@ -419,12 +422,18 @@ cat $tmp > myTripleNestedObject.json
 
 
 cat <<EOF | tee givenLoadTripleNestedObject.zen | $Z -z -a myTripleNestedObject.json | tee givenTripleNestedObjectOutput.json
-Given I have a valid 'string array' named 'myFirstArray'   
-And I have a valid 'string array' named 'mySecondArray' inside 'mySecondObject'
-And I have a 'myThirdArray' inside 'myThirdObject' 
-And I have a 'myFourthArray'  
-Then print all data
+# Given I have a 'string array' named 'myFirstArray'   
+Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
+Given I have a 'myThirdArray' inside 'myThirdObject' 
+Given I have a 'myFourthArray'  
+Given I have a 'number' named 'myFirstNumber'
+Given I have a 'string' named 'myFirstString' 
+Given I have a 'hex' named 'myFirstHex'
+Then print the 'myFirstString' as 'string'
+Then print the 'myFirstHex' as 'hex'
+# Then print the 'myFirstNumber' as 'number'
 EOF
+
 
 rm -f $tmp
 
@@ -499,7 +508,7 @@ let n=n+1
 echo '{ "anykey": "616e7976616c7565" }' > $tmp
 cat <<EOF | tee have.zen | $Z -z -a $tmp
 rule check version 1.0.0
-	 Given I have a 'anykey' as 'hex' 
+	 Given I have a 'hex' named 'anykey'  
 	 Then print the 'anykey' as 'string'
 EOF
 
