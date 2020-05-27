@@ -31,7 +31,7 @@ Given("nothing", function() ZEN.assert(not DATA and not KEYS, "Undesired data pa
 -- convert and import data only when is known by schema and passes validation
 -- ignore all other data structures that are not known by schema or don't pass validation
 
-Given("I am known as ''", function(name) ZEN:Iam(name) end)
+-- Given("I am known as ''", function(name) ZEN:Iam(name) end)
 Given("I am ''", function(name) ZEN:Iam(name) end)
 
 -- TODO: I have a '' as ''
@@ -129,17 +129,19 @@ Given("I have a valid '' from ''", function(n, s)
 end)
 
 ZEN.add_schema({
+	  str = function(obj)
+		 ZEN.assert( luatype(obj) == 'string', 'Not a valid string')
+		 return OCTET.from_string(obj)
+	  end,
 	  array = function(obj)
 		 ZEN.assert( isarray(obj) , "Not a valid array")
-		 local fun = CONF.input.encoding.fun
-		 ZEN.assert( luatype(fun) == 'function', "Conversion is not a valid function")
 		 local _t = { }
 		 for k,v in ipairs(obj) do
-			table.insert(_t, fun(v))
+			table.insert(_t, v)
 		 end
 		 return _t
 	  end,
-	  array_string = function(obj)
+	  string_array = function(obj)
 		 ZEN.assert( isarray(obj) , "Not a valid array")
 		 local _t = { }
 		 for k,v in ipairs(obj) do
@@ -151,17 +153,14 @@ ZEN.add_schema({
 		 end
 		 return _t
 	  end,
-	  array_ecp = function(obj)
+	  ecp_array = function(obj)
 		 ZEN.assert( isarray(obj) , "Not a valid array")
-		 local fun = CONF.input.encoding.fun
-		 ZEN.assert( luatype(fun) == 'function', "Conversion is not a valid function")
 		 local _t = { }
 		 for k,v in ipairs(obj) do
-			table.insert(_t, ECP.new(fun(v)))
+			table.insert(_t, ECP.new(v))
 		 end
 		 return _t
 	  end
-
 })
 
 Given("I have a valid array in ''", function(a)

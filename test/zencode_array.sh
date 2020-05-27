@@ -17,7 +17,7 @@ EOF
 cat <<EOF | zenroom -z -a $t/arr.json
 rule input encoding url64
 rule output encoding hex
-Given I have a valid array in 'bonnetjes'
+Given I have a valid 'array' named 'bonnetjes'
 When I pick the random object in 'bonnetjes'
 and I rename the 'random object' to 'lucky one'
 and I remove the 'lucky one' from 'bonnetjes'
@@ -40,7 +40,7 @@ EOF
 cat <<EOF | zenroom -z -a $t/arr.json | tee $t/ecp.json
 rule input encoding url64
 rule output encoding url64
-Given I have a valid array in 'bonnetjes'
+Given I have a valid 'array' named 'bonnetjes'
 When I create the hash to point 'ECP' of each object in 'bonnetjes'
 # When for each x in 'bonnetjes' create the of 'ECP.hashtopoint(x)'
 Then print the 'hashes'
@@ -49,8 +49,8 @@ EOF
 cat <<EOF | zenroom -z -a $t/arr.json -k $t/ecp.json
 rule input encoding url64
 rule output encoding url64
-Given I have a valid array in 'bonnetjes'
-and I have a valid array of 'ECP' in 'hashes'
+Given I have a valid 'array' named 'bonnetjes'
+and I have a valid 'ecp array' named 'hashes'
 # When I pick the random object in array 'hashes'
 # and I remove the 'random object' from array 'hashes'
 When for each x in 'hashes' y in 'bonnetjes' is true 'x == ECP.hashtopoint(y)'
@@ -62,7 +62,7 @@ EOF
 cat <<EOF | zenroom -z -a $t/arr.json | json_pp
 rule input encoding url64
 rule output encoding url64
-Given I have a valid array in 'bonnetjes'
+Given I have a valid 'array' named 'bonnetjes'
 When for each x in 'bonnetjes' create the array using 'sha256(x)'
 Then print the 'array'
 and print the 'bonnetjes'
