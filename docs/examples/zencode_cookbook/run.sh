@@ -106,7 +106,7 @@ cat <<EOF  > $tmp
 EOF
 
 cat <<EOF | tee givenLoadFlatObject.zen | $Z -z -a $tmp | tee givenLoadFlatObjectOutput.json
-Given I have a valid 'array string' named 'myArray'   
+Given I have a valid 'string array' named 'myArray'   
 # Given I have a valid 'string' in 'myString'  # Questo è ancora rotto
 Given I have a valid number in 'myNumber'
 When I randomize the 'myArray' array
@@ -141,7 +141,7 @@ let n=n+1
 
 
 cat <<EOF | tee givenLoadArray2.zen | $Z -z -a $tmp
-Given I have a valid 'array string' named 'myArray' 
+Given I have a valid 'string array' named 'myArray' 
 # Given I have a valid string inside 'myString'
 # Given I have a valid number inside 'myNumber' 
 When I randomize the 'myArray' array
@@ -161,7 +161,7 @@ let n=n+1
 
 cat <<EOF | tee givenLoadArrayDebugVerbose.zen | $Z -z -a myFlatObject.json | tee givenDebugOutputVerbose.json
 Given debug
-Given I have a valid array 'array string' names 'myArray'
+Given I have a valid 'string array' named 'myArray'
 Given debug
 Given I have a valid string inside 'myString'
 Given debug
@@ -366,7 +366,7 @@ let n=n+1
 
 
 cat <<EOF | tee givenLoadArrayDebug.zen | $Z -z -a myFlatObject.json | tee givenDebugOutput.json
-Given I have a valid 'array string' named 'myArray' 
+Given I have a valid 'string array' named 'myArray' 
 Given debug 
 When I randomize the 'myArray' array
 Then print all data
@@ -419,8 +419,8 @@ cat $tmp > myTripleNestedObject.json
 
 
 cat <<EOF | tee givenLoadTripleNestedObject.zen | $Z -z -a myTripleNestedObject.json | tee givenTripleNestedObjectOutput.json
-Given I have a valid 'array string' named 'myFirstArray'   
-And I have a valid 'array string' named 'mySecondArray' inside 'mySecondObject'
+Given I have a valid 'string array' named 'myFirstArray'   
+And I have a valid 'string array' named 'mySecondArray' inside 'mySecondObject'
 And I have a 'myThirdArray' inside 'myThirdObject' 
 And I have a 'myFourthArray'  
 Then print all data

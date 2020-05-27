@@ -41,8 +41,8 @@ cat $tmp > myTripleNestedObject.json
 
 
 cat <<EOF | tee givenLoadTripleNestedObject.zen | $Z -z -a myTripleNestedObject.json | tee givenTripleNestedObjectOutput.json
-Given I have a valid 'array string' named 'myFirstArray'   
-Given I have a valid 'array string' named 'mySecondArray' inside 'mySecondObject'
+Given I have a valid 'string array' named 'myFirstArray'   
+Given I have a valid 'string array' named 'mySecondArray' inside 'mySecondObject'
 And I have a 'myThirdArray' inside 'myThirdObject' 
 And I have a 'myFourthArray'  
 Then print all data

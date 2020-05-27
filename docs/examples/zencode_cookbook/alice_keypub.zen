@@ -1,3 +1,4 @@
+Scenario 'simple' : load stuff
 Given I am 'Andrea'
 Given I have a valid 'keypair' from 'Alice'
 #-- Given the 'nomeOggetto?' is valid
