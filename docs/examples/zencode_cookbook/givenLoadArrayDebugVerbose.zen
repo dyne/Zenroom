@@ -1,9 +1,9 @@
 Given debug
 Given I have a valid 'string array' named 'myArray'
 Given debug
-Given I have a valid str named 'myString'
+Given I have a 'string' named 'myString' 
 Given debug
-Given I have a valid number named 'myNumber'
+Given I have a 'number' named 'myNumber'
 Given debug 
 When I randomize the 'myArray' array
 When debug

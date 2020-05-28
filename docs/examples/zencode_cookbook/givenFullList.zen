@@ -1,54 +1,3 @@
-
-Z=zenroom
-####################
-
-
-
-n=0
-tmp=`mktemp`
-
-cat <<EOF  > $tmp
-{
-   "myFirstObject":{
-      "myFirstNumber":1,
-	  "myFirstString":"Hello World!",
-      "myFirstHex": "616e7976616c7565",
-      "myFirstBase64": "SGVsbG8gV29ybGQh",
-	  "myFirstUrl64": "SGVsbG8gV29ybGQh",
-	  "myFirstBinary": "0100100001101001",
-	  "myFirstArray":[
-         "String1",
-		 "String2"
-      ]
-   },
-   "mySecondObject":{
-      "mySecondNumber":2,
-      "mySecondArray":[
-         "anotherString1",
-         "anotherString2"
-      ]
-   },
-   "myThirdObject":{
-      "myThirdNumber":3,
-      "myThirdArray":[
-         "oneMoreString1",
-         "oneMoreString2",
-         "oneMoreString3"
-      ]
-   },
-   "myFourthObject":{
-      "myFourthArray":[
-         "oneExtraString1",
-         "oneExtraString2",
-         "oneExtraString3",
-		 "oneExtraString4"
-      ]
-   }
-}
-EOF
-
-
-cat <<EOF | tee givenFullList.zen | $Z -z -a $tmp | tee givenFullList.json
 # ---- Arrays
 Given I have a valid 'string array' named 'myFirstArray'
 # BROKEN: Given I have a 'string array' named 'myFirstArray'   
@@ -76,6 +25,3 @@ Then print the 'myFirstString' as 'string'
 Then print the 'myFirstHex' as 'hex'
 Then print the 'myFirstUrl64' as 'hex'
 # BROKEN Then print the 'myFirstNumber' as 'number'
-EOF
-
-rm -f $tmp

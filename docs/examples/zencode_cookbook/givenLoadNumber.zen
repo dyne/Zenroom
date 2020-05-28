@@ -1,2 +1,2 @@
-Given I have a valid number in 'myNumber'
+Given I have a 'number' named 'myNumber'
 Then print all data

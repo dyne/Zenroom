@@ -1,5 +1,5 @@
-Given I have a valid 'string array' named 'myArray'   
-# Given I have a valid 'string' in 'myString'  # Questo è ancora rotto
-Given I have a valid number in 'myNumber'
+Given I have a 'string' named 'myString'  
+Given I have a 'number' named 'myNumber'
+Given I have a 'string array' named 'myArray'
 When I randomize the 'myArray' array
 Then print all data

@@ -29,7 +29,7 @@ Given I have a valid string inside 'myString'
 Given I have a valid number inside 'myNumber' 
 #-- 
 And debug
-When I create a random 'url64'
+When I create a random 'url64
 When I create a random 'number'
 When I create a random 'string'
 When I create a random 'base64'

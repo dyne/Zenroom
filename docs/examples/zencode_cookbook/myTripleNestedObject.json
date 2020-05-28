@@ -4,7 +4,8 @@
 	  "myFirstString":"Hello World!",
       "myFirstHex": "616e7976616c7565",
 	  "myFirstArray":[
-         "String1"
+         "String1",
+		 "String2"
       ]
    },
    "mySecondObject":{
