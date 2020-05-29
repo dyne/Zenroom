@@ -1,23 +1,21 @@
-# ---- Arrays
-Given I have a valid 'string array' named 'myFirstArray'
-# BROKEN: Given I have a 'string array' named 'myFirstArray'   
+# Arrays
+Given I have a valid 'string array' named 'myFirstArray'   
+Given I have a 'string array' named 'myFirstArray'   
 Given I have a valid 'array' named 'myFirstArray'      
 Given I have a valid 'string array' named 'mySecondArray' inside 'mySecondObject'
 Given I have a 'myThirdArray' inside 'myThirdObject' 
 Given I have a 'myFourthArray'  
-# ---- Numbers
+# Numbers
 Given I have a 'number' named 'myFirstNumber'
 Given I have a 'myFirstNumber'
 Given I have a 'myFirstNumber' inside 'myFirstObject' 
 Given I have a valid 'number' named 'myFirstNumber'
-# ---- Strings
+# Strings
 Given I have a 'string' named 'myFirstString' 
 Given I have a 'string' named 'myFirstString' inside 'myFirstObject' 
-# BROKEN: Given I have a valid 'string' named 'myFirstString' 
-# ---- Different data types
+# BROKEN Given I have a valid 'string' named 'myFirstString' 
+# Different data types
 Given I have a 'hex' named 'myFirstHex'
-# BROKEN: Given I have a valid 'hex' named 'myFirstHex'
-# Rotti anche tutti i "valid" sugli altri tipi di input
 Given I have a 'base64' named 'myFirstBase64'
 Given I have a 'binary' named 'myFirstBinary'
 Given I have a 'url64' named 'myFirstUrl64'

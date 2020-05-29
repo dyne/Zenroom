@@ -441,6 +441,7 @@ EOF
 cat <<EOF | tee givenFullList.zen | $Z -z -a $tmp | tee givenFullList.json
 # Arrays
 Given I have a valid 'string array' named 'myFirstArray'   
+# BROKEN: Given I have a 'string array' named 'myFirstArray'   
 Given I have a valid 'array' named 'myFirstArray'      
 Given I have a valid 'string array' named 'mySecondArray' inside 'mySecondObject'
 Given I have a 'myThirdArray' inside 'myThirdObject' 
