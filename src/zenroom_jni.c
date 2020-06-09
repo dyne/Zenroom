@@ -28,7 +28,7 @@ JNIEXPORT jstring JNICALL Java_decode_zenroom_Zenroom_zenroom
 // __android_log_print(ANDROID_LOG_WARN, "Zenroom", "len %i", strlen(z_error));
 
 __android_log_print(ANDROID_LOG_WARN,    "Zenroom/stderr", "%s", z_error);
-__android_log_print(ANDROID_LOG_VERBOSE, "Zenroom/stdout", "%s", z_output);
+// __android_log_print(ANDROID_LOG_VERBOSE, "Zenroom/stdout", "%s", z_output);
 
 #endif
 
