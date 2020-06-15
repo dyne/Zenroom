@@ -18,6 +18,18 @@
  *
  */
 
+////////////////////////
+// valid configurations:
+//
+// debug=1..3
+// color=1,0
+// seccomp=0,1
+// rngseed=hex:[256 bytes in hex notation]
+// memmanager=sys|lw|je
+// memwipe=0,1
+// print=sys|stb
+///////////////////////
+
 #include <strings.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -104,7 +116,14 @@ int zen_conf_parse(const char *configuration) {
 			if(strcasecmp(lex.string,"debug")  ==0) { curconf = VERBOSE; break; } // bool
 			if(strcasecmp(lex.string,"verbose")==0) { curconf = VERBOSE; break; }
 			if(strcasecmp(lex.string,"color")  ==0) { curconf = COLOR;   break; } // bool
-			if(strcasecmp(lex.string,"seccomp")  ==0) { curconf = SECCOMP;   break; } // bool
+			if(strcasecmp(lex.string,"seccomp")  ==0) { // bool
+#if (defined(ARCH_WIN) || defined(DISABLE_FORK)) || defined(ARCH_CORTEX) || defined(ARCH_BSD)
+				warning(NULL, "protected mode (seccomp isolation) only available on Linux");
+#else
+				curconf = SECCOMP;
+#endif
+				break;
+			}
 			if(strcasecmp(lex.string,"rngseed")  ==0) { curconf = RNGSEED;   break; } // str
 			if(strcasecmp(lex.string,"memmanager") ==0) { curconf = MEMMGR;   break; } // str
 			if(strcasecmp(lex.string,"memwipe") ==0) { curconf = MEMWIPE;   break; } // bool

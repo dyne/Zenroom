@@ -333,18 +333,6 @@ int main(int argc, char **argv) {
 		func(NULL, script);
 	}
 
-#if DEBUG == 1
-	int res;
-	if(zconf_seccomp) act(NULL, "protected mode (seccomp isolation) not available in debug build");
-	if(zencode)
-		res = zen_exec_zencode(Z, script);
-	else
-		res = zen_exec_script(Z, script);
-	zen_teardown(Z);
-	if(res) { cli_free_buffers(); return EXIT_FAILURE; }
-	else { cli_free_buffers(); return EXIT_SUCCESS; }
-#endif
-
 #if (defined(ARCH_WIN) || defined(DISABLE_FORK)) || defined(ARCH_CORTEX) || defined(ARCH_BSD)
 	if(zencode)
 		if( zen_exec_zencode(Z, script) ) { cli_free_buffers(); return EXIT_FAILURE; }
@@ -363,12 +351,12 @@ int main(int argc, char **argv) {
 		if (fork() == 0) {
 #   ifdef ARCH_LINUX /* LINUX engages SECCOMP. */
 			if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) {
-				fprintf(stderr, "Cannot set no_new_privs: %m.\n");
+				error(Z->lua, "Seccomp fail to set no_new_privs: %s", strerror(errno));
 				cli_free_buffers();
 				return EXIT_FAILURE;
 			}
 			if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &strict)) {
-				fprintf(stderr, "Cannot install seccomp filter: %m.\n");
+				error(Z->lua, (stderr, "Seccomp fail to install filter: %s", strerror(errno));
 				cli_free_buffers();
 				return EXIT_FAILURE;
 			}
@@ -379,6 +367,7 @@ int main(int argc, char **argv) {
 			} else {
 				if( zen_exec_script(Z, script) ) { cli_free_buffers(); return EXIT_FAILURE; }
 			}
+			zen_teardown(Z);
 			cli_free_buffers();
 			return EXIT_SUCCESS;
 		}

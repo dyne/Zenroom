@@ -47,13 +47,17 @@ aarch64: apply-patches milagro cortex-lua53 embed-lua
 linux-riscv64: apply-patches milagro lua53 embed-lua
 	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src linux
+	@cp -v src/zenroom build/zenroom
 
 linux-debug: apply-patches milagro lua53 embed-lua
 	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src linux
 	@cp -v src/zenroom build/zenroom
 
-linux-profile: linux-debug
+linux-profile:
+	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	make -C src linux
+	@cp -v src/zenroom build/zenroom
 
 linux-c++: linux
 
