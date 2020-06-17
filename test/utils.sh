@@ -1,8 +1,9 @@
-set -e
-set -o pipefail
+# set -e
+# set -o pipefail
 
 detect_zenroom_path() {
-	zenroom_paths=( "$PWD" "$PWD/../../src" "$PWD/../src" "$PWD/src" "/usr/local/bin" "$PWD/../.." "$PWD/.." )
+	zenroom_paths=( "$PWD" "$PWD/../../src" "$PWD/../src" "$PWD/src"
+					"/usr/local/bin" "$PWD/../.." "$PWD/.." "/bin")
 	zenroom_path="/usr/local/bin/zenroom"
 	case $OSTYPE in
 		linux*)
@@ -44,8 +45,13 @@ detect_zenroom_path() {
 		exit 1
 	fi
 	chmod +x $zenroom_path
+	>&2 echo "## ZENCODE TEST#############################################"
 	>&2 echo
-	>&2 echo "Zenroom exec: $zenroom_path"
+	>&2 echo "`basename $PWD`"
+	>&2 echo
+	>&2 echo "exec: $zenroom_path"
+	>&2 echo
+	>&2 echo "############################################################"
 	>&2 echo
 	echo "$zenroom_path"
 	unset zenroom_paths zenroom_path
@@ -63,4 +69,28 @@ detect_zenroom_conf() {
 		echo "-c $zenroom_conf";
 	fi
 	unset zenroom_conf
+}
+
+zexe() {
+	if [ "$Z" == "" ]; then
+		>&2 echo "no zenroom executable configured"
+		return 1
+	fi
+	if [ "$1" == "" ]; then
+		>&2 echo "no script filename configured"
+		return 1
+	fi
+	out="$1"
+	shift 1
+	>&2 echo "test: $out"
+	t=`mktemp -d`
+	>&2 echo $t
+	tee "$out" | $Z -z $* 2>$t/stderr 1>$t/stdout
+	if [ $? == 0 ]; then
+		cat $t/stdout
+	else
+		>&2 cat $t/stderr | grep -v '^ \. '
+		exit
+	fi
+	return $?
 }

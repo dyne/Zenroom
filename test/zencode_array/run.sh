@@ -1,12 +1,15 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-seed="0xDEADBEEF"
 
-alias zenroom="${1:-./src/zenroom}" # -c rngseed=\\\"$seed\\\""
-#  memmanager=\\\"lw\\\",
+####################
+# common script init
+if ! test -r ../utils.sh; then
+	echo "run executable from its own directory: $0"; exit 1; fi
+. ../utils.sh
+Z="`detect_zenroom_path` `detect_zenroom_conf`"
+####################
 
-t=`mktemp -d`
-cat <<EOF | zenroom -z | tee $t/arr.json
+cat <<EOF | zexe array_32_256.zen | tee arr.json
 rule output encoding url64
 Given nothing
 When I create the array of '32' random objects of '256' bits
@@ -14,10 +17,10 @@ and I rename the 'array' to 'bonnetjes'
 Then print the 'bonnetjes'
 EOF
 
-cat <<EOF | zenroom -z -a $t/arr.json
+cat <<EOF | zexe array_rename_remove.zen -a arr.json
 rule input encoding url64
 rule output encoding hex
-Given I have a valid 'array' named 'bonnetjes'
+Given I have a 'array' named 'bonnetjes'
 When I pick the random object in 'bonnetjes'
 and I rename the 'random object' to 'lucky one'
 and I remove the 'lucky one' from 'bonnetjes'
@@ -27,7 +30,7 @@ Then print the 'lucky one'
 and print the 'bonnetjes'
 EOF
 
-cat <<EOF | zenroom -z
+cat <<EOF | zexe array_ecp_aggregation
 rule output encoding url64
 Given nothing
 When I create the array of '32' random curve points
@@ -37,20 +40,20 @@ Then print the 'aggregation'
 EOF
 
 
-cat <<EOF | zenroom -z -a $t/arr.json | tee $t/ecp.json
+cat <<EOF | zexe array_hashtopoint.zen -a arr.json | tee ecp.json
 rule input encoding url64
 rule output encoding url64
-Given I have a valid 'array' named 'bonnetjes'
+Given I have a 'array' named 'bonnetjes'
 When I create the hash to point 'ECP' of each object in 'bonnetjes'
 # When for each x in 'bonnetjes' create the of 'ECP.hashtopoint(x)'
 Then print the 'hashes'
 EOF
 
-cat <<EOF | zenroom -z -a $t/arr.json -k $t/ecp.json
+cat <<EOF | zexe array_ecp_check.zen -a arr.json -k ecp.json
 rule input encoding url64
 rule output encoding url64
-Given I have a valid 'array' named 'bonnetjes'
-and I have a valid 'ecp array' named 'hashes'
+Given I have a 'array' named 'bonnetjes'
+and I have a 'ecp array' named 'hashes'
 # When I pick the random object in array 'hashes'
 # and I remove the 'random object' from array 'hashes'
 When for each x in 'hashes' y in 'bonnetjes' is true 'x == ECP.hashtopoint(y)'
@@ -59,10 +62,10 @@ EOF
 # 'x == ECP.hashtopoint(y)'
 
 
-cat <<EOF | zenroom -z -a $t/arr.json | json_pp
+cat <<EOF | zexe array_from_hash.zen -a arr.json
 rule input encoding url64
 rule output encoding url64
-Given I have a valid 'array' named 'bonnetjes'
+Given I have a 'array' named 'bonnetjes'
 When for each x in 'bonnetjes' create the array using 'sha256(x)'
 Then print the 'array'
 and print the 'bonnetjes'
@@ -70,7 +73,5 @@ EOF
 # 'x == ECP.hashtopoint(y)'
 
 
-rm -f $t/*
-rmdir $t
 # When I check 'hashes' and 'bonnetjes'
 # When I check 'hashes' and 'bonnetjes' such as

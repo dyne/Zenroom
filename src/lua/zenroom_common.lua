@@ -17,6 +17,7 @@ function iszen(n)
 end
 
 -- gets a string and returns the associated function, string and prefix
+-- comes before schema check
 function input_encoding(what)
    if what == 'u64' or what == 'url64' then
 	  return { fun = function(data)
