@@ -353,11 +353,11 @@ local function export_arr(object, format)
    local conv_f = nil
    local ft = type(format)
    if format and ft == 'function' then conv_f = format goto ok end
-   if format and ft == 'string' then conv_f = get_encoding(format).fun goto ok end
+   if format and ft == 'string' then conv_f = output_encoding(format).fun goto ok end
    conv_f = CONF.output.encoding.fun -- fallback to configured conversion function
    ::ok::
    ZEN.assert(type(conv_f) == 'function' , "export_arr conversion function not configured")
-   return conv_f(object) -- TODO: protected call
+   return conv_f(object) -- TODO: protected call? deepmap?
 end
 function export_obj(object, format)
    -- CONF { encoding = <function 1>,
@@ -379,10 +379,16 @@ local function buf(o) return string.sub(o,5) end
 ---
 -- Decode a format encoded object using the provided decoder or the
 -- default CONF.encoding
+-- Table format of the decoder:
+-- ```
+-- { fun = pointer to conversion function
+--   name = short string name
+--   check = pointer to check function }
+-- ```
 --
 -- @function ZEN.decode(anystr, decoder)
 -- @param anystr data element to be read
--- @param decoder encoding to be used for conversion
+-- @param decoder table describing the conversion
 -- @return octet object decoded
 function ZEN.decode(anystr, decoder)
    ZEN.assert(anystr, "ZEN.decode object is nil")
@@ -393,23 +399,28 @@ function ZEN.decode(anystr, decoder)
    end
    ZEN.assert(t == 'string' or t == 'number' or t == 'table',
 			  "ZEN.decode input not a string or number or table: "..t)
-   if decoder then
-	  ZEN.assert(decoder.fun, "ZEN.decode invalid decoder (no fun)")
-	  xxx("ZEN.decode selected decoder: "..decoder.name)
-	  if t == 'table' then
-		 return( deepmap(decoder.fun, anystr) )
-	  else
-		 return( decoder.fun(anystr) )
+   -- anystr is a valid conversion value
+
+   local dec = decoder or CONF.input.encoding
+
+   if t == 'number' then
+	  if dec.name ~= 'number' then
+		 error("wrong decoder for raw number data: "..dec.name, 3)
+		 return nil
 	  end
+	  return( anystr )
    end
-   -- fallback to configured default
-   xxx("ZEN.decode default decoder: "..CONF.input.encoding.name)
+
+   if not dec.fun then
+	  error("Invalid decoder (no CONF.input.encoding.fun)", 3)
+	  return nil
+   end
+
+   xxx("Data type "..t.." selected decoder: "..dec.name, 3)
    if t == 'table' then
-	  return( deepmap(CONF.input.encoding.fun, anystr))
-   elseif t == 'number' then
-	  return( anystr ) -- kept as lua number
+	  return( deepmap(dec.fun, anystr) )
    else
-	  return( CONF.input.encoding.fun(anystr) )
+	  return( dec.fun(anystr) )
    end
 end
 

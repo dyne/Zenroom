@@ -25,78 +25,70 @@ function input_encoding(what)
 				  else error("Failed import from url64: "..what,3)
 					 end end,
 			   name = 'url64',
-			   check = O.is_url64,
-			   pfx = 'u64' }
+			   check = O.is_url64
+	  }
    elseif what == 'b64' or what =='base64' then
 	  return { fun = function(data)
 				  if O.is_base64(data) then return O.from_base64(data)
 				  else error("Failed import from base64: "..what,3)
 					 end end,
 			   name = 'base64',
-			   check = O.is_base64,
-			   pfx = 'b64' }
+			   check = O.is_base64
+	  }
    elseif what == 'hex' then
 	  return { fun = function(data)
 				  if O.is_hex(data) then return O.from_hex(data)
 				  else error("Failed import from hex: "..what,3)
 				  end end,
 			   name = 'hex',
-			   check = O.is_hex,
-			   pfx = 'hex' }
+			   check = O.is_hex
+	  }
    elseif what == 'bin' or what == 'binary' then
 	  return { fun = function(data)
 				  if O.is_bin(data) then return O.from_bin(data)
 				  else error("Failed import from bin: "..what,3)
 					 end end,
 			   name = 'binary',
-			   check = O.is_bin,
-			   pfx = 'bin' }
+			   check = O.is_bin
+	  }
    elseif what == 'str' or what == 'string' then
    	  return { fun = O.from_string,
 			   check = function(_) return true end,
-   			   name = 'string',
-   			   pfx = 'str' }
+   			   name = 'string'
+	  }
    elseif what == 'num' or what == 'number' then
 	  return { fun = tonumber,
 			   check = function(_) return true end,
 			   -- check = function(a) if tonumber(a) ~= nil then
 			   -- 		 return true else return false end,
-			   name = 'number',
-			   pfx = 'num' }
-   else
-	  warn("Conversion encoding not supported: "..what)
+			   name = 'number'
+	  }
    end
+   xxx("Input encoding not found: "..what, 2)
    return nil
 end
 
 -- gets a string and returns the associated function, string and prefix
-function get_encoding(what)
+function output_encoding(what)
    if what == 'u64' or what == 'url64' then
-	  return { fun = url64,
-			   name = 'url64',
-			   pfx = 'u64' }
+	  return { fun = O.to_url64,
+			   name = 'url64' }
    elseif what == 'b64' or what =='base64' then
-	  return { fun = base64,
-			   name = 'base64',
-			   pfx = 'b64' }
+	  return { fun = O.to_base64,
+			   name = 'base64' }
    elseif what == 'hex' then
-	  return { fun = hex,
-			   name = 'hex',
-			   pfx = 'hex' }
+	  return { fun = O.to_hex,
+			   name = 'hex' }
    elseif what == 'bin' or what == 'binary' then
-	  return { fun = bin,
-			   name = 'binary',
-			   pfx = 'bin' }
+	  return { fun = O.to_bin,
+			   name = 'binary' }
    elseif what == 'str' or what == 'string' then
-	  return { fun = str,
-			   name = 'string',
-			   pfx = 'str' }
-   else
-	  warn("Conversion encoding not supported: "..what)
+	  return { fun = O.to_string,
+			   name = 'string' }
    end
+   xxx("Output encoding not found: "..what, 2)
    return nil
 end
-
 
 function get_format(what)
    if what == 'json' or what == 'JSON' then
@@ -105,9 +97,8 @@ function get_format(what)
    elseif what == 'cbor' or what == 'CBOR' then
 	  return { fun = CBOR.auto,
 			   name = 'cbor' }
-   else
-	  warn("Conversion format not supported: "..what)
    end
+   error("Conversion format not supported: "..what, 2)
    return nil
 end
 	  
@@ -166,6 +157,7 @@ _G["sort_ipairs"] = _pairs
 -- FUNCTIONAL LANGUAGE HELPERS
 ----------------------------------------
 -- stateless map mostly for internal use
+-- TODO: remove and leave only deepmap()
 function _map(t, f, ...)
    -- safety
    if not (type(t) == "table") then return {} end

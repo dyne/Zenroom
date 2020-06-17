@@ -37,7 +37,10 @@ When("backtrace", function() debug_traceback() end)
 Then("backtrace", function() debug_traceback() end)
 
 function debug_heap_dump()
-   I.warn({HEAP = ZEN.heap()})
+   local HEAP = ZEN.heap()
+   I.warn({a_GIVEN = HEAP.IN,
+		   b_WHEN = HEAP.ACK,
+		   c_THEN = HEAP.OUT})
 end
 
 function debug_heap_schema()

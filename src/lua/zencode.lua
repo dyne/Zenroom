@@ -152,7 +152,7 @@ function zencode:parse(text)
    if  #text < 9 then -- strlen("and debug") == 9
    	  warn("Zencode text too short to parse")
    	  return false end
-   -- xxx(3,text)
+   -- xxx(text,3)
    for line in zencode_newline_iter(text) do
 	  if zencode_isempty(line) then goto continue end
 	  if zencode_iscomment(line) then goto continue end

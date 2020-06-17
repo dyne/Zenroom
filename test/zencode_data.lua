@@ -13,7 +13,7 @@ ZEN:parse([[
 rule check version 1.0.0
 rule input encoding string
 Given I have a 'inside' inside 'first'
-and I have a 'third'
+and I have a 'string' named 'third'
 When I write string 'first.inside' in 'test'
 and I write string 'three' in 'tertiur'
 and I verify 'third' is equal to 'tertiur'

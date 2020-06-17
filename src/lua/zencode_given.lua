@@ -34,105 +34,95 @@ Given("nothing", function() ZEN.assert(not DATA and not KEYS, "Undesired data pa
 -- Given("I am known as ''", function(name) ZEN:Iam(name) end)
 Given("I am ''", function(name) ZEN:Iam(name) end)
 
+-- variable names:
+-- s = schema of variable (or encoding)
+-- n = name of variable
+-- t = table containing the variable
+
 -- TODO: I have a '' as ''
-Given("I have a ''", function(name)
-		 ZEN:pick(name)
-		 TMP.valid = true
-		 ZEN:ack(name)
-		 gc()
-end)
-
-Given("I have a '' named ''", function(enc, name)
-		 local encoder = input_encoding(enc)
-		 ZEN.assert(encoder, "Invalid input encoding for '"..name.."': "..enc)
-		 ZEN:pick(name, nil, encoder)
-		 TMP.valid = true
-		 ZEN:ack(name)
-		 gc()
-end)
-
-Given("I have a '' named '' in ''", function(enc,n,l)
-		 local encoder = input_encoding(enc)
-		 ZEN:pickin(l, n, encoder)
-		 TMP.valid = true
-		 ZEN:ack(n) -- save it in ACK.obj
-		 gc()
-end)
-
-Given("I have my ''", function(name)
-		 ZEN.assert(WHO, "No identity specified, use: Given I am ...")
-		 ZEN:pickin(WHO, name)
-		 TMP.valid = true
-		 ZEN:ack(name)
-		 gc()
-end)
-
-Given("I have my valid ''", function(name)
-		 ZEN.assert(WHO, "No identity specified, use: Given I am ...")
-		 ZEN:pickin(WHO, name)
-		 ZEN:validate(name)
-		 ZEN:ack(name)
-		 gc()
-end)
-
-Given("I have a valid ''", function(name)
-		 ZEN:pick(name)
-		 ZEN:validate(name)
-		 ZEN:ack(name)
-		 gc()
-end)
-Given("the '' is valid", function(name)
-		 ZEN:pick(name)
-		 ZEN:validate(name)
-		 gc()
-end)
-
-Given("I have a '' in ''", function(n, s)
-		 ZEN:pickin(s, n)
-		 TMP.valid = true
-		 ZEN:ack(n) -- save it in ACK.obj
-		 gc()
-end)
-Given("I have in '' a ''", function(s, n)
-		 ZEN:pickin(s, n)
-		 TMP.valid = true
-		 ZEN:ack(s) -- save it in ACK.inside.obj
-		 gc()
-end)
-
-
-Given("I have in '' a valid ''", function(s, n)
-		 ZEN:pickin(s, n)
-		 ZEN:validate(n)
-		 ZEN:ack(s) -- save it in ACK.inside.obj
-		 gc()
-end)
-Given("I have a valid '' in ''", function(n, s)
-		 ZEN:pickin(s, n)
-		 ZEN:validate(n)
-		 ZEN:ack(n) -- save it in ACK.obj
-		 gc()
-end)
-
-Given("I have a valid '' named ''", function(s,n)
+Given("I have a ''", function(n)
 		 ZEN:pick(n)
-		 ZEN:validate(n,s)
-		 ZEN:ack(n) -- save it in ACK.obj
+		 ZEN:validate(n)
+		 ZEN:ack(n)
 		 gc()
 end)
 
-Given("I have a valid '' named '' in ''", function(s,n,l)
-		 ZEN:pickin(l, n)
-		 ZEN:validate(n,s)
-		 ZEN:ack(n) -- save it in ACK.obj
+Given("I have a '' named ''", function(s, n)
+		 -- local encoder = input_encoding(s)
+		 -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
+		 ZEN:pick(n, nil, input_encoding(s))
+		 TMP.valid = true
+		 ZEN:ack(n)
 		 gc()
 end)
+
+Given("I have a '' named '' in ''", function(s,n,t)
+		 -- local encoder = input_encoding(s)
+		 ZEN:pickin(t, n, input_encoding(s))
+		 TMP.valid = true
+		 ZEN:ack(n) -- save it in ACK.name
+		 gc()
+end)
+
+Given("I have my ''", function(n)
+		 ZEN.assert(WHO, "No identity specified, use: Given I am ...")
+		 ZEN:pickin(WHO, n)
+		 ZEN:validate(n)
+		 ZEN:ack(n)
+		 gc()
+end)
+Given("the '' is valid", function(n)
+		 ZEN:pick(n)
+		 ZEN:validate(n)
+		 gc()
+end)
+
+Given("I have a '' in ''", function(s, t)
+		 ZEN:pickin(t, s)
+		 TMP.valid = true
+		 ZEN:ack(s) -- save it in ACK.obj
+		 gc()
+end)
+-- Given("I have in '' a ''", function(s, n)
+-- 		 ZEN:pickin(s, n)
+-- 		 TMP.valid = true
+-- 		 ZEN:ack(s) -- save it in ACK.inside.obj
+-- 		 gc()
+-- end)
+
+
+-- Given("I have in '' a valid ''", function(s, n)
+-- 		 ZEN:pickin(s, n)
+-- 		 ZEN:validate(n)
+-- 		 ZEN:ack(s) -- save it in ACK.inside.obj
+-- 		 gc()
+-- end)
+-- Given("I have a valid '' in ''", function(n, s)
+-- 		 ZEN:pickin(s, n)
+-- 		 ZEN:validate(n)
+-- 		 ZEN:ack(n) -- save it in ACK.obj
+-- 		 gc()
+-- end)
+
+-- Given("I have a valid '' named ''", function(s,n)
+-- 		 ZEN:pick(n)
+-- 		 ZEN:validate(n,s)
+-- 		 ZEN:ack(n) -- save it in ACK.obj
+-- 		 gc()
+-- end)
+
+-- Given("I have a valid '' named '' in ''", function(s,n,l)
+-- 		 ZEN:pickin(l, n)
+-- 		 ZEN:validate(n,s)
+-- 		 ZEN:ack(n) -- save it in ACK.obj
+-- 		 gc()
+-- end)
 
 -- public keys for keyring arrays
-Given("I have a valid '' from ''", function(n, s)
-		 ZEN:pickin(s, n)
-		 ZEN:validate(n)
-		 ZEN:ack_table(n, s)
+Given("I have a '' from ''", function(s, t)
+		 ZEN:pickin(t, s)
+		 ZEN:validate(s)
+		 ZEN:ack_table(t, s)
 		 gc()
 end)
 

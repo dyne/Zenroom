@@ -43,7 +43,7 @@ function set_sentence(self, event, from, to, ctx)
 		 error("Zencode function missing: "..pattern, 2)
 		 return false
 	  end
-	  -- TODO: optimize in c
+	  -- TODO: optimize in C
 	  -- remove '' contents, lower everything, expunge prefixes
 	  local tt = string.gsub(trim(ctx.msg),"'(.-)'","''")
 	  tt = string.gsub(tt:lower() ,"when " ,"", 1)
@@ -52,11 +52,13 @@ function set_sentence(self, event, from, to, ctx)
 	  tt = string.gsub(tt,"and "  ,"", 1) -- TODO: expunge only first 'and'
 	  tt = string.gsub(tt,"that " ,"", 1)
 	  tt = string.gsub(tt,"known as ", "", 1)
-	  tt = string.gsub(tt," inside "  ," in ", 1) -- equivalence
+	  tt = string.gsub(tt," inside "," in ", 1) -- equivalence
+	  tt = string.gsub(tt," an "," a ", 1)
+	  tt = tt:gsub(' +',' ') -- eliminate multiple internal spaces
 	  if strcasecmp(tt, pattern) then
 		 local args = {} -- handle multiple arguments in same string
 		 for arg in string.gmatch(ctx.msg,"'(.-)'") do
-			-- xxx(2,"+arg: "..arg)
+			-- xxx("+arg: "..arg, 2)
 			arg = string.gsub(arg, ' ', '_')
 			table.insert(args,arg)
 		 end
@@ -122,7 +124,7 @@ function set_rule(text)
    elseif rule[2] == 'output' and rule[3] then
       -- rule input encoding|format ''
       if rule[3] == 'encoding' then
-         CONF.output.encoding = get_encoding(rule[4])
+         CONF.output.encoding = output_encoding(rule[4])
 		 res = true and CONF.output.encoding
       elseif rule[3] == 'format' then
 		 CONF.output.format = get_format(rule[4])
