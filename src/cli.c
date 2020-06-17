@@ -356,7 +356,7 @@ int main(int argc, char **argv) {
 				return EXIT_FAILURE;
 			}
 			if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &strict)) {
-				error(Z->lua, (stderr, "Seccomp fail to install filter: %s", strerror(errno));
+				error(Z->lua, "Seccomp fail to install filter: %s", strerror(errno));
 				cli_free_buffers();
 				return EXIT_FAILURE;
 			}
