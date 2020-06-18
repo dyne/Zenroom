@@ -1,3 +1,5 @@
 rule check version 1.0.0
-	 Given I have a 'hex' named 'anykey'  
-	 Then print the 'anykey' as 'string'
+rule input encoding string
+rule output encoding string
+	 Given I have a 'anykey'
+	 Then print the 'anykey'

@@ -1,7 +1,7 @@
 # Given I have a 'string array' named 'myFirstArray'   
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
 Given I have a 'myThirdArray' inside 'myThirdObject' 
-Given I have a 'myFourthArray'  
+Given I have a 'myFourthArray' inside 'myFourthObject'   
 Given I have a 'number' named 'myFirstNumber'
 Given I have a 'string' named 'myFirstString' 
 Given I have a 'hex' named 'myFirstHex'

@@ -133,27 +133,6 @@ EOF
 echo "                                                "
 echo "------------------------------------------------"
 echo "               Script number $n                 "
-echo "               Unused in the manual                 "
-echo "------------------------------------------------"
-echo "                                                "
-let n=n+1
-
-
-
-cat <<EOF | tee givenLoadArray2.zen | $Z -z -a $tmp
-Given I have a valid 'string array' named 'myArray' 
-Given I have a 'string' named 'myString'
-Given I have a 'number' named 'myNumber' 
-When I randomize the 'myArray' array
-Then print all data
-EOF
-
-# End of script loading object
-
-
-echo "                                                "
-echo "------------------------------------------------"
-echo "               Script number $n                 "
 echo "------------------------------------------------"
 echo "                                                "
 let n=n+1
@@ -377,7 +356,7 @@ cat <<EOF | tee givenLoadTripleNestedObject.zen | $Z -z -a myTripleNestedObject.
 # Given I have a 'string array' named 'myFirstArray'   
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
 Given I have a 'myThirdArray' inside 'myThirdObject' 
-Given I have a 'myFourthArray'  
+Given I have a 'myFourthArray' inside 'myFourthObject'   
 Given I have a 'number' named 'myFirstNumber'
 Given I have a 'string' named 'myFirstString' 
 Given I have a 'hex' named 'myFirstHex'
@@ -439,30 +418,31 @@ EOF
 
 
 cat <<EOF | tee givenFullList.zen | $Z -z -a $tmp | tee givenFullList.json
+
 # Arrays
-Given I have a valid 'string array' named 'myFirstArray'   
-# BROKEN: Given I have a 'string array' named 'myFirstArray'   
-Given I have a valid 'array' named 'myFirstArray'      
-Given I have a valid 'string array' named 'mySecondArray' inside 'mySecondObject'
+Given I have a 'string array' named 'myFirstArray'   
+Given I have a 'string array' named 'myFirstArray'   
+Given I have an 'array' named 'myFirstArray'      
+Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
 Given I have a 'myThirdArray' inside 'myThirdObject' 
-Given I have a 'myFourthArray'  
+Given I have a 'string array' named 'myFourthArray'
+# Given I have an 'array' named 'myFirstObject'
 # Numbers
 Given I have a 'number' named 'myFirstNumber'
-Given I have a 'myFirstNumber'
-Given I have a 'myFirstNumber' inside 'myFirstObject' 
-Given I have a valid 'number' named 'myFirstNumber'
+# Given I have a 'myFirstNumber'
+Given I have a 'number' named 'myFirstNumber' inside 'myFirstObject' 
 # Strings
 Given I have a 'string' named 'myFirstString' 
 Given I have a 'string' named 'myFirstString' inside 'myFirstObject' 
-# BROKEN Given I have a valid 'string' named 'myFirstString' 
 # Different data types
-Given I have a 'hex' named 'myFirstHex'
-Given I have a 'base64' named 'myFirstBase64'
-Given I have a 'binary' named 'myFirstBinary'
-Given I have a 'url64' named 'myFirstUrl64'
-Then print the 'myFirstString' as 'string'
-Then print the 'myFirstHex' as 'hex'
-Then print the 'myFirstUrl64' as 'hex'
+Given I have an 'hex' named 'myFirstHex'
+Given I have a  'base64' named 'myFirstBase64'
+Given I have a  'binary' named 'myFirstBinary'
+Given I have an 'url64' named 'myFirstUrl64'
+# Then print the 'myFirstString' as 'string'
+# Then print the 'myFirstHex' as 'hex'
+# Then print the 'myFirstUrl64' as 'hex'
+Then print all data
 # BROKEN Then print the 'myFirstNumber' as 'number'
 EOF
 
