@@ -13,7 +13,7 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
 
-cat <<EOF | tee dp3t_keygen.zen | $Z -z | tee SK1.json
+cat <<EOF | zexe dp3t_keygen.zen | tee SK1.json
 rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
@@ -24,22 +24,23 @@ Then print the 'secret day key'
 EOF
 
 
-cat <<EOF | tee dp3t_keyderiv.zen | $Z -z -a SK1.json | tee SK2.json
+cat <<EOF | zexe dp3t_keyderiv.zen -a SK1.json | tee SK2.json
 scenario 'dp3t': Decentralized Privacy-Preserving Proximity Tracing
 rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
 Given I have a 'secret day key'
+# TODO: if the key is found in HEAP then parse secret day key as octet in default encoding
 When I renew the secret day key to a new day
 Then print the 'secret day key'
 EOF
 
-cat <<EOF | tee dp3t_ephidgen.zen | $Z -z -k SK2.json | tee EphID_2.json
+cat <<EOF | zexe dp3t_ephidgen.zen -k SK2.json | tee EphID_2.json
 scenario 'dp3t': Decentralized Privacy-Preserving Proximity Tracing
 rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
-Given I have a 'secret day key'
+Given I have an 'hex' named 'secret day key'
 When I write string 'Broadcast key' in 'broadcast key'
 and I write number '180' in 'epoch'
 and I create the ephemeral ids for today
@@ -58,14 +59,14 @@ When I create the array of '20000' random objects of '256' bits
 and I rename the 'array' to 'list of infected'
 Then print the 'list of infected'
 EOF
-
+exit 0
 # extract a few random infected ephemeral ids to simulate proximity
 cat <<EOF | $Z -z -a SK_infected_20k.json | tee EphID_infected.json
 scenario 'dp3t'
 rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
-Given I have a valid array in 'list of infected'
+Given I have a valid 'array' in 'list of infected'
 When I pick the random object in 'list of infected'
 and I rename the 'random object' to 'secret day key'
 and I write number '180' in 'epoch'
@@ -81,8 +82,8 @@ scenario 'dp3t'
 rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
-Given I have a valid array in 'list of infected'
-and I have a valid array in 'ephemeral ids'
+Given I have a 'array' in 'list of infected'
+and I have a 'array' in 'ephemeral ids'
 When I write number '180' in 'epoch'
 and I write string 'Broadcast key' in 'broadcast key'
 and I create the proximity tracing of infected ids

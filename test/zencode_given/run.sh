@@ -20,13 +20,13 @@ EOF
 
 set +e
 echo '{}' > $tmp
-cat <<EOF | zexe fail_nothing.zen -a $tmp
+cat <<EOF | zexe fail_nothing.zen -a $tmp 2>/dev/null
 rule check version 1.0.0
 	 Given nothing
 	 When I create the random object of '256' bits
 	 Then print the 'random object'
 EOF
-if ! test $? == 1; then 
+if ! test $? == 1; then
 	echo "ERROR in Given nothing"
 	exit 1; fi
 set -e
@@ -72,7 +72,7 @@ EOF
 cat <<EOF | zexe have_valid_arrays.zen -a $tmp
 # Given I have a valid array of 'string' in 'myArray'
 Given I have a valid 'str' in 'myString'
-Given I have a valid 'number' in 'myNumber' 
+Given I have a valid 'number' in 'myNumber'
 When I randomize the 'myArray' array
 Then print all data
 EOF
@@ -91,7 +91,7 @@ cat <<EOF  > $tmp
         "peppe2",
         "peppe3",
         "peppe4"
-        ]  
+        ]
 	},
 
 	"Bobbino":{"Bob":{
@@ -105,7 +105,7 @@ cat <<EOF  > $tmp
         "peppe2B",
         "peppe3B",
         "peppe4B"
-        ]  
+        ]
 	}
 
  }
