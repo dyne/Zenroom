@@ -1,0 +1,5 @@
+Given I have a valid array of 'string' inside 'myArray'
+Given I have a valid string inside 'myString'
+Given I have a valid number inside 'myNumber' 
+When I randomize the 'myArray' array
+Then print all data
