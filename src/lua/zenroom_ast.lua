@@ -51,6 +51,7 @@ function set_sentence(self, event, from, to, ctx)
 	  tt = string.gsub(tt,"given ","", 1)
 	  tt = string.gsub(tt,"and "  ,"", 1) -- TODO: expunge only first 'and'
 	  tt = string.gsub(tt,"that " ,"", 1)
+	  tt = string.gsub(tt,"valid " ,"", 1) -- backward compat
 	  tt = string.gsub(tt,"known as ", "", 1)
 	  tt = string.gsub(tt," inside "," in ", 1) -- equivalence
 	  tt = string.gsub(tt," an "," a ", 1)
