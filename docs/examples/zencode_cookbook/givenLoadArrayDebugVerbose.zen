@@ -1,5 +1,5 @@
 Given debug
-Given I have a valid 'string array' named 'myArray'
+Given I have a 'string array' named 'myArray'
 Given debug
 Given I have a 'string' named 'myString' 
 Given debug

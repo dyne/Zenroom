@@ -71,14 +71,7 @@ Which should return this output:
 If you're wondering if you can check what gets loaded and what not, during execution, this will be answered in a little when we'll tell about the *debug* operator.
  
  
-<!-- Temp removed, waiting to see the destiny of given all data
- 
- 
-
-Also this script would have worked.
-
-[](../_media/examples/zencode_cookbook/givenLoadArray2.zen ':include :type=code gherkin')
--->
+<!-- Temp removed, -->
 
 
 ## *Given I have* using a nested JSON file (part 2)
@@ -111,12 +104,6 @@ The output should look like this:
 
 [](../_media/examples/zencode_cookbook/givenTripleNestedObjectOutput.json ':include :type=code json')
 
-## The valid keyword 
-
-We've been using the keyword *valid* without knowing much about it: the keyword works only in some situations 
-* one
-* two
-* three
  
 ## Corner case: omonimity
 
@@ -162,56 +149,20 @@ Here you are declaring the identity of the one who is executing the current scri
  - When executing cryptographic operations that will need a key or keypair: the keys are passed to Zenroom (via *-a* and *-k* parameters) as JSON or CBOR files, with a format that includes the owner of the keys.
  - In scripts using the *my* keyword, the identity a condition for the execution
  
+# THE END: Comprehensive list of *Given* statements
+
+Let's use an even larger object this time, named *myLargeNestedObject.json*: 
+
+[](../_media/examples/zencode_cookbook/myLargeNestedObject.json ':include :type=code json')
+
+Below is a list of most of the *Given* statements you will need in most situations:
+
+[](../_media/examples/zencode_cookbook/givenFullList.zen ':include :type=code gherkin')
+
 
 
 
 <!-- Temp 
-
- 
-
- 
-### Importing and validating an array 
-
-
- 
- Given I have a 'keypair'
- When I rename the 'object' to 'renObject'
- Then print all data 
- 
- 
- 
- given: I have a valid array of 'number' in 'lista_di_numeri'
- 
- 
- 
- 
- 
-array
-array_ecp
-array_string
-array_number
-
- 
- 
-  - given: I have a ''
-  - given: I have my ''
-  - given: I have my valid ''
-  - given: I have a valid ''
-  
-  
- 
- 
- Given I have an 'array'
- When I rename the 'array' to 'renArray'
- Then print all data 
- 
- 
-
-
-On Linux, you can use: 
-
-```bash
-zenroom -z arrayGenerator.zen | tee myArray.json
 ```
 
 -->

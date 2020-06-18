@@ -108,7 +108,7 @@ EOF
 cat <<EOF | tee givenLoadFlatObject.zen | $Z -z -a $tmp | tee givenLoadFlatObjectOutput.json
 Given I have a 'string' named 'myString'  
 Given I have a 'number' named 'myNumber'
-Given I have a valid 'string array' named 'myArray'
+Given I have a 'string array' named 'myArray'
 When I randomize the 'myArray' array
 Then print all data
 EOF
@@ -140,7 +140,7 @@ let n=n+1
 
 cat <<EOF | tee givenLoadArrayDebugVerbose.zen | $Z -z -a myFlatObject.json | tee givenDebugOutputVerbose.json
 Given debug
-Given I have a valid 'string array' named 'myArray'
+Given I have a 'string array' named 'myArray'
 Given debug
 Given I have a 'string' named 'myString' 
 Given debug
@@ -198,7 +198,7 @@ cat $tmp > myNestedRepetitveObject.json
 cat <<EOF | tee givenLoadRepetitveObject.zen | $Z -z -a $tmp | tee givenLoadRepetitveObjectOutput.json
 Scenario 'simple': let us load some stuff cause it is fun!
 Given I am 'Alice'
-And I have my valid 'keypair'
+And I have my  'keypair'
 And I have a 'myArray' inside 'myFirstObject' 
 And I have a 'myArray' inside 'mySecondObject' 
 Then print all data
@@ -216,7 +216,7 @@ let n=n+1
 cat <<EOF | tee givenLoadRepetitveObjectDebug.zen | $Z -z -a $tmp | tee givenLoadRepetitveObjectDebugOutput.json
 Scenario 'simple': let us load some stuff cause it is fun!
 Given I am 'Alice'
-And I have my valid 'keypair'
+And I have my  'keypair'
 And I have a 'myArray' inside 'myFirstObject' 
 And I have a 'myArray' inside 'mySecondObject' 
 And debug
@@ -275,7 +275,7 @@ cat $tmp > myNestedObject.json
 cat <<EOF | tee givenLoadNestedObject.zen | $Z -z -a $tmp | tee givenLoadNestedObjectOutput.json
 Scenario 'simple': let us load some stuff cause it is fun!
 Given I am 'Alice'
-And I have my valid 'keypair'
+And I have my  'keypair'
 And I have a 'myFirstArray' inside 'myFirstObject' 
 And I have a 'mySecondArray' inside 'mySecondObject' 
 Then print all data
@@ -297,7 +297,7 @@ let n=n+1
 
 
 cat <<EOF | tee givenLoadArrayDebug.zen | $Z -z -a myFlatObject.json | tee givenDebugOutput.json
-Given I have a valid 'string array' named 'myArray' 
+Given I have a  'string array' named 'myArray' 
 Given debug 
 When I randomize the 'myArray' array
 Then print all data
@@ -415,35 +415,30 @@ cat <<EOF  > $tmp
    }
 }
 EOF
-
+cat $tmp > myLargeNestedObject.json
 
 cat <<EOF | tee givenFullList.zen | $Z -z -a $tmp | tee givenFullList.json
 
-# Arrays
+# Load Arrays
 Given I have a 'string array' named 'myFirstArray'   
-Given I have a 'string array' named 'myFirstArray'   
-Given I have an 'array' named 'myFirstArray'      
+Given I have an 'array' named 'myFirstArray' 
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
 Given I have a 'myThirdArray' inside 'myThirdObject' 
 Given I have a 'string array' named 'myFourthArray'
-# Given I have an 'array' named 'myFirstObject'
-# Numbers
+# Load Numbers
 Given I have a 'number' named 'myFirstNumber'
-# Given I have a 'myFirstNumber'
-Given I have a 'number' named 'myFirstNumber' inside 'myFirstObject' 
-# Strings
+Given I have a 'number' named 'mySecondNumber' inside 'mySecondObject'
+# Load Strings
 Given I have a 'string' named 'myFirstString' 
 Given I have a 'string' named 'myFirstString' inside 'myFirstObject' 
 # Different data types
-Given I have an 'hex' named 'myFirstHex'
+Given I have an 'hex' named 'myFirstHex' 
+Given I have an 'hex' named 'myFirstHex' inside 'myFirstObject' 
 Given I have a  'base64' named 'myFirstBase64'
 Given I have a  'binary' named 'myFirstBinary'
 Given I have an 'url64' named 'myFirstUrl64'
-# Then print the 'myFirstString' as 'string'
-# Then print the 'myFirstHex' as 'hex'
-# Then print the 'myFirstUrl64' as 'hex'
+and debug
 Then print all data
-# BROKEN Then print the 'myFirstNumber' as 'number'
 EOF
 
 rm -f $tmp
