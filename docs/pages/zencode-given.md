@@ -158,11 +158,3 @@ Let's use an even larger object this time, named *myLargeNestedObject.json*:
 Below is a list of most of the *Given* statements you will need in most situations:
 
 [](../_media/examples/zencode_cookbook/givenFullList.zen ':include :type=code gherkin')
-
-
-
-
-<!-- Temp 
-```
-
--->
