@@ -1,6 +1,6 @@
 {
    "myFirstObject":{
-      "myFirstNumber":1.1,
+      "myFirstNumber":1.23456,
 	  "myFirstString":"Hello World!",
       "myFirstHex": "616e7976616c7565",
       "myFirstBase64": "SGVsbG8gV29ybGQh",

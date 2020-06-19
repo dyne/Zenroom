@@ -18,4 +18,4 @@ Given I have a  'base64' named 'myFirstBase64'
 Given I have a  'binary' named 'myFirstBinary'
 Given I have an 'url64' named 'myFirstUrl64'
 and debug
-Then print the 'myFirstNumber'
+Then print all data

@@ -2,8 +2,6 @@
 
 
 
-# https://pad.dyne.org/code/#/2/code/edit/NTsTFsGUExxvnycVzM32AJvZ/
-
 
 # common script init
 # if ! test -r ../../../test/utils.sh; then
@@ -316,7 +314,7 @@ let n=n+1
 cat <<EOF  > $tmp
 {
    "myFirstObject":{
-      "myFirstNumber":1.1,
+      "myFirstNumber":1.23456,
 	  "myFirstString":"Hello World!",
       "myFirstHex": "616e7976616c7565",
       "myFirstBase64": "SGVsbG8gV29ybGQh",
@@ -375,7 +373,7 @@ Given I have a  'base64' named 'myFirstBase64'
 Given I have a  'binary' named 'myFirstBinary'
 Given I have an 'url64' named 'myFirstUrl64'
 and debug
-Then print the 'myFirstNumber'
+Then print all data
 EOF
 
 rm -f $tmp
