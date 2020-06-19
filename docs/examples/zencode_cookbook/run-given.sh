@@ -18,69 +18,6 @@ Z=zenroom
 n=0
 tmp=`mktemp`
 
-echo "                                                "
-echo "------------------------------------------------"
-echo "               Script number $n                 "
-echo "------------------------------------------------"
-echo "                                                "
-let n=n+1
-
-cat <<EOF | tee alice_keygen.zen | $Z -z > alice_keypair.json
-Scenario 'simple': Create the keypair
-Given that I am known as 'Alice'
-When I create the keypair
-Then print my data
-EOF
-
-
-echo "                                                "
-echo "------------------------------------------------"
-echo "               Script number $n                 "
-echo "------------------------------------------------"
-echo "                                                "
-let n=n+1
-
-
-
-cat <<EOF | tee randomArrayGeneration.zen | $Z -z
-	Given nothing
-	When I create the array of '16' random objects of '32' bits
-	Then print all data
-EOF
-
-echo "                                                "
-echo "------------------------------------------------"
-echo "               Script number $n                 "
-echo "------------------------------------------------"
-echo "                                                "
-let n=n+1
-
-
-
-cat <<EOF | tee randomArrayRename.zen | $Z -z
-	Given nothing
-	When I create the array of '16' random objects of '32' bits
-	And I rename the 'array' to 'myArray'
-	Then print all data
-EOF
-
-echo "                                                "
-echo "------------------------------------------------"
-echo "               Script number $n                 "
-echo "------------------------------------------------"
-echo "                                                "
-let n=n+1
-
-cat <<EOF | tee randomArrayMultiple.zen | $Z -z | tee myArrays.json
-	Given nothing
-	When I create the array of '2' random objects of '8' bits
-	And I rename the 'array' to 'myTinyArray'
-	And I create the array of '4' random objects of '16' bits
-	And I rename the 'array' to 'myAverageArray'
-	And I create the array of '16' random objects of '64' bits
-	And I rename the 'array' to 'myBigFatArray'
-	Then print all data
-EOF
 
 echo "                                                "
 echo "------------------------------------------------"
@@ -379,7 +316,7 @@ let n=n+1
 cat <<EOF  > $tmp
 {
    "myFirstObject":{
-      "myFirstNumber":1,
+      "myFirstNumber":1.1,
 	  "myFirstString":"Hello World!",
       "myFirstHex": "616e7976616c7565",
       "myFirstBase64": "SGVsbG8gV29ybGQh",
@@ -438,7 +375,7 @@ Given I have a  'base64' named 'myFirstBase64'
 Given I have a  'binary' named 'myFirstBinary'
 Given I have an 'url64' named 'myFirstUrl64'
 and debug
-Then print all data
+Then print the 'myFirstNumber'
 EOF
 
 rm -f $tmp

@@ -9,8 +9,8 @@
 - Programming Zencode
   - [Zencode](/pages/zencode.md "Zencode")
   - [Zencode command list](/pages/zencode-list.md "Zencode command list")
-  - [Zencode cookbook](/pages/zencode-cookbook.md "Zencode cookbook") 
-  - [Zencode given](/pages/zencode-given.md "Zencode cookbook") 
+  - [Cookbook intro](/pages/zencode-cookbook-intro.md "Zencode cookbook intro") 
+  - [Cookbook Given](/pages/zencode-cookbook-given.md "Zencode cookbook Given") 
 
 - Programming Lua
   - [Lua](/pages/lua.md "in Lua")

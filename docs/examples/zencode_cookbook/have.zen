@@ -1,5 +1,0 @@
-rule check version 1.0.0
-rule input encoding string
-rule output encoding string
-	 Given I have a 'anykey'
-	 Then print the 'anykey'

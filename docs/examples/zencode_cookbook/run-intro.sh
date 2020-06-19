@@ -18,120 +18,79 @@ Z=zenroom
 n=0
 tmp=`mktemp`
 
-
-let n=0
 echo "                                                "
 echo "------------------------------------------------"
-echo "------------------------------------------------"
-echo "------------------------------------------------"
-echo "------------------------------------------------"
-echo "     OLDER (and invisible) Script number $n     "
+echo "               Script number $n                 "
 echo "------------------------------------------------"
 echo "                                                "
 let n=n+1
 
-# Invisible script below
-
-set +e
-echo '{}' > $tmp
-cat <<EOF | tee nothing.zen | $Z -z -a $tmp 2>/dev/null
-rule check version 1.0.0
-	 Given nothing
-	 When I create the random object of '256' bits
-	 Then print the 'random object'
+cat <<EOF | tee alice_keygen.zen | $Z -z > alice_keypair.json
+Scenario 'simple': Create the keypair
+Given that I am known as 'Alice'
+When I create the keypair
+Then print my data
 EOF
-if ! test $? == 1; then 
-	echo "ERROR in Given nothing"
-	exit 1; fi
-set -e
 
 
 echo "                                                "
 echo "------------------------------------------------"
-echo "               OLDER Script number $n           "
+echo "               Script number $n                 "
 echo "------------------------------------------------"
 echo "                                                "
 let n=n+1
 
 
-cat <<EOF | tee nothing.zen | $Z -z
-rule check version 1.0.0
-	 Given nothing
-	 When I create the random object of '256' bits
-	 Then print the 'random object'
-EOF
 
+cat <<EOF | tee randomArrayGeneration.zen | $Z -z
+	Given nothing
+	When I create the array of '16' random objects of '32' bits
+	Then print all data
+EOF
 
 echo "                                                "
 echo "------------------------------------------------"
-echo "               OLDER Script number $n           "
+echo "               Script number $n                 "
 echo "------------------------------------------------"
 echo "                                                "
 let n=n+1
 
 
-echo '{ "anykey": "anyvalue" }' > $tmp
-cat <<EOF | tee have.zen | $Z -z -a $tmp
-rule check version 1.0.0
-rule input encoding string
-rule output encoding string
-	 Given I have a 'anykey'
-	 Then print the 'anykey'
-EOF
 
+cat <<EOF | tee randomArrayRename.zen | $Z -z
+	Given nothing
+	When I create the array of '16' random objects of '32' bits
+	And I rename the 'array' to 'myArray'
+	Then print all data
+EOF
 
 echo "                                                "
 echo "------------------------------------------------"
-echo "               OLDER Script number $n           "
+echo "               Script number $n                 "
 echo "------------------------------------------------"
 echo "                                                "
 let n=n+1
 
-echo '{ "anykey": "616e7976616c7565" }' > $tmp
-cat <<EOF | tee have.zen | $Z -z -a $tmp
-rule check version 1.0.0
-	 Given I have a 'hex' named 'anykey'  
-	 Then print the 'anykey' as 'string'
+cat <<EOF | tee randomArrayMultiple.zen | $Z -z | tee myArrays.json
+	Given nothing
+	When I create the array of '2' random objects of '8' bits
+	And I rename the 'array' to 'myTinyArray'
+	And I create the array of '4' random objects of '16' bits
+	And I rename the 'array' to 'myAverageArray'
+	And I create the array of '16' random objects of '64' bits
+	And I rename the 'array' to 'myBigFatArray'
+	Then print all data
 EOF
-
 
 echo "                                                "
 echo "------------------------------------------------"
-echo "               OLDER Script number $n           "
+echo "               Script number $n                 "
 echo "------------------------------------------------"
 echo "                                                "
-let n=n+1
-
-
-cat <<EOF  > $tmp  # > tmp.json
-{
-   "Andrea":{
-      "keypair":{
-         "private_key":"IIiTD89L6_sbIvaUc5jAVR88ySigaBXppS5GLUjm7Dv2OLKbNIVdiZ48jpLGskKVDPpukKe4R0A",
-         "public_key":"BFKQTA1ZiebF0is_LtMcVgu4QXC-HOjMpCwDPLuvuXGVAgORIn5NUm7Ey7UDljeNrTCZvhEqxCPjSvWLtIuSYXeZcHWENp7oO37nv7hL2Qj1vMwwlpeRhnSZnjhnKYjq5aTQV1T-eH3e0UcJASzvnb8"
-      }
-   },
-   "Object":{
-      "myNumber":1000,
-      "myString":"Hello World once more!",
-      "myArray":[
-         "AnotherString1",
-         "AnotherString2",
-         "AnotherString3"
-      ]
-   }
-}
-EOF
-cat <<EOF | tee have_valid.zen | $Z -z -a $tmp
-rule check version 1.0.0
-scenario 'simple'
-	 Given I am 'Andrea'
-	 and I have my 'keypair'
-	 and debug
-	 Then print the 'keypair'
-EOF
 
 rm -f $tmp
+
+
 
 
 
