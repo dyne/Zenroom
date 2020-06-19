@@ -19,7 +19,8 @@
 - Bindings
   - [JavaScript](/pages/javascript.md "Use Zenroom in JavaScript")
   - [Python](/pages/python.md "Use Zenroom in JavaScript")
-  - [Java](/pages/java.md)
+  - [Java](/pages/java.md "Use Zenroom in Java")
+  - [iOS](/pages/ios.md "Use Zenroom in iOS")
 
 - Tutorials
  - [Zenroom in node.js](/pages/zenroom-javascript1.md "Use Zenroom in node.js")
