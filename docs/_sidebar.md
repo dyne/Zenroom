@@ -9,7 +9,7 @@
 - Programming Zencode
   - [Zencode](/pages/zencode.md "Zencode")
   - [Zencode command list](/pages/zencode-list.md "Zencode command list")
-  <!-- - [Cookbook intro](/pages/zencode-cookbook-intro.md "Zencode cookbook intro") --> 
+  - [Cookbook intro](/pages/zencode-cookbook-intro.md "Zencode cookbook intro") 
  <!-- - [Cookbook Given](/pages/zencode-cookbook-given.md "Zencode cookbook Given")  -->
 
 
