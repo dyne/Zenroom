@@ -9,8 +9,12 @@
 - Programming Zencode
   - [Zencode](/pages/zencode.md "Zencode")
   - [Zencode command list](/pages/zencode-list.md "Zencode command list")
+  <!--- to remove when cookbook is ready
+
   - [Cookbook intro](/pages/zencode-cookbook-intro.md "Zencode cookbook intro") 
   - [Cookbook Given](/pages/zencode-cookbook-given.md "Zencode cookbook Given") 
+
+--->
 
 - Programming Lua
   - [Lua](/pages/lua.md "in Lua")
