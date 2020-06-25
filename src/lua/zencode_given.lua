@@ -106,11 +106,7 @@ ZEN.add_schema({
 		 ZEN.assert( isarray(obj) , "Not a valid array")
 		 local _t = { }
 		 for k,v in ipairs(obj) do
-			if type(v) == 'zenroom.octet' then
-			   table.insert(_t, v)
-			else
-			   table.insert(_t, OCTET.from_string(v))
-			end
+			table.insert(_t, OCTET.from_string(v))
 		 end
 		 return _t
 	  end,

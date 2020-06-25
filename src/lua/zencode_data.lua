@@ -43,7 +43,7 @@ function ZEN.find_schema(name)
    local res = { }
    res.fun = ZEN.schemas[name]
    if not res.fun then
-	  xxx("Schema not found: "..name, 2);
+	  xxx("Schema not found: "..(name or 'nil'), 2);
 	  return nil
    end
    res.name = name
@@ -199,14 +199,20 @@ function guess_conversion(objtype, definition)
 			  name = 'number' }
    elseif objtype == 'table' then
 	  if not definition then -- table ===
-		 res = CONF.input.encoding
+		 res = ZEN.find_schema(definition)
+		 if res then
+			res.isschema = true
+			res.istable = nil
+		 else -- TODO: run deepmap of CONF.input.encoding.check
+			res = CONF.input.encoding
+			res.istable = true
+			res.isschema = nil
+		 end
 		 if not res then
 			error('Implicit conversion for table not found: '..objtype, 2)
 			return nil
 		 end
-		 res.istable = true
-		 res.isschema = nil
-	  else
+	  else -- schema or encoding is defined
 		 res = input_encoding(definition)
 		 if not res then
 			res = ZEN.find_schema(definition)
@@ -296,11 +302,12 @@ function ZEN:pick(what, obj, conv)
    local got
    got = inside_pick(IN.KEYS, what) or inside_pick(IN,what)
    ZEN.assert(got, "Cannot find '"..what.."' anywhere")
+   if not conv and ZEN.schemas[what] then conv = what end
    guess = guess_conversion(type(got), conv)
    ZEN.assert(guess, "Cannot guess any conversion for: "..
 				 type(got).." "..(conv or "(nil)"))
    TMP = { root = nil,
-		   data = operate_conversion(got, I.spy(guess)),
+		   data = operate_conversion(got, guess),
 		   schema = guess.name }
    assert(ZEN.OK)
    ZEN:ftrace("pick found "..what)
@@ -334,7 +341,9 @@ function ZEN:pickin(section, what, conv)
    ZEN.assert(got, "Cannot find '"..what.."' inside '"..section.."'")
    -- TODO: check all corner cases to make sure TMP[what] is a k/v map
    ::found::
-   local guess = guess_conversion(type(got), conv)
+   -- conv = conv or what
+   if not conv and ZEN.schemas[what] then conv = what end
+   local guess = guess_conversion(type(got), conv )
    TMP = { root = section,
 		   data = operate_conversion(got, guess),
 		   schema = guess.name }
@@ -370,17 +379,17 @@ end
 --    ZEN:ftrace("validation passed for "..name.. " with schema "..schema_name)
 -- end
 
--- function ZEN:validate_recur(obj, name)
---    ZEN.assert(name, "ZEN:validate_recur error: schema name is nil")
---    ZEN.assert(obj, "ZEN:validate_recur error: object is nil")
---    local s = ZEN.schemas[name]
---    ZEN.assert(s, "ZEN:validate_recur error: schema not found: "..name)
---    ZEN.assert(type(s) == 'function', "ZEN:validate_recur error: schema is not a function: "..name)
---    ZEN:ftrace("validate_recur "..name)
---    local res = s(obj)
---    ZEN.assert(res, "Schema validation failed: "..name)
---    return(res)
--- end
+function ZEN:validate_recur(obj, name)
+   ZEN.assert(name, "ZEN:validate_recur error: schema name is nil")
+   ZEN.assert(obj, "ZEN:validate_recur error: object is nil")
+   local s = ZEN.schemas[name]
+   ZEN.assert(s, "ZEN:validate_recur error: schema not found: "..name)
+   ZEN.assert(type(s) == 'function', "ZEN:validate_recur error: schema is not a function: "..name)
+   ZEN:ftrace("validate_recur "..name)
+   local res = s(obj)
+   ZEN.assert(res, "Schema validation failed: "..name)
+   return(res)
+end
 
 function ZEN:ack_table(key,val)
    ZEN.assert(type(key) == 'string',"ZEN:table_add arg #1 is not a string")
