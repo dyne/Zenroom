@@ -67,12 +67,12 @@ end)
 Then("print as '' the ''", function(conv, obj) OUT[obj] = export_obj(ACK[obj], conv) end)
 Then("print the '' as ''", function(obj, conv) OUT[obj] = export_obj(ACK[obj], conv) end)
 
-Then("print as '' the '' inside ''", function(conv, obj, section)
+Then("print as '' the '' in ''", function(conv, obj, section)
 		local src = ACK[section][obj]
 		ZEN.assert(src, "Not found "..obj.." inside "..section)
 		OUT[obj] = export_obj(src, conv)
 end)
-Then("print the '' as '' inside ''", function(obj, conv, section)
+Then("print the '' as '' in ''", function(obj, conv, section)
 		local src = ACK[section][obj]
 		ZEN.assert(src, "Not found "..obj.." inside "..section)
 		OUT[obj] = export_obj(src, conv)

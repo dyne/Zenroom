@@ -34,11 +34,9 @@ ZEN.add_schema({
 -- credential keypair operations
 When("I create the credential keypair", function()
 		-- sk = rand, pk = G * sk
-		local tmp = { private = INT.random() }
-		tmp.public = ECP.generator() * tmp.private
-		ZEN:pick('credential_keypair', tmp)
-		ZEN:validate('credential_keypair')
-		ZEN:ack('credential_keypair')
+		ACK.credential_keypair = { private = INT.random() }
+		ACK.credential_keypair.public = ECP.generator() *
+		   ACK.credential_keypair.private
 end)
 
 -- issuer authority kepair operations
@@ -59,12 +57,9 @@ ZEN.add_schema({
 })
 
 When("I create the issuer keypair", function()
-		local t = { }
-		t.sk, t.vk = COCONUT.ca_keygen()
-		ZEN:pick('issuer_keypair', { issuer_sign = t.sk,
-									 verifier = t.vk })
-		ZEN:validate('issuer_keypair')
-		ZEN:ack('issuer_keypair')
+		ACK.issuer_keypair = { }
+		ACK.issuer_keypair.issuer_sign,
+		ACK.issuer_keypair.verifier = COCONUT.ca_keygen()
 end)
 
 -- request credential signatures
@@ -88,11 +83,9 @@ ZEN.add_schema({
 When("I create the credential request", function()
 		ZEN.assert(ACK.credential_keypair.private,
 				   "Private key not found in credential keypair")
-		ZEN:pick('credential_request',
-				 COCONUT.prepare_blind_sign(ACK.credential_keypair.public,
-											ACK.credential_keypair.private))
-		ZEN:validate('credential_request')
-		ZEN:ack('credential_request')
+		ACK.credential_request =
+		   COCONUT.prepare_blind_sign(ACK.credential_keypair.public,
+									  ACK.credential_keypair.private)
 end)
 
 
@@ -213,17 +206,14 @@ ZEN.add_schema({
 
 
 When("I create the petition ''", function(uid)
-		ZEN:pick('petition',
-				 { uid = O.from_string(uid),
-				   owner = ACK.credential_keypair.public,
-				   scores = { pos = { left = ECP.infinity(),
-									  right = ECP.infinity() },
-							  neg = { left = ECP.infinity(),
-									  right = ECP.infinity()  } }
-		})
-		-- pass validation by hand since we just created it
-		TMP.valid = true
- 		ZEN:ack('petition')
+		ACK.petition = 
+		   { uid = O.from_string(uid),
+			 owner = ACK.credential_keypair.public,
+			 scores = { pos = { left = ECP.infinity(),
+								right = ECP.infinity() },
+						neg = { left = ECP.infinity(),
+								right = ECP.infinity()  } }
+		   }
 		-- generate an ECDH signature of the (encoded) petition using the
 		-- credential keys
 		-- ecdh = ECDH.new()
@@ -255,12 +245,10 @@ When("I create the petition signature ''", function(uid)
 		   ACK.verifiers,
 		   ACK.credentials,
 		   ACK.credential_keypair.private, ack_uid)
-		ZEN:pick('petition_signature',
+		ACK.petition_signature = 
 				 { proof = Theta,
 				   uid_signature = zeta, -- ECP
-				   uid_petition = ack_uid })
-		ZEN:validate('petition_signature')
-		ZEN:ack('petition_signature')
+				   uid_petition = ack_uid }
 end)
 
 When("I verify the signature proof is correct", function()

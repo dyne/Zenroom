@@ -53,16 +53,16 @@ function input_encoding(what)
 	  }
    elseif what == 'str' or what == 'string' then
    	  return { fun = O.from_string,
-			   check = function(_) return true end,
+   			   check = function(_) return true end,
    			   name = 'string'
-	  }
+   	  }
    elseif what == 'num' or what == 'number' then
-	  return { fun = tonumber,
-			   check = function(_) return true end,
-			   -- check = function(a) if tonumber(a) ~= nil then
-			   -- 		 return true else return false end,
-			   name = 'number'
-	  }
+   	  return { fun = tonumber,
+   			   check = tonumber, -- function(_) return true end,
+   			   -- check = function(a) if tonumber(a) ~= nil then
+   			   -- 		 return true else return false end,
+   			   name = 'number'
+   	  }
    end
    xxx("Input encoding not found: "..what, 2)
    return nil
@@ -187,8 +187,12 @@ end
 -- deep recursive map on a tree structure
 -- for usage see test/deepmap.lua
 function deepmap(fun,t,...)
-   assert(luatype(fun) == 'function', "Internal error: deepmap 2nd argument is not a function")
-   assert(luatype(t) == 'table', "Internal error: deepmap 1st argument is not a table")
+   if luatype(fun) ~= 'function' then
+	  error("Internal error: deepmap 1st argument is not a function", 3)
+	  return nil end
+   if luatype(t) ~= 'table' then
+	  error("Internal error: deepmap 2nd argument is not a table", 3)
+	  return nil end
    local res = {}
    for k,v in pairs(t) do
 	  if luatype(v) == 'table' then
@@ -201,8 +205,8 @@ function deepmap(fun,t,...)
 end
 
 function isarray(obj)
-   if not obj then error("isarray() called on a nil object",2) end
-   if luatype(obj) ~= 'table' then error("isarray() argument is not a table",2) end
+   if not obj then error("Argument of isarray() is nil",2) end
+   if luatype(obj) ~= 'table' then error("Argument is not a table: "..type(obj),2) end
    local count = 0
    for k, v in pairs(obj) do
 	  -- check that all keys are numbers

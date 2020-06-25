@@ -48,12 +48,9 @@ ZEN.add_schema({
 
 -- generate keypair
 local function f_keygen()
-   local kp
-   kp = ECDH.keygen()
-   ZEN:pick('keypair', { public_key = kp.public,
-						 private_key = kp.private })
-   ZEN:validate('keypair')
-   ZEN:ack('keypair')
+   local kp = ECDH.keygen()
+   ACK.keypair = { public_key = kp.public,
+				   private_key = kp.private }
 end
 When("I create the keypair", f_keygen)
 

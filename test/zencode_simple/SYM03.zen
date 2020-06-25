@@ -1,5 +1,5 @@
 Scenario simple: Decrypt the message with the password
-Given I have a valid 'secret message'
+Given I have a 'secret message'
 When I write string 'my secret word' in 'password'
 and I decrypt the secret message with 'password'
 Then print as 'string' the 'text' inside 'message'

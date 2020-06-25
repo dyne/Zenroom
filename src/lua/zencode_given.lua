@@ -42,7 +42,6 @@ Given("I am ''", function(name) ZEN:Iam(name) end)
 -- TODO: I have a '' as ''
 Given("I have a ''", function(n)
 		 ZEN:pick(n)
-		 ZEN:validate(n)
 		 ZEN:ack(n)
 		 gc()
 end)
@@ -50,16 +49,14 @@ end)
 Given("I have a '' named ''", function(s, n)
 		 -- local encoder = input_encoding(s)
 		 -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
-		 ZEN:pick(n, nil, input_encoding(s))
-		 TMP.valid = true
+		 ZEN:pick(n, nil, s)
 		 ZEN:ack(n)
 		 gc()
 end)
 
 Given("I have a '' named '' in ''", function(s,n,t)
 		 -- local encoder = input_encoding(s)
-		 ZEN:pickin(t, n, input_encoding(s))
-		 TMP.valid = true
+		 ZEN:pickin(t, n, s)
 		 ZEN:ack(n) -- save it in ACK.name
 		 gc()
 end)
@@ -67,79 +64,41 @@ end)
 Given("I have my ''", function(n)
 		 ZEN.assert(WHO, "No identity specified, use: Given I am ...")
 		 ZEN:pickin(WHO, n)
-		 ZEN:validate(n)
 		 ZEN:ack(n)
 		 gc()
 end)
 Given("the '' is valid", function(n)
 		 ZEN:pick(n)
-		 ZEN:validate(n)
 		 gc()
 end)
 
 Given("I have a '' in ''", function(s, t)
 		 ZEN:pickin(t, s)
-		 TMP.valid = true
 		 ZEN:ack(s) -- save it in ACK.obj
 		 gc()
 end)
--- Given("I have in '' a ''", function(s, n)
--- 		 ZEN:pickin(s, n)
--- 		 TMP.valid = true
--- 		 ZEN:ack(s) -- save it in ACK.inside.obj
--- 		 gc()
--- end)
 
-
--- Given("I have in '' a valid ''", function(s, n)
--- 		 ZEN:pickin(s, n)
--- 		 ZEN:validate(n)
--- 		 ZEN:ack(s) -- save it in ACK.inside.obj
--- 		 gc()
--- end)
--- Given("I have a valid '' in ''", function(n, s)
--- 		 ZEN:pickin(s, n)
--- 		 ZEN:validate(n)
--- 		 ZEN:ack(n) -- save it in ACK.obj
--- 		 gc()
--- end)
-
--- Given("I have a valid '' named ''", function(s,n)
--- 		 ZEN:pick(n)
--- 		 ZEN:validate(n,s)
--- 		 ZEN:ack(n) -- save it in ACK.obj
--- 		 gc()
--- end)
-
--- Given("I have a valid '' named '' in ''", function(s,n,l)
--- 		 ZEN:pickin(l, n)
--- 		 ZEN:validate(n,s)
--- 		 ZEN:ack(n) -- save it in ACK.obj
--- 		 gc()
--- end)
-
--- public keys for keyring arrays
+-- public keys for keyring arrays (scenario simple)
 Given("I have a '' from ''", function(s, t)
 		 ZEN:pickin(t, s)
-		 ZEN:validate(s)
-		 ZEN:ack_table(t, s)
+		 ZEN:ack_table(s, t)
 		 gc()
 end)
 
 ZEN.add_schema({
-	  string = function(obj)
-		 ZEN.assert( luatype(obj) == 'string', 'Not a valid string')
-		 return OCTET.from_string(obj)
-	  end,
-	  number = function(obj)
-		 ZEN.assert( luatype(obj) == 'number', 'Not a valid number')
-		 return obj -- lua number internally
-	  end,
+	  -- string = function(obj)
+	  -- 	 ZEN.assert( luatype(obj) == 'string', 'Not a valid string')
+	  -- 	 return OCTET.from_string(obj)
+	  -- end,
+	  -- number = function(obj)
+	  -- 	 ZEN.assert( luatype(obj) == 'number', 'Not a valid number')
+	  -- 	 return obj -- lua number internally
+	  -- end,
 	  array = function(obj)
-		 ZEN.assert( isarray(obj) , "Not a valid array")
+		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
 		 local _t = { }
 		 for k,v in ipairs(obj) do
-			table.insert(_t, v)
+			table.insert(_t, CONF.input.encoding.fun(v))
 		 end
 		 return _t
 	  end,

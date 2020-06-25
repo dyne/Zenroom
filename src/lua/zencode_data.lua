@@ -35,6 +35,22 @@ function ZEN.add_schema(arr)
 end
 
 
+function ZEN.find_schema(name)
+   -- returns a table with function pointers and string desc
+   -- { fun   = conversion function pointer
+   --   name  = conversion string description 
+   -- }
+   local res = { }
+   res.fun = ZEN.schemas[name]
+   if not res.fun then
+	  xxx("Schema not found: "..name, 2);
+	  return nil
+   end
+   res.name = name
+   return res
+end
+
+
 -- -- basic encoding schemas
 -- ZEN.add_schema({
 -- 	  base64 = function(obj) return ZEN:convert(obj, OCTET.from_base64) end,
@@ -130,6 +146,111 @@ function ZEN:Iam(name)
    assert(ZEN.OK)
 end
 
+---
+-- Guess how to convert the object, using what format or schema
+-- check the definition string (coming straight from zencode)
+-- considering the type of the object:
+-- ```
+-- type    def       conv
+-- ------------------------------------------------------
+-- str     ===       default_encoding
+-- str     format    input_encoding(format)
+-- str     schema    schema_f(..., default_encoding)
+-- num     (number)  num
+-- table   ===       deepmap(table, default_encoding)
+-- table   format    deepmap(table, input_encoding(format))
+-- table   schema    schema_f(table, default_encoding)
+-- ```
+-- returns a table with function pointers and string desc
+-- { fun   = conversion function pointer
+--   name  = conversion string description 
+--   check = check function pointer
+--   istable = true -- if deepmap required
+-- }
+function guess_conversion(objtype, definition)
+   local res
+   -- map to check if format string exists
+   local formats = { hex=1, bin=1, base64=1, url64=1 }
+   -- ZEN.schemas is the other map to check
+   if objtype == 'string' then
+	  if not definition then -- str ===
+		 res = CONF.input.encoding -- default defined by rules
+		 if not res then
+			error('Implicit conversion for string not found: '..objtype, 2)
+			return nil
+		 end
+	  else -- str format or schema
+		 res = input_encoding(definition)
+		 if not res then
+			res = ZEN.find_schema(definition)
+			if res then res.isschema = true end -- used in operate_conversion
+		 else -- zealot check
+			res.isschema = nil
+		 end
+		 if not res then
+			error('String conversion not found: '..definition, 2)
+			return nil
+		 end		 
+	  end
+	  res.istable = nil
+   elseif objtype == 'number' then
+	  res = { fun = tonumber,
+			  check = tonumber,
+			  name = 'number' }
+   elseif objtype == 'table' then
+	  if not definition then -- table ===
+		 res = CONF.input.encoding
+		 if not res then
+			error('Implicit conversion for table not found: '..objtype, 2)
+			return nil
+		 end
+		 res.istable = true
+		 res.isschema = nil
+	  else
+		 res = input_encoding(definition)
+		 if not res then
+			res = ZEN.find_schema(definition)
+			if res then res.isschema = true end
+		 else
+			res.istable = true
+			res.isschema = nil
+		 end
+		 if not res then
+			error('Table conversion not found: '..definition, 2)
+			return nil
+		 end
+	  end
+   else
+	  error('Unrecognized object type in Given conversion',2)
+	  return nil
+   end
+   return res
+end
+
+-- takes a data object and the guessed structure, operates the
+-- conversion and returns the resulting raw data to be used inside the
+-- WHEN block in HEAP
+function operate_conversion(data, guessed)
+   if not guessed.fun then
+	  error('No conversion operation guessed: '..guessed.name, 2)
+	  return nil
+   end
+   xxx('Operating conversion on: '..guessed.name)
+   if guessed.istable then
+	  -- TODO: better error checking on deepmap?
+	  return deepmap(guessed.fun, data)
+   elseif guessed.isschema then
+	  return guessed.fun(data)
+   else
+	  if guessed.check then
+		 if not guessed.check(data) then
+			error('Conversion check failed for data: '..guessed.name, 2)
+			return nil
+		 end
+	  end
+   end
+   return guessed.fun(data)
+end
 
 -- local function used inside ZEN:pick*
 -- try obj.*.what (TODO: exclude KEYS and WHO)
@@ -164,20 +285,23 @@ end
 -- @param encoding[opt] optional encoding spec (default CONF.input.encoding)
 -- @return true or false
 function ZEN:pick(what, obj, conv)
+   local guess
    if obj then -- object provided by argument
-	  TMP = { data = obj,
-			  root = nil,
-			  schema = what,
-			  valid = false }
+	  guess = guess_conversion(type(obj), conv)
+	  TMP = { root = nil,
+			  data = operate_conversion(obj, guess),
+			  schema = guess.name }
 	  return(ZEN.OK)
    end
    local got
    got = inside_pick(IN.KEYS, what) or inside_pick(IN,what)
    ZEN.assert(got, "Cannot find '"..what.."' anywhere")
+   guess = guess_conversion(type(got), conv)
+   ZEN.assert(guess, "Cannot guess any conversion for: "..
+				 type(got).." "..(conv or "(nil)"))
    TMP = { root = nil,
-		   data = ZEN.decode(got, conv), -- conv may be nil
-		   valid = false,
-		   schema = what }
+		   data = operate_conversion(got, I.spy(guess)),
+		   schema = guess.name }
    assert(ZEN.OK)
    ZEN:ftrace("pick found "..what)
 end
@@ -210,56 +334,55 @@ function ZEN:pickin(section, what, conv)
    ZEN.assert(got, "Cannot find '"..what.."' inside '"..section.."'")
    -- TODO: check all corner cases to make sure TMP[what] is a k/v map
    ::found::
+   local guess = guess_conversion(type(got), conv)
    TMP = { root = section,
-		   data = ZEN.decode(got, conv),
-		   valid = false,
-		   schema = what }
+		   data = operate_conversion(got, guess),
+		   schema = guess.name }
    assert(ZEN.OK)
    ZEN:ftrace("pickin found "..what.." in "..section)
 end
 
----
--- Optional step inside the <b>Given</b> block to execute schema
--- validation on the last data structure selected by @{pick}.
---
--- @function ZEN:validate(name)
--- @param name string descriptor of the data object
--- @param schema[opt] string descriptor of the schema to validate
--- @return true or false
-function ZEN:validate(name, schema)
-   local schema_name = schema or TMP.schema or name -- if no schema then coincides with name
-   ZEN.assert(name, "ZEN:validate error: argument is nil")
-   ZEN.assert(TMP, "ZEN:validate error: TMP is nil")
-   -- ZEN.assert(TMP.schema, "ZEN:validate error: TMP.schema is nil")
-   -- ZEN.assert(TMP.schema == name, "ZEN:validate() TMP does not contain "..name)
-   ZEN.assert(TMP.data, "ZEN:validate error: data not found in TMP for schema "..name)
-   local schema_f = ZEN.schemas[schema_name]
-   ZEN.assert(schema_f, "ZEN:validate error: "..schema_name.." schema not found")
-   ZEN.assert(type(schema_f) == 'function',
-			  "ZEN:validate error: schema is not a function for "..schema_name)
-   ZEN:ftrace("validate "..name.. " with schema "..schema_name)
-   TMP.data = schema_f(TMP.data) -- overwrite
-   ZEN.assert(TMP.data, "ZEN:validate error: validation failed for "..name
-				 .." with schema "..schema_name)
-   assert(ZEN.OK)
-   TMP.valid = true
-   ZEN:ftrace("validation passed for "..name.. " with schema "..schema_name)
-end
+-- ---
+-- -- Optional step inside the <b>Given</b> block to execute schema
+-- -- validation on the last data structure selected by @{pick}.
+-- --
+-- -- @function ZEN:validate(name)
+-- -- @param name string descriptor of the data object
+-- -- @param schema[opt] string descriptor of the schema to validate
+-- -- @return true or false
+-- function ZEN:validate(name, schema)
+--    local schema_name = schema or TMP.schema or name -- if no schema then coincides with name
+--    ZEN.assert(name, "ZEN:validate error: argument is nil")
+--    ZEN.assert(TMP, "ZEN:validate error: TMP is nil")
+--    -- ZEN.assert(TMP.schema, "ZEN:validate error: TMP.schema is nil")
+--    -- ZEN.assert(TMP.schema == name, "ZEN:validate() TMP does not contain "..name)
+--    ZEN.assert(TMP.data, "ZEN:validate error: data not found in TMP for schema "..name)
+--    local schema_f = ZEN.schemas[schema_name]
+--    ZEN.assert(schema_f, "ZEN:validate error: "..schema_name.." schema not found")
+--    ZEN.assert(type(schema_f) == 'function',
+-- 			  "ZEN:validate error: schema is not a function for "..schema_name)
+--    ZEN:ftrace("validate "..name.. " with schema "..schema_name)
+--    TMP.data = schema_f(TMP.data) -- overwrite
+--    ZEN.assert(TMP.data, "ZEN:validate error: validation failed for "..name
+-- 				 .." with schema "..schema_name)
+--    assert(ZEN.OK)
+--    TMP.valid = true
+--    ZEN:ftrace("validation passed for "..name.. " with schema "..schema_name)
+-- end
 
-function ZEN:validate_recur(obj, name)
-   ZEN.assert(name, "ZEN:validate_recur error: schema name is nil")
-   ZEN.assert(obj, "ZEN:validate_recur error: object is nil")
-   local s = ZEN.schemas[name]
-   ZEN.assert(s, "ZEN:validate_recur error: schema not found: "..name)
-   ZEN.assert(type(s) == 'function', "ZEN:validate_recur error: schema is not a function: "..name)
-   ZEN:ftrace("validate_recur "..name)
-   local res = s(obj)
-   ZEN.assert(res, "Schema validation failed: "..name)
-   return(res)
-end
+-- function ZEN:validate_recur(obj, name)
+--    ZEN.assert(name, "ZEN:validate_recur error: schema name is nil")
+--    ZEN.assert(obj, "ZEN:validate_recur error: object is nil")
+--    local s = ZEN.schemas[name]
+--    ZEN.assert(s, "ZEN:validate_recur error: schema not found: "..name)
+--    ZEN.assert(type(s) == 'function', "ZEN:validate_recur error: schema is not a function: "..name)
+--    ZEN:ftrace("validate_recur "..name)
+--    local res = s(obj)
+--    ZEN.assert(res, "Schema validation failed: "..name)
+--    return(res)
+-- end
 
 function ZEN:ack_table(key,val)
-   ZEN.assert(TMP.valid, "No valid object found in TMP")
    ZEN.assert(type(key) == 'string',"ZEN:table_add arg #1 is not a string")
    ZEN.assert(type(val) == 'string',"ZEN:table_add arg #2 is not a string")
    if not ACK[key] then ACK[key] = { } end
@@ -277,7 +400,7 @@ end
 -- @function ZEN:ack(name)
 -- @param name string key of the data object in TMP[name]
 function ZEN:ack(name)
-   ZEN.assert(TMP.data and TMP.valid, "No valid object found: ".. name)
+   ZEN.assert(TMP.data, "No valid object found: ".. name)
    assert(ZEN.OK)
    local t = type(ACK[name])
    if not ACK[name] then -- assign in ACK the single object

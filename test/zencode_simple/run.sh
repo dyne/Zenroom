@@ -31,7 +31,7 @@ EOF
 
 cat <<EOF | tee SYM03.zen | $Z -a cipher_message.json -z
 Scenario simple: Decrypt the message with the password
-Given I have a valid 'secret message'
+Given I have a 'secret message'
 When I write string 'my secret word' in 'password'
 and I decrypt the secret message with 'password'
 Then print as 'string' the 'text' inside 'message'
@@ -48,7 +48,7 @@ EOF
 cat <<EOF | tee alice_keypub.zen | $Z -z -k alice_keypair.json > alice_pub.json
 Scenario 'simple': Publish the public key
 Given that I am known as 'Alice'
-and I have my valid 'public key'
+and I have my 'public key'
 Then print my 'public key'
 EOF
 
@@ -56,7 +56,7 @@ cat <<EOF | tee DSA01.zen | $Z -z -k alice_keypair.json | tee alice_signs_to_bob
 Rule check version 1.0.0
 Scenario 'simple': Alice signs a message for Bob
 	Given that I am known as 'Alice'
-	and I have my valid 'keypair'
+	and I have my 'keypair'
 	When I write string 'This is my signed message to Bob.' in 'draft'
 	and I create the signature of 'draft'
 	Then print my 'signature'
@@ -67,8 +67,8 @@ cat <<EOF | tee DSA02.zen | $Z -z -k alice_pub.json -a alice_signs_to_bob.json
 rule check version 1.0.0
 Scenario 'simple': Bob verifies the signature from Alice
 	Given that I am known as 'Bob'
-	and I have a valid 'public key' from 'Alice'
-	and I have a valid 'signature' from 'Alice'
+	and I have a 'public key' from 'Alice'
+	and I have a 'signature' from 'Alice'
 	and I have a 'draft'
 	When I verify the 'draft' is signed by 'Alice'
 	Then print 'signature' 'correct' as 'string'
@@ -85,7 +85,7 @@ EOF
 cat <<EOF | tee bob_keypub.zen | $Z -z -k bob_keypair.json > bob_pub.json
 Scenario 'simple': Publish the public key
 Given that I am known as 'Bob'
-and I have my valid 'public key'
+and I have my 'public key'
 Then print my 'public key'
 EOF
 
@@ -93,8 +93,8 @@ cat <<EOF | tee AES05.zen | $Z -z -k alice_keypair.json -a bob_pub.json | tee al
 Rule check version 1.0.0
 Scenario 'simple': Alice encrypts a message for Bob
 	Given that I am known as 'Alice'
-	and I have my valid 'keypair'
-	and I have a valid 'public key' from 'Bob'
+	and I have my 'keypair'
+	and I have a 'public key' from 'Bob'
 	When I write string 'This is my secret message.' in 'message'
 	and I write string 'This is the header' in 'header'
 	and I encrypt the message for 'Bob'
@@ -105,8 +105,8 @@ cat <<EOF | tee AES06.zen | $Z -z -k bob_keypair.json -a alice_pub.json | tee bo
 Rule check version 1.0.0
 Scenario 'simple': Bob gathers public keys in his keyring
 	Given that I am 'Bob'
-	and I have my valid 'keypair'
-	and I have a valid 'public key' from 'Alice'
+	and I have my 'keypair'
+	and I have a 'public key' from 'Alice'
 	Then print my 'keypair'
 	and print the 'public key'
 EOF
@@ -115,9 +115,9 @@ cat <<EOF | tee AES07.zen | $Z -z -k bob_keyring.json -a alice_to_bob.json
 Rule check version 1.0.0
 Scenario 'simple': Bob decrypts the message from Alice
 	Given that I am known as 'Bob'
-	and I have my valid 'keypair'
-	and I have a valid 'public key' from 'Alice'
-	and I have a valid 'secret message'
+	and I have my 'keypair'
+	and I have a 'public key' from 'Alice'
+	and I have a 'secret message'
 	When I decrypt the secret message from 'Alice'
 	Then print as 'string' the 'message'
 	and print as 'string' the 'header' inside 'secret message'
