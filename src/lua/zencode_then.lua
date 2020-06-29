@@ -34,6 +34,18 @@ end)
 Then("print all data", function()
 		OUT = ACK
 end)
+
+function map_to_string(obj)
+   local t = type(obj)
+   if t == 'number' then return t end
+   return O.to_string(obj)
+end
+
+Then("print all data as ''", function(e)
+		OUT = deepmap(map_to_string, ACK)
+		-- export_obj( ZEN.decode(ACK, input_encoding(e)), e)
+end)
+
 Then("print my data", function() ZEN:Iam() -- sanity checks
 		OUT[WHO] = ACK
 end)
