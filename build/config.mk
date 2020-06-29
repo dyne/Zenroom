@@ -61,11 +61,9 @@ ld := ld
 system := Windows
 cflags := -mthreads -D'ARCH=\"WIN\"' -DARCH_WIN
 ldadd := ${pwd}/lib/lua53/src/liblua.a
-ldadd += ${milib}/amcl_curve_ED25519.lib
-ldadd += ${milib}/amcl_curve_BLS383.lib
-ldadd += ${milib}/amcl_pairing_BLS383.lib
-ldadd += ${milib}/amcl_curve_GOLDILOCKS.lib
-ldadd += ${milib}/amcl_curve_SECP256K1.lib
+ldadd += ${milib}/libamcl_curve_${ecp_curve}.lib
+ldadd += ${milib}/libamcl_pairing_${ecp_curve}.lib
+ldadd += ${milib}/libamcl_curve_${ecdh_curve}.lib
 ldadd += ${milib}/amcl_core.lib
 ldadd += -l:libm.a -l:libpthread.a -lssp
 endif

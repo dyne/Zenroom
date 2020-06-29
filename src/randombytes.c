@@ -48,9 +48,9 @@
 # include <stdint.h>
 # include <sys/ioctl.h>
 # include <sys/stat.h>
+# include <unistd.h>
 # include <sys/syscall.h>
 # include <sys/types.h>
-# include <unistd.h>
 
 // We need SSIZE_MAX as the maximum read len from /dev/urandom
 # if !defined(SSIZE_MAX)
