@@ -82,11 +82,6 @@ cat <<EOF | tee randomArrayMultiple.zen | $Z -z | tee myArrays.json
 	Then print all data
 EOF
 
-echo "                                                "
-echo "------------------------------------------------"
-echo "               Script number $n                 "
-echo "------------------------------------------------"
-echo "                                                "
 
 rm -f $tmp
 

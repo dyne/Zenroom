@@ -3,3 +3,5 @@ Given I have a 'number' named 'myNumber'
 Given I have a 'string array' named 'myArray'
 When I randomize the 'myArray' array
 Then print all data
+# Then print the 'myString' as 'string'
+# Then print the 'myArray' as 'string'

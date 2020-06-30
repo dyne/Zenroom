@@ -1,7 +1,7 @@
 
 # Load Arrays
 Given I have a 'string array' named 'myFirstArray'   
-Given I have an 'array' named 'myFirstArray' 
+Given I have an 'string array' named 'myFirstArray' 
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
 Given I have a 'myThirdArray' inside 'myThirdObject' 
 Given I have a 'string array' named 'myFourthArray'

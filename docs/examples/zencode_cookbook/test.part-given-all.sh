@@ -5,73 +5,73 @@
 # if ! test -r ../utils.sh; then
 #  echo "run executable from its own directory: $0"; exit 1; fi
 # . ../utils.sh
-Z="detect_zenroom_path detect_zenroom_conf"
+Z=zenroom
 ####################
 
-cat <<EOF  > arr.json
+n=0
+tmp=`mktemp`
+
+echo "                                                "
+echo "------------------------------------------------"
+echo "               Script number $n                 "
+echo "------------------------------------------------"
+echo "                                                "
+let n=n+1
+
+
+# This loads an object
+cat <<EOF  > $tmp 
 {
    "myFirstObject":{
-      "myFirstNumber":1,
-    "myFirstString":"Hello World!",
-      "myFirstHex": "616e7976616c7565",
-      "myFirstBase64": "SGVsbG8gV29ybGQh",
-    "myFirstUrl64": "SGVsbG8gV29ybGQh",
-    "myFirstBinary": "0100100001101001",
-    "myFirstArray":[
+      "myFirstNumber":11223344,
+      "myFirstString":"Hello World!",
+      "myFirstArray":[
          "String1",
-     "String2"
+         "String2",
+         "String3",
+         "String4"
       ]
    },
    "mySecondObject":{
-      "mySecondNumber":2,
+      "mySecondNumber":1234567890,
+	  "mySecondString":"Oh, hello again!",
       "mySecondArray":[
          "anotherString1",
-         "anotherString2"
-      ]
+         "anotherString2",
+         "anotherString3",
+         "anotherString4"
+      ]      
    },
-   "myThirdObject":{
-      "myThirdNumber":3,
-      "myThirdArray":[
-         "oneMoreString1",
-         "oneMoreString2",
-         "oneMoreString3"
-      ]
-   },
-   "myFourthObject":{
-      "myFourthArray":[
-         "oneExtraString1",
-         "oneExtraString2",
-         "oneExtraString3",
-     "oneExtraString4"
-      ]
+   "Alice":{
+      "keypair":{
+         "private_key":"DbjRMCC7fykuUaqYDX_cy_Zs7J0ZC0y9VxBLRcfwIJ63MAZtW4fJ4IxxdUdLNy0ye0-qf0IlRZI",
+         "public_key":"BE39Wu7AXSzSplMd37VhCB094xHqCgvZxMhgaTA7B0Xz4mEIZmoO2FmWiokVXuJ0O9jH9AQD4UBkXiCU4gzYrLQc9VpfB4Qr8rz6jj_UYvC77FiLGc-0jsE4mQfpgLoOspBGcfNyiS8Y50hl8zthKjo"
+      }
    }
 }
 EOF
 
+# cat $tmp > temp.json
 
-cat <<EOF | zenroom givenFullList.zen -a arr.json
-Given I have a 'string array' named 'myFirstArray'   
-Given I have a 'string array' named 'myFirstArray'   
-Given I have an 'array' named 'myFirstArray'      
-Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
-Given I have a 'myThirdArray' inside 'myThirdObject' 
-Given I have a 'string array' named 'myFourthArray'
-# Given I have an 'array' named 'myFirstObject'
-# Numbers
-Given I have a 'number' named 'myFirstNumber'
-# Given I have a 'myFirstNumber'
-Given I have a 'number' named 'myFirstNumber' inside 'myFirstObject' 
-# Strings
-Given I have a 'string' named 'myFirstString' 
-Given I have a 'string' named 'myFirstString' inside 'myFirstObject' 
-# Different data types
-Given I have an 'hex' named 'myFirstHex'
-Given I have a  'base64' named 'myFirstBase64'
-Given I have a  'binary' named 'myFirstBinary'
-Given I have an 'url64' named 'myFirstUrl64'
-# Then print the 'myFirstString' as 'string'
-# Then print the 'myFirstHex' as 'hex'
-# Then print the 'myFirstUrl64' as 'hex'
+
+
+
+
+cat <<EOF | tee temp.zen | $Z -z -a $tmp | tee temp.json
+Scenario 'simple': let us load some stuff cause it is fun!
+#Rule input base64
+Given I am 'Alice'
+And I have my  'keypair'
+And I have a 'string array' named 'myFirstArray' inside 'myFirstObject' 
+And I have a 'string array' named 'mySecondArray' inside 'mySecondObject' 
+and debug
 Then print all data
-# BROKEN Then print the 'myFirstNumber' as 'number'
+and debug
+Then print the 'myFirstArray' as 'string'
+Then print the 'mySecondArray' as 'string'
 EOF
+
+
+
+
+rm -f $tmp

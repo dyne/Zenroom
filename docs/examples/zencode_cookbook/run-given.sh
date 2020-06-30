@@ -46,6 +46,8 @@ Given I have a 'number' named 'myNumber'
 Given I have a 'string array' named 'myArray'
 When I randomize the 'myArray' array
 Then print all data
+# Then print the 'myString' as 'string'
+# Then print the 'myArray' as 'string'
 EOF
 
 cat $tmp > myFlatObject.json
@@ -134,8 +136,8 @@ cat <<EOF | tee givenLoadRepetitveObject.zen | $Z -z -a $tmp | tee givenLoadRepe
 Scenario 'simple': let us load some stuff cause it is fun!
 Given I am 'Alice'
 And I have my  'keypair'
-And I have a 'myArray' inside 'myFirstObject' 
-And I have a 'myArray' inside 'mySecondObject' 
+And I have a 'string array' named 'myArray' inside 'myFirstObject' 
+And I have a 'string array' named 'myArray' inside 'mySecondObject' 
 Then print all data
 EOF
 
@@ -152,8 +154,8 @@ cat <<EOF | tee givenLoadRepetitveObjectDebug.zen | $Z -z -a $tmp | tee givenLoa
 Scenario 'simple': let us load some stuff cause it is fun!
 Given I am 'Alice'
 And I have my  'keypair'
-And I have a 'myArray' inside 'myFirstObject' 
-And I have a 'myArray' inside 'mySecondObject' 
+And I have a 'string array' named 'myArray' inside 'myFirstObject' 
+And I have a 'string array' named 'myArray' inside 'mySecondObject' 
 And debug
 Then print all data
 And debug
@@ -356,7 +358,7 @@ cat <<EOF | tee givenFullList.zen | $Z -z -a $tmp | tee givenFullList.json
 
 # Load Arrays
 Given I have a 'string array' named 'myFirstArray'   
-Given I have an 'array' named 'myFirstArray' 
+Given I have an 'string array' named 'myFirstArray' 
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
 Given I have a 'myThirdArray' inside 'myThirdObject' 
 Given I have a 'string array' named 'myFourthArray'

@@ -1,8 +1,8 @@
 Scenario 'simple': let us load some stuff cause it is fun!
 Given I am 'Alice'
 And I have my  'keypair'
-And I have a 'myArray' inside 'myFirstObject' 
-And I have a 'myArray' inside 'mySecondObject' 
+And I have a 'string array' named 'myArray' inside 'myFirstObject' 
+And I have a 'string array' named 'myArray' inside 'mySecondObject' 
 And debug
 Then print all data
 And debug
