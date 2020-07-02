@@ -306,6 +306,6 @@ When("I count the petition results", function()
 		ZEN.assert(ACK.petition_tally, "Tally not found")
 		ZEN.assert(ACK.petition_tally.uid == ACK.petition.uid,
 				   "Tally does not correspond to petition")
-		OUT.petition_results = COCONUT.count_signatures_petition(
+		ACK.petition_results = COCONUT.count_signatures_petition(
 		   ACK.petition.scores, ACK.petition_tally).pos
 end)

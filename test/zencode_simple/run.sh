@@ -34,8 +34,8 @@ Scenario simple: Decrypt the message with the password
 Given I have a 'secret message'
 When I write string 'my secret word' in 'password'
 and I decrypt the secret message with 'password'
-Then print as 'string' the 'text' inside 'message'
-and print as 'string' the 'header' inside 'message'
+Then print the 'text' as 'string' in 'message'
+and print the 'header' as 'string' in 'message'
 EOF
 
 cat <<EOF | tee alice_keygen.zen | $Z -z > alice_keypair.json
@@ -71,8 +71,8 @@ Scenario 'simple': Bob verifies the signature from Alice
 	and I have a 'signature' from 'Alice'
 	and I have a 'draft'
 	When I verify the 'draft' is signed by 'Alice'
-	Then print 'signature' 'correct' as 'string'
-	and print as 'string' the 'draft'
+	Then print 'signature correct'
+	and print the 'draft' as 'string'
 EOF
 
 cat <<EOF | tee bob_keygen.zen | $Z -z > bob_keypair.json
@@ -119,6 +119,6 @@ Scenario 'simple': Bob decrypts the message from Alice
 	and I have a 'public key' from 'Alice'
 	and I have a 'secret message'
 	When I decrypt the secret message from 'Alice'
-	Then print as 'string' the 'message'
-	and print as 'string' the 'header' inside 'secret message'
+	Then print the 'message' as 'string'
+	and print the 'header' as 'string' inside 'secret message'
 EOF

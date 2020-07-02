@@ -186,10 +186,13 @@ end
 
 -- deep recursive map on a tree structure
 -- for usage see test/deepmap.lua
+-- operates only on strings, passes numbers through
 function deepmap(fun,t,...)
    if luatype(fun) ~= 'function' then
 	  error("Internal error: deepmap 1st argument is not a function", 3)
 	  return nil end
+   -- if luatype(t) == 'number' then
+   -- 	  return t end
    if luatype(t) ~= 'table' then
 	  error("Internal error: deepmap 2nd argument is not a table", 3)
 	  return nil end
@@ -263,14 +266,11 @@ end
 
 -- assert all values in table are converted to zenroom types
 -- used in zencode when transitioning out of given memory
-function zenguard(tbl)
-   for k,v in next,tbl,nil do
-	  local ok = false
-	  if luatype(v) == 'table' then
-		 zenguard(v)
-	  else
-		 ok = iszen(type(v)) or tonumber(v)
-		 ZEN.assert(ok,"Variable "..k.." has unconverted value type: "..type(v))
-	  end
+function zenguard(val)
+   if not (iszen(type(val)) or tonumber(val)) then
+	  xxx("Invalid value: "..val)
+	  I.print(ZEN.heap().ACK)
+	  error("Zenguard detected an invalid value in HEAP: type "..type(val), 2)
+	  return nil
    end
 end

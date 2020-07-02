@@ -5,5 +5,5 @@ Scenario 'simple': Bob verifies the signature from Alice
 	and I have a 'signature' from 'Alice'
 	and I have a 'draft'
 	When I verify the 'draft' is signed by 'Alice'
-	Then print 'signature' 'correct' as 'string'
-	and print as 'string' the 'draft'
+	Then print 'signature correct'
+	and print the 'draft' as 'string'

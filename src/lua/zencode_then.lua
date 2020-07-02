@@ -18,75 +18,187 @@
 
 --- THEN
 
-Then("print ''", function(v)
-		table.insert(OUT, v) -- raw string
-end)
-
-Then("print '' ''", function(k,v)
-		OUT[k] = v
-end)
-
-
-Then("print '' '' as ''", function(k,v,s)
-		OUT[k] = export_obj( ZEN.decode(v, input_encoding(s)), s)
-end)
-
-Then("print all data", function()
-		OUT = ACK
-end)
-
-function map_to_string(obj)
-   local t = type(obj)
-   if t == 'number' then return t end
+-- Octet to string encoding conversion mechanism: takes the name of
+-- the encoding and returns the function. Octet is a first class
+-- citizen in Zenroom therefore all WHEN/ACK r/w HEAP types can be
+-- converted by its methods.
+local function outcast_string(obj)
+   local t = luatype(obj)
+   if t == 'number' then return obj end
    return O.to_string(obj)
 end
+local function outcast_hex(obj)
+   local t = luatype(obj)
+   if t == 'number' then return obj end
+   return O.to_hex(obj)
+end
+local function outcast_base64(obj)
+   local t = luatype(obj)
+   if t == 'number' then return obj end
+   return O.to_base64(obj)
+end
+local function outcast_url64(obj)
+   local t = luatype(obj)
+   if t == 'number' then return obj end
+   return O.to_url64(obj)
+end
+local function outcast_bin(obj)
+   local t = luatype(obj)
+   if t == 'number' then return obj end
+   return O.to_bin(obj)
+end
+-- takes a string returns the function, good for use in deepmap(fun,table)
+local function guess_outcast(cast)
+   if     cast == 'string' then return outcast_string
+   elseif cast == 'hex'    then return outcast_hex
+   elseif cast == 'base64' then return outcast_base64
+   elseif cast == 'url64'  then return outcast_url64
+   elseif cast == 'bin'    then return outcast_bin
+   else
+	  error("Invalid output conversion: "..cast, 2)
+	  return nil
+   end
+end
 
-Then("print all data as ''", function(e)
-		OUT = deepmap(map_to_string, ACK)
-		-- export_obj( ZEN.decode(ACK, input_encoding(e)), e)
-end)
+--------------------------------------
 
-Then("print my data", function() ZEN:Iam() -- sanity checks
-		OUT[WHO] = ACK
-end)
-Then("print all my data", function() ZEN:Iam() 
-		OUT[WHO] = ACK
-end)
-Then("print my ''", function(obj) ZEN:Iam()
-		ZEN.assert(ACK[obj], "Data not found in ACK: "..obj)
-		if not OUT[WHO] then OUT[WHO] = { } end
-		OUT[WHO][obj] = ACK[obj]
-end)
-
-Then("print as '' my ''", function(conv,obj)		ZEN:Iam()
-		ZEN.assert(ACK[obj], "My data: "..obj.." not found to print: "..conv)
-		if not OUT[WHO] then OUT[WHO] = { } end
-		OUT[WHO][obj] = export_obj(ACK[obj], conv)
-end)
-Then("print my '' as ''", function(obj,conv)		ZEN:Iam()
-		ZEN.assert(ACK[obj], "My data: "..obj.." not found to print: "..conv)
-		if not OUT[WHO] then OUT[WHO] = { } end
-		OUT[WHO][obj] = export_obj(ACK[obj], conv)
-end)
-
-Then("print the ''", function(key)
-		if not OUT[key] then
-		   ZEN.assert(ACK[key], "Data to print not found: "..key)
-		   OUT[key] = ACK[key]
+Then("print ''", function(v)
+		if ACK[v] then
+		   local fun = guess_outcast(CONF.output.encoding.name)
+		   OUT.output = fun(ACK[v]) -- value in ACK
+		else
+		   OUT.output = v -- raw string value
 		end
 end)
 
-Then("print as '' the ''", function(conv, obj) OUT[obj] = export_obj(ACK[obj], conv) end)
-Then("print the '' as ''", function(obj, conv) OUT[obj] = export_obj(ACK[obj], conv) end)
-
-Then("print as '' the '' in ''", function(conv, obj, section)
-		local src = ACK[section][obj]
-		ZEN.assert(src, "Not found "..obj.." inside "..section)
-		OUT[obj] = export_obj(src, conv)
+Then("print '' as ''", function(v,s)
+		local fun = guess_outcast(s)
+		if ACK[v] then
+		   OUT.output = fun(ACK[v])
+		else
+		   OUT.output = fun(v)
+		end
 end)
-Then("print the '' as '' in ''", function(obj, conv, section)
-		local src = ACK[section][obj]
-		ZEN.assert(src, "Not found "..obj.." inside "..section)
-		OUT[obj] = export_obj(src, conv)
+
+
+Then("print '' as '' in ''", function(v,s,k)
+		local fun = guess_outcast(s)
+		OUT[k] = fun(v)
+end)
+
+Then("print data", function()
+		OUT = ACK
+		local fun = guess_outcast(CONF.output.encoding.name)
+		if luatype(OUT) == 'table' then
+		   OUT = deepmap(fun, OUT)
+		else
+		   OUT = fun(OUT)
+		end
+end)
+
+Then("print data as ''", function(e)
+		OUT = ACK
+		local fun = guess_outcast(e)
+		if luatype(OUT) == 'table' then
+		   OUT = deepmap(fun, OUT)
+		else
+		   OUT = fun(OUT)
+		end
+end)
+
+Then("print my data", function()
+		ZEN:Iam() -- sanity checks
+		OUT[WHO] = ACK
+		local fun = guess_outcast(CONF.output.encoding.name)
+		if luatype(OUT[WHO]) == 'table' then
+		   OUT[WHO] = deepmap(fun, OUT[WHO])
+		else
+		   OUT[WHO] = fun(OUT[WHO])
+		end
+end)
+
+Then("print my data as ''", function(s)
+		ZEN:Iam() -- sanity checks
+		OUT[WHO] = ACK
+		local fun = guess_outcast(s)
+		if luatype(OUT[WHO]) == 'table' then
+		   OUT[WHO] = deepmap(fun, OUT[WHO])
+		else
+		   OUT[WHO] = fun(OUT[WHO])
+		end
+end)
+
+Then("print my ''", function(obj)
+		ZEN:Iam()
+		ZEN.assert(ACK[obj], "Data object not found: "..obj)
+		if not OUT[WHO] then OUT[WHO] = { } end
+		local fun = guess_outcast(CONF.output.encoding.name)
+		OUT[WHO][obj] = ACK[obj]
+		if luatype(OUT[WHO][obj]) == 'table' then
+		   OUT[WHO][obj] = deepmap(fun, OUT[WHO][obj])
+		else
+		   OUT[WHO][obj] = fun(OUT[WHO][obj])
+		end
+end)
+
+Then("print my '' as ''", function(obj,conv)
+		ZEN:Iam()
+		ZEN.assert(ACK[obj], "My data object not found: "..obj)
+		if not OUT[WHO] then OUT[WHO] = { } end
+		local fun = guess_outcast(conv)
+		OUT[WHO][obj] = ACK[obj]
+		if luatype(OUT[WHO][obj]) == 'table' then
+		   OUT[WHO][obj] = deepmap(fun, OUT[WHO][obj])
+		else
+		   OUT[WHO][obj] = fun(OUT[WHO][obj])
+		end
+end)
+
+Then("print the ''", function(key)
+		ZEN.assert(ACK[key], "Data object not found: "..key)
+		if not OUT[key] then OUT[key] = { } end
+		OUT[key] = ACK[key]
+		local fun = guess_outcast(CONF.output.encoding.name)
+		if luatype(OUT[key]) == 'table' then
+		   OUT[key] = deepmap(fun, OUT[key])
+		else
+		   OUT[key] = fun(OUT[key])
+		end
+end)
+
+Then("print the '' as ''", function(key, conv)
+		ZEN.assert(ACK[key], "Data object not found: "..key)
+		if not OUT[key] then OUT[key] = { } end
+		OUT[key] = ACK[key]
+		local fun = guess_outcast(conv)
+		if luatype(OUT[key]) == 'table' then
+		   OUT[key] = deepmap(fun, OUT[key])
+		else
+		   OUT[key] = fun(OUT[key])
+		end
+end)
+
+Then("print the '' as '' in ''", function(key, conv, section)
+		ZEN.assert(ACK[section][key], "Data object not found: "..key.." inside "..section)
+		if not OUT[key] then OUT[key] = { } end
+		OUT[key] = ACK[section][key]
+		local fun = guess_outcast(conv)
+		if luatype(OUT[key]) == 'table' then
+		   OUT[key] = deepmap(fun, OUT[key])
+		else
+		   OUT[key] = fun(OUT[key])
+		end
+end)
+
+Then("print the '' in ''", function(key, section)
+		ZEN.assert(ACK[section][key], "Data object not found: "..key.." inside "..section)
+		if not OUT[key] then OUT[key] = { } end
+		OUT[key] = ACK[section][key]
+		local fun = guess_outcast(CONF.output.encoding.name)
+		if luatype(OUT[key]) == 'table' then
+		   OUT[key] = deepmap(fun, OUT[key])
+		else
+		   OUT[key] = fun(OUT[key])
+		end
 end)
 

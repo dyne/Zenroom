@@ -219,13 +219,14 @@ function zencode:run()
 
 	  -- HEAP integrity guard
 	  if CONF.heapguard then
+		 -- trigger upon switch to when or then section
 		 if x.section == 'then' or x.section == 'when' then
 			-- delete IN memory
 			IN.KEYS = { }
 			IN = { }
 			collectgarbage'collect'
 			-- guard ACK's contents on section switch
-			zenguard(ACK)
+			deepmap(zenguard,ACK)
 		 end
 	  end
 
@@ -248,7 +249,7 @@ function zencode:run()
 		 -- OUT.zenroom.scenario = ZEN.scenario
 	  end
 	  ZEN:trace("<<< Encoding { OUT } to "..CONF.output.format.name)
-	  print(CONF.output.format.fun(OUT))
+	  print(CONF.output.format.fun(OUT)) -- formats are JSON or CBOR etc...
 	  ZEN:trace(">>> Encoding successful")
    else -- this should never occur in zencode, OUT is always a table
 	  ZEN:trace("<<< Printing OUT (plain format, not a table)")
