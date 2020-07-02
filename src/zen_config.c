@@ -142,9 +142,10 @@ int zen_conf_parse(const char *configuration) {
 			}
 
 			if(curconf==RNGSEED) {
-				if( strlen(lex.string)-4 != RANDOM_SEED_LEN *2) { // hex doubles size
+				int len = strlen(lex.string);
+				if( len-4 != RANDOM_SEED_LEN *2) { // hex doubles size
 					error(NULL,"Invalid length of random seed: %u (must be %u)",
-					      lex.string_len/2, RANDOM_SEED_LEN);
+					      len/2, RANDOM_SEED_LEN);
 					free(lexbuf);
 					return 0;
 				}
