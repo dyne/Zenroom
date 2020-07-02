@@ -65,7 +65,7 @@ end
 Then("print ''", function(v)
 		if ACK[v] then
 		   local fun = guess_outcast(CONF.output.encoding.name)
-		   OUT.output = fun(ACK[v]) -- value in ACK
+		   OUT[v] = fun(ACK[v]) -- value in ACK
 		else
 		   OUT.output = v -- raw string value
 		end
@@ -74,7 +74,7 @@ end)
 Then("print '' as ''", function(v,s)
 		local fun = guess_outcast(s)
 		if ACK[v] then
-		   OUT.output = fun(ACK[v])
+		   OUT[v] = fun(ACK[v])
 		else
 		   OUT.output = fun(v)
 		end
