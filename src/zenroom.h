@@ -53,7 +53,7 @@ typedef struct {
 	void  (*sys_free)(void *ptr);
 } zen_mem_t;
 
-#define RANDOM_SEED_LEN 256
+#define RANDOM_SEED_LEN 64
 
 #include <stdarg.h>
 typedef int (*sprintf_t)( char * buf, char const * fmt, ... );

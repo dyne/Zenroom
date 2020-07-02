@@ -11,12 +11,12 @@ exe=${1:-zenroom}
 echo "TEST RNGSEED READ/WRITE"
 zmodload zsh/system
 cat <<EOF | ${exe} | sysread run1
-print(RNGSEED:hex() .. ";" .. O.random(256):hex())
+print(RNGSEED:hex() .. ";" .. O.random(64):hex())
 EOF
 seed1=`print $run1 | cut -d';' -f 1`
 rand1=`print $run1 | cut -d';' -f 2`
-cat <<EOF | ${exe} -c rngseed=hex:$seed1 | sysread run2
-print(RNGSEED:hex() .. ";" .. O.random(256):hex())
+cat <<EOF | ${exe} -c "rngseed=hex:$seed1" | sysread run2
+print(RNGSEED:hex() .. ";" .. O.random(64):hex())
 EOF
 seed2=`print $run2 | cut -d';' -f 1`
 rand2=`print $run2 | cut -d';' -f 2`
@@ -25,7 +25,8 @@ rand2=`print $run2 | cut -d';' -f 2`
 
 [[ "$rand1" != "$rand2" ]] && return 1
 
-seed="619007c2ae1cf73f188d142f168a127d29fb59291713394f703ca8501e31548015de3f89ef6ca10043e0f7fa2bf7c1525634065cbe5fb14f7c8aa652d726334e633537ec5b15b399897f8389230d9cc06d2143bf58ed0a3f6407daeb339ab099630a898ba4d3bcf13b896c1f5d4620da7117cb647a9ae0e46b046d17a50f190000e87d250d08e38ed1843d70a12ad5a4d00bb91d3d5109b8c1d77c4e83861ab6de8297bbc4ad68481305f0c4b32860f41afc74937e10b0e4b911d97b9b6435fd7a00ae2dd3ff7721021acfbab2146bc0c6ad796969ed0451b8913f1e4813ab9e25506e199a69dcea7856bf2003dae16db2f9ca95a765dd52cf2d919200b1501f"
+seed="74eeeab870a394175fae808dd5dd3b047f3ee2d6a8d01e14bff94271565625e98a63babe8dd6cbea6fedf3e19de4bc80314b861599522e44409fdd20f7cd6cfc"
+
 dtmode=`mktemp`
 cat <<EOF > $dtmode
 print("RNGSEED: ".. RNGSEED:hex())

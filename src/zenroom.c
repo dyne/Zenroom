@@ -190,7 +190,7 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	// use RNGseed from configuration if present (deterministic mode)
 	if(zconf_rngseed[0] != 0x0) {
 		Z->random_external = 1;
-		memset(Z->random_seed, 0x0, 256);
+		memset(Z->random_seed, 0x0, RANDOM_SEED_LEN);
 		hex2buf(Z->random_seed, zconf_rngseed);
 	}
 	// initialize the random generator
