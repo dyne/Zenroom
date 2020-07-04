@@ -74,7 +74,11 @@ end)
 Then("print '' as ''", function(v,s)
 		local fun = guess_outcast(s)
 		if ACK[v] then
-		   OUT[v] = fun(ACK[v])
+			if luatype(ACK[v]) == 'table' then
+				OUT[v] = deepmap(fun, ACK[v])
+			else
+				OUT[v] = fun(ACK[v])
+			end
 		else
 		   OUT.output = fun(v)
 		end
