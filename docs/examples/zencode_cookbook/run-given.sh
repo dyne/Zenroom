@@ -45,10 +45,9 @@ Given I have a 'string' named 'myString'
 Given I have a 'number' named 'myNumber'
 Given I have a 'string array' named 'myArray'
 When I randomize the 'myArray' array
-# Then print 'myNumber' 
-# Then print 'myString' as 'string'
-#Then print 'myArray' as 'string'
-The print all data
+Then print all data
+Then print 'myString' as 'string'
+Then print 'myArray' as 'string'
 EOF
 
 cat $tmp > myFlatObject.json
