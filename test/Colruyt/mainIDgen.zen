@@ -1,4 +1,0 @@
-Scenario simple
-Given nothing
-When I create the keypair
-Then print the 'keypair' as 'base64'
