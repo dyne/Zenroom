@@ -1,0 +1,11 @@
+Given nothing
+When I write string 'the' in 'words'
+and I append string 'quick' to 'words'
+and I append string 'brown' to 'words'
+and I append string 'fox' to 'words'
+and I append string 'jumps' to 'words'
+and I append string 'over' to 'words'
+and I append string 'the' to 'words'
+and I append string 'lazy' to 'words'
+and I append string 'dog' to 'words'
+Then print 'words' as 'string'
