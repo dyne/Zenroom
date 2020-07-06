@@ -11,10 +11,37 @@ givenLongOutput.json
 # *Given*: reading and verifying input
 
 The *Given* keyword marks the first phase of Zencode execution, where input is read and processed and some variables are set. More precisely: 
- - Read data from files, passed using the *-a* and *-k* parameters, formatted in JSON or CBOR
+ - Read data from files, passed using the *-a* and *-k* parameters, formatted in JSON or CBOR (where JSON is the default and CBOR needs to be specified)
  - State the identity of the script executor
  - Validate the input, both synctatically and cryptographically. 
 
+# *Encoding* and *Schemas* 
+
+Zenroom supports different ***encodings***, and can handle different types of data, referred internally as ***schemas*** which can be simple (like numbers or strings) or complex (like arrays or ''keypair'', a schema present in several ***scenarios*** - we'll read about this later). 
+
+The encodings can be used to tell Zenroom what data to expect as input as well as to convert the output data in the ***Then*** phase (also something we'll talk later about. The ***encodings*** and ***schemas*** supported (without defining a ***scenario*** are the following:
+ - ***Encodings***: url64, base64, hex, binary
+ - ***Schemas***: array, number, string, string array 
+
+The usage of the ***encodings*** is pretty intuitive, you'll see several example in this chapter. 
+The schema ***number*** can be both an integer or a float, in the second case a comma is used as separator as separator.
+The ***array*** is also ***quite*** intuitive but not completely: a regular ***array*** will work as expected only if it contains object encoded as ***hex***, ***binary***, ***base64*** or ***url64*** or contain ***number*** objects. 
+So where are the strings and arrays that contain strings? We have a little extra chapter for that.
+
+
+
+## The ***Schemas*** ***string***  and ***string array***
+
+For security reasons (just google "LangSec strings"), strings need a special  management differently. Shortly:
+ - a ***string*** is an object read with base64 encoding
+ - a ***string array*** is an array that contains only objects that are read using base64 encoding. 
+
+While for every other schema, once you have declared it in the input phase, you don't need to worry about it anymore, when using ***string*** and ***string arrays*** Zenroom will load them as base 64 and output them as hex by default. 
+
+In order to output a ***string*** and ***string array*** in the same way as they were loaded, you'll need to to tell Zenroom to format them accordingly while processing the output, in the ***Then*** phase.
+
+
+ 
 
 <!-- Temp removed, waiting to see the destiny of given all data
  

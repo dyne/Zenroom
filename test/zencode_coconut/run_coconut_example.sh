@@ -4,7 +4,7 @@ set -e
 set -u
 set -o pipefail
 
-alias zenroom="${1:-../../src/zenroom}"
+# alias zenroom="${1:-../../src/zenroom}"
 pfx=.
 echo
 echo "=========================================="
