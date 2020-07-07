@@ -1,0 +1,6 @@
+Scenario 'simple': let us load some stuff cause it is fun!
+Given I am 'Alice'
+And I have my  'keypair'
+And I have a 'myFirstArray' inside 'myFirstObject' 
+And I have a 'mySecondArray' inside 'mySecondObject' 
+Then print all data

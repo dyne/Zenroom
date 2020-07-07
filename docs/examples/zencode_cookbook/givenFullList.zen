@@ -1,0 +1,21 @@
+
+# Load Arrays
+Given I have a 'string array' named 'myFirstArray'   
+Given I have an 'string array' named 'myFirstArray' 
+Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
+Given I have a 'myThirdArray' inside 'myThirdObject' 
+Given I have a 'string array' named 'myFourthArray'
+# Load Numbers
+Given I have a 'number' named 'myFirstNumber'
+Given I have a 'number' named 'mySecondNumber' inside 'mySecondObject'
+# Load Strings
+Given I have a 'string' named 'myFirstString' 
+Given I have a 'string' named 'myFirstString' inside 'myFirstObject' 
+# Different data types
+Given I have an 'hex' named 'myFirstHex' 
+Given I have an 'hex' named 'myFirstHex' inside 'myFirstObject' 
+Given I have a  'base64' named 'myFirstBase64'
+Given I have a  'binary' named 'myFirstBinary'
+Given I have an 'url64' named 'myFirstUrl64'
+and debug
+Then print all data

@@ -9,7 +9,9 @@
 - Programming Zencode
   - [Zencode](/pages/zencode.md "Zencode")
   - [Zencode command list](/pages/zencode-list.md "Zencode command list")
-  - [Zencode cookbook](/pages/zencode-cookbook.md "Zencode cookbook") 
+  - [Cookbook intro](/pages/zencode-cookbook-intro.md "Zencode cookbook intro") 
+ [Cookbook Given](/pages/zencode-cookbook-given.md "Zencode cookbook Given")
+
 
 - Programming Lua
   - [Lua](/pages/lua.md "in Lua")
@@ -18,12 +20,14 @@
 - Bindings
   - [JavaScript](/pages/javascript.md "Use Zenroom in JavaScript")
   - [Python](/pages/python.md "Use Zenroom in JavaScript")
-  - [Java](/pages/java.md)
+  - [Java](/pages/java.md "Use Zenroom in Java")
+  - [iOS](/pages/ios.md "Use Zenroom in iOS")
 
 - Tutorials
  - [Zenroom in node.js](/pages/zenroom-javascript1.md "Use Zenroom in node.js")
  - [Zenroom in the browser](/pages/zenroom-javascript2.md "Use Zenroom in the browser")
  - [Zenroom in React](/pages/zenroom-javascript3.md "Use Zenroom in React")
+ - [Zenroom ClojureScript](/pages/zenroom-clojurescript.md "Zenroom ClojureScript]") 
 
 - Extensions
  - [Redroom](/ext/redroom)

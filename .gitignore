@@ -1,5 +1,6 @@
 *.[oa]
 *.so
+zenroom
 src/lualibs_detected.c
 CMakeCache.*
 CMakeFiles
