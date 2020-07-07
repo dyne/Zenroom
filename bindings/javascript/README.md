@@ -96,11 +96,17 @@ All the available options and method are covered in the next API section
 
 ### script
 
-Set the zenroom script to run
+First, you'll have create a script that Zenroom can execute.
+In this first section, we're covering Zenroom's scripts in Lua,
+if you want to execute smart contracts in Zencode (Zenroom's
+domain specific language), please see below.
 
-The syntax of the zenroom scripts are extensively available at
-<https://zenroom.dyne.org/api/tutorials/Syntax.html>
-You may want also to look at some example in a live executable environment here <https://zenroom.dyne.org/demo/>
+This method set the zenroom lua or zencode to run.
+
+The syntax of the Zenroom Lua scripts is documented at
+<https://dev.zenroom.org/>
+You may want also to look at some example in a live
+executable environment at: <https://dev.zenroom.org/demo>
 
 #### Parameters
 
@@ -121,13 +127,15 @@ const script = 'print("hello")'
 zenroom.script(script).zenroom_exec().reset()
 ```
 
-Returns **zenroom** the zenroom module
+Returns **zenroom** as zenroom module
 
 ### keys
 
-Set the keys JSON for you zenroom execution
+Set the parameter "keys" in JSON for the script/smart contract
+you're executing in Zenroom.
 
-the keys will be available in script as the `KEYS` variable
+The keys will be available in the execution of the script/smart
+contract as the `KEYS` variable.
 
 #### Parameters
 
@@ -153,13 +161,15 @@ const keys = {a: 1, b: 2}
 zenroom.script(script).keys(keys).zenroom_exec().reset()
 ```
 
-Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** the zenroom module
+Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** as zenroom module
 
 ### data
 
-Set the data for your zenroom execution
+Set the parameter "data" in JSON for the script/smart
+contract you're executing in Zenroom.
 
-The data will be available in script as the `DATA` variable
+The data will be available in the execution of the
+script/smart contract as the `DATA` variable.
 
 #### Parameters
 
@@ -185,13 +195,14 @@ const data = {a: 1, b: 2}
 zenroom.script(script).data(data).zenroom_exec()
 ```
 
-Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** the zenroom module
+Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** as zenroom module
 
 ### conf
 
-Set the conf before your zenroom execution
+Set the configuration of zenroom execution.
 
-all the available configuration are available [here](https://github.com/DECODEproject/Zenroom/blob/master/src/zen_config.c#L100-L106)
+The possible configurations are available
+[here]\(<https://github.com/DECODEproject/Zenroom/blob/master/src/zen_config.c> #L104-L111)
 
 #### Parameters
 
@@ -213,13 +224,13 @@ const conf = 'debug=1,memwipe=0'
 zenroom.script(script).conf(conf).zenroom_exec()
 ```
 
-Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** the zenroom module
+Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** as zenroom module
 
 ### print_err
 
-Set the print_err callback to customize
-the behaviour of the print_err calls made to stderr
-by default it prints to the console.error
+Set the print_err callback: customize the behaviour of the
+print_err calls made to stderr,by default it prints to the
+`console.error`
 
 Type: [Function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function)
 
@@ -240,13 +251,13 @@ const script = 'print("hello")'
 zenroom.print_err(print_err_fn).script(script).zenroom_exec()
 ```
 
-Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** the zenroom module
+Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** as zenroom module
 
 ### print
 
-Set the print callback to customize
-the behaviour of the print calls made to stdout
-by default it prints to the console.log
+Set the print callback: customize \* the behavior of the
+print calls made to stdout,by default it prints to the
+`console.log`
 
 Type: [Function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function)
 
@@ -267,11 +278,12 @@ const script = 'print("hello")'
 zenroom.print(printFunction).script(script).zenroom_exec()
 ```
 
-Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** the zenroom module
+Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** as zenroom module
 
 ### success
 
-Set the success callback that is executed after a successful execution of zenroom
+Set the `success` callback that is executed after
+a successful execution of Zenroom
 
 Type: [Function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function)
 
@@ -292,11 +304,12 @@ zenroom.script(script).success(()=>{
 }).zenroom_exec()
 ```
 
-Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** the zenroom module
+Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** as zenroom module
 
 ### error
 
-Set the error callback that is executed after an unsuccessful execution of zenroom
+Set the "error callback" that is executed after an
+unsuccessful execution of Zenroom
 
 Type: [Function](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function)
 
@@ -317,15 +330,16 @@ zenroom.script(script).error(()=>{
 }).zenroom_exec()
 ```
 
-Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** the zenroom module
+Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** as zenroom module
 
 ### zenroom_exec
 
-Execute the zenroom vm (using the previously setted options)
+Starts the Zenroom VM, using the parameters previously set.
 
-It is usually the last method of the chain, but like the other methods returns
-the zenroom module itself, so can be used for other calls if you need to make more
-executions in a row
+This is usually the last method of the chain. Just like the
+other methods, it returns the zenroom module itself, so it
+can be used for other calls if you need to run more executions
+in a row.
 
 #### Examples
 
@@ -342,15 +356,17 @@ const script = 'print("hello")';
 zenroom.script(script).zenroom_exec()
 ```
 
-Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** the zenroom module
+Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** as zenroom module
 
 ### zencode_exec
 
-Execute zencode contracts (using the previously setted options)
+Execute [Zencode](https://dev.zenroom.org/#/pages/zencode)
+smart contracts, using the previously setted options.
 
-It is usually the last method of the chain, but like the other methods returns
-the zenroom module itself, so can be used for other calls if you need to make more
-executions in a row
+This is usually the last method of the chain. Just like the
+other methods, it returns the zenroom module itself, so it
+can be used for other calls if you need to run more executions
+in a row.
 
 #### Examples
 
@@ -367,14 +383,15 @@ const zencode = 'print("hello")';
 zenroom.script(script).zencode_exec()
 ```
 
-Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** the zenroom module
+Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** as zenroom module
 
 ### init
 
 This method allows the configuration of your call by passing one
-configuration option object. You can use the chain methods after this anyway.
+configuration option object. You can chain methods after this anyway.
 
-If some attribute is already set, those will be overwritten by the new options
+If some attribute is already set, those will be overwritten by the new
+options.
 
 The following options are available:
 
@@ -384,6 +401,7 @@ The following options are available:
   <li><strong>conf</strong></li>
   <li><strong>data</strong></li>
   <li><strong>print</strong></li>
+  <li><strong>print_err</strong></li>
   <li><strong>success</strong></li>
   <li><strong>error</strong></li>
 </ul>
@@ -438,15 +456,15 @@ const encrypt_secret_to_many = {
 zenroom.init(encrypt_secret_to_many).zenroom_exec()
 ```
 
-Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** the zenroom module
+Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** as zenroom module
 
 ### reset
 
-Reset the setted options already provided and cleans up the zenroom module
+Reset the options previously set, and cleans up the zenroom module.
 
-It is usually the last method of the chain, but like the other methods returns
-the zenroom module itself, so can be used for other calls if you need to make more
-executions in a row
+This is can easily be the last method of the chain. Just like the
+other methods, it returns the zenroom module itself, so it can be
+used for other calls if you need to run more executions in a row.
 
 #### Examples
 
@@ -466,7 +484,7 @@ zenroom.script(script)
        .zenroom_exec()    // This does not run the script anymore
 ```
 
-Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** the zenroom module
+Returns **[object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** as zenroom module
 
 ## 😍 Acknowledgements
 

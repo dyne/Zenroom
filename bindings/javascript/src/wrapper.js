@@ -1,9 +1,9 @@
 import 'core-js/stable'
 import 'regenerator-runtime/runtime.js'
 
-import Zenroom from '../dist/lib/zenroom.js';
+import Zenroom from '../dist/lib/zenroom.js'
 
-const C = Zenroom();
+const C = Zenroom()
 
 /* istanbul ignore next */
 const zenroomExec = (script, conf = null, keys = null, data = null) => {
@@ -12,10 +12,10 @@ const zenroomExec = (script, conf = null, keys = null, data = null) => {
       'zenroom_exec',
       'number',
       ['string', 'string', 'string', 'string'],
-      [script, conf, keys, data],
-    );
-  });
-};
+      [script, conf, keys, data]
+    )
+  })
+}
 
 /* istanbul ignore next */
 const zencodeExec = (script, conf = null, keys = null, data = null) => {
@@ -24,41 +24,48 @@ const zencodeExec = (script, conf = null, keys = null, data = null) => {
       'zencode_exec',
       'number',
       ['string', 'string', 'string', 'string'],
-      [script, conf, keys, data],
-    );
-  });
-};
+      [script, conf, keys, data]
+    )
+  })
+}
 
 const stringify = (field) => {
   if (!field) {
-    return null;
+    return null
   }
 
   try {
-    return JSON.stringify(JSON.parse(field));
+    return JSON.stringify(JSON.parse(field))
   } catch (e) {
     if (typeof field === 'object') {
-      return JSON.stringify(field);
-    } if (typeof field === 'string') {
-      return field;
+      return JSON.stringify(field)
+    }
+    if (typeof field === 'string') {
+      return field
     }
   }
-};
+}
 
 const zenroom = (function () {
-  let self = {};
-  self.options = {};
+  let self = {}
+  self.options = {}
 
   const __debug = function () {
-    return self;
-  };
+    return self
+  }
 
   /**
-   * Set the zenroom script to run
+   * First, you'll have create a script that Zenroom can execute.
+   * In this first section, we're covering Zenroom's scripts in Lua,
+   * if you want to execute smart contracts in Zencode (Zenroom's
+   * domain specific language), please see below.
    *
-   * The syntax of the zenroom scripts are extensively available at
-   * https://zenroom.dyne.org/api/tutorials/Syntax.html
-   * You may want also to look at some example in a live executable environment here https://zenroom.dyne.org/demo/
+   * This method set the zenroom lua or zencode to run.
+   *
+   * The syntax of the Zenroom Lua scripts is documented at
+   * https://dev.zenroom.org/
+   * You may want also to look at some example in a live
+   * executable environment at: https://dev.zenroom.org/demo
    *
    * @example <caption>Example usage of `script()`</caption>
    * // returns zenroom
@@ -70,17 +77,19 @@ const zenroom = (function () {
    * zenroom.script(script).zenroom_exec().reset()
    *
    * @param {string} script the lua script to be set
-   * @returns {zenroom} the zenroom module
+   * @returns {zenroom} as zenroom module
    */
   const script = function (script) {
-    self.script = script;
-    return this;
-  };
+    self.script = script
+    return this
+  }
 
   /**
-   * Set the keys JSON for you zenroom execution
+   * Set the parameter "keys" in JSON for the script/smart contract
+   * you're executing in Zenroom.
    *
-   * the keys will be available in script as the `KEYS` variable
+   * The keys will be available in the execution of the script/smart
+   * contract as the `KEYS` variable.
    *
    * @example <caption>Example usage of `keys()`</caption>
    * // returns zenroom
@@ -97,17 +106,19 @@ const zenroom = (function () {
    * zenroom.script(script).keys(keys).zenroom_exec().reset()
    *
    * @param {object} keys the keys to be set as an object
-   * @returns {object} the zenroom module
+   * @returns {object} as zenroom module
    */
   const keys = function (keys) {
-    self.keys = stringify(keys);
-    return this;
-  };
+    self.keys = stringify(keys)
+    return this
+  }
 
   /**
-   * Set the data for your zenroom execution
+   * Set the parameter "data" in JSON for the script/smart
+   * contract you're executing in Zenroom.
    *
-   * The data will be available in script as the `DATA` variable
+   * The data will be available in the execution of the
+   * script/smart contract as the `DATA` variable.
    *
    * @example <caption>Example usage of `data()`</caption>
    * // returns zenroom
@@ -124,17 +135,18 @@ const zenroom = (function () {
    * zenroom.script(script).data(data).zenroom_exec()
    *
    * @param {string} data
-   * @returns {object} the zenroom module
+   * @returns {object} as zenroom module
    */
   const data = function (data) {
-    self.data = stringify(data);
-    return this;
-  };
+    self.data = stringify(data)
+    return this
+  }
 
   /**
-   * Set the conf before your zenroom execution
+   * Set the configuration of zenroom execution.
    *
-   * all the available configuration are available [here](https://github.com/DECODEproject/Zenroom/blob/master/src/zen_config.c#L100-L106)
+   * The possible configurations are available
+   * [here](https://github.com/DECODEproject/Zenroom/blob/master/src/zen_config.c #L104-L111)
    *
    * @example <caption>Example usage of `conf()`</caption>
    * // returns zenroom
@@ -147,17 +159,17 @@ const zenroom = (function () {
    * zenroom.script(script).conf(conf).zenroom_exec()
    *
    * @param {string} conf the string of configuration to be set
-   * @returns {object} the zenroom module
+   * @returns {object} as zenroom module
    */
   const conf = function (conf) {
-    self.conf = conf;
-    return this;
-  };
+    self.conf = conf
+    return this
+  }
 
   /**
-   * Set the print_err callback to customize
-   * the behaviour of the print_err calls made to stderr
-   * by default it prints to the console.error
+   * Set the print_err callback: customize the behaviour of the
+   * print_err calls made to stderr,by default it prints to the
+   * `console.error`
    *
    * @example <caption>Example usage of `print_err()`</caption>
    * // returns zenroom
@@ -171,21 +183,21 @@ const zenroom = (function () {
    * zenroom.print_err(print_err_fn).script(script).zenroom_exec()
    *
    * @callback print_err
-   * @returns {object} the zenroom module
+   * @returns {object} as zenroom module
    */
   const print_err = function (e) {
-    self.print_err = e;
+    self.print_err = e
     C.then((Module) => {
-      Module.printErr = (text) => self.print_err(text);
-    });
+      Module.printErr = (text) => self.print_err(text)
+    })
 
-    return this;
-  };
+    return this
+  }
 
   /**
-   * Set the print callback to customize
-   * the behaviour of the print calls made to stdout
-   * by default it prints to the console.log
+   * Set the print callback: customize * the behavior of the
+   * print calls made to stdout,by default it prints to the
+   * `console.log`
    *
    * @example <caption>Example usage of `print()`</caption>
    * // returns zenroom
@@ -199,19 +211,20 @@ const zenroom = (function () {
    * zenroom.print(printFunction).script(script).zenroom_exec()
    *
    * @callback print
-   * @returns {object} the zenroom module
+   * @returns {object} as zenroom module
    */
   const print = function (printFunction) {
-    self.print = printFunction;
+    self.print = printFunction
     C.then((Module) => {
-      Module.print = (text) => self.print(text);
-    });
+      Module.print = (text) => self.print(text)
+    })
 
-    return this;
-  };
+    return this
+  }
 
   /**
-   * Set the success callback that is executed after a successful execution of zenroom
+   * Set the `success` callback that is executed after
+   * a successful execution of Zenroom
    *
    * @example <caption>Example usage of `success()`</caption>
    * // returns zenroom
@@ -225,18 +238,19 @@ const zenroom = (function () {
    * }).zenroom_exec()
    *
    * @callback success
-   * @returns {object} the zenroom module
+   * @returns {object} as zenroom module
    */
   const success = function (successCallback) {
-    self.success = successCallback;
+    self.success = successCallback
     C.then((Module) => {
-      Module.exec_ok = successCallback;
-    });
-    return this;
-  };
+      Module.exec_ok = successCallback
+    })
+    return this
+  }
 
   /**
-   * Set the error callback that is executed after an unsuccessful execution of zenroom
+   * Set the "error callback" that is executed after an
+   * unsuccessful execution of Zenroom
    *
    * @example <caption>Example usage of `error()`</caption>
    * // returns zenroom
@@ -250,22 +264,23 @@ const zenroom = (function () {
    * }).zenroom_exec()
    *
    * @callback error
-   * @returns {object} the zenroom module
+   * @returns {object} as zenroom module
    */
   const error = function (errorCallback) {
-    self.error = errorCallback;
+    self.error = errorCallback
     C.then((Module) => {
-      Module.exec_error = errorCallback;
-    });
-    return this;
-  };
+      Module.exec_error = errorCallback
+    })
+    return this
+  }
 
   /**
-   * Execute the zenroom vm (using the previously setted options)
+   * Starts the Zenroom VM, using the parameters previously set.
    *
-   * It is usually the last method of the chain, but like the other methods returns
-   * the zenroom module itself, so can be used for other calls if you need to make more
-   * executions in a row
+   * This is usually the last method of the chain. Just like the
+   * other methods, it returns the zenroom module itself, so it
+   * can be used for other calls if you need to run more executions
+   * in a row.
    *
    * @example <caption>Example usage of `zenroom_exec()`</caption>
    * // returns zenroom
@@ -276,19 +291,21 @@ const zenroom = (function () {
    * const script = 'print("hello")';
    * zenroom.script(script).zenroom_exec()
    *
-   * @returns {object} the zenroom module
+   * @returns {object} as zenroom module
    */
   const zenroom_exec = function () {
-    zenroomExec(self.script, self.conf, self.keys, self.data);
-    return this;
-  };
+    zenroomExec(self.script, self.conf, self.keys, self.data)
+    return this
+  }
 
   /**
-   * Execute zencode contracts (using the previously setted options)
+   * Execute [Zencode](https://dev.zenroom.org/#/pages/zencode)
+   * smart contracts, using the previously setted options.
    *
-   * It is usually the last method of the chain, but like the other methods returns
-   * the zenroom module itself, so can be used for other calls if you need to make more
-   * executions in a row
+   * This is usually the last method of the chain. Just like the
+   * other methods, it returns the zenroom module itself, so it
+   * can be used for other calls if you need to run more executions
+   * in a row.
    *
    * @example <caption>Example usage of `zencode_exec()`</caption>
    * // returns zenroom
@@ -299,18 +316,19 @@ const zenroom = (function () {
    * const zencode = 'print("hello")';
    * zenroom.script(script).zencode_exec()
    *
-   * @returns {object} the zenroom module
+   * @returns {object} as zenroom module
    */
   const zencode_exec = function () {
-    zencodeExec(self.script, self.conf, self.keys, self.data);
-    return this;
-  };
+    zencodeExec(self.script, self.conf, self.keys, self.data)
+    return this
+  }
 
   /**
    * This method allows the configuration of your call by passing one
-   * configuration option object. You can use the chain methods after this anyway.
+   * configuration option object. You can chain methods after this anyway.
    *
-   * If some attribute is already set, those will be overwritten by the new options
+   * If some attribute is already set, those will be overwritten by the new
+options.
    *
    * The following options are available:
    * <ul>
@@ -319,6 +337,7 @@ const zenroom = (function () {
    *   <li><strong>conf</strong></li>
    *   <li><strong>data</strong></li>
    *   <li><strong>print</strong></li>
+   *   <li><strong>print_err</strong></li>
    *   <li><strong>success</strong></li>
    *   <li><strong>error</strong></li>
    * </ul>
@@ -363,37 +382,37 @@ const zenroom = (function () {
    *
    * zenroom.init(encrypt_secret_to_many).zenroom_exec()
    *
-   * @returns {object} the zenroom module
+   * @returns {object} as zenroom module
    */
   const init = function (options) {
     /* istanbul ignore next */
-    self.options = Object.assign(self.options, options) || {};
+    self.options = Object.assign(self.options, options) || {}
 
-    script(self.options.script || '');
-    keys(self.options.keys || null);
-    conf(self.options.conf || null);
-    data(self.options.data || null);
-    print(self.options.print || ((text) => console.log(text)));
-    print_err(self.options.print_err || ((text) => console.error(text)));
-    success(self.options.success || new Function()); // eslint-disable-line no-new-func
-    error(self.options.error || new Function()); // eslint-disable-line no-new-func
+    script(self.options.script || '')
+    keys(self.options.keys || null)
+    conf(self.options.conf || null)
+    data(self.options.data || null)
+    print(self.options.print || ((text) => console.log(text)))
+    print_err(self.options.print_err || ((text) => console.error(text)))
+    success(self.options.success || new Function()) // eslint-disable-line no-new-func
+    error(self.options.error || new Function()) // eslint-disable-line no-new-func
 
-    return this;
-  };
+    return this
+  }
 
   const __setup = function () {
-    print(self.print || ((text) => console.log(text)));
-    print_err(self.print_err || ((text) => console.error(text)));
-    success(self.success || (() => {}));
-    error(self.error || (() => {}));
-  };
+    print(self.print || ((text) => console.log(text)))
+    print_err(self.print_err || ((text) => console.error(text)))
+    success(self.success || (() => {}))
+    error(self.error || (() => {}))
+  }
 
   /**
-   * Reset the setted options already provided and cleans up the zenroom module
+   * Reset the options previously set, and cleans up the zenroom module.
    *
-   * It is usually the last method of the chain, but like the other methods returns
-   * the zenroom module itself, so can be used for other calls if you need to make more
-   * executions in a row
+   * This is can easily be the last method of the chain. Just like the
+   * other methods, it returns the zenroom module itself, so it can be
+   * used for other calls if you need to run more executions in a row.
    *
    * @example <caption>Example usage of `reset()`</caption>
    * // returns zenroom
@@ -407,16 +426,16 @@ const zenroom = (function () {
    *        .reset()
    *        .zenroom_exec()    // This does not run the script anymore
    *
-   * @returns {object} the zenroom module
+   * @returns {object} as zenroom module
    */
   const reset = function () {
-    self = {};
-    self.options = {};
-    __setup();
-    return this;
-  };
+    self = {}
+    self.options = {}
+    __setup()
+    return this
+  }
 
-  __setup();
+  __setup()
 
   return {
     script,
@@ -431,8 +450,8 @@ const zenroom = (function () {
     error,
     init,
     reset,
-    __debug,
-  };
-}());
+    __debug
+  }
+})()
 
-module.exports = zenroom;
+module.exports = zenroom
