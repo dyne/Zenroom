@@ -1,0 +1,11 @@
+Given debug
+Given I have a 'string array' named 'myArray'
+Given debug
+Given I have a 'string' named 'myString' 
+Given debug
+Given I have a 'number' named 'myNumber'
+Given debug 
+When I randomize the 'myArray' array
+When debug
+Then print all data
+Then debug

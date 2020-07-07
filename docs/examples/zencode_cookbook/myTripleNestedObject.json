@@ -1,0 +1,34 @@
+{
+   "myFirstObject":{
+      "myFirstNumber":1,
+	  "myFirstString":"Hello World!",
+      "myFirstHex": "616e7976616c7565",
+	  "myFirstArray":[
+         "String1",
+		 "String2"
+      ]
+   },
+   "mySecondObject":{
+      "mySecondNumber":2,
+      "mySecondArray":[
+         "anotherString1",
+         "anotherString2"
+      ]
+   },
+   "myThirdObject":{
+      "myThirdNumber":3,
+      "myThirdArray":[
+         "oneMoreString1",
+         "oneMoreString2",
+         "oneMoreString3"
+      ]
+   },
+   "myFourthObject":{
+      "myFourthArray":[
+         "oneExtraString1",
+         "oneExtraString2",
+         "oneExtraString3",
+		 "oneExtraString4"
+      ]
+   }
+}

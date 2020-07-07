@@ -1,0 +1,11 @@
+  {
+      "myNumber":12345,
+      "myString":"Hello World!",
+      "myArray":[
+         "String-1-one",
+         "String-2-two",
+         "String-3-three",
+		 "String-4-four",
+		 "String-5-five"
+      ]
+ }

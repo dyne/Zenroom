@@ -6,7 +6,7 @@ One of Zenroom's strong points is the quality of the random generation (see [ran
 Let's first go the super fast way to test code, entering the [Zenroom web demo](https://dev.zenroom.org/demo/). Copy this code into the *Zencode* tab on the top left of the page: 
 
 
-[](../_media/examples/zencode_cookbook/01_randomArrayGeneration.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/randomArrayGeneration.zen ':include :type=code gherkin')
 
 
 
@@ -39,10 +39,10 @@ In the example Zenroom did graciously output first the licensing, then some info
 On Linux, you can use: 
 
 ```bash
-zenroom -z arrayGenerator.zen | tee myArray.json
+zenroom -z arrayGenerator.zen | tee myArrays.json
 ```
 
-After running this command, a file named *myArray.json* should have magically appeared in the folder you're in.
+After running this command, a file named *myArrays.json* should have magically appeared in the folder you're in.
 
 # Renaming the array: the *And* keyword
 
@@ -51,47 +51,19 @@ Open *myArray.json* with your text editor, and notice that the array produced wi
  - Each phase can have as many commands as you like, provided that they're on a different line and they begin with the keyword *And* 
 For example, you can rename your array to *'myArray'* by running this script:
 
-[](../_media/examples/zencode_cookbook/02_randomArrayRename.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/randomArrayRename.zen ':include :type=code gherkin')
 
 Note that you need to use the **' '** in the line that renames the array, cause you may be generating and renaming a bunch of arrays already, like in this script:
 
-[](../_media/examples/zencode_cookbook/03_randomArrayMultiple.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/randomArrayMultiple.zen ':include :type=code gherkin')
 
 
 The script above will produce an output like this:
 
-```json
-{
-   "myAverageArray":[
-      "gtg",
-      "SOM",
-      "UtY",
-      "Bio"
-   ],
-   "myBigFatArray":[
-      "P67ESzS4BPgyHANw2lg3PA",
-      "kktMsbVuSYeCqA9EvOPpLA",
-      "7wfk9XcwUbDa9fP8D2NkhQ",
-      "j2jG-gEmffiqlW0FU5j57A",
-      "HU2eiA3xNuytsAsvAg8YWA",
-      "x-0xqCcxSizSma1UxvI31A",
-      "6n6bITnyZbkyY9Mhv2Kt8A",
-      "ZR42Vju8Rec8Zgxm_V3uAg",
-      "SgoxzbiNMBzm7MbsDH2fkA",
-      "8ANau1jP2gGRDRkkka_8NA",
-      "haEz_2LtjYspViyAklRNAw",
-      "7PUUpfZjsDqlt8P6YyhBkw",
-      "57jHd-WWgEzTaK-xHUpRHA",
-      "oPo_05atgistmNOgfL4cpA",
-      "EXsoXYjCPXwA4OrifhZKhw",
-      "llkiwnwn_iYWdZjgsKU3Tg"
-   ],
-   "myTinyArray":[
-      "iQ",
-      "oQ"
-   ]
-}
-```
+
+[](../_media/examples/zencode_cookbook/myArrays.json ':include :type=code json')
+
+
 
 Certainly, at this point, your keen eye has noted something odd in the output...If in the Zencode I generated the arrays sorted by size, why is output sorted differently? Because in Zenroom, my friend,  [Determinism](https://github.com/DECODEproject/Zenroom/blob/master/test/deterministic_random_test.sh) is king, so Zenroom will by default sort the output alphabetically.
 

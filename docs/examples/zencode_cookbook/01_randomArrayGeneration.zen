@@ -1,3 +1,0 @@
-	Given nothing
-	When I create the array of '16' random objects of '32' bits
-	Then print all data

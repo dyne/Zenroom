@@ -1,0 +1,28 @@
+{
+   "myFirstObject":{
+      "myNumber":11223344,
+      "myString":"Hello World!",
+      "myArray":[
+         "String1",
+         "String2",
+         "String3",
+         "String4"
+      ]
+   },
+   "mySecondObject":{
+      "myNumber":1234567890,
+	  "myString":"Oh, hello again!",
+      "myArray":[
+         "anotherString1",
+         "anotherString2",
+         "anotherString3",
+         "anotherString4"
+      ]
+   },
+   "Alice":{
+      "keypair":{
+         "private_key":"DbjRMCC7fykuUaqYDX_cy_Zs7J0ZC0y9VxBLRcfwIJ63MAZtW4fJ4IxxdUdLNy0ye0-qf0IlRZI",
+         "public_key":"BE39Wu7AXSzSplMd37VhCB094xHqCgvZxMhgaTA7B0Xz4mEIZmoO2FmWiokVXuJ0O9jH9AQD4UBkXiCU4gzYrLQc9VpfB4Qr8rz6jj_UYvC77FiLGc-0jsE4mQfpgLoOspBGcfNyiS8Y50hl8zthKjo"
+      }
+   }
+}

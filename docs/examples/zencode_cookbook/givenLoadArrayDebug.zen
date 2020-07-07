@@ -1,0 +1,4 @@
+Given I have a  'string array' named 'myArray' 
+Given debug 
+When I randomize the 'myArray' array
+Then print all data
