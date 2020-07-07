@@ -11,7 +11,7 @@ givenLongOutput.json
 # *Given*: reading and verifying input
 
 The *Given* keyword marks the first phase of Zencode execution, where input is read and processed and some variables are set. More precisely: 
- - Read data from files, passed using the *-a* and *-k* parameters, formatted in JSON or CBOR (where JSON is the default and CBOR needs to be specified)
+ - Read data from files, passed using the *--data* and *--keys* parameters, formatted in JSON or CBOR (where JSON is the default and CBOR needs to be specified)
  - State the identity of the script executor
  - Validate the input, both synctatically and cryptographically. 
 
@@ -32,10 +32,7 @@ So where are the strings and arrays that contain strings? We have a little extra
 
 ## The ***Schemas*** ***string***  and ***string array***
 
-For security reasons (just google "LangSec strings"), strings need a special  management differently. Shortly:
- - a ***string*** is an object read with base64 encoding
- - a ***string array*** is an array that contains only objects that are read using base64 encoding. 
-
+For security reasons (just search for [LangSec strings](https://langsec.org/bof-handout.pdf)), strings need a special  management differently. 
 While for every other schema, once you have declared it in the input phase, you don't need to worry about it anymore, when using ***string*** and ***string arrays*** Zenroom will load them as base 64 and output them as hex by default. 
 
 In order to output a ***string*** and ***string array*** in the same way as they were loaded, you'll need to to tell Zenroom to format them accordingly while processing the output, in the ***Then*** phase.
@@ -55,7 +52,7 @@ In order to output a ***string*** and ***string array*** in the same way as they
  
 ## *Given nothing*
  
- This statement (which we've used already, so no example here) sets a pre-condition to the execution of the script where: *Given nothing* will halt the execution if data is passed to Zenroom via *-a* and *-k* parameters, you want to use it when you want to be sure that no parameters are being passed from outside.
+ This statement (which we've used already, so no example here) sets a pre-condition to the execution of the script where: *Given nothing* will halt the execution if data is passed to Zenroom via *--data* and *--keys* parameters, you want to use it when you want to be sure that no parameters are being passed from outside.
 
  
 # Data import and validation in Zencode (part 1)
@@ -70,7 +67,7 @@ Let's start with a create a file named *myFlatObject.json* containing several an
 
 ## *Given I have* using a "flat" JSON (part 1)
 
-Following is a scrip that loads and validates all the data in myNestedObject.json and (extra bonus!) it randomizes the array and prints the output:
+Following is a script that loads and validates all the data in myNestedObject.json and (extra bonus!) it randomizes the array and prints the output:
 
 [](../_media/examples/zencode_cookbook/givenLoadFlatObject.zen ':include :type=code gherkin')
 
