@@ -1,28 +1,20 @@
 ### [given]
 given:
   - given: nothing
-  - given: all data
-  - given: I introduce myself as ''
   - given: I am known as ''
   - given: I am ''
   - given: I have a ''
+  - given: I have a '' named ''
+  - given: I have a '' named '' in ''
   - given: I have my ''
-  - given: I have my valid ''
-  - given: I have a valid ''
   - given: the '' is valid
-  - given: I have a '' inside ''
-  - given: I have inside '' a ''
-  - given: I have inside '' a valid ''
-  - given: I have a valid '' inside ''
-  - given: I have a valid '' from ''
-  - given: I have a valid array in ''
-  - given: I have a valid array of '' in ''
-  - given: I have a valid number in ''
+  - given: I have a '' in ''
+  - given: I have a '' from ''
 ### [given]
 ### [when]
 when:
-  - when: I append '' to ''
-  - when: I append '' to '' formatted as ''
+  - when: I append string '' to ''
+  - when: I append '' to '' as ''
   - when: I write string '' in ''
   - when: I write number '' in ''
   - when: I set '' to '' as ''
@@ -58,19 +50,18 @@ when:
 ### [then]
 then:
   - then: print ''
-  - then: print '' ''
-  - then: print '' '' as ''
-  - then: print all data
+  - then: print '' as ''
+  - then: print '' as '' in ''
+  - then: print data
+  - then: print data as ''
   - then: print my data
-  - then: print all my data
+  - then: print my data as ''
   - then: print my ''
-  - then: print as '' my ''
   - then: print my '' as ''
   - then: print the ''
-  - then: print as '' the ''
   - then: print the '' as ''
-  - then: print as '' the '' inside ''
-  - then: print the '' as '' inside ''
+  - then: print the '' as '' in ''
+  - then: print the '' in ''
 ### [then]
 ### [simple_when]
 simple:
