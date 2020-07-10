@@ -97,7 +97,7 @@ local function new_state_machine()
 			end,
 			onrule = function(self, event, from, to, msg)
 			   -- process rules immediately
-			   set_rule(msg)
+			   if msg then set_rule(msg) end
 			end,
 			-- set_sentence from zencode_ast
 			ongiven = set_sentence,

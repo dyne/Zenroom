@@ -88,7 +88,8 @@ end
 -- TODO: investigate use of lua-faces
 function set_rule(text)
    local res = false
-   local rule = strtok(text.msg) -- TODO: optimise in C (see zenroom_common)
+   local tr = text.msg:gsub(' +',' ') -- eliminate multiple internal spaces
+   local rule = strtok( trim(tr):lower() ) -- TODO: optimise in C (see zenroom_common)
    if rule[2] == 'check' and rule[3] == 'version' and rule[4] then
 	  SEMVER = require_once('semver')
 	  local ver = SEMVER(rule[4])
