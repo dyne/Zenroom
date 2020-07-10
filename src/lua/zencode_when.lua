@@ -20,32 +20,32 @@
 --- WHEN
 
 When("I append string '' to ''", function(content, dest)
-		ZEN.assert(not ZEN.schemas[dest], "Append denied, schema collision detected: "..dest)
+		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		ACK[dest] = ACK[dest] .. O.from_string(content)
 end)
 When("I append '' to '' as ''", function(content, dest, format)
-		ZEN.assert(not ZEN.schemas[dest], "Append denied, schema collision detected: "..dest)
+		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		ACK[dest] = ACK[dest] .. ZEN.decode(content, input_encoding(format))
 end)
 
 -- simplified exception for I write: import encoding from_string ...
 When("I write string '' in ''", function(content, dest)
-		ZEN.assert(not ZEN.schemas[dest], "When denied, schema collision detected: "..dest)
+		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		ACK[dest] = O.from_string(content)
 end)
 -- ... and from a number
 When("I write number '' in ''", function(content, dest)
-		ZEN.assert(not ZEN.schemas[dest], "When denied, schema collision detected: "..dest)
+		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		-- TODO: detect number base 10
 		ACK[dest] = tonumber(content, 10)
 end)
 
 When("I set '' to '' as ''", function(dest, content, format)
-		ZEN.assert(not ZEN.schemas[dest], "When denied, schema collision detected: "..dest)
+		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		ACK[dest] = ZEN.decode(content, input_encoding(format))
 end)
 When("I create a random ''", function(s)
-		ZEN.assert(not ZEN.schemas[s], "When denied, schema collision detected: "..s)
+		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		ACK[s] = OCTET.random(64) -- TODO: right now hardcoded 256 bit random secrets
 end)
 
@@ -77,7 +77,7 @@ end)
 
 -- numericals
 When("I set '' to '' base ''", function(dest, content, base)
-		ZEN.assert(not ACK[dest], "When denied, schema collision detected: "..dest)
+		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		local bas = tonumber(base)
 		ZEN.assert(bas, "Invalid numerical conversion for base: "..base)
 		local num = tonumber(content,bas)
