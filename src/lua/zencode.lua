@@ -234,7 +234,7 @@ function zencode:run()
 	  exitcode(0)
       local ok, err = pcall(x.hook,table.unpack(x.args))
       if not ok or not ZEN.OK then
-	  	 if err then ZEN:trace("[!] "..err) end
+	  	 if err then ZEN:trace("\27[31;1m[!]\27[0m "..err) end
 		 fatal(x.source) -- traceback print inside
 	  end
 	  collectgarbage'collect'
