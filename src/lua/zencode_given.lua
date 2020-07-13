@@ -103,18 +103,76 @@ ZEN.add_schema({
 		 return _t
 	  end,
 	  string_array = function(obj)
-		 ZEN.assert( isarray(obj) , "Not a valid array")
+		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
 		 local _t = { }
 		 for k,v in ipairs(obj) do
 			table.insert(_t, OCTET.from_string(v))
 		 end
 		 return _t
 	  end,
+	  number_array = function(obj)
+		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
+		 local _t = { }
+		 for k,v in ipairs(obj) do
+			if not tonumber(v) then error("Not a valid number in array: "..v, 3) end
+			table.insert(_t, v)
+		 end
+		 return _t
+	  end,
+	  hex_array = function(obj)
+		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
+		 local _t = { }
+		 for k,v in ipairs(obj) do
+			table.insert(_t, OCTET.from_hex(v))
+		 end
+		 return _t
+	  end,
+	  bin_array = function(obj)
+		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
+		 local _t = { }
+		 for k,v in ipairs(obj) do
+			table.insert(_t, OCTET.from_bin(v))
+		 end
+		 return _t
+	  end,
+	  base64_array = function(obj)
+		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
+		 local _t = { }
+		 for k,v in ipairs(obj) do
+			table.insert(_t, OCTET.from_base64(v))
+		 end
+		 return _t
+	  end,
+	  url64_array = function(obj)
+		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
+		 local _t = { }
+		 for k,v in ipairs(obj) do
+			table.insert(_t, OCTET.from_url64(v))
+		 end
+		 return _t
+	  end,
+	  -- default encoding, semantic conversion
+	  int_array = function(obj)
+		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
+		 local _t = { }
+		 for k,v in ipairs(obj) do
+			table.insert(_t, INT.new(v))
+		 end
+		 return _t
+	  end,
 	  ecp_array = function(obj)
-		 ZEN.assert( isarray(obj) , "Not a valid array")
+		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
 		 local _t = { }
 		 for k,v in ipairs(obj) do
 			table.insert(_t, ECP.new(v))
+		 end
+		 return _t
+	  end,
+	  ecp2_array = function(obj)
+		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
+		 local _t = { }
+		 for k,v in ipairs(obj) do
+			table.insert(_t, ECP2.new(v))
 		 end
 		 return _t
 	  end
