@@ -44,9 +44,9 @@ When("I set '' to '' as ''", function(dest, content, format)
 		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		ACK[dest] = ZEN.decode(content, input_encoding(format))
 end)
-When("I create a random ''", function(s)
+When("I create a random ''", function(dest)
 		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
-		ACK[s] = OCTET.random(64) -- TODO: right now hardcoded 256 bit random secrets
+		ACK[dest] = OCTET.random(64) -- TODO: right now hardcoded 256 bit random secrets
 end)
 
 -- generic comparison using overloaded __eq on any value
