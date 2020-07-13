@@ -52,7 +52,7 @@ When("I set '' to '' as ''", function(dest, content, format)
 		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		ACK[dest] = ZEN.decode(content, input_encoding(format))
 end)
-When("I create a random ''", function(dest)
+When("I create the random ''", function(dest)
 		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		ACK[dest] = OCTET.random(64) -- TODO: right now hardcoded 256 bit random secrets
 end)
