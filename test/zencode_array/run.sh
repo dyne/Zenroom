@@ -30,7 +30,7 @@ Then print the 'lucky one'
 and print the 'bonnetjes'
 EOF
 
-cat <<EOF | zexe array_ecp_aggregation
+cat <<EOF | zexe array_ecp_aggregation.zen
 rule output encoding url64
 Given nothing
 When I create the array of '32' random curve points
