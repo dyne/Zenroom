@@ -135,7 +135,7 @@ int zen_conf_parse(const char *configuration) {
 				else if(strcasecmp(lex.string,"lw") == 0) zconf_memmg = LW;
 				else if(strcasecmp(lex.string,"je") == 0) zconf_memmg = JE;
 				else {
-					error(NULL,"invalid memory manager: %s",lex.string);
+					error(NULL,"Invalid memory manager: %s",lex.string);
 					// free(lexbuf);
 					return 0;
 				}
@@ -165,7 +165,7 @@ int zen_conf_parse(const char *configuration) {
 				if(strcasecmp(lex.string,"stb") == 0) zconf_printf = STB_PRINTF;
 				else if(strcasecmp(lex.string,"sys") == 0) zconf_printf = LIBC_PRINTF;
 				else {
-					error(NULL,"invalid print function: %s",lex.string);
+					error(NULL,"Invalid print function: %s",lex.string);
 					// free(lexbuf);
 					return 0;
 				}
@@ -173,7 +173,7 @@ int zen_conf_parse(const char *configuration) {
 			}
 
 			// free(lexbuf);
-			error(NULL,"invalid configuration: %s", lex.string);
+			error(NULL,"Invalid configuration: %s", lex.string);
 			curconf = NIL;
 			return 0;
 
@@ -184,17 +184,17 @@ int zen_conf_parse(const char *configuration) {
 			if(curconf==MEMWIPE) { zconf_memwipe = lex.int_number; break; }
 
 			// free(lexbuf);
-			error(NULL,"invalid integer configuration");
+			error(NULL,"Invalid integer configuration");
 			curconf = NIL;
 			return 0;
 
 		default:
 			if(lex.token == ',') { curconf = NIL; break; }
 			if(lex.token == '=' && curconf == NIL) {
-				warning(NULL,"undefined config variable");
+				warning(NULL,"Undefined config variable");
 				break; }
 			if(lex.token == '=' && curconf != NIL) break; // OK
-			error(NULL,"%s: invalid string in configuration: %c",__func__, lex.token);
+			error(NULL,"%s: Invalid string in configuration: %c",__func__, lex.token);
 			// free(lexbuf);
 			return 0;
 		}

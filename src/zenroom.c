@@ -143,7 +143,12 @@ static int zen_init_pmain(lua_State *L) { // protected mode init
 // initializes globals: MEM, Z, L (in this order)
 // zen_init_pmain is the Lua routine executed in protected mode
 zenroom_t *zen_init(const char *conf, char *keys, char *data) {
-	if(conf) zen_conf_parse(conf); // minimal stb parsing
+	if(conf) {
+		if( ! zen_conf_parse(conf) ) { // minimal stb parsing
+			error(NULL,"Fatal error",conf);
+			return(NULL);
+		}
+	}
 
 	switch(zconf_memmg) {
 	case LW:
