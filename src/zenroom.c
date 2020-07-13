@@ -145,7 +145,7 @@ static int zen_init_pmain(lua_State *L) { // protected mode init
 zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	if(conf) {
 		if( ! zen_conf_parse(conf) ) { // minimal stb parsing
-			error(NULL,"Fatal error",conf);
+			error(NULL,"Fatal error");
 			return(NULL);
 		}
 	}
