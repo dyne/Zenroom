@@ -86,7 +86,7 @@ local function new_state_machine()
 			-- msg is a table: { msg = "string", Z = ZEN (self) }
 			onscenario = function(self, event, from, to, msg)
 			   -- first word until the colon
-			   local scenarios = strtok(string.match(msg.msg, "[^:]+"))
+			   local scenarios = strtok(string.match(trim(msg.msg):lower(), "[^:]+"))
 			   for k,scen in ipairs(scenarios) do
 				  if k ~= 1 then -- skip first (prefix)
 					 require_once("zencode_"..trimq(scen))
