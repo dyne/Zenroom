@@ -20,12 +20,20 @@
 --- WHEN
 
 When("I append string '' to ''", function(content, dest)
-		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
-		ACK[dest] = ACK[dest] .. O.from_string(content)
+		-- ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
+		if ACK[dest] then
+		   ACK[dest] = ACK[dest] .. O.from_string(content)
+		else
+		   ACK[dest] = O.from_string(content)
+		end
 end)
 When("I append '' to '' as ''", function(content, dest, format)
-		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
-		ACK[dest] = ACK[dest] .. ZEN.decode(content, input_encoding(format))
+		-- ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
+		if ACK[dest] then
+		   ACK[dest] = ACK[dest] .. ZEN.decode(content, input_encoding(format))
+		else
+		   ACK[dest] = ZEN.decode(content, input_encoding(format))
+		end
 end)
 
 -- simplified exception for I write: import encoding from_string ...
