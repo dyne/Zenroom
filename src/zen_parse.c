@@ -28,6 +28,7 @@
 // #include <jutils.h>
 
 #include <zenroom.h>
+#include <zen_memory.h>
 #include <zen_error.h>
 #include <jutils.h>
 
@@ -59,28 +60,34 @@ static int lua_parse_prefix(lua_State* L) {
 
 // internal use, trims the string to a provided destination which is
 // pre-allocated
-static void trimto(char *dest, const char *src, const size_t len) {
+static size_t trimto(char *dest, const char *src, const size_t len) {
 	register unsigned short int c;
 	register unsigned short int d;
 	for(c=0; c<len && isspace(src[c]); c++); // skip front space
 	for(d=0; c<len; c++, d++) dest[d] = src[c];
 	dest[d] = '\0'; // null termination
+	return(d);
 }
-static char ta[MAX_LINE];
-static char tb[MAX_LINE];
+
 static int lua_strcasecmp(lua_State *L) {
 	const char *a, *b;
 	size_t la, lb;
+	char *ta, *tb;
 	a = luaL_checklstring(L,1,&la); SAFE(a);
 	b = luaL_checklstring(L,2,&lb); SAFE(b);
 	if(la>MAX_LINE) lerror(L, "strcasecmp: arg #1 MAX_LINE limit hit");
 	if(lb>MAX_LINE) lerror(L, "strcasecmp: arg #2 MAX_LINE limit hit");
-	trimto(ta, a, la);
-	trimto(tb, b, lb);
-	if( strcasecmp(ta,tb) == 0 )
-		lua_pushboolean(L,1);
-	else
-		lua_pushboolean(L,0);
+	ta = zen_memory_alloc(la+1);
+	tb = zen_memory_alloc(lb+1);
+	la = trimto(ta, a, la);
+	lb = trimto(tb, b, lb);
+	if(la != lb) { lua_pushboolean(L,0); goto end; }
+	if( strcasecmp(ta,tb) == 0 ) { lua_pushboolean(L,1); goto end; }
+// else
+	lua_pushboolean(L,0);
+end:
+	zen_memory_free(ta);
+	zen_memory_free(tb);
 	return 1;
 }
 
