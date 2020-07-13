@@ -98,14 +98,15 @@ int zen_conf_parse(const char *configuration) {
 	int len = strlen(configuration);
 	if(len<3) return 0;
 	stb_lexer lex;
-	char *lexbuf = (char*)malloc(MAX_CONFIG);
+	char lexbuf[MAX_CONFIG];
+	// char *lexbuf = (char*)malloc(MAX_CONFIG);
 	stb_c_lexer_init(&lex, configuration, configuration+len, lexbuf, MAX_CONFIG);
 	zconf_rngseed[0] = '\0'; // set zero rngseed as config flag
 	curconf = NIL;
 	while (stb_c_lexer_get_token(&lex)) {
 		if (lex.token == CLEX_parse_error) {
 			error(NULL,"%s: error parsing configuration: %s", __func__, configuration);
-			free(lexbuf);
+			// free(lexbuf);
 			return 0;
 		}
 
@@ -135,7 +136,7 @@ int zen_conf_parse(const char *configuration) {
 				else if(strcasecmp(lex.string,"je") == 0) zconf_memmg = JE;
 				else {
 					error(NULL,"invalid memory manager: %s",lex.string);
-					free(lexbuf);
+					// free(lexbuf);
 					return 0;
 				}
 				break;
@@ -146,12 +147,12 @@ int zen_conf_parse(const char *configuration) {
 				if( len-4 != RANDOM_SEED_LEN *2) { // hex doubles size
 					error(NULL,"Invalid length of random seed: %u (must be %u)",
 					      len/2, RANDOM_SEED_LEN);
-					free(lexbuf);
+					// free(lexbuf);
 					return 0;
 				}
 				if(strncasecmp(lex.string, "hex:", 4) != 0) { // hex: prefix needed
 					error(NULL,"Invalid rngseed data prefix (must be hex:)");
-					free(lexbuf);
+					// free(lexbuf);
 					return 0;
 				}
 				// copy string and null terminate
@@ -165,13 +166,13 @@ int zen_conf_parse(const char *configuration) {
 				else if(strcasecmp(lex.string,"sys") == 0) zconf_printf = LIBC_PRINTF;
 				else {
 					error(NULL,"invalid print function: %s",lex.string);
-					free(lexbuf);
+					// free(lexbuf);
 					return 0;
 				}
 				break;
 			}
 
-			free(lexbuf);
+			// free(lexbuf);
 			error(NULL,"invalid configuration: %s", lex.string);
 			curconf = NIL;
 			return 0;
@@ -182,7 +183,7 @@ int zen_conf_parse(const char *configuration) {
 			if(curconf==SECCOMP) { zconf_seccomp = lex.int_number; break; }
 			if(curconf==MEMWIPE) { zconf_memwipe = lex.int_number; break; }
 
-			free(lexbuf);
+			// free(lexbuf);
 			error(NULL,"invalid integer configuration");
 			curconf = NIL;
 			return 0;
@@ -194,10 +195,10 @@ int zen_conf_parse(const char *configuration) {
 				break; }
 			if(lex.token == '=' && curconf != NIL) break; // OK
 			error(NULL,"%s: invalid string in configuration: %c",__func__, lex.token);
-			free(lexbuf);
+			// free(lexbuf);
 			return 0;
 		}
 	}
-	free(lexbuf);
+	// free(lexbuf);
 	return 1;
 }

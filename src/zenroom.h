@@ -102,7 +102,7 @@ void zen_teardown(zenroom_t *zenroom);
 #endif
 
 #ifndef MAX_CONFIG // for the configuration parser
-#define MAX_CONFIG 1024
+#define MAX_CONFIG 512
 #endif
 
 #ifndef MAX_ZENCODE // maximum size of a zencode script
