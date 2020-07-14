@@ -271,7 +271,7 @@ When("I split the rightmost '' bytes of ''", function(len, src)
 		ZEN.assert(s, "Invalid number arg #1: "..type(len))
 		ZEN.assert(ACK[src], "Element not found: "..src)
 		ZEN.assert(not ACK.rightmost, "Cannot overwrite existing value: ".."rightmost")
-		local l,r = OCT.chop(ACK[src],s)
+		local l,r = OCTET.chop(ACK[src],s)
 		ACK.rightmost = r
 		ACK[src] = l
 end)
