@@ -69,6 +69,9 @@ linux-debug-jemalloc: linux
 linux-clang: gcc := clang
 linux-clang: linux
 
+linux-clang-debug: gcc := clang
+linux-clang-debug: linux
+
 linux-sanitizer: gcc := clang
 linux-sanitizer: cflags := -O1 -ggdb ${cflags_protection} -DDEBUG=1
 linux-sanitizer: cflags += -fsanitize=address -fno-omit-frame-pointer
