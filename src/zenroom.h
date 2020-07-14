@@ -57,9 +57,9 @@ typedef struct {
 
 #include <stdarg.h>
 typedef int (*sprintf_t)( char * buf, char const * fmt, ... );
-typedef int (*snprintf_t)( char * buf, size_t count, char const * fmt, ... );
+typedef int (*snprintf_t)( char * buf, unsigned long count, char const * fmt, ... );
 typedef int (*vsprintf_t)( char * buf, char const * fmt, va_list va );
-typedef int (*vsnprintf_t)( char * buf, size_t count, char const * fmt, va_list va );
+typedef int (*vsnprintf_t)( char * buf, unsigned long count, char const * fmt, va_list va );
 
 
 // zenroom context, also available as "_Z" global in lua space
