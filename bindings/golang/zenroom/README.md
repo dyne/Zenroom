@@ -1,7 +1,7 @@
 # Zenroom-Go
 
-[![Build Status](https://travis-ci.org/DECODEproject/zenroom-go.svg?branch=master)](https://travis-ci.org/DECODEproject/zenroom-go)
-[![GoDoc](https://godoc.org/github.com/DECODEproject/zenroom-go?status.svg)](https://godoc.org/github.com/DECODEproject/zenroom-go)
+[![Build Status](https://travis-ci.org/dyne/zenroom-go.svg?branch=master)](https://travis-ci.org/dyne/zenroom-go)
+[![GoDoc](https://godoc.org/github.com/dyne/zenroom-go?status.svg)](https://godoc.org/github.com/dyne/zenroom-go)
 
 Zenroom Binding for Go
 
@@ -14,7 +14,7 @@ Zenroom is a brand new virtual machine for fast cryptographic operations on Elli
 Currently the bindings are only available for Linux machines, but if this is your current environment you should be able to just do:
 
 ```bash
-$ go get github.com/DECODEproject/Zenroom/bindings/golang/zenroom
+$ go get github.com/dyne/Zenroom/bindings/golang/zenroom
 ```
 
 ## Usage
@@ -26,7 +26,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/DECODEproject/Zenroom/bindings/golang/zenroom"
+	"github.com/dyne/Zenroom/bindings/golang/zenroom"
 )
 
 	genKeysScript := []byte(`

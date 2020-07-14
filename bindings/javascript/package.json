@@ -3,9 +3,10 @@
   "version": "1.1.1",
   "description": "wrapper of Zenroom, a secure and small virtual machine for crypto language processing",
   "main": "index.js",
-  "repository": "https://github.com/DECODEproject/Zenroom.git",
+  "repository": "https://github.com/dyne/Zenroom.git",
   "author": "Puria Nafisi Azizi <puria@dyne.org>",
   "license": "AGPL-3.0",
+  "keywords": ["zenroom", "crypto-language-processing", "virtual-machine", "blockchain", "crypto", "ecc", "dyne", "ecdh", "ecdsa", "zero-knowledge-proofs", "javascript", "npm", "ecp2", "miller-loop", "hamming-distance", "elgamal", "aes-gcm", "aead", "seccomp", "goldilocks"],
   "scripts": {
     "lint": "npx standard",
     "build": "cd ../.. && make javascript-wasm",
