@@ -991,7 +991,7 @@ static int bitshift_hamming_distance(lua_State *L) {
 }
 
 
-int luaopen_octet(lua_State *L) {
+int luaopen_octet() {
 	const struct luaL_Reg octet_class[] = {
 		{"new",   newoctet},
 		{"concat",concat_n},

@@ -25,7 +25,7 @@
 
 typedef struct {
 	size_t halflen; // length in bytes of a reduced coordinate
-	size_t totlen; // length of a serialized octet
+	int totlen; // length of a serialized octet
 	ECP  val;
 	// TODO: the values above make it necessary to propagate the
 	// visibility on the specific curve point types to the rest of the

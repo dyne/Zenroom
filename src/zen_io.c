@@ -197,23 +197,23 @@ static int zen_write (lua_State *L) {
 	return 1;
 }
 
-static int zen_error (lua_State *L) {
-	size_t pos = 0;
-	size_t len = 0;
-	int n = lua_gettop(L);  /* number of arguments */
-	int i;
-	lua_getglobal(L, "tostring");
-	out[0] = '['; out[1] = '!';	out[2] = ']'; out[3] = ' ';	pos = 4;
-	for (i=1; i<=n; i++) {
-		const char *s = lua_print_format(L, i, &len);
-		if (i>1) { out[pos]='\t'; pos++; }
-		(*Z->snprintf)(out+pos,MAX_JSBUF-pos,"%s",s);
-		pos+=len;
-		lua_pop(L, 1);  /* pop result */
-	}
-	EM_ASM_({Module.printErr(UTF8ToString($0))}, out);
-	return 0;
-}
+// static int zen_error (lua_State *L) {
+// 	size_t pos = 0;
+// 	size_t len = 0;
+// 	int n = lua_gettop(L);  /* number of arguments */
+// 	int i;
+// 	lua_getglobal(L, "tostring");
+// 	out[0] = '['; out[1] = '!';	out[2] = ']'; out[3] = ' ';	pos = 4;
+// 	for (i=1; i<=n; i++) {
+// 		const char *s = lua_print_format(L, i, &len);
+// 		if (i>1) { out[pos]='\t'; pos++; }
+// 		(*Z->snprintf)(out+pos,MAX_JSBUF-pos,"%s",s);
+// 		pos+=len;
+// 		lua_pop(L, 1);  /* pop result */
+// 	}
+// 	EM_ASM_({Module.printErr(UTF8ToString($0))}, out);
+// 	return 0;
+// }
 
 static int zen_warn (lua_State *L) {
 	size_t pos = 0;
@@ -262,10 +262,10 @@ static int zen_printerr(lua_State *L)
 	return 1;
 }
 
-static int zen_error (lua_State *L)
-{
-    return 1;
-}
+// static int zen_error (lua_State *L)
+// {
+//     return 1;
+// }
 
 static int zen_warn (lua_State *L)
 {
@@ -392,42 +392,42 @@ static int zen_act (lua_State *L) {
 // api_checknelems(L, 1);
 // luaG_errormsg(L);
 
-static int zen_error (lua_State *L) {
-	int n = lua_gettop(L);  /* number of arguments */
-	int w;
+// static int zen_error (lua_State *L) {
+// 	int n = lua_gettop(L);  /* number of arguments */
+// 	int w;
 
-	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
+// 	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
 
-	int status = 1;
-	size_t len = 0;
-	int i;
-	lua_getglobal(L, "tostring");
-	w = write(STDERR_FILENO, "[!] ",4* sizeof(char));
-    (void)w;
-	for (i=1; i<=n; i++) {
-		const char *s = lua_print_format(L, i, &len);
-		if(i>1)
-			w = write(STDERR_FILENO, "\t",sizeof(char));
-        (void)w;
-		status = status &&
-			(write(STDERR_FILENO, s, len) == (int)len);
-		lua_pop(L, 1);  /* pop result */
-	}
-	w = write(STDERR_FILENO,"\n",sizeof(char));
+// 	int status = 1;
+// 	size_t len = 0;
+// 	int i;
+// 	lua_getglobal(L, "tostring");
+// 	w = write(STDERR_FILENO, "[!] ",4* sizeof(char));
+//     (void)w;
+// 	for (i=1; i<=n; i++) {
+// 		const char *s = lua_print_format(L, i, &len);
+// 		if(i>1)
+// 			w = write(STDERR_FILENO, "\t",sizeof(char));
+//         (void)w;
+// 		status = status &&
+// 			(write(STDERR_FILENO, s, len) == (int)len);
+// 		lua_pop(L, 1);  /* pop result */
+// 	}
+// 	w = write(STDERR_FILENO,"\n",sizeof(char));
 
-	// output the zencode line if active
-	lua_getglobal(L,"ZEN_traceback");
-	size_t zencode_line_len;
-	const char *zencode_line = lua_tolstring(L,3,&zencode_line_len);
-	if(zencode_line) {
-		w = write(STDERR_FILENO, "[!] ",4* sizeof(char));
-		w = write(STDERR_FILENO, zencode_line, zencode_line_len);
-	}
-	lua_pop(L,1); // lua_getglobal ZEN_tracebak
+// 	// output the zencode line if active
+// 	lua_getglobal(L,"ZEN_traceback");
+// 	size_t zencode_line_len;
+// 	const char *zencode_line = lua_tolstring(L,3,&zencode_line_len);
+// 	if(zencode_line) {
+// 		w = write(STDERR_FILENO, "[!] ",4* sizeof(char));
+// 		w = write(STDERR_FILENO, zencode_line, zencode_line_len);
+// 	}
+// 	lua_pop(L,1); // lua_getglobal ZEN_tracebak
 
-    (void)w;
-	return 0;
-}
+//     (void)w;
+// 	return 0;
+// }
 
 #endif
 

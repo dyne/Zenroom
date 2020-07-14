@@ -47,15 +47,15 @@ extern zen_extension_t zen_extensions[];
 // extern unsigned int zen_lua_init_len;
 
 // extern int luaopen_crypto(lua_State *L);
-extern int luaopen_octet(lua_State *L);
-// extern int luaopen_rsa(lua_State *L);
-extern int luaopen_ecdh(lua_State *L);
-extern int luaopen_aes(lua_State *L);
-extern int luaopen_ecp(lua_State *L);
-extern int luaopen_ecp2(lua_State *L);
-extern int luaopen_fp12(lua_State *L);
-extern int luaopen_big(lua_State *L);
-extern int luaopen_hash(lua_State *L);
+extern int luaopen_octet();
+// extern int luaopen_rsa();
+extern int luaopen_ecdh();
+extern int luaopen_aes();
+extern int luaopen_ecp();
+extern int luaopen_ecp2();
+extern int luaopen_fp12();
+extern int luaopen_big();
+extern int luaopen_hash();
 
 // really loaded in lib/lua53/linit.c
 // align here for reference

@@ -155,8 +155,7 @@ static int ctr_process(lua_State *L) {
 }
 
 
-int luaopen_aes(lua_State *L) {
-	(void)L;
+int luaopen_aes() {
 	const struct luaL_Reg aes_class[] = {
 		{"gcm_encrypt", gcm_encrypt},
 		{"gcm_decrypt", gcm_decrypt},

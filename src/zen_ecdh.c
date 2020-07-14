@@ -424,8 +424,7 @@ static int ecdh_aead_decrypt(lua_State *L) {
 
 
 
-int luaopen_ecdh(lua_State *L) {
-	(void)L;
+int luaopen_ecdh() {
 	const struct luaL_Reg ecdh_class[] = {
 		{"keygen",ecdh_keygen},
 		{"pubgen",ecdh_pubgen},

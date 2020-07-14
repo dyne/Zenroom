@@ -59,6 +59,7 @@ static int color = 0;
 void set_color(int on) { color = on; }
 
 void notice(lua_State *L, const char *format, ...) {
+	(void)L;
 	if(!verbosity) return;
 	va_list arg;
 	snprintf_t pr = Z ? Z->snprintf : &snprintf;
@@ -84,6 +85,7 @@ void func(void *L, const char *format, ...) {
 }
 
 void error(lua_State *L, const char *format, ...) {
+	(void)L;
 	if(!format) return;
 	va_list arg;
 	snprintf_t pr = Z ? Z->snprintf : &snprintf;
@@ -99,6 +101,7 @@ void error(lua_State *L, const char *format, ...) {
 }
 
 void act(lua_State *L, const char *format, ...) {
+	(void)L;
 	if(!verbosity) return;
 	va_list arg;
 	snprintf_t pr = Z ? Z->snprintf : &snprintf;
@@ -109,8 +112,8 @@ void act(lua_State *L, const char *format, ...) {
 }
 
 void warning(lua_State *L, const char *format, ...) {
+	(void)L;
 	if(verbosity<2) return;
-
 	va_list arg;
 	snprintf_t pr = Z ? Z->snprintf : &snprintf;
 	if(color)
@@ -122,5 +125,3 @@ void warning(lua_State *L, const char *format, ...) {
 	va_end(arg);
 	if(Z) Z->errorlevel = 2;
 }
-
-
