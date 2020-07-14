@@ -125,17 +125,6 @@ When("number '' is more or equal than ''", function(left, right)
 		local l, r = numcheck(ACK[left], ACK[right])
 		ZEN.assert(l >= r, "Failed comparison: "..l.." is not more or equal than "..r)
 end)
-When("'' in '' is more than '' in ''", function(ele, left, ere, right)
-		ZEN.assert(ACK[left], "Object not found: "..left)
-		local lo = ACK[left][ele]
-		ZEN.assert(lo, "Number not found: "..left.."."..ele)
-		ZEN.assert(ACK[right], "Object not found: "..right)
-		local ro = ACK[right][ere]
-		ZEN.assert(ro, "Number not found: "..right.."."..ere)
-		local l, r = numcheck(lo, ro)
-		ZEN.assert(l > r, "Failed comparison: "..left.."."..ele..
-					  " is not more than "..right.."."..ere)
-end)
 
 -- random and hashing operations
 When("I create the random object of '' bits", function(n)
