@@ -29,14 +29,17 @@
 #include <zen_error.h>
 #include <zen_octet.h>
 
+#ifdef __ANDROID__
+#include <android/log.h>
+#endif
+
 extern zenroom_t *Z;
 extern int EXITCODE;
 
 int zen_write_err_va(const char *fmt, va_list va) {
 	int res = 0;
 #ifdef __ANDROID__
-// 	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", "%s -- %s", pfx, msg);
-	res = __android_log_vprint(ANDROID_LOG_VERBOSE, "ZEN", fmt, va);
+	res = __android_log_vprint(ANDROID_LOG_DEBUG, "ZEN", fmt, va);
 #else
 	if(!Z) res = vfprintf(stderr,fmt,va); // no init yet, print to stderr
 	if(!res && Z->stderr_buf) { // print to configured buffer

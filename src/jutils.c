@@ -33,6 +33,10 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
+#ifdef __ANDROID__
+#include <android/log.h>
+#endif
+
 // ANSI colors for terminal
 const char* ANSI_RED     = "\x1b[1;31m";
 const char* ANSI_GREEN   = "\x1b[1;32m";
@@ -57,6 +61,43 @@ void set_debug(int lev) {
 
 static int color = 0;
 void set_color(int on) { color = on; }
+
+#ifdef __ANDROID__
+void error(lua_State *L, const char *format, ...) {
+	va_list arg;
+	va_start(arg, format);
+	__android_log_vprint(ANDROID_LOG_ERROR, "ZEN", format, arg);
+	va_end(arg);
+}
+void warning(lua_State *L, const char *format, ...) {
+	if(verbosity<1) return;
+	va_list arg;
+	va_start(arg, format);
+	__android_log_vprint(ANDROID_LOG_WARN, "ZEN", format, arg);
+	va_end(arg);
+}
+void notice(lua_State *L, const char *format, ...) {
+	if(verbosity<1) return;
+	va_list arg;
+	va_start(arg, format);
+	__android_log_vprint(ANDROID_LOG_INFO, "ZEN", format, arg);
+	va_end(arg);
+}
+void act(lua_State *L, const char *format, ...) {
+	if(verbosity<2) return;
+	va_list arg;
+	va_start(arg, format);
+	__android_log_vprint(ANDROID_LOG_DEBUG, "ZEN", format, arg);
+	va_end(arg);
+}
+void func(void *L, const char *format, ...) {
+	if(verbosity<3) return;
+	va_list arg;
+	va_start(arg, format);
+	__android_log_vprint(ANDROID_LOG_VERBOSE, "ZEN", format, arg);
+	va_end(arg);
+}
+#else
 
 void notice(lua_State *L, const char *format, ...) {
 	(void)L;
@@ -125,3 +166,5 @@ void warning(lua_State *L, const char *format, ...) {
 	va_end(arg);
 	if(Z) Z->errorlevel = 2;
 }
+
+#endif
