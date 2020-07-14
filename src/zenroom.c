@@ -168,9 +168,11 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	Z->stdout_buf = NULL;
 	Z->stdout_pos = 0;
 	Z->stdout_len = 0;
+	Z->stdout_full = 0;
 	Z->stderr_buf = NULL;
 	Z->stderr_pos = 0;
 	Z->stderr_len = 0;
+	Z->stderr_full = 0;
 	Z->userdata = NULL;
 	Z->errorlevel = get_debug();
 	Z->random_generator = NULL;

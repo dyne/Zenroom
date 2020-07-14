@@ -30,37 +30,81 @@
 #include <zen_octet.h>
 
 extern zenroom_t *Z;
+extern int EXITCODE;
 
 int zen_write_err_va(const char *fmt, va_list va) {
 // #ifdef __ANDROID__
 // 	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", "%s -- %s", pfx, msg);
 // 	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", fmt, va); // TODO: test
 // #endif
-	size_t len = 0;
-	if(!Z) len = vfprintf(stderr,fmt,va); // no init yet, print to stderr
-	if(!len && Z->stderr_buf) { // print to configured buffer
-		char *err = Z->stderr_buf;
-		len = (*Z->vsnprintf)(err+Z->stderr_pos,
-		                  Z->stderr_len-Z->stderr_pos,
-		                  fmt, va);
-		Z->stderr_pos+=len;
+	int res = 0;
+	if(!Z) res = vfprintf(stderr,fmt,va); // no init yet, print to stderr
+	if(!res && Z->stderr_buf) { // print to configured buffer
+		if(Z->stderr_full) {
+			error(Z->lua, "Error buffer full, log message lost");
+			return(0);
+		}
+		size_t max = Z->stderr_len - Z->stderr_pos;
+		res = (*Z->vsnprintf)
+			(Z->stderr_buf + Z->stderr_pos, // buffer start
+			 Z->stderr_len - Z->stderr_pos,  // length max
+			 fmt, va);
+		if(res < 0) {
+			error(Z->lua, "Fatal error writing error buffer: %s", strerror(errno));
+			EXITCODE = -1;
+			return(EXITCODE);
+		}
+		if(res > (int)max) {
+			error(Z->lua, "Error buffer too small, log truncated: %u bytes (max %u)",res, max);
+			Z->stderr_full = 1;
+			Z->stderr_pos += max;
+		} else {
+			Z->stderr_pos += res;
+		}
 	}
-	if(!len) len = vfprintf(stderr,fmt,va); // fallback no configured buffer
-	return len;
+	if(!res) res = vfprintf(stderr,fmt,va); // fallback no configured buffer
+	return(res);
 }
 
 int zen_write_out_va(const char *fmt, va_list va) {
-	size_t len = 0;
-	if(!Z) len = vfprintf(stdout,fmt,va);
-	if(!len && Z->stdout_buf) {
-		char *out = Z->stdout_buf;
-		len = (*Z->vsnprintf)(out+Z->stdout_pos,
-		                  Z->stdout_len-Z->stdout_pos,
-		                  fmt, va);
-		Z->stdout_pos+=len;
+	int res = 0;
+	if(!Z) res = vfprintf(stdout,fmt,va); // no init yet, print to stdout
+	if(!res && Z->stdout_buf) { // print to configured buffer
+		if(Z->stdout_full) {
+			error(Z->lua, "Output buffer full, result data lost");
+			return(0);
+		}
+		size_t max = Z->stdout_len - Z->stdout_pos;
+		res = (*Z->vsnprintf)
+			(Z->stdout_buf + Z->stdout_pos, // buffer start
+			 Z->stdout_len - Z->stdout_pos,  // length max
+			 fmt, va);
+		if(res < 0) {
+			error(Z->lua, "Fatal error writing output buffer: %s", strerror(errno));
+			EXITCODE = -1;
+			return(EXITCODE);
+		}
+		if(res > (int)max) {
+			error(Z->lua, "Output buffer too small, data truncated: %u bytes (max %u)",res, max);
+			Z->stdout_full = 1;
+			Z->stdout_pos += max;
+		} else {
+			Z->stdout_pos += res;
+		}
 	}
-	if(!len) len = vfprintf(stdout,fmt,va);
-	return len;
+	if(!res) res = vfprintf(stdout,fmt,va); // fallback no configured buffer
+	return(res);
+	// size_t len = 0;
+	// if(!Z) len = vfprintf(stdout,fmt,va);
+	// if(!len && Z->stdout_buf) {
+	// 	char *out = Z->stdout_buf;
+	// 	len = (*Z->vsnprintf)(out+Z->stdout_pos,
+	// 	                  Z->stdout_len-Z->stdout_pos,
+	// 	                  fmt, va);
+	// 	Z->stdout_pos+=len;
+	// }
+	// if(!len) len = vfprintf(stdout,fmt,va);
+	// return len;
 }
 
 int zen_write_err(const char *fmt, ...) {
