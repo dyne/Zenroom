@@ -40,9 +40,7 @@ int zen_write_err_va(const char *fmt, va_list va) {
 	if(!Z) len = vfprintf(stderr,fmt,va); // no init yet, print to stderr
 	if(!len && Z->stderr_buf) { // print to configured buffer
 		char *err = Z->stderr_buf;
-		len = (*Z->vsnprintf)(err+Z->stderr_pos,
-		                  Z->stderr_len-Z->stderr_pos,
-		                  fmt, va);
+		len = (*Z->vsnprintf)(err+Z->stderr_pos, Z->stderr_len, fmt, va);
 		Z->stderr_pos+=len;
 	}
 	if(!len) len = vfprintf(stderr,fmt,va); // fallback no configured buffer
@@ -54,9 +52,7 @@ int zen_write_out_va(const char *fmt, va_list va) {
 	if(!Z) len = vfprintf(stdout,fmt,va);
 	if(!len && Z->stdout_buf) {
 		char *out = Z->stdout_buf;
-		len = (*Z->vsnprintf)(out+Z->stdout_pos,
-		                  Z->stdout_len-Z->stdout_pos,
-		                  fmt, va);
+		len = (*Z->vsnprintf)(out+Z->stdout_pos, Z->stdout_len, fmt, va);
 		Z->stdout_pos+=len;
 	}
 	if(!len) len = vfprintf(stdout,fmt,va);
