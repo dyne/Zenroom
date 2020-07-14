@@ -33,11 +33,11 @@ extern zenroom_t *Z;
 extern int EXITCODE;
 
 int zen_write_err_va(const char *fmt, va_list va) {
-// #ifdef __ANDROID__
-// 	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", "%s -- %s", pfx, msg);
-// 	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", fmt, va); // TODO: test
-// #endif
 	int res = 0;
+#ifdef __ANDROID__
+// 	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", "%s -- %s", pfx, msg);
+	res = __android_log_vprint(ANDROID_LOG_VERBOSE, "ZEN", fmt, va);
+#else
 	if(!Z) res = vfprintf(stderr,fmt,va); // no init yet, print to stderr
 	if(!res && Z->stderr_buf) { // print to configured buffer
 		if(Z->stderr_full) {
@@ -63,6 +63,7 @@ int zen_write_err_va(const char *fmt, va_list va) {
 		}
 	}
 	if(!res) res = vfprintf(stderr,fmt,va); // fallback no configured buffer
+#endif
 	return(res);
 }
 
