@@ -76,10 +76,10 @@ void* rng_alloc() {
 		randombytes(Z->random_seed,RANDOM_SEED_LEN-4);
 		// using time() from milagro
 		unsign32 ttmp = (unsign32)time(NULL);
-		Z->random_seed[252] = (ttmp >> 24) & 0xff;
-		Z->random_seed[253] = (ttmp >> 16) & 0xff;
-		Z->random_seed[254] = (ttmp >>  8) & 0xff;
-		Z->random_seed[255] =  ttmp & 0xff;
+		Z->random_seed[60] = (ttmp >> 24) & 0xff;
+		Z->random_seed[61] = (ttmp >> 16) & 0xff;
+		Z->random_seed[62] = (ttmp >>  8) & 0xff;
+		Z->random_seed[63] =  ttmp & 0xff;
 	}
 #endif
 	// RAND_seed is destructive, preserve seed here
