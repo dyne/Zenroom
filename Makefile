@@ -156,10 +156,10 @@ install-lua:
 	cp src/ecdh.so ${destlib}
 
 clean:
-	make clean -C ${pwd}/lib/lua53/src
-	make clean -C ${pwd}/lib/milagro-crypto-c
 	rm -f ${pwd}/lib/milagro-crypto-c/CMakeCache.txt
 	rm -rf ${pwd}/lib/milagro-crypto-c/CMakeFiles
+	make clean -C ${pwd}/lib/lua53/src
+	make clean -C ${pwd}/lib/milagro-crypto-c
 	make clean -C src
 	make clean -C bindings
 	rm -f ${extras}/index.*
