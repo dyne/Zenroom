@@ -201,6 +201,7 @@ ifneq (,$(findstring javascript,$(MAKECMDGOALS)))
 gcc := ${EMSCRIPTEN}/emcc
 ar := ${EMSCRIPTEN}/emar
 ld := ${gcc}
+ranlib := ${EMSCRIPTEN}/emranlib
 system:= Javascript
 # lua_embed_opts := "compile"
 ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zenroom_exec_tobuf\",\"_zencode_exec\",\"_zencode_exec_tobuf\",\"_set_debug\"]'" -s "EXTRA_EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\",\"printErr\"]'" -s USE_SDL=0 -s USE_PTHREADS=0 -lm
