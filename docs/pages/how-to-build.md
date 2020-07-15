@@ -10,6 +10,15 @@ git submodule update --init --recursive
 The Zenroom compiles the same sourcecode to run on Linux in the form of 2 different POSIX compatible ELF binary formats using GCC (linking shared libraries) or musl-libc (fully static) targeting both X86 and ARM architectures.
 It also compiles to a Windows 64-bit native and fully static executable. At last, it compiles to Javascript/Webassembly using the LLVM based emscripten SDK. To recapitulate some Makefile targets:
 
+## Prerequisites
+
+<!-- tabs:start -->
+#### **Devuan / Debian / Ubuntu**
+```bash
+apt-get install -y git build-essential cmake zsh xxd
+```
+<!-- tabs:end -->
+
 ## Shared builds
 The simpliest, builds a shared executable linked to a system-wide libc, libm and libpthread (mostly for debugging)
 Then first build the shared executable for your platform:
