@@ -16,9 +16,6 @@
 -- You should have received a copy of the GNU Affero General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
--- make sure relevant defaults are there
-CONF.encoding = CONF.encoding or url64
-CONF.encoding_prefix = CONF.encoding_prefix or 'u64'
 
 ZEN.add_schema({
 	  -- keypair (ECDH)
