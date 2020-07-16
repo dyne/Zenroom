@@ -1,4 +1,4 @@
-Scenario simple: Decrypt the message with the password
+Scenario ecdh: Decrypt the message with the password
 Given I have a 'secret message'
 When I write string 'my secret word' in 'password'
 and I decrypt the secret message with 'password'

@@ -1,4 +1,4 @@
-Scenario simple: Encrypt a message with the password
+Scenario ecdh: Encrypt a message with the password
 Given nothing
 # only inline input, no KEYS or DATA passed
 When I write string 'my secret word' in 'password'

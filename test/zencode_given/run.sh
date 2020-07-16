@@ -113,7 +113,7 @@ EOF
 
 cat <<EOF | tee have_my.zen | $Z -z -a $tmp
 rule check version 1.0.0
-scenario 'simple'
+scenario 'ecdh'
 	 Given I am 'Andrea'
 	 and I have my 'keypair'
 	 Then print the 'keypair'
@@ -121,7 +121,7 @@ EOF
 
 cat <<EOF | tee have_my_valid.zen | $Z -z -a $tmp
 rule check version 1.0.0
-scenario 'simple'
+scenario 'ecdh'
 	 Given I am 'Andrea'
 	 and I have my valid 'keypair'
 	 Then print the 'keypair'
@@ -129,7 +129,7 @@ EOF
 
 cat <<EOF | tee is_valid.zen | $Z -z -a $tmp
 rule check version 1.0.0
-scenario 'simple'
+scenario 'ecdh'
 	 Given I am 'Andrea'
 	 and the 'keypair' is valid
 	 Then print all data
@@ -138,36 +138,36 @@ EOF
 
 cat <<EOF | tee have_a_inside.zen | $Z -z -a $tmp
 rule check version 1.0.0
-scenario 'simple'
+scenario 'ecdh'
 	 Given I have a 'robba' inside 'stuff'
 	 Then print the 'robba'
 EOF
 cat <<EOF | tee have_inside_a.zen | $Z -z -a $tmp
 rule check version 1.0.0
-scenario 'simple'
+scenario 'ecdh'
 	 Given I have inside 'stuff' a 'robba'
 	 Then print the 'stuff'
 EOF
 # ambiguity explained:
 cat <<EOF | tee have_a_inside.zen | $Z -z -a $tmp
 rule check version 1.0.0
-scenario 'simple'
+scenario 'ecdh'
 	 Given I have a 'keypair' inside 'Bobbino'
 	 Then print the 'keypair'
 EOF
 cat <<EOF | tee have_inside_a.zen | $Z -z -a $tmp
 rule check version 1.0.0
-scenario 'simple'
+scenario 'ecdh'
 	 Given I have inside 'Bobbino' a 'keypair'
 	 Then print the 'Bobbino'
 EOF
 # TODO: rename in Given I have inside 'Bobbino' a 'keypair'
 # diverso da Given I have a 'keypair' inside 'Bobbino'
 # also same statements with valid
-# also from (maybe move to scenario simple)
+# also from (maybe move to scenario ecdh)
 cat <<EOF | tee have_inside_a.zen | $Z -z -a $tmp
 rule check version 1.0.0
-scenario 'simple'
+scenario 'ecdh'
 	 Given I have a valid 'public key' from 'Andrea'
 	 when schema
 	 Then print all data
@@ -176,13 +176,13 @@ EOF
 # array
 cat <<EOF | tee have_a_implicit_array.zen | $Z -z -a $tmp
 rule check version 1.0.0
-scenario 'simple'
+scenario 'ecdh'
 	 Given I have a 'peppe' inside 'stuff'
 	 Then print the 'peppe'
 EOF
 cat <<EOF | tee have_a_implicit_array.zen | $Z -z -a $tmp
 rule check version 1.0.0
-scenario 'simple'
+scenario 'ecdh'
 	 Given I have a valid 'array' named 'peppe' inside 'stuff'
 	 Given I have a valid 'array' named 'peppe'
 	 Then print the 'peppe'
@@ -190,7 +190,7 @@ EOF
 
 cat <<EOF | tee have_a_implicit_array.zen | $Z -z -a $tmp
 rule check version 1.0.0
-scenario 'simple'
+scenario 'ecdh'
 	 Given I have a valid 'number' named 'quantity' inside 'stuff'
 	 Then print the 'peppe'
 EOF

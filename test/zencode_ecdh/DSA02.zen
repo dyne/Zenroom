@@ -1,5 +1,5 @@
 rule check version 1.0.0
-Scenario 'simple': Bob verifies the signature from Alice
+Scenario 'ecdh': Bob verifies the signature from Alice
 	Given that I am known as 'Bob'
 	and I have a 'public key' from 'Alice'
 	and I have a 'signature' from 'Alice'

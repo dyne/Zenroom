@@ -2,7 +2,7 @@ print'===================='
 print'= Zencode internals'
 print'===================='
 
-require'zencode_simple'
+require'zencode_ecdh'
 require'zencode_coconut'
 CONF.input.encoding = get_encoding('url64')
 CONF.output.encoding = get_encoding('base64')

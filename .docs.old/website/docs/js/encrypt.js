@@ -7,7 +7,7 @@ var ZC = (function() {
     let aliceKeys = null
     let t0 = 0
     let t1 = 0
-    let zencode_encrypt_contract = `Scenario 'simple': Alice sends a secret to Bob
+    let zencode_encrypt_contract = `Scenario 'ecdh': Alice sends a secret to Bob
 Given that I am known as 'Alice'
 and I have my 'keypair'
 and I have inside 'Bob' a valid 'public key'
@@ -21,13 +21,13 @@ Then print the 'secret message'
         $('#encrypt_contract').html(zencode_encrypt_contract)
 
 		// generate the keypairs
-        zencode(`Scenario 'simple': $scenario
+        zencode(`Scenario 'ecdh': $scenario
                  Given that I am known as 'Bob'
                  When I create the keypair
                  Then print my data`, null, null)
         bobKeys = JSON.parse(zencodeResults.pop())
         $("#bob").html(JSON.stringify({Bob: { public_key: bobKeys.Bob.keypair.public_key}}))
-        zencode(`Scenario 'simple': $scenario
+        zencode(`Scenario 'ecdh': $scenario
                  Given that I am known as 'Alice'
                  When I create the keypair
                  Then print my data`, null, null)

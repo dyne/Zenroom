@@ -1,5 +1,5 @@
 Rule check version 1.0.0
-Scenario 'simple': Alice signs a message for Bob
+Scenario 'ecdh': Alice signs a message for Bob
 	Given that I am known as 'Alice'
 	and I have my 'keypair'
 	When I write string 'This is my signed message to Bob.' in 'draft'

@@ -1,5 +1,5 @@
 Rule check version 1.0.0
-Scenario 'simple': Alice encrypts a message for Bob
+Scenario 'ecdh': Alice encrypts a message for Bob
 	Given that I am known as 'Alice'
 	and I have my 'keypair'
 	and I have a 'public key' from 'Bob'

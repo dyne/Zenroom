@@ -1,5 +1,5 @@
 Rule check version 1.0.0
-Scenario 'simple': Bob decrypts the message from Alice
+Scenario 'ecdh': Bob decrypts the message from Alice
 	Given that I am known as 'Bob'
 	and I have my 'keypair'
 	and I have a 'public key' from 'Alice'
