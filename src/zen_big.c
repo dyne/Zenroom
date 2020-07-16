@@ -746,7 +746,8 @@ static int big_modinv(lua_State *L) {
 	return 1;
 }
 
-int luaopen_big() {
+int luaopen_big(lua_State *L) {
+	(void)L;
 	const struct luaL_Reg big_class[] = {
 		{"new",newbig},
 		{"eq",big_eq},

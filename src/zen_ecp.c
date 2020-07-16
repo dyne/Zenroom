@@ -465,7 +465,8 @@ static int ecp_output(lua_State *L) {
 	return 1;
 }
 
-int luaopen_ecp() {
+int luaopen_ecp(lua_State *L) {
+	(void)L;
 	const struct luaL_Reg ecp_class[] = {
 		{"new",lua_new_ecp},
 		{"inf",ecp_get_infinity},

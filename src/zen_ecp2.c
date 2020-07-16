@@ -410,7 +410,8 @@ static int ecp2_get_zi(lua_State *L) {
 	return 1;
 }
 
-int luaopen_ecp2() {
+int luaopen_ecp2(lua_State *L) {
+	(void)L;
 	const struct luaL_Reg ecp2_class[] = {
 		{"new",lua_new_ecp2},
 		{"generator",ecp2_generator},

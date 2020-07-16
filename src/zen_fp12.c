@@ -162,7 +162,8 @@ static int fp12_inv(lua_State *L) {
 		{"sqr",fp12_sqr}, \
 		{"inv",fp12_inv}
 
-int luaopen_fp12() {
+int luaopen_fp12(lua_State *L) {
+		(void)L;
 	const struct luaL_Reg fp12_class[] = {
 		{"new",fp12_from_octet},
 		{"octet",fp12_from_octet},

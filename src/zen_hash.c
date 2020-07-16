@@ -295,7 +295,8 @@ static int hash_pbkdf2(lua_State *L) {
 	return 1;
 }
 		
-int luaopen_hash() {
+int luaopen_hash(lua_State *L) {
+	(void)L;
 	const struct luaL_Reg hash_class[] = {
 		{"new",lua_new_hash},
 		{"hmac",hash_hmac},
