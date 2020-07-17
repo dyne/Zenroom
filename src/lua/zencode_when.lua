@@ -58,10 +58,27 @@ When("I create the random ''", function(dest)
 end)
 
 -- generic comparison using overloaded __eq on any value
-When("I verify '' is equal to ''", function(l,r)
-		ZEN.assert(ACK[l] == ACK[r],
-				   "When comparison failed: objects are not equal: "
-					  ..l.." == "..r)
+When("verify '' is equal to ''", function(l,r)
+		local tabeq = false
+		if luatype(ACK[l]) == 'table' then
+		   ZEN.assert(luatype(ACK[r]) == 'table',
+					  "Cannot verify equality: "..l.." is a table, "..r.." is not")
+		   tabeq = true
+		end
+		if luatype(ACK[r]) == 'table' then
+		   ZEN.assert(luatype(ACK[l]) == 'table',
+					  "Cannot verify equality: "..r.." is a table, "..l.." is not")
+		   tabeq = true
+		end
+		if tabeq then -- use CBOR encoding and compare strings: there
+					  -- may be faster ways, but this is certainly the
+					  -- most maintainable
+		   ZEN.assert( CBOR.encode(ACK[l]) == CBOR.encode(ACK[r]),
+					   "Verification failed: arrays are not equal: "..l.." == "..r)
+		else
+		   ZEN.assert(ACK[l] == ACK[r],
+					  "Verification failed: objects are not equal: "..l.." == "..r)
+		end
 end)
 
 -- hashing single strings

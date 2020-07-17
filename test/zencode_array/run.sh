@@ -9,7 +9,7 @@ if ! test -r ../utils.sh; then
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
-cat <<EOF | zexe array_32_256.zen | tee arr.json
+cat <<EOF | zexe array_32_256.zen > arr.json
 rule output encoding url64
 Given nothing
 When I create the array of '32' random objects of '256' bits
@@ -27,10 +27,9 @@ and I remove the 'lucky one' from 'bonnetjes'
 # redundant check
 and the 'lucky one' is not found in 'bonnetjes'
 Then print the 'lucky one'
-and print the 'bonnetjes'
 EOF
 
-cat <<EOF | zexe array_ecp_aggregation.zen
+cat <<EOF | zexe array_ecp_aggregation.zen > ecp_aggregation.json
 rule output encoding url64
 Given nothing
 When I create the array of '32' random curve points
@@ -40,7 +39,7 @@ Then print the 'aggregation'
 EOF
 
 
-cat <<EOF | zexe array_hashtopoint.zen -a arr.json | tee ecp.json
+cat <<EOF | zexe array_hashtopoint.zen -a arr.json > ecp.json
 rule input encoding url64
 rule output encoding url64
 Given I have a 'array' named 'bonnetjes'
@@ -49,7 +48,7 @@ When I create the hash to point 'ECP' of each object in 'bonnetjes'
 Then print the 'hashes'
 EOF
 
-cat <<EOF | zexe array_ecp_check.zen -a arr.json -k ecp.json
+cat <<EOF | zexe array_ecp_check.zen -a arr.json -k ecp.json > hashes.json
 rule input encoding url64
 rule output encoding url64
 Given I have a 'array' named 'bonnetjes'
@@ -62,14 +61,38 @@ EOF
 # 'x == ECP.hashtopoint(y)'
 
 
-cat <<EOF | zexe array_from_hash.zen -a arr.json
+cat <<EOF | zexe left_array_from_hash.zen -a arr.json > left_arr.json
 rule input encoding url64
 rule output encoding url64
 Given I have a 'array' named 'bonnetjes'
 When for each x in 'bonnetjes' create the array using 'sha256(x)'
-Then print the 'array'
-and print the 'bonnetjes'
+and rename the 'array' to 'left array'
+Then print the 'left array'
 EOF
+
+
+cat <<EOF | zexe right_array_from_hash.zen -a arr.json > right_arr.json
+rule input encoding url64
+rule output encoding url64
+Given I have a 'array' named 'bonnetjes'
+When for each x in 'bonnetjes' create the array using 'sha256(x)'
+and rename the 'array' to 'right array'
+Then print the 'right array'
+EOF
+
+# comparison
+
+cat <<EOF | zexe array_comparison.zen -a left_arr.json -k right_arr.json
+rule input encoding url64
+rule output encoding url64
+Given I have a 'array' named 'left array'
+and I have a 'array' named 'right array'
+When I verify 'left array' is equal to 'right array'
+Then print 'OK'
+EOF
+
+
+
 # 'x == ECP.hashtopoint(y)'
 
 
