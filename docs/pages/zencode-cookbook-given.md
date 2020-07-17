@@ -104,7 +104,7 @@ Let's get things more complicated and create a JSON file  containing several nes
 
 [](../_media/examples/zencode_cookbook/myNestedObject.json ':include :type=code json')
  
-In this JSON we placed three different objects, two contain a similar collection of objects inside and one is a cryptographic keypair, which is perfectly ok. We'll load the two arrays and the keypair: note that in order to load the crypto keypair you'll need to use a *scenario*, in this case we'll use the *scenario 'simple'*, don't worry about this for now, let's try focus on the loading part and run this script: 
+In this JSON we placed three different objects, two contain a similar collection of objects inside and one is a cryptographic keypair, which is perfectly ok. We'll load the two arrays and the keypair: note that in order to load the crypto keypair you'll need to use a *scenario*, in this case we'll use the *scenario 'ecdh'*, don't worry about this for now, let's try focus on the loading part and run this script: 
  
 [](../_media/examples/zencode_cookbook/givenLoadNestedObject.zen ':include :type=code gherkin')
  

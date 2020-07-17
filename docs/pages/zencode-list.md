@@ -19,7 +19,7 @@ So each Zencode smart contract will contain at least three lines, each begining 
 Scenarios are set in the beginning of a script and they make Zenroom use a certain set of rules to interpretate the Zencode contained in the smart contract. Different scenarios will typically contain different keywords. The syntax to set a scenario is: 
 
 ```gherkin
-   Scenario 'simple': Create the keypair
+   Scenario 'ecdh': Create the keypair
 ```
 
 The scenario setting happens before the ```:```, everything right of that isn't processed by Zenroom and can be used as a title to the smart contract. 
@@ -104,7 +104,7 @@ Without extensions, these are the basic functions available
 
 [](../_media/zencode_utterances.yaml ':include :fragment=when :type=code yaml')
 
-with the `simple` extension the following statementa are valid
+with the `ecdh` extension the following statementa are valid
 
 [](../_media/zencode_utterances.yaml ':include :fragment=simple_when :type=code yaml')
 

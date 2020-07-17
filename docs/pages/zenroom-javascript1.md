@@ -74,7 +74,7 @@ So create a new file called `keygen.js` and put the following code:
 const zenroom = require('zenroom')
 
 const keygen_contract = `rule check version 1.0.0
-Scenario 'simple': Create the keypair`
+Scenario 'ecdh': Create the keypair`
 Given that I am known as 'Puria'
 When I create the keypair
 Then print my data`
@@ -89,12 +89,6 @@ Et voila the result is something like (I prettified for the purpose of readabili
 
 ```json
 {
-  "zenroom": {
-    "curve": "goldilocks",
-    "encoding": "url64",
-    "version": "1.0.0+a7fab75",
-    "scenario": "simple"
-  },
   "Puria": {
     "keypair": {
       "public_key": "u64:BBqhjaIXr6vPMVhQKSU1vau5lUJDXwGBul0OwZYarNnUhbG2W6bMY-uo2dH-W4ymjx-vU_3agTQm2N1F25xq8o74DutvNW3ZX8GHROa5zIi7TIDoXy-_5sSyKBeVnGZ9IrFkoo9R2cbtREjOE6hgZ-Q",
