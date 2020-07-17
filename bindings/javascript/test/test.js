@@ -286,13 +286,11 @@ describe('Zenroom module', function () {
 
   it(`sohuld create correct keygen with zencode`, () => {
     let result
-    const zencode = `
-    Rule check version 1.0.0
-Scenario 'simple': Bob generate a keypair
+    const zencode = `Rule check version 1.0.0
+Scenario 'ecdh': Bob generate a keypair
 Given that I am known as 'Bob'
 When I create the keypair
-Then print my data
-    `
+Then print my data`
     zenroom.script(zencode).print(output => { result = JSON.parse(output) }).zencode_exec()
     expect(result).to.have.all.keys('Bob')
     expect(result.Bob.keypair).to.have.all.keys('public_key private_key'.split(' '))
@@ -326,7 +324,7 @@ Then print my data
     and I have a valid 'petition tally'
     When I count the petition results
     Then print the 'petition results'
-    and print as 'string' the 'uid' inside 'petition'`
+    and print the 'uid' as 'string' inside 'petition'`
     const data = { 'petition': { 'list': ['AwUH_Rlj8Bcus2fSIq43TMQrsH6pkkwo3SU8j80QHy0DtY_MdRvKzy7EUWb2MCRANauVQU5wTovHTus'], 'owner': 'AgOeMqZ9U8x-Y2MpZW_7ol2ypzMVJ8R5GgRHDN28QzAmmqK0EoHn_6EDC1is_w6p6GGbAfbUet2iwXU', 'scores': { 'neg': { 'left': 'AwhTBQereoQOA6HZ4GxNvgAlZUniqs2o0VcEPVOEXtRWb8qnGAB82oUNWKnpVs2GxnNAGWyfSObRFD4', 'right': 'AwdPb0fDAr2uaNhnTXeLTxe88ANaNlt6m6ZvWEr82_RdRz1H-Kry8AXh4ezFFWZmh9nKZK-7Jg6S3lw' }, 'pos': { 'left': 'AghTBQereoQOA6HZ4GxNvgAlZUniqs2o0VcEPVOEXtRWb8qnGAB82oUNWKnpVs2GxnNAGWyfSObRFD4', 'right': 'AgPB7BJ1-wG8YaK-1M7h7WRCYhqxu7AYhjzFE0l9rUb746hjYbcjYiPaxWAbf8RQtLOvC7omLiyW0fo' } }, 'uid': 'cG9sbA' }, 'verifiers': { 'alpha': 'A9Qek4uE84c81vE1Ql737u8RGyfWXn3gTmM2W954sInwrVz-KHtufk6J7Yyj8LTNS6AWIeS9CxoXuQEo3PQYBlWsLbCrjOASQIb7g4vcC2gKk63HKA-EkEnbw11tZFZbL9d13PII3A_dhD7Qh-IJid_Q_sYTXVwSO0W5LgNOpdRSXVbWHxDDF6hpm1uRPOYcDzeVp0L_xVu1F7rcFs3iNZln06NQOruBHaoSm3jpBYafD5wd0-C_Mhf35NaaNtjGPgBbiFx-UJmtwyjolsk9kgNDPgvDPqcGbfpo1yZg9IrZjFMrWpFFXQ', 'beta': 'AwIuF4zyuGX4O6HQAdpkAAxqAf6DAaXDyCy_992ccO-kpc3RqJVh7st3wQBOR2N4CfuNrLzOL54_dwV3F4DWwrA759x3Vr0m-c03fGnBUlbqMR1E5bRqymURkzl5jV3ArbQeu7z24EwcYwm3IPmSPmbLjfEJezn8KDsYZl15YiF8M2rO0ORE2F6XcFsjL62NmWWmv7sE15ADLTzbZKsvspQM0Rd7UuM67Ws6lqDfAUxKFP7jBxlSQgR-0TUsCUjzBs-OeSJ9OvzzY_7Rdtqoi1zCkj0Xz8TAzHOVPQ0vykucxdzPRuyD7Q' } }
     const keys = { 'credential_keypair': { 'private': 'B9UsanWy7fvmQgpM2craxQ97KwKBT2swhjvzoc9ocEa0Pzpg_4I3', 'public': 'AgOeMqZ9U8x-Y2MpZW_7ol2ypzMVJ8R5GgRHDN28QzAmmqK0EoHn_6EDC1is_w6p6GGbAfbUet2iwXU' }, 'petition': { 'list': ['AwUH_Rlj8Bcus2fSIq43TMQrsH6pkkwo3SU8j80QHy0DtY_MdRvKzy7EUWb2MCRANauVQU5wTovHTus'], 'owner': 'AgOeMqZ9U8x-Y2MpZW_7ol2ypzMVJ8R5GgRHDN28QzAmmqK0EoHn_6EDC1is_w6p6GGbAfbUet2iwXU', 'scores': { 'neg': { 'left': 'AwhTBQereoQOA6HZ4GxNvgAlZUniqs2o0VcEPVOEXtRWb8qnGAB82oUNWKnpVs2GxnNAGWyfSObRFD4', 'right': 'AwdPb0fDAr2uaNhnTXeLTxe88ANaNlt6m6ZvWEr82_RdRz1H-Kry8AXh4ezFFWZmh9nKZK-7Jg6S3lw' }, 'pos': { 'left': 'AghTBQereoQOA6HZ4GxNvgAlZUniqs2o0VcEPVOEXtRWb8qnGAB82oUNWKnpVs2GxnNAGWyfSObRFD4', 'right': 'AgPB7BJ1-wG8YaK-1M7h7WRCYhqxu7AYhjzFE0l9rUb746hjYbcjYiPaxWAbf8RQtLOvC7omLiyW0fo' } }, 'uid': 'cG9sbA' }, 'petition_tally': { 'c': 'xTeVns8-JeofKqT5KSX1xtQUB_lyVkUQGJSZpEmJ7yA', 'dec': { 'neg': 'AgdPb0fDAr2uaNhnTXeLTxe88ANaNlt6m6ZvWEr82_RdRz1H-Kry8AXh4ezFFWZmh9nKZK-7Jg6S3lw', 'pos': 'AwdPb0fDAr2uaNhnTXeLTxe88ANaNlt6m6ZvWEr82_RdRz1H-Kry8AXh4ezFFWZmh9nKZK-7Jg6S3lw' }, 'rx': 'BLahbPKzsXDsbjHF2FN18BcIw8T5ZyvBRfU59ZTMye4qOGr3daBw', 'uid': 'cG9sbA' } }
     zenroom.script(contract).data(data).keys(keys).print(t => { result = JSON.parse(t) }).zencode_exec()
