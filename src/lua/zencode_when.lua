@@ -19,7 +19,7 @@
 
 --- WHEN
 
-When("I append string '' to ''", function(content, dest)
+When("append string '' to ''", function(content, dest)
 		-- ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		if ACK[dest] then
 		   ACK[dest] = ACK[dest] .. O.from_string(content)
@@ -27,7 +27,7 @@ When("I append string '' to ''", function(content, dest)
 		   ACK[dest] = O.from_string(content)
 		end
 end)
-When("I append '' to '' as ''", function(content, dest, format)
+When("append '' to '' as ''", function(content, dest, format)
 		-- ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		if ACK[dest] then
 		   ACK[dest] = ACK[dest] .. ZEN.decode(content, input_encoding(format))
@@ -37,22 +37,22 @@ When("I append '' to '' as ''", function(content, dest, format)
 end)
 
 -- simplified exception for I write: import encoding from_string ...
-When("I write string '' in ''", function(content, dest)
+When("write string '' in ''", function(content, dest)
 		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		ACK[dest] = O.from_string(content)
 end)
 -- ... and from a number
-When("I write number '' in ''", function(content, dest)
+When("write number '' in ''", function(content, dest)
 		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		-- TODO: detect number base 10
 		ACK[dest] = tonumber(content, 10)
 end)
 
-When("I set '' to '' as ''", function(dest, content, format)
+When("set '' to '' as ''", function(dest, content, format)
 		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		ACK[dest] = ZEN.decode(content, input_encoding(format))
 end)
-When("I create the random ''", function(dest)
+When("create the random ''", function(dest)
 		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		ACK[dest] = OCTET.random(64) -- TODO: right now hardcoded 256 bit random secrets
 end)
@@ -82,14 +82,14 @@ When("verify '' is equal to ''", function(l,r)
 end)
 
 -- hashing single strings
-When("I create the hash of ''", function(s)
+When("create the hash of ''", function(s)
 		-- TODO: hash an array
 		local src = ACK[s]
 		ZEN.assert(src, "Object not found: "..s)
 		ACK.hash = sha256(src)
 end)
 
-When("I create the hash of '' using ''", function(s,h)
+When("create the hash of '' using ''", function(s,h)
 		local src = ACK[s]
 		ZEN.assert(src, "Object not found: "..s)
 		if strcasecmp(h,'sha256') then		   
@@ -101,7 +101,7 @@ When("I create the hash of '' using ''", function(s,h)
 end)
 
 -- numericals
-When("I set '' to '' base ''", function(dest, content, base)
+When("set '' to '' base ''", function(dest, content, base)
 		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		local bas = tonumber(base)
 		ZEN.assert(bas, "Invalid numerical conversion for base: "..base)
@@ -144,21 +144,21 @@ When("number '' is more or equal than ''", function(left, right)
 end)
 
 -- random and hashing operations
-When("I create the random object of '' bits", function(n)
+When("create the random object of '' bits", function(n)
    local bits = tonumber(n)
    ZEN.assert(bits, "Invalid number of bits: "..n)
    ACK.random_object = OCTET.random( math.ceil(bits/8) )
 end)
 
 -- array operations
-When("I create the array of '' random objects", function(s)
+When("create the array of '' random objects", function(s)
 		ACK.array = { }
 		for i = s,1,-1 do
 		   table.insert(ACK.array,OCTET.random(64))
 		end
 end)
 
-When("I create the array of '' random objects of '' bits", function(s, bits)
+When("create the array of '' random objects of '' bits", function(s, bits)
 		ACK.array = { }
 		local bytes = math.ceil(bits/8)
 		for i = s,1,-1 do
@@ -166,7 +166,7 @@ When("I create the array of '' random objects of '' bits", function(s, bits)
 		end
 end)
 
-When("I create the array of '' random curve points", function(s)
+When("create the array of '' random curve points", function(s)
 		ACK.array = { }
 		for i = s,1,-1 do
 		   table.insert(ACK.array,ECP.random())
@@ -174,7 +174,7 @@ When("I create the array of '' random curve points", function(s)
 end)
 
 
-When("I create the aggregation of ''", function(arr)
+When("create the aggregation of ''", function(arr)
 		local A = ACK[arr]
 		ZEN.assert(A, "Object not found: "..arr)
 		local count = isarray(A)
@@ -190,7 +190,7 @@ When("I create the aggregation of ''", function(arr)
 		end
 end)
 
-When("I create the hash to point '' of each object in ''", function(what, arr)
+When("create the hash to point '' of each object in ''", function(what, arr)
 		local F = _G[what]
 		ZEN.assert(luatype(F.hashtopoint) == 'function',
 				   "Hash type "..what.." is invalid (no hashtopoint)")
@@ -204,13 +204,13 @@ When("I create the hash to point '' of each object in ''", function(what, arr)
         end
 end)
 
-When("I rename the '' to ''", function(old,new)
+When("rename the '' to ''", function(old,new)
 		ZEN.assert(ACK[old], "Object not found: "..old)
 		ACK[new] = ACK[old]
 		ACK[old] = nil
 end)
 
-When("I pick the random object in ''", function(arr)
+When("pick the random object in ''", function(arr)
 		local A = ACK[arr]
 		ZEN.assert(A, "Object not found: "..arr)
 		local count = isarray(A)
@@ -219,7 +219,7 @@ When("I pick the random object in ''", function(arr)
 		ACK.random_object = A[r]
 end)
 
-When("I randomize the '' array", function(arr)
+When("randomize the '' array", function(arr)
 		local A = ACK[arr]
 		ZEN.assert(A, "Object not found: "..arr)
 		local count = isarray(A)
@@ -234,7 +234,7 @@ When("I randomize the '' array", function(arr)
 		ACK[arr] = res
 end)
 
-When("I remove the '' from ''", function(ele,arr)
+When("remove the '' from ''", function(ele,arr)
 		local E = ACK[ele]
 		ZEN.assert(E, "Element not found: "..ele)
 		local A = ACK[arr]
@@ -247,7 +247,7 @@ When("I remove the '' from ''", function(ele,arr)
 		ACK[arr] = O
 end)
 
-When("I insert the '' in ''", function(ele,arr)
+When("insert the '' in ''", function(ele,arr)
 		ZEN.assert(ACK[ele], "Element not found: "..ele)
 		ZEN.assert(ACK[arr], "Array not found: "..arr)
 		table.insert(ACK[arr], ACK[ele])
@@ -272,7 +272,7 @@ When("the '' is found in ''", function(ele, arr)
 		ZEN.assert(found, "Element '"..ele.."' is not found inside array: "..arr)
 end)
 
-When("I split the rightmost '' bytes of ''", function(len, src)
+When("split the rightmost '' bytes of ''", function(len, src)
 		local s = tonumber(len)
 		ZEN.assert(s, "Invalid number arg #1: "..type(len))
 		ZEN.assert(ACK[src], "Element not found: "..src)
@@ -282,7 +282,7 @@ When("I split the rightmost '' bytes of ''", function(len, src)
 		ACK[src] = l
 end)
 
-When("I split the leftmost '' bytes of ''", function(len, src)
+When("split the leftmost '' bytes of ''", function(len, src)
 		local s = tonumber(len)
 		ZEN.assert(s, "Invalid number arg #1: "..type(len))
 		ZEN.assert(ACK[src], "Element not found: "..src)
@@ -294,7 +294,7 @@ When("I split the leftmost '' bytes of ''", function(len, src)
 end)
 
 -- TODO:
--- When("I set '' as '' with ''", function(dest, format, content) end)
--- When("I append '' as '' to ''", function(content, format, dest) end)
--- When("I write '' as '' in ''", function(content, dest) end)
+-- When("set '' as '' with ''", function(dest, format, content) end)
+-- When("append '' as '' to ''", function(content, format, dest) end)
+-- When("write '' as '' in ''", function(content, dest) end)
 -- implicit conversion as string

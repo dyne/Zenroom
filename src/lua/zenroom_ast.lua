@@ -46,6 +46,8 @@ function set_sentence(self, event, from, to, ctx)
 	  -- TODO: optimize in C
 	  -- remove '' contents, lower everything, expunge prefixes
 	  local tt = string.gsub(trim(ctx.msg),"'(.-)'","''")
+	  tt = tt:gsub(' +',' ') -- eliminate multiple internal spaces
+	  tt = string.gsub(tt,"I ","", 1)
 	  tt = string.gsub(tt:lower() ,"when " ,"", 1)
 	  tt = string.gsub(tt,"then " ,"", 1)
 	  tt = string.gsub(tt,"given ","", 1)
@@ -56,7 +58,6 @@ function set_sentence(self, event, from, to, ctx)
 	  tt = string.gsub(tt,"all ", "", 1)
 	  tt = string.gsub(tt," inside "," in ", 1) -- equivalence
 	  tt = string.gsub(tt," an "," a ", 1)
-	  tt = tt:gsub(' +',' ') -- eliminate multiple internal spaces
 	  if strcasecmp(tt, pattern) then
 		 local args = {} -- handle multiple arguments in same string
 		 for arg in string.gmatch(ctx.msg,"'(.-)'") do

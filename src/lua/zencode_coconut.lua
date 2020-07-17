@@ -32,7 +32,7 @@ ZEN.add_schema({
                   private = get(obj, 'private', INT.new) } end
 })
 -- credential keypair operations
-When("I create the credential keypair", function()
+When("create the credential keypair", function()
 		-- sk = rand, pk = G * sk
 		ACK.credential_keypair = { private = INT.random() }
 		ACK.credential_keypair.public = ECP.generator() *
@@ -56,7 +56,7 @@ ZEN.add_schema({
 	  end
 })
 
-When("I create the issuer keypair", function()
+When("create the issuer keypair", function()
 		ACK.issuer_keypair = { }
 		ACK.issuer_keypair.issuer_sign,
 		ACK.issuer_keypair.verifier = COCONUT.ca_keygen()
@@ -80,7 +80,7 @@ ZEN.add_schema({
 	  end
 })
 
-When("I create the credential request", function()
+When("create the credential request", function()
 		ZEN.assert(ACK.credential_keypair.private,
 				   "Private key not found in credential keypair")
 		ACK.credential_request =
@@ -101,7 +101,7 @@ ZEN.add_schema({
 		 return { h = get(obj, 'h', ECP.new),
 				  s = get(obj, 's', ECP.new) } end,
 })
-When("I create the credential signature", function()
+When("create the credential signature", function()
 		ZEN.assert(WHO, "Issuer is not known")
         ZEN.assert(ACK.credential_request, "No valid signature request found.")
         ZEN.assert(ACK.issuer_keypair.issuer_sign, "No valid issuer signature keys found.")
@@ -110,7 +110,7 @@ When("I create the credential signature", function()
                               ACK.credential_request)
 		ACK.verifier = ACK.issuer_keypair.verifier
 end)
-When("I create the credentials", function()
+When("create the credentials", function()
         ZEN.assert(ACK.credential_signature, "Credential signature not found")
         ZEN.assert(ACK.credential_keypair.private, "Credential private key not found")
         -- prepare output with an aggregated sigma credential
@@ -136,7 +136,7 @@ ZEN.add_schema({
 -- aggregated verifiers schema is same as a single verifier
 ZEN.add_schema({verifiers = ZEN.schemas['verifier']})
 
-When("I aggregate the verifiers", function()
+When("aggregate the verifiers", function()
 		for k,v in pairs(ACK.verifier) do
 		-- if ACK.verifier.alpha then
 		   ACK.verifiers = v
@@ -144,7 +144,7 @@ When("I aggregate the verifiers", function()
 		-- TODO: aggregate all array
 end)
 
-When("I create the credential proof", function()
+When("create the credential proof", function()
         ZEN.assert(ACK.verifiers, "No issuer verification keys are selected")
 		ZEN.assert(ACK.credential_keypair.private,
 				   "Credential private key not found")
@@ -154,7 +154,7 @@ When("I create the credential proof", function()
 							   ACK.credentials,
 							   ACK.credential_keypair.private)
 end)
-When("I verify the credential proof", function()
+When("verify the credential proof", function()
         ZEN.assert(ACK.credential_proof, "No valid credential proof found")
         ZEN.assert(ACK.verifiers, "Verifier of aggregated issuer keys not found")
         ZEN.assert(
@@ -205,7 +205,7 @@ ZEN.add_schema({
 })
 
 
-When("I create the petition ''", function(uid)
+When("create the petition ''", function(uid)
 		ACK.petition = 
 		   { uid = O.from_string(uid),
 			 owner = ACK.credential_keypair.public,
@@ -222,7 +222,7 @@ When("I create the petition ''", function(uid)
 		-- OUT.petition_ecdh_sign = map(ACK.petition_ecdh_sign, hex)
 end)
 
-When("I verify the new petition to be empty", function()
+When("verify the new petition to be empty", function()
         ZEN.assert(ECP.isinf(ACK.petition.scores.pos.left),
                    "Invalid new petition: positive left score is not zero")
         ZEN.assert(ECP.isinf(ACK.petition.scores.pos.right),
@@ -233,7 +233,7 @@ When("I verify the new petition to be empty", function()
                    "Invalid new petition: negative right score is not zero")
 end)
 
-When("I create the petition signature ''", function(uid)
+When("create the petition signature ''", function(uid)
         ZEN.assert(ACK.verifiers, "Verifier of aggregated issuer keys not found")
 		ZEN.assert(ACK.credential_keypair.private,
 				   "Credential private key not found")
@@ -251,7 +251,7 @@ When("I create the petition signature ''", function(uid)
 				   uid_petition = ack_uid }
 end)
 
-When("I verify the signature proof is correct", function()
+When("verify the signature proof is correct", function()
 		ZEN.assert(
 		   COCONUT.verify_cred_petition(ACK.verifiers,
 										ACK.petition_signature.proof,
@@ -280,7 +280,7 @@ When("the petition signature is just one more", function()
 				   "Coconut petition signature adds more than one signature")
 end)
 
-When("I add the signature to the petition", function()
+When("add the signature to the petition", function()
 		-- add the signature to the petition count
 		local scores = ACK.petition.scores
 		local psign  = ACK.petition_signature.one
@@ -292,7 +292,7 @@ When("I add the signature to the petition", function()
 		ACK.petition.scores = scores
 end)
 
-When("I create a petition tally", function()
+When("create a petition tally", function()
         ZEN.assert(ACK.credential_keypair.private,
 				   "Private key not found in credential keypair")
 		ZEN.assert(ACK.petition, "Petition not found")
@@ -301,7 +301,7 @@ When("I create a petition tally", function()
 		ACK.petition_tally.uid = ACK.petition.uid
 end)
 
-When("I count the petition results", function()
+When("count the petition results", function()
 		ZEN.assert(ACK.petition, "Petition not found")
 		ZEN.assert(ACK.petition_tally, "Tally not found")
 		ZEN.assert(ACK.petition_tally.uid == ACK.petition.uid,

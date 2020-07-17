@@ -49,10 +49,10 @@ local function f_keygen()
    ACK.keypair = { public_key = kp.public,
 				   private_key = kp.private }
 end
-When("I create the keypair", f_keygen)
+When("create the keypair", f_keygen)
 
 -- encrypt with a header and secret
-When("I encrypt the secret message '' with ''", function(msg, sec)
+When("encrypt the secret message '' with ''", function(msg, sec)
 		ZEN.assert(ACK[msg], "Data to encrypt not found: message")
 		ZEN.assert(ACK[sec], "Secret used to encrypt not found: "..sec)
 		-- KDF2 sha256 on all secrets
@@ -66,7 +66,7 @@ When("I encrypt the secret message '' with ''", function(msg, sec)
 end)
 
 -- decrypt with a secret
-When("I decrypt the secret message with ''", function(sec)
+When("decrypt the secret message with ''", function(sec)
 		ZEN.assert(ACK[sec], "Secret used to decrypt not found: secret")
 		ZEN.assert(ACK.secret_message,
 				   "Secret data to decrypt not found: secret message")
@@ -85,7 +85,7 @@ When("I decrypt the secret message with ''", function(sec)
 end)
 
 -- encrypt to a single public key
-When("I encrypt the message for ''", function(_key)
+When("encrypt the message for ''", function(_key)
 		ZEN.assert(ACK.keypair, "Keys not found: keypair")
 		ZEN.assert(ACK.keypair.private_key, "Private key not found in keypair")
 		ZEN.assert(ACK.message, "Data to encrypt not found: message")
@@ -105,7 +105,7 @@ When("I encrypt the message for ''", function(_key)
 end)
 
 
-When("I decrypt the secret message from ''", function(_key)
+When("decrypt the secret message from ''", function(_key)
 		ZEN.assert(ACK.keypair, "Keyring not found")
 		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
 		ZEN.assert(ACK.secret_message, "Data to decrypt not found: secret_message")
@@ -121,7 +121,7 @@ When("I decrypt the secret message from ''", function(_key)
 end)
 
 -- sign a message and verify
-When("I create the signature of ''", function(doc)
+When("create the signature of ''", function(doc)
 		ZEN.assert(ACK.keypair, "Keyring not found")
 		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
 		local obj = ACK[doc]
@@ -136,7 +136,7 @@ When("I create the signature of ''", function(doc)
 		-- include contextual information
 end)
 
-When("I verify the '' is signed by ''", function(msg, by)
+When("verify the '' is signed by ''", function(msg, by)
 		ZEN.assert(ACK.public_key[by], "Public key by "..by.." not found")
 		local obj = ACK[msg]
 		ZEN.assert(obj, "Object not found: "..msg)

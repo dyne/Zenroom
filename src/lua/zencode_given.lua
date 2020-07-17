@@ -32,7 +32,7 @@ Given("nothing", function() ZEN.assert(not DATA and not KEYS, "Undesired data pa
 -- ignore all other data structures that are not known by schema or don't pass validation
 
 -- Given("I am known as ''", function(name) ZEN:Iam(name) end)
-Given("I am ''", function(name) ZEN:Iam(name) end)
+Given("am ''", function(name) ZEN:Iam(name) end)
 
 -- variable names:
 -- s = schema of variable (or encoding)
@@ -40,13 +40,13 @@ Given("I am ''", function(name) ZEN:Iam(name) end)
 -- t = table containing the variable
 
 -- TODO: I have a '' as ''
-Given("I have a ''", function(n)
+Given("have a ''", function(n)
 		 ZEN:pick(n)
 		 ZEN:ack(n)
 		 gc()
 end)
 
-Given("I have a '' named ''", function(s, n)
+Given("have a '' named ''", function(s, n)
 		 -- local encoder = input_encoding(s)
 		 -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
 		 ZEN:pick(n, nil, s)
@@ -54,14 +54,14 @@ Given("I have a '' named ''", function(s, n)
 		 gc()
 end)
 
-Given("I have a '' named '' in ''", function(s,n,t)
+Given("have a '' named '' in ''", function(s,n,t)
 		 -- local encoder = input_encoding(s)
 		 ZEN:pickin(t, n, s)
 		 ZEN:ack(n) -- save it in ACK.name
 		 gc()
 end)
 
-Given("I have my ''", function(n)
+Given("have my ''", function(n)
 		 ZEN.assert(WHO, "No identity specified, use: Given I am ...")
 		 ZEN:pickin(WHO, n)
 		 ZEN:ack(n)
@@ -72,14 +72,14 @@ Given("the '' is valid", function(n)
 		 gc()
 end)
 
-Given("I have a '' in ''", function(s, t)
+Given("have a '' in ''", function(s, t)
 		 ZEN:pickin(t, s)
 		 ZEN:ack(s) -- save it in ACK.obj
 		 gc()
 end)
 
 -- public keys for keyring arrays (scenario simple)
-Given("I have a '' from ''", function(s, t)
+Given("have a '' from ''", function(s, t)
 		 ZEN:pickin(t, s)
 		 ZEN:ack_table(s, t)
 		 gc()
