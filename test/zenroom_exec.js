@@ -11,25 +11,25 @@ C.exec_error = () => 0
 C.print = text => console.log(text)
 C.printErr = text => console.log(text)
 
-const zenroomExec = function(script, conf = null, keys = null, data = null, verbosity = 1) {
+const zenroomExec = function(script, conf = null, keys = null, data = null) {
   C.then(function(Module){
     Module.ccall(
       'zenroom_exec',
       'number',
       ['string', 'string', 'string', 'string', 'number'],
-      [script, conf, keys, data, verbosity]
+      [script, conf, keys, data]
     )
   })
 }
 
-const zenroom = function(script_file, conf_file=null, keys_file=null, data_file=process.argv[4], verbosity=1) {
+const zenroom = function(script_file, conf_file=null, keys_file=null, data_file=process.argv[4]) {
   const enc = { encoding: 'utf8' }
   const script = fs.readFileSync(script_file, enc)
   const conf = (conf_file) ? fs.readFileSync(conf_file, enc) : null
   const keys = (keys_file) ? fs.readFileSync(keys_file, enc) : null
   const data = (data_file) ? fs.readFileSync(data_file, enc) : null
 
-  return zenroomExec(script, conf, keys, data, verbosity)
+  return zenroomExec(script, conf, keys, data)
 }
 
 console.log("[JS] zenroom_exec %s %s",
