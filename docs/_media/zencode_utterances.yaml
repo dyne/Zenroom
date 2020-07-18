@@ -2,50 +2,49 @@
 given:
   - given: nothing
   - given: I am known as ''
-  - given: I am ''
-  - given: I have a ''
-  - given: I have a '' named ''
-  - given: I have a '' named '' in ''
-  - given: I have my ''
+  - given: am ''
+  - given: have a ''
+  - given: have a '' named ''
+  - given: have a '' named '' in ''
+  - given: have my ''
   - given: the '' is valid
-  - given: I have a '' in ''
-  - given: I have a '' from ''
+  - given: have a '' in ''
+  - given: have a '' from ''
 ### [given]
 ### [when]
 when:
-  - when: I append string '' to ''
-  - when: I append '' to '' as ''
-  - when: I write string '' in ''
-  - when: I write number '' in ''
-  - when: I set '' to '' as ''
-  - when: I create a random ''
-  - when: I verify '' is equal to ''
-  - when: I create the hash of ''
-  - when: I create the hash of '' using ''
-  - when: I set '' to '' base ''
+  - when: append string '' to ''
+  - when: append '' to '' as ''
+  - when: write string '' in ''
+  - when: write number '' in ''
+  - when: set '' to '' as ''
+  - when: create the random ''
+  - when: verify '' is equal to ''
+  - when: create the hash of ''
+  - when: create the hash of '' using ''
+  - when: set '' to '' base ''
   - when: number '' is less than ''
   - when: number '' is less or equal than ''
   - when: number '' is more than ''
   - when: number '' is more or equal than ''
-  - when: ''''' in '''' is more than '''' in '''''
-  - when: I create the random object of '' bits
-  - when: I create the array of '' random objects
-  - when: I create the array of '' random objects of '' bits
-  - when: I create the array of '' random curve points
-  - when: I create the aggregation of ''
-  - when: I create the hash to point '' of each object in ''
-  - when: I rename the '' to ''
-  - when: I pick the random object in ''
-  - when: I randomize the '' array
-  - when: I remove the '' from ''
-  - when: I insert the '' in ''
+  - when: create the random object of '' bits
+  - when: create the array of '' random objects
+  - when: create the array of '' random objects of '' bits
+  - when: create the array of '' random curve points
+  - when: create the aggregation of ''
+  - when: create the hash to point '' of each object in ''
+  - when: rename the '' to ''
+  - when: pick the random object in ''
+  - when: randomize the '' array
+  - when: remove the '' from ''
+  - when: insert the '' in ''
   - when: the '' is not found in ''
   - when: the '' is found in ''
-  - when: I split the rightmost '' bytes of ''
-  - when: I split the leftmost '' bytes of ''
-  - when: I set '' as '' with ''
-  - when: I append '' as '' to ''
-  - when: I write '' as '' in ''
+  - when: split the rightmost '' bytes of ''
+  - when: split the leftmost '' bytes of ''
+  - when: set '' as '' with ''
+  - when: append '' as '' to ''
+  - when: write '' as '' in ''
 ### [when]
 ### [then]
 then:
@@ -64,34 +63,27 @@ then:
   - then: print the '' in ''
 ### [then]
 ### [simple_when]
-simple:
-  - when: I create the keypair
-  - when: I encrypt the secret message '' with ''
-  - when: I decrypt the secret message with ''
-  - when: I encrypt the message for ''
-  - when: I decrypt the secret message from ''
-  - when: I create the signature of ''
-  - when: I verify the '' is signed by ''
+simple: []
 ### [simple_when]
 ### [coconut_when]
 coconut:
-  - when: I create the credential keypair
-  - when: I create the issuer keypair
-  - when: I create the credential request
-  - when: I create the credential signature
-  - when: I create the credentials
-  - when: I aggregate the verifiers
-  - when: I create the credential proof
-  - when: I verify the credential proof
-  - when: I create the petition ''
-  - when: I verify the new petition to be empty
-  - when: I create the petition signature ''
-  - when: I verify the signature proof is correct
+  - when: create the credential keypair
+  - when: create the issuer keypair
+  - when: create the credential request
+  - when: create the credential signature
+  - when: create the credentials
+  - when: aggregate the verifiers
+  - when: create the credential proof
+  - when: verify the credential proof
+  - when: create the petition ''
+  - when: verify the new petition to be empty
+  - when: create the petition signature ''
+  - when: verify the signature proof is correct
   - when: the petition signature is not a duplicate
   - when: the petition signature is just one more
-  - when: I add the signature to the petition
-  - when: I create a petition tally
-  - when: I count the petition results
+  - when: add the signature to the petition
+  - when: create a petition tally
+  - when: count the petition results
 ### [coconut_when]
 ### [dp3t_when]
 dp3t:

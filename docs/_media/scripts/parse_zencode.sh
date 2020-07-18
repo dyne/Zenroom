@@ -29,7 +29,7 @@ echo "### [then]" >> $FILE
 print $(_parse then then) | yq -y . >> $FILE
 echo "### [then]" >> $FILE
 echo "### [simple_when]" >> $FILE
-print $(_parse simple when) | yq -y . >> $FILE
+print $(_parse ecdh when) | yq -y . >> $FILE
 echo "### [simple_when]" >> $FILE
 echo "### [coconut_when]" >> $FILE
 print $(_parse coconut when) | yq -y . >> $FILE

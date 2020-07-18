@@ -1,6 +1,6 @@
 .PHONY: website preview
 
-all: api map website
+all: api map website zencode
 
 # api output is _media/lua
 api:
@@ -14,22 +14,22 @@ website:
 	@ln -fs _media/js/zenroom.data .
 	@mkdir -p _media/examples
 	@cp -v ../examples/*.keys ../examples/*.data ../examples/*.lua examples/
-	@cp -av ../test/zencode_coconut examples/
 	@cp -v ../bindings/javascript/README.md pages/javascript.md
 	@cp -v ../bindings/python3/README.md pages/python.md
 
 zencode:
+	@../build/zencode_scenario.sh ecdh
 	@../build/zencode_scenario.sh dp3t
-	@../build/zencode_scenario.sh simple
+	@../build/zencode_scenario.sh credentials
+	@../build/zencode_scenario.sh array
+	@../build/zencode_scenario.sh given
+	@../build/zencode_scenario.sh cookbook
 
 map:
 	./_media/scripts/parse_zencode.sh _media/zencode_utterances.yaml
 
 preview:
 	docsify serve .
-
-deploy: api map website
-	cd website && ./mkdocs-dyne-theme/.deploy
 
 clean:
 	make -C pages/ldoc clean
