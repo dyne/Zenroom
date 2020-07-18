@@ -63,7 +63,14 @@ then:
   - then: print the '' in ''
 ### [then]
 ### [simple_when]
-simple: []
+ecdh:
+  - when: create the keypair
+  - when: encrypt the secret message '' with ''
+  - when: decrypt the secret message with ''
+  - when: encrypt the message for ''
+  - when: decrypt the secret message from ''
+  - when: create the signature of ''
+  - when: verify the '' is signed by ''
 ### [simple_when]
 ### [coconut_when]
 coconut:
