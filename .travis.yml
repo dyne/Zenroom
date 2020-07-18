@@ -71,7 +71,7 @@ deploy:
     name: Zenroom $TRAVIS_TAG (Apple/OSX build)
     on:
       tags: true
-      repo: DECODEproject/zenroom
+      repo: dyne/zenroom
       branch: "$RELEASE_BRANCH"
       condition: $TRAVIS_OS_NAME = osx
   - provider: releases
@@ -83,7 +83,7 @@ deploy:
     name: Zenroom $TRAVIS_TAG Python 3 module (Apple/OSX build)
     on:
       tags: true
-      repo: DECODEproject/zenroom
+      repo: dyne/zenroom
       branch: "$RELEASE_BRANCH"
       condition: $TRAVIS_OS_NAME = osx
   - provider: releases
@@ -95,7 +95,7 @@ deploy:
     name: Zenroom $TRAVIS_TAG (Apple/iOS build)
     on:
       tags: true
-      repo: DECODEproject/zenroom
+      repo: dyne/zenroom
       branch: "$RELEASE_BRANCH"
       condition: $TRAVIS_OS_NAME = osx
   - provider: releases
@@ -107,7 +107,7 @@ deploy:
     name: Zenroom $TRAVIS_TAG (Win64 EXE build)
     on:
       tags: true
-      repo: DECODEproject/zenroom
+      repo: dyne/zenroom
       branch: "$RELEASE_BRANCH"
       condition: $TRAVIS_OS_NAME = linux
   - provider: releases
@@ -119,7 +119,7 @@ deploy:
     name: Zenroom $TRAVIS_TAG (Win64 DLL build)
     on:
       tags: true
-      repo: DECODEproject/zenroom
+      repo: dyne/zenroom
       branch: "$RELEASE_BRANCH"
       condition: $TRAVIS_OS_NAME = linux
   # - provider: releases
@@ -131,7 +131,7 @@ deploy:
   #   name: Zenroom $TRAVIS_TAG (Linux 64bit static build)
   #   on:
   #     tags: true
-  #     repo: DECODEproject/zenroom
+  #     repo: dyne/zenroom
   #     branch: "$RELEASE_BRANCH"
   #     condition: $TRAVIS_OS_NAME = linux
   # - provider: releases
@@ -143,7 +143,7 @@ deploy:
   #   name: Zenroom $TRAVIS_TAG (Javascript build)
   #   on:
   #     tags: true
-  #     repo: DECODEproject/zenroom
+  #     repo: dyne/zenroom
   #     branch: "$RELEASE_BRANCH"
   #     condition: $TRAVIS_OS_NAME = linux
 
