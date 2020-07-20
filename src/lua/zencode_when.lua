@@ -81,23 +81,27 @@ When("verify '' is equal to ''", function(l,r)
 		end
 end)
 
--- hashing single strings
-When("create the hash of ''", function(s)
-		-- TODO: hash an array
-		local src = ACK[s]
-		ZEN.assert(src, "Object not found: "..s)
-		ACK.hash = sha256(src)
-end)
-
-When("create the hash of '' using ''", function(s,h)
-		local src = ACK[s]
-		ZEN.assert(src, "Object not found: "..s)
-		if strcasecmp(h,'sha256') then		   
-		   ACK.hash = sha256(src)
-		elseif strcasecmp(h,'sha512') then
-		   ACK.hash = sha512(src)
-		end
-		ZEN.assert(ACK.hash, "Invalid hash: "..h)
+When("verify '' is not equal to ''", function(l,r)
+	local tabeq = false
+	if luatype(ACK[l]) == 'table' then
+	   ZEN.assert(luatype(ACK[r]) == 'table',
+				  "Cannot verify equality: "..l.." is a table, "..r.." is not")
+	   tabeq = true
+	end
+	if luatype(ACK[r]) == 'table' then
+	   ZEN.assert(luatype(ACK[l]) == 'table',
+				  "Cannot verify equality: "..r.." is a table, "..l.." is not")
+	   tabeq = true
+	end
+	if tabeq then -- use CBOR encoding and compare strings: there
+				  -- may be faster ways, but this is certainly the
+				  -- most maintainable
+	   ZEN.assert( CBOR.encode(ACK[l]) ~= CBOR.encode(ACK[r]),
+				   "Verification failed: arrays are equal: "..l.." == "..r)
+	else
+	   ZEN.assert(ACK[l] ~= ACK[r],
+				  "Verification failed: objects are equal: "..l.." == "..r)
+	end
 end)
 
 -- numericals
@@ -143,133 +147,10 @@ When("number '' is more or equal than ''", function(left, right)
 		ZEN.assert(l >= r, "Failed comparison: "..l.." is not more or equal than "..r)
 end)
 
--- random and hashing operations
-When("create the random object of '' bits", function(n)
-   local bits = tonumber(n)
-   ZEN.assert(bits, "Invalid number of bits: "..n)
-   ACK.random_object = OCTET.random( math.ceil(bits/8) )
-end)
-
--- array operations
-When("create the array of '' random objects", function(s)
-		ACK.array = { }
-		for i = s,1,-1 do
-		   table.insert(ACK.array,OCTET.random(64))
-		end
-end)
-
-When("create the array of '' random objects of '' bits", function(s, bits)
-		ACK.array = { }
-		local bytes = math.ceil(bits/8)
-		for i = s,1,-1 do
-		   table.insert(ACK.array,OCTET.random(bytes))
-		end
-end)
-
-When("create the array of '' random curve points", function(s)
-		ACK.array = { }
-		for i = s,1,-1 do
-		   table.insert(ACK.array,ECP.random())
-		end
-end)
-
-
-When("create the aggregation of ''", function(arr)
-		local A = ACK[arr]
-		ZEN.assert(A, "Object not found: "..arr)
-		local count = isarray(A)
-		ZEN.assert( count > 0, "Object is not an array: "..arr)
-		if type(A[1]) == 'zenroom.ecp' then -- TODO: check all elements
-		   ACK.aggregation = ECP.generator()
-		   for k,v in next,A,nil do
-			  if not ACK.aggregation then ACK.aggregation = v
-			  else ACK.aggregation = ACK.aggregation + v end
-		   end
-		else -- TODO: more aggregators for INT and ECP2
-		   error("Unknown aggregation for type: "..type(A[1]))
-		end
-end)
-
-When("create the hash to point '' of each object in ''", function(what, arr)
-		local F = _G[what]
-		ZEN.assert(luatype(F.hashtopoint) == 'function',
-				   "Hash type "..what.." is invalid (no hashtopoint)")
-        local A = ACK[arr]
-        ZEN.assert(A, "Object not found: "..arr)
-        local count = isarray(A)
-        ZEN.assert( count > 0, "Object is not an array: "..arr)
-        ACK.hashes = { }
-        for k,v in sort_ipairs(A) do
-		   ACK.hashes[k] = F.hashtopoint(v)
-        end
-end)
-
 When("rename the '' to ''", function(old,new)
 		ZEN.assert(ACK[old], "Object not found: "..old)
 		ACK[new] = ACK[old]
 		ACK[old] = nil
-end)
-
-When("pick the random object in ''", function(arr)
-		local A = ACK[arr]
-		ZEN.assert(A, "Object not found: "..arr)
-		local count = isarray(A)
-		ZEN.assert( count > 0, "Object is not an array: "..arr)
-		local r = random_int16() % count
-		ACK.random_object = A[r]
-end)
-
-When("randomize the '' array", function(arr)
-		local A = ACK[arr]
-		ZEN.assert(A, "Object not found: "..arr)
-		local count = isarray(A)
-		ZEN.assert( count > 0, "Object is not an array: "..arr)
-		local res = { }
-		for i = count,2,-1 do
-		   local r = (random_int16() % (i-1))+1
-		   table.insert(res,A[r]) -- limit 16bit lenght for arrays
-		   table.remove(A, r)
-		end
-		table.insert(res,A[1])
-		ACK[arr] = res
-end)
-
-When("remove the '' from ''", function(ele,arr)
-		local E = ACK[ele]
-		ZEN.assert(E, "Element not found: "..ele)
-		local A = ACK[arr]
-		ZEN.assert(A, "Array not found: "..arr)
-		ZEN.assert( isarray(A) > 0, "Object is not an array: "..arr)
-		local O = { }
-		for k,v in next,A,nil do
-		   if v ~= E then table.insert(O,v) end
-		end
-		ACK[arr] = O
-end)
-
-When("insert the '' in ''", function(ele,arr)
-		ZEN.assert(ACK[ele], "Element not found: "..ele)
-		ZEN.assert(ACK[arr], "Array not found: "..arr)
-		table.insert(ACK[arr], ACK[ele])
-end)
-
-When("the '' is not found in ''", function(ele, arr)
-		ZEN.assert(ACK[ele], "Element not found: "..ele)
-		ZEN.assert(ACK[arr], "Array not found: "..arr)
-		for k,v in next,ACK[arr],nil do
-		   ZEN.assert(v ~= ACK[ele], "Element '"..ele.."' is contained inside array: "..arr)
-		end
-end)
-
-
-When("the '' is found in ''", function(ele, arr)
-		ZEN.assert(ACK[ele], "Element not found: "..ele)
-		ZEN.assert(ACK[arr], "Array not found: "..arr)
-		local found = false
-		for k,v in next,ACK[arr],nil do
-		   if v == ACK[ele] then found = true end
-		end
-		ZEN.assert(found, "Element '"..ele.."' is not found inside array: "..arr)
 end)
 
 When("split the rightmost '' bytes of ''", function(len, src)

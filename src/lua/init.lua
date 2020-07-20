@@ -47,7 +47,7 @@ function require_once(ninc)
    local class = REQUIRED[ninc]
    if type(class) == "table" then return class end
    -- new require
-   class = require(ninc)
+class = require(ninc)
    if type(class) == "table" then REQUIRED[ninc] = class end
    return class
 end
@@ -79,14 +79,20 @@ V   = require('semver')
 VERSION = V(VERSION)
 
 ZEN = require('zencode')
--- requires zencode_ast
+-- requires zencode_ast internally after having created
+-- the global ZEN context
 
 -- base zencode functions and schemas
-require('zencode_data')
+require('zencode_data') -- pick/in, conversions etc.
 require('zencode_given')
 require('zencode_when')
+require('zencode_hash') -- when extension
+require('zencode_array') -- when extension
 require('zencode_then')
-require('zencode_eval')
+-- this is to evaluate expressions or derivate a column
+-- it would execute lua code inside the zencode and is
+-- therefore dangerous, switched off by default 
+-- require('zencode_eval')
 if DEBUG > 0 then require('zencode_debug') end
 
 -- scenario are loaded on-demand
