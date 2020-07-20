@@ -116,6 +116,7 @@ _G["CONF"] = {
 			  format = get_format('json'),
 			  versioning = false },
    parser = { strict_match = true },
+   hash = 'sha256',
    heapguard = true
 }
 

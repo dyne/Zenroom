@@ -21,7 +21,7 @@ When("create the hash of ''", function(s)
     -- TODO: hash an array
     local src = ACK[s]
     ZEN.assert(src, "Object not found: "..s)
-    ACK.hash = sha256(src)
+    ACK.hash = HASH.new(CONF.hash):process(src)
 end)
 
 When("create the hash of '' using ''", function(s,h)
@@ -64,4 +64,28 @@ When("create the hashes of each object in ''", function(arr)
        c = c + 1
        table.insert(ACK.hashes, sha256(v))
     end
+end)
+
+-- HMAC from RFC2104.
+When("create the HMAC of '' with key ''", function(obj, key)
+    local src = ACK[obj]
+    ZEN.assert(src, "Object not found: "..obj)
+    local hkey = ACK[key]
+    ZEN.assert(hkey, "Key not found: "..key)
+    ACK.HMAC = HASH.new(CONF.hash):hmac(hkey, obj)
+end)
+
+When("create the key derivation of ''", function(obj)
+    local src = ACK[obj]
+    ZEN.assert(src, "Object not found: "..obj)
+    ACK.key_derivation = HASH.new(CONF.hash):kdf(src)
+end)
+
+When("create the key derivation of '' with password ''", function(obj, salt)
+    local src = ACK[obj]
+    ZEN.assert(src, "Object not found: "..obj)
+    local pass = ACK[salt]
+    ZEN.assert(pass, "Password not found: "..salt)
+    ACK.key_derivation = HASH.new(CONF.hash):pbkdf2(src,
+        { salt = pass }) -- , iterations = 10000, length = 32
 end)
