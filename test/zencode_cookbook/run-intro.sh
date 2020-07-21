@@ -24,7 +24,7 @@ echo "                                                "
 let n=n+1
 
 cat <<EOF | zexe ../../docs/examples/zencode_cookbook/alice_keygen.zen -z > ../../docs/examples/zencode_cookbook/alice_keypair.json
-Scenario 'simple': Create the keypair
+Scenario 'ecdh': Create the keypair
 Given that I am known as 'Alice'
 When I create the keypair
 Then print my data
@@ -69,7 +69,7 @@ echo "------------------------------------------------"
 echo "                                                "
 let n=n+1
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/randomArrayMultiple.zen -z | tee ../../docs/examples/zencode_cookbook/myArrays.json
+cat <<EOF | zexe ../../docs/examples/zencode_cookbook/randomArrayMultiple.zen -z | jq | tee ../../docs/examples/zencode_cookbook/myArrays.json
 	Given nothing
 	When I create the array of '2' random objects of '8' bits
 	And I rename the 'array' to 'myTinyArray'

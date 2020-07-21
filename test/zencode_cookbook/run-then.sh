@@ -67,6 +67,10 @@ cat <<EOF  > $tmp
   "myFifthString":"We have run out of greetings.",
   "mySixthString":"So instead we'll tell the days of the week...",
   "mySeventhString":"...Monday,",
+  "myEightEqualString":"These string is equal to another one.",
+  "myNinthEqualString":"These string is equal to another one.",
+  "myFourthNumber":3,
+  "myTenthString":"oneExtraString1"
   
    },
    
@@ -79,21 +83,23 @@ cat <<EOF  > $tmp
    
 }
 EOF
-cat $tmp > ../../docs/examples/zencode_cookbook/myLargeNestedObjectWhen1.json
+cat $tmp > ../../docs/examples/zencode_cookbook/myLargeNestedObjectThen.json
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/whenFullListPart1.zen -z -a $tmp | tee ../../docs/examples/zencode_cookbook/givenFullListPart1.json
+cat <<EOF | zexe ../../docs/examples/zencode_cookbook/thenFullList.zen -z -a $tmp | jq | tee ../../docs/examples/zencode_cookbook/thenOutputFullList.json
 # rule input encoding base64
+Scenario 'ecdh': Create the keypair
+Given I am 'Alice'
+Given I have my 'keypair' 
 # Load Arrays
-Scenario 'simple': Create the keypair
-# Given that I am known as 'Alice'
-Given I have a 'keypair' from 'Alice'
 Given I have a 'string array' named 'myFirstArray'   
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
-Given I have a 'myThirdArray' inside 'myThirdObject' 
+Given I have a 'string array' named 'myThirdArray' inside 'myThirdObject' 
 Given I have a 'string array' named 'myFourthArray'
 # Load Numbers
 Given I have a 'number' named 'myFirstNumber' in 'myFirstObject'
 Given I have a 'number' named 'mySecondNumber' in 'mySecondObject'
+Given I have a 'number' named 'myFourthNumber'
+Given I have a 'number' named 'myThirdNumber'
 # Load Strings
 Given I have a 'string' named 'myFirstString' in 'myFirstObject'
 Given I have a 'string' named 'myFirstString' inside 'myFirstObject' 
@@ -103,6 +109,7 @@ Given I have a 'string' named 'myFourthString'
 Given I have a 'string' named 'myFifthString'
 Given I have a 'string' named 'mySixthString'
 Given I have a 'string' named 'mySeventhString'
+Given I have a 'string' named 'myTenthString'
 # Different data types
 Given I have an 'hex' named 'myFirstHex' 
 Given I have an 'hex' named 'myFirstHex' inside 'myFirstObject' 
@@ -110,32 +117,54 @@ Given I have a  'base64' named 'myFirstBase64'
 Given I have a  'binary' named 'myFirstBinary'
 Given I have an 'url64' named 'myFirstUrl64'
 and debug
+#
 # END of loading stuff
-# ROTTO sotto: [W]  .  ERR Object not found: mySecondObject
-# [W] [!] Object not found: mySecondObject
-# When 'mySecondNumber' in 'mySecondObject' is more than 'myFirstNumber' in 'myFirstObject'
-When I append 'myFirstString' to 'mySecondString' as 'string'
-When I append string 'myThirdString' to 'myFourthString'
-When I create a random 'newRandomObject'
-#   da fare:    quello sopra dovrebbe avere "the" invece di "a" per consistenza   
-# ROTTO qui sotto: [W] [!] [string "zencode_when"]:175: Unknown aggregation for type: zenroom.octet - ma ce lo aspettavamo questo ritorna errore se non è un array di ECP oppure number, ECP2, se nell'array ci sono degli ECP/numeri li somma, in un nuova variabile... come caco un array di ecp?
-# When I create the aggregation of 'myFourthArray'
-When I create the array of '16' random curve points
-When I create the array of '32' random objects
-When I create the array of '64' random objects of '512' bits
-When I create the hash of 'myFifthString'
-# this accepts sha256 or sha512 as hash types
-When I create the hash of 'mySixthString' using 'sha256'
-When I create the hash of 'mySeventhString' using 'sha512'
-# The following accepts ecp or ecp2 as type of point, what it does is generating public keys from secret key
-When I create the hash to point 'ecp' of each object in 'myFourthArray'
-When I create the hash to point 'ecp2' of each object in 'myFirstArray'        
-When I create the random object of '16' bits
-Then print all data
+#
+When I insert the 'myFirstString' in 'myFirstArray'
+When I pick the random object in 'myFirstArray'
+When I randomize the 'myFourthArray' array
+# FORSE NON ROTTO sotto: 
+# When I remove the 'oneMoreString1' from 'myThirdArray'
+When I rename the 'myThirdArray' to 'myJustRenamedArray'
+#  When I set 'nameOfVariable' to 'value' as 'number | string | based64 ... '
+When I set 'myFirstString' to 'call me The Pink Panther!' as 'string'
+When I set 'myFirstNumber' to '42' as 'number'
+# ROTTO sotto con tutte le basi
+# When I set 'mySecondNumber' to '42' base '16'
+# When I set 'myThirdNumber' to '42' base '2 | 10 | 16'
+When I split the leftmost '3' bytes of 'myFirstString'
+# ROTTO sotto:  [W]  .  ERR Overwrite error: rightmost   -[W] [!] Overwrite error: rightmost
+# When I split the rightmost '3' bytes of 'myThirdString'
+When I verify 'myEightEqualString' is equal to 'myNinthEqualString'         
+When I write number '10' in 'nameOfFirstNewVariable'
+When I write string 'pippo' in 'nameOfSecondNewVariable'
+When number 'myFourthNumber' is less or equal than 'myThirdNumber'
+# The comparison below happens after we changed value to 'myFirstNumber'
+When number 'myThirdNumber' is less than 'myFirstNumber'
+When number 'myThirdNumber' is more or equal than 'mySecondNumber'
+When number 'myThirdNumber' is more than 'mySecondNumber'
+When the 'myTenthString' is found in 'myFourthArray'
+When the 'myFirstString' is not found in 'myFourthArray'
+When the 'myFirstNumber' is not found in 'myFourthArray'
+# Begin the Then phase:
+Then print my data 
+Then print 'myFirstNumber' 
+Then print 'mySecondNumber' as 'hex' 
+Then print 'myThirdString' as 'string' in 'myThirdObject' 
+Then print data 
+# Then print data as 'hex' 
+Then print my 'keypair' 
+# Then print my 'keypair' as 'bin' 
+# Then print my data as 'string' 
+Then print the 'myFirstArray' 
+Then print 'leftmost' as 'string'
+Then print 'myFirstString' as 'string'
+# Da Rimuovere, doppione: Then print the 'mySecondArray' as 'base64' 
+# Da Rimuovere, doppione: Then print the '' as '' in ''
+# Da Rimuovere, doppione: Then print the '' in '' 
 EOF
 
 rm -f $tmp
-
 
 
 
