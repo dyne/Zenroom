@@ -59,27 +59,6 @@ Given("schema", function() debug_heap_schema() end)
 When("schema",  function() debug_heap_schema() end)
 Then("schema",  function() debug_heap_schema() end)
 
-When("create the introspection of scenario ''", function(scen)
-   -- save env
-   local gs = ZEN.given_steps
-   local ws = ZEN.when_steps
-   local ts = ZEN.then_steps
-   local ss = ZEN.schemas
-   ZEN.given_steps = {}
-   ZEN.when_steps = {}
-   ZEN.then_steps = {}
-   ZEN.schemas = {}
-   -- load scenario
-   require_once("zencode_"..trimq(scen))
-   print("Scenario: "..scen)
-   I.print({
-      Given = ZEN.given_steps,
-      When = ZEN.when_steps,
-      Then = ZEN.then_steps,
-   })
-   I.print({Schemas = ZEN.schemas})
-end)
-
 function debug_codec()
    I.warn({CODEC = CODEC})
 end

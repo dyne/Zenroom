@@ -158,6 +158,7 @@ static char *rngseed = NULL;
 static char *script = NULL;
 static char *keys = NULL;
 static char *data = NULL;
+static char *introspect = NULL;
 
 int cli_alloc_buffers() {
 	conffile = malloc(MAX_STRING);
@@ -168,6 +169,7 @@ int cli_alloc_buffers() {
 	script = malloc(MAX_FILE);
 	keys = malloc(MAX_FILE);
 	data = malloc(MAX_FILE);
+	introspect = malloc(MAX_STRING);
 	return(1);
 }
 
@@ -180,6 +182,7 @@ int cli_free_buffers() {
 	free(script);
 	free(keys);
 	free(data);
+	free(introspect);
 	return(1);
 }
 
@@ -190,9 +193,9 @@ int main(int argc, char **argv) {
 
 	cli_alloc_buffers();
 
-	const char *short_options = "hd:ic:k:a:S:pz";
+	const char *short_options = "hD:ic:k:a:S:pz";
 	const char *help          =
-		"Usage: zenroom [-h] [ -d lvl ] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ -S seed ] [ -p ] [ -z ] [ script.lua ]\n";
+		"Usage: zenroom [-h] [ -D scenario ] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ -S seed ] [ -p ] [ -z ] [ script.lua ]\n";
 	int pid, status, retval;
 	conffile   [0] = '\0';
 	scriptfile [0] = '\0';
@@ -201,6 +204,7 @@ int main(int argc, char **argv) {
 	rngseed    [0] = '\0';
 	data       [0] = '\0';
 	keys       [0] = '\0';
+	introspect [0] = '\0';
 	// conf[0] = '\0';
 	script[0] = '\0';
 	int verbosity = 1;
@@ -211,9 +215,8 @@ int main(int argc, char **argv) {
 #endif
 	while((opt = getopt(argc, argv, short_options)) != -1) {
 		switch(opt) {
-		case 'd':
-			verbosity = atoi(optarg);
-			set_debug(verbosity);
+		case 'D':
+			snprintf(introspect,MAX_STRING-1,"%s",optarg);
 			break;
 		case 'h':
 			fprintf(stdout,"%s",help);
@@ -297,19 +300,6 @@ int main(int argc, char **argv) {
 		return(res);
 	}
 
-	if(scriptfile[0]!='\0') {
-		////////////////////////////////////
-		// load a file as script and execute
-		if(verbosity) notice(NULL, "reading Zencode from file: %s", scriptfile);
-		load_file(script, fopen(scriptfile, "rb"));
-	} else {
-		////////////////////////
-		// get another argument from stdin
-		if(verbosity) act(NULL, "reading Zencode from stdin");
-		load_file(script, stdin);
-		func(NULL, "%s\n--",script);
-	}
-
 	// configuration from -c or default
 	if(conffile[0]!='\0') {
 		if(verbosity) act(NULL, "configuration: %s",conffile);
@@ -326,6 +316,51 @@ int main(int argc, char **argv) {
 		error(NULL, "Initialisation failed.");
 		cli_free_buffers();
 		return EXIT_FAILURE; }
+
+	// print scenario documentation
+	if(introspect) {
+		static char zscript[MAX_ZENCODE];
+		notice(NULL, "Documentation for scenario: %s",introspect);
+		(*Z->snprintf)(zscript,MAX_ZENCODE-1,
+		               "function Given(text, fn) ZEN.given_steps[text] = true end\n"
+		               "function When(text, fn) ZEN.when_steps[text] = true end\n"
+		               "function Then(text, fn) ZEN.then_steps[text] = true end\n"
+		               "function ZEN.add_schema(arr)\n"
+		               "  for k,v in pairs(arr) do ZEN.schemas[k] = true end end\n"
+		               "ZEN.given_steps = {}\n"
+		               "ZEN.when_steps = {}\n"
+		               "ZEN.then_steps = {}\n"
+		               "ZEN.schemas = {}\n"
+		               "require_once('zencode_%s')\n"
+		               "print(JSON.encode(\n"
+		               "{ Given = ZEN.given_steps,\n"
+		               "  When = ZEN.when_steps,\n"
+		               "  Then = ZEN.then_steps,\n"
+		               "  Schemas = ZEN.schemas }))", introspect);
+		int ret = luaL_dostring(Z->lua, zscript);
+		if(ret) {
+			error(Z->lua, "Zencode execution error");
+			error(Z->lua, "Script:\n%s", zscript);
+			error(Z->lua, "%s", lua_tostring(Z->lua, -1));
+			fflush(stderr);
+		}
+		zen_teardown(Z);
+		cli_free_buffers();
+		return EXIT_SUCCESS;
+	}
+
+	if(scriptfile[0]!='\0') {
+		////////////////////////////////////
+		// load a file as script and execute
+		if(verbosity) notice(NULL, "reading Zencode from file: %s", scriptfile);
+		load_file(script, fopen(scriptfile, "rb"));
+	} else {
+		////////////////////////
+		// get another argument from stdin
+		if(verbosity) act(NULL, "reading Zencode from stdin");
+		load_file(script, stdin);
+		func(NULL, "%s\n--",script);
+	}
 
 	// configure to parse Lua or Zencode
 	if(zencode) {
