@@ -64,7 +64,7 @@ EOF
 
 cat <<EOF | zexe have_number.zen -a $tmp
 rule check version 1.0.0
-	 Given I have a 'number' named 'myNumber'
+	 Given I have a 'number' named 'myNumber' inside 'myObject'
 	 Then print the 'myNumber'
 EOF
 

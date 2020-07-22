@@ -166,6 +166,7 @@ end
 --   name  = conversion string description 
 --   check = check function pointer
 --   istable = true -- if deepmap required
+--   isschema = true -- if schema function required
 -- }
 function guess_conversion(objtype, definition)
    local res
@@ -235,7 +236,7 @@ end
 
 -- takes a data object and the guessed structure, operates the
 -- conversion and returns the resulting raw data to be used inside the
--- WHEN block in HEAP
+-- WHEN block in HEAP.
 function operate_conversion(data, guessed)
    if not guessed.fun then
 	  error('No conversion operation guessed: '..guessed.name, 2)
@@ -286,9 +287,9 @@ end
 -- it ready in TMP for @{validate} or @{ack}.
 --
 -- @function ZEN:pick(name, data, encoding)
--- @param name string descriptor of the data object
--- @param data[opt] optional data object (default search inside IN.*)
--- @param encoding[opt] optional encoding spec (default CONF.input.encoding)
+-- @param what string descriptor of the data object
+-- @param obj[opt] optional data object (default search inside IN.*)
+-- @param conv[opt] optional encoding spec (default CONF.input.encoding)
 -- @return true or false
 function ZEN:pick(what, obj, conv)
    local guess
@@ -297,6 +298,9 @@ function ZEN:pick(what, obj, conv)
 	  TMP = { root = nil,
 			  data = operate_conversion(obj, guess),
 			  schema = guess.name }
+	  CODEC[what] = { name = guess.name,
+					  istable = guess.istable,
+					  isschema = guess.isschema }
 	  return(ZEN.OK)
    end
    local got
@@ -309,6 +313,9 @@ function ZEN:pick(what, obj, conv)
    TMP = { root = nil,
 		   data = operate_conversion(got, guess),
 		   schema = guess.name }
+   CODEC[what] = { name = guess.name,
+				   istable = guess.istable,
+				   isschema = guess.isschema }
    assert(ZEN.OK)
    ZEN:ftrace("pick found "..what)
 end
@@ -347,6 +354,10 @@ function ZEN:pickin(section, what, conv)
    TMP = { root = section,
 		   data = operate_conversion(got, guess),
 		   schema = guess.name }
+   CODEC[what] = { root = section,
+				   name = guess.name,
+				   istable = guess.istable,
+				   isschema = guess.isschema }
    assert(ZEN.OK)
    ZEN:ftrace("pickin found "..what.." in "..section)
 end

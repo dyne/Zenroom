@@ -79,3 +79,11 @@ When("create the introspection of scenario ''", function(scen)
    })
    I.print({Schemas = ZEN.schemas})
 end)
+
+function debug_codec()
+   I.warn({CODEC = CODEC})
+end
+
+Given("codec", function() debug_codec() end)
+When("codec", function() debug_codec() end)
+Then("codec", function() debug_codec() end)

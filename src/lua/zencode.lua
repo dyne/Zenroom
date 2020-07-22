@@ -140,6 +140,7 @@ function zencode:begin()
    ACK = { } -- When processing,  destination for push*
    OUT = { } -- print out
    AST = { } -- AST of parsed Zencode
+   CODEC = { } -- saves input conversions for to decode using same
    WHO = nil
    collectgarbage'collect'
    -- Zencode init traceback

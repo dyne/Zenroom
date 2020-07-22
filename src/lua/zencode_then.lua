@@ -54,9 +54,21 @@ local function guess_outcast(cast)
    elseif cast == 'base64' then return outcast_base64
    elseif cast == 'url64'  then return outcast_url64
    elseif cast == 'bin'    then return outcast_bin
+   elseif cast == 'number' then return(function(v) return(v) end)
    else
 	  error("Invalid output conversion: "..cast, 2)
 	  return nil
+   end
+end
+local function check_codec(value)
+   if not CODEC[value] then
+	  return CONF.output.encoding.name
+   else
+	  if CODEC[value].isschema then
+		 return CONF.output.encoding.name
+	  else
+		 return CODEC[value].name or CONF.output.encoding.name
+	  end
    end
 end
 
@@ -64,7 +76,7 @@ end
 
 Then("print ''", function(v)
 		if ACK[v] then
-		   local fun = guess_outcast(CONF.output.encoding.name)
+		   local fun = guess_outcast( check_codec(v) )
 		   OUT[v] = fun(ACK[v]) -- value in ACK
 		else
 		   OUT.output = v -- raw string value
@@ -136,7 +148,7 @@ Then("print my ''", function(obj)
 		ZEN:Iam()
 		ZEN.assert(ACK[obj], "Data object not found: "..obj)
 		if not OUT[WHO] then OUT[WHO] = { } end
-		local fun = guess_outcast(CONF.output.encoding.name)
+		local fun = guess_outcast( check_codec(obj) )
 		OUT[WHO][obj] = ACK[obj]
 		if luatype(OUT[WHO][obj]) == 'table' then
 		   OUT[WHO][obj] = deepmap(fun, OUT[WHO][obj])
@@ -162,7 +174,7 @@ Then("print the ''", function(key)
 		ZEN.assert(ACK[key], "Data object not found: "..key)
 		if not OUT[key] then OUT[key] = { } end
 		OUT[key] = ACK[key]
-		local fun = guess_outcast(CONF.output.encoding.name)
+		local fun = guess_outcast( check_codec(key) )
 		if luatype(OUT[key]) == 'table' then
 		   OUT[key] = deepmap(fun, OUT[key])
 		else
@@ -198,7 +210,7 @@ Then("print the '' in ''", function(key, section)
 		ZEN.assert(ACK[section][key], "Data object not found: "..key.." inside "..section)
 		if not OUT[key] then OUT[key] = { } end
 		OUT[key] = ACK[section][key]
-		local fun = guess_outcast(CONF.output.encoding.name)
+		local fun = guess_outcast( check_codec(section) )
 		if luatype(OUT[key]) == 'table' then
 		   OUT[key] = deepmap(fun, OUT[key])
 		else
