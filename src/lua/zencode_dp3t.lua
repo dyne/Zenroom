@@ -30,14 +30,14 @@ SHA256 = HASH.new('sha256')
 -- 	  -- ephemeral ids (array of 16 byte AES-GCM checksums)
 -- })
 
-When("I renew the secret day key to a new day", function()
+When("renew the secret day key to a new day", function()
 		ZEN.assert(ACK.secret_day_key, "Secret day key not found")
 		local sk = SHA256:process(ACK.secret_day_key)
 		ZEN.assert(sk, "Error renewing secret day key (SHA256)")
 		ACK.secret_day_key = sk
 end)
 
-When("I create the ephemeral ids for today", function()
+When("create the ephemeral ids for today", function()
 		ZEN.assert(ACK.secret_day_key, "Secret day key not found")
 		ZEN.assert(ACK.broadcast_key, "Broadcast key not found")
 		ZEN.assert(type(ACK.epoch) == 'number', "Epoch length (minutes) not found")
@@ -52,7 +52,7 @@ When("I create the ephemeral ids for today", function()
 		end
 end)
 
-When("I create the proximity tracing of infected ids", function()
+When("create the proximity tracing of infected ids", function()
 		ZEN.assert(type(ACK.epoch) == 'number', "Number of moments not found")
 		ZEN.assert(type(ACK.list_of_infected) == 'table', "List of infected not found")
 		ZEN.assert(type(ACK.ephemeral_ids) == 'table', "List of ephemeral ids not found")
