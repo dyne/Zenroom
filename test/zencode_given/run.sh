@@ -70,9 +70,9 @@ EOF
 
 
 cat <<EOF | zexe have_valid_arrays.zen -a $tmp
-# Given I have a valid array of 'string' in 'myArray'
-Given I have a valid 'str' in 'myString'
-Given I have a valid 'number' in 'myNumber'
+Given I have a valid 'string array' named 'myArray' in 'myObject'
+Given I have a valid 'string' named 'myString' in 'myObject'
+Given I have a valid 'number' named 'myNumber' in 'myObject'
 When I randomize the 'myArray' array
 Then print all data
 EOF
@@ -81,7 +81,7 @@ cat <<EOF  > $tmp
 {"Andrea":{
       "keypair":{
          "private_key":"IIiTD89L6_sbIvaUc5jAVR88ySigaBXppS5GLUjm7Dv2OLKbNIVdiZ48jpLGskKVDPpukKe4R0A",
-         "public_key":"BFKQTA1ZiebF0is_LtMcVgu4QXC-HOjMpCwDPLuvuXGVAgORIn5NUm7Ey7UDljeNrTCZvhEqxCPjSvWLtIuSYXeZcHWENp7oO37nv7hL2Qj1vMwwlpeRhnSZnjhnKYjq5aTQV1T-eH3e0UcJASzvnb8"
+         "public_key":"BBgzMLWv0ZTiMBwCxF7kEIv_y7NmilO4vmZGRj_edBY5rDchp7dmo-z4g4_13mdN_3b8-o5GxTNw3SHzQC4uxd0"
       },
    },
    "stuff": {
@@ -94,20 +94,18 @@ cat <<EOF  > $tmp
         ]
 	},
 
-	"Bobbino":{"Bob":{
+	"Bobbino":{
       "keypair":{
          "private_key":"IIiTD89L6_sbIvaUc5jAVR88ySigaBXppS5GLUjm7Dv2OLKbNIVdiZ48jpLGskKVDPpukKe4R0A",
-         "public_key":"BFKQTA1ZiebF0is_LtMcVgu4QXC-HOjMpCwDPLuvuXGVAgORIn5NUm7Ey7UDljeNrTCZvhEqxCPjSvWLtIuSYXeZcHWENp7oO37nv7hL2Qj1vMwwlpeRhnSZnjhnKYjq5aTQV1T-eH3e0UcJASzvnb8"
+         "public_key":"BBgzMLWv0ZTiMBwCxF7kEIv_y7NmilO4vmZGRj_edBY5rDchp7dmo-z4g4_13mdN_3b8-o5GxTNw3SHzQC4uxd0"
 				},
-			},
-	  "robbaB":"1000",
+    "robbaB":"1000",
     "peppeB":[
         "peppe2B",
         "peppe3B",
         "peppe4B"
         ]
 	}
-
  }
 EOF
 
@@ -135,18 +133,11 @@ scenario 'ecdh'
 	 Then print all data
 EOF
 
-
-cat <<EOF | tee have_a_inside.zen | $Z -z -a $tmp
-rule check version 1.0.0
-scenario 'ecdh'
-	 Given I have a 'robba' inside 'stuff'
-	 Then print the 'robba'
-EOF
 cat <<EOF | tee have_inside_a.zen | $Z -z -a $tmp
 rule check version 1.0.0
 scenario 'ecdh'
-	 Given I have inside 'stuff' a 'robba'
-	 Then print the 'stuff'
+	 Given I have a 'number' named 'robba' inside 'stuff'
+	 Then print the 'robba'
 EOF
 # ambiguity explained:
 cat <<EOF | tee have_a_inside.zen | $Z -z -a $tmp
@@ -154,12 +145,6 @@ rule check version 1.0.0
 scenario 'ecdh'
 	 Given I have a 'keypair' inside 'Bobbino'
 	 Then print the 'keypair'
-EOF
-cat <<EOF | tee have_inside_a.zen | $Z -z -a $tmp
-rule check version 1.0.0
-scenario 'ecdh'
-	 Given I have inside 'Bobbino' a 'keypair'
-	 Then print the 'Bobbino'
 EOF
 # TODO: rename in Given I have inside 'Bobbino' a 'keypair'
 # diverso da Given I have a 'keypair' inside 'Bobbino'
@@ -192,9 +177,11 @@ cat <<EOF | tee have_a_implicit_array.zen | $Z -z -a $tmp
 rule check version 1.0.0
 scenario 'ecdh'
 	 Given I have a valid 'number' named 'quantity' inside 'stuff'
-	 Then print the 'peppe'
+	 Then print the 'quantity'
 EOF
 
 
 
 rm -f $tmp
+echo "####################"
+echo "SUCCESS"
