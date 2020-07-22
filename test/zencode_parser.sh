@@ -10,7 +10,7 @@ set -e
 
 cat << EOF | zenroom -z
 rule check version 1.0.0
-Scenario coconut: credential keygen
+Scenario credential: credential keygen
 Given that I am known as 'Alice'
 When I create the credential keypair
 Then print my 'credential keypair'
@@ -18,7 +18,7 @@ EOF
 
 cat << EOF | zenroom -z
 rule check version 1.0.0
-Scenario coconut: issuer keygen
+Scenario credential: issuer keygen
 Given that I am known as 'MadHatter'
 When I create the issuer keypair
 Then print my 'issuer keypair'
@@ -28,7 +28,7 @@ EOF
 cat << EOF | zenroom -z
 rule check version 1.0.0
 rule unknown ignore
-Scenario coconut: issuer keygen
+Scenario credential: issuer keygen
 Given that I am known as 'MadHatter'
 When I create the issuer keypair
 and I don't know what I am doing
@@ -40,7 +40,7 @@ set +e
 
 cat << EOF | zenroom -z
 rule check version 1.0.0
-Scenario coconut: issuer keygen
+Scenario credential: issuer keygen
 Given that I am known as 'MadHatter'
 0YOUI4qhIeXmIpyK
 Then print 'Success' 'OK'
@@ -49,7 +49,7 @@ EOF
 
 cat << EOF | zenroom -z
 rule check version 1.0.0
-Scenario coconut: issuer keygen
+Scenario credential: issuer keygen
 Given that I am known as 'MadHatter'
 and 0YOUI4qhIeXmIpyK
 Then print 'Success' 'OK'
@@ -58,7 +58,7 @@ EOF
 
 cat << EOF | zenroom -z
 rule check version 1.0.0
-Scenario coconut: issuer keygen
+Scenario credential: issuer keygen
 Given that I am known as 'MadHatter'
 Given 0YOUI4qhIeXmIpyK
 Then print 'Success' 'OK'
@@ -67,7 +67,7 @@ EOF
 
 cat << EOF | zenroom -z
 rule check version 1.0.0
-Scenario coconut: issuer keygen
+Scenario credential: issuer keygen
 Given that I am known as 'MadHatter'
 When I create the issuer keypair
 and this should fail or 'rule unknown ignore'

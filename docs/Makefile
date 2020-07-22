@@ -20,7 +20,8 @@ website:
 zencode:
 	@../build/zencode_scenario.sh ecdh
 	@../build/zencode_scenario.sh dp3t
-	@../build/zencode_scenario.sh credentials
+	@../build/zencode_scenario.sh credential
+	@../build/zencode_scenario.sh petition
 	@../build/zencode_scenario.sh array
 	@../build/zencode_scenario.sh given
 	@../build/zencode_scenario.sh cookbook
@@ -34,9 +35,14 @@ preview:
 
 clean:
 	make -C pages/ldoc clean
-	@rm -rf examples/zencode_simple
+	@rm -rf examples/zencode_ecdh
 	@rm -rf examples/zencode_dp3t
-	@rm -rf examples/zencode_coconut
+	@rm -rf examples/zencode_credential
+	@rm -rf examples/zencode_petition
+	@rm -rf examples/zencode_array
+	@rm -rf examples/zencode_given
+	@rm -rf examples/zencode_cookbook
+	@rm -rf examples/zencode_hash
 	@rm -f  examples/*.data
 	@rm -f  examples/*.keys
 	@rm -f  examples/*.lua

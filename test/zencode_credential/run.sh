@@ -12,14 +12,14 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 # credential request
 
 cat << EOF | zexe credential_keygen.zen | tee keypair.keys
-Scenario coconut: credential keygen
+Scenario credential: credential keygen
     Given that I am known as 'Alice'
     When I create the credential keypair
     Then print my 'credential keypair'
 EOF
 
 cat << EOF | zexe create_request.zen -k keypair.keys | tee request.json
-Scenario coconut: create request
+Scenario credential: create request
     Given that I am known as 'Alice'
     and I have my valid 'credential keypair'
     When I create the credential request
@@ -29,14 +29,14 @@ EOF
 # credential issuance
 
 cat << EOF | zexe issuer_keygen.zen | tee issuer_keypair.keys
-Scenario coconut: issuer keygen
+Scenario credential: issuer keygen
     Given that I am known as 'MadHatter'
     When I create the issuer keypair
     Then print my 'issuer keypair'
 EOF
 
 cat << EOF | zexe publish_verifier.zen -k issuer_keypair.keys | tee verifier.json
-Scenario coconut: publish verifier
+Scenario credential: publish verifier
     Given that I am known as 'MadHatter'
     and I have my valid 'verifier'
     Then print my 'verifier'
@@ -45,7 +45,7 @@ EOF
 # credential signature
 
 cat << EOF | zexe issuer_sign.zen -a request.json -k issuer_keypair.keys | tee signature.json
-Scenario coconut: issuer sign
+Scenario credential: issuer sign
     Given that I am known as 'MadHatter'
     and I have my valid 'issuer keypair'
     and I have a valid 'credential request'
@@ -55,7 +55,7 @@ Scenario coconut: issuer sign
 EOF
 
 cat << EOF | zexe aggregate_signature.zen -a signature.json -k keypair.keys | tee credentials.json
-Scenario coconut: aggregate signature
+Scenario credential: aggregate signature
     Given that I am known as 'Alice'
     and I have my valid 'credential keypair'
     and I have a valid 'credential signature'
@@ -67,7 +67,7 @@ EOF
 # zero-knowledge credential proof emission and verification
 
 cat << EOF | zexe create_proof.zen -k credentials.json -a verifier.json | tee proof.json
-Scenario coconut: create proof
+Scenario credential: create proof
     Given that I am known as 'Alice'
     and I have my valid 'credential keypair'
     and I have a valid 'verifier' from 'MadHatter'
@@ -79,7 +79,7 @@ EOF
 
 
 cat << EOF | zexe verify_proof.zen -k proof.json -a verifier.json
-Scenario coconut: verify proof
+Scenario credential: verify proof
     Given that I have a valid 'verifier' from 'MadHatter'
     and I have a valid 'credential proof'
     When I aggregate the verifiers

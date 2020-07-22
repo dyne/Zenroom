@@ -68,9 +68,8 @@ zencode-integration = \
 	cd test/zencode_ecdh && ./run.sh; cd -; \
 	cd test/zencode_array && ./run.sh; cd -; \
 	cd test/zencode_hash && ./run.sh; cd -; \
-	cd test/zencode_coconut &&    \
-	./run_coconut_example.sh ../../${1} &&    \
-	./run_petition_example.sh ../../${1}; cd -;
+	cd test/zencode_credential && ./run.sh; cd -; \
+	cd test/zencode_petition && ./run.sh; cd -;
 
 
 # ${1} test/closure.lua && \
