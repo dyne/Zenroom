@@ -24,6 +24,7 @@ zencode:
 	@../build/zencode_scenario.sh array
 	@../build/zencode_scenario.sh given
 	@../build/zencode_scenario.sh cookbook
+	@../build/zencode_scenario.sh hash
 
 map:
 	./_media/scripts/parse_zencode.sh _media/zencode_utterances.yaml
