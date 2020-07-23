@@ -79,8 +79,8 @@
 extern zenroom_t *Z;
 
 // from base58.c
-// extern int b58tobin(void *bin, size_t *binszp, const char *b58, size_t b58sz);
-// extern int b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz);
+extern int b58tobin(void *bin, size_t *binszp, const char *b58, size_t b58sz);
+extern int b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz);
 
 // from zenroom types that are convertible to octet
 // they don't do any internal memory allocation
@@ -124,22 +124,23 @@ void push_octet_to_hex_string(lua_State *L, octet *o) {
 	return;
 }
 
-// extern const int8_t b58digits_map[];
-// int is_base58(const char *in) {
-// 	if(!in) {
-// 		HEREs("null string in is_base58");
-// 		return 0; }
-// 	int c;
-// 	for(c=0; in[c]!='\0'; c++) {
-// 		if(b58digits_map[(int8_t)in[c]]==-1) {
-// 			func(NULL,"invalid base58 digit");
-// 			return 0; }
-// 		if(in[c] & 0x80) {
-// 			func(NULL,"high-bit set on invalid digit");
-// 			return 0; }
-// 	}
-// 	return c;
-// }
+extern const int8_t b58digits_map[];
+// extern const char b58digits_ordered[];
+int is_base58(const char *in) {
+	if(!in) {
+		HEREs("null string in is_base58");
+		return 0; }
+	int c;
+	for(c=0; in[c]!='\0'; c++) {
+		if(b58digits_map[(int8_t)in[c]]==-1) {
+			func(NULL,"invalid base58 digit");
+			return 0; }
+		if(in[c] & 0x80) {
+			func(NULL,"high-bit set on invalid digit");
+			return 0; }
+	}
+	return c;
+}
 
 int is_hex(const char *in) {
 	if(!in) { ERROR(); return 0; }
@@ -378,17 +379,18 @@ static int lua_is_url64(lua_State *L) {
 	return 1;
 }
 
-// static int lua_is_base58(lua_State *L) {
-// 	const char *s = lua_tostring(L, 1);
-// 	luaL_argcheck(L, s != NULL, 1, "string expected");
-// 	int len = is_base58(s);
-// 	if(!len) {
-// 		lua_pushboolean(L, 0);
-// 		func(L, "string is not a valid base58 sequence");
-// 		return 1; }
-// 	lua_pushboolean(L, 1);
-// 	return 1;
-// }
+static int lua_is_base58(lua_State *L) {
+	const char *s = lua_tostring(L, 1);
+	luaL_argcheck(L, s != NULL, 1, "string expected");
+	int len = is_base58(s);
+	if(!len) {
+		lua_pushboolean(L, 0);
+		func(L, "string is not a valid base58 sequence");
+		return 1; }
+	lua_pushboolean(L, 1);
+	return 1;
+}
+
 static int lua_is_hex(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "string expected");
@@ -463,28 +465,30 @@ static int from_url64(lua_State *L) {
 	return 1;
 }
 
-// static int from_base58(lua_State *L) {
-// 	const char *s = lua_tostring(L, 1);
-// 	luaL_argcheck(L, s != NULL, 1, "base58 string expected");
-// 	int len = is_base58(s);
-// 	if(!len) {
-// 		lerror(L, "base58 string contains invalid characters");
-// 		return 0; }
-// 	size_t binmax = len + len + len;
-// 	size_t binlen = binmax;
-// 	char *dst = zen_memory_alloc(binmax);
-// 	if(!b58tobin(dst, &binlen, s, len)) {
-// 		zen_memory_free(dst);
-// 		lerror(L,"Error in conversion from base58 for string: %s",s);
-// 		return 0; }
-// 	octet *o = o_new(L, binlen);
-// 	o->len = binlen;
-// 	// b58tobin returns its result at the _end_ of buf!!!
-// 	int l,r;
-// 	for(l=binlen, r=binmax; l>=0; l--, r--) o->val[l] = dst[r];
-// 	zen_memory_free(dst);
-// 	return 1;
-// }
+static int from_base58(lua_State *L) {
+	const char *s = lua_tostring(L, 1);
+	luaL_argcheck(L, s != NULL, 1, "base58 string expected");
+	int len = is_base58(s);
+	if(!len) {
+		lerror(L, "base58 string contains invalid characters");
+		return 0; }
+	size_t binmax = B64decoded_len(len); //((len + 3) >> 2) *3;
+	char *tmp = zen_memory_alloc(binmax);
+	// size_t binmax = len + len + len;
+	size_t binlen = binmax;
+	if(!b58tobin((void*)tmp, &binlen, s, len)) {
+		lerror(L,"Error in conversion from base58 for string: %s",s);
+		return 0; }
+	octet *o = o_new(L, binlen);
+	if(binlen>binmax) {
+		memcpy(o->val,&tmp[binlen-binmax],binmax);
+	} else {
+		memcpy(o->val,&tmp[binmax-binlen],binlen);
+	}
+	zen_memory_free(tmp);
+	o->len = binlen;
+	return 1;
+}
 
 static int from_string(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
@@ -682,27 +686,29 @@ This encoding uses the same alphabet as Bitcoin addresses. Why base58 instead of
     @function octet:base58()
     @return a string representing the octet's contents in base58
 */
-// static int to_base58(lua_State *L) {
-// 	octet *o = o_arg(L,1);	SAFE(o);
-// 	if(!o->len || !o->val) {
-// 		lerror(L, "base64 cannot encode an empty octet");
-// 		return 0; }
-// 	if(o->len < 3) {
-// 		// there is a bug in luke-jr's implementation of base58 (fixed
-// 		// in bitcoin-core) when encoding strings smaller than 3 bytes
-// 		// the 'j' counter being unsigned and initialised at size-2 in
-// 		// the carry inner loop flips to 18446744073709551615
-// 		lerror(L,"base58 cannot encode octets smaller than 3 bytes");
-// 		return 0; }
-// 	int newlen = getlen_base58(o->len);
-// 	char *b = zen_memory_alloc(newlen);
-// 	size_t b58len = newlen;
-// 	b58enc(b, &b58len, o->val, o->len);
-// 	// b[b58len] = '\0'; // already present, but for safety
-// 	lua_pushlstring(L,b,b58len-1);
-// 	zen_memory_free(b);
-// 	return 1;
-// }
+static int to_base58(lua_State *L) {
+	octet *o = o_arg(L,1);	SAFE(o);
+	if(!o->len || !o->val) {
+		lerror(L, "base64 cannot encode an empty octet");
+		return 0; }
+	if(o->len < 3) {
+		// there is a bug in luke-jr's implementation of base58 (fixed
+		// in bitcoin-core) when encoding strings smaller than 3 bytes
+		// the 'j' counter being unsigned and initialised at size-2 in
+		// the carry inner loop flips to 18446744073709551615
+		lerror(L,"base58 cannot encode octets smaller than 3 bytes");
+		return 0; }
+	int maxlen = o->len <<1;
+	char *b = zen_memory_alloc(maxlen);
+	size_t b58len;
+	b58enc(b, &b58len, o->val, o->len);
+	// b[b58len] = '\0'; // already present, but for safety
+	lua_pushlstring(L,b,b58len);
+	zen_memory_free(b);
+	// don't free since its pushed as string in Lua
+	// so the GC will take care of it
+	return 1;
+}
 
 /***
     Converts an octet into an array of bytes, compatible with Lua's transformations on <a href="https://www.lua.org/pil/11.1.html">arrays</a>.
@@ -1000,20 +1006,20 @@ int luaopen_octet(lua_State *L) {
 		{"chop",  chop},
 		{"is_base64", lua_is_base64},
 		{"is_url64", lua_is_url64},
-//		{"is_base58", lua_is_base58},
+		{"is_base58", lua_is_base58},
 		{"is_hex", lua_is_hex},
 		{"is_bin", lua_is_bin},
 		{"from_number",from_number},
 		{"from_base64",from_base64},
 		{"from_url64",from_url64},
-//		{"from_base58",from_base58},
+		{"from_base58",from_base58},
 		{"from_string",from_string},
 		{"from_str",   from_string},
 		{"from_hex",   from_hex},
 		{"from_bin",   from_bin},
 		{"base64",from_base64},
 		{"url64",from_url64},
-//		{"base58",from_base58},
+		{"base58",from_base58},
 		{"string",from_string},
 		{"str",   from_string},
 		{"hex",   from_hex},
@@ -1021,7 +1027,7 @@ int luaopen_octet(lua_State *L) {
 		{"to_hex"   , to_hex},
 		{"to_base64", to_base64},
 		{"to_url64",  to_url64},
-//		{"to_base58", to_base58},
+		{"to_base58", to_base58},
 		{"to_string", to_string},
 		{"to_str",    to_string},
 		{"to_array",  to_array},
@@ -1038,7 +1044,7 @@ int luaopen_octet(lua_State *L) {
 		{"hex"   , to_hex},
 		{"base64", to_base64},
 		{"url64",  to_url64},
-//		{"base58", to_base58},
+		{"base58", to_base58},
 		{"string", to_string},
 		{"str",    to_string},
 		{"array",  to_array},
