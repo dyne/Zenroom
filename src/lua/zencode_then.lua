@@ -42,6 +42,11 @@ local function outcast_url64(obj)
    if t == 'number' then return obj end
    return O.to_url64(obj)
 end
+local function outcast_base58(obj)
+	local t = luatype(obj)
+	if t == 'number' then return obj end
+	return O.to_base58(obj)
+ end 
 local function outcast_bin(obj)
    local t = luatype(obj)
    if t == 'number' then return obj end
@@ -53,7 +58,9 @@ local function guess_outcast(cast)
    elseif cast == 'hex'    then return outcast_hex
    elseif cast == 'base64' then return outcast_base64
    elseif cast == 'url64'  then return outcast_url64
+   elseif cast == 'base58'  then return outcast_base58
    elseif cast == 'bin'    then return outcast_bin
+   elseif cast == 'binary'    then return outcast_bin
    elseif cast == 'number' then return(function(v) return(v) end)
    else
 	  error("Invalid output conversion: "..cast, 2)
