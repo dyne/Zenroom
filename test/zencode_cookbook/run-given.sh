@@ -122,11 +122,14 @@ cat <<EOF  > $tmp
       ]
    },
    "Alice":{
-      "keypair":{
-         "private_key":"DbjRMCC7fykuUaqYDX_cy_Zs7J0ZC0y9VxBLRcfwIJ63MAZtW4fJ4IxxdUdLNy0ye0-qf0IlRZI",
-         "public_key":"BE39Wu7AXSzSplMd37VhCB094xHqCgvZxMhgaTA7B0Xz4mEIZmoO2FmWiokVXuJ0O9jH9AQD4UBkXiCU4gzYrLQc9VpfB4Qr8rz6jj_UYvC77FiLGc-0jsE4mQfpgLoOspBGcfNyiS8Y50hl8zthKjo"
-      }
-   }
+	   "keypair":{
+		  "private_key":"L9pogbrN_oU6BOt2U37-hK5c4-McvHU-SNhT0P7QDsI",
+		  "public_key":"BPg1CFFH1eCsq3HHGWo3dCDG4QPA9VHxrF30y8MHtar-JLcXOQvjq81yXydcR5KWaYnxNIgzUVNtqTh4s2QsXNI"
+	   }
+	}
+   
+   
+   
 }
 EOF
 
@@ -193,13 +196,13 @@ cat <<EOF  > $tmp
          "anotherString3",
          "anotherString4"
       ]      
-   },
-   "Alice":{
-      "keypair":{
-         "private_key":"DbjRMCC7fykuUaqYDX_cy_Zs7J0ZC0y9VxBLRcfwIJ63MAZtW4fJ4IxxdUdLNy0ye0-qf0IlRZI",
-         "public_key":"BE39Wu7AXSzSplMd37VhCB094xHqCgvZxMhgaTA7B0Xz4mEIZmoO2FmWiokVXuJ0O9jH9AQD4UBkXiCU4gzYrLQc9VpfB4Qr8rz6jj_UYvC77FiLGc-0jsE4mQfpgLoOspBGcfNyiS8Y50hl8zthKjo"
-      }
-   }
+   },   
+	  "Alice":{
+	   "keypair":{
+		  "private_key":"L9pogbrN_oU6BOt2U37-hK5c4-McvHU-SNhT0P7QDsI",
+		  "public_key":"BPg1CFFH1eCsq3HHGWo3dCDG4QPA9VHxrF30y8MHtar-JLcXOQvjq81yXydcR5KWaYnxNIgzUVNtqTh4s2QsXNI"
+	   }
+	}
 }
 EOF
 

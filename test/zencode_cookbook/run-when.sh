@@ -39,12 +39,12 @@ cat <<EOF  > $tmp
 		 "String3"
       ],
 	  "myFirstNumberArray":[10, 20, 30],
-	   "myOnlyEcpArray":[
-		  "AwxPDos75tOCSXiZqr1m66TR3VhdVvmZ7zQrcBApAlJadVJ0ckzru-sWQWSzLgSL1HDmOzAtvQ8bBNE",
-		  "AgeWxWpKth6IpkIqeP0GIA46frue77PC0YXMjl4-j0yQ7up7uqM7DfGzzzoTQqStWXGj1fn_l3xFW74",
-		  "AwCZpAeRIkPUGYq4wmeDhevRhJzpoUFjomJw4HhQM-QJ1CICibgWMTP95wv9VB1AzYvAJzEv2oxJ8xg",
-		  "Aw7ZVYGHa8xhKx4BEI74r1elcPtnJWyDJdleAaS6rtnqb1ITkH640jYj1r7YqK6M8NVx6BkKm4S1358"
-	   ]
+   "myOnlyEcpArray":[
+      "AjHGaNdano8URHxzbkzBJgqWSUVL5Dm3YMx-AYaZFe8u4H-yZL1UmxwxAiWy4mysnQ",
+      "AhhVr7iKRMvU1VGFld2-IUwh8ywNwPGLJ4_6_QAfQ4qpHD0BcFBNsQkdzmrrhWPGjg",
+      "AzfRdz8Rvg0cZAmfd8tG_31rWPgPd1t_EQ_s-D9BjrtpiDl6gm1t8kwyLNqWacvYAw",
+      "Az9Qi996vQvcQOxRiddsh8GGpFjMdpiDQv4LSh7IuFtA2WKmBVb5-5q43nRJsN3E9A"
+   ]
    },
    "mySecondObject":{
       "mySecondNumber":2,
@@ -93,10 +93,10 @@ cat <<EOF  > $tmp
    },
    
    "Alice":{
-      "keypair":{
-         "private_key":"PRHwDEZN5XZAPRB2fi33caOCrguLVvWR015SKfpOjzomzOu0bhIYp-2xDpj-OEFb6euu86xnCd4",
-         "public_key":"BGDPKUMA0tUZV_I_6M73hPkeph-NJeaabbFIacQ-qbDF5dmtikm8wse641yPbN4ui45j97dz9wNw0oqEUcJyuCrDJnzQT6Os6ajjW1Nu9DdzJbqBucvNUA6jctbCfrohqxNXO88nyG14G4CIrVxtDzs"
-      }
+	   "keypair":{
+		  "private_key":"L9pogbrN_oU6BOt2U37-hK5c4-McvHU-SNhT0P7QDsI",
+		  "public_key":"BPg1CFFH1eCsq3HHGWo3dCDG4QPA9VHxrF30y8MHtar-JLcXOQvjq81yXydcR5KWaYnxNIgzUVNtqTh4s2QsXNI"
+	   }
 	}
    
 }
@@ -256,6 +256,7 @@ and I rename the 'array' to 'my512BitsRandomObjectsArray'
 # this statement outputs an array of ECP points and put in an array called "array"
 #The curve used can be modified via configuration file.
 When I create the array of '3' random curve points
+and I rename the 'array' to 'myECPPointsArray'
 
 # SET
 # The 'set' statement creates a new variable and assign it a value.

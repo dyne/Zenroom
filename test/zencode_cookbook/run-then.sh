@@ -75,10 +75,10 @@ cat <<EOF  > $tmp
    },
    
    "Alice":{
-      "keypair":{
-         "private_key":"PRHwDEZN5XZAPRB2fi33caOCrguLVvWR015SKfpOjzomzOu0bhIYp-2xDpj-OEFb6euu86xnCd4",
-         "public_key":"BGDPKUMA0tUZV_I_6M73hPkeph-NJeaabbFIacQ-qbDF5dmtikm8wse641yPbN4ui45j97dz9wNw0oqEUcJyuCrDJnzQT6Os6ajjW1Nu9DdzJbqBucvNUA6jctbCfrohqxNXO88nyG14G4CIrVxtDzs"
-      }
+	   "keypair":{
+		  "private_key":"L9pogbrN_oU6BOt2U37-hK5c4-McvHU-SNhT0P7QDsI",
+		  "public_key":"BPg1CFFH1eCsq3HHGWo3dCDG4QPA9VHxrF30y8MHtar-JLcXOQvjq81yXydcR5KWaYnxNIgzUVNtqTh4s2QsXNI"
+	   }
 	}
    
 }
