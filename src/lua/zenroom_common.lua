@@ -201,7 +201,7 @@ function deepmap(fun,t,...)
 	  if luatype(v) == 'table' then
 		 res[k] = deepmap(fun, v) -- recursion
 	  else
-		 res[k] = fun(v,...)
+		 res[k] = fun(v,k,...)
 	  end
    end
    return setmetatable(res, getmetatable(t))

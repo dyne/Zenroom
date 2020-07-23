@@ -104,7 +104,7 @@ end)
 
 Then("print data", function()
 		OUT = ACK
-		local fun = guess_outcast(CONF.output.encoding.name)
+		local fun = function(v,k) return guess_outcast( check_codec(k) )(v) end
 		if luatype(OUT) == 'table' then
 		   OUT = deepmap(fun, OUT)
 		else
@@ -125,7 +125,7 @@ end)
 Then("print my data", function()
 		ZEN:Iam() -- sanity checks
 		OUT[WHO] = ACK
-		local fun = guess_outcast(CONF.output.encoding.name)
+		local fun = function(v,k) return guess_outcast( check_codec(k) )(v) end
 		if luatype(OUT[WHO]) == 'table' then
 		   OUT[WHO] = deepmap(fun, OUT[WHO])
 		else
