@@ -318,7 +318,7 @@ int main(int argc, char **argv) {
 		return EXIT_FAILURE; }
 
 	// print scenario documentation
-	if(introspect) {
+	if(introspect[0]!='\0') {
 		static char zscript[MAX_ZENCODE];
 		notice(NULL, "Documentation for scenario: %s",introspect);
 		(*Z->snprintf)(zscript,MAX_ZENCODE-1,
