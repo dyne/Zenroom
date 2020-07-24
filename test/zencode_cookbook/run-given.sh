@@ -121,12 +121,12 @@ cat <<EOF  > $tmp
          "anotherString4"
       ]
    },
-   "Alice":{
-	   "keypair":{
-		  "private_key":"L9pogbrN_oU6BOt2U37-hK5c4-McvHU-SNhT0P7QDsI",
-		  "public_key":"BPg1CFFH1eCsq3HHGWo3dCDG4QPA9VHxrF30y8MHtar-JLcXOQvjq81yXydcR5KWaYnxNIgzUVNtqTh4s2QsXNI"
+	 "Alice":{
+		  "keypair":{
+			 "private_key":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
+			 "public_key":"BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
+		  }
 	   }
-	}
    
    
    
@@ -197,12 +197,12 @@ cat <<EOF  > $tmp
          "anotherString4"
       ]      
    },   
-	  "Alice":{
-	   "keypair":{
-		  "private_key":"L9pogbrN_oU6BOt2U37-hK5c4-McvHU-SNhT0P7QDsI",
-		  "public_key":"BPg1CFFH1eCsq3HHGWo3dCDG4QPA9VHxrF30y8MHtar-JLcXOQvjq81yXydcR5KWaYnxNIgzUVNtqTh4s2QsXNI"
-	   }
-	}
+	   "Alice":{
+      "keypair":{
+         "private_key":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
+         "public_key":"BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
+      }
+   }
 }
 EOF
 
@@ -216,8 +216,8 @@ cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadNestedObject.zen 
 Scenario 'ecdh': let us load some stuff cause it is fun!
 Given I am 'Alice'
 And I have my  'keypair'
-And I have a 'myFirstArray' inside 'myFirstObject' 
-And I have a 'mySecondArray' inside 'mySecondObject' 
+And I have a 'string array' named 'myFirstArray' inside 'myFirstObject' 
+And I have a 'string array' named 'mySecondArray' inside 'mySecondObject' 
 Then print all data
 EOF
 
@@ -295,8 +295,8 @@ cat $tmp > ../../docs/examples/zencode_cookbook/myTripleNestedObject.json
 cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadTripleNestedObject.zen -z -a ../../docs/examples/zencode_cookbook/myTripleNestedObject.json | jq | tee ../../docs/examples/zencode_cookbook/givenTripleNestedObjectOutput.json
 # Given I have a 'string array' named 'myFirstArray'   
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
-Given I have a 'myThirdArray' inside 'myThirdObject' 
-Given I have a 'myFourthArray' inside 'myFourthObject'   
+Given I have a 'string array' named 'myThirdArray' inside 'myThirdObject' 
+Given I have a 'string array' named  'myFourthArray' inside 'myFourthObject'   
 Given I have a 'number' named 'myFirstNumber'
 Given I have a 'string' named 'myFirstString' 
 Given I have a 'hex' named 'myFirstHex'
@@ -363,7 +363,7 @@ cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenFullList.zen -z -a $t
 Given I have a 'string array' named 'myFirstArray'   
 Given I have an 'string array' named 'myFirstArray' 
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
-Given I have a 'myThirdArray' inside 'myThirdObject' 
+Given I have a 'string array' named 'myThirdArray' inside 'myThirdObject' 
 Given I have a 'string array' named 'myFourthArray'
 # Load Numbers
 Given I have a 'number' named 'myFirstNumber'
