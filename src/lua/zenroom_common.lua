@@ -35,6 +35,14 @@ function input_encoding(what)
 			   name = 'base64',
 			   check = O.is_base64
 	  }
+	elseif what == 'b58' or what =='base58' then
+		return { fun = function(data)
+					if O.is_base58(data) then return O.from_base58(data)
+					else error("Failed import from base58: "..what,3)
+					   end end,
+				 name = 'base58',
+				 check = O.is_base58
+		}
    elseif what == 'hex' then
 	  return { fun = function(data)
 				  if O.is_hex(data) then return O.from_hex(data)

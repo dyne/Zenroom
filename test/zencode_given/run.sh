@@ -80,8 +80,8 @@ EOF
 cat <<EOF  > $tmp
 {"Andrea":{
       "keypair":{
-         "private_key":"IIiTD89L6_sbIvaUc5jAVR88ySigaBXppS5GLUjm7Dv2OLKbNIVdiZ48jpLGskKVDPpukKe4R0A",
-         "public_key":"BBgzMLWv0ZTiMBwCxF7kEIv_y7NmilO4vmZGRj_edBY5rDchp7dmo-z4g4_13mdN_3b8-o5GxTNw3SHzQC4uxd0"
+         "private_key":"IIiTD89L6/sbIvaUc5jAVR88ySigaBXppS5GLUjm7Dv2OLKbNIVdiZ48jpLGskKVDPpukKe4R0A=",
+         "public_key":"BBgzMLWv0ZTiMBwCxF7kEIv/y7NmilO4vmZGRj/edBY5rDchp7dmo+z4g4/13mdN/3b8+o5GxTNw3SHzQC4uxd0="
       },
    },
    "stuff": {
@@ -96,8 +96,8 @@ cat <<EOF  > $tmp
 
 	"Bobbino":{
       "keypair":{
-         "private_key":"IIiTD89L6_sbIvaUc5jAVR88ySigaBXppS5GLUjm7Dv2OLKbNIVdiZ48jpLGskKVDPpukKe4R0A",
-         "public_key":"BBgzMLWv0ZTiMBwCxF7kEIv_y7NmilO4vmZGRj_edBY5rDchp7dmo-z4g4_13mdN_3b8-o5GxTNw3SHzQC4uxd0"
+         "private_key":"IIiTD89L6/sbIvaUc5jAVR88ySigaBXppS5GLUjm7Dv2OLKbNIVdiZ48jpLGskKVDPpukKe4R0A=",
+         "public_key":"BBgzMLWv0ZTiMBwCxF7kEIv/y7NmilO4vmZGRj/edBY5rDchp7dmo+z4g4/13mdN/3b8+o5GxTNw3SHzQC4uxd0="
 				},
     "robbaB":"1000",
     "peppeB":[
@@ -154,7 +154,7 @@ cat <<EOF | tee have_inside_a.zen | $Z -z -a $tmp
 rule check version 1.0.0
 scenario 'ecdh'
 	 Given I have a valid 'public key' from 'Andrea'
-	 when schema
+#	 when schema
 	 Then print all data
 EOF
 
@@ -162,14 +162,14 @@ EOF
 cat <<EOF | tee have_a_implicit_array.zen | $Z -z -a $tmp
 rule check version 1.0.0
 scenario 'ecdh'
-	 Given I have a 'peppe' inside 'stuff'
+	 Given I have a 'string array' named 'peppe' inside 'stuff'
 	 Then print the 'peppe'
 EOF
 cat <<EOF | tee have_a_implicit_array.zen | $Z -z -a $tmp
 rule check version 1.0.0
 scenario 'ecdh'
-	 Given I have a valid 'array' named 'peppe' inside 'stuff'
-	 Given I have a valid 'array' named 'peppe'
+	 Given I have a valid 'string array' named 'peppe' inside 'stuff'
+	 Given I have a valid 'string array' named 'peppe'
 	 Then print the 'peppe'
 EOF
 

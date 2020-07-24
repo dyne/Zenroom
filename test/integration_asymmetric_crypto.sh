@@ -7,7 +7,6 @@
 zen=($*)
 zen=${zen:-./src/zenroom}
 # echo "using: $zen"
-curves=(goldilocks)
 secret="This is the secret message that is sent among people."
 ppl=(zora vuk mira darko)
 
@@ -43,8 +42,8 @@ sender.private = hex(keys.private)
 iv = O.random(16)
 ciphermsg =
   { header =
-      url64(JSON.encode({ public = ECDH.pubgen(sender.private),
-	  	    		     iv = iv })) }
+      CBOR.encode({ public = ECDH.pubgen(sender.private),
+	  				iv = iv }) }
 session = ECDH.session(sender.private, recipient.public)
 ciphermsg.text, ciphermsg.checksum =
     AES.gcm_encrypt(session,
@@ -64,20 +63,18 @@ recipient = { }
 recipient.private = hex(keys.private)
 sender = { }
 -- header is the public key of sender
-decode = { header = JSON.decode(data.header) }
-sender.public = O.from_url64(decode.header.public)
+decode = { header = CBOR.decode(data.header) }
+sender.public = O.from_base64(decode.header.public)
 session = ECDH.session(recipient.private, sender.public)
 decode.text, decode.checksum =
-    AES.gcm_decrypt(session, O.from_url64(data.text), O.from_url64(decode.header.iv), data.header)
+    AES.gcm_decrypt(session, O.from_base64(data.text), O.from_base64(decode.header.iv), data.header)
 print(decode.text:str())
 EOF
 }
 
 print - "== Running integration tests for ECDH"
 
-for curve in $curves; do
-    print "== curve: $curve"
-	generate
+generate
 
 	for p in $ppl; do
 		for pp in $ppl; do
@@ -102,12 +99,12 @@ for curve in $curves; do
 				print - "ERROR in integration ecdh test: $tmp"
 				print "DECRYPT $from -> $to"
 				print - "INPUT keys:"
-				cat $tmp/$to-keys.json | json_pp
+				cat $tmp/$to-keys.json | jq
 				print - "INPUT data:"
-				cat $tmp/from-$from-to-$to-cryptomsg.json | json_pp
+				cat $tmp/from-$from-to-$to-cryptomsg.json | jq
 				# print $secret | xxd
 				print - "OUTPUT string: ${#res} bytes"
-				print $res | xxd
+				print $res
 				print - "envelope from ${from}:"
 				cat $tmp/$pp-envelop.json
 				print - "recipient-keys to ${to}:"
@@ -121,7 +118,7 @@ for curve in $curves; do
 			fi
 		done
 	done
-done
+
 # just in case
 [[ "$tmp" != "/" ]] && rm -rf "$tmp"
 print - "== All tests passed OK"

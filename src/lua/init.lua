@@ -57,9 +57,9 @@ end
 -- ZEN = { assert = assert } -- zencode shim when not loaded
 require('zenroom_common')
 INSPECT = require('inspect')
-OCTET  = require('zenroom_octet')
-JSON   = require('zenroom_json')
 CBOR   = require('zenroom_cbor')
+JSON   = require('zenroom_json')
+OCTET  = require('zenroom_octet')
 ECDH   = require('zenroom_ecdh')
 AES    = require('zenroom_aes')
 BIG    = require('zenroom_big')
@@ -109,10 +109,10 @@ _G["CONF"] = {
    -- and ECDH public keys cannot function as ECP
    -- because of IANA 7303
    verbosity = 1,
-   input = { encoding = input_encoding('url64'),
+   input = { encoding = input_encoding('base64'),
 			 format = get_format('json'),
 			 tagged = false },
-   output = { encoding = output_encoding('url64'),
+   output = { encoding = output_encoding('base64'),
 			  format = get_format('json'),
 			  versioning = false },
    parser = { strict_match = true },

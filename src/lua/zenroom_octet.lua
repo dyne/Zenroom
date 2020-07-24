@@ -41,7 +41,10 @@ function str(data)
 		 return OCTET.from_url64(data):str()
 	  elseif OCTET.is_base64(data) then
 		 -- return decoded string format for JSON.decode
-		 return OCTET.from_base64(data):str()
+       return OCTET.from_base64(data):str()
+      elseif OCTET.is_base58(data) then
+         -- return decoded string format for JSON.decode
+         return OCTET.from_base58(data):str()
 	  elseif OCTET.is_hex(data) then
 		 -- return decoded string format for JSON.decode
 		 return OCTET.from_hex(data):str()
@@ -106,52 +109,6 @@ function base58(data)
 end
 
 -- serialize an array containing any type of cryptographic numbers
-octet.serialize = function(arr)
-   total = 0
-   map(arr, function(a) 
-		  t = type(a)
-		  -- supported lua native types
-		  if(t == "string") then total = total + #a return
-		  elseif(t == "number") then total = total + #tostring(a) return
-		  elseif not iszen(t) then
-			 error("OCTET.serialize: unsupported type: "..t)
-		  end
-		  if(t == "zenroom.octet") then
-			 total = total + #a
-		  elseif(t == "zenroom.big"
-					or
-					t == "zenroom.ecp"
-					or
-				 t == "zenroom.ecp2") then
-			 total = total + #a:octet()
-		  else
-			 error("OCTET.serialize: unsupported zenroom type: "..t)
-		  end
-   end)
-   concat = O.new(total)
-   map(arr,function(e)
-		  t = type(e)
-		  -- supported lua native types
-		  if(t == "string") then concat = concat .. O.from_str(e) return
-		  elseif(t == "number") then concat = concat .. O.from_str(tostring(e)) return
-		  elseif not iszen(t) then
-			 error("OCTET.serialize: unsupported type: "..t)
-		  end
-		  if(t == "zenroom.octet") then
-			 concat = concat .. e
-		  elseif(t == "zenroom.big"
-				 or
-				 t == "zenroom.ecp"
-				 or
-				 t == "zenroom.ecp2") then
-			 concat = concat .. e:octet()
-		  else
-			 error("OCTET.serialize: unsupported zenroom type: "..t)
-		  end
-   end)
-   return concat
-end
-
-function zero(len)    return octet.new(len):zero(len) end
+octet.serialize = function(obj) return OCTET.from_string( CBOR.encode(obj)) end
 
 return octet

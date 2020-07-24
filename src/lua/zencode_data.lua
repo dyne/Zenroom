@@ -94,21 +94,23 @@ ZEN.get = function(obj, key, conversion)
    ZEN.assert(not conversion or type(conversion) == 'function',
 			  "ZEN.get invalid conversion function")
    local k
-   if key == "." then k = obj
-   else k = obj[key] end
+   if key == "." then
+      k = obj
+   else
+      k = obj[key]
+   end
    ZEN.assert(k, "Key not found in object conversion: "..key)
    local res = nil
    local t = type(k)
    if iszen(t) and conversion then res = conversion(k) goto ok end
    if iszen(t) and not conversion then res = k goto ok end
-   if t == 'string' and conversion == str then res = k goto ok end
-   if t == 'string' and conversion and conversion ~= str then
-	  res = conversion(k) goto ok end
-   if t == 'string' and not conversion then
-	  res = CONF.input.encoding.fun(k)
-	  goto ok
+   if t == 'string' then
+      res = CONF.input.encoding.fun(k)
+      if conversion then res = conversion(res) end
+      goto ok
    end
    if t == 'number' then res = k end
+   -- TODO: table
    ::ok::
    assert(ZEN.OK and res, "ZEN.get on invalid key: "..key.." ("..t..")")
    return res
@@ -171,7 +173,7 @@ end
 function guess_conversion(objtype, definition)
    local res
    -- map to check if format string exists
-   local formats = { hex=1, bin=1, base64=1, url64=1 }
+   local formats = { hex=1, bin=1, base64=1, url64=1, base58=1 }
    -- ZEN.schemas is the other map to check
    if objtype == 'string' then
 	  if not definition then -- str ===

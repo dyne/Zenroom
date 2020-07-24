@@ -143,6 +143,14 @@ ZEN.add_schema({
 		 end
 		 return _t
 	  end,
+	  base58_array = function(obj)
+		if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
+		local _t = { }
+		for k,v in ipairs(obj) do
+		   table.insert(_t, OCTET.from_base58(v))
+		end
+		return _t
+	 end,
 	  url64_array = function(obj)
 		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
 		 local _t = { }

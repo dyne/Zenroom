@@ -11,6 +11,7 @@ assert(msg_hex:lower() == OK:hex(), 'fail in hex lowercase import')
 assert(OK:str() == msg_str, 'fail in string export')
 assert(O.from_string(msg_str) == OK, 'fail in string import')
 assert(O.from_base64(msg_b64) == OK, 'fail in base64 import')
+assert(O.to_base64( O.from_hex(msg_hex) ) == msg_b64, 'fail in base64 export')
 assert(O.from_url64(msg_u64) == OK, 'fail in url64 import')
 assert(O.from_base58(msg_b58) == OK, 'fail in base58 import')
 

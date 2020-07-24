@@ -37,9 +37,9 @@ ZEN.add_schema({
 				  text     = ZEN.get(obj, 'text') }
 	  end,
 	  signature = function(obj)
-		 return { r = ZEN.get(obj, 'r', INT.new),
-				  s = ZEN.get(obj, 's', INT.new) }
---				  text = ZEN.get(obj, 'text') }
+		 return { r = ZEN.get(obj, 'r'),
+				  s = ZEN.get(obj, 's')}
+
 	  end
 })
 
@@ -128,7 +128,7 @@ When("create the signature of ''", function(doc)
 		ZEN.assert(obj, "Object not found: "..doc)
 		local t = type(obj)
 		if t == 'table' then
-		   local s = ECDH.sign(ACK.keypair.private_key, OCTET.serialize(obj))
+		   local s = ECDH.sign(ACK.keypair.private_key, CBOR.encode(obj))
 		   ACK[doc].signature = s
 		else
 		   ACK.signature = ECDH.sign(ACK.keypair.private_key, obj)
@@ -146,7 +146,7 @@ When("verify the '' is signed by ''", function(msg, by)
 		   sign = obj.signature
 		   ZEN.assert(sign, "Signature by "..by.." not found")
 		   obj.signature = nil
-		   ZEN.assert(ECDH.verify(ACK.public_key[by], OCTET.serialize(obj), sign),
+		   ZEN.assert(ECDH.verify(ACK.public_key[by], CBOR.encode(obj), sign),
 					  "The signature is not authentic")
 		else
 		   sign = ACK.signature[by]

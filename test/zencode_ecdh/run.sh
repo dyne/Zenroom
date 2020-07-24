@@ -8,7 +8,7 @@ if ! test -r ../utils.sh; then
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
-cat <<EOF | tee SYM01.zen | $Z -z > secret.json
+cat <<EOF | zexe SYM01.zen > secret.json
 rule check version 1.0.0
 Scenario ecdh: Generate a random password
 Given nothing
@@ -16,7 +16,7 @@ When I create the random 'password'
 Then print the 'password'
 EOF
 
-cat <<EOF | tee SYM02.zen | $Z -z > cipher_message.json
+cat <<EOF | zexe SYM02.zen > cipher_message.json
 Scenario ecdh: Encrypt a message with the password
 Given nothing
 # only inline input, no KEYS or DATA passed
@@ -29,7 +29,7 @@ and I encrypt the secret message 'whisper' with 'password'
 Then print the 'secret message'
 EOF
 
-cat <<EOF | tee SYM03.zen | $Z -a cipher_message.json -z
+cat <<EOF | zexe SYM03.zen -a cipher_message.json 
 Scenario ecdh: Decrypt the message with the password
 Given I have a 'secret message'
 When I write string 'my secret word' in 'password'
@@ -38,22 +38,23 @@ Then print the 'text' as 'string' in 'message'
 and print the 'header' as 'string' in 'message'
 EOF
 
-cat <<EOF | tee alice_keygen.zen | $Z -z > alice_keypair.json
+cat <<EOF | zexe alice_keygen.zen > alice_keypair.json
 Scenario 'ecdh': Create the keypair
 Given that I am known as 'Alice'
 When I create the keypair
 Then print my data
 EOF
 
-cat <<EOF | tee alice_keypub.zen | $Z -z -k alice_keypair.json > alice_pub.json
+cat <<EOF | zexe alice_keypub.zen -k alice_keypair.json > alice_pub.json
 Scenario 'ecdh': Publish the public key
 Given that I am known as 'Alice'
 and I have my 'public key'
 Then print my 'public key'
 EOF
 
-cat <<EOF | tee DSA01.zen | $Z -z -k alice_keypair.json | tee alice_signs_to_bob.json
+cat <<EOF | zexe DSA01.zen -k alice_keypair.json | tee alice_signs_to_bob.json
 Rule check version 1.0.0
+# rule output encoding base64
 Scenario 'ecdh': Alice signs a message for Bob
 	Given that I am known as 'Alice'
 	and I have my 'keypair'
@@ -63,8 +64,9 @@ Scenario 'ecdh': Alice signs a message for Bob
 	and print my 'draft'
 EOF
 
-cat <<EOF | tee DSA02.zen | $Z -z -k alice_pub.json -a alice_signs_to_bob.json
+cat <<EOF | zexe DSA02.zen -k alice_pub.json -a alice_signs_to_bob.json
 rule check version 1.0.0
+# rule input encoding base64
 Scenario 'ecdh': Bob verifies the signature from Alice
 	Given that I am known as 'Bob'
 	and I have a 'public key' from 'Alice'
@@ -75,21 +77,21 @@ Scenario 'ecdh': Bob verifies the signature from Alice
 	and print the 'draft' as 'string'
 EOF
 
-cat <<EOF | tee bob_keygen.zen | $Z -z > bob_keypair.json
+cat <<EOF | zexe bob_keygen.zen > bob_keypair.json
 Scenario 'ecdh': Create the keypair
 Given that I am known as 'Bob'
 When I create the keypair
 Then print my data
 EOF
 
-cat <<EOF | tee bob_keypub.zen | $Z -z -k bob_keypair.json > bob_pub.json
+cat <<EOF | zexe bob_keypub.zen -k bob_keypair.json > bob_pub.json
 Scenario 'ecdh': Publish the public key
 Given that I am known as 'Bob'
 and I have my 'public key'
 Then print my 'public key'
 EOF
 
-cat <<EOF | tee AES05.zen | $Z -z -k alice_keypair.json -a bob_pub.json | tee alice_to_bob.json
+cat <<EOF | zexe AES05.zen -k alice_keypair.json -a bob_pub.json | tee alice_to_bob.json
 Rule check version 1.0.0
 Scenario 'ecdh': Alice encrypts a message for Bob
 	Given that I am known as 'Alice'
@@ -101,7 +103,7 @@ Scenario 'ecdh': Alice encrypts a message for Bob
 	Then print the 'secret message'
 EOF
 
-cat <<EOF | tee AES06.zen | $Z -z -k bob_keypair.json -a alice_pub.json | tee bob_keyring.json
+cat <<EOF | zexe AES06.zen -k bob_keypair.json -a alice_pub.json | tee bob_keyring.json
 Rule check version 1.0.0
 Scenario 'ecdh': Bob gathers public keys in his keyring
 	Given that I am 'Bob'
@@ -111,7 +113,7 @@ Scenario 'ecdh': Bob gathers public keys in his keyring
 	and print the 'public key'
 EOF
 
-cat <<EOF | tee AES07.zen | $Z -z -k bob_keyring.json -a alice_to_bob.json
+cat <<EOF | zexe AES07.zen -k bob_keyring.json -a alice_to_bob.json
 Rule check version 1.0.0
 Scenario 'ecdh': Bob decrypts the message from Alice
 	Given that I am known as 'Bob'

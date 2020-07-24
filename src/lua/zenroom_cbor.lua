@@ -28,7 +28,7 @@ _cbor.encode = function(tab)
 end
 
 _cbor.auto = function(obj)
-   local t = type(obj)
+   local t = luatype(obj)
    if t == 'table' then
 	  -- export table to JSON
 	  return _cbor.encode(obj)
