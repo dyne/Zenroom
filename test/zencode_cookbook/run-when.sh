@@ -93,11 +93,11 @@ cat <<EOF  > $tmp
    },
    
    "Alice":{
-	   "keypair":{
-		  "private_key":"L9pogbrN_oU6BOt2U37-hK5c4-McvHU-SNhT0P7QDsI",
-		  "public_key":"BPg1CFFH1eCsq3HHGWo3dCDG4QPA9VHxrF30y8MHtar-JLcXOQvjq81yXydcR5KWaYnxNIgzUVNtqTh4s2QsXNI"
-	   }
-	}
+      "keypair":{
+         "private_key":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
+         "public_key":"BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
+      }
+   }
    
 }
 EOF
