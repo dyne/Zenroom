@@ -46,8 +46,20 @@ Given("have a ''", function(n)
 		 gc()
 end)
 
+Given("have a '' in ''", function(s, t)
+	ZEN:pickin(t, s)
+	ZEN:ack(s) -- save it in ACK.obj
+	gc()
+end)
+
+-- public keys for keyring arrays (scenario simple)
+Given("have a '' from ''", function(s, t)
+	ZEN:pickin(t, s)
+	ZEN:ack_table(s, t)
+	gc()
+end)
+
 Given("have a '' named ''", function(s, n)
-		 -- local encoder = input_encoding(s)
 		 -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
 		 ZEN:pick(n, nil, s)
 		 ZEN:ack(n)
@@ -55,7 +67,6 @@ Given("have a '' named ''", function(s, n)
 end)
 
 Given("have a '' named '' in ''", function(s,n,t)
-		 -- local encoder = input_encoding(s)
 		 ZEN:pickin(t, n, s)
 		 ZEN:ack(n) -- save it in ACK.name
 		 gc()
@@ -72,18 +83,6 @@ Given("the '' is valid", function(n)
 		 gc()
 end)
 
-Given("have a '' in ''", function(s, t)
-		 ZEN:pickin(t, s)
-		 ZEN:ack(s) -- save it in ACK.obj
-		 gc()
-end)
-
--- public keys for keyring arrays (scenario simple)
-Given("have a '' from ''", function(s, t)
-		 ZEN:pickin(t, s)
-		 ZEN:ack_table(s, t)
-		 gc()
-end)
 
 ZEN.add_schema({
 	  -- string = function(obj)

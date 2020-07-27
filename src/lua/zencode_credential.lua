@@ -34,20 +34,22 @@ When("create the credential keypair", function()
 		   ACK.credential_keypair.private
 end)
 
+local function issuer_sign_f(obj)
+	return { x = ZEN.get(obj, 'x', INT.new),
+			 y = ZEN.get(obj, 'y', INT.new) }
+end
+local function verifier_f(obj)
+	return { alpha = ZEN.get(obj, 'alpha', ECP2.new),
+			 beta  = ZEN.get(obj, 'beta', ECP2.new) }
+end
 -- issuer authority kepair operations
 ZEN.add_schema({
 	  -- certificate authority (ca) / issuer keypair
-      issuer_sign = function(obj)
-              return { x = ZEN.get(obj, 'x', INT.new),
-                       y = ZEN.get(obj, 'y', INT.new) }
-	  end,
-      verifier = function(obj)
-		 return { alpha = ZEN.get(obj, 'alpha', ECP2.new),
-				  beta  = ZEN.get(obj, 'beta', ECP2.new) }
-	  end,
+      issuer_sign = issuer_sign_f,
+      verifier = verifier_f,
 	  issuer_keypair = function(obj) -- recursive import
-		 return { issuer_sign   = ZEN:validate_recur(obj.issuer_sign, 'issuer_sign'),
-				  verifier = ZEN:validate_recur(obj.verifier, 'verifier') }
+		 return { issuer_sign   = issuer_sign_f(obj.issuer_sign),
+				  verifier = verifier_f(obj.verifier) }
 	  end
 })
 

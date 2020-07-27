@@ -17,17 +17,20 @@
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+function public_key_f(o)
+	if type(o) == "string" then
+		o = ZEN.decode(o)
+	end
+	ZEN.assert(ECDH.pubcheck(o),
+			   "Public key is not a valid point on curve")
+	return o
+ end
+
 ZEN.add_schema({
 	  -- keypair (ECDH)
-	  public_key = function(obj)
-		 local o = obj.public_key or obj -- fix recursive schema check
-		 if type(o) == "string" then o = ZEN.decode(o) end
-		 ZEN.assert(ECDH.pubcheck(o),
-					"Public key is not a valid point on curve")
-		 return o
-	  end,
+	  public_key = public_key_f,
       keypair = function(obj)
-         return { public_key  = ZEN:validate_recur(obj, 'public_key'),
+         return { public_key  = public_key_f(obj.public_key),
                   private_key = ZEN.get(obj, 'private_key') }
 	  end,
 	  secret_message = function(obj)

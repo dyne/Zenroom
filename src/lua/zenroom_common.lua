@@ -276,9 +276,9 @@ end
 -- used in zencode when transitioning out of given memory
 function zenguard(val)
    if not (iszen(type(val)) or tonumber(val)) then
-	  xxx("Invalid value: "..val)
-	  I.print(ZEN.heap().ACK)
-	  error("Zenguard detected an invalid value in HEAP: type "..type(val), 2)
-	  return nil
+		I.print(ZEN.heap().ACK)
+		xxx("Invalid value: "..val)
+		error("Zenguard detected an invalid value in HEAP: type "..type(val), 2)
+		return nil
    end
 end
