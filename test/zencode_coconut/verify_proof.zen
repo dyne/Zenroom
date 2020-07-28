@@ -1,4 +1,4 @@
-Scenario coconut: verify proof
+Scenario 'credential': verify proof
     Given that I have a valid 'verifier' from 'MadHatter'
     and I have a valid 'credential proof'
     When I aggregate the verifiers

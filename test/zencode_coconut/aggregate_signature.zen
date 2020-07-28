@@ -1,4 +1,4 @@
-Scenario coconut: aggregate signature
+Scenario 'credential': aggregate signature
     Given that I am known as 'Alice'
     and I have my valid 'credential keypair'
     and I have a valid 'credential signature'

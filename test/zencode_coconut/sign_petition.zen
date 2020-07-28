@@ -1,4 +1,4 @@
-Scenario coconut: sign petition
+Scenario 'petition': sign petition
     Given I am 'Alice'
     and I have my valid 'credential keypair'
     and I have a valid 'credentials'

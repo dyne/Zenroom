@@ -1,4 +1,4 @@
-Scenario coconut: count petition
+Scenario 'petition': count petition
     Given that I have a valid 'petition'
     and I have a valid 'petition tally'
     When I count the petition results

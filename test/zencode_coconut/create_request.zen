@@ -1,4 +1,4 @@
-Scenario coconut: create request
+Scenario 'credential': create request
     Given that I am known as 'Alice'
     and I have my valid 'credential keypair'
     When I create the credential request

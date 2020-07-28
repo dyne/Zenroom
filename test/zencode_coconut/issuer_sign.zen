@@ -1,4 +1,4 @@
-Scenario coconut: issuer sign
+Scenario 'credential': issuer sign
     Given that I am known as 'MadHatter'
     and I have my valid 'issuer keypair'
     and I have a valid 'credential request'

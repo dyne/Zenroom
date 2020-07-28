@@ -1,4 +1,4 @@
-Scenario coconut: aggregate petition signature
+Scenario 'petition': aggregate petition signature
     Given that I have a valid 'petition signature'
     and I have a valid 'petition'
     and I have a valid 'verifiers'

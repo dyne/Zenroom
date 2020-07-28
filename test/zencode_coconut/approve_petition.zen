@@ -1,4 +1,4 @@
-Scenario coconut: approve petition
+Scenario 'petition': approve petition
     Given that I have a valid 'verifier' from 'MadHatter'
     and I have a valid 'credential proof'
     and I have a valid 'petition'

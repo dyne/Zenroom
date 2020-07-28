@@ -1,4 +1,4 @@
-Scenario coconut: create petition
+Scenario 'petition': create petition
     Given that I am known as 'Alice'
     and I have my valid 'credential keypair'
     and I have my valid 'credentials'
