@@ -67,7 +67,6 @@ javascript-npm: apply-patches milagro lua53 embed-lua
 	make -C src js
 	@mkdir -p build/npm
 	@cp -v src/zenroom.js   build/npm/
-	@cp -v src/zenroom.data build/npm/
 	@cp -v src/zenroom.wasm build/npm/
 
 javascript-rn: cflags += -DARCH_JS -D'ARCH=\"JS\"' -D MAX_STRING=128000
