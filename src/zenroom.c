@@ -40,9 +40,10 @@
 #include <lua_functions.h>
 #include <repl.h>
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#endif
+#undef __EMSCRIPTEN__
+// #ifdef __EMSCRIPTEN__
+// #include <emscripten.h>
+// #endif
 
 #include <zenroom.h>
 #include <zen_memory.h>

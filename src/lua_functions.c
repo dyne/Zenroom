@@ -33,10 +33,6 @@
 
 extern zenroom_t *Z;
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#endif
-
 int zen_unset(lua_State *L, char *key) {
 	lua_pushnil(L);
 	lua_setglobal(L, key);
