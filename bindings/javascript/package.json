@@ -9,11 +9,11 @@
   "keywords": ["zenroom", "crypto-language-processing", "virtual-machine", "blockchain", "crypto", "ecc", "dyne", "ecdh", "ecdsa", "zero-knowledge-proofs", "javascript", "npm", "ecp2", "miller-loop", "hamming-distance", "elgamal", "aes-gcm", "aead", "seccomp", "goldilocks"],
   "scripts": {
     "lint": "npx standard",
-    "make": "cd ../.. && make javascript-wasm",
+    "make": "cd ../.. && make javascript-npm",
     "build": "yarn run make && yarn run clean && yarn run transpile",
     "clean": "rimraf dist/lib",
     "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
-    "pretranspile": "mkdirp dist/lib && cp -v ../../build/wasm/z* dist/lib",
+    "pretranspile": "mkdirp dist/lib && cp -v ../../build/npm/* dist/lib",
     "transpile": "npx babel src -d dist",
     "test": "node index.js && nyc --require @babel/register mocha",
     "test:html": "nyc report --reporter=html yarn test",
