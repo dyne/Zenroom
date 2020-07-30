@@ -325,9 +325,9 @@ And I rename the 'hash' to 'hashOfMySeventhString'
 # This statement takes an array as input, and produces an array as output named "hashes", which
 # we immediately rename.
 When I create the hash to point 'ecp' of each object in 'myFourthArray'
-And I rename the 'hashes' to 'hashesOfMyFourthArray'
+And I rename the 'hashes' to 'ECPhashesOfMyFourthArray'
 When I create the hash to point 'ecp2' of each object in 'myFirstArray'        
-And I rename the 'hashes' to 'hashesOfMyFirstArray'
+And I rename the 'hashes' to 'ECP2hashesOfMyFirstArray'
 
 # Key derivation function (KDF)
 # The output object is named "key_derivation":
