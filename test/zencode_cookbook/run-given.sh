@@ -266,10 +266,10 @@ cat <<EOF  > $tmp
       "mySecondNumber":1234567890,
 	  "mySecondString":"Oh, hello again!",
       "mySecondArray":[
-         "anotherString1",
-         "anotherString2",
-         "anotherString3",
-         "anotherString4"
+         "123",
+         "456",
+         "123.456",
+         "1234567890"
       ]      
    },   
 	   "Alice":{
@@ -292,7 +292,7 @@ Scenario 'ecdh': let us load some stuff cause it is fun!
 Given I am 'Alice'
 And I have my  'keypair'
 And I have a 'string array' named 'myFirstArray' inside 'myFirstObject' 
-And I have a 'string array' named 'mySecondArray' inside 'mySecondObject' 
+And I have a 'number array' named 'mySecondArray' inside 'mySecondObject' 
 Then print all data
 EOF
 

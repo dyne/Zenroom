@@ -12,7 +12,118 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
 n=0
-tmp=`mktemp`
+tmpInput=`mktemp`
+tmpOutput=`mktemp`
+
+tmpGiven=`mktemp`
+tmpThen1=`mktemp`	
+tmpZen1="${tmpGiven} ${tmpThen1}"
+tmpThen2=`mktemp`	
+tmpZen2="${tmpGiven} ${tmpThen2}"
+tmpThen3=`mktemp`	
+tmpZen3="${tmpGiven} ${tmpThen3}"
+tmpThen4=`mktemp`	
+tmpZen4="${tmpGiven} ${tmpThen4}"
+
+
+
+cat <<EOF  > $tmpInput
+{
+   "myObject":{
+      "myNumber_1":123456789,
+      "myNumber_2":123456789,
+      "myNumber_3":123456789,	  
+	  "myString_1":"Hello World!",
+	  "myString_2":"Hello World!",
+	  "myString_3":"Hello World!",
+      "myHex_1": "68747470733a2f2f6769746875622e636f6d2f64796e652f5a656e726f6f6d",
+      "myHex_2": "68747470733a2f2f6769746875622e636f6d2f64796e652f5a656e726f6f6d",
+      "myHex_3": "68747470733a2f2f6769746875622e636f6d2f64796e652f5a656e726f6f6d",
+      "myBase64_1": "aHR0cHM6Ly9naXRodWIuY29tL2R5bmUvWmVucm9vbQ==",
+      "myBase64_2": "aHR0cHM6Ly9naXRodWIuY29tL2R5bmUvWmVucm9vbQ==",
+      "myBase64_3": "aHR0cHM6Ly9naXRodWIuY29tL2R5bmUvWmVucm9vbQ==",
+	  "myUrl64": "SGVsbG8gV29ybGQh",
+	  "myBinary_1": "01001000011010011000100101001010010010101",
+	  "myBinary_2": "01001000011010011000100101001010010010101",
+	  "myBinary_3": "01001000011010011000100101001010010010101",
+	  "myStringArray_1":[
+         "Hello World! --- 1",
+		 "Hello World! --- 2",
+		 "Hello World! --- 3"
+      ],
+	  "myStringArray_2":[
+         "Hello World! --- 1",
+		 "Hello World! --- 2",
+		 "Hello World! --- 3"
+      ],
+	   "myStringArray_3":[
+         "Hello World! --- 1",
+		 "Hello World! --- 2",
+		 "Hello World! --- 3"
+      ],
+	  "myNumberArray_1":[
+         "123",
+		 "456",
+		 "1234.5678"
+      ],
+	  "myNumberArray_2":[
+         "123",
+		 "456",
+		 "1234.5678"
+      ],
+	  "myNumberArray_3":[
+         "123",
+		 "456",
+		 "1234.5678"
+      ],	  
+   },
+   
+   "Alice":{
+      "keypair":{
+         "private_key":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
+         "public_key":"BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
+      }
+   }
+   
+}
+EOF
+cat $tmpInput > ../../docs/examples/zencode_cookbook/myLargeNestedObjectThen.json
+
+
+
+cat <<EOF  > $tmpGiven
+# rule input encoding base64
+Scenario 'ecdh': Create the keypair
+Given I am 'Alice'
+Given I have my 'keypair' 
+# Load Arrays
+Given I have a 'string array' named 'myStringArray_1'
+Given I have a 'string array' named 'myStringArray_2'  
+Given I have a 'string array' named 'myStringArray_3'  
+Given I have a 'number array' named 'myNumberArray_1'
+Given I have a 'number array' named 'myNumberArray_2'
+Given I have a 'number array' named 'myNumberArray_3'
+# Load Numbers
+Given I have a 'number' named 'myNumber_1'
+Given I have a 'number' named 'myNumber_2'
+Given I have a 'number' named 'myNumber_3' 
+# Load Strings
+Given I have a 'string' named 'myString_1' 
+Given I have a 'string' named 'myString_2' 
+Given I have a 'string' named 'myString_3'  
+# Different data types
+Given I have an 'hex' named 'myHex_1' 
+Given I have an 'hex' named 'myHex_2' 
+Given I have an 'hex' named 'myHex_3' 
+Given I have a  'base64' named 'myBase64_1'
+Given I have a  'base64' named 'myBase64_2'
+Given I have a  'base64' named 'myBase64_3'
+Given I have a  'binary' named 'myBinary_1'
+Given I have a  'binary' named 'myBinary_2'
+Given I have a  'binary' named 'myBinary_3'
+Given I have an 'url64' named 'myUrl64'
+EOF
+cat $tmpGiven > ../../docs/examples/zencode_cookbook/thenCompleteScriptGiven.zen
 
 
 
@@ -25,147 +136,91 @@ let n=n+1
 
 
 
-cat <<EOF  > $tmp
-{
-   "myFirstObject":{
-      "myFirstNumber":1.23456,
-	  "myFirstString":"Hello World!",
-      "myFirstHex": "616e7976616c7565",
-      "myFirstBase64": "SGVsbG8gV29ybGQh",
-	  "myFirstUrl64": "SGVsbG8gV29ybGQh",
-	  "myFirstBinary": "0100100001101001",
-	  "myFirstArray":[
-         "String1",
-		 "String2"
-      ]
-   },
-   "mySecondObject":{
-      "mySecondNumber":2,
-	  "mySecondString":"...and hi everybody!",
-      "mySecondArray":[
-         "anotherString1",
-         "anotherString2"
-      ]
-   },
-   "myThirdObject":{
-      "myThirdNumber":3,
-	  "myThirdString":"...and good morning!",
-      "myThirdArray":[
-         "oneMoreString1",
-         "oneMoreString2",
-         "oneMoreString3"
-      ]
-   },
-   "myFourthObject":{
-      "myFourthArray":[
-         "oneExtraString1",
-         "oneExtraString2",
-         "oneExtraString3",
-		 "oneExtraString4"
-      ],
-  "myFourthString":"...and good evening!",
-  "myFifthString":"We have run out of greetings.",
-  "mySixthString":"So instead we'll tell the days of the week...",
-  "mySeventhString":"...Monday,",
-  "myEightEqualString":"These string is equal to another one.",
-  "myNinthEqualString":"These string is equal to another one.",
-  "myFourthNumber":3,
-  "myTenthString":"oneExtraString1"
-  
-   },
-   
-   "Alice":{
-	   "keypair":{
-		  "private_key":"L9pogbrN_oU6BOt2U37-hK5c4-McvHU-SNhT0P7QDsI",
-		  "public_key":"BPg1CFFH1eCsq3HHGWo3dCDG4QPA9VHxrF30y8MHtar-JLcXOQvjq81yXydcR5KWaYnxNIgzUVNtqTh4s2QsXNI"
-	   }
-	}
-   
-}
-EOF
-cat $tmp > ../../docs/examples/zencode_cookbook/myLargeNestedObjectThen.json
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/thenFullList.zen -z -a $tmp | jq | tee ../../docs/examples/zencode_cookbook/thenOutputFullList.json
-# rule input encoding base64
-Scenario 'ecdh': Create the keypair
-Given I am 'Alice'
-Given I have my 'keypair' 
-# Load Arrays
-Given I have a 'string array' named 'myFirstArray'   
-Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
-Given I have a 'string array' named 'myThirdArray' inside 'myThirdObject' 
-Given I have a 'string array' named 'myFourthArray'
-# Load Numbers
-Given I have a 'number' named 'myFirstNumber' in 'myFirstObject'
-Given I have a 'number' named 'mySecondNumber' in 'mySecondObject'
-Given I have a 'number' named 'myFourthNumber'
-Given I have a 'number' named 'myThirdNumber'
-# Load Strings
-Given I have a 'string' named 'myFirstString' in 'myFirstObject'
-Given I have a 'string' named 'myFirstString' inside 'myFirstObject' 
-Given I have a 'string' named 'mySecondString'
-Given I have a 'string' named 'myThirdString'
-Given I have a 'string' named 'myFourthString'
-Given I have a 'string' named 'myFifthString'
-Given I have a 'string' named 'mySixthString'
-Given I have a 'string' named 'mySeventhString'
-Given I have a 'string' named 'myTenthString'
-# Different data types
-Given I have an 'hex' named 'myFirstHex' 
-Given I have an 'hex' named 'myFirstHex' inside 'myFirstObject' 
-Given I have a  'base64' named 'myFirstBase64'
-Given I have a  'binary' named 'myFirstBinary'
-Given I have an 'url64' named 'myFirstUrl64'
-and debug
-#
-# END of loading stuff
-#
-When I insert the 'myFirstString' in 'myFirstArray'
-When I pick the random object in 'myFirstArray'
-When I randomize the 'myFourthArray' array
-# FORSE NON ROTTO sotto: 
-# When I remove the 'oneMoreString1' from 'myThirdArray'
-When I rename the 'myThirdArray' to 'myJustRenamedArray'
-#  When I set 'nameOfVariable' to 'value' as 'number | string | based64 ... '
-When I set 'myFirstString' to 'call me The Pink Panther!' as 'string'
-When I set 'myFirstNumber' to '42' as 'number'
-# ROTTO sotto con tutte le basi
-# When I set 'mySecondNumber' to '42' base '16'
-# When I set 'myThirdNumber' to '42' base '2 | 10 | 16'
-When I split the leftmost '3' bytes of 'myFirstString'
-# ROTTO sotto:  [W]  .  ERR Overwrite error: rightmost   -[W] [!] Overwrite error: rightmost
-# When I split the rightmost '3' bytes of 'myThirdString'
-When I verify 'myEightEqualString' is equal to 'myNinthEqualString'         
-When I write number '10' in 'nameOfFirstNewVariable'
-When I write string 'pippo' in 'nameOfSecondNewVariable'
-When number 'myFourthNumber' is less or equal than 'myThirdNumber'
-# The comparison below happens after we changed value to 'myFirstNumber'
-When number 'myThirdNumber' is less than 'myFirstNumber'
-When number 'myThirdNumber' is more or equal than 'mySecondNumber'
-When number 'myThirdNumber' is more than 'mySecondNumber'
-When the 'myTenthString' is found in 'myFourthArray'
-When the 'myFirstString' is not found in 'myFourthArray'
-When the 'myFirstNumber' is not found in 'myFourthArray'
-# Begin the Then phase:
-Then print my data 
-Then print 'myFirstNumber' 
-Then print 'mySecondNumber' as 'hex' 
-Then print 'myThirdString' as 'string' in 'myThirdObject' 
-Then print data 
+
+
+cat <<EOF  > $tmpThen1
+Then print all data
+Then print 'myString_2' as 'bin' 
+Then print 'myString_3' as 'hex' 
+
+Then print 'myNumber_2' as 'base64' 
+Then print 'myNumber_3' as 'bin'
+
+Then print 'myStringArray_2' as 'bin' 
+Then print 'myStringArray_3' as 'hex' 
+
+Then print 'myNumberArray_2' as 'base64' 
+Then print 'myNumberArray_2' as 'bin' 
+
+Then print 'myBinary_2' as 'hex' 
+Then print 'myBinary_3' as 'base64' 
+
+Then print 'myBase64_2' as 'string'
+Then print 'myBase64_3' as 'bin' 
+
+Then print 'myHex_2' as 'string'
+Then print 'myHex_3' as 'base64' 
+
+
+
+
+
+EOF
+
+
+
+
+cat $tmpThen1 > ../../docs/examples/zencode_cookbook/thenCompleteScriptPart1.zen
+
+
+cat $tmpZen1 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpInput | jq | tee ../../docs/examples/zencode_cookbook/thenCompleteOutputPart1.json
+
+
+
+
+
+echo "                                                "
+echo "------------------------------------------------"
+echo "               Script number $n                 "
+echo "------------------------------------------------"
+echo "                                                "
+let n=n+1
+
+
+cat <<EOF  > $tmpThen2
+
+# Then print 'myNumber_3' as 'string'
+# Then print 'myNumber_3' as 'hex'
+# Then print my data 
 # Then print data as 'hex' 
-Then print my 'keypair' 
+# Then print data as 'number'
+# Then print my 'keypair' 
 # Then print my 'keypair' as 'bin' 
 # Then print my data as 'string' 
-Then print the 'myFirstArray' 
-Then print 'leftmost' as 'string'
-Then print 'myFirstString' as 'string'
-# Da Rimuovere, doppione: Then print the 'mySecondArray' as 'base64' 
-# Da Rimuovere, doppione: Then print the '' as '' in ''
-# Da Rimuovere, doppione: Then print the '' in '' 
+# Then print the 'myStringArray' 
+# Then print 'leftmost' as 'string'
+# Then print 'myString' as 'string'
+# Then print 'myNumber_3' as 'hex'
+
+ 
+# Da Rimuovere, doppi_1: Then print the 'mySecondArray' as 'base64' 
+# Da Rimuovere, doppi_1: Then print the '' as '' in ''
+# Da Rimuovere, doppi_1: Then print the '' in '' 
+
+
 EOF
 
-rm -f $tmp
 
-
+rm -f $tmpInput
+rm -f $tmpGiven
+rm -f $tmpThen1
+rm -f $tmpZen1
+rm -f $tmpThen2
+rm -f $tmpZen2
+rm -f $tmpThen3
+rm -f $tmpZen3
+rm -f $tmpThen4
+rm -f $tmpZen4
 
 
