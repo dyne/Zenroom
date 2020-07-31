@@ -27,6 +27,7 @@ test64  = right:base64()
 testU64 = right:url64()
 test58  = right:base58()
 testhex = right:hex()
+testbin = right:bin()
 
 print '== test octet copy'
 left = right;
@@ -65,6 +66,12 @@ print '== test hex import/export'
 left = OCTET.hex(testhex)
 dotest(left, right)
 dotest(left:hex(), testhex)
+dotest(hash:process(left), hash:process(right))
+
+print '== test bin import/export'
+left = OCTET.bin(testbin)
+dotest(left, right)
+dotest(left:bin(), testbin)
 dotest(hash:process(left), hash:process(right))
 
 -- print '= OK'

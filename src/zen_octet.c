@@ -547,12 +547,11 @@ static int from_bin(lua_State *L) {
 			b = b<<1;
 			j++;
 		} else { // reset bytemask and shift left
+			if(*S=='1') b = b | 0x1;
 			o->val[d] = b;
 			b = 0x0;
 			j = 0;
 			d++;
-			if(*S=='1') b = b | 0x1;
-			b = b<<1;
 		}
 		i++;
 	}
