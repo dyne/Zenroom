@@ -24,32 +24,38 @@
 -- converted by its methods.
 local function outcast_string(obj)
    local t = luatype(obj)
-   if t == 'number' then return obj end
+   if t == 'number' then
+	  return tostring(obj) end
    return O.to_string(obj)
 end
 local function outcast_hex(obj)
    local t = luatype(obj)
-   if t == 'number' then return obj end
+   if t == 'number' then
+	  return O.to_hex( BIG.new(obj) ) end
    return O.to_hex(obj)
 end
 local function outcast_base64(obj)
    local t = luatype(obj)
-   if t == 'number' then return obj end
+   if t == 'number' then
+	  return O.from_string( tostring(obj) ):base64() end
    return O.to_base64(obj)
 end
 local function outcast_url64(obj)
    local t = luatype(obj)
-   if t == 'number' then return obj end
+   if t == 'number' then
+	  return O.from_string( tostring(obj) ):url64() end
    return O.to_url64(obj)
 end
 local function outcast_base58(obj)
 	local t = luatype(obj)
-	if t == 'number' then return obj end
+	if t == 'number' then
+	   return O.from_string( tostring(obj) ):base58() end
 	return O.to_base58(obj)
  end 
 local function outcast_bin(obj)
    local t = luatype(obj)
-   if t == 'number' then return obj end
+   if t == 'number' then
+	  return O.from_string( tostring(obj) ):bin() end
    return O.to_bin(obj)
 end
 -- takes a string returns the function, good for use in deepmap(fun,table)

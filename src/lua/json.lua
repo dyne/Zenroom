@@ -105,10 +105,11 @@ end
 
 local function encode_number(val)
   -- Check for NaN, -inf and inf
-  if val ~= val or val <= -math.huge or val >= math.huge then
-    error("unexpected number value '" .. tostring(val) .. "'")
-  end
-  return string.format("%.14g", val)
+  -- if val ~= val or val <= -math.huge or val >= math.huge then
+  --   error("unexpected number value '" .. tostring(val) .. "'")
+  -- end
+  -- return string.format("%.14g", val)
+   return val
 end
 
 local function encode_function(val)

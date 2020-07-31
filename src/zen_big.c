@@ -73,18 +73,16 @@ extern ecp* ecp_dup(lua_State *L, ecp* in);
 	if   (r->doublesize)     _r = r->dval; \
 	else { dcopy(lr,r->val); _r = (chunk*)&lr; }
 
+// error(L,"error in %s %u",__FUNCTION__,__LINE__);
+
 #define checkalldouble(l,r) \
 	if(!l->val && !l->dval) { \
-		error(L,"error in %s %u",__FUNCTION__,__LINE__); \
 		lerror(L,"uninitialised big in arg1"); } \
 	if(!r->val && !r->dval) { \
-		error(L,"error in %s %u",__FUNCTION__,__LINE__); \
 		lerror(L,"uninitialised big in arg2"); } \
 	if(l->doublesize && !r->doublesize) { \
-		error(L,"error in %s %u",__FUNCTION__,__LINE__); \
 		lerror(L,"incompatible sizes: arg1 is double, arg2 is not"); \
 	} else if(r->doublesize && !l->doublesize) { \
-		error(L,"error in %s %u",__FUNCTION__,__LINE__); \
 		lerror(L,"incompatible sizes: arg2 is double, arg1 is not"); \
 	}
 
@@ -297,6 +295,8 @@ static int newbig(lua_State *L) {
 	int tn;
 	lua_Number n = lua_tointegerx(L,1,&tn);
 	if(tn) {
+		if(n > 0xffff)
+			warning(L, "Import of number to BIG limit exceeded (>16bit)");
 		big *c = big_new(L); SAFE(c);
 		big_init(c);
 		BIG_zero(c->val);
