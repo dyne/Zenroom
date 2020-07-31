@@ -31,7 +31,7 @@ end
 local function outcast_hex(obj)
    local t = luatype(obj)
    if t == 'number' then
-	  return O.to_hex( BIG.new(obj) ) end
+	  return O.to_hex( O.from_string( tostring(obj) ):hex() ) end
    return O.to_hex(obj)
 end
 local function outcast_base64(obj)

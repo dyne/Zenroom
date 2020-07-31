@@ -114,7 +114,7 @@ ZEN.add_schema({
 		 local _t = { }
 		 for k,v in ipairs(obj) do
 			if not tonumber(v) then error("Not a valid number in array: "..v, 3) end
-			table.insert(_t, v)
+			table.insert(_t, tonumber(v))
 		 end
 		 return _t
 	  end,
