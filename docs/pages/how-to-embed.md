@@ -6,19 +6,18 @@ To call Zenroom from an host program is very simple, since there isn't an API of
 
 ```c
 int zenroom_exec(char *script, char *conf, char *keys,
-                 char *data, int verbosity);
+                 char *data);
 ```
 The input buffers are all read-only, here their functions:
 - `script`: a long string containing the script to be executed
 - `conf`: a short configuration string (for now only `umm` supported as value)
 - `keys`: a string often JSON formatted that contains keys (sensitive information)
 - `data`: a string (also JSON formatted) that contains data
-- `verbosity`: a number from 1 to 3 activating more debugging messages
 
 In addition to this function there is another one that copies results (error messages and printed output) inside memory buffers:
 ```c
 int zenroom_exec_tobuf(char *script, char *conf, char *keys,
-                       char *data, int verbosity,
+                       char *data,
                        char *stdout_buf, size_t stdout_len,
                        char *stderr_buf, size_t stderr_len);
 ```
@@ -30,7 +29,7 @@ In addition to the previously explained arguments, the new ones are:
 
 At last a third call is provided not to execute the script, but to obtain its JSON formatted Abstract Syntax Tree (AST) inside a provided buffer:
 ```c
-int zenroom_parse_ast(char *script, int verbosity,
+int zenroom_parse_ast(char *script,
                       char *stdout_buf, size_t stdout_len,
                       char *stderr_buf, size_t stderr_len);
 ```
@@ -38,6 +37,10 @@ int zenroom_parse_ast(char *script, int verbosity,
 # Language bindings
 
 This API can be called in similar ways from a variety of languages and wrappers that already facilitate its usage.
+
+# Zenroom header file
+
+Here can you find the latest [zenroom.h header file](https://github.com/dyne/Zenroom/blob/master/src/zenroom.h), remember to add *#include <stddef.h>*.
 
 ## Javascript
 
@@ -67,6 +70,10 @@ Tutorials on how to use the zenRoom in the js world
 
 🌐 [Javascript NPM package](https://www.npmjs.com/package/zenroom)
 
+
+<!-- Outdated
+ 
+
 ## Python
 
 
@@ -94,7 +101,7 @@ Detailed documentation of python bindings are available [here](/pages/javascript
 
 💾 Installation
 ```
-import "github.com/DECODEproject/Zenroom/bindings/golang/zenroom"
+import "github.com/dyne/Zenroom/tree/master/bindings/golang/zenroom"
 ```
 
 🎮 Quick Usage
@@ -105,4 +112,6 @@ res, _ := zenroom.Exec(script)
 fmt.Println(string(res))
 ```
 
-[Go language bindings](https://godoc.org/github.com/DECODEproject/Zenroom/bindings/golang/zenroom)
+[Go language bindings](https://godoc.org/github.com/dyne/Zenroom/bindings/golang/zenroom)
+
+-->
