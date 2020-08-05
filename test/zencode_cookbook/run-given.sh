@@ -70,9 +70,15 @@ EOF
 echo "                                                "
 echo "------------------------------------------------"
 echo "               Script number $n                 "
+echo "               Super verbose output             "
 echo "------------------------------------------------"
 echo "                                                "
 let n=n+1
+
+
+# conf=`mktemp`
+# echo verbose=3 > $conf
+# -c = "verbose=3"
 
 
 cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadArrayDebugVerbose.zen -z -a ../../docs/examples/zencode_cookbook/myFlatObject.json | jq . | tee ../../docs/examples/zencode_cookbook/givenDebugOutputVerbose.json
@@ -252,32 +258,32 @@ rm -f $tmp
 # This loads an object
 cat <<EOF  > $tmp 
 {
-   "myFirstObject":{
-      "myFirstNumber":11223344,
-      "myFirstString":"Hello World!",
-      "myFirstArray":[
-         "String1",
-         "String2",
-         "String3",
-         "String4"
-      ]
-   },
-   "mySecondObject":{
-      "mySecondNumber":1234567890,
-	  "mySecondString":"Oh, hello again!",
-      "mySecondArray":[
-         "123",
-         "456",
-         "123.456",
-         "1234567890"
-      ]      
-   },   
-	   "Alice":{
+	"Alice":{
       "keypair":{
          "private_key":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
          "public_key":"BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
       }
-   }
+   },
+	"myFirstObject":{
+      "myFirstNumber":87654321,
+      "myFirstString":"Hello World!",
+      "myFirstArray":[
+         "Hello World! N.1",
+         "Hello World! N.2",
+         "Hello World! N.3",
+         "Hello World! N.4"
+      ]
+   },
+	"mySecondObject":{
+      "mySecondNumber":12345678,
+	  "mySecondString":"Oh, hello again!",
+      "mySecondArray":[
+         "123",
+         "4.56",
+         "123.45678",
+         "12345678"
+      ]      
+   }   
 }
 EOF
 
@@ -372,9 +378,9 @@ cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadTripleNestedObjec
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
 Given I have a 'string array' named 'myThirdArray' inside 'myThirdObject' 
 Given I have a 'string array' named  'myFourthArray' inside 'myFourthObject'   
-Given I have a 'number' named 'myFirstNumber'
-Given I have a 'string' named 'myFirstString' 
-Given I have a 'hex' named 'myFirstHex'
+Given I have a 'number' named 'myFirstNumber' inside 'myFirstObject'
+Given I have a 'string' named 'myFirstString' inside 'myFirstObject'
+Given I have a 'hex' named 'myFirstHex' inside 'myFirstObject'
 Then print the 'myFirstString' as 'string'
 Then print the 'myFirstHex' as 'hex'
 # Then print the 'myFirstNumber' as 'number'
@@ -435,23 +441,23 @@ cat $tmp > ../../docs/examples/zencode_cookbook/myLargeNestedObject.json
 cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenFullList.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/givenFullList.json
 
 # Load Arrays
-Given I have a 'string array' named 'myFirstArray'   
-Given I have an 'string array' named 'myFirstArray' 
+Given I have a 'string array' named 'myFirstArray' inside 'myFirstObject' 
+Given I have an 'string array' named 'myFirstArray' inside 'myFirstObject' 
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
 Given I have a 'string array' named 'myThirdArray' inside 'myThirdObject' 
-Given I have a 'string array' named 'myFourthArray'
+Given I have a 'string array' named 'myFourthArray' inside 'myFourthObject'
 # Load Numbers
-Given I have a 'number' named 'myFirstNumber'
+Given I have a 'number' named 'myFirstNumber' inside 'myFirstObject' 
 Given I have a 'number' named 'mySecondNumber' inside 'mySecondObject'
 # Load Strings
-Given I have a 'string' named 'myFirstString' 
+Given I have a 'string' named 'myFirstString' inside 'myFirstObject' 
 Given I have a 'string' named 'myFirstString' inside 'myFirstObject' 
 # Different data types
-Given I have an 'hex' named 'myFirstHex' 
 Given I have an 'hex' named 'myFirstHex' inside 'myFirstObject' 
-Given I have a  'base64' named 'myFirstBase64'
-Given I have a  'binary' named 'myFirstBinary'
-Given I have an 'url64' named 'myFirstUrl64'
+Given I have an 'hex' named 'myFirstHex' inside 'myFirstObject' 
+Given I have a  'base64' named 'myFirstBase64' inside 'myFirstObject' 
+Given I have a  'binary' named 'myFirstBinary' inside 'myFirstObject' 
+Given I have an 'url64' named 'myFirstUrl64' inside 'myFirstObject' 
 and debug
 Then print all data
 EOF

@@ -11,7 +11,7 @@ if ! test -r ../utils.sh; then
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
-n=0
+n=1
 tmpInput=`mktemp`
 tmpOutput=`mktemp`
 
@@ -30,11 +30,11 @@ tmpZen4="${tmpGiven} ${tmpThen4}"
 cat <<EOF  > $tmpInput
 {
    "myObject":{
-      "myNumber_1":123456789,
-      "myNumber_2":123456789,
-      "myNumber_3":123456789,
-      "myNumber_4":123456789,
-      "myNumber_5":123456789,	  
+      "myNumber_1":12345678901234567890123456789,
+      "myNumber_2":12345678901234567890123456789,
+      "myNumber_3":12345678901234567890123456789,
+      "myNumber_4":12345678901234567890123456789, 
+   	  "myNumber_5":12345678901234567890123456789,  
 	  "myString_1":"Hello World!",
 	  "myString_2":"Hello World!",
 	  "myString_3":"Hello World!",
@@ -120,21 +120,33 @@ cat <<EOF  > $tmpInput
          "private_key":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
          "public_key":"BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
       }
+   },
+	"Bob": {
+		"public_key": "BGdp6q41IE9X4H909u8dc05mJxfl+cYNmLChky2u6G3uUJPfEmM8hm4HRz/eSl+w75glCrW6WaOKwBMFCcfzoLg="
+    },
+	"Carl": {
+         "public_key": "BG/TONSVfG5iQWNpp4bNG7Ev0g36XncIeaDOWOHX+MvDj/rPOEHahE2uJepOAv6ijZj07sc2XRddIH4HB78Nu4k="
+    },
+	
+   "copyOfMyObject":{
+   "myNumber_1":10000,
+   "myString_1":"Good morning Vietnam!",
    }
-   
 }
 EOF
 cat $tmpInput > ../../docs/examples/zencode_cookbook/myLargeNestedObjectThen.json
 
-
+# Given phase for all the scripts
 
 cat <<EOF  > $tmpGiven
 # rule input encoding base64
 Scenario 'ecdh': Create the keypair
 Given I am 'Alice'
 Given I have my 'keypair' 
+and I have a 'public key' from 'Bob'
+and I have a 'public key' from 'Carl'
 # Load Arrays
-Given I have a 'string array' named 'myStringArray_1'
+# Given I have a 'string array' named 'myStringArray_1'
 Given I have a 'string array' named 'myStringArray_2'  
 Given I have a 'string array' named 'myStringArray_3'
 Given I have a 'string array' named 'myStringArray_4'  
@@ -152,6 +164,9 @@ Given I have a 'number' named 'myNumber_4'
 Given I have a 'number' named 'myNumber_5' 
 # Load Strings
 Given I have a 'string' named 'myString_1' 
+# Questo sotto non funziona proprio, quindi toglierei la parte in 'qualcosa'
+Given I have a 'string' named 'myString_1' in 'copyOfMyObject'
+Given I have a 'number' named 'myNumber_1' in 'copyOfMyObject'
 Given I have a 'string' named 'myString_2' 
 Given I have a 'string' named 'myString_3'  
 Given I have a 'string' named 'myString_4' 
@@ -186,18 +201,22 @@ cat $tmpGiven > ../../docs/examples/zencode_cookbook/thenCompleteScriptGiven.zen
 echo "                                                "
 echo "------------------------------------------------"
 echo "               Script number $n                 "
+echo "               Huge print script                "
 echo "------------------------------------------------"
 echo "                                                "
 let n=n+1
 
 
 
-
+# HUGE print script to test all the combinations
 
 
 cat <<EOF  > $tmpThen1
 Then print all data
 
+# By printing all data, the first of the 5 items
+# is printed with its default schema.
+# 
 # (0): default
 # 1: string
 # 2: number
@@ -254,10 +273,10 @@ EOF
 
 
 
-cat $tmpThen1 > ../../docs/examples/zencode_cookbook/thenCompleteScriptPart1.zen
+cat $tmpThen1 > ../../docs/examples/zencode_cookbook/thenExhaustiveScript.zen
 
 
-cat $tmpZen1 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpInput | jq | tee ../../docs/examples/zencode_cookbook/thenCompleteOutputPart1.json
+cat $tmpZen1 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpInput | jq . | tee ../../docs/examples/zencode_cookbook/thenExhaustiveScriptOutput.json
 
 
 
@@ -266,6 +285,7 @@ cat $tmpZen1 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpInpu
 echo "                                                "
 echo "------------------------------------------------"
 echo "               Script number $n                 "
+echo "               print my data script             "
 echo "------------------------------------------------"
 echo "                                                "
 let n=n+1
@@ -273,26 +293,45 @@ let n=n+1
 
 cat <<EOF  > $tmpThen2
 
-# Then print 'myNumber_3' as 'string'
-# Then print 'myNumber_3' as 'hex'
-# Then print my data 
-# Then print data as 'hex' 
-# Then print data as 'number'
-# Then print my 'keypair' 
-# Then print my 'keypair' as 'bin' 
-# Then print my data as 'string' 
-# Then print the 'myStringArray' 
-# Then print 'leftmost' as 'string'
-# Then print 'myString' as 'string'
-# Then print 'myNumber_3' as 'hex'
+When I write string 'This message is for Bob.' in 'messageForBob'
+When I write string 'This message is for Carl.' in 'messageForCarl'
 
- 
-# Da Rimuovere, doppi_1: Then print the 'mySecondArray' as 'base64' 
-# Da Rimuovere, doppi_1: Then print the '' as '' in ''
-# Da Rimuovere, doppi_1: Then print the '' in '' 
+and I write string 'This is the header' in 'header'
+#and I encrypt the message for 'Bob'
+and I encrypt the 'messageForBob'
+and I rename the 'message' to 'Message for Bob'
+and debug
+#and I encrypt the message for 'Carl'
+#and I rename the 'message' to 'Message for Carl'
+Then print the 'Message for Bob'
+#and print the 'Message for Carl'
+
+# Then print my 'keypair' 
+# Then print the 'public key' 
+# print ''
+# print '' as ''
+# print '' as '' in ''
+# print data
+# print data as ''
+# print my ''
+# print my '' as ''
+# print my data
+# print my data as ''
+# print the ''
+# print the '' as ''
+# print the '' as '' in ''
+# print the '' in ''
 
 
 EOF
+
+
+cat $tmpThen2 > ../../docs/examples/zencode_cookbook/thenCompleteScriptPart2.zen
+
+
+cat $tmpZen2 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpInput | jq . | tee ../../docs/examples/zencode_cookbook/thenCompleteOutputPart2.json
+
+
 
 
 rm -f $tmpInput

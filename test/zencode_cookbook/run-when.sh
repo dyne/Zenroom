@@ -34,9 +34,9 @@ cat <<EOF  > $tmp
 	  "myFirstUrl64": "SGVsbG8gV29ybGQh",
 	  "myFirstBinary": "0100100001101001",
 	  "myFirstArray":[
-		 "String1",
-		 "String2",
-		 "String3"
+		 "Hello World! myFirstObject, myFirstArray[0]",
+		 "Hello World! myFirstObject, myFirstArray[1]",
+		 "Hello World! myFirstObject, myFirstArray[2]"
       ],
 	  "myFirstNumberArray":[10, 20, 30],
    "myOnlyEcpArray":[
@@ -58,23 +58,24 @@ cat <<EOF  > $tmp
       "myThirdNumber":3,
 	  "myThirdString":"...and good morning!",
       "myThirdArray":[
-         "oneMoreString1",
-         "oneMoreString2",
-         "oneMoreString3",
-		 "Hello World!"
+         "Hello World! myThirdObject, myThirdArray[0]",
+         "Hello World! myThirdObject, myThirdArray[1]",
+         "Hello World! myThirdObject, myThirdArray[2]",
+		 "Hello World! myThirdObject, myThirdArray[3]"
       ],
 	  "myCopyOfFirstArray":[
-		 "String1",
-		 "String2",
-		 "String3"
+		 "Hello World!, myThirdObject, myCopyOfFirstArray[0]",
+		 "Hello World!, myThirdObject, myCopyOfFirstArray[1]",
+		 "Hello World!, myThirdObject, myCopyOfFirstArray[2]"
 		 ]
    },
    "myFourthObject":{
       "myFourthArray":[
-         "oneExtraString1",
-         "oneExtraString2",
-         "oneExtraString3",
-		 "oneExtraString4"
+         "Hello World! myFourthObject, myFourthArray[0]",
+         "Hello World! myFourthObject, myFourthArray[1]",
+		 "Will this string be found inside an array?",
+         "Hello World! myFourthObject, myFourthArray[2]",
+		 "Hello World! myFourthObject, myFourthArray[3]"
       ],
   "myFourthString":"...and good evening!",
   "myFifthString":"We have run out of greetings.",
@@ -83,7 +84,7 @@ cat <<EOF  > $tmp
   "myEightEqualString":"These string is equal to another one.",
   "myNinthEqualString":"These string is equal to another one.",
   "myFourthNumber":3,
-  "myTenthString":"oneExtraString1",
+  "myTenthString":"Will this string be found inside an array?",
   "myEleventhStringToBeHashed":"hash me to kdf",
   "myTwelfthStringToBeHashedUsingPBKDF2":"hash me to pbkdf2",
   "myThirteenStringPassword":"my funky password",
@@ -109,37 +110,36 @@ cat <<EOF  > $tmpGiven
 Scenario 'ecdh': Create the keypair
 Given I have a 'keypair' from 'Alice'
 # Load Arrays
-Given I have a 'string array' named 'myFirstArray'   
+Given I have a 'string array' named 'myFirstArray'  inside 'myFirstObject'
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
 Given I have a 'string array' named 'myThirdArray' inside 'myThirdObject' 
-Given I have a 'string array' named 'myFourthArray'
+Given I have a 'string array' named 'myFourthArray' inside 'myFourthObject'
 Given I have a 'number array' named 'myFirstNumberArray' inside 'myFirstObject'
-Given I have a 'string array' named 'myCopyOfFirstArray'
-Given I have a 'ecp array' named 'myOnlyEcpArray'   
+Given I have a 'string array' named 'myCopyOfFirstArray' inside 'myThirdObject'
+Given I have a 'ecp array' named 'myOnlyEcpArray'   inside 'myFirstObject'
 # Load Numbers
 Given I have a 'number' named 'myFirstNumber' in 'myFirstObject'
 Given I have a 'number' named 'mySecondNumber' in 'mySecondObject'
-Given I have a 'number' named 'myFourthNumber'
-Given I have a 'number' named 'myThirdNumber'
+Given I have a 'number' named 'myFourthNumber' inside 'myFourthObject'
+Given I have a 'number' named 'myThirdNumber' inside 'myThirdObject' 
 # Load Strings
 Given I have a 'string' named 'myFirstString' in 'myFirstObject'
-Given I have a 'string' named 'mySecondString'
-Given I have a 'string' named 'myThirdString'
-Given I have a 'string' named 'myFourthString'
-Given I have a 'string' named 'myFifthString'
-Given I have a 'string' named 'mySixthString'
-Given I have a 'string' named 'mySeventhString'
-Given I have a 'string' named 'myTenthString'
-Given I have a 'string' named 'myEleventhStringToBeHashed'
-Given I have a 'string' named 'myTwelfthStringToBeHashedUsingPBKDF2' 
-Given I have a 'string' named 'myThirteenStringPassword'
-Given I have a 'string' named 'myFourteenthStringToBeHashedUsingHMAC' 
+Given I have a 'string' named 'mySecondString' inside 'mySecondObject'
+Given I have a 'string' named 'myThirdString' inside 'myThirdObject' 
+Given I have a 'string' named 'myFourthString' inside 'myFourthObject'
+Given I have a 'string' named 'myFifthString' inside 'myFourthObject'
+Given I have a 'string' named 'mySixthString' inside 'myFourthObject'
+Given I have a 'string' named 'mySeventhString' inside 'myFourthObject'
+Given I have a 'string' named 'myTenthString' inside 'myFourthObject'
+Given I have a 'string' named 'myEleventhStringToBeHashed' inside 'myFourthObject'
+Given I have a 'string' named 'myTwelfthStringToBeHashedUsingPBKDF2' inside 'myFourthObject' 
+Given I have a 'string' named 'myThirteenStringPassword' inside 'myFourthObject'
+Given I have a 'string' named 'myFourteenthStringToBeHashedUsingHMAC' inside 'myFourthObject'
 # Different data types
-Given I have an 'hex' named 'myFirstHex' 
 Given I have an 'hex' named 'myFirstHex' inside 'myFirstObject' 
-Given I have a  'base64' named 'myFirstBase64'
-Given I have a  'binary' named 'myFirstBinary'
-Given I have an 'url64' named 'myFirstUrl64'
+Given I have a  'base64' named 'myFirstBase64' in 'myFirstObject'
+Given I have a  'binary' named 'myFirstBinary' in 'myFirstObject'
+Given I have an 'url64' named 'myFirstUrl64' in 'myFirstObject'
 # Let's debug here to make sure we know what we're loading
 and debug
 # Here we're done loading stuff 
