@@ -243,7 +243,8 @@ function operate_conversion(data, guessed)
 	  error('No conversion operation guessed: '..guessed.name, 2)
 	  return nil
    end
-   xxx('Operating conversion on: '..guessed.name)
+   -- TODO: make xxx print to stderr!
+   -- xxx('Operating conversion on: '..guessed.name)
    if guessed.istable then
 	  -- TODO: better error checking on deepmap?
 	  return deepmap(guessed.fun, data)

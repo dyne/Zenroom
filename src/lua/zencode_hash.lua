@@ -50,20 +50,15 @@ When("create the hash to point '' of each object in ''", function(what, arr)
     ZEN.assert(A, "Object not found: "..arr)
     local count = isarray(A)
     ZEN.assert( count > 0, "Object is not an array: "..arr)
-    ACK.hashes = { }
-    for k,v in sort_ipairs(A) do
-       ACK.hashes[k] = F.hashtopoint(v)
-    end
+    ACK.hash_to_point = deepmap(F.hashtopoint, A)
 end)
 
 When("create the hashes of each object in ''", function(arr)
-    ZEN.assert(isarray(ACK[arr]), "Array not found: "..arr)
-    local c = 0
-    ACK.hashes = { }
-    for k,v in sort_ipairs(ACK[arr]) do
-       c = c + 1
-       table.insert(ACK.hashes, sha256(v))
-    end
+    local A = ACK[arr]
+    ZEN.assert(A, "Object not found: "..arr)
+    local count = isarray(A)
+    ZEN.assert( count > 0, "Object is not an array: "..arr)
+    ACK.hashes = deepmap(sha256, A)
 end)
 
 -- HMAC from RFC2104.

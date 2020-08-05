@@ -194,19 +194,29 @@ octet* o_new(lua_State *L, const int size) {
 octet* o_arg(lua_State *L,int n) {
 	void *ud;
 	octet *o = NULL;
+	const char *type = luaL_typename(L,n);
 	o = (octet*) luaL_testudata(L, n, "zenroom.octet"); // new
-	if(!o && strncmp("string",luaL_typename(L,n),6)==0) {
+	if(o) {
+		if(o->len>MAX_OCTET) {
+			error(L, "argument %u octet too long: %u bytes",n,o->len);
+			lerror(L, "operation aborted");
+			return NULL;
+		}
+		return(o);
+	} else if( (strncmp("string",type,6)==0) || (strncmp("number",type,6)==0) ) {
 		size_t len; const char *str;
 		str = luaL_optlstring(L,n,NULL,&len);
 		if(!str || !len) {
 			error(L, "invalid NULL string (zero size)");
 			lerror(L,"failed implicit conversion from string to octet");
-			return 0; }
+			return 0;
+		}
 		if(!len || len>MAX_STRING) {
 			error(L, "invalid string size: %u", len);
 			lerror(L,"failed implicit conversion from string to octet");
-			return 0; }
-		// note here implicit conversion is only made from u64 and hex
+		return 0;
+		}
+/* 		// note here implicit conversion is only made from u64 and hex
 		// TODO: convert from more string encodings cascading is_* funcs
 		int hlen;
 		if((hlen = is_url64(str))>0) { // import from U64 encoded string
@@ -214,49 +224,49 @@ octet* o_arg(lua_State *L,int n) {
 			func(L,"octet argument is_url64 len %u -> %u",hlen, declen);
 			o = o_new(L, declen); SAFE(o);
 			o->len = U64decode(o->val, str);
+			return(o);
 		} else if((hlen = is_hex(str))>0) { // import from a HEX encoded string
 			o = o_new(L, hlen); SAFE(o);
 			OCT_fromHex(o, (char*)str);
-		} else {
-			// fallback to a string
-			o = o_new(L, len+1); SAFE(o); // new
-			OCT_jstring(o, (char*)str);
-		}
+			return(o);
+ */
+		// fallback to a string
+		o = o_new(L, len+1); SAFE(o); // new
+		OCT_jstring(o, (char*)str);
 		lua_pop(L,1);
+		return(o);
 	} else {
+		// zenroom types
 		ud = luaL_testudata(L, n, "zenroom.big");
-		if(!o && ud) {
+		if(ud) {
 			big *b = (big*)ud;
 			o = new_octet_from_big(L,b); SAFE(o);
 			lua_pop(L,1);
+			return(o);
 		}
 		ud = luaL_testudata(L, n, "zenroom.ecp");
-		if(!o && ud) {
+		if(ud) {
 			ecp *e = (ecp*)ud;
 			o = o_new(L, e->totlen + 0x0f); SAFE(o); // new
 			_ecp_to_octet(o,e);
 			lua_pop(L,1);
+			return(o);
 		}
 		ud = luaL_testudata(L, n, "zenroom.ecp2");
-		if(!o && ud) {
+		if(ud) {
 			ecp2 *e = (ecp2*)ud;
 			o = o_new(L, e->totlen + 0x0f); SAFE(o); // new
 			_ecp2_to_octet(o,e);
 			lua_pop(L,1);
+			return(o);
 		}
 	}
-	if(!o) {
-		error(L,"Error in argument #%u",n);
-		lerror(L, "%s: cannot convert %s to zeroom.octet",__func__,luaL_typename(L,n));
-		return NULL; }
+	error(L,"Error in argument #%u",n);
+	lerror(L, "%s: cannot convert %s to zeroom.octet",__func__,luaL_typename(L,n));
+	return NULL;
 	// if executing here, something is pushed into Lua's stack
 	// but this is an internal function to gather arguments, so
 	// should be popped before returning the new octet
-	if(o->len>MAX_OCTET) {
-		error(L, "argument %u octet too long: %u bytes",n,o->len);
-		lerror(L, "operation aborted");
-		return NULL; }
-	return(o);
 }
 
 // allocates a new octet in LUA, duplicating the one in arg
@@ -316,11 +326,9 @@ excessing data. Octets cannot be resized.
 @return octet newly instantiated octet
 */
 static int newoctet (lua_State *L) {
-	octet *o;
-	size_t len = luaL_optnumber(L, 1, 0);
-	o = o_new(L,len); SAFE(o);
-	OCT_empty(o);
-	return 1;  /* new userdatum is already on the stack */
+	const octet *o = o_arg(L, 1); SAFE(o);
+	octet *r = o_dup(L,(octet*)o); SAFE(r);
+	return 1;
 }
 
 static int filloctet(lua_State *L) {
@@ -807,17 +815,20 @@ static int pad(lua_State *L) {
 }
 
 /***
-    Fill an octet with zero values up to indicated size or its maximum size.
+    Create an octet filled with zero values up to indicated size or its maximum size.
 
     @int[opt=octet:max] length fill with zero up to this size, use maxumum octet size if omitted
     @function octet:zero(length)
 */
 static int zero(lua_State *L) {
-	octet *o = o_arg(L,1);	SAFE(o);
-	const int len = luaL_optinteger(L, 2, o->max);
+	const int len = luaL_optnumber(L, 1, MAX_STRING);
+	if(len<1) {
+		lerror(L, "Cannot create a zero length octet");
+		return 0;
+	}
+	func(L, "Creating a zero filled octet of %u bytes", len);
 	octet *n = o_new(L,len); SAFE(n);
-	OCT_copy(n,o);
-	int i;
+	register int i;
 	for(i=0; i<len; i++) n->val[i]=0x0;
 	n->len = len;
 	return 1;
@@ -1000,6 +1011,7 @@ int luaopen_octet(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg octet_class[] = {
 		{"new",   newoctet},
+		{"zero",  zero},
 		{"concat",concat_n},
 		{"xor",   xor_n},
 		{"chop",  chop},
@@ -1050,7 +1062,6 @@ int luaopen_octet(lua_State *L) {
 		{"bin",    to_bin},
 		{"eq", eq},
 		{"pad", pad},
-		{"zero", zero},
 		{"max", max},
 		{"entropy", entropy},
 		{"bytefreq", entropy_bytefreq},
