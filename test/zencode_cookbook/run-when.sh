@@ -210,7 +210,7 @@ EOF
 cat $tmpWhen1 > ../../docs/examples/zencode_cookbook/whenCompleteScriptPart1.zen
 
 
-cat $tmpZen1 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmp | jq | tee ../../docs/examples/zencode_cookbook/whenCompleteOutputPart1.json
+cat $tmpZen1 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/whenCompleteOutputPart1.json
 
 
 
@@ -273,7 +273,7 @@ EOF
 cat $tmpWhen2 > ../../docs/examples/zencode_cookbook/whenCompleteScriptPart2.zen
 
 
-cat $tmpZen2 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmp | jq | tee ../../docs/examples/zencode_cookbook/whenCompleteOutputPart2.json
+cat $tmpZen2 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/whenCompleteOutputPart2.json
 
 
 
@@ -356,7 +356,7 @@ EOF
 
 cat $tmpWhen3 > ../../docs/examples/zencode_cookbook/whenCompleteScriptPart3.zen
 
-cat $tmpZen3 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmp | jq | tee ../../docs/examples/zencode_cookbook/whenCompleteOutputPart3.json
+cat $tmpZen3 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/whenCompleteOutputPart3.json
 
 
 
@@ -406,7 +406,7 @@ cat $tmpWhen4 > ../../docs/examples/zencode_cookbook/whenCompleteScriptPart4.zen
 
 
 
-cat $tmpZen4 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmp | jq | tee ../../docs/examples/zencode_cookbook/whenCompleteOutputPart4.json 
+cat $tmpZen4 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/whenCompleteOutputPart4.json 
 
 # > jq >
 

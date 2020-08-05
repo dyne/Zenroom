@@ -69,7 +69,7 @@ echo "------------------------------------------------"
 echo "                                                "
 let n=n+1
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/randomArrayMultiple.zen -z | jq | tee ../../docs/examples/zencode_cookbook/myArrays.json
+cat <<EOF | zexe ../../docs/examples/zencode_cookbook/randomArrayMultiple.zen -z | jq . | tee ../../docs/examples/zencode_cookbook/myArrays.json
 	Given nothing
 	When I create the array of '2' random objects of '8' bits
 	And I rename the 'array' to 'myTinyArray'
