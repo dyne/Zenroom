@@ -39,12 +39,13 @@ cat <<EOF  > $tmp
 		 "Hello World! myFirstObject, myFirstArray[2]"
       ],
 	  "myFirstNumberArray":[10, 20, 30],
-   "myOnlyEcpArray":[
-      "AjHGaNdano8URHxzbkzBJgqWSUVL5Dm3YMx-AYaZFe8u4H-yZL1UmxwxAiWy4mysnQ",
-      "AhhVr7iKRMvU1VGFld2-IUwh8ywNwPGLJ4_6_QAfQ4qpHD0BcFBNsQkdzmrrhWPGjg",
-      "AzfRdz8Rvg0cZAmfd8tG_31rWPgPd1t_EQ_s-D9BjrtpiDl6gm1t8kwyLNqWacvYAw",
-      "Az9Qi996vQvcQOxRiddsh8GGpFjMdpiDQv4LSh7IuFtA2WKmBVb5-5q43nRJsN3E9A"
-   ]
+     
+   "myOnlyEcpArray": [
+    "Awz+ogtsf9xRn7hIw/6B1xvwoBNRgNFJOPYqSdPd+OAHXgDVuLWuKEvIsynbdWBJIw==",
+    "A05tQgcTdT7+OAvfWZMIYI9G2owWBBR3/KqRBL/KPh2rPknbW1FBbRcee3P+7hpOoQ==",
+    "AzijxD9GRztPcRtEXjdpXIPTzzmv0dvCdQNcmToC09pOw1ZLg/eAHdgEFV6oWhionQ==",
+    "Ak8k6etvJjUPfSTFZFtQiRKaX1gIs3lUMzti+BQZW1XhUl8OOAOa/LrCRWyV1fpLwg=="
+  ]
    },
    "mySecondObject":{
       "mySecondNumber":2,
@@ -110,12 +111,12 @@ cat <<EOF  > $tmpGiven
 Scenario 'ecdh': Create the keypair
 Given I have a 'keypair' from 'Alice'
 # Load Arrays
-Given I have a 'string array' named 'myFirstArray'  inside 'myFirstObject'
-Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
-Given I have a 'string array' named 'myThirdArray' inside 'myThirdObject' 
-Given I have a 'string array' named 'myFourthArray' inside 'myFourthObject'
-Given I have a 'number array' named 'myFirstNumberArray' inside 'myFirstObject'
-Given I have a 'string array' named 'myCopyOfFirstArray' inside 'myThirdObject'
+Given I have a 'string' named 'myFirstArray'  inside 'myFirstObject'
+Given I have a 'string' named 'mySecondArray' inside 'mySecondObject'
+Given I have a 'string' named 'myThirdArray' inside 'myThirdObject' 
+Given I have a 'string' named 'myFourthArray' inside 'myFourthObject'
+Given I have a 'number' named 'myFirstNumberArray' inside 'myFirstObject'
+Given I have a 'string' named 'myCopyOfFirstArray' inside 'myThirdObject'
 Given I have a 'ecp array' named 'myOnlyEcpArray'   inside 'myFirstObject'
 # Load Numbers
 Given I have a 'number' named 'myFirstNumber' in 'myFirstObject'
@@ -325,9 +326,9 @@ And I rename the 'hash' to 'hashOfMySeventhString'
 # This statement takes an array as input, and produces an array as output named "hashes", which
 # we immediately rename.
 When I create the hash to point 'ecp' of each object in 'myFourthArray'
-And I rename the 'hashes' to 'ECPhashesOfMyFourthArray'
+And I rename the 'hash to point' to 'ECPhashesOfMyFourthArray'
 When I create the hash to point 'ecp2' of each object in 'myFirstArray'        
-And I rename the 'hashes' to 'ECP2hashesOfMyFirstArray'
+And I rename the 'hash to point' to 'ECP2hashesOfMyFirstArray'
 
 # Key derivation function (KDF)
 # The output object is named "key_derivation":

@@ -176,8 +176,6 @@ function guess_conversion(objtype, definition)
    -- assert(definition, "Internal error: guess_conversion needs 2 arguments", 2)
    local res = { }
    local t
-   -- map to check if format string exists
-   local formats = { hex=1, bin=1, base64=1, url64=1, base58=1 }
    -- ZEN.schemas is the other map to check
    if objtype == 'string' then
        t = input_encoding(definition)
@@ -203,9 +201,7 @@ function guess_conversion(objtype, definition)
       res.istable = nil -- no deepmap for single string
       
    elseif objtype == 'number' then
-	   res = { fun = tonumber,
-            check = tonumber,
-            name = 'number' }
+      res = input_encoding(objtype)
 
    elseif objtype == 'table' then
 		t = input_encoding(definition)
@@ -246,19 +242,19 @@ function operate_conversion(data, guessed)
    -- TODO: make xxx print to stderr!
    -- xxx('Operating conversion on: '..guessed.name)
    if guessed.istable then
-	  -- TODO: better error checking on deepmap?
-	  return deepmap(guessed.fun, data)
+     -- TODO: better error checking on deepmap?
+      if luatype(guessed.check) == 'function' then
+         deepmap(guessed.check, data)
+      end
+      return deepmap(guessed.fun, data)
    elseif guessed.isschema then
-	  return guessed.fun(data)
+	   return guessed.fun(data)
    else
-	  if guessed.check then
-		 if not guessed.check(data) then
-			error('Conversion check failed for data: '..guessed.name, 2)
-			return nil
-		 end
-	  end
-   end
-   return guessed.fun(data)
+	   if luatype(guessed.check) == 'function' then
+         guessed.check(data)
+      end
+      return guessed.fun(data)      
+	end
 end
 
 local function save_array_codec(n)
@@ -303,7 +299,7 @@ function ZEN:pick(what, obj, conv)
    TMP.data = operate_conversion(got, TMP.guess)
    TMP.schema = TMP.guess.name
    assert(ZEN.OK)
-   ZEN:ftrace("pick found "..what)
+   if DEBUG > 1 then ZEN:ftrace("pick found "..what) end
 end
 
 ---
@@ -348,7 +344,7 @@ function ZEN:pickin(section, what, conv, fail)
 	TMP.data = operate_conversion(got, TMP.guess)
 	TMP.schema = TMP.guess.name
    assert(ZEN.OK)
-   ZEN:ftrace("pickin found "..what.." in "..section)
+   if DEBUG > 1 then ZEN:ftrace("pickin found "..what.." in "..section) end
 end
 
 

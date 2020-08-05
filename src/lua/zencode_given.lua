@@ -93,6 +93,11 @@ Given("my '' is valid", function(n)
 		 gc()
 end)
 
+local function array_convert(name, obj)
+	local conv = guess_conversion('table',name)
+	-- deepmap(conv.check, obj)
+	return deepmap(conv.fun, obj)
+end
 
 ZEN.add_schema({
 	  -- string = function(obj)
@@ -105,92 +110,50 @@ ZEN.add_schema({
 	  -- end,
 	  array = function(obj)
 		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
-		 local _t = { }
-		 for k,v in ipairs(obj) do
-			table.insert(_t, CONF.input.encoding.fun(v))
-		 end
-		 return _t
+		 -- default rule input encoding
+		 return deepmap(CONF.input.encoding.fun, obj)
 	  end,
 	  string_array = function(obj)
 		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
-		 local _t = { }
-		 for k,v in ipairs(obj) do
-			table.insert(_t, OCTET.from_string(v))
-		 end
-		 return _t
+		 return array_convert('string', obj)
 	  end,
 	  number_array = function(obj)
 		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
-		 local _t = { }
-		 for k,v in ipairs(obj) do
-			if not tonumber(v) then error("Not a valid number in array: "..v, 3) end
-			table.insert(_t, tonumber(v))
-		 end
-		 return _t
+		 return array_convert('number', obj)
 	  end,
 	  hex_array = function(obj)
 		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
-		 local _t = { }
-		 for k,v in ipairs(obj) do
-			table.insert(_t, OCTET.from_hex(v))
-		 end
-		 return _t
+		 return array_convert('hex', obj)
 	  end,
 	  bin_array = function(obj)
 		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
-		 local _t = { }
-		 for k,v in ipairs(obj) do
-			table.insert(_t, OCTET.from_bin(v))
-		 end
-		 return _t
+		 return array_convert('bin', obj)
 	  end,
 	  base64_array = function(obj)
 		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
-		 local _t = { }
-		 for k,v in ipairs(obj) do
-			table.insert(_t, OCTET.from_base64(v))
-		 end
-		 return _t
+		 return array_convert('base64', obj)
 	  end,
 	  base58_array = function(obj)
 		if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
-		local _t = { }
-		for k,v in ipairs(obj) do
-		   table.insert(_t, OCTET.from_base58(v))
-		end
-		return _t
-	 end,
+		return array_convert('base58', obj)
+	  end,
 	  url64_array = function(obj)
 		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
-		 local _t = { }
-		 for k,v in ipairs(obj) do
-			table.insert(_t, OCTET.from_url64(v))
-		 end
-		 return _t
+		 return array_convert('url64', obj)
 	  end,
 	  -- default encoding, semantic conversion
 	  int_array = function(obj)
 		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
-		 local _t = { }
-		 for k,v in ipairs(obj) do
-			table.insert(_t, INT.new(v))
-		 end
-		 return _t
+		 return deepmap(INT.new, deepmap(CONF.input.encoding.fun, obj))
 	  end,
 	  ecp_array = function(obj)
 		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
-		 local _t = { }
-		 for k,v in ipairs(obj) do
-			table.insert(_t, ECP.new(v))
-		 end
-		 return _t
+		 return deepmap(ECP.new, deepmap(CONF.input.encoding.fun, obj))
 	  end,
 	  ecp2_array = function(obj)
 		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
-		 local _t = { }
-		 for k,v in ipairs(obj) do
-			table.insert(_t, ECP2.new(v))
-		 end
-		 return _t
+		 return deepmap(ECP2.new, deepmap(CONF.input.encoding.fun, obj))
 	  end
 })
+-- alias big to int
+ZEN.add_schema({big_array = ZEN.schemas.int_array})

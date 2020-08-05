@@ -65,12 +65,11 @@ function input_encoding(what)
    			   name = 'string'
    	  }
    elseif what == 'num' or what == 'number' then
-   	  return { fun = tonumber,
-   			   check = tonumber, -- function(_) return true end,
-   			   -- check = function(a) if tonumber(a) ~= nil then
-   			   -- 		 return true else return false end,
-   			   name = 'number'
-   	  }
+	return ({ fun = function(x) return(tonumber(x)) end,
+			check = function(x)
+	   			ZEN.assert(tonumber(x), "Invalid conversion, not a number: "..type(x))
+			end,
+			name = 'number' })
    end
    xxx("Input encoding not found: "..what, 2)
    return nil
