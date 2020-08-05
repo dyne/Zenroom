@@ -134,9 +134,10 @@ ZEN.add_schema({
 ZEN.add_schema({verifiers = ZEN.schemas['verifier']})
 
 When("aggregate the verifiers", function()
+		if not ACK.verifiers then ACK.verifiers = { } end
 		for k,v in pairs(ACK.verifier) do
 		-- if ACK.verifier.alpha then
-		   ACK.verifiers = v
+		   ACK.verifiers[k] = v
 		end
 		-- TODO: aggregate all array
 end)

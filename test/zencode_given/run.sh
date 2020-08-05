@@ -129,7 +129,7 @@ cat <<EOF | tee is_valid.zen | $Z -z -a $tmp
 rule check version 1.0.0
 scenario 'ecdh'
 	 Given I am 'Andrea'
-	 and the 'keypair' is valid
+	 and my 'keypair' is valid
 	 Then print all data
 EOF
 
@@ -153,7 +153,7 @@ EOF
 cat <<EOF | tee have_inside_a.zen | $Z -z -a $tmp
 rule check version 1.0.0
 scenario 'ecdh'
-	 Given I have a valid 'public key' from 'Andrea'
+	 Given I have a valid 'keypair' from 'Andrea'
 #	 when schema
 	 Then print all data
 EOF
@@ -169,7 +169,6 @@ cat <<EOF | tee have_a_implicit_array.zen | $Z -z -a $tmp
 rule check version 1.0.0
 scenario 'ecdh'
 	 Given I have a valid 'string array' named 'peppe' inside 'stuff'
-	 Given I have a valid 'string array' named 'peppe'
 	 Then print the 'peppe'
 EOF
 

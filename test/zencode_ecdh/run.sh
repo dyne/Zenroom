@@ -48,8 +48,8 @@ EOF
 cat <<EOF | zexe alice_keypub.zen -k alice_keypair.json > alice_pub.json
 Scenario 'ecdh': Publish the public key
 Given that I am known as 'Alice'
-and I have my 'public key'
-Then print my 'public key'
+and I have my 'keypair'
+Then print my 'public key' from 'keypair'
 EOF
 
 cat <<EOF | zexe DSA01.zen -k alice_keypair.json | tee alice_signs_to_bob.json
@@ -71,7 +71,7 @@ Scenario 'ecdh': Bob verifies the signature from Alice
 	Given that I am known as 'Bob'
 	and I have a 'public key' from 'Alice'
 	and I have a 'signature' from 'Alice'
-	and I have a 'draft'
+	and I have a 'draft' from 'Alice'
 	When I verify the 'draft' is signed by 'Alice'
 	Then print 'signature correct'
 	and print the 'draft' as 'string'
@@ -87,8 +87,8 @@ EOF
 cat <<EOF | zexe bob_keypub.zen -k bob_keypair.json > bob_pub.json
 Scenario 'ecdh': Publish the public key
 Given that I am known as 'Bob'
-and I have my 'public key'
-Then print my 'public key'
+and I have my 'keypair'
+Then print my 'public key' from 'keypair'
 EOF
 
 cat <<EOF | zexe AES05.zen -k alice_keypair.json -a bob_pub.json | tee alice_to_bob.json

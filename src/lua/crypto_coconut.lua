@@ -157,7 +157,7 @@ function coco.aggregate_creds(sk, sigma_tilde)
 end
 
 function coco.prove_creds(vk, sigma, secret)
-   ZEN.assert(vk, "COCONUT.prove_creds called with empty verifier")
+   ZEN.assert(vk and vk.alpha and vk.beta, "COCONUT.prove_creds called with empty verifier")
    ZEN.assert(sigma, "COCONUT.prove_creds called with empty credential")
    ZEN.assert(secret, "COCONUT.prove_creds called with empty secret")
 

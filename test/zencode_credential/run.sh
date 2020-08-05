@@ -38,8 +38,8 @@ EOF
 cat << EOF | zexe publish_verifier.zen -k issuer_keypair.keys | tee verifier.json
 Scenario credential: publish verifier
     Given that I am known as 'MadHatter'
-    and I have my valid 'verifier'
-    Then print my 'verifier'
+    and I have my valid 'issuer keypair'
+    Then print my 'verifier' from 'issuer keypair'
 EOF
 
 # credential signature
@@ -48,7 +48,7 @@ cat << EOF | zexe issuer_sign.zen -a request.json -k issuer_keypair.keys | tee s
 Scenario credential: issuer sign
     Given that I am known as 'MadHatter'
     and I have my valid 'issuer keypair'
-    and I have a valid 'credential request'
+    and I have a 'credential request' inside 'Alice'
     When I create the credential signature
     Then print the 'credential signature'
     and print the 'verifier'
@@ -70,7 +70,7 @@ cat << EOF | zexe create_proof.zen -k credentials.json -a verifier.json | tee pr
 Scenario credential: create proof
     Given that I am known as 'Alice'
     and I have my valid 'credential keypair'
-    and I have a valid 'verifier' from 'MadHatter'
+    and I have a valid 'verifier' inside 'MadHatter'
     and I have my valid 'credentials'
     When I aggregate the verifiers
     and I create the credential proof
@@ -80,7 +80,7 @@ EOF
 
 cat << EOF | zexe verify_proof.zen -k proof.json -a verifier.json
 Scenario credential: verify proof
-    Given that I have a valid 'verifier' from 'MadHatter'
+    Given that I have a valid 'verifier' inside 'MadHatter'
     and I have a valid 'credential proof'
     When I aggregate the verifiers
     and I verify the credential proof

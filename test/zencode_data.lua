@@ -1,11 +1,11 @@
 print "ZENCODE GENERIC DATA MANIPULATION TESTS"
 
 DATA = [[
-[
-  { "first" : { "inside" : "first.inside" } },
-  { "second" : { "inside" : "second.inside" } },
-  { "third" : "three" }
-]
+{
+  "first" : { "inside" : "first.inside" },
+  "second" : { "inside" : "second.inside" },
+  "third" : "three"
+}
 ]]
 
 ZEN:begin()

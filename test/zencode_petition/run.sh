@@ -15,7 +15,7 @@ Scenario petition: create
     Given that I am known as 'Alice'
     and I have my valid 'credential keypair'
     and I have my valid 'credentials'
-    and I have a valid 'verifier' from 'MadHatter'
+    and I have a valid 'verifier' inside 'MadHatter'
     When I aggregate the verifiers
     and I create the credential proof
     and I create the petition 'poll'
@@ -26,9 +26,9 @@ EOF
 cat <<EOF | zexe approve_petition.zen -k petition_request.json -a ../zencode_credential/verifier.json > petition.json
 Scenario credential
 Scenario petition: approve
-    Given that I have a valid 'verifier' from 'MadHatter'
-    and I have a valid 'credential proof'
-    and I have a valid 'petition'
+    Given that I have a 'verifier' inside 'MadHatter'
+    and I have a 'credential proof'
+    and I have a 'petition'
     When I aggregate the verifiers
     and I verify the credential proof
     and I verify the new petition to be empty
@@ -42,8 +42,8 @@ Scenario credential
 Scenario petition: sign petition
     Given I am 'Alice'
     and I have my valid 'credential keypair'
-    and I have a valid 'credentials'
-    and I have a valid 'verifier' from 'MadHatter'
+    and I have my 'credentials'
+    and I have a valid 'verifier' inside 'MadHatter'
     When I aggregate the verifiers
     and I create the petition signature 'poll'
     Then print the 'petition signature'
@@ -78,6 +78,6 @@ Scenario petition: count
     Given that I have a valid 'petition'
     and I have a valid 'petition tally'
     When I count the petition results
-    Then print the 'petition results'
+    Then print the 'petition results' as 'number'
     and print the 'uid' as 'string' inside 'petition'
 EOF

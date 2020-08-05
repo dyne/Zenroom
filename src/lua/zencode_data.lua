@@ -172,7 +172,7 @@ end
 --   isschema = true -- if schema function required
 -- }
 function guess_conversion(objtype, definition)
-   definition = I.spy(definition or CONF.input.encoding.name)
+   definition = definition or CONF.input.encoding.name
    -- assert(definition, "Internal error: guess_conversion needs 2 arguments", 2)
    local res = { }
    local t
@@ -260,28 +260,6 @@ function operate_conversion(data, guessed)
    return guessed.fun(data)
 end
 
--- local function used inside ZEN:pick*
--- try obj.*.what (TODO: exclude KEYS and WHO)
-local function inside_pick(obj, what)
-   ZEN.assert(obj, "ZEN:pick object is nil")
-   ZEN.assert(luatype(what) == "string",
-			  "ZEN:pick object index is not a string")
-   local got
-   if luatype(obj) == 'string' then got = obj
-   else got = obj[what] end
-   if got then
-	  goto gotit
-   end
-   for k,v in pairs(obj) do -- search 1 deeper
-      if luatype(v) == "table" and v[what] then
-         got = v[what]
-         break
-      end
-   end
-   ::gotit::
-   return got
-end
-
 local function save_array_codec(n)
 	local toks = strtok(n)
 	if toks[2] == 'array' then
@@ -314,7 +292,7 @@ function ZEN:pick(what, obj, conv)
 	   return(ZEN.OK)
    end
    local got
-   got = inside_pick(IN.KEYS, what) or inside_pick(IN,what)
+   got = IN.KEYS[what] or IN[what]
    ZEN.assert(got, "Cannot find '"..what.."' anywhere")
    if not conv and ZEN.schemas[what] then conv = what end
    TMP.guess = guess_conversion(type(got), conv)
@@ -336,26 +314,33 @@ end
 --
 -- @function ZEN:pickin(section, name)
 -- @param section string descriptor of the section containing the data
--- @param name string descriptor of the data object
+-- @param what string descriptor of the data object
+-- @param conv string explicit conversion or schema to use
+-- @param fail bool bail out or continue on error
 -- @return true or false
-function ZEN:pickin(section, what, conv)
+function ZEN:pickin(section, what, conv, fail)
    ZEN.assert(section, "No section specified")
    local root -- section
    local got  -- what
-   root = inside_pick(IN.KEYS,section)
-   if root then --    IN KEYS
-	  got = inside_pick(root, what)
+   local bail -- fail
+   root = IN.KEYS[section]
+   if root then
+	  got = root[what]
 	  if got then goto found end
    end
-   root = inside_pick(IN,section)
-   if root then --    IN
-	  got = inside_pick(root, what)
+   root = IN[section]
+   if root then
+	  got = root [what]
 	  if got then goto found end
    end
-   ZEN.assert(got, "Cannot find '"..what.."' inside '"..section.."'")
+   if got then goto found end -- success condition
+   if bail then
+	  ZEN.assert(got, "Cannot find '"..what.."' inside '"..section.."'")
+   else return false end
    -- TODO: check all corner cases to make sure TMP[what] is a k/v map
    ::found::
    -- conv = conv or what
+   root = nil
    if not conv and ZEN.schemas[what] then conv = what end
    TMP.guess = guess_conversion(type(got), conv )
    TMP.root = section

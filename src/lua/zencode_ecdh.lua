@@ -141,8 +141,11 @@ end)
 
 When("verify the '' is signed by ''", function(msg, by)
 		ZEN.assert(ACK.public_key[by], "Public key by "..by.." not found")
-		local obj = ACK[msg]
+		local obj
+		obj = ACK[msg]
 		ZEN.assert(obj, "Object not found: "..msg)
+		obj = obj[by]
+		ZEN.assert(obj, "Object not found: "..msg.." by "..by)
 		local t = type(obj)
 		local sign
 		if t == 'table' then

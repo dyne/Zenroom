@@ -47,16 +47,22 @@ Given("have a ''", function(n)
 end)
 
 Given("have a '' in ''", function(s, t)
-	ZEN:pickin(t, s)
-	ZEN:ack(s) -- save it in ACK.obj
-	gc()
+		 ZEN:pickin(t, s)
+		 ZEN:ack(s) -- save it in ACK.obj
+		 gc()
 end)
 
 -- public keys for keyring arrays (scenario simple)
+-- supports bot ways in from given
+-- public_key : { name : value }
+-- or
+-- name : { public_key : value }
 Given("have a '' from ''", function(s, t)
-	ZEN:pickin(t, s)
-	ZEN:ack_table(s, t)
-	gc()
+		 if not ZEN:pickin(t, s, nil, false) then
+			ZEN:pickin(s, t)
+		 end
+		 ZEN:ack_table(s, t)
+		 gc()
 end)
 
 Given("have a '' named ''", function(s, n)
@@ -80,6 +86,10 @@ Given("have my ''", function(n)
 end)
 Given("the '' is valid", function(n)
 		 ZEN:pick(n)
+		 gc()
+end)
+Given("my '' is valid", function(n)
+		 ZEN:pickin(WHO, n)
 		 gc()
 end)
 

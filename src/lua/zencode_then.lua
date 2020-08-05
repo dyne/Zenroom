@@ -170,6 +170,22 @@ Then("print my ''", function(obj)
 		end
 end)
 
+Then("print my '' from ''", function(obj, section)
+		ZEN:Iam()
+		ZEN.assert(ACK[section], "Section not found: "..section)
+		local got
+		got = ACK[section][obj]
+		ZEN.assert(got, "Data object not found: "..obj)
+		local fun = guess_outcast( check_codec(obj, section) )
+		if luatype(got) == 'table' then
+		   got = deepmap(fun, got)
+		else
+		   got  = fun(got)
+		end
+		if not OUT[WHO] then OUT[WHO] = { } end
+		OUT[WHO][obj] = got
+end)
+
 Then("print my '' as ''", function(obj,conv)
 		ZEN:Iam()
 		ZEN.assert(ACK[obj], "My data object not found: "..obj)
