@@ -54,7 +54,6 @@ EOF
 
 cat <<EOF | zexe DSA01.zen -k alice_keypair.json | tee alice_signs_to_bob.json
 Rule check version 1.0.0
-# rule output encoding base64
 Scenario 'ecdh': Alice signs a message for Bob
 	Given that I am known as 'Alice'
 	and I have my 'keypair'
