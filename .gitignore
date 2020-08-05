@@ -363,3 +363,16 @@ test/zencode_petition/sign_petition.zen
 test/zencode_petition/tally_petition.zen
 test/zencode_petition/tally.json
 lib/milagro-crypto-c/CPackConfig.cmake
+docs/examples/zencode_cookbook/myLargeNestedObjectThen.json
+docs/examples/zencode_cookbook/myLargeNestedObjectWhen.json
+docs/examples/zencode_cookbook/thenFullList.zen
+docs/examples/zencode_cookbook/thenOutputFullList.json
+docs/examples/zencode_cookbook/whenCompleteOutputPart1.json
+docs/examples/zencode_cookbook/whenCompleteOutputPart2.json
+docs/examples/zencode_cookbook/whenCompleteOutputPart3.json
+docs/examples/zencode_cookbook/whenCompleteOutputPart4.json
+docs/examples/zencode_cookbook/whenCompleteScriptGiven.zen
+docs/examples/zencode_cookbook/whenCompleteScriptPart1.zen
+docs/examples/zencode_cookbook/whenCompleteScriptPart2.zen
+docs/examples/zencode_cookbook/whenCompleteScriptPart3.zen
+docs/examples/zencode_cookbook/whenCompleteScriptPart4.zen

@@ -161,37 +161,6 @@ end
 _G["sort_pairs"]  = _pairs
 _G["sort_ipairs"] = _pairs
 
-------------------------------
--- FUNCTIONAL LANGUAGE HELPERS
-----------------------------------------
--- stateless map mostly for internal use
--- TODO: remove and leave only deepmap()
-function _map(t, f, ...)
-   -- safety
-   if not (type(t) == "table") then return {} end
-   if t == nil then return {} end
-   -- if #t == 0  then return {} end
-
-   local _t = {}
-   for index,value in sort_pairs(t) do
-	  local k, kv, v = index, f(index,value,...)
-	  _t[v and kv or k] = v or kv
-   end
-   return _t
-end
--- map values in place, sort tables by keys for deterministic order
-function map(data, fun)
-   if(type(data) ~= "table") then
-	  error "map() first argument is not a table"
-	  return nil end
-   if(type(fun) ~= "function") then
-	  error "map() second argument is not a function"
-	  return nil end
-   out = {}
-   _map(data,function(k,v) out[k] = fun(v) end)
-   return(out)
-end
-
 -- deep recursive map on a tree structure
 -- for usage see test/deepmap.lua
 -- operates only on strings, passes numbers through
@@ -207,7 +176,7 @@ function deepmap(fun,t,...)
    local res = {}
    for k,v in pairs(t) do
 	  if luatype(v) == 'table' then
-		 res[k] = deepmap(fun, v) -- recursion
+		 res[k] = deepmap(fun,v,...) -- recursion
 	  else
 		 res[k] = fun(v,k,...)
 	  end

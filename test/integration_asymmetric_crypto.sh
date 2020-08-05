@@ -16,7 +16,8 @@ tmp=`mktemp -d`
 generate() {
     for p in $ppl; do
         cat <<EOF | $zen > $tmp/$p-keys.json 2>/dev/null
-print( JSON.encode(map(ECDH.keygen(), hex)) )
+k = ECDH.keygen()
+print( JSON.encode(deepmap(O.to_hex, k)) )
 EOF
         cat <<EOF | $zen -k $tmp/$p-keys.json > $tmp/$p-envelop.json 2>/dev/null
 keys = JSON.decode(KEYS)

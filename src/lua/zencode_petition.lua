@@ -39,10 +39,6 @@ ZEN.add_schema({
 		 if type(obj.list) == 'table' then
 			res.list = deepmap(function(o) return ZEN.get(o,".",ECP.new) end, obj.list )
 		 end
-			-- res.list = { }
-			-- for k,v in sort_ipairs(obj.list) do
-			--    table.insert(res.list,ECP.new(v))
-			-- end
 		 return res
 	  end,
 	 petition_signature = function(obj)
