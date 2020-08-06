@@ -20,74 +20,7 @@
 
 --- Zencode data internals
 
-
--- init schemas
-function ZEN.add_schema(arr)
-   local _illegal_schemas = { -- const
-	  whoami = true
-   }
-   for k,v in pairs(arr) do
-	  -- check overwrite / duplicate to avoid scenario namespace clash
-	  ZEN.assert(not ZEN.schemas[k], "Add schema denied, already registered schema: "..k)
-	  ZEN.assert(not _illegal_schemas[k], "Add schema denied, reserved name: "..k)
-	  ZEN.schemas[k] = v
-   end
-end
-
-
-function ZEN.find_schema(name)
-   -- returns a table with function pointers and string desc
-   -- { fun   = conversion function pointer
-   --   name  = conversion string description 
-   -- }
-   local res = { }
-   res.fun = ZEN.schemas[name]
-   if not res.fun then
-	  xxx("Schema not found: "..(name or 'nil'), 2);
-	  return nil
-   end
-   res.name = name
-   return res
-end
-
-
--- -- basic encoding schemas
--- ZEN.add_schema({
--- 	  base64 = function(obj) return ZEN:convert(obj, OCTET.from_base64) end,
--- 	  url64  = function(obj) return ZEN:convert(obj, OCTET.from_url64)  end,
--- 	  hex =    function(obj) return ZEN:convert(obj, OCTET.from_hex) end,
--- 	  str =    function(obj) return ZEN:convert(obj, OCTET.from_string) end,
--- })
-
--- init statements
-function Given(text, fn)
-   ZEN.assert(not ZEN.given_steps[text],
-   			  "Conflicting statement loaded by scenario: "..text)
-   ZEN.given_steps[text] = fn
-end
-function When(text, fn)
-   ZEN.assert(not ZEN.when_steps[text],
-   			  "Conflicting statement loaded by scenario: "..text)
-   ZEN.when_steps[text] = fn
-end
-function Then(text, fn)
-   ZEN.assert(not ZEN.then_steps[text],
-   			  "Conflicting statement loaded by scenario : "..text)
-   ZEN.then_steps[text] = fn
-end
-
--- the main security concern in this Zencode module is that no data
--- passes without validation from IN to ACK or from inline input.
-
--- TODO: return the prefix of an encoded string if found
-ZEN.prefix = function(str)
-   t = type(str)
-   if t ~= "string" then return nil end
-   if str:sub(4,4) ~= ":" then return nil end
-   return str:sub(1,3)
-end
-
--- TODO: ZEN.cast to zenroom. type
+-- Used in scenario's schema declarations to cast to zenroom. type
 ZEN.get = function(obj, key, conversion)
    ZEN.assert(obj, "ZEN.get no object found")
    ZEN.assert(type(key) == "string", "ZEN.get key is not a string")
@@ -110,7 +43,10 @@ ZEN.get = function(obj, key, conversion)
       goto ok
    end
    if t == 'number' then res = k end
-   -- TODO: table
+   if t == 'table' then
+	  res = deepmap(CONF.input.encoding.fun, k)
+	  if conversion then res = deepmap(conversion, res) end
+   end
    ::ok::
    assert(ZEN.OK and res, "ZEN.get on invalid key: "..key.." ("..t..")")
    return res
@@ -223,9 +159,8 @@ function guess_conversion(objtype, definition)
 			error('Table conversion not found: '..definition, 2)
 			return nil
       end
-      
    else
-	  error('Unrecognized object type in Given conversion',2)
+	  error('Unrecognized object type when guessing conversion: '..objtype,2)
 	  return nil
    end
    return res
@@ -264,160 +199,6 @@ local function save_array_codec(n)
    else
       return nil
    end
-end
-
----
--- Pick a generic data structure from the <b>IN</b> memory
--- space. Looks for named data on the first and second level and makes
--- it ready in TMP for @{validate} or @{ack}.
---
--- @function ZEN:pick(name, data, encoding)
--- @param what string descriptor of the data object
--- @param obj[opt] optional data object (default search inside IN.*)
--- @param conv[opt] optional encoding spec (default CONF.input.encoding)
--- @return true or false
-function ZEN:pick(what, obj, conv)
-   local guess
-   if obj then -- object provided by argument
-      TMP.root = nil
-      -- guess = { fun, check, name(type)
-      --           istable, isschema      }
-	   TMP.guess = guess_conversion(type(obj), conv)
-      TMP.data = TMP.operate_conversion(obj, TMP.guess)
-      TMP.schema = TMP.guess.name
-      -- local toks = strtok(what,'[^_]+')
-	   return(ZEN.OK)
-   end
-   local got
-   got = IN.KEYS[what] or IN[what]
-   ZEN.assert(got, "Cannot find '"..what.."' anywhere")
-   if not conv and ZEN.schemas[what] then conv = what end
-   TMP.guess = guess_conversion(type(got), conv)
-   ZEN.assert(TMP.guess, "Cannot guess any conversion for: "..
-				  type(got).." "..(conv or "(nil)"))
-   TMP.root = nil
-   TMP.data = operate_conversion(got, TMP.guess)
-   TMP.schema = TMP.guess.name
-   assert(ZEN.OK)
-   if DEBUG > 1 then ZEN:ftrace("pick found "..what) end
-end
-
----
--- Pick a data structure named 'what' contained under a 'section' key
--- of the at the root of the <b>IN</b> memory space. Looks for named
--- data at the first and second level underneath IN[section] and moves
--- it to TMP[what][section], ready for @{validate} or @{ack}. If
--- TMP[what] exists already, every new entry is added as a key/value
---
--- @function ZEN:pickin(section, name)
--- @param section string descriptor of the section containing the data
--- @param what string descriptor of the data object
--- @param conv string explicit conversion or schema to use
--- @param fail bool bail out or continue on error
--- @return true or false
-function ZEN:pickin(section, what, conv, fail)
-   ZEN.assert(section, "No section specified")
-   local root -- section
-   local got  -- what
-   local bail -- fail
-   root = IN.KEYS[section]
-   if root then
-	  got = root[what]
-	  if got then goto found end
-   end
-   root = IN[section]
-   if root then
-	  got = root [what]
-	  if got then goto found end
-   end
-   if got then goto found end -- success condition
-   if bail then
-	  ZEN.assert(got, "Cannot find '"..what.."' inside '"..section.."'")
-   else return false end
-   -- TODO: check all corner cases to make sure TMP[what] is a k/v map
-   ::found::
-   -- conv = conv or what
-   root = nil
-   if not conv and ZEN.schemas[what] then conv = what end
-   TMP.guess = guess_conversion(type(got), conv )
-   TMP.root = section
-	TMP.data = operate_conversion(got, TMP.guess)
-	TMP.schema = TMP.guess.name
-   assert(ZEN.OK)
-   if DEBUG > 1 then ZEN:ftrace("pickin found "..what.." in "..section) end
-end
-
-
-function ZEN:get_schema(obj, name)
-   ZEN.assert(name, "ZEN:get_schema error: schema name is nil")
-   ZEN.assert(obj, "ZEN:get_schema error: object is nil")
-   local s = ZEN.schemas[name]
-   ZEN.assert(s, "ZEN:get_schema error: schema not found: "..name)
-   ZEN.assert(type(s) == 'function', "ZEN:get_schema error: schema is not a function: "..name)
-   ZEN:ftrace("get_schema "..name)
-   local res = s(obj)
-   ZEN.assert(res, "Recursive schema conversion failed: "..name)
-   return(res)
-end
-
-function ZEN:ack_table(key,val)
-   ZEN.assert(type(key) == 'string',"ZEN:table_add arg #1 is not a string")
-   ZEN.assert(type(val) == 'string',"ZEN:table_add arg #2 is not a string")
-   if not ACK[key] then ACK[key] = { } end
-   ACK[key][val] = TMP.data
-end
-
----
--- Final step inside the <b>Given</b> block towards the <b>When</b>:
--- pass on a data structure into the ACK memory space, ready for
--- processing.  It requires the data to be present in TMP[name] and
--- typically follows a @{pick}. In some restricted cases it is used
--- inside a <b>When</b> block following the inline insertion of data
--- from zencode.
---
--- @function ZEN:ack(name)
--- @param name string key of the data object in TMP[name]
-function ZEN:ack(name)
-   ZEN.assert(TMP.data, "No valid object found: ".. name)
-   -- CODEC[what] = CODEC[what] or {
-   --    name = guess.name,
-   --    istable = guess.istable,
-   --    isschema = guess.isschema }
-
-   assert(ZEN.OK)
-   local t = type(ACK[name])
-   if not ACK[name] then -- assign in ACK the single object
-	  ACK[name] = TMP.data
-	  goto done
-   end
-   -- ACK[name] already holds an object
-   -- not a table?
-   if t ~= 'table' then -- convert single object to array
-	  ACK[name] = { ACK[name] }
-	  table.insert(ACK[name], TMP.data)
-	  goto done
-   end
-   -- it is a table already
-   if isarray(ACK[name]) then -- plain array
-	  table.insert(ACK[name], TMP.data)
-	  goto done
-   else -- associative map
-	  table.insert(ACK[name], TMP.data) -- TODO: associative map insertion
-	  goto done
-   end
-   ::done::
-   assert(ZEN.OK)
-end
-
-function ZEN:ackmy(name, object)
-   local obj = object or TMP.data
-   ZEN:trace("f   pushmy() "..name.." "..type(obj))
-   ZEN.assert(WHO, "No identity specified")
-   ZEN.assert(obj, "Object not found: ".. name)
-   local me = WHO
-   if not ACK[me] then ACK[me] = { } end
-   ACK[me][name] = obj
-   assert(ZEN.OK)
 end
 
 ---
@@ -478,56 +259,3 @@ function export_obj(object, format)
    end
    return export_arr(object, format)
 end
-
-local function pfx(o) return string.sub(o,1,3) end
-local function buf(o) return string.sub(o,5) end
-
----
--- Decode a format encoded object using the provided decoder or the
--- default CONF.encoding
--- Table format of the decoder:
--- ```
--- { fun = pointer to conversion function
---   name = short string name
---   check = pointer to check function }
--- ```
---
--- @function ZEN.decode(anystr, decoder)
--- @param anystr data element to be read
--- @param decoder table describing the conversion
--- @return octet object decoded
-function ZEN.decode(anystr, decoder)
-   ZEN.assert(anystr, "ZEN.decode object is nil")
-   local t = type(anystr)   
-   if iszen(t) then
-      warn("ZEN.decode input already decoded to "..t)
-      return t
-   end
-   ZEN.assert(t == 'string' or t == 'number' or t == 'table',
-			  "ZEN.decode input not a string or number or table: "..t)
-   -- anystr is a valid conversion value
-
-   local dec = decoder or CONF.input.encoding
-
-   if t == 'number' then
-	  if dec.name ~= 'number' then
-		 error("wrong decoder for raw number data: "..dec.name, 3)
-		 return nil
-	  end
-	  return( anystr )
-   end
-
-   if not dec.fun then
-	  error("Invalid decoder (no CONF.input.encoding.fun)", 3)
-	  return nil
-   end
-
-   xxx("Data type "..t.." selected decoder: "..dec.name, 3)
-   if t == 'table' then
-	  return( deepmap(dec.fun, anystr) )
-   else
-	  return( dec.fun(anystr) )
-   end
-end
-
-

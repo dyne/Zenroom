@@ -30,9 +30,10 @@ end)
 When("append '' to '' as ''", function(content, dest, format)
 		-- ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		if ACK[dest] then
-		   ACK[dest] = ACK[dest] .. ZEN.decode(content, input_encoding(format))
+		   ACK[dest] = ACK[dest] ..
+			  operate_conversion( content, guess_conversion( type(content), format))
 		else
-		   ACK[dest] = ZEN.decode(content, input_encoding(format))
+		   ACK[dest] = operate_conversion( content, guess_conversion( type(content), format))
 		end
 end)
 
@@ -50,8 +51,9 @@ end)
 
 When("set '' to '' as ''", function(dest, content, format)
 		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
-		ACK[dest] = ZEN.decode(content, input_encoding(format))
+		ACK[dest] = operate_conversion(content, guess_conversion(type(content), format))
 end)
+
 When("create the random ''", function(dest)
 		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		ACK[dest] = OCTET.random(64) -- TODO: right now hardcoded 256 bit random secrets

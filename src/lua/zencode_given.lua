@@ -19,10 +19,154 @@
 -- TODO: use strict table
 -- https://stevedonovan.github.io/Penlight/api/libraries/pl.strict.html
 
+-- the main security concern in this Zencode module is that no data
+-- passes without validation from IN to ACK or from inline input.
+
 -- GIVEN
 local function gc()
    TMP = { }
    collectgarbage'collect'
+end
+
+---
+-- Pick a generic data structure from the <b>IN</b> memory
+-- space. Looks for named data on the first and second level and makes
+-- it ready in TMP for @{validate} or @{ack}.
+--
+-- @function pick(name, data, encoding)
+-- @param what string descriptor of the data object
+-- @param obj[opt] optional data object (default search inside IN.*)
+-- @param conv[opt] optional encoding spec (default CONF.input.encoding)
+-- @return true or false
+local function pick(what, obj, conv)
+   local guess
+   if obj then -- object provided by argument
+      TMP.root = nil
+      -- guess = { fun, check, name(type)
+      --           istable, isschema      }
+	   TMP.guess = guess_conversion(type(obj), conv)
+      TMP.data = TMP.operate_conversion(obj, TMP.guess)
+      TMP.schema = TMP.guess.name
+      -- local toks = strtok(what,'[^_]+')
+	   return(ZEN.OK)
+   end
+   local got
+   got = IN.KEYS[what] or IN[what]
+   ZEN.assert(got, "Cannot find '"..what.."' anywhere")
+   if not conv and ZEN.schemas[what] then conv = what end
+   TMP.guess = guess_conversion(type(got), conv)
+   ZEN.assert(TMP.guess, "Cannot guess any conversion for: "..
+				  type(got).." "..(conv or "(nil)"))
+   TMP.root = nil
+   TMP.data = operate_conversion(got, TMP.guess)
+   TMP.schema = TMP.guess.name
+   assert(ZEN.OK)
+   if DEBUG > 1 then ZEN:ftrace("pick found "..what) end
+end
+
+---
+-- Pick a data structure named 'what' contained under a 'section' key
+-- of the at the root of the <b>IN</b> memory space. Looks for named
+-- data at the first and second level underneath IN[section] and moves
+-- it to TMP[what][section], ready for @{validate} or @{ack}. If
+-- TMP[what] exists already, every new entry is added as a key/value
+--
+-- @function pickin(section, name)
+-- @param section string descriptor of the section containing the data
+-- @param what string descriptor of the data object
+-- @param conv string explicit conversion or schema to use
+-- @param fail bool bail out or continue on error
+-- @return true or false
+local function pickin(section, what, conv, fail)
+   ZEN.assert(section, "No section specified")
+   local root -- section
+   local got  -- what
+   local bail -- fail
+   root = IN.KEYS[section]
+   if root then
+	  got = root[what]
+	  if got then goto found end
+   end
+   root = IN[section]
+   if root then
+	  got = root [what]
+	  if got then goto found end
+   end
+   if got then goto found end -- success condition
+   if bail then
+	  ZEN.assert(got, "Cannot find '"..what.."' inside '"..section.."'")
+   else return false end
+   -- TODO: check all corner cases to make sure TMP[what] is a k/v map
+   ::found::
+   -- conv = conv or what
+   root = nil
+   if not conv and ZEN.schemas[what] then conv = what end
+   TMP.guess = guess_conversion(type(got), conv )
+   TMP.root = section
+	TMP.data = operate_conversion(got, TMP.guess)
+	TMP.schema = TMP.guess.name
+   assert(ZEN.OK)
+   if DEBUG > 1 then ZEN:ftrace("pickin found "..what.." in "..section) end
+end
+
+local function ack_table(key,val)
+   ZEN.assert(type(key) == 'string',"ZEN:table_add arg #1 is not a string")
+   ZEN.assert(type(val) == 'string',"ZEN:table_add arg #2 is not a string")
+   if not ACK[key] then ACK[key] = { } end
+   ACK[key][val] = TMP.data
+end
+
+
+---
+-- Final step inside the <b>Given</b> block towards the <b>When</b>:
+-- pass on a data structure into the ACK memory space, ready for
+-- processing.  It requires the data to be present in TMP[name] and
+-- typically follows a @{pick}. In some restricted cases it is used
+-- inside a <b>When</b> block following the inline insertion of data
+-- from zencode.
+--
+-- @function ack(name)
+-- @param name string key of the data object in TMP[name]
+local function ack(name)
+   ZEN.assert(TMP.data, "No valid object found: ".. name)
+   -- CODEC[what] = CODEC[what] or {
+   --    name = guess.name,
+   --    istable = guess.istable,
+   --    isschema = guess.isschema }
+   assert(ZEN.OK)
+   local t = type(ACK[name])
+   if not ACK[name] then -- assign in ACK the single object
+	  ACK[name] = TMP.data
+	  goto done
+   end
+   -- ACK[name] already holds an object
+   -- not a table?
+   if t ~= 'table' then -- convert single object to array
+	  ACK[name] = { ACK[name] }
+	  table.insert(ACK[name], TMP.data)
+	  goto done
+   end
+   -- it is a table already
+   if isarray(ACK[name]) then -- plain array
+	  table.insert(ACK[name], TMP.data)
+	  goto done
+   else -- associative map
+	  table.insert(ACK[name], TMP.data) -- TODO: associative map insertion
+	  goto done
+   end
+   ::done::
+   assert(ZEN.OK)
+end
+
+local function ackmy(name, object)
+   local obj = object or TMP.data
+   ZEN:trace("f   pushmy() "..name.." "..type(obj))
+   ZEN.assert(WHO, "No identity specified")
+   ZEN.assert(obj, "Object not found: ".. name)
+   local me = WHO
+   if not ACK[me] then ACK[me] = { } end
+   ACK[me][name] = obj
+   assert(ZEN.OK)
 end
 
 Given("nothing", function() ZEN.assert(not DATA and not KEYS, "Undesired data passed as input") end)
@@ -41,14 +185,14 @@ Given("am ''", function(name) ZEN:Iam(name) end)
 
 -- TODO: I have a '' as ''
 Given("have a ''", function(n)
-		 ZEN:pick(n)
-		 ZEN:ack(n)
+		 pick(n)
+		 ack(n)
 		 gc()
 end)
 
 Given("have a '' in ''", function(s, t)
-		 ZEN:pickin(t, s)
-		 ZEN:ack(s) -- save it in ACK.obj
+		 pickin(t, s)
+		 ack(s) -- save it in ACK.obj
 		 gc()
 end)
 
@@ -58,38 +202,38 @@ end)
 -- or
 -- name : { public_key : value }
 Given("have a '' from ''", function(s, t)
-		 if not ZEN:pickin(t, s, nil, false) then
-			ZEN:pickin(s, t)
+		 if not pickin(t, s, nil, false) then
+			pickin(s, t)
 		 end
-		 ZEN:ack_table(s, t)
+		 ack_table(s, t)
 		 gc()
 end)
 
 Given("have a '' named ''", function(s, n)
 		 -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
-		 ZEN:pick(n, nil, s)
-		 ZEN:ack(n)
+		 pick(n, nil, s)
+		 ack(n)
 		 gc()
 end)
 
 Given("have a '' named '' in ''", function(s,n,t)
-		 ZEN:pickin(t, n, s)
-		 ZEN:ack(n) -- save it in ACK.name
+		 pickin(t, n, s)
+		 ack(n) -- save it in ACK.name
 		 gc()
 end)
 
 Given("have my ''", function(n)
 		 ZEN.assert(WHO, "No identity specified, use: Given I am ...")
-		 ZEN:pickin(WHO, n)
-		 ZEN:ack(n)
+		 pickin(WHO, n)
+		 ack(n)
 		 gc()
 end)
 Given("the '' is valid", function(n)
-		 ZEN:pick(n)
+		 pick(n)
 		 gc()
 end)
 Given("my '' is valid", function(n)
-		 ZEN:pickin(WHO, n)
+		 pickin(WHO, n)
 		 gc()
 end)
 

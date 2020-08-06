@@ -118,6 +118,35 @@ OUT = OUT or { } -- print out
 AST = AST or { } -- AST of parsed Zencode
 WHO = nil
 
+-- init statements
+function Given(text, fn)
+   ZEN.assert(not ZEN.given_steps[text],
+   			  "Conflicting statement loaded by scenario: "..text)
+   ZEN.given_steps[text] = fn
+end
+function When(text, fn)
+   ZEN.assert(not ZEN.when_steps[text],
+   			  "Conflicting statement loaded by scenario: "..text)
+   ZEN.when_steps[text] = fn
+end
+function Then(text, fn)
+   ZEN.assert(not ZEN.then_steps[text],
+   			  "Conflicting statement loaded by scenario : "..text)
+   ZEN.then_steps[text] = fn
+end
+
+-- init schemas
+function zencode.add_schema(arr)
+   local _illegal_schemas = { -- const
+	  whoami = true
+   }
+   for k,v in pairs(arr) do
+	  -- check overwrite / duplicate to avoid scenario namespace clash
+	  ZEN.assert(not ZEN.schemas[k], "Add schema denied, already registered schema: "..k)
+	  ZEN.assert(not _illegal_schemas[k], "Add schema denied, reserved name: "..k)
+	  ZEN.schemas[k] = v
+   end
+end
 
 
 

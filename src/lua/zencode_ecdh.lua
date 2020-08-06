@@ -16,15 +16,13 @@
 -- You should have received a copy of the GNU Affero General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
+-- defined outside because reused across different schemas
 function public_key_f(o)
-	if type(o) == "string" then
-		o = ZEN.decode(o)
-	end
-	ZEN.assert(ECDH.pubcheck(o),
-			   "Public key is not a valid point on curve")
-	return o
- end
+   o = operate_conversion(o, guess_conversion(type(o)))
+   ZEN.assert(ECDH.pubcheck(o),
+			  "Public key is not a valid point on curve")
+   return o
+end
 
 ZEN.add_schema({
 	  -- keypair (ECDH)
