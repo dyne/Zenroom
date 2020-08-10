@@ -61,7 +61,7 @@ When("pick the random object in ''", function(arr)
     ZEN.assert(A, "Object not found: "..arr)
     local count = isarray(A)
     ZEN.assert( count > 0, "Object is not an array: "..arr)
-    local r = random_int16() % count
+    local r = (random_int16() % count) +1
     ACK.random_object = A[r]
 end)
 
