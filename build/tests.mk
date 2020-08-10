@@ -56,17 +56,13 @@ lua-modules = \
 	@${1} test/faces.lua && \
 	${1} test/slaxml.lua
 
-zencode-tests = \
-	@${1} test/zencode_numericals.lua && \
-	${1} test/zencode_data.lua
-
-
 zencode-integration = \
 	./test/zencode_parser.sh && \
 	cd test/zencode_given && ./run.sh; cd -; \
-	cd test/zencode_ecdh && ./run.sh; cd -; \
+	cd test/zencode_numbers && ./run.sh; cd -; \
 	cd test/zencode_array && ./run.sh; cd -; \
 	cd test/zencode_hash && ./run.sh; cd -; \
+	cd test/zencode_ecdh && ./run.sh; cd -; \
 	cd test/zencode_credential && ./run.sh; cd -; \
 	cd test/zencode_petition && ./run.sh; cd -;
 
