@@ -135,6 +135,23 @@ function Then(text, fn)
    ZEN.then_steps[text] = fn
 end
 
+---
+-- Declare 'my own' name that will refer all uses of the 'my' pronoun
+-- to structures contained under this name.
+--
+-- @function Iam(name)
+-- @param name own name to be saved in WHO
+function Iam(name)
+   if name then
+	  ZEN.assert(not WHO, "Identity already defined in WHO")
+	  ZEN.assert(type(name) == "string", "Own name not a string")
+	  WHO = name
+   else
+	  ZEN.assert(WHO, "No identity specified in WHO")
+   end
+   assert(ZEN.OK)
+end
+
 -- init schemas
 function zencode.add_schema(arr)
    local _illegal_schemas = { -- const

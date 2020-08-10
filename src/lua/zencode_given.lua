@@ -43,9 +43,9 @@ local function pick(what, conv)
    got = IN.KEYS[what] or IN[what]
    ZEN.assert(got, "Cannot find '"..what.."' anywhere")
    -- if not conv and ZEN.schemas[what] then conv = what end
-   TMP.guess = guess_conversion(type(got), conv or what)
+   TMP.guess = guess_conversion(luatype(got), conv or what)
    ZEN.assert(TMP.guess, "Cannot guess any conversion for: "..
-				  type(got).." "..(conv or "(nil)"))
+				  luatype(got).." "..(conv or "(nil)"))
    TMP.root = nil
    TMP.data = operate_conversion(got, TMP.guess)
    TMP.schema = TMP.guess.name
@@ -148,25 +148,15 @@ local function ack(name)
    assert(ZEN.OK)
 end
 
-local function ackmy(name, object)
-   local obj = object or TMP.data
-   ZEN:trace("f   pushmy() "..name.." "..type(obj))
-   ZEN.assert(WHO, "No identity specified")
-   ZEN.assert(obj, "Object not found: ".. name)
-   local me = WHO
-   if not ACK[me] then ACK[me] = { } end
-   ACK[me][name] = obj
-   assert(ZEN.OK)
-end
-
-Given("nothing", function() ZEN.assert(not DATA and not KEYS, "Undesired data passed as input") end)
+Given("nothing", function()
+		 ZEN.assert(not DATA and not KEYS, "Undesired data passed as input")
+end)
 
 -- maybe TODO: Given all valid data
 -- convert and import data only when is known by schema and passes validation
 -- ignore all other data structures that are not known by schema or don't pass validation
 
--- Given("I am known as ''", function(name) ZEN:Iam(name) end)
-Given("am ''", function(name) ZEN:Iam(name) end)
+Given("am ''", function(name) Iam(name) end)
 
 -- variable names:
 -- s = schema of variable (or encoding)

@@ -53,36 +53,8 @@ ZEN.get = function(obj, key, conversion)
 end
 
 
--- import function to have recursion of nested data structures
--- according to their stated schema
-function ZEN:valid(sname, obj)
-   ZEN.assert(sname, "Import error: schema name is nil")
-   ZEN.assert(obj, "Import error: object is nil '"..sname.."'")
-   local s = ZEN.schemas[sname]
-   ZEN.assert(s, "Import error: schema not found '"..sname.."'")
-   ZEN.assert(type(s) == 'function', "Import error: schema is not a function '"..sname.."'")
-   return s(obj)
-end
-
 --- Given block (IN read-only memory)
 -- @section Given
-
----
--- Declare 'my own' name that will refer all uses of the 'my' pronoun
--- to structures contained under this name.
---
--- @function ZEN:Iam(name)
--- @param name own name to be saved in WHO
-function ZEN:Iam(name)
-   if name then
-	  ZEN.assert(not WHO, "Identity already defined in WHO")
-	  ZEN.assert(type(name) == "string", "Own name not a string")
-	  WHO = name
-   else
-	  ZEN.assert(WHO, "No identity specified in WHO")
-   end
-   assert(ZEN.OK)
-end
 
 ---
 -- Guess how to convert the object, using what format or schema
@@ -123,7 +95,6 @@ function guess_conversion(objtype, definition)
 	  end
 	  return( input_encoding(definition) )
    end
-      
    if objtype == 'number' then
       return( input_encoding(objtype) )
    end
@@ -177,15 +148,6 @@ function operate_conversion(data, guessed)
       end
       return guessed.fun(data)      
 	end
-end
-
-local function save_array_codec(n)
-	local toks = strtok(n)
-	if toks[2] == 'array' then
-
-   else
-      return nil
-   end
 end
 
 ---

@@ -22,30 +22,33 @@
 
 COCONUT = require_once('crypto_coconut')
 
+function petition_scores_f(o)
+   local obj = deepmap(CONF.input.encoding.fun, o)
+   return({
+		 pos = { left  = ZEN.get(obj.pos, 'left',  ECP.new),
+				 right = ZEN.get(obj.pos, 'right', ECP.new) },
+		 neg = { left  = ZEN.get(obj.neg, 'left',  ECP.new),
+				 right = ZEN.get(obj.neg, 'right', ECP.new) } })
+end
+
 -- petition
 ZEN.add_schema({
-	  petition_scores = function(obj)
-		 return({
-			   pos = { left  = ZEN.get(obj.pos, 'left', ECP.new),
-					   right = ZEN.get(obj.pos, 'right', ECP.new) },
-			   neg = { left  = ZEN.get(obj.neg, 'left', ECP.new),
-					   right = ZEN.get(obj.neg, 'right', ECP.new) } })
-	  end,
-	  petition = function(obj)
-		 local res = { uid = ZEN.get(obj,'uid'),
-					   owner = ZEN.get(obj, 'owner', ECP.new),
-					   scores = ZEN:valid('petition_scores',obj.scores) }
-		 if type(obj.vkeys) == 'table' then res.vkeys = ZEN:valid('verifier',obj.vkeys) end
-		 if type(obj.list) == 'table' then
+      petition_scores = petition_scores_f,
+      petition = function(obj)
+         local res = { uid = ZEN.get(obj,'uid'),
+                       owner = ZEN.get(obj, 'owner', ECP.new),
+                       scores = petition_scores_f(obj.scores) }
+         if obj.vkeys then res.vkeys = verifier_f(obj.vkeys) end
+         if obj.list then
 			res.list = deepmap(function(o) return ZEN.get(o,".",ECP.new) end, obj.list )
 		 end
-		 return res
+         return res
+      end,
+      petition_signature = function(obj)
+		 return { proof = credential_proof_f(obj.proof),
+				  uid_signature = ZEN.get(obj, 'uid_signature', ECP.new),
+				  uid_petition = ZEN.get(obj, 'uid_petition') }
 	  end,
-	 petition_signature = function(obj)
-		return { proof = ZEN:valid('credential_proof',obj.proof),
-				 uid_signature = ZEN.get(obj, 'uid_signature', ECP.new),
-				 uid_petition = ZEN.get(obj, 'uid_petition') }
-	 end,
 
 	 petition_tally = function(obj)
 		local dec = { }

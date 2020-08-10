@@ -34,11 +34,13 @@ When("create the credential keypair", function()
 		   ACK.credential_keypair.private
 end)
 
-local function issuer_sign_f(obj)
-	return { x = ZEN.get(obj, 'x', INT.new),
-			 y = ZEN.get(obj, 'y', INT.new) }
+function issuer_sign_f(o)
+   local obj = deepmap(CONF.input.encoding.fun, o)
+   return { x = ZEN.get(obj, 'x', INT.new),
+			y = ZEN.get(obj, 'y', INT.new) }
 end
-local function verifier_f(obj)
+function verifier_f(o)
+   local obj = deepmap(CONF.input.encoding.fun, o)
 	return { alpha = ZEN.get(obj, 'alpha', ECP2.new),
 			 beta  = ZEN.get(obj, 'beta', ECP2.new) }
 end
@@ -116,22 +118,23 @@ When("create the credentials", function()
 		   ACK.credential_keypair.private, { ACK.credential_signature })
 end)
 
+function credential_proof_f(o)
+   local obj = deepmap(CONF.input.encoding.fun, o)
+   return { nu = ZEN.get(obj, 'nu', ECP.new),
+			kappa = ZEN.get(obj, 'kappa', ECP2.new),
+			pi_v = { c = ZEN.get(obj.pi_v, 'c', INT.new),
+					 rm = ZEN.get(obj.pi_v, 'rm', INT.new),
+					 rr = ZEN.get(obj.pi_v, 'rr', INT.new) },
+			sigma_prime = { h_prime = ZEN.get(obj.sigma_prime, 'h_prime', ECP.new),
+							s_prime = ZEN.get(obj.sigma_prime, 's_prime', ECP.new) } }
+end
 
 ZEN.add_schema({
 	  -- theta: blind proof of certification
-	  credential_proof = function(obj)
-		 return { nu = ZEN.get(obj, 'nu', ECP.new),
-				  kappa = ZEN.get(obj, 'kappa', ECP2.new),
-				  pi_v = { c = ZEN.get(obj.pi_v, 'c', INT.new),
-						   rm = ZEN.get(obj.pi_v, 'rm', INT.new),
-						   rr = ZEN.get(obj.pi_v, 'rr', INT.new) },
-				  sigma_prime = { h_prime = ZEN.get(obj.sigma_prime, 'h_prime', ECP.new),
-								  s_prime = ZEN.get(obj.sigma_prime, 's_prime', ECP.new) } }
-	  end
+	  credential_proof = credential_proof_f,
+	  -- aggregated verifiers schema is same as a single verifier
+	  verifiers = verifier_f
 })
-
--- aggregated verifiers schema is same as a single verifier
-ZEN.add_schema({verifiers = ZEN.schemas['verifier']})
 
 When("aggregate the verifiers", function()
 		if not ACK.verifiers then ACK.verifiers = { } end

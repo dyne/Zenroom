@@ -136,7 +136,7 @@ Then("print data as ''", function(e)
 end)
 
 Then("print my data", function()
-		ZEN:Iam() -- sanity checks
+		Iam() -- sanity checks
 		OUT[WHO] = ACK
 		local fun = function(v,k) return guess_outcast( check_codec(k) )(v) end
 		if luatype(OUT[WHO]) == 'table' then
@@ -147,7 +147,7 @@ Then("print my data", function()
 end)
 
 Then("print my data as ''", function(s)
-		ZEN:Iam() -- sanity checks
+		Iam() -- sanity checks
 		OUT[WHO] = ACK
 		local fun = guess_outcast(s)
 		if luatype(OUT[WHO]) == 'table' then
@@ -158,7 +158,7 @@ Then("print my data as ''", function(s)
 end)
 
 Then("print my ''", function(obj)
-		ZEN:Iam()
+		Iam()
 		ZEN.assert(ACK[obj], "Data object not found: "..obj)
 		if not OUT[WHO] then OUT[WHO] = { } end
 		local fun = guess_outcast( check_codec(obj) )
@@ -171,7 +171,7 @@ Then("print my ''", function(obj)
 end)
 
 Then("print my '' from ''", function(obj, section)
-		ZEN:Iam()
+		Iam()
 		ZEN.assert(ACK[section], "Section not found: "..section)
 		local got
 		got = ACK[section][obj]
@@ -187,7 +187,7 @@ Then("print my '' from ''", function(obj, section)
 end)
 
 Then("print my '' as ''", function(obj,conv)
-		ZEN:Iam()
+		Iam()
 		ZEN.assert(ACK[obj], "My data object not found: "..obj)
 		if not OUT[WHO] then OUT[WHO] = { } end
 		local fun = guess_outcast(conv)
