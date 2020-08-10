@@ -142,6 +142,28 @@ static int lua_new_hash(lua_State *L) {
 	return 1;
 }
 
+// internal use to feed bytes into the hash structure
+static void _feed(hash *h, octet *o) {
+	register int i;
+	switch(h->algo) {
+	case _SHA256: for(i=0;i<o->len;i++) HASH256_process(h->sha256,o->val[i]); break;
+	case _SHA384: for(i=0;i<o->len;i++) HASH384_process(h->sha384,o->val[i]); break;
+	case _SHA512: for(i=0;i<o->len;i++) HASH512_process(h->sha512,o->val[i]); break;
+	case _SHA3_256: for(i=0;i<o->len;i++) SHA3_process(h->sha3_256,o->val[i]); break;
+	case _SHA3_512: for(i=0;i<o->len;i++) SHA3_process(h->sha3_512,o->val[i]); break;
+	}
+}
+
+// internal use to yeld a result from the hash structure
+static void _yeld(hash *h, octet *o) {
+	switch(h->algo) {
+	case _SHA256: HASH256_hash(h->sha256,o->val); break;
+	case _SHA384: HASH384_hash(h->sha384,o->val); break;
+	case _SHA512: HASH512_hash(h->sha512,o->val); break;
+	case _SHA3_256: SHA3_hash(h->sha3_256,o->val); break;
+	case _SHA3_512: SHA3_hash(h->sha3_512,o->val); break;
+	}
+}
 
 /**
    Hash an octet into a new octet. Use the configured hash function to
@@ -154,35 +176,44 @@ static int lua_new_hash(lua_State *L) {
 static int hash_process(lua_State *L) {
 	hash *h = hash_arg(L,1); SAFE(h);
 	octet *o = o_arg(L,2); SAFE(o);
+	octet *res = o_new(L,h->len); SAFE(res);
 	HEREs(h->name);
-	if(h->algo == _SHA256) {
-		int i; octet *res = o_new(L,h->len); SAFE(res);
-		for(i=0;i<o->len;i++) HASH256_process(h->sha256,o->val[i]);
-		HASH256_hash(h->sha256,res->val);
-		res->len = h->len;
-	} else if(h->algo == _SHA384) {
-		int i; octet *res = o_new(L,h->len); SAFE(res);
-		for(i=0;i<o->len;i++) HASH384_process(h->sha384,o->val[i]);
-		HASH384_hash(h->sha384,res->val);
-		res->len = h->len;
-	} else if(h->algo == _SHA512) {
-		int i; octet *res = o_new(L,h->len); SAFE(res);
-		for(i=0;i<o->len;i++) HASH512_process(h->sha512,o->val[i]);
-		HASH512_hash(h->sha512,res->val);
-		res->len = h->len;
-	} else if(h->algo == _SHA3_256) {
-		int i; octet *res = o_new(L,h->len); SAFE(res);
-		for(i=0;i<o->len;i++) SHA3_process(h->sha3_256,o->val[i]);
-		SHA3_hash(h->sha3_256,res->val);
-		res->len = h->len;
-	} else if(h->algo == _SHA3_512) {
-		int i; octet *res = o_new(L,h->len); SAFE(res);
-		for(i=0;i<o->len;i++) SHA3_process(h->sha3_512,o->val[i]);
-		SHA3_hash(h->sha3_512,res->val);
-		res->len = h->len;
-	} else {
-		lerror(L,"Error in HASH object configuration: algo not found");
-		return 0; }
+	_feed(h, o);
+	_yeld(h, res);
+	res->len = h->len;
+	return 1;
+}
+
+/**
+   Feed a new octet into a current hashing session. This is used to
+   hash multiple chunks until @{yeld} is called.
+
+   @param data octet containing the data to be hashed
+   @function hash:feed(data)
+*/
+static int hash_feed(lua_State *L) {
+	hash *h = hash_arg(L,1); SAFE(h);
+	octet *o = o_arg(L,2); SAFE(o);
+	HEREs(h->name);
+	_feed(h, o);
+	return 0;
+}
+
+/**
+   Yeld a new octet from the current hashing session. This is used to
+   finalize the hashing of multiple chunks after @{feed} is called.
+
+   @function hash:yeld(data)
+   @return a new octet containing the hash of the data
+
+*/
+static int hash_yeld(lua_State *L) {
+	hash *h = hash_arg(L,1); SAFE(h);
+	HEREs(h->name);
+	octet *res = o_new(L,h->len); SAFE(res);
+	HEREs(h->name);
+	_yeld(h, res);
+	res->len = h->len;
 	return 1;
 }
 
@@ -307,6 +338,8 @@ int luaopen_hash(lua_State *L) {
 		{NULL,NULL}};
 	const struct luaL_Reg hash_methods[] = {
 		{"process",hash_process},
+		{"feed",hash_feed},
+		{"yeld",hash_yeld},
 		{"do",hash_process},
 		{"hmac",hash_hmac},
 		{"kdf2", hash_kdf2},

@@ -19,7 +19,12 @@ sha3_256_str896 = hex('916f6061fe879741ca6469b43971dfdb28b1a32dc36cb3254e812be27
 sha3_512_str896 = hex('afebb2ef542e6579c50cad06d2e578f9f8dd6881d7dc824d26360feebf18a4fa73e3261122948efcfd492e74e82e2189ed0fb440d187f382270cb455f21dd185')
 
 local straMB = O.zero(1000000)
+local straMB1 = O.zero(500000)
+local straMB2 = O.zero(500000)
 straMB:fill(O.from_str('a'))
+straMB1:fill(O.from_str('a'))
+straMB2:fill(O.from_str('a'))
+
 sha256_straMB = hex('cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0')
 sha512_straMB = hex('e718483d0ce769644e2e42c7bc15b4638e1f98b13b2044285632a803afa973ebde0ff244877ea60a4cb0432ce577c31beb009c5c2c49aa2e4eadb217ad8cc09b')
 sha384_straMB = hex('9d0e1809716474cb086e834e310a4a1ced149e9c00f248527972cec5704c2a5b07b8b3dc38ecc4ebae97ddd87f3d8985')
@@ -44,6 +49,31 @@ print " test on 1000000 bytes"
 for i,h in ipairs(hash_algos) do
    local H = HASH.new(h)
    assert(H:process(straMB) == _G[h..'_straMB'], "Error in "..h)
+   print(h.." OK")
+end
+
+print " feed/yeld test on 448 bytes"
+for i,h in ipairs(hash_algos) do
+   local H = HASH.new(h)
+   H:feed(str448)
+   assert(H:yeld() == _G[h..'_str448'], "Error in "..h)
+   print(h.." OK")
+end
+
+print " feed/yeld test on 896 bytes"
+for i,h in ipairs(hash_algos) do
+   local H = HASH.new(h)
+   H:feed(str896)
+   assert(H:yeld() == _G[h..'_str896'], "Error in "..h)
+   print(h.." OK")
+end
+
+print " feed/yeld test on 1000000 bytes"
+for i,h in ipairs(hash_algos) do
+   local H = HASH.new(h)
+   H:feed(straMB1)
+   H:feed(straMB2)
+   assert(H:yeld() == _G[h..'_straMB'], "Error in "..h)
    print(h.." OK")
 end
 
