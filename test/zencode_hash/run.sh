@@ -10,6 +10,43 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
 
+cat <<EOF | zexe hash_string.zen | tee hex.json
+rule output encoding hex
+Given nothing
+When I write string 'a string to be hashed' in 'source'
+and I create the hash of 'source'
+Then print the 'hash'
+EOF
+
+
+cat <<EOF | zexe hash_compare.zen -a hex.json
+rule input encoding hex
+rule input untagged
+rule output encoding hex
+Given I have a 'hex' named 'hash'
+When I set 'myhash' to 'c24463f5e352da20cb79a43f97436cce57344911e1d0ec0008cbedb5fabcca33' as 'hex'
+and I verify 'myhash' is equal to 'hash'
+Then print the 'hash'
+EOF
+
+cat <<EOF | zexe hash_string256.zen
+rule output encoding hex
+Given nothing
+When I write string 'a string to be hashed' in 'source'
+and I create the hash of 'source' using 'sha256'
+Then print the 'hash'
+EOF
+
+
+cat <<EOF | zexe hash_string512.zen
+rule output encoding hex
+Given nothing
+When I write string 'a string to be hashed' in 'source'
+and I create the hash of 'source' using 'sha512'
+Then print the 'hash'
+EOF
+
+
 cat << EOF | zexe hash_default.zen
 rule output encoding hex
 Given nothing
@@ -53,3 +90,4 @@ and I create the hash of 'source'
 Then print 'hash'
 EOF
 
+success

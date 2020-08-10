@@ -86,11 +86,38 @@ zexe() {
 	t=`mktemp -d`
 	>&2 echo $t
 	tee "$out" | $Z -z $* 2>$t/stderr 1>$t/stdout
-	if [ $? == 0 ]; then
+	res=$?
+	if [ $res == 0 ]; then
 		cat $t/stdout
 	else
 		>&2 cat $t/stderr | grep -v '^ \. '
 		exit
 	fi
+	return $res
+}
+
+debug() {
+	if [ "$Z" == "" ]; then
+		>&2 echo "no zenroom executable configured"
+		return 1
+	fi
+	if [ "$1" == "" ]; then
+		>&2 echo "no script filename configured"
+		return 1
+	fi
+	out="$1"
+	shift 1
+	>&2 echo "test: $out"
+	tee "$out" | $Z -z $* 
 	return $?
+}
+
+success() {
+	p=`pwd`
+	echo
+	echo "####################################"
+	echo "SUCCESS: `basename $p`"
+	echo "####################################"
+	echo
+	echo
 }

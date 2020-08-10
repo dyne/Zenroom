@@ -70,7 +70,7 @@ Scenario 'ecdh': Bob verifies the signature from Alice
 	Given that I am known as 'Bob'
 	and I have a 'public key' from 'Alice'
 	and I have a 'signature' from 'Alice'
-	and I have a 'draft' from 'Alice'
+	and I have a 'url64' named 'draft' in 'Alice'
 	When I verify the 'draft' is signed by 'Alice'
 	Then print 'signature correct'
 	and print the 'draft' as 'string'
@@ -117,9 +117,11 @@ Rule check version 1.0.0
 Scenario 'ecdh': Bob decrypts the message from Alice
 	Given that I am known as 'Bob'
 	and I have my 'keypair'
-	and I have a 'public key' from 'Alice'
+	and I have a 'base64' named 'Alice' in 'public key'
 	and I have a 'secret message'
 	When I decrypt the secret message from 'Alice'
 	Then print the 'message' as 'string'
 	and print the 'header' as 'string' inside 'secret message'
 EOF
+
+success

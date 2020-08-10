@@ -19,7 +19,7 @@ Then print the 'random object'
 EOF
 
 set +e
-echo '{}' > $tmp
+echo '{"a": 1}' > $tmp
 cat <<EOF | zexe fail_nothing.zen -a $tmp 2>/dev/null
 rule check version 1.0.0
 	 Given nothing
@@ -109,7 +109,7 @@ cat <<EOF  > $tmp
  }
 EOF
 
-cat <<EOF | tee have_my.zen | $Z -z -a $tmp
+cat <<EOF | zexe have_my.zen -a $tmp
 rule check version 1.0.0
 scenario 'ecdh'
 	 Given I am 'Andrea'
@@ -117,7 +117,7 @@ scenario 'ecdh'
 	 Then print the 'keypair'
 EOF
 
-cat <<EOF | tee have_my_valid.zen | $Z -z -a $tmp
+cat <<EOF | zexe have_my_valid.zen -a $tmp
 rule check version 1.0.0
 scenario 'ecdh'
 	 Given I am 'Andrea'
@@ -125,7 +125,7 @@ scenario 'ecdh'
 	 Then print the 'keypair'
 EOF
 
-cat <<EOF | tee is_valid.zen | $Z -z -a $tmp
+cat <<EOF | zexe is_valid.zen -a $tmp
 rule check version 1.0.0
 scenario 'ecdh'
 	 Given I am 'Andrea'
@@ -133,14 +133,14 @@ scenario 'ecdh'
 	 Then print all data
 EOF
 
-cat <<EOF | tee have_inside_a.zen | $Z -z -a $tmp
+cat <<EOF | zexe have_inside_a.zen -a $tmp
 rule check version 1.0.0
 scenario 'ecdh'
 	 Given I have a 'number' named 'robba' inside 'stuff'
 	 Then print the 'robba'
 EOF
 # ambiguity explained:
-cat <<EOF | tee have_a_inside.zen | $Z -z -a $tmp
+cat <<EOF | zexe have_a_inside.zen -a $tmp
 rule check version 1.0.0
 scenario 'ecdh'
 	 Given I have a 'keypair' inside 'Bobbino'
@@ -150,7 +150,7 @@ EOF
 # diverso da Given I have a 'keypair' inside 'Bobbino'
 # also same statements with valid
 # also from (maybe move to scenario ecdh)
-cat <<EOF | tee have_inside_a.zen | $Z -z -a $tmp
+cat <<EOF | zexe have_inside_a.zen -a $tmp
 rule check version 1.0.0
 scenario 'ecdh'
 	 Given I have a valid 'keypair' from 'Andrea'
@@ -159,20 +159,20 @@ scenario 'ecdh'
 EOF
 
 # array
-cat <<EOF | tee have_a_implicit_array.zen | $Z -z -a $tmp
+cat <<EOF | zexe have_a_implicit_array.zen -a $tmp
 rule check version 1.0.0
 scenario 'ecdh'
 	 Given I have a 'string array' named 'peppe' inside 'stuff'
 	 Then print the 'peppe'
 EOF
-cat <<EOF | tee have_a_implicit_array.zen | $Z -z -a $tmp
+cat <<EOF | zexe have_a_implicit_array.zen -a $tmp
 rule check version 1.0.0
 scenario 'ecdh'
 	 Given I have a valid 'string array' named 'peppe' inside 'stuff'
 	 Then print the 'peppe'
 EOF
 
-cat <<EOF | tee have_a_implicit_array.zen | $Z -z -a $tmp
+cat <<EOF | zexe have_a_implicit_array.zen -a $tmp
 rule check version 1.0.0
 scenario 'ecdh'
 	 Given I have a valid 'number' named 'quantity' inside 'stuff'
@@ -180,7 +180,5 @@ scenario 'ecdh'
 EOF
 
 
-
 rm -f $tmp
-echo "####################"
-echo "SUCCESS"
+success

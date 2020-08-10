@@ -81,3 +81,5 @@ Scenario petition: count
     Then print the 'petition results' as 'number'
     and print the 'uid' as 'string' inside 'petition'
 EOF
+
+success

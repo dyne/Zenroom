@@ -86,3 +86,5 @@ Scenario credential: verify proof
     and I verify the credential proof
     Then print 'Success'
 EOF
+
+success

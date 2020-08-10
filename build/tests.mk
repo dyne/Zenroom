@@ -63,7 +63,6 @@ zencode-tests = \
 
 zencode-integration = \
 	./test/zencode_parser.sh && \
-	./test/zencode_enchash.sh && \
 	cd test/zencode_given && ./run.sh; cd -; \
 	cd test/zencode_ecdh && ./run.sh; cd -; \
 	cd test/zencode_array && ./run.sh; cd -; \
