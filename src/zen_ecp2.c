@@ -410,6 +410,20 @@ static int ecp2_get_zi(lua_State *L) {
 	return 1;
 }
 
+static int ecp2_output(lua_State *L) {
+	ecp2 *e = ecp2_arg(L,1); SAFE(e);
+	if (ECP2_isinf(&e->val)) { // Infinity
+		octet *o = o_new(L,3); SAFE(o);
+		o->val[0] = SCHAR_MAX; o->val[1] = SCHAR_MAX;
+		o->val[3] = 0x0; o->len = 2;
+		return 1; }
+	octet *o = o_new(L,e->totlen + 0x0f);
+	SAFE(o); lua_pop(L,1);
+	_ecp2_to_octet(o,e);
+	push_octet_to_hex_string(L,o);
+	return 1;
+}
+
 int luaopen_ecp2(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg ecp2_class[] = {
@@ -446,6 +460,7 @@ int luaopen_ecp2(lua_State *L) {
 		{"mul",ecp2_mul},
 		{"__mul",ecp2_mul},
 		{"__gc", ecp2_destroy},
+		{"__tostring",ecp2_output},
 		{NULL,NULL}
 	};
 	zen_add_class("ecp2", ecp2_class, ecp2_methods);
