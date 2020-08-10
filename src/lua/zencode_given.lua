@@ -35,26 +35,15 @@ end
 --
 -- @function pick(name, data, encoding)
 -- @param what string descriptor of the data object
--- @param obj[opt] optional data object (default search inside IN.*)
 -- @param conv[opt] optional encoding spec (default CONF.input.encoding)
 -- @return true or false
-local function pick(what, obj, conv)
+local function pick(what, conv)
    local guess
-   if obj then -- object provided by argument
-      TMP.root = nil
-      -- guess = { fun, check, name(type)
-      --           istable, isschema      }
-	   TMP.guess = guess_conversion(type(obj), conv)
-      TMP.data = TMP.operate_conversion(obj, TMP.guess)
-      TMP.schema = TMP.guess.name
-      -- local toks = strtok(what,'[^_]+')
-	   return(ZEN.OK)
-   end
    local got
    got = IN.KEYS[what] or IN[what]
    ZEN.assert(got, "Cannot find '"..what.."' anywhere")
-   if not conv and ZEN.schemas[what] then conv = what end
-   TMP.guess = guess_conversion(type(got), conv)
+   -- if not conv and ZEN.schemas[what] then conv = what end
+   TMP.guess = guess_conversion(type(got), conv or what)
    ZEN.assert(TMP.guess, "Cannot guess any conversion for: "..
 				  type(got).." "..(conv or "(nil)"))
    TMP.root = nil
@@ -100,11 +89,12 @@ local function pickin(section, what, conv, fail)
    ::found::
    -- conv = conv or what
    root = nil
-   if not conv and ZEN.schemas[what] then conv = what end
-   TMP.guess = guess_conversion(type(got), conv )
+   -- if not conv and ZEN.schemas[what] then conv = what end
+   -- if no encoding provided then conversion is same as name (schemas etc.)
+   TMP.guess = guess_conversion(luatype(got), conv or what )
    TMP.root = section
-	TMP.data = operate_conversion(got, TMP.guess)
-	TMP.schema = TMP.guess.name
+   TMP.data = operate_conversion(got, TMP.guess)
+   TMP.schema = TMP.guess.name
    assert(ZEN.OK)
    if DEBUG > 1 then ZEN:ftrace("pickin found "..what.." in "..section) end
 end
@@ -196,22 +186,23 @@ Given("have a '' in ''", function(s, t)
 		 gc()
 end)
 
--- public keys for keyring arrays (scenario simple)
+-- public keys for keyring arrays (scenario ecdh)
 -- supports bot ways in from given
 -- public_key : { name : value }
 -- or
 -- name : { public_key : value }
 Given("have a '' from ''", function(s, t)
-		 if not pickin(t, s, nil, false) then
-			pickin(s, t)
-		 end
+		 -- if not pickin(t, s, nil, false) then
+		 -- 	pickin(s, t)
+		 -- end
+		 pickin(t, s, nil, false)
 		 ack_table(s, t)
 		 gc()
 end)
 
 Given("have a '' named ''", function(s, n)
 		 -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
-		 pick(n, nil, s)
+		 pick(n, s)
 		 ack(n)
 		 gc()
 end)
@@ -236,68 +227,3 @@ Given("my '' is valid", function(n)
 		 pickin(WHO, n)
 		 gc()
 end)
-
-local function array_convert(name, obj)
-	local conv = guess_conversion('table',name)
-	-- deepmap(conv.check, obj)
-	return deepmap(conv.fun, obj)
-end
-
-ZEN.add_schema({
-	  -- string = function(obj)
-	  -- 	 ZEN.assert( luatype(obj) == 'string', 'Not a valid string')
-	  -- 	 return OCTET.from_string(obj)
-	  -- end,
-	  -- number = function(obj)
-	  -- 	 ZEN.assert( luatype(obj) == 'number', 'Not a valid number')
-	  -- 	 return obj -- lua number internally
-	  -- end,
-	  array = function(obj)
-		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
-		 -- default rule input encoding
-		 return deepmap(CONF.input.encoding.fun, obj)
-	  end,
-	  string_array = function(obj)
-		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
-		 return array_convert('string', obj)
-	  end,
-	  number_array = function(obj)
-		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
-		 return array_convert('number', obj)
-	  end,
-	  hex_array = function(obj)
-		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
-		 return array_convert('hex', obj)
-	  end,
-	  bin_array = function(obj)
-		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
-		 return array_convert('bin', obj)
-	  end,
-	  base64_array = function(obj)
-		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
-		 return array_convert('base64', obj)
-	  end,
-	  base58_array = function(obj)
-		if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
-		return array_convert('base58', obj)
-	  end,
-	  url64_array = function(obj)
-		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
-		 return array_convert('url64', obj)
-	  end,
-	  -- default encoding, semantic conversion
-	  int_array = function(obj)
-		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
-		 return deepmap(INT.new, deepmap(CONF.input.encoding.fun, obj))
-	  end,
-	  ecp_array = function(obj)
-		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
-		 return deepmap(ECP.new, deepmap(CONF.input.encoding.fun, obj))
-	  end,
-	  ecp2_array = function(obj)
-		 if not isarray(obj) then error("Not a valid array: "..type(obj), 3) end
-		 return deepmap(ECP2.new, deepmap(CONF.input.encoding.fun, obj))
-	  end
-})
--- alias big to int
-ZEN.add_schema({big_array = ZEN.schemas.int_array})

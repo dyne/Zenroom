@@ -18,7 +18,7 @@
 
 -- defined outside because reused across different schemas
 function public_key_f(o)
-   o = operate_conversion(o, guess_conversion(type(o)))
+   o = operate_conversion(o, guess_conversion('string', CONF.input.encoding.name))
    ZEN.assert(ECDH.pubcheck(o),
 			  "Public key is not a valid point on curve")
    return o
@@ -110,9 +110,9 @@ When("decrypt the secret message from ''", function(_key)
 		ZEN.assert(ACK.keypair, "Keyring not found")
 		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
 		ZEN.assert(ACK.secret_message, "Data to decrypt not found: secret_message")
-		ZEN.assert(ACK.public_key[_key],
-				   "Key to decrypt not found: public key[".._key.."])")
-		local session = ECDH.session(ACK.keypair.private_key, ACK.public_key[_key])
+		ZEN.assert(ACK[_key],
+				   "Key to decrypt not found, the public key from: ".._key)
+		local session = ECDH.session(ACK.keypair.private_key, ACK[_key])
 		ACK.message, checksum = ECDH.aead_decrypt(session,
 												  ACK.secret_message.text,
 												  ACK.secret_message.iv,
@@ -142,8 +142,8 @@ When("verify the '' is signed by ''", function(msg, by)
 		local obj
 		obj = ACK[msg]
 		ZEN.assert(obj, "Object not found: "..msg)
-		obj = obj[by]
-		ZEN.assert(obj, "Object not found: "..msg.." by "..by)
+		-- obj = obj[by]
+		-- ZEN.assert(obj, "Object not found: "..msg.." by "..by)
 		local t = type(obj)
 		local sign
 		if t == 'table' then

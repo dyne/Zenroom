@@ -71,7 +71,7 @@ function input_encoding(what)
 			end,
 			name = 'number' })
    end
-   xxx("Input encoding not found: "..what, 2)
+   error("Input encoding not found: "..what or '(nil)', 3)
    return nil
 end
 

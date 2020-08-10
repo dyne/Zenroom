@@ -108,62 +108,49 @@ end
 --   isschema = true -- if schema function required
 -- }
 function guess_conversion(objtype, definition)
-   definition = definition or CONF.input.encoding.name
-   -- assert(definition, "Internal error: guess_conversion needs 2 arguments", 2)
-   local res = { }
    local t
-   -- ZEN.schemas is the other map to check
-   if objtype == 'string' then
-       t = input_encoding(definition)
-       -- t = { name, fun, check}
-       if t then
-         res = { name = t.name,
-               fun = t.fun,
-               check = t.check }
-       else
-         t = ZEN.schemas[definition]
-         -- t = function pointer
-         if t then
-            res = { fun = t,
-                  isschema = true,
-                  name = definition } -- also t.name
-                  -- check = nil
-         end
-      end
-		if not res then
-			error('String conversion not found: '..definition, 2)
-			return nil
-		end
-      res.istable = nil -- no deepmap for single string
-      
-   elseif objtype == 'number' then
-      res = input_encoding(objtype)
-
-   elseif objtype == 'table' then
-		t = input_encoding(definition)
-      if t then
-         res = { istable = true,
-               name = t.name,
-               fun = t.fun,
-               check = t.check }
-         -- isschema = nil
-      else
-         t = ZEN.schemas[definition]
-         if t then
-            res = { fun = t,
-                  isschema = true,
-                  name = definition }
-         end
-      end
-      if not res then
-			error('Table conversion not found: '..definition, 2)
-			return nil
-      end
-   else
-	  error('Unrecognized object type when guessing conversion: '..objtype,2)
-	  return nil
+   -- a defined schema overrides any other conversion
+   t = ZEN.schemas[definition]
+   if t then
+	  return({ fun = t,
+			   isschema = true,
+			   name = definition or objtype })
    end
-   return res
+   if objtype == 'string' then
+	  if not definition then
+		 error("Undefined conversion for string object",2)
+		 return nil
+	  end
+	  return( input_encoding(definition) )
+   end
+      
+   if objtype == 'number' then
+      return( input_encoding(objtype) )
+   end
+   -- definition: value_encoding .. data_type
+   if objtype == 'table' then
+	  toks = strtok(definition,'[^_]+')
+	  if not (#toks == 2) then
+		 error('Invalid table conversion: '..definition..' (must be "base64 array" or "string dictionary" etc.)',2)
+		 return nil
+	  end
+	  if not (toks[2] == 'array' or toks[2] == 'dictionary') then
+		 error('Invalid table conversion: '..definition.. ' (must be array or dictionary)', 2)
+		 return nil
+	  end
+	  t = input_encoding(toks[1])
+      if not t then
+		 error('Invalid '..toks[2]..' conversion: '..toks[1], 2)
+		 return nil
+	  end
+	  -- TODO: array or dictionary
+       return({ istable = true,
+				name = t.name,
+				fun = t.fun,
+				check = t.check })
+   end
+   error('Invalid conversion for type '..objtype..': '..definition, 2)
+   return nil
 end
 
 -- takes a data object and the guessed structure, operates the
