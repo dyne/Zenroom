@@ -29,15 +29,6 @@ and the 'lucky one' is not found in 'bonnetjes'
 Then print the 'lucky one'
 EOF
 
-cat <<EOF | zexe array_ecp_aggregation.zen > ecp_aggregation.json
-rule output encoding url64
-Given nothing
-When I create the array of '32' random curve points
-and I rename the 'array' to 'curve points'
-and I create the aggregation of 'curve points'
-Then print the 'aggregation'
-EOF
-
 # cat <<EOF | zexe array_hashtopoint.zen -a arr.json > ecp.json
 # rule input encoding url64
 # rule output encoding url64
@@ -114,9 +105,58 @@ EOF
 
 # 'x == ECP.hashtopoint(y)'
 
+cat <<EOF > nesting.json
+{
+  "first" : { "inside" : "first.inside" },
+  "second" : { "inside" : "second.inside" },
+  "third" : "three"
+}
+EOF
 
-# When I check 'hashes' and 'bonnetjes'
-# When I check 'hashes' and 'bonnetjes' such as
+cat <<EOF | zexe pick_nested.zen -a nesting.json
+rule check version 1.0.0
+rule input encoding string
+Given I have a 'string' named 'inside' inside 'first'
+and I have a 'string' named 'third'
+When I write string 'first.inside' in 'test'
+and I write string 'three' in 'tertiur'
+and I verify 'third' is equal to 'tertiur'
+Then print the 'test' as 'string'
+EOF
+
+cat <<EOF | zexe random_from_array.zen
+rule check version 1.0.0
+Given nothing
+When I create the array of '32' random objects of '256' bits
+and I pick the random object in 'array'
+and I remove the 'random object' from 'array'
+and the 'random object' is not found in 'array'
+Then print the 'random object'
+EOF
+
+cat <<EOF | zexe leftmost_split.zen
+rule check version 1.0.0
+Given nothing
+When I set 'whole' to 'Zenroom works great' as 'string'
+and I split the leftmost '3' bytes of 'whole'
+Then print the 'leftmost' as 'string'
+and print the 'whole' as 'string'
+EOF
+
+cat <<EOF | zexe random_numbers.zen | tee array_random_nums.json
+Given nothing
+When I create the array of '64' random numbers
+Then print the 'array' as 'number'
+EOF
+
+
+cat <<EOF | zexe random_numbers.zen | tee array_random_nums.json
+Given nothing
+When I create the array of '64' random numbers modulo '100'
+and I create the aggregation of array 'array'
+Then print the 'array' as 'number'
+and print the 'aggregation' as 'number'
+EOF
 
 success
 

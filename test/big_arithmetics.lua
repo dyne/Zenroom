@@ -17,3 +17,7 @@ assert(four / two == two, "Error four divided by two")
 assert(four:int() == 4, "Error four conversion to int")
 -- /* maximum length of the conversion of a number to a string */
 -- #define MAXNUMBER2STR	50
+
+
+assert(BIG.new(O.from_hex('0a')):int() == 10, "Octet -> BIG -> integer conversion failed")
+assert(BIG.new(O.from_hex('14')):int() == 20, "Octet -> BIG -> integer conversion failed")

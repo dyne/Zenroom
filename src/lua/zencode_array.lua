@@ -33,23 +33,45 @@ When("create the array of '' random objects of '' bits", function(s, bits)
     end
 end)
 
-When("create the array of '' random curve points", function(s)
+When("create the array of '' random numbers", function(s)
     ACK.array = { }
     for i = s,1,-1 do
-       table.insert(ACK.array,ECP.random())
+       table.insert(ACK.array,tonumber(random_int16()))
     end
 end)
 
-When("create the aggregation of ''", function(arr)
+When("create the array of '' random numbers modulo ''", function(s,m)
+		ACK.array = { }
+		for i = s,1,-1 do
+		   table.insert(ACK.array,math.floor(random_int16() % m))
+		end
+end)
+
+When("create the aggregation of array ''", function(arr)
+		-- TODO: switch typologies, sum numbers and bigs, aggregate hash
     local A = ACK[arr]
     ZEN.assert(A, "Object not found: "..arr)
     local count = isarray(A)
     ZEN.assert( count > 0, "Object is not an array: "..arr)
-    if type(A[1]) == 'zenroom.ecp' then -- TODO: check all elements
-       ACK.aggregation = ECP.generator()
+    if luatype(A[1]) == 'number' then -- TODO: check all elements
+       ACK.aggregation = 0
        for k,v in next,A,nil do
-          if not ACK.aggregation then ACK.aggregation = v
-          else ACK.aggregation = ACK.aggregation + v end
+		  ACK.aggregation = ACK.aggregation + tonumber(v)
+       end
+	elseif type(A[1]) == 'zenroom.big' then
+	   ACK.aggregation = BIG.new(0)
+       for k,v in next,A,nil do
+		  ACK.aggregation = ACK.aggregation + v
+       end
+	elseif type(A[1]) == 'zenroom.ecp' then
+	   ACK.aggregation = ECP.generator()
+       for k,v in next,A,nil do
+		  ACK.aggregation = ACK.aggregation + v
+       end
+	elseif type(A[1]) == 'zenroom.ecp2' then
+	   ACK.aggregation = ECP2.generator()
+       for k,v in next,A,nil do
+		  ACK.aggregation = ACK.aggregation + v
        end
     else -- TODO: more aggregators for INT and ECP2
        error("Unknown aggregation for type: "..type(A[1]))
