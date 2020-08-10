@@ -40,15 +40,17 @@ end
 local function pick(what, conv)
    local guess
    local got
-   got = IN.KEYS[what] or IN[what]
+   local data
+   raw = IN.KEYS[what] or IN[what]
+   got = luatype(raw)
    ZEN.assert(got, "Cannot find '"..what.."' anywhere")
    -- if not conv and ZEN.schemas[what] then conv = what end
-   TMP.guess = guess_conversion(luatype(got), conv or what)
-   ZEN.assert(TMP.guess, "Cannot guess any conversion for: "..
-				  luatype(got).." "..(conv or "(nil)"))
-   TMP.root = nil
-   TMP.data = operate_conversion(got, TMP.guess)
-   TMP.schema = TMP.guess.name
+   TMP = guess_conversion(got, conv or what)
+   ZEN.assert(TMP, "Cannot guess any conversion for: "..
+				 got.." "..(conv or what or "(nil)"))
+   TMP.type = got
+   TMP.name = what
+   TMP.raw = raw
    assert(ZEN.OK)
    if DEBUG > 1 then ZEN:ftrace("pick found "..what) end
 end
@@ -70,31 +72,29 @@ local function pickin(section, what, conv, fail)
    ZEN.assert(section, "No section specified")
    local root -- section
    local got  -- what
+   local raw -- data pointer
    local bail -- fail
    root = IN.KEYS[section]
    if root then
-	  got = root[what]
-	  if got then goto found end
+	  raw = root[what]
+	  if raw then goto found end
    end
    root = IN[section]
    if root then
-	  got = root [what]
-	  if got then goto found end
+	  raw = root[what]
+	  if raw then goto found end
    end
-   if got then goto found end -- success condition
-   if bail then
-	  ZEN.assert(got, "Cannot find '"..what.."' inside '"..section.."'")
-   else return false end
+   ZEN.assert(raw, "Cannot find '"..what.."' inside '"..section.."'")
    -- TODO: check all corner cases to make sure TMP[what] is a k/v map
    ::found::
    -- conv = conv or what
-   root = nil
    -- if not conv and ZEN.schemas[what] then conv = what end
    -- if no encoding provided then conversion is same as name (schemas etc.)
-   TMP.guess = guess_conversion(luatype(got), conv or what )
+   got = luatype(raw)
+   TMP = guess_conversion(got, conv or what )
+   TMP.name = what
    TMP.root = section
-   TMP.data = operate_conversion(got, TMP.guess)
-   TMP.schema = TMP.guess.name
+   TMP.raw = raw
    assert(ZEN.OK)
    if DEBUG > 1 then ZEN:ftrace("pickin found "..what.." in "..section) end
 end
@@ -103,7 +103,7 @@ local function ack_table(key,val)
    ZEN.assert(type(key) == 'string',"ZEN:table_add arg #1 is not a string")
    ZEN.assert(type(val) == 'string',"ZEN:table_add arg #2 is not a string")
    if not ACK[key] then ACK[key] = { } end
-   ACK[key][val] = TMP.data
+   ACK[key][val] = operate_conversion(TMP)
 end
 
 
@@ -118,30 +118,30 @@ end
 -- @function ack(name)
 -- @param name string key of the data object in TMP[name]
 local function ack(name)
-   ZEN.assert(TMP.data, "No valid object found: ".. name)
+   ZEN.assert(TMP, "No valid object found: ".. name)
    -- CODEC[what] = CODEC[what] or {
    --    name = guess.name,
    --    istable = guess.istable,
    --    isschema = guess.isschema }
    assert(ZEN.OK)
-   local t = type(ACK[name])
+   local t = luatype(ACK[name])
    if not ACK[name] then -- assign in ACK the single object
-	  ACK[name] = TMP.data
+	  ACK[name] = operate_conversion(TMP)
 	  goto done
    end
    -- ACK[name] already holds an object
    -- not a table?
    if t ~= 'table' then -- convert single object to array
 	  ACK[name] = { ACK[name] }
-	  table.insert(ACK[name], TMP.data)
+	  table.insert(ACK[name], operate_conversion(TMP))
 	  goto done
    end
    -- it is a table already
    if isarray(ACK[name]) then -- plain array
-	  table.insert(ACK[name], TMP.data)
+	  table.insert(ACK[name], operate_conversion(TMP))
 	  goto done
-   else -- associative map
-	  table.insert(ACK[name], TMP.data) -- TODO: associative map insertion
+   else -- associative map (dictionary)
+	  table.insert(ACK[name], operate_conversion(TMP)) -- TODO: associative map insertion
 	  goto done
    end
    ::done::

@@ -86,8 +86,9 @@ function guess_conversion(objtype, definition)
    if t then
 	  return({ fun = t,
 			   isschema = true,
-			   name = definition or objtype })
+			   conversion = definition or objtype })
    end
+   objtype = objtype or definition
    if objtype == 'string' then
 	  if not definition then
 		 error("Undefined conversion for string object",2)
@@ -116,7 +117,7 @@ function guess_conversion(objtype, definition)
 	  end
 	  -- TODO: array or dictionary
        return({ istable = true,
-				name = t.name,
+				conversion = t.name,
 				fun = t.fun,
 				check = t.check })
    end
@@ -127,9 +128,9 @@ end
 -- takes a data object and the guessed structure, operates the
 -- conversion and returns the resulting raw data to be used inside the
 -- WHEN block in HEAP.
-function operate_conversion(data, guessed)
+function operate_conversion(guessed)
    if not guessed.fun then
-	  error('No conversion operation guessed: '..guessed.name, 2)
+	  error('No conversion operation guessed', 2)
 	  return nil
    end
    -- TODO: make xxx print to stderr!
@@ -137,16 +138,16 @@ function operate_conversion(data, guessed)
    if guessed.istable then
      -- TODO: better error checking on deepmap?
       if luatype(guessed.check) == 'function' then
-         deepmap(guessed.check, data)
+         deepmap(guessed.check, guessed.raw)
       end
-      return deepmap(guessed.fun, data)
+      return deepmap(guessed.fun, guessed.raw)
    elseif guessed.isschema then
-	   return guessed.fun(data)
+	   return guessed.fun(guessed.raw)
    else
 	   if luatype(guessed.check) == 'function' then
-         guessed.check(data)
+         guessed.check(guessed.raw)
       end
-      return guessed.fun(data)      
+      return guessed.fun(guessed.raw)
 	end
 end
 

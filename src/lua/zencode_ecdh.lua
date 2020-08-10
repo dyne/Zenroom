@@ -18,10 +18,10 @@
 
 -- defined outside because reused across different schemas
 function public_key_f(o)
-   o = operate_conversion(o, guess_conversion('string', CONF.input.encoding.name))
-   ZEN.assert(ECDH.pubcheck(o),
+   local res = CONF.input.encoding.fun(o)
+   ZEN.assert(ECDH.pubcheck(res),
 			  "Public key is not a valid point on curve")
-   return o
+   return res
 end
 
 ZEN.add_schema({

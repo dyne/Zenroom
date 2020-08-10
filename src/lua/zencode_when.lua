@@ -51,7 +51,9 @@ end)
 
 When("set '' to '' as ''", function(dest, content, format)
 		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
-		ACK[dest] = operate_conversion(content, guess_conversion(type(content), format))
+		local guess = input_encoding(format)
+		guess.raw = content
+		ACK[dest] = operate_conversion(guess)
 end)
 
 When("create the random ''", function(dest)
