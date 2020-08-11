@@ -31,9 +31,9 @@ When("append '' to '' as ''", function(content, dest, format)
 		-- ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		if ACK[dest] then
 		   ACK[dest] = ACK[dest] ..
-			  operate_conversion( content, guess_conversion( content, format))
+			  operate_conversion( guess_conversion( content, format))
 		else
-		   ACK[dest] = operate_conversion( content, guess_conversion( content, format))
+		   ACK[dest] = operate_conversion( guess_conversion( content, format))
 		end
 end)
 
