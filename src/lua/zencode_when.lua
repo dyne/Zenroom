@@ -29,11 +29,12 @@ When("append string '' to ''", function(content, dest)
 end)
 When("append '' to '' as ''", function(content, dest, format)
 		-- ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
-		if ACK[dest] then
-		   ACK[dest] = ACK[dest] ..
-			  operate_conversion( guess_conversion( content, format))
+		local val = ACK[content] or operate_conversion( guess_conversion( val, format))
+		local dst = ACK[dest]
+		if dst then
+		   ACK[dest] = dst .. val
 		else
-		   ACK[dest] = operate_conversion( guess_conversion( content, format))
+		   ACK[dest] = val
 		end
 end)
 
@@ -155,6 +156,10 @@ When("rename the '' to ''", function(old,new)
 		ZEN.assert(ACK[old], "Object not found: "..old)
 		ACK[new] = ACK[old]
 		ACK[old] = nil
+		if ZEN.CODEC[old] then
+		   ZEN.CODEC[new] = ZEN.CODEC[old]
+		   ZEN.CODEC[old] = nil
+		end
 end)
 
 When("split the rightmost '' bytes of ''", function(len, src)
