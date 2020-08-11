@@ -74,35 +74,41 @@ local function guess_outcast(cast)
    end
 end
 local function check_codec(value)
-   if not CODEC[value] then
+   if not ZEN.CODEC[value] then
+	  return CONF.output.encoding.name
+   end
+   if ZEN.CODEC[value].zentype == 'schema' then
 	  return CONF.output.encoding.name
    else
-	  if CODEC[value].isschema then
-		 return CONF.output.encoding.name
-	  else
-		 return CODEC[value].name or CONF.output.encoding.name
-	  end
+	  return ZEN.CODEC[value].encoding or CONF.output.encoding.name
    end
 end
 
 --------------------------------------
 
-Then("print ''", function(v)
-		if ACK[v] then
-		   local fun = guess_outcast( check_codec(v) )
-		   OUT[v] = fun(ACK[v]) -- value in ACK
+Then("print ''", function(k)
+		local fun
+		local val = ACK[k]
+		if val then
+		   fun = guess_outcast( check_codec(k) )
+		   if luatype(val) == 'table' then
+			  OUT[k] = deepmap(fun, val)
+		   else
+			  OUT[k] = fun(val)
+		   end
 		else
-		   OUT.output = v -- raw string value
+		   OUT.output = k -- raw string value
 		end
 end)
 
 Then("print '' as ''", function(v,s)
 		local fun = guess_outcast(s)
-		if ACK[v] then
-			if luatype(ACK[v]) == 'table' then
-				OUT[v] = deepmap(fun, ACK[v])
+		local val = ACK[v]
+		if val then
+			if luatype(val) == 'table' then
+				OUT[v] = deepmap(fun, val)
 			else
-				OUT[v] = fun(ACK[v])
+				OUT[v] = fun(val)
 			end
 		else
 		   OUT.output = fun(v)
@@ -112,50 +118,71 @@ end)
 
 Then("print '' as '' in ''", function(v,s,k)
 		local fun = guess_outcast(s)
-		OUT[k] = fun(v)
+		local val = ACK[v]
+		if val then
+		   if luatype(val) == 'table' then
+			  OUT[k] = deepmap(fun, val)
+		   else
+			  OUT[k] = fun(val)
+		   end
+		else
+		   OUT[k] = fun(v)
+		end
 end)
 
 Then("print data", function()
-		OUT = ACK
-		local fun = function(v,k) return guess_outcast( check_codec(k) )(v) end
-		if luatype(OUT) == 'table' then
-		   OUT = deepmap(fun, OUT)
-		else
-		   OUT = fun(OUT)
+		local fun
+		for k,v in pairs(ACK) do
+		   fun = guess_outcast( check_codec(k) )
+		   if luatype(v) == 'table' then
+			  OUT[k] = deepmap(fun, v)
+		   else
+			  OUT[k] = fun(v)
+		   end
 		end
 end)
 
 Then("print data as ''", function(e)
-		OUT = ACK
-		local fun = guess_outcast(e)
-		if luatype(OUT) == 'table' then
-		   OUT = deepmap(fun, OUT)
-		else
-		   OUT = fun(OUT)
+		local fun
+		for k,v in pairs(ACK) do
+		   fun = guess_outcast( e )
+		   if luatype(v) == 'table' then
+			  OUT[k] = deepmap(fun, v)
+		   else
+			  OUT[k] = fun(v)
+		   end
 		end
 end)
 
 Then("print my data", function()
 		Iam() -- sanity checks
-		OUT[WHO] = ACK
-		local fun = function(v,k) return guess_outcast( check_codec(k) )(v) end
-		if luatype(OUT[WHO]) == 'table' then
-		   OUT[WHO] = deepmap(fun, OUT[WHO])
-		else
-		   OUT[WHO] = fun(OUT[WHO])
+		local fun
+		OUT[WHO] = { }
+		for k,v in pairs(ACK) do
+		   fun = guess_outcast( check_codec(k) )
+		   if luatype(v) == 'table' then
+			  OUT[WHO][k] = deepmap(fun, v)
+		   else
+			  OUT[WHO][k] = fun(v)
+		   end
 		end
 end)
 
 Then("print my data as ''", function(s)
 		Iam() -- sanity checks
-		OUT[WHO] = ACK
-		local fun = guess_outcast(s)
-		if luatype(OUT[WHO]) == 'table' then
-		   OUT[WHO] = deepmap(fun, OUT[WHO])
-		else
-		   OUT[WHO] = fun(OUT[WHO])
+		local fun
+		OUT[WHO] = { }
+		for k,v in pairs(ACK) do
+		   fun = guess_outcast( s )
+		   if luatype(v) == 'table' then
+			  OUT[WHO][k] = deepmap(fun, v)
+		   else
+			  OUT[WHO][k] = fun(v)
+		   end
 		end
 end)
+
+---------- checked until here
 
 Then("print my ''", function(obj)
 		Iam()
@@ -176,7 +203,7 @@ Then("print my '' from ''", function(obj, section)
 		local got
 		got = ACK[section][obj]
 		ZEN.assert(got, "Data object not found: "..obj)
-		local fun = guess_outcast( check_codec(obj, section) )
+		local fun = guess_outcast( check_codec(obj) )
 		if luatype(got) == 'table' then
 		   got = deepmap(fun, got)
 		else

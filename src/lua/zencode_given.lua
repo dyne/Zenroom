@@ -120,7 +120,12 @@ local function ack(name)
    ZEN.assert(not ACK[name], "Destination already exists, cannot overwrite: "..name, 2)
    assert(ZEN.OK)
    ACK[name] = operate_conversion(TMP)
-
+   -- save codec state
+   ZEN.CODEC[name] = { name = TMP.name,
+					   luatype = TMP.luatype,
+					   zentype = TMP.zentype,
+					   encoding = TMP.encoding,
+					   root = TMP.root }
    -- ACK[name] already holds an object
    -- not a table?
    -- if not (dsttype == 'table') then -- convert single object to array

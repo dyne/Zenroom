@@ -60,7 +60,7 @@ When("schema",  function() debug_heap_schema() end)
 Then("schema",  function() debug_heap_schema() end)
 
 function debug_codec()
-   I.warn({CODEC = CODEC})
+   I.warn({CODEC = ZEN.CODEC})
 end
 
 Given("codec", function() debug_codec() end)
