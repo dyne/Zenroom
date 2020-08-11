@@ -19,57 +19,70 @@ end
 -- gets a string and returns the associated function, string and prefix
 -- comes before schema check
 function input_encoding(what)
+   if not luatype(what) == 'string' then
+	  error("Call to input_encoding argument is not a string: "..type(what),2)
+   end
    if what == 'u64' or what == 'url64' then
 	  return { fun = function(data)
+				  if not (luatype(data)=='string') then
+					 error("input_encoding argument not a string: "..type(data),3) end
 				  if O.is_url64(data) then return O.from_url64(data)
 				  else error("Failed import from url64: "..what,3)
 					 end end,
-			   name = 'url64',
+			   encoding = 'url64',
 			   check = O.is_url64
 	  }
    elseif what == 'b64' or what =='base64' then
 	  return { fun = function(data)
+				  if not (luatype(data)=='string') then
+					 error("input_encoding argument not a string: "..type(data),3) end
 				  if O.is_base64(data) then return O.from_base64(data)
 				  else error("Failed import from base64: "..what,3)
 					 end end,
-			   name = 'base64',
+			   encoding = 'base64',
 			   check = O.is_base64
 	  }
 	elseif what == 'b58' or what =='base58' then
 		return { fun = function(data)
+					if not (luatype(data)=='string') then
+					   error("input_encoding argument not a string: "..type(data),3) end
 					if O.is_base58(data) then return O.from_base58(data)
 					else error("Failed import from base58: "..what,3)
 					   end end,
-				 name = 'base58',
+				 encoding = 'base58',
 				 check = O.is_base58
 		}
    elseif what == 'hex' then
 	  return { fun = function(data)
+				  if not (luatype(data)=='string') then
+					 error("input_encoding argument not a string: "..type(data),3) end
 				  if O.is_hex(data) then return O.from_hex(data)
 				  else error("Failed import from hex: "..what,3)
 				  end end,
-			   name = 'hex',
+			   encoding = 'hex',
 			   check = O.is_hex
 	  }
    elseif what == 'bin' or what == 'binary' then
 	  return { fun = function(data)
+				  if not (luatype(data)=='string') then
+					 error("input_encoding argument not a string: "..type(data),3) end
 				  if O.is_bin(data) then return O.from_bin(data)
 				  else error("Failed import from bin: "..what,3)
 					 end end,
-			   name = 'binary',
+			   encoding = 'binary',
 			   check = O.is_bin
 	  }
    elseif what == 'str' or what == 'string' then
    	  return { fun = O.from_string,
    			   check = function(_) return true end,
-   			   name = 'string'
+   			   encoding = 'string'
    	  }
    elseif what == 'num' or what == 'number' then
 	return ({ fun = function(x) return(tonumber(x)) end,
 			check = function(x)
-	   			ZEN.assert(tonumber(x), "Invalid conversion, not a number: "..type(x))
+	   			ZEN.assert(tonumber(x), "Invalid encoding, not a number: "..type(x))
 			end,
-			name = 'number' })
+			encoding = 'number' })
    end
    error("Input encoding not found: "..what or '(nil)', 3)
    return nil

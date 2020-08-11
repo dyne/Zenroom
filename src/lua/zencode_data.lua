@@ -63,41 +63,53 @@ end
 -- ```
 -- type    def       conv
 -- ------------------------------------------------------
--- str     ===       default_encoding
+--         schema    schema_f(===, default_encoding)
 -- str     format    input_encoding(format)
--- str     schema    schema_f(..., default_encoding)
--- num     (number)  num
--- table   ===       deepmap(table, default_encoding)
--- table   format    deepmap(table, input_encoding(format))
--- table   schema    schema_f(table, default_encoding)
+-- num               input_encoding(number)
+-- table   f dict    deepmap(table, input_encoding(f))
+-- table   f array   deepmap(table, input_encoding(f))
 -- ```
 -- returns a table with function pointers and string desc that
--- will be used by operate conversion
--- { fun   = conversion function pointer
---   name  = conversion string description 
---   check = check function pointer
---   istable = true -- if deepmap required
---   isschema = true -- if schema function required
+-- will be used by @{operate_conversion}
+-- { fun         = conversion function pointer
+--   conversion  = conversion string description 
+--   check       = check function pointer
+--   raw         = raw data pointer
+--   (name)      = key name of data (set externally)
+--   (root)      = root section name (set externally)
+--   luatype     = type of raw data for lua
+--   zentype     = type of data for zenroom (array, dict, obj, schema)
 -- }
-function guess_conversion(objtype, definition)
+function guess_conversion(obj, definition)
    local t
+   local objtype = luatype(obj)
+   local res
    -- a defined schema overrides any other conversion
    t = ZEN.schemas[definition]
    if t then
 	  return({ fun = t,
-			   isschema = true,
-			   conversion = definition or objtype })
+			   zentype = 'schema',
+			   luatype = objtype,
+			   raw = obj,
+			   encoding = definition or objtype })
    end
-   objtype = objtype or definition
    if objtype == 'string' then
 	  if not definition then
 		 error("Undefined conversion for string object",2)
 		 return nil
 	  end
-	  return( input_encoding(definition) )
+	  res = input_encoding(definition)
+	  res.luatype = 'string'
+	  res.zentype = 'object'
+	  res.raw = obj
+	  return(res)
    end
    if objtype == 'number' then
-      return( input_encoding(objtype) )
+      res = input_encoding(objtype)
+	  res.luatype = 'number'
+	  res.zentype = 'number'
+	  res.raw = obj
+	  return(res)
    end
    -- definition: value_encoding .. data_type
    if objtype == 'table' then
@@ -110,16 +122,15 @@ function guess_conversion(objtype, definition)
 		 error('Invalid table conversion: '..definition.. ' (must be array or dictionary)', 2)
 		 return nil
 	  end
-	  t = input_encoding(toks[1])
-      if not t then
-		 error('Invalid '..toks[2]..' conversion: '..toks[1], 2)
+	  res = input_encoding(toks[1])
+      if not res then
+		 error('Invalid '..toks[2]..' encoding: '..toks[1], 2)
 		 return nil
 	  end
-	  -- TODO: array or dictionary
-       return({ istable = true,
-				conversion = t.name,
-				fun = t.fun,
-				check = t.check })
+	  res.luatype = 'table'
+	  res.zentype = 'array'
+	  res.raw = obj
+	  return(res)
    end
    error('Invalid conversion for type '..objtype..': '..definition, 2)
    return nil
@@ -135,16 +146,16 @@ function operate_conversion(guessed)
    end
    -- TODO: make xxx print to stderr!
    -- xxx('Operating conversion on: '..guessed.name)
-   if guessed.istable then
+   if guessed.zentype == 'schema' then
+	  return guessed.fun(guessed.raw)
+   elseif guessed.luatype == 'table' then
      -- TODO: better error checking on deepmap?
       if luatype(guessed.check) == 'function' then
          deepmap(guessed.check, guessed.raw)
       end
       return deepmap(guessed.fun, guessed.raw)
-   elseif guessed.isschema then
-	   return guessed.fun(guessed.raw)
-   else
-	   if luatype(guessed.check) == 'function' then
+   else -- object
+	   if guessed.check then
          guessed.check(guessed.raw)
       end
       return guessed.fun(guessed.raw)

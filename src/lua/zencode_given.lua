@@ -39,18 +39,15 @@ end
 -- @return true or false
 local function pick(what, conv)
    local guess
-   local got
    local data
+   local raw
    raw = IN.KEYS[what] or IN[what]
-   got = luatype(raw)
-   ZEN.assert(got, "Cannot find '"..what.."' anywhere")
+   ZEN.assert(raw, "Cannot find '"..what.."' anywhere")
    -- if not conv and ZEN.schemas[what] then conv = what end
-   TMP = guess_conversion(got, conv or what)
+   TMP = guess_conversion(raw, conv or what)
    ZEN.assert(TMP, "Cannot guess any conversion for: "..
-				 got.." "..(conv or what or "(nil)"))
-   TMP.type = got
+				 luatype(raw).." "..(conv or what or "(nil)"))
    TMP.name = what
-   TMP.raw = raw
    assert(ZEN.OK)
    if DEBUG > 1 then ZEN:ftrace("pick found "..what) end
 end
@@ -71,7 +68,6 @@ end
 local function pickin(section, what, conv, fail)
    ZEN.assert(section, "No section specified")
    local root -- section
-   local got  -- what
    local raw -- data pointer
    local bail -- fail
    root = IN.KEYS[section]
@@ -90,11 +86,9 @@ local function pickin(section, what, conv, fail)
    -- conv = conv or what
    -- if not conv and ZEN.schemas[what] then conv = what end
    -- if no encoding provided then conversion is same as name (schemas etc.)
-   got = luatype(raw)
-   TMP = guess_conversion(got, conv or what )
+   TMP = guess_conversion(raw, conv or what )
    TMP.name = what
    TMP.root = section
-   TMP.raw = raw
    assert(ZEN.OK)
    if DEBUG > 1 then ZEN:ftrace("pickin found "..what.." in "..section) end
 end
@@ -123,29 +117,27 @@ local function ack(name)
    --    name = guess.name,
    --    istable = guess.istable,
    --    isschema = guess.isschema }
+   ZEN.assert(not ACK[name], "Destination already exists, cannot overwrite: "..name, 2)
    assert(ZEN.OK)
-   local t = luatype(ACK[name])
-   if not ACK[name] then -- assign in ACK the single object
-	  ACK[name] = operate_conversion(TMP)
-	  goto done
-   end
+   ACK[name] = operate_conversion(TMP)
+
    -- ACK[name] already holds an object
    -- not a table?
-   if t ~= 'table' then -- convert single object to array
-	  ACK[name] = { ACK[name] }
-	  table.insert(ACK[name], operate_conversion(TMP))
-	  goto done
-   end
-   -- it is a table already
-   if isarray(ACK[name]) then -- plain array
-	  table.insert(ACK[name], operate_conversion(TMP))
-	  goto done
-   else -- associative map (dictionary)
-	  table.insert(ACK[name], operate_conversion(TMP)) -- TODO: associative map insertion
-	  goto done
-   end
-   ::done::
-   assert(ZEN.OK)
+   -- if not (dsttype == 'table') then -- convert single object to array
+   -- 	  ACK[name] = { ACK[name] }
+   -- 	  table.insert(ACK[name], operate_conversion(TMP))
+   -- 	  goto done
+   -- end
+   -- -- it is a table already
+   -- if isarray(ACK[name]) then -- plain array
+   -- 	  table.insert(ACK[name], operate_conversion(TMP))
+   -- 	  goto done
+   -- else -- associative map (dictionary)
+   -- 	  table.insert(ACK[name], operate_conversion(TMP)) -- TODO: associative map insertion
+   -- 	  goto done
+   -- end
+   -- ::done::
+   -- assert(ZEN.OK)
 end
 
 Given("nothing", function()
