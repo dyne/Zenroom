@@ -54,7 +54,7 @@ When("set '' to '' as ''", function(dest, content, format)
 		guess.raw = content
 		ACK[dest] = operate_conversion(guess)
 		ZEN.CODEC[dest] = { name = dest,
-							encoding = 'format',
+							encoding = format,
 							luatype = 'string',
 							zentype = 'element' }
 
