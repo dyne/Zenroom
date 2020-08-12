@@ -171,8 +171,7 @@ cat <<EOF  > $tmpWhen1
 # APPEND
 # The "append" statement are pretty self-explaining: 
 # append a simple object like a number (or a string) to an existing array (or string array)
-When I append 'myFirstString' to 'mySecondString' as 'string'
-When I append string 'myThirdString' to 'myFourthString'
+When I append 'mySecondString' to 'myFirstString'
 
 # RENAME
 # The "rename" statement: we've been hinting at this for a while now,

@@ -19,23 +19,12 @@
 
 --- WHEN
 
-When("append string '' to ''", function(content, dest)
-		-- ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
-		if ACK[dest] then
-		   ACK[dest] = ACK[dest] .. O.from_string(content)
-		else
-		   ACK[dest] = O.from_string(content)
-		end
-end)
-When("append '' to '' as ''", function(content, dest, format)
-		-- ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
-		local val = ACK[content] or operate_conversion( guess_conversion( val, format))
+When("append '' to ''", function(src, dest, format)
+		local val = ACK[src]
+		ZEN.assert(val, "Cannot append a non existing variable: "..src)
 		local dst = ACK[dest]
-		if dst then
-		   ACK[dest] = dst .. val
-		else
-		   ACK[dest] = val
-		end
+		ZEN.assert(dst, "Cannot append to non existing destination: "..dest)
+		ACK[dest] = dst .. val
 end)
 
 -- simplified exception for I write: import encoding from_string ...
@@ -156,10 +145,8 @@ When("rename the '' to ''", function(old,new)
 		ZEN.assert(ACK[old], "Object not found: "..old)
 		ACK[new] = ACK[old]
 		ACK[old] = nil
-		if ZEN.CODEC[old] then
-		   ZEN.CODEC[new] = ZEN.CODEC[old]
-		   ZEN.CODEC[old] = nil
-		end
+		ZEN.CODEC[new] = ZEN.CODEC[old]
+		ZEN.CODEC[old] = nil
 end)
 
 When("split the rightmost '' bytes of ''", function(len, src)
@@ -170,6 +157,7 @@ When("split the rightmost '' bytes of ''", function(len, src)
 		local l,r = OCTET.chop(ACK[src],s)
 		ACK.rightmost = r
 		ACK[src] = l
+		ZEN.CODEC.rightmost = ZEN.CODEC[src]
 end)
 
 When("split the leftmost '' bytes of ''", function(len, src)
@@ -180,6 +168,7 @@ When("split the leftmost '' bytes of ''", function(len, src)
 		local l,r = OCTET.chop(ACK[src],s)
 		ACK.leftmost = l
 		ACK[src] = r
+		ZEN.CODEC.leftmost = ZEN.CODEC[src]
 end)
 
 -- TODO:
