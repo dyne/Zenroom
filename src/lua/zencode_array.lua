@@ -19,36 +19,57 @@
 -- array operations
 
 When("create the array of '' random objects", function(s)
-    ACK.array = { }
-    for i = s,1,-1 do
-       table.insert(ACK.array,OCTET.random(64))
-    end
+		ZEN.assert(not ACK.array, "Cannot overwrite existing object: ".."array")
+		ACK.array = { }
+		for i = s,1,-1 do
+		   table.insert(ACK.array,OCTET.random(64))
+		end
+		ZEN.CODEC.array = { name = dest,
+							encoding = CONF.output.encoding.name,
+							luatype = 'table',
+							zentype = 'array' }
 end)
 
 When("create the array of '' random objects of '' bits", function(s, bits)
-    ACK.array = { }
-    local bytes = math.ceil(bits/8)
-    for i = s,1,-1 do
-       table.insert(ACK.array,OCTET.random(bytes))
-    end
+		ZEN.assert(not ACK.array, "Cannot overwrite existing object: ".."array")
+		ACK.array = { }
+		local bytes = math.ceil(bits/8)
+		for i = s,1,-1 do
+		   table.insert(ACK.array,OCTET.random(bytes))
+		end
+		ZEN.CODEC.array = { name = dest,
+							encoding = CONF.output.encoding.name,
+							luatype = 'table',
+							zentype = 'array' }
 end)
 
 When("create the array of '' random numbers", function(s)
-    ACK.array = { }
-    for i = s,1,-1 do
-       table.insert(ACK.array,tonumber(random_int16()))
-    end
+		ZEN.assert(not ACK.array, "Cannot overwrite existing object: ".."array")
+		ACK.array = { }
+		for i = s,1,-1 do
+		   table.insert(ACK.array,tonumber(random_int16()))
+		end
+		ZEN.CODEC.array = { name = dest,
+							encoding = 'number',
+							luatype = 'number',
+							zentype = 'element' }
 end)
 
 When("create the array of '' random numbers modulo ''", function(s,m)
+		ZEN.assert(not ACK.array, "Cannot overwrite existing object: ".."array")
 		ACK.array = { }
 		for i = s,1,-1 do
 		   table.insert(ACK.array,math.floor(random_int16() % m))
 		end
+		ZEN.CODEC.array = { name = dest,
+							encoding = 'number',
+							luatype = 'number',
+							zentype = 'element' }
 end)
 
 When("create the aggregation of array ''", function(arr)
 		-- TODO: switch typologies, sum numbers and bigs, aggregate hash
+		ZEN.assert(not ACK.array, "Cannot overwrite existing object: ".."aggregation")
     local A = ACK[arr]
     ZEN.assert(A, "Object not found: "..arr)
     local count = isarray(A)
@@ -76,6 +97,10 @@ When("create the aggregation of array ''", function(arr)
     else -- TODO: more aggregators for INT and ECP2
        error("Unknown aggregation for type: "..type(A[1]))
     end
+	ZEN.CODEC.aggregation = { name = dest,
+							  encoding = 'number',
+							  luatype = 'number',
+							  zentype = 'element' }
 end)
 
 When("pick the random object in ''", function(arr)
