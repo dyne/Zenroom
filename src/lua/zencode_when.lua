@@ -31,12 +31,21 @@ end)
 When("write string '' in ''", function(content, dest)
 		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		ACK[dest] = O.from_string(content)
+		ZEN.CODEC[dest] = { name = dest,
+							encoding = 'string',
+							luatype = 'string',
+							zentype = 'element' }
+
 end)
 -- ... and from a number
 When("write number '' in ''", function(content, dest)
 		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
 		-- TODO: detect number base 10
 		ACK[dest] = tonumber(content, 10)
+		ZEN.CODEC[dest] = { name = dest,
+							encoding = 'number',
+							luatype = 'number',
+							zentype = 'element' }
 end)
 
 When("set '' to '' as ''", function(dest, content, format)
@@ -44,6 +53,11 @@ When("set '' to '' as ''", function(dest, content, format)
 		local guess = input_encoding(format)
 		guess.raw = content
 		ACK[dest] = operate_conversion(guess)
+		ZEN.CODEC[dest] = { name = dest,
+							encoding = 'format',
+							luatype = 'string',
+							zentype = 'element' }
+
 end)
 
 When("create the random ''", function(dest)
@@ -106,6 +120,10 @@ When("set '' to '' base ''", function(dest, content, base)
 		local num = tonumber(content,bas)
 		ZEN.assert(num, "Invalid numerical conversion for value: "..content)
 		ACK[dest] = num
+		ZEN.CODEC[dest] = { name = dest,
+							encoding = 'number',
+							luatype = 'number',
+							zentype = 'element' }
 end)
 
 -- check a tuple of numbers before comparison, convert from octet if necessary

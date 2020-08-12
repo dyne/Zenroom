@@ -78,7 +78,7 @@ end
 --   (name)      = key name of data (set externally)
 --   (root)      = root section name (set externally)
 --   luatype     = type of raw data for lua
---   zentype     = type of data for zenroom (array, dict, obj, schema)
+--   zentype     = type of data for zenroom (array, dict, element, schema)
 -- }
 function guess_conversion(obj, definition)
    local t
@@ -100,14 +100,14 @@ function guess_conversion(obj, definition)
 	  end
 	  res = input_encoding(definition)
 	  res.luatype = 'string'
-	  res.zentype = 'object'
+	  res.zentype = 'element'
 	  res.raw = obj
 	  return(res)
    end
    if objtype == 'number' then
       res = input_encoding(objtype)
 	  res.luatype = 'number'
-	  res.zentype = 'number'
+	  res.zentype = 'element'
 	  res.raw = obj
 	  return(res)
    end
