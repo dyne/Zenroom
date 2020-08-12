@@ -240,7 +240,7 @@ function serialize(tab)
 		 strings = strings .. tostring(k)
 		 local t = type(v)
 		 if iszen(t) then
-			if v == 'zenroom.octet' then
+			if t == 'zenroom.octet' then
 			   octets = octets .. v
 			else
 			   octets = octets .. v:octet()
