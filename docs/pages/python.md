@@ -98,7 +98,7 @@ Example usage of `zencode_exec(script, keys=None, data=None, conf=None)`
 ```python
 from zenroom import zenroom
 
-contract = """Scenario 'simple': Create a keypair"
+contract = """Scenario ecdh: Create a keypair"
 Given that I am known as 'identifier'
 When I create the keypair
 Then print my data

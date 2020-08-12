@@ -141,8 +141,8 @@ install:
 		&& cp -ra examples/* ${destdocs}/examples/
 	install -d ${destdocs}/scenarios/coconut \
 		&& cp -ra test/zencode_coconut/*.zen ${destdocs}/scenarios/coconut/
-	install -d ${destdocs}/scenarios/simple \
-		&& cp -ra test/zencode_simple/*.zen ${destdocs}/scenarios/simple/
+	install -d ${destdocs}/scenarios/ecdh \
+		&& cp -ra test/zencode_ecdh/*.zen ${destdocs}/scenarios/ecdh/
 
 	if [ -d docs/Zencode_Whitepaper.pdf ]; then cp -ra docs/Zencode_Whitepaper.pdf ${destdocs}/; fi
 	cp README.md ${destdocs}/README.txt

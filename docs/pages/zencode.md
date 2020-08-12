@@ -50,15 +50,15 @@ The encryption is applied using 3 arguments:
 
 These 3 arguments can be written or imported, but must given before using the `I encrypt` block:
 
-[](../_media/examples/zencode_simple/SYM02.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_ecdh/SYM02.zen ':include :type=code gherkin')
 
 The output is returned in `secret message` and it looks like:
 
-[](../_media/examples/zencode_simple/cipher_message.json ':include :type=code json')
+[](../_media/examples/zencode_ecdh/cipher_message.json ':include :type=code json')
 
 To decode make sure to have that secret password and that a valid `secret message` is given, then use:
 
-[](../_media/examples/zencode_simple/SYM03.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_ecdh/SYM03.zen ':include :type=code gherkin')
 
 So let's imagine I want to share a secret with someone and send secret messages encrypted with it:
 
@@ -98,11 +98,11 @@ In this phase each participant will create his/her own keypair, store it and com
 
 The statement to generate a keypair (public and private keys) is simple:
 
-[](../_media/examples/zencode_simple/alice_keygen.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_ecdh/alice_keygen.zen ':include :type=code gherkin')
 
 It will produce something like this:
 
-[](../_media/examples/zencode_simple/alice_keypair.json ':include :type=code json')
+[](../_media/examples/zencode_ecdh/alice_keypair.json ':include :type=code json')
 
 Where the public key is usually a longer octet and actually an [Elliptic Curve Point](/lua/modules/ECP.html) coordinate.
 
@@ -129,10 +129,10 @@ After both Alice and Bob have their own keypairs and they both know
 each other public key we can move forward to do asymmetric encryption
 and signatures.
 
-[](../_media/examples/zencode_simple/alice_keypub.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_ecdh/alice_keypub.zen ':include :type=code gherkin')
 
 
-[](../_media/examples/zencode_simple/alice_pub.json ':include :type=code json')
+[](../_media/examples/zencode_ecdh/alice_pub.json ':include :type=code json')
 
 The advantage of using Zencode here is the use of the `valid` keyword which effectively parses the `public key` object and verifies it as valid, in this case as being a valid point on the elliptic curve in use. This greatly reduces the possibility of common mistakes.
 
@@ -150,9 +150,9 @@ Before getting to the encryption 2 other objects must be given:
 
 So with an input separated between DATA and KEYS or grouped together in an array like:
 
-[](../_media/examples/zencode_simple/bob_keyring.json ':include :type=code json')
+[](../_media/examples/zencode_ecdh/bob_keyring.json ':include :type=code json')
 
-[](../_media/examples/zencode_simple/AES05.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_ecdh/AES05.zen ':include :type=code gherkin')
 
 which encrypts and stores results in `secret message`; also in this case `header` may be given, then is included in the encryption as an authenticated clear-text section.
 
@@ -173,15 +173,15 @@ sequenceDiagram
 
 **1. Alice encrypts the message using Bob's public key**
 
-[](../_media/examples/zencode_simple/AES05.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_ecdh/AES05.zen ':include :type=code gherkin')
 
 **2. Bob prepares a keyring with Alice's public key**
 
-[](../_media/examples/zencode_simple/AES06.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_ecdh/AES06.zen ':include :type=code gherkin')
 
 **3. Bob decrypts the message using Alice's public key**
 
-[](../_media/examples/zencode_simple/AES07.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_ecdh/AES07.zen ':include :type=code gherkin')
 
 In this basic example the session key for encryption is made combining
 the private key of Alice and the public key of Bob (or
@@ -251,11 +251,11 @@ public/private keypairs and the public keypair of the correspondent.
 
 **1. Alice signs a message for Bob**
 
-[](../_media/examples/zencode_simple/DSA01.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_ecdh/DSA01.zen ':include :type=code gherkin')
 
 **1. Bob verifies the signed message from Alice**
 
-[](../_media/examples/zencode_simple/DSA02.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_ecdh/DSA02.zen ':include :type=code gherkin')
 
 In this example Alice uses her private key to sign and authenticate a
 message. Bob or anyone else can use Alice's public key to prove that
@@ -307,7 +307,7 @@ create a **proof** any time she wants using as input:
 - the **credentials**
 - her **credential keypair**
 - the **verifier** by MadHatter
-[](../_media/examples/zencode_simple/create_proof.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_ecdh/create_proof.zen ':include :type=code gherkin')
 
 All these "things" (credentials, proofs, etc.) are data structures that can be used as input and received as output of Zencode functions. For instance a **proof** can be print in **JSON** format and looks a bit list this:
 
@@ -336,7 +336,7 @@ Anyone can verify proofs using as input:
 
 - the **credential proof**
 - the **verifier** by MadHatter
-[](../_media/examples/zencode_simple/verify_proof.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_ecdh/verify_proof.zen ':include :type=code gherkin')
 
 What is so special about these proofs? Well!  Alice cannot be followed
 by her trail of proofs: **she can produce an infinite number of
