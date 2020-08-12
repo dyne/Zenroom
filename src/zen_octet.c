@@ -859,7 +859,7 @@ static int eq(lua_State *L) {
 	if (x->len!=y->len) {
 		lua_pushboolean(L, 0);
 		return 1; }
-	int i;
+	register int i;
 	for (i=0; i<x->len; i++) { // xor
 		if (x->val[i] ^ y->val[i]) {
 			lua_pushboolean(L, 0);

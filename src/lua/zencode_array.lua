@@ -109,9 +109,15 @@ When("remove the '' from ''", function(ele,arr)
     ZEN.assert(A, "Array not found: "..arr)
     ZEN.assert( isarray(A) > 0, "Object is not an array: "..arr)
     local O = { }
+	local found = false
     for k,v in next,A,nil do
-       if v ~= E then table.insert(O,v) end
+       if not (v == E) then
+		  table.insert(O,v)
+	   else
+		  found = true
+	   end
     end
+	ZEN.assert(found, "Element to be removed not found in array")
     ACK[arr] = O
 end)
 
