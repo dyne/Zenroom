@@ -162,6 +162,98 @@ function operate_conversion(guessed)
 	end
 end
 
+
+-- Octet to string encoding conversion mechanism: takes the name of
+-- the encoding and returns the function. Octet is a first class
+-- citizen in Zenroom therefore all WHEN/ACK r/w HEAP types can be
+-- converted by its methods.
+function outcast_string(obj)
+   local t = luatype(obj)
+   if t == 'number' then
+	  return tostring(obj) end
+   return O.to_string(obj)
+end
+function outcast_hex(obj)
+   local t = luatype(obj)
+   if t == 'number' then
+	  return O.to_hex( O.from_string( tostring(obj) ):hex() ) end
+   return O.to_hex(obj)
+end
+function outcast_base64(obj)
+   local t = luatype(obj)
+   if t == 'number' then
+	  return O.from_string( tostring(obj) ):base64() end
+   return O.to_base64(obj)
+end
+function outcast_url64(obj)
+   local t = luatype(obj)
+   if t == 'number' then
+	  return O.from_string( tostring(obj) ):url64() end
+   return O.to_url64(obj)
+end
+function outcast_base58(obj)
+	local t = luatype(obj)
+	if t == 'number' then
+	   return O.from_string( tostring(obj) ):base58() end
+	return O.to_base58(obj)
+ end
+function outcast_bin(obj)
+   local t = luatype(obj)
+   if t == 'number' then
+	  return O.from_string( tostring(obj) ):bin() end
+   return O.to_bin(obj)
+end
+-- takes a string returns the function, good for use in deepmap(fun,table)
+function guess_outcast(cast)
+   if     cast == 'string' then return outcast_string
+   elseif cast == 'hex'    then return outcast_hex
+   elseif cast == 'base64' then return outcast_base64
+   elseif cast == 'url64'  then return outcast_url64
+   elseif cast == 'base58'  then return outcast_base58
+   elseif cast == 'bin'    then return outcast_bin
+   elseif cast == 'binary'    then return outcast_bin
+   elseif cast == 'number' then return(function(v) return(v) end)
+   else
+	  error("Invalid output conversion: "..cast, 2)
+	  return nil
+   end
+end
+function check_codec(value)
+   if not ZEN.CODEC then
+	  return CONF.output.encoding.name
+   end
+   if not ZEN.CODEC[value] then
+	  return CONF.output.encoding.name
+   end
+   if ZEN.CODEC[value].zentype == 'schema' then
+	  return CONF.output.encoding.name
+   else
+	  return ZEN.CODEC[value].encoding or CONF.output.encoding.name
+   end
+end
+
+function serialize(tab)
+   assert(luatype(tab) == 'table', "Cannot serialize: not a table",2)
+   local octets = OCTET.zero(1)
+   local strings = "K"
+   deepmap(function(v,k)
+		 strings = strings .. tostring(k)
+		 local t = type(v)
+		 if iszen(t) then
+			if v == 'zenroom.octet' then
+			   octets = octets .. v
+			else
+			   octets = octets .. v:octet()
+			end
+		 else -- number
+			strings = strings .. tostring(v)
+		 end
+		   end, tab)
+   return { octets = octets,
+			strings = strings }
+   -- TODO: call gc?
+end
+
 ---
 -- Compare equality of two data objects (TODO: octet, ECP, etc.)
 -- @function ZEN:eq(first, second)

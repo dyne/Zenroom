@@ -21,10 +21,19 @@ local _cbor = require('cbor')
 _cbor.decode = _cbor.raw_decode
 
 _cbor.encode = function(tab)
-   return _cbor.raw_encode(
-	  -- encodes zencode types
-	  I.process(tab)
-   )
+   -- encodes zencode types according to CODEC
+   assert(luatype(tab) == 'table', "CBOR encode argument needs to be a table")
+   local fun
+   local res = { }
+   for k,v in pairs(tab) do
+	  fun = guess_outcast( check_codec(k) )
+	  if luatype(v) == 'table' then
+		 res[k] = deepmap(fun, v)
+	  else
+		 res[k] = fun(v)
+	  end
+   end
+   return _cbor.raw_encode( res )
 end
 
 _cbor.auto = function(obj)
