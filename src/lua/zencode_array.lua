@@ -85,6 +85,7 @@ When("pick the random object in ''", function(arr)
     ZEN.assert( count > 0, "Object is not an array: "..arr)
     local r = (random_int16() % count) +1
     ACK.random_object = A[r]
+	ZEN.CODEC.random_object = ZEN.CODEC[arr]
 end)
 
 When("randomize the '' array", function(arr)
