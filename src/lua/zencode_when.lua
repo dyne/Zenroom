@@ -177,7 +177,6 @@ When("split the leftmost '' bytes of ''", function(len, src)
 		ZEN.assert(s, "Invalid number arg #1: "..type(len))
 		ZEN.assert(ACK[src], "Element not found: "..src)
 		ZEN.assert(not ACK.leftmost, "Cannot overwrite existing value: ".."leftmost")
-		print(#src)
 		local l,r = OCTET.chop(ACK[src],s)
 		ACK.leftmost = l
 		ACK[src] = r
