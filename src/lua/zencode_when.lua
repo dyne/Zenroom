@@ -65,6 +65,29 @@ When("create the random ''", function(dest)
 		ACK[dest] = OCTET.random(64) -- TODO: right now hardcoded 256 bit random secrets
 end)
 
+When("create the serialization of ''", function(src)
+		ZEN.assert(ACK[src], "Object not found: "..src)
+		ZEN.assert(not ACK.serialization,
+				   "Cannot overwrite existing value: "..'serialization')
+		if luatype(ACK[src]) == 'table' then
+		   local res
+		   res = serialize(ACK[src])
+		   ACK.serialization =
+			  OCTET.from_string(res.strings) .. res.octets
+		else
+		   ACK.serialization = ACK[src]
+		end
+end)
+
+When("create the serialization of data", function()
+		ZEN.assert(not ACK.serialization,
+				   "Cannot overwrite existing value: "..'serialization')
+		local res
+		res = serialize(ACK)
+		ACK.serialization =
+		   OCTET.from_string(res.strings) .. res.octets
+end)
+
 -- generic comparison using overloaded __eq on any value
 When("verify '' is equal to ''", function(l,r)
 		local tabeq = false
