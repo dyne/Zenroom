@@ -38,13 +38,14 @@ cat <<EOF  > $tmp
 		 "Hello World! myFirstObject, myFirstArray[1]",
 		 "Hello World! myFirstObject, myFirstArray[2]"
       ],
-	  "myFirstNumberArray":[10, 20, 30],
-     
-   "myOnlyEcpArray": [
-    "Awz+ogtsf9xRn7hIw/6B1xvwoBNRgNFJOPYqSdPd+OAHXgDVuLWuKEvIsynbdWBJIw==",
-    "A05tQgcTdT7+OAvfWZMIYI9G2owWBBR3/KqRBL/KPh2rPknbW1FBbRcee3P+7hpOoQ==",
-    "AzijxD9GRztPcRtEXjdpXIPTzzmv0dvCdQNcmToC09pOw1ZLg/eAHdgEFV6oWhionQ==",
-    "Ak8k6etvJjUPfSTFZFtQiRKaX1gIs3lUMzti+BQZW1XhUl8OOAOa/LrCRWyV1fpLwg=="
+	  "myFirstNumberArray":[10, 20, 30, 40, 50],
+   "myOnlyEcpArray":[
+        "Awz+ogtsf9xRn7hIw/6B1xvwoBNRgNFJOPYqSdPd+OAHXgDVuLWuKEvIsynbdWBJIw==",
+		"A05tQgcTdT7+OAvfWZMIYI9G2owWBBR3/KqRBL/KPh2rPknbW1FBbRcee3P+7hpOoQ==",
+		"AzijxD9GRztPcRtEXjdpXIPTzzmv0dvCdQNcmToC09pOw1ZLg/eAHdgEFV6oWhionQ==",
+		"Ak8k6etvJjUPfSTFZFtQiRKaX1gIs3lUMzti+BQZW1XhUl8OOAOa/LrCRWyV1fpLwg=="
+   ],
+    "myOnlyEcp2Array":[    "QTQcWNiZgxQSyk7z0Zuy7GSF7kfrvahtaKFfgWsQeZurOpSSEiA81amccUi6S0LEIozhraN8aL+S8X7cPoqg7s1ftnC/S/MH3kwRwJ0jscACVvf+1Y/XEtngBZ0g1frPBNe6CVuaoQiXuda0g5t4mZzItGt6hgtsn7f/iHyO+Iwe1+9vUEzfysxNmFVjEq8ADEeFLqnltHbrI2H3vVZTc5g5IWxAJF00wE7n0kKb4AF59bqxbBN62dIqmVEodMDH",	"Anq3ieAxAEGfNzzQYUuQD1NPZuaojS6Fd3/nr3GFKqTPJmdEFTYamiGAN5nN5N5mMBMxE2sub/I39sqFKjDF22Iu/jZWsT+grD5E3PDuiaR4Ugr7V/WOdY3iiY5tfZm4AlWiNYSVR3KIcZe81E5q/GucEvAeC0VuGDgrTvTZ3/e7qxSxsi6aoqlLl2dD3AjABVQHfdY0BZ4gL1xYCmF7TYPs6LNeVb1+9buFZk3I7mskgGjrzgdKgm7IH3rL3Hsl",	"SQn5DHPbQTPmxfQirsxZ28uJu6PKv54UDXUzAqqUliAmc52+yFhwgeJpBWwpGfUPP04m8eNUo0hIO3EA2MKDaVxc78HS4PM2nm8ngyX/fTcg1WheaNIkrF4yycGeIEByB3NsYm36CvrJmfKQMtbON0yMpjD6vTfG6C82xaF+vRSieXgXDqh0e3e0deWkWo2vAQht5aqMDX0hGub01gk6tv/IeboIfr3fva80g4XPoiyfI23VZpRP65LdjnAS1seQ", 	"FcLlzyRlrLBCQAEKs6d+WCtV4awcogoGiGlWKStiuPR+1ms4ZBGKmwW+bniPcAQ3PEUqLBsy+SGmWA0IdkeGRyoJA/gsjZFYr8s8L5ZBd+zIk6ycjuK1fINyfXif3efmR0K2gjSQvptlzmggTr0SLoA3qO1vRZ2ZjPJLa4ehyhZaqx3rxqNWSxK/WzviPHfsAnYQVIOmJGsMl8lGpaJdHWh7XiMDUqJLu2B9OfE4O4pTE8eARR10oSaaNovDzkF+"
   ]
    },
    "mySecondObject":{
@@ -72,11 +73,11 @@ cat <<EOF  > $tmp
    },
    "myFourthObject":{
       "myFourthArray":[
-         "Hello World! myFourthObject, myFourthArray[0]",
-         "Hello World! myFourthObject, myFourthArray[1]",
+         "Hello World! inside myFourthObject, inside myFourthArray[0]",
+         "Hello World! inside myFourthObject, inside myFourthArray[1]",
 		 "Will this string be found inside an array?",
-         "Hello World! myFourthObject, myFourthArray[2]",
-		 "Hello World! myFourthObject, myFourthArray[3]"
+         "Hello World! inside myFourthObject, inside myFourthArray[2]",
+		 "Hello World! inside myFourthObject, inside myFourthArray[3]"
       ],
   "myFourthString":"...and good evening!",
   "myFifthString":"We have run out of greetings.",
@@ -89,8 +90,13 @@ cat <<EOF  > $tmp
   "myEleventhStringToBeHashed":"hash me to kdf",
   "myTwelfthStringToBeHashedUsingPBKDF2":"hash me to pbkdf2",
   "myThirteenStringPassword":"my funky password",
-  "myFourteenthStringToBeHashedUsingHMAC":"hash me to HMAC"
-
+  "myFourteenthStringToBeHashedUsingHMAC":"hash me to HMAC",
+  "myOnlyBIGArray":[
+	"7dcd7392a9dea33b145a03279af78b1adf1c0549f5121ec28dd3dc136c0ca693",
+	"8bd877e84538380c455448239f04d817e9657ecf2786442f11c98248ca8178a2",
+	"d2cfc1b31b087d0d7137e3f5d45fc6a9cf33025fdba6f9cad40a04e36b420763",
+	"554e2fcf3a4a1d872446febb81a91d910e772a4cf4c5e36a3569b159cb5ff439"
+      ]	  
   
    },
    
@@ -111,13 +117,14 @@ cat <<EOF  > $tmpGiven
 Scenario 'ecdh': Create the keypair
 Given I have a 'keypair' from 'Alice'
 # Load Arrays
-Given I have a 'string' named 'myFirstArray'  inside 'myFirstObject'
-Given I have a 'string' named 'mySecondArray' inside 'mySecondObject'
-Given I have a 'string' named 'myThirdArray' inside 'myThirdObject' 
-Given I have a 'string' named 'myFourthArray' inside 'myFourthObject'
-Given I have a 'number' named 'myFirstNumberArray' inside 'myFirstObject'
-Given I have a 'string' named 'myCopyOfFirstArray' inside 'myThirdObject'
-Given I have a 'ecp array' named 'myOnlyEcpArray'   inside 'myFirstObject'
+Given I have a 'string array' named 'myFirstArray'  inside 'myFirstObject'
+Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
+Given I have a 'string array' named 'myThirdArray' inside 'myThirdObject' 
+Given I have a 'string array' named 'myFourthArray' inside 'myFourthObject'
+Given I have a 'number array' named 'myFirstNumberArray' inside 'myFirstObject'
+Given I have a 'string array' named 'myCopyOfFirstArray' inside 'myThirdObject'
+Given I have a 'base64 array' named 'myOnlyEcpArray' inside 'myFirstObject'
+Given I have a 'base64 array' named 'myOnlyEcp2Array' inside 'myFirstObject'
 # Load Numbers
 Given I have a 'number' named 'myFirstNumber' in 'myFirstObject'
 Given I have a 'number' named 'mySecondNumber' in 'mySecondObject'
@@ -253,12 +260,13 @@ When I create the array of '4' random objects
 and I rename the 'array' to 'my4RandomObjectsArray'
 When I create the array of '5' random objects of '512' bits
 and I rename the 'array' to 'my512BitsRandomObjectsArray'
-# A special case of the "create random" is the "create random curve points":
-# this statement outputs an array of ECP points and put in an array called "array"
-#The curve used can be modified via configuration file.
-When I create the array of '3' random curve points
-and I rename the 'array' to 'myECPPointsArray'
-
+# You can generate an array of random numbers, from 0 o 65355, with this statement.
+When I create the array of '10' random numbers 
+and I rename the 'array' to 'my10RandomNumbersArray'
+# A variation of the statement above, allows you to use the "modulo" function to cap the max value
+# of the random numbers. In the example below, the max value will be "999".
+When I create the array of '16' random numbers modulo '1000'
+and I rename the 'array' to 'my16RandomNumbersModulo1000Array'
 # SET
 # The 'set' statement creates a new variable and assign it a value.
 # Overwriting variables discouraged in Zenroom: if you try to overwrite an existing variable, 
@@ -268,7 +276,7 @@ and I rename the 'array' to 'myECPPointsArray'
 When I set 'myNewlyCreatedString' to 'call me The Pink Panther!' as 'string'
 When I set 'myFirstNewlyCreatedNumber' to '42' as 'number'
 When I set 'mySecondNewlyCreatedNumber' to '42' base '16'
-Then print all data 
+Then print all data
 EOF
 
 cat $tmpWhen2 > ../../docs/examples/zencode_cookbook/whenCompleteScriptPart2.zen
@@ -323,12 +331,12 @@ And I rename the 'hash' to 'hashOfMySeventhString'
 # The "create hash to point" statement can do some serious cryptography: 
 # use it generating public keys from a secret key, where the secret key can be any random number.
 # The statement accepts curves "ecp" or "ecp2" to produce the hash.
-# This statement takes an array as input, and produces an array as output named "hashes", which
+# This statement takes an array as input, and produces an array as output named "hash_to_point", which
 # we immediately rename.
 When I create the hash to point 'ecp' of each object in 'myFourthArray'
-And I rename the 'hash to point' to 'ECPhashesOfMyFourthArray'
+And I rename the 'hash_to_point' to 'ECPhashesOfMyFourthArray'
 When I create the hash to point 'ecp2' of each object in 'myFirstArray'        
-And I rename the 'hash to point' to 'ECP2hashesOfMyFirstArray'
+And I rename the 'hash_to_point' to 'ECP2hashesOfMyFirstArray'
 
 # Key derivation function (KDF)
 # The output object is named "key_derivation":
@@ -344,11 +352,12 @@ And I rename the 'key_derivation' to 'pbkdf2OfmyTwelfthString'
 When I create the HMAC of 'myFourteenthStringToBeHashedUsingHMAC' with key 'myThirteenStringPassword'
 And I rename the 'HMAC' to 'HMACOfMyFourteenthString'
 
-# AGGREGATE ECP POINTS
-# The "create the aggregation" statement takes as input an array of ECP points
-# and aggregates it into a new object called "aggregation" that we'll rename
-When I create the aggregation of 'myOnlyEcpArray'
-And I rename the 'aggregation' to 'aggregationOfMyOnlyEcpArray'
+# AGGREGATE
+# The "create the aggregation" statement takes as input an array of numers
+# and sums then it into a new object called "aggregation" that we'll rename immediately.
+# It works on both arrays and dictionaries, the data type needs to be specified as in the example.
+When I create the aggregation of array 'myFirstNumberArray'
+And I rename the 'aggregation' to 'aggregationOfMyFirstNumberArray'
 
 # Since we've been dealing with cryptography, we probably want to format the output
 # as "hex", which we do as follows:

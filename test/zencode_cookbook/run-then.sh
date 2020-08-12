@@ -126,12 +126,7 @@ cat <<EOF  > $tmpInput
     },
 	"Carl": {
          "public_key": "BG/TONSVfG5iQWNpp4bNG7Ev0g36XncIeaDOWOHX+MvDj/rPOEHahE2uJepOAv6ijZj07sc2XRddIH4HB78Nu4k="
-    },
-	
-   "copyOfMyObject":{
-   "myNumber_1":10000,
-   "myString_1":"Good morning Vietnam!",
-   }
+    }
 }
 EOF
 cat $tmpInput > ../../docs/examples/zencode_cookbook/myLargeNestedObjectThen.json
@@ -146,53 +141,51 @@ Given I have my 'keypair'
 and I have a 'public key' from 'Bob'
 and I have a 'public key' from 'Carl'
 # Load Arrays
-# Given I have a 'string array' named 'myStringArray_1'
-Given I have a 'string array' named 'myStringArray_2'  
-Given I have a 'string array' named 'myStringArray_3'
-Given I have a 'string array' named 'myStringArray_4'  
-Given I have a 'string array' named 'myStringArray_5'
-Given I have a 'number array' named 'myNumberArray_1'
-Given I have a 'number array' named 'myNumberArray_2'
-Given I have a 'number array' named 'myNumberArray_3'
-Given I have a 'number array' named 'myNumberArray_4'
-Given I have a 'number array' named 'myNumberArray_5'
+# Given I have a 'string array' named 'myStringArray_1' inside 'myObject'
+Given I have a 'string array' named 'myStringArray_2' inside 'myObject'
+Given I have a 'string array' named 'myStringArray_3' inside 'myObject'
+Given I have a 'string array' named 'myStringArray_4' inside 'myObject' 
+Given I have a 'string array' named 'myStringArray_5' inside 'myObject'
+Given I have a 'number array' named 'myNumberArray_1' inside 'myObject'
+Given I have a 'number array' named 'myNumberArray_2' inside 'myObject'
+Given I have a 'number array' named 'myNumberArray_3' inside 'myObject'
+Given I have a 'number array' named 'myNumberArray_4' inside 'myObject'
+Given I have a 'number array' named 'myNumberArray_5' inside 'myObject'
 # Load Numbers
-Given I have a 'number' named 'myNumber_1'
-Given I have a 'number' named 'myNumber_2'
-Given I have a 'number' named 'myNumber_3' 
-Given I have a 'number' named 'myNumber_4'
-Given I have a 'number' named 'myNumber_5' 
+Given I have a 'number' named 'myNumber_1' inside 'myObject'
+Given I have a 'number' named 'myNumber_2' inside 'myObject'
+Given I have a 'number' named 'myNumber_3' inside 'myObject' 
+Given I have a 'number' named 'myNumber_4' inside 'myObject'
+Given I have a 'number' named 'myNumber_5' inside 'myObject'
 # Load Strings
-Given I have a 'string' named 'myString_1' 
+Given I have a 'string' named 'myString_1'  inside 'myObject'
 # Questo sotto non funziona proprio, quindi toglierei la parte in 'qualcosa'
-Given I have a 'string' named 'myString_1' in 'copyOfMyObject'
-Given I have a 'number' named 'myNumber_1' in 'copyOfMyObject'
-Given I have a 'string' named 'myString_2' 
-Given I have a 'string' named 'myString_3'  
-Given I have a 'string' named 'myString_4' 
-Given I have a 'string' named 'myString_5'  
+Given I have a 'string' named 'myString_2' inside 'myObject'
+Given I have a 'string' named 'myString_3' inside 'myObject'
+Given I have a 'string' named 'myString_4' inside 'myObject'
+Given I have a 'string' named 'myString_5' inside 'myObject'
 # Different data types
-Given I have an 'hex' named 'myHex_1' 
-Given I have an 'hex' named 'myHex_2' 
-Given I have an 'hex' named 'myHex_3' 
-Given I have an 'hex' named 'myHex_4' 
-Given I have an 'hex' named 'myHex_5' 
-Given I have a  'base64' named 'myBase64_1'
-Given I have a  'base64' named 'myBase64_2'
-Given I have a  'base64' named 'myBase64_3'
-Given I have a  'base64' named 'myBase64_4'
-Given I have a  'base64' named 'myBase64_5'
-Given I have a  'binary' named 'myBinary_1'
-Given I have a  'binary' named 'myBinary_2'
-Given I have a  'binary' named 'myBinary_3'
-Given I have a  'binary' named 'myBinary_4'
-Given I have a  'binary' named 'myBinary_5'
-Given I have an 'url64' named 'myUrl64_1'
-Given I have an 'url64' named 'myUrl64_2'
-Given I have an 'url64' named 'myUrl64_3'
-Given I have an 'url64' named 'myUrl64_4'
-Given I have an 'url64' named 'myUrl64_5'
-Given I have an 'url64' named 'myUrl64_6'
+Given I have an 'hex' named 'myHex_1' inside 'myObject'
+Given I have an 'hex' named 'myHex_2' inside 'myObject'
+Given I have an 'hex' named 'myHex_3' inside 'myObject'
+Given I have an 'hex' named 'myHex_4' inside 'myObject'
+Given I have an 'hex' named 'myHex_5' inside 'myObject'
+Given I have a  'base64' named 'myBase64_1' inside 'myObject'
+Given I have a  'base64' named 'myBase64_2' inside 'myObject'
+Given I have a  'base64' named 'myBase64_3' inside 'myObject'
+Given I have a  'base64' named 'myBase64_4' inside 'myObject'
+Given I have a  'base64' named 'myBase64_5' inside 'myObject'
+Given I have a  'binary' named 'myBinary_1' inside 'myObject'
+Given I have a  'binary' named 'myBinary_2' inside 'myObject'
+Given I have a  'binary' named 'myBinary_3' inside 'myObject'
+Given I have a  'binary' named 'myBinary_4' inside 'myObject'
+Given I have a  'binary' named 'myBinary_5' inside 'myObject'
+Given I have an 'url64' named 'myUrl64_1' inside 'myObject'
+Given I have an 'url64' named 'myUrl64_2' inside 'myObject'
+Given I have an 'url64' named 'myUrl64_3' inside 'myObject'
+Given I have an 'url64' named 'myUrl64_4' inside 'myObject'
+Given I have an 'url64' named 'myUrl64_5' inside 'myObject'
+Given I have an 'url64' named 'myUrl64_6' inside 'myObject'
 EOF
 cat $tmpGiven > ../../docs/examples/zencode_cookbook/thenCompleteScriptGiven.zen
 
@@ -293,17 +286,102 @@ let n=n+1
 
 cat <<EOF  > $tmpThen2
 
+# Then print all data
+
+# By printing all data, the first of the 5 items
+# is printed with its default schema.
+# 
+# (0): default
+# 1: string
+# 2: number
+# 3: base64
+# 4: bin
+# 5: hex
+
+Then print 'myString_1'
+Then print 'myString_2' as 'number' 
+Then print 'myString_3' as 'base64' 
+Then print 'myString_4' as 'bin' 
+Then print 'myString_5' as 'hex' 
+
+Then print 'myNumber_1'  
+Then print 'myNumber_2' as 'string' 
+Then print 'myNumber_3' as 'base64'
+Then print 'myNumber_4' as 'bin' 
+Then print 'myNumber_5' as 'hex'
+
+Then print 'myStringArray_1' 
+Then print 'myStringArray_2' as 'number' 
+Then print 'myStringArray_3' as 'base64' 
+Then print 'myStringArray_4' as 'bin' 
+Then print 'myStringArray_5' as 'hex' 
+
+Then print 'myNumberArray_1' 
+Then print 'myNumberArray_2' as 'string' 
+Then print 'myNumberArray_3' as 'base64' 
+Then print 'myNumberArray_4' as 'bin' 
+Then print 'myNumberArray_5' as 'hex' 
+
+Then print 'myBinary_1' 
+Then print 'myBinary_2' as 'string' 
+Then print 'myBinary_3' as 'number' 
+Then print 'myBinary_4' as 'base64' 
+Then print 'myBinary_5' as 'hex' 
+
+Then print 'myBase64_1' 
+Then print 'myBase64_2' as 'string'
+Then print 'myBase64_3' as 'number' 
+Then print 'myBase64_4' as 'bin'
+Then print 'myBase64_5' as 'hex' 
+
+Then print 'myHex_1' 
+Then print 'myHex_2' as 'string'
+Then print 'myHex_3' as 'number' 
+Then print 'myHex_4' as 'base64'
+Then print 'myHex_5' as 'bin' 
+
+Then print 'myUrl64_1' 
+Then print 'myUrl64_2' as 'string'
+Then print 'myUrl64_3' as 'number'
+Then print 'myUrl64_4' as 'base64'
+Then print 'myUrl64_5' as 'bin'
+Then print 'myUrl64_6' as 'hex'
+
+EOF
+
+
+cat $tmpThen2 > ../../docs/examples/zencode_cookbook/thenCompleteScriptPart2.zen
+
+
+cat $tmpZen2 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpInput | jq . | tee ../../docs/examples/zencode_cookbook/thenCompleteOutputPart2.json
+
+
+
+
+echo "                                                "
+echo "------------------------------------------------"
+echo "               Script number $n                 "
+echo "               print my data script             "
+echo "------------------------------------------------"
+echo "                                                "
+let n=n+1
+
+
+cat <<EOF  > $tmpThen3
+
 When I write string 'This message is for Bob.' in 'messageForBob'
 When I write string 'This message is for Carl.' in 'messageForCarl'
 
 and I write string 'This is the header' in 'header'
+Then print 'header'
+
 #and I encrypt the message for 'Bob'
-and I encrypt the 'messageForBob'
-and I rename the 'message' to 'Message for Bob'
-and debug
+# and I encrypt the 'messageForBob'
+# and I rename the 'message' to 'Message for Bob'
+# and debug
 #and I encrypt the message for 'Carl'
 #and I rename the 'message' to 'Message for Carl'
-Then print the 'Message for Bob'
+#Then print the 'Message for Bob'
 #and print the 'Message for Carl'
 
 # Then print my 'keypair' 
@@ -326,10 +404,10 @@ Then print the 'Message for Bob'
 EOF
 
 
-cat $tmpThen2 > ../../docs/examples/zencode_cookbook/thenCompleteScriptPart2.zen
+cat $tmpThen3 > ../../docs/examples/zencode_cookbook/thenCompleteScriptPart3.zen
 
 
-cat $tmpZen2 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpInput | jq . | tee ../../docs/examples/zencode_cookbook/thenCompleteOutputPart2.json
+cat $tmpZen3 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpInput | jq . | tee ../../docs/examples/zencode_cookbook/thenCompleteOutputPart3.json
 
 
 
