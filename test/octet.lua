@@ -78,30 +78,53 @@ dotest(hash:process(left), hash:process(right))
 
 print '== ECP import/export'
 
-left = INT.new(rng,ECP.order()) * ECP.generator() -- ECP point aka pub key
+left = INT.random() * ECP.generator() -- ECP point aka pub key
 b64 = left:octet():base64()
 right = base64(b64)
 dotest(left:octet(),right)
+CONF.input = { }
+CONF.output = { }
+
 print '== JSON import/export'
-function jsontest(f,reason)
-   local str = JSON.encode({public = f(left)})
+function jsontest(reason)
+   CONF.input.encoding = input_encoding(reason)
+   CONF.output.encoding = output_encoding(reason)
+   local str = JSON.encode({public = left})
    right = JSON.decode(str)
-   dotest(left:octet(),f(right['public']),reason)
-   ECP.new(f(right['public'])) -- test if ecp point on curve
+   right.public = CONF.input.encoding.fun(right.public)
+   dotest(left:octet(),right.public)
+   ECP.new(right.public) -- test if ecp point on curve
 end
-jsontest(hex,"hex")
--- jsontest(base58,"base58")
-jsontest(url64,"url64")
-jsontest(base64,"base64")
--- jsontest(bin,"bin") -- TODO: fix
+jsontest("hex")
+jsontest("base58")
+jsontest("url64")
+jsontest("base64")
+jsontest("bin")
+
+print '== CBOR import/export'
+function cbortest(reason)
+   CONF.input.encoding = input_encoding(reason)
+   CONF.output.encoding = output_encoding(reason)
+   local str = CBOR.encode({public = left})
+   right = CBOR.decode(str)
+   right.public = CONF.input.encoding.fun(right.public)
+   dotest(left:octet(),right.public)
+   ECP.new(right.public) -- test if ecp point on curve
+end
+cbortest("hex")
+cbortest("base58")
+cbortest("url64")
+cbortest("base64")
+cbortest("bin")
 
 COCONUT = require_once('crypto_coconut')
 
+print '== JSON cryptotests'
 -- more testing using crypto verification of pub/priv keypair
 function jsoncryptotest(f)
    local key = {}
-   key.private = INT.new(rng,ECP.order())
-   key.public = key.private * ECP.G()
+   key.private = INT.random()
+   key.public = key.private * ECP.generator()
    local str = JSON.encode({private = _G[f](key.private)})
    dstr = JSON.decode(str).private
    doct = _G[f](dstr)
@@ -112,9 +135,9 @@ function jsoncryptotest(f)
 			 .._G[f](dint).."\n".._G[f](key.private))
 end
 jsoncryptotest('hex')
--- jsoncryptotest('base58')
+jsoncryptotest('base58')
 jsoncryptotest('base64')
 jsoncryptotest('url64')
--- jsoncryptotest('bin') -- TODO: fix
+jsoncryptotest('bin')
 
 print '= OK'

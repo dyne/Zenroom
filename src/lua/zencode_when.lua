@@ -77,7 +77,6 @@ When("create the flattening of ''", function(src)
 				   "Cannot overwrite existing value: "..'flattening')
 		ACK.flattening = ZEN.serialize(ACK[src])
 end)
-
 When("create the serialization of data", function()
 		ZEN.assert(not ACK.serialization,
 				   "Cannot overwrite existing value: "..'serialization')
@@ -85,6 +84,20 @@ When("create the serialization of data", function()
 		res = serialize(ACK)
 		ACK.serialization =
 		   OCTET.from_string(res.strings) .. res.octets
+end)
+
+When("create the cbor of ''", function(src)
+		ZEN.assert(ACK[src], "Object not found: "..src)
+		ZEN.assert(not ACK.flattening,
+				   "Cannot overwrite existing value: "..'cbor')
+		ACK.cbor = CBOR.encode(ACK[src])
+end)
+
+When("create the json of ''", function(src)
+		ZEN.assert(ACK[src], "Object not found: "..src)
+		ZEN.assert(not ACK.flattening,
+				   "Cannot overwrite existing value: "..'cbor')
+		ACK.cbor = JSON.encode(ACK[src])
 end)
 
 -- generic comparison using overloaded __eq on any value

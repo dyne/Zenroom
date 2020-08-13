@@ -310,8 +310,7 @@ function zencode:run()
    end
 end
 
-function zencode.to_octet(src)
-   local A = ACK[src]
+function zencode.to_octet(A)
    local lt = luatype(A)
    ZEN.assert(not (t == 'table'),
 			  "Cannot convert table to octet, use zencode.serialize",2)
@@ -327,8 +326,7 @@ function zencode.to_octet(src)
    error("Unknown type, cannot convert to octet",2)
 end
 
-function zencode.serialize(src)
-   local A = ACK[src]
+function zencode.serialize(A)
    if luatype(A) == 'table' then
 	  local res
 	  res = serialize(A)

@@ -84,7 +84,7 @@ function input_encoding(what)
 			end,
 			encoding = 'number' })
    end
-   error("Input encoding not found: "..what or '(nil)', 3)
+   error("Input encoding not found", 1)
    return nil
 end
 
@@ -96,6 +96,9 @@ function output_encoding(what)
    elseif what == 'b64' or what =='base64' then
 	  return { fun = O.to_base64,
 			   name = 'base64' }
+   elseif what == 'b58' or what =='base58' then
+	  return { fun = O.to_base58,
+			   name = 'base58' }
    elseif what == 'hex' then
 	  return { fun = O.to_hex,
 			   name = 'hex' }
@@ -106,7 +109,7 @@ function output_encoding(what)
 	  return { fun = O.to_string,
 			   name = 'string' }
    end
-   xxx("Output encoding not found: "..what, 2)
+   error("Output encoding not found: "..what, 2)
    return nil
 end
 
