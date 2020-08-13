@@ -232,11 +232,17 @@ function check_codec(value)
    end
 end
 
+-- Crawls a whole table structure and collects all strings and octets
+-- contained in its keys and values. Converts numbers to
+-- strings. Structure returned is:
+-- { octets = zenroom.octet
+--   strings = string }
+-- calling function may want to convert all to octet or string
 function serialize(tab)
    assert(luatype(tab) == 'table', "Cannot serialize: not a table",2)
    local octets = OCTET.zero(1)
    local strings = "K"
-   deepmap(function(v,k)
+   sort_apply(function(v,k)
 		 strings = strings .. tostring(k)
 		 local t = type(v)
 		 if iszen(t) then
@@ -251,7 +257,6 @@ function serialize(tab)
 		   end, tab)
    return { octets = octets,
 			strings = strings }
-   -- TODO: call gc?
 end
 
 ---

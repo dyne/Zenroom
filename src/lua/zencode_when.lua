@@ -69,14 +69,13 @@ When("create the serialization of ''", function(src)
 		ZEN.assert(ACK[src], "Object not found: "..src)
 		ZEN.assert(not ACK.serialization,
 				   "Cannot overwrite existing value: "..'serialization')
-		if luatype(ACK[src]) == 'table' then
-		   local res
-		   res = serialize(ACK[src])
-		   ACK.serialization =
-			  OCTET.from_string(res.strings) .. res.octets
-		else
-		   ACK.serialization = ACK[src]
-		end
+		ACK.serialization = ZEN.serialize(ACK[src])
+end)
+When("create the flattening of ''", function(src)
+		ZEN.assert(ACK[src], "Object not found: "..src)
+		ZEN.assert(not ACK.flattening,
+				   "Cannot overwrite existing value: "..'flattening')
+		ACK.flattening = ZEN.serialize(ACK[src])
 end)
 
 When("create the serialization of data", function()

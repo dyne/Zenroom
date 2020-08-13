@@ -196,6 +196,49 @@ function deepmap(fun,t,...)
    return setmetatable(res, getmetatable(t))
 end
 
+-- apply a function on all keys and values of a tree structure
+-- uses sorted listing for deterministic order
+function sort_apply(fun,t,...)
+   if luatype(fun) ~= 'function' then
+	  error("Internal error: apply 1st argument is not a function", 3)
+	  return nil end
+   -- if luatype(t) == 'number' then
+   -- 	  return t end
+   if luatype(t) ~= 'table' then
+	  error("Internal error: apply 2nd argument is not a table", 3)
+	  return nil end
+   for k,v in sort_pairs(t) do
+	  if luatype(v) == 'table' then
+		 sort_apply(fun,v,...) -- recursion
+	  else
+		 fun(v,k,...)
+	  end
+   end
+end
+
+-- deep recursive map on a tree structure
+-- for usage see test/deepmap.lua
+-- operates only on strings, passes numbers through
+function deepmap(fun,t,...)
+   if luatype(fun) ~= 'function' then
+	  error("Internal error: deepmap 1st argument is not a function", 3)
+	  return nil end
+   -- if luatype(t) == 'number' then
+   -- 	  return t end
+   if luatype(t) ~= 'table' then
+	  error("Internal error: deepmap 2nd argument is not a table", 3)
+	  return nil end
+   local res = {}
+   for k,v in pairs(t) do
+	  if luatype(v) == 'table' then
+		 res[k] = deepmap(fun,v,...) -- recursion
+	  else
+		 res[k] = fun(v,k,...)
+	  end
+   end
+   return setmetatable(res, getmetatable(t))
+end
+
 function isarray(obj)
    if not obj then error("Argument of isarray() is nil",2) end
    if luatype(obj) ~= 'table' then error("Argument is not a table: "..type(obj),2) end
