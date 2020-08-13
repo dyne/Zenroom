@@ -69,7 +69,7 @@ end)
 
 When("create the aggregation of array ''", function(arr)
 		-- TODO: switch typologies, sum numbers and bigs, aggregate hash
-		ZEN.assert(not ACK.array, "Cannot overwrite existing object: ".."aggregation")
+		ZEN.assert(not ACK.aggregation, "Cannot overwrite existing object: ".."aggregation")
     local A = ACK[arr]
     ZEN.assert(A, "Object not found: "..arr)
     local count = isarray(A)
