@@ -70,7 +70,7 @@ Scenario 'ecdh': Bob verifies the signature from Alice
 	Given that I am known as 'Bob'
 	and I have a 'public key' from 'Alice'
 	and I have a 'signature' from 'Alice'
-	and I have a 'url64' named 'draft' in 'Alice'
+	and I have a 'string' named 'draft' in 'Alice'
 	When I verify the 'draft' is signed by 'Alice'
 	Then print 'signature correct'
 	and print the 'draft' as 'string'

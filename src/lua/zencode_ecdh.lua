@@ -125,16 +125,12 @@ end)
 When("create the signature of ''", function(doc)
 		ZEN.assert(ACK.keypair, "Keyring not found")
 		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
+		ZEN.assert(not ACK.signature, "Cannot overwrite existing object: ".."signature")
 		local obj = ACK[doc]
 		ZEN.assert(obj, "Object not found: "..doc)
-		local t = type(obj)
-		if t == 'table' then
-		   local s = ECDH.sign(ACK.keypair.private_key, CBOR.encode(obj))
-		   ACK[doc].signature = s
-		else
-		   ACK.signature = ECDH.sign(ACK.keypair.private_key, obj)
-		end
-		-- include contextual information
+		local t = luatype(obj)
+		ACK.signature = ECDH.sign(ACK.keypair.private_key, ZEN.serialize(obj))
+		ZEN.CODEC.signature = CONF.output.encoding.name
 end)
 
 When("verify the '' is signed by ''", function(msg, by)
@@ -144,18 +140,31 @@ When("verify the '' is signed by ''", function(msg, by)
 		ZEN.assert(obj, "Object not found: "..msg)
 		-- obj = obj[by]
 		-- ZEN.assert(obj, "Object not found: "..msg.." by "..by)
-		local t = type(obj)
+		local t = luatype(obj)
 		local sign
 		if t == 'table' then
 		   sign = obj.signature
 		   ZEN.assert(sign, "Signature by "..by.." not found")
 		   obj.signature = nil
-		   ZEN.assert(ECDH.verify(ACK.public_key[by], CBOR.encode(obj), sign),
-					  "The signature is not authentic")
+		   ZEN.assert(ECDH.verify(ACK.public_key[by], ZEN.serialize(obj), sign),
+					  "The signature by "..by.." is not authentic")
 		else
 		   sign = ACK.signature[by]
 		   ZEN.assert(sign, "Signature by "..by.." not found")
 		   ZEN.assert(ECDH.verify(ACK.public_key[by], obj, sign),
-					  "The signature is not authentic")
+					  "The signature by "..by.." is not authentic")
 		end
 end)
+
+When("verify the '' has a signature in '' by ''", function(msg, sig, by)
+		ZEN.assert(ACK.public_key[by], "Public key by "..by.." not found")
+		local obj
+		obj = ACK[msg]
+		ZEN.assert(obj, "Object not found: "..msg)
+		local s
+		s = ACK[sig]
+		ZEN.assert(s, "Signature not found: "..sig)
+		ZEN.assert(ECDH.verify(ACK.public_key[by], ZEN.serialize(obj), s),
+				   "The signature by "..by.." is not authentic")
+end)
+

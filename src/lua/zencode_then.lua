@@ -31,7 +31,8 @@ Then("print ''", function(k)
 			  OUT[k] = fun(val)
 		   end
 		else
-		   OUT.output = k -- raw string value
+		   if not OUT.output then OUT.output = { } end
+		   table.insert(OUT.output,k) -- raw string value
 		end
 end)
 

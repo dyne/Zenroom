@@ -112,14 +112,16 @@ function guess_conversion(obj, definition)
 	  return(res)
    end
    -- definition: value_encoding .. data_type
+   -- value_encoding: base64, hex, etc.
+   -- data_type: array, dictionary, structure
    if objtype == 'table' then
 	  toks = strtok(definition,'[^_]+')
 	  if not (#toks == 2) then
 		 error('Invalid table conversion: '..definition..' (must be "base64 array" or "string dictionary" etc.)',2)
 		 return nil
 	  end
-	  if not (toks[2] == 'array' or toks[2] == 'dictionary') then
-		 error('Invalid table conversion: '..definition.. ' (must be array or dictionary)', 2)
+	  if not ((toks[2] == 'array') or (toks[2] == 'dictionary') or (toks[2] == 'structure')) then
+		 error('Invalid table conversion: '..definition.. ' (must be array or dictionary or structure)', 2)
 		 return nil
 	  end
 	  res = input_encoding(toks[1])
@@ -128,7 +130,7 @@ function guess_conversion(obj, definition)
 		 return nil
 	  end
 	  res.luatype = 'table'
-	  res.zentype = 'array'
+	  res.zentype = toks[2]
 	  res.raw = obj
 	  return(res)
    end
@@ -169,42 +171,37 @@ end
 -- converted by its methods.
 function outcast_string(obj)
    local t = luatype(obj)
-   if t == 'number' then
-	  return tostring(obj) end
+   if t == 'number' then return obj end
    return O.to_string(obj)
 end
 function outcast_hex(obj)
    local t = luatype(obj)
-   if t == 'number' then
-	  return O.to_hex( O.from_string( tostring(obj) ):hex() ) end
+   if t == 'number' then return obj end
    return O.to_hex(obj)
 end
 function outcast_base64(obj)
    local t = luatype(obj)
-   if t == 'number' then
-	  return O.from_string( tostring(obj) ):base64() end
+   if t == 'number' then return obj end
    return O.to_base64(obj)
 end
 function outcast_url64(obj)
    local t = luatype(obj)
-   if t == 'number' then
-	  return O.from_string( tostring(obj) ):url64() end
+   if t == 'number' then return obj end
    return O.to_url64(obj)
 end
 function outcast_base58(obj)
 	local t = luatype(obj)
-	if t == 'number' then
-	   return O.from_string( tostring(obj) ):base58() end
+	if t == 'number' then return obj end
 	return O.to_base58(obj)
  end
 function outcast_bin(obj)
    local t = luatype(obj)
-   if t == 'number' then
-	  return O.from_string( tostring(obj) ):bin() end
+   if t == 'number' then return obj end
    return O.to_bin(obj)
 end
 -- takes a string returns the function, good for use in deepmap(fun,table)
 function guess_outcast(cast)
+   if not cast then error("guess_outcast called with nil argument", 2) end
    if     cast == 'string' then return outcast_string
    elseif cast == 'hex'    then return outcast_hex
    elseif cast == 'base64' then return outcast_base64
@@ -230,6 +227,7 @@ function check_codec(value)
    else
 	  return ZEN.CODEC[value].encoding or CONF.output.encoding.name
    end
+   return CONF.output.encoding.name
 end
 
 -- Crawls a whole table structure and collects all strings and octets

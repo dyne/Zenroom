@@ -24,56 +24,67 @@ function input_encoding(what)
    end
    if what == 'u64' or what == 'url64' then
 	  return { fun = function(data)
-				  if not (luatype(data)=='string') then
-					 error("input_encoding argument not a string: "..type(data),3) end
-				  if O.is_url64(data) then return O.from_url64(data)
-				  else error("Failed import from url64: "..what,3)
-					 end end,
+				  if luatype(data) == 'number' then
+					 return data
+				  else
+					 return O.from_url64(data)
+				  end
+					 end,
 			   encoding = 'url64',
 			   check = O.is_url64
 	  }
    elseif what == 'b64' or what =='base64' then
 	  return { fun = function(data)
-				  if not (luatype(data)=='string') then
-					 error("input_encoding argument not a string: "..type(data),3) end
-				  if O.is_base64(data) then return O.from_base64(data)
-				  else error("Failed import from base64: "..what,3)
-					 end end,
+				  if luatype(data) == 'number' then
+					 return data
+				  else
+					 return O.from_base64(data)
+				  end
+					 end,
 			   encoding = 'base64',
 			   check = O.is_base64
 	  }
 	elseif what == 'b58' or what =='base58' then
 		return { fun = function(data)
-					if not (luatype(data)=='string') then
-					   error("input_encoding argument not a string: "..type(data),3) end
-					if O.is_base58(data) then return O.from_base58(data)
-					else error("Failed import from base58: "..what,3)
-					   end end,
+					if luatype(data) == 'number' then
+					   return data
+					else
+					   return O.from_base58(data)
+					end
+					   end,
 				 encoding = 'base58',
 				 check = O.is_base58
 		}
    elseif what == 'hex' then
 	  return { fun = function(data)
-				  if not (luatype(data)=='string') then
-					 error("input_encoding argument not a string: "..type(data),3) end
-				  if O.is_hex(data) then return O.from_hex(data)
-				  else error("Failed import from hex: "..what,3)
-				  end end,
+				  if luatype(data) == 'number' then
+					 return data
+				  else
+					 return O.from_hex(data)
+				  end
+					 end,
 			   encoding = 'hex',
 			   check = O.is_hex
 	  }
    elseif what == 'bin' or what == 'binary' then
 	  return { fun = function(data)
-				  if not (luatype(data)=='string') then
-					 error("input_encoding argument not a string: "..type(data),3) end
-				  if O.is_bin(data) then return O.from_bin(data)
-				  else error("Failed import from bin: "..what,3)
-					 end end,
+				  if luatype(data) == 'number' then
+					 return data
+				  else
+					 return O.from_bin(data)
+				  end
+					 end,
 			   encoding = 'binary',
 			   check = O.is_bin
 	  }
    elseif what == 'str' or what == 'string' then
-   	  return { fun = O.from_string,
+   	  return { fun = function(data)
+				  if luatype(data) == 'number' then
+					 return data
+				  else
+					 return O.from_string(data)
+				  end
+					 end,
    			   check = function(_) return true end,
    			   encoding = 'string'
    	  }
@@ -84,29 +95,65 @@ function input_encoding(what)
 			end,
 			encoding = 'number' })
    end
-   error("Input encoding not found", 1)
+   error("Input encoding not found: " .. what, 2)
    return nil
 end
 
 -- gets a string and returns the associated function, string and prefix
 function output_encoding(what)
    if what == 'u64' or what == 'url64' then
-	  return { fun = O.to_url64,
+	  return { fun = function(data)
+				  if luatype(data) == 'number' then
+					 return data
+				  else
+					 return O.to_url64(data)
+				  end
+					 end,
 			   name = 'url64' }
    elseif what == 'b64' or what =='base64' then
-	  return { fun = O.to_base64,
+	  return { fun = function(data)
+				  if luatype(data) == 'number' then
+					 return data
+				  else
+					 return O.to_base64(data)
+				  end
+					 end,
 			   name = 'base64' }
    elseif what == 'b58' or what =='base58' then
-	  return { fun = O.to_base58,
+	  return { fun = function(data)
+				  if luatype(data) == 'number' then
+					 return data
+				  else
+					 return O.to_base58(data)
+				  end
+					 end,
 			   name = 'base58' }
    elseif what == 'hex' then
-	  return { fun = O.to_hex,
+	  return { fun = function(data)
+				  if luatype(data) == 'number' then
+					 return data
+				  else
+					 return O.to_hex(data)
+				  end
+					 end,
 			   name = 'hex' }
    elseif what == 'bin' or what == 'binary' then
-	  return { fun = O.to_bin,
+	  return { fun = function(data)
+				  if luatype(data) == 'number' then
+					 return data
+				  else
+					 return O.to_bin(data)
+				  end
+					 end,
 			   name = 'binary' }
    elseif what == 'str' or what == 'string' then
-	  return { fun = O.to_string,
+	  return { fun = function(data)
+				  if luatype(data) == 'number' then
+					 return data
+				  else
+					 return O.to_string(data)
+				  end
+					 end,
 			   name = 'string' }
    end
    error("Output encoding not found: "..what, 2)
