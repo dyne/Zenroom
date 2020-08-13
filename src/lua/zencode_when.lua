@@ -116,7 +116,7 @@ When("verify '' is equal to ''", function(l,r)
 		if tabeq then -- use CBOR encoding and compare strings: there
 					  -- may be faster ways, but this is certainly the
 					  -- most maintainable
-		   ZEN.assert( CBOR.encode(ACK[l]) == CBOR.encode(ACK[r]),
+		   ZEN.assert( ZEN.serialize(ACK[l]) == ZEN.serialize(ACK[r]),
 					   "Verification failed: arrays are not equal: "..l.." == "..r)
 		else
 		   ZEN.assert(ACK[l] == ACK[r],
