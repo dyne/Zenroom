@@ -15,6 +15,12 @@ to human language and can process large data structures while
 operating cryptographic transformations and basic logical operations
 on them.
 
+
+<!-- Unused files
+ 
+ 
+
+
 ## Quickstart
 
 
@@ -40,10 +46,19 @@ If everything went well, in the file `keypair.json` you will see something like 
 }
 ```
 
+-->
+
 ## Quicklinks
 
 
-Checkout Zenroom's [documentation](https://dev.zenroom.org/),  [homepage](http://zenroom.org/), the ["Coconut" smart contracts](https://github.com/DECODEproject/Zenroom/tree/master/test/zencode_coconut) or the [Zencode whitepaper](https://dev.zenroom.org/pages/zenroom_whitepaper.pdf).
+Checkout Zenroom's: 
+ - [Quickstart](/pages/zencode-cookbook-intro): learn how to create your first script in [Zencode](/pages/zencode-cookbook-intro).
+ - Homepage [zenroom.org](http://zenroom.org/): find all the info about Zenroom or download a [build](https://zenroom.org/#downloads).
+ - [Documentation](https://dev.zenroom.org/): learn how to use Zenroom as a CLI or a library and how to program in [Zencode](/pages/zencode-cookbook-intro).
+ - Domain specific language[Zencode](/pages/zencode-intro): learn about how Zenroom's virtual machine works or how to write [smart contracts](/pages/zencode-cookbook-intro) in a English-like language.
+ - The [Zencode whitepaper](https://dev.zenroom.org/pages/zenroom_whitepaper.pdf).
+ - the ["Coconut" smart contracts](https://github.com/DECODEproject/Zenroom/tree/master/test/zencode_coconut) 
+
 
 
 
