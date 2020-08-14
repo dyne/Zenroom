@@ -1,0 +1,100 @@
+{
+   "myObject":{
+      "myNumber_1":12345678901234567890123456789,
+      "myNumber_2":12345678901234567890123456789,
+      "myNumber_3":12345678901234567890123456789,
+      "myNumber_4":12345678901234567890123456789, 
+   	  "myNumber_5":12345678901234567890123456789,  
+	  "myString_1":"Hello World!",
+	  "myString_2":"Hello World!",
+	  "myString_3":"Hello World!",
+	  "myString_4":"Hello World!",
+	  "myString_5":"Hello World!",
+      "myHex_1": "68747470733a2f2f6769746875622e636f6d2f64796e652f5a656e726f6f6d",
+      "myHex_2": "68747470733a2f2f6769746875622e636f6d2f64796e652f5a656e726f6f6d",
+      "myHex_3": "68747470733a2f2f6769746875622e636f6d2f64796e652f5a656e726f6f6d",
+	  "myHex_4": "68747470733a2f2f6769746875622e636f6d2f64796e652f5a656e726f6f6d",
+	  "myHex_5": "68747470733a2f2f6769746875622e636f6d2f64796e652f5a656e726f6f6d",
+      "myBase64_1": "aHR0cHM6Ly9naXRodWIuY29tL2R5bmUvWmVucm9vbQ==",
+      "myBase64_2": "aHR0cHM6Ly9naXRodWIuY29tL2R5bmUvWmVucm9vbQ==",
+      "myBase64_3": "aHR0cHM6Ly9naXRodWIuY29tL2R5bmUvWmVucm9vbQ==",
+	  "myBase64_4": "aHR0cHM6Ly9naXRodWIuY29tL2R5bmUvWmVucm9vbQ==",
+	  "myBase64_5": "aHR0cHM6Ly9naXRodWIuY29tL2R5bmUvWmVucm9vbQ==",
+	  "myUrl64_1": "aHR0cHM6Ly9naXRodWIuY29tL2R5bmUvWmVucm9vbS8",
+  	  "myUrl64_2": "aHR0cHM6Ly9naXRodWIuY29tL2R5bmUvWmVucm9vbS8",
+  	  "myUrl64_3": "aHR0cHM6Ly9naXRodWIuY29tL2R5bmUvWmVucm9vbS8",
+  	  "myUrl64_4": "aHR0cHM6Ly9naXRodWIuY29tL2R5bmUvWmVucm9vbS8",
+  	  "myUrl64_5": "aHR0cHM6Ly9naXRodWIuY29tL2R5bmUvWmVucm9vbS8",
+	  "myUrl64_6": "aHR0cHM6Ly9naXRodWIuY29tL2R5bmUvWmVucm9vbS8",
+	  "myBinary_1": "01011010011001010110111001110010011011110110111101101101",
+	  "myBinary_2": "01011010011001010110111001110010011011110110111101101101",
+	  "myBinary_3": "01011010011001010110111001110010011011110110111101101101",
+	  "myBinary_4": "01011010011001010110111001110010011011110110111101101101",
+	  "myBinary_5": "01011010011001010110111001110010011011110110111101101101",
+	  
+	  "myStringArray_1":[
+         "Hello World! --- 1",
+		 "Hello World! --- 2",
+		 "Hello World! --- 3"
+      ],
+	  "myStringArray_2":[
+         "Hello World! --- 1",
+		 "Hello World! --- 2",
+		 "Hello World! --- 3"
+      ],
+	   "myStringArray_3":[
+         "Hello World! --- 1",
+		 "Hello World! --- 2",
+		 "Hello World! --- 3"
+      ],
+	   "myStringArray_4":[
+         "Hello World! --- 1",
+		 "Hello World! --- 2",
+		 "Hello World! --- 3"
+      ],
+	   "myStringArray_5":[
+         "Hello World! --- 1",
+		 "Hello World! --- 2",
+		 "Hello World! --- 3"
+      ],
+	  
+	  "myNumberArray_1":[
+         "123",
+		 "456",
+		 "1234.5678"
+      ],
+	  "myNumberArray_2":[
+         "123",
+		 "456",
+		 "1234.5678"
+      ],
+	  "myNumberArray_3":[
+         "123",
+		 "456",
+		 "1234.5678"
+      ],
+	  "myNumberArray_4":[
+         "123",
+		 "456",
+		 "1234.5678"
+      ],
+	  "myNumberArray_5":[
+         "123",
+		 "456",
+		 "1234.5678"
+      ],	  
+   },
+   
+   "Alice":{
+      "keypair":{
+         "private_key":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
+         "public_key":"BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
+      }
+   },
+	"Bob": {
+		"public_key": "BGdp6q41IE9X4H909u8dc05mJxfl+cYNmLChky2u6G3uUJPfEmM8hm4HRz/eSl+w75glCrW6WaOKwBMFCcfzoLg="
+    },
+	"Carl": {
+         "public_key": "BG/TONSVfG5iQWNpp4bNG7Ev0g36XncIeaDOWOHX+MvDj/rPOEHahE2uJepOAv6ijZj07sc2XRddIH4HB78Nu4k="
+    }
+}

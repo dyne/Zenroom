@@ -1,0 +1,22 @@
+# VERIFY EQUAL
+# The "verify equal" statement checks that the value of two ojects is equal.
+# It works with simple objects of any encoding.
+When I verify 'myEightEqualString' is equal to 'myNinthEqualString'         
+When I verify 'myThirdNumber' is equal to 'myFourthNumber'
+
+# LESS, MORE, EQUAL
+# Number comparisons: those are pretty self explaining.
+When number 'myFourthNumber' is less or equal than 'myThirdNumber'
+When number 'myFirstNumber' is less than  'myThirdNumber'
+When number 'myThirdNumber' is more or equal than 'mySecondNumber'
+When number 'myThirdNumber' is more than 'mySecondNumber'
+
+# FOUND, NOT FOUND
+# The "is found" statement, takes two objects as input: 
+# the name of a variable and the name of an array. It reads its content of the variable 
+# and matches it against each element of the array.
+# It works with any kind of array, as long as the element of the array are of the same schema
+# as the variable.
+When the 'myTenthString' is found in 'myFourthArray'
+When the 'myFirstString' is not found in 'myFourthArray'
+Then print all data

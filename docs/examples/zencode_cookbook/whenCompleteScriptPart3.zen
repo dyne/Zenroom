@@ -1,0 +1,56 @@
+# HASH
+
+# Output objects: as overwriting variables is discouraged in Zenroom, all the hashing
+# and cryptography statements will output a new object with a hardcoded name, listed
+# along with the statement. It's a good practice to rename the object immediately after
+# its creation, both to make it more readable and as well to avoid overwriting in case you
+# are using a statement with similar output more than once in the same script.
+
+# The "create hash" statement hashes a string, but it does not hash an array!
+# The default algorythm for the hash can be modified by passing them to Zenroom as config file. 
+# Note that the object produced, containing the hashing of the string, will be named "hash", 
+# which we promptly rename. The same is true for the two following statements.
+When I create the hash of 'myFifthString'
+And I rename the 'hash' to 'hashOfMyFifthString'
+
+# Following is a version of the statement above that takes the hashing algorythm as parameter, 
+# it accepts sha256 or sha512 as hash types
+When I create the hash of 'mySixthString' using 'sha256'
+And I rename the 'hash' to 'hashOfMySixthString'
+When I create the hash of 'mySeventhString' using 'sha512'
+And I rename the 'hash' to 'hashOfMySeventhString'
+
+# The "create hash to point" statement can do some serious cryptography: 
+# use it generating public keys from a secret key, where the secret key can be any random number.
+# The statement accepts curves "ecp" or "ecp2" to produce the hash.
+# This statement takes an array as input, and produces an array as output named "hash_to_point", which
+# we immediately rename.
+When I create the hash to point 'ecp' of each object in 'myFourthArray'
+And I rename the 'hash_to_point' to 'ecpHashesOfMyFourthArray'
+When I create the hash to point 'ecp2' of each object in 'myFirstArray'        
+And I rename the 'hash_to_point' to 'ecp2HashesOfMyFirstArray'
+
+# Key derivation function (KDF)
+# The output object is named "key_derivation":
+When I create the key derivation of 'myEleventhStringToBeHashed'
+And I rename the 'key_derivation' to 'kdfOfMyEleventhString'
+
+# Password-Based Key Derivation Function (pbKDF) hashing, 
+# this also outputs an object named "key_derivation":
+When I create the key derivation of 'myTwelfthStringToBeHashedUsingPBKDF2' with password 'myThirteenStringPassword'
+And I rename the 'key_derivation' to 'pbkdf2OfmyTwelfthString'
+
+# Hash-based message authentication code (HMAC)
+When I create the HMAC of 'myFourteenthStringToBeHashedUsingHMAC' with key 'myThirteenStringPassword'
+And I rename the 'HMAC' to 'hmacOfMyFourteenthString'
+
+# AGGREGATE
+# The "create the aggregation" statement takes as input an array of numers
+# and sums then it into a new object called "aggregation" that we'll rename immediately.
+# It works on both arrays and dictionaries, the data type needs to be 
+# specified as in the example.
+When I create the aggregation of array 'myFirstNumberArray'
+And I rename the 'aggregation' to 'aggregationOfMyFirstNumberArray'
+
+# Now let's print out everything
+Then print all data  

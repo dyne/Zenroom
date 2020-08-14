@@ -1,0 +1,63 @@
+# APPEND
+# The "append" statement are pretty self-explaining: 
+# append a simple object of any encoding to another one
+When I append 'mySecondString' to 'myFifteenthString' 
+When I append 'mySecondNumber' to 'myThirdNumber' 
+
+# RENAME
+# The "rename" statement: we've been hinting at this for a while now,
+# pretty self-explaining, it works with any object type or schema.
+When I rename the 'myThirdArray' to 'myJustRenamedArray'
+
+# INSERT
+# The "insert" statement is used to append a simple object to an array.
+# It's pretty self-explaining. 
+When I insert the 'myFirstString' in 'myFirstArray'
+
+# REMOVE
+# The "remove" statement does the opposite of the one above:
+# Use it remove an element from an array, it takes as input the name of a string, 
+# and the name of an array - we don't mix code and data! 
+When I remove the 'mySixteenthString' from 'myJustRenamedArray'
+
+# SPLIT (leftmost, rightmost)
+# The "split" statements, take as input the name of a string and a numeric value,
+# the statement removes the leftmost/outmost characters from the string 
+# and places the result in a newly created string called "leftmost" or "rightmost"
+# which we immediately rename
+When I split the leftmost '4' bytes of 'mySecondString'
+And I rename the 'leftmost' to 'myFirstStringLeftmost'
+When I split the rightmost '6' bytes of 'myThirdString'
+And I rename the 'rightmost' to 'myThirdStringRightmost'
+
+# RANDOMIZE
+# The "randomize" statements takes the name of an array as input and shuffles it. 
+When I randomize the 'myFourthArray' array
+
+# WRITE IN
+# the "write in" statement create a new object, assigns it an encoding but 
+# only "number" or "string" (if you need any other encoding, 
+# use the "set as" statement) and assigns it the value you define.
+When I write number '10' in 'nameOfFirstNewVariable'
+When I write string 'This is my lovely new string!' in 'nameOfSecondNewVariable'
+
+# PICK RANDOM
+# The "pick a random object in" picks randomly an object from the target array
+# and puts into a newly created object named "random_object".
+# The name is hardcoded, the object can be renamed.
+When I pick the random object in 'myFirstArray'
+and I rename the 'random_object' to 'myRandomlyPickedObject'
+
+# FLATTEN
+# The flatten (or serialization) statement is used to flatten an array or a complex structure. 
+# The main use case is pre-processing the data to be hashed or signed.
+# The serialization uses an custom algorythm: it can only be reproduced 
+# with Zenroom, but there are ways to make Zenroom's hashing of complex structured
+# verifiable with other tools, as well as use Zenroom to check hashes produced by
+# other softwares. As statement, you can use both "flattening" and "serialization"  
+When I create the flattening of 'myFirstArray'
+And I rename the 'flattening' to 'serializationOfmyFirstArray'
+When I create the serialization of data
+And I rename the 'serialization' to 'serializationOfAllData'
+
+Then print all data

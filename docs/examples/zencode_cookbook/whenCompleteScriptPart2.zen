@@ -1,0 +1,42 @@
+# CREATE RANDOM
+# The "create random" creates a random object with a default set of parameters
+# The name of the generate objected is defined between the ' '  
+# The parameters can be modified by passing them to Zenroom as configuration file
+When I create the random 'newRandomObject'
+
+# Below is a variation that lets you create a random number of configurable length.
+# This statement doesn't let you choose the name of the name of the newly created object,
+# which is hardcoded to "random_object". We are immediately renaming it.
+When I create the random object of '128' bits
+and I rename the 'random_object' to 'my128BitsRandom'
+
+# The "create array of random" statement, lets you create an array of random objects, 
+# and you can select the length in bits. The first statement uses the default lenght of 512 bits.
+# Like the previous one, this statement outputs an object whose name is hardcoded into "array".
+# Since we're creating three arrays called "array" below, Zenroom would simply overwrite 
+# the first two, so we are renaming the output immediately. 
+When I create the array of '4' random objects
+and I rename the 'array' to 'my4RandomObjectsArray'
+When I create the array of '5' random objects of '256' bits
+and I rename the 'array' to 'my256BitsRandomObjectsArray'
+
+# You can generate an array of random numbers, from 0 o 65355, with this statement.
+When I create the array of '10' random numbers 
+and I rename the 'array' to 'my10RandomNumbersArray'
+# A variation of the statement above, allows you to use the "modulo" function to cap the max value
+# of the random numbers. In the example below, the max value will be "999".
+When I create the array of '16' random numbers modulo '1000'
+and I rename the 'array' to 'my16RandomNumbersModulo1000Array'
+
+# SET
+# The 'set' statement creates a new variable and assign it a value.
+# Overwriting variables discouraged in Zenroom: if you try to overwrite an existing variable, 
+# you will get an error, that you can override the error using a rule 
+# in the beginning of the script.
+# The 'set' statement can generate different kind of schemas, as well as to create variables 
+# containing numbers in different bases. 
+# When working with strings, remember that spaces are converted to underscores.
+When I set 'myNewlyCreatedString' to 'call me The Pink Panther!' as 'string'
+When I set 'myNewlyFirstCreatedNumber' to '42' as 'number'
+When I set 'myNewlySecondCreatedNumber' to '42' base '16'
+Then print all data
