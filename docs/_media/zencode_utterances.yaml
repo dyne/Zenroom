@@ -1,45 +1,39 @@
 ### [given]
 given:
   - given: nothing
-  - given: I am known as ''
   - given: am ''
   - given: have a ''
+  - given: have a '' in ''
+  - given: have a '' from ''
   - given: have a '' named ''
   - given: have a '' named '' in ''
   - given: have my ''
+  - given: have my '' named ''
   - given: the '' is valid
-  - given: have a '' in ''
-  - given: have a '' from ''
+  - given: my '' is valid
 ### [given]
 ### [when]
 when:
-  - when: append string '' to ''
-  - when: append '' to '' as ''
+  - when: append '' to ''
+  - when: create the ''
+  - when: move '' in ''
   - when: write string '' in ''
   - when: write number '' in ''
   - when: set '' to '' as ''
   - when: create the random ''
+  - when: create the serialization of ''
+  - when: create the flattening of ''
+  - when: create the serialization of data
+  - when: create the cbor of ''
+  - when: create the json of ''
   - when: verify '' is equal to ''
-  - when: create the hash of ''
-  - when: create the hash of '' using ''
+  - when: verify '' is not equal to ''
   - when: set '' to '' base ''
   - when: number '' is less than ''
   - when: number '' is less or equal than ''
   - when: number '' is more than ''
   - when: number '' is more or equal than ''
-  - when: create the random object of '' bits
-  - when: create the array of '' random objects
-  - when: create the array of '' random objects of '' bits
-  - when: create the array of '' random curve points
-  - when: create the aggregation of ''
-  - when: create the hash to point '' of each object in ''
   - when: rename the '' to ''
-  - when: pick the random object in ''
-  - when: randomize the '' array
-  - when: remove the '' from ''
-  - when: insert the '' in ''
-  - when: the '' is not found in ''
-  - when: the '' is found in ''
   - when: split the rightmost '' bytes of ''
   - when: split the leftmost '' bytes of ''
   - when: set '' as '' with ''
@@ -56,13 +50,39 @@ then:
   - then: print my data
   - then: print my data as ''
   - then: print my ''
+  - then: print my '' from ''
   - then: print my '' as ''
   - then: print the ''
   - then: print the '' as ''
   - then: print the '' as '' in ''
   - then: print the '' in ''
 ### [then]
-### [simple_when]
+### [array]
+array:
+  - when: create the array of '' random objects
+  - when: create the array of '' random objects of '' bits
+  - when: create the array of '' random numbers
+  - when: create the array of '' random numbers modulo ''
+  - when: create the aggregation of array ''
+  - when: pick the random object in ''
+  - when: randomize the '' array
+  - when: remove the '' from ''
+  - when: insert the '' in ''
+  - when: the '' is not found in ''
+  - when: the '' is found in ''
+### [array]
+### [hash]
+hash:
+  - when: create the hash of ''
+  - when: create the hash of '' using ''
+  - when: create the random object of '' bits
+  - when: create the hash to point '' of each object in ''
+  - when: create the hashes of each object in ''
+  - when: create the HMAC of '' with key ''
+  - when: create the key derivation of ''
+  - when: create the key derivation of '' with password ''
+### [hash]
+### [ecdh]
 ecdh:
   - when: create the keypair
   - when: encrypt the secret message '' with ''
@@ -71,9 +91,10 @@ ecdh:
   - when: decrypt the secret message from ''
   - when: create the signature of ''
   - when: verify the '' is signed by ''
-### [simple_when]
-### [coconut_when]
-coconut:
+  - when: verify the '' has a signature in '' by ''
+### [ecdh]
+### [credential]
+credential:
   - when: create the credential keypair
   - when: create the issuer keypair
   - when: create the credential request
@@ -82,6 +103,9 @@ coconut:
   - when: aggregate the verifiers
   - when: create the credential proof
   - when: verify the credential proof
+### [credential]
+### [petition]
+petition:
   - when: create the petition ''
   - when: verify the new petition to be empty
   - when: create the petition signature ''
@@ -91,10 +115,10 @@ coconut:
   - when: add the signature to the petition
   - when: create a petition tally
   - when: count the petition results
-### [coconut_when]
-### [dp3t_when]
+### [petition]
+### [dp3t]
 dp3t:
-  - when: I renew the secret day key to a new day
-  - when: I create the ephemeral ids for today
-  - when: I create the proximity tracing of infected ids
-### [dp3t_when]
+  - when: renew the secret day key to a new day
+  - when: create the ephemeral ids for today
+  - when: create the proximity tracing of infected ids
+### [dp3t]

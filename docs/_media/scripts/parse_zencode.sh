@@ -22,21 +22,38 @@ FILE=$1
 echo "### [given]" > $FILE
 print $(_parse given given) | yq -y . >> $FILE
 echo "### [given]" >> $FILE
+
 echo "### [when]" >> $FILE
 print $(_parse when when) | yq -y . >> $FILE
 echo "### [when]" >> $FILE
+
 echo "### [then]" >> $FILE
 print $(_parse then then) | yq -y . >> $FILE
 echo "### [then]" >> $FILE
-echo "### [simple_when]" >> $FILE
+
+echo "### [array]" >> $FILE
+print $(_parse array when) | yq -y . >> $FILE
+echo "### [array]" >> $FILE
+
+echo "### [hash]" >> $FILE
+print $(_parse hash when) | yq -y . >> $FILE
+echo "### [hash]" >> $FILE
+
+echo "### [ecdh]" >> $FILE
 print $(_parse ecdh when) | yq -y . >> $FILE
-echo "### [simple_when]" >> $FILE
-echo "### [coconut_when]" >> $FILE
-print $(_parse coconut when) | yq -y . >> $FILE
-echo "### [coconut_when]" >> $FILE
-echo "### [dp3t_when]" >> $FILE
+echo "### [ecdh]" >> $FILE
+
+echo "### [credential]" >> $FILE
+print $(_parse credential when) | yq -y . >> $FILE
+echo "### [credential]" >> $FILE
+
+echo "### [petition]" >> $FILE
+print $(_parse petition when) | yq -y . >> $FILE
+echo "### [petition]" >> $FILE
+
+echo "### [dp3t]" >> $FILE
 print $(_parse dp3t when) | yq -y . >> $FILE
-echo "### [dp3t_when]" >> $FILE
+echo "### [dp3t]" >> $FILE
 ##print $(_parse given given
 ##		_parse when when
 ##		_parse then then
