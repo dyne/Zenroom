@@ -51,8 +51,8 @@ When("create the array of '' random numbers", function(s)
 		end
 		ZEN.CODEC.array = { name = dest,
 							encoding = 'number',
-							luatype = 'number',
-							zentype = 'element' }
+							luatype = 'table',
+							zentype = 'array' }
 end)
 
 When("create the array of '' random numbers modulo ''", function(s,m)
@@ -63,49 +63,69 @@ When("create the array of '' random numbers modulo ''", function(s,m)
 		end
 		ZEN.CODEC.array = { name = dest,
 							encoding = 'number',
-							luatype = 'number',
-							zentype = 'element' }
+							luatype = 'table',
+							zentype = 'array' }
 end)
 
 When("create the aggregation of array ''", function(arr)
 		-- TODO: switch typologies, sum numbers and bigs, aggregate hash
 		ZEN.assert(not ACK.aggregation, "Cannot overwrite existing object: ".."aggregation")
-    local A = ACK[arr]
+		local A = ACK[arr]
     ZEN.assert(A, "Object not found: "..arr)
+	ZEN.assert(ZEN.CODEC[arr].zentype == 'array',
+			   "Object is not an array: "..arr)
     local count = isarray(A)
     ZEN.assert( count > 0, "Object is not an array: "..arr)
-    if luatype(A[1]) == 'number' then -- TODO: check all elements
+    if luatype(A[1]) == 'number' then
        ACK.aggregation = 0
        for k,v in next,A,nil do
 		  ACK.aggregation = ACK.aggregation + tonumber(v)
        end
+	   ZEN.CODEC.aggregation =
+		  { name = dest,
+			encoding = 'number',
+			luatype = 'number',
+			zentype = 'element' }
 	elseif type(A[1]) == 'zenroom.big' then
 	   ACK.aggregation = BIG.new(0)
        for k,v in next,A,nil do
 		  ACK.aggregation = ACK.aggregation + v
        end
+	   ZEN.CODEC.aggregation =
+		  { name = dest,
+			encoding = CONF.output.encoding.name,
+			luatype = 'string',
+			zentype = 'element' }
 	elseif type(A[1]) == 'zenroom.ecp' then
 	   ACK.aggregation = ECP.generator()
        for k,v in next,A,nil do
 		  ACK.aggregation = ACK.aggregation + v
        end
+	   ZEN.CODEC.aggregation =
+		  { name = dest,
+			encoding = CONF.output.encoding.name,
+			luatype = 'string',
+			zentype = 'element' }
 	elseif type(A[1]) == 'zenroom.ecp2' then
 	   ACK.aggregation = ECP2.generator()
        for k,v in next,A,nil do
 		  ACK.aggregation = ACK.aggregation + v
        end
-    else -- TODO: more aggregators for INT and ECP2
+	   ZEN.CODEC.aggregation =
+		  { name = dest,
+			encoding = CONF.output.encoding.name,
+			luatype = 'string',
+			zentype = 'element' }
+    else
        error("Unknown aggregation for type: "..type(A[1]))
     end
-	ZEN.CODEC.aggregation = { name = dest,
-							  encoding = 'number',
-							  luatype = 'number',
-							  zentype = 'element' }
 end)
 
 When("pick the random object in ''", function(arr)
     local A = ACK[arr]
     ZEN.assert(A, "Object not found: "..arr)
+	ZEN.assert(ZEN.CODEC[arr].zentype == 'array',
+			   "Object is not an array: "..arr)
     local count = isarray(A)
     ZEN.assert( count > 0, "Object is not an array: "..arr)
     local r = (random_int16() % count) +1
@@ -116,6 +136,8 @@ end)
 When("randomize the '' array", function(arr)
     local A = ACK[arr]
     ZEN.assert(A, "Object not found: "..arr)
+	ZEN.assert(ZEN.CODEC[arr].zentype == 'array',
+			   "Object is not an array: "..arr)
     local count = isarray(A)
     ZEN.assert( count > 0, "Object is not an array: "..arr)
     local res = { }
@@ -133,7 +155,8 @@ When("remove the '' from ''", function(ele,arr)
     ZEN.assert(E, "Element not found: "..ele)
     local A = ACK[arr]
     ZEN.assert(A, "Array not found: "..arr)
-    ZEN.assert( isarray(A) > 0, "Object is not an array: "..arr)
+	ZEN.assert(ZEN.CODEC[arr].zentype == 'array',
+			   "Object is not an array: "..arr)
     local O = { }
 	local found = false
     for k,v in next,A,nil do
@@ -150,12 +173,16 @@ end)
 When("insert the '' in ''", function(ele,arr)
     ZEN.assert(ACK[ele], "Element not found: "..ele)
     ZEN.assert(ACK[arr], "Array not found: "..arr)
+	ZEN.assert(ZEN.CODEC[arr].zentype == 'array',
+			   "Object is not an array: "..arr)
     table.insert(ACK[arr], ACK[ele])
 end)
 
 When("the '' is not found in ''", function(ele, arr)
     ZEN.assert(ACK[ele], "Element not found: "..ele)
     ZEN.assert(ACK[arr], "Array not found: "..arr)
+	ZEN.assert(ZEN.CODEC[arr].zentype == 'array',
+			   "Object is not an array: "..arr)
     for k,v in next,ACK[arr],nil do
        ZEN.assert(v ~= ACK[ele], "Element '"..ele.."' is contained inside array: "..arr)
     end
@@ -164,6 +191,8 @@ end)
 When("the '' is found in ''", function(ele, arr)
     ZEN.assert(ACK[ele], "Element not found: "..ele)
     ZEN.assert(ACK[arr], "Array not found: "..arr)
+	ZEN.assert(ZEN.CODEC[arr].zentype == 'array',
+			   "Object is not an array: "..arr)
     local found = false
     for k,v in next,ACK[arr],nil do
        if v == ACK[ele] then found = true end
