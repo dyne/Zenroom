@@ -1,28 +1,26 @@
 {
-   "myFirstObject":{
-      "myFirstNumber":11223344,
+	"Alice":{
+      "keypair":{
+         "private_key":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
+         "public_key":"BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
+      },
+	  "myFirstNumber":87654321,
       "myFirstString":"Hello World!",
       "myFirstArray":[
-         "String1",
-         "String2",
-         "String3",
-         "String4"
+         "Hello World! N.1",
+         "Hello World! N.2",
+         "Hello World! N.3",
+         "Hello World! N.4"
       ]
    },
-   "mySecondObject":{
-      "mySecondNumber":1234567890,
-	  "mySecondString":"Oh, hello again!",
-      "mySecondArray":[
-         "anotherString1",
-         "anotherString2",
-         "anotherString3",
-         "anotherString4"
+	"theSecondObject":{
+      "theSecondNumber":12345678,
+	  "theSecondString":"Oh, hello again!",
+      "theSecondArray":[
+         "123",
+         "4.56",
+         "123.45678",
+         "12345678"
       ]      
-   },
-   "Alice":{
-      "keypair":{
-         "private_key":"DbjRMCC7fykuUaqYDX_cy_Zs7J0ZC0y9VxBLRcfwIJ63MAZtW4fJ4IxxdUdLNy0ye0-qf0IlRZI",
-         "public_key":"BE39Wu7AXSzSplMd37VhCB094xHqCgvZxMhgaTA7B0Xz4mEIZmoO2FmWiokVXuJ0O9jH9AQD4UBkXiCU4gzYrLQc9VpfB4Qr8rz6jj_UYvC77FiLGc-0jsE4mQfpgLoOspBGcfNyiS8Y50hl8zthKjo"
-      }
-   }
+   }   
 }

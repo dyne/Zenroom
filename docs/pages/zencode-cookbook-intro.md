@@ -1,7 +1,7 @@
 
-# My first random array
+# Quickstart: My first random array
 
-One of Zenroom's strong points is the quality of the random generation (see [random test 1](https://github.com/DECODEproject/Zenroom/blob/master/test/random_hamming_gnuplot.sh) and [random test 2](https://github.com/DECODEproject/Zenroom/blob/master/test/random_rngtest_fips140-2.sh)), which happens to pass NIST's [tests](https://github.com/DECODEproject/Zenroom/blob/master/test/nist/run.sh), so let's start with generate an array of random numbers and get it printed out. 
+One of Zenroom's strong points is the quality of the random generation (see [random test 1](https://github.com/dyne/Zenroom/blob/master/test/random_hamming_gnuplot.sh) and [random test 2](https://github.com/dyne/Zenroom/blob/master/test/random_rngtest_fips140-2.sh)), which happens to pass NIST's [tests](https://github.com/dyne/Zenroom/blob/master/test/nist/run.sh), so let's start with generate an array of random numbers and get it printed out. 
 
 Let's first go the super fast way to test code, entering the [Zenroom web demo](https://dev.zenroom.org/demo/). Copy this code into the *Zencode* tab on the top left of the page: 
 
@@ -16,7 +16,7 @@ Then press the *RUN▶️* button to execute the script, the result should look 
 
 We got a nice array here. You can play with the values *'16'* and *'32'*, to see both the array and the random numbers change their length. 
 
-# Saving the output 
+# Use Zenroom by command line (CLI) 
 
 Once you're done with your array, it's time to go pro, meaning that we're leaving the web demo and moving to using Zenroom as *command line application* (CLI). 
 
@@ -39,10 +39,10 @@ In the example Zenroom did graciously output first the licensing, then some info
 On Linux, you can use: 
 
 ```bash
-zenroom -z arrayGenerator.zen | tee myArrays.json
+zenroom -z arrayGenerator.zen | tee myFirstRandomArray.json
 ```
 
-After running this command, a file named *myArrays.json* should have magically appeared in the folder you're in.
+After running this command, a file named *myFirstRandomArray.json* should have magically appeared in the folder you're in, looking like <a href="./_media/examples/zencode_cookbook/myFirstRandomArray.json" download>this one</a>.
 
 # Renaming the array: the *And* keyword
 
@@ -58,12 +58,13 @@ Note that you need to use the **' '** in the line that renames the array, cause 
 [](../_media/examples/zencode_cookbook/randomArrayMultiple.zen ':include :type=code gherkin')
 
 
-The script above will produce an output like this:
+The script above will produce an output like this: 
 
 
 [](../_media/examples/zencode_cookbook/myArrays.json ':include :type=code json')
 
 
 
-Certainly, at this point, your keen eye has noted something odd in the output...If in the Zencode I generated the arrays sorted by size, why is output sorted differently? Because in Zenroom, my friend,  [Determinism](https://github.com/DECODEproject/Zenroom/blob/master/test/deterministic_random_test.sh) is king, so Zenroom will by default sort the output alphabetically.
+Certainly, at this point, your keen eye has noted something odd in the output...If in the Zencode I generated the arrays sorted by size, why is output sorted differently? Because in Zenroom, my friend,  [Determinism](https://github.com/dyne/Zenroom/blob/master/test/deterministic_random_test.sh) is king, so Zenroom will by default sort the output alphabetically.
 
+If you enjoyed the trip so far, go on and learn how to program Zencode starting by the [Given](/pages/zencode-cookbook-given) phase.

@@ -1,0 +1,4 @@
+Scenario 'ecdh': Generate a keypair
+Given I am 'Andrea'
+When I create the keypair
+Then print my data

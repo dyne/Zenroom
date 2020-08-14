@@ -1,4 +1,4 @@
-Given I have a  'string array' named 'myArray' 
+Given I have a  'string array' named 'myFiveStrings' 
 Given debug 
-When I randomize the 'myArray' array
+When I randomize the 'myFiveStrings' array
 Then print all data

@@ -1,6 +1,14 @@
-Scenario 'simple': let us load some stuff cause it is fun!
+Scenario 'ecdh': let us load some stuff cause it is fun!
+# 
+# Here I am stating who I am:
 Given I am 'Alice'
-And I have my  'keypair'
-And I have a 'myFirstArray' inside 'myFirstObject' 
-And I have a 'mySecondArray' inside 'mySecondObject' 
+#
+# Here I load the data from the JSON object having my name:
+And I have my 'keypair'
+And I have my 'string' named 'myFirstString'
+And I have my 'number' named 'myFirstNumber'
+#
+# Here I load data from a different JSON object:
+And I have a 'string' named 'theSecondString' inside 'theSecondObject'
+And I have a 'number' named 'theSecondNumber' inside 'theSecondObject' 
 Then print all data

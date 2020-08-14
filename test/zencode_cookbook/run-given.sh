@@ -13,6 +13,7 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 
 n=0
 tmp=`mktemp`
+tmp2=`mktemp`
 
 
 
@@ -27,7 +28,7 @@ let n=n+1
 echo '{ 
       "myNumber":12345,
       "myString":"Hello World!",
-      "myArray":[
+      "myFiveStrings":[
          "String-1-one",
          "String-2-two",
          "String-3-three",
@@ -40,8 +41,6 @@ echo '{
 cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadFlatObject.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/givenLoadFlatObjectOutput.json
 Given I have a 'string' named 'myString'  
 Given I have a 'number' named 'myNumber'
-Given I have a 'string array' named 'myArray'
-When I randomize the 'myArray' array
 Then print all data
 EOF
 
@@ -83,13 +82,13 @@ let n=n+1
 
 cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadArrayDebugVerbose.zen -z -a ../../docs/examples/zencode_cookbook/myFlatObject.json | jq . | tee ../../docs/examples/zencode_cookbook/givenDebugOutputVerbose.json
 Given debug
-Given I have a 'string array' named 'myArray'
+Given I have a 'string array' named 'myFiveStrings'
 Given debug
 Given I have a 'string' named 'myString' 
 Given debug
 Given I have a 'number' named 'myNumber'
 Given debug 
-When I randomize the 'myArray' array
+When I randomize the 'myFiveStrings' array
 When debug
 Then print all data
 Then debug
@@ -180,7 +179,7 @@ cat <<EOF  > $tmp
    "myFirstObject":{
       "myNumber":11223344,
       "myString":"Hello World!",
-      "myArray":[
+      "myFiveStrings":[
          "String1",
          "String2",
          "String3",
@@ -211,12 +210,48 @@ EOF
 
 cat $tmp > ../../docs/examples/zencode_cookbook/myNestedRepetitveObject.json
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadRepetitveObject.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/givenLoadRepetitveObjectOutput.json
+
+cat <<EOF  > $tmp2 
+{
+   "myFirstObject":{
+      "myNumber":11223344,
+      "myString":"Hello World!",
+      "myStringArray":[
+         "String1",
+         "String2",
+         "String3",
+         "String4"
+      ]
+   },
+   "mySecondObject":{
+      "myNumber":1234567890,
+	  "myString":"Oh, hello again!",
+      "myStringArray":[
+         "anotherString1",
+         "anotherString2",
+         "anotherString3",
+         "anotherString4"
+      ]
+   },
+	 "Alice":{
+		  "keypair":{
+			 "private_key":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
+			 "public_key":"BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
+		  }
+	   }
+   
+   
+   
+}
+EOF
+
+
+cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadRepetitveObject.zen -z -a $tmp2 | jq . | tee ../../docs/examples/zencode_cookbook/givenLoadRepetitveObjectOutput.json
 Scenario 'ecdh': let us load some stuff cause it is fun!
 Given I am 'Alice'
 And I have my  'keypair'
-And I have a 'string array' named 'myArray' inside 'myFirstObject' 
-And I have a 'string array' named 'mySecondArray' inside 'mySecondObject' 
+And I have a 'string array' named 'myStringArray' inside 'myFirstObject' 
+# And I have a 'string array' named 'myStringArray' inside 'mySecondObject' 
 Then print all data
 EOF
 
@@ -233,7 +268,7 @@ cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadRepetitveObjectDe
 Scenario 'ecdh': let us load some stuff cause it is fun!
 Given I am 'Alice'
 And I have my  'keypair'
-And I have a 'string array' named 'myArray' inside 'myFirstObject' 
+And I have a 'string array' named 'myFiveStrings' inside 'myFirstObject' 
 And I have a 'string array' named 'mySecondArray' inside 'mySecondObject' 
 And debug
 Then print all data
@@ -257,10 +292,8 @@ cat <<EOF  > $tmp
       "keypair":{
          "private_key":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
          "public_key":"BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
-      }
-   },
-	"myFirstObject":{
-      "myFirstNumber":87654321,
+      },
+	  "myFirstNumber":87654321,
       "myFirstString":"Hello World!",
       "myFirstArray":[
          "Hello World! N.1",
@@ -269,10 +302,10 @@ cat <<EOF  > $tmp
          "Hello World! N.4"
       ]
    },
-	"mySecondObject":{
-      "mySecondNumber":12345678,
-	  "mySecondString":"Oh, hello again!",
-      "mySecondArray":[
+	"theSecondObject":{
+      "theSecondNumber":12345678,
+	  "theSecondString":"Oh, hello again!",
+      "theSecondArray":[
          "123",
          "4.56",
          "123.45678",
@@ -290,10 +323,18 @@ cat $tmp > ../../docs/examples/zencode_cookbook/myNestedObject.json
 
 cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadNestedObject.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/givenLoadNestedObjectOutput.json
 Scenario 'ecdh': let us load some stuff cause it is fun!
+# 
+# Here I am stating who I am:
 Given I am 'Alice'
-And I have my  'keypair'
-And I have a 'string array' named 'myFirstArray' inside 'myFirstObject' 
-And I have a 'number array' named 'mySecondArray' inside 'mySecondObject' 
+#
+# Here I load the data from the JSON object having my name:
+And I have my 'keypair'
+And I have my 'string' named 'myFirstString'
+And I have my 'number' named 'myFirstNumber'
+#
+# Here I load data from a different JSON object:
+And I have a 'string' named 'theSecondString' inside 'theSecondObject'
+And I have a 'number' named 'theSecondNumber' inside 'theSecondObject' 
 Then print all data
 EOF
 
@@ -313,9 +354,9 @@ let n=n+1
 
 
 cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadArrayDebug.zen -z -a ../../docs/examples/zencode_cookbook/myFlatObject.json | jq . | tee ../../docs/examples/zencode_cookbook/givenDebugOutput.json
-Given I have a  'string array' named 'myArray' 
+Given I have a  'string array' named 'myFiveStrings' 
 Given debug 
-When I randomize the 'myArray' array
+When I randomize the 'myFiveStrings' array
 Then print all data
 EOF
 
@@ -376,9 +417,7 @@ Given I have a 'string array' named  'myFourthArray' inside 'myFourthObject'
 Given I have a 'number' named 'myFirstNumber' inside 'myFirstObject'
 Given I have a 'string' named 'myFirstString' inside 'myFirstObject'
 Given I have a 'hex' named 'myFirstHex' inside 'myFirstObject'
-Then print the 'myFirstString' as 'string'
-Then print the 'myFirstHex' as 'hex'
-# Then print the 'myFirstNumber' as 'number'
+Then print all data
 EOF
 
 
@@ -437,11 +476,11 @@ cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenFullList.zen -z -a $t
 
 # Load Arrays
 Given I have a 'string array' named 'myFirstArray' inside 'myFirstObject' 
-Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
-Given I have a 'string array' named 'myThirdArray' inside 'myThirdObject' 
-Given I have a 'string array' named 'myFourthArray' inside 'myFourthObject'
+# Remember that you can load arrays of other types, just 
+# like writing the encoding before the word array, for example 
+# you could load a 'number array' or 'base64 array'
+# 
 # Load Numbers
-Given I have a 'number' named 'myFirstNumber' inside 'myFirstObject' 
 Given I have a 'number' named 'mySecondNumber' inside 'mySecondObject'
 # Load Strings
 Given I have a 'string' named 'myFirstString' inside 'myFirstObject' 
@@ -450,7 +489,6 @@ Given I have an 'hex' named 'myFirstHex' inside 'myFirstObject'
 Given I have a  'base64' named 'myFirstBase64' inside 'myFirstObject' 
 Given I have a  'binary' named 'myFirstBinary' inside 'myFirstObject' 
 Given I have an 'url64' named 'myFirstUrl64' inside 'myFirstObject' 
-and debug
 Then print all data
 EOF
 

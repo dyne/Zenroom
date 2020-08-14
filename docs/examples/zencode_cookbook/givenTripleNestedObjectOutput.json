@@ -1,1 +1,20 @@
-{"myFirstHex":"616e7976616c7565","myFirstString":"Hello World!"}
+{
+  "myFirstHex": "616e7976616c7565",
+  "myFirstNumber": 1,
+  "myFirstString": "Hello World!",
+  "myFourthArray": [
+    "oneExtraString1",
+    "oneExtraString2",
+    "oneExtraString3",
+    "oneExtraString4"
+  ],
+  "mySecondArray": [
+    "anotherString1",
+    "anotherString2"
+  ],
+  "myThirdArray": [
+    "oneMoreString1",
+    "oneMoreString2",
+    "oneMoreString3"
+  ]
+}

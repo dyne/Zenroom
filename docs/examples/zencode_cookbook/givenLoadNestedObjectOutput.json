@@ -1,1 +1,10 @@
-{"keypair":{"private_key":"DbjRMCC7fykuUaqYDX_cy_Zs7J0ZC0y9VxBLRcfwIJ63MAZtW4fJ4IxxdUdLNy0ye0-qf0IlRZI","public_key":"BE39Wu7AXSzSplMd37VhCB094xHqCgvZxMhgaTA7B0Xz4mEIZmoO2FmWiokVXuJ0O9jH9AQD4UBkXiCU4gzYrLQc9VpfB4Qr8rz6jj_UYvC77FiLGc-0jsE4mQfpgLoOspBGcfNyiS8Y50hl8zthKjo"},"myFirstArray":["String0","String0","String0","String4"],"mySecondArray":["anotherStringw","anotherStringw","anotherStringw","anotherStringw"]}
+{
+  "keypair": {
+    "private_key": "AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
+    "public_key": "BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
+  },
+  "myFirstNumber": 87654321,
+  "myFirstString": "Hello World!",
+  "theSecondNumber": 12345678,
+  "theSecondString": "Oh, hello again!"
+}

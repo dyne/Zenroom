@@ -19,7 +19,7 @@ So each Zencode smart contract will contain at least three lines, each begining 
 Scenarios are set in the beginning of a script and they make Zenroom use a certain set of rules to interpretate the Zencode contained in the smart contract. Different scenarios will typically contain different keywords. The syntax to set a scenario is: 
 
 ```gherkin
-   Scenario 'ecdh': Create the keypair
+   Scenario 'simple': Create the keypair
 ```
 
 The scenario setting happens before the ```:```, everything right of that isn't processed by Zenroom and can be used as a title to the smart contract. 
@@ -57,11 +57,8 @@ You can pass to Zenroom a configuration file, using the parameter ```-c```, desc
 This affects **my** statements
 
 ```gherkin
-   Given I introduce myself as ''
-   Given I am known as ''
    Given I am ''
    Given I have my ''
-   Given I have my valid ''
 ```
 
 Data provided as input (from **data** and **keys**) is all imported
@@ -70,7 +67,10 @@ automatically from **JSON** or [CBOR](https://tools.ietf.org/html/rfc7049) binar
 Scenarios can add Schema for specific data validation mapped to **words** like: **signature**, **proof** or **secret**.
 
 
-**Data input**
+<!-- old stuff
+ 
+ 
+
 ```gherkin
    Given I have a ''
    Given I have a valid ''
@@ -81,6 +81,14 @@ Scenarios can add Schema for specific data validation mapped to **words** like: 
    Given the '' is valid
 ```
 
+-->
+
+**Data input**
+
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=given :type=code gherkin')
+
+
 or check emptiness:
 
 ```gherkin
@@ -89,7 +97,7 @@ or check emptiness:
 
 all the list of valid `given` statements are:
 
-[](../_media/zencode_utterances.yaml ':include :fragment=given :type=code yaml')
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=given :type=code gherkin')
 
 
 When **valid** is specified then extra checks are made on input value,
@@ -102,21 +110,21 @@ Processing data is done in the when block. Also scenarios add statements to this
 
 Without extensions, these are the basic functions available
 
-[](../_media/zencode_utterances.yaml ':include :fragment=when :type=code yaml')
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=when :type=code gherkin')
 
 with the `ecdh` extension the following statementa are valid
 
-[](../_media/zencode_utterances.yaml ':include :fragment=simple_when :type=code yaml')
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=ecdh :type=code gherkin')
 
-with the `coconut` extension the following statementa are valid
+with the `credential` extension the following statementa are valid
 
-[](../_media/zencode_utterances.yaml ':include :fragment=coconut_when :type=code yaml')
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=credential :type=code gherkin')
 
 # *Then*
 
 Output is all exported in JSON or CBOR
 
-[](../_media/zencode_utterances.yaml ':include :fragment=then :type=code yaml')
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=then :type=code gherkin')
 
 Settings:
 ```txt

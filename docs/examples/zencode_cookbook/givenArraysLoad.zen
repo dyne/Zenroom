@@ -1,0 +1,10 @@
+Given I have a 'string array' named 'myStringArray'
+Given I have a 'number array' named 'myNumberArray'
+Given I have a 'bin array' named 'myBinArray'
+Given I have a 'hex array' named 'myHexArray'
+Given I have a 'base64 array' named 'myBase64Array'
+Given I have a 'base64 array' named 'myECPArray'
+Given I have a 'base64 array' named 'myBIGArray'
+Given I have a 'base64 array' named 'myECP2Array'
+
+Then print all data

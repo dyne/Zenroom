@@ -1,0 +1,9 @@
+# Encrypt with password
+Scenario 'ecdh': Encrypt a message with the password
+# the names "header", "message" and "password" are hardcoded when using the encrypt statement
+Given I have a 'string' named 'password'
+And I have a 'string' named 'message'
+And I have a 'string' named 'header'
+When I encrypt the secret message 'message' with 'password'
+# anything introduced by 'the' becomes a new variable
+Then print the 'secret message'
