@@ -333,10 +333,11 @@ int main(int argc, char **argv) {
 		               "ZEN.schemas = {}\n"
 		               "require_once('zencode_%s')\n"
 		               "print(JSON.encode(\n"
-		               "{ Given = ZEN.given_steps,\n"
+		               "{ Scenario = \"%s\",\n"
+		               "  Given = ZEN.given_steps,\n"
 		               "  When = ZEN.when_steps,\n"
 		               "  Then = ZEN.then_steps,\n"
-		               "  Schemas = ZEN.schemas }))", introspect);
+		               "  Schemas = ZEN.schemas }))", introspect, introspect);
 		int ret = luaL_dostring(Z->lua, zscript);
 		if(ret) {
 			error(Z->lua, "Zencode execution error");
