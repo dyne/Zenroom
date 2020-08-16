@@ -117,11 +117,12 @@ function guess_conversion(obj, definition)
    if objtype == 'table' then
 	  toks = strtok(definition,'[^_]+')
 	  if not (#toks == 2) then
-		 error('Invalid table conversion: '..definition..' (must be "base64 array" or "string dictionary" etc.)',2)
+		 error('Invalid definition: '..definition..' (must be "base64 array" or "string dictionary" etc.)',2)
 		 return nil
 	  end
+	  -- zentypes
 	  if not ((toks[2] == 'array') or (toks[2] == 'dictionary') or (toks[2] == 'structure')) then
-		 error('Invalid table conversion: '..definition.. ' (must be array or dictionary or structure)', 2)
+		 error('Invalid table type: '..definition.. ' (must be array or dictionary)', 2)
 		 return nil
 	  end
 	  res = input_encoding(toks[1])
@@ -130,7 +131,7 @@ function guess_conversion(obj, definition)
 		 return nil
 	  end
 	  res.luatype = 'table'
-	  res.zentype = toks[2]
+	  res.zentype = toks[2] -- zentypes couples with table
 	  res.raw = obj
 	  return(res)
    end

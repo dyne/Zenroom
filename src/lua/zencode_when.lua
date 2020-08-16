@@ -27,6 +27,13 @@ When("append '' to ''", function(src, dest, format)
 		ACK[dest] = dst .. val
 end)
 
+When("create the ''", function(dest)
+		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
+		ACK[dest] = { }
+		ZEN.CODEC[dest] = guess_conversion(ACK[dest], dest)
+		ZEN.CODEC[dest].name = dest
+end)
+
 -- simplified exception for I write: import encoding from_string ...
 When("write string '' in ''", function(content, dest)
 		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
@@ -35,8 +42,8 @@ When("write string '' in ''", function(content, dest)
 							encoding = 'string',
 							luatype = 'string',
 							zentype = 'element' }
-
 end)
+
 -- ... and from a number
 When("write number '' in ''", function(content, dest)
 		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
@@ -224,6 +231,17 @@ When("split the leftmost '' bytes of ''", function(len, src)
 		ZEN.CODEC.leftmost = ZEN.CODEC[src]
 end)
 
+When("create the sum of '' and ''", function(left,right)
+		local l = tonumber(ACK[left])
+		ZEN.assert(l, "Invalid number for sum: "..left)
+		local r = tonumber(ACK[right])
+		ZEN.assert(r, "Invalid number for sum: "..right)
+		ACK.sum = l + r
+		ZEN.CODEC.sum = { name = sum,
+						  encoding = 'number',
+						  luatype = 'number',
+						  zentype = 'element' }
+end)
 -- TODO:
 -- When("set '' as '' with ''", function(dest, format, content) end)
 -- When("append '' as '' to ''", function(content, format, dest) end)

@@ -86,8 +86,9 @@ ZEN = require('zencode')
 require('zencode_data') -- pick/in, conversions etc.
 require('zencode_given')
 require('zencode_when')
-require('zencode_hash') -- when extension
-require('zencode_array') -- when extension
+require('zencode_hash')       -- when extension
+require('zencode_array')      -- when extension
+require('zencode_dictionary') -- when extension
 require('zencode_then')
 -- this is to evaluate expressions or derivate a column
 -- it would execute lua code inside the zencode and is
