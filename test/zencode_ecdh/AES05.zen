@@ -5,5 +5,5 @@ Scenario 'ecdh': Alice encrypts a message for Bob
 	and I have a 'public key' from 'Bob'
 	When I write string 'This is my secret message.' in 'message'
 	and I write string 'This is the header' in 'header'
-	and I encrypt the message for 'Bob'
+	and I encrypt the secret message of 'message' for 'Bob'
 	Then print the 'secret message'

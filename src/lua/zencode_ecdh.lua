@@ -86,10 +86,10 @@ When("decrypt the secret message with ''", function(sec)
 end)
 
 -- encrypt to a single public key
-When("encrypt the message for ''", function(_key)
+When("encrypt the secret message of '' for ''", function(msg, _key)
 		ZEN.assert(ACK.keypair, "Keys not found: keypair")
 		ZEN.assert(ACK.keypair.private_key, "Private key not found in keypair")
-		ZEN.assert(ACK.message, "Data to encrypt not found: message")
+		ZEN.assert(ACK[msg], "Data to encrypt not found: "..msg)
 		ZEN.assert(type(ACK.public_key) == 'table',
 				   "Public keys not found in keyring")
 		ZEN.assert(ACK.public_key[_key], "Public key not found for: ".._key)
@@ -100,20 +100,20 @@ When("encrypt the message for ''", function(_key)
 		ACK.secret_message.text,
 		ACK.secret_message.checksum =
 		   ECDH.aead_encrypt(key,
-							 ACK.message,
+							 ACK[msg],
 							 ACK.secret_message.iv,
 							 ACK.secret_message.header)
 end)
 
 
-When("decrypt the secret message from ''", function(_key)
+When("decrypt the message of '' from ''", function(secret,_key)
 		ZEN.assert(ACK.keypair, "Keyring not found")
 		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
-		ZEN.assert(ACK.secret_message, "Data to decrypt not found: secret_message")
+		ZEN.assert(ACK[secret], "Data to decrypt not found: secret_message")
 		local pubkey = ACK[_key] or ACK.public_key[_key]
 		ZEN.assert(pubkey,
 				   "Key to decrypt not found, the public key from: ".._key)
-		local message = ACK.secret_message[_key] or ACK.secret_message
+		local message = ACK[secret][_key] or ACK[secret]
 		local session = ECDH.session(ACK.keypair.private_key, pubkey)
 		ACK.message, checksum = ECDH.aead_decrypt(session,
 												  message.text,

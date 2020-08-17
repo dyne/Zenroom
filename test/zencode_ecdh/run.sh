@@ -98,7 +98,7 @@ Scenario 'ecdh': Alice encrypts a message for Bob
 	and I have a 'public key' from 'Bob'
 	When I write string 'This is my secret message.' in 'message'
 	and I write string 'This is the header' in 'header'
-	and I encrypt the message for 'Bob'
+	and I encrypt the secret message of 'message' for 'Bob'
 	Then print the 'secret message'
 EOF
 
@@ -119,7 +119,7 @@ Scenario 'ecdh': Bob decrypts the message from Alice
 	and I have my 'keypair'
 	and I have a 'base64' named 'Alice' in 'public key'
 	and I have a 'secret message'
-	When I decrypt the secret message from 'Alice'
+	When I decrypt the message of 'secret message' from 'Alice'
 	Then print the 'message' as 'string'
 	and print the 'header' as 'string' inside 'secret message'
 EOF
