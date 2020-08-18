@@ -106,16 +106,16 @@ When("encrypt the secret message of '' for ''", function(msg, _key)
 end)
 
 
-When("decrypt the message of '' from ''", function(secret,_key)
+When("decrypt the text of '' from ''", function(secret,_key)
 		ZEN.assert(ACK.keypair, "Keyring not found")
 		ZEN.assert(ACK.keypair.private_key, "Private key not found in keyring")
-		ZEN.assert(ACK[secret], "Data to decrypt not found: secret_message")
+		ZEN.assert(ACK[secret], "Data to decrypt not found: "..secret)
 		local pubkey = ACK[_key] or ACK.public_key[_key]
 		ZEN.assert(pubkey,
 				   "Key to decrypt not found, the public key from: ".._key)
 		local message = ACK[secret][_key] or ACK[secret]
 		local session = ECDH.session(ACK.keypair.private_key, pubkey)
-		ACK.message, checksum = ECDH.aead_decrypt(session,
+		ACK.text, checksum = ECDH.aead_decrypt(session,
 												  message.text,
 												  message.iv,
 												  message.header)

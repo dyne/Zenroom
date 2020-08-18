@@ -119,8 +119,8 @@ Scenario 'ecdh': Bob decrypts the message from Alice
 	and I have my 'keypair'
 	and I have a 'base64' named 'Alice' in 'public key'
 	and I have a 'secret message'
-	When I decrypt the message of 'secret message' from 'Alice'
-	Then print the 'message' as 'string'
+	When I decrypt the text of 'secret message' from 'Alice'
+	Then print the 'text' as 'string'
 	and print the 'header' as 'string' inside 'secret message'
 EOF
 
