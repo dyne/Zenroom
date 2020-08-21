@@ -54,8 +54,9 @@ When("create the keypair", f_keygen)
 
 -- encrypt with a header and secret
 When("encrypt the secret message '' with ''", function(msg, sec)
-		ZEN.assert(ACK[msg], "Data to encrypt not found: message")
+		ZEN.assert(ACK[msg], "Data to encrypt not found: "..msg)
 		ZEN.assert(ACK[sec], "Secret used to encrypt not found: "..sec)
+		ZEN.assert(not ACK.secret_message, "Cannot overwrite existing object: ".."text")
 		-- KDF2 sha256 on all secrets
 		local secret = KDF(ACK[sec])
 		ACK.secret_message = { header = ACK.header or 'empty',
@@ -67,21 +68,20 @@ When("encrypt the secret message '' with ''", function(msg, sec)
 end)
 
 -- decrypt with a secret
-When("decrypt the secret message with ''", function(sec)
+When("decrypt the text of '' with ''", function(msg, sec)
 		ZEN.assert(ACK[sec], "Secret used to decrypt not found: secret")
-		ZEN.assert(ACK.secret_message,
+		ZEN.assert(ACK[msg],
 				   "Secret data to decrypt not found: secret message")
-
+		ZEN.assert(not ACK.text, "Cannot overwrite existing object: ".."text")
         local secret = KDF(ACK[sec])
         -- KDF2 sha256 on all secrets, this way the
         -- secret is always 256 bits, safe for direct aead_decrypt
-        ACK.message = { header = ACK.secret_message.header }
-        ACK.message.text, ACK.checksum =
+        ACK.text, ACK.checksum =
            ECDH.aead_decrypt(secret,
-							 ACK.secret_message.text,
-							 ACK.secret_message.iv,
-							 ACK.message.header)
-        ZEN.assert(ACK.checksum == ACK.secret_message.checksum,
+							 ACK[msg].text,
+							 ACK[msg].iv,
+							 ACK[msg].header)
+        ZEN.assert(ACK.checksum == ACK[msg].checksum,
                    "Decryption error: authentication failure, checksum mismatch")
 end)
 
@@ -93,6 +93,8 @@ When("encrypt the secret message of '' for ''", function(msg, _key)
 		ZEN.assert(type(ACK.public_key) == 'table',
 				   "Public keys not found in keyring")
 		ZEN.assert(ACK.public_key[_key], "Public key not found for: ".._key)
+		ZEN.assert(not ACK.secret_message, "Cannot overwrite existing object: ".."secret message")
+
 		local private = ACK.keypair.private_key
 		local key = ECDH.session(ACK.keypair.private_key, ACK.public_key[_key])
 		ACK.secret_message = { header = ACK.header or 'empty',
