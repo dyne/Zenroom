@@ -14,7 +14,7 @@ lua_cflags := -DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE -DLUA_COMPAT_BITLIB -I${pwd}/
 # ----------------
 # zenroom defaults
 gcc := gcc
-ar := ar
+ar := $(shell command -v ar) # cmake requires full path
 ranlib := ranlib
 ld := ld
 cflags_protection := -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
