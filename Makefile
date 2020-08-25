@@ -17,7 +17,7 @@
 #  <http://www.gnu.org/licenses/>.
 
 pwd := $(shell pwd)
-ARCH=$(shell uname -m)
+ARCH ?=$(shell uname -m)
 PREFIX ?= /usr/local
 # VERSION is set in src/Makefile
 VERSION := $(shell awk '/ZENROOM_VERSION :=/ { print $$3; exit }' src/Makefile | tee VERSION)
