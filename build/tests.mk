@@ -104,7 +104,6 @@ check-osx:
 	${test-exec} test/constructs.lua
 	$(call lowmem-tests,${test-exec})
 	$(call determinism-tests,${test-exec})
-	$(call lua-modules,${test-exec})
 	$(call crypto-tests,${test-exec})
 	$(call zencode-tests,${test-exec})
 	$(call crypto-integration,${test-exec})
@@ -118,7 +117,6 @@ check-linux:
 	${test-exec} test/constructs.lua
 	$(call himem-tests,${test-exec})
 	$(call lowmem-tests,${test-exec})
-	$(call lua-modules,${test-exec})
 	$(call determinism-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
 	$(call zencode-tests,${test-exec})
