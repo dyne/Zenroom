@@ -231,17 +231,71 @@ When("split the leftmost '' bytes of ''", function(len, src)
 		ZEN.CODEC.leftmost = ZEN.CODEC[src]
 end)
 
-When("create the sum of '' and ''", function(left,right)
-		local l = tonumber(ACK[left])
-		ZEN.assert(l, "Invalid number for sum: "..left)
-		local r = tonumber(ACK[right])
-		ZEN.assert(r, "Invalid number for sum: "..right)
-		ACK.sum = l + r
-		ZEN.CODEC.sum = { name = sum,
-						  encoding = 'number',
-						  luatype = 'number',
-						  zentype = 'element' }
+When("create the result of '' + ''", function(left,right)
+        local l = tonumber(ACK[left])
+        ZEN.assert(l, "Invalid number in element: "..left)
+        local r = tonumber(ACK[right])
+        ZEN.assert(r, "Invalid number in element: "..right)
+		ZEN.assert(not ACK.result, "Cannot overwrite existing value: ".."result")
+        ACK.result = l + r
+        ZEN.CODEC.result = { name = result,
+                             encoding = 'number',
+                             luatype = 'number',
+							 zentype = 'element' }
 end)
+
+When("create the result of '' - ''", function(left,right)
+        local l = tonumber(ACK[left])
+        ZEN.assert(l, "Invalid number in element: "..left)
+        local r = tonumber(ACK[right])
+        ZEN.assert(r, "Invalid number in element: "..right)
+		ZEN.assert(not ACK.result, "Cannot overwrite existing value: ".."result")
+        ACK.result = l - r
+        ZEN.CODEC.result = { name = result,
+							 encoding = 'number',
+							 luatype = 'number',
+							 zentype = 'element' }
+end)
+
+When("create the result of '' * ''", function(left,right)
+        local l = tonumber(ACK[left])
+        ZEN.assert(l, "Invalid number in element: "..left)
+        local r = tonumber(ACK[right])
+        ZEN.assert(r, "Invalid number in element: "..right)
+		ZEN.assert(not ACK.result, "Cannot overwrite existing value: ".."result")
+        ACK.result = l * r
+        ZEN.CODEC.result = { name = result,
+							 encoding = 'number',
+							 luatype = 'number',
+							 zentype = 'element' }
+end)
+
+When("create the result of '' / ''", function(left,right)
+        local l = tonumber(ACK[left])
+        ZEN.assert(l, "Invalid number in element: "..left)
+        local r = tonumber(ACK[right])
+        ZEN.assert(r, "Invalid number in element: "..right)
+		ZEN.assert(not ACK.result, "Cannot overwrite existing value: ".."result")
+        ACK.result = l / r
+        ZEN.CODEC.result = { name = result,
+							 encoding = 'number',
+							 luatype = 'number',
+							 zentype = 'element' }
+end)
+
+When("create the result of '' % ''", function(left,right)
+        local l = tonumber(ACK[left])
+        ZEN.assert(l, "Invalid number in element: "..left)
+        local r = tonumber(ACK[right])
+        ZEN.assert(r, "Invalid number in element: "..right)
+		ZEN.assert(not ACK.result, "Cannot overwrite existing value: ".."result")
+        ACK.result = l % r
+        ZEN.CODEC.result = { name = result,
+							 encoding = 'number',
+							 luatype = 'number',
+							 zentype = 'element' }
+end)
+
 -- TODO:
 -- When("set '' as '' with ''", function(dest, format, content) end)
 -- When("append '' as '' to ''", function(content, format, dest) end)
