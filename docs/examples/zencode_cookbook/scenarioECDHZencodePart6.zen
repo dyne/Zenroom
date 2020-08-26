@@ -1,0 +1,20 @@
+Rule check version 1.0.0 
+Scenario 'ecdh': Bob decrypts the message from Alice 
+
+# Here we state that Bob is running the script and we load his keypair 
+Given that I am known as 'Bob' 
+Given I have my 'keypair'
+
+# Here we load Alice's public key
+Given I have a 'public key' from 'Alice' 
+
+# Here we load the encrypted message(s)
+Given I have a 'secret message' named 'secretForBob'
+
+# Here we decrypt the message and rename it
+When I decrypt the text of 'secretForBob' from 'Alice'
+When I rename the 'text' to 'textForBob'
+
+# Here we print out the message and its header
+Then print the 'textForBob' as 'string' 
+Then print the 'header' as 'string' inside 'secretForBob' 

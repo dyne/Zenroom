@@ -1,0 +1,25 @@
+Rule check version 1.0.0
+Scenario 'ecdh': Alice encrypts a message for Bob and Carl 
+
+# Here we load keypair and public keys
+Given that I am known as 'Alice'
+Given that I have my 'keypair'
+Given that I have a 'public key' from 'Bob'
+Given that I have a 'public key' from 'Carl'
+
+# Here we load the header, as a string just like before
+Given that I have a 'string' named 'header'
+
+# This is something new: here we are loading the payload to be encrypted,
+# stating that it's encoded in base64
+Given that I have a 'base64' named 'jsonFileInBase64'
+
+# Here we encrypt and rename, as we did when encrypting the regular text message
+When I encrypt the secret message of 'jsonFileInBase64' for 'Bob'
+When I rename the 'secret message' to 'secretForBob'
+When I encrypt the secret message of 'jsonFileInBase64' for 'Carl'
+When I rename the 'secret message' to 'secretForCarl'
+
+# and to finish, here we print out the encrypted payloads, for both the recipients
+Then print the 'secretForBob' as 'base64'
+Then print the 'secretForCarl' as 'base64' 

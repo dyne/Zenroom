@@ -1,0 +1,11 @@
+{
+	"Bob": {
+		"keypair": {
+			"private_key": "psBF05iHz/X8WBpwitJoSsZ7BiKawrdaVfQN3AtTa6I=",
+			"public_key": "BBA0kD35T9lUHR/WhDwBmgg/vMzlu1Vb0qtBjBZ8rbhdtW3AcX6z64a59RqF6FCV5q3lpiFNTmOgA264x1cZHE0="
+		}
+	},
+		"Alice": {
+		"public_key": "BNRzlJ4csYlWgycGGiK/wgoEw3OizCdx9MWg06rxUBTP5rP9qPASOW5KY8YgmNjW5k7lLpboboHrsApWsvgkMN4="
+	}
+}

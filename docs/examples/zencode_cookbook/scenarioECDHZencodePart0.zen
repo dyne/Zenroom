@@ -1,4 +1,4 @@
 Scenario 'ecdh': Generate a keypair
-Given I am 'Andrea'
+Given I am 'Alice'
 When I create the keypair
 Then print my data

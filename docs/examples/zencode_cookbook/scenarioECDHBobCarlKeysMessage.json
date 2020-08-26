@@ -1,0 +1,10 @@
+{
+	"Bob": {
+		"public_key": "BBA0kD35T9lUHR/WhDwBmgg/vMzlu1Vb0qtBjBZ8rbhdtW3AcX6z64a59RqF6FCV5q3lpiFNTmOgA264x1cZHE0="
+	},
+	"Carl": {
+		"public_key": "BLdpLbIcpV5oQ3WWKFDmOQ/zZqTo93cT1SId8HNITgDzFeI6Y3FCBTxsKHeyY1GAbHzABsOf1Zo61FRQFLRAsc8="
+	},
+	"myMessageForBobAndCarl": "Dear Bob and Carl, we're not friends anymore cause your names are too short. Goodbye.",
+	"header": "Secret message for Bob and Carl"
+}

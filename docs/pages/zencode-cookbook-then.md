@@ -55,6 +55,8 @@ In the same fashion, you can print all the data using the statement
 Then print all data
 ```
 
+<!-- template 
+
 ## Sorting data output
 
 We've learned that when using the ***Then print all data*** or ***Then print my data*** statements, Zenroom will automatically sort the output alphabetically, because *Determinism is King*. 
@@ -66,7 +68,7 @@ Then print 'C-String'
 Then print 'B-String' 
 Then print 'A-String' 
 ```
-
+-->
 
 ## Overwriting values
 

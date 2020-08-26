@@ -1,0 +1,18 @@
+rule check version 1.0.0 
+Scenario 'ecdh': Bob verifies the signature from Alice
+
+# Declaring who I am and loading all the stuff
+Given that I am known as 'Bob' 
+Given I have a 'public key' from 'Alice' 
+Given I have a 'string' named 'myMessage' 
+Given I have a 'signature' named 'myMessage.signature'
+Given I have a 'string array' named 'myStringArray'
+Given I have a 'signature' named  'myStringArray.signature'
+
+# The verification happens here: if the verification would fails, Zenroom would stop and print an error 
+When I verify the 'myMessage' has a signature in 'myMessage.signature' by 'Alice'
+When I verify the 'myStringArray' has a signature in 'myStringArray.signature' by 'Alice'	
+
+# Here we're printing the original message along with happy statement of success
+Then print the 'myMessage'
+Then print 'Zenroom certifies that signatures are all correct!' as 'string'
