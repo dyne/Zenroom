@@ -14,7 +14,7 @@ lua_cflags := -DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE -DLUA_COMPAT_BITLIB -I${pwd}/
 # ----------------
 # zenroom defaults
 gcc := gcc
-ar := $(shell command -v ar) # cmake requires full path
+ar := $(shell which ar) # cmake requires full path
 ranlib := ranlib
 ld := ld
 cflags_protection := -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
@@ -43,10 +43,10 @@ ldadd += ${milib}/libamcl_core.a
 # target specific settings
 
 ifneq (,$(findstring win,$(MAKECMDGOALS)))
-gcc := x86_64-w64-mingw32-gcc
-ar  := x86_64-w64-mingw32-ar
-ranlib := x86_64-w64-mingw32-ranlib
-ld := x86_64-w64-mingw32-ld
+gcc := $(shell which x86_64-w64-mingw32-gcc)
+ar  := $(shell which x86_64-w64-mingw32-ar)
+ranlib := $(shell which x86_64-w64-mingw32-ranlib)
+ld := $(shell which x86_64-w64-mingw32-ld)
 system := Windows
 cflags := -mthreads -D'ARCH=\"WIN\"' -DARCH_WIN
 ldflags := -L/usr/x86_64-w64-mingw32/lib
