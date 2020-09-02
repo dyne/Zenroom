@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-RNGSEED="hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+RNGSEED="rngseed=hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
 
 ####################
 # common script init
@@ -71,13 +71,13 @@ echo "                                                "
 echo "------------------------------------------------"
 echo "  Generate a keypair with known seed: $n       "
 echo "  The known seed is:							  "
-echo "  74eeeab870a394175fae808dd5dd3b047f3ee2d6a8d01e14bff94271565625e98a63babe8dd6cbea6fedf3e19de4bc80314b861599522e44409fdd20f7cd6cfc "
+echo "  hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
 echo "------------------------------------------------"
 echo "                                                "
 
 
 
-cat $tmpZencode0 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -c rngseed=hex:74eeeab870a394175fae808dd5dd3b047f3ee2d6a8d01e14bff94271565625e98a63babe8dd6cbea6fedf3e19de4bc80314b861599522e44409fdd20f7cd6cfc | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHKeypair2.json
+cat $tmpZencode0 | zexe ../../docs/examples/zencode_cookbook/temp.zen -c $RNGSEED -z | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHKeypair2.json
 
 
 
@@ -87,7 +87,9 @@ echo "   	END of Generate a keypair with known seed - script $n"
 echo "                                                "
 echo " The keypair should be:  "
 echo "                                                "
-echo " {"Alice":{"keypair":{"private_key":"Aku7vkJ7K01gQehKELav3qaQfTeTMZKgK+5VhaR3Ui0=","public_key":"BBCQg21VcjsmfTmNsg+I+8m1Cm0neaYONTqRnXUjsJLPa8075IYH+a9w2wRO7rFM1cKmv19Igd7ntDZcUvLq3xI="}}}  "
+echo " private_key : B4rYTWx6UMbc2YPWRNpl4w2M6gY9jqSa637n8Kr2pPc="
+echo " public_key : BHdrWMNBRclVO1I1/iEaYjfEi5C0eEvG2GZgsCNq87qy8feZ74JEvnKK9FC07ThhJ8s4ON2ZQcLJ+8HpWMfKPww="
+echo "                                                "
 echo "------------------------------------------------"
 echo "                                                "
 
