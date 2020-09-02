@@ -19,25 +19,47 @@ In the ***Then*** phase, the output is shaped, processed, sorted and printed out
 
 Let's see two basic examples, where let's say that we are loading this object: 
 
-```JSON
-"myNumber":123456789
+```json
+{
+"myNumber":123456789 }
 ```
 
 In the first example, we'll simply print an object *as it is*, meaning using the default encoding of its ***schema*** or the encoding defined in a ***rule output encode*** statement (if present), along with the default file format (JSON): 
 
 ```gherkin
-Then print 'myNumber' 
+Then print the 'myNumber' 
 ```
 
 The output should simply be *123456789*.
 
-In the second example, we wanna spice things up a bit and print the number as something else, lets say as an *hex*:
+In the second example, we wanna spice things up a bit and print the number as something else (with a different encoding), lets say as an *hex*:
 
 ```gherkin
-Then print 'myNumber' as 'hex'
+Then print the 'myNumber' as 'hex'
 ```
 
 The output here will be the *hex* value of *123456789*, which is *75BCD15*
+
+You can also print with a different encoding an object that, at the output, is nested into something else, which is often the case when you are using ***schemas*** for example if you have:
+
+```json
+{
+"petition": {"uid" : "TW9yZV9wcml2YWN5X2Zvcl9hbGwh"} }
+```
+
+You may want to print the *uid* as string, instead of the default base64 encoding. You can do this by: 
+
+```gherkin
+Then print the 'uid' as 'string' inside 'petition' 
+```
+
+And the output shoul be:
+
+```json
+{
+"uid": "More_privacy_for_all!" }
+```
+
 
 ## The ***my*** and ***all*** operators
 
