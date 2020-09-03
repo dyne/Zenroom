@@ -1,0 +1,23 @@
+name: Test
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bindings/javascript
+    strategy:
+      matrix:
+        node-version: [10.x, 12.x, 14.x]
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: mymindstorm/setup-emsdk@v6
+        with:
+          version: '1.39.15'  
+      - run: emcc -v
+      - run: yarn
+      - run: yarn build
+      - run: yarn test
