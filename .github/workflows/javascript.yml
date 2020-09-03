@@ -21,6 +21,9 @@ jobs:
         with:
           version: ${{env.EM_VERSION}}
       - run: emcc -v
+      - name: Install zsh
+        if: runner.os == 'Linux'
+        run: sudo apt-get update; sudo apt-get install zsh
       - run: yarn
       - run: yarn build
         env: 
