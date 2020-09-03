@@ -14,6 +14,7 @@ jobs:
         node-version: [10.x, 12.x, 14.x]
     steps:
       - uses: actions/checkout@v1
+      - uses: jwlawson/actions-setup-cmake@v1.3
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
