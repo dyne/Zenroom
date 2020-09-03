@@ -29,3 +29,27 @@ jobs:
         env: 
           EMSCRIPTEN: ${{env.EMSDK}}/upstream/emscripten
       - run: yarn test
+  publish:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+          registry-url: https://registry.npmjs.org/
+      - uses: mymindstorm/setup-emsdk@v6
+        with:
+          version: ${{env.EM_VERSION}}
+      - name: Install zsh
+        if: runner.os == 'Linux'
+        run: sudo apt-get update; sudo apt-get install zsh
+      - run: yarn
+      - run: yarn build
+        env: 
+          EMSCRIPTEN: ${{ env.EMSDK }}/upstream/emscripten
+      - run: npm version $(npm show zenroom@next version)
+      - run: yarn release:pre
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.npm_token}} 
+    
