@@ -51,8 +51,11 @@ jobs:
       - run: yarn build
         env: 
           EMSCRIPTEN: ${{ env.EMSDK }}/upstream/emscripten
-      - run: npm version $(npm show zenroom@next version)
-      - run: echo "//registry.npmjs.org/:_authToken=$NPM_AUTH_TOKEN" > .npmrc
+      - name: Run npm version
+        run: npm version $(npm show zenroom@next version)
+      - name: Generate .npmrc
+        run: echo "//registry.npmjs.org/:_authToken=$NPM_AUTH_TOKEN" > .npmrc
+      - run: npm login
       - run: yarn release:pre
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}} 
