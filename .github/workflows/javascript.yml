@@ -1,0 +1,31 @@
+name: Test
+on: [push]
+env:
+  EM_VERSION: 1.39.15
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bindings/javascript
+    strategy:
+      matrix:
+        node-version: [12.x]
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: mymindstorm/setup-emsdk@v6
+        with:
+          version: ${{env.EM_VERSION}}
+      - run: emcc -v
+      - name: Install zsh
+        if: runner.os == 'Linux'
+        run: sudo apt-get update; sudo apt-get install zsh
+      - run: yarn
+      - run: yarn build
+        env: 
+          EMSCRIPTEN: ${{env.EMSDK}}/upstream/emscripten
+      - run: yarn test
