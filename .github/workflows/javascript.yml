@@ -2,8 +2,7 @@ name: Test
 on: [push]
 env:
   EM_VERSION: 1.39.15
-  EM_CACHE_FOLDER: 'emsdk-cache'
-  EMSCRIPTEN: 'emsdk-cache'
+  EMSCRIPTEN: ${{env.EMSDK}}
 
 jobs:
   test:
@@ -22,7 +21,6 @@ jobs:
       - uses: mymindstorm/setup-emsdk@v6
         with:
           version: ${{env.EM_VERSION}}
-          actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
       - run: emcc -v
       - run: yarn
       - run: yarn build
