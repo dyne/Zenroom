@@ -2,6 +2,7 @@ name: Test javascript bindings
 on: [push]
 env:
   EM_VERSION: 1.39.15
+  NODE_AUTH_TOKEN: ${{secrets.npm_token}}
 
 jobs:
 #   test:
@@ -55,7 +56,6 @@ jobs:
         run: npm version $(npm show zenroom@next version)
       - name: Generate .npmrc
         run: echo "//registry.npmjs.org/:_authToken=$NODE_AUTH_TOKEN" > .npmrc
-      - run: yarn release:pre
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}} 
+      - run: npm publish . --tag next
+           
     
