@@ -2,7 +2,6 @@ name: Test
 on: [push]
 env:
   EM_VERSION: 1.39.15
-  EMSCRIPTEN: ${{env.EMSDK}}
 
 jobs:
   test:
@@ -24,4 +23,6 @@ jobs:
       - run: emcc -v
       - run: yarn
       - run: yarn build
+        env: 
+          EMSCRIPTEN: ${{env.EMSDK}}
       - run: yarn test
