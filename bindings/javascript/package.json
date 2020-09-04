@@ -1,6 +1,6 @@
 {
   "name": "zenroom",
-  "version": "1.1.5",
+  "version": "1.1.5-12",
   "description": "wrapper of Zenroom, a secure and small virtual machine for crypto language processing",
   "main": "index.js",
   "repository": "https://github.com/dyne/Zenroom.git",
@@ -43,7 +43,7 @@
     "doc": "documentation serve src/wrapper.js --shallow",
     "doc:api": "documentation readme src/wrapper.js -s '⚙️ API' --shallow --markdown-toc false",
     "release": "release-it --no-git.requireCleanWorkingDir",
-    "release:pre": "release-it --no-git --preRelease -i pre --publish --ci"
+    "release:pre": "DEBUG=release-it:* release-it --no-git --preRelease -i pre --publish --ci --npm.skipChecks --disable-metrics"
   },
   "files": [
     "dist"
@@ -67,7 +67,7 @@
     "mkdirp": "^1.0.4",
     "mocha": "^7.1.2",
     "nyc": "^15.0.1",
-    "release-it": "^13.5.8",
+    "release-it": "^14.0.1",
     "rimraf": "^3.0.2",
     "sinon": "^9.0.2",
     "standard": "^14.3.3"
