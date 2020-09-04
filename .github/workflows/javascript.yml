@@ -54,7 +54,7 @@ jobs:
       - name: Run npm version
         run: npm version $(npm show zenroom@next version)
       - name: Generate .npmrc
-        run: echo "//registry.npmjs.org/:_authToken=$NODE_AUTH_TOKEN" > .npmrc
+        run: echo "//registry.npmjs.org/:_authToken=${{secrets.NPM_TOKEN}}" > .npmrc
       - run: cat .npmrc
       - run: yarn release:pre --npm.skipChecks --disable-metrics
            
