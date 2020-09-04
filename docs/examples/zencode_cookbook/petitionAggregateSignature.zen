@@ -1,0 +1,10 @@
+Scenario credential
+Scenario petition: aggregate signature
+    Given that I have a valid 'petition signature'
+    Given I have a valid 'petition'
+    Given I have a valid 'verifiers'
+    When the petition signature is not a duplicate
+    When the petition signature is just one more
+    When I add the signature to the petition
+    Then print the 'petition'
+    Then print the 'verifiers'

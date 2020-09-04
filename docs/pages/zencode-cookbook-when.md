@@ -36,19 +36,20 @@ Since the *When* phase contains many statements, we did split the scripts in fou
 
 
 
-## Manipulation: rename, remove, append... 
+## Manipulation: sum/subtract, rename, remove, append... 
 
 We grouped together all the statements that perform object manipulation, so: 
 
- - append
- - rename
- - insert
- - remove 
- - split
- - randomize
- - write in
- - pick a random element
- - flatten
+ - ***sum and subtract*** two numbers
+ - ***append*** a simple object to another
+ - ***rename*** an object
+ - ***insert*** a simple object into an array
+ - ***remove*** an element from an array
+ - ***split*** a string
+ - ***randomize*** the elements of an array
+ - ***Create string/number*** (statement "write in")
+ - ***pick a random element*** from an array
+ - ***flatten*** an array into a string
  
 In the script below, we've put together a list of this statement and explained in the comments how each statement works: 
  
@@ -104,11 +105,28 @@ The output should look like this: <a href="../_media/examples/zencode_cookbook/w
 
 
 
-
-
 ## Comparing strings, numbers, arrays 
 
-The last group includes all the statements to compare objects, you can:
+This group includes all the statements to compare objects, you can:
+
+ - Compare if objects (strings, numbers or arrays) are equal.
+ - See if a number is more, less or equal to another. 
+ - See if an array contains an element of a given value.
+
+See our script below:
+
+
+[](../_media/examples/zencode_cookbook/whenCompleteScriptPart4.zen ':include :type=code gherkin')
+
+
+
+The output should look like 
+<a href="../_media/examples/zencode_cookbook/whenCompleteOutputPart4.json" download>whenCompleteOutputPart4.json</a>. 
+
+
+## Operations with dictionaries
+
+The last group includes all the statements that are exclusive to ***dictionary*** objects 
 
  - Compare if objects (strings, numbers or arrays) are equal.
  - See if a number is more, less or equal to another. 
