@@ -55,7 +55,7 @@ jobs:
       - name: Run npm version
         run: yarn version --new-version $(npm show zenroom@next version) --no-git-tag-version
       - run: yarn version --prerelease --no-git-tag-version
-      - run: npm publish . --tag next  --dry-run
+      - run: npm publish . --tag next
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
