@@ -53,11 +53,9 @@ jobs:
         env: 
           EMSCRIPTEN: ${{ env.EMSDK }}/upstream/emscripten
       - name: Run npm version
-        run: npm version $(npm show zenroom@next version)
-#       - name: Generate .npmrc
-#         run: echo "//registry.npmjs.org/:_authToken=${{secrets.NPM_TOKEN}}" > .npmrc
-#       - run: cat .npmrc
-      - run: yarn release:pre --npm.skipChecks --disable-metrics
+        run: yarn version --new-version $(npm show zenroom@next version) --no-git-tag-version
+      - run: yarn version --prerelease --no-git-tag-version
+      - run: npm publish . --tag next  --dry-run
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
