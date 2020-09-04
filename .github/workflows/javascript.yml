@@ -5,37 +5,37 @@ env:
   NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
 jobs:
-#   test:
-#     runs-on: ubuntu-latest
-#     defaults:
-#       run:
-#         working-directory: bindings/javascript
-#     strategy:
-#       matrix:
-#         node-version: [12.x]
-#     steps:
-#       - uses: actions/checkout@v1
-#       - uses: actions/setup-node@v1
-#         with:
-#           node-version: ${{ matrix.node-version }}
-#       - uses: mymindstorm/setup-emsdk@v6
-#         with:
-#           version: ${{env.EM_VERSION}}
-#       - run: emcc -v
-#       - name: Install zsh
-#         if: runner.os == 'Linux'
-#         run: sudo apt-get update; sudo apt-get install zsh
-#       - run: yarn
-#       - run: yarn build
-#         env: 
-#           EMSCRIPTEN: ${{env.EMSDK}}/upstream/emscripten
-#       - run: yarn test
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bindings/javascript
+    strategy:
+      matrix:
+        node-version: [12.x]
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: mymindstorm/setup-emsdk@v6
+        with:
+          version: ${{env.EM_VERSION}}
+      - run: emcc -v
+      - name: Install zsh
+        if: runner.os == 'Linux'
+        run: sudo apt-get update; sudo apt-get install zsh
+      - run: yarn
+      - run: yarn build
+        env: 
+          EMSCRIPTEN: ${{env.EMSDK}}/upstream/emscripten
+      - run: yarn test
   publish:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: bindings/javascript
-#     needs: test
+    needs: test
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
@@ -52,7 +52,7 @@ jobs:
       - run: yarn build
         env: 
           EMSCRIPTEN: ${{ env.EMSDK }}/upstream/emscripten
-      - name: Run npm version
+      - name: Run yarn version to zenroom@next
         run: yarn version --new-version $(npm show zenroom@next version) --no-git-tag-version
       - run: yarn version --prerelease --no-git-tag-version
       - run: npm publish . --tag next
