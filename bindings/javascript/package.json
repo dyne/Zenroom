@@ -1,12 +1,34 @@
 {
   "name": "zenroom",
-  "version": "1.1.1",
+  "version": "1.1.5",
   "description": "wrapper of Zenroom, a secure and small virtual machine for crypto language processing",
   "main": "index.js",
   "repository": "https://github.com/dyne/Zenroom.git",
+  "homepage": "https://dev.zenroom.org/#/pages/javascript",
   "author": "Puria Nafisi Azizi <puria@dyne.org>",
   "license": "AGPL-3.0",
-  "keywords": ["zenroom", "crypto-language-processing", "virtual-machine", "blockchain", "crypto", "ecc", "dyne", "ecdh", "ecdsa", "zero-knowledge-proofs", "javascript", "npm", "ecp2", "miller-loop", "hamming-distance", "elgamal", "aes-gcm", "aead", "seccomp", "goldilocks"],
+  "keywords": [
+    "zenroom",
+    "crypto-language-processing",
+    "virtual-machine",
+    "blockchain",
+    "crypto",
+    "ecc",
+    "dyne",
+    "ecdh",
+    "ecdsa",
+    "zero-knowledge-proofs",
+    "javascript",
+    "npm",
+    "ecp2",
+    "miller-loop",
+    "hamming-distance",
+    "elgamal",
+    "aes-gcm",
+    "aead",
+    "seccomp",
+    "goldilocks"
+  ],
   "scripts": {
     "lint": "npx standard",
     "make": "cd ../.. && make javascript-npm",
@@ -21,7 +43,7 @@
     "doc": "documentation serve src/wrapper.js --shallow",
     "doc:api": "documentation readme src/wrapper.js -s '⚙️ API' --shallow --markdown-toc false",
     "release": "release-it --no-git.requireCleanWorkingDir",
-    "release:pre": "release-it --no-git.requireCleanWorkingDir --preRelease"
+    "release:pre": "release-it --no-git --preRelease -i pre --publish --ci"
   },
   "files": [
     "dist"
