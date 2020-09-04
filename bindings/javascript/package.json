@@ -1,6 +1,6 @@
 {
   "name": "zenroom",
-  "version": "1.1.5-12",
+  "version": "1.1.5",
   "description": "wrapper of Zenroom, a secure and small virtual machine for crypto language processing",
   "main": "index.js",
   "repository": "https://github.com/dyne/Zenroom.git",
