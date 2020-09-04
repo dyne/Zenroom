@@ -1,0 +1,9 @@
+Scenario credential
+Scenario petition: sign petition
+    Given I am 'Alice'
+    Given I have my valid 'credential keypair'
+    Given I have my 'credentials'
+    Given I have a valid 'verifier' inside 'MadHatter'
+    When I aggregate the verifiers
+	When I create the petition signature 'More privacy for all!'
+    Then print the 'petition signature'

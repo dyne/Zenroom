@@ -16,7 +16,8 @@
 
 - Zencode Advanced 
   - [Cryptography](/pages/zencode-crypto.md "Zencode")
-  - [Scenario ecdh: encryption, signature](/pages/zencode-scenarios-ecdh "Zencode")
+  - [Scenario ECDH: encryption, signature](/pages/zencode-scenarios-ecdh "Zencode ECDH")
+  - [Scenario petition: cryptographic petition](/pages/zencode-scenarios-petition "Zencode petition")
 
 
 - Programming Lua

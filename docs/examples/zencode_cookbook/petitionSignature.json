@@ -1,0 +1,19 @@
+{
+  "petition_signature": {
+    "proof": {
+      "kappa": "Kv9mcdWfcAute8/M6Lqy91huGj3rX5UEBm27G9EmYvtaqe1JojBKV4Mjgi/wuT/cEUOtW0u8DlyPd/hSKtraKUlWFaUDFIR2W23kNtZGRNpPMsFbbxAwPjGEpd3CdauBE6Wzhn+bKUClDP0aNLCWCYDAT+yks66xrJwXbxasAlaCZKMe6dahG/rQF4HbU2Y3MtaX0xPFl01JgNROUFVmZQkED77aH+2WSzzzTS8ltEDrLavwH3KO1RGqMR05Pojm",
+      "nu": "AkESQUrJ1tDJPkJQxNJmPKu1c10AyIAC00hGwE8imoBfwboPvkd79BSBVMPFgbxqzQ==",
+      "pi_v": {
+        "c": "tU1CznJeTILLf9+otyo4wplz460FhRIJYwzVFN7rqXo=",
+        "rm": "94dJZRAlRxyoLYI+cnY3y9hv9WF944cWJgcGuq41uk4=",
+        "rr": "DlplKTcnWsXjDOqfspuht+KW2coB37xDUqFodPp1JMM="
+      },
+      "sigma_prime": {
+        "h_prime": "AkBH1fdyWiGePJ1b1X0mHRTPqqEbeG3zZu/e6fDAVtB1dEFg5iFhE0+yttT+Z5EinA==",
+        "s_prime": "AwlUPy7Fm47jp6mgohIZwabOuWdTPIVfGnQ0ruC57F4cfJ5vMQJCVXrObxq8jRiRwA=="
+      }
+    },
+    "uid_petition": "TW9yZV9wcml2YWN5X2Zvcl9hbGwh",
+    "uid_signature": "AxiT1yJJYEOvv6JctsjgH0pVQQK0XKkOSpXEY0DYUeoRy104Irg6a0He50jZh6Bvgg=="
+  }
+}

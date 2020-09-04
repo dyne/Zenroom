@@ -133,7 +133,7 @@ First thing to do is encode it to ***base64***, the linux command *base64* will 
 ```bash
 base64 -w 0 scenarioECDHJSONdata.json > scenarioECDHJSONToBased64.b64
 ``` 
-The result should be a long string looking like this: 
+The result should be a file named *scenarioECDHJSONToBased64.b64* containing a long string looking like this: 
 
 [](../_media/examples/zencode_cookbook/scenarioECDHJSONToBased64.b64 ':include :type=code b64')
 
