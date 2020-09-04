@@ -2,7 +2,7 @@ name: Test javascript bindings
 on: [push]
 env:
   EM_VERSION: 1.39.15
-  NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+  NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
 jobs:
 #   test:
@@ -41,7 +41,6 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 12
-          registry-url: https://registry.npmjs.org/
       - uses: mymindstorm/setup-emsdk@v6
         with:
           version: ${{env.EM_VERSION}}
@@ -55,7 +54,7 @@ jobs:
       - name: Run npm version
         run: npm version $(npm show zenroom@next version)
       - name: Generate .npmrc
-        run: echo "https://registry.npmjs.org/:_authToken=$NODE_AUTH_TOKEN" > .npmrc
+        run: echo "//registry.npmjs.org/:_authToken=$NODE_AUTH_TOKEN" > .npmrc
       - run: yarn release:pre --npm.skipChecks --disable-metrics
            
     
