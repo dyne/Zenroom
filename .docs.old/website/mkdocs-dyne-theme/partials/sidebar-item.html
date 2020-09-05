@@ -1,8 +1,0 @@
-{% if toc_item.children %}
-  <ul>
-    {% for toc_item in toc_item.children %}
-      <li><a href="{{ toc_item.url }}">{{ toc_item.title }}</a></li>
-      {% include 'partials/sidebar-item.html' %}
-    {% endfor %}
-  </ul>
-{% endif %}

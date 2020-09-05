@@ -1,3 +1,0 @@
-[submodule "docs/wiki"]
-	path = .docs.old/wiki
-	url = https://github.com/DECODEproject/zenroom.wiki.git

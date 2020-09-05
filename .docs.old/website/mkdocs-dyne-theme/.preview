@@ -1,6 +1,0 @@
-#!/usr/bin/env zsh
-
-# reserved for future wrapping
-
-mkdocs serve
-
