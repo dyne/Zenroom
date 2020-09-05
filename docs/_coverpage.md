@@ -22,4 +22,4 @@ desktop, embedded, mobile, cloud and even web browsers.
 -->
 
 [🌐 Downloads](http://zenroom.org/#downloads)
-[Quickstart](#quickstart)
+[Quickstart](/pages/zencode-cookbook-intro.md)

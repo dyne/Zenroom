@@ -1,15 +1,15 @@
 {
   "credential_proof": {
-    "kappa": "Sv8p9Mi9a7Y1OD+8V5iGnYz24m/UK1X63yXRsELc+6mKmfdK7+fmNOIurhRmW/PnSezTJY1o7czSEslUvm9bO9Rr2E2lbHNTFIvmvD5XXNbRWR57CQXEJYa/IrEAkhifTRmX7DCAvAFFcY2EsFN4ggqc5UNyZUMun1pZEA6R2Z81HeBrW6V2w71UDFoyN+5PKLhZIxDuXxkKtHR1GleuwVF+wkjPpjeLUCCwUnH6h/hdf79fEPto159zLvmyjMHZ",
-    "nu": "Ak0tWFTR41AtWpNnwDupwd0UCgdJ8+q/IQOneN1CYbFj/x1SvC7CBwaVJ24TKs8X1A==",
+    "kappa": "MOcYGBVMjhZgnTkEARRXWEU7/q2SKOYLjprYJkbcJ2xAy0PqnYNyV5oxD1sRjb+bA5tcGabdfpxZMA1vIV7f7Lm92ZWs+lzK7EeUks3Rgj6vb+lV3oxgks54ccXPH7ZXRGrWQEF7Xdip99b6xXH+5StcrBkP3bYsmePuBhUuLrYexwil+Fak/JD6FwOBGt4FFfquFME70ZT6hESfnLVQyH32LqO2Btei5TX6wdPY+CAzuBFT9KHK5jdGprhde9nZ",
+    "nu": "AiH3ymuBTC3oafrx2YysbjBWU4gyaR82kuNa2ZyPgdNn9Dl6JSLuhXzxU7m1Aw/HUw==",
     "pi_v": {
       "c": "0Uu+Ldk04+JSw9V0TQW2ufZuxe1v3K8jffunxxLLI0o=",
-      "rm": "/whX++PaO/CgYJWFJC1hfAFDooLumUPgu3c4JgImhGg=",
-      "rr": "IoR8xg4o/4csq/iV5KR2gFh3GB1KqD8k8Ys3B4uPugI="
+      "rm": "9Xoqg+G8r4mjABm/XZcQPErlZ9sw6kTvJjfeHEjUBmk=",
+      "rr": "UIrkVZgn733Hct6uLxVbgDPCcJzAxX4kMnZeTxa8GnA="
     },
     "sigma_prime": {
-      "h_prime": "AwMfg7hhJqpRSc9S1IRp3IJ4xCiYKPdIAUMaJ9f4+nNYHEGzFbF582I3wU1fuZHyLg==",
-      "s_prime": "AgNmF194e6xfGGd5al33XAagTTFQquZZ9g0YjyE1+QjScLutQbG64vhtFlB4iBtm6Q=="
+      "h_prime": "Ag49Lc8GOIedaPnsyCh7UvSIKJZmLQubNrFlkTUH23jY4kAfj79wcUfm0ZunuI6oLQ==",
+      "s_prime": "Awp1OpPVdbaTMTGi31czu4L8avEYVQB6bxNHfmdmLTs3Zc9hW3U8xlWcFCLdDuCeXA=="
     }
   },
   "petition": {
