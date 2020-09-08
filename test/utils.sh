@@ -3,7 +3,7 @@
 
 detect_zenroom_path() {
 	zenroom_paths=( "$PWD" "$PWD/../../src" "$PWD/../src" "$PWD/src"
-					"/usr/local/bin" "$PWD/../.." "$PWD/.." "/bin")
+					"/usr/local/bin" "/usr/bin" "/bin" "$PWD/../.." "$PWD/..")
 	zenroom_path="/usr/local/bin/zenroom"
 	case $OSTYPE in
 		linux*)
