@@ -11,6 +11,16 @@ if ! test -r ../utils.sh; then
 . ../utils.sh
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
+# use zexe if you have zenroom in a system-wide path
+#
+# zexe() {
+#	out="$1"
+#	shift 1
+#	>&2 echo "test: $out"
+#	tee "$out" | zenroom -z $*
+# }
+####################
+
 
 n=0
 tmp=`mktemp`

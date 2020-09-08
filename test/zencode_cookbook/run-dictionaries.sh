@@ -2,18 +2,22 @@
 
 RNGSEED="hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
 
+
 ####################
 # common script init
-# if ! test -r ../utils.sh; then
-# 	echo "run executable from its own directory: $0"; exit 1; fi
-# . ../utils.sh
-# Z="`detect_zenroom_path` `detect_zenroom_conf`"
-zexe() {
-	out="$1"
-	shift 1
-	>&2 echo "test: $out"
-	tee "$out" | zenroom -z $*
-}
+if ! test -r ../utils.sh; then
+	echo "run executable from its own directory: $0"; exit 1; fi
+. ../utils.sh
+Z="`detect_zenroom_path` `detect_zenroom_conf`"
+####################
+# use zexe if you have zenroom in a system-wide path
+#
+# zexe() {
+#	out="$1"
+#	shift 1
+#	>&2 echo "test: $out"
+#	tee "$out" | zenroom -z $*
+# }
 ####################
 
 ## Path: ../../docs/examples/zencode_cookbook/
@@ -201,38 +205,50 @@ cat <<EOF > ../../docs/examples/zencode_cookbook/dictionariesBlockchain.json
       }
    },
    "ABC-TransactionListSecondBatch":{
-      "ABC-Transactions1Sum":{
+      "ABC-Transactions1Data":{
          "timestamp":1597573040,
          "TransactionValue":1000,
 		 "PricePerKG":2,
          "TransferredProductAmount":500
       },
-      "ABC-Transactions2Sum":{
+      "ABC-Transactions2Data":{
          "timestamp":1597573140,
          "TransactionValue":1000,
 		 "PricePerKG":2,
          "TransferredProductAmount":500
       },
-      "ABC-Transactions3Sum":{
+      "ABC-Transactions4Data":{
          "timestamp":1597573240,
          "TransactionValue":2000,
 		 "PricePerKG":4,
          "TransferredProductAmount":500
       },
-	  "ABC-Transactions3Sum":{
+	  "ABC-Transactions5Data":{
          "timestamp":1597573340,
          "TransactionValue":1000,
 		 "PricePerKG":2,
          "TransferredProductAmount":500
       },
-	  "ABC-Transactions3Sum":{
+	  "ABC-Transactions6Data":{
+         "timestamp":1597573440,
+         "TransactionValue":1000,
+		 "PricePerKG":2,
+         "TransferredProductAmount":510
+      },
+	  "ABC-Transactions7Data":{
+         "timestamp":1597573440,
+         "TransactionValue":1000,
+		 "PricePerKG":2,
+         "TransferredProductAmount":520
+      },
+	  "ABC-Transactions8Data":{
          "timestamp":1597573440,
          "TransactionValue":2000,
 		 "PricePerKG":4,
-         "TransferredProductAmount":500
+         "TransferredProductAmount":530
       }
    },
-   "timestamp":1597573330
+   "referenceTimestamp":1597573330
 }
 EOF
 
@@ -253,48 +269,70 @@ cat <<EOF | zexe ../../docs/examples/zencode_cookbook/dictionariesFind_max_trans
 rule check version 1.0.0
 Scenario ecdh: sign the result
 
-# import the Authority keypair
+# Import the Authority keypair
 Given that I am known as 'Authority'
 and I have my 'keypair'
 
-# import the blockchain data
+# Here we load the two dictionaries and import their data
+# and we also load a number named 'timestamp': there are also numbers with the same
+# inside the dictionaries, but those are referred to differently
 Given I have a 'string dictionary' named 'ABC-TransactionListSecondBatch'
 and I have a 'string dictionary' named 'ABC-TransactionListFirstBatch'
-and I have a 'number' named 'timestamp'
+and I have a 'number' named 'referenceTimestamp'
 
-# find the last (most recent) sum
+# In this statement we find the last (most recent) transaction in the dictionary 
+# "ABC-TransactionListSecondBatch" by finding the element that contains
+# the number 'timestamp' with the highest value in that dictionary.
+# We also save the value of this 'timestamp' in an object that we call "Theta"
 When I find the max value 'timestamp' for dictionaries in 'ABC-TransactionListSecondBatch'
-and rename the 'max value' to 'last sum'
+and I rename the 'max value' to 'Theta'
 
-# compute the total values of recent transactions not included in last sum
-and create the sum value 'TransactionValue' for dictionaries in 'ABC-TransactionListFirstBatch' where 'timestamp' > 'last sum'
-and rename the 'sum value' to 'TotalTransactionsValue'
-and create the sum value 'TransferredProductAmount' for dictionaries in 'ABC-TransactionListFirstBatch' where 'timestamp' > 'last sum'
-and rename the 'sum value' to 'TotalTransferredProductAmount'
+# Here we compute the sum of the "TransactionValue" numbers, 
+# in the elements of the dictionary "ABC-TransactionListFirstBatch", 
+# that have a 'timestamp' higher than "Theta". 
+# We also rename the sum into "sumOfTransactionsValueFirstBatchAfterTheta"
+When I create the sum value 'TransactionValue' for dictionaries in 'ABC-TransactionListFirstBatch' where 'timestamp' > 'Theta'
+and I rename the 'sum value' to 'sumOfTransactionsValueFirstBatchAfterTheta'
 
-# retrieve the values in last sum
-When I find the 'TransactionValue' for dictionaries in 'ABC-TransactionListSecondBatch' where 'timestamp' = 'last sum'
-and I find the 'TransferredProductAmount' for dictionaries in 'ABC-TransactionListSecondBatch' where 'timestamp' = 'last sum'
+# Here we do something similar to the statements above, but using the numbers
+# named "TransferredProductAmount" in the same dictionary 
+# We rename the sum to "sumOfTransactionsValueFirstBatchAfterTheta"
+When I create the sum value 'TransferredProductAmount' for dictionaries in 'ABC-TransactionListFirstBatch' where 'timestamp' > 'Theta'
+and I rename the 'sum value' to 'TotalTransferredProductAmountFirstBatchAfterTheta'
+
+# In the statements below we are looking for the transaction(s) happened at time "Theta", 
+# in both the dictionaries, and saving their "TransactionValue" into a new object (and renaming the object)
+When I find the 'TransactionValue' for dictionaries in 'ABC-TransactionListSecondBatch' where 'timestamp' = 'Theta'
+and I rename the 'TransactionValue' to 'TransactionValueSecondBatchAtTheta'
+When I find the 'TransferredProductAmount' for dictionaries in 'ABC-TransactionListSecondBatch' where 'timestamp' = 'Theta'
+and I rename the 'TransferredProductAmount' to 'TransferredProductAmountSecondBatchAtTheta'
 
 # sum the last with the new aggregated values from recent transactions
-and I create the sum of 'TotalTransactionsValue' and 'TransactionValue'
-and I rename the 'sum' to 'TransactionValueSums'
-and I create the sum of 'TotalTransferredProductAmount' and 'TransferredProductAmount'
-and I rename the 'sum' to 'TransactionProductAmountSums'
+When I create the result of 'sumOfTransactionsValueFirstBatchAfterTheta' + 'TransactionValueSecondBatchAtTheta'
+and I rename the 'result' to 'SumTransactionValueAfterTheta'
+When I create the result of 'TotalTransferredProductAmountFirstBatchAfterTheta' + 'TransferredProductAmountSecondBatchAtTheta'
+and I rename the 'result' to 'SumTransactionProductAmountAfterTheta'
 
 # create the entry for the new sum
-and I create the 'number dictionary'
-and I move 'TransactionValueSums' in 'number dictionary'
-and I move 'TransactionProductAmountSums' in 'number dictionary'
-and I move 'timestamp' in 'number dictionary'
-and I rename the 'number dictionary' to 'New-ABC-TransactionsSum'
+When I create the 'number dictionary'
+When I move 'SumTransactionValueAfterTheta' in 'number dictionary'
+When I move 'SumTransactionProductAmountAfterTheta' in 'number dictionary'
+and debug
+When I move 'TransactionValueSecondBatchAtTheta' in 'number dictionary'
+When I move 'TransferredProductAmountSecondBatchAtTheta' in 'number dictionary'
+When I move 'referenceTimestamp' in 'number dictionary'
+# When I move 'Theta' in 'number dictionary'
+and I rename the 'number dictionary' to 'ABC-TransactionsAfterTheta'
 
 # sign the new entry
-and I create the signature of 'New-ABC-TransactionsSum'
-and I rename the 'signature' to 'New-ABC-TransactionsSum.signature'
+When I create the signature of 'ABC-TransactionsAfterTheta'
+and I rename the 'signature' to 'ABC-TransactionsAfterTheta.signature'
 
 # print the result
-Then print the 'New-ABC-TransactionsSum'
-and print the 'New-ABC-TransactionsSum.signature'
+Then print the 'ABC-TransactionsAfterTheta'
+and print the 'ABC-TransactionsAfterTheta.signature'
+# and print the 'Theta'
+# and print the 'TransactionValueSecondBatchAtTheta'
+# and print the 'TransferredProductAmountSecondBatchAtTheta'
 EOF
 
