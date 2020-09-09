@@ -16,32 +16,31 @@
 
 - Zencode Advanced 
   - [Cryptography](/pages/zencode-crypto.md "Zencode")
-  - [Scenario ECDH: encryption, signature](/pages/zencode-scenarios-ecdh "Zencode ECDH")
-  - [Scenario petition: cryptographic petition](/pages/zencode-scenarios-petition "Zencode petition")
-
-
-- Programming Lua
-  - [Lua](/pages/lua.md "in Lua")
-  - [Lua full reference](/pages/ldoc/o/README.md "in Lua") 
+  - [Scenario 'credentials': zero knowledge proof and attribute based credentials](/pages/zencode-scenario-credentials.md "Zencode credentials")
+  - [Scenario 'ecdh': encryption, signature](/pages/zencode-scenarios-ecdh "Zencode ecdh")
+  - [Scenario 'petition': cryptographic petition](/pages/zencode-scenarios-petition "Zencode petition")
+  - [Scenario 'dp3t': proximity tracing](/pages/zencode-scenario-dp3t "Zencode petition")
+  
 
 - Bindings
-  - [Zenroom as a lib](/pages/how-to-embed.md "Embed") 
-  - [JavaScript](/pages/javascript.md "Use Zenroom in JavaScript")
+  - [ Use Zenroom as a library](/pages/how-to-embed.md "Embed") 
+  - [JavaScript ](/pages/javascript.md "Use Zenroom in JavaScript")
   - [Python](/pages/python.md "Use Zenroom in JavaScript")
   - [Java](/pages/java.md "Use Zenroom in Java")
   - [iOS](/pages/ios.md "Use Zenroom in iOS")
 
-- Tutorials
+- Integration
  - [Zenroom in node.js](/pages/zenroom-javascript1.md "Use Zenroom in node.js")
  - [Zenroom in the browser](/pages/zenroom-javascript2.md "Use Zenroom in the browser")
  - [Zenroom in React](/pages/zenroom-javascript3.md "Use Zenroom in React")
  - [Zenroom ClojureScript](/pages/zenroom-clojurescript.md "Zenroom ClojureScript]") 
 
 - Extensions
+ - [RESTroom-mw](/pages/restroom-mw)
  - [Redroom](/ext/redroom)
  - [Lotionroom](/ext/lotionroom)
  - [Sawroom](/ext/sawroom)
- - [RESTroom](/ext/restroom)
+
 
 - Build & Test
  - [Build instructions](/pages/how-to-build.md "Build Zenroom")  
@@ -49,6 +48,10 @@
  - [Random quality](/pages/random.md "Random quality measurement")
  - [Browser-encryption demo](/pages/encrypt.md "Browser-encryption demo")
 
+
+- Programming Lua
+  - [Lua](/pages/lua.md "in Lua")
+  - [Lua full reference](/pages/ldoc/o/README.md "in Lua") 
  
 - Misc
  - [Changelog](CHANGELOG)

@@ -18,6 +18,7 @@ The default curve used in Zenroom for all the ECDH cryptography (including keypa
 
 
 
+
  
 ## Generate a keypair
  
@@ -33,47 +34,6 @@ The result should look like this
 
 [](../_media/examples/zencode_cookbook/scenarioECDHKeypair1.json ':include :type=code json')
 
-
-
-
-## Encrypt with password
-
-The *secret message* is also a ***schema*** in Zenroom, it comprises a string named **header** and a second string containing the message that can have any name. 
-
-In thos very simple encryption, we can load the following data, that include the **password** (just a string in this case) and the whole **secret message**, all of which comes nested inside *"mySecretStuff"* just for the fun of it:
-
-[](../_media/examples/zencode_cookbook/scenarioECDHInputSecretData1.json ':include :type=code json')
-
-
-A basic script to encrypt the **secret message** with a password would look like:
-
-[](../_media/examples/zencode_cookbook/scenarioECDHZencodePart1.zen ':include :type=code gherkin')
-
-What happens here is: 
- - The regular string inside the **secret message** (here called *myMessage*) will be encrypted.
- - The **header** will simply be signed.
-
-The result should look like this:
-
-[](../_media/examples/zencode_cookbook/scenarioECDHPart1.json ':include :type=code json')
-
-If you later want to decrypt this, you may want to save it into a file that we'll name *scenarioECDHPart1.json*.
-
-
-### Decrypt with password
-
-Decryption does normally come after the encryption, so following script allows you to decrypt the encrypted **secret message** you generated above. So you can pass the file *scenarioECDHPart1.json* (the output from the previous script) to Zenroom using the *-a*, along with password alone using the *-k* parameter:
-
-[](../_media/examples/zencode_cookbook/scenarioECDHInputDataPart1.json ':include :type=code json')
-
-
-A basic script to decrypt the **secret message** with a password would look like:
-
-[](../_media/examples/zencode_cookbook/scenarioECDHZencodePart2.zen ':include :type=code gherkin')
-
-The result should look like this:
-
-[](../_media/examples/zencode_cookbook/scenarioECDHPart2.json ':include :type=code json')
 
 
 ## Encrypt a message with a public key
@@ -234,4 +194,45 @@ The result should look like this:
 [](../_media/examples/zencode_cookbook/scenarioECDHPart4.json ':include :type=code json')
 
 
-### 
+
+
+## Symetric cryptography: encrypt with password
+
+The *secret message* is also a ***schema*** in Zenroom, it comprises a string named **header** and a second string containing the message that can have any name. 
+
+In thos very simple encryption, we can load the following data, that include the **password** (just a string in this case) and the whole **secret message**, all of which comes nested inside *"mySecretStuff"* just for the fun of it:
+
+[](../_media/examples/zencode_cookbook/scenarioECDHInputSecretData1.json ':include :type=code json')
+
+
+A basic script to encrypt the **secret message** with a password would look like:
+
+[](../_media/examples/zencode_cookbook/scenarioECDHZencodePart1.zen ':include :type=code gherkin')
+
+What happens here is: 
+ - The regular string inside the **secret message** (here called *myMessage*) will be encrypted.
+ - The **header** will simply be signed.
+
+The result should look like this:
+
+[](../_media/examples/zencode_cookbook/scenarioECDHPart1.json ':include :type=code json')
+
+If you later want to decrypt this, you may want to save it into a file that we'll name *scenarioECDHPart1.json*.
+
+
+### Symetric cryptography: decrypt with password
+
+Decryption does normally come after the encryption, so following script allows you to decrypt the encrypted **secret message** you generated above. So you can pass the file *scenarioECDHPart1.json* (the output from the previous script) to Zenroom using the *-a*, along with password alone using the *-k* parameter:
+
+[](../_media/examples/zencode_cookbook/scenarioECDHInputDataPart1.json ':include :type=code json')
+
+
+A basic script to decrypt the **secret message** with a password would look like:
+
+[](../_media/examples/zencode_cookbook/scenarioECDHZencodePart2.zen ':include :type=code gherkin')
+
+The result should look like this:
+
+[](../_media/examples/zencode_cookbook/scenarioECDHPart2.json ':include :type=code json')
+
+

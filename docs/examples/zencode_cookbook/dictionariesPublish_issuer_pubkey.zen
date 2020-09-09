@@ -1,0 +1,5 @@
+rule check version 1.0.0
+Scenario 'ecdh': Publish the public key
+Given that I am known as 'Authority'
+and I have my 'keypair'
+Then print my 'public key' from 'keypair'

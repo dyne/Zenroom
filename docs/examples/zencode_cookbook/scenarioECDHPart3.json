@@ -1,8 +1,8 @@
 {
   "myMessage": "Dear Bob, your name is too short, goodbye - Alice.",
   "myMessage.signature": {
-    "r": "MEGjoXyou+Gs9QRxncRHw1MJKAuDw/NORtT4e2HKnYI=",
-    "s": "7HNNaNUxbB1myKI8OOxCsfrzyTYtncdm3GCSA94MIVQ="
+    "r": "hLj1fqGCCrGQ4BccC7lbmcCEgo2H+YqMcdZToKeq8t0=",
+    "s": "sSKqSNhHJZIigq5flBsLvelSCCerbnlzDrUYr4w98d4="
   },
   "myStringArray": [
     "Hello World! This is my string array, element [0]",
@@ -10,7 +10,7 @@
     "Hello World! This is my string array, element [2]"
   ],
   "myStringArray.signature": {
-    "r": "550tna/N00SCrE3Ia3VMAJOiKa2NZ1GK7q7q7dIrR6I=",
-    "s": "p+tgUcP4UNy/8m+7WhF9j8bmmVnFc74rBxjCU3G4LV8="
+    "r": "d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=",
+    "s": "F0FYZCnyV1xThXs2D0UwdHzp/y+puWewVD9ALen9SgE="
   }
 }

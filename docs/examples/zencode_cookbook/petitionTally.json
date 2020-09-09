@@ -10,23 +10,23 @@
     "owner": "AxSggI9xzQ/RTjH2gRyFd+QHPCTqZucAihUyETUhVdJY9vohtmcGDFmEdOTHOTCeow==",
     "scores": {
       "neg": {
-        "left": "Ag0bcJtRio70oQChJ1k4djku0arkLJ9x3pFCizFfWF+V38QDVR1+DQIy3EzQYCR2bQ==",
-        "right": "AhjtKPOAgjqo4RolYA0CgUbZwLm2PnCpgFgJ8yL7HNx401jnQHqoWFfxbyK91vmOHA=="
+        "left": "AhSggI9xzQ/RTjH2gRyFd+QHPCTqZucAihUyETUhVdJY9vohtmcGDFmEdOTHOTCeow==",
+        "right": "AiYOfisKWOmEom+LysYHrPopraIWBWNydmMK0PMT8gs/3okQdorm4mDgcCgLtHHauA=="
       },
       "pos": {
-        "left": "Aw0bcJtRio70oQChJ1k4djku0arkLJ9x3pFCizFfWF+V38QDVR1+DQIy3EzQYCR2bQ==",
-        "right": "AjBMYUzy5LFrtDsXIVmiEJkO0PVPI5khQW8SHqpMPGq8kJu0vabGcM4SyhYPHTI0rg=="
+        "left": "AxSggI9xzQ/RTjH2gRyFd+QHPCTqZucAihUyETUhVdJY9vohtmcGDFmEdOTHOTCeow==",
+        "right": "Ai1UU7k1uPNomHeBH65UcRX2guN0OzTlcCk6rnMdqOMRKM1KrtDLl6biwHoWEHDZGg=="
       }
     },
     "uid": "TW9yZV9wcml2YWN5X2Zvcl9hbGwh"
   },
   "petition_tally": {
-    "c": "JEMg7OlfFMM+YoCzQusQ90mjCSZaQHQNZSRCK+xsRiA=",
+    "c": "HLv/jcY6vT44Lya6eKYeo+e8MfKRvWgfmHgrzDSUv3s=",
     "dec": {
-      "neg": "AxjtKPOAgjqo4RolYA0CgUbZwLm2PnCpgFgJ8yL7HNx401jnQHqoWFfxbyK91vmOHA==",
-      "pos": "AhjtKPOAgjqo4RolYA0CgUbZwLm2PnCpgFgJ8yL7HNx401jnQHqoWFfxbyK91vmOHA=="
+      "neg": "AyYOfisKWOmEom+LysYHrPopraIWBWNydmMK0PMT8gs/3okQdorm4mDgcCgLtHHauA==",
+      "pos": "AiYOfisKWOmEom+LysYHrPopraIWBWNydmMK0PMT8gs/3okQdorm4mDgcCgLtHHauA=="
     },
-    "rx": "8LWH8BQEqDLgVXExGvmN7d4Kvrxutq/BWciSWX04Ct0=",
+    "rx": "rGIBEsc0Dbno4XYsZ66dqFVnSbp1U6jtd2RwXgci+wo=",
     "uid": "TW9yZV9wcml2YWN5X2Zvcl9hbGwh"
   }
 }

@@ -85,9 +85,10 @@
   ],
   "myFourthNumber": 3,
   "myFourthString": "...and good evening!",
+  "myNewlyCreatedBase64": "SGVsbG8gV29ybGQh",
+  "myNewlyCreatedNumberInBaseSomething": 66,
   "myNewlyCreatedString": "call_me_The_Pink_Panther!",
-  "myNewlyFirstCreatedNumber": 42,
-  "myNewlySecondCreatedNumber": 66,
+  "myNewlytCreatedNumber": 42,
   "myOnlyEcp2Array": [
     "QTQcWNiZgxQSyk7z0Zuy7GSF7kfrvahtaKFfgWsQeZurOpSSEiA81amccUi6S0LEIozhraN8aL+S8X7cPoqg7s1ftnC/S/MH3kwRwJ0jscACVvf+1Y/XEtngBZ0g1frPBNe6CVuaoQiXuda0g5t4mZzItGt6hgtsn7f/iHyO+Iwe1+9vUEzfysxNmFVjEq8ADEeFLqnltHbrI2H3vVZTc5g5IWxAJF00wE7n0kKb4AF59bqxbBN62dIqmVEodMDH",
     "Anq3ieAxAEGfNzzQYUuQD1NPZuaojS6Fd3/nr3GFKqTPJmdEFTYamiGAN5nN5N5mMBMxE2sub/I39sqFKjDF22Iu/jZWsT+grD5E3PDuiaR4Ugr7V/WOdY3iiY5tfZm4AlWiNYSVR3KIcZe81E5q/GucEvAeC0VuGDgrTvTZ3/e7qxSxsi6aoqlLl2dD3AjABVQHfdY0BZ4gL1xYCmF7TYPs6LNeVb1+9buFZk3I7mskgGjrzgdKgm7IH3rL3Hsl",

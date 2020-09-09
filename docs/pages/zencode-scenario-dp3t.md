@@ -1,0 +1,95 @@
+# Scenario 'dp3t': proximity tracing
+
+A software application implementing this scheme shall be capable of computing through 3 basic steps:
+
+1. Setup the secret day key (SK)
+2. Create a list of Ephemeral IDs (EphIDs)
+3. Check the proximity to “infected” devices
+
+The following sections will demonstrate how an application can do that
+by embedding the Zenroom VM and using the special “DP3T” Zencode
+scenario.
+
+## Setup the SK
+
+Execute the following Zencode:
+
+[](../_media/examples/zencode_dp3t/dp3t_keygen.zen ':include :type=code gherkin')
+
+This will output you a brand new “secret day key” (SK):
+
+[](../_media/examples/zencode_dp3t/SK1.json ':include :type=code json')
+
+If you have already created a new SK and want to renew, pass the
+previous SK as input to Zenroom (either DATA or KEYS buffer) and run
+this Zencode:
+
+[](../_media/examples/zencode_dp3t/dp3t_keyderiv.zen ':include :type=code gherkin')
+
+This will output a new SK in the same format but with different content:
+
+[](../_media/examples/zencode_dp3t/SK2.json ':include :type=code json')
+
+## Create the EphIDs
+
+To generate a list of ephemeral IDs (EphIDs) for the day one should
+have a renewed secret day key and an `epoch` number: the minutes
+interval of `ephid` renewal during the day. Here we set `epoch` to
+`180` thus producing 9 ephids and segmenting the day in 8 moments:
+early morning, late morning, lunch, early afternoon, late afternoon,
+dinner, early evening, late evening.
+
+The current secret day key (SK) needs to be passed as input to the
+following script as DATA or INPUT:
+
+[](../_media/examples/zencode_dp3t/dp3t_ephidgen.zen ':include :type=code gherkin')
+
+This will yield 9 EphIDs ready to use as output:
+
+[](../_media/examples/zencode_dp3t/EphID_2.json ':include :type=code json')
+
+This is a randomized array of EphIDs that the mobile application should broadcast at the different moments of the day.
+
+## Check the proximity
+
+Here we assume the mobile application will have received from an
+online server the list of “infected SKs” identifiers, for instance as
+a JSON file. This list will be very big (plausibly 20.000 entries) and
+is truncated here, it will consist of an array of `list of infected`
+secret day keys belonging to individuals willing to run the
+application. For example:
+
+```json
+{
+   "list_of_infected" : [
+      "b2bf0a3038f3810d2b3fbd4f300b3d8827cf5fb0078c3bd3dc65c48481162820",
+      "d843e0cec156f496e11f39f81e40708cf95341dad022a450924decd7e153354c",
+      "64c200f8db42a03f9757529f6415aa452639039f2c92301b640c17b3889b6ccc",
+      "595d59e1ddc733536e9943f29ad066904bb06802cfe8c216bdc9d67d0deb28f9",
+      "e28668b87d50147848385b5adfc010f7fce516e57115220be49214d415a0e451",
+      "3188ab1c837658bd906430d98b41eb3b6012c153282456abbaf622036f4996e9",
+  ...
+}
+```
+
+The mobile application will also have a list of EphIDs that were caught from the ether (broadcasted by other devices) and stored on the phone.
+
+[](../_media/examples/zencode_dp3t/EphID_infected.json ':include :type=code json')
+
+At this point the application will have to execute the following
+Zencode to calculate if it has been in the proximity of any COVID-19
+positive device:
+
+[](../_media/examples/zencode_dp3t/dp3t_check.zen ':include :type=code gherkin')
+
+This code will take a while to run, approx 2 seconds on a i5 2.4Ghz
+CPU and 10 seconds on a phone, requiring approx 4MB of RAM to process
+the `list of infected` array and check them on the `ephemeral ids`
+collected. This script will then output an array of SKs that are
+present in the infection list and that were in the proximity.
+
+[](../_media/examples/zencode_dp3t/SK_proximity.json ':include :type=code json')
+
+As it is visible in this example the SK of a single device (SK) will
+be repeated in case it was in the proximity through different moments
+of the day.

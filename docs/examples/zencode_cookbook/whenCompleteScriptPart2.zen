@@ -37,6 +37,8 @@ and I rename the 'array' to 'my16RandomNumbersModulo1000Array'
 # containing numbers in different bases. 
 # When working with strings, remember that spaces are converted to underscores.
 When I set 'myNewlyCreatedString' to 'call me The Pink Panther!' as 'string'
-When I set 'myNewlyFirstCreatedNumber' to '42' as 'number'
-When I set 'myNewlySecondCreatedNumber' to '42' base '16'
+When I set 'myNewlyCreatedBase64' to 'SGVsbG8gV29ybGQh' as 'base64'
+When I set 'myNewlytCreatedNumber' to '42' as 'number'
+When I set 'myNewlyCreatedNumberInBaseSomething' to '42' base '16'
+
 Then print all data

@@ -1,18 +1,18 @@
 
-# Quickstart: My first random array
+# Quickstart: My first random array :id=quickstart
 
 One of Zenroom's strong points is the quality of the random generation (see [random test 1](https://github.com/dyne/Zenroom/blob/master/test/random_hamming_gnuplot.sh) and [random test 2](https://github.com/dyne/Zenroom/blob/master/test/random_rngtest_fips140-2.sh)), which happens to pass NIST's [tests](https://github.com/dyne/Zenroom/blob/master/test/nist/run.sh), so let's start with generate an array of random numbers and get it printed out. 
 
-Let's first go the super fast way to test code, entering the [Zenroom web demo](https://dev.zenroom.org/demo/). Copy this code into the *Zencode* tab on the top left of the page: 
+Let's first go the super fast way to test code, entering the [Zenroom web playground](https://apiroom.net). Copy this code into the *Zencode* tab on the top left of the page: 
 
 
 [](../_media/examples/zencode_cookbook/randomArrayGeneration.zen ':include :type=code gherkin')
 
 
 
-Then press the *RUN▶️* button to execute the script, the result should look like this:
+Then press the *PLAY▶️* button to execute the script, the result should look like this:
 
-![CreateArrayWebDemo](../_media/images/cookbookCreateArrayWebDemo.png)
+![CreateArrayWebDemo](../_media/images/ApiroomQuickIntro.png)
 
 We got a nice array here. You can play with the values *'16'* and *'32'*, to see both the array and the random numbers change their length. 
 

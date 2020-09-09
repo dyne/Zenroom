@@ -1,0 +1,22 @@
+{
+  "Identity": {
+    "UserNo": 1021,
+    "RecordNo": 22,
+    "DateOfIssue": "2020-01-01",
+    "Name": "Giacomo",
+    "FirstNames": "Rossi",
+    "DateOfBirth": "1977-01-01",
+    "PlaceOfBirth": "Milano",
+    "Address": "Piazza Venezia",
+    "TelephoneNo": "327 1234567"
+  },
+  "HistoryOfTransactions": {
+    "NumberOfPreviouslyExecutedTransactions": 1020,
+    "NumberOfCurrentPeriodTransactions": 57,
+    "CanceledTransactions": 6,
+    "DateOfFirstTransaction": "2019-01-01",
+    "TotalSoldWithTransactions": 2160,
+    "TotalPurchasedWithTransactions": 1005,
+    "Remarks": "none"
+  }
+}
