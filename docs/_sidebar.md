@@ -40,6 +40,7 @@
  - [Redroom](/ext/redroom)
  - [Lotionroom](/ext/lotionroom)
  - [Sawroom](/ext/sawroom)
+ - [Apiroom](/pages/apiroom)
 
 
 - Build & Test

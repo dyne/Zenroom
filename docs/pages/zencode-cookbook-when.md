@@ -123,6 +123,10 @@ See our script below:
 The output should look like 
 <a href="../_media/examples/zencode_cookbook/whenCompleteOutputPart4.json" download>whenCompleteOutputPart4.json</a>. 
 
+<!-- Dictionaries temp 
+
+
+
 
 ## Operations with dictionaries
 
@@ -141,7 +145,9 @@ See our script below:
 
 The output should look like 
 <a href="../_media/examples/zencode_cookbook/whenCompleteOutputPart4.json" download>whenCompleteOutputPart4.json</a>. 
+-->
 
+###
 
 <!--  
 [](../_media/examples/zencode_cookbook/whenCompleteOutputPart4.json ':include :type=code json')  

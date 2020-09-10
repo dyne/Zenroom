@@ -187,7 +187,7 @@ When I decrypt the text of 'secret message' with 'password'
 When I rename the 'text' to 'textDecrypted'
 
 # And here we print out the decrypted message
-Then print the 'textDecrypted' 
+Then print the 'textDecrypted' as 'string'
 EOF
 
 
