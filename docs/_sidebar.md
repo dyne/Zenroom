@@ -1,18 +1,15 @@
 
 - Zenroom basics
   - [Getting Started](/)
-  - [Zenroom CLI](/pages/how-to-exec.md "Execute") 
-<!--- to remove https://github.com/DECODEproject/Zenroom/blob/master/docs/website/docs/encrypt.md  ---> 
+  - [Zenroom's VM and Zencode](/pages/zencode-intro.md "Zencode cookbook intro")  
+  - [Zenroom's Command Line Interface](/pages/how-to-exec.md "Execute")
+
 
 - Zencode Basics
-  - [What is Zencode?](/pages/zencode-intro.md "Zencode cookbook intro")
   - [Quickstart](/pages/zencode-cookbook-intro.md "Zencode Quickstart") 
   - [Zencode: "Given" phase](/pages/zencode-cookbook-given.md "Zencode cookbook Given")
   - [Zencode: "When phase](/pages/zencode-cookbook-when.md "Zencode cookbook When")
   - [Zencode: "Then" phase](/pages/zencode-cookbook-then.md "Zencode cookbook Then")
-  - [Zencode "rules"](/pages/zencode-rules.md "Zencode encoding and format rules")
-  - [Zencode "config"](/pages/zenroom-config.md "Zenroom config")
-  - [Zencode command list](/pages/zencode-list.md "Zencode command list")
 
 - Zencode Advanced 
   - [Cryptography](/pages/zencode-crypto.md "Zencode")
@@ -20,7 +17,9 @@
   - [Scenario 'ecdh': encryption, signature](/pages/zencode-scenarios-ecdh "Zencode ecdh")
   - [Scenario 'petition': cryptographic petition](/pages/zencode-scenarios-petition "Zencode petition")
   - [Scenario 'dp3t': proximity tracing](/pages/zencode-scenario-dp3t "Zencode petition")
-  
+  - [Zencode "rules"](/pages/zencode-rules.md "Zencode encoding and format rules")
+  - [Zencode "config"](/pages/zenroom-config.md "Zenroom config")
+  - [Zencode command list](/pages/zencode-list.md "Zencode command list")  
 
 - Bindings
   - [ Use Zenroom as a library](/pages/how-to-embed.md "Embed") 
@@ -60,4 +59,4 @@
  - [To-do](TODO)
  - [📄 Zenroom whitepaper](/pages/zenroom_whitepaper.pdf ':ignore')
 
-<!--- Java example --->
+<!--- comment example --->

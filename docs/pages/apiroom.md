@@ -87,25 +87,103 @@ The syntax highlight does not perform a syntax check, it's only there to help yo
 
 
 
-# Login and check your APIs
+# Check your APIs: Apiroom's back-end
 
 If you aren't yet logged in, you can see the button **Login**. After logging in, you will be able to see **Create API** button, by pressing it you are prompted with a list of your saves Zencode smart contracts, turned into APIs: 
 
 ![ApiroomShots](../_media/images/apiroom/Shot7LinkApi.png)
 
 
-(to be continued)
+Here we see: 
+
+- Under **Zencode smart contract** you read the name of the smart contract and the API. By clicking on it you can edit the Zencode of the smart contract and by hovering with your mouse you can edit the whole smart contract in the front-end editor, or delete it.
+- The three columns **Keys (-k)**, **Config (-c)** and **Data (-d)**: under them you have the respective keys, config and data, saved in the front-end editor. 
+- A column with a **ON-OFF** toggle button: that turns on and off the API.
+- When the **ON-OFF** button is on, you have a **Link** clickable link, that takes you straight the the API. 
+
+In the top right you see the buttons: 
+- **Export**: it exports the ticked smart contracts and builds a *Dockerfile* along with the software needed to run them, so you can deploy your service wherever you want (currently in beta).
+- **Test APIs**: this will bring to a [Swagger](https://swagger.io/) instance, where you can test and debug your APIs.
+
+**IMPORTANT**: take a mental note of the smart contract **Encrypt message with password** as we'll be giving a deeper look at it in a minute. That comes straight from the smart contract **Encrypt a message using a password** from the examples of the front-end editor. 
+
+
+## Difference between *Keys* and *Data* in the back-end
+
+This is a very **important** point, so pay attention: the Data you saved in the front-end editor is stored here for reference only and ***will not be loaded as the smart-contract is exposed to an API in RESTroom-mw*** (more about this in a minute). 
+
+# A smart contract just turned into an API?
+
+The easiest way to explain this is by demonstrating it, just click on the link [https://apiroom.net/api/dyneorg/Create-a-keypair](https://apiroom.net/api/dyneorg/Create-a-keypair) and you should see something like this: 
+
+![ApiroomShots](../_media/images/apiroom/Shot7BKeypair.png)
+
+If you refresh the page, you will get every time a new keypair. The keypair is being generated on Apiroom's server by [RESTroom-mw](https://dyne.github.io/restroom-mw/#/) and you can call the API with a REST call. 
+
+**IMPORTANT**: the Data you saved in the front-end editor is stored here for reference only and ***will not be loaded as the smart-contract is exposed to an API in RESTroom-mw***, so if the smart contract you are trying to use needs something inside Data to run, the output will be an error. In order to test and debug all of this, [Swagger ](https://swagger.io/) comes to help.
+
+# Testing and debugging an API
+
+If you press the **Test APIs** button you land on something like this: 
+
+![ApiroomShots](../_media/images/apiroom/Shot8Swagger.png)
+
+Let's have a look at the API *Encrypt-message-with-password*: this exposes a smart contract that performs symetric encryption from a string, loaded from the examples in front-end editor. The smart contracts requires several strings to run, of which only one (the password) is saved in the **Keys** field. If you execute it from the **Link** in Apiroom's backend, you would get the error:
+
+```bash
+ZEN:run() [!] /zencode.lua:285: Given that I have a 'string' named 'header' [!] Error detected. Execution aborted.
+```
+
+The reason is, the smart contract is missing a string (it is actually missing two in total) which we need to pass to the API. This where Swagger comes to help, if you click on the ***/dyneorg/Encrypt-message-with-password*** smart contract link in Swagger, and below you press the ***Try it out*** you are presented with something like this: 
+
+![ApiroomShots](../_media/images/apiroom/Shot8bSwagger.png)
+
+What you want to do now, is
+- Fill the **data** in text box with the strings that the smart contract is expecting, in JSON, which you can again check in the **Encrypt a message using a password** example in the front-end editor, 
+- Leave the **keys** part empty, because the content of that will be read by the keys stored in the Apiroom's back-end.
+
+The result should look like this (don't mind the formatting, as long as it's JSON it will work): 
+
+![ApiroomShots](../_media/images/apiroom/Shot9Swagger.png)
+
+When you press the **Execute button**, you should be getting the result of the smart-contract (some cryptographic material, in the *Response body* ) along with some other interesting stuff that we see below:
+
+![ApiroomShots](../_media/images/apiroom/Shot10Swagger.png)
+
+
+## CURL 
+
+Swagger provides you with a *curl* shell script to test the API from a command line, which you can do straight ahead (it works on Windows too!):
+
+```bash
+curl -X POST "https://apiroom.net/api/dyneorg/Encrypt-message-with-password" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"data\":{\"header\":\"A very important secret\",\"message\":\"Dear Bob, your name is too short, goodbye - Alice.\"},\"keys\":{}}"
+```
+
+The result should be some crypto-material, similar to the one you saw in the *Response body*
+
+
+## CURL with a file
+
+You may also want to use the *curl* script, but instead of passing the data inline in the script, you may want to upload it from a file: you'll simply need to properly encapsulated the **data** in a json file and use the right *curl* parameter to upload the file. 
+
+The file should look like this: 
+
+[](./ApiroomDemoData.json ':include :type=code json')
+
+and the *curl* script should use the the parameter **-d "@./pathOf/myFile.json"**, looking like:
+
+```bash
+curl "https://apiroom.net/api/dyneorg/Encrypt-message-with-password" -H "accept: application/json" -H "Content-Type: application/json" -d "@./data.json"
+```
+
+## Prototyping your microservice
+
+If you master *curl* and some shell scripting, you will easily be able to create a service that pulls data from somewhere, encapsulates it in a file and then uploads to your favourite *smart-contract turned API* for some super-rapid micro-service prototyping.
+
+You can obviously also use the APIs exposed in Apiroom in your web/mobile application, by using the **POST** call that we have just tested in *curl* 
+
 
 <!-- WIP 
-
-Here we'll see: 
-
-- Under ***Zencode smart contract*** you rea the name 
-
-
-
-
-
 
 ## TEMP
  
