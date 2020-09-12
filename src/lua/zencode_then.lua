@@ -185,6 +185,8 @@ Then("print the '' as ''", function(key, conv)
 		end
 end)
 
+-- TODO: change: print the 'string' named 'pippo' inside 'message'
+
 Then("print the '' as '' in ''", function(key, conv, section)
 		ZEN.assert(ACK[section][key], "Data object not found: "..key.." inside "..section)
 		if not OUT[key] then OUT[key] = { } end

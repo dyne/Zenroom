@@ -68,6 +68,7 @@ ECP2   = require('zenroom_ecp2')
 HASH   = require('zenroom_hash')
 BENCH  = require('zenroom_bench')
 MACHINE = require('statemachine')
+DATE = require('date')
 
 O   = OCTET  -- alias
 INT = BIG    -- alias

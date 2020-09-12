@@ -22,8 +22,9 @@
 -- re-randomization, and multiple unlinkable selective attribute
 -- revelations. For information about usage see
 -- https://zenroom.dyne.org and https://decodeproject.eu
-ECP     = require_once('zenroom_ecp')
-ECP2    = require_once('zenroom_ecp2')
+-- already included by init.lua
+-- ECP     = require_once('zenroom_ecp')
+-- ECP2    = require_once('zenroom_ecp2')
 
 local coco = {
    _VERSION = 'crypto_coconut.lua 1.1',

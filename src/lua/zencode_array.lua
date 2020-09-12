@@ -130,14 +130,16 @@ When("pick the random object in ''", function(arr)
     ZEN.assert( count > 0, "Object is not an array: "..arr)
     local r = (random_int16() % count) +1
     ACK.random_object = A[r]
-	ZEN.CODEC.random_object = ZEN.CODEC[arr]
+	ZEN.CODEC.random_object = { name = 'random object',
+								encoding = ZEN.CODEC[arr].encoding,
+								luatype = 'string',
+								zentype = 'element' }
 end)
 
 When("randomize the '' array", function(arr)
     local A = ACK[arr]
     ZEN.assert(A, "Object not found: "..arr)
-	ZEN.assert(ZEN.CODEC[arr].zentype == 'array',
-			   "Object is not an array: "..arr)
+	ZEN.assert(ZEN.CODEC[arr].zentype == 'array', "Object is not an array: "..arr)
     local count = isarray(A)
     ZEN.assert( count > 0, "Object is not an array: "..arr)
     local res = { }
@@ -150,34 +152,72 @@ When("randomize the '' array", function(arr)
     ACK[arr] = res
 end)
 
-When("remove the '' from ''", function(ele,arr)
-    local E = ACK[ele]
-    ZEN.assert(E, "Element not found: "..ele)
-    local A = ACK[arr]
-    ZEN.assert(A, "Array not found: "..arr)
-	ZEN.assert(ZEN.CODEC[arr].zentype == 'array',
-			   "Object is not an array: "..arr)
-    local O = { }
-	local found = false
-    for k,v in next,A,nil do
-       if not (v == E) then
-		  table.insert(O,v)
-	   else
-		  found = true
-	   end
-    end
-	ZEN.assert(found, "Element to be removed not found in array")
-    ACK[arr] = O
+local function check_container(name)
+   ZEN.assert(ACK[name], "Invalid container, not found: "..name)
+   ZEN.assert(luatype(ACK[name]) == 'table', "Invalid container, not a table: "..name)
+   ZEN.assert(ZEN.CODEC[name].zentype ~= 'element', "Invalid container: "..name.." is a "..ZEN.CODEC[name].zentype)
+end
+
+local function check_element(name)
+   local o = ACK[name]
+   ZEN.assert(o, "Invalid element, not found: "..name)
+   ZEN.assert(iszen(type(o)), "Invalid element, not a zenroom object: "..name)
+   ZEN.assert(ZEN.CODEC[name].zentype == 'element', "Invalid element: "..name.." is a "..ZEN.CODEC[name].zentype)
+   return o
+end
+
+local function _when_remove(ele, from)
+		check_container(from)
+        local found = false
+		local obj = ACK[ele]
+		local newdest = { }
+        if not obj then -- inline key name (string) requires dictionary
+           ZEN.assert(ZEN.CODEC[from].zentype ~= 'dictionary', "Element "..ele.." not found and target "..from.." is not a dictionary")
+           ZEN.assert(ACK[from][ele], "Key not found: "..ele.." in dictionary "..from)
+           ACK[from][ele] = nil -- remove from dictionary
+           found = true
+        else
+           -- remove value of element from array
+           ZEN.assert(ZEN.CODEC[from].zentype == 'array', "Element "..ele.." found and target "..from.." is not an array")
+		   check_element(ele)
+           local tempp = ACK[from]
+           for k,v in next,tempp,nil do
+              if not (v == obj) then
+                 table.insert(newdest,v)
+              else
+                 found = true
+              end
+           end
+        end
+        ZEN.assert(found, "Element to be removed not found in array")
+        ACK[from] = newdest
+end
+When("remove '' from ''", function(ele,from) _when_remove(ele, from) end)
+When("remove the '' from ''", function(ele,from) _when_remove(ele, from) end)
+
+When("insert '' in ''", function(ele, dest)
+		ZEN.assert(ACK[dest], "Invalid destination, not found: "..dest)
+        ZEN.assert(luatype(ACK[dest]) == 'table', "Invalid destination, not a table: "..dest)
+        ZEN.assert(ZEN.CODEC[dest].zentype ~= 'element', "Invalid destination, not a container: "..dest)
+        ZEN.assert(ACK[ele], "Invalid insertion, object not found: "..ele)
+        ZEN.assert(ZEN.CODEC[ele].zentype == 'element', "Invalid insertion, not an element: "..ele)
+        if isarray(ACK[dest]) then
+           table.insert(ACK[dest], ACK[ele])
+        else
+           ACK[dest][ele] = ACK[ele]
+        end
+        -- ACK[ele] = nil
 end)
 
-When("insert the '' in ''", function(ele,arr)
-    ZEN.assert(ACK[ele], "Element not found: "..ele)
-    ZEN.assert(ACK[arr], "Array not found: "..arr)
-	ZEN.assert(ZEN.CODEC[arr].zentype == 'array',
-			   "Object is not an array: "..arr)
-    table.insert(ACK[arr], ACK[ele])
-end)
+-- When("insert the '' in ''", function(ele,arr)
+--     ZEN.assert(ACK[ele], "Element not found: "..ele)
+--     ZEN.assert(ACK[arr], "Array not found: "..arr)
+-- 	ZEN.assert(ZEN.CODEC[arr].zentype == 'array',
+-- 			   "Object is not an array: "..arr)
+--     table.insert(ACK[arr], ACK[ele])
+-- end)
 
+-- TODO: 
 When("the '' is not found in ''", function(ele, arr)
     ZEN.assert(ACK[ele], "Element not found: "..ele)
     ZEN.assert(ACK[arr], "Array not found: "..arr)

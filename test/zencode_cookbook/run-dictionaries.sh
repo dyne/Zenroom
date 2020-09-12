@@ -308,10 +308,17 @@ When I find the 'TransferredProductAmount' for dictionaries in 'ABC-TransactionL
 and I rename the 'TransferredProductAmount' to 'TransferredProductAmountSecondBatchAtTheta'
 
 # sum the last with the new aggregated values from recent transactions
+<<<<<<< HEAD
 When I create the result of 'sumOfTransactionsValueFirstBatchAfterTheta' + 'TransactionValueSecondBatchAtTheta'
 and I rename the 'result' to 'SumTransactionValueAfterTheta'
 When I create the result of 'TotalTransferredProductAmountFirstBatchAfterTheta' + 'TransferredProductAmountSecondBatchAtTheta'
 and I rename the 'result' to 'SumTransactionProductAmountAfterTheta'
+=======
+and I create the result of 'TotalTransactionsValue' + 'TransactionValue'
+and I rename the 'result' to 'TransactionValueSums'
+and I create the result of 'TotalTransferredProductAmount' + 'TransferredProductAmount'
+and I rename the 'result' to 'TransactionProductAmountSums'
+>>>>>>> unified array and dictionary basic manipulations
 
 # create the entry for the new sum
 When I create the 'number dictionary'

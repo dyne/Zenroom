@@ -15,35 +15,9 @@
 --
 -- You should have received a copy of the GNU Affero General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
-When("move '' in ''", function(from, to)
-        ZEN.assert(ACK[to], "Destination not found: "..to)
-        ZEN.assert(ACK[from], "Object not found: "..from)
-        ZEN.assert(ZEN.CODEC[from].zentype == 'element',
-                   "Object to move is not a single element: "..from)
-        ZEN.assert(luatype(ACK[to]) == 'table',
-                   "Invalid destination, not a table container: "..to)
-        if ZEN.CODEC[to].zentype == 'array' then
-           table.insert(ACK[to], ACK[from])
-        else
-           ACK[to][from] = ACK[from]
-        end
-        ACK[from] = nil
-end)
 
-When("copy '' in ''", function(from, to)
-        ZEN.assert(ACK[to], "Destination not found: "..to)
-        ZEN.assert(ACK[from], "Object not found: "..from)
-        ZEN.assert(ZEN.CODEC[from].zentype == 'element',
-                   "Object to copy is not a single element: "..from)
-        ZEN.assert(luatype(ACK[to]) == 'table',
-                   "Invalid destination, not a table container: "..to)
-        if isarray(ACK[to]) then
-           table.insert(ACK[to], ACK[from])
-        else
-           ACK[to][from] = ACK[from]
-        end
-        ACK[from] = nil
-end)
+
+
 
 -- this is a map reduce function processing a single argument as
 -- values found, it uses function pointers and conditions from the
@@ -82,11 +56,30 @@ When("find the max value '' for dictionaries in ''", function(name, arr)
         ZEN.assert(ACK[arr], "No dictionaries found in: "..arr)
         local max = 0
 		local params = { target = name }
-		params.op = function(v) if max < v then max = v end end
+		params.op = function(v)
+		   if max < v then max = v end
+		end
 		dicts_reduce(ACK[arr],params)
         ZEN.assert(max, "No max value "..name.." found across dictionaries in"..arr)
         ACK.max_value = max
         ZEN.CODEC.max_value = ZEN.CODEC[arr]
+end)
+
+When("find the min value '' for dictionaries in ''", function(name, arr)
+        ZEN.assert(ACK[arr], "No dictionaries found in: "..arr)
+		local min
+		-- init min with any value
+		for k, v in pairs(ACK[arr]) do
+		   min = v[name] -- suppose existance of key
+		   break
+		end
+		local params = { target = name }
+		params.op = function(v)
+		   if v < min then min = v end
+		end
+		dicts_reduce(ACK[arr],params)
+		ACK.min_value = min
+		ZEN.CODEC.min_value = ZEN.CODEC[arr]
 end)
 
 When("create the sum value '' for dictionaries in '' where '' > ''", function(name,arr, left, right)

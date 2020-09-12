@@ -10,6 +10,7 @@ if ! test -r ../utils.sh; then
 	echo "run executable from its own directory: $0"; exit 1; fi
 . ../utils.sh
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
+<<<<<<< HEAD
 ####################
 # use zexe if you have zenroom in a system-wide path
 #
@@ -19,6 +20,17 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 #	>&2 echo "test: $out"
 #	tee "$out" | zenroom -z $*
 # }
+=======
+
+# zexe() {
+# 	out="$1"
+# 	shift 1
+# 	>&2 echo "test: $out"
+# 	tee "$out" | zenroom -z $*
+# }
+
+
+>>>>>>> unified array and dictionary basic manipulations
 ####################
 
 n=0

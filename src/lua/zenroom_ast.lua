@@ -90,7 +90,7 @@ end
 function set_rule(text)
    local res = false
    local tr = text.msg:gsub(' +',' ') -- eliminate multiple internal spaces
-   local rule = strtok( trim(tr):lower() ) -- TODO: optimise in C (see zenroom_common)
+   local rule = strtok( trim(tr):lower() )
    if rule[2] == 'check' and rule[3] == 'version' and rule[4] then
 	  SEMVER = require_once('semver')
 	  local ver = SEMVER(rule[4])
@@ -98,10 +98,10 @@ function set_rule(text)
 		 act("Zencode version match: "..VERSION.original)
 		 res = true
 	  elseif ver < VERSION then
-		 error("Zencode written for an older version: "
+		 warn("Zencode written for an older version: "
 				 ..ver.original.." < "..VERSION.original, 2)
 	  elseif ver > VERSION then
-		 error("Zencode written for a newer version: "
+		 warn("Zencode written for a newer version: "
 					..ver.original.." > "..VERSION.original, 2)
 	  else
 		 error("Version check error: "..rule[4])
