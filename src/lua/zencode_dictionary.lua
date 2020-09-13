@@ -62,7 +62,9 @@ When("find the max value '' for dictionaries in ''", function(name, arr)
 		dicts_reduce(ACK[arr],params)
         ZEN.assert(max, "No max value "..name.." found across dictionaries in"..arr)
         ACK.max_value = max
-        ZEN.CODEC.max_value = ZEN.CODEC[arr]
+        ZEN.CODEC.max_value = { name = 'max value',
+								encoding = ZEN.CODEC[arr].encoding,
+								zentype = 'element' }
 end)
 
 When("find the min value '' for dictionaries in ''", function(name, arr)
@@ -79,7 +81,9 @@ When("find the min value '' for dictionaries in ''", function(name, arr)
 		end
 		dicts_reduce(ACK[arr],params)
 		ACK.min_value = min
-		ZEN.CODEC.min_value = ZEN.CODEC[arr]
+        ZEN.CODEC.min_value = { name = 'min value',
+								encoding = ZEN.CODEC[arr].encoding,
+								zentype = 'element' }
 end)
 
 When("create the sum value '' for dictionaries in '' where '' > ''", function(name,arr, left, right)
@@ -97,7 +101,9 @@ When("create the sum value '' for dictionaries in '' where '' > ''", function(na
         ZEN.assert(sum, "No sum of value "..name
 					  .." found across dictionaries in"..arr)
         ACK.sum_value = sum
-        ZEN.CODEC.sum_value = ZEN.CODEC[arr]
+        ZEN.CODEC.sum_value = { name = 'sum value',
+								encoding = ZEN.CODEC[arr].encoding,
+								zentype = 'element' }
 end)
 
 When("find the '' for dictionaries in '' where '' = ''",function(name, arr, left, right)
@@ -114,5 +120,7 @@ When("find the '' for dictionaries in '' where '' = ''",function(name, arr, left
 
 		ZEN.assert(val, "No value found "..name.." across dictionaries in "..arr)
 		ACK[name] = val
-		ZEN.CODEC[name] = ZEN.CODEC[arr]
+		ZEN.CODEC[name] = { name = name,
+							encoding = ZEN.CODEC[arr].encoding,
+							zentype = 'element' }
 end)

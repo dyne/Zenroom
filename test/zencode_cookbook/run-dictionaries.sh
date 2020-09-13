@@ -158,9 +158,9 @@ and I rename the 'string dictionary' to 'ABC-TransactionsStatement'
 and I write number '108' in 'TransactionsConcluded'
 and I write string 'Transaction Control Dictionary' in 'nameOfDictionary'
 and I write number '21' in 'AverageAmountPerTransaction'
-and I move 'nameOfDictionary' in 'ABC-TransactionsStatement'
-and I move 'TransactionsConcluded' in 'ABC-TransactionsStatement'
-and I move 'AverageAmountPerTransaction' in 'ABC-TransactionsStatement'
+and I insert 'nameOfDictionary' in 'ABC-TransactionsStatement'
+and I insert 'TransactionsConcluded' in 'ABC-TransactionsStatement'
+and I insert 'AverageAmountPerTransaction' in 'ABC-TransactionsStatement'
 Then print the 'ABC-TransactionsStatement' 
 EOF
 
@@ -308,27 +308,20 @@ When I find the 'TransferredProductAmount' for dictionaries in 'ABC-TransactionL
 and I rename the 'TransferredProductAmount' to 'TransferredProductAmountSecondBatchAtTheta'
 
 # sum the last with the new aggregated values from recent transactions
-<<<<<<< HEAD
 When I create the result of 'sumOfTransactionsValueFirstBatchAfterTheta' + 'TransactionValueSecondBatchAtTheta'
 and I rename the 'result' to 'SumTransactionValueAfterTheta'
 When I create the result of 'TotalTransferredProductAmountFirstBatchAfterTheta' + 'TransferredProductAmountSecondBatchAtTheta'
 and I rename the 'result' to 'SumTransactionProductAmountAfterTheta'
-=======
-and I create the result of 'TotalTransactionsValue' + 'TransactionValue'
-and I rename the 'result' to 'TransactionValueSums'
-and I create the result of 'TotalTransferredProductAmount' + 'TransferredProductAmount'
-and I rename the 'result' to 'TransactionProductAmountSums'
->>>>>>> unified array and dictionary basic manipulations
 
 # create the entry for the new sum
 When I create the 'number dictionary'
-When I move 'SumTransactionValueAfterTheta' in 'number dictionary'
-When I move 'SumTransactionProductAmountAfterTheta' in 'number dictionary'
+When I insert 'SumTransactionValueAfterTheta' in 'number dictionary'
+When I insert 'SumTransactionProductAmountAfterTheta' in 'number dictionary'
 and debug
-When I move 'TransactionValueSecondBatchAtTheta' in 'number dictionary'
-When I move 'TransferredProductAmountSecondBatchAtTheta' in 'number dictionary'
-When I move 'referenceTimestamp' in 'number dictionary'
-# When I move 'Theta' in 'number dictionary'
+When I insert 'TransactionValueSecondBatchAtTheta' in 'number dictionary'
+When I insert 'TransferredProductAmountSecondBatchAtTheta' in 'number dictionary'
+When I insert 'referenceTimestamp' in 'number dictionary'
+# When I insert 'Theta' in 'number dictionary'
 and I rename the 'number dictionary' to 'ABC-TransactionsAfterTheta'
 
 # sign the new entry
