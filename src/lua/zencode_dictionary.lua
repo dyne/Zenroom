@@ -88,6 +88,23 @@ When("find the min value '' for dictionaries in ''", function(name, arr)
 								zentype = 'element' }
 end)
 
+When("create the sum value '' for dictionaries in ''", function(name,arr)
+        ZEN.assert(ACK[arr], "No dictionaries found in: "..arr)
+		ZEN.assert(not ACK.sum_value, "Cannot overwrite existing object: "..'sum value')
+
+		local sum = 0 -- result of reduction TODO: BIG or ECP to octet sums?
+		local params = { target = name }
+		params.op = function(v) sum = sum + v end
+        dicts_reduce(ACK[arr], params)
+        ZEN.assert(sum, "No sum of value "..name
+					  .." found across dictionaries in"..arr)
+        ACK.sum_value = sum
+        ZEN.CODEC.sum_value = { name = 'sum value',
+								encoding = ZEN.CODEC[arr].encoding,
+								zentype = 'element',
+								luatype = 'number' } -- TODO: zenroom types
+end)
+
 When("create the sum value '' for dictionaries in '' where '' > ''", function(name,arr, left, right)
         ZEN.assert(ACK[arr], "No dictionaries found in: "..arr)
 		ZEN.assert(ACK[right], "Right side term of comparison not found: "..right)
