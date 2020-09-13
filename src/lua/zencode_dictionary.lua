@@ -54,6 +54,7 @@ end
 
 When("find the max value '' for dictionaries in ''", function(name, arr)
         ZEN.assert(ACK[arr], "No dictionaries found in: "..arr)
+		ZEN.assert(not ACK.max_value, "Cannot overwrite existing object: "..'max value')
         local max = 0
 		local params = { target = name }
 		params.op = function(v)
@@ -69,6 +70,7 @@ end)
 
 When("find the min value '' for dictionaries in ''", function(name, arr)
         ZEN.assert(ACK[arr], "No dictionaries found in: "..arr)
+		ZEN.assert(not ACK.min_value, "Cannot overwrite existing object: "..'min value')
 		local min
 		-- init min with any value
 		for k, v in pairs(ACK[arr]) do
@@ -89,6 +91,7 @@ end)
 When("create the sum value '' for dictionaries in '' where '' > ''", function(name,arr, left, right)
         ZEN.assert(ACK[arr], "No dictionaries found in: "..arr)
 		ZEN.assert(ACK[right], "Right side term of comparison not found: "..right)
+		ZEN.assert(not ACK.sum_value, "Cannot overwrite existing object: "..'sum value')
 
 		local sum = 0 -- result of reduction
 		local params = { target = name,
@@ -109,18 +112,27 @@ end)
 When("find the '' for dictionaries in '' where '' = ''",function(name, arr, left, right)
         ZEN.assert(ACK[arr], "No dictionaries found in: "..arr)
 		ZEN.assert(ACK[right], "Right side term of comparison not found: "..right)
+		ZEN.assert(not ACK[name], "Cannot overwrite existing object: "..name)
 
-		local val
+		local val = { }
 		local params = { target = name,
 						 conditions = { } }
 		params.conditions[left] = ACK[right]
 		params.cmp = function(l,r) return l == r end
-		params.op = function(v) val = v end
+		params.op = function(v) table.insert(val, v) end
 		dicts_reduce(ACK[arr], params)
 
 		ZEN.assert(val, "No value found "..name.." across dictionaries in "..arr)
-		ACK[name] = val
-		ZEN.CODEC[name] = { name = name,
-							encoding = ZEN.CODEC[arr].encoding,
-							zentype = 'element' }
+		if #val == 1 then
+		   ACK[name] = val[1]
+		   ZEN.CODEC[name] = { name = name,
+							   encoding = ZEN.CODEC[arr].encoding,
+							   zentype = 'element' }
+		else
+		   ACK[name] = val
+		   ZEN.CODEC[name] = { name = name,
+							   encoding = ZEN.CODEC[arr].encoding,
+							   luatype = 'table',
+							   zentype = 'array' }
+		end
 end)

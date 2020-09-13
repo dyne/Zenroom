@@ -232,9 +232,19 @@ When("split the leftmost '' bytes of ''", function(len, src)
 end)
 
 When("create the result of '' + ''", function(left,right)
-        local l = tonumber(ACK[left])
+        local l = 0
+		if ZEN.CODEC[left].zentype == 'array' then
+		   for k,v in ipairs(ACK[left]) do l = l + tonumber(v) end
+		else
+		   l = tonumber(ACK[left])
+		end
         ZEN.assert(l, "Invalid number in element: "..left)
-        local r = tonumber(ACK[right])
+		local r = 0
+		if ZEN.CODEC[right].zentype == 'array' then
+		   for k,v in ipairs(ACK[right]) do r = r + tonumber(v) end
+		else
+		   r = tonumber(ACK[right])
+		end
         ZEN.assert(r, "Invalid number in element: "..right)
 		ZEN.assert(not ACK.result, "Cannot overwrite existing value: ".."result")
         ACK.result = l + r

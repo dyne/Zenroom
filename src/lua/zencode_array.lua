@@ -201,12 +201,13 @@ When("insert '' in ''", function(ele, dest)
         ZEN.assert(ZEN.CODEC[dest].zentype ~= 'element', "Invalid destination, not a container: "..dest)
         ZEN.assert(ACK[ele], "Invalid insertion, object not found: "..ele)
         ZEN.assert(ZEN.CODEC[ele].zentype == 'element', "Invalid insertion, not an element: "..ele)
-        if isarray(ACK[dest]) then
+        if ZEN.CODEC[dest].zentype == 'array' then
            table.insert(ACK[dest], ACK[ele])
-        else
+        elseif ZEN.CODEC[dest].zentype == 'dictionary' then
            ACK[dest][ele] = ACK[ele]
+		else
+		   ZEN.assert(false, "Invalid destination type: "..ZEN.CODEC[dest].zentype)
         end
-        -- ACK[ele] = nil
 end)
 
 -- When("insert the '' in ''", function(ele,arr)

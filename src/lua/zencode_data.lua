@@ -121,7 +121,7 @@ function guess_conversion(obj, definition)
 		 return nil
 	  end
 	  -- zentypes
-	  if not ((toks[2] == 'array') or (toks[2] == 'dictionary') or (toks[2] == 'structure')) then
+	  if not ((toks[2] == 'array') or (toks[2] == 'dictionary')) then
 		 error('Invalid table type: '..definition.. ' (must be array or dictionary)', 2)
 		 return nil
 	  end
