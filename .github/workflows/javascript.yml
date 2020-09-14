@@ -53,8 +53,7 @@ jobs:
         env: 
           EMSCRIPTEN: ${{ env.EMSDK }}/upstream/emscripten
       - name: Run yarn version to zenroom@next
-        run: yarn version --new-version $(npm show zenroom@next version) --no-git-tag-version
-      - run: yarn version --prerelease --no-git-tag-version
+        run: yarn version --new-version $(npm show zenroom version)+$(git rev-parse --short HEAD) --no-git-tag-version
       - run: npm publish . --tag next
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
