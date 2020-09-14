@@ -36,6 +36,12 @@
 extern zenroom_t *Z;
 extern int EXITCODE;
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#ifndef MAX_JSBUF
+#define MAX_JSBUF 4096000 // 4MiB
+#endif
+
 int zen_write_err_va(const char *fmt, va_list va) {
 	int res = 0;
 #ifdef __ANDROID__
@@ -65,7 +71,13 @@ int zen_write_err_va(const char *fmt, va_list va) {
 			Z->stderr_pos += res;
 		}
 	}
+#ifdef __EMSCRIPTEN__
+	char s[MAX_JSBUF];
+	vsprintf(s,fmt,va);
+	EM_ASM_({Module.printErr(UTF8ToString($0))}, s);
+#else
 	if(!res) res = vfprintf(stderr,fmt,va); // fallback no configured buffer
+#endif
 #endif
 	return(res);
 }
@@ -200,11 +212,6 @@ static int lua_print_stderr_tobuf(lua_State *L, char newline) {
 
 // optimized printing functions for wasm
 // these are about double the speed than the normal stdout/stderr wrapper
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#ifndef MAX_JSBUF
-#define MAX_JSBUF 4096000 // 4MiB
-#endif
 static char out[MAX_JSBUF];
 static int zen_print (lua_State *L) {
 	size_t pos = 0;
