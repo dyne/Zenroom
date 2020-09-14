@@ -40,16 +40,27 @@ Since the *When* phase contains many statements, we did split the scripts in fou
 
 We grouped together all the statements that perform object manipulation, so: 
 
- - ***sum and subtract*** two numbers
- - ***append*** a simple object to another
- - ***rename*** an object
- - ***insert*** a simple object into an array
- - ***remove*** an element from an array
- - ***split*** a string
- - ***randomize*** the elements of an array
- - ***Create string/number*** (statement "write in")
- - ***pick a random element*** from an array
- - ***flatten*** an array into a string
+
+ ***Sum and subtract*** two numbers
+ 
+ ***Append*** a simple object to another
+ 
+ ***Rename*** an object
+ 
+ ***Insert*** a simple object into an array
+ 
+ ***Remove*** an element from an array
+ 
+ ***Split*** a string
+ 
+ ***Randomize*** the elements of an array
+ 
+ ***Create string/number*** (statement "write in")
+ 
+ ***Pick a random element*** from an array
+ 
+ ***flatten*** an array into a string
+ 
  
 In the script below, we've put together a list of this statement and explained in the comments how each statement works: 
  
@@ -68,9 +79,13 @@ The output should look like <a href="../_media/examples/zencode_cookbook/whenCom
 ## Create regular or random objects 
 
 In the second group we gathered the *When* statements that can create new objects and assign values to them.
- - The "create" statements can generate random numbers (or arrays thereof), with different parameters.
- - The "set" statements allow you to create an object and assign a value to it. 
+
+
+ The "create" statements can ***generate random numbers*** (or arrays thereof), with different parameters.
+
+ The "set" statements allow you to ***create an object and assign a value to it***. 
  
+
  See our example script below: 
  
 
@@ -84,12 +99,19 @@ The output should look like <a href="../_media/examples/zencode_cookbook/whenCom
 ## Basic cryptography: hashing
 
 Here we have grouped together the statements that perform: 
- - Basic hashing
- - Hashing a number to a point on a curve
- - Key derivation function (KDF)
- - Password-Based Key Derivation Function (pbKDF)
- - hash-based message authentication code (HMAC)
- - Aggregation of ECP or ECP2 points
+
+
+ ***Basic hashing***
+ 
+ ***Hashing a number to a point on a curve***
+ 
+ ***Key derivation function (KDF)***
+ 
+ ***Password-Based Key Derivation Function (pbKDF)***
+ 
+ ***Hash-based message authentication code (HMAC)***
+ 
+ ***Aggregation of ECP or ECP2 points***
 
 Keep in mind that in order to use more advanced cryptography like encryption, zero knowledge proof, zk-SNARKS, attributed based credential or the [Coconut](https://arxiv.org/pdf/1802.07344.pdf)  flow you will need to select a *scenario* in the beginning of the scripts. We'll write more about scenarios later, for now we're using the "ecdh" scenario as we're loading an asymetric keypair from the JSON. See our example below:
 
@@ -109,9 +131,13 @@ The output should look like this: <a href="../_media/examples/zencode_cookbook/w
 
 This group includes all the statements to compare objects, you can:
 
- - Compare if objects (strings, numbers or arrays) are equal.
- - See if a number is more, less or equal to another. 
- - See if an array contains an element of a given value.
+
+ ***Compare*** if objects (strings, numbers or arrays) are equal
+ 
+ See if a ***number is more, less or equal*** to another 
+ 
+ See ***if an array contains an element*** of a given value.
+
 
 See our script below:
 
