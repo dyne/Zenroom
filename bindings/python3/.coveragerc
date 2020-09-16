@@ -1,4 +1,0 @@
-[run]
-omit =
-    zenroom/zenroom_swig.py
-    zenroom/zenroom_test.py
