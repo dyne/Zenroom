@@ -70,7 +70,9 @@ redis: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o redis_zenroom.so-${ARCH}.so ${LDFLAGS} ${LDADD}
 
 python: ${SOURCES}
-	${CC} -shared ${SOURCES} zen_python.o -o _zenroom.so ${LDFLAGS} ${LDADD}
+	mkdir -p ${top_srcdir}/bindings/python3/zenroom
+	@cp -v ${SRCDIR}libzenroom-${ARCH}-${VERSION}.so \
+		${top_srcdir}/bindings/python3/zenroom/libzenroom.so
 
 go: ${SOURCES}
 	${CC} -shared ${SOURCES} zen_go.o -o libzenroomgo.so ${LDFLAGS} ${LDADD}

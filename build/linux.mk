@@ -111,13 +111,8 @@ linux-lib-debug: apply-patches milagro lua53 embed-lua
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src linux-lib
 
-linux-python3: apply-patches milagro lua53 embed-lua
-	swig -python -py3 ${pwd}/build/swig.i
-	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c \
-		-o src/zen_python.o
-	CC=${gcc} LD=${ld} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-		make -C src python
-	@cp -v ${pwd}/build/zenroom.py ${pwd}/bindings/python3/zenroom/zenroom_swig.py
+linux-python3: linux-lib
+	make -C src python
 
 linux-go: apply-patches milagro lua53 embed-lua
 	swig -go -cgo -intgosize 32 ${pwd}/build/swig.i
