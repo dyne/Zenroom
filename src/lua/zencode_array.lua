@@ -200,7 +200,6 @@ When("insert '' in ''", function(ele, dest)
         ZEN.assert(luatype(ACK[dest]) == 'table', "Invalid destination, not a table: "..dest)
         ZEN.assert(ZEN.CODEC[dest].zentype ~= 'element', "Invalid destination, not a container: "..dest)
         ZEN.assert(ACK[ele], "Invalid insertion, object not found: "..ele)
-        ZEN.assert(ZEN.CODEC[ele].zentype == 'element', "Invalid insertion, not an element: "..ele)
         if ZEN.CODEC[dest].zentype == 'array' then
            table.insert(ACK[dest], ACK[ele])
         elseif ZEN.CODEC[dest].zentype == 'dictionary' then
@@ -208,6 +207,7 @@ When("insert '' in ''", function(ele, dest)
 		else
 		   ZEN.assert(false, "Invalid destination type: "..ZEN.CODEC[dest].zentype)
         end
+		ZEN.CODEC[dest][ele] = ZEN.CODEC[ele]
 end)
 
 -- When("insert the '' in ''", function(ele,arr)
