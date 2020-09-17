@@ -218,25 +218,30 @@ end)
 --     table.insert(ACK[arr], ACK[ele])
 -- end)
 
--- TODO: 
 When("the '' is not found in ''", function(ele, arr)
-    ZEN.assert(ACK[ele], "Element not found: "..ele)
-    ZEN.assert(ACK[arr], "Array not found: "..arr)
-	ZEN.assert(ZEN.CODEC[arr].zentype == 'array',
-			   "Object is not an array: "..arr)
-    for k,v in next,ACK[arr],nil do
-       ZEN.assert(v ~= ACK[ele], "Element '"..ele.."' is contained inside array: "..arr)
-    end
+        local obj = ACK[ele]
+        ZEN.assert(obj, "Element not found: "..ele)
+        ZEN.assert(ACK[arr], "Array not found: "..arr)
+		if ZEN.CODEC[arr].zentype == 'array' or ZEN.CODEC[arr].zentype == 'dictionary' then
+		   for k,v in pairs(ACK[arr]) do
+			  ZEN.assert(v ~= obj, "Element '"..ele.."' is contained inside: "..arr)
+		   end
+		else
+		   ZEN.assert(false, "Invalid container type: "..arr.." is "..ZEN.CODEC[arr].zentype)
+		end
 end)
 
 When("the '' is found in ''", function(ele, arr)
-    ZEN.assert(ACK[ele], "Element not found: "..ele)
-    ZEN.assert(ACK[arr], "Array not found: "..arr)
-	ZEN.assert(ZEN.CODEC[arr].zentype == 'array',
-			   "Object is not an array: "..arr)
-    local found = false
-    for k,v in next,ACK[arr],nil do
-       if v == ACK[ele] then found = true end
-    end
-    ZEN.assert(found, "Element '"..ele.."' is not found inside array: "..arr)
+		local obj = ACK[ele]
+		ZEN.assert(obj, "Element not found: "..ele)
+		ZEN.assert(ACK[arr], "Array not found: "..arr)
+		local found = false
+		if ZEN.CODEC[arr].zentype == 'array' or ZEN.CODEC[arr].zentype == 'dictionary' then
+		   for k,v in pairs(ACK[arr]) do
+			  if v == obj then found = true end
+		   end
+		else
+		   ZEN.assert(false, "Invalid container type: "..arr.." is "..ZEN.CODEC[arr].zentype)
+		end
+		ZEN.assert(found, "The content of element '"..ele.."' is not found inside: "..arr)
 end)
