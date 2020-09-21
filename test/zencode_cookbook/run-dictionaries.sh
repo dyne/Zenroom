@@ -24,6 +24,10 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 
 n=0
 
+tmpGiven1=`mktemp`
+tmpWhen1=`mktemp`	
+tmpZen1="${tmpGiven1} ${tmpWhen1}"
+
 
 cat <<EOF > ../../docs/examples/zencode_cookbook/dictionariesIdentity_example.json
 {
@@ -50,7 +54,7 @@ cat <<EOF > ../../docs/examples/zencode_cookbook/dictionariesIdentity_example.js
 }
 EOF
 
-let n=n+1
+let n=1
 
 echo "                                                "
 echo "------------------------------------------------"
@@ -68,7 +72,7 @@ When I create the keypair
 Then print my data
 EOF
 
-let n=n+1
+let n=2
 
 echo "                                                "
 echo "------------------------------------------------"
@@ -86,7 +90,7 @@ and I have my 'keypair'
 Then print my 'public key' from 'keypair'
 EOF
 
-let n=n+1
+let n=3
 
 echo "                                                "
 echo "------------------------------------------------"
@@ -114,7 +118,7 @@ and print the 'HistoryOfTransactions.signature'
 EOF
 
 
-let n=n+1
+let n=4
 
 echo "                                                "
 echo "------------------------------------------------"
@@ -140,7 +144,7 @@ EOF
 
 
 
-let n=n+1
+let n=5
 
 echo "                                                "
 echo "------------------------------------------------"
@@ -248,7 +252,8 @@ cat <<EOF > ../../docs/examples/zencode_cookbook/dictionariesBlockchain.json
          "TransferredProductAmount":530
       }
    },
-   "referenceTimestamp":1597573330
+   "referenceTimestamp":1597573340,
+	"PricePerKG":3
 }
 EOF
 
@@ -256,7 +261,7 @@ EOF
 
 
 
-let n=n+1
+let n=6
 
 echo "                                                "
 echo "------------------------------------------------"
@@ -265,28 +270,40 @@ echo " 												  "
 echo "------------------------------------------------"
 echo "   "
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/dictionariesFind_max_transactions.zen -a ../../docs/examples/zencode_cookbook/dictionariesBlockchain.json -k ../../docs/examples/zencode_cookbook/dictionariesIssuer_keypair.json | jq .
+
+
+cat <<EOF  > $tmpGiven1
 rule check version 1.0.0
-Scenario ecdh: sign the result
+Scenario ecdh: dictionary computation and signing 
 
-# Import the Authority keypair
+# LOAD DICTIONARIES
+# Here we load the two dictionaries and import their data.
+# Later we also load some numbers, one of them name "PricePerKG" exists in the dictionary's root, 
+# as well as inside each element of the object: homonimy is not a problem in this case.
+Given that I have a 'string dictionary' named 'ABC-TransactionListSecondBatch'
+Given that I have a 'string dictionary' named 'ABC-TransactionListFirstBatch'
+
+# Loading other stuff here
+Given that I have a 'number' named 'referenceTimestamp'
+Given that I have a 'number' named 'PricePerKG'
 Given that I am known as 'Authority'
-and I have my 'keypair'
+Given that I have my 'keypair'
 
-# Here we load the two dictionaries and import their data
-# and we also load a number named 'timestamp': there are also numbers with the same
-# inside the dictionaries, but those are referred to differently
-Given I have a 'string dictionary' named 'ABC-TransactionListSecondBatch'
-and I have a 'string dictionary' named 'ABC-TransactionListFirstBatch'
-and I have a 'number' named 'referenceTimestamp'
+EOF
 
-# In this statement we find the last (most recent) transaction in the dictionary 
-# "ABC-TransactionListSecondBatch" by finding the element that contains
-# the number 'timestamp' with the highest value in that dictionary.
+cat $tmpGiven1 > ../../docs/examples/zencode_cookbook/dictionariesGiven.zen
+
+cat <<EOF  > $tmpWhen1
+
+# FIND MAX and MIN values in Dictionaries
+# All the dictionaries contain an internet date 'number' named 'timestamp' 
+# In this statement we find the most recent transaction in the dictionary "ABC-TransactionListSecondBatch" 
+# by finding the element that contains the number 'timestamp' with the highest value in that dictionary.
 # We also save the value of this 'timestamp' in an object that we call "Theta"
 When I find the max value 'timestamp' for dictionaries in 'ABC-TransactionListSecondBatch'
 and I rename the 'max value' to 'Theta'
 
+# CREATE SUM with condition
 # Here we compute the sum of the "TransactionValue" numbers, 
 # in the elements of the dictionary "ABC-TransactionListFirstBatch", 
 # that have a 'timestamp' higher than "Theta". 
@@ -300,6 +317,7 @@ and I rename the 'sum value' to 'sumOfTransactionsValueFirstBatchAfterTheta'
 When I create the sum value 'TransferredProductAmount' for dictionaries in 'ABC-TransactionListFirstBatch' where 'timestamp' > 'Theta'
 and I rename the 'sum value' to 'TotalTransferredProductAmountFirstBatchAfterTheta'
 
+# FIND VALUE inside Dictionary's object
 # In the statements below we are looking for the transaction(s) happened at time "Theta", 
 # in both the dictionaries, and saving their "TransactionValue" into a new object (and renaming the object)
 When I find the 'TransactionValue' for dictionaries in 'ABC-TransactionListSecondBatch' where 'timestamp' = 'Theta'
@@ -313,17 +331,28 @@ and I rename the 'result' to 'SumTransactionValueAfterTheta'
 When I create the result of 'TotalTransferredProductAmountFirstBatchAfterTheta' + 'TransferredProductAmountSecondBatchAtTheta'
 and I rename the 'result' to 'SumTransactionProductAmountAfterTheta'
 
+# ROTTO
+#
+# The value of 'referenceTimestamp' is not found into 
+#  The content of element 'referenceTimestamp' is not found inside: ABC-TransactionListSecondBatch
+# ROTTO: When the 'timestamp' is found in 'ABC-TransactionListSecondBatch'
+# Works: When the 'referenceTimestamp' is found in 'ABC-TransactionListSecondBatch'
+# ROTTO: When the 'PricePerKG' is found in 'ABC-TransactionListSecondBatch'
+
+# CREATE Dictionary
+# INSERT in Dictionary
+
 # create the entry for the new sum
 When I create the 'number dictionary'
-When I insert 'SumTransactionValueAfterTheta' in 'number dictionary'
+When I insert 'SumTransactionValueAfterTheta' in 'number dictionary' 
 When I insert 'SumTransactionProductAmountAfterTheta' in 'number dictionary'
-and debug
 When I insert 'TransactionValueSecondBatchAtTheta' in 'number dictionary'
 When I insert 'TransferredProductAmountSecondBatchAtTheta' in 'number dictionary'
 When I insert 'referenceTimestamp' in 'number dictionary'
 # When I insert 'Theta' in 'number dictionary'
 and I rename the 'number dictionary' to 'ABC-TransactionsAfterTheta'
 
+# ECDSA SIGNATURE of Dictionaries
 # sign the new entry
 When I create the signature of 'ABC-TransactionsAfterTheta'
 and I rename the 'signature' to 'ABC-TransactionsAfterTheta.signature'
@@ -331,8 +360,13 @@ and I rename the 'signature' to 'ABC-TransactionsAfterTheta.signature'
 # print the result
 Then print the 'ABC-TransactionsAfterTheta'
 and print the 'ABC-TransactionsAfterTheta.signature'
-# and print the 'Theta'
-# and print the 'TransactionValueSecondBatchAtTheta'
-# and print the 'TransferredProductAmountSecondBatchAtTheta'
+
 EOF
 
+cat $tmpWhen1 > ../../docs/examples/zencode_cookbook/dictionariesWhen.zen
+
+cat $tmpZen1 | zexe ../../docs/examples/zencode_cookbook/dictionariesComputation.zen -z -a ../../docs/examples/zencode_cookbook/dictionariesBlockchain.json -k ../../docs/examples/zencode_cookbook/dictionariesIssuer_keypair.json | tee ../../docs/examples/zencode_cookbook/dictionariesComputationOutput.json | jq .
+
+#cat <<EOF | zexe ../../docs/examples/zencode_cookbook/dictionariesFind_max_transactions.zen -a ../../docs/examples/zencode_cookbook/dictionariesBlockchain.json -k ../../docs/examples/zencode_cookbook/dictionariesIssuer_keypair.json | jq .
+
+# cat <<EOF  > $tmpWhen1

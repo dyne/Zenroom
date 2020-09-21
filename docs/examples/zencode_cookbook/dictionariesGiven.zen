@@ -1,0 +1,17 @@
+rule check version 1.0.0
+Scenario ecdh: dictionary computation and signing 
+
+# LOAD dictionaries
+# Here we load the two dictionaries and import their data 
+# and we also load a number named 'timestamp': there are also numbers with the same
+# inside the dictionaries, but those are referred to differently
+Given that I have a 'string dictionary' named 'ABC-TransactionListSecondBatch'
+Given that I have a 'string dictionary' named 'ABC-TransactionListFirstBatch'
+
+
+Given that I have a 'number' named 'referenceTimestamp'
+Given that I have a 'number' named 'PricePerKG'
+Given that I am known as 'Authority'
+Given that I have my 'keypair'
+
+
