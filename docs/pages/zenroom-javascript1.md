@@ -32,7 +32,12 @@ This is exactly what we used to create a WASM (WebAssembly) build by using the E
 So let’s start by our first hello world example in node.js I’m familiar with yarn so I’ll use that but if you prefer you can use `npm `
 
 
-`$ mkdir zenroom-nodejs-test$ cd zenroom-nodejs-test $ yarn init $ yarn add zenroom`
+```bash
+$ mkdir zenroom-nodejs-test
+$ cd zenroom-nodejs-test 
+$ yarn init 
+$ yarn add zenroom
+```
 
 
 The previous commands create a folder and a js project and will add zenroom javascript wrapper as a dependency. The wrapper is a very simple utility around the pure emscripten build.
@@ -41,8 +46,8 @@ The previous commands create a folder and a js project and will add zenroom java
 Next create a `index.js` with the following content
 
 ```javascript
-const zenroom = require('zenroom').default
-zenroom.script('print("Hello World!")').zenroom.exec()
+const zenroom = require('zenroom')
+zenroom.script('print("Hello World!")').zenroom_exec()
 ```
 
 So the first line will import the `zenroom` module the second one executes a very simple Hello World! zenroom script.
@@ -74,7 +79,7 @@ So create a new file called `keygen.js` and put the following code:
 const zenroom = require('zenroom')
 
 const keygen_contract = `rule check version 1.0.0
-Scenario 'simple': Create the keypair`
+Scenario 'ecdh': Create the keypair
 Given that I am known as 'Puria'
 When I create the keypair
 Then print my data`
@@ -89,16 +94,10 @@ Et voila the result is something like (I prettified for the purpose of readabili
 
 ```json
 {
-  "zenroom": {
-    "curve": "goldilocks",
-    "encoding": "url64",
-    "version": "1.0.0+a7fab75",
-    "scenario": "simple"
-  },
   "Puria": {
     "keypair": {
-      "public_key": "u64:BBqhjaIXr6vPMVhQKSU1vau5lUJDXwGBul0OwZYarNnUhbG2W6bMY-uo2dH-W4ymjx-vU_3agTQm2N1F25xq8o74DutvNW3ZX8GHROa5zIi7TIDoXy-_5sSyKBeVnGZ9IrFkoo9R2cbtREjOE6hgZ-Q",
-      "private_key": "u64:IT-cZZQf1-yzXF6GSrvQGScRHGbZeh8_LGFMIGCKrxKZtbk3RJbWXLlBlOfJ3oAWgaaYa5mc9iM"
+      "public_key": "BBqhjaIXr6vPMVhQKSU1vau5lUJDXwGBul0OwZYarNnUhbG2W6bMY-uo2dH-W4ymjx-vU_3agTQm2N1F25xq8o74DutvNW3ZX8GHROa5zIi7TIDoXy-_5sSyKBeVnGZ9IrFkoo9R2cbtREjOE6hgZ-Q",
+      "private_key": "IT-cZZQf1-yzXF6GSrvQGScRHGbZeh8_LGFMIGCKrxKZtbk3RJbWXLlBlOfJ3oAWgaaYa5mc9iM"
     }
   }
 }
