@@ -1,6 +1,7 @@
 *.[oa]
 *.so
-zenroom
+src/zenroom
+build/zenroom
 src/lualibs_detected.c
 CMakeCache.*
 CMakeFiles
@@ -365,3 +366,5 @@ test/zencode_petition/sign_petition.zen
 test/zencode_petition/tally_petition.zen
 test/zencode_petition/tally.json
 lib/milagro-crypto-c/CPackConfig.cmake
+*__pycache__*
+*zenroom.egg-info*
