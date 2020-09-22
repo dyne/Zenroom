@@ -27,6 +27,7 @@ Now let’s create a new file `index.html` with the following content
 <!DOCTYPE html>
 <html>
         <head>
+                <meta charset="utf-8" />
                 <script src="./node_modules/zenroom/dist/lib/zenroom.js"></script>
                 <script>
 console.log(Module)
@@ -57,10 +58,11 @@ Edit your `index.html` file with the following content:
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="utf-8" />
     <script src="./node_modules/zenroom/dist/lib/zenroom.js"></script>
     <script>
         const keygen_contract = `rule check version 1.0.0
-Scenario 'simple': Create the keypair
+Scenario 'ecdh': Create the keypair
 Given that I am known as 'Puria'
 When I create the keypair
 Then print my data`
@@ -71,7 +73,7 @@ Then print my data`
 
         Wasm.onRuntimeInitialized = async _ => {
         const zenroom = {
-          zencode_exec: C.cwrap('zencode_exec', 'number',
+          zencode_exec: Wasm.cwrap('zencode_exec', 'number',
                                      ['string', 'string', 'string', 'string', 'number']),
         }
         zenroom.zencode_exec(keygen_contract, null, null, null, 0)
