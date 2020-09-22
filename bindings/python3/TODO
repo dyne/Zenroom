@@ -1,0 +1,9 @@
+# -*- mode: org -*-
+
+* TODO Add error handling
+* TODO Add option to call zenroom executable
+* DONE Integrate zenroom buildprocess
+* TODO Add option to run with system installed libzenroom
+* TODO Add mypy check into buid process
+* TODO Add docstrings
+* TODO Add "safe mode"?
