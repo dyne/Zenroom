@@ -63,7 +63,7 @@ import './App.css';
 import zenroom from 'zenroom'
 
 const keygen_contract = `rule check version 1.0.0
-Scenario 'simple': Create the keypair
+Scenario 'ecdh': Create the keypair
 Given that I am known as 'Puria'
 When I create the keypair
 Then print my data`
