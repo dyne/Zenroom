@@ -280,7 +280,7 @@ EOF
 cat $tmpThen1 > ../../docs/examples/zencode_cookbook/thenExhaustiveScript.zen
 
 
-cat $tmpZen1 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpInput | jq . | tee ../../docs/examples/zencode_cookbook/thenExhaustiveScriptOutput.json
+cat $tmpZen1 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpInput | jq . | tee ../../docs/examples/zencode_cookbook/thenExhaustiveScriptOutput.json | jq
 
 
 
@@ -364,7 +364,7 @@ EOF
 cat $tmpThen2 > ../../docs/examples/zencode_cookbook/thenCompleteScriptPart2.zen
 
 
-cat $tmpZen2 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpInput | jq . | tee ../../docs/examples/zencode_cookbook/thenCompleteOutputPart2.json
+cat $tmpZen2 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpInput | jq . | tee ../../docs/examples/zencode_cookbook/thenCompleteOutputPart2.json | jq
 
 
 
@@ -418,7 +418,7 @@ EOF
 cat $tmpThen3 > ../../docs/examples/zencode_cookbook/thenCompleteScriptPart3.zen
 
 
-cat $tmpZen3 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpInput | jq . | tee ../../docs/examples/zencode_cookbook/thenCompleteOutputPart3.json
+cat $tmpZen3 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpInput | jq . | tee ../../docs/examples/zencode_cookbook/thenCompleteOutputPart3.json | jq
 
 
 

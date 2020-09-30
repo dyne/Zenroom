@@ -21,7 +21,7 @@ When I rename the 'myThirdArray' to 'myJustRenamedArray'
 # INSERT
 # The "insert" statement is used to append a simple object to an array.
 # It's pretty self-explaining. 
-When I insert the 'myFirstString' in 'myFirstArray'
+When I insert 'myFirstString' in 'myFirstArray'
 
 # REMOVE
 # The "remove" statement does the opposite of the one above:

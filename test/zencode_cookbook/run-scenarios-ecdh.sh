@@ -54,7 +54,8 @@ let n=n+1
 echo "                                                "
 echo "------------------------------------------------"
 echo "   Generate a keypair: $n          "
-echo " 												  "
+echo " 	this is generated with a known seed			  "
+echo " 	to change, remove the	RNGSEED=   in the beginning "
 echo "------------------------------------------------"
 echo "                                                "
 
@@ -68,7 +69,7 @@ EOF
 
 cat $tmpZencode0 > ../../docs/examples/zencode_cookbook/scenarioECDHZencodePart0.zen
 
-cat $tmpZencode0 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHKeypair1.json
+cat $tmpZencode0 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHKeypair1.json | jq
 
 let n=n+1
 echo "                                                "
@@ -81,7 +82,7 @@ echo "                                                "
 
 
 
-cat $tmpZencode0 | zexe ../../docs/examples/zencode_cookbook/temp.zen -c $RNGSEED -z | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHKeypair2.json
+cat $tmpZencode0 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHKeypair2.json | jq
 
 
 
@@ -143,7 +144,7 @@ EOF
 cat $tmpZencode1 > ../../docs/examples/zencode_cookbook/scenarioECDHZencodePart1.zen
 
 
-cat $tmpZencode1 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpData1 | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHPart1.json
+cat $tmpZencode1 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpData1 | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHPart1.json | jq
 
 
 
@@ -194,7 +195,7 @@ EOF
 cat $tmpZencode2 > ../../docs/examples/zencode_cookbook/scenarioECDHZencodePart2.zen
 
 
-cat $tmpZencode2 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -k $tmpData2 -a ../../docs/examples/zencode_cookbook/scenarioECDHPart1.json | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHPart2.json
+cat $tmpZencode2 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -k $tmpData2 -a ../../docs/examples/zencode_cookbook/scenarioECDHPart1.json | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHPart2.json | jq
 
 
 
@@ -267,7 +268,7 @@ EOF
 cat $tmpZencode3 > ../../docs/examples/zencode_cookbook/scenarioECDHZencodePart3.zen
 
 
-cat $tmpZencode3 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpData3 | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHPart3.json
+cat $tmpZencode3 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpData3 | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHPart3.json | jq
 
 
 
@@ -330,7 +331,7 @@ EOF
 cat $tmpZencode4 > ../../docs/examples/zencode_cookbook/scenarioECDHZencodePart4.zen
 
 
-cat $tmpZencode4 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -k $tmpData4 -a ../../docs/examples/zencode_cookbook/scenarioECDHPart3.json | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHPart4.json
+cat $tmpZencode4 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -k $tmpData4 -a ../../docs/examples/zencode_cookbook/scenarioECDHPart3.json | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHPart4.json | jq
 
 
 
@@ -416,7 +417,7 @@ EOF
 cat $tmpZencode5 > ../../docs/examples/zencode_cookbook/scenarioECDHZencodePart5.zen
 
 
-cat $tmpZencode5 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -k $tmpData5 -a $tmpData7  | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHPart5.json
+cat $tmpZencode5 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -k $tmpData5 -a $tmpData7  | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHPart5.json | jq
 
 
 
@@ -482,7 +483,7 @@ EOF
 cat $tmpZencode6 > ../../docs/examples/zencode_cookbook/scenarioECDHZencodePart6.zen
 
 
-cat $tmpZencode6 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -k $tmpData6 -a ../../docs/examples/zencode_cookbook/scenarioECDHPart5.json | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHPart6.json
+cat $tmpZencode6 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -k $tmpData6 -a ../../docs/examples/zencode_cookbook/scenarioECDHPart5.json | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHPart6.json | jq
 
 
 

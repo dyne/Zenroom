@@ -22,7 +22,7 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
 
-n=0
+n=1
 tmp=`mktemp`
 tmp2=`mktemp`
 
@@ -33,7 +33,7 @@ echo "------------------------------------------------"
 echo "               Script number $n                 "
 echo "------------------------------------------------"
 echo "                                                "
-let n=n+1
+
 
 
 echo '{ 
@@ -49,7 +49,7 @@ echo '{
 }' > $tmp
 
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadFlatObject.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/givenLoadFlatObjectOutput.json
+cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadFlatObject.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/givenLoadFlatObjectOutput.json | jq 
 Given I have a 'string' named 'myString'  
 Given I have a 'number' named 'myNumber'
 Then print all data
@@ -62,28 +62,28 @@ cat $tmp > ../../docs/examples/zencode_cookbook/myFlatObject.json
 
 
 
-
+let n=2
 echo "                                                "
 echo "------------------------------------------------"
 echo "               Script number $n                 "
 echo "------------------------------------------------"
 echo "                                                "
-let n=n+1
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadNumber.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/givenLoadNumberOutput.json
+
+cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadNumber.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/givenLoadNumberOutput.json | jq
 Given I have a 'number' named 'myNumber'
 Then print all data
 EOF
 
 
-
+let n=3
 echo "                                                "
 echo "------------------------------------------------"
 echo "               Script number $n                 "
 echo "               Super verbose output             "
 echo "------------------------------------------------"
 echo "                                                "
-let n=n+1
+
 
 
 # conf=`mktemp`
@@ -91,7 +91,7 @@ let n=n+1
 # -c = "verbose=3"
 
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadArrayDebugVerbose.zen -z -a ../../docs/examples/zencode_cookbook/myFlatObject.json | jq . | tee ../../docs/examples/zencode_cookbook/givenDebugOutputVerbose.json
+cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadArrayDebugVerbose.zen -z -a ../../docs/examples/zencode_cookbook/myFlatObject.json | jq . | tee ../../docs/examples/zencode_cookbook/givenDebugOutputVerbose.json | jq
 Given debug
 Given I have a 'string array' named 'myFiveStrings'
 Given debug
@@ -106,13 +106,13 @@ Then debug
 EOF
 
 
-
+let n=4
 echo "                                                "
 echo "------------------------------------------------"
 echo "               Script number $n                 "
 echo "------------------------------------------------"
 echo "                                                "
-let n=n+1
+
 
 
 echo '{ 
@@ -158,7 +158,7 @@ echo '{
 }' > $tmp
 
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenArraysLoad.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/givenArraysLoadOutput.json
+cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenArraysLoad.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/givenArraysLoadOutput.json | jq
 Given I have a 'string array' named 'myStringArray'
 Given I have a 'number array' named 'myNumberArray'
 Given I have a 'bin array' named 'myBinArray'
@@ -176,13 +176,13 @@ cat $tmp > ../../docs/examples/zencode_cookbook/givenArraysLoadInput.json
 
 
 
-
+let n=5
 echo "                                                "
 echo "------------------------------------------------"
 echo "               Script number $n                 "
 echo "------------------------------------------------"
 echo "                                                "
-let n=n+1
+
 
 # This loads an object
 cat <<EOF  > $tmp 
@@ -257,7 +257,7 @@ cat <<EOF  > $tmp2
 EOF
 
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadRepetitveObject.zen -z -a $tmp2 | jq . | tee ../../docs/examples/zencode_cookbook/givenLoadRepetitveObjectOutput.json
+cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadRepetitveObject.zen -z -a $tmp2 | jq . | tee ../../docs/examples/zencode_cookbook/givenLoadRepetitveObjectOutput.json | jq
 Scenario 'ecdh': let us load some stuff cause it is fun!
 Given I am 'Alice'
 And I have my  'keypair'
@@ -267,15 +267,15 @@ Then print all data
 EOF
 
 
-
+let n=6
 echo "                                                "
 echo "------------------------------------------------"
 echo "               Script number $n                 "
 echo "------------------------------------------------"
 echo "                                                "
-let n=n+1
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadRepetitveObjectDebug.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/givenLoadRepetitveObjectDebugOutput.json
+
+cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadRepetitveObjectDebug.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/givenLoadRepetitveObjectDebugOutput.json | jq
 Scenario 'ecdh': let us load some stuff cause it is fun!
 Given I am 'Alice'
 And I have my  'keypair'
@@ -287,13 +287,13 @@ And debug
 EOF
 
 
-
+let n=7
 echo "                                                "
 echo "------------------------------------------------"
 echo "               Script number $n                 "
 echo "------------------------------------------------"
 echo "                                                "
-let n=n+1
+
 
 rm -f $tmp
 # This loads an object
@@ -332,7 +332,7 @@ cat $tmp > ../../docs/examples/zencode_cookbook/myNestedObject.json
 
 
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadNestedObject.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/givenLoadNestedObjectOutput.json
+cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadNestedObject.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/givenLoadNestedObjectOutput.json | jq
 Scenario 'ecdh': let us load some stuff cause it is fun!
 # 
 # Here I am stating who I am:
@@ -355,16 +355,16 @@ EOF
 rm -f $tmp
 
 
-
+let n=8
 echo "                                                "
 echo "------------------------------------------------"
 echo "               Script number $n                 "
 echo "------------------------------------------------"
 echo "                                                "
-let n=n+1
 
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadArrayDebug.zen -z -a ../../docs/examples/zencode_cookbook/myFlatObject.json | jq . | tee ../../docs/examples/zencode_cookbook/givenDebugOutput.json
+
+cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadArrayDebug.zen -z -a ../../docs/examples/zencode_cookbook/myFlatObject.json | jq . | tee ../../docs/examples/zencode_cookbook/givenDebugOutput.json | jq
 Given I have a  'string array' named 'myFiveStrings' 
 Given debug 
 When I randomize the 'myFiveStrings' array
@@ -372,13 +372,13 @@ Then print all data
 EOF
 
 
-
+let n=9
 echo "                                                "
 echo "------------------------------------------------"
 echo "               Script number $n                 "
 echo "------------------------------------------------"
 echo "                                                "
-let n=n+1
+
 
 
 cat <<EOF  > $tmp
@@ -420,7 +420,7 @@ EOF
 cat $tmp > ../../docs/examples/zencode_cookbook/myTripleNestedObject.json
 
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadTripleNestedObject.zen -z -a ../../docs/examples/zencode_cookbook/myTripleNestedObject.json | jq . | tee ../../docs/examples/zencode_cookbook/givenTripleNestedObjectOutput.json
+cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadTripleNestedObject.zen -z -a ../../docs/examples/zencode_cookbook/myTripleNestedObject.json | jq . | tee ../../docs/examples/zencode_cookbook/givenTripleNestedObjectOutput.json | jq
 # Given I have a 'string array' named 'myFirstArray'   
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
 Given I have a 'string array' named 'myThirdArray' inside 'myThirdObject' 
@@ -434,13 +434,13 @@ EOF
 
 rm -f $tmp
 
-
+let n=10
 echo "                                                "
 echo "------------------------------------------------"
 echo "               Script number $n                 "
 echo "------------------------------------------------"
 echo "                                                "
-let n=n+1
+
 
 cat <<EOF  > $tmp
 {
@@ -483,7 +483,7 @@ cat <<EOF  > $tmp
 EOF
 cat $tmp > ../../docs/examples/zencode_cookbook/myLargeNestedObject.json
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenFullList.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/givenFullList.json
+cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenFullList.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/givenFullList.json | jq
 
 # Load Arrays
 Given I have a 'string array' named 'myFirstArray' inside 'myFirstObject' 

@@ -109,7 +109,7 @@ EOF
 cat $tmpZencode5 > ../../docs/examples/zencode_cookbook/scenarioECDHJSONEncrypt.zen
 
 
-cat $tmpZencode5 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -k $tmpData5 -a ../../docs/examples/zencode_cookbook/scenarioECDHJSONInBase64.json | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHJSONOutputbase64.json
+cat $tmpZencode5 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -k $tmpData5 -a ../../docs/examples/zencode_cookbook/scenarioECDHJSONInBase64.json | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHJSONOutputbase64.json | jq .
 
 
 
@@ -165,10 +165,10 @@ EOF
 
 cat $tmpZencode6 > ../../docs/examples/zencode_cookbook/scenarioECDHJSONDecrypt.zen
 
-cat $tmpZencode6 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -k $tmpData6 -a ../../docs/examples/zencode_cookbook/scenarioECDHJSONOutputbase64.json | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHJSONOutput.json
+cat $tmpZencode6 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -k $tmpData6 -a ../../docs/examples/zencode_cookbook/scenarioECDHJSONOutputbase64.json | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHJSONOutput.json | jq
 
 
-cat ../../docs/examples/zencode_cookbook/scenarioECDHJSONOutput.json | jq -r '.textForBob' | base64 -d | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHJSONdecryptedOutput.json
+cat ../../docs/examples/zencode_cookbook/scenarioECDHJSONOutput.json | jq -r '.textForBob' | base64 -d | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHJSONdecryptedOutput.json | jq .
 
 
 
