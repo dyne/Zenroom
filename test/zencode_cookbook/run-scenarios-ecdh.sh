@@ -50,7 +50,7 @@ tmpZencode6=`mktemp`
 
 
 
-let n=n+1
+let n=1
 echo "                                                "
 echo "------------------------------------------------"
 echo "   Generate a keypair: $n          "
@@ -71,7 +71,7 @@ cat $tmpZencode0 > ../../docs/examples/zencode_cookbook/scenarioECDHZencodePart0
 
 cat $tmpZencode0 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHKeypair1.json | jq
 
-let n=n+1
+let n=2
 echo "                                                "
 echo "------------------------------------------------"
 echo "  Generate a keypair with known seed: $n       "
@@ -100,7 +100,7 @@ echo "                                                "
 
 
 
-let n=n+1
+let n=3
 echo "                                                "
 echo "------------------------------------------------"
 echo "   Encrypt message with a password: $n          "
@@ -155,7 +155,7 @@ echo "------------------------------------------------"
 echo "                                                "
 
 
-let n=n+1
+let n=4
 echo "                                                "
 echo "------------------------------------------------"
 echo "   Decrypt message with a password: $n          "
@@ -209,7 +209,7 @@ echo "                         			              "
 
 
 
-let n=n+1
+let n=5
 echo "                                                "
 echo "------------------------------------------------"
 echo "   create the signature of an object: $n          "
@@ -283,7 +283,7 @@ echo "                         			              "
 
 
 
-let n=n+1
+let n=6
 echo "                                                "
 echo "------------------------------------------------"
 echo "   Verify the signature of an object: $n          "
@@ -345,7 +345,7 @@ echo "                         			              "
 
 
 
-let n=n+1
+let n=7
 echo "                                                "
 echo "------------------------------------------------"
 echo "   encrypt a message with a public key: $n          "
@@ -396,7 +396,10 @@ Given that I have a 'public key' from 'Carl'
 
 # Loading the secret message
 Given that I have a 'string' named 'myMessageForBobAndCarl'
-Given that I have a 'string' named 'header'
+# Commenting reading og the header, as we don't need the header, 
+# so Zenroom will set it as "DefaultHeader"
+#  
+# Given that I have a 'string' named 'header'
 
 # Encrypt the secret message for 1st recipient and rename the output
 When I encrypt the secret message of 'myMessageForBobAndCarl' for 'Bob'
@@ -429,7 +432,7 @@ echo "------------------------------------------------"
 echo "                         			              "
 
 
-let n=n+1
+let n=8
 echo "                                                "
 echo "------------------------------------------------"
 echo "   decrypt a message with a public key: $n          "

@@ -38,7 +38,10 @@ tmpZencode6=`mktemp`
 let n=n+1
 echo "                                                "
 echo "------------------------------------------------"
-echo "   Encrypt a JSON with a public key: $n          "
+echo "   Encrypt a JSON with a public key (ECDH): $n      "
+echo "   Via a shell script, we first encode a json file in base64 "
+echo "   Then, via shell, we put it as a string into a JSON file          "
+echo "   and finally we encrypt it using Zenroom 	  "
 echo " 												  "
 echo "------------------------------------------------"
 echo "                                                "
@@ -53,8 +56,7 @@ cat << EOF | base64 -w 0 > ../../docs/examples/zencode_cookbook/scenarioECDHJSON
 EOF
 
 cat << EOF > ../../docs/examples/zencode_cookbook/scenarioECDHJSONInBase64.json
-{"jsonFileInBase64" : "$(cat ../../docs/examples/zencode_cookbook/scenarioECDHJSONToBased64.b64)",
-"header": "Sample JSON, to be encrypted for Bob and Carl"}
+{"jsonFileInBase64" : "$(cat ../../docs/examples/zencode_cookbook/scenarioECDHJSONToBased64.b64)"}
 EOF
 
 cat <<EOF  > $tmpData5
@@ -86,9 +88,6 @@ Given that I am known as 'Alice'
 Given that I have my 'keypair'
 Given that I have a 'public key' from 'Bob'
 Given that I have a 'public key' from 'Carl'
-
-# Here we load the header, as a string just like before
-Given that I have a 'string' named 'header'
 
 # This is something new: here we are loading the payload to be encrypted,
 # stating that it's encoded in base64
@@ -126,6 +125,8 @@ let n=n+1
 echo "                                                "
 echo "------------------------------------------------"
 echo "   Decrypt a JSON with a public key: $n          "
+echo "   Here we firt decrypt the base64 encrypted before, using Zenroom         "
+echo "   Then, via shell script, we convert the decrypted base64 back to JSON "
 echo " 												  "
 echo "------------------------------------------------"
 echo "                                                "
@@ -157,18 +158,30 @@ Given I have my 'keypair'
 Given I have a 'public key' from 'Alice' 
 Given I have a 'secret message' named 'secretForBob' 
 When I decrypt the text of 'secretForBob' from 'Alice'
-When I rename the 'text' to 'textForBob'
-Then print the 'textForBob' as 'base64' 
-Then print the 'header' as 'string' inside 'secretForBob' 
+When I rename the 'text' to 'DecryptedtextForBobBase64'
+Then print the 'DecryptedtextForBobBase64' as 'base64'
+# The header is here the "DefaultHeader" so we won't print
+# Then print the 'header' as 'string' inside 'secretForBob' 
 EOF
 
 
 cat $tmpZencode6 > ../../docs/examples/zencode_cookbook/scenarioECDHJSONDecrypt.zen
 
+echo "     "
+echo "     "
+echo "         Below is the JSON in base64, decrypted: "
+echo "     "
+echo "     "
+
 cat $tmpZencode6 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -k $tmpData6 -a ../../docs/examples/zencode_cookbook/scenarioECDHJSONOutputbase64.json | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHJSONOutput.json | jq
 
+echo "     "
+echo "     "
+echo "      And the stuff below is the original JSON file, decrypted using Bob's public key: "
+echo "     "
+echo "     "
 
-cat ../../docs/examples/zencode_cookbook/scenarioECDHJSONOutput.json | jq -r '.textForBob' | base64 -d | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHJSONdecryptedOutput.json | jq .
+cat ../../docs/examples/zencode_cookbook/scenarioECDHJSONOutput.json | jq -r '.DecryptedtextForBobBase64' | base64 -d | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHJSONdecryptedOutput.json | jq .
 
 
 

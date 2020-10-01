@@ -59,7 +59,7 @@ When("encrypt the secret message '' with ''", function(msg, sec)
 		ZEN.assert(not ACK.secret_message, "Cannot overwrite existing object: ".."text")
 		-- KDF2 sha256 on all secrets
 		local secret = KDF(ACK[sec])
-		ACK.secret_message = { header = ACK.header or 'empty',
+		ACK.secret_message = { header = ACK.header or OCTET.from_string('DefaultHeader'),
 							   iv = O.random(32) }
 		ACK.secret_message.text, ACK.secret_message.checksum =
 		   ECDH.aead_encrypt(secret, ACK[msg],
@@ -97,7 +97,7 @@ When("encrypt the secret message of '' for ''", function(msg, _key)
 
 		local private = ACK.keypair.private_key
 		local key = ECDH.session(ACK.keypair.private_key, ACK.public_key[_key])
-		ACK.secret_message = { header = ACK.header or 'empty',
+		ACK.secret_message = { header = ACK.header or OCTET.from_string('DefaultHeader'),
 							   iv = O.random(32) }
 		ACK.secret_message.text,
 		ACK.secret_message.checksum =
