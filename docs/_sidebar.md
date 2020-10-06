@@ -47,6 +47,8 @@
  - [Zenroom on Cortex M](/pages/cortex.md "Zenroom on Cortex M")
  - [Random quality](/pages/random.md "Random quality measurement")
  - [Browser-encryption demo](/pages/encrypt.md "Browser-encryption demo")
+ - [Telegram bot](/pages/zenroomTelegramBotPython.md "Zenroom Telegram bot")
+
 
 
 - Programming Lua
