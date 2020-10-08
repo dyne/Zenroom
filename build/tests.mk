@@ -22,8 +22,10 @@ lowmem-tests = \
 		${1} test/goto.lua && \
 		${1} test/events.lua && \
 		${1} test/code.lua && \
-		${1} test/locals.lua && \
-	    ${1} test/coroutine.lua
+		${1} test/locals.lua
+
+# removed for memory usage in wasm
+#	    ${1} test/coroutine.lua
 
 # ECP arithmetic test vectors from milagro, removed from normal tests
 # since in zenroom built without debug is not allowed to import an ECP
