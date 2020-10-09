@@ -3,12 +3,20 @@ Mostly for fun, we put together a tiny bot for [Telegram](https://web.telegram.o
 
 # How it works
 
- * Access the bot [here](https://web.telegram.org/#/im?p=@zenroom_bot) or by typing ***@zenroom_bot*** inside telegram
- * Encrypt your messages using the command ***/encrypt***
- * Decrypt using the command ***/decrypt***
+ - Access the bot [here](https://web.telegram.org/#/im?p=@zenroom_bot) or by typing ***@zenroom_bot*** inside telegram
+ - Encrypt your messages using the command ***/encrypt***
+ - Decrypt using the command ***/decrypt***
+
+# Dependency and preparation
+
+
+ - In the script, Replace **TOKEN** with your telegram token 
+ - **sudo pip3 install python-telegram-bot**
+ - **sudo pip3 install requests**
+ - Run it by launching **python3 zenroombot.py**
  
 # The script
 
-The script is written in python3, find the source code here: 
+The source code here: 
   
 [](../../examples/zenroom-bot.py ':include :type=code python')
