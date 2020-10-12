@@ -155,6 +155,11 @@ end)
 
 Given("am ''", function(name) Iam(name) end)
 
+Given("my name is in ''", function(name)
+		 assert(IN[name], "No name found inside "..name)
+		 Iam(IN[name])
+end)
+
 -- variable names:
 -- s = schema of variable (or encoding)
 -- n = name of variable
