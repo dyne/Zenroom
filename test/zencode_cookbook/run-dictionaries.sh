@@ -331,13 +331,10 @@ and I rename the 'result' to 'SumTransactionValueAfterTheta'
 When I create the result of 'TotalTransferredProductAmountFirstBatchAfterTheta' + 'TransferredProductAmountSecondBatchAtTheta'
 and I rename the 'result' to 'SumTransactionProductAmountAfterTheta'
 
-# ROTTO
-#
-# The value of 'referenceTimestamp' is not found into 
-#  The content of element 'referenceTimestamp' is not found inside: TransactionsBatchA
-# ROTTO: When the 'timestamp' is found in 'TransactionsBatchA'
-# Works: When the 'referenceTimestamp' is found in 'TransactionsBatchA'
-# ROTTO: When the 'PricePerKG' is found in 'TransactionsBatchA'
+and I write string 'ABC-Transactions1Data' in 'element'
+and I write string 'ABC-not' in 'not.there'
+When the 'element' is found in 'TransactionsBatchA'
+and the 'not.there' is not found in 'TransactionsBatchA'
 
 # CREATE Dictionary
 # INSERT in Dictionary
@@ -360,7 +357,7 @@ and I rename the 'signature' to 'ABC-TransactionsAfterTheta.signature'
 # print the result
 Then print the 'ABC-TransactionsAfterTheta'
 and print the 'ABC-TransactionsAfterTheta.signature'
-
+and print the 'TransactionsBatchA'
 EOF
 
 cat $tmpWhen1 > ../../docs/examples/zencode_cookbook/dictionariesWhen.zen

@@ -222,9 +222,17 @@ When("the '' is not found in ''", function(ele, arr)
         local obj = ACK[ele]
         ZEN.assert(obj, "Element not found: "..ele)
         ZEN.assert(ACK[arr], "Array not found: "..arr)
-		if ZEN.CODEC[arr].zentype == 'array' or ZEN.CODEC[arr].zentype == 'dictionary' then
+		if ZEN.CODEC[arr].zentype == 'array' then
 		   for k,v in pairs(ACK[arr]) do
 			  ZEN.assert(v ~= obj, "Element '"..ele.."' is contained inside: "..arr)
+		   end
+		elseif ZEN.CODEC[arr].zentype == 'dictionary' then
+		   for k,v in pairs(ACK[arr]) do
+			  local val = k
+			  if luatype(k) == 'string' then
+			  	 val = O.from_string(k)
+			  end
+			  ZEN.assert(val ~= obj, "Element '"..ele.."' is contained inside: "..arr)
 		   end
 		else
 		   ZEN.assert(false, "Invalid container type: "..arr.." is "..ZEN.CODEC[arr].zentype)
@@ -236,9 +244,17 @@ When("the '' is found in ''", function(ele, arr)
 		ZEN.assert(obj, "Element not found: "..ele)
 		ZEN.assert(ACK[arr], "Array not found: "..arr)
 		local found = false
-		if ZEN.CODEC[arr].zentype == 'array' or ZEN.CODEC[arr].zentype == 'dictionary' then
+		if ZEN.CODEC[arr].zentype == 'array' then
 		   for k,v in pairs(ACK[arr]) do
 			  if v == obj then found = true end
+		   end
+		elseif ZEN.CODEC[arr].zentype == 'dictionary' then
+		   for k,v in pairs(ACK[arr]) do
+			  local val = k
+			  if luatype(k) == 'string' then
+			  	 val = O.from_string(k)
+			  end
+			  if val == obj then found = true end
 		   end
 		else
 		   ZEN.assert(false, "Invalid container type: "..arr.." is "..ZEN.CODEC[arr].zentype)
