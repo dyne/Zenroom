@@ -5,54 +5,31 @@ env:
   NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
 jobs:
-#   test:
-#     runs-on: ubuntu-latest
-#     defaults:
-#       run:
-#         working-directory: bindings/javascript
-#     strategy:
-#       matrix:
-#         node-version: [10.x, 12.x, 14.x]
-#     steps:
-#       - uses: actions/checkout@v1
-#       - uses: actions/setup-node@v1
-#         with:
-#           node-version: ${{ matrix.node-version }}
-#       - uses: mymindstorm/setup-emsdk@v6
-#         with:
-#           version: ${{env.EM_VERSION}}
-#       - run: emcc -v
-#       - name: Install zsh
-#         if: runner.os == 'Linux'
-#         run: sudo apt-get update; sudo apt-get install zsh
-#       - run: yarn
-#       - run: yarn build
-#         env: 
-#           EMSCRIPTEN: ${{env.EMSDK}}/upstream/emscripten
-#       - run: yarn test
-
-  crypto-test:
+  test:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: bindings/javascript
-#     needs: test
+    strategy:
+      matrix:
+        node-version: [10.x, 12.x, 14.x]
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
-          registry-url: 'https://registry.npmjs.org'
+          node-version: ${{ matrix.node-version }}
       - uses: mymindstorm/setup-emsdk@v6
         with:
           version: ${{env.EM_VERSION}}
+      - run: emcc -v
       - name: Install zsh
         if: runner.os == 'Linux'
         run: sudo apt-get update; sudo apt-get install zsh
       - run: yarn
       - run: yarn build
         env: 
-          EMSCRIPTEN: ${{ env.EMSDK }}/upstream/emscripten
+          EMSCRIPTEN: ${{env.EMSDK}}/upstream/emscripten
+      - run: yarn test
       - name: Run crypto tests
         working-directory: ./
         run: make check-js
@@ -62,7 +39,7 @@ jobs:
     defaults:
       run:
         working-directory: bindings/javascript
-    needs: crypto-test
+    needs: test
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
