@@ -1,17 +1,19 @@
 rule check version 1.0.0
 Scenario ecdh: dictionary computation and signing 
 
-# LOAD dictionaries
-# Here we load the two dictionaries and import their data 
-# and we also load a number named 'timestamp': there are also numbers with the same
-# inside the dictionaries, but those are referred to differently
-Given that I have a 'string dictionary' named 'ABC-TransactionListSecondBatch'
-Given that I have a 'string dictionary' named 'ABC-TransactionListFirstBatch'
+# LOAD DICTIONARIES
+# Here we load the two dictionaries and import their data.
+# Later we also load some numbers, one of them name "PricePerKG" exists in the dictionary's root, 
+# as well as inside each element of the object: homonimy is not a problem in this case.
+Given that I have a 'string dictionary' named 'TransactionsBatchA'
+Given that I have a 'string dictionary' named 'TransactionsBatchB'
 
-
+# Loading other stuff here
 Given that I have a 'number' named 'referenceTimestamp'
 Given that I have a 'number' named 'PricePerKG'
+Given that I have a 'string' named 'dictionaryToBeFound'
+
+# Loading the keypair afer setting my identity
 Given that I am known as 'Authority'
 Given that I have my 'keypair'
-
 

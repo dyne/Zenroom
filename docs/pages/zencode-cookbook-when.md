@@ -207,26 +207,42 @@ The output should look like
 
 ## Operations with dictionaries
 
-The last group includes all the statements that are exclusive to ***dictionary*** objects. A dictionary is a complex object made of an array of complex objects, where all the objects in the array have the same structure. You can use dictionaries for examples with a list of transactions, a list of accounts, a list of data entries.
+The last group includes all the statements that are exclusive to ***dictionary*** objects. A dictionary is a ***complex object*** that can be nested under another dictionary to create a ***list*** (that is still referred to as dictionary). Dictionaries can have ***different internal structure***. You can use dictionaries for examples when you have a list of transactions, a list of accounts, a list of data entries.
 
-***Compare if objects*** (strings, numbers or arrays) are equal.
+Operations with dictionaries allow you to:
 
-***Find maximum and minimum values*** among an array different 
+***Find maximum and minimum***: compare the homonym elements in each dictionary, and find the one with the highest/lowest value. 
 
-***See if a number is more, less or equal*** to another. 
+***Conditioned sum***: sum homonym elements in each dictionary, only if a certain element in that dictionary is higher/lower than a certain value. 
 
-***See if an array contains*** an element of a given value.
+***Find dictionaries containing an element of a certain value***: match homonym elements in each dictionary with a certain value, and return all those that match (the statement returns an array). 
 
-Load this dataset:
+***Find dictionary in list***: browse the list of see if a dictionary name matches or not a certain string.
+
+***Create a dictionary***: create a dictionary on the fly, using values computed in the script and insert elements into it
+
+
+In the script we'll use as example we'll load a complex dataset, containing dictionaries that mimic records of transactions. Not that the dictionaries do not always have the same exact structure:
 
 [](../_media/examples/zencode_cookbook/dictionariesBlockchain.json ':include :type=code json')
 
 
-with this script
+In the script below we will: 
+ - Find the *timestamp* of the latest *transaction* (and older transaction)
+ - Sum the *amount of product transferred* for all the *transactions* occurred after a certain *timestamp*, for two lists of dictionaries
+ - Sum the results of the above sum
+ - Find the *transactions* occurred at a certain *timestamp* 
+ - Check if a *transaction* with certain name is found in the list
+ - Creating a new dictionary 
+ - Inserting in the newly created dictionary, the output of the computation above
+ - Singning the newly created dictionary using ECDSA cryptography
+ - Printing out the newly created dictionary, its signature and a couple more objects
+
+This part of the script load the dictionaries along with some simple objects:
 
 [](../_media/examples/zencode_cookbook/dictionariesGiven.zen ':include :type=code gherkin')
 
-and do this computation:
+and This part of the script does the computation:
 
 [](../_media/examples/zencode_cookbook/dictionariesWhen.zen ':include :type=code gherkin')
 

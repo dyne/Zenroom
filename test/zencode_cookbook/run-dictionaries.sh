@@ -171,17 +171,22 @@ EOF
 cat <<EOF > ../../docs/examples/zencode_cookbook/dictionariesBlockchain.json
 {
    "TransactionsBatchB":{
+   "Information":{
+         "Metadata": "TransactionsBatchB6789",
+		 "Buyer" : "John Doe"
+      },
       "ABC-Transactions1Data":{
          "timestamp":1597573139,
          "TransactionValue":1000,
 		 "PricePerKG":2,
-         "TransferredProductAmount":500
+         "TransferredProductAmount":500,
+		 "UndeliveredProductAmount":100,
+		 "ProductPurchasePrice":1
       },
       "ABC-Transactions2Data":{
          "timestamp":1597573239,
          "TransactionValue":1000,
-		 "PricePerKG":2,
-         "TransferredProductAmount":500
+		 "PricePerKG":2
       },
       "ABC-Transactions3Data":{
          "timestamp":1597573339,
@@ -209,6 +214,10 @@ cat <<EOF > ../../docs/examples/zencode_cookbook/dictionariesBlockchain.json
       }
    },
    "TransactionsBatchA":{
+	"Information":{
+         "Metadata": "TransactionsBatchA12345",
+		 "Buyer" : "Jane Doe"
+      },   
       "ABC-Transactions1Data":{
          "timestamp":1597573040,
          "TransactionValue":1000,
@@ -229,9 +238,7 @@ cat <<EOF > ../../docs/examples/zencode_cookbook/dictionariesBlockchain.json
       },
 	  "ABC-Transactions5Data":{
          "timestamp":1597573340,
-         "TransactionValue":1000,
-		 "PricePerKG":2,
-         "TransferredProductAmount":500
+         "TransactionValue":1000
       },
 	  "ABC-Transactions6Data":{
          "timestamp":1597573440,
@@ -248,10 +255,10 @@ cat <<EOF > ../../docs/examples/zencode_cookbook/dictionariesBlockchain.json
 	  "ABC-Transactions8Data":{
          "timestamp":1597573440,
          "TransactionValue":2000,
-		 "PricePerKG":4,
-         "TransferredProductAmount":530
+		 "PricePerKG":4
       }
    },
+   "dictionaryToBeFound":"ABC-Transactions1Data",
    "referenceTimestamp":1597573340,
 	"PricePerKG":3
 }
@@ -286,6 +293,9 @@ Given that I have a 'string dictionary' named 'TransactionsBatchB'
 # Loading other stuff here
 Given that I have a 'number' named 'referenceTimestamp'
 Given that I have a 'number' named 'PricePerKG'
+Given that I have a 'string' named 'dictionaryToBeFound'
+
+# Loading the keypair afer setting my identity
 Given that I am known as 'Authority'
 Given that I have my 'keypair'
 
@@ -302,6 +312,8 @@ cat <<EOF  > $tmpWhen1
 # We also save the value of this 'timestamp' in an object that we call "Theta"
 When I find the max value 'timestamp' for dictionaries in 'TransactionsBatchA'
 and I rename the 'max value' to 'Theta'
+When I find the min value 'timestamp' for dictionaries in 'TransactionsBatchA'
+and I rename the 'min value' to 'oldestTransaction'
 
 # CREATE SUM with condition
 # Here we compute the sum of the "TransactionValue" numbers, 
@@ -322,42 +334,60 @@ and I rename the 'sum value' to 'TotalTransferredProductAmountFirstBatchAfterThe
 # in both the dictionaries, and saving their "TransactionValue" into a new object (and renaming the object)
 When I find the 'TransactionValue' for dictionaries in 'TransactionsBatchA' where 'timestamp' = 'Theta'
 and I rename the 'TransactionValue' to 'TransactionValueSecondBatchAtTheta'
+
 When I find the 'TransferredProductAmount' for dictionaries in 'TransactionsBatchA' where 'timestamp' = 'Theta'
 and I rename the 'TransferredProductAmount' to 'TransferredProductAmountSecondBatchAtTheta'
 
-# sum the last with the new aggregated values from recent transactions
+# Here we create a simple sum of the new aggregated values from recent transactions
 When I create the result of 'sumOfTransactionsValueFirstBatchAfterTheta' + 'TransactionValueSecondBatchAtTheta'
 and I rename the 'result' to 'SumTransactionValueAfterTheta'
+
 When I create the result of 'TotalTransferredProductAmountFirstBatchAfterTheta' + 'TransferredProductAmountSecondBatchAtTheta'
 and I rename the 'result' to 'SumTransactionProductAmountAfterTheta'
 
-and I write string 'ABC-Transactions1Data' in 'element'
-and I write string 'ABC-not' in 'not.there'
-When the 'element' is found in 'TransactionsBatchA'
+# FOUND, NOT FOUND
+# Here we search for a dictionary what a certain name in a list. 
+# This could be useful when searching for a certain transaction in different data sets
+# We are loading the string to match from the dataset.
+
+When the 'dictionaryToBeFound' is found in 'TransactionsBatchA'
+
+# Here we are doing the opposite, so check the a dictionary is not in the list
+# and we ar ecreating the string not to be match inline in the script, just for the fun of it
+When I write string 'someRandomName' in 'not.there'
 and the 'not.there' is not found in 'TransactionsBatchA'
 
 # CREATE Dictionary
-# INSERT in Dictionary
-
-# create the entry for the new sum
+# You can create a new dictionary using a similar syntax to the one to create an array 
+# in the case below we're create a "number dictionary", which is key value storage where 
+# the values we want to insert are all numbers
 When I create the 'number dictionary'
-When I insert 'SumTransactionValueAfterTheta' in 'number dictionary' 
-When I insert 'SumTransactionProductAmountAfterTheta' in 'number dictionary'
-When I insert 'TransactionValueSecondBatchAtTheta' in 'number dictionary'
-When I insert 'TransferredProductAmountSecondBatchAtTheta' in 'number dictionary'
-When I insert 'referenceTimestamp' in 'number dictionary'
-# When I insert 'Theta' in 'number dictionary'
 and I rename the 'number dictionary' to 'ABC-TransactionsAfterTheta'
 
+# INSERT in Dictionary
+# We can use the "insert" statement to add an element to a dictionary, as we would do with an array
+When I insert 'SumTransactionValueAfterTheta' in 'ABC-TransactionsAfterTheta' 
+When I insert 'SumTransactionProductAmountAfterTheta' in 'ABC-TransactionsAfterTheta'
+When I insert 'TransactionValueSecondBatchAtTheta' in 'ABC-TransactionsAfterTheta'
+When I insert 'TransferredProductAmountSecondBatchAtTheta' in 'ABC-TransactionsAfterTheta'
+When I insert 'referenceTimestamp' in 'ABC-TransactionsAfterTheta'
+
 # ECDSA SIGNATURE of Dictionaries
-# sign the new entry
+# sign the newly created dictionary using ECDSA cryptography
 When I create the signature of 'ABC-TransactionsAfterTheta'
 and I rename the 'signature' to 'ABC-TransactionsAfterTheta.signature'
 
-# print the result
+# PRINT the results
+# Here we're printing just what we need, but a whole list of dictionaries can be printed 
+# in the usual fashion, just uncomment the last line to print all the dictionaries
+# contained into 'TransactionsBatchA' and 'TransactionsBatchB' 
+
 Then print the 'ABC-TransactionsAfterTheta'
+and print the 'Theta'
 and print the 'ABC-TransactionsAfterTheta.signature'
-and print the 'TransactionsBatchA'
+and print the 'Information' inside 'TransactionsBatchA'
+# and print the 'TransactionsBatchA'
+# and print the 'TransactionsBatchB'
 EOF
 
 cat $tmpWhen1 > ../../docs/examples/zencode_cookbook/dictionariesWhen.zen

@@ -240,9 +240,29 @@ This last is the perfect example to introduce the *debug* operator.
  
 # Loading dictionaries
 
-The last group includes all the statements that are exclusive to ***dictionaries***. A dictionary is an ***array of elements***, where elements are complex objects which all have the same internal structure. You can use dictionaries, for example, to deal with a list of transactions, a list of accounts, a list of data entries, or any array of objects that share the same structure
+The last group includes all the statements that are exclusive to ***dictionaries***. A dictionary is a ***complex object*** that can be nested under another dictionary to create a ***list*** (that is still referred to as dictionary). Dictionaries can have ***different internal structure***. You can use dictionaries for examples when you have a list of transactions, a list of accounts, a list of data entries.
 
-A dictionary will have a structure like this: 
+A basic ***list of dictionaries*** could look like:
+
+```json
+{
+	"List" : {
+		"Dictionary1": {
+			"someNumber" : 1
+		},
+		"Dictionary2":{
+			"someNumber" : 2
+
+		},
+		"Dictionary3":{
+			"someNumber": 3,
+			"someOtherNumber": 4
+		}
+	}
+}
+```
+
+Here is a more complex ***list of dictionaries*** which contains elements of different type, including arrays:
 
 
 ```json
@@ -250,23 +270,20 @@ A dictionary will have a structure like this:
 	"Beatles" : {
 		"John": {
 			"yearOfBirth" : 1940,
-			"instrumentPlayed" : "voice",
-			"wearsGlasses":1
+			"spouse" : ["Cynthia Powell","Yoko Ono"]
+
 		},
 		"Paul":{
-			"yearOfBirth":1942,
 			"instrumentPlayed":"bass",
-			"wearsGlasses":0
+			"spouse" : ["Linda Eastman","Heather Mills","Nancy Shevell"]
 		},
 		"Ringo":{
 			"yearOfBirth":1940,
 			"instrumentPlayed":"guitar",
-			"wearsGlasses":0
+			"spouse" : ["Maureen Cox","Barbara Bach" ]
 		},
 		"George":{
-			"yearOfBirth":1943,
-			"instrumentPlayed":"drums",
-			"wearsGlasses":0
+			"yearOfBirth":1943
 		}
 	}
 }

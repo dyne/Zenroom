@@ -1,16 +1,21 @@
 {
-   "ABC-TransactionListFirstBatch":{
+   "TransactionsBatchB":{
+   "Information":{
+         "Metadata": "TransactionsBatchB6789",
+		 "Buyer" : "John Doe"
+      },
       "ABC-Transactions1Data":{
          "timestamp":1597573139,
          "TransactionValue":1000,
 		 "PricePerKG":2,
-         "TransferredProductAmount":500
+         "TransferredProductAmount":500,
+		 "UndeliveredProductAmount":100,
+		 "ProductPurchasePrice":1
       },
       "ABC-Transactions2Data":{
          "timestamp":1597573239,
          "TransactionValue":1000,
-		 "PricePerKG":2,
-         "TransferredProductAmount":500
+		 "PricePerKG":2
       },
       "ABC-Transactions3Data":{
          "timestamp":1597573339,
@@ -37,7 +42,11 @@
          "TransferredProductAmount":500
       }
    },
-   "ABC-TransactionListSecondBatch":{
+   "TransactionsBatchA":{
+	"Information":{
+         "Metadata": "TransactionsBatchA12345",
+		 "Buyer" : "Jane Doe"
+      },   
       "ABC-Transactions1Data":{
          "timestamp":1597573040,
          "TransactionValue":1000,
@@ -58,9 +67,7 @@
       },
 	  "ABC-Transactions5Data":{
          "timestamp":1597573340,
-         "TransactionValue":1000,
-		 "PricePerKG":2,
-         "TransferredProductAmount":500
+         "TransactionValue":1000
       },
 	  "ABC-Transactions6Data":{
          "timestamp":1597573440,
@@ -77,10 +84,10 @@
 	  "ABC-Transactions8Data":{
          "timestamp":1597573440,
          "TransactionValue":2000,
-		 "PricePerKG":4,
-         "TransferredProductAmount":530
+		 "PricePerKG":4
       }
    },
+   "dictionaryToBeFound":"ABC-Transactions1Data",
    "referenceTimestamp":1597573340,
 	"PricePerKG":3
 }
