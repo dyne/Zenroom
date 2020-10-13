@@ -30,6 +30,10 @@ jobs:
         env: 
           EMSCRIPTEN: ${{env.EMSDK}}/upstream/emscripten
       - run: yarn test
+      - name: Run crypto tests
+        working-directory: ./
+        run: make check-js
+
   publish:
     runs-on: ubuntu-latest
     defaults:
