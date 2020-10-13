@@ -30,12 +30,38 @@ jobs:
         env: 
           EMSCRIPTEN: ${{env.EMSDK}}/upstream/emscripten
       - run: yarn test
-  publish:
+
+  crypto-test:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: bindings/javascript
     needs: test
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+          registry-url: 'https://registry.npmjs.org'
+      - uses: mymindstorm/setup-emsdk@v6
+        with:
+          version: ${{env.EM_VERSION}}
+      - name: Install zsh
+        if: runner.os == 'Linux'
+        run: sudo apt-get update; sudo apt-get install zsh
+      - run: yarn
+      - run: yarn build
+        env: 
+          EMSCRIPTEN: ${{ env.EMSDK }}/upstream/emscripten
+      - name: Run crypto tests
+        run: cd ../ && make check-js
+
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bindings/javascript
+    needs: crypto-test
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
