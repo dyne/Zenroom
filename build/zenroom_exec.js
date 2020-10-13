@@ -1,4 +1,4 @@
-#!/usr/bin/env nodejs
+#!/usr/bin/env node
 // try this script from nodejs with a script as argument:
 if ( process.argv[2] === undefined ) {
 	console.log("usage: zenroom_exec.js script_file.lua")
