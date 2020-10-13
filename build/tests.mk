@@ -129,7 +129,7 @@ check-linux:
 	@echo "----------------"
 
 
-check-js: test-exec := nodejs ${pwd}/test/zenroom_exec.js ${pwd}/src/zenroom.js
+check-js: test-exec := node ${pwd}/test/zenroom_exec.js ${pwd}/src/zenroom.js
 check-js:
 	$(call lowmem-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
