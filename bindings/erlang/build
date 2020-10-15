@@ -1,4 +1,7 @@
 #!/bin/sh
 
+cp -v ../../src/zenroom.h .
+cp -v ../../src/libzenroom-x86_64.so .
+
 docker build . -t dyne/zenroom-erlang:wip
 docker run -it dyne/zenroom-erlang:wip

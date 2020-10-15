@@ -52,7 +52,7 @@ linux: ${SOURCES}
 # available vars to identify the build:
 # ${ARCH} ${VERSION} ${BRANCH} ${HASH}
 linux-lib: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o libzenroom-${ARCH}-${VERSION}.so ${LDFLAGS} ${LDADD}
+	${CC} ${CFLAGS} ${SOURCES} -o libzenroom-${ARCH}.so ${LDFLAGS} ${LDADD}
 
 luarock: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o octet.so ${LDFLAGS} ${LDADD}
