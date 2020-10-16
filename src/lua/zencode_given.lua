@@ -156,8 +156,10 @@ end)
 Given("am ''", function(name) Iam(name) end)
 
 Given("my name is in ''", function(name)
-		 assert(IN[name], "No name found inside "..name)
-		 Iam(IN[name])
+       pick(name, 'string')
+       assert(TMP, "No name found inside "..name)
+       local user = TMP.name
+		 Iam(user)
 end)
 
 -- variable names:
