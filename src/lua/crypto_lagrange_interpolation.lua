@@ -34,11 +34,14 @@ CONDITIONS OF ANY KIND, either express or implied.
 local G1 = ECP.generator() -- return value
 local O  = ECP.order() -- return value
 
-function li.create_shared_secret(total, quorum)
+function li.create_shared_secret(total, quorum, secret)
    assert(quorum < total, 'Error calling create_shared_secret: quorum ('..quorum..') must be smaller than total ('..total..')')
    -- generation of the coefficients of the secret polynomial
    local coeff = { }
-   for i=1,quorum,1 do
+   -- take last argument or create random
+   if secret then coeff[1] = BIG.new(secret)
+   else coeff[1] = BIG.random() end
+   for i=2,quorum,1 do
 	  coeff[i] = BIG.random()
    end
    --generation of the shares
