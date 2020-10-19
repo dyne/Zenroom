@@ -19,7 +19,7 @@
 
 --all integers here are computed modulo the order of the curve ECP.order()
 
-Q = 5 -- quorum
+Q = 4 -- quorum
 N = 9 -- participants
 assert(Q < N)
 
@@ -33,15 +33,17 @@ end
 
 --generation of the shares
 for i=1,N,1 do
-    local x = BIG.random()
-    while (x == 0) do       --provides trivial unleakability by setting the x coordinate non zero
-        x = BIG.random()
-        if x ~=0 then
-            for k in pairs(shares) do 
-                if x == k then x = 0 end    --checking that an old share is generated twice
-            end
-        end
-    end
+    local x
+	  repeat	
+	  	 x = BIG.random()
+		 if x ~=0 then
+			--checking for duplicates in shares
+			for k in pairs(shares) do
+			   if x == k then x = 0 end
+			end
+		 end
+      until x ~= 0	--this part provides trivial unleakability: x coordinate is never zero
+      
     local y = coeff[1]     --a_0
     local x_n = BIG.new(1)
     for n=2,Q,1 do
@@ -65,10 +67,9 @@ local sec = BIG.new(0)
 local num
 local den
 for i = 1,Q,1 do 
-    if Q % 2 == 1 then
-        num = BIG.new(1)
-    else 
-        num = BIG.new(BIG.modneg(1))
+    num = BIG.new(1)
+    if Q % 2 == 0 then
+     num = ECP.order() - num 
     end
     den = BIG.new(1)
     for j = 1,Q,1 do

@@ -47,17 +47,17 @@ function li.create_shared_secret(total, quorum, secret)
    --generation of the shares
    local shares = { }
    for i=1,total,1 do
-	  local x = BIG.random()
-	  --provides trivial unleakability: x coordinate is never zero
-	  while (x == 0) do
-		 x = BIG.random()
+	  local x
+	  repeat	
+	  	 x = BIG.random()
 		 if x ~=0 then
 			--checking for duplicates in shares
 			for k in pairs(shares) do
 			   if x == k then x = 0 end
 			end
 		 end
-	  end
+	  until x ~= 0	--this part provides trivial unleakability: x coordinate is never zero
+	  
 	  local y = coeff[1]     --a_0
 	  local x_n = BIG.new(1)
 	  for n=2,quorum,1 do
@@ -77,12 +77,9 @@ function li.compose_shared_secret(shares)
    local den
    local quorum = #shares
    for i = 1,quorum,1 do
-	  if quorum % 2 == 1 then
-		 num = BIG.new(1)
-	  else
-		 -- TODO: fails on quorum at even numbers
-		 num = BIG.new(BIG.modneg(1,O))
-	  end
+	  num = BIG.new(1)
+      if quorum % 2 == 0 then
+    	num = O - num	end
 	  den = BIG.new(1)
 	  for j = 1,quorum,1 do
 		 if j~=i then
