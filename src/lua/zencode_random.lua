@@ -146,15 +146,15 @@ end)
 When("pick the random object in ''", function(arr)
     local A = ACK[arr]
     ZEN.assert(A, "Object not found: "..arr)
-	ZEN.assert(ZEN.CODEC[arr].zentype == 'array',
-			   "Object is not an array: "..arr)
+	-- ZEN.assert(ZEN.CODEC[arr].zentype == 'array',
+	-- 		   "Object is not an array: "..arr)
     local count = isarray(A)
     ZEN.assert( count > 0, "Object is not an array: "..arr)
     local r = (random_int16() % count) +1
     ACK.random_object = A[r]
 	ZEN.CODEC.random_object = { name = 'random object',
-								encoding = ZEN.CODEC[arr].encoding,
 								luatype = 'string',
+								encoding = check_codec(arr),
 								zentype = 'element' }
 end)
 

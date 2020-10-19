@@ -80,7 +80,8 @@ function li.compose_shared_secret(shares)
 	  if quorum % 2 == 1 then
 		 num = BIG.new(1)
 	  else
-		 num = BIG.new(BIG.modneg(1))
+		 -- TODO: fails on quorum at even numbers
+		 num = BIG.new(BIG.modneg(1,O))
 	  end
 	  den = BIG.new(1)
 	  for j = 1,quorum,1 do

@@ -216,11 +216,13 @@ function guess_outcast(cast)
 	  return nil
    end
 end
+
 function check_codec(value)
    if not ZEN.CODEC then
 	  return CONF.output.encoding.name
    end
    if not ZEN.CODEC[value] then
+	  warn("Object has no CODEC registration: "..value)
 	  return CONF.output.encoding.name
    end
    if ZEN.CODEC[value].zentype == 'schema' then

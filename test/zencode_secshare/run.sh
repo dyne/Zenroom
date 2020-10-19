@@ -35,10 +35,20 @@ When I write string 'my small secret' in 'secret'
 Then print the 'secret'
 EOF
 
-cat <<EOF | zexe create_secret_shares.zen -k secret.json | jq . | tee shares.json
+cat <<EOF | debug create_secret_shares.zen -k secret.json | jq . | tee shares.json
 Scenario secshare
 Given I have a 'string' named 'secret'
 When I create the secret shares of 'secret' with '9' quorum '5'
+and I randomize the 'secret shares' array
+# now remove shares until we use only 5
+and I pick the random object in 'secret shares'
+and I remove the 'random object' from 'secret shares'
+and I pick the random object in 'secret shares'
+and I remove the 'random object' from 'secret shares'
+and I pick the random object in 'secret shares'
+and I remove the 'random object' from 'secret shares'
+and I pick the random object in 'secret shares'
+and I remove the 'random object' from 'secret shares'
 Then print the 'secret shares'
 EOF
 
