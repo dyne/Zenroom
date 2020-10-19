@@ -24,7 +24,7 @@ function shuffle_array_f(tab)
    ZEN.assert( count > 0, "Randomized object is not an array")
    local res = { }
    for i = count,2,-1 do
-	  local r = (random_int16() % (i-1))+1
+	  local r = (random_int16() % i)+1
 	  table.insert(res,tab[r]) -- limit 16bit lenght for arrays
 	  table.remove(tab, r)
    end
