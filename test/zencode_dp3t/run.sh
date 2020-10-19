@@ -29,7 +29,7 @@ scenario 'dp3t': Decentralized Privacy-Preserving Proximity Tracing
 rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
-Given I have a 'secret day key'
+Given I have an 'hex' named 'secret day key'
 # TODO: if the key is found in HEAP then parse secret day key as octet in default encoding
 When I renew the secret day key to a new day
 Then print the 'secret day key'
@@ -50,23 +50,24 @@ EOF
 
 
 # now generate a test with 20.000 infected SK
-cat <<EOF | $Z -z > SK_infected_20k.json
+cat <<EOF | zexe dp3t_testgen.zen > SK_infected_20k.json
 rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
 Given nothing
-When I create the array of '20000' random objects of '256' bits
+When I create the array of '200' random objects of '256' bits
 and I rename the 'array' to 'list of infected'
+and debug
 Then print the 'list of infected'
 EOF
-exit 0
+
 # extract a few random infected ephemeral ids to simulate proximity
-cat <<EOF | $Z -z -a SK_infected_20k.json | tee EphID_infected.json
+cat <<EOF | zexe dp3t_testextract.zen -a SK_infected_20k.json | tee EphID_infected.json
 scenario 'dp3t'
 rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
-Given I have a valid 'array' in 'list of infected'
+Given I have an 'hex array' named 'list of infected'
 When I pick the random object in 'list of infected'
 and I rename the 'random object' to 'secret day key'
 and I write number '180' in 'epoch'
@@ -77,21 +78,22 @@ Then print the 'ephemeral ids'
 EOF
 
 # given a list of infected and a list of ephemeral ids 
-cat <<EOF | tee dp3t_check.zen | $Z -z -a SK_infected_20k.json -k EphID_infected.json | tee SK_proximity.json
+cat <<EOF | zexe dp3t_checkinfected.zen -a SK_infected_20k.json -k EphID_infected.json | tee SK_proximity.json
 scenario 'dp3t'
 rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
-Given I have a 'array' in 'list of infected'
-and I have a 'array' in 'ephemeral ids'
+Given I have a 'hex array' named 'list of infected'
+and I have a 'hex array' named 'ephemeral ids'
 When I write number '180' in 'epoch'
 and I write string 'Broadcast key' in 'broadcast key'
 and I create the proximity tracing of infected ids
+and debug
 Then print the 'proximity tracing'
 EOF
 
 # given a list of infected and a list of ephemeral ids 
-# cat <<EOF | $Z -c memmanager=sys -z -a $D/SK_infected_20k.json -k $D/EphID_2.json
+# cat <<EOF | zexe -c memmanager=sys -z -a $D/SK_infected_20k.json -k $D/EphID_2.json
 # scenario 'dp3t'
 # rule check version 1.0.0
 # rule input encoding hex

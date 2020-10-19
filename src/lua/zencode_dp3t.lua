@@ -59,7 +59,7 @@ When("create the proximity tracing of infected ids", function()
 		ZEN.assert(ACK.broadcast_key, "Broadcast key not found")
 		ACK.proximity_tracing = { }
 		local epd = (24*60)/ACK.epoch -- num epochs per day
-		local zero = OCTET.new(epd*16):zero() -- 0 byte buffer
+		local zero = OCTET.zero(epd*16) -- 0 byte buffer
 		for n,sk in ipairs(ACK.list_of_infected) do
 		   local PRF = SHA256:hmac(sk, ACK.broadcast_key)
 		   for i = 0,epd,1 do
