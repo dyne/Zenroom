@@ -89,6 +89,7 @@ require('zencode_given')
 require('zencode_when')
 require('zencode_hash')       -- when extension
 require('zencode_array')      -- when extension
+require('zencode_random')     -- when extension
 require('zencode_dictionary') -- when extension
 require('zencode_then')
 -- this is to evaluate expressions or derivate a column
