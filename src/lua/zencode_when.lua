@@ -67,44 +67,18 @@ When("set '' to '' as ''", function(dest, content, format)
 
 end)
 
-When("create the random ''", function(dest)
-		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
-		ACK[dest] = OCTET.random(64) -- TODO: right now hardcoded 256 bit random secrets
-end)
-
-When("create the serialization of ''", function(src)
-		ZEN.assert(ACK[src], "Object not found: "..src)
-		ZEN.assert(not ACK.serialization,
-				   "Cannot overwrite existing value: "..'serialization')
-		ACK.serialization = ZEN.serialize(ACK[src])
-end)
-When("create the flattening of ''", function(src)
-		ZEN.assert(ACK[src], "Object not found: "..src)
-		ZEN.assert(not ACK.flattening,
-				   "Cannot overwrite existing value: "..'flattening')
-		ACK.flattening = ZEN.serialize(ACK[src])
-end)
-When("create the serialization of data", function()
-		ZEN.assert(not ACK.serialization,
-				   "Cannot overwrite existing value: "..'serialization')
-		local res
-		res = serialize(ACK)
-		ACK.serialization =
-		   OCTET.from_string(res.strings) .. res.octets
-end)
-
 When("create the cbor of ''", function(src)
 		ZEN.assert(ACK[src], "Object not found: "..src)
-		ZEN.assert(not ACK.flattening,
+		ZEN.assert(not ACK.cbor,
 				   "Cannot overwrite existing value: "..'cbor')
-		ACK.cbor = CBOR.encode(ACK[src])
+		ACK.cbor = OCTET.from_string( CBOR.encode(ACK[src]) )
 end)
 
 When("create the json of ''", function(src)
 		ZEN.assert(ACK[src], "Object not found: "..src)
-		ZEN.assert(not ACK.flattening,
-				   "Cannot overwrite existing value: "..'cbor')
-		ACK.cbor = JSON.encode(ACK[src])
+		ZEN.assert(not ACK.json,
+				   "Cannot overwrite existing value: "..'json')
+		ACK.json = OCTET.from_string( JSON.encode(ACK[src]) )
 end)
 
 -- generic comparison using overloaded __eq on any value

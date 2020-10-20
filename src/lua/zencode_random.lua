@@ -18,6 +18,11 @@
 
 -- random operations, mostly on arrays and schemas supported
 
+When("create the random ''", function(dest)
+		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
+		ACK[dest] = OCTET.random(64) -- TODO: right now hardcoded 256 bit random secrets
+end)
+
 function shuffle_array_f(tab)
    -- do not enforce CODEC detection since some schemas are also 1st level arrays
    local count = isarray(tab)
