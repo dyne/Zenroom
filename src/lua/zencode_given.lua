@@ -155,9 +155,10 @@ end)
 
 Given("am ''", function(name) Iam(name) end)
 
-Given("my name is in ''", function(name)
-		 assert(IN[name], "No name found inside "..name)
-		 Iam(IN[name])
+Given("my name is in a '' named ''", function(sc, name)
+		 pick(name, sc)
+		 assert(TMP.name, "No name found in: "..name)
+		 Iam( O.to_string( operate_conversion(TMP) ) )
 end)
 
 -- variable names:
