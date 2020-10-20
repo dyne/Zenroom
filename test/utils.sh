@@ -89,8 +89,10 @@ zexe() {
 	res=$?
 	if [ $res == 0 ]; then
 		cat $t/stdout
+		echo "OK  `basename $out`" >> /tmp/zenroom-test-summary.txt
 	else
 		>&2 cat $t/stderr | grep -v '^ \. '
+		echo "ERR `basename $out`" >> /tmp/zenroom-test-summary.txt
 		exit
 	fi
 	return $res

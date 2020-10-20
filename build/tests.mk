@@ -103,6 +103,7 @@ check:
 
 check-osx: test-exec := ./src/zenroom.command
 check-osx:
+	rm -f /tmp/zenroom-test-summary.txt
 	${test-exec} test/constructs.lua
 	$(call lowmem-tests,${test-exec})
 	$(call determinism-tests,${test-exec})
@@ -116,6 +117,7 @@ check-osx:
 
 check-linux: test-exec := ./src/zenroom
 check-linux:
+	rm -f /tmp/zenroom-test-summary.txt
 	${test-exec} test/constructs.lua
 	$(call himem-tests,${test-exec})
 	$(call lowmem-tests,${test-exec})
@@ -124,6 +126,7 @@ check-linux:
 	$(call zencode-tests,${test-exec})
 	$(call crypto-integration,${test-exec})
 	$(call zencode-integration,${test-exec})
+	cat /tmp/zenroom-test-summary.txt
 	@echo "----------------"
 	@echo "All tests passed for LINUX binary build"
 	@echo "----------------"
@@ -149,9 +152,11 @@ check-py:
 
 check-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom -d 3
 check-debug:
+	rm -f /tmp/zenroom-test-summary.txt
 	$(call lowmem-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
 	$(call zencode-tests,${test-exec})
+	cat /tmp/zenroom-test-summary.txt
 	@echo "----------------"
 	@echo "All tests passed for DEBUG binary build"
 	@echo "----------------"
@@ -160,22 +165,26 @@ check-debug:
 
 check-crypto: test-exec := ./src/zenroom
 check-crypto:
+	rm -f /tmp/zenroom-test-summary.txt
 	$(call determinism-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
 	$(call zencode-tests,${test-exec})
 	$(call crypto-integration,${test-exec})
 	$(call zencode-integration,${test-exec})
+	cat /tmp/zenroom-test-summary.txt
 	@echo "-----------------------"
 	@echo "All CRYPTO tests passed"
 	@echo "-----------------------"
 
 check-crypto-lw: test-exec := ./src/zenroom -c memmanager=\"lw\"
 check-crypto-lw:
+	rm -f /tmp/zenroom-test-summary.txt
 	$(call determinism-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
 	$(call zencode-tests,${test-exec})
 	$(call crypto-integration,${test-exec})
 	$(call zencode-integration,${test-exec})
+	cat /tmp/zenroom-test-summary.txt
 	@echo "-----------------------"
 	@echo "All CRYPTO tests passed with lw memory manager"
 	@echo "-----------------------"
@@ -183,9 +192,11 @@ check-crypto-lw:
 
 check-crypto-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom -d 3
 check-crypto-debug:
+	rm -f /tmp/zenroom-test-summary.txt
 	$(call determinism-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
 	$(call zencode-tests,${test-exec})
+	cat /tmp/zenroom-test-summary.txt
 
 
 #	./test/integration_asymmetric_crypto.sh ${test-exec}
