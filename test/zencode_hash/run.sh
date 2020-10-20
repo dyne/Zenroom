@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# RNGSEED="hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+
 
 ####################
 # common script init
@@ -88,6 +90,23 @@ Given nothing
 When I create the random 'source'
 and I create the hash of 'source'
 Then print 'hash'
+EOF
+
+cat <<EOF | zexe random_numbers.zen | tee array_random_nums.json
+# test hashing serialized tables
+Given nothing
+When I create the array of '64' random numbers
+and I create the hash of 'array'
+and I rename the 'hash' to 'sha256'
+and I create the hash of 'array' using 'sha512'
+and I rename the 'hash' to 'sha512'
+and I set 'secret' to 'my password' as 'string'
+and I create the key derivation of 'array' with password 'secret'
+and I create the HMAC of 'array' with key 'secret'
+Then print 'sha256'
+Then print 'sha512'
+Then print 'key derivation'
+Then print 'HMAC'
 EOF
 
 success
