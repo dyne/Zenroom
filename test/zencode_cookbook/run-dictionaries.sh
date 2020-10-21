@@ -394,12 +394,19 @@ And I rename the 'hash' to 'sha512hashOf:ABC-TransactionsAfterTheta'
 When I create the key derivation of 'ABC-TransactionsAfterTheta' with password 'myVerySecretPassword'
 And I rename the 'key_derivation' to 'pbkdf2Of:ABC-TransactionsAfterTheta'
 
+# CBOR 
+# You can render a whole (list of) dictionary as CBOR
+
+When I create the cbor of 'TransactionsBatchA'
+And I rename the 'cbor' to 'CBORof:TransactionsBatchA'
+
 Then print the 'ABC-TransactionsAfterTheta'
 and print the 'Theta'
 and print the 'ABC-TransactionsAfterTheta.signature'
 and print the 'Information' inside 'TransactionsBatchA'
 and print the 'sha512hashOf:ABC-TransactionsAfterTheta'
 and print the 'pbkdf2Of:ABC-TransactionsAfterTheta'
+and print the 'CBORof:TransactionsBatchA'
 # and print the 'TransactionsBatchA'
 # and print the 'TransactionsBatchB'
 EOF

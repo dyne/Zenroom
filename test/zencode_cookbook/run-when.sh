@@ -112,7 +112,7 @@ cat <<EOF  > $tmp
   
    },
    "myUserName":"User1234",
-   "Alice":{
+   "User1234":{
       "keypair":{
          "private_key":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
          "public_key":"BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
@@ -134,9 +134,9 @@ cat $tmp > ../../docs/examples/zencode_cookbook/myLargeNestedObjectWhen.json
 
 cat <<EOF  > $tmpGiven
 # We're using scenario 'ecdh' cause we are loading a keypair
-Scenario 'ecdh': Create the keypair
-Given I have a 'keypair' from 'Alice'
+Scenario 'ecdh': using keypair and signing
 Given my name is in a 'string' named 'myUserName'
+Given that I have my 'keypair'
 # Load Arrays
 Given I have a 'string array' named 'myFirstArray'  inside 'myFirstObject'
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
@@ -323,6 +323,13 @@ When I set 'myNewlyCreatedString' to 'call me The Pink Panther!' as 'string'
 When I set 'myNewlyCreatedBase64' to 'SGVsbG8gV29ybGQh' as 'base64'
 When I set 'myNewlytCreatedNumber' to '42' as 'number'
 When I set 'myNewlyCreatedNumberInBaseSomething' to '42' base '16'
+
+# CREATE the CBOR/JSON
+# You can render an object into CBOR, or render it JSON (if it was imported as JSON).
+# This is useful when you want to perform operations on larger datasets
+
+When I create the cbor of 'myFirstArray'
+And I rename the 'cbor' to 'myArrayRenderedToCBOR'
 
 Then print all data
 EOF

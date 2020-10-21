@@ -59,8 +59,6 @@ We grouped together all the statements that perform object manipulation, so:
  
  ***Pick a random element*** from an array
  
- ***flatten*** an array into a string
- 
  
 In the script below, we've put together a list of this statement and explained in the comments how each statement works: 
  
@@ -76,7 +74,7 @@ zenroom -a myLargeNestedObjectWhen.json -z whenCompleteScriptPart1.zen | jq | te
 
 The output should look like <a href="../_media/examples/zencode_cookbook/whenCompleteOutputPart1.json" download>whenCompleteOutputPart1.json</a>. Remember that the output gets sorted alphabetically, because in Zenroom *determinism is King*.
 
-## Create regular or random objects 
+## Create regular or random objects and render them
 
 In the second group we gathered the *When* statements that can create new objects and assign values to them.
 
@@ -84,6 +82,8 @@ In the second group we gathered the *When* statements that can create new object
  The "create" statements can ***generate random numbers*** (or arrays thereof), with different parameters.
 
  The "set" statements allow you to ***create an object and assign a value to it***. 
+ 
+ The "create the cbor of" statement allows you ***render an object to CBOR***. The statement also has a counterpart to render to JSON: "create the json of"
  
 
  See our example script below: 
@@ -165,6 +165,8 @@ Here we have grouped together the statements that perform:
  ***Hash-based message authentication code (HMAC)***
  
  ***Aggregation of ECP or ECP2 points***
+
+Hashing works for any data type, so you can hash simple objects (strings, numbers etc.) as well as hashes and dictionaries.
 
 Keep in mind that in order to use more advanced cryptography like encryption, zero knowledge proof, zk-SNARKS, attributed based credential or the [Coconut](https://arxiv.org/pdf/1802.07344.pdf)  flow you will need to select a *scenario* in the beginning of the scripts. We'll write more about scenarios later, for now we're using the "ecdh" scenario as we're loading an asymetric keypair from the JSON. See our example below:
 

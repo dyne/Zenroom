@@ -21,7 +21,6 @@ And I rename the 'hash' to 'hashOf:MyFirstArray'
 When I create the hash of 'ABC-Transactions1Data'
 And I rename the 'hash' to 'hashOfDictionary:ABC-Transactions1Data'
 
-
 # Following is a version of the statement above that takes the hashing algorythm as parameter, 
 # it accepts sha256 or sha512 as hash types
 When I create the hash of 'mySixthString' using 'sha256'

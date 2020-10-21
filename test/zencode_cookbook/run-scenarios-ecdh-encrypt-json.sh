@@ -72,7 +72,8 @@ cat <<EOF  > $tmpData5
 	},
 	"Carl": {
 		"public_key": "BLdpLbIcpV5oQ3WWKFDmOQ/zZqTo93cT1SId8HNITgDzFeI6Y3FCBTxsKHeyY1GAbHzABsOf1Zo61FRQFLRAsc8="
-	}
+	},
+	"myUserName":"Alice"
 }
 EOF
 cat $tmpData5 > ../../docs/examples/zencode_cookbook/scenarioECDHJSONAliceBobCarlKeys.json
@@ -84,7 +85,7 @@ Rule check version 1.0.0
 Scenario 'ecdh': Alice encrypts a message for Bob and Carl 
 
 # Here we load keypair and public keys
-Given that I am known as 'Alice'
+Given my name is in a 'string' named 'myUserName'
 Given that I have my 'keypair'
 Given that I have a 'public key' from 'Bob'
 Given that I have a 'public key' from 'Carl'
@@ -143,7 +144,8 @@ cat <<EOF  > $tmpData6
 	},
 		"Alice": {
 		"public_key": "BNRzlJ4csYlWgycGGiK/wgoEw3OizCdx9MWg06rxUBTP5rP9qPASOW5KY8YgmNjW5k7lLpboboHrsApWsvgkMN4="
-	}
+	},
+	"myUserName":"Bob"
 }
 EOF
 cat $tmpData6 > ../../docs/examples/zencode_cookbook/scenarioECDHJSONAliceBobDecryptKeys.json
@@ -153,7 +155,7 @@ cat $tmpData6 > ../../docs/examples/zencode_cookbook/scenarioECDHJSONAliceBobDec
 cat <<EOF  > $tmpZencode6
 Rule check version 1.0.0 
 Scenario 'ecdh': Bob decrypts the message from Alice 
-Given that I am known as 'Bob' 
+Given my name is in a 'string' named 'myUserName'
 Given I have my 'keypair' 
 Given I have a 'public key' from 'Alice' 
 Given I have a 'secret message' named 'secretForBob' 

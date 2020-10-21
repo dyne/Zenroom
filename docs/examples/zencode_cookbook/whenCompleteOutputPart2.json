@@ -8,10 +8,8 @@
     "timestamp": 1597573139
   },
   "keypair": {
-    "Alice": {
-      "private_key": "AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
-      "public_key": "BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
-    }
+    "private_key": "AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
+    "public_key": "BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
   },
   "my10RandomNumbersArray": [
     53569,
@@ -57,6 +55,7 @@
     "LSHFW45Tl51+cm3VF4UUmFWFUCmQp/xkHUfZruoMtaIEt5swMbCPC00IlnO0P9qXkUmjtdzdkP7gLZAQ3Am4nw==",
     "VVDAaAucQMiZ4NDQX06AGW1pmSHo/dZ9IEg8V3YuRdcYS+jUGWqcTAuuCVMBClZNm7tnewtGthnnh6I78QRvQg=="
   ],
+  "myArrayRenderedToCBOR": "g1g8U0dWc2JHOGdWMjl5YkdRaElHMTVSbWx5YzNSUFltcGxZM1FzSUcxNVJtbHljM1JCY25KaGVWc3dYUT09WDxTR1ZzYkc4Z1YyOXliR1FoSUcxNVJtbHljM1JQWW1wbFkzUXNJRzE1Um1seWMzUkJjbkpoZVZzeFhRPT1YPFNHVnNiRzhnVjI5eWJHUWhJRzE1Um1seWMzUlBZbXBsWTNRc0lHMTVSbWx5YzNSQmNuSmhlVnN5WFE9PQ==",
   "myCopyOfFirstArray": [
     "Hello World!, myThirdObject, myCopyOfFirstArray[0]",
     "Hello World!, myThirdObject, myCopyOfFirstArray[1]",

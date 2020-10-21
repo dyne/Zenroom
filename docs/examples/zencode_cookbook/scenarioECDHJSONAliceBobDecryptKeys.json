@@ -7,5 +7,6 @@
 	},
 		"Alice": {
 		"public_key": "BNRzlJ4csYlWgycGGiK/wgoEw3OizCdx9MWg06rxUBTP5rP9qPASOW5KY8YgmNjW5k7lLpboboHrsApWsvgkMN4="
-	}
+	},
+	"myUserName":"Bob"
 }

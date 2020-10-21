@@ -8,10 +8,8 @@
     "timestamp": 1597573139
   },
   "keypair": {
-    "Alice": {
-      "private_key": "AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
-      "public_key": "BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
-    }
+    "private_key": "AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
+    "public_key": "BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
   },
   "myCopyOfFirstArray": [
     "Hello World!, myThirdObject, myCopyOfFirstArray[0]",

@@ -1,10 +1,11 @@
 Rule check version 1.0.0 
 Scenario 'ecdh': Bob decrypts the message from Alice 
-Given that I am known as 'Bob' 
+Given my name is in a 'string' named 'myUserName'
 Given I have my 'keypair' 
 Given I have a 'public key' from 'Alice' 
 Given I have a 'secret message' named 'secretForBob' 
 When I decrypt the text of 'secretForBob' from 'Alice'
-When I rename the 'text' to 'textForBob'
-Then print the 'textForBob' as 'base64' 
-Then print the 'header' as 'string' inside 'secretForBob' 
+When I rename the 'text' to 'DecryptedtextForBobBase64'
+Then print the 'DecryptedtextForBobBase64' as 'base64'
+# The header is here the "DefaultHeader" so we won't print
+# Then print the 'header' as 'string' inside 'secretForBob' 

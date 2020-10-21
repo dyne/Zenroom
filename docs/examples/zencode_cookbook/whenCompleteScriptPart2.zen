@@ -41,4 +41,10 @@ When I set 'myNewlyCreatedBase64' to 'SGVsbG8gV29ybGQh' as 'base64'
 When I set 'myNewlytCreatedNumber' to '42' as 'number'
 When I set 'myNewlyCreatedNumberInBaseSomething' to '42' base '16'
 
+# CREATE the CBOR/JSON
+# You can render an object into CBOR, or render it JSON (if it was imported as JSON).
+
+When I create the cbor of 'myFirstArray'
+And I rename the 'cbor' to 'myArrayRenderedToCBOR'
+
 Then print all data

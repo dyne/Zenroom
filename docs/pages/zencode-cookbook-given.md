@@ -138,13 +138,31 @@ Which should return this output:
 
 
 
-## *Given I am*
+## State the user's identity: *Given I am*
 
 By using the ***Given I am*** statement, you are declaring the identity of the one who is executing the current script. This means that, when loading nested JSON files (as in the next example), the name of one of the nested JSON objects has to match the name following the ***Given I am*** statement.
 
 This statement is typically used when: 
 - Executing cryptographic operations that will need a key or keypair: the keys are passed to Zenroom (via *-a* and *-k* parameters) as JSON or CBOR files, using a format that includes the owner of the keys. In the next example we'll indeed a *keypair*.
 - In scripts where the identity is a condition for the execution of the script.
+
+## Passing the identity via parameter:  *Given my name is in ''*
+
+You can also load the identity of the user executing the script, from a parameter, which allows you to keep a clear separation of the code and the data. The statement looks like: 
+
+```gherkin
+Given my name is in a 'string' named 'myUserName'
+``` 
+
+And you will need to pass the identity in a parameter, looking like this: 
+
+```json
+{
+	"myUserName" : "Alice"
+}
+```
+
+The paramater can be passed to Zenroom (via *-a* and *-k* parameters) as JSON or CBOR files. 
 
 
 ## *Given I have* to load nested JSON file (part 2)
