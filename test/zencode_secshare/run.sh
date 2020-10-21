@@ -40,6 +40,8 @@ EOF
 
 
 cat <<EOF | debug ../../docs/examples/zencode_cookbook/scenarioSecShare-createSharedSecret.zen -k ../../docs/examples/zencode_cookbook/scenarioSecShare-Secret.json | jq . | tee ../../docs/examples/zencode_cookbook/scenarioSecShare-sharedSecret.json
+
+# Let's define the scenario, we'll need the 'secshare' here
 Scenario secshare: create a shared secret
 
 # We'll start from a secret, which can be max 32 bytes in length
@@ -66,7 +68,7 @@ echo "                                                "
 
 
 
-cat <<EOF | debug ../../docs/examples/zencode_cookbook/scenarioSecShare-createSharedSecret.zen -k ../../docs/examples/zencode_cookbook/scenarioSecShare-Secret.json -a ../../docs/examples/zencode_cookbook/scenarioSecShare-sharedSecret.json | jq . | tee ../../docs/examples/zencode_cookbook/scenarioSecShare-sharedSecret5parts.json
+cat <<EOF | debug ../../docs/examples/zencode_cookbook/scenarioSecShare-removeShares.zen -k ../../docs/examples/zencode_cookbook/scenarioSecShare-Secret.json -a ../../docs/examples/zencode_cookbook/scenarioSecShare-sharedSecret.json | jq . | tee ../../docs/examples/zencode_cookbook/scenarioSecShare-sharedSecret5parts.json
 
 # Here we load the "secret shares", which is a an array of base64 numbers
 Given I have a 'base64 array' named 'mySharedSecret'
@@ -107,8 +109,9 @@ Scenario secshare: recompose the secret shares
 Given I have a 'secret shares' named 'my5partsOfTheSharedSecret'
 
 # Here we are testing if the secret shares can be recomposed to form the password
-# in case the quorum isn't reached or isn't correct, Zenroom breaks and the execution is stopped
-# if the quorum is correct, the original "secret" should be printed out.
+# in case the quorum isn't reached or isn't correct, Zenroom will anyway output a string,
+# that will be different from the original secret.
+# if the quorum is correct, the original secret should be printed out.
 when I compose the secret using 'my5partsOfTheSharedSecret'
 Then print the 'secret' as 'string'
 EOF

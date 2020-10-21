@@ -83,7 +83,7 @@ In the second group we gathered the *When* statements that can create new object
 
  The "set" statements allow you to ***create an object and assign a value to it***. 
  
- The "create the cbor of" statement allows you ***render an object to CBOR***. The statement also has a counterpart to render to JSON: "create the json of"
+ The "create the cbor of" statement allows you ***render an object to CBOR***. The statement also has a counterpart to render to JSON: "create the json of".
  
 
  See our example script below: 

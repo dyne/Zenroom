@@ -17,6 +17,7 @@
   - [Scenario 'ecdh': encryption, signature](/pages/zencode-scenarios-ecdh "Zencode ecdh")
   - [Scenario 'petition': cryptographic petition](/pages/zencode-scenarios-petition "Zencode petition")
   - [Scenario 'dp3t': proximity tracing](/pages/zencode-scenario-dp3t "Zencode petition")
+  - [Scenario 'secshare': secret sharing](/pages/zencode-scenario-secShare "Zencode secret share")
   - [Zencode "rules"](/pages/zencode-rules.md "Zencode encoding and format rules")
   - [Zencode "config"](/pages/zenroom-config.md "Zenroom config")
   - [Zencode command list](/pages/zencode-list.md "Zencode command list")  
