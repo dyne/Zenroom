@@ -40,8 +40,10 @@ ZEN.add_schema({
 })
 
 When("create the secret shares of '' with '' quorum ''", function(sec, tot, q)
-		ZEN.assert(ACK[sec], "Secret not found: "..sec)
-        ACK.secret_shares = LAG.create_shared_secret(tot,q,ACK[sec])
+		local s = ACK[sec]
+		ZEN.assert(s, "Secret not found: "..sec)
+		ZEN.assert(#s <= 32, "Secret too big to share: "..#s.." bytes, max is 32 bytes")
+        ACK.secret_shares = LAG.create_shared_secret(tot,q,s)
 end)
 
 When("compose the secret using ''", function(shares)
