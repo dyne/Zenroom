@@ -81,53 +81,6 @@ When("create the json of ''", function(src)
 		ACK.json = OCTET.from_string( JSON.encode(ACK[src]) )
 end)
 
--- generic comparison using overloaded __eq on any value
-When("verify '' is equal to ''", function(l,r)
-		local tabeq = false
-		if luatype(ACK[l]) == 'table' then
-		   ZEN.assert(luatype(ACK[r]) == 'table',
-					  "Cannot verify equality: "..l.." is a table, "..r.." is not")
-		   tabeq = true
-		end
-		if luatype(ACK[r]) == 'table' then
-		   ZEN.assert(luatype(ACK[l]) == 'table',
-					  "Cannot verify equality: "..r.." is a table, "..l.." is not")
-		   tabeq = true
-		end
-		if tabeq then -- use CBOR encoding and compare strings: there
-					  -- may be faster ways, but this is certainly the
-					  -- most maintainable
-		   ZEN.assert( ZEN.serialize(ACK[l]) == ZEN.serialize(ACK[r]),
-					   "Verification failed: arrays are not equal: "..l.." == "..r)
-		else
-		   ZEN.assert(ACK[l] == ACK[r],
-					  "Verification failed: objects are not equal: "..l.." == "..r)
-		end
-end)
-
-When("verify '' is not equal to ''", function(l,r)
-	local tabeq = false
-	if luatype(ACK[l]) == 'table' then
-	   ZEN.assert(luatype(ACK[r]) == 'table',
-				  "Cannot verify equality: "..l.." is a table, "..r.." is not")
-	   tabeq = true
-	end
-	if luatype(ACK[r]) == 'table' then
-	   ZEN.assert(luatype(ACK[l]) == 'table',
-				  "Cannot verify equality: "..r.." is a table, "..l.." is not")
-	   tabeq = true
-	end
-	if tabeq then -- use CBOR encoding and compare strings: there
-				  -- may be faster ways, but this is certainly the
-				  -- most maintainable
-	   ZEN.assert( CBOR.encode(ACK[l]) ~= CBOR.encode(ACK[r]),
-				   "Verification failed: arrays are equal: "..l.." == "..r)
-	else
-	   ZEN.assert(ACK[l] ~= ACK[r],
-				  "Verification failed: objects are equal: "..l.." == "..r)
-	end
-end)
-
 -- numericals
 When("set '' to '' base ''", function(dest, content, base)
 		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
@@ -140,39 +93,6 @@ When("set '' to '' base ''", function(dest, content, base)
 							encoding = 'number',
 							luatype = 'number',
 							zentype = 'element' }
-end)
-
--- check a tuple of numbers before comparison, convert from octet if necessary
-local function numcheck(left, right)
-   local al, ar
-   ZEN.assert(left, "numcheck left object not found")
-   if type(left) == "zenroom.octet" then al = BIG.new(left):integer()
-   else al = left end
-   local l = tonumber(al)
-   ZEN.assert(l, "Invalid numcheck left argument: "..type(left))
-
-   ZEN.assert(right, "numcheck right object not found")
-   if type(right) == "zenroom.octet" then ar = BIG.new(right):integer()
-   else ar = right end
-   local r = tonumber(ar)
-   ZEN.assert(r, "Invalid numerical in right argument: "..type(right))
-   return l, r
-end
-When("number '' is less than ''", function(left, right)
-		local l, r = numcheck(ACK[left], ACK[right])
-		ZEN.assert(l < r, "Failed comparison: "..l.." is not less than "..r)
-end)
-When("number '' is less or equal than ''", function(left, right)
-		local l, r = numcheck(ACK[left], ACK[right])
-		ZEN.assert(l <= r, "Failed comparison: "..l.." is not less or equal than "..r)
-end)
-When("number '' is more than ''", function(left, right)
-		local l, r = numcheck(ACK[left], ACK[right])
-		ZEN.assert(l > r, "Failed comparison: "..l.." is not more than "..r)
-end)
-When("number '' is more or equal than ''", function(left, right)
-		local l, r = numcheck(ACK[left], ACK[right])
-		ZEN.assert(l >= r, "Failed comparison: "..l.." is not more or equal than "..r)
 end)
 
 When("rename the '' to ''", function(old,new)

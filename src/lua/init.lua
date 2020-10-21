@@ -91,6 +91,7 @@ require('zencode_hash')       -- when extension
 require('zencode_array')      -- when extension
 require('zencode_random')     -- when extension
 require('zencode_dictionary') -- when extension
+require('zencode_verify')     -- when extension
 require('zencode_then')
 -- this is to evaluate expressions or derivate a column
 -- it would execute lua code inside the zencode and is
