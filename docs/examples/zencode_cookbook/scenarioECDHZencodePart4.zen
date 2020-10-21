@@ -2,7 +2,7 @@ rule check version 1.0.0
 Scenario 'ecdh': Bob verifies the signature from Alice
 
 # Declaring who I am and loading all the stuff
-Given that I am known as 'Bob' 
+Given my name is in a 'string' named 'myUserName'
 Given I have a 'public key' from 'Alice' 
 Given I have a 'string' named 'myMessage' 
 Given I have a 'signature' named 'myMessage.signature'

@@ -30,6 +30,7 @@ tmpData4=`mktemp`
 tmpData5=`mktemp`
 tmpData6=`mktemp`
 tmpData7=`mktemp`
+tmpData8=`mktemp`
 
 
 tmpKeys1=`mktemp`
@@ -46,6 +47,7 @@ tmpZencode3=`mktemp`
 tmpZencode4=`mktemp`
 tmpZencode5=`mktemp`
 tmpZencode6=`mktemp`
+tmpZencode7=`mktemp`
 
 
 
@@ -234,7 +236,8 @@ cat <<EOF  > $tmpData3
 		  "private_key": "Aku7vkJ7K01gQehKELav3qaQfTeTMZKgK+5VhaR3Ui0=",
       "public_key": "BBCQg21VcjsmfTmNsg+I+8m1Cm0neaYONTqRnXUjsJLPa8075IYH+a9w2wRO7rFM1cKmv19Igd7ntDZcUvLq3xI="
     }
-  }
+  },
+  "myUserName":"Alice"
 }
 EOF
 cat $tmpData3 > ../../docs/examples/zencode_cookbook/scenarioECDHInputDataPart2.json
@@ -245,7 +248,7 @@ cat <<EOF  > $tmpZencode3
 Scenario 'ecdh': create the signature of an object
 
 # Declaring who I am and loading all the stuff
-Given I am 'Alice'
+Given my name is in a 'string' named 'myUserName'
 Given I have my 'keypair'
 Given that I have a 'string' named 'myMessage' inside 'mySecretStuff'
 Given I have a 'string array' named 'myStringArray'
@@ -298,8 +301,9 @@ cat <<EOF  > $tmpData4
 
  "Alice": {
       "public_key": "BBCQg21VcjsmfTmNsg+I+8m1Cm0neaYONTqRnXUjsJLPa8075IYH+a9w2wRO7rFM1cKmv19Igd7ntDZcUvLq3xI="
-    }
-  }
+    },
+	"myUserName":"Bob"
+}
 
 EOF
 cat $tmpData4 > ../../docs/examples/zencode_cookbook/scenarioECDHAlicePublicKey.json
@@ -311,7 +315,7 @@ rule check version 1.0.0
 Scenario 'ecdh': Bob verifies the signature from Alice
 
 # Declaring who I am and loading all the stuff
-Given that I am known as 'Bob' 
+Given my name is in a 'string' named 'myUserName'
 Given I have a 'public key' from 'Alice' 
 Given I have a 'string' named 'myMessage' 
 Given I have a 'signature' named 'myMessage.signature'
@@ -362,7 +366,8 @@ cat <<EOF  > $tmpData5
 			"private_key": "WBdsWLDno9/DNaap8cOXyQsCG182NJ0ddjLo/k05mgs=",
 			"public_key": "BNRzlJ4csYlWgycGGiK/wgoEw3OizCdx9MWg06rxUBTP5rP9qPASOW5KY8YgmNjW5k7lLpboboHrsApWsvgkMN4="
 		}
-	}
+	},
+	"myUserName":"Alice"
 }
 EOF
 cat $tmpData5 > ../../docs/examples/zencode_cookbook/scenarioECDHAliceKeyapir.json
@@ -387,7 +392,7 @@ Rule check version 1.0.0
 Scenario 'ecdh': Alice encrypts a message for Bob and Carl
 
 # Loading Alice' keypair
-Given that I am 'Alice'
+Given my name is in a 'string' named 'myUserName'
 Given that I have my 'keypair'
 
 # Loading the public keys of the recipients, you can load as many as you like
@@ -452,7 +457,8 @@ cat <<EOF  > $tmpData6
 	},
 		"Alice": {
 		"public_key": "BNRzlJ4csYlWgycGGiK/wgoEw3OizCdx9MWg06rxUBTP5rP9qPASOW5KY8YgmNjW5k7lLpboboHrsApWsvgkMN4="
-	}
+	},
+	"myUserName":"Bob"
 }
 EOF
 cat $tmpData6 > ../../docs/examples/zencode_cookbook/scenarioECDHAliceBobDecryptKeys.json
@@ -464,7 +470,7 @@ Rule check version 1.0.0
 Scenario 'ecdh': Bob decrypts the message from Alice 
 
 # Here we state that Bob is running the script and we load his keypair 
-Given that I am known as 'Bob' 
+Given my name is in a 'string' named 'myUserName'
 Given I have my 'keypair'
 
 # Here we load Alice's public key
@@ -488,6 +494,35 @@ cat $tmpZencode6 > ../../docs/examples/zencode_cookbook/scenarioECDHZencodePart6
 
 cat $tmpZencode6 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -k $tmpData6 -a ../../docs/examples/zencode_cookbook/scenarioECDHPart5.json | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHPart6.json | jq
 
+
+
+let n=9
+echo "                                                "
+echo "------------------------------------------------"
+echo "   Generate a keypair loading name from data $n          "
+echo " 	this is generated with a known seed			  "
+echo " 	to change, remove the	RNGSEED=   in the beginning "
+echo "------------------------------------------------"
+echo "                                                "
+
+cat <<EOF  > $tmpData7
+{
+	"myUserName":"Alice"
+}
+EOF
+cat $tmpData6 > ../../docs/examples/zencode_cookbook/scenarioECDHLoadNameFromData.json
+
+
+cat <<EOF  > $tmpZencode7
+Scenario 'ecdh': Generate a keypair
+Given my name is in a 'string' named 'myUserName'
+When I create the keypair
+Then print my data
+EOF
+
+cat $tmpZencode0 > ../../docs/examples/zencode_cookbook/scenarioECDHZencodePart0.zen
+
+cat $tmpZencode0 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHKeypair3.json | jq
 
 
 
@@ -536,3 +571,4 @@ rm -f $tmpZencode3
 rm -f $tmpZencode4
 rm -f $tmpZencode5
 rm -f $tmpZencode6
+rm -f $tmpZencode7

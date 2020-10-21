@@ -1,13 +1,13 @@
 {
   "secretForBob": {
-    "checksum": "RbeYCV/ILFs1/lefPuZJ2w==",
-    "header": "U2VjcmV0IG1lc3NhZ2UgZm9yIEJvYiBhbmQgQ2FybA==",
+    "checksum": "YUGVXcm0a1QfzdL567ibUQ==",
+    "header": "RGVmYXVsdEhlYWRlcg==",
     "iv": "XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA=",
     "text": "XIQ3HekI3eKXbzXPW02VgHd3J6f/pkYzY4ygD5iFMYdYcgzbVuaLqT0JJi+FiwyNBqYYtIxhSQJggHDndEfkaCFDjvy6yj/+ibMUVKm3g3F2KDGOQA=="
   },
   "secretForCarl": {
-    "checksum": "Jy5LPkJzKWctSylCphJUTg==",
-    "header": "U2VjcmV0IG1lc3NhZ2UgZm9yIEJvYiBhbmQgQ2FybA==",
+    "checksum": "xodWkV2c2L7sDVb22HCwLg==",
+    "header": "RGVmYXVsdEhlYWRlcg==",
     "iv": "VyJ47aH6+hysFuthAZJP+LyFxmZs6L56Ru0P+JlCbDs=",
     "text": "eE3k+wbO4BVqFDA/14+BQDm6sQhcNZ1rcluKO4WTAMIneixt2X5zrtRAyAfoX87SESiSVZkhQQKIYQvKQBNzRLLKXgEHDCtQdVJMj1G7jXQRxdZ/nQ=="
   }

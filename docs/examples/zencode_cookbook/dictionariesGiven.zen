@@ -12,8 +12,9 @@ Given that I have a 'string dictionary' named 'TransactionsBatchB'
 Given that I have a 'number' named 'referenceTimestamp'
 Given that I have a 'number' named 'PricePerKG'
 Given that I have a 'string' named 'dictionaryToBeFound'
+Given that I have a 'string' named 'myVerySecretPassword'
 
 # Loading the keypair afer setting my identity
-Given that I am known as 'Authority'
+Given my name is in a 'string' named 'myUserName'
 Given that I have my 'keypair'
 

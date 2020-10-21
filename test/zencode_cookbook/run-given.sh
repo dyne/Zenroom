@@ -25,6 +25,7 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 n=1
 tmp=`mktemp`
 tmp2=`mktemp`
+tmp3=`mktemp`
 
 
 
@@ -262,9 +263,16 @@ Scenario 'ecdh': let us load some stuff cause it is fun!
 Given I am 'Alice'
 And I have my  'keypair'
 And I have a 'string array' named 'myStringArray' inside 'myFirstObject' 
+
+#
+# # # Uncomment the line below to enjoy the fireworks
 # And I have a 'string array' named 'myStringArray' inside 'mySecondObject' 
+
 Then print all data
 EOF
+
+
+
 
 
 let n=6
@@ -508,4 +516,33 @@ rm -f $tmp
 
 
 
+let n=11
+echo "                                                "
+echo "------------------------------------------------"
+echo "               Script number $n                 "
+echo " Given I am, loaded from data                   "
+echo "------------------------------------------------"
+echo "       										  "
 
+
+cat <<EOF  > $tmp3
+{
+   "myUserName":"User1234",
+	 "User1234":{
+		  "keypair":{
+			 "private_key":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
+			 "public_key":"BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
+		  }
+	   } 
+}
+EOF
+
+
+cat <<EOF | zexe ../../docs/examples/zencode_cookbook/givenLoadNameFromData.zen -z -a $tmp3 | jq . | tee ../../docs/examples/zencode_cookbook/givenLoadNameFromDataOutput.json | jq
+Scenario 'ecdh': load name from data
+Given my name is in a 'string' named 'myUserName'
+And I have my  'keypair'
+Then print my data
+EOF
+
+rm -f $tmp3

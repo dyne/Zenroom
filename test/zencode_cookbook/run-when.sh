@@ -111,13 +111,21 @@ cat <<EOF  > $tmp
       ]	  
   
    },
-   
+   "myUserName":"User1234",
    "Alice":{
       "keypair":{
          "private_key":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
          "public_key":"BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
       }
-   }
+   },
+   "ABC-Transactions1Data":{
+         "timestamp":1597573139,
+         "TransactionValue":1000,
+		 "PricePerKG":2,
+         "TransferredProductAmount":500,
+		 "UndeliveredProductAmount":100,
+		 "ProductPurchasePrice":1
+      }
    
 }
 EOF
@@ -128,6 +136,7 @@ cat <<EOF  > $tmpGiven
 # We're using scenario 'ecdh' cause we are loading a keypair
 Scenario 'ecdh': Create the keypair
 Given I have a 'keypair' from 'Alice'
+Given my name is in a 'string' named 'myUserName'
 # Load Arrays
 Given I have a 'string array' named 'myFirstArray'  inside 'myFirstObject'
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
@@ -157,6 +166,8 @@ Given I have a 'string' named 'myThirteenStringPassword' inside 'myFourthObject'
 Given I have a 'string' named 'myFourteenthStringToBeHashedUsingHMAC' inside 'myFourthObject'
 Given I have a 'string' named 'myFifteenthString' inside 'myFourthObject'
 Given I have a 'string' named 'mySixteenthString' inside 'myFourthObject'
+# Load dictionaries
+Given I have a 'string dictionary' named 'ABC-Transactions1Data'
 # Different data types
 Given I have an 'hex' named 'myFirstHex' inside 'myFirstObject' 
 Given I have a  'base64' named 'myFirstBase64' in 'myFirstObject'
@@ -240,18 +251,6 @@ When I write string 'This is my lovely new string!' in 'nameOfSecondNewVariable'
 # The name is hardcoded, the object can be renamed.
 When I pick the random object in 'myFirstArray'
 and I rename the 'random_object' to 'myRandomlyPickedObject'
-
-# FLATTEN
-# The flatten (or serialization) statement is used to flatten an array or a complex structure. 
-# The main use case is pre-processing the data to be hashed or signed.
-# The serialization uses an custom algorythm: it can only be reproduced 
-# with Zenroom, but there are ways to make Zenroom's hashing of complex structured
-# verifiable with other tools, as well as use Zenroom to check hashes produced by
-# other softwares. As statement, you can use both "flattening" and "serialization"  
-When I create the flattening of 'myFirstArray'
-And I rename the 'flattening' to 'serializationOfmyFirstArray'
-When I create the serialization of data
-And I rename the 'serialization' to 'serializationOfAllData'
 
 Then print all data
 EOF
@@ -370,12 +369,29 @@ cat <<EOF  > $tmpWhen3
 When I create the hash of 'myFifthString'
 And I rename the 'hash' to 'hashOfMyFifthString'
 
+# In the same fashion, we can hash arrays 
+When I create the hash of 'myFirstArray'
+And I rename the 'hash' to 'hashOf:MyFirstArray'
+
+# and we can as well hash dictionaries
+When I create the hash of 'ABC-Transactions1Data'
+And I rename the 'hash' to 'hashOfDictionary:ABC-Transactions1Data'
+
 # Following is a version of the statement above that takes the hashing algorythm as parameter, 
 # it accepts sha256 or sha512 as hash types
 When I create the hash of 'mySixthString' using 'sha256'
 And I rename the 'hash' to 'hashOfMySixthString'
 When I create the hash of 'mySeventhString' using 'sha512'
 And I rename the 'hash' to 'hashOfMySeventhString'
+
+# Again, you can hash with sha256 or sha512 also arrays and dictionaries
+When I create the hash of 'myFirstArray' using 'sha512'
+And I rename the 'hash' to 'sha512HashOf:MyFirstArray'
+
+When I create the hash of 'ABC-Transactions1Data' using 'sha512'
+And I rename the 'hash' to 'sha512HashOfDictionary:ABC-Transactions1Data'
+
+
 
 # The "create hash to point" statement can do some serious cryptography: 
 # use it generating public keys from a secret key, where the secret key can be any random number.

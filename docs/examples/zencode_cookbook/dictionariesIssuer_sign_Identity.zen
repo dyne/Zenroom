@@ -1,6 +1,6 @@
 rule check version 1.0.0
 Scenario ecdh: Sign a new Identity
-Given that I am known as 'Authority'
+Given my name is in a 'string' named 'myUserName'
 and I have my 'keypair'
 and I have a 'string dictionary' named 'Identity'
 and I have a 'string dictionary' named 'HistoryOfTransactions'

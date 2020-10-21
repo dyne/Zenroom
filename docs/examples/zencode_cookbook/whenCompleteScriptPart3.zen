@@ -13,12 +13,30 @@
 When I create the hash of 'myFifthString'
 And I rename the 'hash' to 'hashOfMyFifthString'
 
+# In the same fashion, we can hash arrays 
+When I create the hash of 'myFirstArray'
+And I rename the 'hash' to 'hashOf:MyFirstArray'
+
+# and we can as well hash dictionaries
+When I create the hash of 'ABC-Transactions1Data'
+And I rename the 'hash' to 'hashOfDictionary:ABC-Transactions1Data'
+
+
 # Following is a version of the statement above that takes the hashing algorythm as parameter, 
 # it accepts sha256 or sha512 as hash types
 When I create the hash of 'mySixthString' using 'sha256'
 And I rename the 'hash' to 'hashOfMySixthString'
 When I create the hash of 'mySeventhString' using 'sha512'
 And I rename the 'hash' to 'hashOfMySeventhString'
+
+# Again, you can hash with sha256 or sha512 also arrays and dictionaries
+When I create the hash of 'myFirstArray' using 'sha512'
+And I rename the 'hash' to 'sha512HashOf:MyFirstArray'
+
+When I create the hash of 'ABC-Transactions1Data' using 'sha512'
+And I rename the 'hash' to 'sha512HashOfDictionary:ABC-Transactions1Data'
+
+
 
 # The "create hash to point" statement can do some serious cryptography: 
 # use it generating public keys from a secret key, where the secret key can be any random number.

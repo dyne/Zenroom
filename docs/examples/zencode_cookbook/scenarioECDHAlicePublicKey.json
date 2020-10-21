@@ -2,6 +2,7 @@
 
  "Alice": {
       "public_key": "BBCQg21VcjsmfTmNsg+I+8m1Cm0neaYONTqRnXUjsJLPa8075IYH+a9w2wRO7rFM1cKmv19Igd7ntDZcUvLq3xI="
-    }
-  }
+    },
+	"myUserName":"Bob"
+}
 

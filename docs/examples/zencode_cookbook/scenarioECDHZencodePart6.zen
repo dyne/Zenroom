@@ -2,7 +2,7 @@ Rule check version 1.0.0
 Scenario 'ecdh': Bob decrypts the message from Alice 
 
 # Here we state that Bob is running the script and we load his keypair 
-Given that I am known as 'Bob' 
+Given my name is in a 'string' named 'myUserName'
 Given I have my 'keypair'
 
 # Here we load Alice's public key

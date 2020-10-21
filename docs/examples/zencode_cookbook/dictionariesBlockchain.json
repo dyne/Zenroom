@@ -89,5 +89,7 @@
    },
    "dictionaryToBeFound":"ABC-Transactions1Data",
    "referenceTimestamp":1597573340,
-	"PricePerKG":3
+	"PricePerKG":3,
+	"myUserName":"Authority1234",
+	"myVerySecretPassword":"password123"
 }

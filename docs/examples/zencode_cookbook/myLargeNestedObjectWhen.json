@@ -74,12 +74,20 @@
       ]	  
   
    },
-   
+   "myUserName":"User1234",
    "Alice":{
       "keypair":{
          "private_key":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
          "public_key":"BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
       }
-   }
+   },
+   "ABC-Transactions1Data":{
+         "timestamp":1597573139,
+         "TransactionValue":1000,
+		 "PricePerKG":2,
+         "TransferredProductAmount":500,
+		 "UndeliveredProductAmount":100,
+		 "ProductPurchasePrice":1
+      }
    
 }

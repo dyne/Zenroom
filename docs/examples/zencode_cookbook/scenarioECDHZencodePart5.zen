@@ -2,7 +2,7 @@ Rule check version 1.0.0
 Scenario 'ecdh': Alice encrypts a message for Bob and Carl
 
 # Loading Alice' keypair
-Given that I am 'Alice'
+Given my name is in a 'string' named 'myUserName'
 Given that I have my 'keypair'
 
 # Loading the public keys of the recipients, you can load as many as you like
@@ -11,7 +11,10 @@ Given that I have a 'public key' from 'Carl'
 
 # Loading the secret message
 Given that I have a 'string' named 'myMessageForBobAndCarl'
-Given that I have a 'string' named 'header'
+# Commenting reading og the header, as we don't need the header, 
+# so Zenroom will set it as "DefaultHeader"
+#  
+# Given that I have a 'string' named 'header'
 
 # Encrypt the secret message for 1st recipient and rename the output
 When I encrypt the secret message of 'myMessageForBobAndCarl' for 'Bob'

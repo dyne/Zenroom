@@ -50,7 +50,8 @@ cat <<EOF > ../../docs/examples/zencode_cookbook/dictionariesIdentity_example.js
     "TotalSoldWithTransactions": 2160,
     "TotalPurchasedWithTransactions": 1005,
     "Remarks": "none"
-  }
+  },
+  "myUserName":"Authority1234"
 }
 EOF
 
@@ -67,7 +68,7 @@ echo "                                                "
 cat <<EOF | zexe ../../docs/examples/zencode_cookbook/dictionariesCreate_issuer_keypair.zen | tee ../../docs/examples/zencode_cookbook/dictionariesIssuer_keypair.json | jq
 rule check version 1.0.0
 Scenario 'ecdh': Create the keypair
-Given that I am known as 'Authority'
+Given that I am known as 'Authority1234'
 When I create the keypair
 Then print my data
 EOF
@@ -82,10 +83,10 @@ echo "------------------------------------------------"
 echo "                                                "
 
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/dictionariesPublish_issuer_pubkey.zen -k ../../docs/examples/zencode_cookbook/dictionariesIssuer_keypair.json | tee ../../docs/examples/zencode_cookbook/dictionariesIssuer_pubkey.json | jq
+cat <<EOF | zexe ../../docs/examples/zencode_cookbook/dictionariesPublish_issuer_pubkey.zen -a ../../docs/examples/zencode_cookbook/dictionariesIdentity_example.json -k ../../docs/examples/zencode_cookbook/dictionariesIssuer_keypair.json | tee ../../docs/examples/zencode_cookbook/dictionariesIssuer_pubkey.json | jq
 rule check version 1.0.0
 Scenario 'ecdh': Publish the public key
-Given that I am known as 'Authority'
+Given my name is in a 'string' named 'myUserName'
 and I have my 'keypair'
 Then print my 'public key' from 'keypair'
 EOF
@@ -103,7 +104,7 @@ echo "   "
 cat <<EOF | zexe ../../docs/examples/zencode_cookbook/dictionariesIssuer_sign_Identity.zen -a ../../docs/examples/zencode_cookbook/dictionariesIdentity_example.json -k ../../docs/examples/zencode_cookbook/dictionariesIssuer_keypair.json | tee ../../docs/examples/zencode_cookbook/dictionaries_Identity_signed.json | jq .
 rule check version 1.0.0
 Scenario ecdh: Sign a new Identity
-Given that I am known as 'Authority'
+Given my name is in a 'string' named 'myUserName'
 and I have my 'keypair'
 and I have a 'string dictionary' named 'Identity'
 and I have a 'string dictionary' named 'HistoryOfTransactions'
@@ -131,15 +132,15 @@ echo "   "
 cat <<EOF | zexe ../../docs/examples/zencode_cookbook/dictionariesVerify_Identity_signature.zen -a ../../docs/examples/zencode_cookbook/dictionaries_Identity_signed.json -k ../../docs/examples/zencode_cookbook/dictionariesIssuer_pubkey.json | jq .
 rule check version 1.0.0
 Scenario ecdh: Verify the Identity signature
-Given I have a 'public key' from 'Authority'
+Given I have a 'public key' from 'Authority1234'
 and I have a 'string dictionary' named 'Identity'
 and I have a 'string dictionary' named 'HistoryOfTransactions'
 and I have a 'signature' named 'Identity.signature'
 and I have a 'signature' named 'HistoryOfTransactions.signature'
-When I verify the 'Identity' has a signature in 'Identity.signature' by 'Authority'
-When I verify the 'HistoryOfTransactions' has a signature in 'HistoryOfTransactions.signature' by 'Authority'
-Then print 'Signature of Identity by Authority is Valid'
-and print 'Signature of HistoryOfTransactions by Authority is Valid'
+When I verify the 'Identity' has a signature in 'Identity.signature' by 'Authority1234'
+When I verify the 'HistoryOfTransactions' has a signature in 'HistoryOfTransactions.signature' by 'Authority1234'
+Then print 'Signature of Identity by Authority1234 is Valid'
+and print 'Signature of HistoryOfTransactions by Authority1234 is Valid'
 EOF
 
 
@@ -260,7 +261,9 @@ cat <<EOF > ../../docs/examples/zencode_cookbook/dictionariesBlockchain.json
    },
    "dictionaryToBeFound":"ABC-Transactions1Data",
    "referenceTimestamp":1597573340,
-	"PricePerKG":3
+	"PricePerKG":3,
+	"myUserName":"Authority1234",
+	"myVerySecretPassword":"password123"
 }
 EOF
 
@@ -294,9 +297,10 @@ Given that I have a 'string dictionary' named 'TransactionsBatchB'
 Given that I have a 'number' named 'referenceTimestamp'
 Given that I have a 'number' named 'PricePerKG'
 Given that I have a 'string' named 'dictionaryToBeFound'
+Given that I have a 'string' named 'myVerySecretPassword'
 
 # Loading the keypair afer setting my identity
-Given that I am known as 'Authority'
+Given my name is in a 'string' named 'myUserName'
 Given that I have my 'keypair'
 
 EOF
@@ -382,10 +386,20 @@ and I rename the 'signature' to 'ABC-TransactionsAfterTheta.signature'
 # in the usual fashion, just uncomment the last line to print all the dictionaries
 # contained into 'TransactionsBatchA' and 'TransactionsBatchB' 
 
+# HASH
+# we can hash the dictionary using any hashing algorythm
+When I create the hash of 'ABC-TransactionsAfterTheta' using 'sha512'
+And I rename the 'hash' to 'sha512hashOf:ABC-TransactionsAfterTheta' 
+
+When I create the key derivation of 'ABC-TransactionsAfterTheta' with password 'myVerySecretPassword'
+And I rename the 'key_derivation' to 'pbkdf2Of:ABC-TransactionsAfterTheta'
+
 Then print the 'ABC-TransactionsAfterTheta'
 and print the 'Theta'
 and print the 'ABC-TransactionsAfterTheta.signature'
 and print the 'Information' inside 'TransactionsBatchA'
+and print the 'sha512hashOf:ABC-TransactionsAfterTheta'
+and print the 'pbkdf2Of:ABC-TransactionsAfterTheta'
 # and print the 'TransactionsBatchA'
 # and print the 'TransactionsBatchB'
 EOF

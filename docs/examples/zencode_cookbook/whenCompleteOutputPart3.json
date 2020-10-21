@@ -1,4 +1,12 @@
 {
+  "ABC-Transactions1Data": {
+    "PricePerKG": 2,
+    "ProductPurchasePrice": 1,
+    "TransactionValue": 1000,
+    "TransferredProductAmount": 500,
+    "UndeliveredProductAmount": 100,
+    "timestamp": 1597573139
+  },
   "aggregationOfMyFirstNumberArray": 150,
   "ecp2HashesOfMyFirstArray": [
     "P3kjyymJDeTJKoowxWiL71de7ri38wSQWPCht7hxH66vRUors4Pcz62qdVy/j5IWSk5ONZcd7qBqUyvqJxoH4WQ/6HhtmJbu2AjMDzx5A9NDHOzmp3dIB6s3JQmn8LFjSBdWjQJOcjr3IUHzfKYfj7OxmEfnrTRGgjDKQjCtyIKGV96YEresQ2iQPz2QEXq/T7vUJPDZUUtgqFOK+go9glTWZXiRGNHiaJaj026Cd94i+F2Q0tKFHyMpMC26YRJt",
@@ -12,6 +20,8 @@
     "AgPuDVZUYsQhpGtHUt8j03KituiJ2Ny4N77dH5gstnispY61EmA3WcaH5uKSov5l2Q==",
     "A1BVXNqDgNHWe0bc4U/CVsHxeVuTriX+5BCY/8TYB4riLS7TFrgAe4IMlakTHKaZ7g=="
   ],
+  "hashOf:MyFirstArray": "YLoN0ix9Nnm974zvKJvKErdPgrX+ZWY8teSuPXcJD+s=",
+  "hashOfDictionary:ABC-Transactions1Data": "yzPoZdr42Gj9T5SnhkFF2XGh9bVz6kP+tIO0RTtA1rM=",
   "hashOfMyFifthString": "vtzeeZeRAIY82kxzuv1PK39jnH2fc6TZqrc6sWVq3Tg=",
   "hashOfMySeventhString": "P5vd4OgxZwstTNgbQv20H0WAblBRpSa+t4RutFN3utKHrBBFgQ8gZQ0kdcrjjZD4Q1hNiUO9zXi0LBDsnHna0g==",
   "hashOfMySixthString": "yWXf351s+C3fkJ190MWfmgyTaCFrWR/alVsK4QVyoxU=",
@@ -91,5 +101,7 @@
   "myThirdString": "...and good morning!",
   "myThirteenStringPassword": "my funky password",
   "myTwelfthStringToBeHashedUsingPBKDF2": "hash me to pbkdf2",
-  "pbkdf2OfmyTwelfthString": "dFHv7CjBk+ZwpqIxRrJwysw="
+  "pbkdf2OfmyTwelfthString": "dFHv7CjBk+ZwpqIxRrJwysw=",
+  "sha512HashOf:MyFirstArray": "9kR1xzrdhhwEXC/rMCwe3DciuRvu82OreG6AFNIjNdiKLUgCm61CkNrp8plvlNoCtdXGeAv6Ly1c8n34QiwHPg==",
+  "sha512HashOfDictionary:ABC-Transactions1Data": "BQpoQbKTCEGJbOKfkAb3M5GA6n+hrCLY5lu1boKlHYDDA+GvSUmmdpQqiEyLysyJoXNA+hmfIxOCUZGginb2Ww=="
 }

@@ -1,6 +1,7 @@
 # We're using scenario 'ecdh' cause we are loading a keypair
 Scenario 'ecdh': Create the keypair
 Given I have a 'keypair' from 'Alice'
+Given my name is in a 'string' named 'myUserName'
 # Load Arrays
 Given I have a 'string array' named 'myFirstArray'  inside 'myFirstObject'
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
@@ -30,6 +31,8 @@ Given I have a 'string' named 'myThirteenStringPassword' inside 'myFourthObject'
 Given I have a 'string' named 'myFourteenthStringToBeHashedUsingHMAC' inside 'myFourthObject'
 Given I have a 'string' named 'myFifteenthString' inside 'myFourthObject'
 Given I have a 'string' named 'mySixteenthString' inside 'myFourthObject'
+# Load dictionaries
+Given I have a 'string dictionary' named 'ABC-Transactions1Data'
 # Different data types
 Given I have an 'hex' named 'myFirstHex' inside 'myFirstObject' 
 Given I have a  'base64' named 'myFirstBase64' in 'myFirstObject'
