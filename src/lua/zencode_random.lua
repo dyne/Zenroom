@@ -20,7 +20,7 @@
 
 When("create the random ''", function(dest)
 		ZEN.assert(not ACK[dest], "Cannot overwrite existing value: "..dest)
-		ACK[dest] = OCTET.random(64) -- TODO: right now hardcoded 256 bit random secrets
+		ACK[dest] = OCTET.random(32) -- TODO: right now hardcoded 256 bit random secrets
 end)
 
 function shuffle_array_f(tab)
