@@ -77,6 +77,19 @@ end
 When("remove '' from ''", function(ele,from) _when_remove(ele, from) end)
 When("remove the '' from ''", function(ele,from) _when_remove(ele, from) end)
 
+When("create the copy of element '' in array ''", function(pos, arr)
+		ZEN.assert(ACK[arr], "No array found in: "..arr)
+		ZEN.assert(isarray(ACK[arr]), "Not an array: "..arr)
+		local num = tonumber(pos)
+		ZEN.assert(num, "Argument is not a position number: "..pos)
+		ZEN.assert(ACK[arr][num], "No element found in: "..arr.."["..pos.."]")
+		ACK.copy = ACK[arr][num]
+		-- TODO: support nested arrays or dictionaries
+		ZEN.CODEC.copy = { name = from,
+						   encoding = ZEN.CODEC[arr].encoding,
+						   zentype = 'element' }
+end)
+
 When("insert '' in ''", function(ele, dest)
 		ZEN.assert(ACK[dest], "Invalid destination, not found: "..dest)
         ZEN.assert(luatype(ACK[dest]) == 'table', "Invalid destination, not a table: "..dest)
