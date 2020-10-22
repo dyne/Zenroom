@@ -52,6 +52,13 @@ local function dicts_reduce(dicts, params)
    end
 end
 
+When("create the new dictionary", function()
+		ACK.new_dictionary = { }
+		ZEN.CODEC.new_dictionary = { name = 'new dictionary',
+								encoding = check_codec('new dictionary'),
+								zentype = 'dictionary' }
+end)
+
 When("find the max value '' for dictionaries in ''", function(name, arr)
         ZEN.assert(ACK[arr], "No dictionaries found in: "..arr)
 		ZEN.assert(not ACK.max_value, "Cannot overwrite existing object: "..'max value')

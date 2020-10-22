@@ -77,6 +77,13 @@ end
 When("remove '' from ''", function(ele,from) _when_remove(ele, from) end)
 When("remove the '' from ''", function(ele,from) _when_remove(ele, from) end)
 
+When("create the new array", function()
+		ACK.new_array = { }
+		ZEN.CODEC.new_array = { name = 'new array',
+								encoding = check_codec('new array'),
+								zentype = 'array' }
+end)
+						   
 When("create the copy of element '' in array ''", function(pos, arr)
 		ZEN.assert(ACK[arr], "No array found in: "..arr)
 		ZEN.assert(isarray(ACK[arr]), "Not an array: "..arr)
