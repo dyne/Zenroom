@@ -35,6 +35,10 @@ echo "### [array]" >> $FILE
 print $(_parse array when) | yq -y . >> $FILE
 echo "### [array]" >> $FILE
 
+echo "### [random]" >> $FILE
+print $(_parse random when) | yq -y . >> $FILE
+echo "### [random]" >> $FILE
+
 echo "### [hash]" >> $FILE
 print $(_parse hash when) | yq -y . >> $FILE
 echo "### [hash]" >> $FILE
@@ -54,6 +58,15 @@ echo "### [petition]" >> $FILE
 echo "### [dp3t]" >> $FILE
 print $(_parse dp3t when) | yq -y . >> $FILE
 echo "### [dp3t]" >> $FILE
+
+echo "### [secshare]" >> $FILE
+print $(_parse secshare when) | yq -y . >> $FILE
+echo "### [secshare]" >> $FILE
+
+echo "### [validators]" >> $FILE
+print $(_parse validators when) | yq -y . >> $FILE
+echo "### [validators]" >> $FILE
+
 ##print $(_parse given given
 ##		_parse when when
 ##		_parse then then

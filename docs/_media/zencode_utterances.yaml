@@ -2,6 +2,7 @@
 given:
   - given: nothing
   - given: am ''
+  - given: my name is in a '' named ''
   - given: have a ''
   - given: have a '' in ''
   - given: have a '' from ''
@@ -16,14 +17,9 @@ given:
 when:
   - when: append '' to ''
   - when: create the ''
-  - when: move '' in ''
   - when: write string '' in ''
   - when: write number '' in ''
   - when: set '' to '' as ''
-  - when: create the random ''
-  - when: create the serialization of ''
-  - when: create the flattening of ''
-  - when: create the serialization of data
   - when: create the cbor of ''
   - when: create the json of ''
   - when: verify '' is equal to ''
@@ -34,8 +30,14 @@ when:
   - when: number '' is more than ''
   - when: number '' is more or equal than ''
   - when: rename the '' to ''
+  - when: copy the '' to ''
   - when: split the rightmost '' bytes of ''
   - when: split the leftmost '' bytes of ''
+  - when: create the result of '' + ''
+  - when: create the result of '' - ''
+  - when: create the result of '' * ''
+  - when: create the result of '' / ''
+  - when: create the result of '' % ''
   - when: set '' as '' with ''
   - when: append '' as '' to ''
   - when: write '' as '' in ''
@@ -59,18 +61,24 @@ then:
 ### [then]
 ### [array]
 array:
+  - when: remove '' from ''
+  - when: remove the '' from ''
+  - when: insert '' in ''
+  - when: insert the '' in ''
+  - when: the '' is not found in ''
+  - when: the '' is found in ''
+### [array]
+### [random]
+random:
+  - when: create the random ''
+  - when: randomize the '' array
   - when: create the array of '' random objects
   - when: create the array of '' random objects of '' bits
   - when: create the array of '' random numbers
   - when: create the array of '' random numbers modulo ''
   - when: create the aggregation of array ''
   - when: pick the random object in ''
-  - when: randomize the '' array
-  - when: remove the '' from ''
-  - when: insert the '' in ''
-  - when: the '' is not found in ''
-  - when: the '' is found in ''
-### [array]
+### [random]
 ### [hash]
 hash:
   - when: create the hash of ''
@@ -86,9 +94,9 @@ hash:
 ecdh:
   - when: create the keypair
   - when: encrypt the secret message '' with ''
-  - when: decrypt the secret message with ''
-  - when: encrypt the message for ''
-  - when: decrypt the secret message from ''
+  - when: decrypt the text of '' with ''
+  - when: encrypt the secret message of '' for ''
+  - when: decrypt the text of '' from ''
   - when: create the signature of ''
   - when: verify the '' is signed by ''
   - when: verify the '' has a signature in '' by ''
@@ -122,3 +130,12 @@ dp3t:
   - when: create the ephemeral ids for today
   - when: create the proximity tracing of infected ids
 ### [dp3t]
+### [secshare]
+secshare:
+  - when: create the secret shares of '' with '' quorum ''
+  - when: compose the secret using ''
+### [secshare]
+### [validators]
+validators:
+  - when: ''''' is a valid email'
+### [validators]
