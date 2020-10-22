@@ -42,6 +42,10 @@ ZEN.add_schema({
          if obj.list then
 			res.list = deepmap(function(o) return ZEN.get(o,".",ECP.new) end, obj.list )
 		 end
+		 if obj.signature then
+			res.signature = { r = ZEN.get(obj.signature, 'r'),
+							  s = ZEN.get(obj.signature, 's')}
+		 end
          return res
       end,
       petition_signature = function(obj)
@@ -72,6 +76,9 @@ When("create the petition ''", function(uid)
 						neg = { left = ECP.infinity(),
 								right = ECP.infinity()  } }
 		   }
+		ZEN.CODEC.petition = { name = 'petition',
+							   encoding = check_codec('petition'),
+							   zentype = 'schema' }
 		-- generate an ECDH signature of the (encoded) petition using the
 		-- credential keys
 		-- ecdh = ECDH.new()
