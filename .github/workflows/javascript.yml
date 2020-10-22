@@ -1,5 +1,10 @@
 name: Test javascript bindings
-on: [push]
+on:
+  push:
+    paths:
+    - '!docs/**'
+    - '!examples/**'
+    - '!*.md'
 env:
   EM_VERSION: 1.39.15
   NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
