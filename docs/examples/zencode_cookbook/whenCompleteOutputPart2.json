@@ -12,48 +12,48 @@
     "public_key": "BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
   },
   "my10RandomNumbersArray": [
-    53569,
-    24248,
-    60238,
-    46518,
-    29541,
-    12022,
-    2355,
-    58095,
-    56619,
-    21929
+    45924,
+    20226,
+    48305,
+    18567,
+    23653,
+    49109,
+    54327,
+    24852,
+    53700,
+    36511
   ],
-  "my128BitsRandom": "5XsSIXmaZbf5ikQgMSVGjQ==",
+  "my128BitsRandom": "VyJ47aH6+hysFuthAZJP+A==",
   "my16RandomNumbersModulo1000Array": [
-    951,
-    798,
-    154,
-    278,
-    750,
-    239,
-    268,
-    580,
-    600,
-    564,
-    163,
-    212,
-    500,
-    202,
-    32,
-    502
+    363,
+    537,
+    653,
+    517,
+    171,
+    62,
+    569,
+    248,
+    238,
+    518,
+    541,
+    22,
+    355,
+    95,
+    619,
+    929
   ],
   "my256BitsRandomObjectsArray": [
+    "GEvo1BlqnEwLrglTAQpWTZu7Z3sLRrYZ54eiO/EEb0I=",
     "nZWZYQvfuo/Ffin7ssTg7gSPc8wMcAc/7tll5SaSMOA=",
     "jOC52BsZubEqimMqCo5h/QXZj9LNycdkKudrC3Lcy3A=",
     "YLhID/K+5U6nwyGfJ6STrZv9/cSLtw1Rj8x60JhHkO0=",
-    "zGGrBmKs0WR2t4X64Y1kBEQWiOzT4V87HQcDEOyves0=",
-    "ZLMCT7G8h0hlXNW/N9QUYcTRn44r3HGazZ4FApP+3g8="
+    "zGGrBmKs0WR2t4X64Y1kBEQWiOzT4V87HQcDEOyves0="
   ],
   "my4RandomObjectsArray": [
-    "br5gmh+cSRNAvocKCmAD0OlGrHM0SppnvEjlMHpV6tsuXbuOPBPjLN3SL7s0Z1kDDR92VSF2l3Az1K1+LyWO1w==",
-    "cmTV4E+a6GE9PY1unEaCyb1Mn1TDDB1WGjvBNXkBDAufdQILxJv9AvF71pMHTlI55OZ3pH08vOIdcGfhzUUmQQ==",
-    "LSHFW45Tl51+cm3VF4UUmFWFUCmQp/xkHUfZruoMtaIEt5swMbCPC00IlnO0P9qXkUmjtdzdkP7gLZAQ3Am4nw==",
-    "VVDAaAucQMiZ4NDQX06AGW1pmSHo/dZ9IEg8V3YuRdcYS+jUGWqcTAuuCVMBClZNm7tnewtGthnnh6I78QRvQg=="
+    "vIXGZmzovnpG7Q/4mUJsO+V7EiF5mmW3+YpEIDElRo1uvmCaH5xJE0C+hwoKYAPQ6UasczRKmme8SOUwelXq2w==",
+    "Ll27jjwT4yzd0i+7NGdZAw0fdlUhdpdwM9Stfi8ljtdyZNXgT5roYT09jW6cRoLJvUyfVMMMHVYaO8E1eQEMCw==",
+    "n3UCC8Sb/QLxe9aTB05SOeTmd6R9PLziHXBn4c1FJkEtIcVbjlOXnX5ybdUXhRSYVYVQKZCn/GQdR9mu6gy1og==",
+    "BLebMDGwjwtNCJZztD/al5FJo7Xc3ZD+4C2QENwJuJ9VUMBoC5xAyJng0NBfToAZbWmZIej91n0gSDxXdi5F1w=="
   ],
   "myArrayRenderedToCBOR": "g1g8U0dWc2JHOGdWMjl5YkdRaElHMTVSbWx5YzNSUFltcGxZM1FzSUcxNVJtbHljM1JCY25KaGVWc3dYUT09WDxTR1ZzYkc4Z1YyOXliR1FoSUcxNVJtbHljM1JQWW1wbFkzUXNJRzE1Um1seWMzUkJjbkpoZVZzeFhRPT1YPFNHVnNiRzhnVjI5eWJHUWhJRzE1Um1seWMzUlBZbXBsWTNRc0lHMTVSbWx5YzNSQmNuSmhlVnN5WFE9PQ==",
   "myCopyOfFirstArray": [
@@ -128,5 +128,5 @@
   "myThirdString": "...and good morning!",
   "myThirteenStringPassword": "my funky password",
   "myTwelfthStringToBeHashedUsingPBKDF2": "hash me to pbkdf2",
-  "newRandomObject": "XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyBXInjtofr6HKwW62EBkk/4vIXGZmzovnpG7Q/4mUJsOw=="
+  "newRandomObject": "XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="
 }

@@ -63,7 +63,6 @@ and I rename the 'result' to 'SumTransactionProductAmountAfterTheta'
 # Here we search for a dictionary what a certain name in a list. 
 # This could be useful when searching for a certain transaction in different data sets
 # We are loading the string to match from the dataset.
-
 When the 'dictionaryToBeFound' is found in 'TransactionsBatchA'
 
 # Here we are doing the opposite, so check the a dictionary is not in the list
@@ -77,6 +76,12 @@ and the 'not.there' is not found in 'TransactionsBatchA'
 # the values we want to insert are all numbers
 When I create the 'number dictionary'
 and I rename the 'number dictionary' to 'ABC-TransactionsAfterTheta'
+
+# COPY
+# You can copy a dictionary that is nested into a list of dictionaries
+# to the root level of the data, to make manipulation and visibility easier.
+When I create the copy of 'Information' from dictionary 'TransactionsBatchA'
+And I rename the 'copy' to 'copyOfInformationBatchA'
 
 # INSERT in Dictionary
 # We can use the "insert" statement to add an element to a dictionary, as we would do with an array
@@ -104,9 +109,13 @@ And I rename the 'hash' to 'sha512hashOf:ABC-TransactionsAfterTheta'
 When I create the key derivation of 'ABC-TransactionsAfterTheta' with password 'myVerySecretPassword'
 And I rename the 'key_derivation' to 'pbkdf2Of:ABC-TransactionsAfterTheta'
 
+# CBOR 
+# You can render a whole (list of) dictionary as CBOR
 When I create the cbor of 'TransactionsBatchA'
 And I rename the 'cbor' to 'CBORof:TransactionsBatchA'
 
+
+# Let's print it all out!
 Then print the 'ABC-TransactionsAfterTheta'
 and print the 'Theta'
 and print the 'ABC-TransactionsAfterTheta.signature'
@@ -114,5 +123,4 @@ and print the 'Information' inside 'TransactionsBatchA'
 and print the 'sha512hashOf:ABC-TransactionsAfterTheta'
 and print the 'pbkdf2Of:ABC-TransactionsAfterTheta'
 and print the 'CBORof:TransactionsBatchA'
-# and print the 'TransactionsBatchA'
-# and print the 'TransactionsBatchB'
+and print the 'copyOfInformationBatchA'

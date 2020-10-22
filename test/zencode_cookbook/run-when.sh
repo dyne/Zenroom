@@ -224,6 +224,13 @@ When I insert 'myFirstString' in 'myFirstArray'
 # and the name of an array - we don't mix code and data! 
 When I remove the 'mySixteenthString' from 'myJustRenamedArray'
 
+# COPY (element of array)
+# You can copy a certain element from an array, to a new object named "copy", with the
+# same encoding of the array, in the root level of the data. 
+# We are immeediately renaming the outout for your convenience.
+When I create the copy of element '3' in array 'myFourthArray'
+and I rename the 'copy' to 'copyOfElement3OfmyFourthArray'
+
 # SPLIT (leftmost, rightmost)
 # The "split" statements, take as input the name of a string and a numeric value,
 # the statement removes the leftmost/outmost characters from the string 

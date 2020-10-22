@@ -43,6 +43,7 @@ When I set 'myNewlyCreatedNumberInBaseSomething' to '42' base '16'
 
 # CREATE the CBOR/JSON
 # You can render an object into CBOR, or render it JSON (if it was imported as JSON).
+# This is useful when you want to perform operations on larger datasets
 
 When I create the cbor of 'myFirstArray'
 And I rename the 'cbor' to 'myArrayRenderedToCBOR'

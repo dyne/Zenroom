@@ -51,7 +51,9 @@ We grouped together all the statements that perform object manipulation, so:
  
  ***Remove*** an element from an array
  
- ***Split*** a string
+ ***Copy element of array*** to a new simple object
+ 
+ ***Split string*** using leftmost or rightmost bytes
  
  ***Randomize*** the elements of an array
  
@@ -213,6 +215,8 @@ The last group includes all the statements that are exclusive to ***dictionary**
 
 Operations with dictionaries allow you to:
 
+
+
 ***Find maximum and minimum***: compare the homonym elements in each dictionary, and find the one with the highest/lowest value. 
 
 ***Conditioned sum***: sum homonym elements in each dictionary, only if a certain element in that dictionary is higher/lower than a certain value. 
@@ -221,7 +225,12 @@ Operations with dictionaries allow you to:
 
 ***Find dictionary in list***: browse the list of see if a dictionary name matches or not a certain string.
 
-***Create a dictionary***: create a dictionary on the fly, using values computed in the script and insert elements into it
+***Create a dictionary***: create a dictionary on the fly, using values computed in the script and insert elements into it.
+
+***Copy a dictionary***: copy a dictionary that is nested into another dictionary, at the root level of the data, to manipulate it more easily.
+
+
+
 
 
 In the script we'll use as example we'll load a complex dataset, containing dictionaries that mimic records of transactions. Not that the dictionaries do not always have the same exact structure:
@@ -244,7 +253,7 @@ This part of the script load the dictionaries along with some simple objects:
 
 [](../_media/examples/zencode_cookbook/dictionariesGiven.zen ':include :type=code gherkin')
 
-and This part of the script does the computation:
+and this part of the script does the computation:
 
 [](../_media/examples/zencode_cookbook/dictionariesWhen.zen ':include :type=code gherkin')
 
