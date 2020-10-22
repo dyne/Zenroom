@@ -168,3 +168,14 @@ When("verify '' is a email", function(name)
 		ZEN.assert(res, err)
 end)
 
+When("verify '' contains a list of emails", function(name)
+		local A = ACK[name]
+		ZEN.assert(A, "Object not found: "..name)
+		ZEN.assert(luatype(A) == 'table', "Object is not a container: "..name)
+		local res, err
+		for k,v in pairs(A) do
+		   res, err = validemail(O.to_string(v))
+		   ZEN.assert(res, (err or "OK") .. " on email: ".. O.to_string(v))
+		end
+end)
+
