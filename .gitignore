@@ -24,6 +24,7 @@ src/zenroom.js
 src/zenroom.js.mem
 src/zenroom.wasm
 src/zenroom-shared
+src/zenroom.command
 build/Zenroom-*
 build/xtensa-*
 build/*wasm
