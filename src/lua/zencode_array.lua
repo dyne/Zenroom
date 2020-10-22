@@ -106,10 +106,14 @@ When("insert '' in ''", function(ele, dest)
            table.insert(ACK[dest], ACK[ele])
         elseif ZEN.CODEC[dest].zentype == 'dictionary' then
            ACK[dest][ele] = ACK[ele]
+        elseif ZEN.CODEC[dest].zentype == 'schema' then
+           ACK[dest][ele] = ACK[ele]
 		else
 		   ZEN.assert(false, "Invalid destination type: "..ZEN.CODEC[dest].zentype)
         end
 		ZEN.CODEC[dest][ele] = ZEN.CODEC[ele]
+		ACK[ele] = nil
+		ZEN.CODEC[ele] = nil
 end)
 
 -- When("insert the '' in ''", function(ele,arr)
