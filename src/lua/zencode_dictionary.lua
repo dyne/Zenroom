@@ -164,7 +164,7 @@ end)
 When("create the copy of '' from dictionary ''", function(name, dict)
 		ZEN.assert(ACK[dict], "No dictionary found in: "..dict)
 		ZEN.assert(ACK[dict][name], "No element found in: "..dict.."."..name)
-		ACK.copy = ACK[dict][name]
+		ACK.copy = deepcopy(ACK[dict][name])
 		-- TODO: support nested arrays or dictionaries
 		ZEN.CODEC.copy = { name = name,
 						   encoding = ZEN.CODEC[dict].encoding,

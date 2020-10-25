@@ -278,27 +278,6 @@ function coco.verify_cred_petition(vk, Theta, zeta, uid)
    return true
 end
 
--- takes an array of bigs and a curve order (modulo)
-function coco.lagrange_interpolation(indexes)
-   ZEN.assert(type(indexes) == "table", "Lagrange interpolation argument is not an array")
-   local l = {}
-   local numerator
-   local denominator
-   for i in indexes do
-	  numerator = BIG.new(1)
-	  denominator = BIG.new(1)
-	  for j in indexes do
-		 if (j ~= i)
-		 then
-            numerator = numerator * (x - j)
-            denominator = denominator * (i - j)
-		 end
-		 l[#l+1] = numerator * denominator:modinv(O)
-	  end
-   end
-   return l
-end
-
 function coco.prove_sign_petition(pub, m)
    -- sign == vote
    local k = INT.random()
