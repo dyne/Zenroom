@@ -36,9 +36,10 @@ ZEN.add_schema({
       petition_scores = petition_scores_f,
       petition = function(obj)
          local res = { uid = ZEN.get(obj,'uid'),
-                       owner = ZEN.get(obj, 'owner', ECP.new),
                        scores = petition_scores_f(obj.scores) }
+		 if obj.owner then res.owner = ZEN.get(obj, 'owner', ECP.new) end
          if obj.vkeys then res.vkeys = verifier_f(obj.vkeys) end
+		 if obj.verifier then res.verifier = verifier_f(obj.verifier) end
          if obj.list then
 			res.list = deepmap(function(o) return ZEN.get(o,".",ECP.new) end, obj.list )
 		 end
