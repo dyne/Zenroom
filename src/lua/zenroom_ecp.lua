@@ -26,4 +26,9 @@ function ecp.random()
    return ecp.mapit(OCTET.random(64))
 end
 
+function ecp.prime()
+   -- TODO: retrieve from milagro's ROM, hardcoded now for BLS383
+   return BIG.new( OCTET.from_hex('5565569564AB6EB5A06DADC41FEA9284A0AD462CF365A511AC31B801696124F47A8C3F298A64852BDA371D6485AAB0AB') )
+end
+
 return ecp
