@@ -123,8 +123,9 @@ int _fp_to_big(big *dst, FP *src) {
 static int lua_new_ecp(lua_State *L) {
 	// unsafe parsing into BIG, only necessary for tests
 	// deactivate when not running tests
+	void *tx;
 #ifdef DEBUG
-	void *tx = luaL_testudata(L, 1, "zenroom.big");
+	tx = luaL_testudata(L, 1, "zenroom.big");
 	void *ty = luaL_testudata(L, 2, "zenroom.big");
 	if(tx && ty) {
 		ecp *e = ecp_new(L); SAFE(e);
@@ -144,7 +145,15 @@ static int lua_new_ecp(lua_State *L) {
 			warning(L,"new ECP value out of curve (points to infinity)");
 		return 1; }
 #endif
-
+	tx = luaL_testudata(L, 1, "zenroom.big");
+	if(tx) {
+		ecp *e = ecp_new(L); SAFE(e);
+		big *x;
+		x = big_arg(L, 1); SAFE(x);
+		if(!ECP_setx(&e->val, x->val, 0))
+			warning(L,"new ECP value out of curve (points to infinity)");
+		return 1;
+	}
 	// We protect well this entrypoint since parsing any input is at risk
 	// Milagro's _fromOctet() uses ECP_BLS383_set(ECP_BLS383 *P,BIG_384_29 x)
 	// then converts the BIG to an FP modulo using FP_BLS383_nres.
