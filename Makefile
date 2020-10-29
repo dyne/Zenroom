@@ -162,7 +162,7 @@ clean:
 	fi
 	rm -f ${pwd}/lib/milagro-crypto-c/CMakeCache.txt
 	rm -rf ${pwd}/lib/milagro-crypto-c/CMakeFiles
-	git restore ${pwd}/lib/milagro-crypto-c/CPackConfig.cmake
+	git checkout ${pwd}/lib/milagro-crypto-c/CPackConfig.cmake
 	make clean -C ${pwd}/src
 	make clean -C ${pwd}/bindings
 	rm -f ${extras}/index.*

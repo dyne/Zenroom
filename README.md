@@ -30,3 +30,63 @@ introduction to the love we put in craftsmanship.
 
 **Zenroom is licensed as AGPLv3; we are open to grant exceptions on a commercial basis.**
 
+## Build
+
+Dependencies: makefile, cmake, zsh, gcc
+
+Optional: musl-libc, emscripten for wasm builds
+
+Use this command sequence:
+
+```
+git checkout https://github.com/dyne/zenroom
+cd zenroom
+make linux
+```
+
+to create the CLI executable in `src/zenroom`
+
+```
+make linux-lib
+```
+
+to create the shared library in `src/libzenroom-x86_64.so`
+
+```
+make
+```
+
+to list more available targets
+
+
+## License
+
+Copyright (C) 2017-2020 Dyne.org foundation
+
+Designed and written by Denis Roio with the help of Puria Nafisi Azizi
+
+documentation and testing by Andrea D'Intino
+
+seccomp isolation and microkernel port by Daniele Lacamera
+
+reviews and suggestions contributed by: Richard Stallman, Enrico
+Zimuel and Sofía Celi
+
+Special thanks to our colleagues in the DECODE project Francesca
+Bria, George Danezis, Ola Bini, Mark de Villiers, Ivan Jelincic,
+Alberto Sonnino, Jim Barritt, Christian Espinoza, Samuel Mulube and
+Nina Boelsums.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+ 
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public
+License along with this program.  If not, see
+<https://www.gnu.org/licenses/>.
