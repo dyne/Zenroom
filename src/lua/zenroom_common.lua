@@ -305,13 +305,32 @@ function deepmap(fun,t,...)
 end
 
 function isarray(obj)
-   if not obj then error("Argument of isarray() is nil",2) end
-   if luatype(obj) ~= 'table' then error("Argument is not a table: "..type(obj),2) end
+   if not obj then
+	  warn("Argument of isarray() is nil")
+	  return 0
+   end
+   if luatype(obj) ~= 'table' then return 0 end -- error("Argument is not a table: "..type(obj)
    local count = 0
    for k, v in pairs(obj) do
 	  -- check that all keys are numbers
 	  -- don't check sparse ratio (cjson's lua_array_length)
 	  if luatype(k) ~= "number" then return 0 end
+	  count = count + 1
+   end
+   return count
+end
+
+function isdictionary(obj)
+   if not obj then
+	  warn("Argument of isdictionary() is nil")
+	  return 0
+   end
+   if luatype(obj) ~= 'table' then return 0 end -- error("Argument is not a table: "..type(obj)
+   local count = 0
+   for k, v in pairs(obj) do
+	  -- check that all keys are numbers
+	  -- don't check sparse ratio (cjson's lua_array_length)
+	  if luatype(k) ~= "string" then return 0 end
 	  count = count + 1
    end
    return count

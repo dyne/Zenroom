@@ -24,7 +24,7 @@ local function check_container(name)
    if ZEN.CODEC[name] then
 	  ZEN.assert(ZEN.CODEC[name].zentype ~= 'element', "Invalid container: "..name.." is a "..ZEN.CODEC[name].zentype)
    else
-	  warn("Object has no CODEC registration: "..name)
+	  xxx("Object has no CODEC registration: "..name)
    end
 end
 
@@ -35,7 +35,7 @@ local function check_element(name)
    if ZEN.CODEC[name] then
 	  ZEN.assert(ZEN.CODEC[name].zentype == 'element', "Invalid element: "..name.." is a "..ZEN.CODEC[name].zentype)
    else
-	  warn("Object has no CODEC registration: "..name)
+	  xxx("Object has no CODEC registration: "..name)
    end
    return o
 end
@@ -47,9 +47,14 @@ local function _when_remove(ele, from)
 		local newdest = { }
         if not obj then -- inline key name (string) requires dictionary
 		   if ZEN.CODEC[from] then
-			  ZEN.assert(ZEN.CODEC[from].zentype ~= 'dictionary', "Element "..ele.." not found and target "..from.." is not a dictionary")
+			  ZEN.assert(
+				 (ZEN.CODEC[from].zentype ~= 'dictionary')
+				 or
+				 (ZEN.CODEC[from].zentype ~= 'schema')
+				 , "Element "..ele.." not found and target "
+				 ..from.." is not a dictionary")
 		   else
-			  warn("Object has no CODEC registration: "..from)
+			  xxx("Object has no CODEC registration: "..from)
 		   end
            ZEN.assert(ACK[from][ele], "Key not found: "..ele.." in dictionary "..from)
            ACK[from][ele] = nil -- remove from dictionary
@@ -59,7 +64,7 @@ local function _when_remove(ele, from)
 		   if ZEN.CODEC[from] then
 			  ZEN.assert(ZEN.CODEC[from].zentype == 'array', "Element "..ele.." found and target "..from.." is not an array")
 		   else
-			  warn("Object has no CODEC registration: "..from)
+			  xxx("Object has no CODEC registration: "..from)
 		   end
 		   -- check_element(ele)
            local tempp = ACK[from]

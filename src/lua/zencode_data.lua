@@ -222,7 +222,7 @@ function check_codec(value)
 	  return CONF.output.encoding.name
    end
    if not ZEN.CODEC[value] then
-	  warn("Object has no CODEC registration: "..value)
+	  xxx("Object has no CODEC registration: "..value)
 	  return CONF.output.encoding.name
    end
    if ZEN.CODEC[value].zentype == 'schema' then
