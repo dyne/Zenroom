@@ -54,6 +54,9 @@ linux: ${SOURCES}
 linux-lib: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o libzenroom-${ARCH}.so ${LDFLAGS} ${LDADD}
 
+lib-static: ${SOURCES}
+	${AR} rcs libzenroom-${ARCH}.a ${SOURCES} ${LDADD}
+
 luarock: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o octet.so ${LDFLAGS} ${LDADD}
 	${CC} ${CFLAGS} ${SOURCES} -o ecdh.so ${LDFLAGS} ${LDADD}
@@ -66,6 +69,9 @@ python: ${SOURCES}
 
 go: ${SOURCES}
 	${CC} -shared ${SOURCES} zen_go.o -o libzenroomgo.so ${LDFLAGS} ${LDADD}
+
+erlang: ${SOURCES} erlang.o
+	${CC} -shared ${CFLAGS} ${SOURCES} erlang.o -o zenroom.so ${LDFLAGS} ${LDADD}
 
 osx: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom.command ${LDFLAGS} ${LDADD}

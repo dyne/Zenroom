@@ -1,3 +1,23 @@
+/*  Zenroom (DECODE project)
+ *
+ *  (c) Copyright 2020 Dyne.org foundation
+ *  designed, written and maintained by Denis Roio <jaromil@dyne.org>
+ *
+ * This source code is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Public License as published
+ * by the Free Software Foundation; either version 3 of the License,
+ * or (at your option) any later version.
+ *
+ * This source code is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * Please refer to the GNU Public License for more details.
+ *
+ * You should have received a copy of the GNU Public License along with
+ * this source code; if not, write to:
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
 #include <string.h>
 #include <stdint.h>
 
@@ -29,14 +49,15 @@ zencode_exec_erl(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 		return enif_make_badarg(env);
 
 	if (script.size < 1) return argv[0];
+	char *zconf = conf.size < 1 ? NULL : conf.data;
+	char *zkeys = keys.size < 1 ? NULL : keys.data;
+	char *zdata = data.size < 1 ? NULL : data.data;
 
+	// allocate stdout and stderr
 	enif_alloc_binary(MAX_STDOUT, &stdout);
 	enif_alloc_binary(MAX_STDERR, &stderr);
 
-	zencode_exec_tobuf((char*) script.data,
-	                   (char*) conf.data,
-	                   (char*) keys.data,
-	                   (char*) data.data,
+	zencode_exec_tobuf((char*) script.data, zconf, zkeys, zdata,
 	                   (char*) stdout.data, MAX_STDOUT,
 	                   (char*) stderr.data, MAX_STDERR);
 
