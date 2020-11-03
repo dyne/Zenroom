@@ -211,7 +211,7 @@ octet* o_arg(lua_State *L,int n) {
 			lerror(L,"failed implicit conversion from string to octet");
 			return 0;
 		}
-		if(!len || len>MAX_STRING) {
+		if(!len || len>MAX_OCTET) {
 			error(L, "invalid string size: %u", len);
 			lerror(L,"failed implicit conversion from string to octet");
 		return 0;
@@ -503,7 +503,7 @@ static int from_string(lua_State *L) {
 	luaL_argcheck(L, s != NULL, 1, "string expected");
 	const int len = strlen(s);
 	// STRING SIZE CHECK before import to OCTET
-	if(!len || len>MAX_STRING) {
+	if(!len || len>MAX_OCTET) {
 		error(L, "%s: invalid string size: %u", __func__,len);
 		lerror(L, "operation aborted");
 		return 0; }
@@ -821,7 +821,7 @@ static int pad(lua_State *L) {
     @function octet:zero(length)
 */
 static int zero(lua_State *L) {
-	const int len = luaL_optnumber(L, 1, MAX_STRING);
+	const int len = luaL_optnumber(L, 1, MAX_OCTET);
 	if(len<1) {
 		lerror(L, "Cannot create a zero length octet");
 		return 0;
