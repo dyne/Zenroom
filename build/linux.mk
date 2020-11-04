@@ -91,6 +91,14 @@ musl-lib: ldadd += /usr/lib/${ARCH}-linux-musl/libc.a
 musl-lib: cflags += -DLIBRARY
 musl-lib: apply-patches milagro lua53 embed-lua
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	ECP=${ecp_curve} ECDH=${ecdh_curve} MILIB=${milib} \
+	make -C src lib-static
+
+linux-lib-static: cflags := -O3 ${cflags_protection} -fPIE -fPIC
+linux-lib-static: cflags += -DLIBRARY
+linux-lib-static: apply-patches milagro lua53 embed-lua
+	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	ECP=${ecp_curve} ECDH=${ecdh_curve} MILIB=${milib} \
 	make -C src lib-static
 
 linux-lib-debug: cflags += -shared -DLIBRARY

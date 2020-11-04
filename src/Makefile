@@ -55,7 +55,12 @@ linux-lib: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o libzenroom-${ARCH}.so ${LDFLAGS} ${LDADD}
 
 lib-static: ${SOURCES}
-	${AR} rcs libzenroom-${ARCH}.a ${SOURCES} ${LDADD}
+	ar x ../lib/lua53/src/liblua.a
+	ar x ${MILIB}/libamcl_curve_${ECP}.a
+	ar x ${MILIB}/libamcl_pairing_${ECP}.a
+	ar x ${MILIB}/libamcl_curve_${ECDH}.a
+	ar x ${MILIB}/libamcl_core.a
+	${AR} rcs libzenroom-${ARCH}.a *.o
 
 luarock: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o octet.so ${LDFLAGS} ${LDADD}
