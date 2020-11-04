@@ -1074,7 +1074,7 @@ int luaopen_octet(lua_State *L) {
 		{"__bxor",xor_n},
 		{"__eq",eq},
 		{"__gc", o_destroy},
-		{"__tostring",to_hex},
+		{"__tostring",to_base64},
 		{NULL,NULL}
 	};
 	zen_add_class("octet", octet_class, octet_methods);
