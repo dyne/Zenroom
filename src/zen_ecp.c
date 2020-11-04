@@ -107,7 +107,6 @@ int ecp_destroy(lua_State *L) {
 }
 
 int _fp_to_big(big *dst, FP *src) {
-	FP_reduce(src);
 	FP_redc(dst->val,src);
 	return 1;
 }
@@ -413,12 +412,10 @@ static int ecp_octet(lua_State *L) {
 */
 static int ecp_get_x(lua_State *L) {
 	ecp *e = ecp_arg(L, 1); SAFE(e);
-	FP fx;
+	ECP_affine(&e->val);
 	big *x = big_new(L);
 	big_init(x);
-	FP_copy(&fx, &e->val.x);
-	FP_reduce(&fx);
-	FP_redc(x->val,&fx);
+	_fp_to_big(x, &e->val.x);
 	return 1;
 }
 
@@ -430,33 +427,10 @@ static int ecp_get_x(lua_State *L) {
 */
 static int ecp_get_y(lua_State *L) {
 	ecp *e = ecp_arg(L, 1); SAFE(e);
-	FP fy;
+	ECP_affine(&e->val);
 	big *y = big_new(L);
 	big_init(y);
-	FP_copy(&fy, &e->val.y);
-	FP_reduce(&fy);
-	FP_redc(y->val,&fy);
-	return 1;
-}
-
-static int ecp_table(lua_State *L) {
-	ecp *e = ecp_arg(L, 1); SAFE(e);
-	octet *o;
-	ECP_affine(&e->val);
-	big *x,*y;
-	x = big_new(L); big_init(x);
-	lua_pop(L,1); _fp_to_big(x, &e->val.x);
-	o = new_octet_from_big(L,x);
-	lua_pop(L,1);
-	push_octet_to_hex_string(L,o);
-	lua_setfield(L,2,"x");
-	// y
-	y = big_new(L); big_init(y);
-	lua_pop(L,1); _fp_to_big(y, &e->val.y);
-	o = new_octet_from_big(L,y);
-	lua_pop(L,1);
-	push_octet_to_hex_string(L,o);
-	lua_setfield(L,2,"y");
+	_fp_to_big(y, &e->val.y);
 	return 1;
 }
 
@@ -497,7 +471,6 @@ int luaopen_ecp(lua_State *L) {
 		{"isinf",ecp_isinf},
 		{"isinfinity",ecp_isinf},
 		{"octet",ecp_octet},
-		{"table",ecp_table},
 		{"add",ecp_add},
 		{"x",ecp_get_x},
 		{"y",ecp_get_y},
