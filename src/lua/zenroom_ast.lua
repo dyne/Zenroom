@@ -82,6 +82,8 @@ function set_sentence(self, event, from, to, ctx)
    	  exitcode(1)
    	  error("Zencode pattern not found: "..trim(ctx.msg), 1)
    	  return false
+   else
+	  warn("Zencode pattern not found: "....trim(ctx.msg), 1)
    end
 end
 
