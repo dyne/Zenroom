@@ -83,7 +83,7 @@ function set_sentence(self, event, from, to, ctx)
    	  error("Zencode pattern not found: "..trim(ctx.msg), 1)
    	  return false
    else
-	  warn("Zenroom has ignored this statement (maybe Restroom-mw would): "....trim(ctx.msg), 1)
+	  warn("Zenroom has ignored this statement (maybe Restroom-mw would): "..trim(ctx.msg), 1)
    end
 end
 
