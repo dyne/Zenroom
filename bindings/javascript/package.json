@@ -1,9 +1,11 @@
 {
   "name": "zenroom",
-  "version": "1.1.5",
+  "version": "2.0.0",
   "description": "wrapper of Zenroom, a secure and small virtual machine for crypto language processing",
-  "main": "index.js",
-  "repository": "https://github.com/dyne/Zenroom.git",
+  "main": "dist/main/index.js",
+  "typings": "dist/main/index.d.ts",
+  "module": "dist/module/index.js",
+  "repository": "https://github.com/dyne/zenroom.git",
   "homepage": "https://dev.zenroom.org/#/pages/javascript",
   "author": "Puria Nafisi Azizi <puria@dyne.org>",
   "license": "AGPL-3.0",
@@ -31,51 +33,52 @@
   ],
   "scripts": {
     "lint": "npx standard",
-    "make": "cd ../.. && make javascript-npm",
-    "build": "yarn run make && yarn run clean && yarn run transpile",
-    "clean": "rimraf dist/lib",
-    "coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
-    "pretranspile": "mkdirp dist/lib && cp -v ../../build/npm/* dist/lib",
-    "transpile": "npx babel src -d dist",
-    "test": "node index.js && nyc --require @babel/register mocha",
-    "test:html": "nyc report --reporter=html yarn test",
-    "test:watch": "yarn test --watch",
+    "build": "run-s build:*",
+    "build:zenroom": "cd ../.. && make javascript-npm",
+    "build:clean": "rimraf dist/*",
+    "build:copylibs": "mkdirp dist/main && mkdirp dist/module && cp -v ../../build/npm/* dist/main/ && cp -v ../../build/npm/* dist/module",
+    "build:copylibssrc": "cp -v ../../build/npm/* src/",
+    "build:typescript": "tsc -p tsconfig.json",
+    "build:module": "tsc -p tsconfig.module.json",
+    "coverage:old": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
+    "test": "nyc ava",
     "doc": "documentation serve src/wrapper.js --shallow",
     "doc:api": "documentation readme src/wrapper.js -s '⚙️ API' --shallow --markdown-toc false",
     "release": "release-it --no-git.requireCleanWorkingDir",
-    "release:pre": "DEBUG=release-it:* release-it --no-git --preRelease -i pre --publish --ci --npm.skipChecks --disable-metrics"
+    "release:pre": "DEBUG=release-it:* release-it --no-git --preRelease -i pre --publish --ci --npm.skipChecks --disable-metrics",
+    "watch:build": "tsc -p tsconfig.json -w",
+    "watch:test": "nyc --silent ava --watch"
   },
   "files": [
-    "dist"
+    "dist/main",
+    "dist/module",
+    "!**/*.spec.*",
+    "!**/*.json",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md"
   ],
   "devDependencies": {
-    "@babel/cli": "^7.6.4",
-    "@babel/core": "^7.6.4",
-    "@babel/node": "^7.8.7",
-    "@babel/preset-env": "^7.2.0",
-    "@babel/preset-react": "^7.0.0",
-    "@babel/register": "^7.0.0",
-    "babel-plugin-istanbul": "^6.0.0",
-    "babelify": "^10.0.0",
-    "capture-console": "^1.0.1",
-    "chai": "^4.2.0",
-    "codecov": "^3.1.0",
-    "documentation": "^13.0.0",
-    "eslint": "^7.0.0",
-    "eslint-config-airbnb-base": "^14.1.0",
-    "eslint-plugin-import": "^2.14.0",
+    "@ava/typescript": "^1.1.1",
+    "@istanbuljs/nyc-config-typescript": "^1.0.1",
+    "@types/node": "^14.14.6",
+    "ava": "^3.13.0",
+    "codecov": "^3.8.1",
+    "cross-env": "^7.0.2",
+    "documentation": "^13.1.0",
+    "eslint": "^7.12.1",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.22.1",
     "mkdirp": "^1.0.4",
-    "mocha": "^7.1.2",
-    "nyc": "^15.0.1",
-    "release-it": "^14.0.1",
+    "npm-run-all": "^4.1.5",
+    "nyc": "^15.1.0",
+    "release-it": "^14.2.1",
     "rimraf": "^3.0.2",
-    "sinon": "^9.0.2",
-    "standard": "^14.3.3"
+    "standard": "^16.0.1",
+    "ts-node": "^9.0.0",
+    "typescript": "^4.0.5"
   },
-  "dependencies": {
-    "core-js": "^3.6.5",
-    "regenerator-runtime": "*"
-  },
+  "dependencies": {},
   "standard": {
     "ignore": [
       "dist",
@@ -83,20 +86,23 @@
       "test"
     ]
   },
+  "ava": {
+    "failFast": true,
+    "timeout": "60s",
+    "typescript": {
+      "rewritePaths": {
+        "src/": "dist/main/"
+      }
+    },
+    "files": [
+      "!dist/module/**"
+    ]
+  },
   "nyc": {
-    "check-coverage": true,
-    "per-file": true,
-    "lines": 98,
-    "statements": 90,
-    "functions": 90,
-    "branches": 70,
-    "cache": true,
-    "all": true,
-    "include": [
-      "dist/*.js"
-    ],
+    "extends": "@istanbuljs/nyc-config-typescript",
     "exclude": [
-      "zenroom"
+      "**/*.spec.js",
+      "**/zenroom.js"
     ]
   }
 }

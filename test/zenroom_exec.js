@@ -6,13 +6,13 @@ const util = require('util')
 
 const C = require(process.argv[2])()
 
-C.exec_ok = () => 0
-C.exec_error = () => 0
-C.print = text => console.log(text)
-C.printErr = text => console.log(text)
 
 const zenroomExec = function(script, conf = null, keys = null, data = null) {
   C.then(function(Module){
+	Module.exec_ok = () => 0
+	Module.exec_error = () => 0
+	Module.print = text => console.log(text)
+	Module.printErr = text => console.log(text)
     Module.ccall(
       'zenroom_exec',
       'number',

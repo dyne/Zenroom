@@ -344,10 +344,16 @@ int zencode_exec(char *script, char *conf, char *keys, char *data) {
 	int r;
 
 	if(!script) {
-		error(NULL, "NULL string as script for zenroom_exec()");
+		error(NULL, "NULL string as script for zencode_exec()");
+#ifdef __EMSCRIPTEN__
+		EM_ASM(Module.onAbort());
+#endif
 		return EXIT_FAILURE; }
 	if(script[0] == '\0') {
-		error(NULL, "Empty string as script for zenroom_exec()");
+		error(NULL, "Empty string as script for zencode_exec()");
+#ifdef __EMSCRIPTEN__
+		EM_ASM(Module.onAbort());
+#endif
 		return EXIT_FAILURE; }
 
 	char *c, *k, *d;
@@ -357,20 +363,24 @@ int zencode_exec(char *script, char *conf, char *keys, char *data) {
 	Z = zen_init(c, k, d);
 	if(!Z) {
 		error(NULL, "Initialisation failed.");
+#ifdef __EMSCRIPTEN__
+		EM_ASM(Module.onAbort());
+#endif
 		return EXIT_FAILURE; }
 	if(!Z->lua) {
 		error(NULL, "Initialisation failed.");
+#ifdef __EMSCRIPTEN__
+		EM_ASM(Module.onAbort());
+#endif
 		return EXIT_FAILURE; }
 
 	r = zen_exec_zencode(Z, script);
 	if(r) {
+		error(Z->lua, "Error detected. Execution aborted.");
+		zen_teardown(Z);
 #ifdef __EMSCRIPTEN__
 		EM_ASM({Module.exec_error();});
 #endif
-		//		error(r);
-		error(Z->lua, "Error detected. Execution aborted.");
-
-		zen_teardown(Z);
 		return EXIT_FAILURE;
 	}
 
@@ -390,9 +400,15 @@ int zenroom_exec(char *script, char *conf, char *keys, char *data) {
 
 	if(!script) {
 		error(NULL, "NULL string as script for zenroom_exec()");
+#ifdef __EMSCRIPTEN__
+		EM_ASM(Module.onAbort());
+#endif
 		return EXIT_FAILURE; }
 	if(script[0] == '\0') {
 		error(NULL, "Empty string as script for zenroom_exec()");
+#ifdef __EMSCRIPTEN__
+		EM_ASM(Module.onAbort());
+#endif
 		return EXIT_FAILURE; }
 
 	char *c, *k, *d;
@@ -402,29 +418,33 @@ int zenroom_exec(char *script, char *conf, char *keys, char *data) {
 	Z = zen_init(c, k, d);
 	if(!Z) {
 		error(NULL, "Initialisation failed.");
+#ifdef __EMSCRIPTEN__
+		EM_ASM(Module.onAbort());
+#endif
 		return EXIT_FAILURE; }
 	if(!Z->lua) {
 		error(NULL, "Initialisation failed.");
+#ifdef __EMSCRIPTEN__
+		EM_ASM(Module.onAbort());
+#endif
 		return EXIT_FAILURE; }
 
 	r = zen_exec_script(Z, script);
 	if(r) {
+		error(Z->lua, "Error detected. Execution aborted.");
+		zen_teardown(Z);
 #ifdef __EMSCRIPTEN__
 		EM_ASM({Module.exec_error();});
 #endif
-		//		error(r);
-		error(Z->lua, "Error detected. Execution aborted.");
-
-		zen_teardown(Z);
 		return EXIT_FAILURE;
 	}
 
-#ifdef __EMSCRIPTEN__
-	EM_ASM({Module.exec_ok();});
-#endif
 
 	func(Z->lua, "Zenroom operations completed.");
 	zen_teardown(Z);
+#ifdef __EMSCRIPTEN__
+	EM_ASM({Module.exec_ok();});
+#endif
 	return(EXITCODE);
 }
 
