@@ -6,7 +6,7 @@ on:
     - 'examples/**'
     - '*.md'
 env:
-  EM_VERSION: 1.39.15
+  EM_VERSION: latest
   NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
 jobs:
