@@ -1,7 +1,7 @@
 -- This file is part of Zenroom (https://zenroom.dyne.org)
 --
 -- Copyright (C) 2020 Dyne.org foundation
--- Implementation by Alberto Ibrisevich and Denis Roio
+-- Implementation by Alberto Ibrisevic and Denis Roio
 --
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU Affero General Public License as
@@ -26,13 +26,14 @@ G = ECP.generator()
 --method for obtaining a valid EC keypair where the secret key is chosen at random
 function key_gen()
     keypair = { }
+    local sk
     repeat
     sk = OCTET.random(32)
         d = BIG.new(sk)
         if  o <= d then d = BIG.new(0) end --guaranties that the generated keypair is valid
     until (d ~= BIG.new(0)) 
     local P = d*G
-    pk = (P:x()):octet()
+    pk = (P:x()):octet():pad(48)
     keypair.sk = sk
     keypair.pk = pk
     return keypair
@@ -82,7 +83,7 @@ function Sign(sk, m)
     local r = (R:x()):octet():pad(48) --padding is fundamental, otherwise we could lose non-significant zeros
     local s = BIG.mod(k + e*d, o):octet():pad(32)
     local sig = r..s
-    --assert(Verify(P:x(),m,sig), "Invalid signature")
+    assert(Verify(P:x(),m,sig), "Invalid signature")          --comment this line if it is unnecessary
     return sig
 end
 
@@ -103,14 +104,8 @@ function Verify(pk, m, sig)
     local e = BIG.new(hash_tag("BIP0340/challenge", r:octet()..(P:x()):octet()..m)) % o 
     local R = (s*G) - (e*P)     --if the signature is valid the result will be k*G as expected
     assert(not ECP.isinf(R), "Verification failed, point to infinity")
-    --the following is ad-hoc code to fix a suspected bug where, after performing subtraction of points (maybe even other operations) correctly
-    --if we call the coordinates the calues are not the right ones, so we need to recover them through the octet representation of the point
-    local sign, x = OCTET.chop(R:octet(),1)     
-    assert((BIG.new(sign) % BIG.new(2) == BIG.new(0)) , "Verification failed, y is odd")
-    assert((BIG.new(x) == r), "Verification failed")
-    --here are the expected lines of code that are not working atm:
-    --assert((R:y() % BIG.new(2) == BIG.new(0)) , "Verification failed, y is odd")
-    --assert((R:x() == r), "Verification failed")
+    assert((R:y() % BIG.new(2) == BIG.new(0)) , "Verification failed, y is odd")
+    assert((R:x() == r), "Verification failed")
     return true
 end
 

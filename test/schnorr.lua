@@ -6,13 +6,14 @@ G = ECP.generator()
 
 function key_gen()
     keypair = { }
+    local sk
     repeat
     sk = OCTET.random(32)
         d = BIG.new(sk)
         if  o <= d then d = BIG.new(0) end --guaranties that the generated keypair is valid
     until (d ~= BIG.new(0)) 
-    local P = d*G
-    pk = (P:x()):octet()
+    P = d*G
+    pk = (P:x()):octet():pad(48)
     keypair.sk = sk
     keypair.pk = pk
     return keypair
@@ -57,6 +58,7 @@ function Sign(sk, m)
     print("R = ", R)
     print("x_R = ", R:x())
     print("y_R = ", R:y())
+    assert(Verify(P:x(),m,sig), "Invalid signature")
     return sig
 end
 
@@ -77,10 +79,7 @@ function Verify(pk, m, sig)
     local R = (s*G) - (e*P) 
     print("R = ", R)
     assert(not ECP.isinf(R), "Verification failed, point to infinity")
-    local sign, x = OCTET.chop(R:octet(),1)
-    R = ECP.new(BIG.new(x))
-    print("x_R = ", R:x())
-    assert((BIG.new(sign) % BIG.new(2) == BIG.new(0)) , "Verification failed, y is odd")
+    assert((R:y() % BIG.new(2) == BIG.new(0)) , "Verification failed, y is odd")
     assert((R:x() == r), "Verification failed")
     return true
 end
