@@ -82,8 +82,8 @@ function set_sentence(self, event, from, to, ctx)
    	  exitcode(1)
    	  error("Zencode pattern not found: "..trim(ctx.msg), 1)
    	  return false
-   else
-	  warn("Zenroom has ignored this statement (maybe Restroom-mw would): "..trim(ctx.msg), 1)
+   elseif not ctx.Z.OK and not CONF.parser.strict_match then
+	  warn("Zencode pattern ignored: "..trim(ctx.msg), 1)
    end
 end
 
