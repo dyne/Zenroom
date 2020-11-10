@@ -6,54 +6,65 @@ type ZenroomProps = {
   conf?: string | null;
 };
 
-export const zencode_exec = async (zencode: string, props?: ZenroomProps) => {
+type ZenroomResult = {
+  result: string;
+  logs: string;
+};
+
+export const zencode_exec = async (
+  zencode: string,
+  props?: ZenroomProps
+): Promise<ZenroomResult> => {
   const Module = await Zenroom();
   return new Promise((resolve, reject) => {
-    let out = "";
-    let error = "";
+    let result = "";
+    let logs = "";
     const _exec = Module.cwrap("zencode_exec", "number", [
       "string",
       "string",
       "string",
       "string",
     ]);
-    Module.print = (t: string) => (out += t);
-    Module.printErr = (t: string) => (error += t);
+    Module.print = (t: string) => (result += t);
+    Module.printErr = (t: string) => (logs += t);
     Module.exec_ok = () => {
-      resolve(out);
+      resolve({ result, logs });
     };
     Module.exec_error = () => {
-      reject(error);
+      reject({ result, logs });
     };
     Module.onAbort = () => {
-      reject(error);
+      reject({ result, logs });
     };
     const { data = null, keys = null, conf = null } = { ...props };
     _exec(zencode, conf, keys, data);
   });
 };
 
-export const zenroom_exec = async (lua: string, props?: ZenroomProps) => {
+export const zenroom_exec = async (
+  lua: string,
+  props?: ZenroomProps
+): Promise<ZenroomResult> => {
   const Module = await Zenroom();
   return new Promise((resolve, reject) => {
-    let out = "";
-    let error = "";
+    let result = "";
+    let logs = "";
     const _exec = Module.cwrap("zenroom_exec", "number", [
       "string",
       "string",
       "string",
       "string",
     ]);
-    Module.print = (t: string) => (out += t);
-    Module.printErr = (t: string) => (error += t);
+    Module.print = (t: string) => (result += t);
+    Module.printErr = (t: string) => (logs += t);
     Module.exec_ok = () => {
-      resolve(out);
+      resolve({ result, logs });
     };
     Module.exec_error = () => {
-      reject(error);
+      reject({ result, logs });
     };
     Module.onAbort = () => {
-      reject(error);
+      reject({ result, logs });
     };
     const { data = null, keys = null, conf = null } = { ...props };
     _exec(lua, conf, keys, data);

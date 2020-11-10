@@ -9,13 +9,13 @@ test("does exists", (t) => {
 });
 
 test("does run hello world", async (t) => {
-  const r = await zenroom_exec(`print('hello world!')`);
-  t.is(r, "hello world!");
+  const { result } = await zenroom_exec(`print('hello world!')`);
+  t.is(result, "hello world!");
 });
 
 test("does parse data", async (t) => {
-  const r = await zenroom_exec(`print(DATA)`, { data: "DATA INSIDE" });
-  t.is(r, "DATA INSIDE");
+  const { result } = await zenroom_exec(`print(DATA)`, { data: "DATA INSIDE" });
+  t.is(result, "DATA INSIDE");
 });
 
 test("does broke gracefully", async (t) => {
@@ -23,7 +23,7 @@ test("does broke gracefully", async (t) => {
     await zenroom_exec(`broken sapokdao`);
   } catch (e) {
     t.true(
-      e.includes(
+      e.logs.includes(
         `[!] [string "broken sapokdao"]:1: syntax error near 'sapokdao'`
       )
     );
@@ -34,12 +34,12 @@ test("does handle empty zencode", async (t) => {
   try {
     await zencode_exec(null);
   } catch (e) {
-    t.true(e.includes("[!] NULL string as script for zencode_exec()"));
+    t.true(e.logs.includes("[!] NULL string as script for zencode_exec()"));
   }
   try {
     await zencode_exec(``);
   } catch (e) {
-    t.true(e.includes("[!] Empty string as script for zencode_exec()"));
+    t.true(e.logs.includes("[!] Empty string as script for zencode_exec()"));
   }
 });
 
@@ -47,20 +47,20 @@ test("does handle empty lua", async (t) => {
   try {
     await zenroom_exec(null);
   } catch (e) {
-    t.true(e.includes("[!] NULL string as script for zenroom_exec()"));
+    t.true(e.logs.includes("[!] NULL string as script for zenroom_exec()"));
   }
   try {
     await zenroom_exec(``);
   } catch (e) {
-    t.true(e.includes("[!] Empty string as script for zenroom_exec()"));
+    t.true(e.logs.includes("[!] Empty string as script for zenroom_exec()"));
   }
 });
 
 test("does run zencode", async (t) => {
-  const r = await zencode_exec(`scenario simple:
+  const { result } = await zencode_exec(`scenario simple:
   given nothing
   Then print all data`);
-  t.is(r, "[]");
+  t.is(result, "[]");
 });
 
 test("handle broken zencode", async (t) => {
@@ -68,9 +68,24 @@ test("handle broken zencode", async (t) => {
     await zencode_exec(`sapodksapodk`);
   } catch (e) {
     t.true(
-      e.includes(
+      e.logs.includes(
         `[!] [string "ZEN:begin()..."]:2: Invalid Zencode line: sapodksapodk`
       )
     );
   }
+});
+
+test("Executes a zencode correctly", async (t) => {
+  const random_name = Math.random().toString(36).substring(7);
+  const {
+    result,
+  } = await zencode_exec(`Scenario 'credential': credential keygen 
+    Given that I am known as '${random_name}' 
+    When I create the credential keypair 
+    Then print my 'credential keypair'`);
+  t.is(typeof result, "string");
+  const r = JSON.parse(result);
+  t.is(typeof r[random_name], "object");
+  t.is(typeof r[random_name]["credential_keypair"]["public"], "string");
+  t.is(typeof r[random_name]["credential_keypair"]["private"], "string");
 });

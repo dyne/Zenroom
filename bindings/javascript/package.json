@@ -1,6 +1,6 @@
 {
   "name": "zenroom",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "wrapper of Zenroom, a secure and small virtual machine for crypto language processing",
   "main": "dist/main/index.js",
   "typings": "dist/main/index.d.ts",
@@ -47,7 +47,8 @@
     "release": "release-it --no-git.requireCleanWorkingDir",
     "release:pre": "DEBUG=release-it:* release-it --no-git --preRelease -i pre --publish --ci --npm.skipChecks --disable-metrics",
     "watch:build": "tsc -p tsconfig.json -w",
-    "watch:test": "nyc --silent ava --watch"
+    "watch:test": "nyc --silent ava --watch",
+    "watch": "run-p watch:*"
   },
   "files": [
     "dist/main",

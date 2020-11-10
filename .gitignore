@@ -23,6 +23,7 @@ lib/musl
 src/zenroom.js
 src/zenroom.js.mem
 src/zenroom.wasm
+src/zenroom.wasm.js
 src/zenroom-shared
 src/zenroom.command
 build/Zenroom-*

@@ -62,3 +62,4 @@ typings/
 .next
 dist
 src/*.js
+src/*.wasm
