@@ -53,12 +53,9 @@ npm install zenroom
 🎮 Quick Usage
 
 ```javascript
-import zenroom from 'zenroom'
-
+const {zenroom_exec} = require("zenroom");
 const script = `print("Hello World!")`
-zenroom.script(script).zenroom_exec()
-
-// prints in the console.log "Hello World!"
+zenroom_exec(script).then(({result}) => console.log(result)) //=> "Hello World!"
 ```
 
 Detailed documentation of js is available [here](/pages/javascript)
