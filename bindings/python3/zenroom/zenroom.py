@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from enum import auto, Enum
 
 from zenroom._config import LIBZENROOM_LOC
-from zenroom._redirect import output_to, error_to
+from zenroom._redirect import redirect_sys_stream
 from zenroom._utils import case_apply
 
 
@@ -63,7 +63,7 @@ def zencode_exec(script, conf=None, keys=None, data=None):
 def _zenroom_call(language, script, conf, keys, data):
     outbuf = io.BytesIO()
     errbuf = io.BytesIO()
-    with output_to(outbuf), error_to(errbuf):
+    with redirect_sys_stream(True, outbuf), redirect_sys_stream(False, errbuf):
         case_apply(
             language,
             {_ZenLanguage.lua: lua_exec,

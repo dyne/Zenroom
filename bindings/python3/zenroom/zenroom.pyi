@@ -3,7 +3,6 @@ from typing import Any, Optional, Mapping
 from ctypes import CDLL
 
 from zenroom._config import LIBZENROOM_LOC as LIBZENROOM_LOC
-from zenroom._redirect import error_to as error_to, output_to as output_to
 from zenroom._utils import case_apply as case_apply
 
 
