@@ -112,7 +112,8 @@ linux-lib-debug: apply-patches milagro lua53 embed-lua
 	make -C src linux-lib
 
 linux-python3: linux-lib
-	make -C src python
+	@cp -v ${pwd}/src/libzenroom-${ARCH}.so \
+		${pwd}/bindings/python3/zenroom/libzenroom.so
 
 linux-go: apply-patches milagro lua53 embed-lua
 	swig -go -cgo -intgosize 32 ${pwd}/build/swig.i
