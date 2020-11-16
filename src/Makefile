@@ -78,6 +78,10 @@ erlang: ${SOURCES} erlang.o
 osx: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom.command ${LDFLAGS} ${LDADD}
 
+osx-shared: ${SOURCES}
+	# Call libzenroom.so to simplify python bindings
+	${CC} ${CFLAGS} ${SOURCES} -o libzenroom-${ARCH}.so ${LDFLAGS} ${LDADD}
+
 win-exe: LDFLAGS += -static
 win-exe: ${SOURCES}
 	./stamp-exe.sh
