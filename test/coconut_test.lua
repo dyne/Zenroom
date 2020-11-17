@@ -23,9 +23,21 @@ aggsigma = COCONUT.aggregate_creds(cred_keypair.private, {sigmatilde})
 Theta = COCONUT.prove_creds(ca_keypair.verify, aggsigma, secret)
 ret = COCONUT.verify_creds(ca_keypair.verify, Theta)
 assert(ret == true, 'Coconut credentials not verifying')
+
+-- wrong verifier test
+-- sk, pk = COCONUT.ca_keygen()
+-- wca_keypair = { verify = pk, sign = sk }
+-- assert(wca_keypair ~= ca_keypair) -- wrong ca is different
+-- Theta = COCONUT.prove_creds(ca_keypair.verify, aggsigma, secret)
+-- ret = COCONUT.verify_creds(wca_keypair.verify, Theta)
+-- assert(ret == false, 'Coconut credentials not failing')
+
 print('')
 print('[ok] test Coconut')
 print('')
+
+
+
 
 -- Multiple CAs sign
 sk, pk = COCONUT.ca_keygen()

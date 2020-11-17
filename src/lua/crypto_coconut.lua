@@ -50,8 +50,9 @@ Developed for the DECODE project
 ]] .. coco._LICENSE))
 local challenge = G1:octet() .. G2:octet() .. hs:octet()
 function coco.to_challenge(list)
+   local ser = serialize(list)
    -- assert(coco.challenge, "COCONUT secret challenge not set")
-   return INT.new( sha256( challenge .. OCTET.serialize(list)))
+   return INT.new( sha256( challenge .. ser.octets .. OCTET.from_string(ser.strings)))
 end
 
 -- local zero-knowledge proof verifications

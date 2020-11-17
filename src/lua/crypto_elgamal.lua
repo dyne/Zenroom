@@ -46,7 +46,8 @@ Jaromil started writing this code on Tuesday 21st January 2020
 ]] .. elgah._LICENSE))
 local challenge = G:octet() .. hs:octet()
 local function to_challenge(list)
-   return INT.new( sha256( challenge .. OCTET.serialize(list)))
+   local ser = serialize(list)
+   return INT.new( sha256( challenge .. ser.octets .. OCTET.from_string(ser.strings)))
 end
 
 function elgah.keygen()

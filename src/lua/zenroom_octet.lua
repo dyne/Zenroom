@@ -108,7 +108,4 @@ function base58(data)
    end
 end
 
--- serialize an array containing any type of cryptographic numbers
-octet.serialize = function(obj) return OCTET.from_string( CBOR.encode(obj)) end
-
 return octet
