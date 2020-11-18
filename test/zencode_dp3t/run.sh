@@ -24,7 +24,7 @@ Then print the 'secret day key'
 EOF
 
 
-cat <<EOF | zexe dp3t_keyderiv.zen -a SK1.json | tee SK2.json
+cat <<EOF | zexe dp3t_keyderiv.zen -a SK1.json | tee SK2.json | jq
 scenario 'dp3t': Decentralized Privacy-Preserving Proximity Tracing
 rule check version 1.0.0
 rule input encoding hex
@@ -35,7 +35,7 @@ When I renew the secret day key to a new day
 Then print the 'secret day key'
 EOF
 
-cat <<EOF | zexe dp3t_ephidgen.zen -k SK2.json | tee EphID_2.json
+cat <<EOF | zexe dp3t_ephidgen.zen -k SK2.json | tee EphID_2.json | jq
 scenario 'dp3t': Decentralized Privacy-Preserving Proximity Tracing
 rule check version 1.0.0
 rule input encoding hex
@@ -50,7 +50,7 @@ EOF
 
 
 # now generate a test with 20.000 infected SK
-cat <<EOF | zexe dp3t_testgen.zen > SK_infected_20k.json
+cat <<EOF | zexe dp3t_testgen.zen > SK_infected_20k.json | jq
 rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
@@ -62,7 +62,7 @@ Then print the 'list of infected'
 EOF
 
 # extract a few random infected ephemeral ids to simulate proximity
-cat <<EOF | zexe dp3t_testextract.zen -a SK_infected_20k.json | tee EphID_infected.json
+cat <<EOF | zexe dp3t_testextract.zen -a SK_infected_20k.json | tee EphID_infected.json | jq
 scenario 'dp3t'
 rule check version 1.0.0
 rule input encoding hex
@@ -78,7 +78,7 @@ Then print the 'ephemeral ids'
 EOF
 
 # given a list of infected and a list of ephemeral ids 
-cat <<EOF | zexe dp3t_checkinfected.zen -a SK_infected_20k.json -k EphID_infected.json | tee SK_proximity.json
+cat <<EOF | zexe dp3t_checkinfected.zen -a SK_infected_20k.json -k EphID_infected.json | tee SK_proximity.json | jq
 scenario 'dp3t'
 rule check version 1.0.0
 rule input encoding hex

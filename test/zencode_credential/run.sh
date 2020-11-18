@@ -53,7 +53,7 @@ echo "------------------------------------------------"
 echo "                                                "
 
 
-cat << EOF | zexe ../../docs/examples/zencode_cookbook/credentialParticipantSignatureRequest.zen -k ../../docs/examples/zencode_cookbook/credentialParticipantKeypair.json | jq . | tee ../../docs/examples/zencode_cookbook/credentialParticipantSignatureRequest.json
+cat << EOF | zexe ../../docs/examples/zencode_cookbook/credentialParticipantSignatureRequest.zen -k ../../docs/examples/zencode_cookbook/credentialParticipantKeypair.json | jq . | tee ../../docs/examples/zencode_cookbook/credentialParticipantSignatureRequest.json | jq
 Scenario credential: create request
     Given that I am known as 'Alice'
     and I have my valid 'credential keypair'
@@ -72,7 +72,7 @@ echo " "
 # credential issuance
 
 
-cat << EOF | zexe ../../docs/examples/zencode_cookbook/credentialIssuerKeygen.zen | jq . | tee ../../docs/examples/zencode_cookbook/credentialIssuerKeypair.json
+cat << EOF | zexe ../../docs/examples/zencode_cookbook/credentialIssuerKeygen.zen | jq . | tee ../../docs/examples/zencode_cookbook/credentialIssuerKeypair.json | jq
 Scenario credential: issuer keygen
     Given that I am known as 'MadHatter'
     When I create the issuer keypair
@@ -88,7 +88,7 @@ echo "------------------------------------------------"
 echo " "
 
 
-cat << EOF | zexe ../../docs/examples/zencode_cookbook/credentialIssuerPublishVerifier.zen -k ../../docs/examples/zencode_cookbook/credentialIssuerKeypair.json | jq . | tee ../../docs/examples/zencode_cookbook/credentialIssuerVerifier.json
+cat << EOF | zexe ../../docs/examples/zencode_cookbook/credentialIssuerPublishVerifier.zen -k ../../docs/examples/zencode_cookbook/credentialIssuerKeypair.json | jq . | tee ../../docs/examples/zencode_cookbook/credentialIssuerVerifier.json | jq
 Scenario credential: publish verifier
     Given that I am known as 'MadHatter'
     and I have my valid 'issuer keypair'
@@ -108,7 +108,7 @@ echo " "
 
 
 
-cat << EOF | zexe ../../docs/examples/zencode_cookbook/credentialIssuerSignRequest.zen -a ../../docs/examples/zencode_cookbook/credentialParticipantSignatureRequest.json -k ../../docs/examples/zencode_cookbook/credentialIssuerKeypair.json | jq . | tee ../../docs/examples/zencode_cookbook/credentialIssuerSignedCredential.json
+cat << EOF | zexe ../../docs/examples/zencode_cookbook/credentialIssuerSignRequest.zen -a ../../docs/examples/zencode_cookbook/credentialParticipantSignatureRequest.json -k ../../docs/examples/zencode_cookbook/credentialIssuerKeypair.json | jq . | tee ../../docs/examples/zencode_cookbook/credentialIssuerSignedCredential.json | jq
 Scenario credential: issuer sign
     Given that I am known as 'MadHatter'
     and I have my valid 'issuer keypair'
@@ -126,7 +126,7 @@ echo " with its public key.					  "
 echo "------------------------------------------------"
 echo " "
 
-cat << EOF | zexe ../../docs/examples/zencode_cookbook/credentialParticipantAggregateCredential.zen -a ../../docs/examples/zencode_cookbook/credentialIssuerSignedCredential.json -k ../../docs/examples/zencode_cookbook/credentialParticipantKeypair.json | jq . | tee ../../docs/examples/zencode_cookbook/credentialParticipantAggregatedCredential.json
+cat << EOF | zexe ../../docs/examples/zencode_cookbook/credentialParticipantAggregateCredential.zen -a ../../docs/examples/zencode_cookbook/credentialIssuerSignedCredential.json -k ../../docs/examples/zencode_cookbook/credentialParticipantKeypair.json | jq . | tee ../../docs/examples/zencode_cookbook/credentialParticipantAggregatedCredential.json | jq
 Scenario credential: aggregate signature
     Given that I am known as 'Alice'
     and I have my valid 'credential keypair'
@@ -146,7 +146,7 @@ echo " "
 
 # zero-knowledge credential proof emission and verification
 
-cat << EOF | zexe ../../docs/examples/zencode_cookbook/credentialParticipantCreateProof.zen -k ../../docs/examples/zencode_cookbook/credentialParticipantAggregatedCredential.json -a ../../docs/examples/zencode_cookbook/credentialIssuerVerifier.json | jq . | tee ../../docs/examples/zencode_cookbook/credentialParticipantProof.json
+cat << EOF | zexe ../../docs/examples/zencode_cookbook/credentialParticipantCreateProof.zen -k ../../docs/examples/zencode_cookbook/credentialParticipantAggregatedCredential.json -a ../../docs/examples/zencode_cookbook/credentialIssuerVerifier.json | jq . | tee ../../docs/examples/zencode_cookbook/credentialParticipantProof.json | jq
 Scenario credential: create proof
     Given that I am known as 'Alice'
     and I have my valid 'credential keypair'
@@ -165,13 +165,13 @@ echo " 												  "
 echo "------------------------------------------------"
 echo " "
 
-cat << EOF | zexe ../../docs/examples/zencode_cookbook/credentialAnyoneVerifyProof.zen -k ../../docs/examples/zencode_cookbook/credentialParticipantProof.json -a ../../docs/examples/zencode_cookbook/credentialIssuerVerifier.json
+cat << EOF | zexe ../../docs/examples/zencode_cookbook/credentialAnyoneVerifyProof.zen -k ../../docs/examples/zencode_cookbook/credentialParticipantProof.json -a ../../docs/examples/zencode_cookbook/credentialIssuerVerifier.json | jq
 Scenario credential: verify proof
     Given that I have a valid 'verifier' inside 'MadHatter'
     and I have a valid 'credential proof'
     When I aggregate the verifiers
-    and I verify the credential proof
-    Then print 'Success'
+    When I verify the credential proof
+    Then print 'The proof matches the verifier! So you can add zencode after the verify statement, that will execute only if the match occurs.'
 EOF
 
 echo "   "

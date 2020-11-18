@@ -37,7 +37,6 @@
     40,
     50
   ],
-  "myFirstString": "Hello World!",
   "myFirstStringLeftmost": "...a",
   "myFirstUrl64": "SGVsbG8gV29ybGQh",
   "myFourteenthStringToBeHashedUsingHMAC": "hash me to HMAC",

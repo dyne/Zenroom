@@ -34,7 +34,7 @@ echo "------------------------------------------------"
 echo "   											  "
 
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/petitionRequest.zen -k ../../docs/examples/zencode_cookbook/credentialParticipantAggregatedCredential.json -a ../../docs/examples/zencode_cookbook/credentialIssuerVerifier.json | jq . | tee ../../docs/examples/zencode_cookbook/petitionRequest.json
+cat <<EOF | zexe ../../docs/examples/zencode_cookbook/petitionRequest.zen -k ../../docs/examples/zencode_cookbook/credentialParticipantAggregatedCredential.json -a ../../docs/examples/zencode_cookbook/credentialIssuerVerifier.json | jq . | tee ../../docs/examples/zencode_cookbook/petitionRequest.json | jq
 # Two scenarios are needed for this script, "credential" and "petition".
 	Scenario credential: read and validate the credentials
 	Scenario petition: create the petition
@@ -67,7 +67,7 @@ echo "------------------------------------------------"
 echo "   											  "
 
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/petitionApprove.zen -k ../../docs/examples/zencode_cookbook/petitionRequest.json -a ../../docs/examples/zencode_cookbook/credentialIssuerVerifier.json | jq . | tee ../../docs/examples/zencode_cookbook/petitionApproved.json
+cat <<EOF | zexe ../../docs/examples/zencode_cookbook/petitionApprove.zen -k ../../docs/examples/zencode_cookbook/petitionRequest.json -a ../../docs/examples/zencode_cookbook/credentialIssuerVerifier.json | jq . | tee ../../docs/examples/zencode_cookbook/petitionApproved.json | jq
 Scenario credential
 Scenario petition: approve
     Given that I have a 'verifier' inside 'MadHatter'
@@ -91,7 +91,7 @@ echo "------------------------------------------------"
 echo "   											  "
 
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/petitionSign.zen -k ../../docs/examples/zencode_cookbook/credentialParticipantAggregatedCredential.json -a ../../docs/examples/zencode_cookbook/credentialIssuerVerifier.json | jq . | tee ../../docs/examples/zencode_cookbook/petitionSignature.json
+cat <<EOF | zexe ../../docs/examples/zencode_cookbook/petitionSign.zen -k ../../docs/examples/zencode_cookbook/credentialParticipantAggregatedCredential.json -a ../../docs/examples/zencode_cookbook/credentialIssuerVerifier.json | jq . | tee ../../docs/examples/zencode_cookbook/petitionSignature.json | jq
 Scenario credential
 Scenario petition: sign petition
     Given I am 'Alice'
@@ -118,7 +118,7 @@ echo "------------------------------------------------"
 echo "   											  "
  
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/petitionAggregateSignature.zen -k ../../docs/examples/zencode_cookbook/petitionApproved.json -a ../../docs/examples/zencode_cookbook/petitionSignature.json | jq . | tee ../../docs/examples/zencode_cookbook/petitionAggregatedSignature.json
+cat <<EOF | zexe ../../docs/examples/zencode_cookbook/petitionAggregateSignature.zen -k ../../docs/examples/zencode_cookbook/petitionApproved.json -a ../../docs/examples/zencode_cookbook/petitionSignature.json | jq . | tee ../../docs/examples/zencode_cookbook/petitionAggregatedSignature.json | jq
 Scenario credential
 Scenario petition: aggregate signature
     Given that I have a valid 'petition signature'
@@ -141,7 +141,7 @@ echo "------------------------------------------------"
 echo "   											  "
 
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/petitionTally.zen -k ../../docs/examples/zencode_cookbook/credentialParticipantAggregatedCredential.json -a ../../docs/examples/zencode_cookbook/petitionAggregatedSignature.json | jq . | tee ../../docs/examples/zencode_cookbook/petitionTally.json
+cat <<EOF | zexe ../../docs/examples/zencode_cookbook/petitionTally.zen -k ../../docs/examples/zencode_cookbook/credentialParticipantAggregatedCredential.json -a ../../docs/examples/zencode_cookbook/petitionAggregatedSignature.json | jq . | tee ../../docs/examples/zencode_cookbook/petitionTally.json | jq
 Scenario credential
 Scenario petition: tally
     Given that I am 'Alice'
@@ -161,7 +161,7 @@ echo "------------------------------------------------"
 echo "   											  "
 
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/petitionCount.zen -k ../../docs/examples/zencode_cookbook/petitionTally.json -a ../../docs/examples/zencode_cookbook/petitionAggregatedSignature.json | jq . | tee ../../docs/examples/zencode_cookbook/petitionCount.json
+cat <<EOF | zexe ../../docs/examples/zencode_cookbook/petitionCount.zen -k ../../docs/examples/zencode_cookbook/petitionTally.json -a ../../docs/examples/zencode_cookbook/petitionAggregatedSignature.json | jq . | tee ../../docs/examples/zencode_cookbook/petitionCount.json | jq
 Scenario credential
 Scenario petition: count
     Given that I have a valid 'petition'
