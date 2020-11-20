@@ -17,7 +17,6 @@
 #  <http://www.gnu.org/licenses/>.
 
 pwd := $(shell pwd)
-export top_srcdir = ${pwd}
 ARCH ?=$(shell uname -m)
 PREFIX ?= /usr/local
 # VERSION is set in src/Makefile
