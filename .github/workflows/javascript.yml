@@ -23,7 +23,7 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: mymindstorm/setup-emsdk@v6
+      - uses: mymindstorm/setup-emsdk@v7
         with:
           version: ${{env.EM_VERSION}}
       - run: emcc -v
