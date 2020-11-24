@@ -38,6 +38,7 @@ tmpZen4="${tmpGiven} ${tmpThen4}"
 
 
 
+
 cat <<EOF  > $tmpInput
 {
    "myObject":{
@@ -125,19 +126,34 @@ cat <<EOF  > $tmpInput
 		 "1234.5678"
       ],	  
    },
-   
    "Alice":{
       "keypair":{
          "private_key":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
          "public_key":"BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
-      }
+      },
+	  "issuer_keypair": {
+			"issuer_sign": {
+				"x": "zK8Gs70vdLRErIKkTQdNbWfrWIExirgMKSxfGuPa1aU=",
+				"y": "x83wJ6rYhwowX/q4R0fNiE87JD4R48U1lBN21OgFJoE="
+			},
+			"verifier": {
+				"alpha": "P/0EVN5KUGszzll5GlO9yI3p1p80BaWp5UdJ/R4rrRYyxcBg93F3KKOEYJtrsJ4SBlxbo59jeWEi2WBRnBwClNI4YOD3ak2llLNp7y6NN3FbSKF6ZI1aoeD22rp/SUTTQVfT6vMtzXDHaE8KEWBnN87Gb5unt6tDj1kVhbE9scTV5G62ZpJBBB3aUTbQsDtCGWQlBWb0jImIaJ3ZndChwzUVy2DBnRC5nqVDzH8BJ5AtPO46qwo8M4EQ7dLPCv1h",
+				"beta": "DxkhJCeC0LmNix2Q9XZxmHKwBv6fbYymNH6PGdvnOU6uD3NhZBbp+jA27kPon1CACigQ4IT/TpUGJwoy3M0o7l2x+mxPS6akE26kMrYARNC3fbYk6N9ugbjki8WX6uPQFheJJ1ZfSiiUQ02MFmIPTDKa0bRjXTyHak41+2SbQpPU1BYreIlIrDmzP8XrEaz0H0287Mg85L/iAXdtSpOk5qRyXm+lGa6QldyYkQ22xmNN6Ch0mIb3Ds9/e8EN1bM0"
+			}
+		}
    },
 	"Bob": {
 		"public_key": "BGdp6q41IE9X4H909u8dc05mJxfl+cYNmLChky2u6G3uUJPfEmM8hm4HRz/eSl+w75glCrW6WaOKwBMFCcfzoLg="
     },
 	"Carl": {
          "public_key": "BG/TONSVfG5iQWNpp4bNG7Ev0g36XncIeaDOWOHX+MvDj/rPOEHahE2uJepOAv6ijZj07sc2XRddIH4HB78Nu4k="
-    }
+    },
+	"salesReport": {
+      "maxPricePerKG": 100,
+      "sumValueAllTransactions": 3800,
+      "transferredProductAmountafterSalesStart": 30,
+	  "shopOwner": "JackInTheShop"
+   }
 }
 EOF
 cat $tmpInput > ../../docs/examples/zencode_cookbook/myLargeNestedObjectThen.json
@@ -146,9 +162,11 @@ cat $tmpInput > ../../docs/examples/zencode_cookbook/myLargeNestedObjectThen.jso
 
 cat <<EOF  > $tmpGiven
 # rule input encoding base64
-Scenario 'ecdh': Create the keypair
+Scenario 'ecdh': load a issuer keypair
+Scenario 'credential': Create the keypair
 Given I am 'Alice'
-Given I have my 'keypair' 
+Given I have my 'keypair'
+Given I have my 'issuer keypair' 
 and I have a 'public key' from 'Bob'
 and I have a 'public key' from 'Carl'
 # Load Arrays
@@ -197,6 +215,10 @@ Given I have an 'url64' named 'myUrl64_3' inside 'myObject'
 Given I have an 'url64' named 'myUrl64_4' inside 'myObject'
 Given I have an 'url64' named 'myUrl64_5' inside 'myObject'
 Given I have an 'url64' named 'myUrl64_6' inside 'myObject'
+# Dictionary
+Given I have a 'string dictionary' named 'salesReport'
+
+
 EOF
 cat $tmpGiven > ../../docs/examples/zencode_cookbook/thenCompleteScriptGiven.zen
 
@@ -419,6 +441,45 @@ cat $tmpThen3 > ../../docs/examples/zencode_cookbook/thenCompleteScriptPart3.zen
 
 
 cat $tmpZen3 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpInput | jq . | tee ../../docs/examples/zencode_cookbook/thenCompleteOutputPart3.json | jq
+
+
+
+
+
+echo "                                                "
+echo "------------------------------------------------"
+echo "               Script number $n                 "
+echo "               print nested objects using 'in' and 'from' "
+echo "------------------------------------------------"
+echo "                                                "
+let n=n+1
+
+# WIP: Then print the 'keypair' in 'Alice'
+# WIP: Then print the 'public key' in 'Bob'
+# WIP: Then print my 'public key'
+
+
+cat <<EOF  > $tmpThen4
+
+# This prints a child of dictionary, which can be a string (like here) or another dictionary
+Then print the 'maxPricePerKG' in 'salesReport'
+
+# This prints the "verifier", that is the cryptographical object produced by an issuer that is publicly accessible
+# in order to match it with the proofs. 
+Then print the 'verifier' inside 'issuer keypair'
+
+
+EOF
+
+
+
+
+
+cat $tmpThen4 > ../../docs/examples/zencode_cookbook/thenCompleteScriptPart4.zen
+
+
+cat $tmpZen4 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpInput | jq . | tee ../../docs/examples/zencode_cookbook/thenCompleteOutputPart4.json | jq
+
 
 
 

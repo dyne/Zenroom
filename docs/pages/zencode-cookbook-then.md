@@ -61,6 +61,23 @@ And the output shoul be:
 ```
 
 
+## Printing nested objects
+
+When working with ***dictionaries*** or ***schemas*** you may want to print out just a part of the data you're working with. The statement that comes to help here is: 
+
+```gherkin
+Then print the 'childObject' inside 'parentObject'
+```
+
+Here are a couple examples, keep in mind that **in** and **inside** are interchangeable:
+
+[](../_media/examples/zencode_cookbook/thenCompleteScriptPart4.zen ':include :type=code gherkin')
+
+The output should look like this:
+
+[](../_media/examples/zencode_cookbook/thenCompleteOutputPart4.json ':include :type=code json')
+
+
 ## The ***my*** and ***all*** operators
 
 We have already learned how the ***my*** operator works to load data in the ***Given*** phase.
