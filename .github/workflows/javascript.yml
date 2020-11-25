@@ -51,7 +51,7 @@ jobs:
         with:
           node-version: 12
           registry-url: 'https://registry.npmjs.org'
-      - uses: mymindstorm/setup-emsdk@v6
+      - uses: mymindstorm/setup-emsdk@v7
         with:
           version: ${{env.EM_VERSION}}
       - name: Install zsh
