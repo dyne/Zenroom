@@ -819,7 +819,7 @@ LUALIB_API const char *luaL_tolstring (lua_State *L, int idx, size_t *len) {
 */
 #if defined(LUA_COMPAT_MODULE)
 
-const char *luaL_findtable (lua_State *L, int idx,
+static const char *luaL_findtable (lua_State *L, int idx,
                                    const char *fname, int szhint) {
   const char *e;
   if (idx) lua_pushvalue(L, idx);
@@ -978,8 +978,13 @@ static void *l_alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
     free(ptr);
     return NULL;
   }
-  else
-    return realloc(ptr, nsize);
+  else {  /* cannot fail when shrinking a block */
+    void *newptr = realloc(ptr, nsize);
+    if (newptr == NULL && ptr != NULL && nsize <= osize)
+      return ptr;  /* keep the original block */
+    else  /* no fail or not shrinking */
+     return newptr;  /* use the new block */
+  }
 }
 
 
