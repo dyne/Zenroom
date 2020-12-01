@@ -1,4 +1,0 @@
-Scenario 'credential': publish verifier
-    Given that I am known as 'MadHatter'
-    and I have my valid 'verifier'
-    Then print my 'verifier'
