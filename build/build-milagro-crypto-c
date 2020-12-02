@@ -7,6 +7,9 @@ cd "${MESON_BUILD_ROOT}"
 mkdir -p milagro-crypto-c
 cd milagro-crypto-c
 
+ecp_curve=$1
+ecdh_curve=$2
+
 cmake \
     -DBUILD_SHARED_LIBS=OFF \
     -DBUILD_PYTHON=OFF \
