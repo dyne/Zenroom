@@ -1,5 +1,9 @@
 #!/usr/bin/env zsh
 
+[[ ! -z "$MESON_SOURCE_ROOT" ]] && {
+	cd "$MESON_SOURCE_ROOT"
+	cd ..
+}
 
 [[ -d src/lua ]] || {
 	print "error - directory not found: src/lua"
