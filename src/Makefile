@@ -123,6 +123,8 @@ debug: clean ${SOURCES}
 
 clean:
 	rm -f *_factory.c
+	rm -f zen_ecdh_factory.h
+	rm -f lualibs_detected.c
 	rm -f *.o
 	rm -f *.so
 	rm -f zenroom-static
