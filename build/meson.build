@@ -1,7 +1,7 @@
 project(
     'zenroom',
     'c',
-    version: '1.5',
+    version: '1.2',
     license: 'GPL3',
      meson_version: '>=0.49.2',
     default_options: [
@@ -97,7 +97,8 @@ lua_lib = static_library('lua',
         milagro_include_dirs,
         milagro_generated_include_dirs,
         zenroom_include_dirs
-    ]
+    ],
+	c_args: ['-DLUA_COMPAT_5_3', '-DLUA_COMPAT_MODULE', '-DLUA_COMPAT_BITLIB']
 )
 lua_dep = declare_dependency(
     link_with: lua_lib,
