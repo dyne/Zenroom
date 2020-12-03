@@ -3,6 +3,7 @@ project(
     'c',
     version: '1.5',
     license: 'GPL3',
+     meson_version: '>=0.49.2',
     default_options: [
         'c_std=c99',
         'warning_level=2',
@@ -83,9 +84,8 @@ lua_src = files(
 
 milagro_include_dirs = include_directories('../lib/milagro-crypto-c/include')
 run_command(
-    'build-milagro-crypto-c',
+    'build-milagro-crypto-c', ecp_curve, ecdh_curve,
     check: true,
-    env: ['ecp_curve=' + ecp_curve, 'ecdh_curve=' + ecdh_curve]
 )
 milagro_generated_include_dirs = include_directories('milagro-crypto-c/include')
 
