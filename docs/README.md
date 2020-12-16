@@ -52,12 +52,12 @@ If everything went well, in the file `keypair.json` you will see something like 
 
 
 Checkout Zenroom's: 
- - [Quickstart](/pages/zencode-cookbook-intro): learn how to create your first script in [Zencode](/pages/zencode-cookbook-intro).
+ - [Quickstart](https://dev.zenroom.org/#/pages/zencode-cookbook-intro): learn how to create your first script in [Zencode](/pages/zencode-cookbook-intro).
  - Homepage [zenroom.org](http://zenroom.org/): find all the info about Zenroom or download a [build](https://zenroom.org/#downloads).
- - [Documentation](https://dev.zenroom.org/): learn how to use Zenroom as a CLI or a library and how to program in [Zencode](/pages/zencode-cookbook-intro).
+ - [Documentation](https://dev.zenroom.org/): learn how to use Zenroom as a CLI or a library and how to program in [Zencode](https://dev.zenroom.org/#/pages/zencode-cookbook-intro).
  - Domain specific language[Zencode](/pages/zencode-intro): learn about how Zenroom's virtual machine works or how to write [smart contracts](/pages/zencode-cookbook-intro) in a English-like language.
  - The [Zencode whitepaper](https://dev.zenroom.org/pages/zenroom_whitepaper.pdf).
- - the ["Coconut" smart contracts](https://github.com/DECODEproject/Zenroom/tree/master/test/zencode_coconut) 
+ - the ["Coconut" smart contracts](https://dev.zenroom.org/#/pages/zencode-scenario-credentials) 
 
 
 
