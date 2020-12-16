@@ -183,6 +183,63 @@ If you master *curl* and some shell scripting, you will easily be able to create
 You can obviously also use the APIs exposed in Apiroom in your web/mobile application, by using the **POST** call that we have just tested in *curl* 
 
 
+## Export APIs to Dockerfile
+
+After you're happy with the APIs you've prototyped and you're ready for a real deployment, in the back-end of Apiroom you can create a **Dockerfile** that will:
+ 
+ - Create a Docker image 
+ - Clone and configure [RESTroom-mw](https://dyne.github.io/restroom-mw/#/) 
+ - Save there the contracts that you have selected 
+
+To create the **Dockerfile**, select the contracts you want have running in the microservice then clic on "Export Docker"
+
+![ApiroomShots](../_media/images/apiroom/ApiroomExportToDocker.png)
+
+### Docker image configuration
+
+The **Dockerfile** contains the:
+ - The ports used by the Docker image 
+ - The config of [RESTroom-mw](https://dyne.github.io/restroom-mw/#/), meaning the ports (which should match with the ports used by the Docker image) and the folder where the contracts and keys/data are saved. Those are stored in the **.env** file inside the **/restroom-mw** folder of the Docker image
+ 
+They are contained in those lines, that can be edited manually: 
+
+```bash
+# setup docker
+WORKDIR /restroom-mw
+EXPOSE 3300 
+EXPOSE 3301 
+
+# Adding the .env file
+RUN touch .env
+RUN echo 'ZENCODE_DIR=/restroom-mw/zencode\n\
+CUSTOM_404_MESSAGE=nothing to see here\n\
+HTTP_PORT=3300\n\
+HTTPS_PORT=3301\n'\
+> /restroom-mw/.env
+```
+
+### Build and run the Docker image 
+
+To build the image you can to use: 
+
+```bash
+docker build --tag dyne/restroom_mw:latest .
+```
+
+After the image is build, assuming that you're using th in order to run it, you can use:
+
+```bash
+docker run -d -p 3300:3300 -p 3301:3301 dyne/restroom_mw:latest
+```
+
+If everything worked fine, by going to **http://ipnumber:3300/docs** you should see something like this:
+
+
+![ApiroomShots](../_media/images/apiroom/RestroommwSwagger.png)
+
+
+
+
 <!-- WIP 
 
 ## TEMP
