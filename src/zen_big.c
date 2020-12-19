@@ -131,7 +131,7 @@ big* big_new(lua_State *L) {
 
 big* big_arg(lua_State *L,int n) {
 	void *ud = luaL_testudata(L, n, "zenroom.big");
-	// luaL_argcheck(L, ud != NULL, n, "big class expected");
+	luaL_argcheck(L, ud != NULL, n, "big class expected");
 	if(ud) {
 		big *b = (big*)ud;
 		if(!b->val && !b->dval) {
