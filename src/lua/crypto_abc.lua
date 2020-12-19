@@ -40,8 +40,9 @@ Forked by Jaromil on 18 January 2020 from Coconut Petition
 ]] .. abc._LICENSE))
 local challenge = G1:octet() .. G2:octet() .. hs:octet()
 function abc.to_challenge(list)
-   -- assert(abc.challenge, "ABC secret challenge not set")
-   return INT.new( sha256( challenge .. ZEN.serialize(list)))
+   local ser = serialize(list)
+   -- assert(coco.challenge, "COCONUT secret challenge not set")
+   return INT.new( sha256( challenge .. ser.octets .. OCTET.from_string(ser.strings)))
 end
 
 -- local zero-knowledge proof verifications
