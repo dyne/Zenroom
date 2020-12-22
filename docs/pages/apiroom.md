@@ -21,17 +21,17 @@ This is the user manual of Zenroom's web playground [Apiroom](https://apiroom.ne
 When landing on [Apiroom](https://apiroom.net) you're prompted with its front-end, where you have: 
 
 - The text box **Zencode smart contract**: use it to type your [Zencode](pages/zencode-cookbook-intro) scripts
-- The text boxes **Keys** and **Data** that you can use to pass different kind of data to Zenroom, as you would do with the parameters **-a** and **-k** from the command line application
- - The **Examples** drop-down menu, that fills the text boxes with sample Zencode smart contracts
-- The text box named **Config** that you can use to pass [configuration](/pages/zenroom-config) files to Zenroom (in the front end only)
-- The **PLAY▶️** button, that will execute the smart contracts, along with the keys and data you provided
-- An output box to show you the output of the Zencode smart contract you executed
+- The text boxes **Keys** and **Data**: use them to pass different kind of data to Zenroom, as you would do with the parameters **-k** and **-a** respectively from the command line application
+ - The **Examples** drop-down menu fills the text boxes with sample Zencode smart contracts
+- The text box named **Config**: use it to pass [configuration](/pages/zenroom-config) files to Zenroom (in the front end only)
+- The **PLAY▶️** button: use it to execute the smart contracts, along with the keys and data you provided
+- An output box shows the output of the Zencode smart contract you executed
 
 And also:
 
-- The **Create API** button, that will save your smart contract and create an API from it (you need to be logged in to use it)
-- The **Login** button that allows you to login and create an account
-- After having logged in, the **My Contracts** button, to check, test and debug the APIs you have created from your Zencode smart contracts
+- The **Create API** button saves your smart contract and create an API from it (you need to be logged in to use it)
+- The **Login** button allows you to login and create an account
+- Once logged in, the **My Contracts** button is used to check, test and debug the APIs created from your Zencode smart contracts
 
 ![ApiroomShots](../_media/images/apiroom/Shot1.png)
 
@@ -56,7 +56,7 @@ Now, in the **Zencode smart contract** text box, try and type *When I*: the auto
 
 ## Mastering the auto-complete
 
-In the auto-complete window you can scroll up and down, and by clicking or pressing enter, the line will be inserted. The lines inserted will typically include a *dummy object name*, which some times will work straight of the box (like the example highlighted in the screenshot) but more often will need some adjustment. For example, the second statement from top:
+In the auto-complete window you can scroll up and down, and by clicking or pressing enter, the selected line will be inserted. The lines inserted will typically include a *dummy object name*, which some times will work straight of the box (like the example highlighted in the screenshot) but more often will need some adjustment. For example, the second statement from top:
 
 ```gherkin
 When I create the 'nameOfNewObject'
@@ -70,7 +70,7 @@ But in the statement that is under it in the screenshot, we are in a very differ
 When I create the aggregation array of 'nameOfArray'
 ```
 
-Here the statement is meant the perform the [aggregation](/pages/zencode-cookbook-when?id=basic-cryptography-hashing) of an array of ECP/ECP2 points (a cryptographical operation), so it's especting to be with an existing array. Therefore, as things are now, the statement will not work and throw an error.
+Here the statement is meant the perform the [aggregation](/pages/zencode-cookbook-when?id=basic-cryptography-hashing) of an array of ECP/ECP2 points (a cryptographical operation), so it's expecting to be with an existing array. Therefore, as things are now, the statement will not work and throw an error.
 
 If we look instead at the first statement in the screenshot, we first read: 
 
@@ -232,7 +232,7 @@ After the image is build, assuming that you're using th in order to run it, you 
 docker run -d -p 3300:3300 -p 3301:3301 dyne/restroom_mw:latest
 ```
 
-If everything worked fine, by going to **http://ipnumber:3300/docs** you should see something like this:
+If everything worked fine, by going to **http://localhost:3300/docs** you should see something like this:
 
 
 ![ApiroomShots](../_media/images/apiroom/RestroommwSwagger.png)
