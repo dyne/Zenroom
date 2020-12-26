@@ -39,7 +39,7 @@ Optional: musl-libc, emscripten for wasm builds
 Use this command sequence:
 
 ```
-git checkout https://github.com/dyne/zenroom
+git clone https://github.com/dyne/zenroom
 cd zenroom
 make linux
 ```
