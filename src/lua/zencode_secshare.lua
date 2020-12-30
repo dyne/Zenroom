@@ -43,7 +43,11 @@ When("create the secret shares of '' with '' quorum ''", function(sec, tot, q)
 		local s = ACK[sec]
 		ZEN.assert(s, "Secret not found: "..sec)
 		ZEN.assert(#s <= 32, "Secret too big to share: "..#s.." bytes, max is 32 bytes")
-        ACK.secret_shares = LAG.create_shared_secret(tot,q,s)
+		local total = tonumber(tot)
+		ZEN.assert(total, "Total shares is not a number: "..tot)
+		local quorum = tonumber(q)
+		ZEN.assert(quorum, "Quorum shares is not a number: "..q)
+        ACK.secret_shares = LAG.create_shared_secret(total,quorum,s)
 end)
 
 When("compose the secret using ''", function(shares)

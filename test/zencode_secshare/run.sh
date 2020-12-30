@@ -50,7 +50,7 @@ Given I have a 'string' named '32BytesSecret'
 # Here we are creating the "secret shares", the output will be an array of pairs of numbers
 # The quorum represents the minumum amount of secret shares needed to
 # rebuild the secret, and it can be configured
-When I create the secret shares of '32BytesSecret' with '9' quorum '5'
+When I create the secret shares of '32BytesSecret' with '19' quorum '5'
 
 # Here we rename the output and print it out
 and I rename the 'secret shares' to 'mySharedSecret'
