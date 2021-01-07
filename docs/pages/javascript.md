@@ -70,20 +70,45 @@ import { zenroom_exec, zencode_exec } from 'zenroom'
 // const { zenroom_exec, zencode_exec } = require('zenroom')
 
 
-// Zencode Hello World!
+// Zencode: generate a random array. This script takes no extra input
 
-const zencode = `
+const zencodeRandom = `
 	Given nothing
 	When I create the array of '16' random objects of '32' bits
     	Then print all data`
 	
-zencode_exec(zencode)
+zencode_exec(zencodeRandom)
 	.then((result) => {
 		console.log(result);
 	})
 	.catch((error) => {
 		throw new Error(error);
 	});
+
+
+// Zencode: encrypt a message. 
+// This script takes the options' object as the second parameter: you can include data and/or keys as input.
+// The "config" parameter is also optional.
+
+const zencodeEncrypt = `
+	Scenario 'ecdh': Encrypt a message with the password 
+	Given that I have a 'string' named 'password' 
+	Given that I have a 'string' named 'message' 
+	When I encrypt the secret message 'message' with 'password' 
+	Then print the 'secret message'`
+	
+const zenKeys = "{\r\n\t\"password\": \"myVerySecretPassword\"\r\n}"
+
+const zenData = "{\r\n\t\"message\": \"Hello World\"\r\n}"
+	
+zencode_exec(zencode, {data: zenData, keys: zenKeys, conf:`color=0, debug=0`})
+	.then((result) => {
+		console.log(result);
+	})
+	.catch((error) => {
+		throw new Error(error);
+	});
+
 
 
 // Lua Hello World!
@@ -103,7 +128,7 @@ zenroom_exec(lua)
 
 
 try {
-  const result = await zenroom_exec(`print(DATA)`, {data: "Some data", conf:`color=0, debug=0`});
+  const result = await zenroom_exec(`print(DATA)`, {data: "Some data", keys: "Some other data", conf:`color=0, debug=0`});
   console.log(result); // => Some data
 } catch (e) {
   throw new Error(e)
