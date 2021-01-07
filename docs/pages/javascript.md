@@ -97,9 +97,17 @@ const zencodeEncrypt = `
 	When I encrypt the secret message 'message' with 'password' 
 	Then print the 'secret message'`
 	
-const zenKeys = "{\r\n\t\"password\": \"myVerySecretPassword\"\r\n}"
+const zenKeys = `
+	{
+		"password": "myVerySecretPassword"
+	}
+`
 
-const zenData = "{\r\n\t\"message\": \"Hello World\"\r\n}"
+const zenData = `
+	{
+			"message": "HELLO WORLD"
+	}
+`
 	
 zencode_exec(zencode, {data: zenData, keys: zenKeys, conf:`color=0, debug=0`})
 	.then((result) => {
