@@ -115,13 +115,15 @@ milagro:
 	@echo "-- Building milagro (${system})"
 	if ! [ -r ${pwd}/lib/milagro-crypto-c/CMakeCache.txt ]; then \
 		cd ${pwd}/lib/milagro-crypto-c && \
+		mkdir -p build && \
+		cd build && \
 		CC=${gcc} LD=${ld} \
-		cmake . -DCMAKE_C_FLAGS="${cflags}" -DCMAKE_SYSTEM_NAME="${system}" \
+		cmake ../ -DCMAKE_C_FLAGS="${cflags}" -DCMAKE_SYSTEM_NAME="${system}" \
 		-DCMAKE_AR=${ar} -DCMAKE_C_COMPILER=${gcc} ${milagro_cmake_flags}; \
 	fi
 	if ! [ -r ${pwd}/lib/milagro-crypto-c/lib/libamcl_core.a ]; then \
 		CC=${gcc} CFLAGS="${cflags}" AR=${ar} RANLIB=${ranlib} LD=${ld} \
-		make -C ${pwd}/lib/milagro-crypto-c; \
+		make -C ${pwd}/lib/milagro-crypto-c/build; \
 	fi
 
 check-milagro: milagro
@@ -157,11 +159,12 @@ install-lua:
 
 clean:
 	make clean -C ${pwd}/lib/lua53/src
-	if [ -f ${pwd}/lib/milagro-crypto-c/Makefile ]; then \
-		make clean -C ${pwd}/lib/milagro-crypto-c; \
+	if [ -f ${pwd}/lib/milagro-crypto-c/build/Makefile ]; then \
+		make clean -C ${pwd}/lib/milagro-crypto-c/build; \
 	fi
 	rm -f ${pwd}/lib/milagro-crypto-c/CMakeCache.txt
 	rm -rf ${pwd}/lib/milagro-crypto-c/CMakeFiles
+	rm -rf ${pwd}/lib/milagro-crypto-c/build
 	git checkout ${pwd}/lib/milagro-crypto-c/CPackConfig.cmake
 	make clean -C ${pwd}/src
 	make clean -C ${pwd}/bindings
