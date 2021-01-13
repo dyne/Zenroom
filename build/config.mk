@@ -9,7 +9,7 @@ website := ${pwd}/docs
 luasrc := ${pwd}/lib/lua53/src
 ldadd := ${pwd}/lib/lua53/src/liblua.a
 lua_embed_opts := ""
-lua_cflags := -DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE -DLUA_COMPAT_BITLIB -I${pwd}/lib/milagro-crypto-c/include -I${pwd}/src
+lua_cflags := -DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE -DLUA_COMPAT_BITLIB -I${pwd}/lib/milagro-crypto-c/build/include -I${pwd}/src -I${pwd}/lib/milagro-crypto-c/include 
 
 # ----------------
 # zenroom defaults
@@ -33,7 +33,7 @@ rsa_bits := ""
 ecdh_curve := SECP256K1
 ecp_curve  := BLS383
 milagro_cmake_flags := -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DBUILD_DOCS=OFF -DBUILD_BENCHMARKS=OFF -DBUILD_EXAMPLES=OFF -DWORD_SIZE=32 -DBUILD_PAILLIER=OFF -DBUILD_X509=OFF -DBUILD_WCC=OFF -DBUILD_MPIN=OFF -DAMCL_CURVE=${ecdh_curve},${ecp_curve} -DAMCL_RSA=${rsa_bits} -DCMAKE_SHARED_LIBRARY_LINK_FLAGS="" -DC99=1 -DPAIRING_FRIENDLY_BLS383='BLS' -DCOMBA=1
-milib := ${pwd}/lib/milagro-crypto-c/lib
+milib := ${pwd}/lib/milagro-crypto-c/build/lib
 ldadd += ${milib}/libamcl_curve_${ecp_curve}.a
 ldadd += ${milib}/libamcl_pairing_${ecp_curve}.a
 ldadd += ${milib}/libamcl_curve_${ecdh_curve}.a
