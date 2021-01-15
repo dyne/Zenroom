@@ -1,0 +1,16 @@
+name: Build cortex-arm target
+
+on: [push, pull_request]
+
+jobs:
+  coverity-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v2
+      - name: install dependencies
+        run: |
+          sudo apt install gcc-arm-none-eabi zsh
+      - name: build cortex-arm target 
+        run: |
+          make cortex-arm
