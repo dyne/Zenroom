@@ -238,10 +238,10 @@ static const char PUF_RNG[] = "uvVu3thQapaKX1Nso6ElSkzZafq3kHCG";
 
 void main(void)
 {
-    zenroom_exec_rng_tobuf(zenroom_test_code, NULL, NULL, NULL, 1,
-                           zen_stdout, ZEN_BUF_LEN,
-                           zen_stderr, ZEN_BUF_LEN,
-                           PUF_RNG, 32);
+    zenroom_exec_tobuf(zenroom_test_code, NULL, NULL, NULL,
+                       zen_stdout, ZEN_BUF_LEN,
+                       zen_stderr, ZEN_BUF_LEN
+                      );
 }
 
 
