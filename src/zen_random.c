@@ -80,8 +80,8 @@ void* rng_alloc() {
 		Z->random_seed[61] = (ttmp >> 16) & 0xff;
 		Z->random_seed[62] = (ttmp >>  8) & 0xff;
 		Z->random_seed[63] =  ttmp & 0xff;
-	}
 #endif
+	}
 	// RAND_seed is destructive, preserve seed here
 	char tseed[RANDOM_SEED_LEN];
 	memcpy(tseed,Z->random_seed,RANDOM_SEED_LEN);
