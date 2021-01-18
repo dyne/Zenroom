@@ -124,6 +124,15 @@ ldflags := -lm -lpthread
 system := Linux
 endif
 
+ifneq (,$(findstring raspi,$(MAKECMDGOALS)))
+pi := ${CROSS_PI_PATH}
+gcc := ${pi}/bin/arm-linux-gnueabihf-gcc
+ar := ${pi}/bin/arm-linux-gnueabihf-ar
+cflags := -O3 -march=armv6 -mfloat-abi=hard -mfpu=vfp -I${pi}/arm-linux-gnueabihf/include -fPIC -D'ARCH=\"LINUX\"' -DARCH_LINUX
+ldflags := -L${pi}arm-linux-gnueabihf/lib -lm -lpthread
+system := Linux
+endif
+
 ifneq (,$(findstring jemalloc,$(MAKECMDGOALS)))
 cflags += -DUSE_JEMALLOC
 ldflags += -ljemalloc
