@@ -104,9 +104,8 @@ int ecdh_destroy(lua_State *L) {
 /**
    Generate an ECDH public/private key pair for a keyring
 
-   Keys generated are both returned and stored inside the
-   keyring. They can also be retrieved later using the
-   @{public} and @{private} methods.
+   Keys generated are both returned and stored inside the keyring
+   table as public and private properties.
 
    @function keyring:keygen()
    @treturn[1] OCTET public key
@@ -122,6 +121,25 @@ static int ecdh_keygen(lua_State *L) {
 	(*ECDH.ECP__KEY_PAIR_GENERATE)(Z->random_generator,sk,pk);
 	return 1;
 }
+
+
+/**
+   Generate an ECDH public key from a secret key
+
+   Public key is returned.
+
+   @function keyring:pubgen()
+   @return OCTET public key
+*/
+static int ecdh_pubgen(lua_State *L) {
+	octet *sk = o_arg(L, 1); SAFE(sk);
+	octet *pk = o_new(L,ECDH.fieldsize*2 +1); SAFE(pk);
+	// If RNG is NULL then the private key is provided externally in S
+	// otherwise it is generated randomly internally
+	(*ECDH.ECP__KEY_PAIR_GENERATE)(NULL,sk,pk);
+	return 1;
+}
+
 
 /*
    Validate an ECDH public key.
@@ -217,28 +235,6 @@ static int ecdh_pub_xy(lua_State *L) {
 	return(res);
 }
 
-/**
-   Imports a private key inside an ECDH keyring.
-
-   This is a get/set method working both ways: without argument it
-   returns the private key of a keyring, or if an @{OCTET} argument is
-   provided it is imported as private key inside the keyring and used
-   to derivate its corresponding public key.
-
-   If the keyring contains already any key, it will refuse to
-   overwrite them and return an error.
-
-   @param key[opt] octet of a private key to be imported
-   @function ECDH.pubgen(key)
-*/
-static int ecdh_pubgen(lua_State *L) {
-	octet *sk = o_arg(L, 1); SAFE(sk);
-	octet *pk = o_new(L,ECDH.fieldsize*2 +1); SAFE(pk);
-	// If RNG is NULL then the private key is provided externally in S
-	// otherwise it is generated randomly internally
-	(*ECDH.ECP__KEY_PAIR_GENERATE)(NULL,sk,pk);
-	return 1;
-}
 
 /**
    Elliptic Curve Digital Signature Algorithm (ECDSA) signing

@@ -52,6 +52,12 @@ local function f_keygen()
 end
 When("create the keypair", f_keygen)
 
+When("create the keypair with secret key ''", function(sec)
+		local pub = ECDH.pubgen(sec)
+		ACK.keypair = { public_key = pub,
+						private_key = sec }
+end)
+
 -- encrypt with a header and secret
 When("encrypt the secret message '' with ''", function(msg, sec)
 		ZEN.assert(ACK[msg], "Data to encrypt not found: "..msg)
