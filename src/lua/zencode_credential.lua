@@ -23,13 +23,26 @@ COCONUT = require_once('crypto_coconut')
 ZEN.add_schema({
 	  -- credential keypair (elgamal)
       credential_keypair = function(obj)
+		 local pub = ZEN.get(obj, 'public', ECP.new)
+		 local sec = ZEN.get(obj, 'private', INT.new)
+		 ZEN.assert(pub == ECP.generator() * sec,
+					"Public key does not belong to secret key in credential keypair")
          return { public  = ZEN.get(obj, 'public', ECP.new),
                   private = ZEN.get(obj, 'private', INT.new) } end
 })
+
 -- credential keypair operations
 When("create the credential keypair", function()
 		-- sk = rand, pk = G * sk
 		ACK.credential_keypair = { private = INT.random() }
+		ACK.credential_keypair.public = ECP.generator() *
+		   ACK.credential_keypair.private
+end)
+
+When("create the credential keypair with secret key ''", function(sec)
+		-- pk = G * sec
+		ZEN.assert(ACK[sec], "Secret key not found: "..sec)
+		ACK.credential_keypair = { private = ACK[sec] }
 		ACK.credential_keypair.public = ECP.generator() *
 		   ACK.credential_keypair.private
 end)
