@@ -28,8 +28,11 @@ ZEN.add_schema({
 	  -- keypair (ECDH)
 	  public_key = public_key_f,
       keypair = function(obj)
-         return { public_key  = public_key_f(obj.public_key),
-                  private_key = ZEN.get(obj, 'private_key') }
+		 local pub = public_key_f(obj.public_key)
+		 local sec = ZEN.get(obj, 'private_key')
+		 ZEN.assert(pub == ECDH.pubgen(sec), "Public key does not belong to secret key in keypair")
+         return { public_key  = pub,
+                  private_key = sec }
 	  end,
 	  secret_message = function(obj)
 		 return { checksum = ZEN.get(obj, 'checksum'),
