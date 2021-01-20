@@ -42,7 +42,7 @@ end)
 When("create the credential keypair with secret key ''", function(sec)
 		-- pk = G * sec
 		ZEN.assert(ACK[sec], "Secret key not found: "..sec)
-		ACK.credential_keypair = { private = ACK[sec] }
+		ACK.credential_keypair = { private = INT.new(ACK[sec]) }
 		ACK.credential_keypair.public = ECP.generator() *
 		   ACK.credential_keypair.private
 end)
