@@ -1,6 +1,6 @@
 {
   "name": "zenroom",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "wrapper of Zenroom, a secure and small virtual machine for crypto language processing",
   "main": "dist/main/index.js",
   "typings": "dist/main/index.d.ts",
