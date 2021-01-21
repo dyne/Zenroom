@@ -11,11 +11,22 @@ type ZenroomResult = {
   logs: string;
 };
 
+const cache = {
+  module: null,
+};
+
+const getModule = async () => {
+  if (cache.module === null) {
+    cache.module = await Zenroom();
+  }
+  return cache.module;
+};
+
 export const zencode_exec = async (
   zencode: string,
   props?: ZenroomProps
 ): Promise<ZenroomResult> => {
-  const Module = await Zenroom();
+  const Module = await getModule();
   return new Promise((resolve, reject) => {
     let result = "";
     let logs = "";
@@ -45,7 +56,7 @@ export const zenroom_exec = async (
   lua: string,
   props?: ZenroomProps
 ): Promise<ZenroomResult> => {
-  const Module = await Zenroom();
+  const Module = await getModule();
   return new Promise((resolve, reject) => {
     let result = "";
     let logs = "";
