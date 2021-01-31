@@ -11,6 +11,8 @@ jobs:
       - name: install dependencies
         run: |
           sudo apt install gcc-arm-none-eabi zsh
+      - name: Checkout submodules
+        uses: textbook/git-checkout-submodule-action@master
       - name: build cortex-arm target 
         run: |
           make cortex-arm
