@@ -308,37 +308,6 @@ static int zen_act (lua_State *L) {
 	return 0;
 }
 
-#elif defined(ARCH_CORTEX)
-static int zen_print (lua_State *L)
-{
-    return 1;
-}
-
-static int zen_printerr(lua_State *L)
-{
-	return 1;
-}
-
-// static int zen_error (lua_State *L)
-// {
-//     return 1;
-// }
-
-static int zen_warn (lua_State *L)
-{
-    return 1;
-}
-
-static int zen_write (lua_State *L)
-{
-    return 1;
-}
-
-static int zen_act (lua_State *L)
-{
-	return 1;
-}
-
 #else
 
 

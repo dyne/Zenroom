@@ -23,6 +23,17 @@ BRANCH := $(shell git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
 HASH := $(shell git rev-parse --short HEAD)
 VERSION := ${ZENROOM_VERSION}+${HASH}
 CFLAGS  += -I. -I../lib/lua53/src -I../lib/milagro-crypto-c/build/include -I../lib/milagro-crypto-c/include -Wall -Wextra
+
+CMSIS := ../lib/cmsis
+CORTEX_M_SRC_ASM = $(CMSIS)/Device/ARM/ARMCM3/Source/GCC/startup_ARMCM3.S
+CORTEX_M_SRC_C = $(CMSIS)/Device/ARM/ARMCM3/Source/system_ARMCM3.c
+CMSIS_INCLUDE_FLAGS = -I$(CMSIS)/Device/ARM/ARMCM3/Include \
+	-I$(CMSIS)/CMSIS/Core/Include
+CORTEX_M_CFLAGS = \
+	       $(CMSIS_INCLUDE_FLAGS) \
+	       -mthumb \
+	       -nostartfiles
+		   
 SOURCES := \
 	cli.o jutils.o zenroom.o zen_error.o \
 	lua_functions.o lua_modules.o lualibs_detected.o lua_shims.o \
@@ -35,6 +46,9 @@ SOURCES := \
 	zen_aes.o \
 	randombytes.o \
 	cortex_m.o
+
+cortex_m_boot.o: $(CORTEX_M_SRC_ASM)
+	${CC} ${CFLAGS} ${CORTEX_M_CFLAGS} -c $^ -o $@
 
 # js: CFLAGS += -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
 js: JSOUT ?= zenroom.js
@@ -113,8 +127,8 @@ ios-lib: ${SOURCES}
 android-arm android-x86 android-aarch64 java-x86_64 java-x86 java-arm java-aarch64: ${SOURCES} zenroom_jni.o
 	${CC} ${CFLAGS} ${SOURCES} zenroom_jni.o -o zenroom.so ${LDFLAGS} ${LDADD}
 
-arm: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o zenroom.elf ${LDFLAGS} ${LDADD}
+arm: ${SOURCES} cortex_m_boot.o
+	${CC} ${CFLAGS} ${CORTEX_M_CFLAGS} ${CORTEX_M_SRC_C} ${SOURCES} cortex_m_boot.o -o zenroom.elf ${LDFLAGS} ${LDADD}
 	${OBJCOPY} -O binary zenroom.elf zenroom.bin
 
 debug: CFLAGS+= -ggdb -DDEBUG=1 -Wall
