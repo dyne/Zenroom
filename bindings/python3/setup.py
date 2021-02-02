@@ -5,21 +5,25 @@ from setuptools import Extension, setup
 ECP_CURVE = 'BLS383'
 ECDH_CURVE = 'SECP256K1'
 
-ZENROOM_ROOT = '../../'
+if os.path.exists('bindings'):
+    ZENROOM_ROOT = os.getcwd()
+else:
+    ZENROOM_ROOT = os.path.join(os.getcwd(), '../../')
+
 ZENROOM_LIB_ROOT = os.path.join(ZENROOM_ROOT, 'src')
 
 LUA_ROOT = os.path.join(ZENROOM_ROOT, 'lib/lua53/src')
-MILAGRO_ROOT = os.path.join(ZENROOM_ROOT, 'lib/milagro-crypto-c')
-MILAGRO_INCLUDE_DIR = os.path.join(MILAGRO_ROOT, 'include')
+MILAGRO_INCLUDE_DIR = os.path.join(ZENROOM_ROOT,
+                                   'lib/milagro-crypto-c/include')
 
 
 def get_version():
     zenroom_version = '1.0.0'
-    hash = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'],
-                          cwd=ZENROOM_ROOT, text=True,
-                          capture_output=True).stdout
+    hash = subprocess.run(['git', 'rev-list', '--all', '--count'],
+                          cwd=ZENROOM_ROOT,
+                          stdout=subprocess.PIPE).stdout.decode('utf-8')
     # Last char in hash is a newline
-    return zenroom_version + '+' + hash[:-1]
+    return zenroom_version + '.dev' + hash[:-1]
 
 
 ZENROOM_SOURCES = [
@@ -86,16 +90,18 @@ LUA_SOURCES = [
 ]
 
 # Add meson build variables to the environment
-current_cwd = os.getcwd()
-env = dict(os.environ, MESON_SOURCE_ROOT=current_cwd + '/../',
-           MESON_BUILD_ROOT=current_cwd)
+build_root = os.path.join(ZENROOM_ROOT, 'bindings/python3/')
+source_root = os.path.join(ZENROOM_ROOT, 'build')
+env = dict(os.environ,
+           MESON_SOURCE_ROOT=source_root,
+           MESON_BUILD_ROOT=build_root)
 
+os.chdir(ZENROOM_ROOT)
 zenroom_ecdh_factory = 'zenroom_ecdh_factory.c'
-subprocess.check_call(["../../build/codegen_ecdh_factory.sh",
-                      ECDH_CURVE, zenroom_ecdh_factory])
-subprocess.check_call(["../../build/codegen_ecp_factory.sh", ECP_CURVE],
+subprocess.check_call(["build/codegen_ecdh_factory.sh",
+                      ECDH_CURVE, 'bindings/python3/' + zenroom_ecdh_factory])
+subprocess.check_call(["build/codegen_ecp_factory.sh", ECP_CURVE],
                       env=env)
-os.chdir('../../')
 subprocess.check_call("build/embed-lualibs")
 
 # Build milagro-lib
@@ -114,7 +120,7 @@ zenroom_lib = Extension('zenroom',
                             for src in LUA_SOURCES
                         ],
                         include_dirs=[
-                            current_cwd,
+                            os.getcwd(),
                             ZENROOM_LIB_ROOT,
                             LUA_ROOT,
                             MILAGRO_INCLUDE_DIR,
@@ -150,7 +156,7 @@ setup(
                 'Bindings of Zenroom library for Python.',
     version=get_version(),
     long_description=get_readme(),
-    long_description_content_type='text/org',
+    long_description_content_type='text/markdown',
     url='https://github.com/dyne/Zenroom',
     author='David Dashyan',
     author_email='mail@davie.li',
