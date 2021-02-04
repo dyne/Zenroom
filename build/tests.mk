@@ -61,6 +61,7 @@ lua-modules = \
 
 zencode-integration = \
 	./test/zencode_parser.sh && \
+	cd test/zencode_cookbook && ./run-all.sh; cd -; \
 	cd test/zencode_given && ./run.sh; cd -; \
 	cd test/zencode_numbers && ./run.sh; cd -; \
 	cd test/zencode_array && ./run.sh; cd -; \
