@@ -27,7 +27,7 @@ SOURCES := \
 	cli.o jutils.o zenroom.o zen_error.o \
 	lua_functions.o lua_modules.o lualibs_detected.o lua_shims.o \
 	encoding.o base58.o \
-	zen_memory.o lwmem.o \
+	zen_memory.o lwmem.o mutt_sprintf.o \
 	zen_io.o zen_parse.o repl.o zen_config.o \
 	zen_octet.o zen_ecp.o zen_ecp2.o zen_big.o \
 	zen_fp12.o zen_random.o zen_hash.o \

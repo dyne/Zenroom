@@ -56,6 +56,7 @@
 #define STB_SPRINTF_NOFLOAT 1
 #define STB_SPRINTF_DECORATE(name) z_##name
 #include <stb_sprintf.h>
+#include <mutt_sprintf.h>
 
 // prototypes from zen_octet.c
 extern void push_buffer_to_octet(lua_State *L, char *p, size_t len);
@@ -178,20 +179,27 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	Z->random_generator = NULL;
 	Z->random_external = 0;
 	switch(zconf_printf) {
-		case STB_PRINTF:
-			Z->sprintf = &z_sprintf;
-			Z->snprintf = &z_snprintf;
-			Z->vsprintf = &z_vsprintf;
-			Z->vsnprintf = &z_vsnprintf;
-			act(NULL,"STB print functions in use");
-			break;
-		default: // LIBC_PRINTF
-			Z->sprintf = &sprintf;
-			Z->snprintf = &snprintf;
-			Z->vsprintf = &vsprintf;
-			Z->vsnprintf = &vsnprintf;
-			func(NULL,"LIBC print functions in use");
-			break;
+	case STB_PRINTF:
+		Z->sprintf = &z_sprintf;
+		Z->snprintf = &z_snprintf;
+		Z->vsprintf = &z_vsprintf;
+		Z->vsnprintf = &z_vsnprintf;
+		act(NULL,"STB print functions in use");
+		break;
+	case MUTT_PRINTF:
+		Z->sprintf = &sprintf; // TODO: mutt based
+		Z->vsprintf = &vsprintf;
+		Z->snprintf = &mutt_snprintf;
+		Z->vsnprintf = &mutt_vsnprintf;
+		act(NULL,"MUTT print functions in use");
+		break;
+	default: // LIBC_PRINTF
+		Z->sprintf = &sprintf;
+		Z->snprintf = &snprintf;
+		Z->vsprintf = &vsprintf;
+		Z->vsnprintf = &vsnprintf;
+		func(NULL,"LIBC print functions in use");
+		break;
 	}
 
 	// use RNGseed from configuration if present (deterministic mode)

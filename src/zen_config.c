@@ -164,6 +164,7 @@ int zen_conf_parse(const char *configuration) {
 			if(curconf==PRINTF) {
 				if(strcasecmp(lex.string,"stb") == 0) zconf_printf = STB_PRINTF;
 				else if(strcasecmp(lex.string,"sys") == 0) zconf_printf = LIBC_PRINTF;
+				else if(strcasecmp(lex.string,"mutt") == 0) zconf_printf = MUTT_PRINTF;
 				else {
 					error(NULL,"Invalid print function: %s",lex.string);
 					// free(lexbuf);

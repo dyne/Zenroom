@@ -24,6 +24,6 @@
 // supported memory managers: lwmem, jemalloc, system
 typedef enum { LW, JE, SYS } mmtype;
 // printf function pointers for zen_config
-typedef enum { LIBC_PRINTF, STB_PRINTF } printftype;
+typedef enum { LIBC_PRINTF, STB_PRINTF, MUTT_PRINTF } printftype;
 
 #endif
