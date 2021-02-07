@@ -82,12 +82,12 @@ lua_src = files(
     '../lib/lua53/src/linit.c',
 )
 
-milagro_include_dirs = include_directories('../lib/milagro-crypto-c/include')
+milagro_include_dirs = include_directories('../lib/milagro-crypto-c/build/include')
 run_command(
     'build-milagro-crypto-c', ecp_curve, ecdh_curve,
     check: true,
 )
-milagro_generated_include_dirs = include_directories('milagro-crypto-c/include')
+milagro_generated_include_dirs = include_directories('milagro-crypto-c/build/include')
 
 lua_include_dirs = include_directories('../lib/lua53/src')
 lua_lib = static_library('lua',
