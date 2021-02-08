@@ -183,9 +183,20 @@ If you master *curl* and some shell scripting, you will easily be able to create
 You can obviously also use the APIs exposed in Apiroom in your web/mobile application, by using the **POST** call that we have just tested in *curl* 
 
 
+# Export APIs 
+
+After you're happy with the APIs you've prototyped and you're ready for a real deployment, in the back-end of Apiroom you can **select some smart contracts and export them** to:
+
+- A **Dockerfile** 
+- A shell script that will **install RESTroom-mw and the APIs**
+- Just download **smart contracts**, which you can use in Zenroom or RESTroom-mw, along with the keys and data you have saved
+ 
+
+![ApiroomShots](../_media/images/apiroom/ApiroomExportToDocker.png)
+
 ## Export APIs to Dockerfile
 
-After you're happy with the APIs you've prototyped and you're ready for a real deployment, in the back-end of Apiroom you can create a **Dockerfile** that will:
+You can export your APIs to a **Dockerfile** that will:
  
  - Create a Docker image 
  - Clone and configure [RESTroom-mw](https://dyne.github.io/restroom-mw/#/) 
@@ -193,7 +204,6 @@ After you're happy with the APIs you've prototyped and you're ready for a real d
 
 To create the **Dockerfile**, select the contracts you want have running in the microservice then clic on "Export Docker"
 
-![ApiroomShots](../_media/images/apiroom/ApiroomExportToDocker.png)
 
 ### Docker image configuration
 
@@ -237,7 +247,16 @@ If everything worked fine, by going to **http://localhost:3300/docs** you should
 
 ![ApiroomShots](../_media/images/apiroom/RestroommwSwagger.png)
 
+## Export APIs to a RESTroom-mw instance
 
+If you select the Export -> **script to setup...**, Apiroom will generate a shell script, that will:
+
+- Install **RESTroom-mw**
+- Copy a default **.env file** in the RESTroom-mw instance
+- Copy the **smart contracts/APIs** in the RESTroom-mw instance
+- Give you instructions on **how to build and launch** RESTroom-mw 
+
+You want to use this option if you want to have the APIs on a non-containerized server. 
 
 
 <!-- WIP 
