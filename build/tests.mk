@@ -49,6 +49,21 @@ crypto-tests = \
 	${1} test/coconut_test.lua && \
 	${1} test/crypto_abc_zeta.lua
 
+cortex-m-crypto-tests = \
+	${1}test/octet.lua && \
+	${1}test/octet_conversion.lua && \
+	${1}test/hash.lua && \
+	${1}test/ecdh.lua && \
+	${1}test/dh_session.lua && \
+	${1}test/nist/aes_gcm.lua && \
+	${1}test/nist/aes_cbc.lua && \
+	${1}test/nist/aes_ctr.lua && \
+	${1}test/ecp_generic.lua && \
+	${1}test/elgamal.lua && \
+	${1}test/bls_pairing.lua && \
+	${1}test/coconut_test.lua && \
+	${1}test/coconut_abc_zeta.lua
+
 crypto-integration = \
 	test/octet-json.sh ${1} && \
 	cd test/nist && ./run.sh ../../${1}; cd -; \
@@ -101,6 +116,7 @@ check:
 	@echo "Test target 'check' supports various modes, please specify one:"
 	@echo "\t check-linux, check-osx, check-js check-py"
 	@echo "\t check-debug, check-crypto, debug-crypto"
+	@echo "\t check-cortex-m"
 
 check-osx: test-exec := ./src/zenroom.command
 check-osx:
@@ -222,6 +238,13 @@ check-crypto-debug:
 	$(call zencode-tests,${test-exec})
 	cat /tmp/zenroom-test-summary.txt
 
+check-cortex-m: test-exec := qemu-system-arm -M mps2-an385 -kernel src/zenroom.bin -semihosting -nographic
+check-cortex-m:
+	rm -f /tmp/zenroom-test-summary.txt
+	$(call cortex-m-crypto-tests,${test-exec} -semihosting-config arg=)
+	@echo "-----------------------"
+	@echo "All CRYPTO tests passed"
+	@echo "-----------------------"
 
 #	./test/integration_asymmetric_crypto.sh ${test-exec}
 

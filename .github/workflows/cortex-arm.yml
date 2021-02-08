@@ -10,9 +10,12 @@ jobs:
         uses: actions/checkout@v2
       - name: install dependencies
         run: |
-          sudo apt install gcc-arm-none-eabi zsh
+          sudo apt install gcc-arm-none-eabi zsh qemu-system-arm 
       - name: Checkout submodules
         uses: textbook/git-checkout-submodule-action@master
       - name: build cortex-arm target 
         run: |
           make cortex-arm
+      - name: Run cortex-m check
+        run: |
+          make check-cortex-m
