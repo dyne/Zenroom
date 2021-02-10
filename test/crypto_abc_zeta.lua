@@ -20,7 +20,7 @@ local issuer_aggkeys = ABC.aggregate_keys({issuer_keypair.verify,
 									   issuer2_keypair.verify,
 									   issuer3_keypair.verify})
 
-Lambda = ABC.prepare_blind_sign(client.public, client.private)
+Lambda = ABC.prepare_blind_sign(client.private)
 local sigma_tilde1 = ABC.blind_sign(issuer_keypair.sign, Lambda)
 local sigma_tilde2 = ABC.blind_sign(issuer2_keypair.sign, Lambda)
 local sigma_tilde3 = ABC.blind_sign(issuer3_keypair.sign, Lambda)

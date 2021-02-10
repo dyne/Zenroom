@@ -61,7 +61,7 @@ local function make_pi_s(gamma, commit, k, r, m)
 			rr = wr - c * r  }
 end
 
-local function verify_pi_s(l)
+function abc.verify_pi_s(l)
    local Aw = l.sign.a * l.pi_s.commit
 	  + G1 * l.pi_s.rk
    local Bw = l.sign.b * l.pi_s.commit
@@ -101,7 +101,8 @@ function abc.aggregate_keys(keys)
 			beta = agg_beta }
 end
 
-function abc.prepare_blind_sign(gamma, secret)
+function abc.prepare_blind_sign(secret)
+   local gamma = G1 * secret
    local m = INT.new(sha256(secret))
    -- ElGamal commitment
    local r = INT.random()
@@ -119,7 +120,7 @@ function abc.prepare_blind_sign(gamma, secret)
 end
 
 function abc.blind_sign(sk, Lambda)
-   assert(verify_pi_s(Lambda),
+   assert(abc.verify_pi_s(Lambda),
 		  'Zero knowledge proof does not verify (Lambda.pi_s)', 2)
    local h = Lambda.commit
    local a_tilde = Lambda.sign.a * sk.y
