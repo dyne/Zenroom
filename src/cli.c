@@ -433,9 +433,9 @@ int main(int argc, char **argv) {
 	time_t sec = (double) (after.tv_sec) - (double) (before.tv_sec);
 	suseconds_t msec = (double) (after.tv_usec) - (double) (before.tv_usec);
 	if(sec>1)
-		warning(NULL,"Time used:: %us %u μs", sec,msec);
+		warning(NULL,"Time used: %u s %06u μs", sec,msec);
 	else
-		act(NULL,"Time used:: %us %u μs", sec,msec);
+		act(NULL,"Time used: %u s %06u μs", sec,msec);
 
 	cli_free_buffers();
 	return EXIT_SUCCESS;
