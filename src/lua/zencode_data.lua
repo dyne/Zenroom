@@ -211,6 +211,8 @@ function guess_outcast(cast)
    elseif cast == 'bin'    then return outcast_bin
    elseif cast == 'binary'    then return outcast_bin
    elseif cast == 'number' then return(function(v) return(v) end)
+	  -- in case is a schema then outcast uses default output encoding
+   elseif ZEN.schemas[cast] then return CONF.output.encoding.fun
    else
 	  error("Invalid output conversion: "..cast, 2)
 	  return nil

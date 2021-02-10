@@ -86,7 +86,7 @@ local function pickin(section, what, conv, fail)
    -- conv = conv or what
    -- if not conv and ZEN.schemas[what] then conv = what end
    -- if no encoding provided then conversion is same as name (schemas etc.)
-   TMP = guess_conversion(raw, conv or what )
+   TMP = guess_conversion(raw, conv or what)
    TMP.name = what
    TMP.root = section
    assert(ZEN.OK)
@@ -98,6 +98,11 @@ local function ack_table(key,val)
    ZEN.assert(type(val) == 'string',"ZEN:table_add arg #2 is not a string")
    if not ACK[key] then ACK[key] = { } end
    ACK[key][val] = operate_conversion(TMP)
+   ZEN.CODEC[key] = { name = TMP.name,
+					  luatype = 'table',
+					  zentype = 'dictionary',
+					  encoding = TMP.encoding,
+					  root = TMP.root }
 end
 
 
@@ -188,7 +193,7 @@ Given("have a '' from ''", function(s, t)
 		 -- if not pickin(t, s, nil, false) then
 		 -- 	pickin(s, t)
 		 -- end
-		 pickin(t, s, nil, false)
+		 pickin(t, s, s, false)
 		 ack_table(s, t)
 		 gc()
 end)
