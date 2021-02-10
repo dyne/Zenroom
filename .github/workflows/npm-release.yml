@@ -63,7 +63,7 @@ jobs:
           EMSCRIPTEN: ${{ env.EMSDK }}/upstream/emscripten
       - name: Run yarn version to zenroom@next
         run: yarn version --new-version ${{ github.event.inputs.zenroom_npm_version }} --no-git-tag-version
-      - run: npm publish .
+      - run: npm publish --tag latest .
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
