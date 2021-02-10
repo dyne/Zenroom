@@ -113,7 +113,7 @@ cortex-lua53:
 
 milagro:
 	@echo "-- Building milagro (${system})"
-	if ! [ -r ${pwd}/lib/milagro-crypto-c/CMakeCache.txt ]; then \
+	if ! [ -r ${pwd}/lib/milagro-crypto-c/build/CMakeCache.txt ]; then \
 		cd ${pwd}/lib/milagro-crypto-c && \
 		mkdir -p build && \
 		cd build && \
@@ -121,7 +121,7 @@ milagro:
 		cmake ../ -DCMAKE_C_FLAGS="${cflags}" -DCMAKE_SYSTEM_NAME="${system}" \
 		-DCMAKE_AR=${ar} -DCMAKE_C_COMPILER=${gcc} ${milagro_cmake_flags}; \
 	fi
-	if ! [ -r ${pwd}/lib/milagro-crypto-c/lib/libamcl_core.a ]; then \
+	if ! [ -r ${pwd}/lib/milagro-crypto-c/build/lib/libamcl_core.a ]; then \
 		CC=${gcc} CFLAGS="${cflags}" AR=${ar} RANLIB=${ranlib} LD=${ld} \
 		make -C ${pwd}/lib/milagro-crypto-c/build; \
 	fi
@@ -141,11 +141,6 @@ install:
 	if [ -d docs/website/site ]; then cd docs/website/site && cp -ra * ${destdocs}/docs/; cd -; fi
 	install -d ${destdocs}/examples \
 		&& cp -ra examples/* ${destdocs}/examples/
-	install -d ${destdocs}/scenarios/coconut \
-		&& cp -ra test/zencode_coconut/*.zen ${destdocs}/scenarios/coconut/
-	install -d ${destdocs}/scenarios/ecdh \
-		&& cp -ra test/zencode_ecdh/*.zen ${destdocs}/scenarios/ecdh/
-
 	if [ -d docs/Zencode_Whitepaper.pdf ]; then cp -ra docs/Zencode_Whitepaper.pdf ${destdocs}/; fi
 	cp README.md ${destdocs}/README.txt
 	cp LICENSE.txt ${destdocs}/LICENSE.txt
