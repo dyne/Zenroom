@@ -47,7 +47,7 @@ crypto-tests = \
 	${1} test/elgamal.lua && \
 	${1} test/bls_pairing.lua && \
 	${1} test/coconut_test.lua && \
-	${1} test/coconut_abc_zeta.lua
+	${1} test/crypto_abc_zeta.lua
 
 crypto-integration = \
 	test/octet-json.sh ${1} && \
