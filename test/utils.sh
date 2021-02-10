@@ -82,11 +82,15 @@ zexe() {
 	fi
 	out="$1"
 	shift 1
+	echo >&2
+	echo "====================================" >&2
 	>&2 echo "test: $out"
 	t=`mktemp -d`
 	>&2 echo $t
 	tee "$out" | $Z -z $* 2>$t/stderr 1>$t/stdout
 	res=$?
+	grep "Time used" $t/stderr >&2
+	echo "OUTPUT SIZE: `stat -c '%s' $t/stdout` bytes" >&2
 	if [ $res == 0 ]; then
 		cat $t/stdout
 		echo "OK  `basename $out`" >> /tmp/zenroom-test-summary.txt
@@ -95,6 +99,7 @@ zexe() {
 		echo "ERR `basename $out`" >> /tmp/zenroom-test-summary.txt
 		exit
 	fi
+	echo "====================================" >&2
 	return $res
 }
 
