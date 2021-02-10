@@ -16,6 +16,11 @@ function iszen(n)
    return false
 end
 
+-- workaround for a ternary conditional operator
+function fif(condition, if_true, if_false)
+  if condition then return if_true else return if_false end
+end
+
 -- gets a string and returns the associated function, string and prefix
 -- comes before schema check
 function input_encoding(what)
