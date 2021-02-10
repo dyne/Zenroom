@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       zenroom_npm_version:
-        description: 'Release version of the zenroom npm to publish'
+        description: 'Release version of the zenroom npm to publish (eg.: 2.2.3)'
         required: true
 env:
   EM_VERSION: latest
