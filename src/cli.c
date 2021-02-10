@@ -307,6 +307,11 @@ int main(int argc, char **argv) {
 	} else
 		if(verbosity) act(NULL, "using default configuration");
 
+	// time from here
+	struct timeval before;
+	struct timeval after;
+	gettimeofday(&before, 0);
+
 	// set_debug(verbosity);
 	Z = zen_init(
 			(conffile[0])?conffile:NULL,
@@ -422,6 +427,16 @@ int main(int argc, char **argv) {
 #endif /* POSIX */
 
 	zen_teardown(Z);
+
+	// measure and report time of execution
+	gettimeofday(&after, 0);
+	time_t sec = (double) (after.tv_sec) - (double) (before.tv_sec);
+	suseconds_t msec = (double) (after.tv_usec) - (double) (before.tv_usec);
+	if(sec>1)
+		warning(NULL,"Time used:: %us %u μs", sec,msec);
+	else
+		act(NULL,"Time used:: %us %u μs", sec,msec);
+
 	cli_free_buffers();
 	return EXIT_SUCCESS;
 }
