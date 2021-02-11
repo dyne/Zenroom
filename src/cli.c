@@ -430,12 +430,9 @@ int main(int argc, char **argv) {
 
 	// measure and report time of execution
 	gettimeofday(&after, 0);
-	time_t sec = (double) (after.tv_sec) - (double) (before.tv_sec);
-	suseconds_t msec = (double) (after.tv_usec) - (double) (before.tv_usec);
-	if(sec>1)
-		warning(NULL,"Time used: %u s %06u μs", sec,msec);
-	else
-		act(NULL,"Time used: %u s %06u μs", sec,msec);
+	double usecs = (double) (after.tv_sec) * 1000000.0f + (double) (after.tv_usec) -
+		(double) (before.tv_sec) * 1000000.0f - (double) (before.tv_usec);
+	act(NULL,"Time used: %d μs", usecs);
 
 	cli_free_buffers();
 	return EXIT_SUCCESS;

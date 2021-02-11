@@ -176,7 +176,7 @@ function get_format(what)
    error("Conversion format not supported: "..what, 2)
    return nil
 end
-	  
+
 -- debugging facility
 function xxx(s, n)
    n = n or 3
@@ -390,7 +390,8 @@ end
 function zenguard(val)
    if not (iszen(type(val)) or tonumber(val)) then
 		I.print(ZEN.heap().ACK)
-		xxx("Invalid value: "..val)
+		-- xxx("Invalid value: "..val)
+		debug_heap_dump()
 		error("Zenguard detected an invalid value in HEAP: type "..type(val), 2)
 		return nil
    end

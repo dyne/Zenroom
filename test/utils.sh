@@ -102,6 +102,7 @@ zexe() {
 		exit
 	fi
 	echo "====================================" >&2
+	sleep .1 # let some air between tests
 	return $res
 }
 
