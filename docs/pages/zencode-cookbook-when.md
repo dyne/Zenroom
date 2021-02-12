@@ -76,34 +76,13 @@ zenroom -a myLargeNestedObjectWhen.json -z whenCompleteScriptPart1.zen | jq | te
 
 The output should look like <a href="../_media/examples/zencode_cookbook/whenCompleteOutputPart1.json" download>whenCompleteOutputPart1.json</a>. Remember that the output gets sorted alphabetically, because in Zenroom *determinism is King*.
 
-## Create regular or random objects and render them
+## Create the "(name of schema)"
 
-In the second group we gathered the *When* statements that can create new objects and assign values to them.
+Let's have a look at at the statement "Create", first focusing to a special use case.
 
+The statement *Create the* works only to create different both **simple objects** as well as **schemas**, which are particular objects, whose names and structures are predefined.
 
- The "create" statements can ***generate random numbers*** (or arrays thereof), with different parameters.
-
- The "set" statements allow you to ***create an object and assign a value to it***. 
- 
- The "create the cbor of" statement allows you ***render an object to CBOR***. The statement also has a counterpart to render to JSON: "create the json of".
- 
-
- See our example script below: 
- 
-
-[](../_media/examples/zencode_cookbook/whenCompleteScriptPart2.zen ':include :type=code gherkin')
-
-
-
-The output should look like <a href="../_media/examples/zencode_cookbook/whenCompleteOutputPart2.json" download>whenCompleteOutputPart2.json</a>.
-
-## The statement "Create the (name of schema)"
-
-By now we have been using the statement "Create" a bit, let's get a better look at it. 
-
-The statement *Create the* works only to create **schemas**, which are particular objects, whose names and structures are predefined.
-
-in *Zencode*, *the* is a keyword indicating that a **schema** is about to be created. The structure of the **schema** created by the statement, matches the word(s) following the keyword "the", and the name of object created will also be the same.
+in *Zencode*, *the* is a keyword indicating that a **schema** is about to be created. In case a **schema** created by the statement, its structure will matche the word(s) following the keyword "the", and the name of object created will also be the same.
 
 A general version of the statement looks like this: 
 
@@ -117,6 +96,8 @@ A statement we have use extensively already from the scenario 'ecdh'
 ```gherkin
 When I create the keypair
 ``` 
+
+We'll look at two way to generate keypairs (from a random or from a known seed in the next chapter).
 
 As you probably know by now, this statement outputs something looking like this: 
 
@@ -149,6 +130,31 @@ When I create the json of 'myCborObject'
 ``` 
 
 We're sparing you the full list of **schemas** that you can create, but the best place to see a full and updated list is <a href="https://apiroom.net">https://apiroom.net</a>. 
+
+
+## Create regular or random objects and render them
+
+In the second group we gathered the *When* statements that can create new objects and assign values to them.
+
+
+ The "create" statements can ***generate random numbers*** (or arrays thereof), with different parameters.
+
+ The "set" statements allow you to ***create an object and assign a value to it***. 
+ 
+ The "create the cbor of" statement allows you ***render an object to CBOR***. The statement also has a counterpart to render to JSON: "create the json of".
+ 
+ A special case is the stament "create keypair", which we see in two flavours, one ***creates a keypair from a random seed***, one ***from a known seed***.
+ 
+
+ See our example script below: 
+ 
+
+[](../_media/examples/zencode_cookbook/whenCompleteScriptPart2.zen ':include :type=code gherkin')
+
+
+
+The output should look like <a href="../_media/examples/zencode_cookbook/whenCompleteOutputPart2.json" download>whenCompleteOutputPart2.json</a>.
+
 
 
 ## Basic cryptography: hashing

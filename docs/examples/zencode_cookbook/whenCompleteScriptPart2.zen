@@ -48,4 +48,25 @@ When I set 'myNewlyCreatedNumberInBaseSomething' to '42' base '16'
 When I create the cbor of 'myFirstArray'
 And I rename the 'cbor' to 'myArrayRenderedToCBOR'
 
+# CREATE KEYPAIR
+# Keypairs can be created from a random seed or from a known seed
+
+# Below is the standard keypair generation statement, which uses a random seed
+# The random seed can in fact be passed to Zenroom and last for the whole 
+# smart contract execution session, via the "config" parameter. 
+# Note that, in order to create a keypair, you'll need to declare the identity of the script
+# executor, which is done in the Given phase
+ 
+# Note: we're renaming the created keypairs exclusively cause we're generating 2 keypairs 
+# in the same script, so the second would overwrite the first. In reality you never want to 
+# rename a keypair, as its schema is hardcoded in Zenroom and cryptographically it doesn't make sense
+# to use more than one keypair in the same script.
+When I create the keypair
+and I rename the 'keypair' to 'keypairFromRandom'
+
+# Below is a statement to create a keypair from a known seed.
+# The seed has to be passed to Zenroom via a string, that can have an arbitrary size
+When I create the keypair with secret key 'myThirteenStringPassword'
+and I rename the 'keypair' to 'keypairFromSeed'
+
 Then print all data
