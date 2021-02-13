@@ -4,8 +4,23 @@
     print "Run from base directory: ./test/$0"
     return 1
 }
+
+if ! test -r ./test/utils.sh; then
+	echo "run executable from its own directory: $0"; exit 1; fi
+. ./test/utils.sh
+
 zen=($*)
 zen=${zen:-./src/zenroom}
+
+run_zenroom_on_cortexm_qemu(){
+	qemu_zenroom_run "$*"
+	cat ./outlog
+}
+
+if [[ "$1" == "cortexm" ]]; then
+	zen=run_zenroom_on_cortexm_qemu
+fi
+
 # echo "using: $zen"
 secret="This is the secret message that is sent among people."
 ppl=(zora vuk mira darko)
@@ -14,12 +29,13 @@ tmp=`mktemp -d`
 # echo "tempdir: $tmp"
 
 generate() {
+	tmpfile=`mktemp`
     for p in $ppl; do
-        cat <<EOF | $zen > $tmp/$p-keys.json 2>/dev/null
+        cat <<EOF >$tmpfile && $zen $tmpfile > $tmp/$p-keys.json 2>/dev/null
 k = ECDH.keygen()
 print( JSON.encode(deepmap(O.to_hex, k)) )
 EOF
-        cat <<EOF | $zen -k $tmp/$p-keys.json > $tmp/$p-envelop.json 2>/dev/null
+        cat <<EOF >$tmpfile && $zen $tmpfile -k $tmp/$p-keys.json > $tmp/$p-envelop.json 2>/dev/null
 keys = JSON.decode(KEYS)
 envelop = JSON.encode({
     message="$secret",
@@ -27,12 +43,14 @@ envelop = JSON.encode({
 print(envelop)
 EOF
     done
+	rm -f $tmpfile
 }
 
 test_encrypt() {
     from=$1
     to=$2
-    cat <<EOF | $zen -k $tmp/$from-keys.json -a $tmp/$to-envelop.json \
+	tmpfile=`mktemp`
+    cat <<EOF >$tmpfile && $zen $tmpfile -k $tmp/$from-keys.json -a $tmp/$to-envelop.json \
                      > $tmp/from-$from-to-$to-cryptomsg.json 2>/dev/null
 keys = JSON.decode(KEYS)
 data = JSON.decode(DATA)
@@ -52,12 +70,14 @@ ciphermsg.text, ciphermsg.checksum =
 	  ciphermsg.header)
 print(JSON.encode(ciphermsg))
 EOF
+	rm -f $tmpfile
 }
 
 test_decrypt() {
     from=$1
     to=$2
-    cat <<EOF | $zen -k $tmp/$to-keys.json -a $tmp/from-$from-to-$to-cryptomsg.json
+	tmpfile=`mktemp`
+    cat <<EOF >$tmpfile && $zen $tmpfile -k $tmp/$to-keys.json -a $tmp/from-$from-to-$to-cryptomsg.json
 keys = JSON.decode(KEYS)
 data = JSON.decode(DATA)
 recipient = { }
@@ -71,6 +91,7 @@ decode.text, decode.checksum =
     AES.gcm_decrypt(session, O.from_base64(data.text), O.from_base64(decode.header.iv), data.header)
 print(decode.text:str())
 EOF
+	rm -f $tmpfile
 }
 
 print - "== Running integration tests for ECDH"

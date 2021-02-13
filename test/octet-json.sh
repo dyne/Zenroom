@@ -4,11 +4,29 @@ tstr="Zenroom test"
 zenroom=$1
 valgrind=$2
 
+[[ -r test ]] || {
+    print "Run from base directory: ./test/$0"
+    return 1
+}
+
+if ! test -r ./test/utils.sh; then
+	echo "run executable from its own directory: $0"; exit 1; fi
+. ./test/utils.sh
+
+run_zenroom_on_cortexm_qemu(){
+	qemu_zenroom_run "$*"
+	cat ./outlog
+}
+
 function grind() {
-	if [[ "$2" != "valgrind" ]]; then
-		$zenroom $*
-	else
+	if [[ "$valgrind" == "valgrind" ]]; then
 		valgrind --max-stackframe=2064480 $zenroom $*
+	else
+		if [[ "$zenroom" == "cortexm" ]]; then
+			run_zenroom_on_cortexm_qemu $*
+		else
+			$zenroom $*
+		fi
 	fi
 	return $?
 }

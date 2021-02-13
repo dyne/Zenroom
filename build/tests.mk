@@ -64,6 +64,21 @@ cortex-m-crypto-tests = \
 	${1}test/coconut_test.lua && \
 	${1}test/coconut_abc_zeta.lua
 
+cortex-m-crypto-tests = \
+	test/cortex_m_crypto_tests.sh
+
+cortex-m-zencode-integration = \
+	cd test/zencode_numbers && ./run.sh ${1}; cd -; \
+	cd test/zencode_array && ./run.sh ${1}; cd -; \
+	cd test/zencode_hash && ./run.sh ${1}; cd -; \
+	cd test/zencode_ecdh && ./run.sh ${1}; cd -; \
+	cd test/zencode_credential && ./run.sh ${1}; cd -; \
+	cd test/zencode_petition && ./run.sh ${1}; cd -;
+
+cortex-m-crypto-integration = \
+	test/octet-json.sh ${1} && \
+	test/integration_asymmetric_crypto.sh ${1}
+	
 crypto-integration = \
 	test/octet-json.sh ${1} && \
 	cd test/nist && ./run.sh ../../${1}; cd -; \
@@ -238,10 +253,13 @@ check-crypto-debug:
 	$(call zencode-tests,${test-exec})
 	cat /tmp/zenroom-test-summary.txt
 
-check-cortex-m: test-exec := qemu-system-arm -M mps2-an385 -kernel src/zenroom.bin -semihosting -nographic
 check-cortex-m:
 	rm -f /tmp/zenroom-test-summary.txt
-	$(call cortex-m-crypto-tests,${test-exec} -semihosting-config arg=)
+	--rm -f ./outlog
+	$(call cortex-m-crypto-tests)
+	$(call cortex-m-crypto-integration,cortexm)
+	$(call cortex-m-zencode-integration,cortexm)
+	cat /tmp/zenroom-test-summary.txt
 	@echo "-----------------------"
 	@echo "All CRYPTO tests passed"
 	@echo "-----------------------"
