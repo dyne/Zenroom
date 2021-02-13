@@ -6,9 +6,14 @@
 if ! test -r ../utils.sh; then
 	echo "run executable from its own directory: $0"; exit 1; fi
 . ../utils.sh
+
+is_cortexm=false
+if [[ "$1" == "cortexm" ]]; then
+	is_cortexm=true
+fi
+
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
-
 
 cat <<EOF | zexe hash_string.zen | tee hex.json
 rule output encoding hex
