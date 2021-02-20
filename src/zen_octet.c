@@ -1,6 +1,6 @@
 /* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Copyright (C) 2017-2020 Dyne.org foundation
+ * Copyright (C) 2017-2021 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -203,7 +203,9 @@ octet* o_arg(lua_State *L,int n) {
 			return NULL;
 		}
 		return(o);
-	} else if( (strncmp("string",type,6)==0) || (strncmp("number",type,6)==0) ) {
+	}
+	if( strlen(type) >= 6 && ((strncmp("string",type,6)==0)
+						  || (strncmp("number",type,6)==0)) ) {
 		size_t len; const char *str;
 		str = luaL_optlstring(L,n,NULL,&len);
 		if(!str || !len) {
@@ -216,50 +218,36 @@ octet* o_arg(lua_State *L,int n) {
 			lerror(L,"failed implicit conversion from string to octet");
 		return 0;
 		}
-/* 		// note here implicit conversion is only made from u64 and hex
-		// TODO: convert from more string encodings cascading is_* funcs
-		int hlen;
-		if((hlen = is_url64(str))>0) { // import from U64 encoded string
-			int declen = B64decoded_len(hlen);
-			func(L,"octet argument is_url64 len %u -> %u",hlen, declen);
-			o = o_new(L, declen); SAFE(o);
-			o->len = U64decode(o->val, str);
-			return(o);
-		} else if((hlen = is_hex(str))>0) { // import from a HEX encoded string
-			o = o_new(L, hlen); SAFE(o);
-			OCT_fromHex(o, (char*)str);
-			return(o);
- */
 		// fallback to a string
 		o = o_new(L, len+1); SAFE(o); // new
 		OCT_jstring(o, (char*)str);
 		lua_pop(L,1);
 		return(o);
-	} else {
-		// zenroom types
-		ud = luaL_testudata(L, n, "zenroom.big");
-		if(ud) {
-			big *b = (big*)ud;
-			o = new_octet_from_big(L,b); SAFE(o);
-			lua_pop(L,1);
-			return(o);
-		}
-		ud = luaL_testudata(L, n, "zenroom.ecp");
-		if(ud) {
-			ecp *e = (ecp*)ud;
-			o = o_new(L, e->totlen + 0x0f); SAFE(o); // new
-			_ecp_to_octet(o,e);
-			lua_pop(L,1);
-			return(o);
-		}
-		ud = luaL_testudata(L, n, "zenroom.ecp2");
-		if(ud) {
-			ecp2 *e = (ecp2*)ud;
-			o = o_new(L, e->totlen + 0x0f); SAFE(o); // new
-			_ecp2_to_octet(o,e);
-			lua_pop(L,1);
-			return(o);
-		}
+	}
+	// else
+    // zenroom types
+	ud = luaL_testudata(L, n, "zenroom.big");
+	if(ud) {
+		big *b = (big*)ud;
+		o = new_octet_from_big(L,b); SAFE(o);
+		lua_pop(L,1);
+		return(o);
+	}
+	ud = luaL_testudata(L, n, "zenroom.ecp");
+	if(ud) {
+		ecp *e = (ecp*)ud;
+		o = o_new(L, e->totlen + 0x0f); SAFE(o); // new
+		_ecp_to_octet(o,e);
+		lua_pop(L,1);
+		return(o);
+	}
+	ud = luaL_testudata(L, n, "zenroom.ecp2");
+	if(ud) {
+		ecp2 *e = (ecp2*)ud;
+		o = o_new(L, e->totlen + 0x0f); SAFE(o); // new
+		_ecp2_to_octet(o,e);
+		lua_pop(L,1);
+		return(o);
 	}
 	error(L,"Error in argument #%u",n);
 	lerror(L, "%s: cannot convert %s to zeroom.octet",__func__,luaL_typename(L,n));
@@ -860,12 +848,11 @@ static int eq(lua_State *L) {
 		lua_pushboolean(L, 0);
 		return 1; }
 	register int i;
+	short res = 1;
 	for (i=0; i<x->len; i++) { // xor
-		if (x->val[i] ^ y->val[i]) {
-			lua_pushboolean(L, 0);
-			return 1; }
+		if (x->val[i] ^ y->val[i]) res = 0;
 	}
-	lua_pushboolean(L, 1);
+	lua_pushboolean(L, res);
 	return 1;
 }
 

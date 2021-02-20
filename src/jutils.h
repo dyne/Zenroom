@@ -1,6 +1,6 @@
 /*  Jaromil's utility collection
  *
- *  (c) Copyright 2001-2019 Denis Rojo <jaromil@dyne.org>
+ *  (c) Copyright 2001-2021 Denis Rojo <jaromil@dyne.org>
  *
  * This source code is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Public License as published 
@@ -55,5 +55,7 @@ int z_sprintf(char *buf, char const *fmt, ...);
 int z_snprintf(char *buf, int count, char const *fmt, ...);
 int z_vsprintf(char *buf, char const *fmt, va_list va);
 int z_vsnprintf(char *buf, int count, char const *fmt, va_list va);
+
+short compare(const char *left, const char *right, size_t len);
 
 #endif
