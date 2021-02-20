@@ -151,10 +151,12 @@ void load_file(char *dst, FILE *fd) {
 }
 
 static char *conffile = NULL;
-static char *scriptfile = NULL;
 static char *keysfile = NULL;
+static char *scriptfile = NULL;
 static char *datafile = NULL;
 static char *rngseed = NULL;
+static char *sideload = NULL;
+static char *sidescript = NULL;
 static char *script = NULL;
 static char *keys = NULL;
 static char *data = NULL;
@@ -166,10 +168,12 @@ static struct timeval after;
 int cli_alloc_buffers() {
 	conffile = malloc(MAX_STRING);
 	scriptfile = malloc(MAX_STRING);
+	sideload = malloc(MAX_STRING);
 	keysfile = malloc(MAX_STRING);
 	datafile = malloc(MAX_STRING);
 	rngseed = malloc(MAX_STRING);
 	script = malloc(MAX_FILE);
+	sidescript = malloc(MAX_FILE);
 	keys = malloc(MAX_FILE);
 	data = malloc(MAX_FILE);
 	introspect = malloc(MAX_STRING);
@@ -179,6 +183,7 @@ int cli_alloc_buffers() {
 int cli_free_buffers() {
 	free(conffile);
 	free(scriptfile);
+	free(sidescript);
 	free(keysfile);
 	free(datafile);
 	free(rngseed);
@@ -196,12 +201,13 @@ int main(int argc, char **argv) {
 
 	cli_alloc_buffers();
 
-	const char *short_options = "hD:ic:k:a:S:pz";
+	const char *short_options = "hD:ic:k:a:l:S:pz";
 	const char *help          =
-		"Usage: zenroom [-h] [ -D scenario ] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ -S seed ] [ -p ] [ -z ] [ script.lua ]\n";
+		"Usage: zenroom [-h] [ -D scenario ] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ -S seed ] [ -p ] [ -z ] [ -l lib ] [ script.lua ]\n";
 	int pid, status, retval;
 	conffile   [0] = '\0';
 	scriptfile [0] = '\0';
+	sideload   [0] = '\0';
 	keysfile   [0] = '\0';
 	datafile   [0] = '\0';
 	rngseed    [0] = '\0';
@@ -228,6 +234,9 @@ int main(int argc, char **argv) {
 			break;
 		case 'i':
 			interactive = 1;
+			break;
+		case 'l':
+			snprintf(sideload,MAX_STRING-1,"%s",optarg);
 			break;
 		case 'k':
 			snprintf(keysfile,MAX_STRING-1,"%s",optarg);
@@ -354,6 +363,12 @@ int main(int argc, char **argv) {
 		zen_teardown(Z);
 		cli_free_buffers();
 		return EXIT_SUCCESS;
+	}
+
+	if(sideload[0]!='\0') {
+		notice(Z->lua,"Side loading library: %s",sideload);
+		load_file(sidescript, fopen(sideload,"rb"));
+		zen_exec_script(Z, sidescript);
 	}
 
 	if(scriptfile[0]!='\0') {
