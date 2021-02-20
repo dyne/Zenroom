@@ -160,6 +160,9 @@ static char *keys = NULL;
 static char *data = NULL;
 static char *introspect = NULL;
 
+static struct timeval before;
+static struct timeval after;
+
 int cli_alloc_buffers() {
 	conffile = malloc(MAX_STRING);
 	scriptfile = malloc(MAX_STRING);
@@ -308,8 +311,6 @@ int main(int argc, char **argv) {
 		if(verbosity) act(NULL, "using default configuration");
 
 	// time from here
-	struct timeval before;
-	struct timeval after;
 	gettimeofday(&before, 0);
 
 	// set_debug(verbosity);
@@ -432,7 +433,7 @@ int main(int argc, char **argv) {
 	gettimeofday(&after, 0);
 	double usecs = (double) (after.tv_sec) * 1000000.0f + (double) (after.tv_usec) -
 		(double) (before.tv_sec) * 1000000.0f - (double) (before.tv_usec);
-	act(NULL,"Time used: %d μs", usecs);
+	act(NULL,"Time used: %.0f μs", usecs);
 
 	cli_free_buffers();
 	return EXIT_SUCCESS;
