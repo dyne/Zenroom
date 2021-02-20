@@ -100,11 +100,11 @@ function set_rule(text)
 		 act("Zencode version match: "..VERSION.original)
 		 res = true
 	  elseif ver < VERSION then
-		 warn("Zencode written for an older version: "
-				 ..ver.original.." < "..VERSION.original, 2)
+		 warn("Zencode written for an older version: "..ver.original)
+		 res = true
 	  elseif ver > VERSION then
-		 warn("Zencode written for a newer version: "
-					..ver.original.." > "..VERSION.original, 2)
+		 warn("Zencode written for a newer version: "..ver.original)
+		 res = true
 	  else
 		 error("Version check error: "..rule[4])
 	  end
