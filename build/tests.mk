@@ -68,6 +68,9 @@ cortex-m-crypto-tests = \
 	test/cortex_m_crypto_tests.sh
 
 cortex-m-zencode-integration = \
+	./test/zencode_parser.sh ${1} && \
+	cd test/zencode_given && ./run.sh ${1}; cd -; \
+	cd test/zencode_cookbook && ./run-all.sh ${1}; cd -; \
 	cd test/zencode_numbers && ./run.sh ${1}; cd -; \
 	cd test/zencode_array && ./run.sh ${1}; cd -; \
 	cd test/zencode_hash && ./run.sh ${1}; cd -; \
