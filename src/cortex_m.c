@@ -152,6 +152,24 @@ void load_file(char *dst, char *file)
 extern zenroom_t *Z;
 int SEMIHOSTING_STDOUT_FILENO;
 
+// implement the fault handler
+void HardFault_Handler(void)
+{
+  exit(EXIT_FAILURE);
+}
+
+void MemManage_Handler(void){
+  exit(EXIT_FAILURE);
+}
+
+void BusFault_Handler(void){
+  exit(0x20023);
+}
+
+void UsageFault_Handler(void){
+  exit(EXIT_FAILURE);
+}
+
 int main(void)
 {
   static char scriptfile[MAX_FILE_NAME] = {0};
