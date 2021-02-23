@@ -30,8 +30,8 @@
   - [iOS](/pages/ios.md "Use Zenroom in iOS")
 
 - Integration
- - [Zenroom in node.js](/pages/zenroom-javascript1.md "Use Zenroom in node.js")
- - [Zenroom in the browser](/pages/zenroom-javascript2.md "Use Zenroom in the browser")
+ - [Zenroom in node.js](/pages/zenroom-javascript1b.md "Use Zenroom in node.js")
+ - [Zenroom in the browser](/pages/zenroom-javascript2b.md "Use Zenroom in the browser")
  - [Zenroom in React](/pages/zenroom-javascript3.md "Use Zenroom in React")
  - [Zenroom ClojureScript](/pages/zenroom-clojurescript.md "Zenroom ClojureScript]") 
 
