@@ -5,17 +5,32 @@ set -e
 set -u
 set -o pipefail
 
-exe=${1:-zenroom}
+# common script init
+if ! test -r ./test/utils.sh; then
+	echo "run executable from its own directory: $0"; exit 1; fi
+. ./test/utils.sh
 
+is_cortexm=false
+if [[ "$1" == "cortexm" ]]; then
+	is_cortexm=true
+fi
+
+exe=${1:-zenroom}
+if [[ $is_cortexm == true ]];then
+	exe=qemu_zenroom_run
+fi
+
+tmpfile=`mktemp`
+echo $tmpfile
 
 echo "TEST RNGSEED READ/WRITE"
 zmodload zsh/system
-cat <<EOF | ${exe} | sysread run1
+cat <<EOF >$tmpfile && ${exe} $tmpfile && cat ./outlog | sysread run1
 print(RNGSEED:hex() .. ";" .. O.random(64):hex())
 EOF
 seed1=`print $run1 | cut -d';' -f 1`
 rand1=`print $run1 | cut -d';' -f 2`
-cat <<EOF | ${exe} -c "rngseed=hex:$seed1" | sysread run2
+cat <<EOF >$tmpfile && ${exe} $tmpfile -c "rngseed=hex:$seed1" && cat ./outlog | sysread run2
 print(RNGSEED:hex() .. ";" .. O.random(64):hex())
 EOF
 seed2=`print $run2 | cut -d';' -f 1`
@@ -62,8 +77,16 @@ I.print({ ecdh_sign = { c = c, d = d } })
 -- will check if same on next execution
 EOF
 
-first=`${exe} -c rngseed=hex:$seed $dtmode`
-second=`${exe} -c rngseed=hex:$seed $dtmode`
+if [[ "$is_cortexm" == true ]]; then
+	qemu_zenroom_run -c rngseed=hex:$seed $dtmode
+	first=`cat ./outlog`
+	qemu_zenroom_run -c rngseed=hex:$seed $dtmode
+	second=`cat ./outlog`
+else
+	first=`${exe} -c rngseed=hex:$seed $dtmode`
+	second=`${exe} -c rngseed=hex:$seed $dtmode`
+fi
+
 # echo "$first"
 
 if [[ "$first" == "$second" ]]; then
@@ -84,9 +107,20 @@ else
 	return 1
 fi
 
-first=`${exe}  $dtmode`
-second=`${exe} $dtmode`
 
+if [[ "$is_cortexm" == true ]]; then
+	set +e
+	seed1=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)
+	seed2=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)
+	set -e
+	qemu_zenroom_run -seed $seed1 $dtmode
+	first=`cat ./outlog`
+	qemu_zenroom_run -seed $seed2 $dtmode
+	second=`cat ./outlog`
+else
+	first=`${exe}  $dtmode`
+	second=`${exe} $dtmode`
+fi
 
 if ! [[ "$first" == "$second" ]]; then
 	echo

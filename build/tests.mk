@@ -259,6 +259,7 @@ check-crypto-debug:
 check-cortex-m:
 	rm -f /tmp/zenroom-test-summary.txt
 	--rm -f ./outlog
+	$(call determinism-tests,cortexm)
 	$(call cortex-m-crypto-tests)
 	$(call cortex-m-crypto-integration,cortexm)
 	$(call cortex-m-zencode-integration,cortexm)

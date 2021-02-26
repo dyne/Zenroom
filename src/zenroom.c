@@ -28,6 +28,10 @@
 #include <sys/wait.h>
 #endif
 
+#ifdef ARCH_CORTEX
+	#include "zenroom.h"
+	extern char external_random_seed[RANDOM_SEED_LEN];
+#endif
 
 #include <errno.h>
 
@@ -201,6 +205,11 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 		func(NULL,"LIBC print functions in use");
 		break;
 	}
+
+#ifdef ARCH_CORTEX
+	// Copy the seed from external source
+	memcpy(Z->random_seed, external_random_seed, RANDOM_SEED_LEN);
+#endif
 
 	// use RNGseed from configuration if present (deterministic mode)
 	if(zconf_rngseed[0] != 0x0) {
