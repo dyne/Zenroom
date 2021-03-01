@@ -29,7 +29,7 @@
 #include <sys/wait.h>
 #endif
 
-
+#include <time.h>
 #include <errno.h>
 
 #include <lua.h>
@@ -162,8 +162,7 @@ static char *keys = NULL;
 static char *data = NULL;
 static char *introspect = NULL;
 
-static struct timeval before;
-static struct timeval after;
+struct timespec before = {0}, after = {0};
 
 int cli_alloc_buffers() {
 	conffile = malloc(MAX_STRING);
@@ -320,7 +319,7 @@ int main(int argc, char **argv) {
 		if(verbosity) act(NULL, "using default configuration");
 
 	// time from here
-	gettimeofday(&before, 0);
+    clock_gettime(CLOCK_MONOTONIC, &before);
 
 	// set_debug(verbosity);
 	Z = zen_init(
@@ -445,10 +444,9 @@ int main(int argc, char **argv) {
 	zen_teardown(Z);
 
 	// measure and report time of execution
-	gettimeofday(&after, 0);
-	double usecs = (double) (after.tv_sec) * 1000000.0f + (double) (after.tv_usec) -
-		(double) (before.tv_sec) * 1000000.0f - (double) (before.tv_usec);
-	act(NULL,"Time used: %.0f μs", usecs);
+    clock_gettime(CLOCK_MONOTONIC, &after);
+    after.tv_nsec += (after.tv_sec - before.tv_sec) * 1000000000L;
+    act(NULL,"Time used: %lu μs", (after.tv_nsec - before.tv_nsec) / 1000L);
 
 	cli_free_buffers();
 	return EXIT_SUCCESS;
