@@ -20,8 +20,12 @@ credential = [[
 
 local cred_table = JSON.decode(credential)
 local cred_oct = ZEN.serialize(cred_table)
+
+-- generate test keypair
+-- TODO: JWK read write from RFC7517
 local kp = ECDH.keygen() -- { private, public }
 local signature = ECDH.sign(kp.private, cred_oct)
+
 print(#signature.r)
 print(#signature.s)
 -- render in JWT with header, unencoded (RFC7797)
