@@ -50,6 +50,7 @@ ZENROOM_SOURCES = [
     'lua_modules.c',
     'lua_shims.c',
     'lwmem.c',
+    'mutt_sprintf.c',
     'randombytes.c',
     'repl.c',
     'zen_aes.c',
