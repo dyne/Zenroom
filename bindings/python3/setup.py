@@ -1,5 +1,6 @@
 import os
 import subprocess
+import time
 from setuptools import Extension, setup
 
 ECP_CURVE = 'BLS383'
@@ -17,13 +18,25 @@ MILAGRO_INCLUDE_DIR = os.path.join(ZENROOM_ROOT,
                                    'lib/milagro-crypto-c/include')
 
 
-def get_version():
-    zenroom_version = '2.0.0'
-    hash = subprocess.run(['git', 'rev-list', '--all', '--count'],
+def get_zenroom_version():
+    zenroom_version = '1.0.0'
+    hash = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'],
                           cwd=ZENROOM_ROOT,
                           stdout=subprocess.PIPE).stdout.decode('utf-8')
     # Last char in hash is a newline
-    return zenroom_version + '.dev' + hash[:-1]
+    return zenroom_version + '+' + hash[:-1]
+
+
+def get_python_version():
+    zenroom_version = '2.0.0'
+    current_time = ''
+    try:
+        with open(os.path.join(ZENROOM_ROOT, 'current_time')) as f:
+            current_time = f.read()
+    except IOError:
+        current_time = time.time()
+    # Last char in hash is a newline
+    return zenroom_version + '.dev' + current_time
 
 
 ZENROOM_SOURCES = [
@@ -127,7 +140,7 @@ zenroom_lib = Extension('zenroom',
                             'milagro-crypto-c/include',
                         ],
                         extra_compile_args=[
-                            '-DVERSION="' + get_version() + '"',
+                            '-DVERSION="' + get_zenroom_version() + '"',
                             '-DLUA_COMPAT_5_3',
                             '-DLUA_COMPAT_MODULE',
                             '-DLUA_COMPAT_BITLIB'
@@ -144,7 +157,7 @@ zenroom_lib = Extension('zenroom',
 
 def get_readme():
     try:
-        with open(ZENROOM_ROOT + 'docs/pages/python.md') as f:
+        with open(os.path.join(ZENROOM_ROOT, 'docs/pages/python.md')) as f:
             return f.read()
     except IOError:
         pass
@@ -153,11 +166,11 @@ def get_readme():
 setup(
     name='zenroom',
     description='Zenroom for Python: Bindings of Zenroom library for Python.',
-    version=get_version(),
+    version=get_python_version(),
     long_description=get_readme(),
     long_description_content_type='text/markdown',
-    license = 'AGPLv3'
-    keywords = 'zenroom crypto-language-processing virtual-machine blockchain crypto ecc dyne ecdh ecdsa zero-knowledge-proofs javascript npm ecp2 miller-loop hamming-distance elgamal aes-gcm aead seccomp goldilocks'
+    license = 'AGPLv3',
+    keywords = 'zenroom crypto-language-processing virtual-machine blockchain crypto ecc dyne ecdh ecdsa zero-knowledge-proofs javascript npm ecp2 miller-loop hamming-distance elgamal aes-gcm aead seccomp goldilocks'.split(),
     url='https://github.com/dyne/Zenroom',
     author='Danilo Spinella, David Dashyan, Puria Nafisi Azizi',
     author_email='danyspin@dyne.org, mail@davie.li, puria@dyne.org',
@@ -180,7 +193,7 @@ setup(
         'Documentation': 'https://dev.zenroom.org/',
         'DECODE': 'https://decodeproject.eu',
         'DYNE': 'https://dyne.org',
-        'ZENROOM': 'https://zenroom.org'
+        'ZENROOM': 'https://zenroom.org',
     },
     packages=['zenroom'],
     ext_modules=[zenroom_lib],
