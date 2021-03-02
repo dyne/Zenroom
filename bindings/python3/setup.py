@@ -157,7 +157,7 @@ setup(
     long_description=get_readme(),
     long_description_content_type='text/markdown',
     url='https://github.com/dyne/Zenroom',
-    author='Danilo Spinella, David Dashian, Puria Nafisi Azizi',
+    author='Danilo Spinella, David Dashyan, Puria Nafisi Azizi',
     author_email='danyspin@dyne.org, mail@davie.li, puria@dyne.org',
     classifiers=[
         'Development Status :: 3 - Alpha',
