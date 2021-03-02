@@ -156,20 +156,32 @@ setup(
     version=get_version(),
     long_description=get_readme(),
     long_description_content_type='text/markdown',
+    license = 'AGPLv3'
+    keywords = 'zenroom crypto-language-processing virtual-machine blockchain crypto ecc dyne ecdh ecdsa zero-knowledge-proofs javascript npm ecp2 miller-loop hamming-distance elgamal aes-gcm aead seccomp goldilocks'
     url='https://github.com/dyne/Zenroom',
     author='Danilo Spinella, David Dashyan, Puria Nafisi Azizi',
     author_email='danyspin@dyne.org, mail@davie.li, puria@dyne.org',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: GNU Affero General Public License v3',
+        'Operating System :: POSIX :: Linux',
+        'Operating System :: MacOS :: MacOS X',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3 :: Only',
+        'Topic :: Security',
     ],
+    project_urls={
+        'Source Code': 'https://github.com/dyne/Zenroom',
+        'Documentation': 'https://dev.zenroom.org/',
+        'DECODE': 'https://decodeproject.eu',
+        'DYNE': 'https://dyne.org',
+        'ZENROOM': 'https://zenroom.org'
+    },
     packages=['zenroom'],
     ext_modules=[zenroom_lib],
     python_requires='>=3.6, <4',
