@@ -33,7 +33,7 @@ local header = OCTET.from_string(
         JSON.encode({alg = "ES256K",
                      b64 = true,
                      crit = "b64" }))
-local jws = base64(header) .. '.' .. base64(signature.r .. signature.s)
+local jws = url64(header) .. '..' .. url64(signature.r .. signature.s)
 -- insert signature into credential as proof 
 cred_table.proof = {
         type = "Signature", -- TODO: check what to write here for secp256k1
@@ -57,7 +57,7 @@ local v_jws = strtok(v_proof.jws,'[^.]*')
 local v_header = JSON.decode( v_jws[1] )
 I.print(v_header)
 -- parse signature
-local v_sigoct = OCTET.from_base64(v_jws[2])
+local v_sigoct = OCTET.from_url64(v_jws[3])
 local v_signature = { }
 -- separate r[32] .. s[32] using 'chop'
 v_signature.r, v_signature.s = OCTET.chop(v_sigoct,32)
