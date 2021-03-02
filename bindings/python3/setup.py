@@ -153,7 +153,7 @@ zenroom_lib = Extension('zenroom',
 
 def get_readme():
     try:
-        with open(ZENROOM_ROOT + 'docs/pages/python.md') as f:
+        with open(os.path.join(ZENROOM_ROOT, 'docs/pages/python.md')) as f:
             return f.read()
     except IOError:
         pass
@@ -165,8 +165,8 @@ setup(
     version=get_python_version(),
     long_description=get_readme(),
     long_description_content_type='text/markdown',
-    license = 'AGPLv3'
-    keywords = 'zenroom crypto-language-processing virtual-machine blockchain crypto ecc dyne ecdh ecdsa zero-knowledge-proofs javascript npm ecp2 miller-loop hamming-distance elgamal aes-gcm aead seccomp goldilocks'
+    license = 'AGPLv3',
+    keywords = 'zenroom crypto-language-processing virtual-machine blockchain crypto ecc dyne ecdh ecdsa zero-knowledge-proofs javascript npm ecp2 miller-loop hamming-distance elgamal aes-gcm aead seccomp goldilocks'.split(),
     url='https://github.com/dyne/Zenroom',
     author='Danilo Spinella, David Dashyan, Puria Nafisi Azizi',
     author_email='danyspin@dyne.org, mail@davie.li, puria@dyne.org',
@@ -189,7 +189,7 @@ setup(
         'Documentation': 'https://dev.zenroom.org/',
         'DECODE': 'https://decodeproject.eu',
         'DYNE': 'https://dyne.org',
-        'ZENROOM': 'https://zenroom.org'
+        'ZENROOM': 'https://zenroom.org',
     },
     packages=['zenroom'],
     ext_modules=[zenroom_lib],
