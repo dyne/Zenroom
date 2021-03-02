@@ -18,7 +18,7 @@ MILAGRO_INCLUDE_DIR = os.path.join(ZENROOM_ROOT,
 
 
 def get_version():
-    zenroom_version = '1.0.0'
+    zenroom_version = '2.0.0'
     hash = subprocess.run(['git', 'rev-list', '--all', '--count'],
                           cwd=ZENROOM_ROOT,
                           stdout=subprocess.PIPE).stdout.decode('utf-8')
@@ -144,7 +144,7 @@ zenroom_lib = Extension('zenroom',
 
 def get_readme():
     try:
-        with open(ZENROOM_ROOT + 'README') as f:
+        with open(ZENROOM_ROOT + 'docs/pages/python.md') as f:
             return f.read()
     except IOError:
         pass
@@ -152,14 +152,13 @@ def get_readme():
 
 setup(
     name='zenroom',
-    description='Zenroom for Python: '
-                'Bindings of Zenroom library for Python.',
+    description='Zenroom for Python: Bindings of Zenroom library for Python.',
     version=get_version(),
     long_description=get_readme(),
     long_description_content_type='text/markdown',
     url='https://github.com/dyne/Zenroom',
-    author='David Dashyan',
-    author_email='mail@davie.li',
+    author='Danilo Spinella, David Dashian, Puria Nafisi Azizi',
+    author_email='danyspin@dyne.org, mail@davie.li, puria@dyne.org',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
@@ -168,6 +167,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3 :: Only',
     ],
     packages=['zenroom'],
