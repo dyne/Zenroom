@@ -59,6 +59,13 @@ local function jws_signature_to_octet(obj)
                 '..' .. OCTET.to_url64(obj.r .. obj.s))
 end
 
+When("set the verification method in '' to ''", function(vc, meth)
+    local cred = have(vc)
+    ZEN.assert(cred.proof, "The object is not signed: "..vc)
+    local m = have(meth)
+    ACK[vc].proof.verificationMethod = m
+end)
+
 When("sign the verifiable credential named ''", function(vc)
     local cred = have(vc)
     local keypair = have'keypair'
@@ -67,7 +74,6 @@ When("sign the verifiable credential named ''", function(vc)
         type = "Zenroom", -- .. VERSION, -- , "Signature", -- TODO: check what to write here for secp256k1
         -- created = "2018-06-18T21:19:10Z",
         proofPurpose = "authenticate", -- assertionMethod", -- TODO: check
-        verificationMethod = "https://example.com/jdoe/keys/1", -- public key published on APIroom
     }
     local cred_str = JSON.encode(cred)
     proof.jws = jws_signature_to_octet( ECDH.sign(keypair.private_key, OCTET.from_string(cred_str)) )

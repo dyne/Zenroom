@@ -31,7 +31,8 @@ cat <<EOF > unsigned.json
       }]
     }
   }
-}
+},
+"pubkey_url": "https://dyne.org/marziano/keys/1"
 }
 EOF
 
@@ -55,7 +56,9 @@ Scenario ecdh
 Given that I am 'Alice'
 and I have my 'keypair'
 and I have a 'verifiable credential' named 'my-vc'
+and I have a 'string' named 'pubkey url'
 When I sign the verifiable credential named 'my-vc'
+and I set the verification method in 'my-vc' to 'pubkey url'
 Then print 'my-vc' as 'string'
 EOF
 
