@@ -242,7 +242,7 @@ blocks where the different operations are done at different times and
 print the results all together!
 
 ```gherkin
-Scenario coconut
+Scenario credential
 	Given that I am known as 'Issuer'
 	When I create the issuer keypair
 	and I create the credential keypair
