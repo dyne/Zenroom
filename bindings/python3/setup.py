@@ -1,5 +1,6 @@
 import os
 import subprocess
+import time
 from setuptools import Extension, setup
 
 ECP_CURVE = 'BLS383'
@@ -28,11 +29,14 @@ def get_zenroom_version():
 
 def get_python_version():
     zenroom_version = '2.0.0'
-    hash = subprocess.run(['git', 'rev-list', '--all', '--count'],
-                          cwd=ZENROOM_ROOT,
-                          stdout=subprocess.PIPE).stdout.decode('utf-8')
+    current_time = ''
+    try:
+        with open(os.path.join(ZENROOM_ROOT, 'current_time')) as f:
+            current_time = f.read()
+    except IOError:
+        current_time = time.time()
     # Last char in hash is a newline
-    return zenroom_version + '.dev' + hash[:-1]
+    return zenroom_version + '.dev' + current_time
 
 
 ZENROOM_SOURCES = [

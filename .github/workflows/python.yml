@@ -31,6 +31,7 @@ jobs:
 
       - name: Build wheels
         run: |
+          date +%s > current_time
           # Remove shared library
           rm bindings/golang/zenroom/lib/libzenroomgo.so
           cp bindings/python3/setup.py .
