@@ -83,9 +83,6 @@ luarock: ${SOURCES}
 redis: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o redis_zenroom.so-${ARCH}.so ${LDFLAGS} ${LDADD}
 
-python: ${SOURCES}
-	${CC} -shared ${SOURCES} zen_python.o -o _zenroom.so ${LDFLAGS} ${LDADD}
-
 go: ${SOURCES}
 	${CC} -shared ${SOURCES} zen_go.o -o libzenroomgo.so ${LDFLAGS} ${LDADD}
 
@@ -94,6 +91,10 @@ erlang: ${SOURCES} erlang.o
 
 osx: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom.command ${LDFLAGS} ${LDADD}
+
+osx-shared: ${SOURCES}
+	# Call libzenroom.so to simplify python bindings
+	${CC} ${CFLAGS} ${SOURCES} -o libzenroom-${ARCH}.so ${LDFLAGS} ${LDADD}
 
 win-exe: LDFLAGS += -static
 win-exe: ${SOURCES}

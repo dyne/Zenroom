@@ -6,13 +6,9 @@ osx: apply-patches milagro lua53 embed-lua
 osx-debug: cflags := -O1 -ggdb ${cflags_protection} -DDEBUG=1
 osx-debug: osx
 
-osx-python3: apply-patches milagro lua53 embed-lua
-	swig -python -py3 ${pwd}/build/swig.i
-	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c \
-		-o src/zen_python.o
-	CC=${gcc} LD=${ld} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-		make -C src python
-	@mkdir -p ${pwd}/build/python3 && cp -v ${pwd}/src/_zenroom.so ${pwd}/build/python3
+osx-python3: osx-shared
+	@cp -v ${pwd}/src/libzenroom-${ARCH}.so \
+		${pwd}/bindings/python3/zenroom/libzenroom.so
 
 osx-go: apply-patches milagro lua53 embed-lua
 	swig -go -cgo -intgosize 32 ${pwd}/build/swig.i
@@ -68,6 +64,14 @@ osx-lib: apply-patches milagro lua53 embed-lua ios-lib
 osx-lib:
 	TARGET=${ARCH} AR=${ar} CC=${gcc} CFLAGS="${cflags}" make -C src ios-lib
 	cp -v src/zenroom-ios-${ARCH}.a build/libzenroom.a
+
+osx-shared: ARCH := x86_64
+osx-shared: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -DARCH_OSX
+osx-shared: ldflags := -lm
+osx-shared: cflags += -dynamiclib
+osx-shared: apply-patches milagro lua53 embed-lua
+	CC=${gcc} LD=${ld} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+		make -C src osx-shared
 
 ios-fat:
 	lipo -create build/zenroom-ios-x86_64.a build/zenroom-ios-arm64.a build/zenroom-ios-armv7.a -output build/zenroom-ios.a
