@@ -1,11 +1,6 @@
-name: Build and upload nightly to PyPI
+name: Build and upload to PyPI
 
-on:
-  push:
-    paths-ignore:
-    - 'docs/**'
-    - 'examples/**'
-    - '*.md'
+on: [workflow_dispatch]
 
 jobs:
   build_wheels:
