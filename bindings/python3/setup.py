@@ -17,7 +17,16 @@ MILAGRO_INCLUDE_DIR = os.path.join(ZENROOM_ROOT,
                                    'lib/milagro-crypto-c/include')
 
 
-def get_version():
+def get_zenroom_version():
+    zenroom_version = '1.0.0'
+    hash = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'],
+                          cwd=ZENROOM_ROOT,
+                          stdout=subprocess.PIPE).stdout.decode('utf-8')
+    # Last char in hash is a newline
+    return zenroom_version + '+' + hash[:-1]
+
+
+def get_python_version():
     zenroom_version = '2.0.0'
     hash = subprocess.run(['git', 'rev-list', '--all', '--count'],
                           cwd=ZENROOM_ROOT,
@@ -127,7 +136,7 @@ zenroom_lib = Extension('zenroom',
                             'milagro-crypto-c/include',
                         ],
                         extra_compile_args=[
-                            '-DVERSION="' + get_version() + '"',
+                            '-DVERSION="' + get_zenroom_version() + '"',
                             '-DLUA_COMPAT_5_3',
                             '-DLUA_COMPAT_MODULE',
                             '-DLUA_COMPAT_BITLIB'
@@ -153,7 +162,7 @@ def get_readme():
 setup(
     name='zenroom',
     description='Zenroom for Python: Bindings of Zenroom library for Python.',
-    version=get_version(),
+    version=get_python_version(),
     long_description=get_readme(),
     long_description_content_type='text/markdown',
     license = 'AGPLv3'

@@ -1,6 +1,11 @@
 name: Build and upload to PyPI
 
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+    inputs:
+      zenroom_python_version:
+        description: 'Release version of the zenroom python to publish (eg.: 2.0.0)'
+        required: true
 
 jobs:
   build_wheels:
@@ -29,6 +34,8 @@ jobs:
           # Remove shared library
           rm bindings/golang/zenroom/lib/libzenroomgo.so
           cp bindings/python3/setup.py .
+          sed -i setup.py \
+              -e 's/version=get_python_version()/'version=${{ github.event.inputs.zenroom_python_version }}/
           pip install cibuildwheel
           cibuildwheel --output-dir wheelhouse
         env:
