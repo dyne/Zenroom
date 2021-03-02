@@ -1,4 +1,4 @@
-name: NPM RELEASE
+name: Release on NPM
 on:
   workflow_dispatch:
     inputs:
