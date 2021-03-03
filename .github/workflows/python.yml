@@ -48,7 +48,7 @@ jobs:
           CIBW_SKIP: cp27-* cp35-* pp*
           CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake vim zsh
           CIBW_BEFORE_BUILD_MACOS: brew install cmake vim zsh
-          CIBW_TEST_COMMAND: pytest -s tests/
+          CIBW_TEST_COMMAND: pytest -s /project/tests/
           CIBW_TEST_EXTRAS: test
 
       - uses: actions/upload-artifact@v2
