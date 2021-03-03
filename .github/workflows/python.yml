@@ -8,7 +8,25 @@ on:
     - '*.md'
 
 jobs:
+  python-test:
+    name: Run unit tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bindings/python3
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: '3.7'
+      - run: sudo apt-get update && sudo apt-get install -y cmake vim zsh
+      - run: pip install -e .[test]
+      - run: pytest -s tests
+
   build_wheels:
+    needs: [python-test]
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -48,6 +66,7 @@ jobs:
           CIBW_SKIP: cp27-* cp35-* pp*
           CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake vim zsh
           CIBW_BEFORE_BUILD_MACOS: brew install cmake vim zsh
+
 
       - uses: actions/upload-artifact@v2
         with:

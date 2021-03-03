@@ -34,8 +34,7 @@ jobs:
           # Remove shared library
           rm bindings/golang/zenroom/lib/libzenroomgo.so
           cp bindings/python3/setup.py .
-          sed -i setup.py \
-              -e 's/version=get_python_version()/'version=${{ github.event.inputs.zenroom_python_version }}/
+          sed -ie 's/version=get_python_version()/version=${{ github.event.inputs.zenroom_python_version }}/' setup.py
           pip install cibuildwheel
           cibuildwheel --output-dir wheelhouse
         env:

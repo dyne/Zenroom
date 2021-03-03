@@ -9,7 +9,8 @@ ECDH_CURVE = 'SECP256K1'
 if os.path.exists('bindings'):
     ZENROOM_ROOT = os.getcwd()
 else:
-    ZENROOM_ROOT = os.path.join(os.getcwd(), '../../')
+    ZENROOM_ROOT = os.path.dirname(os.path.dirname(os.getcwd()))
+
 
 ZENROOM_LIB_ROOT = os.path.join(ZENROOM_ROOT, 'src')
 
@@ -34,7 +35,7 @@ def get_python_version():
         with open(os.path.join(ZENROOM_ROOT, 'current_time')) as f:
             current_time = f.read()
     except IOError:
-        current_time = time.time()
+        current_time = str(int(time.time()))
     # Last char in hash is a newline
     return zenroom_version + '.dev' + current_time
 
