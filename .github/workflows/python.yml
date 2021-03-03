@@ -48,12 +48,15 @@ jobs:
           CIBW_SKIP: cp27-* cp35-* pp*
           CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake vim zsh
           CIBW_BEFORE_BUILD_MACOS: brew install cmake vim zsh
-          CIBW_TEST_COMMAND: ls /root
           CIBW_TEST_EXTRAS: test
 
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
+
+      - name: Run unit tests
+        run: |
+          pytest -s bindings/python3/tests
 
   upload_pypi:
     needs: [build_wheels]
