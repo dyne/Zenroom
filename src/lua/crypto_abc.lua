@@ -76,15 +76,8 @@ end
 
 -- Public Coconut API
 function abc.issuer_keygen()
-   local x = INT.random()
-   local y = INT.random()
-   local sk = { x = x,
-                y = y  }
-   local vk = { alpha = G2 * x,
-                beta  = G2 * y  }
-   -- return keypair
-   return { sign = sk,
-			verify = vk }
+   return { x = INT.random(),
+            y = INT.random()  }
 end
 
 function abc.aggregate_keys(keys)
