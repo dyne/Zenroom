@@ -89,5 +89,11 @@ When("verify the verifiable credential named ''", function(vc)
     local proof = cred.proof
     cred.proof = nil
     local cred_str = JSON.encode(cred)
-    ZEN.assert( ECDH.verify(public_key, OCTET.from_string(cred_str), sign), "The signature does not validate: "..vc)
+    -- if public_key is a table then use the first value: support 'from'
+    -- extraction, but not multiple keys
+    local pub
+    if luatype(public_key) == 'table' then
+         pub = public_key[1]
+    else pub = public_key end
+    ZEN.assert( ECDH.verify(pub, OCTET.from_string(cred_str), sign), "The signature does not validate: "..vc)
 end)
