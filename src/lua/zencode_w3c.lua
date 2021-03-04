@@ -93,7 +93,7 @@ When("verify the verifiable credential named ''", function(vc)
     -- extraction, but not multiple keys
     local pub
     if luatype(public_key) == 'table' then
-         pub = public_key[1]
+         _,pub = next(public_key)
     else pub = public_key end
     ZEN.assert( ECDH.verify(pub, OCTET.from_string(cred_str), sign), "The signature does not validate: "..vc)
 end)
