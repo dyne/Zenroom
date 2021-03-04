@@ -66,6 +66,13 @@ When("set the verification method in '' to ''", function(vc, meth)
     ACK[vc].proof.verificationMethod = m
 end)
 
+When("get the verification method in ''", function(vc)
+    empty'verification_method'
+    local cred = have(vc)
+    ZEN.assert(cred.proof, "The object is not signed: "..vc)
+    ACK.verification_method = cred.proof.verificationMethod
+end)
+
 When("sign the verifiable credential named ''", function(vc)
     local cred = have(vc)
     local keypair = have'keypair'
@@ -86,9 +93,12 @@ When("verify the verifiable credential named ''", function(vc)
     ZEN.assert(cred.proof, "The object has no signature: "..vc)
     ZEN.assert(cred.proof.jws, "The object has no signature: "..vc)
     local sign = jws_octet_to_signature(cred.proof.jws)
+    -- omit the proof subtable from verification
     local proof = cred.proof
     cred.proof = nil
     local cred_str = JSON.encode(cred)
+    -- restore proof in HEAP (cred is still a pointer here)
+    cred.proof = proof
     -- if public_key is a table then use the first value: support 'from'
     -- extraction, but not multiple keys
     local pub
