@@ -165,8 +165,8 @@ function zencode.add_schema(arr)
    end
 end
 
-function zencode.have(o) 
-    local res = ACK[o]
+function zencode.have(o)
+    local res = ACK[string.gsub(o, ' ', '_')]
     ZEN.assert(res, "Cannot find object: " .. o)
     return res
 end

@@ -16,90 +16,104 @@
 -- You should have received a copy of the GNU Affero General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
--- COCONUT implementation in Zencode
+-- ABC/COCONUT implementation in Zencode
 
-COCONUT = require_once('crypto_coconut')
+local ABC = require_once('crypto_abc')
+local G1 = ECP.generator()
+local G2 = ECP2.generator()
+
+function issuer_key_f(o)
+	local obj = deepmap(CONF.input.encoding.fun, o)
+	return { x = ZEN.get(obj, 'x', INT.new),
+			 y = ZEN.get(obj, 'y', INT.new) }
+ end
 
 ZEN.add_schema({
-	  -- credential keypair (elgamal)
-      credential_keypair = function(obj)
-		 local pub = ZEN.get(obj, 'public', ECP.new)
-		 local sec = ZEN.get(obj, 'private', INT.new)
-		 ZEN.assert(pub == ECP.generator() * sec,
-					"Public key does not belong to secret key in credential keypair")
-         return { public  = ZEN.get(obj, 'public', ECP.new),
-                  private = ZEN.get(obj, 'private', INT.new) } end
+	keys = function(obj)
+		local res = { }
+		if obj.credential then
+			res.credential = INT.new( CONF.input.encoding.fun(obj.credential))
+		end
+		if obj.issuer then
+			local o = deepmap(CONF.input.encoding.fun, obj.issuer)
+			res.issuer = {	x = INT.new(o.x),
+							y = INT.new(o.y)	}
+		end
+		return(res)
+	end,
+	credential_verifier = function(obj)
+		return(ECP.new(CONF.input.encoding.fun(obj)))
+	end,
+	issuer_verifier = function(obj)
+		local o = deepmap(CONF.input.encoding.fun, obj)
+		return { alpha = ECP2.new(o.alpha),
+				 beta  = ECP2.new(o.beta)	}
+	end
 })
 
 -- credential keypair operations
-When("create the credential keypair", function()
-		-- sk = rand, pk = G * sk
-		ACK.credential_keypair = { private = INT.random() }
-		ACK.credential_keypair.public = ECP.generator() *
-		   ACK.credential_keypair.private
+When("create the credential key", function()
+	ACK.keys = fif(ACK.keys, ACK.keys, {})
+	ZEN.assert(not ACK.keys.credential, "Cannot overwrite object: ".."keys.credential")
+	ACK.keys.credential = INT.random()
+end)
+
+When("create the credential verifier", function()
+	ZEN.have'keys'
+	ZEN.assert(ACK.keys.credential, "Object not found: ".."keys.credential")
+	ACK.credential_verifier = ECP.generator() *	ACK.keys.credential
 end)
 
 When("create the credential keypair with secret key ''", function(sec)
-		-- pk = G * sec
-		ZEN.assert(ACK[sec], "Secret key not found: "..sec)
-		ACK.credential_keypair = { private = INT.new(ACK[sec]) }
-		ACK.credential_keypair.public = ECP.generator() *
-		   ACK.credential_keypair.private
+	local secret = ZEN.have(sec)
+	ZEN.assert(not ACK.keypair.credential, "Cannot overwrite object: ".."keypair.credential")
+	ACK.keypair.credential = INT.new(secret)
 end)
 
-function issuer_sign_f(o)
-   local obj = deepmap(CONF.input.encoding.fun, o)
-   return { x = ZEN.get(obj, 'x', INT.new),
-			y = ZEN.get(obj, 'y', INT.new) }
-end
-function verifier_f(o)
-   local obj = deepmap(CONF.input.encoding.fun, o)
-	return { alpha = ZEN.get(obj, 'alpha', ECP2.new),
-			 beta  = ZEN.get(obj, 'beta', ECP2.new) }
-end
--- issuer authority kepair operations
-ZEN.add_schema({
-	  -- certificate authority (ca) / issuer keypair
-      issuer_sign = issuer_sign_f,
-      verifier = verifier_f,
-	  issuer_keypair = function(obj) -- recursive import
-		 return { issuer_sign   = issuer_sign_f(obj.issuer_sign),
-				  verifier = verifier_f(obj.verifier) }
-	  end
-})
-
-When("create the issuer keypair", function()
-		ACK.issuer_keypair = { }
-		ACK.issuer_keypair.issuer_sign,
-		ACK.issuer_keypair.verifier = COCONUT.ca_keygen()
+When("create the issuer key", function()
+	ACK.keys = fif(ACK.keys, ACK.keys, {})
+	ZEN.assert(not ACK.keys.issuer, "Cannot overwrite object: ".."keys.issuer")
+	ACK.keys.issuer = ABC.issuer_keygen()
 end)
+
+When("create the issuer verifier", function()
+	ZEN.have'keys'
+	ZEN.assert(ACK.keys.issuer, "Object not found: ".."keys.issuer")
+	ACK.issuer_verifier = { alpha	= G2 * ACK.keys.issuer.x,
+							beta	= G2 * ACK.keys.issuer.y	}
+end)
+
+-- TODO:
+-- When("create the issuer key with secret key ''", function(sec)
+-- 	local secret = ZEN.have(sec)
+-- 	ZEN.assert(not ACK.keypair.issuer, "Cannot overwrite object: ".."keypair.issuer")
+-- 	ACK.keypair.issuer = ABC.issuer_keygen(sec)
+-- end)
+
 
 -- request credential signatures
 ZEN.add_schema({
      -- lambda
 	  credential_request = function(obj)
-		local req = { c = { a = ZEN.get(obj.c, 'a', ECP.new),
-							b = ZEN.get(obj.c, 'b', ECP.new) },
+		local req = { sign = {	a = ZEN.get(obj.sign, 'a', ECP.new),
+								b = ZEN.get(obj.sign, 'b', ECP.new) },
 					  pi_s = { rr = ZEN.get(obj.pi_s, 'rr', INT.new),
 							   rm = ZEN.get(obj.pi_s, 'rm', INT.new),
 							   rk = ZEN.get(obj.pi_s, 'rk', INT.new),
-							   c =  ZEN.get(obj.pi_s, 'c',  INT.new)  },
+							   commit =  ZEN.get(obj.pi_s, 'commit',  INT.new)  },
 					  commit = ZEN.get(obj, 'commit', ECP.new),
 					  public = ZEN.get(obj, 'public', ECP.new) }
-		ZEN.assert(COCONUT.verify_pi_s(req),
+		ZEN.assert(ABC.verify_pi_s(req),
                    "Error in credential request: proof is invalid (verify_pi_s)")
 		return req
 	  end
 })
 
 When("create the credential request", function()
-		ZEN.assert(ACK.credential_keypair.private,
-				   "Private key not found in credential keypair")
-		ACK.credential_request =
-		   COCONUT.prepare_blind_sign(ACK.credential_keypair.public,
-									  ACK.credential_keypair.private)
+	ZEN.have'keys'
+	ZEN.assert(ACK.keys.credential, "Credential key not found")
+	ACK.credential_request = ABC.prepare_blind_sign(ACK.keys.credential)
 end)
-
 
 -- issuer's signature of credentials
 ZEN.add_schema({
@@ -115,20 +129,21 @@ ZEN.add_schema({
 })
 When("create the credential signature", function()
 		ZEN.assert(WHO, "Issuer is not known")
-        ZEN.assert(ACK.credential_request, "No valid signature request found.")
-        ZEN.assert(ACK.issuer_keypair.issuer_sign, "No valid issuer signature keys found.")
+		ZEN.have'credential request'
+        ZEN.assert(ACK.keys.issuer, "Issuer key not found")
         ACK.credential_signature =
-           COCONUT.blind_sign(ACK.issuer_keypair.issuer_sign,
-                              ACK.credential_request)
-		ACK.verifier = ACK.issuer_keypair.verifier
+           ABC.blind_sign(ACK.keys.issuer, ACK.credential_request)
+		ACK.verifier = {	alpha	= G2 * ACK.keys.issuer.x,
+							beta	= G2 * ACK.keys.issuer.y	}
 end)
 When("create the credentials", function()
-        ZEN.assert(ACK.credential_signature, "Credential signature not found")
-        ZEN.assert(ACK.credential_keypair.private, "Credential private key not found")
-        -- prepare output with an aggregated sigma credential
-        -- requester signs the sigma with private key
-        ACK.credentials = COCONUT.aggregate_creds(
-		   ACK.credential_keypair.private, { ACK.credential_signature })
+	ZEN.have'credential signature'
+	ZEN.have'keys'
+    ZEN.assert(ACK.keys.credential, "Credential key not found")
+    -- prepare output with an aggregated sigma credential
+    -- requester signs the sigma with private key
+    ACK.credentials = ABC.aggregate_creds(
+		   ACK.keys.credential, { ACK.credential_signature })
 end)
 
 function credential_proof_f(o)
@@ -146,12 +161,13 @@ ZEN.add_schema({
 	  -- theta: blind proof of certification
 	  credential_proof = credential_proof_f,
 	  -- aggregated verifiers schema is same as a single verifier
-	  verifiers = verifier_f
+	--   verifiers = verifier_f
 })
 
 When("aggregate the verifiers", function()
+	ZEN.have'issuer verifier'
 		if not ACK.verifiers then ACK.verifiers = { } end
-		for k,v in pairs(ACK.verifier) do
+		for k,v in pairs(ACK.issuer_verifier) do
 		-- if ACK.verifier.alpha then
 		   ACK.verifiers[k] = v
 		end
@@ -159,20 +175,21 @@ When("aggregate the verifiers", function()
 end)
 
 When("create the credential proof", function()
-        ZEN.assert(ACK.verifiers, "No issuer verification keys are selected")
-		ZEN.assert(ACK.credential_keypair.private,
-				   "Credential private key not found")
-		ZEN.assert(ACK.credentials, "Credentials not found")
-		ACK.credential_proof =
-		   COCONUT.prove_creds(ACK.verifiers,
-							   ACK.credentials,
-							   ACK.credential_keypair.private)
+	ZEN.have'verifiers'
+	ZEN.have'keys'
+	ZEN.have'credentials'
+	ZEN.empty'credential proof'
+	ZEN.assert(ACK.keys.credential, "Credential key not found")
+	ACK.credential_proof =
+		ABC.prove_cred(ACK.verifiers,
+					   ACK.credentials,
+					   ACK.keys.credential)
 end)
 When("verify the credential proof", function()
-        ZEN.assert(ACK.credential_proof, "No valid credential proof found")
-        ZEN.assert(ACK.verifiers, "Verifier of aggregated issuer keys not found")
-        ZEN.assert(
-           COCONUT.verify_creds(ACK.verifiers,
+	ZEN.have'credential proof'
+	ZEN.have'verifiers'
+    ZEN.assert(
+        ABC.verify_cred(	ACK.verifiers,
 								ACK.credential_proof),
            "Credential proof does not validate")
 end)

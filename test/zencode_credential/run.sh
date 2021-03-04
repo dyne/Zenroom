@@ -40,11 +40,11 @@ echo "                                                "
 cat << EOF | zexe ../../docs/examples/zencode_cookbook/credentialParticipantKeygen.zen | jq . | tee ../../docs/examples/zencode_cookbook/credentialParticipantKeypair.json
 Scenario credential: credential keygen
     Given that I am known as 'Alice'
-    When I create the credential keypair
-    Then print my 'credential keypair'
+    When I create the credential key
+    Then print my 'keys'
 EOF
 
-let n=n+2
+let n=n+1
 echo "                                                "
 echo "------------------------------------------------"
 echo " Script $n: Participant creates a credential request "
@@ -56,12 +56,12 @@ echo "                                                "
 cat << EOF | zexe ../../docs/examples/zencode_cookbook/credentialParticipantSignatureRequest.zen -k ../../docs/examples/zencode_cookbook/credentialParticipantKeypair.json | jq . | tee ../../docs/examples/zencode_cookbook/credentialParticipantSignatureRequest.json | jq
 Scenario credential: create request
     Given that I am known as 'Alice'
-    and I have my valid 'credential keypair'
+    and I have my valid 'keys'
     When I create the credential request
     Then print my 'credential request'
 EOF
 
-let n=n+3
+let n=n+1
 echo "                                                "
 echo "------------------------------------------------"
 echo " Script $n: create the keypair of the issuer    "
@@ -75,11 +75,11 @@ echo " "
 cat << EOF | zexe ../../docs/examples/zencode_cookbook/credentialIssuerKeygen.zen | jq . | tee ../../docs/examples/zencode_cookbook/credentialIssuerKeypair.json | jq
 Scenario credential: issuer keygen
     Given that I am known as 'MadHatter'
-    When I create the issuer keypair
-    Then print my 'issuer keypair'
+    When I create the issuer key
+    Then print my 'keys'
 EOF
 
-let n=n+4
+let n=n+1
 echo "                                                "
 echo "------------------------------------------------"
 echo " Script $n: create the verifier of the issuer    "
@@ -91,12 +91,13 @@ echo " "
 cat << EOF | zexe ../../docs/examples/zencode_cookbook/credentialIssuerPublishVerifier.zen -k ../../docs/examples/zencode_cookbook/credentialIssuerKeypair.json | jq . | tee ../../docs/examples/zencode_cookbook/credentialIssuerVerifier.json | jq
 Scenario credential: publish verifier
     Given that I am known as 'MadHatter'
-    and I have my valid 'issuer keypair'
-    Then print my 'verifier' from 'issuer keypair'
+    and I have my 'keys'
+    When I create the issuer verifier
+    Then print my 'issuer verifier'
 EOF
 
 
-let n=n+5
+let n=n+1
 echo "                                                "
 echo "------------------------------------------------"
 echo " Script $n: the issuer signs the credential "
@@ -111,7 +112,7 @@ echo " "
 cat << EOF | zexe ../../docs/examples/zencode_cookbook/credentialIssuerSignRequest.zen -a ../../docs/examples/zencode_cookbook/credentialParticipantSignatureRequest.json -k ../../docs/examples/zencode_cookbook/credentialIssuerKeypair.json | jq . | tee ../../docs/examples/zencode_cookbook/credentialIssuerSignedCredential.json | jq
 Scenario credential: issuer sign
     Given that I am known as 'MadHatter'
-    and I have my valid 'issuer keypair'
+    and I have my valid 'keys'
     and I have a 'credential request' inside 'Alice'
     When I create the credential signature
     Then print the 'credential signature'
@@ -129,11 +130,11 @@ echo " "
 cat << EOF | zexe ../../docs/examples/zencode_cookbook/credentialParticipantAggregateCredential.zen -a ../../docs/examples/zencode_cookbook/credentialIssuerSignedCredential.json -k ../../docs/examples/zencode_cookbook/credentialParticipantKeypair.json | jq . | tee ../../docs/examples/zencode_cookbook/credentialParticipantAggregatedCredential.json | jq
 Scenario credential: aggregate signature
     Given that I am known as 'Alice'
-    and I have my valid 'credential keypair'
-    and I have a valid 'credential signature'
+    and I have my 'keys'
+    and I have a 'credential signature'
     When I create the credentials
     Then print my 'credentials'
-    and print my 'credential keypair'
+    and print my 'keys'
 EOF
 
 let n=n+7
@@ -149,9 +150,9 @@ echo " "
 cat << EOF | zexe ../../docs/examples/zencode_cookbook/credentialParticipantCreateProof.zen -k ../../docs/examples/zencode_cookbook/credentialParticipantAggregatedCredential.json -a ../../docs/examples/zencode_cookbook/credentialIssuerVerifier.json | jq . | tee ../../docs/examples/zencode_cookbook/credentialParticipantProof.json | jq
 Scenario credential: create proof
     Given that I am known as 'Alice'
-    and I have my valid 'credential keypair'
-    and I have a valid 'verifier' inside 'MadHatter'
-    and I have my valid 'credentials'
+    and I have my 'keys'
+    and I have a 'issuer verifier' inside 'MadHatter'
+    and I have my 'credentials'
     When I aggregate the verifiers
     and I create the credential proof
     Then print the 'credential proof'
@@ -167,8 +168,8 @@ echo " "
 
 cat << EOF | zexe ../../docs/examples/zencode_cookbook/credentialAnyoneVerifyProof.zen -k ../../docs/examples/zencode_cookbook/credentialParticipantProof.json -a ../../docs/examples/zencode_cookbook/credentialIssuerVerifier.json | jq
 Scenario credential: verify proof
-    Given that I have a valid 'verifier' inside 'MadHatter'
-    and I have a valid 'credential proof'
+    Given that I have a 'issuer verifier' inside 'MadHatter'
+    and I have a 'credential proof'
     When I aggregate the verifiers
     When I verify the credential proof
     Then print 'The proof matches the verifier! So you can add zencode after the verify statement, that will execute only if the match occurs.'
