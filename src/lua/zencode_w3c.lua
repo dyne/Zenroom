@@ -16,15 +16,6 @@
 -- You should have received a copy of the GNU Affero General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-local function have(o) 
-    local res = ACK[o]
-    ZEN.assert(res, "Cannot find object: " .. o)
-    return res
-end
-local function empty(o)
-    ZEN.assert(not ACK[o], "Cannot overwrite existing object: " .. o)
-end
-
 ZEN.add_schema({
     -- flexible verifiable credential
     -- only internal 'jws' member has peculiar encoding
@@ -60,22 +51,22 @@ local function jws_signature_to_octet(obj)
 end
 
 When("set the verification method in '' to ''", function(vc, meth)
-    local cred = have(vc)
+    local cred = ZEN.have(vc)
     ZEN.assert(cred.proof, "The object is not signed: "..vc)
-    local m = have(meth)
+    local m = ZEN.have(meth)
     ACK[vc].proof.verificationMethod = m
 end)
 
 When("get the verification method in ''", function(vc)
-    empty'verification_method'
-    local cred = have(vc)
+    ZEN.empty'verification_method'
+    local cred = ZEN.have(vc)
     ZEN.assert(cred.proof, "The object is not signed: "..vc)
     ACK.verification_method = cred.proof.verificationMethod
 end)
 
 When("sign the verifiable credential named ''", function(vc)
-    local cred = have(vc)
-    local keypair = have'keypair'
+    local cred = ZEN.have(vc)
+    local keypair = ZEN.have'keypair'
     ZEN.assert(not cred.proof, "The object is already signed: "..vc)
     local proof = {
         type = "Zenroom", -- .. VERSION, -- , "Signature", -- TODO: check what to write here for secp256k1
@@ -88,8 +79,8 @@ When("sign the verifiable credential named ''", function(vc)
 end)
 
 When("verify the verifiable credential named ''", function(vc)
-    local cred = have(vc)
-    local public_key = have'public_key'
+    local cred = ZEN.have(vc)
+    local public_key = ZEN.have'public_key'
     ZEN.assert(cred.proof, "The object has no signature: "..vc)
     ZEN.assert(cred.proof.jws, "The object has no signature: "..vc)
     local sign = jws_octet_to_signature(cred.proof.jws)

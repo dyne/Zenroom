@@ -61,7 +61,7 @@ function set_sentence(self, event, from, to, ctx)
 	  if strcasecmp(tt, pattern) then
 		 local args = {} -- handle multiple arguments in same string
 		 for arg in string.gmatch(ctx.msg,"'(.-)'") do
-			-- xxx("+arg: "..arg, 2)
+			-- convert all spaces to underscore in argument strings
 			arg = string.gsub(arg, ' ', '_')
 			table.insert(args,arg)
 		 end
