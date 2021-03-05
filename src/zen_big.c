@@ -306,6 +306,9 @@ static int newbig(lua_State *L) {
 
 	// octet argument, import
 	octet *o = o_arg(L, 1); SAFE(o);
+	if(o->len > MODBYTES) {
+		error(L, "Import of octet to BIG limit exceeded (%u > %u bytes)", o->len, MODBYTES);
+		return 0; }
 	big *c = big_new(L); SAFE(c);
 	_octet_to_big(L, c,o);
 	return 1;
