@@ -1,6 +1,6 @@
 -- This file is part of Zenroom (https://zenroom.dyne.org)
 --
--- Copyright (C) 2020 Dyne.org foundation
+-- Copyright (C) 2020-21 Dyne.org foundation
 -- Written by Denis Roio
 --
 -- This program is free software: you can redistribute it and/or modify
@@ -34,17 +34,6 @@ local G1 = ECP.generator() -- return value
 local G2 = ECP2.generator() -- return value
 local O  = ECP.order() -- return value
 
--- stateful challenge hardcoded string
-local hs = ECP.hashtopoint(str([[
-Forked by Jaromil on 18 January 2020 from Coconut Petition
-]] .. abc._LICENSE))
-local challenge = G1:octet() .. G2:octet() .. hs:octet()
-function abc.to_challenge(list)
-   local ser = serialize(list)
-   -- assert(coco.challenge, "COCONUT secret challenge not set")
-   return INT.new( sha256( challenge .. ser.octets .. OCTET.from_string(ser.strings)))
-end
-
 -- local zero-knowledge proof verifications
 local function make_pi_s(gamma, commit, k, r, m)
    local wk = INT.random()
@@ -52,8 +41,8 @@ local function make_pi_s(gamma, commit, k, r, m)
    local wr = INT.random()
    local Aw = G1 * wk
    local Bw = gamma * wk + commit * wm
-   local Cw = G1 * wr + hs * wm
-   local c = abc.to_challenge({ commit, Aw, Bw, Cw })
+   local Cw = G1 * wr + SALT * wm
+   local c = ZKP_challenge({ commit, Aw, Bw, Cw })
    -- return pi_s
    return { commit = c,
 			rk = wk - c * k,
@@ -69,9 +58,9 @@ function abc.verify_pi_s(l)
 	  + l.commit * l.pi_s.rm
    local Cw = l.commit * l.pi_s.commit
 	  + G1 * l.pi_s.rr
-	  + hs * l.pi_s.rm
+	  + SALT * l.pi_s.rm
    -- return a bool for assert
-   return l.pi_s.commit == abc.to_challenge({ l.commit, Aw, Bw, Cw })
+   return l.pi_s.commit == ZKP_challenge({ l.commit, Aw, Bw, Cw })
 end
 
 -- Public Coconut API
@@ -99,7 +88,7 @@ function abc.prepare_blind_sign(secret)
    local m = INT.new(sha256(secret))
    -- ElGamal commitment
    local r = INT.random()
-   local commit = G1 * r + hs * m
+   local commit = G1 * r + SALT * m
    local k = INT.random()
    local sign = { a = G1 * k,
 				  b = gamma * k + commit * m }
@@ -150,7 +139,7 @@ function abc.prove_cred(verify, sigma, secret)
    local nu = sigma_prime.h_prime * r
    local wm = INT.random()
    local wr = INT.random()
-   local challenge = abc.to_challenge(
+   local challenge = ZKP_challenge(
 	  { verify.alpha, verify.beta,
 		verify.alpha + G2 * wr + verify.beta * wm, -- Aw
 		sigma_prime.h_prime * wr })                -- Bw
@@ -175,7 +164,7 @@ function abc.verify_cred(verify, Theta)
    local Bw = Theta.nu * Theta.pi_v.c
 	  + Theta.sigma_prime.h_prime * Theta.pi_v.rr
    -- check zero knowledge proof
-   assert(Theta.pi_v.c == abc.to_challenge({verify.alpha, verify.beta, Aw, Bw}),
+   assert(Theta.pi_v.c == ZKP_challenge({verify.alpha, verify.beta, Aw, Bw}),
 		  "Credential proof does not verify (wrong challenge)", 2)
    assert(not Theta.sigma_prime.h_prime:isinf(),
 		  "Credential proof does not verify (sigma.h is infinite)", 2)
@@ -184,9 +173,6 @@ function abc.verify_cred(verify, Theta)
 		  "Credential proof does not verify (miller loop error)", 2)
    return true
 end
-
------------
--- petition
 
 function abc.prove_cred_uid(vk, sigma, secret, uid)
    local m = INT.new(sha256(secret))
@@ -207,7 +193,7 @@ function abc.prove_cred_uid(vk, sigma, secret, uid)
    local Bw = sigma_prime.h_prime * wr
    local Cw = wm * ECP.hashtopoint(uid)
    -- create the challenge
-   local c = abc.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw })
+   local c = ZKP_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw })
    -- create responses
    local pi_v = { c = c,
 				  rm = wm - m * c,
@@ -229,7 +215,7 @@ function abc.verify_cred_uid(vk, theta, zeta, uid)
    local Bw = theta.pi_v.rr * theta.sigma_prime.h_prime + theta.nu * theta.pi_v.c
    local Cw = theta.pi_v.rm * ECP.hashtopoint(uid) + zeta * theta.pi_v.c
    -- compute the challenge prime
-   assert(theta.pi_v.c == abc.to_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw }),
+   assert(theta.pi_v.c == ZKP_challenge({ vk.alpha, vk.beta, Aw, Bw, Cw }),
 		  "verify_cred_petition: invalid challenge", 2)
    -- verify signature --
    assert(not theta.sigma_prime.h_prime:isinf(),
