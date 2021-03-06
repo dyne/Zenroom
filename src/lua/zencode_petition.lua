@@ -17,11 +17,7 @@
 -- License along with this program.  If not, see
 -- <https://www.gnu.org/licenses/>.
 
--- Revokable attribute based credentials implementation in Zencode
-
--- ABC crypto scheme used for BLS based credentials
-
-local ABC = require_once'crypto_abc'
+local CRED = require_once'crypto_credential'
 local PET = require_once'crypto_petition'
 
 local function petition_scores_f(o)
@@ -184,7 +180,7 @@ When(
 		local zeta
 		local ack_uid = OCTET.from_string(uid)
 		Theta, zeta =
-			ABC.prove_cred_uid(
+			CRED.prove_cred_uid(
 			ACK.verifiers,
 			ACK.credentials,
 			ACK.keys.credential,
@@ -202,7 +198,7 @@ When(
 	'verify the signature proof is correct',
 	function()
 		ZEN.assert(
-			ABC.verify_cred_uid(
+			CRED.verify_cred_uid(
 				ACK.verifiers,
 				ACK.petition_signature.proof,
 				ACK.petition_signature.uid_signature,

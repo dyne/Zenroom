@@ -19,7 +19,7 @@
 
 -- ABC/COCONUT implementation in Zencode
 
-local ABC = require_once('crypto_abc')
+local CRED = require_once('crypto_credential')
 -- local G1 = ECP.generator()
 local G2 = ECP2.generator()
 
@@ -95,7 +95,7 @@ When(
 			not ACK.keys.issuer,
 			'Cannot overwrite object: ' .. 'keys.issuer'
 		)
-		ACK.keys.issuer = ABC.issuer_keygen()
+		ACK.keys.issuer = CRED.issuer_keygen()
 	end
 )
 
@@ -131,7 +131,7 @@ ZEN.add_schema(
 				public = ZEN.get(obj, 'public', ECP.new)
 			}
 			ZEN.assert(
-				ABC.verify_pi_s(req),
+				CRED.verify_pi_s(req),
 				'Error in credential request: proof is invalid (verify_pi_s)'
 			)
 			return req
@@ -144,7 +144,7 @@ When(
 	function()
 		ZEN.have 'keys'
 		ZEN.assert(ACK.keys.credential, 'Credential key not found')
-		ACK.credential_request = ABC.prepare_blind_sign(ACK.keys.credential)
+		ACK.credential_request = CRED.prepare_blind_sign(ACK.keys.credential)
 	end
 )
 
@@ -175,7 +175,7 @@ When(
 		ZEN.have 'credential request'
 		ZEN.assert(ACK.keys.issuer, 'Issuer key not found')
 		ACK.credential_signature =
-			ABC.blind_sign(ACK.keys.issuer, ACK.credential_request)
+			CRED.blind_sign(ACK.keys.issuer, ACK.credential_request)
 		ACK.verifier = {
 			alpha = G2 * ACK.keys.issuer.x,
 			beta = G2 * ACK.keys.issuer.y
@@ -191,7 +191,7 @@ When(
 		-- prepare output with an aggregated sigma credential
 		-- requester signs the sigma with private key
 		ACK.credentials =
-			ABC.aggregate_creds(ACK.keys.credential, {ACK.credential_signature})
+			CRED.aggregate_creds(ACK.keys.credential, {ACK.credential_signature})
 	end
 )
 
@@ -239,7 +239,7 @@ When(
 		ZEN.empty 'credential proof'
 		ZEN.assert(ACK.keys.credential, 'Credential key not found')
 		ACK.credential_proof =
-			ABC.prove_cred(ACK.verifiers, ACK.credentials, ACK.keys.credential)
+			CRED.prove_cred(ACK.verifiers, ACK.credentials, ACK.keys.credential)
 	end
 )
 When(
@@ -248,7 +248,7 @@ When(
 		ZEN.have 'credential proof'
 		ZEN.have 'verifiers'
 		ZEN.assert(
-			ABC.verify_cred(ACK.verifiers, ACK.credential_proof),
+			CRED.verify_cred(ACK.verifiers, ACK.credential_proof),
 			'Credential proof does not validate'
 		)
 	end
