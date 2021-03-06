@@ -16,11 +16,10 @@
 -- You should have received a copy of the GNU Affero General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-local credential
+local credential = { }
 
 local G1 = ECP.generator() -- return value
 local G2 = ECP2.generator() -- return value
-local O  = ECP.order() -- return value
 
 -- local zero-knowledge proof verifications
 local function make_pi_s(gamma, commit, k, r, m)
@@ -214,4 +213,4 @@ function credential.verify_cred_uid(vk, theta, zeta, uid)
    return true
 end
 
-return abc
+return credential

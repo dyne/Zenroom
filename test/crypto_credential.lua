@@ -2,7 +2,7 @@ print()
 print '= ATTRIBUTE BASED CRYPTOGRAPHY TEST (ZKP + zeta/UID)'
 print()
 
-local ABC = require_once('crypto_abc')
+local CRED = require_once('crypto_credential')
 local G2 = ECP2.generator()
 
 local client = {
@@ -18,9 +18,9 @@ local client = {
 
 local UID = 'Unique Session Identifier'
 
-local issuer_key = ABC.issuer_keygen()
-local issuer2_key = ABC.issuer_keygen()
-local issuer3_key = ABC.issuer_keygen()
+local issuer_key =CRED.issuer_keygen()
+local issuer2_key =CRED.issuer_keygen()
+local issuer3_key =CRED.issuer_keygen()
 local issuer_verifier = {
 	alpha = G2 * issuer_key.x,
 	beta = G2 * issuer_key.y
@@ -35,16 +35,16 @@ local issuer3_verifier = {
 }
 
 local issuer_aggkeys =
-	ABC.aggregate_keys(
+	CRED.aggregate_keys(
 	{issuer_verifier, issuer2_verifier, issuer3_verifier}
 )
 
-local Lambda = ABC.prepare_blind_sign(client.private)
-local sigma_tilde1 = ABC.blind_sign(issuer_key, Lambda)
-local sigma_tilde2 = ABC.blind_sign(issuer2_key, Lambda)
-local sigma_tilde3 = ABC.blind_sign(issuer3_key, Lambda)
+local Lambda =CRED.prepare_blind_sign(client.private)
+local sigma_tilde1 =CRED.blind_sign(issuer_key, Lambda)
+local sigma_tilde2 =CRED.blind_sign(issuer2_key, Lambda)
+local sigma_tilde3 =CRED.blind_sign(issuer3_key, Lambda)
 client.aggsigma =
-	ABC.aggregate_creds(
+	CRED.aggregate_creds(
 	client.private,
 	{sigma_tilde1, sigma_tilde2, sigma_tilde3}
 )
@@ -52,10 +52,10 @@ client.aggsigma =
 local Theta, Theta2
 local zeta, zeta2
 -- simple
-Theta = ABC.prove_cred(issuer_aggkeys, client.aggsigma, client.private)
-Theta2 = ABC.prove_cred(issuer_aggkeys, client.aggsigma, client.private)
-assert(ABC.verify_cred(issuer_aggkeys, Theta))
-assert(ABC.verify_cred(issuer_aggkeys, Theta2))
+Theta =CRED.prove_cred(issuer_aggkeys, client.aggsigma, client.private)
+Theta2 =CRED.prove_cred(issuer_aggkeys, client.aggsigma, client.private)
+assert(CRED.verify_cred(issuer_aggkeys, Theta))
+assert(CRED.verify_cred(issuer_aggkeys, Theta2))
 assert(
 	not (ZEN.serialize(Theta) == ZEN.serialize(Theta2)),
 	'different zk proofs do not differ'
@@ -63,14 +63,14 @@ assert(
 
 -- zkp + uid + zeta
 Theta, zeta =
-	ABC.prove_cred_uid(
+	CRED.prove_cred_uid(
 	issuer_aggkeys,
 	client.aggsigma,
 	client.private,
 	UID
 )
 Theta2, zeta2 =
-	ABC.prove_cred_uid(
+	CRED.prove_cred_uid(
 	issuer_aggkeys,
 	client.aggsigma,
 	client.private,
@@ -78,11 +78,11 @@ Theta2, zeta2 =
 )
 
 assert(
-	ABC.verify_cred_uid(issuer_aggkeys, Theta, zeta, UID),
+	CRED.verify_cred_uid(issuer_aggkeys, Theta, zeta, UID),
 	'first UID-proof verification fails'
 )
 assert(
-	ABC.verify_cred_uid(issuer_aggkeys, Theta2, zeta2, UID),
+	CRED.verify_cred_uid(issuer_aggkeys, Theta2, zeta2, UID),
 	'second UID-proof verification fails'
 )
 assert(
