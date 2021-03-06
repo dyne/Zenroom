@@ -81,8 +81,8 @@ test("Executes a zencode correctly", async (t) => {
     result,
   } = await zencode_exec(`Scenario 'credential': credential keygen 
     Given that I am known as '${random_name}' 
-    When I create the credential keys
-    and I create the issuer keys
+    When I create the credential key
+    and I create the issuer key
     Then print my 'keys'`);
   t.is(typeof result, "string");
   const r = JSON.parse(result);
