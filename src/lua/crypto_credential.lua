@@ -16,19 +16,7 @@
 -- You should have received a copy of the GNU Affero General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-local abc = {
-   _VERSION = 'crypto_abc.lua 1.0',
-   _URL = 'https://zenroom.dyne.org',
-   _DESCRIPTION = 'Attribute Based Credentials with optional zeta/UID',
-   _LICENSE = [[
-Licensed under the terms of the GNU Public License as published by
-the Free Software Foundation; either version 3 of the License, or
-(at your option) any later version.  Unless required by applicable
-law or agreed to in writing, software distributed under the License
-is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-CONDITIONS OF ANY KIND, either express or implied.
-]]
-}
+local credential
 
 local G1 = ECP.generator() -- return value
 local G2 = ECP2.generator() -- return value
@@ -50,7 +38,7 @@ local function make_pi_s(gamma, commit, k, r, m)
 			rr = wr - c * r  }
 end
 
-function abc.verify_pi_s(l)
+function credential.verify_pi_s(l)
    local Aw = l.sign.a * l.pi_s.commit
 	  + G1 * l.pi_s.rk
    local Bw = l.sign.b * l.pi_s.commit
@@ -64,12 +52,12 @@ function abc.verify_pi_s(l)
 end
 
 -- Public Coconut API
-function abc.issuer_keygen()
+function credential.issuer_keygen()
    return { x = INT.random(),
             y = INT.random()  }
 end
 
-function abc.aggregate_keys(keys)
+function credential.aggregate_keys(keys)
    local agg_alpha = keys[1].alpha
    local agg_beta  = keys[1].beta
    if #keys > 1 then
@@ -83,7 +71,7 @@ function abc.aggregate_keys(keys)
 			beta = agg_beta }
 end
 
-function abc.prepare_blind_sign(secret)
+function credential.prepare_blind_sign(secret)
    local gamma = G1 * secret
    local m = INT.new(sha256(secret))
    -- ElGamal commitment
@@ -101,8 +89,8 @@ function abc.prepare_blind_sign(secret)
 			public = gamma }
 end
 
-function abc.blind_sign(sk, Lambda)
-   assert(abc.verify_pi_s(Lambda),
+function credential.blind_sign(sk, Lambda)
+   assert(credential.verify_pi_s(Lambda),
 		  'Zero knowledge proof does not verify (Lambda.pi_s)', 2)
    local h = Lambda.commit
    local a_tilde = Lambda.sign.a * sk.y
@@ -113,7 +101,7 @@ function abc.blind_sign(sk, Lambda)
             b_tilde = b_tilde  }
 end
 
-function abc.aggregate_creds(sk, sigma_tilde)
+function credential.aggregate_creds(sk, sigma_tilde)
    local agg_s =
 	  -- ElGamal verify commitment
 	  sigma_tilde[1].b_tilde - sigma_tilde[1].a_tilde * sk
@@ -129,7 +117,7 @@ function abc.aggregate_creds(sk, sigma_tilde)
             s = agg_s }
 end
 
-function abc.prove_cred(verify, sigma, secret)
+function credential.prove_cred(verify, sigma, secret)
    local m = INT.new(sha256(secret))
    local r = INT.random()
    local r_prime = INT.random()
@@ -154,7 +142,7 @@ function abc.prove_cred(verify, sigma, secret)
    }
 end
 
-function abc.verify_cred(verify, Theta)
+function credential.verify_cred(verify, Theta)
    if #verify == 1 then verify = verify[1] end -- single element in array
    -- verify pi_v
    local Aw = Theta.kappa * Theta.pi_v.c
@@ -174,7 +162,7 @@ function abc.verify_cred(verify, Theta)
    return true
 end
 
-function abc.prove_cred_uid(vk, sigma, secret, uid)
+function credential.prove_cred_uid(vk, sigma, secret, uid)
    local m = INT.new(sha256(secret))
    local r = INT.random()
    -- material
@@ -206,7 +194,7 @@ function abc.prove_cred_uid(vk, sigma, secret, uid)
    return Theta, zeta
 end
 
-function abc.verify_cred_uid(vk, theta, zeta, uid)
+function credential.verify_cred_uid(vk, theta, zeta, uid)
    -- recompute witnessess commitments
    local Aw = theta.kappa * theta.pi_v.c
 	  + G2 * theta.pi_v.rr
