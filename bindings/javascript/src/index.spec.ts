@@ -88,5 +88,6 @@ test("Executes a zencode correctly", async (t) => {
   const r = JSON.parse(result);
   t.is(typeof r[random_name], "object");
   t.is(typeof r[random_name]["keys"]["credential"], "string");
-  t.is(typeof r[random_name]["keys"]["issuer"], "string");
+  t.is(typeof r[random_name]["keys"]["issuer"]["x"], "string");
+  t.is(typeof r[random_name]["keys"]["issuer"]["y"], "string");
 });
