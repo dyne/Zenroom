@@ -1,28 +1,30 @@
 -- This file is part of Zenroom (https://zenroom.dyne.org)
 --
--- Copyright (C) 2020-2021 Dyne.org foundation
--- designed, written and maintained by Denis Roio <jaromil@dyne.org>
+-- Copyright (C) 2020-2021 Dyne.org foundation designed, written and
+-- maintained by Denis Roio <jaromil@dyne.org>
 --
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU Affero General Public License as
 -- published by the Free Software Foundation, either version 3 of the
 -- License, or (at your option) any later version.
 --
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU Affero General Public License for more details.
+-- This program is distributed in the hope that it will be useful, but
+-- WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-- Affero General Public License for more details.
 --
--- You should have received a copy of the GNU Affero General Public License
--- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-- You should have received a copy of the GNU Affero General Public
+-- License along with this program.  If not, see
+-- <https://www.gnu.org/licenses/>.
 
 -- Revokable attribute based credentials implementation in Zencode
 
--- COCONUT crypto scheme used for BLS based credentials
+-- ABC crypto scheme used for BLS based credentials
 
-COCONUT = require_once('crypto_coconut')
+local ABC = require_once'crypto_abc'
+local PET = require_once'crypto_petition'
 
-function petition_scores_f(o)
+local function petition_scores_f(o)
 	local obj = deepmap(CONF.input.encoding.fun, o)
 	return ({
 		pos = {
@@ -35,6 +37,30 @@ function petition_scores_f(o)
 		}
 	})
 end
+
+-- function definitions aligned with zencode_credentials
+local function verifier_f(obj)
+	return {
+		alpha = ZEN.get(obj, 'alpha', ECP2.new),
+		beta = ZEN.get(obj, 'beta', ECP2.new)
+	}
+end
+local function credential_proof_f(obj)
+	return {
+		nu = ZEN.get(obj, 'nu', ECP.new),
+		kappa = ZEN.get(obj, 'kappa', ECP2.new),
+		pi_v = {
+			c = ZEN.get(obj.pi_v, 'c', INT.new),
+			rm = ZEN.get(obj.pi_v, 'rm', INT.new),
+			rr = ZEN.get(obj.pi_v, 'rr', INT.new)
+		},
+		sigma_prime = {
+			h_prime = ZEN.get(obj.sigma_prime, 'h_prime', ECP.new),
+			s_prime = ZEN.get(obj.sigma_prime, 's_prime', ECP.new)
+		}
+	}
+end
+-- end of schemas from zencode_credentials
 
 -- petition
 ZEN.add_schema(
@@ -95,9 +121,11 @@ ZEN.add_schema(
 When(
 	"create the petition ''",
 	function(uid)
+		ZEN.have'keys'
+		ZEN.assert(ACK.keys.credential,"Credential key not found")
 		ACK.petition = {
-			uid = O.from_string(uid),
-			owner = ACK.credential_keypair.public,
+			uid = OCTET.from_string(uid), -- TODO: take UID from HEAP not STACK
+			owner = ECP.generator() * ACK.keys.credential,
 			scores = {
 				pos = {
 					left = ECP.infinity(),
@@ -148,23 +176,18 @@ When(
 When(
 	"create the petition signature ''",
 	function(uid)
-		ZEN.assert(
-			ACK.verifiers,
-			'Verifier of aggregated issuer keys not found'
-		)
-		ZEN.assert(
-			ACK.credential_keypair.private,
-			'Credential private key not found'
-		)
-		ZEN.assert(ACK.credentials, 'Signed credential not found')
+		ZEN.have'credentials'
+		ZEN.have'verifiers'
+		ZEN.have'keys'
+		ZEN.assert(ACK.keys.credential,'Credential key not found')
 		local Theta
 		local zeta
-		local ack_uid = O.from_string(uid)
+		local ack_uid = OCTET.from_string(uid)
 		Theta, zeta =
-			COCONUT.prove_cred_petition(
+			ABC.prove_cred_uid(
 			ACK.verifiers,
 			ACK.credentials,
-			ACK.credential_keypair.private,
+			ACK.keys.credential,
 			ack_uid
 		)
 		ACK.petition_signature = {
@@ -179,7 +202,7 @@ When(
 	'verify the signature proof is correct',
 	function()
 		ZEN.assert(
-			COCONUT.verify_cred_petition(
+			ABC.verify_cred_uid(
 				ACK.verifiers,
 				ACK.petition_signature.proof,
 				ACK.petition_signature.uid_signature,
@@ -213,13 +236,13 @@ When(
 	function()
 		-- verify that the signature is +1 (no other value supported)
 		ACK.petition_signature.one =
-			COCONUT.prove_sign_petition(ACK.petition.owner, BIG.new(1))
+			PET.prove_sign_petition(ACK.petition.owner, BIG.new(1))
 		ZEN.assert(
-			COCONUT.verify_sign_petition(
+			PET.verify_sign_petition(
 				ACK.petition.owner,
 				ACK.petition_signature.one
 			),
-			'Coconut petition signature adds more than one signature'
+			'ABC petition signature adds more than one signature'
 		)
 	end
 )
@@ -243,13 +266,13 @@ When(
 	'create a petition tally',
 	function()
 		ZEN.assert(
-			ACK.credential_keypair.private,
+			ACK.keys.credential,
 			'Private key not found in credential keypair'
 		)
 		ZEN.assert(ACK.petition, 'Petition not found')
 		ACK.petition_tally =
-			COCONUT.prove_tally_petition(
-			ACK.credential_keypair.private,
+			PET.prove_tally_petition(
+			ACK.keys.credential,
 			ACK.petition.scores
 		)
 		ACK.petition_tally.uid = ACK.petition.uid
@@ -266,7 +289,7 @@ When(
 			'Tally does not correspond to petition'
 		)
 		ACK.petition_results =
-			COCONUT.count_signatures_petition(
+			PET.count_signatures_petition(
 			ACK.petition.scores,
 			ACK.petition_tally
 		).pos

@@ -124,6 +124,29 @@ _G["CONF"] = {
    heapguard = true
 }
 
+-- do not modify
+LICENSE = [[
+Licensed under the terms of the GNU Public License as published by
+the Free Software Foundation; either version 3 of the License, or
+(at your option) any later version.  Unless required by applicable
+law or agreed to in writing, software distributed under the License
+is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.
+]]
+COPYRIGHT = [[
+Forked by Jaromil on 18 January 2020 from Coconut Petition
+]]
+SALT = ECP.hashtopoint(OCTET.from_string(COPYRIGHT .. LICENSE))
+-- Calculate a system-wide crypto challenge for ZKP operations
+-- returns a BIG INT
+-- this is a sort of salted hash for advanced ZKP operations and
+-- should not be changed. It may be made configurable in future.
+function ZKP_challenge(list)
+	local challenge = ECP.generator():octet() .. ECP2.generator():octet() .. SALT:octet()
+    local ser = serialize(list)
+	return INT.new( sha256( challenge .. ser.octets .. OCTET.from_string(ser.strings)))
+end
+
 -- encoding base64url (RFC4648) is the fastest and most portable in zenroom
 -- set_encoding('url64')
 -- set_format('json')
