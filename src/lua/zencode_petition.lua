@@ -34,29 +34,6 @@ local function petition_scores_f(o)
 	})
 end
 
--- function definitions aligned with zencode_credentials
-local function verifier_f(obj)
-	return {
-		alpha = ZEN.get(obj, 'alpha', ECP2.new),
-		beta = ZEN.get(obj, 'beta', ECP2.new)
-	}
-end
-local function credential_proof_f(obj)
-	return {
-		nu = ZEN.get(obj, 'nu', ECP.new),
-		kappa = ZEN.get(obj, 'kappa', ECP2.new),
-		pi_v = {
-			c = ZEN.get(obj.pi_v, 'c', INT.new),
-			rm = ZEN.get(obj.pi_v, 'rm', INT.new),
-			rr = ZEN.get(obj.pi_v, 'rr', INT.new)
-		},
-		sigma_prime = {
-			h_prime = ZEN.get(obj.sigma_prime, 'h_prime', ECP.new),
-			s_prime = ZEN.get(obj.sigma_prime, 's_prime', ECP.new)
-		}
-	}
-end
--- end of schemas from zencode_credentials
 
 -- petition
 ZEN.add_schema(
@@ -71,10 +48,10 @@ ZEN.add_schema(
 				res.owner = ZEN.get(obj, 'owner', ECP.new)
 			end
 			if obj.vkeys then
-				res.vkeys = verifier_f(obj.vkeys)
+				res.vkeys = key_import_issuer_verifier_f(obj.vkeys)
 			end
 			if obj.verifier then
-				res.verifier = verifier_f(obj.verifier)
+				res.verifier = key_import_issuer_verifier_f(obj.verifier)
 			end
 			if obj.list then
 				res.list =
@@ -95,7 +72,8 @@ ZEN.add_schema(
 		end,
 		petition_signature = function(obj)
 			return {
-				proof = credential_proof_f(obj.proof),
+						-- from zencode_credential
+				proof = import_credential_proof_f(obj.proof),
 				uid_signature = ZEN.get(obj, 'uid_signature', ECP.new),
 				uid_petition = ZEN.get(obj, 'uid_petition')
 			}
@@ -117,8 +95,8 @@ ZEN.add_schema(
 When(
 	"create the petition ''",
 	function(uid)
-		ZEN.have'keys'
-		ZEN.assert(ACK.keys.credential,"Credential key not found")
+		havekey'credential'
+		-- ZEN.assert(ACK.keys.credential,"Credential key not found")
 		ACK.petition = {
 			uid = OCTET.from_string(uid), -- TODO: take UID from HEAP not STACK
 			owner = ECP.generator() * ACK.keys.credential,
@@ -174,8 +152,7 @@ When(
 	function(uid)
 		ZEN.have'credentials'
 		ZEN.have'verifiers'
-		ZEN.have'keys'
-		ZEN.assert(ACK.keys.credential,'Credential key not found')
+		havekey'credential'
 		local Theta
 		local zeta
 		local ack_uid = OCTET.from_string(uid)
@@ -261,10 +238,7 @@ When(
 When(
 	'create a petition tally',
 	function()
-		ZEN.assert(
-			ACK.keys.credential,
-			'Private key not found in credential keypair'
-		)
+		havekey'credential'
 		ZEN.assert(ACK.petition, 'Petition not found')
 		ACK.petition_tally =
 			PET.prove_tally_petition(
