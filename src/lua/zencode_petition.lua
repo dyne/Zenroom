@@ -47,11 +47,8 @@ ZEN.add_schema(
 			if obj.owner then
 				res.owner = ZEN.get(obj, 'owner', ECP.new)
 			end
-			if obj.vkeys then
-				res.vkeys = key_import_issuer_verifier_f(obj.vkeys)
-			end
-			if obj.verifier then
-				res.verifier = key_import_issuer_verifier_f(obj.verifier)
+			if obj.issuer_public_key then
+				res.issuer_public_key = key_import_issuer_verifier_f(obj.issuer_public_key)
 			end
 			if obj.list then
 				res.list =
@@ -151,14 +148,14 @@ When(
 	"create the petition signature ''",
 	function(uid)
 		ZEN.have'credentials'
-		ZEN.have'verifiers'
+		ZEN.have'issuer public key'
 		havekey'credential'
 		local Theta
 		local zeta
 		local ack_uid = OCTET.from_string(uid)
 		Theta, zeta =
 			CRED.prove_cred_uid(
-			ACK.verifiers,
+			ACK.issuer_public_key,
 			ACK.credentials,
 			ACK.keys.credential,
 			ack_uid
@@ -176,7 +173,7 @@ When(
 	function()
 		ZEN.assert(
 			CRED.verify_cred_uid(
-				ACK.verifiers,
+				ACK.issuer_public_key,
 				ACK.petition_signature.proof,
 				ACK.petition_signature.uid_signature,
 				ACK.petition_signature.uid_petition

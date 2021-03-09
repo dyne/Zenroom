@@ -17,7 +17,7 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 #	out="$1"
 #	shift 1
 #	>&2 echo "test: $out"
-#	tee "$out" | zenroom -z $*
+#	jq . | tee "$out" | zenroom -z $*
 # }
 ####################
 
@@ -38,7 +38,7 @@ echo " 												  "
 echo "------------------------------------------------"
 echo "                                                "
 
-cat << EOF | zexe ${out}/credentialParticipantKeygen.zen | tee ${out}/credentialParticipantKeypair.json
+cat << EOF | zexe ${out}/credentialParticipantKeygen.zen | jq . | tee ${out}/credentialParticipantKeypair.json
 Scenario credential: credential keygen
     Given that I am known as 'Alice'
     When I create the credential key
@@ -54,7 +54,7 @@ echo "------------------------------------------------"
 echo "                                                "
 
 
-cat << EOF | zexe ${out}/credentialParticipantSignatureRequest.zen -k ${out}/credentialParticipantKeypair.json | tee ${out}/credentialParticipantSignatureRequest.json | jq .
+cat << EOF | zexe ${out}/credentialParticipantSignatureRequest.zen -k ${out}/credentialParticipantKeypair.json | jq . | tee ${out}/credentialParticipantSignatureRequest.json
 Scenario credential: create request
     Given that I am known as 'Alice'
     and I have my valid 'keys'
@@ -73,7 +73,7 @@ echo " "
 # credential issuance
 
 
-cat << EOF | zexe ${out}/credentialIssuerKeygen.zen | tee ${out}/credentialIssuerKeypair.json | jq .
+cat << EOF | zexe ${out}/credentialIssuerKeygen.zen | jq . | tee ${out}/credentialIssuerKeypair.json
 Scenario credential: issuer keygen
     Given that I am known as 'MadHatter'
     When I create the issuer key
@@ -83,18 +83,18 @@ EOF
 let n=n+1
 echo "                                                "
 echo "------------------------------------------------"
-echo " Script $n: create the verifier of the issuer    "
+echo " Script $n: create the public_key of the issuer    "
 echo " 												  "
 echo "------------------------------------------------"
 echo " "
 
 
-cat << EOF | zexe ${out}/credentialIssuerPublishVerifier.zen -k ${out}/credentialIssuerKeypair.json | tee ${out}/credentialIssuerVerifier.json | jq .
-Scenario credential: publish verifier
+cat << EOF | zexe ${out}/credentialIssuerPublishpublic_key.zen -k ${out}/credentialIssuerKeypair.json | jq . | tee ${out}/credentialIssuerpublic_key.json
+Scenario credential: publish public_key
     Given that I am known as 'MadHatter'
     and I have my 'keys'
-    When I create the issuer verifier
-    Then print my 'issuer verifier'
+    When I create the issuer public key
+    Then print my 'issuer public key'
 EOF
 
 
@@ -110,17 +110,18 @@ echo " "
 
 
 
-cat << EOF | zexe ${out}/credentialIssuerSignRequest.zen -a ${out}/credentialParticipantSignatureRequest.json -k ${out}/credentialIssuerKeypair.json | tee ${out}/credentialIssuerSignedCredential.json | jq .
+cat << EOF | zexe ${out}/credentialIssuerSignRequest.zen -a ${out}/credentialParticipantSignatureRequest.json -k ${out}/credentialIssuerKeypair.json | jq . | tee ${out}/credentialIssuerSignedCredential.json
 Scenario credential: issuer sign
     Given that I am known as 'MadHatter'
     and I have my valid 'keys'
     and I have a 'credential request' inside 'Alice'
     When I create the credential signature
+    and I create the issuer public key
     Then print the 'credential signature'
-    and print the 'verifier'
+    and print the 'issuer public key'
 EOF
 
-let n=n+6
+let n=n+1
 echo "                                                "
 echo "------------------------------------------------"
 echo " Script $n: the participant aggregates credential "
@@ -128,7 +129,7 @@ echo " with its public key.					  "
 echo "------------------------------------------------"
 echo " "
 
-cat << EOF | zexe ${out}/credentialParticipantAggregateCredential.zen -a ${out}/credentialIssuerSignedCredential.json -k ${out}/credentialParticipantKeypair.json | tee ${out}/credentialParticipantAggregatedCredential.json | jq .
+cat << EOF | zexe ${out}/credentialParticipantAggregateCredential.zen -a ${out}/credentialIssuerSignedCredential.json -k ${out}/credentialParticipantKeypair.json | jq . | tee ${out}/credentialParticipantAggregatedCredential.json
 Scenario credential: aggregate signature
     Given that I am known as 'Alice'
     and I have my 'keys'
@@ -138,7 +139,7 @@ Scenario credential: aggregate signature
     and print my 'keys'
 EOF
 
-let n=n+7
+let n=n+1
 echo "                                                "
 echo "------------------------------------------------"
 echo " Script $n: the participant creates the proof "
@@ -148,32 +149,32 @@ echo " "
 
 # zero-knowledge credential proof emission and verification
 
-cat << EOF | zexe ${out}/credentialParticipantCreateProof.zen -k ${out}/credentialParticipantAggregatedCredential.json -a ${out}/credentialIssuerVerifier.json | tee ${out}/credentialParticipantProof.json | jq .
+cat << EOF | debug ${out}/credentialParticipantCreateProof.zen -k ${out}/credentialParticipantAggregatedCredential.json -a ${out}/credentialIssuerpublic_key.json | jq . | tee ${out}/credentialParticipantProof.json
 Scenario credential: create proof
     Given that I am known as 'Alice'
     and I have my 'keys'
-    and I have a 'issuer verifier' inside 'MadHatter'
+    and I have a 'issuer public key' inside 'MadHatter'
     and I have my 'credentials'
-    When I aggregate the verifiers
+    When I aggregate all the issuer public keys
     and I create the credential proof
     Then print the 'credential proof'
 EOF
 
-let n=n+8
+let n=n+1
 echo "                                                "
 echo "------------------------------------------------"
-echo " Script $n: anybody matches the proof with the verifier"
+echo " Script $n: anybody matches the proof with the public_key"
 echo " 												  "
 echo "------------------------------------------------"
 echo " "
 
-cat << EOF | zexe ${out}/credentialAnyoneVerifyProof.zen -k ${out}/credentialParticipantProof.json -a ${out}/credentialIssuerVerifier.json | jq .
+cat << EOF | zexe ${out}/credentialAnyoneVerifyProof.zen -k ${out}/credentialParticipantProof.json -a ${out}/credentialIssuerpublic_key.json | jq .
 Scenario credential: verify proof
-    Given that I have a 'issuer verifier' inside 'MadHatter'
+    Given that I have a 'issuer public key' inside 'MadHatter'
     and I have a 'credential proof'
-    When I aggregate the verifiers
+    When I aggregate all the issuer public keys
     When I verify the credential proof
-    Then print 'The proof matches the verifier! So you can add zencode after the verify statement, that will execute only if the match occurs.'
+    Then print 'The proof matches the public_key! So you can add zencode after the verify statement, that will execute only if the match occurs.'
 EOF
 
 echo "   "

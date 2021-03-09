@@ -36,7 +36,7 @@ echo "------------------------------------------------"
 echo "   											  "
 
 
-cat <<EOF | zexe ${out}/petitionRequest.zen -k ${out}/credentialParticipantAggregatedCredential.json -a ${out}/credentialIssuerVerifier.json | tee ${out}/petitionRequest.json | jq .
+cat <<EOF | zexe ${out}/petitionRequest.zen -k ${out}/credentialParticipantAggregatedCredential.json -a ${out}/credentialIssuerpublic_key.json | tee ${out}/petitionRequest.json | jq .
 # Two scenarios are needed for this script, "credential" and "petition".
 	Scenario credential: read and validate the credentials
 	Scenario petition: create the petition
@@ -45,13 +45,13 @@ cat <<EOF | zexe ${out}/petitionRequest.zen -k ${out}/credentialParticipantAggre
 # Here I load everything needed to proceed
     Given I have my 'keys'
     Given I have my 'credentials'
-    Given I have a 'issuer verifier' inside 'MadHatter'
+    Given I have a 'issuer public key' inside 'MadHatter'
 # In the "when" phase we have the cryptographical creation of the petition
-    When I aggregate the verifiers
+    When I aggregate all the issuer public keys
     When I create the credential proof
     When I create the petition 'More privacy for all!'
 # Here we are printing out what is needed to the get the petition approved
-    Then print the 'verifiers'
+    Then print the 'issuer public key'
 	Then print the 'credential proof'
 	Then print the 'petition'
 # Here we're just printing the "uid" as string, instead of the default base64
@@ -69,17 +69,17 @@ echo "------------------------------------------------"
 echo "   											  "
 
 
-cat <<EOF | zexe ${out}/petitionApprove.zen -k ${out}/petitionRequest.json -a ${out}/credentialIssuerVerifier.json | tee ${out}/petitionApproved.json | jq .
+cat <<EOF | zexe ${out}/petitionApprove.zen -k ${out}/petitionRequest.json -a ${out}/credentialIssuerpublic_key.json | tee ${out}/petitionApproved.json | jq .
 Scenario credential
 Scenario petition: approve
-    Given that I have a 'issuer verifier' inside 'MadHatter'
+    Given that I have a 'issuer public key' inside 'MadHatter'
     Given I have a 'credential proof'
     Given I have a 'petition'
-    When I aggregate the verifiers
+    When I aggregate all the issuer public keys
     When I verify the credential proof
     When I verify the new petition to be empty
     Then print the 'petition'
-    Then print the 'verifiers'
+    Then print the 'issuer public key'
 	Then print the 'uid' as 'string' inside 'petition' 
 EOF
 
@@ -93,17 +93,17 @@ echo "------------------------------------------------"
 echo "   											  "
 
 
-cat <<EOF | zexe ${out}/petitionSign.zen -k ${out}/credentialParticipantAggregatedCredential.json -a ${out}/credentialIssuerVerifier.json | tee ${out}/petitionSignature.json | jq .
+cat <<EOF | zexe ${out}/petitionSign.zen -k ${out}/credentialParticipantAggregatedCredential.json -a ${out}/credentialIssuerpublic_key.json | tee ${out}/petitionSignature.json | jq .
 Scenario credential
 Scenario petition: sign petition
     Given I am 'Alice'
     Given I have my valid 'keys'
     Given I have my 'credentials'
-    Given I have a valid 'issuer verifier' inside 'MadHatter'
-    When I aggregate the verifiers
+    Given I have a valid 'issuer public key' inside 'MadHatter'
+    When I aggregate all the issuer public keys
 	When I create the petition signature 'More privacy for all!'
     Then print the 'petition signature'
-    and print the 'issuer verifier'
+    and print the 'issuer public key'
 EOF
 
 let n=4
@@ -124,15 +124,15 @@ echo "   											  "
 cat <<EOF | zexe ${out}/petitionAggregateSignature.zen -k ${out}/petitionApproved.json -a ${out}/petitionSignature.json | tee ${out}/petitionAggregatedSignature.json | jq .
 Scenario credential
 Scenario petition: aggregate signature
-    Given that I have a valid 'petition signature'
-    Given I have a valid 'petition'
-    Given I have a valid 'issuer verifier'
+    Given that I have a 'petition signature'
+    Given I have a 'petition'
+    Given I have a 'issuer public key'
     When the petition signature is not a duplicate
     When the petition signature is just one more
     When I add the signature to the petition
-    and I aggregate the verifiers
+    and I aggregate all the issuer public keys
     Then print the 'petition'
-    Then print the 'verifiers'
+    Then print the 'issuer public key'
 EOF
 
 let n=5

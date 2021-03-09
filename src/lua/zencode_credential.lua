@@ -56,14 +56,6 @@ When(
 )
 
 When(
-	'create the credential verifier',
-	function()
-		havekey'credential'
-		ACK.credential_verifier = ECP.generator() * ACK.keys.credential
-	end
-)
-
-When(
 	"create the credential key with secret key ''",
 	function(sec)
 		initkeys'credential'
@@ -80,10 +72,10 @@ When(
 )
 
 When(
-	'create the issuer verifier',
+	'create the issuer public key',
 	function()
 		havekey'issuer'
-		ACK.issuer_verifier = {
+		ACK.issuer_public_key = {
 			alpha = G2 * ACK.keys.issuer.x,
 			beta = G2 * ACK.keys.issuer.y
 		}
@@ -93,10 +85,7 @@ When(
 -- request credential signatures
 ZEN.add_schema(
 	{
-		credential_verifier = function(obj)
-            return (ECP.new(CONF.input.encoding.fun(obj)))
-        end,
-        issuer_verifier = key_import_issuer_verifier_f,
+        issuer_public_key = key_import_issuer_verifier_f,
 		-- lambda
 		credential_request = function(obj)
 			local req = {
@@ -197,13 +186,13 @@ ZEN.add_schema(
 )
 
 When(
-	'aggregate the verifiers',
+	'aggregate the issuer public keys',
 	function()
-		ZEN.have 'issuer verifier'
+		ZEN.have 'issuer public key'
 		if not ACK.verifiers then
 			ACK.verifiers = {}
 		end
-		for k, v in pairs(ACK.issuer_verifier) do
+		for k, v in pairs(ACK.issuer_public_key) do
 			ACK.verifiers[k] = v
 		end
 		-- TODO: aggregate all array

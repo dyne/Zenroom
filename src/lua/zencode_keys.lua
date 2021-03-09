@@ -60,6 +60,8 @@ end
 ZEN.add_schema(
     {
         keys = function(obj)
+            -- ecdh_curve
+            -- bls_curve
             local res = {}
             if obj.credential then
                 res.credential = ZEN.get(obj, 'credential', INT.new)
@@ -69,6 +71,9 @@ ZEN.add_schema(
                     x = ZEN.get(obj.issuer, 'x', INT.new),
                     y = ZEN.get(obj.issuer, 'y', INT.new)
                 }
+            end
+            if obj.bls then
+                res.bls = ZEN.get(obj, 'bls', INT.new)
             end
             return (res)
         end
