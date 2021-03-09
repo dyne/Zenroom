@@ -1,9 +1,10 @@
 
+When I create the issuer public key
 # This prints a child of dictionary, which can be a string (like here) or another dictionary
 Then print the 'maxPricePerKG' in 'salesReport'
 
 # This prints the "verifier", that is the cryptographical object produced by an issuer that is publicly accessible
-# in order to match it to the proofs
-Then print the 'verifier' inside 'issuer keypair'
+# in order to match it with the proofs. 
+Then print the 'issuer public key' 
 
 

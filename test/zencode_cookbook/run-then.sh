@@ -131,14 +131,10 @@ cat <<EOF  > $tmpInput
          "private_key":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
          "public_key":"BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
       },
-	  "issuer_keypair": {
-			"issuer_sign": {
+	  "keys": {
+			"issuer": {
 				"x": "zK8Gs70vdLRErIKkTQdNbWfrWIExirgMKSxfGuPa1aU=",
 				"y": "x83wJ6rYhwowX/q4R0fNiE87JD4R48U1lBN21OgFJoE="
-			},
-			"verifier": {
-				"alpha": "P/0EVN5KUGszzll5GlO9yI3p1p80BaWp5UdJ/R4rrRYyxcBg93F3KKOEYJtrsJ4SBlxbo59jeWEi2WBRnBwClNI4YOD3ak2llLNp7y6NN3FbSKF6ZI1aoeD22rp/SUTTQVfT6vMtzXDHaE8KEWBnN87Gb5unt6tDj1kVhbE9scTV5G62ZpJBBB3aUTbQsDtCGWQlBWb0jImIaJ3ZndChwzUVy2DBnRC5nqVDzH8BJ5AtPO46qwo8M4EQ7dLPCv1h",
-				"beta": "DxkhJCeC0LmNix2Q9XZxmHKwBv6fbYymNH6PGdvnOU6uD3NhZBbp+jA27kPon1CACigQ4IT/TpUGJwoy3M0o7l2x+mxPS6akE26kMrYARNC3fbYk6N9ugbjki8WX6uPQFheJJ1ZfSiiUQ02MFmIPTDKa0bRjXTyHak41+2SbQpPU1BYreIlIrDmzP8XrEaz0H0287Mg85L/iAXdtSpOk5qRyXm+lGa6QldyYkQ22xmNN6Ch0mIb3Ds9/e8EN1bM0"
 			}
 		}
    },
@@ -166,7 +162,7 @@ Scenario 'ecdh': load a issuer keypair
 Scenario 'credential': Create the keypair
 Given I am 'Alice'
 Given I have my 'keypair'
-Given I have my 'issuer keypair' 
+Given I have my 'keys' 
 and I have a 'public key' from 'Bob'
 and I have a 'public key' from 'Carl'
 # Load Arrays
@@ -461,12 +457,13 @@ let n=n+1
 
 cat <<EOF  > $tmpThen4
 
+When I create the issuer public key
 # This prints a child of dictionary, which can be a string (like here) or another dictionary
 Then print the 'maxPricePerKG' in 'salesReport'
 
 # This prints the "verifier", that is the cryptographical object produced by an issuer that is publicly accessible
 # in order to match it with the proofs. 
-Then print the 'verifier' inside 'issuer keypair'
+Then print the 'issuer public key' 
 
 
 EOF
