@@ -1,7 +1,7 @@
 Scenario credential
 Scenario petition: tally
     Given that I am 'Alice'
-    Given I have my valid 'credential keypair'
+    Given I have my 'keys'
     Given I have a valid 'petition'
     When I create a petition tally
     Then print all data
