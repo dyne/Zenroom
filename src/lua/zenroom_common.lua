@@ -352,7 +352,7 @@ function isdictionary(obj)
    if luatype(obj) ~= 'table' then return 0 end -- error("Argument is not a table: "..type(obj)
    local count = 0
    for k, v in pairs(obj) do
-	  -- check that all keys are numbers
+	  -- check that all keys are not numbers
 	  -- don't check sparse ratio (cjson's lua_array_length)
 	  if luatype(k) ~= "string" then return 0 end
 	  count = count + 1
@@ -362,12 +362,11 @@ end
 
 function array_contains(arr, obj)
    assert(luatype(arr) == 'table', "Internal error: array_contains argument is not a table")
-   local res = false
-   for k, v in ipairs(obj) do
+   for k, v in pairs(arr) do
 	  assert(luatype(k) == 'number', "Internal error: array_contains argument is not an array")
-	  res = res or v == obj
+	  if v == obj then return true end
    end
-   return res
+   return false
 end
 
 
