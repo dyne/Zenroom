@@ -23,42 +23,34 @@ local CRED = require_once('crypto_credential')
 -- local G1 = ECP.generator()
 local G2 = ECP2.generator()
 
-ZEN.add_schema(
-	{
-		keys = function(obj)
-			local res = {}
-			if obj.credential then
-				res.credential = ZEN.get(obj, 'credential', INT.new)
-			end
-			if obj.issuer then
-				res.issuer = {
-					x = ZEN.get(obj.issuer, 'x', INT.new),
-					y = ZEN.get(obj.issuer, 'y', INT.new)
-				}
-			end
-			return (res)
-		end,
-		credential_verifier = function(obj)
-			return (ECP.new(CONF.input.encoding.fun(obj)))
-		end,
-		issuer_verifier = function(obj)
-			return {
-				alpha = ZEN.get(obj, 'alpha', ECP2.new),
-				beta = ZEN.get(obj, 'beta', ECP2.new)
-			}
-		end
+-- exported function (non local) for use in zencode_petition
+function import_credential_proof_f(obj)
+	return {
+		nu = ZEN.get(obj, 'nu', ECP.new),
+		kappa = ZEN.get(obj, 'kappa', ECP2.new),
+		pi_v = {
+			c = ZEN.get(obj.pi_v, 'c', INT.new),
+			rm = ZEN.get(obj.pi_v, 'rm', INT.new),
+			rr = ZEN.get(obj.pi_v, 'rr', INT.new)
+		},
+		sigma_prime = {
+			h_prime = ZEN.get(obj.sigma_prime, 'h_prime', ECP.new),
+			s_prime = ZEN.get(obj.sigma_prime, 's_prime', ECP.new)
+		}
 	}
-)
+end
+function key_import_issuer_verifier_f(obj)
+	return {
+		alpha = ZEN.get(obj, 'alpha', ECP2.new),
+		beta = ZEN.get(obj, 'beta', ECP2.new)
+	}
+end
 
 -- credential keypair operations
 When(
 	'create the credential key',
 	function()
-		ACK.keys = fif(ACK.keys, ACK.keys, {})
-		ZEN.assert(
-			not ACK.keys.credential,
-			'Cannot overwrite object: ' .. 'keys.credential'
-		)
+		initkeys'credential'
 		ACK.keys.credential = INT.random()
 	end
 )
@@ -66,11 +58,7 @@ When(
 When(
 	'create the credential verifier',
 	function()
-		ZEN.have 'keys'
-		ZEN.assert(
-			ACK.keys.credential,
-			'Object not found: ' .. 'keys.credential'
-		)
+		havekey'credential'
 		ACK.credential_verifier = ECP.generator() * ACK.keys.credential
 	end
 )
@@ -78,11 +66,7 @@ When(
 When(
 	"create the credential key with secret key ''",
 	function(sec)
-		local secret = ZEN.have(sec)
-		ZEN.assert(
-			not ACK.keys.credential,
-			'Cannot overwrite object: ' .. 'keys.credential'
-		)
+		initkeys'credential'
 		ACK.keys.credential = INT.new(secret)
 	end
 )
@@ -90,11 +74,7 @@ When(
 When(
 	'create the issuer key',
 	function()
-		ACK.keys = fif(ACK.keys, ACK.keys, {})
-		ZEN.assert(
-			not ACK.keys.issuer,
-			'Cannot overwrite object: ' .. 'keys.issuer'
-		)
+		initkeys'issuer'
 		ACK.keys.issuer = CRED.issuer_keygen()
 	end
 )
@@ -102,8 +82,7 @@ When(
 When(
 	'create the issuer verifier',
 	function()
-		ZEN.have 'keys'
-		ZEN.assert(ACK.keys.issuer, 'Object not found: ' .. 'keys.issuer')
+		havekey'issuer'
 		ACK.issuer_verifier = {
 			alpha = G2 * ACK.keys.issuer.x,
 			beta = G2 * ACK.keys.issuer.y
@@ -114,6 +93,10 @@ When(
 -- request credential signatures
 ZEN.add_schema(
 	{
+		credential_verifier = function(obj)
+            return (ECP.new(CONF.input.encoding.fun(obj)))
+        end,
+        issuer_verifier = key_import_issuer_verifier_f,
 		-- lambda
 		credential_request = function(obj)
 			local req = {
@@ -142,8 +125,7 @@ ZEN.add_schema(
 When(
 	'create the credential request',
 	function()
-		ZEN.have 'keys'
-		ZEN.assert(ACK.keys.credential, 'Credential key not found')
+		havekey'credential'
 		ACK.credential_request = CRED.prepare_blind_sign(ACK.keys.credential)
 	end
 )
@@ -171,9 +153,8 @@ ZEN.add_schema(
 When(
 	'create the credential signature',
 	function()
-		ZEN.assert(WHO, 'Issuer is not known')
 		ZEN.have 'credential request'
-		ZEN.assert(ACK.keys.issuer, 'Issuer key not found')
+		havekey'issuer'
 		ACK.credential_signature =
 			CRED.blind_sign(ACK.keys.issuer, ACK.credential_request)
 		ACK.verifier = {
@@ -186,8 +167,7 @@ When(
 	'create the credentials',
 	function()
 		ZEN.have 'credential signature'
-		ZEN.have 'keys'
-		ZEN.assert(ACK.keys.credential, 'Credential key not found')
+		havekey'credential'
 		-- prepare output with an aggregated sigma credential
 		-- requester signs the sigma with private key
 		ACK.credentials =
@@ -234,10 +214,9 @@ When(
 	'create the credential proof',
 	function()
 		ZEN.have 'verifiers'
-		ZEN.have 'keys'
 		ZEN.have 'credentials'
 		ZEN.empty 'credential proof'
-		ZEN.assert(ACK.keys.credential, 'Credential key not found')
+		havekey'credential'
 		ACK.credential_proof =
 			CRED.prove_cred(ACK.verifiers, ACK.credentials, ACK.keys.credential)
 	end
