@@ -142,7 +142,7 @@ ZEN.add_schema(
 When(
 	'create the credential signature',
 	function()
-		ZEN.have 'credential request'
+		have 'credential request'
 		havekey'issuer'
 		ACK.credential_signature =
 			CRED.blind_sign(ACK.keys.issuer, ACK.credential_request)
@@ -155,7 +155,7 @@ When(
 When(
 	'create the credentials',
 	function()
-		ZEN.have 'credential signature'
+		have 'credential signature'
 		havekey'credential'
 		-- prepare output with an aggregated sigma credential
 		-- requester signs the sigma with private key
@@ -188,7 +188,7 @@ ZEN.add_schema(
 When(
 	'aggregate the issuer public keys',
 	function()
-		ZEN.have 'issuer public key'
+		have 'issuer public key'
 		if not ACK.verifiers then
 			ACK.verifiers = {}
 		end
@@ -202,9 +202,9 @@ When(
 When(
 	'create the credential proof',
 	function()
-		ZEN.have 'verifiers'
-		ZEN.have 'credentials'
-		ZEN.empty 'credential proof'
+		have 'verifiers'
+		have 'credentials'
+		empty 'credential proof'
 		havekey'credential'
 		ACK.credential_proof =
 			CRED.prove_cred(ACK.verifiers, ACK.credentials, ACK.keys.credential)
@@ -213,8 +213,8 @@ When(
 When(
 	'verify the credential proof',
 	function()
-		ZEN.have 'credential proof'
-		ZEN.have 'verifiers'
+		have 'credential proof'
+		have 'verifiers'
 		ZEN.assert(
 			CRED.verify_cred(ACK.verifiers, ACK.credential_proof),
 			'Credential proof does not validate'

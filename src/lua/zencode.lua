@@ -165,12 +165,12 @@ function zencode.add_schema(arr)
    end
 end
 
-function zencode.have(o)
+function have(o)
     local res = ACK[string.gsub(o, ' ', '_')]
     ZEN.assert(res, "Cannot find object: " .. o)
     return res
 end
-function zencode.empty(o)
+function empty(o)
 	-- convert all spaces to underscore in argument
 	local s = string.gsub(o, ' ', '_')
     ZEN.assert(not ACK[s], "Cannot overwrite existing object: " .. o)

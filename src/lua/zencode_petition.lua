@@ -147,8 +147,8 @@ When(
 When(
 	"create the petition signature ''",
 	function(uid)
-		ZEN.have'credentials'
-		ZEN.have'issuer public key'
+		have'credentials'
+		have'issuer public key'
 		havekey'credential'
 		local Theta
 		local zeta
