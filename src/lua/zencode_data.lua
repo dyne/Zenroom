@@ -91,7 +91,7 @@ function guess_conversion(obj, definition)
 			   zentype = 'schema',
 			   luatype = objtype,
 			   raw = obj,
-			   encoding = definition or objtype })
+			   encoding = CONF.output.encoding.name })
    end
    if objtype == 'string' then
 	  if not definition then
@@ -116,24 +116,38 @@ function guess_conversion(obj, definition)
    -- data_type: array, dictionary, structure
    if objtype == 'table' then
 	  toks = strtok(definition,'[^_]+')
-	  if not (#toks == 2) then
+	  if not (#toks > 1) then
 		 error('Invalid definition: '..definition..' (must be "base64 array" or "string dictionary" etc.)',2)
 		 return nil
 	  end
-	  -- zentypes
-	  if not ((toks[2] == 'array') or (toks[2] == 'dictionary')) then
-		 error('Invalid table type: '..definition.. ' (must be array or dictionary)', 2)
+     local rightmost = #toks
+     local leftwords = '' -- concat all left words in toks minus the last
+     for i = 1, rightmost-2 do leftwords = leftwords..toks[i]..'_' end
+     leftwords = leftwords..toks[rightmost-1] -- no trailing underscore
+	  -- check if the last word is among zentype collections
+	  if not ((toks[rightmost] == 'array') or (toks[rightmost] == 'dictionary')) then
+		 error('Invalid table type: '..toks[rightmost].. ' (must be array or dictionary)', 2)
 		 return nil
 	  end
-	  res = input_encoding(toks[1])
-      if not res then
-		 error('Invalid '..toks[2]..' encoding: '..toks[1], 2)
-		 return nil
-	  end
-	  res.luatype = 'table'
-	  res.zentype = toks[2] -- zentypes couples with table
-	  res.raw = obj
-	  return(res)
+     -- schema type in array or dict
+     t =  ZEN.schemas[leftwords]
+     if t then
+         return({ fun = t,
+                 zentype = 'schema',
+                 luatype = objtype,
+                 raw = obj,
+                 encoding = toks[rightmost] })
+     end
+     -- normal type in input encoding
+	  res = input_encoding(leftwords)
+     if res then
+      res.luatype = 'table'
+      res.zentype = toks[rightmost] -- zentypes couples with table
+      res.raw = obj
+      return(res)
+     end
+      error('Invalid '..toks[rightmost]..' encoding: '..leftwords, 2)
+		return nil
    end
    error('Invalid conversion for type '..objtype..': '..definition, 2)
    return nil
@@ -150,7 +164,16 @@ function operate_conversion(guessed)
    -- TODO: make xxx print to stderr!
    -- xxx('Operating conversion on: '..guessed.name)
    if guessed.zentype == 'schema' then
-	  return guessed.fun(guessed.raw)
+      if guessed.encoding == 'array' or guessed.encoding == 'dictionary' then
+         local res = { }
+         for k,v in pairs(guessed.raw) do
+            res[k] = guessed.fun(v)
+         end
+         return(res)
+      else
+	      return guessed.fun(guessed.raw)
+      end
+      -- error('Invalid schema conversion for encoding: '..guessed.encoding, 2)
    elseif guessed.luatype == 'table' then
      -- TODO: better error checking on deepmap?
       if luatype(guessed.check) == 'function' then
@@ -212,7 +235,7 @@ function guess_outcast(cast)
    elseif cast == 'binary'    then return outcast_bin
    elseif cast == 'number' then return(function(v) return(v) end)
 	  -- in case is a schema then outcast uses default output encoding
-   elseif ZEN.schemas[cast] then return CONF.output.encoding.fun
+   elseif ZEN.schemas[string.gsub(cast, ' ', '_')] then return CONF.output.encoding.fun
    else
 	  error("Invalid output conversion: "..cast, 2)
 	  return nil

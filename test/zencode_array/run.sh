@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-
+DEBUG=1
 ####################
 # common script init
 if ! test -r ../utils.sh; then
@@ -170,5 +170,19 @@ When I create the cbor of 'array'
 Then print the 'cbor' as 'hex'
 and print the 'array'
 EOF
+
+cat << EOF > array_public_bls.json
+{ "public_keys": {
+ "Alice":"KrfEl2HFpml3di0N5vnrN+yrbSgiSClGBgz9zEmp2BihHOejIuOrTsOS573Fh6ciCxv6jI3syiF7mfGKUKXurUruj1kUtJfRpXHXa4d22LlioeB9uv+l14qhecrFojboOGrxZulFoDKVVWVCB0/bAD6HquSmvX4+jyPl/BLt6TUnNDLeWK8vm6zu9sR8/XFtKqEfCgQB4u0vbDhqOKhRNut8MjLtMcxYgWZTunmszNAZdAGMcYSod/0p1AzOnAUi",
+ "Bob"  :"HA5WkWcTL0bJRRtjaTlW67SxTKBvuMniEOuao+jeuKA/2PT5965hvJgeDuTc2dHjGkCUzTjYhruOmY8puiF6s+8LRttJo17utYtsDNtNPNpaNdDSg8Dsg+wljGnqDUW8Jy29GQtuse2nqCOhGDzx9XC9pRCcu7hxAlIQsivpI2D9vXvi6BrVEniFG/kOrzzaUXXWNzBEuLhkwgvHcjLwC4Ph6ynrcsFIwEZycKuJKCaoOJu/ZQRT/nyfSf/Bom2k"
+} }
+EOF
+
+cat <<EOF | debug array_schema.zen -a array_public_bls.json
+Scenario multidarkroom
+Given I have a 'bls public key array' named 'public keys'
+Then print all data
+EOF
+
 success
 
