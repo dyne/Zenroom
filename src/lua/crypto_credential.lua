@@ -83,7 +83,7 @@ function credential.aggregate_keys(keys)
 end
 
 function credential.prepare_blind_sign(secret)
-   local gamma = G1 * I.spy(secret)
+   local gamma = G1 * secret
    local m = INT.new(sha256(secret))
    -- ElGamal commitment
    local r = INT.random()
