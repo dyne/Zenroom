@@ -46,6 +46,7 @@ cat <<EOF > "${DIR}"/zen_ecp_factory.h
 #define CURVE_G2xb CURVE_Pxb_${CN}
 #define CURVE_G2ya CURVE_Pya_${CN}
 #define CURVE_G2yb CURVE_Pyb_${CN}
+#define CURVE_Prime Modulus_${CN}
 
 #define ECP_copy(d,s) ECP_${CN}_copy(d,s)
 #define ECP_set(d,x,y) ECP_${CN}_set(d, x, y)

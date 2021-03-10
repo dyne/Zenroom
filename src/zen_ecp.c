@@ -434,6 +434,11 @@ static int ecp_get_y(lua_State *L) {
 	return 1;
 }
 
+static int ecp_prime(lua_State *L) {
+	big *p = big_dup(L,(big*)CURVE_Prime); SAFE(p);
+	return 1;
+}
+
 static int ecp_output(lua_State *L) {
 	ecp *e = ecp_arg(L,1); SAFE(e);
 	if (ECP_isinf(&e->val)) { // Infinity
@@ -463,6 +468,7 @@ int luaopen_ecp(lua_State *L) {
 		{"sub",ecp_sub},
 		{"mul",ecp_mul},
 		{"validate",ecp_validate},
+		{"prime",ecp_prime},
 		{NULL,NULL}};
 	const struct luaL_Reg ecp_methods[] = {
 		{"affine",ecp_affine},
