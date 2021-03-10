@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include "zenroom.h"
 
 #ifdef ARCH_CORTEX
@@ -64,7 +65,11 @@ int _write(int fd, const void *buf, size_t len)
       (unsigned int)buf,
       (unsigned int)len,
   };
-  return semihost_call(SEMIHOSTING_SYS_WRITE0, (int)buf);
+  return semihost_call(SEMIHOSTING_SYS_WRITE, (int)args);
+}
+
+int write_to_console(const char* str){
+  return semihost_call(SEMIHOSTING_SYS_WRITE0, (int)str);
 }
 
 int _lseek(int fd, int off, int whence)
@@ -145,6 +150,25 @@ void load_file(char *dst, char *file)
 #define MAX_FILE_NAME 256
 
 extern zenroom_t *Z;
+int SEMIHOSTING_STDOUT_FILENO;
+
+// implement the fault handler
+void HardFault_Handler(void)
+{
+  exit(EXIT_FAILURE);
+}
+
+void MemManage_Handler(void){
+  exit(EXIT_FAILURE);
+}
+
+void BusFault_Handler(void){
+  exit(0x20023);
+}
+
+void UsageFault_Handler(void){
+  exit(EXIT_FAILURE);
+}
 
 int main(void)
 {
@@ -155,6 +179,7 @@ int main(void)
   static char keys[MAX_STRING] = {0};
   static char data[MAX_STRING] = {0};
   static char conffile[MAX_STRING] = {0};
+  SEMIHOSTING_STDOUT_FILENO = _open("outlog", 4, 6);
 
   static char cmd_line[256] = {0};
   sys_getcmdline(cmd_line, 256);

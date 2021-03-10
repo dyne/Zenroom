@@ -39,6 +39,13 @@ detect_zenroom_path() {
 		;;
 	esac
 
+	if test "$is_cortexm" == true; then
+		for p in "${zenroom_paths[@]}"; do
+			if test -r "$p/$zenroom_name"; then zenroom_path="$p/zenroom.bin"; break; fi
+			if test -r "$p/zenroom"; then zenroom_path="$p/zenroom.bin"; break; fi
+		done
+	fi
+
 	if ! test -r $zenroom_path; then
 		echo "Zenroom executable not found"
 		echo "download yours from https://files.dyne.org/zenroom/nightly/"
@@ -71,6 +78,15 @@ detect_zenroom_conf() {
 	unset zenroom_conf
 }
 
+qemu_zenroom_run() {
+	zenroom_bin_path="src/zenroom.bin"
+	if ! test -f "src/zenroom.bin"; then
+		zenroom_bin_path="../../src/zenroom.bin"
+	fi
+	rm -rf ./outlog
+	eval qemu-system-arm -M mps2-an385 -kernel $zenroom_bin_path -semihosting -nographic -semihosting-config arg="'$@'"
+}
+
 zexe() {
 	if [ "$Z" == "" ]; then
 		>&2 echo "no zenroom executable configured"
@@ -87,7 +103,12 @@ zexe() {
 	>&2 echo "test: $out"
 	t=`mktemp -d`
 	>&2 echo $t
-	tee "$out" | $Z -z $* 2>$t/stderr 1>$t/stdout
+	if [[ "$is_cortexm" == true ]]; then
+		local args="$*"
+		tee "$out" | qemu_zenroom_run "$args" "-z" "$out" 2>$t/stderr && cat ./outlog>$t/stdout
+	else 
+		tee "$out" | $Z -z $* 2>$t/stderr 1>$t/stdout
+	fi
 	res=$?
 	exec_time=`grep "Time used" $t/stderr | cut -d: -f2`
 	out_size=`stat -c '%s' $t/stdout`

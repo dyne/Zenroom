@@ -39,14 +39,23 @@
 #define MAX_JSBUF 4096000 // 4MiB
 #endif
 #endif
+
+#if defined(ARCH_CORTEX)
+extern int SEMIHOSTING_STDOUT_FILENO;
+extern int write_to_console(const char* str);
+#endif
+
 extern zenroom_t *Z;
 extern int EXITCODE;
-
 
 int zen_write_err_va(const char *fmt, va_list va) {
 	int res = 0;
 #ifdef __ANDROID__
 	res = __android_log_vprint(ANDROID_LOG_DEBUG, "ZEN", fmt, va);
+#elif defined(ARCH_CORTEX)
+	char buffer[MAX_STRING] = {0};
+	vsnprintf(buffer, MAX_STRING, fmt, va);
+	res = write_to_console(buffer);
 #else
 	if(!Z) res = vfprintf(stderr,fmt,va); // no init yet, print to stderr
 	if(!res && Z->stderr_buf) { // print to configured buffer
@@ -308,8 +317,111 @@ static int zen_act (lua_State *L) {
 	return 0;
 }
 
-#else
+#elif defined(ARCH_CORTEX)
 
+static int zen_print (lua_State *L) {
+	if( lua_print_stdout_tobuf(L,'\n') ) return 0;
+
+	int status = 1;
+	size_t len = 0;
+	int n = lua_gettop(L);  /* number of arguments */
+	int i, w;
+	lua_getglobal(L, "tostring");
+	for (i=1; i<=n; i++) {
+		const char *s = lua_print_format(L, i, &len);
+		if(i>1)
+            w = write(SEMIHOSTING_STDOUT_FILENO, "\t", 1);
+        (void)w;
+		status = status &&
+			(write(SEMIHOSTING_STDOUT_FILENO, s,  len) == (int)len);
+		lua_pop(L, 1);  /* pop result */
+	}
+	w = write(SEMIHOSTING_STDOUT_FILENO,"\n",sizeof(char));
+    (void)w;
+	return 0;
+}
+
+// print to stderr without raising errors
+static int zen_printerr(lua_State *L) {
+	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
+
+	int status = 1;
+	size_t len = 0;
+	int n = lua_gettop(L);  /* number of arguments */
+	int i, w;
+	lua_getglobal(L, "tostring");
+	for (i=1; i<=n; i++) {
+		const char *s = lua_print_format(L, i, &len);
+		if(i>1)
+			w = write_to_console("\t");
+		(void)w;
+		status = status &&
+			(write_to_console(s) == (int)len);
+		lua_pop(L, 1);  /* pop result */
+	}
+	w = write_to_console("\n");
+	(void)w;
+	return 0;
+}
+
+// print without an ending newline
+static int zen_write (lua_State *L) {
+	if( lua_print_stdout_tobuf(L,' ') ) return 0;
+	octet *o = o_arg(L, 1); SAFE(o);
+	short res;
+	int w;
+	w = write(SEMIHOSTING_STDOUT_FILENO, o->val, o->len);
+	res = (w == o->len) ? 0 : 1;
+	return(res);
+}
+
+static int zen_warn (lua_State *L) {
+	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
+	int status = 1;
+	size_t len = 0;
+	int n = lua_gettop(L);  /* number of arguments */
+	int i, w;
+	lua_getglobal(L, "tostring");
+	w = write_to_console("[W] ");
+	(void)w;
+	for (i=1; i<=n; i++) {
+		const char *s = lua_print_format(L, i, &len);
+		if(i>1)
+			w = write_to_console("\t");
+		(void)w;
+		status = status &&
+			(write_to_console(s) == (int)len);
+		lua_pop(L, 1);  /* pop result */
+	}
+	w = write_to_console("\n");
+	(void)w;
+	return 0;
+}
+
+static int zen_act (lua_State *L) {
+	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
+	int status = 1;
+	size_t len = 0;
+	int n = lua_gettop(L);  /* number of arguments */
+	int i, w;
+	lua_getglobal(L, "tostring");
+	w = write_to_console(" .  ");
+	(void)w;
+	for (i=1; i<=n; i++) {
+		const char *s = lua_print_format(L, i, &len);
+		if(i>1)
+			w = write_to_console("\t");
+		(void)w;
+		status = status &&
+			(write_to_console(s));
+		lua_pop(L, 1);  /* pop result */
+	}
+	w = write_to_console("\n");
+	(void)w;
+	return 0;
+}
+
+#else
 
 static int zen_print (lua_State *L) {
 	if( lua_print_stdout_tobuf(L,'\n') ) return 0;
