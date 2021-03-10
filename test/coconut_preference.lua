@@ -5,7 +5,8 @@
 
 -- The file also contains the test code used in coconut_test.lua readapted for the preference system 
 
-COCONUT = require_once('crypto_coconut')
+CRED = require_once'crypto_credential'
+PET = require_once'crypto_petition'
 
  local G1 = ECP.generator() -- return value
  local G2 = ECP2.generator() -- return value
@@ -20,7 +21,7 @@ COCONUT = require_once('crypto_coconut')
  -- preference algorithm
  
  function prove_sign_preference(pub, m, choice)
- -- is the analogous of COCONUT.prove_sign_petition
+ -- is the analogous of CRED.prove_sign_petition
 
  -- sign == m
  local k = INT.random()
@@ -46,7 +47,7 @@ COCONUT = require_once('crypto_coconut')
  local Cw = G1*wm + hs*wr1
  local Dw = cv*wm + hs*wr2
  -- create the challenge
- local c = COCONUT.to_challenge({enc_v.left, enc_v.right,
+ local c = ZKP_challenge({enc_v.left, enc_v.right,
                          cv, Aw, Bw, Cw, Dw}) % O
  -- create responses
  local rk = wk - c * k
@@ -67,7 +68,7 @@ end
 
  
  function verify_sign_preference(pub, theta)
-    -- analogous of COCONUT.verify_sign_petition but it should can be used also for the petition
+    -- analogous of CRED.verify_sign_petition but it should can be used also for the petition
 
     -- recompute witnessess commitment
     local scores = theta.scores 
@@ -84,7 +85,7 @@ end
        + hs * theta.pi_vote.rr2
        + theta.cv * theta.pi_vote.c
     -- verify challenge
-    ZEN.assert(theta.pi_vote.c == COCONUT.to_challenge(
+    ZEN.assert(theta.pi_vote.c == ZKP_challenge(
                   {scores.pos.left, scores.pos.right,
                    theta.cv, Aw, Bw, Cw, Dw }),
                "verify_sign_petition: challenge fails")
@@ -92,7 +93,7 @@ end
  end
  
  function count_preferences(scores, pi_tally)
-    -- analogous of COCONUT.count_tally_petition
+    -- analogous of CRED.count_tally_petition
     local restab = { }
     for idx=0,1000 do      -- added the zero case since it can be a possibility
        -- if idx ~= 0 then -- not zero
@@ -108,40 +109,40 @@ end
 --TESTING
 -- A single CA signs
 -- generate the keys of the credential
-cred_keypair = { private = INT.random() }
+local cred_keypair = { private = INT.random() }
 cred_keypair.public = ECP.generator() * cred_keypair.private
-secret = cred_keypair.private -- "Some sort of secret credential"
+local secret = cred_keypair.private -- "Some sort of secret credential"
 
 -- simple credential test
 local sk, pk
-sk, pk = COCONUT.ca_keygen()
-ca_keypair = { verify = pk, sign = sk }
-Lambda = COCONUT.prepare_blind_sign(cred_keypair.public, secret)
-sigmatilde = COCONUT.blind_sign(ca_keypair.sign, Lambda)
-aggsigma = COCONUT.aggregate_creds(cred_keypair.private, {sigmatilde})
-Theta = COCONUT.prove_creds(ca_keypair.verify, aggsigma, secret)
-ret = COCONUT.verify_creds(ca_keypair.verify, Theta)
+sk = CRED.issuer_keygen()
+ca_keypair = { verify = { alpha=G2*sk.x, beta=G2*sk.y}, sign = sk }
+Lambda = CRED.prepare_blind_sign(secret)
+sigmatilde = CRED.blind_sign(ca_keypair.sign, Lambda)
+aggsigma = CRED.aggregate_creds(cred_keypair.private, {sigmatilde})
+Theta = CRED.prove_cred(ca_keypair.verify, aggsigma, secret)
+ret = CRED.verify_cred(ca_keypair.verify, Theta)
 assert(ret == true, 'Coconut credentials not verifying')
 print('')
 print('[ok] test Coconut')
 print('')
 
 -- Multiple CAs sign
-sk, pk = COCONUT.ca_keygen()
-ca2_keypair = { verify = pk, sign = sk }
-sk, pk = COCONUT.ca_keygen()
-ca3_keypair = { verify = pk, sign = sk }
-ca_aggkeys = COCONUT.aggregate_keys({ca_keypair.verify,
+sk = CRED.issuer_keygen()
+ca2_keypair = { verify = { alpha=G2*sk.x, beta=G2*sk.y}, sign = sk }
+sk = CRED.issuer_keygen()
+ca3_keypair = { verify = { alpha=G2*sk.x, beta=G2*sk.y}, sign = sk }
+ca_aggkeys = CRED.aggregate_keys({ca_keypair.verify,
 									 ca2_keypair.verify,
 									 ca3_keypair.verify})
-Lambda = COCONUT.prepare_blind_sign(cred_keypair.public, secret)
-sigma_tilde1 = COCONUT.blind_sign(ca_keypair.sign, Lambda)
-sigma_tilde2 = COCONUT.blind_sign(ca2_keypair.sign, Lambda)
-sigma_tilde3 = COCONUT.blind_sign(ca3_keypair.sign, Lambda)
-aggsigma = COCONUT.aggregate_creds(cred_keypair.private, {sigma_tilde1, sigma_tilde2, sigma_tilde3})
+Lambda = CRED.prepare_blind_sign(secret)
+sigma_tilde1 = CRED.blind_sign(ca_keypair.sign, Lambda)
+sigma_tilde2 = CRED.blind_sign(ca2_keypair.sign, Lambda)
+sigma_tilde3 = CRED.blind_sign(ca3_keypair.sign, Lambda)
+aggsigma = CRED.aggregate_creds(cred_keypair.private, {sigma_tilde1, sigma_tilde2, sigma_tilde3})
 -- do the actual test
-local Theta = COCONUT.prove_creds(ca_aggkeys, aggsigma, secret)
-local ret = COCONUT.verify_creds(ca_aggkeys, Theta)
+local Theta = CRED.prove_cred(ca_aggkeys, aggsigma, secret)
+local ret = CRED.verify_cred(ca_aggkeys, Theta)
 assert(ret == true, 'Coconut credentials not verifying')
 print('')
 print('[ok] test multi-authority Coconut')
@@ -152,17 +153,20 @@ local UID = "petition unique identifier"
 issuer = cred_keypair -- reuse the signed credential keypair for the issuer
 voter = { private = INT.random() } -- create a new signed credential keypair for the voter
 voter.public = ECP.generator() * voter.private
-Lambda = COCONUT.prepare_blind_sign(voter.public, voter.private)
-sigma_tilde1 = COCONUT.blind_sign(ca_keypair.sign, Lambda)
-sigma_tilde2 = COCONUT.blind_sign(ca2_keypair.sign, Lambda)
-sigma_tilde3 = COCONUT.blind_sign(ca3_keypair.sign, Lambda)
-voter.aggsigma = COCONUT.aggregate_creds(voter.private, {sigma_tilde1, sigma_tilde2, sigma_tilde3})
-local Theta = COCONUT.prove_creds(ca_aggkeys, voter.aggsigma, voter.private)
-local ret = COCONUT.verify_creds(ca_aggkeys, Theta)
+Lambda = CRED.prepare_blind_sign(voter.private)
+sigma_tilde1 = CRED.blind_sign(ca_keypair.sign, Lambda)
+sigma_tilde2 = CRED.blind_sign(ca2_keypair.sign, Lambda)
+sigma_tilde3 = CRED.blind_sign(ca3_keypair.sign, Lambda)
+voter.aggsigma = CRED.aggregate_creds(voter.private, {sigma_tilde1, sigma_tilde2, sigma_tilde3})
+local Theta = CRED.prove_cred(ca_aggkeys, voter.aggsigma, voter.private)
+local ret = CRED.verify_cred(ca_aggkeys, Theta)
 
 -- show coconut credentials
-Theta, zeta = COCONUT.prove_cred_petition(ca_aggkeys, voter.aggsigma, voter.private, UID)
-local res = COCONUT.verify_cred_petition(ca_aggkeys, Theta, zeta, UID)
+Theta, zeta = CRED.prove_cred_uid(ca_aggkeys, voter.aggsigma, voter.private, UID)
+local res = CRED.verify_cred_uid(ca_aggkeys, Theta, zeta, UID)
+-- Theta, zeta = PET.prove_sign_petition(voter.aggsigma, voter.private)
+-- local res = PET.verify_sign_petition(ca_aggkeys, Theta)
+
 assert(res == true, "Coconut petition credentials not verifying")
 print('')
 print('[ok] test petition credential Coconut')
@@ -188,8 +192,8 @@ for v=1,loops do
    scores.neg.right = scores.neg.right + psign.scores.neg.right
 end
 print('')
-ptally = COCONUT.prove_tally_petition(issuer.private, scores)
-local res = COCONUT.verify_tally_petition(scores, ptally)
+ptally = PET.prove_tally_petition(issuer.private, scores)
+local res = PET.verify_tally_petition(scores, ptally)
 print('')
 print('[ok] test petition tally Coconut')
 print('')

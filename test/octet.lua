@@ -117,8 +117,6 @@ cbortest("url64")
 cbortest("base64")
 cbortest("bin")
 
-COCONUT = require_once('crypto_coconut')
-
 print '== JSON cryptotests'
 -- more testing using crypto verification of pub/priv keypair
 function jsoncryptotest(f)
