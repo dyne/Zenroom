@@ -24,6 +24,10 @@ rm /tmp/zenroom-test-summary.txt
 # echo "${red}red text ${green}green text${reset}"
 red=`tput setaf 1`
 green=`tput setaf 2`
+yellow=`tput setaf 3`
+blue=`tput setaf 4`
+magenta=`tput setaf 5`
+cyan=`tput setaf 6`
 reset=`tput sgr0`
 
 
@@ -31,7 +35,7 @@ reset=`tput sgr0`
 # Change this to change the amount of participants 
 # and the amount of recursion for some of the scripts
 
-Participants=3
+Participants=10
 Recursion=1
 
 users=""
@@ -376,7 +380,7 @@ verify_signature
 done
 
 
-echo -e "${reset} "
-echo -e "${blue}### \n \nChange the value of 'Participants' in the beginning of the script, to change the amount of signees, currently it is: ${green} $Participants \n" 
-echo -e "${blue}### \n ${reset} "
 
+echo -e "${magenta}\n \n<============================================>${reset}"
+echo -e "${green}\n Change the value of 'Participants' in the beginning of the script, to change the amount of signees, and the 'Recursion' in order to change how many time the multisig related scripts should cycle. Currently: \n\n - 'Partipants' is: ${red} $Participants \n${green} - 'Recursion' is: ${yellow} $Recursion \n" 
+echo -e "${magenta}<============================================>${reset}\n"
