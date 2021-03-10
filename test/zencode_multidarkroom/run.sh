@@ -88,18 +88,20 @@ generate_participant "Bob"
 
 # join the verifiers of signed credentials
 json_join verifier_Alice.json verifier_Bob.json > public_keys.json
-
+echo "{\"public_keys\": `cat public_keys.json` }" > public_key_array.json
+# make a uid using the current timestamp
 echo "{\"today\": \"`date +'%s'`\"}" > uid.json
 
 # anyone can start a session
 
 # SIGNING SESSION
-cat <<EOF | zexe session_start.zen -k uid.json -a public_keys.json > multidarkroom_session.json
+cat <<EOF | debug session_start.zen -k uid.json -a public_key_array.json > multidarkroom_session.json
 Scenario multidarkroom
-Given I have a 'bls public key' from 'Alice'
-and I have a 'bls public key' from 'Bob'
+Given I have a 'bls public key array' named 'public keys'
 and I have a 'string' named 'today'
-When I create the multidarkroom session with uid 'today'
+When I aggregate the bls public key from array 'public keys'
+and I rename the 'bls public key' to 'multidarkroom public key'
+and I create the multidarkroom session with uid 'today'
 Then print the 'multidarkroom session'
 EOF
 #

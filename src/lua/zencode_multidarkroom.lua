@@ -65,17 +65,27 @@ When("create the bls public key", function()
     ACK.bls_public_key = G2 * ACK.keys.bls
 end)
 
+When("aggregate the bls public key from array ''", function(arr)
+    empty 'bls public key'
+    local s = have(arr)
+    for k,v in pairs(s) do
+        if not ACK.bls_public_key then
+            ACK.bls_public_key = v
+        else
+            ACK.bls_public_key = ACK.bls_public_key + v
+        end
+    end
+end)
+
 When("create the multidarkroom session with UID ''", function(uid)
     empty 'multidarkroom session'
     have(uid)
-    -- TODO: more checks
+    have'multidarkroom public key'
     -- init random and uid
-    local r = INT.random()
     local UID = ECP.hashtopoint(uid)
-    -- session public key
-    local PM = G2 * r
-    for k, v in pairs(ACK.bls_public_key) do PM = PM + v end
-    ACK.multidarkroom_session = {UID = UID, SM = UID * r, verifier = PM}
+    local r = INT.random()
+    ACK.multidarkroom_session = {UID = UID, SM = UID * r,
+                verifier = ACK.multidarkroom_public_key + G2*r }
 end)
 
 When("create the multidarkroom signature", function()

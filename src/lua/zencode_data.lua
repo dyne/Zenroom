@@ -134,6 +134,7 @@ function guess_conversion(obj, definition)
      if t then
          return({ fun = t,
                  zentype = 'schema',
+                 schema = leftwords,
                  luatype = objtype,
                  raw = obj,
                  encoding = toks[rightmost] })
@@ -167,7 +168,7 @@ function operate_conversion(guessed)
       if guessed.encoding == 'array' or guessed.encoding == 'dictionary' then
          local res = { }
          for k,v in pairs(guessed.raw) do
-            res[k] = guessed.fun(v)
+            res[k] = guessed.fun(v[guessed.schema])
          end
          return(res)
       else
