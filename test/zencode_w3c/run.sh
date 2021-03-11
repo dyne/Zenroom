@@ -69,7 +69,7 @@ Given that I am 'Alice'
 and I have my 'public key'
 and I have a 'verifiable credential' named 'my-vc'
 When I verify the verifiable credential named 'my-vc'
-Then print 'YES MOFOS'
+Then print 'W3C CRED IS VALID'
 EOF
 
 
