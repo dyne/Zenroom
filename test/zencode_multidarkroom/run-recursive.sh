@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
 
+######
+# Setup output color aliases
+#
+# echo "${red}red text ${green}green text${reset}"
+red=`tput setaf 1`
+green=`tput setaf 2`
+yellow=`tput setaf 3`
+blue=`tput setaf 4`
+magenta=`tput setaf 5`
+cyan=`tput setaf 6`
+reset=`tput sgr0`
 
 
 ####################
@@ -13,7 +24,9 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 #### SETUP OUTPUT FOLDER and cleaning
 # ${out}/credentialParticipantKeygen.zen
 # out='../../docs/examples/zencode_cookbook'
+# out='./files'
 out='/dev/shm/files'
+
 
 mkdir -p ${out}
 rm ${out}/*
@@ -21,22 +34,14 @@ rm /tmp/zenroom-test-summary.txt
 
 
 
-# echo "${red}red text ${green}green text${reset}"
-red=`tput setaf 1`
-green=`tput setaf 2`
-yellow=`tput setaf 3`
-blue=`tput setaf 4`
-magenta=`tput setaf 5`
-cyan=`tput setaf 6`
-reset=`tput sgr0`
 
 
 #################
 # Change this to change the amount of participants 
 # and the amount of recursion for some of the scripts
 
-Participants=10
-Recursion=1
+Participants=6
+Recursion=3
 
 users=""
 for i in $(seq $Participants)
@@ -59,16 +64,14 @@ done
 # exit 0
 
 
-
-echo -e "${reset} "
 echo -e "${green} ======================================================" 
 echo -e "${green} ======================================================" 
 echo -e "${green} ======================================================" 
 echo -e "${green} =============== START SCRIPT =========================" 
 echo -e "${green} ======================================================" 
 echo -e "${green} ======================================================" 
-echo -e "${green} ======================================================" 
-echo -e "${reset} "
+echo -e "${green} ======================================================${reset}" 
+
 
 
 ## ISSUER creation
@@ -79,7 +82,7 @@ when I create the issuer key
 Then print my 'keys'
 EOF
 
-cat <<EOF | zexe ${out}/issuer_credential.zen -k ${out}/issuer_key.json  | jq . | tee ${out}/credential.json
+cat <<EOF | zexe ${out}/issuer_public_key.zen -k ${out}/issuer_key.json  | jq . | tee ${out}/issuer_public_key.json
 Scenario credential: publish verifier
 Given that I am known as 'The Authority'
 and I have my 'keys'
@@ -103,7 +106,7 @@ and I create the credential key
 Then print my 'keys'
 EOF
 
-	cat <<EOF | zexe ${out}/pubkey_${1}.zen -k ${out}/keypair_${1}.json  | jq . | tee ${out}/verifier_${1}.json
+	cat <<EOF | zexe ${out}/pubkey_${1}.zen -k ${out}/keypair_${1}.json  | jq . | tee ${out}/public_key_${1}.json
 Scenario multidarkroom
 Given I am '${1}'
 and I have my 'keys'
@@ -183,45 +186,22 @@ issuer_keygen_sign ${user}
 echo  "Issuer creates keypair, verifier and signs the request from: "  ${user}
 done
 
-# exit 0
+#####################
+# Joining files and creating uid
+#####
 
+echo "${yellow} =========================== merging public keys ===================${reset}" 
 
+jq -s 'reduce .[] as $item ({}; . * $item)' . ${out}/public_key_* | tee ${out}/public_keys.json
 
+echo "${yellow} =========================== writing public keys array ===================${reset}"
 
+echo "{\"public_keys\": `cat ${out}/public_keys.json` }" | tee ${out}/public_key_array.json
 
+echo "${yellow} =========================== writing uid ===================${reset}"
 
-# agent: signature caller
-# verb:  aggregate
-# obj:   verifiers (sum of all participant verifiers)
-# verb:  create
-# obj:   uid (arbitrary string, may be the hash of a document)
-# obj:   multisignature (session to sign uid)
+echo "{\"today\": \"`date +'%s'`\"}" | tee ${out}/uid.json
 
-# join the verifiers of signed credentials
-
-# jq -s 'reduce .[] as $item ({}; . * $item)' . verifier_Alice.json verifier_Bob.json verifier_Carl.json verifier_Derek.json verifier_Eva.json verifier_Frank.json verifier_Gina.json verifier_Jessie.json verifier_Karl.json verifier_Ingrid.json | tee verifiers.json
-
-jq -s 'reduce .[] as $item ({}; . * $item)' . ${out}/verifier_* | tee ${out}/verifiers.json
-
-
-echo "{\"today\": \"`date +'%s'`\"}" > ${out}/uid.json
-
-# anyone can start a session
-#############################
-### SCRIPT THAT PRODUCES THE MULTISIGNATURE
-#############################
-
-multisignature="Scenario multidarkroom \n"
-
-for user in ${users[@]}
-do
-
-multisignature+="Given I have a 'bls public key' from '${user}' \n"  
-done
-
-multisignature+="Given I have a 'string' named 'today' \nWhen I create the multidarkroom session with uid 'today' \nThen print the 'multidarkroom session'\n"
-
-echo -e "\n \n \n THis is the multisig script: \n \n \n" $multisignature 
 
 
 
@@ -229,9 +209,15 @@ echo -e "\n \n \n THis is the multisig script: \n \n \n" $multisignature
 # SIGNING SESSION
 
 create_multisignature(){
-echo -e $multisignature | zexe ${out}/session_start.zen -k ${out}/uid.json -a ${out}/verifiers.json > ${out}/multisignature.json
-#
-# TODO: credentials may be included in the multisignature
+cat <<EOF  | zexe ${out}/session_start.zen -k ${out}/uid.json -a ${out}/public_key_array.json | tee  ${out}/multisignature.json
+Scenario multidarkroom
+Given I have a 'bls public key array' named 'public keys'
+and I have a 'string' named 'today'
+When I aggregate the bls public key from array 'public keys'
+and I rename the 'bls public key' to 'multidarkroom public key'
+and I create the multidarkroom session with uid 'today'
+Then print the 'multidarkroom session'
+EOF
 }
 
 # preparing for the cycle
@@ -245,11 +231,11 @@ create_multisignature
 
 done
 
+#############
 # create_multisignature
-
 # participant is told of the multisignature and offered to sign
 # participant joins the credential (=issuer pubkey) and the multisignature
-json_join ${out}/credential.json ${out}/multisignature.json | jq . > ${out}/credential_to_sign.json
+json_join ${out}/issuer_public_key.json ${out}/multisignature.json | jq . > ${out}/credential_to_sign.json
 
 cp multisignature.json multisignature_input.json
 
@@ -285,7 +271,7 @@ function collect_sign() {
 	local tmp_msig=`mktemp`
 	local tmp_sig=`mktemp`
 	cp -v ${out}/multisignature.json $tmp_msig
-	json_join ${out}/credential.json ${out}/signature_$name.json > $tmp_sig
+	json_join ${out}/issuer_public_key.json ${out}/signature_$name.json > $tmp_sig
 	cat << EOF | zexe ${out}/collect_sign.zen -a $tmp_msig -k $tmp_sig  | jq . | tee ${out}/multisignature.json
 Scenario multidarkroom
 Scenario credential
