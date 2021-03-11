@@ -77,6 +77,16 @@ When("aggregate the bls public key from array ''", function(arr)
     end
 end)
 
+When("create the multidarkroom hash of ''",function(doc)
+    empty'multidarkroom hash'
+    have(doc)
+    if luatype(doc) == 'table' then
+        ACK.multidarkroom_hash = ZEN.serialize( ECP.hashtopoint(doc) )
+    else
+        ACK.multidarkroom_hash = ECP.hashtopoint(doc)
+    end
+end)
+
 When("create the multidarkroom session with UID ''", function(uid)
     empty 'multidarkroom session'
     have(uid)
@@ -84,7 +94,9 @@ When("create the multidarkroom session with UID ''", function(uid)
     -- init random and uid
     local UID = ECP.hashtopoint(uid)
     local r = INT.random()
-    ACK.multidarkroom_session = {UID = UID, SM = UID * r,
+    ACK.multidarkroom_session = {
+                UID = UID,
+                SM = UID * r,
                 verifier = ACK.multidarkroom_public_key + G2*r }
 end)
 
