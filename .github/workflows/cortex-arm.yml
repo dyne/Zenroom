@@ -11,7 +11,7 @@ jobs:
         uses: actions/checkout@v2
       - name: update dependencies
         run: |
-          sudo apt update && sudo apt upgrade
+          sudo apt update
       - name: install dependencies
         run: |
           sudo apt install zsh qemu-system-arm
