@@ -1,20 +1,24 @@
--- This file is part of Zenroom (https://zenroom.dyne.org)
+--[[
+--This file is part of zenroom
 --
--- Copyright (C) 2018-2019 Dyne.org foundation
--- designed, written and maintained by Denis Roio <jaromil@dyne.org>
+--Copyright (C) 2018-2021 Dyne.org foundation
+--designed, written and maintained by Denis Roio <jaromil@dyne.org>
 --
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU Affero General Public License as
--- published by the Free Software Foundation, either version 3 of the
--- License, or (at your option) any later version.
+--This program is free software: you can redistribute it and/or modify
+--it under the terms of the GNU Affero General Public License v3.0
 --
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU Affero General Public License for more details.
+--This program is distributed in the hope that it will be useful,
+--but WITHOUT ANY WARRANTY; without even the implied warranty of
+--MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--GNU Affero General Public License for more details.
 --
--- You should have received a copy of the GNU Affero General Public License
--- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+--Along with this program you should have received a copy of the
+--GNU Affero General Public License v3.0
+--If not, see http://www.gnu.org/licenses/agpl.txt
+--
+--Last modified by Denis Roio
+--on Friday, 12th March 2021 1:19:09 pm
+--]]
 
 -- TODO: use strict table
 -- https://stevedonovan.github.io/Penlight/api/libraries/pl.strict.html
@@ -24,8 +28,8 @@
 
 -- GIVEN
 local function gc()
-   TMP = { }
-   collectgarbage'collect'
+   TMP = {}
+   collectgarbage 'collect'
 end
 
 ---
@@ -42,14 +46,19 @@ local function pick(what, conv)
    local data
    local raw
    raw = IN.KEYS[what] or IN[what]
-   ZEN.assert(raw, "Cannot find '"..what.."' anywhere")
+   ZEN.assert(raw, "Cannot find '" .. what .. "' anywhere")
    -- if not conv and ZEN.schemas[what] then conv = what end
    TMP = guess_conversion(raw, conv or what)
-   ZEN.assert(TMP, "Cannot guess any conversion for: "..
-				 luatype(raw).." "..(conv or what or "(nil)"))
+   ZEN.assert(
+      TMP,
+      'Cannot guess any conversion for: ' ..
+         luatype(raw) .. ' ' .. (conv or what or '(nil)')
+   )
    TMP.name = what
    assert(ZEN.OK)
-   if DEBUG > 1 then ZEN:ftrace("pick found "..what) end
+   if DEBUG > 1 then
+      ZEN:ftrace('pick found ' .. what)
+   end
 end
 
 ---
@@ -66,21 +75,28 @@ end
 -- @param fail bool bail out or continue on error
 -- @return true or false
 local function pickin(section, what, conv, fail)
-   ZEN.assert(section, "No section specified")
-   local root -- section
-   local raw -- data pointer
-   local bail -- fail
+   ZEN.assert(section, 'No section specified')
+   local root  -- section
+   local raw  -- data pointer
+   local bail  -- fail
    root = IN.KEYS[section]
    if root then
-	  raw = root[what]
-	  if raw then goto found end
+      raw = root[what]
+      if raw then
+         goto found
+      end
    end
    root = IN[section]
    if root then
-	  raw = root[what]
-	  if raw then goto found end
+      raw = root[what]
+      if raw then
+         goto found
+      end
    end
-   ZEN.assert(raw, "Cannot find '"..what.."' inside '"..section.."'")
+   ZEN.assert(
+      raw,
+      "Cannot find '" .. what .. "' inside '" .. section .. "'"
+   )
    -- TODO: check all corner cases to make sure TMP[what] is a k/v map
    ::found::
    -- conv = conv or what
@@ -90,21 +106,32 @@ local function pickin(section, what, conv, fail)
    TMP.name = what
    TMP.root = section
    assert(ZEN.OK)
-   if DEBUG > 1 then ZEN:ftrace("pickin found "..what.." in "..section) end
+   if DEBUG > 1 then
+      ZEN:ftrace('pickin found ' .. what .. ' in ' .. section)
+   end
 end
 
-local function ack_table(key,val)
-   ZEN.assert(type(key) == 'string',"ZEN:table_add arg #1 is not a string")
-   ZEN.assert(type(val) == 'string',"ZEN:table_add arg #2 is not a string")
-   if not ACK[key] then ACK[key] = { } end
+local function ack_table(key, val)
+   ZEN.assert(
+      type(key) == 'string',
+      'ZEN:table_add arg #1 is not a string'
+   )
+   ZEN.assert(
+      type(val) == 'string',
+      'ZEN:table_add arg #2 is not a string'
+   )
+   if not ACK[key] then
+      ACK[key] = {}
+   end
    ACK[key][val] = operate_conversion(TMP)
-   ZEN.CODEC[key] = { name = TMP.name,
-					  luatype = 'table',
-					  zentype = 'dictionary',
-					  encoding = TMP.encoding,
-					  root = TMP.root }
+   ZEN.CODEC[key] = {
+      name = TMP.name,
+      luatype = 'table',
+      zentype = 'dictionary',
+      encoding = TMP.encoding,
+      root = TMP.root
+   }
 end
-
 
 ---
 -- Final step inside the <b>Given</b> block towards the <b>When</b>:
@@ -117,20 +144,26 @@ end
 -- @function ack(name)
 -- @param name string key of the data object in TMP[name]
 local function ack(name)
-   ZEN.assert(TMP, "No valid object found: ".. name)
+   ZEN.assert(TMP, 'No valid object found: ' .. name)
    -- CODEC[what] = CODEC[what] or {
    --    name = guess.name,
    --    istable = guess.istable,
    --    isschema = guess.isschema }
-   ZEN.assert(not ACK[name], "Destination already exists, cannot overwrite: "..name, 2)
+   ZEN.assert(
+      not ACK[name],
+      'Destination already exists, cannot overwrite: ' .. name,
+      2
+   )
    assert(ZEN.OK)
    ACK[name] = operate_conversion(TMP)
    -- save codec state
-   ZEN.CODEC[name] = { name = TMP.name,
-					   luatype = TMP.luatype,
-					   zentype = TMP.zentype,
-					   encoding = TMP.encoding,
-					   root = TMP.root }
+   ZEN.CODEC[name] = {
+      name = TMP.name,
+      luatype = TMP.luatype,
+      zentype = TMP.zentype,
+      encoding = TMP.encoding,
+      root = TMP.root
+   }
    -- ACK[name] already holds an object
    -- not a table?
    -- if not (dsttype == 'table') then -- convert single object to array
@@ -150,21 +183,35 @@ local function ack(name)
    -- assert(ZEN.OK)
 end
 
-Given("nothing", function()
-		 ZEN.assert(not DATA and not KEYS, "Undesired data passed as input")
-end)
+Given(
+   'nothing',
+   function()
+      ZEN.assert(
+         not DATA and not KEYS,
+         'Undesired data passed as input'
+      )
+   end
+)
 
 -- maybe TODO: Given all valid data
 -- convert and import data only when is known by schema and passes validation
 -- ignore all other data structures that are not known by schema or don't pass validation
 
-Given("am ''", function(name) Iam(name) end)
+Given(
+   "am ''",
+   function(name)
+      Iam(name)
+   end
+)
 
-Given("my name is in a '' named ''", function(sc, name)
-		 pick(name, sc)
-		 assert(TMP.name, "No name found in: "..name)
-		 Iam( O.to_string( operate_conversion(TMP) ) )
-end)
+Given(
+   "my name is in a '' named ''",
+   function(sc, name)
+      pick(name, sc)
+      assert(TMP.name, 'No name found in: ' .. name)
+      Iam(O.to_string(operate_conversion(TMP)))
+   end
+)
 
 -- variable names:
 -- s = schema of variable (or encoding)
@@ -172,62 +219,89 @@ end)
 -- t = table containing the variable
 
 -- TODO: I have a '' as ''
-Given("have a ''", function(n)
-		 pick(n)
-		 ack(n)
-		 gc()
-end)
+Given(
+   "have a ''",
+   function(n)
+      pick(n)
+      ack(n)
+      gc()
+   end
+)
 
-Given("have a '' in ''", function(s, t)
-		 pickin(t, s)
-		 ack(s) -- save it in ACK.obj
-		 gc()
-end)
+Given(
+   "have a '' in ''",
+   function(s, t)
+      pickin(t, s)
+      ack(s) -- save it in ACK.obj
+      gc()
+   end
+)
 
 -- public keys for keyring arrays (scenario ecdh)
 -- supports bot ways in from given
 -- public_key : { name : value }
 -- or
 -- name : { public_key : value }
-Given("have a '' from ''", function(s, t)
-		 -- if not pickin(t, s, nil, false) then
-		 -- 	pickin(s, t)
-		 -- end
-		 pickin(t, s, s, false)
-		 ack_table(s, t)
-		 gc()
-end)
+Given(
+   "have a '' from ''",
+   function(s, t)
+      -- if not pickin(t, s, nil, false) then
+      -- 	pickin(s, t)
+      -- end
+      pickin(t, s, s, false)
+      ack_table(s, t)
+      gc()
+   end
+)
 
-Given("have a '' named ''", function(s, n)
-		 -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
-		 pick(n, s)
-		 ack(n)
-		 gc()
-end)
+Given(
+   "have a '' named ''",
+   function(s, n)
+      -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
+      pick(n, s)
+      ack(n)
+      gc()
+   end
+)
 
-Given("have a '' named '' in ''", function(s,n,t)
-		 pickin(t, n, s)
-		 ack(n) -- save it in ACK.name
-		 gc()
-end)
+Given(
+   "have a '' named '' in ''",
+   function(s, n, t)
+      pickin(t, n, s)
+      ack(n) -- save it in ACK.name
+      gc()
+   end
+)
 
-Given("have my ''", function(n)
-		 ZEN.assert(WHO, "No identity specified, use: Given I am ...")
-		 pickin(WHO, n)
-		 ack(n)
-		 gc()
-end)
-Given("have my '' named ''", function(s, n)
-		 -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
-		 pickin(WHO, n, s)
-		 ack(n)
-		 gc()
-end)
-Given("the '' is valid", function(n)
-		 pick(n)
-		 gc()
-end)
-Given("my '' is valid", function(n)
-		 pickin(WHO, n)
-		 gc()
-end)
+Given(
+   "have my ''",
+   function(n)
+      ZEN.assert(WHO, 'No identity specified, use: Given I am ...')
+      pickin(WHO, n)
+      ack(n)
+      gc()
+   end
+)
+Given(
+   "have my '' named ''",
+   function(s, n)
+      -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
+      pickin(WHO, n, s)
+      ack(n)
+      gc()
+   end
+)
+Given(
+   "the '' is valid",
+   function(n)
+      pick(n)
+      gc()
+   end
+)
+Given(
+   "my '' is valid",
+   function(n)
+      pickin(WHO, n)
+      gc()
+   end
+)

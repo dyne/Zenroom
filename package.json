@@ -1,0 +1,8 @@
+{
+	"projectname": "Zenroom",
+	"projectversion": "1.2",
+	"license": "AGPL-3.0",
+	"repository": "https://github.com/dyne/zenroom",
+	"author": "dyne",
+	"description": "Secure VM for smart-contract execution in human-like language"
+}
