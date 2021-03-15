@@ -122,8 +122,8 @@ zexe() {
 		echo "ERR `basename $out`" >> /tmp/zenroom-test-summary.txt
 		exit
 	fi
+	rm -rf "$t"
 	echo "====================================" >&2
-	sleep .1 # let some air between tests
 	return $res
 }
 
@@ -139,7 +139,7 @@ debug() {
 	out="$1"
 	shift 1
 	>&2 echo "test: $out"
-	tee "$out" | $Z -z $* 
+	tee "$out" | $Z -z $*
 	return $?
 }
 

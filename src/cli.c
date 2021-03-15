@@ -1,21 +1,23 @@
-/* This file is part of Zenroom (https://zenroom.dyne.org)
- *
- * Copyright (C) 2017-2020 Dyne.org foundation
+/*
+ * This file is part of zenroom
+ * 
+ * Copyright (C) 2017-2021 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
- *
+ * 
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
+ * it under the terms of the GNU Affero General Public License v3.0
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- *
+ * 
+ * Along with this program you should have received a copy of the
+ * GNU Affero General Public License v3.0
+ * If not, see http://www.gnu.org/licenses/agpl.txt
+ * 
+ * Last modified by Denis Roio
+ * on Monday, 15th March 2021 11:50:27 pm
  */
 
 #include <stdio.h>
@@ -443,10 +445,12 @@ int main(int argc, char **argv) {
 
 	zen_teardown(Z);
 
-	// measure and report time of execution
-    clock_gettime(CLOCK_MONOTONIC, &after);
-    after.tv_nsec += (after.tv_sec - before.tv_sec) * 1000000000L;
-    act(NULL,"Time used: %lu μs", (after.tv_nsec - before.tv_nsec) / 1000L);
+	{
+		// measure and report time of execution
+		clock_gettime(CLOCK_MONOTONIC, &after);
+		long musecs = (after.tv_sec - before.tv_sec) * 1000000L;
+		act(NULL,"Time used: %lu μs", ( ((after.tv_nsec - before.tv_nsec) / 1000L) + musecs) );
+	}
 
 	cli_free_buffers();
 	return EXIT_SUCCESS;
