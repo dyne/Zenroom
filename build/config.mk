@@ -233,7 +233,7 @@ endif
 
 
 ifneq (,$(findstring debug,$(MAKECMDGOALS)))
-cflags += -Og -ggdb -DDEBUG=1 -Wstack-usage=4096 -Wall -Wextra -std=c99 -pedantic
+cflags := -Og -ggdb -DDEBUG=1 -Wstack-usage=4096 -Wall -Wextra -pedantic
 endif
 
 ifneq (,$(findstring profile,$(MAKECMDGOALS)))

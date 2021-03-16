@@ -20,18 +20,21 @@
  * on Monday, 15th March 2021 11:50:27 pm
  */
 
+#ifndef LIBRARY
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
 #include <ctype.h>
+#include <time.h>
 
-#if (defined ARCH_LINUX) || (defined ARCH_OSX) || (defined ARCH_BSD)
+// #if (defined ARCH_LINUX) || (defined ARCH_OSX) || (defined ARCH_BSD)
 #include <sys/types.h>
 #include <sys/wait.h>
-#endif
+// #endif
 
-#include <time.h>
 #include <errno.h>
 
 #include <lua.h>
@@ -45,7 +48,8 @@
 
 #include <zenroom.h>
 #include <zen_memory.h>
-#ifdef ARCH_LINUX
+
+#if defined(ARCH_LINUX)
 #include <sys/prctl.h>
 #include <linux/seccomp.h>
 #include <linux/filter.h>
@@ -76,7 +80,6 @@ extern zenroom_t *Z;
 // configure seccomp activation
 extern int zconf_seccomp;
 
-#ifndef LIBRARY
 
 extern int zen_setenv(lua_State *L, char *key, char *val);
 
@@ -164,6 +167,7 @@ static char *keys = NULL;
 static char *data = NULL;
 static char *introspect = NULL;
 
+// for benchmark, breaks c99 spec
 struct timespec before = {0}, after = {0};
 
 int cli_alloc_buffers() {
@@ -455,4 +459,5 @@ int main(int argc, char **argv) {
 	cli_free_buffers();
 	return EXIT_SUCCESS;
 }
-#endif
+
+#endif // LIBRARY
