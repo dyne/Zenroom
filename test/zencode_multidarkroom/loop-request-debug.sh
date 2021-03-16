@@ -72,6 +72,6 @@ Then print my 'credential request'
 EOF
 
 while true; do
- gdb -x .gdbinit --args zenroom -z credential_request.zen -k ${out}/keypair_${name}.json 
+ gdb -x .gdbinit --args ../../src/zenroom -cdebug=3 -z credential_request.zen -k ${out}/keypair_${name}.json 
 done
 

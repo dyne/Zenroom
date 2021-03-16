@@ -485,7 +485,6 @@ static int big_sub(lua_State *L) {
 		if(BIG_comp(l->val,r->val)<0) {
 			BIG t;
 			BIG_sub(t, r->val, l->val);
-			BIG_mod(d->val, (chunk*)CURVE_Order);
 			BIG_sub(d->val, (chunk*)CURVE_Order, t);
 		} else {
 			BIG_sub(d->val, l->val, r->val);
