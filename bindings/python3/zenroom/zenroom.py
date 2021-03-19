@@ -6,7 +6,6 @@ import ctypes as ct
 from dataclasses import dataclass, field
 
 from zenroom._config import LIBZENROOM_LOC
-from zenroom._redirect import redirect_sys_stream
 
 
 _LIBZENROOM = ct.CDLL(str(LIBZENROOM_LOC))
@@ -29,24 +28,33 @@ def _char_p(x):
 
 
 def _apply_call(call, script, conf, keys, data):
-    outbuf = io.BytesIO()
-    errbuf = io.BytesIO()
-    with redirect_sys_stream(True, outbuf), redirect_sys_stream(False, errbuf):
-        call(
-            _char_p(script),
-            _char_p(conf),
-            _char_p(keys),
-            _char_p(data)
-        )
+    # 2MB
+    stdout_len = 2 * 1024 * 1024
+    stdout_buf = ct.create_string_buffer(stdout_len)
+    print(stdout_buf)
+    # 64kB
+    stderr_len = 64 * 1024
+    stderr_buf = ct.create_string_buffer(stderr_len)
+    print(stderr_buf)
+    call(
+        _char_p(script),
+        _char_p(conf),
+        _char_p(keys),
+        _char_p(data),
+        stdout_buf,
+        stdout_len,
+        stderr_buf,
+        stderr_len,
+    )
     return ZenResult(
-        outbuf.getvalue().decode().strip(),
-        errbuf.getvalue().decode().strip(),
+        stdout_buf.value.decode().strip(),
+        stderr_buf.value.decode().strip(),
     )
 
 
 def zenroom_exec(script, conf=None, keys=None, data=None):
-    return _apply_call(_LIBZENROOM.zenroom_exec, script, conf, keys, data)
+    return _apply_call(_LIBZENROOM.zenroom_exec_tobuf, script, conf, keys, data)
 
 
 def zencode_exec(script, conf=None, keys=None, data=None):
-    return _apply_call(_LIBZENROOM.zencode_exec, script, conf, keys, data)
+    return _apply_call(_LIBZENROOM.zencode_exec_tobuf, script, conf, keys, data)
