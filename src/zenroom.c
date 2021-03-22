@@ -291,9 +291,19 @@ void zen_teardown(zenroom_t *Z) {
 		if(Z) (*MEM->free)(Z);
 		free(MEM);
 		lw_memory_free();
+		{
+			extern zenroom_t *Z;
+			Z = NULL;
+		}
 		return; }
 	warning(NULL,"MEM not found");
-	if(Z) free(Z);
+	if(Z) {
+		free(Z);
+		{
+			extern zenroom_t *Z;
+			Z = NULL;
+		}
+	}
 }
 
 static char zscript[MAX_ZENCODE];
