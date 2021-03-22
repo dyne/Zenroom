@@ -12,6 +12,7 @@ project(
 
 add_project_arguments(
     '-DVERSION="' + meson.project_version() + '"',
+    '-D_POSIX_C_SOURCE=199309',
     language: 'c'
 )
 
@@ -82,12 +83,12 @@ lua_src = files(
     '../lib/lua53/src/linit.c',
 )
 
-milagro_include_dirs = include_directories('../lib/milagro-crypto-c/build/include')
+milagro_include_dirs = include_directories('../lib/milagro-crypto-c/include')
 run_command(
     'build-milagro-crypto-c', ecp_curve, ecdh_curve,
     check: true,
 )
-milagro_generated_include_dirs = include_directories('milagro-crypto-c/build/include')
+milagro_generated_include_dirs = include_directories('milagro-crypto-c/include')
 
 lua_include_dirs = include_directories('../lib/lua53/src')
 lua_lib = static_library('lua',
@@ -116,6 +117,7 @@ zenroom_src = [
     '../src/lua_modules.c',
     '../src/lua_shims.c',
     '../src/lwmem.c',
+    '../src/mutt_sprintf.c',
     '../src/randombytes.c',
     '../src/repl.c',
     '../src/zen_aes.c',
