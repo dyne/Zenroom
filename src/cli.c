@@ -30,10 +30,10 @@
 #include <ctype.h>
 #include <time.h>
 
-// #if (defined ARCH_LINUX) || (defined ARCH_OSX) || (defined ARCH_BSD)
+#if ! defined ARCH_WIN
 #include <sys/types.h>
 #include <sys/wait.h>
-// #endif
+#endif
 
 #include <errno.h>
 
