@@ -31,7 +31,6 @@ def _apply_call(call, script, conf, keys, data):
     # 2MB
     stdout_len = 2 * 1024 * 1024
     stdout_buf = ct.create_string_buffer(stdout_len)
-    print(stdout_buf)
     # 64kB
     stderr_len = 64 * 1024
     stderr_buf = ct.create_string_buffer(stderr_len)
