@@ -179,7 +179,7 @@ cat << EOF > array_public_bls.json
 EOF
 
 cat <<EOF | debug array_schema.zen -a array_public_bls.json
-Scenario multidarkroom
+Scenario reflow
 Given I have a 'bls public key array' named 'public keys'
 Then print all data
 EOF

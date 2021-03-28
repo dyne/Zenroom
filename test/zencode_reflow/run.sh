@@ -8,7 +8,7 @@ if ! test -r ../utils.sh; then
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
-sideload='../../src/lua/zencode_multidarkroom.lua'
+sideload='../../src/lua/zencode_reflow.lua'
 
 ## ISSUER
 cat <<EOF | zexe issuer_keygen.zen | tee issuer_keypair.json
@@ -30,7 +30,7 @@ generate_participant() {
     local name=$1
     ## PARTICIPANT
 	cat <<EOF | zexe keygen_${1}.zen | tee keypair_${1}.json
-Scenario multidarkroom
+Scenario reflow
 Scenario credential
 Given I am '${1}'
 When I create the BLS key
@@ -39,7 +39,7 @@ Then print my 'keys'
 EOF
 
 	cat <<EOF | zexe pubkey_${1}.zen -k keypair_${1}.json | tee verifier_${1}.json
-Scenario multidarkroom
+Scenario reflow
 Given I am '${1}'
 and I have my 'keys'
 When I create the BLS public key
@@ -95,35 +95,35 @@ echo "{\"today\": \"`date +'%s'`\"}" > uid.json
 # anyone can start a session
 
 # SIGNING SESSION
-cat <<EOF | debug session_start.zen -k uid.json -a public_key_array.json > multidarkroom_session.json
-Scenario multidarkroom
+cat <<EOF | debug session_start.zen -k uid.json -a public_key_array.json > reflow_session.json
+Scenario reflow
 Given I have a 'bls public key array' named 'public keys'
 and I have a 'string' named 'today'
 When I aggregate the bls public key from array 'public keys'
-and I rename the 'bls public key' to 'multidarkroom public key'
-and I create the multidarkroom session with uid 'today'
-Then print the 'multidarkroom session'
+and I rename the 'bls public key' to 'reflow public key'
+and I create the reflow session with uid 'today'
+Then print the 'reflow session'
 EOF
 #
 
 # anyone can require a verified credential to be able to sign, chosing
 # the right issuer verifier for it
-json_join issuer_verifier.json multidarkroom_session.json > credential_to_sign.json
+json_join issuer_verifier.json reflow_session.json > credential_to_sign.json
 
 
 # PARTICIPANT SIGNS (function)
 function participant_sign() {
 	local name=$1
 	cat <<EOF | zexe sign_session.zen -a credential_to_sign.json -k verified_credential_$name.json | tee signature_$name.json
-Scenario multidarkroom
+Scenario reflow
 Scenario credential
 Given I am '$name'
 and I have my 'credentials'
 and I have my 'keys'
-and I have a 'multidarkroom session'
+and I have a 'reflow session'
 and I have a 'issuer public key' from 'The Authority'
-When I create the multidarkroom signature
-Then print the 'multidarkroom signature'
+When I create the reflow signature
+Then print the 'reflow signature'
 EOF
 }
 
@@ -134,20 +134,20 @@ function collect_sign() {
 	local name=$1
 	local tmp_msig=`mktemp`
 	local tmp_sig=`mktemp`
-	cp -v multidarkroom_session.json $tmp_msig
+	cp -v reflow_session.json $tmp_msig
 	json_join issuer_verifier.json signature_$name.json > $tmp_sig
-	cat << EOF | zexe collect_sign.zen -a $tmp_msig -k $tmp_sig | tee multidarkroom_session.json
-Scenario multidarkroom
+	cat << EOF | zexe collect_sign.zen -a $tmp_msig -k $tmp_sig | tee reflow_session.json
+Scenario reflow
 Scenario credential
-Given I have a 'multidarkroom session'
+Given I have a 'reflow session'
 and I have a 'issuer public key' in 'The Authority'
-and I have a 'multidarkroom signature'
+and I have a 'reflow signature'
 When I aggregate all the issuer public keys
-and I verify the multidarkroom signature credential
-and I check the multidarkroom signature fingerprint is new
-and I add the multidarkroom fingerprint to the multidarkroom session
-and I add the multidarkroom signature to the multidarkroom session
-Then print the 'multidarkroom session'
+and I verify the reflow signature credential
+and I check the reflow signature fingerprint is new
+and I add the reflow fingerprint to the reflow session
+and I add the reflow signature to the reflow session
+Then print the 'reflow session'
 EOF
 	rm -f $tmp_msig $tmp_sig
 }
@@ -157,11 +157,11 @@ collect_sign 'Alice'
 collect_sign 'Bob'
 
 # VERIFY SIGNATURE
-cat << EOF | zexe verify_sign.zen -a multidarkroom_session.json | jq .
-Scenario multidarkroom
-Given I have a 'multidarkroom session'
-When I verify the multidarkroom session is valid
+cat << EOF | zexe verify_sign.zen -a reflow_session.json | jq .
+Scenario reflow
+Given I have a 'reflow session'
+When I verify the reflow session is valid
 Then print 'SUCCESS'
-and print the 'multidarkroom session'
+and print the 'reflow session'
 EOF
 

@@ -46,7 +46,7 @@ EOF
 name=Alice
     ## PARTICIPANT
 	cat <<EOF | zenroom -z > ${out}/keypair_${name}.json
-Scenario multidarkroom
+Scenario reflow
 Scenario credential
 Given I am '${name}'
 When I create the BLS key
@@ -56,7 +56,7 @@ EOF
 
 # 	cat <<EOF | zenroom
 #  ${out}/pubkey_${name}.zen -k ${out}/keypair_${name}.json  > ${out}/public_key_${name}.json
-# Scenario multidarkroom
+# Scenario reflow
 # Given I am '${name}'
 # and I have my 'keys'
 # When I create the BLS public key

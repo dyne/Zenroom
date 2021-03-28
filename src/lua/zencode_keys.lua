@@ -21,13 +21,12 @@
 --]]
 
 
--- DESCRIPTION
--- Special keys schema has optional members common to multiple
--- scenarios, it provides a common interface to create keys, verifiers
--- and check their existance. It does not use the keys, that's up to the
--- specific scenarios. One single scenario may require and use the same
--- key types (one or more) as others do, for instance multidarkroom uses
--- bls and credential, petition uses credential and ecdh.
+-- DESCRIPTION: Special keys schema has optional members common to
+-- multiple scenarios, it provides a common interface to create keys,
+-- verifiers and check their existance. It does not use the keys, that's
+-- up to the specific scenarios. One single scenario may require and use
+-- the same key types (one or more) as others do, for instance reflow
+-- uses bls and credential, petition uses credential and ecdh.
 
 function initkeys(ktype)
     if luatype(ACK.keys) == 'table' then

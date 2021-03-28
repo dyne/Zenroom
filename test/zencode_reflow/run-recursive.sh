@@ -98,7 +98,7 @@ generate_participant() {
     local name=$1
     ## PARTICIPANT
 	cat <<EOF | zexe ${out}/keygen_${1}.zen  | jq . | tee ${out}/keypair_${1}.json
-Scenario multidarkroom
+Scenario reflow
 Scenario credential
 Given I am '${1}'
 When I create the BLS key
@@ -107,7 +107,7 @@ Then print my 'keys'
 EOF
 
 	cat <<EOF | zexe ${out}/pubkey_${1}.zen -k ${out}/keypair_${1}.json  | jq . | tee ${out}/public_key_${1}.json
-Scenario multidarkroom
+Scenario reflow
 Given I am '${1}'
 and I have my 'keys'
 When I create the BLS public key
@@ -210,13 +210,13 @@ echo "{\"today\": \"`date +'%s'`\"}" | tee ${out}/uid.json
 
 create_multisignature(){
 cat <<EOF  | zexe ${out}/session_start.zen -k ${out}/uid.json -a ${out}/public_key_array.json | tee  ${out}/multisignature.json
-Scenario multidarkroom
+Scenario reflow
 Given I have a 'bls public key array' named 'public keys'
 and I have a 'string' named 'today'
 When I aggregate the bls public key from array 'public keys'
-and I rename the 'bls public key' to 'multidarkroom public key'
-and I create the multidarkroom session with uid 'today'
-Then print the 'multidarkroom session'
+and I rename the 'bls public key' to 'reflow public key'
+and I create the reflow session with uid 'today'
+Then print the 'reflow session'
 EOF
 }
 
@@ -243,15 +243,15 @@ cp multisignature.json multisignature_input.json
 function participant_sign() {
 	local name=$1
 	cat <<EOF | zexe ${out}/sign_session.zen -a ${out}/credential_to_sign.json -k ${out}/verified_credential_$name.json  | jq . | tee ${out}/signature_$name.json
-Scenario multidarkroom
+Scenario reflow
 Scenario credential
 Given I am '$name'
 and I have my 'credentials'
 and I have my 'keys'
-and I have a 'multidarkroom session'
+and I have a 'reflow session'
 and I have a 'issuer public key' from 'The Authority'
-When I create the multidarkroom signature
-Then print the 'multidarkroom signature'
+When I create the reflow signature
+Then print the 'reflow signature'
 EOF
 }
 
@@ -273,17 +273,17 @@ function collect_sign() {
 	cp -v ${out}/multisignature.json $tmp_msig
 	json_join ${out}/issuer_public_key.json ${out}/signature_$name.json > $tmp_sig
 	cat << EOF | zexe ${out}/collect_sign.zen -a $tmp_msig -k $tmp_sig  | jq . | tee ${out}/multisignature.json
-Scenario multidarkroom
+Scenario reflow
 Scenario credential
-Given I have a 'multidarkroom session'
+Given I have a 'reflow session'
 and I have a 'issuer public key' in 'The Authority'
-and I have a 'multidarkroom signature'
+and I have a 'reflow signature'
 When I aggregate all the issuer public keys
-and I verify the multidarkroom signature credential
-and I check the multidarkroom signature fingerprint is new
-and I add the multidarkroom fingerprint to the multidarkroom session
-and I add the multidarkroom signature to the multidarkroom session
-Then print the 'multidarkroom session'
+and I verify the reflow signature credential
+and I check the reflow signature fingerprint is new
+and I add the reflow fingerprint to the reflow session
+and I add the reflow signature to the reflow session
+Then print the 'reflow session'
 EOF
 	rm -f $tmp_msig $tmp_sig
 }
@@ -340,11 +340,11 @@ done
 
 verify_signature(){
 cat << EOF | zexe ${out}/verify_sign.zen -a ${out}/multisignature.json | jq .
-Scenario multidarkroom
-Given I have a 'multidarkroom session'
-When I verify the multidarkroom session is valid
+Scenario reflow
+Given I have a 'reflow session'
+When I verify the reflow session is valid
 Then print 'SUCCESS'
-and print the 'multidarkroom session'
+and print the 'reflow session'
 EOF
 }
 
