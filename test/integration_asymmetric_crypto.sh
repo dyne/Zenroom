@@ -35,7 +35,7 @@ generate() {
 k = ECDH.keygen()
 print( JSON.encode(deepmap(O.to_hex, k)) )
 EOF
-        cat <<EOF >$tmpfile && $zen $tmpfile -k $tmp/$p-keys.json > $tmp/$p-envelop.json 2>/dev/null
+        cat <<EOF >$tmpfile && $zen -k $tmp/$p-keys.json $tmpfile > $tmp/$p-envelop.json 2>/dev/null
 keys = JSON.decode(KEYS)
 envelop = JSON.encode({
     message="$secret",
@@ -50,7 +50,7 @@ test_encrypt() {
     from=$1
     to=$2
 	tmpfile=`mktemp`
-    cat <<EOF >$tmpfile && $zen $tmpfile -k $tmp/$from-keys.json -a $tmp/$to-envelop.json \
+    cat <<EOF >$tmpfile && $zen -k $tmp/$from-keys.json -a $tmp/$to-envelop.json $tmpfile \
                      > $tmp/from-$from-to-$to-cryptomsg.json 2>/dev/null
 keys = JSON.decode(KEYS)
 data = JSON.decode(DATA)
@@ -77,7 +77,7 @@ test_decrypt() {
     from=$1
     to=$2
 	tmpfile=`mktemp`
-    cat <<EOF >$tmpfile && $zen $tmpfile -k $tmp/$to-keys.json -a $tmp/from-$from-to-$to-cryptomsg.json
+    cat <<EOF >$tmpfile && $zen -k $tmp/$to-keys.json -a $tmp/from-$from-to-$to-cryptomsg.json $tmpfile
 keys = JSON.decode(KEYS)
 data = JSON.decode(DATA)
 recipient = { }
