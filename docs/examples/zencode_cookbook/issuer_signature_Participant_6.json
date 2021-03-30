@@ -1,0 +1,11 @@
+{
+  "credential_signature": {
+    "a_tilde": "AwxEjj7ICmFAxik1ntDIWRad9tfbEljYLm46QlAgRRttt1kclSGZmMIbR8Yo3Pz3HA==",
+    "b_tilde": "Ai5wMrm6O7v3WnAekYKNmyR5FB4ej1fOHoRnr2hXFeYtDVrfnaNnh9jd6zysjYhn9w==",
+    "h": "Ak4RD8Lc1P4+7jVqwGp8ZTCXE1PXsClXk9UWePjhoX3AR7B+yqrEahnhVck2wbBe+g=="
+  },
+  "issuer_public_key": {
+    "alpha": "JipsVWiDwQNqvi0+enmMmj++ivgWlEJlyc24cOmJmFf5sl+PluyqBOEkGp7vDNKyQzzIo2LtDQgK9+2i1/pitQocHks/hirR06S0qKcOQEFGpXI8dFErC9SqzXBCsUFbQbe7uxEhTR2zcVS+zZKa9d/dR6pLCkBs4IpW0RrCU5FFpttXK8fGzEmrxcOAPkzQD9XoipB7Bk/8LfXj4eGqkcpp3avpeweoslxpXZAfxP9ot4NAaMlmvr/3u1KlbAX5",
+    "beta": "DzXIpu8TZu6hTNKoG4Dqzf+eOYxCGTwmlDRtBa5GglI+vU3o30dw5fA/a5+0CFZXVM9ODuC0riPF23vpLuyDLyREI0+4t23N2o3AgLaziv53W3JZ1dCa++5WmC8Ci8cQBoAJb27PD9Ri2Up6WboJ9gxErkO3Ce+QmhQ45GQnlfNhlsBeoJBXZRjEa56OSHxUS3Gtm2vvIOrD2ec7vgER8FCNlwJ5yQVGaDN4I2PEmlQgThCc3xdiDKKiXjo5+Z4M"
+  }
+}

@@ -17,10 +17,14 @@ if ! test -r ../utils.sh; then
 
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 
-out=/dev/shm/files
-mkdir -p $out
+out=../../docs/examples/zencode_cookbook
 
-Participants=1000
+# OR: out=/dev/shm/files
+
+mkdir -p $out
+ 
+
+Participants=10
 
 users=""
 for i in $(seq $Participants)
@@ -53,7 +57,7 @@ echo "================================================================"
 
 # Create the petition
 
-cat <<EOF | zexe ${out}/petitionRequest.zen -k ${out}/verified_credential_Participant_1.json -a ${out}/issuer_public_key.json | tee ${out}/petition_request.json | jq .
+cat <<EOF | zexe ${out}/petitionRequest.zen -k ${out}/verified_credential_Participant_1.json -a ${out}/credentialIssuerpublic_key.json  | jq . | tee ${out}/petitionRequest.json | jq .
 # Two scenarios are needed for this script, "credential" and "petition".
 	Scenario credential: read and validate the credentials
 	Scenario petition: create the petition
@@ -78,7 +82,7 @@ EOF
 
 # Approve the petition
 
-cat <<EOF | zexe ${out}/petitionApprove.zen -k ${out}/petition_request.json -a ${out}/issuer_public_key.json | tee ${out}/petition.json | jq .
+cat <<EOF | zexe ${out}/petitionApprove.zen -k ${out}/petitionRequest.json -a ${out}/credentialIssuerpublic_key.json  | jq . | tee ${out}/petition.json | jq .
 Scenario credential
 Scenario petition: approve
     Given that I have a 'issuer public key' inside 'The Authority'
@@ -92,9 +96,10 @@ Scenario petition: approve
 	Then print the 'uid' as 'string' inside 'petition' 
 EOF
 
+cp -v ${out}/petition.json ${out}/petitionEmpty.json 
 
 sign_petition() {
-    cat <<EOF | zexe ${out}/petitionSign.zen -k ${out}/verified_credential_$1.json -a ${out}/issuer_public_key.json | tee ${out}/petition_signature.json | jq .
+    cat <<EOF | zexe ${out}/petitionSign.zen -k ${out}/verified_credential_$1.json -a ${out}/credentialIssuerpublic_key.json  | jq . | tee ${out}/petitionSignature.json | jq .
 Scenario credential
 Scenario petition: sign petition
     Given I am '${1}'
@@ -111,8 +116,8 @@ echo "signed petition for $1"
 
 }
 
-aggreate_petition() {
-cat <<EOF | zexe ${out}/petitionAggregateSignature.zen -k ${out}/petition.json -a ${out}/petition_signature.json | tee ${out}/petition_updated.json | jq .
+aggregate_petition() {
+cat <<EOF | zexe ${out}/petitionAggregateSignature.zen -k ${out}/petition.json -a ${out}/petitionSignature.json  | jq . | tee ${out}/petitionAggregated.json | jq .
 Scenario credential
 Scenario petition: aggregate signature
     Given that I have a 'petition signature'
@@ -125,7 +130,8 @@ Scenario petition: aggregate signature
     Then print the 'petition'
     Then print the 'issuer public key'
 EOF
-mv $out/petition_updated.json $out/petition.json
+
+mv $out/petitionAggregated.json $out/petition.json
 
 echo "aggregated petition for $1"
 
@@ -136,25 +142,25 @@ echo Signing and Aggregating
 for user in ${users[@]}
 do
     sign_petition $user
-    aggreate_petition $user
+    aggregate_petition $user
 done
 
 echo Tallying the petition
 
-cat <<EOF | zexe ${out}/petitionTally.zen -k ${out}/verified_credential_Participant_1.json -a ${out}/petition.json | tee ${out}/petition_tally.json | jq .
+cat <<EOF | zexe ${out}/petitionTally.zen -k ${out}/verified_credential_Participant_1.json -a ${out}/petition.json  | jq . | tee ${out}/petitionTally.json | jq .
 Scenario credential
 Scenario petition: tally
     Given that I am 'Participant_1'
     Given I have my 'keys'
     Given I have a valid 'petition'
     When I create a petition tally
-    Then print all data
+    Then print the 'petition tally'
 EOF
 
 
 echo Counting the signatures
 
-cat <<EOF | zexe ${out}/petitionCount.zen -k ${out}/petition_tally.json -a ${out}/petition.json | tee ${out}/petition_count.json | jq .
+cat <<EOF | zexe ${out}/petitionCount.zen -k ${out}/petitionTally.json -a ${out}/petition.json  | jq . | tee ${out}/petitionCount.json | jq .
 Scenario credential
 Scenario petition: count
     Given that I have a valid 'petition'

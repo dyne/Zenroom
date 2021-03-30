@@ -1,1 +1,11 @@
-{"keys":{"credential":"zK8Gs70vdLRErIKkTQdNbWfrWIExirgMKSxfGuPa1aU="},"petition":{"list":["AxiT1yJJYEOvv6JctsjgH0pVQQK0XKkOSpXEY0DYUeoRy104Irg6a0He50jZh6Bvgg=="],"owner":"AxSggI9xzQ/RTjH2gRyFd+QHPCTqZucAihUyETUhVdJY9vohtmcGDFmEdOTHOTCeow==","scores":{"neg":{"left":"AxOG+HvgIx52QQV1llfLfVdSgvWaXPurje5Gcd+EA/F5w47l40oIy+Gf7RTii2vaLw==","right":"AzlFeeo+q3el8t/6DU8pfMSkserf6FotAS+srvQoqq+m6VHKjEMjmK763KpomNaV3w=="},"pos":{"left":"AhOG+HvgIx52QQV1llfLfVdSgvWaXPurje5Gcd+EA/F5w47l40oIy+Gf7RTii2vaLw==","right":"Aku4pdZSirYhFGNgYzWumYBrqtwPmilioz9k8AvHbqsoK5IDafSBFxD/cwyLFft8/A=="}},"uid":"TW9yZV9wcml2YWN5X2Zvcl9hbGwh"},"petition_tally":{"c":"ueOVLaTH5tCuj3Ql7C+e6nrK8XnsIDCptc3H2l6SOLI=","dec":{"neg":"AjlFeeo+q3el8t/6DU8pfMSkserf6FotAS+srvQoqq+m6VHKjEMjmK763KpomNaV3w==","pos":"AzlFeeo+q3el8t/6DU8pfMSkserf6FotAS+srvQoqq+m6VHKjEMjmK763KpomNaV3w=="},"rx":"FurxTh/Tybv/atap0gyav0mcYuLF7ClV0AUtFIjiJlk=","uid":"TW9yZV9wcml2YWN5X2Zvcl9hbGwh"}}
+{
+  "petition_tally": {
+    "c": "6IA00IFHiPk8YMIRrqreacASFctEqkRdWy1veZIEVFM=",
+    "dec": {
+      "neg": "AiNvjjY7jHRSGiZpP3HzytHtLM6lSYwgixFJeI5VQBHMaanjre2GYCw7tsv5NBrkMQ==",
+      "pos": "AyNvjjY7jHRSGiZpP3HzytHtLM6lSYwgixFJeI5VQBHMaanjre2GYCw7tsv5NBrkMQ=="
+    },
+    "rx": "ZaaYSIvy8vr0Dr5xgmMFM//Mz6PSyCglBuUxke30Y/U=",
+    "uid": "TW9yZV9wcml2YWN5X2Zvcl9hbGwh"
+  }
+}

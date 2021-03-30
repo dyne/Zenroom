@@ -1,0 +1,18 @@
+{
+  "Participant_9": {
+    "credential_request": {
+      "commit": "Aj1MN6SfRssqF5JAm5Y/OaN2Z/u/YksyLs+2dmjB/m+28Q/7HouOajnRuArIzS7cQA==",
+      "pi_s": {
+        "commit": "V5/47M8pYHt2iqsM1mO8jTQa8BC8Ck7rJlYkEjeSNJg=",
+        "rk": "gt1jF7SoCMt2yttP6vVQ/aOctMk1Ic/TJ37ujGEXI0U=",
+        "rm": "FF66mnES7CSRJMBgYfKo0qeUBp3sRUeBQOCkYom9MEk=",
+        "rr": "MqARtsQzcWJPEiB7a1Qsw0Ayvh0HKIsfXMfFr3l3dI0="
+      },
+      "public": "AxRrCiuVXePUHj5hZXrCz8SVrE9F8lqt9m54xULJS0qiEhiEj1/TR4F0oiX9mqQvNA==",
+      "sign": {
+        "a": "A1TF7WaR3HdmEougd8bY2rpgRE6+c61N1ozqAS40usluFRuL8pP8THE+ecdZwis2CA==",
+        "b": "A0cs/v1hS5eItjL6w63Kb0FXkMdem0hH57ycNZ9tVZiLpuIcLkLhj6r23PRkofH96w=="
+      }
+    }
+  }
+}

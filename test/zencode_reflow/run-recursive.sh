@@ -25,7 +25,7 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 # ${out}/credentialParticipantKeygen.zen
 # out='../../docs/examples/zencode_cookbook'
 # out='./files'
-out='/dev/shm/files'
+out='/dev/shm/multi'
 
 
 mkdir -p ${out}
@@ -40,8 +40,8 @@ rm /tmp/zenroom-test-summary.txt
 # Change this to change the amount of participants 
 # and the amount of recursion for some of the scripts
 
-Participants=6
-Recursion=3
+Participants=3
+Recursion=1
 
 users=""
 for i in $(seq $Participants)

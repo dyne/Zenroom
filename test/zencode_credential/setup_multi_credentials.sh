@@ -10,10 +10,13 @@ if ! test -r ../utils.sh; then
 
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 
-out=/dev/shm/files
+out=../../docs/examples/zencode_cookbook
+
+# OR: out=/dev/shm/files
+
 mkdir -p $out
 
-Participants=1000
+Participants=10
 
 users=""
 for i in $(seq $Participants)
@@ -30,7 +33,7 @@ when I create the issuer key
 Then print my 'keys'
 EOF
 
-cat <<EOF | zexe ${out}/issuer_public_key.zen -k ${out}/issuer_key.json  | jq . | tee ${out}/issuer_public_key.json
+cat <<EOF | zexe ${out}/issuer_public_key.zen -k ${out}/issuer_key.json  | jq . | tee ${out}/credentialIssuerpublic_key.json
 Scenario credential: publish verifier
 Given that I am known as 'The Authority'
 and I have my 'keys'

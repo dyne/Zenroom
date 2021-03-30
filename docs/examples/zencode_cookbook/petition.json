@@ -1,0 +1,32 @@
+{
+  "issuer_public_key": {
+    "alpha": "JipsVWiDwQNqvi0+enmMmj++ivgWlEJlyc24cOmJmFf5sl+PluyqBOEkGp7vDNKyQzzIo2LtDQgK9+2i1/pitQocHks/hirR06S0qKcOQEFGpXI8dFErC9SqzXBCsUFbQbe7uxEhTR2zcVS+zZKa9d/dR6pLCkBs4IpW0RrCU5FFpttXK8fGzEmrxcOAPkzQD9XoipB7Bk/8LfXj4eGqkcpp3avpeweoslxpXZAfxP9ot4NAaMlmvr/3u1KlbAX5",
+    "beta": "DzXIpu8TZu6hTNKoG4Dqzf+eOYxCGTwmlDRtBa5GglI+vU3o30dw5fA/a5+0CFZXVM9ODuC0riPF23vpLuyDLyREI0+4t23N2o3AgLaziv53W3JZ1dCa++5WmC8Ci8cQBoAJb27PD9Ri2Up6WboJ9gxErkO3Ce+QmhQ45GQnlfNhlsBeoJBXZRjEa56OSHxUS3Gtm2vvIOrD2ec7vgER8FCNlwJ5yQVGaDN4I2PEmlQgThCc3xdiDKKiXjo5+Z4M"
+  },
+  "petition": {
+    "list": [
+      "AjQG/phizEipR68xWxal/YbM57vCT1mh1BN8bjfwSi8BUevzhvy0OHTbKpFd/vIgiw==",
+      "AygJkAhFSrgTSJhTaLplnoaCErgguQkEKI56YI72ah6oniI267xJPnTh7RbvY4cPKQ==",
+      "AlNhFQWuMVQoKPThrjBzcH/gQzm8mlpnXzzT8KOAagNQKfon02Bdt0YAB1cb6cNLoQ==",
+      "AhZuE5L59Xm0A4dbMQw+fzhtmErPyT1N9f2fdtHC5SlU1l3GZEHWXlFIwLQ1jDw2uA==",
+      "Aik5sAQuabbdzf8H85Lp1GFLGw2aBthTg5gVKz5aHX3nBxcWuV82OPCiWoZqPURRZQ==",
+      "A09xCSq2KcsRhPY5SASMZ0MMkMThgehS4KaNDg5wQRovfGsJVfn7bv5or1gMeRgj+w==",
+      "AiTe2BokoSaL8XAp7MMW7HV/uHmWKaSe1DW1BWU0sTy2mNIfUbApRWsmQtflHhoYxA==",
+      "A1BJNptDLq2Y+ULJtEAR5eH0rfFxy5BwEzoPS1Oy0fTu2En+AkKwmvXPQHd5doYQEQ==",
+      "Ak77KxPsfbETuQYC9fCngYMKdo5dFxO8RCkGjK0x2BNyMdZBOa3b/14c+GIxGN4VUA==",
+      "AwBROMeIMkjbENLNXnEBkiqAl54O/3tXj35QD7N6l5k/WGsWrLyXxeDw1PTXFUkzQw=="
+    ],
+    "owner": "A0GcYY8aMKVs2j1H64f1/skaOqDnNR48h78aInWbcx2tKTMefLJfcoYlAwC3hGysAw==",
+    "scores": {
+      "neg": {
+        "left": "AjBrOpxxRbhPsZe3HWrSCidXvobtMYn6osF90jdeBcss6LNlw07J75srZpwhygJztg==",
+        "right": "AyNvjjY7jHRSGiZpP3HzytHtLM6lSYwgixFJeI5VQBHMaanjre2GYCw7tsv5NBrkMQ=="
+      },
+      "pos": {
+        "left": "AzBrOpxxRbhPsZe3HWrSCidXvobtMYn6osF90jdeBcss6LNlw07J75srZpwhygJztg==",
+        "right": "AlB0dqa4tdS+HscLQo7aM0vejoNIlCrN+jjzCTjfzCAcSRQf2U7h1RUK1JO9mphO2w=="
+      }
+    },
+    "uid": "TW9yZV9wcml2YWN5X2Zvcl9hbGwh"
+  }
+}
