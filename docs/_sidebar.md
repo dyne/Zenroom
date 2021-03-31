@@ -18,6 +18,7 @@
   - [Scenario 'petition': cryptographic petition](/pages/zencode-scenarios-petition "Zencode petition")
   - [Scenario 'dp3t': proximity tracing](/pages/zencode-scenario-dp3t "Zencode petition")
   - [Scenario 'secshare': secret sharing](/pages/zencode-scenario-secShare "Zencode secret share")
+  - [Scenario 'w3c': Verifiable Credentials](/pages/zencode-cookbook-w3c-vc "W3C Verifiable Credentials")
   - [Zencode "rules"](/pages/zencode-rules.md "Zencode encoding and format rules")
   - [Zencode "config"](/pages/zenroom-config.md "Zenroom config")
   - [Zencode command list](/pages/zencode-list.md "Zencode command list")  

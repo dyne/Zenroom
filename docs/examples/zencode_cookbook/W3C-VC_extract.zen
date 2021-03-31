@@ -1,0 +1,4 @@
+Scenario 'w3c' : extract verification method
+Given I have a 'verifiable credential' named 'my-vc'
+When I get the verification method in 'my-vc'
+Then print 'verification method' as 'string'

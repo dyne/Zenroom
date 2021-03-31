@@ -1,0 +1,9 @@
+Scenario 'w3c': sign JSON
+Scenario 'ecdh': (required)
+Given that I am 'Authority'
+Given I have my 'keypair'
+Given I have a 'verifiable credential' named 'my-vc'
+Given I have a 'string' named 'pubkey url'
+When I sign the verifiable credential named 'my-vc'
+When I set the verification method in 'my-vc' to 'pubkey url'
+Then print 'my-vc' as 'string'
