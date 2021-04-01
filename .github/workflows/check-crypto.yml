@@ -15,7 +15,7 @@ jobs:
       - name: Build Zenroom on linux
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
-          sudo apt install zsh jq && make linux
+          sudo apt install zsh jq luajit lua-cjson && make linux
           make check-crypto
       - name: Build Zenroom on macos
         if: ${{ matrix.os == 'macos-latest' }}
