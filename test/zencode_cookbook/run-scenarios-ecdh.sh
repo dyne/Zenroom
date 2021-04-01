@@ -491,7 +491,7 @@ When I rename the 'text' to 'textForBob'
 
 # Here we print out the message and its header
 Then print the 'textForBob' as 'string' 
-Then print the 'header' as 'string' inside 'secretForBob' 
+Then print the 'header' from 'secretForBob' as 'string'
 EOF
 
 

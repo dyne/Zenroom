@@ -180,7 +180,7 @@ Scenario credential: verify proof
     and I have a 'credential proof'
     When I aggregate all the issuer public keys
     When I verify the credential proof
-    Then print 'The proof matches the public_key! So you can add zencode after the verify statement, that will execute only if the match occurs.'
+    then print the string 'the proof matches the public_key! So you can add zencode after the verify statement, that will execute only if the match occurs.'
 EOF
 
 echo "   "

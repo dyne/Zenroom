@@ -40,6 +40,21 @@ function fif(condition, if_true, if_false)
   if condition then return if_true else return if_false end
 end
 
+function uscore(input)
+	if luatype(input) == 'string' then
+		return string.gsub(input, ' ', '_')
+	else
+		error("Underscore transform not a string: "..luatype(input), 2)
+	end
+end
+function space(input)
+	if luatype(input) == 'string' then
+		return string.gsub(input, '_', ' ')
+	else
+		error("Whitespace transform not a string: "..luatype(input), 2)
+	end
+end
+
 -- gets a string and returns the associated function, string and prefix
 -- comes before schema check
 function input_encoding(what)

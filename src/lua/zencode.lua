@@ -159,21 +159,36 @@ function zencode.add_schema(arr)
    }
    for k,v in pairs(arr) do
 	  -- check overwrite / duplicate to avoid scenario namespace clash
-	  ZEN.assert(not ZEN.schemas[k], "Add schema denied, already registered schema: "..k)
-	  ZEN.assert(not _illegal_schemas[k], "Add schema denied, reserved name: "..k)
+	  if ZEN.schemas[k] then
+		error( "Add schema denied, already registered schema: "..k, 2)
+	  end
+	  if _illegal_schemas[k] then
+	    error( "Add schema denied, reserved name: "..k, 2)
+	  end
 	  ZEN.schemas[k] = v
    end
 end
 
-function have(o)
-    local res = ACK[string.gsub(o, ' ', '_')]
-    ZEN.assert(res, "Cannot find object: " .. o)
-    return res
+function have(obj) -- accepts arrays for depth checks
+	local res
+	if luatype(obj) == 'table' then
+		local prev = ACK
+		for k,v in ipairs(obj) do
+			res = prev[uscore(v)]
+			if not res then error("Cannot find object: " .. v, 2) end
+			prev = res
+		end
+	else
+		res = ACK[uscore(obj)]
+    	if not res then error("Cannot find object: " .. obj, 2) end
+	end
+	return res
 end
-function empty(o)
+function empty(obj)
 	-- convert all spaces to underscore in argument
-	local s = string.gsub(o, ' ', '_')
-    ZEN.assert(not ACK[s], "Cannot overwrite existing object: " .. o)
+	if ACK[uscore(obj)] then
+		error("Cannot overwrite existing object: " .. obj, 2)
+	end
 end
 
 ---------------------------------------------------------------

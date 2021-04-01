@@ -17,4 +17,4 @@
 	Then print the 'petition'
 # Here we're just printing the "uid" as string, instead of the default base64
 # so that it's human readable - this is not needed to advance in the flow
-	Then print the 'uid' as 'string' inside 'petition' 
+	Then print the 'uid' from 'petition' as 'string'

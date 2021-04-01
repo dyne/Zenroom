@@ -17,65 +17,128 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Friday, 12th March 2021 1:19:58 pm
+--on Thursday, 1st April 2021
 --]]
 
 --- THEN
 
 --------------------------------------
 
-local function then_print_the_f(k)
-	local fun
-	local val = ACK[k]
-	if val then
-		fun = guess_outcast(check_codec(k))
-		if luatype(val) == 'table' then
-			OUT[k] = deepmap(fun, val)
-		else
-			OUT[k] = fun(val)
-		end
+local function then_outcast(val, sch)
+	if not val then
+		error("Then outcast called on empty variable", 2)
+	end
+	local fun = guess_outcast(sch)
+	if luatype(val) == 'table' then
+		return deepmap(fun, val)
 	else
-		if not OUT.output then
-			OUT.output = {}
-		end
-		table.insert(OUT.output, k) -- raw string value
+		return fun(val)
 	end
 end
 
-Then("print ''", then_print_the_f)
-Then("print the ''", then_print_the_f)
+local function then_insert(dest, val, key)
+	if not ACK[dest] then
+		OUT[dest] = val
+	elseif luatype(OUT[dest]) == 'table' then
+		if isarray(OUT[dest]) then
+			table.insert(OUT[dest], val)
+		else
+			assert(key, 'Then statement targets dictionary with empty key: '..dest)
+			OUT[dest][key] = val
+		end
+	else -- extend string to array
+		local tmp = OUT[dest]
+		OUT[dest] = { tmp }
+		table.insert(OUT[dest], val)
+	end
+end
+
+
+Then("print string ''", function(k)
+	if not OUT.output then
+		OUT.output = {}
+	end
+	table.insert(OUT.output, k) -- raw string value
+end)
+
+Then("print ''", function(name)
+	local val = have(name)
+	OUT[name] = then_outcast( val, check_codec(name) )
+end)
 
 Then(
 	"print '' as ''",
-	function(v, s)
-		local fun = guess_outcast(s)
-		local val = ACK[v]
-		if val then
-			if luatype(val) == 'table' then
-				OUT[v] = deepmap(fun, val)
-			else
-				OUT[v] = fun(val)
-			end
-		else
-			OUT.output = fun(v)
-		end
+	function(k, s)
+		local val = have(k)
+		OUT[k] = then_outcast( val, s )
+	end
+)
+
+Then(
+	"print '' from ''",
+	function(k, f)
+		local val = have({f,k}) -- use array to check in depth
+		OUT[k] = then_outcast( val, check_codec(f) )
+	end
+)
+
+Then(
+	"print '' from '' as ''",
+	function(k, f, s)
+		local val = have({f,k}) -- use array to check in depth
+		OUT[k] = then_outcast( val, s )
+	end
+)
+
+Then(
+	"print '' from '' as '' in ''",
+	function(k, f, s, d)
+		local val = have({f,k}) -- use array to check in depth
+		then_insert( d, then_outcast( val, s ), k)
 	end
 )
 
 Then(
 	"print '' as '' in ''",
-	function(v, s, k)
-		local fun = guess_outcast(s)
-		local val = ACK[v]
-		if val then
-			if luatype(val) == 'table' then
-				OUT[k] = deepmap(fun, val)
-			else
-				OUT[k] = fun(val)
-			end
-		else
-			OUT[k] = fun(v)
-		end
+	function(k, s, d)
+		local val = have(k) -- use array to check in depth
+		then_insert( d, then_outcast( val, s ), k)
+	end
+)
+
+Then(
+	"print my '' from '' as ''",
+	function(k, f, s)
+		local val = have({f,k}) -- use array to check in depth
+		then_insert( WHO, then_outcast( val, s ), k)
+	end
+)
+
+Then(
+	"print my '' from ''",
+	function(k, f)
+		local val = have({f,k}) -- use array to check in depth
+		-- my statements always print to a dictionary named after WHO
+		if not OUT[WHO] then OUT[WHO] = { } end
+		OUT[WHO][k] = then_outcast( val, check_codec(f) )
+	end
+)
+
+Then(
+	"print my '' as ''",
+	function(k, s)
+		local val = have(k) -- use array to check in depth
+		then_insert( WHO, then_outcast( val, s ), k)
+	end
+)
+
+Then(
+	"print my ''",
+	function(k)
+		local val = have(k)
+		-- my statements always print to a dictionary named after WHO
+		if not OUT[WHO] then OUT[WHO] = { } end
+		OUT[WHO][k] = then_outcast( val, check_codec(k) )
 	end
 )
 
@@ -139,136 +202,6 @@ Then(
 			else
 				OUT[WHO][k] = fun(v)
 			end
-		end
-	end
-)
-
----------- checked until here
-
-Then(
-	"print my ''",
-	function(obj)
-		Iam()
-		ZEN.assert(ACK[obj], 'Data object not found: ' .. obj)
-		if not OUT[WHO] then
-			OUT[WHO] = {}
-		end
-		local fun = guess_outcast(check_codec(obj))
-		OUT[WHO][obj] = ACK[obj]
-		if luatype(OUT[WHO][obj]) == 'table' then
-			OUT[WHO][obj] = deepmap(fun, OUT[WHO][obj])
-		else
-			OUT[WHO][obj] = fun(OUT[WHO][obj])
-		end
-	end
-)
-
-Then(
-	"print my '' from ''",
-	function(obj, section)
-		Iam()
-		ZEN.assert(ACK[section], 'Section not found: ' .. section)
-		local got
-		got = ACK[section][obj]
-		ZEN.assert(got, 'Data object not found: ' .. obj)
-		local fun = guess_outcast(check_codec(obj))
-		if luatype(got) == 'table' then
-			got = deepmap(fun, got)
-		else
-			got = fun(got)
-		end
-		if not OUT[WHO] then
-			OUT[WHO] = {}
-		end
-		OUT[WHO][obj] = got
-	end
-)
-
-Then(
-	"print my '' as ''",
-	function(obj, conv)
-		Iam()
-		ZEN.assert(ACK[obj], 'My data object not found: ' .. obj)
-		if not OUT[WHO] then
-			OUT[WHO] = {}
-		end
-		local fun = guess_outcast(conv)
-		OUT[WHO][obj] = ACK[obj]
-		if luatype(OUT[WHO][obj]) == 'table' then
-			OUT[WHO][obj] = deepmap(fun, OUT[WHO][obj])
-		else
-			OUT[WHO][obj] = fun(OUT[WHO][obj])
-		end
-	end
-)
-
--- Then("print the ''", function(key)
--- 		ZEN.assert(ACK[key], "Data object not found: "..key)
--- 		if not OUT[key] then OUT[key] = { } end
--- 		OUT[key] = ACK[key]
--- 		local fun = guess_outcast( check_codec(key) )
--- 		if luatype(OUT[key]) == 'table' then
--- 		   OUT[key] = deepmap(fun, OUT[key])
--- 		else
--- 		   OUT[key] = fun(OUT[key])
--- 		end
--- end)
-
-Then(
-	"print the '' as ''",
-	function(key, conv)
-		ZEN.assert(ACK[key], 'Data object not found: ' .. key)
-		if not OUT[key] then
-			OUT[key] = {}
-		end
-		OUT[key] = ACK[key]
-		local fun = guess_outcast(conv)
-		if luatype(OUT[key]) == 'table' then
-			OUT[key] = deepmap(fun, OUT[key])
-		else
-			OUT[key] = fun(OUT[key])
-		end
-	end
-)
-
--- TODO: change: print the 'string' named 'pippo' inside 'message'
-
-Then(
-	"print the '' as '' in ''",
-	function(key, conv, section)
-		ZEN.assert(
-			ACK[section][key],
-			'Data object not found: ' .. key .. ' inside ' .. section
-		)
-		if not OUT[key] then
-			OUT[key] = {}
-		end
-		OUT[key] = ACK[section][key]
-		local fun = guess_outcast(conv)
-		if luatype(OUT[key]) == 'table' then
-			OUT[key] = deepmap(fun, OUT[key])
-		else
-			OUT[key] = fun(OUT[key])
-		end
-	end
-)
-
-Then(
-	"print the '' in ''",
-	function(key, section)
-		ZEN.assert(
-			ACK[section][key],
-			'Data object not found: ' .. key .. ' inside ' .. section
-		)
-		if not OUT[key] then
-			OUT[key] = {}
-		end
-		OUT[key] = ACK[section][key]
-		local fun = guess_outcast(check_codec(section))
-		if luatype(OUT[key]) == 'table' then
-			OUT[key] = deepmap(fun, OUT[key])
-		else
-			OUT[key] = fun(OUT[key])
 		end
 	end
 )

@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Friday, 12th March 2021 1:19:33 pm
+--on Thursday, 1st April 2021
 --]]
 
 
@@ -100,7 +100,7 @@ When(
         end
         local hkey = ACK[key]
         ZEN.assert(hkey, 'Key not found: ' .. key)
-        ACK.HMAC = HASH.new(CONF.hash):hmac(hkey, obj)
+        ACK.hmac = HASH.new(CONF.hash):hmac(hkey, obj)
     end
 )
 

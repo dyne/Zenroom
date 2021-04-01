@@ -84,7 +84,7 @@ rule output encoding url64
 Given I have a 'url64 array' named 'left array'
 and I have a 'url64 array' named 'right array'
 When I verify 'left array' is equal to 'right array'
-Then print 'OK'
+Then print the string 'OK'
 EOF
 
 cat <<EOF | zexe array_remove_object.zen -a arr.json > right_arr.json
@@ -105,7 +105,7 @@ rule output encoding url64
 Given I have a 'url64 array' named 'left array'
 and I have a 'url64 array' named 'right array'
 When I verify 'left array' is not equal to 'right array'
-Then print 'OK'
+Then print the string 'OK'
 EOF
 
 

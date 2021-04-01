@@ -29,7 +29,7 @@ Given nothing
 When I write number '10' in 'left'
 and I write number '20' in 'right'
 and number 'left' is less or equal than 'right'
-Then print 'OK'
+Then print the string 'OK'
 EOF
 
 
@@ -39,7 +39,7 @@ Given nothing
 When I set 'left' to '0a' base '16'
 and I set 'right' to '14' base '16'
 and number 'left' is less or equal than 'right'
-Then print 'OK'
+Then print the string 'OK'
 EOF
 
 cat <<EOF | zexe cmp_base16_less.zen
@@ -48,7 +48,7 @@ Given nothing
 When I set 'left' to '0a' base '16'
 and I set 'right' to '14' base '16'
 and number 'left' is less than 'right'
-Then print 'OK'
+Then print the string 'OK'
 EOF
 
 success

@@ -169,7 +169,7 @@ When I decrypt the text of 'secretForBob' from 'Alice'
 When I rename the 'text' to 'DecryptedtextForBobBase64'
 Then print the 'DecryptedtextForBobBase64' as 'base64'
 # The header is here the "DefaultHeader" so we won't print
-# Then print the 'header' as 'string' inside 'secretForBob' 
+# Then print the 'header' from 'secretForBob' as 'string'
 EOF
 
 

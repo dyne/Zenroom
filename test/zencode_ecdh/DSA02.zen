@@ -6,5 +6,5 @@ Scenario 'ecdh': Bob verifies the signature from Alice
 	and I have a 'signature' from 'Alice'
 	and I have a 'string' named 'draft' in 'Alice'
 	When I verify the 'draft' is signed by 'Alice'
-	Then print 'signature correct'
+	Then print the string 'signature correct'
 	and print the 'draft' as 'string'

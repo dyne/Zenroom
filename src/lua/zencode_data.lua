@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Friday, 12th March 2021 1:17:33 pm
+--on Thursday, 1st April 2021
 --]]
 
 --- Zencode data internals
@@ -301,7 +301,7 @@ function guess_outcast(cast)
       return (function(v)
          return (v)
       end)
-   elseif ZEN.schemas[string.gsub(cast, ' ', '_')] then
+   elseif ZEN.schemas[uscore(cast, ' ', '_')] then
       return CONF.output.encoding.fun
    else
       error('Invalid output conversion: ' .. cast, 2)

@@ -8,4 +8,4 @@ Scenario petition: approve
     When I verify the new petition to be empty
     Then print the 'petition'
     Then print the 'issuer public key'
-	Then print the 'uid' as 'string' inside 'petition' 
+	Then print the 'uid' from 'petition' as 'string'

@@ -50,7 +50,7 @@ You can also print with a different encoding an object that, at the output, is n
 You may want to print the *uid* as string, instead of the default base64 encoding. You can do this by: 
 
 ```gherkin
-Then print the 'uid' as 'string' inside 'petition' 
+Then print the 'uid' from 'petition' as 'string'
 ```
 
 And the output shoul be:

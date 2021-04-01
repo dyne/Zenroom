@@ -77,7 +77,7 @@ cat <<EOF | zexe ${out}/petitionRequest.zen -k ${out}/verified_credential_Partic
 	Then print the 'petition'
 # Here we're just printing the "uid" as string, instead of the default base64
 # so that it's human readable - this is not needed to advance in the flow
-	Then print the 'uid' as 'string' inside 'petition' 
+	Then print the 'uid' from 'petition' as 'string'
 EOF
 
 # Approve the petition
@@ -93,7 +93,7 @@ Scenario petition: approve
     When I verify the new petition to be empty
     Then print the 'petition'
     Then print the 'issuer public key'
-	Then print the 'uid' as 'string' inside 'petition' 
+	Then print the 'uid' from 'petition' as 'string'
 EOF
 
 cp -v ${out}/petition.json ${out}/petitionEmpty.json 
@@ -167,5 +167,5 @@ Scenario petition: count
     Given I have a valid 'petition tally'
     When I count the petition results
     Then print the 'petition results' as 'number'
-    Then print the 'uid' inside 'petition'
+    Then print the 'uid' from 'petition'
 EOF

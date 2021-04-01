@@ -6,4 +6,4 @@ Scenario 'ecdh': Bob decrypts the message from Alice
 	and I have a 'secret message'
 	When I decrypt the text of 'secret message' from 'Alice'
 	Then print the 'text' as 'string'
-	and print the 'header' as 'string' inside 'secret message'
+	and print the 'header' from 'secret message' as 'string'

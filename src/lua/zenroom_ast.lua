@@ -1,21 +1,24 @@
--- This file is part of Zenroom (https://zenroom.dyne.org)
+--[[
+--This file is part of zenroom
 --
--- Copyright (C) 2018-2021 Dyne.org foundation designed, written and
--- maintained by Denis Roio <jaromil@dyne.org>
+--Copyright (C) 2018-2021 Dyne.org foundation
+--designed, written and maintained by Denis Roio <jaromil@dyne.org>
 --
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU Affero General Public License as
--- published by the Free Software Foundation, either version 3 of the
--- License, or (at your option) any later version.
+--This program is free software: you can redistribute it and/or modify
+--it under the terms of the GNU Affero General Public License v3.0
 --
--- This program is distributed in the hope that it will be useful, but
--- WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
--- Affero General Public License for more details.
+--This program is distributed in the hope that it will be useful,
+--but WITHOUT ANY WARRANTY; without even the implied warranty of
+--MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--GNU Affero General Public License for more details.
 --
--- You should have received a copy of the GNU Affero General Public
--- License along with this program.  If not, see
--- <https://www.gnu.org/licenses/>.
+--Along with this program you should have received a copy of the
+--GNU Affero General Public License v3.0
+--If not, see http://www.gnu.org/licenses/agpl.txt
+--
+--Last modified by Denis Roio
+--on Thursday, 1st April 2021
+--]]
 
 function zencode_iscomment(b)
 	local x = string.char(b:byte(1))
@@ -44,10 +47,15 @@ end
 function set_sentence(self, event, from, to, ctx)
 	local reg = ctx.Z[self.current .. '_steps']
 	ctx.Z.OK = false
+	xxx('Zencode AST from: ' .. from .. " to: "..to)
 	ZEN.assert(
 		reg,
 		'Steps register not found: ' .. self.current .. '_steps'
 	)
+	-- ignore 'the' only in Then statements
+	if to == 'then' then
+			ctx.msg = string.gsub(ctx.msg:lower(), ' the ', ' ', 1)
+	end
 	for pattern, func in pairs(reg) do
 		if (type(func) ~= 'function') then
 			error('Zencode function missing: ' .. pattern, 2)
@@ -72,7 +80,7 @@ function set_sentence(self, event, from, to, ctx)
 			local args = {} -- handle multiple arguments in same string
 			for arg in string.gmatch(ctx.msg, "'(.-)'") do
 				-- convert all spaces to underscore in argument strings
-				arg = string.gsub(arg, ' ', '_')
+				arg = uscore(arg, ' ', '_')
 				table.insert(args, arg)
 			end
 			ctx.Z.id = ctx.Z.id + 1

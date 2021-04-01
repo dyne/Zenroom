@@ -41,7 +41,7 @@ Given I have a 'secret message'
 When I write string 'my secret word' in 'password'
 and I decrypt the text of 'secret message' with 'password'
 Then print the 'text' as 'string'
-and print the 'header' as 'string' in 'secret message'
+and print the 'header' from 'secret message' as 'string'
 EOF
 
 cat <<EOF | zexe alice_keygen.zen > alice_keypair.json
@@ -78,7 +78,7 @@ Scenario 'ecdh': Bob verifies the signature from Alice
 	and I have a 'signature' from 'Alice'
 	and I have a 'string' named 'draft' in 'Alice'
 	When I verify the 'draft' is signed by 'Alice'
-	Then print 'signature correct'
+	Then print the string 'signature correct'
 	and print the 'draft' as 'string'
 EOF
 
@@ -127,7 +127,7 @@ Scenario 'ecdh': Bob decrypts the message from Alice
 	and I have a 'secret message'
 	When I decrypt the text of 'secret message' from 'Alice'
 	Then print the 'text' as 'string'
-	and print the 'header' as 'string' inside 'secret message'
+	and print the 'header' from 'secret message' as 'string'
 EOF
 
 success
