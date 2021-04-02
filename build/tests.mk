@@ -101,7 +101,7 @@ zencode-integration = \
 	cd test/zencode_hash && ./run.sh; cd -; \
 	cd test/zencode_ecdh && ./run.sh; cd -; \
 	cd test/zencode_credential && ./run.sh; cd -; \
-	cd test/zencode_petition && ./run.sh; cd -;
+	cd test/zencode_petition && ./run.sh; cd -; \
 	cd test/zencode_reflow && ./run.sh; cd -;
 
 
