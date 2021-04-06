@@ -172,7 +172,7 @@ Given I have my 'keys'
 and I have a 'public key' from 'Bob'
 and I have a 'public key' from 'Carl'
 # Load Arrays
-# Given I have a 'string array' named 'myStringArray_1' inside 'myObject'
+Given I have a 'string array' named 'myStringArray_1' inside 'myObject'
 Given I have a 'string array' named 'myStringArray_2' inside 'myObject'
 Given I have a 'string array' named 'myStringArray_3' inside 'myObject'
 Given I have a 'string array' named 'myStringArray_4' inside 'myObject' 
@@ -465,7 +465,7 @@ cat <<EOF  > $tmpThen4
 
 When I create the issuer public key
 # This prints a child of dictionary, which can be a string (like here) or another dictionary
-Then print the 'maxPricePerKG' in 'salesReport'
+Then print the 'maxPricePerKG' from 'salesReport'
 
 # This prints the "verifier", that is the cryptographical object produced by an issuer that is publicly accessible
 # in order to match it with the proofs. 
