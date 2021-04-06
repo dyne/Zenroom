@@ -29,7 +29,7 @@ function zencode_iscomment(b)
 	end
 end
 function zencode_isempty(b)
-	if b == nil or b == '' then
+	if b == nil or trim(b) == '' then
 		return true
 	else
 		return false

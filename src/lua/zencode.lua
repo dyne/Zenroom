@@ -220,17 +220,21 @@ end
 
 
 function zencode:parse(text)
-   if  #text < 9 then -- strlen("and debug") == 9
+	if  #text < 9 then -- strlen("and debug") == 9
    	  warn("Zencode text too short to parse")
-   	  return false end
+		 return false
+	end
+	local linenum=0
    -- xxx(text,3)
    for line in zencode_newline_iter(text) do
+	linenum = linenum + 1
 	  if zencode_isempty(line) then goto continue end
 	  if zencode_iscomment(line) then goto continue end
+	--   xxx(2, 'Line: '.. text)
 	  -- max length for single zencode line is #define MAX_LINE
 	  -- hard-coded inside zenroom.h
 	  local prefix = parse_prefix(line)
-	  self.assert(prefix, "Invalid Zencode line: "..line)
+	  self.assert(prefix, "Invalid Zencode line "..linenum..": "..line)
 	  local defs -- parse in what phase are we
 	  self.OK = true
 	  exitcode(0)
