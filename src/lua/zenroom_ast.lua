@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Thursday, 1st April 2021
+--on Tuesday, 6th April 2021
 --]]
 
 function zencode_iscomment(b)
@@ -52,30 +52,31 @@ function set_sentence(self, event, from, to, ctx)
 		reg,
 		'Steps register not found: ' .. self.current .. '_steps'
 	)
+	-- TODO: optimize in C
+	-- remove '' contents, lower everything, expunge prefixes
 	-- ignore 'the' only in Then statements
+	local tt = string.gsub(trim(ctx.msg), "'(.-)'", "''")
 	if to == 'then' then
-			ctx.msg = string.gsub(ctx.msg:lower(), ' the ', ' ', 1)
+		tt = string.gsub(tt, ' the ', ' ', 1)
 	end
+	tt = string.gsub(tt, ' +', ' ') -- eliminate multiple internal spaces
+	tt = string.gsub(tt, 'I ', '', 1)
+	tt = string.gsub(tt:lower(), 'when ', '', 1)
+	tt = string.gsub(tt, 'then ', '', 1)
+	tt = string.gsub(tt, 'given ', '', 1)
+	tt = string.gsub(tt, 'and ', '', 1) -- TODO: expunge only first 'and'
+	tt = string.gsub(tt, 'that ', '', 1)
+	tt = string.gsub(tt, 'valid ', '', 1) -- backward compat
+	tt = string.gsub(tt, 'known as ', '', 1)
+	tt = string.gsub(tt, 'all ', '', 1)
+	tt = string.gsub(tt, ' inside ', ' in ', 1) -- equivalence
+	tt = string.gsub(tt, ' an ', ' a ', 1)
+
 	for pattern, func in pairs(reg) do
 		if (type(func) ~= 'function') then
 			error('Zencode function missing: ' .. pattern, 2)
 			return false
 		end
-		-- TODO: optimize in C
-		-- remove '' contents, lower everything, expunge prefixes
-		local tt = string.gsub(trim(ctx.msg), "'(.-)'", "''")
-		tt = tt:gsub(' +', ' ') -- eliminate multiple internal spaces
-		tt = string.gsub(tt, 'I ', '', 1)
-		tt = string.gsub(tt:lower(), 'when ', '', 1)
-		tt = string.gsub(tt, 'then ', '', 1)
-		tt = string.gsub(tt, 'given ', '', 1)
-		tt = string.gsub(tt, 'and ', '', 1) -- TODO: expunge only first 'and'
-		tt = string.gsub(tt, 'that ', '', 1)
-		tt = string.gsub(tt, 'valid ', '', 1) -- backward compat
-		tt = string.gsub(tt, 'known as ', '', 1)
-		tt = string.gsub(tt, 'all ', '', 1)
-		tt = string.gsub(tt, ' inside ', ' in ', 1) -- equivalence
-		tt = string.gsub(tt, ' an ', ' a ', 1)
 		if strcasecmp(tt, pattern) then
 			local args = {} -- handle multiple arguments in same string
 			for arg in string.gmatch(ctx.msg, "'(.-)'") do

@@ -343,7 +343,7 @@ cat << EOF | zexe ${out}/verify_sign.zen -a ${out}/multisignature.json | jq .
 Scenario reflow
 Given I have a 'reflow session'
 When I verify the reflow session is valid
-Then print 'SUCCESS'
+Then print the string 'SUCCESS'
 and print the 'reflow session'
 EOF
 }

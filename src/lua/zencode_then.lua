@@ -17,12 +17,23 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Thursday, 1st April 2021
+--on Friday, 2nd April 2021
 --]]
 
---- THEN
-
---------------------------------------
+--- THEN combinations:
+-- the
+-- the from
+-- the as
+-- the in
+-- my
+-- my from
+-- my as
+-- the from as
+-- the from in
+-- the as in
+-- the from as in
+-- my from as
+----------------------
 
 local function then_outcast(val, sch)
 	if not val then
