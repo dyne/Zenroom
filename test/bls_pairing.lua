@@ -109,9 +109,19 @@ assert( PAIR.ate(pk, hm) == PAIR.ate(G2, sm),
         "BLS Signature doesn't validates")
 
 -- check verify fails on wrong sig
-hm = ECP.hashtopoint(msg..str("!!"))
-assert( PAIR.ate(pk, hm) ~= PAIR.ate(G2, sm),
+hmwrong = ECP.hashtopoint(msg..str("!!"))
+assert( PAIR.ate(pk, hmwrong) ~= PAIR.ate(G2, sm),
         "BLS Signature validates incorrectly")
+
+print'Test BLS aggregated signatures'
+sk2 = INT.random()
+pk2 = G2 * sk2
+sm2 = ECP.hashtopoint(msg) * sk2
+assert( PAIR.ate(pk2, hm) == PAIR.ate(G2, sm2),
+        "BLS Signature 2 doesn't validates")
+assert( PAIR.ate(pk + pk2, hm) == PAIR.ate(G2, sm + sm2),
+        "BLS Signature aggregation doesn't validates")
+
 
 print("Test tripartite shared secret")
 -- Parties A,B,C generate random a,b,c ∈ Zr
