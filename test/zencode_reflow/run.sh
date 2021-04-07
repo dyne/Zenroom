@@ -92,35 +92,37 @@ echo "{\"public_keys\": `cat public_keys.json` }" > public_key_array.json
 # make a uid using the current timestamp
 echo "{\"today\": \"`date +'%s'`\"}" > uid.json
 
-# anyone can start a session
+# anyone can start a seal
 
-# SIGNING SESSION
-cat <<EOF | debug session_start.zen -k uid.json -a public_key_array.json > reflow_session.json
+# SIGNING seal
+cat <<EOF | debug seal_start.zen -k uid.json -a public_key_array.json > reflow_seal.json
 Scenario reflow
 Given I have a 'bls public key array' named 'public keys'
 and I have a 'string' named 'today'
 When I aggregate the bls public key from array 'public keys'
 and I rename the 'bls public key' to 'reflow public key'
-and I create the reflow session with uid 'today'
-Then print the 'reflow session'
+and I create the reflow identity of 'today'
+and debug
+and I create the reflow seal with identity 'reflow identity'
+Then print the 'reflow seal'
 EOF
 #
 
 # anyone can require a verified credential to be able to sign, chosing
 # the right issuer verifier for it
-json_join issuer_verifier.json reflow_session.json > credential_to_sign.json
+json_join issuer_verifier.json reflow_seal.json > credential_to_sign.json
 
 
 # PARTICIPANT SIGNS (function)
 function participant_sign() {
 	local name=$1
-	cat <<EOF | zexe sign_session.zen -a credential_to_sign.json -k verified_credential_$name.json | tee signature_$name.json
+	cat <<EOF | zexe sign_seal.zen -a credential_to_sign.json -k verified_credential_$name.json | tee signature_$name.json
 Scenario reflow
 Scenario credential
 Given I am '$name'
 and I have my 'credentials'
 and I have my 'keys'
-and I have a 'reflow session'
+and I have a 'reflow seal'
 and I have a 'issuer public key' from 'The Authority'
 When I create the reflow signature
 Then print the 'reflow signature'
@@ -134,20 +136,20 @@ function collect_sign() {
 	local name=$1
 	local tmp_msig=`mktemp`
 	local tmp_sig=`mktemp`
-	cp -v reflow_session.json $tmp_msig
+	cp -v reflow_seal.json $tmp_msig
 	json_join issuer_verifier.json signature_$name.json > $tmp_sig
-	cat << EOF | zexe collect_sign.zen -a $tmp_msig -k $tmp_sig | tee reflow_session.json
+	cat << EOF | zexe collect_sign.zen -a $tmp_msig -k $tmp_sig | tee reflow_seal.json
 Scenario reflow
 Scenario credential
-Given I have a 'reflow session'
+Given I have a 'reflow seal'
 and I have a 'issuer public key' in 'The Authority'
 and I have a 'reflow signature'
 When I aggregate all the issuer public keys
 and I verify the reflow signature credential
 and I check the reflow signature fingerprint is new
-and I add the reflow fingerprint to the reflow session
-and I add the reflow signature to the reflow session
-Then print the 'reflow session'
+and I add the reflow fingerprint to the reflow seal
+and I add the reflow signature to the reflow seal
+Then print the 'reflow seal'
 EOF
 	rm -f $tmp_msig $tmp_sig
 }
@@ -157,11 +159,10 @@ collect_sign 'Alice'
 collect_sign 'Bob'
 
 # VERIFY SIGNATURE
-cat << EOF | zexe verify_sign.zen -a reflow_session.json | jq .
+cat << EOF | zexe verify_sign.zen -a reflow_seal.json | jq .
 Scenario reflow
-Given I have a 'reflow session'
-When I verify the reflow session is valid
+Given I have a 'reflow seal'
+When I verify the reflow seal is valid
 Then print the string 'SUCCESS'
-and print the 'reflow session'
+and print the 'reflow seal'
 EOF
-

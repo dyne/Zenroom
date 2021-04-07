@@ -22,7 +22,7 @@ ABC = require_once('crypto_credential')
 
 G2 = ECP2.generator()
 
-local function import_reflow_session_fingerprints_f(o)
+local function import_reflow_seal_fingerprints_f(o)
     if not o then
         return {}
     end
@@ -39,19 +39,19 @@ ZEN.add_schema(
         bls_public_key = function(obj)
             return ECP2.new(CONF.input.encoding.fun(obj))
         end,
-        reflow_session = function(obj)
+        reflow_seal = function(obj)
             return {
-                UID = ZEN.get(obj, 'UID', ECP.new),
+                identity = ZEN.get(obj, 'identity', ECP.new),
                 SM = ZEN.get(obj, 'SM', ECP.new),
                 verifier = ZEN.get(obj, 'verifier', ECP2.new),
-                fingerprints = import_reflow_session_fingerprints_f(
+                fingerprints = import_reflow_seal_fingerprints_f(
                     obj.fingerprints
                 )
             }
         end,
         reflow_signature = function(obj)
             return {
-                UID = ZEN.get(obj, 'UID', ECP.new),
+                identity = ZEN.get(obj, 'identity', ECP.new),
                 signature = ZEN.get(obj, 'signature', ECP.new),
                 proof = import_credential_proof_f(obj.proof),
                 zeta = ZEN.get(obj, 'zeta', ECP.new)
@@ -83,7 +83,7 @@ When(
     function(arr)
         empty 'bls public key'
         local s = have(arr)
-        for k, v in pairs(s) do
+        for _, v in pairs(s) do
             if not ACK.bls_public_key then
                 ACK.bls_public_key = v
             else
@@ -94,44 +94,49 @@ When(
 )
 
 When(
-    "create the reflow hash of ''",
+    "create the reflow identity of ''",
     function(doc)
-        empty 'reflow hash'
+        empty 'reflow identity'
         have(doc)
         if luatype(doc) == 'table' then
-            ACK.reflow_hash = ZEN.serialize(ECP.hashtopoint(doc))
+            ACK.reflow_identity = ECP.hashtopoint(ZEN.serialize(doc))
         else
-            ACK.reflow_hash = ECP.hashtopoint(doc)
+            ACK.reflow_identity = ECP.hashtopoint(doc)
         end
     end
 )
 
+local function _create_reflow_seal_f(uid)
+    empty 'reflow seal'
+    have(uid)
+    have 'reflow public key'
+    local UID = ACK[uid]
+    ZEN.assert(type(UID) == 'zenroom.ecp',
+                            "Invalid reflow identity: "
+                            ..uid.." ("..type(UID)..")")
+    local r = INT.random()
+    ACK.reflow_seal = {
+        identity = UID,
+        SM = UID * r,
+        verifier = ACK.reflow_public_key + G2 * r
+    }
+end
+
 When(
-    "create the reflow session with UID ''",
-    function(uid)
-        empty 'reflow session'
-        have(uid)
-        have 'reflow public key'
-        -- init random and uid
-        local UID = ECP.hashtopoint(uid)
-        local r = INT.random()
-        ACK.reflow_session = {
-            UID = UID,
-            SM = UID * r,
-            verifier = ACK.reflow_public_key + G2 * r
-        }
-    end
-)
+    "create the reflow seal with identity ''",
+    _create_reflow_seal_f)
+When("create the reflow seal",
+    function() _create_reflow_seal_f('reflow identity') end)
 
 When(
     'create the reflow signature',
     function()
         empty 'reflow signature'
-        have 'reflow session'
+        have 'reflow seal'
         have 'issuer public key'
         -- aggregate all credentials
         local pubcred = false
-        for k, v in pairs(ACK.issuer_public_key) do
+        for _, v in pairs(ACK.issuer_public_key) do
             if not pubcred then
                 pubcred = v
             else
@@ -146,11 +151,11 @@ When(
             pubcred,
             ACK.credentials,
             ACK.keys.credential,
-            ACK.reflow_session.UID
+            ACK.reflow_seal.identity
         )
         ACK.reflow_signature = {
-            UID = ACK.reflow_session.UID,
-            signature = ACK.reflow_session.UID * ACK.keys.bls,
+            identity = ACK.reflow_seal.identity,
+            signature = ACK.reflow_seal.identity * ACK.keys.bls,
             proof = p,
             zeta = z
         }
@@ -162,7 +167,7 @@ When(
     function()
         have 'credential'
         local res = false
-        for k, v in pairs(ACK.issuer_public_key) do
+        for _, v in pairs(ACK.issuer_public_key) do
             if not res then
                 res = {alpha = v.alpha, beta = v.beta}
             else
@@ -179,13 +184,13 @@ When(
     function()
         have 'reflow_signature'
         have 'verifiers'
-        have 'reflow_session'
+        have 'reflow_seal'
         ZEN.assert(
             ABC.verify_cred_uid(
                 ACK.verifiers,
                 ACK.reflow_signature.proof,
                 ACK.reflow_signature.zeta,
-                ACK.reflow_session.UID
+                ACK.reflow_seal.identity
             ),
             'Signature has an invalid credential to sign'
         )
@@ -196,31 +201,29 @@ When(
     'check the reflow signature fingerprint is new',
     function()
         have 'reflow_signature'
-        have 'reflow_session'
-        if not ACK.reflow_session.fingerprints then
+        have 'reflow_seal'
+        if not ACK.reflow_seal.fingerprints then
             return
         end
         ZEN.assert(
-            not ACK.reflow_session.fingerprints[
-                ACK.reflow_signature.zeta
-            ],
+            not ACK.reflow_seal.fingerprints[ACK.reflow_signature.zeta],
             'Signature fingerprint is not new'
         )
     end
 )
 
 When(
-    'add the reflow fingerprint to the reflow session',
+    'add the reflow fingerprint to the reflow seal',
     function()
         have 'reflow_signature'
-        have 'reflow_session'
-        if not ACK.reflow_session.fingerprints then
-            ACK.reflow_session.fingerprints = {
+        have 'reflow_seal'
+        if not ACK.reflow_seal.fingerprints then
+            ACK.reflow_seal.fingerprints = {
                 ACK.reflow_signature.zeta
             }
         else
             table.insert(
-                ACK.reflow_session.fingerprints,
+                ACK.reflow_seal.fingerprints,
                 ACK.reflow_signature.zeta
             )
         end
@@ -228,26 +231,51 @@ When(
 )
 
 When(
-    'add the reflow signature to the reflow session',
+    'add the reflow signature to the reflow seal',
     function()
-        have 'reflow_session'
+        have 'reflow_seal'
         have 'reflow_signature'
-        ACK.reflow_session.SM =
-            ACK.reflow_session.SM +
-            ACK.reflow_signature.signature
+        ACK.reflow_seal.SM =
+            ACK.reflow_seal.SM + ACK.reflow_signature.signature
     end
 )
 
 When(
-    'verify the reflow session is valid',
+    'verify the reflow seal is valid',
     function()
-        have 'reflow_session'
+        have 'reflow_seal'
         ZEN.assert(
-            ECP2.miller(
-                ACK.reflow_session.verifier,
-                ACK.reflow_session.UID
-            ) == ECP2.miller(G2, ACK.reflow_session.SM),
-            "reflow session doesn't validates"
+            ECP2.miller(ACK.reflow_seal.verifier, ACK.reflow_seal.identity)
+            ==
+            ECP2.miller(G2, ACK.reflow_seal.SM),
+            "reflow seal doesn't validates"
         )
+    end
+)
+
+When(
+    "aggregate the reflow seal array in ''",
+    function(arr)
+        have(arr)
+        empty 'reflow seal'
+        local dst = {}
+        for _, v in pairs(ACK[arr]) do
+            if not dst.UID then
+                dst.UID = v.UID
+            else
+                dst.UID = dst.UID + v.UID
+            end
+            if not dst.SM then
+                dst.SM = v.SM
+            else
+                dst.SM = dst.SM + v.SM
+            end
+            if not dst.verifier then
+                dst.verifier = v.verifier
+            else
+                dst.verifier = dst.verifier + v.verifier
+            end
+        end
+        ACK.reflow_seal = dst
     end
 )
