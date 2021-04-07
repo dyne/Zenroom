@@ -54,6 +54,11 @@
   "myNumber_3": 1.234568e+28,
   "myNumber_4": 1.234568e+28,
   "myNumber_5": 1.234568e+28,
+  "myStringArray_1": [
+    "Hello World! --- 1",
+    "Hello World! --- 2",
+    "Hello World! --- 3"
+  ],
   "myStringArray_2": [
     "SGVsbG8gV29ybGQhIC0tLSAx",
     "SGVsbG8gV29ybGQhIC0tLSAy",

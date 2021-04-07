@@ -165,6 +165,8 @@ Given I have a 'string' named 'myFourthString' inside 'myFourthObject'
 Given I have a 'string' named 'myFifthString' inside 'myFourthObject'
 Given I have a 'string' named 'mySixthString' inside 'myFourthObject'
 Given I have a 'string' named 'mySeventhString' inside 'myFourthObject'
+Given I have a 'string' named 'myNinthEqualString' inside 'myFourthObject'
+Given I have a 'string' named 'myEightEqualString' inside 'myFourthObject'
 Given I have a 'string' named 'myTenthString' inside 'myFourthObject'
 Given I have a 'string' named 'myEleventhStringToBeHashed' inside 'myFourthObject'
 Given I have a 'string' named 'myTwelfthStringToBeHashedUsingPBKDF2' inside 'myFourthObject' 
@@ -352,7 +354,7 @@ And I rename the 'cbor' to 'myArrayRenderedToCBOR'
 # smart contract execution session, via the "config" parameter. 
 # Note that, in order to create a keypair, you'll need to declare the identity of the script
 # executor, which is done in the Given phase
- 
+
 # Note: we're renaming the created keypairs exclusively cause we're generating 2 keypairs 
 # in the same script, so the second would overwrite the first. In reality you never want to 
 # rename a keypair, as its schema is hardcoded in Zenroom and cryptographically it doesn't make sense

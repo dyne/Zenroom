@@ -7,7 +7,7 @@ Given I have my 'keys'
 and I have a 'public key' from 'Bob'
 and I have a 'public key' from 'Carl'
 # Load Arrays
-# Given I have a 'string array' named 'myStringArray_1' inside 'myObject'
+Given I have a 'string array' named 'myStringArray_1' inside 'myObject'
 Given I have a 'string array' named 'myStringArray_2' inside 'myObject'
 Given I have a 'string array' named 'myStringArray_3' inside 'myObject'
 Given I have a 'string array' named 'myStringArray_4' inside 'myObject' 

@@ -15,4 +15,4 @@ When I verify the 'myStringArray' has a signature in 'myStringArray.signature' b
 
 # Here we're printing the original message along with happy statement of success
 Then print the 'myMessage'
-Then print 'Zenroom certifies that signatures are all correct!' as 'string'
+Then print the string 'Zenroom certifies that signatures are all correct!'
