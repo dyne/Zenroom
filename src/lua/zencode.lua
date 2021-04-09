@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Wednesday, 7th April 2021
+--on Friday, 9th April 2021
 --]]
 --- <h1>Zencode language parser</h1>
 --
@@ -374,22 +374,24 @@ function zencode:run()
 end
 
 function zencode.to_octet(A)
-	local lt = luatype(A)
-	ZEN.assert(
-		not (t == 'table'),
-		'Cannot convert table to octet, use zencode.serialize',
-		2
-	)
+	local t = luatype(A)
+	if t == 'table' then
+		error('Cannot convert table to octet, use zencode.serialize',2)
+	end
 	if t == 'number' then
 		return O.from_string(tostring(A))
 	else
-		if type(A) == 'zenroom.octet' then
+		local zt = type(A)
+		if not iszen(zt) then
+			error('Cannot convert value to octet: '..zt, 2)
+		end
+		if zt == 'zenroom.octet' then
 			return A
-		else -- all other types have :octet() method to export
+		else -- all other zenroom types have :octet() method to export
 			return A:octet()
 		end
 	end
-	error('Unknown type, cannot convert to octet', 2)
+	error('Unknown type, cannot convert to octet: '..type(A), 2)
 end
 
 function zencode.serialize(A)

@@ -17,35 +17,49 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Wednesday, 7th April 2021
+--on Friday, 9th April 2021
 --]]
+-- generic comparison using overloaded __eq on values
+local function _eq(left, right)
+  if luatype(left) == 'number' and luatype(right) == 'number' then
+    return (left == right)
+  else
+    return (ZEN.serialize(left) == ZEN.serialize(right))
+  end
+end
+local function _neq(left, right)
+  if luatype(left) == 'number' and luatype(right) == 'number' then
+    return (left ~= right)
+  else
+    return (ZEN.serialize(left) ~= ZEN.serialize(right))
+  end
+end
 
--- generic comparison using overloaded __eq on any value
 When(
   "verify '' is equal to ''",
   function(l, r)
     local left = have(l)
     local right = have(r)
     ZEN.assert(
-      ZEN.serialize(left) == ZEN.serialize(right),
-      'Verification failed: elements are not equal: ' ..
-        l .. ' == ' .. r
+      _eq(left, right),
+      'Verification fail: elements are not equal: ' .. l .. ' == ' .. r
     )
   end
 )
 
-When("verify '' is not equal to ''",
+When(
+  "verify '' is not equal to ''",
   function(l, r)
     local left = have(l)
     local right = have(r)
     ZEN.assert(
-      ZEN.serialize(left) ~= ZEN.serialize(right),
-      'Verification failed: elements are equal: ' ..
-        l .. ' == ' .. r
+      _neq(left, right),
+      'Verification fail: elements are equal: ' .. l .. ' == ' .. r
     )
-  end)
+  end
+)
 
-  -- comparison inside dictionary
+-- comparison inside dictionary
 When(
   "verify '' is equal to '' in ''",
   function(l, tr, tt)
@@ -53,8 +67,8 @@ When(
     local tab = have(tt)
     local right = tab[tr]
     ZEN.assert(
-      ZEN.serialize(left) == ZEN.serialize(right),
-      'Verification failed: elements are not equal: ' ..
+      _eq(left, right),
+      'Verification fail: elements are not equal: ' ..
         l .. ' == ' .. tt .. '.' .. tr
     )
   end
@@ -67,43 +81,60 @@ When(
     local tab = have(tt)
     local right = tab[tr]
     ZEN.assert(
-      ZEN.serialize(left) ~= ZEN.serialize(right),
-      'Verification failed: elements are equal: ' ..
+      _neq(left, right),
+      'Verification fail: elements are equal: ' ..
         l .. ' == ' .. tt .. '.' .. tr
     )
   end
 )
 
--- check a tuple of numbers before comparison, convert from octet if necessary
--- TODO: improve this and avoid using Lua's numeric values
+-- check a tuple of numbers before comparison, convert to BIG or number
 local function numcheck(left, right)
   local al, ar
-  ZEN.assert(left, 'numcheck left object not found')
-  if type(left) == 'zenroom.octet' then
-    al = BIG.new(left):integer()
-  else
+  --
+  if left == nil then
+    error('1st argument of numerical comparison is nil', 2)
+  end
+  local tl = type(left)
+  if not iszen(tl) then
+    if tl ~= 'number' then
+      error('1st argument invalid numeric type: ' .. tl, 2)
+    end
+  end
+  if tl == 'zenroom.octet' then
+    al = BIG.new(left)
+  elseif tl == 'zenroom.big' or tl == 'number' then
     al = left
-  end
-  local l = tonumber(al)
-  ZEN.assert(l, 'Invalid numcheck left argument: ' .. type(left))
-
-  ZEN.assert(right, 'numcheck right object not found')
-  if type(right) == 'zenroom.octet' then
-    ar = BIG.new(right):integer()
   else
-    ar = right
+    al = left:octet()
   end
-  local r = tonumber(ar)
-  ZEN.assert(r, 'Invalid numerical in right argument: ' .. type(right))
-  return l, r
+  --
+  if right == nil then
+    error('2nd argument of numerical comparison is nil', 2)
+  end
+  local tr = type(right)
+  if not iszen(tr) then
+    if tr ~= 'number' then
+      error('2nd argument invalid numeric type: ' .. tr, 2)
+    end
+  end
+  if tr == 'zenroom.octet' then
+    ar = BIG.new(right)
+  elseif tr == 'zenroom.big' or tr == 'number' then
+    ar = right
+  else
+    ar = right:octet()
+  end
+  return al, ar
 end
+
 When(
   "number '' is less than ''",
   function(left, right)
     local l, r = numcheck(ACK[left], ACK[right])
     ZEN.assert(
       l < r,
-      'Failed comparison: ' .. l .. ' is not less than ' .. r
+      'Comparison fail: ' .. left .. ' is not less than ' .. right
     )
   end
 )
@@ -113,7 +144,8 @@ When(
     local l, r = numcheck(ACK[left], ACK[right])
     ZEN.assert(
       l <= r,
-      'Failed comparison: ' .. l .. ' is not less or equal than ' .. r
+      'Comparison fail: ' ..
+        left .. ' is not less or equal than ' .. right
     )
   end
 )
@@ -122,8 +154,8 @@ When(
   function(left, right)
     local l, r = numcheck(ACK[left], ACK[right])
     ZEN.assert(
-      l > r,
-      'Failed comparison: ' .. l .. ' is not more than ' .. r
+      r < l,
+      'Comparison fail: ' .. left .. ' is not more than ' .. right
     )
   end
 )
@@ -132,8 +164,9 @@ When(
   function(left, right)
     local l, r = numcheck(ACK[left], ACK[right])
     ZEN.assert(
-      l >= r,
-      'Failed comparison: ' .. l .. ' is not more or equal than ' .. r
+      r <= l,
+      'Comparison fail: ' ..
+        left .. ' is not more or equal than ' .. right
     )
   end
 )

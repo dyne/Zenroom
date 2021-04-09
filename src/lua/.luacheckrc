@@ -7,7 +7,7 @@ globals = {
     'empty', 'have', 'initkeys', 'havekey',
     'G2','ABC','ECDH',
     'check_codec', 'ZKP_challenge', 'sha256', 'sha512',
-    'act', 'notice', 'warn', 'error', 'fatal', 'trim', 'serialize',
+    'act', 'notice', 'warn', 'error', 'fatal', 'trim', 'serialize', 'iszen',
     'DEBUG', 'ZEN_traceback', 'input_encoding', 'output_encoding', 'get_format'
     }
 local _columns = 72
