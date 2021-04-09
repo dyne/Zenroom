@@ -4,7 +4,7 @@ make cortex-arm
 
 # To launch in qemu
 ```
-qemu-system-arm -M lm3s6965evb --kernel src/zenroom.bin -nographic -S -gdb tcp::3333 
+qemu-system-arm -M mps2-an385 --kernel src/zenroom.bin -nographic -semihosting -S -gdb tcp::3333 
 ```
 # To connect from gdb-multiarch
 ```
