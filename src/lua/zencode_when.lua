@@ -237,3 +237,23 @@ end)
 -- When("write '' as '' in ''", function(content, dest) end)
 -- implicit conversion as string
 
+-- https://github.com/dyne/Zenroom/issues/175
+When("remove zero values in ''", function(target)
+	have(target)
+	ACK[target] = deepmap(function(v)
+		if luatype(v) == 'number' then
+			if v == 0 then
+				return nil
+			else
+				return v
+			end
+		else
+			return v
+		end
+	end, ACK[target])
+end)
+
+-- When("remove all empty strings in ''", function(target)
+-- 	have(target)
+-- 	ACK[target] = deepmap(function(v) if trim(v) == '' then return nil end, ACK[target])
+-- end)
