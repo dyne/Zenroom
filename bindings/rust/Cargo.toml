@@ -1,0 +1,11 @@
+[package]
+name = "zenroom"
+version = "0.1.0"
+authors = ["Danilo Spinella <oss@danyspin97.org>"]
+edition = "2018"
+
+[build-dependencies]
+bindgen = "0.53.1"
+
+[dev-dependencies]
+serde_json = "1.0"
