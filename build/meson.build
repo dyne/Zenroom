@@ -31,7 +31,7 @@ add_project_arguments(
 ecdh_curve = get_option('ecdh_curve')
 ecp_curve = get_option('ecp_curve')
 zen_ecdh_factory = custom_target('generate_ecdh_factory',
-    command: ['../build/codegen_ecdh_factory.sh', ecdh_curve, '@OUTPUT@'],
+    command: ['/bin/sh', '@SOURCE_ROOT@/codegen_ecdh_factory.sh', ecdh_curve, '@OUTPUT@', '@SOURCE_ROOT@'],
     output: 'zen_ecdh_factory.c',
     build_by_default: true
 )
