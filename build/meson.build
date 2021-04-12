@@ -108,7 +108,6 @@ lua_dep = declare_dependency(
 
 zenroom_src = [
     '../src/base58.c',
-    '../src/cli.c',
     '../src/cortex_m.c',
     '../src/encoding.c',
     '../src/jutils.c',
@@ -152,6 +151,7 @@ both_libraries(
 executable(
     'zenroom',
     zenroom_src,
+    '../src/cli.c',
     include_directories: [
         zenroom_include_dirs,
         milagro_include_dirs,
