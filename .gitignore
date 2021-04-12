@@ -58,4 +58,5 @@ lib/milagro-crypto-c/CPackConfig.cmake
 CPack*
 CTest*
 
-
+# generated files by cargo
+bindings/rust/target/
