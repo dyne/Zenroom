@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Friday, 9th April 2021
+--on Tuesday, 13th April 2021
 --]]
 
 --- WHEN
@@ -146,89 +146,176 @@ When("split the leftmost '' bytes of ''", function(len, src)
 	ZEN.CODEC.leftmost = ZEN.CODEC[src]
 end)
 
+local function _numinput(num)
+	local t = type(num)
+	if not iszen(t) then
+		if t == 'table' then -- TODO: only numbers supported, not zenroom.big
+			local aggr = 0
+			for k,v in pairs(num) do
+				aggr = aggr + _numinput(v)
+			end
+			return aggr, false
+		elseif t ~= 'number' then
+			error('Invalid numeric type: ' .. t, 2)
+		end
+		return num, false
+	end
+	local res
+	if t == 'zenroom.octet' then
+		return BIG.new(num), true
+	elseif t == 'zenroom.big' then
+		return num, true
+	else
+		return BIG.new(num:octet()), true -- may give internal errors
+	end
+	error("Invalid number", 2)
+	return nil, false
+end
+
+-- escape math function overloads for pointers
+local function _add(l,r) return(l + r) end
+local function _sub(l,r) return(l - r) end
+local function _mul(l,r) return(l * r) end
+local function _div(l,r) return(l / r) end
+local function _mod(l,r) return(l % r) end
+
+local function _math_op(op, l, r)
+	local left, lz  = _numinput(l)
+	local right, rz = _numinput(r)
+	if lz ~= rz then error("Incompatible numeric arguments", 2) end
+	local codec
+	if lz and rz then
+		codec = {	name = result,
+					encoding = CONF.output.encoding.name,
+					luatype = 'string',
+					zentype = 'big' }
+	else
+		codec =  {	name = result,
+					encoding = 'number',
+		 			luatype = 'number',
+					zentype = 'element' }
+	end
+	return op(left, right), codec
+end
+
 When("create the result of '' + ''", function(left,right)
-	have(left)
-	have(right)
-	empty'result'
-    local l = 0
-	if ZEN.CODEC[left].zentype == 'array' then
-	   for k,v in ipairs(ACK[left]) do l = l + tonumber(v) end
-	else
-	   l = tonumber(ACK[left])
-	end
-       ZEN.assert(l, "Invalid number in element: "..left)
-	local r = 0
-	if ZEN.CODEC[right].zentype == 'array' then
-	   for k,v in ipairs(ACK[right]) do r = r + tonumber(v) end
-	else
-	   r = tonumber(ACK[right])
-	end
-       ZEN.assert(r, "Invalid number in element: "..right)
-       ACK.result = l + r
-       ZEN.CODEC.result = { name = result,
-                            encoding = 'number',
-                             luatype = 'number',
-							 zentype = 'element' }
+	local l = have(left)
+	local r = have(right)
+	empty 'result'
+	ACK.result, ZEN.CODEC.result = _math_op(_add, l, r)
+end)
+
+When("create the result of '' in '' + ''", function(left, dict, right)
+	local d = have(dict)
+	local l = d[left]
+	local r = have(right)
+	empty 'result'
+	ACK.result, ZEN.CODEC.result = _math_op(_add, l, r)
+end)
+
+When("create the result of '' in '' + '' in ''", function(left, ldict, right, rdict)
+	local ld = have(ldict)
+	local l = ld[left]
+	local rd = have(rdict)
+	local r = rd[right]
+	empty 'result'
+	ACK.result, ZEN.CODEC.result = _math_op(_add, l, r)
 end)
 
 When("create the result of '' - ''", function(left,right)
-	have(left)
-	have(right)
-	empty'result'
-	    local l = tonumber(ACK[left])
-        ZEN.assert(l, "Invalid number in element: "..left)
-        local r = tonumber(ACK[right])
-        ZEN.assert(r, "Invalid number in element: "..right)
-	    ACK.result = l - r
-        ZEN.CODEC.result = { name = result,
-							 encoding = 'number',
-							 luatype = 'number',
-							 zentype = 'element' }
+	local l = have(left)
+	local r = have(right)
+	empty 'result'
+	ACK.result, ZEN.CODEC.result = _math_op(_sub, l, r)
+end)
+
+When("create the result of '' in '' - ''", function(left, dict, right)
+	local d = have(dict)
+	local l = d[left]
+	local r = have(right)
+	empty 'result'
+	ACK.result, ZEN.CODEC.result = _math_op(_sub, l, r)
+end)
+
+When("create the result of '' in '' - '' in ''", function(left, ldict, right, rdict)
+	local ld = have(ldict)
+	local l = ld[left]
+	local rd = have(rdict)
+	local r = rd[right]
+	empty 'result'
+	ACK.result, ZEN.CODEC.result = _math_op(_sub, l, r)
 end)
 
 When("create the result of '' * ''", function(left,right)
-	have(left)
-	have(right)
-	empty'result'
-    local l = tonumber(ACK[left])
-        ZEN.assert(l, "Invalid number in element: "..left)
-        local r = tonumber(ACK[right])
-        ZEN.assert(r, "Invalid number in element: "..right)
-        ACK.result = l * r
-        ZEN.CODEC.result = { name = result,
-							 encoding = 'number',
-							 luatype = 'number',
-							 zentype = 'element' }
+	local l = have(left)
+	local r = have(right)
+	empty 'result'
+	ACK.result, ZEN.CODEC.result = _math_op(_mul, l, r)
+end)
+
+When("create the result of '' in '' * ''", function(left, dict, right)
+	local d = have(dict)
+	local l = d[left]
+	local r = have(right)
+	empty 'result'
+	ACK.result, ZEN.CODEC.result = _math_op(_mul, l, r)
+end)
+
+When("create the result of '' in '' * '' in ''", function(left, ldict, right, rdict)
+	local ld = have(ldict)
+	local l = ld[left]
+	local rd = have(rdict)
+	local r = rd[right]
+	empty 'result'
+	ACK.result, ZEN.CODEC.result = _math_op(_mul, l, r)
 end)
 
 When("create the result of '' / ''", function(left,right)
-	have(left)
-	have(right)
-	empty'result'
-        local l = tonumber(ACK[left])
-        ZEN.assert(l, "Invalid number in element: "..left)
-        local r = tonumber(ACK[right])
-        ZEN.assert(r, "Invalid number in element: "..right)
-        ACK.result = l / r
-        ZEN.CODEC.result = { name = result,
-							 encoding = 'number',
-							 luatype = 'number',
-							 zentype = 'element' }
+	local l = have(left)
+	local r = have(right)
+	empty 'result'
+	ACK.result, ZEN.CODEC.result = _math_op(_div, l, r)
+end)
+
+When("create the result of '' in '' / ''", function(left, dict, right)
+	local d = have(dict)
+	local l = d[left]
+	local r = have(right)
+	empty 'result'
+	ACK.result, ZEN.CODEC.result = _math_op(_div, l, r)
+end)
+
+When("create the result of '' in '' / '' in ''", function(left, ldict, right, rdict)
+	local ld = have(ldict)
+	local l = ld[left]
+	local rd = have(rdict)
+	local r = rd[right]
+	empty 'result'
+	ACK.result, ZEN.CODEC.result = _math_op(_div, l, r)
 end)
 
 When("create the result of '' % ''", function(left,right)
-	have(left)
-	have(right)
-	empty'result'
-        local l = tonumber(ACK[left])
-        ZEN.assert(l, "Invalid number in element: "..left)
-        local r = tonumber(ACK[right])
-        ZEN.assert(r, "Invalid number in element: "..right)
-        ACK.result = l % r
-        ZEN.CODEC.result = { name = result,
-							 encoding = 'number',
-							 luatype = 'number',
-							 zentype = 'element' }
+	local l = have(left)
+	local r = have(right)
+	empty 'result'
+	ACK.result, ZEN.CODEC.result = _math_op(_mod, l, r)
+end)
+
+When("create the result of '' in '' % ''", function(left, dict, right)
+	local d = have(dict)
+	local l = d[left]
+	local r = have(right)
+	empty 'result'
+	ACK.result, ZEN.CODEC.result = _math_op(_mod, l, r)
+end)
+
+When("create the result of '' in '' % '' in ''", function(left, ldict, right, rdict)
+	local ld = have(ldict)
+	local l = ld[left]
+	local rd = have(rdict)
+	local r = rd[right]
+	empty 'result'
+	ACK.result, ZEN.CODEC.result = _math_op(_mod, l, r)
 end)
 
 -- TODO:
