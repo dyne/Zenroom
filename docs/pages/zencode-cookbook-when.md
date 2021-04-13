@@ -235,6 +235,7 @@ Operations with dictionaries allow you to:
 
 ***Copy a dictionary***: copy a dictionary that is nested into another dictionary, at the root level of the data, to manipulate it more easily.
 
+***Math operations***: sum, subtraction, multiplication, division and modulo, between numbers found in dictionaries and numbers loaded individiually.
 
 
 
@@ -254,6 +255,7 @@ In the script below we will:
  - Inserting in the newly created dictionary, the output of the computation above
  - Singning the newly created dictionary using ECDSA cryptography
  - Printing out the newly created dictionary, its signature and a couple more objects
+ - Various sums, subtractions, multiplications, divisions
 
 This part of the script load the dictionaries along with some simple objects:
 
