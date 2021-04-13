@@ -15,7 +15,12 @@ fi
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
-cat <<EOF | zexe hash_left.zen | tee left.json
+# out=../../docs/examples/zencode_cookbook
+out=/dev/shm/files
+
+
+
+cat <<EOF | zexe ${out}/numbers_hash_left.zen | jq . | tee ${out}/numbers_left.json | jq 
 Given nothing
 When I write string 'a left string to be hashed' in 'source'
 and I create the hash of 'source'
@@ -23,7 +28,7 @@ and I rename 'hash' to 'left'
 Then print 'left'
 EOF
 
-cat <<EOF | zexe hash_right.zen | tee right.json
+cat <<EOF | zexe ${out}/numbers_hash_right.zen | jq . | tee ${out}/numbers_right.json | jq
 Given nothing
 When I write string 'a right string to be hashed' in 'source'
 and I create the hash of 'source'
@@ -31,12 +36,13 @@ and I rename 'hash' to 'right'
 Then print 'right'
 EOF
 
-cat <<EOF | zexe hash_eq.zen -a left.json -k right.json
+cat <<EOF | zexe ${out}/numbers_hash_eq.zen -a ${out}/numbers_left.json -k ${out}/numbers_right.json | jq
 Given I have a 'base64' named 'left'
 When I write string 'a left string to be hashed' in 'source'
 and I create the hash of 'source'
 When I verify 'left' is equal to 'hash'
 Then print the string 'OK'
+Then print data
 EOF
 
 # cat <<EOF | zexe hash_neq.zen -a left.json -k right.json
@@ -46,13 +52,14 @@ EOF
 # Then print the string 'OK'
 # EOF
 
-cat <<EOF | zexe num_eq_base10.zen
+cat <<EOF | zexe ${out}/numbers_num_eq_base10.zen | jq
 rule check version 1.0.0
 Given nothing
 When I write number '42' in 'left'
 and I write number '42' in 'right'
 and I verify 'left' is equal to 'right'
 Then print the string 'OK'
+Then print data
 EOF
 
 # cat <<EOF | zexe num_neq_base10.zen
@@ -65,13 +72,14 @@ EOF
 # EOF
 
 
-cat <<EOF | zexe cmp_base10.zen
+cat <<EOF | zexe ${out}/numbers_cmp_base10.zen | jq
 rule check version 1.0.0
 Given nothing
 When I write number '10' in 'left'
 and I write number '20' in 'right'
 and number 'left' is less or equal than 'right'
 Then print the string 'OK'
+Then print data
 EOF
 
 # cat <<EOF | zexe cmp_nlt_base10.zen
@@ -85,25 +93,27 @@ EOF
 
 
 
-cat <<EOF | zexe cmp_base16.zen
+cat <<EOF | zexe ${out}/numbers_cmp_base16.zen | jq
 rule check version 1.0.0
 Given nothing
 When I set 'left' to '0a' base '16'
 and I set 'right' to '14' base '16'
 and number 'left' is less or equal than 'right'
 Then print the string 'OK'
+Then print data
 EOF
 
-cat <<EOF | zexe cmp_base16_less.zen
+cat <<EOF | zexe ${out}/numbers_cmp_base16_less.zen | jq
 rule check version 1.0.0
 Given nothing
 When I set 'left' to '0a' base '16'
 and I set 'right' to '14' base '16'
 and number 'left' is less than 'right'
 Then print the string 'OK'
+Then print data
 EOF
 
-cat << EOF > zero_values.json
+cat << EOF > ${out}/numbers_zero_values.json | jq
 {"packet": {
 "Active_power_imported_kW":4.85835600,
 "Active_energy_imported_kWh":53.72700119,
@@ -135,7 +145,7 @@ cat << EOF > zero_values.json
 } }
 EOF
 
-cat << EOF | zexe remove_zero_values.zen -a zero_values.json
+cat << EOF | zexe ${out}/numbers_remove_zero_values.zen -a ${out}/numbers_zero_values.json | jq
 Given I have a 'string dictionary' named 'packet'
 When I remove zero values in 'packet'
 Then print all data

@@ -8,9 +8,13 @@ Scenario ecdh: dictionary computation and signing
 Given that I have a 'string dictionary' named 'TransactionsBatchA'
 Given that I have a 'string dictionary' named 'TransactionsBatchB'
 
+Given that I have a 'string dictionary' named 'TransactionAmountsA'
+Given that I have a 'string dictionary' named 'TransactionAmountsB'
+
 # Loading other stuff here
 Given that I have a 'number' named 'referenceTimestamp'
 Given that I have a 'number' named 'PricePerKG'
+Given that I have a 'number' named 'otherPricePerKG'
 Given that I have a 'string' named 'dictionaryToBeFound'
 Given that I have a 'string' named 'myVerySecretPassword'
 

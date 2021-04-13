@@ -178,98 +178,109 @@ EOF
 cat <<EOF > ../../docs/examples/zencode_cookbook/dictionariesBlockchain.json
 {
    "TransactionsBatchB":{
-   "Information":{
-         "Metadata": "TransactionsBatchB6789",
-		 "Buyer" : "John Doe"
+      "Information":{
+         "Metadata":"TransactionsBatchB6789",
+         "Buyer":"John Doe"
       },
       "ABC-Transactions1Data":{
          "timestamp":1597573139,
          "TransactionValue":1000,
-		 "PricePerKG":2,
+         "PricePerKG":2,
          "TransferredProductAmount":500,
-		 "UndeliveredProductAmount":100,
-		 "ProductPurchasePrice":1
+         "UndeliveredProductAmount":100,
+         "ProductPurchasePrice":1
       },
       "ABC-Transactions2Data":{
          "timestamp":1597573239,
          "TransactionValue":1000,
-		 "PricePerKG":2
+         "PricePerKG":2
       },
       "ABC-Transactions3Data":{
          "timestamp":1597573339,
          "TransactionValue":1000,
-		 "PricePerKG":2,
+         "PricePerKG":2,
          "TransferredProductAmount":500
       },
       "ABC-Transactions4Data":{
          "timestamp":1597573439,
          "TransactionValue":2000,
-		 "PricePerKG":4,
+         "PricePerKG":4,
          "TransferredProductAmount":500
       },
       "ABC-Transactions5Data":{
          "timestamp":1597573539,
          "TransactionValue":2000,
-		 "PricePerKG":4,
+         "PricePerKG":4,
          "TransferredProductAmount":500
       },
       "ABC-Transactions6Data":{
          "timestamp":1597573639,
          "TransactionValue":2000,
-		 "PricePerKG":4,
+         "PricePerKG":4,
          "TransferredProductAmount":500
       }
    },
    "TransactionsBatchA":{
-	"Information":{
-         "Metadata": "TransactionsBatchA12345",
-		 "Buyer" : "Jane Doe"
-      },   
+      "Information":{
+         "Metadata":"TransactionsBatchA12345",
+         "Buyer":"Jane Doe"
+      },
       "ABC-Transactions1Data":{
          "timestamp":1597573040,
          "TransactionValue":1000,
-		 "PricePerKG":2,
+         "PricePerKG":2,
          "TransferredProductAmount":500
       },
       "ABC-Transactions2Data":{
          "timestamp":1597573140,
          "TransactionValue":1000,
-		 "PricePerKG":2,
+         "PricePerKG":2,
          "TransferredProductAmount":500
       },
       "ABC-Transactions4Data":{
          "timestamp":1597573240,
          "TransactionValue":2000,
-		 "PricePerKG":4,
+         "PricePerKG":4,
          "TransferredProductAmount":500
       },
-	  "ABC-Transactions5Data":{
+      "ABC-Transactions5Data":{
          "timestamp":1597573340,
          "TransactionValue":1000
       },
-	  "ABC-Transactions6Data":{
+      "ABC-Transactions6Data":{
          "timestamp":1597573440,
          "TransactionValue":1000,
-		 "PricePerKG":2,
+         "PricePerKG":2,
          "TransferredProductAmount":510
       },
-	  "ABC-Transactions7Data":{
+      "ABC-Transactions7Data":{
          "timestamp":1597573440,
          "TransactionValue":1000,
-		 "PricePerKG":2,
+         "PricePerKG":2,
          "TransferredProductAmount":520
       },
-	  "ABC-Transactions8Data":{
+      "ABC-Transactions8Data":{
          "timestamp":1597573440,
          "TransactionValue":2000,
-		 "PricePerKG":4
+         "PricePerKG":4
       }
+   },
+   "TransactionAmountsA":{
+      "InitialAmount":20,
+      "LaterAmount":30,
+      "Currency":"EUR"
+   },
+   "TransactionAmountsB":{
+      "InitialAmount":50,
+      "LaterAmount":60,
+      "Currency":"EUR"
    },
    "dictionaryToBeFound":"ABC-Transactions1Data",
    "referenceTimestamp":1597573340,
-	"PricePerKG":3,
-	"myUserName":"Authority1234",
-	"myVerySecretPassword":"password123"
+   "PricePerKG":3,
+   "otherPricePerKG":5,
+   "myUserName":"Authority1234",
+   "myVerySecretPassword":"password123"
 }
 EOF
 
@@ -299,9 +310,13 @@ Scenario ecdh: dictionary computation and signing
 Given that I have a 'string dictionary' named 'TransactionsBatchA'
 Given that I have a 'string dictionary' named 'TransactionsBatchB'
 
+Given that I have a 'string dictionary' named 'TransactionAmountsA'
+Given that I have a 'string dictionary' named 'TransactionAmountsB'
+
 # Loading other stuff here
 Given that I have a 'number' named 'referenceTimestamp'
 Given that I have a 'number' named 'PricePerKG'
+Given that I have a 'number' named 'otherPricePerKG'
 Given that I have a 'string' named 'dictionaryToBeFound'
 Given that I have a 'string' named 'myVerySecretPassword'
 
@@ -410,6 +425,53 @@ And I rename the 'key_derivation' to 'pbkdf2Of:ABC-TransactionsAfterTheta'
 When I create the cbor of 'TransactionsBatchA'
 And I rename the 'cbor' to 'CBORof:TransactionsBatchA'
 
+# MATH OPERATIONS
+# Below math operations with numbers that are loaded individually
+
+When I create the result of 'PricePerKG' + 'otherPricePerKG'
+and I rename the 'result' to 'NumbersSum'
+
+When I create the result of 'PricePerKG' - 'otherPricePerKG'
+and I rename the 'result' to 'NumbersSubtraction'
+
+When I create the result of 'PricePerKG' * 'otherPricePerKG'
+and I rename the 'result' to 'NumbersMultiplication'
+
+When I create the result of 'PricePerKG' / 'otherPricePerKG'
+and I rename the 'result' to 'NumbersDivision'
+
+# MATH OPERATIONS
+# with numbers found in dictionaries, at root level of the dictionary
+
+When I create the result of 'InitialAmount' in 'TransactionAmountsA' + 'InitialAmount' in 'TransactionAmountsB'
+and I rename the 'result' to 'NumbersInDicts-Sum'
+
+When I create the result of 'InitialAmount' in 'TransactionAmountsA' - 'InitialAmount' in 'TransactionAmountsB'
+and I rename the 'result' to 'NumbersInDicts-Subtraction'
+
+When I create the result of 'InitialAmount' in 'TransactionAmountsA' * 'InitialAmount' in 'TransactionAmountsB'
+and I rename the 'result' to 'NumbersInDicts-Multiplication'
+
+When I create the result of 'InitialAmount' in 'TransactionAmountsA' / 'InitialAmount' in 'TransactionAmountsB'
+and I rename the 'result' to 'NumbersInDicts-Division'
+
+
+# MATH OPERATIONS
+# between numbers loaded individually and numbers found in dictionaries
+
+When I create the result of 'InitialAmount' in 'TransactionAmountsA' + 'PricePerKG'
+and I rename the 'result' to 'NumbersMixed-Sum'
+
+When I create the result of 'InitialAmount' in 'TransactionAmountsA' - 'PricePerKG'
+and I rename the 'result' to 'NumbersMixed-Subtraction'
+
+When I create the result of 'InitialAmount' in 'TransactionAmountsA' * 'PricePerKG'
+and I rename the 'result' to 'NumbersMixed-Multiplication'
+
+When I create the result of 'InitialAmount' in 'TransactionAmountsA' / 'PricePerKG'
+and I rename the 'result' to 'NumbersMixed-Division'
+
+
 
 # Let's print it all out!
 Then print the 'ABC-TransactionsAfterTheta'
@@ -420,6 +482,23 @@ and print the 'sha512hashOf:ABC-TransactionsAfterTheta'
 and print the 'pbkdf2Of:ABC-TransactionsAfterTheta'
 and print the 'CBORof:TransactionsBatchA'
 and print the 'copyOfInformationBatchA'
+and print the 'NumbersSum'
+and print the 'NumbersSubtraction'
+and print the 'NumbersMultiplication'
+and print the 'NumbersDivision'
+
+and print the 'NumbersInDicts-Sum'
+and print the 'NumbersInDicts-Subtraction'
+and print the 'NumbersInDicts-Multiplication'
+and print the 'NumbersInDicts-Division'
+
+
+and print the 'NumbersMixed-Sum'
+and print the 'NumbersMixed-Subtraction'
+and print the 'NumbersMixed-Multiplication'
+and print the 'NumbersMixed-Division'
+
+
 EOF
 
 cat $tmpWhen1 > ../../docs/examples/zencode_cookbook/dictionariesWhen.zen
