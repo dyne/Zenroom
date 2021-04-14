@@ -47,6 +47,17 @@ func TestCallStrings(t *testing.T) {
 	}
 }
 
+func TestZencode(t *testing.T) {
+	script := `Scenario 'ecdh': Create the keypair
+Given that I am known as 'Alice'
+When I create the keypair
+Then print my data`
+	res, success := ZencodeExec(script, "", "", "")
+	if !success {
+		t.Error(res.logs)
+	}
+}
+
 // func BenchmarkBasicPrint(b *testing.B) {
 // 	script := []byte(`print ('hello')`)
 // 	for n := 0; n < b.N; n++ {
