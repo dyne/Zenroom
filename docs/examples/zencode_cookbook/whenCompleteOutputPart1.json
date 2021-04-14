@@ -86,6 +86,9 @@
   "myTwelfthStringToBeHashedUsingPBKDF2": "hash me to pbkdf2",
   "nameOfFirstNewVariable": 10,
   "nameOfSecondNewVariable": "This_is_my_lovely_new_string!",
+  "resultOfmyFirstDivision": -1,
+  "resultOfmyFirstModulo": 2,
+  "resultOfmyFirstMultiplication": 6,
   "resultOfmyFirstSubtraction": -1,
   "resultOfmyFirstSum": 5
 }

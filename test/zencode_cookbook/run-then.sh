@@ -155,7 +155,30 @@ cat <<EOF  > $tmpInput
       "sumValueAllTransactions": 3800,
       "transferredProductAmountafterSalesStart": 30,
 	  "shopOwner": "JackInTheShop"
-   }
+   },
+   "myFourthObject": {
+    "myFourthArray": [
+      "Hello World! inside myFourthObject, inside myFourthArray[0]",
+      "Hello World! inside myFourthObject, inside myFourthArray[1]",
+      "Will this string be found inside an array?",
+      "Hello World! inside myFourthObject, inside myFourthArray[2]",
+      "Hello World! inside myFourthObject, inside myFourthArray[3]"
+    ],
+    "myFourthString": "...and good evening!",
+    "myFifthString": "We have run out of greetings.",
+    "mySixthString": "So instead we'll tell the days of the week...",
+    "mySeventhString": "...Monday,",
+    "myEightEqualString": "These string is equal to another one.",
+    "myNinthEqualString": "These string is equal to another one.",
+    "myFourthNumber": 3,
+    "myTenthString": "Will this string be found inside an array?",
+    "myEleventhStringToBeHashed": "hash me to kdf",
+    "myTwelfthStringToBeHashedUsingPBKDF2": "hash me to pbkdf2",
+    "myThirteenStringPassword": "my funky password",
+    "myFourteenthStringToBeHashedUsingHMAC": "hash me to HMAC",
+    "myFifteenthString": "Hello World again!",
+    "mySixteenthString": "Hello World! myThirdObject, myThirdArray[2]"
+  }
 }
 EOF
 cat $tmpInput > ../../docs/examples/zencode_cookbook/myLargeNestedObjectThen.json
@@ -219,6 +242,9 @@ Given I have an 'url64' named 'myUrl64_5' inside 'myObject'
 Given I have an 'url64' named 'myUrl64_6' inside 'myObject'
 # Dictionary
 Given I have a 'string dictionary' named 'salesReport'
+Given I have a 'string dictionary' named 'myFourthObject'
+
+
 
 
 EOF
@@ -292,7 +318,6 @@ Then print 'myUrl64_3' as 'number'
 Then print 'myUrl64_4' as 'base64'
 Then print 'myUrl64_5' as 'bin'
 Then print 'myUrl64_6' as 'hex'
-
 
 
 
@@ -382,6 +407,10 @@ Then print 'myUrl64_4' as 'base64'
 Then print 'myUrl64_5' as 'bin'
 Then print 'myUrl64_6' as 'hex'
 
+# Print from and as
+Then print the 'myFourthString' from 'myFourthObject'
+Then print the 'myFifthString' from 'myFourthObject' as 'hex'
+
 EOF
 
 
@@ -396,7 +425,7 @@ cat $tmpZen2 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpInpu
 echo "                                                "
 echo "------------------------------------------------"
 echo "               Script number $n                 "
-echo "               print my data script             "
+echo "               print messages             "
 echo "------------------------------------------------"
 echo "                                                "
 let n=n+1

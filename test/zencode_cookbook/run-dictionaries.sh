@@ -275,6 +275,19 @@ cat <<EOF > ../../docs/examples/zencode_cookbook/dictionariesBlockchain.json
       "LaterAmount":60,
       "Currency":"EUR"
    },
+   "PowerData":{
+      "Active_power_imported_kW":4.85835600,
+      "Active_energy_imported_kWh":53.72700119,
+      "Active_power_exported_kW":0.0,
+      "Apparent_energy_imported_kVAh":0,
+      "Apparent_power_exported_kVA":0.00000000,
+      "Apparent_energy_exported_kVAh":0.00000000,
+      "Power_factor":0.71163559,
+      "Application_data":"Application_data_string",
+      "Application_UID":"Application_UID_string",
+      "Currency":"EUR",
+      "Expected_annual_production":0.00000000
+   },
    "dictionaryToBeFound":"ABC-Transactions1Data",
    "referenceTimestamp":1597573340,
    "PricePerKG":3,
@@ -312,6 +325,8 @@ Given that I have a 'string dictionary' named 'TransactionsBatchB'
 
 Given that I have a 'string dictionary' named 'TransactionAmountsA'
 Given that I have a 'string dictionary' named 'TransactionAmountsB'
+Given that I have a 'string dictionary' named 'PowerData'
+
 
 # Loading other stuff here
 Given that I have a 'number' named 'referenceTimestamp'
@@ -426,51 +441,40 @@ When I create the cbor of 'TransactionsBatchA'
 And I rename the 'cbor' to 'CBORof:TransactionsBatchA'
 
 # MATH OPERATIONS
-# Below math operations with numbers that are loaded individually
-
-When I create the result of 'PricePerKG' + 'otherPricePerKG'
-and I rename the 'result' to 'NumbersSum'
-
-When I create the result of 'PricePerKG' - 'otherPricePerKG'
-and I rename the 'result' to 'NumbersSubtraction'
-
-When I create the result of 'PricePerKG' * 'otherPricePerKG'
-and I rename the 'result' to 'NumbersMultiplication'
-
-When I create the result of 'PricePerKG' / 'otherPricePerKG'
-and I rename the 'result' to 'NumbersDivision'
-
-# MATH OPERATIONS
-# with numbers found in dictionaries, at root level of the dictionary
+# Like with regular numbers, you can sum, subtract, multiply, divide, modulo with values, 
+# see the examples below. The output of the statement will be an object named "result" 
+# that we immediately rename.
+# The operators allowed are: +, -, *, /, %.
+# MATH with numbers found in dictionaries, at root level of the dictionary
 
 When I create the result of 'InitialAmount' in 'TransactionAmountsA' + 'InitialAmount' in 'TransactionAmountsB'
 and I rename the 'result' to 'NumbersInDicts-Sum'
-
 When I create the result of 'InitialAmount' in 'TransactionAmountsA' - 'InitialAmount' in 'TransactionAmountsB'
 and I rename the 'result' to 'NumbersInDicts-Subtraction'
-
 When I create the result of 'InitialAmount' in 'TransactionAmountsA' * 'InitialAmount' in 'TransactionAmountsB'
 and I rename the 'result' to 'NumbersInDicts-Multiplication'
-
 When I create the result of 'InitialAmount' in 'TransactionAmountsA' / 'InitialAmount' in 'TransactionAmountsB'
 and I rename the 'result' to 'NumbersInDicts-Division'
+When I create the result of 'InitialAmount' in 'TransactionAmountsA' % 'InitialAmount' in 'TransactionAmountsB'
+and I rename the 'result' to 'NumbersInDicts-Modulo'
 
 
-# MATH OPERATIONS
-# between numbers loaded individually and numbers found in dictionaries
-
+# MATH between numbers loaded individually and numbers found in dictionaries
 When I create the result of 'InitialAmount' in 'TransactionAmountsA' + 'PricePerKG'
 and I rename the 'result' to 'NumbersMixed-Sum'
-
 When I create the result of 'InitialAmount' in 'TransactionAmountsA' - 'PricePerKG'
 and I rename the 'result' to 'NumbersMixed-Subtraction'
-
 When I create the result of 'InitialAmount' in 'TransactionAmountsA' * 'PricePerKG'
 and I rename the 'result' to 'NumbersMixed-Multiplication'
-
 When I create the result of 'InitialAmount' in 'TransactionAmountsA' / 'PricePerKG'
 and I rename the 'result' to 'NumbersMixed-Division'
+When I create the result of 'InitialAmount' in 'TransactionAmountsA' % 'PricePerKG'
+and I rename the 'result' to 'NumbersMixed-Modulo'
 
+# REMOVE ZERO values
+# Use this statement to clean up a dictionary by removing all the object whose value is 0
+# In this case we're using the dictionary 'PowerData' which has several 0 objects.
+When I remove zero values in 'PowerData'
 
 
 # Let's print it all out!
@@ -482,21 +486,21 @@ and print the 'sha512hashOf:ABC-TransactionsAfterTheta'
 and print the 'pbkdf2Of:ABC-TransactionsAfterTheta'
 and print the 'CBORof:TransactionsBatchA'
 and print the 'copyOfInformationBatchA'
-and print the 'NumbersSum'
-and print the 'NumbersSubtraction'
-and print the 'NumbersMultiplication'
-and print the 'NumbersDivision'
 
 and print the 'NumbersInDicts-Sum'
 and print the 'NumbersInDicts-Subtraction'
 and print the 'NumbersInDicts-Multiplication'
 and print the 'NumbersInDicts-Division'
-
+and print the 'NumbersInDicts-Modulo'
 
 and print the 'NumbersMixed-Sum'
 and print the 'NumbersMixed-Subtraction'
 and print the 'NumbersMixed-Multiplication'
 and print the 'NumbersMixed-Division'
+and print the 'NumbersMixed-Modulo'
+
+and print the 'PowerData'
+
 
 
 EOF

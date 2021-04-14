@@ -12,8 +12,8 @@
     "public_key": "BCal+xoGLDscgNib8i4XCbPVkWCj5q9DFlE5djwKXE+VY9YswlCh5Pigs1psJGbHPJkCbSi6Xr5V2tzO8lxWhUg="
   },
   "keypairFromSeed": {
-    "private_key": "bXkgZnVua3kgcGFzc3dvcmROcQEAAAAARQAAAAAAAAA=",
-    "public_key": "BLFRmF4Zb9Cw1Yji0NjqO8UT7IdbF96JChN6eC0xyy5/j+KyNTzEE3yMi1JIxWDzqH023qSmrDtUeoJ7Gs36TjE="
+    "private_key": "bXkgZnVua3kgcGFzc3dvcmTlIwIAAAAARQAAAAAAAAA=",
+    "public_key": "BJFHzGTN35D6r99zrTp9tgwE5Pdb+fk5E7CqWEBrl5Lr0ywsMU+oFKKzDerkBSCDwbR+SyJiO4yBar4sPxKZjnQ="
   },
   "my10RandomNumbersArray": [
     45924,
@@ -132,7 +132,7 @@
   ],
   "myThirdNumber": 3,
   "myThirdString": "...and good morning!",
-  "myThirteenStringPassword": "my funky passwordNq\u0001",
+  "myThirteenStringPassword": "my funky password�#\u0002",
   "myTwelfthStringToBeHashedUsingPBKDF2": "hash me to pbkdf2",
   "newRandomObject": "XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA="
 }

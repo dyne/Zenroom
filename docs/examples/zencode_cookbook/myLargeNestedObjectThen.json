@@ -107,5 +107,28 @@
       "sumValueAllTransactions": 3800,
       "transferredProductAmountafterSalesStart": 30,
 	  "shopOwner": "JackInTheShop"
-   }
+   },
+   "myFourthObject": {
+    "myFourthArray": [
+      "Hello World! inside myFourthObject, inside myFourthArray[0]",
+      "Hello World! inside myFourthObject, inside myFourthArray[1]",
+      "Will this string be found inside an array?",
+      "Hello World! inside myFourthObject, inside myFourthArray[2]",
+      "Hello World! inside myFourthObject, inside myFourthArray[3]"
+    ],
+    "myFourthString": "...and good evening!",
+    "myFifthString": "We have run out of greetings.",
+    "mySixthString": "So instead we'll tell the days of the week...",
+    "mySeventhString": "...Monday,",
+    "myEightEqualString": "These string is equal to another one.",
+    "myNinthEqualString": "These string is equal to another one.",
+    "myFourthNumber": 3,
+    "myTenthString": "Will this string be found inside an array?",
+    "myEleventhStringToBeHashed": "hash me to kdf",
+    "myTwelfthStringToBeHashedUsingPBKDF2": "hash me to pbkdf2",
+    "myThirteenStringPassword": "my funky password",
+    "myFourteenthStringToBeHashedUsingHMAC": "hash me to HMAC",
+    "myFifteenthString": "Hello World again!",
+    "mySixteenthString": "Hello World! myThirdObject, myThirdArray[2]"
+  }
 }

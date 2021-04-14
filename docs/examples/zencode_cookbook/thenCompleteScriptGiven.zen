@@ -54,5 +54,8 @@ Given I have an 'url64' named 'myUrl64_5' inside 'myObject'
 Given I have an 'url64' named 'myUrl64_6' inside 'myObject'
 # Dictionary
 Given I have a 'string dictionary' named 'salesReport'
+Given I have a 'string dictionary' named 'myFourthObject'
+
+
 
 

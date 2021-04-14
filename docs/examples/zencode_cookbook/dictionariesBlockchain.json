@@ -97,6 +97,19 @@
       "LaterAmount":60,
       "Currency":"EUR"
    },
+   "PowerData":{
+      "Active_power_imported_kW":4.85835600,
+      "Active_energy_imported_kWh":53.72700119,
+      "Active_power_exported_kW":0.0,
+      "Apparent_energy_imported_kVAh":0,
+      "Apparent_power_exported_kVA":0.00000000,
+      "Apparent_energy_exported_kVAh":0.00000000,
+      "Power_factor":0.71163559,
+      "Application_data":"Application_data_string",
+      "Application_UID":"Application_UID_string",
+      "Currency":"EUR",
+      "Expected_annual_production":0.00000000
+   },
    "dictionaryToBeFound":"ABC-Transactions1Data",
    "referenceTimestamp":1597573340,
    "PricePerKG":3,

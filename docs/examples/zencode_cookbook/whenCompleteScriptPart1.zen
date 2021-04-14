@@ -1,11 +1,19 @@
 # SUM, SUBTRACTION
 # You can use the statement 'When I create the result of ... " to 
-# sum or subtract values, see the examples below. The output of the 
+# sum, subtract, multiply, divide, modulo with values, see the examples below. The output of the 
 # statement will be an object named "result" that we immediately rename.
+# The operators allowed are: +, -, *, /, %.
 When I create the result of 'mySecondNumber' + 'myThirdNumber'
 and I rename the 'result' to 'resultOfmyFirstSum'
 When I create the result of 'mySecondNumber' - 'myThirdNumber'
 and I rename the 'result' to 'resultOfmyFirstSubtraction'
+When I create the result of 'mySecondNumber' * 'myThirdNumber'
+and I rename the 'result' to 'resultOfmyFirstMultiplication'
+When I create the result of 'mySecondNumber' - 'myThirdNumber'
+and I rename the 'result' to 'resultOfmyFirstDivision'
+When I create the result of 'mySecondNumber' % 'myThirdNumber'
+and I rename the 'result' to 'resultOfmyFirstModulo'
+
 
 # APPEND
 # The "append" statement are pretty self-explaining: 

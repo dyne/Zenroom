@@ -60,3 +60,7 @@ Then print 'myUrl64_4' as 'base64'
 Then print 'myUrl64_5' as 'bin'
 Then print 'myUrl64_6' as 'hex'
 
+# Print from and as
+Then print the 'myFourthString' from 'myFourthObject'
+Then print the 'myFifthString' from 'myFourthObject' as 'hex'
+

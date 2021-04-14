@@ -66,8 +66,15 @@ And the output shoul be:
 When working with ***dictionaries*** or ***schemas*** you may want to print out just a part of the data you're working with. The statement that comes to help here is: 
 
 ```gherkin
-Then print the 'childObject' inside 'parentObject'
+Then print the 'childObject' from 'parentObject'
 ```
+
+And you can as well print an object from a parent with a different encoding:
+
+```gherkin
+Then print the 'childObject' from 'parentObject' as 'hex'
+```
+
 
 Here are a couple examples, keep in mind that **in** and **inside** are interchangeable:
 

@@ -10,6 +10,8 @@ Given that I have a 'string dictionary' named 'TransactionsBatchB'
 
 Given that I have a 'string dictionary' named 'TransactionAmountsA'
 Given that I have a 'string dictionary' named 'TransactionAmountsB'
+Given that I have a 'string dictionary' named 'PowerData'
+
 
 # Loading other stuff here
 Given that I have a 'number' named 'referenceTimestamp'

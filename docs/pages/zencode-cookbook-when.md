@@ -41,7 +41,7 @@ Since the *When* phase contains many statements, we did split the scripts in fou
 We grouped together all the statements that perform object manipulation, so: 
 
 
- ***Sum and subtract*** two numbers
+***Math operations***: sum, subtraction, multiplication, division and modulo, between numbers
  
  ***Append*** a simple object to another
  
