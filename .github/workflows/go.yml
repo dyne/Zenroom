@@ -1,0 +1,29 @@
+name: Test go bindings
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          submodules: recursive
+      - uses: actions/setup-go@v2
+      - uses: actions/setup-python@v1
+        with:
+          python-version: "3.x"
+      - uses: seanmiddleditch/gha-setup-ninja@master
+
+      - name: Install compiler and dependencies
+        run: |
+          # install deps
+          sudo apt-get install --force-yes gcc cmake vim zsh
+          pip3 install meson
+      - name: Build using meson
+        run: |
+          meson build build_meson && ninja -C build_meson
+      - name: Test go bindings
+        run: |
+          cp build_meson/libzenroom.so bindings/golang/zenroom/lib
+          cd bindings/golang/zenroom && go test
