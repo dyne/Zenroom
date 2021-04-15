@@ -1,0 +1,35 @@
+name: Build Zenroom using meson
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Build
+    strategy:
+      matrix:
+        compiler: [clang-8, clang-9, clang-10, clang-11, gcc-7, gcc-8, gcc-9, gcc-10]
+      fail-fast: false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v1
+        with:
+          python-version: "3.x"
+      - uses: seanmiddleditch/gha-setup-ninja@master
+
+      - name: Install compiler and dependencies
+        run: |
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+          sudo apt-get update
+          # install compiler
+          sudo apt-get install --force-yes ${{ matrix.compiler }}
+          # install deps
+          sudo apt-get install --force-yes cmake vim zsh
+          pip3 install meson
+
+      - name: Build using meson
+        env:
+          CC: ${{ matrix.compiler }}
+        run: |
+          meson build build_meson && ninja -C build_meson
