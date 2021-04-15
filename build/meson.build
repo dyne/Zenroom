@@ -137,9 +137,23 @@ zenroom_src = [
     zen_ecdh_factory,
 ]
 
-both_libraries(
+zenroom_lib = library(
     'zenroom',
     zenroom_src,
+    include_directories: [
+        zenroom_include_dirs,
+        milagro_include_dirs,
+        milagro_generated_include_dirs,
+    ],
+    dependencies: [lua_dep],
+    install: true,
+)
+
+pkg = import('pkgconfig')
+pkg.generate(zenroom_lib)
+
+zenroom_dep = declare_dependency(
+    link_with: zenroom_lib,
     include_directories: [
         zenroom_include_dirs,
         milagro_include_dirs,
@@ -148,15 +162,12 @@ both_libraries(
     dependencies: [lua_dep]
 )
 
+install_headers('../src/zenroom.h', subdir: 'zenroom')
+
 executable(
     'zenroom',
-    zenroom_src,
     '../src/cli.c',
-    include_directories: [
-        zenroom_include_dirs,
-        milagro_include_dirs,
-        milagro_generated_include_dirs,
-    ],
-    dependencies: [lua_dep]
+    dependencies: zenroom_dep,
+    install: true,
 )
 
