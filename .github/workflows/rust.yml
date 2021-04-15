@@ -1,0 +1,23 @@
+name: Test rust bindings
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          submodules: recursive
+      - uses: actions/setup-go@v2
+      - name: Install compiler and dependencies
+        run: |
+          sudo apt-get install --force-yes gcc cmake meson vim zsh
+      - name: Install rust stable
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+      - name: Run tests
+        run: |
+          cd bindings/rust && cargo test
