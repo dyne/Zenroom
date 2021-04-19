@@ -14,7 +14,7 @@ _LIBZENROOM = ct.CDLL(str(LIBZENROOM_LOC))
 @dataclass
 class ZenResult():
     output: str = field()
-    error: str = field()
+    logs: str = field()
 
     def __post_init__(self):
         try:
