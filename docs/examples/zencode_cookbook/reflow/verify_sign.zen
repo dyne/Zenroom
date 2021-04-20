@@ -1,0 +1,5 @@
+Scenario reflow
+Given I have a 'reflow seal'
+When I verify the reflow seal is valid
+Then print the string 'SUCCESS'
+and print the 'reflow seal'

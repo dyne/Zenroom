@@ -1,0 +1,9 @@
+Scenario reflow
+Scenario credential
+Given I am 'Participant_4'
+and I have my 'credentials'
+and I have my 'keys'
+and I have a 'reflow seal'
+and I have a 'issuer public key' from 'The Authority'
+When I create the reflow signature
+Then print the 'reflow signature'

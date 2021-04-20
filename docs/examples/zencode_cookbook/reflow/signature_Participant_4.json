@@ -1,0 +1,20 @@
+{
+  "reflow_signature": {
+    "identity": "AhNpWc/cQOmqc++mQ7fm5YVGXyxeqygm0/7KnPiln80jaqevpV/Kht2QL42NghEw9A==",
+    "proof": {
+      "kappa": "JUDuPfF+NmFg27QrNGLBdkCqYHKWPCfvU9S2ed+AAidve9jhJkxtaJQJW4uwg0DSL+soTuTIZruRXKd5sc96zSCqDsZDghoGqutAPpkrN1/8L+oO5iGiz9WBZw+6wHsBC50woW6BpNtIMF5jHkfRFzjWzJzzl3dIj2x99wpBiz+h8weDiYR2eALOJWcAcYfZI2MlSIfJur0PW2BXWY+HtvRjKLQOy4b7mqwkjRi62D8RSwsEVr0lm96f6tRZVGJI",
+      "nu": "AxudHdDfnoIeyBOOX2GCZ7ljMVV+TLrPXfmPcW6ZrPClVuCt/rs6wl2iAIZGN1W7KA==",
+      "pi_v": {
+        "c": "b4eL8rcYLqZwBa6esUcLv+YU+u45uI+EHTgRhfM6r3c=",
+        "rm": "Cu1aCXMQ+dKvmDDILUx45hhVNqBXcijebMFd+ZX00og=",
+        "rr": "rTgIuIW38NjJ+pjf0X9UFld0dunbxcKN6uteXM99T8E="
+      },
+      "sigma_prime": {
+        "h_prime": "A0Nf3a8g4O3pS3vMl+ClBA3+Npq2xKVEGZi/NEYG7fhRYzs4oOjpr/nFCNJbe3FCAQ==",
+        "s_prime": "Ahs01IcUkLN+ql0/b2U1mFOtUdOzJA5cEhAFVKUTfsdibFMx+8fG7LXhNBbAyqqjzw=="
+      }
+    },
+    "signature": "AiNEu8YScYx4YNn+VRXcd5J+yH7aMzypRHUZunEckha7C1N4JZF2snP3ycbtALIlvA==",
+    "zeta": "AgwY+Bfz8AP3roOJ9jIP6BgnOmEwhdiK5AqnoXVQzOFkjnHmufsOtzEghcoYa+n68A=="
+  }
+}

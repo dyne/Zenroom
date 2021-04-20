@@ -8,17 +8,23 @@ if ! test -r ../utils.sh; then
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
-sideload='../../src/lua/zencode_reflow.lua'
+# sideload='../../src/lua/zencode_reflow.lua'
+
+out='/dev/shm/multi'
+mkdir -p ${out}
+rm ${out}/*
+rm /tmp/zenroom-test-summary.txt
 
 ## ISSUER
-cat <<EOF | zexe issuer_keygen.zen | tee issuer_keypair.json
+cat <<EOF | zexe ${out}/issuer_keygen.zen | tee ${out}/issuer_keypair.json
 Scenario credential
 Given I am 'The Authority'
 when I create the issuer key
 Then print my 'keys'
 EOF
 
-cat <<EOF | zexe issuer_verifier.zen -a issuer_keypair.json | tee issuer_verifier.json
+
+cat <<EOF | zexe ${out}/issuer_verifier.zen -a ${out}/issuer_keypair.json | tee ${out}/issuer_verifier.json
 Scenario credential: publish verifier
 Given that I am known as 'The Authority'
 and I have my 'keys'
@@ -29,7 +35,7 @@ EOF
 generate_participant() {
     local name=$1
     ## PARTICIPANT
-	cat <<EOF | zexe keygen_${1}.zen | tee keypair_${1}.json
+	cat <<EOF | zexe ${out}/keygen_${1}.zen | tee ${out}/keypair_${1}.json
 Scenario reflow
 Scenario credential
 Given I am '${1}'
@@ -38,7 +44,7 @@ and I create the credential key
 Then print my 'keys'
 EOF
 
-	cat <<EOF | zexe pubkey_${1}.zen -k keypair_${1}.json | tee verifier_${1}.json
+	cat <<EOF | zexe ${out}/pubkey_${1}.zen -k ${out}/keypair_${1}.json | tee ${out}/verifier_${1}.json
 Scenario reflow
 Given I am '${1}'
 and I have my 'keys'
@@ -46,7 +52,7 @@ When I create the BLS public key
 Then print my 'bls public key'
 EOF
 
-	cat <<EOF | zexe request_${1}.zen -k keypair_${1}.json | tee request_${1}.json
+	cat <<EOF | zexe ${out}/request_${1}.zen -k ${out}/keypair_${1}.json | tee ${out}/request_${1}.json
 Scenario credential
 Given I am '${1}'
 and I have my 'keys'
@@ -56,7 +62,7 @@ EOF
 	##
 
 	## ISSUER SIGNS
-	cat <<EOF | zexe issuer_sign_${1}.zen -k issuer_keypair.json -a request_${1}.json | tee issuer_signature_${1}.json
+	cat <<EOF | zexe ${out}/issuer_sign_${1}.zen -k ${out}/issuer_keypair.json -a ${out}/request_${1}.json | tee ${out}/issuer_signature_${1}.json
 Scenario credential
 Given I am 'The Authority'
 and I have my 'keys'
@@ -69,7 +75,7 @@ EOF
 	##
 
 	## PARTICIPANT AGGREGATES SIGNED CREDENTIAL
-	cat <<EOF | zexe aggr_cred_${1}.zen -k keypair_${1}.json -a issuer_signature_${1}.json | tee verified_credential_${1}.json
+	cat <<EOF | zexe ${out}/aggr_cred_${1}.zen -k ${out}/keypair_${1}.json -a ${out}/issuer_signature_${1}.json | tee ${out}/verified_credential_${1}.json
 Scenario credential
 Given I am '${1}'
 and I have my 'keys'
@@ -87,15 +93,15 @@ generate_participant "Alice"
 generate_participant "Bob"
 
 # join the verifiers of signed credentials
-json_join verifier_Alice.json verifier_Bob.json > public_keys.json
-echo "{\"public_keys\": `cat public_keys.json` }" > public_key_array.json
+json_join ${out}/verifier_Alice.json ${out}/verifier_Bob.json > ${out}/public_keys.json
+echo "{\"public_keys\": `cat ${out}/public_keys.json` }" > ${out}/public_key_array.json
 # make a uid using the current timestamp
-echo "{\"today\": \"`date +'%s'`\"}" > uid.json
+echo "{\"today\": \"`date +'%s'`\"}" > ${out}/uid.json
 
 # anyone can start a seal
 
 # SIGNING seal
-cat <<EOF | debug seal_start.zen -k uid.json -a public_key_array.json > reflow_seal.json
+cat <<EOF | zexe ${out}/seal_start.zen -k ${out}/uid.json -a ${out}/public_key_array.json | tee ${out}/reflow_seal.json
 Scenario reflow
 Given I have a 'bls public key array' named 'public keys'
 and I have a 'string' named 'today'
@@ -110,13 +116,13 @@ EOF
 
 # anyone can require a verified credential to be able to sign, chosing
 # the right issuer verifier for it
-json_join issuer_verifier.json reflow_seal.json > credential_to_sign.json
+json_join ${out}/issuer_verifier.json ${out}/reflow_seal.json > ${out}/credential_to_sign.json
 
 
 # PARTICIPANT SIGNS (function)
 function participant_sign() {
 	local name=$1
-	cat <<EOF | zexe sign_seal.zen -a credential_to_sign.json -k verified_credential_$name.json | tee signature_$name.json
+	cat <<EOF | zexe ${out}/sign_seal.zen -a ${out}/credential_to_sign.json -k ${out}/verified_credential_$name.json | tee ${out}/signature_$name.json
 Scenario reflow
 Scenario credential
 Given I am '$name'
@@ -136,9 +142,9 @@ function collect_sign() {
 	local name=$1
 	local tmp_msig=`mktemp`
 	local tmp_sig=`mktemp`
-	cp -v reflow_seal.json $tmp_msig
-	json_join issuer_verifier.json signature_$name.json > $tmp_sig
-	cat << EOF | zexe collect_sign.zen -a $tmp_msig -k $tmp_sig | tee reflow_seal.json
+	cp -v ${out}/reflow_seal.json $tmp_msig
+	json_join ${out}/issuer_verifier.json ${out}/signature_$name.json > $tmp_sig
+	cat << EOF | zexe ${out}/collect_sign.zen -a $tmp_msig -k $tmp_sig | tee ${out}/reflow_seal.json
 Scenario reflow
 Scenario credential
 Given I have a 'reflow seal'
@@ -159,7 +165,7 @@ collect_sign 'Alice'
 collect_sign 'Bob'
 
 # VERIFY SIGNATURE
-cat << EOF | zexe verify_sign.zen -a reflow_seal.json | jq .
+cat << EOF | zexe ${out}/verify_sign.zen -a ${out}/reflow_seal.json | jq .
 Scenario reflow
 Given I have a 'reflow seal'
 When I verify the reflow seal is valid

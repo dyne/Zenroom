@@ -25,7 +25,7 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 # ${out}/credentialParticipantKeygen.zen
 # out='../../docs/examples/zencode_cookbook'
 # out='./files'
-out='/dev/shm/multi'
+out='../../docs/examples/zencode_cookbook/reflow/'
 
 
 mkdir -p ${out}
@@ -40,7 +40,7 @@ rm /tmp/zenroom-test-summary.txt
 # Change this to change the amount of participants 
 # and the amount of recursion for some of the scripts
 
-Participants=3
+Participants=4
 Recursion=1
 
 users=""
@@ -215,8 +215,10 @@ Given I have a 'bls public key array' named 'public keys'
 and I have a 'string' named 'today'
 When I aggregate the bls public key from array 'public keys'
 and I rename the 'bls public key' to 'reflow public key'
-and I create the reflow session with uid 'today'
-Then print the 'reflow session'
+and I create the reflow identity of 'today'
+and debug
+and I create the reflow seal with identity 'reflow identity'
+Then print the 'reflow seal'
 EOF
 }
 
@@ -237,7 +239,7 @@ done
 # participant joins the credential (=issuer pubkey) and the multisignature
 json_join ${out}/issuer_public_key.json ${out}/multisignature.json | jq . > ${out}/credential_to_sign.json
 
-cp multisignature.json multisignature_input.json
+cp ${out}/multisignature.json ${out}/multisignature_input.json
 
 # PARTICIPANT SIGNS (function)
 function participant_sign() {
@@ -248,7 +250,7 @@ Scenario credential
 Given I am '$name'
 and I have my 'credentials'
 and I have my 'keys'
-and I have a 'reflow session'
+and I have a 'reflow seal'
 and I have a 'issuer public key' from 'The Authority'
 When I create the reflow signature
 Then print the 'reflow signature'
@@ -275,15 +277,15 @@ function collect_sign() {
 	cat << EOF | zexe ${out}/collect_sign.zen -a $tmp_msig -k $tmp_sig  | jq . | tee ${out}/multisignature.json
 Scenario reflow
 Scenario credential
-Given I have a 'reflow session'
+Given I have a 'reflow seal'
 and I have a 'issuer public key' in 'The Authority'
 and I have a 'reflow signature'
 When I aggregate all the issuer public keys
 and I verify the reflow signature credential
 and I check the reflow signature fingerprint is new
-and I add the reflow fingerprint to the reflow session
-and I add the reflow signature to the reflow session
-Then print the 'reflow session'
+and I add the reflow fingerprint to the reflow seal
+and I add the reflow signature to the reflow seal
+Then print the 'reflow seal'
 EOF
 	rm -f $tmp_msig $tmp_sig
 }
@@ -341,10 +343,10 @@ done
 verify_signature(){
 cat << EOF | zexe ${out}/verify_sign.zen -a ${out}/multisignature.json | jq .
 Scenario reflow
-Given I have a 'reflow session'
-When I verify the reflow session is valid
+Given I have a 'reflow seal'
+When I verify the reflow seal is valid
 Then print the string 'SUCCESS'
-and print the 'reflow session'
+and print the 'reflow seal'
 EOF
 }
 

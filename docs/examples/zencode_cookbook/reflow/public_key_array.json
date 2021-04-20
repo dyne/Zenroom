@@ -1,0 +1,14 @@
+{"public_keys": {
+  "Participant_1": {
+    "bls_public_key": "Fx6fDFX50fWltCVNryQuvBz6AP9jRDQbMYnnEByNFsqy90QWk0DF6Gfl7cHAonnpKeik46cnZC6uTnrJwCTyS1AwDB5iQSQA4FZrx/1B7X2tq/YKohO5hPUDkUJfw/Q8MwDjRXM6Uke9w9JSYqKDejfOynmL0D1/msy8XVpL/DksHEW+TDzNnujqganRqVsJLFPgig4laMd6RrD0fgIF4YMfzs2Cc4g0elEv0n6jCQzrpOJb8zJugoSdVni8uuK6"
+  },
+  "Participant_2": {
+    "bls_public_key": "AT/9bhcTjQkvL16MEeX2u9FmsiSMxdLLEJX5bD7Ibf7wLehc+hMP7L0egpFD+le2ObEUgE9EDBYSRJ1x57S54X2/7pCdeoCc4mdwLEmf6iCSrcIdTFNJtDxdZVVmcEKBHgem7RTFG6qse9Q4WgBT4pADszLBbCJ7ziVz6NVrIOmjDZ7NcmfsYGLbKkJAKQKxEBaeCv9ZMWZRXnR8J6AXXSnNf07y4KSAA8R0reCDH9htMxMM5P9/Tzj+0ABlUzeA"
+  },
+  "Participant_3": {
+    "bls_public_key": "LiI3LDu22oWgDVuH59cy3sGrPw47uJ3pPwNrPRZcmh5BA7cCbP62ONrPdwk1c9I/NfSbA2wPqehgybvYv6qdtB88qtSN0IMYxUmE7mwhhpNVcaSGXLBSLWIfTHQymqwiB9yd/5hf6Y3io5AOXq+PfNUrcMvOrp6elXO/dCPvYuRkVXRIOjXvCxmhxOWszae9OTLfbFDnjACJeXcePZrbLp2x+tDMP/GKTn1M2SqYQwU3RJu17mOtC3Haq1Grg40T"
+  },
+  "Participant_4": {
+    "bls_public_key": "EgPVsaFYr7HlAcS9PXkafQam8541qDH5l/ih4ySYW+69Cxx7Lc/jGz1L6pLlO6+/DDCZDic5WeYYg/AJBrS33rFY8osAh7wpM3YFdCUkEQTZMbciPKcFvpI7k4miXZYiQldEnfXneFyb7P6Law8qygd5iKzIIHjngONhsFg4cTdPp1MJa3cPu8e0FVuLObkiB47Cgaw5iZZiONkzLBNZu/QBqzD6u7uw6kNHd8CD+Nt+ICl2qn6OCJ7ezmFXXyFT"
+  }
+} }
