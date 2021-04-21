@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Friday, 9th April 2021
+--on Wednesday, 21st April 2021
 --]]
 --- <h1>Zencode language parser</h1>
 --
@@ -304,6 +304,19 @@ function zencode:wtrace(src)
 	table.insert(self.traceback, ' W  ZEN:' .. trim(src))
 end
 
+local function IN_uscore(i)
+	-- convert all element keys of IN to underscore
+	local res = {}
+    for k,v in pairs(i) do
+	if luatype(v) == 'table' then
+		 res[uscore(k)] = IN_uscore(v) -- recursion
+	  else
+		 res[uscore(k)] = v
+	  end
+   end
+   return setmetatable(res, getmetatable(i))
+end
+
 function zencode:run()
 	-- runtime checks
 	if not ZEN.checks.version then
@@ -321,6 +334,9 @@ function zencode:run()
 	if KEYS then
 		IN.KEYS = CONF.input.format.fun(KEYS) or {}
 	end
+	-- convert all spaces in keys to underscore
+	IN = IN_uscore(IN)
+
 	-- EXEC zencode
 	for i, x in sort_ipairs(self.AST) do
 		ZEN:trace(x.source)

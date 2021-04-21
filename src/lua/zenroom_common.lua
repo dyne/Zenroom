@@ -43,15 +43,19 @@ end
 function uscore(input)
 	if luatype(input) == 'string' then
 		return string.gsub(input, ' ', '_')
+	elseif luatype(input) == 'number' then
+		return input
 	else
-		error("Underscore transform not a string: "..luatype(input), 2)
+		error("Underscore transform not a string or number: "..luatype(input), 2)
 	end
 end
 function space(input)
 	if luatype(input) == 'string' then
 		return string.gsub(input, '_', ' ')
+	elseif luatype(input) == 'number' then
+		return input
 	else
-		error("Whitespace transform not a string: "..luatype(input), 2)
+		error("Whitespace transform not a string or number: "..luatype(input), 2)
 	end
 end
 

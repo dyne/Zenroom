@@ -15,12 +15,12 @@ fi
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
-# out=../../docs/examples/zencode_cookbook
-out=/dev/shm/files
+out=../../docs/examples/zencode_cookbook
+# out=/dev/shm/files
 
 
 
-cat <<EOF | zexe ${out}/numbers_hash_left.zen | jq . | tee ${out}/numbers_left.json | jq 
+cat <<EOF | zexe ${out}/numbers_hash_left.zen | tee ${out}/numbers_left.json 
 Given nothing
 When I write string 'a left string to be hashed' in 'source'
 and I create the hash of 'source'
@@ -28,7 +28,7 @@ and I rename 'hash' to 'left'
 Then print 'left'
 EOF
 
-cat <<EOF | zexe ${out}/numbers_hash_right.zen | jq . | tee ${out}/numbers_right.json | jq
+cat <<EOF | zexe ${out}/numbers_hash_right.zen | tee ${out}/numbers_right.json
 Given nothing
 When I write string 'a right string to be hashed' in 'source'
 and I create the hash of 'source'
@@ -36,7 +36,7 @@ and I rename 'hash' to 'right'
 Then print 'right'
 EOF
 
-cat <<EOF | zexe ${out}/numbers_hash_eq.zen -a ${out}/numbers_left.json -k ${out}/numbers_right.json | jq
+cat <<EOF | zexe ${out}/numbers_hash_eq.zen -a ${out}/numbers_left.json
 Given I have a 'base64' named 'left'
 When I write string 'a left string to be hashed' in 'source'
 and I create the hash of 'source'
@@ -45,6 +45,7 @@ Then print the string 'OK'
 Then print data
 EOF
 
+# cat <<EOF | debug ${out}/numbers_hash_eq.zen -a ${out}/numbers_left.json -k ${out}/numbers_right.json | jq
 # cat <<EOF | zexe hash_neq.zen -a left.json -k right.json
 # Given I have a 'base64' named 'left'
 # and I have a 'base64' named 'right'
@@ -52,7 +53,7 @@ EOF
 # Then print the string 'OK'
 # EOF
 
-cat <<EOF | zexe ${out}/numbers_num_eq_base10.zen | jq
+cat <<EOF | zexe ${out}/numbers_num_eq_base10.zen
 rule check version 1.0.0
 Given nothing
 When I write number '42' in 'left'
