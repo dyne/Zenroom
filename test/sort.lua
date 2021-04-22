@@ -289,7 +289,7 @@ for i=1,limit do a[i] = false end
 
 for i,v in pairs(a) do assert(v == false) end
 
-A = {"álo", "\0first :-)", "alo", "then this one", "45", "and a new"}
+A = {"Ã¡lo", "\0first :-)", "alo", "then this one", "45", "and a new"}
 table.sort(A)
 check(A)
 
