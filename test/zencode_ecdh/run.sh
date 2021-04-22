@@ -14,6 +14,8 @@ fi
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
+set -e
+
 cat <<EOF | zexe SYM01.zen | save ecdh secret.json
 rule check version 1.0.0
 Scenario ecdh: Generate a random password

@@ -15,6 +15,8 @@ fi
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
+set -e
+
 cat <<EOF | zexe array_32_256.zen > arr.json
 rule output encoding url64
 Given nothing

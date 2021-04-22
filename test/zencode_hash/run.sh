@@ -17,6 +17,7 @@ fi
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
+set -e
 
 cat <<EOF | zexe hash_string.zen | tee hex.json
 rule output encoding hex
