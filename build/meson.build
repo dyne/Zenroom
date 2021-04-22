@@ -164,7 +164,7 @@ zenroom_dep = declare_dependency(
 
 install_headers('../src/zenroom.h', subdir: 'zenroom')
 
-executable(
+zenroom_exe = executable(
     'zenroom',
     '../src/cli.c',
     dependencies: zenroom_dep,
@@ -179,3 +179,79 @@ endif
 if get_option('examples')
     install_subdir('../examples', install_dir: docdir, strip_directory: false)
 endif
+
+lua_tests = [
+    # himem
+    '../test/sort.lua',
+    '../test/literals.lua',
+    '../test/pm.lua',
+    '../test/nextvar.lua',
+    '../test/gc.lua',
+    '../test/calls.lua',
+    '../test/constructs.lua',
+    '../test/json.lua',
+
+    # lowmem
+    '../test/vararg.lua',
+    '../test/utf8.lua',
+    '../test/tpack.lua',
+    '../test/strings.lua',
+    '../test/math.lua',
+    '../test/goto.lua',
+    '../test/events.lua',
+    '../test/code.lua',
+    '../test/locals.lua',
+
+    # crypto
+    '../test/octet.lua',
+    '../test/octet_conversion.lua',
+    '../test/hash.lua',
+    '../test/ecdh.lua',
+    '../test/dh_session.lua',
+    '../test/nist/aes_gcm.lua',
+    '../test/nist/aes_cbc.lua',
+    '../test/nist/aes_ctr.lua',
+    '../test/ecp_generic.lua',
+    '../test/elgamal.lua',
+    '../test/bls_pairing.lua',
+    '../test/coconut_test.lua',
+    '../test/crypto_credential.lua',
+]
+
+foreach test_file : lua_tests
+    test(test_file.underscorify(), zenroom_exe, args: [test_file])
+endforeach
+
+test_dir = meson.source_root() + '/../test/'
+
+zencode_tests = [
+    'zencode_numbers',
+    'zencode_array',
+    'zencode_hash',
+    'zencode_ecdh',
+    'zencode_credential',
+    'zencode_petition',
+    'zencode_reflow',
+]
+
+foreach zencode_test : zencode_tests
+    test_script = find_program(test_dir + zencode_test + '/run.sh')
+    test(
+        zencode_test,
+        test_script,
+        env: [
+            'ZENROOM=' + zenroom_exe.full_path()
+        ],
+        workdir: test_dir + zencode_test
+    )
+endforeach
+
+zencode_cookbook_script = find_program(test_dir + 'zencode_cookbook/run-all.sh')
+test(
+    'zencode_cookbook',
+    test_script,
+    env: [
+        'ZENROOM=' + zenroom_exe.full_path()
+    ],
+    workdir: test_dir + 'zencode_cookbook'
+)
