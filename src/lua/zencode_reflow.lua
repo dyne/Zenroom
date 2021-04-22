@@ -97,11 +97,11 @@ When(
     "create the reflow identity of ''",
     function(doc)
         empty 'reflow identity'
-        have(doc)
-        if luatype(doc) == 'table' then
-            ACK.reflow_identity = ECP.hashtopoint(ZEN.serialize(doc))
+        local src = have(doc)
+        if luatype(src) == 'table' then
+            ACK.reflow_identity = ECP.hashtopoint(ZEN.serialize(src))
         else
-            ACK.reflow_identity = ECP.hashtopoint(doc)
+            ACK.reflow_identity = ECP.hashtopoint(src)
         end
     end
 )
