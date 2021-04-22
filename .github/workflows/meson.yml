@@ -25,11 +25,15 @@ jobs:
           # install compiler
           sudo apt-get install --force-yes ${{ matrix.compiler }}
           # install deps
-          sudo apt-get install --force-yes cmake vim zsh
+          sudo apt-get install --force-yes cmake vim zsh luajit lua-cjson
           pip3 install meson
 
       - name: Build using meson
         env:
           CC: ${{ matrix.compiler }}
         run: |
-          meson build build_meson && ninja -C build_meson
+          meson build builddir && ninja -C builddir
+
+      - name: Run tests
+        run: |
+          ninja -C builddir test
