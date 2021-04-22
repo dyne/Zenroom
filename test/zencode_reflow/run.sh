@@ -10,6 +10,12 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 
 # sideload='../../src/lua/zencode_reflow.lua'
 
+set -e
+
+out='../../docs/examples/zencode_cookbook/reflow'
+
+mkdir -p ${out}
+rm ${out}/*
 
 ## ISSUER
 cat <<EOF | zexe issuer_keygen.zen | save reflow issuer_keypair.json

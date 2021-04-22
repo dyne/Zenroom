@@ -18,7 +18,7 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 out=../../docs/examples/zencode_cookbook
 # out=/dev/shm/files
 
-
+set -e
 
 cat <<EOF | zexe ${out}/numbers_hash_left.zen | tee ${out}/numbers_left.json 
 Given nothing

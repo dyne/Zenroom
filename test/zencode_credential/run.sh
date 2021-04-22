@@ -27,7 +27,7 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 # }
 ####################
 
-
+set -e
 
 ####################
 
