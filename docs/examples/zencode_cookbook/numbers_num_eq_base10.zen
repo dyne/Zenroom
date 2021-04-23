@@ -1,0 +1,7 @@
+rule check version 1.0.0
+Given nothing
+When I write number '42' in 'left'
+and I write number '42' in 'right'
+and I verify 'left' is equal to 'right'
+Then print the string 'OK'
+Then print data

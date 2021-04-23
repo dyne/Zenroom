@@ -1,14 +1,11 @@
 {"public_keys": {
-  "Participant_1": {
-    "bls_public_key": "Fx6fDFX50fWltCVNryQuvBz6AP9jRDQbMYnnEByNFsqy90QWk0DF6Gfl7cHAonnpKeik46cnZC6uTnrJwCTyS1AwDB5iQSQA4FZrx/1B7X2tq/YKohO5hPUDkUJfw/Q8MwDjRXM6Uke9w9JSYqKDejfOynmL0D1/msy8XVpL/DksHEW+TDzNnujqganRqVsJLFPgig4laMd6RrD0fgIF4YMfzs2Cc4g0elEv0n6jCQzrpOJb8zJugoSdVni8uuK6"
+  "Alice": {
+    "bls_public_key": "QpjRoPb3VsUd442xqP1WJerpwFPzLGoUR/5QlglvDgp4/o+adOIxcYl3ZMnTvdezGMmD33S7jJ6yc7s2a1VX/PCy8HChayi/631KhRg0BRTAyOZJ3S6XfeROMga1K8w9DWlnuVKE9Y/MQYIZyjWsTYPjLxj6R9UjEogaYskjg8tx+wEu3QuPU7bp94hYTzLKGosQzhnzpnB9kBDFftFcsdysG0tfQNC0eYrC4EElhJK4be+wfBMK9+pG8UgafT4C"
   },
-  "Participant_2": {
-    "bls_public_key": "AT/9bhcTjQkvL16MEeX2u9FmsiSMxdLLEJX5bD7Ibf7wLehc+hMP7L0egpFD+le2ObEUgE9EDBYSRJ1x57S54X2/7pCdeoCc4mdwLEmf6iCSrcIdTFNJtDxdZVVmcEKBHgem7RTFG6qse9Q4WgBT4pADszLBbCJ7ziVz6NVrIOmjDZ7NcmfsYGLbKkJAKQKxEBaeCv9ZMWZRXnR8J6AXXSnNf07y4KSAA8R0reCDH9htMxMM5P9/Tzj+0ABlUzeA"
+  "Bob": {
+    "bls_public_key": "QGJn+u2D6EPdujabpeCasn6yusRBJAwJRqx9YGSsedarIbRCphu6QX8WdKZuJBBWNMEwHdTz4V5KAPWy0A3MXkhTQ78MVQK4OrlDg8WnJMGysb4WqQgNbVaVEa1wEXa5Ad0XgfbXvWQ4iRYa7cWngM7mCzvPCPRfqn+Z15AEDzV1JPM9caCn2L4Gj0ptcD6lDiowJb6M+c3HVl6BsRBMTQHePWBkzyhYd2t84v7Rpb74q8jcEw9Ovi413hO9W4C9"
   },
-  "Participant_3": {
-    "bls_public_key": "LiI3LDu22oWgDVuH59cy3sGrPw47uJ3pPwNrPRZcmh5BA7cCbP62ONrPdwk1c9I/NfSbA2wPqehgybvYv6qdtB88qtSN0IMYxUmE7mwhhpNVcaSGXLBSLWIfTHQymqwiB9yd/5hf6Y3io5AOXq+PfNUrcMvOrp6elXO/dCPvYuRkVXRIOjXvCxmhxOWszae9OTLfbFDnjACJeXcePZrbLp2x+tDMP/GKTn1M2SqYQwU3RJu17mOtC3Haq1Grg40T"
-  },
-  "Participant_4": {
-    "bls_public_key": "EgPVsaFYr7HlAcS9PXkafQam8541qDH5l/ih4ySYW+69Cxx7Lc/jGz1L6pLlO6+/DDCZDic5WeYYg/AJBrS33rFY8osAh7wpM3YFdCUkEQTZMbciPKcFvpI7k4miXZYiQldEnfXneFyb7P6Law8qygd5iKzIIHjngONhsFg4cTdPp1MJa3cPu8e0FVuLObkiB47Cgaw5iZZiONkzLBNZu/QBqzD6u7uw6kNHd8CD+Nt+ICl2qn6OCJ7ezmFXXyFT"
+  "Carl": {
+    "bls_public_key": "KV+UvE0rgLGGMd/QJOfc4iclViq4QcL0RqyBCV0d95p6Zr7x0GrvcYvo7r/B9R7YBNqoOr5XBUqT57z9jr7SrICDF6V/hJCwYdmC0XIc3F+XRqtcfRVPihEPqkU081MmL0xpyzlCoasZsaQTYdTh3X1taZdqqwUEj+VTogXxcFkR2iLR40dqUqftMzCeUy18HVgRlidTmsb9mH/sVbPxDWF2aJgZDXkZgh5JeakfS4XRb+6Neumjv7oYSvLAA5Is"
   }
 } }

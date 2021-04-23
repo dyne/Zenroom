@@ -25,8 +25,8 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 # ${out}/credentialParticipantKeygen.zen
 # out='../../docs/examples/zencode_cookbook'
 # out='./files'
-out='../../docs/examples/zencode_cookbook/reflow/'
 
+out='../../docs/examples/zencode_cookbook/reflow'
 
 mkdir -p ${out}
 rm ${out}/*
@@ -40,7 +40,7 @@ rm /tmp/zenroom-test-summary.txt
 # Change this to change the amount of participants 
 # and the amount of recursion for some of the scripts
 
-Participants=4
+Participants=3
 Recursion=1
 
 users=""
@@ -85,7 +85,7 @@ EOF
 cat <<EOF | zexe ${out}/issuer_public_key.zen -k ${out}/issuer_key.json  | jq . | tee ${out}/issuer_public_key.json
 Scenario credential: publish verifier
 Given that I am known as 'The Authority'
-and I have my 'keys'
+Given I have my 'keys'
 When I create the issuer public key
 Then print my 'issuer public key'
 EOF
@@ -102,14 +102,14 @@ Scenario reflow
 Scenario credential
 Given I am '${1}'
 When I create the BLS key
-and I create the credential key
+When I create the credential key
 Then print my 'keys'
 EOF
 
 	cat <<EOF | zexe ${out}/pubkey_${1}.zen -k ${out}/keypair_${1}.json  | jq . | tee ${out}/public_key_${1}.json
 Scenario reflow
 Given I am '${1}'
-and I have my 'keys'
+Given I have my 'keys'
 When I create the BLS public key
 Then print my 'bls public key'
 EOF
@@ -118,7 +118,7 @@ EOF
 	cat <<EOF | zexe ${out}/request_${1}.zen -k ${out}/keypair_${1}.json  | jq . | tee ${out}/request_${1}.json
 Scenario credential
 Given I am '${1}'
-and I have my 'keys'
+Given I have my 'keys'
 When I create the credential request
 Then print my 'credential request'
 EOF
@@ -128,12 +128,12 @@ EOF
 	cat <<EOF | zexe ${out}/issuer_sign_${1}.zen -k ${out}/issuer_key.json -a ${out}/request_${1}.json  | jq . | tee ${out}/issuer_signature_${1}.json
 Scenario credential
 Given I am 'The Authority'
-and I have my 'keys'
-and I have a 'credential request' inside '${1}'
-when I create the credential signature
-and I create the issuer public key
+Given I have my 'keys'
+Given I have a 'credential request' inside '${1}'
+When I create the credential signature
+When I create the issuer public key
 Then print the 'credential signature'
-and print the 'issuer public key'
+Then print the 'issuer public key'
 EOF
 	##
 
@@ -141,11 +141,11 @@ EOF
 	cat <<EOF | zexe ${out}/aggr_cred_${1}.zen -k ${out}/keypair_${1}.json -a ${out}/issuer_signature_${1}.json  | jq . | tee ${out}/verified_credential_${1}.json
 Scenario credential
 Given I am '${1}'
-and I have my 'keys'
-and I have a 'credential signature'
-when I create the credentials
-then print my 'credentials'
-and print my 'keys'
+Given I have my 'keys'
+Given I have a 'credential signature'
+When I create the credentials
+Then print my 'credentials'
+Then print my 'keys'
 EOF
 	##
 
@@ -168,12 +168,12 @@ issuer_keygen_sign() {
 	cat <<EOF | zexe ${out}/issuer_sign_${1}.zen -k ${out}/issuer_key.json -a ${out}/request_${1}.json  | jq . | tee ${out}/issuer_signature_${1}.json
 Scenario credential
 Given I am 'The Authority'
-and I have my 'keys'
-and I have a 'credential request' inside '${1}'
-when I create the credential signature
-and I create the issuer public key
+Given I have my 'keys'
+Given I have a 'credential request' inside '${1}'
+When I create the credential signature
+When I create the issuer public key
 Then print the 'credential signature'
-and print the 'issuer public key'
+Then print the 'issuer public key'
 EOF
 	##
 
@@ -200,10 +200,23 @@ echo "{\"public_keys\": `cat ${out}/public_keys.json` }" | tee ${out}/public_key
 
 echo "${yellow} =========================== writing uid ===================${reset}"
 
-echo "{\"today\": \"`date +'%s'`\"}" | tee ${out}/uid.json
+echo "{\"today\": \"`date +'%s'`\"}" | tee ${out}/uid-time.json
 
 
-
+cat <<EOF > ${out}/uid.json
+{
+   "Sale":{
+      "Buyer":"Alice",
+      "Seller":"Bob",
+	  "Witness":"Carl",
+      "Good":"Cow",
+      "Price":100,
+      "Currency":"EUR",
+      "Timestamp":1422779638,
+      "Text":"Bob sells the cow to Alice, cause the cow grew too big and Carl, Bob's roomie, was complaining"
+   }
+}
+EOF
 
 #############################
 # SIGNING SESSION
@@ -212,12 +225,11 @@ create_multisignature(){
 cat <<EOF  | zexe ${out}/session_start.zen -k ${out}/uid.json -a ${out}/public_key_array.json | tee  ${out}/multisignature.json
 Scenario reflow
 Given I have a 'bls public key array' named 'public keys'
-and I have a 'string' named 'today'
+Given I have a 'string dictionary' named 'Sale'
 When I aggregate the bls public key from array 'public keys'
-and I rename the 'bls public key' to 'reflow public key'
-and I create the reflow identity of 'today'
-and debug
-and I create the reflow seal with identity 'reflow identity'
+When I rename the 'bls public key' to 'reflow public key'
+When I create the reflow identity of 'Sale'
+When I create the reflow seal with identity 'reflow identity'
 Then print the 'reflow seal'
 EOF
 }
@@ -248,10 +260,10 @@ function participant_sign() {
 Scenario reflow
 Scenario credential
 Given I am '$name'
-and I have my 'credentials'
-and I have my 'keys'
-and I have a 'reflow seal'
-and I have a 'issuer public key' from 'The Authority'
+Given I have my 'credentials'
+Given I have my 'keys'
+Given I have a 'reflow seal'
+Given I have a 'issuer public key' from 'The Authority'
 When I create the reflow signature
 Then print the 'reflow signature'
 EOF
@@ -278,13 +290,13 @@ function collect_sign() {
 Scenario reflow
 Scenario credential
 Given I have a 'reflow seal'
-and I have a 'issuer public key' in 'The Authority'
-and I have a 'reflow signature'
+Given I have a 'issuer public key' in 'The Authority'
+Given I have a 'reflow signature'
 When I aggregate all the issuer public keys
-and I verify the reflow signature credential
-and I check the reflow signature fingerprint is new
-and I add the reflow fingerprint to the reflow seal
-and I add the reflow signature to the reflow seal
+When I verify the reflow signature credential
+When I check the reflow signature fingerprint is new
+When I add the reflow fingerprint to the reflow seal
+When I add the reflow signature to the reflow seal
 Then print the 'reflow seal'
 EOF
 	rm -f $tmp_msig $tmp_sig
@@ -346,7 +358,19 @@ Scenario reflow
 Given I have a 'reflow seal'
 When I verify the reflow seal is valid
 Then print the string 'SUCCESS'
-and print the 'reflow seal'
+Then print the 'reflow seal'
+EOF
+}
+
+verify_identity(){
+cat << EOF | zexe ${out}/verify_identity.zen -a ${out}/multisignature.json -k ${out}/uid.json  | jq .
+Scenario 'reflow' : Verify the identity in the seal 
+Given I have a 'reflow seal'
+Given I have a 'string dictionary' named 'Sale'
+When I create the reflow identity of 'Sale'
+When I rename the 'reflow identity' to 'SaleIdentity'
+When I verify 'SaleIdentity' is equal to 'identity' in 'reflow seal'
+Then print the string 'The reflow identity in the seal is verified'
 EOF
 }
 
@@ -364,6 +388,7 @@ echo "=========================================================="
 echo  "" 
 
 verify_signature
+verify_identity
 
 done
 

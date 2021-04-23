@@ -10,7 +10,7 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 
 # sideload='../../src/lua/zencode_reflow.lua'
 
-out='/dev/shm/multi'
+out='../../docs/examples/zencode_cookbook/reflow'
 mkdir -p ${out}
 rm ${out}/*
 rm /tmp/zenroom-test-summary.txt
@@ -44,7 +44,7 @@ and I create the credential key
 Then print my 'keys'
 EOF
 
-	cat <<EOF | zexe ${out}/pubkey_${1}.zen -k ${out}/keypair_${1}.json | tee ${out}/verifier_${1}.json
+	cat <<EOF | zexe ${out}/pubkey_${1}.zen -k ${out}/keypair_${1}.json | tee ${out}/public_key_${1}.json
 Scenario reflow
 Given I am '${1}'
 and I have my 'keys'
@@ -88,15 +88,42 @@ EOF
 
 }
 
-# generate two signed credentials
+# generate  signed credentials
 generate_participant "Alice"
 generate_participant "Bob"
+generate_participant "Carl"
 
 # join the verifiers of signed credentials
-json_join ${out}/verifier_Alice.json ${out}/verifier_Bob.json > ${out}/public_keys.json
-echo "{\"public_keys\": `cat ${out}/public_keys.json` }" > ${out}/public_key_array.json
+# json_join ${out}/verifier_Alice.json ${out}/verifier_Bob.json ${out}/verifier_Carl.json > ${out}/public_keys.json
+# echo "{\"public_keys\": `cat ${out}/public_keys.json` }" > ${out}/public_key_array.json
+
+echo "${yellow} =========================== merging public keys ===================${reset}" 
+
+jq -s 'reduce .[] as $item ({}; . * $item)' . ${out}/public_key_* | tee ${out}/public_keys.json
+
+echo "${yellow} =========================== writing public keys array ===================${reset}"
+
+echo "{\"public_keys\": `cat ${out}/public_keys.json` }" | tee ${out}/public_key_array.json
+
 # make a uid using the current timestamp
-echo "{\"today\": \"`date +'%s'`\"}" > ${out}/uid.json
+#echo "{\"today\": \"`date +'%s'`\"}" > ${out}/uid.json
+
+cat <<EOF > ${out}/uid.json
+{
+   "Sale":{
+      "Buyer":"Alice",
+      "Seller":"Bob",
+	  "Witness":"Carl",
+      "Good":"Cow",
+      "Price":100,
+      "Currency":"EUR",
+      "Timestamp":1422779638,
+      "Text":"Bob sells the cow to Alice, cause the cow grew too big and Carl, Bob's roomie, was complaining"
+   }
+}
+EOF
+
+
 
 # anyone can start a seal
 
@@ -104,11 +131,10 @@ echo "{\"today\": \"`date +'%s'`\"}" > ${out}/uid.json
 cat <<EOF | zexe ${out}/seal_start.zen -k ${out}/uid.json -a ${out}/public_key_array.json | tee ${out}/reflow_seal.json
 Scenario reflow
 Given I have a 'bls public key array' named 'public keys'
-and I have a 'string' named 'today'
+and I have a 'string dictionary' named 'Sale'
 When I aggregate the bls public key from array 'public keys'
 and I rename the 'bls public key' to 'reflow public key'
-and I create the reflow identity of 'today'
-and debug
+and I create the reflow identity of 'Sale'
 and I create the reflow seal with identity 'reflow identity'
 Then print the 'reflow seal'
 EOF
@@ -137,6 +163,7 @@ EOF
 
 participant_sign 'Alice'
 participant_sign 'Bob'
+participant_sign 'Carl'
 
 function collect_sign() {
 	local name=$1
@@ -163,6 +190,8 @@ EOF
 # COLLECT UNIQUE SIGNATURES
 collect_sign 'Alice'
 collect_sign 'Bob'
+collect_sign 'Carl'
+
 
 # VERIFY SIGNATURE
 cat << EOF | zexe ${out}/verify_sign.zen -a ${out}/reflow_seal.json | jq .

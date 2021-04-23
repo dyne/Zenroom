@@ -1,5 +1,0 @@
-Scenario reflow
-Given I am 'Participant_4'
-and I have my 'keys'
-When I create the BLS public key
-Then print my 'bls public key'

@@ -1,0 +1,8 @@
+Scenario reflow
+Given I have a 'bls public key array' named 'public keys'
+and I have a 'string dictionary' named 'Sale'
+When I aggregate the bls public key from array 'public keys'
+and I rename the 'bls public key' to 'reflow public key'
+and I create the reflow identity of 'Sale'
+and I create the reflow seal with identity 'reflow identity'
+Then print the 'reflow seal'

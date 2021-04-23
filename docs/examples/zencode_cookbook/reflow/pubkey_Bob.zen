@@ -1,0 +1,5 @@
+Scenario reflow
+Given I am 'Bob'
+and I have my 'keys'
+When I create the BLS public key
+Then print my 'bls public key'
