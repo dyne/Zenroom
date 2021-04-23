@@ -32,3 +32,6 @@ option('ecdh_curve', type: 'combo', choices:
 )
 option('ecp_curve', type: 'combo', choices: ['BLS383'], value: 'BLS383',
     description: 'Available ecp curves')
+
+option('examples', type: 'boolean', description: 'Install examples', value: false)
+option('docs', type: 'boolean', description: 'Install documentation', value: false)

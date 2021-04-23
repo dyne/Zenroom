@@ -171,3 +171,11 @@ executable(
     install: true,
 )
 
+docdir = get_option('datadir') / 'doc' / 'zenroom'
+if get_option('docs')
+    install_subdir('../docs', install_dir: docdir, strip_directory: true)
+endif
+
+if get_option('examples')
+    install_subdir('../examples', install_dir: docdir, strip_directory: false)
+endif
