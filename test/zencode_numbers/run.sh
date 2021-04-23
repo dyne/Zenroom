@@ -83,6 +83,8 @@ Then print the string 'OK'
 Then print data
 EOF
 
+
+
 # cat <<EOF | zexe cmp_nlt_base10.zen
 # rule check version 1.0.0
 # Given nothing
@@ -150,6 +152,16 @@ cat << EOF | zexe ${out}/numbers_remove_zero_values.zen -a ${out}/numbers_zero_v
 Given I have a 'string dictionary' named 'packet'
 When I remove zero values in 'packet'
 Then print all data
+EOF
+
+cat <<EOF | zexe ${out}/big_numbers_cmp_base10.zen | jq
+rule check version 1.0.0
+Given nothing
+When I write number '1619178116640' in 'left'
+and I write number '1619178116641' in 'right'
+and number 'left' is less or equal than 'right'
+Then print the string 'OK'
+Then print data
 EOF
 
 success
