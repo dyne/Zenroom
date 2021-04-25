@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Friday, 12th March 2021 1:19:09 pm
+--on Monday, 26th April 2021
 --]]
 
 -- TODO: use strict table
@@ -46,7 +46,8 @@ local function pick(what, conv)
    local data
    local raw
    raw = IN.KEYS[what] or IN[what]
-   ZEN.assert(raw, "Cannot find '" .. what .. "' anywhere")
+   ZEN.assert(raw, "Cannot find '" .. what .. "' anywhere (null value?)")
+   ZEN.assert(raw ~= '', "Found empty string in '" .. what)
    -- if not conv and ZEN.schemas[what] then conv = what end
    TMP = guess_conversion(raw, conv or what)
    ZEN.assert(
@@ -93,12 +94,15 @@ local function pickin(section, what, conv, fail)
          goto found
       end
    end
-   ZEN.assert(
-      raw,
-      "Cannot find '" .. what .. "' inside '" .. section .. "'"
-   )
+
    -- TODO: check all corner cases to make sure TMP[what] is a k/v map
    ::found::
+   ZEN.assert(
+      raw,
+      "Cannot find '" .. what .. "' inside '" .. section .. "' (null value?)"
+   )
+   ZEN.assert(raw ~= '', "Found empty string '" .. what .."' inside '"..section.."'")
+
    -- conv = conv or what
    -- if not conv and ZEN.schemas[what] then conv = what end
    -- if no encoding provided then conversion is same as name (schemas etc.)
