@@ -1,14 +1,14 @@
 
 ## tests that require too much memory
 himem-tests = \
- @${1} test/sort.lua && \
- ${1} test/literals.lua && \
- ${1} test/pm.lua && \
- ${1} test/nextvar.lua && \
- ${1} test/gc.lua && \
- ${1} test/calls.lua && \
- ${1} test/constructs.lua && \
- ${1} test/json.lua
+		@${1} test/sort.lua && \
+		${1} test/literals.lua && \
+		${1} test/pm.lua && \
+		${1} test/nextvar.lua && \
+		${1} test/gc.lua && \
+		${1} test/calls.lua && \
+		${1} test/constructs.lua && \
+		${1} test/json.lua
 
 determinism-tests = \
 	test/deterministic_random_test.sh ${1}
@@ -154,7 +154,6 @@ check-osx:
 check-linux: test-exec := ./src/zenroom
 check-linux:
 	rm -f /tmp/zenroom-test-summary.txt
-	${test-exec} test/constructs.lua
 	$(call himem-tests,${test-exec})
 	$(call lowmem-tests,${test-exec})
 	$(call determinism-tests,${test-exec})
