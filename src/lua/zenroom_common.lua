@@ -131,13 +131,7 @@ function input_encoding(what)
    			   check = function(_) return true end,
    			   encoding = 'string'
    	  }
-   elseif what == 'num' or what == 'number' then
-	return ({ fun = function(x) return(tonumber(x)) end,
-			check = function(x)
-	   			ZEN.assert(tonumber(x), "Invalid encoding, not a number: "..type(x))
-			end,
-			encoding = 'number' })
-   end
+    end
    error("Input encoding not found: " .. what, 2)
    return nil
 end

@@ -157,11 +157,25 @@ EOF
 cat <<EOF | zexe ${out}/big_numbers_cmp_base10.zen | jq
 rule check version 1.0.0
 Given nothing
-When I write number '1619178116640' in 'left'
-and I write number '1619178116641' in 'right'
+When I write number '161917811' in 'left'
+and I write number '161917812' in 'right'
 and number 'left' is less or equal than 'right'
 Then print the string 'OK'
 Then print data
 EOF
+
+
+# cat <<EOF | debug ${out}/big_number_import_base10.zen -a decimal.json -k timestamp.json
+# Given I have a 'number' named 'decimal'
+# Given I have a 'number' named 'timestamp'
+# and debug
+# When I create the 'string dictionary'
+# and I rename the 'string dictionary' to 'outputData'
+# and I create the result of 'timestamp' - 'decimal'
+# Then print 'decimal' as 'string'
+# and print 'timestamp' as 'number'
+# and print 'result' as 'number'
+# EOF
+
 
 success

@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Tuesday, 6th April 2021
+--on Sunday, 25th April 2021
 --]]
 
 function zencode_iscomment(b)
@@ -103,7 +103,7 @@ function set_sentence(self, event, from, to, ctx)
 	if not ctx.Z.OK and CONF.parser.strict_match then
 		debug_traceback()
 		exitcode(1)
-		error('Zencode pattern not found: ' .. trim(ctx.msg), 1)
+		error('Zencode pattern not found (missing scenario?): ' .. trim(ctx.msg), 1)
 		return false
 	elseif not ctx.Z.OK and not CONF.parser.strict_match then
 		warn('Zencode pattern ignored: ' .. trim(ctx.msg), 1)

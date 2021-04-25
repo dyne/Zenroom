@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Tuesday, 13th April 2021
+--on Sunday, 25th April 2021
 --]]
 
 --- WHEN
@@ -49,7 +49,12 @@ end)
 When("write number '' in ''", function(content, dest)
 	empty(dest)
 	-- TODO: detect number base 10
-	ACK[dest] = tonumber(content, 10)
+	local num = tonumber(content)
+	if num > 2147483647 then
+		error('Overflow of number object over 32bit signed size')
+		-- TODO: maybe support unsigned native here
+	end
+	ACK[dest] = num
 	ZEN.CODEC[dest] = { name = dest,
 						encoding = 'number',
 						luatype = 'number',

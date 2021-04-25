@@ -17,9 +17,8 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Thursday, 1st April 2021
+--on Sunday, 25th April 2021
 --]]
-
 --- Zencode data internals
 
 -- Used in scenario's schema declarations to cast to zenroom. type
@@ -125,10 +124,22 @@ function guess_conversion(obj, definition)
       return (res)
    end
    if objtype == 'number' then
+      if definition then
+         if definition ~= 'number' then
+            error('Invalid conversion for number object: '..definition, 2)
+         end
+      end
       res = input_encoding(objtype)
       res.luatype = 'number'
       res.zentype = 'element'
+      if obj > 2147483647 then
+         error('Overflow of number object over 32bit signed size', 2)
+         -- TODO: maybe support unsigned native here
+      end
       res.raw = obj
+         -- any type of additional conversion from a native number
+         -- detected at input can happen here, for instance using a new
+         -- native unsigned integer
       return (res)
    end
    -- definition: value_encoding .. data_type

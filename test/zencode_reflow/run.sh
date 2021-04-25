@@ -13,7 +13,6 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 out='../../docs/examples/zencode_cookbook/reflow'
 mkdir -p ${out}
 rm ${out}/*
-rm /tmp/zenroom-test-summary.txt
 
 ## ISSUER
 cat <<EOF | zexe ${out}/issuer_keygen.zen | tee ${out}/issuer_keypair.json

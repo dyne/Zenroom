@@ -149,6 +149,7 @@ int is_hex(const char *in) {
 		if (!isxdigit(in[c])) {
 			return 0; }
 	}
+	if(c%2) return 0; // not even digits
 	return c;
 }
 
@@ -505,13 +506,17 @@ static int from_string(lua_State *L) {
 static int from_hex(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	if(!s) {
-		error(L, "%s :: invalid argument",__func__);
+		error(L, "%s :: invalid argument",__func__); // fatal
 		lua_pushboolean(L,0);
 		return 1; }
 	int len = is_hex(s);
+	if(!len) {
+		error(L, "hex sequence invalid"); // fatal
+		lua_pushboolean(L,0);
+		return 1; }
 	func(L,"hex string sequence length: %u",len);
 	if(!len || len>MAX_FILE<<1) { // *2 hex tuples
-		error(L, "hex sequence too long: %u bytes", len<<1);
+		error(L, "hex sequence too long: %u bytes", len<<1); // fatal
 		lua_pushboolean(L,0);
 		return 1; }
 	octet *o = o_new(L, len>>1);
