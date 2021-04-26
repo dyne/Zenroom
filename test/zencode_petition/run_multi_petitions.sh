@@ -16,10 +16,12 @@ if ! test -r ../utils.sh; then
 # fi
 
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
+# OR: out=../../docs/examples/zencode_cookbook
 
-out=../../docs/examples/zencode_cookbook
+out=/dev/shm/files
 
-# OR: out=/dev/shm/files
+
+
 
 mkdir -p $out
  

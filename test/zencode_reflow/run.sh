@@ -126,7 +126,7 @@ EOF
 
 # anyone can start a seal
 
-# SIGNING seal
+# CREATE Reflow seal
 cat <<EOF | zexe ${out}/seal_start.zen -k ${out}/uid.json -a ${out}/public_key_array.json | tee ${out}/reflow_seal.json
 Scenario reflow
 Given I have a 'bls public key array' named 'public keys'
@@ -138,6 +138,8 @@ and I create the reflow seal with identity 'reflow identity'
 Then print the 'reflow seal'
 EOF
 #
+
+cp -v ${out}/reflow_seal.json ${out}/reflow_seal_empty.json
 
 # anyone can require a verified credential to be able to sign, chosing
 # the right issuer verifier for it
@@ -169,8 +171,9 @@ function collect_sign() {
 	local tmp_msig=`mktemp`
 	local tmp_sig=`mktemp`
 	cp -v ${out}/reflow_seal.json $tmp_msig
-	json_join ${out}/issuer_verifier.json ${out}/signature_$name.json > $tmp_sig
-	cat << EOF | zexe ${out}/collect_sign.zen -a $tmp_msig -k $tmp_sig | tee ${out}/reflow_seal.json
+#	json_join ${out}/issuer_verifier.json ${out}/signature_$name.json > $tmp_sig
+	jq -s '.[0] * .[1]' ${out}/issuer_verifier.json ${out}/signature_$name.json > ${out}/issuer_verifier_signature_$name.json
+	cat << EOF | zexe ${out}/collect_sign.zen -a $tmp_msig -k ${out}/issuer_verifier_signature_$name.json | tee ${out}/reflow_seal.json
 Scenario reflow
 Scenario credential
 Given I have a 'reflow seal'
@@ -183,7 +186,7 @@ and I add the reflow fingerprint to the reflow seal
 and I add the reflow signature to the reflow seal
 Then print the 'reflow seal'
 EOF
-	rm -f $tmp_msig $tmp_sig
+	rm -f $tmp_msig
 }
 
 # COLLECT UNIQUE SIGNATURES
@@ -199,4 +202,15 @@ Given I have a 'reflow seal'
 When I verify the reflow seal is valid
 Then print the string 'SUCCESS'
 and print the 'reflow seal'
+EOF
+
+
+cat << EOF | zexe ${out}/verify_identity.zen -a ${out}/reflow_seal.json -k ${out}/uid.json  | jq .
+Scenario 'reflow' : Verify the identity in the seal 
+Given I have a 'reflow seal'
+Given I have a 'string dictionary' named 'Sale'
+When I create the reflow identity of 'Sale'
+When I rename the 'reflow identity' to 'SaleIdentity'
+When I verify 'SaleIdentity' is equal to 'identity' in 'reflow seal'
+Then print the string 'The reflow identity in the seal is verified'
 EOF

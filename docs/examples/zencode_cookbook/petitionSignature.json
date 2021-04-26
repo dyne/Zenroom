@@ -5,16 +5,16 @@
   },
   "petition_signature": {
     "proof": {
-      "kappa": "R/uUCivS+HtTG47ImErdjMJBaB0dZHfK9c+Nx6fPZB+c0Nk5VNl3LOURqNZrGCEFNVis+f2rCeaOGcupy89jNUL2WOPJ8jMIkVGw1Ey3z8dkwVYzkTWveVxmrvyuT2lmLOgZCdwGjauYQnjpp2BtuiIpaE0cm9AIXwfx0lLFBILW8D3YzFTWDqs5M+HsVPS0VNgmO5HjWbM9JuB5Rhq831YBKL7K2+w1VfFoyGvQMdaX7o6sywW4BbZM+1UFAnOr",
-      "nu": "Axz6QffFXxWGQJP1RMsIVX/+veDXhnu1RrToTzOssAwwBXwnvIDp6mPVbAv96T5bPA==",
+      "kappa": "FTVo0KwVoPXPPQLKP6R6YmAS14aLVNBcXHH57EVz6pRfiyicv9P6c1XPSge9dgtgQxJuXF0V0WX+BAcEyoUgxo02oPYj5FKNb/7ZIJLMT/8Oj3+CR8Cjnivi/VkuHzrWGxn6UK+IgTRUbFrxK5MXYF6FPcnYRgjkNt9nLAnT+Kbqzs6YOFbaog44oCvEEq5DElI3p8PrMdPg5sBJX2C6zFFXeqm3JFI1HawF4OuIJJt/rcnGVp2uaiKAp/8zmA+s",
+      "nu": "Ax+3HCc+u2QHCu37FVWSj7pTurOoGwBPKkIEUcaw2ZMqEJji1m9PQ/JCZr3uqtyJ6A==",
       "pi_v": {
-        "c": "8r78Dm98mw7ve5QIGJmjYWy9w2plBkvfUgNU6w2Pqbs=",
-        "rm": "2Ks+10EsNcZ791k85HOth+2QYYAz84Dizg3UBHec8Zo=",
-        "rr": "3n441q2O/9RcW2N397t/0wDNmnqSFskLccOs6j12OYw="
+        "c": "wr5SNDnsfBDzSkiSzTWHiOetSy+rSvMh2VcbVJEW7IQ=",
+        "rm": "mc+HgZsJ/zN1Rg1rfw2XPbqMINAQ6QiDiZ/IMZMON6M=",
+        "rr": "tBjK6AicFxZBZyfwsP7cF7In9cTI0iWD/Qj4QUXAACo="
       },
       "sigma_prime": {
-        "h_prime": "Ai21HtolgqzfL24se7rxLV+K9odFxoPj3xo3NYjptCO9ZjCIPztIicIud+MR+8Ak1g==",
-        "s_prime": "AhF6LoosMChCV3NpvPOjM0F61W6d8V6phPj0jIiLfumMA4DYm2eof4bEUZTfnRhx1g=="
+        "h_prime": "AlTrPrYHuSN4OOGXub5V5THT/banApDRap14dE7vZgGqLI8ywwSROHF+NdbEcUiMJg==",
+        "s_prime": "Ax12vn1y+5XaKxrthKUY1BMCN52KXCq78Htz509T/erNXncL565ieXF5bO8iJi/aEA=="
       }
     },
     "uid_petition": "TW9yZV9wcml2YWN5X2Zvcl9hbGwh",

@@ -39,7 +39,7 @@ Needless to say, each Participant will need to create their own keypair, so this
 
 [](../_media/examples/zencode_cookbook/reflow/keygen_Alice.zen ':include :type=code gherkin')
 
-Which should output (file *keypair_Alice.json*): 
+Which should output (file *keypair_Alice.json*, since **Alice** is the participant we're setting up):
 
 [](../_media/examples/zencode_cookbook/reflow/keypair_Alice.json ':include :type=code json')
 
@@ -84,13 +84,13 @@ The last step of the participant setup is the **Credential aggregation**, again 
 
 [](../_media/examples/zencode_cookbook/reflow/aggr_cred_Alice.zen ':include :type=code gherkin')
 
-Which should output: 
+Which should output (file *verified_credential_Alice.json*): 
 
 [](../_media/examples/zencode_cookbook/reflow/verified_credential_Alice.json ':include :type=code json')
 
 ## The Reflow seal
 
-The **Reflow seal** is the actual multisignature object. This **Reflow seal** is created as "empty" and as the participants sign it, their signatures are progressively added to it, using homomorphic encryption. 
+The **Reflow seal** is the actual multisignature cryptographic object. The **Reflow seal** is created as "empty" and as the participants sign it, their signatures are progressively added to it, using homomorphic encryption. 
 
 The creation of the **Reflow seal** requires some preparation, namely generating the ***Reflow Identity*** and the ***Public keys array***, which in our example is done ***outside of Zenroom***.
 
@@ -112,52 +112,117 @@ jq -s 'reduce .[] as $item ({}; . * $item)' . /path/public_key_* | tee /path/pub
 
 ### Create the Reflow seal  
 
-Input: *public_key_array.json* and *uid.json*
-
+The seal can be created by anyone, using a **Reflow identity** and the of public keys of the participants. The script that creates the seal is (Input: *public_key_array.json* and *uid.json*):
 
 
 [](../_media/examples/zencode_cookbook/reflow/seal_start.zen ':include :type=code gherkin')
 
 Which should output (file: *reflow_seal.json*) : 
 
-[](../_media/examples/zencode_cookbook/reflow/reflow_seal.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/reflow/reflow_seal_empty.json ':include :type=code json')
 
+The **Reflow seal** that we have just created i *empty* (meaning no one has signed it yet), can now be sent over to the participants so that they can sign it using the **Reflow signature** script (that we'll see in a second) and send it back. 
 
-### Create a Reflow signature 
+## The Reflow signature 
 
-Input: ***credential_to_sign.json*** and ***verified_credential_Alice.json***
+In order to create reflow signature, we need to pass to Zenroom 3 objects: 
+ - The *issuer public key*
+ - The *Reflow seal*
+ - The *verified credential* of the participant 
+
+Since Zenroom can only take to parameter as input we need to merge two of these files into one: it is conveniente to merge the *issuer public key* and *Reflow seal* since they are unique to this seal and can therefore be merged once by the organizer and be sent over to all the partecipants.
+
+We did the merge using **jq**:
+
+```shell
+jq -s '.[0] * .[1]' ${out}/issuer_public_key.json ${out}/multisignature.json | jq . > ${out}/credential_to_sign.json
+```
+
+The output (file: *credential_to_sign.json*) should look like:
+
+[](../_media/examples/zencode_cookbook/reflow/credential_to_sign.json ':include :type=code json')
+
+### Create a Reflow signature
+
+Once we have that figured, each partecipant can produce a signature, for which they will need the files  ***credential_to_sign.json*** and ***verified_credential_Alice.json*** (here **Alice** is the partecipant signing)
 
 [](../_media/examples/zencode_cookbook/reflow/sign_seal.zen ':include :type=code gherkin')
 
- 
+Output (file: *signature_Alice.json*): 
+
+[](../_media/examples/zencode_cookbook/reflow/signature_Alice.json ':include :type=code json')
+
+ The resulted signature has major similarities with the [petition signature](http://bario-x250u:3000/#/pages/zencode-scenarios-petition?id=signing-the-petition). Once each participant has produced a signature, the signatures can be added cryptographically to the **Reflow seal**, using the script **Collect signature**.
 
 
 
-### Collect the Reflow signatures 
+### Collect the signatures and add them to the the Reflow seal 
+
+Here we need again to join two files again, the **issuer_verifier.json** and **signature_Alice.json**, which we have achieved with: 
 
 
+```shell
+jq -s '.[0] * .[1]' ${out}/issuer_verifier.json ${out}/signature_$name.json > ${out}/issuer_verifier_signature_$name.json
+```
+
+Note that we are using the variable **$name** instead of **Alice**, this line is taken from the script [run-recursive.sh](https://github.com/dyne/Zenroom/blob/master/test/zencode_reflow/run-recursive.sh), also mentioned in the bottom of the page.
+
+The output file looks like (file: *issuer_verifier_signature_Alice.json*):
+
+[](../_media/examples/zencode_cookbook/reflow/issuer_verifier_signature_Alice.json ':include :type=code json')
+
+
+
+The file *issuer_verifier_signature_Alice.json* we have just created along with the latest *reflow_seal.json* will be passed as input to the script: 
+
+[](../_media/examples/zencode_cookbook/reflow/collect_sign.zen ':include :type=code gherkin')
+
+
+the result, after that three signatures have been added, should be (file: *reflow_seal.json*):
+
+
+[](../_media/examples/zencode_cookbook/reflow/reflow_seal.json ':include :type=code json')
+
+Since in this demo we have 3 partecipants, we now have our fully signed **Reflow seal**.
 
 ## Verify the Reflow seal  
 
+After all the signatures have been added to the **Reflow seal**, in order verify the signatures, we can run the script 
+
+[](../_media/examples/zencode_cookbook/reflow/verify_sign.zen ':include :type=code gherkin')
+
+Which will simply return a string: 
+
+```json
+{
+  "output": [
+    "SUCCESS"
+  ]
+}
+```
+
+Keep in mind that this verification can be placed in the beginning of other scripts, providing a condition to the execution.
 
 
-## Verify the Reflow seal  
+## Verify the Reflow identity
+
+You may as well want to verify just the **Reflow identity**, so the data that the signature was built around, by running (input: *reflow_seal.json* and *uid.json*)
 
 
-
+[](../_media/examples/zencode_cookbook/reflow/verify_identity.zen ':include :type=code gherkin')
 
 
 ```json
 {
-   "list_of_infected" : [
-      "b2bf0a3038f3810d2b3fbd4f300b3d8827cf5fb0078c3bd3dc65c48481162820",
-      "d843e0cec156f496e11f39f81e40708cf95341dad022a450924decd7e153354c",
-      "64c200f8db42a03f9757529f6415aa452639039f2c92301b640c17b3889b6ccc",
-      "595d59e1ddc733536e9943f29ad066904bb06802cfe8c216bdc9d67d0deb28f9",
-      "e28668b87d50147848385b5adfc010f7fce516e57115220be49214d415a0e451",
-      "3188ab1c837658bd906430d98b41eb3b6012c153282456abbaf622036f4996e9"
+  "output": [
+    "The_reflow_identity_in_the_seal_is_verified"
+  ]
 }
 ```
+
+Like above, this verification can be placed in the beginning of other scripts, providing a condition to the execution.
+
+
 
 
 
