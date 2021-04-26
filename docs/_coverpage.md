@@ -5,8 +5,7 @@
 
 
 - 
-<span class="small-caps">zenroom</span> is a **secure language interpreter** of both Lua and its own secure domain specific language <span class="small-caps">zencode</span> to <a href="https://zenroom.org/#features" target="_blank" alt="Features" style="font-weight: bold; text-decoration:underline !important;">execute cryptographic operations</a>  and execute smart contracts in a multiplatform environment.
-
+<span class="small-caps">zenroom</span> is a small, portable and **secure language interpreter** of a domain specific language called <span class="small-caps">zencode</span>, able to <a href="https://zenroom.org/#features" target="_blank" alt="Features" style="font-weight: bold; text-decoration:underline !important;">execute cryptographic operations</a> and smart contracts in a multiplatform environment.
 
 
 <!--
