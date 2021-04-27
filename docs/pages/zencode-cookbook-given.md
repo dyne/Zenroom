@@ -103,7 +103,7 @@ Let's start with a create a file named *myFlatObject.json* containing several an
 
 
 
-### *Given I have* to load a flat JSON 
+### *Given I have*: load data from a flat JSON 
 
 The most important thing to know about loading data in Zencode, is that ***each object must be loaded individually***, and one statement is needed to load each object. In this JSON we have one ***string***, one ***number*** and one ***array***, so we'd need three to load our whole JSON file, but we'll leave alone the array for now, so two statements will be enough.
 
@@ -183,7 +183,7 @@ And you will need to pass the identity in a parameter, looking like this:
 The paramater can be passed to Zenroom (via *-a* and *-k* parameters) as JSON or CBOR files. 
 
 
-## *Given I have* to load nested JSON file (part 2)
+## *Given I have*: load data from nested JSON file (part 2)
 
 So let's go one step further and create a JSON file that containing two nested objects, we'll call it named *myNestedObject.json*:
 
@@ -235,44 +235,8 @@ zenroom -a givenArraysLoadInput.json -z givenArraysLoad.zen | tee myArraysOutput
 ``` 
 
 The output should looke like this: <a href="../_media/examples/zencode_cookbook/givenArraysLoadOutput.json" download>givenArraysLoadOutput.json</a>.
-
-## Variations on *Given I have* using a nested JSON file (part 3)
-
-Let's now load some real arrays, from a more complex JSON like this one: 
-
-[](../_media/examples/zencode_cookbook/myTripleNestedObject.json ':include :type=code json')
-
-Let's try with this script: 
-
-[](../_media/examples/zencode_cookbook/givenLoadTripleNestedObject.zen ':include :type=code gherkin')
  
 
-The output should look like this: 
-
-[](../_media/examples/zencode_cookbook/givenTripleNestedObjectOutput.json ':include :type=code json')
-
- 
-## Corner case: homonymy
-
-Now let's look at corner cases: what would happen if I load two differently named objects, that contain objects with the same name? Something like this: 
-
-[](../_media/examples/zencode_cookbook/myNestedRepetitveObject.json ':include :type=code json')
-
-We could try using the following script:
-
-
-[](../_media/examples/zencode_cookbook/givenLoadRepetitveObject.zen ':include :type=code gherkin')
-
-After uncommenting the statemen that loads the object *'myStringArray'* for the second time, Zenroom would halt the execution and return an error.
-
-<!-- Unused files
-
-You would get this result, which is probably something you want to avoid:
-
-[](../_media/examples/zencode_cookbook/givenLoadRepetitveObjectOutput.json ':include :type=code json')
-
-This last is the perfect example to introduce the *debug* operator.
---> 
  
 # Loading dictionaries
 
@@ -331,6 +295,23 @@ Dictionaries are named and loaded in the same fashion as arrays, so in order to 
 Given I have a 'string dictionary' named 'Beatles' 
 ```
 
+## Variations on *Given I have*, to load a nested JSON aka *Dictionary* (part 3)
+
+Let's now load some real arrays, from a more complex JSON like this one: 
+
+[](../_media/examples/zencode_cookbook/myTripleNestedObject.json ':include :type=code json')
+
+Let's try with this script: 
+
+[](../_media/examples/zencode_cookbook/givenLoadTripleNestedObject.zen ':include :type=code gherkin')
+ 
+
+The output should look like this: 
+
+[](../_media/examples/zencode_cookbook/givenTripleNestedObjectOutput.json ':include :type=code json')
+
+### More on loading dictionaries
+
 So let's try to load a real dataset that contains two dictionaries, dummy datasets representing transactions, the first named *ABC-TransactionListFirstBatch* and the second *ABC-TransactionListSecondBatch*, which we'll save in the file **dictionariesBlockchain.json**:
 
 [](../_media/examples/zencode_cookbook/dictionariesBlockchain.json ':include :type=code json')
@@ -364,16 +345,56 @@ Or if you're a fan of verbosity, you can try with this script:
 
 We won't show the output of the script here as it would fill a couple pages... so many wasted electrons! Looking at this script can otherwise be a good exercise for you to figure out how Zenroom behaves each time a different piece of data is loaded.
 
+# Corner cases
+
 
 ## Enjoy the silence: *Given nothing*
  
  This statement sets a pre-condition to the execution of the script: *Given nothing* will halt the execution if data is passed to Zenroom via *--data* and *--keys* parameters, you want to use it when you want to be sure that no data is being passed to Zenroom. You may want to use it when you generate random objects or keypairs. 
+ 
+ 
+## Homonymy
+
+Now let's look at corner cases: what would happen if I load two differently named objects, that contain objects with the same name? Something like this: 
+
+[](../_media/examples/zencode_cookbook/myNestedRepetitveObject.json ':include :type=code json')
+
+We could try using the following script:
+
+
+[](../_media/examples/zencode_cookbook/givenLoadRepetitveObject.zen ':include :type=code gherkin')
+
+After uncommenting the statemen that loads the object *'myStringArray'* for the second time, Zenroom would halt the execution and return an error.
+
+
+## JSON empty objects and the *null* values 
+
+You may bump into empty objects or null values like these: 
+ 
+```json
+
+{ "myData": {
+		"myString1": "",
+		"myString2": null,
+		"myString3": "Hello World!"
+	}
+}
+```
+
+and you would load it with: 
+
+```gherkin
+Given I have a 'string' named 'myString1' in 'myData'
+Given I have a 'string' named 'myString2' in 'myData'
+Given I have a 'string' named 'myString3' in 'myData'
+Then print data
+```
+
+When doing son, you would incur in errors, cause Zenroom doesn't load objects with empty or *null* values. On the other hand, Zenroom doesn't normally allow you to set or change the value of an existing object, so importing an empty object expecting to fill it later, doesn't make much sense. You may instead create, copy and rename new objects at execution time, you will read about this in the [When](/pages/zencode-cookbook-when?id=manipulation-sumsubtract-rename-remove-append) section of this manual.
+
+ 
 
 <!-- Temp removed, 
-
-
-
-
 
  
 # Comprehensive list of *Given* statements
