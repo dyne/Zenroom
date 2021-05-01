@@ -17,17 +17,17 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Sunday, 25th April 2021
+--on Saturday, 1st May 2021
 --]]
 --- Zencode data internals
 
 -- Used in scenario's schema declarations to cast to zenroom. type
 ZEN.get = function(obj, key, conversion)
-   ZEN.assert(obj, 'ZEN.get no object found')
-   ZEN.assert(type(key) == 'string', 'ZEN.get key is not a string')
-   ZEN.assert(
+   assert(obj, 'ZEN.get no object found', 2)
+   assert(type(key) == 'string', 'ZEN.get key is not a string', 2)
+   assert(
       not conversion or type(conversion) == 'function',
-      'ZEN.get invalid conversion function'
+      'ZEN.get invalid conversion function', 2
    )
    local k
    if key == '.' then
@@ -35,7 +35,7 @@ ZEN.get = function(obj, key, conversion)
    else
       k = obj[key]
    end
-   ZEN.assert(k, 'Key not found in object conversion: ' .. key)
+   assert(k, 'Key not found in object conversion: ' .. key, 2)
    local res = nil
    local t = type(k)
    if iszen(t) and conversion then
@@ -65,8 +65,7 @@ ZEN.get = function(obj, key, conversion)
    ::ok::
    assert(
       ZEN.OK and res,
-      'ZEN.get on invalid key: ' .. key .. ' (' .. t .. ')'
-   )
+      'ZEN.get on invalid key: ' .. key .. ' (' .. t .. ')', 2)
    return res
 end
 
@@ -320,6 +319,7 @@ function guess_outcast(cast)
    end
 end
 
+-- TODO: rename to check_output_codec_encoding(v)
 function check_codec(value)
    if not ZEN.CODEC then
       return CONF.output.encoding.name
@@ -334,6 +334,48 @@ function check_codec(value)
       return ZEN.CODEC[value].encoding or CONF.output.encoding.name
    end
    return CONF.output.encoding.name
+end
+
+function new_codec(cname, parameters, clone)
+   local name = uscore(cname)
+   assert(ACK[name], "Cannot create codec, object not found: "..name, 2)
+   assert(not ZEN.CODEC[name], "Cannot overwrite ZEN.CODEC."..name, 2)
+   local res
+   if clone then
+      assert(ZEN.CODEC[clone], "Clone not found in ZEN.CODEC."..clone, 2)
+   end
+   if ZEN.CODEC[clone] then
+      res = ZEN.CODEC[clone]
+      res.name = name
+   else
+      res = {
+         name = name,
+         encoding = CONF.output.encoding.name
+      }
+   end
+   -- overwrite with paramenters in argument
+   for k,v in pairs(parameters) do
+      res[k] = v
+   end
+   -- detect zentype and luatype
+   if not res.luatype then
+      res.luatype = luatype(ACK[name])
+   end
+   if not res.zentype then
+      if res.luatype == 'table' then
+         if isdictionary(ACK[name]) then
+            res.zentype = 'dictionary'
+         elseif isarray(ACK[name]) then
+            res.zentype = 'array'
+         else
+            error("Unknown zentype for lua table: "..name, 2)
+         end
+      else
+         res.zentype = type(ACK[name])
+      end
+   end
+   ZEN.CODEC[name] = res
+   return(res) -- redundant, should not use return value for efficiency
 end
 
 -- Crawls a whole table structure and collects all strings and octets
@@ -392,51 +434,3 @@ end
 -- Move 'my own' data structure from ACK to OUT.whoami memory space,
 -- ready for its final JSON encoding and print out.
 -- @function ZEN:outmy(name)
-
----
--- Convert a data object to the desired format (argument name provided
--- as string), or use CONF.encoding when called without argument
---
--- @function export_obj(object, format)
--- @param object data element to be converted
--- @param format pointer to a converter function
--- @return object converted to format
-local function export_arr(object, format)
-   ZEN.assert(
-      iszen(type(object)),
-      'export_arr called on a ' .. type(object)
-   )
-   local conv_f = nil
-   local ft = type(format)
-   if format and ft == 'function' then
-      conv_f = format
-      goto ok
-   end
-   if format and ft == 'string' then
-      conv_f = output_encoding(format).fun
-      goto ok
-   end
-   if not CONF.output.encoding then
-      error('CONF.output.encoding is not configured', 2)
-   end
-   conv_f = CONF.output.encoding.fun -- fallback to configured conversion function
-   ::ok::
-   ZEN.assert(
-      type(conv_f) == 'function',
-      'export_arr conversion function not configured'
-   )
-   return conv_f(object) -- TODO: protected call? deepmap?
-end
-function export_obj(object, format)
-   -- CONF { encoding = <function 1>,
-   --        encoding_prefix = "u64"  }
-   ZEN.assert(object, 'export_obj object not found')
-   if type(object) == 'table' then
-      local tres = {}
-      for k, v in ipairs(object) do -- only flat tables support recursion
-         table.insert(tres, export_arr(v, format))
-      end
-      return tres
-   end
-   return export_arr(object, format)
-end

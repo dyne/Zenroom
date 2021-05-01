@@ -46,6 +46,56 @@ local tostring = tostring
 inspect.KEY       = setmetatable({}, {__tostring = function() return 'inspect.KEY' end})
 inspect.METATABLE = setmetatable({}, {__tostring = function() return 'inspect.METATABLE' end})
 
+
+---
+-- Convert a data object to the desired format (argument name provided
+-- as string), or use CONF.encoding when called without argument
+--
+-- @function export_obj(object, format)
+-- @param object data element to be converted
+-- @param format pointer to a converter function
+-- @return object converted to format
+local function export_arr(object, format)
+  ZEN.assert(
+     iszen(type(object)),
+     'export_arr called on a ' .. type(object)
+  )
+  local conv_f = nil
+  local ft = type(format)
+  if format and ft == 'function' then
+     conv_f = format
+     goto ok
+  end
+  if format and ft == 'string' then
+     conv_f = output_encoding(format).fun
+     goto ok
+  end
+  if not CONF.output.encoding then
+     error('CONF.output.encoding is not configured', 2)
+  end
+  conv_f = CONF.output.encoding.fun -- fallback to configured conversion function
+  ::ok::
+  ZEN.assert(
+     type(conv_f) == 'function',
+     'export_arr conversion function not configured'
+  )
+  return conv_f(object) -- TODO: protected call? deepmap?
+end
+
+local function export_obj(object, format)
+  -- CONF { encoding = <function 1>,
+  --        encoding_prefix = "u64"  }
+  ZEN.assert(object, 'export_obj object not found')
+  if type(object) == 'table' then
+     local tres = {}
+     for k, v in ipairs(object) do -- only flat tables support recursion
+        table.insert(tres, export_arr(v, format))
+     end
+     return tres
+  end
+  return export_arr(object, format)
+end
+
 -- Apostrophizes the string if it has quotes, but not aphostrophes
 -- Otherwise, it returns a regular quoted string
 local function smartQuote(str)

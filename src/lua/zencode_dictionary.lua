@@ -1,20 +1,24 @@
--- This file is part of Zenroom (https://zenroom.dyne.org)
+--[[
+--This file is part of zenroom
 --
--- Copyright (C) 2020 Dyne.org foundation
--- designed, written and maintained by Denis Roio <jaromil@dyne.org>
+--Copyright (C) 2020-2021 Dyne.org foundation
+--designed, written and maintained by Denis Roio <jaromil@dyne.org>
 --
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU Affero General Public License as
--- published by the Free Software Foundation, either version 3 of the
--- License, or (at your option) any later version.
+--This program is free software: you can redistribute it and/or modify
+--it under the terms of the GNU Affero General Public License v3.0
 --
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU Affero General Public License for more details.
+--This program is distributed in the hope that it will be useful,
+--but WITHOUT ANY WARRANTY; without even the implied warranty of
+--MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--GNU Affero General Public License for more details.
 --
--- You should have received a copy of the GNU Affero General Public License
--- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+--Along with this program you should have received a copy of the
+--GNU Affero General Public License v3.0
+--If not, see http://www.gnu.org/licenses/agpl.txt
+--
+--Last modified by Denis Roio
+--on Saturday, 1st May 2021
+--]]
 
 
 
@@ -53,120 +57,139 @@ local function dicts_reduce(dicts, params)
 end
 
 When("create the new dictionary", function()
+		empty'new dictionary'
 		ACK.new_dictionary = { }
-		ZEN.CODEC.new_dictionary = { name = 'new dictionary',
-								encoding = check_codec('new dictionary'),
-								zentype = 'dictionary' }
+		new_codec('new dictionary', { zentype = 'dictionary' })
 end)
 
 When("find the max value '' for dictionaries in ''", function(name, arr)
-        ZEN.assert(ACK[arr], "No dictionaries found in: "..arr)
-		ZEN.assert(not ACK.max_value, "Cannot overwrite existing object: "..'max value')
-        local max = 0
-		local params = { target = name }
-		params.op = function(v)
-		   if max < v then max = v end
-		end
-		dicts_reduce(ACK[arr],params)
-        ZEN.assert(max, "No max value "..name.." found across dictionaries in"..arr)
-        ACK.max_value = max
-        ZEN.CODEC.max_value = { name = 'max value',
-								encoding = ZEN.CODEC[arr].encoding,
-								zentype = 'element' }
+	ZEN.assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
+	empty'max value'
+    local max = 0
+	local params = {
+				target = name,
+				op = function(v)
+					if max < v then max = v end
+				end
+			}
+	dicts_reduce(ACK[arr],params) -- optimization? operate directly on ACK
+    ZEN.assert(max, "No max value "..name.." found across dictionaries in"..arr)
+    ACK.max_value = max
+	new_codec('max value', {
+		zentype = 'element', -- introduce scalar?
+		luatype = 'number'
+	}, arr) -- clone array's encoding
 end)
 
 When("find the min value '' for dictionaries in ''", function(name, arr)
-        ZEN.assert(ACK[arr], "No dictionaries found in: "..arr)
-		ZEN.assert(not ACK.min_value, "Cannot overwrite existing object: "..'min value')
-		local min
-		-- init min with any value
-		for k, v in pairs(ACK[arr]) do
-		   min = v[name] -- suppose existance of key
-		   break
-		end
-		local params = { target = name }
-		params.op = function(v)
-		   if v < min then min = v end
-		end
-		dicts_reduce(ACK[arr],params)
-		ACK.min_value = min
-        ZEN.CODEC.min_value = { name = 'min value',
-								encoding = ZEN.CODEC[arr].encoding,
-								zentype = 'element' }
+	ZEN.assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
+	empty'min value'
+	local min
+	-- init min with any value
+	for k,v in pairs(ACK[arr]) do
+	   min = v[name] -- suppose existance of key
+	   break
+	end
+	local params = {
+		target = name,
+		op = function(v)
+			if v < min then min = v end
+		 end
+	}
+	dicts_reduce(ACK[arr],params)
+	ACK.min_value = min
+	new_codec('max value', {
+		zentype = 'element', -- introduce scalar?
+		luatype = 'number'
+	}, arr) -- clone array's encoding
 end)
 
 When("create the sum value '' for dictionaries in ''", function(name,arr)
-        ZEN.assert(ACK[arr], "No dictionaries found in: "..arr)
-		ZEN.assert(not ACK.sum_value, "Cannot overwrite existing object: "..'sum value')
-
-		local sum = 0 -- result of reduction TODO: BIG or ECP to octet sums?
-		local params = { target = name }
-		params.op = function(v) sum = sum + v end
-        dicts_reduce(ACK[arr], params)
-        ZEN.assert(sum, "No sum of value "..name
-					  .." found across dictionaries in"..arr)
-        ACK.sum_value = sum
-        ZEN.CODEC.sum_value = { name = 'sum value',
-								encoding = ZEN.CODEC[arr].encoding,
-								zentype = 'element',
-								luatype = 'number' } -- TODO: zenroom types
+	ZEN.assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
+	empty'sum value'
+	local sum = 0 -- result of reduction TODO: BIG or ECP to octet sums?
+	local params = {
+		target = name,
+		op = function(v) sum = sum + v end
+	}
+    dicts_reduce(ACK[arr], params)
+    ZEN.assert(sum, "No sum of value "..name
+				  .." found across dictionaries in"..arr)
+    ACK.sum_value = sum
+	new_codec('sum value', {
+		zentype = 'element', -- introduce scalar?
+		luatype = 'number'
+	}, arr) -- clone array's encoding
 end)
 
 When("create the sum value '' for dictionaries in '' where '' > ''", function(name,arr, left, right)
-        ZEN.assert(ACK[arr], "No dictionaries found in: "..arr)
-		ZEN.assert(ACK[right], "Right side term of comparison not found: "..right)
-		ZEN.assert(not ACK.sum_value, "Cannot overwrite existing object: "..'sum value')
+	ZEN.assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
+	have(right)
+	empty'sum value'
 
-		local sum = 0 -- result of reduction
-		local params = { target = name,
-						 conditions = { } }
-		params.conditions[left] = ACK[right] -- used in cmp
-		params.cmp = function(l,r) return l > r end
-		params.op = function(v) sum = sum + v end
-        dicts_reduce(ACK[arr], params)
-
-        ZEN.assert(sum, "No sum of value "..name
-					  .." found across dictionaries in"..arr)
-        ACK.sum_value = sum
-        ZEN.CODEC.sum_value = { name = 'sum value',
-								encoding = ZEN.CODEC[arr].encoding,
-								zentype = 'element' }
+	local sum = 0 -- result of reduction
+	local params = {
+		target = name,
+		conditions = { },
+		cmp = function(l,r) return l > r end,
+		op = function(v) sum = sum + v end
+	}
+	params.conditions[left] = ACK[right] -- used in cmp
+    dicts_reduce(ACK[arr], params)
+    ZEN.assert(sum, "No sum of value "..name
+				  .." found across dictionaries in"..arr)
+    ACK.sum_value = sum
+	new_codec('sum value', {
+		zentype = 'element', -- introduce scalar?
+		luatype = 'number'
+	}, arr) -- clone array's encoding
 end)
 
 When("find the '' for dictionaries in '' where '' = ''",function(name, arr, left, right)
-        ZEN.assert(ACK[arr], "No dictionaries found in: "..arr)
-		ZEN.assert(ACK[right], "Right side term of comparison not found: "..right)
-		ZEN.assert(not ACK[name], "Cannot overwrite existing object: "..name)
+	ZEN.assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
+	have(right)
+	empty(name)
 
-		local val = { }
-		local params = { target = name,
-						 conditions = { } }
-		params.conditions[left] = ACK[right]
-		params.cmp = function(l,r) return l == r end
-		params.op = function(v) table.insert(val, v) end
-		dicts_reduce(ACK[arr], params)
-
-		ZEN.assert(val, "No value found "..name.." across dictionaries in "..arr)
-		if #val == 1 then
-		   ACK[name] = val[1]
-		   ZEN.CODEC[name] = { name = name,
-							   encoding = ZEN.CODEC[arr].encoding,
-							   zentype = 'element' }
-		else
-		   ACK[name] = val
-		   ZEN.CODEC[name] = { name = name,
-							   encoding = ZEN.CODEC[arr].encoding,
-							   luatype = 'table',
-							   zentype = 'array' }
-		end
+	local val = { }
+	local params = {
+		target = name,
+		conditions = { },
+		cmp = function(l,r) return l == r end,
+		op = function(v) table.insert(val, v) end
+	}
+	params.conditions[left] = ACK[right]
+	dicts_reduce(ACK[arr], params)
+	ZEN.assert(val, "No value found "..name.." across dictionaries in "..arr)
+	if #val == 1 then
+		ACK[name] = val[1]
+		new_codec(name, {
+			luatype = luatype(ACK[name]),
+			zentype = 'element'
+		}, arr)
+	else
+	   ACK[name] = val
+	   new_codec(name, {
+		   luatype = 'table',
+		   zentype = 'array'
+	   }, arr)
+	end
 end)
 
 When("create the copy of '' from dictionary ''", function(name, dict)
-		ZEN.assert(ACK[dict], "No dictionary found in: "..dict)
-		ZEN.assert(ACK[dict][name], "No element found in: "..dict.."."..name)
-		ACK.copy = deepcopy(ACK[dict][name])
-		-- TODO: support nested arrays or dictionaries
-		ZEN.CODEC.copy = { name = name,
-						   encoding = ZEN.CODEC[dict].encoding,
-						   zentype = 'element' }
+	have(dict)
+	empty'copy'
+	ZEN.assert(ACK[dict][name], "Dictionary member not found: "..dict.."."..name)
+	ACK.copy = deepcopy(ACK[dict][name])
+	new_codec('copy', { luatype = luatype(ACK[copy]) }, dict)
+	if ZEN.CODEC.copy.luatype == 'table' then
+		if isdictionary(ACK.copy) then
+			   ZEN.CODEC.copy.zentype = 'dictionary'
+		elseif isarray(ACK.copy) then
+			   ZEN.CODEC.copy.zentype = 'array'
+		else
+		   ZEN.assert(false, "Unknown zentype for lua table element: "..dict.."."..name)
+		end
+	else
+		ZEN.CODEC.copy.zentype = 'element'
+	end
 end)
