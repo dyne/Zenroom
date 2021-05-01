@@ -181,8 +181,6 @@ Given I have an 'hex' named 'myFirstHex' inside 'myFirstObject'
 Given I have a  'base64' named 'myFirstBase64' in 'myFirstObject'
 Given I have a  'binary' named 'myFirstBinary' in 'myFirstObject'
 Given I have an 'url64' named 'myFirstUrl64' in 'myFirstObject'
-# Let's debug here to make sure we know what we're loading
-and debug
 # Here we're done loading stuff 
 EOF
 cat $tmpGiven > ../../docs/examples/zencode_cookbook/whenCompleteScriptGiven.zen
