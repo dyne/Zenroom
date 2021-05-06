@@ -36,18 +36,22 @@ end
 
 ZEN.add_schema(
     {
-        bls_public_key = function(obj)
-            return ECP2.new(CONF.input.encoding.fun(obj))
+        reflow_public_key = function(obj)
+            return ({
+				  ecp2 = ZEN.get(obj, 'ecp2', ECP2.new)
+					})
         end,
         reflow_seal = function(obj)
-            return {
-                identity = ZEN.get(obj, 'identity', ECP.new),
-                SM = ZEN.get(obj, 'SM', ECP.new),
-                verifier = ZEN.get(obj, 'verifier', ECP2.new),
-                fingerprints = import_reflow_seal_fingerprints_f(
-                    obj.fingerprints
-                )
-            }
+		   local f
+		   if obj.fingerprints then
+			  f = import_reflow_seal_fingerprints_f(obj.fingerprints)
+		   else f = nil end
+		   return {
+			  identity = ZEN.get(obj, 'identity', ECP.new),
+			  SM = ZEN.get(obj, 'SM', ECP.new),
+			  verifier = ZEN.get(obj, 'verifier', ECP2.new),
+			  fingerprints = f
+		   }
         end,
         reflow_signature = function(obj)
             return {
@@ -56,38 +60,51 @@ ZEN.add_schema(
                 proof = import_credential_proof_f(obj.proof),
                 zeta = ZEN.get(obj, 'zeta', ECP.new)
             }
-        end
+        end,
+		reflow_identity = function(obj)
+		   return ZEN.get(nil, 'reflow_identity', ECP.new)
+		end
     }
 )
 
+local function _makeuid(src)
+   local uid
+   if luatype(src) == 'table' then
+	  uid = ECP.hashtopoint(ZEN.serialize(src))
+   else
+	  uid = ECP.hashtopoint(src)
+   end
+   return(uid)
+end
+
 When(
-    'create the bls key',
+    'create the reflow key',
     function()
         -- keygen: δ = r.O ; γ = δ.G2
-        initkeys 'bls'
-        ACK.keys.bls = INT.random() -- BLS secret signing key
+        initkeys 'reflow'
+        ACK.keys.reflow = INT.random() -- BLS secret signing key
     end
 )
 
 When(
-    'create the bls public key',
+    'create the reflow public key',
     function()
-        empty 'bls public key'
-        havekey 'bls'
-        ACK.bls_public_key = G2 * ACK.keys.bls
+        empty 'reflow public key'
+        havekey 'reflow'
+        ACK.reflow_public_key = { ecp2 = G2 * ACK.keys.reflow }
     end
 )
 
 When(
-    "aggregate the bls public key from array ''",
+    "aggregate the reflow public key from array ''",
     function(arr)
-        empty 'bls public key'
+        empty 'reflow public key'
         local s = have(arr)
         for _, v in pairs(s) do
-            if not ACK.bls_public_key then
-                ACK.bls_public_key = v
+            if not ACK.reflow_public_key then
+                ACK.reflow_public_key = { ecp2 = v.ecp2 }
             else
-                ACK.bls_public_key = ACK.bls_public_key + v
+                ACK.reflow_public_key.ecp2 = ACK.reflow_public_key.ecp2 + v.ecp2
             end
         end
     end
@@ -98,11 +115,7 @@ When(
     function(doc)
         empty 'reflow identity'
         local src = have(doc)
-        if luatype(src) == 'table' then
-            ACK.reflow_identity = ECP.hashtopoint(ZEN.serialize(src))
-        else
-            ACK.reflow_identity = ECP.hashtopoint(src)
-        end
+		ACK.reflow_identity = _makeuid(have(doc))
     end
 )
 
@@ -118,7 +131,7 @@ local function _create_reflow_seal_f(uid)
     ACK.reflow_seal = {
         identity = UID,
         SM = UID * r,
-        verifier = ACK.reflow_public_key + G2 * r
+        verifier = ACK.reflow_public_key.ecp2 + G2 * r
     }
 end
 
@@ -134,7 +147,8 @@ When(
         empty 'reflow signature'
         have 'reflow seal'
         have 'issuer public key'
-        -- aggregate all credentials
+		havekey 'reflow'
+		-- aggregate all credentials
         local pubcred = false
         for _, v in pairs(ACK.issuer_public_key) do
             if not pubcred then
@@ -155,7 +169,7 @@ When(
         )
         ACK.reflow_signature = {
             identity = ACK.reflow_seal.identity,
-            signature = ACK.reflow_seal.identity * ACK.keys.bls,
+            signature = ACK.reflow_seal.identity * ACK.keys.reflow,
             proof = p,
             zeta = z
         }
@@ -279,3 +293,77 @@ When(
         ACK.reflow_seal = dst
     end
 )
+
+--------------------
+-- MATERIAL PASSPORT
+--
+-- Simplified flow to generate and verify material passports, which
+-- are a particular use-case of reflow signatures. Statements here do
+-- implicit things and reduce complexity of operations, in particular
+-- there is no multi-party computation in this process so credential
+-- use is omitted.
+
+
+-- aggregation supports single element arrays and fixes off-by-one
+local function _aggregate_array(arr)
+   assert(isarray(arr), "Cannot aggregate invalid array", 2)
+   local res = arr[1]
+   if #arr > 1 then
+	  for i = 2, #arr do
+		 res = res + arr[i]
+	  end
+   end
+   return(res)
+end
+
+When(
+   "create the material passport of ''",
+   function(obj)
+	  local key = havekey'reflow'
+	  local id = have'reflow identity'
+	  -- object to sign
+	  local src = have(obj)
+	  empty('material passport')
+	  -- append agent id to track and trace
+	  if not ACK.fingerprints then ACK.fingerprints = { } end
+	  table.insert(ACK.fingerprints, id)
+	  -- calculate object uid
+	  local UID = _makeuid(src) -- reflow unique ID of object
+	  -- calculate signing uid (aggregation of all fingerprints)
+	  local SID = UID + _aggregate_array(ACK.fingerprints)
+	  local r = INT.random() -- blinding factor
+	  ACK.material_passport = {
+		 identity = UID,
+		 fingerprints = ACK.fingerprints,
+		 SM = (SID * r) + (SID * key), -- blinding factor
+		 verifier = (G2 * r) + (G2 * key)
+	  }
+end)
+
+When(
+   "verify the material passport of ''",
+   function(obj)
+	  local src = have(obj)
+	  local seal = have(obj..'.seal')
+	  ZEN.assert(seal.fingerprints,
+				 "No fingerprints found in object seal: "..obj)
+	  local UID = _makeuid(src)
+	  ZEN.assert(UID == seal.identity,
+				 "Object does not match seal identity (needs track and trace?): "..obj)
+	  local SID = UID + _aggregate_array(seal.fingerprints)
+	  ZEN.assert(
+		 ECP2.miller(seal.verifier, SID)
+		 ==
+		 ECP2.miller(G2, seal.SM),
+		 "Object matches, but seal is invalid: "..obj) 
+end)
+
+-- Complex check calculates UID of object and compares to seal, if
+-- correct then validates, else searches for .track array of seals and
+-- calculates aggregated UID, if correct then validates
+When(
+   "verify the material passport of '' is valid",
+   function(obj)
+	  have(obj)
+	  have(obj..'.seal')
+end)

@@ -51,7 +51,8 @@ local keytypes = {
     ecdh = true,
     credential = true,
     issuer = true,
-    bls = true
+    bls = true,
+	reflow = true
 }
 
 function havekey(ktype)
@@ -81,6 +82,9 @@ ZEN.add_schema(
             end
             if obj.bls then
                 res.bls = ZEN.get(obj, 'bls', INT.new)
+            end
+            if obj.reflow then
+                res.reflow = ZEN.get(obj, 'reflow', INT.new)
             end
             return (res)
         end

@@ -8,30 +8,19 @@ if ! test -r ../utils.sh; then
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
+out='../../docs/examples/zencode_cookbook/reflow'
+function save() {
+	tee ${out}/$1 | tee ./$1 | jq .
+}
 
-# # CREATE A NEW seal
-# mv reflow_seal.json reflow_seal_1.json
-# mv public_key_array.json public_key_array_1.json
-# mv uid.json uid_1.json
-# # generate two signed credentials
-# generate_participant "Carl"
-# generate_participant "Denis"
-# # join the verifiers of signed credentials
-# json_join verifier_Carl.json verifier_Denis.json > public_keys.json
-# echo "{\"public_keys\": `cat public_keys.json` }" > public_key_array.json
-# # make a uid using the current timestamp
-# echo "{\"today\": \"`date`\"}" > uid.json
-# # SIGNING seal
-# cat <<EOF | debug seal_start.zen -k uid.json -a public_key_array.json > reflow_seal.json
-# Scenario reflow
-# Given I have a 'bls public key array' named 'public keys'
-# and I have a 'string' named 'today'
-# When I aggregate the bls public key from array 'public keys'
-# and I rename the 'bls public key' to 'reflow public key'
-# and I create the reflow identity of 'today'
-# and I create the reflow seal with identity 'reflow identity'
-# Then print the 'reflow seal'
-# EOF
+cat << EOF > Agent.json
+{ "Agent": {
+  "id": "BADC0FFE",
+  "name": "Alice",
+  "note": "The smartypants who is lost in Wonderland",
+  }
+}
+EOF
 
 cat << EOF > EconomicResource.json
 { "EconomicResource": { 
@@ -58,7 +47,7 @@ cat << EOF > EconomicResource.json
 EOF
 
 cat << EOF > EconomicEvent.json
-{
+{ "EconomicEvent": {
         "action": {
           "label": "transfer"
         },
@@ -84,27 +73,80 @@ cat << EOF > EconomicEvent.json
           }
         }
       }
+    }
 EOF
 
 cat << EOF > Process.json
-{
-  finished: false,
-  id: "01EVTV5F0PHMH7R1J5A1QXEZM1",
-  name: "A sample process",
-  note: "Description of a sample process",
-  inputs: [],
-  outputs: []
+{ "Process": {
+  "finished": 0,
+  "id": "01EVTV5F0PHMH7R1J5A1QXEZM1",
+  "name": "A sample process",
+  "note": "Description of a sample process",
+  "inputs": [],
+  "outputs": []
+  }
 }
 EOF
 
-cat << EOF | debug create_seal_of_resource.zen -a EconomicResource.json -k public_key_array.json |tee EconomicResource_seal.json 
+cat <<EOF | zexe create_agent_reflow_identity.zen -a Agent.json | save identity_Alice.json
+Scenario reflow
+Given I am 'Alice'
+and I have a 'string dictionary' named 'Agent'
+When I create the reflow identity of 'Agent'
+Then print 'reflow identity'
+EOF
+
+jq -s 'reduce .[] as $item ({}; . * $item)' . identity_Alice.json keypair_Alice.json | save alice.json
+
+cat << EOF | debug create_seal_of_resource.zen -a EconomicResource.json -k alice.json | save EconomicResource_seal.json
+Scenario reflow
+Given I am 'Alice'
+and I have my 'keys'
+and I have a 'reflow identity'
+and I have a 'string dictionary' named 'EconomicResource'
+When I create the material passport of 'EconomicResource'
+and I rename the 'material passport' to 'EconomicResource.seal'
+Then print the 'EconomicResource'
+and print the 'EconomicResource.seal'
+EOF
+
+cat << EOF | zexe verify_seal_of_resource.zen -a EconomicResource_seal.json
 Scenario reflow
 Given I have a 'string dictionary' named 'EconomicResource'
-and I have a 'bls public key array' named 'public keys'
-When I aggregate the bls public key from array 'public keys'
-and I rename the 'bls public key' to 'reflow public key'
-and I create the reflow identity of 'EconomicResource'
-and I create the reflow seal with identity 'reflow UID'
-Then print the 'reflow seal'
-and print the 'reflow identity'
+and I have a 'reflow seal' named 'EconomicResource.seal'
+When I verify the material passport of 'EconomicResource'
+Then print the string 'Valid Resource material passport'
 EOF
+
+cat << EOF | debug create_seal_of_event.zen -a EconomicEvent.json -k alice.json |tee EconomicEvent_seal.json 
+Scenario reflow
+Given I am 'Alice'
+and I have my 'keys'
+and I have a 'reflow identity'
+and I have a 'string dictionary' named 'EconomicEvent'
+When I create the material passport of 'EconomicEvent'
+and I rename the 'material passport' to 'EconomicEvent.seal'
+Then print the 'EconomicEvent'
+and print the 'EconomicEvent.seal'
+EOF
+
+cat << EOF | zexe verify_seal_of_event.zen -a EconomicEvent_seal.json
+Scenario reflow
+Given I have a 'string dictionary' named 'EconomicEvent'
+and I have a 'reflow seal' named 'EconomicEvent.seal'
+When I verify the material passport of 'EconomicEvent'
+Then print the string 'Valid Event material passport'
+EOF
+
+# cat << EOF | debug create_seal_of_process.zen -a Process.json -k keypair_Alice.json | tee Process_seal.json 
+# Scenario reflow
+# Given I have a 'string dictionary' named 'Process'
+# and I have a 'bls public key array' named 'public keys'
+# When I aggregate the bls public key from array 'public keys'
+# and I rename the 'bls public key' to 'reflow public key'
+# and I create the reflow identity of 'Process'
+# and I create the reflow seal with identity 'reflow identity'
+# and I rename the 'reflow seal' to 'Process.seal'
+# Then print the 'Process'
+# and print the 'Process.seal'
+# EOF
