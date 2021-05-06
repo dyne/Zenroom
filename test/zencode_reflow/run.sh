@@ -54,7 +54,6 @@ Scenario reflow
 Given I am '${1}'
 and I have my 'keys'
 When I create the reflow public key
-and debug
 Then print my 'reflow public key'
 EOF
 
@@ -87,8 +86,8 @@ Given I am '${1}'
 and I have my 'keys'
 and I have a 'credential signature'
 when I create the credentials
-then print my 'credentials'
-and print my 'keys'
+then print 'credentials'
+and print 'keys'
 EOF
 	##
 
@@ -159,8 +158,8 @@ function participant_sign() {
 Scenario reflow
 Scenario credential
 Given I am '$name'
-and I have my 'credentials'
-and I have my 'keys'
+and I have the 'credentials'
+and I have the 'keys'
 and I have a 'reflow seal'
 and I have a 'issuer public key' from 'The Authority'
 When I create the reflow signature

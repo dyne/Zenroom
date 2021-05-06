@@ -20,6 +20,8 @@
 
 ABC = require_once('crypto_credential')
 
+require_once('zencode_credential')
+
 G2 = ECP2.generator()
 
 local function import_reflow_seal_fingerprints_f(o)
@@ -34,25 +36,25 @@ local function import_reflow_seal_fingerprints_f(o)
     return arr
 end
 
+local function import_reflow_seal_f(obj)
+   local f
+   if obj.fingerprints then
+	  f = import_reflow_seal_fingerprints_f(obj.fingerprints)
+   else f = nil end
+   return {
+	  identity = ZEN.get(obj, 'identity', ECP.new),
+	  SM = ZEN.get(obj, 'SM', ECP.new),
+	  verifier = ZEN.get(obj, 'verifier', ECP2.new),
+	  fingerprints = f
+   }
+end
+
 ZEN.add_schema(
     {
         reflow_public_key = function(obj)
-            return ({
-				  ecp2 = ZEN.get(obj, 'ecp2', ECP2.new)
-					})
+            return ({ ecp2 = ZEN.get(obj, 'ecp2', ECP2.new)	})
         end,
-        reflow_seal = function(obj)
-		   local f
-		   if obj.fingerprints then
-			  f = import_reflow_seal_fingerprints_f(obj.fingerprints)
-		   else f = nil end
-		   return {
-			  identity = ZEN.get(obj, 'identity', ECP.new),
-			  SM = ZEN.get(obj, 'SM', ECP.new),
-			  verifier = ZEN.get(obj, 'verifier', ECP2.new),
-			  fingerprints = f
-		   }
-        end,
+        reflow_seal = import_reflow_seal_f,
         reflow_signature = function(obj)
             return {
                 identity = ZEN.get(obj, 'identity', ECP.new),
@@ -63,6 +65,13 @@ ZEN.add_schema(
         end,
 		reflow_identity = function(obj)
 		   return ZEN.get(nil, 'reflow_identity', ECP.new)
+		end,
+		material_passport = function(obj)
+		   return {
+			  seal = import_reflow_seal_f(obj.seal),
+			  proof = import_credential_proof_f(obj.proof),
+			  zeta = ZEN.get(obj, 'zeta', ECP.new)
+		   }
 		end
     }
 )
@@ -148,6 +157,7 @@ When(
         have 'reflow seal'
         have 'issuer public key'
 		havekey 'reflow'
+		havekey 'credential'
 		-- aggregate all credentials
         local pubcred = false
         for _, v in pairs(ACK.issuer_public_key) do
@@ -320,7 +330,9 @@ When(
    "create the material passport of ''",
    function(obj)
 	  local key = havekey'reflow'
+	  local cred = have'credentials'
 	  local id = have'reflow identity'
+	  have'issuer public key'
 	  -- object to sign
 	  local src = have(obj)
 	  empty('material passport')
@@ -332,11 +344,17 @@ When(
 	  -- calculate signing uid (aggregation of all fingerprints)
 	  local SID = UID + _aggregate_array(ACK.fingerprints)
 	  local r = INT.random() -- blinding factor
+	  local p, z = ABC.prove_cred_uid(ACK.issuer_public_key,
+									  ACK.credentials, ACK.keys.credential, SID)
 	  ACK.material_passport = {
-		 identity = UID,
-		 fingerprints = ACK.fingerprints,
-		 SM = (SID * r) + (SID * key), -- blinding factor
-		 verifier = (G2 * r) + (G2 * key)
+		 seal = {
+			identity = UID,
+			fingerprints = ACK.fingerprints,
+			SM = (SID * r) + (SID * key), -- blinding factor
+			verifier = (G2 * r) + (G2 * key)
+		 },
+		 proof = p,
+		 zeta = z
 	  }
 end)
 
@@ -344,18 +362,22 @@ When(
    "verify the material passport of ''",
    function(obj)
 	  local src = have(obj)
-	  local seal = have(obj..'.seal')
-	  ZEN.assert(seal.fingerprints,
-				 "No fingerprints found in object seal: "..obj)
+	  local mp = have'material passport'
+	  local pub = have'issuer public key'
+	  ZEN.assert(mp.seal.fingerprints,
+				 "No fingerprints found in material passport seal: "..obj)
 	  local UID = _makeuid(src)
-	  ZEN.assert(UID == seal.identity,
-				 "Object does not match seal identity (needs track and trace?): "..obj)
-	  local SID = UID + _aggregate_array(seal.fingerprints)
+	  ZEN.assert(UID == mp.seal.identity,
+				 "Object does not match material passport identity (needs track and trace?): "..obj)
+	  local SID = UID + _aggregate_array(mp.seal.fingerprints)
 	  ZEN.assert(
-		 ECP2.miller(seal.verifier, SID)
+		 ECP2.miller(mp.seal.verifier, SID)
 		 ==
-		 ECP2.miller(G2, seal.SM),
-		 "Object matches, but seal is invalid: "..obj) 
+		 ECP2.miller(G2, mp.seal.SM),
+		 "Object matches, but seal is invalid: "..obj)
+	  ZEN.assert(
+		 ABC.verify_cred_uid(ACK.issuer_public_key, mp.proof, mp.zeta, SID),
+		 "Object and seal are valid, but proof of issuance fails: "..obj)
 end)
 
 -- Complex check calculates UID of object and compares to seal, if

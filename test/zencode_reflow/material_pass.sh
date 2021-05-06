@@ -96,44 +96,63 @@ When I create the reflow identity of 'Agent'
 Then print 'reflow identity'
 EOF
 
-jq -s 'reduce .[] as $item ({}; . * $item)' . identity_Alice.json keypair_Alice.json | save alice.json
 
-cat << EOF | debug create_seal_of_resource.zen -a EconomicResource.json -k alice.json | save EconomicResource_seal.json
+## AGENT CRYPTO KEYS
+# this is composed of various parts:
+# 1. keys containing: reflow and credentials
+# 2. credentials
+# 3. identity
+jq -s 'reduce .[] as $item ({}; . * $item)' . identity_Alice.json verified_credential_Alice.json | save alice.json
+
+
+## AUTHORITY PUBLIC KEY
+# add the issuer node public key to the object passed
+jq -s 'reduce .[] as $item ({}; . * $item)' . issuer_verifier.json EconomicResource.json | save EconomicResource_issuer.json
+
+cat << EOF | debug create_seal_of_resource.zen -a EconomicResource_issuer.json -k alice.json | save EconomicResource_seal.json
 Scenario reflow
 Given I am 'Alice'
-and I have my 'keys'
+and I have the 'keys'
+and I have the 'credentials'
+and I have a 'issuer public key' in 'The Authority'
 and I have a 'reflow identity'
 and I have a 'string dictionary' named 'EconomicResource'
 When I create the material passport of 'EconomicResource'
-and I rename the 'material passport' to 'EconomicResource.seal'
 Then print the 'EconomicResource'
-and print the 'EconomicResource.seal'
+and print the 'material passport'
 EOF
 
-cat << EOF | zexe verify_seal_of_resource.zen -a EconomicResource_seal.json
+cat << EOF | zexe verify_seal_of_resource.zen -a EconomicResource_seal.json -k issuer_verifier.json
 Scenario reflow
 Given I have a 'string dictionary' named 'EconomicResource'
-and I have a 'reflow seal' named 'EconomicResource.seal'
+and I have a 'issuer public key' in 'The Authority'
+and I have a 'material passport'
 When I verify the material passport of 'EconomicResource'
 Then print the string 'Valid Resource material passport'
 EOF
 
-cat << EOF | debug create_seal_of_event.zen -a EconomicEvent.json -k alice.json |tee EconomicEvent_seal.json 
+## AUTHORITY PUBLIC KEY
+# add the issuer node public key to the object passed
+jq -s 'reduce .[] as $item ({}; . * $item)' . issuer_verifier.json EconomicEvent.json | save EconomicEvent_issuer.json
+
+cat << EOF | debug create_seal_of_event.zen -a EconomicEvent_issuer.json -k alice.json |tee EconomicEvent_seal.json 
 Scenario reflow
 Given I am 'Alice'
-and I have my 'keys'
+and I have the 'keys'
+and I have the 'credentials'
+and I have a 'issuer public key' in 'The Authority'
 and I have a 'reflow identity'
 and I have a 'string dictionary' named 'EconomicEvent'
 When I create the material passport of 'EconomicEvent'
-and I rename the 'material passport' to 'EconomicEvent.seal'
 Then print the 'EconomicEvent'
-and print the 'EconomicEvent.seal'
+and print the 'material passport'
 EOF
 
-cat << EOF | zexe verify_seal_of_event.zen -a EconomicEvent_seal.json
+cat << EOF | zexe verify_seal_of_event.zen -a EconomicEvent_seal.json -k issuer_verifier.json
 Scenario reflow
 Given I have a 'string dictionary' named 'EconomicEvent'
-and I have a 'reflow seal' named 'EconomicEvent.seal'
+and I have a 'issuer public key' in 'The Authority'
+and I have a 'material passport'
 When I verify the material passport of 'EconomicEvent'
 Then print the string 'Valid Event material passport'
 EOF
