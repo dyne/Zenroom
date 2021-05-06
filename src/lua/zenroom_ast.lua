@@ -59,6 +59,10 @@ function set_sentence(self, event, from, to, ctx)
 	if to == 'then' then
 		tt = string.gsub(tt, ' the ', ' ', 1)
 	end
+	if to == 'given' then
+	   tt = string.gsub(tt, ' the ', ' a ', 1)
+	   tt = string.gsub(tt, ' an ',  ' a ', 1)
+	end
 	tt = string.gsub(tt, ' +', ' ') -- eliminate multiple internal spaces
 	tt = string.gsub(tt, 'I ', '', 1)
 	tt = string.gsub(tt:lower(), 'when ', '', 1)
