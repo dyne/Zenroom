@@ -23,17 +23,21 @@
 
 -- Used in scenario's schema declarations to cast to zenroom. type
 ZEN.get = function(obj, key, conversion)
-   assert(obj, 'ZEN.get no object found', 2)
    assert(type(key) == 'string', 'ZEN.get key is not a string', 2)
    assert(
       not conversion or type(conversion) == 'function',
       'ZEN.get invalid conversion function', 2
    )
    local k
-   if key == '.' then
-      k = obj
+   if not obj then -- take from IN root
+	  -- does not support to pick in WHO (use of 'my')
+	  k = IN.KEYS[key] or IN[key]
    else
-      k = obj[key]
+	  if key == '.' then
+		 k = obj
+	  else
+		 k = obj[key]
+	  end
    end
    assert(k, 'Key not found in object conversion: ' .. key, 2)
    local res = nil
