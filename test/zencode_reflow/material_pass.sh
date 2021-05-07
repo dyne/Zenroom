@@ -8,14 +8,8 @@ if ! test -r ../utils.sh; then
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
-#out='../../docs/examples/zencode_cookbook/reflow'
-in='../../docs/examples/zencode_cookbook/reflow'
-out='./files'
-function save() {
-	tee ${out}/$1 | tee ./$1 | jq .
-}
 
-cat << EOF > ${out}/Agent.json
+cat << EOF | save reflow Agent.json
 { "Agent": {
   "id": "BADC0FFE",
   "name": "Alice",
@@ -24,7 +18,7 @@ cat << EOF > ${out}/Agent.json
 }
 EOF
 
-cat << EOF > ${out}/EconomicResource.json
+cat << EOF | save reflow EconomicResource.json
 { "EconomicResource": { 
         "accountingQuantity": {
           "hasNumericalValue": 0.0478270231353376,
@@ -48,7 +42,7 @@ cat << EOF > ${out}/EconomicResource.json
     }
 EOF
 
-cat << EOF > ${out}/EconomicEvent.json
+cat << EOF | save reflow EconomicEvent.json
 { "EconomicEvent": {
         "action": {
           "label": "transfer"
@@ -78,7 +72,7 @@ cat << EOF > ${out}/EconomicEvent.json
     }
 EOF
 
-cat << EOF > ${out}/Process.json
+cat << EOF | save reflow Process.json
 { "Process": {
   "finished": 0,
   "id": "01EVTV5F0PHMH7R1J5A1QXEZM1",
@@ -90,7 +84,7 @@ cat << EOF > ${out}/Process.json
 }
 EOF
 
-cat <<EOF | zexe ${out}/create_agent_reflow_identity.zen -a ${out}/Agent.json | save ${out}/identity_Alice.json
+cat <<EOF | zexe create_agent_reflow_identity.zen -a Agent.json | save reflow identity_Alice.json
 Scenario reflow
 Given I am 'Alice'
 and I have a 'string dictionary' named 'Agent'
@@ -104,18 +98,18 @@ EOF
 # 1. keys containing: reflow and credentials
 # 2. credentials
 # 3. identity
-jq -s 'reduce .[] as $item ({}; . * $item)' . ${out}/identity_Alice.json ${in}/verified_credential_Alice.json | save alice.json
+json_join identity_Alice.json verified_credential_Alice.json | save reflow alice.json
 
 
 ## AUTHORITY PUBLIC KEY
 # add the issuer node public key to the object passed
-jq -s 'reduce .[] as $item ({}; . * $item)' . ${in}/issuer_verifier.json ${out}/EconomicResource.json | save EconomicResource_issuer.json
+json_join issuer_verifier.json EconomicResource.json | save reflow EconomicResource_issuer.json
 
-cat << EOF | debug ${out}/create_seal_of_resource.zen -a ${out}/EconomicResource_issuer.json -k ${out}/alice.json | save ${out}/EconomicResource_seal.json
+cat << EOF | zexe create_seal_of_resource.zen -a EconomicResource_issuer.json -k alice.json | save reflow EconomicResource_seal.json
 Scenario reflow
 Given I am 'Alice'
-and I have my 'keys'
-and I have my 'credentials'
+and I have the 'keys'
+and I have the 'credentials'
 and I have a 'issuer public key' in 'The Authority'
 and I have a 'reflow identity'
 and I have a 'string dictionary' named 'EconomicResource'
@@ -124,7 +118,7 @@ Then print the 'EconomicResource'
 and print the 'material passport'
 EOF
 
-cat << EOF | zexe ${out}/verify_seal_of_resource.zen -a ${out}/EconomicResource_seal.json -k ${out}/issuer_verifier.json
+cat << EOF | zexe verify_seal_of_resource.zen -a EconomicResource_seal.json -k issuer_verifier.json
 Scenario reflow
 Given I have a 'string dictionary' named 'EconomicResource'
 and I have a 'issuer public key' in 'The Authority'
@@ -135,9 +129,9 @@ EOF
 
 ## AUTHORITY PUBLIC KEY
 # add the issuer node public key to the object passed
-jq -s 'reduce .[] as $item ({}; . * $item)' . ${out}/issuer_verifier.json EconomicEvent.json | save ${out}/EconomicEvent_issuer.json
+json_join issuer_verifier.json EconomicEvent.json | save reflow EconomicEvent_issuer.json
 
-cat << EOF | debug ${out}/create_seal_of_event.zen -a ${out}/EconomicEvent_issuer.json -k ${out}/alice.json |tee ${out}/EconomicEvent_seal.json 
+cat << EOF | zexe create_seal_of_event.zen -a EconomicEvent_issuer.json -k alice.json | save reflow EconomicEvent_seal.json 
 Scenario reflow
 Given I am 'Alice'
 and I have the 'keys'
@@ -150,7 +144,7 @@ Then print the 'EconomicEvent'
 and print the 'material passport'
 EOF
 
-cat << EOF | zexe ${out}/verify_seal_of_event.zen -a ${out}/EconomicEvent_seal.json -k ${out}/issuer_verifier.json
+cat << EOF | zexe verify_seal_of_event.zen -a EconomicEvent_seal.json -k issuer_verifier.json
 Scenario reflow
 Given I have a 'string dictionary' named 'EconomicEvent'
 and I have a 'issuer public key' in 'The Authority'

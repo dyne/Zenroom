@@ -127,6 +127,16 @@ zexe() {
 	return $res
 }
 
+save() {
+	here="./"
+	docs="../../docs/examples/zencode_cookbook/$1"
+	if command -v jq; then
+		tee ${here}/"$2" | tee ${docs}/"$2" | jq .
+	else
+		tee ${here}/"$2" | tee ${docs}/"$2"
+	fi
+}
+
 debug() {
 	if [ "$Z" == "" ]; then
 		>&2 echo "no zenroom executable configured"
@@ -186,29 +196,34 @@ function json_remove {
 	rm -f $tmp
 }
 
-# requires luajit and cjson
-# example:
-# json_join left.json right.json
 function json_join {
-	tmp=`mktemp`
-	cat <<EOF > $tmp
-J = require "cjson"
-local fd
-fd = io.open('$1',"r")
-left = fd:read '*all'
-fd:close()
-fd = io.open('$2',"r")
-right = fd:read '*all'
-fd:close()
-local r = { }
-for k,v in pairs( J.decode( left ) ) do
-	r[k] = v
-end
-for k,v in pairs( J.decode( right) ) do
-	r[k] = v
-end
-print(J.encode(r))
-EOF
-	luajit $tmp
-	rm -f $tmp
+	jq -s 'reduce .[] as $item ({}; . * $item)' . $*
 }
+
+
+# # requires luajit and cjson
+# # example:
+# # json_join left.json right.json
+# function json_join {
+# 	tmp=`mktemp`
+# 	cat <<EOF > $tmp
+# J = require "cjson"
+# local fd
+# fd = io.open('$1',"r")
+# left = fd:read '*all'
+# fd:close()
+# fd = io.open('$2',"r")
+# right = fd:read '*all'
+# fd:close()
+# local r = { }
+# for k,v in pairs( J.decode( left ) ) do
+# 	r[k] = v
+# end
+# for k,v in pairs( J.decode( right) ) do
+# 	r[k] = v
+# end
+# print(J.encode(r))
+# EOF
+# 	luajit $tmp
+# 	rm -f $tmp
+# }
