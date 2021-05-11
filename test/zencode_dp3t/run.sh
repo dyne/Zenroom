@@ -2,8 +2,6 @@
 
 # https://github.com/DP-3T/documents
 
-RNGSEED=hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-
 ####################
 # common script init
 if ! test -r ../utils.sh; then
@@ -13,7 +11,7 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
 
-cat <<EOF | zexe dp3t_keygen.zen | tee SK1.json
+cat <<EOF | zexe dp3t_keygen.zen | save dp3t SK1.json
 rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
@@ -24,7 +22,7 @@ Then print the 'secret day key'
 EOF
 
 
-cat <<EOF | zexe dp3t_keyderiv.zen -a SK1.json | tee SK2.json | jq
+cat <<EOF | zexe dp3t_keyderiv.zen -a SK1.json | save dp3t SK2.json
 scenario 'dp3t': Decentralized Privacy-Preserving Proximity Tracing
 rule check version 1.0.0
 rule input encoding hex
@@ -35,7 +33,7 @@ When I renew the secret day key to a new day
 Then print the 'secret day key'
 EOF
 
-cat <<EOF | zexe dp3t_ephidgen.zen -k SK2.json | tee EphID_2.json | jq
+cat <<EOF | zexe dp3t_ephidgen.zen -k SK2.json | save dp3t EphID_2.json
 scenario 'dp3t': Decentralized Privacy-Preserving Proximity Tracing
 rule check version 1.0.0
 rule input encoding hex
@@ -50,7 +48,7 @@ EOF
 
 
 # now generate a test with 20.000 infected SK
-cat <<EOF | zexe dp3t_testgen.zen > SK_infected_20k.json | jq
+cat <<EOF | zexe dp3t_testgen.zen | save dp3t SK_infected_20k.json
 rule check version 1.0.0
 rule input encoding hex
 rule output encoding hex
@@ -62,7 +60,7 @@ Then print the 'list of infected'
 EOF
 
 # extract a few random infected ephemeral ids to simulate proximity
-cat <<EOF | zexe dp3t_testextract.zen -a SK_infected_20k.json | tee EphID_infected.json | jq
+cat <<EOF | zexe dp3t_testextract.zen -a SK_infected_20k.json | save dp3t EphID_infected.json
 scenario 'dp3t'
 rule check version 1.0.0
 rule input encoding hex
@@ -78,7 +76,7 @@ Then print the 'ephemeral ids'
 EOF
 
 # given a list of infected and a list of ephemeral ids 
-cat <<EOF | zexe dp3t_checkinfected.zen -a SK_infected_20k.json -k EphID_infected.json | tee SK_proximity.json | jq
+cat <<EOF | zexe dp3t_checkinfected.zen -a SK_infected_20k.json -k EphID_infected.json | save dp3t SK_proximity.json
 scenario 'dp3t'
 rule check version 1.0.0
 rule input encoding hex

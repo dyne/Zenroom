@@ -8,9 +8,7 @@ if ! test -r ../utils.sh; then
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
-out=../../docs/examples/zencode_cookbook
-
-cat <<EOF > ${out}/W3C-VC_unsigned.json
+cat <<EOF | save w3c W3C-VC_unsigned.json
 {"my-vc": {
   "@context": [
     "https://www.w3.org/2018/credentials/v1",
@@ -38,14 +36,14 @@ cat <<EOF > ${out}/W3C-VC_unsigned.json
 }
 EOF
 
-cat <<EOF | zexe ${out}/W3C-VC_keygen.zen  | jq . | tee ${out}/W3C-VC_keypair.json
+cat <<EOF | zexe W3C-VC_keygen.zen | save w3c W3C-VC_keypair.json
 Scenario 'ecdh': Create the keypair
 Given that I am known as 'Alice'
 When I create the keypair
 Then print my data
 EOF
 
-cat <<EOF | zexe ${out}/W3C-VC_issuerKeygen.zen  | jq . | tee ${out}/W3C-VC_issuerKeypair.json
+cat <<EOF | zexe W3C-VC_issuerKeygen.zen  | save w3c W3C-VC_issuerKeypair.json
 Scenario 'ecdh': Create the keypair
 Given that I am known as 'Authority'
 When I create the keypair
@@ -53,14 +51,14 @@ Then print my data
 EOF
 
 
-cat <<EOF | zexe ${out}/W3C-VC_pubkey.zen -k ${out}/W3C-VC_issuerKeypair.json  | jq . | tee ${out}/W3C-VC_pubkey.json
+cat <<EOF | zexe W3C-VC_pubkey.zen -k W3C-VC_issuerKeypair.json | save w3c W3C-VC_pubkey.json
 Scenario 'ecdh': Publish the public key
 Given that I am known as 'Authority'
 and I have my 'keypair'
 Then print my 'public key' from 'keypair'
 EOF
 
-cat <<EOF | zexe ${out}/W3C-VC_sign.zen -a ${out}/W3C-VC_unsigned.json -k ${out}/W3C-VC_issuerKeypair.json  | jq . | tee ${out}/W3C-VC_signed.json
+cat <<EOF | zexe W3C-VC_sign.zen -a W3C-VC_unsigned.json -k W3C-VC_issuerKeypair.json | save w3c W3C-VC_signed.json
 Scenario 'w3c': sign JSON
 Scenario 'ecdh': (required)
 Given that I am 'Authority'
@@ -72,16 +70,16 @@ When I set the verification method in 'my-vc' to 'pubkey url'
 Then print 'my-vc' as 'string'
 EOF
 
-cat <<EOF | zexe ${out}/W3C-VC_verify.zen -a ${out}/W3C-VC_signed.json -k ${out}/W3C-VC_pubkey.json  | jq . | tee ${out}/W3C-VC_output.json
+cat <<EOF | zexe W3C-VC_verify.zen -a W3C-VC_signed.json -k W3C-VC_pubkey.json | save w3c W3C-VC_output.json
 Scenario 'w3c': verify signature
 Scenario 'ecdh': (required)
 Given I have a 'public key' inside 'Authority'
 Given I have a 'verifiable credential' named 'my-vc'
 When I verify the verifiable credential named 'my-vc'
-Then print 'W3C CREDENTIAL IS VALID'
+Then print the string 'W3C CREDENTIAL IS VALID'
 EOF
 
-cat <<EOF | zexe ${out}/W3C-VC_extract.zen -a ${out}/W3C-VC_signed.json  | jq . | tee ${out}/W3C-VC_extracted_verification_method.json
+cat <<EOF | zexe W3C-VC_extract.zen -a W3C-VC_signed.json | save w3c W3C-VC_extracted_verification_method.json
 Scenario 'w3c' : extract verification method
 Given I have a 'verifiable credential' named 'my-vc'
 When I get the verification method in 'my-vc'

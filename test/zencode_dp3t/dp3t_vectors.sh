@@ -79,7 +79,7 @@ end
 EOF
 
 cat <<EOF | $Z | tee $D/sk_zero.json
-SK = O.new(32):zero()
+SK = O.zero(32)
 SHA256 = HASH.new('sha256')
 BROADCAST_KEY = O.from_string("Decentralized Privacy-Preserving Proximity Tracing")
 PRF = SHA256:hmac(SK, BROADCAST_KEY)
