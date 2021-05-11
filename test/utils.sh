@@ -117,12 +117,14 @@ zexe() {
 	fi
 	res=$?
 	exec_time=`grep "Time used" $t/stderr | cut -d: -f2`
+	exec_memory=`grep "Memory used" $t/stderr | cut -d: -f2`
 	out_size=`stat -c '%s' $t/stdout`
 	echo "EXECUTION TIME: $exec_time" >&2
 	echo "OUTPUT SIZE: `stat -c '%s' $t/stdout` bytes" >&2
 	if [ $res == 0 ]; then
 		cat $t/stdout
-		echo -e "OK \t|\t `basename $out` \t|\t $exec_time \t|\t $out_size" >> /tmp/zenroom-test-summary.txt
+		echo -e "OK \t|\t `basename $out` \t|\t $exec_time \t|\t $out_size \t|\t $exec_memory" \
+			 >> /tmp/zenroom-test-summary.txt
 	else
 		>&2 cat $t/stderr | grep -v '^ \. '
 		echo "ERR `basename $out`" >> /tmp/zenroom-test-summary.txt
@@ -136,7 +138,8 @@ zexe() {
 save() {
 	here="./"
 	docs="../../docs/examples/zencode_cookbook/$1"
-	if command -v jq; then
+	mkdir -p ${docs}
+	if command -v jq > /dev/null; then
 		tee ${here}/"$2" | tee ${docs}/"$2" | jq .
 	else
 		tee ${here}/"$2" | tee ${docs}/"$2"
