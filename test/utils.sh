@@ -68,7 +68,13 @@ detect_zenroom_conf() {
 	zenroom_conf=""
 	if ! test "$DEBUG" == ""; then zenroom_conf="$zenroom_conf,debug=$DEBUG"; fi
 	if ! test "$COLOR" == ""; then zenroom_conf="$zenroom_conf,color=$COLOR"; fi
-	if ! test "$RNGSEED" == ""; then zenroom_conf="$zenroom_conf,rngseed=$RNGSEED"; fi
+	if test "$RNGSEED" == ""; then
+		zenroom_conf="$zenroom_conf,rngseed=hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+	elif test "$RNGSEED" == "random"; then
+		>&2 echo "Using Real Random (no rngseed to zero)"
+	else
+		zenroom_conf="$zenroom_conf,rngseed=$RNGSEED"
+	fi
 	if ! test "$SECCOMP" == ""; then zenroom_conf="$zenroom_conf,seccomp=$SECCOMP"; fi
 	if ! test "$MEMWIPE" == ""; then zenroom_conf="$zenroom_conf,memwipe=$MEMWIPE"; fi
 	if ! test "$zenroom_conf" == ""; then
