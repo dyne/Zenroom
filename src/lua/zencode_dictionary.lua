@@ -98,7 +98,7 @@ When("find the min value '' for dictionaries in ''", function(name, arr)
 	}
 	dicts_reduce(ACK[arr],params)
 	ACK.min_value = min
-	new_codec('max value', {
+	new_codec('min value', {
 		zentype = 'element', -- introduce scalar?
 		luatype = 'number'
 	}, arr) -- clone array's encoding
