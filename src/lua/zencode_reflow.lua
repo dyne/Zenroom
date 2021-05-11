@@ -52,9 +52,11 @@ end
 ZEN.add_schema(
     {
         reflow_public_key = function(obj)
-            return ({ ecp2 = ZEN.get(obj, 'ecp2', ECP2.new)	})
+		   return ZEN.get(obj, '.', ECP2.new)
         end,
+
         reflow_seal = import_reflow_seal_f,
+
         reflow_signature = function(obj)
             return {
                 identity = ZEN.get(obj, 'identity', ECP.new),
@@ -64,7 +66,7 @@ ZEN.add_schema(
             }
         end,
 		reflow_identity = function(obj)
-		   return ZEN.get(nil, 'reflow_identity', ECP.new)
+		   return ZEN.get(obj, '.', ECP.new)
 		end,
 		material_passport = function(obj)
 		   return {
@@ -100,7 +102,7 @@ When(
     function()
         empty 'reflow public key'
         havekey 'reflow'
-        ACK.reflow_public_key = { ecp2 = G2 * ACK.keys.reflow }
+        ACK.reflow_public_key = G2 * ACK.keys.reflow
     end
 )
 
@@ -111,9 +113,9 @@ When(
         local s = have(arr)
         for _, v in pairs(s) do
             if not ACK.reflow_public_key then
-                ACK.reflow_public_key = { ecp2 = v.ecp2 }
+                ACK.reflow_public_key = v
             else
-                ACK.reflow_public_key.ecp2 = ACK.reflow_public_key.ecp2 + v.ecp2
+                ACK.reflow_public_key = ACK.reflow_public_key + v
             end
         end
     end
@@ -140,7 +142,7 @@ local function _create_reflow_seal_f(uid)
     ACK.reflow_seal = {
         identity = UID,
         SM = UID * r,
-        verifier = ACK.reflow_public_key.ecp2 + G2 * r
+        verifier = ACK.reflow_public_key + G2 * r
     }
 end
 
