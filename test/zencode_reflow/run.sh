@@ -11,17 +11,8 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 # sideload='../../src/lua/zencode_reflow.lua'
 
 
-out='../../docs/examples/zencode_cookbook/reflow'
-
-function save() {
-	tee ${out}/$1 | tee $1
-}
-
-mkdir -p ${out}
-rm ${out}/*
-
 ## ISSUER
-cat <<EOF | zexe ${out}/issuer_keygen.zen | save issuer_keypair.json
+cat <<EOF | zexe issuer_keygen.zen | save reflow issuer_keypair.json
 Scenario credential
 Given I am 'The Authority'
 when I create the issuer key
@@ -29,7 +20,7 @@ Then print my 'keys'
 EOF
 
 
-cat <<EOF | zexe ${out}/issuer_verifier.zen -a ${out}/issuer_keypair.json | save issuer_verifier.json
+cat <<EOF | zexe issuer_verifier.zen -a issuer_keypair.json | save reflow issuer_verifier.json
 Scenario credential: publish verifier
 Given that I am known as 'The Authority'
 and I have my 'keys'
@@ -40,16 +31,15 @@ EOF
 generate_participant() {
     local name=$1
     ## PARTICIPANT
-	cat <<EOF | zexe ${out}/keygen_${1}.zen | save keypair_${1}.json
+	cat <<EOF | zexe keygen_${1}.zen | save reflow keypair_${1}.json
 Scenario reflow
-Scenario credential
 Given I am '${1}'
 When I create the reflow key
 and I create the credential key
 Then print my 'keys'
 EOF
 
-	cat <<EOF | zexe ${out}/pubkey_${1}.zen -k ${out}/keypair_${1}.json | save public_key_${1}.json
+	cat <<EOF | zexe pubkey_${1}.zen -k keypair_${1}.json | save reflow public_key_${1}.json
 Scenario reflow
 Given I am '${1}'
 and I have my 'keys'
@@ -57,7 +47,7 @@ When I create the reflow public key
 Then print my 'reflow public key'
 EOF
 
-	cat <<EOF | zexe ${out}/request_${1}.zen -k ${out}/keypair_${1}.json | save request_${1}.json
+	cat <<EOF | zexe request_${1}.zen -k keypair_${1}.json | save reflow request_${1}.json
 Scenario credential
 Given I am '${1}'
 and I have my 'keys'
@@ -67,7 +57,7 @@ EOF
 	##
 
 	## ISSUER SIGNS
-	cat <<EOF | zexe ${out}/issuer_sign_${1}.zen -k ${out}/issuer_keypair.json -a ${out}/request_${1}.json | save issuer_signature_${1}.json
+	cat <<EOF | zexe issuer_sign_${1}.zen -k issuer_keypair.json -a request_${1}.json | save reflow issuer_signature_${1}.json
 Scenario credential
 Given I am 'The Authority'
 and I have my 'keys'
@@ -80,7 +70,7 @@ EOF
 	##
 
 	## PARTICIPANT AGGREGATES SIGNED CREDENTIAL
-	cat <<EOF | zexe ${out}/aggr_cred_${1}.zen -k ${out}/keypair_${1}.json -a ${out}/issuer_signature_${1}.json | save verified_credential_${1}.json
+	cat <<EOF | zexe aggr_cred_${1}.zen -k keypair_${1}.json -a issuer_signature_${1}.json | save reflow verified_credential_${1}.json
 Scenario credential
 Given I am '${1}'
 and I have my 'keys'
@@ -99,21 +89,21 @@ generate_participant "Bob"
 generate_participant "Carl"
 
 # join the verifiers of signed credentials
-# json_join ${out}/verifier_Alice.json ${out}/verifier_Bob.json ${out}/verifier_Carl.json > ${out}/public_keys.json
-# echo "{\"public_keys\": `cat ${out}/public_keys.json` }" > ${out}/public_key_array.json
+# json_join verifier_Alice.json verifier_Bob.json verifier_Carl.json > public_keys.json
+# echo "{\"public_keys\": `cat public_keys.json` }" > public_key_array.json
 
 echo "${yellow} =========================== merging public keys ===================${reset}" 
 rm -f public_key_array.json
-jq -s 'reduce .[] as $item ({}; . * $item)' . ./public_key_* | save public_keys.json
+jq -s 'reduce .[] as $item ({}; . * $item)' . ./public_key_* | save reflow public_keys.json
 
 echo "${yellow} =========================== writing public keys array ===================${reset}"
 
-echo "{\"public_keys\": `cat ${out}/public_keys.json` }" | save public_key_array.json
+echo "{\"public_keys\": `cat public_keys.json` }" | save reflow public_key_array.json
 
 # make a uid using the current timestamp
-#echo "{\"today\": \"`date +'%s'`\"}" > ${out}/uid.json
+#echo "{\"today\": \"`date +'%s'`\"}" > uid.json
 
-cat <<EOF > ${out}/uid.json
+cat <<EOF > uid.json
 {
    "Sale":{
       "Buyer":"Alice",
@@ -133,7 +123,7 @@ EOF
 # anyone can start a seal
 
 # CREATE Reflow seal
-cat <<EOF | zexe ${out}/seal_start.zen -k ${out}/uid.json -a ${out}/public_key_array.json | save reflow_seal.json
+cat <<EOF | zexe seal_start.zen -k uid.json -a public_key_array.json | save reflow reflow_seal.json
 Scenario reflow
 Given I have a 'reflow public key array' named 'public keys'
 and I have a 'string dictionary' named 'Sale'
@@ -144,19 +134,18 @@ Then print the 'reflow seal'
 EOF
 #
 
-cp -v ${out}/reflow_seal.json ${out}/reflow_seal_empty.json
+cp -v reflow_seal.json reflow_seal_empty.json
 
 # anyone can require a verified credential to be able to sign, chosing
 # the right issuer verifier for it
-json_join issuer_verifier.json reflow_seal.json | save credential_to_sign.json
+json_join issuer_verifier.json reflow_seal.json | save reflow credential_to_sign.json
 
 
 # PARTICIPANT SIGNS (function)
 function participant_sign() {
 	local name=$1
-	cat <<EOF | zexe ${out}/sign_seal.zen -a ${out}/credential_to_sign.json -k ${out}/verified_credential_$name.json | save signature_$name.json
+	cat <<EOF | zexe sign_seal.zen -a credential_to_sign.json -k verified_credential_$name.json | save reflow signature_$name.json
 Scenario reflow
-Scenario credential
 Given I am '$name'
 and I have the 'credentials'
 and I have the 'keys'
@@ -175,12 +164,11 @@ function collect_sign() {
 	local name=$1
 	local tmp_msig=`mktemp`
 	local tmp_sig=`mktemp`
-	cp -v ${out}/reflow_seal.json $tmp_msig
-#	json_join ${out}/issuer_verifier.json ${out}/signature_$name.json > $tmp_sig
-	jq -s '.[0] * .[1]' issuer_verifier.json signature_$name.json | save issuer_verifier_signature_$name.json
-	cat << EOF | zexe collect_sign.zen -a $tmp_msig -k issuer_verifier_signature_$name.json | save reflow_seal.json
+	cp -v reflow_seal.json $tmp_msig
+#	json_join issuer_verifier.json signature_$name.json > $tmp_sig
+	jq -s '.[0] * .[1]' issuer_verifier.json signature_$name.json | save reflow issuer_verifier_signature_$name.json
+	cat << EOF | zexe collect_sign.zen -a $tmp_msig -k issuer_verifier_signature_$name.json | save reflow reflow_seal.json
 Scenario reflow
-Scenario credential
 Given I have a 'reflow seal'
 and I have a 'issuer public key' in 'The Authority'
 and I have a 'reflow signature'
@@ -201,7 +189,7 @@ collect_sign 'Carl'
 
 
 # VERIFY SIGNATURE
-cat << EOF | zexe ${out}/verify_sign.zen -a ${out}/reflow_seal.json | jq .
+cat << EOF | zexe verify_sign.zen -a reflow_seal.json
 Scenario reflow
 Given I have a 'reflow seal'
 When I verify the reflow seal is valid
@@ -210,7 +198,7 @@ and print the 'reflow seal'
 EOF
 
 
-cat << EOF | zexe ${out}/verify_identity.zen -a ${out}/reflow_seal.json -k ${out}/uid.json  | jq .
+cat << EOF | zexe verify_identity.zen -a reflow_seal.json -k uid.json
 Scenario 'reflow' : Verify the identity in the seal 
 Given I have a 'reflow seal'
 Given I have a 'string dictionary' named 'Sale'
