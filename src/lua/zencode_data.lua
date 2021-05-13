@@ -224,7 +224,7 @@ function operate_conversion(guessed)
       -- error('Invalid schema conversion for encoding: '..guessed.encoding, 2)
 	  local res = {}
       if guessed.encoding == 'array' then
-		 for _,v in ipairs(guessed.raw) do
+		 for k,v in pairs(guessed.raw) do
 			table.insert(res, guessed.fun(v))
 		 end
 		 return(res)

@@ -111,11 +111,18 @@ When(
     function(arr)
         empty 'reflow public key'
         local s = have(arr)
-        for _, v in pairs(s) do
+		ZEN.assert(#s ~= 0, "Empty array: "..arr)
+		local val
+        for k, v in pairs(s) do
+		    if k == 'reflow_public_key' then val = v 
+			   -- tolerate about named arrays
+			elseif v.reflow_public_key then val = v.reflow_public_key
+			else ZEN.assert(false, "Reflow public key not found in array: "..arr.."["..#array.."] at key "..k)
+			end
             if not ACK.reflow_public_key then
-                ACK.reflow_public_key = v
+                ACK.reflow_public_key = val
             else
-                ACK.reflow_public_key = ACK.reflow_public_key + v
+                ACK.reflow_public_key = ACK.reflow_public_key + val
             end
         end
     end

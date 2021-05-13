@@ -89,21 +89,10 @@ generate_participant "Bob"
 generate_participant "Carl"
 
 # join the verifiers of signed credentials
-# json_join verifier_Alice.json verifier_Bob.json verifier_Carl.json > public_keys.json
-# echo "{\"public_keys\": `cat public_keys.json` }" > public_key_array.json
+json_join public_key_Alice.json public_key_Bob.json public_key_Carl.json > public_keys.json
+echo "{\"public_keys\": `cat public_keys.json` }" > public_key_array.json
 
-echo "${yellow} =========================== merging public keys ===================${reset}" 
-rm -f public_key_array.json
-jq -s 'reduce .[] as $item ({}; . * $item)' . ./public_key_* | save reflow public_keys.json
-
-echo "${yellow} =========================== writing public keys array ===================${reset}"
-
-echo "{\"public_keys\": `cat public_keys.json` }" | save reflow public_key_array.json
-
-# make a uid using the current timestamp
-#echo "{\"today\": \"`date +'%s'`\"}" > uid.json
-
-cat <<EOF > uid.json
+cat <<EOF > Example.json
 {
    "Sale":{
       "Buyer":"Alice",
@@ -123,7 +112,7 @@ EOF
 # anyone can start a seal
 
 # CREATE Reflow seal
-cat <<EOF | zexe seal_start.zen -k uid.json -a public_key_array.json | save reflow reflow_seal.json
+cat <<EOF | zexe seal_start.zen -k Example.json -a public_key_array.json | save reflow reflow_seal.json
 Scenario reflow
 Given I have a 'reflow public key array' named 'public keys'
 and I have a 'string dictionary' named 'Sale'
@@ -198,7 +187,7 @@ and print the 'reflow seal'
 EOF
 
 
-cat << EOF | zexe verify_identity.zen -a reflow_seal.json -k uid.json
+cat << EOF | zexe verify_identity.zen -a reflow_seal.json -k Example.json
 Scenario 'reflow' : Verify the identity in the seal 
 Given I have a 'reflow seal'
 Given I have a 'string dictionary' named 'Sale'
