@@ -347,13 +347,12 @@ function check_codec(value)
 end
 
 function new_codec(cname, parameters, clone)
-   local name = fif(luatype(cname) == 'string', uscore(cname), cname)
-   assert(ACK[name], "Cannot create codec, object not found: "..name, 2)
-   assert(not ZEN.CODEC[name], "Cannot overwrite ZEN.CODEC."..name, 2)
+   if not cname then error("Missing name in new codec", 2) end
+   local name = fif(luatype(cname) == 'string', uscore(cname), cname) -- may be a numerical index
+   if not ACK[name] then error("Cannot create codec, object not found: "..name, 2) end
+   if ZEN.CODEC[name] then error("Cannot overwrite ZEN.CODEC."..name, 2) end
    local res
-   if clone then
-      assert(ZEN.CODEC[clone], "Clone not found in ZEN.CODEC."..clone, 2)
-   end
+   if clone and not ZEN.CODEC[clone] then error("Clone not found in ZEN.CODEC."..clone, 2) end
    if ZEN.CODEC[clone] then
       res = ZEN.CODEC[clone]
       res.name = name
@@ -364,8 +363,10 @@ function new_codec(cname, parameters, clone)
       }
    end
    -- overwrite with paramenters in argument
-   for k,v in pairs(parameters) do
-      res[k] = v
+   if parameters then
+	  for k,v in pairs(parameters) do
+		 res[k] = v
+	  end
    end
    -- detect zentype and luatype
    if not res.luatype then

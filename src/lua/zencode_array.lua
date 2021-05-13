@@ -84,9 +84,10 @@ When("remove the '' from ''", function(ele,from) _when_remove(ele, from) end)
 
 When("create the new array", function()
 		ACK.new_array = { }
-		ZEN.CODEC.new_array = { name = 'new array',
-								encoding = check_codec('new array'),
-								zentype = 'array' }
+		ZEN.CODEC.new_array = new_codec('new array',
+										{ encoding = CONF.output.encoding.name,
+										  zentype = 'array',
+										  luatype = 'table' })
 end)
 						   
 When("create the copy of element '' in array ''", function(pos, arr)
@@ -97,9 +98,7 @@ When("create the copy of element '' in array ''", function(pos, arr)
 		ZEN.assert(ACK[arr][num], "No element found in: "..arr.."["..pos.."]")
 		ACK.copy = ACK[arr][num]
 		-- TODO: support nested arrays or dictionaries
-		ZEN.CODEC.copy = { name = from,
-						   encoding = ZEN.CODEC[arr].encoding,
-						   zentype = 'element' }
+		ZEN.CODEC.copy = new_codec('copy',nil,arr)
 end)
 
 When("insert '' in ''", function(ele, dest)
