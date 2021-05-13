@@ -222,7 +222,13 @@ function operate_conversion(guessed)
    -- xxx('Operating conversion on: '..guessed.name)
    if guessed.zentype == 'schema' then
       -- error('Invalid schema conversion for encoding: '..guessed.encoding, 2)
-      if guessed.encoding == 'array' or guessed.encoding == 'dictionary' then
+	  local res = {}
+      if guessed.encoding == 'array' then
+		 for _,v in ipairs(guessed.raw) do
+			table.insert(res, guessed.fun(v))
+		 end
+		 return(res)
+	  elseif guessed.encoding == 'dictionary' then
          local res = {}
          for k, v in pairs(guessed.raw) do
             res[k] = guessed.fun(v[guessed.schema])
@@ -341,7 +347,7 @@ function check_codec(value)
 end
 
 function new_codec(cname, parameters, clone)
-   local name = uscore(cname)
+   local name = fif(luatype(cname) == 'string', uscore(cname), cname)
    assert(ACK[name], "Cannot create codec, object not found: "..name, 2)
    assert(not ZEN.CODEC[name], "Cannot overwrite ZEN.CODEC."..name, 2)
    local res

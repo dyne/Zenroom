@@ -153,15 +153,49 @@ When I verify the material passport of 'EconomicEvent'
 Then print the string 'Valid Event material passport'
 EOF
 
-# cat << EOF | debug create_seal_of_process.zen -a Process.json -k keypair_Alice.json | tee Process_seal.json 
-# Scenario reflow
-# Given I have a 'string dictionary' named 'Process'
-# and I have a 'bls public key array' named 'public keys'
-# When I aggregate the bls public key from array 'public keys'
-# and I rename the 'bls public key' to 'reflow public key'
-# and I create the reflow identity of 'Process'
-# and I create the reflow seal with identity 'reflow identity'
-# and I rename the 'reflow seal' to 'Process.seal'
-# Then print the 'Process'
-# and print the 'Process.seal'
-# EOF
+#############
+# AGGREGATION
+
+# make an array of material_passport.seal structs.  this is optionally
+# done with zenroom, host application may have a quick way to
+# manipulate structures
+cat <<EOF | zexe extract_seal.zen -a EconomicEvent_seal.json > seal1.json
+Scenario reflow
+Given I have a 'material passport'
+When I create the copy of 'seal' from dictionary 'material passport'
+and I rename 'copy' to 'seal1'
+Then print the 'seal1'
+EOF
+cat <<EOF | zexe extract_seal.zen -a EconomicResource_seal.json > seal2.json
+Scenario reflow
+Given I have a 'material passport'
+When I create the copy of 'seal' from dictionary 'material passport'
+and I rename 'copy' to 'seal2'
+Then print the 'seal2'
+EOF
+cat <<EOF | zexe make_seal_array.zen -a seal1.json -k seal2.json > SealArray.json
+Scenario reflow
+Given I have a 'reflow seal' named 'seal1'
+and I have a 'reflow seal' named 'seal2'
+When I create the new array
+and I insert 'seal1' in 'new array'
+and I insert 'seal2' in 'new array'
+and I rename 'new array' to 'Seals'
+Then print 'Seals'
+EOF
+json_join SealArray.json issuer_verifier.json Process.json | save reflow Aggregate_seal.json
+
+
+
+cat << EOF | debug create_seal_of_process.zen -a Aggregate_seal.json -k alice.json | tee Process_seal.json 
+Scenario reflow
+Given I am 'Alice'
+and I have the 'keys'
+and I have the 'credentials'
+and I have a 'issuer public key' in 'The Authority'
+and I have a 'reflow identity'
+and I have a 'reflow seal array' named 'Seals'
+When I create the sum value 'identity' for dictionaries in 'Seals'
+and debug
+Then print the 'sum value'
+EOF

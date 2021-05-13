@@ -33,13 +33,15 @@
 
 local function dicts_reduce(dicts, params)
    local found
+   local arr
    for ak,av in pairs(dicts) do
 	  found = false
 	  -- apply params filters, boolean just check key presence
 	  if params.conditions and params.cmp then
 		 for pk,pv in pairs(params.conditions) do
-			if av[pk] then
-			   if params.cmp(av[pk], pv) then
+			local tv = av[pk]
+			if tv then
+			   if params.cmp(tv, pv) then
 				  found = true
 			   end
 			end
@@ -107,19 +109,21 @@ end)
 When("create the sum value '' for dictionaries in ''", function(name,arr)
 	ZEN.assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
 	empty'sum value'
-	local sum = 0 -- result of reduction TODO: BIG or ECP to octet sums?
+	local sum -- result of reduction
 	local params = {
 		target = name,
-		op = function(v) sum = sum + v end
+		op = function(v)
+		   if not sum then sum = v
+		   else sum = sum + v end
+		end
 	}
     dicts_reduce(ACK[arr], params)
     ZEN.assert(sum, "No sum of value "..name
-				  .." found across dictionaries in"..arr)
+				  .." found across dictionaries in "..arr)
     ACK.sum_value = sum
 	new_codec('sum value', {
-		zentype = 'element', -- introduce scalar?
-		luatype = 'number'
-	}, arr) -- clone array's encoding
+		zentype = type(sum), -- introduce scalar?
+	}) -- clone array's encoding
 end)
 
 When("create the sum value '' for dictionaries in '' where '' > ''", function(name,arr, left, right)
