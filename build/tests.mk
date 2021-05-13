@@ -73,6 +73,7 @@ cortex-m-zencode-integration = \
 	cd test/zencode_cookbook && ./run-all.sh ${1}; cd -; \
 	cd test/zencode_numbers && ./run.sh ${1}; cd -; \
 	cd test/zencode_array && ./run.sh ${1}; cd -; \
+	cd test/zencode_dictionary && ./run.sh ${1}; cd -; \
 	cd test/zencode_hash && ./run.sh ${1}; cd -; \
 	cd test/zencode_ecdh && ./run.sh ${1}; cd -; \
 	cd test/zencode_credential && ./run.sh ${1}; cd -; \
@@ -81,7 +82,7 @@ cortex-m-zencode-integration = \
 cortex-m-crypto-integration = \
 	test/octet-json.sh ${1} && \
 	test/integration_asymmetric_crypto.sh ${1}
-	
+
 crypto-integration = \
 	test/octet-json.sh ${1} && \
 	cd test/nist && ./run.sh ../../${1}; cd -; \
