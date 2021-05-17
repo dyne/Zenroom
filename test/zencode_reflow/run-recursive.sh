@@ -41,8 +41,8 @@ rm /tmp/zenroom-test-summary.txt
 # Change this to change the amount of participants 
 # and the amount of recursion for some of the scripts
 
-Participants=3
-Recursion=1
+Participants=10
+Recursion=2
 
 users=""
 for i in $(seq $Participants)
@@ -100,19 +100,18 @@ generate_participant() {
     ## PARTICIPANT
 	cat <<EOF | zexe ${out}/keygen_${1}.zen  | jq . | tee ${out}/keypair_${1}.json
 Scenario reflow
-Scenario credential
 Given I am '${1}'
-When I create the BLS key
-When I create the credential key
+When I create the reflow key
+and I create the credential key
 Then print my 'keys'
 EOF
 
 	cat <<EOF | zexe ${out}/pubkey_${1}.zen -k ${out}/keypair_${1}.json  | jq . | tee ${out}/public_key_${1}.json
 Scenario reflow
 Given I am '${1}'
-Given I have my 'keys'
-When I create the BLS public key
-Then print my 'bls public key'
+and I have my 'keys'
+When I create the reflow public key
+Then print my 'reflow public key'
 EOF
 
 
@@ -209,12 +208,11 @@ EOF
 create_multisignature(){
 cat <<EOF  | zexe ${out}/seal_start.zen -k ${out}/uid.json -a ${out}/public_key_array.json | tee  ${out}/reflow_seal.json
 Scenario reflow
-Given I have a 'bls public key array' named 'public keys'
-Given I have a 'string dictionary' named 'Sale'
-When I aggregate the bls public key from array 'public keys'
-When I rename the 'bls public key' to 'reflow public key'
-When I create the reflow identity of 'Sale'
-When I create the reflow seal with identity 'reflow identity'
+Given I have a 'reflow public key array' named 'public keys'
+and I have a 'string dictionary' named 'Sale'
+When I aggregate the reflow public key from array 'public keys'
+and I create the reflow identity of 'Sale'
+and I create the reflow seal with identity 'reflow identity'
 Then print the 'reflow seal'
 EOF
 }
@@ -245,7 +243,6 @@ function participant_sign() {
 	local name=$1
 	cat <<EOF | zexe ${out}/sign_session.zen -a ${out}/credential_to_sign.json -k ${out}/verified_credential_$name.json  | jq . | tee ${out}/signature_$name.json
 Scenario reflow
-Scenario credential
 Given I am '$name'
 Given I have my 'credentials'
 Given I have my 'keys'
@@ -275,15 +272,14 @@ function collect_sign() {
 	jq -s '.[0] * .[1]' ${out}/issuer_verifier.json ${out}/signature_$name.json > ${out}/issuer_verifier_signature_$name.json
 	cat << EOF | zexe ${out}/collect_sign.zen -a $tmp_msig -k ${out}/issuer_verifier_signature_$name.json  | jq . | tee ${out}/reflow_seal.json
 Scenario reflow
-Scenario credential
 Given I have a 'reflow seal'
-Given I have a 'issuer public key' in 'The Authority'
-Given I have a 'reflow signature'
+and I have a 'issuer public key' in 'The Authority'
+and I have a 'reflow signature'
 When I aggregate all the issuer public keys
-When I verify the reflow signature credential
-When I check the reflow signature fingerprint is new
-When I add the reflow fingerprint to the reflow seal
-When I add the reflow signature to the reflow seal
+and I verify the reflow signature credential
+and I check the reflow signature fingerprint is new
+and I add the reflow fingerprint to the reflow seal
+and I add the reflow signature to the reflow seal
 Then print the 'reflow seal'
 EOF
 	rm -f $tmp_msig 
