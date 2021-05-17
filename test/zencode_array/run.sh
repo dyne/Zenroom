@@ -23,6 +23,12 @@ and I rename the 'array' to 'bonnetjes'
 Then print the 'bonnetjes'
 EOF
 
+cat << EOF | zexe array_length.zen -a arr.json
+Given I have a 'url64 array' named 'bonnetjes'
+When I create the length of 'bonnetjes'
+Then print the 'length'
+EOF
+
 cat <<EOF | zexe array_rename_remove.zen -a arr.json
 rule input encoding url64
 rule output encoding hex
@@ -183,6 +189,23 @@ Scenario reflow
 Given I have a 'reflow public key array' named 'public keys'
 Then print all data
 EOF
+
+cat << EOF > array_matches.json
+{ "haystack": [ "Approved", "Not approved", "Approved", "Not approved", "Approved","Not approved", "Approved","Not approved", "Approved" ] }
+EOF
+cat << EOF > quorum.json
+{ "quorum": 5,
+  "needle": "Approved" }
+EOF
+
+cat << EOF | zexe needle_in_haystack.zen -a array_matches.json -k quorum.json
+Given I have a 'string array' named 'haystack'
+and I have a 'number' named 'quorum'
+and I have a 'string' named 'needle'
+When the 'needle' is found in 'haystack' at least 'quorum' times
+Then Print the string 'Success' 
+EOF
+
 
 success
 

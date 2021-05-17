@@ -89,7 +89,14 @@ When("create the new array", function()
 										  zentype = 'array',
 										  luatype = 'table' })
 end)
-						   
+
+When("create the length of ''", function(arr)
+	local obj = have(arr)
+	ZEN.assert(luatype(obj) == 'table', "Not a table: "..arr)
+	ACK.length = #obj
+	ZEN.CODEC.length = new_codec('length', { luatype = 'number' })
+end)
+
 When("create the copy of element '' in array ''", function(pos, arr)
 		ZEN.assert(ACK[arr], "No array found in: "..arr)
 		ZEN.assert(isarray(ACK[arr]), "Not an array: "..arr)
@@ -170,4 +177,19 @@ When("the '' is found in ''", function(ele, arr)
 		   ZEN.assert(false, "Invalid container type: "..arr.." is "..ZEN.CODEC[arr].zentype)
 		end
 		ZEN.assert(found, "The content of element '"..ele.."' is not found inside: "..arr)
+end)
+
+When("the '' is found in '' at least '' times", function(ele, arr, times)
+	local obj = have(ele)
+	ZEN.assert( luatype(obj) ~= 'table', "Invalid use of table in object comparison: "..ele)
+	local num = have(times)
+	ZEN.assert( luatype(num) == 'number', "Not a number: "..times)
+	local list = have(arr)
+	ZEN.assert( luatype(list) == 'table', "Not a table: "..arr)
+	ZEN.assert( isarray(list), "Not an array: "..arr)
+	local found = 0
+	for _,v in pairs(list) do
+		if v == obj then found = found + 1 end
+	end
+	ZEN.assert(found >= num, "Object "..ele.." found only "..found.." times instead of "..num.." in array "..arr)
 end)
