@@ -103,6 +103,7 @@ zexe() {
 		return 1
 	fi
 	out="$1"
+	docs="../../docs/examples/zencode_cookbook/$1"
 	shift 1
 	echo >&2
 	echo "====================================" >&2
@@ -113,7 +114,7 @@ zexe() {
 		local args="$*"
 		tee "$out" | qemu_zenroom_run "$args" "-z" "$out" 2>$t/stderr && cat ./outlog>$t/stdout
 	else 
-		tee "$out" | $Z -z $* 2>$t/stderr 1>$t/stdout
+		tee "$out" | tee "$docs" | $Z -z $* 2>$t/stderr 1>$t/stdout
 	fi
 	res=$?
 	exec_time=`grep "Time used" $t/stderr | cut -d: -f2`
