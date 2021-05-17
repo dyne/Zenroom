@@ -1,5 +1,4 @@
 Scenario reflow
-Scenario credential
 Given I have a 'reflow seal'
 and I have a 'issuer public key' in 'The Authority'
 and I have a 'reflow signature'

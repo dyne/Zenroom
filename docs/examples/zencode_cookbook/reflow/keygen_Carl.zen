@@ -1,6 +1,5 @@
 Scenario reflow
-Scenario credential
 Given I am 'Carl'
-When I create the BLS key
+When I create the reflow key
 and I create the credential key
 Then print my 'keys'

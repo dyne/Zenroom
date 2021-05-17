@@ -1,8 +1,7 @@
 Scenario reflow
-Scenario credential
 Given I am 'Carl'
-and I have my 'credentials'
-and I have my 'keys'
+and I have the 'credentials'
+and I have the 'keys'
 and I have a 'reflow seal'
 and I have a 'issuer public key' from 'The Authority'
 When I create the reflow signature

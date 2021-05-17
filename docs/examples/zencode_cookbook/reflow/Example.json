@@ -1,0 +1,12 @@
+{
+   "Sale":{
+      "Buyer":"Alice",
+      "Seller":"Bob",
+	  "Witness":"Carl",
+      "Good":"Cow",
+      "Price":100,
+      "Currency":"EUR",
+      "Timestamp":1422779638,
+      "Text":"Bob sells the cow to Alice, cause the cow grew too big and Carl, Bob's roomie, was complaining"
+   }
+}
