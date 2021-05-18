@@ -108,7 +108,6 @@ lua_dep = declare_dependency(
 
 zenroom_src = [
     '../src/base58.c',
-    '../src/cli.c',
     '../src/cortex_m.c',
     '../src/encoding.c',
     '../src/jutils.c',
@@ -138,7 +137,7 @@ zenroom_src = [
     zen_ecdh_factory,
 ]
 
-both_libraries(
+zenroom_lib = library(
     'zenroom',
     zenroom_src,
     include_directories: [
@@ -146,17 +145,37 @@ both_libraries(
         milagro_include_dirs,
         milagro_generated_include_dirs,
     ],
+    dependencies: [lua_dep],
+    install: true,
+)
+
+pkg = import('pkgconfig')
+pkg.generate(zenroom_lib)
+
+zenroom_dep = declare_dependency(
+    link_with: zenroom_lib,
+    include_directories: [
+        zenroom_include_dirs,
+        milagro_include_dirs,
+        milagro_generated_include_dirs,
+    ],
     dependencies: [lua_dep]
 )
+
+install_headers('../src/zenroom.h', subdir: 'zenroom')
 
 executable(
     'zenroom',
-    zenroom_src,
-    include_directories: [
-        zenroom_include_dirs,
-        milagro_include_dirs,
-        milagro_generated_include_dirs,
-    ],
-    dependencies: [lua_dep]
+    '../src/cli.c',
+    dependencies: zenroom_dep,
+    install: true,
 )
 
+docdir = get_option('datadir') / 'doc' / 'zenroom'
+if get_option('docs')
+    install_subdir('../docs', install_dir: docdir, strip_directory: true)
+endif
+
+if get_option('examples')
+    install_subdir('../examples', install_dir: docdir, strip_directory: false)
+endif
