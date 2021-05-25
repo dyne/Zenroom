@@ -240,3 +240,45 @@ Then print the 'New-ABC-TransactionsSum'
 and print the 'New-ABC-TransactionsSum.signature'
 EOF
 
+cat << EOF | save dictionary nested_dictionaries.json
+{
+   "dataTime0":{
+      "Active_energy_imported_kWh":4027.66,
+      "Ask_Price":0.1,
+      "Currency":"EUR",
+      "Expiry":3600,
+      "Timestamp":1422779638,
+      "TimeServer":"http://showcase.api.linx.twenty57.net/UnixTime/tounix?date=now"
+   },
+   "nested":{
+      "dataTime1":{
+         "Active_energy_imported_kWh":4030,
+         "Ask_Price":0.15,
+         "Currency":"EUR",
+         "Expiry":3600,
+         "Timestamp":1422779633,
+         "TimeServer":"http://showcase.api.linx.twenty57.net/UnixTime/tounix?date=now"
+      },
+      "dataTime2":{
+         "Active_energy_imported_kWh":4040.25,
+         "Ask_Price":0.15,
+         "Currency":"EUR",
+         "Expiry":3600,
+         "Timestamp":1422779634,
+         "TimeServer":"http://showcase.api.linx.twenty57.net/UnixTime/tounix?date=now"
+      }
+   }
+}
+EOF
+
+cat << EOF | zexe nested_dictionaries.zen -a nested_dictionaries.json | save dictionary pick_nested_dict.json
+Given I have a 'string dictionary' named 'nested'
+When I create the copy of 'dataTime1' from dictionary 'nested'
+and I rename 'copy' to 'dataTime1'
+and I create the copy of 'Currency' from dictionary 'dataTime1'
+and I rename the 'copy' to 'first method'
+When I create the copy of 'Currency' in 'dataTime1' in 'nested'
+and I rename the 'copy' to 'second method'
+Then print the 'first method'
+and print the 'second method'
+EOF

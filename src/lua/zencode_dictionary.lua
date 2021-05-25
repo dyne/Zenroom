@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Saturday, 1st May 2021
+--on Wednesday, 26th May 2021
 --]]
 
 
@@ -179,12 +179,29 @@ When("find the '' for dictionaries in '' where '' = ''",function(name, arr, left
 	end
 end)
 
-When("create the copy of '' from dictionary ''", function(name, dict)
-	have(dict)
+local function create_copy_f(root, in1, in2)
+	local r = have(root)
 	empty'copy'
-	ZEN.assert(ACK[dict][name], "Dictionary member not found: "..dict.."."..name)
-	ACK.copy = deepcopy(ACK[dict][name])
-	new_codec('copy', { luatype = luatype(ACK[copy]) }, dict)
+	ZEN.assert(luatype(r) == 'table', "Object is not a table:"..root)
+	ZEN.assert(in1, "Undefined key or index: "..in1.." in "..root)
+	local res
+	if tonumber(in1) then
+		ZEN.assert(isarray(r), "Invalid index "..in1.." as object is not an array: "..root)
+	else
+		ZEN.assert(isdictionary(r), "Invalid key "..in1.." as object is not a dictionary:"..root)
+	end
+	ACK.copy = r[in1]
+	ZEN.assert(ACK.copy, "Member not found: "..in1.." in "..root)
+	if in2 then
+		if tonumber(in2) then
+			ZEN.assert(isarray(ACK.copy), "Invalid index "..in2.." as object is not an array: "..in1.." in "..root)
+		else
+			ZEN.assert(isdictionary(ACK.copy), "Invalid key "..in2.." as object is not a dictionary:"..in1.." in "..root)
+		end	
+		ACK.copy = ACK.copy[in2]
+		ZEN.assert(ACK.copy, "Member not found: "..in2.." in "..in1.." in "..root)
+	end
+	new_codec('copy', { luatype = luatype(ACK[copy]) }, root)
 	if ZEN.CODEC.copy.luatype == 'table' then
 		if isdictionary(ACK.copy) then
 			   ZEN.CODEC.copy.zentype = 'dictionary'
@@ -196,4 +213,7 @@ When("create the copy of '' from dictionary ''", function(name, dict)
 	else
 		ZEN.CODEC.copy.zentype = 'element'
 	end
-end)
+end
+When("create the copy of '' from dictionary ''", function(name, dict) create_copy_f(dict, name) end)
+When("create the copy of '' in ''", function(name, dict) create_copy_f(dict, name) end)
+When("create the copy of '' in '' in ''", function(obj, branch, root) create_copy_f(root, branch, obj) end)
