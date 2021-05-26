@@ -69,7 +69,7 @@ and I rename the 'result' to 'SumTransactionProductAmountAfterTheta'
 # Here we search for a dictionary what a certain name in a list. 
 # This could be useful when searching for a certain transaction in different data sets
 # We are loading the string to match from the dataset.
-When the 'dictionaryToBeFound' is found in 'TransactionsBatchA'
+When the 'dictionaryToBeFound' is not found in 'TransactionsBatchA'
 
 # Here we are doing the opposite, so check the a dictionary is not in the list
 # and we ar ecreating the string not to be match inline in the script, just for the fun of it
@@ -88,6 +88,17 @@ and I rename the 'number dictionary' to 'ABC-TransactionsAfterTheta'
 # to the root level of the data, to make manipulation and visibility easier.
 When I create the copy of 'Information' from dictionary 'TransactionsBatchA'
 And I rename the 'copy' to 'copyOfInformationBatchA'
+
+# You can also copy an element of a dictionary, to the root level.
+# We're then renaming the object and we're using the notation "element<<dictionary"
+# just for convenience, the name of the newly created object is just a string.
+When I create the copy of 'InitialAmount' from dictionary 'TransactionAmountsA'
+And I rename the 'copy' to 'InitialAmount<<TransactionAmountsA'
+
+# And you can also copy an element of a dictionary, that is nested 
+# into another dictionary, to the root level:
+When I create the copy of 'Buyer' in 'Information' in 'TransactionsBatchA'
+and I rename the 'copy' to 'Buyer<<Information<<TransactionsBatchA'
 
 # INSERT in Dictionary
 # We can use the "insert" statement to add an element to a dictionary, as we would do with an array
@@ -180,6 +191,9 @@ and print the 'NumbersMixed-Division'
 and print the 'NumbersMixed-Modulo'
 
 and print the 'PowerData'
+and print the 'InitialAmount<<TransactionAmountsA'
+and print the 'Buyer<<Information<<TransactionsBatchA'
+
 
 
 

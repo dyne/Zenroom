@@ -233,7 +233,7 @@ Operations with dictionaries allow you to:
 
 ***Create a dictionary***: create a dictionary on the fly, using values computed in the script and insert elements into it.
 
-***Copy a dictionary***: copy a dictionary that is nested into another dictionary, at the root level of the data, to manipulate it more easily.
+***Copy a dictionary or element***: copy a dictionary that is nested into another dictionary or copy an element to the root level of the data, to manipulate it more easily.
 
 ***Math operations***: sum, subtraction, multiplication, division and modulo, between numbers found in dictionaries and numbers loaded individiually.
 
