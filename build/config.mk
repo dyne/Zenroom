@@ -82,6 +82,18 @@ milagro_cmake_flags += -DCMAKE_SYSTEM_PROCESSOR="arm" -DCMAKE_CROSSCOMPILING=1 -
 ldflags+=-mcpu=cortex-m3 -mthumb -mlittle-endian -mthumb-interwork -Wstack-usage=1024 -Wno-main -ffreestanding -T cortex_m.ld -nostartfiles -Wl,-gc-sections -ggdb
 endif
 
+ifneq (,$(findstring aarch64,$(MAKECMDGOALS)))
+gcc := aarch64-linux-gnu-gcc 
+objcopy := aarch64-linux-gnu-objcopy
+ranlib := aarch64-linux-gnu-ranlib
+ld := aarch64-linux-gnu 
+system := Linux 
+ldadd += -lm
+cflags := -O3 -fPIC -D'ARCH=\"LINUX\"' -DARCH_LINUX
+ldflags := -lm -lpthread
+milagro_cmake_flags += -DCMAKE_SYSTEM_PROCESSOR="aarch64" -DCMAKE_CROSSCOMPILING=1 -DCMAKE_C_COMPILER_WORKS=1
+endif
+
 ifneq (,$(findstring riscv64,$(MAKECMDGOALS)))
 gcc := riscv64-linux-gnu-gcc
 ar  := riscv64-linux-gnu-ar
