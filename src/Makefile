@@ -132,6 +132,9 @@ arm: ${SOURCES} cortex_m_boot.o
 	${CC} ${CFLAGS} ${CORTEX_M_CFLAGS} ${CORTEX_M_SRC_C} ${SOURCES} cortex_m_boot.o -o zenroom.elf ${LDFLAGS} ${LDADD}
 	${OBJCOPY} -O binary zenroom.elf zenroom.bin
 
+aarch64: ${SOURCES}
+	${CC} ${CFLAGS} ${SOURCES} -o zenroom ${LDFLAGS} ${LDADD}
+
 debug: CFLAGS+= -ggdb -DDEBUG=1 -Wall
 debug: LDADD+= -lm
 debug: clean ${SOURCES}

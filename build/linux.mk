@@ -47,7 +47,7 @@ cortex-arm:	apply-patches milagro cortex-lua53 embed-lua
 aarch64: ldflags += -Wl,-Map=./zenroom.map
 aarch64: apply-patches milagro cortex-lua53 embed-lua
 	CC=${gcc} AR="${ar}" OBJCOPY="${objcopy}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-	make -C src arm
+	make -C src aarch64 
 
 linux-riscv64: apply-patches milagro lua53 embed-lua
 	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
