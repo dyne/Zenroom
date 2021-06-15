@@ -114,10 +114,11 @@ When(
 		ZEN.assert(#s ~= 0, "Empty array: "..arr)
 		local val
         for k, v in pairs(s) do
-		    if k == 'reflow_public_key' then val = v 
+		    if k == 'reflow_public_key' then val = v
 			   -- tolerate about named arrays
 			elseif v.reflow_public_key then val = v.reflow_public_key
-			else ZEN.assert(false, "Reflow public key not found in array: "..arr.."["..#array.."] at key "..k)
+			else ZEN.assert(false, "Reflow public key not found in array: "
+                    ..arr.."["..#s.."] at key "..k)
 			end
             if not ACK.reflow_public_key then
                 ACK.reflow_public_key = val
@@ -132,7 +133,6 @@ When(
     "create the reflow identity of ''",
     function(doc)
         empty 'reflow identity'
-        local src = have(doc)
 		ACK.reflow_identity = _makeuid(have(doc))
     end
 )
@@ -341,7 +341,7 @@ When(
 	  local key = havekey'reflow'
 	  local cred = have'credentials'
 	  local id = have'reflow identity'
-	  have'issuer public key'
+	  local issuer_pub = have'issuer public key'
 	  -- object to sign
 	  local src = have(obj)
 	  empty('material passport')
@@ -353,12 +353,12 @@ When(
 	  -- calculate signing uid (aggregation of all fingerprints)
 	  local SID = UID + _aggregate_array(ACK.fingerprints)
 	  local r = INT.random() -- blinding factor
-	  local p, z = ABC.prove_cred_uid(ACK.issuer_public_key,
-									  ACK.credentials, ACK.keys.credential, SID)
+	  local p, z = ABC.prove_cred_uid(issuer_pub, cred,
+									  ACK.keys.credential, SID)
 	  ACK.material_passport = {
 		 seal = {
 			identity = UID,
-			fingerprints = ACK.fingerprints,
+			fingerprints = ACK.fingerprints, -- optional
 			SM = (SID * r) + (SID * key), -- blinding factor
 			verifier = (G2 * r) + (G2 * key)
 		 },
@@ -385,7 +385,7 @@ When(
 		 ECP2.miller(G2, mp.seal.SM),
 		 "Object matches, but seal is invalid: "..obj)
 	  ZEN.assert(
-		 ABC.verify_cred_uid(ACK.issuer_public_key, mp.proof, mp.zeta, SID),
+		 ABC.verify_cred_uid(pub, mp.proof, mp.zeta, SID),
 		 "Object and seal are valid, but proof of issuance fails: "..obj)
 end)
 

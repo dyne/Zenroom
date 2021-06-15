@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Sunday, 25th April 2021
+--on Tuesday, 15th June 2021
 --]]
 
 --- WHEN
@@ -156,7 +156,7 @@ local function _numinput(num)
 	if not iszen(t) then
 		if t == 'table' then -- TODO: only numbers supported, not zenroom.big
 			local aggr = 0
-			for k,v in pairs(num) do
+			for _,v in pairs(num) do
 				aggr = aggr + _numinput(v)
 			end
 			return aggr, false
@@ -165,7 +165,6 @@ local function _numinput(num)
 		end
 		return num, false
 	end
-	local res
 	if t == 'zenroom.octet' then
 		return BIG.new(num), true
 	elseif t == 'zenroom.big' then
