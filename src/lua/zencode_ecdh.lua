@@ -17,11 +17,11 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Friday, 12th March 2021 1:18:02 pm
+--on Tuesday, 15th June 2021
 --]]
 
 -- defined outside because reused across different schemas
-function public_key_f(o)
+local function public_key_f(o)
 	local res = CONF.input.encoding.fun(o)
 	ZEN.assert(
 		ECDH.pubcheck(res),
@@ -65,6 +65,7 @@ ZEN.add_schema(
 
 -- generate keypair
 local function f_keygen()
+	empty'keypair'
 	local kp = ECDH.keygen()
 	ACK.keypair = {
 		public_key = kp.public,
@@ -76,6 +77,8 @@ When('create the keypair', f_keygen)
 When(
 	"create the keypair with secret key ''",
 	function(sec)
+		have(sec)
+		empty'keypair'
 		local pub = ECDH.pubgen(ACK[sec])
 		ACK.keypair = {
 			public_key = pub,
@@ -88,12 +91,9 @@ When(
 When(
 	"encrypt the secret message '' with ''",
 	function(msg, sec)
-		ZEN.assert(ACK[msg], 'Data to encrypt not found: ' .. msg)
-		ZEN.assert(ACK[sec], 'Secret used to encrypt not found: ' .. sec)
-		ZEN.assert(
-			not ACK.secret_message,
-			'Cannot overwrite existing object: ' .. 'text'
-		)
+		have(msg)
+		have(sec)
+		empty'secret message'
 		-- KDF2 sha256 on all secrets
 		local secret = KDF(ACK[sec])
 		ACK.secret_message = {
@@ -114,15 +114,10 @@ When(
 When(
 	"decrypt the text of '' with ''",
 	function(msg, sec)
-		ZEN.assert(ACK[sec], 'Secret used to decrypt not found: secret')
-		ZEN.assert(
-			ACK[msg],
-			'Secret data to decrypt not found: secret message'
-		)
-		ZEN.assert(
-			not ACK.text,
-			'Cannot overwrite existing object: ' .. 'text'
-		)
+		have(sec)
+		have(msg)
+		empty'text'
+		empty'checksum'
 		local secret = KDF(ACK[sec])
 		-- KDF2 sha256 on all secrets, this way the
 		-- secret is always 256 bits, safe for direct aead_decrypt
@@ -144,23 +139,19 @@ When(
 When(
 	"encrypt the secret message of '' for ''",
 	function(msg, _key)
-		ZEN.assert(ACK.keypair, 'Keys not found: keypair')
+		have'keypair'
 		ZEN.assert(
 			ACK.keypair.private_key,
 			'Private key not found in keypair'
 		)
-		ZEN.assert(ACK[msg], 'Data to encrypt not found: ' .. msg)
+		have(msg)
+		have'public_key'
 		ZEN.assert(
 			type(ACK.public_key) == 'table',
-			'Public keys not found in keyring'
+			'Public key is not a table'
 		)
 		ZEN.assert(ACK.public_key[_key], 'Public key not found for: ' .. _key)
-		ZEN.assert(
-			not ACK.secret_message,
-			'Cannot overwrite existing object: ' .. 'secret message'
-		)
-
-		local private = ACK.keypair.private_key
+		empty'secret message'
 		local key =
 			ECDH.session(ACK.keypair.private_key, ACK.public_key[_key])
 		ACK.secret_message = {
@@ -180,19 +171,25 @@ When(
 When(
 	"decrypt the text of '' from ''",
 	function(secret, _key)
-		ZEN.assert(ACK.keypair, 'Keyring not found')
+		have'keypair'
 		ZEN.assert(
 			ACK.keypair.private_key,
-			'Private key not found in keyring'
+			'Private key not found in keypair'
 		)
-		ZEN.assert(ACK[secret], 'Data to decrypt not found: ' .. secret)
-		local pubkey = ACK[_key] or ACK.public_key[_key]
-		ZEN.assert(
-			pubkey,
-			'Key to decrypt not found, the public key from: ' .. _key
-		)
+		have(secret)
+		local pubkey = ACK[_key]
+		if not _key then
+			have'public_key'
+			ZEN.assert(
+				type(ACK.public_key) == 'table',
+				'Public key is not a table'
+			)
+			pubkey = ACK.public_key[_key]
+			ZEN.assert(pubkey, 'Public key not found for: ' .. _key)
+		end
 		local message = ACK[secret][_key] or ACK[secret]
 		local session = ECDH.session(ACK.keypair.private_key, pubkey)
+		local checksum
 		ACK.text, checksum =
 			ECDH.aead_decrypt(session, message.text, message.iv, message.header)
 		ZEN.assert(
@@ -206,18 +203,13 @@ When(
 When(
 	"create the signature of ''",
 	function(doc)
-		ZEN.assert(ACK.keypair, 'Keyring not found')
+		have'keypair'
 		ZEN.assert(
 			ACK.keypair.private_key,
-			'Private key not found in keyring'
+			'Private key not found in keypair'
 		)
-		ZEN.assert(
-			not ACK.signature,
-			'Cannot overwrite existing object: ' .. 'signature'
-		)
-		local obj = ACK[doc]
-		ZEN.assert(obj, 'Object not found: ' .. doc)
-		local t = luatype(obj)
+		empty'signature'
+		local obj = have(doc)
 		ACK.signature = ECDH.sign(ACK.keypair.private_key, ZEN.serialize(obj))
 		ZEN.CODEC.signature = CONF.output.encoding.name
 	end
@@ -226,12 +218,13 @@ When(
 When(
 	"verify the '' is signed by ''",
 	function(msg, by)
-		ZEN.assert(ACK.public_key[by], 'Public key by ' .. by .. ' not found')
-		local obj
-		obj = ACK[msg]
-		ZEN.assert(obj, 'Object not found: ' .. msg)
-		-- obj = obj[by]
-		-- ZEN.assert(obj, "Object not found: "..msg.." by "..by)
+		have'public_key'
+		ZEN.assert(
+			type(ACK.public_key) == 'table',
+			'Public key is not a table'
+		)
+		ZEN.assert(ACK.public_key[by], 'Public key not found for: ' .. by)
+		local obj = have(msg)
 		local t = luatype(obj)
 		local sign
 		if t == 'table' then
@@ -256,13 +249,14 @@ When(
 When(
 	"verify the '' has a signature in '' by ''",
 	function(msg, sig, by)
-		ZEN.assert(ACK.public_key[by], 'Public key by ' .. by .. ' not found')
-		local obj
-		obj = ACK[msg]
-		ZEN.assert(obj, 'Object not found: ' .. msg)
-		local s
-		s = ACK[sig]
-		ZEN.assert(s, 'Signature not found: ' .. sig)
+		have'public_key'
+		ZEN.assert(
+			type(ACK.public_key) == 'table',
+			'Public key is not a table'
+		)
+		ZEN.assert(ACK.public_key[by], 'Public key not found for: ' .. by)
+		local obj = have(msg)
+		local s = have(sig)
 		ZEN.assert(
 			ECDH.verify(ACK.public_key[by], ZEN.serialize(obj), s),
 			'The signature by ' .. by .. ' is not authentic'
