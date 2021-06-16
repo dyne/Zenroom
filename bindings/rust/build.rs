@@ -1,17 +1,25 @@
 extern crate bindgen;
-extern crate meson;
 
 use std::env;
 use std::path::PathBuf;
+use std::process::Command;
 
 fn main() {
     let build_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("build");
     let build_path = build_path.join("build");
     let build_path = build_path.to_str().unwrap();
-    meson::build("../../build", build_path);
+    let mut cmd = Command::new("meson");
+    cmd.args(&["../../build", build_path, "-Ddefault_library=static"]);
+    let status = cmd.status().expect("failed to run meson");
+    // TODO: use status.exit_ok() when it gets to stable
+    assert!(status.success());
+
+    let mut cmd = Command::new("ninja");
+    cmd.current_dir(build_path);
+    let status = cmd.status().expect("failed to run ninja");
+    assert!(status.success());
 
     println!("cargo:rustc-link-lib=static=zenroom");
-    println!("cargo:rustc-link-lib=static=lua");
     println!("cargo:rustc-link-lib=static=amcl_bls_BLS383");
     println!("cargo:rustc-link-lib=static=amcl_core");
     println!("cargo:rustc-link-lib=static=amcl_curve_BLS383");
