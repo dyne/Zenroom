@@ -8,6 +8,7 @@ We have been using Zenroom built as native libraries, for mobile applications, b
 
 You can download the latest nightly builds as well as the point releases on [https://zenroom.org/#downloads](https://zenroom.org/#downloads). We will add more builds as soon as we implement them.
 
+
 ### ***Important***: how to manage empty strings
 
 One of the major headaches, for reasons that go beyond human comprehension, was the management of empty strings. Zenroom accepts parameters only as strings, meaning that you'll need to use *JSON.stringify* when passing a JSON object to it. Passing an empty JSON to *JSON.stringify* will return an object looking like this:
@@ -40,6 +41,22 @@ implementation fileTree(dir: "jniLibs", include: ["*.so"])
 implementation "com.android.support:appcompat-v7:${rootProject.ext.supportLibVersion}"
 implementation "com.facebook.react:react-native:+"
 ```
+
+Also make sure you tell gradle what ABIs it has use, which you do by adding to *build.gradle* the following lines (as you can see [here](https://github.com/LedgerProject/GPP_app/blob/409e626956a9c9e0950fb45c1ab06343485a8acf/android/app/build.gradle#L137-L139)):
+
+```javascript
+android {
+
+   \\  ... stuff here
+
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a", "mips" //  "x86" are "x86_64" are coming soon
+        }
+    }
+```
+
+
+
 
 ### Step 2: java setup
 In the file *android/app/src/main/java/com/company-name/app-name/MainApplication.java* insert the string:
