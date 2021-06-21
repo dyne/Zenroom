@@ -1,5 +1,10 @@
-# set -e
+set -e
 # set -o pipefail
+
+is_cortexm=false
+if [[ "$1" == "cortexm" ]]; then
+	is_cortexm=true
+fi
 
 detect_zenroom_path() {
 	if [ ! -z $ZENROOM ]; then
