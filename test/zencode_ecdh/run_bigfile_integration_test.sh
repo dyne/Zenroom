@@ -1,4 +1,7 @@
 #!/bin/sh
+#
+# TODO: fixme
+
 export TIME='\t%E real,\t%U user,\t%S sys,\t%K amem,\t%M mmem'
 
 #zsh

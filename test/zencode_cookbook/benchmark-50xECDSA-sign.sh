@@ -162,9 +162,6 @@ When I create the signature of 'TransactionsBatchA'
 When I rename the 'signature' to 'signatureOfTransactionsBatchA36'
 
 When I create the signature of 'TransactionsBatchA' 
-When I rename the 'signature' to 'signatureOfTransactionsBatchA36'
-
-When I create the signature of 'TransactionsBatchA' 
 When I rename the 'signature' to 'signatureOfTransactionsBatchA37'                  
 
 When I create the signature of 'TransactionsBatchA' 
@@ -178,9 +175,6 @@ When I rename the 'signature' to 'signatureOfTransactionsBatchA40'
 
 When I create the signature of 'TransactionsBatchA' 
 When I rename the 'signature' to 'signatureOfTransactionsBatchA41'
-
-When I create the signature of 'TransactionsBatchA' 
-When I rename the 'signature' to 'signatureOfTransactionsBatchA42'
 
 When I create the signature of 'TransactionsBatchA' 
 When I rename the 'signature' to 'signatureOfTransactionsBatchA42'

@@ -4,17 +4,9 @@
 # common script init
 if ! test -r ../utils.sh; then
 	echo "run executable from its own directory: $0"; exit 1; fi
-. ../utils.sh
-
-is_cortexm=false
-if [[ "$1" == "cortexm" ]]; then
-	is_cortexm=true
-fi
-
+. ../utils.sh $*
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
-
-set -e
 
 cat <<EOF | zexe SYM01.zen | save ecdh secret.json
 rule check version 1.0.0

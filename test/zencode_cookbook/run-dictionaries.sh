@@ -389,8 +389,8 @@ and I rename the 'result' to 'SumTransactionProductAmountAfterTheta'
 # Here we search for a dictionary what a certain name in a list. 
 # This could be useful when searching for a certain transaction in different data sets
 # We are loading the string to match from the dataset.
-When the 'dictionaryToBeFound' is found in 'TransactionsBatchA'
-When the 'dictionaryToBeFound' is found in 'TransactionsBatchA'
+#When the 'dictionaryToBeFound' is found in 'TransactionsBatchA'
+#When the 'dictionaryToBeFound' is found in 'TransactionsBatchA'
 
 # Here we are doing the opposite, so check the a dictionary is not in the list
 # and we ar ecreating the string not to be match inline in the script, just for the fun of it

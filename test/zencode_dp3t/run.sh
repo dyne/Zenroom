@@ -5,11 +5,14 @@
 ####################
 # common script init
 if ! test -r ../utils.sh; then
-	echo "run executable from its own directory: $0"; exit 1; fi
+        echo "run executable from its own directory: $0"; exit 1; fi
 . ../utils.sh
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
-
+set -e
+out='../../docs/examples/zencode_cookbook/reflow'
+mkdir -p ${out}
+rm ${out}/*
 
 cat <<EOF | zexe dp3t_keygen.zen | save dp3t SK1.json
 rule check version 1.0.0
