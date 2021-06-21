@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Sunday, 25th April 2021
+--on Monday, 21st June 2021
 --]]
 
 function zencode_iscomment(b)
@@ -168,6 +168,12 @@ function set_rule(text)
 		end
 	elseif rule[2] == 'unknown' and rule[3] then
 		if rule[3] == 'ignore' then
+			CONF.parser.strict_match = false
+			res = true
+		end
+		-- alias of unknown ignore for specific callers
+	elseif rule[2] == 'caller' and rule[3] then
+		if rule[3] == 'restroom-mw' then
 			CONF.parser.strict_match = false
 			res = true
 		end
