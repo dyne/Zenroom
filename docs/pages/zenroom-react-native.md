@@ -17,7 +17,7 @@ One of the major headaches, for reasons that go beyond human comprehension, was 
 {}
 ```
 
-which on some (!) Zenroom builds will produce a crash. Therefore, whenever you're passing an empty parameter, you'll need ***pass an empty string***.
+which on some (!) Zenroom builds will produce a crash. Therefore, whenever you're passing an empty parameter, you'll need ***pass an empty string*** ( [Android](https://github.com/LedgerProject/GPP_app/blob/409e626956a9c9e0950fb45c1ab06343485a8acf/android/app/src/main/java/decode/zenroom/ZenroomModule.java#L51-L58) ). 
 
 
 ## Android Setup
