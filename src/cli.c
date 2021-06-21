@@ -17,7 +17,7 @@
  * If not, see http://www.gnu.org/licenses/agpl.txt
  * 
  * Last modified by Denis Roio
- * on Monday, 15th March 2021 11:50:27 pm
+ * on Monday, 21st June 2021
  */
 
 #ifndef LIBRARY
@@ -266,7 +266,7 @@ int main(int argc, char **argv) {
 
 	if(verbosity) {
 		notice(NULL, "Zenroom v%s - secure crypto language VM",VERSION);
-		act(NULL, "Zenroom is Copyright (C) 2017-2020 by the Dyne.org foundation");
+		act(NULL, "Zenroom is Copyright (C) 2017-2021 by the Dyne.org foundation");
 		act(NULL, "For the original source code and documentation go to https://zenroom.org");
 		act(NULL, "Zenroom is free software: you can redistribute it and/or modify");
 		act(NULL, "it under the terms of the GNU Affero General Public License as");

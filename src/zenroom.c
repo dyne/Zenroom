@@ -117,9 +117,29 @@ static int zen_init_pmain(lua_State *L) { // protected mode init
 	// initialise global variables
 #if defined(VERSION)
 	zen_setenv(L, "VERSION", VERSION);
+	act(NULL,"Release version: %s", VERSION);
+#endif
+#if defined(COMMIT)
+	zen_setenv(L, "COMMIT", COMMIT);
+	func(NULL,"Build commit hash: %s", COMMIT);
+#endif
+#if defined(BRANCH)
+	zen_setenv(L, "BRANCH", BRANCH);
+	func(NULL,"Build branch: %s", BRANCH);
 #endif
 #if defined(ARCH)
 	zen_setenv(L, "ARCH", ARCH);
+	func(NULL,"Build architecture: %s", ARCH);
+#endif
+#define STRINGIZE(x) #x
+#define STRINGIZE_VALUE_OF(x) STRINGIZE(x)
+#if defined(MAKETARGET)
+	zen_setenv(L, "MAKETARGET", MAKETARGET);
+	func(NULL,"Build target: %s", MAKETARGET);
+#endif
+#if defined(CFLAGS)
+	zen_setenv(L, "CFLAGS", STRINGIZE_VALUE_OF(CFLAGS));
+	func(NULL,"Build CFLAGS: %s", STRINGIZE_VALUE_OF(CFLAGS));
 #endif
 #if defined(GITLOG)
 	zen_setenv(L, "GITLOG", GITLOG);

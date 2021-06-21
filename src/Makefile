@@ -16,12 +16,12 @@
 #  along with this program.  If not, see
 #  <http://www.gnu.org/licenses/>.
 
-ZENROOM_VERSION := 1.0.0
-CC?=gcc
+ZENROOM_VERSION := 2.0.0
+CC ?= gcc
 ARCH := $(shell uname -m)
 BRANCH := $(shell git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
-HASH := $(shell git rev-parse --short HEAD)
-VERSION := ${ZENROOM_VERSION}+${HASH}
+COMMIT := $(shell git rev-parse --short HEAD)
+VERSION := ${ZENROOM_VERSION}
 CFLAGS  += -I. -I../lib/lua53/src -I../lib/milagro-crypto-c/build/include -I../lib/milagro-crypto-c/include -Wall -Wextra
 
 CMSIS := ../lib/cmsis
@@ -153,4 +153,4 @@ clean:
 	rm -f zenroom.html
 
 .c.o:
-	$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"${VERSION}\"
+	$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"${VERSION}\" -DMAKETARGET=\"${MAKECMDGOALS}\" -DCOMMIT=\"${COMMIT}\" -DBRANCH=\"${BRANCH}\" -DARCH=\"${ARCH}\" -DCFLAGS="${CFLAGS}" 
