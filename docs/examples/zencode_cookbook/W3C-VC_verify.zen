@@ -3,4 +3,4 @@ Scenario 'ecdh': (required)
 Given I have a 'public key' inside 'Authority'
 Given I have a 'verifiable credential' named 'my-vc'
 When I verify the verifiable credential named 'my-vc'
-Then print 'W3C CREDENTIAL IS VALID'
+Then print the string 'W3C CREDENTIAL IS VALID'

@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Tuesday, 15th June 2021
+--on Monday, 21st June 2021
 --]]
 
 --- WHEN
@@ -65,12 +65,12 @@ When("set '' to '' as ''", function(dest, content, format)
 	empty(dest)
 	local guess = input_encoding(format)
 	guess.raw = content
-	ACK[dest] = operate_conversion(guess)
-	ZEN.CODEC[dest] = { name = dest,
-						encoding = format,
-						luatype = 'string',
-						zentype = 'element' }
-
+	if format == 'number' then
+		ACK[dest] = tonumber( operate_conversion(guess) )
+	else
+		ACK[dest] = operate_conversion(guess)
+	end
+	ZEN.CODEC[dest] = new_codec(dest, { luatype = luatype(ACK[dest]), zentype = 'element' })
 end)
 
 When("create the cbor of ''", function(src)
