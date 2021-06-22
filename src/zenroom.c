@@ -121,7 +121,7 @@ static int zen_init_pmain(lua_State *L) { // protected mode init
 #endif
 #if defined(COMMIT)
 	zen_setenv(L, "COMMIT", COMMIT);
-	func(NULL,"Build commit hash: %s", COMMIT);
+	act(NULL,"Build commit hash: %s", COMMIT);
 #endif
 #if defined(BRANCH)
 	zen_setenv(L, "BRANCH", BRANCH);

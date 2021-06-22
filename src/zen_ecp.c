@@ -17,7 +17,7 @@
  * If not, see http://www.gnu.org/licenses/agpl.txt
  * 
  * Last modified by Denis Roio
- * on Tuesday, 16th March 2021 8:42:17 am
+ * on Tuesday, 22nd June 2021
  */
 
 
@@ -495,5 +495,8 @@ int luaopen_ecp(lua_State *L) {
 		{NULL,NULL}
 	};
 	zen_add_class("ecp", ecp_class, ecp_methods);
+	
+	act(L,"ECP curve is %s",ECP_CURVE_NAME);	
+
 	return 1;
 }

@@ -34,7 +34,7 @@ cat <<EOF > "${DIR}"/zen_ecp_factory.h
 #define ECP ECP_${CN}
 #define ECP2 ECP2_${CN}
 
-#define CURVE_NAME "${CN}"
+#define ECP_CURVE_NAME "${CN}"
 #define CURVE_A CURVE_A_${CN}
 #define CURVE_B Curve_B_${CN}
 #define CURVE_B_I CURVE_B_I_${CN}

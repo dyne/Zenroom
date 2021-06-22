@@ -98,7 +98,7 @@ int zen_load_string(lua_State *L, const char *code,
 }
 
 int zen_exec_extension(lua_State *L, zen_extension_t *p) {
-	SAFE(p); HEREs(p->name);
+	SAFE(p); // HEREs(p->name);
 #ifdef __EMSCRIPTEN__
 	if(p->code) {
 		// HEREs(p->code);
