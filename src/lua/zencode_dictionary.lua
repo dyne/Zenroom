@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Wednesday, 26th May 2021
+--on Wednesday, 23rd June 2021
 --]]
 
 
@@ -62,6 +62,14 @@ When("create the new dictionary", function()
 		empty'new dictionary'
 		ACK.new_dictionary = { }
 		new_codec('new dictionary', { zentype = 'dictionary' })
+end)
+
+When("create the pruned dictionary of ''", function(dict)
+	empty'pruned dictionary'
+	local d = have(dict)
+	ZEN.assert(luatype(d) == 'table', 'Object is not a table: '..dict)
+	ACK.pruned_dictionary = prune(d)
+	new_codec('pruned dictionary', nil, dict)
 end)
 
 When("find the max value '' for dictionaries in ''", function(name, arr)

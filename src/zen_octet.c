@@ -167,8 +167,8 @@ int is_bin(const char *in) {
 
 // REMEMBER: newuserdata already pushes the object in lua's stack
 octet* o_new(lua_State *L, const int size) {
-	if(size<=0) {
-		error(L, "Cannot create octet, size zero or less");
+	if(size<0) {
+		error(L, "Cannot create octet, size less than zero");
 		lerror(L, "execution aborted");
 		return NULL; }
 	if(size>MAX_OCTET) {
@@ -492,7 +492,7 @@ static int from_string(lua_State *L) {
 	luaL_argcheck(L, s != NULL, 1, "string expected");
 	const int len = strlen(s);
 	// STRING SIZE CHECK before import to OCTET
-	if(!len || len>MAX_OCTET) {
+	if(len>MAX_OCTET) {
 		error(L, "%s: invalid string size: %u", __func__,len);
 		lerror(L, "operation aborted");
 		return 0; }

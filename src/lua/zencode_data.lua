@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Saturday, 1st May 2021
+--on Wednesday, 23rd June 2021
 --]]
 --- Zencode data internals
 
@@ -421,7 +421,35 @@ function serialize(tab)
    }
 end
 
----
+-- eliminate all empty string objects "" and all empty dictionaries
+-- (containing only empy objects), uses recursion into tables
+function prune(tab)
+   assert(luatype(tab) == 'table', 'Cannot prune: not a table', 2)
+   local pruned_values = deepmap(function(v)
+      if #v == 0 then return nil
+      else return v end
+   end, tab)
+   local function prune_in(ttab)
+         local res = { }
+         local next = next
+         local luatype = luatype
+         for k,v in pairs(ttab) do
+            if luatype(v) == 'table' then
+               if next(v) == nil then
+                  res[k] = nil -- {} to nil
+               else
+                  res[k] = prune_in(v) -- recursion
+               end
+            else
+               res[k] = v
+            end
+         end
+         return setmetatable(res, getmetatable(ttab))
+   end
+   pruned_tables = prune_in(pruned_values)
+   return pruned_tables
+end
+   ---
 -- Compare equality of two data objects (TODO: octet, ECP, etc.)
 -- @function ZEN:eq(first, second)
 

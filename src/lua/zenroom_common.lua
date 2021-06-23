@@ -268,29 +268,6 @@ end
 _G["sort_pairs"]  = _pairs
 _G["sort_ipairs"] = _pairs
 
--- deep recursive map on a tree structure
--- for usage see test/deepmap.lua
--- operates only on strings, passes numbers through
-function deepmap(fun,t,...)
-   if luatype(fun) ~= 'function' then
-	  error("Internal error: deepmap 1st argument is not a function", 3)
-	  return nil end
-   -- if luatype(t) == 'number' then
-   -- 	  return t end
-   if luatype(t) ~= 'table' then
-	  error("Internal error: deepmap 2nd argument is not a table", 3)
-	  return nil end
-   local res = {}
-   for k,v in pairs(t) do
-	  if luatype(v) == 'table' then
-		 res[k] = deepmap(fun,v,...) -- recursion
-	  else
-		 res[k] = fun(v,k,...)
-	  end
-   end
-   return setmetatable(res, getmetatable(t))
-end
-
 function deepcopy(orig)
    local orig_type = type(orig)
    local copy
@@ -330,6 +307,7 @@ end
 -- for usage see test/deepmap.lua
 -- operates only on strings, passes numbers through
 function deepmap(fun,t,...)
+   local luatype = luatype
    if luatype(fun) ~= 'function' then
 	  error("Internal error: deepmap 1st argument is not a function", 3)
 	  return nil end
