@@ -15,8 +15,11 @@ jobs:
       - name: install dependencies
         run: |
           sudo apt install zsh qemu-system-arm
-      - name: Checkout submodules
-        uses: textbook/git-checkout-submodule-action@master
+      - name: download cmsis
+        run: |
+          curl -LO https://github.com/ARM-software/CMSIS_5/archive/refs/tags/5.7.0.tar.gz
+          tar xvf 5.7.0.tar.gz -C lib
+          mv lib/CMSIS_5-5.7.0 lib/cmsis
       - name: build cortex-arm target 
         run: |
           make cortex-arm
