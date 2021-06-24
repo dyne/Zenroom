@@ -41,6 +41,16 @@ all:
 
 # if ! [ -r build/luac ]; then ${gcc} -I${luasrc} -o build/luac ${luasrc}/luac.c ${luasrc}/liblua.a -lm; fi
 
+.PHONY: meson meson-re meson-test
+meson:
+	meson -Dexamples=true -Ddocs=true -Doptimization=3 build meson
+	ninja -C meson
+meson-re:
+	meson --reconfigure -Dexamples=true -Ddocs=true -Doptimization=3 build meson
+	ninja -C meson
+meson-test:
+	ninja -C meson test
+	
 embed-lua:
 	@echo "Embedding all files in src/lua"
 	./build/embed-lualibs ${lua_embed_opts}

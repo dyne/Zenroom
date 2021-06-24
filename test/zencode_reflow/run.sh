@@ -10,13 +10,6 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 
 # sideload='../../src/lua/zencode_reflow.lua'
 
-set -e
-
-out='../../docs/examples/zencode_cookbook/reflow'
-
-mkdir -p ${out}
-rm ${out}/*
-
 ## ISSUER
 cat <<EOF | zexe issuer_keygen.zen | save reflow issuer_keypair.json
 Scenario credential
@@ -76,7 +69,7 @@ EOF
 	##
 
 	## PARTICIPANT AGGREGATES SIGNED CREDENTIAL
-	cat <<EOF | zexe aggr_cred_${1}.zen -k keypair_${1}.json -a issuer_signature_${1}.json | save reflow verified_credential_${1}.json
+	cat <<EOF | debug aggr_cred_${1}.zen -k keypair_${1}.json -a issuer_signature_${1}.json | save reflow verified_credential_${1}.json
 Scenario credential
 Given I am '${1}'
 and I have my 'keys'
@@ -86,7 +79,7 @@ then print 'credentials'
 and print 'keys'
 EOF
 	##
-
+echo "OK $1"
 }
 
 # generate  signed credentials
@@ -94,7 +87,7 @@ generate_participant "Alice"
 generate_participant "Bob"
 generate_participant "Carl"
 
-# join the verifiers of signed credentials
+echo "# join the verifiers of signed credentials"
 json_join public_key_Alice.json public_key_Bob.json public_key_Carl.json > public_keys.json
 echo "{\"public_keys\": `cat public_keys.json` }" > public_key_array.json
 
@@ -115,7 +108,7 @@ EOF
 
 
 
-# anyone can start a seal
+echo "# anyone can start a seal"
 
 # CREATE Reflow seal
 cat <<EOF | zexe seal_start.zen -k Example.json -a public_key_array.json | save reflow reflow_seal.json

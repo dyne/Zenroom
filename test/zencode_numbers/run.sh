@@ -6,21 +6,10 @@
 if ! test -r ../utils.sh; then
 	echo "run executable from its own directory: $0"; exit 1; fi
 . ../utils.sh
-
-is_cortexm=false
-if [[ "$1" == "cortexm" ]]; then
-	is_cortexm=true
-fi
-
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
-out=../../docs/examples/zencode_cookbook
-# out=/dev/shm/files
-
-set -e
-
-cat <<EOF | zexe ${out}/numbers_hash_left.zen | tee ${out}/numbers_left.json 
+cat <<EOF | zexe numbers_hash_left.zen | save numbers numbers_left.json 
 Given nothing
 When I write string 'a left string to be hashed' in 'source'
 and I create the hash of 'source'
@@ -28,7 +17,7 @@ and I rename 'hash' to 'left'
 Then print 'left'
 EOF
 
-cat <<EOF | zexe ${out}/numbers_hash_right.zen | tee ${out}/numbers_right.json
+cat <<EOF | zexe numbers_hash_right.zen | save numbers numbers_right.json
 Given nothing
 When I write string 'a right string to be hashed' in 'source'
 and I create the hash of 'source'
@@ -36,7 +25,7 @@ and I rename 'hash' to 'right'
 Then print 'right'
 EOF
 
-cat <<EOF | zexe ${out}/numbers_hash_eq.zen -a ${out}/numbers_left.json
+cat <<EOF | zexe numbers_hash_eq.zen -a numbers_left.json
 Given I have a 'base64' named 'left'
 When I write string 'a left string to be hashed' in 'source'
 and I create the hash of 'source'
@@ -53,7 +42,7 @@ EOF
 # Then print the string 'OK'
 # EOF
 
-cat <<EOF | zexe ${out}/numbers_num_eq_base10.zen
+cat <<EOF | zexe numbers_num_eq_base10.zen
 rule check version 1.0.0
 Given nothing
 When I write number '42' in 'left'
@@ -73,7 +62,7 @@ EOF
 # EOF
 
 
-cat <<EOF | zexe ${out}/numbers_cmp_base10.zen | jq
+cat <<EOF | zexe numbers_cmp_base10.zen
 rule check version 1.0.0
 Given nothing
 When I write number '10' in 'left'
@@ -96,7 +85,7 @@ EOF
 
 
 
-cat <<EOF | zexe ${out}/numbers_cmp_base16.zen | jq
+cat <<EOF | zexe numbers_cmp_base16.zen
 rule check version 1.0.0
 Given nothing
 When I set 'left' to '0a' base '16'
@@ -106,7 +95,7 @@ Then print the string 'OK'
 Then print data
 EOF
 
-cat <<EOF | zexe ${out}/numbers_cmp_base16_less.zen | jq
+cat <<EOF | zexe numbers_cmp_base16_less.zen
 rule check version 1.0.0
 Given nothing
 When I set 'left' to '0a' base '16'
@@ -116,7 +105,7 @@ Then print the string 'OK'
 Then print data
 EOF
 
-cat << EOF > ${out}/numbers_zero_values.json | jq
+cat << EOF > numbers_zero_values.json
 {"packet": {
 "Active_power_imported_kW":4.85835600,
 "Active_energy_imported_kWh":53.72700119,
@@ -148,13 +137,13 @@ cat << EOF > ${out}/numbers_zero_values.json | jq
 } }
 EOF
 
-cat << EOF | zexe ${out}/numbers_remove_zero_values.zen -a ${out}/numbers_zero_values.json | jq
+cat << EOF | zexe numbers_remove_zero_values.zen -a numbers_zero_values.json
 Given I have a 'string dictionary' named 'packet'
 When I remove zero values in 'packet'
 Then print all data
 EOF
 
-cat <<EOF | zexe ${out}/big_numbers_cmp_base10.zen | jq
+cat <<EOF | zexe big_numbers_cmp_base10.zen
 rule check version 1.0.0
 Given nothing
 When I write number '161917811' in 'left'

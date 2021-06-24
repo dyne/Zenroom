@@ -216,7 +216,7 @@ function json_remove {
 }
 
 function json_join {
-	jq -s 'reduce .[] as $item ({}; . * $item)' . $*
+	jq -s 'reduce .[] as $item ({}; . * $item)' $*
 }
 
 
