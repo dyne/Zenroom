@@ -1,3 +1,12 @@
+
+# WRITE IN (create string or number)
+# the "write in" statement create a new object, assigns it an encoding but 
+# only "number" or "string" (if you need any other encoding, 
+# use the "set as" statement) and assigns it the value you define.
+When I write number '10' in 'nameOfFirstNewVariable'
+When I write string 'This is my lovely new string!' in 'nameOfSecondNewVariable'
+
+
 # SUM, SUBTRACTION
 # You can use the statement 'When I create the result of ... " to 
 # sum, subtract, multiply, divide, modulo with values, see the examples below. The output of the 
@@ -13,6 +22,14 @@ When I create the result of 'mySecondNumber' - 'myThirdNumber'
 and I rename the 'result' to 'resultOfmyFirstDivision'
 When I create the result of 'mySecondNumber' % 'myThirdNumber'
 and I rename the 'result' to 'resultOfmyFirstModulo'
+
+# Now let's do some math with the number that we just created: 
+
+When I create the result of 'mySecondNumber' + 'nameOfFirstNewVariable'
+and I rename the 'result' to 'resultOfmySecondSum'
+When I create the result of 'mySecondNumber' * 'nameOfFirstNewVariable'
+and I rename the 'result' to 'resultOfmySecondMultiplication'
+
 
 
 # APPEND
@@ -58,12 +75,6 @@ And I rename the 'rightmost' to 'myThirdStringRightmost'
 # The "randomize" statements takes the name of an array as input and shuffles it. 
 When I randomize the 'myFourthArray' array
 
-# WRITE IN (create string or number)
-# the "write in" statement create a new object, assigns it an encoding but 
-# only "number" or "string" (if you need any other encoding, 
-# use the "set as" statement) and assigns it the value you define.
-When I write number '10' in 'nameOfFirstNewVariable'
-When I write string 'This is my lovely new string!' in 'nameOfSecondNewVariable'
 
 # PICK RANDOM
 # The "pick a random object in" picks randomly an object from the target array
