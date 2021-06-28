@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Monday, 21st June 2021
+--on Tuesday, 22nd June 2021
 --]]
 
 function zencode_iscomment(b)
@@ -61,7 +61,7 @@ function set_sentence(self, event, from, to, ctx)
 	end
 	if to == 'given' then
 	   tt = string.gsub(tt, ' the ', ' a ', 1)
-	   tt = string.gsub(tt, ' an ',  ' a ', 1)
+	   tt = string.gsub(tt, 'have ', '', 1)
 	end
 	tt = string.gsub(tt, ' +', ' ') -- eliminate multiple internal spaces
 	tt = string.gsub(tt, 'I ', '', 1)

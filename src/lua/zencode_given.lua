@@ -224,7 +224,7 @@ Given(
 
 -- TODO: I have a '' as ''
 Given(
-   "have a ''",
+   "a ''",
    function(n)
       pick(n)
       ack(n)
@@ -233,7 +233,7 @@ Given(
 )
 
 Given(
-   "have a '' in ''",
+   "a '' in ''",
    function(s, t)
       pickin(t, s)
       ack(s) -- save it in ACK.obj
@@ -247,7 +247,7 @@ Given(
 -- or
 -- name : { public_key : value }
 Given(
-   "have a '' from ''",
+   "a '' from ''",
    function(s, t)
       -- if not pickin(t, s, nil, false) then
       -- 	pickin(s, t)
@@ -259,7 +259,7 @@ Given(
 )
 
 Given(
-   "have a '' named ''",
+   "a '' named ''",
    function(s, n)
       -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
       pick(n, s)
@@ -269,7 +269,7 @@ Given(
 )
 
 Given(
-   "have a '' named '' in ''",
+   "a '' named '' in ''",
    function(s, n, t)
       pickin(t, n, s)
       ack(n) -- save it in ACK.name
@@ -278,7 +278,7 @@ Given(
 )
 
 Given(
-   "have my ''",
+   "my ''",
    function(n)
       ZEN.assert(WHO, 'No identity specified, use: Given I am ...')
       pickin(WHO, n)
@@ -287,7 +287,7 @@ Given(
    end
 )
 Given(
-   "have my '' named ''",
+   "my '' named ''",
    function(s, n)
       -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
       pickin(WHO, n, s)
@@ -296,7 +296,7 @@ Given(
    end
 )
 Given(
-   "the '' is valid",
+   "a '' is valid",
    function(n)
       pick(n)
       gc()
