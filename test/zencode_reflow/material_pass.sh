@@ -13,7 +13,7 @@ cat << EOF | save reflow Agent.json
 { "Agent": {
   "id": "BADC0FFE",
   "name": "Alice",
-  "note": "The smartypants who is lost in Wonderland",
+  "note": "The smartypants who is lost in Wonderland"
   }
 }
 EOF
