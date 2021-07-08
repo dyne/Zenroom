@@ -186,18 +186,18 @@ function credential.verify_cred(verify, Theta)
    -- check zero knowledge proof
    assert(
       Theta.pi_v.c == ZKP_challenge({verify.alpha, verify.beta, Aw, Bw}),
-      'Credential proof does not verify (wrong challenge)',
+      'credential verification: invalid challenge',
       2
    )
    assert(
       not Theta.sigma_prime.h_prime:isinf(),
-      'Credential proof does not verify (sigma.h is infinite)',
+      'credential verification: invalid signature (infinite sigma)',
       2
    )
    assert(
       ECP2.miller(Theta.kappa, Theta.sigma_prime.h_prime) ==
          ECP2.miller(G2, Theta.sigma_prime.s_prime + Theta.nu),
-      'Credential proof does not verify (miller loop error)',
+      'credential verification: invalid signature (miller loop)',
       2
    )
    return true
@@ -253,19 +253,19 @@ function credential.verify_cred_uid(vk, theta, zeta, uid)
    -- compute the challenge prime
    assert(
       theta.pi_v.c == ZKP_challenge({vk.alpha, vk.beta, Aw, Bw, Cw}),
-      'verify_cred_petition: invalid challenge',
+      'credential verification: invalid challenge for UID '..uid,
       2
    )
    -- verify signature --
    assert(
       not theta.sigma_prime.h_prime:isinf(),
-      'verify_cred_petition: sigma_prime.h points at infinite',
+      'credential verification: invalid signature (infinite sigma) for UID '..uid,
       2
    )
    assert(
       ECP2.miller(theta.kappa, theta.sigma_prime.h_prime) ==
          ECP2.miller(G2, theta.sigma_prime.s_prime + theta.nu),
-      'verify_cred_petition: miller loop fails',
+      'credential verification: invalid signature (miller loop) for UID '..uid,
       2
    )
    return true

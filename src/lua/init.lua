@@ -169,7 +169,7 @@ function ZKP_challenge(list)
 	local ser = serialize(list)
 	return INT.new(
 		sha256(challenge .. ser.octets .. OCTET.from_string(ser.strings))
-	)
+	) % ECP.order()
 end
 
 -- encoding base64url (RFC4648) is the fastest and most portable in zenroom
