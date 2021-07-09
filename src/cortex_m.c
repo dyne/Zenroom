@@ -151,6 +151,7 @@ void load_file(char *dst, char *file)
 
 extern zenroom_t *Z;
 int SEMIHOSTING_STDOUT_FILENO;
+char external_random_seed[RANDOM_SEED_LEN];
 
 // implement the fault handler
 void HardFault_Handler(void)
@@ -197,6 +198,8 @@ int main(void)
   int verbosity = 1;
   int retcode = EXIT_SUCCESS;
 
+  memset(external_random_seed, 0, RANDOM_SEED_LEN);
+
   while (ptr != NULL)
   {
     if (strncmp(ptr, "-k", 2) == 0)
@@ -217,6 +220,14 @@ int main(void)
     {
       ptr = strtok(NULL, delim);
       snprintf(conffile, MAX_STRING - 1, "%s", ptr);
+    }
+    else if(strncmp(ptr, "-seed", 5) == 0){
+      ptr = strtok(NULL, delim);
+      if(strlen(ptr) != RANDOM_SEED_LEN){
+        error(NULL, "The seed length must be %d",RANDOM_SEED_LEN);
+        exit(EXIT_FAILURE);
+      }
+      memcpy(external_random_seed, ptr, RANDOM_SEED_LEN);
     }
     else
     {
