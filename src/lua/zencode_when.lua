@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Monday, 21st June 2021
+--on Sunday, 11th July 2021
 --]]
 
 --- WHEN
@@ -189,14 +189,14 @@ local function _math_op(op, l, r)
 	if lz ~= rz then error("Incompatible numeric arguments", 2) end
 	local codec
 	if lz and rz then
-		codec = {	name = result,
+		codec = {	name = 'result',
 					encoding = CONF.output.encoding.name,
 					luatype = 'string',
 					zentype = 'big' }
 	else
-		codec =  {	name = result,
+		codec =  {	name = 'result',
 					encoding = 'number',
-		 			luatype = 'number',
+					luatype = 'number',
 					zentype = 'element' }
 	end
 	return op(left, right), codec
