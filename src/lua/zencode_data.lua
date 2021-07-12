@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Wednesday, 23rd June 2021
+--on Sunday, 11th July 2021
 --]]
 --- Zencode data internals
 
@@ -149,7 +149,7 @@ function guess_conversion(obj, definition)
    -- value_encoding: base64, hex, etc.
    -- data_type: array, dictionary, structure
    if objtype == 'table' then
-      toks = strtok(definition, '[^_]+')
+      local toks = strtok(definition, '[^_]+')
       if not (#toks > 1) then
          error(
             'Invalid definition: ' ..
@@ -224,12 +224,11 @@ function operate_conversion(guessed)
       -- error('Invalid schema conversion for encoding: '..guessed.encoding, 2)
 	  local res = {}
       if guessed.encoding == 'array' then
-		 for k,v in pairs(guessed.raw) do
+		 for _,v in pairs(guessed.raw) do
 			table.insert(res, guessed.fun(v))
 		 end
 		 return(res)
 	  elseif guessed.encoding == 'dictionary' then
-         local res = {}
          for k, v in pairs(guessed.raw) do
             res[k] = guessed.fun(v[guessed.schema])
          end
@@ -255,42 +254,42 @@ end
 -- the encoding and returns the function. Octet is a first class
 -- citizen in Zenroom therefore all WHEN/ACK r/w HEAP types can be
 -- converted by its methods.
-function outcast_string(obj)
+local function outcast_string(obj)
    local t = luatype(obj)
    if t == 'number' then
       return obj
    end
    return O.to_string(obj)
 end
-function outcast_hex(obj)
+local function outcast_hex(obj)
    local t = luatype(obj)
    if t == 'number' then
       return obj
    end
    return O.to_hex(obj)
 end
-function outcast_base64(obj)
+local function outcast_base64(obj)
    local t = luatype(obj)
    if t == 'number' then
       return obj
    end
    return O.to_base64(obj)
 end
-function outcast_url64(obj)
+local function outcast_url64(obj)
    local t = luatype(obj)
    if t == 'number' then
       return obj
    end
    return O.to_url64(obj)
 end
-function outcast_base58(obj)
+local function outcast_base58(obj)
    local t = luatype(obj)
    if t == 'number' then
       return obj
    end
    return O.to_base58(obj)
 end
-function outcast_bin(obj)
+local function outcast_bin(obj)
    local t = luatype(obj)
    if t == 'number' then
       return obj
@@ -395,6 +394,26 @@ end
 -- { octets = zenroom.octet
 --   strings = string }
 -- calling function may want to convert all to octet or string
+--
+-- apply a function on all keys and values of a tree structure
+-- uses sorted listing for deterministic order
+local function sort_apply(fun,t,...)
+   if luatype(fun) ~= 'function' then
+	  error("Internal error: apply 1st argument is not a function", 3)
+	  return nil end
+   -- if luatype(t) == 'number' then
+   -- 	  return t end
+   if luatype(t) ~= 'table' then
+	  error("Internal error: apply 2nd argument is not a table", 3)
+	  return nil end
+   for k,v in pairs(t) do -- OPTIMIZATION: was sort_pairs
+	  if luatype(v) == 'table' then
+		 sort_apply(fun,v,...) -- recursion
+	  else
+		 fun(v,k,...)
+	  end
+   end
+end
 function serialize(tab)
    assert(luatype(tab) == 'table', 'Cannot serialize: not a table', 2)
    local octets = OCTET.zero(1)

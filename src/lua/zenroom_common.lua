@@ -221,7 +221,7 @@ end
 function xxx(s, n)
    n = n or 3
    if DEBUG >= n then
-	  print("LUA "..s)
+	  printerr("LUA "..s)
    end
 end
 
@@ -238,7 +238,7 @@ end
 -- from: https://www.lua.org/pil/19.3.html
 _G["lua_pairs"]  = _G["pairs"]
 _G["lua_ipairs"] = _G["ipairs"]
-function _pairs(t)
+local function _pairs(t)
    local a = {}
    for n in lua_pairs(t) do table.insert(a, n) end
    table.sort(a)
@@ -249,7 +249,7 @@ function _pairs(t)
 	  return a[i], t[a[i]]
    end
 end
-function _ipairs(t)
+local function _ipairs(t)
    local a = {}
    for n in lua_ipairs(t) do table.insert(a, n) end
    table.sort(a)

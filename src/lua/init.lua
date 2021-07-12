@@ -93,7 +93,6 @@ V = require('semver')
 ZENROOM_VERSION = V(VERSION)
 
 ZEN = require('zencode')
--- requires zencode_ast internally after having created
 -- the global ZEN context
 
 -- base zencode functions and schemas

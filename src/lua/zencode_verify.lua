@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Friday, 9th April 2021
+--on Sunday, 11th July 2021
 --]]
 -- generic comparison using overloaded __eq on values
 local function _eq(left, right)
@@ -35,7 +35,7 @@ local function _neq(left, right)
   end
 end
 
-When(
+IfWhen(
   "verify '' is equal to ''",
   function(l, r)
     local left = have(l)
@@ -47,7 +47,7 @@ When(
   end
 )
 
-When(
+IfWhen(
   "verify '' is not equal to ''",
   function(l, r)
     local left = have(l)
@@ -60,7 +60,7 @@ When(
 )
 
 -- comparison inside dictionary
-When(
+IfWhen(
   "verify '' is equal to '' in ''",
   function(l, tr, tt)
     local left = have(l)
@@ -74,7 +74,7 @@ When(
   end
 )
 
-When(
+IfWhen(
   "verify '' is not equal to '' in ''",
   function(l, tr, tt)
     local left = have(l)
@@ -128,7 +128,7 @@ local function numcheck(left, right)
   return al, ar
 end
 
-When(
+IfWhen(
   "number '' is less than ''",
   function(left, right)
     local l, r = numcheck(ACK[left], ACK[right])
@@ -138,7 +138,7 @@ When(
     )
   end
 )
-When(
+IfWhen(
   "number '' is less or equal than ''",
   function(left, right)
     local l, r = numcheck(ACK[left], ACK[right])
@@ -149,7 +149,7 @@ When(
     )
   end
 )
-When(
+IfWhen(
   "number '' is more than ''",
   function(left, right)
     local l, r = numcheck(ACK[left], ACK[right])
@@ -159,7 +159,7 @@ When(
     )
   end
 )
-When(
+IfWhen(
   "number '' is more or equal than ''",
   function(left, right)
     local l, r = numcheck(ACK[left], ACK[right])
@@ -238,7 +238,7 @@ local function validemail(str)
   return true
 end
 
-When(
+IfWhen(
   "verify '' is a email",
   function(name)
     local A = ACK[name]
@@ -248,7 +248,7 @@ When(
   end
 )
 
-When(
+IfWhen(
   "verify '' contains a list of emails",
   function(name)
     local A = ACK[name]

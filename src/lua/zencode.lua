@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Wednesday, 21st April 2021
+--on Monday, 12th July 2021
 --]]
 --- <h1>Zencode language parser</h1>
 --
@@ -52,8 +52,11 @@
 local zencode = {
 	given_steps = {},
 	when_steps = {},
+	if_steps = {},
 	then_steps = {},
 	schemas = {},
+	branch = false,
+	branch_valid = false,
 	id = 0,
 	AST = {},
 	traceback = {}, -- execution backtrace
@@ -66,6 +69,156 @@ require('zenroom_ast')
 
 -- set_sentence
 -- set_rule
+
+local function set_sentence(self, event, from, to, ctx)
+	local reg = ctx.Z[self.current .. '_steps']
+	ctx.Z.OK = false
+	xxx('Zencode parser from: ' .. from .. " to: "..to)
+	assert(reg,'Callback register not found: ' .. self.current)
+	assert(#reg,'Callback register empty: '..self.current)
+	local gsub = string.gsub -- optimization
+	-- TODO: optimize in C
+	-- remove '' contents, lower everything, expunge prefixes
+	-- ignore 'the' only in Then statements
+	local tt = gsub(trim(ctx.msg), "'(.-)'", "''")
+	if to == 'then' then
+		tt = gsub(tt, ' the ', ' ', 1)
+	end
+	if to == 'given' then
+	   tt = gsub(tt, ' the ', ' a ', 1)
+	   tt = gsub(tt, 'have ', '', 1)
+	end
+	tt = gsub(tt, ' +', ' ') -- eliminate multiple internal spaces
+	tt = gsub(tt, 'I ', '', 1)
+	tt = gsub(tt:lower(), 'when ', '', 1)
+	tt = gsub(tt, 'then ', '', 1)
+	tt = gsub(tt, 'given ', '', 1)
+	tt = gsub(tt, 'if ', '', 1)
+	tt = gsub(tt, 'and ', '', 1) -- TODO: expunge only first 'and'
+	tt = gsub(tt, 'that ', '', 1)
+	tt = gsub(tt, 'valid ', '', 1) -- backward compat
+	tt = gsub(tt, 'known as ', '', 1)
+	tt = gsub(tt, 'all ', '', 1)
+	tt = gsub(tt, ' inside ', ' in ', 1) -- equivalence
+	tt = gsub(tt, ' an ', ' a ', 1)
+
+	-- TODO: OPTIMIZE here to avoid iteration over all zencode language every time
+	for pattern, func in pairs(reg) do
+		if (type(func) ~= 'function') then
+			error('Zencode function missing: ' .. pattern, 2)
+			return false
+		end
+		xxx(tt .. ' == ' ..pattern)
+		if strcasecmp(tt, pattern) then
+			local args = {} -- handle multiple arguments in same string
+			for arg in string.gmatch(ctx.msg, "'(.-)'") do
+				-- convert all spaces to underscore in argument strings
+				arg = uscore(arg, ' ', '_')
+				table.insert(args, arg)
+			end
+			ctx.Z.id = ctx.Z.id + 1
+			-- AST data prototype
+			table.insert(
+				ctx.Z.AST,
+				{
+					id = ctx.Z.id, -- ordered number
+					args = args, -- array of vars
+					source = ctx.msg, -- source text
+					section = self.current,
+					from = from,
+					to = to,
+					hook = func
+				}
+			) -- function
+			ctx.Z.OK = true
+			break
+		end
+	end
+	if not ctx.Z.OK and CONF.parser.strict_match then
+		debug_traceback()
+		exitcode(1)
+		error('Zencode pattern not found (missing scenario?): ' .. trim(ctx.msg), 1)
+		return false
+	elseif not ctx.Z.OK and not CONF.parser.strict_match then
+		warn('Zencode pattern ignored: ' .. trim(ctx.msg), 1)
+	end
+end
+
+local function set_rule(text)
+	local res = false
+	local tr = text.msg:gsub(' +', ' ') -- eliminate multiple internal spaces
+	local rule = strtok(trim(tr):lower())
+	if rule[2] == 'check' and rule[3] == 'version' and rule[4] then
+		-- TODO: check version of running VM
+		-- elseif rule[2] == 'load' and rule[3] then
+		--     act("zencode extension: "..rule[3])
+		--     require("zencode_"..rule[3])
+		SEMVER = require_once('semver')
+		local ver = SEMVER(rule[4])
+		if ver == ZENROOM_VERSION then
+			act('Zencode version match: ' .. ZENROOM_VERSION.original)
+			res = true
+		elseif ver < ZENROOM_VERSION then
+			warn('Zencode written for an older version: ' .. ver.original)
+			res = true
+		elseif ver > ZENROOM_VERSION then
+			warn('Zencode written for a newer version: ' .. ver.original)
+			res = true
+		else
+			error('Version check error: ' .. rule[4])
+		end
+		text.Z.checks.version = res
+	elseif rule[2] == 'input' and rule[3] then
+		-- rule input encoding|format ''
+		if rule[3] == 'encoding' and rule[4] then
+			CONF.input.encoding = input_encoding(rule[4])
+			res = true and CONF.input.encoding
+		elseif rule[3] == 'format' and rule[4] then
+			CONF.input.format = get_format(rule[4])
+			res = true and CONF.input.format
+		elseif rule[3] == 'untagged' then
+			res = true
+			CONF.input.tagged = false
+		end
+	elseif rule[2] == 'output' and rule[3] then
+		-- TODO: rule debug [ format | encoding ]
+		-- rule input encoding|format ''
+		if rule[3] == 'encoding' then
+			CONF.output.encoding = output_encoding(rule[4])
+			res = true and CONF.output.encoding
+		elseif rule[3] == 'format' then
+			CONF.output.format = get_format(rule[4])
+			res = true and CONF.output.format
+		elseif rule[3] == 'versioning' then
+			CONF.output.versioning = true
+			res = true
+		elseif strcasecmp(rule[3], 'ast') then
+			CONF.output.AST = true
+			res = true
+		end
+	elseif rule[2] == 'unknown' and rule[3] then
+		if rule[3] == 'ignore' then
+			CONF.parser.strict_match = false
+			res = true
+		end
+		-- alias of unknown ignore for specific callers
+	elseif rule[2] == 'caller' and rule[3] then
+		if rule[3] == 'restroom-mw' then
+			CONF.parser.strict_match = false
+			res = true
+		end
+	elseif rule[2] == 'set' and rule[4] then
+		CONF[rule[3]] = tonumber(rule[4]) or rule[4]
+		res = true and CONF[rule[3]]
+	end
+	if not res then
+		error('Rule invalid: ' .. text.msg, 3)
+	else
+		act(text.msg)
+	end
+	return res
+end
+
 
 local function new_state_machine()
 	local machine =
@@ -88,14 +241,18 @@ local function new_state_machine()
 					from = {'init', 'rule', 'scenario'},
 					to = 'given'
 				},
-				{name = 'enter_given', from = 'given', to = 'given'},
+				{name = 'enter_given', from = {'given'}, to = 'given'},
 				{name = 'enter_and', from = 'given', to = 'given'},
-				{name = 'enter_when', from = 'given', to = 'when'},
-				{name = 'enter_when', from = 'when', to = 'when'},
+
+				{name = 'enter_when', from = {'given', 'when', 'if'}, to = 'when'},
 				{name = 'enter_and', from = 'when', to = 'when'},
-				{name = 'enter_then', from = {'given', 'when'}, to = 'then'},
-				{name = 'enter_then', from = 'then', to = 'then'},
-				{name = 'enter_and', from = 'then', to = 'then'}
+
+				{name = 'enter_if', from = {'given', 'when', 'if', 'then'}, to = 'if'},
+				{name = 'enter_and', from = 'if', to = 'if'},
+
+				{name = 'enter_then', from = {'given', 'when', 'then', 'if'}, to = 'then'},
+				{name = 'enter_and', from = 'then', to = 'then'},
+
 			},
 			callbacks = {
 				-- msg is a table: { msg = "string", Z = ZEN (self) }
@@ -105,7 +262,7 @@ local function new_state_machine()
 						strtok(string.match(trim(msg.msg):lower(), '[^:]+'))
 					for k, scen in ipairs(scenarios) do
 						if k ~= 1 then -- skip first (prefix)
-							require_once('zencode_' .. trimq(scen))
+							require('zencode_' .. trimq(scen))
 							ZEN:trace('Scenario ' .. scen)
 							return
 						end
@@ -113,13 +270,11 @@ local function new_state_machine()
 				end,
 				onrule = function(self, event, from, to, msg)
 					-- process rules immediately
-					if msg then
-						set_rule(msg)
-					end
+					if msg then	set_rule(msg) end
 				end,
-				-- set_sentence from zencode_ast
 				ongiven = set_sentence,
 				onwhen = set_sentence,
+				onif = set_sentence,
 				onthen = set_sentence,
 				onand = set_sentence
 			}
@@ -141,21 +296,33 @@ WHO = nil
 function Given(text, fn)
 	ZEN.assert(
 		not ZEN.given_steps[text],
-		'Conflicting statement loaded by scenario: ' .. text
+		'Conflicting GIVEN statement loaded by scenario: ' .. text
 	)
 	ZEN.given_steps[text] = fn
 end
 function When(text, fn)
 	ZEN.assert(
 		not ZEN.when_steps[text],
-		'Conflicting statement loaded by scenario: ' .. text
+		'Conflicting WHEN statement loaded by scenario: ' .. text
 	)
+	ZEN.when_steps[text] = fn
+end
+function IfWhen(text, fn)
+	ZEN.assert(
+		not ZEN.if_steps[text],
+		'Conflicting IF-WHEN statement loaded by scenario: ' .. text
+	)
+	ZEN.assert(
+		not ZEN.when_steps[text],
+		'Conflicting IF-WHEN statement loaded by scenario: ' .. text
+	)
+	ZEN.if_steps[text]   = fn
 	ZEN.when_steps[text] = fn
 end
 function Then(text, fn)
 	ZEN.assert(
 		not ZEN.then_steps[text],
-		'Conflicting statement loaded by scenario : ' .. text
+		'Conflicting THEN statement loaded by scenario : ' .. text
 	)
 	ZEN.then_steps[text] = fn
 end
@@ -224,6 +391,30 @@ end
 ---------------------------------------------------------------
 -- ZENCODE PARSER
 
+local function zencode_iscomment(b)
+	local x = string.char(b:byte(1))
+	if x == '#' then
+		return true
+	else
+		return false
+	end
+end
+local function zencode_isempty(b)
+	if b == nil or trim(b) == '' then
+		return true
+	else
+		return false
+	end
+end
+-- returns an iterator for newline termination
+local function zencode_newline_iter(text)
+	s = trim(text) -- implemented in zen_io.c
+	if s:sub(-1) ~= '\n' then
+		s = s .. '\n'
+	end
+	return s:gmatch('(.-)\n') -- iterators return functions
+end
+
 function zencode:begin()
 	self.id = 0
 	self.AST = {}
@@ -255,6 +446,8 @@ function zencode:parse(text)
 	end
 	local linenum=0
    -- xxx(text,3)
+	local prefix
+	local parse_prefix = parse_prefix -- optimization
    for line in zencode_newline_iter(text) do
 	linenum = linenum + 1
 	  if zencode_isempty(line) then goto continue end
@@ -262,19 +455,18 @@ function zencode:parse(text)
 	--   xxx(2, 'Line: '.. text)
 	  -- max length for single zencode line is #define MAX_LINE
 	  -- hard-coded inside zenroom.h
-	  local prefix = parse_prefix(line)
-	  self.assert(prefix, "Invalid Zencode line "..linenum..": "..line)
-	  local defs -- parse in what phase are we
+	  prefix = parse_prefix(line)
+	  assert(prefix, "Invalid Zencode line "..linenum..": "..line)
 	  self.OK = true
 	  exitcode(0)
 	  -- try to enter the machine state named in prefix
 	  -- xxx(3,"Zencode machine enter_"..prefix..": "..text)
 	  local fm = self.machine["enter_"..prefix]
-	  self.assert(fm,"Invalid Zencode prefix: "..prefix)
-	  self.assert(fm(self.machine, { msg = line, Z = self }),
-				  line.."\n    "..
-					 "Invalid transition from "
-					 ..self.machine.current.." to Rule block")
+	  assert(fm,"Invalid Zencode prefix: "..prefix)
+	  assert(fm(self.machine, { msg = line, Z = self }),
+				line.."\n    "..
+				"Invalid transition from "
+				..self.machine.current.." to Rule block")
 	  ::continue::
    end
    collectgarbage'collect'
@@ -317,6 +509,27 @@ local function IN_uscore(i)
    return setmetatable(res, getmetatable(i))
 end
 
+-- return true: caller skip execution and go to ::continue::
+-- return false: execute statement
+local function manage_branching(x)
+	if x.section == 'if' then ZEN.branch = true end
+	if ZEN.branch then
+		xxx('branching section: '..x.section)
+		if x.section == 'when' and x.from == 'then' then
+			ZEN.branch = false
+			xxx('end of conditional branch')
+		-- elseif x.section == 'if' or x.section == 'when' then
+		-- 	return false
+		elseif x.section == 'then' and not ZEN.branch_valid then
+			xxx('skip execution in false conditional branch')
+			return true
+		end
+		-- elseif x.section == 'if' and x.from == 'then' then		
+		-- 	ZEN.branch_valid = false
+	end
+	return false
+end
+
 function zencode:run()
 	-- runtime checks
 	if not ZEN.checks.version then
@@ -338,9 +551,11 @@ function zencode:run()
 	IN = IN_uscore(IN)
 
 	-- EXEC zencode
-	for i, x in sort_ipairs(self.AST) do
+	for _, x in pairs(self.AST) do
 		ZEN:trace(x.source)
-
+		if manage_branching(x) then
+			goto continue
+		end
 		-- HEAP integrity guard
 		if CONF.heapguard then
 			-- trigger upon switch to when or then section
@@ -364,6 +579,7 @@ function zencode:run()
 			fatal(x.source) -- traceback print inside
 		end
 		collectgarbage 'collect'
+		::continue::
 	end
 	-- PRINT output
 	ZEN:trace('--- Zencode execution completed')
@@ -458,13 +674,23 @@ end
 
 function zencode.assert(condition, errmsg)
 	if condition then
+		if ZEN.branch then
+			ZEN.branch_valid = true
+		end
 		return true
 	end
-	-- ZEN.debug() -- prints all data in memory
-	ZEN:trace('ERR ' .. errmsg)
-	ZEN.OK = false
-	exitcode(1)
-	error(errmsg, 3)
+	-- in conditional branching ZEN.assert doesn't quit
+	if ZEN.branch then
+		ZEN:trace(errmsg)
+		xxx(errmsg)
+		ZEN.branch_valid = false
+	else
+		-- ZEN.debug() -- prints all data in memory
+		ZEN:trace('ERR ' .. errmsg)
+		ZEN.OK = false
+		exitcode(1)
+		error(errmsg, 3)
+	end
 end
 
 return zencode
