@@ -102,7 +102,28 @@ qemu_zenroom_run() {
 	eval qemu-system-arm -M mps2-an385 -kernel $zenroom_bin_path -semihosting -nographic -semihosting-config arg="'$@'"
 }
 
+debug() {
+	if [ "$Z" == "" ]; then
+		>&2 echo "no zenroom executable configured"
+		return 1
+	fi
+	if [ "$1" == "" ]; then
+		>&2 echo "no script filename configured"
+		return 1
+	fi
+	out="$1"
+	shift 1
+	>&2 echo "test: $out"
+	tee "$out" | $Z -z $*
+	return $?
+}
+
+
 zexe() {
+	if [ "$DEBUG" == "1" ]; then
+		debug $*
+		return $?
+	fi
 	if [ "$Z" == "" ]; then
 		>&2 echo "no zenroom executable configured"
 		return 1
@@ -154,22 +175,6 @@ save() {
 	else
 		tee ${here}/"$2" | tee ${docs}/"$2"
 	fi
-}
-
-debug() {
-	if [ "$Z" == "" ]; then
-		>&2 echo "no zenroom executable configured"
-		return 1
-	fi
-	if [ "$1" == "" ]; then
-		>&2 echo "no script filename configured"
-		return 1
-	fi
-	out="$1"
-	shift 1
-	>&2 echo "test: $out"
-	tee "$out" | $Z -z $*
-	return $?
 }
 
 success() {
