@@ -1,0 +1,116 @@
+# We're using scenario 'ecdh' cause we are loading a keypair
+Scenario 'ecdh': using keypair and signing
+Given my name is in a 'string' named 'myUserName'
+Given that I have my 'keypair'
+# Load Arrays
+Given I have a 'string array' named 'myFirstArray'  inside 'myFirstObject'
+Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
+Given I have a 'string array' named 'myThirdArray' inside 'myThirdObject' 
+Given I have a 'string array' named 'myFourthArray' inside 'myFourthObject'
+Given I have a 'number array' named 'myFirstNumberArray' inside 'myFirstObject'
+Given I have a 'string array' named 'myCopyOfFirstArray' inside 'myThirdObject'
+Given I have a 'base64 array' named 'myOnlyEcpArray' inside 'myFirstObject'
+Given I have a 'base64 array' named 'myOnlyEcp2Array' inside 'myFirstObject'
+# Load Numbers
+Given I have a 'number' named 'myFirstNumber' in 'myFirstObject'
+Given I have a 'number' named 'mySecondNumber' in 'mySecondObject'
+Given I have a 'number' named 'myFourthNumber' inside 'myFourthObject'
+Given I have a 'number' named 'myThirdNumber' inside 'myThirdObject' 
+# Load Strings
+Given I have a 'string' named 'myFirstString' in 'myFirstObject'
+Given I have a 'string' named 'mySecondString' inside 'mySecondObject'
+Given I have a 'string' named 'myThirdString' inside 'myThirdObject' 
+Given I have a 'string' named 'myFourthString' inside 'myFourthObject'
+Given I have a 'string' named 'myFifthString' inside 'myFourthObject'
+Given I have a 'string' named 'mySixthString' inside 'myFourthObject'
+Given I have a 'string' named 'mySeventhString' inside 'myFourthObject'
+Given I have a 'string' named 'myNinthEqualString' inside 'myFourthObject'
+Given I have a 'string' named 'myEightEqualString' inside 'myFourthObject'
+Given I have a 'string' named 'myTenthString' inside 'myFourthObject'
+Given I have a 'string' named 'myEleventhStringToBeHashed' inside 'myFourthObject'
+Given I have a 'string' named 'myTwelfthStringToBeHashedUsingPBKDF2' inside 'myFourthObject' 
+Given I have a 'string' named 'myThirteenStringPassword' inside 'myFourthObject'
+Given I have a 'string' named 'myFourteenthStringToBeHashedUsingHMAC' inside 'myFourthObject'
+Given I have a 'string' named 'myFifteenthString' inside 'myFourthObject'
+Given I have a 'string' named 'mySixteenthString' inside 'myFourthObject'
+# Load dictionaries
+Given I have a 'string dictionary' named 'ABC-Transactions1Data'
+# Different data types
+Given I have an 'hex' named 'myFirstHex' inside 'myFirstObject' 
+Given I have a  'base64' named 'myFirstBase64' in 'myFirstObject'
+Given I have a  'binary' named 'myFirstBinary' in 'myFirstObject'
+Given I have an 'url64' named 'myFirstUrl64' in 'myFirstObject'
+# Here we're done loading stuff 
+# HASH
+
+# Output objects: as overwriting variables is discouraged in Zenroom, all the hashing
+# and cryptography statements will output a new object with a hardcoded name, listed
+# along with the statement. It's a good practice to rename the object immediately after
+# its creation, both to make it more readable and as well to avoid overwriting in case you
+# are using a statement with similar output more than once in the same script.
+
+# The "create hash" statement hashes a string, but it does not hash an array!
+# The default algorythm for the hash can be modified by passing them to Zenroom as config file. 
+# Note that the object produced, containing the hashing of the string, will be named "hash", 
+# which we promptly rename. The same is true for the two following statements.
+When I create the hash of 'myFifthString'
+And I rename the 'hash' to 'hashOfMyFifthString'
+
+# In the same fashion, we can hash arrays 
+When I create the hash of 'myFirstArray'
+And I rename the 'hash' to 'hashOf:MyFirstArray'
+
+# and we can as well hash dictionaries
+When I create the hash of 'ABC-Transactions1Data'
+And I rename the 'hash' to 'hashOfDictionary:ABC-Transactions1Data'
+
+# Following is a version of the statement above that takes the hashing algorythm as parameter, 
+# it accepts sha256 or sha512 as hash types
+When I create the hash of 'mySixthString' using 'sha256'
+And I rename the 'hash' to 'hashOfMySixthString'
+When I create the hash of 'mySeventhString' using 'sha512'
+And I rename the 'hash' to 'hashOfMySeventhString'
+
+# Again, you can hash with sha256 or sha512 also arrays and dictionaries
+When I create the hash of 'myFirstArray' using 'sha512'
+And I rename the 'hash' to 'sha512HashOf:MyFirstArray'
+
+When I create the hash of 'ABC-Transactions1Data' using 'sha512'
+And I rename the 'hash' to 'sha512HashOfDictionary:ABC-Transactions1Data'
+
+
+
+# The "create hash to point" statement can do some serious cryptography: 
+# use it generating public keys from a secret key, where the secret key can be any random number.
+# The statement accepts curves "ecp" or "ecp2" to produce the hash.
+# This statement takes an array as input, and produces an array as output named "hash_to_point", which
+# we immediately rename.
+When I create the hash to point 'ecp' of each object in 'myFourthArray'
+And I rename the 'hash_to_point' to 'ecpHashesOfMyFourthArray'
+When I create the hash to point 'ecp2' of each object in 'myFirstArray'        
+And I rename the 'hash_to_point' to 'ecp2HashesOfMyFirstArray'
+
+# Key derivation function (KDF)
+# The output object is named "key_derivation":
+When I create the key derivation of 'myEleventhStringToBeHashed'
+And I rename the 'key_derivation' to 'kdfOfMyEleventhString'
+
+# Password-Based Key Derivation Function (pbKDF) hashing, 
+# this also outputs an object named "key_derivation":
+When I create the key derivation of 'myTwelfthStringToBeHashedUsingPBKDF2' with password 'myThirteenStringPassword'
+And I rename the 'key_derivation' to 'pbkdf2OfmyTwelfthString'
+
+# Hash-based message authentication code (HMAC)
+When I create the HMAC of 'myFourteenthStringToBeHashedUsingHMAC' with key 'myThirteenStringPassword'
+And I rename the 'HMAC' to 'hmacOfMyFourteenthString'
+
+# AGGREGATE
+# The "create the aggregation" statement takes as input an array of numers
+# and sums then it into a new object called "aggregation" that we'll rename immediately.
+# It works on both arrays and dictionaries, the data type needs to be 
+# specified as in the example.
+When I create the aggregation of array 'myFirstNumberArray'
+And I rename the 'aggregation' to 'aggregationOfMyFirstNumberArray'
+
+# Now let's print out everything
+Then print all data  

@@ -1,0 +1,65 @@
+# We're using scenario 'ecdh' cause we are loading a keypair
+Scenario 'ecdh': using keypair and signing
+Given my name is in a 'string' named 'myUserName'
+Given that I have my 'keypair'
+# Load Arrays
+Given I have a 'string array' named 'myFirstArray'  inside 'myFirstObject'
+Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
+Given I have a 'string array' named 'myThirdArray' inside 'myThirdObject' 
+Given I have a 'string array' named 'myFourthArray' inside 'myFourthObject'
+Given I have a 'number array' named 'myFirstNumberArray' inside 'myFirstObject'
+Given I have a 'string array' named 'myCopyOfFirstArray' inside 'myThirdObject'
+Given I have a 'base64 array' named 'myOnlyEcpArray' inside 'myFirstObject'
+Given I have a 'base64 array' named 'myOnlyEcp2Array' inside 'myFirstObject'
+# Load Numbers
+Given I have a 'number' named 'myFirstNumber' in 'myFirstObject'
+Given I have a 'number' named 'mySecondNumber' in 'mySecondObject'
+Given I have a 'number' named 'myFourthNumber' inside 'myFourthObject'
+Given I have a 'number' named 'myThirdNumber' inside 'myThirdObject' 
+# Load Strings
+Given I have a 'string' named 'myFirstString' in 'myFirstObject'
+Given I have a 'string' named 'mySecondString' inside 'mySecondObject'
+Given I have a 'string' named 'myThirdString' inside 'myThirdObject' 
+Given I have a 'string' named 'myFourthString' inside 'myFourthObject'
+Given I have a 'string' named 'myFifthString' inside 'myFourthObject'
+Given I have a 'string' named 'mySixthString' inside 'myFourthObject'
+Given I have a 'string' named 'mySeventhString' inside 'myFourthObject'
+Given I have a 'string' named 'myNinthEqualString' inside 'myFourthObject'
+Given I have a 'string' named 'myEightEqualString' inside 'myFourthObject'
+Given I have a 'string' named 'myTenthString' inside 'myFourthObject'
+Given I have a 'string' named 'myEleventhStringToBeHashed' inside 'myFourthObject'
+Given I have a 'string' named 'myTwelfthStringToBeHashedUsingPBKDF2' inside 'myFourthObject' 
+Given I have a 'string' named 'myThirteenStringPassword' inside 'myFourthObject'
+Given I have a 'string' named 'myFourteenthStringToBeHashedUsingHMAC' inside 'myFourthObject'
+Given I have a 'string' named 'myFifteenthString' inside 'myFourthObject'
+Given I have a 'string' named 'mySixteenthString' inside 'myFourthObject'
+# Load dictionaries
+Given I have a 'string dictionary' named 'ABC-Transactions1Data'
+# Different data types
+Given I have an 'hex' named 'myFirstHex' inside 'myFirstObject' 
+Given I have a  'base64' named 'myFirstBase64' in 'myFirstObject'
+Given I have a  'binary' named 'myFirstBinary' in 'myFirstObject'
+Given I have an 'url64' named 'myFirstUrl64' in 'myFirstObject'
+# Here we're done loading stuff 
+# VERIFY EQUAL
+# The "verify equal" statement checks that the value of two ojects is equal.
+# It works with simple objects of any encoding.
+When I verify 'myEightEqualString' is equal to 'myNinthEqualString'         
+When I verify 'myThirdNumber' is equal to 'myFourthNumber'
+
+# LESS, MORE, EQUAL
+# Number comparisons: those are pretty self explaining.
+When number 'myFourthNumber' is less or equal than 'myThirdNumber'
+When number 'myFirstNumber' is less than  'myThirdNumber'
+When number 'myThirdNumber' is more or equal than 'mySecondNumber'
+When number 'myThirdNumber' is more than 'mySecondNumber'
+
+# FOUND, NOT FOUND
+# The "is found" statement, takes two objects as input: 
+# the name of a variable and the name of an array. It reads its content of the variable 
+# and matches it against each element of the array.
+# It works with any kind of array, as long as the element of the array are of the same schema
+# as the variable.
+When the 'myTenthString' is found in 'myFourthArray'
+When the 'myFirstString' is not found in 'myFourthArray'
+Then print all data

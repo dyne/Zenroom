@@ -1,0 +1,116 @@
+# We're using scenario 'ecdh' cause we are loading a keypair
+Scenario 'ecdh': using keypair and signing
+Given my name is in a 'string' named 'myUserName'
+Given that I have my 'keypair'
+# Load Arrays
+Given I have a 'string array' named 'myFirstArray'  inside 'myFirstObject'
+Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
+Given I have a 'string array' named 'myThirdArray' inside 'myThirdObject' 
+Given I have a 'string array' named 'myFourthArray' inside 'myFourthObject'
+Given I have a 'number array' named 'myFirstNumberArray' inside 'myFirstObject'
+Given I have a 'string array' named 'myCopyOfFirstArray' inside 'myThirdObject'
+Given I have a 'base64 array' named 'myOnlyEcpArray' inside 'myFirstObject'
+Given I have a 'base64 array' named 'myOnlyEcp2Array' inside 'myFirstObject'
+# Load Numbers
+Given I have a 'number' named 'myFirstNumber' in 'myFirstObject'
+Given I have a 'number' named 'mySecondNumber' in 'mySecondObject'
+Given I have a 'number' named 'myFourthNumber' inside 'myFourthObject'
+Given I have a 'number' named 'myThirdNumber' inside 'myThirdObject' 
+# Load Strings
+Given I have a 'string' named 'myFirstString' in 'myFirstObject'
+Given I have a 'string' named 'mySecondString' inside 'mySecondObject'
+Given I have a 'string' named 'myThirdString' inside 'myThirdObject' 
+Given I have a 'string' named 'myFourthString' inside 'myFourthObject'
+Given I have a 'string' named 'myFifthString' inside 'myFourthObject'
+Given I have a 'string' named 'mySixthString' inside 'myFourthObject'
+Given I have a 'string' named 'mySeventhString' inside 'myFourthObject'
+Given I have a 'string' named 'myNinthEqualString' inside 'myFourthObject'
+Given I have a 'string' named 'myEightEqualString' inside 'myFourthObject'
+Given I have a 'string' named 'myTenthString' inside 'myFourthObject'
+Given I have a 'string' named 'myEleventhStringToBeHashed' inside 'myFourthObject'
+Given I have a 'string' named 'myTwelfthStringToBeHashedUsingPBKDF2' inside 'myFourthObject' 
+Given I have a 'string' named 'myThirteenStringPassword' inside 'myFourthObject'
+Given I have a 'string' named 'myFourteenthStringToBeHashedUsingHMAC' inside 'myFourthObject'
+Given I have a 'string' named 'myFifteenthString' inside 'myFourthObject'
+Given I have a 'string' named 'mySixteenthString' inside 'myFourthObject'
+# Load dictionaries
+Given I have a 'string dictionary' named 'ABC-Transactions1Data'
+# Different data types
+Given I have an 'hex' named 'myFirstHex' inside 'myFirstObject' 
+Given I have a  'base64' named 'myFirstBase64' in 'myFirstObject'
+Given I have a  'binary' named 'myFirstBinary' in 'myFirstObject'
+Given I have an 'url64' named 'myFirstUrl64' in 'myFirstObject'
+# Here we're done loading stuff 
+# CREATE RANDOM
+# The "create random" creates a random object with a default set of parameters
+# The name of the generate objected is defined between the ' '  
+# The parameters can be modified by passing them to Zenroom as configuration file
+When I create the random 'newRandomObject'
+
+# Below is a variation that lets you create a random number of configurable length.
+# This statement doesn't let you choose the name of the name of the newly created object,
+# which is hardcoded to "random_object". We are immediately renaming it.
+When I create the random object of '128' bits
+and I rename the 'random_object' to 'my128BitsRandom'
+
+# The "create array of random" statement, lets you create an array of random objects, 
+# and you can select the length in bits. The first statement uses the default lenght of 512 bits.
+# Like the previous one, this statement outputs an object whose name is hardcoded into "array".
+# Since we're creating three arrays called "array" below, Zenroom would simply overwrite 
+# the first two, so we are renaming the output immediately. 
+When I create the array of '4' random objects
+and I rename the 'array' to 'my4RandomObjectsArray'
+When I create the array of '5' random objects of '256' bits
+and I rename the 'array' to 'my256BitsRandomObjectsArray'
+
+# You can generate an array of random numbers, from 0 o 65355, with this statement.
+When I create the array of '10' random numbers 
+and I rename the 'array' to 'my10RandomNumbersArray'
+# A variation of the statement above, allows you to use the "modulo" function to cap the max value
+# of the random numbers. In the example below, the max value will be "999".
+When I create the array of '16' random numbers modulo '1000'
+and I rename the 'array' to 'my16RandomNumbersModulo1000Array'
+
+# SET
+# The 'set' statement creates a new variable and assign it a value.
+# Overwriting variables discouraged in Zenroom: if you try to overwrite an existing variable, 
+# you will get an error, that you can override the error using a rule 
+# in the beginning of the script.
+# The 'set' statement can generate different kind of schemas, as well as to create variables 
+# containing numbers in different bases. 
+# When working with strings, remember that spaces are converted to underscores.
+When I set 'myNewlyCreatedString' to 'call me The Pink Panther!' as 'string'
+When I set 'myNewlyCreatedBase64' to 'SGVsbG8gV29ybGQh' as 'base64'
+When I set 'myNewlytCreatedNumber' to '42' as 'number'
+When I set 'myNewlyCreatedNumberInBaseSomething' to '42' base '16'
+
+# CREATE the CBOR/JSON
+# You can render an object into CBOR, or render it JSON (if it was imported as JSON).
+# This is useful when you want to perform operations on larger datasets
+
+When I create the cbor of 'myFirstArray'
+And I rename the 'cbor' to 'myArrayRenderedToCBOR'
+
+# CREATE KEYPAIR
+# Keypairs can be created from a random seed or from a known seed
+
+# Below is the standard keypair generation statement, which uses a random seed
+# The random seed can in fact be passed to Zenroom and last for the whole 
+# smart contract execution session, via the "config" parameter. 
+# Note that, in order to create a keypair, you'll need to declare the identity of the script
+# executor, which is done in the Given phase
+
+# Note: we're renaming the created keypairs exclusively cause we're generating 2 keypairs 
+# in the same script, so the second would overwrite the first. In reality you never want to 
+# rename a keypair, as its schema is hardcoded in Zenroom and cryptographically it doesn't make sense
+# to use more than one keypair in the same script.
+When I rename the 'keypair' to 'GivenKeypair'
+When I create the keypair
+and I rename the 'keypair' to 'keypairFromRandom'
+
+# Below is a statement to create a keypair from a known seed.
+# The seed has to be passed to Zenroom via a string, that can have an arbitrary size
+When I create the keypair with secret key 'myThirteenStringPassword'
+and I rename the 'keypair' to 'keypairFromSeed'
+
+Then print all data

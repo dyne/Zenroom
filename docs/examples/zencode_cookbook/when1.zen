@@ -1,0 +1,129 @@
+# We're using scenario 'ecdh' cause we are loading a keypair
+Scenario 'ecdh': using keypair and signing
+Given my name is in a 'string' named 'myUserName'
+Given that I have my 'keypair'
+# Load Arrays
+Given I have a 'string array' named 'myFirstArray'  inside 'myFirstObject'
+Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
+Given I have a 'string array' named 'myThirdArray' inside 'myThirdObject' 
+Given I have a 'string array' named 'myFourthArray' inside 'myFourthObject'
+Given I have a 'number array' named 'myFirstNumberArray' inside 'myFirstObject'
+Given I have a 'string array' named 'myCopyOfFirstArray' inside 'myThirdObject'
+Given I have a 'base64 array' named 'myOnlyEcpArray' inside 'myFirstObject'
+Given I have a 'base64 array' named 'myOnlyEcp2Array' inside 'myFirstObject'
+# Load Numbers
+Given I have a 'number' named 'myFirstNumber' in 'myFirstObject'
+Given I have a 'number' named 'mySecondNumber' in 'mySecondObject'
+Given I have a 'number' named 'myFourthNumber' inside 'myFourthObject'
+Given I have a 'number' named 'myThirdNumber' inside 'myThirdObject' 
+# Load Strings
+Given I have a 'string' named 'myFirstString' in 'myFirstObject'
+Given I have a 'string' named 'mySecondString' inside 'mySecondObject'
+Given I have a 'string' named 'myThirdString' inside 'myThirdObject' 
+Given I have a 'string' named 'myFourthString' inside 'myFourthObject'
+Given I have a 'string' named 'myFifthString' inside 'myFourthObject'
+Given I have a 'string' named 'mySixthString' inside 'myFourthObject'
+Given I have a 'string' named 'mySeventhString' inside 'myFourthObject'
+Given I have a 'string' named 'myNinthEqualString' inside 'myFourthObject'
+Given I have a 'string' named 'myEightEqualString' inside 'myFourthObject'
+Given I have a 'string' named 'myTenthString' inside 'myFourthObject'
+Given I have a 'string' named 'myEleventhStringToBeHashed' inside 'myFourthObject'
+Given I have a 'string' named 'myTwelfthStringToBeHashedUsingPBKDF2' inside 'myFourthObject' 
+Given I have a 'string' named 'myThirteenStringPassword' inside 'myFourthObject'
+Given I have a 'string' named 'myFourteenthStringToBeHashedUsingHMAC' inside 'myFourthObject'
+Given I have a 'string' named 'myFifteenthString' inside 'myFourthObject'
+Given I have a 'string' named 'mySixteenthString' inside 'myFourthObject'
+# Load dictionaries
+Given I have a 'string dictionary' named 'ABC-Transactions1Data'
+# Different data types
+Given I have an 'hex' named 'myFirstHex' inside 'myFirstObject' 
+Given I have a  'base64' named 'myFirstBase64' in 'myFirstObject'
+Given I have a  'binary' named 'myFirstBinary' in 'myFirstObject'
+Given I have an 'url64' named 'myFirstUrl64' in 'myFirstObject'
+# Here we're done loading stuff 
+
+# WRITE IN (create string or number)
+# the "write in" statement create a new object, assigns it an encoding but 
+# only "number" or "string" (if you need any other encoding, 
+# use the "set as" statement) and assigns it the value you define.
+When I write number '10' in 'nameOfFirstNewVariable'
+When I write string 'This is my lovely new string!' in 'nameOfSecondNewVariable'
+
+
+# SUM, SUBTRACTION
+# You can use the statement 'When I create the result of ... " to 
+# sum, subtract, multiply, divide, modulo with values, see the examples below. The output of the 
+# statement will be an object named "result" that we immediately rename.
+# The operators allowed are: +, -, *, /, %.
+When I create the result of 'mySecondNumber' + 'myThirdNumber'
+and I rename the 'result' to 'resultOfmyFirstSum'
+When I create the result of 'mySecondNumber' - 'myThirdNumber'
+and I rename the 'result' to 'resultOfmyFirstSubtraction'
+When I create the result of 'mySecondNumber' * 'myThirdNumber'
+and I rename the 'result' to 'resultOfmyFirstMultiplication'
+When I create the result of 'mySecondNumber' - 'myThirdNumber'
+and I rename the 'result' to 'resultOfmyFirstDivision'
+When I create the result of 'mySecondNumber' % 'myThirdNumber'
+and I rename the 'result' to 'resultOfmyFirstModulo'
+
+# Now let's do some math with the number that we just created: 
+
+When I create the result of 'mySecondNumber' + 'nameOfFirstNewVariable'
+and I rename the 'result' to 'resultOfmySecondSum'
+When I create the result of 'mySecondNumber' * 'nameOfFirstNewVariable'
+and I rename the 'result' to 'resultOfmySecondMultiplication'
+
+
+
+# APPEND
+# The "append" statement are pretty self-explaining: 
+# append a simple object of any encoding to another one
+When I append 'mySecondString' to 'myFifteenthString' 
+When I append 'mySecondNumber' to 'myThirdNumber' 
+
+# RENAME
+# The "rename" statement: we've been hinting at this for a while now,
+# pretty self-explaining, it works with any object type or schema.
+When I rename the 'myThirdArray' to 'myJustRenamedArray'
+
+# INSERT
+# The "insert" statement is used to append a simple object to an array.
+# It's pretty self-explaining. 
+When I insert 'myFirstString' in 'myFirstArray'
+
+# REMOVE
+# The "remove" statement does the opposite of the one above:
+# Use it remove an element from an array, it takes as input the name of a string, 
+# and the name of an array - we don't mix code and data! 
+When I remove the 'mySixteenthString' from 'myJustRenamedArray'
+
+# COPY (element of array)
+# You can copy a certain element from an array, to a new object named "copy", with the
+# same encoding of the array, in the root level of the data. 
+# We are immeediately renaming the outout for your convenience.
+When I create the copy of element '3' in array 'myFourthArray'
+and I rename the 'copy' to 'copyOfElement3OfmyFourthArray'
+
+# SPLIT (leftmost, rightmost)
+# The "split" statements, take as input the name of a string and a numeric value,
+# the statement removes the leftmost/outmost characters from the string 
+# and places the result in a newly created string called "leftmost" or "rightmost"
+# which we immediately rename
+When I split the leftmost '4' bytes of 'mySecondString'
+And I rename the 'leftmost' to 'myFirstStringLeftmost'
+When I split the rightmost '6' bytes of 'myThirdString'
+And I rename the 'rightmost' to 'myThirdStringRightmost'
+
+# RANDOMIZE
+# The "randomize" statements takes the name of an array as input and shuffles it. 
+When I randomize the 'myFourthArray' array
+
+
+# PICK RANDOM
+# The "pick a random object in" picks randomly an object from the target array
+# and puts into a newly created object named "random_object".
+# The name is hardcoded, the object can be renamed.
+When I pick the random object in 'myFirstArray'
+and I rename the 'random_object' to 'myRandomlyPickedObject'
+
+Then print all data
