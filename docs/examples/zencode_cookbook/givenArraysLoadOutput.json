@@ -33,9 +33,9 @@
     "d1f500b8af6d1f8f4ef2ce933ee5de23"
   ],
   "myNumberArray": [
-    123,
-    45678,
-    123.456
+    "123",
+    "45678",
+    "123.456"
   ],
   "myStringArray": [
     "String-1-one",

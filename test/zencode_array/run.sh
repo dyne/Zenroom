@@ -173,7 +173,7 @@ and print the 'aggregation' as 'number'
 EOF
 
 cat <<EOF | zexe cbor.zen -a array_random_nums.json
-Given I have an 'base64 array' named 'array'
+Given I have an 'number array' named 'array'
 When I create the cbor of 'array'
 Then print the 'cbor' as 'hex'
 and print the 'array'

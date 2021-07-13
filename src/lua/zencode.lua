@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Monday, 12th July 2021
+--on Tuesday, 13th July 2021
 --]]
 --- <h1>Zencode language parser</h1>
 --
@@ -81,27 +81,29 @@ local function set_sentence(self, event, from, to, ctx)
 	-- remove '' contents, lower everything, expunge prefixes
 	-- ignore 'the' only in Then statements
 	local tt = gsub(trim(ctx.msg), "'(.-)'", "''")
+	tt = gsub(tt, ' I ', ' ', 1) -- eliminate first person pronoun
+	tt = tt:lower() -- lowercase all statement
 	if to == 'then' then
 		tt = gsub(tt, ' the ', ' ', 1)
 	end
 	if to == 'given' then
 	   tt = gsub(tt, ' the ', ' a ', 1)
-	   tt = gsub(tt, 'have ', '', 1)
+	   tt = gsub(tt, ' have ', ' ', 1)
 	end
-	tt = gsub(tt, ' +', ' ') -- eliminate multiple internal spaces
-	tt = gsub(tt, 'I ', '', 1)
-	tt = gsub(tt:lower(), 'when ', '', 1)
-	tt = gsub(tt, 'then ', '', 1)
-	tt = gsub(tt, 'given ', '', 1)
-	tt = gsub(tt, 'if ', '', 1)
-	tt = gsub(tt, 'and ', '', 1) -- TODO: expunge only first 'and'
-	tt = gsub(tt, 'that ', '', 1)
-	tt = gsub(tt, 'valid ', '', 1) -- backward compat
-	tt = gsub(tt, 'known as ', '', 1)
-	tt = gsub(tt, 'all ', '', 1)
+	-- prefixes found at beginning of statement
+	tt = gsub(tt, '^when ', '', 1)
+	tt = gsub(tt, '^then ', '', 1)
+	tt = gsub(tt, '^given ', '', 1)
+	tt = gsub(tt, '^if ', '', 1)
+	tt = gsub(tt, '^and ', '', 1) -- TODO: expunge only first 'and'
+	-- generic particles
+	tt = gsub(tt, '^that ', ' ', 1)
+	tt = gsub(tt, ' valid ', ' ', 1) -- backward compat
+	tt = gsub(tt, ' known as ', ' ', 1)
+	tt = gsub(tt, ' all ', ' ', 1)
 	tt = gsub(tt, ' inside ', ' in ', 1) -- equivalence
-	tt = gsub(tt, ' an ', ' a ', 1)
-
+	tt = gsub(tt, '^an ', 'a ', 1)
+	tt = gsub(tt, ' +', ' ') -- eliminate multiple internal spaces
 	-- TODO: OPTIMIZE here to avoid iteration over all zencode language every time
 	for pattern, func in pairs(reg) do
 		if (type(func) ~= 'function') then

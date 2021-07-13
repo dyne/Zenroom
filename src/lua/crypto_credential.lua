@@ -253,19 +253,19 @@ function credential.verify_cred_uid(vk, theta, zeta, uid)
    -- compute the challenge prime
    assert(
       theta.pi_v.c == ZKP_challenge({vk.alpha, vk.beta, Aw, Bw, Cw}),
-      'credential verification: invalid challenge for UID '..uid,
+      'credential verification: invalid challenge for UID',
       2
    )
    -- verify signature --
    assert(
       not theta.sigma_prime.h_prime:isinf(),
-      'credential verification: invalid signature (infinite sigma) for UID '..uid,
+      'credential verification: invalid signature (infinite sigma) for UID',
       2
    )
    assert(
       ECP2.miller(theta.kappa, theta.sigma_prime.h_prime) ==
          ECP2.miller(G2, theta.sigma_prime.s_prime + theta.nu),
-      'credential verification: invalid signature (miller loop) for UID '..uid,
+      'credential verification: invalid signature (miller loop) for UID',
       2
    )
    return true
