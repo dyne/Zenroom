@@ -1,19 +1,10 @@
 #!/usr/bin/env bash
 
-RNGSEED="hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-
-
 ####################
 # common script init
 if ! test -r ../utils.sh; then
 	echo "run executable from its own directory: $0"; exit 1; fi
 . ../utils.sh
-
-is_cortexm=false
-if [[ "$1" == "cortexm" ]]; then
-	is_cortexm=true
-fi
-
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 # use zexe if you have zenroom in a system-wide path
@@ -30,124 +21,120 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 
 n=0
 
-tmpGiven1=`mktemp`
-tmpWhen1=`mktemp`	
-tmpZen1="${tmpGiven1} ${tmpWhen1}"
+
+# cat <<EOF | save . dictionariesIdentity_example.json
+# {
+#   "Identity": {
+#     "UserNo": 1021,
+#     "RecordNo": 22,
+#     "DateOfIssue": "2020-01-01",
+#     "Name": "Giacomo",
+#     "FirstNames": "Rossi",
+#     "DateOfBirth": "1977-01-01",
+#     "PlaceOfBirth": "Milano",
+#     "Address": "Piazza Venezia",
+#     "TelephoneNo": "327 1234567"
+#   },
+#   "HistoryOfTransactions": {
+#     "NumberOfPreviouslyExecutedTransactions": 1020,
+#     "NumberOfCurrentPeriodTransactions": 57,
+#     "CanceledTransactions": 6,
+#     "DateOfFirstTransaction": "2019-01-01",
+#     "TotalSoldWithTransactions": 2160,
+#     "TotalPurchasedWithTransactions": 1005,
+#     "Remarks": "none"
+#   },
+#   "myUserName":"Authority1234"
+# }
+# EOF
+
+# let n=1
+
+# echo "                                                "
+# echo "------------------------------------------------"
+# echo "   Create Authority keypair, script:  $n              "
+# echo " 												  "
+# echo "------------------------------------------------"
+# echo "                                                "
 
 
-cat <<EOF > ../../docs/examples/zencode_cookbook/dictionariesIdentity_example.json
-{
-  "Identity": {
-    "UserNo": 1021,
-    "RecordNo": 22,
-    "DateOfIssue": "2020-01-01",
-    "Name": "Giacomo",
-    "FirstNames": "Rossi",
-    "DateOfBirth": "1977-01-01",
-    "PlaceOfBirth": "Milano",
-    "Address": "Piazza Venezia",
-    "TelephoneNo": "327 1234567"
-  },
-  "HistoryOfTransactions": {
-    "NumberOfPreviouslyExecutedTransactions": 1020,
-    "NumberOfCurrentPeriodTransactions": 57,
-    "CanceledTransactions": 6,
-    "DateOfFirstTransaction": "2019-01-01",
-    "TotalSoldWithTransactions": 2160,
-    "TotalPurchasedWithTransactions": 1005,
-    "Remarks": "none"
-  },
-  "myUserName":"Authority1234"
-}
-EOF
+# cat <<EOF | zexe dictionariesCreate_issuer_keypair.zen | save . dictionariesIssuer_keypair.json
+# rule check version 1.0.0
+# Scenario 'ecdh': Create the keypair
+# Given that I am known as 'Authority1234'
+# When I create the keypair
+# Then print my data
+# EOF
 
-let n=1
+# let n=2
 
-echo "                                                "
-echo "------------------------------------------------"
-echo "   Create Authority keypair, script:  $n              "
-echo " 												  "
-echo "------------------------------------------------"
-echo "                                                "
+# echo "                                                "
+# echo "------------------------------------------------"
+# echo "  publish Authority keypair, script:  $n             "
+# echo " 												  "
+# echo "------------------------------------------------"
+# echo "                                                "
 
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/dictionariesCreate_issuer_keypair.zen | tee ../../docs/examples/zencode_cookbook/dictionariesIssuer_keypair.json | jq
-rule check version 1.0.0
-Scenario 'ecdh': Create the keypair
-Given that I am known as 'Authority1234'
-When I create the keypair
-Then print my data
-EOF
+# cat <<EOF | zexe dictionariesPublish_issuer_pubkey.zen -a dictionariesIdentity_example.json -k dictionariesIssuer_keypair.json | save . dictionariesIssuer_pubkey.json
+# rule check version 1.0.0
+# Scenario 'ecdh': Publish the public key
+# Given my name is in a 'string' named 'myUserName'
+# and I have my 'keypair'
+# Then print my 'public key' from 'keypair'
+# EOF
 
-let n=2
+# let n=3
 
-echo "                                                "
-echo "------------------------------------------------"
-echo "  publish Authority keypair, script:  $n             "
-echo " 												  "
-echo "------------------------------------------------"
-echo "                                                "
+# echo "                                                "
+# echo "------------------------------------------------"
+# echo "   Authority signs the Identity, script:  $n                 "
+# echo " 												  "
+# echo "------------------------------------------------"
+# echo "   "
 
-
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/dictionariesPublish_issuer_pubkey.zen -a ../../docs/examples/zencode_cookbook/dictionariesIdentity_example.json -k ../../docs/examples/zencode_cookbook/dictionariesIssuer_keypair.json | tee ../../docs/examples/zencode_cookbook/dictionariesIssuer_pubkey.json | jq
-rule check version 1.0.0
-Scenario 'ecdh': Publish the public key
-Given my name is in a 'string' named 'myUserName'
-and I have my 'keypair'
-Then print my 'public key' from 'keypair'
-EOF
-
-let n=3
-
-echo "                                                "
-echo "------------------------------------------------"
-echo "   Authority signs the Identity, script:  $n                 "
-echo " 												  "
-echo "------------------------------------------------"
-echo "   "
-
-## Authority issues the signature for the Identity
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/dictionariesIssuer_sign_Identity.zen -a ../../docs/examples/zencode_cookbook/dictionariesIdentity_example.json -k ../../docs/examples/zencode_cookbook/dictionariesIssuer_keypair.json | tee ../../docs/examples/zencode_cookbook/dictionaries_Identity_signed.json | jq .
-rule check version 1.0.0
-Scenario ecdh: Sign a new Identity
-Given my name is in a 'string' named 'myUserName'
-and I have my 'keypair'
-and I have a 'string dictionary' named 'Identity'
-and I have a 'string dictionary' named 'HistoryOfTransactions'
-When I create the signature of 'Identity'
-and I rename the 'signature' to 'Identity.signature'
-and I create the signature of 'HistoryOfTransactions'
-and I rename the 'signature' to 'HistoryOfTransactions.signature'
-Then print the 'Identity'
-and print the 'Identity.signature'
-and print the 'HistoryOfTransactions'
-and print the 'HistoryOfTransactions.signature'
-EOF
+# ## Authority issues the signature for the Identity
+# cat <<EOF | zexe dictionariesIssuer_sign_Identity.zen -a dictionariesIdentity_example.json -k dictionariesIssuer_keypair.json | save . dictionaries_Identity_signed.json
+# rule check version 1.0.0
+# Scenario ecdh: Sign a new Identity
+# Given my name is in a 'string' named 'myUserName'
+# and I have my 'keypair'
+# and I have a 'string dictionary' named 'Identity'
+# and I have a 'string dictionary' named 'HistoryOfTransactions'
+# When I create the signature of 'Identity'
+# and I rename the 'signature' to 'Identity.signature'
+# and I create the signature of 'HistoryOfTransactions'
+# and I rename the 'signature' to 'HistoryOfTransactions.signature'
+# Then print the 'Identity'
+# and print the 'Identity.signature'
+# and print the 'HistoryOfTransactions'
+# and print the 'HistoryOfTransactions.signature'
+# EOF
 
 
-let n=4
+# let n=4
 
-echo "                                                "
-echo "------------------------------------------------"
-echo "   verify Authority's signature, script:  $n                 "
-echo " 												  "
-echo "------------------------------------------------"
-echo "   "
+# echo "                                                "
+# echo "------------------------------------------------"
+# echo "   verify Authority's signature, script:  $n                 "
+# echo " 												  "
+# echo "------------------------------------------------"
+# echo "   "
 
-## Anyone can verify the Authority's signature of the Identity
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/dictionariesVerify_Identity_signature.zen -a ../../docs/examples/zencode_cookbook/dictionaries_Identity_signed.json -k ../../docs/examples/zencode_cookbook/dictionariesIssuer_pubkey.json | jq .
-rule check version 1.0.0
-Scenario ecdh: Verify the Identity signature
-Given I have a 'public key' from 'Authority1234'
-and I have a 'string dictionary' named 'Identity'
-and I have a 'string dictionary' named 'HistoryOfTransactions'
-and I have a 'signature' named 'Identity.signature'
-and I have a 'signature' named 'HistoryOfTransactions.signature'
-When I verify the 'Identity' has a signature in 'Identity.signature' by 'Authority1234'
-When I verify the 'HistoryOfTransactions' has a signature in 'HistoryOfTransactions.signature' by 'Authority1234'
-Then print the string 'Signature of Identity by Authority1234 is Valid'
-and print the string 'Signature of HistoryOfTransactions by Authority1234 is Valid'
-EOF
+# ## Anyone can verify the Authority's signature of the Identity
+# cat <<EOF | debug dictionariesVerify_Identity_signature.zen -a dictionaries_Identity_signed.json -k dictionariesIssuer_pubkey.json | save . verifiedAuthoritySignature.json
+# rule check version 1.0.0
+# Scenario ecdh: Verify the Identity signature
+# Given I have a 'public key' from 'Authority1234'
+# and I have a 'string dictionary' named 'Identity'
+# and I have a 'string dictionary' named 'HistoryOfTransactions'
+# and I have a 'signature' named 'Identity.signature'
+# and I have a 'signature' named 'HistoryOfTransactions.signature'
+# When I verify the 'Identity' has a signature in 'Identity.signature' by 'Authority1234'
+# When I verify the 'HistoryOfTransactions' has a signature in 'HistoryOfTransactions.signature' by 'Authority1234'
+# Then print the string 'Signature of Identity by Authority1234 is Valid'
+# and print the string 'Signature of HistoryOfTransactions by Authority1234 is Valid'
+# EOF
 
 
 
@@ -160,7 +147,7 @@ echo " 												  "
 echo "------------------------------------------------"
 echo "   "
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/dictionariesCreate_transaction_entry.zen | jq .
+cat <<EOF | debug dictionariesCreate_transaction_entry.zen | save . created_dictionary.json
 rule check version 1.0.0
 Scenario ecdh
 Given nothing
@@ -175,7 +162,7 @@ and I insert 'AverageAmountPerTransaction' in 'ABC-TransactionsStatement'
 Then print the 'ABC-TransactionsStatement' 
 EOF
 
-cat <<EOF > ../../docs/examples/zencode_cookbook/dictionariesBlockchain.json
+cat <<EOF | save . dictionariesBlockchain.json
 {
    "TransactionsBatchB":{
       "Information":{
@@ -312,7 +299,7 @@ echo "   "
 
 
 
-cat <<EOF  > $tmpGiven1
+cat <<EOF | save . dictionariesGiven.zen
 rule check version 1.0.0
 Scenario ecdh: dictionary computation and signing 
 
@@ -341,9 +328,7 @@ Given that I have my 'keypair'
 
 EOF
 
-cat $tmpGiven1 > ../../docs/examples/zencode_cookbook/dictionariesGiven.zen
-
-cat <<EOF  > $tmpWhen1
+cat <<EOF | save . dictionariesWhen.zen
 
 # FIND MAX and MIN values in Dictionaries
 # All the dictionaries contain an internet date 'number' named 'timestamp' 
@@ -515,14 +500,9 @@ and print the 'PowerData'
 and print the 'InitialAmount<<TransactionAmountsA'
 and print the 'Buyer<<Information<<TransactionsBatchA'
 
-
-
-
 EOF
 
-cat $tmpWhen1 > ../../docs/examples/zencode_cookbook/dictionariesWhen.zen
-
-cat $tmpZen1 | zexe ../../docs/examples/zencode_cookbook/dictionariesComputation.zen -z -a ../../docs/examples/zencode_cookbook/dictionariesBlockchain.json -k ../../docs/examples/zencode_cookbook/dictionariesIssuer_keypair.json | tee ../../docs/examples/zencode_cookbook/dictionariesComputationOutput.json | jq .
+cat dictionariesGiven.zen dictionariesWhen.zen | zexe dictionariesComputation.zen -z -a dictionariesBlockchain.json -k dictionariesIssuer_keypair.json | save . dictionariesComputationOutput.json
 
 #cat <<EOF | zexe ../../docs/examples/zencode_cookbook/dictionariesFind_max_transactions.zen -a ../../docs/examples/zencode_cookbook/dictionariesBlockchain.json -k ../../docs/examples/zencode_cookbook/dictionariesIssuer_keypair.json | jq .
 

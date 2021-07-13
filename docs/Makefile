@@ -27,8 +27,8 @@ zencode:
 	@../build/zencode_scenario.sh cookbook
 	@../build/zencode_scenario.sh hash
 
-map:
-	./_media/scripts/parse_zencode.sh _media/zencode_utterances.yaml
+introspect:
+	./zencode_introspect.sh | jq .
 
 preview:
 	docsify serve .
