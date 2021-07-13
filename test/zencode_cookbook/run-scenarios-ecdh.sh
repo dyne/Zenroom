@@ -1,18 +1,10 @@
 #!/usr/bin/env bash
 
-RNGSEED="hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-
 ####################
 # common script init
 if ! test -r ../utils.sh; then
 	echo "run executable from its own directory: $0"; exit 1; fi
 . ../utils.sh
-
-is_cortexm=false
-if [[ "$1" == "cortexm" ]]; then
-	is_cortexm=true
-fi
-
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 # use zexe if you have zenroom in a system-wide path
@@ -29,32 +21,6 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ## Path: ../../docs/examples/zencode_cookbook/
 
 n=0
-tmpData1=`mktemp`
-tmpData2=`mktemp`
-tmpData3=`mktemp`
-tmpData4=`mktemp`
-tmpData5=`mktemp`
-tmpData6=`mktemp`
-tmpData7=`mktemp`
-tmpData8=`mktemp`
-
-
-tmpKeys1=`mktemp`
-tmpKeys2=`mktemp`
-tmpKeys3=`mktemp`
-tmpKeys4=`mktemp`
-tmpKeys5=`mktemp`
-tmpKeys6=`mktemp`
-
-tmpZencode0=`mktemp`
-tmpZencode1=`mktemp`
-tmpZencode2=`mktemp`
-tmpZencode3=`mktemp`
-tmpZencode4=`mktemp`
-tmpZencode5=`mktemp`
-tmpZencode6=`mktemp`
-tmpZencode7=`mktemp`
-
 
 
 
@@ -68,16 +34,14 @@ echo "------------------------------------------------"
 echo "                                                "
 
 
-cat <<EOF  > $tmpZencode0
+cat <<EOF | save . scenarioECDHZencodePart0.zen
 Scenario 'ecdh': Generate a keypair
 Given I am 'Alice'
 When I create the keypair
 Then print my data
 EOF
 
-cat $tmpZencode0 > ../../docs/examples/zencode_cookbook/scenarioECDHZencodePart0.zen
-
-cat $tmpZencode0 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHKeypair1.json | jq
+cat scenarioECDHZencodePart0.zen | zexe ecdh$n.zen -z | save . scenarioECDHKeypair1.json
 
 let n=2
 echo "                                                "
@@ -90,7 +54,7 @@ echo "                                                "
 
 
 
-cat $tmpZencode0 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHKeypair2.json | jq
+cat scenarioECDHZencodePart0.zen | zexe ecdh$n.zen -z | save . scenarioECDHKeypair2.json
 
 
 
@@ -118,7 +82,7 @@ echo "                                                "
 
 
 
-cat <<EOF  > $tmpData1
+cat <<EOF | save . scenarioECDHInputSecretData1.json
 {
    "mySecretStuff":{
 	  "myPassword":"myVerySecretPassword",
@@ -127,11 +91,10 @@ cat <<EOF  > $tmpData1
 	}
 }
 EOF
-cat $tmpData1 > ../../docs/examples/zencode_cookbook/scenarioECDHInputSecretData1.json
 
 
 
-cat <<EOF  > $tmpZencode1
+cat <<EOF | save . scenarioECDHZencodePart1.zen
 Scenario 'ecdh': Encrypt a message with the password
 
 # Here we load the secret message (made of two strings, one must be named "header")
@@ -149,10 +112,7 @@ When I encrypt the secret message 'myMessage' with 'myPassword'
 Then print the 'secret message'	
 EOF
 
-cat $tmpZencode1 > ../../docs/examples/zencode_cookbook/scenarioECDHZencodePart1.zen
-
-
-cat $tmpZencode1 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpData1 | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHPart1.json | jq
+cat scenarioECDHZencodePart1.zen | zexe ecdh$n.zen -z -a scenarioECDHInputSecretData1.json | save . scenarioECDHPart1.json
 
 
 
@@ -173,18 +133,15 @@ echo "                                                "
 
 
 
-cat <<EOF  > $tmpData2
+cat <<EOF | save . scenarioECDHInputDataPart1.json
 {
    "mySecretStuff":{
 	  "password":"myVerySecretPassword" 
 	}
 }
 EOF
-cat $tmpData2 > ../../docs/examples/zencode_cookbook/scenarioECDHInputDataPart1.json
 
-
-
-cat <<EOF  > $tmpZencode2
+cat <<EOF | save . scenarioECDHZencodePart2.zen
 Scenario 'ecdh': Decrypt the message with the password
 
 # Here we load the encrypted secret message along with the password
@@ -199,13 +156,7 @@ When I rename the 'text' to 'textDecrypted'
 Then print the 'textDecrypted' as 'string'
 EOF
 
-
-cat $tmpZencode2 > ../../docs/examples/zencode_cookbook/scenarioECDHZencodePart2.zen
-
-
-cat $tmpZencode2 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -k $tmpData2 -a ../../docs/examples/zencode_cookbook/scenarioECDHPart1.json | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHPart2.json | jq
-
-
+cat scenarioECDHZencodePart2.zen | zexe ecdh$n.zen -z -k scenarioECDHInputDataPart1.json -a scenarioECDHPart1.json | save . scenarioECDHPart2.json
 
 
 echo "                                                "
@@ -227,7 +178,7 @@ echo "                                                "
 
 
 
-cat <<EOF  > $tmpData3
+cat <<EOF | save . scenarioECDHInputDataPart2.json
 {
    "mySecretStuff":{
 	  "myMessage": "Dear Bob, your name is too short, goodbye - Alice." 
@@ -246,11 +197,8 @@ cat <<EOF  > $tmpData3
   "myUserName":"Alice"
 }
 EOF
-cat $tmpData3 > ../../docs/examples/zencode_cookbook/scenarioECDHInputDataPart2.json
 
-
-
-cat <<EOF  > $tmpZencode3
+cat <<EOF | save . scenarioECDHZencodePart3.zen
 Scenario 'ecdh': create the signature of an object
 
 # Declaring who I am and loading all the stuff
@@ -273,11 +221,7 @@ Then print the 'myStringArray.signature'
 
 EOF
 
-
-cat $tmpZencode3 > ../../docs/examples/zencode_cookbook/scenarioECDHZencodePart3.zen
-
-
-cat $tmpZencode3 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpData3 | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHPart3.json | jq
+cat scenarioECDHZencodePart3.zen | zexe ecdh$n.zen -z -a scenarioECDHInputDataPart2.json | save . scenarioECDHPart3.json
 
 
 
@@ -302,7 +246,7 @@ echo "                                                "
 
 
 
-cat <<EOF  > $tmpData4
+cat <<EOF | save . scenarioECDHAlicePublicKey.json
 {
 
  "Alice": {
@@ -312,11 +256,8 @@ cat <<EOF  > $tmpData4
 }
 
 EOF
-cat $tmpData4 > ../../docs/examples/zencode_cookbook/scenarioECDHAlicePublicKey.json
 
-
-
-cat <<EOF  > $tmpZencode4
+cat <<EOF | save . scenarioECDHZencodePart4.zen
 rule check version 1.0.0 
 Scenario 'ecdh': Bob verifies the signature from Alice
 
@@ -337,11 +278,7 @@ Then print the 'myMessage'
 Then print the string 'Zenroom certifies that signatures are all correct!'
 EOF
 
-
-cat $tmpZencode4 > ../../docs/examples/zencode_cookbook/scenarioECDHZencodePart4.zen
-
-
-cat $tmpZencode4 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -k $tmpData4 -a ../../docs/examples/zencode_cookbook/scenarioECDHPart3.json | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHPart4.json | jq
+cat scenarioECDHZencodePart4.zen | zexe ecdh$n.zen -z -k scenarioECDHAlicePublicKey.json -a scenarioECDHPart3.json | save . scenarioECDHPart4.json
 
 
 
@@ -365,7 +302,7 @@ echo "                                                "
 
 
 
-cat <<EOF  > $tmpData5
+cat <<EOF | save . scenarioECDHAliceKeyapir.json
 {
 	"Alice": {
 		"keypair": {
@@ -376,9 +313,8 @@ cat <<EOF  > $tmpData5
 	"myUserName":"Alice"
 }
 EOF
-cat $tmpData5 > ../../docs/examples/zencode_cookbook/scenarioECDHAliceKeyapir.json
 
-cat <<EOF  > $tmpData7
+cat <<EOF | save . scenarioECDHBobCarlKeysMessage.json
 {
 	"Bob": {
 		"public_key": "BBA0kD35T9lUHR/WhDwBmgg/vMzlu1Vb0qtBjBZ8rbhdtW3AcX6z64a59RqF6FCV5q3lpiFNTmOgA264x1cZHE0="
@@ -390,10 +326,8 @@ cat <<EOF  > $tmpData7
 	"header": "Secret message for Bob and Carl"
 }
 EOF
-cat $tmpData7 > ../../docs/examples/zencode_cookbook/scenarioECDHBobCarlKeysMessage.json
 
-
-cat <<EOF  > $tmpZencode5
+cat <<EOF | save . scenarioECDHZencodePart5.zen
 Rule check version 1.0.0
 Scenario 'ecdh': Alice encrypts a message for Bob and Carl
 
@@ -427,11 +361,7 @@ Then print the 'secretForBob'
 Then print the 'secretForCarl'
 EOF
 
-
-cat $tmpZencode5 > ../../docs/examples/zencode_cookbook/scenarioECDHZencodePart5.zen
-
-
-cat $tmpZencode5 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -k $tmpData5 -a $tmpData7  | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHPart5.json | jq
+cat scenarioECDHZencodePart5.zen | zexe ecdh$n.zen -z -k scenarioECDHAliceKeyapir.json -a scenarioECDHBobCarlKeysMessage.json  | save . scenarioECDHPart5.json
 
 
 
@@ -453,7 +383,7 @@ echo "                                                "
 
 
 
-cat <<EOF  > $tmpData6
+cat <<EOF | save . scenarioECDHAliceBobDecryptKeys.json
 {
 	"Bob": {
 		"keypair": {
@@ -461,17 +391,14 @@ cat <<EOF  > $tmpData6
 			"public_key": "BBA0kD35T9lUHR/WhDwBmgg/vMzlu1Vb0qtBjBZ8rbhdtW3AcX6z64a59RqF6FCV5q3lpiFNTmOgA264x1cZHE0="
 		}
 	},
-		"Alice": {
-		"public_key": "BNRzlJ4csYlWgycGGiK/wgoEw3OizCdx9MWg06rxUBTP5rP9qPASOW5KY8YgmNjW5k7lLpboboHrsApWsvgkMN4="
-	},
+	"public_keys": {
+		"Alice": "BNRzlJ4csYlWgycGGiK/wgoEw3OizCdx9MWg06rxUBTP5rP9qPASOW5KY8YgmNjW5k7lLpboboHrsApWsvgkMN4="
+		},
 	"myUserName":"Bob"
 }
 EOF
-cat $tmpData6 > ../../docs/examples/zencode_cookbook/scenarioECDHAliceBobDecryptKeys.json
 
-
-
-cat <<EOF  > $tmpZencode6
+cat <<EOF | save . scenarioECDHZencodePart6.zen
 Rule check version 1.0.0 
 Scenario 'ecdh': Bob decrypts the message from Alice 
 
@@ -480,7 +407,7 @@ Given my name is in a 'string' named 'myUserName'
 Given I have my 'keypair'
 
 # Here we load Alice's public key
-Given I have a 'public key' from 'Alice' 
+Given I have a 'public key' named 'Alice' in 'public keys'
 
 # Here we load the encrypted message(s)
 Given I have a 'secret message' named 'secretForBob'
@@ -495,10 +422,8 @@ Then print the 'header' from 'secretForBob' as 'string'
 EOF
 
 
-cat $tmpZencode6 > ../../docs/examples/zencode_cookbook/scenarioECDHZencodePart6.zen
 
-
-cat $tmpZencode6 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -k $tmpData6 -a ../../docs/examples/zencode_cookbook/scenarioECDHPart5.json | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHPart6.json | jq
+cat scenarioECDHZencodePart6.zen | zexe ecdh$n.zen -z -k scenarioECDHAliceBobDecryptKeys.json -a scenarioECDHPart5.json | save . scenarioECDHPart6.json
 
 
 
@@ -511,24 +436,20 @@ echo " 	to change, remove the	RNGSEED=   in the beginning "
 echo "------------------------------------------------"
 echo "                                                "
 
-cat <<EOF  > $tmpData7
+cat <<EOF | save . scenarioECDHLoadNameFromData.json
 {
 	"myUserName":"Alice"
 }
 EOF
-cat $tmpData6 > ../../docs/examples/zencode_cookbook/scenarioECDHLoadNameFromData.json
 
-
-cat <<EOF  > $tmpZencode7
+cat <<EOF | save .  scenarioECDHZencodePart7.zen
 Scenario 'ecdh': Generate a keypair
 Given my name is in a 'string' named 'myUserName'
 When I create the keypair
 Then print my data
 EOF
 
-cat $tmpZencode0 > ../../docs/examples/zencode_cookbook/scenarioECDHZencodePart0.zen
-
-cat $tmpZencode0 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z | jq . | tee ../../docs/examples/zencode_cookbook/scenarioECDHKeypair3.json | jq
+cat scenarioECDHZencodePart7.zen | zexe ecdh$n.zen -z -a scenarioECDHLoadNameFromData.json | save . scenarioECDHKeypair3.json
 
 
 
@@ -537,44 +458,3 @@ echo "------------------------------------------------"
 echo "   	END of script $n			       		  "
 echo "------------------------------------------------"
 echo "                         			              "
-
-
-
-
-rm -f ../../docs/examples/zencode_cookbook/temp.zen
-
-rm -f $tmp
-rm -f $tmpGiven
-rm -f $tmpWhen1
-rm -f $tmpZen1
-rm -f $tmpWhen2
-rm -f $tmpZen2
-rm -f $tmpWhen3
-rm -f $tmpZen3
-rm -f $tmpWhen4
-rm -f $tmpZen4
-
-
-rm -f $tmpData1
-rm -f $tmpData2
-rm -f $tmpData3
-rm -f $tmpData4
-rm -f $tmpData5
-rm -f $tmpData6
-rm -f $tmpData7
-
-
-rm -f $tmpKeys1
-rm -f $tmpKeys2
-rm -f $tmpKeys3
-rm -f $tmpKeys4
-rm -f $tmpKeys5
-rm -f $tmpKeys6
-
-rm -f $tmpZencode1
-rm -f $tmpZencode2
-rm -f $tmpZencode3
-rm -f $tmpZencode4
-rm -f $tmpZencode5
-rm -f $tmpZencode6
-rm -f $tmpZencode7
