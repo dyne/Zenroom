@@ -2,19 +2,11 @@
 
 # output path for documentation: ../../docs/examples/zencode_cookbook/
 
-RNGSEED="hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-
 ####################
 # common script init
 if ! test -r ../utils.sh; then
 	echo "run executable from its own directory: $0"; exit 1; fi
 . ../utils.sh
-
-is_cortexm=false
-if [[ "$1" == "cortexm" ]]; then
-	is_cortexm=true
-fi
-
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 # use zexe if you have zenroom in a system-wide path
@@ -29,30 +21,15 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 
 
 n=1
-tmpInput=`mktemp`
-tmpOutput=`mktemp`
 
-tmpGiven=`mktemp`
-tmpThen1=`mktemp`	
-tmpZen1="${tmpGiven} ${tmpThen1}"
-tmpThen2=`mktemp`	
-tmpZen2="${tmpGiven} ${tmpThen2}"
-tmpThen3=`mktemp`	
-tmpZen3="${tmpGiven} ${tmpThen3}"
-tmpThen4=`mktemp`	
-tmpZen4="${tmpGiven} ${tmpThen4}"
-
-
-
-
-cat <<EOF  > $tmpInput
+cat <<EOF | save . myLargeNestedObjectThen.json
 {
    "myObject":{
-      "myNumber_1":12345678901234567890123456789,
-      "myNumber_2":12345678901234567890123456789,
-      "myNumber_3":12345678901234567890123456789,
-      "myNumber_4":12345678901234567890123456789, 
-   	  "myNumber_5":12345678901234567890123456789,  
+      "myNumber_1":1234567890,
+      "myNumber_2":1234567890,
+      "myNumber_3":1234567890,
+      "myNumber_4":1234567890, 
+   	  "myNumber_5":12345678,  
 	  "myString_1":"Hello World!",
 	  "myString_2":"Hello World!",
 	  "myString_3":"Hello World!",
@@ -130,7 +107,7 @@ cat <<EOF  > $tmpInput
          "123",
 		 "456",
 		 "1234.5678"
-      ],	  
+      ]
    },
    "Alice":{
       "keypair":{
@@ -181,11 +158,10 @@ cat <<EOF  > $tmpInput
   }
 }
 EOF
-cat $tmpInput > ../../docs/examples/zencode_cookbook/myLargeNestedObjectThen.json
 
 # Given phase for all the scripts
 
-cat <<EOF  > $tmpGiven
+cat <<EOF | save . thenCompleteScriptGiven.zen
 # rule input encoding base64
 Scenario 'ecdh': load a issuer keypair
 Scenario 'credential': Create the keypair
@@ -243,12 +219,7 @@ Given I have an 'url64' named 'myUrl64_6' inside 'myObject'
 # Dictionary
 Given I have a 'string dictionary' named 'salesReport'
 Given I have a 'string dictionary' named 'myFourthObject'
-
-
-
-
 EOF
-cat $tmpGiven > ../../docs/examples/zencode_cookbook/thenCompleteScriptGiven.zen
 
 
 
@@ -265,7 +236,7 @@ let n=n+1
 # HUGE print script to test all the combinations
 
 
-cat <<EOF  > $tmpThen1
+cat <<EOF | save . thenExhaustiveScript.zen
 Then print all data
 
 # By printing all data, the first of the 5 items
@@ -318,18 +289,11 @@ Then print 'myUrl64_3' as 'number'
 Then print 'myUrl64_4' as 'base64'
 Then print 'myUrl64_5' as 'bin'
 Then print 'myUrl64_6' as 'hex'
-
-
-
 EOF
 
 
 
-
-cat $tmpThen1 > ../../docs/examples/zencode_cookbook/thenExhaustiveScript.zen
-
-
-cat $tmpZen1 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpInput | jq . | tee ../../docs/examples/zencode_cookbook/thenExhaustiveScriptOutput.json | jq
+cat thenCompleteScriptGiven.zen thenExhaustiveScript.zen | debug then1.zen -z -a myLargeNestedObjectThen.json | save . thenExhaustiveScriptOutput.json
 
 
 
@@ -344,7 +308,7 @@ echo "                                                "
 let n=n+1
 
 
-cat <<EOF  > $tmpThen2
+cat <<EOF | save . thenCompleteScriptPart2.zen
 
 # Then print all data
 
@@ -414,12 +378,7 @@ Then print the 'myFifthString' from 'myFourthObject' as 'hex'
 EOF
 
 
-cat $tmpThen2 > ../../docs/examples/zencode_cookbook/thenCompleteScriptPart2.zen
-
-
-cat $tmpZen2 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpInput | jq . | tee ../../docs/examples/zencode_cookbook/thenCompleteOutputPart2.json | jq
-
-
+cat thenCompleteScriptGiven.zen thenCompleteScriptPart2.zen | zexe then2.zen -z -a myLargeNestedObjectThen.json | save . thenCompleteOutputPart2.json
 
 
 echo "                                                "
@@ -431,7 +390,7 @@ echo "                                                "
 let n=n+1
 
 
-cat <<EOF  > $tmpThen3
+cat <<EOF | save . thenCompleteScriptPart3.zen
 
 When I write string 'This message is for Bob.' in 'messageForBob'
 When I write string 'This message is for Carl.' in 'messageForCarl'
@@ -468,10 +427,7 @@ Then print 'header'
 EOF
 
 
-cat $tmpThen3 > ../../docs/examples/zencode_cookbook/thenCompleteScriptPart3.zen
-
-
-cat $tmpZen3 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpInput | jq . | tee ../../docs/examples/zencode_cookbook/thenCompleteOutputPart3.json | jq
+cat thenCompleteScriptGiven.zen thenCompleteScriptPart3.zen | zexe then3.zen -z -a myLargeNestedObjectThen.json | save . thenCompleteOutputPart3.json
 
 
 
@@ -490,7 +446,7 @@ let n=n+1
 # WIP: Then print my 'public key'
 
 
-cat <<EOF  > $tmpThen4
+cat <<EOF | save . thenCompleteScriptPart4.zen
 
 When I create the issuer public key
 # This prints a child of dictionary, which can be a string (like here) or another dictionary
@@ -507,24 +463,9 @@ EOF
 
 
 
-cat $tmpThen4 > ../../docs/examples/zencode_cookbook/thenCompleteScriptPart4.zen
 
 
-cat $tmpZen4 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmpInput | jq . | tee ../../docs/examples/zencode_cookbook/thenCompleteOutputPart4.json | jq
+cat thenCompleteScriptGiven.zen thenCompleteScriptPart4.zen | zexe then4.zen -z -a myLargeNestedObjectThen.json | save . thenCompleteOutputPart4.json
 
-
-
-
-
-rm -f $tmpInput
-rm -f $tmpGiven
-rm -f $tmpThen1
-rm -f $tmpZen1
-rm -f $tmpThen2
-rm -f $tmpZen2
-rm -f $tmpThen3
-rm -f $tmpZen3
-rm -f $tmpThen4
-rm -f $tmpZen4
 
 

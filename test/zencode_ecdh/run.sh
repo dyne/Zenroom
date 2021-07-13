@@ -76,6 +76,46 @@ Scenario 'ecdh': Bob verifies the signature from Alice
 	and print the 'draft' as 'string'
 EOF
 
+cat <<EOF | save . Identity_example.json
+{
+  "Identity": {
+    "UserNo": 1021,
+    "RecordNo": 22,
+    "DateOfIssue": "2020-01-01",
+    "Name": "Giacomo",
+    "FirstNames": "Rossi",
+    "DateOfBirth": "1977-01-01",
+    "PlaceOfBirth": "Milano",
+    "Address": "Piazza Venezia",
+    "TelephoneNo": "327 1234567"
+  }
+}
+EOF
+
+cat <<EOF | zexe DSA01-table.zen -k alice_keypair.json -a Identity_example.json | save ecdh alice_signs_table_to_bob.json
+Rule check version 1.0.0
+Scenario 'ecdh': Alice signs a message for Bob
+	Given that I am known as 'Alice'
+	and I have my 'keypair'
+	and I have a 'string dictionary' named 'Identity'
+	When I create the signature of 'Identity'
+	Then print the 'signature'
+	and print the 'Identity'
+EOF
+
+cat <<EOF | debug DSA02-table.zen -k alice_pub.json -a alice_signs_table_to_bob.json | save ecdh verify_table_sign.json
+rule check version 1.0.0
+# rule input encoding base64
+Scenario 'ecdh': Bob verifies the signature from Alice
+	Given that I am known as 'Bob'
+	and I have a 'public key' from 'Alice'
+	and I have a 'signature'
+	and I have a 'string dictionary' named 'Identity'
+	When I verify the 'Identity' has a signature in 'signature' by 'Alice'
+	Then print the string 'table signature correct'
+EOF
+
+
 cat <<EOF | zexe bob_keygen.zen | save ecdh bob_keypair.json
 Scenario 'ecdh': Create the keypair
 Given that I am known as 'Bob'
