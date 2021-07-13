@@ -170,12 +170,12 @@ save() {
 	here="./"
 	docs="../../docs/examples/zencode_cookbook/$1"
 	mkdir -p ${docs}
-	if [[ "${2##*.}" == "zen" ]]; then
-		tee ${here}/"$2" > ${docs}/"$2"
-	else
+	if [[ "${2##*.}" == "json" ]]; then
 		if command -v jq > /dev/null; then
 			tee ${here}/"$2" | tee ${docs}/"$2" | jq .
 		fi
+	else
+		tee ${here}/"$2" > ${docs}/"$2"
 	fi
 }
 
