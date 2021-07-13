@@ -1,20 +1,11 @@
 #!/usr/bin/env bash
 
 # output path for documentation: ../../docs/examples/zencode_cookbook/
-
-RNGSEED="hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-
 ####################
 # common script init
 if ! test -r ../utils.sh; then
 	echo "run executable from its own directory: $0"; exit 1; fi
 . ../utils.sh
-
-is_cortexm=false
-if [[ "$1" == "cortexm" ]]; then
-	is_cortexm=true
-fi
-
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 # use zexe if you have zenroom in a system-wide path
@@ -32,7 +23,6 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 
 
 n=1
-tmp=`mktemp`
 
 echo "                                                "
 echo "------------------------------------------------"
@@ -41,7 +31,7 @@ echo "------------------------------------------------"
 echo "                                                "
 let n=n+1
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/alice_keygen.zen -z | jq . | tee ../../docs/examples/zencode_cookbook/alice_keypair.json | jq
+cat <<EOF | zexe alice_keygen.zen -z | save . alice_keypair.json
 Scenario 'ecdh': Create the keypair
 Given that I am known as 'Alice'
 When I create the keypair
@@ -58,7 +48,7 @@ let n=n+1
 
 
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/randomArrayGeneration.zen -z | jq . | tee ../../docs/examples/zencode_cookbook/myFirstRandomArray.json | jq
+cat <<EOF | zexe randomArrayGeneration.zen -z | save . myFirstRandomArray.json
 	Given nothing
 	When I create the array of '16' random objects of '32' bits
 	Then print all data
@@ -73,7 +63,7 @@ let n=n+1
 
 
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/randomArrayRename.zen -z | jq
+cat <<EOF | zexe randomArrayRename.zen -z | jq .
 	Given nothing
 	When I create the array of '16' random objects of '32' bits
 	And I rename the 'array' to 'myArray'
@@ -87,7 +77,7 @@ echo "------------------------------------------------"
 echo "                                                "
 let n=n+1
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/randomArrayMultiple.zen -z | jq . | tee ../../docs/examples/zencode_cookbook/myArrays.json | jq
+cat <<EOF | zexe randomArrayMultiple.zen -z | save . myArrays.json
 	Given nothing
 	When I create the array of '2' random objects of '8' bits
 	And I rename the 'array' to 'myTinyArray'
@@ -99,7 +89,6 @@ cat <<EOF | zexe ../../docs/examples/zencode_cookbook/randomArrayMultiple.zen -z
 EOF
 
 
-rm -f $tmp
 
 
 

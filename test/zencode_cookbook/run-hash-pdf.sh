@@ -1,18 +1,10 @@
 #!/usr/bin/env bash
 
-RNGSEED="hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-
 ####################
 # common script init
 if ! test -r ../utils.sh; then
 	echo "run executable from its own directory: $0"; exit 1; fi
 . ../utils.sh
-
-is_cortexm=false
-if [[ "$1" == "cortexm" ]]; then
-	is_cortexm=true
-fi
-
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 # use zexe if you have zenroom in a system-wide path
@@ -33,35 +25,24 @@ n=0
 # File to be hashed
 tmpFile="../../docs/pages/lua.md"
 
-tmpFileToHash=`mktemp`
-
-tmpData1=`mktemp`
-tmpData2=`mktemp`
-
-tmpKeys1=`mktemp`
-tmpKeys2=`mktemp`
-
-tmpZencode1=`mktemp`
-tmpZencode2=`mktemp`
-
 
 
 let n=n+1
 echo "                                                "
-echo "-------------------------------------------------------------------"
+echo "------------------------------------------------"
 echo " 												  "
 echo "    Script number '$n' that hashes the file: 	  "
-echo "    '$tmpFile'											  "
-echo "    and signs the hashes		  "
+echo "    '$tmpFile'								  "
+echo "    and signs the hashes		  				  "
 echo " 												  "
-echo "-------------------------------------------------------------------"
+echo "------------------------------------------------"
 echo "                                                "
 
 
 # echo $tmpFile
 
 
-cat << EOF > ../../docs/examples/zencode_cookbook/fileToHash.json
+cat << EOF | save . fileToHash.json
 {
 "fileToBeHashedBase64" : "$(base64 -w 0 $tmpFile)",
 	"fileToBeHashed.Metadata" : {
@@ -72,10 +53,7 @@ cat << EOF > ../../docs/examples/zencode_cookbook/fileToHash.json
 }
 EOF
 
-
-
-
-cat <<EOF  > $tmpData1
+cat <<EOF | save . AliceKeyring.json
 {
 	"Alice": {
 		"keypair": {
@@ -97,7 +75,7 @@ EOF
 
 
 
-cat <<EOF  > $tmpZencode1
+cat <<EOF | zexe HashPdf.zen -z -k AliceKeyring.json -a ../../docs/examples/zencode_cookbook/fileToHash.json | save . fileToHashOutput.json
 Rule check version 1.0.0
 Scenario 'ecdh': Alice encrypts a message for Bob and Carl 
 
@@ -158,12 +136,6 @@ EOF
 
 
 
-cat $tmpZencode1 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -k $tmpData1 -a ../../docs/examples/zencode_cookbook/fileToHash.json | jq . | tee ../../docs/examples/zencode_cookbook/fileToHashOutput.json | jq .
-
-
-
-
-
 echo "                                                "
 echo "------------------------------------------------"
 echo "   	END of script $n			       		  "
@@ -171,22 +143,3 @@ echo "------------------------------------------------"
 echo "                         			              "
 
 
-let n=n+1
-                                              
-
-
-
-rm -f ../../docs/examples/zencode_cookbook/temp.zen
-
-rm -f $tmp
-
-rm -f $tmpData1
-rm -f $tmpData2
-
-rm -f $tmpKeys1
-rm -f $tmpKeys2
-
-rm -f $tmpZencode1
-rm -f $tmpZencode2
-
-rm -f $tmpFileToHash
