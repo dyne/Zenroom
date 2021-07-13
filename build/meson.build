@@ -1,7 +1,7 @@
 project(
     'zenroom',
     'c',
-    version: '1.2',
+    version: '2.0.0',
     license: 'GPL3',
      meson_version: '>=0.49.2',
     default_options: [
