@@ -5,13 +5,13 @@ if ! [ -d $PWD/src ] && [ -z "${MESON_BUILD_ROOT}" ]; then
 	return 1
 fi
 
-CN="${1:-BLS383}"
+CN="${1:-BLS381}"
 BS=""
 case $CN in
-	"BLS383") BS="384_29" ;;
-	"BLS381") BS="384_29" ;;
-	"BLS461") BS="464_28" ;;
-	"BLS48")  BS="560_29" ;;
+	"BLS383") BS="384_29"; BIGSIZE="384" ;;
+	"BLS381") BS="384_29"; BIGSIZE="384" ;;
+	"BLS461") BS="464_28"; BIGSIZE="464" ;;
+	"BLS48")  BS="560_29"; BIGSIZE="560" ;;
 esac
 
 DIR="${MESON_BUILD_ROOT:-src}"
@@ -27,7 +27,7 @@ cat <<EOF > "${DIR}"/zen_ecp_factory.h
 #include <ecdh_${CN}.h>
 #include <pair_${CN}.h>
 
-#define BIGSIZE 384
+#define BIGSIZE ${BIGSIZE}
 #include <zen_big_factory.h>
 #include <zen_ecp.h>
 
@@ -114,9 +114,9 @@ extern void PAIR_${CN}_GTpow(FP12_${CN} *x,BIG_${BS} b);
 
 
 // instance is in rom_field_XXX.c and included by fp_XXX.h
-/* #define Modulus Modulus_BLS383
-#define CURVE_Gx CURVE_Gx_BLS383
-#define CURVE_Gy CURVE_Gy_BLS383
+/* #define Modulus Modulus_${CN}
+#define CURVE_Gx CURVE_Gx_${CN}
+#define CURVE_Gy CURVE_Gy_${CN}
 		 // 0x73435FD from rom_field_BLS383 at 32bit
 */
 

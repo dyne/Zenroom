@@ -26,7 +26,7 @@ cmake \
     -DAMCL_RSA=${rsa_bits} \
     -DCMAKE_SHARED_LIBRARY_LINK_FLAGS="" \
     -DC99=1 \
-    -DPAIRING_FRIENDLY_BLS383='BLS' \
+    -DPAIRING_FRIENDLY_BLS381='BLS' \
     -DCOMBA=1 \
     -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
     ${milagro_path}

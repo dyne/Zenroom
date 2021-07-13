@@ -3,7 +3,7 @@ import subprocess
 import time
 from setuptools import Extension, setup
 
-ECP_CURVE = 'BLS383'
+ECP_CURVE = 'BLS381'
 ECDH_CURVE = 'SECP256K1'
 
 if os.path.exists('bindings'):

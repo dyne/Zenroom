@@ -20,11 +20,11 @@ fn main() {
     assert!(status.success());
 
     println!("cargo:rustc-link-lib=static=zenroom");
-    println!("cargo:rustc-link-lib=static=amcl_bls_BLS383");
+    println!("cargo:rustc-link-lib=static=amcl_bls_BLS381");
     println!("cargo:rustc-link-lib=static=amcl_core");
-    println!("cargo:rustc-link-lib=static=amcl_curve_BLS383");
+    println!("cargo:rustc-link-lib=static=amcl_curve_BLS381");
     println!("cargo:rustc-link-lib=static=amcl_curve_SECP256K1");
-    println!("cargo:rustc-link-lib=static=amcl_pairing_BLS383");
+    println!("cargo:rustc-link-lib=static=amcl_pairing_BLS381");
     println!("cargo:rustc-link-search={}", build_path);
     println!(
         "cargo:rustc-link-search={}/milagro-crypto-c/lib",

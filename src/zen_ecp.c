@@ -21,9 +21,6 @@
  */
 
 
-// For now, the only supported curve is BLS383 type WEIERSTRASS
-
-
 /// <h1>Elliptic Curve Point Arithmetic (ECP)</h1>
 //
 //  Base arithmetical operations on elliptic curve point coordinates.
@@ -157,8 +154,8 @@ static int lua_new_ecp(lua_State *L) {
 		return 1;
 	}
 	// We protect well this entrypoint since parsing any input is at risk
-	// Milagro's _fromOctet() uses ECP_BLS383_set(ECP_BLS383 *P,BIG_384_29 x)
-	// then converts the BIG to an FP modulo using FP_BLS383_nres.
+	// Milagro's _fromOctet() uses ECP_BLS_set(ECP_BLS *P,BIG x)
+	// then converts the BIG to an FP modulo using FP_BLS_nres.
 	octet *o = o_arg(L,1); SAFE(o);
 	ecp *e = ecp_new(L); SAFE(e);
 	if(o->len == 2 && o->val[0] == SCHAR_MAX && o->val[1] == SCHAR_MAX) {
