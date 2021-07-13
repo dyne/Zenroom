@@ -2,20 +2,13 @@
 
 # output path for documentation: ../../docs/examples/zencode_cookbook/
 
-RNGSEED="hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-
 ####################
 # common script init
 if ! test -r ../utils.sh; then
 	echo "run executable from its own directory: $0"; exit 1; fi
 . ../utils.sh
-
-is_cortexm=false
-if [[ "$1" == "cortexm" ]]; then
-	is_cortexm=true
-fi
-
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
+
 ####################
 # use zexe if you have zenroom in a system-wide path
 #
@@ -28,19 +21,8 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
 n=0
-tmp=`mktemp`
-tmpGiven=`mktemp`
-tmpWhen1=`mktemp`	
-tmpZen1="${tmpGiven} ${tmpWhen1}"
-tmpWhen2=`mktemp`	
-tmpZen2="${tmpGiven} ${tmpWhen2}"
-tmpWhen3=`mktemp`	
-tmpZen3="${tmpGiven} ${tmpWhen3}"
-tmpWhen4=`mktemp`	
-tmpZen4="${tmpGiven} ${tmpWhen4}"
 
-
-cat <<EOF  > $tmp
+cat <<EOF | save . myLargeNestedObjectWhen.json
 {
    "myFirstObject":{
       "myFirstNumber":1.2345,
@@ -135,10 +117,9 @@ cat <<EOF  > $tmp
    
 }
 EOF
-cat $tmp > ../../docs/examples/zencode_cookbook/myLargeNestedObjectWhen.json
 
 
-cat <<EOF  > $tmpGiven
+cat <<EOF  | save . whenCompleteScriptGiven.zen
 # We're using scenario 'ecdh' cause we are loading a keypair
 Scenario 'ecdh': using keypair and signing
 Given my name is in a 'string' named 'myUserName'
@@ -183,9 +164,6 @@ Given I have a  'binary' named 'myFirstBinary' in 'myFirstObject'
 Given I have an 'url64' named 'myFirstUrl64' in 'myFirstObject'
 # Here we're done loading stuff 
 EOF
-cat $tmpGiven > ../../docs/examples/zencode_cookbook/whenCompleteScriptGiven.zen
-
-
 
 let n=n+1
 
@@ -198,7 +176,7 @@ echo "                                                "
 
 
 
-cat <<EOF  > $tmpWhen1
+cat <<EOF  | save . whenCompleteScriptPart1.zen
 
 # WRITE IN (create string or number)
 # the "write in" statement create a new object, assigns it an encoding but 
@@ -287,10 +265,9 @@ and I rename the 'random_object' to 'myRandomlyPickedObject'
 Then print all data
 EOF
 
-cat $tmpWhen1 > ../../docs/examples/zencode_cookbook/whenCompleteScriptPart1.zen
+cat whenCompleteScriptGiven.zen whenCompleteScriptPart1.zen \
+       | zexe when1.zen -z -a  myLargeNestedObjectWhen.json | save . whenCompleteOutputPart1.json 
 
-
-cat $tmpZen1 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/whenCompleteOutputPart1.json | jq
 
 
 
@@ -312,7 +289,7 @@ echo "                                                "
 
 
 
-cat <<EOF  > $tmpWhen2
+cat <<EOF | save . whenCompleteScriptPart2.zen
 # CREATE RANDOM
 # The "create random" creates a random object with a default set of parameters
 # The name of the generate objected is defined between the ' '  
@@ -376,6 +353,7 @@ And I rename the 'cbor' to 'myArrayRenderedToCBOR'
 # in the same script, so the second would overwrite the first. In reality you never want to 
 # rename a keypair, as its schema is hardcoded in Zenroom and cryptographically it doesn't make sense
 # to use more than one keypair in the same script.
+When I rename the 'keypair' to 'GivenKeypair'
 When I create the keypair
 and I rename the 'keypair' to 'keypairFromRandom'
 
@@ -387,11 +365,8 @@ and I rename the 'keypair' to 'keypairFromSeed'
 Then print all data
 EOF
 
-cat $tmpWhen2 > ../../docs/examples/zencode_cookbook/whenCompleteScriptPart2.zen
-
-
-cat $tmpZen2 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/whenCompleteOutputPart2.json | jq
-
+cat whenCompleteScriptGiven.zen whenCompleteScriptPart2.zen \
+       | zexe when2.zen -z -a  myLargeNestedObjectWhen.json | save . whenCompleteOutputPart2.json 
 
 
 echo "                                                "
@@ -413,7 +388,7 @@ echo "                                                "
 
 
 
-cat <<EOF  > $tmpWhen3
+cat <<EOF | save . whenCompleteScriptPart3.zen
 # HASH
 
 # Output objects: as overwriting variables is discouraged in Zenroom, all the hashing
@@ -489,11 +464,8 @@ And I rename the 'aggregation' to 'aggregationOfMyFirstNumberArray'
 Then print all data  
 EOF
 
-cat $tmpWhen3 > ../../docs/examples/zencode_cookbook/whenCompleteScriptPart3.zen
-
-cat $tmpZen3 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/whenCompleteOutputPart3.json | jq
-
-
+cat whenCompleteScriptGiven.zen whenCompleteScriptPart3.zen \
+       | zexe when3.zen -z -a  myLargeNestedObjectWhen.json | save . whenCompleteOutputPart3.json 
 
 echo "                                                "
 echo "------------------------------------------------"
@@ -511,7 +483,7 @@ echo "------------------------------------------------"
 echo "                                                "
 
 
-cat <<EOF  > $tmpWhen4
+cat <<EOF | save . whenCompleteScriptPart4.zen
 # VERIFY EQUAL
 # The "verify equal" statement checks that the value of two ojects is equal.
 # It works with simple objects of any encoding.
@@ -536,13 +508,9 @@ When the 'myFirstString' is not found in 'myFourthArray'
 Then print all data
 EOF
 
-cat $tmpWhen4 > ../../docs/examples/zencode_cookbook/whenCompleteScriptPart4.zen
+cat whenCompleteScriptGiven.zen whenCompleteScriptPart4.zen \
+       | zexe when4.zen -z -a  myLargeNestedObjectWhen.json | save . whenCompleteOutputPart4.json 
 
-
-
-cat $tmpZen4 | zexe ../../docs/examples/zencode_cookbook/temp.zen -z -a $tmp | jq . | tee ../../docs/examples/zencode_cookbook/whenCompleteOutputPart4.json | jq
-
-# > jq >
 
 echo "                                                "
 echo "------------------------------------------------"
@@ -550,15 +518,4 @@ echo "   	END of script $n			       		  "
 echo "------------------------------------------------"
 echo "                                      "
 
-rm -f ../../docs/examples/zencode_cookbook/temp.zen
 
-rm -f $tmp
-rm -f $tmpGiven
-rm -f $tmpWhen1
-rm -f $tmpZen1
-rm -f $tmpWhen2
-rm -f $tmpZen2
-rm -f $tmpWhen3
-rm -f $tmpZen3
-rm -f $tmpWhen4
-rm -f $tmpZen4
