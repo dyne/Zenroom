@@ -18,10 +18,16 @@ Given I have a 'number' named 'left'
 and I have a 'number' named 'right'
 
 If number 'left' is less than 'right'
+and I verify 'left' is equal to 'left'
+When I create the random 'peppino'
 Then print string 'right is higher'
 
 If number 'left' is more than 'right'
+When I create the random 'peppone'
 Then print string 'left is higher'
+
+When I create the random 'fish'
+Then print all data
 EOF
 
 cat << EOF > leftright.json

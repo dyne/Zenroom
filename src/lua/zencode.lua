@@ -246,7 +246,7 @@ local function new_state_machine()
 				{name = 'enter_given', from = {'given'}, to = 'given'},
 				{name = 'enter_and', from = 'given', to = 'given'},
 
-				{name = 'enter_when', from = {'given', 'when', 'if'}, to = 'when'},
+				{name = 'enter_when', from = {'given', 'when', 'if', 'then'}, to = 'when'},
 				{name = 'enter_and', from = 'when', to = 'when'},
 
 				{name = 'enter_if', from = {'given', 'when', 'if', 'then'}, to = 'if'},
@@ -467,8 +467,7 @@ function zencode:parse(text)
 	  assert(fm,"Invalid Zencode prefix: "..prefix)
 	  assert(fm(self.machine, { msg = line, Z = self }),
 				line.."\n    "..
-				"Invalid transition from "
-				..self.machine.current.." to Rule block")
+				"Invalid transition from: "..self.machine.current)
 	  ::continue::
    end
    collectgarbage'collect'
@@ -520,14 +519,13 @@ local function manage_branching(x)
 		if x.section == 'when' and x.from == 'then' then
 			ZEN.branch = false
 			xxx('end of conditional branch')
-		-- elseif x.section == 'if' or x.section == 'when' then
-		-- 	return false
+		elseif x.section == 'when' and not ZEN.branch_valid then
+			xxx('skip execution in false conditional branch: '..x.source)
+			return true
 		elseif x.section == 'then' and not ZEN.branch_valid then
-			xxx('skip execution in false conditional branch')
+			xxx('skip execution in false conditional branch: '..x.source)
 			return true
 		end
-		-- elseif x.section == 'if' and x.from == 'then' then		
-		-- 	ZEN.branch_valid = false
 	end
 	return false
 end

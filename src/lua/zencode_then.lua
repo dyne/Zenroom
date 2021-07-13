@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Friday, 2nd April 2021
+--on Tuesday, 13th July 2021
 --]]
 
 --- THEN combinations:
@@ -64,6 +64,7 @@ local function then_insert(dest, val, key)
 	end
 end
 
+Then("nothing", function() return end) -- nop to terminate if
 
 Then("print string ''", function(k)
 	if not OUT.output then
