@@ -193,11 +193,11 @@ cat <<EOF | save . myNestedRepetitveObject.json
 }
 EOF
 
-cat <<EOF | zexe givenLoadRepetitveObject.zen -z -a myNestedRepetitveObject.json | save . givenLoadRepetitveObjectOutput.json
+cat <<EOF | debug givenLoadRepetitveObject.zen -z -a myNestedRepetitveObject.json | save . givenLoadRepetitveObjectOutput.json
 Scenario 'ecdh': let us load some stuff cause it is fun!
 Given I am 'Alice'
 And I have my  'keypair'
-And I have a 'string array' named 'myStringArray' inside 'myFirstObject' 
+And I have a 'string array' named 'myFiveStrings' inside 'myFirstObject' 
 
 #
 # # # Uncomment the line below to enjoy the fireworks
@@ -454,7 +454,7 @@ cat <<EOF | save . givenUserData.json
 EOF
 
 
-cat <<EOF | zexe givenLoadNameFromData.zen -z -a userData.json | save . givenLoadNameFromDataOutput.json
+cat <<EOF | zexe givenLoadNameFromData.zen -z -a givenUserData.json | save . givenLoadNameFromDataOutput.json
 Scenario 'ecdh': load name from data
 Given my name is in a 'string' named 'myUserName'
 And I have my  'keypair'
