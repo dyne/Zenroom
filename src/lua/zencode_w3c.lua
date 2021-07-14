@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Friday, 12th March 2021 1:20:10 pm
+--on Wednesday, 14th July 2021
 --]]
 
 
@@ -106,7 +106,7 @@ When(
     end
 )
 
-When(
+IfWhen(
     "verify the verifiable credential named ''",
     function(vc)
         local cred = have(vc)

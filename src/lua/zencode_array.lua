@@ -135,7 +135,7 @@ end)
 --     table.insert(ACK[arr], ACK[ele])
 -- end)
 
-When("the '' is not found in ''", function(ele, arr)
+IfWhen("the '' is not found in ''", function(ele, arr)
         local obj = ACK[ele]
         ZEN.assert(obj, "Element not found: "..ele)
         ZEN.assert(ACK[arr], "Array not found: "..arr)
@@ -156,7 +156,7 @@ When("the '' is not found in ''", function(ele, arr)
 		end
 end)
 
-When("the '' is found in ''", function(ele, arr)
+IfWhen("the '' is found in ''", function(ele, arr)
 		local obj = ACK[ele]
 		ZEN.assert(obj, "Element not found: "..ele)
 		ZEN.assert(ACK[arr], "Array not found: "..arr)
@@ -179,7 +179,7 @@ When("the '' is found in ''", function(ele, arr)
 		ZEN.assert(found, "The content of element '"..ele.."' is not found inside: "..arr)
 end)
 
-When("the '' is found in '' at least '' times", function(ele, arr, times)
+IfWhen("the '' is found in '' at least '' times", function(ele, arr, times)
 	local obj = have(ele)
 	ZEN.assert( luatype(obj) ~= 'table', "Invalid use of table in object comparison: "..ele)
 	local num = have(times)

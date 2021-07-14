@@ -210,7 +210,7 @@ When(
 			CRED.prove_cred(ACK.verifiers, ACK.credentials, ACK.keys.credential)
 	end
 )
-When(
+IfWhen(
 	'verify the credential proof',
 	function()
 		have 'credential proof'

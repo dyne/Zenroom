@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Tuesday, 15th June 2021
+--on Wednesday, 14th July 2021
 --]]
 
 -- defined outside because reused across different schemas
@@ -215,7 +215,7 @@ When(
 	end
 )
 
-When(
+IfWhen(
 	"verify the '' is signed by ''",
 	function(msg, by)
 		have'public_key'
@@ -246,7 +246,7 @@ When(
 	end
 )
 
-When(
+IfWhen(
 	"verify the '' has a signature in '' by ''",
 	function(msg, sig, by)
 		have'public_key'

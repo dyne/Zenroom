@@ -168,7 +168,7 @@ When(
 	end
 )
 
-When(
+IfWhen(
 	'verify the signature proof is correct',
 	function()
 		ZEN.assert(
@@ -183,7 +183,7 @@ When(
 	end
 )
 
-When(
+IfWhen(
 	'the petition signature is not a duplicate',
 	function()
 		if luatype(ACK.petition.list) == 'table' then
@@ -201,7 +201,7 @@ When(
 	end
 )
 
-When(
+IfWhen(
 	'the petition signature is just one more',
 	function()
 		-- verify that the signature is +1 (no other value supported)

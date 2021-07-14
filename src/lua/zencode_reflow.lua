@@ -1,22 +1,24 @@
--- This file is part of Zenroom (https://zenroom.dyne.org)
+--[[
+--This file is part of zenroom
 --
--- Copyright (C) 2020-2021 Dyne.org foundation
--- designed and written by Denis Roio
--- with help by Alberto Ibrisevich and Andrea D'Intino
+--Copyright (C) 2020-2021 Dyne.org foundation
+--designed, written and maintained by Denis Roio <jaromil@dyne.org>
 --
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU Affero General Public License as
--- published by the Free Software Foundation, either version 3 of the
--- License, or (at your option) any later version.
+--This program is free software: you can redistribute it and/or modify
+--it under the terms of the GNU Affero General Public License v3.0
 --
--- This program is distributed in the hope that it will be useful, but
--- WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
--- Affero General Public License for more details.
+--This program is distributed in the hope that it will be useful,
+--but WITHOUT ANY WARRANTY; without even the implied warranty of
+--MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--GNU Affero General Public License for more details.
 --
--- You should have received a copy of the GNU Affero General Public
--- License along with this program.  If not, see
--- <https://www.gnu.org/licenses/>.
+--Along with this program you should have received a copy of the
+--GNU Affero General Public License v3.0
+--If not, see http://www.gnu.org/licenses/agpl.txt
+--
+--Last modified by Denis Roio
+--on Wednesday, 14th July 2021
+--]]
 
 ABC = require_once('crypto_credential')
 
@@ -212,7 +214,7 @@ When(
     end
 )
 
-When(
+IfWhen(
     'verify the reflow signature credential',
     function()
         have 'reflow_signature'
@@ -230,7 +232,7 @@ When(
     end
 )
 
-When(
+IfWhen(
     'check the reflow signature fingerprint is new',
     function()
         have 'reflow_signature'
@@ -273,7 +275,7 @@ When(
     end
 )
 
-When(
+IfWhen(
     'verify the reflow seal is valid',
     function()
         have 'reflow_seal'
@@ -367,7 +369,7 @@ When(
 	  }
 end)
 
-When(
+IfWhen(
    "verify the material passport of ''",
    function(obj)
 	  local src = have(obj)
@@ -392,9 +394,10 @@ end)
 -- Complex check calculates UID of object and compares to seal, if
 -- correct then validates, else searches for .track array of seals and
 -- calculates aggregated UID, if correct then validates
-When(
+IfWhen(
    "verify the material passport of '' is valid",
    function(obj)
 	  have(obj)
 	  have(obj..'.seal')
+      -- TODO
 end)
