@@ -51,21 +51,21 @@ n=0
 
 # let n=1
 
-# echo "                                                "
-# echo "------------------------------------------------"
-# echo "   Create Authority keypair, script:  $n              "
-# echo " 												  "
-# echo "------------------------------------------------"
-# echo "                                                "
+echo "                                                "
+echo "------------------------------------------------"
+echo "   Create Authority keypair, script:  $n              "
+echo " 												  "
+echo "------------------------------------------------"
+echo "                                                "
 
 
-# cat <<EOF | zexe dictionariesCreate_issuer_keypair.zen | save . dictionariesIssuer_keypair.json
-# rule check version 1.0.0
-# Scenario 'ecdh': Create the keypair
-# Given that I am known as 'Authority1234'
-# When I create the keypair
-# Then print my data
-# EOF
+cat <<EOF | zexe dictionariesCreate_issuer_keypair.zen | save . dictionariesIssuer_keypair.json
+rule check version 1.0.0
+Scenario 'ecdh': Create the keypair
+Given that I am known as 'Authority1234'
+When I create the keypair
+Then print my data
+EOF
 
 # let n=2
 
@@ -503,7 +503,7 @@ and print the 'Buyer<<Information<<TransactionsBatchA'
 
 EOF
 
-cat dictionariesGiven.zen dictionariesWhen.zen | zexe dictionariesComputation.zen -a dictionariesBlockchain.json -k dictionariesIssuer_keypair.json | save . dictionariesComputationOutput.json
+cat dictionariesGiven.zen dictionariesWhen.zen | debug dictionariesComputation.zen -a dictionariesBlockchain.json -k dictionariesIssuer_keypair.json | save . dictionariesComputationOutput.json
 
 #cat <<EOF | zexe ../../docs/examples/zencode_cookbook/dictionariesFind_max_transactions.zen -a ../../docs/examples/zencode_cookbook/dictionariesBlockchain.json -k ../../docs/examples/zencode_cookbook/dictionariesIssuer_keypair.json | jq .
 
