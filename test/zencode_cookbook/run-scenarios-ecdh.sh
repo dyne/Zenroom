@@ -258,7 +258,7 @@ cat <<EOF | save . scenarioECDHAlicePublicKey.json
 EOF
 
 cat <<EOF | save . scenarioECDHZencodePart4.zen
-rule check version 1.0.0 
+# rule check version 1.0.0 
 Scenario 'ecdh': Bob verifies the signature from Alice
 
 # Declaring who I am and loading all the stuff

@@ -56,7 +56,7 @@ linux-riscv64: apply-patches milagro lua53 embed-lua
 
 linux-debug: apply-patches milagro lua53 embed-lua
 	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-	make -C src linux
+	make -C src linux-debug
 	@cp -v src/zenroom build/zenroom
 
 linux-profile:

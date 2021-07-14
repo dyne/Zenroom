@@ -6,6 +6,7 @@ if ! test -r ../utils.sh; then
 	echo "run executable from its own directory: $0"; exit 1; fi
 . ../utils.sh
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
+
 ####################
 # use zexe if you have zenroom in a system-wide path
 #
@@ -147,8 +148,8 @@ echo " 												  "
 echo "------------------------------------------------"
 echo "   "
 
-cat <<EOF | debug dictionariesCreate_transaction_entry.zen | save . created_dictionary.json
-rule check version 1.0.0
+cat <<EOF | zexe dictionariesCreate_transaction_entry.zen | save . created_dictionary.json
+# rule check version 2.0.0
 Scenario ecdh
 Given nothing
 When I create the 'string dictionary'
@@ -300,7 +301,7 @@ echo "   "
 
 
 cat <<EOF | save . dictionariesGiven.zen
-rule check version 1.0.0
+# rule check version 1.0.0
 Scenario ecdh: dictionary computation and signing 
 
 # LOAD DICTIONARIES
@@ -502,7 +503,7 @@ and print the 'Buyer<<Information<<TransactionsBatchA'
 
 EOF
 
-cat dictionariesGiven.zen dictionariesWhen.zen | zexe dictionariesComputation.zen -z -a dictionariesBlockchain.json -k dictionariesIssuer_keypair.json | save . dictionariesComputationOutput.json
+cat dictionariesGiven.zen dictionariesWhen.zen | zexe dictionariesComputation.zen -a dictionariesBlockchain.json -k dictionariesIssuer_keypair.json | save . dictionariesComputationOutput.json
 
 #cat <<EOF | zexe ../../docs/examples/zencode_cookbook/dictionariesFind_max_transactions.zen -a ../../docs/examples/zencode_cookbook/dictionariesBlockchain.json -k ../../docs/examples/zencode_cookbook/dictionariesIssuer_keypair.json | jq .
 

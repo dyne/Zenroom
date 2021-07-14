@@ -6,6 +6,8 @@ if [[ "$1" == "cortexm" ]]; then
 	is_cortexm=true
 fi
 
+# RNGFAKE="00"
+
 detect_zenroom_path() {
 	if [ ! -z $ZENROOM ]; then
 		echo $ZENROOM
@@ -81,6 +83,13 @@ detect_zenroom_conf() {
 		zenroom_conf="$zenroom_conf,rngseed=hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
 	elif test "$RNGSEED" == "random"; then
 		>&2 echo "Using Real Random (no rngseed to zero)"
+	elif test "$RNGSEED" == "fake"; then
+		>&2 echo "Using Fake Random (deterministic incremental) TODO EXPERIMENTAL"
+		# TODO
+		if test "$RNGFAKE" == ""; then
+			>&2 echo "ERROR: set RNGFAKE in test script to 00"
+			exit 1
+		fi
 	else
 		zenroom_conf="$zenroom_conf,rngseed=$RNGSEED"
 	fi
@@ -118,6 +127,13 @@ debug() {
 	return $?
 }
 
+incr_rngfake() {
+	cat << EOF | zenroom
+res = BIG.new(  )
+res = res + BIG.new(1)
+print(res:octet():pad(64):hex())
+EOF
+}
 
 zexe() {
 	if [ "$DEBUG" == "1" ]; then
@@ -143,6 +159,12 @@ zexe() {
 	if [[ "$is_cortexm" == true ]]; then
 		local args="$*"
 		tee "$out" | qemu_zenroom_run "$args" "-z" "$out" 2>$t/stderr && cat ./outlog>$t/stdout
+		# TODO: increment RNGFAKE
+	# elif [[ "$RNGSEED" == "fake" ]]; then
+	# 	local seed=`incr_rngfake $RNGFAKE`
+	# 	export RNGFAKE=$seed
+	# 	echo $RNGFAKE >&2
+	# 	tee "$out" | tee "$docs" | $Z -z -c "rngseed=hex:$RNGFAKE" $* 2>$t/stderr 1>$t/stdout
 	else 
 		tee "$out" | tee "$docs" | $Z -z $* 2>$t/stderr 1>$t/stdout
 	fi
