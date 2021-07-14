@@ -208,8 +208,11 @@ local function set_rule(text)
 			res = true
 		end
 	elseif rule[2] == 'set' and rule[4] then
-		CONF[rule[3]] = tonumber(rule[4]) or rule[4]
-		res = true and CONF[rule[3]]
+		CONF[rule[3]] = fif( tonumber(rule[4]), tonumber(rule[4]),
+							fif( rule[4]=='true', true,
+							fif( rule[4]=='false', false,
+							rule[4])))
+		res = true
 	end
 	if not res then
 		error('Rule invalid: ' .. text.msg, 3)

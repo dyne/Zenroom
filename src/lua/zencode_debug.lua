@@ -66,3 +66,7 @@ end
 Given("codec", function() debug_codec() end)
 When("codec", function() debug_codec() end)
 Then("codec", function() debug_codec() end)
+
+Given("config", function() I.warn(_G["CONF"]) end)
+When("config", function() I.warn(_G["CONF"]) end)
+Then("config", function() I.warn(_G["CONF"]) end)
