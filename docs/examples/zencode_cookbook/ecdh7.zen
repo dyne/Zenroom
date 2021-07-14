@@ -1,0 +1,31 @@
+Rule check version 1.0.0
+Scenario 'ecdh': Alice encrypts a message for Bob and Carl
+
+# Loading Alice' keypair
+Given my name is in a 'string' named 'myUserName'
+Given that I have my 'keypair'
+
+# Loading the public keys of the recipients, you can load as many as you like
+Given that I have a 'public key' from 'Bob'
+Given that I have a 'public key' from 'Carl'
+
+# Loading the secret message
+Given that I have a 'string' named 'myMessageForBobAndCarl'
+# Commenting reading og the header, as we don't need the header, 
+# so Zenroom will set it as "DefaultHeader"
+#  
+# Given that I have a 'string' named 'header'
+
+# Encrypt the secret message for 1st recipient and rename the output
+When I encrypt the secret message of 'myMessageForBobAndCarl' for 'Bob'
+When I rename the 'secret message' to 'secretForBob'
+
+# Encrypt the secret message for 2nd recipient and rename the output,
+# you can go on encrypting as many recipients as you like, as long as you have their public key
+When I encrypt the secret message of 'myMessageForBobAndCarl' for 'Carl'
+When I rename the 'secret message' to 'secretForCarl'
+
+# Printing out the encrypted messages: it's recommended to print them one by one
+# Cause if you use the "Then print all" statement, you would also print all the keys.
+Then print the 'secretForBob'
+Then print the 'secretForCarl'

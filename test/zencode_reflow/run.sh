@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+RNGSEED='random'
+
+
 ####################
 # common script init
 if ! test -r ../utils.sh; then
@@ -9,6 +12,18 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
 # sideload='../../src/lua/zencode_reflow.lua'
+
+echo -e "${yellow} ======================================================" 
+echo -e "${yellow} ======================================================" 
+echo -e "${yellow} ======================================================" 
+echo -e "${yellow} =============== Clean Up =========================" 
+echo -e "${yellow} ======================================================" 
+echo -e "${yellow} ======================================================" 
+echo -e "${yellow} ======================================================${reset}" 
+
+rm *.json
+rm *.zen
+
 
 ## ISSUER
 cat <<EOF | zexe issuer_keygen.zen | save reflow issuer_keypair.json
@@ -91,7 +106,9 @@ echo "# join the verifiers of signed credentials"
 json_join public_key_Alice.json public_key_Bob.json public_key_Carl.json > public_keys.json
 echo "{\"public_keys\": `cat public_keys.json` }" > public_key_array.json
 
-cat <<EOF > Example.json
+cat public_key_array.json | save reflow public_key_array.json
+
+cat <<EOF | save reflow uid.json
 {
    "Sale":{
       "Buyer":"Alice",
@@ -111,7 +128,7 @@ EOF
 echo "# anyone can start a seal"
 
 # CREATE Reflow seal
-cat <<EOF | zexe seal_start.zen -k Example.json -a public_key_array.json | save reflow reflow_seal.json
+cat <<EOF | zexe seal_start.zen -k uid.json -a public_key_array.json | save reflow reflow_seal.json
 Scenario reflow
 Given I have a 'reflow public key array' named 'public keys'
 and I have a 'string dictionary' named 'Sale'
@@ -123,6 +140,8 @@ EOF
 #
 
 cp -v reflow_seal.json reflow_seal_empty.json
+cat reflow_seal_empty.json | save reflow reflow_seal_empty.json
+
 
 # anyone can require a verified credential to be able to sign, chosing
 # the right issuer verifier for it
@@ -186,12 +205,15 @@ and print the 'reflow seal'
 EOF
 
 
-cat << EOF | zexe verify_identity.zen -a reflow_seal.json -k Example.json
+cat << EOF | debug verify_identity.zen -a reflow_seal.json -k uid.json
 Scenario 'reflow' : Verify the identity in the seal 
 Given I have a 'reflow seal'
 Given I have a 'string dictionary' named 'Sale'
 When I create the reflow identity of 'Sale'
 When I rename the 'reflow identity' to 'SaleIdentity'
 When I verify 'SaleIdentity' is equal to 'identity' in 'reflow seal'
+and debug
 Then print the string 'The reflow identity in the seal is verified'
 EOF
+
+for i in *.zen; do cat $i | save reflow $i; done

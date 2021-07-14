@@ -1,0 +1,20 @@
+Scenario 'ecdh': create the signature of an object
+
+# Declaring who I am and loading all the stuff
+Given my name is in a 'string' named 'myUserName'
+Given I have my 'keypair'
+Given that I have a 'string' named 'myMessage' inside 'mySecretStuff'
+Given I have a 'string array' named 'myStringArray'
+
+# Here we create the signaturs and we rename them to samething that looks nicer
+When I create the signature of 'myStringArray'
+When I rename the 'signature' to 'myStringArray.signature'
+When I create the signature of 'myMessage'
+When I rename the 'signature' to 'myMessage.signature'
+
+# Here we print both the messages and the signatures
+Then print the 'myMessage'
+Then print the 'myMessage.signature'	
+Then print the 'myStringArray'
+Then print the 'myStringArray.signature'
+

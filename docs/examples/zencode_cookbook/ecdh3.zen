@@ -1,0 +1,15 @@
+Scenario 'ecdh': Encrypt a message with the password
+
+# Here we load the secret message (made of two strings, one must be named "header")
+# along with the password, which is just a string in this case
+Given that I have a 'string' named 'myPassword' inside 'mySecretStuff'
+Given that I have a 'string' named 'header' inside 'mySecretStuff'
+Given that I have a 'string' named 'myMessage' inside 'mySecretStuff'
+
+# Below is where the encryption happens: you specify you want to 
+# encrypt using the 'password' string. The newly created object is name "secret message"
+When I encrypt the secret message 'myMessage' with 'myPassword'
+
+# We're printing out only the "secret message", because using "Then print all data"
+# would cause us to also print out the password.
+Then print the 'secret message'	

@@ -1,0 +1,7 @@
+Scenario credential
+Given I am 'Alice'
+and I have my 'keys'
+and I have a 'credential signature'
+when I create the credentials
+then print 'credentials'
+and print 'keys'

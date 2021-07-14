@@ -1,18 +1,1 @@
-{
-  "Participant_4": {
-    "credential_request": {
-      "commit": "AkgOpfYGdoAAOT+KjZY+ZevHY5bjaTK5QG/a6wfIJhTddSP/PcJcNe5SYh4n80Dd5Q==",
-      "pi_s": {
-        "commit": "z8smT2tjV7GJvBYbilCeUz+pMyBqoAiVrXsud+IlkbE=",
-        "rk": "4iLiAxhzEk4uuEeb2SRS4pl69vEFA4V0C0ggtmayvdg=",
-        "rm": "HCyrZDaGRRxhsPW0ozm9e3N5E5UJWKyh6rfgccYqSYM=",
-        "rr": "kou2IfM4HTrtngM6CpXzqzFV3jYouOEp1jEkO0K6Z/w="
-      },
-      "public": "AxL9Oc+1aD28ptipIVpyP2ziduz7Qem3L9oiPIilUFipTN4xTLEDIgC2JjePUYtMBQ==",
-      "sign": {
-        "a": "Agzl+WhqbKdBxzS7vwOH+9ZY+G7jOcql3HJPkVZFCg/CxSv+NaLC3gne7O9kWA98yw==",
-        "b": "A1SCli2JmweB102om9wS/mlXaSXvOl6aZcckYaaGj3wGd4pR68bDiIwRGHA8kptuPQ=="
-      }
-    }
-  }
-}
+{"Participant_4":{"credential_request":{"commit":"AwsIM+nMCR9qtJS/tYSWC4rUg3gkegxXS/ps6Ryn5klpH+3hYw+YUFC64a0XGF56NA==","pi_s":{"commit":"V+QquONmXJangNrEX8CcX++GnsOnOk3OmKjZT5exsUs=","rk":"agBH0XwN0u7VRQaOnPplEr7n13TXXKVOkg+aXMOm33U=","rm":"EvjXNqxDdw2/QPT99Hasyyu5u6/FnYH4t+KEFY6DnFo=","rr":"PfZTbCvSum81Wvdw5eK5gVCa0JiWmQmJSrlelefkwCE="},"public":"AgMmk0rcDJd1FTjJc7d701+cynncMLbAiF+szgfbm8zEZ0ZpWRQ3xfWCQm4QTkDnng==","sign":{"a":"AxgFp7qxhhD5uno/EgKO9ZuwnZGF8LiFRASLwS+LXSuQGdkV3DAPoz2t81+urAvMsw==","b":"AwIPRCXV21rJxqpxVL0GNAz0BS6VGgmUnRu2XFEyu2Gjj3zpSthpfaUcdQ0HvzwWIw=="}}}}

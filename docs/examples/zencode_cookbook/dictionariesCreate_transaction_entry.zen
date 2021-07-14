@@ -1,4 +1,4 @@
-rule check version 1.0.0
+# rule check version 2.0.0
 Scenario ecdh
 Given nothing
 When I create the 'string dictionary'

@@ -1,0 +1,90 @@
+# rule input encoding base64
+Scenario 'ecdh': load a issuer keypair
+Scenario 'credential': Create the keypair
+Given I am 'Alice'
+Given I have my 'keypair'
+Given I have my 'keys' 
+and I have a 'public key' from 'Bob'
+and I have a 'public key' from 'Carl'
+# Load Arrays
+Given I have a 'string array' named 'myStringArray_1' inside 'myObject'
+Given I have a 'string array' named 'myStringArray_2' inside 'myObject'
+Given I have a 'string array' named 'myStringArray_3' inside 'myObject'
+Given I have a 'string array' named 'myStringArray_4' inside 'myObject' 
+Given I have a 'string array' named 'myStringArray_5' inside 'myObject'
+Given I have a 'number array' named 'myNumberArray_1' inside 'myObject'
+Given I have a 'number array' named 'myNumberArray_2' inside 'myObject'
+Given I have a 'number array' named 'myNumberArray_3' inside 'myObject'
+Given I have a 'number array' named 'myNumberArray_4' inside 'myObject'
+Given I have a 'number array' named 'myNumberArray_5' inside 'myObject'
+# Load Numbers
+Given I have a 'number' named 'myNumber_1' inside 'myObject'
+Given I have a 'number' named 'myNumber_2' inside 'myObject'
+Given I have a 'number' named 'myNumber_3' inside 'myObject' 
+Given I have a 'number' named 'myNumber_4' inside 'myObject'
+Given I have a 'number' named 'myNumber_5' inside 'myObject'
+# Load Strings
+Given I have a 'string' named 'myString_1'  inside 'myObject'
+# Questo sotto non funziona proprio, quindi toglierei la parte in 'qualcosa'
+Given I have a 'string' named 'myString_2' inside 'myObject'
+Given I have a 'string' named 'myString_3' inside 'myObject'
+Given I have a 'string' named 'myString_4' inside 'myObject'
+Given I have a 'string' named 'myString_5' inside 'myObject'
+# Different data types
+Given I have an 'hex' named 'myHex_1' inside 'myObject'
+Given I have an 'hex' named 'myHex_2' inside 'myObject'
+Given I have an 'hex' named 'myHex_3' inside 'myObject'
+Given I have an 'hex' named 'myHex_4' inside 'myObject'
+Given I have an 'hex' named 'myHex_5' inside 'myObject'
+Given I have a  'base64' named 'myBase64_1' inside 'myObject'
+Given I have a  'base64' named 'myBase64_2' inside 'myObject'
+Given I have a  'base64' named 'myBase64_3' inside 'myObject'
+Given I have a  'base64' named 'myBase64_4' inside 'myObject'
+Given I have a  'base64' named 'myBase64_5' inside 'myObject'
+Given I have a  'binary' named 'myBinary_1' inside 'myObject'
+Given I have a  'binary' named 'myBinary_2' inside 'myObject'
+Given I have a  'binary' named 'myBinary_3' inside 'myObject'
+Given I have a  'binary' named 'myBinary_4' inside 'myObject'
+Given I have a  'binary' named 'myBinary_5' inside 'myObject'
+Given I have an 'url64' named 'myUrl64_1' inside 'myObject'
+Given I have an 'url64' named 'myUrl64_2' inside 'myObject'
+Given I have an 'url64' named 'myUrl64_3' inside 'myObject'
+Given I have an 'url64' named 'myUrl64_4' inside 'myObject'
+Given I have an 'url64' named 'myUrl64_5' inside 'myObject'
+Given I have an 'url64' named 'myUrl64_6' inside 'myObject'
+# Dictionary
+Given I have a 'string dictionary' named 'salesReport'
+Given I have a 'string dictionary' named 'myFourthObject'
+
+When I write string 'This message is for Bob.' in 'messageForBob'
+When I write string 'This message is for Carl.' in 'messageForCarl'
+
+and I write string 'This is the header' in 'header'
+Then print 'header'
+
+#and I encrypt the message for 'Bob'
+# and I encrypt the 'messageForBob'
+# and I rename the 'message' to 'Message for Bob'
+# and debug
+#and I encrypt the message for 'Carl'
+#and I rename the 'message' to 'Message for Carl'
+#Then print the 'Message for Bob'
+#and print the 'Message for Carl'
+
+# Then print my 'keypair' 
+# Then print the 'public key' 
+# print ''
+# print '' as ''
+# print '' as '' in ''
+# print data
+# print data as ''
+# print my ''
+# print my '' as ''
+# print my data
+# print my data as ''
+# print the ''
+# print the '' as ''
+# print the '' as '' in ''
+# print the '' in ''
+
+

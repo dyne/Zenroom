@@ -1,16 +1,1 @@
-{
-  "myMessage": "Dear Bob, your name is too short, goodbye - Alice.",
-  "myMessage.signature": {
-    "r": "hLj1fqGCCrGQ4BccC7lbmcCEgo2H+YqMcdZToKeq8t0=",
-    "s": "sSKqSNhHJZIigq5flBsLvelSCCerbnlzDrUYr4w98d4="
-  },
-  "myStringArray": [
-    "Hello World! This is my string array, element [0]",
-    "Hello World! This is my string array, element [1]",
-    "Hello World! This is my string array, element [2]"
-  ],
-  "myStringArray.signature": {
-    "r": "d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=",
-    "s": "F0FYZCnyV1xThXs2D0UwdHzp/y+puWewVD9ALen9SgE="
-  }
-}
+{"myMessage":"Dear Bob, your name is too short, goodbye - Alice.","myMessage.signature":{"r":"hLj1fqGCCrGQ4BccC7lbmcCEgo2H+YqMcdZToKeq8t0=","s":"sSKqSNhHJZIigq5flBsLvelSCCerbnlzDrUYr4w98d4="},"myStringArray":["Hello World! This is my string array, element [0]","Hello World! This is my string array, element [1]","Hello World! This is my string array, element [2]"],"myStringArray.signature":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"F0FYZCnyV1xThXs2D0UwdHzp/y+puWewVD9ALen9SgE="}}

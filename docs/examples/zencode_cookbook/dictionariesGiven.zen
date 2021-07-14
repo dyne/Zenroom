@@ -1,4 +1,4 @@
-rule check version 1.0.0
+# rule check version 1.0.0
 Scenario ecdh: dictionary computation and signing 
 
 # LOAD DICTIONARIES

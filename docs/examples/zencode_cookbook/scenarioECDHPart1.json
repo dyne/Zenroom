@@ -1,8 +1,1 @@
-{
-  "secret_message": {
-    "checksum": "ibW4ZBl2vooWBOKPqj119A==",
-    "header": "QSB2ZXJ5IGltcG9ydGFudCBzZWNyZXQ=",
-    "iv": "XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA=",
-    "text": "BBYfSEqsW6FqddmQXBBjetCwr9XL8p7uBgAlsVYBfp437sDhxJVnM8DJK+cY0GInT7E="
-  }
-}
+{"secret_message":{"checksum":"ibW4ZBl2vooWBOKPqj119A==","header":"QSB2ZXJ5IGltcG9ydGFudCBzZWNyZXQ=","iv":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA=","text":"BBYfSEqsW6FqddmQXBBjetCwr9XL8p7uBgAlsVYBfp437sDhxJVnM8DJK+cY0GInT7E="}}

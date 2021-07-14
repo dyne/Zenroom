@@ -1,6 +1,6 @@
 Scenario credential
 Scenario petition: approve
-    Given that I have a 'issuer public key' inside 'MadHatter'
+    Given that I have a 'issuer public key' inside 'The Authority'
     Given I have a 'credential proof'
     Given I have a 'petition'
     When I aggregate all the issuer public keys

@@ -1,0 +1,7 @@
+Rule check version 1.0.0
+Scenario 'ecdh': Bob gathers public keys in his keyring
+	Given that I am 'Bob'
+	and I have my 'keypair'
+	and I have a 'public key' from 'Alice'
+	Then print my 'keypair'
+	and print the 'public key'

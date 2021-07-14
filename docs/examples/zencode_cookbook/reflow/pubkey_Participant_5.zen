@@ -1,0 +1,5 @@
+Scenario reflow
+Given I am 'Participant_5'
+and I have my 'keys'
+When I create the reflow public key
+Then print my 'reflow public key'

@@ -1,5 +1,5 @@
-Scenario multidarkroom
-Scenario credential
+Scenario reflow
 Given I am 'Participant_6'
-When I create the credential key
+When I create the reflow key
+and I create the credential key
 Then print my 'keys'

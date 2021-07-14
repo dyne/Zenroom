@@ -1,0 +1,6 @@
+Scenario ecdh: Decrypt the message with the password
+Given I have a 'secret message'
+When I write string 'my secret word' in 'password'
+and I decrypt the text of 'secret message' with 'password'
+Then print the 'text' as 'string'
+and print the 'header' from 'secret message' as 'string'

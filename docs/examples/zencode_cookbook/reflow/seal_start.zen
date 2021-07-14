@@ -1,0 +1,7 @@
+Scenario reflow
+Given I have a 'reflow public key array' named 'public keys'
+and I have a 'string dictionary' named 'Sale'
+When I aggregate the reflow public key from array 'public keys'
+and I create the reflow identity of 'Sale'
+and I create the reflow seal with identity 'reflow identity'
+Then print the 'reflow seal'

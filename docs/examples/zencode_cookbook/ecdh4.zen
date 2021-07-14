@@ -1,0 +1,12 @@
+Scenario 'ecdh': Decrypt the message with the password
+
+# Here we load the encrypted secret message along with the password
+Given that I have a valid 'secret message'
+Given that I have a 'string' named 'password' inside 'mySecretStuff'
+
+# Here the decryption happens, we'll also rename the output.
+When I decrypt the text of 'secret message' with 'password'
+When I rename the 'text' to 'textDecrypted'
+
+# And here we print out the decrypted message
+Then print the 'textDecrypted' as 'string'

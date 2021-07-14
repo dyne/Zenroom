@@ -1,0 +1,4 @@
+Scenario 'ecdh': Generate a keypair
+Given my name is in a 'string' named 'myUserName'
+When I create the keypair
+Then print my data

@@ -1,0 +1,10 @@
+Scenario reflow
+Given I have a 'reflow seal'
+and I have a 'issuer public key' in 'The Authority'
+and I have a 'reflow signature'
+When I aggregate all the issuer public keys
+and I verify the reflow signature credential
+and I check the reflow signature fingerprint is new
+and I add the reflow fingerprint to the reflow seal
+and I add the reflow signature to the reflow seal
+Then print the 'reflow seal'

@@ -1,0 +1,5 @@
+Scenario credential
+Given I am 'Alice'
+and I have my 'keys'
+When I create the credential request
+Then print my 'credential request'

@@ -1,18 +1,1 @@
-{
-  "Participant_8": {
-    "credential_request": {
-      "commit": "AwQG/UvZoocTinEn751Tk2HOwR7enAmHp9ArYdTaCbGcjkQUY7TPfzR4wYo1ow7hUw==",
-      "pi_s": {
-        "commit": "s/ZAw8p31vltX0Ccz5VtEQdW3y3U/xl09aLfxqAFddA=",
-        "rk": "jFcNkhWvPgivY+uOOAU75Mji3FgE080WUkzxFV3xJ8I=",
-        "rm": "JBbt91dyrxUPd3GQ48XM4OCwEDsxx+HHFkeeZ9PBcPQ=",
-        "rr": "A96bJ7dXtRu8ZW01w1UYgMruPJh02jpFGtTynmRFn2k="
-      },
-      "public": "Agj2uK2jlNVMttzUF4KuRNjYogSDPgnAHpbRGuypbDTsBV3DahqrXndqViudm1BGlA==",
-      "sign": {
-        "a": "A0HWd7LbOMBdezS3r2hB6Y5cJIsnIUd48GUH8/EJUe5YRQbTo/ggZHdntO47thZzeQ==",
-        "b": "A0gpxYCvGAwUZcLpIxpwu6X89roSfTJb7CnxMNN5yC50nJLBYuhy9/MYux84lHsqtg=="
-      }
-    }
-  }
-}
+{"Participant_8":{"credential_request":{"commit":"AhTGTSnMqn3cUO514IKIqidUlB2DnTLesdneYgYCS+qLgJvhtWIlfxP8F649K6e1EA==","pi_s":{"commit":"BCCCDe1UHQDT9EcgrFFLb1gnRi2onI+nz+gA3EZ2aYU=","rk":"cxK57tSTfTF9Zl4Limg3jPFBwTTZAtgCMq5J9VhX7Qo=","rm":"RhfnTDX2+I6XEoYtUrEyf1iQR6Kj/fGQJyRy3lQaodA=","rr":"YFQDsrFP/O5CcQVYN6I624p8IaNZszobzfWxrXwhCBM="},"public":"AgZAQzPOcouM4xriupOqIf2JxVa7jVnB6eQVJnmrF2kgd3g8i9c1Zj1febozBohkcQ==","sign":{"a":"Awuwf5upC9qnwgL2A8bQ0uVK0b6s6pYcZLSt3snUahes0LIvDzQ06Z0g0K1/w2v2+g==","b":"Awzg+oAJHvpYSHjKxzXtKrR1hvfNW9ejZKWlL56wd9Wl4EJ7vCzuCpOspPbjGcpq8g=="}}}}

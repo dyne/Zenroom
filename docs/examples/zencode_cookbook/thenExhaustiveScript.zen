@@ -50,6 +50,3 @@ Then print 'myUrl64_3' as 'number'
 Then print 'myUrl64_4' as 'base64'
 Then print 'myUrl64_5' as 'bin'
 Then print 'myUrl64_6' as 'hex'
-
-
-
