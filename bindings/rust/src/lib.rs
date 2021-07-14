@@ -1,7 +1,10 @@
 #[macro_use]
 extern crate thiserror;
+#[macro_use]
+extern crate lazy_static;
 
 use std::ffi::{CStr, CString};
+use std::sync::Mutex;
 
 mod c {
     #![allow(non_upper_case_globals)]
@@ -24,13 +27,10 @@ pub enum ZenError {
     Execution(ZenResult),
     #[error("Invalid Input: {0}")]
     InvalidInput(#[from] std::ffi::NulError),
-    #[error("Invalid Logs: {0}")]
-    InvalidLogs(std::ffi::IntoStringError),
-    #[error("Invalid Output: {}", .output)]
-    InvalidOutput {
-        output: std::ffi::IntoStringError,
-        logs: String,
-    },
+}
+
+lazy_static! {
+    static ref ZEN_GIL: Mutex<()> = Mutex::new(());
 }
 
 const BUF_SIZE: usize = 2 * 1024 * 1024;
@@ -76,6 +76,7 @@ fn exec_f(
     let mut stderr = Vec::<i8>::with_capacity(BUF_SIZE);
     let stderr_ptr = stderr.as_mut_ptr();
 
+    let lock = ZEN_GIL.lock().unwrap();
     let exit_code = unsafe {
         fun(
             CString::new(script)?.into_raw(),
@@ -88,6 +89,7 @@ fn exec_f(
             BUF_SIZE as u64,
         )
     };
+    drop(lock);
 
     let res = ZenResult {
         output: unsafe { CStr::from_ptr(stdout_ptr) }
@@ -110,15 +112,21 @@ mod tests {
     use crate::*;
     use serde_json::Value;
 
+    const SAMPLE_SCRIPT: &str = r#"
+    Scenario 'ecdh': Create the keypair
+    Given that I am known as 'Alice'
+    When I create the keypair
+    Then print my data
+    "#;
+
     #[test]
     fn simple_script() -> Result<(), ZenError> {
-        let script = r#"
-        Scenario 'ecdh': Create the keypair
-        Given that I am known as 'Alice'
-        When I create the keypair
-        Then print my data
-        "#;
-        let result = zencode_exec(script.into(), String::new(), String::new(), String::new())?;
+        let result = zencode_exec(
+            SAMPLE_SCRIPT.into(),
+            String::new(),
+            String::new(),
+            String::new(),
+        )?;
 
         let json: Value = serde_json::from_str(&result.output).unwrap();
         let keypair = json
@@ -131,6 +139,26 @@ mod tests {
         assert!(keypair.get("private_key").is_some());
         assert!(keypair.get("public_key").is_some());
 
+        Ok(())
+    }
+
+    #[test]
+    fn threaded_exec() -> Result<(), ZenError> {
+        const NUM_THREADS: usize = 5;
+        let mut threads = Vec::new();
+        for _ in 0..NUM_THREADS {
+            threads.push(std::thread::spawn(|| {
+                zencode_exec(
+                    SAMPLE_SCRIPT.into(),
+                    String::new(),
+                    String::new(),
+                    String::new(),
+                )
+            }));
+        }
+        for thread in threads {
+            thread.join().expect("thread should not panic")?;
+        }
         Ok(())
     }
 }

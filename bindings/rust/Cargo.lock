@@ -416,6 +416,7 @@ name = "zenroom"
 version = "0.1.0"
 dependencies = [
  "bindgen",
+ "lazy_static",
  "serde_json",
  "thiserror",
 ]
