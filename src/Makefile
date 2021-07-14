@@ -63,6 +63,10 @@ musl: ${SOURCES}
 linux: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom ${LDFLAGS} ${LDADD}
 
+linux-debug: ${SOURCES}
+	${CC} ${CFLAGS} ${SOURCES} -o zenroom ${LDFLAGS} ${LDADD}
+
+
 # available vars to identify the build:
 # ${ARCH} ${VERSION} ${BRANCH} ${HASH}
 linux-lib: ${SOURCES}

@@ -140,8 +140,13 @@ _G['CONF'] = {
 	},
 	parser = {strict_match = true},
 	hash = 'sha256',
-	heapguard = true
 }
+-- turn on heapguard when DEBUG or linux-debug build
+if DEBUG > 1 or MAKETARGET == "linux-debug" then
+	_G['CONF'].heapguard = true
+else
+	_G['CONF'].heapguard = false
+end
 
 -- do not modify
 _G['LICENSE'] =

@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Tuesday, 13th July 2021
+--on Wednesday, 14th July 2021
 --]]
 --- <h1>Zencode language parser</h1>
 --
@@ -64,8 +64,6 @@ local zencode = {
 	checks = {version = false}, -- version, scenario checked, etc.
 	OK = true -- set false by asserts
 }
-
-require('zenroom_ast')
 
 -- set_sentence
 -- set_rule
