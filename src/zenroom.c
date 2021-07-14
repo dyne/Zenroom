@@ -199,14 +199,14 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	Z->random_generator = NULL;
 	Z->random_external = 0;
 	switch(zconf_printf) {
-	case STB_PRINTF:
+	case STB:
 		Z->sprintf = &z_sprintf;
 		Z->snprintf = &z_snprintf;
 		Z->vsprintf = &z_vsprintf;
 		Z->vsnprintf = &z_vsnprintf;
 		act(NULL,"STB print functions in use");
 		break;
-	case MUTT_PRINTF:
+	case MUTT:
 		Z->sprintf = &sprintf; // TODO: mutt based
 		Z->vsprintf = &vsprintf;
 		Z->snprintf = &mutt_snprintf;

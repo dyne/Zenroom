@@ -89,7 +89,7 @@ int zconf_seccomp = 0;
 char zconf_rngseed[(RANDOM_SEED_LEN*2)+4]; // 0x and terminating \0
 mmtype zconf_memmg = SYS;
 int  zconf_memwipe = 0;
-printftype zconf_printf = SYS;
+printftype zconf_printf = LIBC;
 
 int zen_conf_parse(const char *configuration) {
 	(void)stb__strchr;            // avoid compiler warnings
@@ -162,9 +162,9 @@ int zen_conf_parse(const char *configuration) {
 			}
 
 			if(curconf==PRINTF) {
-				if(strcasecmp(lex.string,"stb") == 0) zconf_printf = STB_PRINTF;
-				else if(strcasecmp(lex.string,"sys") == 0) zconf_printf = LIBC_PRINTF;
-				else if(strcasecmp(lex.string,"mutt") == 0) zconf_printf = MUTT_PRINTF;
+				if(strcasecmp(lex.string,"stb") == 0) zconf_printf = STB;
+				else if(strcasecmp(lex.string,"sys") == 0) zconf_printf = SYS;
+				else if(strcasecmp(lex.string,"mutt") == 0) zconf_printf = MUTT;
 				else {
 					error(NULL,"Invalid print function: %s",lex.string);
 					// free(lexbuf);
