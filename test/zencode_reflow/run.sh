@@ -205,15 +205,14 @@ and print the 'reflow seal'
 EOF
 
 
-cat << EOF | debug verify_identity.zen -a reflow_seal.json -k uid.json
-Scenario 'reflow' : Verify the identity in the seal 
-Given I have a 'reflow seal'
-Given I have a 'string dictionary' named 'Sale'
-When I create the reflow identity of 'Sale'
-When I rename the 'reflow identity' to 'SaleIdentity'
-When I verify 'SaleIdentity' is equal to 'identity' in 'reflow seal'
-and debug
-Then print the string 'The reflow identity in the seal is verified'
-EOF
+#cat << EOF | debug verify_identity.zen -a reflow_seal.json -k uid.json
+#Scenario 'reflow' : Verify the identity in the seal 
+#Given I have a 'reflow seal'
+#Given I have a 'string dictionary' named 'Sale'
+#When I create the reflow identity of 'Sale'
+#When I rename the 'reflow identity' to 'SaleIdentity'
+#When I verify 'SaleIdentity' is equal to 'identity' in 'reflow seal'
+#Then print the string 'The reflow identity in the seal is verified'
+#EOF
 
 for i in *.zen; do cat $i | save reflow $i; done
