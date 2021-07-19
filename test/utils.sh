@@ -166,12 +166,18 @@ zexe() {
 	# 	echo $RNGFAKE >&2
 	# 	tee "$out" | tee "$docs" | $Z -z -c "rngseed=hex:$RNGFAKE" $* 2>$t/stderr 1>$t/stdout
 	else 
-		tee "$out" | tee "$docs" | $Z -z $* 2>$t/stderr 1>$t/stdout
+		tee "$out" | tee "$docs" | \
+                MALLOC_PERTURB_=$(($RANDOM % 255 + 1)) \
+			$Z -z $* 2>$t/stderr 1>$t/stdout
 	fi
 	res=$?
 	exec_time=`grep "Time used" $t/stderr | cut -d: -f2`
 	exec_memory=`grep "Memory used" $t/stderr | cut -d: -f2`
-	out_size=`stat -c '%s' $t/stdout`
+	if [[ "`uname -s`" == "Darwin" ]]; then
+		out_size=`stat -f%z $t/stdout` # BSD stat
+	else
+		out_size=`stat -c '%s' $t/stdout`
+	fi
 	echo "EXECUTION TIME: $exec_time" >&2
 	echo "OUTPUT SIZE: `stat -c '%s' $t/stdout` bytes" >&2
 	if [ $res == 0 ]; then
