@@ -75,8 +75,8 @@ echo -e "${yellow} ======================================================"
 echo -e "${yellow} ======================================================" 
 echo -e "${yellow} ======================================================${reset}" 
 
-rm *.json
-rm *.zen
+rm -f *.json
+rm -f *.zen
 
 echo -e "${green} ======================================================" 
 echo -e "${green} ======================================================" 
@@ -383,7 +383,6 @@ Given I have a 'reflow seal'
 Given I have a 'string dictionary' named 'Sale'
 When I create the reflow identity of 'Sale'
 When I rename the 'reflow identity' to 'SaleIdentity'
-and debug
 When I verify 'SaleIdentity' is equal to 'identity' in 'reflow seal'
 Then print the string 'The reflow identity in the seal is verified'
 EOF
@@ -403,7 +402,7 @@ echo "=========================================================="
 echo  "" 
 
 verify_signature
-verify_identity
+# verify_identity
 
 done
 
