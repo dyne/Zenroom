@@ -1,24 +1,30 @@
--- This file is part of Zenroom (https://zenroom.dyne.org)
+--[[
+--This file is part of zenroom
 --
--- Copyright (C) 2020 Dyne.org foundation
--- Implementation by Alberto Ibrisevic and Denis Roio
+--Copyright (C) 2020-2021 Dyne.org foundation
+--Implementation by Alberto Ibrisevic and Denis Roio
+
+--designed, written and maintained by Denis Roio <jaromil@dyne.org>
 --
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU Affero General Public License as
--- published by the Free Software Foundation, either version 3 of the
--- License, or (at your option) any later version.
+--This program is free software: you can redistribute it and/or modify
+--it under the terms of the GNU Affero General Public License v3.0
 --
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU Affero General Public License for more details.
+--This program is distributed in the hope that it will be useful,
+--but WITHOUT ANY WARRANTY; without even the implied warranty of
+--MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--GNU Affero General Public License for more details.
 --
--- You should have received a copy of the GNU Affero General Public License
--- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+--Along with this program you should have received a copy of the
+--GNU Affero General Public License v3.0
+--If not, see http://www.gnu.org/licenses/agpl.txt
+--
+--Last modified by Denis Roio
+--on Tuesday, 20th July 2021
+--]]
 
 
 --prime modulus of the coordinates of ECP and order of the curve
-p = 13143624632111687734396218524029004720845126870820156444247788574162855139416800818697211380413727823476285338464427
+p = ECP.prime()
 o = ECP.order()
 --generator of the curve
 G = ECP.generator()

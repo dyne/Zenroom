@@ -1,26 +1,26 @@
--- This file is part of Zenroom (https://zenroom.dyne.org)
+--[[
+--This file is part of zenroom
 --
--- Copyright (C) 2020 Dyne.org foundation
--- Written by Denis Roio <jaromil@dyne.org>
+--Copyright (C) 2020-2021 Dyne.org foundation
+--designed, written and maintained by Denis Roio <jaromil@dyne.org>
 --
--- Elgamal based Additive Homomorphic commitment scheme 
+--This program is free software: you can redistribute it and/or modify
+--it under the terms of the GNU Affero General Public License v3.0
 --
--- This program is free software: you can redistribute it and/or modify
--- it under the terms of the GNU Affero General Public License as
--- published by the Free Software Foundation, either version 3 of the
--- License, or (at your option) any later version.
+--This program is distributed in the hope that it will be useful,
+--but WITHOUT ANY WARRANTY; without even the implied warranty of
+--MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--GNU Affero General Public License for more details.
 --
--- This program is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU Affero General Public License for more details.
+--Along with this program you should have received a copy of the
+--GNU Affero General Public License v3.0
+--If not, see http://www.gnu.org/licenses/agpl.txt
 --
--- You should have received a copy of the GNU Affero General Public License
--- along with this program.  If not, see <https://www.gnu.org/licenses/>.
+--Last modified by Denis Roio
+--on Tuesday, 20th July 2021
+--]]
 
--- This scheme is not efficiently decryptable, since decrypting needs
--- to solve the discrete log problem. If numbers are from a small
--- range, this is useful. Otherwise using Paillier is more convenient.
+-- Elgamal based Additive Homomorphic commitment scheme 
 
 local elgah = {
    _VERSION = 'crypto_elgamal.lua 0.5',

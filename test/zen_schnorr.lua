@@ -1,5 +1,26 @@
-o = ECP.order()
-print("Curver Order size in bytes:".. #o)
+--[[
+--This file is part of zenroom
+--
+--Copyright (C) 2020-2021 Dyne.org foundation
+--written by Alberto Ibrisevich
+--
+--This program is free software: you can redistribute it and/or modify
+--it under the terms of the GNU Affero General Public License v3.0
+--
+--This program is distributed in the hope that it will be useful,
+--but WITHOUT ANY WARRANTY; without even the implied warranty of
+--MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--GNU Affero General Public License for more details.
+--
+--Along with this program you should have received a copy of the
+--GNU Affero General Public License v3.0
+--If not, see http://www.gnu.org/licenses/agpl.txt
+--
+--Last modified by Denis Roio
+--on Tuesday, 20th July 2021
+--]]
+
+local O = ECP.order()
 --generator of the curve
 G = ECP.generator()
 
@@ -14,7 +35,7 @@ function keygen()
     repeat
 --        sk = OCTET.random(32)
         d = BIG.new(OCTET.random(32))
-        if  o <= d then d = false end --guaranties that the generated keypair is valid
+        if  O <= d then d = false end --guaranties that the generated keypair is valid
 
     until (d)
     -- check public y is even 
@@ -27,7 +48,7 @@ function pubkey(sk)
     -- assert(#sk == 32, 'invalid secret key: length is not of 32B')
     -- local d = BIG.new(sk)
     assert(sk ~= BIG.new(0), 'invalid secret key, is zero')
-    assert(sk <= o, 'invalid secret key, overflow with curve order')
+    assert(sk <= O, 'invalid secret key, overflow with curve order')
     return(sk*G)
 end
 
@@ -50,15 +71,15 @@ function Sign(sk, m)
         local h = hash_tag("BIP0340/aux", a)
         local t = OCTET.xor(d:octet(), h)
         local rand = hash_tag("BIP0340/nonce", t..((P:x()):octet())..m)
-        k = BIG.new(rand) % o  --maybe it is not needed since o is bigger
+        k = BIG.new(rand) % O  --maybe it is not needed since o is bigger
     until k ~= BIG.new(0)
     local R = k*G
-    if (R:y() % BIG.new(2)) ~= BIG.new(0) then k = o - k end
+    if (R:y() % BIG.new(2)) ~= BIG.new(0) then k = O - k end
     -- TODO: BIP string in challenge?
     -- local e = BIG.new(hash_tag("BIP0340/challenge", ((R:x()):octet())..((P:x()):octet())..m)) % o
-    local e = BIG.new( ZKP_challenge({R:x(), P:x(), m}) ) % o
+    local e = BIG.new( ZKP_challenge({R:x(), P:x(), m}) ) % O
     local r = (R:x()):octet():pad(48) --padding is fundamental, otherwise we could lose non-significant zeros
-    local s = BIG.mod(k + e*d, o):octet():pad(32)
+    local s = BIG.mod(k + e*d, O):octet():pad(32)
     -- local sig = r..s
     return ({r = BIG.new(r),
              s = BIG.new(s)})
@@ -73,10 +94,6 @@ function Sign(sk, m)
     -- return sig
 end
 
-    -- TODO: what is this constant?
-    -- this is the PRIME of the curve in use TODO: ECP.prime()
-    local prime = BIG.new(OCTET.from_hex('5565569564AB6EB5A06DADC41FEA9284A0AD462CF365A511AC31B801696124F47A8C3F298A64852BDA371D6485AAB0AB'))
-
 function Verify(P, m, sig)
     -- local P = pk --ECP.new(BIG.new(pk))
     assert(P, "lifting failed")
@@ -86,13 +103,13 @@ function Verify(P, m, sig)
 --    local r_arr, s_arr = OCTET.chop(sig,48)
 --    local r = BIG.new(r_arr)
 --     I.print({r = r})
-    assert(sig.r <= prime, "Verification failed, r overflows p")
+    assert(sig.r <= ECP.prime(), "Verification failed, r overflows p")
 --    local s = BIG.new(s_arr)
     --print("s = ", s)
-    assert(sig.s <= o, "Verification failed, s overflows o")
-    local e = BIG.new( ZKP_challenge({sig.r, P:x(), m}) ) % o
+    assert(sig.s <= O, "Verification failed, s overflows o")
+    local e = BIG.new( ZKP_challenge({sig.r, P:x(), m}) ) % O
 
---    local e = BIG.new(hash_tag("BIP0340/challenge", sig.r:octet()..(P:x()):octet()..m)) % o 
+--    local e = BIG.new(hash_tag("BIP0340/challenge", sig.r:octet()..(P:x()):octet()..m)) % O
     local R = (sig.s*G) - (e*P) 
     -- I.print({R = R})
     assert(not ECP.isinf(R), "Verification failed, point to infinity")
@@ -107,8 +124,9 @@ m = OCTET.random(32)
 --print(m)
 secret = keygen()
 public = pubkey(secret)
-print(public)
-print('\n')
+
+print("sk: "..secret:octet():base64())
+print("pk: "..public:octet():base64())
 --ok
 
 print("--------Signing phase--------")
@@ -120,8 +138,8 @@ print('\n')
 
 print("--------Verification phase--------")
 if Verify(public, m, firma) then 
-    print('\n')
-    print("Verification passed") 
+    print("  OK Verification passed")
+    print''
 end
 
 

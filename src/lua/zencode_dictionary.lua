@@ -17,11 +17,8 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Wednesday, 14th July 2021
+--on Tuesday, 20th July 2021
 --]]
-
-
-
 
 -- this is a map reduce function processing a single argument as
 -- values found, it uses function pointers and conditions from the
