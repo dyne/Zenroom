@@ -406,7 +406,7 @@ local function sort_apply(fun,t,...)
    if luatype(t) ~= 'table' then
 	  error("Internal error: apply 2nd argument is not a table", 3)
 	  return nil end
-   for k,v in pairs(t) do -- OPTIMIZATION: was sort_pairs
+   for k,v in sort_pairs(t) do -- OPTIMIZATION: was sort_pairs
 	  if luatype(v) == 'table' then
 		 sort_apply(fun,v,...) -- recursion
 	  else
