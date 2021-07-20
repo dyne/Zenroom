@@ -73,13 +73,15 @@ INSPECT = require('inspect')
 CBOR = require('zenroom_cbor')
 JSON = require('zenroom_json')
 OCTET = require('zenroom_octet')
+BIG = require'big'
+ECDH = require'ecdh'
+AES = require'aes'
 ECP = require('zenroom_ecp')
 ECP2 = require('zenroom_ecp2')
 HASH = require('zenroom_hash')
 BENCH = require('zenroom_bench')
 MACHINE = require('statemachine')
 TIME = require('timetable')
-
 O = OCTET -- alias
 INT = BIG -- alias
 I = INSPECT -- alias

@@ -153,9 +153,9 @@ zexe() {
 	shift 1
 	echo >&2
 	echo "====================================" >&2
-	>&2 echo "test: $out"
+	>&2 echo "== TEST: $out"
 	t=`mktemp -d`
-	>&2 echo $t
+	# >&2 echo $t
 	if [[ "$is_cortexm" == true ]]; then
 		local args="$*"
 		tee "$out" | qemu_zenroom_run "$args" "-z" "$out" 2>$t/stderr && cat ./outlog>$t/stdout
@@ -168,7 +168,7 @@ zexe() {
 	else 
 		set -o pipefail
 		tee "$out" | tee "$docs" | \
-                MALLOC_PERTURB_=$(($RANDOM % 255 + 1)) \
+                MALLOC_PERTURB_=$(( $RANDOM % 255 + 1 )) \
 			$Z -z $* 2>$t/stderr 1>$t/stdout
 	fi
 	res=$?
@@ -193,7 +193,6 @@ zexe() {
 		exit
 	fi
 	rm -rf "$t"
-	echo "====================================" >&2
 	return $res
 }
 
@@ -201,6 +200,7 @@ save() {
 	here="./"
 	docs="../../docs/examples/zencode_cookbook/$1"
 	mkdir -p ${docs}
+	>&2 echo "output: $2"
 	if [[ "${2##*.}" == "json" ]]; then
 		if command -v jq > /dev/null; then
 			tee ${here}/"$2" | tee ${docs}/"$2" | jq .
@@ -208,6 +208,7 @@ save() {
 	else
 		tee ${here}/"$2" > ${docs}/"$2"
 	fi
+	>&2 echo "===================================="
 }
 
 success() {
