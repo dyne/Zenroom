@@ -99,11 +99,11 @@ echo "OK $1"
 
 # generate  signed credentials
 generate_participant "Alice"
-generate_participant "Bob"
-generate_participant "Carl"
+# generate_participant "Bob"
+# generate_participant "Carl"
 
 echo "# join the verifiers of signed credentials"
-json_join public_key_Alice.json public_key_Bob.json public_key_Carl.json > public_keys.json
+cp -v public_key_Alice.json  public_keys.json
 echo "{\"public_keys\": `cat public_keys.json` }" > public_key_array.json
 
 cat public_key_array.json | save reflow public_key_array.json
@@ -164,8 +164,8 @@ EOF
 }
 
 participant_sign 'Alice'
-participant_sign 'Bob'
-participant_sign 'Carl'
+# participant_sign 'Bob'
+# participant_sign 'Carl'
 
 function collect_sign() {
 	local name=$1
@@ -191,8 +191,8 @@ EOF
 
 # COLLECT UNIQUE SIGNATURES
 collect_sign 'Alice'
-collect_sign 'Bob'
-collect_sign 'Carl'
+# collect_sign 'Bob'
+# collect_sign 'Carl'
 
 
 # VERIFY SIGNATURE
