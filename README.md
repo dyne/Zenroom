@@ -30,6 +30,37 @@ introduction to the love we put in craftsmanship.
 
 **Zenroom is licensed as AGPLv3; we are open to grant exceptions on a commercial basis.**
 
+## Applications
+
+Many applications already include Zenroom and use the Zencode language.
+
+- [Global Passport Project](https://globalpassportproject.org)
+- [Keypairoom mnemonic deterministic and private keypairs](https://github.com/LedgerProject/keypairoom)
+- [Simple Android app to show how to use Zenroom libs](https://github.com/dyne/Zenroom-Android-app)
+- [Zexec safe remote execution of signed commands](https://github.com/dyne/zexec)
+- [Micro-service to produce ECDSA signed unix timestamps](https://github.com/dyne/zenstamp)
+- [Sawroom Transaction Processor for Hyperledger Sawtooth](https://github.com/dyne/sawroom)
+- [RedRoom Crypto module for Redis](https://github.com/dyne/redroom)
+- [Lotionroom Tendermint / Cosmos proof of concept with Zenroom](https://github.com/dyne/lotionroom)
+- [ZenSchnorr API for Schnorr signatures](https://github.com/wires/zenschnorr)
+- [Great Dane DNSSEC as a AV store for Zenroom](https://github.com/dyne/great-dane)
+- [Zen-Web-Ext Web extensions encapsulating Zenroom functionality](https://github.com/LedgerProject/zen-web-ext)
+
+## Getting Started
+
+To quickly try out Zenroom using the Zencode language with some
+examples navigate to [ApiRoom](https://apiroom.net) and start typing
+into the browser.
+
+The Zenroom VM runs locally in your browser (needs WASM) and
+[ApiRoom](https://apiroom.net) provides various examples to show
+operational crypto flows.
+
+[ApiRoom](https://apiroom.net) is also an IDE (Integrated Development
+Environment) and by signing in with a username and password you can
+save your contracts and download them as a Dockerfile micro-service
+ready to deploy.
+
 ## Build
 
 Dependencies: makefile, cmake, zsh, gcc
@@ -58,19 +89,31 @@ make
 
 to list more available targets
 
+### Meson + Ninja
+
+Practical build scripts for release are provided using Meson + Ninja
+
+```
+meson builddir meson
+ninja -C builddir
+```
+
+Will produce a `zenroom` executable and a `libzenroom` shared lib in `builddir`.
 
 ## License
 
-Copyright (C) 2017-2020 Dyne.org foundation
+Copyright (C) 2017-2021 Dyne.org foundation
 
-Designed and written by Denis Roio with the help of Puria Nafisi Azizi
+Designed and written by Denis Roio with the help of Puria Nafisi Azizi and Andrea D'Intino.
 
-documentation and testing by Andrea D'Intino
+Reviews and suggestions contributed by: Richard Stallman, Daniele
+Lacamera, Enrico Zimuel, Sofía Celi, Sebastian Blichfeld, Danilo
+Spinella, Adam Burns and Thomas Fuerstner.
 
-seccomp isolation and microkernel port by Daniele Lacamera
-
-reviews and suggestions contributed by: Richard Stallman, Enrico
-Zimuel and Sofía Celi
+Zenroom redistributes:
+- Lua 5.3 - Copyright © 1994–2019 Lua.org, PUC-Rio.
+- Apache Milagro Crypto Library (AMCL)
+- Various Lua libraries released under MIT license
 
 Special thanks to our colleagues in the DECODE project Francesca
 Bria, George Danezis, Ola Bini, Mark de Villiers, Ivan Jelincic,
