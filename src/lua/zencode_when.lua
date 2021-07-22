@@ -25,6 +25,12 @@
 -- nop to terminate IF blocks 
 When("done", function() end)
 
+When("delete ''", function(src)
+	have(src)
+	ACK[src] = nil
+	ZEN.CODEC[src] = nil
+end)
+
 When("append '' to ''", function(src, dest)
 	local val = have(src)
 	local dst = have(dest)
@@ -204,6 +210,12 @@ local function _math_op(op, l, r)
 	end
 	return op(left, right), codec
 end
+
+When("create the result of '' inverted sign", function(left)
+	local l = have(left)
+	empty 'result'
+	ACK.result, ZEN.CODEC.result = _math_op(_sub, 0, l)
+end)
 
 When("create the result of '' + ''", function(left,right)
 	local l = have(left)
