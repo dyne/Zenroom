@@ -1,10 +1,6 @@
-#[macro_use]
-extern crate thiserror;
-#[macro_use]
-extern crate lazy_static;
-
 use std::ffi::{CStr, CString};
-use std::sync::Mutex;
+use std::fmt;
+use std::sync::{Mutex, MutexGuard, Once};
 
 mod c {
     #![allow(non_upper_case_globals)]
@@ -21,16 +17,41 @@ pub struct ZenResult {
     pub logs: String,
 }
 
-#[derive(Clone, Debug, Error)]
+#[derive(Clone, Debug)]
 pub enum ZenError {
-    #[error("Execution Error:\n{}", .0.logs)]
     Execution(ZenResult),
-    #[error("Invalid Input: {0}")]
-    InvalidInput(#[from] std::ffi::NulError),
+    InvalidInput(std::ffi::NulError),
 }
 
-lazy_static! {
-    static ref ZEN_GIL: Mutex<()> = Mutex::new(());
+impl From<std::ffi::NulError> for ZenError {
+    fn from(err: std::ffi::NulError) -> Self {
+        Self::InvalidInput(err)
+    }
+}
+
+impl fmt::Display for ZenError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Execution(err) => f.write_fmt(format_args!("Execution Error:\n{}", err.logs)),
+            Self::InvalidInput(err) => f.write_fmt(format_args!("Invalid input: {}", err)),
+        }
+    }
+}
+
+impl std::error::Error for ZenError {}
+
+type ZenGIL = MutexGuard<'static, ()>;
+
+fn aquire_zen_gil() -> ZenGIL {
+    static mut MUTEX: *const Mutex<()> = std::ptr::null();
+    static ONCE: Once = Once::new();
+    let mutex: &Mutex<()> = unsafe {
+        ONCE.call_once(|| {
+            MUTEX = std::mem::transmute(Box::new(Mutex::new(())));
+        });
+        MUTEX.as_ref().unwrap()
+    };
+    mutex.lock().unwrap()
 }
 
 const BUF_SIZE: usize = 2 * 1024 * 1024;
@@ -76,7 +97,7 @@ fn exec_f(
     let mut stderr = Vec::<i8>::with_capacity(BUF_SIZE);
     let stderr_ptr = stderr.as_mut_ptr();
 
-    let lock = ZEN_GIL.lock().unwrap();
+    let lock = aquire_zen_gil();
     let exit_code = unsafe {
         fun(
             CString::new(script)?.into_raw(),
