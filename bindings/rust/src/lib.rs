@@ -116,7 +116,7 @@ fn exec_f(
         output: unsafe { CStr::from_ptr(stdout_ptr) }
             .to_string_lossy()
             .into_owned(),
-        logs: unsafe { CStr::from_ptr(stdout_ptr) }
+        logs: unsafe { CStr::from_ptr(stderr_ptr) }
             .to_string_lossy()
             .into_owned(),
     };
