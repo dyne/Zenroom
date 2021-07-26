@@ -11,6 +11,10 @@ docs/website/site
 docs/website/docs/lua
 docs/website/docs/wiki
 
+# meson
+builddir
+meson
+
 # generated code in zenroom
 src/lualibs_detected.c
 src/zen_big_factory.h

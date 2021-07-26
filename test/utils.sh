@@ -13,7 +13,7 @@ detect_zenroom_path() {
 		echo $ZENROOM
 		exit 0
 	fi
-	zenroom_paths=( "$PWD" "$PWD/../../src" "$PWD/../src" "$PWD/src"
+	zenroom_paths=( "$PWD" "$PWD/../../src" "$PWD/../src" "$PWD/src" "$PWD/meson"
 					"/usr/local/bin" "/usr/bin" "/bin" "$PWD/../.." "$PWD/..")
 	zenroom_path="/usr/local/bin/zenroom"
 	case $OSTYPE in

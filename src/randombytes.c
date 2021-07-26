@@ -233,6 +233,7 @@ static int randombytes_linux_randombytes_urandom(void *buf, size_t n)
 		n -= tmp;
 	}
 	assert(n == 0);
+	close(fd);
 	return 0;
 }
 #endif /* defined(__linux__) */

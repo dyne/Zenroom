@@ -61,6 +61,7 @@ And I rename the 'cbor' to 'myArrayRenderedToCBOR'
 # in the same script, so the second would overwrite the first. In reality you never want to 
 # rename a keypair, as its schema is hardcoded in Zenroom and cryptographically it doesn't make sense
 # to use more than one keypair in the same script.
+When I rename the 'keypair' to 'GivenKeypair'
 When I create the keypair
 and I rename the 'keypair' to 'keypairFromRandom'
 
