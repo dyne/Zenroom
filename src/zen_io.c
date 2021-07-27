@@ -19,15 +19,16 @@
  */
 
 #include <stdio.h>
+#include <unistd.h>
 #include <ctype.h>
 #include <errno.h>
-#include <jutils.h>
 
-#include <lauxlib.h>
 
 #include <zenroom.h>
 #include <zen_error.h>
 #include <zen_octet.h>
+
+#include <lauxlib.h>
 
 #ifdef __ANDROID__
 #include <android/log.h>

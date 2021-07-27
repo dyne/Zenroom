@@ -1,34 +1,54 @@
-/* This file is part of Zenroom (https://zenroom.dyne.org)
- *
- * Copyright (C) 2017-2019 Dyne.org foundation
+/*
+ * This file is part of zenroom
+ * 
+ * Copyright (C) 2017-2021 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
- *
+ * 
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
+ * it under the terms of the GNU Affero General Public License v3.0
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- *
+ * 
+ * Along with this program you should have received a copy of the
+ * GNU Affero General Public License v3.0
+ * If not, see http://www.gnu.org/licenses/agpl.txt
+ * 
+ * Last modified by Denis Roio
+ * on Tuesday, 27th July 2021
  */
 
 #ifndef __ZEN_ERROR_H__
 #define __ZEN_ERROR_H__
 
+#include <stdlib.h>
+#include <string.h>
 #include <stdarg.h>
 #include <lua.h>
 
 int lerror(lua_State *L, const char *fmt, ...);
-int zencode_traceback(lua_State *L);
+// int zencode_traceback(lua_State *L);
+
+void notice(lua_State *L, const char *format, ...);
+void func(void *L, const char *format, ...);
+void error(lua_State *L, const char *format, ...);
+void act(lua_State *L, const char *format, ...);
+void warning(lua_State *L, const char *format, ...);
+
+// from stb_sprintf.h
+int z_sprintf(char *buf, char const *fmt, ...);
+int z_snprintf(char *buf, int count, char const *fmt, ...);
+int z_vsprintf(char *buf, char const *fmt, va_list va);
+int z_vsnprintf(char *buf, int count, char const *fmt, va_list va);
 
 #define ERROR() error(0, "Error in %s",__func__)
 #define SAFE(x) if(!x) lerror(L, "NULL variable in %s",__func__)
+
+void set_debug(int lev);
+int get_debug();
+void set_color(int on);
 
 // useful for debugging
 #if DEBUG == 1

@@ -20,7 +20,7 @@
 
 #include <unistd.h>
 #include <ctype.h>
-#include <jutils.h>
+#include <zen_error.h>
 #include <zenroom.h>
 
 #include <lua.h>
