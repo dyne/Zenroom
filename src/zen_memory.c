@@ -30,8 +30,6 @@ extern zen_mem_t *MEM;
 #ifdef USE_JEMALLOC
 #define JEMALLOC_NO_DEMANGLE
 #include <jemalloc/jemalloc.h>
-#else
-#include <malloc.h>
 #endif
 
 // disable thread-safety of LWMEM
