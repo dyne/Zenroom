@@ -110,7 +110,6 @@ zenroom_src = [
     '../src/base58.c',
     '../src/cortex_m.c',
     '../src/encoding.c',
-    '../src/jutils.c',
     '../src/lua_functions.c',
     '../src/lualibs_detected.c',
     '../src/lua_modules.c',
@@ -218,9 +217,10 @@ lua_tests = [
     'test/crypto_credential.lua',
 ]
 
-# foreach test_file : lua_tests
-#     test(test_file.underscorify(), zenroom_exe, args: [test_file])
-# endforeach
+# test_dir = meson.source_root() + '/../'
+foreach test_file : lua_tests
+    test(test_file.underscorify(), zenroom_exe, args: ['../'+test_file])
+endforeach
 
 test_dir = meson.source_root() + '/../test/'
 
@@ -240,7 +240,7 @@ foreach zencode_test : zencode_tests
         zencode_test,
         test_script,
         env: [
-            'ZENROOM=' + zenroom_exe.full_path()
+            'ZENROOM=' + zenroom_exe.full_path(),
         ],
         workdir: test_dir + zencode_test
     )
@@ -249,9 +249,36 @@ endforeach
 zencode_cookbook_script = find_program(test_dir + 'zencode_cookbook/run-all.sh')
 test(
     'zencode_cookbook',
-    test_script,
+    zencode_cookbook_script,
     env: [
         'ZENROOM=' + zenroom_exe.full_path()
+    ],
+    workdir: test_dir + 'zencode_cookbook'
+)
+test(
+    'zencode_cookbook mem=lw',
+    zencode_cookbook_script,
+    env: [
+        'ZENROOM=' + zenroom_exe.full_path(),
+	'MEMMANAGER=lw'
+    ],
+    workdir: test_dir + 'zencode_cookbook'
+)
+test(
+    'zencode_cookbook print=stb',
+    zencode_cookbook_script,
+    env: [
+        'ZENROOM=' + zenroom_exe.full_path(),
+	'PRINT=stb'
+    ],
+    workdir: test_dir + 'zencode_cookbook'
+)
+test(
+    'zencode_cookbook print=mutt',
+    zencode_cookbook_script,
+    env: [
+        'ZENROOM=' + zenroom_exe.full_path(),
+	'PRINT=mutt'
     ],
     workdir: test_dir + 'zencode_cookbook'
 )

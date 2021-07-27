@@ -27,7 +27,7 @@
 // rngseed=hex:[256 bytes in hex notation]
 // memmanager=sys|lw|je
 // memwipe=0,1
-// print=sys|stb
+// print=sys|stb|mutt
 ///////////////////////
 
 #include <strings.h>
