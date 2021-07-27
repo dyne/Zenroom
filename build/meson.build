@@ -214,7 +214,7 @@ lua_tests = [
     'test/elgamal.lua',
     'test/bls_pairing.lua',
     'test/coconut_test.lua',
-    'test/crypto_credential.lua',
+    'test/crypto_credential.lua'
 ]
 
 # test_dir = meson.source_root() + '/../'
@@ -232,6 +232,7 @@ zencode_tests = [
     'zencode_credential',
     'zencode_petition',
     'zencode_reflow',
+    'zencode_cookbook',
 ]
 
 foreach zencode_test : zencode_tests
@@ -246,39 +247,14 @@ foreach zencode_test : zencode_tests
     )
 endforeach
 
-zencode_cookbook_script = find_program(test_dir + 'zencode_cookbook/run-all.sh')
-test(
-    'zencode_cookbook',
-    zencode_cookbook_script,
-    env: [
-        'ZENROOM=' + zenroom_exe.full_path()
-    ],
-    workdir: test_dir + 'zencode_cookbook'
-)
-test(
-    'zencode_cookbook mem=lw',
-    zencode_cookbook_script,
-    env: [
-        'ZENROOM=' + zenroom_exe.full_path(),
-	'MEMMANAGER=lw'
-    ],
-    workdir: test_dir + 'zencode_cookbook'
-)
-test(
-    'zencode_cookbook print=stb',
-    zencode_cookbook_script,
-    env: [
-        'ZENROOM=' + zenroom_exe.full_path(),
-	'PRINT=stb'
-    ],
-    workdir: test_dir + 'zencode_cookbook'
-)
-test(
-    'zencode_cookbook print=mutt',
-    zencode_cookbook_script,
-    env: [
-        'ZENROOM=' + zenroom_exe.full_path(),
-	'PRINT=mutt'
-    ],
-    workdir: test_dir + 'zencode_cookbook'
-)
+zencode_cookbook_script = find_program(test_dir + 'zencode_cookbook/run.sh')
+test( 'zencode_cookbook memmanager=lw', zencode_cookbook_script,
+    env: [ 'ZENROOM=' + zenroom_exe.full_path(), 'MEMMANAGER=lw' ],
+    workdir: test_dir + 'zencode_cookbook')
+test( 'zencode_cookbook print=stb', zencode_cookbook_script,
+    env: [ 'ZENROOM=' + zenroom_exe.full_path(), 'PRINT=stb' ],
+    workdir: test_dir + 'zencode_cookbook')
+test( 'zencode_cookbook print=mutt', zencode_cookbook_script,
+    env: [ 'ZENROOM=' + zenroom_exe.full_path(), 'PRINT=mutt' ],
+    workdir: test_dir + 'zencode_cookbook')
+
