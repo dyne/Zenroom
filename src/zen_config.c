@@ -75,9 +75,9 @@
 extern void set_debug(int lev);
 extern void set_color(int on);
 
-#include <jutils.h>
 #include <zenroom.h>
 #include <zen_memory.h>
+#include <zen_error.h>
 #include <zen_config.h>
 
 #include <stb_c_lexer.h>

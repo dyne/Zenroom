@@ -17,7 +17,7 @@
  * If not, see http://www.gnu.org/licenses/agpl.txt
  * 
  * Last modified by Denis Roio
- * on Monday, 21st June 2021
+ * on Tuesday, 27th July 2021
  */
 
 #ifndef LIBRARY
@@ -41,13 +41,15 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
-#include <jutils.h>
-
 #include <lua_functions.h>
 #include <repl.h>
 
 #include <zenroom.h>
 #include <zen_memory.h>
+#include <zen_error.h>
+
+#include <sys/types.h>
+#include <unistd.h>
 
 #if defined(ARCH_LINUX)
 #include <sys/prctl.h>

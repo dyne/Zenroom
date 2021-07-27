@@ -51,7 +51,6 @@
 
 #include <zen_ecp_factory.h>
 
-#include <jutils.h>
 #include <zen_error.h>
 #include <zen_octet.h>
 #include <zen_ecp.h>

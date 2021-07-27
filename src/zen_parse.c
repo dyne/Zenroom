@@ -24,15 +24,11 @@
 // #include <stdio.h>
 #include <ctype.h>
 #include <strings.h>
-// #include <errno.h>
-// #include <jutils.h>
 
 #include <zenroom.h>
 #include <zen_memory.h>
 #include <zen_error.h>
-#include <jutils.h>
 
-#include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
 

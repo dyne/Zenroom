@@ -39,7 +39,6 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
-#include <jutils.h>
 #include <zen_error.h>
 #include <lua_functions.h>
 

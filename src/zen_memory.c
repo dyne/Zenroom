@@ -20,9 +20,9 @@
 
 #include <errno.h>
 #include <stdlib.h>
-#include <jutils.h>
 
 #include <zenroom.h>
+#include <zen_error.h>
 
 // global memory manager in zenroom.c
 extern zen_mem_t *MEM;
@@ -30,11 +30,15 @@ extern zen_mem_t *MEM;
 #ifdef USE_JEMALLOC
 #define JEMALLOC_NO_DEMANGLE
 #include <jemalloc/jemalloc.h>
+#else
+#include <malloc.h>
 #endif
 
+// disable thread-safety of LWMEM
 #define LWMEM_CFG_OS 0
 #include <lwmem.h>
 
+// posix memalign used in LWMEM
 void *zen_memalign(const size_t size, const size_t align) {
 	void *mem = NULL;
 	// preserve const values as they seem to be overwritten by calls
@@ -50,7 +54,6 @@ void *zen_memalign(const size_t size, const size_t align) {
 // v |= v >> 16;
 // v++;
 // // from https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
-	(void)valign;
 # if defined(_WIN32)
 	mem = __mingw_aligned_malloc(vsize, valign);
 	if(!mem) {
