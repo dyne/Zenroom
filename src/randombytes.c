@@ -232,6 +232,7 @@ static int randombytes_linux_randombytes_urandom(void *buf, size_t n)
 		offset += tmp;
 		n -= tmp;
 	}
+	close(fd);
 	assert(n == 0);
 	return 0;
 }
