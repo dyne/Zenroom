@@ -35,7 +35,7 @@ CORTEX_M_CFLAGS = \
 	       -nostartfiles
 		   
 SOURCES := \
-	cli.o jutils.o zenroom.o zen_error.o \
+	cli.o zenroom.o zen_error.o \
 	lua_functions.o lua_modules.o lualibs_detected.o lua_shims.o \
 	encoding.o base58.o \
 	zen_memory.o lwmem.o mutt_sprintf.o \
