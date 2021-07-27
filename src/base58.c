@@ -6,7 +6,7 @@
  */
 
 #include <stddef.h>
-// #include <stdint.h>
+#include <stdint.h>
 #include <string.h>
 #include <sys/types.h>
 #include <stdio.h>
@@ -25,28 +25,37 @@ const int8_t b58digits_map[] = {
 
 const char b58digits_ordered[] = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
+typedef uint64_t b58_maxint_t;
+typedef uint32_t b58_almostmaxint_t;
+#define b58_almostmaxint_bits (sizeof(b58_almostmaxint_t) * 8)
+static const b58_almostmaxint_t b58_almostmaxint_mask = ((((b58_maxint_t)1) << b58_almostmaxint_bits) - 1);
+
+
 // const char err_highbit[] = "High bit set on invalid digit";
 // const char err_digit[] = "Invalid base58 digit";
 			// Output number too big (carry to the next int32)
 			// Output number too big (last int32 filled too far)
 
-int b58tobin(void *bin, size_t *binszp, const char *b58, size_t b58sz) {
+int b58tobin(void *bin, size_t *binszp, const char *b58, size_t b58sz)
+{
 	size_t binsz = *binszp;
 	const unsigned char *b58u = (void*)b58;
 	unsigned char *binu = bin;
-	size_t outisz = (binsz + 3) / 4;
-	uint32_t outi[outisz];
-	uint64_t t;
-	uint32_t c;
+	size_t outisz = (binsz + sizeof(b58_almostmaxint_t) - 1) / sizeof(b58_almostmaxint_t);
+	b58_almostmaxint_t outi[outisz];
+	b58_maxint_t t;
+	b58_almostmaxint_t c;
 	size_t i, j;
-	uint8_t bytesleft = binsz % 4;
-	uint32_t zeromask = bytesleft ? (0xffffffff << (bytesleft * 8)) : 0;
+	uint8_t bytesleft = binsz % sizeof(b58_almostmaxint_t);
+	b58_almostmaxint_t zeromask = bytesleft ? (b58_almostmaxint_mask << (bytesleft * 8)) : 0;
 	unsigned zerocount = 0;
 	
 	if (!b58sz)
 		b58sz = strlen(b58);
 	
-	memset(outi, 0, outisz * sizeof(*outi));
+	for (i = 0; i < outisz; ++i) {
+		outi[i] = 0;
+	}
 	
 	// Leading zeros, just count
 	for (i = 0; i < b58sz && b58u[i] == '1'; ++i)
@@ -63,9 +72,9 @@ int b58tobin(void *bin, size_t *binszp, const char *b58, size_t b58sz) {
 		c = (unsigned)b58digits_map[b58u[i]];
 		for (j = outisz; j--; )
 		{
-			t = ((uint64_t)outi[j]) * 58 + c;
-			c = (t & 0x3f00000000) >> 32;
-			outi[j] = t & 0xffffffff;
+			t = ((b58_maxint_t)outi[j]) * 58 + c;
+			c = t >> b58_almostmaxint_bits;
+			outi[j] = t & b58_almostmaxint_mask;
 		}
 		if (c)
 			// Output number too big (carry to the next int32)
@@ -76,24 +85,18 @@ int b58tobin(void *bin, size_t *binszp, const char *b58, size_t b58sz) {
 	}
 	
 	j = 0;
-	switch (bytesleft) {
-		case 3:
-			*(binu++) = (outi[0] &   0xff0000) >> 16;
-		case 2:
-			*(binu++) = (outi[0] &     0xff00) >>  8;
-		case 1:
-			*(binu++) = (outi[0] &       0xff);
-			++j;
-		default:
-			break;
+	if (bytesleft) {
+		for (i = bytesleft; i > 0; --i) {
+			*(binu++) = (outi[0] >> (8 * (i - 1))) & 0xff;
+		}
+		++j;
 	}
 	
 	for (; j < outisz; ++j)
 	{
-		*(binu++) = (outi[j] >> 0x18) & 0xff;
-		*(binu++) = (outi[j] >> 0x10) & 0xff;
-		*(binu++) = (outi[j] >>    8) & 0xff;
-		*(binu++) = (outi[j] >>    0) & 0xff;
+		for (i = sizeof(*outi); i > 0; --i) {
+			*(binu++) = (outi[j] >> (8 * (i - 1))) & 0xff;
+		}
 	}
 	
 	// Count canonical base58 byte count
@@ -109,10 +112,11 @@ int b58tobin(void *bin, size_t *binszp, const char *b58, size_t b58sz) {
 	return 1;
 }
 
-int b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz) {
+int b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz)
+{
 	const uint8_t *bin = data;
 	int carry;
-	ssize_t i, j, high, zcount = 0;
+	size_t i, j, high, zcount = 0;
 	size_t size;
 	
 	while (zcount < binsz && !bin[zcount])
@@ -129,6 +133,10 @@ int b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz) {
 			carry += 256 * buf[j];
 			buf[j] = carry % 58;
 			carry /= 58;
+			if (!j) {
+				// Otherwise j wraps to maxint which is > high
+				break;
+			}
 		}
 	}
 	
@@ -149,4 +157,3 @@ int b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz) {
 	
 	return 1;
 }
-
