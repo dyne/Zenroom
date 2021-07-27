@@ -45,7 +45,6 @@ ZENROOM_SOURCES = [
     'cli.c',
     'cortex_m.c',
     'encoding.c',
-    'jutils.c',
     'lua_functions.c',
     'lualibs_detected.c',
     'lua_modules.c',
