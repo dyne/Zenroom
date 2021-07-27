@@ -168,16 +168,3 @@ void warning(lua_State *L, const char *format, ...) {
 }
 
 #endif
-
-// secure comparison of null terminated strings
-short compare(const char *left, const char *right, size_t len) {
-	if(!left || !right) return 0;
-	register unsigned int i;
-	for (i=0; i<len; i++) {
-		if(!left[i] || !right[i]) return 0; // no null
-		if (left[i] ^ right[i]) return 0; // xor for equality
-	}
-	// check null termination
-	if(left[i] || right[i]) return(0);
-	return(1); // return success
-}
