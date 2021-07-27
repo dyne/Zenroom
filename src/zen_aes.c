@@ -24,7 +24,6 @@
 #include <lauxlib.h>
 #include <ecdh_support.h>
 
-#include <jutils.h>
 #include <zen_error.h>
 #include <zen_octet.h>
 #include <randombytes.h>

@@ -78,7 +78,7 @@ static const unsigned char asciitable[256] = {
 };
 
 static const char alpha_U64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-static const char alpha_B64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+// static const char alpha_B64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 int B64encoded_len(int len) { return ((((len + 2) / 3) <<2) + 1); }
 

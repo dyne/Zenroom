@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <errno.h>
 #include <strings.h>
-#include <jutils.h>
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>

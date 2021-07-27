@@ -21,8 +21,6 @@
 // THE SOFTWARE.
 
 
-#include <jutils.h>
-
 #include "randombytes.h"
 
 #if defined(ARCH_WIN)

@@ -17,7 +17,7 @@
  * If not, see http://www.gnu.org/licenses/agpl.txt
  * 
  * Last modified by Denis Roio
- * on Tuesday, 22nd June 2021
+ * on Tuesday, 27th July 2021
  */
 
 
@@ -50,7 +50,6 @@
 #include <zen_ecp.h>
 #include <zen_ecp_factory.h>
 
-#include <jutils.h>
 #include <zen_error.h>
 #include <zen_octet.h>
 #include <zen_big.h>

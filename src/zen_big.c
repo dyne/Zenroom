@@ -17,7 +17,7 @@
  * If not, see http://www.gnu.org/licenses/agpl.txt
  * 
  * Last modified by Denis Roio
- * on Sunday, 25th April 2021
+ * on Tuesday, 27th July 2021
  */
 
 #include <math.h>
@@ -26,7 +26,6 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
-#include <jutils.h>
 #include <zen_error.h>
 #include <lua_functions.h>
 
