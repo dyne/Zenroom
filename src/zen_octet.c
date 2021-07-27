@@ -697,13 +697,19 @@ static int to_base58(lua_State *L) {
 		// the carry inner loop flips to 18446744073709551615
 		lerror(L,"base58 cannot encode octets smaller than 3 bytes");
 		return 0; }
-	int maxlen = o->len <<1;
-	char *b = zen_memory_alloc(maxlen);
+	size_t maxlen = o->len <<1;
+	// TODO: find out why this breaks!
+	// debug builds work, optimized build breaks here
+	// this workaround will break base58 encoding when using memmanager=lw
+	//char *b = zen_memory_alloc(maxlen);
+	char *b = malloc(maxlen);
+
 	size_t b58len;
 	b58enc(b, &b58len, o->val, o->len);
-	// b[b58len] = '\0'; // already present, but for safety
-	lua_pushlstring(L,b,b58len);
-	zen_memory_free(b);
+	// b[b58len] = '\0'; // already present in libbase58
+	lua_pushstring(L,b);
+	// zen_memory_free(b);
+	free(b);
 	// don't free since its pushed as string in Lua
 	// so the GC will take care of it
 	return 1;
