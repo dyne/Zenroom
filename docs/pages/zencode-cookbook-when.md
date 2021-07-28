@@ -51,6 +51,8 @@ We grouped together all the statements that perform object manipulation, so:
  
  ***Remove*** an element from an array
  
+ ***Copy*** an object into new object
+ 
  ***Copy element of array*** to a new simple object
  
  ***Split string*** using leftmost or rightmost bytes
