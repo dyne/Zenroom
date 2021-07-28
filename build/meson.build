@@ -114,7 +114,6 @@ zenroom_src = [
     '../src/lualibs_detected.c',
     '../src/lua_modules.c',
     '../src/lua_shims.c',
-    '../src/lwmem.c',
     '../src/mutt_sprintf.c',
     '../src/randombytes.c',
     '../src/repl.c',

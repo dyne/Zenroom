@@ -49,7 +49,6 @@ ZENROOM_SOURCES = [
     'lualibs_detected.c',
     'lua_modules.c',
     'lua_shims.c',
-    'lwmem.c',
     'mutt_sprintf.c',
     'randombytes.c',
     'repl.c',
