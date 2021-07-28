@@ -121,11 +121,3 @@ linux-go: apply-patches milagro lua53 embed-lua
 	CC=${gcc} LD=${ld} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src go
 	cp -v ${pwd}/src/libzenroomgo.so ${pwd}/bindings/golang/zenroom/lib/
-
-linux-erlang: cflags += -I $(shell erl -eval 'io:format("~s", [lists:concat([code:root_dir(), "/erts-", erlang:system_info(version), "/include"])])' -s init stop -noshell)
-linux-erlang: cflags += -DLIBRARY
-linux-erlang: apply-patches milagro lua53 embed-lua
-	CC=${gcc} LD=${ld} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-		make -C src erlang
-	cp -v src/zenroom.h src/zenroom.so bindings/erlang/
-	cd bindings/erlang && ./build
