@@ -54,38 +54,37 @@
 #include <randombytes.h>
 
 extern zenroom_t *Z;
-extern zen_mem_t *MEM;
 // small buffer pre-filled with random, used at runtime by some
 // internal functions esp. to wipe out memory (lstring.c)
 uint8_t runtime_random256[256];
 
-void* rng_alloc() {
+void* rng_alloc(zenroom_t *ZZ) {
 	HERE();
-	RNG *rng = (RNG*)(*MEM->malloc)(sizeof(csprng));
+	RNG *rng = (RNG*)malloc(sizeof(csprng));
 	if(!rng) {
 		lerror(NULL, "Error allocating new random number generator in %s",__func__);
 		return NULL; }
 
 	// random seed provided externally 
-	if(Z->random_external) {
-		act(Z->lua,"Random seed is external, deterministic execution");
+	if(ZZ->random_external) {
+		act(ZZ->lua,"Random seed is external, deterministic execution");
 #ifndef ARCH_CORTEX
 	} else {
 		// gather system random using randombytes()
-		randombytes(Z->random_seed,RANDOM_SEED_LEN-4);
+		randombytes(ZZ->random_seed,RANDOM_SEED_LEN-4);
 		// using time() from milagro
 		unsign32 ttmp = (unsign32)time(NULL);
-		Z->random_seed[60] = (ttmp >> 24) & 0xff;
-		Z->random_seed[61] = (ttmp >> 16) & 0xff;
-		Z->random_seed[62] = (ttmp >>  8) & 0xff;
-		Z->random_seed[63] =  ttmp & 0xff;
+		ZZ->random_seed[60] = (ttmp >> 24) & 0xff;
+		ZZ->random_seed[61] = (ttmp >> 16) & 0xff;
+		ZZ->random_seed[62] = (ttmp >>  8) & 0xff;
+		ZZ->random_seed[63] =  ttmp & 0xff;
 #endif
 	}
 	// RAND_seed is destructive, preserve seed here
 	char tseed[RANDOM_SEED_LEN];
-	memcpy(tseed,Z->random_seed,RANDOM_SEED_LEN);
+	memcpy(tseed,ZZ->random_seed,RANDOM_SEED_LEN);
 	RAND_seed(rng, RANDOM_SEED_LEN, tseed);
-	// return into Z->random_generator
+	// return into ZZ->random_generator
 	return(rng);
 }
 

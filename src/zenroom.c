@@ -70,12 +70,10 @@ extern void zen_add_io(lua_State *L);
 // prototypes from zen_parse.c
 extern void zen_add_parse(lua_State *L);
 // prototype from zen_config.c
-extern int zen_conf_parse(const char *configuration);
+extern int zen_conf_parse(zenroom_t *ZZ, const char *configuration);
 
 // prototypes from zen_memory.c
-extern zen_mem_t *libc_memory_init();
-extern zen_mem_t *lw_memory_init();
-extern void lw_memory_free();
+// extern zen_mem_t *libc_memory_init();
 #ifdef USE_JEMALLOC
 extern zen_mem_t *jemalloc_memory_init();
 #endif
@@ -161,164 +159,144 @@ static int zen_init_pmain(lua_State *L) { // protected mode init
 	return(LUA_OK);
 }
 
+#include <lstate.h>
 // initializes globals: MEM, Z, L (in this order)
 // zen_init_pmain is the Lua routine executed in protected mode
 zenroom_t *zen_init(const char *conf, char *keys, char *data) {
+	zenroom_t *ZZ = (zenroom_t*)malloc(sizeof(zenroom_t));
+	Z = ZZ; // TODO: remove global context compat
+
 	if(conf) {
-		if( ! zen_conf_parse(conf) ) { // minimal stb parsing
+		if( ! zen_conf_parse(ZZ, conf) ) { // minimal stb parsing
 			error(NULL,"Fatal error");
 			return(NULL);
 		}
 	}
-
-	switch(zconf_memmg) {
-	case LW:
-		notice(NULL,"Memory manager selected: lightweight");
-		MEM = lw_memory_init();
-		break;
-	default:
-		act(NULL,"System memory manager in use");
-		MEM = libc_memory_init();
-		break;
-		// TODO: JE for jemalloc
-	}
-
 	// create the zenroom_t global context
-	Z = (zenroom_t*)(*MEM->malloc)(sizeof(zenroom_t));
-	Z->mem = MEM;
-	Z->stdout_buf = NULL;
-	Z->stdout_pos = 0;
-	Z->stdout_len = 0;
-	Z->stdout_full = 0;
-	Z->stderr_buf = NULL;
-	Z->stderr_pos = 0;
-	Z->stderr_len = 0;
-	Z->stderr_full = 0;
-	Z->userdata = NULL;
-	Z->errorlevel = get_debug();
-	Z->random_generator = NULL;
-	Z->random_external = 0;
+	ZZ->stdout_buf = NULL;
+	ZZ->stdout_pos = 0;
+	ZZ->stdout_len = 0;
+	ZZ->stdout_full = 0;
+	ZZ->stderr_buf = NULL;
+	ZZ->stderr_pos = 0;
+	ZZ->stderr_len = 0;
+	ZZ->stderr_full = 0;
+	ZZ->userdata = NULL;
+	ZZ->errorlevel = get_debug();
+	ZZ->random_generator = NULL;
+	ZZ->random_external = 0;
 	switch(zconf_printf) {
 	case STB:
-		Z->sprintf = &z_sprintf;
-		Z->snprintf = &z_snprintf;
-		Z->vsprintf = &z_vsprintf;
-		Z->vsnprintf = &z_vsnprintf;
+		ZZ->sprintf = &z_sprintf;
+		ZZ->snprintf = &z_snprintf;
+		ZZ->vsprintf = &z_vsprintf;
+		ZZ->vsnprintf = &z_vsnprintf;
 		act(NULL,"STB print functions in use");
 		break;
 	case MUTT:
-		Z->sprintf = &sprintf; // TODO: mutt based
-		Z->vsprintf = &vsprintf;
-		Z->snprintf = &mutt_snprintf;
-		Z->vsnprintf = &mutt_vsnprintf;
+		ZZ->sprintf = &sprintf; // TODO: mutt based
+		ZZ->vsprintf = &vsprintf;
+		ZZ->snprintf = &mutt_snprintf;
+		ZZ->vsnprintf = &mutt_vsnprintf;
 		act(NULL,"MUTT print functions in use");
 		break;
 	default: // LIBC_PRINTF
-		Z->sprintf = &sprintf;
-		Z->snprintf = &snprintf;
-		Z->vsprintf = &vsprintf;
-		Z->vsnprintf = &vsnprintf;
+		ZZ->sprintf = &sprintf;
+		ZZ->snprintf = &snprintf;
+		ZZ->vsprintf = &vsprintf;
+		ZZ->vsnprintf = &vsnprintf;
 		func(NULL,"LIBC print functions in use");
 		break;
 	}
 
 	// use RNGseed from configuration if present (deterministic mode)
 	if(zconf_rngseed[0] != 0x0) {
-		Z->random_external = 1;
-		memset(Z->random_seed, 0x0, RANDOM_SEED_LEN);
-		hex2buf(Z->random_seed, zconf_rngseed);
+		ZZ->random_external = 1;
+		memset(ZZ->random_seed, 0x0, RANDOM_SEED_LEN);
+		hex2buf(ZZ->random_seed, zconf_rngseed);
 	}
 	// initialize the random generator
-	Z->random_generator = rng_alloc();
+	ZZ->random_generator = rng_alloc(ZZ);
 
-	Z->lua = lua_newstate(zen_memory_manager, MEM);
-	if(!Z->lua) {
+	ZZ->lua = lua_newstate(zen_memory_manager, ZZ);
+	if(!ZZ->lua) {
 		error(NULL,"%s: %s", __func__, "Lua newstate creation failed");
 		return NULL;
 	}
 
 	// expose the debug level
-	lua_pushinteger(Z->lua, Z->errorlevel);
-	lua_setglobal (Z->lua, "DEBUG");
+	lua_pushinteger(ZZ->lua, ZZ->debuglevel);
+	lua_setglobal (ZZ->lua, "DEBUG");
 
-	lua_atpanic(Z->lua, &zen_lua_panic); // as done in lauxlib luaL_newstate
-	lua_pushcfunction(Z->lua, &zen_init_pmain);  /* to call in protected mode */
-	// lua_pushinteger(Z->lua, 0);  /* 1st argument */
-	// lua_pushlightuserdata(Z->lua, NULL); /* 2nd argument */
+	lua_atpanic(ZZ->lua, &zen_lua_panic); // as done in lauxlib luaL_newstate
+	lua_pushcfunction(ZZ->lua, &zen_init_pmain);  /* to call in protected mode */
+	// lua_pushinteger(ZZ->lua, 0);  /* 1st argument */
+	// lua_pushlightuserdata(ZZ->lua, NULL); /* 2nd argument */
 	                    // ctx     args ret errfunc
-	int status = lua_pcall(Z->lua, 0,   1,  0);
+
+	Z = ZZ; // TODO: remove global context compat
+	int status = lua_pcall(ZZ->lua, 0,   1,  0);
 
 	if(status != LUA_OK) {
 		char *_err = (status == LUA_ERRRUN) ? "Runtime error at initialization" :
 			(status == LUA_ERRMEM) ? "Memory allocation error at initalization" :
 			(status == LUA_ERRERR) ? "Error handler fault at initalization" :
 			"Unknown error at initalization";
-		error(Z->lua,"%s: %s\n    %s", __func__, _err,
-		      lua_tostring(Z->lua,1)); // lua's traceback string
+		error(ZZ->lua,"%s: %s\n    %s", __func__, _err,
+		      lua_tostring(ZZ->lua,1)); // lua's traceback string
 		return NULL;
 	}
 
 	if(zconf_memwipe)
-		act(Z->lua,"Memory wipe active");
+		act(ZZ->lua,"Memory wipe active");
 
-	lua_gc(Z->lua, LUA_GCCOLLECT, 0);
-	lua_gc(Z->lua, LUA_GCCOLLECT, 0);
-	act(Z->lua,"Memory in use: %u KB",
-	    lua_gc(Z->lua,LUA_GCCOUNT,0));
+	lua_gc(ZZ->lua, LUA_GCCOLLECT, 0);
+	lua_gc(ZZ->lua, LUA_GCCOLLECT, 0);
+	act(ZZ->lua,"Memory in use: %u KB",
+	    lua_gc(ZZ->lua,LUA_GCCOUNT,0));
 	// uncomment to restrict further requires
 	// zen_require_override(L,1);
 
 	// expose the random seed for optional determinism
-	push_buffer_to_octet(Z->lua, Z->random_seed, RANDOM_SEED_LEN);
-	lua_setglobal(Z->lua, "RNGSEED");
+	push_buffer_to_octet(ZZ->lua, ZZ->random_seed, RANDOM_SEED_LEN);
+	lua_setglobal(ZZ->lua, "RNGSEED");
 
 	// load arguments if present
 	if(data) {
-		func(Z->lua, "declaring global: DATA");
-		zen_setenv(Z->lua,"DATA",data);
+		func(ZZ->lua, "declaring global: DATA");
+		zen_setenv(ZZ->lua,"DATA",data);
 	}
 	if(keys) {
-		func(Z->lua, "declaring global: KEYS");
-		zen_setenv(Z->lua,"KEYS",keys);
+		func(ZZ->lua, "declaring global: KEYS");
+		zen_setenv(ZZ->lua,"KEYS",keys);
 	}
-	return(Z);
+	return(ZZ);
 }
 
 extern char runtime_random256[256];
-void zen_teardown(zenroom_t *Z) {
+void zen_teardown(zenroom_t *ZZ) {
 
-	notice(Z->lua,"Zenroom teardown.");
-	act(Z->lua,"Memory used: %u KB",
-	    lua_gc(Z->lua,LUA_GCCOUNT,0));
+	notice(ZZ->lua,"Zenroom teardown.");
+	act(ZZ->lua,"Memory used: %u KB",
+	    lua_gc(ZZ->lua,LUA_GCCOUNT,0));
 
 	// stateful RNG instance for deterministic mode
-	if(Z->random_generator) {
-		zen_memory_free(Z->random_generator);
-		Z->random_generator = NULL;
+	if(ZZ->random_generator) {
+		zen_memory_free(ZZ->random_generator);
+		ZZ->random_generator = NULL;
 	}
 
 	// save pointers inside Z to free after L and Z
-	if(Z->lua) {
-		func(Z->lua, "lua gc and close...");
-		lua_gc((lua_State*)Z->lua, LUA_GCCOLLECT, 0);
-		lua_gc((lua_State*)Z->lua, LUA_GCCOLLECT, 0);
+	if(ZZ->lua) {
+		func(ZZ->lua, "lua gc and close...");
+		lua_gc((lua_State*)ZZ->lua, LUA_GCCOLLECT, 0);
+		lua_gc((lua_State*)ZZ->lua, LUA_GCCOLLECT, 0);
 		// this call here frees also Z (lightuserdata)
-		lua_close((lua_State*)Z->lua);
+		lua_close((lua_State*)ZZ->lua);
 	}
-	func(NULL,"zen free");
-
-	if(MEM) {
-		if(Z) (*MEM->free)(Z);
-		free(MEM);
-		lw_memory_free();
-		{
-			extern zenroom_t *Z;
-			Z = NULL;
-		}
-		return; }
-	warning(NULL,"MEM not found");
-	if(Z) {
-		free(Z);
+	func(NULL,"finally free Zen context");
+	if(ZZ) {  // TODO: remove compat with global context
+		free(ZZ);
 		{
 			extern zenroom_t *Z;
 			Z = NULL;
@@ -327,18 +305,18 @@ void zen_teardown(zenroom_t *Z) {
 }
 
 static char zscript[MAX_ZENCODE];
-int zen_exec_zencode(zenroom_t *Z, const char *script) {
-	if(!Z) {
+int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
+	if(!ZZ) {
 		error(NULL,"%s: Zenroom context is NULL.",__func__);
 		return 1; }
-	if(!Z->lua) {
+	if(!ZZ->lua) {
 		error(NULL,"%s: Zenroom context not initialised.",
 		      __func__);
 		return 1; }
 	int ret;
-	lua_State* L = (lua_State*)Z->lua;
+	lua_State* L = (lua_State*)ZZ->lua;
 	// introspection on code being executed
-	(*Z->snprintf)(zscript,MAX_ZENCODE-1,
+	(*ZZ->snprintf)(zscript,MAX_ZENCODE-1,
 	         "ZEN:begin()\nZEN:parse([[\n%s\n]])\nZEN:run()\n", script);
 	zen_setenv(L,"CODE",(char*)zscript);
 	ret = luaL_dostring(L, zscript);
@@ -349,21 +327,21 @@ int zen_exec_zencode(zenroom_t *Z, const char *script) {
 		fflush(stderr);
 		return ret;
 	}
-	if(Z->errorlevel > 1)
+	if(ZZ->errorlevel > 1)
 		notice(L, "Script successfully executed:\n\n%s",script);
 	return 0;
 }
 
-int zen_exec_script(zenroom_t *Z, const char *script) {
-	if(!Z) {
+int zen_exec_script(zenroom_t *ZZ, const char *script) {
+	if(!ZZ) {
 		error(NULL,"%s: Zenroom context is NULL.",__func__);
 		return 1; }
-	if(!Z->lua) {
+	if(!ZZ->lua) {
 		error(NULL,"%s: Zenroom context not initialised.",
 				__func__);
 		return 1; }
 	int ret;
-	lua_State* L = (lua_State*)Z->lua;
+	lua_State* L = (lua_State*)ZZ->lua;
 	// introspection on code being executed
 	zen_setenv(L,"CODE",(char*)script);
 	ret = luaL_dostring(L, script);
@@ -372,7 +350,7 @@ int zen_exec_script(zenroom_t *Z, const char *script) {
 		fflush(stderr);
 		return ret;
 	}
-	if(Z->errorlevel > 1)
+	if(ZZ->errorlevel > 1)
 		notice(L, "Script successfully executed:\n\n%s",script);
 	return 0;
 }

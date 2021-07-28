@@ -82,13 +82,17 @@ static char pfx[MAX_STRING];
 
 extern int zen_write_err_va(const char *fmt, va_list va);
 
-static int verbosity = 1;
-int get_debug() { return(verbosity); }
+int get_debug() {
+	if(Z) return(Z->debuglevel);
+	else return 1;
+}
 void set_debug(int lev) {
   lev = lev<0 ? 0 : lev;
   lev = lev>3 ? 3 : lev;
-  verbosity = lev;
+  Z->debuglevel = lev;
 }
+
+#define CTXSAFE(lv) (void)L; if(Z) { if(Z->debuglevel<3) return; }
 
 static int color = 0;
 void set_color(int on) { color = on; }
@@ -101,28 +105,28 @@ void error(lua_State *L, const char *format, ...) {
 	va_end(arg);
 }
 void warning(lua_State *L, const char *format, ...) {
-	if(verbosity<1) return;
+	if(Z->debuglevel<1) return;
 	va_list arg;
 	va_start(arg, format);
 	__android_log_vprint(ANDROID_LOG_WARN, "ZEN", format, arg);
 	va_end(arg);
 }
 void notice(lua_State *L, const char *format, ...) {
-	if(verbosity<1) return;
+	if(Z->debuglevel<1) return;
 	va_list arg;
 	va_start(arg, format);
 	__android_log_vprint(ANDROID_LOG_INFO, "ZEN", format, arg);
 	va_end(arg);
 }
 void act(lua_State *L, const char *format, ...) {
-	if(verbosity<2) return;
+	if(Z->debuglevel<2) return;
 	va_list arg;
 	va_start(arg, format);
 	__android_log_vprint(ANDROID_LOG_DEBUG, "ZEN", format, arg);
 	va_end(arg);
 }
 void func(void *L, const char *format, ...) {
-	if(verbosity<3) return;
+	if(Z->debuglevel<3) return;
 	va_list arg;
 	va_start(arg, format);
 	__android_log_vprint(ANDROID_LOG_VERBOSE, "ZEN", format, arg);
@@ -131,8 +135,7 @@ void func(void *L, const char *format, ...) {
 #else
 
 void notice(lua_State *L, const char *format, ...) {
-	(void)L;
-	if(!verbosity) return;
+	CTXSAFE(1);
 	va_list arg;
 	snprintf_t pr = Z ? Z->snprintf : &snprintf;
 	if(color)
@@ -145,8 +148,7 @@ void notice(lua_State *L, const char *format, ...) {
 }
 
 void func(void *L, const char *format, ...) {
-	(void)L;
-	if(verbosity<3) return;
+	CTXSAFE(3);
 	va_list arg;
 	snprintf_t pr = Z ? Z->snprintf : &snprintf;
 	(*pr)(pfx, MAX_STRING-1, "[D] %s\n",format);
@@ -157,7 +159,7 @@ void func(void *L, const char *format, ...) {
 }
 
 void error(lua_State *L, const char *format, ...) {
-	(void)L;
+	CTXSAFE(0);
 	if(!format) return;
 	va_list arg;
 	snprintf_t pr = Z ? Z->snprintf : &snprintf;
@@ -173,8 +175,7 @@ void error(lua_State *L, const char *format, ...) {
 }
 
 void act(lua_State *L, const char *format, ...) {
-	(void)L;
-	if(!verbosity) return;
+	CTXSAFE(1);
 	va_list arg;
 	snprintf_t pr = Z ? Z->snprintf : &snprintf;
 	(*pr)(pfx, MAX_STRING-1, " .  %s\n",format);
@@ -184,8 +185,7 @@ void act(lua_State *L, const char *format, ...) {
 }
 
 void warning(lua_State *L, const char *format, ...) {
-	(void)L;
-	if(verbosity<2) return;
+	CTXSAFE(2);
 	va_list arg;
 	snprintf_t pr = Z ? Z->snprintf : &snprintf;
 	if(color)

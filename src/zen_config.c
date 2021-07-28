@@ -91,7 +91,7 @@ mmtype zconf_memmg = SYS;
 int  zconf_memwipe = 0;
 printftype zconf_printf = LIBC;
 
-int zen_conf_parse(const char *configuration) {
+int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 	(void)stb__strchr;            // avoid compiler warnings
 	(void)stb__clex_parse_string; // for unused functions
 	if(!configuration) return 0;

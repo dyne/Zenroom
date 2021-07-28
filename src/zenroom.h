@@ -66,7 +66,6 @@ typedef int (*vsnprintf_t)( char * buf, size_t count, char const * fmt, va_list 
 // contents are opaque in lua and available only as lightuserdata
 typedef struct {
 	void *lua; // (lua_State*)
-	zen_mem_t *mem; // memory manager heap
 
 	char *stdout_buf;
 	size_t stdout_len;
@@ -82,6 +81,7 @@ typedef struct {
 	char random_seed[RANDOM_SEED_LEN];
 	int random_external; // signal when rngseed is external
 
+	int debuglevel;
 	int errorlevel;
 	void *userdata; // anything passed at init (reserved for caller)
 
