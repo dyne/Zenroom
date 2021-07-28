@@ -1,6 +1,8 @@
 name: Build and upload nightly to NPM
 on:
   push:
+    branches:
+      - main
     paths-ignore:
     - 'docs/**'
     - 'examples/**'
