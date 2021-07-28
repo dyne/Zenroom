@@ -8,6 +8,27 @@ if ! test -r ../utils.sh; then
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
+######
+# Setup output color aliases
+#
+# echo "${red}red text ${green}green text${reset}"
+red=`tput setaf 1`
+green=`tput setaf 2`
+yellow=`tput setaf 3`
+blue=`tput setaf 4`
+magenta=`tput setaf 5`
+cyan=`tput setaf 6`
+reset=`tput sgr0`
+
+
+
+echo "                                                "
+echo "${magenta}------------------------------------------------"
+echo "${magenta}  If broken, before running this script,        "
+echo "${magenta}  execute 'run.sh' script in the same folder   "
+echo "${magenta}------------------------------------------------"
+echo "${reset}   											  "
+
 
 cat << EOF | save reflow Agent.json
 { "Agent": {
@@ -187,7 +208,7 @@ json_join SealArray.json issuer_verifier.json Process.json | save reflow Aggrega
 
 
 
-cat << EOF | debug create_seal_of_process.zen -a Aggregate_seal.json -k alice.json | tee Process_seal.json 
+cat << EOF | zexe create_seal_of_process.zen -a Aggregate_seal.json -k alice.json | save reflow Process_seal.json 
 Scenario reflow
 Given I am 'Alice'
 and I have the 'keys'
@@ -196,6 +217,17 @@ and I have a 'issuer public key' in 'The Authority'
 and I have a 'reflow identity'
 and I have a 'reflow seal array' named 'Seals'
 When I create the sum value 'identity' for dictionaries in 'Seals'
-and debug
 Then print the 'sum value'
 EOF
+
+# Verify seal 
+
+ 
+
+
+echo "                                                "
+echo "${magenta}------------------------------------------------"
+echo "${magenta}  If broken, before running this script,        "
+echo "${magenta}  execute 'run.sh' script in the same folder   "
+echo "${magenta}------------------------------------------------"
+echo "${reset}   											  "
