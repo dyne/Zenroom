@@ -209,6 +209,13 @@ and I rename the 'result' to 'resultOfmySecondSum'
 When I create the result of 'mySecondNumber' * 'nameOfFirstNewVariable'
 and I rename the 'result' to 'resultOfmySecondMultiplication'
 
+# INVERT SIGN
+# you can invert the sign of a number using this statement
+# in this example, we create an inverted version of 'myFirstNumber' 
+# that goes from '1.2345' to '-1.2345'
+When I create the result of 'myFirstNumber' inverted sign
+and I rename the 'result' to 'myFirstNumberInvertedSign'
+
 
 
 # APPEND
