@@ -49,7 +49,7 @@ static int lua_parse_prefix(lua_State* L) {
 			low[c] = '\0'; break; }
 		low[c] = tolower(line[c]);
 	}
-	if(c==size || c==MAX_LINE) lua_pushnil(L);
+	if(c>size || c==MAX_LINE) lua_pushnil(L);
 	else lua_pushlstring(L,&low[fspace],c-fspace);
 	return 1;
 }

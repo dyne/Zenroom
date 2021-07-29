@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+DEBUG=3
+
 ####################
 # common script init
 if ! test -r ../utils.sh; then
@@ -21,14 +23,20 @@ If number 'left' is less than 'right'
 and I verify 'left' is equal to 'left'
 When I create the random 'peppino'
 Then print string 'right is higher'
+and print all data
+Endif
 
 If number 'left' is more than 'right'
 When I create the random 'peppone'
 Then print string 'left is higher'
+endif
 
 When I create the random 'fish'
 Then print all data
+and trace
 EOF
+
+exit 0
 
 cat << EOF > leftright.json
 { "left": 60,
@@ -42,10 +50,12 @@ and I have a 'number' named 'right'
 If number 'left' is less than 'right'
 Then print string 'right is higher'
 and print string 'and I am right'
+endif
 
 If number 'left' is more than 'right'
 Then print string 'left is higher'
 and print string 'and I am right'
+endif
 
 EOF
 

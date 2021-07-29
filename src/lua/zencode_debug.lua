@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Tuesday, 20th July 2021
+--on Thursday, 29th July 2021
 --]]
 
 -- limit output of string if too long
@@ -39,6 +39,9 @@ end
 Given("backtrace", function() debug_traceback() end)
 When("backtrace", function() debug_traceback() end)
 Then("backtrace", function() debug_traceback() end)
+Given("trace", function() debug_traceback() end)
+When("trace", function() debug_traceback() end)
+Then("trace", function() debug_traceback() end)
 
 function debug_heap_dump()
    local HEAP = ZEN.heap()

@@ -17,7 +17,7 @@
  * If not, see http://www.gnu.org/licenses/agpl.txt
  * 
  * Last modified by Denis Roio
- * on Tuesday, 27th July 2021
+ * on Thursday, 29th July 2021
  */
 
 #ifndef LIBRARY
@@ -388,13 +388,13 @@ int main(int argc, char **argv) {
 		// get another argument from stdin
 		if(verbosity) act(NULL, "reading Zencode from stdin");
 		load_file(script, stdin);
-		func(NULL, "%s\n--",script);
+		// func(NULL, "%s\n--",script);
 	}
 
 	// configure to parse Lua or Zencode
 	if(zencode) {
 		if(verbosity) notice(NULL, "Direct Zencode execution");
-		func(NULL, script);
+		// func(NULL, script);
 	}
 
 #if (defined(ARCH_WIN) || defined(DISABLE_FORK)) || defined(ARCH_CORTEX) || defined(ARCH_BSD)

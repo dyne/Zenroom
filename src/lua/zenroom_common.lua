@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Tuesday, 20th July 2021
+--on Thursday, 29th July 2021
 --]]
 
 -- override type to recognize zenroom's types

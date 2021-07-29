@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Wednesday, 14th July 2021
+--on Thursday, 29th July 2021
 --]]
 --- <h1>Zencode language parser</h1>
 --
@@ -69,9 +69,12 @@ local zencode = {
 -- set_rule
 
 local function set_sentence(self, event, from, to, ctx)
-	local reg = ctx.Z[self.current .. '_steps']
+	local index = self.current
+	if self.current == 'whenif' then index = 'when' end
+	if self.current == 'thenif' then index = 'then' end
+	local reg = ctx.Z[index .. '_steps']
 	ctx.Z.OK = false
-	xxx('Zencode parser from: ' .. from .. " to: "..to)
+	xxx('Zencode parser from: ' .. from .. " to: "..to, 3)
 	assert(reg,'Callback register not found: ' .. self.current)
 	assert(#reg,'Callback register empty: '..self.current)
 	local gsub = string.gsub -- optimization
@@ -108,8 +111,9 @@ local function set_sentence(self, event, from, to, ctx)
 			error('Zencode function missing: ' .. pattern, 2)
 			return false
 		end
-		xxx(tt .. ' == ' ..pattern)
+	    -- xxx(tt .. ' == ' ..pattern)
 		if strcasecmp(tt, pattern) then
+			xxx(tt)
 			local args = {} -- handle multiple arguments in same string
 			for arg in string.gmatch(ctx.msg, "'(.-)'") do
 				-- convert all spaces to underscore in argument strings
@@ -224,39 +228,55 @@ end
 
 
 local function new_state_machine()
+	-- stateDiagram
+    -- [*] --> Given
+    -- Given --> When
+    -- When --> Then
+    -- state branch {
+    --     IF 
+    --     when then
+    --     --
+    --     EndIF
+    -- }
+    -- When --> branch
+    -- branch --> When
+    -- Then --> [*]
 	local machine =
 		MACHINE.create(
 		{
 			initial = 'init',
 			events = {
-				{
-					name = 'enter_rule',
-					from = {'init', 'rule', 'scenario'},
-					to = 'rule'
-				},
-				{
-					name = 'enter_scenario',
-					from = {'init', 'rule', 'scenario'},
-					to = 'scenario'
-				},
-				{
-					name = 'enter_given',
-					from = {'init', 'rule', 'scenario'},
-					to = 'given'
-				},
+				{name = 'enter_rule', from = {'init', 'rule', 'scenario'}, to = 'rule'},
+				{name = 'enter_scenario', from = {'init', 'rule', 'scenario'}, to = 'scenario'},
+				{name = 'enter_given', from = {'init', 'rule', 'scenario'},	to = 'given'},
 				{name = 'enter_given', from = {'given'}, to = 'given'},
+
+				{name = 'enter_when', from = {'given', 'when', 'then', 'endif'}, to = 'when'},
+				{name = 'enter_then', from = {'given', 'when', 'then', 'endif'}, to = 'then'},
+
+				{name = 'enter_if', from = {'given', 'when', 'then', 'endif'}, to = 'if'},
+				{name = 'enter_whenif', from = {'if', 'whenif', 'thenif'}, to = 'whenif'},
+				{name = 'enter_thenif', from = {'if', 'whenif', 'thenif'}, to = 'thenif'},
+				{name = 'enter_endif', from = {'whenif', 'thenif'}, to = 'endif'},
+
 				{name = 'enter_and', from = 'given', to = 'given'},
-
-				{name = 'enter_when', from = {'given', 'when', 'if', 'then'}, to = 'when'},
 				{name = 'enter_and', from = 'when', to = 'when'},
-
-				{name = 'enter_if', from = {'given', 'when', 'if', 'then'}, to = 'if'},
-				{name = 'enter_and', from = 'if', to = 'if'},
-
-				{name = 'enter_then', from = {'given', 'when', 'then', 'if'}, to = 'then'},
 				{name = 'enter_and', from = 'then', to = 'then'},
+				{name = 'enter_and', from = 'whenif', to = 'whenif'},
+				{name = 'enter_and', from = 'thenif', to = 'thenif'},	
+				{name = 'enter_and', from = 'if', to = 'if'}
 
 			},
+			-- graph TD
+			--     Given --> When
+			--     IF --> When
+			--     Then --> When
+			--     Given --> IF
+			--     When --> IF
+			--     Then --> IF
+			--     IF --> Then
+			--     When --> Then
+			--     Given --> Then
 			callbacks = {
 				-- msg is a table: { msg = "string", Z = ZEN (self) }
 				onscenario = function(self, event, from, to, msg)
@@ -278,8 +298,11 @@ local function new_state_machine()
 				ongiven = set_sentence,
 				onwhen = set_sentence,
 				onif = set_sentence,
+				onendif = set_sentence,
 				onthen = set_sentence,
-				onand = set_sentence
+				onand = set_sentence,
+				onwhenif = set_sentence,
+				onthenif = set_sentence
 			}
 		}
 	)
@@ -296,6 +319,8 @@ AST = AST or {} -- AST of parsed Zencode
 WHO = nil
 
 -- init statements
+zencode.endif_steps = { endif = function() return end } --nop
+
 function Given(text, fn)
 	ZEN.assert(
 		not ZEN.given_steps[text],
@@ -443,27 +468,32 @@ function zencode:begin()
 end
 
 function zencode:parse(text)
-	if  #text < 9 then -- strlen("and debug") == 9
+	if #text < 9 then -- strlen("and debug") == 9
    	  warn("Zencode text too short to parse")
 		 return false
 	end
 	local linenum=0
    -- xxx(text,3)
 	local prefix
+	local branching = false
 	local parse_prefix = parse_prefix -- optimization
    for line in zencode_newline_iter(text) do
 	linenum = linenum + 1
 	  if zencode_isempty(line) then goto continue end
 	  if zencode_iscomment(line) then goto continue end
-	--   xxx(2, 'Line: '.. text)
+	--   xxx('Line: '.. text, 3)
 	  -- max length for single zencode line is #define MAX_LINE
 	  -- hard-coded inside zenroom.h
 	  prefix = parse_prefix(line)
 	  assert(prefix, "Invalid Zencode line "..linenum..": "..line)
 	  self.OK = true
 	  exitcode(0)
+	  if prefix == 'if' then branching = true end
+	  if branching and (prefix == 'when') then prefix = prefix..'if' end
+	  if branching and (prefix == 'then') then prefix = prefix..'if' end
+	  if prefix == 'endif' then branching = false end
 	  -- try to enter the machine state named in prefix
-	  -- xxx(3,"Zencode machine enter_"..prefix..": "..text)
+	  -- xxx("Zencode machine enter_"..prefix..": "..text, 3)
 	  local fm = self.machine["enter_"..prefix]
 	  assert(fm,"Invalid Zencode prefix: "..prefix)
 	  assert(fm(self.machine, { msg = line, Z = self }),
@@ -514,19 +544,20 @@ end
 -- return true: caller skip execution and go to ::continue::
 -- return false: execute statement
 local function manage_branching(x)
-	if x.section == 'if' then ZEN.branch = true end
-	if ZEN.branch then
-		xxx('branching section: '..x.section)
-		if x.section == 'when' and x.from == 'then' then
-			ZEN.branch = false
-			xxx('end of conditional branch')
-		elseif x.section == 'when' and not ZEN.branch_valid then
-			xxx('skip execution in false conditional branch: '..x.source)
-			return true
-		elseif x.section == 'then' and not ZEN.branch_valid then
-			xxx('skip execution in false conditional branch: '..x.source)
-			return true
-		end
+	if x.section == 'if' then
+		xxx("START conditional execution: "..x.source, 2)
+		ZEN.branch = true
+		return false
+	end
+	if x.section == 'endif' then
+		xxx("END   conditional execution: "..x.source, 2)
+		ZEN.branch = false
+		return true
+	end
+	if not ZEN.branch then return false end
+	if ZEN.branch_valid == false then
+		xxx('skip execution in false conditional branch: '..x.source, 2)
+		return true
 	end
 	return false
 end
@@ -553,7 +584,7 @@ function zencode:run()
 
 	-- EXEC zencode
 	for _, x in pairs(self.AST) do
-		ZEN:trace(x.source)
+		-- ZEN:trace(x.source)
 		if manage_branching(x) then
 			goto continue
 		end
