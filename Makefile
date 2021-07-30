@@ -50,6 +50,16 @@ meson-re:
 	ninja -C meson
 meson-test:
 	ninja -C meson test
+
+meson-analyze:
+	SCANBUILD=$(pwd)/build/scanbuild.sh ninja -C meson scan-build
+
+sonarqube:
+	@echo "Configure login token in build/sonarqube.sh"
+	cp -v build/sonar-project.properties .
+	./build/sonarqube.sh
+	
+	
 	
 embed-lua:
 	@echo "Embedding all files in src/lua"
