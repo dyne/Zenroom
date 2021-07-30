@@ -8,7 +8,7 @@ jobs:
     - uses: actions/checkout@master
     - uses: seanmiddleditch/gha-setup-ninja@master
     - name: Install compiler and dependencies
-       run: |
+      run: |
          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
          sudo apt-get update
          # install compiler
