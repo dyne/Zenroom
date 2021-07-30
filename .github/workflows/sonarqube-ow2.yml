@@ -1,0 +1,26 @@
+name: OW2 SonarQube
+on: push
+jobs:
+  sonarQubeTrigger:
+    name: SonarQube Trigger
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - uses: seanmiddleditch/gha-setup-ninja@master
+    - name: Install compiler and dependencies
+       run: |
+         sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+         sudo apt-get update
+         # install compiler
+         sudo apt-get install --force-yes clang-tools-11 clang-tools
+         # install deps
+         sudo apt-get install --force-yes cmake vim zsh luajit lua-cjson
+         pip3 install meson
+    - name: Build using Clang's scan-build in Meson
+      run: |
+        make meson && make meson-analyze
+    - name: Upload to SonarQube on OW2
+      env:
+        SONAR_LOGIN: ${{ secrets.SONARQUBE_OW2 }}
+      run: |
+        docker pull sonarqube && make sonarqube
