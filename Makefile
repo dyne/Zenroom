@@ -53,7 +53,7 @@ meson-test:
 
 meson-analyze:
 	SCANBUILD=$(pwd)/build/scanbuild.sh ninja -C meson scan-build
-	cp -ra meson/meson-log/scanbuild/* build/scan
+	cp -ra meson/meson-logs/scanbuild/* build/scan
 
 meson-scanview:
 	ninja -C meson scan-build
