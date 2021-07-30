@@ -57,7 +57,7 @@ meson-analyze:
 
 meson-scanview:
 	ninja -C meson scan-build
-	cp -ra meson/meson-log/scanbuild/* build/scan
+	cp -ra meson/meson-logs/scanbuild/* build/scan
 	scan-view --no-browser build/scan
 
 
