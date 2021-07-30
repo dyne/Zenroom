@@ -184,7 +184,7 @@ zexe() {
 		out_size=`stat -c '%s' $t/stdout`
 	fi
 	echo "EXECUTION TIME: $exec_time" >&2
-	echo "OUTPUT SIZE: `stat -c '%s' $t/stdout` bytes" >&2
+	echo "OUTPUT SIZE: $out_size" >&2
 	if [ $res == 0 ]; then
 		cat $t/stdout
 		echo -e "OK \t|\t `basename $out` \t|\t $exec_time \t|\t $out_size \t|\t $exec_memory" \
