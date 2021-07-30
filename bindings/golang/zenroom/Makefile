@@ -9,6 +9,7 @@ GOBENCH = $(GOCMD) test -benchmem -bench=.
 default: help
 
 test: ## Testing suite
+	cp ../../../src/zenroom.h .
 	LD_LIBRARY_PATH=./zenroom $(GOTEST)
 .PHONY: test
 

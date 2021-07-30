@@ -18,7 +18,7 @@ jobs:
       - name: Install compiler and dependencies
         run: |
           # install deps
-          sudo apt-get install --force-yes gcc cmake vim zsh
+          sudo apt-get install --force-yes make gcc cmake vim zsh
           pip3 install meson
       - name: Build using meson
         run: |
@@ -26,4 +26,4 @@ jobs:
       - name: Test go bindings
         run: |
           cp build_meson/libzenroom.so bindings/golang/zenroom/lib
-          cd bindings/golang/zenroom && go test
+          cd bindings/golang/zenroom && make test
