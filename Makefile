@@ -53,6 +53,14 @@ meson-test:
 
 meson-analyze:
 	SCANBUILD=$(pwd)/build/scanbuild.sh ninja -C meson scan-build
+	cp -ra meson/meson-log/scanbuild/* build/scan
+
+meson-scanview:
+	ninja -C meson scan-build
+	cp -ra meson/meson-log/scanbuild/* build/scan
+	scan-view --no-browser build/scan
+
+
 
 sonarqube:
 	@echo "Configure login token in build/sonarqube.sh"
