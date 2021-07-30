@@ -2,7 +2,7 @@ name: Build and upload nightly to NPM
 on:
   push:
     branches:
-      - main
+      - master 
     paths-ignore:
     - 'docs/**'
     - 'examples/**'
