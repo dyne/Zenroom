@@ -126,7 +126,6 @@ _G['CONF'] = {
 	-- beware this choice affects only the ECDH object
 	-- and ECDH public keys cannot function as ECP
 	-- because of IANA 7303
-	verbosity = 1,
 	input = {
 		encoding = input_encoding('base64'),
 		format = get_format('json'),

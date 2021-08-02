@@ -179,7 +179,7 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 			return 0;
 
 		case CLEX_intlit:
-			if(curconf==VERBOSE) { set_debug  ( lex.int_number ); break; }
+			if(curconf==VERBOSE) { ZZ->debuglevel = lex.int_number; break; }
 			if(curconf==COLOR)   { set_color  ( lex.int_number ); break; }
 			if(curconf==SECCOMP) { zconf_seccomp = lex.int_number; break; }
 			if(curconf==MEMWIPE) { zconf_memwipe = lex.int_number; break; }

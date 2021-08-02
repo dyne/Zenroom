@@ -82,17 +82,7 @@ static char pfx[MAX_STRING];
 
 extern int zen_write_err_va(const char *fmt, va_list va);
 
-int get_debug() {
-	if(Z) return(Z->debuglevel);
-	else return 1;
-}
-void set_debug(int lev) {
-  lev = lev<0 ? 0 : lev;
-  lev = lev>3 ? 3 : lev;
-  Z->debuglevel = lev;
-}
-
-#define CTXSAFE(lv) (void)L; if(Z) { if(Z->debuglevel<3) return; }
+#define CTXSAFE(lv) (void)L; if(Z) { if(Z->debuglevel < lv) return; }
 
 static int color = 0;
 void set_color(int on) { color = on; }
@@ -175,7 +165,7 @@ void error(lua_State *L, const char *format, ...) {
 }
 
 void act(lua_State *L, const char *format, ...) {
-	CTXSAFE(1);
+	CTXSAFE(2);
 	va_list arg;
 	snprintf_t pr = Z ? Z->snprintf : &snprintf;
 	(*pr)(pfx, MAX_STRING-1, " .  %s\n",format);
@@ -185,7 +175,7 @@ void act(lua_State *L, const char *format, ...) {
 }
 
 void warning(lua_State *L, const char *format, ...) {
-	CTXSAFE(2);
+	CTXSAFE(1);
 	va_list arg;
 	snprintf_t pr = Z ? Z->snprintf : &snprintf;
 	if(color)

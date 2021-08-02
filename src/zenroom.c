@@ -166,12 +166,6 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	zenroom_t *ZZ = (zenroom_t*)malloc(sizeof(zenroom_t));
 	Z = ZZ; // TODO: remove global context compat
 
-	if(conf) {
-		if( ! zen_conf_parse(ZZ, conf) ) { // minimal stb parsing
-			error(NULL,"Fatal error");
-			return(NULL);
-		}
-	}
 	// create the zenroom_t global context
 	ZZ->stdout_buf = NULL;
 	ZZ->stdout_pos = 0;
@@ -182,9 +176,17 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	ZZ->stderr_len = 0;
 	ZZ->stderr_full = 0;
 	ZZ->userdata = NULL;
-	ZZ->errorlevel = get_debug();
+	ZZ->errorlevel = 0;
+	ZZ->debuglevel = 2;
 	ZZ->random_generator = NULL;
 	ZZ->random_external = 0;
+	if(conf) {
+		if( ! zen_conf_parse(ZZ, conf) ) { // stb parsing
+			error(NULL,"Fatal error");
+			return(NULL);
+		}
+	}
+
 	switch(zconf_printf) {
 	case STB:
 		ZZ->sprintf = &z_sprintf;
@@ -322,12 +324,12 @@ int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
 	ret = luaL_dostring(L, zscript);
 	if(ret) {
 		error(L, "Zencode execution error");
-		error(L, "Script:\n%s", zscript);
-		error(L, "%s", lua_tostring(L, -1));
+		// error(L, "Script:\n%s", zscript);
+	    error(L, "%s", lua_tostring(L, -1));
 		fflush(stderr);
 		return ret;
 	}
-	if(ZZ->errorlevel > 1)
+	if(ZZ->errorlevel < 1)
 		notice(L, "Script successfully executed:\n\n%s",script);
 	return 0;
 }

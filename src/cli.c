@@ -17,7 +17,7 @@
  * If not, see http://www.gnu.org/licenses/agpl.txt
  * 
  * Last modified by Denis Roio
- * on Thursday, 29th July 2021
+ * on Monday, 2nd August 2021
  */
 
 #ifndef LIBRARY
@@ -153,7 +153,7 @@ void load_file(char *dst, FILE *fd) {
 		offset += bytes;
 	}
 	if(fd!=stdin) fclose(fd);
-	if(get_debug())	act(0, "loaded file (%u bytes)", offset);
+	act(0, "loaded file (%u bytes)", offset);
 	if(firstline) free(firstline);
 }
 
