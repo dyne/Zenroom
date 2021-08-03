@@ -80,28 +80,10 @@ ecp* ecp_dup(lua_State *L, ecp* in) {
 	return(e);
 }
 
-extern int zconf_memwipe; // zenroom_config
-extern char runtime_random256[256]; // zen_random
 int ecp_destroy(lua_State *L) {
 	HERE();
 	ecp *e = ecp_arg(L,1);
 	SAFE(e);
-	if(zconf_memwipe) { // zenroom memory wipe configuration
-		func(L,"   ecp wipe");
-		BIG m; // from big random, using pre-calculated runtime random
-		int len = BIGLEN;
-		register int i, b,j=0,r=0;
-		for(i=0; i<len; i++) {
-			if (j==0)
-				r=runtime_random256[i+33%256];
-			else r>>=1;
-			b=r&1; BIG_shl(m,1);
-			m[0]+=b; j++; j&=7;
-		}
-		FP_nres(&e->val.x, m);
-		FP_copy(&e->val.y, &e->val.x);
-		FP_copy(&e->val.z, &e->val.x);
-	}
 	return 0;
 }
 

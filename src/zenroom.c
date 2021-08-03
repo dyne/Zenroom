@@ -90,13 +90,10 @@ extern void zen_add_random(lua_State *L);
 
 // single instance globals
 zenroom_t *Z = NULL;   // zenroom STACK
-zen_mem_t *MEM = NULL; // zenroom HEAP
 int EXITCODE = 1; // start from error state
 
 // configured globals by zen_config
 extern char zconf_rngseed[(RANDOM_SEED_LEN*2)+4];
-extern mmtype zconf_memmg;
-extern int  zconf_memwipe;
 extern printftype zconf_printf;
 
 static int zen_lua_panic (lua_State *L) {
@@ -160,7 +157,7 @@ static int zen_init_pmain(lua_State *L) { // protected mode init
 }
 
 #include <lstate.h>
-// initializes globals: MEM, Z, L (in this order)
+// initializes globals: Z, L (in this order)
 // zen_init_pmain is the Lua routine executed in protected mode
 zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	zenroom_t *ZZ = (zenroom_t*)malloc(sizeof(zenroom_t));
@@ -248,9 +245,6 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 		      lua_tostring(ZZ->lua,1)); // lua's traceback string
 		return NULL;
 	}
-
-	if(zconf_memwipe)
-		act(ZZ->lua,"Memory wipe active");
 
 	lua_gc(ZZ->lua, LUA_GCCOLLECT, 0);
 	lua_gc(ZZ->lua, LUA_GCCOLLECT, 0);

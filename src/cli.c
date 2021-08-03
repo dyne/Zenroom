@@ -79,8 +79,6 @@ static const struct sock_fprog  strict = {
 
 extern zenroom_t *Z;
 
-// configure seccomp activation
-extern int zconf_seccomp;
 
 
 extern int zen_setenv(lua_State *L, char *key, char *val);
@@ -205,12 +203,12 @@ int main(int argc, char **argv) {
 	int opt, index;
 	int   interactive         = 0;
 	int   zencode             = 0;
-
+	int use_seccomp = 0;
 	cli_alloc_buffers();
 
 	const char *short_options = "hD:ic:k:a:l:S:pz";
 	const char *help          =
-		"Usage: zenroom [-h] [ -D scenario ] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ -S seed ] [ -p ] [ -z ] [ -l lib ] [ script.lua ]\n";
+		"Usage: zenroom [-h] [-s] [ -D scenario ] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ -S seed ] [ -p ] [ -z ] [ -l lib ] [ script.lua ]\n";
 	int pid, status, retval;
 	conffile   [0] = '\0';
 	scriptfile [0] = '\0';
@@ -238,6 +236,9 @@ int main(int argc, char **argv) {
 			fprintf(stdout,"%s",help);
 			cli_free_buffers();
 			return EXIT_SUCCESS;
+			break;
+		case 's':
+		        use_seccomp = 1;
 			break;
 		case 'i':
 			interactive = 1;
@@ -404,7 +405,7 @@ int main(int argc, char **argv) {
 		if( zen_exec_script(Z, script) ) { cli_free_buffers(); return EXIT_FAILURE; }
 
 #else /* POSIX */
-	if (!zconf_seccomp) {
+	if (!use_seccomp) {
 		if(zencode) {
 			if( zen_exec_zencode(Z, script) ) { cli_free_buffers(); return EXIT_FAILURE; }
 		} else {
