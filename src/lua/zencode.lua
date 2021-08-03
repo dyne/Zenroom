@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Monday, 2nd August 2021
+--on Tuesday, 3rd August 2021
 --]]
 --- <h1>Zencode language parser</h1>
 --
@@ -254,7 +254,7 @@ local function new_state_machine()
 				{name = 'enter_when', from = {'given', 'when', 'then', 'endif'}, to = 'when'},
 				{name = 'enter_then', from = {'given', 'when', 'then', 'endif'}, to = 'then'},
 
-				{name = 'enter_if', from = {'given', 'when', 'then', 'endif'}, to = 'if'},
+				{name = 'enter_if', from = {'if', 'given', 'when', 'then', 'endif'}, to = 'if'},
 				{name = 'enter_whenif', from = {'if', 'whenif', 'thenif'}, to = 'whenif'},
 				{name = 'enter_thenif', from = {'if', 'whenif', 'thenif'}, to = 'thenif'},
 				{name = 'enter_endif', from = {'whenif', 'thenif'}, to = 'endif'},
