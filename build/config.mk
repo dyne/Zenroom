@@ -108,11 +108,6 @@ milagro_cmake_flags += -DCMAKE_CROSSCOMPILING=1 -DCMAKE_C_COMPILER_WORKS=1
 ldflags += -Wstack-usage=1024
 endif
 
-ifneq (,$(findstring redis,$(MAKECMDGOALS)))
-cflags := ${cflags_protection} -DARCH_REDIS
-cflags += -O1 -ggdb -DDEBUG=1
-endif
-
 ifneq (,$(findstring ios,$(MAKECMDGOALS)))
 milagro_cmake_flags += -DCMAKE_SYSTEM_PROCESSOR="arm" -DCMAKE_CROSSCOMPILING=1 -DCMAKE_C_COMPILER_WORKS=1
 milagro_cmake_flags += -DCMAKE_OSX_SYSROOT="/" -DCMAKE_OSX_DEPLOYMENT_TARGET=""
