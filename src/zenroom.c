@@ -107,10 +107,10 @@ static int zen_lua_panic (lua_State *L) {
 
 static int zen_init_pmain(lua_State *L) { // protected mode init
 
-	//Set zenroom context as a global in lua
-	//this will be freed on lua_close
-	lua_pushlightuserdata(L, Z);
-	lua_setglobal(L, "_Z");
+	// Set zenroom context as a global in lua
+	// this will be freed on lua_close
+	// lua_pushlightuserdata(L, Z);
+	// lua_setglobal(L, "_Z");
 
 	// initialise global variables
 #if defined(VERSION)
