@@ -322,35 +322,35 @@ WHO = nil
 zencode.endif_steps = { endif = function() return end } --nop
 
 function Given(text, fn)
-	ZEN.assert(
+	assert(
 		not ZEN.given_steps[text],
-		'Conflicting GIVEN statement loaded by scenario: ' .. text
+		'Conflicting GIVEN statement loaded by scenario: ' .. text, 2
 	)
 	ZEN.given_steps[text] = fn
 end
 function When(text, fn)
-	ZEN.assert(
+	assert(
 		not ZEN.when_steps[text],
-		'Conflicting WHEN statement loaded by scenario: ' .. text
+		'Conflicting WHEN statement loaded by scenario: ' .. text, 2
 	)
 	ZEN.when_steps[text] = fn
 end
 function IfWhen(text, fn)
-	ZEN.assert(
+        assert(
 		not ZEN.if_steps[text],
-		'Conflicting IF-WHEN statement loaded by scenario: ' .. text
+		'Conflicting IF-WHEN statement loaded by scenario: ' .. text, 2
 	)
-	ZEN.assert(
+	assert(
 		not ZEN.when_steps[text],
-		'Conflicting IF-WHEN statement loaded by scenario: ' .. text
+		'Conflicting IF-WHEN statement loaded by scenario: ' .. text, 2
 	)
 	ZEN.if_steps[text]   = fn
 	ZEN.when_steps[text] = fn
 end
 function Then(text, fn)
-	ZEN.assert(
+	assert(
 		not ZEN.then_steps[text],
-		'Conflicting THEN statement loaded by scenario : ' .. text
+		'Conflicting THEN statement loaded by scenario : ' .. text, 2
 	)
 	ZEN.then_steps[text] = fn
 end
@@ -546,6 +546,7 @@ end
 local function manage_branching(x)
 	if x.section == 'if' then
 		xxx("START conditional execution: "..x.source, 2)
+		if not ZEN.branch then ZEN.branch_valid = true end
 		ZEN.branch = true
 		return false
 	end
@@ -555,7 +556,7 @@ local function manage_branching(x)
 		return true
 	end
 	if not ZEN.branch then return false end
-	if ZEN.branch_valid == false then
+	if not ZEN.branch_valid then
 		xxx('skip execution in false conditional branch: '..x.source, 2)
 		return true
 	end
@@ -706,16 +707,14 @@ end
 
 function zencode.assert(condition, errmsg)
 	if condition then
-		if ZEN.branch then
-			ZEN.branch_valid = true
-		end
-		return true
+	   return true
+	else
+	   ZEN.branch_valid = false
 	end
 	-- in conditional branching ZEN.assert doesn't quit
 	if ZEN.branch then
 		ZEN:trace(errmsg)
 		xxx(errmsg)
-		ZEN.branch_valid = false
 	else
 		-- ZEN.debug() -- prints all data in memory
 		ZEN:trace('ERR ' .. errmsg)

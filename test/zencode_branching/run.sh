@@ -54,7 +54,6 @@ endif
 
 If number 'left' is more than 'right'
 Then print string 'left is higher'
-and print string 'and I am right'
 endif
 
 EOF
