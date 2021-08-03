@@ -75,6 +75,7 @@ JSON = require('zenroom_json')
 OCTET = require('zenroom_octet')
 BIG = require'big'
 ECDH = require'ecdh'
+-- ECDH public keys cannot function as ECP because of IANA 7303
 AES = require'aes'
 ECP = require('zenroom_ecp')
 ECP2 = require('zenroom_ecp2')
@@ -121,11 +122,6 @@ _G['Then'] = nil
 -----------
 -- defaults
 _G['CONF'] = {
-	-- goldilocks is our favorite ECDH/DSA curve
-	-- other choices here include secp256k1 or ed25519 or bls383
-	-- beware this choice affects only the ECDH object
-	-- and ECDH public keys cannot function as ECP
-	-- because of IANA 7303
 	input = {
 		encoding = input_encoding('base64'),
 		format = get_format('json'),
@@ -173,9 +169,5 @@ function ZKP_challenge(list)
 		sha256(challenge .. ser.octets .. OCTET.from_string(ser.strings))
 	) % ECP.order()
 end
-
--- encoding base64url (RFC4648) is the fastest and most portable in zenroom
--- set_encoding('url64')
--- set_format('json')
 
 collectgarbage 'collect'
