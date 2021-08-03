@@ -84,9 +84,6 @@ luarock: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o octet.so ${LDFLAGS} ${LDADD}
 	${CC} ${CFLAGS} ${SOURCES} -o ecdh.so ${LDFLAGS} ${LDADD}
 
-redis: ${SOURCES}
-	${CC} ${CFLAGS} ${SOURCES} -o redis_zenroom.so-${ARCH}.so ${LDFLAGS} ${LDADD}
-
 go: ${SOURCES}
 	${CC} -shared ${SOURCES} zen_go.o -o libzenroomgo.so ${LDFLAGS} ${LDADD}
 
