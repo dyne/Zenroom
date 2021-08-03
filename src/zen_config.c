@@ -23,10 +23,7 @@
 //
 // debug=1..3
 // color=1,0
-// seccomp=0,1
 // rngseed=hex:[256 bytes in hex notation]
-// memmanager=sys|lw|je
-// memwipe=0,1
 // print=sys|stb|mutt
 ///////////////////////
 
@@ -82,13 +79,10 @@ extern void set_color(int on);
 
 #include <stb_c_lexer.h>
 
-typedef enum { NIL, VERBOSE, COLOR, SECCOMP, RNGSEED, MEMMGR, MEMWIPE, PRINTF } zconf;
+typedef enum { NIL, VERBOSE, COLOR, RNGSEED, PRINTF } zconf;
 static zconf curconf;
 
-int zconf_seccomp = 0;
 char zconf_rngseed[(RANDOM_SEED_LEN*2)+4]; // 0x and terminating \0
-mmtype zconf_memmg = SYS;
-int  zconf_memwipe = 0;
 printftype zconf_printf = LIBC;
 
 int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
@@ -117,31 +111,8 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 			if(strcasecmp(lex.string,"debug")  ==0) { curconf = VERBOSE; break; } // bool
 			if(strcasecmp(lex.string,"verbose")==0) { curconf = VERBOSE; break; }
 			if(strcasecmp(lex.string,"color")  ==0) { curconf = COLOR;   break; } // bool
-			if(strcasecmp(lex.string,"seccomp")  ==0) { // bool
-#if (defined(ARCH_WIN) || defined(DISABLE_FORK)) || defined(ARCH_CORTEX) || defined(ARCH_BSD)
-				warning(NULL, "protected mode (seccomp isolation) only available on Linux");
-#else
-				curconf = SECCOMP;
-#endif
-				break;
-			}
 			if(strcasecmp(lex.string,"rngseed")  ==0) { curconf = RNGSEED;   break; } // str
-			if(strcasecmp(lex.string,"memmanager") ==0) { curconf = MEMMGR;   break; } // str
-			if(strcasecmp(lex.string,"memwipe") ==0) { curconf = MEMWIPE;   break; } // bool
 			if(strcasecmp(lex.string,"print") ==0) { curconf = PRINTF;   break; } // str
-
-			if(curconf==MEMMGR) {
-				if(strcasecmp(lex.string,"sys") == 0) zconf_memmg = SYS;
-				else if(strcasecmp(lex.string,"lw") == 0) zconf_memmg = LW;
-				else if(strcasecmp(lex.string,"je") == 0) zconf_memmg = JE;
-				else {
-					error(NULL,"Invalid memory manager: %s",lex.string);
-					// free(lexbuf);
-					return 0;
-				}
-				break;
-			}
-
 			if(curconf==RNGSEED) {
 				int len = strlen(lex.string);
 				if( len-4 != RANDOM_SEED_LEN *2) { // hex doubles size
@@ -181,8 +152,6 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 		case CLEX_intlit:
 			if(curconf==VERBOSE) { ZZ->debuglevel = lex.int_number; break; }
 			if(curconf==COLOR)   { set_color  ( lex.int_number ); break; }
-			if(curconf==SECCOMP) { zconf_seccomp = lex.int_number; break; }
-			if(curconf==MEMWIPE) { zconf_memwipe = lex.int_number; break; }
 
 			// free(lexbuf);
 			error(NULL,"Invalid integer configuration");

@@ -150,8 +150,6 @@ TString *luaS_createlngstrobj (lua_State *L, size_t l) {
   return ts;
 }
 
-extern int zconf_memwipe; // zenroom_config
-extern char *runtime_random256; // zen_random
 void luaS_remove (lua_State *L, TString *ts) {
   stringtable *tb = &G(L)->strt;
   TString **p = &tb->hash[lmod(ts->hash, tb->size)];
@@ -159,12 +157,6 @@ void luaS_remove (lua_State *L, TString *ts) {
     p = &(*p)->u.hnext;
   *p = (*p)->u.hnext;  /* remove element from its list */
   tb->nuse--;
-  if(zconf_memwipe && runtime_random256) { // zenroom memory wipe configuration
-	  char *s = getstr(ts);
-	  size_t l = tsslen(ts);
-	  register int i;
-	  for(i=0;i<l;i++) s[i] = runtime_random256[i+22%256];
-  }
 }
 
 

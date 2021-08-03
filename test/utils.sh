@@ -93,10 +93,7 @@ detect_zenroom_conf() {
 	else
 		zenroom_conf="$zenroom_conf,rngseed=$RNGSEED"
 	fi
-	if ! test "$MEMMANAGER" == ""; then zenroom_conf="$zenroom_conf,memmanager=$MEMMANAGER"; fi
 	if ! test "$PRINT" == ""; then zenroom_conf="$zenroom_conf,print=$PRINT"; fi
-	if ! test "$SECCOMP" == ""; then zenroom_conf="$zenroom_conf,seccomp=$SECCOMP"; fi
-	if ! test "$MEMWIPE" == ""; then zenroom_conf="$zenroom_conf,memwipe=$MEMWIPE"; fi
 	if ! test "$zenroom_conf" == ""; then
 		>&2 echo "Zenroom conf: $zenroom_conf"
 		echo "-c $zenroom_conf";
