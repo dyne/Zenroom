@@ -39,10 +39,10 @@ int zen_unset(lua_State *L, char *key) {
 
 int zen_setenv(lua_State *L, char *key, char *val) {
 	if(!val) {
-		warning(L, "setenv: NULL string detected");
+		func(L, "setenv: NULL string detected");
 		return 1; }
 	if(val[0]=='\0') {
-		warning(L, "setenv: empty value for key: %s", key);
+		func(L, "setenv: empty value for key: %s", key);
 		return 1; }
 	lua_pushstring(L, val);
 	lua_setglobal(L, key);
