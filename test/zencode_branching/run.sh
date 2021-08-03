@@ -15,7 +15,7 @@ cat << EOF > leftright.json
   "right": 50 }
 EOF
 
-cat << EOF | debug branch.zen -a leftright.json
+cat << EOF | zexe branch.zen -a leftright.json
 Given I have a 'number' named 'left'
 and I have a 'number' named 'right'
 
@@ -36,18 +36,18 @@ Then print all data
 and trace
 EOF
 
-exit 0
 
 cat << EOF > leftright.json
 { "left": 60,
   "right": 50 }
 EOF
 
-cat << EOF | debug branch.zen -a leftright.json
+cat << EOF | zexe branch.zen -a leftright.json
 Given I have a 'number' named 'left'
 and I have a 'number' named 'right'
 
 If number 'left' is less than 'right'
+and I verify 'right' is equal to 'right'
 Then print string 'right is higher'
 and print string 'and I am right'
 endif
