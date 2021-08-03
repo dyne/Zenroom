@@ -161,12 +161,6 @@ zexe() {
 	if [[ "$is_cortexm" == true ]]; then
 		local args="$*"
 		tee "$out" | qemu_zenroom_run "$args" "-z" "$out" 2>$t/stderr && cat ./outlog>$t/stdout
-		# TODO: increment RNGFAKE
-	# elif [[ "$RNGSEED" == "fake" ]]; then
-	# 	local seed=`incr_rngfake $RNGFAKE`
-	# 	export RNGFAKE=$seed
-	# 	echo $RNGFAKE >&2
-	# 	tee "$out" | tee "$docs" | $Z -z -c "rngseed=hex:$RNGFAKE" $* 2>$t/stderr 1>$t/stdout
 	else 
 		set -o pipefail
 		tee "$out" | tee "$docs" | \

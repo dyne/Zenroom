@@ -455,7 +455,7 @@ int main(int argc, char **argv) {
 		// measure and report time of execution
 		clock_gettime(CLOCK_MONOTONIC, &after);
 		long musecs = (after.tv_sec - before.tv_sec) * 1000000L;
-		act(NULL,"Time used: %lu μs", ( ((after.tv_nsec - before.tv_nsec) / 1000L) + musecs) );
+		act(NULL,"Time used: %lu", ( ((after.tv_nsec - before.tv_nsec) / 1000L) + musecs) );
 	}
 
 	cli_free_buffers();
