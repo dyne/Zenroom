@@ -61,7 +61,7 @@ When I create the result of 'mySecondNumber' - 'myThirdNumber'
 and I rename the 'result' to 'resultOfmyFirstSubtraction'
 When I create the result of 'mySecondNumber' * 'myThirdNumber'
 and I rename the 'result' to 'resultOfmyFirstMultiplication'
-When I create the result of 'mySecondNumber' - 'myThirdNumber'
+When I create the result of 'mySecondNumber' / 'myThirdNumber'
 and I rename the 'result' to 'resultOfmyFirstDivision'
 When I create the result of 'mySecondNumber' % 'myThirdNumber'
 and I rename the 'result' to 'resultOfmyFirstModulo'
@@ -104,6 +104,11 @@ When I insert 'myFirstString' in 'myFirstArray'
 # and the name of an array - we don't mix code and data! 
 When I remove the 'mySixteenthString' from 'myJustRenamedArray'
 
+# DELETE
+# You can delete an object from the memory stack at runtime
+# this is useful if, for example, you have copied an object to perform an operation
+# and you don't need the copy anymore
+When I delete 'myFourthNumber'
 
 # COPY
 # You can copy a an object into a new one
