@@ -25,12 +25,6 @@
 -- nop to terminate IF blocks
 When("done", function() end)
 
-When("delete ''", function(src)
-	have(src)
-	ACK[src] = nil
-	ZEN.CODEC[src] = nil
-end)
-
 When("append '' to ''", function(src, dest)
 	local val = have(src)
 	local dst = have(dest)
@@ -108,13 +102,13 @@ When("set '' to '' base ''", function(dest, content, base)
 						zentype = 'element' }
 end)
 
-local function delete_f(name)
+local function _delete_f(name)
    have(name)
    ACK[name] = nil
    ZEN.CODEC[name] = nil
 end
-When("delete ''"), delete_f end)
-When("remove ''"), delete_f end)
+When("delete ''", _delete_f)
+When("remove ''", _delete_f)
 
 
 When("rename the '' to ''", function(old,new)
