@@ -108,6 +108,15 @@ When("set '' to '' base ''", function(dest, content, base)
 						zentype = 'element' }
 end)
 
+local function delete_f(name)
+   have(name)
+   ACK[name] = nil
+   ZEN.CODEC[name] = nil
+end
+When("delete ''"), delete_f end)
+When("remove ''"), delete_f end)
+
+
 When("rename the '' to ''", function(old,new)
 	have(old)
 	empty(new)
