@@ -289,6 +289,14 @@ When("create the result of '' in '' * ''", function(left, dict, right)
 	ACK.result, ZEN.CODEC.result = _math_op(_mul, l, r)
 end)
 
+When("create the result of '' * '' in ''", function(left, right, dict)
+	local l = have[left]
+	local d = have(dict)
+	local r = d(right)
+	empty 'result'
+	ACK.result, ZEN.CODEC.result = _math_op(_mul, l, r)
+end)
+
 When("create the result of '' in '' * '' in ''", function(left, ldict, right, rdict)
 	local ld = have(ldict)
 	local l = ld[left]
@@ -309,6 +317,14 @@ When("create the result of '' in '' / ''", function(left, dict, right)
 	local d = have(dict)
 	local l = d[left]
 	local r = have(right)
+	empty 'result'
+	ACK.result, ZEN.CODEC.result = _math_op(_div, l, r)
+end)
+
+When("create the result of '' / '' in ''", function(left, right, dict)
+	local l = have[left]
+	local d = have(dict)
+	local r = d(right)
 	empty 'result'
 	ACK.result, ZEN.CODEC.result = _math_op(_div, l, r)
 end)
