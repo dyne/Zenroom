@@ -86,7 +86,7 @@ end
 
 function credential.prepare_blind_sign(secret)
    local gamma = G1 * secret
-   local m = INT.new(sha256(secret))
+   local m = INT.new(sha256(secret)) % ECP.order()
    -- ElGamal commitment
    local r = INT.random()
    local commit = G1 * r + SALT * m
@@ -140,7 +140,7 @@ function credential.aggregate_creds(sk, sigma_tilde)
 end
 
 function credential.prove_cred(verify, sigma, secret)
-   local m = INT.new(sha256(secret))
+   local m = INT.new(sha256(secret)) % ECP.order()
    local r = INT.random()
    local r_prime = INT.random()
    local sigma_prime = {
@@ -206,7 +206,7 @@ function credential.verify_cred(verify, Theta)
 end
 
 function credential.prove_cred_uid(vk, sigma, secret, uid)
-   local m = INT.new(sha256(secret))
+   local m = INT.new(sha256(secret)) % ECP.order()
    local r = INT.random()
    -- material
    local r_prime = INT.random()

@@ -62,7 +62,7 @@ When(
 	"create the credential key with secret key ''",
 	function(sec)
 		initkeys'credential'
-		ACK.keys.credential = INT.new(secret)
+		ACK.keys.credential = INT.new(secret) % ECP.modulo()
 	end
 )
 
