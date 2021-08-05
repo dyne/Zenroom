@@ -284,7 +284,7 @@ When("create the result of '' in '' * ''", function(left, dict, right)
 end)
 
 When("create the result of '' * '' in ''", function(left, right, dict)
-	local l = have[left]
+	local l = have(left)
 	local d = have(dict)
 	local r = d(right)
 	empty 'result'
@@ -316,7 +316,7 @@ When("create the result of '' in '' / ''", function(left, dict, right)
 end)
 
 When("create the result of '' / '' in ''", function(left, right, dict)
-	local l = have[left]
+	local l = have(left)
 	local d = have(dict)
 	local r = d(right)
 	empty 'result'
