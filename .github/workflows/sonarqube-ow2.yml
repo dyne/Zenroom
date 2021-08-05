@@ -24,3 +24,4 @@ jobs:
         SONAR_LOGIN: ${{ secrets.SONARQUBE_OW2 }}
       run: |
         docker pull sonarqube && make sonarqube
+
