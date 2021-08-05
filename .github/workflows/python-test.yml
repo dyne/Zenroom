@@ -1,0 +1,26 @@
+name: Python unit tests on Linux
+
+on:
+  push:
+    paths-ignore:
+    - 'docs/**'
+    - 'examples/**'
+    - '*.md'
+
+jobs:
+  python-test:
+    name: Run unit tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bindings/python3
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: '3.7'
+      - run: sudo apt-get update && sudo apt-get install -y cmake vim zsh
+      - run: pip install -e .[test]
+      - run: pytest -s tests
