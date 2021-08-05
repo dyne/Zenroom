@@ -8,5 +8,5 @@
 
 docker run --rm -e SONAR_HOST_URL="https://sonarqube.ow2.org" \
 	-e SONAR_LOGIN="$SONAR_LOGIN" \
-	-v "$HOME/devel/zenroom/:/usr/src" sonarsource/sonar-scanner-cli -X \
+	-v ".:/usr/src" sonarsource/sonar-scanner-cli -X \
 	-Dsonar.projectKey=zenroom
