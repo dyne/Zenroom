@@ -638,35 +638,25 @@ function zencode:run()
 	end
 end
 
-function zencode.to_octet(A)
-	local t = luatype(A)
-	if t == 'table' then
-		error('Cannot convert table to octet, use zencode.serialize',2)
-	end
-	if t == 'number' then
-		return O.from_string(tostring(A))
-	else
-		local zt = type(A)
-		if not iszen(zt) then
-			error('Cannot convert value to octet: '..zt, 2)
-		end
-		if zt == 'zenroom.octet' then
-			return A
-		else -- all other zenroom types have :octet() method to export
-			return A:octet()
-		end
-	end
-	error('Unknown type, cannot convert to octet: '..type(A), 2)
-end
-
 function zencode.serialize(A)
-	if luatype(A) == 'table' then
-		local res
-		res = serialize(A)
-		return OCTET.from_string(res.strings) .. res.octets
-	else
-		return zencode.to_octet(A)
-	end
+   local t = luatype(A)
+   if t == 'table' then
+      local res
+      res = serialize(A)
+      return OCTET.from_string(res.strings) .. res.octets
+   elseif t == 'number' then
+      return O.from_string(tostring(A))
+   elseif t == 'string' then
+      return O.from_string(A)
+   else
+      local zt = type(A)
+      if not iszen(zt) then
+	 error('Cannot convert value to octet: '..zt, 2)
+      end
+      -- all zenroom types have :octet() method to export
+      return A:octet()
+   end
+   error('Unknown type, cannot convert to octet: '..type(A), 2)
 end
 
 function zencode.heap()

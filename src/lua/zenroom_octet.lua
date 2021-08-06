@@ -33,7 +33,6 @@ function hex(data)
 	  else return O.from_str(data):hex() end
    elseif(t == "number") then return data
    elseif(t == "table") then return data
-   elseif(t == "zenroom.octet") then return data:hex()
    elseif iszen(t) then return data:octet():hex() -- any zenroom type to octet
    end
 end
@@ -58,8 +57,6 @@ function str(data)
 	  else -- its already a string (we suppose, this is not deterministic)
 		 return data
 	  end
-   elseif t == 'zenroom.octet' then
-	  return data:str()
    elseif iszen(t) then
 	  return data:octet():str()
    else
@@ -74,7 +71,6 @@ function bin(data)
 	  else return O.from_str(data):bin() end
    elseif(t == "number") then return data
    elseif(t == "table") then return data
-   elseif(t == "zenroom.octet") then return data:bin()
    elseif iszen(t) then return data:octet():bin() -- any zenroom type to octet
    end
 end
@@ -86,7 +82,6 @@ function base64(data)
 	  else return O.from_str(data):base64() end
    elseif(t == "number") then return data
    elseif(t == "table") then return data
-   elseif(t == "zenroom.octet") then return data:base64()
    elseif iszen(t) then return data:octet():base64() -- any zenroom type to octet
    end
 end
@@ -98,7 +93,6 @@ function url64(data)
 	  else return O.from_str(data):url64() end
    elseif(t == "number") then return data
    elseif(t == "table") then return data
-   elseif(t == "zenroom.octet") then return data:url64()
    elseif iszen(t) then return data:octet():url64() -- any zenroom type to octet
    end
 end
@@ -107,7 +101,6 @@ function base58(data)
    if(t == "string") then
 	  if O.is_base58(data) then return O.from_base58(data)
 	  else return O.from_str(data):base58() end
-   elseif(t == "zenroom.octet") then return data:base58()
    elseif iszen(t) then return data:octet():base58() -- any zenroom type to octet
    end
 end

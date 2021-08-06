@@ -29,10 +29,10 @@ local function _eq(left, right)
      return (left:octet() == right:octet())
   else
      error("Comparison between incompatible types: "
-	   ..type(left).." and "..type(right), 2
+	   ..type(left).." and "..type(right), 2)
   end
 end
-local function _eq(left, right)
+local function _neq(left, right)
   if luatype(left) == 'number' and luatype(right) == 'number' then
     return (left ~= right)
   elseif luatype(left) == 'table' and luatype(right) == 'table' then
@@ -41,7 +41,7 @@ local function _eq(left, right)
      return (left:octet() ~= right:octet())
   else
      error("Comparison between incompatible types: "
-	   ..type(left).." and "..type(right), 2
+	   ..type(left).." and "..type(right), 2)
   end
 end
 

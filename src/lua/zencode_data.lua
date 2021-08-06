@@ -421,13 +421,8 @@ function serialize(tab)
    sort_apply(
       function(v, k)
          strings = strings .. tostring(k)
-         local t = type(v)
-         if iszen(t) then
-            if t == 'zenroom.octet' then
-               octets = octets .. v
-            else
-               octets = octets .. v:octet()
-            end
+         if iszen(type(v)) then
+	    octets = octets .. v:octet()
          else -- number
             strings = strings .. tostring(v)
          end
