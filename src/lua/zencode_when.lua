@@ -25,6 +25,11 @@
 -- nop to terminate IF blocks
 When("done", function() end)
 
+When("'' is found", function(n) have(n) end)
+When("'' is not found", function(n)
+	ZEN.assert(ACK[n] == nil, "Object should not be found: "..n)
+end)
+
 When("append '' to ''", function(src, dest)
 	local val = have(src)
 	local dst = have(dest)
