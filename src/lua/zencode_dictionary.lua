@@ -32,26 +32,28 @@ local function dicts_reduce(dicts, params)
    local found
    local arr
    for ak,av in pairs(dicts) do
-	  found = false
-	  -- apply params filters, boolean just check key presence
-	  if params.conditions and params.cmp then
-		 for pk,pv in pairs(params.conditions) do
-			local tv = av[pk]
-			if tv then
-			   if params.cmp(tv, pv) then
-				  found = true
-			   end
-			end
-		 end
-	  else found = true end -- no filters, apply everywhere
-	  -- apply sum of selected key/value
-	  if found then
-		 for k,v in pairs(av) do
-			if k == params.target then
-			   params.op(v)
-			end
-		 end
-	  end
+      if luatype(av) == 'table' then
+	 found = false
+	 -- apply params filters, boolean just check key presence
+	 if params.conditions and params.cmp then
+	    for pk,pv in pairs(params.conditions) do
+	       local tv = av[pk]
+	       if tv then
+		  if params.cmp(tv, pv) then
+		     found = true
+		  end
+	       end
+	    end
+	 else found = true end -- no filters, apply everywhere
+	 -- apply sum of selected key/value
+	 if found then
+	    for k,v in pairs(av) do
+	       if k == params.target then
+		  params.op(v)
+	       end
+	    end
+	 end
+      end -- av is a table
    end
 end
 

@@ -282,3 +282,81 @@ and I rename the 'copy' to 'second method'
 Then print the 'first method'
 and print the 'second method'
 EOF
+
+
+cat <<EOF | save dictionary batch_data.json
+{
+	"TransactionsBatchA": {
+		"MetaData": "This var is Not a Table",
+		"Information": {
+			"Metadata": "TransactionsBatchB6789",
+			"Buyer": "John Doe"
+		},
+		"ABC-Transactions1Data": {
+			"timestamp": 1597573139,
+			"TransactionValue": 1500,
+			"PricePerKG": 100,
+			"TransferredProductAmount": 15,
+			"UndeliveredProductAmount": 7,
+			"ProductPurchasePrice": 50
+		},
+		"ABC-Transactions2Data": {
+			"timestamp": 1597573239,
+			"TransactionValue": 1600,
+			"TransferredProductAmount": 20,
+			"PricePerKG": 80
+		},
+		"ABC-Transactions3Data": {
+			"timestamp": 1597573340,
+			"TransactionValue": 700,
+			"PricePerKG": 70,
+			"TransferredProductAmount": 10
+		}
+	},
+	"dictionaryToBeFound": "Information",
+	"salesStartTimestamp": 1597573200,
+	"PricePerKG": 3
+}
+EOF
+
+cat <<EOF | zexe dictionary_iter.zen -a batch_data.json
+Rule check version 2.0.0
+
+Given that I have a 'string' named 'dictionaryToBeFound'
+Given that I have a 'string dictionary' named 'TransactionsBatchA'
+Given that I have a 'number' named 'salesStartTimestamp'
+
+# Here we search if a certain dictionary exists in the list
+When the 'dictionaryToBeFound' is found in 'TransactionsBatchA'
+
+# Here we find the highest value of an element, in all dictionaries
+When I find the max value 'PricePerKG' for dictionaries in 'TransactionsBatchA'
+and I rename the 'max value' to 'maxPricePerKG'
+
+# Here we sum the values of an element, from all dictionaries
+When I create the sum value 'TransactionValue' for dictionaries in 'TransactionsBatchA'
+and I rename the 'sum value' to 'sumValueAllTransactions'
+
+# Here we sum the values of an element, from all dictionaries, with a condition
+When I create the sum value 'TransferredProductAmount' for dictionaries in 'TransactionsBatchA' where 'timestamp' > 'salesStartTimestamp'
+and I rename the 'sum value' to 'transferredProductAmountafterSalesStart'
+
+# Here we create a dictionary
+When I create the 'number dictionary'
+and I rename the 'number dictionary' to 'salesReport'
+
+
+# Here we insert elements into the newly created dictionary
+When I insert 'maxPricePerKG' in 'salesReport'
+When I insert 'sumValueAllTransactions' in 'salesReport'
+When I insert 'transferredProductAmountafterSalesStart' in 'salesReport'
+
+
+When I create the hash of 'salesReport' using 'sha512'
+When I rename the 'hash' to 'sha512hashOfsalesReport'
+
+
+#Print out the data we produced along
+# We also print the dictionary 'Information' as hex, just for fun
+Then print the 'salesReport'
+EOF
