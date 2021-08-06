@@ -9,7 +9,7 @@ if ! test -r ../utils.sh; then
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
-cat <<EOF | zexe numbers_hash_left.zen | save numbers numbers_left.json 
+cat <<EOF | zexe numbers_hash_left.zen | save numbers numbers_left.json
 Given nothing
 When I write string 'a left string to be hashed' in 'source'
 and I create the hash of 'source'
@@ -166,5 +166,84 @@ EOF
 # and print 'result' as 'number'
 # EOF
 
+cat << EOF | save numbers number_dict.json
+{
+	"Transactions1Data": {
+		"timestamp": 1597573139,
+		"TransactionValue": 1500,
+		"PricePerKG": 100,
+		"TransferredProductAmount": 15,
+		"UndeliveredProductAmount": 7,
+		"ProductPurchasePrice": 50
+	},
+	"Transactions2Data": {
+		"timestamp": 1597573239,
+		"TransactionValue": 1600,
+		"TransferredProductAmount": 20,
+		"PricePerKG": 80
+	},
+	"dictionaryToBeFound": "Information",
+	"salesStartTimestamp": 1597573200,
+	"lastYearPricePerKG": 30,
+	"lastYearMonthlySales": 15,
+	"lastYearAvgTransactionsValue": 1500
+}
+EOF
+
+cat << EOF | zexe divisions.zen -a number_dict.json
+Rule check version 2.0.0
+Scenario 'ecdh': keypair management and ECDSA signature
+
+# Here we load a keypair to sign stuff
+# Given that I am 'JackInTheShop'
+# Given that I have my valid 'keypair'
+
+# Here we are loading string dictionaries that contain numbers we will use
+Given that I have a 'string dictionary' named 'Transactions1Data'
+Given that I have a 'string dictionary' named 'Transactions2Data'
+
+# Here we load some numbers that are at root level
+Given that I have a 'number' named 'salesStartTimestamp'
+Given that I have a 'number' named 'lastYearPricePerKG'
+Given that I have a 'number' named 'lastYearMonthlySales'
+Given that I have a 'number' named 'lastYearAvgTransactionsValue'
+
+
+# Here we calculate the difference of two values, inside two dictionaries
+When I create the result of 'TransferredProductAmount' in 'Transactions1Data' - 'TransferredProductAmount' in 'Transactions2Data'
+and I rename the 'result' to 'salesDifference'
+
+
+# Here we divide a number at root level with a number inside a dictionary
+When I create the result of 'lastYearAvgTransactionsValue' / 'TransactionValue' in 'Transactions2Data'
+and I rename the 'result' to 'percentOfSalesinTransaction2'
+
+When I create the result of 'PricePerKG' in 'Transactions1Data' / 'lastYearPricePerKG'
+and I rename the 'result' to 'priceRampinTransaction1'
+
+
+# Here we create a dictionary
+When I create the 'number dictionary'
+and I rename the 'number dictionary' to 'salesReport'
+
+# Here we insert elements into the newly created dictionary
+
+When I insert 'salesDifference' in 'salesReport'
+When I insert 'priceRampinTransaction1' in 'salesReport'
+When I insert 'percentOfSalesinTransaction2' in 'salesReport'
+
+
+When I create the hash of 'salesReport' using 'sha256'
+When I rename the 'hash' to 'salesReport.hash'
+
+# Here we produce an ECDSA signature the newly created dictionary using
+# When I create the signature of 'salesReport'
+# and I rename the 'signature' to 'salesReport.signature'
+
+#Print out the data we produced along
+Then print the 'salesReport'
+# Then print the 'salesReport.signature'
+Then print the 'salesReport.hash'
+EOF
 
 success
