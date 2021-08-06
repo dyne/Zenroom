@@ -228,14 +228,6 @@ function xxx(s, n)
    end
 end
 
-function content(var)
-   if type(var) == "zenroom.octet" then
-	  INSPECT.print(var:array())
-   else
-	  INSPECT.print(var)
-   end
-end
-
 
 -- sorted iterator for deterministic ordering of tables
 -- from: https://www.lua.org/pil/19.3.html

@@ -110,9 +110,7 @@ require('zencode_keys')
 -- it would execute lua code inside the zencode and is
 -- therefore dangerous, switched off by default
 -- require('zencode_eval')
-if DEBUG > 0 then
-	require('zencode_debug')
-end
+require('zencode_debug')
 
 -- scenario are loaded on-demand
 -- scenarios can only implement "When ..." steps
