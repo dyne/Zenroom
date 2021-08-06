@@ -23,15 +23,25 @@
 local function _eq(left, right)
   if luatype(left) == 'number' and luatype(right) == 'number' then
     return (left == right)
-  else
+  elseif luatype(left) == 'table' and luatype(right) == 'table' then
     return (ZEN.serialize(left) == ZEN.serialize(right))
+  elseif iszen(type(left)) and iszen(type(right)) then
+     return (left:octet() == right:octet())
+  else
+     error("Comparison between incompatible types: "
+	   ..type(left).." and "..type(right), 2
   end
 end
-local function _neq(left, right)
+local function _eq(left, right)
   if luatype(left) == 'number' and luatype(right) == 'number' then
     return (left ~= right)
-  else
+  elseif luatype(left) == 'table' and luatype(right) == 'table' then
     return (ZEN.serialize(left) ~= ZEN.serialize(right))
+  elseif iszen(type(left)) and iszen(type(right)) then
+     return (left:octet() ~= right:octet())
+  else
+     error("Comparison between incompatible types: "
+	   ..type(left).." and "..type(right), 2
   end
 end
 

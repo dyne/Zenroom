@@ -25,8 +25,8 @@
 -- nop to terminate IF blocks
 When("done", function() end)
 
-When("'' is found", function(n) have(n) end)
-When("'' is not found", function(n)
+IfWhen("'' is found", function(n) have(n) end)
+IfWhen("'' is not found", function(n)
 	ZEN.assert(ACK[n] == nil, "Object should not be found: "..n)
 end)
 
