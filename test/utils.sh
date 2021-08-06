@@ -159,13 +159,13 @@ zexe() {
 		local args="$*"
 		tee "$out" | qemu_zenroom_run "$args" "-z" "$out" 2>$t/stderr && cat ./outlog>$t/stdout
 	else 
-		set -o pipefail
+	        set +e
 		tee "$out" | tee "$docs" | \
                 MALLOC_PERTURB_=$(( $RANDOM % 255 + 1 )) \
 			$Z -z $* 2>$t/stderr 1>$t/stdout
 	fi
 	res=$?
-	set +o pipefail
+	set -e
 	>&2 echo "exitcode: $res"
 	exec_time=`grep "Time used" $t/stderr | cut -d: -f2`
 	exec_memory=`grep "Memory used" $t/stderr | cut -d: -f2`
