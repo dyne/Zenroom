@@ -309,7 +309,8 @@ excessing data. Octets cannot be resized.
 */
 static int newoctet (lua_State *L) {
 	const octet *o = o_arg(L, 1); SAFE(o);
-	octet *r = o_dup(L,(octet*)o); SAFE(r);
+	octet *r = o_dup(L,(octet*)o);
+	(void)r;
 	return 1;
 }
 
@@ -735,6 +736,15 @@ static int to_array(lua_State *L) {
 }
 
 /***
+    Return self (octet), implemented for compatibility with all
+    zenroom types so that anything can be casted to octet */
+static int to_octet(lua_State *L) {
+	octet *o = o_arg(L,1);	SAFE(o);
+	o_dup(L, o); // pushes to stack
+	return 1;
+}
+
+/***
     Print an octet as string.
 
     @function octet:str()
@@ -1033,6 +1043,7 @@ int luaopen_octet(lua_State *L) {
 		{"to_string", to_string},
 		{"to_str",    to_string},
 		{"to_array",  to_array},
+		{"to_octet",  to_octet},
 		{"to_bin",    to_bin},
 		{"random",  new_random},
 		{"entropy", entropy},
@@ -1048,6 +1059,7 @@ int luaopen_octet(lua_State *L) {
 		{"url64",  to_url64},
 		{"base58", to_base58},
 		{"string", to_string},
+		{"octet",  to_octet},
 		{"str",    to_string},
 		{"array",  to_array},
 		{"bin",    to_bin},
