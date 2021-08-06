@@ -10,7 +10,7 @@ globals = {
     'check_codec', 'ZKP_challenge', 'sha256', 'sha512',
     'printerr', 'act', 'notice', 'warn', 'error', 'xxx', 'fatal', 'trim', 'serialize', 'iszen',
     'DEBUG', 'ZEN_traceback', 'input_encoding', 'output_encoding', 'get_format',
-    'isarray', 'isdictionary', 'array_contains'
+    'isarray', 'isdictionary', 'array_contains',
     'guess_conversion', 'operate_conversion', 'deepcopy', 'guess_outcast', 'new_codec'
     }
 local _columns = 72
