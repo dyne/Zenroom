@@ -324,7 +324,7 @@ int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
 		return ret;
 	}
 	if(ZZ->errorlevel < 1)
-		notice(L, "Script successfully executed:\n\n%s",script);
+		notice(L, "Script successfully executed");
 	return 0;
 }
 
@@ -347,7 +347,7 @@ int zen_exec_script(zenroom_t *ZZ, const char *script) {
 		return ret;
 	}
 	if(ZZ->errorlevel > 1)
-		notice(L, "Script successfully executed:\n\n%s",script);
+		notice(L, "Script successfully executed");
 	return 0;
 }
 
