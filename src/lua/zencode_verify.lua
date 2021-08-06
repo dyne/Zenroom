@@ -24,7 +24,8 @@ local function _eq(left, right)
   if luatype(left) == 'number' and luatype(right) == 'number' then
     return (left == right)
   elseif luatype(left) == 'table' and luatype(right) == 'table' then
-    return (ZEN.serialize(left) == ZEN.serialize(right))
+     if(#left ~= #right) then return false end -- optimization
+     return (ZEN.serialize(left) == ZEN.serialize(right))
   elseif iszen(type(left)) and iszen(type(right)) then
      return (left:octet() == right:octet())
   else
@@ -36,7 +37,8 @@ local function _neq(left, right)
   if luatype(left) == 'number' and luatype(right) == 'number' then
     return (left ~= right)
   elseif luatype(left) == 'table' and luatype(right) == 'table' then
-    return (ZEN.serialize(left) ~= ZEN.serialize(right))
+     if(#left == #right) then return false end -- optimization
+     return (ZEN.serialize(left) ~= ZEN.serialize(right))
   elseif iszen(type(left)) and iszen(type(right)) then
      return (left:octet() ~= right:octet())
   else
