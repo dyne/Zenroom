@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Wednesday, 14th July 2021
+--on Monday, 9th August 2021
 --]]
 
 -- defined outside because reused across different schemas
@@ -73,6 +73,17 @@ local function f_keygen()
 	}
 end
 When('create the keypair', f_keygen)
+-- generate a keypair in "bitcoin" format (only x coord, 03 prepended)
+When('create the bitcoin keypair', function()
+	empty'bitcoin keypair'
+	local kp = ECDH.keygen()
+	local x, y = ECDH.pubxy(kp.public)
+	local pk = OCTET.from_hex('03') .. x
+	ACK.bitcoin_keypair = {
+			public_key = pk,
+			private_key = kp.private
+	}
+end)
 
 When(
 	"create the keypair with secret key ''",
@@ -83,6 +94,20 @@ When(
 		ACK.keypair = {
 			public_key = pub,
 			private_key = ACK[sec]
+		}
+	end
+)
+When(
+	"create the bitcoin keypair with secret key ''",
+	function(sec)
+		local sk = have(sec)
+		empty'bitcoin keypair'
+		local pub = ECDH.pubgen(sk)
+		local x, y = ECDH.pubxy(pub)
+		local pk = OCTET.from_hex('03') .. x
+		ACK.bitcoin_keypair = {
+			public_key = pub,
+			private_key = sk
 		}
 	end
 )
