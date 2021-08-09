@@ -17,7 +17,7 @@
  * If not, see http://www.gnu.org/licenses/agpl.txt
  * 
  * Last modified by Denis Roio
- * on Tuesday, 27th July 2021
+ * on Monday, 9th August 2021
  */
 
 #include <math.h>
@@ -735,6 +735,12 @@ static int big_modinv(lua_State *L) {
 	return 1;
 }
 
+static int big_parity(lua_State *L) {
+	big *c = big_arg(L, 1); SAFE(c);
+	lua_pushboolean(L, BIG_parity(c->val)==1); // big % 2
+	return 1;
+}
+
 int luaopen_big(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg big_class[] = {
@@ -758,6 +764,7 @@ int luaopen_big(lua_State *L) {
 		{"modinv",big_modinv},
 		{"jacobi",big_jacobi},
 		{"monty",big_monty},
+		{"parity",big_parity},
 		{"info",lua_biginfo},
 		{NULL,NULL}
 	};
@@ -788,6 +795,7 @@ int luaopen_big(lua_State *L) {
 		{"modinv",big_modinv},
 		{"jacobi",big_jacobi},
 		{"monty",big_monty},
+		{"parity",big_parity},
 		{"__gc", big_destroy},
 		{"__tostring",big_to_hex},
 		{NULL,NULL}

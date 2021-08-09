@@ -78,7 +78,8 @@ When('create the bitcoin keypair', function()
 	empty'bitcoin keypair'
 	local kp = ECDH.keygen()
 	local x, y = ECDH.pubxy(kp.public)
-	local pk = OCTET.from_hex('03') .. x
+	local pfx = fif( BIG.parity(BIG.new(y) ), OCTET.from_hex('03'), OCTET.from_hex('02') )
+	local pk = pfx .. x
 	ACK.bitcoin_keypair = {
 			public_key = pk,
 			private_key = kp.private
@@ -104,7 +105,8 @@ When(
 		empty'bitcoin keypair'
 		local pub = ECDH.pubgen(sk)
 		local x, y = ECDH.pubxy(pub)
-		local pk = OCTET.from_hex('03') .. x
+		local pfx = fif( BIG.parity(BIG.new(y) ), OCTET.from_hex('03'), OCTET.from_hex('02') )
+		local pk = pfx .. x
 		ACK.bitcoin_keypair = {
 			public_key = pub,
 			private_key = sk
