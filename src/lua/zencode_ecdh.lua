@@ -71,6 +71,7 @@ local function f_keygen()
 		public_key = kp.public,
 		private_key = kp.private
 	}
+	new_codec('keypair', { zentype = 'dictionary' })
 end
 When('create the keypair', f_keygen)
 -- generate a keypair in "bitcoin" format (only x coord, 03 prepended)
@@ -84,6 +85,7 @@ When('create the bitcoin keypair', function()
 			public_key = pk,
 			private_key = kp.private
 	}
+	new_codec('bitcoin keypair', { zentype = 'dictionary' })
 end)
 
 When(
@@ -111,6 +113,7 @@ When(
 			public_key = pub,
 			private_key = sk
 		}
+		new_codec('bitcoin keypair', { zentype = 'dictionary' })
 	end
 )
 
@@ -134,6 +137,7 @@ When(
 			ACK.secret_message.iv,
 			ACK.secret_message.header
 		)
+		new_codec('secret message', { zentype = 'dictionary' })
 	end
 )
 
@@ -192,6 +196,7 @@ When(
 			ACK.secret_message.iv,
 			ACK.secret_message.header
 		)
+		new_codec('secret message', { zentype = 'dictionary' })
 	end
 )
 
