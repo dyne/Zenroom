@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2017-2021 Dyne.org foundation
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
 # Zenroom crypto VM
 
 [![Zenroom logo](https://files.dyne.org/zenroom/logos/zenroom_logotype.png)](https://dev.zenroom.org)

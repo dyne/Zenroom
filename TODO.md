@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2017-2021 Dyne.org foundation
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
 # List of planned improvements
 
 This is a draft TODO list for future directions in zenroom

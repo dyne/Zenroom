@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2017-2021 Dyne.org foundation
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
 # Dyne.org - Contributor License Agreement
 
 This Contributor Agreement (“CA”) applies to the contribution specified in section "Terms" below that you make to any product or project managed by us (the “project”), and sets out the intellectual property rights you grant to us in the contributed materials. The term “us” shall mean Dyne.org Foundation. The term “you” shall mean the person or entity identified below. If you agree to be bound by these terms, fill in the information requested and [sign the Dyne.org CA](https://dyne.org/cla). Read this agreement carefully before signing. These terms and conditions constitute a binding legal agreement.

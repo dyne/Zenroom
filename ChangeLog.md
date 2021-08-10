@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2017-2021 Dyne.org foundation
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
 # Zenroom ChangeLog
 
 ## 1.0.0 (September 2019)
