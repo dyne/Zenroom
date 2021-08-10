@@ -7,6 +7,8 @@ on:
     - 'docs/**'
     - 'examples/**'
     - '*.md'
+  pull_request:
+
 env:
   EM_VERSION: latest
   NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
@@ -43,6 +45,7 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
     defaults:
       run:
         working-directory: bindings/javascript
