@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Thursday, 29th July 2021
+--on Friday, 20th August 2021
 --]]
 
 -- override type to recognize zenroom's types
@@ -32,7 +32,7 @@ _G['type'] = function(var)
 end
 -- TODO: optimise in C
 function iszen(n)
-   for c in n:gmatch("zenroom") do
+   for _ in n:gmatch("zenroom") do
 	  return true
    end
    return false
@@ -147,65 +147,53 @@ function input_encoding(what)
    return nil
 end
 
+local function _native(data, fun)
+	local t = type(data)
+	if t == 'number' then
+		return data
+	elseif t == 'string' then
+		return fun(data)
+	elseif iszen(t) then
+		return fun(data:octet())
+	else
+		error("Cannot export data type: "..t)
+	end
+end
 -- gets a string and returns the associated function, string and prefix
 function output_encoding(what)
-   if what == 'u64' or what == 'url64' then
-	  return { fun = function(data)
-				  if luatype(data) == 'number' then
-					 return data
-				  else
-					 return O.to_url64(data)
-				  end
-					 end,
-			   name = 'url64' }
-   elseif what == 'b64' or what =='base64' then
-	  return { fun = function(data)
-				  if luatype(data) == 'number' then
-					 return data
-				  else
-					 return O.to_base64(data)
-				  end
-					 end,
-			   name = 'base64' }
-   elseif what == 'b58' or what =='base58' then
-	  return { fun = function(data)
-				  if luatype(data) == 'number' then
-					 return data
-				  else
-					 return O.to_base58(data)
-				  end
-					 end,
-			   name = 'base58' }
-   elseif what == 'hex' then
-	  return { fun = function(data)
-				  if luatype(data) == 'number' then
-					 return data
-				  else
-					 return O.to_hex(data)
-				  end
-					 end,
-			   name = 'hex' }
-   elseif what == 'bin' or what == 'binary' then
-	  return { fun = function(data)
-				  if luatype(data) == 'number' then
-					 return data
-				  else
-					 return O.to_bin(data)
-				  end
-					 end,
-			   name = 'binary' }
-   elseif what == 'str' or what == 'string' then
-	  return { fun = function(data)
-				  if luatype(data) == 'number' then
-					 return data
-				  else
-					 return O.to_string(data)
-				  end
-					 end,
-			   name = 'string' }
-   end
-   error("Output encoding not found: "..what, 2)
-   return nil
+	if what == 'u64' or what == 'url64' then
+		return { fun = function(data)
+			return _native(data, O.to_url64)
+		end,
+		name = 'url64' }
+	elseif what == 'b64' or what =='base64' then
+		return { fun = function(data)
+			return _native(data, O.to_base64)
+		end,
+		name = 'base64' }
+	elseif what == 'b58' or what =='base58' then
+		return { fun = function(data)
+				return _native(data, O.to_base58)
+		end,
+		name = 'base58' }
+	elseif what == 'hex' then
+		return { fun = function(data)
+				return _native(data, O.to_hex)
+		end,
+		name = 'hex' }
+	elseif what == 'bin' or what == 'binary' then
+		return { fun = function(data)
+				return _native(data, O.to_bin)
+		end,
+		name = 'binary' }
+	elseif what == 'str' or what == 'string' then
+		return { fun = function(data)
+				return _native(data, O.to_string)
+		end,
+		name = 'string' }
+	end
+	error("Output encoding not found: "..what, 2)
+	return nil
 end
 
 function get_format(what)
@@ -276,26 +264,6 @@ function deepcopy(orig)
 	  copy = orig
    end
    return copy
-end
-
--- apply a function on all keys and values of a tree structure
--- uses sorted listing for deterministic order
-function sort_apply(fun,t,...)
-   if luatype(fun) ~= 'function' then
-	  error("Internal error: apply 1st argument is not a function", 3)
-	  return nil end
-   -- if luatype(t) == 'number' then
-   -- 	  return t end
-   if luatype(t) ~= 'table' then
-	  error("Internal error: apply 2nd argument is not a table", 3)
-	  return nil end
-   for k,v in sort_pairs(t) do
-	  if luatype(v) == 'table' then
-		 sort_apply(fun,v,...) -- recursion
-	  else
-		 fun(v,k,...)
-	  end
-   end
 end
 
 -- deep recursive map on a tree structure

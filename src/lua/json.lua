@@ -76,7 +76,8 @@ local function encode_table(val, stack)
       n = n + 1
     end
     if n ~= #val then
-      error("invalid table: sparse array")
+      warn("JSON encoding error: "..type(val))
+      error("invalid table: sparse array (n="..n..", #val="..#val..")")
     end
     -- Encode
     for i, v in sort_ipairs(val) do
