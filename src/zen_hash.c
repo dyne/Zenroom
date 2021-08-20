@@ -164,6 +164,14 @@ static void _yeld(hash *h, octet *o) {
 	}
 }
 
+static int hash_to_octet(lua_State *L) {
+	hash *h = hash_arg(L,1); SAFE(h);
+	octet *res = o_new(L,h->len); SAFE(res);
+	_yeld(h, res);
+	res->len = h->len;
+	return 1;
+}
+
 /**
    Hash an octet into a new octet. Use the configured hash function to
    hash an octet string and return a new one containing its hash.
@@ -329,6 +337,7 @@ int luaopen_hash(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg hash_class[] = {
 		{"new",lua_new_hash},
+		{"octet",hash_to_octet},
 		{"hmac",hash_hmac},
 		{"kdf2", hash_kdf2},
 		{"kdf", hash_kdf2},
@@ -336,6 +345,7 @@ int luaopen_hash(lua_State *L) {
 		{"pbkdf", hash_pbkdf2},
 		{NULL,NULL}};
 	const struct luaL_Reg hash_methods[] = {
+		{"octet",hash_to_octet},
 		{"process",hash_process},
 		{"feed",hash_feed},
 		{"yeld",hash_yeld},
