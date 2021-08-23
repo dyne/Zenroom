@@ -51,9 +51,20 @@ aliquip ex ea commodo consequat. Duis aute irure dolor in
 reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
 pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
 culpa qui officia deserunt mollit anim id est laborum.]])
-sig = ECDH.sign(alice.private, m)
-assert(ECDH.verify(alice.public, m, sig), "ECDH verify failed")
-assert(not ECDH.verify(alice.public, m..O.from_str("bug"),sig), "ECDH verify failed")
+print 'iterate 100 tests of sign/verify'
+for i=1,100 do
+	sig = ecdh.sign(alice.private, m)
+	assert(ecdh.verify(alice.public, m, sig), "ecdh verify failed")
+	assert(not ecdh.verify(alice.public, sha256(m),sig), "ecdh verify failed")
+end
+
+print 'iterate 100 tests of sign/verify pre-hashed'
+hm = sha256(m)
+for i=1,100 do
+nohashsig = ecdh.sign_hashed(alice.private, hm, #hm)
+assert(ecdh.verify_hashed(alice.public, hm, nohashsig, #hm), "ecdh verify failed")
+assert(not ecdh.verify_hashed(alice.public, sha256(hm),nohashsig, #hm), "ecdh verify failed")
+end
 
 print "OK"
 -- vk, sk = ecdh:keygen()

@@ -281,6 +281,43 @@ static int ecdh_dsa_sign(lua_State *L) {
 	return 1;
 }
 
+static int ecdh_dsa_sign_hashed(lua_State *L) {
+	octet *sk = o_arg(L,1); SAFE(sk);
+	octet *m = o_arg(L,2); SAFE(m);
+	// IEEE ECDSA Signature, R and S are signature on F using private
+	// key S. One can either pass an RNG or have K already
+	// provide. For a correct K's generation see also RFC6979, however
+	// this argument is provided here mostly for testing purposes with
+	// pre-calculated vectors.
+	int max_size;
+	lua_Number n = lua_tointegerx(L,3,&max_size);
+	if(max_size==0) {
+		ERROR(); lerror(L,"missing 3rd argument: byte size of octet to sign");
+	}
+	if (m->len != (int)n) {
+		ERROR(); error(L,"size of input does not match: %u != %u", m->len, (int)n);
+	}
+	if(lua_isnoneornil(L, 4)) {
+		// return a table
+		lua_createtable(L, 0, 2);
+		octet *r = o_new(L,(int)n); SAFE(r);
+		lua_setfield(L, -2, "r");
+		octet *s = o_new(L,(int)n); SAFE(s);
+		lua_setfield(L, -2, "s");
+		(*ECDH.ECP__SP_DSA_NOHASH)((int)n, Z->random_generator, NULL, sk, m, r, s);
+	} else {
+		octet *k = o_arg(L,4); SAFE(k);
+		// return a table
+		lua_createtable(L, 0, 2);
+		octet *r = o_new(L,(int)n); SAFE(r);
+		lua_setfield(L, -2, "r");
+		octet *s = o_new(L,(int)n); SAFE(s);
+		lua_setfield(L, -2, "s");
+		(*ECDH.ECP__SP_DSA_NOHASH)((int)n, NULL, k, sk, m, r, s );
+	}
+	return 1;
+}
+
 
 /**
    Elliptic Curve Digital Signature Algorithm (ECDSA) verification
@@ -301,16 +338,6 @@ static int ecdh_dsa_verify(lua_State *L) {
 	octet *m = o_arg(L,2); SAFE(m);
 	octet *r = NULL;
 	octet *s = NULL;
-	// take a table as argument, gather r and s from its keys
-	// TODO: take an octet and split it
-	// void *ud = luaL_checkudata(L, 3, "zenroom.octet");
-	// if(ud) { // break octet in two r,s
-	// 	octet *tmp = o_arg(L,3); SAFE(tmp);
-	// 	r = o_dup(L,tmp); SAFE(r);
-	// 	s = o_new(L,32); SAFE(s);
-	// 	lua_pop(L,2); // pop r,s used internally
-	// 	OCT_chop(r,s,32); // truncates r to 32 bytes and places the rest in s
-	// } else
 	if(lua_type(L, 3) == LUA_TTABLE) {
 		lua_getfield(L, 3, "r");
 		lua_getfield(L, 3, "s"); // -2 stack
@@ -321,6 +348,41 @@ static int ecdh_dsa_verify(lua_State *L) {
 	}
 	int max_size = 64;
 	int res = (*ECDH.ECP__VP_DSA)(max_size, pk, m, r, s);
+	if(res <0) // ECDH_INVALID in milagro/include/ecdh.h.in (!?!)
+		// TODO: maybe suggest fixing since there seems to be
+		// no criteria between ERROR (used in the first check
+		// in VP_SDA) and INVALID (in the following two
+		// checks...)
+		lua_pushboolean(L, 0);
+	else
+		lua_pushboolean(L, 1);
+	return 1;
+}
+
+static int ecdh_dsa_verify_hashed(lua_State *L) {
+    // IEEE1363 ECDSA Signature Verification. Signature C and D on F
+    // is verified using public key W
+	octet *pk = o_arg(L,1); SAFE(pk);
+	octet *m = o_arg(L,2); SAFE(m);
+	octet *r = NULL;
+	octet *s = NULL;
+	if(lua_type(L, 3) == LUA_TTABLE) {
+		lua_getfield(L, 3, "r");
+		lua_getfield(L, 3, "s"); // -2 stack
+		r = o_arg(L,-2); SAFE(r);
+		s = o_arg(L,-1); SAFE(s);
+	} else {
+		ERROR(); lerror(L,"signature argument invalid: not a table");
+	}
+	int max_size = 0;
+	lua_Number n = lua_tointegerx(L,4,&max_size);
+	if(max_size==0) {
+		ERROR(); lerror(L,"invalid size zero for material to sign");
+	}
+	if (m->len != (int)n) {
+		ERROR(); error(L,"size of input does not match: %u != %u", m->len, (int)n);
+	}
+	int res = (*ECDH.ECP__VP_DSA_NOHASH)((int)n, pk, m, r, s);
 	if(res <0) // ECDH_INVALID in milagro/include/ecdh.h.in (!?!)
 		// TODO: maybe suggest fixing since there seems to be
 		// no criteria between ERROR (used in the first check
@@ -436,6 +498,8 @@ int luaopen_ecdh(lua_State *L) {
 		{"validate", ecdh_pubcheck},
 		{"sign", ecdh_dsa_sign},
 		{"verify", ecdh_dsa_verify},
+		{"sign_hashed", ecdh_dsa_sign_hashed},
+		{"verify_hashed", ecdh_dsa_verify_hashed},
 		{"public_xy", ecdh_pub_xy},
 		{"pubxy", ecdh_pub_xy},
 		{NULL,NULL}};
