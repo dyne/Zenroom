@@ -34,6 +34,8 @@
 #define _SHA3_256 3256
 #define _SHA3_384 3384
 #define _SHA3_512 3512
+#define _SHA3_256 3256
+#define _KECCAK256 7
 
 typedef struct {
 	char name[16];
@@ -44,6 +46,7 @@ typedef struct {
 	hash512 *sha512;
 	sha3 *sha3_256; // SHA3 aka keccak with 32 bytes
 	sha3 *sha3_512; // SHA3 aka keccak with 64 bytes
+        sha3 *keccak256;
 	// ...
 } hash;
 

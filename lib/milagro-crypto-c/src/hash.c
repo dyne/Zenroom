@@ -528,6 +528,21 @@ void SHA3_shake(sha3 *sh,char *buff,int len)
     SHA3_squeeze(sh,buff,len);
 }
 
+void KECCAK_hash(sha3 *sh,char *hash)
+{
+    /* generate a SHA3 hash of appropriate size */
+    int q=sh->rate-(sh->length%sh->rate);
+    if (q==1) SHA3_process(sh,0x86);
+    else
+    {
+        SHA3_process(sh,0x01); // This is the only difference from SHA3
+        while ((int)sh->length%sh->rate!=sh->rate-1) SHA3_process(sh,0x00);
+        SHA3_process(sh,0x80); /* this will force a final transform */
+    }
+    SHA3_squeeze(sh,hash,sh->len);
+    SHA3_init(sh, sh->len);
+}
+
 
 /* test program: should produce digest
 
