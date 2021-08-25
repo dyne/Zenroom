@@ -451,10 +451,11 @@ void SHA3_init(sha3 *sh,int olen)
 }
 
 /* process a single byte */
-void SHA3_process(sha3 *sh,int byt)
+void SHA3_process(sha3 *sh,int bytInt)
 {
+    unsigned char byt = (unsigned char)bytInt;
     int cnt=(int)(sh->length%sh->rate);
-    int i,j,b=cnt%8;
+    int i,j,b=cnt%8;    
     cnt/=8;
     i=cnt%5;
     j=cnt/5;  /* process by columns! */
@@ -462,6 +463,7 @@ void SHA3_process(sha3 *sh,int byt)
     sh->length++;
     if (sh->length%sh->rate==0) SHA3_transform(sh);
 }
+
 
 /* squeeze the sponge */
 void SHA3_squeeze(sha3 *sh,char *buff,int len)
@@ -509,6 +511,7 @@ void SHA3_hash(sha3 *sh,char *hash)
         SHA3_process(sh,0x80); /* this will force a final transform */
     }
     SHA3_squeeze(sh,hash,sh->len);
+    SHA3_init(sh, sh->len);
 }
 
 void SHA3_shake(sha3 *sh,char *buff,int len)
