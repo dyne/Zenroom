@@ -4,7 +4,7 @@ echo "============================="
 echo " HASH VECTOR TESTS FROM NIST "
 echo "============================="
 
-alias zenroom="${1:-../../src/zenroom} -c memmanager=sys"
+alias zenroom="${1:-../../src/zenroom}"
 
 num=0
 check() {

@@ -6,10 +6,18 @@
 -- the kind of hash must be indicated in KEYS
 -- public domain (and thanks for all the NIST)
 
+local function newline_iter(text)
+	s = trim(text) -- implemented in zen_io.c
+	if s:sub(-1) ~= '\n' then
+		s = s .. '\n'
+	end
+	return s:gmatch('(.-)\n') -- iterators return functions
+end
+
 hash = HASH.new(KEYS)
 local test = { }
 local nr = 0
-for line in zencode_newline_iter(DATA) do
+for line in newline_iter(DATA) do
    local rule = strtok(line)
    -- I.print(rule)
    if #rule > 0 then
