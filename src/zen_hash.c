@@ -110,6 +110,13 @@ hash* hash_new(lua_State *L, const char *hashtype) {
 		h->sha3_512 = (sha3*)zen_memory_alloc(sizeof(sha3));
 		SHA3_init(h->sha3_512, h->len);
 
+	} else if(strncasecmp(hashtype,"keccak256",9) == 0) {
+		strncpy(h->name,hashtype,15);
+		h->len = 32;
+		h->algo = _KECCAK256;
+		h->keccak256 = (sha3*)zen_memory_alloc(sizeof(sha3));
+		SHA3_init(h->keccak256, h->len);
+
 	} // ... TODO: other hashes
 	else {
 		lerror(L, "Hash algorithm not known: %s", hashtype);
@@ -150,6 +157,7 @@ static void _feed(hash *h, octet *o) {
 	case _SHA512: for(i=0;i<o->len;i++) HASH512_process(h->sha512,o->val[i]); break;
 	case _SHA3_256: for(i=0;i<o->len;i++) SHA3_process(h->sha3_256,o->val[i]); break;
 	case _SHA3_512: for(i=0;i<o->len;i++) SHA3_process(h->sha3_512,o->val[i]); break;
+        case _KECCAK256: for(i=0;i<o->len;i++) SHA3_process(h->keccak256,o->val[i]); break;
 	}
 }
 
@@ -161,6 +169,7 @@ static void _yeld(hash *h, octet *o) {
 	case _SHA512: HASH512_hash(h->sha512,o->val); break;
 	case _SHA3_256: SHA3_hash(h->sha3_256,o->val); break;
 	case _SHA3_512: SHA3_hash(h->sha3_512,o->val); break;
+	case _KECCAK256: KECCAK_hash(h->keccak256,o->val); break;
 	}
 }
 

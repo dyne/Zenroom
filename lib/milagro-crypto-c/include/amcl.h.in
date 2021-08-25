@@ -466,6 +466,14 @@ extern void  SHA3_shake(sha3 *H,char *h,int len);
  */
 extern void  SHA3_squeeze(sha3 *H,char *h,int len);
 
+/**	@brief create fixed length hash output of KECCAK 
+               (it is almost equal to SHA3)
+ *
+	@param H an instance SHA3
+	@param h a byte array to take hash
+ */
+extern void  KECCAK_hash(sha3 *H,char *h);
+
 
 
 /* AES functions */
