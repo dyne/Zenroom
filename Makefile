@@ -161,13 +161,7 @@ install-lua:
 
 clean:
 	make clean -C ${pwd}/lib/lua53/src
-	if [ -f ${pwd}/lib/milagro-crypto-c/build/Makefile ]; then \
-		make clean -C ${pwd}/lib/milagro-crypto-c/build; \
-	fi
-	rm -f ${pwd}/lib/milagro-crypto-c/CMakeCache.txt
-	rm -rf ${pwd}/lib/milagro-crypto-c/CMakeFiles
 	rm -rf ${pwd}/lib/milagro-crypto-c/build
-	git checkout ${pwd}/lib/milagro-crypto-c/CPackConfig.cmake
 	make clean -C ${pwd}/src
 	make clean -C ${pwd}/bindings
 	rm -f ${extras}/index.*
