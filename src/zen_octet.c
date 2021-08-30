@@ -852,7 +852,7 @@ static int zero(lua_State *L) {
 static int chop(lua_State *L) {
 	octet *src = o_arg(L, 1); SAFE(src);
 	int len = luaL_optnumber(L, 2, 0);
-	if(len >= src->len) {
+	if(len > src->len) {
 		lerror(L, "cannot chop octet of size %i to higher length %i",src->len, len);
 		return 0; }
 	octet *l = o_dup(L, src); SAFE(l);
@@ -1066,6 +1066,7 @@ int luaopen_octet(lua_State *L) {
 		{NULL,NULL}
 	};
 	const struct luaL_Reg octet_methods[] = {
+		{"chop",  chop},
 		{"fill"  , filloctet},
 		{"hex"   , to_hex},
 		{"base64", to_base64},

@@ -15,41 +15,33 @@ function encodeRLP(data)
 	    res = res .. encodeRLP(data[i])
       end
       if #res < 56 then
-	 res = O.to_octet(INT.new(192+#res)) .. res
+	 res = INT.new(192+#res):octet() .. res
       else
 	 -- Length of the result to be saved before the bytes themselves
-	 byt = O.to_hex(O.to_octet(INT.new(#res)))
-
-	 header = O.to_octet(INT.new(247+#byt//2))
-
-	 -- Append bytes with big endian order
-	 for i=1, #byt//2, 1 do
-	    header = header .. O.from_hex(string.sub(byt, 2*i-1, 2*i))
-	 end
+	 byt = INT.new(#res):octet()
+	 header = INT.new(247+#byt):octet() .. byt
 
       end
-   else
+   elseif iszen(type(data)) then
       -- Octet aka byte array
-      res = O.to_octet(data)
+      res = data:octet()
+
       -- Empty octet?
       -- index single bytes of an octet
-      byt = INT.new('0x' .. string.sub(res:hex(), 1, 2))
+      local byt = INT.new( res:chop(1) )
 
       if #res ~= 1 or byt >= INT.new(128) then
 	 if #res < 56 then
-	    header = O.to_octet(INT.new(128+#res))
+	    header = INT.new(128+#res):octet()
 	 else
 	    -- Length of the result to be saved before the bytes themselves
-	    byt = O.to_hex(O.to_octet(INT.new(#res)))
-
-	    header = O.to_octet(INT.new(183+#byt//2))
-
-	    for i=1, #byt//2, 1 do
-	       header = header .. O.from_hex(string.sub(byt, 2*i-1, 2*i))
-	    end
+	    byt = INT.new(#res):octet()
+	    header = INT.new(183+#byt):octet() .. byt
 	 end
       end
 
+   else
+      error("Invalid data type for ETH RLP encoder: "..type(data))
       
    end
    if header then
@@ -104,7 +96,7 @@ from = O.from_hex('ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d1
 
 
 function encodeTransaction(tx)
-   fields = {9, tx["nonce"], tx["gasPrice"], tx["gasLimit"], tx["to"],
+   local fields = {9, tx["nonce"], tx["gasPrice"], tx["gasLimit"], tx["to"],
 	     tx["value"], tx["data"], tx["v"], tx["r"], tx["s"]}
    return encodeRLP(fields)
 end
@@ -125,7 +117,7 @@ end
 
 -- modify the input transaction
 function encodeSignedTransaction(sk, tx)
-   local H, txHash, sig, pk, x, y
+   local H, txHash, sig, pk, x, y, two, res
    H = HASH.new('keccak256')
    txHash = H:process(encodeTransaction(tx))
 
@@ -133,8 +125,9 @@ function encodeSignedTransaction(sk, tx)
 
    pk = ECDH.pubgen(sk)
    x, y = ECDH.pubxy(pk);
+   two = INT.new(2);
    res = tx
-   res.v = INT.new(2) * INT.new(tx.v) + INT.new(35) + INT.new(y) % INT.new(2)
+   res.v = two * INT.new(tx.v) + INT.new(35) + INT.new(y) % two
    res.r = sig.r
    res.s = sig.s
 
