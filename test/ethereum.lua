@@ -9,18 +9,11 @@ function encodeRLP(data)
       return O.from_hex('80')
    end
    if type(data) == 'table' then
-      -- empty octet?
-      res = nil
-      -- -- for each has problems with nil cells
-      -- for _, v in pairs(data) do
+      -- empty octet
+      res = O.new()
       for i=2, data[1]+1, 1 do
-	 if res then -- trick, empty octet?
 	    res = res .. encodeRLP(data[i])
-	 else
-	    res = encodeRLP(data[i])
-	 end
       end
-
       if #res < 56 then
 	 res = O.to_octet(INT.new(192+#res)) .. res
       else
@@ -40,7 +33,7 @@ function encodeRLP(data)
       res = O.to_octet(data)
       -- Empty octet?
       -- index single bytes of an octet
-      byt = INT.new('0x' .. string.sub(hex(res), 1, 2))
+      byt = INT.new('0x' .. string.sub(res:hex(), 1, 2))
 
       if #res ~= 1 or byt >= INT.new(128) then
 	 if #res < 56 then
@@ -116,7 +109,10 @@ function encodeTransaction(tx)
    return encodeRLP(fields)
 end
 
+-- from milagro's ROM, halved (works only with SECP256K1 curve)
+-- const BIG_256_28 CURVE_Order_SECP256K1= {0x364141,0xD25E8CD,0x8A03BBF,0xDCE6AF4,0xFFEBAAE,0xFFFFFFF,0xFFFFFFF,0xFFFFFFF,0xFFFFFFF,0xF};
 halfSecp256k1n = INT.new(hex('7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0'))
+
 function signEcdsaEth(sk, data) 
   local sig
   sig = nil
@@ -137,14 +133,14 @@ function encodeSignedTransaction(sk, tx)
 
    pk = ECDH.pubgen(sk)
    x, y = ECDH.pubxy(pk);
+   res = tx
+   res.v = INT.new(2) * INT.new(tx.v) + INT.new(35) + INT.new(y) % INT.new(2)
+   res.r = sig.r
+   res.s = sig.s
 
-   tx["v"] = INT.new(2) * INT.new(tx["v"]) + INT.new(35) + INT.new(y) % INT.new(2)
-   tx["r"] = sig.r
-   tx["s"] = sig.s
-   
-   return encodeTransaction(tx)
+   return encodeTransaction(res)
 end
 
 
 
-print(hex(encodeSignedTransaction(from, tx)))
+print( encodeSignedTransaction(from, tx):hex() )

@@ -249,6 +249,11 @@ octet* o_arg(lua_State *L,int n) {
 		lua_pop(L,1);
 		return(o);
 	}
+	if( lua_isnil(L, n) || lua_isnone(L,n) ) {
+	  o = o_new(L, 0); SAFE(o);
+	  lua_pop(L,1);
+	  return(o);
+	}
 	error(L,"Error in argument #%u",n);
 	lerror(L, "%s: cannot convert %s to zeroom.octet",__func__,luaL_typename(L,n));
 	return NULL;
@@ -637,8 +642,10 @@ print(msg:base64())
 
 
 */
+
 static int to_base64 (lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
+	if(!o->len) { lua_pushnil(L); return 1; }
 	if(!o->len || !o->val) {
 		lerror(L, "base64 cannot encode an empty string");
 		return 0; }
@@ -653,6 +660,7 @@ static int to_base64 (lua_State *L) {
 
 static int to_url64 (lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
+	if(!o->len) { lua_pushnil(L); return 1; }
 	if(!o->len || !o->val) {
 		lerror(L, "url64 cannot encode an empty string");
 		return 0; }
@@ -682,6 +690,7 @@ This encoding uses the same alphabet as Bitcoin addresses. Why base58 instead of
 */
 static int to_base58(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
+	if(!o->len) { lua_pushnil(L); return 1; }
 	if(!o->len || !o->val) {
 		lerror(L, "base64 cannot encode an empty octet");
 		return 0; }
@@ -719,6 +728,7 @@ static int to_base58(lua_State *L) {
 
 static int to_array(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
+	if(!o->len) { lua_pushnil(L); return 1; }
 	if(!o->len || !o->val) {
 		lerror(L, "array cannot encode an empty octet");
 		return 0; }
@@ -752,6 +762,7 @@ static int to_octet(lua_State *L) {
 */
 static int to_string(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
+	if(!o->len) { lua_pushnil(L); return 1; }
 	char *s = zen_memory_alloc(o->len+2);
 	OCT_toStr(o,s); // TODO: inverted function signature, see
 					// https://github.com/milagro-crypto/milagro-crypto-c/issues/291
@@ -772,12 +783,14 @@ This is the default format when `print()` is used on an octet.
 */
 int to_hex(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
+	if(!o->len) { lua_pushnil(L); return 1; }
 	push_octet_to_hex_string(L, o);
 	return 1;
 }
 
 static int to_bin(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
+	if(!o->len) { lua_pushnil(L); return 1; }
 	char *s = zen_memory_alloc(o->len*8+2);
 	int i;
 	char oo;
