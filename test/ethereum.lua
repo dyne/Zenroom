@@ -169,33 +169,32 @@ tx["to"] = O.from_hex('627306090abaB3A6e1400e9345bC60c78a8BEf57')
 tx["value"] = O.from_hex('11')
 tx["data"] = O.new()
 -- v contains the chain id (when the transaction is not signed)
+-- We always use the chain id
 tx["v"] = INT.new(1337)
 tx["r"] = O.new()
 tx["s"] = O.new()
 
 from = O.from_hex('ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f')
-
+pk = ECDH.pubgen(from)
 
 function encodeTransaction(tx)
    local fields = {tx["nonce"], tx["gasPrice"], tx["gasLimit"], tx["to"],
-	     tx["value"], tx["data"], tx["v"], tx["r"], tx["s"]}
+		   tx["value"], tx["data"], tx["v"], tx["r"], tx["s"]}
    return encodeRLP(fields)
 end
 
 function decodeTransaction(rlp)
-   local fields = {tx["nonce"], tx["gasPrice"], tx["gasLimit"], tx["to"],
-		   tx["value"], tx["data"], tx["v"], tx["r"], tx["s"]}
-   r = decodeRLP(rlp)
+   local t = decodeRLP(rlp)
    return {
-      nonce=r[1],
-      gasPrice=INT.new(r[2]),
-      gasLimit=INT.new(r[3]),
-      to=r[4],
-      value=r[5],
-      data=r[6],
-      v=INT.new(r[7]),
-      r=r[8],
-      r=r[9]
+      nonce=t[1],
+      gasPrice=INT.new(t[2]),
+      gasLimit=INT.new(t[3]),
+      to=t[4],
+      value=t[5],
+      data=t[6],
+      v=INT.new(t[7]),
+      r=t[8],
+      s=t[9]
    }
 end
 
@@ -245,3 +244,34 @@ for _, v in pairs(fields) do
    assert(tx[v] == decodedTx[v])
 end
 
+-- Verify the signature of a transaction which implements EIP-155
+-- Simple replay attack protection
+-- https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
+function verifySignatureTransaction(pk, txSigned)
+   local fields, H, txHash, tx
+   fields = {"nonce", "gasPrice", "gasLimit", "to",
+	     "value", "data"}
+
+   -- construct the transaction which was signed
+   tx = {}
+   for _, v in pairs(fields) do
+      tx[v] = txSigned[v]
+   end
+   tx["v"] = (txSigned["v"]-INT.new(35))/INT.new(2)
+   tx["r"] = O.new()
+   tx["s"] = O.new()
+
+
+   H = HASH.new('keccak256')
+   txHash = H:process(encodeTransaction(tx))
+
+   sig = {
+      r=txSigned["r"],
+      s=txSigned["s"]
+   }
+
+   return ECDH.verify_hashed(pk, txHash, sig, #txHash)
+end
+
+assert(verifySignatureTransaction(pk, tx))
+assert(verifySignatureTransaction(pk, decodedTx))
