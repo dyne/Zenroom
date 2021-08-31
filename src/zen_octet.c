@@ -861,6 +861,39 @@ static int chop(lua_State *L) {
 	return 2;
 }
 
+
+/***
+
+    Extracts a piece of the octet from the start position to the end position inclusive, expressed in numbers.
+
+    @int start position, begins from 1 not 0 like in lua
+    @int end position, may be same as start for a single byte
+    @return new octet sub-section from start to end inclusive
+    @function octet:sub(start, end)
+*/
+static int sub(lua_State *L) {
+  register int i, c;
+  octet *src, *dst;
+  int start, end;
+  src = o_arg(L, 1); SAFE(src);
+  start = luaL_optnumber(L, 2, 0);
+  if(start<1) {
+    lerror(L, "invalid octet:sub() position starts from 1 not %i", start);
+    return 0; }
+  end = luaL_optnumber(L, 3, 0);
+  if(end < start) {
+    lerror(L, "invalid octet:sub() to end position %i smaller than start position %i", end, start);
+    return 0; }
+  if(end > src->len) {
+    lerror(L, "invalid octet:sub() to end position %i on small octet of len %i", end, src->len);
+    return 0; }
+  dst = o_new(L, end - start + 1); SAFE(dst);
+  for(i=start-1, c=0; i<=end; i++, c++)
+    dst->val[c] = src->val[i];
+  dst->len = end - start + 1;
+  return 1;
+}
+
 /***
     Compare two octets to see if contents are equal.
 
@@ -1029,6 +1062,7 @@ int luaopen_octet(lua_State *L) {
 		{"concat",concat_n},
 		{"xor",   xor_n},
 		{"chop",  chop},
+		{"sub",   sub},
 		{"is_base64", lua_is_base64},
 		{"is_url64", lua_is_url64},
 		{"is_base58", lua_is_base58},
@@ -1067,6 +1101,7 @@ int luaopen_octet(lua_State *L) {
 	};
 	const struct luaL_Reg octet_methods[] = {
 		{"chop",  chop},
+		{"sub",   sub},
 		{"fill"  , filloctet},
 		{"hex"   , to_hex},
 		{"base64", to_base64},
