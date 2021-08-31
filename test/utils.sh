@@ -6,6 +6,8 @@ if [[ "$1" == "cortexm" ]]; then
 	is_cortexm=true
 fi
 
+cookbook="../../docs/examples/zencode_cookbook"
+
 # RNGFAKE="00"
 
 detect_zenroom_path() {
@@ -148,11 +150,12 @@ zexe() {
 		return 1
 	fi
 	out="$1"
-	docs="../../docs/examples/zencode_cookbook/$1"
+	docs="${cookbook}/${SUBDOC}/${out}"
+	mkdir -p "${cookbook}/${SUBDOC}"
 	shift 1
 	echo >&2
 	echo "====================================" >&2
-	>&2 echo "== TEST: $out"
+	>&2 echo "== TEST: ${SUBDOC} $out"
 	t=`mktemp -d`
 	# >&2 echo $t
 	if [[ "$is_cortexm" == true ]]; then
