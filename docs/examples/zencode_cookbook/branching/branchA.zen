@@ -1,22 +1,3 @@
-#!/usr/bin/env bash
-
-# DEBUG=3
-SUBDOC=branching
-
-####################
-# common script init
-if ! test -r ../utils.sh; then
-	echo "run executable from its own directory: $0"; exit 1; fi
-. ../utils.sh $*
-Z="`detect_zenroom_path` `detect_zenroom_conf`"
-####################
-
-cat << EOF | save branching leftrightA.json
-{ "number_lower": 10,
-  "number_higher": 50 }
-EOF
-
-cat << EOF | zexe branchA.zen -a leftrightA.json | save branching outputA.json
 # Here we're loading the two numbers we have just defined
 Given I have a 'number' named 'number_lower'
 and I have a 'number' named 'number_higher'
@@ -55,27 +36,3 @@ Endif
 
 When I create the random 'just a random in the main branch'
 Then print all data
-EOF
-
-
-cat << EOF | save branching leftrightB.json
-{ "left": 60,
-  "right": 50 }
-EOF
-
-cat << EOF | zexe branchB.zen -a leftrightB.json | jq 
-Given I have a 'number' named 'left'
-and I have a 'number' named 'right'
-
-If number 'left' is less than 'right'
-and I verify 'right' is equal to 'right'
-Then print string 'right is higher'
-and print string 'and I am right'
-endif
-
-If number 'left' is more than 'right'
-Then print string 'left is higher'
-endif
-
-EOF
-
