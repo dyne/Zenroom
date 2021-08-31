@@ -10,6 +10,7 @@
   - [Zencode: "Given" phase](/pages/zencode-cookbook-given.md "Zencode cookbook Given")
   - [Zencode: "When phase](/pages/zencode-cookbook-when.md "Zencode cookbook When")
   - [Zencode: "Then" phase](/pages/zencode-cookbook-then.md "Zencode cookbook Then")
+  - [Zencode: "If/Endif" branching](/pages/zencode-if-endif.md "Zencode branching")
 
 - Zencode Advanced 
   - [Cryptography](/pages/zencode-crypto.md "Zencode")

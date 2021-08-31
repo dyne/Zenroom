@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DEBUG=3
+# DEBUG=3
 
 ####################
 # common script init
@@ -10,39 +10,39 @@ if ! test -r ../utils.sh; then
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
-cat << EOF > leftright.json
+cat << EOF | save branching leftright.json
 { "left": 10,
   "right": 50 }
 EOF
 
-cat << EOF | zexe branch.zen -a leftright.json
+cat << EOF | zexe branch1.zen -a leftright.json | jq
 Given I have a 'number' named 'left'
 and I have a 'number' named 'right'
 
 If number 'left' is less than 'right'
 and I verify 'left' is equal to 'left'
-When I create the random 'peppino'
+When I create the random 'random_right_is_higher'
 Then print string 'right is higher'
 and print all data
 Endif
 
 If number 'left' is more than 'right'
-When I create the random 'peppone'
+When I create the random 'random_left_is_higher'
 Then print string 'left is higher'
 endif
 
-When I create the random 'fish'
+When I create the random 'random_main_branch'
 Then print all data
 and trace
 EOF
 
 
-cat << EOF > leftright.json
+cat << EOF | save branching leftright.json
 { "left": 60,
   "right": 50 }
 EOF
 
-cat << EOF | zexe branch.zen -a leftright.json
+cat << EOF | zexe branch2.zen -a leftright.json | jq 
 Given I have a 'number' named 'left'
 and I have a 'number' named 'right'
 
