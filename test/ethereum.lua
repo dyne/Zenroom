@@ -326,7 +326,7 @@ assert(verifySignatureTransaction(pk, decodedTx))
 
 -- Taken from https://docs.soliditylang.org/en/v0.5.6/abi-spec.html#function-selector-and-argument-encoding
 function makeWriteStringData(str)
-   local fz, offset, oStr, paddingLength, padding
+   local fId, offset, oStr, paddingLength, padding, bytLen, paddingLen
 
    -- local H = HASH.new('keccak256')
    -- string.sub(hex(H:process('writeString(string)')), 1, 8)
