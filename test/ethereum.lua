@@ -1,3 +1,22 @@
+-- number to octet (n2o), were number is a big integer
+-- in RLP the 0 is reppresented as the empty octet
+zero = INT.new(0)
+function n2o(num)
+   if num == zero then
+      return O.new()
+   else
+      return n20:octet()
+   end
+end
+
+-- idem for octet to number (o2n)
+function o2n(o)
+   if o == O.new() then
+      return zero
+   else
+      return INT.new(o)
+   end
+end
 
 -- the empty octect is encoded as nil
 -- a table contains in the first position (i.e. 1) the number of elements
@@ -5,6 +24,10 @@ function encodeRLP(data)
    local header = nil
    local res = nil
    local byt = nil
+
+   if type(data) == 'bignum' then
+      data = n2o(data)
+   end
 
    if type(data) == 'table' then
       -- empty octet
@@ -159,14 +182,14 @@ assert(arrayEquals({O.from_hex('c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e
 -- start Besu with the following command
 -- besu --network=dev --miner-enabled --miner-coinbase=0xfe3b557e8fb62b89f4916b721be55ceb828dbd73 --rpc-http-cors-origins="all" --host-allowlist="*" --rpc-ws-enabled --rpc-http-enabled --data-path=/tmp/tmpDatdir
 
--- 0 is encoded as the empty octet, which is treated as nil
+-- 0 is encoded as the empty octet (O.new())
 
 tx = {}
-tx["nonce"] = O.new()
+tx["nonce"] = o2n(O.new())
 tx["gasPrice"] = INT.new(1000)
 tx["gasLimit"] = INT.new(25000) 
 tx["to"] = O.from_hex('627306090abaB3A6e1400e9345bC60c78a8BEf57')
-tx["value"] = O.from_hex('11')
+tx["value"] = INT.new(O.from_hex('11'))
 tx["data"] = O.new()
 -- v contains the chain id (when the transaction is not signed)
 -- We always use the chain id
@@ -186,13 +209,13 @@ end
 function decodeTransaction(rlp)
    local t = decodeRLP(rlp)
    return {
-      nonce=t[1],
-      gasPrice=INT.new(t[2]),
-      gasLimit=INT.new(t[3]),
+      nonce=o2n(t[1]),
+      gasPrice=o2n(t[2]),
+      gasLimit=o2n(t[3]),
       to=t[4],
-      value=t[5],
+      value=o2n(t[5]),
       data=t[6],
-      v=INT.new(t[7]),
+      v=o2n(t[7]),
       r=t[8],
       s=t[9]
    }
@@ -275,3 +298,10 @@ end
 
 assert(verifySignatureTransaction(pk, tx))
 assert(verifySignatureTransaction(pk, decodedTx))
+
+
+
+-- Assume we are given a smart contract with a function with the
+-- following signature
+-- writeString(string memory)
+-- We send a string and 
