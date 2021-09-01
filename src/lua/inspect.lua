@@ -372,7 +372,9 @@ function Inspector:putValue(v, exp)
 	 self:putTable(v, exporter)
   elseif iszen(tv) then
 	 if tv == "zenroom.octet" then
-		self:puts("octet[" .. #v .. "] " .. exporter(v))
+		if #v == 0 then self:puts("octet[0] (null)")
+		else self:puts("octet[" .. #v .. "] " .. exporter(v))
+		end
 	 elseif tv == "zenroom.big" then
 		local i = v:octet()
 		self:puts("int[" .. #i.. "] " .. exporter(i))
