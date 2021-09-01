@@ -376,3 +376,44 @@ assert(makeWriteStringData('aaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaa
 
 -- encodedTx = encodeSignedTransaction(from, tx)
 -- print(encodedTx:hex())
+
+-- generate an ethereum keypair
+function eth_keygen()
+   local kp = ECDH.keygen()
+   local H = HASH.new('keccak256')
+   -- the address is the keccak hash of the x concatenated with
+   -- the y of the public key (without 04 at the beginning!)
+   -- Taken from https://github.com/ethereumbook/ethereumbook/blob/develop/04keys-addresses.asciidoc
+   -- in the section Ethereum Address
+   -- or in the Yellow Paper
+
+   -- Warning: we take only the last 20bytes of the hash (...)
+   return {
+      address=H:process(kp.public:sub(2, #kp.public)):sub(13, 32),
+      private=kp.private
+   }
+end
+
+print("New key pair")
+kp = eth_keygen()
+print(kp.address:hex())
+print(kp.private:hex())
+
+
+-- -- Send some eth to the new address
+-- tx = {
+--    nonce=O.from_hex('01'),
+--    to=kp.address,
+--    value=O.from_hex('100000'),
+--    data=O.new(),
+--    gasPrice=O.from_hex('03e8'),
+--    -- --gasLimit=INT.new('3000000'),
+--    gasLimit=O.from_hex('2dc6c0'),
+--    v=INT.new(1337),
+--    r=O.new(),
+--    s=O.new()
+-- }
+
+-- encodedTx = encodeSignedTransaction(from, tx)
+-- print("Send some eth to the new address")
+-- print(encodedTx:hex())
