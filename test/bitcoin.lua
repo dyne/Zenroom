@@ -62,30 +62,34 @@ for i=1,#Bech32Chars,1 do
    BechInverse[Bech32Chars:sub(i,i)] = i-1
 end
 
-sk = O.from_hex('ffa4bb9baf74e69d2d7b10a92a7d8086e617e53d0cdb59f8099c44fad4abc03501')
-pk = ECDH.pubgen(sk)
+-- taken from zencode_ecdh
+function compressPublicKey(public)
+   local x, y = ECDH.pubxy(public)
+   local pfx = fif( BIG.parity(BIG.new(y) ), OCTET.from_hex('03'), OCTET.from_hex('02') )
+   local pk = pfx .. x
+   return pk
+end
 
-tx = {
-   txIn = {
-      {
-	 txid= O.from_hex("71819aa4673279daa541336f829209c78a68428104c49c5bfc3f97bcaf7fa7fe"),
-	 vout= 0,
-      }
-   },
-   txOut = {
-      {
-	 amount = O.from_hex('012a05caf0'), -- this maybe should be a number
-	 address = 'bcrt1qnyu4k62dcj0d90f20zrxn07e2pg7rgyf5esn80'
-      }
-   }
-}
+
+halfSecp256k1n = INT.new(hex('7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0'))
+-- it is similar to sign eth, s < order/2
+-- Warning: it differs from eth for the sign function I call (sign vs sign_hashed)
+function signEcdhBc(sk, data) 
+  local sig
+  sig = nil
+  repeat
+    sig = ECDH.sign(sk, data)
+  until(INT.new(sig.s) < halfSecp256k1n);
+
+  return sig
+end
 
 function readBech32Address(addr)
    local prefix, data, res, byt, countBit,val
    prefix = nil
    if addr:sub(1,4) == 'bcrt' then
       prefix = 4
-   elseif addr:sub(1,2) == 'bc' or addr:sub(1,2) == 'tc' then
+   elseif addr:sub(1,2) == 'bc' or addr:sub(1,2) == 'tb' then
       prefix = 2
    end
    if not prefix then
@@ -106,11 +110,9 @@ function readBech32Address(addr)
 
       if countBit >= 8 then
 	 res = res .. INT.new(byt >> (countBit-8)):octet()
-	 if countBit == 8 then
-	    byt = 0
-	 else
-	    byt = byt % (1 << (countBit-8))
-	 end
+
+	 byt = byt % (1 << (countBit-8))
+
 	 countBit = countBit - 8
       end
    end
@@ -179,14 +181,14 @@ function buildRawTransaction(txIn)
    local raw, script
    raw = O.new()
 
-   if tx["withness"] and #tx["withness"]>0 then
+   if tx["witness"] and #tx["witness"]>0 then
       sigwit = true
    else
       sigwit = false
    end
 
    -- version
-   raw = raw .. O.from_hex('01000000')
+   raw = raw .. O.from_hex('02000000')
 
 
    if sigwit then
@@ -237,9 +239,22 @@ function buildRawTransaction(txIn)
    end
 
    if sigwit then
-      raw = raw .. encodeCompactSize(#tx["withness"])
-      for _, v in pairs(tx["withness"]) do
-	 raw = raw .. v
+      -- Documentation https://bitcoincore.org/en/segwit_wallet_dev/
+      -- The documentation talks about "stack items" but it doesn't specify
+      -- which are they, I think that It depends on the type of transaction
+      -- (P2SH or P2PKH)
+
+      -- The size of witnesses is not necessary because it is equal to the number of
+      -- txin
+      --raw = raw .. encodeCompactSize(#tx["witness"])
+
+      for _, v in pairs(tx["witness"]) do
+	 -- encode all the stack items for the witness
+	 raw = raw .. encodeCompactSize(#v)
+	 for _, s in pairs(v) do
+	    raw = raw .. encodeCompactSize(#s)
+	    raw = raw .. s
+	 end
       end
    end
 
@@ -247,13 +262,6 @@ function buildRawTransaction(txIn)
    
    return raw
 end
---txEnc = buildRawTransaction(txIn)
---print("Prima")
---print(txEnc)
-txEnc = buildRawTransaction(tx)
---print("Dopo")
---print(txEnc)
-sig = ECDH.sign(pk, txEnc)
 
 function encodeWithPrepend(bytes)
    if tonumber(bytes:sub(1,1):hex(), 16) >= 0x80 then
@@ -280,10 +288,240 @@ function encodeDERSignature(sig)
    return res
 end
 
+-- sender tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug
+sk = O.from_hex('39507b5471b71740675ddfdd0ace08f265e13bb168efce59a7e7d6d6782a8de501ea')
+--sk = O.from_hex('7a1afbb80174a41ad288053b246c7f528f5e746332f95f19e360c95bfb1d03bd0188')
+pk = ECDH.pubgen(sk)
+tx = {
+   txIn = {
+      {
+	 txid= O.from_hex("8cf73380cd054b6936360401b53a9db0cb30e33a7997bfd65fad939579096678"),
+	 vout= 0,
+      }
+   },
+   txOut = {
+      {
+	 amount = O.from_hex('1cee40'), -- this maybe should be a number
+	 address = 'tb1q73czlxl7us4s6num5sjlnq6r0yuf8uh5clr2tm'
+      }
+   }
+}
+
+
+txEnc = buildRawTransaction(tx)
+--print("Raw tx")
+--print(txEnc:hex())
+--sig = signEcdhBc(sk, txEnc .. O.from_hex('01000000'))
+
 -- print(encodeDERSignature(sig):hex())
 
-tx["withness"] = {
-   encodeDERSignature(sig)
+-- add sighash: 1-byte value indicating what data is hashed (not part of the DER signature)
+-- tx["witness"] = {
+--    { encodeDERSignature(sig) .. O.from_hex('01'), compressPublicKey(pk) }
+-- }
+-- print("Raw signed")
+-- print(buildRawTransaction(tx):hex())
+-- rawsign = buildRawTransaction(tx)
+
+
+function hashPrevouts(tx)
+   local raw
+   local H
+   H = HASH.new('sha256')
+
+   raw = O.new()
+
+   for _, v in pairs(tx.txIn) do
+      raw = raw .. opposite(v.txid) .. toUInt(v.vout, 4)
+   end
+
+   return H:process(H:process(raw))
+end
+
+function hashSequence(tx)
+   local raw
+   local H
+   local seq
+   H = HASH.new('sha256')
+
+   raw = O.new()
+
+   for _, v in pairs(tx.txIn) do
+      seq = v['sequence']
+      if not seq then
+	 -- default value, not enabled
+	 seq = O.from_hex('ffffffff')
+      end
+      raw = raw .. toUInt(seq, 4)
+   end
+   
+   return H:process(H:process(raw))
+end
+
+function addressScript(addr)
+   if type(addr) == "zenroom.octet" then
+      return addr
+   end
+   -- Only support bech32 address
+   return readBech32Address(addr)
+end
+
+function hashOutputs(tx)
+   local raw
+   local H
+   local seq
+   H = HASH.new('sha256')
+
+   raw = O.new()
+
+   for _, v in pairs(tx.txOut) do 
+      raw = raw .. opposite(v.amount)
+      if #v.amount < 8 then
+	 raw = raw .. O.zero(8 - #v.amount)
+      end
+      
+      if type(v.address) == "zenroom.octet" then
+	 raw = raw .. v.address
+      else
+	 raw = raw .. O.from_hex('160014') .. readBech32Address(v.address)
+      end      
+   end
+
+   return H:process(H:process(raw))
+end
+--------------------------
+--   test from BIP0143  --
+--------------------------
+pk = O.from_hex('045476c2e83188368da1ff3e292e7acafcdb3566bb0ad253f62fc70f07aeee6357fd57dee6b46a6b010a3e4a70961ecf44a40e18b279ec9e9fba9c1dbc64896198')
+tx = {
+   version=1,
+   txIn = {
+      {
+	 txid= O.from_hex("9f96ade4b41d5433f4eda31e1738ec2b36f6e7d1420d94a6af99801a88f7f7ff"),
+	 vout= 0,
+	 sequence = O.from_hex('ffffffee')
+      },
+      {
+	 txid= O.from_hex("8ac60eb9575db5b2d987e29f301b5b819ea83a5c6579d282d189cc04b8e151ef"),
+	 vout= 1,
+	 sigwit = true,
+	 address = O.from_hex('1d0f172a0ecb48aee1be1f2687d2963ae33f71a1'),
+	 amountSpent = O.from_hex('23c34600'),
+	 sequence = O.from_hex('ffffffff')
+      }
+   },
+   txOut = {
+      {
+	 amount = O.from_hex('06b22c20'), -- this maybe should be a number
+	 address = O.from_hex('1976a9148280b37df378db99f66f85c95a783a76ac7a6d5988ac') -- I pass directly the script
+      },
+      {
+	 amount = O.from_hex('0d519390'), -- this maybe should be a number
+	 address = O.from_hex('1976a9143bde42dbee7e4dbe6a21b2d50ce2f0167faa815988ac') -- I pass directly the script
+      }
+   },
+   nLockTime=17,
+   nHashType=O.from_hex('00000001'),
 }
-print("Signed")
-print(buildRawTransaction(tx):hex())
+
+assert(hashPrevouts(tx) == O.from_hex('96b827c8483d4e9b96712b6713a7b68d6e8003a781feba36c31143470b4efd37'))
+assert(hashSequence(tx) == O.from_hex('52b0a642eea2fb7ae638c36f6252b6750293dbe574a806984b8e4d8548339a3b'))
+assert(hashOutputs(tx) == O.from_hex('863ef3e1a92afbfdb97f31ad0fc7683ee943e9abcf2501590ff8f6551f47e5e5'))
+
+-- Double SHA256 of the serialization of:
+--      1. nVersion of the transaction (4-byte little endian)
+--      2. hashPrevouts (32-byte hash)
+--      3. hashSequence (32-byte hash)
+--      4. outpoint (32-byte hash + 4-byte little endian) 
+--      5. scriptCode of the input (serialized as scripts inside CTxOuts)
+--      6. value of the output spent by this input (8-byte little endian)
+--      7. nSequence of the input (4-byte little endian)
+--      8. hashOutputs (32-byte hash)
+--      9. nLocktime of the transaction (4-byte little endian)
+--     10. sighash type of the signature (4-byte little endian)
+function buildTransactionToSing(tx, i)
+   local raw
+   raw = O.new()
+   --      1. nVersion of the transaction (4-byte little endian)
+   raw = raw .. toUInt(tx.version, 4)
+   --      2. hashPrevouts (32-byte hash)
+   raw = raw .. hashPrevouts(tx)
+   --      3. hashSequence (32-byte hash)
+   raw = raw .. hashSequence(tx)
+   --      4. outpoint (32-byte hash + 4-byte little endian)
+   raw = raw .. opposite(tx.txIn[i].txid) .. toUInt(tx.txIn[i].vout, 4)
+   --      5. scriptCode of the input (serialized as scripts inside CTxOuts)
+   raw = raw .. O.from_hex('1976a914') .. addressScript(tx.txIn[i].address)  .. O.from_hex('88ac')
+   --      6. value of the output spent by this input (8-byte little endian)
+   raw = raw .. opposite(tx.txIn[i].amountSpent)
+   if #tx.txIn[i].amountSpent < 8 then
+      raw = raw .. O.zero(8 - #tx.txIn[i].amountSpent)
+   end
+   --      7. nSequence of the input (4-byte little endian)
+   raw = raw .. opposite(tx.txIn[i].sequence)
+   --      8. hashOutputs (32-byte hash)
+   raw = raw .. hashOutputs(tx)
+   --      9. nLocktime of the transaction (4-byte little endian)
+   raw = raw .. toUInt(tx.nLockTime, 4)
+   --     10. sighash type of the signature (4-byte little endian)
+   raw = raw .. toUInt(tx.nHashType, 4)
+
+   return raw
+end
+H=HASH.new('sha256')
+function dSha256(msg)
+   return H:process(H:process(msg))
+end
+
+rawTx = buildTransactionToSing(tx, 2)
+sigHash = dSha256(rawTx)
+assert(rawTx == O.from_hex('0100000096b827c8483d4e9b96712b6713a7b68d6e8003a781feba36c31143470b4efd3752b0a642eea2fb7ae638c36f6252b6750293dbe574a806984b8e4d8548339a3bef51e1b804cc89d182d279655c3aa89e815b1b309fe287d9b2b55d57b90ec68a010000001976a9141d0f172a0ecb48aee1be1f2687d2963ae33f71a188ac0046c32300000000ffffffff863ef3e1a92afbfdb97f31ad0fc7683ee943e9abcf2501590ff8f6551f47e5e51100000001000000'))
+assert(sigHash == O.from_hex('c37af31116d1b27caf68aae9e3ac82f1477929014d5b917657d0eb49478cb670'))
+sig = {
+   r=O.from_hex('3609e17b84f6a7d30c80bfa610b5b4542f32a8a0d5447a12fb1366d7f01cc44a'),
+   s=O.from_hex('573a954c4518331561406f90300e8f3358f51928d43c212a8caed02de67eebee')
+}
+
+assert(compressPublicKey(pk) == O.from_hex('025476c2e83188368da1ff3e292e7acafcdb3566bb0ad253f62fc70f07aeee6357'))
+assert(ECDH.verify_hashed(pk, sigHash, sig, #sigHash))
+
+----------------------------------------
+-- Validate witness from bitcoin core --
+----------------------------------------
+-- sender tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug
+-- dumpprivkey cPW7XRee1yx6sujBWeyZiyg18vhhQk9JaxxPdvwGwYX175YCF48G
+sk = O.from_hex('39507b5471b71740675ddfdd0ace08f265e13bb168efce59a7e7d6d6782a8de501ea')
+pk = ECDH.pubgen(sk)
+tx = {
+   version=2,
+   txIn = {
+      {
+	 txid= O.from_hex("8cf73380cd054b6936360401b53a9db0cb30e33a7997bfd65fad939579096678"),
+	 vout= 0,
+	 sigwit = true,
+	 address = "tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug",
+	 amountSpent = O.from_hex('1cf034'),
+	 sequence = O.from_hex('ffffffff')
+      }
+   },
+   txOut = {
+      {
+	 amount = O.from_hex('1cee40'),--O.from_hex('0d519390'), -- this maybe should be a number
+	 address = 'tb1q73czlxl7us4s6num5sjlnq6r0yuf8uh5clr2tm' -- I pass directly the script
+      }
+   },
+   nLockTime=0,
+   nHashType=O.from_hex('00000001')
+}
+assert(buildRawTransaction(tx) == O.from_hex('0200000001786609799593ad5fd6bf97793ae330cbb09d3ab501043636694b05cd8033f78c0000000000ffffffff0140ee1c0000000000160014f4702f9bfee42b0d4f9ba425f98343793893f2f400000000'))
+-- SIgned raw transaction
+-- 02000000000101786609799593ad5fd6bf97793ae330cbb09d3ab501043636694b05cd8033f78c0000000000ffffffff0140ee1c0000000000160014f4702f9bfee42b0d4f9ba425f98343793893f2f40247304402205f5cf053cfd97c8c3c30c31f11d5be369e0f551173d6699db1635f27d5f26a0402207f9d02edd76708ee4b7551d6c25a533b3d346378c843b13c5e992fabf8db018e012103fe7380f1549462e6f9fff99c2bd0084a2ce568f79f0001f020b413538539427600000000
+rawTx = buildTransactionToSing(tx, 1)
+sigHash = dSha256(rawTx)
+
+sig = {
+   r=O.from_hex('5f5cf053cfd97c8c3c30c31f11d5be369e0f551173d6699db1635f27d5f26a04'),
+   s=O.from_hex('7f9d02edd76708ee4b7551d6c25a533b3d346378c843b13c5e992fabf8db018e')
+}
+assert(compressPublicKey(pk) == O.from_hex('03fe7380f1549462e6f9fff99c2bd0084a2ce568f79f0001f020b4135385394276'))
+assert(ECDH.verify_hashed(pk, sigHash, sig, #sigHash))
