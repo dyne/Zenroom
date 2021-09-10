@@ -47,9 +47,14 @@
 
 -- sk: af3ec27d2b92fed349a4f8baabadfa27deed8a29eb795734373e6f3e14ae5c61
 -- pk: 02845b2dc1d8cf62e441e98b27ac11bec7dbc799d03f1fd2fad9642e32ce6a96ca
+SHA256 = HASH.new('sha256')
+function dSha256(msg)
+   return SHA256:process(SHA256:process(msg))
+end
+
 
 function opposite(num)
-   res = O.new()
+   local res = O.new()
    for i=#num,1,-1 do
       res = res .. num:sub(i,i)
    end
@@ -78,7 +83,7 @@ function signEcdhBc(sk, data)
   local sig
   sig = nil
   repeat
-    sig = ECDH.sign(sk, data)
+    sig = ECDH.sign_hashed(sk, data, #data)
   until(INT.new(sig.s) < halfSecp256k1n);
 
   return sig
@@ -122,7 +127,42 @@ function readBech32Address(addr)
    return res:chop(20)
 end
 
---print(readBech32Address('bcrt1qnyu4k62dcj0d90f20zrxn07e2pg7rgyf5esn80'):hex())
+-- Problem: Overflow of BIG integer
+-- function decodeBase58Check(value, prefix)
+--    local BASE58CHARS = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+--    if not prefix then
+--       prefix = O.from_hex('00')
+--    end
+--    BIG58 = BIG.new(58)
+--    local decodedInt
+--    decodedInt = BIG.new(0)
+--    for i=1, #value, 1 do
+--       -- print(string.find(BASE58CHARS, value:sub(i,i))-1)
+--       decodedInt = decodedInt * BIG58 + BIG.new(string.find(BASE58CHARS, value:sub(i,i))-1)
+--    end
+--    -- print(decodedInt)
+--    -- local decoded = decodedInt:octet()
+--    -- print(decoded:hex())
+
+--    --if decoded:sub(1,1) ~= prefix then
+--   --    error("Error in the prefix")
+--    --end
+
+--    -- local CODE_LEN
+--    -- CODE_LEN = 4
+
+--    -- local errorCode = dSha256(decoded):chop(CODE_LEN)
+--    -- decoded = decoded:sub(2, #decoded)
+
+--    -- if errorCode ~= decoded:sub(#decoded-CODE_LEN+1, #decoded) then
+--    --   error("Invalid base58 string")
+--    -- end
+
+--    -- return decoded:sub(1, #decoded-CODE_LEN)
+--    return decodedInt
+-- end
+
+-- --print(readBech32Address('bcrt1qnyu4k62dcj0d90f20zrxn07e2pg7rgyf5esn80'):hex())
 
 function encodeCompactSize(n)
    local res, padding, prefix, le -- littleEndian;
@@ -469,9 +509,6 @@ function buildTransactionToSing(tx, i)
    return raw
 end
 H=HASH.new('sha256')
-function dSha256(msg)
-   return H:process(H:process(msg))
-end
 
 rawTx = buildTransactionToSing(tx, 2)
 sigHash = dSha256(rawTx)
@@ -525,3 +562,68 @@ sig = {
 }
 assert(compressPublicKey(pk) == O.from_hex('03fe7380f1549462e6f9fff99c2bd0084a2ce568f79f0001f020b4135385394276'))
 assert(ECDH.verify_hashed(pk, sigHash, sig, #sigHash))
+
+---------------------------
+-- Generate my siganture --
+---------------------------
+
+-- assert(decodeBase58Check('cPW7XRee1yx6sujBWeyZiyg18vhhQk9JaxxPdvwGwYX175YCF48G') == O.from_hex('39507b5471b71740675ddfdd0ace08f265e13bb168efce59a7e7d6d6782a8de501ea'))
+sk = O.from_hex('39507b5471b71740675ddfdd0ace08f265e13bb168efce59a7e7d6d6782a8de501ea')
+pk = ECDH.pubgen(sk)
+tx = {
+   version=2,
+   txIn = {
+      {
+	 txid = O.from_hex("8cf73380cd054b6936360401b53a9db0cb30e33a7997bfd65fad939579096678"),
+	 vout = 0,
+	 sigwit = true,
+	 address = "tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug",
+	 amountSpent = O.from_hex('1cf034'),
+	 sequence = O.from_hex('ffffffff')
+      }
+   },
+   txOut = {
+      {
+	 amount = O.from_hex('1cee40'),--O.from_hex('0d519390'), -- this maybe should be a number
+	 address = 'tb1q73czlxl7us4s6num5sjlnq6r0yuf8uh5clr2tm' -- I pass directly the script
+      }
+   },
+   nLockTime=0,
+   nHashType=O.from_hex('00000001')
+}
+
+function buildWitness(tx, sk)
+   local pk = compressPublicKey(ECDH.pubgen(sk))
+   print(ECDH.pubgen(sk))
+   local witness = {}
+   for i=1,#tx.txIn,1 do
+      if tx.txIn[i].sigwit then
+	 local rawTx = buildTransactionToSing(tx, i)
+	 local sigHash = dSha256(rawTx)
+	 local sig = signEcdhBc(sk, sigHash)
+	 witness[i] = {
+	    encodeDERSignature(sig) .. O.from_hex('01'),
+	    pk
+	 }
+      else
+	 witness[i] = O.zero(1)
+      end
+   end
+
+   return witness
+end
+tx.witness = buildWitness(tx, sk)
+rawTx = buildRawTransaction(tx)
+print(rawTx:hex())
+
+-- test signature (TODO: decode DER signature)
+-- tx.witness = nil
+-- rawTx = buildTransactionToSing(tx, 1)
+-- sigHash = dSha256(rawTx)
+-- sig = {
+--    r=O.from_hex('54e8e766a0a33ab5c56e4f68d96ad6f88ab16b4e043aa47d1bb1b6c427e02b13'),
+--    s=O.from_hex('2ff2a76affd591774746da5fa304e8d033c2933cf49d031d529d1d71632589bd')
+-- }
+-- print(pk)
+-- assert(compressPublicKey(pk) == O.from_hex('03fe7380f1549462e6f9fff99c2bd0084a2ce568f79f0001f020b4135385394276'))
+-- assert(ECDH.verify_hashed(pk, sigHash, sig, #sigHash))
