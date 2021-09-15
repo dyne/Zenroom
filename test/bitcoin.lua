@@ -1,4 +1,4 @@
--- Warning: problem importing big int
+-- Some test with BTC
 
 -- I get from the outside the list of unspent transactions
 -- I filter the one that have enough BTC
@@ -89,6 +89,32 @@ function signEcdhBc(sk, data)
   return sig
 end
 
+function readBase58Check(raw)
+   raw = O.from_base58(raw)
+   local data
+   local check
+   assert(#raw > 4)
+   data = raw:sub(1, #raw-4)
+   check = dSha256(data):chop(4)
+
+   assert(raw:sub(#raw-3, #raw) == check)
+
+   return data
+end
+assert(readBase58Check('cRg4MM15LCfvt4oCddAfUgWm54hXw1LFmkHqs6pwym9QopG5Evpt') == O.from_hex('ef7a1afbb80174a41ad288053b246c7f528f5e746332f95f19e360c95bfb1d03bd01'))
+
+function readWIFPrivateKey(sk)
+   sk = readBase58Check(sk)
+   assert(sk:chop(1) == O.from_hex('ef') or sk:chop(1) == O.from_hex('80'))
+
+   -- SEC format used for public key is always compressed
+   assert(sk:sub(#sk, #sk) == O.from_hex('01'))
+
+   -- Private key has length 32
+   return sk:sub(2, 33)
+end
+assert(readWIFPrivateKey('cRg4MM15LCfvt4oCddAfUgWm54hXw1LFmkHqs6pwym9QopG5Evpt') == O.from_hex('7a1afbb80174a41ad288053b246c7f528f5e746332f95f19e360c95bfb1d03bd'))
+
 function readBech32Address(addr)
    local prefix, data, res, byt, countBit,val
    prefix = nil
@@ -126,43 +152,6 @@ function readBech32Address(addr)
    
    return res:chop(20)
 end
-
--- Problem: Overflow of BIG integer
--- function decodeBase58Check(value, prefix)
---    local BASE58CHARS = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
---    if not prefix then
---       prefix = O.from_hex('00')
---    end
---    BIG58 = BIG.new(58)
---    local decodedInt
---    decodedInt = BIG.new(0)
---    for i=1, #value, 1 do
---       -- print(string.find(BASE58CHARS, value:sub(i,i))-1)
---       decodedInt = decodedInt * BIG58 + BIG.new(string.find(BASE58CHARS, value:sub(i,i))-1)
---    end
---    -- print(decodedInt)
---    -- local decoded = decodedInt:octet()
---    -- print(decoded:hex())
-
---    --if decoded:sub(1,1) ~= prefix then
---   --    error("Error in the prefix")
---    --end
-
---    -- local CODE_LEN
---    -- CODE_LEN = 4
-
---    -- local errorCode = dSha256(decoded):chop(CODE_LEN)
---    -- decoded = decoded:sub(2, #decoded)
-
---    -- if errorCode ~= decoded:sub(#decoded-CODE_LEN+1, #decoded) then
---    --   error("Invalid base58 string")
---    -- end
-
---    -- return decoded:sub(1, #decoded-CODE_LEN)
---    return decodedInt
--- end
-
--- --print(readBech32Address('bcrt1qnyu4k62dcj0d90f20zrxn07e2pg7rgyf5esn80'):hex())
 
 function encodeCompactSize(n)
    local res, padding, prefix, le -- littleEndian;
@@ -242,7 +231,6 @@ function buildRawTransaction(txIn)
    for _, v in pairs(tx.txIn) do
       -- outpoint (hash and index of the transaction)
       raw = raw .. opposite(v.txid) .. toUInt(v.vout, 4)
-
       -- the script depends on the signature
       script = O.new()
 
@@ -257,11 +245,11 @@ function buildRawTransaction(txIn)
    -- txOut
    for _, v in pairs(tx.txOut) do
       --raw = raw .. toUInt(v.amount, 8)
-      raw = raw .. opposite(v.amount)
+      local amount = O.new(v.amount)
+      raw = raw .. opposite(amount)
       if #v.amount < 8 then
-	 raw = raw .. O.zero(8 - #v.amount)
+	 raw = raw .. O.zero(8 - #amount)
       end
-      
       -- fixed script to send bitcoins
       -- OP_DUP OP_HASH160 20byte
       --script = O.from_hex('76a914')
@@ -270,7 +258,6 @@ function buildRawTransaction(txIn)
 
       -- OP_EQUALVERIFY OP_CHECKSIG
       --script = script .. O.from_hex('88ac')
-      
       -- Bech32
       script = O.from_hex('0014')
       script = script .. readBech32Address(v.address)
@@ -332,7 +319,7 @@ function readNumberFromDER(raw, pos)
    local size
    assert(raw:sub(pos, pos) == O.from_hex('02'))
    pos= pos+1
-   size = tonumber(raw:sub(pos, pos), 16)
+   size = tonumber(raw:sub(pos, pos):hex(), 16)
    pos = pos +1
 
    -- If the first byte is a 0 do not consider it
@@ -349,7 +336,7 @@ function readNumberFromDER(raw, pos)
    }
    
    
-end function
+end
 
 function decodeDERSignature(raw)
    local sig, tmp, size;
@@ -359,24 +346,27 @@ function decodeDERSignature(raw)
 
    size = tonumber(raw:sub(2,2):hex(), 16)
 
-   tmp = readNumberFromDER(raw, 2)
+   tmp = readNumberFromDER(raw, 3)
 
-   sig.r = tmp[0]
-   tmp = tmp[1]
+   sig.r = tmp[1]
+   tmp = tmp[2]
 
    tmp = readNumberFromDER(raw, tmp)
 
-   sig.s = tmp[0]
+   sig.s = tmp[1]
 
    return sig
 end
 
+
+-- Test for encoding and decoding DER signature
 sig = {
-   r=O.from_hex('3609e17b84f6a7d30c80bfa610b5b4542f32a8a0d5447a12fb1366d7f01cc44a'),
+   r=O.from_hex('ff09e17b84f6a7d30c80bfa610b5b4542f32a8a0d5447a12fb1366d7f01cc44a'),
    s=O.from_hex('573a954c4518331561406f90300e8f3358f51928d43c212a8caed02de67eebee')
 }
-
-encodeDER = encodeDERSignature()
+encodedDER = encodeDERSignature(sig)
+newSig = decodeDERSignature(encodedDER)
+assert(sig.r == newSig.r and sig.s == newSig.s)
 
 -- sender tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug
 sk = O.from_hex('39507b5471b71740675ddfdd0ace08f265e13bb168efce59a7e7d6d6782a8de501ea')
@@ -464,10 +454,11 @@ function hashOutputs(tx)
 
    raw = O.new()
 
-   for _, v in pairs(tx.txOut) do 
-      raw = raw .. opposite(v.amount)
+   for _, v in pairs(tx.txOut) do
+      amount = O.new(v.amount)
+      raw = raw .. opposite(amount)
       if #v.amount < 8 then
-	 raw = raw .. O.zero(8 - #v.amount)
+	 raw = raw .. O.zero(8 - #amount)
       end
       
       if type(v.address) == "zenroom.octet" then
@@ -544,9 +535,10 @@ function buildTransactionToSing(tx, i)
    --      5. scriptCode of the input (serialized as scripts inside CTxOuts)
    raw = raw .. O.from_hex('1976a914') .. addressScript(tx.txIn[i].address)  .. O.from_hex('88ac')
    --      6. value of the output spent by this input (8-byte little endian)
-   raw = raw .. opposite(tx.txIn[i].amountSpent)
-   if #tx.txIn[i].amountSpent < 8 then
-      raw = raw .. O.zero(8 - #tx.txIn[i].amountSpent)
+   amount = O.new(tx.txIn[i].amountSpent)
+   raw = raw .. opposite(amount)
+   if #amount < 8 then
+      raw = raw .. O.zero(8 - #amount)
    end
    --      7. nSequence of the input (4-byte little endian)
    raw = raw .. opposite(tx.txIn[i].sequence)
@@ -576,9 +568,7 @@ assert(ECDH.verify_hashed(pk, sigHash, sig, #sigHash))
 ----------------------------------------
 -- Validate witness from bitcoin core --
 ----------------------------------------
--- sender tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug
--- dumpprivkey cPW7XRee1yx6sujBWeyZiyg18vhhQk9JaxxPdvwGwYX175YCF48G
-sk = O.from_hex('39507b5471b71740675ddfdd0ace08f265e13bb168efce59a7e7d6d6782a8de501ea')
+sk = readWIFPrivateKey('cPW7XRee1yx6sujBWeyZiyg18vhhQk9JaxxPdvwGwYX175YCF48G')
 pk = ECDH.pubgen(sk)
 tx = {
    version=2,
@@ -658,7 +648,6 @@ tx = {
 
 function buildWitness(tx, sk)
    local pk = compressPublicKey(ECDH.pubgen(sk))
-   print(ECDH.pubgen(sk))
    local witness = {}
    for i=1,#tx.txIn,1 do
       if tx.txIn[i].sigwit then
@@ -678,7 +667,7 @@ function buildWitness(tx, sk)
 end
 tx.witness = buildWitness(tx, sk)
 rawTx = buildRawTransaction(tx)
-print(rawTx:hex())
+-- print(rawTx:hex())
 
 -- test signature (TODO: decode DER signature)
 -- tx.witness = nil
@@ -691,3 +680,140 @@ print(rawTx:hex())
 -- print(pk)
 -- assert(compressPublicKey(pk) == O.from_hex('03fe7380f1549462e6f9fff99c2bd0084a2ce568f79f0001f020b4135385394276'))
 -- assert(ECDH.verify_hashed(pk, sigHash, sig, #sigHash))
+
+
+------------------------------------------
+-- Start from the result of listunspent --
+------------------------------------------
+
+-- Unspent transactions of the account tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug
+-- [
+--   {
+--     "txid": "6aedc7c53b7067d2c7454f8fc83844715964a0a8a9e9e492aaa472207118df0c",
+--     "vout": 0,
+--     "address": "tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug",
+--     "label": "",
+--     "scriptPubKey": "00147d705ebfc54c783c527d66abe48cd532a97fb28c",
+--     "amount": 0.00083000,
+--     "confirmations": 1907,
+--     "spendable": true,
+--     "solvable": true,
+--     "desc": "wpkh([7d705ebf]03fe7380f1549462e6f9fff99c2bd0084a2ce568f79f0001f020b4135385394276)#8n5cy8kz",
+--     "safe": true
+--   },
+--   {
+--     "txid": "d3c612235660bdc84913611ab36be8335631a1bfe66d8166b128bc872a039986",
+--     "vout": 0,
+--     "address": "tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug",
+--     "label": "",
+--     "scriptPubKey": "00147d705ebfc54c783c527d66abe48cd532a97fb28c",
+--     "amount": 0.01937000,
+--     "confirmations": 1199,
+--     "spendable": true,
+--     "solvable": true,
+--     "desc": "wpkh([7d705ebf]03fe7380f1549462e6f9fff99c2bd0084a2ce568f79f0001f020b4135385394276)#8n5cy8kz",
+--     "safe": true
+--   }
+-- ]
+
+-- -- Pay attention to the amount it has to be multiplied for 10^8
+
+-- unspent: list of unspent transactions
+-- sk: private key
+-- to: receiver bitcoin address (must be segwit/Bech32!)
+-- amount: satoshi to transfer (BIG integer)
+
+-- return nil if it cannot build the transaction
+-- (for example if there are not enough founds)
+function buildTxFromUnspent(unspent, sk, to, amount, fee)
+   local tx, i, currentAmount
+   tx = {
+      version=2,
+      txIn = {},
+      txOut = {},
+      nLockTime=0,
+      nHashType=O.from_hex('00000001')
+   }
+
+
+   i=1
+   currentAmount = INT.new(0)
+   while i <= #unspent and currentAmount < amount+fee do
+      currentAmount = currentAmount + unspent[i].amount
+      tx.txIn[i] = {
+	 txid = unspent[i].txid,
+	 vout = unspent[i].vout,
+	 sigwit = true,
+	 address = unspent[i].address,
+	 amountSpent = unspent[i].amount,
+	 sequence = O.from_hex('ffffffff'),
+	 scriptPubKey = unspent[i].scriptPubKey
+      }
+      i=i+1
+   end
+
+   if currentAmount < amount+fee or i==1 then
+      -- Not enough BTC
+      return nil
+   end
+
+   -- Add exactly two outputs, one for the receiver and one for the exceding amount
+   tx.txOut[1] = {
+      amount = amount,
+      address = to
+   }
+
+   if currentAmount > amount+fee then
+      tx.txOut[2] = {
+	 amount = currentAmount-amount-fee,
+	 address = tx.txIn[1].address
+      }
+   end
+
+   return tx
+end
+
+sk = readWIFPrivateKey('cPW7XRee1yx6sujBWeyZiyg18vhhQk9JaxxPdvwGwYX175YCF48G')
+unspent = {
+  {
+     txid= O.from_hex("6aedc7c53b7067d2c7454f8fc83844715964a0a8a9e9e492aaa472207118df0c"),
+     vout= 0,
+     address= "tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug",
+     scriptPubKey= O.from_hex("00147d705ebfc54c783c527d66abe48cd532a97fb28c"),
+     amount= INT.new(O.from_hex('014438')),
+  }
+}
+
+assert(buildTxFromUnspent(unspent, sk, "tb1q73czlxl7us4s6num5sjlnq6r0yuf8uh5clr2tm", INT.new(O.from_hex('0186a0')), INT.new(O.from_hex('03e8'))) == nil)
+
+sk = readWIFPrivateKey('cPW7XRee1yx6sujBWeyZiyg18vhhQk9JaxxPdvwGwYX175YCF48G')
+unspent = {
+  {
+     txid= O.from_hex("6aedc7c53b7067d2c7454f8fc83844715964a0a8a9e9e492aaa472207118df0c"),
+     vout= 0,
+     address= "tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug",
+     scriptPubKey= O.from_hex("00147d705ebfc54c783c527d66abe48cd532a97fb28c"),
+     amount= INT.new(O.from_hex('014438')),
+  },
+  {
+     txid= O.from_hex("d3c612235660bdc84913611ab36be8335631a1bfe66d8166b128bc872a039986"),
+     vout= 0,
+     address= "tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug",
+     scriptPubKey= O.from_hex("00147d705ebfc54c783c527d66abe48cd532a97fb28c"),
+     amount= INT.new(O.from_hex('1d8e68')),
+  }
+}
+
+
+-- Try to build the transaction
+
+tx = buildTxFromUnspent(unspent, sk, "tb1q73czlxl7us4s6num5sjlnq6r0yuf8uh5clr2tm", INT.new(O.from_hex('0186a0')), INT.new(O.from_hex('03e8')))
+assert(tx ~= nil)
+
+-- This value was generated by zenroom, is to test that any modification doesn't break buildRawTransaction without witness
+assert(buildRawTransaction(tx) == O.from_hex('02000000020cdf18712072a4aa92e4e9a9a8a06459714438c88f4f45c7d267703bc5c7ed6a0000000000ffffffff8699032a87bc28b166816de6bfa1315633e86bb31a611349c8bd60562312c6d30000000000ffffffff02a086010000000000160014f4702f9bfee42b0d4f9ba425f98343793893f2f418481d00000000001600147d705ebfc54c783c527d66abe48cd532a97fb28c00000000'))
+
+tx.witness = buildWitness(tx, sk)
+rawTx = buildRawTransaction(tx)
+print(rawTx:hex())
+-- This transaction is in testnet with the hash f46e7234e143f51ba788ea4b7ae554691baa01dd9f68116626f92812836efe1f
