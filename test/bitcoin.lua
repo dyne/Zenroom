@@ -328,6 +328,56 @@ function encodeDERSignature(sig)
    return res
 end
 
+function readNumberFromDER(raw, pos)
+   local size
+   assert(raw:sub(pos, pos) == O.from_hex('02'))
+   pos= pos+1
+   size = tonumber(raw:sub(pos, pos), 16)
+   pos = pos +1
+
+   -- If the first byte is a 0 do not consider it
+   if raw:sub(pos, pos) == O.from_hex('00') then
+      pos = pos +1
+      size = size -1
+   end
+
+   data = raw:sub(pos, pos+size-1)
+
+   return {
+      data,
+      pos+size
+   }
+   
+   
+end function
+
+function decodeDERSignature(raw)
+   local sig, tmp, size;
+   sig = {}
+
+   assert(raw:chop(1) == O.from_hex('30'))
+
+   size = tonumber(raw:sub(2,2):hex(), 16)
+
+   tmp = readNumberFromDER(raw, 2)
+
+   sig.r = tmp[0]
+   tmp = tmp[1]
+
+   tmp = readNumberFromDER(raw, tmp)
+
+   sig.s = tmp[0]
+
+   return sig
+end
+
+sig = {
+   r=O.from_hex('3609e17b84f6a7d30c80bfa610b5b4542f32a8a0d5447a12fb1366d7f01cc44a'),
+   s=O.from_hex('573a954c4518331561406f90300e8f3358f51928d43c212a8caed02de67eebee')
+}
+
+encodeDER = encodeDERSignature()
+
 -- sender tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug
 sk = O.from_hex('39507b5471b71740675ddfdd0ace08f265e13bb168efce59a7e7d6d6782a8de501ea')
 --sk = O.from_hex('7a1afbb80174a41ad288053b246c7f528f5e746332f95f19e360c95bfb1d03bd0188')
@@ -468,6 +518,7 @@ assert(hashPrevouts(tx) == O.from_hex('96b827c8483d4e9b96712b6713a7b68d6e8003a78
 assert(hashSequence(tx) == O.from_hex('52b0a642eea2fb7ae638c36f6252b6750293dbe574a806984b8e4d8548339a3b'))
 assert(hashOutputs(tx) == O.from_hex('863ef3e1a92afbfdb97f31ad0fc7683ee943e9abcf2501590ff8f6551f47e5e5'))
 
+-- BIP0143
 -- Double SHA256 of the serialization of:
 --      1. nVersion of the transaction (4-byte little endian)
 --      2. hashPrevouts (32-byte hash)
@@ -567,25 +618,38 @@ assert(ECDH.verify_hashed(pk, sigHash, sig, #sigHash))
 -- Generate my siganture --
 ---------------------------
 
--- assert(decodeBase58Check('cPW7XRee1yx6sujBWeyZiyg18vhhQk9JaxxPdvwGwYX175YCF48G') == O.from_hex('39507b5471b71740675ddfdd0ace08f265e13bb168efce59a7e7d6d6782a8de501ea'))
-sk = O.from_hex('39507b5471b71740675ddfdd0ace08f265e13bb168efce59a7e7d6d6782a8de501ea')
+-- address tb1q73czlxl7us4s6num5sjlnq6r0yuf8uh5clr2tm
+-- dump private key cRg4MM15LCfvt4oCddAfUgWm54hXw1LFmkHqs6pwym9QopG5Evpt
+sk = O.from_hex('7a1afbb80174a41ad288053b246c7f528f5e746332f95f19e360c95bfb1d03bd0188')
 pk = ECDH.pubgen(sk)
 tx = {
    version=2,
    txIn = {
       {
-	 txid = O.from_hex("8cf73380cd054b6936360401b53a9db0cb30e33a7997bfd65fad939579096678"),
-	 vout = 0,
+	 txid= O.from_hex("29a69950861c2706705c3a618af0a3a15752605b69f6386e4b5a1c1b505f551c"),
+	 vout= 0,
 	 sigwit = true,
-	 address = "tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug",
-	 amountSpent = O.from_hex('1cf034'),
+	 address = "tb1q73czlxl7us4s6num5sjlnq6r0yuf8uh5clr2tm",
+	 amountSpent = O.from_hex('014050'),
+	 sequence = O.from_hex('ffffffff')
+      },
+      {
+	 txid= O.from_hex("f218b0b5255de0497b8b2f66bb48beac08cf2448721ab4f8d1ee01e694fa9d7b"),
+	 vout= 0,
+	 sigwit = true,
+	 address = "tb1q73czlxl7us4s6num5sjlnq6r0yuf8uh5clr2tm",
+	 amountSpent = O.from_hex('1cee40'),
 	 sequence = O.from_hex('ffffffff')
       }
    },
    txOut = {
       {
-	 amount = O.from_hex('1cee40'),--O.from_hex('0d519390'), -- this maybe should be a number
-	 address = 'tb1q73czlxl7us4s6num5sjlnq6r0yuf8uh5clr2tm' -- I pass directly the script
+	 amount = O.from_hex('1d8e68'),--O.from_hex('0d519390'), -- this maybe should be a number
+	 address = 'tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug'
+      },
+      {
+	 amount = O.from_hex('9c40'),--O.from_hex('0d519390'), -- this maybe should be a number
+	 address = 'tb1q73czlxl7us4s6num5sjlnq6r0yuf8uh5clr2tm'
       }
    },
    nLockTime=0,
