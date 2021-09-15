@@ -708,7 +708,7 @@ static int to_base58(lua_State *L) {
 	//char *b = zen_memory_alloc(maxlen);
 	char *b = malloc(maxlen);
 
-	size_t b58len;
+	size_t b58len = maxlen;
 	b58enc(b, &b58len, o->val, o->len);
 	// b[b58len] = '\0'; // already present in libbase58
 	lua_pushstring(L,b);
