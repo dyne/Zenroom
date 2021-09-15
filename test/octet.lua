@@ -55,11 +55,11 @@ dotest(left, right)
 dotest(left:url64(), testU64)
 dotest(hash:process(left), hash:process(right))
 
---print '== test base58 import/export'
---left = OCTET.base58(test58)
---dotest(left, right)
---dotest(left:base58(), test58)
---dotest(hash:process(left), hash:process(right))
+print '== test base58 import/export'
+left = OCTET.base58(test58)
+dotest(left, right)
+dotest(left:base58(), test58)
+dotest(hash:process(left), hash:process(right))
 
 
 print '== test hex import/export'
