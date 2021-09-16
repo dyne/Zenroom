@@ -103,7 +103,7 @@ Scenario 'ecdh': Alice signs a message for Bob
 	and print the 'Identity'
 EOF
 
-cat <<EOF | debug DSA02-table.zen -k alice_pub.json -a alice_signs_table_to_bob.json | save ecdh verify_table_sign.json
+cat <<EOF | zexe DSA02-table.zen -k alice_pub.json -a alice_signs_table_to_bob.json | save ecdh verify_table_sign.json
 rule check version 1.0.0
 # rule input encoding base64
 Scenario 'ecdh': Bob verifies the signature from Alice
@@ -152,16 +152,81 @@ Scenario 'ecdh': Bob gathers public keys in his keyring
 	and print the 'public key'
 EOF
 
-cat <<EOF | zexe AES07.zen -k bob_keyring.json -a alice_to_bob.json | save ecdh asym_clear_message.json
+cat <<EOF | debug AES07.zen -k bob_keyring.json -a alice_to_bob.json | save ecdh asym_clear_message.json
 Rule check version 1.0.0
 Scenario 'ecdh': Bob decrypts the message from Alice
 	Given that I am known as 'Bob'
 	and I have my 'keypair'
 	and I have a 'base64' named 'Alice' in 'public key'
+	and I have a 'secret message'	
+	When I decrypt the text of 'secret message' from 'Alice'
+	and debug
+	Then print the 'text' as 'string'
+	and print the 'header' from 'secret message' as 'string'
+EOF
+
+#####################
+## new key management
+cat << EOF | zexe keygen.zen | save ecdh alice_keys.json
+Scenario ecdh
+Given I am known as 'Alice'
+When I create the ecdh key
+Then print my 'keys'
+EOF
+
+cat << EOF | zexe pubkey.zen -k alice_keys.json | save ecdh alice_pubkey.json
+Scenario ecdh
+Given I am known as 'Alice'
+Given I have my 'keys'
+When I create the ecdh public key
+Then print my 'ecdh public key'
+EOF
+
+cat << EOF | zexe keygen.zen | save ecdh bob_keys.json
+Scenario ecdh
+Given I am known as 'Bob'
+When I create the ecdh key
+Then print my 'keys'
+EOF
+
+cat << EOF | zexe pubkey.zen -k bob_keys.json | save ecdh bob_pubkey.json
+Scenario ecdh
+Given I am known as 'Bob'
+Given I have my 'keys'
+When I create the ecdh public key
+Then print my 'ecdh public key'
+EOF
+
+
+cat <<EOF | debug enc_to_bob.zen -k alice_keys.json -a bob_pubkey.json | save ecdh enc_alice_to_bob.json
+Rule check version 1.0.0
+Scenario 'ecdh': Alice encrypts a message for Bob
+	Given that I am known as 'Alice'
+	and I have my 'keys'
+	and I have a 'ecdh public key' from 'Bob'
+	When I write string 'This is my secret message.' in 'message'
+	and I write string 'This is the header' in 'header'
+	and I encrypt the secret message of 'message' for 'Bob'
+	and debug
+	and I remove 'ecdh public key'
+	and I create the ecdh public key
+	and debug
+	Then print the 'secret message'
+	and print my 'ecdh public key'
+EOF
+
+cat <<EOF | zexe dec_from_alice.zen -k bob_keys.json -a enc_alice_to_bob.json | save ecdh dec_bob_from_alice.json
+Rule check version 1.0.0
+Scenario 'ecdh': Bob decrypts the message from Alice
+	Given that I am known as 'Bob'
+	and I have my 'keys'
+	and I have a 'ecdh public key' from 'Alice'
 	and I have a 'secret message'
 	When I decrypt the text of 'secret message' from 'Alice'
 	Then print the 'text' as 'string'
 	and print the 'header' from 'secret message' as 'string'
 EOF
+
+
 
 success

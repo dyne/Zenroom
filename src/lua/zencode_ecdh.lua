@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Monday, 9th August 2021
+--on Saturday, 4th September 2021
 --]]
 
 -- defined outside because reused across different schemas
@@ -34,6 +34,7 @@ ZEN.add_schema(
 	{
 		-- keypair (ECDH)
 		public_key = public_key_f,
+		ecdh_public_key = public_key_f,
 		keypair = function(obj)
 			local pub = public_key_f(obj.public_key)
 			local sec = ZEN.get(obj, 'private_key')
@@ -89,14 +90,39 @@ When('create the bitcoin keypair', function()
 end)
 
 When(
+	"create the ecdh key",
+	function()
+		initkeys'ecdh'
+		ACK.keys.ecdh = OCTET.random(16)
+	end
+)
+When(
+	"create the ecdh public key",
+	function()
+		empty'ecdh public key'
+		local pk = havekey'ecdh'
+		ACK.ecdh_public_key = ECDH.pubgen(pk)
+	end
+)
+When(
+	"create the ecdh key with secret key ''",
+	function(sec)
+		local sk = have(sec)
+		initkeys'ecdh'
+		-- TODO: check sec is an octet of reasonable length?
+		ACK.keys.ecdh = sk
+	end
+)
+
+When(
 	"create the keypair with secret key ''",
 	function(sec)
-		have(sec)
+		local sk = have(sec)
 		empty'keypair'
-		local pub = ECDH.pubgen(ACK[sec])
+		local pub = ECDH.pubgen(sk)
 		ACK.keypair = {
 			public_key = pub,
-			private_key = ACK[sec]
+			private_key = sk
 		}
 	end
 )
@@ -121,11 +147,11 @@ When(
 When(
 	"encrypt the secret message '' with ''",
 	function(msg, sec)
-		have(msg)
-		have(sec)
+		local text = have(msg)
+		local sk = have(sec)
 		empty'secret message'
 		-- KDF2 sha256 on all secrets
-		local secret = KDF(ACK[sec])
+		local secret = KDF(sk)
 		ACK.secret_message = {
 			header = ACK.header or OCTET.from_string('DefaultHeader'),
 			iv = O.random(32)
@@ -133,7 +159,7 @@ When(
 		ACK.secret_message.text, ACK.secret_message.checksum =
 			ECDH.aead_encrypt(
 			secret,
-			ACK[msg],
+			text,
 			ACK.secret_message.iv,
 			ACK.secret_message.header
 		)
@@ -145,46 +171,73 @@ When(
 When(
 	"decrypt the text of '' with ''",
 	function(msg, sec)
-		have(sec)
-		have(msg)
+		local sk = have(sec)
+		local text = have(msg)
 		empty'text'
 		empty'checksum'
-		local secret = KDF(ACK[sec])
+		local secret = KDF(sk)
 		-- KDF2 sha256 on all secrets, this way the
 		-- secret is always 256 bits, safe for direct aead_decrypt
 		ACK.text, ACK.checksum =
 			ECDH.aead_decrypt(
 			secret,
-			ACK[msg].text,
-			ACK[msg].iv,
-			ACK[msg].header
+			text.text,
+			text.iv,
+			text.header
 		)
 		ZEN.assert(
-			ACK.checksum == ACK[msg].checksum,
+			ACK.checksum == text.checksum,
 			'Decryption error: authentication failure, checksum mismatch'
 		)
 	end
 )
 
+local function _havekey_compat()
+	initkeys()
+    local sk = ACK.keys.ecdh
+	if sk then
+		return sk
+	else
+		local kp = have'keypair'
+		if not kp then goto fail end
+		sk = kp.private_key
+		if not sk then goto fail end
+		return sk
+	end
+	::fail::
+	ZEN.assert(sk, "ECDH Private key not found anywhere in keys or keypair")
+end
+
+local function _pubkey_compat(_key)
+	local pubkey = ACK[_key]
+	if not pubkey then
+		local pubkey_arr
+		pubkey_arr = ACK.public_key or ACK.ecdh_public_key
+		ZEN.assert(
+			type(pubkey_arr) == 'table',
+			'Public key is not a table'
+		)
+		pubkey = pubkey_arr[_key]
+		ZEN.assert(pubkey, 'Public key not found for: ' .. _key)
+	end
+	return pubkey
+end
+
 -- encrypt to a single public key
 When(
 	"encrypt the secret message of '' for ''",
 	function(msg, _key)
-		have'keypair'
-		ZEN.assert(
-			ACK.keypair.private_key,
-			'Private key not found in keypair'
-		)
+		local sk = _havekey_compat()
+		-- have'keypair'
+		-- ZEN.assert(
+		-- 	ACK.keypair.private_key,
+		-- 	'Private key not found in keypair'
+		-- )
 		have(msg)
-		have'public_key'
-		ZEN.assert(
-			type(ACK.public_key) == 'table',
-			'Public key is not a table'
-		)
-		ZEN.assert(ACK.public_key[_key], 'Public key not found for: ' .. _key)
+		local pk = _pubkey_compat(_key)
 		empty'secret message'
 		local key =
-			ECDH.session(ACK.keypair.private_key, ACK.public_key[_key])
+			I.spy(ECDH.session(sk, pk))
 		ACK.secret_message = {
 			header = ACK.header or OCTET.from_string('DefaultHeader'),
 			iv = O.random(32)
@@ -203,24 +256,16 @@ When(
 When(
 	"decrypt the text of '' from ''",
 	function(secret, _key)
-		have'keypair'
-		ZEN.assert(
-			ACK.keypair.private_key,
-			'Private key not found in keypair'
-		)
+		local sk = _havekey_compat()
+		-- have'keypair'
+		-- ZEN.assert(
+		-- 	ACK.keypair.private_key,
+		-- 	'Private key not found in keypair'
+		-- )
 		have(secret)
-		local pubkey = ACK[_key]
-		if not _key then
-			have'public_key'
-			ZEN.assert(
-				type(ACK.public_key) == 'table',
-				'Public key is not a table'
-			)
-			pubkey = ACK.public_key[_key]
-			ZEN.assert(pubkey, 'Public key not found for: ' .. _key)
-		end
+		local pk = I.spy(_pubkey_compat(_key))
 		local message = ACK[secret][_key] or ACK[secret]
-		local session = ECDH.session(ACK.keypair.private_key, pubkey)
+		local session = I.spy(ECDH.session(sk, pk))
 		local checksum
 		ACK.text, checksum =
 			ECDH.aead_decrypt(session, message.text, message.iv, message.header)
