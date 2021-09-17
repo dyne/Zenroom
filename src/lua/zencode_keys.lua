@@ -52,7 +52,8 @@ local keytypes = {
     credential = true,
     issuer = true,
     bls = true,
-	reflow = true
+    reflow = true,
+    bitcoin = true
 }
 
 function havekey(ktype)
@@ -64,6 +65,8 @@ function havekey(ktype)
     ZEN.assert(res, 'Key not found: ' .. ktype)
     return res
 end
+
+require 'crypto_bitcoin'
 
 ZEN.add_schema(
     {
@@ -86,6 +89,15 @@ ZEN.add_schema(
             if obj.reflow then
                 res.reflow = ZEN.get(obj, 'reflow', INT.new)
             end
+	    if obj.bitcoin then
+	       res.bitcoin = {
+		  secret = readWIFPrivateKey(obj.bitcoin.secret),
+		  -- Bech32 implemented in zencode_bitcoin, available
+		  -- only if scenario is loaded
+		  address = readBech32Address(obj.bitcoin.address)
+		  -- address = ZEN.get(obj.bitcoin, 'address', O.from_string)
+	       }
+	    end
             return (res)
         end
     }
