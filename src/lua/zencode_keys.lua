@@ -66,6 +66,8 @@ function havekey(ktype)
     return res
 end
 
+local btc = require('crypto_bitcoin')
+
 ZEN.add_schema(
     {
         keys = function(obj)
@@ -92,10 +94,10 @@ ZEN.add_schema(
             end
 	    if obj.bitcoin then
 	       res.bitcoin = {
-		  secret = readWIFPrivateKey(obj.bitcoin.secret),
+		  secret = btc.read_wif_private_key(obj.bitcoin.secret),
 		  -- Bech32 implemented in zencode_bitcoin, available
 		  -- only if scenario is loaded
-		  address = readBech32Address(obj.bitcoin.address)
+		  address = btc.read_bech32_address(obj.bitcoin.address)
 		  -- address = ZEN.get(obj.bitcoin, 'address', O.from_string)
 	       }
 	    end

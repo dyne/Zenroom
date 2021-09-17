@@ -18,12 +18,32 @@
 --
 --]]
 
-SHA256 = HASH.new('sha256')
-function dSha256(msg)
+local btc = {}
+
+function btc.big_from_string(src)
+   if not src then
+      error("null input to btc.big_from_string", 2)
+   end
+   local acc = BIG.new(0)
+   local ten = BIG.new(10)
+   for i=1, #src, 1 do
+      local digit = tonumber(src:sub(i,i), 10)
+      if digit == nil then
+	 error("string is not a BIG number", 2)
+      end
+      acc = acc * ten + BIG.new(digit)
+   end
+
+   return acc
+end
+
+local function dSha256(msg)
+   local SHA256 = HASH.new('sha256')
    return SHA256:process(SHA256:process(msg))
 end
 
-function opposite(num)
+-- MOVE: this function could be implemented in C in the octet class
+local function opposite(num)
    local res = O.new()
    for i=#num,1,-1 do
       res = res .. num:sub(i,i)
@@ -32,29 +52,27 @@ function opposite(num)
 end
 
 -- taken from zencode_ecdh
-function compressPublicKey(public)
+function btc.compress_public_key(public)
    local x, y = ECDH.pubxy(public)
    local pfx = fif( BIG.parity(BIG.new(y) ), OCTET.from_hex('03'), OCTET.from_hex('02') )
    local pk = pfx .. x
    return pk
 end
 
-
-halfSecp256k1n = INT.new(hex('7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0'))
-
 -- it is similar to sign eth, s < order/2
--- Warning: it differs from eth for the sign function I call (sign vs sign_hashed)
-function signEcdhBc(sk, data) 
-  local sig
-  sig = nil
-  repeat
-    sig = ECDH.sign_hashed(sk, data, #data)
-  until(INT.new(sig.s) < halfSecp256k1n);
-
-  return sig
+-- MOVE: this function should be in the ECDH module
+function btc.sign_ecdh(sk, data) 
+   local halfSecp256k1n = INT.new(hex('7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0'))
+   local sig
+   sig = nil
+   repeat
+      sig = ECDH.sign_hashed(sk, data, #data)
+   until(INT.new(sig.s) < halfSecp256k1n);
+   
+   return sig
 end
 
-function readBase58Check(raw)
+function btc.read_base58check(raw)
    raw = O.from_base58(raw)
    local data
    local check
@@ -67,8 +85,8 @@ function readBase58Check(raw)
    return data
 end
 
-function readWIFPrivateKey(sk)
-   sk = readBase58Check(sk)
+function btc.read_wif_private_key(sk)
+   sk = btc.read_base58check(sk)
    assert(sk:chop(1) == O.from_hex('ef') or sk:chop(1) == O.from_hex('80'))
 
    -- SEC format used for public key is always compressed
@@ -78,7 +96,12 @@ function readWIFPrivateKey(sk)
    return sk:sub(2, 33)
 end
 
-function readBech32Address(addr)
+function btc.read_bech32_address(addr)
+   local Bech32Chars = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
+   local BechInverse = {}
+   for i=1,#Bech32Chars,1 do
+      BechInverse[Bech32Chars:sub(i,i)] = i-1
+   end
    local prefix, data, res, byt, countBit,val
    prefix = nil
    if addr:sub(1,4) == 'bcrt' then
@@ -87,7 +110,7 @@ function readBech32Address(addr)
       prefix = 2
    end
    if not prefix then
-      error("Not bech32")
+      error("Invalid bech32 prefix", 2)
    end
    -- +3 = do not condider separator and version bit
    data = addr:sub(prefix+3, #addr)
@@ -106,7 +129,7 @@ function readBech32Address(addr)
 	 res = res .. INT.new(byt >> (countBit-8)):octet()
 
 	 byt = byt % (1 << (countBit-8))
-
+  
 	 countBit = countBit - 8
       end
    end
@@ -116,10 +139,12 @@ function readBech32Address(addr)
    return res:chop(20)
 end
 
-function encodeCompactSize(n)
+-- variable length encoding for integer based on the
+-- actual length of the number
+function btc.encode_compact_size(n)
    local res, padding, prefix, le -- littleEndian;
 
-   if type(n) ~= "bignum" then
+   if type(n) ~= "zenroom.bignum" then
       n = INT.new(n)
    end
    
@@ -153,8 +178,9 @@ function encodeCompactSize(n)
    return res
 end
 
-function toUInt(num, nbytes)
-   if type(num) ~= "bignum" then
+-- fixed size encoding for integer
+function btc.to_uint(num, nbytes)
+   if type(num) ~= "zenroom.bignum" then
       num = INT.new(num)
    end
    num = opposite(num:octet())
@@ -165,7 +191,7 @@ function toUInt(num, nbytes)
 end
 
 -- with not coinbase input
-function buildRawTransaction(tx)
+function btc.build_raw_transaction(tx)
    local raw, script
    raw = O.new()
 
@@ -184,26 +210,26 @@ function buildRawTransaction(tx)
       raw = raw .. O.from_hex('0001')
    end
    
-   raw = raw .. encodeCompactSize(INT.new(#tx.txIn))
+   raw = raw .. btc.encode_compact_size(INT.new(#tx.txIn))
 
    -- txIn
    for _, v in pairs(tx.txIn) do
       -- outpoint (hash and index of the transaction)
-      raw = raw .. opposite(v.txid) .. toUInt(v.vout, 4)
+      raw = raw .. opposite(v.txid) .. btc.to_uint(v.vout, 4)
       -- the script depends on the signature
       script = O.new()
 
-      raw = raw .. encodeCompactSize(#script) .. script
+      raw = raw .. btc.encode_compact_size(#script) .. script
       
       -- Sequence number disabled
       raw = raw .. O.from_hex('ffffffff')
    end
 
-   raw = raw .. encodeCompactSize(INT.new(#tx.txOut))
+   raw = raw .. btc.encode_compact_size(INT.new(#tx.txOut))
 
    -- txOut
    for _, v in pairs(tx.txOut) do
-      --raw = raw .. toUInt(v.amount, 8)
+      --raw = raw .. btc.to_uint(v.amount, 8)
       local amount = O.new(v.amount)
       raw = raw .. opposite(amount)
       if #v.amount < 8 then
@@ -221,7 +247,7 @@ function buildRawTransaction(tx)
       script = O.from_hex('0014')
       script = script .. v.address -- readBech32Address(v.address)
       
-      raw = raw .. encodeCompactSize(#script) .. script
+      raw = raw .. btc.encode_compact_size(#script) .. script
    end
 
    if sigwit then
@@ -232,13 +258,13 @@ function buildRawTransaction(tx)
 
       -- The size of witnesses is not necessary because it is equal to the number of
       -- txin
-      --raw = raw .. encodeCompactSize(#tx["witness"])
+      --raw = raw .. btc.encode_compact_size(#tx["witness"])
 
       for _, v in pairs(tx["witness"]) do
 	 -- encode all the stack items for the witness
-	 raw = raw .. encodeCompactSize(#v)
+	 raw = raw .. btc.encode_compact_size(#v)
 	 for _, s in pairs(v) do
-	    raw = raw .. encodeCompactSize(#s)
+	    raw = raw .. btc.encode_compact_size(#s)
 	    raw = raw .. s
 	 end
       end
@@ -249,7 +275,7 @@ function buildRawTransaction(tx)
    return raw
 end
 
-function encodeWithPrepend(bytes)
+local function encode_with_prepend(bytes)
    if tonumber(bytes:sub(1,1):hex(), 16) >= 0x80 then
       bytes = O.from_hex('00') .. bytes
    end
@@ -257,24 +283,24 @@ function encodeWithPrepend(bytes)
    return bytes
 end
 
-function encodeDERSignature(sig)
+function btc.encode_der_signature(sig)
    local res, tmp;
 
    res = O.new()
 
    -- r
-   tmp = encodeWithPrepend(sig.r)
+   tmp = encode_with_prepend(sig.r)
    res = res .. O.from_hex('02') .. INT.new(#tmp):octet() .. tmp
 
    -- s
-   tmp = encodeWithPrepend(sig.s)
+   tmp = encode_with_prepend(sig.s)
    res = res .. O.from_hex('02') .. INT.new(#tmp):octet() .. tmp
    
    res = O.from_hex('30') .. INT.new(#res):octet() .. res
    return res
 end
 
-function readNumberFromDER(raw, pos)
+local function read_number_from_der(raw, pos)
    local size
    assert(raw:sub(pos, pos) == O.from_hex('02'))
    pos= pos+1
@@ -297,7 +323,7 @@ function readNumberFromDER(raw, pos)
    
 end
 
-function decodeDERSignature(raw)
+function btc.decode_der_signature(raw)
    local sig, tmp, size;
    sig = {}
 
@@ -305,19 +331,19 @@ function decodeDERSignature(raw)
 
    size = tonumber(raw:sub(2,2):hex(), 16)
 
-   tmp = readNumberFromDER(raw, 3)
+   tmp = read_number_from_der(raw, 3)
 
    sig.r = tmp[1]
    tmp = tmp[2]
 
-   tmp = readNumberFromDER(raw, tmp)
+   tmp = read_number_from_der(raw, tmp)
 
    sig.s = tmp[1]
 
    return sig
 end
 
-function hashPrevouts(tx)
+local function hash_prevouts(tx)
    local raw
    local H
    H = HASH.new('sha256')
@@ -325,13 +351,13 @@ function hashPrevouts(tx)
    raw = O.new()
 
    for _, v in pairs(tx.txIn) do
-      raw = raw .. opposite(v.txid) .. toUInt(v.vout, 4)
+      raw = raw .. opposite(v.txid) .. btc.to_uint(v.vout, 4)
    end
 
    return H:process(H:process(raw))
 end
 
-function hashSequence(tx)
+local function hash_sequence(tx)
    local raw
    local H
    local seq
@@ -345,21 +371,13 @@ function hashSequence(tx)
 	 -- default value, not enabled
 	 seq = O.from_hex('ffffffff')
       end
-      raw = raw .. toUInt(seq, 4)
+      raw = raw .. btc.to_uint(seq, 4)
    end
    
    return H:process(H:process(raw))
 end
 
-function addressScript(addr)
-   if type(addr) == "zenroom.octet" then
-      return addr
-   end
-   -- Only support bech32 address
-   return readBech32Address(addr)
-end
-
-function hashOutputs(tx)
+local function hash_outputs(tx)
    local raw
    local H
    local seq
@@ -373,12 +391,9 @@ function hashOutputs(tx)
       if #v.amount < 8 then
 	 raw = raw .. O.zero(8 - #amount)
       end
-      
-      if type(v.address) == "zenroom.octet" then
-	 raw = raw .. v.address
-      else
-	 raw = raw .. O.from_hex('160014') .. readBech32Address(v.address)
-      end      
+      -- This is specific to Bech32 addresses, we should be able to verify the kind of address
+      raw = raw .. O.from_hex('160014') .. v.address
+
    end
 
    return H:process(H:process(raw))
@@ -388,29 +403,29 @@ end
 -- BIP0143
 -- Double SHA256 of the serialization of:
 --      1. nVersion of the transaction (4-byte little endian)
---      2. hashPrevouts (32-byte hash)
---      3. hashSequence (32-byte hash)
+--      2. hash_prevouts (32-byte hash)
+--      3. hash_sequence (32-byte hash)
 --      4. outpoint (32-byte hash + 4-byte little endian) 
 --      5. scriptCode of the input (serialized as scripts inside CTxOuts)
 --      6. value of the output spent by this input (8-byte little endian)
 --      7. nSequence of the input (4-byte little endian)
---      8. hashOutputs (32-byte hash)
+--      8. hash_outputs (32-byte hash)
 --      9. nLocktime of the transaction (4-byte little endian)
 --     10. sighash type of the signature (4-byte little endian)
-function buildTransactionToSing(tx, i)
+function btc.build_transaction_to_sign(tx, i)
    local raw
    local amount
    raw = O.new()
    --      1. nVersion of the transaction (4-byte little endian)
-   raw = raw .. toUInt(tx.version, 4)
-   --      2. hashPrevouts (32-byte hash)
-   raw = raw .. hashPrevouts(tx)
-   --      3. hashSequence (32-byte hash)
-   raw = raw .. hashSequence(tx)
+   raw = raw .. btc.to_uint(tx.version, 4)
+   --      2. hash_prevouts (32-byte hash)
+   raw = raw .. hash_prevouts(tx)
+   --      3. hash_sequence (32-byte hash)
+   raw = raw .. hash_sequence(tx)
    --      4. outpoint (32-byte hash + 4-byte little endian)
-   raw = raw .. opposite(tx.txIn[i].txid) .. toUInt(tx.txIn[i].vout, 4)
+   raw = raw .. opposite(tx.txIn[i].txid) .. btc.to_uint(tx.txIn[i].vout, 4)
    --      5. scriptCode of the input (serialized as scripts inside CTxOuts)
-   raw = raw .. O.from_hex('1976a914') .. addressScript(tx.txIn[i].address)  .. O.from_hex('88ac')
+   raw = raw .. O.from_hex('1976a914') .. tx.txIn[i].address  .. O.from_hex('88ac')
    --      6. value of the output spent by this input (8-byte little endian)
    amount = O.new(tx.txIn[i].amountSpent)
    raw = raw .. opposite(amount)
@@ -419,26 +434,27 @@ function buildTransactionToSing(tx, i)
    end
    --      7. nSequence of the input (4-byte little endian)
    raw = raw .. opposite(tx.txIn[i].sequence)
-   --      8. hashOutputs (32-byte hash)
-   raw = raw .. hashOutputs(tx)
+   --      8. hash_outputs (32-byte hash)
+   raw = raw .. hash_outputs(tx)
    --      9. nLocktime of the transaction (4-byte little endian)
-   raw = raw .. toUInt(tx.nLockTime, 4)
+   raw = raw .. btc.to_uint(tx.nLockTime, 4)
    --     10. sighash type of the signature (4-byte little endian)
-   raw = raw .. toUInt(tx.nHashType, 4)
+   raw = raw .. btc.to_uint(tx.nHashType, 4)
 
    return raw
 end
 
-function buildWitness(tx, sk)
-   local pk = compressPublicKey(ECDH.pubgen(sk))
+-- Here I sign the transaction
+function btc.build_witness(tx, sk)
+   local pk = btc.compress_public_key(ECDH.pubgen(sk))
    local witness = {}
    for i=1,#tx.txIn,1 do
       if tx.txIn[i].sigwit then
-	 local rawTx = buildTransactionToSing(tx, i)
+	 local rawTx = btc.build_transaction_to_sign(tx, i)
 	 local sigHash = dSha256(rawTx)
-	 local sig = signEcdhBc(sk, sigHash)
+	 local sig = btc.sign_ecdh(sk, sigHash)
 	 witness[i] = {
-	    encodeDERSignature(sig) .. O.from_hex('01'),
+	    btc.encode_der_signature(sig) .. O.from_hex('01'),
 	    pk
 	 }
       else
@@ -457,7 +473,7 @@ end
 
 -- return nil if it cannot build the transaction
 -- (for example if there are not enough founds)
-function buildTxFromUnspent(unspent, sk, to, amount, fee)
+function btc.build_tx_from_unspent(unspent, sk, to, amount, fee)
    local tx, i, currentAmount
    tx = {
       version=2,
@@ -504,7 +520,7 @@ function buildTxFromUnspent(unspent, sk, to, amount, fee)
    return tx
 end
 
-function valueSatoshiToBTC(value)
+function btc.value_btc_to_satoshi(value)
    pos = value:find("%.")
    decimals = value:sub(pos+1, #value)
 
@@ -514,23 +530,26 @@ function valueSatoshiToBTC(value)
 
    decimals = decimals .. string.rep("0", 8-#decimals)
 
-   return bigFromString(value:sub(1, pos-1) .. decimals)
+   return btc.big_from_string(value:sub(1, pos-1) .. decimals)
 end
 
-function rawTransactionFromJSON(data, sk)
-   local obj = JSON.decode(data)
-   local sk = readWIFPrivateKey(sk)
+-- function rawTransactionFromJSON(data, sk)
+--    local obj = JSON.decode(data)
+--    local sk = btc.read_wif_private_key(sk)
 
-   for k, v in pairs(obj.unspent) do
-      v.txid = O.from_hex(v.txid)
-      v.amount = valueSatoshiToBTC(v.amount)
-   end
+--    for k, v in pairs(obj.unspent) do
+--       v.txid = O.from_hex(v.txid)
+--       v.amount = valueSatoshiToBTC(v.amount)
+--    end
 
-   local tx = buildTxFromUnspent(obj.unspent, sk, obj.to, bigFromString(obj.amount), bigFromString(obj.fee))
+--    local tx = btc.build_tx_from_unspent(obj.unspent, sk, obj.to, btc.big_from_string(obj.amount), btc.big_from_string(obj.fee))
 
-   tx.witness = buildWitness(tx, sk)
+--    tx.witness = btc.build_witness(tx, sk)
 
-   local rawTx = buildRawTransaction(tx)
+--    local rawTx = btc.build_raw_transaction(tx)
 
-   return rawTx
-end
+--    return rawTx
+-- end
+
+
+return btc
