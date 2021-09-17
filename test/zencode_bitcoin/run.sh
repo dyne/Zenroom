@@ -23,26 +23,14 @@ cat <<EOF | save bitcoin txinput.json
   "unspent": [
     {
       "address": "tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug",
-      "amount": "0.01",
-      "txid": "ee7265cda7433e6bb93363284c4b8f4c1c478a9bd83dd6f3d0fca23cdefa183d",
-      "vout": 0
-    },
-    {
-      "address": "tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug",
       "amount": "0.00031",
       "txid": "26a1258b6cc85b01a4ff98bee02f07ddc63decd9866a8cfa565aac77d145bc18",
       "vout": 1
     },
     {
       "address": "tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug",
-      "amount": "0.00082",
-      "txid": "045bf0f05aea16e9fc3381bb60ffb628d44bfefdceb22f390231466be8ffaee8",
-      "vout": 1
-    },
-    {
-      "address": "tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug",
-      "amount": "0.00036",
-      "txid": "563ddc9dd9a1dd25098928bec9b3cc79cf9048ec52f79aed0a1b4d4dc3583680",
+      "amount": "0.00949",
+      "txid": "2879312e3189270725669ff2f959baa97e09eee63431d82e3498c2fa546099c9",
       "vout": 1
     }
   ]
