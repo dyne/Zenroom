@@ -17,7 +17,7 @@
  * If not, see http://www.gnu.org/licenses/agpl.txt
  * 
  * Last modified by Denis Roio
- * on Monday, 2nd August 2021
+ * on Thursday, 2nd September 2021
  */
 
 #ifndef LIBRARY
@@ -348,11 +348,13 @@ int main(int argc, char **argv) {
 		               "function Given(text, fn) ZEN.given_steps[text] = true end\n"
 		               "function When(text, fn) ZEN.when_steps[text] = true end\n"
 		               "function Then(text, fn) ZEN.then_steps[text] = true end\n"
+					   "function IfWhen(text, fn) ZEN.if_steps[text] = true end\n"
 		               "function ZEN.add_schema(arr)\n"
 		               "  for k,v in pairs(arr) do ZEN.schemas[k] = true end end\n"
 		               "ZEN.given_steps = {}\n"
 		               "ZEN.when_steps = {}\n"
 		               "ZEN.then_steps = {}\n"
+   		               "ZEN.if_steps = {}\n"
 		               "ZEN.schemas = {}\n"
 		               "require_once('zencode_%s')\n"
 		               "print(JSON.encode(\n"
@@ -360,6 +362,7 @@ int main(int argc, char **argv) {
 		               "  Given = ZEN.given_steps,\n"
 		               "  When = ZEN.when_steps,\n"
 		               "  Then = ZEN.then_steps,\n"
+					   "  If = ZEN.if_steps,\n"
 		               "  Schemas = ZEN.schemas }))", introspect, introspect);
 		int ret = luaL_dostring(Z->lua, zscript);
 		if(ret) {
