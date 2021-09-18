@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+RNGSEED="random"
 ####################
 # common script init
 if ! test -r ../utils.sh; then
@@ -160,10 +161,15 @@ Scenario 'ecdh': Bob decrypts the message from Alice
 	and I have a 'base64' named 'Alice' in 'public key'
 	and I have a 'secret message'	
 	When I decrypt the text of 'secret message' from 'Alice'
-	and debug
 	Then print the 'text' as 'string'
 	and print the 'header' from 'secret message' as 'string'
 EOF
+
+echo
+echo '##################################'
+echo '## NEW KEY MANAGEMENT TESTS'
+echo '##################################'
+echo
 
 #####################
 ## new key management
@@ -197,22 +203,34 @@ When I create the ecdh public key
 Then print my 'ecdh public key'
 EOF
 
+# check that secret key doesn't changes on pubkey generation
+cat << EOF | debug keygen_immutable.zen | save ecdh carl_keys.json
+Scenario ecdh
+Given I am known as 'Carl'
+When I create the ecdh key
+and I copy the 'ecdh' in 'keys' to 'ecdh before'
+and I create the ecdh public key
+and I copy the 'ecdh' in 'keys' to 'ecdh after'
+and I verify 'ecdh before' is equal to 'ecdh after'
+Then print 'ecdh before'
+and print 'ecdh after'
+EOF
 
+cat alice_keys.json | jq .
 cat <<EOF | debug enc_to_bob.zen -k alice_keys.json -a bob_pubkey.json | save ecdh enc_alice_to_bob.json
 Rule check version 1.0.0
 Scenario 'ecdh': Alice encrypts a message for Bob
 	Given that I am known as 'Alice'
 	and I have my 'keys'
-	and I have a 'ecdh public key' from 'Bob'
+	and I have a 'ecdh' public key from 'Bob'
 	When I write string 'This is my secret message.' in 'message'
 	and I write string 'This is the header' in 'header'
 	and I encrypt the secret message of 'message' for 'Bob'
-	and debug
-	and I remove 'ecdh public key'
 	and I create the ecdh public key
-	and debug
 	Then print the 'secret message'
 	and print my 'ecdh public key'
+	and print my 'keys'
+	and print all data
 EOF
 
 cat <<EOF | zexe dec_from_alice.zen -k bob_keys.json -a enc_alice_to_bob.json | save ecdh dec_bob_from_alice.json
@@ -220,7 +238,7 @@ Rule check version 1.0.0
 Scenario 'ecdh': Bob decrypts the message from Alice
 	Given that I am known as 'Bob'
 	and I have my 'keys'
-	and I have a 'ecdh public key' from 'Alice'
+	and I have a 'ecdh' public key from 'Alice'
 	and I have a 'secret message'
 	When I decrypt the text of 'secret message' from 'Alice'
 	Then print the 'text' as 'string'
