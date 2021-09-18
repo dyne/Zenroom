@@ -93,15 +93,15 @@ When(
 	"create the ecdh key",
 	function()
 		initkeys'ecdh'
-		ACK.keys.ecdh = OCTET.random(16)
+		ACK.keys.ecdh = ECDH.keygen().private
 	end
 )
 When(
 	"create the ecdh public key",
 	function()
 		empty'ecdh public key'
-		local pk = havekey'ecdh'
-		ACK.ecdh_public_key = ECDH.pubgen(pk)
+		local sk = havekey'ecdh'
+		ACK.ecdh_public_key = ECDH.pubgen(sk)
 	end
 )
 When(
@@ -109,7 +109,7 @@ When(
 	function(sec)
 		local sk = have(sec)
 		initkeys'ecdh'
-		-- TODO: check sec is an octet of reasonable length?
+		ECDH.pubgen(sk)
 		ACK.keys.ecdh = sk
 	end
 )
@@ -212,7 +212,7 @@ local function _pubkey_compat(_key)
 	local pubkey = ACK[_key]
 	if not pubkey then
 		local pubkey_arr
-		pubkey_arr = ACK.public_key or ACK.ecdh_public_key
+		pubkey_arr = ACK.public_key or ACK.public_key_session or ACK.ecdh_public_key
 		ZEN.assert(
 			type(pubkey_arr) == 'table',
 			'Public key is not a table'
@@ -236,8 +236,7 @@ When(
 		have(msg)
 		local pk = _pubkey_compat(_key)
 		empty'secret message'
-		local key =
-			I.spy(ECDH.session(sk, pk))
+		local key = ECDH.session(sk, pk)
 		ACK.secret_message = {
 			header = ACK.header or OCTET.from_string('DefaultHeader'),
 			iv = O.random(32)
@@ -263,9 +262,9 @@ When(
 		-- 	'Private key not found in keypair'
 		-- )
 		have(secret)
-		local pk = I.spy(_pubkey_compat(_key))
+		local pk = _pubkey_compat(_key)
 		local message = ACK[secret][_key] or ACK[secret]
-		local session = I.spy(ECDH.session(sk, pk))
+		local session = ECDH.session(sk, pk)
 		local checksum
 		ACK.text, checksum =
 			ECDH.aead_decrypt(session, message.text, message.iv, message.header)
@@ -295,12 +294,9 @@ When(
 IfWhen(
 	"verify the '' is signed by ''",
 	function(msg, by)
-		have'public_key'
-		ZEN.assert(
-			type(ACK.public_key) == 'table',
-			'Public key is not a table'
-		)
-		ZEN.assert(ACK.public_key[by], 'Public key not found for: ' .. by)
+	        -- compat
+	        local pk = _pubkey_compat(by)
+		ZEN.assert(pk, 'Public key not found for: '..by)
 		local obj = have(msg)
 		local t = luatype(obj)
 		local sign
@@ -309,14 +305,14 @@ IfWhen(
 			ZEN.assert(sign, 'Signature by ' .. by .. ' not found')
 			obj.signature = nil
 			ZEN.assert(
-				ECDH.verify(ACK.public_key[by], ZEN.serialize(obj), sign),
+				ECDH.verify(pk, ZEN.serialize(obj), sign),
 				'The signature by ' .. by .. ' is not authentic'
 			)
 		else
 			sign = ACK.signature[by]
 			ZEN.assert(sign, 'Signature by ' .. by .. ' not found')
 			ZEN.assert(
-				ECDH.verify(ACK.public_key[by], obj, sign),
+				ECDH.verify(pk, obj, sign),
 				'The signature by ' .. by .. ' is not authentic'
 			)
 		end
@@ -326,16 +322,11 @@ IfWhen(
 IfWhen(
 	"verify the '' has a signature in '' by ''",
 	function(msg, sig, by)
-		have'public_key'
-		ZEN.assert(
-			type(ACK.public_key) == 'table',
-			'Public key is not a table'
-		)
-		ZEN.assert(ACK.public_key[by], 'Public key not found for: ' .. by)
+	        local pk = _pubkey_compat(by)
 		local obj = have(msg)
 		local s = have(sig)
 		ZEN.assert(
-			ECDH.verify(ACK.public_key[by], ZEN.serialize(obj), s),
+			ECDH.verify(pk, ZEN.serialize(obj), s),
 			'The signature by ' .. by .. ' is not authentic'
 		)
 	end
