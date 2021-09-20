@@ -348,36 +348,31 @@ octet *new_octet_from_big(lua_State *L, big *c) {
 }
 
 // Doesn't work (there is some memory leak)
-/* static int big_from_decimal_string(lua_State *L) { */
-/*         const char *s = lua_tostring(L, 1); */
-/* 	luaL_argcheck(L, s != NULL, 1, "string expected"); */
-/* 	BIG ten; */
-/* 	big *num = big_new(L); SAFE(num); */
+static int big_from_decimal_string(lua_State *L) {
+        const char *s = lua_tostring(L, 1);
+	luaL_argcheck(L, s != NULL, 1, "string expected");
+	big *num = big_new(L); SAFE(num);
 
-/* 	big_init(num); */
-/* 	BIG_zero(num->val); */
-/* 	int i = 0; */
+	big_init(num);
+	BIG_zero(num->val);
+	int i = 0;
+	while(s[i] != '\0') {
+	        BIG res;
+		BIG_copy(res, num->val);
+		BIG_pmul(num->val, res, 10);
 
-/* 	BIG_zero(ten); */
-/* 	BIG_inc(ten, 10); */
-
-/* 	while(s[i] != '\0') { */
-/* 	        BIG res; */
-/* 		BIG_copy(res, num->val); */
-/* 		BIG_mul(num->val, res, ten); */
-
-/* 		//if (!isdigit(s[i])) { */
-/* 		if (s[i] < '0' || s[i] > '9') { */
-/* 			error(L, "%s: string is not a number %s", __func__, s); */
-/* 			lerror(L, "operation aborted"); */
-/* 			return 0; */
-/* 		} */
-/* 		BIG_inc(num->val, (int)(s[i] - '0')); */
-/* 		i++; */
-/* 	} */
-/* 	BIG_norm(num->val); */
-/* 	return 1; */
-/* } */
+		//if (!isdigit(s[i])) {
+		if (s[i] < '0' || s[i] > '9') {
+			error(L, "%s: string is not a number %s", __func__, s);
+			lerror(L, "operation aborted");
+			return 0;
+		}
+		BIG_inc(num->val, (int)(s[i] - '0'));
+		i++;
+	}
+	BIG_norm(num->val);
+	return 1;
+}
 
 
 static int luabig_to_octet(lua_State *L) {
@@ -778,7 +773,7 @@ int luaopen_big(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg big_class[] = {
 		{"new",newbig},
-		//{"from_dec_str",big_from_decimal_string},
+		{"from_decimal",big_from_decimal_string},
 		{"eq",big_eq},
 		{"add",big_add},
 		{"sub",big_sub},
