@@ -29,8 +29,8 @@ ZEN.add_schema(
       recipient_address = function(obj) 
 	 return(btc.read_bech32_address(obj))
       end,
-      amount = btc.big_from_string,
-      fee = btc.big_from_string,
+      amount = BIG.from_decimal,
+      fee = BIG.from_decimal,
       unspent = function(obj)
 	 local res = {}
 	 for _,v in pairs(obj) do

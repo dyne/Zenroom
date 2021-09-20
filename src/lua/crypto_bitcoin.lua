@@ -20,21 +20,11 @@
 
 local btc = {}
 
-function btc.big_from_string(src)
-   if not src then
-      error("null input to btc.big_from_string", 2)
-   end
-   local acc = BIG.new(0)
-   local ten = BIG.new(10)
-   for i=1, #src, 1 do
-      local digit = tonumber(src:sub(i,i), 10)
-      if digit == nil then
-	 error("string is not a BIG number", 2)
-      end
-      acc = acc * ten + BIG.new(digit)
-   end
+function btc.address_from_public_key(public_key)
+   local SHA256 = HASH.new('sha256')
+   local RMD160 = HASH.new('ripemd160')
+   return RMD160:process(SHA256:process(public_key))
 
-   return acc
 end
 
 local function dSha256(msg)
@@ -530,7 +520,7 @@ function btc.value_btc_to_satoshi(value)
 
    decimals = decimals .. string.rep("0", 8-#decimals)
 
-   return btc.big_from_string(value:sub(1, pos-1) .. decimals)
+   return BIG.from_decimal(value:sub(1, pos-1) .. decimals)
 end
 
 -- function rawTransactionFromJSON(data, sk)
