@@ -151,6 +151,8 @@ extern void PAIR_${CN}_GTpow(FP12_${CN} *x,BIG_${BS} b);
 #define BIG_add(d,l,r) BIG_${BS}_add(d,l,r)
 #define BIG_sub(d,l,r) BIG_${BS}_sub(d,l,r)
 #define BIG_mul(d,l,r) BIG_${BS}_mul(d,l,r)
+#define BIG_imul(d,l,r) BIG_${BS}_imul(d,l,r)
+#define BIG_pmul(d,l,r) BIG_${BS}_pmul(d,l,r)
 #define BIG_mod(x,n) BIG_${BS}_mod(x,n)
 #define BIG_invmodp(x,y,n) BIG_${BS}_invmodp(x,y,n)
 #define BIG_monty(d,m,c,s) BIG_${BS}_monty(d,m,c,s)
