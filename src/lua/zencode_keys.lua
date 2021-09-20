@@ -100,6 +100,9 @@ ZEN.add_schema(
 		  address = btc.read_bech32_address(obj.bitcoin.address)
 		  -- address = ZEN.get(obj.bitcoin, 'address', O.from_string)
 	       }
+	       pk = btc.compress_public_key(ECDH.pubgen(res.bitcoin.secret))
+	       ZEN.assert(btc.address_from_public_key(pk) == res.bitcoin.address,
+			  "Address cannot be derived from the private key")
 	    end
             return (res)
         end
