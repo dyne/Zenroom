@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Friday, 12th March 2021 1:19:48 pm
+--on Saturday, 4th September 2021
 --]]
 
 
@@ -74,6 +74,9 @@ ZEN.add_schema(
             -- ecdh_curve
             -- bls_curve
             local res = {}
+            if obj.ecdh then
+                res.ecdh = ZEN.get(obj, 'ecdh')
+            end
             if obj.credential then
                 res.credential = ZEN.get(obj, 'credential', INT.new)
             end

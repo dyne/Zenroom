@@ -241,11 +241,20 @@ Given(
    end
 )
 
--- public keys for keyring arrays (scenario ecdh)
--- supports bot ways in from given
--- public_key : { name : value }
--- or
--- name : { public_key : value }
+-- public keys for keyring arrays
+-- returns a special array for upcoming session:
+-- public_key_session : { name : value }
+Given(
+   "a '' public key from ''",
+   function(s, t)
+      -- if not pickin(t, s, nil, false) then
+      -- 	pickin(s, t)
+      -- end
+      pickin(t, s..'_public_key', s..'_public_key', false)
+      ack_table('public_key_session', t)
+   end
+)
+
 Given(
    "a '' from ''",
    function(s, t)
