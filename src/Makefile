@@ -33,11 +33,11 @@ CORTEX_M_CFLAGS = \
 	       $(CMSIS_INCLUDE_FLAGS) \
 	       -mthumb \
 	       -nostartfiles
-		   
+
 SOURCES := \
 	cli.o zenroom.o zen_error.o \
 	lua_functions.o lua_modules.o lualibs_detected.o lua_shims.o \
-	encoding.o base58.o \
+	encoding.o base58.o rmd160.c\
 	zen_memory.o mutt_sprintf.o \
 	zen_io.o zen_parse.o repl.o zen_config.o \
 	zen_octet.o zen_ecp.o zen_ecp2.o zen_big.o \

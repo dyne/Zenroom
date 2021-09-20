@@ -23,6 +23,7 @@
 
 #include <lua.h>
 #include <amcl.h>
+#include <rmd160.h>
 
 #define SHA256 32
 #define SHA512 64
@@ -36,6 +37,7 @@
 #define _SHA3_512 3512
 #define _SHA3_256 3256
 #define _KECCAK256 7
+#define _RMD160 160
 
 typedef struct {
 	char name[16];
@@ -47,7 +49,8 @@ typedef struct {
 	sha3 *sha3_256; // SHA3 aka keccak with 32 bytes
 	sha3 *sha3_512; // SHA3 aka keccak with 64 bytes
         sha3 *keccak256;
-	// ...
+        dword *rmd160;
+        // ...
 } hash;
 
 
