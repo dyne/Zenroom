@@ -11,18 +11,18 @@ assert(BTC.encode_compact_size(INT.new(253)) == O.from_hex('fdfd00'))
 assert(BTC.encode_compact_size(INT.new(515)) == O.from_hex('fd0302'))
 
 -- Test for encoding and decoding DER signature
-sig = {
+local sig = {
    r=O.from_hex('ff09e17b84f6a7d30c80bfa610b5b4542f32a8a0d5447a12fb1366d7f01cc44a'),
    s=O.from_hex('573a954c4518331561406f90300e8f3358f51928d43c212a8caed02de67eebee')
 }
-encodedDER = BTC.encode_der_signature(sig)
-newSig = BTC.decode_der_signature(encodedDER)
+local encodedDER = BTC.encode_der_signature(sig)
+local newSig = BTC.decode_der_signature(encodedDER)
 assert(sig.r == newSig.r and sig.s == newSig.s)
 --------------------------
 --   test from BIP0143  --
 --------------------------
-pk = O.from_hex('045476c2e83188368da1ff3e292e7acafcdb3566bb0ad253f62fc70f07aeee6357fd57dee6b46a6b010a3e4a70961ecf44a40e18b279ec9e9fba9c1dbc64896198')
-tx = {
+local pk = O.from_hex('045476c2e83188368da1ff3e292e7acafcdb3566bb0ad253f62fc70f07aeee6357fd57dee6b46a6b010a3e4a70961ecf44a40e18b279ec9e9fba9c1dbc64896198')
+local tx = {
    version=1,
    txIn = {
       {
@@ -74,9 +74,9 @@ tx = {
 ----------------------------------------
 -- Validate witness from bitcoin core --
 ----------------------------------------
-sk = BTC.read_wif_private_key('cPW7XRee1yx6sujBWeyZiyg18vhhQk9JaxxPdvwGwYX175YCF48G')
-pk = ECDH.pubgen(sk)
-tx = {
+local sk = BTC.read_wif_private_key('cPW7XRee1yx6sujBWeyZiyg18vhhQk9JaxxPdvwGwYX175YCF48G')
+local pk = ECDH.pubgen(sk)
+local tx = {
    version=2,
    txIn = {
       {
@@ -98,6 +98,16 @@ tx = {
    nHashType=O.from_hex('00000001')
 }
 assert(BTC.build_raw_transaction(tx) == O.from_hex('0200000001786609799593ad5fd6bf97793ae330cbb09d3ab501043636694b05cd8033f78c0000000000ffffffff0140ee1c0000000000160014f4702f9bfee42b0d4f9ba425f98343793893f2f400000000'))
+
+local newtx = BTC.decode_raw_transaction(BTC.build_raw_transaction(tx))
+
+assert(tx.version == newtx.version)
+assert(#newtx.txIn == 1)
+assert(newtx.txIn[1].txid == O.from_hex("8cf73380cd054b6936360401b53a9db0cb30e33a7997bfd65fad939579096678"))
+assert(newtx.txIn[1].vout == 0)
+assert(newtx.txIn[1].sequence == O.from_hex('ffffffff'))
+assert(#newtx.txOut == 1)
+
 
 rawTx = BTC.build_transaction_to_sign(tx, 1)
 sigHash = BTC.dsha256(rawTx)

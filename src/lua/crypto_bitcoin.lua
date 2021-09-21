@@ -168,9 +168,26 @@ function btc.encode_compact_size(n)
    return res
 end
 
+local function decode_compact_size_at_index(raw, i)
+   local b1
+
+   b1 = tonumber(raw:sub(i,i):hex(), 16)
+   local s, e -- start and end index
+   if b1 < 0xfd then
+      s, e = 1, 1
+   elseif b1 == 0xfd then
+      s, e = 2, 3
+   elseif b1 == 0xfe then
+      s, e = 2, 5
+   else
+      s, e = 2, 9
+   end
+   return INT.new(raw:sub(i+s-1, i+e-1)), i+e
+end
+
 -- fixed size encoding for integer
 function btc.to_uint(num, nbytes)
-   if type(num) ~= "zenroom.bignum" then
+   if type(num) ~= "zenroom.big" then
       num = INT.new(num)
    end
    num = opposite(num:octet())
@@ -180,16 +197,84 @@ function btc.to_uint(num, nbytes)
    return num
 end
 
+-- read little endian number from transaction raw at position i 
+local function read_uint(raw, i, nbytes)
+   return tonumber(opposite(raw:sub(i,i+nbytes-1)):hex(), 16), i+nbytes
+end
+
+function btc.decode_raw_transaction(raw)
+   local SCRIPT_SIZE_LIMIT = BIG.from_decimal('10000')
+   local tx
+   local i=1
+   tx = {}
+   -- version (little endian)
+   tx.version, i = read_uint(raw, i, 4)
+   assert(tx.version == 1 or tx.version == 2)
+
+   -- check if this is segwit, BIP 141
+   segwit = (raw:sub(i, i+1) == O.from_hex('0001'))
+   if segwit then
+      i=i+2
+   end
+   
+   -- read txin
+   local n_txin
+   n_txin, i = decode_compact_size_at_index(raw, i)
+   tx.txIn = {}
+   for j=1,tonumber(n_txin:octet():hex(), 16),1 do
+      local currIn = {}
+      -- previous output
+      currIn.txid = opposite(raw:sub(i, i+32-1))
+      i=i+32
+
+      currIn.vout, i = read_uint(raw, i, 4)
+
+      scriptBytes, i = decode_compact_size_at_index(raw, i)
+      assert(scriptBytes < SCRIPT_SIZE_LIMIT)
+      scriptBytes = tonumber(scriptBytes:octet():hex(), 16)
+      if scriptBytes > 0 then
+	 -- TODO: decode the script
+	 i = i + scriptBytes
+      end
+      
+      currIn.sequence = opposite(raw:sub(i, i+3))
+      i = i + 4
+
+      table.insert(tx.txIn, currIn)
+   end
+   -- read txout
+   n_txout, i = decode_compact_size_at_index(raw, i)
+   tx.txOut = {}
+   for j=1,tonumber(n_txout:octet():hex(), 16),1 do
+      local currOut = {}
+      currOut.amount = BIG.new(opposite(raw:sub(i,i+8-1)))
+      i=i+8
+
+      scriptBytes, i = decode_compact_size_at_index(raw, i)
+      assert(scriptBytes < SCRIPT_SIZE_LIMIT)
+      scriptBytes = tonumber(scriptBytes:octet():hex(), 16)
+      if scriptBytes > 0 then
+	 -- TODO: decode the script
+	 i = i + scriptBytes
+      end
+
+      table.insert(tx.txOut, currOut)
+   end
+
+   -- read witness (if segwit)
+
+
+   -- read nlocktime
+   tx.nLockTime, i = read_uint(raw, i, 4)
+   return tx
+end
+
 -- with not coinbase input
 function btc.build_raw_transaction(tx)
    local raw, script
    raw = O.new()
 
-   if tx["witness"] and #tx["witness"]>0 then
-      sigwit = true
-   else
-      sigwit = false
-   end
+   sigwit = (tx["witness"] and #tx["witness"]>0)
 
    -- version
    raw = raw .. O.from_hex('02000000')
