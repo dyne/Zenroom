@@ -347,7 +347,7 @@ octet *new_octet_from_big(lua_State *L, big *c) {
 	return(o);
 }
 
-// Doesn't work (there is some memory leak)
+// Works only for positive numbers
 static int big_from_decimal_string(lua_State *L) {
         const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "string expected");
@@ -371,6 +371,71 @@ static int big_from_decimal_string(lua_State *L) {
 		i++;
 	}
 	BIG_norm(num->val);
+	return 1;
+}
+
+// Slow but only for export
+// Works only for positive numbers
+static int big_to_decimal_string(lua_State *L) {
+       	big *num = big_arg(L,1); SAFE(num);
+	BIG_norm(num->val);
+	BIG safenum;
+	BIG_copy(safenum, num->val);
+	BIG ten_power;
+	BIG ten;
+
+	BIG_zero(ten_power);
+	BIG_inc(ten_power, 1);
+
+	BIG_zero(ten);
+	BIG_inc(ten, 10);
+	int i = 0;
+	int j;
+	// Order of magnitude
+	while (BIG_comp(ten_power,num->val)<=0) {
+		BIG res;
+		BIG_copy(res, ten_power);
+		BIG_pmul(ten_power, res, 10);
+        	i++;
+		BIG_norm(ten_power);
+	}
+	char *s = zen_memory_alloc(i+3);
+	if (i == 0) {
+		s[0] = '0';
+		i++;
+	} else {
+
+		i = 0;
+		while(!BIG_iszilch(safenum)) {
+	        	// Read less significant digit
+			BIG tmp;
+			BIG_copy(tmp, safenum);
+			BIG_mod(tmp, ten);
+			s[i] = tmp[0]+'0';
+
+			// Divide by 10 (remove the digit I have just read)
+			DBIG dividend;
+			BIG_dzero(dividend);
+			BIG_dscopy(dividend, safenum);
+			BIG_ddiv(safenum, dividend, ten);
+			i++;
+		}
+	}
+	s[i]='\0';
+
+	// Digits in the opposite order
+	j = 0;
+	i--;
+	while(j < i) {
+	  char t;
+	  t = s[i];
+	  s[i] = s[j];
+	  s[j] = t;
+	  i--;
+	  j++;
+	}
+	lua_pushstring(L,s);
+	zen_memory_free(s);
 	return 1;
 }
 
@@ -801,6 +866,7 @@ int luaopen_big(lua_State *L) {
 		// idiomatic operators
 		{"octet",luabig_to_octet},
 		{"hex",big_to_hex},
+		{"decimal",big_to_decimal_string},
 		{"__add",big_add},
 		{"__sub",big_sub},
 		{"__mul",big_mul},

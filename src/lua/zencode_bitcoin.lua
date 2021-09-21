@@ -56,6 +56,7 @@ When('create the bitcoin transaction',
 	have'fee'
 
 	local tx = btc.build_tx_from_unspent(ACK.unspent, ACK.recipient_address, ACK.amount, ACK.fee)
+	ZEN.assert(tx ~= nil, "Not enough bitcoins in the unspent list")
 	
 	tx.witness = btc.build_witness(tx, ACK.keys.bitcoin.secret)
 	ACK.bitcoin_transaction = btc.build_raw_transaction(tx)
