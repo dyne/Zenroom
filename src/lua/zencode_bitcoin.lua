@@ -54,14 +54,8 @@ When('create the bitcoin transaction',
 	have'recipient address'
 	have'amount'
 	have'fee'
-	-- TODO: validation bitcoin.secret <-> address
-	-- local rawtx = BTC.maketx(ACK.keys.bitcoin.secret, ACK.keys.bitcoin.address,
-	-- 			 ACK.recipient_address, ACK.amount, ACK.fee)
-	-- ACK.bitcoin_transaction = rawtx
-	-- ACK.bitcoin_transaction = O.from_string("OK")
 
-	local tx = btc.build_tx_from_unspent(ACK.unspent, ACK.keys.bitcoin.secret,
-					     ACK.recipient_address, ACK.amount, ACK.fee)
+	local tx = btc.build_tx_from_unspent(ACK.unspent, ACK.recipient_address, ACK.amount, ACK.fee)
 	
 	tx.witness = btc.build_witness(tx, ACK.keys.bitcoin.secret)
 	ACK.bitcoin_transaction = btc.build_raw_transaction(tx)
