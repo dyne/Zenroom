@@ -31,8 +31,8 @@ function single_share_f(o)
 end
 
 ZEN.add_schema({
-      -- sigle share
-      single_share = signel_share_f,
+      -- single share
+      single_share = single_share_f,
       -- array of single shares
       secret_shares = function(obj)
          local res = { }
@@ -44,17 +44,19 @@ ZEN.add_schema({
 })
 
 When("create the secret shares of '' with '' quorum ''", function(sec, tot, q)
-		local s = ACK[sec]
-		ZEN.assert(s, "Secret not found: "..sec)
-		ZEN.assert(#s <= 32, "Secret too big to share: "..#s.." bytes, max is 32 bytes")
-		local total = tonumber(tot)
-		ZEN.assert(total, "Total shares is not a number: "..tot)
-		local quorum = tonumber(q)
-		ZEN.assert(quorum, "Quorum shares is not a number: "..q)
-        ACK.secret_shares = LAG.create_shared_secret(total,quorum,s)
+	local soct = have(sec)
+	-- this check is relative to the BIG size, established by curve's size
+	-- it is made inside the crypto function, but could also be made here
+	-- local sbig = BIG.new(soct) % ECP.order()
+	-- ZEN.assert(sbig:octet() == soct, "Secret too big to share: "..#soct.." bytes")
+	local total = tonumber(tot)
+	ZEN.assert(total, "Total shares is not a number: "..tot)
+	local quorum = tonumber(q)
+	ZEN.assert(quorum, "Quorum shares is not a number: "..q)
+        ACK.secret_shares = LAG.create_shared_secret(total,quorum,soct)
 end)
 
 When("compose the secret using ''", function(shares)
-		ZEN.assert(ACK[shares], "Shares not found: "..shares)
-        ACK.secret = LAG.compose_shared_secret(ACK[shares])
+	local sh = have(shares)
+        ACK.secret = LAG.compose_shared_secret(sh)
 end)

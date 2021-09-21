@@ -174,3 +174,35 @@ and I verify 'original secret' is equal to 'composed secret'
 Then print string 'SECRETS MATCH'
 EOF
 
+cat <<EOF | save secshare 32secret.json
+{ "secret": "640e744984d511506a3ea1e52417c0a49caa11762626c7cae8f5302138205a07" }
+EOF
+
+# fails with this secret, slightly bigger than curve secp256k1 modulo:
+# { "secret": "f40e744984d511506a3ea1e52417c0a49caa11762626c7cae8f5302138205a07" }
+
+cat <<EOF | zexe 32secret.zen -k 32secret.json | save secshare 32shares.json
+Rule check version 2.0.0
+Scenario secshare: create a shared secret
+
+Given I have a 'hex' named 'secret'
+
+When I create the secret shares of 'secret' with '5' quorum '3'
+
+Then print the 'secret shares'
+EOF
+
+cat <<EOF | zexe 32compose.zen -k 32shares.json -a 32secret.json | jq .
+Rule check version 2.0.0
+Scenario secshare: compose a shared secret
+
+Given I have a 'secret shares'
+and I have a 'hex' named 'secret'
+
+When I rename 'secret' to 'original secret'
+and I compose the secret using 'secret shares'
+and I verify 'original secret' is equal to 'secret'
+
+Then print string 'SECRETS MATCH'
+EOF
+

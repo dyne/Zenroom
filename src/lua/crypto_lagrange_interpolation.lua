@@ -39,7 +39,14 @@ local G1 = ECP.generator() -- return value
 local O  = ECP.order() -- return value
 
 function li.create_shared_secret(total, quorum, secret)
-   assert(quorum < total, 'Error calling create_shared_secret: quorum ('..quorum..') must be smaller than total ('..total..')')
+   if quorum >= total then
+	 error('Error calling create_shared_secret: quorum ('..quorum..') must be smaller than total ('..total..')', 2)
+   end
+   -- check that BIG can contain the whole secret, depends from curve's size
+   local secbig = BIG.new(secret) % O
+   if secbig:octet() ~= secret then
+      error('Secret exceeds maximum BIG size: '..#O..' bytes')
+   end
    -- generation of the coefficients of the secret polynomial
    local coeff = { }
    -- take last argument or create random
