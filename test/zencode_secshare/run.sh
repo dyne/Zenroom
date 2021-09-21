@@ -2,22 +2,14 @@
 
 # RNGSEED="hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
 
+SUBDOC=secshare
+
 ####################
 # common script init
 if ! test -r ../utils.sh; then
 	echo "run executable from its own directory: $0"; exit 1; fi
 . ../utils.sh
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
-####################
-# use zexe if you have zenroom in a system-wide path
-#
-# zexe() {
-#	out="$1"
-#	shift 1
-#	>&2 echo "test: $out"
-#	tee "$out" | zenroom -z $*
-# }
-####################
 
 n=0
 
@@ -31,7 +23,7 @@ echo "                                                "
 
 
 
-cat <<EOF  > ../../docs/examples/zencode_cookbook/scenarioSecShare-Secret.json
+cat <<EOF  | save secshare Secret.json
 {
 	"32BytesSecret":"myMilkshakeBringsAllTheBoysTo..."
 }
@@ -39,7 +31,7 @@ EOF
 
 
 
-cat <<EOF | debug ../../docs/examples/zencode_cookbook/scenarioSecShare-createSharedSecret.zen -k ../../docs/examples/zencode_cookbook/scenarioSecShare-Secret.json | jq . | tee ../../docs/examples/zencode_cookbook/scenarioSecShare-sharedSecret.json
+cat <<EOF | zexe createSharedSecret.zen -k Secret.json | save secshare sharedSecret.json
 
 # Let's define the scenario, we'll need the 'secshare' here
 Scenario secshare: create a shared secret
@@ -50,7 +42,7 @@ Given I have a 'string' named '32BytesSecret'
 # Here we are creating the "secret shares", the output will be an array of pairs of numbers
 # The quorum represents the minumum amount of secret shares needed to
 # rebuild the secret, and it can be configured
-When I create the secret shares of '32BytesSecret' with '19' quorum '5'
+When I create the secret shares of '32BytesSecret' with '9' quorum '5'
 
 # Here we rename the output and print it out
 and I rename the 'secret shares' to 'mySharedSecret'
@@ -68,7 +60,8 @@ echo "                                                "
 
 
 
-cat <<EOF | debug ../../docs/examples/zencode_cookbook/scenarioSecShare-removeShares.zen -k ../../docs/examples/zencode_cookbook/scenarioSecShare-Secret.json -a ../../docs/examples/zencode_cookbook/scenarioSecShare-sharedSecret.json | jq . | tee ../../docs/examples/zencode_cookbook/scenarioSecShare-sharedSecret5parts.json
+cat <<EOF | zexe removeShares.zen -k Secret.json -a sharedSecret.json \
+    | save secshare sharedSecret5parts.json
 
 # Here we load the "secret shares", which is a an array of base64 numbers
 Given I have a 'base64 array' named 'mySharedSecret'
@@ -102,7 +95,8 @@ echo "                                                "
 
 
 
-cat <<EOF | zexe ../../docs/examples/zencode_cookbook/scenarioSecShare-composeSecretShares.zen -k ../../docs/examples/zencode_cookbook/scenarioSecShare-sharedSecret5parts.json | tee ../../docs/examples/zencode_cookbook/scenarioSecShare-composedSecretShares.json
+cat <<EOF | zexe composeSecretShares.zen -k sharedSecret5parts.json \
+    | save secshare composedSecretShares.json
 Scenario secshare: recompose the secret shares
 
 # Here we are loading the "secret shares" 
