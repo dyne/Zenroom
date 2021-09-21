@@ -94,6 +94,7 @@ function btc.read_bech32_address(addr)
    end
    local prefix, data, res, byt, countBit,val
    prefix = nil
+   addr = addr:lower()
    if addr:sub(1,4) == 'bcrt' then
       prefix = 4
    elseif addr:sub(1,2) == 'bc' or addr:sub(1,2) == 'tb' then
@@ -125,8 +126,7 @@ function btc.read_bech32_address(addr)
    end
 
    -- TODO: I dont look at the checksum
-   
-   return res:chop(20)
+   return res:sub(1,#res-3)
 end
 
 -- variable length encoding for integer based on the
@@ -457,13 +457,12 @@ end
 -- -- Pay attention to the amount it has to be multiplied for 10^8
 
 -- unspent: list of unspent transactions
--- sk: private key
 -- to: receiver bitcoin address (must be segwit/Bech32!)
 -- amount: satoshi to transfer (BIG integer)
 
 -- return nil if it cannot build the transaction
 -- (for example if there are not enough founds)
-function btc.build_tx_from_unspent(unspent, sk, to, amount, fee)
+function btc.build_tx_from_unspent(unspent, to, amount, fee)
    local tx, i, currentAmount
    tx = {
       version=2,
