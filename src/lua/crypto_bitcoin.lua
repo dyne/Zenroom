@@ -565,7 +565,7 @@ function btc.build_tx_from_unspent(unspent, to, amount, fee)
       tx.txIn[i] = {
 	 txid = unspent[i].txid,
 	 vout = unspent[i].vout,
-	 sigwit = true,
+	 sigwit = O.from_hex('01'), -- this should be true
 	 address = unspent[i].address,
 	 amountSpent = unspent[i].amount,
 	 sequence = O.from_hex('ffffffff'),
