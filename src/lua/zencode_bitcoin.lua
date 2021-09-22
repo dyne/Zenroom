@@ -58,7 +58,24 @@ When('create the bitcoin transaction',
 	local tx = btc.build_tx_from_unspent(ACK.unspent, ACK.recipient_address, ACK.amount, ACK.fee)
 	ZEN.assert(tx ~= nil, "Not enough bitcoins in the unspent list")
 	
-	tx.witness = btc.build_witness(tx, ACK.keys.bitcoin.secret)
-	ACK.bitcoin_transaction = btc.build_raw_transaction(tx)
+	ACK.bitcoin_transaction = tx
+     end
+)
+When("sign with bitcoin the ''",
+     function(_bitcoin_transaction)
+
+	local bitcoin_transaction = have(_bitcoin_transaction)
+	ZEN.assert(bitcoin_transaction.witness == nil, "The bitcoin transaction has already been signed")
+
+	bitcoin_transaction.witness = btc.build_witness(ACK.bitcoin_transaction, ACK.keys.bitcoin.secret)
+
+     end
+)
+When("create the bitcoin raw transaction of the ''",
+     function(_bitcoin_transaction)
+
+	local bitcoin_transaction = have(_bitcoin_transaction)
+
+	ACK.bitcoin_raw_transaction = btc.build_raw_transaction(bitcoin_transaction)
      end
 )
