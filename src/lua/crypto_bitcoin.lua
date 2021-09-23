@@ -49,6 +49,23 @@ function btc.compress_public_key(public)
    return pk
 end
 
+function btc.uncompress_public_key(public)
+   local p = BIG.new(O.from_hex('fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f'))
+   local e = BIG.new(O.from_hex('3fffffffffffffffffffffffffffffffffffffffffffffffffffffffbfffff0c'))
+
+   local parity = public:sub(1,1)
+   assert(parity == O.from_hex('02') or parity == O.from_hex('03'))
+   local x = BIG.new(public:sub(2, #public))
+   -- y*y = x*x*x + 7
+   local rhs = BIG.mod(BIG.modmul(BIG.modmul(x,x,p),x,p)+BIG.new(7),p)
+   local sqrt_rhs = rhs:modpower(e, p)
+   assert(BIG.modmul(sqrt_rhs,sqrt_rhs, p) == rhs)
+   if sqrt_rhs:parity() ~= (parity == O.from_hex('03')) then -- this is a xor
+      sqrt_rhs = sqrt_rhs:modneg(p)
+   end
+   return O.from_hex('04') .. x .. sqrt_rhs
+end
+
 -- it is similar to sign eth, s < order/2
 -- MOVE: this function should be in the ECDH module
 function btc.sign_ecdh(sk, data) 
@@ -201,17 +218,19 @@ end
 local function read_uint(raw, i, nbytes)
    return tonumber(opposite(raw:sub(i,i+nbytes-1)):hex(), 16), i+nbytes
 end
-
-function btc.decode_raw_transaction(raw)
+-- The sender address is not in the raw transaction
+function btc.decode_raw_transaction(raw, sender_address)
    local SCRIPT_SIZE_LIMIT = BIG.from_decimal('10000')
    local tx
    local i=1
+   local scriptBytes
    tx = {}
    -- version (little endian)
    tx.version, i = read_uint(raw, i, 4)
    assert(tx.version == 1 or tx.version == 2)
 
    -- check if this is segwit, BIP 141
+
    segwit = (raw:sub(i, i+1) == O.from_hex('0001'))
    if segwit then
       i=i+2
@@ -232,13 +251,16 @@ function btc.decode_raw_transaction(raw)
       scriptBytes, i = decode_compact_size_at_index(raw, i)
       assert(scriptBytes < SCRIPT_SIZE_LIMIT)
       scriptBytes = tonumber(scriptBytes:octet():hex(), 16)
+      print(scriptBytes)
       if scriptBytes > 0 then
-	 -- TODO: decode the script
+	 -- empty script
 	 i = i + scriptBytes
       end
       
       currIn.sequence = opposite(raw:sub(i, i+3))
       i = i + 4
+
+      currIn.address = sender_address
 
       table.insert(tx.txIn, currIn)
    end
@@ -254,7 +276,16 @@ function btc.decode_raw_transaction(raw)
       assert(scriptBytes < SCRIPT_SIZE_LIMIT)
       scriptBytes = tonumber(scriptBytes:octet():hex(), 16)
       if scriptBytes > 0 then
-	 -- TODO: decode the script
+	 -- decode the script
+	 -- the script is 00 ADDRESS_LEN ADDRESS
+	 -- test segwit ver 0 script
+	 assert(raw:sub(i,i) == O.from_hex('00'))
+	 local addressLen = tonumber(raw:sub(i+1,i+1):hex(), 16)
+
+	 assert(2+addressLen == scriptBytes)
+
+	 currOut.address = raw:sub(i+2, i+scriptBytes-1)
+
 	 i = i + scriptBytes
       end
 
@@ -262,7 +293,22 @@ function btc.decode_raw_transaction(raw)
    end
 
    -- read witness (if segwit)
-
+   if segwit then
+      tx.witness = {}
+      for j=1,#tx.txIn,1 do
+      	 stackSize, i = decode_compact_size_at_index(raw, i)
+      	 stackSize = tonumber(stackSize:octet():hex(), 16)
+      	 items = {}
+      	 for k=1,stackSize,1 do
+      	    itemBytes, i = decode_compact_size_at_index(raw, i)
+      	    itemBytes = tonumber(itemBytes:octet():hex(), 16)
+	    item = raw:sub(i, i+itemBytes-1)
+	    i=i+itemBytes
+      	    table.insert(items, item)
+      	 end
+      	 table.insert(tx.witness, items)
+      end
+   end
 
    -- read nlocktime
    tx.nLockTime, i = read_uint(raw, i, 4)
@@ -539,6 +585,25 @@ function btc.build_witness(tx, sk)
 
    return witness
 end
+
+function btc.verify_witness(tx)
+   if tx.witness == nil then
+      return false
+   end
+   for i, v in pairs(tx.witness) do
+      local rawTx = btc.build_transaction_to_sign(tx, i)
+      local sigHash = btc.dsha256(rawTx)
+      local sig = btc.decode_der_signature(v[1])
+      print(v[2]:hex())
+      print(sig.r:hex())
+      print(sig.s:hex())
+      if not ECDH.verify_hashed(v[2], sigHash, sig, #sigHash) then
+	 return false
+      end
+   end
+   return true
+end
+
 -- -- Pay attention to the amount it has to be multiplied for 10^8
 
 -- unspent: list of unspent transactions

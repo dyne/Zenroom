@@ -98,7 +98,7 @@ local tx = {
    nHashType=O.from_hex('00000001')
 }
 assert(BTC.build_raw_transaction(tx) == O.from_hex('0200000001786609799593ad5fd6bf97793ae330cbb09d3ab501043636694b05cd8033f78c0000000000ffffffff0140ee1c0000000000160014f4702f9bfee42b0d4f9ba425f98343793893f2f400000000'))
-
+print(BTC.build_raw_transaction(tx):hex())
 local newtx = BTC.decode_raw_transaction(BTC.build_raw_transaction(tx))
 
 assert(tx.version == newtx.version)
@@ -107,14 +107,21 @@ assert(newtx.txIn[1].txid == O.from_hex("8cf73380cd054b6936360401b53a9db0cb30e33
 assert(newtx.txIn[1].vout == 0)
 assert(newtx.txIn[1].sequence == O.from_hex('ffffffff'))
 assert(#newtx.txOut == 1)
+assert(newtx.witness == nil)
 
+tx.witness = BTC.build_witness(tx, sk)
+local rawTx = BTC.build_raw_transaction(tx)
+print(rawTx:hex())
+local newtx = BTC.decode_raw_transaction(rawTx, tx.txIn[1].address)
 
-rawTx = BTC.build_transaction_to_sign(tx, 1)
-sigHash = BTC.dsha256(rawTx)
-
-sig = {
-   r=O.from_hex('5f5cf053cfd97c8c3c30c31f11d5be369e0f551173d6699db1635f27d5f26a04'),
-   s=O.from_hex('7f9d02edd76708ee4b7551d6c25a533b3d346378c843b13c5e992fabf8db018e')
-}
-assert(BTC.compress_public_key(pk) == O.from_hex('03fe7380f1549462e6f9fff99c2bd0084a2ce568f79f0001f020b4135385394276'))
-assert(ECDH.verify_hashed(pk, sigHash, sig, #sigHash))
+assert(tx.version == newtx.version)
+assert(#newtx.txIn == 1)
+assert(newtx.txIn[1].txid == O.from_hex("8cf73380cd054b6936360401b53a9db0cb30e33a7997bfd65fad939579096678"))
+assert(newtx.txIn[1].vout == 0)
+print(newtx.txIn[1].address:hex())
+assert(newtx.txIn[1].address == tx.txIn[1].address)
+assert(newtx.txIn[1].sequence == O.from_hex('ffffffff'))
+assert(#newtx.txOut == 1)
+assert(#newtx.witness == #tx.witness)
+assert(ZEN.serialize(newtx.witness) == ZEN.serialize(tx.witness))
+assert(BTC.verify_witness(newtx))

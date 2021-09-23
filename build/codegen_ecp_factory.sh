@@ -134,6 +134,7 @@ extern void PAIR_${CN}_GTpow(FP12_${CN} *x,BIG_${BS} b);
 #define BIG_iszilch(b) BIG_${BS}_iszilch(b)
 #define BIG_diszilch(b) BIG_${BS}_diszilch(b)
 #define BIG_inc(b,n) BIG_${BS}_inc(b,n)
+#define BIG_dec(b,n) BIG_${BS}_dec(b,n)
 #define BIG_norm(b) BIG_${BS}_norm(b)
 #define BIG_nbits(b) BIG_${BS}_nbits(b)
 #define BIG_copy(b,a) BIG_${BS}_copy(b,a)

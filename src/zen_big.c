@@ -666,6 +666,43 @@ static int big_mul(lua_State *L) {
 	return 1;
 }
 
+static int big_modpower(lua_State *L) {
+	big *x = big_arg(L,1); SAFE(x);
+	big *n = big_arg(L,2); SAFE(n);
+	big *m = big_arg(L,3); SAFE(n);
+
+	BIG safen;
+	BIG_copy(safen, n->val);
+
+	big *res = big_new(L); SAFE(res);
+	big_init(res);
+	BIG_zero(res->val);
+	BIG_inc(res->val, 1);
+
+	BIG powerx;
+	BIG_copy(powerx, x->val);
+
+	BIG zero;
+	BIG_zero(zero);
+
+	while(BIG_comp(safen, zero) > 0) {
+	        if((safen[0] & 1) == 1) {
+			// n odd
+		        BIG_modmul(res->val, res->val, powerx, m->val);
+			BIG_dec(safen, 1);
+		} else {
+			// n even
+			BIG tmp;
+			BIG_modmul(tmp, powerx, powerx, m->val);
+			BIG_copy(powerx, tmp);
+			BIG_norm(safen);
+			BIG_shr(safen, 1);
+		}
+	}
+
+	return 1;
+}
+
 static int big_sqr(lua_State *L) {
 	big *l = big_arg(L,1); SAFE(l);
 	if(l->doublesize) {
@@ -888,6 +925,7 @@ int luaopen_big(lua_State *L) {
 		{"modneg",big_modneg},
 		{"modsub",big_modsub},
 		{"modinv",big_modinv},
+		{"modpower",big_modpower},
 		{"jacobi",big_jacobi},
 		{"monty",big_monty},
 		{"parity",big_parity},
