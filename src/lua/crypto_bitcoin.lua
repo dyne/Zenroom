@@ -219,7 +219,7 @@ local function read_uint(raw, i, nbytes)
    return tonumber(opposite(raw:sub(i,i+nbytes-1)):hex(), 16), i+nbytes
 end
 -- The sender address is not in the raw transaction
-function btc.decode_raw_transaction(raw, sender_address)
+function btc.decode_raw_transaction(raw, sender_address, amounts_spent)
    local SCRIPT_SIZE_LIMIT = BIG.from_decimal('10000')
    local tx
    local i=1
@@ -248,10 +248,11 @@ function btc.decode_raw_transaction(raw, sender_address)
 
       currIn.vout, i = read_uint(raw, i, 4)
 
+      currIn.amountSpent = amounts_spent[j]
+
       scriptBytes, i = decode_compact_size_at_index(raw, i)
       assert(scriptBytes < SCRIPT_SIZE_LIMIT)
       scriptBytes = tonumber(scriptBytes:octet():hex(), 16)
-      print(scriptBytes)
       if scriptBytes > 0 then
 	 -- empty script
 	 i = i + scriptBytes
@@ -312,6 +313,7 @@ function btc.decode_raw_transaction(raw, sender_address)
 
    -- read nlocktime
    tx.nLockTime, i = read_uint(raw, i, 4)
+
    return tx
 end
 
@@ -587,6 +589,7 @@ function btc.build_witness(tx, sk)
 end
 
 function btc.verify_witness(tx)
+   tx.nHashType = O.from_hex('00000001')
    if tx.witness == nil then
       return false
    end
@@ -594,10 +597,7 @@ function btc.verify_witness(tx)
       local rawTx = btc.build_transaction_to_sign(tx, i)
       local sigHash = btc.dsha256(rawTx)
       local sig = btc.decode_der_signature(v[1])
-      print(v[2]:hex())
-      print(sig.r:hex())
-      print(sig.s:hex())
-      if not ECDH.verify_hashed(v[2], sigHash, sig, #sigHash) then
+      if not ECDH.verify_hashed(btc.uncompress_public_key(v[2]), sigHash, sig, #sigHash) then
 	 return false
       end
    end
