@@ -640,12 +640,12 @@ static int to_segwit_address(lua_State *L) {
 	char hrp[3];
 	register int i = 0;
 	while(i < 2 && s[i] != '\0') {
-	  if(s[i] > 'A' && s[i] < 'Z') {
-	    hrp[i] = s[i] - 'A' + 'a'; // to upper case
-	  } else {
-	    hrp[i] = s[i];
-	  }
-	  i++;
+		if(s[i] > 'A' && s[i] < 'Z') {
+			hrp[i] = s[i] - 'A' + 'a'; // to upper case
+		} else {
+			hrp[i] = s[i];
+       		}
+		i++;
 	}
 	hrp[i] = '\0';
 	if(s[i] != '\0' || (strcmp(hrp, "bc") != 0 && strcmp(hrp, "tb") != 0)) {
