@@ -77,7 +77,7 @@
 
 extern zenroom_t *Z;
 
-// from segwith_addr.c
+// from segwit_addr.c
 extern int segwit_addr_encode(char *output, const char *hrp, int witver, const uint8_t *witprog, size_t witprog_len);
 extern int segwit_addr_decode(int* witver, uint8_t* witdata, size_t* witdata_len, const char* hrp, const char* addr);
 
@@ -564,7 +564,7 @@ static int from_bin(lua_State *L) {
 	return 1;
 }
 
-static int segwit_address_decode(lua_State *L) {
+static int from_segwit_address(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	if(!s) {
 		error(L, "%s :: invalid argument",__func__); // fatal
@@ -594,6 +594,80 @@ static int segwit_address_decode(lua_State *L) {
 	lua_pushinteger(L,witver);
 
 	return 2;
+}
+
+int my_strncasecmp(const char *s1, const char *s2, size_t n) {
+    size_t i = 0;
+    while (i < n) {
+        char c1 = s1[i];
+        char c2 = s2[i];
+        if (c1 >= 'A' && c1 <= 'Z') c1 = (c1 - 'A') + 'a';
+        if (c2 >= 'A' && c2 <= 'Z') c2 = (c2 - 'A') + 'a';
+        if (c1 < c2) return -1;
+        if (c1 > c2) return 1;
+        if (c1 == 0) return 0;
+        ++i;
+    }
+    return 0;
+}
+
+static int to_segwit_address(lua_State *L) {
+	octet *o = o_arg(L,1);	SAFE(o);
+	if(!o->len) { lua_pushnil(L); return 1; }
+	int tn;
+	lua_Number witver = lua_tointegerx(L,2,&tn);
+	if(!tn) {
+		lerror(L, "O.from_number input is not a number");
+		return 0; }
+	const char *s = lua_tostring(L, 3);
+	int err = 0;
+	if(!s) {
+		error(L, "%s :: invalid argument",__func__); // fatal
+		err = 1;
+	}
+
+	if(witver < 0 || witver > 16) {
+	        error(L, "Invalid segwit version: %d", witver);
+		err = 1;
+	}
+
+	if(o->len < 2 || o->len > 40) {
+	        error(L, "Invalid size for segwit address: %d", o->len);
+		err = 1;
+	}
+
+	// HRP to lower case
+	char hrp[3];
+	register int i = 0;
+	while(i < 2 && s[i] != '\0') {
+	  if(s[i] > 'A' && s[i] < 'Z') {
+	    hrp[i] = s[i] - 'A' + 'a'; // to upper case
+	  } else {
+	    hrp[i] = s[i];
+	  }
+	  i++;
+	}
+	hrp[i] = '\0';
+	if(s[i] != '\0' || (strcmp(hrp, "bc") != 0 && strcmp(hrp, "tb") != 0)) {
+	        error(L, "Invalid human readable part: %s", s);
+		err = 1;
+	}
+	if(err) {
+	        lua_pushboolean(L,0);
+	        return 1;
+	}
+	char *result = zen_memory_alloc(73+strlen(hrp));
+
+	if (!segwit_addr_encode(result, hrp, witver, (uint8_t*)o->val, o->len)) {
+		error(L, "%s :: cannot be encoded to segwit format", __func__);
+		lua_pushboolean(L,0);
+		return 1;
+        }
+
+	lua_pushstring(L,result);
+	zen_memory_free(result);
+
+	return 1;
 }
 
 
@@ -1134,7 +1208,7 @@ int luaopen_octet(lua_State *L) {
 		{"bytefreq", entropy_bytefreq},
 		{"hamming", bitshift_hamming_distance},
 		{"popcount_hamming", popcount_hamming_distance},
-		{"from_segwit", segwit_address_decode},
+		{"from_segwit", from_segwit_address},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg octet_methods[] = {
@@ -1157,6 +1231,7 @@ int luaopen_octet(lua_State *L) {
 		{"bytefreq", entropy_bytefreq},
 		{"hamming", bitshift_hamming_distance},
 		{"popcount_hamming", popcount_hamming_distance},
+		{"segwit", to_segwit_address},
 
 		// idiomatic operators
 		{"__len",size},

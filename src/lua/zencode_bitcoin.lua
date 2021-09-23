@@ -26,15 +26,13 @@ local btc = require('crypto_bitcoin')
 
 ZEN.add_schema(
    {
-      recipient_address = function(obj) 
-	 return(btc.read_bech32_address(obj))
-      end,
+      recipient_address = O.from_segwit,
       amount = BIG.from_decimal,
       fee = BIG.from_decimal,
       unspent = function(obj)
 	 local res = {}
 	 for _,v in pairs(obj) do
-	    local address = btc.read_bech32_address(v.address)
+	    local address = O.from_segwit(v.address)
 	    local amount  = btc.value_btc_to_satoshi(v.amount)
 	    local txid    = OCTET.from_hex(v.txid)
 	    local vout    = v.vout
