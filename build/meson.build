@@ -109,6 +109,7 @@ lua_dep = declare_dependency(
 zenroom_src = [
     '../src/base58.c',
     '../src/rmd160.c',
+    '../src/segwit_addr.c',
     '../src/cortex_m.c',
     '../src/encoding.c',
     '../src/lua_functions.c',

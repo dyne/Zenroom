@@ -77,6 +77,10 @@
 
 extern zenroom_t *Z;
 
+// from segwith_addr.c
+extern int segwit_addr_encode(char *output, const char *hrp, int witver, const uint8_t *witprog, size_t witprog_len);
+extern int segwit_addr_decode(int* witver, uint8_t* witdata, size_t* witdata_len, const char* hrp, const char* addr);
+
 // from base58.c
 extern int b58tobin(void *bin, size_t *binszp, const char *b58, size_t b58sz);
 extern int b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz);
@@ -559,6 +563,39 @@ static int from_bin(lua_State *L) {
 	o->len = d;
 	return 1;
 }
+
+static int segwit_address_decode(lua_State *L) {
+	const char *s = lua_tostring(L, 1);
+	if(!s) {
+		error(L, "%s :: invalid argument",__func__); // fatal
+		lua_pushboolean(L,0);
+		return 1; }
+	int witver;
+	uint8_t witprog[40];
+	size_t witprog_len;
+	const char* hrp = "bc";
+	int ret = segwit_addr_decode(&witver, witprog, &witprog_len, hrp, s);
+	if(!ret) {
+		hrp = "tb";
+		ret = segwit_addr_decode(&witver, witprog, &witprog_len, hrp, s);
+	}
+	if(!ret) {
+		error(L, "%s :: not bech32 address", __func__);
+		lua_pushboolean(L,0);
+		return 1;
+	}
+	octet *o = o_new(L, witprog_len);
+	register size_t i;
+	for(i=0; i<witprog_len; i++) {
+		o->val[i] = (char)witprog[i];
+	}
+	o->len = witprog_len;
+
+	lua_pushinteger(L,witver);
+
+	return 2;
+}
+
 
 /***
 Concatenate two octets, returns a new octet. This is also executed
@@ -1097,6 +1134,7 @@ int luaopen_octet(lua_State *L) {
 		{"bytefreq", entropy_bytefreq},
 		{"hamming", bitshift_hamming_distance},
 		{"popcount_hamming", popcount_hamming_distance},
+		{"from_segwit", segwit_address_decode},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg octet_methods[] = {

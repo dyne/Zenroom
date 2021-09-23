@@ -43,6 +43,7 @@ def get_python_version():
 ZENROOM_SOURCES = [
     'rmd160.c',
     'base58.c',
+    'segwit_addr.c',
     'cli.c',
     'cortex_m.c',
     'encoding.c',
