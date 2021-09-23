@@ -103,49 +103,6 @@ function btc.read_wif_private_key(sk)
    return sk:sub(2, 33)
 end
 
-function btc.read_bech32_address(addr)
-   local Bech32Chars = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
-   local BechInverse = {}
-   for i=1,#Bech32Chars,1 do
-      BechInverse[Bech32Chars:sub(i,i)] = i-1
-   end
-   local prefix, data, res, byt, countBit,val
-   prefix = nil
-   addr = addr:lower()
-   if addr:sub(1,4) == 'bcrt' then
-      prefix = 4
-   elseif addr:sub(1,2) == 'bc' or addr:sub(1,2) == 'tb' then
-      prefix = 2
-   end
-   if not prefix then
-      error("Invalid bech32 prefix", 2)
-   end
-   -- +3 = do not condider separator and version bit
-   data = addr:sub(prefix+3, #addr)
-
-   res = O.new()
-   byt=0 -- byte accumulator
-   countBit = 0 -- how many bits I have put in the accumulator
-   for i=1,#data,1 do
-      val = BechInverse[data:sub(i,i)]
-
-      -- Add 5 bits to the buffer
-      byt = (byt << 5) + val
-      countBit = countBit + 5
-
-      if countBit >= 8 then
-	 res = res .. INT.new(byt >> (countBit-8)):octet()
-
-	 byt = byt % (1 << (countBit-8))
-  
-	 countBit = countBit - 8
-      end
-   end
-
-   -- TODO: I dont look at the checksum
-   return res:chop(20)
-end
-
 -- variable length encoding for integer based on the
 -- actual length of the number
 function btc.encode_compact_size(n)

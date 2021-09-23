@@ -93,11 +93,13 @@ ZEN.add_schema(
                 res.reflow = ZEN.get(obj, 'reflow', INT.new)
             end
 	    if obj.bitcoin then
+	       addr, ver = O.from_segwit(obj.bitcoin.address)
 	       res.bitcoin = {
-		  secret = btc.read_wif_private_key(obj.bitcoin.secret),
-		  -- Bech32 implemented in zencode_bitcoin, available
+		  -- WIF format implemented in zencode_bitcoin, available
 		  -- only if scenario is loaded
-		  address = btc.read_bech32_address(obj.bitcoin.address)
+		  secret = btc.read_wif_private_key(obj.bitcoin.secret),
+		  address = addr,
+		  version = ver
 		  -- address = ZEN.get(obj.bitcoin, 'address', O.from_string)
 	       }
 	       pk = btc.compress_public_key(ECDH.pubgen(res.bitcoin.secret))
