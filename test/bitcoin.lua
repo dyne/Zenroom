@@ -98,8 +98,7 @@ local tx = {
    nHashType=O.from_hex('00000001')
 }
 assert(BTC.build_raw_transaction(tx) == O.from_hex('0200000001786609799593ad5fd6bf97793ae330cbb09d3ab501043636694b05cd8033f78c0000000000ffffffff0140ee1c0000000000160014f4702f9bfee42b0d4f9ba425f98343793893f2f400000000'))
-print(BTC.build_raw_transaction(tx):hex())
-local newtx = BTC.decode_raw_transaction(BTC.build_raw_transaction(tx))
+local newtx = BTC.decode_raw_transaction(BTC.build_raw_transaction(tx), tx.txIn[1].address, { BIG.from_decimal('1896500') })
 
 assert(tx.version == newtx.version)
 assert(#newtx.txIn == 1)
@@ -111,14 +110,12 @@ assert(newtx.witness == nil)
 
 tx.witness = BTC.build_witness(tx, sk)
 local rawTx = BTC.build_raw_transaction(tx)
-print(rawTx:hex())
-local newtx = BTC.decode_raw_transaction(rawTx, tx.txIn[1].address)
+local newtx = BTC.decode_raw_transaction(rawTx, tx.txIn[1].address, { BIG.from_decimal('1896500') })
 
 assert(tx.version == newtx.version)
 assert(#newtx.txIn == 1)
 assert(newtx.txIn[1].txid == O.from_hex("8cf73380cd054b6936360401b53a9db0cb30e33a7997bfd65fad939579096678"))
 assert(newtx.txIn[1].vout == 0)
-print(newtx.txIn[1].address:hex())
 assert(newtx.txIn[1].address == tx.txIn[1].address)
 assert(newtx.txIn[1].sequence == O.from_hex('ffffffff'))
 assert(#newtx.txOut == 1)
