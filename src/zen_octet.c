@@ -596,21 +596,6 @@ static int from_segwit_address(lua_State *L) {
 	return 2;
 }
 
-int my_strncasecmp(const char *s1, const char *s2, size_t n) {
-    size_t i = 0;
-    while (i < n) {
-        char c1 = s1[i];
-        char c2 = s2[i];
-        if (c1 >= 'A' && c1 <= 'Z') c1 = (c1 - 'A') + 'a';
-        if (c2 >= 'A' && c2 <= 'Z') c2 = (c2 - 'A') + 'a';
-        if (c1 < c2) return -1;
-        if (c1 > c2) return 1;
-        if (c1 == 0) return 0;
-        ++i;
-    }
-    return 0;
-}
-
 static int to_segwit_address(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
 	if(!o->len) { lua_pushnil(L); return 1; }
@@ -661,6 +646,7 @@ static int to_segwit_address(lua_State *L) {
 	if (!segwit_addr_encode(result, hrp, witver, (uint8_t*)o->val, o->len)) {
 		error(L, "%s :: cannot be encoded to segwit format", __func__);
 		lua_pushboolean(L,0);
+		zen_memory_free(result);
 		return 1;
         }
 
