@@ -633,7 +633,7 @@ static int to_segwit_address(lua_State *L) {
 		i++;
 	}
 	hrp[i] = '\0';
-	if(s[i] != '\0' || (strcmp(hrp, "bc") != 0 && strcmp(hrp, "tb") != 0)) {
+	if(s[i] != '\0' || (strncmp(hrp, "bc",2) != 0 && strncmp(hrp, "tb",2) != 0)) {
 	        error(L, "Invalid human readable part: %s", s);
 		err = 1;
 	}
@@ -959,6 +959,22 @@ static int chop(lua_State *L) {
 }
 
 
+static int reverse(lua_State *L) {
+	octet *src = o_arg(L, 1); SAFE(src);
+
+	octet *dest = o_new(L, src->len); SAFE(dest);
+	register int i=0, j=src->len-1;
+	while(i < src->len) {
+		dest->val[j] = src->val[i];
+
+		i++;
+		j--;
+	}
+	dest->len = src->len;
+	return 1;
+}
+
+
 /***
 
     Extracts a piece of the octet from the start position to the end position inclusive, expressed in numbers.
@@ -1200,6 +1216,7 @@ int luaopen_octet(lua_State *L) {
 	const struct luaL_Reg octet_methods[] = {
 		{"chop",  chop},
 		{"sub",   sub},
+		{"reverse",  reverse},
 		{"fill"  , filloctet},
 		{"hex"   , to_hex},
 		{"base64", to_base64},
