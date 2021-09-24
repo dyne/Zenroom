@@ -32,15 +32,6 @@ function btc.dsha256(msg)
    return SHA256:process(SHA256:process(msg))
 end
 
--- MOVE: this function could be implemented in C in the octet class
-local function opposite(num)
-   local res = O.new()
-   for i=#num,1,-1 do
-      res = res .. num:sub(i,i)
-   end
-   return res
-end
-
 -- taken from zencode_ecdh
 function btc.compress_public_key(public)
    local x, y = ECDH.pubxy(public)
@@ -117,7 +108,7 @@ function btc.encode_compact_size(n)
    if n <= INT.new(252) then
       res = n:octet()
    else
-      le = opposite(n:octet())
+      le = n:octet():reverse()
       prefix = O.new()
       if n <= INT.new('0xffff') then
 	 prefix = O.from_hex('fd') 
@@ -164,7 +155,7 @@ function btc.to_uint(num, nbytes)
    if type(num) ~= "zenroom.big" then
       num = INT.new(num)
    end
-   num = opposite(num:octet())
+   num = num:octet():reverse()
    if #num < nbytes then
       num = num .. O.zero(nbytes - #num)
    end
@@ -173,7 +164,7 @@ end
 
 -- read little endian number from transaction raw at position i 
 local function read_uint(raw, i, nbytes)
-   return tonumber(opposite(raw:sub(i,i+nbytes-1)):hex(), 16), i+nbytes
+   return tonumber(raw:sub(i,i+nbytes-1):reverse():hex(), 16), i+nbytes
 end
 -- The sender address is not in the raw transaction
 function btc.decode_raw_transaction(raw, sender_address, amounts_spent)
@@ -200,7 +191,7 @@ function btc.decode_raw_transaction(raw, sender_address, amounts_spent)
    for j=1,tonumber(n_txin:octet():hex(), 16),1 do
       local currIn = {}
       -- previous output
-      currIn.txid = opposite(raw:sub(i, i+32-1))
+      currIn.txid = raw:sub(i, i+32-1):reverse()
       i=i+32
 
       currIn.vout, i = read_uint(raw, i, 4)
@@ -215,7 +206,7 @@ function btc.decode_raw_transaction(raw, sender_address, amounts_spent)
 	 i = i + scriptBytes
       end
       
-      currIn.sequence = opposite(raw:sub(i, i+3))
+      currIn.sequence = raw:sub(i, i+3):reverse()
       i = i + 4
 
       currIn.address = sender_address
@@ -227,7 +218,7 @@ function btc.decode_raw_transaction(raw, sender_address, amounts_spent)
    tx.txOut = {}
    for j=1,tonumber(n_txout:octet():hex(), 16),1 do
       local currOut = {}
-      currOut.amount = BIG.new(opposite(raw:sub(i,i+8-1)))
+      currOut.amount = BIG.new(raw:sub(i,i+8-1):reverse())
       i=i+8
 
       scriptBytes, i = decode_compact_size_at_index(raw, i)
@@ -295,7 +286,7 @@ function btc.build_raw_transaction(tx)
    -- txIn
    for _, v in pairs(tx.txIn) do
       -- outpoint (hash and index of the transaction)
-      raw = raw .. opposite(v.txid) .. btc.to_uint(v.vout, 4)
+      raw = raw .. v.txid:reverse() .. btc.to_uint(v.vout, 4)
       -- the script depends on the signature
       script = O.new()
 
@@ -311,7 +302,7 @@ function btc.build_raw_transaction(tx)
    for _, v in pairs(tx.txOut) do
       --raw = raw .. btc.to_uint(v.amount, 8)
       local amount = O.new(v.amount)
-      raw = raw .. opposite(amount)
+      raw = raw .. amount:reverse()
       if #v.amount < 8 then
 	 raw = raw .. O.zero(8 - #amount)
       end
@@ -431,7 +422,7 @@ function btc.hash_prevouts(tx)
    raw = O.new()
 
    for _, v in pairs(tx.txIn) do
-      raw = raw .. opposite(v.txid) .. btc.to_uint(v.vout, 4)
+      raw = raw .. v.txid:reverse() .. btc.to_uint(v.vout, 4)
    end
 
    return H:process(H:process(raw))
@@ -467,7 +458,7 @@ function btc.hash_outputs(tx)
 
    for _, v in pairs(tx.txOut) do
       amount = O.new(v.amount)
-      raw = raw .. opposite(amount)
+      raw = raw .. amount:reverse()
       if #v.amount < 8 then
 	 raw = raw .. O.zero(8 - #amount)
       end
@@ -503,17 +494,17 @@ function btc.build_transaction_to_sign(tx, i)
    --      3. hash_sequence (32-byte hash)
    raw = raw .. btc.hash_sequence(tx)
    --      4. outpoint (32-byte hash + 4-byte little endian)
-   raw = raw .. opposite(tx.txIn[i].txid) .. btc.to_uint(tx.txIn[i].vout, 4)
+   raw = raw .. tx.txIn[i].txid:reverse() .. btc.to_uint(tx.txIn[i].vout, 4)
    --      5. scriptCode of the input (serialized as scripts inside CTxOuts)
    raw = raw .. O.from_hex('1976a914') .. tx.txIn[i].address  .. O.from_hex('88ac')
    --      6. value of the output spent by this input (8-byte little endian)
    amount = O.new(tx.txIn[i].amountSpent)
-   raw = raw .. opposite(amount)
+   raw = raw .. amount:reverse()
    if #amount < 8 then
       raw = raw .. O.zero(8 - #amount)
    end
    --      7. nSequence of the input (4-byte little endian)
-   raw = raw .. opposite(tx.txIn[i].sequence)
+   raw = raw .. tx.txIn[i].sequence:reverse()
    --      8. hash_outputs (32-byte hash)
    raw = raw .. btc.hash_outputs(tx)
    --      9. nLocktime of the transaction (4-byte little endian)

@@ -666,6 +666,7 @@ static int big_mul(lua_State *L) {
 	return 1;
 }
 
+// Square and multiply, not secure against side channel attacks
 static int big_modpower(lua_State *L) {
 	big *x = big_arg(L,1); SAFE(x);
 	big *n = big_arg(L,2); SAFE(n);
