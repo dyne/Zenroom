@@ -163,7 +163,7 @@ toolchain = ${ndk}/toolchains/llvm/prebuilt/linux-x86_64
 gcc = ${toolchain}/bin/clang
 ar = ${toolchain}/bin/llvm-ar
 ldadd += -lm -llog
-ldflags += -shared
+ldflags := -shared
 cflags += -fPIC ${cflags_protection} -DLIBRARY -D'ARCH=\"LINUX\"' -DARCH_LINUX -DARCH_ANDROID
 cflags += -DLUA_USE_DLOPEN -I${ndk}/sysroot/usr/include
 system := Android
