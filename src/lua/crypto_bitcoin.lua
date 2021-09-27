@@ -20,6 +20,8 @@
 
 local btc = {}
 
+ECDHUTILS = require('ecdh_utils')
+
 function btc.address_from_public_key(public_key)
    local SHA256 = HASH.new('sha256')
    local RMD160 = HASH.new('ripemd160')
@@ -30,44 +32,6 @@ end
 function btc.dsha256(msg)
    local SHA256 = HASH.new('sha256')
    return SHA256:process(SHA256:process(msg))
-end
-
--- taken from zencode_ecdh
-function btc.compress_public_key(public)
-   local x, y = ECDH.pubxy(public)
-   local pfx = fif( BIG.parity(BIG.new(y) ), OCTET.from_hex('03'), OCTET.from_hex('02') )
-   local pk = pfx .. x
-   return pk
-end
-
-function btc.uncompress_public_key(public)
-   local p = BIG.new(O.from_hex('fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f'))
-   local e = BIG.new(O.from_hex('3fffffffffffffffffffffffffffffffffffffffffffffffffffffffbfffff0c'))
-
-   local parity = public:sub(1,1)
-   assert(parity == O.from_hex('02') or parity == O.from_hex('03'))
-   local x = BIG.new(public:sub(2, #public))
-   -- y*y = x*x*x + 7
-   local rhs = BIG.mod(BIG.modmul(BIG.modmul(x,x,p),x,p)+BIG.new(7),p)
-   local sqrt_rhs = rhs:modpower(e, p)
-   assert(BIG.modmul(sqrt_rhs,sqrt_rhs, p) == rhs)
-   if sqrt_rhs:parity() ~= (parity == O.from_hex('03')) then -- this is a xor
-      sqrt_rhs = sqrt_rhs:modneg(p)
-   end
-   return O.from_hex('04') .. x .. sqrt_rhs
-end
-
--- it is similar to sign eth, s < order/2
--- MOVE: this function should be in the ECDH module
-function btc.sign_ecdh(sk, data) 
-   local halfSecp256k1n = INT.new(hex('7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0'))
-   local sig
-   sig = nil
-   repeat
-      sig = ECDH.sign_hashed(sk, data, #data)
-   until(INT.new(sig.s) < halfSecp256k1n);
-   
-   return sig
 end
 
 function btc.read_base58check(raw)
@@ -99,7 +63,7 @@ end
 function btc.encode_compact_size(n)
    local res, padding, prefix, le -- littleEndian;
 
-   if type(n) ~= "zenroom.bignum" then
+   if type(n) ~= "zenroom.big" then
       n = INT.new(n)
    end
    
@@ -517,13 +481,13 @@ end
 
 -- Here I sign the transaction
 function btc.build_witness(tx, sk)
-   local pk = btc.compress_public_key(ECDH.pubgen(sk))
+   local pk = ECDHUTILS.compress_public_key(ECDH.pubgen(sk))
    local witness = {}
    for i=1,#tx.txIn,1 do
       if tx.txIn[i].sigwit then
 	 local rawTx = btc.build_transaction_to_sign(tx, i)
 	 local sigHash = btc.dsha256(rawTx)
-	 local sig = btc.sign_ecdh(sk, sigHash)
+	 local sig = ECDHUTILS.sign_ecdh(sk, sigHash)
 	 witness[i] = {
 	    btc.encode_der_signature(sig) .. O.from_hex('01'),
 	    pk
@@ -545,7 +509,7 @@ function btc.verify_witness(tx)
       local rawTx = btc.build_transaction_to_sign(tx, i)
       local sigHash = btc.dsha256(rawTx)
       local sig = btc.decode_der_signature(v[1])
-      if not ECDH.verify_hashed(btc.uncompress_public_key(v[2]), sigHash, sig, #sigHash) then
+      if not ECDH.verify_hashed(ECDHUTILS.uncompress_public_key(v[2]), sigHash, sig, #sigHash) then
 	 return false
       end
    end

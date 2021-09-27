@@ -67,6 +67,7 @@ function havekey(ktype)
 end
 
 local btc = require('crypto_bitcoin')
+local ECDHUTILS = require('ecdh_utils')
 
 ZEN.add_schema(
     {
@@ -102,7 +103,7 @@ ZEN.add_schema(
 		  version = ver
 		  -- address = ZEN.get(obj.bitcoin, 'address', O.from_string)
 	       }
-	       pk = btc.compress_public_key(ECDH.pubgen(res.bitcoin.secret))
+	       pk = ECDHUTILS.compress_public_key(ECDH.pubgen(res.bitcoin.secret))
 	       ZEN.assert(btc.address_from_public_key(pk) == res.bitcoin.address,
 			  "Address cannot be derived from the private key")
 	    end
