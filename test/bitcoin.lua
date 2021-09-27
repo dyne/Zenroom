@@ -83,7 +83,7 @@ local tx = {
 	 txid= O.from_hex("8cf73380cd054b6936360401b53a9db0cb30e33a7997bfd65fad939579096678"),
 	 vout= 0,
 	 sigwit = true,
-	 address = BTC.read_bech32_address("tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug"),
+	 address = O.from_segwit("tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug"),
 	 amountSpent = BIG.from_decimal('1896500'), -- O.from_hex('1cf034'),
 	 sequence = O.from_hex('ffffffff')
       }
@@ -91,7 +91,7 @@ local tx = {
    txOut = {
       {
 	 amount = BIG.from_decimal('1896000'), -- O.from_hex('1cee40'),
-	 address = BTC.read_bech32_address('tb1q73czlxl7us4s6num5sjlnq6r0yuf8uh5clr2tm')
+	 address = O.from_segwit('tb1q73czlxl7us4s6num5sjlnq6r0yuf8uh5clr2tm')
       }
    },
    nLockTime=0,
@@ -114,7 +114,7 @@ local newtx = BTC.decode_raw_transaction(rawTx, tx.txIn[1].address, { BIG.from_d
 
 assert(tx.version == newtx.version)
 assert(#newtx.txIn == 1)
-assert(newtx.txIn[1].txid == O.from_hex("8cf73380cd054b6936360401b53a9db0cb30e33a7997bfd65fad939579096678"))
+assert(newtx.txIn[1].txid == tx.txIn[1].txid)
 assert(newtx.txIn[1].vout == 0)
 assert(newtx.txIn[1].address == tx.txIn[1].address)
 assert(newtx.txIn[1].sequence == O.from_hex('ffffffff'))
