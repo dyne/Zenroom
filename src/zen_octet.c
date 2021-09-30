@@ -656,6 +656,37 @@ static int to_segwit_address(lua_State *L) {
 	return 1;
 }
 
+int to_mnemonic(lua_State *L) {
+	octet *o = o_arg(L,1);	SAFE(o);
+	if(!o->len) { lua_pushnil(L); return 1; }
+	char *result = zen_memory_alloc(24 * 10);
+	if(mnemonic_from_data(result, (const uint8_t*)o->val, o->len)) {
+		lua_pushstring(L, result);
+	} else {
+		error(L, "%s :: cannot be encoded to segwit format", __func__);
+		lua_pushboolean(L,0);
+	}
+	zen_memory_free(result);
+
+	return 1;
+}
+
+static int from_mnemonic(lua_State *L) {
+	const char *s = lua_tostring(L, 1);
+	if(!s) {
+		error(L, "%s :: invalid argument",__func__); // fatal
+		lua_pushboolean(L,0);
+		return 1; }
+	// From bip39 it can be at most 32bytes
+	octet *o = o_new(L, 32);
+	if(!mnemonic_check_and_bits(s, &(o->len), (uint8_t*)o->val)) {
+		error(L, "%s :: words cannot be encoded with bip39 format", __func__);
+		lua_pushboolean(L,0);
+	}
+
+	return 1;
+}
+
 
 /***
 Concatenate two octets, returns a new octet. This is also executed
@@ -1189,6 +1220,7 @@ int luaopen_octet(lua_State *L) {
 		{"from_str",   from_string},
 		{"from_hex",   from_hex},
 		{"from_bin",   from_bin},
+		{"from_mnemonic",   from_mnemonic},
 		{"base64",from_base64},
 		{"url64",from_url64},
 		{"base58",from_base58},
@@ -1235,6 +1267,7 @@ int luaopen_octet(lua_State *L) {
 		{"hamming", bitshift_hamming_distance},
 		{"popcount_hamming", popcount_hamming_distance},
 		{"segwit", to_segwit_address},
+		{"to_mnemonic", to_mnemonic},
 
 		// idiomatic operators
 		{"__len",size},
