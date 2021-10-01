@@ -99,7 +99,7 @@ tests = {
 
 for i,v in pairs(tests) do
    o = O.from_hex(v[1])
-   assert(o:to_mnemonic() == v[2])
+   assert(o:mnemonic() == v[2])
    assert(O.from_mnemonic(v[2]) == o)
 end
 
