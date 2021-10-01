@@ -166,24 +166,12 @@ void U64encode(char *dest, const char *src, int len) {
  * Imported from https://github.com/trezor/trezor-crypto/blob/master/bip39.c
  * Changes of Alberto Lerda on 29th Sept 2021
  * - Removed cache (maybe we add it in future)
- * - Started using SHA and PBKDF2 of Milagro
+ * - Started using SHA of Milagro
  * - Removed global static string because zenroom could be used on a multi-thread
- * - app and it wouldnìt work
- * - imported memzero from memzero.c
+ *   app and it wouldn't work
  * - `mnemonic_check` verifies the checksum and return the byte array
  *   it has become ` mnemonic_check_and_bits`
  */
-
-
-// Removed optimizations (compiler dependent)
-void memzero(void *const pnt, const size_t len) {
-  volatile unsigned char *volatile pnt_ = (volatile unsigned char *volatile)pnt;
-  size_t i = (size_t)0U;
-
-  while (i < len) {
-    pnt_[i++] = 0U;
-  }
-}
 
 void sha256_raw(const uint8_t *data, int len, uint8_t *result) {
   hash256 hash;
@@ -223,7 +211,7 @@ int mnemonic_from_data(char *mnemo, const uint8_t *data, int len) {
     *p = (i < mlen - 1) ? ' ' : 0;
     p++;
   }
-  memzero(bits, sizeof(bits));
+  memset(bits, 0, sizeof(bits));
   return 1;
 }
 
@@ -251,7 +239,7 @@ int mnemonic_to_bits(const char *mnemonic, uint8_t *bits) {
   uint32_t j = 0, k = 0, ki = 0, bi = 0;
   uint8_t result[32 + 1] = {0};
 
-  memzero(result, sizeof(result));
+  memset(result, 0, sizeof(result));
   i = 0;
   while (mnemonic[i]) {
     j = 0;
@@ -288,7 +276,7 @@ int mnemonic_to_bits(const char *mnemonic, uint8_t *bits) {
     return 0;
   }
   memcpy(bits, result, sizeof(result));
-  memzero(result, sizeof(result));
+  memset(result, 0, sizeof(result));
 
   // returns amount of entropy + checksum BITS
   return n * 11;

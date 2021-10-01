@@ -1267,7 +1267,7 @@ int luaopen_octet(lua_State *L) {
 		{"hamming", bitshift_hamming_distance},
 		{"popcount_hamming", popcount_hamming_distance},
 		{"segwit", to_segwit_address},
-		{"to_mnemonic", to_mnemonic},
+		{"mnemonic", to_mnemonic},
 
 		// idiomatic operators
 		{"__len",size},
