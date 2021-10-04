@@ -656,18 +656,22 @@ static int to_segwit_address(lua_State *L) {
 	return 1;
 }
 
-int to_mnemonic(lua_State *L) {
+static int to_mnemonic(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
 	if(!o->len) { lua_pushnil(L); return 1; }
+	if(o->len > 32) {
+	  error(L, "%s :: octet bigger than 32 bytes cannot be encoded to mnemonic");
+	  lua_pushboolean(L,0);
+	  return 0;
+	}
 	char *result = zen_memory_alloc(24 * 10);
 	if(mnemonic_from_data(result, (const uint8_t*)o->val, o->len)) {
 		lua_pushstring(L, result);
 	} else {
-		error(L, "%s :: cannot be encoded to segwit format", __func__);
+		error(L, "%s :: cannot be encoded to mnemonic", __func__);
 		lua_pushboolean(L,0);
 	}
 	zen_memory_free(result);
-
 	return 1;
 }
 

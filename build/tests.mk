@@ -47,7 +47,8 @@ crypto-tests = \
 	${1} test/elgamal.lua && \
 	${1} test/bls_pairing.lua && \
 	${1} test/coconut_test.lua && \
-	${1} test/crypto_credential.lua
+	${1} test/crypto_credential.lua \
+	${1} test/mnemonic_encoding.lua
 
 cortex-m-crypto-tests = \
 	${1}test/octet.lua && \
@@ -76,6 +77,7 @@ cortex-m-zencode-integration = \
 	cd test/zencode_dictionary && ./run.sh ${1}; cd -; \
 	cd test/zencode_hash && ./run.sh ${1}; cd -; \
 	cd test/zencode_ecdh && ./run.sh ${1}; cd -; \
+	cd test/zencode_secshare && ./run.sh ${1}; cd -; \
 	cd test/zencode_credential && ./run.sh ${1}; cd -; \
 	cd test/zencode_petition && ./run.sh ${1}; cd -;
 
