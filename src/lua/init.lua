@@ -169,3 +169,5 @@ function ZKP_challenge(list)
 end
 
 collectgarbage 'collect'
+
+return(ZEN)
