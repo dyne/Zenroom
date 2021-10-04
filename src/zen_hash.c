@@ -56,6 +56,11 @@
 #include <zen_big.h>
 #include <zen_hash.h>
 
+// From rmd160.c
+extern void RMD160_init(dword *MDbuf);
+extern void RMD160_process(dword *MDbuf, byte *message, dword length);
+extern void RMD160_hash(dword *MDbuf, byte *hashcode);
+
 /**
    Create a new hash object of a selected algorithm (sha256 or
    sha512). The resulting object can then process any @{OCTET} into
@@ -109,14 +114,18 @@ hash* hash_new(lua_State *L, const char *hashtype) {
 		h->algo = _SHA3_512;
 		h->sha3_512 = (sha3*)zen_memory_alloc(sizeof(sha3));
 		SHA3_init(h->sha3_512, h->len);
-
 	} else if(strncasecmp(hashtype,"keccak256",9) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 32;
 		h->algo = _KECCAK256;
 		h->keccak256 = (sha3*)zen_memory_alloc(sizeof(sha3));
 		SHA3_init(h->keccak256, h->len);
-
+	} else if(strncasecmp(hashtype,"ripemd160",9) == 0) {
+		strncpy(h->name,hashtype,15);
+		h->len = 20;
+		h->algo = _RMD160;
+		h->rmd160 = (dword*)zen_memory_alloc(160/32);
+		RMD160_init(h->rmd160);
 	} // ... TODO: other hashes
 	else {
 		lerror(L, "Hash algorithm not known: %s", hashtype);
@@ -158,6 +167,7 @@ static void _feed(hash *h, octet *o) {
 	case _SHA3_256: for(i=0;i<o->len;i++) SHA3_process(h->sha3_256,o->val[i]); break;
 	case _SHA3_512: for(i=0;i<o->len;i++) SHA3_process(h->sha3_512,o->val[i]); break;
         case _KECCAK256: for(i=0;i<o->len;i++) SHA3_process(h->keccak256,o->val[i]); break;
+	case _RMD160: RMD160_process(h->rmd160, (unsigned char*)o->val, o->len); break;
 	}
 }
 
@@ -170,6 +180,7 @@ static void _yeld(hash *h, octet *o) {
 	case _SHA3_256: SHA3_hash(h->sha3_256,o->val); break;
 	case _SHA3_512: SHA3_hash(h->sha3_512,o->val); break;
 	case _KECCAK256: KECCAK_hash(h->keccak256,o->val); break;
+	case _RMD160: RMD160_hash(h->rmd160, (unsigned char*)o->val); break;
 	}
 }
 

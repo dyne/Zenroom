@@ -108,6 +108,8 @@ lua_dep = declare_dependency(
 
 zenroom_src = [
     '../src/base58.c',
+    '../src/rmd160.c',
+    '../src/segwit_addr.c',
     '../src/cortex_m.c',
     '../src/encoding.c',
     '../src/lua_functions.c',
@@ -213,7 +215,8 @@ lua_tests = [
     'test/elgamal.lua',
     'test/bls_pairing.lua',
     'test/coconut_test.lua',
-    'test/crypto_credential.lua'
+    'test/crypto_credential.lua',
+    'test/mnemonic_encoding.lua'
 ]
 
 # test_dir = meson.source_root() + '/../'
@@ -227,6 +230,7 @@ zencode_tests = [
     'zencode_numbers',
     'zencode_array',
     'zencode_hash',
+    'zencode_secshare',
     'zencode_ecdh',
     'zencode_credential',
     'zencode_petition',

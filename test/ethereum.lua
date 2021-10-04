@@ -1,3 +1,24 @@
+-- Some tests with Ethereum
+
+-- number to octet (n2o), were number is a big integer
+-- in RLP the 0 is reppresented as the empty octet
+zero = INT.new(0)
+function n2o(num)
+   if num == zero then
+      return O.new()
+   else
+      return n20:octet()
+   end
+end
+
+-- idem for octet to number (o2n)
+function o2n(o)
+   if o == O.new() then
+      return zero
+   else
+      return INT.new(o)
+   end
+end
 
 -- the empty octect is encoded as nil
 -- a table contains in the first position (i.e. 1) the number of elements
@@ -5,6 +26,10 @@ function encodeRLP(data)
    local header = nil
    local res = nil
    local byt = nil
+
+   if type(data) == 'bignum' then
+      data = n2o(data)
+   end
 
    if type(data) == 'table' then
       -- empty octet
@@ -159,14 +184,14 @@ assert(arrayEquals({O.from_hex('c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e
 -- start Besu with the following command
 -- besu --network=dev --miner-enabled --miner-coinbase=0xfe3b557e8fb62b89f4916b721be55ceb828dbd73 --rpc-http-cors-origins="all" --host-allowlist="*" --rpc-ws-enabled --rpc-http-enabled --data-path=/tmp/tmpDatdir
 
--- 0 is encoded as the empty octet, which is treated as nil
+-- 0 is encoded as the empty octet (O.new())
 
 tx = {}
-tx["nonce"] = O.new()
+tx["nonce"] = o2n(O.new())
 tx["gasPrice"] = INT.new(1000)
 tx["gasLimit"] = INT.new(25000) 
 tx["to"] = O.from_hex('627306090abaB3A6e1400e9345bC60c78a8BEf57')
-tx["value"] = O.from_hex('11')
+tx["value"] = INT.new(O.from_hex('11'))
 tx["data"] = O.new()
 -- v contains the chain id (when the transaction is not signed)
 -- We always use the chain id
@@ -186,13 +211,13 @@ end
 function decodeTransaction(rlp)
    local t = decodeRLP(rlp)
    return {
-      nonce=t[1],
-      gasPrice=INT.new(t[2]),
-      gasLimit=INT.new(t[3]),
+      nonce=o2n(t[1]),
+      gasPrice=o2n(t[2]),
+      gasLimit=o2n(t[3]),
       to=t[4],
-      value=t[5],
+      value=o2n(t[5]),
       data=t[6],
-      v=INT.new(t[7]),
+      v=o2n(t[7]),
       r=t[8],
       s=t[9]
    }
@@ -275,3 +300,120 @@ end
 
 assert(verifySignatureTransaction(pk, tx))
 assert(verifySignatureTransaction(pk, decodedTx))
+
+
+
+-- Assume we are given a smart contract with a function with the
+-- following signature
+-- function writeString(string memory)
+-- We send a string and the smart contract signals an event
+
+-- Smart contract
+-- // SPDX-License-Identifier: GPL-3.0
+-- pragma solidity ^0.8.4;
+
+
+-- contract SaveString {
+
+--     event StringSaveEvent(address user, string content);
+
+--     function writeString(string memory content) public {
+--         emit StringSaveEvent(msg.sender, content);
+--     }
+-- }
+
+
+
+-- Taken from https://docs.soliditylang.org/en/v0.5.6/abi-spec.html#function-selector-and-argument-encoding
+function makeWriteStringData(str)
+   local fId, offset, oStr, paddingLength, padding, bytLen, paddingLen
+
+   -- local H = HASH.new('keccak256')
+   -- string.sub(hex(H:process('writeString(string)')), 1, 8)
+   fId = O.from_hex('dd206202')
+
+   -- dynamic parameter are saved at the end of string, this is at which offset they are saved
+   offset = O.from_hex('0000000000000000000000000000000000000000000000000000000000000020')
+
+   -- length as a 256 unsigned integer
+   bytLen = INT.new(#str):octet()
+   paddingLength = 32-#bytLen
+   paddingLen = O.zero(paddingLength)
+
+   -- octet string
+   oStr = O.to_octet(str)
+
+   paddingLength = #str % 32
+   
+   if paddingLength > 0 then
+      paddingLength = 32 - paddingLength
+      padding = O.zero(paddingLength)
+   else
+      padding = O.new()
+
+   end
+
+   return fId .. offset .. paddingLen .. bytLen  .. oStr .. padding
+end
+
+assert(makeWriteStringData('ciao mondo') == O.from_hex('dd2062020000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000a6369616f206d6f6e646f00000000000000000000000000000000000000000000'))
+assert(makeWriteStringData('aaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddpadding') == O.from_hex('dd20620200000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000207616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646470616464696e6700000000000000000000000000000000000000000000000000'))
+
+
+-- The following transaction depends on the address of the smart contract
+-- tx = {
+--    nonce=O.new(),
+--    to=O.from_hex('F12b5dd4EAD5F743C6BaA640B0216200e89B60Da'),
+--    value=O.new(),
+--    data=makeWriteStringData('generated by script'),
+--    gasPrice=O.from_hex('03e8'),
+--    -- --gasLimit=INT.new('3000000'),
+--    gasLimit=O.from_hex('2dc6c0'),
+--    v=INT.new(1337),
+--    r=O.new(),
+--    s=O.new()
+-- }
+
+-- encodedTx = encodeSignedTransaction(from, tx)
+-- print(encodedTx:hex())
+
+-- generate an ethereum keypair
+function eth_keygen()
+   local kp = ECDH.keygen()
+   local H = HASH.new('keccak256')
+   -- the address is the keccak hash of the x concatenated with
+   -- the y of the public key (without 04 at the beginning!)
+   -- Taken from https://github.com/ethereumbook/ethereumbook/blob/develop/04keys-addresses.asciidoc
+   -- in the section Ethereum Address
+   -- or in the Yellow Paper
+
+   -- Warning: we take only the last 20bytes of the hash (...)
+   return {
+      address=H:process(kp.public:sub(2, #kp.public)):sub(13, 32),
+      private=kp.private
+   }
+end
+
+print("New key pair")
+kp = eth_keygen()
+print(kp.address:hex())
+print(kp.private:hex())
+
+
+-- -- Send some eth to the new address
+-- tx = {
+--    nonce=O.from_hex('01'),
+--    to=kp.address,
+--    value=O.from_hex('100000'),
+--    data=O.new(),
+--    gasPrice=O.from_hex('03e8'),
+--    -- --gasLimit=INT.new('3000000'),
+--    gasLimit=O.from_hex('2dc6c0'),
+--    v=INT.new(1337),
+--    r=O.new(),
+--    s=O.new()
+-- }
+
+-- encodedTx = encodeSignedTransaction(from, tx)
+-- print("Send some eth to the new address")
+-- print(encodedTx:hex())

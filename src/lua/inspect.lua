@@ -494,7 +494,12 @@ end
 -- @function INSPECT.warn(object)
 -- @param object complex table data structure
 function inspect.warn(root, options)
-   warn(inspect.inspect(root, options))
+   if luatype(options) == 'string' then
+      warn('Spy on: '..options)
+      warn(inspect.inspect(root, {}))
+   else
+      warn(inspect.inspect(root, options))
+   end
    return root
 end
 
@@ -509,4 +514,3 @@ inspect.spy = inspect.warn
 setmetatable(inspect, { __call = function(_, ...) return inspect.print(...) end })
 
 return inspect
-

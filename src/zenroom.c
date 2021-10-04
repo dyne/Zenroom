@@ -212,7 +212,10 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	if(zconf_rngseed[0] != 0x0) {
 		ZZ->random_external = 1;
 		memset(ZZ->random_seed, 0x0, RANDOM_SEED_LEN);
-		hex2buf(ZZ->random_seed, zconf_rngseed);
+		int len = hex2buf(ZZ->random_seed, zconf_rngseed);
+		func(NULL, "RNG seed converted from hex to %u bytes", len);
+	} else {
+		func(NULL, "RNG seed not found in configuration");
 	}
 	// initialize the random generator
 	ZZ->random_generator = rng_alloc(ZZ);

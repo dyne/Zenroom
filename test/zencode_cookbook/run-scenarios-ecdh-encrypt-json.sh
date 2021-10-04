@@ -45,7 +45,7 @@ cat << EOF | base64 -w 0 | save . scenarioECDHJSONToBased64.b64
 EOF
 
 cat << EOF | save . scenarioECDHJSONInBase64.json
-{"jsonFileInBase64" : "$(cat ../../docs/examples/zencode_cookbook/scenarioECDHJSONToBased64.b64)"}
+{"jsonFileInBase64" : "$(cat scenarioECDHJSONToBased64.b64)"}
 EOF
 
 cat <<EOF | save . scenarioECDHJSONAliceBobCarlKeys.json

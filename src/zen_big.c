@@ -347,6 +347,99 @@ octet *new_octet_from_big(lua_State *L, big *c) {
 	return(o);
 }
 
+// Works only for positive numbers
+static int big_from_decimal_string(lua_State *L) {
+        const char *s = lua_tostring(L, 1);
+	luaL_argcheck(L, s != NULL, 1, "string expected");
+	big *num = big_new(L); SAFE(num);
+
+	big_init(num);
+	BIG_zero(num->val);
+	int i = 0;
+	while(s[i] != '\0') {
+	        BIG res;
+		BIG_copy(res, num->val);
+		BIG_pmul(num->val, res, 10);
+
+		//if (!isdigit(s[i])) {
+		if (s[i] < '0' || s[i] > '9') {
+			error(L, "%s: string is not a number %s", __func__, s);
+			lerror(L, "operation aborted");
+			return 0;
+		}
+		BIG_inc(num->val, (int)(s[i] - '0'));
+		i++;
+	}
+	BIG_norm(num->val);
+	return 1;
+}
+
+// Slow but only for export
+// Works only for positive numbers
+static int big_to_decimal_string(lua_State *L) {
+       	big *num = big_arg(L,1); SAFE(num);
+	BIG_norm(num->val);
+	BIG safenum;
+	BIG_copy(safenum, num->val);
+	BIG ten_power;
+	BIG ten;
+
+	BIG_zero(ten_power);
+	BIG_inc(ten_power, 1);
+
+	BIG_zero(ten);
+	BIG_inc(ten, 10);
+	int i = 0;
+	int j;
+	// Order of magnitude
+	while (BIG_comp(ten_power,num->val)<=0) {
+		BIG res;
+		BIG_copy(res, ten_power);
+		BIG_pmul(ten_power, res, 10);
+        	i++;
+		BIG_norm(ten_power);
+	}
+	char *s = zen_memory_alloc(i+3);
+	if (i == 0) {
+		s[0] = '0';
+		i++;
+	} else {
+
+		i = 0;
+		while(!BIG_iszilch(safenum)) {
+	        	// Read less significant digit
+			BIG tmp;
+			BIG_copy(tmp, safenum);
+			BIG_mod(tmp, ten);
+			s[i] = tmp[0]+'0';
+
+			// Divide by 10 (remove the digit I have just read)
+			DBIG dividend;
+			BIG_dzero(dividend);
+			BIG_dscopy(dividend, safenum);
+			BIG_ddiv(safenum, dividend, ten);
+			i++;
+		}
+	}
+	s[i]='\0';
+
+	// Digits in the opposite order
+	j = 0;
+	i--;
+	while(j < i) {
+	  char t;
+	  t = s[i];
+	  s[i] = s[j];
+	  s[j] = t;
+	  i--;
+	  j++;
+	}
+	lua_pushstring(L,s);
+	zen_memory_free(s);
+	return 1;
+}
+
+
 static int luabig_to_octet(lua_State *L) {
 	big *c = big_arg(L,1); SAFE(c);
 	new_octet_from_big(L,c);
@@ -573,6 +666,44 @@ static int big_mul(lua_State *L) {
 	return 1;
 }
 
+// Square and multiply, not secure against side channel attacks
+static int big_modpower(lua_State *L) {
+	big *x = big_arg(L,1); SAFE(x);
+	big *n = big_arg(L,2); SAFE(n);
+	big *m = big_arg(L,3); SAFE(n);
+
+	BIG safen;
+	BIG_copy(safen, n->val);
+
+	big *res = big_new(L); SAFE(res);
+	big_init(res);
+	BIG_zero(res->val);
+	BIG_inc(res->val, 1);
+
+	BIG powerx;
+	BIG_copy(powerx, x->val);
+
+	BIG zero;
+	BIG_zero(zero);
+
+	while(BIG_comp(safen, zero) > 0) {
+	        if((safen[0] & 1) == 1) {
+			// n odd
+		        BIG_modmul(res->val, res->val, powerx, m->val);
+			BIG_dec(safen, 1);
+		} else {
+			// n even
+			BIG tmp;
+			BIG_modmul(tmp, powerx, powerx, m->val);
+			BIG_copy(powerx, tmp);
+			BIG_norm(safen);
+			BIG_shr(safen, 1);
+		}
+	}
+
+	return 1;
+}
+
 static int big_sqr(lua_State *L) {
 	big *l = big_arg(L,1); SAFE(l);
 	if(l->doublesize) {
@@ -745,6 +876,7 @@ int luaopen_big(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg big_class[] = {
 		{"new",newbig},
+		{"from_decimal",big_from_decimal_string},
 		{"eq",big_eq},
 		{"add",big_add},
 		{"sub",big_sub},
@@ -772,6 +904,7 @@ int luaopen_big(lua_State *L) {
 		// idiomatic operators
 		{"octet",luabig_to_octet},
 		{"hex",big_to_hex},
+		{"decimal",big_to_decimal_string},
 		{"__add",big_add},
 		{"__sub",big_sub},
 		{"__mul",big_mul},
@@ -793,6 +926,7 @@ int luaopen_big(lua_State *L) {
 		{"modneg",big_modneg},
 		{"modsub",big_modsub},
 		{"modinv",big_modinv},
+		{"modpower",big_modpower},
 		{"jacobi",big_jacobi},
 		{"monty",big_monty},
 		{"parity",big_parity},

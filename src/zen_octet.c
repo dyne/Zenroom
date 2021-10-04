@@ -77,6 +77,10 @@
 
 extern zenroom_t *Z;
 
+// from segwit_addr.c
+extern int segwit_addr_encode(char *output, const char *hrp, int witver, const uint8_t *witprog, size_t witprog_len);
+extern int segwit_addr_decode(int* witver, uint8_t* witdata, size_t* witdata_len, const char* hrp, const char* addr);
+
 // from base58.c
 extern int b58tobin(void *bin, size_t *binszp, const char *b58, size_t b58sz);
 extern int b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz);
@@ -560,6 +564,134 @@ static int from_bin(lua_State *L) {
 	return 1;
 }
 
+static int from_segwit_address(lua_State *L) {
+	const char *s = lua_tostring(L, 1);
+	if(!s) {
+		error(L, "%s :: invalid argument",__func__); // fatal
+		lua_pushboolean(L,0);
+		return 1; }
+	int witver;
+	uint8_t witprog[40];
+	size_t witprog_len;
+	const char* hrp = "bc";
+	int ret = segwit_addr_decode(&witver, witprog, &witprog_len, hrp, s);
+	if(!ret) {
+		hrp = "tb";
+		ret = segwit_addr_decode(&witver, witprog, &witprog_len, hrp, s);
+	}
+	if(!ret) {
+		error(L, "%s :: not bech32 address", __func__);
+		lua_pushboolean(L,0);
+		return 1;
+	}
+	octet *o = o_new(L, witprog_len);
+	register size_t i;
+	for(i=0; i<witprog_len; i++) {
+		o->val[i] = (char)witprog[i];
+	}
+	o->len = witprog_len;
+
+	lua_pushinteger(L,witver);
+
+	return 2;
+}
+
+static int to_segwit_address(lua_State *L) {
+	octet *o = o_arg(L,1);	SAFE(o);
+	if(!o->len) { lua_pushnil(L); return 1; }
+	int tn;
+	lua_Number witver = lua_tointegerx(L,2,&tn);
+	if(!tn) {
+		lerror(L, "O.from_number input is not a number");
+		return 0; }
+	const char *s = lua_tostring(L, 3);
+	int err = 0;
+	if(!s) {
+		error(L, "%s :: invalid argument",__func__); // fatal
+		err = 1;
+	}
+
+	if(witver < 0 || witver > 16) {
+	        error(L, "Invalid segwit version: %d", witver);
+		err = 1;
+	}
+
+	if(o->len < 2 || o->len > 40) {
+	        error(L, "Invalid size for segwit address: %d", o->len);
+		err = 1;
+	}
+
+	// HRP to lower case
+	char hrp[3];
+	register int i = 0;
+	while(i < 2 && s[i] != '\0') {
+		if(s[i] > 'A' && s[i] < 'Z') {
+			hrp[i] = s[i] - 'A' + 'a'; // to upper case
+		} else {
+			hrp[i] = s[i];
+       		}
+		i++;
+	}
+	hrp[i] = '\0';
+	if(s[i] != '\0' || (strncmp(hrp, "bc",2) != 0 && strncmp(hrp, "tb",2) != 0)) {
+	        error(L, "Invalid human readable part: %s", s);
+		err = 1;
+	}
+	if(err) {
+	        lua_pushboolean(L,0);
+	        return 1;
+	}
+	char *result = zen_memory_alloc(73+strlen(hrp));
+
+	if (!segwit_addr_encode(result, hrp, witver, (uint8_t*)o->val, o->len)) {
+		error(L, "%s :: cannot be encoded to segwit format", __func__);
+		lua_pushboolean(L,0);
+		zen_memory_free(result);
+		return 1;
+        }
+
+	lua_pushstring(L,result);
+	zen_memory_free(result);
+
+	return 1;
+}
+
+static int to_mnemonic(lua_State *L) {
+	octet *o = o_arg(L,1);	SAFE(o);
+	if(!o->len) { lua_pushnil(L); return 1; }
+	if(o->len > 32) {
+	  error(L, "%s :: octet bigger than 32 bytes cannot be encoded to mnemonic");
+	  lua_pushboolean(L,0);
+	  return 0;
+	}
+	char *result = zen_memory_alloc(24 * 10);
+	if(mnemonic_from_data(result, (const uint8_t*)o->val, o->len)) {
+		lua_pushstring(L, result);
+	} else {
+		error(L, "%s :: cannot be encoded to mnemonic", __func__);
+		lua_pushboolean(L,0);
+	}
+	zen_memory_free(result);
+	return 1;
+}
+
+static int from_mnemonic(lua_State *L) {
+	const char *s = lua_tostring(L, 1);
+	if(!s) {
+		error(L, "%s :: invalid argument",__func__); // fatal
+		lua_pushboolean(L,0);
+		return 1; }
+	// From bip39 it can be at most 32bytes
+	octet *o = o_new(L, 32);
+	if(!mnemonic_check_and_bits(s, &(o->len), (uint8_t*)o->val)) {
+		error(L, "%s :: words cannot be encoded with bip39 format", __func__);
+		lua_pushboolean(L,0);
+	}
+
+	return 1;
+}
+
+
 /***
 Concatenate two octets, returns a new octet. This is also executed
 when using the '<b>..</b>' operator btween two octets. It results in a
@@ -893,6 +1025,22 @@ static int chop(lua_State *L) {
 }
 
 
+static int reverse(lua_State *L) {
+	octet *src = o_arg(L, 1); SAFE(src);
+
+	octet *dest = o_new(L, src->len); SAFE(dest);
+	register int i=0, j=src->len-1;
+	while(i < src->len) {
+		dest->val[j] = src->val[i];
+
+		i++;
+		j--;
+	}
+	dest->len = src->len;
+	return 1;
+}
+
+
 /***
 
     Extracts a piece of the octet from the start position to the end position inclusive, expressed in numbers.
@@ -1108,6 +1256,7 @@ int luaopen_octet(lua_State *L) {
 		{"from_str",   from_string},
 		{"from_hex",   from_hex},
 		{"from_bin",   from_bin},
+		{"from_mnemonic",   from_mnemonic},
 		{"base64",from_base64},
 		{"url64",from_url64},
 		{"base58",from_base58},
@@ -1129,11 +1278,13 @@ int luaopen_octet(lua_State *L) {
 		{"bytefreq", entropy_bytefreq},
 		{"hamming", bitshift_hamming_distance},
 		{"popcount_hamming", popcount_hamming_distance},
+		{"from_segwit", from_segwit_address},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg octet_methods[] = {
 		{"chop",  chop},
 		{"sub",   sub},
+		{"reverse",  reverse},
 		{"fill"  , filloctet},
 		{"hex"   , to_hex},
 		{"base64", to_base64},
@@ -1152,6 +1303,8 @@ int luaopen_octet(lua_State *L) {
 		{"bytefreq", entropy_bytefreq},
 		{"hamming", bitshift_hamming_distance},
 		{"popcount_hamming", popcount_hamming_distance},
+		{"segwit", to_segwit_address},
+		{"mnemonic", to_mnemonic},
 
 		// idiomatic operators
 		{"__len",size},

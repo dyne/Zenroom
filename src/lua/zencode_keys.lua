@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Friday, 12th March 2021 1:19:48 pm
+--on Saturday, 4th September 2021
 --]]
 
 
@@ -52,7 +52,8 @@ local keytypes = {
     credential = true,
     issuer = true,
     bls = true,
-	reflow = true
+    reflow = true,
+    bitcoin = true
 }
 
 function havekey(ktype)
@@ -65,12 +66,18 @@ function havekey(ktype)
     return res
 end
 
+local btc = require('crypto_bitcoin')
+local ECDHUTILS = require('ecdh_utils')
+
 ZEN.add_schema(
     {
         keys = function(obj)
             -- ecdh_curve
             -- bls_curve
             local res = {}
+            if obj.ecdh then
+                res.ecdh = ZEN.get(obj, 'ecdh')
+            end
             if obj.credential then
                 res.credential = ZEN.get(obj, 'credential', INT.new)
             end
@@ -86,6 +93,20 @@ ZEN.add_schema(
             if obj.reflow then
                 res.reflow = ZEN.get(obj, 'reflow', INT.new)
             end
+	    if obj.bitcoin then
+	       addr, ver = O.from_segwit(obj.bitcoin.address)
+	       res.bitcoin = {
+		  -- WIF format implemented in zencode_bitcoin, available
+		  -- only if scenario is loaded
+		  secret = btc.read_wif_private_key(obj.bitcoin.secret),
+		  address = addr,
+		  version = ver
+		  -- address = ZEN.get(obj.bitcoin, 'address', O.from_string)
+	       }
+	       pk = ECDHUTILS.compress_public_key(ECDH.pubgen(res.bitcoin.secret))
+	       ZEN.assert(btc.address_from_public_key(pk) == res.bitcoin.address,
+			  "Address cannot be derived from the private key")
+	    end
             return (res)
         end
     }
