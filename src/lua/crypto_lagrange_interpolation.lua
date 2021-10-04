@@ -64,7 +64,7 @@ function li.create_shared_secret(total, quorum, secret)
    if secbig:octet() ~= secret or secbig > P then
       error('Secret exceeds maximum BIG size: '..#O..' bytes or the size of the choosen prime')
    end
-   secbin = secbig % P
+   secbig = secbig % P
    -- generation of the coefficients of the secret polynomial
    local coeff = { }
    -- take last argument or create random
