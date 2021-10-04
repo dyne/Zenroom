@@ -34,5 +34,8 @@ int U64decode(char *dest, const char *src);
 int B64encoded_len(int len);
 void U64encode(char *dest, const char *src, int len);
 
+int b45encode(char *dest, const uint8_t *src, int len);
+int b45decode(uint8_t *dest, const char *src);
+int is_base45(const char* src);
 
 #endif

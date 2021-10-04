@@ -154,3 +154,123 @@ void U64encode(char *dest, const char *src, int len) {
 
 	*p++ = '\0';
 }
+
+
+static const char alpha_b45[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:";
+
+
+static const uint8_t b45table[256] = {
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	36, 64, 64, 64, 37, 38, 64, 64, 64, 64, 39, 40, 64, 41, 42, 43,
+	 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 44, 64, 64, 64, 64, 64,
+	64, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+	25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+};
+
+
+// returns the length of the string encoded
+// if dest == NULL it doesn't create the output string
+// (it only returns the length)
+int b45encode(char *dest, const uint8_t *src, int len) {
+	int i, j;
+	// A pair of bytes becomes a triplet of chars,
+	// if the length is odd the last byte is encoded as
+	// two chars (there is also the final char '\0')
+	int dest_len = len / 2 * 3 + (len % 2) * 2 + 1;
+
+	if(dest) {
+		j=0;
+		for(i=0; i+1<len; i+= 2) {
+			uint16_t word = (((uint16_t)src[i]) << 8) | src[i+1];
+			dest[j++] = alpha_b45[word % 45]; word = word / 45;
+			dest[j++] = alpha_b45[word % 45]; word = word / 45;
+			dest[j++] = alpha_b45[word];
+		}
+		// i is even
+		if(len == i + 1) {
+		        // len is odd
+			uint16_t word = (uint16_t)src[len-1];
+			dest[j++] = alpha_b45[word % 45]; word = word / 45;
+			dest[j++] = alpha_b45[word];
+		}
+		dest[j++] = '\0';
+	}
+	return dest_len;
+}
+
+// returns the length of the bytes decoded
+// Even when there is an error, the decoding goes on until
+// the end
+int b45decode(uint8_t *dest, const char *src) {
+	int i, j;
+
+	int error = 0;
+	// chars cannot be indices
+	// (otherwise they rise a warning, they could be negative)
+	const uint8_t *bytes = (uint8_t*)src;
+
+	i = 0;
+	j = 0;
+	// start decoding the triplets
+	while(bytes[i] && bytes[i+1] && bytes[i+2]) {
+	        uint16_t c = b45table[bytes[i]];
+	        uint16_t d = b45table[bytes[i+1]];
+	        uint16_t e = b45table[bytes[i+2]];
+
+		uint32_t decoded = c + 45 * d + 2025*e;
+		if(decoded >= (1<<16)) {
+		        error = 1;
+		}
+		dest[j++] = decoded / 256;
+		dest[j++] = decoded % 256;
+		i+=3;
+	}
+	// there could be one last byte (when the length is odd)
+	if (bytes[i]) {
+	        if(!bytes[i+1]) {
+		        error = 1;
+		} else {
+		        // in this case s[i+2] == '\0'
+		        uint16_t c = b45table[bytes[i]];
+		        uint16_t d = b45table[bytes[i+1]];
+
+			if (c > 63 || d > 63 || c + 45 * d > 255) {
+			        error = 1;
+			}
+			c = c + 45 * d;
+			dest[j++] = c % 256;
+		}
+	}
+
+	return error ? -1 : j;
+}
+
+// read the string until the end even if there is an error
+// it returns a negative value if there is an error
+int is_base45(const char* src) {
+        int i = 0;
+	int error = 0;
+	while(src[i] != '\0') {
+	        if(b45table[(uint8_t)src[i]] > 63) {
+		        error = 1;
+		}
+	        i++;
+	}
+	if(i % 3 == 1) {
+	        error = 1;
+	}
+	i = i / 3 * 2 + (i % 3) / 2; // length of decoded string
+
+	return error ? -1 : i;
+}
