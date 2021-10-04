@@ -851,6 +851,37 @@ static int to_base58(lua_State *L) {
 	return 1;
 }
 
+static int to_base45 (lua_State *L) {
+	octet *o = o_arg(L,1);	SAFE(o);
+	int newlen = b45encode(NULL, (uint8_t*)o->val, o->len);
+	char *b = zen_memory_alloc(newlen);
+	b45encode(b, (uint8_t*)o->val, o->len);
+	lua_pushstring(L,b);
+	zen_memory_free(b);
+	return 1;
+}
+
+
+static int from_base45(lua_State *L) {
+	const char *s = lua_tostring(L, 1);
+	luaL_argcheck(L, s != NULL, 1, "base45 string expected");
+	int len = is_base45(s);
+	if(len < 0) {
+		lerror(L, "base45 string contains invalid characters");
+		return 0;
+	}
+	octet *o = o_new(L, len);
+	len = b45decode((uint8_t*)o->val, s);
+	if(len < 0) {
+		lerror(L, "base45 invalid string");
+		return 0;
+	}
+	o->len = len;
+
+	return 1;
+}
+
+
 /***
     Converts an octet into an array of bytes, compatible with Lua's transformations on <a href="https://www.lua.org/pil/11.1.html">arrays</a>.
 
@@ -1218,6 +1249,7 @@ int luaopen_octet(lua_State *L) {
 		{"is_bin", lua_is_bin},
 		{"from_number",from_number},
 		{"from_base64",from_base64},
+		{"from_base45",from_base45},
 		{"from_url64",from_url64},
 		{"from_base58",from_base58},
 		{"from_string",from_string},
@@ -1258,6 +1290,7 @@ int luaopen_octet(lua_State *L) {
 		{"base64", to_base64},
 		{"url64",  to_url64},
 		{"base58", to_base58},
+		{"base45", to_base45},
 		{"string", to_string},
 		{"octet",  to_octet},
 		{"str",    to_string},
