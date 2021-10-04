@@ -170,4 +170,3 @@ end
 
 collectgarbage 'collect'
 
-return(ZEN)
