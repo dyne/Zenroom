@@ -47,7 +47,7 @@ crypto-tests = \
 	${1} test/elgamal.lua && \
 	${1} test/bls_pairing.lua && \
 	${1} test/coconut_test.lua && \
-	${1} test/crypto_credential.lua \
+	${1} test/crypto_credential.lua && \
 	${1} test/mnemonic_encoding.lua
 
 cortex-m-crypto-tests = \
@@ -251,10 +251,9 @@ check-crypto-mutt:
 	@echo "All CRYPTO tests passed with lw memory manager"
 	@echo "-----------------------"
 
-check-crypto-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom -d 3
+check-crypto-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom
 check-crypto-debug:
 	rm -f /tmp/zenroom-test-summary.txt
-	$(call determinism-tests,${test-exec})
 	$(call crypto-tests,${test-exec})
 	$(call zencode-tests,${test-exec})
 	cat /tmp/zenroom-test-summary.txt
