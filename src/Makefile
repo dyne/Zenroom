@@ -18,7 +18,7 @@
 
 ZENROOM_VERSION := 2.0.0
 CC ?= gcc
-ARCH := $(shell uname -m)
+# ARCH := $(shell uname -m)
 BRANCH := $(shell git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
 COMMIT := $(shell git rev-parse --short HEAD)
 VERSION := ${ZENROOM_VERSION}
@@ -37,7 +37,7 @@ CORTEX_M_CFLAGS = \
 SOURCES := \
 	cli.o zenroom.o zen_error.o \
 	lua_functions.o lua_modules.o lualibs_detected.o lua_shims.o \
-	encoding.o base58.o rmd160.c segwit_addr.c\
+	encoding.o base58.o rmd160.o segwit_addr.o \
 	zen_memory.o mutt_sprintf.o \
 	zen_io.o zen_parse.o repl.o zen_config.o \
 	zen_octet.o zen_ecp.o zen_ecp2.o zen_big.o \
@@ -93,8 +93,8 @@ erlang: ${SOURCES} erlang.o
 osx: ${SOURCES}
 	${CC} ${CFLAGS} ${SOURCES} -o zenroom.command ${LDFLAGS} ${LDADD}
 
+# Call libzenroom.so to simplify python bindings
 osx-shared: ${SOURCES}
-	# Call libzenroom.so to simplify python bindings
 	${CC} ${CFLAGS} ${SOURCES} -o libzenroom-${ARCH}.so ${LDFLAGS} ${LDADD}
 
 win-exe: LDFLAGS += -static
@@ -154,4 +154,4 @@ clean:
 	rm -f zenroom.html
 
 .c.o:
-	$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"${VERSION}\" -DMAKETARGET=\"${MAKECMDGOALS}\" -DCOMMIT=\"${COMMIT}\" -DBRANCH=\"${BRANCH}\" -DARCH=\"${ARCH}\" -DCFLAGS="${CFLAGS}" 
+	$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"${VERSION}\" -DMAKETARGET=\"${MAKECMDGOALS}\" -DCOMMIT=\"${COMMIT}\" -DBRANCH=\"${BRANCH}\" -DCFLAGS="${CFLAGS}"
