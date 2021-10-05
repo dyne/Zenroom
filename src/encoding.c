@@ -165,7 +165,7 @@ void U64encode(char *dest, const char *src, int len) {
 static const char alpha_b45[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:";
 
 
-static const uint8_t b45table[256] = {
+static const char b45table[256] = {
 	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
 	64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
 	36, 64, 64, 64, 37, 38, 64, 64, 64, 64, 39, 40, 64, 41, 42, 43,
@@ -188,7 +188,7 @@ static const uint8_t b45table[256] = {
 // returns the length of the string encoded
 // if dest == NULL it doesn't create the output string
 // (it only returns the length)
-int b45encode(char *dest, const uint8_t *src, int len) {
+int b45encode(char *dest, const char *src, int len) {
 	int i, j;
 	// A pair of bytes becomes a triplet of chars,
 	// if the length is odd the last byte is encoded as
@@ -218,13 +218,13 @@ int b45encode(char *dest, const uint8_t *src, int len) {
 // returns the length of the bytes decoded
 // Even when there is an error, the decoding goes on until
 // the end
-int b45decode(uint8_t *dest, const char *src) {
+int b45decode(char *dest, const char *src) {
 	int i, j;
 
 	int error = 0;
 	// chars cannot be indices
 	// (otherwise they rise a warning, they could be negative)
-	const uint8_t *bytes = (uint8_t*)src;
+	const char *bytes = (char*)src;
 
 	i = 0;
 	j = 0;
@@ -268,7 +268,7 @@ int is_base45(const char* src) {
         int i = 0;
 	int error = 0;
 	while(src[i] != '\0') {
-	        if(b45table[(uint8_t)src[i]] > 63) {
+	        if(b45table[(char)src[i]] > 63) {
 		        error = 1;
 		}
 	        i++;
@@ -292,7 +292,7 @@ int is_base45(const char* src) {
  *   it has become ` mnemonic_check_and_bits`
  */
 
-void sha256_raw(const uint8_t *data, int len, uint8_t *result) {
+void sha256_raw(const char *data, int len, char *result) {
   hash256 hash;
   HASH256_init(&hash);
   register int i;
@@ -302,12 +302,12 @@ void sha256_raw(const uint8_t *data, int len, uint8_t *result) {
 
 // Return value: 0 bad input data, 1 bip39 string generated correctly
 // mnemo size has to be 24*10
-int mnemonic_from_data(char *mnemo, const uint8_t *data, int len) {
+int mnemonic_from_data(char *mnemo, const char *data, int len) {
   if (len % 4 || len < 16 || len > 32) {
     return 0;
   }
 
-  uint8_t bits[32 + 1];
+  char bits[32 + 1];
 
   sha256_raw(data, len, bits);
   // checksum
@@ -334,7 +334,7 @@ int mnemonic_from_data(char *mnemo, const uint8_t *data, int len) {
   return 1;
 }
 
-int mnemonic_to_bits(const char *mnemonic, uint8_t *bits) {
+int mnemonic_to_bits(const char *mnemonic, char *bits) {
   if (!mnemonic) {
     return 0;
   }
@@ -356,7 +356,7 @@ int mnemonic_to_bits(const char *mnemonic, uint8_t *bits) {
 
   char current_word[10] = {0};
   uint32_t j = 0, k = 0, ki = 0, bi = 0;
-  uint8_t result[32 + 1] = {0};
+  char result[32 + 1] = {0};
 
   memset(result, 0, sizeof(result));
   i = 0;
@@ -402,8 +402,8 @@ int mnemonic_to_bits(const char *mnemonic, uint8_t *bits) {
 }
 
 // bits must be 33 bytes long
-int mnemonic_check_and_bits(const char *mnemonic, int *len, uint8_t *result) {
-  uint8_t bits[32+1] = { 0 };
+int mnemonic_check_and_bits(const char *mnemonic, int *len, char *result) {
+  char bits[32+1] = { 0 };
   int mnemonic_bits_len = mnemonic_to_bits(mnemonic, bits);
   if (mnemonic_bits_len != (12 * 11) && mnemonic_bits_len != (18 * 11) &&
       mnemonic_bits_len != (24 * 11)) {
@@ -413,7 +413,7 @@ int mnemonic_check_and_bits(const char *mnemonic, int *len, uint8_t *result) {
   *len = words * 4 / 3; // remove checksum;
   memcpy(result, bits, *len);
   
-  uint8_t checksum = bits[words * 4 / 3];
+  char checksum = bits[words * 4 / 3];
   sha256_raw(bits, words * 4 / 3, bits);
   if (words == 12) {
     return (bits[0] & 0xF0) == (checksum & 0xF0);  // compare first 4 bits

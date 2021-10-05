@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 pwd := $(shell pwd)
-ARCH ?=$(shell uname -m)
+# ARCH ?=$(shell uname -m)
 PREFIX ?= /usr/local
 # VERSION is set in src/Makefile
 VERSION := $(shell awk '/ZENROOM_VERSION :=/ { print $$3; exit }' src/Makefile | tee VERSION)
