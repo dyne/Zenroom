@@ -39,6 +39,8 @@ ldadd += ${milib}/libamcl_pairing_${ecp_curve}.a
 ldadd += ${milib}/libamcl_curve_${ecdh_curve}.a
 ldadd += ${milib}/libamcl_core.a
 
+ldadd += ${pwd}/lib/dilithium2/clean/libdilithium2_clean.a
+
 # ------------------------
 # target specific settings
 
