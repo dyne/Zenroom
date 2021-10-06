@@ -133,6 +133,11 @@ milagro:
 		make -C ${pwd}/lib/milagro-crypto-c/build; \
 	fi
 
+quantum-proof:
+	@echo "-- Building Quantum-Proof libs"
+	cd ${pwd}/lib/dilithium2/clean && make
+	cd ${pwd}/lib/kyber512/clean && make
+
 check-milagro: milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c test
 
