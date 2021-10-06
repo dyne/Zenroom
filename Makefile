@@ -128,7 +128,7 @@ milagro:
 
 quantum-proof:
 	@echo "-- Building Quantum-Proof libs"
-	cd ${pwd}/lib/dilithium2/clean && make
+	cd ${pwd}/lib/dilithium2 && make
 	cd ${pwd}/lib/kyber512/clean && make
 
 check-milagro: milagro
