@@ -28,27 +28,27 @@
 #include <zen_octet.h>
 
 
-#define PQCLEAN_DILITHIUM2AES_CLEAN_CRYPTO_PUBLICKEYBYTES 1312
-#define PQCLEAN_DILITHIUM2AES_CLEAN_CRYPTO_SECRETKEYBYTES 2528
-#define PQCLEAN_DILITHIUM2AES_CLEAN_CRYPTO_BYTES 2420
-#define PQCLEAN_DILITHIUM2AES_CLEAN_CRYPTO_ALGNAME "Dilithium2-AES"
+#define PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES 1312
+#define PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_SECRETKEYBYTES 2528
+#define PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_BYTES 2420
+#define PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_ALGNAME "Dilithium2-AES"
 
 // Post quantum digital signature
-extern int PQCLEAN_DILITHIUM2AES_CLEAN_crypto_sign_keypair(uint8_t *pk, uint8_t *sk);
+extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair(uint8_t *pk, uint8_t *sk);
 
-extern int PQCLEAN_DILITHIUM2AES_CLEAN_crypto_sign_signature(
+extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_signature(
     uint8_t *sig, size_t *siglen,
     const uint8_t *m, size_t mlen, const uint8_t *sk);
 
-extern int PQCLEAN_DILITHIUM2AES_CLEAN_crypto_sign_verify(
+extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_verify(
     const uint8_t *sig, size_t siglen,
     const uint8_t *m, size_t mlen, const uint8_t *pk);
 
-extern int PQCLEAN_DILITHIUM2AES_CLEAN_crypto_sign(
+extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign(
     uint8_t *sm, size_t *smlen,
     const uint8_t *m, size_t mlen, const uint8_t *sk);
 
-extern int PQCLEAN_DILITHIUM2AES_CLEAN_crypto_sign_open(
+extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_open(
     uint8_t *m, size_t *mlen,
     const uint8_t *sm, size_t smlen, const uint8_t *pk);
 
@@ -58,14 +58,14 @@ static int pq_sign(lua_State *L) {
 	octet *sk = o_arg(L,1); SAFE(sk);
 	octet *m = o_arg(L,2); SAFE(m);
 
-	if(sk->len != PQCLEAN_DILITHIUM2AES_CLEAN_CRYPTO_SECRETKEYBYTES) {
+	if(sk->len != PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_SECRETKEYBYTES) {
 		lerror(L,"invalid size for secret key");
 		lua_pushboolean(L, 0);
 		return 1;
 	}
-	octet *sig = o_new(L,PQCLEAN_DILITHIUM2AES_CLEAN_CRYPTO_BYTES); SAFE(sig);
+	octet *sig = o_new(L,PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_BYTES); SAFE(sig);
 
-	if(PQCLEAN_DILITHIUM2AES_CLEAN_crypto_sign_signature((uint8_t*)sig->val, (size_t*)&sig->len,
+	if(PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_signature((uint8_t*)sig->val, (size_t*)&sig->len,
 							     (uint8_t*)m->val, m->len, (uint8_t*)sk->val)
 	   && sig->len > 0) {
 		lerror(L,"error in the signature");
