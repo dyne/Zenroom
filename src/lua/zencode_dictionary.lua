@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Tuesday, 20th July 2021
+--on Wednesday, 6th October 2021
 --]]
 
 -- this is a map reduce function processing a single argument as
@@ -225,3 +225,18 @@ When("create the copy of '' from dictionary ''", function(name, dict) create_cop
 When("create the copy of '' from ''", function(name, dict) create_copy_f(dict, name) end)
 When("create the copy of '' in ''", function(name, dict) create_copy_f(dict, name) end)
 When("create the copy of '' in '' in ''", function(obj, branch, root) create_copy_f(root, branch, obj) end)
+
+When("for each dictionary in '' append '' to ''", function(arr, right, left)
+	local dicts = have(arr)
+	ZEN.assert(luatype(dicts) == 'table', 'Object is not a table: '..arr)
+	for kk,vv in pairs(dicts) do
+		local l, r
+		for k,v in pairs(vv) do
+			if k == right then r = v end
+			if k == left then l = v end
+		end
+		ZEN.assert(l, "Object not found: "..kk.."."..left)
+		ZEN.assert(r, "Object not found: "..kk.."."..right)
+		vv[left] = l..r
+	end
+end)

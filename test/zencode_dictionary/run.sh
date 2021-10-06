@@ -360,3 +360,25 @@ When I rename the 'hash' to 'sha512hashOfsalesReport'
 # We also print the dictionary 'Information' as hex, just for fun
 Then print the 'salesReport'
 EOF
+
+
+cat << EOF  | save dictionary blockchains.json
+{ 
+   "blockchains":{ 
+      "b1":{ 
+         "endpoint":"http://pesce.com/" ,
+         "last-transaction": "123" 
+      }, 
+      "b2":{ 
+         "endpoint":"http://fresco.com/",
+         "last-transaction": "234" 
+      } 
+   } 
+}
+EOF
+
+cat << EOF | zexe append_foreach.zen -a blockchains.json | save dictionary blockchains_appended.json
+Given I have a 'string dictionary' named 'blockchains'
+When for each dictionary in 'blockchains' I append 'last-transaction' to 'endpoint'
+Then print 'blockchains'
+EOF
