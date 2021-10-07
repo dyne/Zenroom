@@ -129,8 +129,7 @@ milagro:
 
 quantum-proof:
 	@echo "-- Building Quantum-Proof libs"
-	cd ${pwd}/lib/dilithium2 && make
-	cd ${pwd}/lib/kyber512/clean && make
+	cd ${pwd}/lib/pqclean && make
 
 check-milagro: milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c test
@@ -178,8 +177,7 @@ install-lua:
 
 clean:
 	make clean -C ${pwd}/lib/lua53/src
-	make clean -C ${pwd}/lib/dilithium2/clean
-	make clean -C ${pwd}/lib/kyber512/clean
+	make clean -C ${pwd}/lib/pqclean
 	rm -rf ${pwd}/lib/milagro-crypto-c/build
 	make clean -C ${pwd}/lib/zstd
 	make clean -C ${pwd}/src
