@@ -665,7 +665,7 @@ static int to_mnemonic(lua_State *L) {
 	  return 0;
 	}
 	char *result = zen_memory_alloc(24 * 10);
-	if(mnemonic_from_data(result, (const uint8_t*)o->val, o->len)) {
+	if(mnemonic_from_data(result, o->val, o->len)) {
 		lua_pushstring(L, result);
 	} else {
 		error(L, "%s :: cannot be encoded to mnemonic", __func__);
@@ -683,7 +683,7 @@ static int from_mnemonic(lua_State *L) {
 		return 1; }
 	// From bip39 it can be at most 32bytes
 	octet *o = o_new(L, 32);
-	if(!mnemonic_check_and_bits(s, &(o->len), (uint8_t*)o->val)) {
+	if(!mnemonic_check_and_bits(s, &(o->len), o->val)) {
 		error(L, "%s :: words cannot be encoded with bip39 format", __func__);
 		lua_pushboolean(L,0);
 	}
@@ -853,9 +853,9 @@ static int to_base58(lua_State *L) {
 
 static int to_base45 (lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
-	int newlen = b45encode(NULL, (uint8_t*)o->val, o->len);
+	int newlen = b45encode(NULL, o->val, o->len);
 	char *b = zen_memory_alloc(newlen);
-	b45encode(b, (uint8_t*)o->val, o->len);
+	b45encode(b, o->val, o->len);
 	lua_pushstring(L,b);
 	zen_memory_free(b);
 	return 1;
@@ -871,7 +871,7 @@ static int from_base45(lua_State *L) {
 		return 0;
 	}
 	octet *o = o_new(L, len);
-	len = b45decode((uint8_t*)o->val, s);
+	len = b45decode(o->val, s);
 	if(len < 0) {
 		lerror(L, "base45 invalid string");
 		return 0;

@@ -224,7 +224,7 @@ int b45decode(char *dest, const char *src) {
 	int error = 0;
 	// chars cannot be indices
 	// (otherwise they rise a warning, they could be negative)
-	const char *bytes = (char*)src;
+	const uint8_t *bytes = (uint8_t*)src;
 
 	i = 0;
 	j = 0;
@@ -267,8 +267,9 @@ int b45decode(char *dest, const char *src) {
 int is_base45(const char* src) {
         int i = 0;
 	int error = 0;
-	while(src[i] != '\0') {
-	        if(b45table[(char)src[i]] > 63) {
+	uint8_t *bytes = (uint8_t*)src;
+	while(bytes[i] != '\0') {
+	        if(b45table[bytes[i]] > 63) {
 		        error = 1;
 		}
 	        i++;
