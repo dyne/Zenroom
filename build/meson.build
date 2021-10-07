@@ -136,6 +136,27 @@ zenroom_src = [
     '../src/zen_random.c',
     '../src/zenroom.c',
     zen_ecdh_factory,
+
+    '../lib/pqclean/fips202.c',
+
+    '../lib/pqclean/dilithium2/ntt.c',
+    '../lib/pqclean/dilithium2/packing.c',
+    '../lib/pqclean/dilithium2/poly.c',
+    '../lib/pqclean/dilithium2/polyvec.c',
+    '../lib/pqclean/dilithium2/reduce.c',
+    '../lib/pqclean/dilithium2/rounding.c',
+    '../lib/pqclean/dilithium2/sign.c',
+    '../lib/pqclean/dilithium2/symmetric-shake.c',
+
+    '../lib/pqclean/kyber512/cbd.c',
+    '../lib/pqclean/kyber512/indcpa.c',
+    '../lib/pqclean/kyber512/kem.c',
+    '../lib/pqclean/kyber512/ntt.c',
+    '../lib/pqclean/kyber512/poly.c',
+    '../lib/pqclean/kyber512/polyvec.c',
+    '../lib/pqclean/kyber512/reduce.c',
+    '../lib/pqclean/kyber512/symmetric-shake.c',
+    '../lib/pqclean/kyber512/verify.c', 
 ]
 
 zenroom_lib = library(
