@@ -125,6 +125,7 @@ milagro:
 		CC=${gcc} CFLAGS="${cflags}" AR=${ar} RANLIB=${ranlib} LD=${ld} \
 		make -C ${pwd}/lib/milagro-crypto-c/build; \
 	fi
+	make quantum-proof
 
 quantum-proof:
 	@echo "-- Building Quantum-Proof libs"
@@ -177,6 +178,8 @@ install-lua:
 
 clean:
 	make clean -C ${pwd}/lib/lua53/src
+	make clean -C ${pwd}/lib/dilithium2/clean
+	make clean -C ${pwd}/lib/kyber512/clean
 	rm -rf ${pwd}/lib/milagro-crypto-c/build
 	make clean -C ${pwd}/lib/zstd
 	make clean -C ${pwd}/src
