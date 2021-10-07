@@ -75,19 +75,6 @@ local function f_keygen()
 	new_codec('keypair', { zentype = 'dictionary' })
 end
 When('create the keypair', f_keygen)
--- generate a keypair in "bitcoin" format (only x coord, 03 prepended)
-When('create the bitcoin keypair', function()
-	empty'bitcoin keypair'
-	local kp = ECDH.keygen()
-	local x, y = ECDH.pubxy(kp.public)
-	local pfx = fif( BIG.parity(BIG.new(y) ), OCTET.from_hex('03'), OCTET.from_hex('02') )
-	local pk = pfx .. x
-	ACK.bitcoin_keypair = {
-			public_key = pk,
-			private_key = kp.private
-	}
-	new_codec('bitcoin keypair', { zentype = 'dictionary' })
-end)
 
 When(
 	"create the ecdh key",
@@ -124,22 +111,6 @@ When(
 			public_key = pub,
 			private_key = sk
 		}
-	end
-)
-When(
-	"create the bitcoin keypair with secret key ''",
-	function(sec)
-		local sk = have(sec)
-		empty'bitcoin keypair'
-		local pub = ECDH.pubgen(sk)
-		local x, y = ECDH.pubxy(pub)
-		local pfx = fif( BIG.parity(BIG.new(y) ), OCTET.from_hex('03'), OCTET.from_hex('02') )
-		local pk = pfx .. x
-		ACK.bitcoin_keypair = {
-			public_key = pub,
-			private_key = sk
-		}
-		new_codec('bitcoin keypair', { zentype = 'dictionary' })
 	end
 )
 

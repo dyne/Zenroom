@@ -34,30 +34,54 @@ function btc.dsha256(msg)
    return SHA256:process(SHA256:process(msg))
 end
 
-function btc.read_base58check(raw)
-   raw = O.from_base58(raw)
-   local data
-   local check
-   assert(#raw > 4)
-   data = raw:sub(1, #raw-4)
-   check = btc.dsha256(data):chop(4)
+function btc.wif_to_sk(wif)
+   if not type(wif) == 'zenroom.octet' then
+      error("invalid bitcoin key type, not an octet: "..type(wif), 3) end
+   local len = #wif   
+   if not (len == 32+6) then
+	 error("Invalid bitcoin key, WIF too short: "..len.." bytes", 3) end
+   local ver = wif:chop(1):hex()
+   if not(ver == 'ef' or ver == '80') then
+      error("Invalid bitcoin key version: "..ver, 3) end
+   local compress = wif:sub(34,34):hex()
+   if not(compress == '01') then
+      error("Invalid bitcoin key compression byte: "..wif:sub(len, len):hex(), 3) end
 
-   assert(raw:sub(#raw-3, #raw) == check)
+   local data = wif:sub(1, len-4)
+   local check = btc.dsha256(data):chop(4)
 
-   return data
+   if not(wif:sub(len-3, len) == check) then
+      error("Invalid bitcoin key: checksum mismatch", 3) end
+
+   return wif:sub(2,len-5)
 end
 
-function btc.read_wif_private_key(sk)
-   sk = btc.read_base58check(sk)
-   assert(sk:chop(1) == O.from_hex('ef') or sk:chop(1) == O.from_hex('80'))
 
-   -- SEC format used for public key is always compressed
-   assert(sk:sub(#sk, #sk) == O.from_hex('01'))
-
-   -- Private key has length 32
-   return sk:sub(2, 33)
+-- 0x80 = Mainnet
+-- 0xEF = Testnet
+function btc.sk_to_wif(sk, vs)
+   local ver
+   if vs == 'testnet' then
+      ver = O.from_hex('EF')
+   else
+      ver = O.from_hex('80')
+   end
+   local res = ver..sk
+   res = res..O.from_hex('01') -- compressed public key
+   res = res..btc.dsha256(sk):chop(4) -- checksum
+   return res
 end
 
+function btc.sk_to_pubc(sk)
+   if not #sk == 32 then
+      error("Invalid bitcoin key size: "..#sk) end
+   local pub = ECDH.pubgen(sk)
+   local x, y = ECDH.pubxy(pub)
+   local pfx = fif( BIG.parity( BIG.new(y) ),
+		    OCTET.from_hex('03'), OCTET.from_hex('02') )
+   return(pfx .. x)
+
+end
 -- variable length encoding for integer based on the
 -- actual length of the number
 function btc.encode_compact_size(n)

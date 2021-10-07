@@ -1,10 +1,8 @@
 -- Some test with BTC
 
 local BTC = require('crypto_bitcoin')
-
-assert(BTC.read_base58check('cRg4MM15LCfvt4oCddAfUgWm54hXw1LFmkHqs6pwym9QopG5Evpt') == O.from_hex('ef7a1afbb80174a41ad288053b246c7f528f5e746332f95f19e360c95bfb1d03bd01'))
-
-assert(BTC.read_wif_private_key('cRg4MM15LCfvt4oCddAfUgWm54hXw1LFmkHqs6pwym9QopG5Evpt') == O.from_hex('7a1afbb80174a41ad288053b246c7f528f5e746332f95f19e360c95bfb1d03bd'))
+local sk = BTC.wif_to_sk(O.from_base58('cRg4MM15LCfvt4oCddAfUgWm54hXw1LFmkHqs6pwym9QopG5Evpt'))
+assert(sk == O.from_hex('7a1afbb80174a41ad288053b246c7f528f5e746332f95f19e360c95bfb1d03bd'))
 
 assert(BTC.encode_compact_size(INT.new(1)) == O.from_hex('01'))
 assert(BTC.encode_compact_size(INT.new(253)) == O.from_hex('fdfd00'))
@@ -74,7 +72,7 @@ local tx = {
 ----------------------------------------
 -- Validate witness from bitcoin core --
 ----------------------------------------
-local sk = BTC.read_wif_private_key('cPW7XRee1yx6sujBWeyZiyg18vhhQk9JaxxPdvwGwYX175YCF48G')
+local sk = BTC.wif_to_sk(O.from_base58('cPW7XRee1yx6sujBWeyZiyg18vhhQk9JaxxPdvwGwYX175YCF48G'))
 local pk = ECDH.pubgen(sk)
 local tx = {
    version=2,

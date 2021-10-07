@@ -45,6 +45,64 @@ ZEN.add_schema(
       end
    })
 
+-- generate a keypair in "bitcoin" format (only x coord, 03 prepended)
+When('create the bitcoin testnet key', function()
+	initkeys'bitcoin testnet'
+	local kp = ECDH.keygen()
+	ACK.keys.bitcoin_testnet = btc.sk_to_wif( kp.private, 'testnet' )
+end)
+
+When('create the bitcoin key', function()
+	initkeys'bitcoin'
+	local kp = ECDH.keygen()
+	ACK.keys.bitcoin = btc.sk_to_wif( kp.private, 'mainnet' )
+end)
+
+When("create the bitcoin key with secret key ''", function(sec)
+		local sk = have(sec)
+		local wif
+		if #sk == 32 then -- bare sk
+		   wif = btc.sk_to_wif(sk)
+		elseif #sk == 32+6 then -- wif
+		   btc.wif_to_sk(sk) -- checks
+		   wif = sk
+		else
+		   error("Invalid bitcoin key size for "..sec..": "..#sk)
+		end
+		initkeys'bitcoin'
+		ACK.keys.bitcoin = wif
+end)
+When("create the bitcoin testnet key with secret key ''", function(sec)
+		local sk = have(sec)
+		local wif
+		if #sk == 32 then -- bare sk
+		   wif = btc.sk_to_wif(sk)
+		elseif #sk == 32+6 then -- wif
+		   btc.wif_to_sk(sk) -- checks
+		   wif = sk
+		else
+		   error("Invalid bitcoin key size for "..sec..": "..#sk)
+		end
+		initkeys'bitcoin testnet'
+		ACK.keys.bitcoin_testnet = wif
+end)
+
+When("create the bitcoin public key", function()
+	empty'bitcoin public key'
+	local wif = havekey'bitcoin'
+	local pk = btc.wif_to_sk(wif)
+	ACK.bitcoin_public_key = btc.sk_to_pubc(pk)
+	new_codec('bitcoin public key', { zentype = 'schema' })
+end)
+
+When("create the bitcoin testnet public key", function()
+	empty'bitcoin testnet public key'
+	local wif = havekey'bitcoin testnet'
+	local pk = btc.wif_to_sk(wif)
+	ACK.bitcoin_testnet_public_key = btc.sk_to_pubc(pk)
+	new_codec('bitcoin testnet public key', { zentype = 'schema' })
+end)
+
 When('create the bitcoin transaction',
      function()
 	havekey'bitcoin'

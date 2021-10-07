@@ -40,7 +40,7 @@ function initkeys(ktype)
     -- if ktype is specified then check overwriting
     if ktype then
         ZEN.assert(
-            not ACK.keys[ktype],
+            not ACK.keys[uscore(ktype)],
             'Cannot overwrite existing key: ' .. ktype
         )
     end
@@ -53,17 +53,19 @@ local keytypes = {
     issuer = true,
     bls = true,
     reflow = true,
-    bitcoin = true
+    bitcoin = true,
+    bitcoin_testnet = true
 }
 
 function havekey(ktype)
-    ZEN.assert(keytypes[ktype], 'Unknown key type: ' .. ktype)
-    -- check that keys exist and are a table
-    initkeys()
-    local res
-    res = ACK.keys[ktype]
-    ZEN.assert(res, 'Key not found: ' .. ktype)
-    return res
+   local kname = uscore(ktype)
+   ZEN.assert(keytypes[kname], 'Unknown key type: ' .. ktype)
+   -- check that keys exist and are a table
+   initkeys()
+   local res
+   res = ACK.keys[kname]
+   ZEN.assert(res, 'Key not found: ' .. ktype)
+   return res
 end
 
 local btc = require('crypto_bitcoin')
