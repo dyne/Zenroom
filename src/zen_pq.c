@@ -31,7 +31,7 @@
 #define PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES 1312
 #define PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_SECRETKEYBYTES 2528
 #define PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_BYTES 2420
-#define PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_ALGNAME "Dilithium2-AES"
+#define PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_ALGNAME "Dilithium2"
 
 // Post quantum digital signature
 extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair(uint8_t *pk, uint8_t *sk);
@@ -53,6 +53,19 @@ extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_open(
     const uint8_t *sm, size_t smlen, const uint8_t *pk);
 
 
+static int pq_signature_keygen(lua_State *L) {
+	lua_createtable(L, 0, 2);
+        octet *private = o_new(L,PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_SECRETKEYBYTES); SAFE(private);
+	lua_setfield(L, -2, "private");
+        octet *public = o_new(L,PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE(public);
+	lua_setfield(L, -2, "public");
+
+	PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair((uint8_t*)public->val, (uint8_t*)private->val);
+	public->len = PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES;
+	private->len = PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_SECRETKEYBYTES;
+
+	return 1;
+}
 
 static int pq_sign(lua_State *L) {
 	octet *sk = o_arg(L,1); SAFE(sk);
@@ -66,7 +79,7 @@ static int pq_sign(lua_State *L) {
 	octet *sig = o_new(L,PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_BYTES); SAFE(sig);
 
 	if(PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_signature((uint8_t*)sig->val, (size_t*)&sig->len,
-							     (uint8_t*)m->val, m->len, (uint8_t*)sk->val)
+							  (uint8_t*)m->val, m->len, (uint8_t*)sk->val)
 	   && sig->len > 0) {
 		lerror(L,"error in the signature");
 		lua_pushboolean(L, 0);
@@ -76,11 +89,30 @@ static int pq_sign(lua_State *L) {
 	return 1;
 }
 
+static int pq_verify(lua_State *L) {
+        octet *pk = o_arg(L,1); SAFE(pk);
+	octet *sig = o_arg(L,2); SAFE(sig);
+	octet *m = o_arg(L,3); SAFE(m);
+
+	if(pk->len != PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES) {
+		lerror(L,"invalid size for public key");
+		lua_pushboolean(L, 0);
+		return 1;
+	}
+
+	int result = PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_verify((uint8_t*)sig->val, (size_t)sig->len,
+								 (uint8_t*)m->val, m->len, (uint8_t*)pk->val);
+	lua_pushboolean(L, result == 0);
+	return 1;
+}
+
 
 int luaopen_pq(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg ecdh_class[] = {
+	        {"sigkeygen", pq_signature_keygen},
 	        {"sign", pq_sign},
+	        {"verify", pq_verify},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg ecdh_methods[] = {
