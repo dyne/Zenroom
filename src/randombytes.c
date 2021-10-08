@@ -247,8 +247,6 @@ static int randombytes_bsd_randombytes(void *buf, size_t n)
 #include <string.h>
 int randombytes(void *buf, size_t n)
 {
-        memset(buf, 0xff, n);
-	return 0;
 	if(!n) return 0;
 #if defined(__EMSCRIPTEN__)
 # pragma message("Using crypto api from NodeJS")
