@@ -3,10 +3,12 @@
 #include "params.h"
 #include "poly.h"
 #include "polyvec.h"
-#include "randombytes.h"
 #include "sign.h"
 #include "symmetric.h"
 #include <stdint.h>
+
+// Imported from zenroom
+extern int randombytes(void *buf, size_t n);
 
 /*************************************************
 * Name:        PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair
