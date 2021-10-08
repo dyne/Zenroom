@@ -128,7 +128,7 @@ zenroom_src = [
     '../src/zen_big.c',
     '../src/zen_config.c',
     '../src/zen_ecdh.c',
-    '../src/zen_pq.c',
+    '../src/zen_qp.c',
     '../src/zen_ecp2.c',
     '../src/zen_ecp.c',
     '../src/zen_error.c',
