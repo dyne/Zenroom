@@ -1,11 +1,13 @@
 #include "indcpa.h"
 #include "kem.h"
 #include "params.h"
-#include "randombytes.h"
 #include "symmetric.h"
 #include "verify.h"
 #include <stddef.h>
 #include <stdint.h>
+
+// Imported from zenroom
+extern int randombytes(void *buf, size_t n);
 
 /*************************************************
 * Name:        PQCLEAN_KYBER512_CLEAN_crypto_kem_keypair
