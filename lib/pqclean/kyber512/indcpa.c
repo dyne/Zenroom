@@ -3,10 +3,12 @@
 #include "params.h"
 #include "poly.h"
 #include "polyvec.h"
-#include "randombytes.h"
 #include "symmetric.h"
 #include <stddef.h>
 #include <stdint.h>
+
+// Imported from zenroom
+extern int randombytes(void *buf, size_t n);
 
 /*************************************************
 * Name:        pack_pk
