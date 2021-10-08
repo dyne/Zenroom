@@ -106,6 +106,54 @@ static int qp_sign(lua_State *L) {
 	return 1;
 }
 
+// generate an octet which is signature+message
+static int qp_signed_message(lua_State *L) {
+	octet *sk = o_arg(L,1); SAFE(sk);
+	octet *m = o_arg(L,2); SAFE(m);
+
+	if(sk->len != PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_SECRETKEYBYTES) {
+		lerror(L,"invalid size for secret key");
+		lua_pushboolean(L, 0);
+		return 1;
+	}
+	octet *sig = o_new(L,PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_BYTES+m->len); SAFE(sig);
+
+	if(PQCLEAN_DILITHIUM2_CLEAN_crypto_sign((unsigned char*)sig->val,
+						(size_t*)&sig->len,
+						(unsigned char*)m->val, m->len,
+						(unsigned char*)sk->val)
+	   && sig->len > 0) {
+		lerror(L,"error in the signature");
+		lua_pushboolean(L, 0);
+		return 1;
+
+	}
+	return 1;
+}
+
+static int qp_verified_message(lua_State *L) {
+        octet *pk = o_arg(L,1); SAFE(pk);
+	octet *sm = o_arg(L,2); SAFE(sm); // signed message
+
+	if(pk->len != PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES) {
+		lerror(L,"invalid size for public key");
+		lua_pushboolean(L, 0);
+		return 1;
+	}
+
+	octet *msg = o_new(L,sm->len); SAFE(msg);
+
+	int result = PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_open((unsigned char*)msg->val,
+							       (size_t*)&msg->len,
+							       (unsigned char*)sm->val, sm->len,
+							       (unsigned char*)pk->val) == 0
+	  && msg->len > 0;
+	if(!result) {
+	  lua_pushboolean(L, 0);
+	}
+	return 1;
+}
+
 static int qp_verify(lua_State *L) {
         octet *pk = o_arg(L,1); SAFE(pk);
 	octet *sig = o_arg(L,2); SAFE(sig);
@@ -200,7 +248,9 @@ int luaopen_qp(lua_State *L) {
 	const struct luaL_Reg ecdh_class[] = {
 	        {"sigkeygen", qp_signature_keygen},
 	        {"sign", qp_sign},
+		{"signed_msg", qp_signed_message},
 	        {"verify", qp_verify},
+		{"verified_msg", qp_verified_message},
 	        {"kemkeygen", qp_kem_keygen},
 	        {"enc", qp_enc},
 	        {"dec", qp_dec},

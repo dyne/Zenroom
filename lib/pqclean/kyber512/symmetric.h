@@ -1,6 +1,6 @@
 #ifndef PQCLEAN_KYBER512_CLEAN_SYMMETRIC_H
 #define PQCLEAN_KYBER512_CLEAN_SYMMETRIC_H
-#include "fips202.h"
+#include "../fips202.h"
 #include "params.h"
 #include <stddef.h>
 #include <stdint.h>
