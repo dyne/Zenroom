@@ -1,4 +1,4 @@
-#include "fips202.h"
+#include "../fips202.h"
 #include "packing.h"
 #include "params.h"
 #include "poly.h"
