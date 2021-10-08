@@ -9,6 +9,9 @@ local sig = QP.sign(kp.private, O.from_string(msg))
 assert(QP.verify(kp.public, sig, O.from_string(msg)))
 assert(not QP.verify(kp.public, sig, O.from_string("Another message")))
 
+local sm = QP.signed_msg(kp.private, msg)
+
+assert(QP.verified_msg(kp.public, sm):string() == msg)
 
 local kp = QP.kemkeygen()
 
