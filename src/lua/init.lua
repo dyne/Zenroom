@@ -74,7 +74,7 @@ CBOR = require('zenroom_cbor')
 JSON = require('zenroom_json')
 OCTET = require('zenroom_octet')
 BIG = require'big'
-ECDH = require'ecdh'
+ECDH = require('zenroom_ecdh')
 -- ECDH public keys cannot function as ECP because of IANA 7303
 AES = require'aes'
 ECP = require('zenroom_ecp')
