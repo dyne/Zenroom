@@ -153,7 +153,7 @@ Scenario 'ecdh': Bob gathers public keys in his keyring
 	and print the 'public key'
 EOF
 
-cat <<EOF | debug AES07.zen -k bob_keyring.json -a alice_to_bob.json | save ecdh asym_clear_message.json
+cat <<EOF | zexe AES07.zen -k bob_keyring.json -a alice_to_bob.json | save ecdh asym_clear_message.json
 Rule check version 1.0.0
 Scenario 'ecdh': Bob decrypts the message from Alice
 	Given that I am known as 'Bob'
@@ -204,7 +204,7 @@ Then print my 'ecdh public key'
 EOF
 
 # check that secret key doesn't changes on pubkey generation
-cat << EOF | debug keygen_immutable.zen | save ecdh carl_keys.json
+cat << EOF | zexe keygen_immutable.zen | save ecdh carl_keys.json
 Scenario ecdh
 Given I am known as 'Carl'
 When I create the ecdh key
@@ -217,7 +217,7 @@ and print 'ecdh after'
 EOF
 
 cat alice_keys.json | jq .
-cat <<EOF | debug enc_to_bob.zen -k alice_keys.json -a bob_pubkey.json | save ecdh enc_alice_to_bob.json
+cat <<EOF | zexe enc_to_bob.zen -k alice_keys.json -a bob_pubkey.json | save ecdh enc_alice_to_bob.json
 Rule check version 1.0.0
 Scenario 'ecdh': Alice encrypts a message for Bob
 	Given that I am known as 'Alice'
