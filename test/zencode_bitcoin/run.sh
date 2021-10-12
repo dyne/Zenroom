@@ -51,3 +51,24 @@ When I sign with bitcoin the 'bitcoin transaction'
 When I create the bitcoin raw transaction of the 'bitcoin transaction'
 Then print the 'bitcoin raw transaction' as 'hex'
 EOF
+
+cat <<EOF | zexe keygen.zen | save bitcoin keys.json
+rule output encoding base58
+Scenario bitcoin
+Given I am known as 'Satoshi'
+When I create the bitcoin testnet key
+Then print my 'keys'
+EOF
+
+
+cat <<EOF | debug pubkey.zen -k keys.json | save bitcoin public.json
+rule output encoding base58
+Scenario bitcoin
+Given I am known as 'Satoshi'
+and I have my 'keys'
+# and debug
+When I create the bitcoin testnet public key
+Then print my 'bitcoin testnet public key'
+EOF
+
+#and I create the bitcoin testnet public key

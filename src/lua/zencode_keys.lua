@@ -62,14 +62,29 @@ function havekey(ktype)
    ZEN.assert(keytypes[kname], 'Unknown key type: ' .. ktype)
    -- check that keys exist and are a table
    initkeys()
-   local res
-   res = ACK.keys[kname]
+   local res = ACK.keys[kname]
    ZEN.assert(res, 'Key not found: ' .. ktype)
    return res
 end
 
 local btc = require('crypto_bitcoin')
 local ECDHUTILS = require('ecdh_utils')
+
+local function _import_bitcoin(obj)
+   -- force base58 as bitcoin always uses that
+   local res = { }
+   res.address, res.version = O.from_segwit(obj.address)
+   local sk = O.from_base58(obj.secret)
+   local wif = btc.wif_to_sk(sk)
+   if not wif then
+      error("invalid bitcoin wif key", 2) end
+   res.secret = sk
+   local pk = btc.sk_to_pubc( wif )
+   I.warn({pk = pk, addr = res.address, res = res})
+   ZEN.assert(btc.address_from_public_key(pk) == res.address,
+	      "Address cannot be derived from the private key")
+   return res
+end
 
 ZEN.add_schema(
     {
@@ -96,18 +111,10 @@ ZEN.add_schema(
                 res.reflow = ZEN.get(obj, 'reflow', INT.new)
             end
 	    if obj.bitcoin then
-	       addr, ver = O.from_segwit(obj.bitcoin.address)
-	       res.bitcoin = {
-		  -- WIF format implemented in zencode_bitcoin, available
-		  -- only if scenario is loaded
-		  secret = btc.read_wif_private_key(obj.bitcoin.secret),
-		  address = addr,
-		  version = ver
-		  -- address = ZEN.get(obj.bitcoin, 'address', O.from_string)
-	       }
-	       pk = ECDHUTILS.compress_public_key(ECDH.pubgen(res.bitcoin.secret))
-	       ZEN.assert(btc.address_from_public_key(pk) == res.bitcoin.address,
-			  "Address cannot be derived from the private key")
+	       res.bitcoin = _import_bitcoin( obj.bitcoin )
+	    end
+	    if obj.bitcoin_testnet then
+	       res.bitcoin_testnet = _import_bitcoin( obj.bitcoin_testnet )
 	    end
             return (res)
         end

@@ -20,8 +20,6 @@
 
 local btc = {}
 
-ECDHUTILS = require('ecdh_utils')
-
 function btc.address_from_public_key(public_key)
    local SHA256 = HASH.new('sha256')
    local RMD160 = HASH.new('ripemd160')
@@ -37,9 +35,9 @@ end
 function btc.wif_to_sk(wif)
    if not type(wif) == 'zenroom.octet' then
       error("invalid bitcoin key type, not an octet: "..type(wif), 3) end
-   local len = #wif   
+   local len = #wif
    if not (len == 32+6) then
-	 error("Invalid bitcoin key, WIF too short: "..len.." bytes", 3) end
+      error("Invalid bitcoin key, wrong WIF size: "..len.." bytes", 3) end
    local ver = wif:chop(1):hex()
    if not(ver == 'ef' or ver == '80') then
       error("Invalid bitcoin key version: "..ver, 3) end
@@ -48,6 +46,7 @@ function btc.wif_to_sk(wif)
       error("Invalid bitcoin key compression byte: "..wif:sub(len, len):hex(), 3) end
 
    local data = wif:sub(1, len-4)
+
    local check = btc.dsha256(data):chop(4)
 
    if not(wif:sub(len-3, len) == check) then
@@ -68,18 +67,19 @@ function btc.sk_to_wif(sk, vs)
    end
    local res = ver..sk
    res = res..O.from_hex('01') -- compressed public key
-   res = res..btc.dsha256(sk):chop(4) -- checksum
+   res = res..btc.dsha256(res):chop(4) -- checksum
    return res
 end
 
 function btc.sk_to_pubc(sk)
    if not #sk == 32 then
       error("Invalid bitcoin key size: "..#sk) end
-   local pub = ECDH.pubgen(sk)
-   local x, y = ECDH.pubxy(pub)
-   local pfx = fif( BIG.parity( BIG.new(y) ),
-		    OCTET.from_hex('03'), OCTET.from_hex('02') )
-   return(pfx .. x)
+   return( ECDH.compress_public_key( ECDH.pubgen(sk) ) )
+
+   -- local x, y = ECDH.pubxy(pub)
+   -- local pfx = fif( BIG.parity( BIG.new(y) ),
+   -- 		    OCTET.from_hex('03'), OCTET.from_hex('02') )
+   -- return(pfx .. x)
 
 end
 -- variable length encoding for integer based on the
@@ -505,13 +505,13 @@ end
 
 -- Here I sign the transaction
 function btc.build_witness(tx, sk)
-   local pk = ECDHUTILS.compress_public_key(ECDH.pubgen(sk))
+   local pk = ECDH.compress_public_key(ECDH.pubgen(sk))
    local witness = {}
    for i=1,#tx.txIn,1 do
       if tx.txIn[i].sigwit then
 	 local rawTx = btc.build_transaction_to_sign(tx, i)
 	 local sigHash = btc.dsha256(rawTx)
-	 local sig = ECDHUTILS.sign_ecdh(sk, sigHash)
+	 local sig = ECDH.sign_ecdh(sk, sigHash)
 	 witness[i] = {
 	    btc.encode_der_signature(sig) .. O.from_hex('01'),
 	    pk
@@ -533,7 +533,7 @@ function btc.verify_witness(tx)
       local rawTx = btc.build_transaction_to_sign(tx, i)
       local sigHash = btc.dsha256(rawTx)
       local sig = btc.decode_der_signature(v[1])
-      if not ECDH.verify_hashed(ECDHUTILS.uncompress_public_key(v[2]), sigHash, sig, #sigHash) then
+      if not ECDH.verify_hashed(ECDH.uncompress_public_key(v[2]), sigHash, sig, #sigHash) then
 	 return false
       end
    end

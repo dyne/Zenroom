@@ -49,13 +49,13 @@ ZEN.add_schema(
 When('create the bitcoin testnet key', function()
 	initkeys'bitcoin testnet'
 	local kp = ECDH.keygen()
-	ACK.keys.bitcoin_testnet = btc.sk_to_wif( kp.private, 'testnet' )
+	ACK.keys.bitcoin_testnet = { secret = btc.sk_to_wif( kp.private, 'testnet' ) }
 end)
 
 When('create the bitcoin key', function()
 	initkeys'bitcoin'
 	local kp = ECDH.keygen()
-	ACK.keys.bitcoin = btc.sk_to_wif( kp.private, 'mainnet' )
+	ACK.keys.bitcoin = { secret = btc.sk_to_wif( kp.private, 'mainnet' ) }
 end)
 
 When("create the bitcoin key with secret key ''", function(sec)
