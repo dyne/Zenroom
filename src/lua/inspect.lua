@@ -86,10 +86,10 @@ end
 local function export_obj(object, format)
   -- CONF { encoding = <function 1>,
   --        encoding_prefix = "u64"  }
-  ZEN.assert(object, 'export_obj object not found')
-  if type(object) == 'table' then
+  assert(object, 'export_obj object not found')
+  if luatype(object) == 'table' then
      local tres = {}
-     for k, v in ipairs(object) do -- only flat tables support recursion
+     for k, v in pairs(object) do -- only flat tables support recursion
         table.insert(tres, export_arr(v, format))
      end
      return tres
@@ -447,25 +447,15 @@ function inspect.inspect(root, options)
   return table.concat(inspector.buffer)
 end
 
--- conversion wrappers for zenroom types
-function inspect.encode(item)
-   t = type(item)
-   if iszen(t) then
-	  return export_obj(item)
-   -- elseif iszen(t) then
-   -- 	  if t == "zenroom.ecp" and ECP.isinf(item) then
-   -- 	  	 return "Infinity"
-   -- 	  else
-   -- 	  	 return ZEN:export(item)
-   -- 	  end
-   else
-	  return item
-   end
-end
-
 -- apply conversion wrapper to all values of a table
-function inspect.process(item)
-   return processRecursive(inspect.encode, item, {}, {})
+function inspect.process(item, format)
+   return processRecursive(function(item)
+	 if iszen(type(item)) then
+	    return export_obj(item, format)
+	 else
+	    return item
+	 end
+   end, item, {}, {})
 end
 
 --- Print all contents of a table in a tree representation, works with

@@ -122,12 +122,12 @@ _G['Then'] = nil
 _G['CONF'] = {
 	input = {
 		encoding = input_encoding('base64'),
-		format = get_format('json'),
+		format = { fun = JSON.auto, name = 'json' },
 		tagged = false
 	},
 	output = {
 		encoding = output_encoding('base64'),
-		format = get_format('json'),
+		format = { fun = JSON.auto, name = 'json' },
 		versioning = false
 	},
 	debug = { encoding = output_encoding('hex') },
