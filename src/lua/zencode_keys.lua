@@ -68,7 +68,6 @@ function havekey(ktype)
 end
 
 local btc = require('crypto_bitcoin')
-local ECDHUTILS = require('ecdh_utils')
 
 local function _import_bitcoin(obj)
    -- force base58 as bitcoin always uses that
