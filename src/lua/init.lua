@@ -130,6 +130,7 @@ _G['CONF'] = {
 		format = get_format('json'),
 		versioning = false
 	},
+	debug = { encoding = output_encoding('hex') },
 	parser = {strict_match = true},
 	hash = 'sha256',
 }

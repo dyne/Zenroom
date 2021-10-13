@@ -74,7 +74,7 @@ local function export_arr(object, format)
   if not CONF.output.encoding then
      error('CONF.output.encoding is not configured', 2)
   end
-  conv_f = CONF.output.encoding.fun -- fallback to configured conversion function
+  conv_f = CONF.debug.encoding.fun -- fallback to configured conversion function
   ::ok::
   ZEN.assert(
      type(conv_f) == 'function',
