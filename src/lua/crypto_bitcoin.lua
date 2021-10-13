@@ -608,6 +608,26 @@ function btc.value_btc_to_satoshi(value)
    return BIG.from_decimal(value:sub(1, pos-1) .. decimals)
 end
 
+function btc.value_satoshi_to_btc(value)
+   local str_value = value:decimal()
+   local len = #str_value
+   local str_btc;
+
+   if len <= 8 then
+      str_btc = '0.';
+      for i=1,8-len,1 do
+	 str_btc = str_btc .. '0'
+      end
+      str_btc = str_btc .. str_value
+   else
+      str_btc = string.sub(str_value, 1, len-8) .. '.' .. string.sub(str_value, len-7, len)
+   end
+
+   str_btc = string.gsub(str_btc, '%.?0*$', '')
+
+   return str_btc
+end
+
 -- function rawTransactionFromJSON(data, sk)
 --    local obj = JSON.decode(data)
 --    local sk = btc.read_wif_private_key(sk)
