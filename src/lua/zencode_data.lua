@@ -22,12 +22,12 @@
 --- Zencode data internals
 
 -- Used in scenario's schema declarations to cast to zenroom. type
-ZEN.get = function(obj, key, conversion)
+ZEN.get = function(obj, key, conversion, encoding)
    assert(type(key) == 'string', 'ZEN.get key is not a string', 2)
-   assert(
-      not conversion or type(conversion) == 'function',
-      'ZEN.get invalid conversion function', 2
-   )
+   assert(not conversion or type(conversion) == 'function',
+	  'ZEN.get invalid conversion function', 2)
+   assert(not encoding or type(encoding) == 'function',
+	  'ZEN.get invalid encoding function', 2)
    local k
    if not obj then -- take from IN root
 	  -- does not support to pick in WHO (use of 'my')
@@ -51,7 +51,11 @@ ZEN.get = function(obj, key, conversion)
       goto ok
    end
    if t == 'string' then
-      res = CONF.input.encoding.fun(k)
+      if encoding then
+	 res = encoding(k)
+      else
+	 res = CONF.input.encoding.fun(k)
+      end
       if conversion then
          res = conversion(res)
       end
@@ -61,7 +65,11 @@ ZEN.get = function(obj, key, conversion)
       res = k
    end
    if t == 'table' then
-      res = deepmap(CONF.input.encoding.fun, k)
+      if encoding then
+	 res = deepmap(encoding, k)
+      else
+	 res = deepmap(CONF.input.encoding.fun, k)
+      end
       if conversion then
          res = deepmap(conversion, res)
       end
@@ -107,12 +115,14 @@ function guess_conversion(obj, definition)
    -- a defined schema overrides any other conversion
    t = ZEN.schemas[definition]
    if t then
+      -- complex schema specfying output conversion as: {import=fun, export=fun}
+      local c = fif(luatype(t)=='table', 'complex', CONF.output.encoding.name)
       return ({
          fun = t,
          zentype = 'schema',
          luatype = objtype,
          raw = obj,
-         encoding = CONF.output.encoding.name
+         encoding = c
       })
    end
    if objtype == 'string' then
@@ -218,21 +228,30 @@ function operate_conversion(guessed)
       error('No conversion operation guessed', 2)
       return nil
    end
+   -- carry guessed detection in CODEC
+   ZEN.CODEC[guessed.name] = {
+      name = guessed.name,
+      encoding = guessed.encoding,
+      zentype = guessed.zentype,
+      luatype = guessed.luatype
+   }
    -- TODO: make xxx print to stderr!
    -- xxx('Operating conversion on: '..guessed.name)
    if guessed.zentype == 'schema' then
       -- error('Invalid schema conversion for encoding: '..guessed.encoding, 2)
 	  local res = {}
       if guessed.encoding == 'array' then
-		 for _,v in pairs(guessed.raw) do
-			table.insert(res, guessed.fun(v))
-		 end
-		 return(res)
-	  elseif guessed.encoding == 'dictionary' then
+	 for _,v in pairs(guessed.raw) do
+	    table.insert(res, guessed.fun(v))
+	 end
+	 return(res)
+      elseif guessed.encoding == 'dictionary' then
          for k, v in pairs(guessed.raw) do
             res[k] = guessed.fun(v[guessed.schema])
          end
-         return (res)
+         return (res)	
+      elseif guessed.encoding == 'complex' then
+	 return guessed.fun.import(guessed.raw)
       else
          return guessed.fun(guessed.raw)
       end
@@ -301,6 +320,8 @@ function guess_outcast(cast)
    if not cast then
       error('guess_outcast called with nil argument', 2)
    end
+   if luatype(cast) ~= 'string' then
+      error('guess_outcast called with wrong argument: '..type(cast), 3) end
    if cast == 'string' then
       return outcast_string
    elseif cast == 'hex' then
@@ -320,14 +341,27 @@ function guess_outcast(cast)
       return (function(v)
          return (v)
       end)
-   elseif ZEN.schemas[uscore(cast, ' ', '_')] then
-      return CONF.output.encoding.fun
-   else
-      error('Invalid output conversion: ' .. cast, 2)
-      return nil
    end
+   -- try schemas
+   local fun = ZEN.schemas[uscore(cast, ' ', '_')]
+   if luatype(fun) == 'table' then
+      -- complex schema encoding
+      assert(luatype(fun.export) == 'function',
+		"Guess outcast cannot find schema export")
+      return fun.export
+   else
+      return CONF.output.encoding.fun
+   end
+   error('Invalid output conversion: ' .. cast, 2)
+   return nil
 end
 
+-- CODEC format:
+-- { name: string,
+--   encoding: encoder name string or 'complex' handled by schema
+--   zentype:  zencode type: element, array, dictionary or schema
+--   luatype:  lua type (string, number, table or userdata) 
+-- }
 -- TODO: rename to check_output_codec_encoding(v)
 function check_codec(value)
    if not ZEN.CODEC then
@@ -338,9 +372,13 @@ function check_codec(value)
       return CONF.output.encoding.name
    end
    if ZEN.CODEC[value].zentype == 'schema' then
-      return CONF.output.encoding.name
-   else
-      return ZEN.CODEC[value].encoding or CONF.output.encoding.name
+      if ZEN.CODEC[value].encoding == 'complex' then
+	 assert(luatype(ZEN.schemas[value].export) == 'function',
+		"Complex export for schema is not a function: "..value)
+	 return value -- name of schema itself as it contains export
+      else
+	 return ZEN.CODEC[value].encoding or CONF.output.encoding.name
+      end
    end
    return CONF.output.encoding.name
 end

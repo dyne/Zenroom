@@ -41,9 +41,21 @@ local function then_outcast(val, sch)
 	end
 	local fun = guess_outcast(sch)
 	if luatype(val) == 'table' then
-		return deepmap(fun, val)
+	   local codec = ZEN.CODEC[sch]
+	   if codec and codec.zentype == 'schema' and codec.encoding == 'complex' then
+	      if not isdictionary(val) then
+		 error('Complex schema value is not a dictionary: '..sch, 2)
+	      end
+	      return fun(val)
+	   else
+	      if luatype(val) == 'table' then
+		 return deepmap(fun, val)
+	      else
+		 return fun(val)
+	      end
+	   end
 	else
-		return fun(val)
+	   return fun(val)
 	end
 end
 

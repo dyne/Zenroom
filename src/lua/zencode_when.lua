@@ -47,10 +47,10 @@ end)
 When("write string '' in ''", function(content, dest)
 	empty(dest)
 	ACK[dest] = O.from_string(content)
-	ZEN.CODEC[dest] = { name = dest,
-						encoding = 'string',
-						luatype = 'string',
-						zentype = 'element' }
+	ZEN.CODEC[dest] = new_codec(dest,
+				    {encoding = 'string',
+				     luatype = 'string',
+				     zentype = 'element' })
 end)
 
 -- ... and from a number
@@ -63,22 +63,23 @@ When("write number '' in ''", function(content, dest)
 		-- TODO: maybe support unsigned native here
 	end
 	ACK[dest] = num
-	ZEN.CODEC[dest] = { name = dest,
-						encoding = 'number',
-						luatype = 'number',
-						zentype = 'element' }
+	ZEN.CODEC[dest] = new_codec(dest,
+				    {encoding = 'number',
+				     luatype = 'number',
+				     zentype = 'element' })
 end)
 
 When("set '' to '' as ''", function(dest, content, format)
 	empty(dest)
 	local guess = input_encoding(format)
 	guess.raw = content
+	guess.name = dest
 	if format == 'number' then
 		ACK[dest] = tonumber( operate_conversion(guess) )
 	else
 		ACK[dest] = operate_conversion(guess)
 	end
-	ZEN.CODEC[dest] = new_codec(dest, { luatype = luatype(ACK[dest]), zentype = 'element' })
+--	ZEN.CODEC[dest] = new_codec(dest, { luatype = luatype(ACK[dest]), zentype = 'element' })
 end)
 
 When("create the cbor of ''", function(src)
@@ -101,10 +102,10 @@ When("set '' to '' base ''", function(dest, content, base)
 	local num = tonumber(content,bas)
 	ZEN.assert(num, "Invalid numerical conversion for value: "..content)
 	ACK[dest] = num
-	ZEN.CODEC[dest] = { name = dest,
-						encoding = 'number',
-						luatype = 'number',
-						zentype = 'element' }
+	ZEN.CODEC[dest] = new_codec(dest,
+				    {encoding = 'number',
+				     luatype = 'number',
+				     zentype = 'element' })
 end)
 
 local function _delete_f(name)
@@ -211,16 +212,17 @@ local function _math_op(op, l, r)
 	local right, rz = _numinput(r)
 	if lz ~= rz then error("Incompatible numeric arguments", 2) end
 	local codec
+	ACK.result = true -- new_codec checks existance
 	if lz and rz then
-		codec = {	name = 'result',
-					encoding = CONF.output.encoding.name,
-					luatype = 'string',
-					zentype = 'big' }
+		codec = new_codec('result',
+				  {encoding = CONF.output.encoding.name,
+				   luatype = 'string',
+				   zentype = 'big' })
 	else
-		codec =  {	name = 'result',
-					encoding = 'number',
-					luatype = 'number',
-					zentype = 'element' }
+		codec = new_codec('result',
+				  {encoding = 'number',
+				   luatype = 'number',
+				   zentype = 'element' })
 	end
 	return op(left, right), codec
 end
