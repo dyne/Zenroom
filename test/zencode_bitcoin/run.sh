@@ -9,10 +9,7 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
 cat <<EOF | save bitcoin keys.json
-{ "keys": { "bitcoin": {
-  "secret": "cPW7XRee1yx6sujBWeyZiyg18vhhQk9JaxxPdvwGwYX175YCF48G",
-  "address": "tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug" }
-} }
+{ "keys": { "bitcoin": "cPW7XRee1yx6sujBWeyZiyg18vhhQk9JaxxPdvwGwYX175YCF48G" } }
 EOF
 
 cat <<EOF | save bitcoin txinput.json
@@ -37,7 +34,7 @@ cat <<EOF | save bitcoin txinput.json
 }
 EOF
 
-cat <<EOF | debug create_bitcoin_rawtx.zen -a txinput.json -k keys.json \
+cat <<EOF | zexe create_bitcoin_rawtx.zen -a txinput.json -k keys.json \
     | save bitcoin bitcoin_rawtx.json
 rule input encoding base58
 Scenario bitcoin: create a rawtx from unspent
@@ -52,23 +49,48 @@ When I create the bitcoin raw transaction of the 'bitcoin transaction'
 Then print the 'bitcoin raw transaction' as 'hex'
 EOF
 
-cat <<EOF | zexe keygen.zen | save bitcoin keys.json
+###########################
+## REAL RANDOM TRANSACTION
+
+RNGSEED=random
+. ../utils.sh $*
+Z="`detect_zenroom_path` `detect_zenroom_conf`"
+
+function genagent() {
+
+cat <<EOF | zexe keygen.zen | save bitcoin ${1}-keys.json
 rule output encoding base58
 Scenario bitcoin
-Given I am known as 'Satoshi'
+Given I am known as '${1}'
 When I create the bitcoin testnet key
 Then print my 'keys'
 EOF
 
-
-cat <<EOF | debug pubkey.zen -k keys.json | save bitcoin public.json
+cat <<EOF | zexe pubkey.zen -k ${1}-keys.json | save bitcoin ${1}-address.json
 rule output encoding base58
 Scenario bitcoin
-Given I am known as 'Satoshi'
+Given I am known as '${1}'
 and I have my 'keys'
-# and debug
 When I create the bitcoin testnet public key
-Then print my 'bitcoin testnet public key'
+and I create the bitcoin testnet address
+Then print my 'bitcoin testnet address'
 EOF
 
+}
+
+genagent Satoshi
+genagent AlpacaSocks
+
+cat <<EOF | debug rawtx.zen -k AlpacaSocks-address.json -a txinput.json | save bitcoin rawtx_to_AlpacaSocks.json
+rule output encoding base58
+Scenario bitcoin
+Given I have the 'bitcoin testnet address' in 'AlpacaSocks'
+Given I have a 'amount'
+and I have a 'fee'
+and I have a 'unspent'
+When I rename 'bitcoin testnet address' to 'recipient address'
+When I create the bitcoin transaction
+and debug
+Then print the 'unspent'
+EOF
 #and I create the bitcoin testnet public key

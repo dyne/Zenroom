@@ -23,39 +23,75 @@
 local btc = require('crypto_bitcoin')
 
 -- TODO: any mean to verify that the content of address and txid is valid
+local function _get_addr(obj)
+   local res = ZEN.get(obj, '.', O.from_base58, tostring)
+   if not res then error("invalid segwit address",2) end
+   return res
+end
+
+local function _schema_unspent_import(obj)
+   local res = {}
+   for _,v in pairs(obj) do
+      local address = ZEN.get(v,'address', O.from_segwit, tostring) 
+      local amount  = ZEN.get(v,'amount', btc.value_btc_to_satoshi, tostring)
+      local txid    = ZEN.get(v,'txid', OCTET.from_hex, tostring)
+      local vout    = v.vout -- number
+      table.insert(res, { address = address,
+			  amount  = amount,
+			  txid    = txid,
+			  vout    = vout })
+   end
+   return(res)
+end
+local function _schema_unspent_export(obj)
+   local res = { }
+   for _,v in pairs(obj) do
+      -- to_segwit: octet, version number(0), 'bc' or 'tc'
+      I.warn(v)
+      local address = v.address:segwit(0, 'tb')
+      local amount = v.amount:decimal()
+      local txid = v.txid:hex()
+      local vout = v.vout
+      table.insert(res, { address = address,
+			  amount  = amount,
+			  txid    = txid,
+			  vout    = vout })
+   end
+   return res
+end
 
 ZEN.add_schema(
    {
-      recipient_address = O.from_segwit,
-      amount = BIG.from_decimal,
-      fee = BIG.from_decimal,
-      unspent = function(obj)
-	 local res = {}
-	 for _,v in pairs(obj) do
-	    local address = O.from_segwit(v.address)
-	    local amount  = btc.value_btc_to_satoshi(v.amount)
-	    local txid    = OCTET.from_hex(v.txid)
-	    local vout    = v.vout
-	    table.insert(res, { address = address,
-				amount  = amount,
-				txid    = txid,
-				vout    = vout })
-	 end
-	 return(res)
-      end
+      recipient_address = function(obj)
+	 return ZEN.get(obj, '.', O.from_segwit, tostring) end,
+      amount            = function(obj)
+	 return ZEN.get(obj, '.', BIG.from_decimal, tostring) end,
+      fee               = function(obj)
+	 return ZEN.get(obj, '.', BIG.from_decimal, tostring) end,
+
+      unspent = { import = _schema_unspent_import,
+		  export = _schema_unspent_export },
+
+      bitcoin_public_key         = function(obj)
+	 return ZEN.get(obj, '.', O.from_base58, tostring) end,
+      bitcoin_address            = _get_addr,
+      bitcoin_testnet_public_key = function(obj)
+	 return ZEN.get(obj, '.', O.from_base58, tostring) end,
+      bitcoin_testnet_address    = _get_addr,
+
    })
 
 -- generate a keypair in "bitcoin" format (only x coord, 03 prepended)
 When('create the bitcoin testnet key', function()
 	initkeys'bitcoin testnet'
 	local kp = ECDH.keygen()
-	ACK.keys.bitcoin_testnet = { secret = btc.sk_to_wif( kp.private, 'testnet' ) }
+	ACK.keys.bitcoin_testnet = btc.sk_to_wif( kp.private, 'testnet' )
 end)
 
 When('create the bitcoin key', function()
 	initkeys'bitcoin'
 	local kp = ECDH.keygen()
-	ACK.keys.bitcoin = { secret = btc.sk_to_wif( kp.private, 'mainnet' ) }
+	ACK.keys.bitcoin = btc.sk_to_wif( kp.private, 'mainnet' )
 end)
 
 When("create the bitcoin key with secret key ''", function(sec)
@@ -103,10 +139,15 @@ When("create the bitcoin testnet public key", function()
 	new_codec('bitcoin testnet public key', { zentype = 'schema' })
 end)
 
+When("create the bitcoin testnet address", function()
+	empty'bitcoin testnet address'
+	local pk = have'bitcoin testnet public key'
+	ACK.bitcoin_testnet_address = btc.address_from_public_key(pk)
+	new_codec('bitcoin testnet address', { zentype = 'schema' })
+end)
+
 When('create the bitcoin transaction',
      function()
-	havekey'bitcoin'
-	-- now available ACK.keys.bitcoin
 	have'recipient address'
 	have'amount'
 	have'fee'
