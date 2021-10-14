@@ -1,10 +1,13 @@
 local BTC = require('crypto_bitcoin')
 local HDW = require('hdwallet')
 
+local mskgenerated = HDW.master_key_generation(O.from_hex('000102030405060708090a0b0c0d0e0f'))
+I.spy(mskgenerated)
+
 local mpk = HDW.parse_extkey('xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8')
 
 local msk = HDW.parse_extkey('xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHi')
-
+I.spy(msk)
 assert(ZEN.serialize(HDW.neutered(msk)) == ZEN.serialize(mpk))
 
 -- m/0 (hardened)
@@ -36,7 +39,45 @@ m_0sk.secret = nil
 local m_0_1pk = HDW.ckd_pub(m_0sk,BIG.new(O.from_hex('01')))
 m_0sk.secret = save_secret
 local derived = 'xpub6ASuArnXKPbfEwhqN6e3mwBcDTgzisQN1wXN9BJcM47sSikHjJf3UFHKkNAWbWMiGj7Wf5uMash7SyYq527Hqck2AxYysAA7xmALppuCkwQ'
-I.spy(m_0_1pk)
-I.spy(HDW.parse_extkey(derived))
+
 assert(ZEN.serialize(m_0_1pk) == ZEN.serialize(HDW.parse_extkey(derived)))
 assert(HDW.format_extkey(m_0_1pk, HDW.MAINPK) == derived)
+
+-- m/0H/1/2H
+local m_0_1_2sk = HDW.ckd_priv(m_0_1sk,BIG.new(O.from_hex('80000002')))
+local derived = 'xprv9z4pot5VBttmtdRTWfWQmoH1taj2axGVzFqSb8C9xaxKymcFzXBDptWmT7FwuEzG3ryjH4ktypQSAewRiNMjANTtpgP4mLTj34bhnZX7UiM'
+assert(ZEN.serialize(m_0_1_2sk) == ZEN.serialize(HDW.parse_extkey(derived)))
+assert(HDW.format_extkey(m_0_1_2sk, HDW.MAINSK) == derived)
+
+local m_0_1_2pk = HDW.neutered(m_0_1_2sk)
+local derived = 'xpub6D4BDPcP2GT577Vvch3R8wDkScZWzQzMMUm3PWbmWvVJrZwQY4VUNgqFJPMM3No2dFDFGTsxxpG5uJh7n7epu4trkrX7x7DogT5Uv6fcLW5'
+assert(ZEN.serialize(m_0_1_2pk) == ZEN.serialize(HDW.parse_extkey(derived)))
+assert(HDW.format_extkey(m_0_1_2pk, HDW.MAINPK) == derived)
+
+-- m/0H/1/2H/2
+local m_0_1_2_2sk = HDW.ckd_priv(m_0_1_2sk,BIG.new(O.from_hex('02')))
+local derived = 'xprvA2JDeKCSNNZky6uBCviVfJSKyQ1mDYahRjijr5idH2WwLsEd4Hsb2Tyh8RfQMuPh7f7RtyzTtdrbdqqsunu5Mm3wDvUAKRHSC34sJ7in334'
+assert(ZEN.serialize(m_0_1_2_2sk) == ZEN.serialize(HDW.parse_extkey(derived)))
+assert(HDW.format_extkey(m_0_1_2_2sk, HDW.MAINSK) == derived)
+
+local m_0_1_2_2pk = HDW.ckd_pub(m_0_1_2sk,BIG.new(O.from_hex('02')))
+local derived = 'xpub6FHa3pjLCk84BayeJxFW2SP4XRrFd1JYnxeLeU8EqN3vDfZmbqBqaGJAyiLjTAwm6ZLRQUMv1ZACTj37sR62cfN7fe5JnJ7dh8zL4fiyLHV'
+assert(ZEN.serialize(m_0_1_2_2pk) == ZEN.serialize(HDW.parse_extkey(derived)))
+assert(HDW.format_extkey(m_0_1_2_2pk, HDW.MAINPK) == derived)
+
+local m_0_1_2_2pk = HDW.ckd_pub(m_0_1_2pk,BIG.new(O.from_hex('02')))
+local derived = 'xpub6FHa3pjLCk84BayeJxFW2SP4XRrFd1JYnxeLeU8EqN3vDfZmbqBqaGJAyiLjTAwm6ZLRQUMv1ZACTj37sR62cfN7fe5JnJ7dh8zL4fiyLHV'
+assert(ZEN.serialize(m_0_1_2_2pk) == ZEN.serialize(HDW.parse_extkey(derived)))
+assert(HDW.format_extkey(m_0_1_2_2pk, HDW.MAINPK) == derived)
+
+
+-- m/0H/1/2H/2/1000000000
+local m_0_1_2_2_xsk = HDW.ckd_priv(m_0_1_2_2sk,BIG.from_decimal('1000000000'))
+local derived = 'xprvA41z7zogVVwxVSgdKUHDy1SKmdb533PjDz7J6N6mV6uS3ze1ai8FHa8kmHScGpWmj4WggLyQjgPie1rFSruoUihUZREPSL39UNdE3BBDu76'
+assert(ZEN.serialize(m_0_1_2_2_xsk) == ZEN.serialize(HDW.parse_extkey(derived)))
+assert(HDW.format_extkey(m_0_1_2_2_xsk, HDW.MAINSK) == derived)
+
+local m_0_1_2_2_xpk = HDW.ckd_pub(m_0_1_2_2sk,BIG.from_decimal('1000000000'))
+local derived = 'xpub6H1LXWLaKsWFhvm6RVpEL9P4KfRZSW7abD2ttkWP3SSQvnyA8FSVqNTEcYFgJS2UaFcxupHiYkro49S8yGasTvXEYBVPamhGW6cFJodrTHy'
+assert(ZEN.serialize(m_0_1_2_2_xpk) == ZEN.serialize(HDW.parse_extkey(derived)))
+assert(HDW.format_extkey(m_0_1_2_2_xpk, HDW.MAINPK) == derived)

@@ -483,11 +483,13 @@ static int ecdh_aead_decrypt(lua_State *L) {
 
 static int ecdh_mul_gen(lua_State *L) {
         ECP_SECP256K1 g;
-	big *n = big_arg(L, 1); SAFE(n);
+	BIG_256_28 n;
+	octet *n_oct = o_arg(L, 1); SAFE(n_oct);
+	BIG_256_28_fromBytesLen(n, n_oct->val, n_oct->len);
 	ECP_SECP256K1_generator(&g);
 
 	octet *ng = o_new(L, 65); SAFE(ng);
-	ECP_SECP256K1_mul(&g, n->val);
+	ECP_SECP256K1_mul(&g, n);
 	ECP_SECP256K1_toOctet(ng, &g, false);
 
 	return 1;

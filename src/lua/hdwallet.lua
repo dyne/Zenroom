@@ -166,7 +166,7 @@ end
 -- It is only defined for non-hardened child keys (i <= 0x80000000)
 function HDW.ckd_pub(parent_key, i)
    local newkey = {}
-   local l
+   local l, lR, lL
    local s512 = HASH.new('sha512')
 
    -- check validity of index
@@ -178,6 +178,7 @@ function HDW.ckd_pub(parent_key, i)
       newkey = HDW.neutered(HDW.ckd_priv(parent_key, i))
    else
       pk = HDW.getPublic(parent_key)
+      newkey.child_number = i
       
       l = parent_key.public .. to_uint_be(i, 4)
       l = HASH.hmac(s512, parent_key.chain_code, l)
@@ -202,6 +203,24 @@ function HDW.ckd_pub(parent_key, i)
    end
 
    return newkey
+end
+
+function HDW.master_key_generation(seed)
+   if not seed then
+      seed = O.random(32)
+   end
+   local s512 = HASH.new('sha512')
+   local l = HASH.hmac(s512, O.from_string('Bitcoin seed'), s)
+   local lL = l:sub( 1,32)
+   -- check Ll < order of the curve
+   local lR = l:sub(33,64)
+   return {
+      secret = lL,
+      chain_code = lR,
+      level = 0,
+      fingerprint_parent = O.from_hex('00000000'),
+      child_number = O.from_hex('00000000'),
+   }
 end
 
 
