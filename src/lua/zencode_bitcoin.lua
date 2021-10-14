@@ -32,10 +32,14 @@ end
 local function _schema_unspent_import(obj)
    local res = {}
    for _,v in pairs(obj) do
+      -- compatibility with electrum and bitcoin core
+      local n_amount = fif( v.amount, 'amount', 'value')
+      local n_txid = fif( v.txid, 'txid', 'prevout_hash')
+      local n_vout = fif( v.vout, 'vout', 'prevout_n')
       local address = ZEN.get(v,'address', O.from_segwit, tostring) 
-      local amount  = ZEN.get(v,'amount', btc.value_btc_to_satoshi, tostring)
-      local txid    = ZEN.get(v,'txid', OCTET.from_hex, tostring)
-      local vout    = v.vout -- number
+      local amount  = ZEN.get(v,n_amount, btc.value_btc_to_satoshi, tostring)
+      local txid    = ZEN.get(v,n_txid, OCTET.from_hex, tostring)
+      local vout    = v[n_vout] -- number
       table.insert(res, { address = address,
 			  amount  = amount,
 			  txid    = txid,
@@ -47,9 +51,8 @@ local function _schema_unspent_export(obj)
    local res = { }
    for _,v in pairs(obj) do
       -- to_segwit: octet, version number(0), 'bc' or 'tc'
-      I.warn(v)
       local address = v.address:segwit(0, 'tb')
-      local amount = v.amount:decimal()
+      local amount = btc.value_satoshi_to_btc(v.amount)
       local txid = v.txid:hex()
       local vout = v.vout
       table.insert(res, { address = address,
@@ -65,9 +68,9 @@ ZEN.add_schema(
       recipient_address = function(obj)
 	 return ZEN.get(obj, '.', O.from_segwit, tostring) end,
       amount            = function(obj)
-	 return ZEN.get(obj, '.', BIG.from_decimal, tostring) end,
+	 return ZEN.get(obj, '.', btc.value_btc_to_satoshi, tostring) end,
       fee               = function(obj)
-	 return ZEN.get(obj, '.', BIG.from_decimal, tostring) end,
+	 return ZEN.get(obj, '.', btc.value_btc_to_satoshi, tostring) end,
 
       unspent = { import = _schema_unspent_import,
 		  export = _schema_unspent_export },
