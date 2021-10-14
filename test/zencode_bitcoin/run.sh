@@ -44,6 +44,7 @@ and I have a 'fee'
 and I have a 'recipient address'
 and I have a 'unspent'
 When I create the bitcoin transaction
+Then print the 'bitcoin transaction' as 'hex'
 When I sign with bitcoin the 'bitcoin transaction'
 When I create the bitcoin raw transaction of the 'bitcoin transaction'
 Then print the 'bitcoin raw transaction' as 'hex'
