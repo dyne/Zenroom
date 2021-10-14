@@ -207,7 +207,7 @@ function HDW.ckd_pub(parent_key, i)
       lL = BIG.new(l:sub( 1,32))
       lR = l:sub(33,64)
 
-      local nG = ECDH.mul_gen(lL)
+      local nG = ECDH.pubgen(lL) -- = n * G
 
       newkey.public = ECDH.compress_public_key(ECDH.add(nG, parent_key.public))
       -- check if lR >= order curve, in that case return ckd_priv(parent_key, i+1)

@@ -481,20 +481,6 @@ static int ecdh_aead_decrypt(lua_State *L) {
 	return 2;
 }
 
-static int ecdh_mul_gen(lua_State *L) {
-        ECP_SECP256K1 g;
-	BIG_256_28 n;
-	octet *n_oct = o_arg(L, 1); SAFE(n_oct);
-	BIG_256_28_fromBytesLen(n, n_oct->val, n_oct->len);
-	ECP_SECP256K1_generator(&g);
-
-	octet *ng = o_new(L, 65); SAFE(ng);
-	ECP_SECP256K1_mul(&g, n);
-	ECP_SECP256K1_toOctet(ng, &g, false);
-
-	return 1;
-}
-
 static int ecdh_add(lua_State *L) {
 	octet *pk1 = o_arg(L, 1); SAFE(pk1);
 	if((*ECDH.ECP__PUBLIC_KEY_VALIDATE)(pk1)!=0) {
@@ -540,7 +526,6 @@ int luaopen_ecdh(lua_State *L) {
 		{"public_xy", ecdh_pub_xy},
 		{"pubxy", ecdh_pub_xy},
 		{"add", ecdh_add},
-		{"mul_gen", ecdh_mul_gen},
 		{NULL,NULL}};
 	const struct luaL_Reg ecdh_methods[] = {
 		{"__gc", ecdh_destroy},
