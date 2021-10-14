@@ -373,6 +373,47 @@ static int big_from_decimal_string(lua_State *L) {
 	BIG_norm(num->val);
 	return 1;
 }
+/*
+  fixed size encoding for integer with big endian order
+  @param num number that has to be coverted
+  @param len bytes size
+  @param big_endian use big endian order (if omitted by default is true)
+*/
+static int big_to_fixed_octet(lua_State *L) {
+        big *num = big_arg(L,1); SAFE(num);
+	octet* o = new_octet_from_big(L,num);
+	int i;
+	lua_Number len = lua_tointegerx(L,2,&i);
+	if(!i) {
+		lerror(L, "O.from_number input is not a number");
+		return 0;
+	}
+	int big_endian = lua_toboolean(L, 3);
+	int int_len = len;
+	if(o->len < len) {
+		octet* padded_oct = o_new(L, len);
+		for(i=0; i<o->len; i++) {
+		  padded_oct->val[int_len-(o->len)+i] = o->val[i];
+		}
+		for(i=0; i<len-o->len; i++) {
+			padded_oct->val[i] = '\0';
+		}
+		padded_oct->len = len;
+		o = padded_oct;
+	}
+	if(!big_endian) {
+	        register int i=0, j=o->len-1;
+		register char t;
+	        while(i < j) {
+		        t = o->val[j];
+		        o->val[j] = o->val[i];
+			o->val[i] = t;
+			i++; j--;
+		}
+
+	}
+	return 1;
+}
 
 // Slow but only for export
 // Works only for positive numbers
@@ -932,6 +973,7 @@ int luaopen_big(lua_State *L) {
 		{"parity",big_parity},
 		{"__gc", big_destroy},
 		{"__tostring",big_to_hex},
+		{"fixed",big_to_fixed_octet},
 		{NULL,NULL}
 	};
 	zen_add_class("big", big_class, big_methods);

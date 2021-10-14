@@ -23,7 +23,15 @@ local BTC = require('crypto_bitcoin')
 
 local HDW = {}
 
+-- an extended key is a table with the fields
+-- secret, chain_code, level, fingerprint_parent, child_number
+-- a private key may have public=nil
+-- a public key have secret=nil
+
+
 -- parse extended key
+-- @param data octet to be parsed
+-- @return extended key
 function HDW.parse_extkey(data)
    data = O.from_base58(data)
    -- check checksum
@@ -60,18 +68,6 @@ function HDW.parse_extkey(data)
    return extkey
 end
 
--- fixed size encoding for integer
-local function to_uint_be(num, nbytes)
-   if type(num) ~= "zenroom.big" then
-      num = INT.new(num)
-   end
-   num = num:octet()
-   if #num < nbytes then
-      num = O.zero(nbytes - #num) .. num
-   end
-   return num
-end
-
 HDW.MAINPK = O.from_hex('0488B21E')
 HDW.TESTPK = O.from_hex('043587CF')
 HDW.MAINSK = O.from_hex('0488ADE4')
@@ -101,9 +97,9 @@ function HDW.format_extkey(extkey, version)
 
    data = data .. O.from_hex(string.format("%02x", extkey.level))
 
-   data = data .. to_uint_be(extkey.fingerprint_parent, 4)
+   data = data .. BIG.new(extkey.fingerprint_parent):fixed(4)
 
-   data = data .. to_uint_be(extkey.child_number, 4)
+   data = data .. BIG.new(extkey.child_number):fixed(4)
 
    data = data .. extkey.chain_code
 
@@ -121,7 +117,9 @@ function HDW.format_extkey(extkey, version)
    return data:base58()
 end
 
-
+-- Child key derivation private key
+-- @param parent_key extended key object
+-- @param i index
 function HDW.ckd_priv(parent_key, i)
    local newkey = {}
    local l
@@ -183,8 +181,9 @@ function HDW.neutered(parent_key)
    return newkey      
 end
 
-
--- It is only defined for non-hardened child keys (i <= 0x80000000)
+-- Child key derivation public key
+-- @param parent_key extended key object
+-- @param i it is only defined for non-hardened child keys (i <= 0x80000000)
 function HDW.ckd_pub(parent_key, i)
    local newkey = {}
    local l, lR, lL
@@ -201,7 +200,7 @@ function HDW.ckd_pub(parent_key, i)
       pk = HDW.getPublic(parent_key)
       newkey.child_number = i
       
-      l = parent_key.public .. to_uint_be(i, 4)
+      l = parent_key.public .. i:fixed(4)
       l = HASH.hmac(s512, parent_key.chain_code, l)
 
       lL = BIG.new(l:sub( 1,32))

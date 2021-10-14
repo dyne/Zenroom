@@ -481,6 +481,15 @@ static int ecdh_aead_decrypt(lua_State *L) {
 	return 2;
 }
 
+/*
+   Takes two points on the curve SECP256K1 (in the form of a public key),
+   add them and return the point (as a public key not compressed)
+
+   @param pk1 addendum point
+   @param pk2 addendum point
+   @return sum result
+*/
+
 static int ecdh_add(lua_State *L) {
 	octet *pk1 = o_arg(L, 1); SAFE(pk1);
 	if((*ECDH.ECP__PUBLIC_KEY_VALIDATE)(pk1)!=0) {
