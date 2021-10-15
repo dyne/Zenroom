@@ -564,6 +564,15 @@ static int from_bin(lua_State *L) {
 	return 1;
 }
 
+/*
+  In the bitcoin world, addresses are the hash of the public key (binary data).
+  However, the user usually knows them in some encoded form (which also include
+  some error check mechanism, to improve security against typos). Bech32 is the
+  format used with segwit transactions.
+  @param s Address encoded as Bech32(m)
+  @treturn[1] Address as binary data
+  @treturn[2] Segwit version (version 0 is Bech32, version >0 is Bechm)
+*/
 static int from_segwit_address(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	if(!s) {
@@ -595,7 +604,15 @@ static int from_segwit_address(lua_State *L) {
 
 	return 2;
 }
-
+/*
+  For an introduction see `from_segwit_address`
+  HRP (human readble part) are the first characters of the address, they can
+  be bc (bitcoin network) or tb (testnet network)
+  @param o Address in binary format (octet with the result of the hash160)
+  @param witver Segwit version
+  @param s HRP
+  @return Bech32(m) encoded string
+*/
 static int to_segwit_address(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
 	if(!o->len) { lua_pushnil(L); return 1; }
@@ -622,11 +639,16 @@ static int to_segwit_address(lua_State *L) {
 	}
 
 	// HRP to lower case
+	// the string the user pass could be longer than 2 characters
+	// and it could be either lower case of upper case
+	// First of all I normalize it:
+	// - it can be at most 2 chars
+	// - it must be lower case
 	char hrp[3];
 	register int i = 0;
 	while(i < 2 && s[i] != '\0') {
 		if(s[i] > 'A' && s[i] < 'Z') {
-			hrp[i] = s[i] - 'A' + 'a'; // to upper case
+			hrp[i] = s[i] - 'A' + 'a'; // to lower case
 		} else {
 			hrp[i] = s[i];
        		}
@@ -1017,14 +1039,22 @@ static int chop(lua_State *L) {
 	int len = luaL_optnumber(L, 2, 0);
 	if(len > src->len) {
 		lerror(L, "cannot chop octet of size %i to higher length %i",src->len, len);
-		return 0; }
+		return 0;
+	} else if(len < 0) {
+ 	        // OCT_chop assign len to the len of the new octet without checks
+		lerror(L, "cannot chop octet with negative size %d",len);
+		return 0;
+	}
 	octet *l = o_dup(L, src); SAFE(l);
 	octet *r = o_new(L, src->len - len); SAFE(r);
 	OCT_chop(l, r, len);
 	return 2;
 }
 
-
+/*
+  Build the byte in reverse order with respect
+  to the one which is given.
+*/
 static int reverse(lua_State *L) {
 	octet *src = o_arg(L, 1); SAFE(src);
 

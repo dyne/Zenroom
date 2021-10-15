@@ -380,6 +380,7 @@ static int big_from_decimal_string(lua_State *L) {
   @param big_endian use big endian order (if omitted by default is true)
 */
 static int big_to_fixed_octet(lua_State *L) {
+        int n_args = lua_gettop(L);
         big *num = big_arg(L,1); SAFE(num);
 	octet* o = new_octet_from_big(L,num);
 	int i;
@@ -388,7 +389,11 @@ static int big_to_fixed_octet(lua_State *L) {
 		lerror(L, "O.from_number input is not a number");
 		return 0;
 	}
-	int big_endian = lua_toboolean(L, 3);
+
+	int big_endian = 1;
+	if(n_args > 2) {
+	        big_endian = lua_toboolean(L, 3);
+	}
 	int int_len = len;
 	if(o->len < len) {
 		octet* padded_oct = o_new(L, len);
@@ -415,8 +420,12 @@ static int big_to_fixed_octet(lua_State *L) {
 	return 1;
 }
 
-// Slow but only for export
-// Works only for positive numbers
+/*
+  Slow but only for export
+  Works only for positive numbers
+  @param num number to be converted (zenroom.big)
+  @return string which represent a decimal number (only digits 0-9)
+*/
 static int big_to_decimal_string(lua_State *L) {
        	big *num = big_arg(L,1); SAFE(num);
 	BIG_norm(num->val);

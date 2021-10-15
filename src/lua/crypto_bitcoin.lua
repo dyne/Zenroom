@@ -20,6 +20,9 @@
 
 local btc = {}
 
+-- A bitcoin address is unique given the public key
+-- address = RIPEMD160(SHA256(public_key))
+-- the composition of RIPEMD160 and SHA256 is known as HASH160
 function btc.address_from_public_key(public_key)
    local SHA256 = HASH.new('sha256')
    local RMD160 = HASH.new('ripemd160')
@@ -32,6 +35,11 @@ function btc.dsha256(msg)
    return SHA256:process(SHA256:process(msg))
 end
 
+-- The user knows his private key in the WIF format (base58)
+-- This function compute the bytes of the private key (an octet)
+-- from the WIF format
+-- @param wif Private key in WIF format
+-- @return Private key octet
 function btc.wif_to_sk(wif)
    if not type(wif) == 'zenroom.octet' then
       error("invalid bitcoin key type, not an octet: "..type(wif), 3) end
@@ -71,6 +79,7 @@ function btc.sk_to_wif(sk, vs)
    return res
 end
 
+-- Compute the compressed public key (pubc) from the secret key
 function btc.sk_to_pubc(sk)
    if not #sk == 32 then
       error("Invalid bitcoin key size: "..#sk) end
@@ -253,7 +262,11 @@ function btc.decode_raw_transaction(raw, sender_address, amounts_spent)
    return tx
 end
 
+-- create an octet which is a raw transaction
+-- works only with Bech32 v0 addresses
 -- with not coinbase input
+-- @param tx table which reppresent a transaction
+-- @return octet raw transaction
 function btc.build_raw_transaction(tx)
    local raw, script
    raw = O.new()
@@ -342,6 +355,10 @@ local function encode_with_prepend(bytes)
    return bytes
 end
 
+-- DER is the format used by bitcoin to encode
+-- ECDSA signatures
+-- @param sig signature table (with r and s)
+-- @return octet encoded with DER format
 function btc.encode_der_signature(sig)
    local res, tmp;
 
@@ -378,10 +395,12 @@ local function read_number_from_der(raw, pos)
       data,
       pos+size
    }
-   
-   
 end
 
+-- DER is the format used by bitcoin to encode
+-- ECDSA signatures
+-- @param raw octet encoded with DER format
+-- @return signature table (with r and s)
 function btc.decode_der_signature(raw)
    local sig, tmp, size;
    sig = {}
@@ -402,6 +421,8 @@ function btc.decode_der_signature(raw)
    return sig
 end
 
+-- Hash required in the raw transaction (is exposed to be able to use it
+-- in the tests)
 function btc.hash_prevouts(tx)
    local raw
    local H
@@ -416,6 +437,8 @@ function btc.hash_prevouts(tx)
    return H:process(H:process(raw))
 end
 
+-- Hash required in the raw transaction (is exposed to be able to use it
+-- in the tests)
 function btc.hash_sequence(tx)
    local raw
    local H
@@ -436,6 +459,8 @@ function btc.hash_sequence(tx)
    return H:process(H:process(raw))
 end
 
+-- Hash required in the raw transaction (is exposed to be able to use it
+-- in the tests)
 function btc.hash_outputs(tx)
    local raw
    local H
@@ -540,13 +565,12 @@ function btc.verify_witness(tx)
    return true
 end
 
--- -- Pay attention to the amount it has to be multiplied for 10^8
-
--- unspent: list of unspent transactions
--- to: receiver bitcoin address (must be segwit/Bech32!)
--- amount: satoshi to transfer (BIG integer)
-
--- return nil if it cannot build the transaction
+-- Pay attention to the amount, it has to be multiplied for 10^8
+-- @param unspent list of unspent transactions
+-- @param to receiver bitcoin address (must be segwit/Bech32!)
+-- @param amount satoshi to transfer (BIG integer)
+-- @param fee satoshi of fee we want to pay
+-- @return nil if the transaction cannot built
 -- (for example if there are not enough founds)
 function btc.build_tx_from_unspent(unspent, to, amount, fee)
    local tx, i, currentAmount
@@ -595,6 +619,9 @@ function btc.build_tx_from_unspent(unspent, to, amount, fee)
    return tx
 end
 
+-- 1 BTC = 1e8 satoshi
+-- @param value number of BTC as string (digits with a dot)
+-- @return number of sathosi as zenroom.big
 function btc.value_btc_to_satoshi(value)
    pos = value:find("%.")
    decimals = value:sub(pos+1, #value)
@@ -608,6 +635,9 @@ function btc.value_btc_to_satoshi(value)
    return BIG.from_decimal(value:sub(1, pos-1) .. decimals)
 end
 
+-- 1 BTC = 1e8 satoshi
+-- @param value number of sathosi as zenroom.big
+-- @return number of BTC as string (digits with a dot)
 function btc.value_satoshi_to_btc(value)
    local str_value = value:decimal()
    local len = #str_value
