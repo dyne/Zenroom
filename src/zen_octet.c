@@ -1308,6 +1308,7 @@ int luaopen_octet(lua_State *L) {
 		{"bytefreq", entropy_bytefreq},
 		{"hamming", bitshift_hamming_distance},
 		{"popcount_hamming", popcount_hamming_distance},
+		{"to_segwit", to_segwit_address},
 		{"from_segwit", from_segwit_address},
 		{NULL,NULL}
 	};

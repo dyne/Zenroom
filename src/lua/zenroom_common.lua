@@ -156,7 +156,7 @@ local function _native(data, fun)
 	elseif iszen(t) then
 		return fun(data:octet())
 	else
-		error("Cannot export data type: "..t)
+		error("Cannot export data type: "..t, 2)
 	end
 end
 -- gets a string and returns the associated function, string and prefix

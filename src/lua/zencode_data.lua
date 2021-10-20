@@ -394,10 +394,7 @@ function new_codec(cname, parameters, clone)
       res = ZEN.CODEC[clone]
       res.name = name
    else
-      res = {
-         name = name,
-         encoding = CONF.output.encoding.name
-      }
+      res = { name = name }
    end
    -- overwrite with paramenters in argument
    if parameters then

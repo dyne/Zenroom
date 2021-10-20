@@ -63,119 +63,96 @@ local function _schema_unspent_export(obj)
    return res
 end
 
+local function _address_import(obj)
+   return { raw = ZEN.get(obj, '.', O.from_segwit, tostring) }
+end
+local function _address_export(obj)
+   return O.to_segwit(obj.raw, obj.version, O.to_string(obj.network))
+end
+
 ZEN.add_schema(
    {
-      recipient_address = function(obj)
-	 return ZEN.get(obj, '.', O.from_segwit, tostring) end,
-      amount            = function(obj)
+      satoshi_amount            = function(obj)
 	 return ZEN.get(obj, '.', btc.value_btc_to_satoshi, tostring) end,
-      fee               = function(obj)
+      satoshi_fee               = function(obj)
 	 return ZEN.get(obj, '.', btc.value_btc_to_satoshi, tostring) end,
 
-      unspent = { import = _schema_unspent_import,
+      bitcoin_unspent = { import = _schema_unspent_import,
 		  export = _schema_unspent_export },
 
-      bitcoin_public_key         = function(obj)
-	 return ZEN.get(obj, '.', O.from_base58, tostring) end,
-      bitcoin_address            = _get_addr,
-      bitcoin_testnet_public_key = function(obj)
-	 return ZEN.get(obj, '.', O.from_base58, tostring) end,
-      bitcoin_testnet_address    = _get_addr,
+      bitcoin_address = { import = _address_import,
+			  export = _address_export },
 
    })
 
 -- generate a keypair in "bitcoin" format (only x coord, 03 prepended)
-When('create the bitcoin testnet key', function()
-	initkeys'bitcoin testnet'
-	local kp = ECDH.keygen()
-	ACK.keys.bitcoin_testnet = btc.sk_to_wif( kp.private, 'testnet' )
-end)
-
 When('create the bitcoin key', function()
 	initkeys'bitcoin'
 	local kp = ECDH.keygen()
-	ACK.keys.bitcoin = btc.sk_to_wif( kp.private, 'mainnet' )
+	ACK.keys.bitcoin = kp.private
 end)
 
 When("create the bitcoin key with secret key ''", function(sec)
 		local sk = have(sec)
-		local wif
-		if #sk == 32 then -- bare sk
-		   wif = btc.sk_to_wif(sk)
-		elseif #sk == 32+6 then -- wif
+		local res
+		if #sk == 32+6 then -- wif
 		   btc.wif_to_sk(sk) -- checks
-		   wif = sk
+		   res = sk
+		elseif #sk == 32 then
+		   res = sk
 		else
 		   error("Invalid bitcoin key size for "..sec..": "..#sk)
 		end
 		initkeys'bitcoin'
-		ACK.keys.bitcoin = wif
-end)
-When("create the bitcoin testnet key with secret key ''", function(sec)
-		local sk = have(sec)
-		local wif
-		if #sk == 32 then -- bare sk
-		   wif = btc.sk_to_wif(sk)
-		elseif #sk == 32+6 then -- wif
-		   btc.wif_to_sk(sk) -- checks
-		   wif = sk
-		else
-		   error("Invalid bitcoin key size for "..sec..": "..#sk)
-		end
-		initkeys'bitcoin testnet'
-		ACK.keys.bitcoin_testnet = wif
+		ACK.keys.bitcoin = res
 end)
 
 When("create the bitcoin public key", function()
 	empty'bitcoin public key'
-	local wif = havekey'bitcoin'
-	local pk = btc.wif_to_sk(wif)
-	ACK.bitcoin_public_key = btc.sk_to_pubc(pk)
+	local sk = havekey'bitcoin'
+	ACK.bitcoin_public_key = btc.sk_to_pubc(sk)
 	new_codec('bitcoin public key', { zentype = 'schema' })
 end)
 
-When("create the bitcoin testnet public key", function()
-	empty'bitcoin testnet public key'
-	local wif = havekey'bitcoin testnet'
-	local pk = btc.wif_to_sk(wif)
-	ACK.bitcoin_testnet_public_key = btc.sk_to_pubc(pk)
-	new_codec('bitcoin testnet public key', { zentype = 'schema' })
+When("create the bitcoin testnet wif key", function()
+	empty'bitcoin testnet wif key'
+	local sk = havekey'bitcoin'
+	ACK.bitcoin_testnet_wif_key = btc.sk_to_wif(sk, 'testnet')
+	new_codec('bitcoin testnet wif key',
+		  { zentype = 'element',
+		    encoding = 'base58' })
 end)
 
-When("create the bitcoin testnet address", function()
+When("create the bitcoin address", function()
 	empty'bitcoin testnet address'
-	local pk = have'bitcoin testnet public key'
-	ACK.bitcoin_testnet_address = btc.address_from_public_key(pk)
-	new_codec('bitcoin testnet address', { zentype = 'schema' })
+	local pk = have'bitcoin public key'	
+	ACK.bitcoin_address = { raw = btc.address_from_public_key(pk),
+				version = 0,
+				network = O.from_string('tb') }
+	new_codec('bitcoin address', { zentype = 'schema',
+				       encoding = 'complex' })
 end)
 
-When('create the bitcoin transaction',
-     function()
-	have'recipient address'
-	have'amount'
-	have'fee'
-
-	local tx = btc.build_tx_from_unspent(ACK.unspent, ACK.recipient_address, ACK.amount, ACK.fee)
-	ZEN.assert(tx ~= nil, "Not enough bitcoins in the unspent list")
-	
+When('create the bitcoin transaction', function()
+	local to      = have'recipient address'
+	local q       = have'satoshi amount'
+	local fee     = have'satoshi fee'
+	local unspent = have'bitcoin unspent'
+	local tx = btc.build_tx_from_unspent(unspent, to, q, fee)
+	ZEN.assert(tx, "Not enough bitcoins in the unspent list")
 	ACK.bitcoin_transaction = tx
-     end
-)
-When("sign with bitcoin the ''",
-     function(_bitcoin_transaction)
+end)
 
-	local bitcoin_transaction = have(_bitcoin_transaction)
-	ZEN.assert(bitcoin_transaction.witness == nil, "The bitcoin transaction has already been signed")
+When("sign the bitcoin testnet transaction", function()
+	local sk = havekey'bitcoin testnet'
+	local tx = have('bitcoin testnet transaction')
+	ZEN.assert(not tx.witness, "The bitcoin testnet transaction is already signed")
+	tx.witness = btc.build_witness(tx, sk)
+end)
 
-	bitcoin_transaction.witness = btc.build_witness(ACK.bitcoin_transaction, ACK.keys.bitcoin.secret)
-
-     end
-)
-When("create the bitcoin raw transaction of the ''",
-     function(_bitcoin_transaction)
-
-	local bitcoin_transaction = have(_bitcoin_transaction)
-
-	ACK.bitcoin_raw_transaction = btc.build_raw_transaction(bitcoin_transaction)
+When("create the bitcoin raw transaction of ''", function(tname)
+	empty'bitcoin raw transaction'
+	local tx = have(tname)
+	ACK.bitcoin_raw_transaction = btc.build_raw_transaction(tx)
      end
 )

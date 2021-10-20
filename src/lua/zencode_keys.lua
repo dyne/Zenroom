@@ -110,10 +110,7 @@ ZEN.add_schema(
                 res.reflow = ZEN.get(obj, 'reflow', INT.new)
             end
 	    if obj.bitcoin then
-	       res.bitcoin = O.from_base58(obj.bitcoin)
-	    end
-	    if obj.bitcoin_testnet then
-	       res.bitcoin_testnet = O.from_base58(obj.bitcoin_testnet)
+	       res.bitcoin = ZEN.get(obj, 'bitcoin')
 	    end
             return (res)
         end

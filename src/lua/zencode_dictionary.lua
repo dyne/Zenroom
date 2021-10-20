@@ -240,3 +240,14 @@ When("for each dictionary in '' append '' to ''", function(arr, right, left)
 		vv[left] = l..r
 	end
 end)
+
+When("move '' in ''", function(src, dict)
+	local s = have(src)
+	local d = have(dict)
+	ZEN.assert(luatype(d) == 'table', "Object is not a table: "..dict)
+	ZEN.assert(ZEN.CODEC[dict].zentype == 'dictionary'
+		   or ZEN.CODEC[dict].zentype == 'schema',
+		   "Object is not a schema or dictionary: "..dict)
+	d[src] = s
+	ACK[src] = nil
+end)

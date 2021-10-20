@@ -46,7 +46,19 @@ local function then_outcast(val, sch)
 	      if not isdictionary(val) then
 		 error('Complex schema value is not a dictionary: '..sch, 2)
 	      end
-	      return fun(val)
+	      -- check that the schema has an hardcoded encoding
+	      if ZEN.CODEC[sch] and ZEN.CODEC[sch].encoding
+		 and  ZEN.CODEC[sch].encoding ~= 'complex' then
+		 local res = fun(val)
+		 local enc = guess_outcast( ZEN.CODEC[sch].encoding )
+		 if luatype(res) == 'table' then
+		    return deepmap(enc, res)
+		 else
+		    return enc(res)
+		 end
+	      else
+		 return fun(val)
+	      end
 	   else
 	      if luatype(val) == 'table' then
 		 return deepmap(fun, val)
