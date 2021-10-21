@@ -70,6 +70,7 @@ local function _address_export(obj)
    return O.to_segwit(obj.raw, obj.version, O.to_string(obj.network))
 end
 
+
 ZEN.add_schema(
    {
       satoshi_amount            = function(obj)
@@ -143,16 +144,16 @@ When('create the bitcoin transaction', function()
 	ACK.bitcoin_transaction = tx
 end)
 
-When("sign the bitcoin testnet transaction", function()
-	local sk = havekey'bitcoin testnet'
-	local tx = have('bitcoin testnet transaction')
-	ZEN.assert(not tx.witness, "The bitcoin testnet transaction is already signed")
+When("sign the bitcoin transaction", function()
+	local sk = havekey'bitcoin'
+	local tx = have('bitcoin transaction')
+	ZEN.assert(not tx.witness, "The bitcoin transaction is already signed")
 	tx.witness = btc.build_witness(tx, sk)
 end)
 
-When("create the bitcoin raw transaction of ''", function(tname)
+When("create the bitcoin raw transaction", function()
+	local tx = have'bitcoin transaction'
 	empty'bitcoin raw transaction'
-	local tx = have(tname)
 	ACK.bitcoin_raw_transaction = btc.build_raw_transaction(tx)
      end
 )

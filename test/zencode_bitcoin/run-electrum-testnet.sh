@@ -8,47 +8,21 @@
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 
 # five satoshi
-amount="0.00000005"
+amount="0.00000666"
 # one satoshi
-fee="0.00000001"
+   fee="0.00001000"
+# recipient's testnet address (alberto's)
+to="tb1q73czlxl7us4s6num5sjlnq6r0yuf8uh5clr2tm"
 
 . ./common.sh
 
 genagent alpaca
 
-cat <<EOF | debug wifkey.zen -k alpaca-keys.json | save bitcoin alpaca-wif.json
-Scenario bitcoin
-Given I am known as 'alpaca'
-and I have my 'keys'
-When I create the bitcoin testnet wif key
-Then print my 'bitcoin testnet wif key' as 'base58'
-EOF
+genwallet alpaca
 
-electrum --testnet close_wallet
-rm -f ~/.electrum/testnet/wallets/default_wallet
+echo "Wait 5 seconds to gather unspent list"
+sleep 5
 
-wif="p2wpkh:`cat alpaca-wif.json | jq '.alpaca' | sed 's/\"//g'`"
-echo "WIF: $wif"
-electrum --testnet restore $wif
-
-addr=`cat alpaca-address.json | jq '.bitcoin_address' | sed 's/\"//g'`
-
-# alberto's testnet address
-to="tb1q73czlxl7us4s6num5sjlnq6r0yuf8uh5clr2tm"
-
-electrum --testnet setconfig rpcuser     zenroom
-electrum --testnet setconfig rpcpassword zencode
-electrum --testnet load_wallet
-
-# electrum --testnet getprivatekeys $from
-
-# sk=`electrum --testnet getprivatekeys $from 2> /dev/null`
-# if [[ "$sk" == "" ]]; then
-#     echo "error: no private key found in electrum for address $from"
-#     exit 1
-# fi
-
-sleep 3
 curl -s --data-binary \
      '{"jsonrpc":"2.0","id":"curltext","method":"listunspent","params":[]}' \
      http://zenroom:zencode@127.0.0.1:7777 \
@@ -77,6 +51,25 @@ and I create the bitcoin transaction
 
 Then print the 'bitcoin transaction'
 EOF
+
+cat <<EOF | zexe sign_transaction.zen \
+		 -k alpaca-keys.json -a electrum-transaction.json \
+    | save bitcoin signed-transaction.json
+Scenario bitcoin
+Given I am known as 'alpaca'
+and I have my 'keys'
+and I have a 'base64 dictionary' named 'bitcoin transaction'
+When I sign the bitcoin transaction
+and I create the bitcoin raw transaction
+and I create the size of 'bitcoin raw transaction'
+Then print the 'bitcoin raw transaction' as 'hex'
+and print the 'size'
+EOF
+
+echo "Broadcasting transaction via electrum"
+rawtx=`cat signed-transaction.json | jq '.bitcoin_raw_transaction' | sed 's/\"//g'`
+
+electrum broadcast --testnet $rawtx
 
 # \
 #     | jq -S --arg amount $amount --arg fee $fee --arg from $from --arg to $to '

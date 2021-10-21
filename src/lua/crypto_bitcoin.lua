@@ -317,7 +317,8 @@ function btc.build_raw_transaction(tx)
       --script = script .. O.from_hex('88ac')
       -- Bech32
       script = O.from_hex('0014')
-      script = script .. v.address -- readBech32Address(v.address)
+      -- readBech32Address(v.address)
+      script = script .. fif(v.address.raw, v.address.raw, v.address)
       
       raw = raw .. btc.encode_compact_size(#script) .. script
    end
@@ -423,7 +424,7 @@ end
 
 -- Hash required in the raw transaction (is exposed to be able to use it
 -- in the tests)
-function btc.hash_prevouts(tx)
+local function _hash_prevouts(tx)
    local raw
    local H
    H = HASH.new('sha256')
@@ -439,7 +440,7 @@ end
 
 -- Hash required in the raw transaction (is exposed to be able to use it
 -- in the tests)
-function btc.hash_sequence(tx)
+local function _hash_sequence(tx)
    local raw
    local H
    local seq
@@ -461,7 +462,7 @@ end
 
 -- Hash required in the raw transaction (is exposed to be able to use it
 -- in the tests)
-function btc.hash_outputs(tx)
+local function _hash_outputs(tx)
    local raw
    local H
    local seq
@@ -476,7 +477,7 @@ function btc.hash_outputs(tx)
 	 raw = raw .. O.zero(8 - #amount)
       end
       -- This is specific to Bech32 addresses, we should be able to verify the kind of address
-      raw = raw .. O.from_hex('160014') .. v.address
+      raw = raw .. O.from_hex('160014') .. fif(v.address.raw, v.address.raw, v.address)
 
    end
 
@@ -503,9 +504,9 @@ function btc.build_transaction_to_sign(tx, i)
    --      1. nVersion of the transaction (4-byte little endian)
    raw = raw .. btc.to_uint(tx.version, 4)
    --      2. hash_prevouts (32-byte hash)
-   raw = raw .. btc.hash_prevouts(tx)
+   raw = raw .. _hash_prevouts(tx)
    --      3. hash_sequence (32-byte hash)
-   raw = raw .. btc.hash_sequence(tx)
+   raw = raw .. _hash_sequence(tx)
    --      4. outpoint (32-byte hash + 4-byte little endian)
    raw = raw .. tx.txIn[i].txid:reverse() .. btc.to_uint(tx.txIn[i].vout, 4)
    --      5. scriptCode of the input (serialized as scripts inside CTxOuts)
@@ -519,7 +520,7 @@ function btc.build_transaction_to_sign(tx, i)
    --      7. nSequence of the input (4-byte little endian)
    raw = raw .. tx.txIn[i].sequence:reverse()
    --      8. hash_outputs (32-byte hash)
-   raw = raw .. btc.hash_outputs(tx)
+   raw = raw .. _hash_outputs(I.spy(tx))
    --      9. nLocktime of the transaction (4-byte little endian)
    raw = raw .. btc.to_uint(tx.nLockTime, 4)
    --     10. sighash type of the signature (4-byte little endian)
