@@ -303,7 +303,7 @@ end
 
 -- Really simple data encoder, it only works with elementary types (for
 -- example ERC-20 only uses this kind of data types)
-function ETH.data_contract(fz_name, params)
+function ETH.data_contract_builder(fz_name, params)
    local H = HASH.new('keccak256')
    local signature = fz_name .. '(' .. table.concat(params, ",") .. ')'
    local f_id = O.from_hex(string.sub(hex(H:process(signature)), 1, 8))
@@ -316,13 +316,31 @@ function ETH.data_contract(fz_name, params)
 	 -- I don't check the range of values (for bool the input should be 0 or 1),
 	 -- while for int<M> should be 0 ... 2^(<M>)-1
 	 if string.match(v, 'int%d+') or v == 'address' then
-	    res = res .. BIG.from_decimal(args[i]):fixed(32)
+	    res = res .. BIG.new(args[i]):fixed(32)
 	 elseif v == 'bool' then
 	    res = res .. BIG.new(fif(args[i], 1, 0)):fixed(32)
 	 end
       end
       return res
    end
+end
+
+local ERC20_SIGNATURES = {
+   balanceOf         = { 'address' },
+   transfer          = { 'address', 'uint256' },
+   approve           = { 'address', 'uint256' },
+   decreaseAllowance = { 'address', 'uint256' },
+   increaseAllowance = { 'address', 'uint256' },
+   transferFrom      = { 'address', 'address', 'uint256' },
+   decimals          = { },
+   name              = { },
+   symbol            = { },
+   totalSupply       = { },
+}
+
+ETH.erc20 = {}
+for k, v in pairs(ERC20_SIGNATURES) do
+   ETH.erc20[k] = ETH.data_contract_builder(k, v)
 end
 
 return ETH
