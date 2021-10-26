@@ -94,5 +94,38 @@ print(kp.private:hex())
 
 -- Some test with data generation for smart conctract
 -- function baz(uint32 x, bool y)
-local contract = ETH.data_contract('baz', { 'uint32', 'bool' })
-assert(contract('69', true) == O.from_hex('cdcd77c000000000000000000000000000000000000000000000000000000000000000450000000000000000000000000000000000000000000000000000000000000001'))
+local contract = ETH.data_contract_builder('baz', { 'uint32', 'bool' })
+assert(contract(69, true) == O.from_hex('cdcd77c000000000000000000000000000000000000000000000000000000000000000450000000000000000000000000000000000000000000000000000000000000001'))
+
+
+print("ERC 20")
+assert(ETH.erc20.balanceOf(O.from_hex('19e942FB3193bb2a3D6bAD206ECBe9E60599c388')) == O.from_hex('70a0823100000000000000000000000019e942fb3193bb2a3d6bad206ecbe9e60599c388'))
+assert(ETH.erc20.transfer(O.from_hex('e24Cd6B528A513181C765d3dadb0809E1eF991f5'), BIG.from_decimal('1000')) == O.from_hex('a9059cbb000000000000000000000000e24cd6b528a513181c765d3dadb0809e1ef991f500000000000000000000000000000000000000000000000000000000000003e8'))
+assert(ETH.erc20.decimals() == O.from_hex('313ce567'))
+assert(ETH.erc20.symbol() == O.from_hex('95d89b41'))
+assert(ETH.erc20.totalSupply() == O.from_hex('18160ddd'))
+assert(ETH.erc20.approve(O.from_hex('19e942FB3193bb2a3D6bAD206ECBe9E60599c388'), 1000) == O.from_hex('095ea7b300000000000000000000000019e942fb3193bb2a3d6bad206ecbe9e60599c38800000000000000000000000000000000000000000000000000000000000003e8'))
+assert(ETH.erc20.transferFrom(O.from_hex('19e942FB3193bb2a3D6bAD206ECBe9E60599c388'), O.from_hex('e24Cd6B528A513181C765d3dadb0809E1eF991f5'), 1000) == O.from_hex('23b872dd00000000000000000000000019e942fb3193bb2a3d6bad206ecbe9e60599c388000000000000000000000000e24cd6b528a513181c765d3dadb0809e1ef991f500000000000000000000000000000000000000000000000000000000000003e8'))
+
+
+-- tx = {}
+-- tx["nonce"] = ETH.o2n(O.new())
+-- tx["gasPrice"] = INT.new(1000)
+-- tx["gasLimit"] = INT.new(25000)
+-- tx["to"] = O.from_hex('627306090abaB3A6e1400e9345bC60c78a8BEf57')
+-- tx["value"] = INT.new(O.from_hex('11'))
+-- tx["data"] = O.new()
+-- -- v contains the chain id (when the transaction is not signed)
+-- -- We always use the chain id
+-- tx["v"] = INT.new(1337)
+-- tx["r"] = O.new()
+-- tx["s"] = O.new()
+
+-- from = O.from_hex('ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f')
+-- pk = ECDH.pubgen(from)
+
+
+-- encodedTx = ETH.encodeSignedTransaction(from, tx)
+
+-- print(encodedTx:hex())
+-- decodedTx = ETH.decodeTransaction(encodedTx)
