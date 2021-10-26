@@ -92,18 +92,18 @@ void load_file(char *dst, FILE *fd) {
 	if(!fd) {
 		error(0, "Error opening %s", strerror(errno));
 		exit(1); }
-	if(fd!=stdin) {
-		if(fseek(fd, 0L, SEEK_END)<0) {
-			error(0, "fseek(end) error in %s: %s",__func__,
-			      strerror(errno));
-			exit(1); }
-		file_size = ftell(fd);
-		if(fseek(fd, 0L, SEEK_SET)<0) {
-			error(0, "fseek(start) error in %s: %s",__func__,
-			      strerror(errno));
-			exit(1); }
-		func(0, "size of file: %u",file_size);
-	}
+	// if(fd!=stdin) {
+	// 	if(fseek(fd, 0L, SEEK_END)<0) {
+	// 		error(0, "fseek(end) error in %s: %s",__func__,
+	// 		      strerror(errno));
+	// 		exit(1); }
+	// 	file_size = ftell(fd);
+	// 	if(fseek(fd, 0L, SEEK_SET)<0) {
+	// 		error(0, "fseek(start) error in %s: %s",__func__,
+	// 		      strerror(errno));
+	// 		exit(1); }
+	// 	func(0, "size of file: %u",file_size);
+	// }
 
 	firstline = malloc(MAX_STRING);
 	// skip shebang on firstline
@@ -133,12 +133,12 @@ void load_file(char *dst, FILE *fd) {
 
 		if(!bytes) {
 			if(feof(fd)) {
-				if((fd!=stdin) && (long)offset!=file_size) {
-					warning(0, "Incomplete file read (%u of %u bytes)",
-					      offset, file_size);
-				} else {
+				// if((fd!=stdin) && (long)offset!=file_size) {
+				// 	warning(0, "Incomplete file read (%u of %u bytes)",
+				// 	      offset, file_size);
+				// } else {
 					func(0, "EOF after %u bytes",offset);
-				}
+				// }
  				dst[offset] = '\0';
 				break;
 			}
@@ -288,13 +288,25 @@ int main(int argc, char **argv) {
 	}
 
 	if(keysfile[0]!='\0') {
+		FILE *keysfd;
 		if(verbosity) act(NULL, "reading KEYS from file: %s", keysfile);
-		load_file(keys, fopen(keysfile, "r"));
+		if (keysfile[0] == '-') {
+			keysfd = fdopen(3, "r");
+		} else {
+			keysfd = fopen(keysfile, "r");
+		}
+		load_file(keys, keysfd);
 	}
 
 	if(datafile[0]!='\0' && verbosity) {
+		FILE *datafd;
 		if(verbosity) act(NULL, "reading DATA from file: %s", datafile);
-		load_file(data, fopen(datafile, "r"));
+		if (datafile[0] == '-') {
+			datafd = fdopen(4, "r");
+		} else {
+			datafd = fopen(datafile, "r");
+		}
+		load_file(data, datafd);
 	}
 
 	if(interactive) {
