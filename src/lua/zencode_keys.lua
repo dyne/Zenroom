@@ -54,7 +54,7 @@ local keytypes = {
     bls = true,
     reflow = true,
     bitcoin = true,
-    bitcoin_testnet = true
+    testnet = true
 }
 
 function havekey(ktype)
@@ -64,24 +64,6 @@ function havekey(ktype)
    initkeys()
    local res = ACK.keys[kname]
    ZEN.assert(res, 'Key not found: ' .. ktype)
-   return res
-end
-
-local btc = require('crypto_bitcoin')
-
-local function _import_bitcoin(obj)
-   -- force base58 as bitcoin always uses that
-   local res = { }
-   res.address, res.version = O.from_segwit(obj.address)
-   local sk = O.from_base58(obj.secret)
-   local wif = btc.wif_to_sk(sk)
-   if not wif then
-      error("invalid bitcoin wif key", 2) end
-   res.secret = sk
-   local pk = btc.sk_to_pubc( wif )
-   I.warn({pk = pk, addr = res.address, res = res})
-   ZEN.assert(btc.address_from_public_key(pk) == res.address,
-	      "Address cannot be derived from the private key")
    return res
 end
 
@@ -112,6 +94,10 @@ ZEN.add_schema(
 	    if obj.bitcoin then
 	       res.bitcoin = ZEN.get(obj, 'bitcoin')
 	    end
+	    if obj.testnet then
+	       res.testnet = ZEN.get(obj, 'testnet')
+	    end
+
             return (res)
         end
     }
