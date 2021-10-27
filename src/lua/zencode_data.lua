@@ -315,6 +315,13 @@ local function outcast_bin(obj)
    end
    return O.to_bin(obj)
 end
+local function outcast_mnemonic(obj)
+   local t = luatype(obj)
+   if t == 'number' then
+      return obj
+   end
+   return O.to_mnemonic(obj)
+end
 -- takes a string returns the function, good for use in deepmap(fun,table)
 function guess_outcast(cast)
    if not cast then
@@ -336,6 +343,8 @@ function guess_outcast(cast)
       return outcast_bin
    elseif cast == 'binary' then
       return outcast_bin
+   elseif cast == 'mnemonic' then
+      return outcast_mnemonic
    elseif cast == 'number' then
       -- in case is a schema then outcast uses default output encoding
       return (function(v)
