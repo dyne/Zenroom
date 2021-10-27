@@ -300,8 +300,9 @@ function btc.build_raw_transaction(tx)
    raw = raw .. btc.encode_compact_size(INT.new(#tx.txOut))
 
    -- txOut
-   for _, v in pairs(tx.txOut) do
+   for k, v in pairs(tx.txOut) do
       --raw = raw .. btc.to_uint(v.amount, 8)
+      assert(v.address, "Address not found in txout["..k.."]")
       local amount = O.new(v.amount)
       raw = raw .. amount:reverse()
       if #v.amount < 8 then
@@ -465,7 +466,6 @@ end
 local function _hash_outputs(tx)
    local raw
    local H
-   local seq
    H = HASH.new('sha256')
 
    raw = O.new()
@@ -477,7 +477,7 @@ local function _hash_outputs(tx)
 	 raw = raw .. O.zero(8 - #amount)
       end
       -- This is specific to Bech32 addresses, we should be able to verify the kind of address
-      raw = raw .. O.from_hex('160014') .. fif(v.address.raw, v.address.raw, v.address)
+      raw = raw .. O.from_hex('160014') .. fif( v.address.raw, v.address.raw, v.address)
 
    end
 
@@ -497,9 +497,12 @@ end
 --      8. hash_outputs (32-byte hash)
 --      9. nLocktime of the transaction (4-byte little endian)
 --     10. sighash type of the signature (4-byte little endian)
-function btc.build_transaction_to_sign(tx, i)
+local function build_transaction_to_sign(tx, i)
    local raw
    local amount
+   local address = fif(tx.txIn[i].address.raw, 
+		       tx.txIn[i].address.raw, tx.txIn[i].address)
+   assert(address, "Cannot sign or verify transaction: no address provided")
    raw = O.new()
    --      1. nVersion of the transaction (4-byte little endian)
    raw = raw .. btc.to_uint(tx.version, 4)
@@ -510,7 +513,7 @@ function btc.build_transaction_to_sign(tx, i)
    --      4. outpoint (32-byte hash + 4-byte little endian)
    raw = raw .. tx.txIn[i].txid:reverse() .. btc.to_uint(tx.txIn[i].vout, 4)
    --      5. scriptCode of the input (serialized as scripts inside CTxOuts)
-   raw = raw .. O.from_hex('1976a914') .. tx.txIn[i].address  .. O.from_hex('88ac')
+   raw = raw .. O.from_hex('1976a914') .. address  .. O.from_hex('88ac')
    --      6. value of the output spent by this input (8-byte little endian)
    amount = O.new(tx.txIn[i].amountSpent)
    raw = raw .. amount:reverse()
@@ -520,7 +523,7 @@ function btc.build_transaction_to_sign(tx, i)
    --      7. nSequence of the input (4-byte little endian)
    raw = raw .. tx.txIn[i].sequence:reverse()
    --      8. hash_outputs (32-byte hash)
-   raw = raw .. _hash_outputs(I.spy(tx))
+   raw = raw .. _hash_outputs(tx)
    --      9. nLocktime of the transaction (4-byte little endian)
    raw = raw .. btc.to_uint(tx.nLockTime, 4)
    --     10. sighash type of the signature (4-byte little endian)
@@ -535,7 +538,8 @@ function btc.build_witness(tx, sk)
    local witness = {}
    for i=1,#tx.txIn,1 do
       if tx.txIn[i].sigwit then
-	 local rawTx = btc.build_transaction_to_sign(tx, i)
+	 -- fill address generated from sk if not present in txin
+	 local rawTx = build_transaction_to_sign(tx, i)
 	 local sigHash = btc.dsha256(rawTx)
 	 local sig = ECDH.sign_ecdh(sk, sigHash)
 	 witness[i] = {
@@ -556,7 +560,7 @@ function btc.verify_witness(tx)
       return false
    end
    for i, v in pairs(tx.witness) do
-      local rawTx = btc.build_transaction_to_sign(tx, i)
+      local rawTx = build_transaction_to_sign(tx, i)
       local sigHash = btc.dsha256(rawTx)
       local sig = btc.decode_der_signature(v[1])
       if not ECDH.verify_hashed(ECDH.uncompress_public_key(v[2]), sigHash, sig, #sigHash) then
@@ -573,7 +577,7 @@ end
 -- @param fee satoshi of fee we want to pay
 -- @return nil if the transaction cannot built
 -- (for example if there are not enough founds)
-function btc.build_tx_from_unspent(unspent, to, amount, fee)
+function btc.build_tx_from_unspent(unspent, to, amount, fee, from)
    local tx, i, currentAmount
    tx = {
       version=2,
@@ -587,13 +591,18 @@ function btc.build_tx_from_unspent(unspent, to, amount, fee)
    i=1
    currentAmount = INT.new(0)
    while i <= #unspent and currentAmount < amount+fee do
-      currentAmount = currentAmount + unspent[i].amount
+      assert(unspent[i].address or from, "No sender address specified")
+      -- amount should be already converted to a zenroom type, if not
+      -- then we assume it is a string value expressed in satoshis
+      local amount = unspent[i].amount
+      if not iszen( type( amount ) ) then amount = BIG.from_decimal( amount ) end
+      currentAmount = currentAmount + amount
       tx.txIn[i] = {
 	 txid = unspent[i].txid,
 	 vout = unspent[i].vout,
 	 sigwit = O.from_hex('01'), -- this should be true
-	 address = unspent[i].address,
-	 amountSpent = unspent[i].amount,
+	 address = unspent[i].address or from,
+	 amountSpent = amount,
 	 sequence = O.from_hex('ffffffff'),
 	 --scriptPubKey = unspent[i].scriptPubKey
       }
