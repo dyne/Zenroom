@@ -325,22 +325,25 @@ function ETH.data_contract_builder(fz_name, params)
    end
 end
 
+
+-- methods with the modifier "view" have to be executed (locally) with
+-- eth_call, they don't change the blockchain
+-- the i property are the input parameter
+-- the o property is (are) the output return types
 local ERC20_SIGNATURES = {
-   balanceOf         = { 'address' },
-   transfer          = { 'address', 'uint256' },
-   approve           = { 'address', 'uint256' },
-   decreaseAllowance = { 'address', 'uint256' },
-   increaseAllowance = { 'address', 'uint256' },
-   transferFrom      = { 'address', 'address', 'uint256' },
-   decimals          = { },
-   name              = { },
-   symbol            = { },
-   totalSupply       = { },
+   balanceOf         = { i={'address'}, o={'uint256'}, view=true },
+   transfer          = { i={'address', 'uint256'}, o={'bool'} },
+   approve           = { i={'address', 'uint256'}, o={'bool'} },
+   transferFrom      = { i={'address', 'address', 'uint256'}, o={'bool'} },
+   decimals          = { o={'uint8'}, view=true },
+   name              = { o={'string'}, view=true },
+   symbol            = { o={'string'}, view=true },
+   totalSupply       = { o={'uint256'}, view=true },
 }
 
 ETH.erc20 = {}
 for k, v in pairs(ERC20_SIGNATURES) do
-   ETH.erc20[k] = ETH.data_contract_builder(k, v)
+   ETH.erc20[k] = ETH.data_contract_builder(k, v.i)
 end
 
 return ETH
