@@ -113,7 +113,6 @@ local function set_sentence(self, event, from, to, ctx)
 		end
 	    -- xxx(tt .. ' == ' ..pattern)
 		if strcasecmp(tt, pattern) then
-			xxx(tt)
 			local args = {} -- handle multiple arguments in same string
 			for arg in string.gmatch(ctx.msg, "'(.-)'") do
 				-- convert all spaces to underscore in argument strings

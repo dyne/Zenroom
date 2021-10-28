@@ -138,9 +138,10 @@ function input_encoding(what)
       return { fun = function(data)
 		  if luatype(data) == 'number' then
 		     return data
-		     else
-			return O.from_mnemonic(data)
-		     end
+		  else
+		     -- trim and eliminate double spaces
+		     return O.from_mnemonic( gsub( trim( data ), ' +', ' ') )
+		  end
       end,
 	       check = function(_) return true end,
 	       encoding = 'mnemonic'
