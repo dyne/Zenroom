@@ -385,9 +385,9 @@ function check_codec(value)
 	 assert(luatype(ZEN.schemas[value].export) == 'function',
 		"Complex export for schema is not a function: "..value)
 	 return value -- name of schema itself as it contains export
-      else
-	 return ZEN.CODEC[value].encoding or CONF.output.encoding.name
       end
+   else
+      return ZEN.CODEC[value].encoding or CONF.output.encoding.name
    end
    return CONF.output.encoding.name
 end
