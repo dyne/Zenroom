@@ -495,7 +495,7 @@ function zencode:parse(text)
 	  -- try to enter the machine state named in prefix
 	  -- xxx("Zencode machine enter_"..prefix..": "..text, 3)
 	  local fm = self.machine["enter_"..prefix]
-	  assert(fm, "Invalid Zencode line "..linenum..": "..line)
+	  assert(fm, "Invalid Zencode line "..linenum..": '"..line.."'")
 	  assert(fm(self.machine, { msg = line, Z = self }),
 				line.."\n    "..
 				"Invalid transition from: "..self.machine.current)
