@@ -230,7 +230,7 @@ function HDW.master_key_generation(seed)
       seed = O.random(32)
    end
    local s512 = HASH.new('sha512')
-   local l = HASH.hmac(s512, O.from_string('Bitcoin seed'), s)
+   local l = HASH.hmac(s512, O.from_string('Bitcoin seed'), seed)
    local lL = l:sub( 1,32)
    -- check Ll < order of the curve
    local lR = l:sub(33,64)
