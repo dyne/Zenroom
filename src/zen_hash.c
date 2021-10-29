@@ -327,7 +327,7 @@ static int hash_pbkdf2(lua_State *L) {
 	hash *h = hash_arg(L,1); SAFE(h);
 	octet *k = o_arg(L, 2); SAFE(k);
 	int iter, keylen;
-	octet *s;
+	octet *s, *ss;
 	// take a table as argument with salt, iterations and length parameters
 	if(lua_type(L, 3) == LUA_TTABLE) {
 		lua_getfield(L, 3, "salt");
@@ -343,13 +343,18 @@ static int hash_pbkdf2(lua_State *L) {
 		// keylen is length of input key
 		keylen = luaL_optinteger(L, 5, k->len);
 	}
+	// There must be the space to concat a 4 byte integer
+	// (look at the source code of PBKDF2)
+	ss = o_new(L, s->len+4); SAFE(ss);
+	memcpy(ss->val, s->val, s->len);
+	ss->len = s->len;
 	octet *out = o_new(L, keylen); SAFE(out);
 
 	// TODO: OPTIMIZATION: reuse the initialized hash* structure in
 	// hmac->ehashit instead of milagro's
         // TODO: according to RFC2898, s should have a size of 8
         // c should be a positive integer
-	PBKDF2(h->len, k, s, iter, keylen, out);
+	PBKDF2(h->len, k, ss, iter, keylen, out);
 	return 1;
 }
 		
