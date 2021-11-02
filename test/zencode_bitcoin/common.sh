@@ -12,11 +12,7 @@ Scenario bitcoin
 Given I am known as '${1}'
 and I have my 'keys'
 When I create the bitcoin public key
-and I create the bitcoin address
-and I write string 'tb' in 'network'
-and I write number '0' in 'version'
-and I move 'version' in 'bitcoin address'
-and I move 'network' in 'bitcoin address'
+and I create the bitcoin testnet address
 Then print 'bitcoin address'
 EOF
 

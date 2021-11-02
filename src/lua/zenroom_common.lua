@@ -140,7 +140,7 @@ function input_encoding(what)
 		     return data
 		  else
 		     -- trim and eliminate double spaces
-		     return O.from_mnemonic( gsub( trim( data ), ' +', ' ') )
+		     return O.from_mnemonic( string.gsub( trim( data ), ' +', ' ') )
 		  end
       end,
 	       check = function(_) return true end,
