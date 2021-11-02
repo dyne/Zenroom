@@ -243,5 +243,36 @@ function HDW.master_key_generation(seed)
    }
 end
 
+-- Implements the default wallet layout
+-- only external keys are supported
+-- @param parent_key parent private key
+-- @param i bignum i >= 0 and i <= 80000000
+-- @param wallet bignum or the string '' (the dafult wallet), optional
+-- @param nohardened by default child keys are hardened (if there is not the parameter
+-- nohardned = nil which is the same as false)
+function HDW.standard_child(parent_key, i, wallet, nohardened)
+   local HARDNED = BIG.new(O.from_hex('80000000'))
+   assert(i < HARDNED)
+
+   if not nohardened then
+      i = i + HARDNED
+   end
+
+   if not wallet or wallet=='' then
+      wallet = INT.new(0)
+   end
+
+   assert(wallet < HARDNED)
+
+   wallet_key = HDW.ckd_priv(parent_key, wallet+HARDNED)
+   external_key = HDW.ckd_priv(wallet_key, INT.new(0))
+   address_key = HDW.ckd_priv(external_key, i)
+
+   return address_key
+end
+
+function HDW.mnemonic_master_key(mnemonic, password)
+   return HDW.master_key_generation(HASH.mnemonic_seed(mnemonic, password))
+end
 
 return HDW

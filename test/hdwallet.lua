@@ -80,3 +80,21 @@ local m_0_1_2_2_xpk = HDW.ckd_pub(m_0_1_2_2sk,BIG.from_decimal('1000000000'))
 local derived = 'xpub6H1LXWLaKsWFhvm6RVpEL9P4KfRZSW7abD2ttkWP3SSQvnyA8FSVqNTEcYFgJS2UaFcxupHiYkro49S8yGasTvXEYBVPamhGW6cFJodrTHy'
 assert(ZEN.serialize(m_0_1_2_2_xpk) == ZEN.serialize(HDW.parse_extkey(derived)))
 assert(HDW.format_extkey(m_0_1_2_2_xpk, HDW.MAINPK) == derived)
+
+
+-- default wallet support example
+local mnemonic = "void come effort suffer camp survey warrior heavy shoot primary clutch crush open amazing screen patrol group space point ten exist slush involve unfold"
+local password = "password"
+
+local parent_key = HDW.mnemonic_master_key(mnemonic, password)
+I.spy(parent_key)
+local c00 = HDW.standard_child(parent_key, INT.new(42))
+local c01 = HDW.standard_child(parent_key, INT.new(1729))
+I.spy(c00)
+I.spy(c01)
+
+local c10 = HDW.standard_child(parent_key, INT.new(42), '', false)
+local c11 = HDW.standard_child(parent_key, INT.new(1729), '', false)
+
+assert(ZEN.serialize(c00) == ZEN.serialize(c10))
+assert(ZEN.serialize(c01) == ZEN.serialize(c11))
