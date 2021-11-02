@@ -154,7 +154,7 @@ for i,v in pairs(tests) do
    assert(O.from_mnemonic(v[2]) == o)
 
    assert(HASH.mnemonic_seed(v[2], 'TREZOR') == O.from_hex(v[3]))
-   assert(HDW.format_extkey(HDW.master_key_generation(O.from_hex(v[3])), HDW.MAINSK) == v[4])
+   assert(HDW.format_extkey(HDW.mnemonic_master_key(v[2], 'TREZOR'), HDW.MAINSK) == v[4])
 end
 
 print("The following should not be encodable")
