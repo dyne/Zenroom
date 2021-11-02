@@ -98,7 +98,7 @@ int main()
     pr[3]=ran>>24;
     for (int i=4; i<10; i++) pr[i]=i;
 
-    RAND_seed(&RNG,10,pr);
+    AMCL_(RAND_seed)(&RNG,10,pr);
 
     int iterations;
     clock_t start;

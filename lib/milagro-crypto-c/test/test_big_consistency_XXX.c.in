@@ -44,7 +44,7 @@ int main()
     /* Fake random source */
     RAND_clean(&rng);
     for (i=0; i<256; i++) raw[i]=(char)i;
-    RAND_seed(&rng,256,raw);
+    AMCL_(RAND_seed)(&rng,256,raw);
 
     /* Set to zero */
     BIG_XXX_zero(F);

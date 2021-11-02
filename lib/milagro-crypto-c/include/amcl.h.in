@@ -34,6 +34,8 @@
 #define OS "@OS@"                               /**< Build OS */
 #endif
 
+#define AMCL_(name) @AMCL_PREFIX@ ## name
+
 /* modulus types */
 
 #define NOT_SPECIAL 0	       /**< Modulus of no exploitable form */
@@ -464,7 +466,7 @@ extern void  SHA3_shake(sha3 *H,char *h,int len);
 	@param h a byte array to take hash
 	@param len is the length of the hash
  */
-extern void  SHA3_squeeze(sha3 *H,char *h,int len);
+extern void  AMCL_(SHA3_squeeze)(sha3 *H,char *h,int len);
 
 /**	@brief create fixed length hash output of KECCAK 
                (it is almost equal to SHA3)
@@ -518,14 +520,14 @@ extern void AES_ecb_decrypt(amcl_aes *A,uchar * b);
 	@param b is an array of 16 plaintext bytes, on exit becomes ciphertext
 	@return 0, or overflow bytes from CFB mode
  */
-extern unsign32 AES_encrypt(amcl_aes *A,char *b );
+extern unsign32 AMCL_(AES_encrypt)(amcl_aes *A,char *b );
 /**	@brief Decrypt a single 16 byte block in active mode
  *
 	@param A an instance of the AMCL_AES
 	@param b is an array of 16 ciphertext bytes, on exit becomes plaintext
 	@return 0, or overflow bytes from CFB mode
  */
-extern unsign32 AES_decrypt(amcl_aes *A,char *b);
+extern unsign32 AMCL_(AES_decrypt)(amcl_aes *A,char *b);
 /**	@brief Clean up after application of AES
  *
 	@param A an instance of the AMCL_AES
@@ -587,7 +589,7 @@ extern void GCM_finish(gcm *G,char *t);
 	@param b an array of seed bytes
 
  */
-extern void RAND_seed(csprng *R,int n,char *b);
+extern void AMCL_(RAND_seed)(csprng *R,int n,char *b);
 /**	@brief Delete all internal state of a random number generator
  *
 	@param R an instance of a Cryptographically Secure Random Number Generator

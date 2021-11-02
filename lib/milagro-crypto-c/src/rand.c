@@ -95,7 +95,7 @@ static unsign32 pack(const uchar *b)
 
 /* SU= 360 */
 /* Initialize RNG with some real entropy from some external source */
-void RAND_seed(csprng *rng,int rawlen,char *raw)
+void AMCL_(RAND_seed)(csprng *rng,int rawlen,char *raw)
 {
     /* initialise from at least 128 byte string of raw  *
      * random (keyboard?) input, and 32-bit time-of-day */
@@ -163,7 +163,7 @@ void main()
 
 
 	for (i=0;i<256;i++) raw[i]=(char)i;
-    RAND_seed(&rng,256,raw);
+    AMCL_(RAND_seed)(&rng,256,raw);
 
 	for (i=0;i<1000;i++)
 		printf("%02x ",(unsigned char)RAND_byte(&rng));

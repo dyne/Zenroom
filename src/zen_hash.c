@@ -264,7 +264,7 @@ static int hash_hmac(lua_State *L) {
 	if(h->algo == _SHA256) {
 		out = o_new(L, SHA256+1); SAFE(out);
 		//       hash    m   k  outlen  out
-		if(!HMAC(SHA256, in, k, SHA256, out)) {
+		if(!AMCL_(HMAC)(SHA256, in, k, SHA256, out)) {
 			error(L, "%s: hmac (%u bytes) failed.", SHA256);
 			lua_pop(L, 1);
 			lua_pushboolean(L,0);
@@ -272,7 +272,7 @@ static int hash_hmac(lua_State *L) {
 	} else if(h->algo == _SHA512) {
 		out = o_new(L, SHA512+1); SAFE(out);
 		//       hash    m   k  outlen  out
-		if(!HMAC(SHA512, in, k, SHA512, out)) {
+		if(!AMCL_(HMAC)(SHA512, in, k, SHA512, out)) {
 			error(L, "%s: hmac (%u bytes) failed.", SHA512);
 			lua_pop(L, 1);
 			lua_pushboolean(L,0);
