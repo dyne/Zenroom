@@ -305,6 +305,9 @@ end
 -- example ERC-20 only uses this kind of data types)
 function ETH.data_contract_builder(fz_name, params)
    local H = HASH.new('keccak256')
+   if type(params) ~= 'table' then
+      params = {}
+   end
    local signature = fz_name .. '(' .. table.concat(params, ",") .. ')'
    local f_id = O.from_hex(string.sub(hex(H:process(signature)), 1, 8))
    return function(...)
@@ -315,12 +318,48 @@ function ETH.data_contract_builder(fz_name, params)
       for i, v in ipairs(params) do
 	 -- I don't check the range of values (for bool the input should be 0 or 1),
 	 -- while for int<M> should be 0 ... 2^(<M>)-1
-	 if string.match(v, 'int%d+') or v == 'address' then
+	 if string.match(v, 'uint%d+') or v == 'address' then
 	    res = res .. BIG.new(args[i]):fixed(32)
 	 elseif v == 'bool' then
 	    res = res .. BIG.new(fif(args[i], 1, 0)):fixed(32)
 	 end
       end
+      return res
+   end
+end
+
+function ETH.contract_return_builder(params)
+   if type(params) ~= 'table' then
+      params = {}
+   end
+   -- @param val string or octet with the value returned by the contract
+   return function(val)
+      if type(val) == 'string' then
+	 val = string.gsub(val, '^0x', '')
+	 val = O.from_hex(val)
+      end
+      assert(type(val) == 'zenroom.octet')
+
+      local res = {}
+      for i, v in ipairs(params) do
+	 -- I don't check the range of values (for bool the input should be 0 or 1),
+	 -- while for int<M> should be 0 ... 2^(<M>)-1
+	 if string.match(v, 'uint%d+') or v == 'address' then
+	    table.insert(res, BIG.new(val:sub(32 * (i-1)+1, 32 * i)))
+	 elseif v == 'bool' then
+	    table.insert(res, BIG.new(val:sub(32 * (i-1)+1, 32 * i)) ~= BIG.new(0))
+	 elseif v == 'string' then
+	    -- TODO: don't know the maximum size of argument
+	    -- there could be an overflow
+	    local offset = tonumber(val:sub(32 * (i-1)+1, 32 * i):hex(), 16)
+	    local slen = tonumber(val:sub(1+offset, 32+offset):hex(), 16)
+	    local s = val:sub(1+offset+32, offset+32+slen):string()
+	    table.insert(res, s)
+	 else
+	    assert(false, "Unknown data type")
+	 end
+      end
+
       return res
    end
 end
@@ -344,6 +383,11 @@ local ERC20_SIGNATURES = {
 ETH.erc20 = {}
 for k, v in pairs(ERC20_SIGNATURES) do
    ETH.erc20[k] = ETH.data_contract_builder(k, v.i)
+end
+
+ETH.erc20return = {}
+for k, v in pairs(ERC20_SIGNATURES) do
+   ETH.erc20return[k] = ETH.contract_return_builder(v.o)
 end
 
 return ETH
