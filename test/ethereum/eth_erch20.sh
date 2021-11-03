@@ -10,18 +10,18 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 
 # HOST=http://85.93.88.149:8545
 HOST=http://localhost:8545
-function send() {
-    echo '{"jsonrpc":"2.0","method":"eth_sendRawTransaction","params":["'"$1"'"],"id":1}'
+function send() (
+    &>2 echo '{"jsonrpc":"2.0","method":"eth_sendRawTransaction","params":["'"$1"'"],"id":1}'
     curl -X POST --data '{"jsonrpc":"2.0","method":"eth_sendRawTransaction","params":["'"$1"'"],"id":1}' $HOST
     sleep 1
-}
+)
 
-function call() {
-    params="{\"to\": \"$1\", \"data\": \"$2\"}"
-    echo $params
+function call() (
+    local params="{\"to\": \"$1\", \"data\": \"$2\"}"
+    &>2 echo $params
     curl -X POST --data '{"jsonrpc":"2.0","method":"eth_call","params":['"$params"', "latest"],"id":42}' $HOST | jq '.result'
     sleep 1
-}
+)
 
 # A has a lot of tokens
 
@@ -31,7 +31,7 @@ Ask="ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"
 #A="19e942FB3193bb2a3D6bAD206ECBe9E60599c388"
 
 
-B="e24Cd6B528A513181C765d3dadb0809E1eF991f5"
+B="fe3b557e8fb62b89f4916b721be55ceb828dbd73"
 #B="f17f52151EbEF6C7334FAD080c5704D77216b732"
 
 # contract
@@ -61,7 +61,7 @@ cat <<EOF > transfer.lua
 ETH=require('crypto_ethereum')
 
 tx = {}
-tx["nonce"] = ETH.o2n(1)
+tx["nonce"] = ETH.o2n(2)
 tx["gasPrice"] = INT.new(1000)
 tx["gasLimit"] = INT.from_decimal('300000')
 tx["to"] = O.from_hex('$C')
@@ -98,4 +98,22 @@ print(ETH.erc20.balanceOf(O.from_hex('$B')):hex())
 EOF
 
 echo "balance B"
-call $C `$Z balance.lua` 
+call $C `$Z balance.lua`
+
+echo "Details of the contract"
+cat <<EOF > contract_name.lua
+ETH=require('crypto_ethereum')
+print(ETH.erc20.name():hex())
+EOF
+echo "{ \"name\": " $(call $C `$Z contract_name.lua`) ", \"balance_b\": \"00000000000000000000000000000000000000000000000000000000000003e8\"}" >data.json
+
+cat <<EOF > read_data.lua
+ETH=require('crypto_ethereum')
+DATA = JSON.decode(DATA)
+I.spy(DATA)
+print("Balance of B is " .. ETH.erc20return.balanceOf(DATA.balance_b)[1]:decimal())
+print("The name of the contract is " .. ETH.erc20return.name(DATA.name)[1])
+
+EOF
+
+$Z -a data.json read_data.lua
