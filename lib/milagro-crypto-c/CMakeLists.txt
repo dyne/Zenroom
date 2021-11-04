@@ -104,6 +104,9 @@ log(CMAKE_INSTALL_PREFIX)
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 log(BUILD_SHARED_LIBS)
 
+set(AMCL_PREFIX "${AMCL_PREFIX}" CACHE STRING "Prefix exported functions")
+log(AMCL_PREFIX)
+
 option(BUILD_BENCHMARKS  "Build benchmarks"       ON)
 option(BUILD_DOCS        "Build docs"             ON)
 option(BUILD_EXAMPLES    "Build examples"         ON)

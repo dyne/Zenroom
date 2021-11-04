@@ -43,7 +43,7 @@ int main()
     /* Fake random source */
     RAND_clean(&rng);
     for (i=0; i<256; i++) raw[i]=(char)i;
-    RAND_seed(&rng,256,raw);
+    AMCL_(RAND_seed)(&rng,256,raw);
 
     /* test comparison */
     for (len = 1; len <= 101; len=len+10)

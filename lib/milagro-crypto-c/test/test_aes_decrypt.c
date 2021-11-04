@@ -213,7 +213,7 @@ int main(int argc, char** argv)
             AES_init(&a,mode,KEYLen,KEY,IV);
             for (i=0; i<(CIPHERTEXTLen/blockSize); i++)
             {
-                AES_decrypt(&a,&CIPHERTEXT[i*blockSize]);
+                AMCL_(AES_decrypt)(&a,&CIPHERTEXT[i*blockSize]);
             }
 
             octet PLAINTEXTOct= {CIPHERTEXTLen,CIPHERTEXTLen,CIPHERTEXT};

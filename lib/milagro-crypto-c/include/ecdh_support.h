@@ -59,7 +59,7 @@ extern void HASH(int h,octet *I,octet *O);
 	@param tag is the output HMAC
 	@return 0 for bad parameters, else 1
  */
-extern int HMAC(int h,octet *M,octet *K,int len,octet *tag);
+extern int AMCL_(HMAC)(int h,octet *M,octet *K,int len,octet *tag);
 
 /*extern void KDF1(octet *,int,octet *);*/
 

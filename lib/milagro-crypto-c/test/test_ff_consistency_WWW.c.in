@@ -53,7 +53,7 @@ int main()
     /* Fake random source */
     RAND_clean(&RNG);
     for (i=0; i<256; i++) seed[i]=(char)i;
-    RAND_seed(&RNG,256,seed);
+    AMCL_(RAND_seed)(&RNG,256,seed);
 
     /* Testing general equality and equality to zero */
     FF_WWW_zero(A, HFLEN_WWW);

@@ -75,7 +75,7 @@ int main()
     pr[2]=ran>>16;
     pr[3]=ran>>24;
     for (i=4; i<10; i++) pr[i]=i;
-    RAND_seed(&RNG,10,pr);
+    AMCL_(RAND_seed)(&RNG,10,pr);
 
     BIG_XXX_rcopy(x,CURVE_Gx_ZZZ);
 #if CURVETYPE_ZZZ!=MONTGOMERY

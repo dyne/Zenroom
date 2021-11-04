@@ -144,7 +144,7 @@ void HASH(int sha,octet *p,octet *w)
 }
 
 /* Calculate HMAC of m using key k. HMAC is tag of length olen */
-int HMAC(int sha,octet *m,octet *k,int olen,octet *tag)
+int AMCL_(HMAC)(int sha,octet *m,octet *k,int olen,octet *tag)
 {
     /* Input is from an octet m        *
      * olen is requested output length in bytes. k is the key  *
@@ -216,13 +216,13 @@ void PBKDF2(int sha,octet *p,octet *s,int rep,int olen,octet *key)
         len=s->len;
         OCT_jint(s,i,4);
 
-        HMAC(sha,s,p,sha,&F);
+        AMCL_(HMAC)(sha,s,p,sha,&F);
 
         s->len=len;
         OCT_copy(&U,&F);
         for (j=2; j<=rep; j++)
         {
-            HMAC(sha,&U,p,sha,&U);
+            AMCL_(HMAC)(sha,&U,p,sha,&U);
             OCT_xor(&F,&U);
         }
 
@@ -262,7 +262,7 @@ void AES_CBC_IV0_ENCRYPT(octet *k,octet *m,octet *c)
             }
         }
         if (fin) break;
-        AES_encrypt(&a,buff);
+        AMCL_(AES_encrypt)(&a,buff);
         for (i=0; i<16; i++)
             if (opt<c->max) c->val[opt++]=buff[i];
     }
@@ -271,7 +271,7 @@ void AES_CBC_IV0_ENCRYPT(octet *k,octet *m,octet *c)
 
     padlen=16-i;
     for (j=i; j<16; j++) buff[j]=padlen;
-    AES_encrypt(&a,buff);
+    AMCL_(AES_encrypt)(&a,buff);
     for (i=0; i<16; i++)
         if (opt<c->max) c->val[opt++]=buff[i];
     AES_end(&a);
@@ -308,7 +308,7 @@ int AES_CBC_IV0_DECRYPT(octet *k,octet *c,octet *m)
             }
             else ch=c->val[ipt++];
         }
-        AES_decrypt(&a,buff);
+        AMCL_(AES_decrypt)(&a,buff);
         if (fin) break;
         for (i=0; i<16; i++)
             if (opt<m->max) m->val[opt++]=buff[i];
