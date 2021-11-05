@@ -140,7 +140,7 @@ extern int ECP_ZZZ_SP_DSA(int h,csprng *R,octet *k,octet *s,octet *M,octet *c,oc
 	@return 0 or an error code
  */
 extern int ECP_ZZZ_VP_DSA(int h,octet *W,octet *M,octet *c,octet *d);
-extern int ECP_ZZZ_SP_DSA_NOHASH(int h,csprng *R,octet *k,octet *s,octet *M,octet *c,octet *d);
+extern int ECP_ZZZ_SP_DSA_NOHASH(int sha,csprng *RNG,octet *K,octet *S,octet *H,octet *C,octet *D, char *y_ephemeral);
 extern int ECP_ZZZ_VP_DSA_NOHASH(int h,octet *W,octet *M,octet *c,octet *d);
 #endif
 

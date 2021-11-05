@@ -225,10 +225,10 @@ int ECP_ZZZ_SP_DSA(int sha,csprng *RNG,octet *K,octet *S,octet *F,octet *C,octet
 }
 
 /* IEEE ECDSA Signature as above, without hash on input (assume as already hashed) */
-int ECP_ZZZ_SP_DSA_NOHASH(int sha,csprng *RNG,octet *K,octet *S,octet *H,octet *C,octet *D)
+int ECP_ZZZ_SP_DSA_NOHASH(int sha,csprng *RNG,octet *K,octet *S,octet *H,octet *C,octet *D, char *y_ephemeral)
 // substituted F with H in args
 {
-    BIG_XXX r,s,f,c,d,u,vx,w;
+    BIG_XXX r,s,f,c,d,u,vx,vy,w;
     ECP_ZZZ G,V;
 
     ECP_ZZZ_generator(&G);
@@ -254,8 +254,10 @@ int ECP_ZZZ_SP_DSA_NOHASH(int sha,csprng *RNG,octet *K,octet *S,octet *H,octet *
             ECP_ZZZ_copy(&V,&G);
             ECP_ZZZ_mul(&V,u);
 
-            ECP_ZZZ_get(vx,vx,&V);
-
+            ECP_ZZZ_get(vx,vy,&V);
+	    if(y_ephemeral) {
+	       BIG_XXX_toBytes(y_ephemeral, vy);
+	    }
             BIG_XXX_copy(c,vx);
             BIG_XXX_mod(c,r);
             if (BIG_XXX_iszilch(c)) continue;
@@ -284,8 +286,10 @@ int ECP_ZZZ_SP_DSA_NOHASH(int sha,csprng *RNG,octet *K,octet *S,octet *H,octet *
         ECP_ZZZ_copy(&V,&G);
         ECP_ZZZ_mul(&V,u);
 
-        ECP_ZZZ_get(vx,vx,&V);
-
+        ECP_ZZZ_get(vx,vy,&V);
+	if(y_ephemeral) {
+	   BIG_XXX_toBytes(y_ephemeral, vy);
+	}
         BIG_XXX_copy(c,vx);
         BIG_XXX_mod(c,r);
         if (BIG_XXX_iszilch(c)) return ECDH_ERROR;
