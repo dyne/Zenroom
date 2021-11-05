@@ -25,8 +25,10 @@ function call() (
 
 # A has a lot of tokens
 
-A="f17f52151EbEF6C7334FAD080c5704D77216b732"
-Ask="ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"
+#A="f17f52151EbEF6C7334FAD080c5704D77216b732"
+#Ask="ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"
+A="627306090abaB3A6e1400e9345bC60c78a8BEf57"
+Ask="c87509a1c067bbde78beb793e6fa76530b6382a4c0241e5e4a9ec0a0f44dc0d3"
 # On rinkeby
 #A="19e942FB3193bb2a3D6bAD206ECBe9E60599c388"
 
@@ -35,8 +37,8 @@ B="fe3b557e8fb62b89f4916b721be55ceb828dbd73"
 #B="f17f52151EbEF6C7334FAD080c5704D77216b732"
 
 # contract
-C="b9A219631Aed55eBC3D998f17C3840B7eC39C0cc"
-
+#C="b9A219631Aed55eBC3D998f17C3840B7eC39C0cc"
+C="8CdaF0CD259887258Bc13a92C0a6dA92698644C0"
 # On rinkeby the contract is 0xEf56e128ba3682019116146361934dCcC9B18C2B
 #C="Ef56e128ba3682019116146361934dCcC9B18C2B"
 
@@ -45,23 +47,23 @@ ETH=require('crypto_ethereum')
 print(ETH.erc20.balanceOf(O.from_hex('$A')):hex())
 EOF
 
-echo "Balances before"
-echo "balance A"
-call $C `$Z balance.lua` 
+# echo "Balances before"
+# echo "balance A"
+# call $C `$Z balance.lua`
 
-cat <<EOF > balance.lua
-ETH=require('crypto_ethereum')
-print(ETH.erc20.balanceOf(O.from_hex('$B')):hex())
-EOF
+# cat <<EOF > balance.lua
+# ETH=require('crypto_ethereum')
+# print(ETH.erc20.balanceOf(O.from_hex('$B')):hex())
+# EOF
 
-echo "balance B"
-call $C `$Z balance.lua`
+# echo "balance B"
+# call $C `$Z balance.lua`
 
 cat <<EOF > transfer.lua
 ETH=require('crypto_ethereum')
 
 tx = {}
-tx["nonce"] = ETH.o2n(2)
+tx["nonce"] = ETH.o2n(1)
 tx["gasPrice"] = INT.new(1000)
 tx["gasLimit"] = INT.from_decimal('300000')
 tx["to"] = O.from_hex('$C')
@@ -80,7 +82,6 @@ encodedTx = ETH.encodeSignedTransaction(from, tx)
 
 print(encodedTx:hex())
 EOF
-
 send `$Z transfer.lua`
 
 echo "Balances after"
@@ -117,3 +118,5 @@ print("The name of the contract is " .. ETH.erc20return.name(DATA.name)[1])
 EOF
 
 $Z -a data.json read_data.lua
+
+$Z transfer.lua
