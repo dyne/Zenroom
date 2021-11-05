@@ -37,7 +37,7 @@ typedef struct {
 	                          octet *U,octet *M);
 	int (*ECP__SP_DSA)(int h,csprng *R,octet *k,octet *s,octet *M,octet *c,octet *d);
 	int (*ECP__VP_DSA)(int h,octet *W,octet *M,octet *c,octet *d);
-	int (*ECP__SP_DSA_NOHASH)(int h,csprng *R,octet *k,octet *s,octet *M,octet *c,octet *d);
+        int (*ECP__SP_DSA_NOHASH)(int h,csprng *R,octet *k,octet *s,octet *M,octet *c,octet *d,char *y_ephemeral);
 	int (*ECP__VP_DSA_NOHASH)(int h,octet *W,octet *M,octet *c,octet *d);
 	int fieldsize;
 	int hash; // hash type is also bytes length of hash

@@ -184,10 +184,7 @@ function ETH.encodeSignedTransaction(sk, tx)
    H = HASH.new('keccak256')
    txHash = H:process(ETH.encodeTransaction(tx))
 
-   sig, k = ECDH.sign_ecdh(sk, txHash)
-
-   pk = ECDH.pubgen(k)
-   x, y = ECDH.pubxy(pk)
+   sig, y = ECDH.sign_ecdh(sk, txHash)
 
    two = INT.new(2)
 
