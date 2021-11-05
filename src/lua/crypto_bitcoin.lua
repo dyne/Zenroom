@@ -24,16 +24,9 @@ local btc = {}
 -- address = RIPEMD160(SHA256(public_key))
 -- the composition of RIPEMD160 and SHA256 is known as HASH160
 function btc.address_from_public_key(public_key)
-   local SHA256 = HASH.new('sha256')
-   local RMD160 = HASH.new('ripemd160')
-   return RMD160:process(SHA256:process(public_key))
-
+   return HASH.hash160(public_key)
 end
 
-function btc.dsha256(msg)
-   local SHA256 = HASH.new('sha256')
-   return SHA256:process(SHA256:process(msg))
-end
 
 -- The user knows his private key in the WIF format (base58)
 -- This function compute the bytes of the private key (an octet)
@@ -55,7 +48,7 @@ function btc.wif_to_sk(wif)
 
    local data = wif:sub(1, len-4)
 
-   local check = btc.dsha256(data):chop(4)
+   local check = HASH.dsha256(data):chop(4)
 
    if not(wif:sub(len-3, len) == check) then
       error("Invalid bitcoin key: checksum mismatch", 3) end
@@ -75,22 +68,10 @@ function btc.sk_to_wif(sk, vs)
    end
    local res = ver..sk
    res = res..O.from_hex('01') -- compressed public key
-   res = res..btc.dsha256(res):chop(4) -- checksum
+   res = res..HASH.dsha256(res):chop(4) -- checksum
    return res
 end
 
--- Compute the compressed public key (pubc) from the secret key
-function btc.sk_to_pubc(sk)
-   if not #sk == 32 then
-      error("Invalid bitcoin key size: "..#sk) end
-   return( ECDH.compress_public_key( ECDH.pubgen(sk) ) )
-
-   -- local x, y = ECDH.pubxy(pub)
-   -- local pfx = fif( BIG.parity( BIG.new(y) ),
-   -- 		    OCTET.from_hex('03'), OCTET.from_hex('02') )
-   -- return(pfx .. x)
-
-end
 -- variable length encoding for integer based on the
 -- actual length of the number
 function btc.encode_compact_size(n)
@@ -540,7 +521,7 @@ function btc.build_witness(tx, sk)
       if tx.txIn[i].sigwit then
 	 -- fill address generated from sk if not present in txin
 	 local rawTx = build_transaction_to_sign(tx, i)
-	 local sigHash = btc.dsha256(rawTx)
+	 local sigHash = HASH.dsha256(rawTx)
 	 local sig = ECDH.sign_ecdh(sk, sigHash)
 	 witness[i] = {
 	    btc.encode_der_signature(sig) .. O.from_hex('01'),
@@ -561,7 +542,7 @@ function btc.verify_witness(tx)
    end
    for i, v in pairs(tx.witness) do
       local rawTx = build_transaction_to_sign(tx, i)
-      local sigHash = btc.dsha256(rawTx)
+      local sigHash = HASH.dsha256(rawTx)
       local sig = btc.decode_der_signature(v[1])
       if not ECDH.verify_hashed(ECDH.uncompress_public_key(v[2]), sigHash, sig, #sigHash) then
 	 return false

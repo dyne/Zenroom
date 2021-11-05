@@ -18,9 +18,6 @@
 --
 --]]
 
-
-local BTC = require('crypto_bitcoin')
-
 local HDW = {}
 
 -- an extended key is a table with the fields
@@ -35,7 +32,7 @@ local HDW = {}
 function HDW.parse_extkey(data)
    data = O.from_base58(data)
    -- check checksum
-   assert(#data == 82 and data:sub(#data-3, #data) == BTC.dsha256(data:sub(1, #data-4)):chop(4), "Wrong input key", 2)
+   assert(#data == 82 and data:sub(#data-3, #data) == HASH.dsha256(data:sub(1, #data-4)):chop(4), "Wrong input key", 2)
    local extkey = {}
    local i = 1
 
@@ -79,7 +76,7 @@ end
 
 function HDW.getPublic(extkey)
    if not extkey.public then
-      extkey.public = BTC.sk_to_pubc(extkey.secret)
+      extkey.public = ECDH.sk_to_pubc(extkey.secret)
    end
    assert(extkey.public ~= nil)
    return extkey.public
@@ -110,7 +107,7 @@ function HDW.format_extkey(extkey, version)
       data = data .. O.from_hex('00') .. extkey.secret
    end
 
-   local check = BTC.dsha256(data):sub(1,4)
+   local check = HASH.dsha256(data):sub(1,4)
 
    data = data .. check
    
@@ -161,7 +158,7 @@ function HDW.ckd_priv(parent_key, i)
    -- compute fingerprint
    -- parent_key is a private key
    pk = HDW.getPublic(parent_key)
-   newkey.fingerprint_parent = BTC.address_from_public_key(pk):sub(1,4)
+   newkey.fingerprint_parent = HASH.hash160(pk):sub(1,4)
    
    newkey.chain_code = lR
 
@@ -214,7 +211,7 @@ function HDW.ckd_pub(parent_key, i)
 	 return ckd_priv(parent_key, i+1)
       end
 
-      newkey.fingerprint_parent = BTC.address_from_public_key(pk):sub(1,4)
+      newkey.fingerprint_parent = HASH.hash160(pk):sub(1,4)
    
       newkey.chain_code = lR
 

@@ -58,4 +58,11 @@ function ecdh.sign_ecdh(sk, data)
    return sig
 end
 
+-- Compute the compressed public key (pubc) from the secret key
+function ecdh.sk_to_pubc(sk)
+   if not #sk == 32 then
+      error("Invalid ecdh private key size: "..#sk) end
+   return( ECDH.compress_public_key( ECDH.pubgen(sk) ) )
+end
+
 return ecdh

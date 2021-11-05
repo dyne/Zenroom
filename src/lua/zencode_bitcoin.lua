@@ -148,7 +148,7 @@ When("create the testnet key with secret key ''", function(sec)
 local function _get_pub(name)
 	empty(name..' public key')
 	local sk = havekey(name)
-	ACK[name..'_public_key'] = btc.sk_to_pubc(sk)
+	ACK[name..'_public_key'] = ECDH.sk_to_pubc(sk)
 	new_codec(name..' public key', { zentype = 'schema' })
 end
 When("create the bitcoin public key", function() _get_pub('bitcoin') end)
@@ -157,7 +157,7 @@ When("create the testnet public key", function() _get_pub('testnet') end)
 local function _get_priv(name)
    empty(name..' master key')
    local sk = havekey(name)
-   ACK[name..'_master_key'] = btc.sk_to_wif(sk, name)
+   ACK[name..'_master_key'] = ECDH.sk_to_wif(sk, name)
    new_codec(name..' master key',
 	     { zentype = 'element',
 	       encoding = 'base58' })
@@ -171,7 +171,7 @@ local function _create_addr(name,pfx)
 	if ACK[name..'_public_key'] then
 	   pk = have(name..' public key')
 	else
-	   pk = btc.sk_to_pubc( havekey(name) )
+	   pk = ECDH.sk_to_pubc( havekey(name) )
 	end
 	ACK[name..'_address'] = { raw = btc.address_from_public_key(pk),
 				  version = 0,
