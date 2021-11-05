@@ -52,10 +52,12 @@ function ecdh.sign_ecdh(sk, data)
    local sig
    sig = nil
    repeat
-      sig = ECDH.sign_hashed(sk, data, #data)
+      -- TODO: improve number generation
+      k = BIG.modrand(INT.new(2)*halfSecp256k1n):octet()
+      sig = ECDH.sign_hashed(sk, data, #data, k)
    until(INT.new(sig.s) < halfSecp256k1n);
-
-   return sig
+   
+   return sig, k
 end
 
 -- Compute the compressed public key (pubc) from the secret key
