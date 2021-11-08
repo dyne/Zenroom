@@ -255,9 +255,6 @@ int ECP_ZZZ_SP_DSA_NOHASH(int sha,csprng *RNG,octet *K,octet *S,octet *H,octet *
             ECP_ZZZ_mul(&V,u);
 
             ECP_ZZZ_get(vx,vy,&V);
-	    if(y_ephemeral) {
-	       BIG_XXX_toBytes(y_ephemeral, vy);
-	    }
             BIG_XXX_copy(c,vx);
             BIG_XXX_mod(c,r);
             if (BIG_XXX_iszilch(c)) continue;
@@ -287,9 +284,6 @@ int ECP_ZZZ_SP_DSA_NOHASH(int sha,csprng *RNG,octet *K,octet *S,octet *H,octet *
         ECP_ZZZ_mul(&V,u);
 
         ECP_ZZZ_get(vx,vy,&V);
-	if(y_ephemeral) {
-	   BIG_XXX_toBytes(y_ephemeral, vy);
-	}
         BIG_XXX_copy(c,vx);
         BIG_XXX_mod(c,r);
         if (BIG_XXX_iszilch(c)) return ECDH_ERROR;
@@ -302,6 +296,9 @@ int ECP_ZZZ_SP_DSA_NOHASH(int sha,csprng *RNG,octet *K,octet *S,octet *H,octet *
 
         BIG_XXX_modmul(d,u,d,r);
         if (BIG_XXX_iszilch(d)) return ECDH_ERROR;
+    }
+    if(y_ephemeral) {
+      BIG_XXX_toBytes(y_ephemeral, vy);
     }
 
     C->len=D->len=EGS_ZZZ;
