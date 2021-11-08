@@ -60,6 +60,7 @@
 #include <zen_hash.h>
 #include <zen_ecdh.h>
 #include <zen_big_factory.h>
+#include <big_256_28.h> // big for ECDH
 
 // #include <ecp_SECP256K1.h>
 #include <zen_big.h>
@@ -318,7 +319,7 @@ static int ecdh_dsa_sign_hashed(lua_State *L) {
 		octet *s = o_new(L,(int)n); SAFE(s);
 		lua_setfield(L, -2, "s");
 		// Size of a big256 used with SECP256k1
-		octet *y_ephemeral = o_new(L,32); SAFE(y_ephemeral);
+		octet *y_ephemeral = o_new(L,NLEN_256_28); SAFE(y_ephemeral);
 		y_ephemeral->len=32;
 		(*ECDH.ECP__SP_DSA_NOHASH)((int)n, Z->random_generator, NULL, sk, m, r, s, y_ephemeral->val);
 	} else {
