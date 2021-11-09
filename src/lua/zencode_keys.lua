@@ -123,7 +123,7 @@ local function _keys_export(obj)
       res.bitcoin = O.to_base58( BTC.sk_to_wif(obj.bitcoin, 'bitcoin') )
    end
    if obj.testnet then
-      res.testnet = O.to_base58( BTC.sk_to_wif(obj.testnet, 'testnet') ))
+      res.testnet = O.to_base58( BTC.sk_to_wif(obj.testnet, 'testnet') )
    end
 
    return (res)
