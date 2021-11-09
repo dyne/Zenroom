@@ -20,7 +20,8 @@
 --on Tuesday, 17th September 2021
 --]]
 
-local btc = require('crypto_bitcoin')
+local btc -- mostly loaded at init
+if not BTC then btc = require('crypto_bitcoin') else btc = BTC end
 
 -- TODO: any mean to verify that the content of address and txid is valid
 local function _get_addr(obj)
