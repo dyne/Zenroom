@@ -327,7 +327,7 @@ static int hash_pbkdf2(lua_State *L) {
 	hash *h = hash_arg(L,1); SAFE(h);
 	octet *k = o_arg(L, 2); SAFE(k);
 	int iter, keylen;
-	octet *s;
+	octet *s, *ss;
 	// take a table as argument with salt, iterations and length parameters
 	if(lua_type(L, 3) == LUA_TTABLE) {
 		lua_getfield(L, 3, "salt");
@@ -343,16 +343,67 @@ static int hash_pbkdf2(lua_State *L) {
 		// keylen is length of input key
 		keylen = luaL_optinteger(L, 5, k->len);
 	}
+	// There must be the space to concat a 4 byte integer
+	// (look at the source code of PBKDF2)
+	ss = o_new(L, s->len+4); SAFE(ss);
+	memcpy(ss->val, s->val, s->len);
+	ss->len = s->len;
 	octet *out = o_new(L, keylen); SAFE(out);
 
 	// TODO: OPTIMIZATION: reuse the initialized hash* structure in
 	// hmac->ehashit instead of milagro's
         // TODO: according to RFC2898, s should have a size of 8
         // c should be a positive integer
-	PBKDF2(h->len, k, s, iter, keylen, out);
+	PBKDF2(h->len, k, ss, iter, keylen, out);
 	return 1;
 }
-		
+
+// Taken from https://github.com/trezor/trezor-firmware/blob/master/crypto/bip39.c
+
+#define BIP39_PBKDF2_ROUNDS 2048
+// passphrase must be at most 256 characters otherwise it would be truncated
+static int mnemonic_to_seed(lua_State *L) {
+	const char *mnemonic = lua_tostring(L, 1);
+	luaL_argcheck(L, mnemonic != NULL, 1, "string expected");
+
+	const char *passphrase = lua_tostring(L, 2);
+	luaL_argcheck(L, passphrase != NULL, 2, "string expected");
+
+	int mnemoniclen = strlen(mnemonic);
+	int passphraselen = strnlen(passphrase, 256);
+
+	uint8_t salt[8 + 256] = {0};
+	memcpy(salt, "mnemonic", 8);
+	memcpy(salt + 8, passphrase, passphraselen);
+
+	// PBDKF2 inputs have to be octets
+	octet omnemonic;
+	omnemonic.val = (char*)malloc(mnemoniclen);
+	memcpy(omnemonic.val, mnemonic, mnemoniclen);
+	omnemonic.max = mnemoniclen;
+	omnemonic.len = mnemoniclen;
+
+	// There must be the space to concat a 4 byte integer
+	// (look at the source code of PBKDF2)
+	octet osalt;
+	osalt.val = (char*)malloc(passphraselen+8+4);
+	memcpy(osalt.val, salt, passphraselen+8+4);
+	osalt.len = passphraselen+8;
+	osalt.max = passphraselen+8+4;
+
+	/*octet omnemonic = { mnemoniclen, mnemoniclen, (char*)mnemonic };
+	  octet osalt = {passphraselen+8, passphraselen+8+4, (char*)salt};*/
+
+	octet *okey = o_new(L, 512 / 8);
+	PBKDF2(SHA512, &omnemonic, &osalt, BIP39_PBKDF2_ROUNDS, 512 / 8, okey);
+	okey->len = 512 / 8;
+
+	free(omnemonic.val);
+	free(osalt.val);
+	return 1;
+}
+
+
 int luaopen_hash(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg hash_class[] = {
@@ -363,6 +414,7 @@ int luaopen_hash(lua_State *L) {
 		{"kdf", hash_kdf2},
 		{"pbkdf2", hash_pbkdf2},
 		{"pbkdf", hash_pbkdf2},
+		{"mnemonic_seed", mnemonic_to_seed},
 		{NULL,NULL}};
 	const struct luaL_Reg hash_methods[] = {
 		{"octet",hash_to_octet},

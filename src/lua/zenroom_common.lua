@@ -66,83 +66,95 @@ end
 -- comes before schema check
 function input_encoding(what)
    if not luatype(what) == 'string' then
-	  error("Call to input_encoding argument is not a string: "..type(what),2)
+      error("Call to input_encoding argument is not a string: "..type(what),2)
    end
    if what == 'u64' or what == 'url64' then
-	  return { fun = function(data)
-				  if luatype(data) == 'number' then
-					 return data
-				  else
-					 return O.from_url64(data)
-				  end
-					 end,
-			   encoding = 'url64',
-			   check = O.is_url64
-	  }
+      return { fun = function(data)
+		  if luatype(data) == 'number' then
+		     return data
+		  else
+		     return O.from_url64(data)
+		  end
+      end,
+	       encoding = 'url64',
+	       check = O.is_url64
+      }
    elseif what == 'b64' or what =='base64' then
-	  return { fun = function(data)
-				  if luatype(data) == 'number' then
-					 return data
-				  else
-					 return O.from_base64(data)
-				  end
-					 end,
-			   encoding = 'base64',
-			   check = O.is_base64
-	  }
-	elseif what == 'b58' or what =='base58' then
-		return { fun = function(data)
-					if luatype(data) == 'number' then
-					   return data
-					else
-					   return O.from_base58(data)
-					end
-					   end,
-				 encoding = 'base58',
-				 check = O.is_base58
-		}
+      return { fun = function(data)
+		  if luatype(data) == 'number' then
+		     return data
+		  else
+		     return O.from_base64(data)
+		  end
+      end,
+	       encoding = 'base64',
+	       check = O.is_base64
+      }
+   elseif what == 'b58' or what =='base58' then
+      return { fun = function(data)
+		  if luatype(data) == 'number' then
+		     return data
+		  else
+		     return O.from_base58(data)
+		  end
+      end,
+	       encoding = 'base58',
+	       check = O.is_base58
+      }
    elseif what == 'hex' then
-	  return { fun = function(data)
-				  if luatype(data) == 'number' then
-					 return data
-				  else
-					 return O.from_hex(data)
-				  end
-					 end,
-			   encoding = 'hex',
-			   check = O.is_hex
-	  }
+      return { fun = function(data)
+		  if luatype(data) == 'number' then
+		     return data
+		  else
+		     return O.from_hex(data)
+		  end
+      end,
+	       encoding = 'hex',
+	       check = O.is_hex
+      }
    elseif what == 'bin' or what == 'binary' then
-	  return { fun = function(data)
-				  if luatype(data) == 'number' then
-					 return data
-				  else
-					 return O.from_bin(data)
-				  end
-					 end,
-			   encoding = 'binary',
-			   check = O.is_bin
-	  }
+      return { fun = function(data)
+		  if luatype(data) == 'number' then
+		     return data
+		  else
+		     return O.from_bin(data)
+		  end
+      end,
+	       encoding = 'binary',
+	       check = O.is_bin
+      }
    elseif what == 'str' or what == 'string' then
-   	  return { fun = function(data)
-				  if luatype(data) == 'number' then
-					 return data
-				  else
-					 return O.from_string(data)
-				  end
-					 end,
-   			   check = function(_) return true end,
-   			   encoding = 'string'
-   	  }
-	elseif what == 'num' or what == 'number' then
-		return ({
-			fun = function(x) return(x) end,
-			check = function(x)
-				assert(tonumber(x), "Invalid encoding, not a number: "..type(x), 3)
-			end,
+      return { fun = function(data)
+		  if luatype(data) == 'number' then
+		     return data
+		  else
+		     return O.from_string(data)
+		  end
+      end,
+	       check = function(_) return true end,
+	       encoding = 'string'
+      }
+   elseif what =='mnemonic' then
+      return { fun = function(data)
+		  if luatype(data) == 'number' then
+		     return data
+		  else
+		     -- trim and eliminate double spaces
+		     return O.from_mnemonic( string.gsub( trim( data ), ' +', ' ') )
+		  end
+      end,
+	       check = function(_) return true end,
+	       encoding = 'mnemonic'
+      }
+   elseif what == 'num' or what == 'number' then
+      return ({
+	    fun = function(x) return(x) end,
+	    check = function(x)
+	       assert(tonumber(x), "Invalid encoding, not a number: "..type(x), 3)
+	    end,
             encoding = 'number'
-		})
-    end
+      })
+   end
    error("Input encoding not found: " .. what, 2)
    return nil
 end
@@ -156,7 +168,7 @@ local function _native(data, fun)
 	elseif iszen(t) then
 		return fun(data:octet())
 	else
-		error("Cannot export data type: "..t)
+		error("Cannot export data type: "..t, 2)
 	end
 end
 -- gets a string and returns the associated function, string and prefix

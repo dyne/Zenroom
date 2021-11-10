@@ -96,9 +96,13 @@ end)
 
 When("create the length of ''", function(arr)
 	local obj = have(arr)
-	ZEN.assert(luatype(obj) == 'table', "Not a table: "..arr)
 	ACK.length = #obj
 	ZEN.CODEC.length = new_codec('length', { luatype = 'number' })
+end)
+When("create the size of ''", function(arr)
+	local obj = have(arr)
+	ACK.size = #obj
+	ZEN.CODEC.length = new_codec('size', { luatype = 'number' })
 end)
 
 When("create the copy of element '' in array ''", function(pos, arr)

@@ -32,6 +32,7 @@ When(
             src = ZEN.serialize(src) -- serialize tables using zenroom's algo
         end
         ACK.hash = HASH.new(CONF.hash):process(src)
+	new_codec('hash', { zentype = 'element' })
     end
 )
 
@@ -49,6 +50,7 @@ When(
             ACK.hash = sha512(src)
         end
         ZEN.assert(ACK.hash, 'Invalid hash: ' .. h)
+	new_codec('hash', { zentype = 'element' })
     end
 )
 
@@ -59,6 +61,7 @@ When(
         local bits = tonumber(n)
         ZEN.assert(bits, 'Invalid number of bits: ' .. n)
         ACK.random_object = OCTET.random(math.ceil(bits / 8))
+	new_codec('random_object', { zentype = 'element' })
     end
 )
 
@@ -75,6 +78,7 @@ When(
         local count = isarray(A)
         ZEN.assert(count > 0, 'Object is not an array: ' .. arr)
         ACK.hash_to_point = deepmap(F.hashtopoint, A)
+	new_codec('hash_to_point', { luatype='table', zentype='array' })
     end
 )
 
@@ -86,6 +90,7 @@ When(
         local count = isarray(A)
         ZEN.assert(count > 0, 'Object is not an array: ' .. arr)
         ACK.hashes = deepmap(sha256, A)
+	new_codec('hashes', { luatype='table', zentype='array' })
     end
 )
 
@@ -101,6 +106,7 @@ When(
         local hkey = ACK[key]
         ZEN.assert(hkey, 'Key not found: ' .. key)
         ACK.HMAC = HASH.new(CONF.hash):hmac(hkey, obj)
+	new_codec('HMAC', { zentype = 'element' })
     end
 )
 
@@ -113,6 +119,7 @@ When(
             src = ZEN.serialize(src)
         end
         ACK.key_derivation = HASH.new(CONF.hash):kdf(src)
+	new_codec('key_derivation', { zentype = 'element' })
     end
 )
 
@@ -128,5 +135,6 @@ When(
         ZEN.assert(pass, 'Password not found: ' .. salt)
         ACK.key_derivation =
             HASH.new(CONF.hash):pbkdf2(src, {salt = pass}) -- , iterations = 10000, length = 32
+	new_codec('key derivation', { zentype = 'element' })
     end
 )

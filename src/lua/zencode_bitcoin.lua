@@ -20,7 +20,8 @@
 --on Tuesday, 17th September 2021
 --]]
 
-local btc = require('crypto_bitcoin')
+local btc -- mostly loaded at init
+if not BTC then btc = require('crypto_bitcoin') else btc = BTC end
 
 -- TODO: any mean to verify that the content of address and txid is valid
 local function _get_addr(obj)
@@ -29,13 +30,20 @@ local function _get_addr(obj)
    return res
 end
 
-local function _schema_unspent_import(obj)
+local function _bitcoin_unspent_import(obj)
    local res = {}
    for _,v in pairs(obj) do
-      local address = ZEN.get(v,'address', O.from_segwit, tostring) 
-      local amount  = ZEN.get(v,'amount', btc.value_btc_to_satoshi, tostring)
-      local txid    = ZEN.get(v,'txid', OCTET.from_hex, tostring)
-      local vout    = v.vout -- number
+      -- compatibility with electrum and bitcoin core
+      local n_amount = fif( v.amount, 'amount', 'value')
+      local n_txid = fif( v.txid, 'txid', 'prevout_hash')
+      local n_vout = fif( v.vout, 'vout', 'prevout_n')
+      local address
+      if v.address then
+	 address = ZEN.get(v,'address', O.from_segwit, tostring)
+      end
+      local amount  = ZEN.get(v,n_amount, btc.value_btc_to_satoshi, tostring)
+      local txid    = ZEN.get(v,n_txid, OCTET.from_hex, tostring)
+      local vout    = v[n_vout] -- number
       table.insert(res, { address = address,
 			  amount  = amount,
 			  txid    = txid,
@@ -43,13 +51,12 @@ local function _schema_unspent_import(obj)
    end
    return(res)
 end
-local function _schema_unspent_export(obj)
+local function _bitcoin_unspent_export(obj)
    local res = { }
    for _,v in pairs(obj) do
       -- to_segwit: octet, version number(0), 'bc' or 'tc'
-      I.warn(v)
       local address = v.address:segwit(0, 'tb')
-      local amount = v.amount:decimal()
+      local amount = btc.value_satoshi_to_btc(v.amount)
       local txid = v.txid:hex()
       local vout = v.vout
       table.insert(res, { address = address,
@@ -60,119 +67,149 @@ local function _schema_unspent_export(obj)
    return res
 end
 
+local function _satoshi_unspent_import(obj)
+   local res = {}
+   for _,v in pairs(obj) do
+      -- compatibility with electrum and bitcoin core
+      table.insert(res, { amount = ZEN.get(v,'value', BIG.from_decimal, tostring),
+			  txid    = ZEN.get(v,'txid', OCTET.from_hex, tostring),
+			  vout    = v.vout }) 
+   end
+   return(res)
+end
+local function _satoshi_unspent_export(obj)
+   local res = { }
+   for _,v in pairs(obj) do
+      -- to_segwit: octet, version number(0), 'bc' or 'tc'
+      local address = v.address:segwit(0, 'tb')
+      local amount = BIG.to_decimal(v.amount)
+      local txid = v.txid:hex()
+      local vout = v.vout
+      table.insert(res, { amount  = amount,
+			  txid    = txid,
+			  vout    = vout })
+   end
+   return res
+end
+
+local function _address_import(obj)
+   return { raw = ZEN.get(obj, '.', O.from_segwit, tostring) }
+end
+local function _address_export(obj)
+   return O.to_segwit(obj.raw, obj.version, O.to_string(obj.network))
+end
+
+
 ZEN.add_schema(
    {
-      recipient_address = function(obj)
-	 return ZEN.get(obj, '.', O.from_segwit, tostring) end,
-      amount            = function(obj)
+      satoshi_amount            = function(obj)
 	 return ZEN.get(obj, '.', BIG.from_decimal, tostring) end,
-      fee               = function(obj)
+      satoshi_fee               = function(obj)
 	 return ZEN.get(obj, '.', BIG.from_decimal, tostring) end,
-
-      unspent = { import = _schema_unspent_import,
-		  export = _schema_unspent_export },
-
-      bitcoin_public_key         = function(obj)
-	 return ZEN.get(obj, '.', O.from_base58, tostring) end,
-      bitcoin_address            = _get_addr,
-      bitcoin_testnet_public_key = function(obj)
-	 return ZEN.get(obj, '.', O.from_base58, tostring) end,
-      bitcoin_testnet_address    = _get_addr,
+      satoshi_unspent = { import = _satoshi_unspent_import,
+			  export = _satoshi_unspent_export },
+      bitcoin_unspent = { import = _bitcoin_unspent_import,
+			  export = _bitcoin_unspent_export },
+      bitcoin_address = { import = _address_import,
+			  export = _address_export },
+      testnet_address = { import = _address_import,
+			  export = _address_export },
 
    })
 
 -- generate a keypair in "bitcoin" format (only x coord, 03 prepended)
-When('create the bitcoin testnet key', function()
-	initkeys'bitcoin testnet'
+local function _keygen(name)
+	initkeys(name)
 	local kp = ECDH.keygen()
-	ACK.keys.bitcoin_testnet = btc.sk_to_wif( kp.private, 'testnet' )
-end)
+	ACK.keys[name] = kp.private
+end
+When('create the bitcoin key', function() _keygen('bitcoin') end)
+When('create the testnet key', function() _keygen('testnet') end)
 
-When('create the bitcoin key', function()
-	initkeys'bitcoin'
-	local kp = ECDH.keygen()
-	ACK.keys.bitcoin = btc.sk_to_wif( kp.private, 'mainnet' )
-end)
-
+local function _import_wif(sec, name)
+		local sk = have(sec)
+		local res
+		if #sk == 32+6 then -- wif
+		   btc.wif_to_sk(sk) -- checks
+		   res = sk
+		elseif #sk == 32 then
+		   res = sk
+		   -- TODO: import from hdwallet xpriv format
+		else
+		   error("Invalid "..name.." key size for "..sec..": "..#sk)
+		end
+		initkeys(name)
+		ACK.keys[name] = res
+end
 When("create the bitcoin key with secret key ''", function(sec)
-		local sk = have(sec)
-		local wif
-		if #sk == 32 then -- bare sk
-		   wif = btc.sk_to_wif(sk)
-		elseif #sk == 32+6 then -- wif
-		   btc.wif_to_sk(sk) -- checks
-		   wif = sk
-		else
-		   error("Invalid bitcoin key size for "..sec..": "..#sk)
-		end
-		initkeys'bitcoin'
-		ACK.keys.bitcoin = wif
-end)
-When("create the bitcoin testnet key with secret key ''", function(sec)
-		local sk = have(sec)
-		local wif
-		if #sk == 32 then -- bare sk
-		   wif = btc.sk_to_wif(sk)
-		elseif #sk == 32+6 then -- wif
-		   btc.wif_to_sk(sk) -- checks
-		   wif = sk
-		else
-		   error("Invalid bitcoin key size for "..sec..": "..#sk)
-		end
-		initkeys'bitcoin testnet'
-		ACK.keys.bitcoin_testnet = wif
-end)
+	_import_wif(sec, 'bitcoin') end)
+When("create the testnet key with secret key ''", function(sec)
+	_import_wif(sec, 'testnet') end)
 
-When("create the bitcoin public key", function()
-	empty'bitcoin public key'
-	local wif = havekey'bitcoin'
-	local pk = btc.wif_to_sk(wif)
-	ACK.bitcoin_public_key = btc.sk_to_pubc(pk)
-	new_codec('bitcoin public key', { zentype = 'schema' })
-end)
+local function _get_pub(name)
+	empty(name..' public key')
+	local sk = havekey(name)
+	ACK[name..'_public_key'] = ECDH.sk_to_pubc(sk)
+	new_codec(name..' public key', { zentype = 'schema' })
+end
+When("create the bitcoin public key", function() _get_pub('bitcoin') end)
+When("create the testnet public key", function() _get_pub('testnet') end)
 
-When("create the bitcoin testnet public key", function()
-	empty'bitcoin testnet public key'
-	local wif = havekey'bitcoin testnet'
-	local pk = btc.wif_to_sk(wif)
-	ACK.bitcoin_testnet_public_key = btc.sk_to_pubc(pk)
-	new_codec('bitcoin testnet public key', { zentype = 'schema' })
-end)
+local function _get_priv(name)
+   empty(name..' master key')
+   local sk = havekey(name)
+   ACK[name..'_master_key'] = ECDH.sk_to_wif(sk, name)
+   new_codec(name..' master key',
+	     { zentype = 'element',
+	       encoding = 'base58' })
+end
+When("create the bitcoin master key", function() _get_priv('bitcoin') end)
+When("create the testnet master key", function() _get_priv('testnet') end)
 
-When("create the bitcoin testnet address", function()
-	empty'bitcoin testnet address'
-	local pk = have'bitcoin testnet public key'
-	ACK.bitcoin_testnet_address = btc.address_from_public_key(pk)
-	new_codec('bitcoin testnet address', { zentype = 'schema' })
-end)
+local function _create_addr(name,pfx)
+	empty(name..' address')
+	local pk
+	if ACK[name..'_public_key'] then
+	   pk = have(name..' public key')
+	else
+	   pk = ECDH.sk_to_pubc( havekey(name) )
+	end
+	ACK[name..'_address'] = { raw = btc.address_from_public_key(pk),
+				  version = 0,
+				  network = O.from_string(pfx) }
+	new_codec(name..' address', { zentype = 'schema',
+				      encoding = 'complex' })
+end
+When("create the bitcoin address", function() _create_addr('bitcoin','bc') end)
+When("create the testnet address", function() _create_addr('testnet','tb') end)
 
-When('create the bitcoin transaction',
-     function()
-	have'recipient address'
-	have'amount'
-	have'fee'
+local function _create_tx(name)
+	local to      = have'recipient'
+	local q       = have'satoshi amount'
+	local fee     = have'satoshi fee'
+	local unspent = have(name..' unspent')
+	local tx = btc.build_tx_from_unspent(unspent, to, q, fee, ACK.sender)
+	ZEN.assert(tx, "Not enough "..name.." in the unspent list")
+	ACK[name..'_transaction'] = tx
+end
+When('create the bitcoin transaction', function() _create_tx('bitcoin') end)
+When('create the testnet transaction', function() _create_tx('testnet') end)
 
-	local tx = btc.build_tx_from_unspent(ACK.unspent, ACK.recipient_address, ACK.amount, ACK.fee)
-	ZEN.assert(tx ~= nil, "Not enough bitcoins in the unspent list")
-	
-	ACK.bitcoin_transaction = tx
-     end
-)
-When("sign with bitcoin the ''",
-     function(_bitcoin_transaction)
 
-	local bitcoin_transaction = have(_bitcoin_transaction)
-	ZEN.assert(bitcoin_transaction.witness == nil, "The bitcoin transaction has already been signed")
+local function _sign_tx(name)
+   local sk = havekey(name)
+   local tx = have(name..'_transaction')
+   ZEN.assert(not tx.witness, "The "..name.." transaction is already signed")
+   tx.witness = btc.build_witness(tx, sk)
+end
+When("sign the bitcoin transaction", function() _sign_tx('bitcoin') end)
+When("sign the testnet transaction", function() _sign_tx('testnet') end)
 
-	bitcoin_transaction.witness = btc.build_witness(ACK.bitcoin_transaction, ACK.keys.bitcoin.secret)
+local function _toraw_tx(name)
+	local tx = have(name..' transaction')
+	empty(name..' raw transaction')
+	ACK[name..'_raw_transaction'] = btc.build_raw_transaction(tx)
+end
 
-     end
-)
-When("create the bitcoin raw transaction of the ''",
-     function(_bitcoin_transaction)
-
-	local bitcoin_transaction = have(_bitcoin_transaction)
-
-	ACK.bitcoin_raw_transaction = btc.build_raw_transaction(bitcoin_transaction)
-     end
-)
+When("create the bitcoin raw transaction", function() _toraw_tx('bitcoin') end)
+When("create the testnet raw transaction", function() _toraw_tx('testnet') end)

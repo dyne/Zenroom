@@ -83,6 +83,8 @@ HASH = require('zenroom_hash')
 BENCH = require('zenroom_bench')
 MACHINE = require('statemachine')
 TIME = require('timetable')
+-- BITCOIN primitives are imported by default
+BTC = require('crypto_bitcoin')
 O = OCTET -- alias
 INT = BIG -- alias
 I = INSPECT -- alias
@@ -111,6 +113,9 @@ require('zencode_keys')
 -- therefore dangerous, switched off by default
 -- require('zencode_eval')
 require('zencode_debug')
+
+-- bitcoin is loaded by default
+require('zencode_bitcoin')
 
 -- scenario are loaded on-demand
 -- scenarios can only implement "When ..." steps
