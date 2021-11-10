@@ -69,7 +69,7 @@ test("handle broken zencode", async (t) => {
   } catch (e) {
     t.true(
       e.logs.includes(
-        `Invalid Zencode line 1: sapodksapodk` 
+        `Invalid Zencode line 1: 'sapodksapodk'` 
       )
     );
   }
