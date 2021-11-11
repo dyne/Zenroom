@@ -209,10 +209,14 @@ Then(
 	'print data',
 	function()
 		local fun
-		for k, v in iterate_data(ACK) do
+		for k, v in pairs(ACK) do
 			fun = guess_outcast(check_codec(k))
 			if luatype(v) == 'table' then
-				OUT[k] = deepmap(fun, v)
+				if ZEN.CODEC[k].encoding == 'complex' then
+					OUT[k] = fun(v)
+				else
+					OUT[k] = deepmap(fun, v)
+				end
 			else
 				OUT[k] = fun(v)
 			end
@@ -224,7 +228,7 @@ Then(
 	"print data as ''",
 	function(e)
 		local fun
-		for k, v in iterate_data(ACK) do
+		for k, v in pairs(ACK) do
 			fun = guess_outcast(e)
 			if luatype(v) == 'table' then
 				OUT[k] = deepmap(fun, v)
@@ -241,10 +245,14 @@ Then(
 		Iam() -- sanity checks
 		local fun
 		OUT[WHO] = {}
-		for k, v in iterate_data(ACK) do
+		for k, v in pairs(ACK) do
 			fun = guess_outcast(check_codec(k))
 			if luatype(v) == 'table' then
-				OUT[WHO][k] = deepmap(fun, v)
+				if ZEN.CODEC[k].encoding == 'complex' then
+					OUT[WHO][k] = fun(v)
+				else
+					OUT[WHO][k] = deepmap(fun, v)
+				end
 			else
 				OUT[WHO][k] = fun(v)
 			end
@@ -259,7 +267,7 @@ Then(
 		Iam() -- sanity checks
 		local fun
 		OUT[WHO] = {}
-		for k, v in iterate_data(ACK) do
+		for k, v in pairs(ACK) do
 			fun = guess_outcast(s)
 			if luatype(v) == 'table' then
 				OUT[WHO][k] = deepmap(fun, v)
