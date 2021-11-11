@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Sunday, 11th July 2021
+--on Thursday, 11th November 2021
 --]]
 --- Zencode data internals
 
@@ -31,7 +31,7 @@ ZEN.get = function(obj, key, conversion, encoding)
    local k
    if not obj then -- take from IN root
 	  -- does not support to pick in WHO (use of 'my')
-	  k = IN.KEYS[key] or IN[key]
+	  k = KIN[key] or IN[key]
    else
 	  if key == '.' then
 		 k = obj

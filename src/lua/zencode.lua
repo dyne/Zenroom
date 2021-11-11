@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Tuesday, 3rd August 2021
+--on Thursday, 11th November 2021
 --]]
 --- <h1>Zencode language parser</h1>
 --
@@ -310,7 +310,7 @@ end
 
 -- Zencode HEAP globals
 IN = {} -- Given processing, import global DATA from json
-IN.KEYS = {} -- Given processing, import global KEYS from json
+KIN = {} -- Given processing, import global KEYS from json
 TMP = TMP or {} -- Given processing, temp buffer for ack*->validate->push*
 ACK = ACK or {} -- When processing,  destination for push*
 OUT = OUT or {} -- print out
@@ -453,7 +453,7 @@ function zencode:begin()
 	-- Reset HEAP
 	self.machine = {}
 	IN = {} -- Given processing, import global DATA from json
-	IN.KEYS = {} -- Given processing, import global KEYS from json
+	KIN = {} -- Given processing, import global KEYS from json
 	TMP = {} -- Given processing, temp buffer for ack*->validate->push*
 	ACK = {} -- When processing,  destination for push*
 	OUT = {} -- print out
@@ -574,13 +574,25 @@ function zencode:run()
 	if DATA then
 		-- if plain array conjoin into associative
 		IN = CONF.input.format.fun(DATA) or {}
+		DATA = nil
 	end
-	IN.KEYS = {} -- import global KEYS from json
+	KIN = {} -- import global KEYS from json
 	if KEYS then
-		IN.KEYS = CONF.input.format.fun(KEYS) or {}
+		KIN = CONF.input.format.fun(KEYS) or {}
+		KEYS = nil
 	end
+	collectgarbage 'collect'
+
 	-- convert all spaces in keys to underscore
 	IN = IN_uscore(IN)
+	KIN = IN_uscore(KIN)
+
+	-- check name collisions between DATA and KEYS
+	for k in pairs(IN) do
+		if KIN[k] then
+			error("Object name collision in input: "..k)
+		end
+	end
 
 	-- EXEC zencode
 	for _, x in pairs(self.AST) do
@@ -588,17 +600,17 @@ function zencode:run()
 		if manage_branching(x) then
 			goto continue
 		end
+		-- trigger upon switch to when or then section
+		if x.from == 'given' and x.to ~= 'given' then
+			-- delete IN memory
+			KIN = {}
+			IN = {}
+			collectgarbage 'collect'
+		end
 		-- HEAP integrity guard
 		if CONF.heapguard then
-			-- trigger upon switch to when or then section
-			if x.section == 'then' or x.section == 'when' then
-				-- delete IN memory
-				IN.KEYS = {}
-				IN = {}
-				collectgarbage 'collect'
-				-- guard ACK's contents on section switch
-				deepmap(zenguard, ACK)
-			end
+			-- guard ACK's contents on section switch
+			deepmap(zenguard, ACK)
 		end
 
 		ZEN.OK = true

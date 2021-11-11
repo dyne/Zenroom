@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Monday, 26th April 2021
+--on Thursday, 11th November 2021
 --]]
 
 -- TODO: use strict table
@@ -45,7 +45,7 @@ local function pick(what, conv)
    local guess
    local data
    local raw
-   raw = IN.KEYS[what] or IN[what]
+   raw = KIN[what] or IN[what]
    ZEN.assert(raw, "Cannot find '" .. what .. "' anywhere (null value?)")
    ZEN.assert(raw ~= '', "Found empty string in '" .. what)
    -- if not conv and ZEN.schemas[what] then conv = what end
@@ -80,7 +80,7 @@ local function pickin(section, what, conv, fail)
    local root  -- section
    local raw  -- data pointer
    local bail  -- fail
-   root = IN.KEYS[section]
+   root = KIN[section]
    if root then
       raw = root[what]
       if raw then
