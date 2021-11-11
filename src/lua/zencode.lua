@@ -81,7 +81,7 @@ local function set_sentence(self, event, from, to, ctx)
 	-- TODO: optimize in C
 	-- remove '' contents, lower everything, expunge prefixes
 	-- ignore 'the' only in Then statements
-	local tt = gsub(trim(ctx.msg), "'(.-)'", "''")
+	local tt = gsub(ctx.msg, "'(.-)'", "''") -- msg trimmed on parse
 	tt = gsub(tt, ' I ', ' ', 1) -- eliminate first person pronoun
 	tt = tt:lower() -- lowercase all statement
 	if to == 'then' then
@@ -427,7 +427,7 @@ local function zencode_iscomment(b)
 	end
 end
 local function zencode_isempty(b)
-	if b == nil or trim(b) == '' then
+	if b == nil or b == '' then
 		return true
 	else
 		return false
@@ -478,12 +478,13 @@ function zencode:parse(text)
 	local parse_prefix = parse_prefix -- optimization
    for line in zencode_newline_iter(text) do
 	linenum = linenum + 1
-	  if zencode_isempty(line) then goto continue end
-	  if zencode_iscomment(line) then goto continue end
+	local tline = trim(line) -- saves trims in isempty / iscomment
+	  if zencode_isempty(tline) then goto continue end
+	  if zencode_iscomment(tline) then goto continue end
 	--   xxx('Line: '.. text, 3)
 	  -- max length for single zencode line is #define MAX_LINE
 	  -- hard-coded inside zenroom.h
-	  prefix = parse_prefix(line)
+	  prefix = parse_prefix(line) -- trim is included
 	  assert(prefix, "Invalid Zencode line "..linenum..": "..line)
 	  self.OK = true
 	  exitcode(0)
@@ -495,7 +496,7 @@ function zencode:parse(text)
 	  -- xxx("Zencode machine enter_"..prefix..": "..text, 3)
 	  local fm = self.machine["enter_"..prefix]
 	  assert(fm, "Invalid Zencode line "..linenum..": '"..line.."'")
-	  assert(fm(self.machine, { msg = line, Z = self }),
+	  assert(fm(self.machine, { msg = tline, Z = self }),
 				line.."\n    "..
 				"Invalid transition from: "..self.machine.current)
 	  ::continue::
