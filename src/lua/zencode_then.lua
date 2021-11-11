@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Tuesday, 13th July 2021
+--on Thursday, 11th November 2021
 --]]
 
 --- THEN combinations:
@@ -85,6 +85,20 @@ local function then_insert(dest, val, key)
 		local tmp = OUT[dest]
 		OUT[dest] = { tmp }
 		table.insert(OUT[dest], val)
+	end
+end
+
+local function iterate_data(t)
+	local a = {}
+	for k,v in lua_pairs(t) do
+		if k ~= 'keys' then
+			table.insert(a, n)
+		end
+	end
+	local i = 0      -- iterator variable
+	return function ()   -- iterator function
+	   i = i + 1
+	   return a[i], t[a[i]]
 	end
 end
 
@@ -179,10 +193,23 @@ Then(
 )
 
 Then(
+	'print keys',
+	function()
+		OUT.keys = ZEN.schemas.keys.export(ACK.keys)
+	end
+)
+Then(
+	'print my keys',
+	function()
+		OUT[WHO] = { keys = ZEN.schemas.keys.export(ACK.keys) }
+	end
+)
+
+Then(
 	'print data',
 	function()
 		local fun
-		for k, v in pairs(ACK) do
+		for k, v in iterate_data(ACK) do
 			fun = guess_outcast(check_codec(k))
 			if luatype(v) == 'table' then
 				OUT[k] = deepmap(fun, v)
@@ -197,7 +224,7 @@ Then(
 	"print data as ''",
 	function(e)
 		local fun
-		for k, v in pairs(ACK) do
+		for k, v in iterate_data(ACK) do
 			fun = guess_outcast(e)
 			if luatype(v) == 'table' then
 				OUT[k] = deepmap(fun, v)
@@ -214,7 +241,7 @@ Then(
 		Iam() -- sanity checks
 		local fun
 		OUT[WHO] = {}
-		for k, v in pairs(ACK) do
+		for k, v in iterate_data(ACK) do
 			fun = guess_outcast(check_codec(k))
 			if luatype(v) == 'table' then
 				OUT[WHO][k] = deepmap(fun, v)
@@ -222,6 +249,7 @@ Then(
 				OUT[WHO][k] = fun(v)
 			end
 		end
+		if not next(OUT[WHO]) then OUT[WHO] = nil end
 	end
 )
 
@@ -231,7 +259,7 @@ Then(
 		Iam() -- sanity checks
 		local fun
 		OUT[WHO] = {}
-		for k, v in pairs(ACK) do
+		for k, v in iterate_data(ACK) do
 			fun = guess_outcast(s)
 			if luatype(v) == 'table' then
 				OUT[WHO][k] = deepmap(fun, v)
@@ -239,5 +267,6 @@ Then(
 				OUT[WHO][k] = fun(v)
 			end
 		end
+		if not next(OUT[WHO]) then OUT[WHO] = nil end
 	end
 )
