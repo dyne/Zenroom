@@ -248,7 +248,7 @@ Then(
 		for k, v in pairs(ACK) do
 			fun = guess_outcast(check_codec(k))
 			if luatype(v) == 'table' then
-				if ZEN.CODEC[k].encoding == 'complex' then
+				if ZEN.CODEC[k] and ZEN.CODEC[k].encoding == 'complex' then
 					OUT[WHO][k] = fun(v)
 				else
 					OUT[WHO][k] = deepmap(fun, v)
