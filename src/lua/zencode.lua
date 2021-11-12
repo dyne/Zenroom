@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Thursday, 11th November 2021
+--on Friday, 12th November 2021
 --]]
 --- <h1>Zencode language parser</h1>
 --
@@ -156,8 +156,7 @@ local function set_rule(text)
 		-- elseif rule[2] == 'load' and rule[3] then
 		--     act("zencode extension: "..rule[3])
 		--     require("zencode_"..rule[3])
-		SEMVER = require_once('semver')
-		local ver = SEMVER(rule[4])
+		local ver = V(rule[4]) -- SEMVER
 		if ver == ZENROOM_VERSION then
 			act('Zencode version match: ' .. ZENROOM_VERSION.original)
 			res = true
@@ -284,7 +283,7 @@ local function new_state_machine()
 						strtok(string.match(trim(msg.msg):lower(), '[^:]+'))
 					for k, scen in ipairs(scenarios) do
 						if k ~= 1 then -- skip first (prefix)
-							require('zencode_' .. trimq(scen))
+							load_scenario('zencode_' .. trimq(scen))
 							ZEN:trace('Scenario ' .. scen)
 							return
 						end
@@ -463,7 +462,6 @@ function zencode:begin()
 	collectgarbage 'collect'
 	-- Zencode init traceback
 	self.machine = new_state_machine()
-	return true
 end
 
 function zencode:parse(text)

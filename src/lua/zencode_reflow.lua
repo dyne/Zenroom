@@ -20,9 +20,10 @@
 --on Wednesday, 14th July 2021
 --]]
 
+load_scenario('zencode_credential')
+
 ABC = require_once('crypto_credential')
 
-require_once('zencode_credential')
 
 G2 = ECP2.generator()
 

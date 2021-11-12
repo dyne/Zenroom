@@ -188,7 +188,7 @@ check-py:
 	@echo "All tests passed for PYTHON build"
 	@echo "----------------"
 
-check-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom -d 3
+check-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom
 check-debug:
 	rm -f /tmp/zenroom-test-summary.txt
 	$(call lowmem-tests,${test-exec})

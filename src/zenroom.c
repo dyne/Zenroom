@@ -316,7 +316,12 @@ int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
 	lua_State* L = (lua_State*)ZZ->lua;
 	// introspection on code being executed
 	(*ZZ->snprintf)(zscript,MAX_ZENCODE-1,
-	         "ZEN:begin()\nZEN:parse([[\n%s\n]])\nZEN:run()\n", script);
+	        "local _res, _err\n"
+		"pcall( function() ZEN:begin() end)\n"
+		"pcall( function() ZEN:parse([[\n%s\n]]) end)\n"
+		"_res, _err = pcall( function() ZEN:run() end)\n"
+		"if not _res then exitcode(1) ZEN.OK = false end\n"
+		, script);
 	zen_setenv(L,"CODE",(char*)zscript);
 	ret = luaL_dostring(L, zscript);
 	if(ret) {
