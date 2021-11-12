@@ -124,7 +124,7 @@ hash* hash_new(lua_State *L, const char *hashtype) {
 		strncpy(h->name,hashtype,15);
 		h->len = 20;
 		h->algo = _RMD160;
-		h->rmd160 = (dword*)zen_memory_alloc(160/32);
+		h->rmd160 = (dword*)zen_memory_alloc((160/32)+0x0f);
 		RMD160_init(h->rmd160);
 	} // ... TODO: other hashes
 	else {
