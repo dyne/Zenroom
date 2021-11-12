@@ -125,6 +125,37 @@ static int lua_trim_quotes(lua_State* L) {
 	return 1;
 }
 
+
+static int lua_unserialize_json(lua_State* L) {
+	const char *in;
+	size_t size;
+	register int level = 0;
+	register char *p;
+	in = luaL_checklstring(L, 1, &size);
+	p = (char*)in;
+	while (size && isspace(*p) ) { size--; p++; } // first char
+	if(!size) {	lua_pushnil(L);	return 1; }
+	if (*p == '{' || *p == '[') {
+		level++;
+	} else {
+		func(L, "JSON doesn't starts with '{', char found: %c", *p);
+		lua_pushnil(L);
+		return 1;
+	} // ok, level is 1
+	for( p++ ; size>0 ; size--, p++ ) {
+		if(*p=='{' || *p=='[') level++;
+		if(*p=='}' || *p==']') level--;
+		if(level==0) { // end of first block
+			lua_pushlstring(L,in,(size_t)(p - in)+1);
+			lua_pushlstring(L,++p, size+1);
+			return 2;
+		}
+	}
+	// should never be here
+	lerror(L, "JSON as malformed beginning or end");
+	return 0;
+}
+
 void zen_add_parse(lua_State *L) {
 	// override print() and io.write()
 	static const struct luaL_Reg custom_parser [] =
@@ -132,6 +163,7 @@ void zen_add_parse(lua_State *L) {
 		  {"strcasecmp", lua_strcasecmp},
 		  {"trim", lua_trim_spaces},
 		  {"trimq", lua_trim_quotes},
+		  {"jsontok", lua_unserialize_json},
 		  {NULL, NULL} };
 	lua_getglobal(L, "_G");
 	luaL_setfuncs(L, custom_parser, 0);  // for Lua versions 5.2 or greater

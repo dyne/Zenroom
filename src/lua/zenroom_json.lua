@@ -17,18 +17,38 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Tuesday, 20th July 2021
+--on Friday, 12th November 2021
 --]]
 
 local J = require('json')
 
 
 J.decode = function(data)
-   if not data then error("JSON.decode error decoding nil string", 2) end
-   -- assert(str ~= "","JSON.decode error decoding empty string")
-   -- assert(type(str) == "string", "JSON.decode error unsopported type: "..type(str))
-   local res = JSON.raw_decode( str(data) )
-   if not res then error("JSON.decode error decoding type: "..t, 2) end
+   if not data then error("JSON.decode called without argument", 2) end
+   assert(#data > 1,"JSON.decode argument is empty string")
+   assert(luatype(data) == "string", "JSON.decode argument of unsopported type: "..luatype(data))
+   local res = {}
+   local right = tostring(data)
+   local left
+   local tmp
+   while right do
+      left, right = jsontok(right) -- function in zen_parser.c
+      if not left then break end
+      tmp = JSON.raw_decode(left)
+      if luatype(tmp) == 'table' then
+            for k,v in pairs(tmp) do
+               -- adds all unnamed array elements into 'array'
+               if luatype(k)=='number' then
+                  res.array = fif(res.array, res.array, {})
+                  table.insert(res.array, v)
+               else
+                  res[k] = v
+               end
+            end
+      else
+         error("JSON decode has not returned a table", 2)
+      end
+   end
    return res
 end
 
