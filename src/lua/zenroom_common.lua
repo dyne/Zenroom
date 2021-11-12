@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Friday, 20th August 2021
+--on Friday, 12th November 2021
 --]]
 
 -- override type to recognize zenroom's types
@@ -167,6 +167,8 @@ local function _native(data, fun)
 		return fun(data)
 	elseif iszen(t) then
 		return fun(data:octet())
+	elseif t == 'table' then
+		return deepmap(fun, data)
 	else
 		error("Cannot export data type: "..t, 2)
 	end

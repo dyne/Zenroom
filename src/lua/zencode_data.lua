@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Thursday, 11th November 2021
+--on Friday, 12th November 2021
 --]]
 --- Zencode data internals
 
@@ -380,14 +380,17 @@ function check_codec(value)
       xxx('Object has no CODEC registration: ' .. value)
       return CONF.output.encoding.name
    end
-   if ZEN.CODEC[value].zentype == 'schema' then
-      if ZEN.CODEC[value].encoding == 'complex' then
-	 assert(luatype(ZEN.schemas[value].export) == 'function',
-		"Complex export for schema is not a function: "..value)
+   local codec = ZEN.CODEC[value]
+   if codec.zentype == 'schema' then
+      if codec.encoding == 'complex' then
+         assert(ZEN.schemas[codec.name],
+          "Complex export for schema not found: "..value)
+	      assert(luatype(ZEN.schemas[codec.name].export) == 'function',
+		    "Complex export for schema is not a function: "..value)
 	 return value -- name of schema itself as it contains export
       end
    else
-      return ZEN.CODEC[value].encoding or CONF.output.encoding.name
+      return codec.encoding or CONF.output.encoding.name
    end
    return CONF.output.encoding.name
 end

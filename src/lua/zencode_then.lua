@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Thursday, 11th November 2021
+--on Friday, 12th November 2021
 --]]
 
 --- THEN combinations:
@@ -212,7 +212,7 @@ Then(
 		for k, v in pairs(ACK) do
 			fun = guess_outcast(check_codec(k))
 			if luatype(v) == 'table' then
-				if ZEN.CODEC[k].encoding == 'complex' then
+				if ZEN.CODEC[k] and ZEN.CODEC[k].encoding == 'complex' then
 					OUT[k] = fun(v)
 				else
 					OUT[k] = deepmap(fun, v)
