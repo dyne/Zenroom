@@ -52,12 +52,13 @@ J.decode = function(data)
    return res
 end
 
-J.encode = function(tab)
+J.encode = function(tab,enc)
    return
 	  JSON.raw_encode(
 		 -- process encodes zencode types
 		 -- it is part of inspect.lua
-		 INSPECT.process(tab, CONF.output.encoding.name)
+		 INSPECT.process(tab,
+         enc or CONF.output.encoding.name)
 	  )
    -- return JSON.raw_encode(tab)
 end
