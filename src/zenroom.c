@@ -355,7 +355,7 @@ int zen_exec_script(zenroom_t *ZZ, const char *script) {
 	if(ret) {
 	  error(L, "ERROR:");
 	  error(L, "%s", lua_tostring(L, -1));
-	}
+	} else EXITCODE=0;
 	if(!EXITCODE)
 	  notice(L, "Script successfully executed");
 	else
