@@ -53,6 +53,7 @@ local function pick(what, conv)
    if not TMP then error('Cannot guess any conversion for: ' ..
          luatype(raw) .. ' ' .. (conv or what or '(nil)')) end
    TMP.name = what
+   TMP.schema = conv
    assert(ZEN.OK)
    if DEBUG > 1 then
       ZEN:ftrace('pick found ' .. what)
@@ -103,6 +104,7 @@ local function pickin(section, what, conv, fail)
    TMP = guess_conversion(raw, conv or what)
    TMP.name = what
    TMP.root = section
+   TMP.schema = conv
    assert(ZEN.OK)
    if DEBUG > 1 then
       ZEN:ftrace('pickin found ' .. what .. ' in ' .. section)
@@ -129,6 +131,10 @@ local function ack_table(key, val)
       encoding = TMP.encoding,
       root = TMP.root
    }
+   -- name of schema may differ from name of object
+   if TMP.schema and ( TMP.schema ~= TMP.encoding ) then
+      ZEN.CODEC[key].schema = TMP.schema
+   end
 end
 
 ---
@@ -162,6 +168,11 @@ local function ack(name)
       encoding = TMP.encoding,
       root = TMP.root
    }
+   -- name of schema may differ from name of object
+   if TMP.schema and ( TMP.schema ~= TMP.encoding ) then
+      ZEN.CODEC[name].schema = TMP.schema
+   end
+   
    -- ACK[name] already holds an object
    -- not a table?
    -- if not (dsttype == 'table') then -- convert single object to array

@@ -369,7 +369,8 @@
  -- { name: string,
  --   encoding: encoder name string or 'complex' handled by schema
  --   zentype:  zencode type: element, array, dictionary or schema
- --   luatype:  lua type (string, number, table or userdata) 
+ --   luatype:  lua type (string, number, table or userdata)
+ --   schema: schema name used to import (may differ from name)
  -- }
  -- TODO: rename to check_output_codec_encoding(v)
  function check_codec(value)
@@ -383,9 +384,10 @@
     local codec = ZEN.CODEC[value]
     if codec.zentype == 'schema' then
        if codec.encoding == 'complex' then
-	  assert(ZEN.schemas[codec.name],
-	   "Complex export for schema not found: "..value)
-	       assert(luatype(ZEN.schemas[codec.name].export) == 'function',
+        local sch = codec.schema or codec.name
+   	  assert(ZEN.schemas[sch],
+   	   "Complex export for schema not found: "..value)
+	       assert(luatype(ZEN.schemas[sch].export) == 'function',
 		     "Complex export for schema is not a function: "..value)
 	  return value -- name of schema itself as it contains export
        end
