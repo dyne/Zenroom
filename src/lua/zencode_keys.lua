@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Saturday, 4th September 2021
+--on Friday, 12th November 2021
 --]]
 
 
@@ -29,14 +29,16 @@
 -- uses bls and credential, petition uses credential and ecdh.
 
 function initkeys(ktype)
+
     if luatype(ACK.keys) == 'table' then
         -- TODO: check that curve types match
     elseif ACK.keys == nil then
         -- initialise empty ACK.keys
-        ACK.keys = {} -- TODO: save curve types
-	new_codec('keys', { zentype = 'schema',
-			    luatype = 'table',
-			    encoding = 'complex' })
+         ACK.keys = {} -- TODO: save curve types
+	      new_codec('keys', {
+            zentype = 'schema',
+			   luatype = 'table',
+			   encoding = 'complex' })
     else
         error('Keys table is corrupted', 2)
     end
@@ -48,6 +50,15 @@ function initkeys(ktype)
         )
     end
 end
+When("create the keys", function()
+   empty'keys'
+   -- initialise empty ACK.keys
+   ACK.keys = {}
+   new_codec('keys', {
+       zentype = 'schema',
+       luatype = 'table',
+       encoding = 'complex' })
+end)
 
 -- KNOWN KEY TYPES FOUND IN ACK.keys
 local keytypes = {
