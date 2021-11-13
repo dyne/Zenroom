@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Friday, 12th November 2021
+--on Saturday, 13th November 2021
 --]]
 --- <h1>Zencode language parser</h1>
 --
@@ -140,7 +140,7 @@ local function set_sentence(self, event, from, to, ctx)
 	if not ctx.Z.OK and CONF.parser.strict_match then
 		debug_traceback()
 		exitcode(1)
-		error('Zencode pattern not found (missing scenario?): ' .. trim(ctx.msg), 1)
+		error('Zencode pattern not found ('..index..'): ' .. trim(ctx.msg), 1)
 		return false
 	elseif not ctx.Z.OK and not CONF.parser.strict_match then
 		warn('Zencode pattern ignored: ' .. trim(ctx.msg), 1)
@@ -672,6 +672,7 @@ end
 function zencode.heap()
 	return ({
 		IN = IN,
+		KIN = KIN,
 		TMP = TMP,
 		ACK = ACK,
 		OUT = OUT
