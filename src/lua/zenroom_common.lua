@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Friday, 12th November 2021
+--on Saturday, 13th November 2021
 --]]
 
 -- override type to recognize zenroom's types
@@ -385,7 +385,7 @@ function zenguard(val)
    if not (iszen(type(val)) or tonumber(val)) then
 		I.print(ZEN.heap().ACK)
 		-- xxx("Invalid value: "..val)
-		debug_heap_dump()
+		-- debug_heap_dump()
 		error("Zenguard detected an invalid value in HEAP: type "..type(val), 2)
 		return nil
    end
