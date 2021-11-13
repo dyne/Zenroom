@@ -14,10 +14,10 @@ EOF
 
 cat <<EOF | save bitcoin txinput.json
 {
-  "amount": "50000",
-  "fee": "1000",
-  "recipient_address": "tb1q73czlxl7us4s6num5sjlnq6r0yuf8uh5clr2tm",
-  "unspent": [
+  "satoshi amount": "1",
+  "satoshi fee": "142",
+  "bitcoin address": "tb1q73czlxl7us4s6num5sjlnq6r0yuf8uh5clr2tm",
+  "bitcoin unspent": [
     {
       "address": "tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug",
       "amount": "0.00031",
@@ -36,16 +36,36 @@ EOF
 
 cat <<EOF | zexe create_bitcoin_rawtx.zen -a txinput.json -k keys.json \
     | save bitcoin bitcoin_rawtx.json
-rule input encoding base58
-Scenario bitcoin: create a rawtx from unspent
 Given I have the 'keys'
-and I have a 'amount'
-and I have a 'fee'
-and I have a 'recipient address'
-and I have a 'unspent'
-When I create the bitcoin transaction
-Then print the 'bitcoin transaction' as 'hex'
-When I sign with bitcoin the 'bitcoin transaction'
-When I create the bitcoin raw transaction of the 'bitcoin transaction'
+and I have a 'satoshi amount'
+and I have a 'satoshi fee'
+and I have a 'bitcoin address'
+and I have a 'bitcoin unspent'
+
+When I create the bitcoin transaction to 'bitcoin address'
+and I sign the bitcoin transaction
+and I create the bitcoin raw transaction
+Then print the 'bitcoin raw transaction' as 'hex'
+EOF
+
+cat << EOF | save bitcoin wif.json
+{ "wif": "cPW7XRee1yx6sujBWeyZiyg18vhhQk9JaxxPdvwGwYX175YCF48G" }
+EOF
+cat <<EOF | zexe import_key.zen -a txinput.json -k wif.json \
+    | save bitcoin import_key.json
+
+Given I have the 'bitcoin key' named 'wif'
+and I have a 'satoshi amount'
+and I have a 'satoshi fee'
+and I have a 'bitcoin address'
+and I have a 'bitcoin unspent'
+and schema
+When I create the keys
+and I rename 'wif' to 'bitcoin'
+and I move 'bitcoin' in 'keys'
+and I create the bitcoin transaction to 'bitcoin address'
+and I sign the bitcoin transaction
+and I create the bitcoin raw transaction
+
 Then print the 'bitcoin raw transaction' as 'hex'
 EOF
