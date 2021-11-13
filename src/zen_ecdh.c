@@ -61,7 +61,7 @@
 #include <zen_ecdh.h>
 #include <zen_big_factory.h>
 
-#include <ecp_SECP256K1.h>
+// #include <ecp_SECP256K1.h>
 #include <zen_big.h>
 
 #define KEYPROT(alg,key)	  \
@@ -73,7 +73,7 @@ extern void ecdh_init(ecdh *e);
 
 extern zenroom_t *Z; // accessed to check random_seed configuration
 
-static ecdh ECDH;
+ecdh ECDH;
 
 /// Global ECDH functions
 // @section ECDH.globals
@@ -481,37 +481,7 @@ static int ecdh_aead_decrypt(lua_State *L) {
 	return 2;
 }
 
-/*
-   Takes two points on the curve SECP256K1 (in the form of a public key),
-   add them and return the point (as a public key not compressed)
-
-   @param pk1 addendum point
-   @param pk2 addendum point
-   @return sum result
-*/
-
-static int ecdh_add(lua_State *L) {
-	octet *pk1 = o_arg(L, 1); SAFE(pk1);
-	if((*ECDH.ECP__PUBLIC_KEY_VALIDATE)(pk1)!=0) {
-		return lerror(L, "Invalid public key passed as argument");
-	}
-	octet *pk2 = o_arg(L, 2); SAFE(pk2);
-	if((*ECDH.ECP__PUBLIC_KEY_VALIDATE)(pk2)!=0) {
-		return lerror(L, "Invalid public key passed as argument");
-	}
-	ECP_SECP256K1 p1, p2;
-	// Export public key to octet.  This is like o_dup but skips
-	// first byte since that is used internally by Milagro as a
-	// prefix for Montgomery (2) or non-Montgomery curves (4)
-	octet *pk_sum = o_new(L, pk1->len); SAFE(pk_sum);
-	ECP_SECP256K1_fromOctet(&p1,pk1);
-	ECP_SECP256K1_fromOctet(&p2,pk2);
-	ECP_SECP256K1_add(&p1, &p2);
-	ECP_SECP256K1_toOctet(pk_sum, &p1, false);
-
-	return 1;
-}
-
+extern int ecdh_add(lua_State *L);
 
 int luaopen_ecdh(lua_State *L) {
 	(void)L;

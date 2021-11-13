@@ -17,6 +17,7 @@ cat <<EOF > "${FILE}"
 #include <zen_ecdh.h>
 #include <zen_error.h>
 #include <ecdh_${CN}.h>
+#include <ecp_${CN}.h>
 
 void ecdh_init(ecdh *ECDH) {
 	ECDH->fieldsize = EFS_${CN};
@@ -32,4 +33,38 @@ void ecdh_init(ecdh *ECDH) {
 	ECDH->ECP__VP_DSA_NOHASH = ECP_${CN}_VP_DSA_NOHASH;
 	act(NULL,"ECDH curve is ${CN}");
 }
+
+/*
+   Takes two points on the curve ECDH (in the form of a public key),
+   add them and return the point (as a public key not compressed)
+
+   @param pk1 addendum point
+   @param pk2 addendum point
+   @return sum result
+*/
+extern ecdh ECDH;
+
+int ecdh_add(lua_State *L) {
+	octet *pk1 = o_arg(L, 1); SAFE(pk1);
+	if((*ECDH.ECP__PUBLIC_KEY_VALIDATE)(pk1)!=0) {
+		return lerror(L, "Invalid public key passed as argument");
+	}
+	octet *pk2 = o_arg(L, 2); SAFE(pk2);
+	if((*ECDH.ECP__PUBLIC_KEY_VALIDATE)(pk2)!=0) {
+		return lerror(L, "Invalid public key passed as argument");
+	}
+	ECP_${CN} p1, p2;
+	// Export public key to octet.  This is like o_dup but skips
+	// first byte since that is used internally by Milagro as a
+	// prefix for Montgomery (2) or non-Montgomery curves (4)
+	octet *pk_sum = o_new(L, pk1->len); SAFE(pk_sum);
+	ECP_${CN}_fromOctet(&p1,pk1);
+	ECP_${CN}_fromOctet(&p2,pk2);
+	ECP_${CN}_add(&p1, &p2);
+	ECP_${CN}_toOctet(pk_sum, &p1, false);
+
+	return 1;
+}
+
+
 EOF
