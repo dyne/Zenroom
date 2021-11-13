@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Thursday, 11th November 2021
+--on Saturday, 13th November 2021
 --]]
 
 -- TODO: use strict table
@@ -46,15 +46,12 @@ local function pick(what, conv)
    local data
    local raw
    raw = KIN[what] or IN[what]
-   ZEN.assert(raw, "Cannot find '" .. what .. "' anywhere (null value?)")
-   ZEN.assert(raw ~= '', "Found empty string in '" .. what)
+   if not raw then error("Cannot find '" .. what .. "' anywhere (null value?)", 2) end
+   if raw == '' then error("Found empty string in '" .. what) end
    -- if not conv and ZEN.schemas[what] then conv = what end
    TMP = guess_conversion(raw, conv or what)
-   ZEN.assert(
-      TMP,
-      'Cannot guess any conversion for: ' ..
-         luatype(raw) .. ' ' .. (conv or what or '(nil)')
-   )
+   if not TMP then error('Cannot guess any conversion for: ' ..
+         luatype(raw) .. ' ' .. (conv or what or '(nil)')) end
    TMP.name = what
    assert(ZEN.OK)
    if DEBUG > 1 then
@@ -97,11 +94,8 @@ local function pickin(section, what, conv, fail)
 
    -- TODO: check all corner cases to make sure TMP[what] is a k/v map
    ::found::
-   ZEN.assert(
-      raw,
-      "Cannot find '" .. what .. "' inside '" .. section .. "' (null value?)"
-   )
-   ZEN.assert(raw ~= '', "Found empty string '" .. what .."' inside '"..section.."'")
+   if not raw then error("Cannot find '" .. what .. "' inside '" .. section .. "' (null value?)",2) end
+   if raw == '' then error("Found empty string '" .. what .."' inside '"..section.."'", 2) end
 
    -- conv = conv or what
    -- if not conv and ZEN.schemas[what] then conv = what end
