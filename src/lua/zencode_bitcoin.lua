@@ -99,19 +99,16 @@ local function _address_export(obj)
    return O.to_segwit(obj.raw, obj.version, O.to_string(obj.network))
 end
 
-local function _wif_import(obj)
-	return ZEN.get(obj, '.', BTC.wif_to_sk, O.from_base58)
-end
-local function _wif_export(obj)
-	return O.to_base58( BTC.sk_to_wif( obj) )
-end
-
-local wif_schema = { import = _wif_import, export = _wif_export }
+local function _wif_import(obj)	return ZEN.get(obj, '.', BTC.wif_to_sk, O.from_base58) end
+local function _wif_bitcoin_export(obj)	return O.to_base58( BTC.sk_to_wif( obj, 'bitcoin') ) end
+local function _wif_testnet_export(obj)	return O.to_base58( BTC.sk_to_wif( obj, 'testnet') ) end
+local wif_bitcoin_schema = { import = _wif_import, export = _wif_bitcoin_export }
+local wif_testnet_schema = { import = _wif_import, export = _wif_testnet_export }
 
 ZEN.add_schema(
    {
-	bitcoin_key = wif_schema,
-	testnet_key = wif_schema,
+	bitcoin_key = wif_bitcoin_schema,
+	testnet_key = wif_testnet_schema,
 	wif = wif_schema,
 
       satoshi_amount            = function(obj)
@@ -120,8 +117,8 @@ ZEN.add_schema(
 	 return ZEN.get(obj, '.', BIG.from_decimal, tostring) end,
       satoshi_unspent = { import = _satoshi_unspent_import,
 			  export = _satoshi_unspent_export },
-      bitcoin_unspent = { import = _bitcoin_unspent_import,
-			  export = _bitcoin_unspent_export },
+      bitcoin_unspent = { import = _bitcoin_unspent_import, export = _bitcoin_unspent_export },
+      testnet_unspent = { import = _bitcoin_unspent_import, export = _bitcoin_unspent_export },
       bitcoin_address = { import = _address_import,
 			  export = _address_export },
       testnet_address = { import = _address_import,

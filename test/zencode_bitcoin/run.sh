@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+RNGSEED=random
+
 ####################
 # common script init
 if ! test -r ../utils.sh; then
@@ -9,15 +11,15 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
 cat <<EOF | save bitcoin keys.json
-{ "keys": { "bitcoin": "cPW7XRee1yx6sujBWeyZiyg18vhhQk9JaxxPdvwGwYX175YCF48G" } }
+{ "keys": { "testnet": "cPW7XRee1yx6sujBWeyZiyg18vhhQk9JaxxPdvwGwYX175YCF48G" } }
 EOF
 
 cat <<EOF | save bitcoin txinput.json
 {
   "satoshi amount": "1",
   "satoshi fee": "142",
-  "bitcoin address": "tb1q73czlxl7us4s6num5sjlnq6r0yuf8uh5clr2tm",
-  "bitcoin unspent": [
+  "testnet address": "tb1q73czlxl7us4s6num5sjlnq6r0yuf8uh5clr2tm",
+  "testnet unspent": [
     {
       "address": "tb1q04c9a079f3urc5nav647frx4x25hlv5vanfgug",
       "amount": "0.00031",
@@ -39,13 +41,14 @@ cat <<EOF | zexe create_bitcoin_rawtx.zen -a txinput.json -k keys.json \
 Given I have the 'keys'
 and I have a 'satoshi amount'
 and I have a 'satoshi fee'
-and I have a 'bitcoin address'
-and I have a 'bitcoin unspent'
+and I have a 'testnet address'
+and I have a 'testnet unspent'
 
-When I create the bitcoin transaction to 'bitcoin address'
-and I sign the bitcoin transaction
-and I create the bitcoin raw transaction
-Then print the 'bitcoin raw transaction' as 'hex'
+When I create the testnet transaction to 'testnet address'
+and I sign the testnet transaction
+and I create the testnet raw transaction
+Then print the 'testnet raw transaction' as 'hex'
+and print the 'keys'
 EOF
 
 cat << EOF | save bitcoin wif.json
@@ -54,18 +57,24 @@ EOF
 cat <<EOF | zexe import_key.zen -a txinput.json -k wif.json \
     | save bitcoin import_key.json
 
-Given I have the 'bitcoin key' named 'wif'
+Given I have the 'testnet key' named 'wif'
 and I have a 'satoshi amount'
 and I have a 'satoshi fee'
-and I have a 'bitcoin address'
-and I have a 'bitcoin unspent'
-and schema
+and I have a 'testnet address'
+and I have a 'testnet unspent'
 When I create the keys
-and I rename 'wif' to 'bitcoin'
-and I move 'bitcoin' in 'keys'
-and I create the bitcoin transaction to 'bitcoin address'
-and I sign the bitcoin transaction
-and I create the bitcoin raw transaction
+and I rename 'wif' to 'testnet'
+and I move 'testnet' in 'keys'
+and I create the testnet transaction to 'testnet address'
+and I sign the testnet transaction
+and I create the testnet raw transaction
 
-Then print the 'bitcoin raw transaction' as 'hex'
+Then print the 'testnet raw transaction' as 'hex'
+and print the 'keys'
+EOF
+
+cat <<EOF | debug check_import.zen -a wif.json -k keys.json
+Given I have the 'testnet key' named 'wif'
+and I have the 'keys'
+Then print all data
 EOF
