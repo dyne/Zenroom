@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Friday, 12th November 2021
+--on Saturday, 13th November 2021
 --]]
 
 local btc -- mostly loaded at init
@@ -99,9 +99,21 @@ local function _address_export(obj)
    return O.to_segwit(obj.raw, obj.version, O.to_string(obj.network))
 end
 
+local function _wif_import(obj)
+	return ZEN.get(obj, '.', BTC.wif_to_sk, O.from_base58)
+end
+local function _wif_export(obj)
+	return O.to_base58( BTC.sk_to_wif( obj) )
+end
+
+local wif_schema = { import = _wif_import, export = _wif_export }
 
 ZEN.add_schema(
    {
+	bitcoin_key = wif_schema,
+	testnet_key = wif_schema,
+	wif = wif_schema,
+
       satoshi_amount            = function(obj)
 	 return ZEN.get(obj, '.', BIG.from_decimal, tostring) end,
       satoshi_fee               = function(obj)
@@ -115,6 +127,7 @@ ZEN.add_schema(
       testnet_address = { import = _address_import,
 			  export = _address_export },
 
+			  -- bitcoin key
    })
 
 -- generate a keypair in "bitcoin" format (only x coord, 03 prepended)
@@ -155,17 +168,6 @@ end
 When("create the bitcoin public key", function() _get_pub('bitcoin') end)
 When("create the testnet public key", function() _get_pub('testnet') end)
 
-local function _get_priv(name)
-   empty(name..' master key')
-   local sk = havekey(name)
-   ACK[name..'_master_key'] = ECDH.sk_to_wif(sk, name)
-   new_codec(name..' master key',
-	     { zentype = 'element',
-	       encoding = 'base58' })
-end
-When("create the bitcoin master key", function() _get_priv('bitcoin') end)
-When("create the testnet master key", function() _get_priv('testnet') end)
-
 local function _create_addr(name,pfx)
 	empty(name..' address')
 	local pk
@@ -183,8 +185,11 @@ end
 When("create the bitcoin address", function() _create_addr('bitcoin','bc') end)
 When("create the testnet address", function() _create_addr('testnet','tb') end)
 
-local function _create_tx(name)
-	local to      = have'recipient'
+local function _create_tx(name, recipient)
+	local to      = have(recipient or 'recipient')
+	if not to then
+		error("Cannot create "..name.." transaction: recipient not specified")
+	end
 	local q       = have'satoshi amount'
 	local fee     = have'satoshi fee'
 	local unspent = have(name..' unspent')
@@ -194,7 +199,8 @@ local function _create_tx(name)
 end
 When('create the bitcoin transaction', function() _create_tx('bitcoin') end)
 When('create the testnet transaction', function() _create_tx('testnet') end)
-
+When("create the bitcoin transaction to ''", function(recipient) _create_tx('bitcoin', recipient) end)
+When("create the testnet transaction to ''", function(recipient) _create_tx('testnet', recipient) end)
 
 local function _sign_tx(name)
    local sk = havekey(name)
