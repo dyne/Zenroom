@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Thursday, 29th July 2021
+--on Saturday, 13th November 2021
 --]]
 
 -- limit output of string if too long
@@ -46,8 +46,9 @@ Then("trace", function() debug_traceback() end)
 function debug_heap_dump()
    local HEAP = ZEN.heap()
    I.warn({a_GIVEN_in = HEAP.IN,
-		   b_WHEN_ack = HEAP.ACK,
-		   c_THEN_out = HEAP.OUT})
+         b_GIVEN_in = HEAP.KIN,
+		   c_WHEN_ack = HEAP.ACK,
+		   d_THEN_out = HEAP.OUT})
 end
 
 function debug_heap_schema()
