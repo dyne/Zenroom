@@ -263,7 +263,7 @@ static int hash_hmac(lua_State *L) {
 	octet *out;
 	if(h->algo == _SHA256) {
 		out = o_new(L, SHA256+1); SAFE(out);
-		//       hash    m   k  outlen  out
+		//              hash    m   k  outlen  out
 		if(!AMCL_(HMAC)(SHA256, in, k, SHA256, out)) {
 			error(L, "%s: hmac (%u bytes) failed.", SHA256);
 			lua_pop(L, 1);
@@ -271,7 +271,7 @@ static int hash_hmac(lua_State *L) {
 		}
 	} else if(h->algo == _SHA512) {
 		out = o_new(L, SHA512+1); SAFE(out);
-		//       hash    m   k  outlen  out
+		//              hash    m   k  outlen  out
 		if(!AMCL_(HMAC)(SHA512, in, k, SHA512, out)) {
 			error(L, "%s: hmac (%u bytes) failed.", SHA512);
 			lua_pop(L, 1);
@@ -315,7 +315,7 @@ static int hash_kdf2(lua_State *L) {
 
    @param key octet of the key to be transformed
    @param salt octet containing a salt to be used in transformation
-   @param iterations[opt=1000] number of iterations to be applied
+   @param iterations[opt=5000] number of iterations to be applied
    @param length[opt=key length] integer indicating the new length (default same as input key)
    @function keyring:pbkdf2(key, salt, iterations, length)
    @return a new octet containing the derived key
@@ -350,8 +350,6 @@ static int hash_pbkdf2(lua_State *L) {
 	ss->len = s->len;
 	octet *out = o_new(L, keylen); SAFE(out);
 
-	// TODO: OPTIMIZATION: reuse the initialized hash* structure in
-	// hmac->ehashit instead of milagro's
         // TODO: according to RFC2898, s should have a size of 8
         // c should be a positive integer
 	PBKDF2(h->len, k, ss, iter, keylen, out);

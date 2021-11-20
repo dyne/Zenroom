@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Tuesday, 6th April 2021
+--on Saturday, 20th November 2021
 --]]
 
 
@@ -25,9 +25,7 @@
 When(
     "create the hash of ''",
     function(s)
-        -- TODO: hash an array
-        local src = ACK[s]
-        ZEN.assert(src, 'Object not found: ' .. s)
+        local src = have(s)
         if luatype(src) == 'table' then
             src = ZEN.serialize(src) -- serialize tables using zenroom's algo
         end
@@ -39,8 +37,7 @@ When(
 When(
     "create the hash of '' using ''",
     function(s, h)
-        local src = ACK[s]
-        ZEN.assert(src, 'Object not found: ' .. s)
+        local src = have(s)
         if luatype(src) == 'table' then
             src = ZEN.serialize(src)
         end
@@ -73,8 +70,7 @@ When(
             luatype(F.hashtopoint) == 'function',
             'Hash type ' .. what .. ' is invalid (no hashtopoint)'
         )
-        local A = ACK[arr]
-        ZEN.assert(A, 'Object not found: ' .. arr)
+        local A = have(arr)
         local count = isarray(A)
         ZEN.assert(count > 0, 'Object is not an array: ' .. arr)
         ACK.hash_to_point = deepmap(F.hashtopoint, A)
@@ -85,8 +81,7 @@ When(
 When(
     "create the hashes of each object in ''",
     function(arr)
-        local A = ACK[arr]
-        ZEN.assert(A, 'Object not found: ' .. arr)
+        local A = have(arr)
         local count = isarray(A)
         ZEN.assert(count > 0, 'Object is not an array: ' .. arr)
         ACK.hashes = deepmap(sha256, A)
@@ -98,13 +93,15 @@ When(
 When(
     "create the HMAC of '' with key ''",
     function(obj, key)
-        local src = ACK[obj]
-        ZEN.assert(src, 'Object not found: ' .. obj)
+        local src = have(obj)
         if luatype(src) == 'table' then
             src = ZEN.serialize(src)
         end
-        local hkey = ACK[key]
-        ZEN.assert(hkey, 'Key not found: ' .. key)
+        local hkey = have(key)
+        -- static int hash_hmac(lua_State *L) {
+        --     hash *h   = hash_arg(L,1);
+        --     octet *k  = o_arg(L, 2);
+        --     octet *in = o_arg(L, 3);
         ACK.HMAC = HASH.new(CONF.hash):hmac(hkey, obj)
 	new_codec('HMAC', { zentype = 'element' })
     end
@@ -113,8 +110,7 @@ When(
 When(
     "create the key derivation of ''",
     function(obj)
-        local src = ACK[obj]
-        ZEN.assert(src, 'Object not found: ' .. obj)
+        local src = have(obj)
         if luatype(src) == 'table' then
             src = ZEN.serialize(src)
         end
@@ -126,15 +122,13 @@ When(
 When(
     "create the key derivation of '' with password ''",
     function(obj, salt)
-        local src = ACK[obj]
-        ZEN.assert(src, 'Object not found: ' .. obj)
+        local src = have(obj)
         if luatype(src) == 'table' then
             src = ZEN.serialize(src)
         end
-        local pass = ACK[salt]
-        ZEN.assert(pass, 'Password not found: ' .. salt)
+        local pass = have(salt)
         ACK.key_derivation =
-            HASH.new(CONF.hash):pbkdf2(src, {salt = pass}) -- , iterations = 10000, length = 32
+            HASH.new('sha512'):pbkdf2(str, {salt = pass, iterations = 5000, length = 32})
 	new_codec('key derivation', { zentype = 'element' })
     end
 )
