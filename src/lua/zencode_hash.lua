@@ -128,7 +128,7 @@ When(
         end
         local pass = have(salt)
         ACK.key_derivation =
-            HASH.new('sha512'):pbkdf2(str, {salt = pass, iterations = 5000, length = 32})
+            HASH.new('sha512'):pbkdf2(src, {salt = pass, iterations = 5000, length = 32})
 	new_codec('key derivation', { zentype = 'element' })
     end
 )
