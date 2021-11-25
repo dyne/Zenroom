@@ -371,6 +371,7 @@ local ERC20_SIGNATURES = {
    balanceOf         = { i={'address'}, o={'uint256'}, view=true },
    transfer          = { i={'address', 'uint256'}, o={'bool'} },
    approve           = { i={'address', 'uint256'}, o={'bool'} },
+   allowance         = { i={'address', 'address'}, view=true, o={'uint256'} },
    transferFrom      = { i={'address', 'address', 'uint256'}, o={'bool'} },
    decimals          = { o={'uint8'}, view=true },
    name              = { o={'string'}, view=true },
