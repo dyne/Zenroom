@@ -414,7 +414,7 @@ int zencode_exec(char *script, char *conf, char *keys, char *data) {
 
 	func(Z->lua, "Zenroom operations completed.");
 	zen_teardown(Z);
-	exit(EXITCODE);
+	return(EXITCODE);
 }
 
 int zenroom_exec(char *script, char *conf, char *keys, char *data) {
@@ -469,7 +469,7 @@ int zenroom_exec(char *script, char *conf, char *keys, char *data) {
 #ifdef __EMSCRIPTEN__
 	EM_ASM({Module.exec_ok();});
 #endif
-	exit(EXITCODE);
+	return(EXITCODE);
 }
 
 
@@ -528,7 +528,7 @@ int zencode_exec_tobuf(char *script, char *conf, char *keys, char *data,
 
 	func(L, "Zenroom operations completed.");
 	zen_teardown(Z);
-	exit(EXITCODE);
+	return(EXITCODE);
 }
 
 
@@ -586,6 +586,6 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys, char *data,
 
 	func(L, "Zenroom operations completed.");
 	zen_teardown(Z);
-	exit(EXITCODE);
+	return(EXITCODE);
 }
 
