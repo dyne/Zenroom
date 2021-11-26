@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Wednesday, 28th July 2021
+--on Friday, 26th November 2021
 --]]
 
 --- WHEN
@@ -138,41 +138,41 @@ When("copy the '' to ''", function(old,new)
 	have(old)
 	empty(new)
 	ACK[new] = deepcopy(ACK[old])
-	ZEN.CODEC[new] = deepcopy(ZEN.CODEC[old])
+	new_codec(new, { }, old)
 end)
 When("copy '' to ''", function(old,new)
 	have(old)
 	empty(new)
 	ACK[new] = deepcopy(ACK[old])
-	ZEN.CODEC[new] = deepcopy(ZEN.CODEC[old])
+	new_codec(new, { }, old)
 end)
 When("copy the '' in '' to ''", function(old,inside,new)
 	ZEN.assert(ACK[inside][old], "Object not found: "..old.." inside "..inside)
 	empty(new)
 	ACK[new] = deepcopy(ACK[inside][old])
-	ZEN.CODEC[new] = deepcopy(ZEN.CODEC[inside])
+	new_codec(new, { }, inside)
 end)
 
 When("split the rightmost '' bytes of ''", function(len, src)
-	have(src)
+	local obj = have(src)
 	empty'rightmost'
 	local s = tonumber(len)
 	ZEN.assert(s, "Invalid number arg #1: "..type(len))
-	local l,r = OCTET.chop(ACK[src],s)
+	local l,r = OCTET.chop(obj,#obj-s)
 	ACK.rightmost = r
 	ACK[src] = l
-	ZEN.CODEC.rightmost = ZEN.CODEC[src]
+	new_codec('rightmost', { }, src)
 end)
 
 When("split the leftmost '' bytes of ''", function(len, src)
-	have(src)
+	local obj = have(src)
 	empty'leftmost'
 	local s = tonumber(len)
 	ZEN.assert(s, "Invalid number arg #1: "..type(len))
-	local l,r = OCTET.chop(ACK[src],s)
+	local l,r = OCTET.chop(obj,s)
 	ACK.leftmost = l
 	ACK[src] = r
-	ZEN.CODEC.leftmost = ZEN.CODEC[src]
+	new_codec('leftmost', { }, src)
 end)
 
 local function _numinput(num)
