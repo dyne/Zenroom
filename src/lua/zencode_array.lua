@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Tuesday, 20th July 2021
+--on Saturday, 27th November 2021
 --]]
 
 -- array operations
@@ -44,65 +44,59 @@ local function check_element(name)
    return o
 end
 
-local function _when_remove(ele, from)
-		check_container(from)
-        local found = false
-		local obj = ACK[ele]
-		local newdest = { }
-        if not obj then -- inline key name (string) requires dictionary
-		   if ZEN.CODEC[from] then
-			  ZEN.assert(
-				 (ZEN.CODEC[from].zentype ~= 'dictionary')
-				 or
-				 (ZEN.CODEC[from].zentype ~= 'schema')
-				 , "Element "..ele.." not found and target "
-				 ..from.." is not a dictionary")
-		   else
-			  xxx("Object has no CODEC registration: "..from)
-		   end
-           ZEN.assert(ACK[from][ele], "Key not found: "..ele.." in dictionary "..from)
-           ACK[from][ele] = nil -- remove from dictionary
-           found = true
-        else
-           -- remove value of element from array
-		   if ZEN.CODEC[from] then
-			  ZEN.assert(ZEN.CODEC[from].zentype == 'array', "Element "..ele.." found and target "..from.." is not an array")
-		   else
-			  xxx("Object has no CODEC registration: "..from)
-		   end
-		   -- check_element(ele)
-           local tempp = ACK[from]
-           for k,v in next,tempp,nil do
-              if not (v == obj) then
-                 table.insert(newdest,v)
-              else
-                 found = true
-              end
-           end
-        end
-        ZEN.assert(found, "Element to be removed not found in array")
-        ACK[from] = newdest
+local function _when_remove_dictionary(ele, from)
+	-- ele is just the name (key) of object to remove
+	local found = false
+	local dict = have(from)
+	ZEN.assert(dict[ele],
+		"Object not found in "..codec.zentype..": "..ele.." in "..from)
+	ACK[from][ele] = nil -- remove from dictionary
+	found = true
 end
-When("remove '' from ''", function(ele,from) _when_remove(ele, from) end)
-When("remove the '' from ''", function(ele,from) _when_remove(ele, from) end)
+local function _when_remove_array(ele, from)
+	local obj = have(ele)
+	local arr = have(from)
+	local found = false
+	local newdest = { }
+	for k,v in next,arr,nil do
+	   if not (v == obj) then
+		  table.insert(newdest,v)
+	   else
+		  found = true
+	   end
+	end
+	ZEN.assert(found, "Element to be removed not found in array")
+	ACK[from] = newdest
+end
+
+When("remove the '' from ''", function(ele,from)
+	local codec = ZEN.CODEC[from]
+	ZEN.assert(codec, "No codec registration for target: "..from)
+	if codec.zentype == 'dictionary'
+	or codec.zentype == 'schema' then
+		_when_remove_dictionary(ele, from)
+	elseif codec.zentype == 'array' then
+		_when_remove_array(ele, from)
+	else
+		I.warn({ CODEC = codec})
+		error("Invalid codec registration for target: "..from)
+	end
+end)
 
 When("create the new array", function()
 		ACK.new_array = { }
-		ZEN.CODEC.new_array = new_codec('new array',
-										{ encoding = CONF.output.encoding.name,
-										  zentype = 'array',
-										  luatype = 'table' })
+		new_codec('new array', {zentype='array', luatype='table'})
 end)
 
 When("create the length of ''", function(arr)
 	local obj = have(arr)
 	ACK.length = #obj
-	ZEN.CODEC.length = new_codec('length', { luatype = 'number' })
+	new_codec('length', {luatype='number',zentype='element'})
 end)
 When("create the size of ''", function(arr)
 	local obj = have(arr)
 	ACK.size = #obj
-	ZEN.CODEC.length = new_codec('size', { luatype = 'number' })
+	new_codec('size', {zentype='element',luatype='number'})
 end)
 
 When("create the copy of element '' in array ''", function(pos, arr)
@@ -113,7 +107,7 @@ When("create the copy of element '' in array ''", function(pos, arr)
 		ZEN.assert(ACK[arr][num], "No element found in: "..arr.."["..pos.."]")
 		ACK.copy = ACK[arr][num]
 		-- TODO: support nested arrays or dictionaries
-		ZEN.CODEC.copy = new_codec('copy',nil,arr)
+		new_codec('copy',{zentype='element',luatype=luatype(ACK.copy)},arr)
 end)
 
 When("insert '' in ''", function(ele, dest)

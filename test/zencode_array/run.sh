@@ -100,7 +100,7 @@ rule input encoding url64
 rule output encoding url64
 Given I have a 'url64 array' named 'bonnetjes'
 When I pick the random object in 'bonnetjes'
-and I remove 'random object' from 'bonnetjes'
+and I remove the 'random object' from 'bonnetjes'
 and I create the hashes of each object in 'bonnetjes'
 and rename the 'hashes' to 'right array'
 Then print the 'right array'
@@ -143,7 +143,7 @@ rule check version 1.0.0
 Given nothing
 When I create the array of '32' random objects of '256' bits
 and I pick the random object in 'array'
-and I remove 'random object' from 'array'
+and I remove the 'random object' from 'array'
 and the 'random object' is not found in 'array'
 Then print the 'random object'
 EOF

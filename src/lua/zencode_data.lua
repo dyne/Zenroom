@@ -396,46 +396,46 @@
     end
     return CONF.output.encoding.name
  end
-
+ 
  function new_codec(cname, parameters, clone)
-    if not cname then error("Missing name in new codec", 2) end
-    local name = fif(luatype(cname) == 'string', uscore(cname), cname) -- may be a numerical index
-    if not ACK[name] then error("Cannot create codec, object not found: "..name, 2) end
-    if ZEN.CODEC[name] then error("Cannot overwrite ZEN.CODEC."..name, 2) end
-    local res
-    if clone and not ZEN.CODEC[clone] then error("Clone not found in ZEN.CODEC."..clone, 2) end
-    if ZEN.CODEC[clone] then
-       res = ZEN.CODEC[clone]
-       res.name = name
-    else
-       res = { name = name }
-    end
-    -- overwrite with paramenters in argument
-    if parameters then
-	   for k,v in pairs(parameters) do
-		  res[k] = v
-	   end
-    end
-    -- detect zentype and luatype
-    if not res.luatype then
-       res.luatype = luatype(ACK[name])
-    end
-    if not res.zentype then
-       if res.luatype == 'table' then
-	  if isdictionary(ACK[name]) then
-	     res.zentype = 'dictionary'
-	  elseif isarray(ACK[name]) then
-	     res.zentype = 'array'
-	  else
-	     error("Unknown zentype for lua table: "..name, 2)
-	  end
-       else
-	  res.zentype = type(ACK[name])
-       end
-    end
-    ZEN.CODEC[name] = res
-    return(res) -- redundant, should not use return value for efficiency
- end
+   if not cname then error("Missing name in new codec", 2) end
+   local name = fif(luatype(cname) == 'string', uscore(cname), cname) -- may be a numerical index
+   if not ACK[name] then error("Cannot create codec, object not found: "..name, 2) end
+   if ZEN.CODEC[name] then error("Cannot overwrite ZEN.CODEC."..name, 2) end
+   local res
+   if clone and not ZEN.CODEC[clone] then error("Clone not found in ZEN.CODEC."..clone, 2) end
+   if ZEN.CODEC[clone] then
+      res = deepcopy(ZEN.CODEC[clone])
+      res.name = name
+   else
+      res = { name = name }
+   end
+   -- overwrite with paramenters in argument
+   if parameters then
+      for k,v in pairs(parameters) do
+         res[k] = v
+      end
+   end
+   -- detect zentype and luatype
+   if not res.luatype then
+      res.luatype = luatype(ACK[name])
+   end
+   if not res.zentype then
+      if res.luatype == 'table' then
+         if isdictionary(ACK[name]) then
+            res.zentype = 'dictionary'
+         elseif isarray(ACK[name]) then
+            res.zentype = 'array'
+         else
+            error("Unknown zentype for lua table: "..name, 2)
+         end
+      else
+         res.zentype = 'element'
+      end
+   end
+   ZEN.CODEC[name] = res
+   return(res) -- redundant, should not use return value for efficiency
+end
 
  -- Crawls a whole table structure and collects all strings and octets
  -- contained in its keys and values. Converts numbers to

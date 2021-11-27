@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Saturday, 20th November 2021
+--on Friday, 26th November 2021
 --]]
 
 
@@ -48,17 +48,6 @@ When(
         end
         ZEN.assert(ACK.hash, 'Invalid hash: ' .. h)
 	new_codec('hash', { zentype = 'element' })
-    end
-)
-
--- random and hashing operations
-When(
-    "create the random object of '' bits",
-    function(n)
-        local bits = tonumber(n)
-        ZEN.assert(bits, 'Invalid number of bits: ' .. n)
-        ACK.random_object = OCTET.random(math.ceil(bits / 8))
-	new_codec('random_object', { zentype = 'element' })
     end
 )
 
