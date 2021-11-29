@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+SUBDOC=http
+
 ####################
 # common script init
 if ! test -r ../utils.sh; then
@@ -28,21 +30,28 @@ Then print all data
 EOF
 
 cat <<EOF | zexe api-compose.zen -z -a base-url.json -k api-values.json | save http api-compose-output.json
-Scenario http: create a GET request concatenating values on a HTTP url
+Scenario 'http': create a GET request concatenating values on a HTTP url
 
+# The base URL and the parameters are loaded as strings
 Given I have a 'string' named 'base-url'
-and I have a 'string' named 'lon'
-and I have a 'string' named 'lat'
-and I have a 'string' named 'product'
-and I have a 'string' named 'output'
+Given I have a 'string' named 'lon'
+Given I have a 'string' named 'lat'
+Given I have a 'string' named 'product'
+Given I have a 'string' named 'output'
 
+# The statement 'create the url' creates an object to which parameters 
+# can be appended to create a valid GET request
 When I create the url from 'base-url'
+
+# And here are the parameters to be appended to the query
+# They are appended as 'key=value&'
 When I append 'lon'     as http request to 'url'
-and  I append 'lat'     as http request to 'url'
-and  I append 'product' as http request to 'url'
-and  I append 'output'  as http request to 'url'
+When I append 'lat'     as http request to 'url'
+When I append 'product' as http request to 'url'
+When I append 'output'  as http request to 'url'
 
 Then print the 'url'
+
 EOF
 
 # Now we have created the api-request, which should look like this:
