@@ -195,3 +195,55 @@ IfWhen("the '' is found in '' at least '' times", function(ele, arr, times)
 	end
 	ZEN.assert(found >= num, "Object "..ele.." found only "..found.." times instead of "..num.." in array "..arr)
 end)
+
+local function _aggr_array(arr)
+   local A = have(arr)
+   local codec = ZEN.CODEC[arr]
+   ZEN.assert(codec.zentype == 'array' or
+	      (codec.zentype == 'schema' and codec.encoding == 'array'),
+	      "Object is not a valid array: "..arr)
+   local count = isarray(A)
+   ZEN.assert( count > 0, "Array is empty or invalid: "..arr)
+   local res, par
+   if luatype(A[1]) == 'number' then
+      res = 0
+      for k,v in next,A,nil do
+	 res = res + tonumber(v)
+      end
+      par = {encoding='number',zentype='element'}
+   elseif type(A[1]) == 'zenroom.big' then
+      res = BIG.new(0)
+      for k,v in next,A,nil do
+	 res = res + v
+      end
+      par = {zentype = 'element'}
+   elseif type(A[1]) == 'zenroom.ecp' then
+      res = ECP.generator()
+      for k,v in next,A,nil do
+	 res = res + v
+      end
+      par = {zentype = 'element'}
+   elseif type(A[1]) == 'zenroom.ecp2' then
+      res = ECP2.generator()
+      for k,v in next,A,nil do
+	 res = res + v
+      end
+      par = {zentype = 'element'}
+   else
+      error("Unknown aggregation for type: "..type(A[1]))
+   end
+   return res, par
+end
+
+When("create the aggregation of array ''", function(arr)
+	empty'aggregation'
+	local params
+	ACK.aggregation, params = _aggr_array(arr)
+	new_codec('aggregation', params)
+end)
+When("create the sum value of elements in array ''", function(arr)
+	empty'sum value'
+	local params
+	ACK.sum_value, params = _aggr_array(arr)
+	new_codec('sum value', params)
+end)

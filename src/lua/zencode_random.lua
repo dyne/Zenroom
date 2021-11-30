@@ -119,44 +119,6 @@ When("create the array of '' random numbers modulo ''", function(s,m)
 	new_codec('array', { luatype = 'table',	zentype = 'array', encoding = 'number' })
 end)
 
-When("create the aggregation of array ''", function(arr)
-		-- TODO: switch typologies, sum numbers and bigs, aggregate hash
-		ZEN.assert(not ACK.aggregation, "Cannot overwrite existing object: ".."aggregation")
-		local A = ACK[arr]
-    ZEN.assert(A, "Object not found: "..arr)
-	ZEN.assert(ZEN.CODEC[arr].zentype == 'array',
-			   "Object is not an array: "..arr)
-    local count = isarray(A)
-    ZEN.assert( count > 0, "Object is not an array: "..arr)
-    if luatype(A[1]) == 'number' then
-       ACK.aggregation = 0
-       for k,v in next,A,nil do
-		  ACK.aggregation = ACK.aggregation + tonumber(v)
-       end
-	   new_codec('aggregation', {encoding='number',zentype='element'})
-	elseif type(A[1]) == 'zenroom.big' then
-	   ACK.aggregation = BIG.new(0)
-       for k,v in next,A,nil do
-		  ACK.aggregation = ACK.aggregation + v
-       end
-	   new_codec('aggregation', {zentype = 'element'})
-	elseif type(A[1]) == 'zenroom.ecp' then
-	   ACK.aggregation = ECP.generator()
-       for k,v in next,A,nil do
-		  ACK.aggregation = ACK.aggregation + v
-       end
-	   new_codec('aggregation', {zentype = 'element'})
-	elseif type(A[1]) == 'zenroom.ecp2' then
-	   ACK.aggregation = ECP2.generator()
-       for k,v in next,A,nil do
-		  ACK.aggregation = ACK.aggregation + v
-       end
-	   new_codec('aggregation', {zentype = 'element'})
-    else
-       error("Unknown aggregation for type: "..type(A[1]))
-    end
-end)
-
 When("pick the random object in ''", function(arr)
     local A = have(arr)
 	empty'random object'
