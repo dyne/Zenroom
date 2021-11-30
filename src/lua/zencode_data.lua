@@ -466,21 +466,25 @@ end
  function serialize(tab)
     assert(luatype(tab) == 'table', 'Cannot serialize: not a table', 2)
     local octets = OCTET.zero(1)
-    local strings = 'K'
+    local strings = { 'K' }
     sort_apply(
        function(v, k)
-	  strings = strings .. tostring(k)
-	  if iszen(type(v)) then
-	     octets = octets .. v:octet()
-	  else -- number
-	     strings = strings .. tostring(v)
-	  end
+	      table.insert(strings, tostring(k))
+	      if iszen(type(v)) then
+            -- TODO: optimize octet concatenation in C
+            -- to avoid reallocation of new octets in this loop
+            -- should count total length allocate one and insert
+	         octets = octets.. v:octet()
+         else -- number
+	         table.insert(strings, tostring(v))
+         end
        end,
        tab
     )
     return {
        octets = octets,
-       strings = strings
+       -- string concatenation is optimized
+       strings = table.concat(strings)
     }
  end
 
