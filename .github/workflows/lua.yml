@@ -15,5 +15,5 @@ jobs:
       - uses: nebularg/actions-luacheck@v1
         with:
           path: 'src/lua'
-          args: -std lua53 -config .luacheckrc
+          args: --std lua53 --config .luacheckrc
           annotate: 'warning'
