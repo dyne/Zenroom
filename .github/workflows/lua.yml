@@ -16,4 +16,3 @@ jobs:
         with:
           path: 'src/lua'
           args: --std lua53 --config .luacheckrc
-          annotate: 'warning'

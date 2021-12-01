@@ -47,14 +47,14 @@ function ecdh.uncompress_public_key(public)
 end
 
 -- it is similar to sign eth, s < order/2
-function ecdh.sign_ecdh(sk, data) 
+function ecdh.sign_ecdh(sk, data)
    local halfSecp256k1n = INT.new(hex('7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0'))
    local sig
    sig = nil
    repeat
       sig = ECDH.sign_hashed(sk, data, #data)
    until(INT.new(sig.s) < halfSecp256k1n);
-   
+
    return sig
 end
 
