@@ -27,6 +27,6 @@ jobs:
           echo "##[endgroup]"
         shell: bash
       - run: |
-          luacheck --config .luacheckrc --std lua54 | [ $? -lt 1 ] && echo "⚠ Some warning found but it's fine"
+          luacheck --config .luacheckrc --std lua54 . | [ $? -lt 1 ] && echo "⚠ Some warning found but it's fine"
         shell: bash
 
