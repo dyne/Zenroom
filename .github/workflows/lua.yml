@@ -1,0 +1,20 @@
+name: Lua linting
+on:
+  push:
+    branches:
+      - master 
+    paths:
+    - 'src/lua/**'
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: nebularg/actions-luacheck@v1
+        with:
+          path: 'src/lua'
+          config: 'src/lua/.luacheckrc'
+          args: -std lua53
+          annotate: 'warning'
