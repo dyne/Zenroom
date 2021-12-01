@@ -342,7 +342,7 @@ function ETH.contract_return_builder(params)
       for i, v in ipairs(params) do
 	 -- I don't check the range of values (for bool the input should be 0 or 1),
 	 -- while for int<M> should be 0 ... 2^(<M>)-1
-	 if string.match(v, 'uint%d+') or v == 'address' then
+	 if v == 'address' or string.match(v, '^uint%d+$') then
 	    table.insert(res, BIG.new(val:sub(32 * (i-1)+1, 32 * i)))
 	 elseif v == 'bool' then
 	    table.insert(res, BIG.new(val:sub(32 * (i-1)+1, 32 * i)) ~= BIG.new(0))
