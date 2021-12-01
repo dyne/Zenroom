@@ -15,19 +15,17 @@ jobs:
         working-directory: src/lua
     steps:
       - uses: actions/checkout@v1
-      - run: |
-          echo "##[group]Install luacheck"
+      - name: Install luacheck
+        run: |
           if ! hash luacheck &>/dev/null; then
             sudo apt-get install -yq luarocks 1>/dev/null || exit 1
             sudo luarocks install luacheck 1>/dev/null || exit 1
             sudo luarocks install lanes &>/dev/null || true
           fi
-          echo "##[command]luacheck --version"
           luacheck --version
-          echo "##[endgroup]"
         shell: bash
-      - run: |
+      - name: 🔍 Run luacheck
+        run: |
           luacheck --config .luacheckrc --std lua54 .
         continue-on-error: true
-        shell: bash
 
