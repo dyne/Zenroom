@@ -10,9 +10,23 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-20.04
+    defaults:
+      run:
+        working-directory: bindings/javascript
     steps:
       - uses: actions/checkout@v1
-      - uses: nebularg/actions-luacheck@v1
-        with:
-          path: 'src/lua'
-          args: --std lua53 --config .luacheckrc
+      - run: |
+          echo "##[group]Install luacheck"
+          if ! hash luacheck &>/dev/null; then
+            sudo apt-get install -yq luarocks 1>/dev/null || exit 1
+            sudo luarocks install luacheck 1>/dev/null || exit 1
+            sudo luarocks install lanes &>/dev/null || true
+          fi
+          echo "##[command]luacheck --version"
+          luacheck --version
+          echo "##[endgroup]"
+        shell: bash
+      - run: |
+          luacheck --config .luacheckrc --std lua54 | [ $? -lt 1 ] && echo "⚠ Some warning found but it's fine"
+        shell: bash
+
