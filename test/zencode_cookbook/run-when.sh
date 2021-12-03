@@ -546,19 +546,25 @@ echo "                                                "
 
 
 cat <<EOF | save . whenCompleteScriptPart5.zen
+
+# CREATE
+# These creates a new empty array named 'array'
+When I create the new array
+
 # INSERT
 # The "insert" statement is used to append a simple object to an array.
 # It's pretty self-explaining. 
 When I insert 'myFirstString' in 'myFirstArray'
 
 # LENTGH
-# These two statements create an object containing the length of the array
+# These two statements create objects, named "size" and "length" 
+# containing the length of the array
 When I create the length of 'mySecondNumberArray'
 When I create the size of 'mySecondNumberArray'
 
 # SUM 
-# These two statements create an object containing the 
-# arithmetic sum of the array: they work only with "number array"
+# These two statements create objects, named "aggregation" and "sum value" containing the 
+# arithmetic sum of the array, they work only with "number array"
 When I create the aggregation of array 'mySecondNumberArray'
 When I create the sum value of elements in array 'mySecondNumberArray'
 
@@ -573,6 +579,18 @@ When I create the copy of element '2' in array 'mySecondNumberArray'
 # and the name of an array - we don't mix code and data! 
 When I rename the 'myThirdArray' to 'myJustRenamedArray'
 When I remove the 'mySixteenthString' from 'myJustRenamedArray'
+
+Then print the 'mySecondNumberArray'
+Then print the 'myFirstArray'
+Then print the 'myJustRenamedArray'
+
+Then print the 'length'
+Then print the 'size'
+
+Then print the 'aggregation'
+Then print the 'sum value'
+
+Then print the 'copy'
 
 EOF
 
