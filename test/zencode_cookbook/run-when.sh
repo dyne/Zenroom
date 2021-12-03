@@ -113,8 +113,16 @@ cat <<EOF | save . myLargeNestedObjectWhen.json
          "TransferredProductAmount":500,
 		 "UndeliveredProductAmount":100,
 		 "ProductPurchasePrice":1
-      }
-   
+      },	
+	  "mySecondNumberArray": [
+		567,
+		748,
+		907,
+		876,
+		34,
+		760,
+		935
+	]
 }
 EOF
 
@@ -133,6 +141,8 @@ Given I have a 'number array' named 'myFirstNumberArray' inside 'myFirstObject'
 Given I have a 'string array' named 'myCopyOfFirstArray' inside 'myThirdObject'
 Given I have a 'base64 array' named 'myOnlyEcpArray' inside 'myFirstObject'
 Given I have a 'base64 array' named 'myOnlyEcp2Array' inside 'myFirstObject'
+Given I have a 'number array' named 'mySecondNumberArray'
+
 # Load Numbers
 Given I have a 'number' named 'myFirstNumber' in 'myFirstObject'
 Given I have a 'number' named 'mySecondNumber' in 'mySecondObject'
@@ -217,7 +227,6 @@ When I create the result of 'myFirstNumber' inverted sign
 and I rename the 'result' to 'myFirstNumberInvertedSign'
 
 
-
 # APPEND
 # The "append" statement are pretty self-explaining: 
 # append a simple object of any encoding to another one
@@ -228,17 +237,6 @@ When I append 'mySecondNumber' to 'myThirdNumber'
 # The "rename" statement: we've been hinting at this for a while now,
 # pretty self-explaining, it works with any object type or schema.
 When I rename the 'myThirdArray' to 'myJustRenamedArray'
-
-# INSERT
-# The "insert" statement is used to append a simple object to an array.
-# It's pretty self-explaining. 
-When I insert 'myFirstString' in 'myFirstArray'
-
-# REMOVE
-# The "remove" statement does the opposite of the one above:
-# Use it remove an element from an array, it takes as input the name of a string, 
-# and the name of an array - we don't mix code and data! 
-When I remove the 'mySixteenthString' from 'myJustRenamedArray'
 
 # DELETE
 # You can delete an object from the memory stack at runtime
@@ -536,5 +534,57 @@ echo "------------------------------------------------"
 echo "   	END of script $n			       		  "
 echo "------------------------------------------------"
 echo "                                      "
+
+
+let n=n+1
+echo "                                                "
+echo "------------------------------------------------"
+echo "   The array statements: $n               "
+echo " insert, remove, length, sum, copy element"
+echo "------------------------------------------------"
+echo "                                                "
+
+
+cat <<EOF | save . whenCompleteScriptPart5.zen
+# INSERT
+# The "insert" statement is used to append a simple object to an array.
+# It's pretty self-explaining. 
+When I insert 'myFirstString' in 'myFirstArray'
+
+# LENTGH
+# These two statements create an object containing the length of the array
+When I create the length of 'mySecondNumberArray'
+When I create the size of 'mySecondNumberArray'
+
+# SUM 
+# These two statements create an object containing the 
+# arithmetic sum of the array: they work only with "number array"
+When I create the aggregation of array 'mySecondNumberArray'
+When I create the sum value of elements in array 'mySecondNumberArray'
+
+# COPY ELEMENT
+# This statement creates a an object named "copy" containing
+# the given element of the array
+When I create the copy of element '2' in array 'mySecondNumberArray'
+
+# REMOVE
+# The "remove" statement does the opposite of the one above:
+# Use it remove an element from an array, it takes as input the name of a string, 
+# and the name of an array - we don't mix code and data! 
+When I rename the 'myThirdArray' to 'myJustRenamedArray'
+When I remove the 'mySixteenthString' from 'myJustRenamedArray'
+
+EOF
+
+cat whenCompleteScriptGiven.zen whenCompleteScriptPart5.zen \
+       | zexe when5.zen -z -a  myLargeNestedObjectWhen.json | save . whenCompleteOutputPart5.json 
+
+
+echo "                                                "
+echo "------------------------------------------------"
+echo "   	END of script $n			       		  "
+echo "------------------------------------------------"
+echo "                                      "
+
 
 

@@ -1,0 +1,73 @@
+# We're using scenario 'ecdh' cause we are loading a keypair
+Scenario 'ecdh': using keypair and signing
+Given my name is in a 'string' named 'myUserName'
+Given that I have my 'keypair'
+# Load Arrays
+Given I have a 'string array' named 'myFirstArray'  inside 'myFirstObject'
+Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
+Given I have a 'string array' named 'myThirdArray' inside 'myThirdObject' 
+Given I have a 'string array' named 'myFourthArray' inside 'myFourthObject'
+Given I have a 'number array' named 'myFirstNumberArray' inside 'myFirstObject'
+Given I have a 'string array' named 'myCopyOfFirstArray' inside 'myThirdObject'
+Given I have a 'base64 array' named 'myOnlyEcpArray' inside 'myFirstObject'
+Given I have a 'base64 array' named 'myOnlyEcp2Array' inside 'myFirstObject'
+Given I have a 'number array' named 'mySecondNumberArray'
+
+# Load Numbers
+Given I have a 'number' named 'myFirstNumber' in 'myFirstObject'
+Given I have a 'number' named 'mySecondNumber' in 'mySecondObject'
+Given I have a 'number' named 'myFourthNumber' inside 'myFourthObject'
+Given I have a 'number' named 'myThirdNumber' inside 'myThirdObject' 
+# Load Strings
+Given I have a 'string' named 'myFirstString' in 'myFirstObject'
+Given I have a 'string' named 'mySecondString' inside 'mySecondObject'
+Given I have a 'string' named 'myThirdString' inside 'myThirdObject' 
+Given I have a 'string' named 'myFourthString' inside 'myFourthObject'
+Given I have a 'string' named 'myFifthString' inside 'myFourthObject'
+Given I have a 'string' named 'mySixthString' inside 'myFourthObject'
+Given I have a 'string' named 'mySeventhString' inside 'myFourthObject'
+Given I have a 'string' named 'myNinthEqualString' inside 'myFourthObject'
+Given I have a 'string' named 'myEightEqualString' inside 'myFourthObject'
+Given I have a 'string' named 'myTenthString' inside 'myFourthObject'
+Given I have a 'string' named 'myEleventhStringToBeHashed' inside 'myFourthObject'
+Given I have a 'string' named 'myTwelfthStringToBeHashedUsingPBKDF2' inside 'myFourthObject' 
+Given I have a 'string' named 'myThirteenStringPassword' inside 'myFourthObject'
+Given I have a 'string' named 'myFourteenthStringToBeHashedUsingHMAC' inside 'myFourthObject'
+Given I have a 'string' named 'myFifteenthString' inside 'myFourthObject'
+Given I have a 'string' named 'mySixteenthString' inside 'myFourthObject'
+# Load dictionaries
+Given I have a 'string dictionary' named 'ABC-Transactions1Data'
+# Different data types
+Given I have an 'hex' named 'myFirstHex' inside 'myFirstObject' 
+Given I have a  'base64' named 'myFirstBase64' in 'myFirstObject'
+Given I have a  'binary' named 'myFirstBinary' in 'myFirstObject'
+Given I have an 'url64' named 'myFirstUrl64' in 'myFirstObject'
+# Here we're done loading stuff 
+# INSERT
+# The "insert" statement is used to append a simple object to an array.
+# It's pretty self-explaining. 
+When I insert 'myFirstString' in 'myFirstArray'
+
+# LENTGH
+# These two statements create an object containing the length of the array
+When I create the length of 'mySecondNumberArray'
+When I create the size of 'mySecondNumberArray'
+
+# SUM 
+# These two statements create an object containing the 
+# arithmetic sum of the array: they work only with "number array"
+When I create the aggregation of array 'mySecondNumberArray'
+When I create the sum value of elements in array 'mySecondNumberArray'
+
+# COPY ELEMENT
+# This statement creates a an object named "copy" containing
+# the given element of the array
+When I create the copy of element '2' in array 'mySecondNumberArray'
+
+# REMOVE
+# The "remove" statement does the opposite of the one above:
+# Use it remove an element from an array, it takes as input the name of a string, 
+# and the name of an array - we don't mix code and data! 
+When I rename the 'myThirdArray' to 'myJustRenamedArray'
+When I remove the 'mySixteenthString' from 'myJustRenamedArray'
+
