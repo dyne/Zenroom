@@ -34,16 +34,35 @@ EOF
 
 addr=`cat address.json | jq '.testnet_address' | sed 's/\"//g'`
 
-echo "curl -s https://blockstream.info/testnet/api/address/${addr}/utxo"
-cat <<EOF > order.json
+echo "curl -s https://blockstream.info/testnet/api/address/${addr}/utxo" | tee unspent_query.sh ../../docs/examples/zencode_cookbook/bitcoin/unspent_query.sh
+
+# cat <<EOF | tee  culo.json 
+# {
+#  "satoshi amount": "1",
+#  "satoshi fee": "141",
+#  "recipient": "tb1q73czlxl7us4s6num5sjlnq6r0yuf8uh5clr2tm",
+#  "sender": "${addr}",
+#  "satoshi unspent": `curl -s https://blockstream.info/testnet/api/address/${addr}/utxo`
+# }
+# EOF
+
+cat <<EOF | tee transaction_data.json ../../docs/examples/zencode_cookbook/bitcoin/transaction_data.json
 {
   "satoshi amount": "1",
   "satoshi fee": "141",
   "recipient": "tb1q73czlxl7us4s6num5sjlnq6r0yuf8uh5clr2tm",
-  "sender": "${addr}",
+  "sender": "${addr}"
+}
+EOF
+
+cat <<EOF | tee unspent.json  ../../docs/examples/zencode_cookbook/bitcoin/unspent.json
+{
   "satoshi unspent": `curl -s https://blockstream.info/testnet/api/address/${addr}/utxo`
 }
 EOF
+
+
+jq -s '.[0] * .[1]' unspent.json  transaction_data.json | save bitcoin order.json
 
 cat <<EOF | zexe sign.zen -a order.json | save bitcoin transaction.json
 Given I have a 'testnet address' named 'sender'
@@ -56,9 +75,7 @@ and I create the testnet transaction
 Then print the 'testnet transaction'
 EOF
 
-cat <<EOF | zexe sign_transaction.zen \
-		 -k keys.json -a transaction.json \
-    | save bitcoin rawtx.json
+cat <<EOF | zexe sign_transaction.zen -k keys.json -a transaction.json | save bitcoin rawtx.json
 Given I have the 'keys'
 and I have a 'base64 dictionary' named 'testnet transaction'
 When I sign the testnet transaction

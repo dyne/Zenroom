@@ -1,0 +1,6 @@
+Given I have the 'keys'
+and I have a 'base64 dictionary' named 'testnet transaction'
+When I sign the testnet transaction
+and I create the testnet raw transaction
+and I create the size of 'testnet raw transaction'
+Then print the 'testnet raw transaction' as 'hex'
