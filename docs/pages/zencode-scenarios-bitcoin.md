@@ -1,13 +1,16 @@
 # Testnet vs Mainnet
 
-There are format difference between Bitcoin *testnet* and *mainnet*. We wanted to enable both the networks, making it comfortable for the developer to switch from one to another, for this reason in any statement that is specific for the network, by swapping **testnet** with **bitcoin**, you change the way the statement works. For example,
+There are format difference between Bitcoin *testnet* and *mainnet*. We wanted to enable both the networks, making it comfortable for the developer to switch from one to another (note: keys and protocols have slight differences between testnet and mainnet. 
 
-In order to create a key for the testnet, you can use the statement 
+For this reason in any statement that is specific for the network, by swapping the word **testnet** with **bitcoin**, you change the way the statement works.  
+
+For example, In order to create a **key for the testnet**, you can use the statement 
 
 ```gherkin
 When I create the testnet key
 ```
-To do the same thing for mainnet you can use:
+
+On the other hand, to **create a key for mainnet** you can use:
 
 ```gherkin
 When I create the bitcoin key
@@ -15,15 +18,19 @@ When I create the bitcoin key
 
 The example below is created for the **testnet** as we believe that's a convenient starting point.
 
-Note: you don't need to define a scenario, as **the bitcoin statements are always loaded**. 
+Note: you don't need to define a scenario, as the zencode statements for **bitcoin are always loaded**. 
 
 
 # Key generation
 
-On this page we prioritize security over easy of use, therefore we have chosen to keep some operations separated, particularly the generation of private and public key (and the creation and signature of transactions, further down), which can indeed be merged into one script, but you would end up with both the keys in the same output, while we opted to keep them separated.
+On this page we prioritize security over easy of use, therefore we have chosen to keep some operations separated. 
+
+Particularly the generation of private and public key (and the creation and signature of transactions, further down), which can indeed be merged into one script, but you would end up with both the keys in the same output. 
 
 ## Private key
-The script below generates a **bitcoin testnet** private key. Note: you don't need to declare your identity using the statement ***Given I am 'Alice'***, but you can still do it if it comes handy, and then use the statement ***Then print my 'keys'*** to format the output.
+The script below generates a **bitcoin testnet** private key. 
+
+Note: you don't need to declare your identity using the statement ***Given I am 'User1234'***, but you can still do it if it comes handy, and then use the statement ***Then print my 'keys'*** to format the output.
 
 [](../_media/examples/zencode_cookbook/bitcoin/keygen.zen ':include :type=code gherkin')
 
@@ -33,6 +40,21 @@ The output should look like this:
 
 You want to store this into the file 
 <a href="../_media/examples/zencode_cookbook/bitcoin/keys.json" download>keys.json</a>
+
+### Generate a private key from a known seed 
+
+Key generation in Zenroom uses by default a pseudo-random as seed, that is internally generated. 
+
+You can also opt to use a seed generated elsewhere, for example by using the [keypairoom](https://github.com/ledgerproject/keypairoom) library or it's [npm package](https://www.npmjs.com/package/keypair-lib). 
+
+The statements looks like:
+
+```gherkin
+When I create the testnet key with secret key 'mySeed'
+```
+Which requires you to load a 32 bytes long *base64* object named 'mySeed', the statement is defined [here](https://github.com/dyne/Zenroom/blob/master/src/lua/zencode_bitcoin.lua#L156).
+
+
 
 ## Public key 
 
@@ -121,7 +143,9 @@ The signed transaction should look like:
 
 [](../_media/examples/zencode_cookbook/bitcoin/rawtx.json ':include :type=code json')
 
-**Note: this script and the previous one can be merged** into one script that creates the transaction, signs it and prints it out as raw transaction. In this example we kept the script separated as this script was originally meant to demonstrate how to make an **offline Bitcoin wallet**, where the signature happens on different machine (which can be kept offline for security reasons). You can merge the two scripts and feed the result with the <a href="../_media/examples/zencode_cookbook/bitcoin/keys.json" download>keys.json</a> we created on top of this page and the file <a href="../_media/examples/zencode_cookbook/bitcoin/order.json" download>order.json</a>
+**Note: this script and the previous one can be merged** into one script that creates the transaction, signs it and prints it out as raw transaction. 
+
+In this example we kept the script separated as this script was originally meant to demonstrate how to make an **offline Bitcoin wallet**, where the signature happens on different machine (which can be kept offline for security reasons). You can merge the two scripts and feed the resulting script with <a href="../_media/examples/zencode_cookbook/bitcoin/keys.json" download>keys.json</a> we created on top of this page and <a href="../_media/examples/zencode_cookbook/bitcoin/order.json" download>order.json</a>
 
 
 
