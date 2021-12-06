@@ -22,9 +22,15 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 cat << EOF | zexe keygen.zen | save bitcoin keys.json
 Given nothing
 When I create the testnet key
+When I create the testnet public key
 Then print the 'keys'
 EOF
 
+cat << EOF | zexe pubkeygen.zen -k keys.json | save bitcoin pubkey.json
+Given I have the 'keys'
+When I create the testnet public key
+Then print the 'testnet public key'
+EOF
 cat <<EOF | zexe pubgen.zen -k keys.json | save bitcoin address.json
 Given I have the 'keys'
 When I create the testnet address

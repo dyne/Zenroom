@@ -1,6 +1,6 @@
 # Testnet vs Mainnet
 
-There are format difference between Bitcoin *testnet* and *main net*. We wanted to enable both the networks, making it confortable for the developer to switch from one to another, for this reason in any statement that is specific for the network, by swapping **testnet** with **bitcoin**, you change the way the statement works. For example,
+There are format difference between Bitcoin *testnet* and *mainnet*. We wanted to enable both the networks, making it comfortable for the developer to switch from one to another, for this reason in any statement that is specific for the network, by swapping **testnet** with **bitcoin**, you change the way the statement works. For example,
 
 In order to create a key for the testnet, you can use the statement 
 
@@ -15,82 +15,113 @@ When I create the bitcoin key
 
 The example below is created for the **testnet** as we believe that's a convenient starting point.
 
+Note: you don't need to define a scenario, as **the bitcoin statements are always loaded**. 
 
-# Keygen
 
-Script: 
+# Key generation
+
+On this page we prioritize security over easy of use, therefore we have chosen to keep some operations separated, particularly the generation of private and public key (and the creation and signature of transactions, further down), which can indeed be merged into one script, but you would end up with both the keys in the same output, while we opted to keep them separated.
+
+## Private key
+The script below generates a **bitcoin testnet** private key. Note: you don't need to declare your identity using the statement ***Given I am 'Alice'***, but you can still do it if it comes handy, and then use the statement ***Then print my 'keys'*** to format the output.
 
 [](../_media/examples/zencode_cookbook/bitcoin/keygen.zen ':include :type=code gherkin')
 
-
-Output: 
+The output should look like this: 
 
 [](../_media/examples/zencode_cookbook/bitcoin/keys.json ':include :type=code json')
+
+You want to store this into the file 
+<a href="../_media/examples/zencode_cookbook/bitcoin/keys.json" download>keys.json</a>
+
+## Public key 
+
+Once you have created a private key, you can feed it to the following script to generate the public key:
+
+
+[](../_media/examples/zencode_cookbook/bitcoin/pubkeygen.zen ':include :type=code gherkin')
+
+
+The output should look like this: 
+
+[](../_media/examples/zencode_cookbook/bitcoin/pubkey.json ':include :type=code json')
+
+You want to store this into the file 
+<a href="../_media/examples/zencode_cookbook/bitcoin/pubkey.json" download>pubkey.json</a>
 
 
 # Create testnet address
 
 
-Script: 
+Next, you'll need to generate a **bitcoin testnet address**, you'll need the <a href="../_media/examples/zencode_cookbook/bitcoin/keys.json" download>keys.json</a> you've just generated as input to the following script: 
 
 [](../_media/examples/zencode_cookbook/bitcoin/pubgen.zen ':include :type=code gherkin')
 
 
-Output: 
+The output should look like: 
 
 [](../_media/examples/zencode_cookbook/bitcoin/address.json ':include :type=code json')
 
 
-# Setup the transaction
+# The transaction: setup and execution
+
+The statements used to manage a transaction, follow closely the logic of the Bitcoin protocol. What we'll do here is:
+
+* Prepare a JSON file containing the **amount** to be transferred, **recipient, sender and fee**.
+* **Add to the JSON file a list of the unspent transactions**, as it is returned from a Bitcoin explorer (we're using Blockstream in the test).
+* Then we use the file above, to create a **testnet transaction**.
+* After creating the transaction, first we'll **sign it** using the key we generated above, then we'll create a **raw transaction** out of it, which can be posted to any Bitcoin client. 
 
 
+## Load amount, recipient, sender and fee
 
-## Load recipient, sender and fee
-Load: 
+Now prepare a JSON file containing the amount, recipient, fee and sender: the sender in this example is the one we have just generated as **testnet_address**. The file should look like this: 
 
 [](../_media/examples/zencode_cookbook/bitcoin/transaction_data.json ':include :type=code json')
 
 ## Load unspent transaction
 
-curl it like:
+Then, get a **list of the unspent transactions from your address**, which is again the **testnet_address** we have generated above, but at this point we have already transferred some coins to this address (otherwise the list of unspent transactions would be empty). In the example we ***curl*** blockstream.info with the address we generated above:
 
 [](../_media/examples/zencode_cookbook/bitcoin/unspent_query.sh ':include :type=code bash')
 
 
-The result should be: 
+The result should be a JSON file looking like: 
 
 [](../_media/examples/zencode_cookbook/bitcoin/unspent.json ':include :type=code json')
 
-Now merge the [transaction_data.json ](../_media/examples/zencode_cookbook/bitcoin/transaction_data.json )
- and [unspent.json](../_media/examples/zencode_cookbook/bitcoin/unspent.json)
- two files together into [order.json](../_media/examples/zencode_cookbook/bitcoin/order.json), you can do so by using **jq**: 
+Now merge the <a href="../_media/examples/zencode_cookbook/bitcoin/transaction_data.json" download>transaction_data.json</a>
+  and <a href="../_media/examples/zencode_cookbook/bitcoin/unspent.json" download>unspent.json</a>  two files together into <a href="../_media/examples/zencode_cookbook/bitcoin/order.json" download>order.json</a>. 
+  
+You can do so for example by using **jq**: 
  
 ```bash
  jq -s '.[0] * .[1]' unspent.json  transaction_data.json
 ```
 
-## Create the raw transaction 
+## Create the transaction 
 
-Script:
+Now, you can feed the file **order.json** to the script:
 
 [](../_media/examples/zencode_cookbook/bitcoin/sign.zen ':include :type=code gherkin')
 
 
-Result: 
+Which will produce an unsigned transaction, formatted in human-readable JSON, that should look like:
 
 [](../_media/examples/zencode_cookbook/bitcoin/transaction.json ':include :type=code json')
 
-## Sign the raw transaction 
 
-Script:
+## Sign the transaction and format as raw transaction 
+
+You can now pass the transaction produced from the above script, along with <a href="../_media/examples/zencode_cookbook/bitcoin/keys.json" download>keys.json</a> to the following script that will sign the transaction and format it so that we can pass it to any Bitcoin node. 
 
 [](../_media/examples/zencode_cookbook/bitcoin/sign_transaction.zen ':include :type=code gherkin')
 
-
-Result: 
+The signed transaction should look like:
 
 [](../_media/examples/zencode_cookbook/bitcoin/rawtx.json ':include :type=code json')
 
+**Note: this script and the previous one can be merged** into one script that creates the transaction, signs it and prints it out as raw transaction. In this example we kept the script separated as this script was originally meant to demonstrate how to make an **offline Bitcoin wallet**, where the signature happens on different machine (which can be kept offline for security reasons). You can merge the two scripts and feed the result with the <a href="../_media/examples/zencode_cookbook/bitcoin/keys.json" download>keys.json</a> we created on top of this page and the file <a href="../_media/examples/zencode_cookbook/bitcoin/order.json" download>order.json</a>
 
 
 
