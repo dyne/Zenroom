@@ -27,7 +27,7 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: mymindstorm/setup-emsdk@v7
+      - uses: mymindstorm/setup-emsdk@v11
         with:
           version: ${{env.EM_VERSION}}
       - run: emcc -v
@@ -56,7 +56,7 @@ jobs:
         with:
           node-version: 12
           registry-url: 'https://registry.npmjs.org'
-      - uses: mymindstorm/setup-emsdk@v7
+      - uses: mymindstorm/setup-emsdk@v11
         with:
           version: ${{env.EM_VERSION}}
       - name: Install zsh
