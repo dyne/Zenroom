@@ -64,8 +64,8 @@ test("does run zencode", async (t) => {
 });
 
 test("error format contains newlines", async t => {
-  const {error} = await zencode_exec('a');
-  const lines = error.logs.split('\n');
+  const {result} = await zencode_exec('a');
+  const lines = result.logs.split('\n');
 
   t.true(lines.includes('[W] Zencode text too short to parse'));
   t.true(lines.includes('[W] Zencode is missing version check, please add: rule check version N.N.N'));
