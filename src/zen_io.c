@@ -292,7 +292,7 @@ static int zen_warn (lua_State *L) {
 	for (i=1; i<=n; i++) {
 		const char *s = lua_print_format(L, i, &len);
 		if (i>1) { out[pos]='\t'; pos++; }
-		(*Z->snprintf)(out+pos,MAX_JSBUF-pos,"%s%c",s,newline);
+		(*Z->snprintf)(out+pos,MAX_JSBUF-pos,"%s\n",s);
 		pos+=len;
 		lua_pop(L, 1);  /* pop result */
 	}
@@ -310,7 +310,7 @@ static int zen_act (lua_State *L) {
 	for (i=1; i<=n; i++) {
 		const char *s = lua_print_format(L, i, &len);
 		if (i>1) { out[pos]='\t'; pos++; }
-		(*Z->snprintf)(out+pos,MAX_JSBUF-pos,"%s%c",s,newline);
+		(*Z->snprintf)(out+pos,MAX_JSBUF-pos,"%s\n",s);
 		pos+=len;
 		lua_pop(L, 1);  /* pop result */
 	}
