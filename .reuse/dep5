@@ -3,7 +3,7 @@ Upstream-Name: Zenroom
 Upstream-Contact: Denis Roio <jaromil@dyne.org>
 Source: https://github.com/dyne/Zenroom
 
-Files: src/* bindings/* test/* docs/* examples/* .github/* build/* VERSION pet/petitionCount.zen
+Files: src/* bindings/* test/* docs/* examples/* .github/* build/* VERSION pet/petitionCount.zen .gitattributes
 Copyright: 2017-2021 Dyne.org foundation
 License: AGPL-3.0-or-later
 
