@@ -37,7 +37,9 @@ function txreceipt() (
 nonce=`counttx "0x07837015333210AFE4953f61712997eD6563D0de"`
 echo $nonce
 nonce=9
+# indirizzo (derivato dalla chiave pubblica)
 A="07837015333210AFE4953f61712997eD6563D0de"
+# chiave privata
 Ask="6d8bddb6f25317dda2f2cbd8ad4d8e021b8447a453cfa5f4879721be865e1992"
 
 # contract
