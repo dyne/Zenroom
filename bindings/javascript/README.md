@@ -110,7 +110,7 @@ const zenData = `
   }
 `
 
-zencode_exec(zencode, {data: zenData, keys: zenKeys, conf:`color=0, debug=0`})
+zencode_exec(zencodeEncrypt, {data: zenData, keys: zenKeys, conf:`color=0, debug=0`})
   .then((result) => {
     console.log(result);
   })
