@@ -30,34 +30,29 @@
 
 function initkeys(ktype)
 
-    if luatype(ACK.keys) == 'table' then
-        -- TODO: check that curve types match
-    elseif ACK.keys == nil then
-        -- initialise empty ACK.keys
-         ACK.keys = {} -- TODO: save curve types
-	      new_codec('keys', {
-            zentype = 'schema',
-			   luatype = 'table',
-			   encoding = 'complex' })
-    else
-        error('Keys table is corrupted', 2)
-    end
-    -- if ktype is specified then check overwriting
-    if ktype then
-        ZEN.assert(
-            not ACK.keys[uscore(ktype)],
-            'Cannot overwrite existing key: ' .. ktype
-        )
-    end
+   if luatype(ACK.keys) == 'table' then
+      -- TODO: check that curve types match
+   elseif ACK.keys == nil then
+      -- initialise empty ACK.keys
+      ACK.keys = {} -- TODO: save curve types
+      new_codec('keys', {
+		   zentype = 'schema',
+		   luatype = 'table',
+		   encoding = 'complex' })
+   else
+      error('Keys table is corrupted', 2)
+   end
+   -- if ktype is specified then check overwriting
+   if ktype then
+      ZEN.assert(
+	 not ACK.keys[uscore(ktype)],
+	 'Cannot overwrite existing key: ' .. ktype
+      )
+   end
 end
 When("create the keys", function()
-   empty'keys'
-   -- initialise empty ACK.keys
-   ACK.keys = {}
-   new_codec('keys', {
-       zentype = 'schema',
-       luatype = 'table',
-       encoding = 'complex' })
+	empty'keys'
+	initkeys()
 end)
 
 -- KNOWN KEY TYPES FOUND IN ACK.keys

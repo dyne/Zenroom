@@ -4,5 +4,5 @@ Scenario 'ecdh': Alice signs a message for Bob
 	and I have my 'keypair'
 	When I write string 'This is my signed message to Bob.' in 'draft'
 	and I create the signature of 'draft'
-	Then print my 'signature'
+	Then print the 'signature'
 	and print my 'draft'

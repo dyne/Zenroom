@@ -60,7 +60,7 @@ Scenario 'ecdh': Alice signs a message for Bob
 	and I have my 'keypair'
 	When I write string 'This is my signed message to Bob.' in 'draft'
 	and I create the signature of 'draft'
-	Then print my 'signature'
+	Then print the 'signature'
 	and print my 'draft'
 EOF
 
@@ -70,9 +70,9 @@ rule check version 1.0.0
 Scenario 'ecdh': Bob verifies the signature from Alice
 	Given that I am known as 'Bob'
 	and I have a 'public key'
-	and I have a 'signature' from 'Alice'
+	and I have a 'signature'
 	and I have a 'string' named 'draft' in 'Alice'
-	When I verify the 'draft' is signed by 'Alice'
+	When I verify the 'draft' has a signature in 'signature' by 'Alice'
 	Then print the string 'signature correct'
 	and print the 'draft' as 'string'
 EOF
@@ -176,7 +176,8 @@ echo
 cat << EOF | zexe keygen.zen | save ecdh alice_keys.json
 Scenario ecdh
 Given I am known as 'Alice'
-When I create the ecdh key
+When I create the keys
+and I create the ecdh key
 Then print my 'keys'
 EOF
 
@@ -245,6 +246,26 @@ Scenario 'ecdh': Bob decrypts the message from Alice
 	and print the 'header' from 'secret message' as 'string'
 EOF
 
+cat <<EOF | zexe sign_from_alice.zen -k alice_keys.json | save ecdh sign_alice_keyring.json
+Rule check version 2.0.0
+Scenario 'ecdh'
+Given that I am known as 'Alice'
+and I have my 'keys'
+When I write string 'This is my authenticated message.' in 'message'
+and I create the signature of 'message'
+Then print the 'message'
+and print the 'signature'
+EOF
 
+cat <<EOF | zexe verify_from_alice.zen -k alice_pubkey.json -a sign_alice_keyring.json
+Rule check version 2.0.0
+Scenario 'ecdh'
+Given I have a 'ecdh' public key from 'Alice'
+and I have a 'string' named 'message'
+and I have a 'signature'
+When I verify the 'message' has a signature in 'signature' by 'Alice'
+Then print the string 'Signature is valid'
+and print the 'message'
+EOF
 
 success
