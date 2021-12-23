@@ -1,5 +1,0 @@
-rule check version 1.0.0
-Scenario ecdh: Generate a random password
-Given nothing
-When I create the random 'password'
-Then print the 'password'
