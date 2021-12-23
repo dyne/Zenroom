@@ -14,3 +14,6 @@
 *.pyc binary
 *.pdf binary
 *.bz2 binary
+*.data binary
+*.wasm binary
+*.so binary
