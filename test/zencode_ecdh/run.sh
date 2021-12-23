@@ -212,8 +212,8 @@ and I copy the 'ecdh' in 'keys' to 'ecdh before'
 and I create the ecdh public key
 and I copy the 'ecdh' in 'keys' to 'ecdh after'
 and I verify 'ecdh before' is equal to 'ecdh after'
-Then print 'ecdh before'
-and print 'ecdh after'
+Then print 'ecdh before' as 'hex'
+and print 'ecdh after' as 'hex'
 EOF
 
 cat alice_keys.json | jq .
