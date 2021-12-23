@@ -72,7 +72,7 @@ local function f_keygen()
 		public_key = kp.public,
 		private_key = kp.private
 	}
-	new_codec('keypair', { zentype = 'dictionary' })
+	new_codec('keypair', { zentype = 'schema' })
 end
 When('create the keypair', f_keygen)
 
@@ -179,16 +179,17 @@ local function _havekey_compat()
 	ZEN.assert(sk, "ECDH Private key not found anywhere in keys or keypair")
 end
 
+-- check various locations to find the public key
 local function _pubkey_compat(_key)
 	local pubkey = ACK[_key]
 	if not pubkey then
 		local pubkey_arr
 		pubkey_arr = ACK.public_key or ACK.public_key_session or ACK.ecdh_public_key
-		ZEN.assert(
-			type(pubkey_arr) == 'table',
-			'Public key is not a table'
-		)
-		pubkey = pubkey_arr[_key]
+		if luatype(pubkey_arr) == 'table' then
+		   pubkey = pubkey_arr[_key]
+		else
+		   pubkey = pubkey_arr
+		end
 		ZEN.assert(pubkey, 'Public key not found for: ' .. _key)
 	end
 	return pubkey

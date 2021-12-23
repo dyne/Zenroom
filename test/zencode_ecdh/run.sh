@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-RNGSEED="random"
+# RNGSEED="random"
 ####################
 # common script init
 if ! test -r ../utils.sh; then
@@ -50,7 +50,7 @@ cat <<EOF | zexe alice_keypub.zen -k alice_keypair.json | save ecdh alice_pub.js
 Scenario 'ecdh': Publish the public key
 Given that I am known as 'Alice'
 and I have my 'keypair'
-Then print my 'public key' from 'keypair'
+Then print the 'public key' from 'keypair'
 EOF
 
 cat <<EOF | zexe DSA01.zen -k alice_keypair.json | save ecdh alice_signs_to_bob.json
@@ -69,7 +69,7 @@ rule check version 1.0.0
 # rule input encoding base64
 Scenario 'ecdh': Bob verifies the signature from Alice
 	Given that I am known as 'Bob'
-	and I have a 'public key' from 'Alice'
+	and I have a 'public key'
 	and I have a 'signature' from 'Alice'
 	and I have a 'string' named 'draft' in 'Alice'
 	When I verify the 'draft' is signed by 'Alice'
@@ -109,7 +109,7 @@ rule check version 1.0.0
 # rule input encoding base64
 Scenario 'ecdh': Bob verifies the signature from Alice
 	Given that I am known as 'Bob'
-	and I have a 'public key' from 'Alice'
+	and I have a 'public key'
 	and I have a 'signature'
 	and I have a 'string dictionary' named 'Identity'
 	When I verify the 'Identity' has a signature in 'signature' by 'Alice'
@@ -128,7 +128,7 @@ cat <<EOF | zexe bob_keypub.zen -k bob_keypair.json | save ecdh bob_pub.json
 Scenario 'ecdh': Publish the public key
 Given that I am known as 'Bob'
 and I have my 'keypair'
-Then print my 'public key' from 'keypair'
+Then print the 'public key' from 'keypair'
 EOF
 
 cat <<EOF | zexe AES05.zen -k alice_keypair.json -a bob_pub.json | save ecdh alice_to_bob.json
@@ -136,7 +136,7 @@ Rule check version 1.0.0
 Scenario 'ecdh': Alice encrypts a message for Bob
 	Given that I am known as 'Alice'
 	and I have my 'keypair'
-	and I have a 'public key' from 'Bob'
+	and I have a 'public key'
 	When I write string 'This is my secret message.' in 'message'
 	and I write string 'This is the header' in 'header'
 	and I encrypt the secret message of 'message' for 'Bob'
@@ -148,7 +148,7 @@ Rule check version 1.0.0
 Scenario 'ecdh': Bob gathers public keys in his keyring
 	Given that I am 'Bob'
 	and I have my 'keypair'
-	and I have a 'public key' from 'Alice'
+	and I have a 'public key'
 	Then print my 'keypair'
 	and print the 'public key'
 EOF
@@ -158,7 +158,7 @@ Rule check version 1.0.0
 Scenario 'ecdh': Bob decrypts the message from Alice
 	Given that I am known as 'Bob'
 	and I have my 'keypair'
-	and I have a 'base64' named 'Alice' in 'public key'
+	and I have a 'base64' named 'public key'
 	and I have a 'secret message'	
 	When I decrypt the text of 'secret message' from 'Alice'
 	Then print the 'text' as 'string'
