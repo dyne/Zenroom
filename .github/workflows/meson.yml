@@ -19,6 +19,7 @@ jobs:
         with:
           luaVersion: "luajit-2.0.5"
       - uses: leafo/gh-actions-luarocks@v4
+      - uses: rlalik/setup-cpp-compiler@v1
       - uses: seanmiddleditch/gha-setup-ninja@master
 
       - name: Install compiler and dependencies on 🐧 Ubuntu
@@ -44,7 +45,7 @@ jobs:
 
       - name: Build using meson
         env:
-          CC: ${{ matrix.compiler }}
+          CC: ${{ steps.install_cc.outputs.cc }}
         run: |
           meson build builddir && ninja -C builddir
 
