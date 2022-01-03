@@ -15,6 +15,10 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: "3.x"
+      - uses: leafo/gh-actions-lua@v8
+        with:
+          luaVersion: "luajit-2.0.5"
+      - uses: leafo/gh-actions-luarocks@v4
       - uses: seanmiddleditch/gha-setup-ninja@master
 
       - name: Install compiler and dependencies on 🐧 Ubuntu
@@ -25,12 +29,15 @@ jobs:
           # install compiler
           sudo apt-get install --force-yes ${{ matrix.compiler }}
           # install deps
-          sudo apt-get install --force-yes cmake vim zsh luajit lua-cjson
+          sudo apt-get install --force-yes cmake vim zsh
 
       - name: Install compiler and dependencies on 🍏 macOS
         if: matrix.os == 'macos-latest'
         run: |
-          brew install cmake vim zsh luajit lua-cjson
+          brew install cmake vim zsh
+
+      - name: Install lua dependencies
+        run: luarocks install lua-cjson
 
       - name: Install meson
         run: pip3 install meson
