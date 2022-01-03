@@ -11,15 +11,14 @@ jobs:
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v1
-        with:
-          submodules: recursive
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
         with:
           python-version: "3.x"
       - uses: seanmiddleditch/gha-setup-ninja@master
 
-      - name: Install compiler and dependencies
+      - name: Install compiler and dependencies on 🐧 Ubuntu
+        if: matrix.os == "ubuntu-latest"
         run: |
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test
           sudo apt-get update
@@ -27,7 +26,14 @@ jobs:
           sudo apt-get install --force-yes ${{ matrix.compiler }}
           # install deps
           sudo apt-get install --force-yes cmake vim zsh luajit lua-cjson
-          pip3 install meson
+
+      - name: Install compiler and dependencies on 🍏 macOS
+        if: matrix.os == "macos-latest"
+        run: |
+          brew install cmake vim zsh luajit lua-cjson
+
+      - name: Install meson
+        run: pip3 install meson
 
       - name: Build using meson
         env:
