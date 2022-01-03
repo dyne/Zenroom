@@ -7,8 +7,9 @@ jobs:
     strategy:
       matrix:
         compiler: [clang-9, clang-10, clang-11, gcc-7, gcc-8, gcc-9, gcc-10]
+        os: [ubuntu-latest, macos-latest]
       fail-fast: false
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v1
         with:
