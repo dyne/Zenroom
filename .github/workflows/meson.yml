@@ -19,7 +19,7 @@ jobs:
         with:
           luaVersion: "luajit-2.0.5"
       - uses: leafo/gh-actions-luarocks@v4
-      - uses: rlalik/setup-cpp-compiler@v1
+      - uses: rlalik/setup-cpp-compiler@master
       - uses: seanmiddleditch/gha-setup-ninja@master
 
       - name: Install compiler and dependencies on 🐧 Ubuntu
