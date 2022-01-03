@@ -18,7 +18,7 @@ jobs:
       - uses: seanmiddleditch/gha-setup-ninja@master
 
       - name: Install compiler and dependencies on 🐧 Ubuntu
-        if: matrix.os == "ubuntu-latest"
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test
           sudo apt-get update
@@ -28,7 +28,7 @@ jobs:
           sudo apt-get install --force-yes cmake vim zsh luajit lua-cjson
 
       - name: Install compiler and dependencies on 🍏 macOS
-        if: matrix.os == "macos-latest"
+        if: matrix.os == 'macos-latest'
         run: |
           brew install cmake vim zsh luajit lua-cjson
 
