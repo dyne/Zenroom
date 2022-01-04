@@ -50,7 +50,6 @@ jobs:
         uses: docker/build-push-action@v2
         if: github.event_name != 'pull_request'
         with:
-          context: ./devops/
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
