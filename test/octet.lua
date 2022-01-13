@@ -26,6 +26,7 @@ teststr = right:string()
 test64  = right:base64()
 testU64 = right:url64()
 test58  = right:base58()
+test45  = right:base45()
 testhex = right:hex()
 testbin = right:bin()
 
@@ -60,6 +61,13 @@ left = OCTET.base58(test58)
 dotest(left, right)
 dotest(left:base58(), test58)
 dotest(hash:process(left), hash:process(right))
+
+print '== test base45 import/export'
+left = OCTET.from_base45(test45)
+dotest(left, right)
+dotest(left:base45(), test45)
+dotest(hash:process(left), hash:process(right))
+
 
 
 print '== test hex import/export'
@@ -134,6 +142,7 @@ function jsoncryptotest(f)
 end
 jsoncryptotest('hex')
 jsoncryptotest('base58')
+-- jsoncryptotest('base45')
 jsoncryptotest('base64')
 jsoncryptotest('url64')
 jsoncryptotest('bin')
