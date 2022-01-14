@@ -63,6 +63,23 @@ When("create the new dictionary", function()
 		new_codec('new dictionary', { zentype = 'dictionary' })
 end)
 
+When("create the array of elements named '' for dictionaries in ''",
+     function(name, dict)
+	empty'array'
+	local src = have(dict)
+	ZEN.assert(luatype(src)=='table', "Object is not a table: "..dict)
+	local res = { }
+	for k, v in pairs(src) do
+	   if k == name then table.insert(res, v) end
+	   -- dict is most oftern an array of dictionaries
+	   for kk, vv in pairs(v) do
+	      if kk == name then table.insert(res, vv) end
+	   end
+	end
+	ACK.array = res
+	new_codec('array', {luatype='table',zentype='array'}, dict)
+end)
+
 When("create the pruned dictionary of ''", function(dict)
 	empty'pruned dictionary'
 	local d = have(dict)
