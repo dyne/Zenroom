@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Wednesday, 14th July 2021
+--on Friday, 14th January 2022
 --]]
 
 load_scenario('zencode_credential')
@@ -137,6 +137,36 @@ When(
     function(doc)
         empty 'reflow identity'
 		ACK.reflow_identity = _makeuid(have(doc))
+    end
+)
+
+When(
+    "create the reflow identity of all objects in ''",
+    function(doc)
+        empty 'reflow identity'
+        local arr = have(doc)
+        ZEN.assert(luatype(arr)=='table', "Object is not an array or dictionary: "..doc)
+        local first = { }
+        for k,v in pairs(arr) do
+          -- if reflow_id already present then check if ECP and use that
+          if v.reflow_identity then
+            local rid = ECP.new(v.reflow_identity)
+            ZEN.assert(not rid:isinfinity(),
+             "Object "..doc.."["..k.."] has an invalid reflow identity")
+            table.insert(res, rid)
+          else
+            table.insert(res, _makeuid(v))
+          end
+        end
+        local res
+        for _,v in pairs(res) do
+            if not res then
+                res = v
+            else
+                res = res + v
+            end
+        end
+		ACK.reflow_identity = res
     end
 )
 
