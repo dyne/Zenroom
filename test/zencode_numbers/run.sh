@@ -105,6 +105,21 @@ Then print the string 'OK'
 Then print data
 EOF
 
+cat <<EOF | save numbers boolean.json
+{ "mycat": {
+    "black": true,
+    "white": false,
+     "name": "cat",
+     "age": 6 }
+}
+EOF
+cat <<EOF | debug booleans.zen -a boolean.json
+Given I have a 'string dictionary' named 'mycat'
+When debug
+Then print all data
+EOF
+
+
 cat << EOF > numbers_zero_values.json
 {"packet": {
 "Active_power_imported_kW":4.85835600,

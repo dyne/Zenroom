@@ -258,59 +258,20 @@
     end
  end
 
- -- Octet to string encoding conversion mechanism: takes the name of
- -- the encoding and returns the function. Octet is a first class
- -- citizen in Zenroom therefore all WHEN/ACK r/w HEAP types can be
- -- converted by its methods.
- local function outcast_string(obj)
-    local t = luatype(obj)
-    if t == 'number' then
-       return obj
-    end
-    return O.to_string(obj)
- end
- local function outcast_hex(obj)
-    local t = luatype(obj)
-    if t == 'number' then
-       return obj
-    end
-    return O.to_hex(obj)
- end
- local function outcast_base64(obj)
-    local t = luatype(obj)
-    if t == 'number' then
-       return obj
-    end
-    return O.to_base64(obj)
- end
- local function outcast_url64(obj)
-    local t = luatype(obj)
-    if t == 'number' then
-       return obj
-    end
-    return O.to_url64(obj)
- end
- local function outcast_base58(obj)
-    local t = luatype(obj)
-    if t == 'number' then
-       return obj
-    end
-    return O.to_base58(obj)
- end
- local function outcast_bin(obj)
-    local t = luatype(obj)
-    if t == 'number' then
-       return obj
-    end
-    return O.to_bin(obj)
- end
- local function outcast_mnemonic(obj)
-    local t = luatype(obj)
-    if t == 'number' then
-       return obj
-    end
-    return O.to_mnemonic(obj)
- end
+-- factory function returns a small outcast function that applies
+-- return guessed.fun(guessed.raw)safety checks on values like
+-- exceptions for numbers and booleans
+
+local function f_factory_outcast(fun)
+   return function(data)
+      local dt = luatype(data)
+      -- passthrough native number data
+      if dt == 'number' or dt == 'boolean' then
+	 return data end
+      return fun(data) -- pass function pointer
+   end
+end
+
  -- takes a string returns the function, good for use in deepmap(fun,table)
  function guess_outcast(cast)
     if not cast then
@@ -319,26 +280,23 @@
     if luatype(cast) ~= 'string' then
        error('guess_outcast called with wrong argument: '..type(cast), 3) end
     if cast == 'string' then
-       return outcast_string
-    elseif cast == 'hex' then
-       return outcast_hex
+       return f_factory_outcast(O.to_string)
+    elseif cast == 'hex' then       
+       return f_factory_outcast(O.to_hex)
     elseif cast == 'base64' then
-       return outcast_base64
+       return f_factory_outcast(O.to_base64)
     elseif cast == 'url64' then
-       return outcast_url64
+       return f_factory_outcast(O.to_url64)
     elseif cast == 'base58' then
-       return outcast_base58
-    elseif cast == 'bin' then
-       return outcast_bin
-    elseif cast == 'binary' then
-       return outcast_bin
+       return f_factory_outcast(O.to_base58)
+    elseif cast == 'binary' or cast == 'bin' then
+       return f_factory_outcast(O.to_bin)
     elseif cast == 'mnemonic' then
-       return outcast_mnemonic
+       return f_factory_outcast(O.to_mnemonic)
     elseif cast == 'number' then
-       -- in case is a schema then outcast uses default output encoding
-       return (function(v)
-	  return (v)
-       end)
+       return f_factory_outcast(tonumber)
+    elseif cast == 'boolean' then
+       return function(data) return data end
     end
     -- try schemas
     local fun = ZEN.schemas[uscore(cast, ' ', '_')]
