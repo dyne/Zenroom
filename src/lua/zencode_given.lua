@@ -56,7 +56,7 @@ local function pick(what, conv)
    TMP.schema = conv
    assert(ZEN.OK)
    if DEBUG > 1 then
-      ZEN:ftrace('pick found ' .. what)
+      ZEN:ftrace('pick found ' .. what.. '('..TMP.zentype..')')
    end
 end
 
@@ -160,14 +160,8 @@ local function ack(name)
    )
    assert(ZEN.OK)
    ACK[name] = operate_conversion(TMP)
-   -- save codec state
-   ZEN.CODEC[name] = {
-      name = TMP.name,
-      luatype = TMP.luatype,
-      zentype = TMP.zentype,
-      encoding = TMP.encoding,
-      root = TMP.root
-   }
+   -- also creates codec insice operate conversion
+
    -- name of schema may differ from name of object
    if TMP.schema and ( TMP.schema ~= TMP.encoding ) then
       ZEN.CODEC[name].schema = TMP.schema

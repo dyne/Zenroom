@@ -161,13 +161,8 @@
     if objtype == 'table' then
        local toks = strtok(definition, '[^_]+')
        if not (#toks > 1) then
-	  error(
-	     'Invalid definition: ' ..
-		definition ..
-		   ' (must be "base64 array" or "string dictionary" etc.)',
-	     2
-	  )
-	  return nil
+	  error('Invalid definition: ' .. definition ..
+		' (must be "base64 array" or "string dictionary" etc.)', 2)
        end
        local rightmost = #toks
        local leftwords = '' -- concat all left words in toks minus the last
@@ -180,11 +175,8 @@
 	  not ((toks[rightmost] == 'array') or
 	     (toks[rightmost] == 'dictionary'))
 	then
-	  error(
-	     'Invalid table type: ' ..
-		toks[rightmost] .. ' (must be array or dictionary)',
-	     2
-	  )
+	  error('Invalid table type: ' .. toks[rightmost] ..
+		' (must be array or dictionary)', 2)
 	  return nil
        end
        -- schema type in array or dict
@@ -199,7 +191,7 @@
 	     encoding = toks[rightmost]
 	  })
        end
-       -- normal type in input encoding
+       -- normal type in input encoding: string, base64 etc.
        res = input_encoding(leftwords)
        if res then
 	  res.luatype = 'table'
@@ -207,16 +199,12 @@
 	  res.raw = obj
 	  return (res)
        end
-       error(
-	  'Invalid ' .. toks[rightmost] .. ' encoding: ' .. leftwords,
-	  2
-       )
+       error('Invalid ' .. toks[rightmost] ..
+	     ' encoding: ' .. leftwords, 2)
        return nil
     end
-    error(
-       'Invalid conversion for type ' .. objtype .. ': ' .. definition,
-       2
-    )
+    error('Invalid conversion for type ' .. objtype ..
+	  ': ' .. definition, 2)
     return nil
  end
 
@@ -233,7 +221,8 @@
        name = guessed.name,
        encoding = guessed.encoding,
        zentype = guessed.zentype,
-       luatype = guessed.luatype
+       luatype = guessed.luatype,
+       root = guessed.root
     }
     -- TODO: make xxx print to stderr!
     -- xxx('Operating conversion on: '..guessed.name)

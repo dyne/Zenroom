@@ -44,22 +44,45 @@ function fif(condition, if_true, if_false)
 end
 
 function uscore(input)
-	if luatype(input) == 'string' then
-		return string.gsub(input, ' ', '_')
-	elseif luatype(input) == 'number' then
-		return input
-	else
-		error("Underscore transform not a string or number: "..luatype(input), 2)
-	end
+   local it = luatype(input)
+   if it == 'string' then
+      return string.gsub(input, ' ', '_')
+   elseif it == 'number' then
+      return input
+   else
+      error("Underscore transform not a string or number: "..it, 2)
+   end
 end
 function space(input)
-	if luatype(input) == 'string' then
-		return string.gsub(input, '_', ' ')
-	elseif luatype(input) == 'number' then
-		return input
-	else
-		error("Whitespace transform not a string or number: "..luatype(input), 2)
-	end
+   local it = luatype(input)
+   if it == 'string' then
+      return string.gsub(input, '_', ' ')
+   elseif it == 'number' then
+      return input
+   else
+      error("Whitespace transform not a string or number: "..it, 2)
+   end
+end
+
+-- factory function to generate a function and return its pointer the
+-- function is generated using another pointer to function which is
+-- the encoder, plus it applies common safety checks for data types
+-- that must be excluded for encoding, as for instance numbers and
+-- booleans.
+-- arguments: encoder's name, conversion and check functions
+local function f_factory_encoder(encoder_n, encoder_f, encoder_c)
+   return { fun = function(data)
+	       local dt = luatype(data)
+	       if dt == 'number' then
+		  return data
+	       elseif dt == 'boolean' then
+		  return data
+	       end
+	       return encoder_f(data)
+   end,
+	    encoding = encoder_n,
+	    check = encoder_c
+   }
 end
 
 -- gets a string and returns the associated function, string and prefix
@@ -69,91 +92,30 @@ function input_encoding(what)
       error("Call to input_encoding argument is not a string: "..type(what),2)
    end
    if what == 'u64' or what == 'url64' then
-      return { fun = function(data)
-		  if luatype(data) == 'number' then
-		     return data
-		  else
-		     return O.from_url64(data)
-		  end
-      end,
-	       encoding = 'url64',
-	       check = O.is_url64
-      }
+      return f_factory_encoder('url64', O.from_url64, O.is_url64)
    elseif what == 'b64' or what =='base64' then
-      return { fun = function(data)
-		  if luatype(data) == 'number' then
-		     return data
-		  else
-		     return O.from_base64(data)
-		  end
-      end,
-	       encoding = 'base64',
-	       check = O.is_base64
-      }
+      return f_factory_encoder('base64', O.from_base64, O.is_base64)
    elseif what == 'b58' or what =='base58' then
-      return { fun = function(data)
-		  if luatype(data) == 'number' then
-		     return data
-		  else
-		     return O.from_base58(data)
-		  end
-      end,
-	       encoding = 'base58',
-	       check = O.is_base58
-      }
+      return f_factory_encoder('base58', O.from_base58, O.is_base58)
    elseif what == 'hex' then
-      return { fun = function(data)
-		  if luatype(data) == 'number' then
-		     return data
-		  else
-		     return O.from_hex(data)
-		  end
-      end,
-	       encoding = 'hex',
-	       check = O.is_hex
-      }
+      return f_factory_encoder('hex', O.from_hex, O.is_hex)
    elseif what == 'bin' or what == 'binary' then
-      return { fun = function(data)
-		  if luatype(data) == 'number' then
-		     return data
-		  else
-		     return O.from_bin(data)
-		  end
-      end,
-	       encoding = 'binary',
-	       check = O.is_bin
-      }
+      return f_factory_encoder('binary', O.from_bin, O.is_bin)
    elseif what == 'str' or what == 'string' then
-      return { fun = function(data)
-		  if luatype(data) == 'number' then
-		     return data
-		  else
-		     return O.from_string(data)
-		  end
-      end,
-	       check = function(_) return true end,
-	       encoding = 'string'
-      }
+      -- string has no check function
+      return f_factory_encoder('string', O.from_string, nil)
    elseif what =='mnemonic' then
-      return { fun = function(data)
-		  if luatype(data) == 'number' then
-		     return data
-		  else
-		     -- trim and eliminate double spaces
-		     return O.from_mnemonic( string.gsub( trim( data ), ' +', ' ') )
-		  end
-      end,
-	       check = function(_) return true end,
-	       encoding = 'mnemonic'
-      }
+      -- mnemonic has no check function (TODO:)
+      return f_factory_encoder('mnemonic', O.from_mnemonic, nil)
    elseif what == 'num' or what == 'number' then
-      return ({
-	    fun = function(x) return(x) end,
-	    check = function(x)
-	       assert(tonumber(x), "Invalid encoding, not a number: "..type(x), 3)
-	    end,
-            encoding = 'number'
-      })
+      return f_factory_encoder('number', 
+			       function(data) return tonumber(data) end,
+			       function(data)
+				  if not tonumber(data) then
+				     error("Invalid encoding, not a number: "
+					   ..type(data), 3)
+				  end
+			       end)
    end
    error("Input encoding not found: " .. what, 2)
    return nil
@@ -385,7 +347,7 @@ function zenguard(val)
    if not (iszen(type(val)) or tonumber(val)) then
 		I.print(ZEN.heap().ACK)
 		-- xxx("Invalid value: "..val)
-		-- debug_heap_dump()
+		debug_heap_dump()
 		error("Zenguard detected an invalid value in HEAP: type "..type(val), 2)
 		return nil
    end
