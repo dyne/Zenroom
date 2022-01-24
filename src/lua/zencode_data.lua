@@ -81,6 +81,26 @@
     return res
  end
 
+-- return leftmost and rightmost if definition string indicates
+-- a lua table: dictionary, array or schema
+local function expect_table(definition)
+   local toks = strtok(definition, '[^_]+')
+   local res = { rightmost = toks[#toks] }
+   if res.rightmost == 'array'
+      or
+      res.rightmost == 'dictionary'
+   then
+      res.leftwords = '' -- concat all left words in toks minus the last
+       for i = 1, #toks - 2 do
+	  res.leftwords = res.leftwords .. toks[i] .. '_'
+       end
+       res.leftwords = uscore( res.leftwords .. toks[#toks - 1] )
+       -- no trailing underscore
+      return res
+   end
+   -- schemas may or may be not tables
+end
+
  --- Given block (IN read-only memory)
  -- @section Given
 
@@ -112,11 +132,15 @@
     local t
     local objtype = luatype(obj)
     local res
+    if not definition then
+       error("Cannot take undefined object, found a "..type(obj), 3)
+    end
     -- a defined schema overrides any other conversion
     t = ZEN.schemas[definition]
     if t then
-       -- complex schema specfying output conversion as: {import=fun, export=fun}
+       -- complex schema is a table specfying in/out conversions as: {import=fun, export=fun}
        local c = fif(luatype(t)=='table', 'complex', CONF.output.encoding.name)
+       -- default is always the configured output encoding
        return ({
 	  fun = t,
 	  zentype = 'schema',
@@ -125,10 +149,10 @@
 	  encoding = c
        })
     end
+
     if objtype == 'string' then
-       if not definition then
-	  error('Undefined conversion for string object', 2)
-	  return nil
+       if expect_table(definition) then
+	  error("Cannot take object: expected '"..definition.."' but found '"..objtype.."' (not a table)",3)
        end
        res = input_encoding(definition)
        res.luatype = 'string'
@@ -136,17 +160,51 @@
        res.raw = obj
        return (res)
     end
-    if objtype == 'number' then
-       if definition then
-	  if definition ~= 'number' then
-	     error('Invalid conversion for number object: '..definition, 2)
-	  end
+
+    -- definition: value_encoding .. data_type
+    -- value_encoding: base64, hex, etc.
+    -- data_type: array, dictionary, structure
+    if objtype == 'table' then
+       local def = expect_table(definition)
+       if not def then -- check if the last word is among zentype collections
+	  error("Cannot take object: expected '"..definition
+		.."' but found '"..objtype.."' (not a dictionary or array)",3)
+       end
+       -- schema type in array or dict
+       t = ZEN.schemas[ def.leftwords ]
+       if t then
+	  return ({
+	     fun = t,
+	     zentype = 'schema',
+	     schema = def.leftwords,
+	     luatype = objtype,
+	     raw = obj,
+	     encoding = def.rightmost
+	  })
+       end
+       -- normal type in input encoding: string, base64 etc.
+       res = input_encoding(def.leftwords)
+       if res then
+	  res.luatype = 'table'
+	  res.zentype = def.rightmost -- zentypes couples with table
+	  res.raw = obj
+	  return (res)
+       end
+       error("Cannot take object: invalid "..def.rightmost.." with encoding "..def.leftwords, 3)
+       return nil
+    end
+
+    if objtype == 'number' or tonumber(obj) then
+       if expect_table(definition) then
+	  error("Cannot take object: expected '"..definition.."' but found '"..objtype.."' (not a table)",3)
+       elseif definition ~= 'number' then
+	  error("Cannot take object: expected '"..definition.."' but found '"..objtype.."'",3)
        end
        res = input_encoding(objtype)
        res.luatype = 'number'
        res.zentype = 'element'
        if obj > 2147483647 then
-	  error('Overflow of number object over 32bit signed size', 2)
+	  error('Overflow of number object over 32bit signed size', 3)
 	  -- TODO: maybe support unsigned native here
        end
        res.raw = obj
@@ -155,56 +213,8 @@
 	  -- native unsigned integer
        return (res)
     end
-    -- definition: value_encoding .. data_type
-    -- value_encoding: base64, hex, etc.
-    -- data_type: array, dictionary, structure
-    if objtype == 'table' then
-       local toks = strtok(definition, '[^_]+')
-       if not (#toks > 1) then
-	  error('Invalid definition: ' .. definition ..
-		' (must be "base64 array" or "string dictionary" etc.)', 2)
-       end
-       local rightmost = #toks
-       local leftwords = '' -- concat all left words in toks minus the last
-       for i = 1, rightmost - 2 do
-	  leftwords = leftwords .. toks[i] .. '_'
-       end
-       leftwords = leftwords .. toks[rightmost - 1] -- no trailing underscore
-       -- check if the last word is among zentype collections
-       if
-	  not ((toks[rightmost] == 'array') or
-	     (toks[rightmost] == 'dictionary'))
-	then
-	  error('Invalid table type: ' .. toks[rightmost] ..
-		' (must be array or dictionary)', 2)
-	  return nil
-       end
-       -- schema type in array or dict
-       t = ZEN.schemas[leftwords]
-       if t then
-	  return ({
-	     fun = t,
-	     zentype = 'schema',
-	     schema = leftwords,
-	     luatype = objtype,
-	     raw = obj,
-	     encoding = toks[rightmost]
-	  })
-       end
-       -- normal type in input encoding: string, base64 etc.
-       res = input_encoding(leftwords)
-       if res then
-	  res.luatype = 'table'
-	  res.zentype = toks[rightmost] -- zentypes couples with table
-	  res.raw = obj
-	  return (res)
-       end
-       error('Invalid ' .. toks[rightmost] ..
-	     ' encoding: ' .. leftwords, 2)
-       return nil
-    end
-    error('Invalid conversion for type ' .. objtype ..
-	  ': ' .. definition, 2)
+
+    error('Cannot take object: invalid conversion for type '..objtype..': '..definition, 3)
     return nil
  end
 
