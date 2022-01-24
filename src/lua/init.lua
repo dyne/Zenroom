@@ -148,6 +148,7 @@ _G['CONF'] = {
 	debug = { encoding = { fun = guess_outcast('hex'),
 			       name = 'hex' } },
 	parser = {strict_match = true},
+	heap = { check_collision = true },
 	hash = 'sha256',
 }
 -- turn on heapguard when DEBUG or linux-debug build

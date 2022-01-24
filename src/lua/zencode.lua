@@ -204,10 +204,16 @@ local function set_rule(text)
 			CONF.parser.strict_match = false
 			res = true
 		end
-		-- alias of unknown ignore for specific callers
+	elseif rule[2] == 'collision' and rule[3] then
+	   if rule[3] == 'ignore' then
+	      CONF.heap.check_collision = false
+	      res = true
+	   end
+	   -- alias of unknown ignore for specific callers
 	elseif rule[2] == 'caller' and rule[3] then
 		if rule[3] == 'restroom-mw' then
 			CONF.parser.strict_match = false
+			CONF.heap.check_collision = false
 			res = true
 		end
 	elseif rule[2] == 'set' and rule[4] then
@@ -588,10 +594,12 @@ function zencode:run()
 	KIN = IN_uscore(KIN)
 
 	-- check name collisions between DATA and KEYS
-	for k in pairs(IN) do
-		if KIN[k] then
-			error("Object name collision in input: "..k)
-		end
+	if CONF.heap.check_collision then
+	   for k in pairs(IN) do
+	      if KIN[k] then
+		 error("Object name collision in input: "..k)
+	      end
+	   end
 	end
 
 	-- EXEC zencode
