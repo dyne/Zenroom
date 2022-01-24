@@ -68,7 +68,7 @@ local function export_arr(object, format)
      goto ok
   end
   if format and ft == 'string' then
-     conv_f = output_encoding(format).fun
+     conv_f = guess_outcast(format)
      goto ok
   end
   if not CONF.output.encoding then

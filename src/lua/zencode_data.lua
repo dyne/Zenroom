@@ -258,6 +258,63 @@
     end
  end
 
+-- factory function to generate a function and return its pointer the
+-- function is generated using another pointer to function which is
+-- the encoder, plus it applies common safety checks for data types
+-- that must be excluded for encoding, as for instance numbers and
+-- booleans.
+-- arguments: encoder's name, conversion and check functions
+local function f_factory_encoder(encoder_n, encoder_f, encoder_c)
+   return { fun = function(data)
+	       local dt = luatype(data)
+	       if dt == 'number' then
+		  return data
+	       elseif dt == 'boolean' then
+		  return data
+	       end
+	       return encoder_f(data)
+   end,
+	    encoding = encoder_n,
+	    check = encoder_c
+   }
+end
+
+-- gets a string and returns the associated function, string and prefix
+-- comes before schema check
+function input_encoding(what)
+   if not luatype(what) == 'string' then
+      error("Call to input_encoding argument is not a string: "..type(what),2)
+   end
+   if what == 'u64' or what == 'url64' then
+      return f_factory_encoder('url64', O.from_url64, O.is_url64)
+   elseif what == 'b64' or what =='base64' then
+      return f_factory_encoder('base64', O.from_base64, O.is_base64)
+   elseif what == 'b58' or what =='base58' then
+      return f_factory_encoder('base58', O.from_base58, O.is_base58)
+   elseif what == 'hex' then
+      return f_factory_encoder('hex', O.from_hex, O.is_hex)
+   elseif what == 'bin' or what == 'binary' then
+      return f_factory_encoder('binary', O.from_bin, O.is_bin)
+   elseif what == 'str' or what == 'string' then
+      -- string has no check function
+      return f_factory_encoder('string', O.from_string, nil)
+   elseif what =='mnemonic' then
+      -- mnemonic has no check function (TODO:)
+      return f_factory_encoder('mnemonic', O.from_mnemonic, nil)
+   elseif what == 'num' or what == 'number' then
+      return f_factory_encoder('number', 
+			       function(data) return tonumber(data) end,
+			       function(data)
+				  if not tonumber(data) then
+				     error("Invalid encoding, not a number: "
+					   ..type(data), 3)
+				  end
+			       end)
+   end
+   error("Input encoding not found: " .. what, 2)
+   return nil
+end
+
 -- factory function returns a small outcast function that applies
 -- return guessed.fun(guessed.raw)safety checks on values like
 -- exceptions for numbers and booleans
@@ -267,8 +324,12 @@ local function f_factory_outcast(fun)
       local dt = luatype(data)
       -- passthrough native number data
       if dt == 'number' or dt == 'boolean' then
-	 return data end
-      return fun(data) -- pass function pointer
+	 return data
+      elseif iszen(dt) and dt ~= 'zenroom.octet' then
+	 -- leverage first class citizen method on zenroom data
+	 return fun(data:octet())
+      end
+      return fun(data)
    end
 end
 
@@ -311,6 +372,18 @@ end
     error('Invalid output conversion: ' .. cast, 2)
     return nil
  end
+
+function get_format(what)
+   if what == 'json' or what == 'JSON' then
+      return { fun = JSON.auto,
+	       name = 'json' }
+   elseif what == 'cbor' or what == 'CBOR' then
+      return { fun = CBOR.auto,
+	       name = 'cbor' }
+   end
+   error("Conversion format not supported: "..what, 2)
+   return nil
+end
 
  -- CODEC format:
  -- { name: string,

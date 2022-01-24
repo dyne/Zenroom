@@ -186,7 +186,8 @@ local function set_rule(text)
 		-- TODO: rule debug [ format | encoding ]
 		-- rule input encoding|format ''
 		if rule[3] == 'encoding' then
-			CONF.output.encoding = output_encoding(rule[4])
+			CONF.output.encoding = { fun = guess_outcast(rule[4]),
+						 name = rule[4] }
 			res = true and CONF.output.encoding
 		elseif rule[3] == 'format' then
 			CONF.output.format = get_format(rule[4])

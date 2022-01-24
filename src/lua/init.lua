@@ -140,11 +140,13 @@ _G['CONF'] = {
 		tagged = false
 	},
 	output = {
-		encoding = output_encoding('base64'),
+		encoding = { fun = guess_outcast('base64'),
+			     name = 'base64' },
 		format = { fun = JSON.auto, name = 'json' },
 		versioning = false
 	},
-	debug = { encoding = output_encoding('hex') },
+	debug = { encoding = { fun = guess_outcast('hex'),
+			       name = 'hex' } },
 	parser = {strict_match = true},
 	hash = 'sha256',
 }
