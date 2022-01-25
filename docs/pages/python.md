@@ -105,7 +105,7 @@ Then print my data
 """
 
 result = zenroom.zencode_exec(contract)
-print(result.stdout)
+print(result.output)
 ```
 
 
@@ -117,7 +117,7 @@ from zenroom import zenroom
 script = "print('Hello world')"
 result = zenroom.zenroom_exec(script)
 
-print(result.stdout)
+print(result.output)
 ```
 
 The same arguments and the same result are applied as the `zencode_exec` call.
