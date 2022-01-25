@@ -68,29 +68,29 @@ type Fun = unsafe extern "C" fn(
 ) -> ::std::os::raw::c_int;
 
 pub fn zencode_exec(
-    script: &str,
-    conf: &str,
-    keys: &str,
-    data: &str,
+    script: impl AsRef<str>,
+    conf: impl AsRef<str>,
+    keys: impl AsRef<str>,
+    data: impl AsRef<str>,
 ) -> Result<ZenResult, ZenError> {
     exec_f(c::zencode_exec_tobuf, script, conf, keys, data)
 }
 
 pub fn zenroom_exec(
-    script: &str,
-    conf: &str,
-    keys: &str,
-    data: &str,
+    script: impl AsRef<str>,
+    conf: impl AsRef<str>,
+    keys: impl AsRef<str>,
+    data: impl AsRef<str>,
 ) -> Result<ZenResult, ZenError> {
     exec_f(c::zenroom_exec_tobuf, script, conf, keys, data)
 }
 
 fn exec_f(
     fun: Fun,
-    script: &str,
-    conf: &str,
-    keys: &str,
-    data: &str,
+    script: impl AsRef<str>,
+    conf: impl AsRef<str>,
+    keys: impl AsRef<str>,
+    data: impl AsRef<str>,
 ) -> Result<ZenResult, ZenError> {
     let mut stdout = Vec::<i8>::with_capacity(BUF_SIZE);
     let stdout_ptr = stdout.as_mut_ptr();
@@ -100,10 +100,10 @@ fn exec_f(
     let lock = aquire_zen_gil();
     let exit_code = unsafe {
         fun(
-            CString::new(script)?.into_raw(),
-            CString::new(conf)?.into_raw(),
-            CString::new(keys)?.into_raw(),
-            CString::new(data)?.into_raw(),
+            CString::new(script.as_ref())?.into_raw(),
+            CString::new(conf.as_ref())?.into_raw(),
+            CString::new(keys.as_ref())?.into_raw(),
+            CString::new(data.as_ref())?.into_raw(),
             stdout_ptr,
             BUF_SIZE as u64,
             stderr_ptr,
@@ -142,7 +142,7 @@ mod tests {
 
     #[test]
     fn simple_script() -> Result<(), ZenError> {
-        let result = zencode_exec(SAMPLE_SCRIPT.into(), "", "", "")?;
+        let result = zencode_exec(SAMPLE_SCRIPT, "", "", "")?;
 
         let json: Value = serde_json::from_str(&result.output).unwrap();
         let keypair = json
@@ -164,7 +164,7 @@ mod tests {
         let mut threads = Vec::new();
         for _ in 0..NUM_THREADS {
             threads.push(std::thread::spawn(|| {
-                zencode_exec(SAMPLE_SCRIPT.into(), "", "", "")
+                zencode_exec(SAMPLE_SCRIPT, "", "", "")
             }));
         }
         for thread in threads {
