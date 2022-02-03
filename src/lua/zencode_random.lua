@@ -121,12 +121,14 @@ end)
 
 When("pick the random object in ''", function(arr)
     local A = have(arr)
-	empty'random object'
-    local count = isarray(A)
-    ZEN.assert( count > 0, "Object is not an array: "..arr)
-	-- TODO: if array is bigger than 16 signed max then use random_int32
-    local r = (random_int16() % count) +1
-    ACK.random_object = A[r]
+    empty'random object'
+    ZEN.assert(luatype(A) == 'table', "Object is not a table: "..arr)
+    local tmp = { }
+    for _,v in pairs(A) do
+       table.insert(tmp, v)
+    end
+    local r = (random_int16() % #tmp) +1
+    ACK.random_object = tmp[r]
 	new_codec('random_object', {zentype='element', schema=nil}, arr)
 end)
 
