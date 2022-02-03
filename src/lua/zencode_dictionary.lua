@@ -225,7 +225,7 @@ local function create_copy_f(root, in1, in2)
 		ACK.copy = ACK.copy[in2]
 		ZEN.assert(ACK.copy, "Member not found: "..in2.." in "..in1.." in "..root)
 	end
-	new_codec('copy', { luatype = luatype(ACK[copy]) }, root)
+	new_codec('copy', { luatype = luatype(ACK.copy) }, root)
 	if ZEN.CODEC.copy.luatype == 'table' then
 		if isdictionary(ACK.copy) then
 			   ZEN.CODEC.copy.zentype = 'dictionary'
