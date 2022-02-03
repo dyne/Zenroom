@@ -1,7 +1,7 @@
 --[[
 --This file is part of zenroom
 --
---Copyright (C) 2018-2021 Dyne.org foundation
+--Copyright (C) 2018-2022 Dyne.org foundation
 --designed, written and maintained by Denis Roio <jaromil@dyne.org>
 --
 --This program is free software: you can redistribute it and/or modify
@@ -46,12 +46,16 @@ end
 
 local function _when_remove_dictionary(ele, from)
 	-- ele is just the name (key) of object to remove
-	local found = false
 	local dict = have(from)
-	ZEN.assert(dict[ele],
-		"Object not found in "..codec.zentype..": "..ele.." in "..from)
-	ACK[from][ele] = nil -- remove from dictionary
-	found = true
+	ZEN.assert(dict, "Dictionary not found: "..from)
+	if dict[ele] then
+	   ACK[from][ele] = nil -- remove from dictionary
+	elseif ZEN.CODEC[ele].name ~= ele and dict[ZEN.CODEC[ele].name] then
+	   -- it may be a copy or random object with different name
+	   ACK[from][ZEN.CODEC[ele].name] = nil
+	else
+	   error("Object not found in dictionary: "..ele.." in "..from)
+	end
 end
 local function _when_remove_array(ele, from)
 	local obj = have(ele)

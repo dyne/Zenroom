@@ -1,7 +1,7 @@
 --[[
 --This file is part of zenroom
 --
---Copyright (C) 2018-2021 Dyne.org foundation
+--Copyright (C) 2018-2022 Dyne.org foundation
 --designed, written and maintained by Denis Roio <jaromil@dyne.org>
 --
 --This program is free software: you can redistribute it and/or modify
@@ -124,11 +124,13 @@ When("pick the random object in ''", function(arr)
     empty'random object'
     ZEN.assert(luatype(A) == 'table', "Object is not a table: "..arr)
     local tmp = { }
-    for _,v in pairs(A) do
+    local keys = { }
+    for k,v in pairs(A) do
+       table.insert(keys, k)
        table.insert(tmp, v)
     end
     local r = (random_int16() % #tmp) +1
     ACK.random_object = tmp[r]
-	new_codec('random_object', {zentype='element', schema=nil}, arr)
+	new_codec('random_object', {name=keys[r]})
 end)
 

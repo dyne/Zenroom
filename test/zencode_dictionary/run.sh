@@ -355,6 +355,8 @@ When I insert 'transferredProductAmountafterSalesStart' in 'salesReport'
 When I create the hash of 'salesReport' using 'sha512'
 When I rename the 'hash' to 'sha512hashOfsalesReport'
 
+When I pick the random object in 'TransactionsBatchA'
+When I remove the 'random object' from 'TransactionsBatchA'
 
 #Print out the data we produced along
 # We also print the dictionary 'Information' as hex, just for fun
