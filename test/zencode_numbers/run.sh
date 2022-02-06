@@ -72,6 +72,13 @@ Then print the string 'OK'
 Then print data
 EOF
 
+cat <<EOF | zexe number_cast.zen
+rule check version 1.0.0
+Given nothing
+When I write string '1234' in 'str'
+and I create the number from 'str'
+Then print all data
+EOF
 
 
 # cat <<EOF | zexe cmp_nlt_base10.zen

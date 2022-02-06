@@ -58,6 +58,7 @@ When("write number '' in ''", function(content, dest)
 	empty(dest)
 	-- TODO: detect number base 10
 	local num = tonumber(content)
+	ZEN.assert(num, "Cannot convert value to number: "..content)
 	if num > 2147483647 then
 		error('Overflow of number object over 32bit signed size')
 		-- TODO: maybe support unsigned native here
@@ -67,6 +68,22 @@ When("write number '' in ''", function(content, dest)
 				    {encoding = 'number',
 				     luatype = 'number',
 				     zentype = 'element' })
+end)
+
+When("create the number from ''", function(from)
+	empty'number'
+	local get = have(from)
+	local num = tonumber(O.to_string(get))
+	ZEN.assert(num, "Cannot convert object to number: "..from)
+	if num > 2147483647 then
+	   error('Overflow of number object over 32bit signed size')
+	   -- TODO: maybe support unsigned native here
+	end
+	ACK.number = num
+	ZEN.CODEC.number = new_codec('number',
+				     {encoding = 'number',
+				      luatype = 'number',
+				      zentype = 'element' })
 end)
 
 When("set '' to '' as ''", function(dest, content, format)
