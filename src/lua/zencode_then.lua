@@ -278,3 +278,13 @@ Then(
 		if not next(OUT[WHO]) then OUT[WHO] = nil end
 	end
 )
+
+Then("print first child in ''", function(src)
+	local obj = have(src)
+	for k,v in pairs(obj) do
+	   ACK[k] = v -- to legitimate new_codec creation
+	   OUT[k] = v
+	   ZEN.CODEC[k] = new_codec(k, { encoding = ZEN.CODEC[src].encoding })
+	   break
+	end
+end)
