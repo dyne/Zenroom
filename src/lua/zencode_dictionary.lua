@@ -63,6 +63,13 @@ When("create the new dictionary", function()
 		new_codec('new dictionary', { zentype = 'dictionary' })
 end)
 
+
+When("create the new dictionary named ''", function(name)
+		empty(name)
+		ACK[name] = { }
+		new_codec(name, { zentype = 'dictionary' })
+end)
+
 When("create the array of elements named '' for dictionaries in ''",
      function(name, dict)
 	empty'array'
@@ -268,3 +275,28 @@ When("move '' in ''", function(src, dict)
 	d[src] = s
 	ACK[src] = nil
 end)
+
+When("filter '' fields from ''", function(filters, target)
+	local t = have(target)
+	ZEN.assert(isdictionary(target), "Object is not a dictionary: "..target)
+	local f = have(filters)
+	ZEN.assert(isarray(filters), "Object is not an array: "..filters)
+	if isarray(t) then -- array of dictionaries
+	   for ak,av in pairs(t) do
+	      for k,_ in pairs(av) do	
+		 keep = false
+		 for _, fv in pairs(f) do
+		    if fv:str() == k then keep = true end
+		 end
+		 if not keep then t[ak][k] = nil end
+	      end
+	   end
+	else
+	   for k,_ in pairs(t) do
+	      for _, fv in pairs(f) do
+		 if k ~= fv then t[k] = nil end
+	      end
+	   end
+	end
+end)
+

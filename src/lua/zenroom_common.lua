@@ -150,6 +150,14 @@ function isarray(obj)
 	  warn("Argument of isarray() is nil")
 	  return false
    end
+   if luatype(obj) == 'string' then
+      -- seach HEAD for ACK[obj] and check its CODEC
+      local o = ACK[obj]
+      if not o then return false end
+      if luatype(o) ~= 'table' then return false end
+      if ZEN.CODEC[obj].zentype == 'array' then return true end
+      return false
+   end
    if luatype(obj) ~= 'table' then
       -- warn("Argument of isarray() is not a table")
       return false
@@ -169,7 +177,19 @@ function isdictionary(obj)
 	  warn("Argument of isdictionary() is nil")
 	  return false
    end
-   if luatype(obj) ~= 'table' then return false end -- error("Argument is not a table: "..type(obj)
+   if luatype(obj) == 'string' then
+      -- seach HEAD for ACK[obj] and check its CODEC
+      local o = ACK[obj]
+      if not o then return false end
+      if luatype(o) ~= 'table' then return false end
+      if ZEN.CODEC[obj].zentype == 'dictionary'
+	 or ZEN.CODEC[obj].zentype == 'schema' then
+	 return true end -- TRUE
+      return false
+   end
+   -- check the object itself
+   if luatype(obj) ~= 'table' then return false end
+   -- error("Argument is not a table: "..type(obj)
    local count = 0
    for k, v in pairs(obj) do
 	  -- check that all keys are not numbers

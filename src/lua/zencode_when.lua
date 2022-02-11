@@ -42,6 +42,12 @@ When("create the ''", function(dest)
 	ZEN.CODEC[dest] = guess_conversion(ACK[dest], dest)
 	ZEN.CODEC[dest].name = dest
 end)
+When("create the '' named ''", function(sch, name)
+	empty(name)
+	ACK[name] = { }
+	ZEN.CODEC[name] = guess_conversion(ACK[name], sch)
+	ZEN.CODEC[name].name = name
+end)
 
 -- simplified exception for I write: import encoding from_string ...
 When("write string '' in ''", function(content, dest)
@@ -163,6 +169,7 @@ When("copy '' to ''", function(old,new)
 	ACK[new] = deepcopy(ACK[old])
 	new_codec(new, { }, old)
 end)
+
 When("copy contents of '' in ''", function(src,dst)
 	local obj = have(src)
 	have(dst)
@@ -171,12 +178,25 @@ When("copy contents of '' in ''", function(src,dst)
 	   -- no new codec (using dst)
 	end
 end)
+
+When("copy contents of '' named '' in ''", function(src,name,dst)
+	local obj = have(src)
+	have(dst)
+	for k, v in pairs(obj) do
+	   if k == name then
+	      ACK[dst][k] = v -- no deepcopy
+	   end
+	   -- no new codec (using dst)
+	end
+end)
+
 When("copy the '' in '' to ''", function(old,inside,new)
 	ZEN.assert(ACK[inside][old], "Object not found: "..old.." inside "..inside)
 	empty(new)
 	ACK[new] = deepcopy(ACK[inside][old])
 	new_codec(new, { }, inside)
 end)
+
 When("split the rightmost '' bytes of ''", function(len, src)
 	local obj = have(src)
 	empty'rightmost'

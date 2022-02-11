@@ -114,23 +114,35 @@ When("create the copy of element '' in array ''", function(pos, arr)
 		new_codec('copy',{zentype='element',luatype=luatype(ACK.copy)},arr)
 end)
 
+When("insert string '' in ''", function(st, dest)
+	local d = have(dest)
+        ZEN.assert(luatype(d) == 'table',
+		   "Invalid destination, not a table: "..dest)
+        ZEN.assert(ZEN.CODEC[dest].zentype == 'array',
+		   "Invalid destination, not an array: "..dest)
+	table.insert(ACK[dest], O.from_string(st))
+end)
+
 When("insert '' in ''", function(ele, dest)
-		ZEN.assert(ACK[dest], "Invalid destination, not found: "..dest)
-        ZEN.assert(luatype(ACK[dest]) == 'table', "Invalid destination, not a table: "..dest)
-        ZEN.assert(ZEN.CODEC[dest].zentype ~= 'element', "Invalid destination, not a container: "..dest)
-        ZEN.assert(ACK[ele], "Invalid insertion, object not found: "..ele)
+	local d = have(dest)
+	local e = have(ele)
+        ZEN.assert(luatype(d) == 'table',
+		   "Invalid destination, not a table: "..dest)
+        ZEN.assert(ZEN.CODEC[dest].zentype ~= 'element',
+		   "Invalid destination, not a container: "..dest)
         if ZEN.CODEC[dest].zentype == 'array' then
-           table.insert(ACK[dest], ACK[ele])
+           table.insert(ACK[dest], e)
         elseif ZEN.CODEC[dest].zentype == 'dictionary' then
-           ACK[dest][ele] = ACK[ele]
+           ACK[dest][ele] = e
         elseif ZEN.CODEC[dest].zentype == 'schema' then
-           ACK[dest][ele] = ACK[ele]
-		else
-		   ZEN.assert(false, "Invalid destination type: "..ZEN.CODEC[dest].zentype)
+           ACK[dest][ele] = e
+	else
+	   ZEN.assert(false, "Invalid destination type: "
+		      ..ZEN.CODEC[dest].zentype)
         end
-		ZEN.CODEC[dest][ele] = ZEN.CODEC[ele]
-		ACK[ele] = nil
-		ZEN.CODEC[ele] = nil
+	ZEN.CODEC[dest][ele] = ZEN.CODEC[ele]
+	ACK[ele] = nil
+	ZEN.CODEC[ele] = nil
 end)
 
 -- When("insert the '' in ''", function(ele,arr)
