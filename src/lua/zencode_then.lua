@@ -118,173 +118,147 @@ Then("print ''", function(name)
 	OUT[name] = then_outcast( val, check_codec(name) )
 end)
 
-Then(
-	"print '' as ''",
-	function(k, s)
-		local val = have(k)
-		OUT[k] = then_outcast( val, s )
+Then("print '' as ''",function(k, s)
+	local val = have(k)
+	OUT[k] = then_outcast( val, s )
+end)
+
+Then("print '' from ''",function(k, f)
+	local val = have({f,k}) -- use array to check in depth
+	OUT[k] = then_outcast( val, check_codec(f) )
+end)
+
+Then("print '' from '' as ''",function(k, f, s)
+	local val = have({f,k}) -- use array to check in depth
+	OUT[k] = then_outcast( val, s )
+end)
+
+Then("print '' from '' as '' in ''",function(k, f, s, d)
+	local val = have({f,k}) -- use array to check in depth
+	then_insert( d, then_outcast( val, s ), k)
+end)
+
+Then("print '' as '' in ''",function(k, s, d)
+	local val = have(k) -- use array to check in depth
+	then_insert( d, then_outcast( val, s ), k)
+end)
+
+Then("print my '' from '' as ''",function(k, f, s)
+	Iam()
+	local val = have({f,k}) -- use array to check in depth
+	then_insert( WHO, then_outcast( val, s ), k)
+end)
+
+Then("print my '' from ''",function(k, f)
+	Iam()
+	local val = have({f,k}) -- use array to check in depth
+	-- my statements always print to a dictionary named after WHO
+	if not OUT[WHO] then OUT[WHO] = { } end
+	OUT[WHO][k] = then_outcast( val, check_codec(f) )
+end)
+
+Then("print my '' as ''",function(k, s)
+	Iam()
+	local val = have(k) -- use array to check in depth
+	then_insert( WHO, then_outcast( val, s ), k)
+end)
+
+Then("print my ''",function(k)
+	Iam()
+	local val = have(k)
+	-- my statements always print to a dictionary named after WHO
+	if not OUT[WHO] then OUT[WHO] = { } end
+	OUT[WHO][k] = then_outcast( val, check_codec(k) )
+end)
+
+Then('print keys',function()
+	OUT.keys = ZEN.schemas.keys.export(ACK.keys)
+end)
+Then("print keys for ''", function(k)
+	local keys = ZEN.schemas.keys.export(ACK.keys)
+	if not OUT.keys then OUT.keys = { } end
+	OUT.keys[k] = keys[k]
+end)
+Then('print my keys',function()
+	Iam()
+	OUT[WHO] = { keys = ZEN.schemas.keys.export(ACK.keys) }
+end)
+Then("print my keys for ''", function(k)
+	Iam()
+	local keys = ZEN.schemas.keys.export(ACK.keys)
+	if not OUT[WHO] then OUT[WHO] = { keys = { } } end
+	OUT[WHO].keys[k] = keys[k]
+end)
+
+-- data
+-- data as
+-- data from
+-- data from as
+-- my data
+-- my data as
+-- my data from
+-- my data from as
+
+Then('print data',function()
+	for k, v in pairs(ACK) do
+	   OUT[k] = then_outcast(v, check_codec(k))
 	end
+end
 )
 
-Then(
-	"print '' from ''",
-	function(k, f)
-		local val = have({f,k}) -- use array to check in depth
-		OUT[k] = then_outcast( val, check_codec(f) )
+Then("print data as ''",function(e)
+	local fun
+	for k, v in pairs(ACK) do
+	   OUT[k] = then_outcast(v, e)
 	end
+end
 )
-
-Then(
-	"print '' from '' as ''",
-	function(k, f, s)
-		local val = have({f,k}) -- use array to check in depth
-		OUT[k] = then_outcast( val, s )
-	end
-)
-
-Then(
-	"print '' from '' as '' in ''",
-	function(k, f, s, d)
-		local val = have({f,k}) -- use array to check in depth
-		then_insert( d, then_outcast( val, s ), k)
-	end
-)
-
-Then(
-	"print '' as '' in ''",
-	function(k, s, d)
-		local val = have(k) -- use array to check in depth
-		then_insert( d, then_outcast( val, s ), k)
-	end
-)
-
-Then(
-	"print my '' from '' as ''",
-	function(k, f, s)
-		local val = have({f,k}) -- use array to check in depth
-		then_insert( WHO, then_outcast( val, s ), k)
-	end
-)
-
-Then(
-	"print my '' from ''",
-	function(k, f)
-		local val = have({f,k}) -- use array to check in depth
-		-- my statements always print to a dictionary named after WHO
-		if not OUT[WHO] then OUT[WHO] = { } end
-		OUT[WHO][k] = then_outcast( val, check_codec(f) )
-	end
-)
-
-Then(
-	"print my '' as ''",
-	function(k, s)
-		local val = have(k) -- use array to check in depth
-		then_insert( WHO, then_outcast( val, s ), k)
-	end
-)
-
-Then(
-	"print my ''",
-	function(k)
-		local val = have(k)
-		-- my statements always print to a dictionary named after WHO
-		if not OUT[WHO] then OUT[WHO] = { } end
-		OUT[WHO][k] = then_outcast( val, check_codec(k) )
-	end
-)
-
-Then(
-	'print keys',
-	function()
-		OUT.keys = ZEN.schemas.keys.export(ACK.keys)
-	end
-)
-Then(
-	'print my keys',
-	function()
-		OUT[WHO] = { keys = ZEN.schemas.keys.export(ACK.keys) }
-	end
-)
-
-Then(
-   'print data',
-   function()
-      local fun
-      for k, v in pairs(ACK) do
-	 fun = guess_outcast(check_codec(k))
-	 if luatype(v) == 'table' then
-	    if ZEN.CODEC[k] and ZEN.CODEC[k].encoding == 'complex' then
-	       OUT[k] = fun(v)
-	    else
-	       OUT[k] = deepmap(fun, v)
-	    end
-	 else
-	    OUT[k] = fun(v)
-	 end
-      end
-   end
-)
-
-Then(
-	"print data as ''",
-	function(e)
-		local fun
-		for k, v in pairs(ACK) do
-			fun = guess_outcast(e)
-			if luatype(v) == 'table' then
-				OUT[k] = deepmap(fun, v)
-			else
-				OUT[k] = fun(v)
-			end
-		end
-	end
-)
-
-Then(
-	'print my data',
-	function()
-		Iam() -- sanity checks
-		local fun
-		OUT[WHO] = {}
-		for k, v in pairs(ACK) do
-			fun = guess_outcast(check_codec(k))
-			if luatype(v) == 'table' then
-				if ZEN.CODEC[k] and ZEN.CODEC[k].encoding == 'complex' then
-					OUT[WHO][k] = fun(v)
-				else
-					OUT[WHO][k] = deepmap(fun, v)
-				end
-			else
-				OUT[WHO][k] = fun(v)
-			end
-		end
-		if not next(OUT[WHO]) then OUT[WHO] = nil end
-	end
-)
-
-Then(
-	"print my data as ''",
-	function(s)
-		Iam() -- sanity checks
-		local fun
-		OUT[WHO] = {}
-		for k, v in pairs(ACK) do
-			fun = guess_outcast(s)
-			if luatype(v) == 'table' then
-				OUT[WHO][k] = deepmap(fun, v)
-			else
-				OUT[WHO][k] = fun(v)
-			end
-		end
-		if not next(OUT[WHO]) then OUT[WHO] = nil end
-	end
-)
-
-Then("print data in ''", function(src)
+Then("print data from ''", function(src)
 	local obj = have(src)
 	for k,v in pairs(obj) do
 	   ACK[k] = true -- to legitimate new_codec creation
 	   OUT[k] = then_outcast( v, check_codec(src) )
 	end
 end)
+
+Then("print data from '' as ''", function(src, e)
+	local obj = have(src)
+	for k,v in pairs(obj) do
+	   ACK[k] = true -- to legitimate new_codec creation
+	   OUT[k] = then_outcast( v, e )
+	end
+end)
+
+Then('print my data',function()
+	Iam() -- sanity checks
+	OUT[WHO] = { }
+	for k, v in pairs(ACK) do
+	   OUT[WHO][k] = then_outcast( v, check_codec(k) )
+	end
+end)
+Then("print my data as ''",function(e)
+	Iam() -- sanity checks
+	OUT[WHO] = { }
+	for k, v in pairs(ACK) do
+	   OUT[WHO][k] = then_outcast( v, e )
+	end
+end
+)
+Then("print my data from ''",function(src)
+	Iam() -- sanity checks
+	OUT[WHO] = { }
+	local obj = have(src)
+	for k, v in pairs(obj) do
+	   OUT[WHO][k] = then_outcast( v, check_codec(k) )
+	end
+end
+)
+Then("print my data from '' as ''",function(src, e)
+	Iam() -- sanity checks
+	OUT[WHO] = { }
+	local obj = have(src)
+	for k, v in pairs(obj) do
+	   OUT[WHO][k] = then_outcast( v, e )
+	end
+end
+)
