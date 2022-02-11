@@ -19,9 +19,12 @@ cat <<EOF | save then dictionary.json
 }
 EOF
 
-cat <<EOF | debug first_child.zen -a dictionary.json | save then first_child.json
+cat <<EOF | zexe print_data.zen -a dictionary.json
 Given I have the 'string dictionary' named 'dictionary'
-Then print the first child in 'dictionary'
-Then print the 'dictionary'
-and codec
+Then print all data
+EOF
+
+cat <<EOF | zexe print_data_in.zen -a dictionary.json
+Given I have the 'string dictionary' named 'dictionary'
+Then print data in 'dictionary'
 EOF

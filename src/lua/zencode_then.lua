@@ -35,6 +35,8 @@
 -- my from as
 ----------------------
 
+-- executes a guess_outcast and then operates it
+-- sch may be fed with check_codec() result (name of encoding)
 local function then_outcast(val, sch)
 	if not val then
 		error("Then outcast called on empty variable", 2)
@@ -206,22 +208,22 @@ Then(
 )
 
 Then(
-	'print data',
-	function()
-		local fun
-		for k, v in pairs(ACK) do
-			fun = guess_outcast(check_codec(k))
-			if luatype(v) == 'table' then
-				if ZEN.CODEC[k] and ZEN.CODEC[k].encoding == 'complex' then
-					OUT[k] = fun(v)
-				else
-					OUT[k] = deepmap(fun, v)
-				end
-			else
-				OUT[k] = fun(v)
-			end
-		end
-	end
+   'print data',
+   function()
+      local fun
+      for k, v in pairs(ACK) do
+	 fun = guess_outcast(check_codec(k))
+	 if luatype(v) == 'table' then
+	    if ZEN.CODEC[k] and ZEN.CODEC[k].encoding == 'complex' then
+	       OUT[k] = fun(v)
+	    else
+	       OUT[k] = deepmap(fun, v)
+	    end
+	 else
+	    OUT[k] = fun(v)
+	 end
+      end
+   end
 )
 
 Then(
@@ -279,12 +281,10 @@ Then(
 	end
 )
 
-Then("print first child in ''", function(src)
+Then("print data in ''", function(src)
 	local obj = have(src)
 	for k,v in pairs(obj) do
-	   ACK[k] = v -- to legitimate new_codec creation
-	   OUT[k] = v
-	   ZEN.CODEC[k] = new_codec(k, { encoding = ZEN.CODEC[src].encoding })
-	   break
+	   ACK[k] = true -- to legitimate new_codec creation
+	   OUT[k] = then_outcast( v, check_codec(src) )
 	end
 end)

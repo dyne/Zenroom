@@ -626,7 +626,7 @@ function zencode:run()
 		local ok, err = pcall(x.hook, table.unpack(x.args))
 		if not ok or not ZEN.OK then
 			if err then
-				ZEN:trace('\27[31;1m[!]\27[0m ' .. err)
+				ZEN:trace('[!] ' .. err)
 			end
 			fatal(x.source) -- traceback print inside
 		end
@@ -636,24 +636,16 @@ function zencode:run()
 	-- PRINT output
 	ZEN:trace('--- Zencode execution completed')
 	if type(OUT) == 'table' then
-		ZEN:trace('+++ Adding setup information to { OUT }')
-		if CONF.output.versioning == true then
-			OUT.zenroom = {}
-			OUT.zenroom.version = VERSION.original
-		-- OUT.zenroom.scenario = ZEN.scenario
-		end
-		ZEN:trace('<<< Encoding { OUT } to ' .. CONF.output.format.name)
-		print(CONF.output.format.fun(OUT)) -- formats are JSON or CBOR etc...
+		ZEN:trace('<<< Encoding { OUT } to JSON ')
+		-- this is all already encoded
+		-- needs to be formatted
+		-- was used CONF.output.format.fun
+		-- suspended until more formats are implemented
+		print( JSON.encode(OUT) )
 		ZEN:trace('>>> Encoding successful')
 	else -- this should never occur in zencode, OUT is always a table
 		ZEN:trace('<<< Printing OUT (plain format, not a table)')
 		print(OUT)
-	end
-	-- print the AST to stderr
-	if CONF.output.AST == true then
-		printerr('#+AST_BEGIN')
-		printerr(CONF.output.format.fun(ZEN.AST))
-		printerr('#+AST_END')
 	end
 end
 

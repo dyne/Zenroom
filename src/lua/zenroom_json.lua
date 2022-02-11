@@ -54,13 +54,11 @@ end
 
 J.encode = function(tab,enc)
    return
-	  JSON.raw_encode(
-		 -- process encodes zencode types
-		 -- it is part of inspect.lua
-		 INSPECT.process(tab,
-         enc or CONF.output.encoding.name)
-	  )
-   -- return JSON.raw_encode(tab)
+      JSON.raw_encode(
+	 -- process encodes zencode types
+	 -- it is part of inspect.lua
+	 INSPECT.process(tab, enc or CONF.output.encoding.name)
+      )
 end
 
 J.auto = function(obj)

@@ -402,24 +402,24 @@ end
  --   luatype:  lua type (string, number, table or userdata)
  --   schema: schema name used to import (may differ from name)
  -- }
- -- TODO: rename to check_output_codec_encoding(v)
- function check_codec(value)
+ -- return: name of codec encoding
+ function check_codec(name)
     if not ZEN.CODEC then
        return CONF.output.encoding.name
     end
-    if not ZEN.CODEC[value] then
-       xxx('Object has no CODEC registration: ' .. value)
+    if not ZEN.CODEC[name] then
+       xxx('Object has no CODEC registration: ' .. name)
        return CONF.output.encoding.name
     end
-    local codec = ZEN.CODEC[value]
+    local codec = ZEN.CODEC[name]
     if codec.zentype == 'schema' then
        if codec.encoding == 'complex' then
         local sch = codec.schema or codec.name
    	  assert(ZEN.schemas[sch],
-   	   "Complex export for schema not found: "..value)
+   	   "Complex export for schema not found: "..name)
 	       assert(luatype(ZEN.schemas[sch].export) == 'function',
-		     "Complex export for schema is not a function: "..value)
-	  return value -- name of schema itself as it contains export
+		     "Complex export for schema is not a function: "..name)
+	  return name -- name of schema itself as it contains export
        end
     else
        return codec.encoding or CONF.output.encoding.name
