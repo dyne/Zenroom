@@ -379,8 +379,15 @@ cat << EOF  | save dictionary blockchains.json
 }
 EOF
 
-cat << EOF | zexe append_foreach.zen -a blockchains.json | save dictionary blockchains_appended.json
+cat << EOF | zexe append_foreach.zen -a blockchains.json
 Given I have a 'string dictionary' named 'blockchains'
 When for each dictionary in 'blockchains' I append 'last-transaction' to 'endpoint'
 Then print 'blockchains'
+EOF
+
+cat << EOF | zexe copy_contents_in.zen -a blockchains.json -k batch_data.json
+Given I have a 'string dictionary' named 'blockchains'
+Given that I have a 'string dictionary' named 'TransactionsBatchA'
+When I copy contents of 'blockchains' in 'TransactionsBatchA'
+Then print 'TransactionsBatchA'
 EOF

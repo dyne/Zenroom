@@ -163,13 +163,20 @@ When("copy '' to ''", function(old,new)
 	ACK[new] = deepcopy(ACK[old])
 	new_codec(new, { }, old)
 end)
+When("copy contents of '' in ''", function(src,dst)
+	local obj = have(src)
+	have(dst)
+	for k, v in pairs(obj) do
+	   ACK[dst][k] = v -- no deepcopy
+	   -- no new codec (using dst)
+	end
+end)
 When("copy the '' in '' to ''", function(old,inside,new)
 	ZEN.assert(ACK[inside][old], "Object not found: "..old.." inside "..inside)
 	empty(new)
 	ACK[new] = deepcopy(ACK[inside][old])
 	new_codec(new, { }, inside)
 end)
-
 When("split the rightmost '' bytes of ''", function(len, src)
 	local obj = have(src)
 	empty'rightmost'
