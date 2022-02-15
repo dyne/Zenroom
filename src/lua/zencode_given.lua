@@ -277,10 +277,31 @@ Given(
 )
 
 Given(
+   "a '' named by ''",
+   function(s, n)
+      local name = have(n)
+      -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
+      pick(name, s)
+      ack(name)
+      gc()
+   end
+)
+
+Given(
    "a '' named '' in ''",
    function(s, n, t)
       pickin(t, n, s)
       ack(n) -- save it in ACK.name
+      gc()
+   end
+)
+
+Given(
+   "a '' named by '' in ''",
+   function(s, n, t)
+      local name = have(n)
+      pickin(t, name, s)
+      ack(name) -- save it in ACK.name
       gc()
    end
 )
@@ -294,6 +315,7 @@ Given(
       gc()
    end
 )
+
 Given(
    "my '' named ''",
    function(s, n)
@@ -303,6 +325,17 @@ Given(
       gc()
    end
 )
+Given(
+   "my '' named by ''",
+   function(s, n)
+      -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
+      local name = have(n)
+      pickin(WHO, name, s)
+      ack(name)
+      gc()
+   end
+)
+
 Given(
    "a '' is valid",
    function(n)
