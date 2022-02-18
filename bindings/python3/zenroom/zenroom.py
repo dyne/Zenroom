@@ -34,7 +34,6 @@ def _apply_call(call, script, conf, keys, data):
     # 64kB
     stderr_len = 64 * 1024
     stderr_buf = ct.create_string_buffer(stderr_len)
-    print(stderr_buf)
     call(
         _char_p(script),
         _char_p(conf),

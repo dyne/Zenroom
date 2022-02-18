@@ -2,7 +2,7 @@
 <p align="center">
   <br/>
   <a href="https://dev.zenroom.org/">
-    <img src="https://raw.githubusercontent.com/DECODEproject/Zenroom/master/docs/logo/zenroom_logotype.png" height="140" alt="Zenroom">
+    <img src="https://dev.zenroom.org/_media/images/zenroom_logo.png" height="140" alt="Zenroom">
   </a>
   <h2 align="center">
     zenroom.py 🐍
@@ -45,6 +45,11 @@ pip install zenroom
 **NOTE** - the above command attempts to install the zenroom package, pulling in
 the Zenroom VM as a precompiled binary, so will only work on Linux (amd64) and macOS
 machines.
+
+for the edge (syn to the latest commit on master) version please run:
+```bash
+pip install zenroom --pre
+```
 
 
 ***
