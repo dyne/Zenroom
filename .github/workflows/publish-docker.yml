@@ -60,5 +60,5 @@ jobs:
         if: github.event_name != 'pull_request'
         with:
           push: true
-          tags: ${{ steps.meta.outputs.tag }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
