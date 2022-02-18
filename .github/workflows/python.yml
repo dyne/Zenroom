@@ -6,6 +6,8 @@ on:
     - 'docs/**'
     - 'examples/**'
     - '*.md'
+    branches:
+      - 'master'
 
 jobs:
   python-test:
