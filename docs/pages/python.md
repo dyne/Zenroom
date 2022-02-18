@@ -11,11 +11,11 @@
   
 <br><br>
 
-  <a href="https://travis-ci.com/DECODEproject/zenroom-py">
-    <img src="https://travis-ci.com/DECODEproject/zenroom-py.svg?branch=master" alt="Build status"/>
+  <a href="https://travis-ci.com/dyne/zenroom-py">
+    <img src="https://travis-ci.com/dyne/zenroom-py.svg?branch=master" alt="Build status"/>
   </a>
-  <a href="https://codecov.io/gh/DECODEproject/zenroom-py">
-    <img src="https://codecov.io/gh/DECODEproject/zenroom-py/branch/master/graph/badge.svg" alt="Code coverage"/>
+  <a href="https://codecov.io/gh/dyne/zenroom-py">
+    <img src="https://codecov.io/gh/dyne/zenroom-py/branch/master/graph/badge.svg" alt="Code coverage"/>
   </a>
   <a href="https://pypi.org/project/zenroom/">
     <img alt="PyPI" src="https://img.shields.io/pypi/v/zenroom.svg" alt="Latest release">
@@ -43,7 +43,7 @@ pip install zenroom
 ```
 
 **NOTE** - the above command attempts to install the zenroom package, pulling in
-the Zenroom VM as a precompiled binary, so will only work on Linux (amd64) and macOS
+the Zenroom VM as a precompiled binary, so will only work on Linux and macOS
 machines.
 
 for the edge (syn to the latest commit on master) version please run:
@@ -62,8 +62,8 @@ https://decodeproject.eu/blog/smart-contracts-english-speaker
 The official documentation is available on [https://dev.zenroom.org/zencode/](https://dev.zenroom.org/zencode/)
 
 A good set of examples of `zencode` contracts could be found on
-* [zencode simple tests](https://github.com/DECODEproject/Zenroom/tree/master/test/zencode_simple)
-* [zencode coconut tests](https://github.com/DECODEproject/Zenroom/tree/master/test/zencode_coconut)
+* [zencode simple tests](https://github.com/dyne/Zenroom/tree/master/test/zencode_simple)
+* [zencode coconut tests](https://github.com/dyne/Zenroom/tree/master/test/zencode_coconut)
 
 
 ### 🐍 Python wrapper
@@ -85,15 +85,13 @@ Both functions accept the same arguments:
 - `data` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** the optional data
  string to pass in execution as documented in zenroom docs [here](https://dev.zenroom.org/wiki/how-to-exec/#data-string)
 - `conf` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** the optional conf
- string to pass according to zen_config [here](https://github.com/DECODEproject/Zenroom/blob/master/src/zen_config.c#L99-L104)
+ string to pass according to zen_config [here](https://github.com/dyne/Zenroom/blob/master/src/zen_config.c#L99-L104)
 
 #### return
 Both functions return the same object result `ZenResult` that have two attributes:
 
-- `stdout` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** holds the stdout of
- the script execution
-- `stderr` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** holds the stderr of
- the script execution
+- `stdout` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** holds the stdout of the script execution
+- `stderr` **[string](https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str)** holds the stderr of the script execution
 
 ##### Examples
 
@@ -134,8 +132,7 @@ Tests are made with pytests, just run
 
 `python setup.py test`
 
-in (`zenroom_test.py`)[https://github.com/DECODEproject/Zenroom/blob/master/bindings/python3/zenroom/zenroom_test.py] 
-file you'll find more usage examples of the wrapper
+in [`zenroom_test.py`](https://github.com/dyne/Zenroom/blob/master/bindings/python3/tests/test_all.py) file you'll find more usage examples of the wrapper
 
 ***
 ## 🌐 Links
@@ -148,37 +145,35 @@ https://dev.zenroom.org/
 
 ## 😍 Acknowledgements
 
-Copyright (C) 2018 by [Dyne.org](https://www.dyne.org) foundation, Amsterdam
+Copyright (C) 2018-2022 by [Dyne.org](https://www.dyne.org) foundation, Amsterdam
 
 Originally designed and written by Sam Mulube.
 
-Designed, written and maintained by Puria Nafisi Azizi. 
+Designed, written and maintained by Puria Nafisi Azizi 
 
-Software contained include sources taken from [pytest](https://github.com/pytest-dev/pytest/).
+Rewritten by Danilo Spinella and David Dashyan
 
-
-<img src="https://dev.zenroom.org/img/ec_logo.png" alt="Project funded by the European Commission" height="80px"> 
-<br><br>
-
+<img src="https://ec.europa.eu/cefdigital/wiki/download/attachments/289112547/logo-cef-digital-2021.png" width="310" alt="Project funded by the European Commission">
 This project is receiving funding from the European Union’s Horizon 2020 research and innovation programme under grant agreement nr. 732546 (DECODE).
 
 ***
 
 ## 👥 Contributing
+Please first take a look at the [Dyne.org - Contributor License Agreement](CONTRIBUTING.md) then
 
-1.  [FORK IT](https://github.com/DECODEproject/Zenroom/fork)
+1.  🔀 [FORK IT](https://github.com/dyne/Zenroom//fork)
 2.  Create your feature branch `git checkout -b feature/branch`
 3.  Commit your changes `git commit -am 'Add some fooBar'`
 4.  Push to the branch `git push origin feature/branch`
-5.  Create a new Pull Request
-6.  Thank you
+5.  Create a new Pull Request `gh pr create -f`
+6.  🙏 Thank you
 
 ***
 
 ## 💼 License
 
       Zenroom.py - a python wrapper of zenroom
-      Copyright (c) 2018 Dyne.org foundation, Amsterdam
+      Copyright (c) 2018-2022 Dyne.org foundation, Amsterdam
 
       This program is free software: you can redistribute it and/or modify
       it under the terms of the GNU Affero General Public License as
