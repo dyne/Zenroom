@@ -179,6 +179,23 @@ scenario 'ecdh'
 	 Then print the 'quantity'
 EOF
 
+cat <<EOF | save given named_by_simple.json
+{
+	"friend": "Bob",
+	"Bob": "Gnignigni"
+}
+EOF
+
+cat <<EOF | debug named_by.zen -a named_by_simple.json
+
+# Given I have a 'string' named 'friend'
+Given I have a 'string' named by 'friend'
+
+Then print all data
+
+EOF
+
+
 
 rm -f $tmp
 success
