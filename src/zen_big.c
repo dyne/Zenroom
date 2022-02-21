@@ -257,6 +257,16 @@ static int lua_biginfo(lua_State *L) {
 	return 1;
 }
 
+// return the max value expressed by MODBYTES big to 0xff
+// TODO: fix this to return something usable in modmul
+static int lua_bigmax(lua_State *L) {
+  big *b = big_new(L); SAFE(b);
+  big_init(b);
+  register int c;
+  for(c=0 ; c < b->len ; c++) b->val[c] = 0xffffffff;
+  return 1;
+}
+
 /***
     Create a new Big number. If an argument is present, import it as @{OCTET} and initialise it with its value.
 
@@ -926,6 +936,7 @@ int luaopen_big(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg big_class[] = {
 		{"new",newbig},
+		{"to_octet",luabig_to_octet},
 		{"from_decimal",big_from_decimal_string},
 		{"eq",big_eq},
 		{"add",big_add},
@@ -948,6 +959,7 @@ int luaopen_big(lua_State *L) {
 		{"monty",big_monty},
 		{"parity",big_parity},
 		{"info",lua_biginfo},
+		{"max",lua_bigmax},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg big_methods[] = {
