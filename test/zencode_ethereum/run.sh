@@ -94,36 +94,44 @@ When I rename 'wei value' to 'gwei value'
 Then I print 'gwei value'
 EOF
 diff conv_gweival.json gweival.json
-exit 0
 
 HOST=http://test.fabchain.net:8545
 function getnonce() (
-    curl -H "Content-Type: application/json" -X POST --data '{"jsonrpc":"2.0","method":"eth_getTransactionCount","params":["'"$1"'", "latest"],"id":42}' $HOST | jq '.result'
+    curl -H "Content-Type: application/json" -X POST --data '{"jsonrpc":"2.0","method":"eth_getTransactionCount","params":["'"$1"'", "latest"],"id":42}' $HOST
     sleep 1
 )
+alice_address=`cat alice_address.json | cut -d'"' -f6`
+echo "Alice address: 0x${alice_address}"
+# getnonce "0x${alice_address}"
 
-alice_addr=`cat alice_address.json | awk '/ethereum address/ { print $2 }'`
+
 cat <<EOF | save $SUBDOC alice_nonce.json
-    { "alice nonce": "`getnonce ${alice_addr}`" }
+    { "ethereum nonce": `getnonce 0x${alice_address}`,
+      "gas price": "100000000000",
+      "gas limit": "300000",
+      "gwei value": "10"
+    }
 EOF
 
-cat <<EOF | zexe transaction.zen -a bob_address.json \
+cat <<EOF | zexe transaction.zen -k alice_nonce.json \
+		 -a bob_address.json \
     | save $SUBDOC alice_to_bob_transaction.json
 Scenario ethereum
-and I have a 'ethereum address' inside 'bob'
+Given I have a 'ethereum address' inside 'bob'
 # ?? restroom: and I have a nonce ??
 # nonce is given via RPC input alice's address
 and a 'gas price'
 and a 'gas limit'
-and an 'ethereum nonce' named 'alice nonce'
-and an 'ethereum value'
+and an 'ethereum nonce'
+and a 'gwei value'
 # and a 'wei value'
 # 1 eth is 10^18 wei
 # 1 eth is 10^9 gwei
-When I create the ethereum transaction to 'ethereum address'
+When I create the ethereum transaction of 'gwei value' to 'ethereum address'
 Then print the 'ethereum transaction'
 EOF
 
+exit 0
 cat <<EOF | zexe sign_transaction.zen -a alice_to_bob_transaction.json \
 		 -k alice_keys.json
 Scenario ethereum
