@@ -156,7 +156,7 @@ When("rename '' to ''", function(old,new)
 	ZEN.CODEC[new] = ZEN.CODEC[old]
 	ZEN.CODEC[old] = nil
 end)
-When("rename named by '' to ''", function(old,new)
+When("rename the object named by '' to ''", function(old,new)
 	local oldo = have(old)
 	local olds = oldo:octet():string()
 	have(olds)
@@ -176,7 +176,7 @@ When("rename '' to named by ''", function(old,new)
 	ZEN.CODEC[news] = ZEN.CODEC[old]
 	ZEN.CODEC[old] = nil
 end)
-When("rename named by '' to named by ''", function(old,new)
+When("rename the object named by '' to named by ''", function(old,new)
 	local oldo = have(old)
 	local olds = oldo:octet():string()
 	have(olds)

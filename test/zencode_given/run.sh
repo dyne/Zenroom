@@ -186,7 +186,7 @@ cat <<EOF | save given named_by_simple.json
 }
 EOF
 
-cat <<EOF | debug named_by.zen -a named_by_simple.json
+cat <<EOF | zexe named_by.zen -a named_by_simple.json
 
 # Given I have a 'string' named 'friend'
 Given I have a 'string' named by 'friend'
@@ -213,7 +213,7 @@ cat <<EOF | save given named_by_inside.json
 }
 EOF
 
-cat <<EOF | debug named_by_inside.zen -a named_by_inside.json
+cat <<EOF | zexe named_by_inside.zen -a named_by_inside.json
 Scenario 'ecdh':
 Given my name is in a 'string' named 'Sender'
 Given that I have my 'keypair'
@@ -223,7 +223,7 @@ Given I have a 'string' named 'Message'
 # below the statement needed
 Given that I have a 'public key' named by 'Recipient' inside 'Friends'
 
-When I rename named by 'Recipient' to 'SecretRecipient'
+When I rename the object named by 'Recipient' to 'SecretRecipient'
 When I encrypt the secret message of 'Message' for 'SecretRecipient'
 When I rename the 'secret message' to 'SecretMessage'
 
