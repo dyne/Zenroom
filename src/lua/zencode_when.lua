@@ -156,6 +156,38 @@ When("rename '' to ''", function(old,new)
 	ZEN.CODEC[new] = ZEN.CODEC[old]
 	ZEN.CODEC[old] = nil
 end)
+When("rename named by '' to ''", function(old,new)
+	local oldo = have(old)
+	local olds = oldo:octet():string()
+	have(olds)
+	empty(new)
+	ACK[new] = ACK[olds]
+	ACK[olds] = nil
+	ZEN.CODEC[new] = ZEN.CODEC[olds]
+	ZEN.CODEC[olds] = nil
+end)
+When("rename '' to named by ''", function(old,new)
+	have(old)
+	local newo = have(new)
+	local news = newo:octet():string()
+	empty(news)
+	ACK[news] = ACK[old]
+	ACK[old] = nil
+	ZEN.CODEC[news] = ZEN.CODEC[old]
+	ZEN.CODEC[old] = nil
+end)
+When("rename named by '' to named by ''", function(old,new)
+	local oldo = have(old)
+	local olds = oldo:octet():string()
+	have(olds)
+	local newo = have(new)
+	local news = newo:octet():string()
+	empty(news)
+	ACK[news] = ACK[olds]
+	ACK[olds] = nil
+	ZEN.CODEC[news] = ZEN.CODEC[olds]
+	ZEN.CODEC[olds] = nil
+end)
 
 When("copy the '' to ''", function(old,new)
 	have(old)

@@ -27,8 +27,8 @@ rule check version 1.0.0
 	 Then print the 'random object'
 EOF
 # if ! test $? == 1; then
-# 	echo "ERROR in Given nothing"
-# 	exit 1; fi
+#	echo "ERROR in Given nothing"
+#	exit 1; fi
 set -e
 
 echo '{ "anykey": "anyvalue" }' > $tmp
@@ -80,31 +80,31 @@ EOF
 cat <<EOF  > $tmp
 {"Andrea":{
       "keypair":{
-         "private_key":"IIiTD89L6/sbIvaUc5jAVR88ySigaBXppS5GLUjm7Dv2OLKbNIVdiZ48jpLGskKVDPpukKe4R0A=",
-         "public_key":"BBgzMLWv0ZTiMBwCxF7kEIv/y7NmilO4vmZGRj/edBY5rDchp7dmo+z4g4/13mdN/3b8+o5GxTNw3SHzQC4uxd0="
+	 "private_key":"IIiTD89L6/sbIvaUc5jAVR88ySigaBXppS5GLUjm7Dv2OLKbNIVdiZ48jpLGskKVDPpukKe4R0A=",
+	 "public_key":"BBgzMLWv0ZTiMBwCxF7kEIv/y7NmilO4vmZGRj/edBY5rDchp7dmo+z4g4/13mdN/3b8+o5GxTNw3SHzQC4uxd0="
       },
    },
    "stuff": {
     "robba":"1000",
 	"quantity":1000,
     "peppe":[
-        "peppe2",
-        "peppe3",
-        "peppe4"
-        ]
+	"peppe2",
+	"peppe3",
+	"peppe4"
+	]
 	},
 
 	"Bobbino":{
       "keypair":{
-         "private_key":"IIiTD89L6/sbIvaUc5jAVR88ySigaBXppS5GLUjm7Dv2OLKbNIVdiZ48jpLGskKVDPpukKe4R0A=",
-         "public_key":"BBgzMLWv0ZTiMBwCxF7kEIv/y7NmilO4vmZGRj/edBY5rDchp7dmo+z4g4/13mdN/3b8+o5GxTNw3SHzQC4uxd0="
+	 "private_key":"IIiTD89L6/sbIvaUc5jAVR88ySigaBXppS5GLUjm7Dv2OLKbNIVdiZ48jpLGskKVDPpukKe4R0A=",
+	 "public_key":"BBgzMLWv0ZTiMBwCxF7kEIv/y7NmilO4vmZGRj/edBY5rDchp7dmo+z4g4/13mdN/3b8+o5GxTNw3SHzQC4uxd0="
 				},
     "robbaB":"1000",
     "peppeB":[
-        "peppe2B",
-        "peppe3B",
-        "peppe4B"
-        ]
+	"peppe2B",
+	"peppe3B",
+	"peppe4B"
+	]
 	}
  }
 EOF
@@ -195,7 +195,41 @@ Then print all data
 
 EOF
 
+cat <<EOF | save given named_by_inside.json
+{
+	"Sender": "Alice",
+	"Alice": {
+		"keypair": {
+			"private_key": "2mZDRS1rE4jT5EuozwZfbS+GLE7ogBfgWOr30wXoe3g=",
+			"public_key": "BI/Jwt7PCxfSnypWNH0koLPWOJn0sLMA7VbYlQe6xmIMQms4xvMjLoPXxl4l8d0EzM9ezGVehNCvIHSy+vpctIk="
+		}
+	},
+	"Friends": {
+		"Bob": "BJX5HFLhTxd+QeCcywWP4i7QXufoI83j/VvzoaTlfHjJBJeEIhCIUQHIm+paH/aJWHSnAQC0Mea0IiYb7z4Z4bk=",
+		"Jenna": "BNRzlJ4csYlWgycGGiK/wgoEw3OizCdx9MWg06rxUBTP5rP9qPASOW5KY8YgmNjW5k7lLpboboHrsApWsvgkMN4="
+	},
+	"Recipient": "Bob",
+	"Message": "Hi, Bob!"
+}
+EOF
 
+cat <<EOF | debug named_by_inside.zen -a named_by_inside.json
+Scenario 'ecdh':
+Given my name is in a 'string' named 'Sender'
+Given that I have my 'keypair'
+Given I have a 'string' named 'Recipient'
+Given I have a 'string' named 'Message'
+
+# below the statement needed
+Given that I have a 'public key' named by 'Recipient' inside 'Friends'
+
+When I rename named by 'Recipient' to 'SecretRecipient'
+When I encrypt the secret message of 'Message' for 'SecretRecipient'
+When I rename the 'secret message' to 'SecretMessage'
+
+Then print the 'SecretMessage'
+Then print the 'SecretRecipient'
+EOF
 
 rm -f $tmp
 success
