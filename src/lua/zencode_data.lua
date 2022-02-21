@@ -23,11 +23,12 @@
 
  -- Used in scenario's schema declarations to cast to zenroom. type
  ZEN.get = function(obj, key, conversion, encoding)
-    assert(type(key) == 'string', 'ZEN.get key is not a string', 2)
-    assert(not conversion or type(conversion) == 'function',
-	   'ZEN.get invalid conversion function', 2)
-    assert(not encoding or type(encoding) == 'function',
-	   'ZEN.get invalid encoding function', 2)
+    if type(key) ~= 'string' then
+       error('ZEN.get key is not a string', 2) end
+    if conversion and type(conversion) ~= 'function' then
+       error('ZEN.get invalid conversion function', 2) end
+    if encoding and type(encoding) ~= 'function' then
+       error('ZEN.get invalid encoding function', 2) end
     local k
     if not obj then -- take from IN root
 	   -- does not support to pick in WHO (use of 'my')
@@ -39,7 +40,9 @@
 		  k = obj[key]
 	   end
     end
-    assert(k, 'Key not found in object conversion: ' .. key, 2)
+    if not k then
+       error('Key not found in object conversion: ' .. key, 2)
+    end
     local res = nil
     local t = type(k)
     if iszen(t) and conversion then
