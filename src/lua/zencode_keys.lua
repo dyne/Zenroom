@@ -63,7 +63,8 @@ local keytypes = {
     bls = true,
     reflow = true,
     bitcoin = true,
-    testnet = true
+    testnet = true,
+    ethereum = true
 }
 
 function havekey(ktype)
@@ -75,6 +76,8 @@ function havekey(ktype)
    ZEN.assert(res, 'Key not found: ' .. ktype)
    return res
 end
+
+local function nop(x) return(x) end
 
 local function _keys_import(obj)
    -- ecdh_curve
@@ -104,7 +107,9 @@ local function _keys_import(obj)
    if obj.testnet then
       res.testnet = ZEN.get(obj, 'testnet', BTC.wif_to_sk, O.from_base58)
    end
-
+   if obj.ethereum then
+      res.ethereum = ZEN.get(obj, 'ethereum', nop, O.from_hex)
+   end
    return (res)
 end
 
@@ -131,7 +136,9 @@ local function _keys_export(obj)
    if obj.testnet then
       res.testnet = O.to_base58( BTC.sk_to_wif(obj.testnet, 'testnet') )
    end
-
+   if obj.ethereum then
+      res.ethereum = O.to_hex(obj.ethereum)
+   end
    return (res)
 end
 
