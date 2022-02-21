@@ -51,6 +51,10 @@ ZEN.add_schema(
 			      export = O.to_hex },
       ethereum_address = { import = O.from_hex,
 			   export = O.to_hex },
+      ethereum_nonce = function(obj)
+	 return ZEN.get(obj, 'result', INT.new, tonumber) end,
+      ethereum_transaction = { import = O.from_hex,
+			       export = O.to_hex },
       gas_price = { import = str_wei_to_big_wei,
 		    export = big_wei_to_str_wei },
       gas_limit = { import = str_wei_to_big_wei,
@@ -77,4 +81,18 @@ When('create the ethereum address', function()
 	ACK.ethereum_address = ETH.address_from_public_key(pk)
 	new_codec('ethereum address', { zentype = 'element',
 					encoding = 'hex' })
+end)
+
+When("create the ethereum transaction of '' to ''",
+     function(quantity, destaddr)
+	empty'ethereum transaction'
+	local gasprice = have'gas price'
+	local gaslimit = have'gas limit'
+	local nonce = have'ethereum nonce'
+	local value = have(quantity)
+	local dest = have(destaddr)
+	ACK.ethereum_transaction =
+	   ETH.erc20.transfer(dest, value)
+	new_codec('ethereum transaction', { zentype = 'schema',
+					    encoding = 'complex'})
 end)
