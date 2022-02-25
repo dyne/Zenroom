@@ -245,14 +245,13 @@ end
 --     }
 -- }
 
--- TODO see smart contract with Jaromil
 -- Taken from https://docs.soliditylang.org/en/v0.5.6/abi-spec.html#function-selector-and-argument-encoding
-function ETH.makeWriteStringData(str)
+function ETH.makeStringStorageData(str)
    local fId, offset, oStr, paddingLength, padding, bytLen, paddingLen
 
    -- local H = HASH.new('keccak256')
    -- string.sub(hex(H:process('writeString(string)')), 1, 8)
-   fId = O.from_hex('dd206202')
+   fId = O.from_hex('131a0680')
 
    -- dynamic parameter are saved at the end of string, this is at which offset they are saved
    offset = O.from_hex('0000000000000000000000000000000000000000000000000000000000000020')
@@ -387,6 +386,15 @@ end
 ETH.erc20return = {}
 for k, v in pairs(ERC20_SIGNATURES) do
    ETH.erc20return[k] = ETH.contract_return_builder(v.o)
+end
+
+local FAUCET_SIGNATURES = {
+   transfer = { i={'address'} },
+}
+
+ETH.faucet = {}
+for k, v in pairs(FAUCET_SIGNATURES) do
+   ETH.faucet[k] = ETH.data_contract_builder(k, v.i)
 end
 
 return ETH
