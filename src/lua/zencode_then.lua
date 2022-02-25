@@ -262,3 +262,10 @@ Then("print my data from '' as ''",function(src, e)
 	end
 end
 )
+
+Then("print object named by ''", function(name)
+	local val = have(name):string()
+	local real_name = have(val)
+	OUT[val] = then_outcast( real_name, check_codec(val) )
+end)
+

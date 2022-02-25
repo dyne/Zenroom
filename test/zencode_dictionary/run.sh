@@ -391,3 +391,32 @@ Given that I have a 'string dictionary' named 'TransactionsBatchA'
 When I copy contents of 'blockchains' in 'TransactionsBatchA'
 Then print 'TransactionsBatchA'
 EOF
+
+cat << EOF  | save dictionary dictionary_named_by.json
+{
+	"Recipient": "User1234",
+	"NewRecipient": "User1235",
+	"myDict": {
+		"User1234": {
+			"name": "John",
+			"surname": "Doe"
+		}
+	}
+}
+EOF
+
+
+cat << EOF | zexe dictionary_named_by.zen -a dictionary_named_by.json
+Given I have a 'string' named 'Recipient'
+Given I have a 'string' named 'NewRecipient'
+Given that I have a 'string dictionary' named 'myDict' 
+
+Given that I have a 'string dictionary' named by 'Recipient' inside 'myDict'
+
+When I create the copy of object named by 'Recipient' from dictionary 'myDict'
+
+When I rename the 'copy' to 'tempObject' 
+When I rename 'tempObject' to named by 'NewRecipient'
+
+Then print the object named by 'NewRecipient'
+EOF
