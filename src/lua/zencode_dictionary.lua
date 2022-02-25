@@ -249,6 +249,10 @@ When("create the copy of '' from dictionary ''", function(name, dict) create_cop
 When("create the copy of '' from ''", function(name, dict) create_copy_f(dict, name) end)
 When("create the copy of '' in ''", function(name, dict) create_copy_f(dict, name) end)
 When("create the copy of '' in '' in ''", function(obj, branch, root) create_copy_f(root, branch, obj) end)
+When("create the copy of object named by '' from dictionary ''", function(name, dict) 
+  local label = have(name)
+  create_copy_f(dict, label:string())
+end)
 
 When("for each dictionary in '' append '' to ''", function(arr, right, left)
 	local dicts = have(arr)
