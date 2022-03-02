@@ -19,7 +19,7 @@
 --Last modified by Denis Roio
 --on Saturday, 27th November 2021
 --]]
-
+local stats = require('stats')
 -- array operations
 
 local function check_container(name)
@@ -262,4 +262,22 @@ When("create the sum value of elements in array ''", function(arr)
 	local params
 	ACK.sum_value, params = _aggr_array(arr)
 	new_codec('sum value', params)
+end)
+When("create the average of elements in array ''", function(arr)
+	empty'average'
+	local data = have(arr)
+	ACK.average = stats.average(data):decimal()
+	new_codec('average', { encoding="string" })
+end)
+When("create the variance of elements in array ''", function(arr)
+	empty'variance'
+	local data = have(arr)
+	ACK.variance = stats.variance(data):decimal()
+	new_codec('variance', { encoding="string" })
+end)
+When("create the standard deviation of elements in array ''", function(arr)
+	empty'standard_deviation'
+	local data = have(arr)
+	ACK.standard_deviation = stats.standardDeviation(data):decimal()
+	new_codec('standard_deviation', { encoding="string" })
 end)

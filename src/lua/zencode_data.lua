@@ -308,6 +308,8 @@ function input_encoding(what)
    elseif what == 'str' or what == 'string' then
       -- string has no check function
       return f_factory_encoder('string', O.from_string, nil)
+   elseif what == 'big' or what == 'bignum' then
+      return f_factory_encoder('big', BIG.from_decimal, nil)
    elseif what =='mnemonic' then
       -- mnemonic has no check function (TODO:)
       return f_factory_encoder('mnemonic', O.from_mnemonic, nil)
@@ -366,6 +368,8 @@ end
        return f_factory_outcast(O.to_mnemonic)
     elseif cast == 'number' then
        return f_factory_outcast(tonumber)
+    elseif cast == 'big' then
+       return f_factory_outcast(function(data) return BIG.new(data):decimal() end)
     elseif cast == 'boolean' then
        return function(data) return data end
     end
