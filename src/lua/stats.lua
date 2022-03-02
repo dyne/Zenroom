@@ -31,10 +31,13 @@ function stats.average( t )
   local count = zero 
 
   for k,v in pairs(t) do
-    if type(v) == 'number' then
+    local t = type(v)
+    if t == 'number' then
       v = BIG.from_decimal(tostring(v))
+    elseif iszen(t) then
+      v = BIG.from_decimal(v:octet():string())
     else
-      v = BIG.from_decimal(v:string())
+      error("Unknown type for number", 2)
     end
     if type(v) == 'zenroom.big' then
       local newsum = sum + v
@@ -60,10 +63,14 @@ function stats.variance( t )
   m = stats.average( t )
 
   for k,v in pairs(t) do
-    if type(v) == 'number' then
+    local t = type(v)
+
+    if t == 'number' then
       v = BIG.from_decimal(tostring(v))
+    elseif iszen(t) then
+      v = BIG.from_decimal(v:octet():string())
     else
-      v = BIG.from_decimal(v:string())
+      error("Unknown type for number", 2)
     end
     if type(v) == 'zenroom.big' then
       local newsum
@@ -81,27 +88,8 @@ function stats.variance( t )
   return result
 end
 
-local function big_sqrt(num)
-  local two = BIG.new(2)
-  local xn = num
-  local xnn;
-
-  if xn ~= BIG.new(0) then
-    xnn = (xn + (num / xn)) / two
-    while xnn < xn do
-      xn = xnn
-      xnn = (xn + (num / xn)) / two
-    end
-  end
-
-
-  return xn
-  
-end
-
-
 function stats.standardDeviation( t )
-  return big_sqrt(stats.variance( t ))
+  return BIG.sqrt(stats.variance( t ))
 end
 
 return stats
