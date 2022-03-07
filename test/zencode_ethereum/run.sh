@@ -131,20 +131,31 @@ When I create the ethereum transaction of 'gwei value' to 'ethereum address'
 Then print the 'ethereum transaction'
 EOF
 
-exit 0
-cat <<EOF | zexe sign_transaction.zen -a alice_to_bob_transaction.json \
+cat <<eof | zexe sign_transaction.zen -a alice_to_bob_transaction.json \
 		 -k alice_keys.json
-Scenario ethereum
-Given I have the 'keys'
+scenario ethereum
+given I have the 'keys'
 and I have a 'ethereum transaction'
-# tx["v"] = INT.new(1337) <- chain id
-# tx["r"] = O.new()
-# tx["s"] = O.new()
-# encodedTx = ETH.encodeSignedTransaction(from, tx)
-When I create the signed ethereum transaction for chain 'fab'
+# tx["v"] = int.new(1337) <- chain id
+# tx["r"] = o.new()
+# tx["s"] = o.new()
+# encodedtx = eth.encodesignedtransaction(from, tx)
+when I create the signed ethereum transaction
+#for chain 'fab'
 # needs keys.ethereum and valid eth transaction
-Then print the 'signed ethereum transaction'
-EOF
+then print the 'signed ethereum transaction'
+eof
+
+cat <<eof | zexe sign_transaction_chainid.zen -a alice_to_bob_transaction.json -k alice_keys.json
+scenario ethereum
+given I have the 'keys'
+and I have a 'ethereum transaction'
+when I create the signed ethereum transaction for chain 'fabt'
+then print the 'signed ethereum transaction'
+eof
+
+
+# TODO: verify tx using Alice's public key (not the address)
 
 # local ERC20_SIGNATURES = {
 #    balanceOf         = { view=true, i={'address'}, o={'uint256'} },
