@@ -148,6 +148,8 @@ function(chainid)
   else cid = INT.new(cid) end
   ZEN.assert(cid, "Invalid chain id: "..chainid)
   tx.v = I.spy(cid)
+  tx.r = O.new()
+  tx.s = O.new()
   ACK.signed_ethereum_transaction =
   ETH.encodeSignedTransaction(sk, tx)
   new_codec('signed ethereum transaction', { zentype = 'schema',
