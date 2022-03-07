@@ -158,7 +158,7 @@ function ETH.decodeRLP(rlp)
 end
 
 function ETH.encodeTransaction(tx)
-   local fields = {tx["nonce"], tx["gasPrice"], tx["gasLimit"], tx["to"],
+   local fields = {tx["nonce"], tx["gas_price"], tx["gas_limit"], tx["to"],
 		   tx["value"], tx["data"], tx["v"], tx["r"], tx["s"]}
    return ETH.encodeRLP(fields)
 end
@@ -167,8 +167,8 @@ function ETH.decodeTransaction(rlp)
    local t = ETH.decodeRLP(rlp)
    return {
       nonce=ETH.o2n(t[1]),
-      gasPrice=ETH.o2n(t[2]),
-      gasLimit=ETH.o2n(t[3]),
+      gas_price=ETH.o2n(t[2]),
+      gas_limit=ETH.o2n(t[3]),
       to=t[4],
       value=ETH.o2n(t[5]),
       data=t[6],
