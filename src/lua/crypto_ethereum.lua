@@ -23,9 +23,8 @@ local ETH = {}
 
 -- number to octet (n2o), were number is a big integer
 -- in RLP the 0 is reppresented as the empty octet
-zero = INT.new(0)
 function ETH.n2o(num)
-   if num == zero then
+   if num == INT.new(0) then
       return O.new()
    else
       return num:octet()
@@ -34,8 +33,8 @@ end
 
 -- idem for octet to number (o2n)
 function ETH.o2n(o)
-   if o == O.new() then
-      return zero
+   if #o == 0 then
+      return INT.new(0)
    else
       return INT.new(o)
    end
@@ -86,7 +85,7 @@ function ETH.encodeRLP(data)
       end
 
    else
-      error("Invalid data type for ETH RLP encoder: "..type(data))      
+      error("Invalid data type for ETH RLP encoder: "..type(data))
    end
    if header then
       res = header .. res
@@ -246,35 +245,30 @@ end
 -- }
 
 -- Taken from https://docs.soliditylang.org/en/v0.5.6/abi-spec.html#function-selector-and-argument-encoding
-function ETH.makeStringStorageData(str)
-   local fId, offset, oStr, paddingLength, padding, bytLen, paddingLen
+function ETH.make_storage_data(src)
+   local fId, offset, paddingLength, padding, bytLen, paddingLen
 
    -- local H = HASH.new('keccak256')
-   -- string.sub(hex(H:process('writeString(string)')), 1, 8)
-   fId = O.from_hex('131a0680')
+   -- string.sub(hex(H:process('storage(string)')), 1, 8)
+   fId = O.from_hex('b374012b')
 
    -- dynamic parameter are saved at the end of string, this is at which offset they are saved
    offset = O.from_hex('0000000000000000000000000000000000000000000000000000000000000020')
 
    -- length as a 256 unsigned integer
-   bytLen = INT.new(#str):octet()
+   bytLen = INT.new(#src):octet()
    paddingLength = 32-#bytLen
    paddingLen = O.zero(paddingLength)
-
-   -- octet string
-   oStr = O.to_octet(str)
-
-   paddingLength = #str % 32
-   
+   paddingLength = #src % 32
    if paddingLength > 0 then
       paddingLength = 32 - paddingLength
       padding = O.zero(paddingLength)
    else
       padding = O.new()
-
    end
+   -- done with padding
 
-   return fId .. offset .. paddingLen .. bytLen  .. oStr .. padding
+   return fId .. offset .. paddingLen .. bytLen  .. src .. padding
 end
 
 -- generate an ethereum keypair

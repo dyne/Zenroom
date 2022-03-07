@@ -154,6 +154,33 @@ when I create the signed ethereum transaction for chain 'fabt'
 then print the 'signed ethereum transaction'
 eof
 
+cat <<EOF | save $SUBDOC storage_contract.json
+{ "storage_contract": "d01394Ade77807B3fE7DAE6f54462dE453Cc8741" }
+EOF
+
+cat <<EOF | zexe transaction_storage.zen -k alice_nonce.json -a storage_contract.json | save $SUBDOC alice_storage_tx.json
+Scenario ethereum
+Given I have a 'ethereum address' named 'storage contract'
+# here we assume bob is a storage contract
+and a 'gas price'
+and a 'gas limit'
+and an 'ethereum nonce'
+When I create the ethereum transaction to 'storage contract'
+and I create the random object of '256' bits
+and I use the ethereum transaction to store 'random object'
+Then print the 'ethereum transaction'
+EOF
+
+cat <<eof | zexe sign_transaction_chainid.zen -a alice_storage_tx.json -k alice_keys.json
+scenario ethereum
+given I have the 'keys'
+and I have a 'ethereum transaction'
+when I create the signed ethereum transaction for chain 'fabt'
+then print the 'signed ethereum transaction'
+eof
+
+
+
 
 # TODO: verify tx using Alice's public key (not the address)
 

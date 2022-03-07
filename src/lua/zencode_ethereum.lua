@@ -61,10 +61,15 @@ local function import_eth_tx(obj)
 end
 local function export_eth_tx(obj)
   local res = { }
-  res.nonce = obj.nonce:decimal()  
+  res.nonce = obj.nonce:decimal()
   res.gas_price = obj.gas_price:decimal()
   res.gas_limit = obj.gas_limit:decimal()
-  res.value = obj.value:decimal()
+  if #obj.value == 0 then res.value = '0'
+  elseif type(obj.value) == 'zenroom.big' then
+    res.value = obj.value:decimal()
+  else
+    error("invalid value type: "..type(obj.value))
+  end
   if obj.data then res.data = obj.data:octet():hex() end
   if obj.v then res.v = obj.v:octet():hex() end
   if obj.r then res.r = obj.r:octet():hex() end
@@ -127,6 +132,34 @@ function(quantity, destaddr)
   encoding = 'complex'})
 end)
 
+When("create the ethereum transaction to ''",
+function(destaddr)
+  empty'ethereum transaction'
+  local tx = { }
+  tx.gas_price = have'gas price'
+  tx.gas_limit = have'gas limit'
+  tx.nonce = have'ethereum nonce'
+  tx.value = O.new()
+  tx.data = O.new()
+  tx.to = have(destaddr)
+  ACK.ethereum_transaction = tx
+  new_codec('ethereum transaction', { zentype = 'schema', encoding = 'complex'})
+end)
+
+When("use the ethereum transaction to store ''",
+function(obj)
+  local content = have(obj)
+  local tx = have'ethereum transaction'
+  ZEN.assert(not tx.data or #tx.data == 0, "Cannot overwrite transaction data")
+  tx.data = ETH.make_storage_data(content)
+end)
+
+-- TODO: more contract methods
+-- use the ethereum transaction to store ''
+-- use the ethereum transaction to transfer '' to ''
+-- use the ethereum transaction to elect ''
+-- use the ethereum transaction to vote ''
+
 When("create the signed ethereum transaction",
 function()
   local sk = havekey'ethereum'
@@ -147,7 +180,9 @@ function(chainid)
     cid = INT.new(O.from_string(tostring(chainid)))
   else cid = INT.new(cid) end
   ZEN.assert(cid, "Invalid chain id: "..chainid)
-  tx.v = I.spy(cid)
+  if not tx.data  then tx.data = O.new() end
+  if not tx.value then tx.value = O.new() end
+  tx.v = cid
   tx.r = O.new()
   tx.s = O.new()
   ACK.signed_ethereum_transaction =
