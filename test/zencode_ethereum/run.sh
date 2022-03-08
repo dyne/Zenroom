@@ -104,9 +104,9 @@ alice_address=`cat alice_address.json | cut -d'"' -f6`
 echo "Alice address: 0x${alice_address}"
 # getnonce "0x${alice_address}"
 
-
+NONCE=`getnonce 0x${alice_address} | jq -r '.result'`
 cat <<EOF | save $SUBDOC alice_nonce.json
-    { "ethereum nonce": `getnonce 0x${alice_address}`,
+    { "ethereum nonce": "`printf "%d" ${NONCE}`",
       "gas price": "100000000000",
       "gas limit": "300000",
       "gwei value": "10"

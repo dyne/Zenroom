@@ -84,7 +84,7 @@ ZEN.add_schema(
       ethereum_address = { import = O.from_hex,
 			   export = O.to_hex },
       ethereum_nonce = function(obj)
-	 return ZEN.get(obj, 'result', INT.new, tonumber) end,
+	 return ZEN.get(obj, '.', INT.new, tonumber) end,
       ethereum_transaction = { import = import_eth_tx,
 			       export = export_eth_tx },
       signed_ethereum_transaction = { import = O.from_hex,
