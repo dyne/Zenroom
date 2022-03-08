@@ -173,6 +173,11 @@ static int qp_verify(lua_State *L) {
 	return 1;
 }
 
+static int qp_signature_len(lua_State *L){  
+  lua_pushinteger(L, PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_BYTES);
+  return 1;
+}
+
 static int qp_kem_keygen(lua_State *L) {
 	lua_createtable(L, 0, 2);
         octet *private = o_new(L,PQCLEAN_KYBER512_CLEAN_CRYPTO_SECRETKEYBYTES); SAFE(private);
@@ -251,6 +256,7 @@ int luaopen_qp(lua_State *L) {
 		{"signed_msg", qp_signed_message},
 	        {"verify", qp_verify},
 		{"verified_msg", qp_verified_message},
+		{"signature_len", qp_signature_len},
 	        {"kemkeygen", qp_kem_keygen},
 	        {"enc", qp_enc},
 	        {"dec", qp_dec},
