@@ -30,8 +30,11 @@ for line in newline_iter(DATA) do
 	 nr = nr + 1
 
 	 -- Here starts the test
-	 print(QP.verified_msg(test.pk, test.sm))
+	 assert(QP.verify(test.pk, test.sm:sub(1, QP.signature_len()), test.msg))
 	 assert(test.msg == QP.verified_msg(test.pk, test.sm))
+
+	 assert(test.sm == QP.signed_msg(test.sk, test.msg))
+	 assert(test.sm:sub(1, QP.signature_len()) == QP.sign(test.sk, test.msg))
 
 	 curr_fields = 0
 	 test = { }
