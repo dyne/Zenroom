@@ -11,4 +11,4 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 $Z -a kyber512.rsp check_rsp_kyber.lua
 
 ## Tests for dilithium currently don't work
-# $Z -a dilithium.rsp check_rsp_dilithium.lua
+$Z -a dilithium.rsp check_rsp_dilithium.lua
