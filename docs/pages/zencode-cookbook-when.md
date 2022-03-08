@@ -48,16 +48,10 @@ We grouped together all the statements that perform object manipulation, so:
  ***Append*** a simple object to another
  
  ***Rename*** an object
- 
- ***Insert*** a simple object into an array
- 
- ***Remove*** an element from an array
- 
+  
  ***Delete*** an object from the memory stack
  
  ***Copy*** an object into new object
- 
- ***Copy element of array*** to a new simple object
  
  ***Split string*** using leftmost or rightmost bytes
  
@@ -219,6 +213,31 @@ The output should look like
 <a href="../_media/examples/zencode_cookbook/whenCompleteOutputPart4.json" download>whenCompleteOutputPart4.json</a>. 
 
 
+## Operations with arrays
+
+Here are the statements to work with arrays. Arrays can be of any type (number, string, base64... etc). The statements can do 
+
+***Insert*** a simple object into an array
+
+***Length*** creates an object containing the array length
+ 
+***Length*** creates the arithmetic sum of an 'number array'
+ 
+***Copy element of array*** to a new simple object
+
+***Remove*** an element from an array
+
+
+
+See our script below:
+
+
+[](../_media/examples/zencode_cookbook/whenCompleteScriptPart5.zen ':include :type=code gherkin')
+
+
+
+The output should look like 
+<a href="../_media/examples/zencode_cookbook/whenCompleteOutputPart5.json" download>whenCompleteOutputPart5.json</a>. 
 
 
 ## Operations with dictionaries

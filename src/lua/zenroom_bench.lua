@@ -24,14 +24,14 @@ local bench = { }
 
 bench.entropy = function()
    act("Benchmark: entropy of random generators (Shannon ratios)")
-   print("SEED: \t ".. RNGSEED:entropy())
-   print("PRNG: \t ".. OCTET.random(256):entropy())
    -- use standard ECP size
    local s = #ECP.random():octet()
-   print("OCTET: \t "..OCTET.random(s):entropy())
-   print("BIG:   \t "..BIG.random():octet():entropy())
-   print("ECP:   \t "..ECP.random():octet():entropy())
-   print("ECP2:  \t "..ECP2.random():octet():entropy())
+   return { SEED = RNGSEED:entropy(),
+	    PRNG = OCTET.random(256):entropy(),
+	    OCTET = OCTET.random(s):entropy(),
+	    BIG = BIG.random():octet():entropy(),
+	    ECP = ECP.random():octet():entropy(),
+	    ECP2 = ECP2.random():octet():entropy() }
 end
 
 bench.random_hamming_freq = function (s, q)

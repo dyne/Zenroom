@@ -303,7 +303,6 @@ void zen_teardown(zenroom_t *ZZ) {
 	}
 }
 
-static char zscript[MAX_ZENCODE];
 int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
 	if(!ZZ) {
 		error(NULL,"%s: Zenroom context is NULL.",__func__);
@@ -313,22 +312,31 @@ int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
 		      __func__);
 		return 1; }
 	int ret;
+	char *zscript = malloc(MAX_ZENCODE);
 	lua_State* L = (lua_State*)ZZ->lua;
 	// introspection on code being executed
 	(*ZZ->snprintf)(zscript,MAX_ZENCODE-1,
-	         "ZEN:begin()\nZEN:parse([[\n%s\n]])\nZEN:run()\n", script);
+	        "local _res, _err\n"
+		"_res, _err = pcall( function() ZEN:begin() end)\n"
+		"if not _res then exitcode(1) ZEN.OK = false error('INIT: '.._err,2) end\n"
+		"_res, _err = pcall( function() ZEN:parse([[\n%s\n]]) end)\n"
+		"if not _res then exitcode(1) ZEN.OK = false error('PARSE: '.._err,2) end\n"
+		"_res, _err = pcall( function() ZEN:run() end)\n"
+		"if not _res then exitcode(1) ZEN.OK = false error('EXEC: '.._err,2) end\n"
+		, script);
 	zen_setenv(L,"CODE",(char*)zscript);
 	ret = luaL_dostring(L, zscript);
+	free(zscript);
 	if(ret) {
-		error(L, "Zencode execution error");
-		// error(L, "Script:\n%s", zscript);
-	    error(L, "%s", lua_tostring(L, -1));
-		fflush(stderr);
-		return ret;
+	  error(L, "ERROR:");
+	  error(L, "%s", lua_tostring(L, -1));
 	}
-	if(ZZ->errorlevel < 1)
-		notice(L, "Script successfully executed");
-	return 0;
+	if(!EXITCODE)
+	  notice(L, "Script successfully executed");
+	else
+	  error(L, "Execution aborted");
+
+	return EXITCODE;
 }
 
 int zen_exec_script(zenroom_t *ZZ, const char *script) {
@@ -345,13 +353,14 @@ int zen_exec_script(zenroom_t *ZZ, const char *script) {
 	zen_setenv(L,"CODE",(char*)script);
 	ret = luaL_dostring(L, script);
 	if(ret) {
-		error(L, "%s", lua_tostring(L, -1));
-		fflush(stderr);
-		return ret;
-	}
-	if(ZZ->errorlevel > 1)
-		notice(L, "Script successfully executed");
-	return 0;
+	  error(L, "ERROR:");
+	  error(L, "%s", lua_tostring(L, -1));
+	} else EXITCODE=0;
+	if(!EXITCODE)
+	  notice(L, "Script successfully executed");
+	else
+	  error(L, "Execution aborted");
+	return EXITCODE;
 }
 
 

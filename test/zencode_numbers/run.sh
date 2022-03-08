@@ -72,6 +72,13 @@ Then print the string 'OK'
 Then print data
 EOF
 
+cat <<EOF | zexe number_cast.zen
+rule check version 1.0.0
+Given nothing
+When I write string '1234' in 'str'
+and I create the number from 'str'
+Then print all data
+EOF
 
 
 # cat <<EOF | zexe cmp_nlt_base10.zen
@@ -104,6 +111,21 @@ and number 'left' is less than 'right'
 Then print the string 'OK'
 Then print data
 EOF
+
+cat <<EOF | save numbers boolean.json
+{ "mycat": {
+    "black": true,
+    "white": false,
+     "name": "cat",
+     "age": 6 }
+}
+EOF
+cat <<EOF | debug booleans.zen -a boolean.json
+Given I have a 'string dictionary' named 'mycat'
+When debug
+Then print all data
+EOF
+
 
 cat << EOF > numbers_zero_values.json
 {"packet": {

@@ -20,26 +20,25 @@
 
 local btc = {}
 
-ECDHUTILS = require('ecdh_utils')
-
+-- A bitcoin address is unique given the public key
+-- address = RIPEMD160(SHA256(public_key))
+-- the composition of RIPEMD160 and SHA256 is known as HASH160
 function btc.address_from_public_key(public_key)
-   local SHA256 = HASH.new('sha256')
-   local RMD160 = HASH.new('ripemd160')
-   return RMD160:process(SHA256:process(public_key))
-
+   return HASH.hash160(public_key)
 end
 
-function btc.dsha256(msg)
-   local SHA256 = HASH.new('sha256')
-   return SHA256:process(SHA256:process(msg))
-end
 
+-- The user knows his private key in the WIF format (base58)
+-- This function compute the bytes of the private key (an octet)
+-- from the WIF format
+-- @param wif Private key in WIF format
+-- @return Private key octet
 function btc.wif_to_sk(wif)
    if not type(wif) == 'zenroom.octet' then
       error("invalid bitcoin key type, not an octet: "..type(wif), 3) end
-   local len = #wif   
+   local len = #wif
    if not (len == 32+6) then
-	 error("Invalid bitcoin key, WIF too short: "..len.." bytes", 3) end
+      error("Invalid bitcoin key, wrong WIF size: "..len.." bytes", 3) end
    local ver = wif:chop(1):hex()
    if not(ver == 'ef' or ver == '80') then
       error("Invalid bitcoin key version: "..ver, 3) end
@@ -48,7 +47,8 @@ function btc.wif_to_sk(wif)
       error("Invalid bitcoin key compression byte: "..wif:sub(len, len):hex(), 3) end
 
    local data = wif:sub(1, len-4)
-   local check = btc.dsha256(data):chop(4)
+
+   local check = HASH.dsha256(data):chop(4)
 
    if not(wif:sub(len-3, len) == check) then
       error("Invalid bitcoin key: checksum mismatch", 3) end
@@ -68,20 +68,10 @@ function btc.sk_to_wif(sk, vs)
    end
    local res = ver..sk
    res = res..O.from_hex('01') -- compressed public key
-   res = res..btc.dsha256(sk):chop(4) -- checksum
+   res = res..HASH.dsha256(res):chop(4) -- checksum
    return res
 end
 
-function btc.sk_to_pubc(sk)
-   if not #sk == 32 then
-      error("Invalid bitcoin key size: "..#sk) end
-   local pub = ECDH.pubgen(sk)
-   local x, y = ECDH.pubxy(pub)
-   local pfx = fif( BIG.parity( BIG.new(y) ),
-		    OCTET.from_hex('03'), OCTET.from_hex('02') )
-   return(pfx .. x)
-
-end
 -- variable length encoding for integer based on the
 -- actual length of the number
 function btc.encode_compact_size(n)
@@ -253,7 +243,11 @@ function btc.decode_raw_transaction(raw, sender_address, amounts_spent)
    return tx
 end
 
+-- create an octet which is a raw transaction
+-- works only with Bech32 v0 addresses
 -- with not coinbase input
+-- @param tx table which reppresent a transaction
+-- @return octet raw transaction
 function btc.build_raw_transaction(tx)
    local raw, script
    raw = O.new()
@@ -287,8 +281,9 @@ function btc.build_raw_transaction(tx)
    raw = raw .. btc.encode_compact_size(INT.new(#tx.txOut))
 
    -- txOut
-   for _, v in pairs(tx.txOut) do
+   for k, v in pairs(tx.txOut) do
       --raw = raw .. btc.to_uint(v.amount, 8)
+      assert(v.address, "Address not found in txout["..k.."]")
       local amount = O.new(v.amount)
       raw = raw .. amount:reverse()
       if #v.amount < 8 then
@@ -304,7 +299,8 @@ function btc.build_raw_transaction(tx)
       --script = script .. O.from_hex('88ac')
       -- Bech32
       script = O.from_hex('0014')
-      script = script .. v.address -- readBech32Address(v.address)
+      -- readBech32Address(v.address)
+      script = script .. fif(v.address.raw, v.address.raw, v.address)
       
       raw = raw .. btc.encode_compact_size(#script) .. script
    end
@@ -342,6 +338,10 @@ local function encode_with_prepend(bytes)
    return bytes
 end
 
+-- DER is the format used by bitcoin to encode
+-- ECDSA signatures
+-- @param sig signature table (with r and s)
+-- @return octet encoded with DER format
 function btc.encode_der_signature(sig)
    local res, tmp;
 
@@ -378,10 +378,12 @@ local function read_number_from_der(raw, pos)
       data,
       pos+size
    }
-   
-   
 end
 
+-- DER is the format used by bitcoin to encode
+-- ECDSA signatures
+-- @param raw octet encoded with DER format
+-- @return signature table (with r and s)
 function btc.decode_der_signature(raw)
    local sig, tmp, size;
    sig = {}
@@ -402,7 +404,9 @@ function btc.decode_der_signature(raw)
    return sig
 end
 
-function btc.hash_prevouts(tx)
+-- Hash required in the raw transaction (is exposed to be able to use it
+-- in the tests)
+local function _hash_prevouts(tx)
    local raw
    local H
    H = HASH.new('sha256')
@@ -416,7 +420,9 @@ function btc.hash_prevouts(tx)
    return H:process(H:process(raw))
 end
 
-function btc.hash_sequence(tx)
+-- Hash required in the raw transaction (is exposed to be able to use it
+-- in the tests)
+local function _hash_sequence(tx)
    local raw
    local H
    local seq
@@ -436,10 +442,11 @@ function btc.hash_sequence(tx)
    return H:process(H:process(raw))
 end
 
-function btc.hash_outputs(tx)
+-- Hash required in the raw transaction (is exposed to be able to use it
+-- in the tests)
+local function _hash_outputs(tx)
    local raw
    local H
-   local seq
    H = HASH.new('sha256')
 
    raw = O.new()
@@ -451,7 +458,7 @@ function btc.hash_outputs(tx)
 	 raw = raw .. O.zero(8 - #amount)
       end
       -- This is specific to Bech32 addresses, we should be able to verify the kind of address
-      raw = raw .. O.from_hex('160014') .. v.address
+      raw = raw .. O.from_hex('160014') .. fif( v.address.raw, v.address.raw, v.address)
 
    end
 
@@ -471,20 +478,23 @@ end
 --      8. hash_outputs (32-byte hash)
 --      9. nLocktime of the transaction (4-byte little endian)
 --     10. sighash type of the signature (4-byte little endian)
-function btc.build_transaction_to_sign(tx, i)
+local function build_transaction_to_sign(tx, i)
    local raw
    local amount
+   local address = fif(tx.txIn[i].address.raw, 
+		       tx.txIn[i].address.raw, tx.txIn[i].address)
+   assert(address, "Cannot sign or verify transaction: no address provided")
    raw = O.new()
    --      1. nVersion of the transaction (4-byte little endian)
    raw = raw .. btc.to_uint(tx.version, 4)
    --      2. hash_prevouts (32-byte hash)
-   raw = raw .. btc.hash_prevouts(tx)
+   raw = raw .. _hash_prevouts(tx)
    --      3. hash_sequence (32-byte hash)
-   raw = raw .. btc.hash_sequence(tx)
+   raw = raw .. _hash_sequence(tx)
    --      4. outpoint (32-byte hash + 4-byte little endian)
    raw = raw .. tx.txIn[i].txid:reverse() .. btc.to_uint(tx.txIn[i].vout, 4)
    --      5. scriptCode of the input (serialized as scripts inside CTxOuts)
-   raw = raw .. O.from_hex('1976a914') .. tx.txIn[i].address  .. O.from_hex('88ac')
+   raw = raw .. O.from_hex('1976a914') .. address  .. O.from_hex('88ac')
    --      6. value of the output spent by this input (8-byte little endian)
    amount = O.new(tx.txIn[i].amountSpent)
    raw = raw .. amount:reverse()
@@ -494,7 +504,7 @@ function btc.build_transaction_to_sign(tx, i)
    --      7. nSequence of the input (4-byte little endian)
    raw = raw .. tx.txIn[i].sequence:reverse()
    --      8. hash_outputs (32-byte hash)
-   raw = raw .. btc.hash_outputs(tx)
+   raw = raw .. _hash_outputs(tx)
    --      9. nLocktime of the transaction (4-byte little endian)
    raw = raw .. btc.to_uint(tx.nLockTime, 4)
    --     10. sighash type of the signature (4-byte little endian)
@@ -505,13 +515,14 @@ end
 
 -- Here I sign the transaction
 function btc.build_witness(tx, sk)
-   local pk = ECDHUTILS.compress_public_key(ECDH.pubgen(sk))
+   local pk = ECDH.compress_public_key(ECDH.pubgen(sk))
    local witness = {}
    for i=1,#tx.txIn,1 do
       if tx.txIn[i].sigwit then
-	 local rawTx = btc.build_transaction_to_sign(tx, i)
-	 local sigHash = btc.dsha256(rawTx)
-	 local sig = ECDHUTILS.sign_ecdh(sk, sigHash)
+	 -- fill address generated from sk if not present in txin
+	 local rawTx = build_transaction_to_sign(tx, i)
+	 local sigHash = HASH.dsha256(rawTx)
+	 local sig = ECDH.sign_ecdh(sk, sigHash)
 	 witness[i] = {
 	    btc.encode_der_signature(sig) .. O.from_hex('01'),
 	    pk
@@ -530,25 +541,24 @@ function btc.verify_witness(tx)
       return false
    end
    for i, v in pairs(tx.witness) do
-      local rawTx = btc.build_transaction_to_sign(tx, i)
-      local sigHash = btc.dsha256(rawTx)
+      local rawTx = build_transaction_to_sign(tx, i)
+      local sigHash = HASH.dsha256(rawTx)
       local sig = btc.decode_der_signature(v[1])
-      if not ECDH.verify_hashed(ECDHUTILS.uncompress_public_key(v[2]), sigHash, sig, #sigHash) then
+      if not ECDH.verify_hashed(ECDH.uncompress_public_key(v[2]), sigHash, sig, #sigHash) then
 	 return false
       end
    end
    return true
 end
 
--- -- Pay attention to the amount it has to be multiplied for 10^8
-
--- unspent: list of unspent transactions
--- to: receiver bitcoin address (must be segwit/Bech32!)
--- amount: satoshi to transfer (BIG integer)
-
--- return nil if it cannot build the transaction
+-- Pay attention to the amount, it has to be multiplied for 10^8
+-- @param unspent list of unspent transactions
+-- @param to receiver bitcoin address (must be segwit/Bech32!)
+-- @param amount satoshi to transfer (BIG integer)
+-- @param fee satoshi of fee we want to pay
+-- @return nil if the transaction cannot built
 -- (for example if there are not enough founds)
-function btc.build_tx_from_unspent(unspent, to, amount, fee)
+function btc.build_tx_from_unspent(unspent, to, amount, fee, from)
    local tx, i, currentAmount
    tx = {
       version=2,
@@ -562,13 +572,18 @@ function btc.build_tx_from_unspent(unspent, to, amount, fee)
    i=1
    currentAmount = INT.new(0)
    while i <= #unspent and currentAmount < amount+fee do
-      currentAmount = currentAmount + unspent[i].amount
+      assert(unspent[i].address or from, "No sender address specified")
+      -- amount should be already converted to a zenroom type, if not
+      -- then we assume it is a string value expressed in satoshis
+      local amount = unspent[i].amount
+      if not iszen( type( amount ) ) then amount = BIG.from_decimal( amount ) end
+      currentAmount = currentAmount + amount
       tx.txIn[i] = {
 	 txid = unspent[i].txid,
 	 vout = unspent[i].vout,
 	 sigwit = O.from_hex('01'), -- this should be true
-	 address = unspent[i].address,
-	 amountSpent = unspent[i].amount,
+	 address = unspent[i].address or from,
+	 amountSpent = amount,
 	 sequence = O.from_hex('ffffffff'),
 	 --scriptPubKey = unspent[i].scriptPubKey
       }
@@ -595,6 +610,9 @@ function btc.build_tx_from_unspent(unspent, to, amount, fee)
    return tx
 end
 
+-- 1 BTC = 1e8 satoshi
+-- @param value number of BTC as string (digits with a dot)
+-- @return number of sathosi as zenroom.big
 function btc.value_btc_to_satoshi(value)
    pos = value:find("%.")
    decimals = value:sub(pos+1, #value)
@@ -606,6 +624,29 @@ function btc.value_btc_to_satoshi(value)
    decimals = decimals .. string.rep("0", 8-#decimals)
 
    return BIG.from_decimal(value:sub(1, pos-1) .. decimals)
+end
+
+-- 1 BTC = 1e8 satoshi
+-- @param value number of sathosi as zenroom.big
+-- @return number of BTC as string (digits with a dot)
+function btc.value_satoshi_to_btc(value)
+   local str_value = value:decimal()
+   local len = #str_value
+   local str_btc;
+
+   if len <= 8 then
+      str_btc = '0.';
+      for i=1,8-len,1 do
+	 str_btc = str_btc .. '0'
+      end
+      str_btc = str_btc .. str_value
+   else
+      str_btc = string.sub(str_value, 1, len-8) .. '.' .. string.sub(str_value, len-7, len)
+   end
+
+   str_btc = string.gsub(str_btc, '%.?0*$', '')
+
+   return str_btc
 end
 
 -- function rawTransactionFromJSON(data, sk)

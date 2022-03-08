@@ -24,6 +24,7 @@ cmake \
     -DBUILD_MPIN=OFF \
     -DAMCL_CURVE=${ecdh_curve},${ecp_curve} \
     -DAMCL_RSA=${rsa_bits} \
+    -DAMCL_PREFIX=AMCL_ \
     -DCMAKE_SHARED_LIBRARY_LINK_FLAGS="" \
     -DC99=1 \
     -DPAIRING_FRIENDLY_BLS381='BLS' \

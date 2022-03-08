@@ -1,1 +1,1 @@
-{"Alice":{"draft":"This_is_my_signed_message_to_Bob.","signature":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"TxOClWbb6vjFT1UaPyTbIK+8tBML2kYl5al7g1FUgRA="}}}
+{"Alice":{"draft":"This_is_my_signed_message_to_Bob."},"signature":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"TxOClWbb6vjFT1UaPyTbIK+8tBML2kYl5al7g1FUgRA="}}

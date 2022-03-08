@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Monday, 26th April 2021
+--on Saturday, 13th November 2021
 --]]
 
 -- TODO: use strict table
@@ -30,6 +30,18 @@
 local function gc()
    TMP = {}
    collectgarbage 'collect'
+end
+
+-- safely take any zenroom object as index
+local function _index_to_string(what)
+   local t = type(what)
+   if t == 'string' then
+      return what
+   elseif iszen(t) then
+      return what:octet():string()
+   end
+   error("Invalid type to index variable in heap: "..t, 3)
+   return nil
 end
 
 ---
@@ -45,20 +57,19 @@ local function pick(what, conv)
    local guess
    local data
    local raw
-   raw = IN.KEYS[what] or IN[what]
-   ZEN.assert(raw, "Cannot find '" .. what .. "' anywhere (null value?)")
-   ZEN.assert(raw ~= '', "Found empty string in '" .. what)
+   local name = _index_to_string(what)
+   raw = KIN[name] or IN[name]
+   if not raw then error("Cannot find '" .. name .. "' anywhere (null value?)", 2) end
+   if raw == '' then error("Found empty string in '" .. name) end
    -- if not conv and ZEN.schemas[what] then conv = what end
-   TMP = guess_conversion(raw, conv or what)
-   ZEN.assert(
-      TMP,
-      'Cannot guess any conversion for: ' ..
-         luatype(raw) .. ' ' .. (conv or what or '(nil)')
-   )
-   TMP.name = what
+   TMP = guess_conversion(raw, conv or name)
+   if not TMP then error('Cannot guess any conversion for: ' ..
+         luatype(raw) .. ' ' .. (conv or name or '(nil)')) end
+   TMP.name = name
+   TMP.schema = conv
    assert(ZEN.OK)
    if DEBUG > 1 then
-      ZEN:ftrace('pick found ' .. what)
+      ZEN:ftrace('pick found ' .. name .. '('..TMP.zentype..')')
    end
 end
 
@@ -80,38 +91,37 @@ local function pickin(section, what, conv, fail)
    local root  -- section
    local raw  -- data pointer
    local bail  -- fail
-   root = IN.KEYS[section]
+   local name = _index_to_string(what)
+   root = KIN[section]
    if root then
-      raw = root[what]
+      raw = root[name]
       if raw then
          goto found
       end
    end
    root = IN[section]
    if root then
-      raw = root[what]
+      raw = root[name]
       if raw then
          goto found
       end
    end
 
-   -- TODO: check all corner cases to make sure TMP[what] is a k/v map
+   -- TODO: check all corner cases to make sure TMP[name] is a k/v map
    ::found::
-   ZEN.assert(
-      raw,
-      "Cannot find '" .. what .. "' inside '" .. section .. "' (null value?)"
-   )
-   ZEN.assert(raw ~= '', "Found empty string '" .. what .."' inside '"..section.."'")
+   if not raw then error("Cannot find '" .. name .. "' inside '" .. section .. "' (null value?)",2) end
+   if raw == '' then error("Found empty string '" .. name .."' inside '"..section.."'", 2) end
 
-   -- conv = conv or what
-   -- if not conv and ZEN.schemas[what] then conv = what end
+   -- conv = conv or name
+   -- if not conv and ZEN.schemas[name] then conv = name end
    -- if no encoding provided then conversion is same as name (schemas etc.)
-   TMP = guess_conversion(raw, conv or what)
-   TMP.name = what
+   TMP = guess_conversion(raw, conv or name)
+   TMP.name = name
    TMP.root = section
+   TMP.schema = conv
    assert(ZEN.OK)
    if DEBUG > 1 then
-      ZEN:ftrace('pickin found ' .. what .. ' in ' .. section)
+      ZEN:ftrace('pickin found ' .. name .. ' in ' .. section)
    end
 end
 
@@ -135,6 +145,10 @@ local function ack_table(key, val)
       encoding = TMP.encoding,
       root = TMP.root
    }
+   -- name of schema may differ from name of object
+   if TMP.schema and ( TMP.schema ~= TMP.encoding ) then
+      ZEN.CODEC[key].schema = TMP.schema
+   end
 end
 
 ---
@@ -147,7 +161,8 @@ end
 --
 -- @function ack(name)
 -- @param name string key of the data object in TMP[name]
-local function ack(name)
+local function ack(what)
+   local name = _index_to_string(what)
    ZEN.assert(TMP, 'No valid object found: ' .. name)
    -- CODEC[what] = CODEC[what] or {
    --    name = guess.name,
@@ -160,14 +175,13 @@ local function ack(name)
    )
    assert(ZEN.OK)
    ACK[name] = operate_conversion(TMP)
-   -- save codec state
-   ZEN.CODEC[name] = {
-      name = TMP.name,
-      luatype = TMP.luatype,
-      zentype = TMP.zentype,
-      encoding = TMP.encoding,
-      root = TMP.root
-   }
+   -- also creates codec insice operate conversion
+
+   -- name of schema may differ from name of object
+   if TMP.schema and ( TMP.schema ~= TMP.encoding ) then
+      ZEN.CODEC[name].schema = TMP.schema
+   end
+   
    -- ACK[name] already holds an object
    -- not a table?
    -- if not (dsttype == 'table') then -- convert single object to array
@@ -278,10 +292,32 @@ Given(
 )
 
 Given(
+   "a '' named by ''",
+   function(s, n)
+      -- local name = have(n)
+      local name = _index_to_string(KIN[n] or IN[n])
+      -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
+      pick(name, s)
+      ack(name)
+      gc()
+   end
+)
+
+Given(
    "a '' named '' in ''",
    function(s, n, t)
       pickin(t, n, s)
       ack(n) -- save it in ACK.name
+      gc()
+   end
+)
+
+Given(
+   "a '' named by '' in ''",
+   function(s, n, t)
+      local name = _index_to_string(KIN[n] or IN[n])
+      pickin(t, name, s)
+      ack(name) -- save it in ACK.name
       gc()
    end
 )
@@ -295,6 +331,7 @@ Given(
       gc()
    end
 )
+
 Given(
    "my '' named ''",
    function(s, n)
@@ -304,6 +341,17 @@ Given(
       gc()
    end
 )
+Given(
+   "my '' named by ''",
+   function(s, n)
+      -- ZEN.assert(encoder, "Invalid input encoding for '"..n.."': "..s)
+      local name = _index_to_string(KIN[n] or IN[n])
+      pickin(WHO, name, s)
+      ack(name)
+      gc()
+   end
+)
+
 Given(
    "a '' is valid",
    function(n)

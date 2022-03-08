@@ -1,0 +1,31 @@
+name: Lua linting
+on:
+  push:
+    branches:
+      - master 
+    paths:
+    - 'src/lua/**'
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/lua
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install luacheck
+        run: |
+          if ! hash luacheck &>/dev/null; then
+            sudo apt-get install -yq luarocks 1>/dev/null || exit 1
+            sudo luarocks install luacheck 1>/dev/null || exit 1
+            sudo luarocks install lanes &>/dev/null || true
+          fi
+          luacheck --version
+        shell: bash
+      - name: 🔍 Run luacheck
+        run: |
+          luacheck --config .luacheckrc --std lua54 .
+        continue-on-error: true
+

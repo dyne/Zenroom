@@ -26,6 +26,7 @@ teststr = right:string()
 test64  = right:base64()
 testU64 = right:url64()
 test58  = right:base58()
+test45  = right:base45()
 testhex = right:hex()
 testbin = right:bin()
 
@@ -61,6 +62,13 @@ dotest(left, right)
 dotest(left:base58(), test58)
 dotest(hash:process(left), hash:process(right))
 
+print '== test base45 import/export'
+left = OCTET.from_base45(test45)
+dotest(left, right)
+dotest(left:base45(), test45)
+dotest(hash:process(left), hash:process(right))
+
+
 
 print '== test hex import/export'
 left = OCTET.hex(testhex)
@@ -88,7 +96,8 @@ CONF.output = { }
 print '== JSON import/export'
 function jsontest(reason)
    CONF.input.encoding = input_encoding(reason)
-   CONF.output.encoding = output_encoding(reason)
+   CONF.output.encoding = { fun = guess_outcast(reason),
+			    name = reason }
    local str = JSON.encode({public = left})
    right = JSON.decode(str)
    right.public = CONF.input.encoding.fun(right.public)
@@ -104,7 +113,8 @@ jsontest("bin")
 print '== CBOR import/export'
 function cbortest(reason)
    CONF.input.encoding = input_encoding(reason)
-   CONF.output.encoding = output_encoding(reason)
+   CONF.output.encoding = { fun = guess_outcast(reason),
+			    name = reason }
    local str = CBOR.encode({public = left})
    right = CBOR.decode(str)
    right.public = CONF.input.encoding.fun(right.public)
@@ -134,6 +144,7 @@ function jsoncryptotest(f)
 end
 jsoncryptotest('hex')
 jsoncryptotest('base58')
+-- jsoncryptotest('base45')
 jsoncryptotest('base64')
 jsoncryptotest('url64')
 jsoncryptotest('bin')

@@ -1,7 +1,7 @@
 --[[
 --This file is part of zenroom
 --
---Copyright (C) 2018-2021 Dyne.org foundation
+--Copyright (C) 2018-2022 Dyne.org foundation
 --designed, written and maintained by Denis Roio <jaromil@dyne.org>
 --
 --This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Tuesday, 20th July 2021
+--on Saturday, 27th November 2021
 --]]
 
 -- random operations, mostly on arrays and schemas supported
@@ -41,6 +41,24 @@ function shuffle_array_f(tab)
    return res
 end
 
+-- random and hashing operations
+When("create the random object of '' bits", function(n)
+	empty'random object'
+	local bits = tonumber(n)
+	ZEN.assert(bits, 'Invalid number of bits: ' .. n)
+	ACK.random_object = OCTET.random(math.ceil(bits / 8))
+	new_codec('random_object', { zentype = 'element' })
+end
+)
+When("create the random object of '' bytes",function(n)
+	empty'random object'
+	local bytes = math.ceil(tonumber(n))
+	ZEN.assert(bytes, 'Invalid number of bytes: ' .. n)
+	ACK.random_object = OCTET.random(bytes)
+	new_codec('random_object', { zentype = 'element' })
+end
+)
+
 When("randomize the '' array", function(arr)
 		local A = ACK[arr]
 		ZEN.assert(A, "Object not found: "..arr)
@@ -55,115 +73,64 @@ When("create the array of '' random objects", function(s)
 		for i = s,1,-1 do
 		   table.insert(ACK.array,OCTET.random(64))
 		end
-		ZEN.CODEC.array = { name = dest,
-							encoding = CONF.output.encoding.name,
-							luatype = 'table',
-							zentype = 'array' }
+		new_codec('array', { luatype = 'table', zentype = 'array'})
 end)
 
-When("create the array of '' random objects of '' bits", function(s, bits)
-		ZEN.assert(not ACK.array, "Cannot overwrite existing object: ".."array")
-		ACK.array = { }
-		local bytes = math.ceil(bits/8)
-		for i = s,1,-1 do
-		   table.insert(ACK.array,OCTET.random(bytes))
-		end
-		ZEN.CODEC.array = { name = dest,
-							encoding = CONF.output.encoding.name,
-							luatype = 'table',
-							zentype = 'array' }
+When("create the array of '' random objects of '' bits", function(s, b)
+	empty'array'
+	ACK.array = { }
+	local q = tonumber(s)
+	ZEN.assert(q, "Argument is not a number: "..s)
+	local bits = tonumber(b)
+	local bytes = math.ceil(bits/8)
+	for i = q,1,-1 do
+	   table.insert(ACK.array,OCTET.random(bytes))
+	end
+	new_codec('array', { luatype = 'table', zentype = 'array'})
+end)
+
+When("create the array of '' random objects of '' bytes", function(s, b)
+	empty'array'
+	ACK.array = { }
+	local q = tonumber(s)
+	ZEN.assert(q, "Argument is not a number: "..s)
+	local bytes = math.ceil(tonumber(b))
+	for i = q,1,-1 do
+	   table.insert(ACK.array,OCTET.random(bytes))
+	end
+	new_codec('array', { luatype = 'table', zentype = 'array'})
 end)
 
 When("create the array of '' random numbers", function(s)
-		ZEN.assert(not ACK.array, "Cannot overwrite existing object: ".."array")
-		ACK.array = { }
-		for i = s,1,-1 do
-		   table.insert(ACK.array,tonumber(random_int16()))
-		end
-		ZEN.CODEC.array = { name = dest,
-							encoding = 'number',
-							luatype = 'table',
-							zentype = 'array' }
+	ZEN.assert(not ACK.array, "Cannot overwrite existing object: ".."array")
+	ACK.array = { }
+	for i = s,1,-1 do
+		table.insert(ACK.array,tonumber(random_int16()))
+	end
+	new_codec('array', { luatype = 'table',	zentype = 'array', encoding = 'number' })
 end)
 
 When("create the array of '' random numbers modulo ''", function(s,m)
-		ZEN.assert(not ACK.array, "Cannot overwrite existing object: ".."array")
-		ACK.array = { }
-		for i = s,1,-1 do
-		   table.insert(ACK.array,math.floor(random_int16() % m))
-		end
-		ZEN.CODEC.array = { name = dest,
-							encoding = 'number',
-							luatype = 'table',
-							zentype = 'array' }
-end)
-
-When("create the aggregation of array ''", function(arr)
-		-- TODO: switch typologies, sum numbers and bigs, aggregate hash
-		ZEN.assert(not ACK.aggregation, "Cannot overwrite existing object: ".."aggregation")
-		local A = ACK[arr]
-    ZEN.assert(A, "Object not found: "..arr)
-	ZEN.assert(ZEN.CODEC[arr].zentype == 'array',
-			   "Object is not an array: "..arr)
-    local count = isarray(A)
-    ZEN.assert( count > 0, "Object is not an array: "..arr)
-    if luatype(A[1]) == 'number' then
-       ACK.aggregation = 0
-       for k,v in next,A,nil do
-		  ACK.aggregation = ACK.aggregation + tonumber(v)
-       end
-	   ZEN.CODEC.aggregation =
-		  { name = dest,
-			encoding = 'number',
-			luatype = 'number',
-			zentype = 'element' }
-	elseif type(A[1]) == 'zenroom.big' then
-	   ACK.aggregation = BIG.new(0)
-       for k,v in next,A,nil do
-		  ACK.aggregation = ACK.aggregation + v
-       end
-	   ZEN.CODEC.aggregation =
-		  { name = dest,
-			encoding = CONF.output.encoding.name,
-			luatype = 'string',
-			zentype = 'element' }
-	elseif type(A[1]) == 'zenroom.ecp' then
-	   ACK.aggregation = ECP.generator()
-       for k,v in next,A,nil do
-		  ACK.aggregation = ACK.aggregation + v
-       end
-	   ZEN.CODEC.aggregation =
-		  { name = dest,
-			encoding = CONF.output.encoding.name,
-			luatype = 'string',
-			zentype = 'element' }
-	elseif type(A[1]) == 'zenroom.ecp2' then
-	   ACK.aggregation = ECP2.generator()
-       for k,v in next,A,nil do
-		  ACK.aggregation = ACK.aggregation + v
-       end
-	   ZEN.CODEC.aggregation =
-		  { name = dest,
-			encoding = CONF.output.encoding.name,
-			luatype = 'string',
-			zentype = 'element' }
-    else
-       error("Unknown aggregation for type: "..type(A[1]))
-    end
+	ZEN.assert(not ACK.array, "Cannot overwrite existing object: ".."array")
+	ACK.array = { }
+	for i = s,1,-1 do
+		table.insert(ACK.array,math.floor(random_int16() % m))
+	end
+	new_codec('array', { luatype = 'table',	zentype = 'array', encoding = 'number' })
 end)
 
 When("pick the random object in ''", function(arr)
-    local A = ACK[arr]
-    ZEN.assert(A, "Object not found: "..arr)
-	-- ZEN.assert(ZEN.CODEC[arr].zentype == 'array',
-	-- 		   "Object is not an array: "..arr)
-    local count = isarray(A)
-    ZEN.assert( count > 0, "Object is not an array: "..arr)
-    local r = (random_int16() % count) +1
-    ACK.random_object = A[r]
-	ZEN.CODEC.random_object = { name = 'random object',
-								luatype = 'string',
-								encoding = check_codec(arr),
-								zentype = 'element' }
+    local A = have(arr)
+    empty'random object'
+    ZEN.assert(luatype(A) == 'table', "Object is not a table: "..arr)
+    local tmp = { }
+    local keys = { }
+    for k,v in pairs(A) do
+       table.insert(keys, k)
+       table.insert(tmp, v)
+    end
+    local r = (random_int16() % #tmp) +1
+    ACK.random_object = tmp[r]
+	new_codec('random_object', {name=keys[r]})
 end)
 

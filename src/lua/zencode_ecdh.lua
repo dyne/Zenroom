@@ -30,6 +30,11 @@ local function public_key_f(o)
 	return res
 end
 
+local function warn_keypair()
+   warn("Use of 'keypair' is deprecated in favor of 'keyring'")
+   warn("Examples: I have my 'keyring' or I create the keyring")
+end
+
 ZEN.add_schema(
 	{
 		-- keypair (ECDH)
@@ -42,6 +47,7 @@ ZEN.add_schema(
 				pub == ECDH.pubgen(sec),
 				'Public key does not belong to secret key in keypair'
 			)
+			warn_keypair()
 			return {
 				public_key = pub,
 				private_key = sec
@@ -72,7 +78,8 @@ local function f_keygen()
 		public_key = kp.public,
 		private_key = kp.private
 	}
-	new_codec('keypair', { zentype = 'dictionary' })
+	new_codec('keypair', { zentype = 'schema' })
+	warn_keypair()
 end
 When('create the keypair', f_keygen)
 
@@ -111,6 +118,7 @@ When(
 			public_key = pub,
 			private_key = sk
 		}
+		warn_keypair()
 	end
 )
 
@@ -164,31 +172,34 @@ When(
 )
 
 local function _havekey_compat()
-	initkeys()
-    local sk = ACK.keys.ecdh
-	if sk then
-		return sk
-	else
-		local kp = have'keypair'
-		if not kp then goto fail end
-		sk = kp.private_key
-		if not sk then goto fail end
-		return sk
-	end
-	::fail::
-	ZEN.assert(sk, "ECDH Private key not found anywhere in keys or keypair")
+   initkeys()
+   local sk = ACK.keys.ecdh
+   if sk then
+      return sk
+   else
+      local kp = have'keypair'
+      if not kp then goto fail else
+	 warn_keypair()
+      end
+      sk = kp.private_key
+      if not sk then goto fail end
+      return sk
+   end
+   ::fail::
+   ZEN.assert(sk, "ECDH Private key not found anywhere in keyring or keypair")
 end
 
+-- check various locations to find the public key
 local function _pubkey_compat(_key)
 	local pubkey = ACK[_key]
 	if not pubkey then
 		local pubkey_arr
 		pubkey_arr = ACK.public_key or ACK.public_key_session or ACK.ecdh_public_key
-		ZEN.assert(
-			type(pubkey_arr) == 'table',
-			'Public key is not a table'
-		)
-		pubkey = pubkey_arr[_key]
+		if luatype(pubkey_arr) == 'table' then
+		   pubkey = pubkey_arr[_key]
+		else
+		   pubkey = pubkey_arr
+		end
 		ZEN.assert(pubkey, 'Public key not found for: ' .. _key)
 	end
 	return pubkey
@@ -199,11 +210,6 @@ When(
 	"encrypt the secret message of '' for ''",
 	function(msg, _key)
 		local sk = _havekey_compat()
-		-- have'keypair'
-		-- ZEN.assert(
-		-- 	ACK.keypair.private_key,
-		-- 	'Private key not found in keypair'
-		-- )
 		have(msg)
 		local pk = _pubkey_compat(_key)
 		empty'secret message'
@@ -227,11 +233,6 @@ When(
 	"decrypt the text of '' from ''",
 	function(secret, _key)
 		local sk = _havekey_compat()
-		-- have'keypair'
-		-- ZEN.assert(
-		-- 	ACK.keypair.private_key,
-		-- 	'Private key not found in keypair'
-		-- )
 		have(secret)
 		local pk = _pubkey_compat(_key)
 		local message = ACK[secret][_key] or ACK[secret]
@@ -248,46 +249,14 @@ When(
 
 -- sign a message and verify
 When(
-	"create the signature of ''",
-	function(doc)
-		have'keypair'
-		ZEN.assert(
-			ACK.keypair.private_key,
-			'Private key not found in keypair'
-		)
-		empty'signature'
-		local obj = have(doc)
-		ACK.signature = ECDH.sign(ACK.keypair.private_key, ZEN.serialize(obj))
-		ZEN.CODEC.signature = CONF.output.encoding.name
-	end
-)
-
-IfWhen(
-	"verify the '' is signed by ''",
-	function(msg, by)
-	        -- compat
-	        local pk = _pubkey_compat(by)
-		ZEN.assert(pk, 'Public key not found for: '..by)
-		local obj = have(msg)
-		local t = luatype(obj)
-		local sign
-		if t == 'table' then
-			sign = obj.signature
-			ZEN.assert(sign, 'Signature by ' .. by .. ' not found')
-			obj.signature = nil
-			ZEN.assert(
-				ECDH.verify(pk, ZEN.serialize(obj), sign),
-				'The signature by ' .. by .. ' is not authentic'
-			)
-		else
-			sign = ACK.signature[by]
-			ZEN.assert(sign, 'Signature by ' .. by .. ' not found')
-			ZEN.assert(
-				ECDH.verify(pk, obj, sign),
-				'The signature by ' .. by .. ' is not authentic'
-			)
-		end
-	end
+   "create the signature of ''",
+   function(doc)
+      local sk = _havekey_compat()
+      empty'signature'
+      local obj = have(doc)
+      ACK.signature = ECDH.sign(sk, ZEN.serialize(obj))
+      ZEN.CODEC.signature = CONF.output.encoding.name
+   end
 )
 
 IfWhen(

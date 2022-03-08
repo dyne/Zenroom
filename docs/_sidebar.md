@@ -21,6 +21,9 @@
   - [Scenario 'secshare': secret sharing](/pages/zencode-scenario-secShare "Zencode secret share")
   - [Scenario 'w3c': Verifiable Credentials](/pages/zencode-cookbook-w3c-vc "W3C Verifiable Credentials")
   - [Scenario 'Reflow': Multisignature](/pages/zencode-scenario-reflow "Reflow Multisignature")
+  - [Scenario 'http': Create GET requests](/pages/zencode-scenarios-http.md "create GET requests")
+ <!--- --->
+  - [Scenario 'bitcoin': Create bitcoin transactions](/pages/zencode-scenarios-bitcoin.md "Create bitcoin transactions")  
   - [Zencode "rules"](/pages/zencode-rules.md "Zencode encoding and format rules")
   - [Zencode "config"](/pages/zenroom-config.md "Zenroom config")
   - [Zencode command list](/pages/zencode-list.md "Zencode command list")  

@@ -63,6 +63,30 @@ When("create the new dictionary", function()
 		new_codec('new dictionary', { zentype = 'dictionary' })
 end)
 
+
+When("create the new dictionary named ''", function(name)
+		empty(name)
+		ACK[name] = { }
+		new_codec(name, { zentype = 'dictionary' })
+end)
+
+When("create the array of elements named '' for dictionaries in ''",
+     function(name, dict)
+	empty'array'
+	local src = have(dict)
+	ZEN.assert(luatype(src)=='table', "Object is not a table: "..dict)
+	local res = { }
+	for k, v in pairs(src) do
+	   if k == name then table.insert(res, v) end
+	   -- dict is most oftern an array of dictionaries
+	   for kk, vv in pairs(v) do
+	      if kk == name then table.insert(res, vv) end
+	   end
+	end
+	ACK.array = res
+	new_codec('array', {luatype='table',zentype='array'}, dict)
+end)
+
 When("create the pruned dictionary of ''", function(dict)
 	empty'pruned dictionary'
 	local d = have(dict)
@@ -208,7 +232,7 @@ local function create_copy_f(root, in1, in2)
 		ACK.copy = ACK.copy[in2]
 		ZEN.assert(ACK.copy, "Member not found: "..in2.." in "..in1.." in "..root)
 	end
-	new_codec('copy', { luatype = luatype(ACK[copy]) }, root)
+	new_codec('copy', { luatype = luatype(ACK.copy) }, root)
 	if ZEN.CODEC.copy.luatype == 'table' then
 		if isdictionary(ACK.copy) then
 			   ZEN.CODEC.copy.zentype = 'dictionary'
@@ -225,6 +249,10 @@ When("create the copy of '' from dictionary ''", function(name, dict) create_cop
 When("create the copy of '' from ''", function(name, dict) create_copy_f(dict, name) end)
 When("create the copy of '' in ''", function(name, dict) create_copy_f(dict, name) end)
 When("create the copy of '' in '' in ''", function(obj, branch, root) create_copy_f(root, branch, obj) end)
+When("create the copy of object named by '' from dictionary ''", function(name, dict) 
+  local label = have(name)
+  create_copy_f(dict, label:string())
+end)
 
 When("for each dictionary in '' append '' to ''", function(arr, right, left)
 	local dicts = have(arr)
@@ -240,3 +268,39 @@ When("for each dictionary in '' append '' to ''", function(arr, right, left)
 		vv[left] = l..r
 	end
 end)
+
+When("move '' in ''", function(src, dict)
+	local s = have(src)
+	local d = have(dict)
+	ZEN.assert(luatype(d) == 'table', "Object is not a table: "..dict)
+	ZEN.assert(ZEN.CODEC[dict].zentype == 'dictionary'
+		   or ZEN.CODEC[dict].zentype == 'schema',
+		   "Object is not a schema or dictionary: "..dict)
+	d[src] = s
+	ACK[src] = nil
+end)
+
+When("filter '' fields from ''", function(filters, target)
+	local t = have(target)
+	ZEN.assert(isdictionary(target), "Object is not a dictionary: "..target)
+	local f = have(filters)
+	ZEN.assert(isarray(filters), "Object is not an array: "..filters)
+	if isarray(t) then -- array of dictionaries
+	   for ak,av in pairs(t) do
+	      for k,_ in pairs(av) do	
+		 keep = false
+		 for _, fv in pairs(f) do
+		    if fv:str() == k then keep = true end
+		 end
+		 if not keep then t[ak][k] = nil end
+	      end
+	   end
+	else
+	   for k,_ in pairs(t) do
+	      for _, fv in pairs(f) do
+		 if k ~= fv then t[k] = nil end
+	      end
+	   end
+	end
+end)
+

@@ -83,7 +83,7 @@ void* rng_alloc(zenroom_t *ZZ) {
 	// RAND_seed is destructive, preserve seed here
 	char tseed[RANDOM_SEED_LEN];
 	memcpy(tseed,ZZ->random_seed,RANDOM_SEED_LEN);
-	RAND_seed(rng, RANDOM_SEED_LEN, tseed);
+	AMCL_(RAND_seed)(rng, RANDOM_SEED_LEN, tseed);
 	// return into ZZ->random_generator
 	return(rng);
 }

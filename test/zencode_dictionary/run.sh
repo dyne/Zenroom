@@ -355,6 +355,8 @@ When I insert 'transferredProductAmountafterSalesStart' in 'salesReport'
 When I create the hash of 'salesReport' using 'sha512'
 When I rename the 'hash' to 'sha512hashOfsalesReport'
 
+When I pick the random object in 'TransactionsBatchA'
+When I remove the 'random object' from 'TransactionsBatchA'
 
 #Print out the data we produced along
 # We also print the dictionary 'Information' as hex, just for fun
@@ -377,8 +379,44 @@ cat << EOF  | save dictionary blockchains.json
 }
 EOF
 
-cat << EOF | zexe append_foreach.zen -a blockchains.json | save dictionary blockchains_appended.json
+cat << EOF | zexe append_foreach.zen -a blockchains.json
 Given I have a 'string dictionary' named 'blockchains'
 When for each dictionary in 'blockchains' I append 'last-transaction' to 'endpoint'
 Then print 'blockchains'
+EOF
+
+cat << EOF | zexe copy_contents_in.zen -a blockchains.json -k batch_data.json
+Given I have a 'string dictionary' named 'blockchains'
+Given that I have a 'string dictionary' named 'TransactionsBatchA'
+When I copy contents of 'blockchains' in 'TransactionsBatchA'
+Then print 'TransactionsBatchA'
+EOF
+
+cat << EOF  | save dictionary dictionary_named_by.json
+{
+	"Recipient": "User1234",
+	"NewRecipient": "User1235",
+	"myDict": {
+		"User1234": {
+			"name": "John",
+			"surname": "Doe"
+		}
+	}
+}
+EOF
+
+
+cat << EOF | zexe dictionary_named_by.zen -a dictionary_named_by.json
+Given I have a 'string' named 'Recipient'
+Given I have a 'string' named 'NewRecipient'
+Given that I have a 'string dictionary' named 'myDict' 
+
+Given that I have a 'string dictionary' named by 'Recipient' inside 'myDict'
+
+When I create the copy of object named by 'Recipient' from dictionary 'myDict'
+
+When I rename the 'copy' to 'tempObject' 
+When I rename 'tempObject' to named by 'NewRecipient'
+
+Then print the object named by 'NewRecipient'
 EOF

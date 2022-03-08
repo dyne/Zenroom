@@ -100,7 +100,7 @@ rule input encoding url64
 rule output encoding url64
 Given I have a 'url64 array' named 'bonnetjes'
 When I pick the random object in 'bonnetjes'
-and I remove 'random object' from 'bonnetjes'
+and I remove the 'random object' from 'bonnetjes'
 and I create the hashes of each object in 'bonnetjes'
 and rename the 'hashes' to 'right array'
 Then print the 'right array'
@@ -143,7 +143,7 @@ rule check version 1.0.0
 Given nothing
 When I create the array of '32' random objects of '256' bits
 and I pick the random object in 'array'
-and I remove 'random object' from 'array'
+and I remove the 'random object' from 'array'
 and the 'random object' is not found in 'array'
 Then print the 'random object'
 EOF
@@ -208,6 +208,122 @@ When the 'needle' is found in 'haystack' at least 'quorum' times
 Then Print the string 'Success' 
 EOF
 
+cat <<EOF >timestamp_stats.json
+{
+	"1": {
+		"announce": "/api/consensusroom-announce",
+		"baseUrl": "http://50.116.53.12:3300",
+		"get-6-timestamps": "/api/consensusroom-get-6-timestamps",
+		"myTimestamp": "1644878787666",
+		"public_key": "BGiQeHz55rNc/k/iy7wLzR1jNcq/MOy8IyS6NBZ0kY3Z4sExlyFXcILcdmWDJZp8FyrILOC6eukLkRNt7Q5tzWU=",
+		"timestampAPI": "/api/consensusroom-get-timestamp",
+		"uid": "c633408f9d364740bec696456d5f1ae2",
+		"version": "1"
+	},
+	"2": {
+		"announce": "/api/consensusroom-announce",
+		"baseUrl": "http://172.105.83.46:3300",
+		"get-6-timestamps": "/api/consensusroom-get-6-timestamps",
+		"myTimestamp": "1644878787611",
+		"public_key": "BGiQeHz55rNc/k/iy7wLzR1jNcq/MOy8IyS6NBZ0kY3Z4sExlyFXcILcdmWDJZp8FyrILOC6eukLkRNt7Q5tzWU=",
+		"timestampAPI": "/api/consensusroom-get-timestamp",
+		"uid": "c1da19c60b7a4bf7a66f60825bec7a82",
+		"version": "1"
+	},
+	"3": {
+		"announce": "/api/consensusroom-announce",
+		"baseUrl": "http://212.71.234.197:3300",
+		"get-6-timestamps": "/api/consensusroom-get-6-timestamps",
+		"myTimestamp": "1644878787367",
+		"public_key": "BGiQeHz55rNc/k/iy7wLzR1jNcq/MOy8IyS6NBZ0kY3Z4sExlyFXcILcdmWDJZp8FyrILOC6eukLkRNt7Q5tzWU=",
+		"timestampAPI": "/api/consensusroom-get-timestamp",
+		"uid": "cc95dbf6a3d340fb95452f452a23aa40",
+		"version": "1"
+	},
+	"4": {
+		"announce": "/api/consensusroom-announce",
+		"baseUrl": "http://192.46.209.107:3300",
+		"get-6-timestamps": "/api/consensusroom-get-6-timestamps",
+		"myTimestamp": "1644878787754",
+		"public_key": "BGiQeHz55rNc/k/iy7wLzR1jNcq/MOy8IyS6NBZ0kY3Z4sExlyFXcILcdmWDJZp8FyrILOC6eukLkRNt7Q5tzWU=",
+		"timestampAPI": "/api/consensusroom-get-timestamp",
+		"uid": "3d0fa08a6d034d01a820ea05cbf93831",
+		"version": "1"
+	},
+	"5": {
+		"announce": "/api/consensusroom-announce",
+		"baseUrl": "http://172.105.18.196:3300",
+		"get-6-timestamps": "/api/consensusroom-get-6-timestamps",
+		"myTimestamp": "1644878787679",
+		"public_key": "BGiQeHz55rNc/k/iy7wLzR1jNcq/MOy8IyS6NBZ0kY3Z4sExlyFXcILcdmWDJZp8FyrILOC6eukLkRNt7Q5tzWU=",
+		"timestampAPI": "/api/consensusroom-get-timestamp",
+		"uid": "3794a7c3d1734dc8abcb57c82c972549",
+		"version": "1"
+	},
+	"6": {
+		"announce": "/api/consensusroom-announce",
+		"baseUrl": "http://45.79.92.158:3300",
+		"get-6-timestamps": "/api/consensusroom-get-6-timestamps",
+		"myTimestamp": "1644878787692",
+		"public_key": "BGiQeHz55rNc/k/iy7wLzR1jNcq/MOy8IyS6NBZ0kY3Z4sExlyFXcILcdmWDJZp8FyrILOC6eukLkRNt7Q5tzWU=",
+		"timestampAPI": "/api/consensusroom-get-timestamp",
+		"uid": "11e06cf7615a43f08ebd31c97e1ef9cb",
+		"version": "1"
+	},
+        "non numero": "quarantadue"
+}
+EOF
 
+
+cat <<EOF | zexe timestamp_stats.zen -a timestamp_stats.json
+Given I have a 'string dictionary' named '1'
+Given I have a 'string dictionary' named '2'
+Given I have a 'string dictionary' named '3'
+Given I have a 'string dictionary' named '4'
+Given I have a 'string dictionary' named '5'
+Given I have a 'string dictionary' named '6'
+
+Given I have the 'string' named 'non numero'
+
+When I create the copy of 'myTimestamp' from dictionary '1'
+When I rename the 'copy' to 'time1'
+
+When I create the copy of 'myTimestamp' from dictionary '2'
+When I rename the 'copy' to 'time2'
+
+When I create the copy of 'myTimestamp' from dictionary '3'
+When I rename the 'copy' to 'time3'
+
+When I create the copy of 'myTimestamp' from dictionary '4'
+When I rename the 'copy' to 'time4'
+
+When I create the copy of 'myTimestamp' from dictionary '5'
+When I rename the 'copy' to 'time5'
+
+When I create the copy of 'myTimestamp' from dictionary '6'
+When I rename the 'copy' to 'time6'
+
+# Insert timestamps in array to create average and variance
+
+When I create the 'string array'
+When I rename the 'string array' to 'allTimestamps'
+
+When I insert 'time1' in 'allTimestamps'
+When I insert 'time2' in 'allTimestamps'
+When I insert 'time3' in 'allTimestamps'
+When I insert 'time4' in 'allTimestamps'
+When I insert 'time5' in 'allTimestamps'
+When I insert 'time6' in 'allTimestamps'
+# When I insert 'non numero' in 'allTimestamps'
+
+When I create the average of elements in array 'allTimestamps'
+When I create the variance of elements in array 'allTimestamps'
+When I create the standard deviation of elements in array 'allTimestamps'
+
+Then print the 'average'
+Then print the 'variance'
+Then print the 'standard deviation'
+Then print the 'allTimestamps'
+EOF
 success
 

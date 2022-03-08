@@ -119,12 +119,19 @@ EOF
 # 1. keys containing: reflow and credentials
 # 2. credentials
 # 3. identity
-json_join identity_Alice.json verified_credential_Alice.json | save reflow alice.json
+#
+# DAMN json_join
+# json_join identity_Alice.json verified_credential_Alice.json | save reflow alice.json
+
+jq -s '.[0] * .[1]' identity_Alice.json verified_credential_Alice.json | save reflow alice.json
 
 
 ## AUTHORITY PUBLIC KEY
 # add the issuer node public key to the object passed
-json_join issuer_verifier.json EconomicResource.json | save reflow EconomicResource_issuer.json
+#
+#json_join issuer_verifier.json EconomicResource.json | save reflow EconomicResource_issuer.json
+
+jq -s '.[0] * .[1]' issuer_verifier.json EconomicResource.json | save reflow EconomicResource_issuer.json
 
 cat << EOF | zexe create_seal_of_resource.zen -a EconomicResource_issuer.json -k alice.json | save reflow EconomicResource_seal.json
 Scenario reflow
@@ -150,7 +157,9 @@ EOF
 
 ## AUTHORITY PUBLIC KEY
 # add the issuer node public key to the object passed
-json_join issuer_verifier.json EconomicEvent.json | save reflow EconomicEvent_issuer.json
+#json_join issuer_verifier.json EconomicEvent.json | save reflow EconomicEvent_issuer.json
+
+jq -s '.[0] * .[1]' issuer_verifier.json EconomicEvent.json | save reflow EconomicEvent_issuer.json
 
 cat << EOF | zexe create_seal_of_event.zen -a EconomicEvent_issuer.json -k alice.json | save reflow EconomicEvent_seal.json 
 Scenario reflow
@@ -204,8 +213,10 @@ and I insert 'seal2' in 'new array'
 and I rename 'new array' to 'Seals'
 Then print 'Seals'
 EOF
-json_join SealArray.json issuer_verifier.json Process.json | save reflow Aggregate_seal.json
 
+# json_join SealArray.json issuer_verifier.json Process.json | save reflow Aggregate_seal.json
+
+jq -s  '.[0] * .[1] * .[2]' SealArray.json issuer_verifier.json Process.json | save reflow Aggregate_seal.json
 
 
 cat << EOF | zexe create_seal_of_process.zen -a Aggregate_seal.json -k alice.json | save reflow Process_seal.json 
