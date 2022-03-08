@@ -1,0 +1,8 @@
+Given I have a 'testnet address' named 'sender'
+and I have a 'testnet address' named 'recipient'
+and a 'satoshi fee'
+and a 'satoshi amount'
+and a 'satoshi unspent'
+When I rename 'satoshi unspent' to 'testnet unspent'
+and I create the testnet transaction
+Then print the 'testnet transaction'

@@ -252,6 +252,7 @@ zencode_tests = [
     'zencode_numbers',
     'zencode_array',
     'zencode_hash',
+    'zencode_http',
     'zencode_secshare',
     'zencode_ecdh',
     'zencode_credential',

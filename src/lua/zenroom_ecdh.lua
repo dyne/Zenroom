@@ -2,7 +2,7 @@
 --This file is part of zenroom
 --
 --Copyright (C) 2021 Dyne.org foundation
---designed, written and maintained by Alberto Lerda
+--designed, written and maintained by Alberto Lerda and Denis Roio
 --
 --This program is free software: you can redistribute it and/or modify
 --it under the terms of the GNU Affero General Public License v3.0
@@ -16,18 +16,20 @@
 --GNU Affero General Public License v3.0
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
+--Last modified by Denis Roio
+--on Tuesday, 20th July 2021
 --]]
 
-local ECDHUTILS = {}
+local ecdh = require'ecdh'
 
-function ECDHUTILS.compress_public_key(public)
+function ecdh.compress_public_key(public)
    local x, y = ECDH.pubxy(public)
    local pfx = fif( BIG.parity(BIG.new(y) ), OCTET.from_hex('03'), OCTET.from_hex('02') )
    local pk = pfx .. x
    return pk
 end
 
-function ECDHUTILS.uncompress_public_key(public)
+function ecdh.uncompress_public_key(public)
    local p = BIG.new(O.from_hex('fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f'))
    local e = BIG.new(O.from_hex('3fffffffffffffffffffffffffffffffffffffffffffffffffffffffbfffff0c'))
 
@@ -45,15 +47,22 @@ function ECDHUTILS.uncompress_public_key(public)
 end
 
 -- it is similar to sign eth, s < order/2
-function ECDHUTILS.sign_ecdh(sk, data) 
+function ecdh.sign_ecdh(sk, data)
    local halfSecp256k1n = INT.new(hex('7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0'))
    local sig
    sig = nil
    repeat
       sig = ECDH.sign_hashed(sk, data, #data)
    until(INT.new(sig.s) < halfSecp256k1n);
-   
+
    return sig
 end
 
-return ECDHUTILS
+-- Compute the compressed public key (pubc) from the secret key
+function ecdh.sk_to_pubc(sk)
+   if not #sk == 32 then
+      error("Invalid ecdh private key size: "..#sk) end
+   return( ECDH.compress_public_key( ECDH.pubgen(sk) ) )
+end
+
+return ecdh

@@ -148,6 +148,7 @@ void func(void *L, const char *format, ...) {
 
 }
 
+extern int EXITCODE;
 void error(lua_State *L, const char *format, ...) {
 	CTXSAFE(0);
 	if(!format) return;
@@ -161,6 +162,7 @@ void error(lua_State *L, const char *format, ...) {
 	zen_write_err_va(pfx, arg);
 	va_end(arg);
 	if(Z) Z->errorlevel = 3;
+	EXITCODE=1;
 	// exit(1); // calls teardown (signal 11) TODO: check if OK with seccomp
 }
 

@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Tuesday, 3rd August 2021
+--on Saturday, 13th November 2021
 --]]
 --- <h1>Zencode language parser</h1>
 --
@@ -81,7 +81,7 @@ local function set_sentence(self, event, from, to, ctx)
 	-- TODO: optimize in C
 	-- remove '' contents, lower everything, expunge prefixes
 	-- ignore 'the' only in Then statements
-	local tt = gsub(trim(ctx.msg), "'(.-)'", "''")
+	local tt = gsub(ctx.msg, "'(.-)'", "''") -- msg trimmed on parse
 	tt = gsub(tt, ' I ', ' ', 1) -- eliminate first person pronoun
 	tt = tt:lower() -- lowercase all statement
 	if to == 'then' then
@@ -113,7 +113,6 @@ local function set_sentence(self, event, from, to, ctx)
 		end
 	    -- xxx(tt .. ' == ' ..pattern)
 		if strcasecmp(tt, pattern) then
-			xxx(tt)
 			local args = {} -- handle multiple arguments in same string
 			for arg in string.gmatch(ctx.msg, "'(.-)'") do
 				-- convert all spaces to underscore in argument strings
@@ -141,7 +140,7 @@ local function set_sentence(self, event, from, to, ctx)
 	if not ctx.Z.OK and CONF.parser.strict_match then
 		debug_traceback()
 		exitcode(1)
-		error('Zencode pattern not found (missing scenario?): ' .. trim(ctx.msg), 1)
+		error('Zencode pattern not found ('..index..'): ' .. trim(ctx.msg), 1)
 		return false
 	elseif not ctx.Z.OK and not CONF.parser.strict_match then
 		warn('Zencode pattern ignored: ' .. trim(ctx.msg), 1)
@@ -157,8 +156,7 @@ local function set_rule(text)
 		-- elseif rule[2] == 'load' and rule[3] then
 		--     act("zencode extension: "..rule[3])
 		--     require("zencode_"..rule[3])
-		SEMVER = require_once('semver')
-		local ver = SEMVER(rule[4])
+		local ver = V(rule[4]) -- SEMVER
 		if ver == ZENROOM_VERSION then
 			act('Zencode version match: ' .. ZENROOM_VERSION.original)
 			res = true
@@ -188,7 +186,8 @@ local function set_rule(text)
 		-- TODO: rule debug [ format | encoding ]
 		-- rule input encoding|format ''
 		if rule[3] == 'encoding' then
-			CONF.output.encoding = output_encoding(rule[4])
+			CONF.output.encoding = { fun = guess_outcast(rule[4]),
+						 name = rule[4] }
 			res = true and CONF.output.encoding
 		elseif rule[3] == 'format' then
 			CONF.output.format = get_format(rule[4])
@@ -205,10 +204,16 @@ local function set_rule(text)
 			CONF.parser.strict_match = false
 			res = true
 		end
-		-- alias of unknown ignore for specific callers
+	elseif rule[2] == 'collision' and rule[3] then
+	   if rule[3] == 'ignore' then
+	      CONF.heap.check_collision = false
+	      res = true
+	   end
+	   -- alias of unknown ignore for specific callers
 	elseif rule[2] == 'caller' and rule[3] then
 		if rule[3] == 'restroom-mw' then
 			CONF.parser.strict_match = false
+			CONF.heap.check_collision = false
 			res = true
 		end
 	elseif rule[2] == 'set' and rule[4] then
@@ -285,7 +290,7 @@ local function new_state_machine()
 						strtok(string.match(trim(msg.msg):lower(), '[^:]+'))
 					for k, scen in ipairs(scenarios) do
 						if k ~= 1 then -- skip first (prefix)
-							require('zencode_' .. trimq(scen))
+							load_scenario('zencode_' .. trimq(scen))
 							ZEN:trace('Scenario ' .. scen)
 							return
 						end
@@ -311,7 +316,7 @@ end
 
 -- Zencode HEAP globals
 IN = {} -- Given processing, import global DATA from json
-IN.KEYS = {} -- Given processing, import global KEYS from json
+KIN = {} -- Given processing, import global KEYS from json
 TMP = TMP or {} -- Given processing, temp buffer for ack*->validate->push*
 ACK = ACK or {} -- When processing,  destination for push*
 OUT = OUT or {} -- print out
@@ -428,7 +433,7 @@ local function zencode_iscomment(b)
 	end
 end
 local function zencode_isempty(b)
-	if b == nil or trim(b) == '' then
+	if b == nil or b == '' then
 		return true
 	else
 		return false
@@ -454,7 +459,7 @@ function zencode:begin()
 	-- Reset HEAP
 	self.machine = {}
 	IN = {} -- Given processing, import global DATA from json
-	IN.KEYS = {} -- Given processing, import global KEYS from json
+	KIN = {} -- Given processing, import global KEYS from json
 	TMP = {} -- Given processing, temp buffer for ack*->validate->push*
 	ACK = {} -- When processing,  destination for push*
 	OUT = {} -- print out
@@ -464,7 +469,6 @@ function zencode:begin()
 	collectgarbage 'collect'
 	-- Zencode init traceback
 	self.machine = new_state_machine()
-	return true
 end
 
 function zencode:parse(text)
@@ -479,12 +483,13 @@ function zencode:parse(text)
 	local parse_prefix = parse_prefix -- optimization
    for line in zencode_newline_iter(text) do
 	linenum = linenum + 1
-	  if zencode_isempty(line) then goto continue end
-	  if zencode_iscomment(line) then goto continue end
+	local tline = trim(line) -- saves trims in isempty / iscomment
+	  if zencode_isempty(tline) then goto continue end
+	  if zencode_iscomment(tline) then goto continue end
 	--   xxx('Line: '.. text, 3)
 	  -- max length for single zencode line is #define MAX_LINE
 	  -- hard-coded inside zenroom.h
-	  prefix = parse_prefix(line)
+	  prefix = parse_prefix(line) -- trim is included
 	  assert(prefix, "Invalid Zencode line "..linenum..": "..line)
 	  self.OK = true
 	  exitcode(0)
@@ -495,8 +500,8 @@ function zencode:parse(text)
 	  -- try to enter the machine state named in prefix
 	  -- xxx("Zencode machine enter_"..prefix..": "..text, 3)
 	  local fm = self.machine["enter_"..prefix]
-	  assert(fm, "Invalid Zencode line "..linenum..": "..line)
-	  assert(fm(self.machine, { msg = line, Z = self }),
+	  assert(fm, "Invalid Zencode line "..linenum..": '"..line.."'")
+	  assert(fm(self.machine, { msg = tline, Z = self }),
 				line.."\n    "..
 				"Invalid transition from: "..self.machine.current)
 	  ::continue::
@@ -575,13 +580,27 @@ function zencode:run()
 	if DATA then
 		-- if plain array conjoin into associative
 		IN = CONF.input.format.fun(DATA) or {}
+		DATA = nil
 	end
-	IN.KEYS = {} -- import global KEYS from json
+	KIN = {} -- import global KEYS from json
 	if KEYS then
-		IN.KEYS = CONF.input.format.fun(KEYS) or {}
+		KIN = CONF.input.format.fun(KEYS) or {}
+		KEYS = nil
 	end
+	collectgarbage 'collect'
+
 	-- convert all spaces in keys to underscore
 	IN = IN_uscore(IN)
+	KIN = IN_uscore(KIN)
+
+	-- check name collisions between DATA and KEYS
+	if CONF.heap.check_collision then
+	   for k in pairs(IN) do
+	      if KIN[k] then
+		 error("Object name collision in input: "..k)
+	      end
+	   end
+	end
 
 	-- EXEC zencode
 	for _, x in pairs(self.AST) do
@@ -589,17 +608,17 @@ function zencode:run()
 		if manage_branching(x) then
 			goto continue
 		end
+		-- trigger upon switch to when or then section
+		if x.from == 'given' and x.to ~= 'given' then
+			-- delete IN memory
+			KIN = {}
+			IN = {}
+			collectgarbage 'collect'
+		end
 		-- HEAP integrity guard
 		if CONF.heapguard then
-			-- trigger upon switch to when or then section
-			if x.section == 'then' or x.section == 'when' then
-				-- delete IN memory
-				IN.KEYS = {}
-				IN = {}
-				collectgarbage 'collect'
-				-- guard ACK's contents on section switch
-				deepmap(zenguard, ACK)
-			end
+			-- guard ACK's contents on section switch
+			deepmap(zenguard, ACK)
 		end
 
 		ZEN.OK = true
@@ -607,7 +626,7 @@ function zencode:run()
 		local ok, err = pcall(x.hook, table.unpack(x.args))
 		if not ok or not ZEN.OK then
 			if err then
-				ZEN:trace('\27[31;1m[!]\27[0m ' .. err)
+				ZEN:trace('[!] ' .. err)
 			end
 			fatal(x.source) -- traceback print inside
 		end
@@ -617,24 +636,16 @@ function zencode:run()
 	-- PRINT output
 	ZEN:trace('--- Zencode execution completed')
 	if type(OUT) == 'table' then
-		ZEN:trace('+++ Adding setup information to { OUT }')
-		if CONF.output.versioning == true then
-			OUT.zenroom = {}
-			OUT.zenroom.version = VERSION.original
-		-- OUT.zenroom.scenario = ZEN.scenario
-		end
-		ZEN:trace('<<< Encoding { OUT } to ' .. CONF.output.format.name)
-		print(CONF.output.format.fun(OUT)) -- formats are JSON or CBOR etc...
+		ZEN:trace('<<< Encoding { OUT } to JSON ')
+		-- this is all already encoded
+		-- needs to be formatted
+		-- was used CONF.output.format.fun
+		-- suspended until more formats are implemented
+		print( JSON.encode(OUT) )
 		ZEN:trace('>>> Encoding successful')
 	else -- this should never occur in zencode, OUT is always a table
 		ZEN:trace('<<< Printing OUT (plain format, not a table)')
 		print(OUT)
-	end
-	-- print the AST to stderr
-	if CONF.output.AST == true then
-		printerr('#+AST_BEGIN')
-		printerr(CONF.output.format.fun(ZEN.AST))
-		printerr('#+AST_END')
 	end
 end
 
@@ -662,6 +673,7 @@ end
 function zencode.heap()
 	return ({
 		IN = IN,
+		KIN = KIN,
 		TMP = TMP,
 		ACK = ACK,
 		OUT = OUT

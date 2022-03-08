@@ -50,19 +50,28 @@ function fatal(msg)
 end
 
 -- global
-_G['REQUIRED'] = {}
+REQUIRED = {}
 -- avoid duplicating requires (internal includes)
 function require_once(ninc)
 	local class = REQUIRED[ninc]
-	if type(class) == 'table' then
-		return class
-	end
-	-- new require
-	class = require(ninc)
-	if type(class) == 'table' then
+	local _res
+	if not class then
+		_res, class = pcall( function() return require(ninc) end )
+		assert(_res, class)
 		REQUIRED[ninc] = class
 	end
 	return class
+end
+
+SCENARIOS = {}
+function load_scenario(scen)
+   local s = SCENARIOS[scen]
+   if not s then
+      local _res, _err
+      _res, _err = pcall( function() require(scen) end)
+      assert(_res, _err)
+      SCENARIOS[scen] = true
+   end
 end
 
 -- error = zen_error -- from zen_io
@@ -73,8 +82,8 @@ INSPECT = require('inspect')
 CBOR = require('zenroom_cbor')
 JSON = require('zenroom_json')
 OCTET = require('zenroom_octet')
-BIG = require'big'
-ECDH = require'ecdh'
+BIG = require('zenroom_big')
+ECDH = require('zenroom_ecdh')
 -- ECDH public keys cannot function as ECP because of IANA 7303
 AES = require'aes'
 ECP = require('zenroom_ecp')
@@ -83,6 +92,8 @@ HASH = require('zenroom_hash')
 BENCH = require('zenroom_bench')
 MACHINE = require('statemachine')
 TIME = require('timetable')
+-- BITCOIN primitives are imported by default
+BTC = require('crypto_bitcoin')
 O = OCTET -- alias
 INT = BIG -- alias
 I = INSPECT -- alias
@@ -96,21 +107,24 @@ ZEN = require('zencode')
 -- the global ZEN context
 
 -- base zencode functions and schemas
-require('zencode_data') -- pick/in, conversions etc.
-require('zencode_given')
-require('zencode_when')
-require('zencode_hash') -- when extension
-require('zencode_array') -- when extension
-require('zencode_random') -- when extension
-require('zencode_dictionary') -- when extension
-require('zencode_verify') -- when extension
-require('zencode_then')
-require('zencode_keys')
+load_scenario('zencode_data') -- pick/in, conversions etc.
+load_scenario('zencode_given')
+load_scenario('zencode_when')
+load_scenario('zencode_hash') -- when extension
+load_scenario('zencode_array') -- when extension
+load_scenario('zencode_random') -- when extension
+load_scenario('zencode_dictionary') -- when extension
+load_scenario('zencode_verify') -- when extension
+load_scenario('zencode_then')
+load_scenario('zencode_keys')
 -- this is to evaluate expressions or derivate a column
 -- it would execute lua code inside the zencode and is
 -- therefore dangerous, switched off by default
 -- require('zencode_eval')
-require('zencode_debug')
+load_scenario('zencode_debug')
+
+-- bitcoin is loaded by default
+load_scenario('zencode_bitcoin')
 
 -- scenario are loaded on-demand
 -- scenarios can only implement "When ..." steps
@@ -122,15 +136,19 @@ _G['Then'] = nil
 _G['CONF'] = {
 	input = {
 		encoding = input_encoding('base64'),
-		format = get_format('json'),
+		format = { fun = JSON.auto, name = 'json' },
 		tagged = false
 	},
 	output = {
-		encoding = output_encoding('base64'),
-		format = get_format('json'),
+		encoding = { fun = guess_outcast('base64'),
+			     name = 'base64' },
+		format = { fun = JSON.auto, name = 'json' },
 		versioning = false
 	},
+	debug = { encoding = { fun = guess_outcast('hex'),
+			       name = 'hex' } },
 	parser = {strict_match = true},
+	heap = { check_collision = true },
 	hash = 'sha256',
 }
 -- turn on heapguard when DEBUG or linux-debug build

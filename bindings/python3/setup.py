@@ -29,7 +29,7 @@ def get_zenroom_version():
 
 
 def get_python_version():
-    zenroom_version = '2.0.0'
+    zenroom_version = '2.1.0'
     current_time = ''
     try:
         with open(os.path.join(ZENROOM_ROOT, 'current_time')) as f:

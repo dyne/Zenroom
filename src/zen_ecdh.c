@@ -61,6 +61,9 @@
 #include <zen_ecdh.h>
 #include <zen_big_factory.h>
 
+// #include <ecp_SECP256K1.h>
+#include <zen_big.h>
+
 #define KEYPROT(alg,key)	  \
 	error(L, "%s engine has already a %s set:",alg,key); \
 	lerror(L, "Zenroom won't overwrite. Use a .new() instance.");
@@ -70,7 +73,7 @@ extern void ecdh_init(ecdh *e);
 
 extern zenroom_t *Z; // accessed to check random_seed configuration
 
-static ecdh ECDH;
+ecdh ECDH;
 
 /// Global ECDH functions
 // @section ECDH.globals
@@ -478,8 +481,7 @@ static int ecdh_aead_decrypt(lua_State *L) {
 	return 2;
 }
 
-
-
+extern int ecdh_add(lua_State *L);
 
 int luaopen_ecdh(lua_State *L) {
 	(void)L;
@@ -502,6 +504,7 @@ int luaopen_ecdh(lua_State *L) {
 		{"verify_hashed", ecdh_dsa_verify_hashed},
 		{"public_xy", ecdh_pub_xy},
 		{"pubxy", ecdh_pub_xy},
+		{"add", ecdh_add},
 		{NULL,NULL}};
 	const struct luaL_Reg ecdh_methods[] = {
 		{"__gc", ecdh_destroy},

@@ -82,27 +82,6 @@ Unguessable seed -> SHA -> PRNG internal state -> SHA -> random numbers
 ```
 -----
 
-This is a rather old PRNG and will soon be substituted with [the
-Fortuna PRNG](https://en.wikipedia.org/wiki/Fortuna_(PRNG)) in
-forthcoming versions.
-
-Fortuna was designed by Niels Ferguson and Bruce Schneier. There are
-three parts to Fortuna. The generator takes a fixed-size seed and
-generates arbitrary amounts of pseudorandom data. The accumulator that
-collects and pools entropy from various sources and occasionally reseeds
-the generator. The seed file control that ensures that the PRNG can
-generate random data even when the computer has just booted.
-
-We will describe the three parts:
-
-1. The Generator: this is basically a block cipher in Counter Mode (CTR).
-   It converts a fixed size state to arbitrary long outputs.
-2. Accumulator: collects real random data from various sources and uses it
-   to reseed the generator.
-3. Seed file control: the PRNG keeps a separate file full of entropy,
-   called the seed file, which is read and used as entropy to get into an
-   unknown state.
-
 ## Hamming distance frequency
 
 As a reference indicator of results here we provide a graph that shows

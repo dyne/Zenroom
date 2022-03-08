@@ -514,7 +514,7 @@ static void increment(char *f)
 
 /* SU= 40 */
 /* Encrypt using selected mode of operation */
-unsign32 AES_encrypt(amcl_aes* a,char *buff)
+unsign32 AMCL_(AES_encrypt)(amcl_aes* a,char *buff)
 {
     int j,bytes;
     char st[16];
@@ -580,7 +580,7 @@ unsign32 AES_encrypt(amcl_aes* a,char *buff)
 
 /* SU= 40 */
 /* Decrypt using selected mode of operation */
-unsign32 AES_decrypt(amcl_aes *a,char *buff)
+unsign32 AMCL_(AES_decrypt)(amcl_aes *a,char *buff)
 {
     int j,bytes;
     char st[16];
@@ -685,12 +685,12 @@ int main()
     printf("Plain=   ");
     for (i=0;i<16;i++) printf("%02x",block[i]);
     printf("\n");
-    AES_encrypt(&a,block);
+    AMCL_(AES_encrypt)(&a,block);
     printf("Encrypt= ");
     for (i=0;i<16;i++) printf("%02x",(uchar)block[i]);
     printf("\n");
     AES_reset(&a,CTR16,iv);
-    AES_decrypt(&a,block);
+    AMCL_(AES_decrypt)(&a,block);
     printf("Decrypt= ");
     for (i=0;i<16;i++) printf("%02x",(uchar)block[i]);
     printf("\n");

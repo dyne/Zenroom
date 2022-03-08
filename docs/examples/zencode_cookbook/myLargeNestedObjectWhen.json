@@ -88,6 +88,14 @@
          "TransferredProductAmount":500,
 		 "UndeliveredProductAmount":100,
 		 "ProductPurchasePrice":1
-      }
-   
+      },	
+	  "mySecondNumberArray": [
+		567,
+		748,
+		907,
+		876,
+		34,
+		760,
+		935
+	]
 }

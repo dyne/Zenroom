@@ -46,4 +46,17 @@ function KDF(data, bits)
    return init(b):kdf2(data)
 end
 
+function hash.dsha256(msg)
+   local SHA256 = HASH.new('sha256')
+   return SHA256:process(SHA256:process(msg))
+end
+
+function hash.hash160(msg)
+   local SHA256 = HASH.new('sha256')
+   local RMD160 = HASH.new('ripemd160')
+   return RMD160:process(SHA256:process(msg))
+
+end
+
+
 return hash

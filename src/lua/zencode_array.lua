@@ -1,7 +1,7 @@
 --[[
 --This file is part of zenroom
 --
---Copyright (C) 2018-2021 Dyne.org foundation
+--Copyright (C) 2018-2022 Dyne.org foundation
 --designed, written and maintained by Denis Roio <jaromil@dyne.org>
 --
 --This program is free software: you can redistribute it and/or modify
@@ -17,9 +17,9 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Tuesday, 20th July 2021
+--on Saturday, 27th November 2021
 --]]
-
+local stats = require('stats')
 -- array operations
 
 local function check_container(name)
@@ -44,61 +44,63 @@ local function check_element(name)
    return o
 end
 
-local function _when_remove(ele, from)
-		check_container(from)
-        local found = false
-		local obj = ACK[ele]
-		local newdest = { }
-        if not obj then -- inline key name (string) requires dictionary
-		   if ZEN.CODEC[from] then
-			  ZEN.assert(
-				 (ZEN.CODEC[from].zentype ~= 'dictionary')
-				 or
-				 (ZEN.CODEC[from].zentype ~= 'schema')
-				 , "Element "..ele.." not found and target "
-				 ..from.." is not a dictionary")
-		   else
-			  xxx("Object has no CODEC registration: "..from)
-		   end
-           ZEN.assert(ACK[from][ele], "Key not found: "..ele.." in dictionary "..from)
-           ACK[from][ele] = nil -- remove from dictionary
-           found = true
-        else
-           -- remove value of element from array
-		   if ZEN.CODEC[from] then
-			  ZEN.assert(ZEN.CODEC[from].zentype == 'array', "Element "..ele.." found and target "..from.." is not an array")
-		   else
-			  xxx("Object has no CODEC registration: "..from)
-		   end
-		   -- check_element(ele)
-           local tempp = ACK[from]
-           for k,v in next,tempp,nil do
-              if not (v == obj) then
-                 table.insert(newdest,v)
-              else
-                 found = true
-              end
-           end
-        end
-        ZEN.assert(found, "Element to be removed not found in array")
-        ACK[from] = newdest
+local function _when_remove_dictionary(ele, from)
+	-- ele is just the name (key) of object to remove
+	local dict = have(from)
+	ZEN.assert(dict, "Dictionary not found: "..from)
+	if dict[ele] then
+	   ACK[from][ele] = nil -- remove from dictionary
+	elseif ZEN.CODEC[ele].name ~= ele and dict[ZEN.CODEC[ele].name] then
+	   -- it may be a copy or random object with different name
+	   ACK[from][ZEN.CODEC[ele].name] = nil
+	else
+	   error("Object not found in dictionary: "..ele.." in "..from)
+	end
 end
-When("remove '' from ''", function(ele,from) _when_remove(ele, from) end)
-When("remove the '' from ''", function(ele,from) _when_remove(ele, from) end)
+local function _when_remove_array(ele, from)
+	local obj = have(ele)
+	local arr = have(from)
+	local found = false
+	local newdest = { }
+	for k,v in next,arr,nil do
+	   if not (v == obj) then
+		  table.insert(newdest,v)
+	   else
+		  found = true
+	   end
+	end
+	ZEN.assert(found, "Element to be removed not found in array")
+	ACK[from] = newdest
+end
+
+When("remove the '' from ''", function(ele,from)
+	local codec = ZEN.CODEC[from]
+	ZEN.assert(codec, "No codec registration for target: "..from)
+	if codec.zentype == 'dictionary'
+	or codec.zentype == 'schema' then
+		_when_remove_dictionary(ele, from)
+	elseif codec.zentype == 'array' then
+		_when_remove_array(ele, from)
+	else
+		I.warn({ CODEC = codec})
+		error("Invalid codec registration for target: "..from)
+	end
+end)
 
 When("create the new array", function()
 		ACK.new_array = { }
-		ZEN.CODEC.new_array = new_codec('new array',
-										{ encoding = CONF.output.encoding.name,
-										  zentype = 'array',
-										  luatype = 'table' })
+		new_codec('new array', {zentype='array', luatype='table'})
 end)
 
 When("create the length of ''", function(arr)
 	local obj = have(arr)
-	ZEN.assert(luatype(obj) == 'table', "Not a table: "..arr)
 	ACK.length = #obj
-	ZEN.CODEC.length = new_codec('length', { luatype = 'number' })
+	new_codec('length', {luatype='number',zentype='element'})
+end)
+When("create the size of ''", function(arr)
+	local obj = have(arr)
+	ACK.size = #obj
+	new_codec('size', {zentype='element',luatype='number'})
 end)
 
 When("create the copy of element '' in array ''", function(pos, arr)
@@ -109,26 +111,38 @@ When("create the copy of element '' in array ''", function(pos, arr)
 		ZEN.assert(ACK[arr][num], "No element found in: "..arr.."["..pos.."]")
 		ACK.copy = ACK[arr][num]
 		-- TODO: support nested arrays or dictionaries
-		ZEN.CODEC.copy = new_codec('copy',nil,arr)
+		new_codec('copy',{zentype='element',luatype=luatype(ACK.copy)},arr)
+end)
+
+When("insert string '' in ''", function(st, dest)
+	local d = have(dest)
+        ZEN.assert(luatype(d) == 'table',
+		   "Invalid destination, not a table: "..dest)
+        ZEN.assert(ZEN.CODEC[dest].zentype == 'array',
+		   "Invalid destination, not an array: "..dest)
+	table.insert(ACK[dest], O.from_string(st))
 end)
 
 When("insert '' in ''", function(ele, dest)
-		ZEN.assert(ACK[dest], "Invalid destination, not found: "..dest)
-        ZEN.assert(luatype(ACK[dest]) == 'table', "Invalid destination, not a table: "..dest)
-        ZEN.assert(ZEN.CODEC[dest].zentype ~= 'element', "Invalid destination, not a container: "..dest)
-        ZEN.assert(ACK[ele], "Invalid insertion, object not found: "..ele)
+	local d = have(dest)
+	local e = have(ele)
+        ZEN.assert(luatype(d) == 'table',
+		   "Invalid destination, not a table: "..dest)
+        ZEN.assert(ZEN.CODEC[dest].zentype ~= 'element',
+		   "Invalid destination, not a container: "..dest)
         if ZEN.CODEC[dest].zentype == 'array' then
-           table.insert(ACK[dest], ACK[ele])
+           table.insert(ACK[dest], e)
         elseif ZEN.CODEC[dest].zentype == 'dictionary' then
-           ACK[dest][ele] = ACK[ele]
+           ACK[dest][ele] = e
         elseif ZEN.CODEC[dest].zentype == 'schema' then
-           ACK[dest][ele] = ACK[ele]
-		else
-		   ZEN.assert(false, "Invalid destination type: "..ZEN.CODEC[dest].zentype)
+           ACK[dest][ele] = e
+	else
+	   ZEN.assert(false, "Invalid destination type: "
+		      ..ZEN.CODEC[dest].zentype)
         end
-		ZEN.CODEC[dest][ele] = ZEN.CODEC[ele]
-		ACK[ele] = nil
-		ZEN.CODEC[ele] = nil
+	ZEN.CODEC[dest][ele] = ZEN.CODEC[ele]
+	ACK[ele] = nil
+	ZEN.CODEC[ele] = nil
 end)
 
 -- When("insert the '' in ''", function(ele,arr)
@@ -196,4 +210,74 @@ IfWhen("the '' is found in '' at least '' times", function(ele, arr, times)
 		if v == obj then found = found + 1 end
 	end
 	ZEN.assert(found >= num, "Object "..ele.." found only "..found.." times instead of "..num.." in array "..arr)
+end)
+
+local function _aggr_array(arr)
+   local A = have(arr)
+   local codec = ZEN.CODEC[arr]
+   ZEN.assert(codec.zentype == 'array' or
+	      (codec.zentype == 'schema' and codec.encoding == 'array'),
+	      "Object is not a valid array: "..arr)
+   local count = isarray(A)
+   ZEN.assert( count > 0, "Array is empty or invalid: "..arr)
+   local res, par
+   if luatype(A[1]) == 'number' then
+      res = 0
+      for k,v in next,A,nil do
+	 res = res + tonumber(v)
+      end
+      par = {encoding='number',zentype='element'}
+   elseif type(A[1]) == 'zenroom.big' then
+      res = BIG.new(0)
+      for k,v in next,A,nil do
+	 res = res + v
+      end
+      par = {zentype = 'element'}
+   elseif type(A[1]) == 'zenroom.ecp' then
+      res = ECP.generator()
+      for k,v in next,A,nil do
+	 res = res + v
+      end
+      par = {zentype = 'element'}
+   elseif type(A[1]) == 'zenroom.ecp2' then
+      res = ECP2.generator()
+      for k,v in next,A,nil do
+	 res = res + v
+      end
+      par = {zentype = 'element'}
+   else
+      error("Unknown aggregation for type: "..type(A[1]))
+   end
+   return res, par
+end
+
+When("create the aggregation of array ''", function(arr)
+	empty'aggregation'
+	local params
+	ACK.aggregation, params = _aggr_array(arr)
+	new_codec('aggregation', params)
+end)
+When("create the sum value of elements in array ''", function(arr)
+	empty'sum value'
+	local params
+	ACK.sum_value, params = _aggr_array(arr)
+	new_codec('sum value', params)
+end)
+When("create the average of elements in array ''", function(arr)
+	empty'average'
+	local data = have(arr)
+	ACK.average = stats.average(data):decimal()
+	new_codec('average', { encoding="string" })
+end)
+When("create the variance of elements in array ''", function(arr)
+	empty'variance'
+	local data = have(arr)
+	ACK.variance = stats.variance(data):decimal()
+	new_codec('variance', { encoding="string" })
+end)
+When("create the standard deviation of elements in array ''", function(arr)
+	empty'standard_deviation'
+	local data = have(arr)
+	ACK.standard_deviation = stats.standardDeviation(data):decimal()
+	new_codec('standard_deviation', { encoding="string" })
 end)

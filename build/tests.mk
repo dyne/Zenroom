@@ -22,7 +22,8 @@ lowmem-tests = \
 		${1} test/goto.lua && \
 		${1} test/events.lua && \
 		${1} test/code.lua && \
-		${1} test/locals.lua
+		${1} test/locals.lua && \
+		${1} test/zentypes.lua
 
 # removed for memory usage in wasm
 #	    ${1} test/coroutine.lua
@@ -76,6 +77,7 @@ cortex-m-zencode-integration = \
 	cd test/zencode_array && ./run.sh ${1}; cd -; \
 	cd test/zencode_dictionary && ./run.sh ${1}; cd -; \
 	cd test/zencode_hash && ./run.sh ${1}; cd -; \
+	cd test/zencode_http && ./run.sh ${1}; cd -; \
 	cd test/zencode_ecdh && ./run.sh ${1}; cd -; \
 	cd test/zencode_secshare && ./run.sh ${1}; cd -; \
 	cd test/zencode_credential && ./run.sh ${1}; cd -; \
@@ -188,7 +190,7 @@ check-py:
 	@echo "All tests passed for PYTHON build"
 	@echo "----------------"
 
-check-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom -d 3
+check-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom
 check-debug:
 	rm -f /tmp/zenroom-test-summary.txt
 	$(call lowmem-tests,${test-exec})

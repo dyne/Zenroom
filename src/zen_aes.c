@@ -148,7 +148,7 @@ static int ctr_process(lua_State *L) {
 		return 0; }
 	AES_init(&a, CTR16, key->len, key->val, iv->val);
 	octet *out = o_dup(L, in); SAFE(out);
-	AES_encrypt(&a, out->val);
+	AMCL_(AES_encrypt)(&a, out->val);
 	AES_end(&a);
 	return 1;
 }

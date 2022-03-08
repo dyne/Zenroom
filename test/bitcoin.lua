@@ -3,6 +3,10 @@
 local BTC = require('crypto_bitcoin')
 local sk = BTC.wif_to_sk(O.from_base58('cRg4MM15LCfvt4oCddAfUgWm54hXw1LFmkHqs6pwym9QopG5Evpt'))
 assert(sk == O.from_hex('7a1afbb80174a41ad288053b246c7f528f5e746332f95f19e360c95bfb1d03bd'))
+assert(O.to_base58(BTC.sk_to_wif(sk,'testnet'))
+       == 'cRg4MM15LCfvt4oCddAfUgWm54hXw1LFmkHqs6pwym9QopG5Evpt')
+assert(O.to_base58(BTC.sk_to_wif(sk,'testnet'))
+       == 'cRg4MM15LCfvt4oCddAfUgWm54hXw1LFmkHqs6pwym9QopG5Evpt')
 
 assert(BTC.encode_compact_size(INT.new(1)) == O.from_hex('01'))
 assert(BTC.encode_compact_size(INT.new(253)) == O.from_hex('fdfd00'))

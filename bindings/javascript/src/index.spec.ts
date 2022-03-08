@@ -1,6 +1,6 @@
 import test from "ava";
 
-import { zencode_exec, zenroom_exec } from "./index";
+import {zencode_exec, zenroom_exec} from "./index";
 
 test("does exists", (t) => {
   t.is(typeof zenroom_exec, "function");
@@ -9,12 +9,12 @@ test("does exists", (t) => {
 });
 
 test("does run hello world", async (t) => {
-  const { result } = await zenroom_exec(`print('hello world!')`);
+  const {result} = await zenroom_exec(`print('hello world!')`);
   t.is(result, "hello world!");
 });
 
 test("does parse data", async (t) => {
-  const { result } = await zenroom_exec(`print(DATA)`, { data: "DATA INSIDE" });
+  const {result} = await zenroom_exec(`print(DATA)`, {data: "DATA INSIDE"});
   t.is(result, "DATA INSIDE");
 });
 
@@ -57,11 +57,23 @@ test("does handle empty lua", async (t) => {
 });
 
 test("does run zencode", async (t) => {
-  const { result } = await zencode_exec(`scenario simple:
+  const {result} = await zencode_exec(`scenario simple:
   given nothing
   Then print all data`);
   t.is(result, "[]");
 });
+
+test("error format contains newlines", async t => {
+  try {
+    await zencode_exec(`a`);
+  } catch (e) {
+    const lines = e.logs.split('\n');
+
+    t.true(lines.includes('[W] Zencode text too short to parse'));
+    t.true(lines.includes('[W] Zencode is missing version check, please add: rule check version N.N.N'));
+    t.true(lines.includes('[!] Execution aborted'));
+  }
+})
 
 test("handle broken zencode", async (t) => {
   try {
@@ -69,7 +81,7 @@ test("handle broken zencode", async (t) => {
   } catch (e) {
     t.true(
       e.logs.includes(
-        `Invalid Zencode line 1: sapodksapodk` 
+        `Invalid Zencode line 1: 'sapodksapodk'`
       )
     );
   }
