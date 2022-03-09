@@ -319,9 +319,8 @@ static int ecdh_dsa_sign_hashed(lua_State *L) {
 		octet *s = o_new(L,(int)n); SAFE(s);
 		lua_setfield(L, -2, "s");
 		// Size of a big256 used with SECP256k1
-		octet *y_ephemeral = o_new(L,NLEN_256_28); SAFE(y_ephemeral);
-		y_ephemeral->len=32;
-		(*ECDH.ECP__SP_DSA_NOHASH)((int)n, Z->random_generator, NULL, sk, m, r, s, y_ephemeral->val);
+		octet *y_ephemeral = o_new(L,DBIGLEN); SAFE(y_ephemeral);
+		(*ECDH.ECP__SP_DSA_NOHASH)((int)n, Z->random_generator, NULL, sk, m, r, s, y_ephemeral);
 	} else {
 		octet *k = o_arg(L,4); SAFE(k);
 		// return a table
@@ -331,9 +330,8 @@ static int ecdh_dsa_sign_hashed(lua_State *L) {
 		octet *s = o_new(L,(int)n); SAFE(s);
 		lua_setfield(L, -2, "s");
 		// Size of a big256 used with SECP256k1
-		octet *y_ephemeral = o_new(L,32); SAFE(y_ephemeral);
-		y_ephemeral->len=32;
-		(*ECDH.ECP__SP_DSA_NOHASH)((int)n, NULL, k, sk, m, r, s, y_ephemeral->val);
+		octet *y_ephemeral = o_new(L,DBIGLEN); SAFE(y_ephemeral);
+		(*ECDH.ECP__SP_DSA_NOHASH)((int)n, NULL, k, sk, m, r, s, y_ephemeral);
 	}
 	return 2;
 }
