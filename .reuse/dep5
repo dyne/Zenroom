@@ -16,4 +16,5 @@ Copyright: 2019 The Apache Software Foundation
 License: Apache-2.0
 
 Files: lib/pqclean/*
-License: Public Domain (https://creativecommons.org/share-your-work/public-domain/cc0/)
+Copyright: Léo Ducas, Eike Kiltz, Tancrède Lepoint, Vadim Lyubashevsky, Gregor Seiler, Peter Schwabe, Damien Stehlé
+License: CC0-1.0
