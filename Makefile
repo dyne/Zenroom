@@ -130,11 +130,11 @@ milagro:
 		CC=${gcc} CFLAGS="${cflags}" AR=${ar} RANLIB=${ranlib} LD=${ld} \
 		make -C ${pwd}/lib/milagro-crypto-c/build; \
 	fi
-	make quantum-proof
+	CC=${gcc} CFLAGS="${cflags}" make quantum-proof
 
 quantum-proof:
 	@echo "-- Building Quantum-Proof libs"
-	cd ${pwd}/lib/pqclean && make
+	make -C ${pwd}/lib/pqclean
 
 check-milagro: milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c test
@@ -165,7 +165,7 @@ install-lua:
 clean:
 	make clean -C ${pwd}/lib/lua53/src
 	make clean -C ${pwd}/lib/pqclean
-	rm -rf ${pwd}/lib/milagro-crypto-c/build
+	# rm -rf ${pwd}/lib/milagro-crypto-c/build
 	make clean -C ${pwd}/src
 	make clean -C ${pwd}/bindings
 	rm -f ${extras}/index.*
