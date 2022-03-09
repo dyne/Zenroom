@@ -91,6 +91,11 @@ esp32: apply-patches milagro lua53
 # lpeglabel:
 # 	CC=${gcc} CFLAGS="${cflags} -I${pwd}/lib/lua53/src" AR="${ar}" make -C lib/lpeglabel
 
+zlib:
+	CC=${gcc} CFLAGS="${cflags}" \
+	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
+	pwd="${pwd}" make -C ${pwd}/build/zlib -f ZenMakefile
+
 android-lua53:
 	CC=${gcc} CFLAGS="${cflags} ${lua_cflags}" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
@@ -125,11 +130,11 @@ milagro:
 		CC=${gcc} CFLAGS="${cflags}" AR=${ar} RANLIB=${ranlib} LD=${ld} \
 		make -C ${pwd}/lib/milagro-crypto-c/build; \
 	fi
-	make quantum-proof
+	CC=${gcc} CFLAGS="${cflags}" make quantum-proof
 
 quantum-proof:
 	@echo "-- Building Quantum-Proof libs"
-	cd ${pwd}/lib/pqclean && make
+	make -C ${pwd}/lib/pqclean
 
 check-milagro: milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c test
