@@ -67,6 +67,44 @@ int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair(uint8_t *pk, uint8_t *sk) {
 }
 
 /*************************************************
+* Name:        PQCLEAN_DILITHIUM2_CLEAN_crypto_pub_gen
+*
+* Description: Generates public key from the private key.
+*
+* Arguments:   - uint8_t *pk: pointer to output public key
+*              - uint8_t *sk: pointer to bit-packed secret key
+*
+* Returns 0 (success)
+**************************************************/
+int PQCLEAN_DILITHIUM2_CLEAN_crypto_pub_gen(uint8_t *pk, uint8_t *sk){
+  uint8_t rho[SEEDBYTES], key[SEEDBYTES], tr[SEEDBYTES];
+  polyveck s2, t1, t0;
+  polyvecl mat[K];
+  polyvecl s1;
+
+  /* Unpack the secret-key */
+  PQCLEAN_DILITHIUM2_CLEAN_unpack_sk(rho, tr, key, &t0, &s1, &s2, sk);
+  
+  /* Expand matrix */
+  PQCLEAN_DILITHIUM2_CLEAN_polyvec_matrix_expand(mat, rho);
+
+  /* Matrix-vector multiplication */
+  PQCLEAN_DILITHIUM2_CLEAN_polyvecl_ntt(&s1); 
+  PQCLEAN_DILITHIUM2_CLEAN_polyvec_matrix_pointwise_montgomery(&t1, mat, &s1);  
+  PQCLEAN_DILITHIUM2_CLEAN_polyveck_reduce(&t1);
+  PQCLEAN_DILITHIUM2_CLEAN_polyveck_invntt_tomont(&t1);
+  /* Add error vector s2 */
+  PQCLEAN_DILITHIUM2_CLEAN_polyveck_add(&t1, &t1, &s2);
+
+  /* Extract t1 and write public key */
+  PQCLEAN_DILITHIUM2_CLEAN_polyveck_caddq(&t1);
+  PQCLEAN_DILITHIUM2_CLEAN_polyveck_power2round(&t1, &t0, &t1);
+  PQCLEAN_DILITHIUM2_CLEAN_pack_pk(pk, rho, &t1);
+
+  return 0;  
+}
+
+/*************************************************
 * Name:        PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_signature
 *
 * Description: Computes signature.
