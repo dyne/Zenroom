@@ -30,6 +30,7 @@ for line in newline_iter(DATA) do
 	 nr = nr + 1
 
 	 -- Here starts the test
+	 assert(test.pk == QP.sigpubgen(test.sk))
 	 assert(QP.verify(test.pk, test.sm:sub(1, QP.signature_len()), test.msg))
 	 assert(test.msg == QP.verified_msg(test.pk, test.sm))
 

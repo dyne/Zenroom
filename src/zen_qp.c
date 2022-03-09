@@ -27,7 +27,6 @@
 #include <lua_functions.h>
 #include <zen_octet.h>
 
-
 #define PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES 1312
 #define PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_SECRETKEYBYTES 2528
 #define PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_BYTES 2420
@@ -35,6 +34,8 @@
 
 // Post quantum digital signature
 extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair(uint8_t *pk, uint8_t *sk);
+
+extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_pub_gen(uint8_t *pk, uint8_t *sk);
 
 extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_signature(
     uint8_t *sig, size_t *siglen,
@@ -52,6 +53,7 @@ extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_open(
     uint8_t *m, size_t *mlen,
     const uint8_t *sm, size_t smlen, const uint8_t *pk);
 
+// Post quantum cipher
 #define PQCLEAN_KYBER512_CLEAN_CRYPTO_SECRETKEYBYTES  1632
 #define PQCLEAN_KYBER512_CLEAN_CRYPTO_PUBLICKEYBYTES  800
 #define PQCLEAN_KYBER512_CLEAN_CRYPTO_CIPHERTEXTBYTES 768
@@ -80,6 +82,20 @@ static int qp_signature_keygen(lua_State *L) {
 	private->len = PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_SECRETKEYBYTES;
 
 	return 1;
+}
+
+
+// public key generation starting from private key
+static int qp_sign_pub_gen(lua_State *L) {
+  octet *sk = o_arg(L,1); SAFE(sk);
+  octet *pk = o_new(L,PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE(pk);
+  
+
+  PQCLEAN_DILITHIUM2_CLEAN_crypto_pub_gen((unsigned char*)pk->val,
+					  (unsigned char*)sk->val);
+  pk->len = PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES;
+
+  return 1;
 }
 
 static int qp_sign(lua_State *L) {
@@ -252,6 +268,7 @@ int luaopen_qp(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg ecdh_class[] = {
 	        {"sigkeygen", qp_signature_keygen},
+		{"sigpubgen", qp_sign_pub_gen},
 	        {"sign", qp_sign},
 		{"signed_msg", qp_signed_message},
 	        {"verify", qp_verify},
