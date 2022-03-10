@@ -17,6 +17,8 @@ ZENROOM_LIB_ROOT = os.path.join(ZENROOM_ROOT, 'src')
 LUA_ROOT = os.path.join(ZENROOM_ROOT, 'lib/lua53/src')
 MILAGRO_INCLUDE_DIR = os.path.join(ZENROOM_ROOT,
                                    'lib/milagro-crypto-c/include')
+
+QP_ROOT = os.path.join(ZENROOM_ROOT, 'lib/pqclean')
 ZSTD_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/zstd')
 
 def get_zenroom_version():
@@ -67,6 +69,7 @@ ZENROOM_SOURCES = [
     'zen_memory.c',
     'zen_octet.c',
     'zen_parse.c',
+    'zen_qp.c',
     'zen_random.c',
     'zenroom.c',
 ]
@@ -111,6 +114,11 @@ env = dict(os.environ,
            MESON_SOURCE_ROOT=source_root,
            MESON_BUILD_ROOT=build_root)
 
+# Build qp
+os.chdir(QP_ROOT)
+subprocess.check_call(['make', 'clean'])
+subprocess.check_call(['make'])
+
 os.chdir(ZENROOM_ROOT)
 zenroom_ecdh_factory = 'zenroom_ecdh_factory.c'
 subprocess.check_call(["build/codegen_ecdh_factory.sh",
@@ -144,6 +152,8 @@ zenroom_lib = Extension('zenroom',
                             MILAGRO_INCLUDE_DIR,
                             ZSTD_INCLUDE_DIR,
                             'milagro-crypto-c/include',
+                            os.path.join(QP_ROOT, 'dilithium2'),
+                            os.path.join(QP_ROOT, 'kyber512'),
                         ],
                         extra_compile_args=[
                             '-DVERSION="' + get_zenroom_version() + '"',
@@ -156,6 +166,8 @@ zenroom_lib = Extension('zenroom',
                             'milagro-crypto-c/lib/libamcl_curve_' + ECDH_CURVE + '.a',
                             'milagro-crypto-c/lib/libamcl_pairing_' + ECP_CURVE + '.a',
                             'milagro-crypto-c/lib/libamcl_curve_' + ECP_CURVE + '.a',
+                            os.path.join(QP_ROOT, 'dilithium2/libdilithium2_clean.a'),
+                            os.path.join(QP_ROOT, 'kyber512/libkyber512_clean.a'),
                             'libzstd.a',
                         ],
                         extra_link_args=['-lm']
