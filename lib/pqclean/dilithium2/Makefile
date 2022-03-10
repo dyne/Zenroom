@@ -9,7 +9,7 @@ OBJECTS=ntt.o packing.o poly.o polyvec.o reduce.o rounding.o sign.o symmetric-sh
 all: $(LIB)
 
 %.o: %.c $(HEADERS)
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -fPIC -c -o $@ $<
 
 $(LIB): $(OBJECTS)
 	$(AR) -r $@ $(OBJECTS)
