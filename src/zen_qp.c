@@ -63,6 +63,8 @@ extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_open(
 
 extern int PQCLEAN_KYBER512_CLEAN_crypto_kem_keypair(uint8_t *pk, uint8_t *sk);
 
+extern int PQCLEAN_KYBER512_CLEAN_crypto_pub_gen(uint8_t *pk, uint8_t *sk);
+
 extern int PQCLEAN_KYBER512_CLEAN_crypto_kem_enc(uint8_t *ct, uint8_t *ss, const uint8_t *pk);
 
 extern int PQCLEAN_KYBER512_CLEAN_crypto_kem_dec(uint8_t *ss, const uint8_t *ct, const uint8_t *sk);
@@ -86,7 +88,7 @@ static int qp_signature_keygen(lua_State *L) {
 
 
 // public key generation starting from private key
-static int qp_sign_pub_gen(lua_State *L) {
+static int qp_signature_pubgen(lua_State *L) {
   octet *sk = o_arg(L,1); SAFE(sk);
   octet *pk = o_new(L,PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE(pk);
   
@@ -95,6 +97,16 @@ static int qp_sign_pub_gen(lua_State *L) {
 					  (unsigned char*)sk->val);
   pk->len = PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES;
 
+  return 1;
+}
+
+//for the moment is only checking the length of the public key
+static int qp_signature_pubcheck(lua_State *L) {
+  octet *pk = o_arg(L, 1); SAFE(pk);
+  if(pk->len == PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES)
+    lua_pushboolean(L, 1);
+  else
+    lua_pushboolean(L, 0);
   return 1;
 }
 
@@ -208,6 +220,28 @@ static int qp_kem_keygen(lua_State *L) {
 	return 1;
 }
 
+//generate the public key starting from the private key
+static int qp_kem_pubgen(lua_State *L) {
+  octet *sk = o_arg(L,1); SAFE(sk);
+  octet *pk = o_new(L,PQCLEAN_KYBER512_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE(pk);
+  
+  PQCLEAN_KYBER512_CLEAN_crypto_pub_gen((unsigned char*)pk->val,
+					  (unsigned char*)sk->val);
+  pk->len = PQCLEAN_KYBER512_CLEAN_CRYPTO_PUBLICKEYBYTES;
+
+  return 1;
+}
+
+//for the moment is only checking the length of the public key
+static int qp_kem_pubcheck(lua_State *L) {
+  octet *pk = o_arg(L, 1); SAFE(pk);
+  if(pk->len == PQCLEAN_KYBER512_CLEAN_CRYPTO_PUBLICKEYBYTES)
+    lua_pushboolean(L, 1);
+  else
+    lua_pushboolean(L, 0);
+  return 1;
+}
+
 static int qp_enc(lua_State *L) {
 	octet *pk = o_arg(L,1); SAFE(pk);
 
@@ -268,13 +302,16 @@ int luaopen_qp(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg ecdh_class[] = {
 	        {"sigkeygen", qp_signature_keygen},
-		{"sigpubgen", qp_sign_pub_gen},
+		{"sigpubgen", qp_signature_pubgen},
+		{"sigpubcheck", qp_signature_pubcheck},
 	        {"sign", qp_sign},
 		{"signed_msg", qp_signed_message},
 	        {"verify", qp_verify},
 		{"verified_msg", qp_verified_message},
 		{"signature_len", qp_signature_len},
 	        {"kemkeygen", qp_kem_keygen},
+		{"kempubgen", qp_kem_pubgen},
+		{"kempubcheck", qp_kem_pubcheck},
 	        {"enc", qp_enc},
 	        {"dec", qp_dec},
 		{NULL,NULL}

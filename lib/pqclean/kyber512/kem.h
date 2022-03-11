@@ -5,6 +5,8 @@
 
 int PQCLEAN_KYBER512_CLEAN_crypto_kem_keypair(unsigned char *pk, unsigned char *sk);
 
+int PQCLEAN_KYBER512_CLEAN_crypto_pub_gen(unsigned char *pk, unsigned char *sk);
+
 int PQCLEAN_KYBER512_CLEAN_crypto_kem_enc(unsigned char *ct,
         unsigned char *ss,
         const unsigned char *pk);
