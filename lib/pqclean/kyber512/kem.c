@@ -36,6 +36,25 @@ int PQCLEAN_KYBER512_CLEAN_crypto_kem_keypair(unsigned char *pk,
 }
 
 /*************************************************
+* Name:        PQCLEAN_KYBER512_CLEAN_pub_gen
+*
+* Description: Generates public key from the private key
+*
+* Arguments:   - unsigned char *pk: pointer to output public key
+*                (an already allocated array of KYBER_PUBLICKEYBYTES bytes)
+*              - unsigned char *sk: pointer to the private key
+*
+* Returns 0 (success)
+**************************************************/
+int PQCLEAN_KYBER512_CLEAN_crypto_pub_gen(unsigned char *pk, unsigned char *sk){
+  size_t i;
+  for (i=0; i<KYBER_INDCPA_PUBLICKEYBYTES; i++) {
+    pk[i] = sk[i + KYBER_INDCPA_SECRETKEYBYTES];
+  }
+  return 0;
+}
+
+/*************************************************
 * Name:        PQCLEAN_KYBER512_CLEAN_crypto_kem_enc
 *
 * Description: Generates cipher text and shared
