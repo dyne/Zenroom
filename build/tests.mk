@@ -49,7 +49,8 @@ crypto-tests = \
 	${1} test/bls_pairing.lua && \
 	${1} test/coconut_test.lua && \
 	${1} test/crypto_credential.lua && \
-	${1} test/mnemonic_encoding.lua
+	${1} test/mnemonic_encoding.lua && \
+	${1} test/qp.lua
 
 cortex-m-crypto-tests = \
 	${1}test/octet.lua && \
