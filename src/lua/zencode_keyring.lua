@@ -65,8 +65,9 @@ local keytypes = {
     bitcoin = true,
     testnet = true,
     ethereum = true,
-    dilithium = true
-    schnorr = true
+    dilithium = true,
+    schnorr = true,
+    kyber = true
 }
 
 function havekey(ktype)
@@ -115,6 +116,9 @@ local function _keyring_import(obj)
    if obj.dilithium then
       res.dilithium = ZEN.get(obj, 'dilithium', nop, O.from_hex)
    end
+   if obj.kyber then
+      res.kyber = ZEN.get(obj, 'kyber', nop, O.from_hex)
+   end
    if obj.schnorr then
       res.schnorr = ZEN.get(obj, 'schnorr', nop, O.from_hex)
    end
@@ -149,6 +153,9 @@ local function _keyring_export(obj)
    end
    if obj.dilithium then
       res.dilithium = O.to_hex(obj.dilithium)
+   end
+   if obj.kyber then
+      res.kyber = O.to_hex(obj.kyber)
    end
    if obj.schnorr then
       res.schnorr = O.to_hex(obj.schnorr)
