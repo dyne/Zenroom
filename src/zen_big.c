@@ -125,6 +125,7 @@ big* big_new(lua_State *L) {
 	c->doublesize = 0;
 	c->val = NULL;
 	c->dval = NULL;
+        c->zencode_positive = BIG_POSITIVE;
 	return(c);
 }
 
@@ -365,6 +366,12 @@ static int big_from_decimal_string(lua_State *L) {
 	big_init(num);
 	BIG_zero(num->val);
 	int i = 0;
+        if(s[i] == '-') {
+                num->zencode_positive = BIG_NEGATIVE;
+                i++;
+        } else {
+                num->zencode_positive = BIG_POSITIVE;
+        }
 	while(s[i] != '\0') {
 	        BIG res;
 		BIG_copy(res, num->val);
@@ -435,9 +442,12 @@ static int big_to_fixed_octet(lua_State *L) {
   @param num number to be converted (zenroom.big)
   @return string which represent a decimal number (only digits 0-9)
 */
+// TODO: always show negative sign or put a flag?
 static int big_to_decimal_string(lua_State *L) {
        	big *num = big_arg(L,1); SAFE(num);
 	BIG_norm(num->val);
+
+        // I can modify safenum without loosing num
 	BIG safenum;
 	BIG_copy(safenum, num->val);
 	BIG ten_power;
@@ -458,7 +468,7 @@ static int big_to_decimal_string(lua_State *L) {
         	i++;
 		BIG_norm(ten_power);
 	}
-	char *s = zen_memory_alloc(i+3);
+	char *s = zen_memory_alloc(i+4);
 	if (i == 0) {
 		s[0] = '0';
 		i++;
@@ -479,6 +489,11 @@ static int big_to_decimal_string(lua_State *L) {
 			BIG_ddiv(safenum, dividend, ten);
 			i++;
 		}
+                // In the end I will reverse and the last minus
+                // will be at the beginning
+                if(num->zencode_positive == BIG_NEGATIVE) {
+                        s[i] = '-'; i++;
+                }
 	}
 	s[i]='\0';
 
@@ -783,9 +798,9 @@ static int big_monty(lua_State *L) {
 	if(!s->doublesize) {
 		lerror(L,"no need for montgomery reduction: not a double big number");
 		return 0; }
-	big *m = big_arg(L, 2); SAFE(m);
+	big *m = big_arg(L,2); SAFE(m);
 	if(m->doublesize) {
-		lerror(L, "double big modulus in montgomery reduction");
+		lerror(L,"double big modulus in montgomery reduction");
 		return 0; }
 	big *d = big_new(L); big_init(d); SAFE(d);
 	BIG_monty(d->val, m->val, Montgomery, s->dval);
@@ -793,18 +808,18 @@ static int big_monty(lua_State *L) {
 }
 
 static int big_mod(lua_State *L) {
-	big *l = big_arg(L, 1); SAFE(l);
-	big *r = big_arg(L, 2); SAFE(r);
+	big *l = big_arg(L,1); SAFE(l);
+	big *r = big_arg(L,2); SAFE(r);
 	if(r->doublesize) {
-		lerror(L, "modulus cannot be a double big (dmod)");
+		lerror(L,"modulus cannot be a double big (dmod)");
 		return 0; }
 	if(l->doublesize) {
 		big *d = big_new(L); big_init(d); SAFE(d);
 		DBIG t; BIG_dcopy(t, l->dval); // dmod destroys 2nd arg
 		BIG_dmod(d->val, t, r->val);
 	} else {
-		big *d = big_dup(L, l); SAFE(d);
-		BIG_mod(d->val, r->val);
+		big *d = big_dup(L,l); SAFE(d);
+		BIG_mod(d->val,r->val);
 	}
 	return 1;
 }
@@ -924,6 +939,117 @@ static int big_modinv(lua_State *L) {
 	big *x = big_new(L); SAFE(x);
 	big_init(x);
 	BIG_invmodp(x->val, y->val, m->val);
+	return 1;
+}
+
+// algebraic sum (add and sub) taking under account zencode sign
+static void _algebraic_sum(lua_State *L, big *c, big *a, big *b) {
+        if (a->zencode_positive == b->zencode_positive) {
+	        BIG_add(c->val, a->val, b->val);
+                c->zencode_positive = a->zencode_positive;
+        } else {
+                int res = _compare_bigs(L,a,b);
+                // a and b have opposite sign, so I do the bigger minus the
+                // smaller and take the sign of the bigger
+                if(res > 0) {
+	                BIG_sub(c->val, a->val, b->val);
+                        c->zencode_positive = a->zencode_positive;
+                } else {
+	                BIG_sub(c->val, b->val, a->val);
+                        c->zencode_positive = b->zencode_positive;
+                }
+        }
+
+}
+
+static int big_zenadd(lua_State *L) {
+	big *a = big_arg(L, 1); SAFE(a);
+	big *b = big_arg(L, 2); SAFE(b);
+	big *c = big_new(L); SAFE(c);
+        big_init(c);
+        _algebraic_sum(L, c, a, b);
+	return 1;
+}
+
+static int big_zensub(lua_State *L) {
+	big *a = big_arg(L, 1); SAFE(a);
+	big *b = big_arg(L, 2); SAFE(b);
+	big *c = big_new(L); SAFE(c);
+        big_init(c);
+        b->zencode_positive = BIG_OPPOSITE(b->zencode_positive);
+        _algebraic_sum(L, c, a, b);
+        b->zencode_positive = BIG_OPPOSITE(b->zencode_positive);
+	return 1;
+}
+
+// the result is expected to be inside a BIG
+static int big_zenmul(lua_State *L) {
+	big *a = big_arg(L, 1); SAFE(a);
+	big *b = big_arg(L, 2); SAFE(b);
+	if(a->doublesize || b->doublesize) {
+		lerror(L,"cannot multiply double BIG numbers");
+		return 0;
+        }
+	//BIG_norm(a->val); BIG_norm(b->val);
+        DBIG result;
+        BIG top;
+	big *bottom = big_new(L); SAFE(bottom);
+        big_init(bottom);
+
+        BIG_mul(result, a->val, b->val);
+        BIG_sdcopy(bottom->val, result);
+        BIG_sducopy(top, result);
+
+        // check that the result is a big (not a dbig)
+        if(!iszero(top)) {
+		lerror(L,"the result is too big");
+		return 0;
+        }
+
+        bottom->zencode_positive = BIG_MULSIGN(a->zencode_positive, b->zencode_positive);
+
+	return 1;
+}
+
+static int big_zendiv(lua_State *L) {
+	big *a = big_arg(L, 1); SAFE(a);
+	big *b = big_arg(L, 2); SAFE(b);
+	if(a->doublesize || b->doublesize) {
+		lerror(L,"cannot multiply double BIG numbers");
+		return 0;
+        }
+        DBIG dividend;
+        BIG_dzero(dividend);
+        dcopy(dividend, a->val);
+	big *result = big_new(L); SAFE(result);
+        big_init(result);
+
+        BIG_ddiv(result->val, dividend, b->val);
+
+        result->zencode_positive = BIG_MULSIGN(a->zencode_positive, b->zencode_positive);
+
+	return 1;
+}
+
+static int big_zenmod(lua_State *L) {
+	big *a = big_arg(L, 1); SAFE(a);
+	big *b = big_arg(L, 2); SAFE(b);
+	if(a->doublesize || b->doublesize) {
+		lerror(L,"cannot multiply double BIG numbers");
+		return 0;
+        }
+	if(a->zencode_positive == BIG_NEGATIVE || b->zencode_positive == BIG_NEGATIVE) {
+		lerror(L,"modulo operation only available with positive numbers");
+		return 0;
+        }
+	big *result = big_new(L); SAFE(result);
+        big_init(result);
+        BIG_copy(result->val, a->val);
+
+        BIG_mod(result->val, b->val);
+
+        result->zencode_positive = BIG_POSITIVE;
+
 	return 1;
 }
 
