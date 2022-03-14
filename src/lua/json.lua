@@ -116,7 +116,8 @@ local function encode_number(val)
   local s = tostring(val)
   local n = tonumber(s)
   if not n then error("Not a number: "..val, 2) end
-  return BIG.new(s)
+  if s:find('%.') then return(n), x end
+  return BIG.from_decimal(s)
 end
 
 local function encode_function(val)
@@ -299,14 +300,6 @@ local function parse_number(str, i)
   if s:find('%.') then return(n), x end
   return BIG.from_decimal(s), x
 end
-local function parse_number_neg(str, i)
-  local x = next_char(str, i, delim_chars)
-  local s = str:sub(i, x - 1)
-  decode_error(str, i, "invalid negative number '" .. s .. "'")
-  error("negative numbers not supported in zenroom", 2)
-end
-
-
 
 local function parse_literal(str, i)
   local x = next_char(str, i, delim_chars)
@@ -394,7 +387,7 @@ local char_func_map = {
   [ "7" ] = parse_number,
   [ "8" ] = parse_number,
   [ "9" ] = parse_number,
-  [ "-" ] = parse_number_neg,
+  [ "-" ] = parse_number,
   [ "t" ] = parse_literal,
   [ "f" ] = parse_literal,
   [ "n" ] = parse_literal,

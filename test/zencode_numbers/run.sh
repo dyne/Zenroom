@@ -267,5 +267,33 @@ Then print the 'salesReport'
 # Then print the 'salesReport.signature'
 Then print the 'salesReport.hash'
 EOF
-
+cat <<EOF  >big_pos_and_neg.data
+{
+  "a": "100000000000000",
+  "b": "-20000000000000000",
+  "fp1": "1.0",
+  "fp2": "2.0"
+}
+EOF
+# | zexe big_pos_and_neg.zen -a big_pos_and_neg.data
+cat <<EOF >big_pos_and_neg.zen
+Given I have a 'number' named 'a'
+Given I have a 'number' named 'b'
+Given I have a 'number' named 'fp1'
+Given I have a 'number' named 'fp2'
+When I create the result of 'a' + 'b'
+and I rename the 'result' to 'a+b'
+When I create the result of 'a' - 'b'
+and I rename the 'result' to 'a-b'
+When I create the result of 'b' - 'a'
+and I rename the 'result' to 'b-a'
+When I create the result of 'b' + 'a'
+and I rename the 'result' to 'b+a'
+When I create the result of 'b' * 'a'
+and I rename the 'result' to 'b*a'
+When I create the result of 'b' / 'a'
+and I rename the 'result' to 'b/a'
+Then print data
+EOF
+$Z -z big_pos_and_neg.zen -a big_pos_and_neg.data
 success

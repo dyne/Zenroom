@@ -338,7 +338,13 @@ function input_encoding(what)
       return f_factory_encoder('mnemonic', O.from_mnemonic, nil)
    elseif what == 'num' or what == 'number' then
       return f_factory_encoder('number',
-			       function(data) return tonumber(data) end,
+			       function(data)
+                                 if data:find('%.') then
+                                   return tonumber(data)
+                                 else
+                                   return BIG.from_decimal(data)
+                                 end
+                               end,
 			       function(data)
 				  if not tonumber(data) then
 				     error("Invalid encoding, not a number: "
