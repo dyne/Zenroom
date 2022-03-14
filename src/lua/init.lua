@@ -79,10 +79,9 @@ end
 -- ZEN = { assert = assert } -- zencode shim when not loaded
 require('zenroom_common')
 INSPECT = require('inspect')
-CBOR = require('zenroom_cbor')
-JSON = require('zenroom_json')
 OCTET = require('zenroom_octet')
 BIG = require('zenroom_big')
+JSON = require('zenroom_json')
 ECDH = require('zenroom_ecdh')
 -- ECDH public keys cannot function as ECP because of IANA 7303
 AES = require'aes'
