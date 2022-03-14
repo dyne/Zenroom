@@ -182,10 +182,10 @@ local function ack(what)
    -- also creates codec insice operate conversion
 
    -- name of schema may differ from name of object
-   if TMP.schema and ( TMP.schema ~= TMP.encoding ) then
+   if TMP.schema and (TMP.schema ~= 'number') and ( TMP.schema ~= TMP.encoding ) then
       ZEN.CODEC[name].schema = TMP.schema
    end
-   
+
    -- ACK[name] already holds an object
    -- not a table?
    -- if not (dsttype == 'table') then -- convert single object to array
