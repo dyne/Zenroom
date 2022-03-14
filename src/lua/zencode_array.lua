@@ -238,16 +238,15 @@ end)
 IfWhen("the '' is found in '' at least '' times", function(ele, arr, times)
 	local obj = have(ele)
 	ZEN.assert( luatype(obj) ~= 'table', "Invalid use of table in object comparison: "..ele)
-	local num = have(times)
-	ZEN.assert( luatype(num) == 'number', "Not a number: "..times)
+	local num = BIG.from_decimal( tostring( have(times) ) )
 	local list = have(arr)
 	ZEN.assert( luatype(list) == 'table', "Not a table: "..arr)
 	ZEN.assert( isarray(list), "Not an array: "..arr)
-	local found = 0
+	local found = BIG.new(0)
 	for _,v in pairs(list) do
-		if v == obj then found = found + 1 end
+		if v == obj then found = found + BIG.new(1) end
 	end
-	ZEN.assert(found >= num, "Object "..ele.." found only "..found.." times instead of "..num.." in array "..arr)
+	ZEN.assert(found >= num, "Object "..ele.." found only "..found:decimal().." times instead of "..num:decimal().." in array "..arr)
 end)
 
 local function _aggr_array(arr)

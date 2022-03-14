@@ -92,7 +92,9 @@ local function encode_table(val, stack)
       if type(k) ~= "string" then
         error("invalid table: mixed or invalid key types")
       end
-      table.insert(res, encode(k, stack) .. ":" .. encode(v, stack))
+      local val = encode(v, stack)
+      if type(val) == 'zenroom.big' then val = val:decimal() end
+      table.insert(res, encode(k, stack) .. ":" .. val)
     end
     stack[val] = nil
     return "{" .. table.concat(res, ",") .. "}"
@@ -111,7 +113,10 @@ local function encode_number(val)
   --   error("unexpected number value '" .. tostring(val) .. "'")
   -- end
   -- return string.format("%.14g", val)
-   return val
+  local s = tostring(val)
+  local n = tonumber(s)
+  if not n then error("Not a number: "..val, 2) end
+  return BIG.new(s)
 end
 
 local function encode_function(val)
@@ -290,8 +295,17 @@ local function parse_number(str, i)
   if not n then
     decode_error(str, i, "invalid number '" .. s .. "'")
   end
-  return n, x
+  -- float detection
+  if s:find('%.') then return(n), x end
+  return BIG.from_decimal(s), x
 end
+local function parse_number_neg(str, i)
+  local x = next_char(str, i, delim_chars)
+  local s = str:sub(i, x - 1)
+  decode_error(str, i, "invalid negative number '" .. s .. "'")
+  error("negative numbers not supported in zenroom", 2)
+end
+
 
 
 local function parse_literal(str, i)
@@ -380,7 +394,7 @@ local char_func_map = {
   [ "7" ] = parse_number,
   [ "8" ] = parse_number,
   [ "9" ] = parse_number,
-  [ "-" ] = parse_number,
+  [ "-" ] = parse_number_neg,
   [ "t" ] = parse_literal,
   [ "f" ] = parse_literal,
   [ "n" ] = parse_literal,

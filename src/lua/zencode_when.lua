@@ -105,31 +105,19 @@ When("write number '' in ''", function(content, dest)
 	-- TODO: detect number base 10
 	local num = tonumber(content)
 	ZEN.assert(num, "Cannot convert value to number: "..content)
-	if num > 2147483647 then
-		error('Overflow of number object over 32bit signed size')
+--	if num > 2147483647 then
+--		error('Overflow of number object over 32bit signed size')
 		-- TODO: maybe support unsigned native here
-	end
-	ACK[dest] = num
-	ZEN.CODEC[dest] = new_codec(dest,
-				    {encoding = 'number',
-				     luatype = 'number',
-				     zentype = 'element' })
+--	end
+	ACK[dest] = BIG.from_decimal(content)
+	ZEN.CODEC[dest] = new_codec(dest, {zentype = 'element' })
 end)
 
 When("create the number from ''", function(from)
 	empty'number'
 	local get = have(from)
-	local num = tonumber(O.to_string(get))
-	ZEN.assert(num, "Cannot convert object to number: "..from)
-	if num > 2147483647 then
-	   error('Overflow of number object over 32bit signed size')
-	   -- TODO: maybe support unsigned native here
-	end
-	ACK.number = num
-	ZEN.CODEC.number = new_codec('number',
-				     {encoding = 'number',
-				      luatype = 'number',
-				      zentype = 'element' })
+	ACK.number = BIG.from_decimal(get:octet():string())
+	ZEN.CODEC.number = new_codec('number', {zentype = 'element' })
 end)
 
 When("set '' to '' as ''", function(dest, content, format)
@@ -138,17 +126,11 @@ When("set '' to '' as ''", function(dest, content, format)
 	guess.raw = content
 	guess.name = dest
 	if format == 'number' then
-		ACK[dest] = tonumber( operate_conversion(guess) )
+		ACK[dest] = BIG.from_decimal( operate_conversion(guess) )
 	else
 		ACK[dest] = operate_conversion(guess)
 	end
 --	ZEN.CODEC[dest] = new_codec(dest, { luatype = luatype(ACK[dest]), zentype = 'element' })
-end)
-
-When("create the cbor of ''", function(src)
-	have(src)
-	empty'cbor'
-	ACK.cbor = OCTET.from_string( CBOR.encode(ACK[src]) )
 end)
 
 When("create the json of ''", function(src)

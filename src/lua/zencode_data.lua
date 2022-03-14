@@ -199,6 +199,15 @@ end
        elseif definition ~= 'number' then
 	  error("Cannot take object: expected '"..definition.."' but found '"..objtype.."'",3)
        end
+       if iszen(type(obj)) then
+          res = CONF.input.encoding
+          res.luatype = 'userdata'
+          res.zentype = 'element'
+          res.rawtype = type(obj)
+          res.schema = nil
+          res.raw = obj
+          return(res)
+       end
        res = input_encoding(objtype)
        res.luatype = 'number'
        res.zentype = 'element'
@@ -212,6 +221,16 @@ end
 	  -- native unsigned integer
        return (res)
     end
+    objtype = type(obj)
+    if iszen(objtype) then
+      res = CONF.input.encoding
+      res.luatype = 'userdata'
+      res.zentype = 'element'
+      res.rawtype = objtype
+      res.schema = nil
+      res.raw = obj
+      return(res)
+    end
 
     error('Cannot take object: invalid conversion for type '..objtype..': '..definition, 3)
     return nil
@@ -221,6 +240,13 @@ end
  -- conversion and returns the resulting raw data to be used inside the
  -- WHEN block in HEAP.
  function operate_conversion(guessed)
+   -- check if already a zenroom type
+   -- (i.e. zenroom.big from json decode)
+    if guessed.luatype == 'userdata'
+        and guessed.zentype == 'element'
+        and iszen(guessed.rawtype) then
+      return(guessed.raw)
+    end
     if not guessed.fun then
        error('No conversion operation guessed', 2)
        return nil
@@ -247,7 +273,7 @@ end
 	  for k, v in pairs(guessed.raw) do
 	     res[k] = guessed.fun(v[guessed.schema])
 	  end
-	  return (res)	
+	  return (res)
        elseif guessed.encoding == 'complex' then
 	  return guessed.fun.import(guessed.raw)
        else
@@ -275,8 +301,8 @@ end
 -- arguments: encoder's name, conversion and check functions
 local function f_factory_encoder(encoder_n, encoder_f, encoder_c)
    return { fun = function(data)
-	       local dt = luatype(data)
-	       if dt == 'number' then
+	       local dt = type(data)
+	       if dt == 'zenroom.big' or dt == 'number' then
 		  return data
 	       elseif dt == 'boolean' then
 		  return data
@@ -311,7 +337,7 @@ function input_encoding(what)
       -- mnemonic has no check function (TODO:)
       return f_factory_encoder('mnemonic', O.from_mnemonic, nil)
    elseif what == 'num' or what == 'number' then
-      return f_factory_encoder('number', 
+      return f_factory_encoder('number',
 			       function(data) return tonumber(data) end,
 			       function(data)
 				  if not tonumber(data) then
@@ -352,7 +378,7 @@ end
        error('guess_outcast called with wrong argument: '..type(cast), 3) end
     if cast == 'string' then
        return f_factory_outcast(O.to_string)
-    elseif cast == 'hex' then       
+    elseif cast == 'hex' then
        return f_factory_outcast(O.to_hex)
     elseif cast == 'base64' then
        return f_factory_outcast(O.to_base64)
@@ -427,7 +453,7 @@ end
     end
     return CONF.output.encoding.name
  end
- 
+
  function new_codec(cname, parameters, clone)
    if not cname then error("Missing name in new codec", 2) end
    local name = fif(luatype(cname) == 'string', uscore(cname), cname) -- may be a numerical index
