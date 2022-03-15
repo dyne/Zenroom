@@ -6,13 +6,6 @@ if ! test -r ../utils.sh; then
 	echo "run executable from its own directory: $0"; exit 1; fi
 . ../utils.sh
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
-# zexe() {
-# 	out="$1"
-# 	shift 1
-# 	>&2 echo "test: $out"
-# 	tee "$out" | zenroom -z $*
-# }
-####################
 
 ## Path: ../../docs/examples/zencode_cookbook/
 

@@ -296,9 +296,10 @@ local function parse_number(str, i)
   if not n then
     decode_error(str, i, "invalid number '" .. s .. "'")
   end
-  -- float detection
-  if s:find('%.') then return(n), x end
-  return BIG.from_decimal(s), x
+  -- -- float detection
+  -- if s:find('%.') then return(n), x end
+  -- return BIG.from_decimal(s), x
+   return n, x
 end
 
 local function parse_literal(str, i)
