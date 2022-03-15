@@ -33,7 +33,13 @@ end)
 When("append '' to ''", function(src, dest)
 	local val = have(src)
 	local dst = have(dest)
-	ACK[dest] = dst .. val
+
+        dst = dst .. val
+        if luatype(dst) == 'string' then
+          ACK[dest] = O.from_string(dst)
+        else
+	  ACK[dest] = dst
+        end
 end)
 
 When("create the ''", function(dest)
