@@ -56,7 +56,7 @@ sender.private = hex(keys.private)
 iv = O.random(16)
 ciphermsg =
   { header =
-      CBOR.encode({ public = ECDH.pubgen(sender.private),
+      JSON.encode({ public = ECDH.pubgen(sender.private),
 	  				iv = iv }) }
 session = ECDH.session(sender.private, recipient.public)
 ciphermsg.text, ciphermsg.checksum =
@@ -72,14 +72,14 @@ test_decrypt() {
     from=$1
     to=$2
 	tmpfile=`mktemp`
-    cat <<EOF >$tmpfile && $zen -k $tmp/$to-keys.json -a $tmp/from-$from-to-$to-cryptomsg.json $tmpfile
+    cat <<EOF >$tmpfile && $zen -k $tmp/$to-keys.json -a $tmp/from-$from-to-$to-cryptomsg.json $tmpfile 2>/dev/null
 keys = JSON.decode(KEYS)
 data = JSON.decode(DATA)
 recipient = { }
 recipient.private = hex(keys.private)
 sender = { }
 -- header is the public key of sender
-decode = { header = CBOR.decode(data.header) }
+decode = { header = JSON.decode(data.header) }
 sender.public = O.from_base64(decode.header.public)
 session = ECDH.session(recipient.private, sender.public)
 decode.text, decode.checksum =
