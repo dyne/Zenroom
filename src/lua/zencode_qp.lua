@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Matteo Cristino
---on 14/03/2022
+--on Tuesday, 15th March 2022
 --]]
 
 local QP = require'qp'
@@ -31,6 +31,15 @@ local function dilithium_public_key_f(obj)
    return res
 end
 
+local function dilithium_signature_f(obj)
+   local res = O.from_hex(obj)
+   ZEN.assert(
+      QP.signature_check(res),
+      'Dilithium signature length is not correcr'
+   )
+   return res
+end
+
 local function kyber_public_key_f(obj)
    local res = O.from_hex(obj)
    ZEN.assert(
@@ -40,15 +49,48 @@ local function kyber_public_key_f(obj)
    return res
 end
 
+local function kyber_secret_f(obj)
+   local res = O.from_hex(obj)
+   ZEN.assert(
+      QP.kemsscheck(res),
+      'Kyber secret lentgth is not correct'
+   )
+   return res
+end
+
+local function kyber_ciphertext_f(obj)
+   local res = O.from_hex(obj)
+   ZEN.assert(
+      QP.kemctcheck(res),
+      'Kyber ciphertext length is not correct'
+   )
+   return res
+end
+
+local function import_kem(obj)
+   local res = {}
+   res.kyber_secret = kyber_secret_f(obj.kyber_secret)
+   res.kyber_ciphertext = kyber_ciphertext_f(obj.kyber_ciphertext)
+   return res
+end
+
+local function export_kem(obj)
+   local res = {}
+   res.kyber_secret = obj.kyber_secret:hex()
+   res.kyber_ciphertext = obj.kyber_ciphertext:hex()
+   return res
+end
+
 -- check various locations to find the public key
 -- algo can be either 'dilithium' or 'kyber'
--- I. Given I have a 's' from 't'            --> ACK.s[t] 
--- II.Given I have a 's' public key from 't' --> ACK.public_key_session[t]
+--  Given I have a 's' from 't'            --> ACK.s[t] 
+-- The following command is not supported
+--  Given I have a 's' public key from 't' --> ACK.public_key_session[t]
+-- beacuse it can leads to conflicts using together ecdh and kyber or dilithium
 local function _pubkey_compat(_key, algo)
    local pubkey = ACK[_key]
    if not pubkey then
-      local pubkey_arr
-      pubkey_arr = ACK[algo..'_public_key'] or ACK.public_key_session
+      local pubkey_arr = ACK[algo..'_public_key']
       if luatype(pubkey_arr) == 'table' then
 	 pubkey = pubkey_arr[_key]
       else
@@ -66,20 +108,18 @@ ZEN.add_schema(
    {
       dilithium_public_key = { import = dilithium_public_key_f,
 			       export = O.to_hex },
-      dilithium_private_key = { import = O.from_hex,
-				export = O.to_hex },
-      dilithium_signature = { import = O.from_hex,
+      dilithium_signature = { import = dilithium_signature_f,
 			      export = O.to_hex },
       
       
       kyber_public_key = { import = kyber_public_key_f,
 			   export = O.to_hex },
-      kyber_private_key = { import = O.from_hex,
-			    export = O.to_hex },
-      kyber_secret = { import = O.from_hex,
+      kyber_secret = { import = kyber_secret_f,
 		       export = O.to_hex },
-      kyber_ciphertext = { import = O.from_hex,
-			   export = O.to_hex }
+      kyber_ciphertext = { import = kyber_ciphertext_f,
+			   export = O.to_hex },
+      kyber_kem = { import = import_kem,
+		    export = export_kem }
    }
 )
 
@@ -173,23 +213,21 @@ When("create the kyber public key with secret key ''",
      end
 )
 
--- encrypt/decrypt a secret message
-When("encrypt a secret message for ''",
+-- create a secret message and its ciphertext
+When("create the kyber kem for ''",
      function(pub)
 	local pk = _pubkey_compat(pub, 'kyber')
-	empty'kyber secret'
-	empty'kyber ciphertext'
+	empty'kyber kem'
+	ACK.kyber_kem = {}
 	local enc = QP.enc(pk)
-	ACK.kyber_secret = enc.secret
-	ACK.kyber_ciphertext = enc.cipher 
-	new_codec('kyber secret', { zentype = 'element',
-				    encoding = 'hex'})
-	new_codec('kyber ciphertext', { zentype = 'element',
-				       encoding = 'hex' })
+	ACK.kyber_kem.kyber_ciphertext = enc.cipher
+	ACK.kyber_kem.kyber_secret = enc.secret
+	new_codec('kyber kem', { zentype = 'schema',
+	                         encoding = 'complex'})
      end
 )
-
-When("decrypt the text of ''",
+-- create the secret starting from a ciphertext
+When("create the kyber secret from ''",
      function(secret)
 	local sk = havekey'kyber'
 	local sec = have(secret)
