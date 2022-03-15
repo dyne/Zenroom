@@ -206,6 +206,15 @@ static int qp_signature_len(lua_State *L){
   return 1;
 }
 
+static int qp_signature_check(lua_State *L){  
+  octet *sign = o_arg(L, 1); SAFE(sign);
+  if(sign->len == PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_BYTES)
+    lua_pushboolean(L, 1);
+  else
+    lua_pushboolean(L, 0);
+  return 1;
+}
+
 static int qp_kem_keygen(lua_State *L) {
 	lua_createtable(L, 0, 2);
         octet *private = o_new(L,PQCLEAN_KYBER512_CLEAN_CRYPTO_SECRETKEYBYTES); SAFE(private);
@@ -232,10 +241,28 @@ static int qp_kem_pubgen(lua_State *L) {
   return 1;
 }
 
-//for the moment is only checking the length of the public key
+//checks the length of the public key
 static int qp_kem_pubcheck(lua_State *L) {
   octet *pk = o_arg(L, 1); SAFE(pk);
   if(pk->len == PQCLEAN_KYBER512_CLEAN_CRYPTO_PUBLICKEYBYTES)
+    lua_pushboolean(L, 1);
+  else
+    lua_pushboolean(L, 0);
+  return 1;
+}
+
+static int qp_kem_sscheck(lua_State *L) {
+  octet *ss = o_arg(L, 1); SAFE(ss);
+  if(ss->len == KYBER_SSBYTES)
+    lua_pushboolean(L, 1);
+  else
+    lua_pushboolean(L, 0);
+  return 1;
+}
+
+static int qp_kem_ctcheck(lua_State *L) {
+  octet *ct = o_arg(L, 1); SAFE(ct);
+  if(ct->len == PQCLEAN_KYBER512_CLEAN_CRYPTO_CIPHERTEXTBYTES)
     lua_pushboolean(L, 1);
   else
     lua_pushboolean(L, 0);
@@ -309,9 +336,12 @@ int luaopen_qp(lua_State *L) {
 	        {"verify", qp_verify},
 		{"verified_msg", qp_verified_message},
 		{"signature_len", qp_signature_len},
+		{"signature_check", qp_signature_check},
 	        {"kemkeygen", qp_kem_keygen},
 		{"kempubgen", qp_kem_pubgen},
 		{"kempubcheck", qp_kem_pubcheck},
+		{"kemsscheck", qp_kem_sscheck},
+		{"kemctcheck", qp_kem_ctcheck},
 	        {"enc", qp_enc},
 	        {"dec", qp_dec},
 		{NULL,NULL}
