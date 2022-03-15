@@ -137,7 +137,8 @@ end
     -- a defined schema overrides any other conversion
     t = ZEN.schemas[definition]
     if t then
-       -- complex schema is a table specfying in/out conversions as: {import=fun, export=fun}
+       -- complex schema is a table specfying in/out conversions as:
+       -- {import=fun, export=fun}
        local c = fif(luatype(t)=='table', 'complex', CONF.output.encoding.name)
        -- default is always the configured output encoding
        return ({
@@ -147,17 +148,6 @@ end
 	  raw = obj,
 	  encoding = c
        })
-    end
-
-    if objtype == 'string' then
-       if expect_table(definition) then
-	  error("Cannot take object: expected '"..definition.."' but found '"..objtype.."' (not a table)",3)
-       end
-       res = input_encoding(definition)
-       res.luatype = 'string'
-       res.zentype = 'element'
-       res.raw = obj
-       return (res)
     end
 
     -- definition: value_encoding .. data_type
@@ -196,31 +186,42 @@ end
     if objtype == 'number' or tonumber(obj) then
        if expect_table(definition) then
 	  error("Cannot take object: expected '"..definition.."' but found '"..objtype.."' (not a table)",3)
-       elseif definition ~= 'number' then
-	  error("Cannot take object: expected '"..definition.."' but found '"..objtype.."'",3)
+       -- elseif definition ~= 'number' then
+       -- 	  error("Cannot take object: expected '"..definition.."' but found '"..objtype.."'",3)
        end
-       if iszen(type(obj)) then
-          res = CONF.input.encoding
-          res.luatype = 'userdata'
-          res.zentype = 'element'
-          res.rawtype = type(obj)
-          res.schema = nil
-          res.raw = obj
-          return(res)
+       -- distinguish integer or float
+       -- avoid input_encoding and fill guessed.{fun,encoding,check}
+       if isfloat(obj) then
+	  res = { check = nil,
+		  encoding = 'float',
+		  fun = tonumber }
+       else
+	  res = { check = nil,
+		  encoding = 'integer',
+		  fun = BIG.from_decimal }
        end
-       res = input_encoding(objtype)
        res.luatype = 'number'
        res.zentype = 'element'
-       if obj > 2147483647 then
-	  error('Overflow of number object over 32bit signed size', 3)
-	  -- TODO: maybe support unsigned native here
-       end
+       -- if obj > 2147483647 then
+       -- 	  error('Overflow of number object over 32bit signed size', 3)
+       -- 	  -- TODO: maybe support unsigned native here
+       -- end
        res.raw = obj
 	  -- any type of additional conversion from a native number
 	  -- detected at input can happen here, for instance using a new
 	  -- native unsigned integer
        return (res)
     end
+
+    if objtype == 'string' then
+       res = input_encoding(definition)
+       res.luatype = 'string'
+       res.zentype = 'element'
+       res.raw = obj
+       return (res)
+    end
+
+    -- objtype is not a luatype
     objtype = type(obj)
     if iszen(objtype) then
       res = CONF.input.encoding
@@ -232,7 +233,7 @@ end
       return(res)
     end
 
-    error('Cannot take object: invalid conversion for type '..objtype..': '..definition, 3)
+    error('Invalid object: no conversion for type '..objtype..': '..definition, 3)
     return nil
  end
 
@@ -242,12 +243,8 @@ end
  function operate_conversion(guessed)
    -- check if already a zenroom type
    -- (i.e. zenroom.big from json decode)
-    if guessed.luatype == 'userdata'
-        and guessed.zentype == 'element'
-        and iszen(guessed.rawtype) then
-      return(guessed.raw)
-    end
     if not guessed.fun then
+       I.warn(guessed)
        error('No conversion operation guessed', 2)
        return nil
     end
@@ -259,6 +256,8 @@ end
        luatype = guessed.luatype,
        root = guessed.root
     }
+    -- I.warn({ codec = ZEN.CODEC[guessed.name],
+    -- 	     guessed = guessed })
     -- TODO: make xxx print to stderr!
     -- xxx('Operating conversion on: '..guessed.name)
     if guessed.zentype == 'schema' then
@@ -285,7 +284,18 @@ end
 	  deepmap(guessed.check, guessed.raw)
        end
        return deepmap(guessed.fun, guessed.raw)
-    else -- object
+    else -- element
+
+       -- corner case: input is already a zenroom type
+       if guessed.luatype == 'userdata' then
+	  if iszen(guessed.rawtype) then
+	     return(guessed.raw)
+	  else
+	     error("Unknown userdata type for element: "..guessed.name, 2)
+	  end
+       end
+       ---
+
        if guessed.check then
 	  guessed.check(guessed.raw)
        end
@@ -300,18 +310,29 @@ end
 -- booleans.
 -- arguments: encoder's name, conversion and check functions
 local function f_factory_encoder(encoder_n, encoder_f, encoder_c)
-   return { fun = function(data)
-	       local dt = type(data)
-	       if dt == 'zenroom.big' or dt == 'number' then
-		  return data
-	       elseif dt == 'boolean' then
-		  return data
-	       end
-	       return encoder_f(data)
-   end,
-	    encoding = encoder_n,
-	    check = encoder_c
-   }
+   local res = { }
+   if not encoder_f then
+      res.fun = function(data) return(data) end
+   else
+      res.fun = function(data)
+	 local dt = luatype(data)
+	 -- wrap all conversion functions nested in deepmaps
+	 -- TODO: optimize
+	 if dt == 'number' then
+	    if isfloat(data) then
+	       return data
+	    else
+	       return BIG.from_decimal(tostring(data))
+	    end
+	 elseif dt == 'boolean' then
+	    return data
+	 end
+	 return encoder_f(data)
+      end
+   end
+   res.encoding = encoder_n
+   res.check = encoder_c
+   return(res)
 end
 
 -- gets a string and returns the associated function, string and prefix
@@ -337,20 +358,11 @@ function input_encoding(what)
       -- mnemonic has no check function (TODO:)
       return f_factory_encoder('mnemonic', O.from_mnemonic, nil)
    elseif what == 'num' or what == 'number' then
-      return f_factory_encoder('number',
-			       function(data)
-                                 if data:find('%.') then
-                                   return tonumber(data)
-                                 else
-                                   return BIG.from_decimal(data)
-                                 end
-                               end,
-			       function(data)
-				  if not tonumber(data) then
-				     error("Invalid encoding, not a number: "
-					   ..type(data), 3)
-				  end
-			       end)
+      return f_factory_encoder('number', nil, nil)
+   elseif what == 'int' or what == 'integer' then
+      return f_factory_encoder('integer', nil, nil)
+   elseif what == 'float' then
+      return f_factory_encoder('float', tonumber, nil)
    end
    error("Input encoding not found: " .. what, 2)
    return nil
@@ -367,7 +379,10 @@ local function f_factory_outcast(fun)
       -- passthrough native number data
       if dt == 'number' or dt == 'boolean' then
 	 return data
-      elseif iszen(dt) and dt ~= 'zenroom.octet' then
+      elseif dt == 'zenroom.big' then
+	 -- always export BIG INT as decimal
+	 return BIG.to_decimal(data)
+      elseif iszen(dt) then
 	 -- leverage first class citizen method on zenroom data
 	 return fun(data:octet())
       end
@@ -396,6 +411,10 @@ end
        return f_factory_outcast(O.to_bin)
     elseif cast == 'mnemonic' then
        return f_factory_outcast(O.to_mnemonic)
+    elseif cast == 'float' then
+       return f_factory_outcast(tonumber)
+    elseif cast == 'integer' then
+       return f_factory_outcast(BIG.to_decimal)
     elseif cast == 'number' then
        return f_factory_outcast(tonumber)
     elseif cast == 'boolean' then
