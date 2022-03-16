@@ -33,10 +33,12 @@ end)
 When("append '' to ''", function(src, dest)
 	local val = have(src)
 	local dst = have(dest)
-
+        ZEN.assert(type(val) == type(dst), "Only data of the same type can be appended")
         dst = dst .. val
-        if luatype(dst) == 'string' then
+        if luatype(val) == 'string' then
           ACK[dest] = O.from_string(dst)
+        elseif luatype(val) == 'number' then
+          ACK[dest] = tonumber(dst)
         else
 	  ACK[dest] = dst
         end
