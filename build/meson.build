@@ -72,6 +72,7 @@ zenroom_src = [
     '../src/repl.c',
     '../src/zen_aes.c',
     '../src/zen_big.c',
+    '../src/zen_float.c',
     '../src/zen_config.c',
     '../src/zen_ecdh.c',
     '../src/zen_qp.c',

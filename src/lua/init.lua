@@ -81,6 +81,7 @@ require('zenroom_common')
 INSPECT = require('inspect')
 OCTET = require('zenroom_octet')
 BIG = require('zenroom_big')
+FLOAT = require'float'
 JSON = require('zenroom_json')
 ECDH = require('zenroom_ecdh')
 -- ECDH public keys cannot function as ECP because of IANA 7303
@@ -90,6 +91,7 @@ ECP2 = require('zenroom_ecp2')
 HASH = require('zenroom_hash')
 O = OCTET -- alias
 INT = BIG -- alias
+F=FLOAT
 I = INSPECT -- alias
 H = HASH -- alias
 PAIR = ECP2 -- alias

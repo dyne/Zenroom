@@ -38,12 +38,6 @@ function iszen(n)
    return false
 end
 
--- TODO: implement in C
-function isfloat(obj)
-   local s = tostring(obj)
-   return (s:find('%.') or s:find('e'))
-end
-
 -- workaround for a ternary conditional operator
 function fif(condition, if_true, if_false)
   if condition then return if_true else return if_false end

@@ -378,6 +378,8 @@ function Inspector:putValue(v, exp)
 	 elseif tv == "zenroom.big" then
 		local i = v:octet()
 		self:puts("int[" .. #i.. "] " .. v:decimal()) -- exporter(i))
+	 elseif tv == "zenroom.float" then
+		self:puts("float " .. tostring(v)) -- exporter(i))
 	 elseif tv == "zenroom.ecp" then
 		local i = v:octet()
 		if v == "Infinity" or v == ECP.infinity() then

@@ -1053,6 +1053,28 @@ static int big_zenmod(lua_State *L) {
 	return 1;
 }
 
+static int is_integer(lua_State *L) {
+        int result = 0;
+        if(lua_isinteger(L, 1)) {
+                result = 1;
+        } else if(lua_isstring(L, 1)) {
+                int i = 0;
+                const char *arg = lua_tostring(L, 1);
+                if(arg[i] == '-') {
+                        i++;
+                }
+                result = 1;
+                while(result == 1 && arg[i] != '\0') {
+                        if(arg[i] < '0' || arg[i] > '9') {
+                                result = 0;
+                        }
+                        i++;
+                }
+        }
+        lua_pushboolean(L, result);
+        return 1;
+}
+
 static int big_parity(lua_State *L) {
 	big *c = big_arg(L, 1); SAFE(c);
 	lua_pushboolean(L, BIG_parity(c->val)==1); // big % 2
