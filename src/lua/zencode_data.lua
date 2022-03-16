@@ -191,14 +191,14 @@ end
        end
        -- distinguish integer or float
        -- avoid input_encoding and fill guessed.{fun,encoding,check}
-       if isfloat(obj) then
-	  res = { check = nil,
-		  encoding = 'float',
-		  fun = tonumber }
-       else
+       if BIG.is_integer(obj) then
 	  res = { check = nil,
 		  encoding = 'integer',
 		  fun = BIG.from_decimal }
+       else
+	  res = { check = nil,
+		  encoding = 'float',
+		  fun = FLOAT.new }
        end
        res.luatype = 'number'
        res.zentype = 'element'
@@ -319,10 +319,10 @@ local function f_factory_encoder(encoder_n, encoder_f, encoder_c)
 	 -- wrap all conversion functions nested in deepmaps
 	 -- TODO: optimize
 	 if dt == 'number' then
-	    if isfloat(data) then
-	       return data
-	    else
+	    if BIG.is_integer(data) then
 	       return BIG.from_decimal(tostring(data))
+	    else
+	       return FLOAT.new(data)
 	    end
 	 elseif dt == 'boolean' then
 	    return data
@@ -362,7 +362,7 @@ function input_encoding(what)
    elseif what == 'int' or what == 'integer' then
       return f_factory_encoder('integer', nil, nil)
    elseif what == 'float' then
-      return f_factory_encoder('float', tonumber, nil)
+      return f_factory_encoder('float', nil, nil)
    end
    error("Input encoding not found: " .. what, 2)
    return nil
@@ -382,6 +382,8 @@ local function f_factory_outcast(fun)
       elseif dt == 'zenroom.big' then
 	 -- always export BIG INT as decimal
 	 return BIG.to_decimal(data)
+      elseif dt == 'zenroom.float' then
+         return tostring(data)
       elseif iszen(dt) then
 	 -- leverage first class citizen method on zenroom data
 	 return fun(data:octet())
