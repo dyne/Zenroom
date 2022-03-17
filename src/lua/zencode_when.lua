@@ -33,14 +33,16 @@ end)
 When("append '' to ''", function(src, dest)
 	local val = have(src)
 	local dst = have(dest)
-        ZEN.assert(type(val) == type(dst), "Only data of the same type can be appended")
-        dst = dst .. val
-        if luatype(val) == 'string' then
-          ACK[dest] = O.from_string(dst)
-        elseif luatype(val) == 'number' then
-          ACK[dest] = tonumber(dst)
+        local result = dst .. val
+        if luatype(result) == 'string' then
+          ACK[dest] = O.from_string(result)
         else
-	  ACK[dest] = dst
+	  ACK[dest] = result
+        end
+        if luatype(dst) == 'number' or luatype(val) == 'number' then
+          ZEN.CODEC[dest].encoding = "string"
+          ZEN.CODEC[dest].luatype = "string"
+          ZEN.CODEC[dest].zentype = "element"
         end
 end)
 
