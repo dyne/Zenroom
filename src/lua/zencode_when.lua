@@ -33,16 +33,18 @@ end)
 When("append '' to ''", function(src, dest)
 	local val = have(src)
 	local dst = have(dest)
-        local result = dst .. val
-        if luatype(result) == 'string' then
-          ACK[dest] = O.from_string(result)
-        else
-	  ACK[dest] = result
-        end
-        if luatype(dst) == 'number' or luatype(val) == 'number' then
+        -- if the destination is a number, fix the encoding to string
+        if luatype(dst) == 'number' then
+          dst = tostring(dst)
           ZEN.CODEC[dest].encoding = "string"
           ZEN.CODEC[dest].luatype = "string"
           ZEN.CODEC[dest].zentype = "element"
+        end
+        dst = dst .. val
+        if luatype(dst) == 'string' then
+          ACK[dest] = O.from_string(dst)
+        else
+	  ACK[dest] = dst
         end
 end)
 
