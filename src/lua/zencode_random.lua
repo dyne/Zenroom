@@ -131,6 +131,25 @@ When("pick the random object in ''", function(arr)
     end
     local r = (random_int16() % #tmp) +1
     ACK.random_object = tmp[r]
-	new_codec('random_object', {name=keys[r]})
+    new_codec('random_object', {name=keys[r]})
 end)
 
+When("create the random dictionary with '' random objects from ''", function(num, from)
+	local n = tonumber(num)
+	if not n then n = tonumber(have(num)) end
+	ZEN.assert(n, "Not a number and object not found"..num)
+	local src = have(from)
+	local dst = { }
+	ZEN.assert(luatype(src) == 'table', "Object is not a table: "..from)
+	for k,v in pairs(src) do
+	   if n == 0 then break end
+	   if tonumber(k) then
+	      table.insert(dst, v)
+	   else
+	      dst[k] = v
+	   end
+	   n = n - 1
+	end
+	ACK.random_dictionary = dst
+	new_codec('random_dictionary')
+end)

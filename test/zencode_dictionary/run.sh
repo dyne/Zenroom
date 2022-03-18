@@ -271,6 +271,23 @@ cat << EOF | save dictionary nested_dictionaries.json
 }
 EOF
 
+cat <<EOF | zexe random_dictionary.zen -a dictionariesBlockchain.json | save dictionary random_dictionary.json
+Given I have a 'string dictionary' named 'ABC-TransactionListFirstBatch'
+When I create the random dictionary with '3' random objects from 'ABC-TransactionListFirstBatch'
+Then print the 'random dictionary'
+EOF
+
+cat <<EOF > num.json
+{ "few": 2 }
+EOF
+
+cat <<EOF | zexe random_dictionary.zen -k num.json -a dictionariesBlockchain.json | save dictionary random_dictionary.json
+Given I have a 'string dictionary' named 'ABC-TransactionListFirstBatch'
+and I have a 'number' named 'few'
+When I create the random dictionary with 'few' random objects from 'ABC-TransactionListFirstBatch'
+Then print the 'random dictionary'
+EOF
+
 cat << EOF | zexe nested_dictionaries.zen -a nested_dictionaries.json | save dictionary pick_nested_dict.json
 Given I have a 'string dictionary' named 'nested'
 When I create the copy of 'dataTime1' from dictionary 'nested'
