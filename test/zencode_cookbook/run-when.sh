@@ -279,6 +279,13 @@ When I randomize the 'myFourthArray' array
 When I pick the random object in 'myFirstArray'
 and I rename the 'random_object' to 'myRandomlyPickedObject'
 
+# CREATE RANDOM DICTIONARY 
+# If you need several objects from a dictionary, you can use this statement
+# it will create a new dictionary with the defined amount of objects,
+# picked from the original dictionary 
+When I create the random dictionary with 'mySecondNumberNumber' random objects from 'myFirstObject'
+and I rename the 'random_dictionary' to 'myNewlyCreatedRandomDictionary'
+
 Then print all data
 EOF
 
