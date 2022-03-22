@@ -179,7 +179,31 @@ when I create the signed ethereum transaction for chain 'fabt'
 then print the 'signed ethereum transaction'
 eof
 
+# Store complex object
+NONCE=`getnonce 0x${alice_address} | jq -r '.result'`
+cat <<EOF | save $SUBDOC alice_nonce.json
+    { "ethereum nonce": "`printf "%d" ${NONCE}`",
+      "gas price": "100000000000",
+      "gas limit": "300000",
+      "gwei value": "0",
+      "storage_contract": "E54c7b475644fBd918cfeDC57b1C9179939921E6"
+    }
+EOF
+cat <<EOF | zexe store_complex_object.zen -a alice_nonce.json -k alice_keys.json
+Scenario ethereum
+Given I have the 'keys'
+Given I have a 'ethereum address' named 'storage contract'
+Given I have a 'ethereum nonce'
+and a 'gas price'
+and a 'gas limit'
+When I create the array of '12' random objects
+When I create the ethereum transaction to 'storage contract'
+and I use the ethereum transaction to store 'array'
 
+When I create the signed ethereum transaction for chain 'fabt'
+Then print the 'signed ethereum transaction'
+Then print data
+EOF
 
 
 # TODO: verify tx using Alice's public key (not the address)

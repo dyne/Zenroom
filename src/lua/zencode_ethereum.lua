@@ -151,7 +151,7 @@ function(obj)
   local content = have(obj)
   local tx = have'ethereum transaction'
   ZEN.assert(not tx.data or #tx.data == 0, "Cannot overwrite transaction data")
-  tx.data = ETH.make_storage_data(content)
+  tx.data = ETH.make_storage_data(ZEN.serialize(content))
 end)
 
 -- TODO: more contract methods
