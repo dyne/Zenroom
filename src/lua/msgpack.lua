@@ -321,6 +321,8 @@ return {
 	_AUTHOR = 'Sebastian Steinhauer <s.steinhauer@yahoo.de>',
 	_VERSION = '0.6.1',
 
+	encoder_functions = encoder_functions,
+
 	-- primary encode function
 	encode = function(...)
 		local data, ok = {}
