@@ -416,7 +416,8 @@ static int ecp_get_y(lua_State *L) {
 }
 
 static int ecp_prime(lua_State *L) {
-	big *p = big_dup(L,(big*)CURVE_Prime); SAFE(p);
+	big *p = big_new(L); big_init(p); SAFE(p);
+	BIG_rcopy(p->val, CURVE_Prime);
 	return 1;
 }
 
