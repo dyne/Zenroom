@@ -106,6 +106,20 @@ static int newfloat(lua_State *L) {
 	new_float_from_octet(L, o);
 	return 1;
 }
+static int is_float(lua_State *L) {
+        int result = 0;
+        if(lua_isnumber(L, 1)) {
+                result = 1;
+        } else if(lua_isstring(L, 1)) {
+                const char* arg = lua_tostring(L, 1);
+                float *flt = float_new(L);
+                char *pEnd;
+                *flt = strtof(arg, &pEnd);
+                result = (*pEnd == '\0');
+        }
+        lua_pushboolean(L, result);
+        return 1;
+}
 float* float_arg(lua_State *L,int n) {
 	void *ud = luaL_testudata(L, n, "zenroom.float");
 	luaL_argcheck(L, ud != NULL, n, "float class expected");
@@ -140,6 +154,13 @@ static int float_add(lua_State *L) {
 	float *b = float_arg(L,2); SAFE(b);
         float *c = float_new(L); SAFE(c);
         *c = *a + *b;
+	return 1;
+}
+
+static int float_opposite(lua_State *L) {
+	float *a = float_arg(L,1); SAFE(a);
+        float *b = float_new(L); SAFE(b);
+        *b = -(*a);
 	return 1;
 }
 
@@ -185,6 +206,12 @@ int luaopen_float(lua_State *L) {
 		{"new",newfloat},
 		{"to_octet",float_to_octet},
 		{"eq",float_eq},
+		{"add",float_add},
+		{"sub",float_sub},
+		{"mul",float_mul},
+		{"div",float_div},
+		{"opposite",float_opposite},
+		{"is_float",is_float},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg float_methods[] = {

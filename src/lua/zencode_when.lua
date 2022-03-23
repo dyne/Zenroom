@@ -73,7 +73,11 @@ When("append '' to ''", function(src, dest)
 	   val = O.from_string( tostring(val) )
 	end
         dst = dst .. val
-	ACK[dest] = dst
+        if luatype(dst) == 'string' then
+          ACK[dest] = O.from_string(dst)
+        else
+	  ACK[dest] = dst
+        end
 end)
 
 When("create the ''", function(dest)
@@ -394,6 +398,7 @@ When("create the result of '' * ''", function(left,right)
 	local r = have(right)
 	empty 'result'
 	ACK.result, ZEN.CODEC.result = _math_op(_mul, l, r, BIG.zenmul)
+        I.spy(ZEN.CODEC.result)
 end)
 
 When("create the result of '' in '' * ''", function(left, dict, right)
@@ -513,6 +518,12 @@ When("remove zero values in ''", function(target)
 	end, ACK[target])
 end)
 
+local function trim(s)
+  s = string.gsub(s, "^[%s_]+", "")
+  s = string.gsub(s, "[%s_]+$", "")
+  return s
+end
+
 -- When("remove all empty strings in ''", function(target)
 -- 	have(target)
 -- 	ACK[target] = deepmap(function(v) if trim(v) == '' then return nil end, ACK[target])
@@ -548,3 +559,141 @@ When("seed the random with ''",
 	xxx("New random fingerprint: "..fingerprint:hex())
      end
 )
+
+local int_ops = {['+'] = BIG.zenadd, ['-'] = BIG.zensub, ['*'] = BIG.zenmul, ['/'] = BIG.zendiv}
+local float_ops = {['+'] = F.add, ['-'] = F.sub, ['*'] = F.mul, ['/'] = F.div}
+
+local function apply_op(op, a, b)
+  local fop = nil
+  if type(a) == 'zenroom.big' and type(b) == 'zenroom.big' then
+    fop = int_ops2[op]
+  elseif type(a) == 'zenroom.float' and type(b) == 'zenroom.float' then
+    fop = float_ops2[op]
+  end
+  ZEN.assert(fop, "Unknown types to do arithmetics on", 2)
+  return fop(a, b)
+end
+
+local int_ops1 = {['~'] = BIG.zenopposite}
+local float_ops1 = {['~'] = F.opposite}
+
+local function apply_op1(op, a)
+  local fop = nil
+  if type(a) == 'zenroom.big' then
+    fop = int_ops1[op]
+  elseif type(a) == 'zenroom.float' then
+    fop = float_ops1[op]
+  end
+  ZEN.assert(fop, "Unknown type to do arithmetics on", 2)
+  return fop(a)
+end
+
+
+-- ~ is unary minus
+local priorities = {['+'] = 0, ['-'] = 0, ['*'] = 1, ['/'] = 1, ['~'] = 2}
+When("create the result of ''", function(expr)
+  local specials = {'(', ')'}
+  local i, j
+  empty 'result'
+  for k, v in pairs(priorities) do
+    table.insert(specials, k)
+  end
+  I.spy(expr)
+  -- tokenizations
+  local re = '[()*%-%/+]'
+  local tokens = {}
+  i = 1
+  repeat
+    j = expr:find(re, i)
+    if j then
+      if i < j then
+        local val = trim(expr:sub(i, j-1))
+        if val ~= "" then table.insert(tokens, val) end
+      end
+      table.insert(tokens, expr:sub(j, j))
+      i = j+1
+    end
+  until not j
+  if i <= #expr then
+    local val = trim(expr:sub(i))
+    if val ~= "" then table.insert(tokens, val) end
+  end
+
+  -- infix to RPN
+  local rpn = {}
+  local operators = {}
+  for k, v in pairs(tokens) do
+    if v == '-' and (#operators == 0 or operators[#operators] == '(') then
+        table.insert(operators, '~') -- unary minus (change sign)
+    elseif priorities[v] then
+      while #operators > 0 and operators[#operators] ~= '('
+           and priorities[operators[#operators]]>=priorities[v] do
+        table.insert(rpn, operators[#operators])
+        operators[#operators] = nil
+      end
+      table.insert(operators, v)
+    elseif v == '(' then
+      table.insert(operators, v)
+    elseif v == ')' then
+      -- put every operator in rpn until I don't see the open parens
+      while #operators > 0 and operators[#operators] ~= '(' do
+        table.insert(rpn, operators[#operators])
+        operators[#operators] = nil
+      end
+      ZEN.assert(#operators > 0, "Paranthesis not balanced", 2)
+      operators[#operators] = nil -- remove open parens
+    else
+      table.insert(rpn, v)
+    end
+  end
+
+  -- all remaining operators have to be applied
+  for i = #operators, 1, -1 do
+    if operators[i] == '(' then
+      ZEN.assert(false, "Paranthesis not balanced", 2)
+    end
+    table.insert(rpn, operators[i])
+  end
+
+  local values = {}
+  -- evaluate the expression
+  for k, v in pairs(rpn) do
+    if v == '~' then
+      local op = values[#values]; values[#values] = nil
+      table.insert(values, apply_op1(v, op))
+    elseif priorities[v] then
+      ZEN.assert(#values >= 2)
+      local op1 = values[#values]; values[#values] = nil
+      local op2 = values[#values]; values[#values] = nil
+      local res = apply_op2(v, op2, op1)
+      table.insert(values, res)
+    else
+      local val
+      -- is the current number a integer?
+      if BIG.is_integer(v) then
+        val = BIG.from_decimal(v)
+      elseif F.is_float(v) then
+        val = F.new(v)
+      else
+        val = have(v)
+      end
+      table.insert(values, val)
+    end
+  end
+
+  ZEN.assert(#values == 1, "Invalid arithmetical expression", 2)
+  ACK.result = values[1]
+  if type(values[1]) == 'zenroom.big' then
+    ZEN.CODEC['result'] = new_codec('result',
+   		                    {encoding = 'zenroom.big',
+                                    luatype = 'userdata',
+                                    rawtype = 'zenroom.big',
+                                    zentype = 'element' })
+  elseif type(values[1]) == 'zenroom.float' then
+    ZEN.CODEC['result'] = new_codec('result',
+   		                    {encoding = 'zenroom.float',
+                                    luatype = 'userdata',
+                                    rawtype = 'zenroom.float',
+                                    zentype = 'element' })
+  end
+end)

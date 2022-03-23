@@ -162,6 +162,7 @@ big *big_dup(lua_State *L, big *s) {
 		big_init(n);
 		BIG_rcopy(n->val,s->val);
 	}
+        n->zencode_positive = s->zencode_positive;
 	return(n);
 }
 
@@ -1049,6 +1050,15 @@ static int big_zenmod(lua_State *L) {
         BIG_mod(result->val, b->val);
 
         result->zencode_positive = BIG_POSITIVE;
+
+	return 1;
+}
+
+static int big_zenopposite(lua_State *L) {
+	big *a = big_arg(L, 1); SAFE(a);
+	big *result = big_dup(L, a); SAFE(result);
+
+        result->zencode_positive = BIG_OPPOSITE(result->zencode_positive);
 
 	return 1;
 }
