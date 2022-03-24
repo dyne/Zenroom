@@ -2,6 +2,8 @@ ECP = require('zenroom_ecp')
 ECP2 = require('zenroom_ecp2')
 BIG = require('zenroom_big')
 MPACK = require'zenroom_msgpack'
+ZEN = require'zencode'
+HASH = require'zenroom_hash'
 
 G = ECP.generator()
 O = ECP.order()
@@ -15,12 +17,14 @@ test = {
    O = O,
    salt = salt,
    message = message,
-	 commitment = G * r + salt * message,
-	 seckey = seckey,
-	 pubkey = G * seckey
+   commitment = G * r + salt * message,
+   seckey = seckey,
+   pubkey = G * seckey,
 }
 
+I.print(test)
+print( "SHA256: ".. sha256( ZEN.serialize(test) ):hex() )
 m = MPACK.encode(test)
-print(m)
 d = MPACK.decode(m)
+print( "SHA256: ".. sha256( ZEN.serialize(d) ):hex())
 I.print( d )

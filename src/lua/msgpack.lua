@@ -215,6 +215,7 @@ local decoder_functions = {
 	[0xc6] = function(data, position)
 		return unpack('>s4', data, position)
 	end,
+	-- 0xc7 - 0xc9 for userdata
 	[0xca] = function(data, position)
 		return unpack('>f', data, position)
 	end,
@@ -245,6 +246,7 @@ local decoder_functions = {
 	[0xd3] = function(data, position)
 		return unpack('>i8', data, position)
 	end,
+	-- 0xd4 - 0xd8 for userdata
 	[0xd9] = function(data, position)
 		return unpack('>s1', data, position)
 	end,
@@ -322,6 +324,7 @@ return {
 	_VERSION = '0.6.1',
 
 	encoder_functions = encoder_functions,
+	decoder_functions = decoder_functions,
 
 	-- primary encode function
 	encode = function(...)
