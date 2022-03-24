@@ -46,7 +46,7 @@ function schnorr.keygen()
    return keypair
 end
 
--- given a valid secret key, extracts the related public key not encoded (i.e. the as the point P=(P:x(), P:y())
+-- given a valid secret key, extracts the related public key not encoded (i.e. as the point P=(P:x(), P:y()))
 local function pubpoint_gen(sk)
    assert(sk, "no secret key found")
    assert(#sk == 32, 'invalid secret key: length is not of 32B')
@@ -58,18 +58,18 @@ local function pubpoint_gen(sk)
 end
 
 -- given a valid secret key, extracts the related encoded public key 
--- @param sk a 32 byte OCTET, secret key
+-- @param sk a 32 Byte OCTET, secret key
 -- @return a 48 Byte OCTET, public key
 function schnorr.pubgen(sk)
    local P = pubpoint_gen(sk)
-   pk = (P:x()):octet():pad(48)
+   local pk = (P:x()):octet():pad(48)
    return pk
 end
 
 -- validation of the public key done in two steps:
 -- 1.check the point is on the curve
 -- 2.check the point is not infinte
--- @param pk a 48 byte OCTET, public key
+-- @param pk a 48 Byte OCTET, public key
 -- @return true if the public key is valid, otherwise false
 function schnorr.pubcheck(pk)
    local P = ECP.new(BIG.new(pk)) 
@@ -82,7 +82,7 @@ end
 -- validation of the private key done in two steps:
 -- 1.check the length
 -- 2.check that it is grater than 0 and lower than the order of the curve
--- @param sk a 32 byte OCTET, secret key
+-- @param sk a 32 Byte OCTET, secret key
 -- @return true if the secret key is valid, otherwise false
 function schnorr.seccheck(sk)
    if sk and (#sk == 32) then
@@ -98,7 +98,7 @@ end
 -- 1.check the length of the signature
 -- 2.check that r is lower than p
 -- 3.check that s is lower than o
--- @param sig a 80 byte OCTET, signature ('sig=(r,s)')
+-- @param sig a 80 Byte OCTET, signature ('sig=(r,s)')
 -- @return true if the signature is valid, otherwise false
 function schnorr.sigcheck(sig)
    if sig and (#sig == 80) then
