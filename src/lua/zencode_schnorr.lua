@@ -72,7 +72,7 @@ ZEN.add_schema(
 When('create the schnorr key',
      function()
 	initkeys'schnorr'
-	ACK.keys.schnorr = SCH.keygen().private
+	ACK.keys.schnorr = SCH.keygen()
      end
 )
 
