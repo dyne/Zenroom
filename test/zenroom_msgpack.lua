@@ -1,3 +1,6 @@
+print''
+print("TEST MSGPACK WITH ZENROOM TYPES")
+print''
 ECP = require('zenroom_ecp')
 ECP2 = require('zenroom_ecp2')
 BIG = require('zenroom_big')
@@ -20,11 +23,14 @@ test = {
    commitment = G * r + salt * message,
    seckey = seckey,
    pubkey = G * seckey,
+   pub2 = ECP2.generator() * seckey
 }
 
-I.print(test)
-print( "SHA256: ".. sha256( ZEN.serialize(test) ):hex() )
+test_hash = sha256( ZEN.serialize(test) ):hex()
+print( "ENC SHA256: ".. test_hash)
 m = MPACK.encode(test)
 d = MPACK.decode(m)
-print( "SHA256: ".. sha256( ZEN.serialize(d) ):hex())
-I.print( d )
+res_hash = sha256( ZEN.serialize(d) ):hex()
+print( "DEC SHA256: ".. res_hash)
+assert( res_hash == test_hash, "encoding and decoding mismatch")
+print''

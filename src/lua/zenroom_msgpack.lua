@@ -23,15 +23,22 @@ local pack, unpack = string.pack, string.unpack
 local to_octenv = O.to_url64
 local from_octenv = O.from_url64
 
--- userdata codes available: 0xc{7,8,9} 0xd{4,5,6,7,8}
+-- userdata codes available
+
+-- 0xc{7,8,9} 
 mpack.encoder_functions['zenroom.octet'] = function(v)
    return pack('>Bs4', 0xc7, to_octenv(v)) end
-
-mpack.encoder_functions['zenroom.big']   = function(v)
+mpack.encoder_functions['zenroom.big'] = function(v)
    return pack('>Bs4', 0xc8, to_octenv(v:octet())) end
+-- reserved for zenroom 3.0
+-- mpack.encoder_functions['zenroom.float'] = function(v)
+--    return pack('>Bs4', 0xc9, to_octenv(v:octet())) end
 
+-- 0xd{4,5,6,7,8}
 mpack.encoder_functions['zenroom.ecp']   = function(v)
-   return pack('>Bs4', 0xc9, to_octenv(v:octet())) end
+   return pack('>Bs4', 0xd4, to_octenv(v:octet())) end
+mpack.encoder_functions['zenroom.ecp2']   = function(v)
+   return pack('>Bs4', 0xd5, to_octenv(v:octet())) end
 
 local function decode_octet(data, offset)
    local value, pos = string.unpack('>s4', data, offset)
@@ -39,17 +46,19 @@ local function decode_octet(data, offset)
 end
 local function decode_big(data, offset)
    local value, pos = string.unpack('>s4', data, offset)
---   I.print({ val = from_octenv(value), pos = pos})
    return BIG.new(from_octenv(value)), pos
 end
 local function decode_ecp(data, offset)
    local value, pos = string.unpack('>s4', data, offset)
---   I.print({ val = from_octenv(value), pos = pos})   
    return ECP.new(from_octenv(value)), pos   
 end
-
+local function decode_ecp2(data, offset)
+   local value, pos = string.unpack('>s4', data, offset)
+   return ECP2.new(from_octenv(value)), pos   
+end
 mpack.decoder_functions[0xc7] = decode_octet
 mpack.decoder_functions[0xc8] = decode_big
-mpack.decoder_functions[0xc9] = decode_ecp
+mpack.decoder_functions[0xd4] = decode_ecp
+mpack.decoder_functions[0xd5] = decode_ecp2
 
 return mpack
