@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # RNGSEED="random"
+SUBDOC=ecdh
 ####################
 # common script init
 if ! test -r ../utils.sh; then
@@ -9,7 +10,7 @@ if ! test -r ../utils.sh; then
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
-cat <<EOF | zexe SYM01.zen | save ecdh secret.json
+cat <<EOF | zexe SYM01.zen | save $SUBDOC secret.json
 rule check version 1.0.0
 Scenario ecdh: Generate a random password
 Given nothing
@@ -17,7 +18,7 @@ When I create the random 'password'
 Then print the 'password'
 EOF
 
-cat <<EOF | zexe SYM02.zen | save ecdh cipher_message.json
+cat <<EOF | zexe SYM02.zen | save $SUBDOC cipher_message.json
 Scenario ecdh: Encrypt a message with the password
 Given nothing
 # only inline input, no KEYS or DATA passed
@@ -30,7 +31,7 @@ and I encrypt the secret message 'whisper' with 'password'
 Then print the 'secret message'
 EOF
 
-cat <<EOF | zexe SYM03.zen -a cipher_message.json | save ecdh clear_message.json
+cat <<EOF | zexe SYM03.zen -a cipher_message.json | save $SUBDOC clear_message.json
 Scenario ecdh: Decrypt the message with the password
 Given I have a 'secret message'
 When I write string 'my secret word' in 'password'
@@ -39,21 +40,21 @@ Then print the 'text' as 'string'
 and print the 'header' from 'secret message' as 'string'
 EOF
 
-cat <<EOF | zexe alice_keygen.zen | save ecdh alice_keypair.json
+cat <<EOF | zexe alice_keygen.zen | save $SUBDOC alice_keypair.json
 Scenario 'ecdh': Create the keypair
 Given that I am known as 'Alice'
 When I create the keypair
 Then print my data
 EOF
 
-cat <<EOF | zexe alice_keypub.zen -k alice_keypair.json | save ecdh alice_pub.json
+cat <<EOF | zexe alice_keypub.zen -k alice_keypair.json | save $SUBDOC alice_pub.json
 Scenario 'ecdh': Publish the public key
 Given that I am known as 'Alice'
 and I have my 'keypair'
 Then print the 'public key' from 'keypair'
 EOF
 
-cat <<EOF | zexe DSA01.zen -k alice_keypair.json | save ecdh alice_signs_to_bob.json
+cat <<EOF | zexe DSA01.zen -k alice_keypair.json | save $SUBDOC alice_signs_to_bob.json
 Rule check version 1.0.0
 Scenario 'ecdh': Alice signs a message for Bob
 	Given that I am known as 'Alice'
@@ -64,7 +65,7 @@ Scenario 'ecdh': Alice signs a message for Bob
 	and print my 'draft'
 EOF
 
-cat <<EOF | zexe DSA02.zen -k alice_pub.json -a alice_signs_to_bob.json | save ecdh verify_sign.json
+cat <<EOF | zexe DSA02.zen -k alice_pub.json -a alice_signs_to_bob.json | save $SUBDOC verify_sign.json
 rule check version 1.0.0
 # rule input encoding base64
 Scenario 'ecdh': Bob verifies the signature from Alice
@@ -93,7 +94,7 @@ cat <<EOF | save . Identity_example.json
 }
 EOF
 
-cat <<EOF | zexe DSA01-table.zen -k alice_keypair.json -a Identity_example.json | save ecdh alice_signs_table_to_bob.json
+cat <<EOF | zexe DSA01-table.zen -k alice_keypair.json -a Identity_example.json | save $SUBDOC alice_signs_table_to_bob.json
 Rule check version 1.0.0
 Scenario 'ecdh': Alice signs a message for Bob
 	Given that I am known as 'Alice'
@@ -104,7 +105,7 @@ Scenario 'ecdh': Alice signs a message for Bob
 	and print the 'Identity'
 EOF
 
-cat <<EOF | zexe DSA02-table.zen -k alice_pub.json -a alice_signs_table_to_bob.json | save ecdh verify_table_sign.json
+cat <<EOF | zexe DSA02-table.zen -k alice_pub.json -a alice_signs_table_to_bob.json | save $SUBDOC verify_table_sign.json
 rule check version 1.0.0
 # rule input encoding base64
 Scenario 'ecdh': Bob verifies the signature from Alice
@@ -117,21 +118,21 @@ Scenario 'ecdh': Bob verifies the signature from Alice
 EOF
 
 
-cat <<EOF | zexe bob_keygen.zen | save ecdh bob_keypair.json
+cat <<EOF | zexe bob_keygen.zen | save $SUBDOC bob_keypair.json
 Scenario 'ecdh': Create the keypair
 Given that I am known as 'Bob'
 When I create the keypair
 Then print my data
 EOF
 
-cat <<EOF | zexe bob_keypub.zen -k bob_keypair.json | save ecdh bob_pub.json
+cat <<EOF | zexe bob_keypub.zen -k bob_keypair.json | save $SUBDOC bob_pub.json
 Scenario 'ecdh': Publish the public key
 Given that I am known as 'Bob'
 and I have my 'keypair'
 Then print the 'public key' from 'keypair'
 EOF
 
-cat <<EOF | zexe AES05.zen -k alice_keypair.json -a bob_pub.json | save ecdh alice_to_bob.json
+cat <<EOF | zexe AES05.zen -k alice_keypair.json -a bob_pub.json | save $SUBDOC alice_to_bob.json
 Rule check version 1.0.0
 Scenario 'ecdh': Alice encrypts a message for Bob
 	Given that I am known as 'Alice'
@@ -143,7 +144,7 @@ Scenario 'ecdh': Alice encrypts a message for Bob
 	Then print the 'secret message'
 EOF
 
-cat <<EOF | zexe AES06.zen -k bob_keypair.json -a alice_pub.json | save ecdh bob_keyring.json
+cat <<EOF | zexe AES06.zen -k bob_keypair.json -a alice_pub.json | save $SUBDOC bob_keyring.json
 Rule check version 1.0.0
 Scenario 'ecdh': Bob gathers public keys in his keyring
 	Given that I am 'Bob'
@@ -153,7 +154,7 @@ Scenario 'ecdh': Bob gathers public keys in his keyring
 	and print the 'public key'
 EOF
 
-cat <<EOF | zexe AES07.zen -k bob_keyring.json -a alice_to_bob.json | save ecdh asym_clear_message.json
+cat <<EOF | zexe AES07.zen -k bob_keyring.json -a alice_to_bob.json | save $SUBDOC asym_clear_message.json
 Rule check version 1.0.0
 Scenario 'ecdh': Bob decrypts the message from Alice
 	Given that I am known as 'Bob'
@@ -173,7 +174,7 @@ echo
 
 #####################
 ## new key management
-cat << EOF | zexe keygen.zen | save ecdh alice_keys.json
+cat << EOF | zexe keygen.zen | save $SUBDOC alice_keys.json
 Scenario ecdh
 Given I am known as 'Alice'
 When I create the keys
@@ -181,7 +182,7 @@ and I create the ecdh key
 Then print my 'keys'
 EOF
 
-cat << EOF | zexe pubkey.zen -k alice_keys.json | save ecdh alice_pubkey.json
+cat << EOF | zexe pubkey.zen -k alice_keys.json | save $SUBDOC alice_pubkey.json
 Scenario ecdh
 Given I am known as 'Alice'
 Given I have my 'keys'
@@ -189,14 +190,14 @@ When I create the ecdh public key
 Then print my 'ecdh public key'
 EOF
 
-cat << EOF | zexe keygen.zen | save ecdh bob_keys.json
+cat << EOF | zexe keygen.zen | save $SUBDOC bob_keys.json
 Scenario ecdh
 Given I am known as 'Bob'
 When I create the ecdh key
 Then print my 'keys'
 EOF
 
-cat << EOF | zexe pubkey.zen -k bob_keys.json | save ecdh bob_pubkey.json
+cat << EOF | zexe pubkey.zen -k bob_keys.json | save $SUBDOC bob_pubkey.json
 Scenario ecdh
 Given I am known as 'Bob'
 Given I have my 'keys'
@@ -205,7 +206,7 @@ Then print my 'ecdh public key'
 EOF
 
 # check that secret key doesn't changes on pubkey generation
-cat << EOF | zexe keygen_immutable.zen | save ecdh carl_keys.json
+cat << EOF | zexe keygen_immutable.zen | save $SUBDOC carl_keys.json
 Scenario ecdh
 Given I am known as 'Carl'
 When I create the ecdh key
@@ -218,7 +219,7 @@ and print 'ecdh after' as 'hex'
 EOF
 
 cat alice_keys.json | jq .
-cat <<EOF | zexe enc_to_bob.zen -k alice_keys.json -a bob_pubkey.json | save ecdh enc_alice_to_bob.json
+cat <<EOF | zexe enc_to_bob.zen -k alice_keys.json -a bob_pubkey.json | save $SUBDOC enc_alice_to_bob.json
 Rule check version 1.0.0
 Scenario 'ecdh': Alice encrypts a message for Bob
 	Given that I am known as 'Alice'
@@ -234,7 +235,7 @@ Scenario 'ecdh': Alice encrypts a message for Bob
 	and print all data
 EOF
 
-cat <<EOF | zexe dec_from_alice.zen -k bob_keys.json -a enc_alice_to_bob.json | save ecdh dec_bob_from_alice.json
+cat <<EOF | zexe dec_from_alice.zen -k bob_keys.json -a enc_alice_to_bob.json | save $SUBDOC dec_bob_from_alice.json
 Rule check version 1.0.0
 Scenario 'ecdh': Bob decrypts the message from Alice
 	Given that I am known as 'Bob'
@@ -246,7 +247,7 @@ Scenario 'ecdh': Bob decrypts the message from Alice
 	and print the 'header' from 'secret message' as 'string'
 EOF
 
-cat <<EOF | zexe sign_from_alice.zen -k alice_keys.json | save ecdh sign_alice_keyring.json
+cat <<EOF | zexe sign_from_alice.zen -k alice_keys.json | save $SUBDOC sign_alice_keyring.json
 Rule check version 2.0.0
 Scenario 'ecdh'
 Given that I am known as 'Alice'
@@ -268,4 +269,28 @@ Then print the string 'Signature is valid'
 and print the 'message'
 EOF
 
+cat <<EOF | zexe sign_from_alice2.zen -k alice_keys.json | save $SUBDOC sign_alice_keyring2.json
+Rule check version 2.0.0
+Scenario 'ecdh'
+Given that I am known as 'Alice'
+and I have my 'keys'
+When I write string 'This is my authenticated message.' in 'message'
+and I create the ecdh signature of 'message'
+Then print the 'message'
+and print the 'ecdh signature'
+EOF
+
+cat <<EOF | zexe verify_from_alice2.zen -k alice_pubkey.json -a sign_alice_keyring2.json | jq .
+Rule check version 2.0.0
+Scenario 'ecdh'
+Given I have a 'ecdh public key' from 'Alice'
+and I have a 'string' named 'message'
+and I have a 'ecdh signature'
+When I verify the 'message' has a ecdh signature in 'ecdh signature' by 'Alice'
+Then print the string 'Signature is valid'
+and print the 'message'
+EOF
+
 success
+
+rm *.json *.zen
