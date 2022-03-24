@@ -18,8 +18,8 @@
 --GNU Affero General Public License v3.0
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
---Last modified by Denis Roio
---on Tuesday, 20th July 2021
+--Last modified by Matteo Cristino
+--on Thursday, 24th March 2021
 --]]
 
 local schnorr = {}
@@ -30,20 +30,15 @@ o = ECP.order()
 -- generator of the curve
 G = ECP.generator()
 
--- method for obtaining a valid EC keypair where the secret key is chosen at random
+-- method for obtaining a valid EC secret key that is chosen at random
 function schnorr.keygen()
-   local keypair = {}
-   local sk, pk, P, d
+   local sk, d
    repeat
       sk = OCTET.random(32)
       d = BIG.new(sk)
       if  o <= d then d = BIG.new(0) end --guaranties that the generated keypair is valid
-   until (d ~= BIG.new(0)) 
-   P = d*G
-   pk = (P:x()):octet():pad(48)
-   keypair.private = sk
-   keypair.public = pk
-   return keypair
+   until (d ~= BIG.new(0))
+   return sk
 end
 
 -- given a valid secret key, extracts the related public key not encoded (i.e. as the point P=(P:x(), P:y()))
@@ -61,6 +56,7 @@ end
 -- @param sk a 32 Byte OCTET, secret key
 -- @return a 48 Byte OCTET, public key
 function schnorr.pubgen(sk)
+   if iszen(type(sk)) then sk = sk:octet() end
    local P = pubpoint_gen(sk)
    local pk = (P:x()):octet():pad(48)
    return pk
@@ -72,11 +68,9 @@ end
 -- @param pk a 48 Byte OCTET, public key
 -- @return true if the public key is valid, otherwise false
 function schnorr.pubcheck(pk)
-   local P = ECP.new(BIG.new(pk)) 
-   if P and ECP.validate(P) and not ECP.isinf(P) then
-      return true
-   end
-   return false
+   if iszen(type(pk)) then pk = pk:octet() end
+   local P = ECP.new(BIG.new(pk))
+   return ECP.validate(P) and not ECP.isinf(P)
 end
 
 -- validation of the private key done in two steps:
@@ -85,13 +79,9 @@ end
 -- @param sk a 32 Byte OCTET, secret key
 -- @return true if the secret key is valid, otherwise false
 function schnorr.seccheck(sk)
-   if sk and (#sk == 32) then
-      local d = BIG.new(sk)
-      if (d ~= BIG.new(0)) and (d <= o) then
-	 return true
-      end
-   end
-   return false
+   if iszen(type(sk)) then sk = sk:octet() end
+   local d = BIG.new(sk)
+   return (#sk == 32) and (d ~= BIG.new(0)) and (d <= o)
 end
 
 -- validation of the signature (sig=(r,s)) done in three steps:
@@ -105,9 +95,7 @@ function schnorr.sigcheck(sig)
       local r_arr, s_arr = OCTET.chop(sig,48)
       local r = BIG.new(r_arr)
       local s = BIG.new(s_arr)
-      if (r <= p) and (s <= o) then
-	 return true
-      end
+      return (r <= p) and (s <= o)
    end
    return false
 end
@@ -118,7 +106,8 @@ end
 --      in such a way that collisions across contexts can be assumed to be infeasible.
 -- N.B2: tag names can be customized at will
 local function hash_tag(tag, data)
-   return sha256(sha256(OCTET.str(tag))..sha256(OCTET.str(tag))..data)
+   local h = sha256(O.str(tag))
+   return sha256(h..h..data)
 end
 
 
@@ -127,6 +116,7 @@ end
 -- @param m a 32 Byte OCTET, message 
 -- @return an 80 Byte OCTET, signature '(r,s)'', r is 48 Byte long and s is 32 Byte long
 function schnorr.sign(sk, m)
+   if iszen(type(sk)) then sk = sk:octet() end
    local d = BIG.new(sk)
    local P = pubpoint_gen(sk)
    --for convention we need that P has even y-coordinate
@@ -160,6 +150,7 @@ end
 -- @param sig an 80 Byte OCTET, signature ('sig=(r,s)')
 -- @return true if verification passes, false otherwise
 function schnorr.verify(pk, m, sig)
+   if iszen(type(pk)) then pk = pk:octet() end
    --the follwing "lifts" pk to an ECP with x = pk and y is even
    local P = ECP.new(BIG.new(pk))    
    assert(P, "lifting failed")
