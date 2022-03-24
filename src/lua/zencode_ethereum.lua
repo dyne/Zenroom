@@ -51,6 +51,7 @@ local function import_eth_tx(obj)
   res.gas_price = ZEN.get(obj, 'gas_price', INT.from_decimal, tostring)
   res.gas_limit = ZEN.get(obj, 'gas_limit', INT.from_decimal, tostring)
   res.value = ZEN.get(obj, 'value', INT.from_decimal, tostring)
+  res.to = ZEN.get(obj, 'to', O.from_hex, tostring)
   if obj.data then
     res.data = ZEN.get(obj, 'data', O.from_hex, tostring)
   else res.data = O.new() end
@@ -64,6 +65,7 @@ local function export_eth_tx(obj)
   res.nonce = obj.nonce:decimal()
   res.gas_price = obj.gas_price:decimal()
   res.gas_limit = obj.gas_limit:decimal()
+  res.to = obj.to:hex()
   if #obj.value == 0 then res.value = '0'
   elseif type(obj.value) == 'zenroom.big' then
     res.value = obj.value:decimal()
