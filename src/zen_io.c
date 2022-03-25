@@ -540,35 +540,38 @@ static int zen_fatal(lua_State *L) {
 
 int zen_zstd_compress(lua_State *L) {
   octet *dst, *src;
-  if(!Z->zstd_c) return 0;
-  src = o_arg(L, 1);
+  if(!Z->zstd_c)
+    Z->zstd_c = ZSTD_createCCtx();
+  src = o_arg(L, 1); SAFE(src);
   dst = o_new(L, ZSTD_compressBound(src->len));
   dst->len = ZSTD_compressCCtx(Z->zstd_c,
 			       dst->val, dst->max,
 			       src->val, src->len,
 			       ZSTD_maxCLevel());
-  // TODO: ZSTD_isError(dst->len)
-  //       then ZSTD_getErrorName
+  func(L, "octet compressed: %u -> %u",src->len, dst->len);
+  if (ZSTD_isError(dst->len)) {
+    fprintf(stderr,"ZSTD error: %s\n",ZSTD_getErrorName(dst->len));
+    zen_fatal(L);
+  }
   return 1;
 }
 
-// TODO: WIP
 int zen_zstd_decompress(lua_State *L) {
-  size_t len = 0;
-  size_t dstlen;
-  octet *dst;
-  if(!Z->zstd_c) return 0;
-  lua_getglobal(L, "tostring");  
-  const char *s = lua_print_format(L, 1, &len);
-  dstlen = ZSTD_compressBound(len);
-  dst = o_new(L, dstlen);
-  /* size_t ZSTD_compressCCtx(ZSTD_CCtx* cctx, */
-  /*                        void* dst, size_t dstCapacity, */
-  /*                  const void* src, size_t srcSize, */
-  /*                        int compressionLevel); */
-  dst->len = ZSTD_compressCCtx(Z->zstd_c, dst->val, dstlen, s, len,
-			       ZSTD_maxCLevel());
-//			       ZSTD_defaultCLevel());
+  octet *src, *dst;
+  size_t res;
+  if(!Z->zstd_d)
+    Z->zstd_d = ZSTD_createDCtx();
+  src = o_arg(L, 1); SAFE(src);
+  dst = o_new(L, src->len * 3); // assuming max bound is *3
+  SAFE(dst);
+  dst->len = ZSTD_decompressDCtx(Z->zstd_d,
+		      dst->val, dst->max,
+		      src->val, src->len);
+  func(L, "octet uncompressed: %u -> %u",src->len, dst->len);
+  if (ZSTD_isError(dst->len)) {
+    fprintf(stderr,"ZSTD error: %s\n",ZSTD_getErrorName(dst->len));
+    zen_fatal(L);
+  }
   return 1;
 }
 
@@ -583,7 +586,7 @@ void zen_add_io(lua_State *L) {
 		  {"warn", zen_warn},
 		  {"act", zen_act},
 		  {"compress", zen_zstd_compress},
-//		  {"decompress", zen_zstd_decompress},
+		  {"decompress", zen_zstd_decompress},
 		  {NULL, NULL} };
 	lua_getglobal(L, "_G");
 	luaL_setfuncs(L, custom_print, 0);  // for Lua versions 5.2 or greater

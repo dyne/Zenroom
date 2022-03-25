@@ -230,10 +230,6 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 		return NULL;
 	}
 
-	// initialize ZSTD's context
-	ZZ->zstd_c = ZSTD_createCCtx();
-	ZZ->zstd_d = ZSTD_createDCtx();
-
 	// expose the debug level
 	lua_pushinteger(ZZ->lua, ZZ->debuglevel);
 	lua_setglobal (ZZ->lua, "DEBUG");
@@ -302,6 +298,9 @@ void zen_teardown(zenroom_t *ZZ) {
 		lua_close((lua_State*)ZZ->lua);
 		ZZ->lua = NULL;
 	}
+
+	// TODO: remove zstd header by segregating it to zen_io
+	// teardown
 	if(ZZ->zstd_c) {
 	  ZSTD_freeCCtx(ZZ->zstd_c);
 	  ZZ->zstd_c = NULL;
@@ -310,6 +309,7 @@ void zen_teardown(zenroom_t *ZZ) {
 	  ZSTD_freeDCtx(ZZ->zstd_d);
 	  ZZ->zstd_d = NULL;
 	}
+
 	func(NULL,"finally free Zen context");
 	if(ZZ) {  // TODO: remove compat with global context
 		free(ZZ);
