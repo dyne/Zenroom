@@ -17,4 +17,4 @@ License: Apache-2.0
 
 Files: lib/zstd/*
 Copyright: Copyright (c) 2016-present, Facebook, Inc.
-License: BSD
+License: BSD-3-Clause

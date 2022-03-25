@@ -180,6 +180,9 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	ZZ->debuglevel = 2;
 	ZZ->random_generator = NULL;
 	ZZ->random_external = 0;
+	ZZ->zstd_c = NULL;
+	ZZ->zstd_d = NULL;
+
 	if(conf) {
 		if( ! zen_conf_parse(ZZ, conf) ) { // stb parsing
 			error(NULL,"Fatal error");
