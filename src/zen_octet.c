@@ -437,6 +437,29 @@ static int from_number(lua_State *L) {
 	return 1;
 }
 
+/*
+@function OCTET.from_rawlen(string, length) (unsafe!)
+@str string string to copy in octet as-is
+@int length string length in bytes
+@return octet newly instantiated octet
+*/
+static int from_rawlen (lua_State *L) {
+  const char *s;
+  size_t len;
+  s = lua_tolstring(L, 1, &len);  /* get result */
+  luaL_argcheck(L, s != NULL, 1, "string expected");
+  int tn;
+  lua_Number n = lua_tointegerx(L,2,&tn);
+  if(!tn) {
+    lerror(L, "O.new 2nd arg is not a number");
+    return 0; }
+  octet *o = o_new(L, (int)n); SAFE(o);
+  register int c;
+  for(c=0;c<n;c++) o->val[c] = s[c];
+  o->len = (int)n;
+  return 1;
+}
+
 static int from_base64(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "base64 string expected");
@@ -1284,6 +1307,7 @@ int luaopen_octet(lua_State *L) {
 		{"from_base58",from_base58},
 		{"from_string",from_string},
 		{"from_str",   from_string},
+		{"from_rawlen",  from_rawlen},
 		{"from_hex",   from_hex},
 		{"from_bin",   from_bin},
 		{"from_mnemonic",   from_mnemonic},
