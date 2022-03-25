@@ -81,7 +81,6 @@ require('zenroom_common')
 INSPECT = require('inspect')
 CBOR = require('zenroom_cbor')
 JSON = require('zenroom_json')
-MPACK = require('msgpack')
 OCTET = require('zenroom_octet')
 BIG = require('zenroom_big')
 ECDH = require('zenroom_ecdh')
@@ -90,17 +89,19 @@ AES = require'aes'
 ECP = require('zenroom_ecp')
 ECP2 = require('zenroom_ecp2')
 HASH = require('zenroom_hash')
-BENCH = require('zenroom_bench')
-MACHINE = require('statemachine')
-TIME = require('timetable')
--- BITCOIN primitives are imported by default
-BTC = require('crypto_bitcoin')
 O = OCTET -- alias
 INT = BIG -- alias
 I = INSPECT -- alias
 H = HASH -- alias
 PAIR = ECP2 -- alias
 PAIR.ate = ECP2.miller --alias
+MPACK = require('zenroom_msgpack')
+ZPACK = require('zenroom_zpack')
+BENCH = require('zenroom_bench')
+MACHINE = require('statemachine')
+TIME = require('timetable')
+-- BITCOIN primitives are imported by default
+BTC = require('crypto_bitcoin')
 V = require('semver')
 ZENROOM_VERSION = V(VERSION)
 
