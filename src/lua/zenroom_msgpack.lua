@@ -17,11 +17,13 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --]]
 
-local mpack = require'msgpack'
+-- required by zenroom_zpack
+
+local mpack = require_once'msgpack'
 local pack, unpack = string.pack, string.unpack
 
-local to_octenv = O.to_url64
-local from_octenv = O.from_url64
+local to_octenv = OCTET.to_url64
+local from_octenv = OCTET.from_url64
 
 -- userdata codes available
 
