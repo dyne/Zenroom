@@ -58,6 +58,9 @@
 #include <stb_sprintf.h>
 #include <mutt_sprintf.h>
 
+// zstd
+#include <zstd.h>
+
 // prototypes from zen_octet.c
 extern void push_buffer_to_octet(lua_State *L, char *p, size_t len);
 
@@ -220,11 +223,16 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	// initialize the random generator
 	ZZ->random_generator = rng_alloc(ZZ);
 
+	// initialize Lua's context
 	ZZ->lua = lua_newstate(zen_memory_manager, ZZ);
 	if(!ZZ->lua) {
 		error(NULL,"%s: %s", __func__, "Lua newstate creation failed");
 		return NULL;
 	}
+
+	// initialize ZSTD's context
+	ZZ->zstd_c = ZSTD_createCCtx();
+	ZZ->zstd_d = ZSTD_createDCtx();
 
 	// expose the debug level
 	lua_pushinteger(ZZ->lua, ZZ->debuglevel);
@@ -292,6 +300,15 @@ void zen_teardown(zenroom_t *ZZ) {
 		lua_gc((lua_State*)ZZ->lua, LUA_GCCOLLECT, 0);
 		// this call here frees also Z (lightuserdata)
 		lua_close((lua_State*)ZZ->lua);
+		ZZ->lua = NULL;
+	}
+	if(ZZ->zstd_c) {
+	  ZSTD_freeCCtx(ZZ->zstd_c);
+	  ZZ->zstd_c = NULL;
+	}
+	if(ZZ->zstd_d) {
+	  ZSTD_freeDCtx(ZZ->zstd_d);
+	  ZZ->zstd_d = NULL;
 	}
 	func(NULL,"finally free Zen context");
 	if(ZZ) {  // TODO: remove compat with global context

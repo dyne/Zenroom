@@ -1,60 +1,60 @@
 musl: ldadd += /usr/lib/${ARCH}-linux-musl/libc.a
-musl: apply-patches milagro embed-lua lua53
+musl: apply-patches milagro embed-lua lua53 zstd
 	CC=${gcc} AR="${ar}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src musl
 		@cp -v src/zenroom build/zenroom
 
 musl-local: ldadd += /usr/local/musl/lib/libc.a
-musl-local: apply-patches milagro embed-lua lua53
+musl-local: apply-patches milagro embed-lua lua53 zstd
 	CC=${gcc} AR="${ar}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src musl
 
 musl-system: gcc := gcc
 musl-system: ldadd += -lm
-musl-system: apply-patches milagro embed-lua lua53
+musl-system: apply-patches milagro embed-lua lua53 zstd
 	CC=${gcc} AR="${ar}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src musl
 
 bsd: cflags := -O3 ${cflags_protection} -fPIE -fPIC -DARCH_BSD
 bsd: ldadd += -lm
-bsd: apply-patches milagro lua53 embed-lua
+bsd: apply-patches milagro lua53 embed-lua zstd
 	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src linux
 		@cp -v src/zenroom build/zenroom
 
 
 linux: cflags := -O0 ${cflags_protection} -fPIE -fPIC
-linux: apply-patches milagro lua53 embed-lua
+linux: apply-patches milagro lua53 embed-lua zstd
 	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src linux
 		@cp -v src/zenroom build/zenroom
 
-linux-raspi: apply-patches milagro lua53 embed-lua
+linux-raspi: apply-patches milagro lua53 embed-lua zstd
 	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src linux
 		@cp -v src/zenroom build/zenroom
 
-android-arm android-x86 android-aarch64 java-x86_64: apply-patches milagro lua53 embed-lua
+android-arm android-x86 android-aarch64 java-x86_64: apply-patches milagro lua53 embed-lua zstd
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	LD="${ld}" RANLIB="${ranlib}" AR="${ar}" \
 		make -C src $@
 
 cortex-arm: ldflags += -Wl,-Map=./zenroom.map
-cortex-arm:	apply-patches milagro cortex-lua53 embed-lua
+cortex-arm:	apply-patches milagro cortex-lua53 embed-lua zstd
 	CC=${gcc} AR="${ar}" OBJCOPY="${objcopy}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src arm
 
 aarch64: ldflags += -Wl,-Map=./zenroom.map
-aarch64: apply-patches milagro cortex-lua53 embed-lua
+aarch64: apply-patches milagro cortex-lua53 embed-lua zstd
 	CC=${gcc} AR="${ar}" OBJCOPY="${objcopy}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src aarch64 
 
-linux-riscv64: apply-patches milagro lua53 embed-lua
+linux-riscv64: apply-patches milagro lua53 embed-lua zstd
 	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src linux
 	@cp -v src/zenroom build/zenroom
 
-linux-debug: apply-patches milagro lua53 embed-lua
+linux-debug: apply-patches milagro lua53 embed-lua zstd
 	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src linux-debug
 	@cp -v src/zenroom build/zenroom
@@ -88,26 +88,26 @@ linux-sanitizer: linux
 
 linux-lib: cflags := -O3 ${cflags_protection} -fPIE -fPIC
 linux-lib: cflags += -shared -DLIBRARY
-linux-lib: apply-patches milagro lua53 embed-lua
+linux-lib: apply-patches milagro lua53 embed-lua zstd
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src linux-lib
 
 musl-lib: ldadd += /usr/lib/${ARCH}-linux-musl/libc.a
 musl-lib: cflags += -DLIBRARY
-musl-lib: apply-patches milagro lua53 embed-lua
+musl-lib: apply-patches milagro lua53 embed-lua zstd
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	ECP=${ecp_curve} ECDH=${ecdh_curve} MILIB=${milib} \
 	make -C src lib-static
 
 linux-lib-static: cflags := -O3 ${cflags_protection} -fPIE -fPIC
 linux-lib-static: cflags += -DLIBRARY
-linux-lib-static: apply-patches milagro lua53 embed-lua
+linux-lib-static: apply-patches milagro lua53 embed-lua zstd
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	ECP=${ecp_curve} ECDH=${ecdh_curve} MILIB=${milib} \
 	make -C src lib-static
 
 linux-lib-debug: cflags += -shared -DLIBRARY
-linux-lib-debug: apply-patches milagro lua53 embed-lua
+linux-lib-debug: apply-patches milagro lua53 embed-lua zstd
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src linux-lib
 
@@ -115,7 +115,7 @@ linux-python3: linux-lib
 	@cp -v ${pwd}/src/libzenroom-${ARCH}.so \
 		${pwd}/bindings/python3/zenroom/libzenroom.so
 
-linux-go: apply-patches milagro lua53 embed-lua
+linux-go: apply-patches milagro lua53 embed-lua zstd
 	swig -go -cgo -intgosize 32 ${pwd}/build/swig.i
 	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c -o src/zen_go.o
 	CC=${gcc} LD=${ld} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \

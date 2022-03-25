@@ -1,0 +1,17 @@
+#!/bin/sh
+
+zstd_path="${MESON_SOURCE_ROOT}/../lib/zstd"
+
+cd "${MESON_BUILD_ROOT}"
+mkdir -p zstd && cd zstd
+
+make libzstd.a \
+     ZSTD_LIB_DICTBUILDER=0 \
+     ZSTD_LIB_DEPRECATED=0 \
+     ZSTD_LIB_MINIFY=1 \
+     HUF_FORCE_DECOMPRESS_X1=1 \
+     ZSTD_FORCE_DECOMPRESS_SEQUENCES_SHORT=1 \
+     ZSTD_NO_INLINE=1 \
+     -C ${zstd_path}
+
+cp ${zstd_path}/libzstd.a ${MESON_BUILD_ROOT}
