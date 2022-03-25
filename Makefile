@@ -135,9 +135,14 @@ check-milagro: milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c test
 
 zstd:
-	echo "-- Building ZSTD (${system})"
-	CC=${gcc} LD=${ld} AR=${ar} RANLIB=${ranlib} LD=${ld} \
-	CFLAGS="${cflags}" \
+	echo "-- Building ZSTD"
+	CC=${gcc} \
+	LD=${ld} \
+	AR=${ar} \
+	RANLIB=${ranlib} \
+	LD=${ld} \
+	CFLAGS="${cflags} -fPIC" \
+	LDFLAGS="${ldflags}" \
 	make libzstd.a -C ${pwd}/lib/zstd \
 	ZSTD_LIB_DICTBUILDER=0 \
 	ZSTD_LIB_DEPRECATED=0 \
