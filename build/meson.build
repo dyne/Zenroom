@@ -43,10 +43,13 @@ add_project_link_arguments(
     'milagro-crypto-c/lib/libamcl_curve_' + ecdh_curve + '.a',
     'milagro-crypto-c/lib/libamcl_pairing_' + ecp_curve + '.a',
     'milagro-crypto-c/lib/libamcl_curve_' + ecp_curve + '.a',
+    'libzstd.a',
     language: 'c'
 )
 
 run_command('embed-lualibs', check: true)
+
+run_command('meson-build-zstd')
 
 zenroom_include_dirs = include_directories('../src')
 
@@ -89,6 +92,8 @@ run_command(
     check: true,
 )
 milagro_generated_include_dirs = include_directories('milagro-crypto-c/include')
+
+zstd_include_dirs = include_directories('../lib/zstd')
 
 lua_include_dirs = include_directories('../lib/lua53/src')
 lua_lib = static_library('lua',
@@ -144,6 +149,7 @@ zenroom_lib = library(
         zenroom_include_dirs,
         milagro_include_dirs,
         milagro_generated_include_dirs,
+        zstd_include_dirs,
     ],
     dependencies: [lua_dep],
     install: true,
@@ -158,6 +164,7 @@ zenroom_dep = declare_dependency(
         zenroom_include_dirs,
         milagro_include_dirs,
         milagro_generated_include_dirs,
+        zstd_include_dirs,
     ],
     dependencies: [lua_dep]
 )

@@ -22,7 +22,11 @@ CC ?= gcc
 BRANCH := $(shell git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
 COMMIT := $(shell git rev-parse --short HEAD)
 VERSION := ${ZENROOM_VERSION}
-CFLAGS  += -I. -I../lib/lua53/src -I../lib/milagro-crypto-c/build/include -I../lib/milagro-crypto-c/include -Wall -Wextra
+CFLAGS  += -I. -I../lib/lua53/src \
+	-I../lib/milagro-crypto-c/build/include \
+	-I../lib/milagro-crypto-c/include \
+	-I../lib/zstd \
+	-Wall -Wextra
 
 CMSIS := ../lib/cmsis
 CORTEX_M_SRC_ASM = $(CMSIS)/Device/ARM/ARMCM3/Source/GCC/startup_ARMCM3.S
@@ -78,6 +82,7 @@ lib-static: ${SOURCES}
 	ar x ${MILIB}/libamcl_pairing_${ECP}.a
 	ar x ${MILIB}/libamcl_curve_${ECDH}.a
 	ar x ${MILIB}/libamcl_core.a
+	ar x ../lib/zstd/libzstd.a
 	${AR} rcs libzenroom-${ARCH}.a *.o
 
 luarock: ${SOURCES}
