@@ -952,7 +952,7 @@ static int to_string(lua_State *L) {
 	OCT_toStr(o,s); // TODO: inverted function signature, see
 					// https://github.com/milagro-crypto/milagro-crypto-c/issues/291
 	s[o->len] = '\0'; // make sure string is NULL terminated
-	lua_pushstring(L,s);
+	lua_pushlstring(L,s,o->len);
 	zen_memory_free(s);
 	return 1;
 }
