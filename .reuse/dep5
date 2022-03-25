@@ -14,3 +14,7 @@ License: MIT
 Files: lib/milagro-crypto-c/*
 Copyright: 2019 The Apache Software Foundation
 License: Apache-2.0
+
+Files: lib/zstd/*
+Copyright: Copyright (c) 2016-present, Facebook, Inc.
+License: BSD
