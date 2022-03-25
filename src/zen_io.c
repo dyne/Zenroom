@@ -41,6 +41,8 @@
 #endif
 #endif
 
+#include <zstd.h>
+
 #if defined(ARCH_CORTEX)
 extern int SEMIHOSTING_STDOUT_FILENO;
 extern int write_to_console(const char* str);
@@ -526,48 +528,6 @@ static int zen_act (lua_State *L) {
 	return 0;
 }
 
-// lua_error from lapi.c
-// #include <lapi.h>
-// api_checknelems(L, 1);
-// luaG_errormsg(L);
-
-// static int zen_error (lua_State *L) {
-// 	int n = lua_gettop(L);  /* number of arguments */
-// 	int w;
-
-// 	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
-
-// 	int status = 1;
-// 	size_t len = 0;
-// 	int i;
-// 	lua_getglobal(L, "tostring");
-// 	w = write(STDERR_FILENO, "[!] ",4* sizeof(char));
-//     (void)w;
-// 	for (i=1; i<=n; i++) {
-// 		const char *s = lua_print_format(L, i, &len);
-// 		if(i>1)
-// 			w = write(STDERR_FILENO, "\t",sizeof(char));
-//         (void)w;
-// 		status = status &&
-// 			(write(STDERR_FILENO, s, len) == (int)len);
-// 		lua_pop(L, 1);  /* pop result */
-// 	}
-// 	w = write(STDERR_FILENO,"\n",sizeof(char));
-
-// 	// output the zencode line if active
-// 	lua_getglobal(L,"ZEN_traceback");
-// 	size_t zencode_line_len;
-// 	const char *zencode_line = lua_tolstring(L,3,&zencode_line_len);
-// 	if(zencode_line) {
-// 		w = write(STDERR_FILENO, "[!] ",4* sizeof(char));
-// 		w = write(STDERR_FILENO, zencode_line, zencode_line_len);
-// 	}
-// 	lua_pop(L,1); // lua_getglobal ZEN_tracebak
-
-//     (void)w;
-// 	return 0;
-// }
-
 #endif
 
 
@@ -576,6 +536,40 @@ static int zen_fatal(lua_State *L) {
 	// zencode_traceback(L);
 	lua_fatal(L);
 	return 0; // unreachable code
+}
+
+int zen_zstd_compress(lua_State *L) {
+  octet *dst, *src;
+  if(!Z->zstd_c) return 0;
+  src = o_arg(L, 1);
+  dst = o_new(L, ZSTD_compressBound(src->len));
+  dst->len = ZSTD_compressCCtx(Z->zstd_c,
+			       dst->val, dst->max,
+			       src->val, src->len,
+			       ZSTD_maxCLevel());
+  // TODO: ZSTD_isError(dst->len)
+  //       then ZSTD_getErrorName
+  return 1;
+}
+
+// TODO: WIP
+int zen_zstd_decompress(lua_State *L) {
+  size_t len = 0;
+  size_t dstlen;
+  octet *dst;
+  if(!Z->zstd_c) return 0;
+  lua_getglobal(L, "tostring");  
+  const char *s = lua_print_format(L, 1, &len);
+  dstlen = ZSTD_compressBound(len);
+  dst = o_new(L, dstlen);
+  /* size_t ZSTD_compressCCtx(ZSTD_CCtx* cctx, */
+  /*                        void* dst, size_t dstCapacity, */
+  /*                  const void* src, size_t srcSize, */
+  /*                        int compressionLevel); */
+  dst->len = ZSTD_compressCCtx(Z->zstd_c, dst->val, dstlen, s, len,
+			       ZSTD_maxCLevel());
+//			       ZSTD_defaultCLevel());
+  return 1;
 }
 
 void zen_add_io(lua_State *L) {
@@ -588,6 +582,8 @@ void zen_add_io(lua_State *L) {
 		  {"zen_fatal", zen_fatal},
 		  {"warn", zen_warn},
 		  {"act", zen_act},
+		  {"compress", zen_zstd_compress},
+//		  {"decompress", zen_zstd_decompress},
 		  {NULL, NULL} };
 	lua_getglobal(L, "_G");
 	luaL_setfuncs(L, custom_print, 0);  // for Lua versions 5.2 or greater
