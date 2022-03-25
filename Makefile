@@ -45,9 +45,7 @@ sonarqube:
 	@echo "Configure login token in build/sonarqube.sh"
 	cp -v build/sonar-project.properties .
 	./build/sonarqube.sh
-	
-	
-	
+
 embed-lua:
 	@echo "Embedding all files in src/lua"
 	./build/embed-lualibs ${lua_embed_opts}
@@ -136,6 +134,18 @@ milagro:
 check-milagro: milagro
 	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c test
 
+zstd:
+	echo "-- Building ZSTD (${system})"
+	CC=${gcc} LD=${ld} AR=${ar} RANLIB=${ranlib} LD=${ld} \
+	CFLAGS="${cflags}" \
+	make libzstd.a -C ${pwd}/lib/zstd \
+	ZSTD_LIB_DICTBUILDER=0 \
+	ZSTD_LIB_DEPRECATED=0 \
+	ZSTD_LIB_MINIFY=1 \
+	HUF_FORCE_DECOMPRESS_X1=1 \
+	ZSTD_FORCE_DECOMPRESS_SEQUENCES_SHORT=1 \
+	ZSTD_NO_INLINE=1
+
 # -------------------
 # Test suites for all platforms
 include ${pwd}/build/tests.mk
@@ -162,6 +172,7 @@ install-lua:
 clean:
 	make clean -C ${pwd}/lib/lua53/src
 	rm -rf ${pwd}/lib/milagro-crypto-c/build
+	make clean -C ${pwd}/lib/zstd
 	make clean -C ${pwd}/src
 	make clean -C ${pwd}/bindings
 	rm -f ${extras}/index.*
