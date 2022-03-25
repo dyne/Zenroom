@@ -93,7 +93,8 @@
     "typescript": {
       "rewritePaths": {
         "src/": "dist/main/"
-      }
+      },
+      "compile": false
     },
     "files": [
       "!dist/module/**"

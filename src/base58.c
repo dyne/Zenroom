@@ -33,8 +33,8 @@ static const b58_almostmaxint_t b58_almostmaxint_mask = ((((b58_maxint_t)1) << b
 
 // const char err_highbit[] = "High bit set on invalid digit";
 // const char err_digit[] = "Invalid base58 digit";
-// Output number too big (carry to the next int32)
-// Output number too big (last int32 filled too far)
+			// Output number too big (carry to the next int32)
+			// Output number too big (last int32 filled too far)
 
 int b58tobin(void *bin, size_t *binszp, const char *b58, size_t b58sz)
 {
