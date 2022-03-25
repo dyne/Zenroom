@@ -23,7 +23,6 @@ javascript-web: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' \
 	-s WASM_OBJECT_FILES=0
 javascript-web: ldflags += -s WASM=1 -s ASSERTIONS=1 \
 	-s TOTAL_MEMORY=65536000 \
-	-s ENVIRONMENT=\"'web,node'\" \
 	-s WASM_OBJECT_FILES=0 --llvm-lto 0 \
 	-s DISABLE_EXCEPTION_CATCHING=1
 javascript-web: apply-patches milagro lua53 embed-lua
@@ -39,7 +38,7 @@ javascript-web: apply-patches milagro lua53 embed-lua
 	@cp -v build/web/zenroom.data ${website}/
 
 javascript-wasm: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
-javascript-wasm: ldflags += -s ENVIRONMENT=\"'web,node,shell'\" \
+javascript-wasm: ldflags += -s \
 	-s MODULARIZE=1 \
 	-s ALLOW_MEMORY_GROWTH=1 \
 	-s WARN_UNALIGNED=1 \
@@ -56,8 +55,7 @@ javascript-wasm: apply-patches milagro lua53 embed-lua
 
 javascript-npm: cflags  += -O3
 javascript-npm: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"'
-javascript-npm: ldflags += -s ENVIRONMENT=\"'web,node'\" \
-	-s WASM={0,1} \
+javascript-npm: ldflags += -s \
 	-s MODULARIZE=1 \
 	-s SINGLE_FILE=1 \
 	-s ALLOW_MEMORY_GROWTH=1 \
