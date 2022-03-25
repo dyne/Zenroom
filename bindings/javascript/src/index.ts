@@ -39,15 +39,15 @@ export const zencode_exec = async (
     Module.print = (t: string) => (result += t);
     Module.printErr = (t: string) => (logs += t);
     Module.exec_ok = () => {
-      resolve({ result, logs });
+      resolve({result, logs});
     };
     Module.exec_error = () => {
-      reject({ result, logs });
+      reject({result, logs});
     };
     Module.onAbort = () => {
-      reject({ result, logs });
+      reject({result, logs});
     };
-    const { data = null, keys = null, conf = null } = { ...props };
+    const {data = null, keys = null, conf = null} = {...props};
     _exec(zencode, conf, keys, data);
   });
 };
@@ -69,15 +69,15 @@ export const zenroom_exec = async (
     Module.print = (t: string) => (result += t);
     Module.printErr = (t: string) => (logs += t);
     Module.exec_ok = () => {
-      resolve({ result, logs });
+      resolve({result, logs});
     };
     Module.exec_error = () => {
-      reject({ result, logs });
+      reject({result, logs});
     };
     Module.onAbort = () => {
-      reject({ result, logs });
+      reject({result, logs});
     };
-    const { data = null, keys = null, conf = null } = { ...props };
+    const {data = null, keys = null, conf = null} = {...props};
     _exec(lua, conf, keys, data);
   });
 };
