@@ -17,7 +17,7 @@ ZENROOM_LIB_ROOT = os.path.join(ZENROOM_ROOT, 'src')
 LUA_ROOT = os.path.join(ZENROOM_ROOT, 'lib/lua53/src')
 MILAGRO_INCLUDE_DIR = os.path.join(ZENROOM_ROOT,
                                    'lib/milagro-crypto-c/include')
-
+ZSTD_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/zstd')
 
 def get_zenroom_version():
     zenroom_version = '1.0.0'
@@ -139,6 +139,7 @@ zenroom_lib = Extension('zenroom',
                             ZENROOM_LIB_ROOT,
                             LUA_ROOT,
                             MILAGRO_INCLUDE_DIR,
+                            ZSTD_INCLUDE_DIR,
                             'milagro-crypto-c/include',
                         ],
                         extra_compile_args=[
@@ -152,6 +153,7 @@ zenroom_lib = Extension('zenroom',
                             'milagro-crypto-c/lib/libamcl_curve_' + ECDH_CURVE + '.a',
                             'milagro-crypto-c/lib/libamcl_pairing_' + ECP_CURVE + '.a',
                             'milagro-crypto-c/lib/libamcl_curve_' + ECP_CURVE + '.a',
+                            'libzstd.a',
                         ],
                         extra_link_args=['-lm']
                         )
