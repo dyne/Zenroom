@@ -23,7 +23,7 @@ bsd: apply-patches milagro lua53 embed-lua zstd
 		@cp -v src/zenroom build/zenroom
 
 
-linux: cflags := -O0 ${cflags_protection} -fPIE -fPIC
+linux: cflags := -O2 ${cflags_protection} -fPIE -fPIC
 linux: apply-patches milagro lua53 embed-lua zstd
 	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src linux
