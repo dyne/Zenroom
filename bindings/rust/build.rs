@@ -25,11 +25,9 @@ fn main() {
     println!("cargo:rustc-link-lib=static=amcl_curve_BLS381");
     println!("cargo:rustc-link-lib=static=amcl_curve_SECP256K1");
     println!("cargo:rustc-link-lib=static=amcl_pairing_BLS381");
+    println!("cargo:rustc-link-lib=static=zstd");
     println!("cargo:rustc-link-search={}", build_path);
-    println!(
-        "cargo:rustc-link-search={}/milagro-crypto-c/lib",
-        build_path
-    );
+    println!("cargo:rustc-link-search={}/milagro-crypto-c/lib",build_path);
 
     println!("cargo:rerun-if-changed=wrapper.h");
 
