@@ -2,7 +2,7 @@
 name = "zenroom"
 version = "0.3.0"
 authors = ["Danilo Spinella <oss@danyspin97.org>", "Denis Roio <J@dyne.org>"]
-edition = "2022"
+edition = "2018"
 
 [build-dependencies]
 bindgen = "0.59.2"
