@@ -1,4 +1,6 @@
 #!/bin/sh
+#
+# used by meson and python3 bindings
 
 zstd_path="${MESON_SOURCE_ROOT}/../lib/zstd"
 
