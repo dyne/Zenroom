@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2017-2021 Dyne.org foundation
+SPDX-FileCopyrightText: 2017-2022 Dyne.org foundation
 
 SPDX-License-Identifier: AGPL-3.0-or-later
 -->
@@ -13,8 +13,10 @@ secure domain specific language (DSL) to execute fast cryptographic
 operations using elliptic curve arithmetics.
 
 The Zenroom VM is very small, has **no external dependency**, is fully
-deterministic and ready to run **end-to-end encryption** on any platform:
-desktop, embedded, mobile, cloud and even web browsers.
+deterministic and ready to run **end-to-end encryption** on any
+platform: desktop, embedded, mobile, cloud micro-services, web
+browsers. It can be embedded inside applications written in
+Javascript, Python3, Rust or Golang.
 
 **Zencode** is the name of the DSL executed by Zenroom: it is similar
 to human language and can process large data structures while
@@ -22,6 +24,20 @@ operating cryptographic transformations and basic logical operations
 on them.
 
 [![software by Dyne.org](https://files.dyne.org/software_by_dyne.png)](http://www.dyne.org)
+
+## Timeline
+
+- 2017 - Development started
+- 2019 - Released version 1.0.0
+- 2022 - Released version 2.0.0 (long term support)
+
+This software has zero dependencies. If you chose to use it in your
+project be assured that we intend to support the same code to still
+run in 20 years from now.
+
+Version 3 development started with Quantum Resistant signatures.
+
+## Links
 
 Continue to the [developer website](https://dev.zenroom.org/)
 
@@ -34,7 +50,11 @@ or
 Visit the [product website](http://zenroom.org/) for a friendly
 introduction to the love we put in craftsmanship.
 
-**Zenroom is licensed as AGPLv3; we are open to grant exceptions on a commercial basis.**
+For many quick running examples visit the
+[ApiRoom](https://apiroom.net) online IDE powered by Zenroom.
+
+
+**Zenroom is licensed as AGPLv3; we are [open to grant exceptions on a commercial basis](https://forkbomb.eu).**
 
 ## Applications
 
@@ -51,6 +71,7 @@ Many applications already include Zenroom and use the Zencode language.
 - [ZenSchnorr API for Schnorr signatures](https://github.com/wires/zenschnorr)
 - [Great Dane DNSSEC as a AV store for Zenroom](https://github.com/dyne/great-dane)
 - [Zen-Web-Ext Web extensions encapsulating Zenroom functionality](https://github.com/LedgerProject/zen-web-ext)
+- [Planetmint by the IPDB foundation](https://ipdb.io)
 
 ## Getting Started
 
@@ -97,34 +118,36 @@ to list more available targets
 
 ### Meson + Ninja
 
-Practical build scripts for release are provided using Meson + Ninja
+Practical build scripts for GNU/Linux are provided using Meson + Ninja
 
 ```
-meson builddir meson
-ninja -C builddir
+make meson
 ```
 
-Will produce a `zenroom` executable and a `libzenroom` shared lib in `builddir`.
+Will produce a `zenroom` executable and a `libzenroom` shared lib in `zenroom/build`.
 
 ## License
 
-Copyright (C) 2017-2021 Dyne.org foundation
+Copyright (C) 2017-2022 Dyne.org foundation
 
-Designed and written by Denis Roio with the help of Puria Nafisi Azizi and Andrea D'Intino.
+Designed and written by Denis "[Jaromil](https://jaromil.dyne.org)" Roio with the help of [Puria](https://github.com/puria) Nafisi Azizi and [Andrea](https://github.com/andrea-dintino) D'Intino.
+
+Includes code contributions by Alberto Lerda and Danilo Spinella.
 
 Reviews and suggestions contributed by: Richard Stallman, Daniele
 Lacamera, Enrico Zimuel, Sofía Celi, Sebastian Blichfeld, Danilo
 Spinella, Adam Burns and Thomas Fuerstner.
 
-Zenroom redistributes:
+Zenroom [complies with the REUSE license specification](https://github.com/dyne/Zenroom/actions/workflows/reuse.yml) and redistributes:
 - Lua 5.3 - Copyright © 1994–2019 Lua.org, PUC-Rio.
 - Apache Milagro Crypto Library (AMCL)
 - Various Lua libraries released under MIT license
 
-Special thanks to our colleagues in the DECODE project Francesca
-Bria, George Danezis, Ola Bini, Mark de Villiers, Ivan Jelincic,
-Alberto Sonnino, Jim Barritt, Christian Espinoza, Samuel Mulube and
-Nina Boelsums.
+Special thanks to our colleagues in the [DECODE
+project](https://decodeproject.eu) whose research has inspired the
+birth of this project: Francesca Bria, George Danezis, Ola Bini, Mark
+de Villiers, Ivan Jelincic, Alberto Sonnino, Jim Barritt, Christian
+Espinoza, Samuel Mulube and Nina Boelsums.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
