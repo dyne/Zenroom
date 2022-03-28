@@ -1,10 +1,22 @@
 <!--
-SPDX-FileCopyrightText: 2017-2021 Dyne.org foundation
+SPDX-FileCopyrightText: 2017-2022 Dyne.org foundation
 
 SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
 # Zenroom ChangeLog
+
+## 2.0.0 (March 2022)
+
+Full implementation and documentation of the Zencode language.
+
+Native support of Bitcoin (SECP256K1) and ETH/web3 (BLS381).
+Language bindings for NodeJS, Python3, Rust and Golang.
+Streamlined CI builds for iOS, Android and Cortex-ARM chips.
+Initial port to run on any native Lua >= 5.1 virtual machine.
+Zencode data manipulation, arithmetics and complex operations.
+REFLOW crypto scenario for ZKP and digital product passport.
+Several improvements to stability and portability.
 
 ## 1.0.0 (September 2019)
 
