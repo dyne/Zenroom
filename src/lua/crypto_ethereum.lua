@@ -328,8 +328,10 @@ function ETH.contract_return_builder(params)
       if type(val) == 'string' then
 	 val = string.gsub(val, '^0x', '')
 	 val = O.from_hex(val)
+      else
+        assert(iszen(type(val)))
+        val = val:octet()
       end
-      assert(type(val) == 'zenroom.octet')
 
       local res = {}
       for i, v in ipairs(params) do
@@ -339,12 +341,15 @@ function ETH.contract_return_builder(params)
 	    table.insert(res, BIG.new(val:sub(32 * (i-1)+1, 32 * i)))
 	 elseif v == 'bool' then
 	    table.insert(res, BIG.new(val:sub(32 * (i-1)+1, 32 * i)) ~= BIG.new(0))
-	 elseif v == 'string' then
+	 elseif v == 'string' or v == 'bytes' then
 	    -- TODO: don't know the maximum size of argument
 	    -- there could be an overflow
 	    local offset = tonumber(val:sub(32 * (i-1)+1, 32 * i):hex(), 16)
 	    local slen = tonumber(val:sub(1+offset, 32+offset):hex(), 16)
-	    local s = val:sub(1+offset+32, offset+32+slen):string()
+	    local s = val:sub(1+offset+32, offset+32+slen)
+            if v == 'string' then
+              s = s:string()
+            end
 	    table.insert(res, s)
 	 else
 	    assert(false, "Unknown data type")

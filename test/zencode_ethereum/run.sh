@@ -205,6 +205,19 @@ Then print the 'signed ethereum transaction'
 Then print data
 EOF
 
+# Decode data stored
+cat <<EOF >store_string.data
+{
+  "data": "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000009528b52ffd208f650400b2c8202490c70dffff7fec9944400318421479988024d6b0b928604d78db53a6a9feb7e8ffdfb2013f909c593166bad5c0283193fe93b5b9c71167560c37fdd7f6a78002d1e4a57af9264dbb977bbc2d24cddce30908460c6a6f4abe08cef7276905af238ac2283130ca946c7f6afa0059ad44bac12d163b1d2fea50c049c70aca04c6711c8d0100c28312050000000000000000000000"
+}
+EOF
+
+cat <<EOF | debug store_string.zen -a store_string.data
+Scenario ethereum
+Given I have a 'hex' named 'data'
+When create the 'string' stored in the ethereum data named 'data'
+Then print data
+EOF
 
 # TODO: verify tx using Alice's public key (not the address)
 

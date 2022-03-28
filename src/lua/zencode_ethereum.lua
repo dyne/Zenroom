@@ -21,6 +21,7 @@
 --]]
 
 ETH = require_once'crypto_ethereum'
+ZSTD = require'zenroom_zpack'
 
 
 local function big_wei_to_str_wei(x)
@@ -153,8 +154,19 @@ function(obj)
   local content = have(obj)
   local tx = have'ethereum transaction'
   ZEN.assert(not tx.data or #tx.data == 0, "Cannot overwrite transaction data")
-  tx.data = ETH.make_storage_data(ZEN.serialize(content))
+  tx.data = ETH.make_storage_data(ZSTD.encode(content))
 end)
+
+When("create the '' stored in the ethereum data named ''", function(objtype, obj)
+  empty'ethereum result'
+  local data = have(obj):octet()
+  local eth_decoder = ETH.contract_return_builder({ 'bytes' })
+  local coded = eth_decoder(data)
+  ZEN.assert(#coded == 1, "Wrong data format")
+  ACK.ethereum_result = ZSTD.decode(coded[1])
+  I.spy(ACK.ethereum_result:string())
+end)
+
 
 -- TODO: more contract methods
 -- use the ethereum transaction to store ''
