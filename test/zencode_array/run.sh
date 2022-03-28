@@ -325,5 +325,32 @@ Then print the 'variance'
 Then print the 'standard deviation'
 Then print the 'allTimestamps'
 EOF
-success
 
+cat <<EOF > not_flat_array.json
+{
+"identities": [
+	[
+		"https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp"
+	],
+	[
+		"https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp"
+	],
+	[
+		"https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp"
+	],
+	[
+		"https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp"
+	]
+]
+}
+EOF
+
+
+cat <<EOF | zexe flat_array.zen -a not_flat_array.json
+Rule check version 2.0.0
+Given I have a 'string array' named 'identities'
+When I create the flat array from 'identities'
+Then print the 'flat array'
+EOF
+
+success
