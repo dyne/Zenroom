@@ -281,3 +281,26 @@ When("create the standard deviation of elements in array ''", function(arr)
 	ACK.standard_deviation = O.from_string(stats.standardDeviation(data):decimal())
 	new_codec('standard_deviation', { encoding="string" })
 end)
+
+local function _flat_array(data, res)
+   for _, item in ipairs(data) do
+      if type(item) == 'table' then
+	 _flat_array(item, res)
+      else
+	 table.insert(res, item)
+      end
+   end
+end
+
+When("create the flat array from ''", function(arr)
+	local codec = ZEN.CODEC[arr]
+	ZEN.assert(codec.zentype == 'array' or
+		   (codec.zentype == 'schema' and codec.encoding == 'array'),
+		   "Object is not a valid array: "..arr)
+	local data = have(arr)
+	ZEN.assert(luatype(data) == 'table', "Invalid array: "..arr)
+	empty'flat array'
+	ACK.flat_array = {}
+	_flat_array(data, ACK.flat_array)
+	new_codec('flat array', { encoding="string" })
+end)
