@@ -148,12 +148,23 @@ function(destaddr)
   new_codec('ethereum transaction', { zentype = 'schema', encoding = 'complex'})
 end)
 
+-- we can store only strings (for the moment)
 When("use the ethereum transaction to store ''",
 function(obj)
   local content = have(obj)
   local tx = have'ethereum transaction'
   ZEN.assert(not tx.data or #tx.data == 0, "Cannot overwrite transaction data")
   tx.data = ETH.make_storage_data(content)
+end)
+
+When("create the string from the ethereum bytes named ''", function(obj)
+  empty'string'
+  local data = have(obj):octet()
+  local eth_decoder = ETH.contract_return_factory({ 'bytes' })
+  local result = eth_decoder(data)
+  ZEN.assert(#result == 1, "Wrong data format")
+  ACK.string = O.from_str(result[1])
+  new_codec('string', { encoding = 'string'})
 end)
 
 -- TODO: more contract methods
