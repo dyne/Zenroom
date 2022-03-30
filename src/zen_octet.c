@@ -1285,12 +1285,32 @@ static int bitshift_hamming_distance(lua_State *L) {
 	return 1;
 }
 
+static int crc8(lua_State *L) {
+  register uint8_t crc = 0xff;
+  register size_t j;
+  register int i;
+  octet *o = o_arg(L,1); SAFE(o);
+  char *data = o->val;
+  for (i = 0; i < o->len; i++) {
+    crc ^= data[i];
+    for (j = 0; j < 8; j++) {
+      if ((crc & 0x80) != 0)
+	crc = (uint8_t)((crc << 1) ^ 0x31);
+      else
+	crc <<= 1;
+    }
+  }
+  octet *res = o_new(L,1); SAFE(res);
+  res->val[0] = crc; res->len = 1;
+  return 1;
+}
 
 int luaopen_octet(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg octet_class[] = {
 		{"new",   newoctet},
 		{"zero",  zero},
+		{"crc",  crc8},
 		{"concat",concat_n},
 		{"xor",   xor_n},
 		{"chop",  chop},
@@ -1338,6 +1358,7 @@ int luaopen_octet(lua_State *L) {
 		{NULL,NULL}
 	};
 	const struct luaL_Reg octet_methods[] = {
+	        {"crc",  crc8},
 		{"chop",  chop},
 		{"sub",   sub},
 		{"reverse",  reverse},
