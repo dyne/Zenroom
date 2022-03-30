@@ -71,10 +71,13 @@ Given I have a 'base64 array' named 'mySharedSecret'
 
 When I pick the random object in 'mySharedSecret'
 and I remove the 'random object' from 'mySharedSecret'
+and I delete 'random object'
 and I pick the random object in 'mySharedSecret'
 and I remove the 'random object' from 'mySharedSecret'
+and I delete 'random object'
 and I pick the random object in 'mySharedSecret'
 and I remove the 'random object' from 'mySharedSecret'
+and I delete 'random object'
 and I pick the random object in 'mySharedSecret'
 and I remove the 'random object' from 'mySharedSecret'
 

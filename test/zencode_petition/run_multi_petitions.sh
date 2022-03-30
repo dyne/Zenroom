@@ -148,7 +148,7 @@ Scenario petition: sign petition
     When I aggregate all the issuer public keys
 	When I create the petition signature 'More privacy for all!'
     Then print the 'petition signature'
-    and print the 'issuer public key'
+    # and print the 'issuer public key'
 EOF
 
 echo "signed petition for $1"
