@@ -225,7 +225,7 @@ int ECP_ZZZ_SP_DSA(int sha,csprng *RNG,octet *K,octet *S,octet *F,octet *C,octet
 }
 
 /* IEEE ECDSA Signature as above, without hash on input (assume as already hashed) */
-int ECP_ZZZ_SP_DSA_NOHASH(int sha,csprng *RNG,octet *K,octet *S,octet *H,octet *C,octet *D, octet *y_ephemeral)
+int ECP_ZZZ_SP_DSA_NOHASH(int sha,csprng *RNG,octet *K,octet *S,octet *H,octet *C,octet *D, int *y_parity)
 // substituted F with H in args
 {
     BIG_XXX r,s,f,c,d,u,vx,vy,w;
@@ -297,9 +297,8 @@ int ECP_ZZZ_SP_DSA_NOHASH(int sha,csprng *RNG,octet *K,octet *S,octet *H,octet *
         BIG_XXX_modmul(d,u,d,r);
         if (BIG_XXX_iszilch(d)) return ECDH_ERROR;
     }
-    if(y_ephemeral) {
-      BIG_XXX_toBytes(y_ephemeral->val, vy);
-      y_ephemeral->len = NLEN_XXX;
+    if(y_parity) {
+      *y_parity = BIG_XXX_parity(vy);
     }
 
     C->len=D->len=EGS_ZZZ;
