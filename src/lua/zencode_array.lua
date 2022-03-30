@@ -282,25 +282,39 @@ When("create the standard deviation of elements in array ''", function(arr)
 	new_codec('standard_deviation', { encoding="string" })
 end)
 
-local function _flat_array(data, res)
-   for _, item in ipairs(data) do
-      if type(item) == 'table' then
-	 _flat_array(item, res)
-      else
-	 table.insert(res, item)
+When("create the flat array of contents in ''", function(dic)
+	local codec = ZEN.CODEC[dic]
+	ZEN.assert(codec.zentype == 'array' or
+		   codec.zentype == 'schema' or
+		   codec.zentype == 'dictionary',
+		   "Target is not a valid: "..dic)
+	local data = have(dic)
+	ZEN.assert(luatype(data) == 'table', "Invalid array: "..dic)
+	empty'flat array'
+	ACK.flat_array = {}
+	deepmap(function(v, k, res) table.insert(res, v) end, data, ACK.flat_array)
+	new_codec('flat array', { encoding="string" })
+end)
+
+local function _keys_flat_array(data, res)
+   for k, item in pairs(data) do
+      table.insert(res, k)
+      if luatype(item) == 'table' then
+	 _keys_flat_array(item, res)
       end
    end
 end
 
-When("create the flat array from ''", function(arr)
-	local codec = ZEN.CODEC[arr]
+When("create the flat array of keys in ''", function(dic)
+	local codec = ZEN.CODEC[dic]
 	ZEN.assert(codec.zentype == 'array' or
-		   (codec.zentype == 'schema' and codec.encoding == 'array'),
-		   "Object is not a valid array: "..arr)
-	local data = have(arr)
-	ZEN.assert(luatype(data) == 'table', "Invalid array: "..arr)
+		   codec.zentype == 'schema' or
+		   codec.zentype == 'dictionary',
+		   "Target is not a valid: "..dic)
+	local data = have(dic)
+	ZEN.assert(luatype(data) == 'table', "Invalid target: "..dic)
 	empty'flat array'
 	ACK.flat_array = {}
-	_flat_array(data, ACK.flat_array)
+	_keys_flat_array(data, ACK.flat_array)
 	new_codec('flat array', { encoding="string" })
 end)

@@ -330,7 +330,7 @@ cat <<EOF > not_flat_array.json
 {
 "identities": [
 	[
-		"https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp"
+	     	"https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp"
 	],
 	[
 		"https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp"
@@ -345,12 +345,28 @@ cat <<EOF > not_flat_array.json
 }
 EOF
 
-
-cat <<EOF | zexe flat_array.zen -a not_flat_array.json
+cat <<EOF | zexe flat_array.zen -a not_flat_array.json | jq .
 Rule check version 2.0.0
 Given I have a 'string array' named 'identities'
-When I create the flat array from 'identities'
-Then print the 'flat array'
+When I create the flat array of contents in 'identities'
+and I rename 'flat array' to 'contents flat array'
+When I create the flat array of keys in 'identities'
+and I rename 'flat array' to 'keys flat array'
+Then print the 'keys flat array'
+and print the 'contents flat array'
+EOF
+
+cat timestamp_stats.json | jq '{"timestamp": . }' > not_flat_dic.json
+
+cat <<EOF | zexe flat_array_contents.zen -a not_flat_dic.json | jq .
+Rule check version 2.0.0
+Given I have a 'string dictionary' named 'timestamp'
+When I create the flat array of contents in 'timestamp'
+and I rename 'flat array' to 'contents flat array'
+When I create the flat array of keys in 'timestamp'
+and I rename 'flat array' to 'keys flat array'
+Then print the 'keys flat array'
+and print the 'contents flat array'
 EOF
 
 success
