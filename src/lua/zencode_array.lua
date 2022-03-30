@@ -285,7 +285,6 @@ end)
 When("create the flat array of contents in ''", function(dic)
 	local codec = ZEN.CODEC[dic]
 	ZEN.assert(codec.zentype == 'array' or
-		   codec.zentype == 'schema' or
 		   codec.zentype == 'dictionary',
 		   "Target is not a valid: "..dic)
 	local data = have(dic)
@@ -308,7 +307,6 @@ end
 When("create the flat array of keys in ''", function(dic)
 	local codec = ZEN.CODEC[dic]
 	ZEN.assert(codec.zentype == 'array' or
-		   codec.zentype == 'schema' or
 		   codec.zentype == 'dictionary',
 		   "Target is not a valid: "..dic)
 	local data = have(dic)
