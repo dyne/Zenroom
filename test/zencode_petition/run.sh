@@ -111,7 +111,7 @@ Scenario petition: sign petition
     When I aggregate all the issuer public keys
 	When I create the petition signature 'More privacy for all!'
     Then print the 'petition signature'
-    and print the 'issuer public key'
+    # and print the 'issuer public key'
 EOF
 
 let n=4
@@ -160,7 +160,8 @@ Scenario petition: tally
     Given I have my 'keys'
     Given I have a valid 'petition'
     When I create a petition tally
-    Then print all data
+    Then print the 'petition tally'
+    # Then print all data
 EOF
 
 let n=6
