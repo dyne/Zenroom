@@ -30,6 +30,13 @@ local function public_key_f(o)
 	return res
 end
 
+local function signature_f(o)
+   return {
+      r = ZEN.get(o, 'r'),
+      s = ZEN.get(o, 's')
+   }
+end
+
 local function warn_keypair()
    warn("Use of 'keypair' is deprecated in favor of 'keyring'")
    warn("Examples: I have my 'keyring' or I create the keyring")
@@ -61,12 +68,8 @@ ZEN.add_schema(
 				text = ZEN.get(obj, 'text')
 			}
 		end,
-		signature = function(obj)
-			return {
-				r = ZEN.get(obj, 'r'),
-				s = ZEN.get(obj, 's')
-			}
-		end
+		signature = signature_f,
+		ecdh_signature = signature_f
 	}
 )
 
@@ -248,26 +251,36 @@ When(
 )
 
 -- sign a message and verify
+local function _signing(msg, var)
+   local sk = _havekey_compat()
+   empty(var)
+   local obj = have(msg)
+   ACK[var] = ECDH.sign(sk, ZEN.serialize(obj))
+   ZEN.CODEC.signature = CONF.output.encoding.name
+end
+
+local function _verifying(msg, sig, by)
+   local pk = _pubkey_compat(by)
+   local obj = have(msg)
+   local s = have(sig)
+   ZEN.assert(
+      ECDH.verify(pk, ZEN.serialize(obj), s),
+      'The signature by ' .. by .. ' is not authentic'
+   )
+end
+
 When(
-   "create the signature of ''",
-   function(doc)
-      local sk = _havekey_compat()
-      empty'signature'
-      local obj = have(doc)
-      ACK.signature = ECDH.sign(sk, ZEN.serialize(obj))
-      ZEN.CODEC.signature = CONF.output.encoding.name
-   end
+   "create the signature of ''", function(msg) _signing(msg, 'signature') end
+)
+
+When(
+   "create the ecdh signature of ''", function(msg) _signing(msg, 'ecdh_signature') end
 )
 
 IfWhen(
-	"verify the '' has a signature in '' by ''",
-	function(msg, sig, by)
-	        local pk = _pubkey_compat(by)
-		local obj = have(msg)
-		local s = have(sig)
-		ZEN.assert(
-			ECDH.verify(pk, ZEN.serialize(obj), s),
-			'The signature by ' .. by .. ' is not authentic'
-		)
-	end
+   "verify the '' has a signature in '' by ''", _verifying
+)
+
+IfWhen(
+   "verify the '' has a ecdh signature in '' by ''", _verifying
 )

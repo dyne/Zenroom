@@ -268,4 +268,28 @@ Then print the string 'Signature is valid'
 and print the 'message'
 EOF
 
+cat <<EOF | zexe sign_from_alice2.zen -k alice_keys.json | save ecdh sign_alice_keyring2.json
+Rule check version 2.0.0
+Scenario 'ecdh'
+Given that I am known as 'Alice'
+and I have my 'keys'
+When I write string 'This is my authenticated message.' in 'message'
+and I create the ecdh signature of 'message'
+Then print the 'message'
+and print the 'ecdh signature'
+EOF
+
+cat <<EOF | zexe verify_from_alice2.zen -k alice_pubkey.json -a sign_alice_keyring2.json | jq .
+Rule check version 2.0.0
+Scenario 'ecdh'
+Given I have a 'ecdh public key' from 'Alice'
+and I have a 'string' named 'message'
+and I have a 'ecdh signature'
+When I verify the 'message' has a ecdh signature in 'ecdh signature' by 'Alice'
+Then print the string 'Signature is valid'
+and print the 'message'
+EOF
+
 success
+
+rm *.json *.zen
