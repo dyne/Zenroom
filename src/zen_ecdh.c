@@ -304,6 +304,7 @@ static int ecdh_dsa_sign_hashed(lua_State *L) {
 	// this argument is provided here mostly for testing purposes with
 	// pre-calculated vectors.
 	int max_size;
+        int parity;
 	lua_Number n = lua_tointegerx(L,3,&max_size);
 	if(max_size==0) {
 		ERROR(); lerror(L,"missing 3rd argument: byte size of octet to sign");
@@ -319,8 +320,7 @@ static int ecdh_dsa_sign_hashed(lua_State *L) {
 		octet *s = o_new(L,(int)n); SAFE(s);
 		lua_setfield(L, -2, "s");
 		// Size of a big256 used with SECP256k1
-		octet *y_ephemeral = o_new(L,DBIGLEN); SAFE(y_ephemeral);
-		(*ECDH.ECP__SP_DSA_NOHASH)((int)n, Z->random_generator, NULL, sk, m, r, s, y_ephemeral);
+		(*ECDH.ECP__SP_DSA_NOHASH)((int)n, Z->random_generator, NULL, sk, m, r, s, &parity);
 	} else {
 		octet *k = o_arg(L,4); SAFE(k);
 		// return a table
@@ -330,9 +330,9 @@ static int ecdh_dsa_sign_hashed(lua_State *L) {
 		octet *s = o_new(L,(int)n); SAFE(s);
 		lua_setfield(L, -2, "s");
 		// Size of a big256 used with SECP256k1
-		octet *y_ephemeral = o_new(L,DBIGLEN); SAFE(y_ephemeral);
-		(*ECDH.ECP__SP_DSA_NOHASH)((int)n, NULL, k, sk, m, r, s, y_ephemeral);
+		(*ECDH.ECP__SP_DSA_NOHASH)((int)n, NULL, k, sk, m, r, s, &parity);
 	}
+        lua_pushboolean(L, parity);
 	return 2;
 }
 

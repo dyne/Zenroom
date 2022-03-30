@@ -183,12 +183,15 @@ function ETH.encodeSignedTransaction(sk, tx)
    H = HASH.new('keccak256')
    txHash = H:process(ETH.encodeTransaction(tx))
 
-   sig, y = ECDH.sign_ecdh(sk, txHash)
+   sig, y_parity = ECDH.sign_ecdh(sk, txHash)
 
    two = INT.new(2)
 
    res = tx
-   res.v = two * INT.new(tx.v) + INT.new(35) + INT.new(y) % two
+   res.v = two * INT.new(tx.v) + INT.new(35)
+   if y_parity then
+     res.v = res.v + INT.new(1)
+   end
    res.r = INT.new(sig.r)
    res.s = INT.new(sig.s)
 
