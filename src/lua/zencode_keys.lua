@@ -64,7 +64,8 @@ local keytypes = {
     reflow = true,
     bitcoin = true,
     testnet = true,
-    ethereum = true
+    ethereum = true,
+    schnorr = true
 }
 
 function havekey(ktype)
@@ -110,6 +111,9 @@ local function _keys_import(obj)
    if obj.ethereum then
       res.ethereum = ZEN.get(obj, 'ethereum', nop, O.from_hex)
    end
+   if obj.schnorr then
+      res.schnorr = ZEN.get(obj, 'schnorr', nop, O.from_hex)
+   end
    return (res)
 end
 
@@ -138,6 +142,9 @@ local function _keys_export(obj)
    end
    if obj.ethereum then
       res.ethereum = O.to_hex(obj.ethereum)
+   end
+   if obj.schnorr then
+      res.schnorr = O.to_hex(obj.schnorr)
    end
    return (res)
 end
