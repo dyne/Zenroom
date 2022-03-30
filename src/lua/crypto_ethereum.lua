@@ -294,7 +294,7 @@ end
 
 -- Really simple data encoder, it only works with elementary types (for
 -- example ERC-20 only uses this kind of data types)
-function ETH.data_contract_builder(fz_name, params)
+function ETH.data_contract_factory(fz_name, params)
    local H = HASH.new('keccak256')
    if type(params) ~= 'table' then
       params = {}
@@ -319,7 +319,7 @@ function ETH.data_contract_builder(fz_name, params)
    end
 end
 
-function ETH.contract_return_builder(params)
+function ETH.contract_return_factory(params)
    if type(params) ~= 'table' then
       params = {}
    end
@@ -339,12 +339,15 @@ function ETH.contract_return_builder(params)
 	    table.insert(res, BIG.new(val:sub(32 * (i-1)+1, 32 * i)))
 	 elseif v == 'bool' then
 	    table.insert(res, BIG.new(val:sub(32 * (i-1)+1, 32 * i)) ~= BIG.new(0))
-	 elseif v == 'string' then
+	 elseif v == 'string' or v == 'bytes' then
 	    -- TODO: don't know the maximum size of argument
 	    -- there could be an overflow
 	    local offset = tonumber(val:sub(32 * (i-1)+1, 32 * i):hex(), 16)
 	    local slen = tonumber(val:sub(1+offset, 32+offset):hex(), 16)
 	    local s = val:sub(1+offset+32, offset+32+slen):string()
+            if v == 'string' then
+              s = s:string()
+            end
 	    table.insert(res, s)
 	 else
 	    assert(false, "Unknown data type")
@@ -374,12 +377,12 @@ local ERC20_SIGNATURES = {
 
 ETH.erc20 = {}
 for k, v in pairs(ERC20_SIGNATURES) do
-   ETH.erc20[k] = ETH.data_contract_builder(k, v.i)
+   ETH.erc20[k] = ETH.data_contract_factory(k, v.i)
 end
 
 ETH.erc20return = {}
 for k, v in pairs(ERC20_SIGNATURES) do
-   ETH.erc20return[k] = ETH.contract_return_builder(v.o)
+   ETH.erc20return[k] = ETH.contract_return_factory(v.o)
 end
 
 local FAUCET_SIGNATURES = {
@@ -388,7 +391,7 @@ local FAUCET_SIGNATURES = {
 
 ETH.faucet = {}
 for k, v in pairs(FAUCET_SIGNATURES) do
-   ETH.faucet[k] = ETH.data_contract_builder(k, v.i)
+   ETH.faucet[k] = ETH.data_contract_factory(k, v.i)
 end
 
 return ETH
