@@ -179,3 +179,8 @@ clean-src:
 
 distclean:
 	rm -rf ${musl}
+
+# -------------------
+# Parsing the documentation
+needed-docs:
+	cd ${pwd}/docs/doc_needed; ./run.sh
