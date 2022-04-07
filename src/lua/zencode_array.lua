@@ -297,6 +297,9 @@ end)
 
 local function _keys_flat_array(data, res)
    for k, item in pairs(data) do
+      if type(k) == 'string' then
+        k = O.from_string(k)
+      end
       table.insert(res, k)
       if luatype(item) == 'table' then
 	 _keys_flat_array(item, res)

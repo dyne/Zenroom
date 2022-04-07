@@ -369,4 +369,53 @@ Then print the 'keys flat array'
 and print the 'contents flat array'
 EOF
 
+cat <<EOF > consensusroom-flatten.data
+{
+ "identities": [
+  [
+   "https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp"
+  ],
+  [
+   "https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp"
+  ],
+  [
+   "https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp"
+  ],
+  [
+   "https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp"
+  ]
+ ],
+ "identity": {
+  "uid": "random",
+  "ip": "hostname -I",
+  "baseUrl": "http://hostname -I",
+  "port_http": "$PORT_HTTP",
+  "port_https": "$PORT_HTTPS",
+  "public_key": "BGiQeHz55rNc/k/iy7wLzR1jNcq/MOy8IyS6NBZ0kY3Z4sExlyFXcILcdmWDJZp8FyrILOC6eukLkRNt7Q5tzWU=",
+  "version": "2",
+  "announceAPI": "/api/consensusroom-announce",
+  "get-6-timestampsAPI": "/api/consensusroom-get-6-timestamps",
+  "timestampAPI": "/api/consensusroom-get-timestamp",
+  "tracker": "https://apiroom.net/"
+ }
+}
+EOF
+
+cat <<EOF | zexe consensusroom-flatten.zen -a consensusroom-flatten.data
+Given I have a 'string array' named 'identities'
+Given I have a 'string dictionary' named 'identity'
+
+When I create the flat array of contents in 'identities'
+When I rename the 'flat array' to 'flattened array 1'
+
+When I create the flat array of keys in 'identity'
+When I rename the 'flat array' to 'flattened array 2'
+And debug
+
+Then print the 'flattened array 1'
+Then print the 'flattened array 2'
+Then print the string 'succes'
+EOF
+
+
 success
