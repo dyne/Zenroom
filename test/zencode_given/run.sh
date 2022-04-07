@@ -232,4 +232,28 @@ Then print the 'SecretRecipient'
 EOF
 
 rm -f $tmp
+
+
+cat <<EOF | save given name_named_in.json
+{ 
+	"UserData": {
+	        "Sender": "Alice"
+	},
+	"Alice": {
+		"keypair": {
+			"private_key": "2mZDRS1rE4jT5EuozwZfbS+GLE7ogBfgWOr30wXoe3g=",
+			"public_key": "BI/Jwt7PCxfSnypWNH0koLPWOJn0sLMA7VbYlQe6xmIMQms4xvMjLoPXxl4l8d0EzM9ezGVehNCvIHSy+vpctIk="
+		}
+	}
+}
+EOF
+
+cat <<EOF | zexe name_named_in.zen -a name_named_in.json | jq .
+Scenario 'ecdh'
+# below the statement needed
+Given my name is in a 'string' named 'Sender' inside 'UserData'
+
+Given that I have my 'keypair'
+Then print my data
+EOF
 success
