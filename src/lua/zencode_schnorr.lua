@@ -99,6 +99,15 @@ When("create the schnorr public key with secret key ''",
      end
 )
 
+When("create the schnorr key with secret key ''",
+     function(sec)
+	local sk = have(sec)
+	initkeys'schnorr'
+        SCH.pubgen(sk)
+	ACK.keys.schnorr = sk
+     end
+)
+
 -- generate the sign for a msg and verify
 When("create the schnorr signature of ''",
      function(doc)
