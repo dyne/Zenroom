@@ -95,8 +95,8 @@ When(
     'create the reflow key',
     function()
         -- keygen: δ = r.O ; γ = δ.G2
-        initkeys 'reflow'
-        ACK.keys.reflow = INT.random() -- BLS secret signing key
+        initkeyring 'reflow'
+        ACK.keyring.reflow = INT.random() -- BLS secret signing key
     end
 )
 
@@ -105,7 +105,7 @@ When(
     function()
         empty 'reflow public key'
         havekey 'reflow'
-        ACK.reflow_public_key = G2 * ACK.keys.reflow
+        ACK.reflow_public_key = G2 * ACK.keyring.reflow
     end
 )
 
@@ -216,12 +216,12 @@ When(
             ABC.prove_cred_uid(
             pubcred,
             ACK.credentials,
-            ACK.keys.credential,
+            ACK.keyring.credential,
             ACK.reflow_seal.identity
         )
         ACK.reflow_signature = {
             identity = ACK.reflow_seal.identity,
-            signature = ACK.reflow_seal.identity * ACK.keys.reflow,
+            signature = ACK.reflow_seal.identity * ACK.keyring.reflow,
             proof = p,
             zeta = z
         }
@@ -387,7 +387,7 @@ When(
 	  local SID = UID + _aggregate_array(ACK.fingerprints)
 	  local r = INT.random() -- blinding factor
 	  local p, z = ABC.prove_cred_uid(issuer_pub, cred,
-									  ACK.keys.credential, SID)
+									  ACK.keyring.credential, SID)
 	  ACK.material_passport = {
 		 seal = {
 			identity = UID,

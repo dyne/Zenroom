@@ -48,7 +48,7 @@ cat << EOF | zexe ${out}/credentialParticipantKeygen.zen | jq . | tee ${out}/cre
 Scenario credential: credential keygen
     Given that I am known as 'Alice'
     When I create the credential key
-    Then print my 'keys'
+    Then print my 'keyring'
 EOF
 
 let n=n+1
@@ -63,7 +63,7 @@ echo "                                                "
 cat << EOF | zexe ${out}/credentialParticipantSignatureRequest.zen -k ${out}/credentialParticipantKeypair.json | jq . | tee ${out}/credentialParticipantSignatureRequest.json
 Scenario credential: create request
     Given that I am known as 'Alice'
-    and I have my valid 'keys'
+    and I have my valid 'keyring'
     When I create the credential request
     Then print my 'credential request'
 EOF
@@ -83,7 +83,7 @@ cat << EOF | zexe ${out}/credentialIssuerKeygen.zen | jq . | tee ${out}/credenti
 Scenario credential: issuer keygen
     Given that I am known as 'MadHatter'
     When I create the issuer key
-    Then print my 'keys'
+    Then print my 'keyring'
 EOF
 
 let n=n+1
@@ -98,7 +98,7 @@ echo " "
 cat << EOF | zexe ${out}/credentialIssuerPublishpublic_key.zen -k ${out}/credentialIssuerKeypair.json | jq . | tee ${out}/credentialIssuerpublic_key.json
 Scenario credential: publish public_key
     Given that I am known as 'MadHatter'
-    and I have my 'keys'
+    and I have my 'keyring'
     When I create the issuer public key
     Then print my 'issuer public key'
 EOF
@@ -119,7 +119,7 @@ echo " "
 cat << EOF | zexe ${out}/credentialIssuerSignRequest.zen -a ${out}/credentialParticipantSignatureRequest.json -k ${out}/credentialIssuerKeypair.json | jq . | tee ${out}/credentialIssuerSignedCredential.json
 Scenario credential: issuer sign
     Given that I am known as 'MadHatter'
-    and I have my valid 'keys'
+    and I have my valid 'keyring'
     and I have a 'credential request' inside 'Alice'
     When I create the credential signature
     and I create the issuer public key
@@ -138,11 +138,11 @@ echo " "
 cat << EOF | zexe ${out}/credentialParticipantAggregateCredential.zen -a ${out}/credentialIssuerSignedCredential.json -k ${out}/credentialParticipantKeypair.json | jq . | tee ${out}/credentialParticipantAggregatedCredential.json
 Scenario credential: aggregate signature
     Given that I am known as 'Alice'
-    and I have my 'keys'
+    and I have my 'keyring'
     and I have a 'credential signature'
     When I create the credentials
     Then print my 'credentials'
-    and print my 'keys'
+    and print my 'keyring'
 EOF
 
 let n=n+1
@@ -158,7 +158,7 @@ echo " "
 cat << EOF | debug ${out}/credentialParticipantCreateProof.zen -k ${out}/credentialParticipantAggregatedCredential.json -a ${out}/credentialIssuerpublic_key.json | jq . | tee ${out}/credentialParticipantProof.json
 Scenario credential: create proof
     Given that I am known as 'Alice'
-    and I have my 'keys'
+    and I have my 'keyring'
     and I have a 'issuer public key' inside 'MadHatter'
     and I have my 'credentials'
     When I aggregate all the issuer public keys

@@ -172,20 +172,20 @@ Then("print my ''",function(k)
 end)
 
 Then('print keys',function()
-	OUT.keys = ZEN.schemas.keys.export(ACK.keys)
+	OUT.keys = ZEN.schemas.keys.export(ACK.keyring)
 end)
 Then("print keys for ''", function(k)
-	local keys = ZEN.schemas.keys.export(ACK.keys)
+	local keys = ZEN.schemas.keys.export(ACK.keyring)
 	if not OUT.keys then OUT.keys = { } end
 	OUT.keys[k] = keys[k]
 end)
 Then('print my keys',function()
 	Iam()
-	OUT[WHO] = { keys = ZEN.schemas.keys.export(ACK.keys) }
+	OUT[WHO] = { keys = ZEN.schemas.keys.export(ACK.keyring) }
 end)
 Then("print my keys for ''", function(k)
 	Iam()
-	local keys = ZEN.schemas.keys.export(ACK.keys)
+	local keys = ZEN.schemas.keys.export(ACK.keyring)
 	if not OUT[WHO] then OUT[WHO] = { keys = { } } end
 	OUT[WHO].keys[k] = keys[k]
 end)

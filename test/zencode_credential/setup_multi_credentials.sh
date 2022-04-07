@@ -30,13 +30,13 @@ cat <<EOF | zexe ${out}/issuer_keygen.zen  | jq . | tee ${out}/issuer_key.json
 Scenario credential
 Given I am 'The Authority'
 when I create the issuer key
-Then print my 'keys'
+Then print my 'keyring'
 EOF
 
 cat <<EOF | zexe ${out}/issuer_public_key.zen -k ${out}/issuer_key.json  | jq . | tee ${out}/credentialIssuerpublic_key.json
 Scenario credential: publish verifier
 Given that I am known as 'The Authority'
-and I have my 'keys'
+and I have my 'keyring'
 When I create the issuer public key
 Then print my 'issuer public key'
 EOF
@@ -50,13 +50,13 @@ Scenario multidarkroom
 Scenario credential
 Given I am '${1}'
 When I create the credential key
-Then print my 'keys'
+Then print my 'keyring'
 EOF
 
 	cat <<EOF | zexe ${out}/request_${1}.zen -k ${out}/keypair_${1}.json  | jq . | tee ${out}/request_${1}.json
 Scenario credential
 Given I am '${1}'
-and I have my 'keys'
+and I have my 'keyring'
 When I create the credential request
 Then print my 'credential request'
 EOF
@@ -66,7 +66,7 @@ EOF
 	cat <<EOF | zexe ${out}/issuer_sign_${1}.zen -k ${out}/issuer_key.json -a ${out}/request_${1}.json  | jq . | tee ${out}/issuer_signature_${1}.json
 Scenario credential
 Given I am 'The Authority'
-and I have my 'keys'
+and I have my 'keyring'
 and I have a 'credential request' inside '${1}'
 when I create the credential signature
 and I create the issuer public key
@@ -79,11 +79,11 @@ EOF
 	cat <<EOF | zexe ${out}/aggr_cred_${1}.zen -k ${out}/keypair_${1}.json -a ${out}/issuer_signature_${1}.json  | jq . | tee ${out}/verified_credential_${1}.json
 Scenario credential
 Given I am '${1}'
-and I have my 'keys'
+and I have my 'keyring'
 and I have a 'credential signature'
 when I create the credentials
 then print my 'credentials'
-and print my 'keys'
+and print my 'keyring'
 EOF
 }
 

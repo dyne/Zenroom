@@ -167,7 +167,7 @@ Scenario 'ecdh': load a issuer keypair
 Scenario 'credential': Create the keypair
 Given I am 'Alice'
 Given I have my 'keypair'
-Given I have my 'keys' 
+Given I have my 'keyring' 
 and I have a 'public key' from 'Bob'
 and I have a 'public key' from 'Carl'
 # Load Arrays

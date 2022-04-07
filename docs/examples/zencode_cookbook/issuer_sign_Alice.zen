@@ -1,6 +1,6 @@
 Scenario credential
 Given I am 'The Authority'
-and I have my 'keys'
+and I have my 'keyring'
 and I have a 'credential request' inside 'Alice'
 when I create the credential signature
 and I create the issuer public key

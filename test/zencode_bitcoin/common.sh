@@ -4,13 +4,13 @@ function genagent() {
 Scenario bitcoin
 Given I am known as '${1}'
 When I create the bitcoin key
-Then print my 'keys'
+Then print my 'keyring'
 EOF
 
     cat <<EOF | zexe ${1}-pubkey.zen -k ${1}-keys.json | save bitcoin ${1}-address.json
 Scenario bitcoin
 Given I am known as '${1}'
-and I have my 'keys'
+and I have my 'keyring'
 When I create the bitcoin public key
 and I create the bitcoin testnet address
 Then print 'bitcoin address'
@@ -19,7 +19,7 @@ EOF
     cat <<EOF | zexe ${1}-wifkey.zen -k ${1}-keys.json | save bitcoin ${1}-wif.json
 Scenario bitcoin
 Given I am known as '${1}'
-and I have my 'keys'
+and I have my 'keyring'
 When I create the bitcoin testnet wif key
 Then print my 'bitcoin testnet wif key' as 'base58'
 EOF

@@ -28,34 +28,34 @@
 -- the same key types (one or more) as others do, for instance reflow
 -- uses bls and credential, petition uses credential and ecdh.
 
-function initkeys(ktype)
+function initkeyring(ktype)
 
-   if luatype(ACK.keys) == 'table' then
+   if luatype(ACK.keyring) == 'table' then
       -- TODO: check that curve types match
-   elseif ACK.keys == nil then
-      -- initialise empty ACK.keys
-      ACK.keys = {} -- TODO: save curve types
-      new_codec('keys', {
+   elseif ACK.keyring == nil then
+      -- initialise empty ACK.keyring
+      ACK.keyring = {} -- TODO: save curve types
+      new_codec('keyring', {
 		   zentype = 'schema',
 		   luatype = 'table',
 		   encoding = 'complex' })
    else
-      error('Keys table is corrupted', 2)
+      error('Keyring table is corrupted', 2)
    end
    -- if ktype is specified then check overwriting
    if ktype then
       ZEN.assert(
-	 not ACK.keys[uscore(ktype)],
+	 not ACK.keyring[uscore(ktype)],
 	 'Cannot overwrite existing key: ' .. ktype
       )
    end
 end
-When("create the keys", function()
-	empty'keys'
-	initkeys()
+When("create the keyring", function()
+	empty'keyring'
+	initkeyring()
 end)
 
--- KNOWN KEY TYPES FOUND IN ACK.keys
+-- KNOWN KEY TYPES FOUND IN ACK.keyring
 local keytypes = {
     ecdh = true,
     credential = true,
@@ -72,15 +72,15 @@ function havekey(ktype)
    local kname = uscore(ktype)
    ZEN.assert(keytypes[kname], 'Unknown key type: ' .. ktype)
    -- check that keys exist and are a table
-   initkeys()
-   local res = ACK.keys[kname]
+   initkeyring()
+   local res = ACK.keyring[kname]
    ZEN.assert(res, 'Key not found: ' .. ktype)
    return res
 end
 
 local function nop(x) return(x) end
 
-local function _keys_import(obj)
+local function _keyring_import(obj)
    -- ecdh_curve
    -- bls_curve
    local res = {}
@@ -122,7 +122,7 @@ local function _default_export(obj)
    return fun(obj)
 end
 
-local function _keys_export(obj)
+local function _keyring_export(obj)
    -- ecdh_curve
    -- bls_curve
    local res = {}
@@ -151,7 +151,7 @@ end
 
 ZEN.add_schema(
     {
-        keys = { import = _keys_import,
-		 export = _keys_export  }
+      keyring = { import = _keyring_import,
+		            export = _keyring_export  }
     }
 )

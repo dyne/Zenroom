@@ -1,10 +1,10 @@
 globals = {
     'ZEN', 'OCTET', 'O', 'BIG', 'INT', 'ECP', 'ECP2', 'SALT',
-    'Given','When','Then','IN','ACK','KEYS','OUT','CONF','WHO',
+    'Given','When','Then','IN','ACK','keyring','OUT','CONF','WHO',
     'INSPECT', 'CBOR', 'JSON', 'ECDH', 'AES', 'HASH', 'BENCH', 'KDF',
     'MACHINE', 'DATE', 'VERSION', 'SEMVER',
     'require', 'require_once','fif', 'deepmap', 'luatype',
-    'empty', 'have', 'initkeys', 'havekey', 'zenguard', 'exitcode',
+    'empty', 'have', 'initkeyring', 'havekey', 'zenguard', 'exitcode',
     'parse_prefix', 'strtok', 'strcasecmp', 'uscore', 'debug_traceback',
     'G2','ABC','ECDH',
     'check_codec', 'ZKP_challenge', 'SHA256', 'SHA512', 'sha256', 'sha512',

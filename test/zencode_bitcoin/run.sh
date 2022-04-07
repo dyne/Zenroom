@@ -38,7 +38,7 @@ EOF
 
 cat <<EOF | zexe create_bitcoin_rawtx.zen -a txinput.json -k keys.json \
     | save bitcoin bitcoin_rawtx.json
-Given I have the 'keys'
+Given I have the 'keyring'
 and I have a 'satoshi amount'
 and I have a 'satoshi fee'
 and I have a 'testnet address'
@@ -48,7 +48,7 @@ When I create the testnet transaction to 'testnet address'
 and I sign the testnet transaction
 and I create the testnet raw transaction
 Then print the 'testnet raw transaction' as 'hex'
-and print the 'keys'
+and print the 'keyring'
 EOF
 
 cat << EOF | save bitcoin wif.json
@@ -64,17 +64,17 @@ and I have a 'testnet address'
 and I have a 'testnet unspent'
 When I create the keys
 and I rename 'wif' to 'testnet'
-and I move 'testnet' in 'keys'
+and I move 'testnet' in 'keyring'
 and I create the testnet transaction to 'testnet address'
 and I sign the testnet transaction
 and I create the testnet raw transaction
 
 Then print the 'testnet raw transaction' as 'hex'
-and print the 'keys'
+and print the 'keyring'
 EOF
 
 cat <<EOF | debug check_import.zen -a wif.json -k keys.json
 Given I have the 'testnet key' named 'wif'
-and I have the 'keys'
+and I have the 'keyring'
 Then print all data
 EOF

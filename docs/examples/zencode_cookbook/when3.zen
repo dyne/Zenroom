@@ -11,6 +11,8 @@ Given I have a 'number array' named 'myFirstNumberArray' inside 'myFirstObject'
 Given I have a 'string array' named 'myCopyOfFirstArray' inside 'myThirdObject'
 Given I have a 'base64 array' named 'myOnlyEcpArray' inside 'myFirstObject'
 Given I have a 'base64 array' named 'myOnlyEcp2Array' inside 'myFirstObject'
+Given I have a 'number array' named 'mySecondNumberArray'
+
 # Load Numbers
 Given I have a 'number' named 'myFirstNumber' in 'myFirstObject'
 Given I have a 'number' named 'mySecondNumber' in 'mySecondObject'

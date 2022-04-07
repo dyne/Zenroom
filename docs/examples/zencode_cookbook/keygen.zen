@@ -1,4 +1,4 @@
 Scenario ecdh
 Given I am known as 'Bob'
 When I create the ecdh key
-Then print my 'keys'
+Then print my 'keyring'

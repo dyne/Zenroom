@@ -2,4 +2,4 @@ Scenario reflow
 Given I am 'Alice'
 When I create the reflow key
 and I create the credential key
-Then print my 'keys'
+Then print my 'keyring'

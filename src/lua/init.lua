@@ -1,6 +1,6 @@
 -- This file is part of Zenroom (https://zenroom.dyne.org)
 --
--- Copyright (C) 2018-2021 Dyne.org foundation designed, written and
+-- Copyright (C) 2018-2022 Dyne.org foundation designed, written and
 -- maintained by Denis Roio <jaromil@dyne.org>
 --
 -- This program is free software: you can redistribute it and/or modify
@@ -118,7 +118,7 @@ load_scenario('zencode_random') -- when extension
 load_scenario('zencode_dictionary') -- when extension
 load_scenario('zencode_verify') -- when extension
 load_scenario('zencode_then')
-load_scenario('zencode_keys')
+load_scenario('zencode_keyring')
 -- this is to evaluate expressions or derivate a column
 -- it would execute lua code inside the zencode and is
 -- therefore dangerous, switched off by default

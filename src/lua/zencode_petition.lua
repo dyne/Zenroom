@@ -96,10 +96,10 @@ When(
 	"create the petition ''",
 	function(uid)
 		havekey'credential'
-		-- ZEN.assert(ACK.keys.credential,"Credential key not found")
+		-- ZEN.assert(ACK.keyring.credential,"Credential key not found")
 		ACK.petition = {
 			uid = OCTET.from_string(uid), -- TODO: take UID from HEAP not STACK
-			owner = ECP.generator() * ACK.keys.credential,
+			owner = ECP.generator() * ACK.keyring.credential,
 			scores = {
 				pos = {
 					left = ECP.infinity(),
@@ -160,7 +160,7 @@ When(
 			CRED.prove_cred_uid(
 			ACK.issuer_public_key,
 			ACK.credentials,
-			ACK.keys.credential,
+			ACK.keyring.credential,
 			ack_uid
 		)
 		ACK.petition_signature = {
@@ -242,7 +242,7 @@ When(
 		ZEN.assert(ACK.petition, 'Petition not found')
 		ACK.petition_tally =
 			PET.prove_tally_petition(
-			ACK.keys.credential,
+			ACK.keyring.credential,
 			ACK.petition.scores
 		)
 		ACK.petition_tally.uid = ACK.petition.uid

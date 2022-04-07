@@ -11,6 +11,8 @@ Given I have a 'number array' named 'myFirstNumberArray' inside 'myFirstObject'
 Given I have a 'string array' named 'myCopyOfFirstArray' inside 'myThirdObject'
 Given I have a 'base64 array' named 'myOnlyEcpArray' inside 'myFirstObject'
 Given I have a 'base64 array' named 'myOnlyEcp2Array' inside 'myFirstObject'
+Given I have a 'number array' named 'mySecondNumberArray'
+
 # Load Numbers
 Given I have a 'number' named 'myFirstNumber' in 'myFirstObject'
 Given I have a 'number' named 'mySecondNumber' in 'mySecondObject'
@@ -81,7 +83,6 @@ When I create the result of 'myFirstNumber' inverted sign
 and I rename the 'result' to 'myFirstNumberInvertedSign'
 
 
-
 # APPEND
 # The "append" statement are pretty self-explaining: 
 # append a simple object of any encoding to another one
@@ -92,17 +93,6 @@ When I append 'mySecondNumber' to 'myThirdNumber'
 # The "rename" statement: we've been hinting at this for a while now,
 # pretty self-explaining, it works with any object type or schema.
 When I rename the 'myThirdArray' to 'myJustRenamedArray'
-
-# INSERT
-# The "insert" statement is used to append a simple object to an array.
-# It's pretty self-explaining. 
-When I insert 'myFirstString' in 'myFirstArray'
-
-# REMOVE
-# The "remove" statement does the opposite of the one above:
-# Use it remove an element from an array, it takes as input the name of a string, 
-# and the name of an array - we don't mix code and data! 
-When I remove the 'mySixteenthString' from 'myJustRenamedArray'
 
 # DELETE
 # You can delete an object from the memory stack at runtime
