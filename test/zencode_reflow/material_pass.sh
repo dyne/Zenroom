@@ -136,7 +136,7 @@ jq -s '.[0] * .[1]' issuer_verifier.json EconomicResource.json | save reflow Eco
 cat << EOF | zexe create_seal_of_resource.zen -a EconomicResource_issuer.json -k alice.json | save reflow EconomicResource_seal.json
 Scenario reflow
 Given I am 'Alice'
-and I have the 'keys'
+and I have the 'keyring'
 and I have the 'credentials'
 and I have a 'issuer public key' in 'The Authority'
 and I have a 'reflow identity'
@@ -164,7 +164,7 @@ jq -s '.[0] * .[1]' issuer_verifier.json EconomicEvent.json | save reflow Econom
 cat << EOF | zexe create_seal_of_event.zen -a EconomicEvent_issuer.json -k alice.json | save reflow EconomicEvent_seal.json 
 Scenario reflow
 Given I am 'Alice'
-and I have the 'keys'
+and I have the 'keyring'
 and I have the 'credentials'
 and I have a 'issuer public key' in 'The Authority'
 and I have a 'reflow identity'
@@ -222,7 +222,7 @@ jq -s  '.[0] * .[1] * .[2]' SealArray.json issuer_verifier.json Process.json | s
 cat << EOF | zexe create_seal_of_process.zen -a Aggregate_seal.json -k alice.json | save reflow Process_seal.json 
 Scenario reflow
 Given I am 'Alice'
-and I have the 'keys'
+and I have the 'keyring'
 and I have the 'credentials'
 and I have a 'issuer public key' in 'The Authority'
 and I have a 'reflow identity'

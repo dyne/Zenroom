@@ -30,13 +30,13 @@ cat <<EOF | zenroom -z  > ${out}/issuer_key.json
 Scenario credential
 Given I am 'The Authority'
 when I create the issuer key
-Then print my 'keys'
+Then print my 'keyring'
 EOF
 
 cat <<EOF | zenroom -z -k ${out}/issuer_key.json  > ${out}/issuer_public_key.json
 Scenario credential: publish verifier
 Given that I am known as 'The Authority'
-and I have my 'keys'
+and I have my 'keyring'
 When I create the issuer public key
 Then print my 'issuer public key'
 EOF
@@ -51,14 +51,14 @@ Scenario credential
 Given I am '${name}'
 When I create the BLS key
 and I create the credential key
-Then print my 'keys'
+Then print my 'keyring'
 EOF
 
 # 	cat <<EOF | zenroom
 #  ${out}/pubkey_${name}.zen -k ${out}/keypair_${name}.json  > ${out}/public_key_${name}.json
 # Scenario reflow
 # Given I am '${name}'
-# and I have my 'keys'
+# and I have my 'keyring'
 # When I create the BLS public key
 # Then print my 'bls public key'
 # EOF
@@ -66,7 +66,7 @@ EOF
 cat << EOF > credential_request.zen
 Scenario credential
 Given I am '${name}'
-and I have my 'keys'
+and I have my 'keyring'
 When I create the credential request
 Then print my 'credential request'
 EOF

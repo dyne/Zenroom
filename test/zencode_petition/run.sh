@@ -51,7 +51,7 @@ cat <<EOF | zexe ${out}/petitionRequest.zen -k ${out}/credentialParticipantAggre
 # Here I state my identity
     Given that I am known as 'Alice'
 # Here I load everything needed to proceed
-    Given I have my 'keys'
+    Given I have my 'keyring'
     Given I have my 'credentials'
     Given I have a 'issuer public key' inside 'MadHatter'
 # In the "when" phase we have the cryptographical creation of the petition
@@ -105,7 +105,7 @@ cat <<EOF | zexe ${out}/petitionSign.zen -k ${out}/credentialParticipantAggregat
 Scenario credential
 Scenario petition: sign petition
     Given I am 'Alice'
-    Given I have my valid 'keys'
+    Given I have my valid 'keyring'
     Given I have my 'credentials'
     Given I have a valid 'issuer public key' inside 'MadHatter'
     When I aggregate all the issuer public keys
@@ -157,7 +157,7 @@ cat <<EOF | zexe ${out}/petitionTally.zen -k ${out}/credentialParticipantAggrega
 Scenario credential
 Scenario petition: tally
     Given that I am 'Alice'
-    Given I have my 'keys'
+    Given I have my 'keyring'
     Given I have a valid 'petition'
     When I create a petition tally
     Then print the 'petition tally'

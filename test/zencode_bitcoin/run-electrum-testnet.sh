@@ -57,7 +57,7 @@ cat <<EOF | zexe sign_transaction.zen \
     | save bitcoin signed-transaction.json
 Scenario bitcoin
 Given I am known as 'alpaca'
-and I have my 'keys'
+and I have my 'keyring'
 and I have a 'base64 dictionary' named 'bitcoin transaction'
 When I sign the bitcoin transaction
 and I create the bitcoin raw transaction

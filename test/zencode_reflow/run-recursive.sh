@@ -93,13 +93,13 @@ cat <<EOF | zexe issuer_keygen.zen  | save reflow issuer_keypair.json
 Scenario credential
 Given I am 'The Authority'
 when I create the issuer key
-Then print my 'keys'
+Then print my 'keyring'
 EOF
 
 cat <<EOF | zexe issuer_verifier.zen -k issuer_keypair.json  | save reflow issuer_verifier.json
 Scenario credential: publish verifier
 Given that I am known as 'The Authority'
-Given I have my 'keys'
+Given I have my 'keyring'
 When I create the issuer public key
 Then print my 'issuer public key'
 EOF
@@ -116,13 +116,13 @@ Scenario reflow
 Given I am '${1}'
 When I create the reflow key
 and I create the credential key
-Then print my 'keys'
+Then print my 'keyring'
 EOF
 
 	cat <<EOF | zexe pubkey_${1}.zen -k keypair_${1}.json  | save reflow public_key_${1}.json
 Scenario reflow
 Given I am '${1}'
-and I have my 'keys'
+and I have my 'keyring'
 When I create the reflow public key
 Then print my 'reflow public key'
 EOF
@@ -131,7 +131,7 @@ EOF
 	cat <<EOF | zexe request_${1}.zen -k keypair_${1}.json  | save reflow request_${1}.json
 Scenario credential
 Given I am '${1}'
-Given I have my 'keys'
+Given I have my 'keyring'
 When I create the credential request
 Then print my 'credential request'
 EOF
@@ -141,7 +141,7 @@ EOF
 	cat <<EOF | zexe issuer_sign_${1}.zen -k issuer_keypair.json -a request_${1}.json  | save reflow issuer_signature_${1}.json
 Scenario credential
 Given I am 'The Authority'
-Given I have my 'keys'
+Given I have my 'keyring'
 Given I have a 'credential request' inside '${1}'
 When I create the credential signature
 When I create the issuer public key
@@ -154,11 +154,11 @@ EOF
 	cat <<EOF | zexe aggr_cred_${1}.zen -k keypair_${1}.json -a issuer_signature_${1}.json  | save reflow verified_credential_${1}.json
 Scenario credential
 Given I am '${1}'
-Given I have my 'keys'
+Given I have my 'keyring'
 Given I have a 'credential signature'
 When I create the credentials
 Then print my 'credentials'
-Then print my 'keys'
+Then print my 'keyring'
 EOF
 	##
 
@@ -276,7 +276,7 @@ function participant_sign() {
 Scenario reflow
 Given I am '$name'
 Given I have my 'credentials'
-Given I have my 'keys'
+Given I have my 'keyring'
 Given I have a 'reflow seal'
 Given I have a 'issuer public key' from 'The Authority'
 When I create the reflow signature

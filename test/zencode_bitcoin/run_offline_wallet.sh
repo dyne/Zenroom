@@ -23,16 +23,16 @@ cat << EOF | zexe keygen.zen | save bitcoin keys.json
 Given nothing
 When I create the testnet key
 When I create the testnet public key
-Then print the 'keys'
+Then print the 'keyring'
 EOF
 
 cat << EOF | zexe pubkeygen.zen -k keys.json | save bitcoin pubkey.json
-Given I have the 'keys'
+Given I have the 'keyring'
 When I create the testnet public key
 Then print the 'testnet public key'
 EOF
 cat <<EOF | zexe pubgen.zen -k keys.json | save bitcoin address.json
-Given I have the 'keys'
+Given I have the 'keyring'
 When I create the testnet address
 Then print the 'testnet address'
 EOF
@@ -82,7 +82,7 @@ Then print the 'testnet transaction'
 EOF
 
 cat <<EOF | zexe sign_transaction.zen -k keys.json -a transaction.json | save bitcoin rawtx.json
-Given I have the 'keys'
+Given I have the 'keyring'
 and I have a 'base64 dictionary' named 'testnet transaction'
 When I sign the testnet transaction
 and I create the testnet raw transaction

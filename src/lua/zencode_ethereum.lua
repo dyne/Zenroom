@@ -104,8 +104,8 @@ ZEN.add_schema(
 })
 
 When('create the ethereum key', function()
-	initkeys'ethereum'
-	ACK.keys.ethereum = ECDH.keygen().private
+	initkeyring'ethereum'
+	ACK.keyring.ethereum = ECDH.keygen().private
 end)
 
 When('create the ethereum address', function()

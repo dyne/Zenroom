@@ -89,8 +89,8 @@ When('create the keypair', f_keygen)
 When(
 	"create the ecdh key",
 	function()
-		initkeys'ecdh'
-		ACK.keys.ecdh = ECDH.keygen().private
+		initkeyring'ecdh'
+		ACK.keyring.ecdh = ECDH.keygen().private
 	end
 )
 When(
@@ -105,9 +105,9 @@ When(
 	"create the ecdh key with secret key ''",
 	function(sec)
 		local sk = have(sec)
-		initkeys'ecdh'
+		initkeyring'ecdh'
 		ECDH.pubgen(sk)
-		ACK.keys.ecdh = sk
+		ACK.keyring.ecdh = sk
 	end
 )
 
@@ -175,8 +175,8 @@ When(
 )
 
 local function _havekey_compat()
-   initkeys()
-   local sk = ACK.keys.ecdh
+   initkeyring()
+   local sk = ACK.keyring.ecdh
    if sk then
       return sk
    else

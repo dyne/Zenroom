@@ -110,23 +110,6 @@ jsontest("url64")
 jsontest("base64")
 jsontest("bin")
 
-print '== CBOR import/export'
-function cbortest(reason)
-   CONF.input.encoding = input_encoding(reason)
-   CONF.output.encoding = { fun = guess_outcast(reason),
-			    name = reason }
-   local str = CBOR.encode({public = left})
-   right = CBOR.decode(str)
-   right.public = CONF.input.encoding.fun(right.public)
-   dotest(left:octet(),right.public)
-   ECP.new(right.public) -- test if ecp point on curve
-end
-cbortest("hex")
-cbortest("base58")
-cbortest("url64")
-cbortest("base64")
-cbortest("bin")
-
 print '== JSON cryptotests'
 -- more testing using crypto verification of pub/priv keypair
 function jsoncryptotest(f)

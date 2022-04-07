@@ -53,24 +53,24 @@ end
 When(
 	'create the credential key',
 	function()
-		initkeys'credential'
-		ACK.keys.credential = INT.random()
+		initkeyring'credential'
+		ACK.keyring.credential = INT.random()
 	end
 )
 
 When(
 	"create the credential key with secret key ''",
 	function(sec)
-		initkeys'credential'
-		ACK.keys.credential = INT.new(secret) % ECP.modulo()
+		initkeyring'credential'
+		ACK.keyring.credential = INT.new(secret) % ECP.modulo()
 	end
 )
 
 When(
 	'create the issuer key',
 	function()
-		initkeys'issuer'
-		ACK.keys.issuer = CRED.issuer_keygen()
+		initkeyring'issuer'
+		ACK.keyring.issuer = CRED.issuer_keygen()
 	end
 )
 
@@ -79,8 +79,8 @@ When(
 	function()
 		havekey'issuer'
 		ACK.issuer_public_key = {
-			alpha = G2 * ACK.keys.issuer.x,
-			beta = G2 * ACK.keys.issuer.y
+			alpha = G2 * ACK.keyring.issuer.x,
+			beta = G2 * ACK.keyring.issuer.y
 		}
 	end
 )
@@ -118,7 +118,7 @@ When(
 	'create the credential request',
 	function()
 		havekey'credential'
-		ACK.credential_request = CRED.prepare_blind_sign(ACK.keys.credential)
+		ACK.credential_request = CRED.prepare_blind_sign(ACK.keyring.credential)
 	end
 )
 
@@ -148,10 +148,10 @@ When(
 		have 'credential request'
 		havekey'issuer'
 		ACK.credential_signature =
-			CRED.blind_sign(ACK.keys.issuer, ACK.credential_request)
+			CRED.blind_sign(ACK.keyring.issuer, ACK.credential_request)
 		ACK.verifier = {
-			alpha = G2 * ACK.keys.issuer.x,
-			beta = G2 * ACK.keys.issuer.y
+			alpha = G2 * ACK.keyring.issuer.x,
+			beta = G2 * ACK.keyring.issuer.y
 		}
 	end
 )
@@ -163,7 +163,7 @@ When(
 		-- prepare output with an aggregated sigma credential
 		-- requester signs the sigma with private key
 		ACK.credentials =
-			CRED.aggregate_creds(ACK.keys.credential, {ACK.credential_signature})
+			CRED.aggregate_creds(ACK.keyring.credential, {ACK.credential_signature})
 	end
 )
 
@@ -210,7 +210,7 @@ When(
 		empty 'credential proof'
 		havekey'credential'
 		ACK.credential_proof =
-			CRED.prove_cred(ACK.verifiers, ACK.credentials, ACK.keys.credential)
+			CRED.prove_cred(ACK.verifiers, ACK.credentials, ACK.keyring.credential)
 	end
 )
 IfWhen(

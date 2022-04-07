@@ -85,7 +85,7 @@ participant_sign() {
 Scenario reflow
 Given I am '$name'
 Given I have my 'credentials'
-Given I have my 'keys'
+Given I have my 'keyring'
 Given I have a 'reflow seal'
 Given I have a 'issuer public key' from 'The Authority'
 When I create the reflow signature

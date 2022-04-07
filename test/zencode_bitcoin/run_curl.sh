@@ -37,7 +37,7 @@ EOF
 cat <<EOF | debug create_bitcoin_rawtx.zen -a curltx.json -k keys.json 
 rule input encoding base58
 Scenario bitcoin: create a rawtx from unspent
-Given I have the 'keys'
+Given I have the 'keyring'
 and I have a 'amount'
 and I have a 'fee'
 and I have a 'recipient address'

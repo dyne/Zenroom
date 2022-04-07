@@ -13,11 +13,11 @@ cat <<EOF | zexe ${name}_keygen.zen | save $SUBDOC ${name}_keys.json
 Scenario ethereum
 Given nothing
 When I create the ethereum key
-Then print the 'keys'
+Then print the 'keyring'
 EOF
 
 # cat <<EOF | zexe pubgen.zen -k keys.json | save $SUBDOC pubkey.json
-# Given I have the 'keys'
+# Given I have the 'keyring'
 # When I create the ethereum public key
 # Then print the 'ethereum public key'
 # EOF
@@ -25,7 +25,7 @@ EOF
 cat <<EOF | zexe ${name}_addrgen.zen -k ${name}_keys.json | save $SUBDOC ${name}_address.json
 Scenario ethereum
 Given I am known as '$name'
-and I have the 'keys'
+and I have the 'keyring'
 When I create the ethereum address
 Then print my 'ethereum address'
 EOF
@@ -134,7 +134,7 @@ EOF
 cat <<eof | zexe sign_transaction.zen -a alice_to_bob_transaction.json \
 		 -k alice_keys.json
 scenario ethereum
-given I have the 'keys'
+given I have the 'keyring'
 and I have a 'ethereum transaction'
 # tx["v"] = int.new(1337) <- chain id
 # tx["r"] = o.new()
@@ -148,7 +148,7 @@ eof
 
 cat <<eof | zexe sign_transaction_chainid.zen -a alice_to_bob_transaction.json -k alice_keys.json
 scenario ethereum
-given I have the 'keys'
+given I have the 'keyring'
 and I have a 'ethereum transaction'
 when I create the signed ethereum transaction for chain 'fabt'
 then print the 'signed ethereum transaction'
@@ -173,7 +173,7 @@ EOF
 
 cat <<eof | zexe sign_transaction_chainid.zen -a alice_storage_tx.json -k alice_keys.json
 scenario ethereum
-given I have the 'keys'
+given I have the 'keyring'
 and I have a 'ethereum transaction'
 when I create the signed ethereum transaction for chain 'fabt'
 then print the 'signed ethereum transaction'

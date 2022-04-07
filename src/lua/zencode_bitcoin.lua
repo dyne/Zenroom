@@ -128,9 +128,9 @@ ZEN.add_schema(
 
 -- generate a keypair in "bitcoin" format (only x coord, 03 prepended)
 local function _keygen(name)
-	initkeys(name)
+	initkeyring(name)
 	local kp = ECDH.keygen()
-	ACK.keys[name] = kp.private
+	ACK.keyring[name] = kp.private
 end
 When('create the bitcoin key', function() _keygen('bitcoin') end)
 When('create the testnet key', function() _keygen('testnet') end)
@@ -147,8 +147,8 @@ local function _import_wif(sec, name)
 		else
 		   error("Invalid "..name.." key size for "..sec..": "..#sk)
 		end
-		initkeys(name)
-		ACK.keys[name] = res
+		initkeyring(name)
+		ACK.keyring[name] = res
 end
 When("create the bitcoin key with secret key ''", function(sec)
 	_import_wif(sec, 'bitcoin') end)
