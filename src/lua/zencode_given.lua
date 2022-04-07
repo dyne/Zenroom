@@ -231,6 +231,15 @@ Given(
    end
 )
 
+Given(
+   "my name is in a '' named '' in ''",
+   function(sc, name, struct)
+      pickin(struct, name, sc)
+      assert(TMP.name,  'No name found in: '..name)
+      Iam(O.to_string(operate_conversion(TMP)))
+   end
+)
+
 -- variable names:
 -- s = schema of variable (or encoding)
 -- n = name of variable
