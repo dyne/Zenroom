@@ -100,6 +100,13 @@ When(
     end
 )
 
+When("create the reflow key with secret key ''",
+     function(sec)
+	local sk = have(sec)
+	initkeys'reflow'
+	ACK.keys.reflow = sk
+     end
+)
 When(
     'create the reflow public key',
     function()

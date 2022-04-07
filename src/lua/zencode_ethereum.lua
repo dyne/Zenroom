@@ -213,3 +213,12 @@ function(pubkey)
   ZEN.assert( ETH.verifySignatureTransaction(pk, tx) )
 end)
 
+When(
+	"create the ethereum key with secret key ''",
+	function(sec)
+		local sk = have(sec)
+		initkeys'ethereum'
+		ECDH.pubgen(sk)
+		ACK.keys.ethereum = sk
+	end
+)
