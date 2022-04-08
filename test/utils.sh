@@ -141,8 +141,6 @@ callgrind() {
 	shift 1
 	>&2 echo "test: $out"
 	tee "$out" | valgrind --tool=callgrind --callgrind-out-file="${out}.callgrind" $Z -z $*
-	echo "return: $?"
-	echo "exec profile: $out.callgrind"
 	return $?
 }
 
