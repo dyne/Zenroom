@@ -110,9 +110,6 @@ local function set_sentence(self, event, from, to, ctx)
         tt = tt:lower()
         local func = reg[tt]
         if not func then
-                I.spy(reg)
-                I.spy(tt)
-                I.spy(reg[tt])
                 error('Zencode pattern not found: ' .. tt, 2)
 		return false
         elseif (type(func) ~= 'function') then
@@ -241,7 +238,7 @@ local function new_state_machine()
     -- Given --> When
     -- When --> Then
     -- state branch {
-    --     IF 
+    --     IF
     --     when then
     --     --
     --     EndIF
@@ -271,7 +268,7 @@ local function new_state_machine()
 				{name = 'enter_and', from = 'when', to = 'when'},
 				{name = 'enter_and', from = 'then', to = 'then'},
 				{name = 'enter_and', from = 'whenif', to = 'whenif'},
-				{name = 'enter_and', from = 'thenif', to = 'thenif'},	
+				{name = 'enter_and', from = 'thenif', to = 'thenif'},
 				{name = 'enter_and', from = 'if', to = 'if'}
 
 			},
