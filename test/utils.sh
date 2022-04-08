@@ -128,6 +128,25 @@ debug() {
 	return $?
 }
 
+callgrind() {
+	if [ "$Z" == "" ]; then
+		>&2 echo "no zenroom executable configured"
+		return 1
+	fi
+	if [ "$1" == "" ]; then
+		>&2 echo "no script filename configured"
+		return 1
+	fi
+	out="$1"
+	shift 1
+	>&2 echo "test: $out"
+	tee "$out" | valgrind --tool=callgrind --callgrind-out-file="${out}.callgrind" $Z -z $*
+	echo "return: $?"
+	echo "exec profile: $out.callgrind"
+	return $?
+}
+
+
 incr_rngfake() {
 	cat << EOF | zenroom
 res = BIG.new(  )
@@ -139,6 +158,10 @@ EOF
 zexe() {
 	if [ "$DEBUG" == "1" ]; then
 		debug $*
+		return $?
+	fi
+	if [ "$PROFILE" == "1" ]; then
+		callgrind $*
 		return $?
 	fi
 	if [ "$Z" == "" ]; then
