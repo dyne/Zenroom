@@ -59,7 +59,7 @@ linux-debug: apply-patches milagro lua53 embed-lua zstd
 	make -C src linux-debug
 	@cp -v src/zenroom build/zenroom
 
-linux-profile:
+linux-profile: apply-patches milagro lua53 embed-lua zstd
 	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	make -C src linux
 	@cp -v src/zenroom build/zenroom

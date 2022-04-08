@@ -91,11 +91,6 @@ esp32: apply-patches milagro lua53
 # lpeglabel:
 # 	CC=${gcc} CFLAGS="${cflags} -I${pwd}/lib/lua53/src" AR="${ar}" make -C lib/lpeglabel
 
-zlib:
-	CC=${gcc} CFLAGS="${cflags}" \
-	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
-	pwd="${pwd}" make -C ${pwd}/build/zlib -f ZenMakefile
-
 android-lua53:
 	CC=${gcc} CFLAGS="${cflags} ${lua_cflags}" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
@@ -146,9 +141,10 @@ zstd:
 	make libzstd.a -C ${pwd}/lib/zstd \
 	ZSTD_LIB_DICTBUILDER=0 \
 	ZSTD_LIB_DEPRECATED=0 \
-	ZSTD_LIB_MINIFY=1 \
+	ZSTD_LEGACY_SUPPORT=0 \
 	HUF_FORCE_DECOMPRESS_X1=1 \
 	ZSTD_FORCE_DECOMPRESS_SEQUENCES_SHORT=1 \
+	ZSTD_STRIP_ERROR_STRINGS=1 \
 	ZSTD_NO_INLINE=1
 
 # -------------------
