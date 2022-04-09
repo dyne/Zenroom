@@ -730,7 +730,7 @@ static int big_mul(lua_State *L) {
 static int big_modpower(lua_State *L) {
 	big *x = big_arg(L,1); SAFE(x);
 	big *n = big_arg(L,2); SAFE(n);
-	big *m = big_arg(L,3); SAFE(n);
+	big *m = big_arg(L,3); SAFE(m);
 
 	BIG safen;
 	BIG_copy(safen, n->val);
@@ -932,6 +932,28 @@ static int big_parity(lua_State *L) {
 	return 1;
 }
 
+static int big_shiftr(lua_State *L) {
+        big *c = big_arg(L,1); SAFE(c);
+	int i;
+	lua_Number n = lua_tointegerx(L,2,&i);
+	if(!i) {
+		lerror(L, "the number of bits to shift has to be a number");
+		return 0;
+	}
+	int int_n = n;
+  
+	big *r = big_dup(L,c); SAFE(r);
+	if(c->doublesize) {
+		BIG_dnorm(r->val);
+		BIG_dshr(r->val, int_n);
+	} else {
+		BIG_norm(r->val);
+		BIG_shr(r->val, int_n);
+	}
+	return 1;
+}
+
+
 int luaopen_big(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg big_class[] = {
@@ -960,6 +982,7 @@ int luaopen_big(lua_State *L) {
 		{"parity",big_parity},
 		{"info",lua_biginfo},
 		{"max",lua_bigmax},
+		{"shr",big_shiftr},
 		{NULL,NULL}
 	};
 	const struct luaL_Reg big_methods[] = {
@@ -995,6 +1018,7 @@ int luaopen_big(lua_State *L) {
 		{"__gc", big_destroy},
 		{"__tostring",big_to_hex},
 		{"fixed",big_to_fixed_octet},
+		{"__shr", big_shiftr},
 		{NULL,NULL}
 	};
 	zen_add_class("big", big_class, big_methods);
