@@ -135,9 +135,11 @@ mod tests {
 
     const SAMPLE_SCRIPT: &str = r#"
     Scenario 'ecdh': Create the keypair
+    Scenario 'schnorr'
     Given that I am known as 'Alice'
-    When I create the keypair
-    Then print my data
+    When I create the ecdh key
+    and I create the schnorr key
+    Then print my 'keyring'
     "#;
 
     #[test]
@@ -150,10 +152,10 @@ mod tests {
             .unwrap()
             .get("Alice")
             .unwrap()
-            .get("keypair")
+            .get("keyring")
             .unwrap();
-        assert!(keypair.get("private_key").is_some());
-        assert!(keypair.get("public_key").is_some());
+        assert!(keypair.get("ecdh").is_some());
+        assert!(keypair.get("schnorr").is_some());
 
         Ok(())
     }

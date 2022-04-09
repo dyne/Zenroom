@@ -50,7 +50,7 @@ func TestCallStrings(t *testing.T) {
 func TestZencode(t *testing.T) {
 	script := `Scenario 'ecdh': Create the keypair
 Given that I am known as 'Alice'
-When I create the keypair
+When I create the ecdh key
 Then print my data`
 	res, success := ZencodeExec(script, "", "", "")
 	if !success {
