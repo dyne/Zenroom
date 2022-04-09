@@ -139,7 +139,7 @@ cat <<EOF | zexe sign_from_alice2.zen -k alice_keys.json | save ecdh sign_alice_
 Rule check version 2.0.0
 Scenario 'ecdh'
 Given that I am known as 'Alice'
-and I have my 'keys'
+and I have my 'keyring'
 When I write string 'This is my authenticated message.' in 'message'
 and I create the ecdh signature of 'message'
 Then print the 'message'

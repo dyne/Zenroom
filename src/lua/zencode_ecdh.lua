@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Saturday, 4th September 2021
+--on Saturday, 9th April 2022
 --]]
 
 -- defined outside because reused across different schemas
@@ -47,19 +47,6 @@ ZEN.add_schema(
 		-- keypair (ECDH)
 		public_key = public_key_f,
 		ecdh_public_key = public_key_f,
-		keypair = function(obj)
-			local pub = public_key_f(obj.public_key)
-			local sec = ZEN.get(obj, 'private_key')
-			ZEN.assert(
-				pub == ECDH.pubgen(sec),
-				'Public key does not belong to secret key in keypair'
-			)
-			warn_keypair()
-			return {
-				public_key = pub,
-				private_key = sec
-			}
-		end,
 		secret_message = function(obj)
 			return {
 				checksum = ZEN.get(obj, 'checksum'),
@@ -72,19 +59,6 @@ ZEN.add_schema(
 		ecdh_signature = signature_f
 	}
 )
-
--- generate keypair
-local function f_keygen()
-	empty'keypair'
-	local kp = ECDH.keygen()
-	ACK.keypair = {
-		public_key = kp.public,
-		private_key = kp.private
-	}
-	new_codec('keypair', { zentype = 'schema' })
-	warn_keypair()
-end
-When('create the keypair', f_keygen)
 
 When(
 	"create the ecdh key",
@@ -101,29 +75,18 @@ When(
 		ACK.ecdh_public_key = ECDH.pubgen(sk)
 	end
 )
-When(
-	"create the ecdh key with secret key ''",
-	function(sec)
-		local sk = have(sec)
-		initkeyring'ecdh'
-		ECDH.pubgen(sk)
-		ACK.keyring.ecdh = sk
-	end
-)
-
-When(
-	"create the keypair with secret key ''",
-	function(sec)
-		local sk = have(sec)
-		empty'keypair'
-		local pub = ECDH.pubgen(sk)
-		ACK.keypair = {
-			public_key = pub,
-			private_key = sk
-		}
-		warn_keypair()
-	end
-)
+When("create the ecdh key with secret key ''",function(sec)
+	local sk = have(sec)
+	initkeyring'ecdh'
+	ECDH.pubgen(sk)
+	ACK.keyring.ecdh = sk
+end)
+When("create the ecdh key with secret ''",function(sec)
+	local sk = have(sec)
+	initkeyring'ecdh'
+	ECDH.pubgen(sk)
+	ACK.keyring.ecdh = sk
+end)
 
 -- encrypt with a header and secret
 When(
@@ -174,24 +137,6 @@ When(
 	end
 )
 
-local function _havekey_compat()
-   initkeyring()
-   local sk = ACK.keyring.ecdh
-   if sk then
-      return sk
-   else
-      local kp = have'keypair'
-      if not kp then goto fail else
-	 warn_keypair()
-      end
-      sk = kp.private_key
-      if not sk then goto fail end
-      return sk
-   end
-   ::fail::
-   ZEN.assert(sk, "ECDH Private key not found anywhere in keyring or keypair")
-end
-
 -- check various locations to find the public key
 local function _pubkey_compat(_key)
 	local pubkey = ACK[_key]
@@ -212,7 +157,7 @@ end
 When(
 	"encrypt the secret message of '' for ''",
 	function(msg, _key)
-		local sk = _havekey_compat()
+		local sk = havekey'ecdh'
 		have(msg)
 		local pk = _pubkey_compat(_key)
 		empty'secret message'
@@ -235,7 +180,7 @@ When(
 When(
 	"decrypt the text of '' from ''",
 	function(secret, _key)
-		local sk = _havekey_compat()
+		local sk = havekey'ecdh'
 		have(secret)
 		local pk = _pubkey_compat(_key)
 		local message = ACK[secret][_key] or ACK[secret]
@@ -252,7 +197,7 @@ When(
 
 -- sign a message and verify
 local function _signing(msg, var)
-   local sk = _havekey_compat()
+   local sk = havekey'ecdh'
    empty(var)
    local obj = have(msg)
    ACK[var] = ECDH.sign(sk, ZEN.serialize(obj))
@@ -270,17 +215,21 @@ local function _verifying(msg, sig, by)
 end
 
 When(
-   "create the signature of ''", function(msg) _signing(msg, 'signature') end
-)
+   "create the signature of ''", function(msg)
+   _signing(msg, 'signature')
+end)
 
 When(
-   "create the ecdh signature of ''", function(msg) _signing(msg, 'ecdh_signature') end
+   "create the ecdh signature of ''", function(msg)
+   _signing(msg, 'ecdh_signature')
+end)
+
+IfWhen(
+   "verify the '' has a signature in '' by ''",
+   _verifying
 )
 
 IfWhen(
-   "verify the '' has a signature in '' by ''", _verifying
-)
-
-IfWhen(
-   "verify the '' has a ecdh signature in '' by ''", _verifying
+   "verify the '' has a ecdh signature in '' by ''",
+   _verifying
 )

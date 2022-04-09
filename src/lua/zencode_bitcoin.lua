@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Saturday, 13th November 2021
+--on Saturday, 9th April 2022
 --]]
 
 local btc -- mostly loaded at init
@@ -153,6 +153,10 @@ end
 When("create the bitcoin key with secret key ''", function(sec)
 	_import_wif(sec, 'bitcoin') end)
 When("create the testnet key with secret key ''", function(sec)
+	_import_wif(sec, 'testnet') end)
+When("create the bitcoin key with secret ''", function(sec)
+	_import_wif(sec, 'bitcoin') end)
+When("create the testnet key with secret ''", function(sec)
 	_import_wif(sec, 'testnet') end)
 
 local function _get_pub(name)
