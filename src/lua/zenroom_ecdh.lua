@@ -48,13 +48,17 @@ end
 
 -- it is similar to sign eth, s < order/2
 function ecdh.sign_ecdh(sk, data)
-   local halfSecp256k1n = INT.new(hex('7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0'))
-   local sig
-   sig = nil
-   repeat
-      sig, y = ECDH.sign_hashed(sk, data, #data)
-   until(INT.new(sig.s) < halfSecp256k1n);
-   
+   local Secp256k1n = INT.new(O.from_hex('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141'))
+   local sig, y, sig_s
+   sig, y = ECDH.sign_hashed(sk, data, #data)
+
+   assert(INT.shr(Secp256k1n, 1) == Secp256k1n/INT.new(2), "shr not working")
+   sig_s = INT.new(sig.s)
+   if sig_s > INT.shr(Secp256k1n, 1) then
+      sig_s = INT.modsub(Secp256k1n, sig_s, Secp256k1n)
+      sig.s = sig_s:octet():pad(32)
+      y = not y
+   end
    return sig, y
 end
 
