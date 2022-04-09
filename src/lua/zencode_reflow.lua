@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Friday, 14th January 2022
+--on Saturday, 9th April 2022
 --]]
 
 load_scenario('zencode_credential')
@@ -96,17 +96,24 @@ When(
     function()
         -- keygen: δ = r.O ; γ = δ.G2
         initkeyring 'reflow'
-        ACK.keyring.reflow = INT.random() -- BLS secret signing key
+        ACK.keyring.reflow = INT.random()
+        -- BLS secret signing key
     end
 )
 
 When("create the reflow key with secret key ''",
-     function(sec)
-	local sk = have(sec)
-	initkeys'reflow'
-	ACK.keys.reflow = sk
-     end
-)
+function(sec)
+    local sk = have(sec)
+    initkeys'reflow'
+    ACK.keys.reflow = INT.new(sk)
+end)
+When("create the reflow key with secret ''",
+function(sec)
+    local sk = have(sec)
+    initkeys'reflow'
+    ACK.keys.reflow = INT.new(sk)
+end)
+
 When(
     'create the reflow public key',
     function()

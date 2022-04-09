@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Tuesday, 20th July 2021
+--on Saturday, 9th April 2022
 --]]
 
 -- ABC/COCONUT implementation in Zencode
@@ -50,21 +50,21 @@ function key_import_issuer_verifier_f(obj)
 end
 
 -- credential keypair operations
-When(
-	'create the credential key',
-	function()
-		initkeyring'credential'
-		ACK.keyring.credential = INT.random()
-	end
-)
+When('create the credential key',function()
+	initkeyring'credential'
+	ACK.keyring.credential = INT.random()
+end)
 
-When(
-	"create the credential key with secret key ''",
-	function(sec)
-		initkeyring'credential'
-		ACK.keyring.credential = INT.new(secret) % ECP.modulo()
-	end
-)
+When("create the credential key with secret key ''",function(sec)
+	initkeyring'credential'
+	local secret = have(sec)
+	ACK.keyring.credential = INT.new(secret)
+end)
+When("create the credential key with secret ''",function(sec)
+	initkeyring'credential'
+	local secret = have(sec)
+	ACK.keyring.credential = INT.new(secret)
+end)
 
 When(
 	'create the issuer key',
