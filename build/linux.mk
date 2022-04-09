@@ -115,9 +115,7 @@ linux-python3: linux-lib
 	@cp -v ${pwd}/src/libzenroom-${ARCH}.so \
 		${pwd}/bindings/python3/zenroom/libzenroom.so
 
-linux-go: apply-patches milagro lua53 embed-lua zstd
-	swig -go -cgo -intgosize 32 ${pwd}/build/swig.i
-	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c -o src/zen_go.o
-	CC=${gcc} LD=${ld} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-		make -C src go
-	cp -v ${pwd}/src/libzenroomgo.so ${pwd}/bindings/golang/zenroom/lib/
+linux-go:
+	make meson
+	cp meson/libzenroom.so bindings/golang/zenroom/lib
+	cd bindings/golang/zenroom && make test

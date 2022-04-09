@@ -174,22 +174,17 @@ end)
 Then('print keys',function()
 	OUT.keys = ZEN.schemas.keys.export(ACK.keyring)
 end)
-Then("print keys for ''", function(k)
-	local keys = ZEN.schemas.keys.export(ACK.keyring)
-	if not OUT.keys then OUT.keys = { } end
-	OUT.keys[k] = keys[k]
+Then('print keyring',function()
+	OUT.keyring = ZEN.schemas.keys.export(ACK.keyring)
 end)
 Then('print my keys',function()
 	Iam()
 	OUT[WHO] = { keys = ZEN.schemas.keys.export(ACK.keyring) }
 end)
-Then("print my keys for ''", function(k)
+Then('print my keyring',function()
 	Iam()
-	local keys = ZEN.schemas.keys.export(ACK.keyring)
-	if not OUT[WHO] then OUT[WHO] = { keys = { } } end
-	OUT[WHO].keys[k] = keys[k]
+	OUT[WHO] = { keyring = ZEN.schemas.keys.export(ACK.keyring) }
 end)
-
 -- data
 -- data as
 -- data from
