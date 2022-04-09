@@ -52,7 +52,6 @@ function ecdh.sign_ecdh(sk, data)
    local sig, y, sig_s
    sig, y = ECDH.sign_hashed(sk, data, #data)
 
-   assert(INT.shr(Secp256k1n, 1) == Secp256k1n/INT.new(2), "shr not working")
    sig_s = INT.new(sig.s)
    if sig_s > INT.shr(Secp256k1n, 1) then
       sig_s = INT.modsub(Secp256k1n, sig_s, Secp256k1n)
