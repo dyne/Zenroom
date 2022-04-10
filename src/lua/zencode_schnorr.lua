@@ -71,8 +71,8 @@ ZEN.add_schema(
 -- generate the private key
 When('create the schnorr key',
      function()
-	initkeys'schnorr'
-	ACK.keys.schnorr = SCH.keygen()
+	initkeyring'schnorr'
+	ACK.keyring.schnorr = SCH.keygen()
      end
 )
 
@@ -90,8 +90,8 @@ When('create the schnorr public key',
 When("create the schnorr public key with secret key ''",
      function(sec)
 	local sk = have(sec)
-	initkeys'schnorr'
-	ACK.keys.schnorr = sk
+	initkeyring'schnorr'
+	ACK.keyring.schnorr = sk
 	empty'schnorr public key'
 	ACK.schnorr_public_key = SCH.pubgen(sk)
 	new_codec('schnorr public key', { zentype = 'element',
@@ -101,15 +101,15 @@ When("create the schnorr public key with secret key ''",
 
 When("create the schnorr key with secret key ''",function(sec)
 	local sk = have(sec)
-	initkeys'schnorr'
+	initkeyring'schnorr'
    SCH.pubgen(sk) -- use pubgen as check
-	ACK.keys.schnorr = sk
+	ACK.keyring.schnorr = sk
 end)
 When("create the schnorr key with secret ''",function(sec)
 	local sk = have(sec)
-	initkeys'schnorr'
+	initkeyring'schnorr'
    SCH.pubgen(sk) -- use pubgen as check
-	ACK.keys.schnorr = sk
+	ACK.keyring.schnorr = sk
 end)
 
 -- generate the sign for a msg and verify
