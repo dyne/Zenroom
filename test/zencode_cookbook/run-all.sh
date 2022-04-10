@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+
+set -e
 
 ./run-dictionaries.sh "$1"
 ./run-given.sh "$1"

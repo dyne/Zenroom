@@ -182,9 +182,8 @@ cat <<EOF | save . myNestedRepetitveObject.json
       ]
    },
 	 "Alice":{
-		  "keypair":{
-			 "private_key":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
-			 "public_key":"BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
+		  "keyring":{
+			 "ecdh":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM="
 		  }
 	   }
    
@@ -196,7 +195,7 @@ EOF
 cat <<EOF | debug givenLoadRepetitveObject.zen -z -a myNestedRepetitveObject.json | save . givenLoadRepetitveObjectOutput.json
 Scenario 'ecdh': let us load some stuff cause it is fun!
 Given I am 'Alice'
-And I have my  'keypair'
+And I have my 'keyring'
 And I have a 'string array' named 'myFiveStrings' inside 'myFirstObject' 
 
 #
@@ -221,12 +220,10 @@ echo "                                                "
 cat <<EOF | zexe givenLoadRepetitveObjectDebug.zen -z -a myNestedRepetitveObject.json | save . givenLoadRepetitveObjectDebugOutput.json
 Scenario 'ecdh': let us load some stuff cause it is fun!
 Given I am 'Alice'
-And I have my  'keypair'
+And I have my 'keyring'
 And I have a 'string array' named 'myFiveStrings' inside 'myFirstObject' 
 And I have a 'string array' named 'mySecondArray' inside 'mySecondObject' 
-And debug
 Then print all data
-And debug
 EOF
 
 
@@ -242,9 +239,8 @@ echo "                                                "
 cat <<EOF | save . myNestedObject.json
 {
 	"Alice":{
-      "keypair":{
-         "private_key":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
-         "public_key":"BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
+      "keyring":{
+         "ecdh":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM="
       },
 	  "myFirstNumber":87654321,
       "myFirstString":"Hello World!",
@@ -276,7 +272,7 @@ Scenario 'ecdh': let us load some stuff cause it is fun!
 Given I am 'Alice'
 #
 # Here I load the data from the JSON object having my name:
-And I have my 'keypair'
+And I have my 'keyring'
 And I have my 'string' named 'myFirstString'
 And I have my 'number' named 'myFirstNumber'
 #
@@ -445,9 +441,8 @@ cat <<EOF | save . givenUserData.json
 {
    "myUserName":"User1234",
 	 "User1234":{
-		  "keypair":{
-			 "private_key":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
-			 "public_key":"BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
+		  "keyring":{
+			 "ecdh":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM="
 		  }
 	   } 
 }
@@ -457,6 +452,6 @@ EOF
 cat <<EOF | zexe givenLoadNameFromData.zen -z -a givenUserData.json | save . givenLoadNameFromDataOutput.json
 Scenario 'ecdh': load name from data
 Given my name is in a 'string' named 'myUserName'
-And I have my  'keypair'
+And I have my  'keyring'
 Then print my data
 EOF
