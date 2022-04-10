@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Saturday, 9th April 2022
+--on Sunday, 10th April 2022
 --]]
 
 ETH = require_once'crypto_ethereum'
@@ -215,13 +215,13 @@ end)
 
 When("create the ethereum key with secret key ''",function(sec)
 	local sk = have(sec)
-	initkeys'ethereum'
+	initkeyring'ethereum'
 	ECDH.pubgen(sk)
-	ACK.keys.ethereum = sk
+	ACK.keyring.ethereum = sk
 end)
 When("create the ethereum key with secret ''",function(sec)
 	local sk = have(sec)
-	initkeys'ethereum'
+	initkeyring'ethereum'
 	ECDH.pubgen(sk)
-	ACK.keys.ethereum = sk
+	ACK.keyring.ethereum = sk
 end)
