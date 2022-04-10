@@ -95,11 +95,11 @@ test("Executes a zencode correctly", async (t) => {
     Given that I am known as '${random_name}' 
     When I create the credential key
     and I create the issuer key
-    Then print my 'keys'`);
+    Then print my 'keyring'`);
   t.is(typeof result, "string");
   const r = JSON.parse(result);
   t.is(typeof r[random_name], "object");
-  t.is(typeof r[random_name]["keys"]["credential"], "string");
-  t.is(typeof r[random_name]["keys"]["issuer"]["x"], "string");
-  t.is(typeof r[random_name]["keys"]["issuer"]["y"], "string");
+  t.is(typeof r[random_name]["keyring"]["credential"], "string");
+  t.is(typeof r[random_name]["keyring"]["issuer"]["x"], "string");
+  t.is(typeof r[random_name]["keyring"]["issuer"]["y"], "string");
 });
