@@ -58,7 +58,12 @@ lines=`wc -l < to_be_documented.txt`
 if [[ $lines -gt $count ]]
 then
     to_be_doc=$((lines-count))
+    echo "##################################################"
     echo "There are ${to_be_doc} statements to be documented: "
     cat to_be_documented.txt
-    exit 1
+    echo "##################################################"
+    exit 0
+    # return always success
+    # should extend to update an issue comment
+    # using https://github.com/marketplace/actions/create-or-update-comment
 fi
