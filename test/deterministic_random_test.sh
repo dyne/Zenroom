@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
 
 
 set -e
@@ -9,17 +9,13 @@ exe=${1:-zenroom}
 
 
 echo "TEST RNGSEED READ/WRITE"
-zmodload zsh/system
-cat <<EOF | ${exe} | sysread run1
-print(RNGSEED:hex() .. ";" .. O.random(64):hex())
-EOF
-seed1=`print $run1 | cut -d';' -f 1`
-rand1=`print $run1 | cut -d';' -f 2`
-cat <<EOF | ${exe} -c "rngseed=hex:$seed1" | sysread run2
-print(RNGSEED:hex() .. ";" .. O.random(64):hex())
-EOF
-seed2=`print $run2 | cut -d';' -f 1`
-rand2=`print $run2 | cut -d';' -f 2`
+run1=`echo "print(RNGSEED:hex() .. ';' .. O.random(64):hex())" | ${exe}`
+seed1=`echo $run1 | cut -d';' -f 1`
+rand1=`echo $run1 | cut -d';' -f 2`
+
+run2=`echo "print(RNGSEED:hex() .. ';' .. O.random(64):hex())" | ${exe} -c "rngseed=hex:$seed1"`
+seed2=`echo $run2 | cut -d';' -f 1`
+rand2=`echo $run2 | cut -d';' -f 2`
 
 [[ "$seed1" != "$seed2" ]] && return 1
 
@@ -81,7 +77,7 @@ else
 	diff /tmp/first /tmp/second
 	echo
 	rm $dtmode
-	return 1
+	exit 1
 fi
 
 first=`${exe}  $dtmode`
@@ -104,8 +100,8 @@ else
 	diff /tmp/first /tmp/second
 	echo
 	rm $dtmode
-	return 1
+	exit 1
 fi
 
 rm $dtmode
-return 0
+exit 0
