@@ -32,10 +32,10 @@ echo "                                                "
 let n=n+1
 
 cat <<EOF | zexe alice_keygen.zen -z | save . alice_keypair.json
-Scenario 'ecdh': Create the keypair
+Scenario 'ecdh': Create the keyring
 Given that I am known as 'Alice'
-When I create the keypair
-Then print my data
+When I create the ecdh key
+Then print my keyring
 EOF
 
 

@@ -56,9 +56,8 @@ EOF
 cat <<EOF | save . AliceKeyring.json
 {
 	"Alice": {
-		"keypair": {
-			"private_key": "WBdsWLDno9/DNaap8cOXyQsCG182NJ0ddjLo/k05mgs=",
-			"public_key": "BNRzlJ4csYlWgycGGiK/wgoEw3OizCdx9MWg06rxUBTP5rP9qPASOW5KY8YgmNjW5k7lLpboboHrsApWsvgkMN4="
+		"keyring": {
+			"ecdh": "WBdsWLDno9/DNaap8cOXyQsCG182NJ0ddjLo/k05mgs=",
 		}
 	},
 	"Bob": {
@@ -81,7 +80,7 @@ Scenario 'ecdh': Alice encrypts a message for Bob and Carl
 
 # Here we load keypair and public keys
 Given my name is in a 'string' named 'myUserName'
-Given that I have my 'keypair'
+Given that I have my 'keyring'
 Given that I have a 'string' named 'myPassword'
 Given that I have a 'string dictionary' named 'fileToBeHashed.Metadata'
 
@@ -142,4 +141,6 @@ echo "   	END of script $n			       		  "
 echo "------------------------------------------------"
 echo "                         			              "
 
+
+# TODO: VERIFY SIGNATURE
 

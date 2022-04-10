@@ -110,9 +110,8 @@ cat <<EOF | save . myLargeNestedObjectThen.json
       ]
    },
    "Alice":{
-      "keypair":{
-         "private_key":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
-         "public_key":"BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
+      "keyring":{
+         "ecdh":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM="
       },
 	  "keys": {
 			"issuer": {
@@ -166,7 +165,6 @@ cat <<EOF | save . thenCompleteScriptGiven.zen
 Scenario 'ecdh': load a issuer keypair
 Scenario 'credential': Create the keypair
 Given I am 'Alice'
-Given I have my 'keypair'
 Given I have my 'keyring' 
 and I have a 'public key' from 'Bob'
 and I have a 'public key' from 'Carl'
@@ -293,7 +291,7 @@ EOF
 
 
 
-cat thenCompleteScriptGiven.zen thenExhaustiveScript.zen | debug then1.zen -z -a myLargeNestedObjectThen.json | save . thenExhaustiveScriptOutput.json
+cat thenCompleteScriptGiven.zen thenExhaustiveScript.zen | zexe then1.zen -z -a myLargeNestedObjectThen.json | save . thenExhaustiveScriptOutput.json
 
 
 
@@ -448,6 +446,7 @@ let n=n+1
 
 cat <<EOF | save . thenCompleteScriptPart4.zen
 
+When I create the issuer key
 When I create the issuer public key
 # This prints a child of dictionary, which can be a string (like here) or another dictionary
 Then print the 'maxPricePerKG' from 'salesReport'

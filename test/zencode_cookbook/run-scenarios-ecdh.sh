@@ -37,8 +37,8 @@ echo "                                                "
 cat <<EOF | save . scenarioECDHZencodePart0.zen
 Scenario 'ecdh': Generate a keypair
 Given I am 'Alice'
-When I create the keypair
-Then print my data
+When I create the ecdh key
+Then print my keyring
 EOF
 
 cat scenarioECDHZencodePart0.zen | zexe ecdh$n.zen -z | save . scenarioECDHKeypair1.json
@@ -62,10 +62,9 @@ echo "                                                "
 echo "------------------------------------------------"
 echo "   	END of Generate a keypair with known seed - script $n"
 echo "                                                "
-echo " The keypair should be:  "
+echo " The keyring should be:  "
 echo "                                                "
-echo " private_key : B4rYTWx6UMbc2YPWRNpl4w2M6gY9jqSa637n8Kr2pPc="
-echo " public_key : BHdrWMNBRclVO1I1/iEaYjfEi5C0eEvG2GZgsCNq87qy8feZ74JEvnKK9FC07ThhJ8s4ON2ZQcLJ+8HpWMfKPww="
+echo " ecdh : B4rYTWx6UMbc2YPWRNpl4w2M6gY9jqSa637n8Kr2pPc="
 echo "                                                "
 echo "------------------------------------------------"
 echo "                                                "
@@ -188,12 +187,12 @@ cat <<EOF | save . scenarioECDHInputDataPart2.json
 		 "Hello World! This is my string array, element [1]",
 		 "Hello World! This is my string array, element [2]"
       ],
-	  "Alice": {
-		"keypair": {
-		  "private_key": "Aku7vkJ7K01gQehKELav3qaQfTeTMZKgK+5VhaR3Ui0=",
-      "public_key": "BBCQg21VcjsmfTmNsg+I+8m1Cm0neaYONTqRnXUjsJLPa8075IYH+a9w2wRO7rFM1cKmv19Igd7ntDZcUvLq3xI="
-    }
-  },
+	"Alice": {
+		"keyring": {
+	      "ecdh": "Aku7vkJ7K01gQehKELav3qaQfTeTMZKgK+5VhaR3Ui0="
+	    },
+        "public_key": "BBCQg21VcjsmfTmNsg+I+8m1Cm0neaYONTqRnXUjsJLPa8075IYH+a9w2wRO7rFM1cKmv19Igd7ntDZcUvLq3xI="
+    },
   "myUserName":"Alice"
 }
 EOF
@@ -203,7 +202,7 @@ Scenario 'ecdh': create the signature of an object
 
 # Declaring who I am and loading all the stuff
 Given my name is in a 'string' named 'myUserName'
-Given I have my 'keypair'
+Given I have my 'keyring'
 Given that I have a 'string' named 'myMessage' inside 'mySecretStuff'
 Given I have a 'string array' named 'myStringArray'
 
@@ -305,9 +304,8 @@ echo "                                                "
 cat <<EOF | save . scenarioECDHAliceKeyapir.json
 {
 	"Alice": {
-		"keypair": {
-			"private_key": "WBdsWLDno9/DNaap8cOXyQsCG182NJ0ddjLo/k05mgs=",
-			"public_key": "BNRzlJ4csYlWgycGGiK/wgoEw3OizCdx9MWg06rxUBTP5rP9qPASOW5KY8YgmNjW5k7lLpboboHrsApWsvgkMN4="
+		"keyring": {
+			"ecdh": "WBdsWLDno9/DNaap8cOXyQsCG182NJ0ddjLo/k05mgs="
 		}
 	},
 	"myUserName":"Alice"
@@ -333,7 +331,7 @@ Scenario 'ecdh': Alice encrypts a message for Bob and Carl
 
 # Loading Alice' keypair
 Given my name is in a 'string' named 'myUserName'
-Given that I have my 'keypair'
+Given that I have my 'keyring'
 
 # Loading the public keys of the recipients, you can load as many as you like
 Given that I have a 'public key' from 'Bob'
@@ -386,9 +384,8 @@ echo "                                                "
 cat <<EOF | save . scenarioECDHAliceBobDecryptKeys.json
 {
 	"Bob": {
-		"keypair": {
-			"private_key": "psBF05iHz/X8WBpwitJoSsZ7BiKawrdaVfQN3AtTa6I=",
-			"public_key": "BBA0kD35T9lUHR/WhDwBmgg/vMzlu1Vb0qtBjBZ8rbhdtW3AcX6z64a59RqF6FCV5q3lpiFNTmOgA264x1cZHE0="
+		"keyring": {
+			"ecdh": "psBF05iHz/X8WBpwitJoSsZ7BiKawrdaVfQN3AtTa6I="
 		}
 	},
 	"public_keys": {
@@ -404,7 +401,7 @@ Scenario 'ecdh': Bob decrypts the message from Alice
 
 # Here we state that Bob is running the script and we load his keypair 
 Given my name is in a 'string' named 'myUserName'
-Given I have my 'keypair'
+Given I have my 'keyring'
 
 # Here we load Alice's public key
 Given I have a 'public key' named 'Alice' in 'public keys'
@@ -445,8 +442,8 @@ EOF
 cat <<EOF | save .  scenarioECDHZencodePart7.zen
 Scenario 'ecdh': Generate a keypair
 Given my name is in a 'string' named 'myUserName'
-When I create the keypair
-Then print my data
+When I create the ecdh key
+Then print my keyring
 EOF
 
 cat scenarioECDHZencodePart7.zen | zexe ecdh$n.zen -z -a scenarioECDHLoadNameFromData.json | save . scenarioECDHKeypair3.json

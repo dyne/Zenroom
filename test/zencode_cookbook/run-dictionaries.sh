@@ -23,67 +23,68 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 n=0
 
 
-# cat <<EOF | save . dictionariesIdentity_example.json
-# {
-#   "Identity": {
-#     "UserNo": 1021,
-#     "RecordNo": 22,
-#     "DateOfIssue": "2020-01-01",
-#     "Name": "Giacomo",
-#     "FirstNames": "Rossi",
-#     "DateOfBirth": "1977-01-01",
-#     "PlaceOfBirth": "Milano",
-#     "Address": "Piazza Venezia",
-#     "TelephoneNo": "327 1234567"
-#   },
-#   "HistoryOfTransactions": {
-#     "NumberOfPreviouslyExecutedTransactions": 1020,
-#     "NumberOfCurrentPeriodTransactions": 57,
-#     "CanceledTransactions": 6,
-#     "DateOfFirstTransaction": "2019-01-01",
-#     "TotalSoldWithTransactions": 2160,
-#     "TotalPurchasedWithTransactions": 1005,
-#     "Remarks": "none"
-#   },
-#   "myUserName":"Authority1234"
-# }
-# EOF
+cat <<EOF | save . dictionariesIdentity_example.json
+{
+  "Identity": {
+    "UserNo": 1021,
+    "RecordNo": 22,
+    "DateOfIssue": "2020-01-01",
+    "Name": "Giacomo",
+    "FirstNames": "Rossi",
+    "DateOfBirth": "1977-01-01",
+    "PlaceOfBirth": "Milano",
+    "Address": "Piazza Venezia",
+    "TelephoneNo": "327 1234567"
+  },
+  "HistoryOfTransactions": {
+    "NumberOfPreviouslyExecutedTransactions": 1020,
+    "NumberOfCurrentPeriodTransactions": 57,
+    "CanceledTransactions": 6,
+    "DateOfFirstTransaction": "2019-01-01",
+    "TotalSoldWithTransactions": 2160,
+    "TotalPurchasedWithTransactions": 1005,
+    "Remarks": "none"
+  },
+  "myUserName":"Authority1234"
+}
+EOF
 
 # let n=1
 
 echo "                                                "
 echo "------------------------------------------------"
-echo "   Create Authority keypair, script:  $n              "
+echo "   Create Authority keyring, script:  $n              "
 echo " 												  "
 echo "------------------------------------------------"
 echo "                                                "
 
 
-cat <<EOF | zexe dictionariesCreate_issuer_keypair.zen | save . dictionariesIssuer_keypair.json
+cat <<EOF | zexe dictionariesCreate_issuer_keyring.zen | save . dictionariesIssuer_keyring.json
 rule check version 1.0.0
-Scenario 'ecdh': Create the keypair
+Scenario 'ecdh'
 Given that I am known as 'Authority1234'
-When I create the keypair
-Then print my data
+When I create the ecdh key
+Then print my keyring
 EOF
 
 # let n=2
 
-# echo "                                                "
-# echo "------------------------------------------------"
-# echo "  publish Authority keypair, script:  $n             "
-# echo " 												  "
-# echo "------------------------------------------------"
-# echo "                                                "
+echo "                                                "
+echo "------------------------------------------------"
+echo "  publish Authority keyring, script:  $n             "
+echo " 												  "
+echo "------------------------------------------------"
+echo "                                                "
 
 
-# cat <<EOF | zexe dictionariesPublish_issuer_pubkey.zen -a dictionariesIdentity_example.json -k dictionariesIssuer_keypair.json | save . dictionariesIssuer_pubkey.json
-# rule check version 1.0.0
-# Scenario 'ecdh': Publish the public key
-# Given my name is in a 'string' named 'myUserName'
-# and I have my 'keypair'
-# Then print my 'public key' from 'keypair'
-# EOF
+cat <<EOF | zexe dictionariesPublish_issuer_pubkey.zen -a dictionariesIdentity_example.json -k dictionariesIssuer_keyring.json | save . dictionariesIssuer_pubkey.json
+rule check version 1.0.0
+Scenario 'ecdh': Publish the public key
+Given my name is in a 'string' named 'myUserName'
+and I have my 'keyring'
+When I create the ecdh public key
+Then print my 'ecdh public key'
+EOF
 
 # let n=3
 
@@ -95,11 +96,11 @@ EOF
 # echo "   "
 
 # ## Authority issues the signature for the Identity
-# cat <<EOF | zexe dictionariesIssuer_sign_Identity.zen -a dictionariesIdentity_example.json -k dictionariesIssuer_keypair.json | save . dictionaries_Identity_signed.json
+# cat <<EOF | zexe dictionariesIssuer_sign_Identity.zen -a dictionariesIdentity_example.json -k dictionariesIssuer_keyring.json | save . dictionaries_Identity_signed.json
 # rule check version 1.0.0
 # Scenario ecdh: Sign a new Identity
 # Given my name is in a 'string' named 'myUserName'
-# and I have my 'keypair'
+# and I have my 'keyring'
 # and I have a 'string dictionary' named 'Identity'
 # and I have a 'string dictionary' named 'HistoryOfTransactions'
 # When I create the signature of 'Identity'
@@ -323,9 +324,9 @@ Given that I have a 'number' named 'otherPricePerKG'
 Given that I have a 'string' named 'dictionaryToBeFound'
 Given that I have a 'string' named 'myVerySecretPassword'
 
-# Loading the keypair afer setting my identity
+# Loading the keyring afer setting my identity
 Given my name is in a 'string' named 'myUserName'
-Given that I have my 'keypair'
+Given that I have my 'keyring'
 
 EOF
 
@@ -503,8 +504,8 @@ and print the 'Buyer<<Information<<TransactionsBatchA'
 
 EOF
 
-cat dictionariesGiven.zen dictionariesWhen.zen | debug dictionariesComputation.zen -a dictionariesBlockchain.json -k dictionariesIssuer_keypair.json | save . dictionariesComputationOutput.json
+cat dictionariesGiven.zen dictionariesWhen.zen | debug dictionariesComputation.zen -a dictionariesBlockchain.json -k dictionariesIssuer_keyring.json | save . dictionariesComputationOutput.json
 
-#cat <<EOF | zexe ../../docs/examples/zencode_cookbook/dictionariesFind_max_transactions.zen -a ../../docs/examples/zencode_cookbook/dictionariesBlockchain.json -k ../../docs/examples/zencode_cookbook/dictionariesIssuer_keypair.json | jq .
+#cat <<EOF | zexe ../../docs/examples/zencode_cookbook/dictionariesFind_max_transactions.zen -a ../../docs/examples/zencode_cookbook/dictionariesBlockchain.json -k ../../docs/examples/zencode_cookbook/dictionariesIssuer_keyring.json | jq .
 
 # cat <<EOF  > $tmpWhen1

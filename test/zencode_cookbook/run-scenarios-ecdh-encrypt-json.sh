@@ -51,9 +51,8 @@ EOF
 cat <<EOF | save . scenarioECDHJSONAliceBobCarlKeys.json
 {
 	"Alice": {
-		"keypair": {
-			"private_key": "WBdsWLDno9/DNaap8cOXyQsCG182NJ0ddjLo/k05mgs=",
-			"public_key": "BNRzlJ4csYlWgycGGiK/wgoEw3OizCdx9MWg06rxUBTP5rP9qPASOW5KY8YgmNjW5k7lLpboboHrsApWsvgkMN4="
+		"keyring": {
+			"ecdh": "WBdsWLDno9/DNaap8cOXyQsCG182NJ0ddjLo/k05mgs="
 		}
 	},
 	"Bob": {
@@ -72,7 +71,7 @@ Scenario 'ecdh': Alice encrypts a message for Bob and Carl
 
 # Here we load keypair and public keys
 Given my name is in a 'string' named 'myUserName'
-Given that I have my 'keypair'
+Given that I have my 'keyring'
 Given that I have a 'public key' from 'Bob'
 Given that I have a 'public key' from 'Carl'
 
@@ -121,9 +120,8 @@ echo "                                                "
 cat <<EOF | save . scenarioECDHJSONAliceBobDecryptKeys.json
 {
 	"Bob": {
-		"keypair": {
-			"private_key": "psBF05iHz/X8WBpwitJoSsZ7BiKawrdaVfQN3AtTa6I=",
-			"public_key": "BBA0kD35T9lUHR/WhDwBmgg/vMzlu1Vb0qtBjBZ8rbhdtW3AcX6z64a59RqF6FCV5q3lpiFNTmOgA264x1cZHE0="
+		"keyring": {
+			"ecdh": "psBF05iHz/X8WBpwitJoSsZ7BiKawrdaVfQN3AtTa6I="
 		}
 	},
 	"public_keys": { "Alice": "BNRzlJ4csYlWgycGGiK/wgoEw3OizCdx9MWg06rxUBTP5rP9qPASOW5KY8YgmNjW5k7lLpboboHrsApWsvgkMN4=" },
@@ -135,7 +133,7 @@ cat <<EOF | save . scenarioECDHJSONDecrypt.zen
 Rule check version 1.0.0 
 Scenario 'ecdh': Bob decrypts the message from Alice 
 Given my name is in a 'string' named 'myUserName'
-Given I have my 'keypair' 
+Given I have my 'keyring' 
 Given I have a 'public key' named 'Alice' in 'public keys'
 Given I have a 'secret message' named 'secretForBob' 
 When I decrypt the text of 'secretForBob' from 'Alice'
