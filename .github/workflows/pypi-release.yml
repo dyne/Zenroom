@@ -32,7 +32,7 @@ jobs:
       - name: Build wheels
         run: |
           # Remove shared library
-          rm bindings/golang/zenroom/lib/libzenroom.so
+          rm -f bindings/golang/zenroom/lib/libzenroom.so
           cp bindings/python3/setup.py .
           sed -ie 's/version=get_python_version()/version=${{ github.event.inputs.zenroom_python_version }}/' setup.py
           pip install cibuildwheel
