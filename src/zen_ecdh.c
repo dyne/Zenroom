@@ -497,6 +497,19 @@ static int ecdh_aead_decrypt(lua_State *L) {
 	return 2;
 }
 
+/**
+   Order of the curve underlying the ECDH implementation
+
+
+   @function ECDH.order()
+   @return BIG with the order
+*/
+static int ecdh_order(lua_State *L) {
+	big *o = big_new(L); SAFE(o);
+        big_init(o);
+        BIG_fromBytesLen(o->val, ECDH.order, ECDH.order_size);
+	return 1;
+}
 extern int ecdh_add(lua_State *L);
 
 int luaopen_ecdh(lua_State *L) {
@@ -504,6 +517,7 @@ int luaopen_ecdh(lua_State *L) {
 	const struct luaL_Reg ecdh_class[] = {
 		{"keygen",ecdh_keygen},
 		{"pubgen",ecdh_pubgen},
+		{"order",ecdh_order},
 		{"aead_encrypt",   ecdh_aead_encrypt},
 		{"aead_decrypt",   ecdh_aead_decrypt},
 		{"aesgcm_encrypt", ecdh_aead_encrypt},

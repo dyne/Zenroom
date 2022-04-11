@@ -19,6 +19,8 @@ cat <<EOF > "${FILE}"
 #include <ecdh_${CN}.h>
 #include <ecp_${CN}.h>
 
+static char ORDER[MODBYTES_256_28];
+
 void ecdh_init(ecdh *ECDH) {
 	ECDH->fieldsize = EFS_${CN};
 	ECDH->hash = HASH_TYPE_${CN};
@@ -31,6 +33,11 @@ void ecdh_init(ecdh *ECDH) {
 	ECDH->ECP__VP_DSA = ECP_${CN}_VP_DSA;
 	ECDH->ECP__SP_DSA_NOHASH = ECP_${CN}_SP_DSA_NOHASH;
 	ECDH->ECP__VP_DSA_NOHASH = ECP_${CN}_VP_DSA_NOHASH;
+        BIG_256_28 order_copy; // toBytes takes a non const BIG
+        BIG_256_28_rcopy(order_copy, CURVE_Order_SECP256K1);
+        BIG_256_28_toBytes(ORDER, order_copy);
+        ECDH->order = ORDER;
+        ECDH->order_size = MODBYTES_256_28;
 	act(NULL,"ECDH curve is ${CN}");
 }
 
