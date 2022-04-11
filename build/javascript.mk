@@ -3,21 +3,6 @@
 
 MAX_STRING := 8000 # 512000 # 128000
 
-load-emsdk:
-	EMSCRIPTEN="${pwd}/emsdk/upstream/emscripten" \
-	${pwd}/emsdk/emsdk construct_env ${pwd}/build/emsdk_env.sh
-	@echo "run: ${pwd}/build/emsdk_env.sh"
-
-javascript-demo: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
-javascript-demo: ldflags += -s WASM=1 \
-	-s ASSERTIONS=1 \
-	--shell-file ${website}/demo/shell_minimal.html
-javascript-demo: apply-patches load-emsdk milagro lua53 embed-lua zstd
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-	JSEXT="--preload-file lua@/" \
-	JSOUT="${website}/demo/index.html" \
-	make -C src js
-
 javascript-web: cflags  += -O3 -fno-exceptions -fno-rtti
 javascript-web: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' \
 	-s WASM_OBJECT_FILES=0
@@ -25,7 +10,7 @@ javascript-web: ldflags += -s WASM=1 -s ASSERTIONS=1 \
 	-s TOTAL_MEMORY=65536000 \
 	-s WASM_OBJECT_FILES=0 --llvm-lto 0 \
 	-s DISABLE_EXCEPTION_CATCHING=1
-javascript-web: apply-patches milagro lua53 embed-lua zstd
+javascript-web: ${CORE_TARGETS}
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	JSEXT="--preload-file lua@/" \
 	make -C src js
@@ -45,7 +30,7 @@ javascript-wasm: ldflags += -s \
 	-s FILESYSTEM=1 \
 	-s ASSERTIONS=1 \
 	--no-heap-copy
-javascript-wasm: apply-patches milagro lua53 embed-lua zstd
+javascript-wasm: ${CORE_TARGETS}
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	JSEXT="--embed-file lua@/" \
 	make -C src js
@@ -60,7 +45,7 @@ javascript-npm: ldflags += -s \
 	-s SINGLE_FILE=1 \
 	-s ALLOW_MEMORY_GROWTH=1 \
 	--no-heap-copy
-javascript-npm: apply-patches milagro lua53 embed-lua zstd
+javascript-npm: ${CORE_TARGETS}
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	JSEXT="--embed-file lua@/" \
 	make -C src js
@@ -75,7 +60,7 @@ javascript-rn: ldflags += -s WASM=0 \
 	-s ASSERTIONS=1 \
 	-s EXIT_RUNTIME=1 \
 	--memory-init-file 0
-javascript-rn: apply-patches milagro lua53 embed-lua zstd
+javascript-rn: ${CORE_TARGETS}
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	JSEXT="--embed-file lua@/" \
 	make -C src js

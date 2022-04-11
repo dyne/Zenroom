@@ -9,6 +9,9 @@ PREFIX ?= /usr/local
 # VERSION is set in src/Makefile
 VERSION := $(shell awk '/ZENROOM_VERSION :=/ { print $$3; exit }' src/Makefile | tee VERSION)
 
+# all targets that must be built in sorting order
+CORE_TARGETS := apply-patches milagro embed-lua lua53 zstd
+
 # DESTDIR is supported by install target
 
 # include platform specific configurations pattern-matching target labels
