@@ -166,8 +166,8 @@ zenroom_lib = Extension('zenroom',
                             'milagro-crypto-c/lib/libamcl_curve_' + ECDH_CURVE + '.a',
                             'milagro-crypto-c/lib/libamcl_pairing_' + ECP_CURVE + '.a',
                             'milagro-crypto-c/lib/libamcl_curve_' + ECP_CURVE + '.a',
-                            os.path.join(QP_ROOT, 'build/libqpz.a')
-                            'libzstd.a',
+                            os.path.join(QP_ROOT, 'build/libqpz.a'),
+                            'libzstd.a'
                         ],
                         extra_link_args=['-lm']
                         )
