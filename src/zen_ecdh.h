@@ -43,6 +43,8 @@ typedef struct {
 	int hash; // hash type is also bytes length of hash
 	char curve[16]; // just short names
 	char type[16];
+        char *order;
+        int order_size;
 } ecdh;
 
 #endif
