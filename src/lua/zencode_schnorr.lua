@@ -69,26 +69,21 @@ ZEN.add_schema(
 
 
 -- generate the private key
-When('create the schnorr key',
-     function()
+When('create the schnorr key',function()
 	initkeyring'schnorr'
 	ACK.keyring.schnorr = SCH.keygen()
-     end
-)
+end)
 
 -- generate the public key
-When('create the schnorr public key',
-     function()
+When('create the schnorr public key',function()
 	empty'schnorr public key'
 	local sk = havekey'schnorr'
 	ACK.schnorr_public_key = SCH.pubgen(sk)
 	new_codec('schnorr public key', { zentype = 'element',
 					  encoding = 'hex'})
-     end
-)
+end)
 
-When("create the schnorr public key with secret key ''",
-     function(sec)
+When("create the schnorr public key with secret key ''",function(sec)
 	local sk = have(sec)
 	initkeyring'schnorr'
 	ACK.keyring.schnorr = sk
@@ -96,42 +91,37 @@ When("create the schnorr public key with secret key ''",
 	ACK.schnorr_public_key = SCH.pubgen(sk)
 	new_codec('schnorr public key', { zentype = 'element',
 					  encoding = 'hex'})
-     end
-)
+end)
 
 When("create the schnorr key with secret key ''",function(sec)
 	local sk = have(sec)
 	initkeyring'schnorr'
-   SCH.pubgen(sk) -- use pubgen as check
+	SCH.pubgen(sk) -- use pubgen as check
 	ACK.keyring.schnorr = sk
 end)
 When("create the schnorr key with secret ''",function(sec)
 	local sk = have(sec)
 	initkeyring'schnorr'
-   SCH.pubgen(sk) -- use pubgen as check
+	SCH.pubgen(sk) -- use pubgen as check
 	ACK.keyring.schnorr = sk
 end)
 
 -- generate the sign for a msg and verify
-When("create the schnorr signature of ''",
-     function(doc)
+When("create the schnorr signature of ''",function(doc)
 	local sk = havekey'schnorr'
 	local obj = have(doc)
 	empty'schnorr signature'
-	ACK.schnorr_signature = SCH.sign(sk, obj)
+	ACK.schnorr_signature = SCH.sign(sk, ZEN.serialize(obj))
 	new_codec('schnorr signature', { zentype = 'element',
 					 encoding = 'hex'})
-     end
-)
+end)
 
-IfWhen("verify the '' has a schnorr signature in '' by ''",
-       function(msg, sig, by)
-	  local pk = _pubkey_compat(by, 'schnorr')
-	  local m = have(msg)
+IfWhen("verify the '' has a schnorr signature in '' by ''",function(doc, sig, by)
+	  local pk = _pubkey_compat(by)
+	  local obj = have(doc)
 	  local s = have(sig)
 	  ZEN.assert(
-	     SCH.verify(pk, m, s),
+	     SCH.verify(pk, ZEN.serialize(obj), s),
 	     'The schnorr signature by '..by..' is not authentic'
 	  )
-       end
-)
+end)
