@@ -53,7 +53,7 @@ jobs:
         run: |
           date +%s > current_time
           # Remove shared library
-          rm bindings/golang/zenroom/lib/libzenroom.so
+          rm -f bindings/golang/zenroom/lib/libzenroom.so
           cp bindings/python3/setup.py .
           pip install cibuildwheel
           cibuildwheel --output-dir wheelhouse
