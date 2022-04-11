@@ -57,7 +57,7 @@ cat <<EOF | save . AliceKeyring.json
 {
 	"Alice": {
 		"keyring": {
-			"ecdh": "WBdsWLDno9/DNaap8cOXyQsCG182NJ0ddjLo/k05mgs=",
+			"ecdh": "WBdsWLDno9/DNaap8cOXyQsCG182NJ0ddjLo/k05mgs="
 		}
 	},
 	"Bob": {

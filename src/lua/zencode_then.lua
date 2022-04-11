@@ -93,7 +93,7 @@ end
 local function iterate_data(t)
 	local a = {}
 	for k,v in lua_pairs(t) do
-		if k ~= 'keys' then
+		if k ~= 'keyring' then
 			table.insert(a, n)
 		end
 	end
@@ -171,20 +171,14 @@ Then("print my ''",function(k)
 	OUT[WHO][k] = then_outcast( val, check_codec(k) )
 end)
 
-Then('print keys',function()
-	OUT.keys = ZEN.schemas.keys.export(ACK.keyring)
-end)
 Then('print keyring',function()
-	OUT.keyring = ZEN.schemas.keys.export(ACK.keyring)
-end)
-Then('print my keys',function()
-	Iam()
-	OUT[WHO] = { keys = ZEN.schemas.keys.export(ACK.keyring) }
+	OUT.keyring = ZEN.schemas.keyring.export(ACK.keyring)
 end)
 Then('print my keyring',function()
 	Iam()
-	OUT[WHO] = { keyring = ZEN.schemas.keys.export(ACK.keyring) }
+	OUT[WHO] = { keyring = ZEN.schemas.keyring.export(ACK.keyring) }
 end)
+
 -- data
 -- data as
 -- data from
