@@ -22,14 +22,14 @@ Rule check version 2.0.0
 Scenario qp : Create the kyber private key
 Given I am 'Alice'
 When I create the kyber key
-Then print the 'keys'
+Then print the 'keyring'
 EOF
 
 cat <<EOF | zexe Kyber_readkeys.zen -k Alice_Kyber_privatekey.keys
 Rule check version 2.0.0 
 Scenario qp : Upload the kyber private key
 Given I am 'Alice'
-and I have the 'keys'
+and I have the 'keyring'
 Then print my data
 EOF
 
@@ -37,7 +37,7 @@ cat <<EOF | zexe Kyber_createpublickey.zen -k Alice_Kyber_privatekey.keys | save
 Rule check version 2.0.0 
 Scenario qp : Create and publish the kyber public key
 Given I am 'Alice'
-and I have the 'keys'
+and I have the 'keyring'
 When I create the kyber public key
 Then print my 'kyber public key' 
 EOF
@@ -67,7 +67,7 @@ cat <<EOF | zexe Kyber_dec.zen -k Alice_Kyber_privatekey.keys -a Kyber_Kem.json
 Rule check version 2.0.0 
 Scenario qp : Alice create the kyber secret
 Given that I am known as 'Alice'
-and that I have the 'keys'
+and that I have the 'keyring'
 and I have a 'kyber ciphertext'
 and I have a 'kyber secret'
 When I rename the 'kyber secret' to 'Bob kyber secret'
@@ -88,7 +88,7 @@ Scenario qp : Create the private key
 Given I am known as 'Carl'
 When I create the ecdh key
 and I create the kyber key
-Then print my 'keys'
+Then print my 'keyring'
 EOF
 
 #generating the public keys for ECDH and Kyber
@@ -97,7 +97,7 @@ Rule check version 2.0.0
 Scenario ecdh : Create the public key
 Scenario qp : Create the public key
 Given I am known as 'Carl'
-and I have my 'keys'
+and I have my 'keyring'
 When I create the ecdh public key
 and I create the kyber public key
 Then print my 'kyber public key'
@@ -135,7 +135,7 @@ Rule check version 2.0.0
 Scenario ecdh : Carl decrypts the secret message from Bob using ECDH
 Scenario qp : Carl creates the kyber secret
 Given that I am known as 'Carl'
-and I have my 'keys'
+and I have my 'keyring'
 and I have a 'ecdh public key' from 'Bob'
 and I have a 'secret message'
 and I have a 'string' named 'message'
