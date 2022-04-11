@@ -335,6 +335,7 @@ end
 local function f_factory_outcast(fun)
    return function(data)
       local dt = luatype(data)
+      if dt == 'table' then error("invalid table conversion",2) end
       -- passthrough native number data
       if dt == 'number' or dt == 'boolean' then
 	 return data
@@ -415,15 +416,13 @@ end
        return CONF.output.encoding.name
     end
     local codec = ZEN.CODEC[name]
-    if codec.zentype == 'schema' then
-       if codec.encoding == 'complex' then
-        local sch = codec.schema or codec.name
-   	  assert(ZEN.schemas[sch],
-   	   "Complex export for schema not found: "..name)
-	       assert(luatype(ZEN.schemas[sch].export) == 'function',
-		     "Complex export for schema is not a function: "..name)
-	  return name -- name of schema itself as it contains export
-       end
+    if codec.zentype == 'schema' and codec.encoding == 'complex' then
+       local sch = codec.schema or codec.name
+       assert(ZEN.schemas[sch],
+	      "Complex export for schema not found: "..name)
+       assert(luatype(ZEN.schemas[sch].export) == 'function',
+	      "Complex export for schema is not a function: "..name)
+       return name -- name of schema itself as it contains export
     else
        return codec.encoding or CONF.output.encoding.name
     end
