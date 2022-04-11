@@ -78,7 +78,7 @@ static void HASH256_transform(hash256 *sh)
 {
     /* basic transformation step */
     unsign32 a,b,c,d,e,f,g,h,t1,t2;
-    int j;
+    register int j;
     for (j=16; j<64; j++)
         sh->w[j]=theta1_256(sh->w[j-2])+sh->w[j-7]+theta0_256(sh->w[j-15])+sh->w[j-16];
 
@@ -120,7 +120,7 @@ static void HASH256_transform(hash256 *sh)
 void HASH256_init(hash256 *sh)
 {
     /* re-initialise */
-    int i;
+    register int i;
     for (i=0; i<64; i++) sh->w[i]=0L;
     sh->length[0]=sh->length[1]=0L;
     sh->h[0]=H0_256;
@@ -139,8 +139,8 @@ void HASH256_init(hash256 *sh)
 void HASH256_process(hash256 *sh,int byt)
 {
     /* process the next message byte */
-    int cnt;
-    cnt=(int)((sh->length[0]/32)%16);
+    register int cnt;
+    cnt=(int)((sh->length[0]>>5)%16);
 
     sh->w[cnt]<<=8;
     sh->w[cnt]|=(unsign32)(byt&0xFF);
@@ -159,7 +159,7 @@ void HASH256_process(hash256 *sh,int byt)
 void HASH256_hash(hash256 *sh,char *digest)
 {
     /* pad message and finish - supply digest */
-    int i;
+    register int i;
     unsign32 len0,len1;
     len0=sh->length[0];
     len1=sh->length[1];
