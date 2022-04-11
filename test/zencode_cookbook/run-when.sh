@@ -101,9 +101,8 @@ cat <<EOF | save . myLargeNestedObjectWhen.json
    },
    "myUserName":"User1234",
    "User1234":{
-      "keypair":{
-         "private_key":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
-         "public_key":"BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
+      "keyring":{
+         "ecdh":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM="
       }
    },
    "ABC-Transactions1Data":{
@@ -131,7 +130,7 @@ cat <<EOF  | save . whenCompleteScriptGiven.zen
 # We're using scenario 'ecdh' cause we are loading a keypair
 Scenario 'ecdh': using keypair and signing
 Given my name is in a 'string' named 'myUserName'
-Given that I have my 'keypair'
+Given that I have my 'keyring'
 # Load Arrays
 Given I have a 'string array' named 'myFirstArray'  inside 'myFirstObject'
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
@@ -357,34 +356,28 @@ When I set 'myNewlyCreatedBase64' to 'SGVsbG8gV29ybGQh' as 'base64'
 When I set 'myNewlytCreatedNumber' to '42' as 'number'
 When I set 'myNewlyCreatedNumberInBaseSomething' to '42' base '16'
 
-# CREATE the CBOR/JSON
-# You can render an object into CBOR, or render it JSON (if it was imported as JSON).
-# This is useful when you want to perform operations on larger datasets
+# CREATE KEYRING
+# TODO: update to Keyring handling
+# Keys inside keyrings can be created from a random seed or from a known seed
 
-When I create the cbor of 'myFirstArray'
-And I rename the 'cbor' to 'myArrayRenderedToCBOR'
-
-# CREATE KEYPAIR
-# Keypairs can be created from a random seed or from a known seed
-
-# Below is the standard keypair generation statement, which uses a random seed
+# Below is the standard keyring generation statement, which uses a random seed
 # The random seed can in fact be passed to Zenroom and last for the whole 
 # smart contract execution session, via the "config" parameter. 
-# Note that, in order to create a keypair, you'll need to declare the identity of the script
+# Note that, in order to create a keyring, you'll need to declare the identity of the script
 # executor, which is done in the Given phase
 
-# Note: we're renaming the created keypairs exclusively cause we're generating 2 keypairs 
+# Note: we're renaming the created keyrings exclusively cause we're generating 2 keyringss 
 # in the same script, so the second would overwrite the first. In reality you never want to 
-# rename a keypair, as its schema is hardcoded in Zenroom and cryptographically it doesn't make sense
-# to use more than one keypair in the same script.
-When I rename the 'keypair' to 'GivenKeypair'
-When I create the keypair
-and I rename the 'keypair' to 'keypairFromRandom'
+# rename a keyring, as its schema is hardcoded in Zenroom and cryptographically it doesn't make sense
+# to use more than one keyring in the same script.
+When I rename the 'keyring' to 'GivenKeypair'
+When I create the ecdh key
+and I rename the 'keyring' to 'keypairFromRandom'
 
 # Below is a statement to create a keypair from a known seed.
 # The seed has to be passed to Zenroom via a string, that can have an arbitrary size
-When I create the keypair with secret key 'myThirteenStringPassword'
-and I rename the 'keypair' to 'keypairFromSeed'
+When I create the ecdh key with secret 'myThirteenStringPassword'
+and I rename the 'keyring' to 'keypairFromSeed'
 
 Then print all data
 EOF
