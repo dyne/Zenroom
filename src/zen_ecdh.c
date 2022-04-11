@@ -60,7 +60,6 @@
 #include <zen_hash.h>
 #include <zen_ecdh.h>
 #include <zen_big_factory.h>
-#include <big_256_28.h> // big for ECDH
 
 // #include <ecp_SECP256K1.h>
 #include <zen_big.h>
@@ -505,6 +504,10 @@ static int ecdh_aead_decrypt(lua_State *L) {
    @return BIG with the order
 */
 static int ecdh_order(lua_State *L) {
+        if(!ECDH.order || ECDH.order_size <= 0) {
+		lerror(L, "%s: ECDH order not implemented", __func__);
+                return 0;
+        }
 	big *o = big_new(L); SAFE(o);
         big_init(o);
         BIG_fromBytesLen(o->val, ECDH.order, ECDH.order_size);
