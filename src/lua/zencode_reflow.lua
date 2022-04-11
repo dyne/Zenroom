@@ -221,8 +221,8 @@ When(
                 pubcred = v
             else
                 pubcred = {
-                    pubcred.alpha + v.alpha,
-                    pubcred.beta + v.beta
+                    ['alpha'] = pubcred.alpha + v.alpha,
+                    ['beta'] = pubcred.beta + v.beta
                 }
             end
         end
