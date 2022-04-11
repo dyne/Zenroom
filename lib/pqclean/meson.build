@@ -45,13 +45,37 @@ dilithium2_src = files('dilithium2/ntt.c', 'dilithium2/packing.c',
                        'dilithium2/sign.c',
                        'dilithium2/symmetric-shake.c')
 
+sntrup761_src = files('sntrup761/crypto_core_inv3sntrup761.c',
+                      'sntrup761/crypto_core_invsntrup761.c',
+                      'sntrup761/crypto_core_mult3sntrup761.c',
+                      'sntrup761/crypto_core_multsntrup761.c',
+                      'sntrup761/crypto_core_scale3sntrup761.c',
+                      'sntrup761/crypto_core_weightsntrup761.c',
+                      'sntrup761/crypto_core_wforcesntrup761.c',
+                      'sntrup761/crypto_decode_761x1531.c',
+                      'sntrup761/crypto_decode_761x3.c',
+                      'sntrup761/crypto_decode_761x4591.c',
+                      'sntrup761/crypto_decode_761xint16.c',
+                      'sntrup761/crypto_decode_761xint32.c',
+                      'sntrup761/crypto_encode_761x1531.c',
+                      'sntrup761/crypto_encode_761x1531round.c',
+                      'sntrup761/crypto_encode_761x3.c',
+                      'sntrup761/crypto_encode_761x4591.c',
+                      'sntrup761/crypto_encode_761xfreeze3.c',
+                      'sntrup761/crypto_encode_761xint16.c',
+                      'sntrup761/crypto_encode_int16.c',
+                      'sntrup761/crypto_sort_int32.c',
+                      'sntrup761/crypto_sort_uint32.c',
+                      'sntrup761/crypto_verify_1039.c',
+                      'sntrup761/kem.c', )
+
 qpz_lib = static_library(
   'qpz',
   sources: [
-    'fips202.c',
+    'fips202.c', 'sha2.c',
     kyber512_src,
     dilithium2_src,
+    sntrup761_src
   ],
-  include_directories: [ '.', 'kyber512', 'dilithium2' ],
-  install: true
+  include_directories: [ '.', '../../src/', 'kyber512', 'dilithium2' ],
 )
