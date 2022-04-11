@@ -17,7 +17,7 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
 --Last modified by Denis Roio
---on Friday, 12th November 2021
+--on Sunday, 10th April 2022
 --]]
 
 --- THEN combinations:
@@ -38,39 +38,36 @@
 -- executes a guess_outcast and then operates it
 -- sch may be fed with check_codec() result (name of encoding)
 local function then_outcast(val, sch)
-	if not val then
-		error("Then outcast called on empty variable", 2)
-	end
-	local fun = guess_outcast(sch)
-	if luatype(val) == 'table' then
-	   local codec = ZEN.CODEC[sch]
-	   if codec and codec.zentype == 'schema' and codec.encoding == 'complex' then
-	      if not isdictionary(val) then
-		 error('Complex schema value is not a dictionary: '..sch, 2)
-	      end
-	      -- check that the schema has an hardcoded encoding
-	      if ZEN.CODEC[sch] and ZEN.CODEC[sch].encoding
-		 and  ZEN.CODEC[sch].encoding ~= 'complex' then
-		 local res = fun(val)
-		 local enc = guess_outcast( ZEN.CODEC[sch].encoding )
-		 if luatype(res) == 'table' then
-		    return deepmap(enc, res)
-		 else
-		    return enc(res)
-		 end
-	      else
-		 return fun(val)
-	      end
-	   else
-	      if luatype(val) == 'table' then
-		 return deepmap(fun, val)
-	      else
-		 return fun(val)
-	      end
-	   end
-	else
-	   return fun(val)
-	end
+   if not val then
+      error("Then outcast called on empty variable", 2)
+   end
+   local fun = guess_outcast(sch)
+   local lt = luatype(val)
+   -- handle simple conversions
+   if lt ~= 'table' then return fun(val) end
+   local codec = ZEN.CODEC[sch]
+   if not codec or codec and codec.zentype ~= 'schema' then
+      return deepmap(fun, val)
+   end
+   -- if object name and schema name differ, get correct schema
+   if codec.name ~= sch then fun = guess_outcast(codec.name) end
+   -- handle schema conversions
+   if codec.encoding and codec.encoding == 'complex' then
+      -- complex
+      if not isdictionary(val) then
+	 error('Complex schema value is not a dictionary: '..sch, 2)
+      end
+      return fun(val)
+   else -- schema not complex
+      local res = fun(val)
+      local enc = guess_outcast( codec.encoding )
+      if luatype(res) == 'table' then
+	 return deepmap(enc, res)
+      else
+	 return enc(res)
+      end
+   end
+   error("Then outcast cannot handle data: "..sch,2)
 end
 
 local function then_insert(dest, val, key)
