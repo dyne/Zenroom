@@ -22,22 +22,22 @@ Rule check version 2.0.0
 Scenario qp : Create the dilithium private key
 Given I am 'Alice'
 When I create the dilithium key
-Then print the 'keys'
+Then print the 'keyring'
 EOF
 
 cat <<EOF | zexe Dilithium_readkeys.zen -k Alice_Dilithium_privatekey.keys
 Rule check version 2.0.0 
 Scenario qp : Upload the dilithium key
 Given I am 'Alice'
-and I have the 'keys'
-Then print my 'keys'
+and I have the 'keyring'
+Then print my 'keyring'
 EOF
 
 cat <<EOF | zexe Dilithium_createpublickey.zen -k Alice_Dilithium_privatekey.keys | save $SUBDOC Alice_Dilithium_pubkey.json
 Rule check version 2.0.0 
 Scenario qp : Create and publish the dilithium public key
 Given I am 'Alice'
-and I have the 'keys'
+and I have the 'keyring'
 When I create the dilithium public key
 Then print my 'dilithium public key' 
 EOF
@@ -55,7 +55,7 @@ cat <<EOF | zexe Dilithium_sign.zen -k Alice_Dilithium_privatekey.keys | save $S
 Rule check version 2.0.0 
 Scenario qp : Alice signs the message
 Given I am 'Alice'
-and I have the 'keys'
+and I have the 'keyring'
 When I write string 'Message signed by Alice with Dilithium' in 'message'
 and I create the dilithium signature of 'message'
 Then print the 'dilithium signature'

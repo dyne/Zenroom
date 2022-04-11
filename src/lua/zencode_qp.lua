@@ -16,8 +16,8 @@
 --GNU Affero General Public License v3.0
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
---Last modified by Matteo Cristino
---on Tuesday, 15th March 2022
+--Last modified by Denis Roio
+--on Monday, 11th April 2022
 --]]
 
 local QP = require'qp'
@@ -128,8 +128,8 @@ ZEN.add_schema(
 -- generate the private key
 When('create the dilithium key',
      function()
-	initkeys'dilithium'
-	ACK.keys.dilithium = QP.sigkeygen().private
+	initkeyring'dilithium'
+	ACK.keyring.dilithium = QP.sigkeygen().private
      end
 )
 
@@ -147,8 +147,8 @@ When('create the dilithium public key',
 When("create the dilithium public key with secret key ''",
      function(sec)
 	local sk = have(sec)
-	initkeys'dilithium'
-	ACK.keys.dilithium = sk
+	initkeyring'dilithium'
+	ACK.keyring.dilithium = sk
 	empty'dilithium public key'
 	ACK.dilithium_public_key = QP.sigpubgen(sk)
 	new_codec('dilithium public key', { zentype = 'element',
@@ -185,8 +185,8 @@ IfWhen("verify the '' has a dilithium signature in '' by ''",
 -- generate the private key
 When('create the kyber key',
      function()
-	initkeys'kyber'
-	ACK.keys.kyber = QP.kemkeygen().private
+	initkeyring'kyber'
+	ACK.keyring.kyber = QP.kemkeygen().private
      end
 )
 
@@ -204,8 +204,8 @@ When('create the kyber public key',
 When("create the kyber public key with secret key ''",
      function(sec)
 	local sk = have(sec)
-	initkeys'kyber'
-	ACK.keys.kyber = sk
+	initkeyring'kyber'
+	ACK.keyring.kyber = sk
 	empty'kyber public key'
 	ACK.kyber_public_key = QP.kempubgen(sk)
 	new_codec('kyber public key', { zentype = 'element',
