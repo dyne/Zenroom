@@ -236,14 +236,24 @@ test_dir = meson.source_root() + '/../test/'
 zencode_tests = [
     'zencode_numbers',
     'zencode_array',
+    'zencode_branching',
+    'zencode_given',
+    'zencode_then',
+    'zencode_dictionary',
     'zencode_hash',
     'zencode_http',
+    'zencode_keys',
     'zencode_secshare',
     'zencode_ecdh',
     'zencode_credential',
     'zencode_petition',
+    'zencode_bitcoin',
+    'zencode_ethereum',
+    'zencode_schnorr',
+    'zencode_w3c',
     'zencode_reflow',
     'zencode_cookbook',
+    'zencode_dp3t',
 ]
 
 foreach zencode_test : zencode_tests

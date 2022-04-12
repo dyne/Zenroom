@@ -43,10 +43,10 @@ EOF
 
 cat <<EOF | zexe dictionariesCreate_issuer_keypair.zen | save dictionary dictionariesIssuer_keypair.json
 rule check version 1.0.0
-Scenario 'ecdh': Create the keypair
+Scenario 'ecdh': Create the keyring
 Given that I am known as 'Authority'
-When I create the keypair
-Then print my data
+When I create the ecdh key
+Then print my keyring
 EOF
 
 
@@ -54,8 +54,9 @@ cat <<EOF | zexe dictionariesPublish_issuer_pubkey.zen -k dictionariesIssuer_key
 rule check version 1.0.0
 Scenario 'ecdh': Publish the public key
 Given that I am known as 'Authority'
-and I have my 'keypair'
-Then print my 'public key' from 'keypair'
+and I have my 'keyring'
+When I create the ecdh public key
+Then print my 'ecdh public key'
 EOF
 
 ## Authority issues the signature for the Identity
@@ -63,7 +64,7 @@ cat <<EOF | zexe dictionariesIssuer_sign_Identity.zen -a dictionariesIdentity_ex
 rule check version 1.0.0
 Scenario ecdh: Sign a new Identity
 Given that I am known as 'Authority'
-and I have my 'keypair'
+and I have my 'keyring'
 and I have a 'string dictionary' named 'Identity'
 and I have a 'string dictionary' named 'HistoryOfTransactions'
 When I create the signature of 'Identity'
@@ -80,7 +81,7 @@ EOF
 cat <<EOF | zexe dictionariesVerify_Identity_signature.zen -a dictionaries_Identity_signed.json -k dictionariesIssuer_pubkey.json
 rule check version 1.0.0
 Scenario ecdh: Verify the Identity signature
-Given I have a 'public key' from 'Authority'
+Given I have a 'ecdh public key' from 'Authority'
 and I have a 'string dictionary' named 'Identity'
 and I have a 'string dictionary' named 'HistoryOfTransactions'
 and I have a 'signature' named 'Identity.signature'
@@ -190,7 +191,7 @@ Scenario ecdh: sign the result
 
 # import the Authority keypair
 Given that I am known as 'Authority'
-and I have my 'keypair'
+and I have my 'keyring'
 
 # import the blockchain data
 Given I have a 'string dictionary' named 'ABC-TransactionListSecondBatch'

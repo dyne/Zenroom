@@ -18,7 +18,7 @@ cat <<EOF >generate-key-seed.keys
 }
 EOF
 
-cat <<EOF | debug generate-key-seed.zen -k generate-key-seed.keys
+cat <<EOF | zexe generate-key-seed.zen -k generate-key-seed.keys | jq .
 Rule check version 2.0.0
 Scenario 'ecdh': Create the key
 Scenario 'ethereum': Create key
@@ -28,9 +28,6 @@ Scenario 'schnorr': Create the key
 # Loading the seed
 Given I have a 'string' named 'seed'
 
-# Creating the keypair from the seed
-When I create the keypair with secret key 'seed'
-
 # this needs to be implemented
 When I create the ecdh key with secret key 'seed'
 When I create the ethereum key with secret key 'seed'
@@ -39,6 +36,5 @@ When I create the schnorr key with secret key 'seed'
 When I create the bitcoin key with secret key 'seed'
 
 
-Then print the 'keys'
-Then print the 'keypair'
+Then print the 'keyring'
 EOF
