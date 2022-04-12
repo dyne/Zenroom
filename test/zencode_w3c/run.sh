@@ -39,14 +39,14 @@ EOF
 cat <<EOF | zexe W3C-VC_keygen.zen | save w3c W3C-VC_keypair.json
 Scenario 'ecdh': Create the keypair
 Given that I am known as 'Alice'
-When I create the keypair
+When I create the ecdh key
 Then print my data
 EOF
 
 cat <<EOF | zexe W3C-VC_issuerKeygen.zen  | save w3c W3C-VC_issuerKeypair.json
 Scenario 'ecdh': Create the keypair
 Given that I am known as 'Authority'
-When I create the keypair
+When I create the ecdh key
 Then print my data
 EOF
 
@@ -54,15 +54,16 @@ EOF
 cat <<EOF | zexe W3C-VC_pubkey.zen -k W3C-VC_issuerKeypair.json | save w3c W3C-VC_pubkey.json
 Scenario 'ecdh': Publish the public key
 Given that I am known as 'Authority'
-and I have my 'keypair'
-Then print my 'public key' from 'keypair'
+and I have my 'keyring'
+When I create the ecdh public key
+Then print my 'ecdh public key'
 EOF
 
 cat <<EOF | zexe W3C-VC_sign.zen -a W3C-VC_unsigned.json -k W3C-VC_issuerKeypair.json | save w3c W3C-VC_signed.json
 Scenario 'w3c': sign JSON
 Scenario 'ecdh': (required)
 Given that I am 'Authority'
-Given I have my 'keypair'
+Given I have my 'keyring'
 Given I have a 'verifiable credential' named 'my-vc'
 Given I have a 'string' named 'pubkey url'
 When I sign the verifiable credential named 'my-vc'
@@ -73,7 +74,7 @@ EOF
 cat <<EOF | zexe W3C-VC_verify.zen -a W3C-VC_signed.json -k W3C-VC_pubkey.json | save w3c W3C-VC_output.json
 Scenario 'w3c': verify signature
 Scenario 'ecdh': (required)
-Given I have a 'public key' inside 'Authority'
+Given I have a 'ecdh public key' inside 'Authority'
 Given I have a 'verifiable credential' named 'my-vc'
 When I verify the verifiable credential named 'my-vc'
 Then print the string 'W3C CREDENTIAL IS VALID'
