@@ -136,10 +136,11 @@ static int ecdh_keygen(lua_State *L) {
 */
 static int ecdh_pubgen(lua_State *L) {
 	octet *sk = o_arg(L, 1); SAFE(sk);
+	octet *tmp = o_dup(L, sk); SAFE(tmp);
 	octet *pk = o_new(L,ECDH.fieldsize*2 +1); SAFE(pk);
 	// If RNG is NULL then the private key is provided externally in S
 	// otherwise it is generated randomly internally
-	(*ECDH.ECP__KEY_PAIR_GENERATE)(NULL,sk,pk);
+	(*ECDH.ECP__KEY_PAIR_GENERATE)(NULL,tmp,pk);
 	return 1;
 }
 
