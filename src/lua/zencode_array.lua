@@ -319,3 +319,15 @@ When("create the flat array of keys in ''", function(dic)
 	_keys_flat_array(data, ACK.flat_array)
 	new_codec('flat array', { encoding="string" })
 end)
+
+When("create the array of objects named by '' found in ''", function(name, dict)
+	ZEN.assert(isdictionary(dict), "Second argument is not a dictionary")
+	local n = have(name):octet():string()
+	local src = have(dict)
+	empty'array'
+	ACK.array = { }
+	deepmap(function(v,k,res) 
+	      if k == n then table.insert(res, v) end
+	      end, src, ACK.array)
+	new_codec('array', { encoding='string', zentype='array' })
+end)
