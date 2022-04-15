@@ -154,6 +154,7 @@ zenroom_lib = Extension('zenroom',
                             'milagro-crypto-c/include',
                             os.path.join(QP_ROOT, 'dilithium2'),
                             os.path.join(QP_ROOT, 'kyber512'),
+                            os.path.join(QP_ROOT, 'sntrup761'),
                         ],
                         extra_compile_args=[
                             '-DVERSION="' + get_zenroom_version() + '"',
@@ -166,7 +167,7 @@ zenroom_lib = Extension('zenroom',
                             'milagro-crypto-c/lib/libamcl_curve_' + ECDH_CURVE + '.a',
                             'milagro-crypto-c/lib/libamcl_pairing_' + ECP_CURVE + '.a',
                             'milagro-crypto-c/lib/libamcl_curve_' + ECP_CURVE + '.a',
-                            os.path.join(QP_ROOT, 'build/libqpz.a'),
+                            os.path.join(QP_ROOT, 'libqpz.a'),
                             'libzstd.a'
                         ],
                         extra_link_args=['-lm']

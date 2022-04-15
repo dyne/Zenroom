@@ -1,0 +1,15 @@
+#!/bin/sh
+#
+# used by meson to build quantum-proof target
+
+qp_path="${MESON_SOURCE_ROOT}/../lib/pqclean"
+
+cd "${MESON_BUILD_ROOT}"
+mkdir -p pqclean && cd pqclean
+
+echo "-- Building ZSTD"
+CFLAGS="-O2 -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow -fPIC" \
+      make \
+      -C ${qp_path}
+
+cp ${qp_path}/libqpz.a ${MESON_BUILD_ROOT}

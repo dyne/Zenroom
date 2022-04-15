@@ -38,7 +38,10 @@ ldadd += ${milib}/libamcl_curve_${ecp_curve}.a
 ldadd += ${milib}/libamcl_pairing_${ecp_curve}.a
 ldadd += ${milib}/libamcl_curve_${ecdh_curve}.a
 ldadd += ${milib}/libamcl_core.a
-ldadd += ${pwd}/lib/pqclean/build/libqpz.a
+
+#-----------------
+# quantum-proof
+ldadd += ${pwd}/lib/pqclean/libqpz.a
 
 # ----------------
 # zstd settings
@@ -133,6 +136,10 @@ ifneq (,$(findstring linux,$(MAKECMDGOALS)))
 cflags := ${cflags} -fPIC ${cflags_protection} -D'ARCH=\"LINUX\"' -DARCH_LINUX
 ldflags := -lm -lpthread
 system := Linux
+endif
+
+ifneq (,$(findstring clang,$(MAKECMDGOALS)))
+gcc := clang
 endif
 
 ifneq (,$(findstring raspi,$(MAKECMDGOALS)))
