@@ -39,3 +39,13 @@ for i=1,100 do
    local bob_secret = QP.dec(kp.private, alice.cipher)
    assert(alice.secret == bob_secret, "kyber decpription failed")
 end
+
+print()
+print' SNTRUP ENC/DEC TEST'
+print'iterate 100 tests of enc/dec'
+local kp  = QP.ntrup_keygen()
+for i=1,100 do
+   local alice = QP.ntrup_enc(kp.public) 
+   local bob_secret = QP.ntrup_dec(kp.private, alice.cipher)
+   assert(alice.secret == bob_secret, "ntrup decpription failed")
+end
