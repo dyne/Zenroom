@@ -177,6 +177,14 @@ int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_keypair(uint8_t *pk, uint8_t *sk) {
     return 0;
 }
 
+int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_pubgen(uint8_t *pk, uint8_t *sk) {
+  int i;
+  for (i=0; i < PublicKeys_bytes; ++i) {
+    pk[i] = sk[SecretKeys_bytes+i];
+  }
+  return 0;
+}
+
 int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_enc(uint8_t *c, uint8_t *k, const uint8_t *pk) {
     unsigned char cache[Hash_bytes];
     int i;
