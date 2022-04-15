@@ -33,7 +33,7 @@ jobs:
       - run: emcc -v
       - name: Install zsh
         if: runner.os == 'Linux'
-        run: sudo apt-get update; sudo apt-get install zsh
+        run: sudo apt-get update; sudo apt-get install zsh meson ninja-build
       - run: yarn
       - run: yarn build
         env: 
@@ -61,7 +61,7 @@ jobs:
           version: ${{env.EM_VERSION}}
       - name: Install zsh
         if: runner.os == 'Linux'
-        run: sudo apt-get update; sudo apt-get install zsh
+        run: sudo apt-get update; sudo apt-get install zsh meson ninja-build
       - run: yarn
       - run: yarn build
         env: 
