@@ -18,7 +18,7 @@ jobs:
         working-directory: bindings/python3
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-python@v2
         name: Install Python
         with:
@@ -36,7 +36,7 @@ jobs:
         os: [ubuntu-18.04, macos-10.15]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set up QEMU
         if: runner.os == 'Linux'
