@@ -11,3 +11,5 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 $Z -a kyber512.rsp check_rsp_kyber.lua
 
 $Z -a dilithium.rsp check_rsp_dilithium.lua
+
+$Z -a sntrup761.rsp check_rsp_sntrup761.lua
