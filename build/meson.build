@@ -44,12 +44,14 @@ add_project_link_arguments(
     'milagro-crypto-c/lib/libamcl_pairing_' + ecp_curve + '.a',
     'milagro-crypto-c/lib/libamcl_curve_' + ecp_curve + '.a',
     'libzstd.a',
+    'libqpz.a',
     language: 'c'
 )
 
 run_command('embed-lualibs', check: true)
 
 run_command('meson-build-zstd')
+run_command('meson-build-qp')
 
 zenroom_include_dirs = include_directories('../src')
 
@@ -276,6 +278,7 @@ zencode_tests = [
     'zencode_reflow',
     'zencode_cookbook',
     'zencode_dp3t',
+    'zencode_qp',
 ]
 
 foreach zencode_test : zencode_tests

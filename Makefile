@@ -132,6 +132,7 @@ milagro:
 	fi
 	CC=${gcc} CFLAGS="${cflags}" make quantum-proof
 
+quantum-proof: CFLAGS += -I../../src -I.
 quantum-proof:
 	@echo "-- Building Quantum-Proof libs"
 	make -C ${pwd}/lib/pqclean
