@@ -72,79 +72,32 @@ ZENROOM_SOURCES = [
     'zen_qp.c',
     'zen_random.c',
     'zenroom.c',
-]
-
-LUA_SOURCES = [
-    'lapi.c',
-    'lcode.c',
-    'lctype.c',
-    'ldebug.c',
-    'ldo.c',
-    'ldump.c',
-    'lfunc.c',
-    'lgc.c',
-    'llex.c',
-    'lmem.c',
-    'lobject.c',
-    'lopcodes.c',
-    'lparser.c',
-    'lstate.c',
-    'lstring.c',
-    'ltable.c',
-    'ltm.c',
-    'lundump.c',
-    'lvm.c',
-    'lzio.c',
-    'lauxlib.c',
-    'lbaselib.c',
-    'lcorolib.c',
-    'ldblib.c',
-    'lmathlib.c',
-    'lstrlib.c',
-    'ltablib.c',
-    'lutf8lib.c',
-    'lbitlib.c',
-    'linit.c',
+    'zen_ecdh_factory.c'
 ]
 
 # Add meson build variables to the environment
 build_root = os.path.join(ZENROOM_ROOT, 'bindings/python3/')
-source_root = os.path.join(ZENROOM_ROOT, 'build')
-env = dict(os.environ,
-           MESON_SOURCE_ROOT=source_root,
-           MESON_BUILD_ROOT=build_root)
-
-# Build qp
-os.chdir(QP_ROOT)
-subprocess.check_call(['make', 'clean'])
-subprocess.check_call(['make'])
+# source_root = os.path.join(ZENROOM_ROOT, 'build')
+meson_root = os.path.join(ZENROOM_ROOT, 'meson')
+# env = dict(os.environ,
+#            MESON_SOURCE_ROOT=source_root,
+#            MESON_BUILD_ROOT=build_root)
 
 os.chdir(ZENROOM_ROOT)
-zenroom_ecdh_factory = 'zenroom_ecdh_factory.c'
-subprocess.check_call(["build/codegen_ecdh_factory.sh",
-                      ECDH_CURVE, 'bindings/python3/' + zenroom_ecdh_factory])
-subprocess.check_call(["build/codegen_ecp_factory.sh", ECP_CURVE],
-                      env=env)
-subprocess.check_call("build/embed-lualibs")
+subprocess.check_call(['make', 'clean'])
+subprocess.check_call(['make', 'linux-meson-release'])
 
-# Build zstd
-subprocess.check_call("build/meson-build-zstd", env=env)
-
-# Build milagro-lib
-subprocess.check_call(["build/build-milagro-crypto-c",
-                      ECP_CURVE, ECDH_CURVE],
-                      env=env)
-
-os.chdir("bindings/python3/")
+os.chdir(build_root)
 
 zenroom_lib = Extension('zenroom',
                         sources=[
                             os.path.join(ZENROOM_LIB_ROOT, src)
                             for src in ZENROOM_SOURCES
-                        ] + [zenroom_ecdh_factory] + [
-                            os.path.join(LUA_ROOT, src)
-                            for src in LUA_SOURCES
                         ],
+                        #  + [zenroom_ecdh_factory] + [
+                        #     os.path.join(LUA_ROOT, src)
+                        #     for src in LUA_SOURCES
+                        # ],
                         include_dirs=[
                             os.getcwd(),
                             ZENROOM_LIB_ROOT,
@@ -152,23 +105,24 @@ zenroom_lib = Extension('zenroom',
                             MILAGRO_INCLUDE_DIR,
                             ZSTD_INCLUDE_DIR,
                             'milagro-crypto-c/include',
-                            os.path.join(QP_ROOT, 'dilithium2'),
-                            os.path.join(QP_ROOT, 'kyber512'),
-                            os.path.join(QP_ROOT, 'sntrup761'),
+                            # os.path.join(QP_ROOT, 'dilithium2'),
+                            # os.path.join(QP_ROOT, 'kyber512'),
+                            # os.path.join(QP_ROOT, 'sntrup761'),
                         ],
                         extra_compile_args=[
                             '-DVERSION="' + get_zenroom_version() + '"',
-                            '-DLUA_COMPAT_5_3',
-                            '-DLUA_COMPAT_MODULE',
-                            '-DLUA_COMPAT_BITLIB'
+                            # '-DLUA_COMPAT_5_3',
+                            # '-DLUA_COMPAT_MODULE',
+                            # '-DLUA_COMPAT_BITLIB'
                         ],
                         extra_objects=[
                             'milagro-crypto-c/lib/libamcl_core.a',
                             'milagro-crypto-c/lib/libamcl_curve_' + ECDH_CURVE + '.a',
                             'milagro-crypto-c/lib/libamcl_pairing_' + ECP_CURVE + '.a',
                             'milagro-crypto-c/lib/libamcl_curve_' + ECP_CURVE + '.a',
-                            os.path.join(QP_ROOT, 'libqpz.a'),
-                            'libzstd.a'
+                            os.path.join(meson_root, 'libqpz.a'),
+                            os.path.join(meson_root, 'libzstd.a'),
+                            os.path.join(meson_root, 'liblua.a')
                         ],
                         extra_link_args=['-lm']
                         )
@@ -208,11 +162,9 @@ setup(
         'Topic :: Security',
     ],
     project_urls={
+        'Homepage': 'https://zenroom.org',
         'Source Code': 'https://github.com/dyne/Zenroom',
         'Documentation': 'https://dev.zenroom.org/',
-        'DECODE': 'https://decodeproject.eu',
-        'DYNE': 'https://dyne.org',
-        'ZENROOM': 'https://zenroom.org',
     },
     packages=['zenroom'],
     ext_modules=[zenroom_lib],
