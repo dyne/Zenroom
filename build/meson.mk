@@ -13,7 +13,8 @@ prepare-meson:
 run-meson:
 	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	meson -Dexamples=true -Ddocs=true -Doptimization=3 \
-	-Decdh_curve=${ecdh_curve} -Decp_curve=${ecp_curve} build meson
+	-Decdh_curve=${ecdh_curve} -Decp_curve=${ecp_curve} \
+	-Ddefault_library=static build meson
 
 meson: linux-meson-clang-debug
 

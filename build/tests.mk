@@ -191,6 +191,16 @@ check-py:
 	@echo "All tests passed for PYTHON build"
 	@echo "----------------"
 
+check-rs: test-exec := ${pwd}/test/zenroom_exec_rs/target/debug/zenroom_exec_rs ${pwd}
+check-rs:
+	cargo build --manifest-path ${pwd}/test/zenroom_exec_rs/Cargo.toml
+	$(call lowmem-tests,${test-exec})
+	$(call crypto-tests,${test-exec})
+	$(call zencode-tests,${test-exec})
+	@echo "----------------"
+	@echo "All tests passed for RUST build"
+	@echo "----------------"
+
 check-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom
 check-debug:
 	rm -f /tmp/zenroom-test-summary.txt
