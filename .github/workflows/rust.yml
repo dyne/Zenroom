@@ -21,3 +21,6 @@ jobs:
       - name: Run tests
         run: |
           cd bindings/rust && cargo test
+      - name: Run zenroom tests
+        run: |
+          make check-rs
