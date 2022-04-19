@@ -1,7 +1,7 @@
 
 TARGETS := apply-patches milagro lua53 embed-lua zstd quantum-proof
 
-.PHONY: meson meson-re meson-test
+# .PHONY: meson meson-re meson-test
 
 prepare-meson:
 	mkdir -p ${pwd}/meson
@@ -13,25 +13,20 @@ prepare-meson:
 run-meson:
 	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	meson -Dexamples=true -Ddocs=true -Doptimization=3 \
-	-Decdh_curve=SECP256K1 -Decp_curve=BLS381 build meson
+	-Decdh_curve=${ecdh_curve} -Decp_curve=${ecp_curve} build meson
+
+meson: linux-meson-clang-debug
 
 linux-meson-release: ${TARGETS} prepare-meson run-meson
-	$(info Meson build for Linux release target ${ecdh_curve} ${ecp_curve})
 	ninja -C meson
 
 linux-meson-clang-release: ${TARGETS} prepare-meson run-meson
-	$(info Meson build for Linux release target ${ecdh_curve} ${ecp_curve})
-#	CC=${gcc} meson -Dexamples=true -Ddocs=true -Doptimization=3 -Decdh_curve=SECP256K1 -Decp_curve=BLS381 build meson
-#	ninja -C meson
-
-linux-meson-debug: ${TARGETS} prepare-meson
-	$(info Meson build for Linux debug target ${ecdh_curve} ${ecp_curve})
-	meson -Dexamples=true -Ddocs=true -Doptimization=0 -Decdh_curve=SECP256K1 -Decp_curve=BLS381 build meson
 	ninja -C meson
 
-linux-meson-clang-debug: ${TARGETS} prepare-meson
-	$(info Meson build for Linux debug target ${ecdh_curve} ${ecp_curve})
-	meson -Dexamples=true -Ddocs=true -Doptimization=0 -Decdh_curve=SECP256K1 -Decp_curve=BLS381 build meson
+linux-meson-debug: ${TARGETS} prepare-meson run-meson
+	ninja -C meson
+
+linux-meson-clang-debug: ${TARGETS} prepare-meson run-meson
 	ninja -C meson
 
 meson-test:

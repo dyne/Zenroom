@@ -214,16 +214,6 @@ ldflags := -lm
 system := Darwin
 endif
 
-ifneq (,$(findstring python2,$(MAKECMDGOALS)))
-cflags += $(shell python2.7-config --cflags) -fPIC
-ldflags += $(shell python2.7-config --ldflags)
-endif
-
-ifneq (,$(findstring python3,$(MAKECMDGOALS)))
-cflags += $(shell python3-config --cflags) -fPIC
-ldflags += $(shell python3-config --ldflags)
-endif
-
 ifneq (,$(findstring javascript,$(MAKECMDGOALS)))
 gcc := ${EMSCRIPTEN}/emcc
 ar := ${EMSCRIPTEN}/emar
@@ -253,20 +243,29 @@ ifneq (,$(findstring release,$(MAKECMDGOALS)))
 cflags := -O3 -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
 endif
 
-
+# clang doesn't supports -Wstack-usage=4096
 
 ifneq (,$(findstring debug,$(MAKECMDGOALS)))
-cflags := -Og -ggdb -DDEBUG=1 -Wstack-usage=4096 -Wall -Wextra -pedantic
+cflags := -Og -ggdb -DDEBUG=1 -Wall -Wextra -pedantic
 endif
 
 ifneq (,$(findstring profile,$(MAKECMDGOALS)))
-cflags += -Og -ggdb -pg -DDEBUG=1 -Wstack-usage=4096
+cflags += -Og -ggdb -pg -DDEBUG=1
 endif
-
 
 ifneq (,$(findstring meson,$(MAKECMDGOALS)))
 # meson always builds a shared lib
 cflags += -fPIC
+endif
+
+ifneq (,$(findstring python2,$(MAKECMDGOALS)))
+cflags += $(shell python2.7-config --cflags) -fPIC
+ldflags += $(shell python2.7-config --ldflags)
+endif
+
+ifneq (,$(findstring python3,$(MAKECMDGOALS)))
+cflags += $(shell python3-config --cflags) -fPIC
+ldflags += $(shell python3-config --ldflags)
 endif
 
 # ifneq (,$(findstring ios,$(MAKECMDGOALS)))
