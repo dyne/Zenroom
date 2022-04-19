@@ -67,7 +67,8 @@ local keytypes = {
     ethereum = true,
     dilithium = true,
     schnorr = true,
-    kyber = true
+    kyber = true,
+    ntrup = true
 }
 
 function havekey(ktype)
@@ -81,7 +82,7 @@ function havekey(ktype)
 end
 
 local function nop(x) return(x) end
--- the length of the kyber and dilithium keys can be found in Zenroom/src/zen_qp.c
+-- the length of the kyber, dilithium and ntrup keys can be found in Zenroom/src/zen_qp.c
 local function dilithium_f(o)
    ZEN.assert(#o == 2528, 'Dilithium key length is not correct')
    return o
@@ -90,7 +91,10 @@ local function kyber_f(o)
    ZEN.assert(#o == 1632, 'Kyber key length is not correct')
    return o
 end
-
+local function ntrup_f(o)
+   ZEN.assert(#o == 1763, 'Ntrup key length is not correct')
+   return o
+end  
 
 local function _keyring_import(obj)
    -- ecdh_curve
@@ -132,6 +136,9 @@ local function _keyring_import(obj)
    if obj.schnorr then
       res.schnorr = ZEN.get(obj, 'schnorr', nop, O.from_hex)
    end
+   if obj.ntrup then
+      res.ntrup = ZEN.get(obj, 'ntrup', ntrup_f, O.from_hex)
+   end
    return (res)
 end
 
@@ -169,6 +176,9 @@ local function _keyring_export(obj)
    end
    if obj.schnorr then
       res.schnorr = O.to_hex(obj.schnorr)
+   end
+   if obj.ntrup then
+      res.ntrup = O.to_hex(obj.ntrup)
    end
    return (res)
 end
