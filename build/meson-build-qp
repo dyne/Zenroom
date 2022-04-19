@@ -4,12 +4,8 @@
 
 qp_path="${MESON_SOURCE_ROOT}/../lib/pqclean"
 
-cd "${MESON_BUILD_ROOT}"
-mkdir -p pqclean && cd pqclean
+echo "-- Building Quantum Proof"
+CFLAGS="-I../../src -I. -O2 -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow -fPIC" \
+      make -C ${qp_path}
 
-echo "-- Building ZSTD"
-CFLAGS="-O2 -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow -fPIC" \
-      make \
-      -C ${qp_path}
-
-cp ${qp_path}/libqpz.a ${MESON_BUILD_ROOT}
+cp -v ${qp_path}/libqpz.a ${MESON_SOURCE_ROOT}

@@ -249,6 +249,10 @@ ldadd += ${ldadd} -nostdlib -Wl,--start-group -lmain -lc -Wl,--end-group -lgcc
 # ldadd += ${ldadd} -l:libm.a -l:libpthread.a -lssp
 endif
 
+ifneq (,$(findstring release,$(MAKECMDGOALS)))
+cflags := -O3 -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
+endif
+
 
 
 ifneq (,$(findstring debug,$(MAKECMDGOALS)))
@@ -257,6 +261,12 @@ endif
 
 ifneq (,$(findstring profile,$(MAKECMDGOALS)))
 cflags += -Og -ggdb -pg -DDEBUG=1 -Wstack-usage=4096
+endif
+
+
+ifneq (,$(findstring meson,$(MAKECMDGOALS)))
+# meson always builds a shared lib
+cflags += -fPIC
 endif
 
 # ifneq (,$(findstring ios,$(MAKECMDGOALS)))
