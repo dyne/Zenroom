@@ -28,18 +28,7 @@ all:
 
 # if ! [ -r build/luac ]; then ${gcc} -I${luasrc} -o build/luac ${luasrc}/luac.c ${luasrc}/liblua.a -lm; fi
 
-.PHONY: meson meson-re meson-test
-meson:
-	meson -Dexamples=true -Ddocs=true -Doptimization=3 build meson
-	ninja -C meson
-meson-re:
-	meson --reconfigure -Dexamples=true -Ddocs=true -Doptimization=3 build meson
-	ninja -C meson
-meson-test:
-	ninja -C meson test
-
-meson-analyze:
-	SCANBUILD=$(pwd)/build/scanbuild.sh ninja -C meson scan-build
+.PHONY: zstd
 
 sonarqube:
 	@echo "Configure login token in build/sonarqube.sh"
@@ -70,6 +59,9 @@ include ${pwd}/build/windows.mk
 
 # build targets for linux systems (also musl and android)
 include ${pwd}/build/linux.mk
+
+# build targets for the meson build system (mostly linux)
+include ${pwd}/build/meson.mk
 
 # build targets for apple systems (OSX and IOS)
 include ${pwd}/build/osx.mk
@@ -147,7 +139,7 @@ zstd:
 	AR=${ar} \
 	RANLIB=${ranlib} \
 	LD=${ld} \
-	CFLAGS="${cflags} -fPIC" \
+	CFLAGS="${cflags}" \
 	LDFLAGS="${ldflags}" \
 	make libzstd.a -C ${pwd}/lib/zstd \
 	ZSTD_LIB_DICTBUILDER=0 \
@@ -182,6 +174,7 @@ install-lua:
 	cp src/ecdh.so ${destlib}
 
 clean:
+	rm -rf ${pwd}/meson
 	make clean -C ${pwd}/lib/lua53/src
 	make clean -C ${pwd}/lib/pqclean
 	rm -rf ${pwd}/lib/milagro-crypto-c/build

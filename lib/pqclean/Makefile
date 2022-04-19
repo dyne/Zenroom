@@ -1,4 +1,4 @@
-CFLAGS ?= -O2 -I../../src -I. -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow -fPIC
+CFLAGS ?= -O2 -I../../src -I. -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
 CC ?= gcc
 
 COMMON=sha2.o fips202.o
