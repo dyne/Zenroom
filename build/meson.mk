@@ -14,7 +14,7 @@ run-meson:
 	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	meson -Dexamples=true -Ddocs=true -Doptimization=3 \
 	-Decdh_curve=${ecdh_curve} -Decp_curve=${ecp_curve} \
-	-Ddefault_library=static build meson
+	-Ddefault_library=both build meson
 
 meson: linux-meson-clang-debug
 
