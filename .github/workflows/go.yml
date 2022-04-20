@@ -22,7 +22,7 @@ jobs:
           pip3 install meson
       - name: Build using meson
         run: |
-          meson build build_meson && ninja -C build_meson
+          make linux-go
       - name: Test go bindings
         run: |
           cp build_meson/libzenroom.so bindings/golang/zenroom/lib
