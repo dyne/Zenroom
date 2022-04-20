@@ -77,36 +77,36 @@ esp32: apply-patches milagro lua53
 	CC=${pwd}/build/xtensa-esp32-elf/bin/xtensa-esp32-elf-${gcc} \
 	LD=${pwd}/build/xtensa-esp32-elf/bin/xtensa-esp32-elf-ld \
 	CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-		make -C src linux
+		$(MAKE) -C src linux
 
 # static dependencies in lib
 # lpeglabel:
-# 	CC=${gcc} CFLAGS="${cflags} -I${pwd}/lib/lua53/src" AR="${ar}" make -C lib/lpeglabel
+# 	CC=${gcc} CFLAGS="${cflags} -I${pwd}/lib/lua53/src" AR="${ar}" $(MAKE) -C lib/lpeglabel
 
 zlib:
 	CC=${gcc} CFLAGS="${cflags}" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
-	pwd="${pwd}" make -C ${pwd}/build/zlib -f ZenMakefile
+	pwd="${pwd}" $(MAKE) -C ${pwd}/build/zlib -f ZenMakefile
 
 android-lua53:
 	CC=${gcc} CFLAGS="${cflags} ${lua_cflags}" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
-	make -C ${pwd}/lib/lua53/src ${platform}
+	$(MAKE) -C ${pwd}/lib/lua53/src ${platform}
 
 musl-lua53:
 	CC=${gcc} CFLAGS="${cflags} ${lua_cflags}" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
-	make -C ${pwd}/lib/lua53/src ${platform}
+	$(MAKE) -C ${pwd}/lib/lua53/src ${platform}
 
 lua53:
 	CC=${gcc} CFLAGS="${cflags} ${lua_cflags}" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
-	make -C ${pwd}/lib/lua53/src ${platform}
+	$(MAKE) -C ${pwd}/lib/lua53/src ${platform}
 
 cortex-lua53:
 	CC=${gcc} CFLAGS="${cflags} ${lua_cflags} -DLUA_BAREBONE" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
-	make -C ${pwd}/lib/lua53/src ${platform}
+	$(MAKE) -C ${pwd}/lib/lua53/src ${platform}
 
 milagro:
 	@echo "-- Building milagro (${system})"
@@ -120,17 +120,17 @@ milagro:
 	fi
 	if ! [ -r ${pwd}/lib/milagro-crypto-c/build/lib/libamcl_core.a ]; then \
 		CC=${gcc} CFLAGS="${cflags}" AR=${ar} RANLIB=${ranlib} LD=${ld} \
-		make -C ${pwd}/lib/milagro-crypto-c/build; \
+		$(MAKE) -C ${pwd}/lib/milagro-crypto-c/build; \
 	fi
-	CC=${gcc} CFLAGS="${cflags}" make quantum-proof
+	CC=${gcc} CFLAGS="${cflags}" $(MAKE) quantum-proof
 
 quantum-proof: CFLAGS += -I../../src -I.
 quantum-proof:
 	@echo "-- Building Quantum-Proof libs"
-	make -C ${pwd}/lib/pqclean
+	$(MAKE) -C ${pwd}/lib/pqclean
 
 check-milagro: milagro
-	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c test
+	CC=${gcc} CFLAGS="${cflags}" $(MAKE) -C ${pwd}/lib/milagro-crypto-c test
 
 zstd:
 	echo "-- Building ZSTD"
@@ -141,7 +141,7 @@ zstd:
 	LD=${ld} \
 	CFLAGS="${cflags}" \
 	LDFLAGS="${ldflags}" \
-	make libzstd.a -C ${pwd}/lib/zstd \
+	$(MAKE) libzstd.a -C ${pwd}/lib/zstd \
 	ZSTD_LIB_DICTBUILDER=0 \
 	ZSTD_LIB_DEPRECATED=0 \
 	ZSTD_LEGACY_SUPPORT=0 \
@@ -175,12 +175,12 @@ install-lua:
 
 clean:
 	rm -rf ${pwd}/meson
-	make clean -C ${pwd}/lib/lua53/src
-	make clean -C ${pwd}/lib/pqclean
+	$(MAKE) clean -C ${pwd}/lib/lua53/src
+	$(MAKE) clean -C ${pwd}/lib/pqclean
 	rm -rf ${pwd}/lib/milagro-crypto-c/build
-	make clean -C ${pwd}/lib/zstd
-	make clean -C ${pwd}/src
-	make clean -C ${pwd}/bindings
+	$(MAKE) clean -C ${pwd}/lib/zstd
+	$(MAKE) clean -C ${pwd}/src
+	$(MAKE) clean -C ${pwd}/bindings
 	rm -f ${extras}/index.*
 	rm -rf ${pwd}/build/asmjs
 	rm -rf ${pwd}/build/wasm
@@ -192,7 +192,7 @@ clean:
 
 clean-src:
 	rm -f src/zen_ecdh_factory.c src/zen_ecp_factory.c src/zen_big_factory.c
-	make clean -C src
+	$(MAKE) clean -C src
 
 distclean:
 	rm -rf ${musl}
