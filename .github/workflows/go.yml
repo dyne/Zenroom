@@ -25,5 +25,5 @@ jobs:
           make linux-go
       - name: Test go bindings
         run: |
-          cp build_meson/libzenroom.so bindings/golang/zenroom/lib
+          cp meson/libzenroom.so bindings/golang/zenroom/lib
           cd bindings/golang/zenroom && make test
