@@ -8,8 +8,8 @@ import (
 func TestBasicCall(t *testing.T) {
 	script := "print (1)"
 	res, _ := ZenroomExec(script, "", "", "")
-	if res.output == "1" {
-		t.Errorf("calling print (1), got:%s", res.output)
+	if res.Output == "1" {
+		t.Errorf("calling print (1), got:%s", res.Output)
 	}
 }
 
@@ -17,7 +17,7 @@ func TestVersion(t *testing.T) {
 	script := "print(VERSION)"
 	res, _ := ZenroomExec(script, "", "", "")
 
-	fmt.Printf("Zenroom version: %s\n", res.output)
+	fmt.Printf("Zenroom version: %s\n", res.Output)
 }
 
 func TestCallStrings(t *testing.T) {
@@ -40,8 +40,8 @@ func TestCallStrings(t *testing.T) {
 	for _, testcase := range testcases {
 		t.Run(testcase.label, func(t *testing.T) {
 			res, _ := ZenroomExec(testcase.script, "", "", "")
-			if res.output != testcase.resp {
-				t.Errorf("calling [%s] got %s", testcase.script, res.output)
+			if res.Output != testcase.resp {
+				t.Errorf("calling [%s] got %s", testcase.script, res.Output)
 			}
 		})
 	}
@@ -54,7 +54,7 @@ When I create the ecdh key
 Then print my data`
 	res, success := ZencodeExec(script, "", "", "")
 	if !success {
-		t.Error(res.logs)
+		t.Error(res.Logs)
 	}
 }
 

@@ -24,8 +24,8 @@ import (
 const BUFSIZE = 2 * 1024 * 1024
 
 type ZenResult struct {
-    output string;
-    logs string;
+    Output string;
+    Logs string;
 }
 
 // ZenroomExec is our primary public API method, and it is here that we call Zenroom's
@@ -95,8 +95,8 @@ func wrapper(fun C.fun, script string, conf string, keys string, data string) (Z
 	)
 
 	zen_res := ZenResult{
-		output: C.GoString(stdout),
-		logs: C.GoString(stderr),
+		Output: C.GoString(stdout),
+		Logs: C.GoString(stderr),
 	}
 
 	return zen_res, res == 0
