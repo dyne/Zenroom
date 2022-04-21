@@ -27,4 +27,4 @@ jobs:
         run: |
           cp meson/libzenroom.so bindings/golang/zenroom/lib
           cd bindings/golang/zenroom && make test
-          make check-go
+          cd ../../.. && make check-go

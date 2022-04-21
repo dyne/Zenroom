@@ -20,5 +20,5 @@ jobs:
           toolchain: stable
       - name: Run tests
         run: |
-          cd bindings/rust && cargo test
           make check-rs
+          cd bindings/rust && cargo test
