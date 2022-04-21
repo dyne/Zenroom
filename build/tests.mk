@@ -201,6 +201,16 @@ check-rs:
 	@echo "All tests passed for RUST build"
 	@echo "----------------"
 
+check-go: test-exec := ${pwd}/test/zenroom_exec_go/main ${pwd}
+check-go:
+	cd ${pwd}/test/zenroom_exec_go && go build
+	$(call lowmem-tests,${test-exec})
+	$(call crypto-tests,${test-exec})
+	$(call zencode-tests,${test-exec})
+	@echo "----------------"
+	@echo "All tests passed for GO build"
+	@echo "----------------"
+
 check-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom
 check-debug:
 	rm -f /tmp/zenroom-test-summary.txt
