@@ -8,7 +8,7 @@ package zenroom
 // #include <stdio.h>
 // #include <stdlib.h>
 // #include <string.h>
-// #include "zenroom.h"
+// #include "../../../src/zenroom.h"
 // typedef int(*fun)(char*, char*, char*, char*, char*, size_t, char*, size_t);
 //
 // int wrapper(fun exec, char* script, char* conf, char* data, char* keys, char* stdout, size_t stdout_size, char* stderr, size_t stderr_size) {
