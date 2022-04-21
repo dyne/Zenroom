@@ -28,7 +28,8 @@ fn main() {
     let result = zenroom::zenroom_exec(script, "", "", "");
     let elapsed_time = now.elapsed();
     println!("{:?}", result);
-    println!("--- {} seconds ---", elapsed_time.as_secs());
+    println!("--- {} seconds ---", elapsed_time.as_secs() as f32
+             + elapsed_time.subsec_micros() as f32 * 1e-6);
     println!("@ {} @", (0..40).map(|_| "=").collect::<String>());
 }
 
