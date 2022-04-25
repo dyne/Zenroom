@@ -509,4 +509,61 @@ and debug
 Then print the 'array'
 EOF
 
+cat <<EOF > compare-equal.data
+{
+ "arr": [1,1,1,1],
+ "dict": {
+   "hello": "world",
+   "nice": "world",
+   "big": "world"
+ },
+ "empty_dict": {},
+ "nested_arr": [
+   { "nested": "nested" },
+   { "nested": "nested" }
+ ]
+
+}
+EOF
+
+cat <<EOF | debug compare-equal.zen -a compare-equal.data
+Given I have a 'string array' named 'arr'
+Given I have a 'string dictionary' named 'dict'
+Given I have a 'string array' named 'nested_arr'
+Given I have a 'string dictionary' named 'empty_dict'
+
+If the elements in 'arr' are all equal
+If the elements in 'dict' are all equal
+If the elements in 'nested arr' are all equal
+If the elements in 'empty dict' are all equal
+Then print string 'OK'
+EOF
+
+cat <<EOF > compare-not-equal.data
+{
+ "arr": [1,1,1,3],
+ "dict": {
+   "hello": "world",
+   "nice": "world",
+   "big": "earth"
+ },
+ "nested_arr": [
+   { "nested": "nested" },
+   { "nested": "not-nested" }
+ ]
+
+}
+EOF
+
+cat <<EOF | debug compare-not-equal.zen -a compare-not-equal.data
+Given I have a 'string array' named 'arr'
+Given I have a 'string dictionary' named 'dict'
+Given I have a 'string array' named 'nested_arr'
+
+If the elements in 'arr' are not all equal
+If the elements in 'dict' are not all equal
+If the elements in 'nested arr' are not all equal
+Then print string 'OK'
+EOF
+
 success
