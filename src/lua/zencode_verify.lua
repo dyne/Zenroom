@@ -37,7 +37,7 @@ local function _neq(left, right)
   if luatype(left) == 'number' and luatype(right) == 'number' then
     return (left ~= right)
   elseif luatype(left) == 'table' and luatype(right) == 'table' then
-     if(#left == #right) then return false end -- optimization
+     if(#left ~= #right) then return true end -- optimization
      return (ZEN.serialize(left) ~= ZEN.serialize(right))
   elseif iszen(type(left)) and iszen(type(right)) then
      return (left:octet() ~= right:octet())
@@ -276,3 +276,39 @@ IfWhen(
     end
   end
 )
+
+IfWhen("the elements in '' are equal", function(obj_name)
+       local obj = have(obj_name)
+       local all_equal = true
+       local first = nil
+       local first_idx = nil
+       for k,v in pairs(obj) do
+             if first == nil then
+                     first = v
+                     first_idx = k
+            else
+                     ZEN.assert(_eq(first, v),
+                         "Verification failed: the elements in position "
+                         .. k .. " and " .. first_idx
+                         .. "are not equal")
+            end
+       end
+end)
+
+IfWhen("the elements in '' are not equal", function(obj_name)
+       local obj = have(obj_name)
+       local first = nil
+       local first_idx = nil
+       for k,v in pairs(obj) do
+             if first == nil then
+                     first = v
+                     first_idx = k
+            else
+                    if _neq(first, v) then
+                            -- at least two elements are different
+                            return true
+                    end
+            end
+       end
+       ZEN.assert(false, "Verification failed: all elements are equal")
+end)
