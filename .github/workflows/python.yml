@@ -24,6 +24,7 @@ jobs:
         with:
           python-version: '3.7'
       - run: sudo apt-get update && sudo apt-get install -y cmake vim zsh
+      - run: pip install meson ninja
       - run: pip install -e .[test]
       - run: pytest -s tests
 
