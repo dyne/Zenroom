@@ -410,7 +410,6 @@ When I rename the 'flat array' to 'flattened array 1'
 
 When I create the flat array of keys in 'identity'
 When I rename the 'flat array' to 'flattened array 2'
-And debug
 
 Then print the 'flattened array 1'
 Then print the 'flattened array 2'
@@ -505,7 +504,6 @@ cat <<EOF | zexe dict2array.zen -a dictionaries.json
 Given I have a 'string dictionary' named 'identities'
 and a 'string' named 'nameOfObject'
 When I create the array of objects named by 'nameOfObject' found in 'identities'
-and debug
 Then print the 'array'
 EOF
 
@@ -526,7 +524,7 @@ cat <<EOF > compare-equal.data
 }
 EOF
 
-cat <<EOF | debug compare-equal.zen -a compare-equal.data
+cat <<EOF | zexe compare-equal.zen -a compare-equal.data
 Given I have a 'string array' named 'arr'
 Given I have a 'string dictionary' named 'dict'
 Given I have a 'string array' named 'nested_arr'
@@ -555,7 +553,7 @@ cat <<EOF > compare-not-equal.data
 }
 EOF
 
-cat <<EOF | debug compare-not-equal.zen -a compare-not-equal.data
+cat <<EOF | zexe compare-not-equal.zen -a compare-not-equal.data
 Given I have a 'string array' named 'arr'
 Given I have a 'string dictionary' named 'dict'
 Given I have a 'string array' named 'nested_arr'
