@@ -39,6 +39,7 @@ typedef struct {
 	int (*ECP__VP_DSA)(int h,octet *W,octet *M,octet *c,octet *d);
 	int (*ECP__SP_DSA_NOHASH)(int h,csprng *R,octet *k,octet *s,octet *M,octet *c,octet *d,int *parity);
 	int (*ECP__VP_DSA_NOHASH)(int h,octet *W,octet *M,octet *c,octet *d);
+	int (*ECP__PUBLIC_KEY_RECOVERY)(octet *X, int y_parity, octet *H, octet *C, octet *D, octet *PK);
 	int fieldsize;
 	int hash; // hash type is also bytes length of hash
 	char curve[16]; // just short names

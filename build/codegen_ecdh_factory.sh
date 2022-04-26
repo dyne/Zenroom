@@ -33,6 +33,7 @@ void ecdh_init(ecdh *ECDH) {
 	ECDH->ECP__VP_DSA = ECP_${CN}_VP_DSA;
 	ECDH->ECP__SP_DSA_NOHASH = ECP_${CN}_SP_DSA_NOHASH;
 	ECDH->ECP__VP_DSA_NOHASH = ECP_${CN}_VP_DSA_NOHASH;
+	ECDH->ECP__PUBLIC_KEY_RECOVERY = ECP_SECP256K1_PUBLIC_KEY_RECOVERY;
         BIG_256_28 order_copy; // toBytes takes a non const BIG
         BIG_256_28_rcopy(order_copy, CURVE_Order_SECP256K1);
         BIG_256_28_toBytes(ORDER, order_copy);
