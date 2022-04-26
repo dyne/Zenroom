@@ -30,8 +30,8 @@ function ecdh.compress_public_key(public)
 end
 
 function ecdh.uncompress_public_key(public)
-   local p = BIG.new(O.from_hex('fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f'))
-   local e = BIG.new(O.from_hex('3fffffffffffffffffffffffffffffffffffffffffffffffffffffffbfffff0c'))
+   local p = ECDH.prime()
+   local e = BIG.shr(p + INT.new(1), 2) -- e = (p+1)/4
 
    local parity = public:sub(1,1)
    assert(parity == O.from_hex('02') or parity == O.from_hex('03'))
