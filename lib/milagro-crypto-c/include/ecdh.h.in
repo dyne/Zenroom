@@ -142,5 +142,16 @@ extern int ECP_ZZZ_SP_DSA(int h,csprng *R,octet *k,octet *s,octet *M,octet *c,oc
 extern int ECP_ZZZ_VP_DSA(int h,octet *W,octet *M,octet *c,octet *d);
 extern int ECP_ZZZ_SP_DSA_NOHASH(int sha,csprng *RNG,octet *K,octet *S,octet *H,octet *C,octet *D, int *parity);
 extern int ECP_ZZZ_VP_DSA_NOHASH(int h,octet *W,octet *M,octet *c,octet *d);
+/**	@brief ECDSA Public key recovery from signature
+ *
+	@param X is the x coordinate of the ephemeral public key of the signature
+	@param y_parity is the parity of the y coordinate of the ephemeral public key of the signature
+	@param H the input hashed message
+	@param C component of the input signature
+	@param D component of the input signature
+	@param PK output public key
+	@return 0 or an error code
+ */
+extern int ECP_ZZZ_PUBLIC_KEY_RECOVERY(octet *X, int y_parity, octet *H, octet *C, octet *D, octet *PK);
 #endif
 
