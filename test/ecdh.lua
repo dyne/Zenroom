@@ -51,19 +51,39 @@ aliquip ex ea commodo consequat. Duis aute irure dolor in
 reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
 pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
 culpa qui officia deserunt mollit anim id est laborum.]])
-print 'iterate 100 tests of sign/verify'
-for i=1,100 do
+print 'iterate at least 100 tests of sign/verify'
+print 'and at least 1 tests with r or s length lower than 32 bytes'
+local shorter = false
+local tot = 0
+
+while (tot<100) or (not shorter) do
 	sig = ecdh.sign(alice.private, m)
+	sig.r = INT.new(sig.r):octet()
+	sig.s = INT.new(sig.s):octet()
+	if #sig.r<32 or #sig.s<32 then
+		shorter = true
+	end
 	assert(ecdh.verify(alice.public, m, sig), "ecdh verify failed")
 	assert(not ecdh.verify(alice.public, sha256(m),sig), "ecdh verify failed")
+	tot = tot+1
 end
 
-print 'iterate 100 tests of sign/verify pre-hashed'
-hm = sha256(m)
-for i=1,100 do
-nohashsig = ecdh.sign_hashed(alice.private, hm, #hm)
-assert(ecdh.verify_hashed(alice.public, hm, nohashsig, #hm), "ecdh verify failed")
-assert(not ecdh.verify_hashed(alice.public, sha256(hm),nohashsig, #hm), "ecdh verify failed")
+print 'iterate at least 100 tests of sign/verify pre-hashed'
+print 'and at least 1 tests with r or s length lower than 32 bytes'
+local hm = sha256(m)
+local shorter = false
+local tot = 0
+
+while (tot<100) or (not shorter) do
+	nohashsig = ecdh.sign_hashed(alice.private, hm, #hm)
+	nohashsig.r = INT.new(nohashsig.r):octet()
+	nohashsig.s = INT.new(nohashsig.s):octet()
+	if #nohashsig.r<32 or #nohashsig.s<32 then
+		shorter = true
+	end
+	assert(ecdh.verify_hashed(alice.public, hm, nohashsig, #hm), "ecdh verify failed")
+	assert(not ecdh.verify_hashed(alice.public, sha256(hm),nohashsig, #hm), "ecdh verify failed")
+	tot = tot+1
 end
 
 print "OK"
