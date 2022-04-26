@@ -1,5 +1,6 @@
 rule check version 1.0.0
 Scenario 'ecdh': Publish the public key
 Given my name is in a 'string' named 'myUserName'
-and I have my 'keypair'
-Then print my 'public key' from 'keypair'
+and I have my 'keyring'
+When I create the ecdh public key
+Then print my 'ecdh public key'

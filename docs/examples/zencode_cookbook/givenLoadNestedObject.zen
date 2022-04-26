@@ -4,7 +4,7 @@ Scenario 'ecdh': let us load some stuff cause it is fun!
 Given I am 'Alice'
 #
 # Here I load the data from the JSON object having my name:
-And I have my 'keypair'
+And I have my 'keyring'
 And I have my 'string' named 'myFirstString'
 And I have my 'number' named 'myFirstNumber'
 #

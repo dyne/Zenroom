@@ -1,7 +1,7 @@
 # We're using scenario 'ecdh' cause we are loading a keypair
 Scenario 'ecdh': using keypair and signing
 Given my name is in a 'string' named 'myUserName'
-Given that I have my 'keypair'
+Given that I have my 'keyring'
 # Load Arrays
 Given I have a 'string array' named 'myFirstArray'  inside 'myFirstObject'
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'

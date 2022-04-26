@@ -2,7 +2,7 @@ Scenario 'ecdh': create the signature of an object
 
 # Declaring who I am and loading all the stuff
 Given my name is in a 'string' named 'myUserName'
-Given I have my 'keypair'
+Given I have my 'keyring'
 Given that I have a 'string' named 'myMessage' inside 'mySecretStuff'
 Given I have a 'string array' named 'myStringArray'
 

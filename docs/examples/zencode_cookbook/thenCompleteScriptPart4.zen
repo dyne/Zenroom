@@ -1,4 +1,5 @@
 
+When I create the issuer key
 When I create the issuer public key
 # This prints a child of dictionary, which can be a string (like here) or another dictionary
 Then print the 'maxPricePerKG' from 'salesReport'

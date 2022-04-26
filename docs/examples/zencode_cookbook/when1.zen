@@ -1,7 +1,7 @@
 # We're using scenario 'ecdh' cause we are loading a keypair
 Scenario 'ecdh': using keypair and signing
 Given my name is in a 'string' named 'myUserName'
-Given that I have my 'keypair'
+Given that I have my 'keyring'
 # Load Arrays
 Given I have a 'string array' named 'myFirstArray'  inside 'myFirstObject'
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
@@ -134,5 +134,12 @@ When I randomize the 'myFourthArray' array
 # The name is hardcoded, the object can be renamed.
 When I pick the random object in 'myFirstArray'
 and I rename the 'random_object' to 'myRandomlyPickedObject'
+
+# CREATE RANDOM DICTIONARY 
+# If you need several objects from a dictionary, you can use this statement
+# it will create a new dictionary with the defined amount of objects,
+# picked from the original dictionary 
+When I create the random dictionary with 'mySecondNumber' random objects from 'myOnlyEcpArray'
+and I rename the 'random_dictionary' to 'myNewlyCreatedRandomDictionary'
 
 Then print all data

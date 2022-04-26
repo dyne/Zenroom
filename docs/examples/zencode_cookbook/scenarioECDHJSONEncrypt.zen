@@ -3,7 +3,7 @@ Scenario 'ecdh': Alice encrypts a message for Bob and Carl
 
 # Here we load keypair and public keys
 Given my name is in a 'string' named 'myUserName'
-Given that I have my 'keypair'
+Given that I have my 'keyring'
 Given that I have a 'public key' from 'Bob'
 Given that I have a 'public key' from 'Carl'
 
