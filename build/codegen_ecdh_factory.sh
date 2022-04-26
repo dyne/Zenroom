@@ -6,6 +6,10 @@ if ! [ -d $PWD/src ] && [ -z "$2" ] ; then
 fi
 
 CN="$1"
+case $CN in
+	"SECP256K1") BN="256_28" ;;
+	*) echo "BIG name not defined for the curve ${CN}"; exit -1;  
+esac
 
 FILE="${2:-src/zen_ecdh_factory.c}"
 
@@ -19,7 +23,10 @@ cat <<EOF > "${FILE}"
 #include <ecdh_${CN}.h>
 #include <ecp_${CN}.h>
 
-static char ORDER[MODBYTES_256_28];
+static char ORDER[MODBYTES_${BN}];
+static char PRIME[MODBYTES_${BN}];
+
+#define Cof CURVE_Cof_I_${CN};
 
 void ecdh_init(ecdh *ECDH) {
 	ECDH->fieldsize = EFS_${CN};
@@ -33,12 +40,16 @@ void ecdh_init(ecdh *ECDH) {
 	ECDH->ECP__VP_DSA = ECP_${CN}_VP_DSA;
 	ECDH->ECP__SP_DSA_NOHASH = ECP_${CN}_SP_DSA_NOHASH;
 	ECDH->ECP__VP_DSA_NOHASH = ECP_${CN}_VP_DSA_NOHASH;
-	ECDH->ECP__PUBLIC_KEY_RECOVERY = ECP_SECP256K1_PUBLIC_KEY_RECOVERY;
-        BIG_256_28 order_copy; // toBytes takes a non const BIG
-        BIG_256_28_rcopy(order_copy, CURVE_Order_SECP256K1);
-        BIG_256_28_toBytes(ORDER, order_copy);
+	ECDH->ECP__PUBLIC_KEY_RECOVERY = ECP_${CN}_PUBLIC_KEY_RECOVERY;
+        BIG_${BN} tmp; // toBytes takes a non const BIG
+        BIG_${BN}_rcopy(tmp, CURVE_Order_${CN});
+        BIG_${BN}_toBytes(ORDER, tmp);
         ECDH->order = ORDER;
-        ECDH->order_size = MODBYTES_256_28;
+	ECDH->cofactor = Cof;
+        BIG_${BN}_rcopy(tmp, Modulus_${CN});
+        BIG_${BN}_toBytes(PRIME, tmp);
+        ECDH->prime = PRIME;
+        ECDH->mod_size = MODBYTES_${BN};
 	act(NULL,"ECDH curve is ${CN}");
 }
 
