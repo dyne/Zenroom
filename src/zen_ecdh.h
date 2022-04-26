@@ -45,7 +45,9 @@ typedef struct {
 	char curve[16]; // just short names
 	char type[16];
         char *order;
-        int order_size;
+	char *prime;
+        int mod_size;
+	int cofactor;
 } ecdh;
 
 #endif

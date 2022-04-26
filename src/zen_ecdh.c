@@ -504,13 +504,45 @@ static int ecdh_aead_decrypt(lua_State *L) {
    @return BIG with the order
 */
 static int ecdh_order(lua_State *L) {
-        if(!ECDH.order || ECDH.order_size <= 0) {
+        if(!ECDH.order || ECDH.mod_size <= 0) {
 		lerror(L, "%s: ECDH order not implemented", __func__);
                 return 0;
         }
 	big *o = big_new(L); SAFE(o);
         big_init(o);
-        BIG_fromBytesLen(o->val, ECDH.order, ECDH.order_size);
+        BIG_fromBytesLen(o->val, ECDH.order, ECDH.mod_size);
+	return 1;
+}
+
+/**
+   Modulus of the curve underlying the ECDH implementation
+
+   @function ECDH.prime()
+   @return BIG with the modulus
+*/
+static int ecdh_prime(lua_State *L) {
+        if(!ECDH.prime || ECDH.mod_size <= 0) {
+		lerror(L, "%s: ECDH modulus not implemented", __func__);
+                return 0;
+        }
+	big *p = big_new(L); SAFE(p);
+        big_init(p);
+        BIG_fromBytesLen(p->val, ECDH.prime, ECDH.mod_size);
+	return 1;
+}
+
+/**
+   Cofactor of the curve underlying the ECDH implementation
+
+   @function ECDH.cofactor()
+   @return int with the cofactor
+*/
+static int ecdh_cofactor(lua_State *L) {
+        if(!ECDH.cofactor) {
+		lerror(L, "%s: ECDH cofactor not implemented", __func__);
+                return 0;
+        }
+	lua_pushinteger(L, ECDH.cofactor);
 	return 1;
 }
 
@@ -567,6 +599,8 @@ int luaopen_ecdh(lua_State *L) {
 		{"keygen",ecdh_keygen},
 		{"pubgen",ecdh_pubgen},
 		{"order",ecdh_order},
+		{"prime",ecdh_prime},
+		{"cofactor",ecdh_cofactor},
 		{"aead_encrypt",   ecdh_aead_encrypt},
 		{"aead_decrypt",   ecdh_aead_decrypt},
 		{"aesgcm_encrypt", ecdh_aead_encrypt},
