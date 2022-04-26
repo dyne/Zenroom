@@ -14,40 +14,49 @@ local ETH = require('crypto_ethereum')
 -- besu --network=dev --miner-enabled --miner-coinbase=0xfe3b557e8fb62b89f4916b721be55ceb828dbd73 --rpc-http-cors-origins="all" --host-allowlist="*" --rpc-ws-enabled --rpc-http-enabled --data-path=/tmp/tmpDatdir
 
 -- 0 is encoded as the empty octet (O.new())
-
-tx = {}
+local fields = {"nonce", "gas_price", "gas_limit", "to",
+		"value", "data"}
+local tx = {}
 tx["nonce"] = ETH.o2n(O.new())
-tx["gasPrice"] = INT.new(1000)
-tx["gasLimit"] = INT.new(25000) 
+tx["gas_price"] = INT.new(1000)
+tx["gas_limit"] = INT.new(25000)
 tx["to"] = O.from_hex('627306090abaB3A6e1400e9345bC60c78a8BEf57')
 tx["value"] = INT.new(O.from_hex('11'))
 tx["data"] = O.new()
--- v contains the chain id (when the transaction is not signed)
--- We always use the chain id
-tx["v"] = INT.new(1337)
-tx["r"] = O.new()
-tx["s"] = O.new()
 
-from = O.from_hex('ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f')
-pk = ECDH.pubgen(from)
+for i=1,100 do
+   -- this are overwritten during encoding, so we need to set them each time
+   -- v contains the chain id (when the transaction is not signed)
+   -- We always use the chain id
+   tx["v"] = INT.new(1337)
+   tx["r"] = O.new()
+   tx["s"] = O.new()
+   local from = O.random(32)
+   local pk = ECDH.pubgen(from)
+   local add = ETH.address_from_public_key(pk)
+   local not_add = sha256(add):sub(13, 32)
 
+   local encodedTx = ETH.encodeSignedTransaction(from, tx)
 
-encodedTx = ETH.encodeSignedTransaction(from, tx)
+   local decodedTx = ETH.decodeTransaction(encodedTx)
 
-print(encodedTx:hex())
-decodedTx = ETH.decodeTransaction(encodedTx)
-
-fields = {"nonce", "gasPrice", "gasLimit", "to",
-	  "value", "data"}
-for _, v in pairs(fields) do
-   assert(tx[v] == decodedTx[v])
+   for _, v in pairs(fields) do
+      assert(tx[v] == decodedTx[v])
+   end
+   assert(ETH.verifySignatureTransaction(pk, tx),
+	  "verification from pk and tx failed")
+   assert(ETH.verifySignatureTransaction(pk, decodedTx),
+	  "verification from pk and decodedTx failed")
+   assert(ETH.verify_from_address(add, tx),
+	  "verification from add and tx failed")
+   assert(ETH.verify_from_address(add, decodedTx),
+	  "verification from add and decodedTx failed")
+   assert(not ETH.verify_from_address(not_add, decodedTx),
+	  "verification from not_add and decodedTx succeded")
 end
 
-assert(ETH.verifySignatureTransaction(pk, tx))
-assert(ETH.verifySignatureTransaction(pk, decodedTx))
-
-assert(ETH.makeWriteStringData('ciao mondo') == O.from_hex('dd2062020000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000a6369616f206d6f6e646f00000000000000000000000000000000000000000000'))
-assert(ETH.makeWriteStringData('aaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddpadding') == O.from_hex('dd20620200000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000207616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646470616464696e6700000000000000000000000000000000000000000000000000'))
+assert(ETH.make_storage_data(O.from_string('ciao mondo')) == O.from_hex('b374012b0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000a6369616f206d6f6e646f00000000000000000000000000000000000000000000'))
+assert(ETH.make_storage_data(O.from_string('aaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccddddpadding')) == O.from_hex('b374012b00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000207616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646461616161626262626363636364646464616161616262626263636363646464646161616162626262636363636464646470616464696e6700000000000000000000000000000000000000000000000000'))
 
 
 -- The following transaction depends on the address of the smart contract
@@ -68,7 +77,7 @@ assert(ETH.makeWriteStringData('aaaabbbbccccddddaaaabbbbccccddddaaaabbbbccccdddd
 -- print(encodedTx:hex())
 
 print("New key pair")
-kp = ETH.keygen()
+local kp = ETH.keygen()
 print(kp.address:hex())
 print(kp.private:hex())
 
@@ -94,7 +103,7 @@ print(kp.private:hex())
 
 -- Some test with data generation for smart conctract
 -- function baz(uint32 x, bool y)
-local contract = ETH.data_contract_builder('baz', { 'uint32', 'bool' })
+local contract = ETH.data_contract_factory('baz', { 'uint32', 'bool' })
 assert(contract(69, true) == O.from_hex('cdcd77c000000000000000000000000000000000000000000000000000000000000000450000000000000000000000000000000000000000000000000000000000000001'))
 
 
