@@ -99,10 +99,7 @@ end
 -- * res which is the content read
 -- * idx which is the position of the next byte to read
 local function decodeRLPgeneric(rlp, i)
-   local byt, res, idx
-   local u128
-
-   u128 = INT.new(128)
+   local byt, bytInt, res, idx
 
    byt = rlp:sub(i, i)
    idx=i+1
@@ -179,7 +176,7 @@ end
 
 -- modify the input transaction
 function ETH.encodeSignedTransaction(sk, tx)
-   local H, txHash, sig, pk, x, y, two, res
+   local H, txHash, sig, y_parity, two, res
    H = HASH.new('keccak256')
    txHash = H:process(ETH.encodeTransaction(tx))
 
@@ -196,15 +193,11 @@ function ETH.encodeSignedTransaction(sk, tx)
    res.s = INT.new(sig.s)
 
    return ETH.encodeTransaction(res)
-
 end
 
--- Verify the signature of a transaction which implements EIP-155
--- Simple replay attack protection
--- https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
-function ETH.verifySignatureTransaction(pk, txSigned)
-   local fields, H, txHash, tx
-   fields = {"nonce", "gasPrice", "gasLimit", "to",
+local function hashFromSignedTransaction(txSigned)
+   local fields, H, tx
+   fields = {"nonce", "gas_price", "gas_limit", "to",
 	     "value", "data"}
 
    -- construct the transaction which was signed
@@ -212,20 +205,53 @@ function ETH.verifySignatureTransaction(pk, txSigned)
    for _, v in pairs(fields) do
       tx[v] = txSigned[v]
    end
-   tx["v"] = (txSigned["v"]-INT.new(35))/INT.new(2)
+   tx["v"] = INT.shr(txSigned["v"]-INT.new(35), 1)
    tx["r"] = O.new()
    tx["s"] = O.new()
 
-
    H = HASH.new('keccak256')
-   txHash = H:process(ETH.encodeTransaction(tx))
+   return H:process(ETH.encodeTransaction(tx))
+end
 
-   sig = {
+-- Verify the signature of a transaction which implements EIP-155
+-- Simple replay attack protection
+-- https://github.com/ethereum/EIPs/blob/master/EIPS/eip-155.md
+function ETH.verifySignatureTransaction(pk, txSigned)
+   local txHash = hashFromSignedTransaction(txSigned)
+
+   local sig = {
       r=txSigned["r"],
       s=txSigned["s"]
    }
 
    return ECDH.verify_hashed(pk, txHash, sig, #txHash)
+end
+
+-- verify the signature of a transaction only with the address
+function ETH.verify_from_address(add, txSigned)
+   local txHash, sig, y_parity, pk, valid
+   txHash = hashFromSignedTransaction(txSigned)
+
+   sig = {
+      r=txSigned.r,
+      s=txSigned.s
+   }
+
+   y_parity = fif(txSigned.v:parity(), 0, 1) -- y_parity=0 <=> v:parity()=1
+
+   local x = INT.new(sig.r)
+   local p = ECDH.prime()
+   local n = ECDH.order()
+   local h = ECDH.cofactor() --h=1
+   repeat
+	   pk, valid = ECDH.recovery(x:octet(), y_parity, txHash, sig)
+	   if h > 0 then   -- do not add n last iteration
+		   x = (x + n) % p
+	   end
+	   h = h-1
+   until (valid and ETH.address_from_public_key(pk) == add) or (h < 0)
+
+   return (valid and ETH.address_from_public_key(pk) == add)
 end
 
 -- Assume we are given a smart contract with a function with the
