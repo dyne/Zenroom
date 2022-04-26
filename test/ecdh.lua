@@ -70,12 +70,31 @@ end
 
 print 'iterate at least 100 tests of sign/verify pre-hashed'
 print 'and at least 1 tests with r or s length lower than 32 bytes'
+local function recovery_test(msg, sig, parity, pk)
+	local recovered_pk, valid
+	local parity = parity and 1 or 0
+
+	local x = INT.new(sig.r)
+	local p = ECDH.prime()
+	local n = ECDH.order()
+	local h = ECDH.cofactor() --h=1
+	repeat
+		recovered_pk, valid = ECDH.recovery(x:octet(), parity, msg, sig)
+		if h > 0 then   -- do not add n last iteration
+			x = (x + n) % p
+		end
+	   	h = h-1
+	until (valid and recovered_pk==pk) or (h < 0)
+	
+	return (valid and recovered_pk==pk)
+end
+
 local hm = sha256(m)
 local shorter = false
 local tot = 0
 
 while (tot<100) or (not shorter) do
-	nohashsig = ecdh.sign_hashed(alice.private, hm, #hm)
+	nohashsig, parity = ecdh.sign_hashed(alice.private, hm, #hm)
 	nohashsig.r = INT.new(nohashsig.r):octet()
 	nohashsig.s = INT.new(nohashsig.s):octet()
 	if #nohashsig.r<32 or #nohashsig.s<32 then
@@ -83,6 +102,8 @@ while (tot<100) or (not shorter) do
 	end
 	assert(ecdh.verify_hashed(alice.public, hm, nohashsig, #hm), "ecdh verify failed")
 	assert(not ecdh.verify_hashed(alice.public, sha256(hm),nohashsig, #hm), "ecdh verify failed")
+	assert(recovery_test(hm, nohashsig, parity, alice.public), "ecdh recovery failed")
+	assert(not recovery_test(sha256(hm), nohashsig, parity, alice.public), "ecdh recovery failed")
 	tot = tot+1
 end
 
