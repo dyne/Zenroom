@@ -19,7 +19,7 @@ EOF
 
 #--- simple ntrup operations: uploading, creating private and public keys, enc/dec ---#
 cat <<EOF |zexe ntrup_createprivatekey.zen | save $SUBDOC Alice_ntrup_privatekey.keys
-Rule check version 2.0.0 
+Rule check version 2.0.0
 Scenario qp : Create the ntrup private key
 Given I am 'Alice'
 When I create the ntrup key
@@ -27,7 +27,7 @@ Then print the 'keyring'
 EOF
 
 cat <<EOF | zexe ntrup_readkeys.zen -k Alice_ntrup_privatekey.keys | jq .
-Rule check version 2.0.0 
+Rule check version 2.0.0
 Scenario qp : Upload the ntrup private key
 Given I am 'Alice'
 and I have the 'keyring'
@@ -35,16 +35,16 @@ Then print my data
 EOF
 
 cat <<EOF | zexe ntrup_createpublickey.zen -k Alice_ntrup_privatekey.keys | save $SUBDOC  Alice_ntrup_pubkey.json
-Rule check version 2.0.0 
+Rule check version 2.0.0
 Scenario qp : Create and publish the ntrup public key
 Given I am 'Alice'
 and I have the 'keyring'
 When I create the ntrup public key
-Then print my 'ntrup public key' 
+Then print my 'ntrup public key'
 EOF
 
 cat <<EOF | zexe ntrup_createpublickey2.zen -k ntrup_readsecretkeys.keys | jq .
-Rule check version 2.0.0 
+Rule check version 2.0.0
 Scenario qp : Create and piublish the ntrup public key
 Given I am 'Alice'
 and I have a 'hex' named 'private key'
@@ -55,18 +55,18 @@ Then print my 'ntrup public key'
 EOF
 
 cat <<EOF | zexe ntrup_enc.zen -a Alice_ntrup_pubkey.json | save $SUBDOC ntrup_Kem.json
-Rule check version 2.0.0 
+Rule check version 2.0.0
 Scenario qp : Bob create the ntrup secret for Alice
 Given I am 'Bob'
 and I have a 'ntrup public key' from 'Alice'
 When I create the ntrup kem for 'Alice'
-Then print the 'ntrup ciphertext' from 'ntrup kem' as 'hex'
-Then print the 'ntrup secret' from 'ntrup kem' as 'hex'
+Then print the 'ntrup ciphertext' from 'ntrup kem'
+Then print the 'ntrup secret' from 'ntrup kem'
 Then print the 'ntrup kem'
 EOF
 
 cat <<EOF | zexe ntrup_dec.zen -k Alice_ntrup_privatekey.keys -a ntrup_Kem.json | jq .
-Rule check version 2.0.0 
+Rule check version 2.0.0
 Scenario qp : Alice create the ntrup secret
 Given that I am known as 'Alice'
 and that I have the 'keyring'
@@ -109,17 +109,17 @@ EOF
 
 # creating a secret and its ciphertext with ntrup and kyber
 cat <<EOF | zexe Carl_ntrup_Kyber_enc.zen -a Carl_pubkeys.json | save $SUBDOC Ciphertexts.json
-Rule check version 2.0.0 
+Rule check version 2.0.0
 Scenario qp : Bob creates secret and its ciphertext for Carl with Kyber and ntrup
 Given I am 'Bob'
 and I have a 'ntrup public key' from 'Carl'
 and I have a 'kyber public key' from 'Carl'
 When I create the ntrup kem for 'Carl'
 and I create the kyber kem for 'Carl'
-Then print the 'ntrup ciphertext' from 'ntrup kem' as 'hex'
-and print the 'ntrup secret' from 'ntrup kem' as 'hex'
-Then print the 'kyber ciphertext' from 'kyber kem' as 'hex'
-and print the 'kyber secret' from 'kyber kem' as 'hex'
+Then print the 'ntrup ciphertext' from 'ntrup kem'
+and print the 'ntrup secret' from 'ntrup kem'
+Then print the 'kyber ciphertext' from 'kyber kem'
+and print the 'kyber secret' from 'kyber kem'
 EOF
 
 
@@ -141,7 +141,7 @@ and I create the kyber secret from 'kyber ciphertext'
 
 If I verify 'Bob ntrup secret' is equal to 'ntrup secret'
 If I verify 'Bob kyber secret' is equal to 'kyber secret'
-Then print string 'Success!!!' 
+Then print string 'Success!!!'
 Endif
 EOF
 
