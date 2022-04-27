@@ -36,10 +36,18 @@
 #define PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_ALGNAME        "Dilithium2"
 extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair(uint8_t *pk, uint8_t *sk);
 extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_pub_gen(uint8_t *pk, uint8_t *sk);
-extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_signature(uint8_t *sig, size_t *siglen, const uint8_t *m, size_t mlen, const uint8_t *sk);
-extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_verify(const uint8_t *sig, size_t siglen, const uint8_t *m, size_t mlen, const uint8_t *pk);
-extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign(uint8_t *sm, size_t *smlen, const uint8_t *m, size_t mlen, const uint8_t *sk);
-extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_open(uint8_t *m, size_t *mlen, const uint8_t *sm, size_t smlen, const uint8_t *pk);
+extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_signature(
+	uint8_t *sig, size_t *siglen,
+	const uint8_t *m, size_t mlen, const uint8_t *sk);
+extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_verify(
+	const uint8_t *sig, size_t siglen,
+	const uint8_t *m, size_t mlen, const uint8_t *pk);
+extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign(
+	uint8_t *sm, size_t *smlen,
+	const uint8_t *m, size_t mlen, const uint8_t *sk);
+extern int PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_open(
+	uint8_t *m, size_t *mlen,
+	const uint8_t *sm, size_t smlen, const uint8_t *pk);
 
 /*
   Quantum proof kyber kem/cipher
@@ -75,9 +83,9 @@ extern int PQCLEAN_SNTRUP761_CLEAN_crypto_kem_dec(uint8_t *ss, const uint8_t *ct
 /*#######################################*/
 static int qp_signature_keygen(lua_State *L) {
 	lua_createtable(L, 0, 2);
-	octet *private = o_new(L,PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_SECRETKEYBYTES); SAFE(private);
+	octet *private = o_new(L, PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_SECRETKEYBYTES); SAFE(private);
 	lua_setfield(L, -2, "private");
-	octet *public = o_new(L,PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE(public);
+	octet *public = o_new(L, PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE(public);
 	lua_setfield(L, -2, "public");
 
 	PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_keypair((unsigned char*)public->val,
@@ -89,8 +97,8 @@ static int qp_signature_keygen(lua_State *L) {
 }
 
 static int qp_signature_pubgen(lua_State *L) {
-	octet *sk = o_arg(L,1); SAFE(sk);
-	octet *pk = o_new(L,PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE(pk);
+	octet *sk = o_arg(L, 1); SAFE(sk);
+	octet *pk = o_new(L, PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE(pk);
 
 	PQCLEAN_DILITHIUM2_CLEAN_crypto_pub_gen((unsigned char*)pk->val,
 						(unsigned char*)sk->val);
@@ -110,22 +118,22 @@ static int qp_signature_pubcheck(lua_State *L) {
 }
 
 static int qp_sign(lua_State *L) {
-	octet *sk = o_arg(L,1); SAFE(sk);
-	octet *m = o_arg(L,2); SAFE(m);
+	octet *sk = o_arg(L, 1); SAFE(sk);
+	octet *m = o_arg(L, 2); SAFE(m);
 
 	if(sk->len != PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_SECRETKEYBYTES) {
-		lerror(L,"invalid size for secret key");
+		lerror(L, "invalid size for secret key");
 		lua_pushboolean(L, 0);
 		return 1;
 	}
-	octet *sig = o_new(L,PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_BYTES); SAFE(sig);
+	octet *sig = o_new(L, PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_BYTES); SAFE(sig);
 
 	if(PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_signature((unsigned char*)sig->val,
 							  (size_t*)&sig->len,
 							  (unsigned char*)m->val, m->len,
 							  (unsigned char*)sk->val)
 	   && sig->len > 0) {
-		lerror(L,"error in the signature");
+		lerror(L, "error in the signature");
 		lua_pushboolean(L, 0);
 		return 1;
 	}
@@ -134,22 +142,22 @@ static int qp_sign(lua_State *L) {
 
 // generate an octet which is signature+message
 static int qp_signed_message(lua_State *L) {
-	octet *sk = o_arg(L,1); SAFE(sk);
-	octet *m = o_arg(L,2); SAFE(m);
+	octet *sk = o_arg(L, 1); SAFE(sk);
+	octet *m = o_arg(L, 2); SAFE(m);
 
 	if(sk->len != PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_SECRETKEYBYTES) {
-		lerror(L,"invalid size for secret key");
+		lerror(L, "invalid size for secret key");
 		lua_pushboolean(L, 0);
 		return 1;
 	}
-	octet *sig = o_new(L,PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_BYTES+m->len); SAFE(sig);
+	octet *sig = o_new(L, PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_BYTES+m->len); SAFE(sig);
 
 	if(PQCLEAN_DILITHIUM2_CLEAN_crypto_sign((unsigned char*)sig->val,
 						(size_t*)&sig->len,
 						(unsigned char*)m->val, m->len,
 						(unsigned char*)sk->val)
 	   && sig->len > 0) {
-		lerror(L,"error in the signature");
+		lerror(L, "error in the signature");
 		lua_pushboolean(L, 0);
 		return 1;
 	}
@@ -157,16 +165,16 @@ static int qp_signed_message(lua_State *L) {
 }
 
 static int qp_verified_message(lua_State *L) {
-	octet *pk = o_arg(L,1); SAFE(pk);
-	octet *sm = o_arg(L,2); SAFE(sm); // signed message
+	octet *pk = o_arg(L, 1); SAFE(pk);
+	octet *sm = o_arg(L, 2); SAFE(sm); // signed message
 
 	if(pk->len != PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES) {
-		lerror(L,"invalid size for public key");
+		lerror(L, "invalid size for public key");
 		lua_pushboolean(L, 0);
 		return 1;
 	}
 
-	octet *msg = o_new(L,sm->len); SAFE(msg);
+	octet *msg = o_new(L, sm->len); SAFE(msg);
 
 	int result = PQCLEAN_DILITHIUM2_CLEAN_crypto_sign_open((unsigned char*)msg->val,
 							       (size_t*)&msg->len,
@@ -180,12 +188,12 @@ static int qp_verified_message(lua_State *L) {
 }
 
 static int qp_verify(lua_State *L) {
-	octet *pk = o_arg(L,1); SAFE(pk);
-	octet *sig = o_arg(L,2); SAFE(sig);
-	octet *m = o_arg(L,3); SAFE(m);
+	octet *pk = o_arg(L, 1); SAFE(pk);
+	octet *sig = o_arg(L, 2); SAFE(sig);
+	octet *m = o_arg(L, 3); SAFE(m);
 
 	if(pk->len != PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES) {
-		lerror(L,"invalid size for public key");
+		lerror(L, "invalid size for public key");
 		lua_pushboolean(L, 0);
 		return 1;
 	}
@@ -217,9 +225,9 @@ static int qp_signature_check(lua_State *L){
 /*#######################################*/
 static int qp_kem_keygen(lua_State *L) {
 	lua_createtable(L, 0, 2);
-	octet *private = o_new(L,PQCLEAN_KYBER512_CLEAN_CRYPTO_SECRETKEYBYTES); SAFE(private);
+	octet *private = o_new(L, PQCLEAN_KYBER512_CLEAN_CRYPTO_SECRETKEYBYTES); SAFE(private);
 	lua_setfield(L, -2, "private");
-	octet *public = o_new(L,PQCLEAN_KYBER512_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE(public);
+	octet *public = o_new(L, PQCLEAN_KYBER512_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE(public);
 	lua_setfield(L, -2, "public");
 
 	PQCLEAN_KYBER512_CLEAN_crypto_kem_keypair((unsigned char*)public->val, (unsigned char*)private->val);
@@ -230,8 +238,8 @@ static int qp_kem_keygen(lua_State *L) {
 }
 
 static int qp_kem_pubgen(lua_State *L) {
-	octet *sk = o_arg(L,1); SAFE(sk);
-	octet *pk = o_new(L,PQCLEAN_KYBER512_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE(pk);
+	octet *sk = o_arg(L, 1); SAFE(sk);
+	octet *pk = o_new(L, PQCLEAN_KYBER512_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE(pk);
 
 	PQCLEAN_KYBER512_CLEAN_crypto_pub_gen((unsigned char*)pk->val,
 					      (unsigned char*)sk->val);
@@ -271,23 +279,23 @@ static int qp_kem_ctcheck(lua_State *L) {
 }
 
 static int qp_enc(lua_State *L) {
-	octet *pk = o_arg(L,1); SAFE(pk);
+	octet *pk = o_arg(L, 1); SAFE(pk);
 
 	if(pk->len != PQCLEAN_KYBER512_CLEAN_CRYPTO_PUBLICKEYBYTES) {
-		lerror(L,"invalid size for public key");
+		lerror(L, "invalid size for public key");
 		lua_pushboolean(L, 0);
 		return 1;
 	}
 	lua_createtable(L, 0, 2);
-	octet *ss = o_new(L,KYBER_SSBYTES); SAFE(ss);
+	octet *ss = o_new(L, KYBER_SSBYTES); SAFE(ss);
 	lua_setfield(L, -2, "secret"); // shared secret
-	octet *ct = o_new(L,PQCLEAN_KYBER512_CLEAN_CRYPTO_CIPHERTEXTBYTES); SAFE(ct);
+	octet *ct = o_new(L, PQCLEAN_KYBER512_CLEAN_CRYPTO_CIPHERTEXTBYTES); SAFE(ct);
 	lua_setfield(L, -2, "cipher");
 
 	if(PQCLEAN_KYBER512_CLEAN_crypto_kem_enc((unsigned char*)ct->val,
 						 (unsigned char*)ss->val,
 						 (unsigned char*)pk->val)) {
-		lerror(L,"error in the creation of the shared secret");
+		lerror(L, "error in the creation of the shared secret");
 		lua_pushboolean(L, 0);
 		return 1;
 	}
@@ -297,25 +305,25 @@ static int qp_enc(lua_State *L) {
 }
 
 static int qp_dec(lua_State *L) {
-	octet *sk = o_arg(L,1); SAFE(sk);
-	octet *ct = o_arg(L,2); SAFE(ct);
+	octet *sk = o_arg(L, 1); SAFE(sk);
+	octet *ct = o_arg(L, 2); SAFE(ct);
 
 	if(sk->len != PQCLEAN_KYBER512_CLEAN_CRYPTO_SECRETKEYBYTES) {
-		lerror(L,"invalid size for secret key");
+		lerror(L, "invalid size for secret key");
 		lua_pushboolean(L, 0);
 		return 1;
 	}
 	if(ct->len != PQCLEAN_KYBER512_CLEAN_CRYPTO_CIPHERTEXTBYTES) {
-		lerror(L,"invalid size for ciphertext key");
+		lerror(L, "invalid size for ciphertext key");
 		lua_pushboolean(L, 0);
 		return 1;
 	}
-	octet *ss = o_new(L,KYBER_SSBYTES); SAFE(ss);
+	octet *ss = o_new(L, KYBER_SSBYTES); SAFE(ss);
 
 	if(PQCLEAN_KYBER512_CLEAN_crypto_kem_dec((unsigned char*)ss->val,
 						 (unsigned char*)ct->val,
 						 (unsigned char*)sk->val)) {
-		lerror(L,"error in while deciphering the shared secret");
+		lerror(L, "error in while deciphering the shared secret");
 		lua_pushboolean(L, 0);
 		return 1;
 	}
@@ -329,9 +337,9 @@ static int qp_dec(lua_State *L) {
 /*#######################################*/
 static int qp_sntrup_kem_keygen(lua_State *L) {
 	lua_createtable(L, 0, 2);
-	octet *private = o_new(L,PQCLEAN_SNTRUP761_CLEAN_CRYPTO_SECRETKEYBYTES); SAFE(private);
+	octet *private = o_new(L, PQCLEAN_SNTRUP761_CLEAN_CRYPTO_SECRETKEYBYTES); SAFE(private);
 	lua_setfield(L, -2, "private");
-	octet *public = o_new(L,PQCLEAN_SNTRUP761_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE(public);
+	octet *public = o_new(L, PQCLEAN_SNTRUP761_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE(public);
 	lua_setfield(L, -2, "public");
 
 	PQCLEAN_SNTRUP761_CLEAN_crypto_kem_keypair((unsigned char*)public->val,
@@ -343,8 +351,8 @@ static int qp_sntrup_kem_keygen(lua_State *L) {
 }
 
 static int qp_sntrup_kem_pubgen(lua_State *L) {
-	octet *sk = o_arg(L,1); SAFE(sk);
-	octet *pk = o_new(L,PQCLEAN_SNTRUP761_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE(pk);
+	octet *sk = o_arg(L, 1); SAFE(sk);
+	octet *pk = o_new(L, PQCLEAN_SNTRUP761_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE(pk);
 
 	PQCLEAN_SNTRUP761_CLEAN_crypto_kem_pubgen((unsigned char*)pk->val,
 						  (unsigned char*)sk->val);
@@ -381,26 +389,25 @@ static int qp_sntrup_kem_ctcheck(lua_State *L) {
 }
 
 static int qp_sntrup_kem_enc(lua_State *L) {
-	octet *pk = o_arg(L,1); SAFE(pk);
+	octet *pk = o_arg(L, 1); SAFE(pk);
 
 	if(pk->len != PQCLEAN_SNTRUP761_CLEAN_CRYPTO_PUBLICKEYBYTES) {
-		lerror(L,"invalid size for public key");
+		lerror(L, "invalid size for public key");
 		lua_pushboolean(L, 0);
 		return 1;
 	}
 	lua_createtable(L, 0, 2);
-	octet *ss = o_new(L,PQCLEAN_SNTRUP761_CLEAN_CRYPTO_BYTES); SAFE(ss);
+	octet *ss = o_new(L, PQCLEAN_SNTRUP761_CLEAN_CRYPTO_BYTES); SAFE(ss);
 	lua_setfield(L, -2, "secret"); // shared secret
-	octet *ct = o_new(L,PQCLEAN_SNTRUP761_CLEAN_CRYPTO_CIPHERTEXTBYTES); SAFE(ct);
+	octet *ct = o_new(L, PQCLEAN_SNTRUP761_CLEAN_CRYPTO_CIPHERTEXTBYTES); SAFE(ct);
 	lua_setfield(L, -2, "cipher");
 
 	if(PQCLEAN_SNTRUP761_CLEAN_crypto_kem_enc((unsigned char*)ct->val,
 						  (unsigned char*)ss->val,
 						  (unsigned char*)pk->val)) {
-		lerror(L,"error in the creation of the shared secret");
+		lerror(L, "error in the creation of the shared secret");
 		lua_pushboolean(L, 0);
 		return 1;
-
 	}
 	ss->len = PQCLEAN_SNTRUP761_CLEAN_CRYPTO_BYTES;
 	ct->len = PQCLEAN_SNTRUP761_CLEAN_CRYPTO_CIPHERTEXTBYTES;
@@ -408,16 +415,16 @@ static int qp_sntrup_kem_enc(lua_State *L) {
 }
 
 static int qp_sntrup_kem_dec(lua_State *L) {
-	octet *sk = o_arg(L,1); SAFE(sk);
-	octet *ct = o_arg(L,2); SAFE(ct);
+	octet *sk = o_arg(L, 1); SAFE(sk);
+	octet *ct = o_arg(L, 2); SAFE(ct);
 
 	if(sk->len != PQCLEAN_SNTRUP761_CLEAN_CRYPTO_SECRETKEYBYTES) {
-		lerror(L,"invalid size for secret key");
+		lerror(L, "invalid size for secret key");
 		lua_pushboolean(L, 0);
 		return 1;
 	}
 	if(ct->len != PQCLEAN_SNTRUP761_CLEAN_CRYPTO_CIPHERTEXTBYTES) {
-		lerror(L,"invalid size for ciphertext key");
+		lerror(L, "invalid size for ciphertext key");
 		lua_pushboolean(L, 0);
 		return 1;
 	}
@@ -426,10 +433,9 @@ static int qp_sntrup_kem_dec(lua_State *L) {
 	if(PQCLEAN_SNTRUP761_CLEAN_crypto_kem_dec((unsigned char*)ss->val,
 						  (unsigned char*)ct->val,
 						  (unsigned char*)sk->val)) {
-		lerror(L,"error in while deciphering the shared secret");
+		lerror(L, "error in while deciphering the shared secret");
 		lua_pushboolean(L, 0);
 		return 1;
-
 	}
 	ss->len = PQCLEAN_SNTRUP761_CLEAN_CRYPTO_BYTES;
 	return 1;
