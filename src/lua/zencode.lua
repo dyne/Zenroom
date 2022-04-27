@@ -550,19 +550,19 @@ end
 -- return false: execute statement
 local function manage_branching(x)
 	if x.section == 'if' then
-		xxx("START conditional execution: "..x.source, 2)
+		--xxx("START conditional execution: "..x.source, 2)
 		if not ZEN.branch then ZEN.branch_valid = true end
 		ZEN.branch = true
 		return false
 	end
 	if x.section == 'endif' then
-		xxx("END   conditional execution: "..x.source, 2)
+		--xxx("END   conditional execution: "..x.source, 2)
 		ZEN.branch = false
 		return true
 	end
 	if not ZEN.branch then return false end
 	if not ZEN.branch_valid then
-		xxx('skip execution in false conditional branch: '..x.source, 2)
+		--xxx('skip execution in false conditional branch: '..x.source, 2)
 		return true
 	end
 	return false
