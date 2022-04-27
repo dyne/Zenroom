@@ -564,23 +564,23 @@ static int ecdh_cofactor(lua_State *L) {
    @return[2] 1 if the above public key is valid, 0 otherwise
 */
 static int ecdh_dsa_recovery(lua_State *L) {
-	octet *x = o_arg(L,1); SAFE(x);
+	octet *x = o_arg(L, 1); SAFE(x);
 	int i;
-	lua_Number y = lua_tointegerx(L,2,&i);
+	lua_Number y = lua_tointegerx(L, 2, &i);
 	if(!i) {
 		lerror(L, "parity of y coordinate has to be a integer");
 		return 0;
 	}
-	octet *m = o_arg(L,3); SAFE(m);
+	octet *m = o_arg(L, 3); SAFE(m);
 	octet *r = NULL;
 	octet *s = NULL;
 	if(lua_type(L, 4) == LUA_TTABLE) {
 		lua_getfield(L, 4, "r");
 		lua_getfield(L, 4, "s");
-		r = o_arg(L,-2); SAFE(r);
-		s = o_arg(L,-1); SAFE(s);
+		r = o_arg(L, -2); SAFE(r);
+		s = o_arg(L, -1); SAFE(s);
 	} else {
-		ERROR(); lerror(L,"signature argument invalid: not a table");
+		ERROR(); lerror(L, "signature argument invalid: not a table");
 	}
 	octet *pk = o_new(L, ECDH.fieldsize*2 +1); SAFE(pk);
 
