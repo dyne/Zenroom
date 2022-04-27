@@ -74,13 +74,6 @@ local function kyber_import_kem(obj)
    return res
 end
 
-local function kyber_export_kem(obj)
-   local res = {}
-   res.kyber_secret = obj.kyber_secret:hex()
-   res.kyber_ciphertext = obj.kyber_ciphertext:hex()
-   return res
-end
-
 local function ntrup_public_key_f(obj)
    local res = ZEN.get(obj, '.')
    ZEN.assert(
@@ -114,14 +107,6 @@ local function ntrup_import_kem(obj)
    res.ntrup_ciphertext = ntrup_ciphertext_f(obj.ntrup_ciphertext)
    return res
 end
-
-local function ntrup_export_kem(obj)
-   local res = {}
-   res.ntrup_secret = obj.ntrup_secret:hex()
-   res.ntrup_ciphertext = obj.ntrup_ciphertext:hex()
-   return res
-end
-
 
 -- check various locations to find the public key
 -- algo can be either 'dilithium' or 'kyber'
