@@ -84,7 +84,7 @@ end
 local function nop(x) return(x) end
 -- the length of the kyber, dilithium and ntrup keys can be found in Zenroom/src/zen_qp.c
 local function dilithium_f(o)
-   ZEN.assert(#o == 2528, 'Dilithium key length is not correct')
+   ZEN.assert(#o == 2528, 'Dilithium key length` is not correct')
    return o
 end
 local function kyber_f(o)
@@ -128,16 +128,16 @@ local function _keyring_import(obj)
       res.ethereum = ZEN.get(obj, 'ethereum', nop, O.from_hex)
    end
    if obj.dilithium then
-      res.dilithium = ZEN.get(obj, 'dilithium', dilithium_f, O.from_hex)
+      res.dilithium = ZEN.get(obj, 'dilithium', dilithium_f)
    end
    if obj.kyber then
-      res.kyber = ZEN.get(obj, 'kyber', kyber_f, O.from_hex)
+      res.kyber = ZEN.get(obj, 'kyber', kyber_f)
    end
    if obj.schnorr then
-      res.schnorr = ZEN.get(obj, 'schnorr', nop, O.from_hex)
+      res.schnorr = ZEN.get(obj, 'schnorr', nop)
    end
    if obj.ntrup then
-      res.ntrup = ZEN.get(obj, 'ntrup', ntrup_f, O.from_hex)
+      res.ntrup = ZEN.get(obj, 'ntrup', ntrup_f)
    end
    return (res)
 end
@@ -168,18 +168,10 @@ local function _keyring_export(obj)
    if obj.ethereum then
       res.ethereum = O.to_hex(obj.ethereum)
    end
-   if obj.dilithium then
-      res.dilithium = O.to_hex(obj.dilithium)
-   end
-   if obj.kyber then
-      res.kyber = O.to_hex(obj.kyber)
-   end
-   if obj.schnorr then
-      res.schnorr = O.to_hex(obj.schnorr)
-   end
-   if obj.ntrup then
-      res.ntrup = O.to_hex(obj.ntrup)
-   end
+   if obj.dilithium then res.dilithium = _default_export(obj.dilithium) end
+   if obj.kyber then     res.kyber     = _default_export(obj.kyber) end
+   if obj.schnorr then   res.schnorr   = _default_export(obj.schnorr) end
+   if obj.ntrup then     res.ntrup     = _default_export(obj.ntrup) end
    return (res)
 end
 

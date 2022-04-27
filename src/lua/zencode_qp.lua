@@ -23,7 +23,7 @@
 local QP = require'qp'
 
 local function dilithium_public_key_f(obj)
-   local res = O.from_hex(obj)
+   local res = ZEN.get(obj, '.')
    ZEN.assert(
       QP.sigpubcheck(res),
       'Dilithium public key length is not correct'
@@ -32,7 +32,7 @@ local function dilithium_public_key_f(obj)
 end
 
 local function dilithium_signature_f(obj)
-   local res = O.from_hex(obj)
+   local res = ZEN.get(obj, '.')
    ZEN.assert(
       QP.signature_check(res),
       'Dilithium signature length is not correcr'
@@ -41,7 +41,7 @@ local function dilithium_signature_f(obj)
 end
 
 local function kyber_public_key_f(obj)
-   local res = O.from_hex(obj)
+   local res = ZEN.get(obj, '.')
    ZEN.assert(
       QP.kempubcheck(res),
       'Kyber public key length is not correct'
@@ -50,7 +50,7 @@ local function kyber_public_key_f(obj)
 end
 
 local function kyber_secret_f(obj)
-   local res = O.from_hex(obj)
+   local res = ZEN.get(obj, '.')
    ZEN.assert(
       QP.kemsscheck(res),
       'Kyber secret lentgth is not correct'
@@ -59,7 +59,7 @@ local function kyber_secret_f(obj)
 end
 
 local function kyber_ciphertext_f(obj)
-   local res = O.from_hex(obj)
+   local res = ZEN.get(obj, '.')
    ZEN.assert(
       QP.kemctcheck(res),
       'Kyber ciphertext length is not correct'
@@ -82,7 +82,7 @@ local function kyber_export_kem(obj)
 end
 
 local function ntrup_public_key_f(obj)
-   local res = O.from_hex(obj)
+   local res = ZEN.get(obj, '.')
    ZEN.assert(
       QP.ntrup_pubcheck(res),
       'NTRUP public key length is not correct'
@@ -91,7 +91,7 @@ local function ntrup_public_key_f(obj)
 end
 
 local function ntrup_secret_f(obj)
-   local res = O.from_hex(obj)
+   local res = ZEN.get(obj, '.')
    ZEN.assert(
       QP.ntrup_sscheck(res),
       'NTRUP secret lentgth is not correct'
@@ -100,7 +100,7 @@ local function ntrup_secret_f(obj)
 end
 
 local function ntrup_ciphertext_f(obj)
-   local res = O.from_hex(obj)
+   local res = ZEN.get(obj, '.')
    ZEN.assert(
       QP.ntrup_ctcheck(res),
       'NTRUP ciphertext length is not correct'
@@ -145,30 +145,16 @@ end
 
 ZEN.add_schema(
    {
-      dilithium_public_key = { import = dilithium_public_key_f,
-			       export = O.to_hex },
-      dilithium_signature = { import = dilithium_signature_f,
-			      export = O.to_hex },
-      
-      
-      kyber_public_key = { import = kyber_public_key_f,
-			   export = O.to_hex },
-      kyber_secret = { import = kyber_secret_f,
-		       export = O.to_hex },
-      kyber_ciphertext = { import = kyber_ciphertext_f,
-			   export = O.to_hex },
-      kyber_kem = { import = kyber_import_kem,
-		    export = kyber_export_kem },
-
-      
-      ntrup_public_key = { import = ntrup_public_key_f,
-			   export = O.to_hex },
-      ntrup_secret = { import = ntrup_secret_f,
-		       export = O.to_hex },
-      ntrup_ciphertext = { import = ntrup_ciphertext_f,
-			   export = O.to_hex },
-      ntrup_kem = { import = ntrup_import_kem,
-		    export = ntrup_export_kem }
+      dilithium_public_key = dilithium_public_key_f,
+      dilithium_signature = dilithium_signature_f,
+      kyber_public_key = kyber_public_key_f,
+      kyber_secret = kyber_secret_f,
+      kyber_ciphertext = kyber_ciphertext_f,
+      kyber_kem = kyber_import_kem,
+      ntrup_public_key = ntrup_public_key_f,
+      ntrup_secret = ntrup_secret_f,
+      ntrup_ciphertext = ntrup_ciphertext_f,
+      ntrup_kem = ntrup_import_kem
    }
 )
 
@@ -185,8 +171,7 @@ When('create the dilithium public key',function()
 	empty'dilithium public key'
 	local sk = havekey'dilithium'
 	ACK.dilithium_public_key = QP.sigpubgen(sk)
-	new_codec('dilithium public key', { zentype = 'element',
-					    encoding = 'hex'})
+	new_codec('dilithium public key', { zentype = 'element'})
 end)
 
 When("create the dilithium public key with secret key ''",function(sec)
@@ -195,8 +180,7 @@ When("create the dilithium public key with secret key ''",function(sec)
 	ACK.keyring.dilithium = sk
 	empty'dilithium public key'
 	ACK.dilithium_public_key = QP.sigpubgen(sk)
-	new_codec('dilithium public key', { zentype = 'element',
-					    encoding = 'hex'})
+	new_codec('dilithium public key', { zentype = 'element'})
 end)
 
 -- generate the sign for a msg and verify
@@ -205,8 +189,7 @@ When("create the dilithium signature of ''",function(doc)
 	local obj = have(doc)
 	empty'dilithium signature'
 	ACK.dilithium_signature = QP.sign(sk, ZEN.serialize(obj))
-	new_codec('dilithium signature', { zentypr = 'element',
-					   encoding = 'hex'})
+	new_codec('dilithium signature', { zentype = 'element'})
 end)
 
 IfWhen("verify the '' has a dilithium signature in '' by ''",function(msg, sig, by)
@@ -232,8 +215,7 @@ When('create the kyber public key',function()
 	empty'kyber public key'
 	local sk = havekey'kyber'
 	ACK.kyber_public_key = QP.kempubgen(sk)
-	new_codec('kyber public key', { zentype = 'element',
-					encoding = 'hex'})
+	new_codec('kyber public key', { zentype = 'element'})
 end)
 
 When("create the kyber public key with secret key ''",function(sec)
@@ -242,8 +224,7 @@ When("create the kyber public key with secret key ''",function(sec)
 	ACK.keyring.kyber = sk
 	empty'kyber public key'
 	ACK.kyber_public_key = QP.kempubgen(sk)
-	new_codec('kyber public key', { zentype = 'element',
-					encoding = 'hex' })
+	new_codec('kyber public key', { zentype = 'element'})
 end)
 
 -- create a secret message and its ciphertext
@@ -254,8 +235,7 @@ When("create the kyber kem for ''",function(pub)
 	local enc = QP.enc(pk)
 	ACK.kyber_kem.kyber_ciphertext = enc.cipher
 	ACK.kyber_kem.kyber_secret = enc.secret
-	new_codec('kyber kem', { zentype = 'schema',
-	                         encoding = 'complex'})
+	new_codec('kyber kem', { zentype = 'schema'})
 end)
 -- create the secret starting from a ciphertext
 When("create the kyber secret from ''",function(secret)
@@ -263,8 +243,7 @@ When("create the kyber secret from ''",function(secret)
 	local sec = have(secret)
 	empty 'kyber secret'
 	ACK.kyber_secret = QP.dec(sk, sec)
-	new_codec('kyber secret', { zentype = 'element',
-				    encoding = 'hex' })
+	new_codec('kyber secret', { zentype = 'element'})
 end)
 
 --# NTRUP #--
@@ -280,8 +259,7 @@ When('create the ntrup public key',function()
 	empty'ntrup public key'
 	local sk = havekey'ntrup'
 	ACK.ntrup_public_key = QP.ntrup_pubgen(sk)
-	new_codec('ntrup public key', { zentype = 'element',
-					encoding = 'hex'})
+	new_codec('ntrup public key', { zentype = 'element'})
 end)
 
 When("create the ntrup public key with secret key ''",function(sec)
@@ -290,8 +268,7 @@ When("create the ntrup public key with secret key ''",function(sec)
 	ACK.keyring.ntrup = sk
 	empty'ntrup public key'
 	ACK.ntrup_public_key = QP.ntrup_pubgen(sk)
-	new_codec('ntrup public key', { zentype = 'element',
-					encoding = 'hex' })
+	new_codec('ntrup public key', { zentype = 'element'})
 end)
 
 -- create a secret message and its ciphertext
@@ -302,8 +279,7 @@ When("create the ntrup kem for ''",function(pub)
 	local enc = QP.ntrup_enc(pk)
 	ACK.ntrup_kem.ntrup_ciphertext = enc.cipher
 	ACK.ntrup_kem.ntrup_secret = enc.secret
-	new_codec('ntrup kem', { zentype = 'schema',
-	                         encoding = 'complex'})
+	new_codec('ntrup kem', { zentype = 'schema'})
 end)
 -- create the secret starting from a ciphertext
 When("create the ntrup secret from ''",function(ciphertext)
@@ -311,6 +287,5 @@ When("create the ntrup secret from ''",function(ciphertext)
 	local ct = have(ciphertext)
 	empty'ntrup secret'
 	ACK.ntrup_secret = QP.ntrup_dec(sk, ct)
-	new_codec('ntrup secret', { zentype = 'element',
-				    encoding = 'hex' })
+	new_codec('ntrup secret', { zentype = 'element'})
 end)

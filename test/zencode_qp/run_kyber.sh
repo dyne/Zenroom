@@ -58,8 +58,8 @@ Scenario qp : Bob create the kyber secret for Alice
 Given I am 'Bob'
 and I have a 'kyber public key' from 'Alice'
 When I create the kyber kem for 'Alice'
-Then print the 'kyber ciphertext' from 'kyber kem' as 'hex'
-Then print the 'kyber secret' from 'kyber kem' as 'hex'
+Then print the 'kyber ciphertext' from 'kyber kem'
+Then print the 'kyber secret' from 'kyber kem'
 Then print the 'kyber kem'
 EOF
 
@@ -125,8 +125,8 @@ and I create the ecdh public key
 Then print the 'secret message'
 and print the 'message'
 and print my 'ecdh public key'
-and print the 'kyber ciphertext' from 'kyber kem' as 'hex'
-and print the 'kyber secret' from 'kyber kem' as 'hex'
+and print the 'kyber ciphertext' from 'kyber kem'
+and print the 'kyber secret' from 'kyber kem'
 EOF
 
 
