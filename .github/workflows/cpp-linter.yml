@@ -21,7 +21,7 @@ jobs:
         reporter: github-pr-review
         targets: --recursive src
         level: warning
-        flags: --linelength=80 # Optional
+        flags: --linelength=120 # Optional
         filter: "-readability/braces\
           ,-whitespace/braces\
           ,-whitespace/comments\
