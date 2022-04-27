@@ -134,7 +134,7 @@ local function _keyring_import(obj)
       res.kyber = ZEN.get(obj, 'kyber', kyber_f)
    end
    if obj.schnorr then
-      res.schnorr = ZEN.get(obj, 'schnorr', nop)
+      res.schnorr = ZEN.get(obj, 'schnorr')
    end
    if obj.ntrup then
       res.ntrup = ZEN.get(obj, 'ntrup', ntrup_f)
