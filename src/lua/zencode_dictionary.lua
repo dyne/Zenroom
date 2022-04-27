@@ -195,19 +195,11 @@ When("find the '' for dictionaries in '' where '' = ''",function(name, arr, left
 	params.conditions[left] = ACK[right]
 	dicts_reduce(ACK[arr], params)
 	ZEN.assert(val, "No value found "..name.." across dictionaries in "..arr)
-	if #val == 1 then
-		ACK[name] = val[1]
-		new_codec(name, {
-			luatype = luatype(ACK[name]),
-			zentype = 'element'
-		}, arr)
-	else
-	   ACK[name] = val
-	   new_codec(name, {
-		   luatype = 'table',
-		   zentype = 'array'
-	   }, arr)
-	end
+	ACK[name] = val
+	new_codec(name, {
+                luatype = 'table',
+		zentype = 'array'
+	}, arr)
 end)
 
 local function create_copy_f(root, in1, in2)
