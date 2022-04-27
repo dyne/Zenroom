@@ -21,7 +21,7 @@
 local SCH = require'crypto_schnorr_signature'
 
 local function schnorr_public_key_f(obj)
-   local res = O.from_hex(obj)
+   local res = ZEN.get(obj, '.')
    ZEN.assert(
       SCH.pubcheck(res),
       'Schnorr public key is not valid'
@@ -30,7 +30,7 @@ local function schnorr_public_key_f(obj)
 end
 
 local function schnorr_signature_f(obj)
-   local res = O.from_hex(obj)
+   local res = ZEN.get(obj, '.')
    ZEN.assert(
       SCH.sigcheck(res),
       'Schnorr signature is not valid'
@@ -39,7 +39,7 @@ local function schnorr_signature_f(obj)
 end
 
 -- check various locations to find the public key
---  Given I have a 's' from 't'            --> ACK.s[t] 
+--  Given I have a 's' from 't'            --> ACK.s[t]
 local function _pubkey_compat(_key)
    local pubkey = ACK[_key]
    if not pubkey then
@@ -60,10 +60,8 @@ end
 
 ZEN.add_schema(
    {
-      schnorr_public_key = { import = schnorr_public_key_f,
-			     export = O.to_hex },
-      schnorr_signature = { import = schnorr_signature_f,
-			    export = O.to_hex },
+      schnorr_public_key = schnorr_public_key_f,
+      schnorr_signature = schnorr_signature_f
    }
 )
 
@@ -79,8 +77,7 @@ When('create the schnorr public key',function()
 	empty'schnorr public key'
 	local sk = havekey'schnorr'
 	ACK.schnorr_public_key = SCH.pubgen(sk)
-	new_codec('schnorr public key', { zentype = 'element',
-					  encoding = 'hex'})
+	new_codec('schnorr public key', { zentype = 'element'})
 end)
 
 When("create the schnorr public key with secret key ''",function(sec)
@@ -89,8 +86,7 @@ When("create the schnorr public key with secret key ''",function(sec)
 	ACK.keyring.schnorr = sk
 	empty'schnorr public key'
 	ACK.schnorr_public_key = SCH.pubgen(sk)
-	new_codec('schnorr public key', { zentype = 'element',
-					  encoding = 'hex'})
+	new_codec('schnorr public key', { zentype = 'element'})
 end)
 
 When("create the schnorr key with secret key ''",function(sec)
@@ -112,8 +108,7 @@ When("create the schnorr signature of ''",function(doc)
 	local obj = have(doc)
 	empty'schnorr signature'
 	ACK.schnorr_signature = SCH.sign(sk, ZEN.serialize(obj))
-	new_codec('schnorr signature', { zentype = 'element',
-					 encoding = 'hex'})
+	new_codec('schnorr signature', { zentype = 'element'})
 end)
 
 IfWhen("verify the '' has a schnorr signature in '' by ''",function(doc, sig, by)
