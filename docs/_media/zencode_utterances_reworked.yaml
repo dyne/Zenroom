@@ -1,7 +1,4 @@
 ### [array]
-the '' is found in ''
-the '' is found in '' at least '' times
-the '' is not found in ''
 create the aggregation of array ''
 create the array of objects named by '' found in ''
 create the average of elements in array ''
@@ -17,6 +14,9 @@ create the variance of elements in array ''
 insert '' in ''
 insert string '' in ''
 remove the '' from ''
+the '' is found in ''
+the '' is found in '' at least '' times
+the '' is not found in ''
 ### [array]
 ### [bitcoin]
 create the bitcoin address
@@ -39,17 +39,17 @@ sign the bitcoin transaction
 sign the testnet transaction
 ### [bitcoin]
 ### [credential]
-verify the credential proof
 aggregate the issuer public keys
 create the credential key
 create the credential key with secret ''
 create the credential key with secret key ''
 create the credential proof
 create the credential request
-create the credential signature
 create the credentials
+create the credential signature
 create the issuer key
 create the issuer public key
+verify the credential proof
 ### [credential]
 ### [data]
 ### [data]
@@ -86,8 +86,6 @@ create the proximity tracing of infected ids
 renew the secret day key to a new day
 ### [dp3t]
 ### [ecdh]
-verify the '' has a ecdh signature in '' by ''
-verify the '' has a signature in '' by ''
 create the ecdh key
 create the ecdh key with secret ''
 create the ecdh key with secret key ''
@@ -96,8 +94,10 @@ create the ecdh signature of ''
 create the signature of ''
 decrypt the text of '' from ''
 decrypt the text of '' with ''
-encrypt the secret message '' with ''
 encrypt the secret message of '' for ''
+encrypt the secret message '' with ''
+verify the '' has a ecdh signature in '' by ''
+verify the '' has a signature in '' by ''
 ### [ecdh]
 ### [ethereum]
 create the ethereum address
@@ -117,12 +117,12 @@ a ''
 a '' from ''
 a '' in ''
 a '' is valid
+am ''
 a '' named ''
-a '' named '' in ''
 a '' named by ''
 a '' named by '' in ''
+a '' named '' in ''
 a '' public key from ''
-am ''
 my ''
 my '' is valid
 my '' named ''
@@ -132,11 +132,11 @@ my name is in a '' named '' in ''
 nothing
 ### [given]
 ### [hash]
-create the HMAC of '' with key ''
+create the hashes of each object in ''
 create the hash of ''
 create the hash of '' using ''
 create the hash to point '' of each object in ''
-create the hashes of each object in ''
+create the HMAC of '' with key ''
 create the key derivation of ''
 create the key derivation of '' with password ''
 ### [hash]
@@ -148,18 +148,17 @@ create the url from ''
 create the keyring
 ### [keyring]
 ### [petition]
-the petition signature is just one more
-the petition signature is not a duplicate
-verify the signature proof is correct
 add the signature to the petition
 count the petition results
 create a petition tally
 create the petition ''
 create the petition signature ''
+the petition signature is just one more
+the petition signature is not a duplicate
 verify the new petition to be empty
+verify the signature proof is correct
 ### [petition]
 ### [qp]
-verify the '' has a dilithium signature in '' by ''
 create the dilithium key
 create the dilithium public key
 create the dilithium public key with secret key ''
@@ -174,6 +173,7 @@ create the ntrup key
 create the ntrup public key
 create the ntrup public key with secret key ''
 create the ntrup secret from ''
+verify the '' has a dilithium signature in '' by ''
 ### [qp]
 ### [random]
 create the array of '' random numbers
@@ -189,24 +189,19 @@ pick the random object in ''
 randomize the '' array
 ### [random]
 ### [reflow]
-check the reflow signature fingerprint is new
-verify the credential proof
-verify the material passport of ''
-verify the material passport of '' is valid
-verify the reflow seal is valid
-verify the reflow signature credential
 add the reflow fingerprint to the reflow seal
 add the reflow signature to the reflow seal
 aggregate the issuer public keys
 aggregate the reflow public key from array ''
 aggregate the reflow seal array in ''
+check the reflow signature fingerprint is new
 create the credential key
 create the credential key with secret ''
 create the credential key with secret key ''
 create the credential proof
 create the credential request
-create the credential signature
 create the credentials
+create the credential signature
 create the issuer key
 create the issuer public key
 create the material passport of ''
@@ -220,15 +215,20 @@ create the reflow seal
 create the reflow seal with identity ''
 create the reflow signature
 prepare credentials for verification
+verify the credential proof
+verify the material passport of ''
+verify the material passport of '' is valid
+verify the reflow seal is valid
+verify the reflow signature credential
 ### [reflow]
 ### [schnorr]
-verify the '' has a schnorr signature in '' by ''
 create the schnorr key
 create the schnorr key with secret ''
 create the schnorr key with secret key ''
 create the schnorr public key
 create the schnorr public key with secret key ''
 create the schnorr signature of ''
+verify the '' has a schnorr signature in '' by ''
 ### [schnorr]
 ### [secshare]
 compose the secret using ''
@@ -239,22 +239,22 @@ nothing
 print ''
 print '' as ''
 print '' as '' in ''
-print '' from ''
-print '' from '' as ''
-print '' from '' as '' in ''
 print data
 print data as ''
 print data from ''
 print data from '' as ''
+print '' from ''
+print '' from '' as ''
+print '' from '' as '' in ''
 print keyring
 print my ''
 print my '' as ''
-print my '' from ''
-print my '' from '' as ''
 print my data
 print my data as ''
 print my data from ''
 print my data from '' as ''
+print my '' from ''
+print my '' from '' as ''
 print my keyring
 print object named by ''
 print string ''
@@ -274,52 +274,52 @@ verify '' is not equal to ''
 verify '' is not equal to '' in ''
 ### [verify]
 ### [w3c]
-verify the verifiable credential named ''
 get the verification method in ''
 set the verification method in '' to ''
 sign the verifiable credential named ''
+verify the verifiable credential named ''
 ### [w3c]
 ### [when]
-'' is found
-'' is not found
 append '' to ''
-copy '' to ''
 copy contents of '' in ''
 copy contents of '' named '' in ''
 copy the '' in '' to ''
 copy the '' to ''
+copy '' to ''
 create the ''
-create the '' named ''
 create the cbor of ''
 create the json of ''
+create the '' named ''
 create the number from ''
 create the result of '' % ''
 create the result of '' * ''
-create the result of '' * '' in ''
 create the result of '' + ''
 create the result of '' - ''
 create the result of '' / ''
+create the result of '' * '' in ''
 create the result of '' / '' in ''
 create the result of '' in '' % ''
-create the result of '' in '' % '' in ''
 create the result of '' in '' * ''
-create the result of '' in '' * '' in ''
 create the result of '' in '' + ''
-create the result of '' in '' + '' in ''
 create the result of '' in '' - ''
-create the result of '' in '' - '' in ''
 create the result of '' in '' / ''
+create the result of '' in '' % '' in ''
+create the result of '' in '' * '' in ''
+create the result of '' in '' + '' in ''
+create the result of '' in '' - '' in ''
 create the result of '' in '' / '' in ''
 create the result of '' inverted sign
 delete ''
 done
+'' is found
+'' is not found
 remove ''
 remove zero values in ''
-rename '' to ''
-rename '' to named by ''
-rename the '' to ''
 rename the object named by '' to ''
 rename the object named by '' to named by ''
+rename the '' to ''
+rename '' to ''
+rename '' to named by ''
 set '' to '' as ''
 set '' to '' base ''
 split the leftmost '' bytes of ''
