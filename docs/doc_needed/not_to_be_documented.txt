@@ -11,6 +11,9 @@
 # by a blank line.
 # IMPORTANT: there can not be any other blank line.
 
+"array"
+insert string '' in ''        # "insert '' in ''" more generic and documented
+
 "bitcoin"
 create the bitcoin key with secret key ''	# testnet version documented
 create the bitcoin transaction to ''		# testnet version documented
@@ -23,6 +26,6 @@ create the bitcoin public key			# testnet version documented
 create the bitcoin transaction			# testnet version documented
 
 "dp3t"
-create the proximity tracing of infected ids
-renew the secret day key to a new day
-create the ephemeral ids for today
+create the proximity tracing of infected ids	# inline
+renew the secret day key to a new day	 	# inline
+create the ephemeral ids for today		# inline

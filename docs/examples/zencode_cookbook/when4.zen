@@ -4,6 +4,7 @@ Given my name is in a 'string' named 'myUserName'
 Given that I have my 'keyring'
 # Load Arrays
 Given I have a 'string array' named 'myFirstArray'  inside 'myFirstObject'
+Given I have a 'string array' named 'myNestedArray' inside 'myFirstObject'
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
 Given I have a 'string array' named 'myThirdArray' inside 'myThirdObject' 
 Given I have a 'string array' named 'myFourthArray' inside 'myFourthObject'
@@ -35,7 +36,9 @@ Given I have a 'string' named 'myThirteenStringPassword' inside 'myFourthObject'
 Given I have a 'string' named 'myFourteenthStringToBeHashedUsingHMAC' inside 'myFourthObject'
 Given I have a 'string' named 'myFifteenthString' inside 'myFourthObject'
 Given I have a 'string' named 'mySixteenthString' inside 'myFourthObject'
+Given I have a 'string' named 'mySeventeenthString' inside 'myFourthObject'
 # Load dictionaries
+Given I have a 'string dictionary' named 'myNestedDictionary' inside 'myFirstObject'
 Given I have a 'string dictionary' named 'ABC-Transactions1Data'
 # Different data types
 Given I have an 'hex' named 'myFirstHex' inside 'myFirstObject' 
@@ -56,7 +59,7 @@ When number 'myFirstNumber' is less than  'myThirdNumber'
 When number 'myThirdNumber' is more or equal than 'mySecondNumber'
 When number 'myThirdNumber' is more than 'mySecondNumber'
 
-# FOUND, NOT FOUND
+# FOUND, NOT FOUND, FOUND AT LEAST n TIMES
 # The "is found" statement, takes two objects as input: 
 # the name of a variable and the name of an array. It reads its content of the variable 
 # and matches it against each element of the array.
@@ -64,4 +67,5 @@ When number 'myThirdNumber' is more than 'mySecondNumber'
 # as the variable.
 When the 'myTenthString' is found in 'myFourthArray'
 When the 'myFirstString' is not found in 'myFourthArray'
+When the 'mySeventeenthString' is found in 'myFourthArray' at least 'myFourthNumber' times
 Then print all data

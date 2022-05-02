@@ -4,6 +4,7 @@ Given my name is in a 'string' named 'myUserName'
 Given that I have my 'keyring'
 # Load Arrays
 Given I have a 'string array' named 'myFirstArray'  inside 'myFirstObject'
+Given I have a 'string array' named 'myNestedArray' inside 'myFirstObject'
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
 Given I have a 'string array' named 'myThirdArray' inside 'myThirdObject' 
 Given I have a 'string array' named 'myFourthArray' inside 'myFourthObject'
@@ -35,7 +36,9 @@ Given I have a 'string' named 'myThirteenStringPassword' inside 'myFourthObject'
 Given I have a 'string' named 'myFourteenthStringToBeHashedUsingHMAC' inside 'myFourthObject'
 Given I have a 'string' named 'myFifteenthString' inside 'myFourthObject'
 Given I have a 'string' named 'mySixteenthString' inside 'myFourthObject'
+Given I have a 'string' named 'mySeventeenthString' inside 'myFourthObject'
 # Load dictionaries
+Given I have a 'string dictionary' named 'myNestedDictionary' inside 'myFirstObject'
 Given I have a 'string dictionary' named 'ABC-Transactions1Data'
 # Different data types
 Given I have an 'hex' named 'myFirstHex' inside 'myFirstObject' 
@@ -65,6 +68,16 @@ When I create the size of 'mySecondNumberArray'
 When I create the aggregation of array 'mySecondNumberArray'
 When I create the sum value of elements in array 'mySecondNumberArray'
 
+# STATISTICAL INFORMATIONS
+# These statements perform some statistical operations on the arrays
+# These statements compute the average, the standard deviation and the
+# variance of the elements of the array, saving them in three object named
+# respectively "average", "standard deviation" and "variance", and
+# they work only with "number array"
+When I create the average of elements in array 'mySecondNumberArray'
+When I create the standard deviation of elements in array 'mySecondNumberArray'
+When I create the variance of elements in array 'mySecondNumberArray'
+
 # COPY ELEMENT
 # This statement creates a an object named "copy" containing
 # the given element of the array
@@ -86,6 +99,10 @@ Then print the 'size'
 
 Then print the 'aggregation'
 Then print the 'sum value'
+
+Then print the 'average'
+Then print the 'standard deviation'
+Then print the 'variance'
 
 Then print the 'copy'
 

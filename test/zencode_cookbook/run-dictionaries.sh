@@ -475,6 +475,13 @@ and I rename the 'result' to 'NumbersMixed-Modulo'
 # In this case we're using the dictionary 'PowerData' which has several 0 objects.
 When I remove zero values in 'PowerData'
 
+# CREATE ARRAY of elements with the same key
+# You can group all the elements in a dictionary that have the same key
+# value inside a fresh new generated array named array
+When I write string 'timestamp' in 'Key'
+When I create the array of objects named by 'Key' found in 'TransactionsBatchA'
+and I rename the 'array' to 'TimestampArray'
+
 
 # Let's print it all out!
 Then print the 'ABC-TransactionsAfterTheta'
@@ -501,6 +508,8 @@ and print the 'NumbersMixed-Modulo'
 and print the 'PowerData'
 and print the 'InitialAmount<<TransactionAmountsA'
 and print the 'Buyer<<Information<<TransactionsBatchA'
+
+and print the 'TimestampArray'
 
 EOF
 
