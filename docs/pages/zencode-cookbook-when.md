@@ -60,6 +60,10 @@ We grouped together all the statements that perform object manipulation, so:
  ***Create string/number*** (statement "write in")
  
  ***Pick a random element*** from an array
+
+ ***Create random dictionary*** from another dictionary
+
+ ***Create flat array*** of contents or keys of a dictionary or an array
  
  
 In the script below, we've put together a list of this statement and explained in the comments how each statement works: 
@@ -221,7 +225,13 @@ Here are the statements to work with arrays. Arrays can be of any type (number, 
 
 ***Length*** creates an object containing the array length
  
-***Length*** creates the arithmetic sum of an 'number array'
+***Sum*** creates the arithmetic sum of a 'number array'
+
+***Average***  creates the average of a 'number array'
+
+***Standard deviation***  creates the standard deviation of a 'number array'
+
+***Variance***  creates the variance of a 'number array'
  
 ***Copy element of array*** to a new simple object
 
@@ -264,7 +274,6 @@ Operations with dictionaries allow you to:
 
 
 
-
 In the script we'll use as example we'll load a complex dataset, containing dictionaries that mimic records of transactions. Not that the dictionaries do not always have the same exact structure:
 
 [](../_media/examples/zencode_cookbook/dictionariesBlockchain.json ':include :type=code json')
@@ -281,6 +290,7 @@ In the script below we will:
  - Singning the newly created dictionary using ECDSA cryptography
  - Printing out the newly created dictionary, its signature and a couple more objects
  - Various sums, subtractions, multiplications, divisions
+ - Create an array that contains all the objects named *timestamp* in *TransactionsBatchA*
 
 This part of the script load the dictionaries along with some simple objects:
 

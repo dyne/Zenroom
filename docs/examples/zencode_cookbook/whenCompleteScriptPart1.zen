@@ -97,4 +97,15 @@ and I rename the 'random_object' to 'myRandomlyPickedObject'
 When I create the random dictionary with 'mySecondNumber' random objects from 'myOnlyEcpArray'
 and I rename the 'random_dictionary' to 'myNewlyCreatedRandomDictionary'
 
+# CREATE FLAT ARRAY
+# The "flat array" statement, take as input the name of an array or a dictionary,
+# the statement flat the input contents or the input keys
+# and places the result in a newly created array called "flat array"
+When I create the flat array of contents in 'myNestedArray'
+and I rename the 'flat array' to 'myFlatArray'
+When I create the flat array of contents in 'myNestedDictionary'
+and I rename the 'flat array' to 'myFlatDictionaryContents'
+When I create the flat array of keys in 'myNestedDictionary'
+and I rename the 'flat array' to 'myFlatDictionaryKeys'
+
 Then print all data

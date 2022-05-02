@@ -22,106 +22,137 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 
 n=0
 
-cat <<EOF | save . myLargeNestedObjectWhen.json
+cat <<EOF | jq . | save . myLargeNestedObjectWhen.json
 {
-   "myFirstObject":{
-      "myFirstNumber":1.2345,
-	  "myFirstString":"Hello World!",
-      "myFirstHex": "616e7976616c7565",
-      "myFirstBase64": "SGVsbG8gV29ybGQh",
-	  "myFirstUrl64": "SGVsbG8gV29ybGQh",
-	  "myFirstBinary": "0100100001101001",
-	  "myFirstArray":[
-		 "Hello World! myFirstObject, myFirstArray[0]",
-		 "Hello World! myFirstObject, myFirstArray[1]",
-		 "Hello World! myFirstObject, myFirstArray[2]"
+  "myFirstObject": {
+    "myFirstNumber": 1.2345,
+    "myFirstString": "Hello World!",
+    "myFirstHex": "616e7976616c7565",
+    "myFirstBase64": "SGVsbG8gV29ybGQh",
+    "myFirstUrl64": "SGVsbG8gV29ybGQh",
+    "myFirstBinary": "0100100001101001",
+    "myFirstArray": [
+      "Hello World! myFirstObject, myFirstArray[0]",
+      "Hello World! myFirstObject, myFirstArray[1]",
+      "Hello World! myFirstObject, myFirstArray[2]"
+    ],
+    "myFirstNumberArray": [
+      10,
+      20,
+      30,
+      40,
+      50
+    ],
+    "myOnlyEcpArray": [
+      "Awz+ogtsf9xRn7hIw/6B1xvwoBNRgNFJOPYqSdPd+OAHXgDVuLWuKEvIsynbdWBJIw==",
+      "A05tQgcTdT7+OAvfWZMIYI9G2owWBBR3/KqRBL/KPh2rPknbW1FBbRcee3P+7hpOoQ==",
+      "AzijxD9GRztPcRtEXjdpXIPTzzmv0dvCdQNcmToC09pOw1ZLg/eAHdgEFV6oWhionQ==",
+      "Ak8k6etvJjUPfSTFZFtQiRKaX1gIs3lUMzti+BQZW1XhUl8OOAOa/LrCRWyV1fpLwg=="
+    ],
+    "myOnlyEcp2Array": [
+      "QTQcWNiZgxQSyk7z0Zuy7GSF7kfrvahtaKFfgWsQeZurOpSSEiA81amccUi6S0LEIozhraN8aL+S8X7cPoqg7s1ftnC/S/MH3kwRwJ0jscACVvf+1Y/XEtngBZ0g1frPBNe6CVuaoQiXuda0g5t4mZzItGt6hgtsn7f/iHyO+Iwe1+9vUEzfysxNmFVjEq8ADEeFLqnltHbrI2H3vVZTc5g5IWxAJF00wE7n0kKb4AF59bqxbBN62dIqmVEodMDH",
+      "Anq3ieAxAEGfNzzQYUuQD1NPZuaojS6Fd3/nr3GFKqTPJmdEFTYamiGAN5nN5N5mMBMxE2sub/I39sqFKjDF22Iu/jZWsT+grD5E3PDuiaR4Ugr7V/WOdY3iiY5tfZm4AlWiNYSVR3KIcZe81E5q/GucEvAeC0VuGDgrTvTZ3/e7qxSxsi6aoqlLl2dD3AjABVQHfdY0BZ4gL1xYCmF7TYPs6LNeVb1+9buFZk3I7mskgGjrzgdKgm7IH3rL3Hsl",
+      "SQn5DHPbQTPmxfQirsxZ28uJu6PKv54UDXUzAqqUliAmc52+yFhwgeJpBWwpGfUPP04m8eNUo0hIO3EA2MKDaVxc78HS4PM2nm8ngyX/fTcg1WheaNIkrF4yycGeIEByB3NsYm36CvrJmfKQMtbON0yMpjD6vTfG6C82xaF+vRSieXgXDqh0e3e0deWkWo2vAQht5aqMDX0hGub01gk6tv/IeboIfr3fva80g4XPoiyfI23VZpRP65LdjnAS1seQ",
+      "FcLlzyRlrLBCQAEKs6d+WCtV4awcogoGiGlWKStiuPR+1ms4ZBGKmwW+bniPcAQ3PEUqLBsy+SGmWA0IdkeGRyoJA/gsjZFYr8s8L5ZBd+zIk6ycjuK1fINyfXif3efmR0K2gjSQvptlzmggTr0SLoA3qO1vRZ2ZjPJLa4ehyhZaqx3rxqNWSxK/WzviPHfsAnYQVIOmJGsMl8lGpaJdHWh7XiMDUqJLu2B9OfE4O4pTE8eARR10oSaaNovDzkF+"
+    ],
+    "myNestedArray": [
+      [
+        "hello World! myFirstObject, myNestedArray[0][0]",
+        "hello World! myFirstObject, myNestedArray[0][1]"
       ],
-	  "myFirstNumberArray":[10, 20, 30, 40, 50],
-   "myOnlyEcpArray":[
-        "Awz+ogtsf9xRn7hIw/6B1xvwoBNRgNFJOPYqSdPd+OAHXgDVuLWuKEvIsynbdWBJIw==",
-		"A05tQgcTdT7+OAvfWZMIYI9G2owWBBR3/KqRBL/KPh2rPknbW1FBbRcee3P+7hpOoQ==",
-		"AzijxD9GRztPcRtEXjdpXIPTzzmv0dvCdQNcmToC09pOw1ZLg/eAHdgEFV6oWhionQ==",
-		"Ak8k6etvJjUPfSTFZFtQiRKaX1gIs3lUMzti+BQZW1XhUl8OOAOa/LrCRWyV1fpLwg=="
-   ],
-    "myOnlyEcp2Array":[    "QTQcWNiZgxQSyk7z0Zuy7GSF7kfrvahtaKFfgWsQeZurOpSSEiA81amccUi6S0LEIozhraN8aL+S8X7cPoqg7s1ftnC/S/MH3kwRwJ0jscACVvf+1Y/XEtngBZ0g1frPBNe6CVuaoQiXuda0g5t4mZzItGt6hgtsn7f/iHyO+Iwe1+9vUEzfysxNmFVjEq8ADEeFLqnltHbrI2H3vVZTc5g5IWxAJF00wE7n0kKb4AF59bqxbBN62dIqmVEodMDH",	"Anq3ieAxAEGfNzzQYUuQD1NPZuaojS6Fd3/nr3GFKqTPJmdEFTYamiGAN5nN5N5mMBMxE2sub/I39sqFKjDF22Iu/jZWsT+grD5E3PDuiaR4Ugr7V/WOdY3iiY5tfZm4AlWiNYSVR3KIcZe81E5q/GucEvAeC0VuGDgrTvTZ3/e7qxSxsi6aoqlLl2dD3AjABVQHfdY0BZ4gL1xYCmF7TYPs6LNeVb1+9buFZk3I7mskgGjrzgdKgm7IH3rL3Hsl",	"SQn5DHPbQTPmxfQirsxZ28uJu6PKv54UDXUzAqqUliAmc52+yFhwgeJpBWwpGfUPP04m8eNUo0hIO3EA2MKDaVxc78HS4PM2nm8ngyX/fTcg1WheaNIkrF4yycGeIEByB3NsYm36CvrJmfKQMtbON0yMpjD6vTfG6C82xaF+vRSieXgXDqh0e3e0deWkWo2vAQht5aqMDX0hGub01gk6tv/IeboIfr3fva80g4XPoiyfI23VZpRP65LdjnAS1seQ", 	"FcLlzyRlrLBCQAEKs6d+WCtV4awcogoGiGlWKStiuPR+1ms4ZBGKmwW+bniPcAQ3PEUqLBsy+SGmWA0IdkeGRyoJA/gsjZFYr8s8L5ZBd+zIk6ycjuK1fINyfXif3efmR0K2gjSQvptlzmggTr0SLoA3qO1vRZ2ZjPJLa4ehyhZaqx3rxqNWSxK/WzviPHfsAnYQVIOmJGsMl8lGpaJdHWh7XiMDUqJLu2B9OfE4O4pTE8eARR10oSaaNovDzkF+"
-  ]
-   },
-   "mySecondObject":{
-      "mySecondNumber":2,
-	  "mySecondString":"...and hi everybody!",
-      "mySecondArray":[
-         "anotherString1",
-         "anotherString2"
+      [
+        "hello World! myFirstObject, myNestedArray[1][0]"
       ]
-   },
-   "myThirdObject":{
-      "myThirdNumber":3,
-	  "myThirdString":"...and good morning!",
-      "myThirdArray":[
-         "Hello World! myThirdObject, myThirdArray[0]",
-         "Hello World! myThirdObject, myThirdArray[1]",
-         "Hello World! myThirdObject, myThirdArray[2]",
-		 "Hello World! myThirdObject, myThirdArray[3]"
-      ],
-	  "myCopyOfFirstArray":[
-		 "Hello World!, myThirdObject, myCopyOfFirstArray[0]",
-		 "Hello World!, myThirdObject, myCopyOfFirstArray[1]",
-		 "Hello World!, myThirdObject, myCopyOfFirstArray[2]"
-		 ]
-   },
-   "myFourthObject":{
-      "myFourthArray":[
-         "Hello World! inside myFourthObject, inside myFourthArray[0]",
-         "Hello World! inside myFourthObject, inside myFourthArray[1]",
-		 "Will this string be found inside an array?",
-         "Hello World! inside myFourthObject, inside myFourthArray[2]",
-		 "Hello World! inside myFourthObject, inside myFourthArray[3]"
-      ],
-  "myFourthString":"...and good evening!",
-  "myFifthString":"We have run out of greetings.",
-  "mySixthString":"So instead we'll tell the days of the week...",
-  "mySeventhString":"...Monday,",
-  "myEightEqualString":"These string is equal to another one.",
-  "myNinthEqualString":"These string is equal to another one.",
-  "myFourthNumber":3,
-  "myTenthString":"Will this string be found inside an array?",
-  "myEleventhStringToBeHashed":"hash me to kdf",
-  "myTwelfthStringToBeHashedUsingPBKDF2":"hash me to pbkdf2",
-  "myThirteenStringPassword":"my funky password",
-  "myFourteenthStringToBeHashedUsingHMAC":"hash me to HMAC",
-  "myFifteenthString":"Hello World again!",
-  "mySixteenthString":"Hello World! myThirdObject, myThirdArray[2]",
-  "myOnlyBIGArray":[
-	"7dcd7392a9dea33b145a03279af78b1adf1c0549f5121ec28dd3dc136c0ca693",
-	"8bd877e84538380c455448239f04d817e9657ecf2786442f11c98248ca8178a2",
-	"d2cfc1b31b087d0d7137e3f5d45fc6a9cf33025fdba6f9cad40a04e36b420763",
-	"554e2fcf3a4a1d872446febb81a91d910e772a4cf4c5e36a3569b159cb5ff439"
-      ]	  
-  
-   },
-   "myUserName":"User1234",
-   "User1234":{
-      "keyring":{
-         "ecdh":"AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM="
+    ],
+    "myNestedDictionary": {
+      "1": {
+        "1-first": "hello World!  myFirstObject, 1-first",
+        "1-second": "hello World!  myFirstObject, 1-second"
+      },
+      "2": {
+        "2-first": "hello World!  myFirstObject, 2-first"
       }
-   },
-   "ABC-Transactions1Data":{
-         "timestamp":1597573139,
-         "TransactionValue":1000,
-		 "PricePerKG":2,
-         "TransferredProductAmount":500,
-		 "UndeliveredProductAmount":100,
-		 "ProductPurchasePrice":1
-      },	
-	  "mySecondNumberArray": [
-		567,
-		748,
-		907,
-		876,
-		34,
-		760,
-		935
-	]
+    }
+  },
+  "mySecondObject": {
+    "mySecondNumber": 2,
+    "mySecondString": "...and hi everybody!",
+    "mySecondArray": [
+      "anotherString1",
+      "anotherString2"
+    ]
+  },
+  "myThirdObject": {
+    "myThirdNumber": 3,
+    "myThirdString": "...and good morning!",
+    "myThirdArray": [
+      "Hello World! myThirdObject, myThirdArray[0]",
+      "Hello World! myThirdObject, myThirdArray[1]",
+      "Hello World! myThirdObject, myThirdArray[2]",
+      "Hello World! myThirdObject, myThirdArray[3]"
+    ],
+    "myCopyOfFirstArray": [
+      "Hello World!, myThirdObject, myCopyOfFirstArray[0]",
+      "Hello World!, myThirdObject, myCopyOfFirstArray[1]",
+      "Hello World!, myThirdObject, myCopyOfFirstArray[2]"
+    ]
+  },
+  "myFourthObject": {
+    "myFourthArray": [
+      "Hello World! inside myFourthObject, inside myFourthArray[0]",
+      "Hello World! inside myFourthObject, inside myFourthArray[1]",
+      "Will this string be found inside an array?",
+      "Hello World! inside myFourthObject, inside myFourthArray[2]",
+      "Hello World! inside myFourthObject, inside myFourthArray[3]",
+      "Will this string be found inside an array at least 3 times?",
+      "Will this string be found inside an array at least 3 times?",
+      "Will this string be found inside an array at least 3 times?"
+    ],
+    "myFourthString": "...and good evening!",
+    "myFifthString": "We have run out of greetings.",
+    "mySixthString": "So instead we'll tell the days of the week...",
+    "mySeventhString": "...Monday,",
+    "myEightEqualString": "These string is equal to another one.",
+    "myNinthEqualString": "These string is equal to another one.",
+    "myFourthNumber": 3,
+    "myTenthString": "Will this string be found inside an array?",
+    "myEleventhStringToBeHashed": "hash me to kdf",
+    "myTwelfthStringToBeHashedUsingPBKDF2": "hash me to pbkdf2",
+    "myThirteenStringPassword": "my funky password",
+    "myFourteenthStringToBeHashedUsingHMAC": "hash me to HMAC",
+    "myFifteenthString": "Hello World again!",
+    "mySixteenthString": "Hello World! myThirdObject, myThirdArray[2]",
+    "mySeventeenthString":"Will this string be found inside an array at least 3 times?",
+    "myOnlyBIGArray": [
+      "7dcd7392a9dea33b145a03279af78b1adf1c0549f5121ec28dd3dc136c0ca693",
+      "8bd877e84538380c455448239f04d817e9657ecf2786442f11c98248ca8178a2",
+      "d2cfc1b31b087d0d7137e3f5d45fc6a9cf33025fdba6f9cad40a04e36b420763",
+      "554e2fcf3a4a1d872446febb81a91d910e772a4cf4c5e36a3569b159cb5ff439"
+    ]
+  },
+  "myUserName": "User1234",
+  "User1234": {
+    "keyring": {
+      "ecdh": "AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM="
+    }
+  },
+  "ABC-Transactions1Data": {
+    "timestamp": 1597573139,
+    "TransactionValue": 1000,
+    "PricePerKG": 2,
+    "TransferredProductAmount": 500,
+    "UndeliveredProductAmount": 100,
+    "ProductPurchasePrice": 1
+  },
+  "mySecondNumberArray": [
+    567,
+    748,
+    907,
+    876,
+    34,
+    760,
+    935
+  ]
 }
 EOF
 
@@ -133,6 +164,7 @@ Given my name is in a 'string' named 'myUserName'
 Given that I have my 'keyring'
 # Load Arrays
 Given I have a 'string array' named 'myFirstArray'  inside 'myFirstObject'
+Given I have a 'string array' named 'myNestedArray' inside 'myFirstObject'
 Given I have a 'string array' named 'mySecondArray' inside 'mySecondObject'
 Given I have a 'string array' named 'myThirdArray' inside 'myThirdObject' 
 Given I have a 'string array' named 'myFourthArray' inside 'myFourthObject'
@@ -164,7 +196,9 @@ Given I have a 'string' named 'myThirteenStringPassword' inside 'myFourthObject'
 Given I have a 'string' named 'myFourteenthStringToBeHashedUsingHMAC' inside 'myFourthObject'
 Given I have a 'string' named 'myFifteenthString' inside 'myFourthObject'
 Given I have a 'string' named 'mySixteenthString' inside 'myFourthObject'
+Given I have a 'string' named 'mySeventeenthString' inside 'myFourthObject'
 # Load dictionaries
+Given I have a 'string dictionary' named 'myNestedDictionary' inside 'myFirstObject'
 Given I have a 'string dictionary' named 'ABC-Transactions1Data'
 # Different data types
 Given I have an 'hex' named 'myFirstHex' inside 'myFirstObject' 
@@ -284,6 +318,17 @@ and I rename the 'random_object' to 'myRandomlyPickedObject'
 # picked from the original dictionary 
 When I create the random dictionary with 'mySecondNumber' random objects from 'myOnlyEcpArray'
 and I rename the 'random_dictionary' to 'myNewlyCreatedRandomDictionary'
+
+# CREATE FLAT ARRAY
+# The "flat array" statement, take as input the name of an array or a dictionary,
+# the statement flat the input contents or the input keys
+# and places the result in a newly created array called "flat array"
+When I create the flat array of contents in 'myNestedArray'
+and I rename the 'flat array' to 'myFlatArray'
+When I create the flat array of contents in 'myNestedDictionary'
+and I rename the 'flat array' to 'myFlatDictionaryContents'
+When I create the flat array of keys in 'myNestedDictionary'
+and I rename the 'flat array' to 'myFlatDictionaryKeys'
 
 Then print all data
 EOF
@@ -514,7 +559,7 @@ When number 'myFirstNumber' is less than  'myThirdNumber'
 When number 'myThirdNumber' is more or equal than 'mySecondNumber'
 When number 'myThirdNumber' is more than 'mySecondNumber'
 
-# FOUND, NOT FOUND
+# FOUND, NOT FOUND, FOUND AT LEAST n TIMES
 # The "is found" statement, takes two objects as input: 
 # the name of a variable and the name of an array. It reads its content of the variable 
 # and matches it against each element of the array.
@@ -522,6 +567,7 @@ When number 'myThirdNumber' is more than 'mySecondNumber'
 # as the variable.
 When the 'myTenthString' is found in 'myFourthArray'
 When the 'myFirstString' is not found in 'myFourthArray'
+When the 'mySeventeenthString' is found in 'myFourthArray' at least 'myFourthNumber' times
 Then print all data
 EOF
 
@@ -568,6 +614,16 @@ When I create the size of 'mySecondNumberArray'
 When I create the aggregation of array 'mySecondNumberArray'
 When I create the sum value of elements in array 'mySecondNumberArray'
 
+# STATISTICAL INFORMATIONS
+# These statements perform some statistical operations on the arrays
+# These statements compute the average, the standard deviation and the
+# variance of the elements of the array, saving them in three object named
+# respectively "average", "standard deviation" and "variance", and
+# they work only with "number array"
+When I create the average of elements in array 'mySecondNumberArray'
+When I create the standard deviation of elements in array 'mySecondNumberArray'
+When I create the variance of elements in array 'mySecondNumberArray'
+
 # COPY ELEMENT
 # This statement creates a an object named "copy" containing
 # the given element of the array
@@ -589,6 +645,10 @@ Then print the 'size'
 
 Then print the 'aggregation'
 Then print the 'sum value'
+
+Then print the 'average'
+Then print the 'standard deviation'
+Then print the 'variance'
 
 Then print the 'copy'
 
