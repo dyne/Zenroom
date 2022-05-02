@@ -132,6 +132,11 @@ Which will produce an unsigned transaction, formatted in human-readable JSON, th
 
 [](../_media/examples/zencode_cookbook/bitcoin/transaction.json ':include :type=code json')
 
+If the recipient address is saved under a name other than **recipient** then the transaction can be created using the statement:
+
+```gherkin
+When I create the testnet transaction to ''
+```
 
 ## Sign the transaction and format as raw transaction 
 

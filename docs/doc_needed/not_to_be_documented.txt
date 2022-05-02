@@ -24,6 +24,9 @@ create the bitcoin raw transaction		# testnet version documented
 sign the bitcoin transaction			# testnet version documented
 create the bitcoin public key			# testnet version documented
 create the bitcoin transaction			# testnet version documented
+create the testnet key with secret key ''	# inline
+create the testnet key with secret ''  		# equal to previous that is documented
+create the testnet transaction to ''		# inline
 
 "dp3t"
 create the proximity tracing of infected ids	# inline
