@@ -14,7 +14,7 @@ local function all_statements(file_name)
    while true do
       line = io.read()
       if not line then break end
-      
+
       if line == "" then
 	 -- reading the scenario
 	 scenario = io.read()
@@ -79,14 +79,16 @@ end
 -- here start the code
 local scenarios, zencode = all_statements(arg[1])
 local zencode_doc = documented(arg[2])
-
+local _, zencode_no_doc = all_statements(arg[3])
 
 io.output("to_be_documented.txt")
 
 for _,scenario in pairs(scenarios) do
    io.write(scenario, "\n")
    for statement, _ in pairs(zencode[scenario])do
-      if zencode_doc[statement] == nil then
+      if (not zencode_doc[statement])
+	 and (not zencode_no_doc[scenario]
+	      or not zencode_no_doc[scenario][statement]) then
 	 io.write("\t", statement, "\n")
       end
    end
