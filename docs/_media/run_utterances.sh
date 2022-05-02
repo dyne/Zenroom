@@ -12,11 +12,13 @@ for i in `ls ../../src/lua/zencode_*`; do
 	cat temp.json \
 	    | jq '."Given" | keys[] ' \
 	    | sed -e 's/\\\"/\"/g' -e 's/^.//g' -e 's/.$//g'  \
+	    | sort \
 		  >> zencode_utterances_reworked.yaml
     else
 	cat temp.json \
 	    | jq '.["Given", "If", "When", "Then"] | keys[] ' \
 	    | sed -e 's/\\\"/\"/g' -e 's/^.//g' -e 's/.$//g'  \
+	    | sort \
 		  >> zencode_utterances_reworked.yaml
     fi
     echo "### [${SCENARIO}]" >> zencode_utterances_reworked.yaml
