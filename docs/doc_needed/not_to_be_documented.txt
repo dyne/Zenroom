@@ -28,6 +28,10 @@ create the testnet key with secret key ''	# inline
 create the testnet key with secret ''  		# equal to previous that is documented
 create the testnet transaction to ''		# inline
 
+"credential"
+create the credential key with secret key ''	# inline
+create the credential key with secret ''  	# inline
+
 "dp3t"
 create the proximity tracing of infected ids	# inline
 renew the secret day key to a new day	 	# inline
