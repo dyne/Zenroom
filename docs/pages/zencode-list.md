@@ -43,7 +43,7 @@ rule output encoding hex
 A rule can be set also check that Zenroom is at a certain version: if the rule is not satisfied, Zenroom will stop. 
 
 ```gherkin
-   rule check version 1.0.0
+   rule check version 2.0.0
 ```
 
 ## Configurations 
@@ -54,48 +54,25 @@ You can pass to Zenroom a configuration file, using the parameter ```-c```, desc
 
 # *Given*
 
-This affects **my** statements
+There are different ways to state who you are in order to use **my** statements later
 
 ```gherkin
    Given I am ''
-   Given I have my ''
+   Given my name is in a '' named ''
+   Given my name is in a '' named '' in ''
 ```
 
 Data provided as input (from **data** and **keys**) is all imported
 automatically from **JSON** or [CBOR](https://tools.ietf.org/html/rfc7049) binary formats.
-
-Scenarios can add Schema for specific data validation mapped to **words** like: **signature**, **proof** or **secret**.
-
-
-<!-- old stuff
- 
- 
-
-```gherkin
-   Given I have a ''
-   Given I have a valid ''
-   Given I have a '' inside ''
-   Given I have a valid '' inside ''
-   Given I have a '' from ''
-   Given I have a valid '' from ''
-   Given the '' is valid
-```
-
--->
-
-**Data input**
-
-
-[](../_media/zencode_utterances_reworked.yaml ':include :fragment=given :type=code gherkin')
-
-
-or check emptiness:
+There can also be no input to the code, in this case can be checked the emptiness with:
 
 ```gherkin
    Given nothing
 ```
 
-all the list of valid `given` statements are:
+Scenarios can add Schema for specific data validation mapped to **words** like: **signature**, **proof** or **secret**.
+
+All the valid `given` statements are:
 
 [](../_media/zencode_utterances_reworked.yaml ':include :fragment=given :type=code gherkin')
 
@@ -108,17 +85,76 @@ mostly according to the **scenario**
 
 Processing data is done in the when block. Also scenarios add statements to this block.
 
-Without extensions, these are the basic functions available
+## Basic
+
+Without extensions, all the following statementes are valid:
+
+- basic functions
 
 [](../_media/zencode_utterances_reworked.yaml ':include :fragment=when :type=code gherkin')
+- array functions
 
-with the `ecdh` extension the following statementa are valid
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=array :type=code gherkin')
+- bitcoin functions
 
-[](../_media/zencode_utterances_reworked.yaml ':include :fragment=ecdh :type=code gherkin')
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=bitcoin :type=code gherkin')
+- debug functions
 
-with the `credential` extension the following statementa are valid
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=debug :type=code gherkin')
+- dictionary functions
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=dictionary :type=code gherkin')
+- hash functions
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=hash :type=code gherkin')
+- keyring functions
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=keyring :type=code gherkin')
+- random functions
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=random :type=code gherkin')
+- verify functions
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=verify :type=code gherkin')
+
+## Extensions
+
+Each of the following scenario enable a set of sentences:
+- `credential`
 
 [](../_media/zencode_utterances_reworked.yaml ':include :fragment=credential :type=code gherkin')
+- `dp3t`
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=dp3t :type=code gherkin')
+- `ecdh`
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=ecdh :type=code gherkin')
+- `ethereum`
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=ethereum :type=code gherkin')
+- `http`
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=http :type=code gherkin')
+- `petition`
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=petition :type=code gherkin')
+- `qp`
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=qp :type=code gherkin')
+- `reflow`
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=reflow :type=code gherkin')
+- `schnorr`
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=schnorr :type=code gherkin')
+- `secshare`
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=secshare :type=code gherkin')
+- `w3c`
+
+[](../_media/zencode_utterances_reworked.yaml ':include :fragment=w3c :type=code gherkin')
+
+
 
 # *Then*
 
