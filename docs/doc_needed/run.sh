@@ -42,10 +42,25 @@ echo "  all documented statements have been loaded   "
 echo "-----------------------------------------------"
 echo
 
+# taking all the statements that do not need documentation
+echo -n "loading statements that do not need documentation: ... "
+cat not_to_be_documented.txt \
+    | sed '/^#/d' \
+    | cut -d "#" -f 1 \
+    | sed 's/[ \t]*$//g' \
+	  > no_need_of_doc.txt
+
+echo
+echo "-----------------------------------------------"
+echo "        all statements that do not need        "
+echo "        documentattion have been loaded        "
+echo "-----------------------------------------------"
+echo
+
 # lua program that write on the file to_be_documented.txt the statements
 # that are not documented yet divided by scenario
-lua doc_control.lua introspection.txt documented.txt
-rm -f introspection.txt documented.txt
+lua doc_control.lua introspection.txt documented.txt no_need_of_doc.txt
+rm -f introspection.txt documented.txt no_need_of_doc.txt
 echo
 echo "-----------------------------------------------"
 echo "  all statements to be documented can be found "
