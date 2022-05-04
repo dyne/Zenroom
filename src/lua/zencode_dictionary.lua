@@ -294,27 +294,33 @@ When("move '' in ''", function(src, dict)
 	ACK[src] = nil
 end)
 
+local function _filter_from(v, k, f)
+   local keep = false
+   local res = v
+   for _, fv in pairs(f) do
+      if fv:str() == k then keep = true end
+   end
+   if not keep then res = nil end
+   return res
+end
+
+local function _is_array_of_dictionaries(a)
+   if not isarray(a) then return false end
+   for _, v in pairs(a) do
+      if not isdictionary(v) then
+	 return false
+      end
+   end
+   return true
+end
+
 When("filter '' fields from ''", function(filters, target)
 	local t = have(target)
-	ZEN.assert(isdictionary(target), "Object is not a dictionary: "..target)
+	ZEN.assert(isdictionary(target) or
+		   _is_array_of_dictionaries(t),
+		   "Object is nor a dictionary neither an array of dictionaries: "..target)
 	local f = have(filters)
 	ZEN.assert(isarray(filters), "Object is not an array: "..filters)
-	if isarray(t) then -- array of dictionaries
-	   for ak,av in pairs(t) do
-	      for k,_ in pairs(av) do	
-		 keep = false
-		 for _, fv in pairs(f) do
-		    if fv:str() == k then keep = true end
-		 end
-		 if not keep then t[ak][k] = nil end
-	      end
-	   end
-	else
-	   for k,_ in pairs(t) do
-	      for _, fv in pairs(f) do
-		 if k ~= fv then t[k] = nil end
-	      end
-	   end
-	end
+	ACK[target] = deepmap(_filter_from, t, f)
 end)
 
