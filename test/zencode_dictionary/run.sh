@@ -511,3 +511,85 @@ When I take 'state root hash' from path 'data.header'
 Then print the 'header signature'
 and print the 'state root hash'
 EOF
+
+cat << EOF | save dictionary filter_from.json
+{
+	"myDict": {
+		 "name": "John",
+		 "surname": "Doe",
+		 "age": "42"
+	},
+	"myNestedArray": [
+			 {
+		 	  	"name": "John",
+			  	"surname": "Doe",
+		 	  	"age": "42"
+			 },
+		       	 {
+		 	  	"name": "Jane",
+		 	  	"surname": "Moe",
+		 	  	"age": "31"
+			 },
+		         {
+		 	  	"name": "Amber",
+		 	  	"surname": "Williams",
+		 	  	"age": "68"
+			 },
+		       	 {
+		       		"surname": "Tyson"
+			 }
+	],
+	"myNestedDict": {
+		       "myDict1": {
+		 	  	"name": "John",
+			  	"surname": "Doe",
+		 	  	"age": "42"
+				},
+		       "myDict2": {
+		 	  	"name": "Jane",
+		 	  	"surname": "Moe",
+		 	  	"age": "31"
+				},
+		       "myDict3": {
+		 	  	"name": "Bruce",
+		 	  	"surname": "Wayne"
+				},
+		       "myDict4": {
+		       		"surname": "Tyson"
+				},
+		       "myDict5": {
+		       		"myDict6": {
+					   "name": "Alfred",
+					   "surname": "Pennyworth"
+					   }
+				}
+	},
+	"myNumberDict": {
+			"height" : 182,
+			"age" : 55
+	},
+	"filters": [
+		   "name",
+		   "age"
+	]
+}
+EOF
+
+cat << EOF | zexe filter_from.zen -a filter_from.json | jq .
+Given I have a 'string dictionary' named 'myDict'
+Given I have a 'string array' named 'myNestedArray'
+Given I have a 'string dictionary' named 'myNestedDict'
+Given I have a 'number dictionary' named 'myNumberDict'
+
+Given I have a 'string array' named 'filters'
+
+When I filter 'filters' fields from 'myDict'
+When I filter 'filters' fields from 'myNestedArray'
+When I filter 'filters' fields from 'myNestedDict'
+When I filter 'filters' fields from 'myNumberDict'
+
+Then print the 'myDict'
+and print the 'myNestedArray'
+and print the 'myNestedDict'
+and print the 'myNumberDict'
+EOF
