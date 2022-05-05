@@ -295,19 +295,18 @@ When("move '' in ''", function(src, dict)
 end)
 
 local function _filter_from(v, k, f)
-   local keep = false
-   local res = v
    for _, fv in pairs(f) do
-      if fv:str() == k then keep = true end
+      if fv:str() == k then
+	 return v
+      end
    end
-   if not keep then res = nil end
-   return res
+   return nil
 end
 
 local function _is_array_of_dictionaries(a)
    if not isarray(a) then return false end
    for _, v in pairs(a) do
-      if not isdictionary(v) then
+      if luatype(v) ~= 'table' then
 	 return false
       end
    end
