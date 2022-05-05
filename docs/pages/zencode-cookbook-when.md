@@ -260,7 +260,7 @@ Operations with dictionaries allow you to:
 
 ***Find maximum and minimum***: compare the homonym elements in each dictionary, and find the one with the highest/lowest value. 
 
-***Conditioned sum***: sum homonym elements in each dictionary, only if a certain element in that dictionary is higher/lower than a certain value. 
+***Sum*** and ***Conditioned sum***: sum homonym elements in each dictionary, you can also add homonym elements in each dictionary only if a certain element in that dictionary is higher/lower than a certain value. 
 
 ***Find dictionaries containing an element of a certain value***: match homonym elements in each dictionary with a certain value, and return all those that match (the statement returns an array). 
 
@@ -272,6 +272,7 @@ Operations with dictionaries allow you to:
 
 ***Math operations***: sum, subtraction, multiplication, division and modulo, between numbers found in dictionaries and numbers loaded individiually.
 
+***Prune***: remove all the empty strings ("") and the empty dictionaries (dictionaries that contain only empty strings).
 
 
 In the script we'll use as example we'll load a complex dataset, containing dictionaries that mimic records of transactions. Not that the dictionaries do not always have the same exact structure:
@@ -291,6 +292,7 @@ In the script below we will:
  - Printing out the newly created dictionary, its signature and a couple more objects
  - Various sums, subtractions, multiplications, divisions
  - Create an array that contains all the objects named *timestamp* in *TransactionsBatchA*
+ - Prune a string dictionary
 
 This part of the script load the dictionaries along with some simple objects:
 

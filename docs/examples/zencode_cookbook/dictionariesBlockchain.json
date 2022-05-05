@@ -111,9 +111,19 @@
       "Expected_annual_production":0.00000000
    },
    "dictionaryToBeFound":"ABC-Transactions1Data",
+   "objectToBeCopied":"LaterAmount",
    "referenceTimestamp":1597573340,
    "PricePerKG":3,
    "otherPricePerKG":5,
    "myUserName":"Authority1234",
-   "myVerySecretPassword":"password123"
+   "myVerySecretPassword":"password123",
+   "notPrunedDictionary": {
+      "empty1": "",
+      "notEmpty": "Hello World!",
+      "empty2": "",
+      "emptyDictionary": {
+         "empty3": "",
+	 "empty4": ""
+      }
+   }
 }

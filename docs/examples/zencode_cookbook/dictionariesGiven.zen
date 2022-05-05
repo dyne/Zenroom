@@ -12,12 +12,15 @@ Given that I have a 'string dictionary' named 'TransactionAmountsA'
 Given that I have a 'string dictionary' named 'TransactionAmountsB'
 Given that I have a 'string dictionary' named 'PowerData'
 
+Given that I have a 'string dictionary' named 'notPrunedDictionary'
+
 
 # Loading other stuff here
 Given that I have a 'number' named 'referenceTimestamp'
 Given that I have a 'number' named 'PricePerKG'
 Given that I have a 'number' named 'otherPricePerKG'
 Given that I have a 'string' named 'dictionaryToBeFound'
+Given that I have a 'string' named 'objectToBeCopied'
 Given that I have a 'string' named 'myVerySecretPassword'
 
 # Loading the keyring afer setting my identity

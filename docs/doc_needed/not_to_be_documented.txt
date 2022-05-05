@@ -32,6 +32,12 @@ create the testnet transaction to ''		# inline
 create the credential key with secret key ''	# inline
 create the credential key with secret ''  	# inline
 
+"dictionary"
+create the new dictionary			# "create the ''" is more generic and it is documented
+create the new dictionary named ''		# "create the ''" is more generic and it is documented
+create the copy of '' in ''			# equal to "create the copy of '' from dictionary ''" documented
+create the copy of '' from ''			# equal to "create the copy of '' from dictionary ''" documented
+
 "dp3t"
 create the proximity tracing of infected ids	# inline
 renew the secret day key to a new day	 	# inline
