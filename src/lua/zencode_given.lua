@@ -205,7 +205,7 @@ Given(
    'nothing',
    function()
       ZEN.assert(
-         not DATA and not KEYS,
+         (next(IN) == nil) and (next(KIN) == nil),
          'Undesired data passed as input'
       )
    end
