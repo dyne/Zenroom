@@ -5,9 +5,9 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn main() {
-    let mut cmd = Command::new("make");
-    cmd.args(&["-C", "../..", "meson"]);
-    let status = cmd.status().expect("failed to run meson");
+    // let mut cmd = Command::new("make");
+    // cmd.args(&["-C", "../..", "meson"]);
+    // let status = cmd.status().expect("failed to run meson");
     // let status = cmd.status().exit_ok();
     // TODO: use status.exit_ok() when it gets to stable
     // assert!(status.success());
