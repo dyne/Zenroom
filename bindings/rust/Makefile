@@ -1,0 +1,2 @@
+meson:
+	make -C ../.. meson
