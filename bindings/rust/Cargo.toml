@@ -3,6 +3,9 @@ name = "zenroom"
 version = "0.3.0"
 license = "AGPLv3"
 description = "Zenroom bindings to execute Zencode inside Rust"
+homepage = "https://zenroom.org"
+repository = "https://github.com/dyne/zenroom"
+documentation = "https://dev.zenroom.org"
 authors = ["Denis Roio <J@dyne.org>"]
 edition = "2018"
 
