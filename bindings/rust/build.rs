@@ -7,10 +7,10 @@ use std::process::Command;
 fn main() {
     let mut cmd = Command::new("make");
     cmd.args(&["-C", "../..", "meson"]);
-    // let status = cmd.status().expect("failed to run meson");
-    let status = cmd.status().exit_ok();
+    let status = cmd.status().expect("failed to run meson");
+    // let status = cmd.status().exit_ok();
     // TODO: use status.exit_ok() when it gets to stable
-    assert!(status.success());
+    // assert!(status.success());
     let build_path = PathBuf::from(env::current_dir().unwrap());
     let build_path = build_path.join("..").join("..").join("meson");
     let build_path = build_path.to_str().unwrap();
