@@ -123,7 +123,7 @@ linux-go:
 linux-rust: CMD ?= build
 linux-rust:
 	$(MAKE) meson
-	#[ -d bindings/rust/clib ] || mkdir bindings/rust/clib
+	[ -d bindings/rust/clib ] || mkdir bindings/rust/clib
 	cp meson/libzenroom.a bindings/rust/clib
 	cp lib/milagro-crypto-c/build/lib/* bindings/rust/clib
 	cp meson/liblua.a bindings/rust/clib
