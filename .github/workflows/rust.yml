@@ -21,4 +21,5 @@ jobs:
       - name: Run tests
         run: |
           make check-rs
+          make linux-rust
           cd bindings/rust && cargo test
