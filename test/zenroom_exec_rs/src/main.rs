@@ -1,4 +1,4 @@
-extern crate zenroom;
+use zenroom;
 use std::time::Instant;
 use std::env;
 use std::path::PathBuf;

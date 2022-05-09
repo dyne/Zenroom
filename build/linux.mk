@@ -119,3 +119,15 @@ linux-go:
 	$(MAKE) meson
 	cp meson/libzenroom.so bindings/golang/zenroom/lib
 	cd bindings/golang/zenroom && $(MAKE) test
+
+linux-rust: CMD ?= build
+linux-rust:
+	$(MAKE) meson
+	#[ -d bindings/rust/clib ] || mkdir bindings/rust/clib
+	cp meson/libzenroom.a bindings/rust/clib
+	cp lib/milagro-crypto-c/build/lib/* bindings/rust/clib
+	cp meson/liblua.a bindings/rust/clib
+	cp meson/libqpz.a bindings/rust/clib
+	cp meson/libzstd.a bindings/rust/clib
+	cp src/zenroom.h bindings/rust
+	cd bindings/rust && cargo ${CMD}
