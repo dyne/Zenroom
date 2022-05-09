@@ -25,11 +25,38 @@
 -- nop to terminate IF blocks
 When("done", function() end)
 
-IfWhen("'' is found", function(n)
-	ZEN.assert(ACK[n] ~= nil, "Cannot find object: "..n)
+
+local function _is_found(el, t)
+	if not t then
+		return ACK[el] and (luatype(ACK[el]) == 'table' or #ACK[el] ~= 0)
+	else
+		ZEN.assert(ACK[t], "Array or dictionary not found in: "..t)
+		if ZEN.CODEC[t].zentype == 'array' then
+			local o_el = O.from_string(el)
+			for _,v in pairs(ACK[t]) do
+				if v == o_el then return true end
+			end
+		elseif ZEN.CODEC[t].zentype == 'dictionary' then
+			return ACK[t][el] and (luatype(ACK[t][el]) == 'table' or #ACK[t][el] ~= 0)
+		else
+			ZEN.assert(false, "Invalid container type: "..t.." is "..ZEN.CODEC[t].zentype)
+		end
+	end
+	return false
+end
+
+IfWhen("'' is found", function(el)
+	ZEN.assert(_is_found(el), "Cannot find object: "..el)
 end)
-IfWhen("'' is not found", function(n)
-	ZEN.assert(ACK[n] == nil, "Object should not be found: "..n)
+IfWhen("'' is not found", function(el)
+	ZEN.assert(not _is_found(el), "Object should not be found: "..el)
+end)
+
+IfWhen("'' is found in ''", function(el, t)
+	ZEN.assert(_is_found(el, t), "Cannot find object: "..el.." in "..t)
+end)
+IfWhen("'' is not found in ''", function(el, t)
+	ZEN.assert(not _is_found(el,t), "Object: "..el.." should not be found in "..t)
 end)
 
 When("append '' to ''", function(src, dest)
