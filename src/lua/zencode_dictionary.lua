@@ -246,6 +246,32 @@ When("create the copy of object named by '' from dictionary ''", function(name, 
   create_copy_f(dict, label:string())
 end)
 
+When("move '' out of ''", function(name, dict)
+	empty(name)
+	local saved_copy
+	-- temporary save for copy objects since we reuse create_copy_f
+	if ACK.copy then
+		saved_copy = ACK.copy
+		ACK.copy = nil
+	end
+	create_copy_f(dict, name)
+	ACK[name] = ACK.copy
+	ACK.copy = nil
+	ZEN.CODEC[name] = ZEN.CODEC.copy
+	ZEN.CODEC.copy = nil
+	-- restore any saved 'copy' object
+	if saved_copy then ACK.copy = saved_copy end
+end)
+
+When("move '' from '' to ''", function(name, src, dst)
+	local dest = have(dst)
+	local source = have(src)
+	ZEN.assert(not dest[name], "Cannot overwrite '"..name.."' in '"..dst.."'")
+	ZEN.assert(source[name], "Member not found: '"..name.."' in '"..src.."'")
+	ACK[dst][name] = source[name]
+	ACK[src][name] = nil
+end)
+
 When("for each dictionary in '' append '' to ''", function(arr, right, left)
 	local dicts = have(arr)
 	ZEN.assert(luatype(dicts) == 'table', 'Object is not a table: '..arr)
