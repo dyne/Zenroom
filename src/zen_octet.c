@@ -152,7 +152,6 @@ int is_hex(const char *in) {
 		if (!isxdigit(in[c])) {
 			return 0; }
 	}
-	if(c%2) return 0; // not even digits
 	return c;
 }
 
@@ -530,12 +529,15 @@ static int from_string(lua_State *L) {
 }
 
 static int from_hex(lua_State *L) {
-	const char *s = lua_tostring(L, 1);
+	char *s = (char*)lua_tostring(L, 1);
 	if(!s) {
 		error(L, "%s :: invalid argument",__func__); // fatal
 		lua_pushboolean(L,0);
 		return 1; }
-	int len = is_hex(s);
+	int len;
+	if ( (s[0] == '0') && (s[1] == 'x') )
+	   	 len = is_hex(s+2);
+	else len = is_hex(s);
 	if(!len) {
 		error(L, "hex sequence invalid"); // fatal
 		lua_pushboolean(L,0);
@@ -546,6 +548,14 @@ static int from_hex(lua_State *L) {
 		lua_pushboolean(L,0);
 		return 1; }
 	octet *o = o_new(L, len>>1);
+	if ( (s[0] == '0') && (s[1] == 'x') ) {
+		// ethereum elides the leftmost 0 char when value <= 0F
+		if((len&1)==1) { // odd length means elision
+			s[1]='0'; // overwrite a single byte in const
+			o->len = hex2buf(o->val, s+1);
+			return 1;
+		}
+	}
 	o->len = hex2buf(o->val,s);
 	return 1;
 }
