@@ -329,8 +329,7 @@ function ETH.contract_return_factory(params)
    -- @param val string or octet with the value returned by the contract
    return function(val)
       if type(val) == 'string' then
-	 val = string.gsub(val, '^0x', '')
-	 val = O.from_hex(val)
+   	  val = O.from_hex(val)
       end
       assert(type(val) == 'zenroom.octet')
 

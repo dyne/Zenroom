@@ -157,6 +157,7 @@ function(obj)
   tx.data = ETH.make_storage_data(content)
 end)
 
+-- TODO: DEPRECATE
 When("create the string from the ethereum bytes named ''", function(obj)
   empty'string'
   local data = have(obj):octet()
@@ -165,6 +166,16 @@ When("create the string from the ethereum bytes named ''", function(obj)
   ZEN.assert(#result == 1, "Wrong data format")
   ACK.string = O.from_str(result[1])
   new_codec('string', { encoding = 'string'})
+end)
+
+When("create the '' decoded from ethereum bytes ''", function(dst, obj)
+  empty(dst)
+  local data = have(obj):octet()
+  local eth_decoder = ETH.contract_return_factory({ 'bytes' })
+  local result = eth_decoder(data)
+  ZEN.assert(#result == 1, "Wrong data format")
+  ACK[dst] = O.from_rawlen(result[1], #result[1])
+  new_codec(dst)
 end)
 
 -- TODO: more contract methods
