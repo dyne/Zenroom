@@ -119,6 +119,7 @@ load_scenario('zencode_dictionary') -- when extension
 load_scenario('zencode_verify') -- when extension
 load_scenario('zencode_then')
 load_scenario('zencode_keyring')
+load_scenario('zencode_pack') -- mpack and zpack 
 -- this is to evaluate expressions or derivate a column
 -- it would execute lua code inside the zencode and is
 -- therefore dangerous, switched off by default
