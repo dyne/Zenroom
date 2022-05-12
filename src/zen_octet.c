@@ -554,6 +554,9 @@ static int from_hex(lua_State *L) {
 			s[1]='0'; // overwrite a single byte in const
 			o->len = hex2buf(o->val, s+1);
 			return 1;
+		} else {
+			o->len = hex2buf(o->val, s+2);
+			return 1;
 		}
 	}
 	o->len = hex2buf(o->val,s);
