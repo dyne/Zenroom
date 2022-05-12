@@ -202,40 +202,45 @@ When("find the '' for dictionaries in '' where '' = ''",function(name, arr, left
 	}, arr)
 end)
 
+
+local function _extract(tab, ele, root)
+   local nr = root or 'nil'
+   ZEN.assert(luatype(tab) == 'table', "Object is not a table: "..nr)
+   ZEN.assert(ele, "Undefined key or index: "..ele.." in "..nr)
+   -- if tonumber(ele) then
+   --    ZEN.assert(isarray(tab), "Invalid index "..ele.." as object is not an array: "..nr)
+   -- else
+   --    ZEN.assert(isdictionary(tab), "Invalid key "..ele.." as object is not a dictionary: "..nr)
+   -- end
+   if #tab == 1 then
+      if tab[ele] then return tab[ele] end
+      if luatype(tab[1]) == 'table' then
+	 if tab[1][ele] then
+	    return tab[1][ele]
+	 else
+	    error("Member not found: "..ele.." in "..tab, 3)
+	 end
+      else
+	 error("Member not found: "..ele.." in "..tab, 3)
+      end
+   else
+      if tab[ele] then return tab[ele] end
+   end
+   error("Member not found: "..ele.." in "..tab, 3)
+end
+
 local function create_copy_f(root, in1, in2)
 	local r = have(root)
 	empty'copy'
-	ZEN.assert(luatype(r) == 'table', "Object is not a table:"..root)
-	ZEN.assert(in1, "Undefined key or index: "..in1.." in "..root)
-	local res
-	if tonumber(in1) then
-		ZEN.assert(isarray(r), "Invalid index "..in1.." as object is not an array: "..root)
-	else
-		ZEN.assert(isdictionary(r), "Invalid key "..in1.." as object is not a dictionary:"..root)
-	end
-	ACK.copy = r[in1]
-	ZEN.assert(ACK.copy, "Member not found: "..in1.." in "..root)
+	-- if in2 then empty(in2) else empty(in1) end
+	-- TODO: nested recursion into single array containing a dict (see #366)
+	local tmp = _extract(r, in1)
+	ZEN.assert(tmp, "Member not found: "..in1.." in "..root)
+	ACK.copy = _extract(r, in1, root)
 	if in2 then
-		if tonumber(in2) then
-			ZEN.assert(isarray(ACK.copy), "Invalid index "..in2.." as object is not an array: "..in1.." in "..root)
-		else
-			ZEN.assert(isdictionary(ACK.copy), "Invalid key "..in2.." as object is not a dictionary:"..in1.." in "..root)
-		end	
-		ACK.copy = ACK.copy[in2]
-		ZEN.assert(ACK.copy, "Member not found: "..in2.." in "..in1.." in "..root)
+	   ACK.copy = _extract(ACK.copy, in2, in1)
 	end
-	new_codec('copy', { luatype = luatype(ACK.copy) }, root)
-	if ZEN.CODEC.copy.luatype == 'table' then
-		if isdictionary(ACK.copy) then
-			   ZEN.CODEC.copy.zentype = 'dictionary'
-		elseif isarray(ACK.copy) then
-			   ZEN.CODEC.copy.zentype = 'array'
-		else
-		   ZEN.assert(false, "Unknown zentype for lua table element: "..dict.."."..name)
-		end
-	else
-		ZEN.CODEC.copy.zentype = 'element'
-	end
+	new_codec('copy', nil, root)
 end
 When("create the copy of '' from dictionary ''", function(name, dict) create_copy_f(dict, name) end)
 When("create the copy of '' from ''", function(name, dict) create_copy_f(dict, name) end)
