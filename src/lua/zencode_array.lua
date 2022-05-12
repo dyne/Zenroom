@@ -123,6 +123,23 @@ When("insert string '' in ''", function(st, dest)
 	table.insert(ACK[dest], O.from_string(st))
 end)
 
+When("insert true '' in ''", function(st, dest)
+	local d = have(dest)
+        ZEN.assert(luatype(d) == 'table',
+		   "Invalid destination, not a table: "..dest)
+        ZEN.assert(ZEN.CODEC[dest].zentype == 'array',
+		   "Invalid destination, not an array: "..dest)
+	table.insert(ACK[dest], true)
+end)
+When("insert false '' in ''", function(st, dest)
+	local d = have(dest)
+        ZEN.assert(luatype(d) == 'table',
+		   "Invalid destination, not a table: "..dest)
+        ZEN.assert(ZEN.CODEC[dest].zentype == 'array',
+		   "Invalid destination, not an array: "..dest)
+	table.insert(ACK[dest], false)
+end)
+
 When("insert '' in ''", function(ele, dest)
 	local d = have(dest)
 	local e = have(ele)
