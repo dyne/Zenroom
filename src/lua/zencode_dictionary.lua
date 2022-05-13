@@ -207,35 +207,19 @@ local function _extract(tab, ele, root)
    local nr = root or 'nil'
    ZEN.assert(luatype(tab) == 'table', "Object is not a table: "..nr)
    ZEN.assert(ele, "Undefined key or index: "..ele.." in "..nr)
-   -- if tonumber(ele) then
-   --    ZEN.assert(isarray(tab), "Invalid index "..ele.." as object is not an array: "..nr)
-   -- else
-   --    ZEN.assert(isdictionary(tab), "Invalid key "..ele.." as object is not a dictionary: "..nr)
-   -- end
    if #tab == 1 then
       if tab[ele] then return tab[ele] end
-      if luatype(tab[1]) == 'table' then
-	 if tab[1][ele] then
-	    return tab[1][ele]
-	 else
-	    error("Member not found: "..ele.." in "..tab, 3)
-	 end
-      else
-	 error("Member not found: "..ele.." in "..tab, 3)
+      if luatype(tab[1]) == 'table' and tab[1][ele] then
+	 return tab[1][ele]
       end
    else
       if tab[ele] then return tab[ele] end
    end
-   error("Member not found: "..ele.." in "..tab, 3)
+   error("Member not found: "..ele.." in "..nr, 3)
 end
-
 local function create_copy_f(root, in1, in2)
-	local r = have(root)
 	empty'copy'
-	-- if in2 then empty(in2) else empty(in1) end
-	-- TODO: nested recursion into single array containing a dict (see #366)
-	local tmp = _extract(r, in1)
-	ZEN.assert(tmp, "Member not found: "..in1.." in "..root)
+	local r = have(root)
 	ACK.copy = _extract(r, in1, root)
 	if in2 then
 	   ACK.copy = _extract(ACK.copy, in2, in1)
@@ -251,22 +235,31 @@ When("create the copy of object named by '' from dictionary ''", function(name, 
   create_copy_f(dict, label:string())
 end)
 
-When("move '' out of ''", function(name, dict)
-	empty(name)
-	local saved_copy
-	-- temporary save for copy objects since we reuse create_copy_f
-	if ACK.copy then
-		saved_copy = ACK.copy
-		ACK.copy = nil
+local function take_out_f(root, path, dest)
+	empty(dest)
+	local res = have(root)
+	for k,v in pairs(path) do
+	   res = _extract(res, v)
 	end
-	create_copy_f(dict, name)
-	ACK[name] = ACK.copy
-	ACK.copy = nil
-	ZEN.CODEC[name] = ZEN.CODEC.copy
-	ZEN.CODEC.copy = nil
-	-- restore any saved 'copy' object
-	if saved_copy then ACK.copy = saved_copy end
+	ACK[dest] = _extract(res, dest)
+	new_codec(dest, {}, root)
+end
+When("pickup from path ''", function(path)
+	local parr = strtok(uscore(path), '([^.]+)')
+	local dest = parr[#parr] -- last
+	table.remove(parr, #parr)
+	local root = parr[1] -- first
+	table.remove(parr, 1)
+	take_out_f(root,parr,dest)
 end)
+When("take '' from path ''", function(target, path)
+	local parr = strtok(uscore(path), '([^.]+)')
+	local root = parr[1] -- first
+	table.remove(parr, 1)
+	take_out_f(root,parr,uscore(target))
+end)
+
+When("move '' out of ''", function(name, dict) take_out_f(dict, name, name) end)
 
 When("move '' from '' to ''", function(name, src, dst)
 	local dest = have(dst)

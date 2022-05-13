@@ -502,3 +502,12 @@ When I create the copy of 'header_signature' from dictionary 'batches'
 then print the 'copy'
 and print the 'batches'
 EOF
+
+
+cat <<EOF | zexe pickup.zen -a dict-into-array.json | jq .
+Given I have a 'string dictionary' named 'data' inside 'dataFromEndpoint'
+When I pickup from path 'data.batches.header_signature'
+When I take 'state root hash' from path 'data.header'
+Then print the 'header signature'
+and print the 'state root hash'
+EOF
