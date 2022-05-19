@@ -511,3 +511,23 @@ end)
 -- 	have(target)
 -- 	ACK[target] = deepmap(function(v) if trim(v) == '' then return nil end, ACK[target])
 -- end)
+
+When("create the '' cast of strings in ''", function(conv, source)
+	ZEN.assert(ZEN.CODEC[source], "Object has no codec: "..source)
+	ZEN.assert(ZEN.CODEC[source].encoding == 'string', "Object has no string encoding: "..source)
+	empty(conv)
+	local src = have(source)
+	local enc = input_encoding(conv)
+	if luatype(src) == 'table' then
+	   ACK[conv] = deepmap(function(v)
+		 local s = OCTET.to_string(v)
+		 ZEN.assert(enc.check(s), "Object value is not a "..conv..": "..source)
+		 return enc.fun( s )
+	   end, src)
+	else
+	   local s = OCTET.to_string(src)
+	   ZEN.assert(enc.check(s), "Object value is not a "..conv..": "..source)
+	   ACK[conv] = enc.fun(s)
+	end
+	new_codec(conv, {encoding = conv})
+end)
