@@ -259,8 +259,6 @@ When("take '' from path ''", function(target, path)
 	take_out_f(root,parr,uscore(target))
 end)
 
-When("move '' out of ''", function(name, dict) take_out_f(dict, name, name) end)
-
 When("move '' from '' to ''", function(name, src, dst)
 	local dest = have(dst)
 	local source = have(src)

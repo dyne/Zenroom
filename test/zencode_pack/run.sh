@@ -48,6 +48,7 @@ When I move 'timestamp' from 'result' to 'newblock'
 Then print the 'newblock'
 EOF
 
+
 cat << EOF | zexe newheads_message.zen -a newblock.json | save zenswarm mpack.json
 Given I have a 'hex dictionary' named 'newblock'
 When I create the mpack of 'newblock'
@@ -57,13 +58,13 @@ EOF
 cat << EOF | zexe newblock_unpack.zen -a newblock.json -k mpack.json
 Given I have a 'base64' named 'mpack'
 and I have a 'hex dictionary' named 'newblock'
-and debug
 When I create the 'decoded' decoded from mpack 'mpack'
 and I verify 'decoded' is equal to 'newblock'
 Then print the string 'MPACK SUCCESS'
 EOF
 
 
+# TODO: ZPACK
 cat << EOF | zexe zpack.zen -a newblock.json | save zenswarm zpack.json
 Given I have a 'hex dictionary' named 'newblock'
 When I create the zpack of 'newblock'
@@ -76,7 +77,7 @@ and I have a 'hex dictionary' named 'newblock'
 When I create the 'decoded' decoded from zpack 'zpack'
 and debug
 and I verify 'decoded' is equal to 'newblock'
-Then print the string 'MPACK SUCCESS'
+Then print the string 'ZPACK SUCCESS'
 EOF
 
 

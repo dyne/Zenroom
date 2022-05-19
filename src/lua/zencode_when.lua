@@ -64,17 +64,16 @@ When("append '' to ''", function(src, dest)
 	local dst = have(dest)
         -- if the destination is a number, fix the encoding to string
         if luatype(dst) == 'number' then
-          dst = tostring(dst)
+          dst = O.from_string( tostring(dst) )
           ZEN.CODEC[dest].encoding = "string"
           ZEN.CODEC[dest].luatype = "string"
           ZEN.CODEC[dest].zentype = "element"
         end
+        if luatype(val) == 'number' then
+	   val = O.from_string( tostring(val) )
+	end
         dst = dst .. val
-        if luatype(dst) == 'string' then
-          ACK[dest] = O.from_string(dst)
-        else
-	  ACK[dest] = dst
-        end
+	ACK[dest] = dst
 end)
 
 When("create the ''", function(dest)
