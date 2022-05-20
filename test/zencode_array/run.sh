@@ -564,4 +564,98 @@ If the elements in 'nested arr' are not all equal
 Then print string 'OK'
 EOF
 
+cat <<EOF | save array table-arrays.json
+{ "identity": {
+    "announceAPI": "/api/zenswarm-oracle-announce",
+    "baseUrl": "http://zenswarm.zenroom.org",
+    "country": "IT",
+    "ethereum-notarizationAPI": "/api/ethereum-to-ethereum-notarization.chain",
+    "get-identityAPI": "/api/zenswarm-oracle-get-identity",
+    "http-postAPI": "/api/zenswarm-oracle-http-post",
+    "oracle-key-issuance": "/api/zenswarm-oracle-key-issuance.chain",
+    "pingAPI": "/api/zenswarm-oracle-ping.zen",
+    "port_http": "28170",
+    "port_https": "28331",
+    "sawroom-notarizationAPI": "/api/sawroom-to-ethereum-notarization.chain",
+    "timestampAPI": "/api/zenswarm-oracle-get-timestamp.zen",
+    "tracker": "https://apiroom.net/",
+    "type": "restroom-mw",
+    "updateAPI": "/api/zenswarm-oracle-update",
+    "version": "2"
+  },
+"identities": [
+ {
+      "announceAPI": "/api/zenswarm-oracle-announce",
+      "baseUrl": "http://zenswarm.zenroom.org",
+      "country": "IT",
+      "ethereum-notarizationAPI": "/api/ethereum-to-ethereum-notarization.chain",
+      "get-identityAPI": "/api/zenswarm-oracle-get-identity",
+      "http-postAPI": "/api/zenswarm-oracle-http-post",
+      "oracle-key-issuance": "/api/zenswarm-oracle-key-issuance.chain",
+      "pingAPI": "/api/zenswarm-oracle-ping.zen",
+      "port_http": "26962",
+      "port_https": "25991",
+      "region": "NONE",
+      "sawroom-notarizationAPI": "/api/sawroom-to-ethereum-notarization.chain",
+      "timestampAPI": "/api/zenswarm-oracle-get-timestamp.zen",
+      "tracker": "https://apiroom.net/",
+      "type": "restroom-mw",
+      "updateAPI": "/api/zenswarm-oracle-update",
+      "version": "2"
+    },
+    {
+      "announceAPI": "/api/zenswarm-oracle-announce",
+      "baseUrl": "http://zenswarm.zenroom.org",
+      "country": "IT",
+      "ethereum-notarizationAPI": "/api/ethereum-to-ethereum-notarization.chain",
+      "get-identityAPI": "/api/zenswarm-oracle-get-identity",
+      "http-postAPI": "/api/zenswarm-oracle-http-post",
+      "oracle-key-issuance": "/api/zenswarm-oracle-key-issuance.chain",
+      "pingAPI": "/api/zenswarm-oracle-ping.zen",
+      "port_http": "26368",
+      "port_https": "29841",
+      "region": "NONE",
+      "sawroom-notarizationAPI": "/api/sawroom-to-ethereum-notarization.chain",
+      "timestampAPI": "/api/zenswarm-oracle-get-timestamp.zen",
+      "tracker": "https://apiroom.net/",
+      "type": "restroom-mw",
+      "updateAPI": "/api/zenswarm-oracle-update",
+      "version": "2"
+    },
+{
+    "announceAPI": "/api/zenswarm-oracle-announce",
+    "baseUrl": "http://zenswarm.zenroom.org",
+    "country": "IT",
+    "ethereum-notarizationAPI": "/api/ethereum-to-ethereum-notarization.chain",
+    "get-identityAPI": "/api/zenswarm-oracle-get-identity",
+    "http-postAPI": "/api/zenswarm-oracle-http-post",
+    "oracle-key-issuance": "/api/zenswarm-oracle-key-issuance.chain",
+    "pingAPI": "/api/zenswarm-oracle-ping.zen",
+    "port_http": "28170",
+    "port_https": "28331",
+    "sawroom-notarizationAPI": "/api/sawroom-to-ethereum-notarization.chain",
+    "timestampAPI": "/api/zenswarm-oracle-get-timestamp.zen",
+    "tracker": "https://apiroom.net/",
+    "type": "restroom-mw",
+    "updateAPI": "/api/zenswarm-oracle-update",
+    "version": "2"
+}
+  ]
+}
+
+EOF
+
+cat <<EOF | zexe remote-table-from-table.zen -a table-arrays.json | jq .
+Given I have a 'string array' named 'identities'
+Given I have a 'string array' named 'identity'
+When I create the size of 'identities'
+and I rename 'size' to 'before'
+and I remove the 'identity' from 'identities'
+and I create the size of 'identities'
+and I rename 'size' to 'after'
+Then print the 'before'
+and print the 'after'
+EOF
+
+
 success

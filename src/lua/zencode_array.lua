@@ -62,6 +62,16 @@ local function _when_remove_array(ele, from)
 	local arr = have(from)
 	local found = false
 	local newdest = { }
+	if luatype(obj) == 'table' then
+	   -- overload __eq for tables
+	   local m_obj = {}
+	   local m_arr = {}
+	   setmetatable(arr, m_arr)
+	   setmetatable(obj, m_obj)
+	   local fun = function(l, r) return ZEN.serialize(l) == ZEN.serialize(r) end
+	   m_arr.__eq = fun
+	   m_obj.__eq = fun
+	end
 	for k,v in next,arr,nil do
 	   if not (v == obj) then
 		  table.insert(newdest,v)
