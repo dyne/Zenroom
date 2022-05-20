@@ -96,7 +96,6 @@ H = HASH -- alias
 PAIR = ECP2 -- alias
 PAIR.ate = ECP2.miller --alias
 MPACK = require('zenroom_msgpack')
-ZPACK = require('zenroom_zpack')
 BENCH = require('zenroom_bench')
 MACHINE = require('statemachine')
 TIME = require('timetable')
