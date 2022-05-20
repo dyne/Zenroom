@@ -102,14 +102,25 @@ When("create the new array", function()
 		new_codec('new array', {zentype='array', luatype='table'})
 end)
 
+local function count_f(t)
+   local count = 0
+   if luatype(t) == 'table' then
+      for _, __ in pairs(t) do
+	 count = count + 1
+      end
+   else
+      count = #t
+   end
+   return count
+end
 When("create the length of ''", function(arr)
 	local obj = have(arr)
-	ACK.length = #obj
+	ACK.length = count_f(obj)
 	new_codec('length', {luatype='number',zentype='element'})
 end)
 When("create the size of ''", function(arr)
 	local obj = have(arr)
-	ACK.size = #obj
+	ACK.size = count_f(obj)
 	new_codec('size', {zentype='element',luatype='number'})
 end)
 
