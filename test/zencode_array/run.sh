@@ -645,7 +645,7 @@ cat <<EOF | save array table-arrays.json
 
 EOF
 
-cat <<EOF | zexe remote-table-from-table.zen -a table-arrays.json | jq .
+cat <<EOF | zexe remove-table-from-table.zen -a table-arrays.json | jq .
 Given I have a 'string array' named 'identities'
 Given I have a 'string array' named 'identity'
 When I create the size of 'identities'
@@ -656,6 +656,5 @@ and I rename 'size' to 'after'
 Then print the 'before'
 and print the 'after'
 EOF
-
 
 success

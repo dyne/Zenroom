@@ -564,6 +564,7 @@ int zen_zstd_decompress(lua_State *L) {
   src = o_arg(L, 1); SAFE(src);
   dst = o_new(L, src->len * 3); // assuming max bound is *3
   SAFE(dst);
+  func(L, "decompressing octet: %u", src->len);
   dst->len = ZSTD_decompressDCtx(Z->zstd_d,
 		      dst->val, dst->max,
 		      src->val, src->len);

@@ -68,14 +68,13 @@ EOF
 cat << EOF | zexe zpack.zen -a newblock.json | save zenswarm zpack.json
 Given I have a 'hex dictionary' named 'newblock'
 When I create the zpack of 'newblock'
-Then print the 'zpack'
+Then print the 'zpack' as 'base64'
 EOF
 
-cat << EOF | debug zunpack.zen -a newblock.json -k zpack.json
+cat << EOF | zexe zunpack.zen -a newblock.json -k zpack.json
 Given I have a 'base64' named 'zpack'
 and I have a 'hex dictionary' named 'newblock'
 When I create the 'decoded' decoded from zpack 'zpack'
-and debug
 and I verify 'decoded' is equal to 'newblock'
 Then print the string 'ZPACK SUCCESS'
 EOF
@@ -83,3 +82,4 @@ EOF
 
 
 
+success

@@ -34,3 +34,20 @@ When("create the '' decoded from mpack ''", function(dst, src)
     ACK[dst] = MPACK.decode( OCTET.to_string( pack ) )
     new_codec(dst)
 end)
+
+
+When("create the zpack of ''", function(src)
+    empty'zpack'
+    local source = have(src)
+    ACK.zpack = ZPACK.encode(source)
+    new_codec('zpack', { zentype = 'element'})
+end)
+
+When("create the '' decoded from zpack ''", function(dst, src)
+    empty(dst)
+    local pack = have(src)
+    ZEN.assert(ZEN.CODEC[src].zentype == 'element', "Invalid zpack, not an element: "..src)
+    ZEN.assert(type(pack) == 'zenroom.octet', "Invalid zpack, not an octet: "..src)
+    ACK[dst] = ZPACK.decode( pack )
+    new_codec(dst)
+end)

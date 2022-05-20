@@ -48,7 +48,6 @@ When I move 'parentHash' from 'result' to 'newblock'
 When I move 'timestamp' from 'result' to 'newblock'
 # When I insert 'system_timestamp' in 'newblock'
 When I create the mpack of 'newblock'
-and debug
 Then print the 'mpack' as 'base64'
 EOF
 
