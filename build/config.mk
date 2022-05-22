@@ -136,6 +136,7 @@ ifneq (,$(findstring linux,$(MAKECMDGOALS)))
 cflags := ${cflags} -fPIC ${cflags_protection} -D'ARCH=\"LINUX\"' -DARCH_LINUX
 ldflags := -lm -lpthread
 system := Linux
+cflags += $(if ${COMPILE_LUA}, -DLUA_COMPILED)
 endif
 
 ifneq (,$(findstring clang,$(MAKECMDGOALS)))
@@ -247,6 +248,7 @@ endif
 
 ifneq (,$(findstring debug,$(MAKECMDGOALS)))
 cflags := -Og -ggdb -DDEBUG=1 -Wall -Wextra -pedantic
+cflags += $(if ${COMPILE_LUA}, -DLUA_COMPILED)
 endif
 
 ifneq (,$(findstring profile,$(MAKECMDGOALS)))

@@ -45,7 +45,7 @@ for i in ${(f)libs}; do
     print "+ $i $opts"
 	tmp=`mktemp -d`
 	if [[ "$opts" = "compile" ]]; then
-		./build/luac -o ${tmp}/${n} $i
+		luac5.3 -o ${tmp}/${n} $i
 	else
 		cp $i ${tmp}/${n}
 	fi

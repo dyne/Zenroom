@@ -35,6 +35,7 @@ sonarqube:
 	cp -v build/sonar-project.properties .
 	./build/sonarqube.sh
 
+embed-lua: lua_embed_opts := $(if ${COMPILE_LUA}, compile)
 embed-lua:
 	@echo "Embedding all files in src/lua"
 	./build/embed-lualibs ${lua_embed_opts}
