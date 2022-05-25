@@ -148,8 +148,8 @@ static int lua_unserialize_json(lua_State* L) {
 		if(*p=='{' || *p=='[') level++;
 		if(*p=='}' || *p==']') level--;
 		if(level==0) { // end of first block
-			lua_pushlstring(L,in,(size_t)(p - in)+1);
-			lua_pushlstring(L,++p, size);
+			lua_pushlstring(L, in, (size_t)(p - in)+1);
+			lua_pushlstring(L, ++p, size);
 			return 2;
 		}
 	}
