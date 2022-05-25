@@ -12,7 +12,8 @@ project(
 
 add_project_arguments(
     '-DVERSION="' + meson.project_version() + '"',
-    '-D_POSIX_C_SOURCE=199309',
+    '-D_POSIX_C_SOURCE=200112L',
+    '--std=c99',
     language: 'c'
 )
 
@@ -20,7 +21,7 @@ if host_machine.system() == 'darwin'
     arch = 'OSX'
 elif host_machine.system() == 'linux'
     arch = 'LINUX'
-elif host_machine.system() == 'linux'
+else
     arch = 'BSD'
 endif
 add_project_arguments(
