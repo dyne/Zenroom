@@ -13,7 +13,7 @@ project(
 add_project_arguments(
     '-DVERSION="' + meson.project_version() + '"',
     '-D_POSIX_C_SOURCE=200112L',
-    '--std=c99',
+    '-D_DARWIN_C_SOURCE',
     language: 'c'
 )
 
