@@ -137,6 +137,7 @@ static int lua_unserialize_json(lua_State* L) {
 	while (size && (*p == 0x0) ) { size--; p++; } // first char
 	if(!size) {	lua_pushnil(L);	return 1; }
 	if (*p == '{' || *p == '[') {
+		size--;
 		level++;
 	} else {
 		func(L, "JSON doesn't starts with '{', char found: %c (%02x)", *p, *p);
@@ -148,7 +149,7 @@ static int lua_unserialize_json(lua_State* L) {
 		if(*p=='}' || *p==']') level--;
 		if(level==0) { // end of first block
 			lua_pushlstring(L,in,(size_t)(p - in)+1);
-			lua_pushlstring(L,++p, size+1);
+			lua_pushlstring(L,++p, size);
 			return 2;
 		}
 	}
