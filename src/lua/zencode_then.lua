@@ -71,9 +71,14 @@ local function then_outcast(val, sch)
 end
 
 local function then_insert(dest, val, key)
-	if not ACK[dest] then
-		OUT[dest] = val
-	elseif luatype(OUT[dest]) == 'table' then
+	-- initialize OUT
+	if ACK[dest] and not OUT[dest] then
+		OUT[dest] = deepmap(function(v,k) return v end, ACK[dest])
+	elseif not ACK[dest] and not OUT[dest] then
+		OUT[dest] = {}; OUT[dest][key] = val
+	end
+	-- load OUT
+	if luatype(OUT[dest]) == 'table' then
 		if isarray(OUT[dest]) then
 			table.insert(OUT[dest], val)
 		else
