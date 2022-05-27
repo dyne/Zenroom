@@ -1,0 +1,5 @@
+Scenario ethereum
+Given I am known as 'alice'
+and I have the 'keyring'
+When I create the ethereum address
+Then print my 'ethereum address'

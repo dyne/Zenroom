@@ -24,6 +24,7 @@
   - [Scenario 'http': Create GET requests](/pages/zencode-scenarios-http.md "create GET requests")
  <!--- --->
   - [Scenario 'bitcoin': Create bitcoin transactions](/pages/zencode-scenarios-bitcoin.md "Create bitcoin transactions")  
+  - [Scenario 'ethereum': Create ethereum transactions](/pages/zencode-scenarios-ethereum.md "Create ethereum transactions")  
   - [Zencode "rules"](/pages/zencode-rules.md "Zencode encoding and format rules")
   - [Zencode "config"](/pages/zenroom-config.md "Zenroom config")
   - [Zencode command list](/pages/zencode-list.md "Zencode command list")  

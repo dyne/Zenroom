@@ -42,3 +42,8 @@ create the copy of '' from ''			# equal to "create the copy of '' from dictionar
 create the proximity tracing of infected ids	# inline
 renew the secret day key to a new day	 	# inline
 create the ephemeral ids for today		# inline
+
+"ethereum"
+create the ethereum key with secret key ''	# inline
+create the ethereum key with secret ''		# inline
+create the signed ethereum transaction		# inline

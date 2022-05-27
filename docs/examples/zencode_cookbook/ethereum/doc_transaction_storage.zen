@@ -1,0 +1,15 @@
+Scenario ethereum
+
+# Load  the JSON file
+Given I have a 'ethereum address' named 'storage contract'
+and a 'gas price'
+and a 'gas limit'
+and an 'ethereum nonce'
+and a 'string' named 'data'
+
+# Create the ethereum transaction
+When I create the ethereum transaction to 'storage contract'
+# use it to store the data
+and I use the ethereum transaction to store 'data'
+
+Then print the 'ethereum transaction'

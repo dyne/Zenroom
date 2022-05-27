@@ -105,7 +105,7 @@ echo "Alice address: 0x${alice_address}"
 # getnonce "0x${alice_address}"
 
 NONCE=`getnonce 0x${alice_address} | jq -r '.result'`
-cat <<EOF | save $SUBDOC alice_nonce.json
+cat <<EOF | save $SUBDOC alice_nonce_eth.json
     { "ethereum nonce": "`printf "%d" ${NONCE}`",
       "gas price": "100000000000",
       "gas limit": "300000",
@@ -113,7 +113,7 @@ cat <<EOF | save $SUBDOC alice_nonce.json
     }
 EOF
 
-cat <<EOF | zexe transaction.zen -k alice_nonce.json \
+cat <<EOF | zexe transaction.zen -k alice_nonce_eth.json \
 		 -a bob_address.json \
     | save $SUBDOC alice_to_bob_transaction.json
 Scenario ethereum
@@ -158,7 +158,7 @@ cat <<EOF | save $SUBDOC storage_contract.json
 { "storage_contract": "d01394Ade77807B3fE7DAE6f54462dE453Cc8741" }
 EOF
 
-cat <<EOF | zexe transaction_storage.zen -k alice_nonce.json -a storage_contract.json | save $SUBDOC alice_storage_tx.json
+cat <<EOF | zexe transaction_storage.zen -k alice_nonce_eth.json -a storage_contract.json | save $SUBDOC alice_storage_tx.json
 Scenario ethereum
 Given I have a 'ethereum address' named 'storage contract'
 # here we assume bob is a storage contract
@@ -181,15 +181,14 @@ eof
 
 # Store complex object
 NONCE=`getnonce 0x${alice_address} | jq -r '.result'`
-cat <<EOF | save $SUBDOC alice_nonce.json
+cat <<EOF | save $SUBDOC alice_nonce_data.json
     { "ethereum nonce": "`printf "%d" ${NONCE}`",
       "gas price": "100000000000",
       "gas limit": "300000",
-      "gwei value": "0",
       "storage_contract": "E54c7b475644fBd918cfeDC57b1C9179939921E6"
     }
 EOF
-# cat <<EOF | zexe store_complex_object.zen -a alice_nonce.json -k alice_keys.json
+# cat <<EOF | zexe store_complex_object.zen -a alice_nonce_data.json -k alice_keys.json
 # Scenario ethereum
 # Given I have the 'keys'
 # Given I have a 'ethereum address' named 'storage contract'
@@ -239,3 +238,63 @@ EOF
 # Given I have the 'name'     for erc20 'contract address' ( named 'variable name' )
 # Given I have the 'symbol'   for erc20 'contract address' ( named 'variable name' )
 # Given I have the 'total supply' for erc20 'contract address' ( named 'variable name' )
+
+
+# for documentation
+NONCE=`getnonce 0x${alice_address} | jq -r '.result'`
+cat <<EOF | save $SUBDOC doc_tx_information.json
+    { "ethereum nonce": "`printf "%d" ${NONCE}`",
+      "gas price": "100000000000",
+      "gas limit": "300000"
+    }
+EOF
+
+cat <<EOF | save $SUBDOC doc_alice_data.json
+    { 
+      "data": "This is my first data stored on ethereum blockchain" 
+    }
+EOF
+
+jq -s '.[0]*.[1]' alice_nonce_eth.json bob_address.json | save $SUBDOC doc_tx_information_eth.json
+cat <<EOF | zexe doc_transaction.zen -a doc_tx_information_eth.json | save $SUBDOC doc_alice_to_bob_transaction.json
+Scenario ethereum
+
+# Load the JSON file
+Given I have a 'ethereum address' inside 'bob'
+and a 'gas price'
+and a 'gas limit'
+and an 'ethereum nonce'
+and a 'gwei value'
+
+# Create the ethereum transaction
+When I create the ethereum transaction of 'gwei value' to 'ethereum address'
+
+Then print the 'ethereum transaction'
+EOF
+
+jq -s '.[0]*.[1]' alice_nonce_data.json doc_alice_data.json | save $SUBDOC doc_tx_information_data.json
+cat <<EOF | zexe doc_transaction_storage.zen -a doc_tx_information_data.json | save $SUBDOC doc_alice_storage_tx.json
+Scenario ethereum
+
+# Load  the JSON file
+Given I have a 'ethereum address' named 'storage contract'
+and a 'gas price'
+and a 'gas limit'
+and an 'ethereum nonce'
+and a 'string' named 'data'
+
+# Create the ethereum transaction
+When I create the ethereum transaction to 'storage contract'
+# use it to store the data
+and I use the ethereum transaction to store 'data'
+
+Then print the 'ethereum transaction'
+EOF
+
+cat <<EOF | zexe doc_sign_transaction.zen -a doc_alice_storage_tx.json -k alice_keys.json | save $SUBDOC doc_signed_tx.json
+scenario ethereum
+given I have the 'keyring'
+and I have a 'ethereum transaction'
+when I create the signed ethereum transaction for chain 'fabt'
+then print the 'signed ethereum transaction'
+EOF

@@ -1,0 +1,13 @@
+Scenario ethereum
+
+# Load the JSON file
+Given I have a 'ethereum address' inside 'bob'
+and a 'gas price'
+and a 'gas limit'
+and an 'ethereum nonce'
+and a 'gwei value'
+
+# Create the ethereum transaction
+When I create the ethereum transaction of 'gwei value' to 'ethereum address'
+
+Then print the 'ethereum transaction'
