@@ -298,3 +298,16 @@ and I have a 'ethereum transaction'
 when I create the signed ethereum transaction for chain 'fabt'
 then print the 'signed ethereum transaction'
 EOF
+
+cat <<EOF | save $SUBDOC doc_read_stored_string.json
+{
+  "data": "0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003354686973206973206d7920666972737420646174612073746f726564206f6e20657468657265756d20626c6f636b636861696e00000000000000000000000000"
+}
+EOF
+
+cat <<EOF | zexe doc_read_stored_string.zen -a doc_read_stored_string.json | save $SUBDOC doc_retrieved_data.json
+Scenario ethereum
+Given I have a 'hex' named 'data'
+When I create the 'data retrieved' decoded from ethereum bytes 'data'
+Then print the 'data retrieved' as 'string'
+EOF
