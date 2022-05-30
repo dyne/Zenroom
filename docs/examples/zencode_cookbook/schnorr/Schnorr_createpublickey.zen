@@ -1,0 +1,6 @@
+Rule check version 2.0.0 
+Scenario schnorr : Create and publish the schnorr public key
+Given I am 'Alice'
+and I have the 'keyring'
+When I create the schnorr public key
+Then print my 'schnorr public key' 

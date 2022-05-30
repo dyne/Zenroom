@@ -47,3 +47,7 @@ create the ephemeral ids for today		# inline
 create the ethereum key with secret key ''	# inline
 create the ethereum key with secret ''		# inline
 create the signed ethereum transaction		# inline
+
+"schnorr"
+create the schnorr key with secret key ''	# inline
+create the schnorr key with secret ''		# inline

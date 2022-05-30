@@ -1,0 +1,13 @@
+{
+"message": "Dear Bob, this message was written by Alice, you can verify it!" ,
+"message array":[
+	"Hello World! This is my string array, element [0]",
+    	"Hello World! This is my string array, element [1]",
+    	"Hello World! This is my string array, element [2]"
+	],
+"message dict": {
+	"sender":"Alice",
+	"message":"Hello Bob!",
+	"receiver":"Bob"
+	}
+}
