@@ -8,6 +8,9 @@ then
 fi
 
 DIR=$1
+if [ $1 == 'qp' ]; then
+    DIR=$1/dilithium
+fi
 SUBDOC=$1/benchmark
 
 ######
@@ -197,6 +200,8 @@ for i in *.zen; do cat $i | save $SUBDOC $i; done
 
 #Clean the folder
 rm *.keys *.json *.zen
+rm -rf ../../docs/examples/zencode_cookbook/qp/benchmark/
+rm -rf ../../docs/examples/zencode_cookbook/ecdh/benchmark/
 
 echo -e "${magenta}\n \n<============================================>${reset}"
 echo -e "${green}\n Change the value of 'Sizes' in the beginning of the script, to change the length of the messages to be signed, and the 'Recursion' in order to change how many time the signature related scripts should cycle. Currently: \n\n - 'Length' are: ${red} $Sizes \n${green} - 'Recursion' is: ${yellow} $Recursion \n" 

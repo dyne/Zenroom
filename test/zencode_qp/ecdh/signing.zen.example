@@ -1,7 +1,7 @@
 Scenario ecdh
-Given that I am known as 'The Signer'
-and I have my 'keys'
+Given I am 'The Signer'
+and I have my 'keyring'
 and I have a 'string' named 'message'
-When I create the signature of 'message'
-Then print the 'signature'
+When I create the ecdh signature of 'message'
+Then print the 'ecdh signature'
 and print the 'message'
