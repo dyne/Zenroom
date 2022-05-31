@@ -1,5 +1,5 @@
 Scenario ecdh
-Given that I am known as 'The Signer'
-Given I have my 'keys'
+Given I am 'The Signer'
+Given I have my 'keyring'
 When I create the ecdh public key
 Then print my 'ecdh public key'
