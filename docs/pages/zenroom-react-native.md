@@ -162,7 +162,7 @@ export default NativeModules.Zenroom;
 ## iOS setup
 
 
-Configuration of the Zenroom library on React Native (iOS). Based on the DECODE APP's [commit](https://github.com/DECODEproject/decode-app/commit/9b6c9322f941bf91319556f2838409551e0aa2c7). 
+Configuration of the Zenroom library on React Native (iOS). You'll want to use the function **zencode_exec_tobuf** whose signature you can find in [zenroom.h](https://github.com/dyne/Zenroom/blob/master/src/zenroom.h#L37-L40). 
 
 ### Step 1: copy libs and headers
 Copy in the folder *ios* the files:
@@ -198,13 +198,13 @@ export default NativeModules.Zenroom;
  - Create one more a file named like *mySmartContract.js* containing the code (and the smart contract):
 
 ```javascript
- import zenroom from 'percorso/file/zenroom-client';
+ import zenroom from 'path/file/zenroom-client';
 	   
        // ... your code here
     
-	   const keys = {}; //Inserire qui eventuali keys da passare
-       const data = {}; //Inserire qui eventuali data da passare
-       const zenroomContract = `
+	const keys = {}; //insert here keys you want to pass, usually this contains keys, credentials etc
+       	const data = {}; //insert here data you want to pass, this usually contains generic data 
+       	const zenroomContract = `
          Scenario coconut: issuer keygen
          Given that I am known as 'Alice'
          When I create the issuer keypair
@@ -218,7 +218,7 @@ export default NativeModules.Zenroom;
            JSON.stringify(data)
          );
 
-         return JSON.parse(response); //Risultato del contratto Zenroom
+         return JSON.parse(response); //Zenroom result
        } catch (e) {
          console.log(e);
        }
