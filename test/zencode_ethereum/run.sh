@@ -35,65 +35,80 @@ EOF
 newaddr "alice"
 newaddr "bob"
 
-cat <<EOF > ethval.json
-{"ethereum_value":"1"}
+cat <<EOF | save $SUBDOC coding_export.json
+{
+	"storage_contract": "1b620cA5172A8D6A64798FcA2ee690066F7A7816"
+}
 EOF
-cat <<EOF > gweival.json
-{"gwei_value":"1000000000"}
-EOF
-cat <<EOF > weival.json
-{"wei_value":"1000000000000000000"}
-EOF
-cat <<EOF | zexe eth2wei.zen -a ethval.json \
-    > conv_weival.json
-Scenario ethereum
-Given I have the 'ethereum value'
-When I rename 'ethereum value' to 'wei value'
-Then I print 'wei value'
-EOF
-diff conv_weival.json weival.json
-cat <<EOF | zexe eth2gwei.zen -a ethval.json \
-    > conv_gweival.json
-Scenario ethereum
-Given I have the 'ethereum value'
-When I rename 'ethereum value' to 'gwei value'
-Then I print 'gwei value'
-EOF
-diff conv_gweival.json gweival.json
 
-cat <<EOF | zexe gwei2eth.zen -a gweival.json \
-    > conv_ethval.json
+cat <<EOF | zexe coding_export.zen -a coding_export.json | jq
 Scenario ethereum
-Given I have the 'gwei value'
-When I rename 'gwei value' to 'ethereum value'
-Then I print 'ethereum value'
+Given I have a 'ethereum address' named 'storage contract'
+Then print 'storage contract'
 EOF
-diff conv_ethval.json ethval.json
-cat <<EOF | zexe gwei2wei.zen -a gweival.json \
-    > conv_weival.json
-Scenario ethereum
-Given I have the 'gwei value'
-When I rename 'gwei value' to 'wei value'
-Then I print 'wei value'
-EOF
-diff conv_weival.json weival.json
 
-cat <<EOF | zexe wei2eth.zen -a weival.json \
-    > conv_ethval.json
-Scenario ethereum
-Given I have the 'wei value'
-When I rename 'wei value' to 'ethereum value'
-Then I print 'ethereum value'
-EOF
-diff conv_ethval.json ethval.json
-cat <<EOF | zexe wei2gwei.zen -a weival.json \
-    > conv_gweival.json
-Scenario ethereum
-Given I have the 'wei value'
-When I rename 'wei value' to 'gwei value'
-Then I print 'gwei value'
-EOF
-diff conv_gweival.json gweival.json
+# rename does not change the encoding anymore,
+# maybe create new functions for these operations
+
+#cat <<EOF > ethval.json
+#{"ethereum_value":"1"}
+#EOF
+#cat <<EOF > gweival.json
+#{"gwei_value":"1000000000"}
+#EOF
+#cat <<EOF > weival.json
+#{"wei_value":"1000000000000000000"}
+#EOF
+#cat <<EOF | zexe eth2wei.zen -a ethval.json \
+#    > conv_weival.json
+#Scenario ethereum
+#Given I have the 'ethereum value'
+#When I rename 'ethereum value' to 'wei value'
+#Then I print 'wei value'
+#EOF
+# diff conv_weival.json weival.json
+#cat <<EOF | zexe eth2gwei.zen -a ethval.json \
+#    > conv_gweival.json
+#Scenario ethereum
+#Given I have the 'ethereum value'
+#When I rename 'ethereum value' to 'gwei value'
+#Then I print 'gwei value'
+#EOF
+# diff conv_gweival.json gweival.json
+#
+#cat <<EOF | zexe gwei2eth.zen -a gweival.json \
+#    > conv_ethval.json
+#Scenario ethereum
+#Given I have the 'gwei value'
+#When I rename 'gwei value' to 'ethereum value'
+#Then I print 'ethereum value'
+#EOF
+# diff conv_ethval.json ethval.json
+#cat <<EOF | zexe gwei2wei.zen -a gweival.json \
+#    > conv_weival.json
+#Scenario ethereum
+#Given I have the 'gwei value'
+#When I rename 'gwei value' to 'wei value'
+#Then I print 'wei value'
+#EOF
+# diff conv_weival.json weival.json
+#
+#cat <<EOF | zexe wei2eth.zen -a weival.json \
+#    > conv_ethval.json
+#Scenario ethereum
+#Given I have the 'wei value'
+#When I rename 'wei value' to 'ethereum value'
+#Then I print 'ethereum value'
+#EOF
+# diff conv_ethval.json ethval.json
+#cat <<EOF | zexe wei2gwei.zen -a weival.json \
+#    > conv_gweival.json
+#Scenario ethereum
+#Given I have the 'wei value'
+#When I rename 'wei value' to 'gwei value'
+#Then I print 'gwei value'
+#EOF
+# diff conv_gweival.json gweival.json
 
 HOST=http://test.fabchain.net:8545
 function getnonce() (

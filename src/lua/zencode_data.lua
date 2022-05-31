@@ -421,7 +421,7 @@ end
        assert(s.export, "Complex export function for schema not found: "..name)
        assert(luatype(s.export) == 'function',
 	      "Complex export for schema is not a function: "..name)
-       return name -- name of schema itself as it contains export
+       return sch -- name of schema itself as it contains export
     else
        return codec.encoding or CONF.output.encoding.name
     end
