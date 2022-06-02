@@ -48,7 +48,7 @@ function clean() (
 cat <<EOF >send-coin.zen
 Rule check version 2.0.0
 Scenario ethereum
-Given I have the 'keys'
+Given I have the 'keyring'
 Given I have a 'ethereum address' named 'receiver'
 Given I have a 'ethereum nonce'
 and a 'gas price'
@@ -72,7 +72,7 @@ function send_tx_from() (
     fi
     cat <<EOF > ${1}-send-coin.keys
 {   
-  "keys": { "ethereum": "`echo ${!sk}`" },
+  "keyring": { "ethereum": "`echo ${!sk}`" },
   "my_address": "`echo ${!addr}`",
   "fabchain": "$HOST",
   "gas limit": "100000",
