@@ -241,3 +241,12 @@ When("create the ethereum key with secret ''",function(sec)
 	ECDH.pubgen(sk)
 	ACK.keyring.ethereum = sk
 end)
+
+When("use the ethereum transaction to transfer '' erc20 tokens to ''",
+     function(quantity, destaddr)
+	local tx = have'ethereum transaction'
+	ZEN.assert(not tx.data or #tx.data == 0,
+		   "Cannot overwrite transaction data")
+	tx.data = ETH.erc20.transfer(have(destaddr),
+				     BIG.new(have(quantity)))
+end)
