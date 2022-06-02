@@ -11,7 +11,7 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 HOST="http://test.fabchain.net:8545"
 MY_ADDRESS="ef5dca69e9c573f6acce1b4c641b2b526217328f"
 # token erc20 on fabchian
-ERC20_TOKEN="1e30e53E87869aaD8dC5A1A9dAc31a8dD3559460"
+ERC20_TOKEN="0x0eAD87F45eC59d01868908174f753C5105a0adE0"
 # receiver
 RECEIVER_SK="85d26b5c8b0da6eddb55aa1022eea46e31de276d581d9e7e005d40afce4f9124"
 RECEIVER_ADDRESS="828bddf0231656fb736574dfd02b7862753de64b"
@@ -53,7 +53,8 @@ function send_coins() (
 	"token value": "1",
 	"erc20": "`echo $ERC20_TOKEN`",	
 	"receiver": "`echo $RECEIVER_ADDRESS`",
-	"ethereum nonce": "`echo $(($NONCE))`"
+	"ethereum nonce": "`echo $(($NONCE))`",
+        "details": "31323334"
 }
 EOF
 
@@ -66,8 +67,9 @@ Given I have a 'ethereum nonce'
 and a 'gas price'
 and a 'gas limit'
 and a 'number' named 'token value'
+Given I have a 'hex' named 'details'
 When I create the ethereum transaction to 'erc20'
-and I use the ethereum transaction to transfer 'token value' erc20 tokens to 'receiver'
+and I use the ethereum transaction to transfer 'token value' erc20 tokens to 'receiver' with details 'details'
 When I create the signed ethereum transaction for chain 'fabt'
 Then print the 'signed ethereum transaction'
 EOF
