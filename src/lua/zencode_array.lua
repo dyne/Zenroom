@@ -371,11 +371,11 @@ When("create the array of objects named by '' found in ''", function(name, dict)
 end)
 
 When("create the array by splitting '' at ''", function(data_name, sep_name)
-	local data = have(data_name):octet():string()
-	local sep = have(sep_name):octet():string()
-        ZEN.assert(#sep == 1, "You can only split with respect to characters")
-	empty'array'
-	local strings = strtok(data, "[^" .. sep .. "]*")
+        local data = have(data_name):octet():string()
+        local sep = have(sep_name):octet():string()
+        ZEN.assert(#sep == 1, "You can only split with respect to one character")
+        empty'array'
+        local strings = strtok(data, "[^" .. sep .. "]*")
         local octets = {}
         for k, v in ipairs(strings) do
                 -- exclude empty strings from conversion
@@ -385,6 +385,6 @@ When("create the array by splitting '' at ''", function(data_name, sep_name)
         end
         ACK.array = octets
 
-	new_codec('array', { encoding='string', zentype='array' })
+        new_codec('array', { encoding='string', zentype='array' })
 
 end)
