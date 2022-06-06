@@ -241,6 +241,40 @@ EOF
 
 
 # for documentation
+cat <<EOF | save $SUBDOC doc_key.json
+{
+	"ethereum private key": "150ad66741dd4f917d1e7877e2cb5d47ce1baa8e635b41675fa4f1ca51b681bb"
+}
+EOF
+cat <<EOF | zexe doc_key_upload.zen -a doc_key.json
+Scenario ethereum
+Given I have a 'hex' named 'ethereum private key'
+
+# here we upload the key
+When I create the ethereum key with secret key 'ethereum private key'
+# an equivalent statement is
+# When I create the ethereum key with secret 'ethereum private key'
+
+Then print the keyring
+EOF
+
+cat <<EOF | zexe doc_pubgen.zen -a alice_keys.json
+Scenario ecdh
+Scenario ethereum
+
+# load the ethereum key
+Given I have a 'hex' named 'ethereum' in 'keyring'
+
+# create the ecdh public key
+When I create the ecdh key with secret key 'ethereum'
+When I create the ecdh public key
+# rename it to ethereum public key
+and I rename the 'ecdh public key' to 'ethereum public key'
+
+# print the ethereum public key as hex
+Then print the 'ethereum public key' as 'hex'
+EOF
+
 NONCE=`getnonce 0x${alice_address} | jq -r '.result'`
 cat <<EOF | save $SUBDOC doc_tx_information.json
     { "ethereum nonce": "`printf "%d" ${NONCE}`",
@@ -293,9 +327,27 @@ EOF
 
 cat <<EOF | zexe doc_sign_transaction.zen -a doc_alice_storage_tx.json -k alice_keys.json | save $SUBDOC doc_signed_tx.json
 scenario ethereum
+
+# Load the private key and the transacrtion
 given I have the 'keyring'
 and I have a 'ethereum transaction'
+
+# sign the transaction for the chain with chain id 'fabt'
 when I create the signed ethereum transaction for chain 'fabt'
+
+then print the 'signed ethereum transaction'
+EOF
+
+cat <<EOF | zexe doc_sign_transaction_local.zen -a doc_alice_storage_tx.json -k alice_keys.json
+scenario ethereum
+
+# Load the private key and the transacrtion
+given I have the 'keyring'
+and I have a 'ethereum transaction'
+
+# sign the transaction for the local testnet
+when I create the signed ethereum transaction
+
 then print the 'signed ethereum transaction'
 EOF
 

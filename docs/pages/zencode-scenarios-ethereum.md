@@ -22,39 +22,22 @@ You want to store this into the file
 
 Key generation in Zenroom uses by default a pseudo-random as seed, that is internally generated. 
 
-You can also opt to use a seed generated elsewhere, for example by using the [keypairoom](https://github.com/ledgerproject/keypairoom) library or it's [npm package](https://www.npmjs.com/package/keypair-lib). 
+You can also opt to use a seed generated elsewhere, for example by using the [keypairoom](https://github.com/ledgerproject/keypairoom) library or it's [npm package](https://www.npmjs.com/package/keypair-lib). Suppose you have an Ethereum private key:
 
-The statements looks like:
+[](../_media/examples/zencode_cookbook/ethereum/doc_key.json ':include :type=code json')
 
-```gherkin
-When I create the ethereum key with secret key 'mySeed'
-When I create the ethereum key with secret 'mySeed'
-```
-Which requires you to load a 32 bytes long *base64* object named 'mySeed'.
+Then you can upload it with a script that look like the following script:
+
+[](../_media/examples/zencode_cookbook/ethereum/doc_key_upload.zen ':include :type=code gherkin')
 
 
 ## Public key
 
 Ethereum does not use explicitly a public key, it use it only to create an Ethereum address that represents an account. So in Zencode there are no sentences to produce the public keys, but only the address.
 
-If, for any reson, you need the ethereum public key, than you can simply compute it by understanding that the Ethereum private key is an ECDH private key, then you can compute the public key with the following script:
+If, for any reason, you need the ethereum public key, then you can simply compute it by understanding that the Ethereum private key is an ECDH private key so the following script will do the trick:
 
-```gherkin
-Scenario ecdh
-Scenario ethereum
-
-# load the ethereum key
-Given I have a 'hex' named 'ethereum' in 'keyring'
-
-# create the ecdh public key
-When I create the ecdh key with secret key 'ethereum'
-When I create the ecdh public key
-# rename it to ethereum public key
-and I rename the 'ecdh public key' to 'ethereum public key'
-
-# print the ethereum public key as hex
-Then print the 'ethereum public key' as 'hex'
-```
+[](../_media/examples/zencode_cookbook/ethereum/doc_pubgen.zen ':include :type=code gherkin')
 
 # Create Ethereum address
 
@@ -119,7 +102,7 @@ Which will produce an unsigned transaction, formatted in human-readable JSON, th
 
 [](../_media/examples/zencode_cookbook/ethereum/doc_alice_storage_tx.json ':include :type=code json')
 
-The data stored in this case was a **string** because ethereum allows only array of bytes as data and the string is the simple example of that. However you can upload the type of data that you want (array or dictionaries) and then use [mpack](https://dev.zenroom.org/#/pages/zencode-cookbook-when) to serialize it before uploading it in the ethereum transaction.
+The data stored in this case was a **string** because ethereum allows only array of bytes as data and the string is the simplest example of that. However you can upload the type of data that you want (array or dictionaries) and then use [mpack](https://dev.zenroom.org/#/pages/zencode-cookbook-when) to serialize it before uploading it in the ethereum transaction.
 
 
 ## Sign the transaction
@@ -134,11 +117,10 @@ The signed raw transaction should look like:
 
 **Note: this script and the previous one can be merged** into one script that creates the transaction, signs it and prints it out.
 
-Moreover, if you want to sign the transaction for the local testnet you can use the following statement:
+Moreover, if you want to sign the transaction for the local testnet you can use the following script:
 
-```gherkin
-When I create the signed ethereum transaction
-```
+[](../_media/examples/zencode_cookbook/ethereum/doc_sign_transaction_local.zen ':include :type=code gherkin')
+
 that use 1337 as default chain id.
 
 ## Broadcast and read ethereum transactions

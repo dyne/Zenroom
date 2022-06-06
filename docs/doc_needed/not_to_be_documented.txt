@@ -44,9 +44,7 @@ renew the secret day key to a new day	 	# inline
 create the ephemeral ids for today		# inline
 
 "ethereum"
-create the ethereum key with secret key ''	# inline
-create the ethereum key with secret ''		# inline
-create the signed ethereum transaction		# inline
+create the ethereum key with secret ''		# in the code as comment
 create the string from the ethereum bytes named '' # deprecated
 
 "schnorr"

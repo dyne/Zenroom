@@ -1,0 +1,10 @@
+scenario ethereum
+
+# Load the private key and the transacrtion
+given I have the 'keyring'
+and I have a 'ethereum transaction'
+
+# sign the transaction for the local testnet
+when I create the signed ethereum transaction
+
+then print the 'signed ethereum transaction'
