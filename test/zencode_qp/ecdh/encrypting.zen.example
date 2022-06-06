@@ -1,11 +1,8 @@
 Rule check version 2.0.0
-Scenario 'ecdh': Sender encrypts a message for Receiver
-Given that I am known as 'Sender'
-and I have my 'keys'
-and I have a 'ecdh public key' from 'Receiver'
+Scenario 'ecdh': Bob encrypts a message for Alice
+Given I am 'Bob'
+and I have the 'keyring'
+and I have a 'ecdh public key' from 'Alice'
 and I have a 'string' named 'message'
-When I encrypt the secret message of 'message' for 'Receiver'
-and I rename the 'ecdh public key' to 'Receiver public key'
-and I create the ecdh public key
+When I encrypt the secret message of 'message' for 'Alice'
 Then print the 'secret message'
-and print my 'ecdh public key'

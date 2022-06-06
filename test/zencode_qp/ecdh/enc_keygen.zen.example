@@ -1,5 +1,5 @@
 Rule check version 2.0.0
 Scenario ecdh
-Given I am known as 'Receiver'
+Given I am 'Alice'
 When I create the ecdh key
-Then print my 'keys'
+Then print the 'keyring'
