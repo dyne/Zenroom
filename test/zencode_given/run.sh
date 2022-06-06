@@ -252,4 +252,30 @@ Given my name is in a 'string' named 'Sender' inside 'UserData'
 Given that I have my 'keyring'
 Then print my data
 EOF
+
+
+cat <<EOF | save given nested_dictionary_in.json
+{ 
+"@context": [ 
+"https://www.w3.org/ns/did/v1", 
+"https://w3id.org/security/suites/ed25519-2020/v1" 
+], 
+"id": "did:example:123456789abcdefghi", 
+"authentication": [ 
+{ 
+"id": "did:example:123456789abcdefghi#keys-1", 
+"type": "Ed25519VerificationKey2020", 
+"controller": "did:example:123456789abcdefghi", 
+"publicKeyMultibase": "zH3C2AVvLMv6gmMNam3uVAjZpfkcJCwDwnZn6z3wXmqPV" 
+} 
+] 
+} 
+EOF
+
+cat <<EOF | zexe nested_dict_in.zen -a nested_dictionary_in.json
+Given that I have a 'string' named 'id' in 'authentication'
+Then print all data
+EOF
+ 
+
 success
