@@ -244,7 +244,7 @@ static int randombytes_bsd_randombytes(void *buf, size_t n)
 	return 0;
 }
 #endif /* defined(BSD) */
-
+#include <string.h>
 int randombytes(void *buf, size_t n)
 {
 	if(!n) return 0;

@@ -1,0 +1,6 @@
+Rule check version 2.0.0 
+Scenario qp : Bob create the kyber secret for Alice
+Given I am 'Bob'
+and I have a 'kyber public key' from 'Alice'
+When I create the kyber kem for 'Alice'
+Then print the 'kyber ciphertext' from 'kyber kem'

@@ -1,0 +1,6 @@
+Scenario qp
+Given I have a 'dilithium public key' from 'The Signer'
+and I have a 'dilithium signature'
+and I have a 'string' named 'message'
+When I verify the 'message' has a dilithium signature in 'dilithium signature' by 'The Signer'
+Then print the 'message'

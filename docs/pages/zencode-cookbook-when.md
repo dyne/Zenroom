@@ -60,6 +60,10 @@ We grouped together all the statements that perform object manipulation, so:
  ***Create string/number*** (statement "write in")
  
  ***Pick a random element*** from an array
+
+ ***Create random dictionary*** from another dictionary
+
+ ***Create flat array*** of contents or keys of a dictionary or an array
  
  
 In the script below, we've put together a list of this statement and explained in the comments how each statement works: 
@@ -221,7 +225,13 @@ Here are the statements to work with arrays. Arrays can be of any type (number, 
 
 ***Length*** creates an object containing the array length
  
-***Length*** creates the arithmetic sum of an 'number array'
+***Sum*** creates the arithmetic sum of a 'number array'
+
+***Average***  creates the average of a 'number array'
+
+***Standard deviation***  creates the standard deviation of a 'number array'
+
+***Variance***  creates the variance of a 'number array'
  
 ***Copy element of array*** to a new simple object
 
@@ -250,7 +260,7 @@ Operations with dictionaries allow you to:
 
 ***Find maximum and minimum***: compare the homonym elements in each dictionary, and find the one with the highest/lowest value. 
 
-***Conditioned sum***: sum homonym elements in each dictionary, only if a certain element in that dictionary is higher/lower than a certain value. 
+***Sum*** and ***Conditioned sum***: sum homonym elements in each dictionary, you can also add homonym elements in each dictionary only if a certain element in that dictionary is higher/lower than a certain value. 
 
 ***Find dictionaries containing an element of a certain value***: match homonym elements in each dictionary with a certain value, and return all those that match (the statement returns an array). 
 
@@ -262,7 +272,7 @@ Operations with dictionaries allow you to:
 
 ***Math operations***: sum, subtraction, multiplication, division and modulo, between numbers found in dictionaries and numbers loaded individiually.
 
-
+***Prune***: remove all the empty strings ("") and the empty dictionaries (dictionaries that contain only empty strings).
 
 
 In the script we'll use as example we'll load a complex dataset, containing dictionaries that mimic records of transactions. Not that the dictionaries do not always have the same exact structure:
@@ -281,6 +291,8 @@ In the script below we will:
  - Singning the newly created dictionary using ECDSA cryptography
  - Printing out the newly created dictionary, its signature and a couple more objects
  - Various sums, subtractions, multiplications, divisions
+ - Create an array that contains all the objects named *timestamp* in *TransactionsBatchA*
+ - Prune a string dictionary
 
 This part of the script load the dictionaries along with some simple objects:
 

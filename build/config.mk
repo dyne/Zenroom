@@ -39,6 +39,10 @@ ldadd += ${milib}/libamcl_pairing_${ecp_curve}.a
 ldadd += ${milib}/libamcl_curve_${ecdh_curve}.a
 ldadd += ${milib}/libamcl_core.a
 
+#-----------------
+# quantum-proof
+ldadd += ${pwd}/lib/pqclean/libqpz.a
+
 # ----------------
 # zstd settings
 ldadd += ${pwd}/lib/zstd/libzstd.a
@@ -132,6 +136,11 @@ ifneq (,$(findstring linux,$(MAKECMDGOALS)))
 cflags := ${cflags} -fPIC ${cflags_protection} -D'ARCH=\"LINUX\"' -DARCH_LINUX
 ldflags := -lm -lpthread
 system := Linux
+cflags += $(if ${COMPILE_LUA}, -DLUA_COMPILED)
+endif
+
+ifneq (,$(findstring clang,$(MAKECMDGOALS)))
+gcc := clang
 endif
 
 ifneq (,$(findstring raspi,$(MAKECMDGOALS)))
@@ -206,16 +215,6 @@ ldflags := -lm
 system := Darwin
 endif
 
-ifneq (,$(findstring python2,$(MAKECMDGOALS)))
-cflags += $(shell python2.7-config --cflags) -fPIC
-ldflags += $(shell python2.7-config --ldflags)
-endif
-
-ifneq (,$(findstring python3,$(MAKECMDGOALS)))
-cflags += $(shell python3-config --cflags) -fPIC
-ldflags += $(shell python3-config --ldflags)
-endif
-
 ifneq (,$(findstring javascript,$(MAKECMDGOALS)))
 gcc := ${EMSCRIPTEN}/emcc
 ar := ${EMSCRIPTEN}/emar
@@ -241,14 +240,34 @@ ldadd += ${ldadd} -nostdlib -Wl,--start-group -lmain -lc -Wl,--end-group -lgcc
 # ldadd += ${ldadd} -l:libm.a -l:libpthread.a -lssp
 endif
 
+ifneq (,$(findstring release,$(MAKECMDGOALS)))
+cflags := -O3 -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
+endif
 
+# clang doesn't supports -Wstack-usage=4096
 
 ifneq (,$(findstring debug,$(MAKECMDGOALS)))
-cflags := -Og -ggdb -DDEBUG=1 -Wstack-usage=4096 -Wall -Wextra -pedantic
+cflags := -Og -ggdb -DDEBUG=1 -Wall -Wextra -pedantic
+cflags += $(if ${COMPILE_LUA}, -DLUA_COMPILED)
 endif
 
 ifneq (,$(findstring profile,$(MAKECMDGOALS)))
-cflags += -Og -ggdb -pg -DDEBUG=1 -Wstack-usage=4096
+cflags += -Og -ggdb -pg -DDEBUG=1
+endif
+
+ifneq (,$(findstring meson,$(MAKECMDGOALS)))
+# meson always builds a shared lib
+cflags += -fPIC
+endif
+
+ifneq (,$(findstring python2,$(MAKECMDGOALS)))
+cflags += $(shell python2.7-config --cflags) -fPIC
+ldflags += $(shell python2.7-config --ldflags)
+endif
+
+ifneq (,$(findstring python3,$(MAKECMDGOALS)))
+cflags += $(shell python3-config --cflags) -fPIC
+ldflags += $(shell python3-config --ldflags)
 endif
 
 # ifneq (,$(findstring ios,$(MAKECMDGOALS)))

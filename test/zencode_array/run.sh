@@ -410,12 +410,273 @@ When I rename the 'flat array' to 'flattened array 1'
 
 When I create the flat array of keys in 'identity'
 When I rename the 'flat array' to 'flattened array 2'
-And debug
 
 Then print the 'flattened array 1'
 Then print the 'flattened array 2'
 Then print the string 'succes'
 EOF
 
+
+cat <<EOF | save array dictionaries.json
+{
+	"nameOfObject": "timestampEndpoint",
+	"identities": {
+		"172.105.105.137": {
+			"announce": "/api/consensusroom-announce",
+			"baseUrl": "http://172.105.105.137:3300",
+			"get-6-timestamps": "/api/consensusroom-get-6-timestamps",
+			"public_key": "BGiQeHz55rNc/k/iy7wLzR1jNcq/MOy8IyS6NBZ0kY3Z4sExlyFXcILcdmWDJZp8FyrILOC6eukLkRNt7Q5tzWU=",
+			"timestampAPI": "/api/consensusroom-get-timestamp",
+			"timestampEndpoint": "http://172.105.105.137:3300/api/consensusroom-get-timestamp",
+			"uid": "172.105.105.137",
+			"updateAPI": "/api/consensusroom-update",
+			"version": "1"
+		},
+		"172.105.33.141": {
+			"announce": "/api/consensusroom-announce",
+			"baseUrl": "http://172.105.33.141:3300",
+			"get-6-timestamps": "/api/consensusroom-get-6-timestamps",
+			"public_key": "BGiQeHz55rNc/k/iy7wLzR1jNcq/MOy8IyS6NBZ0kY3Z4sExlyFXcILcdmWDJZp8FyrILOC6eukLkRNt7Q5tzWU=",
+			"timestampAPI": "/api/consensusroom-get-timestamp",
+			"timestampEndpoint": "http://172.105.105.137:3300/api/consensusroom-get-timestamp",
+			"uid": "172.105.33.141",
+			"updateAPI": "/api/consensusroom-update",
+			"version": "1"
+		},
+		"194.195.123.140": {
+			"announce": "/api/consensusroom-announce",
+			"baseUrl": "http://194.195.123.140:3300",
+			"get-6-timestamps": "/api/consensusroom-get-6-timestamps",
+			"public_key": "BGiQeHz55rNc/k/iy7wLzR1jNcq/MOy8IyS6NBZ0kY3Z4sExlyFXcILcdmWDJZp8FyrILOC6eukLkRNt7Q5tzWU=",
+			"timestampAPI": "/api/consensusroom-get-timestamp",
+			"timestampEndpoint": "http://172.105.105.137:3300/api/consensusroom-get-timestamp",
+			"uid": "194.195.123.140",
+			"updateAPI": "/api/consensusroom-update",
+			"version": "1"
+		},
+		"194.195.240.46": {
+			"announce": "/api/consensusroom-announce",
+			"baseUrl": "http://194.195.240.46:3300",
+			"get-6-timestamps": "/api/consensusroom-get-6-timestamps",
+			"public_key": "BGiQeHz55rNc/k/iy7wLzR1jNcq/MOy8IyS6NBZ0kY3Z4sExlyFXcILcdmWDJZp8FyrILOC6eukLkRNt7Q5tzWU=",
+			"timestampAPI": "/api/consensusroom-get-timestamp",
+			"timestampEndpoint": "http://172.105.105.137:3300/api/consensusroom-get-timestamp",
+			"uid": "194.195.240.46",
+			"updateAPI": "/api/consensusroom-update",
+			"version": "1"
+		},
+		"45.33.44.32": {
+			"announce": "/api/consensusroom-announce",
+			"baseUrl": "http://45.33.44.32:3300",
+			"get-6-timestamps": "/api/consensusroom-get-6-timestamps",
+			"public_key": "BGiQeHz55rNc/k/iy7wLzR1jNcq/MOy8IyS6NBZ0kY3Z4sExlyFXcILcdmWDJZp8FyrILOC6eukLkRNt7Q5tzWU=",
+			"timestampAPI": "/api/consensusroom-get-timestamp",
+			"timestampEndpoint": "http://172.105.105.137:3300/api/consensusroom-get-timestamp",
+			"uid": "45.33.44.32",
+			"updateAPI": "/api/consensusroom-update",
+			"version": "1"
+		},
+		"50.116.61.250": {
+			"announce": "/api/consensusroom-announce",
+			"baseUrl": "http://50.116.61.250:3300",
+			"get-6-timestamps": "/api/consensusroom-get-6-timestamps",
+			"public_key": "BGiQeHz55rNc/k/iy7wLzR1jNcq/MOy8IyS6NBZ0kY3Z4sExlyFXcILcdmWDJZp8FyrILOC6eukLkRNt7Q5tzWU=",
+			"timestampAPI": "/api/consensusroom-get-timestamp",
+			"timestampEndpoint": "http://172.105.105.137:3300/api/consensusroom-get-timestamp",
+			"uid": "50.116.61.250",
+			"updateAPI": "/api/consensusroom-update",
+			"version": "1"
+		},
+		"Pepero": {
+			"baseUrl": "http://192.168.0.100:3030",
+			"ip": "192.168.0.100",
+			"public_key": "BGiQeHz55rNc/k/iy7wLzR1jNcq/MOy8IyS6NBZ0kY3Z4sExlyFXcILcdmWDJZp8FyrILOC6eukLkRNt7Q5tzWU=",
+			"timeServer": "http://localhost:3312",
+			"timestampEndpoint": "http://172.105.105.137:3300/api/consensusroom-get-timestamp",
+			"uid": "Kenshiro",
+			"version": "1"
+		}
+	}
+}
+EOF
+
+cat <<EOF | zexe dict2array.zen -a dictionaries.json
+Given I have a 'string dictionary' named 'identities'
+and a 'string' named 'nameOfObject'
+When I create the array of objects named by 'nameOfObject' found in 'identities'
+Then print the 'array'
+EOF
+
+cat <<EOF > compare-equal.data
+{
+ "arr": [1,1,1,1],
+ "dict": {
+   "hello": "world",
+   "nice": "world",
+   "big": "world"
+ },
+ "empty_dict": {},
+ "nested_arr": [
+   { "nested": "nested" },
+   { "nested": "nested" }
+ ]
+
+}
+EOF
+
+cat <<EOF | zexe compare-equal.zen -a compare-equal.data
+Given I have a 'string array' named 'arr'
+Given I have a 'string dictionary' named 'dict'
+Given I have a 'string array' named 'nested_arr'
+Given I have a 'string dictionary' named 'empty_dict'
+
+If the elements in 'arr' are all equal
+If the elements in 'dict' are all equal
+If the elements in 'nested arr' are all equal
+If the elements in 'empty dict' are all equal
+Then print string 'OK'
+EOF
+
+cat <<EOF > compare-not-equal.data
+{
+ "arr": [1,1,1,3],
+ "dict": {
+   "hello": "world",
+   "nice": "world",
+   "big": "earth"
+ },
+ "nested_arr": [
+   { "nested": "nested" },
+   { "nested": "not-nested" }
+ ]
+
+}
+EOF
+
+cat <<EOF | zexe compare-not-equal.zen -a compare-not-equal.data
+Given I have a 'string array' named 'arr'
+Given I have a 'string dictionary' named 'dict'
+Given I have a 'string array' named 'nested_arr'
+
+If the elements in 'arr' are not all equal
+If the elements in 'dict' are not all equal
+If the elements in 'nested arr' are not all equal
+Then print string 'OK'
+EOF
+
+cat <<EOF | save array table-arrays.json
+{ "identity": {
+    "announceAPI": "/api/zenswarm-oracle-announce",
+    "baseUrl": "http://zenswarm.zenroom.org",
+    "country": "IT",
+    "ethereum-notarizationAPI": "/api/ethereum-to-ethereum-notarization.chain",
+    "get-identityAPI": "/api/zenswarm-oracle-get-identity",
+    "http-postAPI": "/api/zenswarm-oracle-http-post",
+    "oracle-key-issuance": "/api/zenswarm-oracle-key-issuance.chain",
+    "pingAPI": "/api/zenswarm-oracle-ping.zen",
+    "port_http": "28170",
+    "port_https": "28331",
+    "sawroom-notarizationAPI": "/api/sawroom-to-ethereum-notarization.chain",
+    "timestampAPI": "/api/zenswarm-oracle-get-timestamp.zen",
+    "tracker": "https://apiroom.net/",
+    "type": "restroom-mw",
+    "updateAPI": "/api/zenswarm-oracle-update",
+    "version": "2"
+  },
+"identities": [
+ {
+      "announceAPI": "/api/zenswarm-oracle-announce",
+      "baseUrl": "http://zenswarm.zenroom.org",
+      "country": "IT",
+      "ethereum-notarizationAPI": "/api/ethereum-to-ethereum-notarization.chain",
+      "get-identityAPI": "/api/zenswarm-oracle-get-identity",
+      "http-postAPI": "/api/zenswarm-oracle-http-post",
+      "oracle-key-issuance": "/api/zenswarm-oracle-key-issuance.chain",
+      "pingAPI": "/api/zenswarm-oracle-ping.zen",
+      "port_http": "26962",
+      "port_https": "25991",
+      "region": "NONE",
+      "sawroom-notarizationAPI": "/api/sawroom-to-ethereum-notarization.chain",
+      "timestampAPI": "/api/zenswarm-oracle-get-timestamp.zen",
+      "tracker": "https://apiroom.net/",
+      "type": "restroom-mw",
+      "updateAPI": "/api/zenswarm-oracle-update",
+      "version": "2"
+    },
+    {
+      "announceAPI": "/api/zenswarm-oracle-announce",
+      "baseUrl": "http://zenswarm.zenroom.org",
+      "country": "IT",
+      "ethereum-notarizationAPI": "/api/ethereum-to-ethereum-notarization.chain",
+      "get-identityAPI": "/api/zenswarm-oracle-get-identity",
+      "http-postAPI": "/api/zenswarm-oracle-http-post",
+      "oracle-key-issuance": "/api/zenswarm-oracle-key-issuance.chain",
+      "pingAPI": "/api/zenswarm-oracle-ping.zen",
+      "port_http": "26368",
+      "port_https": "29841",
+      "region": "NONE",
+      "sawroom-notarizationAPI": "/api/sawroom-to-ethereum-notarization.chain",
+      "timestampAPI": "/api/zenswarm-oracle-get-timestamp.zen",
+      "tracker": "https://apiroom.net/",
+      "type": "restroom-mw",
+      "updateAPI": "/api/zenswarm-oracle-update",
+      "version": "2"
+    },
+{
+    "announceAPI": "/api/zenswarm-oracle-announce",
+    "baseUrl": "http://zenswarm.zenroom.org",
+    "country": "IT",
+    "ethereum-notarizationAPI": "/api/ethereum-to-ethereum-notarization.chain",
+    "get-identityAPI": "/api/zenswarm-oracle-get-identity",
+    "http-postAPI": "/api/zenswarm-oracle-http-post",
+    "oracle-key-issuance": "/api/zenswarm-oracle-key-issuance.chain",
+    "pingAPI": "/api/zenswarm-oracle-ping.zen",
+    "port_http": "28170",
+    "port_https": "28331",
+    "sawroom-notarizationAPI": "/api/sawroom-to-ethereum-notarization.chain",
+    "timestampAPI": "/api/zenswarm-oracle-get-timestamp.zen",
+    "tracker": "https://apiroom.net/",
+    "type": "restroom-mw",
+    "updateAPI": "/api/zenswarm-oracle-update",
+    "version": "2"
+}
+  ]
+}
+
+EOF
+
+cat <<EOF | zexe remove-table-from-table.zen -a table-arrays.json | jq .
+Given I have a 'string array' named 'identities'
+Given I have a 'string array' named 'identity'
+When I create the size of 'identities'
+and I rename 'size' to 'before'
+and I remove the 'identity' from 'identities'
+and I create the size of 'identities'
+and I rename 'size' to 'after'
+Then print the 'before'
+and print the 'after'
+EOF
+
+cat <<EOF > split.data
+{
+  "id": "did:example:123456789abcdefghi#keys-1",
+  "strange_id": "did::",
+  "very_strange_id": "::",
+  "separator": ":"
+}
+EOF
+
+cat <<EOF | zexe split.zen -a split.data
+Given I have a 'string' named 'id'
+Given I have a 'string' named 'strange_id'
+Given I have a 'string' named 'very_strange_id'
+Given I have a 'string' named 'separator'
+When I create the array by splitting 'strange_id' at 'separator'
+When I rename 'array' to 'strange_array'
+When I create the array by splitting 'very_strange_id' at 'separator'
+When I rename 'array' to 'very_strange_array'
+When I create the array by splitting 'id' at 'separator'
+Then print the data
+EOF
 
 success

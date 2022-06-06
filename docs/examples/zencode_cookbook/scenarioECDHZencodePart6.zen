@@ -3,7 +3,7 @@ Scenario 'ecdh': Bob decrypts the message from Alice
 
 # Here we state that Bob is running the script and we load his keypair 
 Given my name is in a 'string' named 'myUserName'
-Given I have my 'keypair'
+Given I have my 'keyring'
 
 # Here we load Alice's public key
 Given I have a 'public key' named 'Alice' in 'public keys'

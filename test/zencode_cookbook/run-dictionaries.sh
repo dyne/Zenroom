@@ -278,11 +278,21 @@ cat <<EOF | save . dictionariesBlockchain.json
       "Expected_annual_production":0.00000000
    },
    "dictionaryToBeFound":"ABC-Transactions1Data",
+   "objectToBeCopied":"LaterAmount",
    "referenceTimestamp":1597573340,
    "PricePerKG":3,
    "otherPricePerKG":5,
    "myUserName":"Authority1234",
-   "myVerySecretPassword":"password123"
+   "myVerySecretPassword":"password123",
+   "notPrunedDictionary": {
+      "empty1": "",
+      "notEmpty": "Hello World!",
+      "empty2": "",
+      "emptyDictionary": {
+         "empty3": "",
+	 "empty4": ""
+      }
+   }
 }
 EOF
 
@@ -316,12 +326,15 @@ Given that I have a 'string dictionary' named 'TransactionAmountsA'
 Given that I have a 'string dictionary' named 'TransactionAmountsB'
 Given that I have a 'string dictionary' named 'PowerData'
 
+Given that I have a 'string dictionary' named 'notPrunedDictionary'
+
 
 # Loading other stuff here
 Given that I have a 'number' named 'referenceTimestamp'
 Given that I have a 'number' named 'PricePerKG'
 Given that I have a 'number' named 'otherPricePerKG'
 Given that I have a 'string' named 'dictionaryToBeFound'
+Given that I have a 'string' named 'objectToBeCopied'
 Given that I have a 'string' named 'myVerySecretPassword'
 
 # Loading the keyring afer setting my identity
@@ -342,7 +355,13 @@ and I rename the 'max value' to 'Theta'
 When I find the min value 'timestamp' for dictionaries in 'TransactionsBatchA'
 and I rename the 'min value' to 'oldestTransaction'
 
-# CREATE SUM with condition
+# CREATE SUM, SUM with condition
+# Here we compute the sum of the "TransactionValue" numbers,
+# in the elements of the dictionary "TransactionsBatchB".
+# We also rename the sum into "sumOfTransactionsValueFirstBatch"
+When I create the sum value 'TransactionValue' for dictionaries in 'TransactionsBatchB'
+and I rename the 'sum value' to 'sumOfTransactionsValueFirstBatch'
+
 # Here we compute the sum of the "TransactionValue" numbers, 
 # in the elements of the dictionary "TransactionsBatchB", 
 # that have a 'timestamp' higher than "Theta". 
@@ -402,6 +421,10 @@ And I rename the 'copy' to 'copyOfInformationBatchA'
 # just for convenience, the name of the newly created object is just a string.
 When I create the copy of 'InitialAmount' from dictionary 'TransactionAmountsA'
 And I rename the 'copy' to 'InitialAmount<<TransactionAmountsA'
+
+# You can also copy an element of a dictionary, which is named from another variable.
+When I create the copy of object named by 'objectToBeCopied' from dictionary 'TransactionAmountsA'
+And I rename the 'copy' to 'LaterAmount<<TransactionAmountsA'
 
 # And you can also copy an element of a dictionary, that is nested 
 # into another dictionary, to the root level:
@@ -475,9 +498,23 @@ and I rename the 'result' to 'NumbersMixed-Modulo'
 # In this case we're using the dictionary 'PowerData' which has several 0 objects.
 When I remove zero values in 'PowerData'
 
+# CREATE ARRAY of elements with the same key
+# You can group all the elements in a dictionary that have the same key
+# value inside a fresh new generated array named array
+When I write string 'timestamp' in 'Key'
+When I create the array of objects named by 'Key' found in 'TransactionsBatchA'
+and I rename the 'array' to 'TimestampArray'
+
+# PRUNE dictionaries
+# Given a string dictionary the prune operation removes all the
+# empty strings ("") and the empty dictionaries (dictionaries that
+# contain only empty strings).
+When I create the pruned dictionary of 'notPrunedDictionary'
+
 
 # Let's print it all out!
 Then print the 'ABC-TransactionsAfterTheta'
+and print the 'sumOfTransactionsValueFirstBatch'
 and print the 'Theta'
 and print the 'ABC-TransactionsAfterTheta.signature'
 and print the 'Information' from 'TransactionsBatchA'
@@ -500,7 +537,12 @@ and print the 'NumbersMixed-Modulo'
 
 and print the 'PowerData'
 and print the 'InitialAmount<<TransactionAmountsA'
+and print the 'LaterAmount<<TransactionAmountsA'
 and print the 'Buyer<<Information<<TransactionsBatchA'
+
+and print the 'TimestampArray'
+
+and print the 'pruned dictionary'
 
 EOF
 

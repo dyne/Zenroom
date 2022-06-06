@@ -1,4 +1,4 @@
 Scenario 'ecdh': load name from data
 Given my name is in a 'string' named 'myUserName'
-And I have my  'keypair'
+And I have my  'keyring'
 Then print my data

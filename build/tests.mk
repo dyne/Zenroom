@@ -49,7 +49,8 @@ crypto-tests = \
 	${1} test/bls_pairing.lua && \
 	${1} test/coconut_test.lua && \
 	${1} test/crypto_credential.lua && \
-	${1} test/mnemonic_encoding.lua
+	${1} test/mnemonic_encoding.lua && \
+	${1} test/qp.lua
 
 cortex-m-crypto-tests = \
 	${1}test/octet.lua && \
@@ -188,6 +189,26 @@ check-py:
 	$(call zencode-tests,${test-exec})
 	@echo "----------------"
 	@echo "All tests passed for PYTHON build"
+	@echo "----------------"
+
+check-rs: test-exec := ${pwd}/test/zenroom_exec_rs/target/debug/zenroom_exec_rs ${pwd}
+check-rs:
+	cargo build --manifest-path ${pwd}/test/zenroom_exec_rs/Cargo.toml
+	$(call lowmem-tests,${test-exec})
+	$(call crypto-tests,${test-exec})
+	$(call zencode-tests,${test-exec})
+	@echo "----------------"
+	@echo "All tests passed for RUST build"
+	@echo "----------------"
+
+check-go: test-exec := ${pwd}/test/zenroom_exec_go/main ${pwd}
+check-go:
+	cd ${pwd}/test/zenroom_exec_go && go build
+	$(call lowmem-tests,${test-exec})
+	$(call crypto-tests,${test-exec})
+	$(call zencode-tests,${test-exec})
+	@echo "----------------"
+	@echo "All tests passed for GO build"
 	@echo "----------------"
 
 check-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom

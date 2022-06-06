@@ -85,8 +85,13 @@ ZEN.add_schema(
 			      export = O.to_hex },
       ethereum_address = { import = O.from_hex,
 			   export = O.to_hex },
-      ethereum_nonce = function(obj)
-	 return ZEN.get(obj, '.', INT.new, tonumber) end,
+      -- TODO generic import from string in zenroom.big,
+      -- if a number begins with 0x import it as hex
+      -- otherwise as decimal (here we have to use tonumber
+      -- in order to contemplate hex strings)
+      ethereum_nonce = { import = function(o)
+                                    return INT.new(tonumber(o)) end,
+                         export = function(o) return o:decimal() end },
       ethereum_transaction = { import = import_eth_tx,
 			       export = export_eth_tx },
       signed_ethereum_transaction = { import = O.from_hex,
@@ -157,6 +162,7 @@ function(obj)
   tx.data = ETH.make_storage_data(content)
 end)
 
+-- TODO: DEPRECATE
 When("create the string from the ethereum bytes named ''", function(obj)
   empty'string'
   local data = have(obj):octet()
@@ -165,6 +171,16 @@ When("create the string from the ethereum bytes named ''", function(obj)
   ZEN.assert(#result == 1, "Wrong data format")
   ACK.string = O.from_str(result[1])
   new_codec('string', { encoding = 'string'})
+end)
+
+When("create the '' decoded from ethereum bytes ''", function(dst, obj)
+  empty(dst)
+  local data = have(obj):octet()
+  local eth_decoder = ETH.contract_return_factory({ 'bytes' })
+  local result = eth_decoder(data)
+  ZEN.assert(#result == 1, "Wrong data format")
+  ACK[dst] = O.from_rawlen(result[1], #result[1])
+  new_codec(dst)
 end)
 
 -- TODO: more contract methods

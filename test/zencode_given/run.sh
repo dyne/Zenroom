@@ -79,9 +79,8 @@ EOF
 
 cat <<EOF  > $tmp
 {"Andrea":{
-      "keypair":{
-	 "private_key":"IIiTD89L6/sbIvaUc5jAVR88ySigaBXppS5GLUjm7Dv2OLKbNIVdiZ48jpLGskKVDPpukKe4R0A=",
-	 "public_key":"BBgzMLWv0ZTiMBwCxF7kEIv/y7NmilO4vmZGRj/edBY5rDchp7dmo+z4g4/13mdN/3b8+o5GxTNw3SHzQC4uxd0="
+      "keyring":{
+	 "ecdh":"IIiTD89L6/sbIvaUc5jAVR88ySigaBXppS5GLUjm7Dv2OLKbNIVdiZ48jpLGskKVDPpukKe4R0A="
       },
    },
    "stuff": {
@@ -95,9 +94,8 @@ cat <<EOF  > $tmp
 	},
 
 	"Bobbino":{
-      "keypair":{
-	 "private_key":"IIiTD89L6/sbIvaUc5jAVR88ySigaBXppS5GLUjm7Dv2OLKbNIVdiZ48jpLGskKVDPpukKe4R0A=",
-	 "public_key":"BBgzMLWv0ZTiMBwCxF7kEIv/y7NmilO4vmZGRj/edBY5rDchp7dmo+z4g4/13mdN/3b8+o5GxTNw3SHzQC4uxd0="
+      "keyring":{
+	 "ecdh":"IIiTD89L6/sbIvaUc5jAVR88ySigaBXppS5GLUjm7Dv2OLKbNIVdiZ48jpLGskKVDPpukKe4R0A="
 				},
     "robbaB":"1000",
     "peppeB":[
@@ -113,23 +111,23 @@ cat <<EOF | zexe have_my.zen -a $tmp
 rule check version 1.0.0
 scenario 'ecdh'
 	 Given I am 'Andrea'
-	 and I have my 'keypair'
-	 Then print the 'keypair'
+	 and I have my 'keyring'
+	 Then print the 'keyring'
 EOF
 
 cat <<EOF | zexe have_my_valid.zen -a $tmp
 rule check version 1.0.0
 scenario 'ecdh'
 	 Given I am 'Andrea'
-	 and I have my valid 'keypair'
-	 Then print the 'keypair'
+	 and I have my valid 'keyring'
+	 Then print the 'keyring'
 EOF
 
 cat <<EOF | zexe is_valid.zen -a $tmp
 rule check version 1.0.0
 scenario 'ecdh'
 	 Given I am 'Andrea'
-	 and my 'keypair' is valid
+	 and my 'keyring' is valid
 	 Then print all data
 EOF
 
@@ -143,8 +141,8 @@ EOF
 cat <<EOF | zexe have_a_inside.zen -a $tmp
 rule check version 1.0.0
 scenario 'ecdh'
-	 Given I have a 'keypair' inside 'Bobbino'
-	 Then print the 'keypair'
+	 Given I have a 'keyring' inside 'Bobbino'
+	 Then print the 'keyring'
 EOF
 # TODO: rename in Given I have inside 'Bobbino' a 'keypair'
 # diverso da Given I have a 'keypair' inside 'Bobbino'
@@ -153,7 +151,7 @@ EOF
 cat <<EOF | zexe have_inside_a.zen -a $tmp
 rule check version 1.0.0
 scenario 'ecdh'
-	 Given I have a valid 'keypair' from 'Andrea'
+	 Given I have a valid 'keyring' from 'Andrea'
 #	 when schema
 	 Then print all data
 EOF
@@ -199,9 +197,8 @@ cat <<EOF | save given named_by_inside.json
 {
 	"Sender": "Alice",
 	"Alice": {
-		"keypair": {
-			"private_key": "2mZDRS1rE4jT5EuozwZfbS+GLE7ogBfgWOr30wXoe3g=",
-			"public_key": "BI/Jwt7PCxfSnypWNH0koLPWOJn0sLMA7VbYlQe6xmIMQms4xvMjLoPXxl4l8d0EzM9ezGVehNCvIHSy+vpctIk="
+		"keyring": {
+			"ecdh": "2mZDRS1rE4jT5EuozwZfbS+GLE7ogBfgWOr30wXoe3g="
 		}
 	},
 	"Friends": {
@@ -216,7 +213,7 @@ EOF
 cat <<EOF | zexe named_by_inside.zen -a named_by_inside.json
 Scenario 'ecdh':
 Given my name is in a 'string' named 'Sender'
-Given that I have my 'keypair'
+Given that I have my 'keyring'
 Given I have a 'string' named 'Recipient'
 Given I have a 'string' named 'Message'
 
@@ -240,9 +237,8 @@ cat <<EOF | save given name_named_in.json
 	        "Sender": "Alice"
 	},
 	"Alice": {
-		"keypair": {
-			"private_key": "2mZDRS1rE4jT5EuozwZfbS+GLE7ogBfgWOr30wXoe3g=",
-			"public_key": "BI/Jwt7PCxfSnypWNH0koLPWOJn0sLMA7VbYlQe6xmIMQms4xvMjLoPXxl4l8d0EzM9ezGVehNCvIHSy+vpctIk="
+		"keyring": {
+			"ecdh": "2mZDRS1rE4jT5EuozwZfbS+GLE7ogBfgWOr30wXoe3g="
 		}
 	}
 }
@@ -253,7 +249,33 @@ Scenario 'ecdh'
 # below the statement needed
 Given my name is in a 'string' named 'Sender' inside 'UserData'
 
-Given that I have my 'keypair'
+Given that I have my 'keyring'
 Then print my data
 EOF
+
+
+cat <<EOF | save given nested_dictionary_in.json
+{ 
+"@context": [ 
+"https://www.w3.org/ns/did/v1", 
+"https://w3id.org/security/suites/ed25519-2020/v1" 
+], 
+"id": "did:example:123456789abcdefghi", 
+"authentication": [ 
+{ 
+"id": "did:example:123456789abcdefghi#keys-1", 
+"type": "Ed25519VerificationKey2020", 
+"controller": "did:example:123456789abcdefghi", 
+"publicKeyMultibase": "zH3C2AVvLMv6gmMNam3uVAjZpfkcJCwDwnZn6z3wXmqPV" 
+} 
+] 
+} 
+EOF
+
+cat <<EOF | zexe nested_dict_in.zen -a nested_dictionary_in.json
+Given that I have a 'string' named 'id' in 'authentication'
+Then print all data
+EOF
+ 
+
 success

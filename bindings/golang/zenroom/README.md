@@ -23,30 +23,26 @@ $ go get github.com/dyne/Zenroom/bindings/golang/zenroom
 package main
 
 import (
-	"fmt"
-	"log"
-
-	"github.com/dyne/Zenroom/bindings/golang/zenroom"
+  zenroom "github.com/dyne/Zenroom/bindings/golang/zenroom"
+  "fmt"
 )
 
-	genKeysScript := []byte(`
-		keyring = ecdh.new('ec25519')
-		keyring:keygen()
-		
-		output = JSON.encode({
-			public = keyring:public():base64(),
-			private = keyring:private():base64()
-		})
-		print(output)
-	`)
-	
-	keys, err := zenroom.Exec(genKeysScript)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("Keys: %s", keys)
+func main() {
+  genKeysScript :=
+`Scenario ecdh
+Given nothing
+hen I create the ecdh key
+Then print 'keyring'
+`
 
- ```
+  result, success := zenroom.ZencodeExec(genKeysScript, "", "", "")
+
+  if ! success {
+    fmt.Println(result.Logs)
+  }
+  fmt.Println(result.Output)
+}
+```
 
 ## More Documentation
 

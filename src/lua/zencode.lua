@@ -105,38 +105,38 @@ local function set_sentence(self, event, from, to, ctx)
 	tt = gsub(tt, ' inside ', ' in ', 1) -- equivalence
 	tt = gsub(tt, '^an ', 'a ', 1)
 	tt = gsub(tt, ' +', ' ') -- eliminate multiple internal spaces
-	-- TODO: OPTIMIZE here to avoid iteration over all zencode language every time
-	for pattern, func in pairs(reg) do
-		if (type(func) ~= 'function') then
-			error('Zencode function missing: ' .. pattern, 2)
-			return false
-		end
-	    -- xxx(tt .. ' == ' ..pattern)
-		if strcasecmp(tt, pattern) then
-			local args = {} -- handle multiple arguments in same string
-			for arg in string.gmatch(ctx.msg, "'(.-)'") do
-				-- convert all spaces to underscore in argument strings
-				arg = uscore(arg, ' ', '_')
-				table.insert(args, arg)
-			end
-			ctx.Z.id = ctx.Z.id + 1
-			-- AST data prototype
-			table.insert(
-				ctx.Z.AST,
-				{
-					id = ctx.Z.id, -- ordered number
-					args = args, -- array of vars
-					source = ctx.msg, -- source text
-					section = self.current,
-					from = from,
-					to = to,
-					hook = func
-				}
-			) -- function
-			ctx.Z.OK = true
-			break
-		end
+	tt = gsub(tt, '^ +', '') -- remove initial spaces
+	tt = gsub(tt, ' +$', '') -- remove final spaces
+        tt = tt:lower()
+        local func = reg[tt]
+        if not func then
+                error('Zencode pattern not found: ' .. tt, 2)
+		return false
+        elseif (type(func) ~= 'function') then
+                error('Zencode function missing: ' .. func, 2)
+		return false
 	end
+	local args = {} -- handle multiple arguments in same string
+        for arg in string.gmatch(ctx.msg, "'(.-)'") do
+                -- convert all spaces to underscore in argument strings
+                arg = uscore(arg, ' ', '_')
+                table.insert(args, arg)
+        end
+        ctx.Z.id = ctx.Z.id + 1
+        -- AST data prototype
+	table.insert(
+	        ctx.Z.AST,
+		{
+		        id = ctx.Z.id, -- ordered number
+                        args = args, -- array of vars
+                        source = ctx.msg, -- source text
+                        section = self.current,
+                        from = from,
+                        to = to,
+                        hook = func
+                }
+        ) -- function
+        ctx.Z.OK = true
 	if not ctx.Z.OK and CONF.parser.strict_match then
 		debug_traceback()
 		exitcode(1)
@@ -238,7 +238,7 @@ local function new_state_machine()
     -- Given --> When
     -- When --> Then
     -- state branch {
-    --     IF 
+    --     IF
     --     when then
     --     --
     --     EndIF
@@ -268,7 +268,7 @@ local function new_state_machine()
 				{name = 'enter_and', from = 'when', to = 'when'},
 				{name = 'enter_and', from = 'then', to = 'then'},
 				{name = 'enter_and', from = 'whenif', to = 'whenif'},
-				{name = 'enter_and', from = 'thenif', to = 'thenif'},	
+				{name = 'enter_and', from = 'thenif', to = 'thenif'},
 				{name = 'enter_and', from = 'if', to = 'if'}
 
 			},
@@ -327,6 +327,7 @@ WHO = nil
 zencode.endif_steps = { endif = function() return end } --nop
 
 function Given(text, fn)
+        text = text:lower()
 	assert(
 		not ZEN.given_steps[text],
 		'Conflicting GIVEN statement loaded by scenario: ' .. text, 2
@@ -334,6 +335,7 @@ function Given(text, fn)
 	ZEN.given_steps[text] = fn
 end
 function When(text, fn)
+        text = text:lower()
 	assert(
 		not ZEN.when_steps[text],
 		'Conflicting WHEN statement loaded by scenario: ' .. text, 2
@@ -341,6 +343,7 @@ function When(text, fn)
 	ZEN.when_steps[text] = fn
 end
 function IfWhen(text, fn)
+        text = text:lower()
         assert(
 		not ZEN.if_steps[text],
 		'Conflicting IF-WHEN statement loaded by scenario: ' .. text, 2
@@ -353,6 +356,7 @@ function IfWhen(text, fn)
 	ZEN.when_steps[text] = fn
 end
 function Then(text, fn)
+        text = text:lower()
 	assert(
 		not ZEN.then_steps[text],
 		'Conflicting THEN statement loaded by scenario : ' .. text, 2
@@ -550,19 +554,19 @@ end
 -- return false: execute statement
 local function manage_branching(x)
 	if x.section == 'if' then
-		xxx("START conditional execution: "..x.source, 2)
+		--xxx("START conditional execution: "..x.source, 2)
 		if not ZEN.branch then ZEN.branch_valid = true end
 		ZEN.branch = true
 		return false
 	end
 	if x.section == 'endif' then
-		xxx("END   conditional execution: "..x.source, 2)
+		--xxx("END   conditional execution: "..x.source, 2)
 		ZEN.branch = false
 		return true
 	end
 	if not ZEN.branch then return false end
 	if not ZEN.branch_valid then
-		xxx('skip execution in false conditional branch: '..x.source, 2)
+		--xxx('skip execution in false conditional branch: '..x.source, 2)
 		return true
 	end
 	return false

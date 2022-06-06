@@ -1,114 +1,329 @@
-### [given]
-Given I am ''
-Given I have a ''
-Given I have a '' in ''
-Given I have a '' from ''
-Given I have a '' named ''
-Given I have a '' named '' in ''
-Given I have my ''
-Given I have my '' named ''
-Given the '' is valid
-Given my '' is valid
-### [given]
-### [when]
-When I append '' to ''
-When I create the ''
-When I move '' in ''
-When I write string '' in ''
-When I write number '' in ''
-When I set '' to '' as ''
-When I create the random ''
-When I create the serialization of ''
-When I create the flattening of ''
-When I create the serialization of data
-When I create the cbor of ''
-When I create the json of ''
-When I verify '' is equal to ''
-When I verify '' is not equal to ''
-When I set '' to '' base ''
-When number '' is less than ''
-When number '' is less or equal than ''
-When number '' is more than ''
-When number '' is more or equal than ''
-When I rename the '' to ''
-When I split the rightmost '' bytes of ''
-When I split the leftmost '' bytes of ''
-When I set '' as '' with ''
-When I append '' as '' to ''
-When I write '' as '' in ''
-### [when]
-### [then]
-Then print ''
-Then print '' as ''
-Then print '' as '' in ''
-Then print data
-Then print data as ''
-Then print my data
-Then print my data as ''
-Then print my ''
-Then print my '' from ''
-Then print my '' as ''
-Then print the ''
-Then print the '' as ''
-Then print the '' as '' in ''
-Then print the '' in ''
-### [then]
 ### [array]
-When I create the array of '' random objects
-When I create the array of '' random objects of '' bits
-When I create the array of '' random numbers
-When I create the array of '' random numbers modulo ''
-When I create the aggregation of array ''
-When I pick the random object in ''
-When I randomize the '' array
-When I remove the '' from ''
-When I insert the '' in ''
-When the '' is not found in ''
-When the '' is found in ''
+create the aggregation of array ''
+create the array of objects named by '' found in ''
+create the average of elements in array ''
+create the copy of element '' in array ''
+create the flat array of contents in ''
+create the flat array of keys in ''
+create the length of ''
+create the new array
+create the size of ''
+create the standard deviation of elements in array ''
+create the sum value of elements in array ''
+create the variance of elements in array ''
+insert '' in ''
+insert string '' in ''
+remove the '' from ''
+the '' is found in ''
+the '' is found in '' at least '' times
+the '' is not found in ''
 ### [array]
-### [hash]
-When I create the hash of ''
-When I create the hash of '' using ''
-When I create the random object of '' bits
-When I create the hash to point '' of each object in ''
-When I create the hashes of each object in ''
-When I create the HMAC of '' with key ''
-When I create the key derivation of ''
-When I create the key derivation of '' with password ''
-### [hash]
-### [ecdh]
-When I create the keypair
-When I encrypt the secret message '' with ''
-When I decrypt the secret message with ''
-When I encrypt the message for ''
-When I decrypt the secret message from ''
-When I create the signature of ''
-When I verify the '' is signed by ''
-When I verify the '' has a signature in '' by ''
-### [ecdh]
+### [bitcoin]
+create the bitcoin address
+create the bitcoin key
+create the bitcoin key with secret ''
+create the bitcoin key with secret key ''
+create the bitcoin public key
+create the bitcoin raw transaction
+create the bitcoin transaction
+create the bitcoin transaction to ''
+create the testnet address
+create the testnet key
+create the testnet key with secret ''
+create the testnet key with secret key ''
+create the testnet public key
+create the testnet raw transaction
+create the testnet transaction
+create the testnet transaction to ''
+sign the bitcoin transaction
+sign the testnet transaction
+### [bitcoin]
 ### [credential]
-When I create the credential keypair
-When I create the issuer keypair
-When I create the credential request
-When I create the credential signature
-When I create the credentials
-When I aggregate the verifiers
-When I create the credential proof
-When I verify the credential proof
+aggregate the issuer public keys
+create the credential key
+create the credential key with secret ''
+create the credential key with secret key ''
+create the credential proof
+create the credential request
+create the credentials
+create the credential signature
+create the issuer key
+create the issuer public key
+verify the credential proof
 ### [credential]
-### [petition]
-When I create the petition ''
-When I verify the new petition to be empty
-When I create the petition signature ''
-When I verify the signature proof is correct
-When the petition signature is not a duplicate
-When the petition signature is just one more
-When I add the signature to the petition
-When I create a petition tally
-When I count the petition results
-### [petition]
+### [data]
+### [data]
+### [debug]
+backtrace
+codec
+config
+debug
+schema
+trace
+### [debug]
+### [dictionary]
+create the array of elements named '' for dictionaries in ''
+create the copy of '' from ''
+create the copy of '' from dictionary ''
+create the copy of '' in ''
+create the copy of '' in '' in ''
+create the copy of object named by '' from dictionary ''
+create the new dictionary
+create the new dictionary named ''
+create the pruned dictionary of ''
+create the sum value '' for dictionaries in ''
+create the sum value '' for dictionaries in '' where '' > ''
+filter '' fields from ''
+find the '' for dictionaries in '' where '' = ''
+find the max value '' for dictionaries in ''
+find the min value '' for dictionaries in ''
+for each dictionary in '' append '' to ''
+move '' in ''
+### [dictionary]
 ### [dp3t]
-When I renew the secret day key to a new day
-When I create the ephemeral ids for today
-When I create the proximity tracing of infected ids
+create the ephemeral ids for today
+create the proximity tracing of infected ids
+renew the secret day key to a new day
 ### [dp3t]
+### [ecdh]
+create the ecdh key
+create the ecdh key with secret ''
+create the ecdh key with secret key ''
+create the ecdh public key
+create the ecdh signature of ''
+create the signature of ''
+decrypt the text of '' from ''
+decrypt the text of '' with ''
+encrypt the secret message of '' for ''
+encrypt the secret message '' with ''
+verify the '' has a ecdh signature in '' by ''
+verify the '' has a signature in '' by ''
+### [ecdh]
+### [ethereum]
+create the ethereum address
+create the ethereum key
+create the ethereum key with secret ''
+create the ethereum key with secret key ''
+create the ethereum transaction of '' to ''
+create the ethereum transaction to ''
+create the signed ethereum transaction
+create the signed ethereum transaction for chain ''
+create the string from the ethereum bytes named ''
+use the ethereum transaction to store ''
+verify the signed ethereum transaction from ''
+### [ethereum]
+### [given]
+a ''
+a '' from ''
+a '' in ''
+a '' is valid
+am ''
+a '' named ''
+a '' named by ''
+a '' named by '' in ''
+a '' named '' in ''
+a '' public key from ''
+my ''
+my '' is valid
+my '' named ''
+my '' named by ''
+my name is in a '' named ''
+my name is in a '' named '' in ''
+nothing
+### [given]
+### [hash]
+create the hashes of each object in ''
+create the hash of ''
+create the hash of '' using ''
+create the hash to point '' of each object in ''
+create the HMAC of '' with key ''
+create the key derivation of ''
+create the key derivation of '' with password ''
+### [hash]
+### [http]
+append '' as http request to ''
+create the url from ''
+### [http]
+### [keyring]
+create the keyring
+### [keyring]
+### [petition]
+add the signature to the petition
+count the petition results
+create a petition tally
+create the petition ''
+create the petition signature ''
+the petition signature is just one more
+the petition signature is not a duplicate
+verify the new petition to be empty
+verify the signature proof is correct
+### [petition]
+### [qp]
+create the dilithium key
+create the dilithium public key
+create the dilithium public key with secret key ''
+create the dilithium signature of ''
+create the kyber kem for ''
+create the kyber key
+create the kyber public key
+create the kyber public key with secret key ''
+create the kyber secret from ''
+create the ntrup kem for ''
+create the ntrup key
+create the ntrup public key
+create the ntrup public key with secret key ''
+create the ntrup secret from ''
+verify the '' has a dilithium signature in '' by ''
+### [qp]
+### [random]
+create the array of '' random numbers
+create the array of '' random numbers modulo ''
+create the array of '' random objects
+create the array of '' random objects of '' bits
+create the array of '' random objects of '' bytes
+create the random ''
+create the random dictionary with '' random objects from ''
+create the random object of '' bits
+create the random object of '' bytes
+pick the random object in ''
+randomize the '' array
+### [random]
+### [reflow]
+add the reflow fingerprint to the reflow seal
+add the reflow signature to the reflow seal
+aggregate the issuer public keys
+aggregate the reflow public key from array ''
+aggregate the reflow seal array in ''
+check the reflow signature fingerprint is new
+create the credential key
+create the credential key with secret ''
+create the credential key with secret key ''
+create the credential proof
+create the credential request
+create the credentials
+create the credential signature
+create the issuer key
+create the issuer public key
+create the material passport of ''
+create the reflow identity of ''
+create the reflow identity of objects in ''
+create the reflow key
+create the reflow key with secret ''
+create the reflow key with secret key ''
+create the reflow public key
+create the reflow seal
+create the reflow seal with identity ''
+create the reflow signature
+prepare credentials for verification
+verify the credential proof
+verify the material passport of ''
+verify the material passport of '' is valid
+verify the reflow seal is valid
+verify the reflow signature credential
+### [reflow]
+### [schnorr]
+create the schnorr key
+create the schnorr key with secret ''
+create the schnorr key with secret key ''
+create the schnorr public key
+create the schnorr public key with secret key ''
+create the schnorr signature of ''
+verify the '' has a schnorr signature in '' by ''
+### [schnorr]
+### [secshare]
+compose the secret using ''
+create the secret shares of '' with '' quorum ''
+### [secshare]
+### [then]
+nothing
+print ''
+print '' as ''
+print '' as '' in ''
+print data
+print data as ''
+print data from ''
+print data from '' as ''
+print '' from ''
+print '' from '' as ''
+print '' from '' as '' in ''
+print keyring
+print my ''
+print my '' as ''
+print my data
+print my data as ''
+print my data from ''
+print my data from '' as ''
+print my '' from ''
+print my '' from '' as ''
+print my keyring
+print object named by ''
+print string ''
+### [then]
+### [verify]
+number '' is less or equal than ''
+number '' is less than ''
+number '' is more or equal than ''
+number '' is more than ''
+the elements in '' are equal
+the elements in '' are not equal
+verify '' contains a list of emails
+verify '' is a email
+verify '' is equal to ''
+verify '' is equal to '' in ''
+verify '' is not equal to ''
+verify '' is not equal to '' in ''
+### [verify]
+### [w3c]
+get the verification method in ''
+set the verification method in '' to ''
+sign the verifiable credential named ''
+verify the verifiable credential named ''
+### [w3c]
+### [when]
+append '' to ''
+copy contents of '' in ''
+copy contents of '' named '' in ''
+copy the '' in '' to ''
+copy the '' to ''
+copy '' to ''
+create the ''
+create the cbor of ''
+create the json of ''
+create the '' named ''
+create the number from ''
+create the result of '' % ''
+create the result of '' * ''
+create the result of '' + ''
+create the result of '' - ''
+create the result of '' / ''
+create the result of '' * '' in ''
+create the result of '' / '' in ''
+create the result of '' in '' % ''
+create the result of '' in '' * ''
+create the result of '' in '' + ''
+create the result of '' in '' - ''
+create the result of '' in '' / ''
+create the result of '' in '' % '' in ''
+create the result of '' in '' * '' in ''
+create the result of '' in '' + '' in ''
+create the result of '' in '' - '' in ''
+create the result of '' in '' / '' in ''
+create the result of '' inverted sign
+delete ''
+done
+'' is found
+'' is not found
+remove ''
+remove zero values in ''
+rename the object named by '' to ''
+rename the object named by '' to named by ''
+rename the '' to ''
+rename '' to ''
+rename '' to named by ''
+set '' to '' as ''
+set '' to '' base ''
+split the leftmost '' bytes of ''
+split the rightmost '' bytes of ''
+write number '' in ''
+write string '' in ''
+### [when]

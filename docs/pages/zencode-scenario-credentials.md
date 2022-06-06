@@ -140,7 +140,7 @@ sequenceDiagram
 
 ----
 
-2 **Alice** generates her **credential keypair**
+2 **Alice** generates her **credential key**
 
 ***Input:*** none
 
@@ -152,6 +152,14 @@ sequenceDiagram
 ***Output:*** credentialParticipantKeypair.json
 
 [](../_media/examples/zencode_cookbook/credentialParticipantKeypair.json ':include :type=code json')
+
+You can also generate the key elsewhere and then import it into Zenroom. To do that you can use one of the following statements:
+
+```gherkin
+When I create the credential key with secret key 'myKey'
+When I create the credential key with secret 'myKey'
+```
+where **myKey** is the credential key generated outside of Zenroom.
 
 ----
 

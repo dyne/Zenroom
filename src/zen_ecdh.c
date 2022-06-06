@@ -60,7 +60,6 @@
 #include <zen_hash.h>
 #include <zen_ecdh.h>
 #include <zen_big_factory.h>
-#include <big_256_28.h> // big for ECDH
 
 // #include <ecp_SECP256K1.h>
 #include <zen_big.h>
@@ -136,10 +135,11 @@ static int ecdh_keygen(lua_State *L) {
 */
 static int ecdh_pubgen(lua_State *L) {
 	octet *sk = o_arg(L, 1); SAFE(sk);
+	octet *tmp = o_dup(L, sk); SAFE(tmp);
 	octet *pk = o_new(L,ECDH.fieldsize*2 +1); SAFE(pk);
 	// If RNG is NULL then the private key is provided externally in S
 	// otherwise it is generated randomly internally
-	(*ECDH.ECP__KEY_PAIR_GENERATE)(NULL,sk,pk);
+	(*ECDH.ECP__KEY_PAIR_GENERATE)(NULL,tmp,pk);
 	return 1;
 }
 
@@ -496,6 +496,101 @@ static int ecdh_aead_decrypt(lua_State *L) {
 	return 2;
 }
 
+/**
+   Order of the curve underlying the ECDH implementation
+
+
+   @function ECDH.order()
+   @return BIG with the order
+*/
+static int ecdh_order(lua_State *L) {
+        if(!ECDH.order || ECDH.mod_size <= 0) {
+		lerror(L, "%s: ECDH order not implemented", __func__);
+                return 0;
+        }
+	big *o = big_new(L); SAFE(o);
+        big_init(o);
+        BIG_fromBytesLen(o->val, ECDH.order, ECDH.mod_size);
+	return 1;
+}
+
+/**
+   Modulus of the curve underlying the ECDH implementation
+
+   @function ECDH.prime()
+   @return BIG with the modulus
+*/
+static int ecdh_prime(lua_State *L) {
+        if(!ECDH.prime || ECDH.mod_size <= 0) {
+		lerror(L, "%s: ECDH modulus not implemented", __func__);
+                return 0;
+        }
+	big *p = big_new(L); SAFE(p);
+        big_init(p);
+        BIG_fromBytesLen(p->val, ECDH.prime, ECDH.mod_size);
+	return 1;
+}
+
+/**
+   Cofactor of the curve underlying the ECDH implementation
+
+   @function ECDH.cofactor()
+   @return int with the cofactor
+*/
+static int ecdh_cofactor(lua_State *L) {
+        if(!ECDH.cofactor) {
+		lerror(L, "%s: ECDH cofactor not implemented", __func__);
+                return 0;
+        }
+	lua_pushinteger(L, ECDH.cofactor);
+	return 1;
+}
+
+/**
+   Elliptic Curve Digital Signature Algorithm (ECDSA) recovery function.
+   This method is intended to be used over all the possible point (x,y)
+   that create the ephemeral public key of the signature, i.e.
+   x can be equal to r+j*n where j is in [0,..,h] (h cofactor of the curve),
+   n is the order of the curve and r is the first component of the signature.
+   While y is uniquely identified by its parity.
+   This method, if it exists, will output a public key Q for which (r, s)
+   is a valid signature on the hashed message m.
+
+   @param x the x coordinate of the ephemeral public key
+   @param y_parity parity of y coordinate of the ephemeral public key
+   @param m hashed message
+   @param sig the signature (r,s)
+   @return[1] the recoverd public key in a compressed form
+   @return[2] 1 if the above public key is valid, 0 otherwise
+*/
+static int ecdh_dsa_recovery(lua_State *L) {
+	octet *x = o_arg(L, 1); SAFE(x);
+	int i;
+	lua_Number y = lua_tointegerx(L, 2, &i);
+	if(!i) {
+		lerror(L, "parity of y coordinate has to be a integer");
+		return 0;
+	}
+	octet *m = o_arg(L, 3); SAFE(m);
+	octet *r = NULL;
+	octet *s = NULL;
+	if(lua_type(L, 4) == LUA_TTABLE) {
+		lua_getfield(L, 4, "r");
+		lua_getfield(L, 4, "s");
+		r = o_arg(L, -2); SAFE(r);
+		s = o_arg(L, -1); SAFE(s);
+	} else {
+		ERROR(); lerror(L, "signature argument invalid: not a table");
+	}
+	octet *pk = o_new(L, ECDH.fieldsize*2 +1); SAFE(pk);
+
+	if( !(*ECDH.ECP__PUBLIC_KEY_RECOVERY)(x, (int)y, m, r, s, pk) )
+		lua_pushboolean(L, 1);
+	else
+		lua_pushboolean(L, 0);
+	return 2;
+}
+
 extern int ecdh_add(lua_State *L);
 
 int luaopen_ecdh(lua_State *L) {
@@ -503,6 +598,9 @@ int luaopen_ecdh(lua_State *L) {
 	const struct luaL_Reg ecdh_class[] = {
 		{"keygen",ecdh_keygen},
 		{"pubgen",ecdh_pubgen},
+		{"order",ecdh_order},
+		{"prime",ecdh_prime},
+		{"cofactor",ecdh_cofactor},
 		{"aead_encrypt",   ecdh_aead_encrypt},
 		{"aead_decrypt",   ecdh_aead_decrypt},
 		{"aesgcm_encrypt", ecdh_aead_encrypt},
@@ -517,6 +615,7 @@ int luaopen_ecdh(lua_State *L) {
 		{"verify", ecdh_dsa_verify},
 		{"sign_hashed", ecdh_dsa_sign_hashed},
 		{"verify_hashed", ecdh_dsa_verify_hashed},
+		{"recovery", ecdh_dsa_recovery},
 		{"public_xy", ecdh_pub_xy},
 		{"pubxy", ecdh_pub_xy},
 		{"add", ecdh_add},

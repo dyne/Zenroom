@@ -126,7 +126,7 @@ local encoder_functions = {
 	['table'] = function(value)
 		if is_an_array(value) then -- it seems to be a proper Lua array
 			local elements = {}
-			for i, v in pairs(value) do
+			for i, v in sort_pairs(value) do
 				elements[i] = encode_value(v)
 			end
 
@@ -140,7 +140,7 @@ local encoder_functions = {
 			end
 		else -- encode as a map
 			local elements = {}
-			for k, v in pairs(value) do
+			for k, v in sort_pairs(value) do
 				elements[#elements + 1] = encode_value(k)
 				elements[#elements + 1] = encode_value(v)
 			end

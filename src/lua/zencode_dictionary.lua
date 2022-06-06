@@ -195,55 +195,36 @@ When("find the '' for dictionaries in '' where '' = ''",function(name, arr, left
 	params.conditions[left] = ACK[right]
 	dicts_reduce(ACK[arr], params)
 	ZEN.assert(val, "No value found "..name.." across dictionaries in "..arr)
-	if #val == 1 then
-		ACK[name] = val[1]
-		new_codec(name, {
-			luatype = luatype(ACK[name]),
-			zentype = 'element'
-		}, arr)
-	else
-	   ACK[name] = val
-	   new_codec(name, {
-		   luatype = 'table',
-		   zentype = 'array'
-	   }, arr)
-	end
+	ACK[name] = val
+	new_codec(name, {
+                luatype = 'table',
+		zentype = 'array'
+	}, arr)
 end)
 
+
+local function _extract(tab, ele, root)
+   local nr = root or 'nil'
+   ZEN.assert(luatype(tab) == 'table', "Object is not a table: "..nr)
+   ZEN.assert(ele, "Undefined key or index: "..ele.." in "..nr)
+   if #tab == 1 then
+      if tab[ele] then return tab[ele] end
+      if luatype(tab[1]) == 'table' and tab[1][ele] then
+	 return tab[1][ele]
+      end
+   else
+      if tab[ele] then return tab[ele] end
+   end
+   error("Member not found: "..ele.." in "..nr, 3)
+end
 local function create_copy_f(root, in1, in2)
-	local r = have(root)
 	empty'copy'
-	ZEN.assert(luatype(r) == 'table', "Object is not a table:"..root)
-	ZEN.assert(in1, "Undefined key or index: "..in1.." in "..root)
-	local res
-	if tonumber(in1) then
-		ZEN.assert(isarray(r), "Invalid index "..in1.." as object is not an array: "..root)
-	else
-		ZEN.assert(isdictionary(r), "Invalid key "..in1.." as object is not a dictionary:"..root)
-	end
-	ACK.copy = r[in1]
-	ZEN.assert(ACK.copy, "Member not found: "..in1.." in "..root)
+	local r = have(root)
+	ACK.copy = _extract(r, in1, root)
 	if in2 then
-		if tonumber(in2) then
-			ZEN.assert(isarray(ACK.copy), "Invalid index "..in2.." as object is not an array: "..in1.." in "..root)
-		else
-			ZEN.assert(isdictionary(ACK.copy), "Invalid key "..in2.." as object is not a dictionary:"..in1.." in "..root)
-		end	
-		ACK.copy = ACK.copy[in2]
-		ZEN.assert(ACK.copy, "Member not found: "..in2.." in "..in1.." in "..root)
+	   ACK.copy = _extract(ACK.copy, in2, in1)
 	end
-	new_codec('copy', { luatype = luatype(ACK.copy) }, root)
-	if ZEN.CODEC.copy.luatype == 'table' then
-		if isdictionary(ACK.copy) then
-			   ZEN.CODEC.copy.zentype = 'dictionary'
-		elseif isarray(ACK.copy) then
-			   ZEN.CODEC.copy.zentype = 'array'
-		else
-		   ZEN.assert(false, "Unknown zentype for lua table element: "..dict.."."..name)
-		end
-	else
-		ZEN.CODEC.copy.zentype = 'element'
-	end
+	new_codec('copy', nil, root)
 end
 When("create the copy of '' from dictionary ''", function(name, dict) create_copy_f(dict, name) end)
 When("create the copy of '' from ''", function(name, dict) create_copy_f(dict, name) end)
@@ -252,6 +233,39 @@ When("create the copy of '' in '' in ''", function(obj, branch, root) create_cop
 When("create the copy of object named by '' from dictionary ''", function(name, dict) 
   local label = have(name)
   create_copy_f(dict, label:string())
+end)
+
+local function take_out_f(root, path, dest)
+	empty(dest)
+	local res = have(root)
+	for k,v in pairs(path) do
+	   res = _extract(res, v)
+	end
+	ACK[dest] = _extract(res, dest)
+	new_codec(dest, {}, root)
+end
+When("pickup from path ''", function(path)
+	local parr = strtok(uscore(path), '([^.]+)')
+	local dest = parr[#parr] -- last
+	table.remove(parr, #parr)
+	local root = parr[1] -- first
+	table.remove(parr, 1)
+	take_out_f(root,parr,dest)
+end)
+When("take '' from path ''", function(target, path)
+	local parr = strtok(uscore(path), '([^.]+)')
+	local root = parr[1] -- first
+	table.remove(parr, 1)
+	take_out_f(root,parr,uscore(target))
+end)
+
+When("move '' from '' to ''", function(name, src, dst)
+	local dest = have(dst)
+	local source = have(src)
+	ZEN.assert(not dest[name], "Cannot overwrite '"..name.."' in '"..dst.."'")
+	ZEN.assert(source[name], "Member not found: '"..name.."' in '"..src.."'")
+	ACK[dst][name] = source[name]
+	ACK[src][name] = nil
 end)
 
 When("for each dictionary in '' append '' to ''", function(arr, right, left)
@@ -280,27 +294,32 @@ When("move '' in ''", function(src, dict)
 	ACK[src] = nil
 end)
 
+local function _filter_from(v, k, f)
+   for _, fv in pairs(f) do
+      if fv:str() == k then
+	 return v
+      end
+   end
+   return nil
+end
+
+local function _is_array_of_dictionaries(a)
+   if not isarray(a) then return false end
+   for _, v in pairs(a) do
+      if luatype(v) ~= 'table' then
+	 return false
+      end
+   end
+   return true
+end
+
 When("filter '' fields from ''", function(filters, target)
 	local t = have(target)
-	ZEN.assert(isdictionary(target), "Object is not a dictionary: "..target)
+	ZEN.assert(isdictionary(target) or
+		   _is_array_of_dictionaries(t),
+		   "Object is nor a dictionary neither an array of dictionaries: "..target)
 	local f = have(filters)
 	ZEN.assert(isarray(filters), "Object is not an array: "..filters)
-	if isarray(t) then -- array of dictionaries
-	   for ak,av in pairs(t) do
-	      for k,_ in pairs(av) do	
-		 keep = false
-		 for _, fv in pairs(f) do
-		    if fv:str() == k then keep = true end
-		 end
-		 if not keep then t[ak][k] = nil end
-	      end
-	   end
-	else
-	   for k,_ in pairs(t) do
-	      for _, fv in pairs(f) do
-		 if k ~= fv then t[k] = nil end
-	      end
-	   end
-	end
+	ACK[target] = deepmap(_filter_from, t, f)
 end)
 

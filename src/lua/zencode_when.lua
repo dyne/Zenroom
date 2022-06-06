@@ -25,9 +25,38 @@
 -- nop to terminate IF blocks
 When("done", function() end)
 
-IfWhen("'' is found", function(n) have(n) end)
-IfWhen("'' is not found", function(n)
-	ZEN.assert(ACK[n] == nil, "Object should not be found: "..n)
+
+local function _is_found(el, t)
+	if not t then
+		return ACK[el] and (luatype(ACK[el]) == 'table' or #ACK[el] ~= 0)
+	else
+		ZEN.assert(ACK[t], "Array or dictionary not found in: "..t)
+		if ZEN.CODEC[t].zentype == 'array' then
+			local o_el = O.from_string(el)
+			for _,v in pairs(ACK[t]) do
+				if v == o_el then return true end
+			end
+		elseif ZEN.CODEC[t].zentype == 'dictionary' then
+			return ACK[t][el] and (luatype(ACK[t][el]) == 'table' or #ACK[t][el] ~= 0)
+		else
+			ZEN.assert(false, "Invalid container type: "..t.." is "..ZEN.CODEC[t].zentype)
+		end
+	end
+	return false
+end
+
+IfWhen("'' is found", function(el)
+	ZEN.assert(_is_found(el), "Cannot find object: "..el)
+end)
+IfWhen("'' is not found", function(el)
+	ZEN.assert(not _is_found(el), "Object should not be found: "..el)
+end)
+
+IfWhen("'' is found in ''", function(el, t)
+	ZEN.assert(_is_found(el, t), "Cannot find object: "..el.." in "..t)
+end)
+IfWhen("'' is not found in ''", function(el, t)
+	ZEN.assert(not _is_found(el,t), "Object: "..el.." should not be found in "..t)
 end)
 
 When("append '' to ''", function(src, dest)
@@ -35,17 +64,16 @@ When("append '' to ''", function(src, dest)
 	local dst = have(dest)
         -- if the destination is a number, fix the encoding to string
         if luatype(dst) == 'number' then
-          dst = tostring(dst)
+          dst = O.from_string( tostring(dst) )
           ZEN.CODEC[dest].encoding = "string"
           ZEN.CODEC[dest].luatype = "string"
           ZEN.CODEC[dest].zentype = "element"
         end
+        if luatype(val) == 'number' then
+	   val = O.from_string( tostring(val) )
+	end
         dst = dst .. val
-        if luatype(dst) == 'string' then
-          ACK[dest] = O.from_string(dst)
-        else
-	  ACK[dest] = dst
-        end
+	ACK[dest] = dst
 end)
 
 When("create the ''", function(dest)
@@ -483,3 +511,23 @@ end)
 -- 	have(target)
 -- 	ACK[target] = deepmap(function(v) if trim(v) == '' then return nil end, ACK[target])
 -- end)
+
+When("create the '' cast of strings in ''", function(conv, source)
+	ZEN.assert(ZEN.CODEC[source], "Object has no codec: "..source)
+	ZEN.assert(ZEN.CODEC[source].encoding == 'string', "Object has no string encoding: "..source)
+	empty(conv)
+	local src = have(source)
+	local enc = input_encoding(conv)
+	if luatype(src) == 'table' then
+	   ACK[conv] = deepmap(function(v)
+		 local s = OCTET.to_string(v)
+		 ZEN.assert(enc.check(s), "Object value is not a "..conv..": "..source)
+		 return enc.fun( s )
+	   end, src)
+	else
+	   local s = OCTET.to_string(src)
+	   ZEN.assert(enc.check(s), "Object value is not a "..conv..": "..source)
+	   ACK[conv] = enc.fun(s)
+	end
+	new_codec(conv, {encoding = conv})
+end)

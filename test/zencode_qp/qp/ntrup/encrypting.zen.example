@@ -1,0 +1,6 @@
+Rule check version 2.0.0 
+Scenario qp : Bob create the ntrup secret for Alice
+Given I am 'Bob'
+and I have a 'ntrup public key' from 'Alice'
+When I create the ntrup kem for 'Alice'
+Then print the 'ntrup ciphertext' from 'ntrup kem'

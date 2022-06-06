@@ -16,7 +16,7 @@ jobs:
         os: [ubuntu-18.04, macos-10.15]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set up QEMU
         if: runner.os == 'Linux'
@@ -46,8 +46,8 @@ jobs:
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_24
           # Skip building on Python 2.7, Python 3.5, 3.6 and PyPy on all platforms
           CIBW_SKIP: cp27-* cp3{5,6}-* pp* *-musllinux*
-          CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake vim zsh
-          CIBW_BEFORE_BUILD_MACOS: brew install cmake vim zsh
+          CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake vim zsh && pip install meson ninja
+          CIBW_BEFORE_BUILD_MACOS: brew install cmake vim zsh && pip install meson ninja
 
       - uses: actions/upload-artifact@v2
         with:

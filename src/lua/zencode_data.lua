@@ -68,11 +68,7 @@
        res = k
     end
     if t == 'table' then
-       if encoding then
-	  res = deepmap(encoding, k)
-       else
-	  res = deepmap(CONF.input.encoding.fun, k)
-       end
+       res = deepmap(encoding or CONF.input.encoding.fun, k)
        if conversion then
 	  res = deepmap(conversion, res)
        end
@@ -418,11 +414,14 @@ end
     local codec = ZEN.CODEC[name]
     if codec.zentype == 'schema' and codec.encoding == 'complex' then
        local sch = codec.schema or codec.name
-       assert(ZEN.schemas[sch],
-	      "Complex export for schema not found: "..name)
-       assert(luatype(ZEN.schemas[sch].export) == 'function',
+       local s = ZEN.schemas[sch]
+       if not s then error("Schema not found: "..name, 2) end
+       if luatype(s) == 'function' then
+	  error("Simple schema found instead of complex: "..name, 2) end
+       assert(s.export, "Complex export function for schema not found: "..name)
+       assert(luatype(s.export) == 'function',
 	      "Complex export for schema is not a function: "..name)
-       return name -- name of schema itself as it contains export
+       return sch -- name of schema itself as it contains export
     else
        return codec.encoding or CONF.output.encoding.name
     end

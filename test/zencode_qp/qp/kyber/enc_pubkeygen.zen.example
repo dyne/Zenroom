@@ -1,0 +1,6 @@
+Rule check version 2.0.0 
+Scenario qp : Create and publish the kyber public key
+Given I am 'Alice'
+and I have the 'keyring'
+When I create the kyber public key
+Then print my 'kyber public key'

@@ -11,7 +11,7 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
 cat <<EOF | save bitcoin keys.json
-{ "keys": { "testnet": "cPW7XRee1yx6sujBWeyZiyg18vhhQk9JaxxPdvwGwYX175YCF48G" } }
+{ "keyring": { "testnet": "cPW7XRee1yx6sujBWeyZiyg18vhhQk9JaxxPdvwGwYX175YCF48G" } }
 EOF
 
 cat <<EOF | save bitcoin txinput.json
@@ -62,7 +62,7 @@ and I have a 'satoshi amount'
 and I have a 'satoshi fee'
 and I have a 'testnet address'
 and I have a 'testnet unspent'
-When I create the keys
+When I create the testnet key
 and I rename 'wif' to 'testnet'
 and I move 'testnet' in 'keyring'
 and I create the testnet transaction to 'testnet address'
@@ -73,7 +73,7 @@ Then print the 'testnet raw transaction' as 'hex'
 and print the 'keyring'
 EOF
 
-cat <<EOF | debug check_import.zen -a wif.json -k keys.json
+cat <<EOF | zexe check_import.zen -a wif.json -k keys.json
 Given I have the 'testnet key' named 'wif'
 and I have the 'keyring'
 Then print all data

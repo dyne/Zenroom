@@ -8,7 +8,7 @@ jobs:
     steps:
       - uses: numworks/setup-arm-toolchain@2020-q4
       - name: checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: update dependencies
         run: |
           sudo apt update

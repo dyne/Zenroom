@@ -1,8 +1,6 @@
 Scenario 'ecdh': let us load some stuff cause it is fun!
 Given I am 'Alice'
-And I have my  'keypair'
+And I have my 'keyring'
 And I have a 'string array' named 'myFiveStrings' inside 'myFirstObject' 
 And I have a 'string array' named 'mySecondArray' inside 'mySecondObject' 
-And debug
 Then print all data
-And debug

@@ -1,0 +1,6 @@
+Rule check version 2.0.0
+Scenario ecdh
+Given I am 'Alice'
+Given I have the 'keyring'
+When I create the ecdh public key
+Then print my 'ecdh public key'

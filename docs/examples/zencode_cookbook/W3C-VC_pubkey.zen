@@ -1,4 +1,5 @@
 Scenario 'ecdh': Publish the public key
 Given that I am known as 'Authority'
-and I have my 'keypair'
-Then print my 'public key' from 'keypair'
+and I have my 'keyring'
+When I create the ecdh public key
+Then print my 'ecdh public key'

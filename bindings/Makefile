@@ -8,6 +8,9 @@ npm:
 	tar cvfz zenroom-npm.tar.gz zenroom-npm
 	rm -rf zenroom-npm
 
+meson:
+	make -C .. meson
+
 clean:
 	rm -f VERSION
 	rm -rf javascript/emsdk/

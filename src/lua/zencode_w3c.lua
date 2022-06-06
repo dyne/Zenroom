@@ -48,12 +48,12 @@ local function jws_octet_to_signature(obj)
 end
 
 -- return octet string suitable for JWS encapsulation
-local function jws_signature_to_octet(obj)
+local function jws_signature_to_octet(obj, algo)
     local header =
         OCTET.from_string(
         JSON.encode(
             {
-                alg = 'ES256K',
+                alg = algo or 'ES256K', -- default secp256k1
                 b64 = true,
                 crit = 'b64'
             }
@@ -87,20 +87,18 @@ When(
     "sign the verifiable credential named ''",
     function(vc)
         local cred = have(vc)
-        local keypair = have 'keypair'
-        ZEN.assert(
-            not cred.proof,
-            'The object is already signed: ' .. vc
-        )
+        local sk = havekey'ecdh' -- assuming secp256k1
+        ZEN.assert(not cred.proof,'The object is already signed: ' .. vc)
         local proof = {
-            type = 'Zenroom', -- .. VERSION, -- , "Signature", -- TODO: check what to write here for secp256k1
+            type = 'Zenroom v'..ZENROOM_VERSION.original,
+	    -- "Signature", -- TODO: check what to write here for secp256k1
             -- created = "2018-06-18T21:19:10Z",
             proofPurpose = 'authenticate' -- assertionMethod", -- TODO: check
         }
         local cred_str = JSON.encode(cred)
         proof.jws =
             jws_signature_to_octet(
-            ECDH.sign(keypair.private_key, OCTET.from_string(cred_str))
+	      ECDH.sign(sk, OCTET.from_string(cred_str))
         )
         ACK[vc].proof = deepmap(OCTET.from_string, proof)
     end
@@ -110,7 +108,7 @@ IfWhen(
     "verify the verifiable credential named ''",
     function(vc)
         local cred = have(vc)
-        local public_key = have 'public_key'
+        local public_key = have 'ecdh public key'
         ZEN.assert(cred.proof, 'The object has no signature: ' .. vc)
         ZEN.assert(
             cred.proof.jws,

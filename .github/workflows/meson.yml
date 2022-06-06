@@ -32,8 +32,8 @@ jobs:
         env:
           CC: ${{ matrix.compiler }}
         run: |
-          meson build builddir && ninja -C builddir
+          make meson && ninja -C meson
 
       - name: Run tests
         run: |
-          ninja -C builddir test
+          ninja -C meson test

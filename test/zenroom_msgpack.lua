@@ -29,7 +29,11 @@ test = {
 test_hash = sha256( ZEN.serialize(test) ):hex()
 print( "ENC SHA256: ".. test_hash)
 sm = MPACK.encode(test)
-d = MPACK.decode(sm)
+print( sm )
+local ssm = OCTET.from_rawlen(sm, #sm)
+local b64 = ssm:base64()
+
+d = MPACK.decode(OCTET.from_base64(b64):string())
 res_hash = sha256( ZEN.serialize(d) ):hex()
 print( "DEC SHA256: ".. res_hash)
 assert( res_hash == test_hash, "encoding and decoding mismatch")

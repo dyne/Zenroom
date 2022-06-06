@@ -1,0 +1,8 @@
+Rule check version 2.0.0
+Scenario 'ecdh': Alice decrypts the message from Bob
+Given I am 'Alice'
+and I have the 'keyring'
+and I have a 'ecdh public key' from 'Bob'
+and I have a 'secret message'
+When I decrypt the text of 'secret message' from 'Bob'
+Then print the 'text'

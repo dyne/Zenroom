@@ -1,0 +1,6 @@
+Scenario ecdh
+Given I have a 'ecdh public key' from 'The Signer'
+and I have a 'ecdh signature'
+and I have a 'string' named 'message'
+When I verify the 'message' has a ecdh signature in 'ecdh signature' by 'The Signer'
+Then print the 'message'

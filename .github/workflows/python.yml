@@ -18,12 +18,13 @@ jobs:
         working-directory: bindings/python3
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-python@v2
         name: Install Python
         with:
           python-version: '3.7'
       - run: sudo apt-get update && sudo apt-get install -y cmake vim zsh
+      - run: pip install meson ninja
       - run: pip install -e .[test]
       - run: pytest -s tests
 
@@ -36,7 +37,7 @@ jobs:
         os: [ubuntu-18.04, macos-10.15]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set up QEMU
         if: runner.os == 'Linux'
@@ -66,8 +67,8 @@ jobs:
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_24
           # Skip building on Python 2.7, Python 3.5, 3.6 and PyPy on all platforms
           CIBW_SKIP: cp27-* cp3{5,6}-* pp* *-musllinux*
-          CIBW_BEFORE_BUILD_LINUX: apt update && apt install -y cmake vim zsh
-          CIBW_BEFORE_BUILD_MACOS: brew install cmake vim zsh
+          CIBW_BEFORE_BUILD_LINUX: apt update && apt install -y cmake vim zsh && pip install meson ninja
+          CIBW_BEFORE_BUILD_MACOS: brew install cmake vim zsh && pip install meson ninja
 
 
       - uses: actions/upload-artifact@v2

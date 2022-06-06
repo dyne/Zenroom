@@ -47,7 +47,7 @@ SOURCES := \
 	zen_octet.o zen_ecp.o zen_ecp2.o zen_big.o \
 	zen_fp12.o zen_random.o zen_hash.o \
 	zen_ecdh_factory.o zen_ecdh.o \
-	zen_aes.o \
+	zen_aes.o zen_qp.o \
 	randombytes.o \
 	cortex_m.o
 

@@ -31,24 +31,14 @@ all:
 
 # if ! [ -r build/luac ]; then ${gcc} -I${luasrc} -o build/luac ${luasrc}/luac.c ${luasrc}/liblua.a -lm; fi
 
-.PHONY: meson meson-re meson-test
-meson:
-	meson -Dexamples=true -Ddocs=true -Doptimization=3 build meson
-	ninja -C meson
-meson-re:
-	meson --reconfigure -Dexamples=true -Ddocs=true -Doptimization=3 build meson
-	ninja -C meson
-meson-test:
-	ninja -C meson test
-
-meson-analyze:
-	SCANBUILD=$(pwd)/build/scanbuild.sh ninja -C meson scan-build
+.PHONY: zstd
 
 sonarqube:
 	@echo "Configure login token in build/sonarqube.sh"
 	cp -v build/sonar-project.properties .
 	./build/sonarqube.sh
 
+embed-lua: lua_embed_opts := $(if ${COMPILE_LUA}, compile)
 embed-lua:
 	@echo "Embedding all files in src/lua"
 	./build/embed-lualibs ${lua_embed_opts}
@@ -74,6 +64,9 @@ include ${pwd}/build/windows.mk
 # build targets for linux systems (also musl and android)
 include ${pwd}/build/linux.mk
 
+# build targets for the meson build system (mostly linux)
+include ${pwd}/build/meson.mk
+
 # build targets for apple systems (OSX and IOS)
 include ${pwd}/build/osx.mk
 
@@ -88,31 +81,36 @@ esp32: apply-patches milagro lua53
 	CC=${pwd}/build/xtensa-esp32-elf/bin/xtensa-esp32-elf-${gcc} \
 	LD=${pwd}/build/xtensa-esp32-elf/bin/xtensa-esp32-elf-ld \
 	CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-		make -C src linux
+		$(MAKE) -C src linux
 
 # static dependencies in lib
 # lpeglabel:
-# 	CC=${gcc} CFLAGS="${cflags} -I${pwd}/lib/lua53/src" AR="${ar}" make -C lib/lpeglabel
+# 	CC=${gcc} CFLAGS="${cflags} -I${pwd}/lib/lua53/src" AR="${ar}" $(MAKE) -C lib/lpeglabel
+
+zlib:
+	CC=${gcc} CFLAGS="${cflags}" \
+	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
+	pwd="${pwd}" $(MAKE) -C ${pwd}/build/zlib -f ZenMakefile
 
 android-lua53:
 	CC=${gcc} CFLAGS="${cflags} ${lua_cflags}" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
-	make -C ${pwd}/lib/lua53/src ${platform}
+	$(MAKE) -C ${pwd}/lib/lua53/src ${platform}
 
 musl-lua53:
 	CC=${gcc} CFLAGS="${cflags} ${lua_cflags}" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
-	make -C ${pwd}/lib/lua53/src ${platform}
+	$(MAKE) -C ${pwd}/lib/lua53/src ${platform}
 
 lua53:
 	CC=${gcc} CFLAGS="${cflags} ${lua_cflags}" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
-	make -C ${pwd}/lib/lua53/src ${platform}
+	$(MAKE) -C ${pwd}/lib/lua53/src ${platform}
 
 cortex-lua53:
 	CC=${gcc} CFLAGS="${cflags} ${lua_cflags} -DLUA_BAREBONE" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
-	make -C ${pwd}/lib/lua53/src ${platform}
+	$(MAKE) -C ${pwd}/lib/lua53/src ${platform}
 
 milagro:
 	@echo "-- Building milagro (${system})"
@@ -126,11 +124,17 @@ milagro:
 	fi
 	if ! [ -r ${pwd}/lib/milagro-crypto-c/build/lib/libamcl_core.a ]; then \
 		CC=${gcc} CFLAGS="${cflags}" AR=${ar} RANLIB=${ranlib} LD=${ld} \
-		make -C ${pwd}/lib/milagro-crypto-c/build; \
+		$(MAKE) -C ${pwd}/lib/milagro-crypto-c/build; \
 	fi
+	CC=${gcc} CFLAGS="${cflags}" $(MAKE) quantum-proof
+
+quantum-proof: CFLAGS += -I../../src -I.
+quantum-proof:
+	@echo "-- Building Quantum-Proof libs"
+	$(MAKE) -C ${pwd}/lib/pqclean
 
 check-milagro: milagro
-	CC=${gcc} CFLAGS="${cflags}" make -C ${pwd}/lib/milagro-crypto-c test
+	CC=${gcc} CFLAGS="${cflags}" $(MAKE) -C ${pwd}/lib/milagro-crypto-c test
 
 zstd:
 	echo "-- Building ZSTD"
@@ -139,15 +143,15 @@ zstd:
 	AR=${ar} \
 	RANLIB=${ranlib} \
 	LD=${ld} \
-	CFLAGS="${cflags} -fPIC" \
+	CFLAGS="${cflags}" \
 	LDFLAGS="${ldflags}" \
-	make libzstd.a -C ${pwd}/lib/zstd \
+	$(MAKE) libzstd.a -C ${pwd}/lib/zstd \
 	ZSTD_LIB_DICTBUILDER=0 \
 	ZSTD_LIB_DEPRECATED=0 \
 	ZSTD_LEGACY_SUPPORT=0 \
 	HUF_FORCE_DECOMPRESS_X1=1 \
 	ZSTD_FORCE_DECOMPRESS_SEQUENCES_SHORT=1 \
-	ZSTD_STRIP_ERROR_STRINGS=1 \
+	ZSTD_STRIP_ERROR_STRINGS=0 \
 	ZSTD_NO_INLINE=1
 
 # -------------------
@@ -174,11 +178,13 @@ install-lua:
 	cp src/ecdh.so ${destlib}
 
 clean:
-	make clean -C ${pwd}/lib/lua53/src
+	rm -rf ${pwd}/meson
+	$(MAKE) clean -C ${pwd}/lib/lua53/src
+	$(MAKE) clean -C ${pwd}/lib/pqclean
 	rm -rf ${pwd}/lib/milagro-crypto-c/build
-	make clean -C ${pwd}/lib/zstd
-	make clean -C ${pwd}/src
-	make clean -C ${pwd}/bindings
+	$(MAKE) clean -C ${pwd}/lib/zstd
+	$(MAKE) clean -C ${pwd}/src
+	$(MAKE) clean -C ${pwd}/bindings
 	rm -f ${extras}/index.*
 	rm -rf ${pwd}/build/asmjs
 	rm -rf ${pwd}/build/wasm
@@ -190,7 +196,7 @@ clean:
 
 clean-src:
 	rm -f src/zen_ecdh_factory.c src/zen_ecp_factory.c src/zen_big_factory.c
-	make clean -C src
+	$(MAKE) clean -C src
 
 distclean:
 	rm -rf ${musl}

@@ -1,15 +1,23 @@
 #!/usr/bin/env bash
 
-# DEBUG=3
 SUBDOC=branching
 
+DEBUG=1
 ####################
 # common script init
 if ! test -r ../utils.sh; then
 	echo "run executable from its own directory: $0"; exit 1; fi
 . ../utils.sh $*
+
+is_cortexm=false
+if [[ "$1" == "cortexm" ]]; then
+	is_cortexm=true
+fi
+
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
+
+set -e
 
 cat << EOF | save branching leftrightA.json
 { "number_lower": 10,
@@ -79,3 +87,100 @@ endif
 
 EOF
 
+cat <<EOF | save branching found.json
+{
+	"str": "good",
+	"empty_arr": [],
+	"not_empty_dict": {
+		      "empty_octet":""
+		      },
+	"arr": ["hello",
+		"goodmorning",
+		"hi",
+		"goodevening"],
+	"dict": {
+		"hello": "world",
+		"nice": "world",
+		"big": "world"
+		}
+}
+EOF
+
+
+cat << EOF | zexe found.zen -a found.json | jq .
+Given I have a 'string dictionary' named 'dict'
+Given I have a 'string array' named 'arr'
+Given I have a 'string dictionary' named 'not_empty_dict'
+Given I have a 'string array' named 'empty_arr'
+Given I have a 'string' named 'str'
+
+When I create the 'string array' named 'found output'
+
+If 'str' is found
+When I insert string '1.success' in 'found output'
+EndIf
+
+If 'empty_arr' is found
+When I insert string '2.success' in 'found output'
+EndIf
+
+If 'hello' is not found
+When I insert string '3.success' in 'found output'
+EndIf
+
+If 'hello' is found in 'arr'
+When I insert string '4.success' in 'found output'
+EndIf
+
+If 'hello' is found in 'dict'
+When I insert string '5.success' in 'found output'
+EndIf
+
+If 'good' is not found in 'arr'
+When I insert string '6.success' in 'found output'
+EndIf
+
+If 'good' is not found in 'dict'
+When I insert string '7.success' in 'found output'
+EndIf
+
+If 'empty octet' is not found in 'not_empty_dict'
+When I insert string '8.success' in 'found output'
+EndIf
+
+
+If 'hello' is found
+When I insert string '1.fail' in 'found output'
+EndIf
+
+If 'str' is not found
+When I insert string '2.fail' in 'found output'
+EndIf
+
+If 'good' is found in 'arr'
+When I insert string '3.fail' in 'found output'
+EndIf
+
+If 'good' is found in 'dict'
+When I insert string '4.fail' in 'found output'
+EndIf
+
+If 'hello' is not found in 'arr'
+When I insert string '5.fail' in 'found output'
+EndIf
+
+If 'hello' is not found in 'dict'
+When I insert string '6.fail' in 'found output'
+EndIf
+
+If 'hello' is found in 'empty arr'
+When I insert string '7.fail' in 'found output'
+EndIf
+
+If 'empty_arr' is not found
+When I insert string '8.fail' in 'found output'
+EndIf
+
+Then print 'found output'
+
+EOF

@@ -23,7 +23,17 @@ EOF
 # needed for Schnorr_sign.zen
 cat <<EOF | save $SUBDOC  message.json
 {
-"message": "`echo "print(O.to_hex(O.random(32)))" | $Z`" 
+"message": "`echo "print(O.to_hex(O.random(32)))" | $Z`" ,
+"messages":[
+	"hello, this is an array test",
+	"hello again, same test of before",
+	"the test ends here, thank you"
+	],
+"messages2": {
+	"first":"hello, this is a dictionary test",
+	"second":"hello again, same test of before",
+	"last":"the test ends here, thank you"
+	}
 }
 EOF
 
@@ -33,22 +43,22 @@ Rule check version 2.0.0
 Scenario schnorr: Create the schnorr private key
 Given I am 'Alice'
 When I create the schnorr key
-Then print the 'keys'
+Then print the 'keyring'
 EOF
 
 cat <<EOF | zexe Schnorr_readkeys.zen -k Alice_Schnorr_privatekey.keys | jq .
 Rule check version 2.0.0 
 Scenario schnorr : Upload the schnorr key
 Given I am 'Alice'
-and I have the 'keys'
-Then print my 'keys'
+and I have the 'keyring'
+Then print my 'keyring'
 EOF
 
 cat <<EOF | zexe Schnorr_createpublickey.zen -k Alice_Schnorr_privatekey.keys | save $SUBDOC Alice_Schnorr_pubkey.json
 Rule check version 2.0.0 
 Scenario schnorr : Create and publish the schnorr public key
 Given I am 'Alice'
-and I have the 'keys'
+and I have the 'keyring'
 When I create the schnorr public key
 Then print my 'schnorr public key' 
 EOF
@@ -69,11 +79,22 @@ cat <<EOF | zexe Schnorr_sign.zen -k Alice_Schnorr_privatekey.keys -a message.js
 Rule check version 2.0.0 
 Scenario schnorr : Alice signs the message
 Given I am 'Alice'
-and I have the 'keys'
+and I have the 'keyring'
 and I have a 'string' named 'message'
+and I have a 'string array' named 'messages'
+and I have a 'string dictionary' named 'messages2'
 When I create the schnorr signature of 'message'
-Then print the 'schnorr signature'
+and I rename the 'schnorr signature' to 'string schnorr signature'
+When I create the schnorr signature of 'messages'
+and I rename the 'schnorr signature' to 'array schnorr signature'
+When I create the schnorr signature of 'messages2'
+and I rename the 'schnorr signature' to 'dictionary schnorr signature'
+Then print the 'string schnorr signature'
+and print the 'array schnorr signature'
+and print the 'dictionary schnorr signature'
 and print the 'message'
+and print the 'messages'
+and print the 'messages2'
 EOF
 
 #merging Alice pubkey with Alice signature and message
@@ -85,10 +106,15 @@ Scenario schnorr : Bob verifies Alice signature
 Given that I am known as 'Bob'
 and I have a 'schnorr public key' from 'Alice'
 and I have a 'string' named 'message'
-and I have a 'schnorr signature'
-If I verify the 'message' has a schnorr signature in 'schnorr signature' by 'Alice'
+and I have a 'string array' named 'messages'
+and I have a 'string dictionary' named 'messages2'
+and I have a 'schnorr signature' named 'string schnorr signature'
+and I have a 'schnorr signature' named 'array schnorr signature'
+and I have a 'schnorr signature' named 'dictionary schnorr signature'
+When I verify the 'message' has a schnorr signature in 'string schnorr signature' by 'Alice'
+and I verify the 'messages' has a schnorr signature in 'array schnorr signature' by 'Alice'
+and I verify the 'messages2' has a schnorr signature in 'dictionary schnorr signature' by 'Alice'
 Then print string 'Success!!!'
-Endif
 EOF
 
 
@@ -117,11 +143,11 @@ Given I am 'Dave'
 and I have a 'ecdh public key' from 'Bob'
 and I have a 'schnorr public key' from 'Alice'
 and I have a 'signature'
-and I have a 'schnorr signature'
+and I have a 'schnorr signature' named 'string schnorr signature'
 and I have a 'string' named 'message ECDH'
 and I have a 'string' named 'message'
 If I verify the 'message ECDH' has a signature in 'signature' by 'Bob'
-If I verify the 'message' has a schnorr signature in 'schnorr signature' by 'Alice'
+If I verify the 'message' has a schnorr signature in 'string schnorr signature' by 'Alice'
 Then print string 'Succes!!!!'
 EndIf
 EOF
@@ -130,3 +156,4 @@ EOF
 rm *.json *.zen *.keys
 
 success
+

@@ -62,6 +62,16 @@ local function _when_remove_array(ele, from)
 	local arr = have(from)
 	local found = false
 	local newdest = { }
+	if luatype(obj) == 'table' then
+	   -- overload __eq for tables
+	   local m_obj = {}
+	   local m_arr = {}
+	   setmetatable(arr, m_arr)
+	   setmetatable(obj, m_obj)
+	   local fun = function(l, r) return ZEN.serialize(l) == ZEN.serialize(r) end
+	   m_arr.__eq = fun
+	   m_obj.__eq = fun
+	end
 	for k,v in next,arr,nil do
 	   if not (v == obj) then
 		  table.insert(newdest,v)
@@ -92,14 +102,25 @@ When("create the new array", function()
 		new_codec('new array', {zentype='array', luatype='table'})
 end)
 
+local function count_f(t)
+   local count = 0
+   if luatype(t) == 'table' then
+      for _, __ in pairs(t) do
+	 count = count + 1
+      end
+   else
+      count = #t
+   end
+   return count
+end
 When("create the length of ''", function(arr)
 	local obj = have(arr)
-	ACK.length = #obj
+	ACK.length = count_f(obj)
 	new_codec('length', {luatype='number',zentype='element'})
 end)
 When("create the size of ''", function(arr)
 	local obj = have(arr)
-	ACK.size = #obj
+	ACK.size = count_f(obj)
 	new_codec('size', {zentype='element',luatype='number'})
 end)
 
@@ -121,6 +142,23 @@ When("insert string '' in ''", function(st, dest)
         ZEN.assert(ZEN.CODEC[dest].zentype == 'array',
 		   "Invalid destination, not an array: "..dest)
 	table.insert(ACK[dest], O.from_string(st))
+end)
+
+When("insert true in ''", function(dest)
+	local d = have(dest)
+        ZEN.assert(luatype(d) == 'table',
+		   "Invalid destination, not a table: "..dest)
+        ZEN.assert(ZEN.CODEC[dest].zentype == 'array',
+		   "Invalid destination, not an array: "..dest)
+	table.insert(ACK[dest], true)
+end)
+When("insert false in ''", function(dest)
+	local d = have(dest)
+        ZEN.assert(luatype(d) == 'table',
+		   "Invalid destination, not a table: "..dest)
+        ZEN.assert(ZEN.CODEC[dest].zentype == 'array',
+		   "Invalid destination, not an array: "..dest)
+	table.insert(ACK[dest], false)
 end)
 
 When("insert '' in ''", function(ele, dest)
@@ -318,4 +356,35 @@ When("create the flat array of keys in ''", function(dic)
 	ACK.flat_array = {}
 	_keys_flat_array(data, ACK.flat_array)
 	new_codec('flat array', { encoding="string" })
+end)
+
+When("create the array of objects named by '' found in ''", function(name, dict)
+	ZEN.assert(isdictionary(dict), "Second argument is not a dictionary")
+	local n = have(name):octet():string()
+	local src = have(dict)
+	empty'array'
+	ACK.array = { }
+	deepmap(function(v,k,res) 
+	      if k == n then table.insert(res, v) end
+	      end, src, ACK.array)
+	new_codec('array', { encoding='string', zentype='array' })
+end)
+
+When("create the array by splitting '' at ''", function(data_name, sep_name)
+        local data = have(data_name):octet():string()
+        local sep = have(sep_name):octet():string()
+        ZEN.assert(#sep == 1, "You can only split with respect to one character")
+        empty'array'
+        local strings = strtok(data, "[^" .. sep .. "]*")
+        local octets = {}
+        for k, v in ipairs(strings) do
+                -- exclude empty strings from conversion
+                if v and #v > 0 then
+                        table.insert(octets, O.from_str(v))
+                end
+        end
+        ACK.array = octets
+
+        new_codec('array', { encoding='string', zentype='array' })
+
 end)

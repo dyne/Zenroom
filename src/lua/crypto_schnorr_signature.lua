@@ -113,7 +113,7 @@ end
 
 -- signing algorithm
 -- @param sk a 32 Byte OCTET, secret key
--- @param m a 32 Byte OCTET, message 
+-- @param m an arbitrary long OCTET, message 
 -- @return an 80 Byte OCTET, signature '(r,s)'', r is 48 Byte long and s is 32 Byte long
 function schnorr.sign(sk, m)
    if iszen(type(sk)) then sk = sk:octet() end
@@ -121,7 +121,7 @@ function schnorr.sign(sk, m)
    local P = pubpoint_gen(sk)
    --for convention we need that P has even y-coordinate
    --N.B: we don't change the point with the new one, but only store the coefficient d needed to obtain it
-   if (P:y() % BIG.new(2)) ~= BIG.new(0) then d = o - d end 
+   if P:y():parity()  then d = o - d end 
    local k
    repeat 
       local a = OCTET.random(32)
@@ -132,7 +132,7 @@ function schnorr.sign(sk, m)
    until k ~= BIG.new(0)
    local R = k*G
    
-   if (R:y() % BIG.new(2)) ~= BIG.new(0) then k = o - k end
+   if R:y():parity() then k = o - k end
    --also here we store only the coefficient k, /wo changing the point R
    local e = BIG.new(hash_tag("BIP0340/challenge", ((R:x()):octet())..((P:x()):octet())..m)) % o
    local r = (R:x()):octet():pad(48) --padding is fundamental, otherwise we could lose non-significant zeros
@@ -146,7 +146,7 @@ end
 
 -- verification algortihm
 -- @param pk a 48 Byte OCTET, public key
--- @param m a 32 Byte OCTET, message 
+-- @param m an arbitrary long OCTET, message 
 -- @param sig an 80 Byte OCTET, signature ('sig=(r,s)')
 -- @return true if verification passes, false otherwise
 function schnorr.verify(pk, m, sig)
@@ -163,7 +163,7 @@ function schnorr.verify(pk, m, sig)
    local e = BIG.new(hash_tag("BIP0340/challenge", r:octet()..(P:x()):octet()..m)) % o 
    local R = (s*G) - (e*P)     --if the signature is valid the result will be k*G as expected   
    assert(not ECP.isinf(R), "Verification failed, point to infinity")
-   assert((R:y() % BIG.new(2) == BIG.new(0)) , "Verification failed, y is odd")
+   assert(not R:y():parity() , "Verification failed, y is odd")
    assert((R:x() == r), "Verification failed")
    return true
 end

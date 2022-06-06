@@ -1,0 +1,5 @@
+Rule check version 2.0.0
+Scenario ecdh
+Given I am 'Alice'
+When I create the ecdh key
+Then print the 'keyring'

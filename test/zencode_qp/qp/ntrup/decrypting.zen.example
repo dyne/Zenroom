@@ -1,0 +1,7 @@
+Rule check version 2.0.0 
+Scenario qp : Alice create the ntrup secret
+Given I am 'Alice'
+and that I have the 'keyring'
+and I have a 'ntrup ciphertext'
+When I create the ntrup secret from 'ntrup ciphertext'
+Then print the 'ntrup secret'

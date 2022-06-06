@@ -317,17 +317,26 @@ int ECP_ZZZ_VP_DSA_NOHASH(int sha,octet *W,octet *H, octet *C,octet *D)
     BIG_XXX r,f,c,d,h2;
     int res=0;
     ECP_ZZZ G,WP;
-    int valid;
+    int valid, clen, dlen;
 
     ECP_ZZZ_generator(&G);
 
     BIG_XXX_rcopy(r,CURVE_Order_ZZZ);
 
-    OCT_shl(C,C->len-MODBYTES_XXX);
-    OCT_shl(D,D->len-MODBYTES_XXX);
+    if(C->len > MODBYTES_XXX) {
+	OCT_shl(C,C->len-MODBYTES_XXX);
+	clen = MODBYTES_XXX;
+    }
+    else clen = C->len;
+    
+    if(D->len > MODBYTES_XXX) {
+	OCT_shl(D,D->len-MODBYTES_XXX);
+	dlen = MODBYTES_XXX;
+    }
+    else dlen = D->len;
 
-    BIG_XXX_fromBytes(c,C->val);
-    BIG_XXX_fromBytes(d,D->val);
+    BIG_XXX_fromBytesLen(c,C->val,clen);
+    BIG_XXX_fromBytesLen(d,D->val,dlen);
 
     int hlen=H->len;
     if (hlen>MODBYTES_XXX) hlen=MODBYTES_XXX;
@@ -374,7 +383,7 @@ int ECP_ZZZ_VP_DSA(int sha,octet *W,octet *F, octet *C,octet *D)
     BIG_XXX r,f,c,d,h2;
     int res=0;
     ECP_ZZZ G,WP;
-    int valid;
+    int valid, clen, dlen;
 
     ehashit(sha,F,-1,NULL,&H,sha);
 
@@ -382,11 +391,20 @@ int ECP_ZZZ_VP_DSA(int sha,octet *W,octet *F, octet *C,octet *D)
 
     BIG_XXX_rcopy(r,CURVE_Order_ZZZ);
 
-    OCT_shl(C,C->len-MODBYTES_XXX);
-    OCT_shl(D,D->len-MODBYTES_XXX);
+    if(C->len > MODBYTES_XXX) {
+	OCT_shl(C,C->len-MODBYTES_XXX);
+	clen = MODBYTES_XXX;
+    }
+    else clen = C->len;
+    
+    if(D->len > MODBYTES_XXX) {
+	OCT_shl(D,D->len-MODBYTES_XXX);
+	dlen = MODBYTES_XXX;
+    }
+    else dlen = D->len;
 
-    BIG_XXX_fromBytes(c,C->val);
-    BIG_XXX_fromBytes(d,D->val);
+    BIG_XXX_fromBytesLen(c,C->val,clen);
+    BIG_XXX_fromBytesLen(d,D->val,dlen);
 
     int hlen=H.len;
     if (hlen>MODBYTES_XXX) hlen=MODBYTES_XXX;
@@ -422,6 +440,54 @@ int ECP_ZZZ_VP_DSA(int sha,octet *W,octet *F, octet *C,octet *D)
     }
 
     return res;
+}
+
+/* From the ephemeral public key (x,y) of a signature (C,D) on H the hash of the message
+   recover the public key PK that verifies the singature, if it exists */
+int ECP_ZZZ_PUBLIC_KEY_RECOVERY(octet *X, int y_parity, octet *H, octet *C, octet *D, octet *PK)
+{
+    BIG_XXX x, c, d, h, r;
+    ECP_ZZZ P, G_neg;
+    int xlen, clen, dlen, hlen;
+
+    if(X->len > MODBYTES_XXX) {
+	OCT_shl(X,X->len-MODBYTES_XXX);
+	xlen = MODBYTES_XXX;
+    }
+    else xlen = X->len;
+    BIG_XXX_fromBytesLen(x,X->val,xlen);
+
+    if (!ECP_ZZZ_setx(&P,x,y_parity)) return -1;
+
+    if(C->len > MODBYTES_XXX) {
+	OCT_shl(C,C->len-MODBYTES_XXX);
+	clen = MODBYTES_XXX;
+    }
+    else clen = C->len;
+    BIG_XXX_fromBytesLen(c,C->val, clen);
+
+    if(D->len > MODBYTES_XXX) {
+	OCT_shl(D,D->len-MODBYTES_XXX);
+	dlen = MODBYTES_XXX;
+    }
+    else dlen = D->len;
+    BIG_XXX_fromBytesLen(d,D->val, dlen);
+
+    hlen=H->len;
+    if (hlen>MODBYTES_XXX) hlen=MODBYTES_XXX;
+    BIG_XXX_fromBytesLen(h,H->val,hlen);
+
+    ECP_ZZZ_generator(&G_neg);
+    ECP_ZZZ_neg(&G_neg);
+
+    ECP_ZZZ_mul2(&P,&G_neg,d,h);
+
+    BIG_XXX_rcopy(r,CURVE_Order_ZZZ);
+    BIG_XXX_invmodp(c,c,r);
+    ECP_ZZZ_mul(&P,c);
+
+    ECP_ZZZ_toOctet(PK,&P,false); //uncompressed public key
+    return ECP_ZZZ_PUBLIC_KEY_VALIDATE(PK);
 }
 
 /* IEEE1363 ECIES encryption. Encryption of plaintext M uses public key W and produces ciphertext V,C,T */

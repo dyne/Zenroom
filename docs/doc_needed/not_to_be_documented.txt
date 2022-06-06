@@ -1,0 +1,44 @@
+# This file is intended to contain all the statements that
+# do not need a documentation. You can add comments with
+# the reason of this choiche by simply placing a "#" and
+# everthing written after it will not be taken into account.
+# You can place a "#" at the beginning of the line or
+# after sentences/scanrios.
+# In order to access the statements in an easier way,
+# they are divided into sections named after the scenario
+# to which they belong, and the name of the section is
+# written betweens "". The sections are separated
+# by a blank line.
+# IMPORTANT: there can not be any other blank line.
+
+"array"
+insert string '' in ''        # "insert '' in ''" more generic and documented
+
+"bitcoin"
+create the bitcoin key with secret key ''	# testnet version documented
+create the bitcoin transaction to ''		# testnet version documented
+create the bitcoin address     	  		# testnet version documented
+create the bitcoin key with secret ''		# testnet version documented
+create the bitcoin key 	    	   		# testnet version documented
+create the bitcoin raw transaction		# testnet version documented
+sign the bitcoin transaction			# testnet version documented
+create the bitcoin public key			# testnet version documented
+create the bitcoin transaction			# testnet version documented
+create the testnet key with secret key ''	# inline
+create the testnet key with secret ''  		# equal to previous that is documented
+create the testnet transaction to ''		# inline
+
+"credential"
+create the credential key with secret key ''	# inline
+create the credential key with secret ''  	# inline
+
+"dictionary"
+create the new dictionary			# "create the ''" is more generic and it is documented
+create the new dictionary named ''		# "create the ''" is more generic and it is documented
+create the copy of '' in ''			# equal to "create the copy of '' from dictionary ''" documented
+create the copy of '' from ''			# equal to "create the copy of '' from dictionary ''" documented
+
+"dp3t"
+create the proximity tracing of infected ids	# inline
+renew the secret day key to a new day	 	# inline
+create the ephemeral ids for today		# inline

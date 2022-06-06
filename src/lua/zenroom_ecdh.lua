@@ -30,8 +30,8 @@ function ecdh.compress_public_key(public)
 end
 
 function ecdh.uncompress_public_key(public)
-   local p = BIG.new(O.from_hex('fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f'))
-   local e = BIG.new(O.from_hex('3fffffffffffffffffffffffffffffffffffffffffffffffffffffffbfffff0c'))
+   local p = ECDH.prime()
+   local e = BIG.shr(p + INT.new(1), 2) -- e = (p+1)/4
 
    local parity = public:sub(1,1)
    assert(parity == O.from_hex('02') or parity == O.from_hex('03'))
@@ -48,13 +48,13 @@ end
 
 -- it is similar to sign eth, s < order/2
 function ecdh.sign_ecdh(sk, data)
-   local Secp256k1n = INT.new(O.from_hex('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141'))
+   local o = ECDH.order()
    local sig, y, sig_s
    sig, y = ECDH.sign_hashed(sk, data, #data)
 
    sig_s = INT.new(sig.s)
-   if sig_s > INT.shr(Secp256k1n, 1) then
-      sig_s = INT.modsub(Secp256k1n, sig_s, Secp256k1n)
+   if sig_s > INT.shr(o, 1) then
+      sig_s = INT.modsub(o, sig_s, o)
       sig.s = sig_s:octet():pad(32)
       y = not y
    end
