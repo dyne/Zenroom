@@ -1,0 +1,11 @@
+Rule check version 2.0.0 
+Scenario schnorr : Create and publish the schnorr public key
+Given I am 'Alice'
+and I have a 'base64' named 'private key'
+
+# here we upload the key
+When I create the schnorr key with secret key 'private key'
+# an equivalent statement is
+# When I create the schnorr key with secret 'private key'
+
+Then print the 'keyring'

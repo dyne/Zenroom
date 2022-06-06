@@ -11,12 +11,7 @@ set -e
 # public key is the corresponding public key
 cat <<EOF | save $SUBDOC  Schnorr_readsecretkeys.keys
 {
-"private_key": "254d726deb59a97872091fcdf2549c462b3ca087b3160645d74d6572a4dd2d26"
-}
-EOF
-cat <<EOF | save $SUBDOC Schnorr_readpubkey.json
-{
-"public_key": "162c895df27ea1d2c9429d274385792d468c4729a250c1f5099aa92febcf34f5691ae341b4481652cecc9ce7ffca7fe7"
+"private_key": "WNChjG0F+Rc11221ua4NI3p8yMKNVHb9macGAgTA3YI="
 }
 EOF
 
@@ -63,16 +58,18 @@ When I create the schnorr public key
 Then print my 'schnorr public key' 
 EOF
 
-cat <<EOF | zexe Schnorr_createpublickey2.zen -k Schnorr_readsecretkeys.keys -a Schnorr_readpubkey.json| jq .
+cat <<EOF | zexe Schnorr_upload_key.zen -k Schnorr_readsecretkeys.keys | jq .
 Rule check version 2.0.0 
 Scenario schnorr : Create and publish the schnorr public key
 Given I am 'Alice'
-and I have a 'hex' named 'private key' 
-and I have a 'hex' named 'public key'
-When I create the schnorr public key with secret key 'private key'
-If I verify 'public key' is equal to 'schnorr public key' 
-Then print my 'schnorr public key'
-EndIf
+and I have a 'base64' named 'private key'
+
+# here we upload the key
+When I create the schnorr key with secret key 'private key'
+# an equivalent statement is
+# When I create the schnorr key with secret 'private key'
+
+Then print the 'keyring'
 EOF
 
 cat <<EOF | zexe Schnorr_sign.zen -k Alice_Schnorr_privatekey.keys -a message.json | save $SUBDOC Alice_Schnorr_sign.json

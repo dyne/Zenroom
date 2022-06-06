@@ -50,5 +50,4 @@ create the signed ethereum transaction		# inline
 create the string from the ethereum bytes named '' # deprecated
 
 "schnorr"
-create the schnorr key with secret key ''	# inline
-create the schnorr key with secret ''		# inline
+create the schnorr key with secret ''		# in the code as comment

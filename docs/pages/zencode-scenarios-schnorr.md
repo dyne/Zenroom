@@ -18,16 +18,15 @@ The output should look like this:
 
 Key generation in Zenroom uses by default a pseudo-random as seed, that is internally generated. 
 
-You can also opt to use a seed generated elsewhere, for example by using the [keypairoom](https://github.com/ledgerproject/keypairoom) library or it's [npm package](https://www.npmjs.com/package/keypair-lib). 
+You can also opt to use a seed generated elsewhere, for example by using the [keypairoom](https://github.com/ledgerproject/keypairoom) library or it's [npm package](https://www.npmjs.com/package/keypair-lib). Suppose you end with a **Schnorr private key**, like:
 
-The statements looks like:
+[](../_media/examples/zencode_cookbook/schnorr/Schnorr_readsecretkeys.keys ':include :type=code json')
 
-```gherkin
-When I create the schnorr key with secret key 'mySeed'
-When I create the schnorr key with secret 'mySeed'
-```
-Which requires you to load a 32 bytes long *base64* object named 'mySeed'.
+Then you can upload it with a script that look like the following script:
 
+[](../_media/examples/zencode_cookbook/schnorr/Schnorr_upload_key.zen ':include :type=code gherkin')
+
+Here we simply print the *keyring*.
 
 ## Public key 
 
@@ -53,18 +52,13 @@ And the output should look like this:
 
 [](../_media/examples/zencode_cookbook/schnorr/Alice_Schnorr_sign.json ':include :type=code json')
 
-You can now merge this file with the one where your schnorr public key is, so that the verifier has everything he needs in one file. You can do it by either use the command:
+You can now merge this file with the one where your schnorr public key is, so that the verifier has everything he needs in one file. You can do it by either use the bash command:
 
-```gherkin
+```bash
 jq -s '.[0]*[1]' pubkey.json signature.json | tee data.json
 ```
 
-where pubkey.json contains the output of the second script and signature.json the output of the above script, or by adding two rows in the previous script, one where you compute the schnorr public key and the other where you print it. The two line to add are:
-
-```gherkin
-When I create the schnorr public key
-Then print my 'schnorr public key'
-```
+where pubkey.json contains the output of the third script and signature.json the output of the above script, or by adding two rows in the previous script, one where you compute the schnorr public key and the other where you print it.
 
 # Verification
 
