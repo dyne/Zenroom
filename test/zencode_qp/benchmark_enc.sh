@@ -1,14 +1,20 @@
 #!/usr/bin/env bash
 
 #input has to be 'ecdh' or 'qp'
-if [ $# != 1 ] || ([ $1 != 'ecdh' ] && [ $1 != 'qp' ]); 
+if [ $# != 1 ] || ([ $1 != 'ecdh' ] && [ $1 != 'kyber' ] && [ $1 != 'ntrup' ]); 
 then
-    echo -e "Correct use:\n ./benchmark_enc.sh ecdh  -->  to compute ecdh benchmark \n ./benchmark_enc.sh qp    -->  to compute qp kyber benchmark"
+    echo -e "Correct use:\n ./benchmark_enc.sh ecdh     -->  to compute ecdh benchmark \n ./benchmark_enc.sh kyber    -->  to compute qp kyber benchmark \n ./benchmark_enc.sh ntrup    -->  to compute qp ntrup benchmark"
     exit 0
 fi
 
-DIR=$1
-SUBDOC=$1/benchmark
+if ([ $1 == 'kyber' ] || [ $1 == 'ntrup' ]);
+then
+    DIR=qp/$1
+
+else
+    DIR=$1
+fi
+SUBDOC=$DIR/benchmark
 
 ######
 # Setup output color aliases
@@ -32,8 +38,8 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 #################
 # Change 'Recursion' to change the amount of recursion
 # Change 'Size' to change the length of the message to be encrypted
-# 32 is raccomanded since it is the same length of the secret created by Kyber
-Recursion=1
+# 32 is raccomanded since it is the same length of the secret created by Kyber and ntrup
+Recursion=10000
 Size=32
 
 
@@ -138,7 +144,9 @@ EOF
 create_cipher(){
     if [ $DIR == "ecdh" ]; then
 	create_message
-	cat "$DIR/encrypting.zen.example" | zexe encrypting.zen -k sender_keys.keys -a to_encrypt.json | save $SUBDOC to_decrypt.json
+	cat "$DIR/encrypting.zen.example" | zexe encrypting.zen -k sender_keys.keys -a to_encrypt.json | save $SUBDOC tmp.json
+	# ecdh needs the sender public key to be able to decrypt the message
+	jq -s '.[0]*.[1]' tmp.json sender_pubkey.json | save $SUBDOC to_decrypt.json
     else
 	cat "$DIR/encrypting.zen.example" | zexe encrypting.zen -a receiver_pubkey.json | save $SUBDOC to_decrypt.json
     fi
@@ -213,6 +221,9 @@ for i in *.zen; do cat $i | save $SUBDOC $i; done
 
 # Clean the folder
 rm *.keys *.json *.zen
+rm -rf ../../docs/examples/zencode_cookbook/qp/kyber/benchmark/
+rm -rf ../../docs/examples/zencode_cookbook/qp/ntrup/benchmark/
+rm -rf ../../docs/examples/zencode_cookbook/ecdh/benchmark/
 
 echo -e "${magenta}\n \n<============================================>${reset}"
 echo -e "${green}\n Change the 'Recursion' in order to change how many time the encryption related scripts should cycle. Currently: \n\n - 'Recursion' is: ${yellow} $Recursion \n" 
