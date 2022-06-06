@@ -1,0 +1,6 @@
+Rule check version 2.0.0 
+Scenario qp : Create and publish the ntrup public key
+Given I am 'Alice'
+and I have the 'keyring'
+When I create the ntrup public key
+Then print my 'ntrup public key'

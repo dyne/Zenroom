@@ -1,8 +1,8 @@
 Rule check version 2.0.0
-Scenario 'ecdh': Receiver decrypts the message from Sender
-Given that I am known as 'Receiver'
-and I have my 'keys'
-and I have a 'ecdh public key' from 'Sender'
+Scenario 'ecdh': Alice decrypts the message from Bob
+Given I am 'Alice'
+and I have the 'keyring'
+and I have a 'ecdh public key' from 'Bob'
 and I have a 'secret message'
-When I decrypt the text of 'secret message' from 'Sender'
-Then print the 'text' as 'string'
+When I decrypt the text of 'secret message' from 'Bob'
+Then print the 'text'
