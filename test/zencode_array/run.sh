@@ -657,4 +657,26 @@ Then print the 'before'
 and print the 'after'
 EOF
 
+cat <<EOF > split.data
+{
+  "id": "did:example:123456789abcdefghi#keys-1",
+  "strange_id": "did::",
+  "very_strange_id": "::",
+  "separator": ":"
+}
+EOF
+
+cat <<EOF | zexe split.zen -a split.data
+Given I have a 'string' named 'id'
+Given I have a 'string' named 'strange_id'
+Given I have a 'string' named 'very_strange_id'
+Given I have a 'string' named 'separator'
+When I create the array by splitting 'strange_id' at 'separator'
+When I rename 'array' to 'strange_array'
+When I create the array by splitting 'very_strange_id' at 'separator'
+When I rename 'array' to 'very_strange_array'
+When I create the array by splitting 'id' at 'separator'
+Then print the data
+EOF
+
 success
