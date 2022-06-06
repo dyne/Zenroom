@@ -93,25 +93,29 @@ local function pickin(section, what, conv, fail)
    local bail  -- fail
    local name = _index_to_string(what)
    root = KIN[section]
-   if root then
-      raw = root[name]
-      if raw then
-         goto found
-      end
+   if not root then
+      root = IN[section]
    end
-   root = IN[section]
-   if root then
+   if not root then
+      error("Cannot find '"..section.."'", 2)
+   end
+   if luatype(root) ~= 'table' then
+      error("Object is not a table: "..section, 2)
+   end
+   if #root == 1 then
       raw = root[name]
-      if raw then
-         goto found
+      if not raw and luatype(root[1]) == 'table' then
+	 raw = root[1][name]
       end
+   else
+      raw = root[name]
+   end
+   if not raw then
+      error("Object not found: "..name.." in "..section, 2)
    end
 
-   -- TODO: check all corner cases to make sure TMP[name] is a k/v map
-   ::found::
-   if not raw then error("Cannot find '" .. name .. "' inside '" .. section .. "' (null value?)",2) end
-   if raw == '' then error("Found empty string '" .. name .."' inside '"..section.."'", 2) end
-
+   if raw == '' then
+      error("Found empty string '" .. name .."' inside '"..section.."'", 2) end
    -- conv = conv or name
    -- if not conv and ZEN.schemas[name] then conv = name end
    -- if no encoding provided then conversion is same as name (schemas etc.)
