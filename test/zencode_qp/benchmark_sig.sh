@@ -36,7 +36,7 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 #################
 # Change 'Recursion' to change the amount of recursion
 # and 'Sizes' to change the length of the messages that need to be signed and verified
-Recursion=1
+Recursion=10000
 Sizes="100 500 1000 2500 5000 7500 10000"
 
 
