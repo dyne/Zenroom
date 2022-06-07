@@ -321,6 +321,7 @@ function ETH.address_from_public_key(pk)
    return H:process(pk:sub(2, #pk)):sub(13, 32)
 end
 
+-- TODO: remove so many .., there should be something like table.concat for octets
 -- Really simple data encoder, it only works with elementary types (for
 -- example ERC-20 only uses this kind of data types)
 function ETH.data_contract_factory(fz_name, params)
@@ -335,6 +336,29 @@ function ETH.data_contract_factory(fz_name, params)
 
       local res = f_id
 
+
+      local tails = {}
+
+      -- check if there are dynamic types and compute tails
+      for i, v in ipairs(params) do
+
+         if v == 'string' or v == 'bytes' then
+            local arg = nil;
+            if iszen(type(args[i])) then
+               arg = args[i]:octet()
+            else
+               arg = O.new(args[i])
+            end
+
+            table.insert(tails, arg)
+         else
+            table.insert(tails, O.new())
+         end
+      end
+
+      local head_size = #params * 32;
+      local tail_size = 0;
+
       for i, v in ipairs(params) do
 	 -- I don't check the range of values (for bool the input should be 0 or 1),
 	 -- while for int<M> should be 0 ... 2^(<M>)-1
@@ -342,7 +366,25 @@ function ETH.data_contract_factory(fz_name, params)
 	    res = res .. BIG.new(args[i]):fixed(32)
 	 elseif v == 'bool' then
 	    res = res .. BIG.new(fif(args[i], 1, 0)):fixed(32)
+         elseif v == 'string' or v == 'bytes' then
+            -- append offset
+            res = res .. BIG.new(head_size + tail_size):fixed(32)
+            tail_size = tail_size + #tails[i]
 	 end
+      end
+      for i, v in pairs(tails) do
+         if #v > 0 then
+            -- right padding
+            local paddingLength = #v % 32
+            local padding
+            if paddingLength > 0 then
+               paddingLength = 32 - paddingLength
+               padding = O.zero(paddingLength)
+            else
+               padding = O.new()
+            end
+            res = res .. INT.new(#v):fixed(32) .. v .. padding
+         end
       end
       return res
    end
@@ -416,6 +458,10 @@ end
 local FAUCET_SIGNATURES = {
    transfer = { i={'address'} },
 }
+
+ETH.transfer_erc20_details = ETH.data_contract_factory(
+        "transferDetails",
+        {"address", "uint256", "bytes"})
 
 ETH.faucet = {}
 for k, v in pairs(FAUCET_SIGNATURES) do

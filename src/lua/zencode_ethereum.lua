@@ -153,13 +153,16 @@ function(destaddr)
   new_codec('ethereum transaction', { zentype = 'schema', encoding = 'complex'})
 end)
 
--- we can store only strings (for the moment)
-When("use the ethereum transaction to store ''",
-function(obj)
-  local content = have(obj)
+local function _use_eth_transaction(abi_fun, ...)
   local tx = have'ethereum transaction'
   ZEN.assert(not tx.data or #tx.data == 0, "Cannot overwrite transaction data")
-  tx.data = ETH.make_storage_data(content)
+  tx.data = abi_fun(...)
+end
+
+-- we can store only strings (for the moment)
+When("use the ethereum transaction to store ''",
+function(content)
+  _use_eth_transaction(ETH.make_storage_data, have(content))
 end)
 
 -- TODO: DEPRECATE
@@ -240,4 +243,20 @@ When("create the ethereum key with secret ''",function(sec)
 	initkeyring'ethereum'
 	ECDH.pubgen(sk)
 	ACK.keyring.ethereum = sk
+end)
+
+When("use the ethereum transaction to transfer '' erc20 tokens to ''",
+     function(quantity, destaddr)
+	_use_eth_transaction(ETH.erc20.transfer,
+                             have(destaddr),
+			     BIG.new(have(quantity)))
+end)
+
+
+When("use the ethereum transaction to transfer '' erc20 tokens to '' with details ''",
+     function(quantity, destaddr, details)
+	_use_eth_transaction(ETH.transfer_erc20_details,
+                             have(destaddr),
+			     BIG.new(have(quantity)),
+                             have(details))
 end)

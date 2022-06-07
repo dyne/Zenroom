@@ -233,6 +233,48 @@ Given I have a 'hex' named 'data'
 When I create the string from the ethereum bytes named 'data'
 Then print data
 EOF
+
+# Transfer erc20 tokens
+NONCE=`getnonce "0xef5dca69e9c573f6acce1b4c641b2b526217328f" | jq -r '.result'`
+cat <<EOF | save $SUBDOC send_tokens.json
+{
+	"keyring": {
+		   "ethereum": "634f3f80fc087ad90866012d74c41ccc698b43592dee7ed27ecb89333c2e3d1c"
+	},
+	"gas price": "100000000000",
+	"gas limit": "100000",
+	"token value": "1",
+	"erc20": "1e30e53E87869aaD8dC5A1A9dAc31a8dD3559460",
+	"receiver": "828bddf0231656fb736574dfd02b7862753de64b",
+	"ethereum nonce": "`echo $(($NONCE))`"
+}
+EOF
+
+cat <<EOF | zexe send_tokens.zen -a send_tokens.json | save $SUBDOC send_tokens_signed_tx.json
+Scenario ethereum
+
+# load the JSON file
+Given I have the 'keyring'
+Given I have a 'ethereum address' named 'receiver'
+Given I have a 'ethereum address' named 'erc20'
+Given I have a 'ethereum nonce'
+and a 'gas price'
+and a 'gas limit'
+# load the number of tokens that will be transferred
+and a 'number' named 'token value'
+
+# create the transaction for the erc20 token contract
+When I create the ethereum transaction to 'erc20'
+# here we fill the data field with all the information needed by the erc20 token contract
+and I use the ethereum transaction to transfer 'token value' erc20 tokens to 'receiver'
+# then i sign it, and it is ready to be broadcast to a node
+When I create the signed ethereum transaction for chain 'fabt'
+
+# print the signed ethereum transaction
+Then print the 'signed ethereum transaction'
+EOF
+
+
 # TODO: verify tx using Alice's public key (not the address)
 
 # local ERC20_SIGNATURES = {
