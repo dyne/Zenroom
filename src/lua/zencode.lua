@@ -109,34 +109,29 @@ local function set_sentence(self, event, from, to, ctx)
 	tt = gsub(tt, ' +$', '') -- remove final spaces
         tt = tt:lower()
         local func = reg[tt]
-        if not func then
-                error('Zencode pattern not found: ' .. tt, 2)
-		return false
-        elseif (type(func) ~= 'function') then
-                error('Zencode function missing: ' .. func, 2)
-		return false
-	end
-	local args = {} -- handle multiple arguments in same string
-        for arg in string.gmatch(ctx.msg, "'(.-)'") do
-                -- convert all spaces to underscore in argument strings
-                arg = uscore(arg, ' ', '_')
-                table.insert(args, arg)
+        if func and type(func) == 'function' then
+	        local args = {} -- handle multiple arguments in same string
+                for arg in string.gmatch(ctx.msg, "'(.-)'") do
+                        -- convert all spaces to underscore in argument strings
+                        arg = uscore(arg, ' ', '_')
+                        table.insert(args, arg)
+                end
+                ctx.Z.id = ctx.Z.id + 1
+                -- AST data prototype
+	        table.insert(
+	               ctx.Z.AST,
+		       {
+		              id = ctx.Z.id, -- ordered number
+                              args = args, -- array of vars
+                              source = ctx.msg, -- source text
+                              section = self.current,
+                              from = from,
+                              to = to,
+                              hook = func
+                       }
+                ) -- function
+                ctx.Z.OK = true
         end
-        ctx.Z.id = ctx.Z.id + 1
-        -- AST data prototype
-	table.insert(
-	        ctx.Z.AST,
-		{
-		        id = ctx.Z.id, -- ordered number
-                        args = args, -- array of vars
-                        source = ctx.msg, -- source text
-                        section = self.current,
-                        from = from,
-                        to = to,
-                        hook = func
-                }
-        ) -- function
-        ctx.Z.OK = true
 	if not ctx.Z.OK and CONF.parser.strict_match then
 		debug_traceback()
 		exitcode(1)
