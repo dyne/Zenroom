@@ -11,7 +11,7 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 HOST="http://test.fabchain.net:8545"
 MY_ADDRESS="ef5dca69e9c573f6acce1b4c641b2b526217328f"
 # token erc20 on fabchian
-ERC20_TOKEN="0x0eAD87F45eC59d01868908174f753C5105a0adE0"
+ERC20_TOKEN="8Cf60F37Cf8EFebEFC567BdCDb61446b7230dB28"
 # receiver
 RECEIVER_SK="85d26b5c8b0da6eddb55aa1022eea46e31de276d581d9e7e005d40afce4f9124"
 RECEIVER_ADDRESS="828bddf0231656fb736574dfd02b7862753de64b"
