@@ -20,8 +20,6 @@
 
 #include <errno.h>
 #include <stdlib.h>
-
-// #include <zenroom.h>
 #include <zen_error.h>
 
 // semantic distinction of alloc calls inside Lua or from outside
@@ -50,6 +48,7 @@ void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
 	// 	error(NULL,"Memory manager missing ZEN context");
 	// 	return NULL;
 	// }
+  (void)ud;
 	if(ptr == NULL) {
 		// When ptr is NULL, osize encodes the kind of object that Lua
 		// is allocating. osize is any of LUA_TSTRING, LUA_TTABLE,

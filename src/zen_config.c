@@ -23,7 +23,7 @@
 //
 // debug=1..3
 // color=1,0
-// rngseed=hex:[256 bytes in hex notation]
+// rngseed=hex:[256 bits in hex notation]
 // print=sys|stb|mutt
 ///////////////////////
 
@@ -73,17 +73,9 @@ extern void set_debug(int lev);
 extern void set_color(int on);
 
 #include <zenroom.h>
-#include <zen_memory.h>
 #include <zen_error.h>
-#include <zen_config.h>
 
 #include <stb_c_lexer.h>
-
-typedef enum { NIL, VERBOSE, COLOR, RNGSEED, PRINTF } zconf;
-static zconf curconf;
-
-char zconf_rngseed[(RANDOM_SEED_LEN*2)+4]; // 0x and terminating \0
-printftype zconf_printf = LIBC;
 
 int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 	(void)stb__strchr;            // avoid compiler warnings
@@ -93,10 +85,12 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 	if(len<3) return 0;
 	stb_lexer lex;
 	char lexbuf[MAX_CONFIG];
+	zconf curconf = NIL;
+	// ZZ->zconf_rngseed[0] = '\0';
+	// ZZ->zconf_printf = LIBC;
+
 	// char *lexbuf = (char*)malloc(MAX_CONFIG);
 	stb_c_lexer_init(&lex, configuration, configuration+len, lexbuf, MAX_CONFIG);
-	zconf_rngseed[0] = '\0'; // set zero rngseed as config flag
-	curconf = NIL;
 	while (stb_c_lexer_get_token(&lex)) {
 		if (lex.token == CLEX_parse_error) {
 			error(NULL,"%s: error parsing configuration: %s", __func__, configuration);
@@ -127,15 +121,15 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 					return 0;
 				}
 				// copy string and null terminate
-				memcpy(zconf_rngseed, lex.string+4, RANDOM_SEED_LEN*2);
-				zconf_rngseed[(RANDOM_SEED_LEN*2)] = 0x0;
+				memcpy(ZZ->zconf_rngseed, lex.string+4, RANDOM_SEED_LEN*2);
+				ZZ->zconf_rngseed[(RANDOM_SEED_LEN*2)] = 0x0;
 				break;
 			}
 
 			if(curconf==PRINTF) {
-				if(strcasecmp(lex.string,"stb") == 0) zconf_printf = STB;
-				else if(strcasecmp(lex.string,"sys") == 0) zconf_printf = SYS;
-				else if(strcasecmp(lex.string,"mutt") == 0) zconf_printf = MUTT;
+				if(strcasecmp(lex.string,"stb") == 0) ZZ->zconf_printf = STB;
+				else if(strcasecmp(lex.string,"sys") == 0) ZZ->zconf_printf = LIBC;
+				else if(strcasecmp(lex.string,"mutt") == 0) ZZ->zconf_printf = MUTT;
 				else {
 					error(NULL,"Invalid print function: %s",lex.string);
 					// free(lexbuf);

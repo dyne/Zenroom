@@ -46,7 +46,6 @@
 
 #include <zenroom.h>
 #include <zen_memory.h>
-#include <zen_config.h>
 
 // hex2oct used to import hex sequence into rng seed
 #include <encoding.h>
@@ -94,10 +93,6 @@ extern void zen_add_random(lua_State *L);
 // single instance globals
 zenroom_t *Z = NULL;   // zenroom STACK
 int EXITCODE = 1; // start from error state
-
-// configured globals by zen_config
-extern char zconf_rngseed[(RANDOM_SEED_LEN*2)+4];
-extern printftype zconf_printf;
 
 static int zen_lua_panic (lua_State *L) {
 	lua_writestringerror("PANIC: unprotected error in call to Lua API (%s)\n",
@@ -182,6 +177,9 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	ZZ->random_external = 0;
 	ZZ->zstd_c = NULL;
 	ZZ->zstd_d = NULL;
+	// set zero rngseed as config flag
+	ZZ->zconf_rngseed[0] = '\0';
+	ZZ->zconf_printf = LIBC;
 
 	if(conf) {
 		if( ! zen_conf_parse(ZZ, conf) ) { // stb parsing
@@ -190,7 +188,7 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 		}
 	}
 
-	switch(zconf_printf) {
+	switch(ZZ->zconf_printf) {
 	case STB:
 		ZZ->sprintf = &z_sprintf;
 		ZZ->snprintf = &z_snprintf;
@@ -215,10 +213,10 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	}
 
 	// use RNGseed from configuration if present (deterministic mode)
-	if(zconf_rngseed[0] != 0x0) {
+	if(ZZ->zconf_rngseed[0] != 0x0) {
 		ZZ->random_external = 1;
 		memset(ZZ->random_seed, 0x0, RANDOM_SEED_LEN);
-		int len = hex2buf(ZZ->random_seed, zconf_rngseed);
+		int len = hex2buf(ZZ->random_seed, ZZ->zconf_rngseed);
 		func(NULL, "RNG seed converted from hex to %u bytes", len);
 	} else {
 		func(NULL, "RNG seed not found in configuration");
