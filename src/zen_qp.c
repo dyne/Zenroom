@@ -476,6 +476,6 @@ int luaopen_qp(lua_State *L) {
 		{NULL,NULL}
 	};
 
-	zen_add_class("qp", ecdh_class, ecdh_methods);
+	zen_add_class(L, "qp", ecdh_class, ecdh_methods);
 	return 1;
 }

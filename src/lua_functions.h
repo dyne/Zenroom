@@ -30,5 +30,5 @@ typedef struct zen_extension_t {
 void zen_add_function(lua_State *L,
                       lua_CFunction func,
                       const char *func_name);
-void zen_add_class(char *name, const luaL_Reg *_class, const luaL_Reg *methods);
+void zen_add_class(lua_State *L, char *name, const luaL_Reg *_class, const luaL_Reg *methods);
 

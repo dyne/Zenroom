@@ -91,14 +91,10 @@ extern int b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz);
 extern int _ecp_to_octet(octet *o, ecp *e);
 extern int _ecp2_to_octet(octet *o, ecp2 *e);
 
-static int _max(int x, int y) { if(x > y) return x;	else return y; }
+static inline int _max(int x, int y) { if(x > y) return x;	else return y; }
 // static int _min(int x, int y) { if(x < y) return x;	else return y; }
 
-// takes a base string and calculated the maximum length of the
-// decoded string
 #include <ctype.h>
-static int getlen_base64(int len) {	return( ((3+(4*(len/3))) & ~0x03)+0x0f ); }
-// static int getlen_base58(int len) {	return( ((3+(5*(len/3))) & ~0x03)+0x0f ); }
 
 // assumes null terminated string
 // returns 0 if not base else length of base encoded string
@@ -466,7 +462,7 @@ static int from_base64(lua_State *L) {
 	if(!len) {
 		lerror(L, "base64 string contains invalid characters");
 		return 0; }
-	int nlen = len + len + len; // getlen_base64(len);
+	int nlen = len + len + len;
 	octet *o = o_new(L, nlen); // 4 byte header
 	OCT_frombase64(o,(char*)s);
 	return 1;
@@ -840,7 +836,7 @@ static int to_base64 (lua_State *L) {
 		lerror(L, "base64 cannot encode an empty string");
 		return 0; }
 	int newlen;
-	newlen = getlen_base64(o->len);
+	newlen = ((3+(4*(o->len/3))) & ~0x03)+0x0f;
 	char *b = zen_memory_alloc(newlen);
 	OCT_tobase64(b,o);
 	lua_pushstring(L,b);
@@ -1405,6 +1401,6 @@ int luaopen_octet(lua_State *L) {
 		{"__tostring",to_base64},
 		{NULL,NULL}
 	};
-	zen_add_class("octet", octet_class, octet_methods);
+	zen_add_class(L, "octet", octet_class, octet_methods);
 	return 1;
 }

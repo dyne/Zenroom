@@ -1021,6 +1021,6 @@ int luaopen_big(lua_State *L) {
 		{"__shr", big_shiftr},
 		{NULL,NULL}
 	};
-	zen_add_class("big", big_class, big_methods);
+	zen_add_class(L, "big", big_class, big_methods);
 	return 1;
 }

@@ -152,6 +152,6 @@ int luaopen_fp12(lua_State *L) {
 		{"__pow", fp12_pow},
 		{NULL,NULL}
 	};
-	zen_add_class("fp12", fp12_class, fp12_methods);
+	zen_add_class(L, "fp12", fp12_class, fp12_methods);
 	return 1;
 }

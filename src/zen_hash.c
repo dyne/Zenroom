@@ -429,6 +429,6 @@ int luaopen_hash(lua_State *L) {
 		{NULL,NULL}
 	};
 
-	zen_add_class("hash", hash_class, hash_methods);
+	zen_add_class(L, "hash", hash_class, hash_methods);
 	return 1;
 }

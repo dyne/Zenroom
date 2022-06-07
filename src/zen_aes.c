@@ -167,6 +167,6 @@ int luaopen_aes(lua_State *L) {
 	};
 
 
-	zen_add_class("aes", aes_class, aes_methods);
+	zen_add_class(L, "aes", aes_class, aes_methods);
 	return 1;
 }
