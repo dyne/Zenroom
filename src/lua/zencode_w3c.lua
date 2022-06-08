@@ -83,6 +83,47 @@ When(
     end
 )
 
+
+When(
+    "create the jws signature of ''", function(src)
+        local cred = have(src)
+	empty'jws'
+        local sk = havekey'ecdh' -- assuming secp256k1
+        ZEN.assert(not cred.proof,'The object is already signed: ' .. src)
+        local proof = {
+            type = 'Zenroom v'..ZENROOM_VERSION.original,
+	    -- "Signature", -- TODO: check what to write here for secp256k1
+            -- created = "2018-06-18T21:19:10Z",
+            proofPurpose = 'authenticate' -- assertionMethod", -- TODO: check
+        }
+	local to_sign
+	if luatype(cred) == 'table' then
+	   to_sign = OCTET.from_string( JSON.encode(cred) )
+	else
+	   to_sign = cred
+	end
+	ACK.jws = OCTET.from_string(
+	   jws_signature_to_octet(ECDH.sign(sk, to_sign)) )
+	new_codec('jws', { zentype = 'element',
+			   encoding = 'string' }) -- url64 encoding is opaque
+    end
+)
+
+IfWhen(
+    "verify the jws signature of ''",
+    function(src)
+        local jws = have'jws'
+	local signed = have(src)
+        local pub = have 'ecdh public key'
+        local signature = jws_octet_to_signature(jws)
+        -- omit the proof subtable from verification
+        ZEN.assert(
+            ECDH.verify(pub, signed, signature),
+            'The signature does not validate: ' .. src
+        )
+    end
+)
+
 When(
     "sign the verifiable credential named ''",
     function(vc)
@@ -95,7 +136,12 @@ When(
             -- created = "2018-06-18T21:19:10Z",
             proofPurpose = 'authenticate' -- assertionMethod", -- TODO: check
         }
-        local cred_str = JSON.encode(cred)
+	local cred_str
+	if luatype(cred) == 'table' then
+	   cred_str = JSON.encode(cred)
+	else
+	   cred_str = cred
+	end
         proof.jws =
             jws_signature_to_octet(
 	      ECDH.sign(sk, OCTET.from_string(cred_str))

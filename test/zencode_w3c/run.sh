@@ -87,3 +87,28 @@ When I get the verification method in 'my-vc'
 Then print 'verification method' as 'string'
 EOF
 
+
+cat <<EOF | save w3c simple_string.json
+{ "simple": "once upon a time... there was a wolf" }
+EOF
+
+cat <<EOF | zexe W3C-jws_sign.zen -a simple_string.json -k W3C-VC_issuerKeypair.json | save w3c W3C-jws_signed.json
+Scenario 'w3c': sign JSON
+Scenario 'ecdh': (required)
+Given that I am 'Authority'
+Given I have my 'keyring'
+Given I have a 'string' named 'simple'
+When I create the jws signature of 'simple'
+Then print the 'jws'
+and print the 'simple'
+EOF
+
+cat <<EOF | zexe W3C-jws_verify.zen -a W3C-jws_signed.json -k W3C-VC_pubkey.json
+Scenario 'w3c': verify signature
+Scenario 'ecdh': (required)
+Given I have a 'ecdh public key' inside 'Authority'
+and I have a 'string' named 'jws'
+and I have a 'string' named 'simple'
+When I verify the jws signature of 'simple'
+Then print the string 'W3C JWS IS VALID'
+EOF
