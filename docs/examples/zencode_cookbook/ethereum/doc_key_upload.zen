@@ -1,0 +1,10 @@
+Scenario ethereum
+
+Given I have a 'hex' named 'ethereum private key'
+
+# here we upload the key
+When I create the ethereum key with secret key 'ethereum private key'
+# an equivalent statement is
+# When I create the ethereum key with secret 'ethereum private key'
+
+Then print the keyring

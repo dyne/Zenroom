@@ -1,0 +1,23 @@
+Rule check version 2.0.0 
+Scenario schnorr : Bob verifies Alice signature
+
+# Declearing who I am and load all the stuff
+Given that I am known as 'Bob'
+and I have a 'schnorr public key' from 'Alice'
+and I have a 'string' named 'message'
+and I have a 'string array' named 'message array'
+and I have a 'string dictionary' named 'message dict'
+and I have a 'schnorr signature' named 'string schnorr signature'
+and I have a 'schnorr signature' named 'array schnorr signature'
+and I have a 'schnorr signature' named 'dictionary schnorr signature'
+
+# Verifying the signatures
+When I verify the 'message' has a schnorr signature in 'string schnorr signature' by 'Alice'
+and I verify the 'message array' has a schnorr signature in 'array schnorr signature' by 'Alice'
+and I verify the 'message dict' has a schnorr signature in 'dictionary schnorr signature' by 'Alice'
+
+# Print the original messages and a string of success
+Then print the 'message'
+and print the 'message array'
+and print the 'message dict'
+Then print string 'Zenroom certifies that signatures are all correct!'

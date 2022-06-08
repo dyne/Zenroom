@@ -1,0 +1,4 @@
+Scenario ethereum
+Given I have a 'hex' named 'data'
+When I create the 'data retrieved' decoded from ethereum bytes 'data'
+Then print the 'data retrieved' as 'string'

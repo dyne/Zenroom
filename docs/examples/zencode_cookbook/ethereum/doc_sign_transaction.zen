@@ -1,0 +1,5 @@
+scenario ethereum
+given I have the 'keyring'
+and I have a 'ethereum transaction'
+when I create the signed ethereum transaction for chain 'fabt'
+then print the 'signed ethereum transaction'

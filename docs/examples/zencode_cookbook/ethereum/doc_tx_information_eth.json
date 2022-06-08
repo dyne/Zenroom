@@ -1,0 +1,9 @@
+{
+  "ethereum nonce": "0",
+  "gas price": "100000000000",
+  "gas limit": "300000",
+  "gwei value": "10",
+  "bob": {
+    "ethereum_address": "0ba910ba5fcced2a2538718367ea0a57c0ca881a"
+  }
+}

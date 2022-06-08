@@ -1,0 +1,7 @@
+{
+  "ethereum nonce": "0",
+  "gas price": "100000000000",
+  "gas limit": "300000",
+  "storage_contract": "E54c7b475644fBd918cfeDC57b1C9179939921E6",
+  "data": "This is my first data stored on ethereum blockchain"
+}

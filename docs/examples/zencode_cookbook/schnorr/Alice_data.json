@@ -1,0 +1,19 @@
+{
+  "Alice": {
+    "schnorr_public_key": "BR98Dh6XMl3xXwdLD2+smhOQyCjBlEnLxMV6V0tRWBUBoJLAWs1WEAgZ2nbhdoUh"
+  },
+  "array_schnorr_signature": "EkJHXWssdxcgnsq3WGhEJsz4ZKAae6o4gM9d5DYzZ+u0BD2ZQkrkci2UKba5OntNaXIPAO34/5YvOy6fIKRqWfHnaWVkYyTbCQsFrcIA8do=",
+  "dictionary_schnorr_signature": "CmjYfc64tnfTcxssg6pN85jUQhmTeBs53IdLNLK2GmWoAIgcq9igMuoIr+r9MDV2R07hBJUrnvFJ0l1wtvMd6LwJ7PrU9ED118Nkx7qpXLY=",
+  "message": "Dear Bob, this message was written by Alice, you can verify it!",
+  "message_array": [
+    "Hello World! This is my string array, element [0]",
+    "Hello World! This is my string array, element [1]",
+    "Hello World! This is my string array, element [2]"
+  ],
+  "message_dict": {
+    "message": "Hello Bob!",
+    "receiver": "Bob",
+    "sender": "Alice"
+  },
+  "string_schnorr_signature": "FZIUilXZ7y+6JM6uGhQqfRhHmPGlqWRadcIVD1c8xKeIYMcpodRf6CsqYYk2ZZkOO9zeH/nXKqIyApSxw76b4GsY1lbG5lX1rMWBjM30mQ8="
+}

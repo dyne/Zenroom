@@ -1,0 +1,25 @@
+Rule check version 2.0.0 
+Scenario schnorr : Alice signs the message
+
+# Declearing who I am and load all the stuff
+Given I am 'Alice'
+and I have the 'keyring'
+and I have a 'string' named 'message'
+and I have a 'string array' named 'message array'
+and I have a 'string dictionary' named 'message dict'
+
+# Creating the signatures and rename them
+When I create the schnorr signature of 'message'
+and I rename the 'schnorr signature' to 'string schnorr signature'
+When I create the schnorr signature of 'message array'
+and I rename the 'schnorr signature' to 'array schnorr signature'
+When I create the schnorr signature of 'message dict'
+and I rename the 'schnorr signature' to 'dictionary schnorr signature'
+
+# Printing both the messages and the signatures 
+Then print the 'string schnorr signature'
+and print the 'array schnorr signature'
+and print the 'dictionary schnorr signature'
+and print the 'message'
+and print the 'message array'
+and print the 'message dict'

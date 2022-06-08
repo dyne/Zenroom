@@ -1,0 +1,14 @@
+Scenario ecdh
+Scenario ethereum
+
+# load the ethereum key
+Given I have a 'hex' named 'ethereum' in 'keyring'
+
+# create the ecdh public key
+When I create the ecdh key with secret key 'ethereum'
+When I create the ecdh public key
+# rename it to ethereum public key
+and I rename the 'ecdh public key' to 'ethereum public key'
+
+# print the ethereum public key as hex
+Then print the 'ethereum public key' as 'hex'

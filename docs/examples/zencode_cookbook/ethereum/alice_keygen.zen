@@ -1,0 +1,4 @@
+Scenario ethereum
+Given nothing
+When I create the ethereum key
+Then print the 'keyring'
