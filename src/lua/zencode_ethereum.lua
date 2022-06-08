@@ -90,7 +90,9 @@ ZEN.add_schema(
       -- otherwise as decimal (here we have to use tonumber
       -- in order to contemplate hex strings)
       ethereum_nonce = { import = function(o)
-                                    return INT.new(tonumber(o)) end,
+			   local n = tonumber(o)
+			   ZEN.assert(n, "Ethereum nonce not valid")
+			   return INT.new(n) end,
                          export = function(o) return o:decimal() end },
       ethereum_transaction = { import = import_eth_tx,
 			       export = export_eth_tx },
