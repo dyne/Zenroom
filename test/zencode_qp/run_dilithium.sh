@@ -16,6 +16,23 @@ cat <<EOF | save $SUBDOC  Dilithium_readsecretkeys.keys
 }
 EOF
 
+# elements that are signed
+cat <<EOF | save $SUBDOC  message.json
+{
+"message": "Dear Bob, this message was written by Alice and signed with Dilithium!" ,
+"message array":[
+	"Hello World! This is my string array, element [0]",
+	"Hello World! This is my string array, element [1]",
+	"Hello World! This is my string array, element [2]"
+	],
+"message dict": {
+	"sender":"Alice",
+	"message":"Hello Bob!",
+	"receiver":"Bob"
+	}
+}
+EOF
+
 #---simple dilithium operations: uploading, creating private and public keys, sign/ver --#
 cat <<EOF | zexe Dilithium_createprivatekey.zen | save $SUBDOC Alice_Dilithium_privatekey.keys
 Rule check version 2.0.0
@@ -51,30 +68,61 @@ When I create the dilithium public key with secret key 'private key'
 Then print my 'dilithium public key'
 EOF
 
-cat <<EOF | zexe Dilithium_sign.zen -k Alice_Dilithium_privatekey.keys | save $SUBDOC Alice_Dilithium_sign.json
+cat <<EOF | zexe Dilithium_sign.zen -k Alice_Dilithium_privatekey.keys -a message.json | save $SUBDOC Alice_Dilithium_sign.json
 Rule check version 2.0.0 
 Scenario qp : Alice signs the message
+
+# Declearing who I am and load all the stuff
 Given I am 'Alice'
 and I have the 'keyring'
-When I write string 'Message signed by Alice with Dilithium' in 'message'
-and I create the dilithium signature of 'message'
-Then print the 'dilithium signature'
+and I have a 'string' named 'message'
+and I have a 'string array' named 'message array'
+and I have a 'string dictionary' named 'message dict'
+
+# Creating the signatures and rename them
+When I create the dilithium signature of 'message'
+and I rename the 'dilithium signature' to 'string dilithium signature'
+When I create the dilithium signature of 'message array'
+and I rename the 'dilithium signature' to 'array dilithium signature'
+When I create the dilithium signature of 'message dict'
+and I rename the 'dilithium signature' to 'dictionary dilithium signature'
+
+# Printing both the messages and the signatures
+Then print the 'string dilithium signature'
+and print the 'array dilithium signature'
+and print the 'dictionary dilithium signature'
 and print the 'message'
+and print the 'message array'
+and print the 'message dict'
 EOF
 
 #merging Alice pubkey with Alice signature and message
-jq -s '.[0]*.[1]' Alice_Dilithium_pubkey.json Alice_Dilithium_sign.json | save $SUBDOC Alice_data.json
+jq -s '.[0]*.[1]' Alice_Dilithium_pubkey.json Alice_Dilithium_sign.json | save $SUBDOC Alice_Dilithium_data.json
 
-cat <<EOF | zexe Dilithium_verifysign.zen -a Alice_data.json
+cat <<EOF | zexe Dilithium_verifysign.zen -a Alice_Dilithium_data.json | save $SUBDOC Dilitihum_verifysign.json
 Rule check version 2.0.0 
 Scenario qp : Bob verifies Alice signature
+
+# Declearing who I am and load all the stuff
 Given that I am known as 'Bob'
 and I have a 'dilithium public key' from 'Alice'
 and I have a 'string' named 'message'
-and I have a 'dilithium signature'
-If I verify the 'message' has a dilithium signature in 'dilithium signature' by 'Alice'
-Then print string 'Success!!!'
-Endif
+and I have a 'string array' named 'message array'
+and I have a 'string dictionary' named 'message dict'
+and I have a 'dilithium signature' named 'string dilithium signature'
+and I have a 'dilithium signature' named 'array dilithium signature'
+and I have a 'dilithium signature' named 'dictionary dilithium signature'
+
+# Verifying the signatures
+When I verify the 'message' has a dilithium signature in 'string dilithium signature' by 'Alice'
+and I verify the 'message array' has a dilithium signature in 'array dilithium signature' by 'Alice'
+and I verify the 'message dict' has a dilithium signature in 'dictionary dilithium signature' by 'Alice'
+
+# Print the original messages and a string of success
+Then print the 'message'
+and print the 'message array'
+and print the 'message dict'
+Then print string 'Zenroom certifies that signatures are all correct!'
 EOF
 
 
@@ -90,7 +138,7 @@ Then print my 'dilithium public key'
 EOF
 
 #merging Alice data and Eve public key for next test
-jq -s '.[0]*.[1]' Alice_data.json Eve_Dilithium_pubkey.json | save $SUBDOC Alice_Eve_Dilithium.json
+jq -s '.[0]*.[1]' Alice_Dilithium_data.json Eve_Dilithium_pubkey.json | save $SUBDOC Alice_Eve_Dilithium.json
 
 cat <<EOF | zexe Dilithium_multiplekeys.zen -a Alice_Eve_Dilithium.json
 Rule check version 2.0.0 
@@ -99,11 +147,11 @@ Given that I am known as 'Carl'
 and I have a 'dilithium public key' from 'Alice'
 and I have a 'dilithium public key' from 'Eve'
 and I have a 'string' named 'message'
-and I have a 'dilithium signature'
-If I verify the 'message' has a dilithium signature in 'dilithium signature' by 'Eve' 
+and I have a 'dilithium signature' named 'string dilithium signature'
+If I verify the 'message' has a dilithium signature in 'string dilithium signature' by 'Eve'
 Then print string 'Eve'
 Endif 
-If I verify the 'message' has a dilithium signature in 'dilithium signature' by 'Alice'
+If I verify the 'message' has a dilithium signature in 'string dilithium signature' by 'Alice'
 Then print string 'Alice'
 Endif
 EOF
@@ -124,7 +172,7 @@ and print the 'message ECDH'
 EOF
 
 #merging Alice and Bob data
-jq -s '.[0]*.[1]' Alice_data.json Bob_data.json | save $SUBDOC Alice_Bob_data.json
+jq -s '.[0]*.[1]' Alice_Dilithium_data.json Bob_data.json | save $SUBDOC Alice_Bob_data.json
 
 cat <<EOF | zexe Dave_Verify_ECDH_Dilithium.zen -a Alice_Bob_data.json
 Rule check version 2.0.0
@@ -134,11 +182,11 @@ Given I am 'Dave'
 and I have a 'ecdh public key' from 'Bob'
 and I have a 'dilithium public key' from 'Alice'
 and I have a 'signature'
-and I have a 'dilithium signature'
+and I have a 'dilithium signature' named 'string dilithium signature'
 and I have a 'string' named 'message ECDH'
 and I have a 'string' named 'message'
 If I verify the 'message ECDH' has a signature in 'signature' by 'Bob'
-If I verify the 'message' has a dilithium signature in 'dilithium signature' by 'Alice'
+If I verify the 'message' has a dilithium signature in 'string dilithium signature' by 'Alice'
 Then print string 'Succes!!!!'
 Endif
 EOF
