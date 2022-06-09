@@ -22,7 +22,6 @@
 // valid configurations:
 //
 // debug=1..3
-// color=1,0
 // rngseed=hex:[256 bits in hex notation]
 // print=sys|stb|mutt
 ///////////////////////
@@ -70,7 +69,6 @@
 #define STB_C_LEXER_IMPLEMENTATION
 
 extern void set_debug(int lev);
-extern void set_color(int on);
 
 #include <zenroom.h>
 #include <zen_error.h>
@@ -102,11 +100,10 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 		switch (lex.token) {
 			// first token parsed, set enum for value
 		case CLEX_id:
-			if(strcasecmp(lex.string, "debug")  ==0) { curconf = VERBOSE; break; } // bool
-			if(strcasecmp(lex.string, "verbose")==0) { curconf = VERBOSE; break; }
-			if(strcasecmp(lex.string, "color")  ==0) { curconf = COLOR;   break; } // bool
-			if(strcasecmp(lex.string, "rngseed")  ==0) { curconf = RNGSEED;   break; } // str
-			if(strcasecmp(lex.string, "print") ==0) { curconf = PRINTF;   break; } // str
+			if(strcasecmp(lex.string,"debug")  ==0) { curconf = VERBOSE; break; } // bool
+			if(strcasecmp(lex.string,"verbose")==0) { curconf = VERBOSE; break; }
+			if(strcasecmp(lex.string,"rngseed")  ==0) { curconf = RNGSEED;   break; } // str
+			if(strcasecmp(lex.string,"print") ==0) { curconf = PRINTF;   break; } // str
 			if(curconf==RNGSEED) {
 				int len = strlen(lex.string);
 				if( len-4 != RANDOM_SEED_LEN *2) { // hex doubles size
@@ -127,9 +124,9 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 			}
 
 			if(curconf==PRINTF) {
-				if(strcasecmp(lex.string, "stb") == 0) ZZ->zconf_printf = STB;
-				else if(strcasecmp(lex.string, "sys") == 0) ZZ->zconf_printf = LIBC;
-				else if(strcasecmp(lex.string, "mutt") == 0) ZZ->zconf_printf = MUTT;
+				if(strcasecmp(lex.string,"stb") == 0) ZZ->zconf_printf = STB;
+				else if(strcasecmp(lex.string,"sys") == 0) ZZ->zconf_printf = LIBC;
+				else if(strcasecmp(lex.string,"mutt") == 0) ZZ->zconf_printf = MUTT;
 				else {
 					zerror(NULL, "Invalid print function: %s", lex.string);
 					// free(lexbuf);
@@ -145,8 +142,6 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 
 		case CLEX_intlit:
 			if(curconf==VERBOSE) { ZZ->debuglevel = lex.int_number; break; }
-			if(curconf==COLOR)   { set_color  ( lex.int_number ); break; }
-
 			// free(lexbuf);
 			zerror(NULL, "Invalid integer configuration");
 			curconf = NIL;
