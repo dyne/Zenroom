@@ -31,11 +31,11 @@
 int lerror(lua_State *L, const char *fmt, ...);
 // int zencode_traceback(lua_State *L);
 
-void notice(lua_State *L, const char *format, ...);
+void notice(void *L, const char *format, ...);
 void func(void *L, const char *format, ...);
-void zerror(lua_State *L, const char *format, ...);
-void act(lua_State *L, const char *format, ...);
-void warning(lua_State *L, const char *format, ...);
+void zerror(void *L, const char *format, ...);
+void act(void *L, const char *format, ...);
+void warning(void *L, const char *format, ...);
 
 // from stb_sprintf.h
 int z_sprintf(char *buf, char const *fmt, ...);

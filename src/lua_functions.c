@@ -29,8 +29,6 @@
 #include <zen_error.h>
 #include <lua_functions.h>
 
-extern zenroom_t *Z;
-
 int zen_unset(lua_State *L, char *key) {
 	lua_pushnil(L);
 	lua_setglobal(L, key);

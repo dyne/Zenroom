@@ -43,6 +43,8 @@
 #include <zenroom.h>
 #include <zen_error.h>
 
+#define MAX_ERRMSG 256 // maximum length of an error message line
+
 int lerror(lua_State *L, const char *fmt, ...) {
 	va_list argp;
 	va_start(argp, fmt);
@@ -68,24 +70,14 @@ int zencode_traceback(lua_State *L) {
 	return 0;
 }
 
-// ANSI colors for terminal
-const char* ANSI_RED     = "\x1b[1;31m";
-const char* ANSI_GREEN   = "\x1b[1;32m";
-const char* ANSI_YELLOW  = "\x1b[1;33m";
-const char* ANSI_BLUE    = "\x1b[1;34m";
-const char* ANSI_MAGENTA = "\x1b[35m";
-const char* ANSI_CYAN    = "\x1b[36m";
-const char* ANSI_RESET   = "\x1b[0m";
-
-extern zenroom_t *Z;
-static char pfx[MAX_STRING];
 
 extern int zen_write_err_va(const char *fmt, va_list va);
 
-#define CTXSAFE(lv) (void)L; if(Z) { if(Z->debuglevel < lv) return; }
+/* static inline zenroom_t* ZZ(lua_State *L) { */
+/*   global_State *_g = G(L); */
+/*   return((zenroom_t*)_g->ud); */
+/* } */
 
-static int color = 0;
-void set_color(int on) { color = on; }
 
 #ifdef __ANDROID__
 void zerror(lua_State *L, const char *format, ...) {
@@ -95,28 +87,24 @@ void zerror(lua_State *L, const char *format, ...) {
 	va_end(arg);
 }
 void warning(lua_State *L, const char *format, ...) {
-	if(Z->debuglevel<1) return;
 	va_list arg;
 	va_start(arg, format);
 	__android_log_vprint(ANDROID_LOG_WARN, "ZEN", format, arg);
 	va_end(arg);
 }
 void notice(lua_State *L, const char *format, ...) {
-	if(Z->debuglevel<1) return;
 	va_list arg;
 	va_start(arg, format);
 	__android_log_vprint(ANDROID_LOG_INFO, "ZEN", format, arg);
 	va_end(arg);
 }
 void act(lua_State *L, const char *format, ...) {
-	if(Z->debuglevel<2) return;
 	va_list arg;
 	va_start(arg, format);
 	__android_log_vprint(ANDROID_LOG_DEBUG, "ZEN", format, arg);
 	va_end(arg);
 }
 void func(void *L, const char *format, ...) {
-	if(Z->debuglevel<3) return;
 	va_list arg;
 	va_start(arg, format);
 	__android_log_vprint(ANDROID_LOG_VERBOSE, "ZEN", format, arg);
@@ -124,70 +112,55 @@ void func(void *L, const char *format, ...) {
 }
 #else
 
-void notice(lua_State *L, const char *format, ...) {
-	CTXSAFE(1);
+#include <mutt_sprintf.h>
+
+void notice(void *L, const char *format, ...) {
+  char pfx[MAX_ERRMSG];
 	va_list arg;
-	snprintf_t pr = Z ? Z->snprintf : &snprintf;
-	if(color)
-		(*pr)(pfx, MAX_STRING-1, "%s[*]%s %s\n", ANSI_GREEN, ANSI_RESET, format);
-	else
-		(*pr)(pfx, MAX_STRING-1, "[*] %s\n", format);
+	mutt_snprintf(pfx, MAX_STRING-1, "[*] %s\n",format);
 	va_start(arg, format);
 	zen_write_err_va(pfx, arg);
 	va_end(arg);
 }
 
 void func(void *L, const char *format, ...) {
-	CTXSAFE(3);
+  char pfx[MAX_ERRMSG];
 	va_list arg;
-	snprintf_t pr = Z ? Z->snprintf : &snprintf;
-	(*pr)(pfx, MAX_STRING-1, "[D] %s\n", format);
+	mutt_snprintf(pfx, MAX_STRING-1, "[D] %s\n",format);
 	va_start(arg, format);
 	zen_write_err_va(pfx, arg);
 	va_end(arg);
 
 }
 
-extern int EXITCODE;
 void zerror(lua_State *L, const char *format, ...) {
-	CTXSAFE(0);
 	if(!format) return;
 	va_list arg;
-	snprintf_t pr = Z ? Z->snprintf : &snprintf;
-	if(color)
-		(*pr)(pfx, MAX_STRING-1, "%s[!]%s %s\n", ANSI_RED, ANSI_RESET, format);
-	else
-		(*pr)(pfx, MAX_STRING-1, "[!] %s\n", format);
+	mutt_snprintf(pfx, MAX_STRING-1, "[!] %s\n",format);
 	va_start(arg, format);
 	zen_write_err_va(pfx, arg);
 	va_end(arg);
-	if(Z) Z->errorlevel = 3;
-	EXITCODE=1;
+	// ZZ(L)->errorlevel = 3;
 	// exit(1); // calls teardown (signal 11) TODO: check if OK with seccomp
 }
 
-void act(lua_State *L, const char *format, ...) {
-	CTXSAFE(2);
+void act(void *L, const char *format, ...) {
+  char pfx[MAX_ERRMSG];
 	va_list arg;
-	snprintf_t pr = Z ? Z->snprintf : &snprintf;
-	(*pr)(pfx, MAX_STRING-1, " .  %s\n", format);
+	mutt_snprintf(pfx, MAX_STRING-1, " .  %s\n",format);
 	va_start(arg, format);
 	zen_write_err_va(pfx, arg);
 	va_end(arg);
 }
 
-void warning(lua_State *L, const char *format, ...) {
-	CTXSAFE(1);
+void warning(void *L, const char *format, ...) {
+  char pfx[MAX_ERRMSG];
 	va_list arg;
-	snprintf_t pr = Z ? Z->snprintf : &snprintf;
-	if(color)
-		(*pr)(pfx, MAX_STRING-1, "%s[W]%s %s\n", ANSI_YELLOW, ANSI_RESET, format);
-	else
-		(*pr)(pfx, MAX_STRING-1, "[W] %s\n", format);
+	mutt_snprintf(pfx, MAX_STRING-1, "[W] %s\n",format);
 	va_start(arg, format);
 	zen_write_err_va(pfx, arg);
 	va_end(arg);
-	if(Z) Z->errorlevel = 2;
+	// ZZ(L)->errorlevel = 2;
 }
 
 #endif
