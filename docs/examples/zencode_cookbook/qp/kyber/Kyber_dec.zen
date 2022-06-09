@@ -1,0 +1,13 @@
+Rule check version 2.0.0 
+Scenario qp : Alice create the kyber secret
+
+# Here I declare my identity
+Given that I am known as 'Alice'
+# Here I load my keyring and the ciphertext
+and I have the 'keyring'
+and I have a 'kyber ciphertext'
+
+# Here I recreate the secret starting from the ciphertext
+When I create the kyber secret from 'kyber ciphertext'
+
+Then print the 'kyber secret'

@@ -1,0 +1,13 @@
+Rule check version 2.0.0
+Scenario qp : Alice create the ntrup secret
+
+# Here I declare my identity
+Given that I am known as 'Alice'
+# Here I load my keyring and the ciphertext
+and that I have the 'keyring'
+and I have a 'ntrup ciphertext'
+
+# Here I recreate the secret starting from the ciphertext
+When I create the ntrup secret from 'ntrup ciphertext'
+
+Then print the 'ntrup secret'

@@ -1,0 +1,5 @@
+Rule check version 2.0.0
+Scenario qp : Create the ntrup private key
+Given I am 'Alice'
+When I create the ntrup key
+Then print the 'keyring'
