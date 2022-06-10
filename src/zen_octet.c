@@ -511,15 +511,12 @@ static int from_base58(lua_State *L) {
 static int from_string(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "string expected");
-	const int len = strlen(s);
-	// STRING SIZE CHECK before import to OCTET
-	if(len>MAX_OCTET) {
-		error(L, "%s: invalid string size: %u", __func__,len);
-		lerror(L, "operation aborted");
-		return 0; }
+	const int len = lua_rawlen(L, 1);
+	luaL_argcheck(L, len > 0, 1, "invalid size");
+	luaL_argcheck(L, len < MAX_OCTET, 1, "size too big");
 	octet *o = o_new(L, len);
 	register int i = 0;
-	for(i=0;s[i];i++) o->val[i]=s[i];
+	for(i=0;i<len;i++) o->val[i]=s[i];
 	o->len = i;
 	return 1;
 }
@@ -981,8 +978,7 @@ static int to_string(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
 	if(!o->len) { lua_pushnil(L); return 1; }
 	char *s = zen_memory_alloc(o->len+2);
-	OCT_toStr(o,s); // TODO: inverted function signature, see
-					// https://github.com/milagro-crypto/milagro-crypto-c/issues/291
+	OCT_toStr(o,s);
 	s[o->len] = '\0'; // make sure string is NULL terminated
 	lua_pushlstring(L,s,o->len);
 	zen_memory_free(s);
