@@ -110,29 +110,29 @@ static int zen_init_pmain(lua_State *L) { // protected mode init
 	// initialise global variables
 #if defined(VERSION)
 	zen_setenv(L, "VERSION", VERSION);
-	act(NULL, "Release version: %s", VERSION);
+	act(NULL,"Release version: %s", VERSION);
 #endif
 #if defined(COMMIT)
 	zen_setenv(L, "COMMIT", COMMIT);
-	act(NULL, "Build commit hash: %s", COMMIT);
+	act(NULL,"Build commit hash: %s", COMMIT);
 #endif
 #if defined(BRANCH)
 	zen_setenv(L, "BRANCH", BRANCH);
-	func(NULL, "Build branch: %s", BRANCH);
+	func(NULL,"Build branch: %s", BRANCH);
 #endif
 #if defined(ARCH)
 	zen_setenv(L, "ARCH", ARCH);
-	func(NULL, "Build architecture: %s", ARCH);
+	func(NULL,"Build architecture: %s", ARCH);
 #endif
 #define STRINGIZE(x) #x
 #define STRINGIZE_VALUE_OF(x) STRINGIZE(x)
 #if defined(MAKETARGET)
 	zen_setenv(L, "MAKETARGET", MAKETARGET);
-	func(NULL, "Build target: %s", MAKETARGET);
+	func(NULL,"Build target: %s", MAKETARGET);
 #endif
 #if defined(CFLAGS)
 	zen_setenv(L, "CFLAGS", STRINGIZE_VALUE_OF(CFLAGS));
-	func(NULL, "Build CFLAGS: %s", STRINGIZE_VALUE_OF(CFLAGS));
+	func(NULL,"Build CFLAGS: %s", STRINGIZE_VALUE_OF(CFLAGS));
 #endif
 #if defined(GITLOG)
 	zen_setenv(L, "GITLOG", GITLOG);
@@ -146,7 +146,7 @@ static int zen_init_pmain(lua_State *L) { // protected mode init
 
 	zen_add_random(L);
 
-	zen_require_override(L, 0);
+	zen_require_override(L,0);
 	if(!zen_lua_init(L)) {
 		zerror(L, "%s: %s", __func__, "initialisation of lua scripts failed");
 		return(LUA_ERRRUN);
@@ -159,7 +159,6 @@ static int zen_init_pmain(lua_State *L) { // protected mode init
 // zen_init_pmain is the Lua routine executed in protected mode
 zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	zenroom_t *ZZ = (zenroom_t*)malloc(sizeof(zenroom_t));
-	Z = ZZ; // TODO: remove global context compat
 
 	// create the zenroom_t global context
 	ZZ->stdout_buf = NULL;
@@ -194,21 +193,21 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 		ZZ->snprintf = &z_snprintf;
 		ZZ->vsprintf = &z_vsprintf;
 		ZZ->vsnprintf = &z_vsnprintf;
-		act(NULL, "STB print functions in use");
+		act(NULL,"STB print functions in use");
 		break;
 	case MUTT:
 		ZZ->sprintf = &sprintf; // TODO: mutt based
 		ZZ->vsprintf = &vsprintf;
 		ZZ->snprintf = &mutt_snprintf;
 		ZZ->vsnprintf = &mutt_vsnprintf;
-		act(NULL, "MUTT print functions in use");
+		act(NULL,"MUTT print functions in use");
 		break;
 	default: // LIBC_PRINTF
 		ZZ->sprintf = &sprintf;
 		ZZ->snprintf = &snprintf;
 		ZZ->vsprintf = &vsprintf;
 		ZZ->vsnprintf = &vsnprintf;
-		func(NULL, "LIBC print functions in use");
+		func(NULL,"LIBC print functions in use");
 		break;
 	}
 
@@ -227,7 +226,7 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	// initialize Lua's context
 	ZZ->lua = lua_newstate(zen_memory_manager, ZZ);
 	if(!ZZ->lua) {
-		zerror(NULL, "%s: %s", __func__, "Lua newstate creation failed");
+		error(NULL,"%s: %s", __func__, "Lua newstate creation failed");
 		return NULL;
 	}
 
@@ -256,10 +255,10 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 
 	lua_gc(ZZ->lua, LUA_GCCOLLECT, 0);
 	lua_gc(ZZ->lua, LUA_GCCOLLECT, 0);
-	act(ZZ->lua, "Memory in use: %u KB",
-	    lua_gc(ZZ->lua, LUA_GCCOUNT, 0));
+	act(ZZ->lua,"Memory in use: %u KB",
+	    lua_gc(ZZ->lua,LUA_GCCOUNT,0));
 	// uncomment to restrict further requires
-	// zen_require_override(L, 1);
+	// zen_require_override(L,1);
 
 	// expose the random seed for optional determinism
 	push_buffer_to_octet(ZZ->lua, ZZ->random_seed, RANDOM_SEED_LEN);
@@ -268,11 +267,11 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	// load arguments if present
 	if(data) {
 		func(ZZ->lua, "declaring global: DATA");
-		zen_setenv(ZZ->lua, "DATA", data);
+		zen_setenv(ZZ->lua,"DATA",data);
 	}
 	if(keys) {
 		func(ZZ->lua, "declaring global: KEYS");
-		zen_setenv(ZZ->lua, "KEYS", keys);
+		zen_setenv(ZZ->lua,"KEYS",keys);
 	}
 	return(ZZ);
 }
@@ -280,9 +279,9 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 extern char runtime_random256[256];
 void zen_teardown(zenroom_t *ZZ) {
 
-	notice(ZZ->lua, "Zenroom teardown.");
-	act(ZZ->lua, "Memory used: %u KB",
-	    lua_gc(ZZ->lua, LUA_GCCOUNT, 0));
+	notice(ZZ->lua,"Zenroom teardown.");
+	act(ZZ->lua,"Memory used: %u KB",
+	    lua_gc(ZZ->lua,LUA_GCCOUNT,0));
 
 	// stateful RNG instance for deterministic mode
 	if(ZZ->random_generator) {
@@ -311,14 +310,8 @@ void zen_teardown(zenroom_t *ZZ) {
 	  ZZ->zstd_d = NULL;
 	}
 
-	func(NULL, "finally free Zen context");
-	if(ZZ) {  // TODO: remove compat with global context
-		free(ZZ);
-		{
-			extern zenroom_t *Z;
-			Z = NULL;
-		}
-	}
+	//func(NULL,"finally free Zen context");
+	free(ZZ);
 }
 
 int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
@@ -333,7 +326,7 @@ int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
 	char *zscript = malloc(MAX_ZENCODE);
 	lua_State* L = (lua_State*)ZZ->lua;
 	// introspection on code being executed
-	(*ZZ->snprintf)(zscript, MAX_ZENCODE-1,
+	(*ZZ->snprintf)(zscript,MAX_ZENCODE-1,
 	        "local _res, _err\n"
 		"_res, _err = pcall( function() ZEN:begin() end)\n"
 		"if not _res then exitcode(1) ZEN.OK = false error('INIT: '.._err,2) end\n"
@@ -342,7 +335,7 @@ int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
 		"_res, _err = pcall( function() ZEN:run() end)\n"
 		"if not _res then exitcode(1) ZEN.OK = false error('EXEC: '.._err,2) end\n"
 		, script);
-	zen_setenv(L, "CODE", (char*)zscript);
+	zen_setenv(L,"CODE",(char*)zscript);
 	ret = luaL_dostring(L, zscript);
 	free(zscript);
 	if(ret) {
@@ -368,7 +361,7 @@ int zen_exec_script(zenroom_t *ZZ, const char *script) {
 	int ret;
 	lua_State* L = (lua_State*)ZZ->lua;
 	// introspection on code being executed
-	zen_setenv(L, "CODE", (char*)script);
+	zen_setenv(L,"CODE",(char*)script);
 	ret = luaL_dostring(L, script);
 	if(ret) {
 	  zerror(L, "ERROR:");

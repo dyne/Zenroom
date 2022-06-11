@@ -149,7 +149,9 @@ void load_file(char *dst, char *file)
 
 #define MAX_FILE_NAME 256
 
-extern zenroom_t *Z;
+// TODO: to be verified how to store context, was once extern
+zenroom_t *Z;
+
 int SEMIHOSTING_STDOUT_FILENO;
 
 // implement the fault handler
