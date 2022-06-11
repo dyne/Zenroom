@@ -53,7 +53,6 @@
 #include <zen_memory.h>
 #include <randombytes.h>
 
-extern zenroom_t *Z;
 // small buffer pre-filled with random, used at runtime by some
 // internal functions esp. to wipe out memory (lstring.c)
 uint8_t runtime_random256[256];
@@ -90,12 +89,14 @@ void* rng_alloc(zenroom_t *ZZ) {
 
 
 static int rng_uint8(lua_State *L) {
+	Z(L);
 	uint8_t res = RAND_byte(Z->random_generator);
 	lua_pushinteger(L, (lua_Integer)res);
 	return(1);
 }
 
 static int rng_uint16(lua_State *L) {
+	Z(L);
 	uint16_t res =
 		RAND_byte(Z->random_generator)
 		| (uint32_t) RAND_byte(Z->random_generator) << 8;
@@ -104,6 +105,7 @@ static int rng_uint16(lua_State *L) {
 }
 
 static int rng_int32(lua_State *L) {
+	Z(L);
 	uint32_t res =
 		RAND_byte(Z->random_generator)
 		| (uint32_t) RAND_byte(Z->random_generator) << 8
@@ -140,7 +142,7 @@ void zen_add_random(lua_State *L) {
 	lua_getglobal(L, "_G");
 	luaL_setfuncs(L, rng_base, 0);
 	lua_pop(L, 1);
-
+	Z(L);
 	{ // pre-fill runtime_random
 		// used in
 		register int i;

@@ -48,7 +48,6 @@ extern int SEMIHOSTING_STDOUT_FILENO;
 extern int write_to_console(const char* str);
 #endif
 
-extern zenroom_t *Z;
 extern int EXITCODE;
 
 int zen_write_err_va(const char *fmt, va_list va) {
