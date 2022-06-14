@@ -77,10 +77,6 @@ static const struct sock_fprog  strict = {
 
 #endif
 
-extern zenroom_t *Z;
-
-
-
 extern int zen_setenv(lua_State *L, char *key, char *val);
 
 // This function exits the process on failure.
@@ -129,7 +125,7 @@ void load_file(char *dst, FILE *fd) {
 		if(!chunk) {
 			warning(0, "File too big, truncated at maximum supported size");
 			break; }
-		bytes = fread(&dst[offset], 1, chunk, fd);
+		bytes = fread(&dst[offset],1,chunk,fd);
 
 		if(!bytes) {
 			if(feof(fd)) {
@@ -137,7 +133,7 @@ void load_file(char *dst, FILE *fd) {
 					warning(0, "Incomplete file read (%u of %u bytes)",
 					      offset, file_size);
 				} else {
-					func(0, "EOF after %u bytes", offset);
+					func(0, "EOF after %u bytes",offset);
 				}
  				dst[offset] = '\0';
 				break;
@@ -206,6 +202,8 @@ int main(int argc, char **argv) {
 	int use_seccomp = 0;
 	cli_alloc_buffers();
 
+	zenroom_t *Z;
+
 	const char *short_options = "hD:ic:k:a:l:S:pz";
 	const char *help          =
 		"Usage: zenroom [-h] [-s] [ -D scenario ] [ -i ] [ -c config ] [ -k keys ] [ -a data ] [ -S seed ] [ -p ] [ -z ] [ -l lib ] [ script.lua ]\n";
@@ -225,10 +223,10 @@ int main(int argc, char **argv) {
 	while((opt = getopt(argc, argv, short_options)) != -1) {
 		switch(opt) {
 		case 'D':
-			snprintf(introspect, MAX_STRING-1, "%s", optarg);
+			snprintf(introspect,MAX_STRING-1,"%s",optarg);
 			break;
 		case 'h':
-			fprintf(stdout, "%s", help);
+			fprintf(stdout,"%s",help);
 			cli_free_buffers();
 			return EXIT_SUCCESS;
 			break;
@@ -239,19 +237,19 @@ int main(int argc, char **argv) {
 			interactive = 1;
 			break;
 		case 'l':
-			snprintf(sideload, MAX_STRING-1, "%s", optarg);
+			snprintf(sideload,MAX_STRING-1,"%s",optarg);
 			break;
 		case 'k':
-			snprintf(keysfile, MAX_STRING-1, "%s", optarg);
+			snprintf(keysfile,MAX_STRING-1,"%s",optarg);
 			break;
 		case 'a':
-			snprintf(datafile, MAX_STRING-1, "%s", optarg);
+			snprintf(datafile,MAX_STRING-1,"%s",optarg);
 			break;
 		case 'c':
-			snprintf(conffile, MAX_STRING-1, "%s", optarg);
+			snprintf(conffile,MAX_STRING-1,"%s",optarg);
 			break;
 		case 'S':
-			snprintf(rngseed, MAX_STRING-1, "%s", optarg);
+			snprintf(rngseed,MAX_STRING-1,"%s",optarg);
 			break;
 		case 'z':
 			zencode = 1;
@@ -263,7 +261,7 @@ int main(int argc, char **argv) {
 	}
 
 	if(verbosity) {
-		notice(NULL, "Zenroom v%s - secure crypto language VM", VERSION);
+		notice(NULL, "Zenroom v%s - secure crypto language VM",VERSION);
 		act(NULL, "Zenroom is Copyright (C) 2017-2021 by the Dyne.org foundation");
 		act(NULL, "For the original source code and documentation go to https://zenroom.org");
 		act(NULL, "Zenroom is free software: you can redistribute it and/or modify");
@@ -279,7 +277,7 @@ int main(int argc, char **argv) {
 	}
 
 	for (index = optind; index < argc; index++) {
-		snprintf(scriptfile, MAX_STRING-1, "%s", argv[index]);
+		snprintf(scriptfile,MAX_STRING-1,"%s",argv[index]);
 	}
 
 	if(keysfile[0]!='\0') {
@@ -295,7 +293,7 @@ int main(int argc, char **argv) {
 	if(interactive) {
 		////////////////////////////////////
 		// start an interactive repl console
-		zen_init(
+		Z = zen_init(
 			conffile[0]?conffile:NULL,
 			keys[0]?keys:NULL,
 			data[0]?data:NULL);
@@ -317,7 +315,7 @@ int main(int argc, char **argv) {
 
 	// configuration from -c or default
 	if(conffile[0]!='\0') {
-		if(verbosity) act(NULL, "configuration: %s", conffile);
+		if(verbosity) act(NULL, "configuration: %s",conffile);
 	// load_file(conf, fopen(conffile, "r"));
 	} else
 		if(verbosity) act(NULL, "using default configuration");
@@ -338,14 +336,14 @@ int main(int argc, char **argv) {
 	// print scenario documentation
 	if(introspect[0]!='\0') {
 		static char zscript[MAX_ZENCODE];
-		notice(NULL, "Documentation for scenario: %s", introspect);
-		(*Z->snprintf)(zscript, MAX_ZENCODE-1,
+		notice(NULL, "Documentation for scenario: %s",introspect);
+		(*Z->snprintf)(zscript,MAX_ZENCODE-1,
 		               "function Given(text, fn) ZEN.given_steps[text] = true end\n"
 		               "function When(text, fn) ZEN.when_steps[text] = true end\n"
 		               "function Then(text, fn) ZEN.then_steps[text] = true end\n"
 					   "function IfWhen(text, fn) ZEN.if_steps[text] = true end\n"
 		               "function ZEN.add_schema(arr)\n"
-		               "  for k, v in pairs(arr) do ZEN.schemas[k] = true end end\n"
+		               "  for k,v in pairs(arr) do ZEN.schemas[k] = true end end\n"
 		               "ZEN.given_steps = {}\n"
 		               "ZEN.when_steps = {}\n"
 		               "ZEN.then_steps = {}\n"
@@ -353,11 +351,11 @@ int main(int argc, char **argv) {
 		               "ZEN.schemas = {}\n"
 		               "require_once('zencode_%s')\n"
 		               "print(JSON.encode(\n"
-		               "{ Scenario = \"%s\", \n"
-		               "  Given = ZEN.given_steps, \n"
-		               "  When = ZEN.when_steps, \n"
-		               "  Then = ZEN.then_steps, \n"
-					   "  If = ZEN.if_steps, \n"
+		               "{ Scenario = \"%s\",\n"
+		               "  Given = ZEN.given_steps,\n"
+		               "  When = ZEN.when_steps,\n"
+		               "  Then = ZEN.then_steps,\n"
+					   "  If = ZEN.if_steps,\n"
 		               "  Schemas = ZEN.schemas }))", introspect, introspect);
 		int ret = luaL_dostring(Z->lua, zscript);
 		if(ret) {
@@ -372,9 +370,10 @@ int main(int argc, char **argv) {
 	}
 
 	if(sideload[0]!='\0') {
-		notice(Z->lua, "Side loading library: %s", sideload);
-		load_file(sidescript, fopen(sideload, "rb"));
+		notice(Z->lua,"Side loading library: %s",sideload);
+		load_file(sidescript, fopen(sideload,"rb"));
 		zen_exec_script(Z, sidescript);
+		// TODO: detect error
 	}
 
 	if(scriptfile[0]!='\0') {
@@ -387,7 +386,7 @@ int main(int argc, char **argv) {
 		// get another argument from stdin
 		if(verbosity) act(NULL, "reading Zencode from stdin");
 		load_file(script, stdin);
-		// func(NULL, "%s\n--", script);
+		// func(NULL, "%s\n--",script);
 	}
 
 	// configure to parse Lua or Zencode
@@ -398,41 +397,48 @@ int main(int argc, char **argv) {
 
 #if (defined(ARCH_WIN) || defined(DISABLE_FORK)) || defined(ARCH_CORTEX) || defined(ARCH_BSD)
 	if(zencode)
-		if( zen_exec_zencode(Z, script) ) { cli_free_buffers(); return EXIT_FAILURE; }
+		zen_exec_zencode(Z, script);
 	else
-		if( zen_exec_script(Z, script) ) { cli_free_buffers(); return EXIT_FAILURE; }
+		zen_exec_script(Z, script);
 
 #else /* POSIX */
 	if (!use_seccomp) {
 		if(zencode) {
-			if( zen_exec_zencode(Z, script) ) { cli_free_buffers(); return EXIT_FAILURE; }
+			zen_exec_zencode(Z, script);
 		} else {
-			if( zen_exec_script(Z, script) ) { cli_free_buffers(); return EXIT_FAILURE; }
+			zen_exec_script(Z, script);
 		}
 	} else {
 		act(NULL, "protected mode (seccomp isolation) activated");
 		if (fork() == 0) {
 #   ifdef ARCH_LINUX /* LINUX engages SECCOMP. */
 			if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) {
+
 				zerror(Z->lua, "Seccomp fail to set no_new_privs: %s", strerror(errno));
+				zen_teardown(Z);
+
 				cli_free_buffers();
 				return EXIT_FAILURE;
 			}
 			if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &strict)) {
+
 				zerror(Z->lua, "Seccomp fail to install filter: %s", strerror(errno));
+				zen_teardown(Z);
+
 				cli_free_buffers();
 				return EXIT_FAILURE;
 			}
 #   endif /* ARCH_LINUX */
 			if(verbosity) act(NULL, "starting execution.");
+			int exitcode;
 			if(zencode) {
-				if( zen_exec_zencode(Z, script) ) { cli_free_buffers(); return EXIT_FAILURE; }
+				exitcode = zen_exec_zencode(Z, script);
 			} else {
-				if( zen_exec_script(Z, script) ) { cli_free_buffers(); return EXIT_FAILURE; }
+				exitcode = zen_exec_script(Z, script);
 			}
 			zen_teardown(Z);
 			cli_free_buffers();
-			return EXIT_SUCCESS;
+			return exitcode;
 		}
 		do {
 			pid = wait(&status);
@@ -447,18 +453,18 @@ int main(int argc, char **argv) {
 		}
 	}
 #endif /* POSIX */
-
+	int exitcode = Z->exitcode;
 	zen_teardown(Z);
 
 	{
 		// measure and report time of execution
 		clock_gettime(CLOCK_MONOTONIC, &after);
 		long musecs = (after.tv_sec - before.tv_sec) * 1000000L;
-		act(NULL, "Time used: %lu", ( ((after.tv_nsec - before.tv_nsec) / 1000L) + musecs) );
+		act(NULL,"Time used: %lu", ( ((after.tv_nsec - before.tv_nsec) / 1000L) + musecs) );
 	}
 
 	cli_free_buffers();
-	return EXIT_SUCCESS;
+	return exitcode;
 }
 
 #endif // LIBRARY
