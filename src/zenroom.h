@@ -95,11 +95,18 @@ typedef struct {
 	vsprintf_t vsprintf;
 	vsnprintf_t vsnprintf;
 
-  char zconf_rngseed[(RANDOM_SEED_LEN*2)+4]; // 0x and terminating \0
-  printftype zconf_printf;
+  	char zconf_rngseed[(RANDOM_SEED_LEN*2)+4]; // 0x and terminating \0
+  	printftype zconf_printf;
 
+	int exitcode;
 } zenroom_t;
 
+// EXIT CODES
+#define ERR_INIT 4
+#define ERR_PARSE 3
+#define ERR_EXEC 2
+#define ERR_GENERIC 1 // EXIT_FAILURE
+#define SUCCESS 0 // EXIT_SUCCESS
 
 zenroom_t *zen_init(const char *conf, char *keys, char *data);
 int  zen_exec_script(zenroom_t *Z, const char *script);
