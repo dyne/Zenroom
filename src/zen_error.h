@@ -29,7 +29,7 @@
 #include <lua.h>
 
 // macro to obtain Z context from a lua_State
-#define Z(l) void *_zv; lua_getallocf(l, &_zv); zenroom_t *Z = _zv
+#define Z(l) zenroom_t *Z = NULL; if (l) { void *_zv; lua_getallocf(l, &_zv); Z = _zv; }
 
 int lerror(lua_State *L, const char *fmt, ...);
 // int zencode_traceback(lua_State *L);

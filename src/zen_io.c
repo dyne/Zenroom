@@ -48,9 +48,7 @@ extern int SEMIHOSTING_STDOUT_FILENO;
 extern int write_to_console(const char* str);
 #endif
 
-extern int EXITCODE;
-
-int zen_write_err_va(const char *fmt, va_list va) {
+int zen_write_err_va(zenroom_t *Z, const char *fmt, va_list va) {
 	int res = 0;
 #ifdef __ANDROID__
 	res = __android_log_vprint(ANDROID_LOG_DEBUG, "ZEN", fmt, va);
@@ -59,7 +57,7 @@ int zen_write_err_va(const char *fmt, va_list va) {
 	vsnprintf(buffer, MAX_STRING, fmt, va);
 	res = write_to_console(buffer);
 #else
-	if(!Z) res = vfprintf(stderr, fmt, va); // no init yet, print to stderr
+	if(!Z) res = vfprintf(stderr,fmt,va); // no init yet, print to stderr
 	if(!res && Z->stderr_buf) { // print to configured buffer
 		if(Z->stderr_full) {
 			zerror(Z->lua, "Error buffer full, log message lost");
@@ -71,9 +69,11 @@ int zen_write_err_va(const char *fmt, va_list va) {
 			 Z->stderr_len - Z->stderr_pos,  // length max
 			 fmt, va);
 		if(res < 0) {
+
 			zerror(Z->lua, "Fatal error writing error buffer: %s", strerror(errno));
-			EXITCODE = -1;
-			return(EXITCODE);
+			Z->exitcode = ERR_GENERIC;
+			return(Z->exitcode);
+
 		}
 		if(res > (int)max) {
 			zerror(Z->lua, "Error buffer too small, log truncated: %u bytes (max %u)", res, max);
@@ -85,18 +85,18 @@ int zen_write_err_va(const char *fmt, va_list va) {
 	}
 # ifdef __EMSCRIPTEN__
 	char s[MAX_JSBUF];
-	vsprintf(s, fmt, va);
+	vsprintf(s,fmt,va);
 	EM_ASM_({Module.printErr(UTF8ToString($0))}, s);
 # else
-	if(!res) res = vfprintf(stderr, fmt, va); // fallback no configured buffer
+	if(!res) res = vfprintf(stderr,fmt,va); // fallback no configured buffer
 # endif
 #endif
 	return(res);
 }
 
-int zen_write_out_va(const char *fmt, va_list va) {
+int zen_write_out_va(zenroom_t *Z, const char *fmt, va_list va) {
 	int res = 0;
-	if(!Z) res = vfprintf(stdout, fmt, va); // no init yet, print to stdout
+	if(!Z) res = vfprintf(stdout,fmt,va); // no init yet, print to stdout
 	if(!res && Z->stdout_buf) { // print to configured buffer
 		if(Z->stdout_full) {
 			zerror(Z->lua, "Output buffer full, result data lost");
@@ -108,9 +108,11 @@ int zen_write_out_va(const char *fmt, va_list va) {
 			 Z->stdout_len - Z->stdout_pos,  // length max
 			 fmt, va);
 		if(res < 0) {
+
 			zerror(Z->lua, "Fatal error writing output buffer: %s", strerror(errno));
-			EXITCODE = -1;
-			return(EXITCODE);
+			Z->exitcode = ERR_GENERIC;
+			return(Z->exitcode);
+
 		}
 		if(res > (int)max) {
 			zerror(Z->lua, "Output buffer too small, data truncated: %u bytes (max %u)", res, max);
@@ -120,10 +122,10 @@ int zen_write_out_va(const char *fmt, va_list va) {
 			Z->stdout_pos += res;
 		}
 	}
-	if(!res) res = vfprintf(stdout, fmt, va); // fallback no configured buffer
+	if(!res) res = vfprintf(stdout,fmt,va); // fallback no configured buffer
 	return(res);
 	// size_t len = 0;
-	// if(!Z) len = vfprintf(stdout, fmt, va);
+	// if(!Z) len = vfprintf(stdout,fmt,va);
 	// if(!len && Z->stdout_buf) {
 	// 	char *out = Z->stdout_buf;
 	// 	len = (*Z->vsnprintf)(out+Z->stdout_pos,
@@ -131,32 +133,32 @@ int zen_write_out_va(const char *fmt, va_list va) {
 	// 	                  fmt, va);
 	// 	Z->stdout_pos+=len;
 	// }
-	// if(!len) len = vfprintf(stdout, fmt, va);
+	// if(!len) len = vfprintf(stdout,fmt,va);
 	// return len;
 }
 
-int zen_write_err(const char *fmt, ...) {
+int zen_write_err(zenroom_t *Z, const char *fmt, ...) {
 // #ifdef __ANDROID__
 // 	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", "%s -- %s", pfx, msg);
 // 	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", fmt, va); // TODO: test
 // #endif
 	va_list arg;
 	size_t len;
-	va_start(arg, fmt);
-	len = zen_write_err_va(fmt, arg);
+	va_start(arg,fmt);
+	len = zen_write_err_va(Z, fmt,arg);
 	va_end(arg);
 	return len;
 }
 
-int zen_write_out(const char *fmt, ...) {
+int zen_write_out(zenroom_t *Z, const char *fmt, ...) {
 // #ifdef __ANDROID__
 // 	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", "%s -- %s", pfx, msg);
 // 	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", fmt, va); // TODO: test
 // #endif
 	va_list arg;
 	size_t len;
-	va_start(arg, fmt);
-	len = zen_write_out_va(fmt, arg);
+	va_start(arg,fmt);
+	len = zen_write_out_va(Z, fmt,arg);
 	va_end(arg);
 	return len;
 }
@@ -181,7 +183,7 @@ static const char *lua_print_format(lua_State *L,
 // configured so calling function can decide if to proceed with other
 // prints (stdout) or not
 static int lua_print_stdout_tobuf(lua_State *L, char newline) {
-	SAFE(Z);
+	Z(L);
 	if(Z->stdout_buf && (Z->stdout_pos < Z->stdout_len)) {
 		int i;
 		int n = lua_gettop(L);  /* number of arguments */
@@ -191,9 +193,9 @@ static int lua_print_stdout_tobuf(lua_State *L, char newline) {
 		for (i=1; i<=n; i++) {
 			s = lua_print_format(L, i, &len);
 			if(i>1) 
-				zen_write_out("\t%s%c", s, newline);
+				zen_write_out(Z, "\t%s%c",s,newline);
 			else
-				zen_write_out("%s%c", s, newline);
+				zen_write_out(Z, "%s%c",s,newline);
 			lua_pop(L, 1);
 		}
 		return 1;
@@ -202,7 +204,7 @@ static int lua_print_stdout_tobuf(lua_State *L, char newline) {
 }
 
 static int lua_print_stderr_tobuf(lua_State *L, char newline) {
-	SAFE(Z);
+	Z(L);
 	if(Z->stderr_buf && (Z->stderr_pos < Z->stderr_len)) {
 		int i;
 		int n = lua_gettop(L);  /* number of arguments */
@@ -212,9 +214,9 @@ static int lua_print_stderr_tobuf(lua_State *L, char newline) {
 		for (i=1; i<=n; i++) {
 			s = lua_print_format(L, i, &len);
 			if(i>1) 
-				zen_write_err("\t%s%c", s, newline);
+				zen_write_err(Z, "\t%s%c",s,newline);
 			else
-				zen_write_err("%s%c", s, newline);
+				zen_write_err(Z, "%s%c",s,newline);
 			lua_pop(L, 1);
 		}
 		return 1;
@@ -275,7 +277,7 @@ static int zen_write (lua_State *L) {
 // 	for (i=1; i<=n; i++) {
 // 		const char *s = lua_print_format(L, i, &len);
 // 		if (i>1) { out[pos]='\t'; pos++; }
-// 		(*Z->snprintf)(out+pos, MAX_JSBUF-pos, "%s", s);
+// 		(*Z->snprintf)(out+pos,MAX_JSBUF-pos,"%s",s);
 // 		pos+=len;
 // 		lua_pop(L, 1);  /* pop result */
 // 	}
@@ -288,12 +290,13 @@ static int zen_warn (lua_State *L) {
 	size_t len = 0;
 	int n = lua_gettop(L);  /* number of arguments */
 	int i;
+	Z(L);
 	lua_getglobal(L, "tostring");
 	out[0] = '['; out[1] = 'W';	out[2] = ']'; out[3] = ' ';	pos = 4;
 	for (i=1; i<=n; i++) {
 		const char *s = lua_print_format(L, i, &len);
 		if (i>1) { out[pos]='\t'; pos++; }
-		(*Z->snprintf)(out+pos, MAX_JSBUF-pos, "%s\n", s);
+		(*Z->snprintf)(out+pos,MAX_JSBUF-pos,"%s\n",s);
 		pos+=len;
 		lua_pop(L, 1);  /* pop result */
 	}
@@ -306,12 +309,13 @@ static int zen_act (lua_State *L) {
 	size_t len = 0;
 	int n = lua_gettop(L);  /* number of arguments */
 	int i;
+	Z(L);
 	lua_getglobal(L, "tostring");
 	out[0] = ' '; out[1] = '.';	out[2] = ' '; out[3] = ' ';	pos = 4;
 	for (i=1; i<=n; i++) {
 		const char *s = lua_print_format(L, i, &len);
 		if (i>1) { out[pos]='\t'; pos++; }
-		(*Z->snprintf)(out+pos, MAX_JSBUF-pos, "%s\n", s);
+		(*Z->snprintf)(out+pos,MAX_JSBUF-pos,"%s\n",s);
 		pos+=len;
 		lua_pop(L, 1);  /* pop result */
 	}
@@ -322,7 +326,7 @@ static int zen_act (lua_State *L) {
 #elif defined(ARCH_CORTEX)
 
 static int zen_print (lua_State *L) {
-	if( lua_print_stdout_tobuf(L, '\n') ) return 0;
+	if( lua_print_stdout_tobuf(L,'\n') ) return 0;
 
 	int status = 1;
 	size_t len = 0;
@@ -338,14 +342,14 @@ static int zen_print (lua_State *L) {
 			(write(SEMIHOSTING_STDOUT_FILENO, s,  len) == (int)len);
 		lua_pop(L, 1);  /* pop result */
 	}
-	w = write(SEMIHOSTING_STDOUT_FILENO, "\n", sizeof(char));
+	w = write(SEMIHOSTING_STDOUT_FILENO,"\n",sizeof(char));
     (void)w;
 	return 0;
 }
 
 // print to stderr without raising errors
 static int zen_printerr(lua_State *L) {
-	if( lua_print_stderr_tobuf(L, '\n') ) return 0;
+	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
 
 	int status = 1;
 	size_t len = 0;
@@ -368,7 +372,7 @@ static int zen_printerr(lua_State *L) {
 
 // print without an ending newline
 static int zen_write (lua_State *L) {
-	if( lua_print_stdout_tobuf(L, ' ') ) return 0;
+	if( lua_print_stdout_tobuf(L,' ') ) return 0;
 	octet *o = o_arg(L, 1); SAFE(o);
 	short res;
 	int w;
@@ -378,7 +382,7 @@ static int zen_write (lua_State *L) {
 }
 
 static int zen_warn (lua_State *L) {
-	if( lua_print_stderr_tobuf(L, '\n') ) return 0;
+	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
 	int status = 1;
 	size_t len = 0;
 	int n = lua_gettop(L);  /* number of arguments */
@@ -401,7 +405,7 @@ static int zen_warn (lua_State *L) {
 }
 
 static int zen_act (lua_State *L) {
-	if( lua_print_stderr_tobuf(L, '\n') ) return 0;
+	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
 	int status = 1;
 	size_t len = 0;
 	int n = lua_gettop(L);  /* number of arguments */
@@ -426,7 +430,7 @@ static int zen_act (lua_State *L) {
 #else
 
 static int zen_print (lua_State *L) {
-	if( lua_print_stdout_tobuf(L, '\n') ) return 0;
+	if( lua_print_stdout_tobuf(L,'\n') ) return 0;
 
 	int status = 1;
 	size_t len = 0;
@@ -442,14 +446,14 @@ static int zen_print (lua_State *L) {
 			(write(STDOUT_FILENO, s,  len) == (int)len);
 		lua_pop(L, 1);  /* pop result */
 	}
-	w = write(STDOUT_FILENO, "\n", sizeof(char));
+	w = write(STDOUT_FILENO,"\n",sizeof(char));
     (void)w;
 	return 0;
 }
 
 // print to stderr without raising errors
 static int zen_printerr(lua_State *L) {
-	if( lua_print_stderr_tobuf(L, '\n') ) return 0;
+	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
 
 	int status = 1;
 	size_t len = 0;
@@ -465,14 +469,14 @@ static int zen_printerr(lua_State *L) {
 			(write(STDERR_FILENO, s,  len) == (int)len);
 		lua_pop(L, 1);  /* pop result */
 	}
-	w = write(STDERR_FILENO, "\n", sizeof(char));
+	w = write(STDERR_FILENO,"\n",sizeof(char));
 	(void)w;
 	return 0;
 }
 
 // print without an ending newline
 static int zen_write (lua_State *L) {
-	if( lua_print_stdout_tobuf(L, ' ') ) return 0;
+	if( lua_print_stdout_tobuf(L,' ') ) return 0;
 	octet *o = o_arg(L, 1); SAFE(o);
 	short res;
 	int w;
@@ -482,47 +486,47 @@ static int zen_write (lua_State *L) {
 }
 
 static int zen_warn (lua_State *L) {
-	if( lua_print_stderr_tobuf(L, '\n') ) return 0;
+	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
 	int status = 1;
 	size_t len = 0;
 	int n = lua_gettop(L);  /* number of arguments */
 	int i, w;
 	lua_getglobal(L, "tostring");
-	w = write(STDERR_FILENO, "[W] ", 4* sizeof(char));
+	w = write(STDERR_FILENO, "[W] ",4* sizeof(char));
 	(void)w;
 	for (i=1; i<=n; i++) {
 		const char *s = lua_print_format(L, i, &len);
 		if(i>1)
-			w = write(STDERR_FILENO, "\t", sizeof(char));
+			w = write(STDERR_FILENO, "\t",sizeof(char));
 		(void)w;
 		status = status &&
 			(write(STDERR_FILENO, s, len) == (int)len);
 		lua_pop(L, 1);  /* pop result */
 	}
-	w = write(STDERR_FILENO, "\n", sizeof(char));
+	w = write(STDERR_FILENO,"\n",sizeof(char));
 	(void)w;
 	return 0;
 }
 
 static int zen_act (lua_State *L) {
-	if( lua_print_stderr_tobuf(L, '\n') ) return 0;
+	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
 	int status = 1;
 	size_t len = 0;
 	int n = lua_gettop(L);  /* number of arguments */
 	int i, w;
 	lua_getglobal(L, "tostring");
-	w = write(STDERR_FILENO, " .  ", 4* sizeof(char));
+	w = write(STDERR_FILENO, " .  ",4* sizeof(char));
 	(void)w;
 	for (i=1; i<=n; i++) {
 		const char *s = lua_print_format(L, i, &len);
 		if(i>1)
-			w = write(STDERR_FILENO, "\t", sizeof(char));
+			w = write(STDERR_FILENO, "\t",sizeof(char));
 		(void)w;
 		status = status &&
 			(write(STDERR_FILENO, s, len) == (int)len);
 		lua_pop(L, 1);  /* pop result */
 	}
-	w = write(STDERR_FILENO, "\n", sizeof(char));
+	w = write(STDERR_FILENO,"\n",sizeof(char));
 	(void)w;
 	return 0;
 }
@@ -539,6 +543,7 @@ static int zen_fatal(lua_State *L) {
 
 int zen_zstd_compress(lua_State *L) {
   octet *dst, *src;
+  Z(L);
   if(!Z->zstd_c)
     Z->zstd_c = ZSTD_createCCtx();
   src = o_arg(L, 1); SAFE(src);
@@ -547,9 +552,9 @@ int zen_zstd_compress(lua_State *L) {
 			       dst->val, dst->max,
 			       src->val, src->len,
 			       ZSTD_maxCLevel());
-  func(L, "octet compressed: %u -> %u", src->len, dst->len);
+  func(L, "octet compressed: %u -> %u",src->len, dst->len);
   if (ZSTD_isError(dst->len)) {
-    fprintf(stderr, "ZSTD error: %s\n", ZSTD_getErrorName(dst->len));
+    fprintf(stderr,"ZSTD error: %s\n",ZSTD_getErrorName(dst->len));
     zen_fatal(L);
   }
   return 1;
@@ -558,6 +563,7 @@ int zen_zstd_compress(lua_State *L) {
 int zen_zstd_decompress(lua_State *L) {
   octet *src, *dst;
   size_t res;
+  Z(L);
   if(!Z->zstd_d)
     Z->zstd_d = ZSTD_createDCtx();
   src = o_arg(L, 1); SAFE(src);
@@ -567,9 +573,9 @@ int zen_zstd_decompress(lua_State *L) {
   dst->len = ZSTD_decompressDCtx(Z->zstd_d,
 		      dst->val, dst->max,
 		      src->val, src->len);
-  func(L, "octet uncompressed: %u -> %u", src->len, dst->len);
+  func(L, "octet uncompressed: %u -> %u",src->len, dst->len);
   if (ZSTD_isError(dst->len)) {
-    fprintf(stderr, "ZSTD error: %s\n", ZSTD_getErrorName(dst->len));
+    fprintf(stderr,"ZSTD error: %s\n",ZSTD_getErrorName(dst->len));
     zen_fatal(L);
   }
   return 1;
