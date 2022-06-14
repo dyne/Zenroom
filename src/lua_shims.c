@@ -27,10 +27,12 @@
 #include <lauxlib.h>
 #include <ldo.h>
 
-extern int EXITCODE;
+#include <zenroom.h>
+#include <zen_error.h>
 
 void lua_fatal(lua_State *L) {
-	EXITCODE = 1;
+  Z(L);
+	Z->exitcode = -1;
 	luaD_throw(L, LUA_ERRRUN);
 }
 

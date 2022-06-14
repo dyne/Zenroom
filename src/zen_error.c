@@ -71,7 +71,7 @@ int zencode_traceback(lua_State *L) {
 }
 
 
-extern int zen_write_err_va(const char *fmt, va_list va);
+extern int zen_write_err_va(zenroom_t *Z, const char *fmt, va_list va);
 
 /* static inline zenroom_t* ZZ(lua_State *L) { */
 /*   global_State *_g = G(L); */
@@ -116,51 +116,54 @@ void func(void *L, const char *format, ...) {
 
 void notice(void *L, const char *format, ...) {
   char pfx[MAX_ERRMSG];
+  Z(L);
 	va_list arg;
 	mutt_snprintf(pfx, MAX_STRING-1, "[*] %s\n",format);
 	va_start(arg, format);
-	zen_write_err_va(pfx, arg);
+	zen_write_err_va(Z, pfx, arg);
 	va_end(arg);
 }
 
 void func(void *L, const char *format, ...) {
   char pfx[MAX_ERRMSG];
+  Z(L);
 	va_list arg;
 	mutt_snprintf(pfx, MAX_STRING-1, "[D] %s\n",format);
 	va_start(arg, format);
-	zen_write_err_va(pfx, arg);
+	zen_write_err_va(Z, pfx, arg);
 	va_end(arg);
 
 }
 
 void zerror(lua_State *L, const char *format, ...) {
 	if(!format) return;
+	Z(L);
 	va_list arg;
 	mutt_snprintf(pfx, MAX_STRING-1, "[!] %s\n",format);
 	va_start(arg, format);
-	zen_write_err_va(pfx, arg);
+	zen_write_err_va(Z, pfx, arg);
 	va_end(arg);
-	// ZZ(L)->errorlevel = 3;
 	// exit(1); // calls teardown (signal 11) TODO: check if OK with seccomp
 }
 
 void act(void *L, const char *format, ...) {
   char pfx[MAX_ERRMSG];
+  Z(L);
 	va_list arg;
 	mutt_snprintf(pfx, MAX_STRING-1, " .  %s\n",format);
 	va_start(arg, format);
-	zen_write_err_va(pfx, arg);
+	zen_write_err_va(Z, pfx, arg);
 	va_end(arg);
 }
 
 void warning(void *L, const char *format, ...) {
   char pfx[MAX_ERRMSG];
+  Z(L);
 	va_list arg;
 	mutt_snprintf(pfx, MAX_STRING-1, "[W] %s\n",format);
 	va_start(arg, format);
-	zen_write_err_va(pfx, arg);
+	zen_write_err_va(Z, pfx, arg);
 	va_end(arg);
-	// ZZ(L)->errorlevel = 2;
 }
 
 #endif
