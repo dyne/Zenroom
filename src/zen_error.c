@@ -80,25 +80,25 @@ extern int zen_write_err_va(zenroom_t *Z, const char *fmt, va_list va);
 
 
 #ifdef __ANDROID__
-void zerror(lua_State *L, const char *format, ...) {
+void zerror(void *L, const char *format, ...) {
 	va_list arg;
 	va_start(arg, format);
 	__android_log_vprint(ANDROID_LOG_ERROR, "ZEN", format, arg);
 	va_end(arg);
 }
-void warning(lua_State *L, const char *format, ...) {
+void warning(void *L, const char *format, ...) {
 	va_list arg;
 	va_start(arg, format);
 	__android_log_vprint(ANDROID_LOG_WARN, "ZEN", format, arg);
 	va_end(arg);
 }
-void notice(lua_State *L, const char *format, ...) {
+void notice(void *L, const char *format, ...) {
 	va_list arg;
 	va_start(arg, format);
 	__android_log_vprint(ANDROID_LOG_INFO, "ZEN", format, arg);
 	va_end(arg);
 }
-void act(lua_State *L, const char *format, ...) {
+void act(void *L, const char *format, ...) {
 	va_list arg;
 	va_start(arg, format);
 	__android_log_vprint(ANDROID_LOG_DEBUG, "ZEN", format, arg);
@@ -135,8 +135,9 @@ void func(void *L, const char *format, ...) {
 
 }
 
-void zerror(lua_State *L, const char *format, ...) {
+void zerror(void *L, const char *format, ...) {
 	if(!format) return;
+	char pfx[MAX_ERRMSG];
 	Z(L);
 	va_list arg;
 	mutt_snprintf(pfx, MAX_STRING-1, "[!] %s\n",format);
