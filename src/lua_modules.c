@@ -86,10 +86,10 @@ int zen_load_string(lua_State *L, const char *code,
 	switch (res) {
 	case LUA_OK: { // func(L, "%s OK %s",__func__,name);
 			break; }
-	case LUA_ERRSYNTAX: { error(L, "%s syntax error: %s",__func__,name); break; }
-	case LUA_ERRMEM: { error(L, "%s out of memory: %s",__func__, name); break;  }
+	case LUA_ERRSYNTAX: { zerror(L, "%s syntax error: %s",__func__,name); break; }
+	case LUA_ERRMEM: { zerror(L, "%s out of memory: %s",__func__, name); break;  }
 	case LUA_ERRGCMM: {
-		error(L, "%s garbage collection error: %s",__func__, name);
+		zerror(L, "%s garbage collection error: %s",__func__, name);
 		break; }
 	}
 	// HEREn(size);
@@ -120,7 +120,7 @@ int zen_exec_extension(lua_State *L, zen_extension_t *p) {
 		return 1;
 	}
 #endif
-	error(L, "%s", lua_tostring(L, -1));
+	zerror(L, "%s", lua_tostring(L, -1));
 	lerror(L,"%s %s",__func__,p->name); // quits with SIGABRT
 	fflush(stderr);
 	return 0;

@@ -74,7 +74,7 @@ extern ecp* ecp_dup(lua_State *L, ecp* in);
 	if   (r->doublesize)     _r = r->dval; \
 	else { dcopy(lr,r->val); _r = (chunk*)&lr; }
 
-// error(L,"error in %s %u",__FUNCTION__,__LINE__);
+// zerror(L,"error in %s %u",__FUNCTION__,__LINE__);
 
 #define checkalldouble(l,r) \
 	if(!l->val && !l->dval) { \
@@ -206,7 +206,7 @@ int big_init(big *n) {
 		func(NULL,"ignoring superflous initialization of big");
 		return(1); }
 	if(n->dval || n->doublesize) {
-		error(NULL,"cannot shrink double big to big in re-initialization");
+		zerror(NULL,"cannot shrink double big to big in re-initialization");
 		return 0; }
 	if(!n->val && !n->dval) {
 		size_t size = sizeof(BIG);
@@ -215,7 +215,7 @@ int big_init(big *n) {
 		n->len = MODBYTES;
 		return(size);
 	}
-	error(NULL,"anomalous state of big number detected on initialization");
+	zerror(NULL,"anomalous state of big number detected on initialization");
 	return(-1);
 }
 int dbig_init(big *n) {
@@ -237,7 +237,7 @@ int dbig_init(big *n) {
 		n->len = MODBYTES<<1;
 		return(size);
 	}
-	error(NULL,"anomalous state of double big number detected on initialization");
+	zerror(NULL,"anomalous state of double big number detected on initialization");
 	return(-1);
 }
 
@@ -304,7 +304,7 @@ static int newbig(lua_State *L) {
 	// octet argument, import
 	octet *o = o_arg(L, 1); SAFE(o);
 	if(o->len > MODBYTES) {
-		error(L, "Import of octet to BIG limit exceeded (%u > %u bytes)", o->len, MODBYTES);
+		zerror(L, "Import of octet to BIG limit exceeded (%u > %u bytes)", o->len, MODBYTES);
 		return 0; }
 	big *c = big_new(L); SAFE(c);
 	_octet_to_big(L, c,o);
@@ -373,7 +373,7 @@ static int big_from_decimal_string(lua_State *L) {
 
 		//if (!isdigit(s[i])) {
 		if (s[i] < '0' || s[i] > '9') {
-			error(L, "%s: string is not a number %s", __func__, s);
+			zerror(L, "%s: string is not a number %s", __func__, s);
 			lerror(L, "operation aborted");
 			return 0;
 		}

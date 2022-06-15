@@ -63,7 +63,7 @@ int zen_write_err_va(const char *fmt, va_list va) {
 	if(!Z) res = vfprintf(stderr,fmt,va); // no init yet, print to stderr
 	if(!res && Z->stderr_buf) { // print to configured buffer
 		if(Z->stderr_full) {
-			error(Z->lua, "Error buffer full, log message lost");
+			zerror(Z->lua, "Error buffer full, log message lost");
 			return(0);
 		}
 		size_t max = Z->stderr_len - Z->stderr_pos;
@@ -72,12 +72,12 @@ int zen_write_err_va(const char *fmt, va_list va) {
 			 Z->stderr_len - Z->stderr_pos,  // length max
 			 fmt, va);
 		if(res < 0) {
-			error(Z->lua, "Fatal error writing error buffer: %s", strerror(errno));
+			zerror(Z->lua, "Fatal error writing error buffer: %s", strerror(errno));
 			EXITCODE = -1;
 			return(EXITCODE);
 		}
 		if(res > (int)max) {
-			error(Z->lua, "Error buffer too small, log truncated: %u bytes (max %u)",res, max);
+			zerror(Z->lua, "Error buffer too small, log truncated: %u bytes (max %u)",res, max);
 			Z->stderr_full = 1;
 			Z->stderr_pos += max;
 		} else {
@@ -100,7 +100,7 @@ int zen_write_out_va(const char *fmt, va_list va) {
 	if(!Z) res = vfprintf(stdout,fmt,va); // no init yet, print to stdout
 	if(!res && Z->stdout_buf) { // print to configured buffer
 		if(Z->stdout_full) {
-			error(Z->lua, "Output buffer full, result data lost");
+			zerror(Z->lua, "Output buffer full, result data lost");
 			return(0);
 		}
 		size_t max = Z->stdout_len - Z->stdout_pos;
@@ -109,12 +109,12 @@ int zen_write_out_va(const char *fmt, va_list va) {
 			 Z->stdout_len - Z->stdout_pos,  // length max
 			 fmt, va);
 		if(res < 0) {
-			error(Z->lua, "Fatal error writing output buffer: %s", strerror(errno));
+			zerror(Z->lua, "Fatal error writing output buffer: %s", strerror(errno));
 			EXITCODE = -1;
 			return(EXITCODE);
 		}
 		if(res > (int)max) {
-			error(Z->lua, "Output buffer too small, data truncated: %u bytes (max %u)",res, max);
+			zerror(Z->lua, "Output buffer too small, data truncated: %u bytes (max %u)",res, max);
 			Z->stdout_full = 1;
 			Z->stdout_pos += max;
 		} else {

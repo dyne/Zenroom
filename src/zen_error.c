@@ -46,7 +46,7 @@
 int lerror(lua_State *L, const char *fmt, ...) {
 	va_list argp;
 	va_start(argp, fmt);
-	error(0,fmt,argp);
+	zerror(0,fmt,argp);
 	luaL_where(L, 1);
 	lua_pushvfstring(L, fmt, argp);
 	va_end(argp);
@@ -88,7 +88,7 @@ static int color = 0;
 void set_color(int on) { color = on; }
 
 #ifdef __ANDROID__
-void error(lua_State *L, const char *format, ...) {
+void zerror(lua_State *L, const char *format, ...) {
 	va_list arg;
 	va_start(arg, format);
 	__android_log_vprint(ANDROID_LOG_ERROR, "ZEN", format, arg);
@@ -149,7 +149,7 @@ void func(void *L, const char *format, ...) {
 }
 
 extern int EXITCODE;
-void error(lua_State *L, const char *format, ...) {
+void zerror(lua_State *L, const char *format, ...) {
 	CTXSAFE(0);
 	if(!format) return;
 	va_list arg;

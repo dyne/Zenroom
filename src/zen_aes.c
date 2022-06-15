@@ -73,14 +73,14 @@ static int gcm_encrypt(lua_State *L) {
 	octet *k =  o_arg(L, 1); SAFE(k);
         // AES key size nk can be 16, 24 or 32 bytes
 	if(k->len > 32 || k->len < 16) {
-		error(L,"ECDH.aead_encrypt accepts only keys of 16,24,32, this is %u", k->len);
+		zerror(L,"ECDH.aead_encrypt accepts only keys of 16,24,32, this is %u", k->len);
 		lerror(L,"ECDH encryption aborted");
 		return 0; }
 	octet *in = o_arg(L, 2); SAFE(in);
 
 	octet *iv = o_arg(L, 3); SAFE(iv);
         if (iv->len < 12) {
-		error(L,"ECDH.aead_encrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
+		zerror(L,"ECDH.aead_encrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
 		lerror(L,"ECDH encryption aborted");
 		return 0; }
 
@@ -111,7 +111,7 @@ static int gcm_decrypt(lua_State *L) {
 	HERE();
 	octet *k = o_arg(L, 1); SAFE(k);
 	if(k->len > 32 || k->len < 16) {
-		error(L,"ECDH.aead_decrypt accepts only keys of 16,24,32, this is %u", k->len);
+		zerror(L,"ECDH.aead_decrypt accepts only keys of 16,24,32, this is %u", k->len);
 		lerror(L,"ECDH decryption aborted");
 		return 0; }
 
@@ -119,7 +119,7 @@ static int gcm_decrypt(lua_State *L) {
 
 	octet *iv = o_arg(L, 3); SAFE(iv);
         if (iv->len < 12) {
-		error(L,"ECDH.aead_decrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
+		zerror(L,"ECDH.aead_decrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
 		lerror(L,"ECDH decryption aborted");
 		return 0; }
 
@@ -137,13 +137,13 @@ static int ctr_process(lua_State *L) {
 	amcl_aes a;
 	octet *key = o_arg(L,1); SAFE(key);
 	if(key->len != 16 && key->len != 32) {
-		error(L,"AES.ctr_process accepts only keys of 16 or 32 bytes, this is %u", key->len);
+		zerror(L,"AES.ctr_process accepts only keys of 16 or 32 bytes, this is %u", key->len);
 		lerror(L, "AES-CTR process aborted");
 		return 0; }
 	octet *in = o_arg(L, 2); SAFE(in);
 	octet *iv = o_arg(L, 3); SAFE(iv);
 	if (iv->len < 12) {
-		error(L,"AES.ctr_process accepts an iv of 12 bytes minimum, this is %u", iv->len);
+		zerror(L,"AES.ctr_process accepts an iv of 12 bytes minimum, this is %u", iv->len);
 		lerror(L,"AES-CTR process aborted");
 		return 0; }
 	AES_init(&a, CTR16, key->len, key->val, iv->val);

@@ -65,7 +65,7 @@
 #include <zen_big.h>
 
 #define KEYPROT(alg,key)	  \
-	error(L, "%s engine has already a %s set:",alg,key); \
+	zerror(L, "%s engine has already a %s set:",alg,key); \
 	lerror(L, "Zenroom won't overwrite. Use a .new() instance.");
 
 // from zen_ecdh_factory.h to setup function pointers
@@ -310,7 +310,7 @@ static int ecdh_dsa_sign_hashed(lua_State *L) {
 		ERROR(); lerror(L,"missing 3rd argument: byte size of octet to sign");
 	}
 	if (m->len != (int)n) {
-		ERROR(); error(L,"size of input does not match: %u != %u", m->len, (int)n);
+		ERROR(); zerror(L,"size of input does not match: %u != %u", m->len, (int)n);
 	}
 	if(lua_isnoneornil(L, 4)) {
 		// return a table
@@ -398,7 +398,7 @@ static int ecdh_dsa_verify_hashed(lua_State *L) {
 		ERROR(); lerror(L,"invalid size zero for material to sign");
 	}
 	if (m->len != (int)n) {
-		ERROR(); error(L,"size of input does not match: %u != %u", m->len, (int)n);
+		ERROR(); zerror(L,"size of input does not match: %u != %u", m->len, (int)n);
 	}
 	int res = (*ECDH.ECP__VP_DSA_NOHASH)((int)n, pk, m, r, s);
 	if(res <0) // ECDH_INVALID in milagro/include/ecdh.h.in (!?!)
@@ -437,14 +437,14 @@ static int ecdh_aead_encrypt(lua_State *L) {
 	octet *k =  o_arg(L, 1); SAFE(k);
         // AES key size nk can be 16, 24 or 32 bytes
 	if(k->len > 32 || k->len < 16) {
-		error(L,"ECDH.aead_encrypt accepts only keys of 16,24,32, this is %u", k->len);
+		zerror(L,"ECDH.aead_encrypt accepts only keys of 16,24,32, this is %u", k->len);
 		lerror(L,"ECDH encryption aborted");
 		return 0; }
 	octet *in = o_arg(L, 2); SAFE(in);
 
 	octet *iv = o_arg(L, 3); SAFE(iv);
         if (iv->len < 12) {
-		error(L,"ECDH.aead_encrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
+		zerror(L,"ECDH.aead_encrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
 		lerror(L,"ECDH encryption aborted");
 		return 0; }
 
@@ -475,7 +475,7 @@ static int ecdh_aead_decrypt(lua_State *L) {
 	HERE();
 	octet *k = o_arg(L, 1); SAFE(k);
 	if(k->len > 32 || k->len < 16) {
-		error(L,"ECDH.aead_decrypt accepts only keys of 16,24,32, this is %u", k->len);
+		zerror(L,"ECDH.aead_decrypt accepts only keys of 16,24,32, this is %u", k->len);
 		lerror(L,"ECDH decryption aborted");
 		return 0; }
 
@@ -483,7 +483,7 @@ static int ecdh_aead_decrypt(lua_State *L) {
 
 	octet *iv = o_arg(L, 3); SAFE(iv);
         if (iv->len < 12) {
-		error(L,"ECDH.aead_decrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
+		zerror(L,"ECDH.aead_decrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
 		lerror(L,"ECDH decryption aborted");
 		return 0; }
 

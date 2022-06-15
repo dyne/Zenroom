@@ -143,13 +143,13 @@ static int lua_new_ecp(lua_State *L) {
 		ECP_inf(&e->val); return 1; } // ECP Infinity
 	if(o->len > e->totlen) { // quick and dirty safety
 		lua_pop(L,1);
-		error(L,"Octet length %u instead of %u bytes",o->len,e->totlen);
+		zerror(L,"Octet length %u instead of %u bytes",o->len,e->totlen);
 		lerror(L,"Invalid octet length to parse an ECP point");
 		return 0; }
 	int res = ECP_validate(o);
 	if(res<0) { // test in Milagro's ecdh_*.h ECP_*_PUBLIC_KEY_VALIDATE
 		lua_pop(L,1);
-		error(L,"ECP point validation returns %i",res);
+		zerror(L,"ECP point validation returns %i",res);
 		lerror(L,"Octet is not a valid ECP (point is not on this curve)");
 		return 0; }
 	if(! ECP_fromOctet(&e->val, o) ) {
@@ -216,7 +216,7 @@ static int ecp_order(lua_State *L) {
 static int ecp_mapit(lua_State *L) {
 	octet *o = o_arg(L,1); SAFE(o);
 	if(o->len != 64) {
-		error(L,"octet length is %u instead of 64 (need to use sha512)",o->len);
+		zerror(L,"octet length is %u instead of 64 (need to use sha512)",o->len);
 		lerror(L,"Invalid argument to ECP.mapit(), not an hash");
 		return 0; }
 	ecp *e = ecp_new(L); SAFE(e);

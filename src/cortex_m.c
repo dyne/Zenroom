@@ -245,7 +245,7 @@ int main(void)
 
   if (!Z)
   {
-    error(NULL, "Initialisation failed.");
+    zerror(NULL, "Initialisation failed.");
     retcode = EXIT_FAILURE;
     goto failed;
   }

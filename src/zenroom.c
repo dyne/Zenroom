@@ -148,7 +148,7 @@ static int zen_init_pmain(lua_State *L) { // protected mode init
 
 	zen_require_override(L,0);
 	if(!zen_lua_init(L)) {
-		error(L,"%s: %s", __func__, "initialisation of lua scripts failed");
+		zerror(L,"%s: %s", __func__, "initialisation of lua scripts failed");
 		return(LUA_ERRRUN);
 	}
 	return(LUA_OK);
@@ -183,7 +183,7 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 
 	if(conf) {
 		if( ! zen_conf_parse(ZZ, conf) ) { // stb parsing
-			error(NULL,"Fatal error");
+			zerror(NULL,"Fatal error");
 			return(NULL);
 		}
 	}
@@ -227,7 +227,7 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	// initialize Lua's context
 	ZZ->lua = lua_newstate(zen_memory_manager, ZZ);
 	if(!ZZ->lua) {
-		error(NULL,"%s: %s", __func__, "Lua newstate creation failed");
+		zerror(NULL,"%s: %s", __func__, "Lua newstate creation failed");
 		return NULL;
 	}
 
@@ -249,7 +249,7 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 			(status == LUA_ERRMEM) ? "Memory allocation error at initalization" :
 			(status == LUA_ERRERR) ? "Error handler fault at initalization" :
 			"Unknown error at initalization";
-		error(ZZ->lua,"%s: %s\n    %s", __func__, _err,
+		zerror(ZZ->lua,"%s: %s\n    %s", __func__, _err,
 		      lua_tostring(ZZ->lua,1)); // lua's traceback string
 		return NULL;
 	}
@@ -323,10 +323,10 @@ void zen_teardown(zenroom_t *ZZ) {
 
 int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
 	if(!ZZ) {
-		error(NULL,"%s: Zenroom context is NULL.",__func__);
+		zerror(NULL,"%s: Zenroom context is NULL.",__func__);
 		return 1; }
 	if(!ZZ->lua) {
-		error(NULL,"%s: Zenroom context not initialised.",
+		zerror(NULL,"%s: Zenroom context not initialised.",
 		      __func__);
 		return 1; }
 	int ret;
@@ -336,33 +336,33 @@ int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
 	(*ZZ->snprintf)(zscript,MAX_ZENCODE-1,
 	        "local _res, _err\n"
 		"_res, _err = pcall( function() ZEN:begin() end)\n"
-		"if not _res then exitcode(1) ZEN.OK = false error('INIT: '.._err,2) end\n"
+		"if not _res then exitcode(1) ZEN.OK = false zerror('INIT: '.._err,2) end\n"
 		"_res, _err = pcall( function() ZEN:parse([[\n%s\n]]) end)\n"
-		"if not _res then exitcode(1) ZEN.OK = false error('PARSE: '.._err,2) end\n"
+		"if not _res then exitcode(1) ZEN.OK = false zerror('PARSE: '.._err,2) end\n"
 		"_res, _err = pcall( function() ZEN:run() end)\n"
-		"if not _res then exitcode(1) ZEN.OK = false error('EXEC: '.._err,2) end\n"
+		"if not _res then exitcode(1) ZEN.OK = false zerror('EXEC: '.._err,2) end\n"
 		, script);
 	zen_setenv(L,"CODE",(char*)zscript);
 	ret = luaL_dostring(L, zscript);
 	free(zscript);
 	if(ret) {
-	  error(L, "ERROR:");
-	  error(L, "%s", lua_tostring(L, -1));
+	  zerror(L, "ERROR:");
+	  zerror(L, "%s", lua_tostring(L, -1));
 	}
 	if(!EXITCODE)
 	  notice(L, "Script successfully executed");
 	else
-	  error(L, "Execution aborted");
+	  zerror(L, "Execution aborted");
 
 	return EXITCODE;
 }
 
 int zen_exec_script(zenroom_t *ZZ, const char *script) {
 	if(!ZZ) {
-		error(NULL,"%s: Zenroom context is NULL.",__func__);
+		zerror(NULL,"%s: Zenroom context is NULL.",__func__);
 		return 1; }
 	if(!ZZ->lua) {
-		error(NULL,"%s: Zenroom context not initialised.",
+		zerror(NULL,"%s: Zenroom context not initialised.",
 				__func__);
 		return 1; }
 	int ret;
@@ -371,13 +371,13 @@ int zen_exec_script(zenroom_t *ZZ, const char *script) {
 	zen_setenv(L,"CODE",(char*)script);
 	ret = luaL_dostring(L, script);
 	if(ret) {
-	  error(L, "ERROR:");
-	  error(L, "%s", lua_tostring(L, -1));
+	  zerror(L, "ERROR:");
+	  zerror(L, "%s", lua_tostring(L, -1));
 	} else EXITCODE=0;
 	if(!EXITCODE)
 	  notice(L, "Script successfully executed");
 	else
-	  error(L, "Execution aborted");
+	  zerror(L, "Execution aborted");
 	return EXITCODE;
 }
 
@@ -386,13 +386,13 @@ int zencode_exec(char *script, char *conf, char *keys, char *data) {
 	int r;
 
 	if(!script) {
-		error(NULL, "NULL string as script for zencode_exec()");
+		zerror(NULL, "NULL string as script for zencode_exec()");
 #ifdef __EMSCRIPTEN__
 		EM_ASM(Module.onAbort());
 #endif
 		return EXIT_FAILURE; }
 	if(script[0] == '\0') {
-		error(NULL, "Empty string as script for zencode_exec()");
+		zerror(NULL, "Empty string as script for zencode_exec()");
 #ifdef __EMSCRIPTEN__
 		EM_ASM(Module.onAbort());
 #endif
@@ -404,13 +404,13 @@ int zencode_exec(char *script, char *conf, char *keys, char *data) {
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
 	Z = zen_init(c, k, d);
 	if(!Z) {
-		error(NULL, "Initialisation failed.");
+		zerror(NULL, "Initialisation failed.");
 #ifdef __EMSCRIPTEN__
 		EM_ASM(Module.onAbort());
 #endif
 		return EXIT_FAILURE; }
 	if(!Z->lua) {
-		error(NULL, "Initialisation failed.");
+		zerror(NULL, "Initialisation failed.");
 #ifdef __EMSCRIPTEN__
 		EM_ASM(Module.onAbort());
 #endif
@@ -418,7 +418,7 @@ int zencode_exec(char *script, char *conf, char *keys, char *data) {
 
 	r = zen_exec_zencode(Z, script);
 	if(r) {
-		error(Z->lua, "Error detected. Execution aborted.");
+		zerror(Z->lua, "Error detected. Execution aborted.");
 		zen_teardown(Z);
 #ifdef __EMSCRIPTEN__
 		EM_ASM({Module.exec_error();});
@@ -441,13 +441,13 @@ int zenroom_exec(char *script, char *conf, char *keys, char *data) {
 	int r;
 
 	if(!script) {
-		error(NULL, "NULL string as script for zenroom_exec()");
+		zerror(NULL, "NULL string as script for zenroom_exec()");
 #ifdef __EMSCRIPTEN__
 		EM_ASM(Module.onAbort());
 #endif
 		return EXIT_FAILURE; }
 	if(script[0] == '\0') {
-		error(NULL, "Empty string as script for zenroom_exec()");
+		zerror(NULL, "Empty string as script for zenroom_exec()");
 #ifdef __EMSCRIPTEN__
 		EM_ASM(Module.onAbort());
 #endif
@@ -459,13 +459,13 @@ int zenroom_exec(char *script, char *conf, char *keys, char *data) {
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
 	Z = zen_init(c, k, d);
 	if(!Z) {
-		error(NULL, "Initialisation failed.");
+		zerror(NULL, "Initialisation failed.");
 #ifdef __EMSCRIPTEN__
 		EM_ASM(Module.onAbort());
 #endif
 		return EXIT_FAILURE; }
 	if(!Z->lua) {
-		error(NULL, "Initialisation failed.");
+		zerror(NULL, "Initialisation failed.");
 #ifdef __EMSCRIPTEN__
 		EM_ASM(Module.onAbort());
 #endif
@@ -473,7 +473,7 @@ int zenroom_exec(char *script, char *conf, char *keys, char *data) {
 
 	r = zen_exec_script(Z, script);
 	if(r) {
-		error(Z->lua, "Error detected. Execution aborted.");
+		zerror(Z->lua, "Error detected. Execution aborted.");
 		zen_teardown(Z);
 #ifdef __EMSCRIPTEN__
 		EM_ASM({Module.exec_error();});
@@ -503,10 +503,10 @@ int zencode_exec_tobuf(char *script, char *conf, char *keys, char *data,
 	int r;
 
 	if(!script) {
-		error(L, "NULL string as script for zenroom_exec()");
+		zerror(L, "NULL string as script for zenroom_exec()");
 		return EXIT_FAILURE; }
 	if(script[0] == '\0') {
-		error(L, "Empty string as script for zenroom_exec()");
+		zerror(L, "Empty string as script for zenroom_exec()");
 		return EXIT_FAILURE; }
 
 	char *c, *k, *d;
@@ -515,11 +515,11 @@ int zencode_exec_tobuf(char *script, char *conf, char *keys, char *data,
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
 	Z = zen_init(c, k, d);
 	if(!Z) {
-		error(L, "Initialisation failed.");
+		zerror(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
 	L = (lua_State*)Z->lua;
 	if(!L) {
-		error(L, "Initialisation failed.");
+		zerror(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
 
 	// setup stdout and stderr buffers
@@ -533,8 +533,8 @@ int zencode_exec_tobuf(char *script, char *conf, char *keys, char *data,
 #ifdef __EMSCRIPTEN__
 		EM_ASM({Module.exec_error();});
 #endif
-		//		error(r);
-		error(L, "Error detected. Execution aborted.");
+		//		zerror(r);
+		zerror(L, "Error detected. Execution aborted.");
 
 		zen_teardown(Z);
 		return EXIT_FAILURE;
@@ -561,10 +561,10 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys, char *data,
 	int r;
 
 	if(!script) {
-		error(L, "NULL string as script for zenroom_exec()");
+		zerror(L, "NULL string as script for zenroom_exec()");
 		return EXIT_FAILURE; }
 	if(script[0] == '\0') {
-		error(L, "Empty string as script for zenroom_exec()");
+		zerror(L, "Empty string as script for zenroom_exec()");
 		return EXIT_FAILURE; }
 
 	char *c, *k, *d;
@@ -573,11 +573,11 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys, char *data,
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
 	Z = zen_init(c, k, d);
 	if(!Z) {
-		error(L, "Initialisation failed.");
+		zerror(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
 	L = (lua_State*)Z->lua;
 	if(!L) {
-		error(L, "Initialisation failed.");
+		zerror(L, "Initialisation failed.");
 		return EXIT_FAILURE; }
 
 	// setup stdout and stderr buffers
@@ -591,8 +591,8 @@ int zenroom_exec_tobuf(char *script, char *conf, char *keys, char *data,
 #ifdef __EMSCRIPTEN__
 		EM_ASM({Module.exec_error();});
 #endif
-		//		error(r);
-		error(L, "Error detected. Execution aborted.");
+		//		zerror(r);
+		zerror(L, "Error detected. Execution aborted.");
 
 		zen_teardown(Z);
 		return EXIT_FAILURE;
