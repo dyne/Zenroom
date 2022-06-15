@@ -24,6 +24,7 @@ jobs:
         flags: --linelength=120 # Optional
         filter: "-readability/braces\
           ,-readability/casting\
+          ,-whitespace/comma\
           ,-whitespace/braces\
           ,-whitespace/comments\
           ,-whitespace/indent\
