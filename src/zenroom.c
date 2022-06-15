@@ -336,11 +336,11 @@ int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
 	(*ZZ->snprintf)(zscript,MAX_ZENCODE-1,
 	        "local _res, _err\n"
 		"_res, _err = pcall( function() ZEN:begin() end)\n"
-		"if not _res then exitcode(1) ZEN.OK = false zerror('INIT: '.._err,2) end\n"
+		"if not _res then exitcode(1) ZEN.OK = false error('INIT: '.._err,2) end\n"
 		"_res, _err = pcall( function() ZEN:parse([[\n%s\n]]) end)\n"
-		"if not _res then exitcode(1) ZEN.OK = false zerror('PARSE: '.._err,2) end\n"
+		"if not _res then exitcode(1) ZEN.OK = false error('PARSE: '.._err,2) end\n"
 		"_res, _err = pcall( function() ZEN:run() end)\n"
-		"if not _res then exitcode(1) ZEN.OK = false zerror('EXEC: '.._err,2) end\n"
+		"if not _res then exitcode(1) ZEN.OK = false error('EXEC: '.._err,2) end\n"
 		, script);
 	zen_setenv(L,"CODE",(char*)zscript);
 	ret = luaL_dostring(L, zscript);
