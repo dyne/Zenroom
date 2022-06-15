@@ -46,7 +46,7 @@
 int lerror(lua_State *L, const char *fmt, ...) {
 	va_list argp;
 	va_start(argp, fmt);
-	zerror(0,fmt,argp);
+	zerror(0, fmt, argp);
 	luaL_where(L, 1);
 	lua_pushvfstring(L, fmt, argp);
 	va_end(argp);
@@ -57,14 +57,14 @@ int lerror(lua_State *L, const char *fmt, ...) {
 int zencode_traceback(lua_State *L) {
     // output the zencode traceback lines
 	int w; (void)w;
-	lua_getglobal(L,"ZEN_traceback");
+	lua_getglobal(L, "ZEN_traceback");
 	size_t zencode_line_len;
-	const char *zencode_line = lua_tolstring(L,lua_gettop(L),&zencode_line_len);
+	const char *zencode_line = lua_tolstring(L, lua_gettop(L), &zencode_line_len);
 	if(zencode_line_len) {
-		w = write(STDERR_FILENO, "[!] ",4* sizeof(char));
+		w = write(STDERR_FILENO, "[!] ", 4* sizeof(char));
 		w = write(STDERR_FILENO, zencode_line, zencode_line_len);
 	}
-	lua_pop(L,1);
+	lua_pop(L, 1);
 	return 0;
 }
 
@@ -129,9 +129,9 @@ void notice(lua_State *L, const char *format, ...) {
 	va_list arg;
 	snprintf_t pr = Z ? Z->snprintf : &snprintf;
 	if(color)
-		(*pr)(pfx, MAX_STRING-1, "%s[*]%s %s\n",ANSI_GREEN,ANSI_RESET,format);
+		(*pr)(pfx, MAX_STRING-1, "%s[*]%s %s\n", ANSI_GREEN, ANSI_RESET, format);
 	else
-		(*pr)(pfx, MAX_STRING-1, "[*] %s\n",format);
+		(*pr)(pfx, MAX_STRING-1, "[*] %s\n", format);
 	va_start(arg, format);
 	zen_write_err_va(pfx, arg);
 	va_end(arg);
@@ -141,7 +141,7 @@ void func(void *L, const char *format, ...) {
 	CTXSAFE(3);
 	va_list arg;
 	snprintf_t pr = Z ? Z->snprintf : &snprintf;
-	(*pr)(pfx, MAX_STRING-1, "[D] %s\n",format);
+	(*pr)(pfx, MAX_STRING-1, "[D] %s\n", format);
 	va_start(arg, format);
 	zen_write_err_va(pfx, arg);
 	va_end(arg);
@@ -155,9 +155,9 @@ void zerror(lua_State *L, const char *format, ...) {
 	va_list arg;
 	snprintf_t pr = Z ? Z->snprintf : &snprintf;
 	if(color)
-		(*pr)(pfx, MAX_STRING-1, "%s[!]%s %s\n",ANSI_RED,ANSI_RESET,format);
+		(*pr)(pfx, MAX_STRING-1, "%s[!]%s %s\n", ANSI_RED, ANSI_RESET, format);
 	else
-		(*pr)(pfx, MAX_STRING-1, "[!] %s\n",format);
+		(*pr)(pfx, MAX_STRING-1, "[!] %s\n", format);
 	va_start(arg, format);
 	zen_write_err_va(pfx, arg);
 	va_end(arg);
@@ -170,7 +170,7 @@ void act(lua_State *L, const char *format, ...) {
 	CTXSAFE(2);
 	va_list arg;
 	snprintf_t pr = Z ? Z->snprintf : &snprintf;
-	(*pr)(pfx, MAX_STRING-1, " .  %s\n",format);
+	(*pr)(pfx, MAX_STRING-1, " .  %s\n", format);
 	va_start(arg, format);
 	zen_write_err_va(pfx, arg);
 	va_end(arg);
@@ -181,9 +181,9 @@ void warning(lua_State *L, const char *format, ...) {
 	va_list arg;
 	snprintf_t pr = Z ? Z->snprintf : &snprintf;
 	if(color)
-		(*pr)(pfx, MAX_STRING-1, "%s[W]%s %s\n",ANSI_YELLOW,ANSI_RESET,format);
+		(*pr)(pfx, MAX_STRING-1, "%s[W]%s %s\n", ANSI_YELLOW, ANSI_RESET, format);
 	else
-		(*pr)(pfx, MAX_STRING-1, "[W] %s\n",format);
+		(*pr)(pfx, MAX_STRING-1, "[W] %s\n", format);
 	va_start(arg, format);
 	zen_write_err_va(pfx, arg);
 	va_end(arg);

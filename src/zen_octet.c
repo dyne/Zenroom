@@ -197,7 +197,7 @@ octet* o_arg(lua_State *L, int n) {
 	o = (octet*) luaL_testudata(L, n, "zenroom.octet"); // new
 	if(o) {
 		if(o->len>MAX_OCTET) {
-			zerror(L, "argument %u octet too long: %u bytes", n,o->len);
+			zerror(L, "argument %u octet too long: %u bytes", n, o->len);
 			lerror(L, "operation aborted");
 			return NULL;
 		}
@@ -206,7 +206,7 @@ octet* o_arg(lua_State *L, int n) {
 	if( strlen(type) >= 6 && ((strncmp("string", type, 6)==0)
 						  || (strncmp("number", type, 6)==0)) ) {
 		size_t len; const char *str;
-		str = luaL_optlstring(L, n,NULL, &len);
+		str = luaL_optlstring(L, n, NULL, &len);
 		if(!str || !len) {
 			zerror(L, "invalid NULL string (zero size)");
 			lerror(L, "failed implicit conversion from string to octet");
@@ -414,7 +414,7 @@ typedef struct { uint64_t high, low; } uint128_t;
 static int from_number(lua_State *L) {
 	// number argument, import
 	int tn;
-	lua_Number n = lua_tointegerx(L, 1,&tn);
+	lua_Number n = lua_tointegerx(L, 1, &tn);
 	if(!tn) {
 		lerror(L, "O.from_number input is not a number");
 		return 0; }
@@ -444,7 +444,7 @@ static int from_rawlen (lua_State *L) {
   s = lua_tolstring(L, 1, &len);  /* get result */
   luaL_argcheck(L, s != NULL, 1, "string expected");
   int tn;
-  lua_Number n = lua_tointegerx(L, 2,&tn);
+  lua_Number n = lua_tointegerx(L, 2, &tn);
   if(!tn) {
     lerror(L, "O.new 2nd arg is not a number");
     return 0; }
@@ -646,7 +646,7 @@ static int to_segwit_address(lua_State *L) {
 	octet *o = o_arg(L, 1);	SAFE(o);
 	if(!o->len) { lua_pushnil(L); return 1; }
 	int tn;
-	lua_Number witver = lua_tointegerx(L, 2,&tn);
+	lua_Number witver = lua_tointegerx(L, 2, &tn);
 	if(!tn) {
 		lerror(L, "O.from_number input is not a number");
 		return 0; }
@@ -980,7 +980,7 @@ static int to_string(lua_State *L) {
 	char *s = zen_memory_alloc(o->len+2);
 	OCT_toStr(o, s);
 	s[o->len] = '\0'; // make sure string is NULL terminated
-	lua_pushlstring(L, s,o->len);
+	lua_pushlstring(L, s, o->len);
 	zen_memory_free(s);
 	return 1;
 }
@@ -1240,7 +1240,7 @@ static int popcount64b(uint64_t x) {
 	// const uint64_t m16 = 0x0000ffff0000ffff; //binary: 16 zeros, 16 ones ...
 	// const uint64_t m32 = 0x00000000ffffffff; //binary: 32 zeros, 32 ones
 	// const uint64_t hff = 0xffffffffffffffff; //binary: all ones
-	// const uint64_t h01 = 0x0101010101010101; //the sum of 256 to the power of 0, 1,2, 3...
+	// const uint64_t h01 = 0x0101010101010101; //the sum of 256 to the power of 0, 1, 2, 3...
 	x -= (x >> 1) & m1;             //put count of each 2 bits into those 2 bits
 	x = (x & m2) + ((x >> 2) & m2); //put count of each 4 bits into those 4 bits
 	x = (x + (x >> 4)) & m4;        //put count of each 8 bits into those 8 bits

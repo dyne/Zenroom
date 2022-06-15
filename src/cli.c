@@ -129,7 +129,7 @@ void load_file(char *dst, FILE *fd) {
 		if(!chunk) {
 			warning(0, "File too big, truncated at maximum supported size");
 			break; }
-		bytes = fread(&dst[offset], 1,chunk, fd);
+		bytes = fread(&dst[offset], 1, chunk, fd);
 
 		if(!bytes) {
 			if(feof(fd)) {
@@ -275,7 +275,7 @@ int main(int argc, char **argv) {
 		act(NULL, "it under the terms of the GNU Affero General Public License as");
 		act(NULL, "published by the Free Software Foundation, either version 3 of the");
 		act(NULL, "License, or (at your option) any later version.");
-		act(NULL, "Zenroom is distributed in the hope that it will be useful, ");
+		act(NULL, "Zenroom is distributed in the hope that it will be useful,");
 		act(NULL, "but WITHOUT ANY WARRANTY; without even the implied warranty of");
 		act(NULL, "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the");
 		act(NULL, "GNU Affero General Public License for more details.");
