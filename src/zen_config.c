@@ -93,7 +93,7 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 	stb_c_lexer_init(&lex, configuration, configuration+len, lexbuf, MAX_CONFIG);
 	while (stb_c_lexer_get_token(&lex)) {
 		if (lex.token == CLEX_parse_error) {
-			zerror(NULL,"%s: error parsing configuration: %s", __func__, configuration);
+			zerror(NULL, "%s: error parsing configuration: %s", __func__, configuration);
 			// free(lexbuf);
 			return 0;
 		}
@@ -102,21 +102,21 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 		switch (lex.token) {
 			// first token parsed, set enum for value
 		case CLEX_id:
-			if(strcasecmp(lex.string,"debug")  ==0) { curconf = VERBOSE; break; } // bool
-			if(strcasecmp(lex.string,"verbose")==0) { curconf = VERBOSE; break; }
-			if(strcasecmp(lex.string,"color")  ==0) { curconf = COLOR;   break; } // bool
-			if(strcasecmp(lex.string,"rngseed")  ==0) { curconf = RNGSEED;   break; } // str
-			if(strcasecmp(lex.string,"print") ==0) { curconf = PRINTF;   break; } // str
+			if(strcasecmp(lex.string, "debug")  ==0) { curconf = VERBOSE; break; } // bool
+			if(strcasecmp(lex.string, "verbose")==0) { curconf = VERBOSE; break; }
+			if(strcasecmp(lex.string, "color")  ==0) { curconf = COLOR;   break; } // bool
+			if(strcasecmp(lex.string, "rngseed")  ==0) { curconf = RNGSEED;   break; } // str
+			if(strcasecmp(lex.string, "print") ==0) { curconf = PRINTF;   break; } // str
 			if(curconf==RNGSEED) {
 				int len = strlen(lex.string);
 				if( len-4 != RANDOM_SEED_LEN *2) { // hex doubles size
-					zerror(NULL,"Invalid length of random seed: %u (must be %u)",
+					zerror(NULL, "Invalid length of random seed: %u (must be %u)",
 					      len/2, RANDOM_SEED_LEN);
 					// free(lexbuf);
 					return 0;
 				}
 				if(strncasecmp(lex.string, "hex:", 4) != 0) { // hex: prefix needed
-					zerror(NULL,"Invalid rngseed data prefix (must be hex:)");
+					zerror(NULL, "Invalid rngseed data prefix (must be hex:)");
 					// free(lexbuf);
 					return 0;
 				}
@@ -127,11 +127,11 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 			}
 
 			if(curconf==PRINTF) {
-				if(strcasecmp(lex.string,"stb") == 0) ZZ->zconf_printf = STB;
-				else if(strcasecmp(lex.string,"sys") == 0) ZZ->zconf_printf = LIBC;
-				else if(strcasecmp(lex.string,"mutt") == 0) ZZ->zconf_printf = MUTT;
+				if(strcasecmp(lex.string, "stb") == 0) ZZ->zconf_printf = STB;
+				else if(strcasecmp(lex.string, "sys") == 0) ZZ->zconf_printf = LIBC;
+				else if(strcasecmp(lex.string, "mutt") == 0) ZZ->zconf_printf = MUTT;
 				else {
-					zerror(NULL,"Invalid print function: %s",lex.string);
+					zerror(NULL, "Invalid print function: %s", lex.string);
 					// free(lexbuf);
 					return 0;
 				}
@@ -139,7 +139,7 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 			}
 
 			// free(lexbuf);
-			zerror(NULL,"Invalid configuration: %s", lex.string);
+			zerror(NULL, "Invalid configuration: %s", lex.string);
 			curconf = NIL;
 			return 0;
 
@@ -148,17 +148,17 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 			if(curconf==COLOR)   { set_color  ( lex.int_number ); break; }
 
 			// free(lexbuf);
-			zerror(NULL,"Invalid integer configuration");
+			zerror(NULL, "Invalid integer configuration");
 			curconf = NIL;
 			return 0;
 
 		default:
 			if(lex.token == ',') { curconf = NIL; break; }
 			if(lex.token == '=' && curconf == NIL) {
-				warning(NULL,"Undefined config variable");
+				warning(NULL, "Undefined config variable");
 				break; }
 			if(lex.token == '=' && curconf != NIL) break; // OK
-			zerror(NULL,"%s: Invalid string in configuration: %c",__func__, lex.token);
+			zerror(NULL, "%s: Invalid string in configuration: %c", __func__, lex.token);
 			// free(lexbuf);
 			return 0;
 		}
