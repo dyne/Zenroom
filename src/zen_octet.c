@@ -512,7 +512,7 @@ static int from_string(lua_State *L) {
 	const int len = strlen(s);
 	// STRING SIZE CHECK before import to OCTET
 	if(len>MAX_OCTET) {
-		error(L, "%s: invalid string size: %u", __func__,len);
+		zerror(L, "%s: invalid string size: %u", __func__,len);
 		lerror(L, "operation aborted");
 		return 0; }
 	octet *o = o_new(L, len);
