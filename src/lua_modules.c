@@ -35,7 +35,7 @@ extern int EXITCODE;
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 LUALIB_API int (luaL_loadfilex) (lua_State *L, const char *filename, const char *mode);
-#define luaL_loadfile(L,f)     luaL_loadfilex(L,f,NULL)
+#define luaL_loadfile(L, f)     luaL_loadfilex(L, f, NULL)
 #endif
 
 extern int lualibs_load_all_detected(lua_State *L);
@@ -79,17 +79,17 @@ int zen_load_string(lua_State *L, const char *code,
                     size_t size, const char *name) {
 	int res;
 #ifdef LUA_COMPILED
-	res = luaL_loadbufferx(L,code,size,name,"b");
+	res = luaL_loadbufferx(L, code, size, name, "b");
 #else
-	res = luaL_loadbufferx(L,code,size,name,NULL);
+	res = luaL_loadbufferx(L, code, size, name, NULL);
 #endif
 	switch (res) {
-	case LUA_OK: { // func(L, "%s OK %s",__func__,name);
+	case LUA_OK: { // func(L, "%s OK %s", __func__, name);
 			break; }
-	case LUA_ERRSYNTAX: { error(L, "%s syntax error: %s",__func__,name); break; }
-	case LUA_ERRMEM: { error(L, "%s out of memory: %s",__func__, name); break;  }
+	case LUA_ERRSYNTAX: { zerror(L, "%s syntax error: %s", __func__, name); break; }
+	case LUA_ERRMEM: { zerror(L, "%s out of memory: %s", __func__, name); break;  }
 	case LUA_ERRGCMM: {
-		error(L, "%s garbage collection error: %s",__func__, name);
+		zerror(L, "%s garbage collection error: %s", __func__, name);
 		break; }
 	}
 	// HEREn(size);
@@ -104,7 +104,7 @@ int zen_exec_extension(lua_State *L, zen_extension_t *p) {
 		// HEREs(p->code);
 		if(luaL_loadfile(L, p->code)==0) {
 			if(lua_pcall(L, 0, LUA_MULTRET, 0) == LUA_OK) {
-				func(L,"loaded %s", p->name);
+				func(L, "loaded %s", p->name);
 				return 1;
 			}
 		}
@@ -112,22 +112,22 @@ int zen_exec_extension(lua_State *L, zen_extension_t *p) {
 #else
 	if(zen_load_string(L, p->code, *p->size, p->name)
 	   ==LUA_OK) {
-		// func(L,"%s %s", __func__, p->name);
+		// func(L, "%s %s", __func__, p->name);
 		// HEREn(*p->size);
 		// HEREp(p->code);
-		lua_call(L,0,1);
-		func(L,"loaded %s", p->name);
+		lua_call(L, 0, 1);
+		func(L, "loaded %s", p->name);
 		return 1;
 	}
 #endif
-	error(L, "%s", lua_tostring(L, -1));
-	lerror(L,"%s %s",__func__,p->name); // quits with SIGABRT
+	zerror(L, "%s", lua_tostring(L, -1));
+	lerror(L, "%s %s", __func__, p->name); // quits with SIGABRT
 	fflush(stderr);
 	return 0;
 }
 
 int nop(lua_State *L) {
-	lerror(L,"illegal instruction: require");
+	lerror(L, "illegal instruction: require");
 	return 0; }
 
 #ifndef S_SPLINT_S
@@ -144,7 +144,7 @@ int zen_require(lua_State *L) {
 		if (strcmp(p->name, s) == 0) {
 			// HEREp(p->func);
 			luaL_requiref(L, p->name, p->func, 1);
-			// func(L,"%s %s",__func__, p->name);
+			// func(L, "%s %s", __func__, p->name);
 			return 1;
 		}
 	}
@@ -155,7 +155,7 @@ int zen_require(lua_State *L) {
 	     p->name != NULL; ++p) {
 		// skip init (called as last)
 		if (strcasecmp(p->name, s) == 0) {
-			return zen_exec_extension(L,p);
+			return zen_exec_extension(L, p);
 		}
 	}
 
@@ -182,16 +182,16 @@ int zen_require(lua_State *L) {
 		luaL_requiref(L, s, luaopen_qp, 1); }	
 	else {
 		// shall we bail out and abort execution here?
-		warning(L, "required extension not found: %s",s);
+		warning(L, "required extension not found: %s", s);
 		return 0; }
-	func(L,"loaded %s",s);
+	func(L, "loaded %s", s);
 	return 1;
 }
 
 
 int zen_exitcode(lua_State *L) {
 	int tn;
-	lua_Number n = lua_tonumberx(L,1,&tn);
+	lua_Number n = lua_tonumberx(L, 1, &tn);
 	if(tn)
 		EXITCODE = (int)n;
 	else
@@ -227,9 +227,9 @@ int zen_lua_init(lua_State *L) {
 	for (p = zen_extensions;
 	     p->name != NULL; ++p) {
 		if (strcasecmp(p->name, "init") == 0)
-			return zen_exec_extension(L,p);
+			return zen_exec_extension(L, p);
 	}
 	lua_gc(L, LUA_GCCOLLECT, 0);
-	lerror(L,"Error loading lua init script");
+	lerror(L, "Error loading lua init script");
 	return 0;
 }

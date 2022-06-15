@@ -90,35 +90,35 @@ void load_file(char *dst, FILE *fd) {
 	size_t offset = 0;
 	size_t bytes = 0;
 	if(!fd) {
-		error(0, "Error opening %s", strerror(errno));
+		zerror(0, "Error opening %s", strerror(errno));
 		exit(1); }
 	if(fd!=stdin) {
 		if(fseek(fd, 0L, SEEK_END)<0) {
-			error(0, "fseek(end) error in %s: %s",__func__,
+			zerror(0, "fseek(end) error in %s: %s", __func__,
 			      strerror(errno));
 			exit(1); }
 		file_size = ftell(fd);
 		if(fseek(fd, 0L, SEEK_SET)<0) {
-			error(0, "fseek(start) error in %s: %s",__func__,
+			zerror(0, "fseek(start) error in %s: %s", __func__,
 			      strerror(errno));
 			exit(1); }
-		func(0, "size of file: %u",file_size);
+		func(0, "size of file: %u", file_size);
 	}
 
 	firstline = malloc(MAX_STRING);
 	// skip shebang on firstline
 	if(!fgets(firstline, MAX_STRING, fd)) {
 		if(errno==0) { // file is empty
-			error(0, "Error reading, file is empty");
+			zerror(0, "Error reading, file is empty");
 			if(firstline) free(firstline);
 			exit(1); }
-		error(0, "Error reading first line: %s", strerror(errno));
+		zerror(0, "Error reading first line: %s", strerror(errno));
 		exit(1); }
 	if(firstline[0]=='#' && firstline[1]=='!')
 		func(0, "Skipping shebang");
 	else {
 		offset+=strlen(firstline);
-		strncpy(dst,firstline,MAX_STRING);
+		strncpy(dst, firstline, MAX_STRING);
 	}
 
 	size_t chunk;
@@ -129,7 +129,7 @@ void load_file(char *dst, FILE *fd) {
 		if(!chunk) {
 			warning(0, "File too big, truncated at maximum supported size");
 			break; }
-		bytes = fread(&dst[offset],1,chunk,fd);
+		bytes = fread(&dst[offset], 1, chunk, fd);
 
 		if(!bytes) {
 			if(feof(fd)) {
@@ -137,13 +137,13 @@ void load_file(char *dst, FILE *fd) {
 					warning(0, "Incomplete file read (%u of %u bytes)",
 					      offset, file_size);
 				} else {
-					func(0, "EOF after %u bytes",offset);
+					func(0, "EOF after %u bytes", offset);
 				}
  				dst[offset] = '\0';
 				break;
 			}
 			if(ferror(fd)) {
-				error(0, "Error in %s: %s",__func__,strerror(errno));
+				zerror(0, "Error in %s: %s", __func__, strerror(errno));
 				fclose(fd);
 				if(firstline) free(firstline);
 				exit(1); }
@@ -230,10 +230,10 @@ int main(int argc, char **argv) {
 	while((opt = getopt(argc, argv, short_options)) != -1) {
 		switch(opt) {
 		case 'D':
-			snprintf(introspect,MAX_STRING-1,"%s",optarg);
+			snprintf(introspect, MAX_STRING-1, "%s", optarg);
 			break;
 		case 'h':
-			fprintf(stdout,"%s",help);
+			fprintf(stdout, "%s", help);
 			cli_free_buffers();
 			return EXIT_SUCCESS;
 			break;
@@ -244,31 +244,31 @@ int main(int argc, char **argv) {
 			interactive = 1;
 			break;
 		case 'l':
-			snprintf(sideload,MAX_STRING-1,"%s",optarg);
+			snprintf(sideload, MAX_STRING-1, "%s", optarg);
 			break;
 		case 'k':
-			snprintf(keysfile,MAX_STRING-1,"%s",optarg);
+			snprintf(keysfile, MAX_STRING-1, "%s", optarg);
 			break;
 		case 'a':
-			snprintf(datafile,MAX_STRING-1,"%s",optarg);
+			snprintf(datafile, MAX_STRING-1, "%s", optarg);
 			break;
 		case 'c':
-			snprintf(conffile,MAX_STRING-1,"%s",optarg);
+			snprintf(conffile, MAX_STRING-1, "%s", optarg);
 			break;
 		case 'S':
-			snprintf(rngseed,MAX_STRING-1,"%s",optarg);
+			snprintf(rngseed, MAX_STRING-1, "%s", optarg);
 			break;
 		case 'z':
 			zencode = 1;
 			interactive = 0;
 			break;
-		case '?': error(0,help); cli_free_buffers(); return EXIT_FAILURE;
-		default:  error(0,help); cli_free_buffers(); return EXIT_FAILURE;
+		case '?': zerror(0, help); cli_free_buffers(); return EXIT_FAILURE;
+		default:  zerror(0, help); cli_free_buffers(); return EXIT_FAILURE;
 		}
 	}
 
 	if(verbosity) {
-		notice(NULL, "Zenroom v%s - secure crypto language VM",VERSION);
+		notice(NULL, "Zenroom v%s - secure crypto language VM", VERSION);
 		act(NULL, "Zenroom is Copyright (C) 2017-2021 by the Dyne.org foundation");
 		act(NULL, "For the original source code and documentation go to https://zenroom.org");
 		act(NULL, "Zenroom is free software: you can redistribute it and/or modify");
@@ -284,7 +284,7 @@ int main(int argc, char **argv) {
 	}
 
 	for (index = optind; index < argc; index++) {
-		snprintf(scriptfile,MAX_STRING-1,"%s",argv[index]);
+		snprintf(scriptfile, MAX_STRING-1, "%s", argv[index]);
 	}
 
 	if(keysfile[0]!='\0') {
@@ -322,7 +322,7 @@ int main(int argc, char **argv) {
 
 	// configuration from -c or default
 	if(conffile[0]!='\0') {
-		if(verbosity) act(NULL, "configuration: %s",conffile);
+		if(verbosity) act(NULL, "configuration: %s", conffile);
 	// load_file(conf, fopen(conffile, "r"));
 	} else
 		if(verbosity) act(NULL, "using default configuration");
@@ -336,21 +336,21 @@ int main(int argc, char **argv) {
 			(keys[0])?keys:NULL,
 			(data[0])?data:NULL);
 	if(!Z) {
-		error(NULL, "Initialisation failed.");
+		zerror(NULL, "Initialisation failed.");
 		cli_free_buffers();
 		return EXIT_FAILURE; }
 
 	// print scenario documentation
 	if(introspect[0]!='\0') {
 		static char zscript[MAX_ZENCODE];
-		notice(NULL, "Documentation for scenario: %s",introspect);
-		(*Z->snprintf)(zscript,MAX_ZENCODE-1,
+		notice(NULL, "Documentation for scenario: %s", introspect);
+		(*Z->snprintf)(zscript, MAX_ZENCODE-1,
 		               "function Given(text, fn) ZEN.given_steps[text] = true end\n"
 		               "function When(text, fn) ZEN.when_steps[text] = true end\n"
 		               "function Then(text, fn) ZEN.then_steps[text] = true end\n"
 					   "function IfWhen(text, fn) ZEN.if_steps[text] = true end\n"
 		               "function ZEN.add_schema(arr)\n"
-		               "  for k,v in pairs(arr) do ZEN.schemas[k] = true end end\n"
+		               "  for k, v in pairs(arr) do ZEN.schemas[k] = true end end\n"
 		               "ZEN.given_steps = {}\n"
 		               "ZEN.when_steps = {}\n"
 		               "ZEN.then_steps = {}\n"
@@ -358,17 +358,17 @@ int main(int argc, char **argv) {
 		               "ZEN.schemas = {}\n"
 		               "require_once('zencode_%s')\n"
 		               "print(JSON.encode(\n"
-		               "{ Scenario = \"%s\",\n"
-		               "  Given = ZEN.given_steps,\n"
-		               "  When = ZEN.when_steps,\n"
-		               "  Then = ZEN.then_steps,\n"
-					   "  If = ZEN.if_steps,\n"
+		               "{ Scenario = \"%s\", \n"
+		               "  Given = ZEN.given_steps, \n"
+		               "  When = ZEN.when_steps, \n"
+		               "  Then = ZEN.then_steps, \n"
+					   "  If = ZEN.if_steps, \n"
 		               "  Schemas = ZEN.schemas }))", introspect, introspect);
 		int ret = luaL_dostring(Z->lua, zscript);
 		if(ret) {
-			error(Z->lua, "Zencode execution error");
-			error(Z->lua, "Script:\n%s", zscript);
-			error(Z->lua, "%s", lua_tostring(Z->lua, -1));
+			zerror(Z->lua, "Zencode execution error");
+			zerror(Z->lua, "Script:\n%s", zscript);
+			zerror(Z->lua, "%s", lua_tostring(Z->lua, -1));
 			fflush(stderr);
 		}
 		zen_teardown(Z);
@@ -377,8 +377,8 @@ int main(int argc, char **argv) {
 	}
 
 	if(sideload[0]!='\0') {
-		notice(Z->lua,"Side loading library: %s",sideload);
-		load_file(sidescript, fopen(sideload,"rb"));
+		notice(Z->lua, "Side loading library: %s", sideload);
+		load_file(sidescript, fopen(sideload, "rb"));
 		zen_exec_script(Z, sidescript);
 	}
 
@@ -392,7 +392,7 @@ int main(int argc, char **argv) {
 		// get another argument from stdin
 		if(verbosity) act(NULL, "reading Zencode from stdin");
 		load_file(script, stdin);
-		// func(NULL, "%s\n--",script);
+		// func(NULL, "%s\n--", script);
 	}
 
 	// configure to parse Lua or Zencode
@@ -419,12 +419,12 @@ int main(int argc, char **argv) {
 		if (fork() == 0) {
 #   ifdef ARCH_LINUX /* LINUX engages SECCOMP. */
 			if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) {
-				error(Z->lua, "Seccomp fail to set no_new_privs: %s", strerror(errno));
+				zerror(Z->lua, "Seccomp fail to set no_new_privs: %s", strerror(errno));
 				cli_free_buffers();
 				return EXIT_FAILURE;
 			}
 			if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &strict)) {
-				error(Z->lua, "Seccomp fail to install filter: %s", strerror(errno));
+				zerror(Z->lua, "Seccomp fail to install filter: %s", strerror(errno));
 				cli_free_buffers();
 				return EXIT_FAILURE;
 			}
@@ -459,7 +459,7 @@ int main(int argc, char **argv) {
 		// measure and report time of execution
 		clock_gettime(CLOCK_MONOTONIC, &after);
 		long musecs = (after.tv_sec - before.tv_sec) * 1000000L;
-		act(NULL,"Time used: %lu", ( ((after.tv_nsec - before.tv_nsec) / 1000L) + musecs) );
+		act(NULL, "Time used: %lu", ( ((after.tv_nsec - before.tv_nsec) / 1000L) + musecs) );
 	}
 
 	cli_free_buffers();

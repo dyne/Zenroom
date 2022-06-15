@@ -53,7 +53,7 @@ int repl_write(lua_State *lua) {
 	size_t len;
 	const char *line = luaL_checklstring(lua,1,&len);
 	if(len>MAX_STRING) {
-		error(lua, "Error: LUA string too long");
+		zerror(lua, "Error: LUA string too long");
 		return 0; }
 	int nop = write(STDOUT_FILENO, line, len);
 	(void)nop;

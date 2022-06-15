@@ -45,7 +45,7 @@ void  system_free(void *ptr) { free(ptr); }
 void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
 	// zenroom_t *ZZ = (zenroom_t*)ud;
 	// if(!ZZ) {
-	// 	error(NULL,"Memory manager missing ZEN context");
+	// 	zerror(NULL, "Memory manager missing ZEN context");
 	// 	return NULL;
 	// }
   (void)ud;
@@ -59,7 +59,7 @@ void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize) {
 		if(nsize!=0) {
 			void *ret = malloc(nsize);
 			if(ret) return ret;
-			error(NULL,"Malloc out of memory, requested %u B",nsize);
+			zerror(NULL, "Malloc out of memory, requested %u B", nsize);
 			return NULL;
 		} else return NULL;
 

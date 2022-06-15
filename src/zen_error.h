@@ -33,7 +33,7 @@ int lerror(lua_State *L, const char *fmt, ...);
 
 void notice(lua_State *L, const char *format, ...);
 void func(void *L, const char *format, ...);
-void error(lua_State *L, const char *format, ...);
+void zerror(lua_State *L, const char *format, ...);
 void act(lua_State *L, const char *format, ...);
 void warning(lua_State *L, const char *format, ...);
 
@@ -43,7 +43,7 @@ int z_snprintf(char *buf, int count, char const *fmt, ...);
 int z_vsprintf(char *buf, char const *fmt, va_list va);
 int z_vsnprintf(char *buf, int count, char const *fmt, va_list va);
 
-#define ERROR() error(0, "Error in %s",__func__)
+#define ERROR() zerror(0, "Error in %s",__func__)
 #define SAFE(x) if(!x) lerror(L, "NULL variable in %s",__func__)
 
 void set_debug(int lev);

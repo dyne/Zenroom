@@ -45,8 +45,8 @@
 //  @copyright Dyne.org foundation 2017-2020
 
 // from milagro's pbc_support.h
-extern void AES_GCM_ENCRYPT(octet *K,octet *IV,octet *H,octet *P,octet *C,octet *T);
-extern void AES_GCM_DECRYPT(octet *K,octet *IV,octet *H,octet *C,octet *P,octet *T);
+extern void AES_GCM_ENCRYPT(octet *K, octet *IV, octet *H, octet *P, octet *C, octet *T);
+extern void AES_GCM_DECRYPT(octet *K, octet *IV, octet *H, octet *C, octet *P, octet *T);
 
 /*
    AES-GCM encrypt with Additional Data (AEAD) encrypts and
@@ -73,15 +73,15 @@ static int gcm_encrypt(lua_State *L) {
 	octet *k =  o_arg(L, 1); SAFE(k);
         // AES key size nk can be 16, 24 or 32 bytes
 	if(k->len > 32 || k->len < 16) {
-		error(L,"ECDH.aead_encrypt accepts only keys of 16,24,32, this is %u", k->len);
-		lerror(L,"ECDH encryption aborted");
+		zerror(L, "ECDH.aead_encrypt accepts only keys of 16, 24, 32, this is %u", k->len);
+		lerror(L, "ECDH encryption aborted");
 		return 0; }
 	octet *in = o_arg(L, 2); SAFE(in);
 
 	octet *iv = o_arg(L, 3); SAFE(iv);
         if (iv->len < 12) {
-		error(L,"ECDH.aead_encrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
-		lerror(L,"ECDH encryption aborted");
+		zerror(L, "ECDH.aead_encrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
+		lerror(L, "ECDH encryption aborted");
 		return 0; }
 
 	octet *h =  o_arg(L, 4); SAFE(h);
@@ -111,22 +111,22 @@ static int gcm_decrypt(lua_State *L) {
 	HERE();
 	octet *k = o_arg(L, 1); SAFE(k);
 	if(k->len > 32 || k->len < 16) {
-		error(L,"ECDH.aead_decrypt accepts only keys of 16,24,32, this is %u", k->len);
-		lerror(L,"ECDH decryption aborted");
+		zerror(L, "ECDH.aead_decrypt accepts only keys of 16, 24, 32, this is %u", k->len);
+		lerror(L, "ECDH decryption aborted");
 		return 0; }
 
 	octet *in = o_arg(L, 2); SAFE(in);
 
 	octet *iv = o_arg(L, 3); SAFE(iv);
         if (iv->len < 12) {
-		error(L,"ECDH.aead_decrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
-		lerror(L,"ECDH decryption aborted");
+		zerror(L, "ECDH.aead_decrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
+		lerror(L, "ECDH decryption aborted");
 		return 0; }
 
 	octet *h = o_arg(L, 4); SAFE(h);
 	// output is padded to next word
 	octet *out = o_new(L, in->len+16); SAFE(out);
-	octet *t2 = o_new(L,16); SAFE(t2);
+	octet *t2 = o_new(L, 16); SAFE(t2);
 
 	AES_GCM_DECRYPT(k, iv, h, in, out, t2);
 	return 2;
@@ -135,16 +135,16 @@ static int gcm_decrypt(lua_State *L) {
 static int ctr_process(lua_State *L) {
 	HERE();
 	amcl_aes a;
-	octet *key = o_arg(L,1); SAFE(key);
+	octet *key = o_arg(L, 1); SAFE(key);
 	if(key->len != 16 && key->len != 32) {
-		error(L,"AES.ctr_process accepts only keys of 16 or 32 bytes, this is %u", key->len);
+		zerror(L, "AES.ctr_process accepts only keys of 16 or 32 bytes, this is %u", key->len);
 		lerror(L, "AES-CTR process aborted");
 		return 0; }
 	octet *in = o_arg(L, 2); SAFE(in);
 	octet *iv = o_arg(L, 3); SAFE(iv);
 	if (iv->len < 12) {
-		error(L,"AES.ctr_process accepts an iv of 12 bytes minimum, this is %u", iv->len);
-		lerror(L,"AES-CTR process aborted");
+		zerror(L, "AES.ctr_process accepts an iv of 12 bytes minimum, this is %u", iv->len);
+		lerror(L, "AES-CTR process aborted");
 		return 0; }
 	AES_init(&a, CTR16, key->len, key->val, iv->val);
 	octet *out = o_dup(L, in); SAFE(out);
@@ -161,9 +161,9 @@ int luaopen_aes(lua_State *L) {
 		{"gcm_decrypt", gcm_decrypt},
 		{"ctr_process", ctr_process},
 		{"ctr", ctr_process},
-		{NULL,NULL}};
+		{NULL, NULL}};
 	const struct luaL_Reg aes_methods[] = {
-		{NULL,NULL}
+		{NULL, NULL}
 	};
 
 

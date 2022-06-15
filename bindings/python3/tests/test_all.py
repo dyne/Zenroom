@@ -1,4 +1,3 @@
-# TODO write tests for failuers
 import pytest
 from schema import Schema, Regex
 from zenroom import zenroom_exec, zencode_exec
@@ -21,6 +20,13 @@ and print the 'aggregation' as 'number'
         'array': [int]
     }).validate(res.result)
 
+def test_zencode_failure():
+    contract = """
+Given I have a 'string' named 'string'
+Then print the data
+"""
+    res = zencode_exec(contract)
+    assert("ERROR" in res.logs)
 
 def test_lua_call_hello_world():
     lua_res = zenroom_exec(

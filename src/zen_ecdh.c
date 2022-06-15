@@ -64,8 +64,8 @@
 // #include <ecp_SECP256K1.h>
 #include <zen_big.h>
 
-#define KEYPROT(alg,key)	  \
-	error(L, "%s engine has already a %s set:",alg,key); \
+#define KEYPROT(alg, key)	  \
+	zerror(L, "%s engine has already a %s set:", alg, key); \
 	lerror(L, "Zenroom won't overwrite. Use a .new() instance.");
 
 // from zen_ecdh_factory.h to setup function pointers
@@ -88,7 +88,7 @@ ecdh ECDH;
 // 	return(1);
 // }
 
-ecdh* ecdh_arg(lua_State *L,int n) {
+ecdh* ecdh_arg(lua_State *L, int n) {
 	void *ud = luaL_checkudata(L, n, "zenroom.ecdh");
 	luaL_argcheck(L, ud != NULL, n, "ecdh class expected");
 	ecdh *e = (ecdh*)ud;
@@ -116,11 +116,11 @@ int ecdh_destroy(lua_State *L) {
 static int ecdh_keygen(lua_State *L) {
 	// return a table
 	lua_createtable(L, 0, 2);
-	octet *pk = o_new(L,ECDH.fieldsize*2 +1); SAFE(pk);
+	octet *pk = o_new(L, ECDH.fieldsize*2 +1); SAFE(pk);
 	lua_setfield(L, -2, "public");
-	octet *sk = o_new(L,ECDH.fieldsize); SAFE(sk);
+	octet *sk = o_new(L, ECDH.fieldsize); SAFE(sk);
 	lua_setfield(L, -2, "private");
-	(*ECDH.ECP__KEY_PAIR_GENERATE)(Z->random_generator,sk,pk);
+	(*ECDH.ECP__KEY_PAIR_GENERATE)(Z->random_generator, sk, pk);
 	return 1;
 }
 
@@ -136,10 +136,10 @@ static int ecdh_keygen(lua_State *L) {
 static int ecdh_pubgen(lua_State *L) {
 	octet *sk = o_arg(L, 1); SAFE(sk);
 	octet *tmp = o_dup(L, sk); SAFE(tmp);
-	octet *pk = o_new(L,ECDH.fieldsize*2 +1); SAFE(pk);
+	octet *pk = o_new(L, ECDH.fieldsize*2 +1); SAFE(pk);
 	// If RNG is NULL then the private key is provided externally in S
 	// otherwise it is generated randomly internally
-	(*ECDH.ECP__KEY_PAIR_GENERATE)(NULL,tmp,pk);
+	(*ECDH.ECP__KEY_PAIR_GENERATE)(NULL, tmp, pk);
 	return 1;
 }
 
@@ -180,8 +180,8 @@ static int ecdh_pubcheck(lua_State *L) {
    @see keyring:aead_encrypt
 */
 static int ecdh_session(lua_State *L) {
-	octet *f = o_arg(L,1); SAFE(f);
-	octet *s = o_arg(L,2); SAFE(s);
+	octet *f = o_arg(L, 1); SAFE(f);
+	octet *s = o_arg(L, 2); SAFE(s);
 	octet *sk = NULL;
 	octet *pk = NULL;
 	// ECDH_OK is 0 in milagro's ecdh.h.in 
@@ -191,12 +191,12 @@ static int ecdh_session(lua_State *L) {
 		lerror(L, "%s: public key not found in any argument", __func__);
 		return 0; }
 	sk = (pk==s) ? f : s;
-	octet *kdf = o_new(L,SHA256); SAFE(kdf);
-	octet *ses = o_new(L,64); SAFE(ses); // modbytes of ecdh curve
-	(*ECDH.ECP__SVDP_DH)(sk,pk,ses);
+	octet *kdf = o_new(L, SHA256); SAFE(kdf);
+	octet *ses = o_new(L, 64); SAFE(ses); // modbytes of ecdh curve
+	(*ECDH.ECP__SVDP_DH)(sk, pk, ses);
 	// NULL would be used internally by KDF2 as 'p' in the hash
-	// function ehashit(sha,z,counter,p,&H,0);
-	KDF2(SHA256,ses,NULL,SHA256,kdf);
+	// function ehashit(sha, z,counter, p,&H, 0);
+	KDF2(SHA256, ses, NULL, SHA256, kdf);
 	return 2;
 }
 
@@ -247,7 +247,7 @@ static int ecdh_pub_xy(lua_State *L) {
    @param kp.public @{OCTET} of a public key
    @param message string or @{OCTET} message to sign
    @function ECDH.sign(kp.private, message)
-   @return table containing signature parameters octets (r,s)
+   @return table containing signature parameters octets (r, s)
    @usage
    kp = ECDH.keygen() -- generate keys or import them
    m = "Message to be signed"
@@ -256,8 +256,8 @@ static int ecdh_pub_xy(lua_State *L) {
 */
 
 static int ecdh_dsa_sign(lua_State *L) {
-	octet *sk = o_arg(L,1); SAFE(sk);
-	octet *m = o_arg(L,2); SAFE(m);
+	octet *sk = o_arg(L, 1); SAFE(sk);
+	octet *m = o_arg(L, 2); SAFE(m);
 	// IEEE ECDSA Signature, R and S are signature on F using private
 	// key S. One can either pass an RNG or have K already
 	// provide. For a correct K's generation see also RFC6979, however
@@ -267,18 +267,18 @@ static int ecdh_dsa_sign(lua_State *L) {
 	if(lua_isnoneornil(L, 3)) {
 		// return a table
 		lua_createtable(L, 0, 2);
-		octet *r = o_new(L,max_size); SAFE(r);
+		octet *r = o_new(L, max_size); SAFE(r);
 		lua_setfield(L, -2, "r");
-		octet *s = o_new(L,max_size); SAFE(s);
+		octet *s = o_new(L, max_size); SAFE(s);
 		lua_setfield(L, -2, "s");
 		(*ECDH.ECP__SP_DSA)( max_size, Z->random_generator, NULL, sk, m, r, s);
 	} else {
-		octet *k = o_arg(L,3); SAFE(k);
+		octet *k = o_arg(L, 3); SAFE(k);
 		// return a table
 		lua_createtable(L, 0, 2);
-		octet *r = o_new(L,max_size); SAFE(r);
+		octet *r = o_new(L, max_size); SAFE(r);
 		lua_setfield(L, -2, "r");
-		octet *s = o_new(L,max_size); SAFE(s);
+		octet *s = o_new(L, max_size); SAFE(s);
 		lua_setfield(L, -2, "s");
 		(*ECDH.ECP__SP_DSA)( max_size, NULL, k, sk, m, r, s );
 	}
@@ -296,8 +296,8 @@ static int ecdh_dsa_sign(lua_State *L) {
  * @return[2] y of the ephemeral public key
  */
 static int ecdh_dsa_sign_hashed(lua_State *L) {
-	octet *sk = o_arg(L,1); SAFE(sk);
-	octet *m = o_arg(L,2); SAFE(m);
+	octet *sk = o_arg(L, 1); SAFE(sk);
+	octet *m = o_arg(L, 2); SAFE(m);
 	// IEEE ECDSA Signature, R and S are signature on F using private
 	// key S. One can either pass an RNG or have K already
 	// provide. For a correct K's generation see also RFC6979, however
@@ -305,29 +305,29 @@ static int ecdh_dsa_sign_hashed(lua_State *L) {
 	// pre-calculated vectors.
 	int max_size;
         int parity;
-	lua_Number n = lua_tointegerx(L,3,&max_size);
+	lua_Number n = lua_tointegerx(L, 3,&max_size);
 	if(max_size==0) {
-		ERROR(); lerror(L,"missing 3rd argument: byte size of octet to sign");
+		ERROR(); lerror(L, "missing 3rd argument: byte size of octet to sign");
 	}
 	if (m->len != (int)n) {
-		ERROR(); error(L,"size of input does not match: %u != %u", m->len, (int)n);
+		ERROR(); zerror(L, "size of input does not match: %u != %u", m->len, (int)n);
 	}
 	if(lua_isnoneornil(L, 4)) {
 		// return a table
 		lua_createtable(L, 0, 2);
-		octet *r = o_new(L,(int)n); SAFE(r);
+		octet *r = o_new(L, (int)n); SAFE(r);
 		lua_setfield(L, -2, "r");
-		octet *s = o_new(L,(int)n); SAFE(s);
+		octet *s = o_new(L, (int)n); SAFE(s);
 		lua_setfield(L, -2, "s");
 		// Size of a big256 used with SECP256k1
 		(*ECDH.ECP__SP_DSA_NOHASH)((int)n, Z->random_generator, NULL, sk, m, r, s, &parity);
 	} else {
-		octet *k = o_arg(L,4); SAFE(k);
+		octet *k = o_arg(L, 4); SAFE(k);
 		// return a table
 		lua_createtable(L, 0, 2);
-		octet *r = o_new(L,(int)n); SAFE(r);
+		octet *r = o_new(L, (int)n); SAFE(r);
 		lua_setfield(L, -2, "r");
-		octet *s = o_new(L,(int)n); SAFE(s);
+		octet *s = o_new(L, (int)n); SAFE(s);
 		lua_setfield(L, -2, "s");
 		// Size of a big256 used with SECP256k1
 		(*ECDH.ECP__SP_DSA_NOHASH)((int)n, NULL, k, sk, m, r, s, &parity);
@@ -352,17 +352,17 @@ static int ecdh_dsa_sign_hashed(lua_State *L) {
 static int ecdh_dsa_verify(lua_State *L) {
     // IEEE1363 ECDSA Signature Verification. Signature C and D on F
     // is verified using public key W
-	octet *pk = o_arg(L,1); SAFE(pk);
-	octet *m = o_arg(L,2); SAFE(m);
+	octet *pk = o_arg(L, 1); SAFE(pk);
+	octet *m = o_arg(L, 2); SAFE(m);
 	octet *r = NULL;
 	octet *s = NULL;
 	if(lua_type(L, 3) == LUA_TTABLE) {
 		lua_getfield(L, 3, "r");
 		lua_getfield(L, 3, "s"); // -2 stack
-		r = o_arg(L,-2); SAFE(r);
-		s = o_arg(L,-1); SAFE(s);
+		r = o_arg(L, -2); SAFE(r);
+		s = o_arg(L, -1); SAFE(s);
 	} else {
-		ERROR(); lerror(L,"signature argument invalid: not a table");
+		ERROR(); lerror(L, "signature argument invalid: not a table");
 	}
 	int max_size = 64;
 	int res = (*ECDH.ECP__VP_DSA)(max_size, pk, m, r, s);
@@ -380,25 +380,25 @@ static int ecdh_dsa_verify(lua_State *L) {
 static int ecdh_dsa_verify_hashed(lua_State *L) {
     // IEEE1363 ECDSA Signature Verification. Signature C and D on F
     // is verified using public key W
-	octet *pk = o_arg(L,1); SAFE(pk);
-	octet *m = o_arg(L,2); SAFE(m);
+	octet *pk = o_arg(L, 1); SAFE(pk);
+	octet *m = o_arg(L, 2); SAFE(m);
 	octet *r = NULL;
 	octet *s = NULL;
 	if(lua_type(L, 3) == LUA_TTABLE) {
 		lua_getfield(L, 3, "r");
 		lua_getfield(L, 3, "s"); // -2 stack
-		r = o_arg(L,-2); SAFE(r);
-		s = o_arg(L,-1); SAFE(s);
+		r = o_arg(L, -2); SAFE(r);
+		s = o_arg(L, -1); SAFE(s);
 	} else {
-		ERROR(); lerror(L,"signature argument invalid: not a table");
+		ERROR(); lerror(L, "signature argument invalid: not a table");
 	}
 	int max_size = 0;
-	lua_Number n = lua_tointegerx(L,4,&max_size);
+	lua_Number n = lua_tointegerx(L, 4,&max_size);
 	if(max_size==0) {
-		ERROR(); lerror(L,"invalid size zero for material to sign");
+		ERROR(); lerror(L, "invalid size zero for material to sign");
 	}
 	if (m->len != (int)n) {
-		ERROR(); error(L,"size of input does not match: %u != %u", m->len, (int)n);
+		ERROR(); zerror(L, "size of input does not match: %u != %u", m->len, (int)n);
 	}
 	int res = (*ECDH.ECP__VP_DSA_NOHASH)((int)n, pk, m, r, s);
 	if(res <0) // ECDH_INVALID in milagro/include/ecdh.h.in (!?!)
@@ -437,15 +437,15 @@ static int ecdh_aead_encrypt(lua_State *L) {
 	octet *k =  o_arg(L, 1); SAFE(k);
         // AES key size nk can be 16, 24 or 32 bytes
 	if(k->len > 32 || k->len < 16) {
-		error(L,"ECDH.aead_encrypt accepts only keys of 16,24,32, this is %u", k->len);
-		lerror(L,"ECDH encryption aborted");
+		zerror(L, "ECDH.aead_encrypt accepts only keys of 16, 24, 32, this is %u", k->len);
+		lerror(L, "ECDH encryption aborted");
 		return 0; }
 	octet *in = o_arg(L, 2); SAFE(in);
 
 	octet *iv = o_arg(L, 3); SAFE(iv);
         if (iv->len < 12) {
-		error(L,"ECDH.aead_encrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
-		lerror(L,"ECDH encryption aborted");
+		zerror(L, "ECDH.aead_encrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
+		lerror(L, "ECDH encryption aborted");
 		return 0; }
 
 	octet *h =  o_arg(L, 4); SAFE(h);
@@ -475,22 +475,22 @@ static int ecdh_aead_decrypt(lua_State *L) {
 	HERE();
 	octet *k = o_arg(L, 1); SAFE(k);
 	if(k->len > 32 || k->len < 16) {
-		error(L,"ECDH.aead_decrypt accepts only keys of 16,24,32, this is %u", k->len);
-		lerror(L,"ECDH decryption aborted");
+		zerror(L, "ECDH.aead_decrypt accepts only keys of 16, 24, 32, this is %u", k->len);
+		lerror(L, "ECDH decryption aborted");
 		return 0; }
 
 	octet *in = o_arg(L, 2); SAFE(in);
 
 	octet *iv = o_arg(L, 3); SAFE(iv);
         if (iv->len < 12) {
-		error(L,"ECDH.aead_decrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
-		lerror(L,"ECDH decryption aborted");
+		zerror(L, "ECDH.aead_decrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
+		lerror(L, "ECDH decryption aborted");
 		return 0; }
 
 	octet *h = o_arg(L, 4); SAFE(h);
 	// output is padded to next word
 	octet *out = o_new(L, in->len+16); SAFE(out);
-	octet *t2 = o_new(L,16); SAFE(t2);
+	octet *t2 = o_new(L, 16); SAFE(t2);
 
 	AES_GCM_DECRYPT(k, iv, h, in, out, t2);
 	return 2;
@@ -596,11 +596,11 @@ extern int ecdh_add(lua_State *L);
 int luaopen_ecdh(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg ecdh_class[] = {
-		{"keygen",ecdh_keygen},
-		{"pubgen",ecdh_pubgen},
-		{"order",ecdh_order},
-		{"prime",ecdh_prime},
-		{"cofactor",ecdh_cofactor},
+		{"keygen", ecdh_keygen},
+		{"pubgen", ecdh_pubgen},
+		{"order", ecdh_order},
+		{"prime", ecdh_prime},
+		{"cofactor", ecdh_cofactor},
 		{"aead_encrypt",   ecdh_aead_encrypt},
 		{"aead_decrypt",   ecdh_aead_decrypt},
 		{"aesgcm_encrypt", ecdh_aead_encrypt},
@@ -609,7 +609,7 @@ int luaopen_ecdh(lua_State *L) {
 		{"aes_decrypt",    ecdh_aead_decrypt},
 		{"session", ecdh_session},
 		{"checkpub", ecdh_pubcheck},
-		{"pubcheck", ecdh_pubcheck},		
+		{"pubcheck", ecdh_pubcheck},
 		{"validate", ecdh_pubcheck},
 		{"sign", ecdh_dsa_sign},
 		{"verify", ecdh_dsa_verify},
@@ -619,10 +619,10 @@ int luaopen_ecdh(lua_State *L) {
 		{"public_xy", ecdh_pub_xy},
 		{"pubxy", ecdh_pub_xy},
 		{"add", ecdh_add},
-		{NULL,NULL}};
+		{NULL, NULL}};
 	const struct luaL_Reg ecdh_methods[] = {
 		{"__gc", ecdh_destroy},
-		{NULL,NULL}
+		{NULL, NULL}
 	 };
 
 
