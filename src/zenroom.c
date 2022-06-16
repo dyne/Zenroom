@@ -270,7 +270,6 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	return(ZZ);
 }
 
-extern char runtime_random256[256];
 void zen_teardown(zenroom_t *ZZ) {
 
 	notice(ZZ->lua,"Zenroom teardown.");
