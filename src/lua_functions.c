@@ -56,7 +56,7 @@ void zen_add_function(lua_State *L,
 }
 
 
-static const char *zen_lua_findtable (lua_State *L, int idx,
+const char *zen_lua_findtable (lua_State *L, int idx,
                                    const char *fname, int szhint) {
 	const char *e;
 	if (idx) lua_pushvalue(L, idx);
