@@ -83,7 +83,8 @@ typedef struct {
 	size_t stderr_full;
 
 	void *random_generator; // cast to RNG
-	char random_seed[RANDOM_SEED_LEN];
+	char random_seed[RANDOM_SEED_LEN+4];
+        char runtime_random256[256+4];
 	int random_external; // signal when rngseed is external
 
 	int debuglevel;
