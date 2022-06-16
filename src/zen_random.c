@@ -62,7 +62,7 @@ void* rng_alloc(zenroom_t *ZZ) {
 
 	// random seed provided externally 
 	if(ZZ->random_external) {
-		act(ZZ->lua,"Random seed is external, deterministic execution");
+		act(NULL,"Random seed is external, deterministic execution");
 #ifndef ARCH_CORTEX
 	} else {
 		// gather system random using randombytes()
