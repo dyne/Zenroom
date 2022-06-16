@@ -165,7 +165,7 @@ int zen_write_out(zenroom_t *Z, const char *fmt, ...) {
 
 // passes the string to be printed through the 'tostring'
 // meta-function configured in Lua, taking care of conversions
-static const char *lua_print_format(lua_State *L,
+const char *lua_print_format(lua_State *L,
 		int pos, size_t *len) {
 	const char *s;
 	lua_pushvalue(L, -1);  /* function to be called */
