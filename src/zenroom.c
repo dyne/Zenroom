@@ -225,7 +225,7 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	// initialize Lua's context
 	ZZ->lua = lua_newstate(zen_memory_manager, ZZ);
 	if(!ZZ->lua) {
-		error(NULL,"%s: %s", __func__, "Lua newstate creation failed");
+		zerror(NULL,"%s: %s", __func__, "Lua newstate creation failed");
 		return NULL;
 	}
 
@@ -410,7 +410,7 @@ int zencode_exec(char *script, char *conf, char *keys, char *data) {
 	r = zen_exec_zencode(Z, script);
 
 	if(r != SUCCESS) {
-		error(Z->lua, "Error detected. Execution aborted.");
+		zerror(Z->lua, "Error detected. Execution aborted.");
 		int exitcode = Z->exitcode;
 		zen_teardown(Z);
 #ifdef __EMSCRIPTEN__
