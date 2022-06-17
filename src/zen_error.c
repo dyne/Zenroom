@@ -117,6 +117,7 @@ void func(void *L, const char *format, ...) {
 void notice(void *L, const char *format, ...) {
   char pfx[MAX_ERRMSG];
   Z(L);
+  if(Z && Z->debuglevel<1) return;
 	va_list arg;
 	mutt_snprintf(pfx, MAX_STRING-1, "[*] %s\n",format);
 	va_start(arg, format);
@@ -127,6 +128,8 @@ void notice(void *L, const char *format, ...) {
 void func(void *L, const char *format, ...) {
   char pfx[MAX_ERRMSG];
   Z(L);
+  if(!Z) return; // without this a lot of debug is always printed
+  if(Z && Z->debuglevel<3) return;
 	va_list arg;
 	mutt_snprintf(pfx, MAX_STRING-1, "[D] %s\n",format);
 	va_start(arg, format);
@@ -144,12 +147,12 @@ void zerror(void *L, const char *format, ...) {
 	va_start(arg, format);
 	zen_write_err_va(Z, pfx, arg);
 	va_end(arg);
-	// exit(1); // calls teardown (signal 11) TODO: check if OK with seccomp
 }
 
 void act(void *L, const char *format, ...) {
   char pfx[MAX_ERRMSG];
   Z(L);
+  if(Z && Z->debuglevel<2) return;
 	va_list arg;
 	mutt_snprintf(pfx, MAX_STRING-1, " .  %s\n",format);
 	va_start(arg, format);
@@ -160,6 +163,7 @@ void act(void *L, const char *format, ...) {
 void warning(void *L, const char *format, ...) {
   char pfx[MAX_ERRMSG];
   Z(L);
+  if(Z && Z->debuglevel<2) return;
 	va_list arg;
 	mutt_snprintf(pfx, MAX_STRING-1, "[W] %s\n",format);
 	va_start(arg, format);
