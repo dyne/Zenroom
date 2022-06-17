@@ -47,6 +47,10 @@ ldadd += ${pwd}/lib/pqclean/libqpz.a
 # zstd settings
 ldadd += ${pwd}/lib/zstd/libzstd.a
 
+#-----------------
+# ed25519 settings
+ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
+
 # ------------------------
 # target specific settings
 

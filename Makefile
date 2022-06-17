@@ -8,6 +8,8 @@ pwd := $(shell pwd)
 PREFIX ?= /usr/local
 # VERSION is set in src/Makefile
 VERSION := $(shell awk '/ZENROOM_VERSION :=/ { print $$3; exit }' src/Makefile | tee VERSION)
+# Targets to be build in this order
+BUILDS := apply-patches milagro lua53 embed-lua zstd quantum-proof ed25519-donna
 
 # DESTDIR is supported by install target
 
@@ -150,6 +152,16 @@ zstd:
 	ZSTD_FORCE_DECOMPRESS_SEQUENCES_SHORT=1 \
 	ZSTD_STRIP_ERROR_STRINGS=0 \
 	ZSTD_NO_INLINE=1
+
+# TODO: move into a makefile inside the lib
+ed25519-donna:
+	echo "-- Building ED25519 for EDDSA"
+	CC=${gcc} \
+	AR=${ar} \
+	CFLAGS="${cflags} -m32 -DED25519_REFHASH -DED25519_TEST" \
+	LDFLAGS="${ldflags}" \
+	${CC} ${CFLAGS} -c -o ${pwd}/lib/ed25519-donna/ed25519.o ${pwd}/lib/ed25519-donna/ed25519.c
+	${AR} rcs ${pwd}/lib/ed25519-donna/libed25519.a ${pwd}/lib/ed25519-donna/ed25519.o
 
 # -------------------
 # Test suites for all platforms
