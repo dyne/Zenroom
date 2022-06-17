@@ -156,12 +156,12 @@ zstd:
 # TODO: move into a makefile inside the lib
 ed25519-donna:
 	echo "-- Building ED25519 for EDDSA"
-	CC=${gcc} \
-	AR=${ar} \
-	CFLAGS="${cflags} -m32 -DED25519_REFHASH -DED25519_TEST" \
-	LDFLAGS="${ldflags}" \
-	${CC} ${CFLAGS} -c -o ${pwd}/lib/ed25519-donna/ed25519.o ${pwd}/lib/ed25519-donna/ed25519.c
-	${AR} rcs ${pwd}/lib/ed25519-donna/libed25519.a ${pwd}/lib/ed25519-donna/ed25519.o
+	CC=${gcc} ;\
+	AR=${ar} ;\
+	CFLAGS="${cflags} -DED25519_FORCE_32BIT -DED25519_REFHASH -DED25519_TEST" ;\
+	LDFLAGS="${ldflags}" ;\
+	$$CC $$CFLAGS -c -o ${pwd}/lib/ed25519-donna/ed25519.o ${pwd}/lib/ed25519-donna/ed25519.c ;\
+	$$AR rcs ${pwd}/lib/ed25519-donna/libed25519.a ${pwd}/lib/ed25519-donna/ed25519.o
 
 # -------------------
 # Test suites for all platforms
