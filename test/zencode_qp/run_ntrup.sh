@@ -36,7 +36,7 @@ EOF
 
 cat <<EOF | zexe ntrup_createpublickey.zen -k Alice_ntrup_privatekey.keys | save $SUBDOC  Alice_ntrup_pubkey.json
 Rule check version 2.0.0
-Scenario qp : Create and publish the ntrup public key
+Scenario qp : Create the ntrup public key
 Given I am 'Alice'
 and I have the 'keyring'
 When I create the ntrup public key
@@ -57,28 +57,40 @@ EOF
 cat <<EOF | zexe ntrup_enc.zen -a Alice_ntrup_pubkey.json | save $SUBDOC ntrup_Kem.json
 Rule check version 2.0.0
 Scenario qp : Bob create the ntrup secret for Alice
+
+# Here I declare my identity
 Given I am 'Bob'
+# Here I load the receiver public key
+# that will be needed to create the ciphertext
 and I have a 'ntrup public key' from 'Alice'
+
+# Here we create the KEM (key encapsulation mechanism)
+# The kem contains the 'ntrup_cyphertext' that will be sent to other party
+# and the 'ntrup_secret' which is random number of a defined length
+# the 'ntrup_secret' needs to be stored separately
 When I create the ntrup kem for 'Alice'
+
 Then print the 'ntrup ciphertext' from 'ntrup kem'
 Then print the 'ntrup secret' from 'ntrup kem'
-Then print the 'ntrup kem'
 EOF
 
-cat <<EOF | zexe ntrup_dec.zen -k Alice_ntrup_privatekey.keys -a ntrup_Kem.json | jq .
+jq 'del(.ntrup_secret)' ntrup_Kem.json | save $SUBDOC ntrup_ciphertext.json
+
+cat <<EOF | zexe ntrup_dec.zen -k Alice_ntrup_privatekey.keys -a ntrup_ciphertext.json | save $SUBDOC ntrup_secret.json
 Rule check version 2.0.0
 Scenario qp : Alice create the ntrup secret
+
+# Here I declare my identity
 Given that I am known as 'Alice'
+# Here I load my keyring and the ciphertext
 and that I have the 'keyring'
 and I have a 'ntrup ciphertext'
-and I have a 'ntrup secret'
-When I rename the 'ntrup secret' to 'Bob ntrup secret'
-and I create the ntrup secret from 'ntrup ciphertext'
-If I verify 'Bob ntrup secret' is equal to 'ntrup secret'
-Then print string 'Succes!!!'
-Endif
-EOF
 
+# Here I recreate the secret starting from the ciphertext
+When I create the ntrup secret from 'ntrup ciphertext'
+
+Then print the 'ntrup secret'
+EOF
 
 #--- Creating together ntrup and Kyber private and public keys ---#
 

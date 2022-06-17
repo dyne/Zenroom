@@ -1,0 +1,23 @@
+Rule check version 2.0.0 
+Scenario qp : Bob verifies Alice signature
+
+# Declearing who I am and load all the stuff
+Given that I am known as 'Bob'
+and I have a 'dilithium public key' from 'Alice'
+and I have a 'string' named 'message'
+and I have a 'string array' named 'message array'
+and I have a 'string dictionary' named 'message dict'
+and I have a 'dilithium signature' named 'string dilithium signature'
+and I have a 'dilithium signature' named 'array dilithium signature'
+and I have a 'dilithium signature' named 'dictionary dilithium signature'
+
+# Verifying the signatures
+When I verify the 'message' has a dilithium signature in 'string dilithium signature' by 'Alice'
+and I verify the 'message array' has a dilithium signature in 'array dilithium signature' by 'Alice'
+and I verify the 'message dict' has a dilithium signature in 'dictionary dilithium signature' by 'Alice'
+
+# Print the original messages and a string of success
+Then print the 'message'
+and print the 'message array'
+and print the 'message dict'
+Then print string 'Zenroom certifies that signatures are all correct!'

@@ -1,7 +1,7 @@
 
 - Zenroom basics
   - [Getting Started](/)
-  - [Zenroom's VM and Zencode](/pages/zencode-intro.md "Zencode cookbook intro")  
+  - [Zenroom's VM and Zencode](/pages/zencode-intro.md "Zencode cookbook intro")
   - [Zenroom's Command Line Interface](/pages/how-to-exec.md "Execute")
 
 
@@ -23,12 +23,13 @@
   - [Scenario 'Reflow': Multisignature](/pages/zencode-scenario-reflow "Reflow Multisignature")
   - [Scenario 'http': Create GET requests](/pages/zencode-scenarios-http.md "create GET requests")
   - [Scenario 'schnorr': Signature](/pages/zencode-scenarios-schnorr.md "Zencode schnorr")
+  - [Scenario 'qp': KEM, signature](/pages/zencode-scenarios-qp.md "Zencode qp")
  <!--- --->
-  - [Scenario 'bitcoin': Create bitcoin transactions](/pages/zencode-scenarios-bitcoin.md "Create bitcoin transactions")  
-  - [Scenario 'ethereum': Create ethereum transactions](/pages/zencode-scenarios-ethereum.md "Create ethereum transactions")  
+  - [Scenario 'bitcoin': Create bitcoin transactions](/pages/zencode-scenarios-bitcoin.md "Create bitcoin transactions")
+  - [Scenario 'ethereum': Create ethereum transactions](/pages/zencode-scenarios-ethereum.md "Create ethereum transactions")
   - [Zencode "rules"](/pages/zencode-rules.md "Zencode encoding and format rules")
   - [Zencode "config"](/pages/zenroom-config.md "Zenroom config")
-  - [Zencode command list](/pages/zencode-list.md "Zencode command list")  
+  - [Zencode command list](/pages/zencode-list.md "Zencode command list")
 
 - Bindings
   - [ Use Zenroom as a library](/pages/how-to-embed.md "Embed") 

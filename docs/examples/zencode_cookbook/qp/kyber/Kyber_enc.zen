@@ -1,0 +1,18 @@
+Rule check version 2.0.0 
+Scenario qp : Bob create the kyber secret for Alice
+
+# Here I declare my identity
+Given I am 'Bob'
+# Here I load the receiver public key
+# that will be needed to create the ciphertext
+and I have a 'kyber public key' from 'Alice'
+
+# Here we create the KEM (key encapsulation mechanism)
+# The kem contains the 'kyber_cyphertext' that will be sent to other party
+# and the 'kyber_secret' which is random number of a defined length
+# the 'kyber_secret' needs to be stored separately
+When I create the kyber kem for 'Alice'
+
+
+Then print the 'kyber ciphertext' from 'kyber kem'
+Then print the 'kyber secret' from 'kyber kem'

@@ -35,7 +35,7 @@ EOF
 
 cat <<EOF | zexe Kyber_createpublickey.zen -k Alice_Kyber_privatekey.keys | save $SUBDOC  Alice_Kyber_pubkey.json
 Rule check version 2.0.0 
-Scenario qp : Create and publish the kyber public key
+Scenario qp : Create the kyber public key
 Given I am 'Alice'
 and I have the 'keyring'
 When I create the kyber public key
@@ -55,28 +55,41 @@ EOF
 cat <<EOF | zexe Kyber_enc.zen -a Alice_Kyber_pubkey.json | save $SUBDOC Kyber_Kem.json
 Rule check version 2.0.0 
 Scenario qp : Bob create the kyber secret for Alice
+
+# Here I declare my identity
 Given I am 'Bob'
+# Here I load the receiver public key
+# that will be needed to create the ciphertext
 and I have a 'kyber public key' from 'Alice'
+
+# Here we create the KEM (key encapsulation mechanism)
+# The kem contains the 'kyber_cyphertext' that will be sent to other party
+# and the 'kyber_secret' which is random number of a defined length
+# the 'kyber_secret' needs to be stored separately
 When I create the kyber kem for 'Alice'
+
+
 Then print the 'kyber ciphertext' from 'kyber kem'
 Then print the 'kyber secret' from 'kyber kem'
-Then print the 'kyber kem'
 EOF
 
-cat <<EOF | zexe Kyber_dec.zen -k Alice_Kyber_privatekey.keys -a Kyber_Kem.json 
+jq 'del(.kyber_secret)' Kyber_Kem.json | save $SUBDOC Kyber_ciphertext.json
+
+cat <<EOF | zexe Kyber_dec.zen -k Alice_Kyber_privatekey.keys -a Kyber_ciphertext.json  | save $SUBDOC Kyber_secret.json
 Rule check version 2.0.0 
 Scenario qp : Alice create the kyber secret
-Given that I am known as 'Alice'
-and that I have the 'keyring'
-and I have a 'kyber ciphertext'
-and I have a 'kyber secret'
-When I rename the 'kyber secret' to 'Bob kyber secret'
-and I create the kyber secret from 'kyber ciphertext'
-If I verify 'Bob kyber secret' is equal to 'kyber secret'
-Then print string 'Succes!!!'
-Endif
-EOF
 
+# Here I declare my identity
+Given that I am known as 'Alice'
+# Here I load my keyring and the ciphertext
+and I have the 'keyring'
+and I have a 'kyber ciphertext'
+
+# Here I recreate the secret starting from the ciphertext
+When I create the kyber secret from 'kyber ciphertext'
+
+Then print the 'kyber secret'
+EOF
 
 #--- Creating together Kyber and ECDH private and public keys ---#
 
