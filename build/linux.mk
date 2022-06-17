@@ -24,7 +24,7 @@ bsd: apply-patches milagro lua53 embed-lua zstd
 
 
 linux: cflags := -O2 ${cflags_protection} -fPIE -fPIC
-linux: apply-patches milagro lua53 embed-lua zstd quantum-proof
+linux: ${BUILDS}
 	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		$(MAKE) -C src linux
 		@cp -v src/zenroom build/zenroom
@@ -54,7 +54,7 @@ linux-riscv64: apply-patches milagro lua53 embed-lua zstd
 	$(MAKE) -C src linux
 	@cp -v src/zenroom build/zenroom
 
-linux-debug: apply-patches milagro lua53 embed-lua zstd
+linux-debug: ${BUILDS}
 	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	$(MAKE) -C src linux-debug
 	@cp -v src/zenroom build/zenroom
