@@ -1,25 +1,20 @@
 #!/usr/bin/env bash
 
-####################
-# common script init
-if ! test -r ../utils.sh; then
-	echo "run executable from its own directory: $0"; exit 1; fi
-. ../utils.sh
-
-is_cortexm=false
-if [[ "$1" == "cortexm" ]]; then
-	is_cortexm=true
-fi
-
-Z="`detect_zenroom_path` `detect_zenroom_conf`"
-####################
 TEMP="$(mktemp)"
 
 IFS=$'\n'       # make newlines the only separator
+c=0
+
+echo
+echo "####################"
+echo "EDDSA SIGNATURE TEST"
 for row in $(cat ./ed25519_tests.txt)
 do
   echo "$row" >$TEMP
-  ../../src/zenroom test_row.lua -a $TEMP
+  ../../src/zenroom test_row.lua -a $TEMP 2>/dev/null
+  res=$?
+  c=$(( $c + 1 ))
+  if [ $res != 0 ]; then echo "$c - ERROR $res"; exit 1; else echo -n "."; fi
 #  if [[ $? != 0 ]]; then
 #    echo "Verifica fallita alla riga"
 #    echo "$row"
@@ -27,4 +22,7 @@ do
 #  fi
 done
 rm $TEMP
+echo
+echo "Success, $c vectors matched"
+echo "###########################"
 # Note: IFS needs to be reset to default!
