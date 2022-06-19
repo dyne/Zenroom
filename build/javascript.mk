@@ -60,7 +60,7 @@ javascript-npm: ldflags += -s \
 	-s SINGLE_FILE=1 \
 	-s ALLOW_MEMORY_GROWTH=1 \
 	--no-heap-copy
-javascript-npm: apply-patches milagro lua53 embed-lua zstd
+javascript-npm: ${BUILDS}
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	JSEXT="--embed-file lua@/" \
 	make -C src js
