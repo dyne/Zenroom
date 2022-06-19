@@ -2,6 +2,7 @@
 
 tstr="Zenroom test"
 zenroom=../../src/zenroom
+if [ ! -r ${zenroom} ]; then zenroom="../../meson/zenroom"; fi
 . ../utils.sh
 
 arg=$1

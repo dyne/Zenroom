@@ -5,6 +5,7 @@
 
 zen=($*)
 zen=${zen:-../../src/zenroom}
+if [ ! -r ${zen} ]; then zen="../../meson/zenroom"; fi
 
 run_zenroom_on_cortexm_qemu(){
 	qemu_zenroom_run "$*"
