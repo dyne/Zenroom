@@ -1,16 +1,10 @@
 #!/usr/bin/env zsh
 
-[[ -r test ]] || {
-    print "Run from base directory: ./test/$0"
-    return 1
-}
 
-if ! test -r ./test/utils.sh; then
-	echo "run executable from its own directory: $0"; exit 1; fi
-. ./test/utils.sh
+. ../utils.sh
 
 zen=($*)
-zen=${zen:-./src/zenroom}
+zen=${zen:-../../src/zenroom}
 
 run_zenroom_on_cortexm_qemu(){
 	qemu_zenroom_run "$*"

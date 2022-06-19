@@ -165,9 +165,9 @@ lua_tests = [
     'test/hash.lua',
     'test/ecdh.lua',
     'test/dh_session.lua',
-    'test/nist/aes_gcm.lua',
-    'test/nist/aes_cbc.lua',
-    'test/nist/aes_ctr.lua',
+    'test/crypto_nist/aes_gcm.lua',
+    'test/crypto_nist/aes_cbc.lua',
+    'test/crypto_nist/aes_ctr.lua',
     'test/ecp_generic.lua',
     'test/elgamal.lua',
     'test/bls_pairing.lua',
@@ -184,7 +184,6 @@ endforeach
 test_dir = meson.source_root() + '/../test/'
 
 zencode_tests = [
-  'ed25519',
     'zencode_numbers',
     'zencode_array',
     'zencode_branching',
@@ -220,14 +219,36 @@ foreach zencode_test : zencode_tests
     )
 endforeach
 
-zencode_cookbook_script = find_program(test_dir + 'zencode_cookbook/run.sh')
+crypto_tests = [
+  'crypto_nist',
+  'crypto_json',
+  'crypto_ecdh',
+  'crypto_eddsa',
+]
+foreach crypto_test : crypto_tests
+    test_script = find_program(test_dir + crypto_test + '/run.sh')
+    test(crypto_test, test_script, env: [
+            'ZENROOM=' + zenroom_exe.full_path(),
+        ], workdir: test_dir + crypto_test)
+endforeach
+
+
+# cookbook compared with different print routines
+zencode_cookbook_script = find_program(test_dir + 'zencode_cookbook/run-all.sh')
+test( 'zencode_cookbook print=sys', zencode_cookbook_script,
+    env: [ 'ZENROOM=' + zenroom_exe.full_path(), 'PRINT=mutt' ],
+    workdir: test_dir + 'zencode_cookbook')
+test( 'zencode_cookbook print=mutt', zencode_cookbook_script,
+    env: [ 'ZENROOM=' + zenroom_exe.full_path(), 'PRINT=mutt' ],
+    workdir: test_dir + 'zencode_cookbook')
+test( 'zencode_cookbook print=stb', zencode_cookbook_script,
+    env: [ 'ZENROOM=' + zenroom_exe.full_path(), 'PRINT=mutt' ],
+    workdir: test_dir + 'zencode_cookbook')
+
+
 # test( 'zencode_cookbook memmanager=lw', zencode_cookbook_script,
 #     env: [ 'ZENROOM=' + zenroom_exe.full_path(), 'MEMMANAGER=lw' ],
 #     workdir: test_dir + 'zencode_cookbook')
 # test( 'zencode_cookbook print=stb', zencode_cookbook_script,
 #     env: [ 'ZENROOM=' + zenroom_exe.full_path(), 'PRINT=stb' ],
 #     workdir: test_dir + 'zencode_cookbook')
-test( 'zencode_cookbook print=mutt', zencode_cookbook_script,
-    env: [ 'ZENROOM=' + zenroom_exe.full_path(), 'PRINT=mutt' ],
-    workdir: test_dir + 'zencode_cookbook')
-

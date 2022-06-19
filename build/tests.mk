@@ -89,9 +89,10 @@ cortex-m-crypto-integration = \
 	test/integration_asymmetric_crypto.sh ${1}
 
 crypto-integration = \
-	test/octet-json.sh ${1} && \
-	cd test/nist && ./run.sh ../../${1}; cd -; \
-	test/integration_asymmetric_crypto.sh ${1}
+	cd test/crypto_json &&  ./run.sh ${1}; cd -; \
+	cd test/crypto_ecdh &&  ./run.sh ${1}; cd -; \
+	cd test/crypto_eddsa && ./run.sh ${1}; cd -; \
+	cd test/crypto_nist &&  ./run.sh ${1}; cd -;
 
 # TODO: complete with tamale and date
 lua-modules = \
