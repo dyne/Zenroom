@@ -16,7 +16,7 @@
 #  along with this program.  If not, see
 #  <http://www.gnu.org/licenses/>.
 
-ZENROOM_VERSION := 2.0.0
+ZENROOM_VERSION := 3.0.0
 CC ?= gcc
 # ARCH := $(shell uname -m)
 BRANCH := $(shell git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
