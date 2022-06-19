@@ -1,5 +1,5 @@
 
-TARGETS := apply-patches milagro lua53 embed-lua zstd quantum-proof
+TARGETS := ${BUILDS}
 
 # .PHONY: meson meson-re meson-test
 
@@ -9,6 +9,7 @@ prepare-meson:
 	ln -sf ${pwd}/lib/zstd/libzstd.a ${pwd}/meson/libzstd.a
 	ln -sf ${pwd}/lib/pqclean/libqpz.a ${pwd}/meson/libqpz.a
 	ln -sf ${pwd}/lib/lua53/src/liblua.a ${pwd}/meson/liblua.a
+	ln -sf ${pwd}/lib/ed25519-donna/libed25519.a ${pwd}/meson/libed25519.a
 
 run-meson:
 	CC=${gcc} AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \

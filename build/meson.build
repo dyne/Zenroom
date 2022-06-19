@@ -41,6 +41,7 @@ add_project_link_arguments(
     'liblua.a',
     'libzstd.a',
     'libqpz.a',
+    'libed25519.a',
     language: 'c'
 )
 
@@ -53,6 +54,8 @@ milagro_generated_include_dirs = include_directories('milagro-crypto-c/include')
 zstd_include_dirs = include_directories('../lib/zstd')
 
 lua_include_dirs = include_directories('../lib/lua53/src')
+
+ed25519_include_dirs = include_directories('../lib/ed25519-donna')
 
 zenroom_src = [
     '../src/base58.c',
@@ -95,6 +98,7 @@ zenroom_lib = library(
         milagro_include_dirs,
         milagro_generated_include_dirs,
         zstd_include_dirs,
+	ed25519_include_dirs,
         lua_include_dirs,
     ],
     install: true,
@@ -110,6 +114,7 @@ zenroom_dep = declare_dependency(
         milagro_include_dirs,
         milagro_generated_include_dirs,
         zstd_include_dirs,
+	ed25519_include_dirs,
         lua_include_dirs,
     ],
 )
@@ -179,6 +184,7 @@ endforeach
 test_dir = meson.source_root() + '/../test/'
 
 zencode_tests = [
+  'ed25519',
     'zencode_numbers',
     'zencode_array',
     'zencode_branching',
