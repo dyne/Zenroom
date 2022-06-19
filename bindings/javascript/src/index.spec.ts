@@ -34,12 +34,12 @@ test("does handle empty zencode", async (t) => {
   try {
     await zencode_exec(null);
   } catch (e) {
-    t.true(e.logs.includes("[!] NULL string as script for zencode_exec()"));
+    t.true(e.logs.includes("[!] NULL string as script argument"));
   }
   try {
     await zencode_exec(``);
   } catch (e) {
-    t.true(e.logs.includes("[!] Empty string as script for zencode_exec()"));
+    t.true(e.logs.includes("[!] Empty string as script argument"));
   }
 });
 
@@ -47,12 +47,12 @@ test("does handle empty lua", async (t) => {
   try {
     await zenroom_exec(null);
   } catch (e) {
-    t.true(e.logs.includes("[!] NULL string as script for zenroom_exec()"));
+    t.true(e.logs.includes("[!] NULL string as script argument"));
   }
   try {
     await zenroom_exec(``);
   } catch (e) {
-    t.true(e.logs.includes("[!] Empty string as script for zenroom_exec()"));
+    t.true(e.logs.includes("[!] Empty string as script argument"));
   }
 });
 
