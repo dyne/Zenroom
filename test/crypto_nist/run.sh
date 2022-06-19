@@ -4,16 +4,18 @@ echo "============================="
 echo " HASH VECTOR TESTS FROM NIST "
 echo "============================="
 
-alias zenroom="${1:-../../src/zenroom}"
+zenroom=../../src/zenroom
+if [ ! -r ${zenroom} ]; then zenroom="../../meson/zenroom"; fi
+
 
 num=0
 check() {
 	tmp=`mktemp`
 	echo -n $1 > $tmp
 	echo "== $1 ShortMsg"
-	num=`zenroom -a ${1}ShortMsg.rsp -k $tmp check_rsp.lua`
+	num=`${zenroom} -a ${1}ShortMsg.rsp -k $tmp check_rsp.lua`
 	echo "== $1 LongMsg"
-	num=$(( $num + `zenroom -a ${1}LongMsg.rsp  -k $tmp check_rsp.lua`))
+	num=$(( $num + `${zenroom} -a ${1}LongMsg.rsp  -k $tmp check_rsp.lua`))
 	rm -f $tmp
 }
 
