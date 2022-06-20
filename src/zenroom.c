@@ -273,8 +273,8 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 }
 
 void zen_teardown(zenroom_t *ZZ) {
-	notice(ZZ->lua,"Zenroom teardown.");
-	act(ZZ->lua,"Memory used: %u KB",
+	notice(NULL,"Zenroom teardown.");
+	act(NULL,"Memory used: %u KB",
 	    lua_gc(ZZ->lua,LUA_GCCOUNT,0));
 
 	// stateful RNG instance for deterministic mode
@@ -285,7 +285,7 @@ void zen_teardown(zenroom_t *ZZ) {
 
 	// save pointers inside Z to free after L and Z
 	if(ZZ->lua) {
-		func(ZZ->lua, "lua gc and close...");
+		func(NULL, "lua gc and close...");
 		lua_gc((lua_State*)ZZ->lua, LUA_GCCOLLECT, 0);
 		lua_gc((lua_State*)ZZ->lua, LUA_GCCOLLECT, 0);
 		// this call here frees also Z (lightuserdata)
