@@ -1,0 +1,5 @@
+Rule check version 2.0.0 
+Scenario qp : Upload the eddsa key
+Given I am 'Alice'
+and I have the 'keyring'
+Then print my 'keyring'

@@ -51,8 +51,8 @@ function initkeyring(ktype)
    end
 end
 When("create the keyring", function()
-	empty'keyring'
-	initkeyring()
+    empty'keyring'
+    initkeyring()
 end)
 
 -- KNOWN KEY TYPES FOUND IN ACK.keyring
@@ -68,7 +68,8 @@ local keytypes = {
     dilithium = true,
     schnorr = true,
     kyber = true,
-    ntrup = true
+    ntrup = true,
+    eddsa = true,
 }
 
 function havekey(ktype)
@@ -139,6 +140,9 @@ local function _keyring_import(obj)
    if obj.ntrup then
       res.ntrup = ZEN.get(obj, 'ntrup', ntrup_f)
    end
+   if obj.eddsa then
+      res.eddsa = ZEN.get(obj, 'eddsa', nop)
+   end
    return (res)
 end
 
@@ -172,6 +176,7 @@ local function _keyring_export(obj)
    if obj.kyber then     res.kyber     = _default_export(obj.kyber) end
    if obj.schnorr then   res.schnorr   = _default_export(obj.schnorr) end
    if obj.ntrup then     res.ntrup     = _default_export(obj.ntrup) end
+   if obj.eddsa then     res.eddsa     = _default_export(obj.eddsa) end
    return (res)
 end
 
@@ -181,3 +186,27 @@ ZEN.add_schema(
 		            export = _keyring_export  }
     }
 )
+
+
+-- UTILS
+-- check various locations to find the public key
+-- algo can be one of dilithium, keyber, eddsa
+--  Given I have a 's' from 't'            --> ACK.s[t]
+function load_pubkey_compat(_key, algo)
+    local pubkey = ACK[_key]
+    if not pubkey then
+        local pubkey_arr = ACK[algo..'_public_key']
+        if luatype(pubkey_arr) == 'table' then
+            pubkey = pubkey_arr[_key]
+        else
+            pubkey = pubkey_arr
+        end
+        ZEN.assert(
+        pubkey,
+        'Public key not found for: ' .. _key
+        )
+    end
+    return pubkey
+end
+
+

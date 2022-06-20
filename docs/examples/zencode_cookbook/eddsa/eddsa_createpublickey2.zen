@@ -1,0 +1,8 @@
+Rule check version 2.0.0 
+Rule input encoding hex
+Rule output encoding hex
+Scenario eddsa : Create and publish the eddsa public key
+Given I am 'Alice'
+and I have a 'hex' named 'private key'
+When I create the eddsa public key with secret key 'private key'
+Then print my 'eddsa public key'

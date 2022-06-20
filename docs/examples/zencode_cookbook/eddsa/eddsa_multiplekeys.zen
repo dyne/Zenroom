@@ -1,0 +1,13 @@
+Rule check version 2.0.0
+Scenario eddsa : Verify the signature among multiple pub key
+Given that I am known as 'Carl'
+and I have a 'eddsa public key' from 'Alice'
+and I have a 'eddsa public key' from 'Eve'
+and I have a 'string' named 'message'
+and I have a 'eddsa signature' named 'string eddsa signature'
+If I verify the 'message' has a eddsa signature in 'string eddsa signature' by 'Eve'
+Then print string 'Eve'
+Endif
+If I verify the 'message' has a eddsa signature in 'string eddsa signature' by 'Alice'
+Then print string 'Alice'
+Endif

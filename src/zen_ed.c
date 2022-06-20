@@ -36,6 +36,8 @@
 		return 1;\
 	}
 
+#define PUSH_CHECK_OCT_LEN(OCT, TYPE)\
+	lua_pushboolean(L, ((OCT)->len == sizeof(TYPE))):
 static int ed_secgen(lua_State *L) {
 	octet *sk = o_new(L, sizeof(ed25519_secret_key)); SAFE(sk);
 	randombytes(sk->val, sizeof(ed25519_secret_key));

@@ -1,0 +1,6 @@
+Rule check version 2.0.0
+Scenario eddsa : Crate Eve eddsa public key
+Given I am 'Eve'
+When I create the eddsa key
+and I create the eddsa public key
+Then print my 'eddsa public key'
