@@ -20,6 +20,7 @@ MILAGRO_INCLUDE_DIR = os.path.join(ZENROOM_ROOT,
 
 QP_ROOT = os.path.join(ZENROOM_ROOT, 'lib/pqclean')
 ZSTD_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/zstd')
+ED25519_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/ed25519-donna')
 
 def get_zenroom_version():
     zenroom_version = '1.0.0'
@@ -70,6 +71,7 @@ ZENROOM_SOURCES = [
     'zen_octet.c',
     'zen_parse.c',
     'zen_qp.c',
+    'zen_ed.c',
     'zen_random.c',
     'zenroom.c',
     'zen_ecdh_factory.c'
@@ -104,6 +106,7 @@ zenroom_lib = Extension('zenroom',
                             LUA_ROOT,
                             MILAGRO_INCLUDE_DIR,
                             ZSTD_INCLUDE_DIR,
+                            ED25519_INCLUDE_DIR,
                             os.path.join(meson_root, 'milagro-crypto-c/include'),
                             # os.path.join(QP_ROOT, 'dilithium2'),
                             # os.path.join(QP_ROOT, 'kyber512'),
@@ -123,7 +126,8 @@ zenroom_lib = Extension('zenroom',
                             os.path.join(meson_root, 'milagro-crypto-c/lib/libamcl_curve_' + ECP_CURVE + '.a'),
                             os.path.join(meson_root, 'libqpz.a'),
                             os.path.join(meson_root, 'libzstd.a'),
-                            os.path.join(meson_root, 'liblua.a')
+                            os.path.join(meson_root, 'liblua.a'),
+                            os.path.join(meson_root, 'libed25519.a')
                         ],
                         extra_link_args=['-lm']
                         )

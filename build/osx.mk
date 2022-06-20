@@ -1,4 +1,4 @@
-osx: apply-patches milagro lua53 embed-lua zstd
+osx: ${BUILDS}
 	CC=${gcc} LD=${ld} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src osx
 	@cp -v ${pwd}/src/zenroom.command ${pwd}/build
@@ -10,7 +10,7 @@ osx-python3: osx-shared
 	@cp -v ${pwd}/src/libzenroom-${ARCH}.so \
 		${pwd}/bindings/python3/zenroom/libzenroom.so
 
-osx-go: apply-patches milagro lua53 embed-lua zstd
+osx-go: ${BUILDS}
 	swig -go -cgo -intgosize 32 ${pwd}/build/swig.i
 	${gcc} ${cflags} -c ${pwd}/build/swig_wrap.c -o src/zen_go.o
 	CC=${gcc} LD=${ld} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
@@ -31,7 +31,7 @@ ios-armv7: SDK := $(shell xcrun --sdk iphoneos --show-sdk-path 2>/dev/null)
 ios-armv7: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM -DARCH_OSX
 ios-armv7: ldflags := -lm
 ios-armv7: platform := ios
-ios-armv7: apply-patches milagro lua53 embed-lua zstd ios-lib
+ios-armv7: ${BUILDS} ios-lib
 
 ios-arm64: ARCH := arm64
 ios-arm64: OS := iphoneos
@@ -43,7 +43,7 @@ ios-arm64: SDK := $(shell xcrun --sdk iphoneos --show-sdk-path 2>/dev/null)
 ios-arm64: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM -DARCH_OSX
 ios-arm64: ldflags := -lm
 ios-arm64: platform := ios
-ios-arm64: apply-patches milagro lua53 embed-lua zstd ios-lib
+ios-arm64: ${BUILDS} ios-lib
 
 ios-sim: ARCH := x86_64
 ios-sim: OS := iphonesimulator
@@ -55,12 +55,12 @@ ios-sim: SDK := $(shell xcrun --sdk iphonesimulator --show-sdk-path 2>/dev/null)
 ios-sim: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM -DARCH_OSX
 ios-sim: ldflags := -lm
 ios-sim: platform := ios
-ios-sim: apply-patches milagro lua53 embed-lua zstd ios-lib
+ios-sim: ${BUILDS} ios-lib
 
 osx-lib: ARCH := x86_64
 osx-lib: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -DARCH_OSX
 osx-lib: ldflags := -lm
-osx-lib: apply-patches milagro lua53 embed-lua zstd ios-lib
+osx-lib: ${BUILDS} ios-lib
 osx-lib:
 	TARGET=${ARCH} AR=${ar} CC=${gcc} CFLAGS="${cflags}" make -C src ios-lib
 	cp -v src/zenroom-ios-${ARCH}.a build/libzenroom.a
@@ -69,7 +69,7 @@ osx-shared: ARCH := x86_64
 osx-shared: cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -DARCH_OSX
 osx-shared: ldflags := -lm
 osx-shared: cflags += -dynamiclib
-osx-shared: apply-patches milagro lua53 embed-lua zstd
+osx-shared: ${BUILDS}
 	CC=${gcc} LD=${ld} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 		make -C src osx-shared
 

@@ -129,5 +129,6 @@ linux-rust:
 	cp meson/liblua.a bindings/rust/clib
 	cp meson/libqpz.a bindings/rust/clib
 	cp meson/libzstd.a bindings/rust/clib
+	cp meson/libed25519.a bindings/rust/clib
 	cp src/zenroom.h bindings/rust
 	cd bindings/rust && cargo ${CMD}
