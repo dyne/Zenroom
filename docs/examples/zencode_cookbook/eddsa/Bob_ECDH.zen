@@ -1,0 +1,10 @@
+Rule check version 2.0.0
+Scenario ecdh : Create the private and public key and sign
+Given I am 'Bob'
+When I create the ecdh key
+and I create the ecdh public key
+and I write string 'Message signed by Bob with ECDH' in 'message ECDH'
+and I create the signature of 'message ECDH'
+Then print my 'ecdh public key'
+and print the 'signature'
+and print the 'message ECDH'

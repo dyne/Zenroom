@@ -1,0 +1,14 @@
+Rule check version 2.0.0
+Scenario ecdh : Dave verifies the ECDH signature
+Scenario eddsa : Dave verifies the eddsa signature
+Given I am 'Dave'
+and I have a 'ecdh public key' from 'Bob'
+and I have a 'eddsa public key' from 'Alice'
+and I have a 'signature'
+and I have a 'eddsa signature' named 'string eddsa signature'
+and I have a 'string' named 'message ECDH'
+and I have a 'string' named 'message'
+If I verify the 'message ECDH' has a signature in 'signature' by 'Bob'
+If I verify the 'message' has a eddsa signature in 'string eddsa signature' by 'Alice'
+Then print string 'Succes!!!!'
+Endif
