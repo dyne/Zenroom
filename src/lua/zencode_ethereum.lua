@@ -264,12 +264,9 @@ function(quantity, destaddr, details)
 end)
 
 When("use the ethereum transaction to create the erc721 with uri ''",
-function(uri_name)
-    local uri = have(uri_name)
-    print(type(uri))
-    ZEN.assert(type(uri) == "string", "The URI must be a string")
+function(uri)
     _use_eth_transaction(ETH.create_erc721,
-                         have(uri))
+                         have(uri):string())
 end)
 
 When("use the ethereum transaction to transfer the erc721 '' from '' to ''",
