@@ -248,17 +248,34 @@ When("create the ethereum key with secret ''",function(sec)
 end)
 
 When("use the ethereum transaction to transfer '' erc20 tokens to ''",
-     function(quantity, destaddr)
-	_use_eth_transaction(ETH.erc20.transfer,
-                             have(destaddr),
-			     BIG.new(have(quantity)))
+function(quantity, destaddr)
+    _use_eth_transaction(ETH.erc20.transfer,
+                         have(destaddr),
+                         BIG.new(have(quantity)))
 end)
 
 
 When("use the ethereum transaction to transfer '' erc20 tokens to '' with details ''",
-     function(quantity, destaddr, details)
-	_use_eth_transaction(ETH.transfer_erc20_details,
-                             have(destaddr),
-			     BIG.new(have(quantity)),
-                             have(details))
+function(quantity, destaddr, details)
+    _use_eth_transaction(ETH.transfer_erc20_details,
+                         have(destaddr),
+                         BIG.new(have(quantity)),
+                         have(details))
+end)
+
+When("use the ethereum transaction to create the erc721 with uri ''",
+function(uri_name)
+    local uri = have(uri_name)
+    print(type(uri))
+    ZEN.assert(type(uri) == "string", "The URI must be a string")
+    _use_eth_transaction(ETH.create_erc721,
+                         have(uri))
+end)
+
+When("use the ethereum transaction to transfer the erc721 '' from '' to ''",
+function(token_id, from, dest)
+    _use_eth_transaction(ETH.erc721.safeTransferFrom,
+                         have(from),
+                         have(dest),
+                         BIG.new(have(token_id)))
 end)
