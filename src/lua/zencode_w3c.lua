@@ -20,9 +20,102 @@
 --on Wednesday, 14th July 2021
 --]]
 
+local function import_ver_method(obj, key)
+    if key == 'publicKeyBase64' then
+	return O.from_base64(obj)  
+    else
+	return O.from_string(obj)
+    end
+end
+
+local function export_ver_method(obj, key)
+    if key == 'publicKeyBase64' then
+	return O.to_base64(obj)
+    else
+	return O.to_string(obj)
+    end
+end
+
+local function import_jws(obj)
+    local tmp = strtok(obj, "[^.]*")
+    return O.from_url64(tmp[1])..O.from_string('..')..O.from_url64(tmp[3])
+end
+
+local function export_jws(obj)
+    local tmp = strtok(O.to_string(obj), "[^.]*")
+    return O.to_url64(O.from_string(tmp[1]))..'..'..O.to_url64(O.from_string(tmp[3]))
+end
+
+local function import_did_doc(doc)
+    local res = {}
+    -- @context, id, alsoKnownAs, verificationMethod are
+    -- always present in DID-documents
+    res['@context'] = deepmap(O.from_string, doc['@context'])
+    res.id = ZEN.get(doc, 'id', O.from_string, tostring)
+    res.alsoKnownAs = ZEN.get(doc, 'alsoKnownAs', O.from_string, tostring)
+    res.verificationMethod = deepmap(import_ver_method, doc.verificationMethod)
+    -- Country, State, desciption, service and proof
+    -- can also not be present
+    if doc.Country then
+       res.Country = ZEN.get(doc, 'Country', O.from_string, tostring)
+    end
+    if doc.State then
+       res.State = ZEN.get(doc, 'State', O.from_string, tostring)
+    end
+    if doc.description then
+       res.description = ZEN.get(doc, 'description', O.from_string, tostring)
+    end
+    -- services
+    if doc.service then
+       res.service = deepmap(O.from_string, doc.service)
+    end
+    -- proof
+    if doc.proof then
+       res.proof = {}
+       res.proof.created = ZEN.get(doc.proof, 'created', INT.from_decimal, tostring)
+       res.proof.jws = ZEN.get(doc.proof, 'jws', import_jws, tostring)
+       res.proof.proofPurpose = ZEN.get(doc.proof, 'proofPurpose', O.from_string, tostring)
+       res.proof.type = ZEN.get(doc.proof, 'type', O.from_string, tostring)
+       res.proof.verificationMethod = ZEN.get(doc.proof, 'verificationMethod' , O.from_string, tostring)
+    end
+    return res
+end
+
+local function export_did_doc(doc)
+    local res = {}
+    res['@context'] = deepmap(O.to_string, doc['@context'])
+    res.id = doc.id:string()
+    res.alsoKnownAs = doc.alsoKnownAs:string()
+    res.verificationMethod = deepmap(export_ver_method, doc.verificationMethod)
+    if doc.Country then
+	res.Country = doc.Country:string()
+    end
+    if doc.State then
+	res.State = doc.State:string()
+    end
+    if doc.description then
+	res.description = doc.description:string()
+    end
+    -- serivce
+    if doc.service then
+	res.service = deepmap(O.to_string, doc.service)
+    end
+    -- proof
+    if doc.proof then
+	res.proof = {}
+	res.proof.created = doc.proof.created:decimal()
+	res.proof.jws = export_jws(doc.proof.jws)
+	res.proof.proofPurpose = doc.proof.proofPurpose:string()
+	res.proof.type = doc.proof.type:string()
+	res.proof.verificationMethod = doc.proof.verificationMethod:string()
+    end
+    return res
+end
 
 ZEN.add_schema(
     {
+	did_document = { import = import_did_doc,
+			 export = export_did_doc },
         -- flexible verifiable credential
         -- only internal 'jws' member has peculiar encoding
         verifiable_credential = function(obj)
