@@ -263,10 +263,16 @@ function(quantity, destaddr, details)
                          have(details))
 end)
 
-When("use the ethereum transaction to create the erc721 with uri ''",
+When("use the ethereum transaction to create the erc721 of uri ''",
 function(uri)
     _use_eth_transaction(ETH.create_erc721,
                          have(uri):string())
+end)
+
+When("use the ethereum transaction to create the erc721 of object ''",
+function(uri)
+    _use_eth_transaction(ETH.create_erc721,
+                         have(uri):base64())
 end)
 
 When("use the ethereum transaction to transfer the erc721 '' from '' to ''",

@@ -68,7 +68,7 @@ Given I have a 'gas price'
 Given I have a 'gas limit'
 Given I have a 'string' named 'asset'
 When I create the ethereum transaction to 'erc721_address'
-When I use the ethereum transaction to create the erc721 with uri 'asset'
+When I use the ethereum transaction to create the erc721 of uri 'asset'
 When I create the signed ethereum transaction for chain 'fabt'
 Then print the 'signed ethereum transaction'
 Then print data
