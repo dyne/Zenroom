@@ -41,16 +41,23 @@ local function then_outcast(val, sch)
    if not val then
       error("Then outcast called on empty variable", 2)
    end
-   local fun = guess_outcast(sch)
+   local codec = ZEN.CODEC[sch]
+   -- if sch is a schema then fun is its export function
+   -- in a schema when codec.schema is not defined it's because
+   -- its name (sch) is the name of the schema
+   local fun
+   if codec and codec.schema then
+      fun = guess_outcast(codec.schema)
+   else
+      fun = guess_outcast(sch)
+   end
+
    local lt = luatype(val)
    -- handle simple conversions
    if lt ~= 'table' then return fun(val) end
-   local codec = ZEN.CODEC[sch]
    if not codec or codec and codec.zentype ~= 'schema' then
       return deepmap(fun, val)
    end
-   -- if object name and schema name differ, get correct schema
-   if codec.name ~= sch then fun = guess_outcast(codec.name) end
    -- handle schema conversions
    if codec.encoding and codec.encoding == 'complex' then
       -- complex
