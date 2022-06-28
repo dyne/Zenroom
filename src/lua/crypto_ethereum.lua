@@ -468,4 +468,16 @@ for k, v in pairs(FAUCET_SIGNATURES) do
    ETH.faucet[k] = ETH.data_contract_factory(k, v.i)
 end
 
+-- TODO implement all ERC721 methods
+local ERC721_SIGNATURES = {
+   safeTransferFrom = { i={'address', 'address', 'uint256'} },
+}
+
+ETH.erc721 = {}
+for k, v in pairs(ERC721_SIGNATURES) do
+   ETH.erc721[k] = ETH.data_contract_factory(k, v.i)
+end
+
+ETH.create_erc721 = ETH.data_contract_factory("createAsset", { 'string' })
+
 return ETH
