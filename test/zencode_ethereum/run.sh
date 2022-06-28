@@ -35,18 +35,6 @@ EOF
 newaddr "alice"
 newaddr "bob"
 
-cat <<EOF | save $SUBDOC coding_export.json
-{
-	"storage_contract": "1b620cA5172A8D6A64798FcA2ee690066F7A7816"
-}
-EOF
-
-cat <<EOF | zexe coding_export.zen -a coding_export.json | jq
-Scenario ethereum
-Given I have a 'ethereum address' named 'storage contract'
-Then print 'storage contract'
-EOF
-
 # rename does not change the encoding anymore,
 # maybe create new functions for these operations
 

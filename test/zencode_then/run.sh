@@ -44,3 +44,34 @@ cat <<EOF | zexe print_data.zen -a dictionary.json
 Given I have the 'string dictionary' named 'dictionary'
 Then print 'second' from 'dictionary'
 EOF
+
+# tests for encoding on print
+cat <<EOF | save then coding_export.json
+{
+	"storage_contract": "1b620cA5172A8D6A64798FcA2ee690066F7A7816"
+}
+EOF
+
+cat <<EOF | zexe coding_export.zen -a coding_export.json | jq
+Scenario ethereum
+Given I have a 'ethereum address' named 'storage contract'
+Then print 'storage contract'
+EOF
+
+cat <<EOF | save then read_and_print_tx.json
+{
+	"tx": {
+		"nonce": "0",
+		"to": "1b620cA5172A8D6A64798FcA2ee690066F7A7816",
+		"gas price": "100000000000",
+		"gas limit": "300000",
+		"value": "0"
+	}
+}
+EOF
+cat <<EOF | zexe read_and_print_tx.zen -a read_and_print_tx.json | jq
+Scenario ethereum
+Given I have a 'ethereum transaction' named 'tx'
+Then print data
+EOF
+# end tests for encoding on print
