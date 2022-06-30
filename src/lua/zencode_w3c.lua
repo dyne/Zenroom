@@ -108,7 +108,7 @@ end
 local function import_verification_method(doc)
     local res = {}
     for key, ver_method in pairs(doc) do
-	if key == "ethereum address" then
+	if key == "ethereum_address" then
 	    res[key] = ZEN.get(doc[key], '.', O.from_hex, tostring)
 	else
 	    res[key] = ZEN.get(doc[key], '.', O.from_base64, tostring)
@@ -120,7 +120,7 @@ end
 local function export_verification_method(doc)
     local res = {}
     for key, ver_method in pairs(doc) do
-	if key == "ethereum address" then
+	if key == "ethereum_address" then
 	    res[key] = O.to_hex(ver_method)
 	else
 	    res[key] = O.to_base64(ver_method)
