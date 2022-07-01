@@ -120,49 +120,61 @@ When("create the array of '' random numbers modulo ''", function(s,m)
 	new_codec('array', { luatype = 'table',	zentype = 'array', encoding = 'number' })
 end)
 
+local function _extract_random_elements(num, from)
+   local n = tonumber(num) or tonumber(have(num))
+   ZEN.assert(n and n>=0, "Not a number or not a positive number: "..num)
+   local src = have(from)
+   ZEN.assert(luatype(src) == 'table', "Object is not a table: "..from)
+
+   local tmp = { }
+   local keys = { }
+   for k,v in pairs(src) do
+      table.insert(keys, k)
+      table.insert(tmp, v)
+   end
+   
+   local len = #tmp
+   local max_len = 65536
+   ZEN.assert(len < max_len, "The number of elements of "..from.." exceed the maximum length: "..max_len)
+   ZEN.assert(n < len, num.." is grater than the number of elements in "..from)
+   local max_random = math.floor(max_len/len)*len
+
+   if n == 1 then
+      local r = random_int16()
+      while r >= max_random do
+	 r = random_int16()
+      end
+      r = (r % len) +1
+      ACK.random_object = tmp[r]
+      new_codec('random_object', {name=keys[r]})
+   else
+      local dst = { }
+      while(n ~= 0) do
+	 local r = random_int16()
+	 while r >= max_random do
+	    r = random_int16()
+	 end
+	 r = (r % len) +1
+	 if keys[r] ~= nil then
+	    if tonumber(keys[r]) then
+	       table.insert(dst ,tmp[r])
+	    else
+	       dst[keys[r]] = tmp[r]
+	    end
+	    keys[r] = nil
+	    tmp[r] = nil
+	    n = n - 1
+	 end
+      end
+      ACK.random_dictionary = dst
+      new_codec('random_dictionary')
+   end
+end
+
 When("pick the random object in ''", function(arr)
-    local A = have(arr)
-    empty'random object'
-    ZEN.assert(luatype(A) == 'table', "Object is not a table: "..arr)
-    local tmp = { }
-    local keys = { }
-    for k,v in pairs(A) do
-       table.insert(keys, k)
-       table.insert(tmp, v)
-    end
-    local r = (random_int16() % #tmp) +1
-    ACK.random_object = tmp[r]
-    new_codec('random_object', {name=keys[r]})
+	_extract_random_elements(1, arr)
 end)
 
-When("create the random dictionary with '' random objects from ''", function(num, from)
-	local n = tonumber(num) or tonumber(have(num))
-	ZEN.assert(n and n>=0, "Not a number or not a positive number: "..num)
-	local src = have(from)
-	ZEN.assert(luatype(src) == 'table', "Object is not a table: "..from)
-
-	local tmp = { }
-	local keys = { }
-	for k,v in pairs(src) do
-	   table.insert(keys, k)
-	   table.insert(tmp, v)
-	end
-	local len = #tmp
-	ZEN.assert(n < len, num.." is grater than the number of elements in "..from)
-
-	local dst = { }
-	while(n ~= 0) do
-	   local r = (random_int16() % len) +1
-	   if tonumber(keys[r]) then
-	      table.insert(dst, keys[r] ,tmp[r])
-	   else
-	      dst[keys[r]] = tmp[r]
-	   end
-	   table.remove(keys, r)
-	   table.remove(tmp, r)
-	   n = n - 1
-	end
-
-	ACK.random_dictionary = dst
-	new_codec('random_dictionary')
-end)
+When("create the random dictionary with '' random objects from ''",
+     _extract_random_elements
+)
