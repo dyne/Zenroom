@@ -132,49 +132,40 @@ local function _extract_random_elements(num, from)
       table.insert(keys, k)
       table.insert(tmp, v)
    end
-   
+
    local len = #tmp
    local max_len = 65536
    ZEN.assert(len < max_len, "The number of elements of "..from.." exceed the maximum length: "..max_len)
    ZEN.assert(n < len, num.." is grater than the number of elements in "..from)
    local max_random = math.floor(max_len/len)*len
 
-   if n == 1 then
+   local dst = { }
+   while(n ~= 0) do
       local r = random_int16()
       while r >= max_random do
-	 r = random_int16()
+         r = random_int16()
       end
       r = (r % len) +1
-      ACK.random_object = tmp[r]
-      new_codec('random_object', {name=keys[r]})
-   else
-      local dst = { }
-      while(n ~= 0) do
-	 local r = random_int16()
-	 while r >= max_random do
-	    r = random_int16()
-	 end
-	 r = (r % len) +1
-	 if keys[r] ~= nil then
-	    if tonumber(keys[r]) then
-	       table.insert(dst ,tmp[r])
-	    else
-	       dst[keys[r]] = tmp[r]
-	    end
-	    keys[r] = nil
-	    tmp[r] = nil
-	    n = n - 1
-	 end
+      if keys[r] ~= nil then
+         if tonumber(keys[r]) then
+            table.insert(dst ,tmp[r])
+         else
+            dst[keys[r]] = tmp[r]
+         end
+         keys[r] = nil
+         tmp[r] = nil
+         n = n - 1
       end
-      ACK.random_dictionary = dst
-      new_codec('random_dictionary')
    end
+   return dst
 end
 
-When("pick the random object in ''", function(arr)
-	_extract_random_elements(1, arr)
+When("pick the random object in ''", function(from)
+        key, ACK.random_object = next(_extract_random_elements(1, from))
+        new_codec('random_object', {name=key})
 end)
 
-When("create the random dictionary with '' random objects from ''",
-     _extract_random_elements
-)
+When("create the random dictionary with '' random objects from ''", function(num, from)
+        ACK.random_dictionary = _extract_random_elements(num, from)
+        new_codec('random_dictionary')
+end)
