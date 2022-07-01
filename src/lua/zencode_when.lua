@@ -485,6 +485,20 @@ When("create the result of '' in '' % '' in ''", function(left, ldict, right, rd
 	ACK.result, ZEN.CODEC.result = _math_op(_mod, l, r)
 end)
 
+local function _countchar(haystack, needle)
+    return select(2, string.gsub(haystack, needle, ""))
+end
+When("create the count of char '' found in ''", function(needle, haystack)
+	local h = have(haystack)
+	empty'count'
+--	ACK.count = _countchar(O.to_string(h), needle)
+	ACK.count = h:octet():charcount(tostring(needle))
+	new_codec('count',
+		  {encoding = 'number',
+		   luatype = 'number',
+		   zentype = 'element' })
+end)
+
 -- TODO:
 -- When("set '' as '' with ''", function(dest, format, content) end)
 -- When("append '' as '' to ''", function(content, format, dest) end)

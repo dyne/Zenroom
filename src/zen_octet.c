@@ -1293,6 +1293,21 @@ static int bitshift_hamming_distance(lua_State *L) {
 	return 1;
 }
 
+static int charcount(lua_State *L) {
+  register char needle;
+  register const char *p;
+  register int count = 0;
+  register int c;
+  octet *o = o_arg(L,1); SAFE(o);
+  const char *s = lua_tostring(L, 2);
+  luaL_argcheck(L, s != NULL, 1, "string expected");
+  needle = *s; // single char
+  const char *hay = (const char*)o->val;
+  for(p=hay, c=0; c < o->len; p++, c++) if(needle==*p) count++;
+  lua_pushinteger(L,count);
+  return 1;
+}
+
 static int crc8(lua_State *L) {
   register uint8_t crc = 0xff;
   register size_t j;
@@ -1359,6 +1374,7 @@ int luaopen_octet(lua_State *L) {
 		{"random",  new_random},
 		{"entropy", entropy},
 		{"bytefreq", entropy_bytefreq},
+		{"charcount", charcount},
 		{"hamming", bitshift_hamming_distance},
 		{"popcount_hamming", popcount_hamming_distance},
 		{"to_segwit", to_segwit_address},
@@ -1390,7 +1406,7 @@ int luaopen_octet(lua_State *L) {
 		{"popcount_hamming", popcount_hamming_distance},
 		{"segwit", to_segwit_address},
 		{"mnemonic", to_mnemonic},
-
+		{"charcount", charcount},
 		// idiomatic operators
 		{"__len",size},
 		{"__concat",concat_n},
