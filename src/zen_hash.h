@@ -50,6 +50,7 @@ typedef struct {
 	sha3 *sha3_512; // SHA3 aka keccak with 64 bytes
         sha3 *keccak256;
         dword *rmd160;
+        csprng *rng; // zencode runtime random
         // ...
 } hash;
 

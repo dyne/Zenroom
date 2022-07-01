@@ -82,6 +82,7 @@ hash* hash_new(lua_State *L, const char *hashtype) {
 	lua_setmetatable(L, -2);
 	char ht[16];
 	h->sha256 = NULL; h->sha384 = NULL; h->sha512 = NULL;
+	h->rng = NULL;
 	if(hashtype) strncpy(ht,hashtype,15);
 	else         strncpy(ht,"sha256",15);
 	if(strncasecmp(hashtype,"sha256",6) == 0) {
@@ -143,6 +144,7 @@ hash* hash_arg(lua_State *L, int n) {
 int hash_destroy(lua_State *L) {
 	hash *h = hash_arg(L,1); SAFE(h);
 	HEREs(h->name);
+	if(h->rng) free(h->rng);
 	if(h->algo == _SHA256)
 		zen_memory_free(h->sha256);
 	else if (h->algo == _SHA512)
@@ -401,6 +403,54 @@ static int mnemonic_to_seed(lua_State *L) {
 	return 1;
 }
 
+static int hash_srand(lua_State *L) {
+  hash *h = hash_arg(L,1); SAFE(h);
+  octet *seed = o_arg(L, 2); SAFE(seed);
+  if(h->rng) free(h->rng); // TODO: reuse if same seed is already sown
+  h->rng = (csprng*)malloc(sizeof(csprng));
+  if(!h->rng) {
+    lerror(L, "Error allocating new random number generator in %s",__func__);
+    return 0;
+  }
+  AMCL_(RAND_seed)(h->rng, seed->len, seed->val);
+  return 0;
+}
+
+static int rand_uint8(lua_State *L) {
+  hash *h = hash_arg(L,1); SAFE(h);
+  if(!h->rng) {
+    lerror(L, "HASH random number generator lacks seed");
+    return 0; }
+  uint8_t res = RAND_byte(h->rng);
+  lua_pushinteger(L, (lua_Integer)res);
+  return(1);
+}
+
+static int rand_uint16(lua_State *L) {
+  hash *h = hash_arg(L,1); SAFE(h);
+  if(!h->rng) {
+    lerror(L, "HASH random number generator lacks seed");
+    return 0; }
+  uint16_t res =
+    RAND_byte(h->rng)
+    | (uint32_t) RAND_byte(h->rng) << 8;
+  lua_pushinteger(L, (lua_Integer)res);
+  return(1);
+}
+
+static int rand_uint32(lua_State *L) {
+  hash *h = hash_arg(L,1); SAFE(h);
+  if(!h->rng) {
+    lerror(L, "HASH random number generator lacks seed");
+    return 0; }
+  uint32_t res =
+    RAND_byte(h->rng)
+    | (uint32_t) RAND_byte(h->rng) << 8
+    | (uint32_t) RAND_byte(h->rng) << 16
+    | (uint32_t) RAND_byte(h->rng) << 24;
+  lua_pushinteger(L, (lua_Integer)res);
+  return(1);
+}
 
 int luaopen_hash(lua_State *L) {
 	(void)L;
@@ -413,6 +463,10 @@ int luaopen_hash(lua_State *L) {
 		{"pbkdf2", hash_pbkdf2},
 		{"pbkdf", hash_pbkdf2},
 		{"mnemonic_seed", mnemonic_to_seed},
+		{"random_seed", hash_srand},
+		{"random_int8", rand_uint8},
+		{"random_int16", rand_uint16},
+		{"random_int32", rand_uint32},
 		{NULL,NULL}};
 	const struct luaL_Reg hash_methods[] = {
 		{"octet",hash_to_octet},
@@ -425,6 +479,10 @@ int luaopen_hash(lua_State *L) {
 		{"kdf", hash_kdf2},
 		{"pbkdf2", hash_pbkdf2},
 		{"pbkdf", hash_pbkdf2},
+		{"random_seed", hash_srand},
+		{"random_int8", rand_uint8},
+		{"random_int16", rand_uint16},
+		{"random_int32", rand_uint32},
 		{"__gc", hash_destroy},
 		{NULL,NULL}
 	};
