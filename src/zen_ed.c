@@ -100,6 +100,7 @@ int luaopen_ed(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg ed_class[] = {
 		{"secgen", ed_secgen},
+		{"keygen", ed_secgen},
 		{"pubgen", ed_pubgen},
 		{"sign", ed_sign},
 		{"verify", ed_verify},
