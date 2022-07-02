@@ -141,7 +141,7 @@ local function _keyring_import(obj)
       res.ntrup = ZEN.get(obj, 'ntrup', ntrup_f)
    end
    if obj.eddsa then
-      res.eddsa = ZEN.get(obj, 'eddsa', nop)
+      res.eddsa = ZEN.get(obj, 'eddsa', nop, O.from_base58)
    end
    return (res)
 end
@@ -176,14 +176,14 @@ local function _keyring_export(obj)
    if obj.kyber then     res.kyber     = _default_export(obj.kyber) end
    if obj.schnorr then   res.schnorr   = _default_export(obj.schnorr) end
    if obj.ntrup then     res.ntrup     = _default_export(obj.ntrup) end
-   if obj.eddsa then     res.eddsa     = _default_export(obj.eddsa) end
+   if obj.eddsa then     res.eddsa     = O.to_base58(obj.eddsa) end
    return (res)
 end
 
 ZEN.add_schema(
     {
-      keyring = { import = _keyring_import,
-		            export = _keyring_export  }
+       keyring = { import = _keyring_import,
+		   export = _keyring_export  }
     }
 )
 

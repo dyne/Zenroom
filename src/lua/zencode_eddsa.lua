@@ -24,8 +24,10 @@ local ED = require'ed'
 
 ZEN.add_schema(
    {
-      eddsa_public_key = function(obj) return ZEN.get(obj, '.') end,
-      eddsa_signature = function(obj) return ZEN.get(obj, '.') end,
+      eddsa_public_key = { import = O.from_base58,
+			   export = O.to_base58 },
+      eddsa_signature = { import = O.from_base58,
+			  export = O.to_base58 }
    }
 )
 
@@ -40,7 +42,8 @@ When('create the eddsa public key',function()
 	empty'eddsa public key'
 	local sk = havekey'eddsa'
 	ACK.eddsa_public_key = ED.pubgen(sk)
-	new_codec('eddsa public key', { zentype = 'element'})
+	new_codec('eddsa public key', { zentype = 'element',
+					encoding = 'base58'})
 end)
 
 When("create the eddsa public key with secret key ''",function(sec)
@@ -49,7 +52,8 @@ When("create the eddsa public key with secret key ''",function(sec)
 	ACK.keyring.eddsa = sk
 	empty'eddsa public key'
 	ACK.eddsa_public_key = ED.pubgen(sk)
-	new_codec('eddsa public key', { zentype = 'element'})
+	new_codec('eddsa public key', { zentype = 'element',
+					encoding = 'base58'})
 end)
 
 -- generate the sign for a msg and verify
@@ -58,7 +62,8 @@ When("create the eddsa signature of ''",function(doc)
 	local obj = have(doc)
 	empty'eddsa signature'
 	ACK.eddsa_signature = ED.sign(sk, ZEN.serialize(obj))
-	new_codec('eddsa signature', { zentype = 'element'})
+	new_codec('eddsa signature', { zentype = 'element',
+				       encoding = 'base58'})
 end)
 
 IfWhen("verify the '' has a eddsa signature in '' by ''",function(msg, sig, by)
