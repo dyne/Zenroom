@@ -80,6 +80,7 @@ cortex-m-zencode-integration = \
 	cd test/zencode_hash && ./run.sh ${1}; cd -; \
 	cd test/zencode_http && ./run.sh ${1}; cd -; \
 	cd test/zencode_ecdh && ./run.sh ${1}; cd -; \
+	cd test/zencode_eddsa && ./run.sh ${1}; cd -; \
 	cd test/zencode_secshare && ./run.sh ${1}; cd -; \
 	cd test/zencode_credential && ./run.sh ${1}; cd -; \
 	cd test/zencode_petition && ./run.sh ${1}; cd -;
@@ -107,6 +108,7 @@ zencode-integration = \
 	cd test/zencode_array && ./run.sh; cd -; \
 	cd test/zencode_hash && ./run.sh; cd -; \
 	cd test/zencode_ecdh && ./run.sh; cd -; \
+	cd test/zencode_eddsa && ./run.sh; cd -; \
 	cd test/zencode_credential && ./run.sh; cd -; \
 	cd test/zencode_petition && ./run.sh; cd -; \
 	cd test/zencode_reflow && ./run.sh; cd -;

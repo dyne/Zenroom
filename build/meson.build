@@ -195,6 +195,7 @@ zencode_tests = [
     'zencode_keys',
     'zencode_secshare',
     'zencode_ecdh',
+    'zencode_eddsa',
     'zencode_credential',
     'zencode_petition',
     'zencode_bitcoin',
