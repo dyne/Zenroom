@@ -120,7 +120,7 @@ When("create the array of '' random numbers modulo ''", function(s,m)
 	new_codec('array', { luatype = 'table',	zentype = 'array', encoding = 'number' })
 end)
 
-local function _extract_random_elements(num, from)
+local function _extract_random_elements(num, from, random_fun)
    local n = tonumber(num) or tonumber(have(num))
    ZEN.assert(n and n>=0, "Not a number or not a positive number: "..num)
    local src = have(from)
@@ -141,9 +141,9 @@ local function _extract_random_elements(num, from)
 
    local dst = { }
    while(n ~= 0) do
-      local r = random_int16()
+      local r = random_fun()
       while r >= max_random do
-         r = random_int16()
+         r = random_fun()
       end
       r = (r % len) +1
       if keys[r] ~= nil then
@@ -161,11 +161,11 @@ local function _extract_random_elements(num, from)
 end
 
 When("pick the random object in ''", function(from)
-        key, ACK.random_object = next(_extract_random_elements(1, from))
+        key, ACK.random_object = next(_extract_random_elements(1, from, random_int16))
         new_codec('random_object', {name=key})
 end)
 
 When("create the random dictionary with '' random objects from ''", function(num, from)
-        ACK.random_dictionary = _extract_random_elements(num, from)
+        ACK.random_dictionary = _extract_random_elements(num, from, random_int16)
         new_codec('random_dictionary')
 end)
