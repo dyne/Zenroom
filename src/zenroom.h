@@ -151,4 +151,9 @@ void zen_teardown(zenroom_t *zenroom);
 #endif
 #endif
 
+// number of bytes pre-fetched from the PRNG on seed initialization
+// should never exceed 256
+#define PRNG_PREROLL 256
+// runtime random_seed addes 4 bytes to this (260 total) used by Lua init
+
 #endif

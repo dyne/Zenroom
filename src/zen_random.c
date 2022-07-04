@@ -114,7 +114,7 @@ static int rng_int32(lua_State *L) {
 static int rng_rr256(lua_State *L) {
   Z(L);
 	lua_newtable(L);
-	int c = 256;
+	int c = PRNG_PREROLL;
 	int idx = 0;
 	while(c--) {
 		lua_pushnumber(L,idx+1);
@@ -144,7 +144,8 @@ void zen_add_random(lua_State *L) {
 		// used in
 		register int i;
 		register char *p = Z->runtime_random256;
-		for(i=0;i<256;i++,p++) *p = RAND_byte(Z->random_generator);
+		for(i=0;i<PRNG_PREROLL;i++,p++)
+		  *p = RAND_byte(Z->random_generator);
 	}
 
 }

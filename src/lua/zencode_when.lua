@@ -545,3 +545,14 @@ When("create the '' cast of strings in ''", function(conv, source)
 	end
 	new_codec(conv, {encoding = conv})
 end)
+
+
+When("seed the random with ''",
+     function(seed)
+	local s = have(seed)
+	ZEN.assert(iszen(type(s)), "New random seed is not a valid zenroom type: "..seed)
+	local fingerprint = random_seed(s) -- pass the seed for srand init
+	act("New random seed of "..#s.." bytes") 
+	xxx("New random fingerprint: "..fingerprint:hex())
+     end
+)

@@ -84,6 +84,7 @@ hash* hash_new(lua_State *L, const char *hashtype) {
 	h->sha256 = NULL; h->sha384 = NULL; h->sha512 = NULL;
 	h->rng = NULL;
 	if(hashtype) strncpy(ht,hashtype,15);
+	// TODO: change default to empty random (waiting for seed)
 	else         strncpy(ht,"sha256",15);
 	if(strncasecmp(hashtype,"sha256",6) == 0) {
 		strncpy(h->name,hashtype,15);
@@ -406,13 +407,16 @@ static int mnemonic_to_seed(lua_State *L) {
 static int hash_srand(lua_State *L) {
   hash *h = hash_arg(L,1); SAFE(h);
   octet *seed = o_arg(L, 2); SAFE(seed);
-  if(h->rng) free(h->rng); // TODO: reuse if same seed is already sown
-  h->rng = (csprng*)malloc(sizeof(csprng));
+  if(!h->rng) // TODO: reuse if same seed is already sown
+    h->rng = (csprng*)malloc(sizeof(csprng));
   if(!h->rng) {
     lerror(L, "Error allocating new random number generator in %s",__func__);
     return 0;
   }
   AMCL_(RAND_seed)(h->rng, seed->len, seed->val);
+  // fast-forward to runtime_random (256 bytes) and 4 bytes lua
+  for(register int i=0;i<PRNG_PREROLL+4;i++) RAND_byte(h->rng);
+
   return 0;
 }
 

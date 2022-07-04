@@ -562,7 +562,6 @@ int zen_zstd_compress(lua_State *L) {
 
 int zen_zstd_decompress(lua_State *L) {
   octet *src, *dst;
-  size_t res;
   Z(L);
   if(!Z->zstd_d)
     Z->zstd_d = ZSTD_createDCtx();
@@ -581,6 +580,27 @@ int zen_zstd_decompress(lua_State *L) {
   return 1;
 }
 
+static int zen_random_seed(lua_State *L) {
+  Z(L);
+  octet *seed = o_arg(L, 1); SAFE(seed);
+  if(seed->len <4) {
+    fprintf(stderr,"Random seed error: too small (%u bytes)\n",seed->len);
+    zen_fatal(L);
+  }
+  AMCL_(RAND_seed)(Z->random_generator, seed->len, seed->val);
+  // fast-forward to runtime_random (256 bytes) and 4 bytes lua
+  octet *rr = o_new(L, PRNG_PREROLL); SAFE(rr);
+  for(register int i=0;i<PRNG_PREROLL;i++)
+    rr->val[i] = RAND_byte(Z->random_generator);
+  rr->len = PRNG_PREROLL;
+  // plus 4 bytes used by Lua init
+  RAND_byte(Z->random_generator);
+  RAND_byte(Z->random_generator);
+  RAND_byte(Z->random_generator);
+  RAND_byte(Z->random_generator);
+  // return "runtime random" fingerprint
+  return 1;
+}
 void zen_add_io(lua_State *L) {
 	// override print() and io.write()
 	static const struct luaL_Reg custom_print [] =
@@ -593,6 +613,7 @@ void zen_add_io(lua_State *L) {
 		  {"act", zen_act},
 		  {"compress", zen_zstd_compress},
 		  {"decompress", zen_zstd_decompress},
+		  {"random_seed", zen_random_seed},
 		  {NULL, NULL} };
 	lua_getglobal(L, "_G");
 	luaL_setfuncs(L, custom_print, 0);  // for Lua versions 5.2 or greater
