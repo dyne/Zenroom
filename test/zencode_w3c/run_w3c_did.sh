@@ -21,11 +21,13 @@ Scenario 'ethereum': Create key
 Scenario 'reflow': Create the key
 Scenario 'schnorr': Create the key
 Scenario 'qp': create the key
+Scenario 'eddsa' : create the key
 
 Given nothing
 
 # Here we are creating the keys
 When I create the ecdh key
+When I create the eddsa key
 When I create the ethereum key 
 When I create the reflow key
 When I create the schnorr key
@@ -42,10 +44,12 @@ Scenario 'ethereum': Create key
 Scenario 'reflow': Create the key
 Scenario 'schnorr': Create the key
 Scenario 'qp': create the key
+Scenario 'eddsa' : create the key
 
 Given I have the 'keyring'
 
 When I create the ecdh public key
+When I create the eddsa public key
 When I create the ethereum address 
 When I create the reflow public key
 When I create the schnorr public key
@@ -53,6 +57,7 @@ When I create the bitcoin public key
 When I create the dilithium public key
 
 Then print the 'ecdh public key'
+Then print the 'eddsa public key'
 Then print the 'ethereum address' 
 Then print the 'reflow public key'
 Then print the 'schnorr public key'
@@ -130,11 +135,13 @@ Given I have a 'string dictionary' named 'identity'
 Given I have a 'string' named 'dilithium public key'
 Given I have a 'string' named 'schnorr public key'
 Given I have a 'string' named 'ecdh public key'
+Given I have a 'string' named 'eddsa public key'
 Given I have a 'string' named 'reflow public key'
 Given I have a 'string' named 'ethereum address'
 
 When I insert 'dilithium public key' in 'identity'
 When I insert 'ecdh public key' in 'identity'
+When I insert 'eddsa public key' in 'identity'
 When I insert 'schnorr public key' in 'identity'
 When I insert 'reflow public key' in 'identity'
 When I insert 'ethereum address' in 'identity'
@@ -192,6 +199,7 @@ Given I have a 'string' named 'State' in 'identity'
 #Given I have a 'string' named 'port_http' in 'identity'
 Given I have a 'string' named 'description' inside 'identity'
 Given I have a 'string' named 'ecdh_public_key' in 'identity'
+Given I have a 'string' named 'eddsa_public_key' in 'identity'
 Given I have a 'string' named 'reflow_public_key' in 'identity'
 Given I have a 'string' named 'schnorr_public_key' in 'identity'
 Given I have a 'string' named 'dilithium_public_key' in 'identity'
@@ -311,19 +319,16 @@ When I insert 'verification-key4' in 'verificationMethod'
 
 # 5
 When I create the 'string dictionary' named 'verification-key5'
-# address
-# this follows the CAIP-10(https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-10.md) spec
-# thus it is: namespace + ":" + chain_id + ":" + address
-When I set 'blockchainAccountId' to 'eip155:1717658228:0x' as 'string'
-When I append 'ethereum address' to 'blockchainAccountId' 
-When I insert 'blockchainAccountId' in 'verification-key5'
+# pk
+When I copy 'eddsa public key' to 'publicKeyBase58'
+When I insert 'publicKeyBase58' in 'verification-key5'
 # type
-When I set 'type' to 'EcdsaSecp256k1RecoveryMethod2020' as 'string'
+When I set 'type' to 'Ed25519VerificationKey2018' as 'string'
 When I insert 'type' in 'verification-key5'
 # id
 When I copy 'did:dyne:id:' to 'id'
-When I set '#blockchainAccountId' to '#blockchainAccountId' as 'string'
-When I append '#blockchainAccountId' to 'id'
+When I set '#key5' to '#key5' as 'string'
+When I append '#key5' to 'id'
 When I insert 'id' in 'verification-key5'
 # controller
 When I create the copy of 'controller' from dictionary 'misc-input'
@@ -331,6 +336,29 @@ When I rename the 'copy' to 'controller'
 When I insert 'controller' in 'verification-key5'
 
 When I insert 'verification-key5' in 'verificationMethod'
+
+# 6
+When I create the 'string dictionary' named 'verification-key6'
+# address
+# this follows the CAIP-10(https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-10.md) spec
+# thus it is: namespace + ":" + chain_id + ":" + address
+When I set 'blockchainAccountId' to 'eip155:1717658228:0x' as 'string'
+When I append 'ethereum address' to 'blockchainAccountId' 
+When I insert 'blockchainAccountId' in 'verification-key6'
+# type
+When I set 'type' to 'EcdsaSecp256k1RecoveryMethod2020' as 'string'
+When I insert 'type' in 'verification-key6'
+# id
+When I copy 'did:dyne:id:' to 'id'
+When I set '#blockchainAccountId' to '#blockchainAccountId' as 'string'
+When I append '#blockchainAccountId' to 'id'
+When I insert 'id' in 'verification-key6'
+# controller
+When I create the copy of 'controller' from dictionary 'misc-input'
+When I rename the 'copy' to 'controller'
+When I insert 'controller' in 'verification-key6'
+
+When I insert 'verification-key6' in 'verificationMethod'
 
 When I insert 'verificationMethod' in 'did document'
 
@@ -382,6 +410,7 @@ cat <<EOF | zexe oracle_signature.zen -k privatekey_gen.json -a to_sign.json | s
 Scenario 'ecdh': sign
 Scenario 'schnorr': sign
 Scenario 'qp': sign
+Scenario 'eddsa': sign
 
 Given I have a 'keyring'
 Given I have a 'string dictionary' named 'json'
@@ -389,8 +418,13 @@ Given I have a 'string dictionary' named 'json'
 When I create the ecdh signature of 'json'
 When I create the schnorr signature of 'json'
 When I create the dilithium signature of 'json'
+When I create the eddsa signature of 'json'
 
-Then print the data
+Then print the 'ecdh signature'
+Then print the 'schnorr signature'
+Then print the 'dilithium signature'
+Then print the 'eddsa signature'
+Then print the 'json'
 EOF
 
 
@@ -400,12 +434,14 @@ Scenario 'w3c': did document
 Scenario 'ecdh': verify sign
 Scenario 'schnorr': verify sign
 Scenario 'qp': verify sign
+Scenario 'eddsa':verify sign
 
 # load did document and signatures
 Given I have a 'did document'
 and I have a 'ecdh signature'
 and I have a 'schnorr signature'
 and I have a 'dilithium signature'
+and I have a 'eddsa signature'
 and I have a 'string dictionary' named 'json'
 
 # Here I retrieve all the public keys/address from 
@@ -422,6 +458,9 @@ When I verify the 'json' has a schnorr signature in 'schnorr signature' by 'schn
 
 When I pickup from path 'verificationMethod.dilithium_public_key'
 When I verify the 'json' has a dilithium signature in 'dilithium signature' by 'dilthium public key'
+
+When I pickup from path 'verificationMethod.eddsa_public_key'
+When I verify the 'json' has a eddsa signature in 'eddsa signature' by 'eddsa public key'
 
 # verification is succesfull
 Then print the string 'signature verified!!!' 

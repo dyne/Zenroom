@@ -24,7 +24,9 @@
 -- like base58, jws, ...
 local function import_vm(obj, key)
     if key == 'publicKeyBase64' then
-	return O.from_base64(obj)  
+	return O.from_base64(obj)
+    elseif key == 'publicKeyBase58' then
+	return O.from_base58(obj)
     else
 	return O.from_string(obj)
     end
@@ -33,6 +35,8 @@ end
 local function export_vm(obj, key)
     if key == 'publicKeyBase64' then
 	return O.to_base64(obj)
+    elseif key == 'publicKeyBase58' then
+	return O.to_base58(obj)
     else
 	return O.to_string(obj)
     end
@@ -110,6 +114,8 @@ local function import_verification_method(doc)
     for key, ver_method in pairs(doc) do
 	if key == "ethereum_address" then
 	    res[key] = ZEN.get(doc[key], '.', O.from_hex, tostring)
+	elseif key == "eddsa_public_key" then
+	    res[key] = ZEN.get(doc[key], '.', O.from_base58, tostring)
 	else
 	    res[key] = ZEN.get(doc[key], '.', O.from_base64, tostring)
 	end
@@ -122,6 +128,8 @@ local function export_verification_method(doc)
     for key, ver_method in pairs(doc) do
 	if key == "ethereum_address" then
 	    res[key] = O.to_hex(ver_method)
+	elseif key == "eddsa_public_key" then
+	    res[key] = O.to_base58(ver_method)
 	else
 	    res[key] = O.to_base64(ver_method)
 	end
@@ -325,6 +333,7 @@ When(
 	ACK.verificationMethod = {}
 
 	local alias = { EcdsaSecp256k1VerificationKey_b64 = 'ecdh_public_key',
+			Ed25519VerificationKey2018 = 'eddsa_public_key',
 			ReflowBLS12381VerificationKey_b64 = 'reflow_public_key',
 			SchnorrBLS12381VerificationKey_b64 = 'schnorr_public_key',
 			Dilithium2VerificationKey_b64 = 'dilithium_public_key',
@@ -332,9 +341,10 @@ When(
 
 	for _, ver_method in pairs(doc.verificationMethod) do
 	    local z_name = alias[O.to_string(ver_method.type)]
-	    empty(z_name)
 	    if ver_method.publicKeyBase64 then
 		ACK.verificationMethod[z_name] = ver_method.publicKeyBase64
+	    elseif ver_method.publicKeyBase58 then
+		ACK.verificationMethod[z_name] = ver_method.publicKeyBase58
 	    elseif ver_method.blockchainAccountId then
 		local address = strtok(O.to_string(ver_method.blockchainAccountId), '[^:]*')[3]
 		ACK.verificationMethod[z_name] = O.from_hex(address)
