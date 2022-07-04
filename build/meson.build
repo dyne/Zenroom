@@ -185,6 +185,7 @@ test_dir = meson.source_root() + '/../test/'
 
 zencode_tests = [
     'zencode_numbers',
+    'zencode_random',
     'zencode_array',
     'zencode_branching',
     'zencode_given',

@@ -4,15 +4,6 @@
 . ../utils.sh
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 
-cat <<EOF | zexe copy_random.zen
-Given nothing
-
-When I create the random 'random'
-When I copy 'random' to 'dest'
-
-Then print 'random'
-Then print 'dest'
-EOF
 cat <<EOF >copy_data.json
 { "my_hex": "0011FFFF" }
 EOF
