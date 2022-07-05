@@ -282,3 +282,10 @@ function(token_id, from, dest)
                          have(dest),
                          BIG.new(have(token_id)))
 end)
+
+When("use the ethereum transaction to approve the erc721 '' transfer from ''",
+function(token_id, from)
+    _use_eth_transaction(ETH.erc721.approve,
+                         have(from),
+                         BIG.new(have(token_id)))
+end)

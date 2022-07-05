@@ -471,6 +471,7 @@ end
 -- TODO implement all ERC721 methods
 local ERC721_SIGNATURES = {
    safeTransferFrom = { i={'address', 'address', 'uint256'} },
+   approve = { i={'address', 'uint256'} },
 }
 
 ETH.erc721 = {}
