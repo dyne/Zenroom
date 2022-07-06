@@ -289,3 +289,11 @@ function(token_id, from)
                          have(from),
                          BIG.new(have(token_id)))
 end)
+
+When("use the ethereum transaction to transfer the erc721 '' in the contract '' to '' in planetmint",
+function(token_id, nft, to)
+    _use_eth_transaction(ETH.eth_to_planetmint,
+                         have(nft),
+                         BIG.new(have(token_id)),
+                         have(to))
+end)
