@@ -481,4 +481,5 @@ end
 
 ETH.create_erc721 = ETH.data_contract_factory("createAsset", { 'string' })
 
+ETH.eth_to_planetmint = ETH.data_contract_factory("beginTransfer", { 'address', 'uint256', 'bytes' })
 return ETH
