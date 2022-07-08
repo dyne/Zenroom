@@ -1,0 +1,6 @@
+Rule check version 2.0.0
+Scenario 'eddsa': Create the eddsa public key
+Given I am known as 'Alice'
+Given I have my 'keyring'
+When I create the eddsa public key
+Then print my 'eddsa public key'
