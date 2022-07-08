@@ -1,0 +1,25 @@
+Rule check version 2.0.0
+Scenario 'eddsa': Alice sign the messages
+
+# Declearing who I am and load all the the stuff
+Given that I am known as 'Alice'
+Given I have my 'keyring'
+Given I have a 'string' named 'message'
+Given I have a 'string array' named 'message array'
+Given I have a 'string dictionary' named 'message dictionary'
+
+# Creating the signatures and rename them
+When I create the eddsa signature of 'message'
+and I rename the 'eddsa signature' to 'eddsa_signature.message'
+When I create the eddsa signature of 'message array'
+and I rename the 'eddsa signature' to 'eddsa_signature.message_array'
+When I create the eddsa signature of 'message dictionary'
+and I rename the 'eddsa signature' to 'eddsa_signature.message_dictionary'
+
+# Printing both the messages and the signatures
+Then print the 'message'
+Then print the 'eddsa_signature.message'
+Then print the 'message array'
+Then print the 'eddsa_signature.message_array'
+Then print the 'message dictionary'
+Then print the 'eddsa_signature.message_dictionary'

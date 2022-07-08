@@ -1,0 +1,23 @@
+Rule check version 2.0.0
+Scenario 'eddsa': Bob verifies Alice signature
+
+# Declearing who I am and load all the stuff
+Given that I am known as 'Bob'
+and I have a 'eddsa public key' from 'Alice'
+and I have a 'string' named 'message'
+and I have a 'string array' named 'message array'
+and I have a 'string dictionary' named 'message dictionary'
+and I have a 'eddsa signature' named 'eddsa_signature.message'
+and I have a 'eddsa signature' named 'eddsa_signature.message_array'
+and I have a 'eddsa signature' named 'eddsa_signature.message_dictionary'
+
+# Verifying the signatures
+When I verify the 'message' has a eddsa signature in 'eddsa_signature.message' by 'Alice'
+and I verify the 'message array' has a eddsa signature in 'eddsa_signature.message_array' by 'Alice'
+and I verify the 'message dictionary' has a eddsa signature in 'eddsa_signature.message_dictionary' by 'Alice'
+
+# Print the original messages and a string of success
+Then print the 'message'
+and print the 'message array'
+and print the 'message dictionary'
+Then print string 'Zenroom certifies that signatures are all correct!'
