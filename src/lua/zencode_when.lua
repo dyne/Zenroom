@@ -560,10 +560,10 @@ When("seed the random with ''",
      end
 )
 
-local int_ops = {['+'] = BIG.zenadd, ['-'] = BIG.zensub, ['*'] = BIG.zenmul, ['/'] = BIG.zendiv}
-local float_ops = {['+'] = F.add, ['-'] = F.sub, ['*'] = F.mul, ['/'] = F.div}
+local int_ops2 = {['+'] = BIG.zenadd, ['-'] = BIG.zensub, ['*'] = BIG.zenmul, ['/'] = BIG.zendiv}
+local float_ops2 = {['+'] = F.add, ['-'] = F.sub, ['*'] = F.mul, ['/'] = F.div}
 
-local function apply_op(op, a, b)
+local function apply_op2(op, a, b)
   local fop = nil
   if type(a) == 'zenroom.big' and type(b) == 'zenroom.big' then
     fop = int_ops2[op]

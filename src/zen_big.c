@@ -1063,7 +1063,7 @@ static int big_zenopposite(lua_State *L) {
 	return 1;
 }
 
-static int is_integer(lua_State *L) {
+static int big_isinteger(lua_State *L) {
         int result = 0;
         if(lua_isinteger(L, 1)) {
                 result = 1;
@@ -1142,6 +1142,13 @@ int luaopen_big(lua_State *L) {
 		{"info", lua_biginfo},
 		{"max", lua_bigmax},
 		{"shr", big_shiftr},
+		{"is_integer", big_isinteger},
+		{"zenadd", big_zenadd},
+		{"zenmod", big_zenmod},
+		{"zenopposite", big_zenopposite},
+		{"zensub", big_zensub},
+		{"zenmul", big_zenmul},
+		{"zendiv", big_zendiv},
 		{NULL, NULL}
 	};
 	const struct luaL_Reg big_methods[] = {

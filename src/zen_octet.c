@@ -70,6 +70,7 @@
 #include <zen_memory.h>
 #include <zen_octet.h>
 #include <zen_big.h>
+#include <zen_float.h>
 
 #include <zen_ecp.h>
 
@@ -227,6 +228,13 @@ octet* o_arg(lua_State *L,int n) {
 	if(ud) {
 		big *b = (big*)ud;
 		o = new_octet_from_big(L,b); SAFE(o);
+		lua_pop(L,1);
+		return(o);
+	}
+	ud = luaL_testudata(L, n, "zenroom.float");
+	if(ud) {
+		float *b = (float*)ud;
+		o = new_octet_from_float(L,b); SAFE(o);
 		lua_pop(L,1);
 		return(o);
 	}

@@ -71,6 +71,7 @@ ZENROOM_SOURCES = [
     'zen_octet.c',
     'zen_parse.c',
     'zen_qp.c',
+    'zen_float.c',
     'zen_ed.c',
     'zen_random.c',
     'zenroom.c',

@@ -35,6 +35,8 @@
 #include <zen_octet.h>
 #include <zen_memory.h>
 
+#include <zen_float.h>
+
 octet *new_octet_from_float(lua_State *L, float *f) {
         octet *o;
         char *byts = (char*)f;
@@ -47,7 +49,7 @@ octet *new_octet_from_float(lua_State *L, float *f) {
         return o;
 }
 
-static float *float_new(lua_State *L) {
+float *float_new(lua_State *L) {
         float *number = (float *)lua_newuserdata(L, sizeof(float));
         if(!number) {
                 lerror(L, "Error allocating a new big in %s", __func__);
@@ -224,6 +226,6 @@ int luaopen_float(lua_State *L) {
 		{"__div",float_div},
 		{NULL,NULL}
 	};
-	zen_add_class("float", float_class, float_methods);
+	zen_add_class(L, "float", float_class, float_methods);
 	return 1;
 }
