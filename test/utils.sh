@@ -195,6 +195,8 @@ zexe() {
 	exec_memory=`grep "Memory used" $t/stderr | cut -d: -f2`
 	if [[ "`uname -s`" == "Darwin" ]]; then
 		out_size=`stat -f%z $t/stdout` # BSD stat
+	elif [[ "`uname -s`" == "OpenBSD" ]]; then
+		out_size=`stat -f%z $t/stdout` # BSD stat
 	else
 		out_size=`stat -c '%s' $t/stdout`
 	fi
