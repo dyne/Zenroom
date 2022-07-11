@@ -42,12 +42,13 @@ local function then_outcast(val, sch)
       error("Then outcast called on empty variable", 2)
    end
    local codec = ZEN.CODEC[sch]
-   -- if sch is a schema then fun is its export function
-   -- in a schema when codec.schema is not defined it's because
-   -- its name (sch) is the name of the schema
+   -- if sch has a codec then we extract its export function from its
+   -- schema name if it exist, otherwise from its name
+   -- if no codec is found then we simply extract the export function
+   -- from the name sch
    local fun
-   if codec and codec.schema then
-      fun = guess_outcast(codec.schema)
+   if codec then
+      fun = guess_outcast(codec.schema or codec.name)
    else
       fun = guess_outcast(sch)
    end
