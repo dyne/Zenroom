@@ -98,11 +98,12 @@ end)
 When("find the max value '' for dictionaries in ''", function(name, arr)
 	ZEN.assert(luatype(have(arr)) == 'table', 'Object is not a table: '..arr)
 	empty'max value'
-    local max = 0
+	local max = nil
 	local params = {
 				target = name,
 				op = function(v)
-					if max < v then max = v end
+					if not max then max = v
+					elseif max < v then max = v end
 				end
 			}
 	dicts_reduce(ACK[arr],params) -- optimization? operate directly on ACK
@@ -144,8 +145,7 @@ When("create the sum value '' for dictionaries in ''", function(name,arr)
 	local params = {
 		target = name,
 		op = function(v)
-		   if not sum then sum = v
-		   else sum = sum + v end
+		   if not sum then sum = v else sum = sum + v end
 		end
 	}
     dicts_reduce(ACK[arr], params)
@@ -162,12 +162,12 @@ When("create the sum value '' for dictionaries in '' where '' > ''", function(na
 	have(right)
 	empty'sum value'
 
-	local sum = 0 -- result of reduction
+	local sum = nil -- result of reduction
 	local params = {
 		target = name,
 		conditions = { },
 		cmp = function(l,r) return l > r end,
-		op = function(v) sum = sum + v end
+		op = function(v) if sum then sum = sum + v else sum = v end end
 	}
 	params.conditions[left] = ACK[right] -- used in cmp
     dicts_reduce(ACK[arr], params)

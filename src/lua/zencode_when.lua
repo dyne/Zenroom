@@ -281,26 +281,30 @@ end)
 local function _numinput(num)
 	local t = type(num)
 	if not iszen(t) then
-		if t == 'table' then -- TODO: only numbers supported, not zenroom.big
-			local aggr = 0
+		if t == 'table' then
+			local aggr = nil
 			for _,v in pairs(num) do
-				aggr = aggr + _numinput(v)
+				if aggr then
+                    aggr = aggr + _numinput(v)
+                else
+                    aggr = _numinput(v)
+                end
 			end
-			return aggr, false
+			return aggr
 		elseif t ~= 'number' then
 			error('Invalid numeric type: ' .. t, 2)
 		end
-		return num, false
+		return num
 	end
 	if t == 'zenroom.octet' then
-		return BIG.new(num), true
-	elseif t == 'zenroom.big' then
-		return num, true
+		return BIG.new(num)
+	elseif t == 'zenroom.big' or t == 'zenroom.float' then
+		return num
 	else
-		return BIG.from_decimal(num:octet():string()), true -- may give internal errors
+		return BIG.from_decimal(num:octet():string()) -- may give internal errors
 	end
 	error("Invalid number", 2)
-	return nil, false
+	return nil
 end
 
 -- escape math function overloads for pointers
@@ -311,21 +315,25 @@ local function _div(l,r) return(l / r) end
 local function _mod(l,r) return(l % r) end
 
 local function _math_op(op, l, r, bigop)
-	local left, lz  = _numinput(l)
-	local right, rz = _numinput(r)
+	local left  = _numinput(l)
+	local right = _numinput(r)
+	local lz = type(left)
+	local rz = type(right)
 	if lz ~= rz then error("Incompatible numeric arguments", 2) end
 	local codec
 	ACK.result = true -- new_codec checks existance
-	if lz and rz then
+	if lz == "zenroom.big" then
 		codec = new_codec('result',
-				  {encoding = CONF.output.encoding.name,
-				   luatype = 'string',
-				   zentype = 'big' })
+				  {encoding = 'integer',
+				   luatype = 'userdata',
+				   zentype = 'element',
+                   rawtype = 'zenroom.big'})
 	else
 		codec = new_codec('result',
-				  {encoding = 'number',
-				   luatype = 'number',
-				   zentype = 'element' })
+				  {encoding = 'float',
+				   luatype = 'userdata',
+				   zentype = 'element',
+                   rawtype = 'zenroom.float'})
 	end
         if type(left) == 'zenroom.big'
           and type(right) == 'zenroom.big' then
@@ -685,13 +693,13 @@ When("create the result of ''", function(expr)
   ACK.result = values[1]
   if type(values[1]) == 'zenroom.big' then
     ZEN.CODEC['result'] = new_codec('result',
-   		                    {encoding = 'zenroom.big',
+   		                    {encoding = 'integer',
                                     luatype = 'userdata',
                                     rawtype = 'zenroom.big',
                                     zentype = 'element' })
   elseif type(values[1]) == 'zenroom.float' then
     ZEN.CODEC['result'] = new_codec('result',
-   		                    {encoding = 'zenroom.float',
+   		                    {encoding = 'number',
                                     luatype = 'userdata',
                                     rawtype = 'zenroom.float',
                                     zentype = 'element' })
