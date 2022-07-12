@@ -151,8 +151,10 @@ Then("print '' as ''",function(k, s)
 end)
 
 Then("print '' from ''",function(k, f)
-	local val = have({f,k}) -- use array to check in depth
-	OUT[k] = then_outcast( val, check_codec(f) )
+	local val = have(f)
+	ZEN.assert(val[k], "Object: "..k..", not foun in "..f)
+	-- f is used in the then_outcast to support schemas
+	OUT[k] = then_outcast( val, check_codec(f) )[k]
 end)
 
 Then("print '' from '' as ''",function(k, f, s)
@@ -178,10 +180,11 @@ end)
 
 Then("print my '' from ''",function(k, f)
 	Iam()
-	local val = have({f,k}) -- use array to check in depth
+	local val = have(f)
+	ZEN.assert(val[k], "Object: "..k..", not foun in "..f)
 	-- my statements always print to a dictionary named after WHO
 	if not OUT[WHO] then OUT[WHO] = { } end
-	OUT[WHO][k] = then_outcast( val, check_codec(f) )
+	OUT[WHO][k] = then_outcast( val, check_codec(f) )[k]
 end)
 
 Then("print my '' as ''",function(k, s)
