@@ -1119,6 +1119,7 @@ int luaopen_big(lua_State *L) {
 		{"new", newbig},
 		{"to_octet", luabig_to_octet},
 		{"from_decimal", big_from_decimal_string},
+		{"to_decimal", big_to_decimal_string},
 		{"eq", big_eq},
 		{"add", big_add},
 		{"sub", big_sub},
