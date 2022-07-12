@@ -72,6 +72,7 @@ EOF
 cat <<EOF | zexe read_and_print_tx.zen -a read_and_print_tx.json | jq
 Scenario ethereum
 Given I have a 'ethereum transaction' named 'tx'
+Then print 'to' from 'tx'
 Then print data
 EOF
 # end tests for encoding on print
