@@ -11,6 +11,7 @@
   - [Zencode: "When phase](/pages/zencode-cookbook-when.md "Zencode cookbook When")
   - [Zencode: "Then" phase](/pages/zencode-cookbook-then.md "Zencode cookbook Then")
   - [Zencode: "If/Endif" branching](/pages/zencode-if-endif.md "Zencode branching")
+  - [Zencode: debug](/pages/zencode-debug.md "Zencode debug")
 
 - Zencode Advanced 
   - [Cryptography](/pages/zencode-crypto.md "Zencode")
