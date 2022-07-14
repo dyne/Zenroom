@@ -17,6 +17,10 @@ And I rename the 'hash' to 'hashOfMyFifthString'
 When I create the hash of 'myFirstArray'
 And I rename the 'hash' to 'hashOf:MyFirstArray'
 
+# or we can hash every element in the array
+When I create the hashes of each object in 'myFirstArray'
+And I rename the 'hashes' to 'hashOf:ObjectsInMyFirstArray'
+
 # and we can as well hash dictionaries
 When I create the hash of 'ABC-Transactions1Data'
 And I rename the 'hash' to 'hashOfDictionary:ABC-Transactions1Data'
