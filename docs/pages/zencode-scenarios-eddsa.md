@@ -1,7 +1,7 @@
 
 # EdDSA
 
-[EdDSA](https://en.wikipedia.org/wiki/EdDSA)(*Edwards-curve Digital Signature Algorithm*) is a variant of Schnorr signature algorithm. The main change apported in this scheme is the employment of twisted Edwards-curves that result in having higher perfomance with respect to other digital signature algorithms, wihtout sacrificing security. Moreover this scheme resolve also another major issue emerged in the other signature schemes: it **does not need a criptographically secure random number generator** to select a random parameter.
+[EdDSA](https://en.wikipedia.org/wiki/EdDSA)(*Edwards-curve Digital Signature Algorithm*) is a variant of Schnorr signature algorithm. The main change apported in this scheme is the employment of twisted Edwards-curves that result in having higher perfomance with respect to other digital signature algorithms, wihtout sacrificing security. Moreover this scheme resolve also another major issue emerged in the other signature schemes: it **does not need a criptographically secure random number generator** to create a random signature.
 
 In Zenroom, using the *Scenario eddsa*, you will use the **Ed25519** version of this algorithm that is based on *SHA-512* and the *Edwards form of Curve25519*. Moreover, the private key, the public key and the signature generated with Zenroom will be encoded in base58.
 
