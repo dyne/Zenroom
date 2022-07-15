@@ -189,17 +189,7 @@ end
        -- elseif definition ~= 'number' then
        -- 	  error("Cannot take object: expected '"..definition.."' but found '"..objtype.."'",3)
        end
-       -- distinguish integer or float
-       -- avoid input_encoding and fill guessed.{fun,encoding,check}
-       if BIG.is_integer(obj) then
-	  res = { check = nil,
-		  encoding = 'integer',
-		  fun = BIG.from_decimal }
-       else
-	  res = { check = nil,
-		  encoding = 'float',
-		  fun = FLOAT.new }
-       end
+       res = input_encoding(definition)
        res.luatype = 'number'
        res.zentype = 'element'
        -- if obj > 2147483647 then
@@ -297,7 +287,9 @@ end
        ---
 
        if guessed.check then
-	  guessed.check(guessed.raw)
+           if not guessed.check(guessed.raw) then
+               error("Could not read " .. guessed.name)
+           end
        end
        return guessed.fun(guessed.raw)
     end
