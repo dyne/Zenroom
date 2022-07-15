@@ -151,6 +151,20 @@ static int float_eq(lua_State *L) {
 	return 1;
 }
 
+static int float_lt(lua_State *L) {
+	float *a = float_arg(L,1); SAFE(a);
+	float *b = float_arg(L,2); SAFE(b);
+        lua_pushboolean(L, *a < *b);
+	return 1;
+}
+
+static int float_lte(lua_State *L) {
+	float *a = float_arg(L,1); SAFE(a);
+	float *b = float_arg(L,2); SAFE(b);
+        lua_pushboolean(L, *a <= *b);
+	return 1;
+}
+
 static int float_add(lua_State *L) {
 	float *a = float_arg(L,1); SAFE(a);
 	float *b = float_arg(L,2); SAFE(b);
@@ -220,6 +234,8 @@ int luaopen_float(lua_State *L) {
 		{"octet",float_to_octet},
 		{"__tostring",string_from_float},
 		{"__eq",float_eq},
+		{"__lt", float_lt},
+		{"__lte", float_lte},
 		{"__add",float_add},
 		{"__sub",float_sub},
 		{"__mul",float_mul},
