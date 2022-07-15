@@ -183,7 +183,7 @@ end
        return nil
     end
 
-    if objtype == 'number' or tonumber(obj) then
+    if objtype == 'number' then
        if expect_table(definition) then
 	  error("Cannot take object: expected '"..definition.."' but found '"..objtype.."' (not a table)",3)
        -- elseif definition ~= 'number' then
@@ -357,12 +357,10 @@ function input_encoding(what)
    elseif what =='mnemonic' then
       -- mnemonic has no check function (TODO:)
       return f_factory_encoder('mnemonic', O.from_mnemonic, nil)
-   elseif what == 'num' or what == 'number' then
-      return f_factory_encoder('number', nil, nil)
-   elseif what == 'int' or what == 'integer' then
-      return f_factory_encoder('integer', nil, nil)
-   elseif what == 'float' then
-      return f_factory_encoder('float', nil, nil)
+   elseif what == 'int' or what == 'integer' then -- aka BIG
+      return f_factory_encoder('integer', BIG.from_decimal, BIG.is_integer)
+   elseif what == 'float' or what == 'num' or what == 'number' then
+      return f_factory_encoder('float', FLOAT.new, FLOAT.is_float)
    end
    error("Input encoding not found: " .. what, 2)
    return nil

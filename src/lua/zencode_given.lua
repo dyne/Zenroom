@@ -26,6 +26,10 @@
 -- the main security concern in this Zencode module is that no data
 -- passes without validation from IN to ACK or from inline input.
 
+-- data coming in is analyzed through a series of functions:
+-- guess_conversion(raw, conv or name) -> zenode_data.lua L:100 approx 
+--- |_ if luatype(string) && format -> input encoding(format)
+
 -- GIVEN
 local function gc()
    TMP = {}
