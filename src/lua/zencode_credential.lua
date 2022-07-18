@@ -32,15 +32,21 @@ function import_credential_proof_f(obj)
 		nu = ZEN.get(obj, 'nu', ECP.new),
 		kappa = ZEN.get(obj, 'kappa', ECP2.new),
 		pi_v = {
-			c = ZEN.get(obj.pi_v, 'c', nil, INT.from_decimal),
-			rm = ZEN.get(obj.pi_v, 'rm', nil, INT.from_decimal),
-			rr = ZEN.get(obj.pi_v, 'rr', nil, INT.from_decimal)
+			c = ZEN.get(obj.pi_v, 'c', INT.new, O.from_base64),
+			rm = ZEN.get(obj.pi_v, 'rm', INT.new, O.from_base64),
+			rr = ZEN.get(obj.pi_v, 'rr', INT.new, O.from_base64)
 		},
 		sigma_prime = {
 			h_prime = ZEN.get(obj.sigma_prime, 'h_prime', ECP.new),
 			s_prime = ZEN.get(obj.sigma_prime, 's_prime', ECP.new)
 		}
 	}
+end
+local function _export_credential_proof_f(obj)
+    if type(obj) == 'zenroom.big' then
+        return obj:octet():base64()
+    end
+    return obj
 end
 function key_import_issuer_verifier_f(obj)
 	return {
@@ -84,34 +90,45 @@ When(
 		}
 	end
 )
+local function _import_credential_request(obj)
+    local req = {
+        sign = {
+            a = ZEN.get(obj.sign, 'a', ECP.new),
+            b = ZEN.get(obj.sign, 'b', ECP.new)
+        },
+        pi_s = {
+            rr = ZEN.get(obj.pi_s, 'rr', INT.new, O.from_base64),
+            rm = ZEN.get(obj.pi_s, 'rm', INT.new, O.from_base64),
+            rk = ZEN.get(obj.pi_s, 'rk', INT.new, O.from_base64),
+            commit = ZEN.get(obj.pi_s, 'commit', INT.new, O.from_base64)
+        },
+        commit = ZEN.get(obj, 'commit', ECP.new),
+        public = ZEN.get(obj, 'public', ECP.new)
+    }
+    ZEN.assert(
+    CRED.verify_pi_s(req),
+    'Error in credential request: proof is invalid (verify_pi_s)'
+    )
+    return req
+end
+
+local function _export_credential_request(obj)
+    if type(obj) == 'zenroom.big' then
+        return obj:octet():base64()
+    end
+    return obj
+end
 
 -- request credential signatures
 ZEN.add_schema(
 	{
         issuer_public_key = key_import_issuer_verifier_f,
 		-- lambda
-		credential_request = function(obj)
-			local req = {
-				sign = {
-					a = ZEN.get(obj.sign, 'a', ECP.new),
-					b = ZEN.get(obj.sign, 'b', ECP.new)
-				},
-				pi_s = {
-					rr = ZEN.get(obj.pi_s, 'rr', nil, INT.from_decimal),
-					rm = ZEN.get(obj.pi_s, 'rm', nil, INT.from_decimal),
-					rk = ZEN.get(obj.pi_s, 'rk', nil, INT.from_decimal),
-					commit = ZEN.get(obj.pi_s, 'commit', nil, INT.from_decimal)
-				},
-				commit = ZEN.get(obj, 'commit', ECP.new),
-				public = ZEN.get(obj, 'public', ECP.new)
-			}
-			ZEN.assert(
-				CRED.verify_pi_s(req),
-				'Error in credential request: proof is invalid (verify_pi_s)'
-			)
-			return req
-		end
-	}
+		credential_request = {
+            import = _import_credential_request,
+            export = _export_credential_request,
+        }
+    }
 )
 
 When(
@@ -170,22 +187,11 @@ When(
 ZEN.add_schema(
 	{
 		-- theta: blind proof of certification
-		credential_proof = function(obj)
-			return {
-				nu = ZEN.get(obj, 'nu', ECP.new),
-				kappa = ZEN.get(obj, 'kappa', ECP2.new),
-				pi_v = {
-					c = ZEN.get(obj.pi_v, 'c', INT.new),
-					rm = ZEN.get(obj.pi_v, 'rm', INT.new),
-					rr = ZEN.get(obj.pi_v, 'rr', INT.new)
-				},
-				sigma_prime = {
-					h_prime = ZEN.get(obj.sigma_prime, 'h_prime', ECP.new),
-					s_prime = ZEN.get(obj.sigma_prime, 's_prime', ECP.new)
-				}
-			}
-		end
-	}
+		credential_proof = {
+            import = _import_credential_proof_f,
+            export = _export_credential_proof_f,
+        }
+    }
 )
 
 When(

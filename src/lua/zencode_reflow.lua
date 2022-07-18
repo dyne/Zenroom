@@ -24,6 +24,12 @@ load_scenario('zencode_credential')
 
 ABC = require_once('crypto_credential')
 
+local function _export_big_as_octet_f(obj)
+    if type(obj) == 'zenroom.big' then
+        return obj:octet():base64()
+    end
+    return obj
+end
 
 G2 = ECP2.generator()
 
@@ -60,14 +66,17 @@ ZEN.add_schema(
 
         reflow_seal = import_reflow_seal_f,
 
-        reflow_signature = function(obj)
-            return {
-                identity = ZEN.get(obj, 'identity', ECP.new),
-                signature = ZEN.get(obj, 'signature', ECP.new),
-                proof = import_credential_proof_f(obj.proof),
-                zeta = ZEN.get(obj, 'zeta', ECP.new)
-            }
-        end,
+        reflow_signature = {
+            import = function(obj)
+                return {
+                    identity = ZEN.get(obj, 'identity', ECP.new),
+                    signature = ZEN.get(obj, 'signature', ECP.new),
+                    proof = import_credential_proof_f(obj.proof),
+                    zeta = ZEN.get(obj, 'zeta', ECP.new)
+                }
+            end,
+            export = _export_big_as_octet_f,
+        },
 		reflow_identity = function(obj)
 		   return ZEN.get(obj, '.', ECP.new)
 		end,
