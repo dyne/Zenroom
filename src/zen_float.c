@@ -40,16 +40,55 @@
 
 #define EPS 0.000001
 
+int _string_from_float(char dest[1024], float src) {
+	// for small number use decimal notation, while
+	// for big one use exponential notation
+	char *format = (src > 1000000) ? "%e" : "%f";
+
+	size_t ubufsz = snprintf(dest, 1024, format, src);
+	if(ubufsz >= 1024) {
+		return -1;
+	}
+	int bufsz = (int)ubufsz;
+
+	// Remove tailing zeros (after .)
+	int last_zero = -1;
+	bool dot = false;
+	if(bufsz > 0 && format[1] == 'f') {
+		bufsz--;
+		while(bufsz >= 0 && !dot) {
+			if(last_zero < 0 && dest[bufsz] != '0') {
+				last_zero = bufsz + 1;;
+			}
+			if(dest[bufsz] == '.') {
+				dot = true;
+				// if last zero is immediately after the
+				// dot, remove also the dot
+				if(last_zero == bufsz+1) {
+					last_zero--;
+				}
+			}
+			bufsz--;
+		}
+		bufsz++;
+		if(dot) {
+			dest[last_zero] = '\0';
+		}
+	}
+	return bufsz;
+
+}
+
 octet *new_octet_from_float(lua_State *L, float *f) {
         octet *o;
         char dest[1024];
-        size_t bufsz = snprintf(dest, 1024, "%f", *f);
-        if(bufsz >= 1024) {
+	int bufsz = _string_from_float(dest, *f);
+	if(bufsz < 0) {
 	        lerror(L, "Output size too big");
-                return 0;
-        }
+		return 0;
+	}
         o = o_new(L, bufsz);
-        register unsigned int i;
+        register int i;
         for(i=0; i<bufsz; i++) {
                 o->val[i] = dest[i];
         }
@@ -227,14 +266,14 @@ static int float_div(lua_State *L) {
 	return 1;
 }
 
-static int string_from_float(lua_State *L) {
+static int float_to_string(lua_State *L) {
 	float *c = float_arg(L,1); SAFE(c);
         char dest[1024];
-        size_t bufsz = snprintf(dest, 1024, "%f", *c);
-        if(bufsz >= 1024) {
+        int bufsz = _string_from_float(dest, *c);
+	if(bufsz < 0) {
 	        lerror(L, "Output size too big");
-                return 0;
-        }
+		return 0;
+	}
         lua_pushstring(L, dest);
 	return 1;
 }
@@ -255,7 +294,7 @@ int luaopen_float(lua_State *L) {
 	};
 	const struct luaL_Reg float_methods[] = {
 		{"octet",float_to_octet},
-		{"__tostring",string_from_float},
+		{"__tostring",float_to_string},
 		{"__eq",float_eq},
 		{"__lt", float_lt},
 		{"__lte", float_lte},

@@ -369,7 +369,7 @@ local function f_factory_outcast(fun)
 	 -- always export BIG INT as decimal
 	 return BIG.to_decimal(data)
       elseif dt == 'zenroom.float' then
-         return tostring(data)
+         return tonumber(tostring(data))
       elseif iszen(dt) then
 	 -- leverage first class citizen method on zenroom data
 	 return fun(data:octet())
