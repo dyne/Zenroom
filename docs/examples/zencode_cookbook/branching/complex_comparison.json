@@ -1,0 +1,9 @@
+{ "string_hello": "hello",
+  "string_world": "world",
+  "dictionary_equal" : { "1": "hello",
+  	       	       	 "2": "hello",
+		     	 "3": "hello" },
+  "dictionary_not_equal": { "1": "hello",
+  			    "2": "hello",
+  			    "3": "world" }		        
+}
