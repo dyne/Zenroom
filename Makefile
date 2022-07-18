@@ -201,6 +201,7 @@ clean:
 	rm -rf ${pwd}/build/demo
 	rm -f ${pwd}/build/swig_wrap.c
 	rm -f ${pwd}/.python-version
+	rm -f ${pwd}/src/zenroom
 
 clean-src:
 	rm -f src/zen_ecdh_factory.c src/zen_ecp_factory.c src/zen_big_factory.c

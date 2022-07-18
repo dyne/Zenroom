@@ -32,9 +32,9 @@ function import_credential_proof_f(obj)
 		nu = ZEN.get(obj, 'nu', ECP.new),
 		kappa = ZEN.get(obj, 'kappa', ECP2.new),
 		pi_v = {
-			c = ZEN.get(obj.pi_v, 'c', INT.new),
-			rm = ZEN.get(obj.pi_v, 'rm', INT.new),
-			rr = ZEN.get(obj.pi_v, 'rr', INT.new)
+			c = ZEN.get(obj.pi_v, 'c', nil, INT.from_decimal),
+			rm = ZEN.get(obj.pi_v, 'rm', nil, INT.from_decimal),
+			rr = ZEN.get(obj.pi_v, 'rr', nil, INT.from_decimal)
 		},
 		sigma_prime = {
 			h_prime = ZEN.get(obj.sigma_prime, 'h_prime', ECP.new),
@@ -97,10 +97,10 @@ ZEN.add_schema(
 					b = ZEN.get(obj.sign, 'b', ECP.new)
 				},
 				pi_s = {
-					rr = ZEN.get(obj.pi_s, 'rr', INT.new),
-					rm = ZEN.get(obj.pi_s, 'rm', INT.new),
-					rk = ZEN.get(obj.pi_s, 'rk', INT.new),
-					commit = ZEN.get(obj.pi_s, 'commit', INT.new)
+					rr = ZEN.get(obj.pi_s, 'rr', nil, INT.from_decimal),
+					rm = ZEN.get(obj.pi_s, 'rm', nil, INT.from_decimal),
+					rk = ZEN.get(obj.pi_s, 'rk', nil, INT.from_decimal),
+					commit = ZEN.get(obj.pi_s, 'commit', nil, INT.from_decimal)
 				},
 				commit = ZEN.get(obj, 'commit', ECP.new),
 				public = ZEN.get(obj, 'public', ECP.new)

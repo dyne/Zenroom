@@ -106,7 +106,7 @@ When("create the array of '' random numbers", function(s)
 	ZEN.assert(not ACK.array, "Cannot overwrite existing object: ".."array")
 	ACK.array = { }
 	for i = s,1,-1 do
-		table.insert(ACK.array,tonumber(random_int16()))
+		table.insert(ACK.array,F.new(random_int16()))
 	end
 	new_codec('array', { luatype = 'table',	zentype = 'array', encoding = 'number' })
 end)
@@ -115,13 +115,13 @@ When("create the array of '' random numbers modulo ''", function(s,m)
 	ZEN.assert(not ACK.array, "Cannot overwrite existing object: ".."array")
 	ACK.array = { }
 	for i = s,1,-1 do
-		table.insert(ACK.array,math.floor(random_int16() % m))
+		table.insert(ACK.array,F.new(math.floor(random_int16() % m)))
 	end
 	new_codec('array', { luatype = 'table',	zentype = 'array', encoding = 'number' })
 end)
 
 local function _extract_random_elements(num, from, random_fun)
-   local n = tonumber(num) or tonumber(have(num))
+   local n = tonumber(num) or tonumber(tostring(have(num)))
    ZEN.assert(n and n>=0, "Not a number or not a positive number: "..num)
    local src = have(from)
    ZEN.assert(luatype(src) == 'table', "Object is not a table: "..from)

@@ -311,11 +311,7 @@ local function f_factory_encoder(encoder_n, encoder_f, encoder_c)
 	 -- wrap all conversion functions nested in deepmaps
 	 -- TODO: optimize
 	 if dt == 'number' then
-	    if BIG.is_integer(data) then
-	       return BIG.from_decimal(tostring(data))
-	    else
-	       return FLOAT.new(data)
-	    end
+	    return FLOAT.new(data)
 	 elseif dt == 'boolean' then
 	    return data
 	 end
@@ -364,7 +360,7 @@ end
 
 local function f_factory_outcast(fun)
    return function(data)
-      local dt = luatype(data)
+      local dt = type(data)
       if dt == 'table' then error("invalid table conversion",2) end
       -- passthrough native number data
       if dt == 'number' or dt == 'boolean' then
@@ -403,12 +399,10 @@ end
        return f_factory_outcast(O.to_bin)
     elseif cast == 'mnemonic' then
        return f_factory_outcast(O.to_mnemonic)
-    elseif cast == 'float' then
-       return f_factory_outcast(tonumber)
+    elseif cast == 'float' or cast == 'number' then
+       return f_factory_outcast(function(data) tonumber(tostring(data)) end)
     elseif cast == 'integer' then
        return f_factory_outcast(BIG.to_decimal)
-    elseif cast == 'number' then
-       return f_factory_outcast(tonumber)
     elseif cast == 'boolean' then
        return function(data) return data end
     end

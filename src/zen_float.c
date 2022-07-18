@@ -21,6 +21,7 @@
  */
 
 #include <math.h>
+#include <float.h>
 
 #include <lua.h>
 #include <lualib.h>
@@ -37,15 +38,22 @@
 
 #include <zen_float.h>
 
+#define EPS 0.000001
+
 octet *new_octet_from_float(lua_State *L, float *f) {
         octet *o;
-        char *byts = (char*)f;
-        register unsigned int i;
-        o = o_new(L, sizeof(f));
-        for(i=0; i<sizeof(f); i++) {
-                o->val[i] = byts[i];
+        char dest[1024];
+        size_t bufsz = snprintf(dest, 1024, "%f", *f);
+        if(bufsz >= 1024) {
+	        lerror(L, "Output size too big");
+                return 0;
         }
-        o->len = sizeof(f);
+        o = o_new(L, bufsz);
+        register unsigned int i;
+        for(i=0; i<bufsz; i++) {
+                o->val[i] = dest[i];
+        }
+        o->len = bufsz;
         return o;
 }
 
@@ -63,14 +71,11 @@ float *float_new(lua_State *L) {
 
 float *new_float_from_octet(lua_State *L, octet* o) {
         float *f = float_new(L);
-        char *byts = (char*)f;
-        register unsigned int i;
-        if(o->len != sizeof(f)) {
-                lerror(L, "Wrong octet size for a float number %d", o->len);
+        char *pEnd;
+        *f = strtof(o->val, &pEnd);
+        if(*pEnd) {
+                lerror(L, "Could not parse float number");
                 return NULL;
-        }
-        for(i=0; i<sizeof(f); i++) {
-                 byts[i] = o->val[i];
         }
         return f;
 }
@@ -147,7 +152,24 @@ static int float_to_octet(lua_State *L) {
 static int float_eq(lua_State *L) {
 	float *a = float_arg(L,1); SAFE(a);
 	float *b = float_arg(L,2); SAFE(b);
-        lua_pushboolean(L, *a == *b);
+        lua_pushboolean(L, fabs(*a - *b) < EPS);
+	// ref. https://stackoverflow.com/a/4915891
+	// TODO: try these tests https://floating-point-gui.de/errors/NearlyEqualsTest.java
+	/*const float absA = fabs(*a);
+	const float absB = fabs(*b);
+	const float diff = fabs(*a-*b);
+
+	char res = 0;
+	if (*a == *b) { // shortcut, handles infinities
+		res = 1;
+	} else if(*a == 0 || *b == 0 || diff < FLT_MIN) {
+		// a or b is zero or both are extremely close to it
+		// relative error is less meaningful here
+		res = (diff < (EPS * FLT_MIN));
+	} else {  // use relative error
+		res = (diff / (absA + absB) < EPS);
+	}*/
+
 	return 1;
 }
 
@@ -158,6 +180,7 @@ static int float_lt(lua_State *L) {
 	return 1;
 }
 
+// TODO: could be false due to equality
 static int float_lte(lua_State *L) {
 	float *a = float_arg(L,1); SAFE(a);
 	float *b = float_arg(L,2); SAFE(b);
