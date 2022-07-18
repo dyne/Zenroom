@@ -446,7 +446,12 @@ end
     end
     if not ZEN.CODEC[name] then
        xxx('Object has no CODEC registration: ' .. name)
-       return CONF.output.encoding.name
+       local s = ZEN.schemas[name]
+       if s then
+           return name
+       else
+           return CONF.output.encoding.name
+       end
     end
     local codec = ZEN.CODEC[name]
     if codec.zentype == 'schema' and codec.encoding == 'complex' then

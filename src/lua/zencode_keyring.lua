@@ -105,19 +105,19 @@ local function _keyring_import(obj)
       res.ecdh = ZEN.get(obj, 'ecdh')
    end
    if obj.credential then
-      res.credential = ZEN.get(obj, 'credential', nil, INT.from_decimal)
+      res.credential = ZEN.get(obj, 'credential', INT.new, O.from_base64)
    end
    if obj.issuer then
       res.issuer = {
-	 x = ZEN.get(obj.issuer, 'x', nil, INT.from_decimal),
-	 y = ZEN.get(obj.issuer, 'y', nil, INT.from_decimal)
+	 x = ZEN.get(obj.issuer, 'x', INT.new, O.from_base64),
+	 y = ZEN.get(obj.issuer, 'y', INT.new, O.from_base64)
       }
    end
    if obj.bls then
-      res.bls = ZEN.get(obj, 'bls', nil, INT.from_decimal)
+      res.bls = ZEN.get(obj, 'bls', INT.new, O.from_base64)
    end
    if obj.reflow then
-      res.reflow = ZEN.get(obj, 'reflow', nil, INT.from_decimal)
+      res.reflow = ZEN.get(obj, 'reflow', INT.new, O.from_base64)
    end
    if obj.bitcoin then
       res.bitcoin = ZEN.get(obj, 'bitcoin', BTC.wif_to_sk, O.from_base58)
@@ -156,13 +156,14 @@ local function _keyring_export(obj)
    -- bls_curve
    local res = {}
    if obj.ecdh then res.ecdh = _default_export(obj.ecdh) end
-   if obj.credential then res.credential = _default_export(obj.credential) end
+   if obj.credential then res.credential = obj.credential:octet():base64() end
    if obj.issuer then
-      local fun = guess_outcast(CONF.output.encoding.name)
-      res.issuer = deepmap(fun, obj.issuer)
+      local fun = guess_outcast("base64")
+      res.issuer = {x = obj.issuer.x:octet(), y = obj.issuer.y:octet()}
+      res.issuer = deepmap(fun, res.issuer)
    end
-   if obj.bls then res.bls = _default_export(obj.bls) end
-   if obj.reflow then res.reflow = _default_export(obj.reflow) end
+   if obj.bls then res.bls = obj.bls:octet():base64() end
+   if obj.reflow then res.reflow = obj.reflow:octet():base64() end
    if obj.bitcoin then
       res.bitcoin = O.to_base58( BTC.sk_to_wif(obj.bitcoin, 'bitcoin') )
    end

@@ -66,7 +66,7 @@ Scenario credential
 Given I am '${1}'
 and I have my 'keyring'
 When I create the credential request
-Then print my 'credential request'
+Then print my 'credential request' as 'credential request'
 EOF
 	##
 
