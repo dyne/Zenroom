@@ -116,8 +116,7 @@ local function encode_number(val)
   local s = tostring(val)
   local n = tonumber(s)
   if not n then error("Not a number: "..val, 2) end
-  if s:find('%.') then return(n), x end
-  return BIG.from_decimal(s)
+  return n
 end
 
 local function encode_function(val)
