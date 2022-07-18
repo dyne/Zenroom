@@ -13,7 +13,7 @@ and print the 'aggregation' as 'number'
     res = zencode_exec(
         contract
     )
-    out_regex = r'{\"aggregation\":\d{4}\.0,\"array\":\[(?:\d{1,3}\.0\,)+\d{1,3}\.0\]}'
+    out_regex = r'{\"aggregation\":\d{4},\"array\":\[(?:\d{1,3}\,)+\d{1,3}\]}'
     assert Regex(out_regex).validate(res.output)
     assert Schema({
         'aggregation': int,
