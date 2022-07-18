@@ -21,6 +21,17 @@
  --]]
  --- Zencode data internals
 
+-- Spec for number input / output
+-- input  |  spec  |  internal     |  output
+
+-- num       none     float           float
+-- num       float    float           float
+-- num       int      int             string (TODO)
+-- string    none     mixed           string
+-- string    int      int             string
+-- string    float    float           float
+
+
  -- Used in scenario's schema declarations to cast to zenroom. type
  ZEN.get = function(obj, key, conversion, encoding)
     if type(key) ~= 'string' then
