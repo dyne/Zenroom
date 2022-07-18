@@ -38,6 +38,7 @@
 
 #include <zen_float.h>
 
+// TODO: precision in conf
 #define EPS 0.000001
 
 int _string_from_float(char dest[1024], float src) {
@@ -49,7 +50,7 @@ int _string_from_float(char dest[1024], float src) {
 	if(ubufsz >= 1024) {
 		return -1;
 	}
-	int bufsz = (int)ubufsz;
+	register int bufsz = (int)ubufsz;
 
 	// Remove tailing zeros (after .)
 	int last_zero = -1;
