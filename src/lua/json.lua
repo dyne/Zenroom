@@ -81,7 +81,7 @@ local function encode_table(val, stack)
     end
     -- Encode
     for i, v in sort_ipairs(val) do
-      table.insert(res, encode(v, stack))
+        res[#res+1] = encode(v, stack)
     end
     stack[val] = nil
     return "[" .. table.concat(res, ",") .. "]"

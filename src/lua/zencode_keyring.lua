@@ -105,19 +105,19 @@ local function _keyring_import(obj)
       res.ecdh = ZEN.get(obj, 'ecdh')
    end
    if obj.credential then
-      res.credential = ZEN.get(obj, 'credential', INT.new)
+      res.credential = ZEN.get(obj, 'credential', nil, INT.from_decimal)
    end
    if obj.issuer then
       res.issuer = {
-	 x = ZEN.get(obj.issuer, 'x', INT.new),
-	 y = ZEN.get(obj.issuer, 'y', INT.new)
+	 x = ZEN.get(obj.issuer, 'x', nil, INT.from_decimal),
+	 y = ZEN.get(obj.issuer, 'y', nil, INT.from_decimal)
       }
    end
    if obj.bls then
-      res.bls = ZEN.get(obj, 'bls', INT.new)
+      res.bls = ZEN.get(obj, 'bls', nil, INT.from_decimal)
    end
    if obj.reflow then
-      res.reflow = ZEN.get(obj, 'reflow', INT.new)
+      res.reflow = ZEN.get(obj, 'reflow', nil, INT.from_decimal)
    end
    if obj.bitcoin then
       res.bitcoin = ZEN.get(obj, 'bitcoin', BTC.wif_to_sk, O.from_base58)

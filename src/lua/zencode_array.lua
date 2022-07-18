@@ -238,15 +238,21 @@ end)
 IfWhen("the '' is found in '' at least '' times", function(ele, arr, times)
 	local obj = have(ele)
 	ZEN.assert( luatype(obj) ~= 'table', "Invalid use of table in object comparison: "..ele)
-	local num = BIG.from_decimal( tostring( have(times) ) )
+	local num = have(times)
 	local list = have(arr)
 	ZEN.assert( luatype(list) == 'table', "Not a table: "..arr)
 	ZEN.assert( isarray(list), "Not an array: "..arr)
-	local found = BIG.new(0)
+	local constructor = fif(type(num) == "zenroom.big", BIG.new, F.new)
+	local found = constructor(0)
+	local one = constructor(1)
 	for _,v in pairs(list) do
-		if v == obj then found = found + BIG.new(1) end
+		if v == obj then found = found + one end
 	end
-	ZEN.assert(found >= num, "Object "..ele.." found only "..found:decimal().." times instead of "..num:decimal().." in array "..arr)
+    if type(num) == "zenroom.big" then
+	    ZEN.assert(found >= num, "Object "..ele.." found only "..found:decimal().." times instead of "..num:decimal().." in array "..arr)
+    else
+	    ZEN.assert(found >= num, "Object "..ele.." found only "..tostring(found).." times instead of "..tostring(num).." in array "..arr)
+    end
 end)
 
 local function _aggr_array(arr)
@@ -280,6 +286,12 @@ local function _aggr_array(arr)
       res = ECP2.generator()
       for k,v in next,A,nil do
 	 res = res + v
+      end
+      par = {zentype = 'element'}
+   elseif type(A[1]) == 'zenroom.float' then
+      res = F.new(0)
+      for k,v in next,A,nil do
+          res = res + v
       end
       par = {zentype = 'element'}
    else

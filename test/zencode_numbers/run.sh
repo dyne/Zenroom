@@ -280,8 +280,8 @@ EOF
 
 # | zexe big_pos_and_neg.zen -a big_pos_and_neg.data
 cat <<EOF | debug big_pos_and_neg.zen -a big_pos_and_neg.data
-Given I have a 'number' named 'a'
-Given I have a 'number' named 'b'
+Given I have a 'integer' named 'a'
+Given I have a 'integer' named 'b'
 Given I have a 'float' named 'fp1'
 Given I have a 'number' named 'fp2'
 Given I have a 'number' named 'c'
@@ -338,6 +338,7 @@ When I create the result of 'the solution / (a + b + 1)'
 and I rename 'result' to 'expr8'
 When I create the result of '-a * (-b -c - (-c+d))'
 and I rename 'result' to 'expr9'
+Then print data
 EOF
 
 cat <<EOF >expressions_float.data
@@ -366,6 +367,28 @@ When I create the result of 'a / b * c / d + a * b / c / d'
 and I rename 'result' to 'expr4'
 When I create the result of '-a * (-b -c - (-c+d))'
 and I rename 'result' to 'expr5'
+Then print data
+EOF
+
+cat <<EOF >compare_zero_float.data
+{
+  "a": "3e3",
+  "b": "2000.0",
+  "c": "1000.0",
+}
+EOF
+
+cat <<EOF | debug compare_zero_float.zen -a compare_zero_float.data
+Given I have a 'float' named 'a'
+Given I have a 'float' named 'b'
+Given I have a 'float' named 'c'
+When I create the result of '-(-a+b)-c'
+and I rename 'result' to 'zero1'
+When I create the result of 'a-(-(-c)+b)'
+and I rename 'result' to 'zero2'
+When I verify 'zero1' is equal to 'zero2'
+Then print the string 'OK'
+Then print data
 EOF
 
 

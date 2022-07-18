@@ -113,7 +113,7 @@ When("write number '' in ''", function(content, dest)
 --		error('Overflow of number object over 32bit signed size')
 		-- TODO: maybe support unsigned native here
 --	end
-	ACK[dest] = BIG.from_decimal(content)
+	ACK[dest] = F.new(content)
 	ZEN.CODEC[dest] = new_codec(dest, {zentype = 'element' })
 end)
 
@@ -406,7 +406,6 @@ When("create the result of '' * ''", function(left,right)
 	local r = have(right)
 	empty 'result'
 	ACK.result, ZEN.CODEC.result = _math_op(_mul, l, r, BIG.zenmul)
-        I.spy(ZEN.CODEC.result)
 end)
 
 When("create the result of '' in '' * ''", function(left, dict, right)
@@ -512,17 +511,21 @@ end)
 
 -- https://github.com/dyne/Zenroom/issues/175
 When("remove zero values in ''", function(target)
+    local types = {"number", "zenroom.float", "zenroom.big"}
+    local zeros = {0, F.new(0), BIG.new(0)}
 	have(target)
 	ACK[target] = deepmap(function(v)
-		if luatype(v) == 'number' then
-			if v == 0 then
-				return nil
-			else
-				return v
-			end
-		else
-			return v
-		end
+        for i =1,#types do
+            if type(v) == types[i] then
+                if v == zeros[i] then
+                    return nil
+                else
+                    return v
+                end
+            end
+            i = i + 1
+        end
+        return v
 	end, ACK[target])
 end)
 
@@ -606,7 +609,6 @@ When("create the result of ''", function(expr)
   for k, v in pairs(priorities) do
     table.insert(specials, k)
   end
-  I.spy(expr)
   -- tokenizations
   local re = '[()*%-%/+]'
   local tokens = {}
@@ -631,7 +633,7 @@ When("create the result of ''", function(expr)
   local rpn = {}
   local operators = {}
   for k, v in pairs(tokens) do
-    if v == '-' and (#operators == 0 or operators[#operators] == '(') then
+    if v == '-' and (#rpn == 0 or operators[#operators] == '(') then
         table.insert(operators, '~') -- unary minus (change sign)
     elseif priorities[v] then
       while #operators > 0 and operators[#operators] ~= '('

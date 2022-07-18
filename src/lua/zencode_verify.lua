@@ -21,7 +21,9 @@
 --]]
 -- generic comparison using overloaded __eq on values
 local function _eq(left, right)
-  if luatype(left) == 'number' and luatype(right) == 'number' then
+  if (luatype(left) == 'number' and luatype(right) == 'number')
+      or (type(left) == 'zenroom.float' and type(right) == 'zenroom.float')
+      or (type(left) == 'zenroom.big' and type(right) == 'zenroom.big') then
     return (left == right)
   elseif luatype(left) == 'table' and luatype(right) == 'table' then
      if(#left ~= #right) then return false end -- optimization
@@ -36,6 +38,9 @@ end
 local function _neq(left, right)
   if luatype(left) == 'number' and luatype(right) == 'number' then
     return (left ~= right)
+  elseif (type(left) == 'zenroom.float' and type(right) == 'zenroom.float')
+      or (type(left) == 'zenroom.big' and type(right) == 'zenroom.big') then
+    return not (left == right)
   elseif luatype(left) == 'table' and luatype(right) == 'table' then
      if(#left ~= #right) then return true end -- optimization
      return (ZEN.serialize(left) ~= ZEN.serialize(right))
@@ -115,7 +120,7 @@ local function numcheck(left, right)
   end
   if tl == 'zenroom.octet' then
     al = BIG.new(left)
-  elseif tl == 'zenroom.big' or tl == 'number' then
+  elseif tl == 'zenroom.big' or tl == 'number' or tl == 'zenroom.float' then
     al = left
   else
     al = left:octet()
@@ -132,7 +137,7 @@ local function numcheck(left, right)
   end
   if tr == 'zenroom.octet' then
     ar = BIG.new(right)
-  elseif tr == 'zenroom.big' or tr == 'number' then
+  elseif tr == 'zenroom.big' or tr == 'number' or tr == 'zenroom.float' then
     ar = right
   else
     ar = right:octet()
