@@ -10,6 +10,21 @@ When I create the random 'random_left_is_higher'
 Then print string 'number_lower is higher'
 Endif
 
+# A simple comparison where the condition is satisfied, the 'When' and 'Then' statements are executed.
+If number 'number_lower' is less than 'number_higher'
+When I create the random 'just a random'
+Then print string 'I promise that number_higher is higher than number_lower'
+Endif
+
+# We can also check if a certain number is less than or equal to another one
+If number 'number_lower' is less or equal than 'number_higher'
+Then print string 'the number_lower is less than or equal to number_higher'
+Endif
+# or if it is more than or equal to
+If number 'number_lower' is more or equal than 'number_higher'
+Then print string 'the number_lower is more than or equal to number_higher, imposssible!'
+Endif
+
 # Here we try a nested comparison: if the first condition is 
 # satisfied, the second one is evaluated too. Given the conditions,
 # they can't both be true at the same time, so the rest of the branch won't be executed.
@@ -17,16 +32,7 @@ If number 'number_lower' is less than 'number_higher'
 If I verify 'number_lower' is equal to 'number_higher'
 When I create the random 'random_this_is_impossible'
 Then print string 'the conditions can never be satisfied'
-Then print all data
 Endif
-
-
-# A simple comparison where the condition is satisfied, the 'When' and 'Then' statements are executed.
-If number 'number_lower' is less than 'number_higher'
-When I create the random 'just a random'
-Then print string 'I promise that number_higher is higher than number_lower'
-Endif
-
 
 # You can also check if an object exists at a certain point of the execution, with the statement:
 # If 'objectName' is found

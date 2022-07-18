@@ -1,0 +1,36 @@
+# Here we're loading the two strings and the two arrays we have just defined
+Given I have a 'string' named 'string_hello'
+Given I have a 'string' named 'string_world'
+Given I have a 'string dictionary' named 'dictionary_equal'
+Given I have a 'string dictionary' named 'dictionary_not_equal'
+
+# Here we try a simple comparison between the strings 
+If I verify 'string_hello' is equal to 'string_world'
+Then print string 'string_hello is equal to string_world, impossible!'
+Endif
+
+# Here we try a simple comparison between the strings 
+If I verify 'string_hello' is not equal to 'string_world'
+Then print string 'string_hello is not equal to string_world'
+Endif
+
+# Here we compare a string with an element of the dictionary
+If I verify 'string_hello' is equal to '1' in 'dictionary equal'
+Then print string 'string_hello is equal to the element with key equal to 1 in dictionary_equal'
+Endif
+If I verify 'string_hello' is not equal to '1' in 'dictionary equal'
+Then print string 'string_hello is not equal to the element with key equal to 1 in dictionary_equal, impossible!'
+Endif
+
+# Here we check if all the elements in the dictionary are equal
+# (it works also with arrays)
+If the elements in 'dictionary_equal' are equal
+Then print string 'all elements inside dictionary_equal are equal'
+Endif
+
+# Here we check if at least two elements in the dictionary are different
+# (it works also with arrays)
+If the elements in 'dictionary_not_equal' are not equal
+Then print string 'all elements inside dictionary_not_equal are different'
+Endif
+

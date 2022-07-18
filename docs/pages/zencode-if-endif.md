@@ -12,7 +12,7 @@ The **first** ***If*** statement creates a *conditional branch* and can be *stac
 		* Then (print something)
 * Endif
 
-The statement ***Endif*** ends the conditional branch, so takes the execution back to the *main* execution branch, indepently on the amount of conditions (on how many ***If*** you have stacked together).
+The statement ***Endif*** ends the conditional branch, so takes the execution back to the *main* execution branch, independently on the amount of conditions (on how many ***If*** you have stacked together).
 
 You can not use a ***When*** or ***Then*** statement, inside a stack of ***If***, so something like this will return an error: 
 
@@ -30,23 +30,39 @@ You can not use a ***When*** or ***Then*** statement, inside a stack of ***If***
 
 We'll use a simple JSON file with two numbers as input:
 
-[](../_media/examples/zencode_cookbook/branching/leftrightA.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/branching/number_comparison.json ':include :type=code json')
 
-And in this script we can see: 
-* a simple condition, that will fail 
-* two stacked conditions, where the second one will fail  
-* a simple condition, that will succeed
+And in this script we can see some simple comparisons between numbers:
+* simple conditions, that will fail
+* simple conditions, that will succeed
+* two stacked conditions, where the second one will fail
 * a simple condition, based on output from a the previous branch, that will succeed
 
 The script goes: 
 
-[](../_media/examples/zencode_cookbook/branching/branchA.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/branching/number_comparison.zen ':include :type=code gherkin')
 
-You should expect an output like this: 
+You should expect an output like this:
 
-[](../_media/examples/zencode_cookbook/branching/outputA.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/branching/number_comparison_output.json ':include :type=code json')
 
+## More complex If/Endif example
 
+We can compare also elements different from numbers. For example in the following we will compare strings. We will use the following JSON as input:
+
+[](../_media/examples/zencode_cookbook/branching/complex_comparison.json ':include :type=code json')
+
+And in the following script we will:
+* check if two strings are *equal* or *not equal*
+* check if a string is *equal* or *not equal* to a dictionary element
+* check if all the elements in a dictionary are equal
+* check if at least two elements in a dictionary are different
+
+[](../_media/examples/zencode_cookbook/branching/complex_comparison.zen ':include :type=code gherkin')
+
+You should expect an output like this:
+
+[](../_media/examples/zencode_cookbook/branching/complex_comparison_output.json ':include :type=code json')
 
 ## Statements that can be used as a condition 
 
@@ -54,6 +70,7 @@ Only some statements can be used as a condition, typically the ones that **verif
 
 * all the **verify** statements
 * all the **is less than** and **is more than** statements
+* all the **is less or equal than** and **is more or equal than** statements
 * all the **is equal to** and **is not equal to** statements
 * all the **is found** and **is not found** statements
 
