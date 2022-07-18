@@ -255,3 +255,11 @@ function zenguard(val)
 	      return nil
    end
 end
+
+oldtonumber = tonumber
+function tonumber(obj, ...)
+    if type(obj) == "zenroom.float" then
+        obj = tostring(obj)
+    end
+    return oldtonumber(obj, ...)
+end
