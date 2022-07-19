@@ -144,7 +144,7 @@ endif
 
 EOF
 
-cat <<EOF | save $SUBODC found.json
+cat <<EOF | save $SUBDOC found.json
 {
 	"str": "good",
 	"empty_arr": [],
