@@ -46,6 +46,21 @@ When('create the eddsa public key',function()
 					encoding = 'base58'})
 end)
 
+local function _pubkey_from_secret(sec)
+   local sk = have(sec)
+   initkeyring'eddsa'
+   ED.pubgen(sk)
+   ACK.keyring.eddsa = sk
+end
+
+When("create the eddsa key with secret key ''",
+     _pubkey_from_secret
+)
+
+When("create the eddsa key with secret ''",
+     _pubkey_from_secret
+)
+
 When("create the eddsa public key with secret key ''",function(sec)
 	local sk = have(sec)
 	initkeyring'eddsa'

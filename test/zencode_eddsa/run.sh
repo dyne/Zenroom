@@ -7,6 +7,11 @@ SUBDOC=eddsa
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
 ####################
 
+cat <<EOF | save $SUBDOC secret_key.json
+{
+	"secret key": "Cwj9CcqHNoBnXBo8iDfnhFkQeDun4Y4LStd2m3TEAYAg"
+}
+EOF
 cat <<EOF | save $SUBDOC message.json
 {
 "message": "Dear Bob, this message was written by Alice and signed with EdDSA" ,
@@ -29,6 +34,33 @@ Scenario 'eddsa': Create the eddsa private key
 Given I am known as 'Alice'
 When I create the eddsa key
 Then print my 'keyring'
+EOF
+
+cat <<EOF | zexe alice_key_upload.zen -k secret_key.json | jq .
+Rule check version 2.0.0
+Scenario 'eddsa' : Create and publish the eddsa public key
+Given I am 'Alice'
+and I have a 'base58' named 'secret key'
+
+# here we upload the key
+When I create the eddsa key with secret key 'secret key'
+# an equivalent statement is
+# When I create the eddsa key with secret 'secret key'
+
+Then print the 'keyring'
+EOF
+
+
+cat <<EOF | zexe alice_key_upload2.zen -k secret_key.json | jq .
+Rule check version 2.0.0
+Scenario 'eddsa' : Create and publish the eddsa public key
+Given I am 'Alice'
+and I have a 'base58' named 'secret key'
+
+# here we upload the key
+When I create the eddsa key with secret 'secret key'
+
+Then print the 'keyring'
 EOF
 
 cat << EOF | zexe alice_pubkey.zen -k alice_keys.json | save $SUBDOC alice_pubkey.json
