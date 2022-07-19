@@ -30,12 +30,13 @@ on them.
 - 2017 - Development started
 - 2019 - Released version 1.0.0
 - 2022 - Released version 2.0.0 (long term support)
+- 2022 - Started development of 3.0.0
 
 This software has zero dependencies. If you chose to use it in your
 project be assured that we intend to support the same code to still
 run in 20 years from now.
 
-Version 3 development started with Quantum Resistant signatures.
+Version 3 development started with the implementation of Quantum Resistant encryption and signatures.
 
 ## Links
 
