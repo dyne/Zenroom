@@ -12,7 +12,7 @@ javascript-demo: cflags  += -DARCH_WASM -D'ARCH=\"WASM\"' -D MAX_STRING=128000
 javascript-demo: ldflags += -s WASM=1 \
 	-s ASSERTIONS=1 \
 	--shell-file ${website}/demo/shell_minimal.html
-javascript-demo: apply-patches load-emsdk milagro lua53 embed-lua zstd
+javascript-demo: ${BUILDS}
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	JSEXT="--preload-file lua@/" \
 	JSOUT="${website}/demo/index.html" \
@@ -25,7 +25,7 @@ javascript-web: ldflags += -s WASM=1 -s ASSERTIONS=1 \
 	-s TOTAL_MEMORY=65536000 \
 	-s WASM_OBJECT_FILES=0 --llvm-lto 0 \
 	-s DISABLE_EXCEPTION_CATCHING=1
-javascript-web: apply-patches milagro lua53 embed-lua zstd
+javascript-web: ${BUILDS}
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	JSEXT="--preload-file lua@/" \
 	make -C src js
@@ -45,7 +45,7 @@ javascript-wasm: ldflags += -s \
 	-s FILESYSTEM=1 \
 	-s ASSERTIONS=1 \
 	--no-heap-copy
-javascript-wasm: apply-patches milagro lua53 embed-lua zstd
+javascript-wasm: ${BUILDS}
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	JSEXT="--embed-file lua@/" \
 	make -C src js
@@ -75,7 +75,7 @@ javascript-rn: ldflags += -s WASM=0 \
 	-s ASSERTIONS=1 \
 	-s EXIT_RUNTIME=1 \
 	--memory-init-file 0
-javascript-rn: apply-patches milagro lua53 embed-lua zstd
+javascript-rn: ${BUILDS}
 	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	JSEXT="--embed-file lua@/" \
 	make -C src js
