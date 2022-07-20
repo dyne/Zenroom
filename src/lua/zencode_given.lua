@@ -149,7 +149,7 @@ local function ack_table(key, val)
    ZEN.CODEC[key] = {
       name = TMP.name,
       luatype = 'table',
-      zentype = 'dictionary',
+      zentype = 'schema',
       encoding = TMP.encoding,
       root = TMP.root
    }
