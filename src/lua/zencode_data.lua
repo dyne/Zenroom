@@ -424,6 +424,8 @@ end
        assert(luatype(fun.export) == 'function',
 		 "Guess outcast cannot find schema export")
        return fun.export
+    elseif fun then
+        return CONF.output.encoding.fun
     end
     error('Invalid output conversion: ' .. cast, 2)
     return nil
