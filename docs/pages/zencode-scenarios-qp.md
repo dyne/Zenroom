@@ -216,7 +216,7 @@ As we can see they Quantum-Proof keys are much longer. Will this affect the spee
 
 We can divide the signature in four main parts: the generation of the *private key*, the generation of the *public key*, the *signature* and the *verification*. As can be seen from the tables below the Dilithium *key generation* is **not affected at all from the key length**, indeed both the key generation time (computed in microsecond) and memory (computed in Kibibyte) are not very different between Dilithium and ECDSA.
 
-| Algorithm | Key         | Time       | Memory |
+| Algorithm | Key         | Time (<span class="unit">&mu;s</span>)| Memory |
 |-----------|-------------|------------|--------|
 | ECDSA     | private key | 13678,5971 | 617    |
 |           | public key  | 15226,2096 | 615    |
