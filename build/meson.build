@@ -232,7 +232,7 @@ foreach crypto_test : crypto_tests
     test_script = find_program(test_dir + crypto_test + '/run.sh')
     test(crypto_test, test_script, env: [
             'ZENROOM=' + zenroom_exe.full_path(),
-        ], workdir: test_dir + crypto_test)
+        ], workdir: test_dir + crypto_test, timeout: 60)
 endforeach
 
 
