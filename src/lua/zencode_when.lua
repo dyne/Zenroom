@@ -352,7 +352,7 @@ When("create the result of '' inverted sign", function(left)
         elseif type(l) == "zenroom.float" then
             zero = F.new(0)
         end
-	ACK.result, ZEN.CODEC.result = _math_op(_sub, zero, l)
+	ACK.result, ZEN.CODEC.result = _math_op(_sub, zero, l, BIG.zensub)
 end)
 
 When("create the result of '' + ''", function(left,right)
