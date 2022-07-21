@@ -346,7 +346,13 @@ end
 When("create the result of '' inverted sign", function(left)
 	local l = have(left)
 	empty 'result'
-	ACK.result, ZEN.CODEC.result = _math_op(_sub, 0, l)
+        local zero = 0;
+        if type(l) == "zenroom.big" then
+            zero = INT.new(0)
+        elseif type(l) == "zenroom.float" then
+            zero = F.new(0)
+        end
+	ACK.result, ZEN.CODEC.result = _math_op(_sub, zero, l)
 end)
 
 When("create the result of '' + ''", function(left,right)

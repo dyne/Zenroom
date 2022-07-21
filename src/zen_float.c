@@ -267,6 +267,14 @@ static int float_div(lua_State *L) {
 	return 1;
 }
 
+static int float_mod(lua_State *L) {
+	float *a = float_arg(L,1); SAFE(a);
+	float *b = float_arg(L,2); SAFE(b);
+        float *c = float_new(L); SAFE(c);
+        *c = fmod(*a, *b);
+	return 1;
+}
+
 static int float_to_string(lua_State *L) {
 	float *c = float_arg(L,1); SAFE(c);
         char dest[1024];
@@ -303,6 +311,7 @@ int luaopen_float(lua_State *L) {
 		{"__sub",float_sub},
 		{"__mul",float_mul},
 		{"__div",float_div},
+		{"__mod",float_mod},
 		{NULL,NULL}
 	};
 	zen_add_class(L, "float", float_class, float_methods);
