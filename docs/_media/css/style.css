@@ -281,6 +281,9 @@ footer span {
     font-size: 90%;
     border-top: none;
 }
+.unit {
+  text-transform: none;
+}
 
 .markdown-section table tbody tr:last-of-type {
     border-bottom: none;
