@@ -129,11 +129,7 @@ When("set '' to '' as ''", function(dest, content, format)
 	local guess = input_encoding(format)
 	guess.raw = content
 	guess.name = dest
-	if format == 'number' then
-		ACK[dest] = BIG.from_decimal( operate_conversion(guess) )
-	else
-		ACK[dest] = operate_conversion(guess)
-	end
+	ACK[dest] = operate_conversion(guess)
 --	ZEN.CODEC[dest] = new_codec(dest, { luatype = luatype(ACK[dest]), zentype = 'element' })
 end)
 
