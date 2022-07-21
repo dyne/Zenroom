@@ -63,13 +63,13 @@ When("append '' to ''", function(src, dest)
 	local val = have(src)
 	local dst = have(dest)
         -- if the destination is a number, fix the encoding to string
-        if luatype(dst) == 'number' then
+        if isnumber(dst) then
           dst = O.from_string( tostring(dst) )
           ZEN.CODEC[dest].encoding = "string"
           ZEN.CODEC[dest].luatype = "string"
           ZEN.CODEC[dest].zentype = "element"
         end
-        if luatype(val) == 'number' then
+        if isnumber(val) then
 	   val = O.from_string( tostring(val) )
 	end
         dst = dst .. val

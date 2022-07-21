@@ -1183,7 +1183,7 @@ int luaopen_big(lua_State *L) {
 		{"monty", big_monty},
 		{"parity", big_parity},
 		{"__gc", big_destroy},
-		{"__tostring", big_to_hex},
+		{"__tostring", big_to_decimal_string},
 		{"fixed", big_to_fixed_octet},
 		{"__shr", big_shiftr},
 		{NULL, NULL}

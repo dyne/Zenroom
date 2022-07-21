@@ -256,10 +256,15 @@ function zenguard(val)
    end
 end
 
-oldtonumber = tonumber
+local oldtonumber = tonumber
 function tonumber(obj, ...)
     if type(obj) == "zenroom.float" then
         obj = tostring(obj)
     end
     return oldtonumber(obj, ...)
+end
+
+function isnumber(n)
+  local t = type(n)
+  return t == 'number' or t == 'zenroom.float' or t == 'zenroom.big'
 end
