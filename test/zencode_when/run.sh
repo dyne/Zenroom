@@ -90,7 +90,14 @@ EOF
 
 cat <<EOF | zexe rmchar -a loremipsum.json
 Given I have a 'string' named 'lorem'
+When I copy 'lorem' to 'ipsum'
+
 When I remove newlines in 'lorem'
 and I remove spaces in 'lorem'
-Then print 'lorem'
+
+When I compact ascii strings in 'ipsum'
+and I verify 'lorem' is equal to 'ipsum'
+
+
+Then print the string 'OK'
 EOF

@@ -1200,6 +1200,34 @@ static int remove_char(lua_State *L) {
   return 1;
 }
 
+// optimized for newlines of all kinds
+static int compact_ascii(lua_State *L) {
+  octet *o = o_arg(L,1); SAFE(o);
+  octet *res = o_new(L,o->len); SAFE(res);
+  register int i;
+  register int len = 0;
+  register short escape = 0;
+  for(i=0; i < o->len; i++) {
+    if( o->val[i] < 0x21 ) continue; // all ASCII below space
+    if(escape) {
+      escape--;
+      if( o->val[i] == 'a'
+	  || o->val[i] == 'b'
+	  || o->val[i] == 't'
+	  || o->val[i] == 'n'
+	  || o->val[i] == 'v'
+	  || o->val[i] == 'f'
+	  || o->val[i] == 'r' )
+	continue;
+    }
+    if( o->val[i] == 0x5C) { escape++; continue; } // \ = 0x5c ASCII
+    res->val[len] = o->val[i];
+    len++;
+  }
+  res->len = len;
+  return 1;
+}
+
 static int entropy_bytefreq(lua_State *L) {
 	octet *o = o_arg(L,1); SAFE(o);
 	register int i; // register
@@ -1399,6 +1427,7 @@ int luaopen_octet(lua_State *L) {
 		{"entropy", entropy},
 		{"bytefreq", entropy_bytefreq},
 		{"rmchar", remove_char},
+		{"compact_ascii", compact_ascii},
 		{"charcount", charcount},
 		{"hamming", bitshift_hamming_distance},
 		{"popcount_hamming", popcount_hamming_distance},
@@ -1433,6 +1462,7 @@ int luaopen_octet(lua_State *L) {
 		{"mnemonic", to_mnemonic},
 		{"charcount", charcount},
 		{"rmchar", remove_char},
+		{"compact_ascii", compact_ascii},
 		// idiomatic operators
 		{"__len",size},
 		{"__concat",concat_n},

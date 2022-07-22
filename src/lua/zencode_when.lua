@@ -556,7 +556,13 @@ When("remove all occurrences of character '' in ''",
     ACK[target] = src:octet():rmchar( ch:octet() )
 end)
 
-
+When("compact ascii strings in ''",
+     function(target)
+	local src = have(target)
+	ZEN.assert(not isnumber(src), "Invalid number object: "..target)
+	ZEN.assert(luatype(src) ~= 'table', "Invalid table object: "..target)
+    ACK[target] = src:octet():compact_ascii()
+end)
 
 local function trim(s)
   s = string.gsub(s, "^[%s_]+", "")
