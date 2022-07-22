@@ -25,8 +25,8 @@ local J = require('json')
 
 J.decode = function(data)
    if not data then error("JSON.decode called without argument", 2) end
-   assert(#data > 1,"JSON.decode argument is empty string")
-   assert(luatype(data) == "string", "JSON.decode argument of unsopported type: "..luatype(data))
+   if #data < 2 then error("JSON.decode argument is empty string", 2) end
+   if luatype(data) ~= "string" then error("JSON.decode argument of unsopported type: "..luatype(data), 2) end
    local res = {}
    local right = tostring(data)
    local left
