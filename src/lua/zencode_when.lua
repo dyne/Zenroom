@@ -531,6 +531,33 @@ When("remove zero values in ''", function(target)
 	end, ACK[target])
 end)
 
+When("remove spaces in ''", function(target)
+    local src = have(target)
+    ZEN.assert(not isnumber(src), "Invalid number object: "..target)
+    ZEN.assert(luatype(src) ~= 'table', "Invalid table object: "..target)
+    ACK[target] = src:octet():rmchar( O.from_hex('20') )
+end)
+
+When("remove newlines in ''", function(target)
+    local src = have(target)
+    ZEN.assert(not isnumber(src), "Invalid number object: "..target)
+    ZEN.assert(luatype(src) ~= 'table', "Invalid table object: "..target)
+    ACK[target] = src:octet():rmchar( O.from_hex('0A') )
+end)
+
+When("remove all occurrences of character '' in ''",
+     function(char, target)
+    local src = have(target)
+    local ch = have(char)
+    ZEN.assert(not isnumber(src), "Invalid number object: "..target)
+    ZEN.assert(luatype(src) ~= 'table', "Invalid table object: "..target)
+    ZEN.assert(not isnumber(ch), "Invalid number object: "..char)
+    ZEN.assert(luatype(ch) ~= 'table', "Invalid table object: "..char)
+    ACK[target] = src:octet():rmchar( ch:octet() )
+end)
+
+
+
 local function trim(s)
   s = string.gsub(s, "^[%s_]+", "")
   s = string.gsub(s, "[%s_]+$", "")

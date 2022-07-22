@@ -1184,6 +1184,22 @@ static int new_random(lua_State *L) {
 	return 1;
 }
 
+static int remove_char(lua_State *L) {
+  octet *o = o_arg(L,1); SAFE(o);
+  octet *c = o_arg(L,2); SAFE(c);
+  octet *res = o_new(L,o->len); SAFE(res);
+  register int i;
+  register int len = 0;
+  register char tc = c->val[0];
+  for(i=0; i < o->len; i++) {
+    if( o->val[i] == tc) continue;
+    res->val[len] = o->val[i];
+    len++;
+  }
+  res->len = len;
+  return 1;
+}
+
 static int entropy_bytefreq(lua_State *L) {
 	octet *o = o_arg(L,1); SAFE(o);
 	register int i; // register
@@ -1382,6 +1398,7 @@ int luaopen_octet(lua_State *L) {
 		{"random",  new_random},
 		{"entropy", entropy},
 		{"bytefreq", entropy_bytefreq},
+		{"rmchar", remove_char},
 		{"charcount", charcount},
 		{"hamming", bitshift_hamming_distance},
 		{"popcount_hamming", popcount_hamming_distance},
@@ -1415,6 +1432,7 @@ int luaopen_octet(lua_State *L) {
 		{"segwit", to_segwit_address},
 		{"mnemonic", to_mnemonic},
 		{"charcount", charcount},
+		{"rmchar", remove_char},
 		// idiomatic operators
 		{"__len",size},
 		{"__concat",concat_n},
