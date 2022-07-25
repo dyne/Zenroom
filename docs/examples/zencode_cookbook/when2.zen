@@ -57,6 +57,8 @@ When I create the random 'newRandomObject'
 # which is hardcoded to "random_object". We are immediately renaming it.
 When I create the random object of '128' bits
 and I rename the 'random_object' to 'my128BitsRandom'
+When I create the random object of '16' bytes
+and I rename the 'random_object' to 'my16BytesRandom'
 
 # The "create array of random" statement, lets you create an array of random objects, 
 # and you can select the length in bits. The first statement uses the default lenght of 512 bits.
@@ -67,6 +69,8 @@ When I create the array of '4' random objects
 and I rename the 'array' to 'my4RandomObjectsArray'
 When I create the array of '5' random objects of '256' bits
 and I rename the 'array' to 'my256BitsRandomObjectsArray'
+When I create the array of '6' random objects of '16' bytes
+and I rename the 'array' to 'my16BytesRandomObjectsArray'
 
 # You can generate an array of random numbers, from 0 o 65355, with this statement.
 When I create the array of '10' random numbers 
