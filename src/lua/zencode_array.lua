@@ -382,8 +382,8 @@ When("create the array of objects named by '' found in ''", function(name, dict)
 end)
 
 When("create the array by splitting '' at ''", function(data_name, sep_name)
-        local data = have(data_name):octet():string()
-        local sep = have(sep_name):octet():string()
+        local data = uscore(have(data_name):octet():string())
+        local sep = uscore(have(sep_name):octet():string())
         ZEN.assert(#sep == 1, "You can only split with respect to one character")
         empty'array'
         local strings = strtok(data, "[^" .. sep .. "]*")

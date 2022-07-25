@@ -625,7 +625,7 @@ Then print the 'before'
 and print the 'after'
 EOF
 
-cat <<EOF > split.data
+cat <<EOF > split.data | jq
 {
   "id": "did:example:123456789abcdefghi#keys-1",
   "strange_id": "did::",
@@ -634,7 +634,7 @@ cat <<EOF > split.data
 }
 EOF
 
-cat <<EOF | zexe split.zen -a split.data
+cat <<EOF | zexe split.zen -a split.data | jq
 Given I have a 'string' named 'id'
 Given I have a 'string' named 'strange_id'
 Given I have a 'string' named 'very_strange_id'
@@ -647,4 +647,29 @@ When I create the array by splitting 'id' at 'separator'
 Then print the data
 EOF
 
+cat <<EOF > split_space.json | jq
+{
+  "string": "Hello world!",
+  "separator": " "
+}
+EOF
+
+cat <<EOF | zexe split_space.zen -a split_space.json | jq
+Given I have a 'string'
+Given I have a 'string' named 'separator'
+
+When I set 'string2' to 'hello world' as 'string'
+When I set 'separator2' to ' ' as 'string'
+
+When I create the array by splitting 'string' at 'separator'
+and I rename 'array' to 'split0'
+When I create the array by splitting 'string' at 'separator2'
+and I rename 'array' to 'split1'
+When I create the array by splitting 'string2' at 'separator'
+and I rename 'array' to 'split2'
+When I create the array by splitting 'string2' at 'separator2'
+and I rename 'array' to 'split3'
+
+Then print data
+EOF
 success
