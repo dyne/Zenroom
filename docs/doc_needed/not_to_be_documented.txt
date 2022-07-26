@@ -38,10 +38,16 @@ create the new dictionary named ''		# "create the ''" is more generic and it is 
 create the copy of '' in ''			# equal to "create the copy of '' from dictionary ''" documented
 create the copy of '' from ''			# equal to "create the copy of '' from dictionary ''" documented
 
+"debug"
+trace						# equal to "backtrace" documented (explicitly written)
+
 "dp3t"
 create the proximity tracing of infected ids	# inline
 renew the secret day key to a new day	 	# inline
 create the ephemeral ids for today		# inline
+
+"eddsa"
+create the eddsa key with secret ''		# in the code as comment
 
 "ethereum"
 create the ethereum key with secret ''		# in the code as comment

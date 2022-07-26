@@ -5,9 +5,9 @@
 
 In Zenroom, using the *Scenario eddsa*, you will use the **Ed25519** version of this algorithm that is based on *SHA-512* and the *Edwards form of Curve25519*. Moreover, the private key, the public key and the signature generated with Zenroom will be encoded in base58.
 
-## Key Generation
+# Key Generation
 
-### Private key
+## Private key
 
 The script below generates a **EdDSA** private key.
 
@@ -17,7 +17,21 @@ The output should look like this:
 
 [](../_media/examples/zencode_cookbook/eddsa/alice_keys.json ':include :type=code json')
 
-### Public key
+### Upload a private key
+
+Key generation in Zenroom uses by default a pseudo-random as seed, that is internally generated.
+
+You can also opt to use a seed generated elsewhere, for example by using the [keypairoom](https://github.com/ledgerproject/keypairoom) library or it's [npm package](https://www.npmjs.com/package/keypair-lib). Suppose you end with a **EdDSA private key**, like:
+
+[](../_media/examples/zencode_cookbook/eddsa/secret_key.json ':include :type=code json')
+
+Then you can upload it with a script that look like the following script:
+
+[](../_media/examples/zencode_cookbook/eddsa/alice_key_upload.zen ':include :type=code gherkin')
+
+Here we simply print the *keyring*.
+
+## Public key
 
 Once you have created a private key, you can feed it to the following script to generate the **public key**:
 
@@ -27,7 +41,7 @@ The output should look like this:
 
 [](../_media/examples/zencode_cookbook/eddsa/alice_pubkey.json ':include :type=code json')
 
-## Signature
+# Signature
 
 In this example we'll sign three objects: a string, a string array and a string dictionary, that we'll verify in the next script. Along with the data to be signed, we'll need the private key. The private key is in the file we have generated with the first script, while the one with the messages that we will sign is the following:
 
@@ -41,7 +55,7 @@ And the output should look like this:
 
 [](../_media/examples/zencode_cookbook/eddsa/signed_from_alice.json ':include :type=code json')
 
-## Verification
+# Verification
 
 In this section we will **verify** the signatures produced in the previous step. to carry out this task we would need the signatures, the messages and the signer public key. The signatures and the messages are contanined in the output of the last script, while the signer public key can be found in the output of the second script. So the input files should look like:
 
