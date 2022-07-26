@@ -47,7 +47,7 @@ local function pubpoint_gen(sk)
    assert(#sk == 32, 'invalid secret key: length is not of 32B')
    local d = BIG.new(sk)
    assert(d ~= BIG.new(0), 'invalid secret key, is zero')
-   assert(d <= o, 'invalid secret key, overflow with curve order')
+   assert(d < o, 'invalid secret key, overflow with curve order')
    local P = d*G
    return P
 end
@@ -139,7 +139,6 @@ function schnorr.sign(sk, m)
 
    local s = BIG.mod(k + e*d, o):octet():pad(32)
    local sig = r..s
-   assert(schnorr.verify(P:x(),m,sig), "Invalid signature")          --comment this line if it is unnecessary
    return sig
 end
 

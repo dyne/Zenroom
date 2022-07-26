@@ -89,18 +89,21 @@ When("create the schnorr public key with secret key ''",function(sec)
 	new_codec('schnorr public key', { zentype = 'element'})
 end)
 
-When("create the schnorr key with secret key ''",function(sec)
-	local sk = have(sec)
-	initkeyring'schnorr'
-	SCH.pubgen(sk) -- use pubgen as check
-	ACK.keyring.schnorr = sk
-end)
-When("create the schnorr key with secret ''",function(sec)
-	local sk = have(sec)
-	initkeyring'schnorr'
-	SCH.pubgen(sk) -- use pubgen as check
-	ACK.keyring.schnorr = sk
-end)
+local function _schnorr_key_from_secret(sec)
+   local sk = have(sec)
+   local o = ECP.order()
+   local d = BIG.new(sk) % o
+   ZEN.assert(d ~= BIG.new(0), 'invalid secret key, is zero')
+   initkeyring'schnorr'
+   ACK.keyring.schnorr = d:octet():pad(32)
+end
+
+When("create the schnorr key with secret key ''",
+     _schnorr_key_from_secret
+)
+When("create the schnorr key with secret ''",
+     _schnorr_key_from_secret
+)
 
 -- generate the sign for a msg and verify
 When("create the schnorr signature of ''",function(doc)
