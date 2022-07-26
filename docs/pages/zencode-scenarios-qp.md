@@ -203,12 +203,12 @@ In the following we will compare the Quantum-Proof algorithms with the most comm
 
 As first parameter we will look at the private and public keys length (measured in bytes).
 
-| Sizes      | private key | public key  |
-|------------|-------------|-------------|
-| ECDSA/ECDH | 32          | 65          |
-| Dilithium  | 2528        | 1312        |
-| Kyber      | 1632        | 800         |
-| NTRUP      | 1763        | 1158        |
+| Sizes      | private key (<span class="unit">B</span>) | public key (<span class="unit">B</span>) |
+|------------|---------------------------------------------|--------------------------------------------|
+| ECDSA/ECDH | 32                                          | 65                                         |
+| Dilithium  | 2528                                        | 1312                                       |
+| Kyber      | 1632                                        | 800                                        |
+| NTRUP      | 1763                                        | 1158                                       |
 
 As we can see they Quantum-Proof keys are much longer. Will this affect the speed of the algorithms?
 
@@ -216,39 +216,39 @@ As we can see they Quantum-Proof keys are much longer. Will this affect the spee
 
 We can divide the signature in four main parts: the generation of the *private key*, the generation of the *public key*, the *signature* and the *verification*. As can be seen from the tables below the Dilithium *key generation* is **not affected at all from the key length**, indeed both the key generation time (computed in microsecond) and memory (computed in Kibibyte) are not very different between Dilithium and ECDSA.
 
-| Algorithm | Key         | Time (<span class="unit">&mu;s</span>)| Memory |
-|-----------|-------------|------------|--------|
-| ECDSA     | private key | 13678,5971 | 617    |
-|           | public key  | 15226,2096 | 615    |
-| Dilithium | private key | 13485,2965 | 650    |
-|           | public key  | 15343,0342 | 637    |
+| Algorithm | Key         | Time (<span class="unit">&mu;s</span>) | Memory (<span class="unit">KiB</span>) |
+|-----------|-------------|----------------------------------------|------------------------------------------|
+| ECDSA     | private key | 13678,5971                             | 617                                      |
+|           | public key  | 15226,2096                             | 615                                      |
+| Dilithium | private key | 13485,2965                             | 650                                      |
+|           | public key  | 15343,0342                             | 637                                      |
 
 Regarding the *signature* and *verification* algorithms the test was performed on different message lengths: 100, 500, 1000, 2.500, 5.000, 7.500 and 10.000 bytes. The **results are amazing**: the time and memory consumed by the two algorithms are really close to each other. Their are shown in the following tables where time is measured in μs (microsecond) and the memory in KiB (Kibibyte).
 
 - Signature:
-| length | ECDSA Time | Dilithium Time | ECDSA Memory | Dilithium Memory  |
-|--------|------------|----------------|--------------|-------------------|
-| 100    | 16081,6516 | 16836,6952     | 622          | 643               |
-| 500    | 16231,4911 | 17385,6549     | 625          | 646               |
-| 1000   | 16410,2233 | 16711,5771     | 629          | 650               |
-| 2500   | 16900,9023 | 17178,8706     | 641          | 662               |
-| 5000   | 17852,7499 | 18490,5152     | 660          | 681               |
-| 7500   | 18810,2357 | 19303,2178     | 680          | 701               |
-| 10000  | 19812,6163 | 20748,2910     | 699          | 721               |
+| length | ECDSA Time (<span class="unit">&mu;s</span>) | Dilithium Time (<span class="unit">&mu;s</span>) | ECDSA Memory (<span class="unit">KiB</span>) | Dilithium Memory (<span class="unit">KiB</span>) |
+|--------|----------------------------------------------|--------------------------------------------------|------------------------------------------------|----------------------------------------------------|
+| 100    | 16081,6516                                   | 16836,6952                                       | 622                                            | 643                                                |
+| 500    | 16231,4911                                   | 17385,6549                                       | 625                                            | 646                                                |
+| 1000   | 16410,2233                                   | 16711,5771                                       | 629                                            | 650                                                |
+| 2500   | 16900,9023                                   | 17178,8706                                       | 641                                            | 662                                                |
+| 5000   | 17852,7499                                   | 18490,5152                                       | 660                                            | 681                                                |
+| 7500   | 18810,2357                                   | 19303,2178                                       | 680                                            | 701                                                |
+| 10000  | 19812,6163                                   | 20748,2910                                       | 699                                            | 721                                                |
 
 In order to have a better view of the time consumed by the signature, you can have a look at the following graph:
 ![](../_media/images/qp_benchmark_signature.png)
 
 - Verification:
-| Length | ECDSA Time | Dilithium Time | ECDSA Memory | Dilithium Memory |
-|--------|------------|----------------|--------------|------------------|
-| 100    | 16092,9629 | 16073,7253     | 615          | 622              |
-| 500    | 16190,9976 | 16194,5630     | 618          | 625              |
-| 1000   | 16495,3762 | 16534,2457     | 622          | 629              |
-| 2500   | 17086,1121 | 16937,7886     | 633          | 641              |
-| 5000   | 18359,5242 | 18312,4593     | 653          | 661              |
-| 7500   | 19497,0142 | 19460,3409     | 673          | 680              |
-| 10000  | 20633,8036 | 20595,4703     | 692          | 700              |
+| Length | ECDSA Time (<span class="unit">&mu;s</span>) | Dilithium Time (<span class="unit">&mu;s</span>) | ECDSA Memory (<span class="unit">KiB</span>) | Dilithium Memory (<span class="unit">KiB</span>) |
+|--------|----------------------------------------------|--------------------------------------------------|------------------------------------------------|----------------------------------------------------|
+| 100    | 16092,9629                                   | 16073,7253                                       | 615                                            | 622                                                |
+| 500    | 16190,9976                                   | 16194,5630                                       | 618                                            | 625                                                |
+| 1000   | 16495,3762                                   | 16534,2457                                       | 622                                            | 629                                                |
+| 2500   | 17086,1121                                   | 16937,7886                                       | 633                                            | 641                                                |
+| 5000   | 18359,5242                                   | 18312,4593                                       | 653                                            | 661                                                |
+| 7500   | 19497,0142                                   | 19460,3409                                       | 673                                            | 680                                                |
+| 10000  | 20633,8036                                   | 20595,4703                                       | 692                                            | 700                                                |
 
 In order to have a better view of the time consumed by the verification, you can have a look at the following graph:
 ![](../_media/images/qp_benchmark_verification.png)
@@ -257,25 +257,25 @@ In order to have a better view of the time consumed by the verification, you can
 
 As for the signature we can divide the KEM in four main parts: the generation of the *private key*, the generation of the *public key*, the *encapsulation/encryption* and the *decapsulation/decryption*. Looking at the table below you can see that **kyber512 is even faster than ECDH in the computation of private and public keys**, while Stremlined NTRU Prime takes a lot more time to compute the private keys, but it is faster than Kyber512 in the generation of the public key. As before time is measured in μs (microsecond) and the memory in KiB (Kibibyte)
 
-| Algorithm | Key         | Time       | Memory |
-|-----------|-------------|------------|--------|
-| ECDH      | private key | 13657,8501 | 614    |
-|           | public key  | 15223,1383 | 615    |
-| Kyber     | private key | 13285,9647 | 640    |
-|           | public key  | 15031,2310 | 632    |
-| NTRUP     | private key | 39736,1747 | 642    |
-|           | public key  | 14713,5626 | 636    |
+| Algorithm | Key         | Time (<span class="unit">&mu;s</span>) | Memory (<span class="unit">KiB</span>) |
+|-----------|-------------|----------------------------------------|------------------------------------------|
+| ECDH      | private key | 13657,8501                             | 614                                      |
+|           | public key  | 15223,1383                             | 615                                      |
+| Kyber     | private key | 13285,9647                             | 640                                      |
+|           | public key  | 15031,2310                             | 632                                      |
+| NTRUP     | private key | 39736,1747                             | 642                                      |
+|           | public key  | 14713,5626                             | 636                                      |
 
 Looking at the encapsulation/decapsulation part, ECDH simply encrypts a message so, in order to have a fair comparison, we encrypted a 32 byte random string. This because the secret exchanged using Kyber512 or Streamlined NTRU Prime is composed of 32 bytes.
 
-| Algorithm | Enc/Dec       | Time       | Memory |
-|-----------|---------------|------------|--------|
-| ECDH      | encryption    | 16039,1876 | 625    |
-|           | decryption    | 14878,8790 | 615    |
-| Kyber     | encapsulation | 15083,5262 | 626    |
-|           | decapsulation | 14388,3123 | 621    |
-| NTRUP     | encapsulation | 15878,6283 | 629    |
-|           | decapsulation | 16262,9084 | 621    |
+| Algorithm | Enc/Dec       | Time (<span class="unit">&mu;s</span>) | Memory (<span class="unit">KiB</span>) |
+|-----------|---------------|----------------------------------------|------------------------------------------|
+| ECDH      | encryption    | 16039,1876                             | 625                                      |
+|           | decryption    | 14878,8790                             | 615                                      |
+| Kyber     | encapsulation | 15083,5262                             | 626                                      |
+|           | decapsulation | 14388,3123                             | 621                                      |
+| NTRUP     | encapsulation | 15878,6283                             | 629                                      |
+|           | decapsulation | 16262,9084                             | 621                                      |
 
 The results are amazing again and they show that, also in this case, **Kyber512 is faster than ECDH**, while Streamlined NTRU Prime is a little bit faster than ECDH in the encryption part, while it is slower in the decryption part.
 
