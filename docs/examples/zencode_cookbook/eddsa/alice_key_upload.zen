@@ -1,0 +1,11 @@
+Rule check version 2.0.0
+Scenario 'eddsa' : Create the eddsa private key
+Given I am 'Alice'
+and I have a 'base58' named 'secret key'
+
+# here we upload the key
+When I create the eddsa key with secret key 'secret key'
+# an equivalent statement is
+# When I create the eddsa key with secret 'secret key'
+
+Then print the 'keyring'

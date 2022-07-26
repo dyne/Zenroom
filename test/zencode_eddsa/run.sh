@@ -38,7 +38,7 @@ EOF
 
 cat <<EOF | zexe alice_key_upload.zen -k secret_key.json | jq .
 Rule check version 2.0.0
-Scenario 'eddsa' : Create and publish the eddsa public key
+Scenario 'eddsa' : Create the eddsa private key
 Given I am 'Alice'
 and I have a 'base58' named 'secret key'
 
@@ -53,7 +53,7 @@ EOF
 
 cat <<EOF | zexe alice_key_upload2.zen -k secret_key.json | jq .
 Rule check version 2.0.0
-Scenario 'eddsa' : Create and publish the eddsa public key
+Scenario 'eddsa' : Create the eddsa private key
 Given I am 'Alice'
 and I have a 'base58' named 'secret key'
 
