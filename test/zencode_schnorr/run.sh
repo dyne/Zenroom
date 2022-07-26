@@ -164,6 +164,34 @@ Then print string 'Succes!!!!'
 EndIf
 EOF
 
+
+#--- creating the schnorr key starting from a number grater than the order of BLS12-381 ---#
+# order = 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+cat <<EOF | save $SUBDOC Schnorr_key.json
+{
+	"schnorr": "73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000002",
+	"one": "0000000000000000000000000000000000000000000000000000000000000001"
+}
+EOF
+
+cat <<EOF | zexe Schnorr_key_upload.zen -k Schnorr_key.json | save $SUBDOC keyring.json
+Rule check version 2.0.0
+Scenario schnorr : Create and publish the schnorr public key
+Given I am 'Alice'
+and I have a 'hex' named 'schnorr'
+and I have a 'hex' named 'one'
+
+When I create the schnorr key with secret key 'schnorr'
+
+# Schnorr key is the uploaded key modulo the order of the curve
+# padded with zeros to reach the 32 bytes length
+When I remove 'schnorr'
+When I pickup from path 'keyring.schnorr'
+When I verify 'schnorr' is equal to 'one'
+
+Then print the 'keyring'
+EOF
+
 #cleaning the folder
 rm *.json *.zen *.keys
 
