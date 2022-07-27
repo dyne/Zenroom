@@ -108,16 +108,37 @@ When(
     end
 )
 
+local function _pbkdf2_f(src, pass, n)
+    if luatype(src) == 'table' then
+	src = ZEN.serialize(src)
+    end
+    ACK.key_derivation =
+	HASH.new('sha512'):pbkdf2(src,
+				  {salt = pass,
+				   iterations = n,
+				   length = 32})
+    new_codec('key derivation', { zentype = 'element' })
+end
+
 When(
     "create the key derivation of '' with password ''",
     function(obj, salt)
-        local src = have(obj)
-        if luatype(src) == 'table' then
-            src = ZEN.serialize(src)
-        end
-        local pass = have(salt)
-        ACK.key_derivation =
-            HASH.new('sha512'):pbkdf2(src, {salt = pass, iterations = 5000, length = 32})
-	new_codec('key derivation', { zentype = 'element' })
+	_pbkdf2_f(have(obj), have(salt), 5000)
+    end
+)
+
+When(
+    "create the key derivation of '' with '' rounds",
+    function(obj, iter)
+	local n = tonumber(iter) or tonumber(tostring(have(iter)))
+	_pbkdf2_f(have(obj), nil, n)
+    end
+)
+
+When(
+    "create the key derivation of '' with '' rounds with password ''",
+    function(obj, iter, salt)
+	local n = tonumber(iter) or tonumber(tostring(have(iter)))
+	_pbkdf2_f(have(obj), have(salt), n)
     end
 )
