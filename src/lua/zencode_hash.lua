@@ -108,6 +108,22 @@ When(
     end
 )
 
+When(
+    "create the key derivations of each object in ''",
+    function(tab)
+        local t = have(tab)
+        ZEN.assert(luatype(t) == 'table', 'Object is not a table: ' .. tab)
+        ACK.key_derivations =
+	    deepmap(
+		function(v)
+		    return HASH.new(CONF.hash):kdf(v)
+		end,
+		t)
+	 new_codec('key derivations', { luatype = 'table',
+					zentype = ZEN.CODEC[tab].zentype})
+    end
+)
+
 local function _pbkdf2_f(src, pass, n)
     if luatype(src) == 'table' then
 	src = ZEN.serialize(src)
