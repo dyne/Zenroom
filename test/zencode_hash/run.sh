@@ -81,6 +81,23 @@ and I create the key derivation of 'source' with password 'secret'
 Then print 'key derivation'
 EOF
 
+cat << EOF | zexe kdf_rounds.zen
+rule output encoding hex
+Given nothing
+When I create the random 'source'
+and I create the key derivation of 'source' with '1' rounds
+Then print 'key derivation'
+EOF
+
+cat << EOF | zexe pbkdf_rounds.zen
+rule output encoding hex
+Given nothing
+When I create the random 'source'
+and I write string 'my pbkdf password' in 'secret'
+and I create the key derivation of 'source' with '5000' rounds with password 'secret'
+Then print 'key derivation'
+EOF
+
 cat << EOF | zexe hmac_default.zen
 rule output encoding hex
 Given nothing
