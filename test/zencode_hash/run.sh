@@ -72,6 +72,22 @@ and I create the key derivation of 'source'
 Then print 'key derivation'
 EOF
 
+cat <<EOF | save . kdf_array.json
+{
+	"source": [ "hello",
+		    "world",
+		    "I'm Alice"
+	]
+}
+EOF
+
+cat << EOF | zexe kdf_array.zen -a kdf_array.json
+rule output encoding hex
+Given I have a 'string array' named 'source'
+When I create the key derivations of each object in 'source'
+Then print 'key derivations'
+EOF
+
 cat << EOF | zexe pbkdf_default.zen
 rule output encoding hex
 Given nothing
