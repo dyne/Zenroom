@@ -84,7 +84,7 @@ local function set_sentence(self, event, from, to, ctx)
 	local tt = gsub(ctx.msg, "'(.-)'", "''") -- msg trimmed on parse
 	tt = gsub(tt, ' I ', ' ', 1) -- eliminate first person pronoun
 	tt = tt:lower() -- lowercase all statement
-	if to == 'then' then
+	if to == 'then' or to == 'thenif' then
 		tt = gsub(tt, ' the ', ' ', 1)
 	end
 	if to == 'given' then
