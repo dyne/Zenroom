@@ -57,6 +57,8 @@ local zencode = {
 	schemas = {},
 	branch = false,
 	branch_valid = false,
+	foreach = false;
+	foreach_table = {},
 	id = 0,
 	AST = {},
 	traceback = {}, -- execution backtrace
@@ -228,85 +230,91 @@ end
 
 
 local function new_state_machine()
-	-- stateDiagram
-    -- [*] --> Given
-    -- Given --> When
-    -- When --> Then
-    -- state branch {
-    --     IF
-    --     when then
-    --     --
-    --     EndIF
-    -- }
-    -- When --> branch
-    -- branch --> When
-    -- Then --> [*]
-	local machine =
-		MACHINE.create(
-		{
-			initial = 'init',
-			events = {
-				{name = 'enter_rule', from = {'init', 'rule', 'scenario'}, to = 'rule'},
-				{name = 'enter_scenario', from = {'init', 'rule', 'scenario'}, to = 'scenario'},
-				{name = 'enter_given', from = {'init', 'rule', 'scenario'},	to = 'given'},
-				{name = 'enter_given', from = {'given'}, to = 'given'},
+   -- stateDiagram
+   -- [*] --> Given
+   -- Given --> When
+   -- When --> Then
+   -- state branch {
+   --     IF
+   --     when then
+   --     --
+   --     EndIF
+   -- }
+   -- When --> branch
+   -- branch --> When
+   -- Then --> [*]
+   local machine =
+      MACHINE.create(
+	 {
+	    initial = 'init',
+	    events = {
+	       {name = 'enter_rule', from = {'init', 'rule', 'scenario'}, to = 'rule'},
+	       {name = 'enter_scenario', from = {'init', 'rule', 'scenario'}, to = 'scenario'},
+	       {name = 'enter_given', from = {'init', 'rule', 'scenario'},	to = 'given'},
+	       {name = 'enter_given', from = {'given'}, to = 'given'},
 
-				{name = 'enter_when', from = {'given', 'when', 'then', 'endif'}, to = 'when'},
-				{name = 'enter_then', from = {'given', 'when', 'then', 'endif'}, to = 'then'},
+	       {name = 'enter_when', from = {'given', 'when', 'then', 'endif', 'done'}, to = 'when'},
+	       {name = 'enter_then', from = {'given', 'when', 'then', 'endif'}, to = 'then'},
 
-				{name = 'enter_if', from = {'if', 'given', 'when', 'then', 'endif'}, to = 'if'},
-				{name = 'enter_whenif', from = {'if', 'whenif', 'thenif'}, to = 'whenif'},
-				{name = 'enter_thenif', from = {'if', 'whenif', 'thenif'}, to = 'thenif'},
-				{name = 'enter_endif', from = {'whenif', 'thenif'}, to = 'endif'},
+	       -- if .. endif
+	       {name = 'enter_if', from = {'if', 'given', 'when', 'then', 'endif'}, to = 'if'},
+	       {name = 'enter_whenif', from = {'if', 'whenif', 'thenif'}, to = 'whenif'},
+	       {name = 'enter_thenif', from = {'if', 'whenif', 'thenif'}, to = 'thenif'},
+	       {name = 'enter_endif', from = {'whenif', 'thenif', 'done'}, to = 'endif'},
 
-				{name = 'enter_and', from = 'given', to = 'given'},
-				{name = 'enter_and', from = 'when', to = 'when'},
-				{name = 'enter_and', from = 'then', to = 'then'},
-				{name = 'enter_and', from = 'whenif', to = 'whenif'},
-				{name = 'enter_and', from = 'thenif', to = 'thenif'},
-				{name = 'enter_and', from = 'if', to = 'if'}
+	       -- foreach .. done
+	       {name = 'enter_foreach', from = {'if', 'whenif', 'endif', 'given', 'when', 'done'}, to = 'foreach'},
+	       {name = 'enter_done', from = {'when', 'whenif', 'endif'}, to = 'done'},
 
-			},
-			-- graph TD
-			--     Given --> When
-			--     IF --> When
-			--     Then --> When
-			--     Given --> IF
-			--     When --> IF
-			--     Then --> IF
-			--     IF --> Then
-			--     When --> Then
-			--     Given --> Then
-			callbacks = {
-				-- msg is a table: { msg = "string", Z = ZEN (self) }
-				onscenario = function(self, event, from, to, msg)
-					-- first word until the colon
-					local scenarios =
-						strtok(string.match(trim(msg.msg):lower(), '[^:]+'))
-					for k, scen in ipairs(scenarios) do
-						if k ~= 1 then -- skip first (prefix)
-							load_scenario('zencode_' .. trimq(scen))
-							ZEN:trace('Scenario ' .. scen)
-							return
-						end
-					end
-				end,
-				onrule = function(self, event, from, to, msg)
-					-- process rules immediately
-					if msg then	set_rule(msg) end
-				end,
-				ongiven = set_sentence,
-				onwhen = set_sentence,
-				onif = set_sentence,
-				onendif = set_sentence,
-				onthen = set_sentence,
-				onand = set_sentence,
-				onwhenif = set_sentence,
-				onthenif = set_sentence
-			}
-		}
-	)
-	return machine
+	       {name = 'enter_and', from = 'given', to = 'given'},
+	       {name = 'enter_and', from = 'when', to = 'when'},
+	       {name = 'enter_and', from = 'then', to = 'then'},
+	       {name = 'enter_and', from = 'whenif', to = 'whenif'},
+	       {name = 'enter_and', from = 'thenif', to = 'thenif'},
+	       {name = 'enter_and', from = 'if', to = 'if'}
+	    },
+	    -- graph TD
+	    --     Given --> When
+	    --     IF --> When
+	    --     Then --> When
+	    --     Given --> IF
+	    --     When --> IF
+	    --     Then --> IF
+	    --     IF --> Then
+	    --     When --> Then
+	    --     Given --> Then
+	    callbacks = {
+	       -- msg is a table: { msg = "string", Z = ZEN (self) }
+	       onscenario = function(self, event, from, to, msg)
+		  -- first word until the colon
+		  local scenarios =
+		     strtok(string.match(trim(msg.msg):lower(), '[^:]+'))
+		  for k, scen in ipairs(scenarios) do
+		     if k ~= 1 then -- skip first (prefix)
+			load_scenario('zencode_' .. trimq(scen))
+			ZEN:trace('Scenario ' .. scen)
+			return
+		     end
+		  end
+	       end,
+	       onrule = function(self, event, from, to, msg)
+		  -- process rules immediately
+		  if msg then	set_rule(msg) end
+	       end,
+	       ongiven = set_sentence,
+	       onwhen = set_sentence,
+	       onif = set_sentence,
+	       onendif = set_sentence,
+	       onthen = set_sentence,
+	       onand = set_sentence,
+	       onwhenif = set_sentence,
+	       onthenif = set_sentence,
+	       onforeach = set_sentence,
+	       ondone = set_sentence
+	    }
+	 }
+      )
+   return machine
 end
 
 -- Zencode HEAP globals
@@ -471,39 +479,55 @@ function zencode:begin()
 end
 
 function zencode:parse(text)
-	if #text < 9 then -- strlen("and debug") == 9
-   	  warn("Zencode text too short to parse")
-		 return false
-	end
-	local linenum=0
+   if #text < 9 then -- strlen("and debug") == 9
+      warn("Zencode text too short to parse")
+      return false
+   end
+   local linenum=0
    -- xxx(text,3)
-	local prefix
-	local branching = false
-	local parse_prefix = parse_prefix -- optimization
+   local prefix
+   local branching = false
+   local foreach = false
+   local parse_prefix = parse_prefix -- optimization
    for line in zencode_newline_iter(text) do
-	linenum = linenum + 1
-	local tline = trim(line) -- saves trims in isempty / iscomment
-	  if zencode_isempty(tline) then goto continue end
-	  if zencode_iscomment(tline) then goto continue end
-	--   xxx('Line: '.. text, 3)
-	  -- max length for single zencode line is #define MAX_LINE
-	  -- hard-coded inside zenroom.h
-	  prefix = parse_prefix(line) -- trim is included
-	  assert(prefix, "Invalid Zencode line "..linenum..": "..line)
-	  self.OK = true
-	  exitcode(0)
-	  if prefix == 'if' then branching = true end
-	  if branching and (prefix == 'when') then prefix = prefix..'if' end
-	  if branching and (prefix == 'then') then prefix = prefix..'if' end
-	  if prefix == 'endif' then branching = false end
-	  -- try to enter the machine state named in prefix
-	  -- xxx("Zencode machine enter_"..prefix..": "..text, 3)
-	  local fm = self.machine["enter_"..prefix]
-	  assert(fm, "Invalid Zencode line "..linenum..": '"..line.."'")
-	  assert(fm(self.machine, { msg = tline, Z = self }),
-				line.."\n    "..
-				"Invalid transition from: "..self.machine.current)
-	  ::continue::
+      linenum = linenum + 1
+      local tline = trim(line) -- saves trims in isempty / iscomment
+      if zencode_isempty(tline) then goto continue end
+      if zencode_iscomment(tline) then goto continue end
+      --   xxx('Line: '.. text, 3)
+      -- max length for single zencode line is #define MAX_LINE
+      -- hard-coded inside zenroom.h
+      prefix = parse_prefix(line) -- trim is included
+      assert(prefix, "Invalid Zencode line "..linenum..": "..line)
+      self.OK = true
+      exitcode(0)
+      -- TODO: use push/pop LIFO to avoid cross-nesting of branch and foreach
+      if prefix == 'foreach' then
+	 assert(not foreach, "Cannot start a loop inside a loop at line "..linenum..": "..line)
+	 foreach = true
+      end
+      if prefix == 'if' then
+	 assert(not branching, "Cannot start a branch inside a branch at line "..linenum..": "..line)
+	 branching = true
+      end
+      if branching and (prefix == 'when') then prefix = prefix..'if' end
+      if branching and (prefix == 'then') then prefix = prefix..'if' end
+      if prefix == 'endif' then
+	 assert(branching, "Cannot end a branch when none is started at line "..linenum..": "..line)
+	 branching = false
+      end
+      if prefix == 'done' then
+	 assert(foreach, "Cannot end a loop when none is started at line "..linenum..": "..line)
+	 foreach = false
+      end
+      -- try to enter the machine state named in prefix
+      -- xxx("Zencode machine enter_"..prefix..": "..text, 3)
+      local fm = self.machine["enter_"..prefix]
+      assert(fm, "Invalid Zencode line "..linenum..": '"..line.."'")
+      assert(fm(self.machine, { msg = tline, Z = self }),
+	     line.."\n    "..
+	     "Invalid transition from: "..self.machine.current)
+      ::continue::
    end
    collectgarbage'collect'
    return true
@@ -602,6 +626,14 @@ function zencode:run()
 	end
 
 	-- EXEC zencode
+	-- AST object x:
+	-- id = ctx.Z.id, -- ordered number
+	-- args = args, -- array of vars
+	-- source = ctx.msg, -- source text
+	-- section = self.current,
+	-- from = from,
+	-- to = to,
+	-- hook = func
 	for _, x in pairs(self.AST) do
 		-- ZEN:trace(x.source)
 		if manage_branching(x) then

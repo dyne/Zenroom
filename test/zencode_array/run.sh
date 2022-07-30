@@ -498,10 +498,10 @@ Given I have a 'string dictionary' named 'dict'
 Given I have a 'string array' named 'nested_arr'
 Given I have a 'string dictionary' named 'empty_dict'
 
-If the elements in 'arr' are all equal
-If the elements in 'dict' are all equal
-If the elements in 'nested arr' are all equal
-If the elements in 'empty dict' are all equal
+When the elements in 'arr' are all equal
+When the elements in 'dict' are all equal
+When the elements in 'nested arr' are all equal
+When the elements in 'empty dict' are all equal
 Then print string 'OK'
 EOF
 
@@ -526,9 +526,9 @@ Given I have a 'string array' named 'arr'
 Given I have a 'string dictionary' named 'dict'
 Given I have a 'string array' named 'nested_arr'
 
-If the elements in 'arr' are not all equal
-If the elements in 'dict' are not all equal
-If the elements in 'nested arr' are not all equal
+When the elements in 'arr' are not all equal
+When the elements in 'dict' are not all equal
+When the elements in 'nested arr' are not all equal
 Then print string 'OK'
 EOF
 
