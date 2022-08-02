@@ -567,6 +567,19 @@ local function manage_branching(x)
 	return false
 end
 
+
+-- assert all values in table are converted to zenroom types
+-- used in zencode when transitioning out of given memory
+local function zenguard(val, key) -- AKA watchdog
+   local tv = type(val)
+   if not (tv == 'boolean' or iszen(tv)) then
+      debug_heap_dump()
+      error("Zenguard detected an invalid value in HEAP: "
+	    ..key.." ("..type(val)..")", 2)
+      return nil
+   end
+end
+
 function zencode:run()
 	-- runtime checks
 	if not ZEN.checks.version then
