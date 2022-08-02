@@ -48,6 +48,7 @@ function debug_heap_dump()
    I.warn({a_GIVEN_in = HEAP.IN,
 	   b_GIVEN_in = HEAP.KIN,
 	   c_WHEN_ack = HEAP.ACK,
+	   c_CODEC_ack = ZEN.CODEC,
 	   d_THEN_out = HEAP.OUT})
 end
 

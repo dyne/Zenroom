@@ -121,6 +121,38 @@ function deepcopy(orig)
    return copy
 end
 
+
+-- compare two tables
+function deepcmp(left, right)
+   if not ( luatype(left) == "table" ) then
+      error("Internal error: deepcmp 1st argument is not a table")
+   end
+   if not ( luatype(right) == "table" ) then
+      error("Internal error: deepcmp 2nd argument is not a table")
+   end
+   if left == right then return true end
+   for key1, value1 in pairs(left) do
+      local value2 = right[key1]
+      if value2 == nil then return false
+      elseif value1 ~= value2 then
+	 if type(value1) == "table" and type(value2) == "table" then
+	    if not deepcmp(value1, value2) then
+	       return false
+	    end
+	 else
+	    return false
+	 end
+      end
+   end
+   -- check for missing keys in tbl1
+   for key2, _ in pairs(right) do
+      if left[key2] == nil then
+	 return false
+      end
+   end
+   return true
+end
+
 -- deep recursive map on a tree structure
 -- for usage see test/deepmap.lua
 -- operates only on strings, passes numbers through
