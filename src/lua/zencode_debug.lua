@@ -46,9 +46,9 @@ Then("trace", function() debug_traceback() end)
 function debug_heap_dump()
    local HEAP = ZEN.heap()
    I.warn({a_GIVEN_in = HEAP.IN,
-         b_GIVEN_in = HEAP.KIN,
-		   c_WHEN_ack = HEAP.ACK,
-		   d_THEN_out = HEAP.OUT})
+	   b_GIVEN_in = HEAP.KIN,
+	   c_WHEN_ack = HEAP.ACK,
+	   d_THEN_out = HEAP.OUT})
 end
 
 function debug_heap_schema()
