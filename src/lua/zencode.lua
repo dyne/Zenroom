@@ -580,6 +580,28 @@ local function zenguard(val, key) -- AKA watchdog
    end
 end
 
+
+-- compare ACK and ZEN.CODEC
+function codecguard()
+   local left = ZEN.heap().ACK
+   local right = ZEN.CODEC
+   for key1, value1 in pairs(left) do
+      if not right[key1] then
+	 error("Internal memory error: missing CODEC for "..key1)
+	 return false, key1
+      end
+      -- TODO: base checks if CODEC matches
+   end
+   -- check for missing keys in tbl1
+   for key2, _ in pairs(right) do
+      if not left[key2] then
+	 error("Internal memory error: unbound CODEC for "..key2)
+	 return false, key2
+      end
+   end
+   return true
+end
+
 function zencode:run()
 	-- runtime checks
 	if not ZEN.checks.version then
@@ -631,6 +653,12 @@ function zencode:run()
 		if CONF.heapguard then -- watchdog
 			-- guard ACK's contents on section switch
 			deepmap(zenguard, ACK)
+			-- check that everythink in HEAP.ACK has a CODEC
+			codecguard()
+			-- if not deepcmp(ACK, ZEN.CODEC) then
+			--    debug_heap_dump()
+			--    error("CODEC missing, unqualified HEAP memory found")
+			-- end
 		end
 
 		ZEN.OK = true
