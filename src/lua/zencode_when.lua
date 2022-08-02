@@ -140,18 +140,18 @@ When("create the json of ''", function(src)
 end)
 
 -- numericals
-When("set '' to '' base ''", function(dest, content, base)
-	empty(dest)
-	local bas = tonumber(base)
-	ZEN.assert(bas, "Invalid numerical conversion for base: "..base)
-	local num = tonumber(content,bas)
-	ZEN.assert(num, "Invalid numerical conversion for value: "..content)
-	ACK[dest] = num
-	ZEN.CODEC[dest] = new_codec(dest,
-				    {encoding = 'number',
-				     luatype = 'number',
-				     zentype = 'element' })
-end)
+-- When("set '' to '' base ''", function(dest, content, base)
+-- 	empty(dest)
+-- 	local bas = tonumber(base)
+-- 	ZEN.assert(bas, "Invalid numerical conversion for base: "..base)
+-- 	local num = tonumber(content,bas)
+-- 	ZEN.assert(num, "Invalid numerical conversion for value: "..content)
+-- 	ACK[dest] = num
+-- 	ZEN.CODEC[dest] = new_codec(dest,
+-- 				    {encoding = 'number',
+-- 				     luatype = 'number',
+-- 				     zentype = 'element' })
+-- end)
 
 local function _delete_f(name)
    have(name)

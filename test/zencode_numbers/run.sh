@@ -92,25 +92,25 @@ EOF
 
 
 
-cat <<EOF | zexe numbers_cmp_base16.zen
-rule check version 1.0.0
-Given nothing
-When I set 'left' to '0a' base '16'
-and I set 'right' to '14' base '16'
-and number 'left' is less or equal than 'right'
-Then print the string 'OK'
-Then print data
-EOF
+# cat <<EOF | zexe numbers_cmp_base16.zen
+# rule check version 1.0.0
+# Given nothing
+# When I set 'left' to '0a' base '16'
+# and I set 'right' to '14' base '16'
+# and number 'left' is less or equal than 'right'
+# Then print the string 'OK'
+# Then print data
+# EOF
 
-cat <<EOF | zexe numbers_cmp_base16_less.zen
-rule check version 1.0.0
-Given nothing
-When I set 'left' to '0a' base '16'
-and I set 'right' to '14' base '16'
-and number 'left' is less than 'right'
-Then print the string 'OK'
-Then print data
-EOF
+# cat <<EOF | zexe numbers_cmp_base16_less.zen
+# rule check version 1.0.0
+# Given nothing
+# When I set 'left' to '0a' base '16'
+# and I set 'right' to '14' base '16'
+# and number 'left' is less than 'right'
+# Then print the string 'OK'
+# Then print data
+# EOF
 
 cat <<EOF | save numbers boolean.json
 { "mycat": {

@@ -615,7 +615,7 @@ function zencode:run()
 			collectgarbage 'collect'
 		end
 		-- HEAP integrity guard
-		if CONF.heapguard then
+		if CONF.heapguard then -- watchdog
 			-- guard ACK's contents on section switch
 			deepmap(zenguard, ACK)
 		end

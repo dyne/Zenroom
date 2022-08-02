@@ -278,11 +278,9 @@ end
 
 -- assert all values in table are converted to zenroom types
 -- used in zencode when transitioning out of given memory
-function zenguard(val)
+function zenguard(val) -- AKA watchdog
    local tv = type(val)
-   if not (tv == 'number' or tv == 'boolean' or iszen(tv)) then
-	      I.print(ZEN.heap().ACK)
-	      -- xxx("Invalid value: "..val)
+   if not (tv == 'boolean' or iszen(tv)) then
 	      debug_heap_dump()
 	      error("Zenguard detected an invalid value in HEAP: type "..type(val), 2)
 	      return nil
