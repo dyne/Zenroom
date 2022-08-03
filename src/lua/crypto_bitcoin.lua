@@ -142,7 +142,7 @@ end
 
 -- read little endian number from transaction raw at position i 
 local function read_uint(raw, i, nbytes)
-   return tonumber(raw:sub(i,i+nbytes-1):reverse():hex(), 16), i+nbytes
+   return BIG.new(tonumber(raw:sub(i,i+nbytes-1):reverse():hex(), 16)), i+nbytes
 end
 -- The sender address is not in the raw transaction
 function btc.decode_raw_transaction(raw, sender_address, amounts_spent)
@@ -561,10 +561,10 @@ end
 function btc.build_tx_from_unspent(unspent, to, amount, fee, from)
    local tx, i, currentAmount
    tx = {
-      version=2,
+      version=BIG.new(2),
       txIn = {},
       txOut = {},
-      nLockTime=0,
+      nLockTime=BIG.new(0),
       nHashType=O.from_hex('00000001')
    }
 
