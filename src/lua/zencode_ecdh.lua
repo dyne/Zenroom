@@ -73,6 +73,7 @@ When(
 		empty'ecdh public key'
 		local sk = havekey'ecdh'
 		ACK.ecdh_public_key = ECDH.pubgen(sk)
+		new_codec('ecdh public key') -- { zentype = 'element' }
 	end
 )
 When("create the ecdh key with secret key ''",function(sec)
@@ -130,10 +131,10 @@ When(
 			text.iv,
 			text.header
 		)
-		ZEN.assert(
-			ACK.checksum == text.checksum,
-			'Decryption error: authentication failure, checksum mismatch'
-		)
+		ZEN.assert(ACK.checksum == text.checksum,
+			   'Decryption error: authentication failure, checksum mismatch')
+		new_codec'text'
+		new_codec'checksum'
 	end
 )
 
@@ -192,6 +193,8 @@ When(
 			checksum == message.checksum,
 			'Failed verification of integrity for secret message'
 		)
+		new_codec'text'
+		new_codec'checksum'
 	end
 )
 
@@ -201,7 +204,7 @@ local function _signing(msg, var)
    empty(var)
    local obj = have(msg)
    ACK[var] = ECDH.sign(sk, ZEN.serialize(obj))
-   ZEN.CODEC.signature = CONF.output.encoding.name
+   new_codec(var, { zentype = 'dictionary' })
 end
 
 local function _verifying(msg, sig, by)
