@@ -406,7 +406,7 @@ function have(obj) -- accepts arrays for depth checks
 			prev = res
 		end
 	else
-		res = ACK[uscore(obj)]
+		res = ACK[uscore(trim(obj))]
 		if not res then
 			error('Cannot find object: ' .. obj, 2)
 		end
