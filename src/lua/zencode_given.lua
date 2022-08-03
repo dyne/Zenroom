@@ -135,27 +135,20 @@ end
 
 local function ack_table(key, val)
    ZEN.assert(
-      type(key) == 'string',
+      luatype(key) == 'string',
       'ZEN:table_add arg #1 is not a string'
    )
    ZEN.assert(
-      type(val) == 'string',
+      luatype(val) == 'string',
       'ZEN:table_add arg #2 is not a string'
    )
    if not ACK[key] then
       ACK[key] = {}
    end
    ACK[key][val] = operate_conversion(TMP)
-   ZEN.CODEC[key] = {
-      name = TMP.name,
-      luatype = 'table',
-      zentype = 'schema',
-      encoding = TMP.encoding,
-      root = TMP.root
-   }
-   -- name of schema may differ from name of object
-   if TMP.schema and ( TMP.schema ~= TMP.encoding ) then
-      ZEN.CODEC[key].schema = TMP.schema
+   if key ~= TMP.name then
+      ZEN.CODEC[key] = ZEN.CODEC[TMP.name]
+      ZEN.CODEC[TMP.name] = nil
    end
 end
 
@@ -172,41 +165,15 @@ end
 local function ack(what)
    local name = _index_to_string(what)
    ZEN.assert(TMP, 'No valid object found: ' .. name)
-   -- CODEC[what] = CODEC[what] or {
-   --    name = guess.name,
-   --    istable = guess.istable,
-   --    isschema = guess.isschema }
-   ZEN.assert(
-      not ACK[name],
-      'Destination already exists, cannot overwrite: ' .. name,
-      2
-   )
-   assert(ZEN.OK)
+   empty(name)
    ACK[name] = operate_conversion(TMP)
-   -- also creates codec insice operate conversion
-
    -- name of schema may differ from name of object
-   if TMP.schema and (TMP.schema ~= 'number') and ( TMP.schema ~= TMP.encoding ) then
-      ZEN.CODEC[name].schema = TMP.schema
-   end
+   -- new_codec(name, { schema = TMP.schema })
 
-   -- ACK[name] already holds an object
-   -- not a table?
-   -- if not (dsttype == 'table') then -- convert single object to array
-   -- 	  ACK[name] = { ACK[name] }
-   -- 	  table.insert(ACK[name], operate_conversion(TMP))
-   -- 	  goto done
+   -- if TMP.schema and (TMP.schema ~= 'number') and ( TMP.schema ~= TMP.encoding ) then
+   --    ZEN.CODEC[name].schema = TMP.schema
    -- end
-   -- -- it is a table already
-   -- if isarray(ACK[name]) then -- plain array
-   -- 	  table.insert(ACK[name], operate_conversion(TMP))
-   -- 	  goto done
-   -- else -- associative map (dictionary)
-   -- 	  table.insert(ACK[name], operate_conversion(TMP)) -- TODO: associative map insertion
-   -- 	  goto done
-   -- end
-   -- ::done::
-   -- assert(ZEN.OK)
+
 end
 
 Given(
