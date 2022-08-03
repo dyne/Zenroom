@@ -564,7 +564,7 @@ When("compact ascii strings in ''",
     ACK[target] = src:octet():compact_ascii()
 end)
 
-local function trim(s)
+local function utrim(s)
   s = string.gsub(s, "^[%s_]+", "")
   s = string.gsub(s, "[%s_]+$", "")
   return s
@@ -652,7 +652,7 @@ When("create the result of ''", function(expr)
     j = expr:find(re, i)
     if j then
       if i < j then
-        local val = trim(expr:sub(i, j-1))
+        local val = utrim(expr:sub(i, j-1))
         if val ~= "" then table.insert(tokens, val) end
       end
       table.insert(tokens, expr:sub(j, j))
@@ -660,7 +660,7 @@ When("create the result of ''", function(expr)
     end
   until not j
   if i <= #expr then
-    local val = trim(expr:sub(i))
+    local val = utrim(expr:sub(i))
     if val ~= "" then table.insert(tokens, val) end
   end
 
