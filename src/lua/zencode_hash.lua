@@ -91,7 +91,7 @@ When(
         --     hash *h   = hash_arg(L,1);
         --     octet *k  = o_arg(L, 2);
         --     octet *in = o_arg(L, 3);
-        ACK.HMAC = HASH.new(CONF.hash):hmac(hkey, obj)
+        ACK.HMAC = HASH.new(CONF.hash):hmac(hkey, src)
 	new_codec('HMAC', { zentype = 'element' })
     end
 )
