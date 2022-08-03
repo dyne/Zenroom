@@ -31,7 +31,7 @@ function limit(anystr)
 end
 
 -- debug functions
-function debug_traceback()
+local function debug_traceback()
    for k,v in pairs(ZEN.traceback) do
 	  warn(v)
    end
@@ -43,7 +43,7 @@ Given("trace", function() debug_traceback() end)
 When("trace", function() debug_traceback() end)
 Then("trace", function() debug_traceback() end)
 
-function debug_heap_dump()
+local function debug_heap_dump()
    local HEAP = ZEN.heap()
    I.warn({a_GIVEN_in = HEAP.IN,
 	   b_GIVEN_in = HEAP.KIN,
@@ -52,9 +52,33 @@ function debug_heap_dump()
 	   d_THEN_out = HEAP.OUT})
 end
 
-function debug_heap_schema()
+local function debug_heap_schema()
    I.schema({SCHEMA = ZEN.heap()})
    -- print only keys without values
+end
+
+
+ZEN.assert = function(condition, errmsg)
+   if condition then
+      return true
+   else
+      ZEN.branch_valid = false
+   end
+   -- in conditional branching ZEN.assert doesn't quit
+   if ZEN.branch then
+      table.insert(ZEN.traceback, errmsg)
+   else
+      -- ZEN.debug() -- prints all data in memory
+      table.insert(ZEN.traceback, errmsg)
+      ZEN.OK = false
+      exitcode(1)
+      error(errmsg, 3)
+   end
+end
+
+ZEN.debug = function()
+	debug_heap_dump()
+	debug_traceback()
 end
 
 -- local function debug_obj_dump()

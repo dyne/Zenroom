@@ -133,7 +133,7 @@ local function set_sentence(self, event, from, to, ctx)
                 ctx.Z.OK = true
         end
 	if not ctx.Z.OK and CONF.parser.strict_match then
-		debug_traceback()
+	   ZEN.debug()
 		exitcode(1)
 		error('Zencode pattern not found ('..index..'): ' .. trim(ctx.msg), 1)
 		return false
@@ -573,7 +573,7 @@ end
 local function zenguard(val, key) -- AKA watchdog
    local tv = type(val)
    if not (tv == 'boolean' or iszen(tv)) then
-      debug_heap_dump()
+      ZEN.debug()
       error("Zenguard detected an invalid value in HEAP: "
 	    ..key.." ("..type(val)..")", 2)
       return nil
@@ -587,7 +587,7 @@ function codecguard()
    local right = ZEN.CODEC
    for key1, value1 in pairs(left) do
       if not right[key1] then
-	 debug_heap_dump()
+	 ZEN.debug()
 	 error("Internal memory error: missing CODEC for "..key1)
 	 return false, key1
       end
@@ -596,7 +596,7 @@ function codecguard()
    -- check for missing keys in tbl1
    for key2, _ in pairs(right) do
       if not left[key2] then
-	 debug_heap_dump()
+	 ZEN.debug()
 	 error("Internal memory error: unbound CODEC for "..key2)
 	 return false, key2
       end
@@ -651,16 +651,13 @@ function zencode:run()
 			IN = {}
 			collectgarbage 'collect'
 		end
+		table.insert(ZEN.traceback, x.source)
 		-- HEAP integrity guard
 		if CONF.heapguard then -- watchdog
 			-- guard ACK's contents on section switch
 			deepmap(zenguard, ACK)
 			-- check that everythink in HEAP.ACK has a CODEC
 			codecguard()
-			-- if not deepcmp(ACK, ZEN.CODEC) then
-			--    debug_heap_dump()
-			--    error("CODEC missing, unqualified HEAP memory found")
-			-- end
 		end
 
 		ZEN.OK = true
@@ -720,52 +717,6 @@ function zencode.heap()
 		ACK = ACK,
 		OUT = OUT
 	})
-end
-
-function zencode.debug()
-	debug_traceback()
-	debug_heap_dump()
-
-	-- I.warn(ZEN.traceback)
-	-- I.warn({ HEAP = { IN = IN,
-	-- 					TMP = TMP,
-	-- 					ACK = ACK,
-	-- 					OUT = OUT }})
-end
-
-function zencode.debug_json()
-	write(
-		JSON.encode(
-			{
-				TRACE = ZEN.traceback,
-				HEAP = {
-					IN = IN,
-					TMP = TMP,
-					ACK = ACK,
-					OUT = OUT
-				}
-			}
-		)
-	)
-end
-
-function zencode.assert(condition, errmsg)
-	if condition then
-	   return true
-	else
-	   ZEN.branch_valid = false
-	end
-	-- in conditional branching ZEN.assert doesn't quit
-	if ZEN.branch then
-		ZEN:trace(errmsg)
-		xxx(errmsg)
-	else
-		-- ZEN.debug() -- prints all data in memory
-		ZEN:trace('ERR ' .. errmsg)
-		ZEN.OK = false
-		exitcode(1)
-		error(errmsg, 3)
-	end
 end
 
 return zencode
