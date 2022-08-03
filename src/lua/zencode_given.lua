@@ -203,6 +203,7 @@ Given(
       pick(name, sc)
       assert(TMP.name, 'No name found in: ' .. name)
       Iam(O.to_string(operate_conversion(TMP)))
+      ZEN.CODEC[name] = nil -- just used to get name
    end
 )
 
@@ -212,6 +213,7 @@ Given(
       pickin(struct, name, sc)
       assert(TMP.name,  'No name found in: '..name)
       Iam(O.to_string(operate_conversion(TMP)))
+      ZEN.CODEC[name] = nil -- just name string
    end
 )
 
