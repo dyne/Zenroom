@@ -43,7 +43,7 @@ local function _bitcoin_unspent_import(obj)
       end
       local amount  = ZEN.get(v,n_amount, btc.value_btc_to_satoshi, tostring)
       local txid    = ZEN.get(v,n_txid, OCTET.from_hex, tostring)
-      local vout    = v[n_vout] -- number
+      local vout    = INT.new(v[n_vout])
       table.insert(res, { address = address,
 			  amount  = amount,
 			  txid    = txid,
@@ -124,6 +124,7 @@ ZEN.add_schema(
 			  export = _address_export },
       testnet_address = { import = _address_import,
 			  export = _address_export },
+      -- TODO: { schema = 'transaction' })
 })
 
 -- generate a keypair in "bitcoin" format (only x coord, 03 prepended)
@@ -196,6 +197,7 @@ local function _create_tx(name, recipient)
 	local tx = btc.build_tx_from_unspent(unspent, to, q, fee, ACK.sender)
 	ZEN.assert(tx, "Not enough "..name.." in the unspent list")
 	ACK[name..'_transaction'] = tx
+	new_codec(name..'_transaction') -- TODO: { schema = 'transaction' })
 end
 When('create the bitcoin transaction', function() _create_tx('bitcoin') end)
 When('create the testnet transaction', function() _create_tx('testnet') end)
@@ -213,8 +215,10 @@ When("sign the testnet transaction", function() _sign_tx('testnet') end)
 
 local function _toraw_tx(name)
 	local tx = have(name..' transaction')
-	empty(name..' raw transaction')
-	ACK[name..'_raw_transaction'] = btc.build_raw_transaction(tx)
+	local dst = name..'_raw_transaction'
+	empty(dst)
+	ACK[dst] = btc.build_raw_transaction(tx)
+	new_codec(dst, { encoding = 'hex' })
 end
 
 When("create the bitcoin raw transaction", function() _toraw_tx('bitcoin') end)
