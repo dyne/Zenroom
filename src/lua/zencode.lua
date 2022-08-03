@@ -587,6 +587,7 @@ function codecguard()
    local right = ZEN.CODEC
    for key1, value1 in pairs(left) do
       if not right[key1] then
+	 debug_heap_dump()
 	 error("Internal memory error: missing CODEC for "..key1)
 	 return false, key1
       end
@@ -595,6 +596,7 @@ function codecguard()
    -- check for missing keys in tbl1
    for key2, _ in pairs(right) do
       if not left[key2] then
+	 debug_heap_dump()
 	 error("Internal memory error: unbound CODEC for "..key2)
 	 return false, key2
       end
