@@ -56,6 +56,12 @@
     end
     local res = nil
     local t = type(k)
+    -- BIG/INT default export is decimal
+    if conversion == INT.new and not encoding then
+       -- compare function address and use default
+       res = INT.from_decimal(k)
+       goto ok
+    end
     if iszen(t) and conversion then
        res = conversion(k)
        goto ok
