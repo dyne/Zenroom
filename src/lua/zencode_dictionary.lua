@@ -290,8 +290,10 @@ When("move '' in ''", function(src, dict)
 	ZEN.assert(ZEN.CODEC[dict].zentype == 'dictionary'
 		   or ZEN.CODEC[dict].zentype == 'schema',
 		   "Object is not a schema or dictionary: "..dict)
+	ZEN.assert(not d[src], "Dictionary already contains: "..src)
 	d[src] = s
 	ACK[src] = nil
+	ZEN.CODEC[src] = nil
 end)
 
 local function _filter_from(v, k, f)

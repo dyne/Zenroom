@@ -52,29 +52,21 @@ and print the 'keyring'
 EOF
 
 cat << EOF | save bitcoin wif.json
-{ "wif": "cPW7XRee1yx6sujBWeyZiyg18vhhQk9JaxxPdvwGwYX175YCF48G" }
+{ "keyring": { "testnet": "cPW7XRee1yx6sujBWeyZiyg18vhhQk9JaxxPdvwGwYX175YCF48G" } }
 EOF
 cat <<EOF | zexe import_key.zen -a txinput.json -k wif.json \
     | save bitcoin import_key.json
 
-Given I have the 'testnet key' named 'wif'
+Given I have a 'keyring'
 and I have a 'satoshi amount'
 and I have a 'satoshi fee'
 and I have a 'testnet address'
 and I have a 'testnet unspent'
-When I create the testnet key
-and I rename 'wif' to 'testnet'
-and I move 'testnet' in 'keyring'
-and I create the testnet transaction to 'testnet address'
+
+When I create the testnet transaction to 'testnet address'
 and I sign the testnet transaction
 and I create the testnet raw transaction
 
 Then print the 'testnet raw transaction' as 'hex'
 and print the 'keyring'
-EOF
-
-cat <<EOF | zexe check_import.zen -a wif.json -k keys.json
-Given I have the 'testnet key' named 'wif'
-and I have the 'keyring'
-Then print all data
 EOF
