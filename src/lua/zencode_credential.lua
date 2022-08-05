@@ -26,28 +26,6 @@ local CRED = require_once('crypto_credential')
 -- local G1 = ECP.generator()
 local G2 = ECP2.generator()
 
--- exported function (non local) for use in zencode_petition
-function import_credential_proof_f(obj)
-	return {
-		nu = ZEN.get(obj, 'nu', ECP.new),
-		kappa = ZEN.get(obj, 'kappa', ECP2.new),
-		pi_v = {
-			c = ZEN.get(obj.pi_v, 'c', INT.new, O.from_base64),
-			rm = ZEN.get(obj.pi_v, 'rm', INT.new, O.from_base64),
-			rr = ZEN.get(obj.pi_v, 'rr', INT.new, O.from_base64)
-		},
-		sigma_prime = {
-			h_prime = ZEN.get(obj.sigma_prime, 'h_prime', ECP.new),
-			s_prime = ZEN.get(obj.sigma_prime, 's_prime', ECP.new)
-		}
-	}
-end
-local function _export_credential_proof_f(obj)
-    if type(obj) == 'zenroom.big' then
-        return obj:octet():base64()
-    end
-    return obj
-end
 function key_import_issuer_verifier_f(obj)
 	return {
 		alpha = ZEN.get(obj, 'alpha', ECP2.new),
@@ -80,118 +58,122 @@ When(
 	end
 )
 
-When(
-	'create the issuer public key',
-	function()
-		havekey'issuer'
-		ACK.issuer_public_key = {
-			alpha = G2 * ACK.keyring.issuer.x,
-			beta = G2 * ACK.keyring.issuer.y
-		}
-	end
-)
-local function _import_credential_request(obj)
-    local req = {
-        sign = {
-            a = ZEN.get(obj.sign, 'a', ECP.new),
-            b = ZEN.get(obj.sign, 'b', ECP.new)
-        },
-        pi_s = {
-            rr = ZEN.get(obj.pi_s, 'rr', INT.new, O.from_base64),
-            rm = ZEN.get(obj.pi_s, 'rm', INT.new, O.from_base64),
-            rk = ZEN.get(obj.pi_s, 'rk', INT.new, O.from_base64),
-            commit = ZEN.get(obj.pi_s, 'commit', INT.new, O.from_base64)
-        },
-        commit = ZEN.get(obj, 'commit', ECP.new),
-        public = ZEN.get(obj, 'public', ECP.new)
-    }
-    ZEN.assert(
-    CRED.verify_pi_s(req),
-    'Error in credential request: proof is invalid (verify_pi_s)'
-    )
-    return req
-end
+When('create the issuer public key',function()
+	havekey'issuer'
+	ACK.issuer_public_key = {
+	   alpha = G2 * ACK.keyring.issuer.x,
+	   beta = G2 * ACK.keyring.issuer.y
+	}
+	new_codec'issuer public key'
+end)
 
-local function _export_credential_request(obj)
-    if type(obj) == 'zenroom.big' then
-        return obj:octet():base64()
-    end
-    return obj
+local function import_credential_request_f(obj)
+   local req = {
+      sign = {
+	 a = ZEN.get(obj.sign, 'a', ECP.new),
+	 b = ZEN.get(obj.sign, 'b', ECP.new)
+      },
+      pi_s = {
+	 rr = ZEN.get(obj.pi_s, 'rr', INT.new),
+	 rm = ZEN.get(obj.pi_s, 'rm', INT.new),
+	 rk = ZEN.get(obj.pi_s, 'rk', INT.new),
+	 commit = ZEN.get(obj.pi_s, 'commit', INT.new)
+      },
+      commit = ZEN.get(obj, 'commit', ECP.new),
+      public = ZEN.get(obj, 'public', ECP.new)
+   }
+   ZEN.assert(
+      CRED.verify_pi_s(req),
+      'Error in credential request: proof is invalid (verify_pi_s)'
+   )
+   return req
 end
 
 -- request credential signatures
 ZEN.add_schema(
-	{
-        issuer_public_key = key_import_issuer_verifier_f,
-		-- lambda
-		credential_request = {
-            import = _import_credential_request,
-            export = _export_credential_request,
-        }
-    }
+   {
+      issuer_public_key = key_import_issuer_verifier_f,
+      credential_request = import_credential_request_f,
+   }
 )
 
-When(
-	'create the credential request',
-	function()
-		havekey'credential'
-		ACK.credential_request = CRED.prepare_blind_sign(ACK.keyring.credential)
-	end
-)
+When('create the credential request', function()
+	havekey'credential'
+	ACK.credential_request = CRED.prepare_blind_sign(ACK.keyring.credential)
+	new_codec'credential request'
+end)
 
 -- issuer's signature of credentials
 ZEN.add_schema(
-	{
-		-- sigmatilde
-		credential_signature = function(obj)
-			return {
-				h = ZEN.get(obj, 'h', ECP.new),
-				b_tilde = ZEN.get(obj, 'b_tilde', ECP.new),
-				a_tilde = ZEN.get(obj, 'a_tilde', ECP.new)
-			}
-		end,
-		-- aggsigma: aggregated signatures of ca issuers
-		credentials = function(obj)
-			return {
-				h = ZEN.get(obj, 'h', ECP.new),
-				s = ZEN.get(obj, 's', ECP.new)
-			}
-		end
-	}
+   {
+      -- sigmatilde
+      credential_signature = function(obj)
+	 return {
+	    h = ZEN.get(obj, 'h', ECP.new),
+	    b_tilde = ZEN.get(obj, 'b_tilde', ECP.new),
+	    a_tilde = ZEN.get(obj, 'a_tilde', ECP.new)
+	 }
+      end,
+      -- aggsigma: aggregated signatures of ca issuers
+      credentials = function(obj)
+	 return {
+	    h = ZEN.get(obj, 'h', ECP.new),
+	    s = ZEN.get(obj, 's', ECP.new)
+	 }
+      end
+   }
 )
 When(
-	'create the credential signature',
-	function()
-		have 'credential request'
-		havekey'issuer'
-		ACK.credential_signature =
-			CRED.blind_sign(ACK.keyring.issuer, ACK.credential_request)
-		ACK.verifier = {
-			alpha = G2 * ACK.keyring.issuer.x,
-			beta = G2 * ACK.keyring.issuer.y
-		}
-	end
+   'create the credential signature',
+   function()
+      have 'credential request'
+      havekey'issuer'
+      ACK.credential_signature =
+	 CRED.blind_sign(ACK.keyring.issuer, ACK.credential_request)
+      ACK.verifier = {
+	 alpha = G2 * ACK.keyring.issuer.x,
+	 beta = G2 * ACK.keyring.issuer.y
+      }
+      new_codec'credential signature'
+      new_codec'verifier'
+   end
 )
 When(
-	'create the credentials',
-	function()
-		have 'credential signature'
-		havekey'credential'
-		-- prepare output with an aggregated sigma credential
-		-- requester signs the sigma with private key
-		ACK.credentials =
-			CRED.aggregate_creds(ACK.keyring.credential, {ACK.credential_signature})
-	end
+   'create the credentials',
+   function()
+      have 'credential signature'
+      havekey'credential'
+      -- prepare output with an aggregated sigma credential
+      -- requester signs the sigma with private key
+      ACK.credentials =
+	 CRED.aggregate_creds(ACK.keyring.credential, {ACK.credential_signature})
+      new_codec'credentials'
+   end
 )
 
+
+-- exported function (non local) for use in zencode_petition
+function import_credential_proof_f(obj)
+   return {
+      nu = ZEN.get(obj, 'nu', ECP.new),
+      kappa = ZEN.get(obj, 'kappa', ECP2.new),
+      pi_v = {
+	 c = ZEN.get(obj.pi_v, 'c', INT.new),
+	 rm = ZEN.get(obj.pi_v, 'rm', INT.new),
+	 rr = ZEN.get(obj.pi_v, 'rr', INT.new)
+      },
+      sigma_prime = {
+	 h_prime = ZEN.get(obj.sigma_prime, 'h_prime', ECP.new),
+	 s_prime = ZEN.get(obj.sigma_prime, 's_prime', ECP.new)
+      }
+   }
+end
+
 ZEN.add_schema(
-	{
-		-- theta: blind proof of certification
-		credential_proof = {
-            import = _import_credential_proof_f,
-            export = _export_credential_proof_f,
-        }
-    }
+   {
+      -- theta: blind proof of certification
+      credential_proof = import_credential_proof_f,
+   }
 )
 
 When(
@@ -205,6 +187,7 @@ When(
 			ACK.verifiers[k] = v
 		end
 		-- TODO: aggregate all array
+		new_codec'verifiers'
 	end
 )
 
@@ -217,6 +200,7 @@ When(
 		havekey'credential'
 		ACK.credential_proof =
 			CRED.prove_cred(ACK.verifiers, ACK.credentials, ACK.keyring.credential)
+		new_codec'credential proof'
 	end
 )
 IfWhen(
