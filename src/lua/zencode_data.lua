@@ -451,7 +451,8 @@
  --   schema: schema name used to import (may differ from name)
  -- }
  -- return: name of codec encoding
- function check_codec(name)
+ function check_codec(in_name)
+    local name = uscore(in_name)
     if not ZEN.CODEC then
        return CONF.output.encoding.name
     end
