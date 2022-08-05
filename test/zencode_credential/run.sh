@@ -6,61 +6,24 @@ RNGSEED="hex:0000000000000000000000000000000000000000000000000000000000000000000
 
 ####################
 # common script init
-if ! test -r ../utils.sh; then
-	echo "run executable from its own directory: $0"; exit 1; fi
 . ../utils.sh
-
-is_cortexm=false
-if [[ "$1" == "cortexm" ]]; then
-	is_cortexm=true
-fi
-
 Z="`detect_zenroom_path` `detect_zenroom_conf`"
-####################
-# use zexe if you have zenroom in a system-wide path
-#
-# zexe() {
-#	out="$1"
-#	shift 1
-#	>&2 echo "test: $out"
-#	jq . | tee "$out" | zenroom -z $*
-# }
-####################
-
-set -e
 
 ####################
 
 # credential request
 
 n=0
-out='../../docs/examples/zencode_cookbook'
+SUBDOC=zencode_cookbook
 
-let n=n+1
-echo "                                                "
-echo "------------------------------------------------"
-echo " Script $n: Participant creates a keypair	  "
-echo " 												  "
-echo "------------------------------------------------"
-echo "                                                "
-
-cat << EOF | zexe ${out}/credentialParticipantKeygen.zen | jq . | tee ${out}/credentialParticipantKeypair.json
+cat << EOF | zexe credentialParticipantKeygen.zen | save $SUBDOC credentialParticipantKeypair.json
 Scenario credential: credential keygen
     Given that I am known as 'Alice'
     When I create the credential key
     Then print my 'keyring'
 EOF
 
-let n=n+1
-echo "                                                "
-echo "------------------------------------------------"
-echo " Script $n: Participant creates a credential request "
-echo " 												  "
-echo "------------------------------------------------"
-echo "                                                "
-
-
-cat << EOF | zexe ${out}/credentialParticipantSignatureRequest.zen -k ${out}/credentialParticipantKeypair.json | jq . | tee ${out}/credentialParticipantSignatureRequest.json
+cat << EOF | zexe credentialParticipantSignatureRequest.zen -k credentialParticipantKeypair.json | save $SUBDOC credentialParticipantSignatureRequest.json
 Scenario credential: create request
     Given that I am known as 'Alice'
     and I have my valid 'keyring'
@@ -68,34 +31,17 @@ Scenario credential: create request
     Then print my 'credential request'
 EOF
 
-let n=n+1
-echo "                                                "
-echo "------------------------------------------------"
-echo " Script $n: create the keypair of the issuer    "
-echo " 												  "
-echo "------------------------------------------------"
-echo " "
-
 # credential issuance
 
 
-cat << EOF | zexe ${out}/credentialIssuerKeygen.zen | jq . | tee ${out}/credentialIssuerKeypair.json
+cat << EOF | zexe credentialIssuerKeygen.zen | save $SUBDOC credentialIssuerKeypair.json
 Scenario credential: issuer keygen
     Given that I am known as 'MadHatter'
     When I create the issuer key
     Then print my 'keyring'
 EOF
 
-let n=n+1
-echo "                                                "
-echo "------------------------------------------------"
-echo " Script $n: create the public_key of the issuer    "
-echo " 												  "
-echo "------------------------------------------------"
-echo " "
-
-
-cat << EOF | zexe ${out}/credentialIssuerPublishpublic_key.zen -k ${out}/credentialIssuerKeypair.json | jq . | tee ${out}/credentialIssuerpublic_key.json
+cat << EOF | zexe credentialIssuerPublishpublic_key.zen -k credentialIssuerKeypair.json | save $SUBDOC credentialIssuerpublic_key.json
 Scenario credential: publish public_key
     Given that I am known as 'MadHatter'
     and I have my 'keyring'
@@ -103,20 +49,7 @@ Scenario credential: publish public_key
     Then print my 'issuer public key'
 EOF
 
-
-let n=n+1
-echo "                                                "
-echo "------------------------------------------------"
-echo " Script $n: the issuer signs the credential "
-echo " 												  "
-echo "------------------------------------------------"
-echo " "
-
-# credential signature
-
-
-
-cat << EOF | zexe ${out}/credentialIssuerSignRequest.zen -a ${out}/credentialParticipantSignatureRequest.json -k ${out}/credentialIssuerKeypair.json | jq . | tee ${out}/credentialIssuerSignedCredential.json
+cat << EOF | zexe credentialIssuerSignRequest.zen -a credentialParticipantSignatureRequest.json -k credentialIssuerKeypair.json | save $SUBDOC credentialIssuerSignedCredential.json
 Scenario credential: issuer sign
     Given that I am known as 'MadHatter'
     and I have my valid 'keyring'
@@ -127,15 +60,7 @@ Scenario credential: issuer sign
     and print the 'issuer public key'
 EOF
 
-let n=n+1
-echo "                                                "
-echo "------------------------------------------------"
-echo " Script $n: the participant aggregates credential "
-echo " with its public key.					  "
-echo "------------------------------------------------"
-echo " "
-
-cat << EOF | zexe ${out}/credentialParticipantAggregateCredential.zen -a ${out}/credentialIssuerSignedCredential.json -k ${out}/credentialParticipantKeypair.json | jq . | tee ${out}/credentialParticipantAggregatedCredential.json
+cat << EOF | zexe credentialParticipantAggregateCredential.zen -a credentialIssuerSignedCredential.json -k credentialParticipantKeypair.json | save $SUBDOC credentialParticipantAggregatedCredential.json
 Scenario credential: aggregate signature
     Given that I am known as 'Alice'
     and I have my 'keyring'
@@ -145,17 +70,9 @@ Scenario credential: aggregate signature
     and print my 'keyring'
 EOF
 
-let n=n+1
-echo "                                                "
-echo "------------------------------------------------"
-echo " Script $n: the participant creates the proof "
-echo " 												  "
-echo "------------------------------------------------"
-echo " "
-
 # zero-knowledge credential proof emission and verification
 
-cat << EOF | debug ${out}/credentialParticipantCreateProof.zen -k ${out}/credentialParticipantAggregatedCredential.json -a ${out}/credentialIssuerpublic_key.json | jq . | tee ${out}/credentialParticipantProof.json
+cat << EOF | zexe credentialParticipantCreateProof.zen -k credentialParticipantAggregatedCredential.json -a credentialIssuerpublic_key.json | save $SUBDOC credentialParticipantProof.json
 Scenario credential: create proof
     Given that I am known as 'Alice'
     and I have my 'keyring'
@@ -166,15 +83,7 @@ Scenario credential: create proof
     Then print the 'credential proof'
 EOF
 
-let n=n+1
-echo "                                                "
-echo "------------------------------------------------"
-echo " Script $n: anybody matches the proof with the public_key"
-echo " 												  "
-echo "------------------------------------------------"
-echo " "
-
-cat << EOF | zexe ${out}/credentialAnyoneVerifyProof.zen -k ${out}/credentialParticipantProof.json -a ${out}/credentialIssuerpublic_key.json | jq .
+cat << EOF | zexe credentialAnyoneVerifyProof.zen -k credentialParticipantProof.json -a credentialIssuerpublic_key.json | jq .
 Scenario credential: verify proof
     Given that I have a 'issuer public key' inside 'MadHatter'
     and I have a 'credential proof'
@@ -183,7 +92,3 @@ Scenario credential: verify proof
     then print the string 'the proof matches the public_key! So you can add zencode after the verify statement, that will execute only if the match occurs.'
 EOF
 
-echo "   "
-echo "---"
-echo "   "
-echo "The whole script was executed, success!"
