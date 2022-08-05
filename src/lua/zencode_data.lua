@@ -1,7 +1,7 @@
  --[[
  --This file is part of zenroom
  --
- --Copyright (C) 2018-2021 Dyne.org foundation
+ --Copyright (C) 2018-2022 Dyne.org foundation
  --designed, written and maintained by Denis Roio <jaromil@dyne.org>
  --
  --This program is free software: you can redistribute it and/or modify
@@ -42,14 +42,14 @@
        error('ZEN.get invalid encoding function', 2) end
     local k
     if not obj then -- take from IN root
-	   -- does not support to pick in WHO (use of 'my')
-	   k = KIN[key] or IN[key]
+       -- does not support to pick in WHO (use of 'my')
+       k = KIN[key] or IN[key]
     else
-	   if key == '.' then
-		  k = obj
-	   else
-		  k = obj[key]
-	   end
+       if key == '.' then
+	  k = obj
+       else
+	  k = obj[key]
+       end
     end
     if not k then
        error('Key not found in object conversion: ' .. key, 2)
@@ -91,25 +91,25 @@
     return res
  end
 
--- return leftmost and rightmost if definition string indicates
--- a lua table: dictionary, array or schema
-local function expect_table(definition)
-   local toks = strtok(definition, '[^_]+')
-   local res = { rightmost = toks[#toks] }
-   if res.rightmost == 'array'
-      or
-      res.rightmost == 'dictionary'
-   then
-      res.leftwords = '' -- concat all left words in toks minus the last
+ -- return leftmost and rightmost if definition string indicates
+ -- a lua table: dictionary, array or schema
+ local function expect_table(definition)
+    local toks = strtok(definition, '[^_]+')
+    local res = { rightmost = toks[#toks] }
+    if res.rightmost == 'array'
+       or
+       res.rightmost == 'dictionary'
+    then
+       res.leftwords = '' -- concat all left words in toks minus the last
        for i = 1, #toks - 2 do
 	  res.leftwords = res.leftwords .. toks[i] .. '_'
        end
        res.leftwords = uscore( res.leftwords .. toks[#toks - 1] )
        -- no trailing underscore
-      return res
-   end
-   -- schemas may or may be not tables
-end
+       return res
+    end
+    -- schemas may or may be not tables
+ end
 
  --- Given block (IN read-only memory)
  -- @section Given
@@ -153,11 +153,11 @@ end
        local c = fif(luatype(t)=='table', 'complex', CONF.output.encoding.name)
        -- default is always the configured output encoding
        return ({
-	  fun = t,
-	  zentype = 'schema',
-	  luatype = objtype,
-	  raw = obj,
-	  encoding = c
+	     fun = t,
+	     zentype = 'schema',
+	     luatype = objtype,
+	     raw = obj,
+	     encoding = c
        })
     end
 
@@ -174,12 +174,12 @@ end
        t = ZEN.schemas[ def.leftwords ]
        if t then
 	  return ({
-	     fun = t,
-	     zentype = 'schema',
-	     schema = def.leftwords,
-	     luatype = objtype,
-	     raw = obj,
-	     encoding = def.rightmost
+		fun = t,
+		zentype = 'schema',
+		schema = def.leftwords,
+		luatype = objtype,
+		raw = obj,
+		encoding = def.rightmost
 	  })
        end
        -- normal type in input encoding: string, base64 etc.
@@ -197,20 +197,20 @@ end
     if objtype == 'number' then
        if expect_table(definition) then
 	  error("Cannot take object: expected '"..definition.."' but found '"..objtype.."' (not a table)",3)
-       -- elseif definition ~= 'number' then
-       -- 	  error("Cannot take object: expected '"..definition.."' but found '"..objtype.."'",3)
+	  -- elseif definition ~= 'number' then
+	  --	  error("Cannot take object: expected '"..definition.."' but found '"..objtype.."'",3)
        end
        res = input_encoding(definition)
        res.luatype = 'number'
        res.zentype = 'element'
        -- if obj > 2147483647 then
-       -- 	  error('Overflow of number object over 32bit signed size', 3)
-       -- 	  -- TODO: maybe support unsigned native here
+       --	  error('Overflow of number object over 32bit signed size', 3)
+       --	  -- TODO: maybe support unsigned native here
        -- end
        res.raw = obj
-	  -- any type of additional conversion from a native number
-	  -- detected at input can happen here, for instance using a new
-	  -- native unsigned integer
+       -- any type of additional conversion from a native number
+       -- detected at input can happen here, for instance using a new
+       -- native unsigned integer
        return (res)
     end
 
@@ -225,13 +225,13 @@ end
     -- objtype is not a luatype
     objtype = type(obj)
     if iszen(objtype) then
-      res = CONF.input.encoding
-      res.luatype = 'userdata'
-      res.zentype = 'element'
-      res.rawtype = objtype
-      res.schema = nil
-      res.raw = obj
-      return(res)
+       res = CONF.input.encoding
+       res.luatype = 'userdata'
+       res.zentype = 'element'
+       res.rawtype = objtype
+       res.schema = nil
+       res.raw = obj
+       return(res)
     end
 
     error('Invalid object: no conversion for type '..objtype..': '..definition, 3)
@@ -242,8 +242,8 @@ end
  -- conversion and returns the resulting raw data to be used inside the
  -- WHEN block in HEAP.
  function operate_conversion(guessed)
-   -- check if already a zenroom type
-   -- (i.e. zenroom.big from json decode)
+    -- check if already a zenroom type
+    -- (i.e. zenroom.big from json decode)
     if not guessed.fun then
        I.warn(guessed)
        error('No conversion operation guessed', 2)
@@ -258,12 +258,12 @@ end
        root = guessed.root
     }
     -- I.warn({ codec = ZEN.CODEC[guessed.name],
-    -- 	     guessed = guessed })
+    --	     guessed = guessed })
     -- TODO: make xxx print to stderr!
     -- xxx('Operating conversion on: '..guessed.name)
     if guessed.zentype == 'schema' then
        -- error('Invalid schema conversion for encoding: '..guessed.encoding, 2)
-	   local res = {}
+       local res = {}
        if guessed.encoding == 'array' then
 	  for _,v in pairs(guessed.raw) do
 	     table.insert(res, guessed.fun(v))
@@ -298,96 +298,96 @@ end
        ---
 
        if guessed.check then
-           if not guessed.check(guessed.raw) then
-               error("Could not read " .. guessed.name)
-           end
+	  if not guessed.check(guessed.raw) then
+	     error("Could not read " .. guessed.name)
+	  end
        end
        return guessed.fun(guessed.raw)
     end
  end
 
--- factory function to generate a function and return its pointer the
--- function is generated using another pointer to function which is
--- the encoder, plus it applies common safety checks for data types
--- that must be excluded for encoding, as for instance numbers and
--- booleans.
--- arguments: encoder's name, conversion and check functions
-local function f_factory_encoder(encoder_n, encoder_f, encoder_c)
-   local res = { }
-   if not encoder_f then
-      res.fun = function(data) return(data) end
-   else
-      res.fun = function(data)
-	 local dt = luatype(data)
-	 -- wrap all conversion functions nested in deepmaps
-	 -- TODO: optimize
-	 if dt == 'number' then
-	    return FLOAT.new(data)
-	 elseif dt == 'boolean' then
-	    return data
-	 end
-	 return encoder_f(data)
-      end
-   end
-   res.encoding = encoder_n
-   res.check = encoder_c
-   return(res)
-end
+ -- factory function to generate a function and return its pointer the
+ -- function is generated using another pointer to function which is
+ -- the encoder, plus it applies common safety checks for data types
+ -- that must be excluded for encoding, as for instance numbers and
+ -- booleans.
+ -- arguments: encoder's name, conversion and check functions
+ local function f_factory_encoder(encoder_n, encoder_f, encoder_c)
+    local res = { }
+    if not encoder_f then
+       res.fun = function(data) return(data) end
+    else
+       res.fun = function(data)
+	  local dt = luatype(data)
+	  -- wrap all conversion functions nested in deepmaps
+	  -- TODO: optimize
+	  if dt == 'number' then
+	     return FLOAT.new(data)
+	  elseif dt == 'boolean' then
+	     return data
+	  end
+	  return encoder_f(data)
+       end
+    end
+    res.encoding = encoder_n
+    res.check = encoder_c
+    return(res)
+ end
 
--- gets a string and returns the associated function, string and prefix
--- comes before schema check
-function input_encoding(what)
-   if not luatype(what) == 'string' then
-      error("Call to input_encoding argument is not a string: "..type(what),2)
-   end
-   if what == 'u64' or what == 'url64' then
-      return f_factory_encoder('url64', O.from_url64, O.is_url64)
-   elseif what == 'b64' or what =='base64' then
-      return f_factory_encoder('base64', O.from_base64, O.is_base64)
-   elseif what == 'b58' or what =='base58' then
-      return f_factory_encoder('base58', O.from_base58, O.is_base58)
-   elseif what == 'hex' then
-      return f_factory_encoder('hex', O.from_hex, O.is_hex)
-   elseif what == 'bin' or what == 'binary' then
-      return f_factory_encoder('binary', O.from_bin, O.is_bin)
-   elseif what == 'str' or what == 'string' then
-      -- string has no check function
-      return f_factory_encoder('string', O.from_string, nil)
-   elseif what =='mnemonic' then
-      -- mnemonic has no check function (TODO:)
-      return f_factory_encoder('mnemonic', O.from_mnemonic, nil)
-   elseif what == 'int' or what == 'integer' then -- aka BIG
-      return f_factory_encoder('integer', BIG.from_decimal, BIG.is_integer)
-   elseif what == 'float' or what == 'num' or what == 'number' then
-      return f_factory_encoder('float', FLOAT.new, FLOAT.is_float)
-   end
-   error("Input encoding not found: " .. what, 2)
-   return nil
-end
+ -- gets a string and returns the associated function, string and prefix
+ -- comes before schema check
+ function input_encoding(what)
+    if not luatype(what) == 'string' then
+       error("Call to input_encoding argument is not a string: "..type(what),2)
+    end
+    if what == 'u64' or what == 'url64' then
+       return f_factory_encoder('url64', O.from_url64, O.is_url64)
+    elseif what == 'b64' or what =='base64' then
+       return f_factory_encoder('base64', O.from_base64, O.is_base64)
+    elseif what == 'b58' or what =='base58' then
+       return f_factory_encoder('base58', O.from_base58, O.is_base58)
+    elseif what == 'hex' then
+       return f_factory_encoder('hex', O.from_hex, O.is_hex)
+    elseif what == 'bin' or what == 'binary' then
+       return f_factory_encoder('binary', O.from_bin, O.is_bin)
+    elseif what == 'str' or what == 'string' then
+       -- string has no check function
+       return f_factory_encoder('string', O.from_string, nil)
+    elseif what =='mnemonic' then
+       -- mnemonic has no check function (TODO:)
+       return f_factory_encoder('mnemonic', O.from_mnemonic, nil)
+    elseif what == 'int' or what == 'integer' then -- aka BIG
+       return f_factory_encoder('integer', BIG.from_decimal, BIG.is_integer)
+    elseif what == 'float' or what == 'num' or what == 'number' then
+       return f_factory_encoder('float', FLOAT.new, FLOAT.is_float)
+    end
+    error("Input encoding not found: " .. what, 2)
+    return nil
+ end
 
--- factory function returns a small outcast function that applies
--- return guessed.fun(guessed.raw)safety checks on values like
--- exceptions for numbers and booleans
+ -- factory function returns a small outcast function that applies
+ -- return guessed.fun(guessed.raw)safety checks on values like
+ -- exceptions for numbers and booleans
 
-local function f_factory_outcast(fun)
-   return function(data)
-      local dt = type(data)
-      if dt == 'table' then error("invalid table conversion",2) end
-      -- passthrough native number data
-      if dt == 'number' or dt == 'boolean' then
-	 return data
-      elseif dt == 'zenroom.big' then
-	 -- always export BIG INT as decimal
-	 return BIG.to_decimal(data)
-      elseif dt == 'zenroom.float' then
-         return tonumber(tostring(data))
-      elseif iszen(dt) then
-	 -- leverage first class citizen method on zenroom data
-	 return fun(data:octet())
-      end
-      return fun(data)
-   end
-end
+ local function f_factory_outcast(fun)
+    return function(data)
+       local dt = type(data)
+       if dt == 'table' then error("invalid table conversion",2) end
+       -- passthrough native number data
+       if dt == 'number' or dt == 'boolean' then
+	  return data
+       elseif dt == 'zenroom.big' then
+	  -- always export BIG INT as decimal
+	  return BIG.to_decimal(data)
+       elseif dt == 'zenroom.float' then
+	  return tonumber(tostring(data))
+       elseif iszen(dt) then
+	  -- leverage first class citizen method on zenroom data
+	  return fun(data:octet())
+       end
+       return fun(data)
+    end
+ end
 
  -- takes a string returns the function, good for use in deepmap(fun,table)
  function guess_outcast(cast)
@@ -422,26 +422,26 @@ end
     if luatype(fun) == 'table' then
        -- complex schema encoding
        assert(luatype(fun.export) == 'function',
-		 "Guess outcast cannot find schema export")
+	      "Guess outcast cannot find schema export")
        return fun.export
     elseif fun then
-        return CONF.output.encoding.fun
+       return CONF.output.encoding.fun
     end
     error('Invalid output conversion: ' .. cast, 2)
     return nil
  end
 
-function get_format(what)
-   if what == 'json' or what == 'JSON' then
-      return { fun = JSON.auto,
-	       name = 'json' }
-   elseif what == 'cbor' or what == 'CBOR' then
-      return { fun = CBOR.auto,
-	       name = 'cbor' }
-   end
-   error("Conversion format not supported: "..what, 2)
-   return nil
-end
+ function get_format(what)
+    if what == 'json' or what == 'JSON' then
+       return { fun = JSON.auto,
+		name = 'json' }
+    elseif what == 'cbor' or what == 'CBOR' then
+       return { fun = CBOR.auto,
+		name = 'cbor' }
+    end
+    error("Conversion format not supported: "..what, 2)
+    return nil
+ end
 
  -- CODEC format:
  -- { name: string,
@@ -459,9 +459,9 @@ end
        xxx('Object has no CODEC registration: ' .. name)
        local s = ZEN.schemas[name]
        if s then
-           return name
+	  return name
        else
-           return CONF.output.encoding.name
+	  return CONF.output.encoding.name
        end
     end
     local codec = ZEN.CODEC[name]
@@ -482,44 +482,44 @@ end
  end
 
  function new_codec(cname, parameters, clone)
-   if not cname then error("Missing name in new codec", 2) end
-   local name = fif(luatype(cname) == 'string', uscore(cname), cname) -- may be a numerical index
-   if not ACK[name] then error("Cannot create codec, object not found: "..name, 2) end
-   if ZEN.CODEC[name] then error("Cannot overwrite ZEN.CODEC."..name, 2) end
-   local res
-   if clone and not ZEN.CODEC[clone] then error("Clone not found in ZEN.CODEC."..clone, 2) end
-   if ZEN.CODEC[clone] then
-      res = deepcopy(ZEN.CODEC[clone])
-      res.name = name
-   else
-      res = { name = name }
-   end
-   -- overwrite with paramenters in argument
-   if parameters then
-      for k,v in pairs(parameters) do
-         res[k] = v
-      end
-   end
-   -- detect zentype and luatype
-   if not res.luatype then
-      res.luatype = luatype(ACK[name])
-   end
-   if not res.zentype then
-      if res.luatype == 'table' then
-         if isdictionary(ACK[name]) then
-            res.zentype = 'dictionary'
-         elseif isarray(ACK[name]) then
-            res.zentype = 'array'
-         else
-            error("Unknown zentype for lua table: "..name, 2)
-         end
-      else
-         res.zentype = 'element'
-      end
-   end
-   ZEN.CODEC[name] = res
-   return(res) -- redundant, should not use return value for efficiency
-end
+    if not cname then error("Missing name in new codec", 2) end
+    local name = fif(luatype(cname) == 'string', uscore(cname), cname) -- may be a numerical index
+    if not ACK[name] then error("Cannot create codec, object not found: "..name, 2) end
+    if ZEN.CODEC[name] then error("Cannot overwrite ZEN.CODEC."..name, 2) end
+    local res
+    if clone and not ZEN.CODEC[clone] then error("Clone not found in ZEN.CODEC."..clone, 2) end
+    if ZEN.CODEC[clone] then
+       res = deepcopy(ZEN.CODEC[clone])
+       res.name = name
+    else
+       res = { name = name }
+    end
+    -- overwrite with paramenters in argument
+    if parameters then
+       for k,v in pairs(parameters) do
+	  res[k] = v
+       end
+    end
+    -- detect zentype and luatype
+    if not res.luatype then
+       res.luatype = luatype(ACK[name])
+    end
+    if not res.zentype then
+       if res.luatype == 'table' then
+	  if isdictionary(ACK[name]) then
+	     res.zentype = 'dictionary'
+	  elseif isarray(ACK[name]) then
+	     res.zentype = 'array'
+	  else
+	     error("Unknown zentype for lua table: "..name, 2)
+	  end
+       else
+	  res.zentype = 'element'
+       end
+    end
+    ZEN.CODEC[name] = res
+    return(res) -- redundant, should not use return value for efficiency
+ end
 
  -- Crawls a whole table structure and collects all strings and octets
  -- contained in its keys and values. Converts numbers to
@@ -532,19 +532,19 @@ end
  -- uses sorted listing for deterministic order
  local function sort_apply(fun,t,...)
     if luatype(fun) ~= 'function' then
-	   error("Internal error: apply 1st argument is not a function", 3)
-	   return nil end
+       error("Internal error: apply 1st argument is not a function", 3)
+       return nil end
     -- if luatype(t) == 'number' then
-    -- 	  return t end
+    --	  return t end
     if luatype(t) ~= 'table' then
-	   error("Internal error: apply 2nd argument is not a table", 3)
-	   return nil end
+       error("Internal error: apply 2nd argument is not a table", 3)
+       return nil end
     for k,v in sort_pairs(t) do -- OPTIMIZATION: was sort_pairs
-	   if luatype(v) == 'table' then
-		  sort_apply(fun,v,...) -- recursion
-	   else
-		  fun(v,k,...)
-	   end
+       if luatype(v) == 'table' then
+	  sort_apply(fun,v,...) -- recursion
+       else
+	  fun(v,k,...)
+       end
     end
  end
  function serialize(tab)
@@ -553,15 +553,15 @@ end
     local strings = { 'K' }
     sort_apply(
        function(v, k)
-	      table.insert(strings, tostring(k))
-	      if iszen(type(v)) then
-            -- TODO: optimize octet concatenation in C
-            -- to avoid reallocation of new octets in this loop
-            -- should count total length allocate one and insert
-	         octets = octets.. v:octet()
-         else -- number
-	         table.insert(strings, tostring(v))
-         end
+	  table.insert(strings, tostring(k))
+	  if iszen(type(v)) then
+	     -- TODO: optimize octet concatenation in C
+	     -- to avoid reallocation of new octets in this loop
+	     -- should count total length allocate one and insert
+	     octets = octets.. v:octet()
+	  else -- number
+	     table.insert(strings, tostring(v))
+	  end
        end,
        tab
     )
@@ -577,50 +577,26 @@ end
  function prune(tab)
     assert(luatype(tab) == 'table', 'Cannot prune: not a table', 2)
     local pruned_values = deepmap(function(v)
-       if #v == 0 then return nil
-       else return v end
+	  if #v == 0 then return nil
+	  else return v end
     end, tab)
     local function prune_in(ttab)
-	  local res = { }
-	  local next = next
-	  local luatype = luatype
-	  for k,v in pairs(ttab) do
-	     if luatype(v) == 'table' then
-		if next(v) == nil then
-		   res[k] = nil -- {} to nil
-		else
-		   res[k] = prune_in(v) -- recursion
-		end
+       local res = { }
+       local next = next
+       local luatype = luatype
+       for k,v in pairs(ttab) do
+	  if luatype(v) == 'table' then
+	     if next(v) == nil then
+		res[k] = nil -- {} to nil
 	     else
-		res[k] = v
+		res[k] = prune_in(v) -- recursion
 	     end
+	  else
+	     res[k] = v
 	  end
-	  return setmetatable(res, getmetatable(ttab))
+       end
+       return setmetatable(res, getmetatable(ttab))
     end
     pruned_tables = prune_in(pruned_values)
     return pruned_tables
  end
-    ---
- -- Compare equality of two data objects (TODO: octet, ECP, etc.)
- -- @function ZEN:eq(first, second)
-
- ---
- -- Check that the first object is greater than the second (TODO)
- -- @function ZEN:gt(first, second)
-
- ---
- -- Check that the first object is lesser than the second (TODO)
- -- @function ZEN:lt(first, second)
-
- --- Then block (OUT write-only memory)
- -- @section Then
-
- ---
- -- Move a generic data structure from ACK to OUT memory space, ready
- -- for its final JSON encoding and print out.
- -- @function ZEN:out(name)
-
- ---
- -- Move 'my own' data structure from ACK to OUT.whoami memory space,
- -- ready for its final JSON encoding and print out.
- -- @function ZEN:outmy(name)
