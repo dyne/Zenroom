@@ -50,7 +50,7 @@ function uscore(input)
    elseif it == 'number' then
       return input
    else
-      error("Underscore transform not a string or number: "..it, 2)
+      error("Underscore transform not a string or number: "..it, 3)
    end
 end
 function space(input)
@@ -60,7 +60,7 @@ function space(input)
    elseif it == 'number' then
       return input
    else
-      error("Whitespace transform not a string or number: "..it, 2)
+      error("Whitespace transform not a string or number: "..it, 3)
    end
 end
 
