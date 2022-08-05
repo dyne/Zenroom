@@ -1,7 +1,7 @@
 --[[
 --This file is part of zenroom
 --
---Copyright (C) 2020-2021 Dyne.org foundation
+--Copyright (C) 2020-2022 Dyne.org foundation
 --designed, written and maintained by Denis Roio <jaromil@dyne.org>
 --
 --This program is free software: you can redistribute it and/or modify
@@ -59,35 +59,35 @@ local function import_reflow_seal_f(obj)
 end
 
 ZEN.add_schema(
-    {
-        reflow_public_key = function(obj)
-		   return ZEN.get(obj, '.', ECP2.new)
-        end,
+   {
+      reflow_public_key = function(obj)
+	 return ZEN.get(obj, '.', ECP2.new)
+      end,
 
-        reflow_seal = import_reflow_seal_f,
+      reflow_seal = import_reflow_seal_f,
 
-        reflow_signature = {
-            import = function(obj)
-                return {
-                    identity = ZEN.get(obj, 'identity', ECP.new),
-                    signature = ZEN.get(obj, 'signature', ECP.new),
-                    proof = import_credential_proof_f(obj.proof),
-                    zeta = ZEN.get(obj, 'zeta', ECP.new)
-                }
-            end,
-            export = _export_big_as_octet_f,
-        },
-		reflow_identity = function(obj)
-		   return ZEN.get(obj, '.', ECP.new)
-		end,
-		material_passport = function(obj)
-		   return {
-			  seal = import_reflow_seal_f(obj.seal),
-			  proof = import_credential_proof_f(obj.proof),
-			  zeta = ZEN.get(obj, 'zeta', ECP.new)
-		   }
-		end
-    }
+      reflow_signature = {
+	 import = function(obj)
+	    return {
+	       identity = ZEN.get(obj, 'identity', ECP.new),
+	       signature = ZEN.get(obj, 'signature', ECP.new),
+	       proof = import_credential_proof_f(obj.proof),
+	       zeta = ZEN.get(obj, 'zeta', ECP.new)
+	    }
+	 end,
+	 export = _export_big_as_octet_f,
+      },
+      reflow_identity = function(obj)
+	 return ZEN.get(obj, '.', ECP.new)
+      end,
+      material_passport = function(obj)
+	 return {
+	    seal = import_reflow_seal_f(obj.seal),
+	    proof = import_credential_proof_f(obj.proof),
+	    zeta = ZEN.get(obj, 'zeta', ECP.new)
+	 }
+      end
+   }
 )
 
 local function _makeuid(src)
@@ -129,68 +129,67 @@ When(
         empty 'reflow public key'
         havekey 'reflow'
         ACK.reflow_public_key = G2 * ACK.keyring.reflow
+	new_codec'reflow public key'
     end
 )
 
 When(
-    "aggregate the reflow public key from array ''",
-    function(arr)
-        empty 'reflow public key'
-        local s = have(arr)
-		ZEN.assert(#s ~= 0, "Empty array: "..arr)
-		local val
-        for k, v in pairs(s) do
-		    if k == 'reflow_public_key' then val = v
-			   -- tolerate about named arrays
-			elseif v.reflow_public_key then val = v.reflow_public_key
-			else ZEN.assert(false, "Reflow public key not found in array: "
-                    ..arr.."["..#s.."] at key "..k)
-			end
-            if not ACK.reflow_public_key then
-                ACK.reflow_public_key = val
-            else
-                ACK.reflow_public_key = ACK.reflow_public_key + val
-            end
-        end
-    end
-)
-
-When(
-    "create the reflow identity of ''",
-    function(doc)
-        empty 'reflow identity'
-		ACK.reflow_identity = _makeuid(have(doc))
-    end
-)
-
-When(
-   "create the reflow identity of objects in ''",
-   function(doc)
-      empty 'reflow identity'
-      local arr = have(doc)
-      ZEN.assert(luatype(arr)=='table', "Object is not an array or dictionary: "..doc)
-      local first = { }
-      for k,v in pairs(arr) do
-	 -- if reflow_id already present then check if ECP and use that
-	 if v.reflow_identity then
-            local rid = ECP.new(v.reflow_identity)
-            ZEN.assert(not rid:isinfinity(),
-		       "Object "..doc.."["..k.."] has an invalid reflow identity")
-            table.insert(first, rid)
+   "aggregate the reflow public key from array ''",
+   function(arr)
+      empty 'reflow public key'
+      local s = have(arr)
+      ZEN.assert(#s ~= 0, "Empty array: "..arr)
+      local val
+      for k, v in pairs(s) do
+	 if k == 'reflow_public_key' then val = v
+	    -- tolerate about named arrays
+	 elseif v.reflow_public_key then val = v.reflow_public_key
+	 else ZEN.assert(false, "Reflow public key not found in array: "
+			 ..arr.."["..#s.."] at key "..k)
+	 end
+	 if not ACK.reflow_public_key then
+	    ACK.reflow_public_key = val
 	 else
-            table.insert(first, _makeuid(v))
+	    ACK.reflow_public_key = ACK.reflow_public_key + val
 	 end
       end
-      local res
-      for _,v in pairs(first) do
-	 if not res then
-	    res = v
-	 else
-	    res = res + v
-	 end
-      end
-      ACK.reflow_identity = res
+      new_codec'reflow public key'
    end
+)
+
+When("create the reflow identity of ''", function(doc)
+	empty 'reflow identity'
+	ACK.reflow_identity = _makeuid(have(doc))
+	new_codec'reflow identity'
+end)
+
+When("create the reflow identity of objects in ''", function(doc)
+	empty 'reflow identity'
+	local arr = have(doc)
+	ZEN.assert(luatype(arr)=='table', "Object is not an array or dictionary: "..doc)
+	local first = { }
+	for k,v in pairs(arr) do
+	   -- if reflow_id already present then check if ECP and use that
+	   if v.reflow_identity then
+	      local rid = ECP.new(v.reflow_identity)
+	      ZEN.assert(not rid:isinfinity(),
+			 "Object "..doc.."["..k.."] has an invalid reflow identity")
+	      table.insert(first, rid)
+	   else
+	      table.insert(first, _makeuid(v))
+	   end
+	end
+	local res
+	for _,v in pairs(first) do
+	   if not res then
+	      res = v
+	   else
+	      res = res + v
+	   end
+	end
+	ACK.reflow_identity = res
+	new_codec'reflow identity'
+end
 )
 
 local function _create_reflow_seal_f(uid)
@@ -207,6 +206,7 @@ local function _create_reflow_seal_f(uid)
         SM = UID * r,
         verifier = ACK.reflow_public_key + G2 * r
     }
+    new_codec'reflow seal'
 end
 
 When(
@@ -215,41 +215,39 @@ When(
 When("create the reflow seal",
     function() _create_reflow_seal_f('reflow identity') end)
 
-When(
-    'create the reflow signature',
-    function()
-        empty 'reflow signature'
-        have 'reflow seal'
-        have 'issuer public key'
-		havekey 'reflow'
-		havekey 'credential'
-		-- aggregate all credentials
-        local pubcred = false
-        for _, v in pairs(ACK.issuer_public_key) do
-            if not pubcred then
-                pubcred = v
-            else
-                pubcred = {
-                    ['alpha'] = pubcred.alpha + v.alpha,
-                    ['beta'] = pubcred.beta + v.beta
-                }
-            end
-        end
-        local p, z =
-            ABC.prove_cred_uid(
-            pubcred,
-            ACK.credentials,
-            ACK.keyring.credential,
-            ACK.reflow_seal.identity
-        )
-        ACK.reflow_signature = {
-            identity = ACK.reflow_seal.identity,
-            signature = ACK.reflow_seal.identity * ACK.keyring.reflow,
-            proof = p,
-            zeta = z
-        }
-    end
-)
+When('create the reflow signature', function()
+	empty 'reflow signature'
+	have 'reflow seal'
+	have 'issuer public key'
+	havekey 'reflow'
+	havekey 'credential'
+	-- aggregate all credentials
+	local pubcred = false
+	for _, v in pairs(ACK.issuer_public_key) do
+	   if not pubcred then
+	      pubcred = v
+	   else
+	      pubcred = {
+		 ['alpha'] = pubcred.alpha + v.alpha,
+		 ['beta'] = pubcred.beta + v.beta
+	      }
+	   end
+	end
+	local p, z =
+	   ABC.prove_cred_uid(
+	      pubcred,
+	      ACK.credentials,
+	      ACK.keyring.credential,
+	      ACK.reflow_seal.identity
+	   )
+	ACK.reflow_signature = {
+	   identity = ACK.reflow_seal.identity,
+	   signature = ACK.reflow_seal.identity * ACK.keyring.reflow,
+	   proof = p,
+	   zeta = z
+	}
+	new_codec'reflow signature'
+end)
 
 When(
     'prepare credentials for verification',
@@ -366,6 +364,7 @@ When(
             end
         end
         ACK.reflow_seal = dst
+	new_codec'reflow seal'
     end
 )
 
@@ -421,6 +420,7 @@ When(
 		 proof = p,
 		 zeta = z
 	  }
+	  new_codec'material passport'
 end)
 
 IfWhen(
