@@ -43,14 +43,14 @@ cat <<EOF | zexe W3C-VC_keygen.zen | save $SUBDOC W3C-VC_keypair.json
 Scenario 'ecdh': Create the keypair
 Given that I am known as 'Alice'
 When I create the ecdh key
-Then print my data
+Then print my keyring
 EOF
 
 cat <<EOF | zexe W3C-VC_issuerKeygen.zen  | save $SUBDOC W3C-VC_issuerKeypair.json
 Scenario 'ecdh': Create the keypair
 Given that I am known as 'Authority'
 When I create the ecdh key
-Then print my data
+Then print my keyring
 EOF
 
 
