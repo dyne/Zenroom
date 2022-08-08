@@ -1,7 +1,7 @@
 --[[
 --This file is part of zenroom
 --
---Copyright (C) 2021 Dyne.org foundation
+--Copyright (C) 2021-2022 Dyne.org foundation
 --designed, written and maintained by Denis Roio <jaromil@dyne.org>
 --
 --This program is free software: you can redistribute it and/or modify
@@ -16,8 +16,6 @@
 --GNU Affero General Public License v3.0
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
---Last modified by Denis Roio
---on Friday, 12th November 2021
 --]]
 
 
@@ -37,8 +35,8 @@ function initkeyring(ktype)
       ACK.keyring = {} -- TODO: save curve types
       new_codec('keyring', {
 		   zentype = 'schema',
-		   luatype = 'table',
-		   encoding = 'complex' })
+		   encoding = 'keyring',
+		   luatype = 'table'    })
    else
       error('Keyring table is corrupted', 2)
    end
@@ -97,7 +95,12 @@ local function ntrup_f(o)
    return o
 end  
 
-local function _keyring_import(obj)
+function import_keyring(obj)
+   for k,_ in pairs(obj) do
+      if not keytypes[k] then
+	 error("Unsupported key type found in keyring: "..k, 2)
+      end
+   end
    -- ecdh_curve
    -- bls_curve
    local res = {}
@@ -151,7 +154,7 @@ local function _default_export(obj)
    return fun(obj)
 end
 
-local function _keyring_export(obj)
+function export_keyring(obj)
    -- ecdh_curve
    -- bls_curve
    local res = {}
@@ -180,13 +183,6 @@ local function _keyring_export(obj)
    if obj.eddsa then     res.eddsa     = O.to_base58(obj.eddsa) end
    return (res)
 end
-
-ZEN.add_schema(
-    {
-       keyring = { import = _keyring_import,
-		   export = _keyring_export  }
-    }
-)
 
 
 -- UTILS
