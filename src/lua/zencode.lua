@@ -190,9 +190,6 @@ local function set_rule(text)
 		elseif rule[3] == 'versioning' then
 			CONF.output.versioning = true
 			res = true
-		elseif strcasecmp(rule[3], 'ast') then
-			CONF.output.AST = true
-			res = true
 		end
 	elseif rule[2] == 'unknown' and rule[3] then
 		if rule[3] == 'ignore' then
