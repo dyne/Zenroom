@@ -60,6 +60,19 @@ local function pick(what, conv)
    local data
    local raw
    local name = _index_to_string(what)
+   -- keyring special object
+   if name == 'keyring' then -- backward compat
+      local keyring = KIN.keyring or IN.keyring
+      if not keyring then error("Keyring not found in input", 2) end
+      TMP = { fun = import_keyring,
+	      encoding = 'keyring',
+	      raw = keyring,
+	      name = 'keyring',
+	      luatype = 'table',
+	      zentype = 'schema' }
+      return true
+   end
+   ---
    raw = KIN[name] or IN[name]
    if not raw then error("Cannot find '" .. name .. "' anywhere (null value?)", 2) end
    if raw == '' then error("Found empty string in '" .. name) end
@@ -94,13 +107,30 @@ local function pickin(section, what, conv, fail)
    local raw  -- data pointer
    local bail  -- fail
    local name = _index_to_string(what)
-   root = KIN[section]
-   if not root then
+
+   if KIN[section] then
+      root = KIN[section]
+   elseif IN[section] then
       root = IN[section]
+   else
+      root = nil
    end
    if not root then
       error("Cannot find '"..section.."'", 2)
    end
+   if name == 'keyring' then -- backward compat
+      local keyring = root.keyring
+      if not keyring then error("Keyring not found in section: "..section, 2) end
+      TMP = { fun = import_keyring,
+	      encoding = 'keyring',
+	      raw = keyring,
+	      root = section,
+	      name = 'keyring',
+	      luatype = 'table',
+	      zentype = 'schema' }
+      return true
+   end
+
    if luatype(root) ~= 'table' then
       error("Object is not a table: "..section, 2)
    end
