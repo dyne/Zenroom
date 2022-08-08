@@ -45,11 +45,19 @@ Then("trace", function() debug_traceback() end)
 
 local function debug_heap_dump()
    local HEAP = ZEN.heap()
+   local ack = HEAP.ACK
+   local keyring = ack.keyring
+   -- ack.keyring = '(hidden)'
+   if keyring then
+      I.schema({KEYRING = keyring})
+      ack.keyring = '(hidden)'
+   end
    I.warn({a_GIVEN_in = HEAP.IN,
 	   b_GIVEN_in = HEAP.KIN,
-	   c_WHEN_ack = HEAP.ACK,
+	   c_WHEN_ack = ack,
 	   c_CODEC_ack = ZEN.CODEC,
 	   d_THEN_out = HEAP.OUT})
+   ack.keyring = keyring
 end
 
 local function debug_heap_schema()
