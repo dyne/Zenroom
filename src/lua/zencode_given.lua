@@ -175,11 +175,12 @@ end
     end
     -- carry guessed detection in CODEC
     ZEN.CODEC[guessed.name] = {
-       name = guessed.schema or guessed.name,
+       name = guessed.name,
        encoding = guessed.encoding,
        zentype = guessed.zentype,
        luatype = guessed.luatype,
-       root = guessed.root
+       root = guessed.root,
+       schema = guessed.schema,
     }
     -- I.warn({ codec = ZEN.CODEC[guessed.name],
     --	     guessed = guessed })
