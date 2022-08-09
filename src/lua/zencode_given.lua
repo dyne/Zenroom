@@ -175,7 +175,7 @@ end
     end
     -- carry guessed detection in CODEC
     ZEN.CODEC[guessed.name] = {
-       name = guessed.name,
+       name = guessed.schema or guessed.name,
        encoding = guessed.encoding,
        zentype = guessed.zentype,
        luatype = guessed.luatype,
