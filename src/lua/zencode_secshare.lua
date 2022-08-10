@@ -54,6 +54,7 @@ When("create the secret shares of '' with '' quorum ''", function(sec, tot, q)
 	local quorum = tonumber(q)
 	ZEN.assert(quorum, "Quorum shares is not a number: "..q)
         ACK.secret_shares = LAG.create_shared_secret(total,quorum,soct)
+        new_codec'secret_shares'
 end)
 
 When("compose the secret using ''", function(shares)
