@@ -1,0 +1,15 @@
+# setup paths for BATS test units
+setup() {
+    bats_require_minimum_version 1.5.0
+    T="$BATS_TEST_DIRNAME"
+    TR=`cd "$T"/.. && pwd`
+    R=`cd "$TR"/.. && pwd`
+    TMP="$BATS_RUN_TMPDIR"
+    load "$TR"/test_helper/bats-support/load
+    SUBDOC=lua
+    Z="$R/src/zenroom"
+}
+
+Z() {
+    $R/src/zenroom $T/$1
+}
