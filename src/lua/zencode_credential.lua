@@ -158,9 +158,9 @@ function import_credential_proof_f(obj)
       nu = ZEN.get(obj, 'nu', ECP.new),
       kappa = ZEN.get(obj, 'kappa', ECP2.new),
       pi_v = {
-	 c = ZEN.get(obj.pi_v, 'c', INT.new),
-	 rm = ZEN.get(obj.pi_v, 'rm', INT.new),
-	 rr = ZEN.get(obj.pi_v, 'rr', INT.new)
+	 c = ZEN.get(obj.pi_v, 'c', INT.new, O.from_base64),
+	 rm = ZEN.get(obj.pi_v, 'rm', INT.new, O.from_base64),
+	 rr = ZEN.get(obj.pi_v, 'rr', INT.new, O.from_base64)
       },
       sigma_prime = {
 	 h_prime = ZEN.get(obj.sigma_prime, 'h_prime', ECP.new),
