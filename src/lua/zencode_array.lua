@@ -246,7 +246,7 @@ IfWhen("the '' is found in '' at least '' times", function(ele, arr, times)
 	local found = constructor(0)
 	local one = constructor(1)
 	for _,v in pairs(list) do
-		if v == obj then found = found + one end
+		if type(v) == type(obj) and v == obj then found = found + one end
 	end
     if type(num) == "zenroom.big" then
 	    ZEN.assert(found >= num, "Object "..ele.." found only "..found:decimal().." times instead of "..num:decimal().." in array "..arr)
