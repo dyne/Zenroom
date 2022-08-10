@@ -74,10 +74,10 @@ local function import_credential_request_f(obj)
 	 b = ZEN.get(obj.sign, 'b', ECP.new)
       },
       pi_s = {
-	 rr = ZEN.get(obj.pi_s, 'rr', INT.new),
-	 rm = ZEN.get(obj.pi_s, 'rm', INT.new),
-	 rk = ZEN.get(obj.pi_s, 'rk', INT.new),
-	 commit = ZEN.get(obj.pi_s, 'commit', INT.new)
+          rr = ZEN.get(obj.pi_s, 'rr', INT.new, O.from_base64),
+          rm = ZEN.get(obj.pi_s, 'rm', INT.new, O.from_base64),
+          rk = ZEN.get(obj.pi_s, 'rk', INT.new, O.from_base64),
+          commit = ZEN.get(obj.pi_s, 'commit', INT.new, O.from_base64),
       },
       commit = ZEN.get(obj, 'commit', ECP.new),
       public = ZEN.get(obj, 'public', ECP.new)
@@ -89,18 +89,33 @@ local function import_credential_request_f(obj)
    return req
 end
 
+local function export_credential_request_f(obj)
+    obj.pi_s.rr = obj.pi_s.rr:octet()
+    obj.pi_s.rm = obj.pi_s.rm:octet()
+    obj.pi_s.rk = obj.pi_s.rk:octet()
+    obj.pi_s.commit = obj.pi_s.commit:octet()
+    return obj
+end
+
 -- request credential signatures
 ZEN.add_schema(
    {
       issuer_public_key = key_import_issuer_verifier_f,
-      credential_request = import_credential_request_f,
+      credential_request = {
+          import = import_credential_request_f,
+          export = export_credential_request_f,
+      }
    }
 )
 
 When('create the credential request', function()
 	havekey'credential'
 	ACK.credential_request = CRED.prepare_blind_sign(ACK.keyring.credential)
-	new_codec'credential request'
+	new_codec('credential request', {
+        encoding="complex",
+        zentype="schema",
+        schema="credential_request",
+    })
 end)
 
 -- issuer's signature of credentials
@@ -169,10 +184,20 @@ function import_credential_proof_f(obj)
    }
 end
 
+function export_credential_proof_f(obj)
+    obj.pi_v.rr = obj.pi_v.rr:octet()
+    obj.pi_v.rm = obj.pi_v.rm:octet()
+    obj.pi_v.c = obj.pi_v.c:octet()
+    return obj
+end
+
 ZEN.add_schema(
    {
       -- theta: blind proof of certification
-      credential_proof = import_credential_proof_f,
+      credential_proof = {
+          import = import_credential_proof_f,
+          export = export_credential_proof_f,
+      }
    }
 )
 
@@ -200,7 +225,11 @@ When(
 		havekey'credential'
 		ACK.credential_proof =
 			CRED.prove_cred(ACK.verifiers, ACK.credentials, ACK.keyring.credential)
-		new_codec'credential proof'
+		new_codec('credential proof', {
+            encoding="complex",
+            zentype="schema",
+            schema="credential_proof",
+        })
 	end
 )
 IfWhen(

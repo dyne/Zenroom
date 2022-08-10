@@ -75,7 +75,10 @@ ZEN.add_schema(
 	       zeta = ZEN.get(obj, 'zeta', ECP.new)
 	    }
 	 end,
-	 export = _export_big_as_octet_f,
+	 export = function(obj)
+         obj.proof = export_credential_proof_f(obj.proof)
+         return obj
+     end,
       },
       reflow_identity = function(obj)
 	 return ZEN.get(obj, '.', ECP.new)
@@ -246,7 +249,11 @@ When('create the reflow signature', function()
 	   proof = p,
 	   zeta = z
 	}
-	new_codec'reflow signature'
+	new_codec('reflow signature', {
+        encoding="complex",
+        zentype="schema",
+        schema="reflow_signature",
+    })
 end)
 
 When(
