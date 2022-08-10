@@ -7,9 +7,11 @@ setup() {
     TMP="$BATS_RUN_TMPDIR"
     load "$TR"/test_helper/bats-support/load
     SUBDOC=lua
-    Z="$R/src/zenroom"
+    if [ "$ZENROOM_EXECUTABLE" == "" ]; then
+	ZENROOM_EXECUTABLE="${TR}/zenroom"
+    fi
 }
 
 Z() {
-    $R/src/zenroom $T/$1
+    $ZENROOM_EXECUTABLE $T/$1
 }
