@@ -133,7 +133,6 @@ check-osx:
 	@echo "----------------"
 
 check-linux: test-exec := ./src/zenroom
-check-linux: ZENROOM_EXECUTABLE := ./src/zenroom
 check-linux:
 	@cp -v ${test-exec} test/zenroom
 	rm -f /tmp/zenroom-test-summary.txt
