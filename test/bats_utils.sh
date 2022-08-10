@@ -1,0 +1,127 @@
+#!/bin/bash
+
+getscript() {
+    tszen="$TMP/$1"
+    cat > $tszen
+    echo $tszen
+    >&3 echo " ⚙️ $1"
+    return 0
+}
+
+zexe() {
+    conf="debug=1,rngseed=hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    script=`getscript ${1}`
+    if [ $? != 0 ]; then echo "Error in Zencode script: $script"; return 1; fi
+
+    if [ "$2" == "" ]; then unset $input
+    else
+	input="$BATS_FILE_TMPDIR/$2"
+	if ! [ -r $input ]; then echo "DATA input not found: $input"; return 1; fi
+	# cat $input | jq .
+    fi
+
+    if [ "$3" == "" ]; then unset $keys
+    else
+	keys="$BATS_FILE_TMPDIR/$3"
+	if ! [ -r $keys ]; then  echo "KEYS input not found: $keys"; return 1; fi
+	cat $keys | jq .
+    fi
+
+    status=1 # BATS compatible
+
+    tmpout=$TMP/out
+    tmperr=$TMP/err
+    if [ "$keys" != "" ]; then
+	$R/src/zenroom -z $script -c $conf -a $input -k $keys 1>$tmpout
+	status=$?
+    elif [ "$input" != "" ]; then
+	$R/src/zenroom -z $script -c $conf -a $input          1>$tmpout
+	status=$?
+    else
+	$R/src/zenroom -z $script -c $conf                    1>$tmpout
+	status=$?
+    fi
+    if [ $status != 0 ]; then >&3 cat $tmperr; fi
+    # export output=`cat $TMP/out`
+    return $status
+}
+
+debug() {
+    conf="debug=1,rngseed=hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    script=`getscript ${1}`
+    >&3 echo "Zencode: $script"
+    >&3 cat $script
+    if [ $? != 0 ]; then return $?; fi
+    input="$2"
+    keys="$3"
+    tmpin=`mktemp`
+    tmpkey=`mktemp`
+    if [ -r "${input}" ]; then
+	 cp ${input} ${tmpin}
+    else echo "$input" > $tmpin
+    fi
+    if [ -r "${keys}" ]; then
+	 cp ${keys} ${tmpkey}
+    else echo "$keys" > $tmpkey
+    fi
+    if [ "$keys" != "" ]; then
+	>&3 $R/src/zenroom -z $script -c $conf -a $tmpin -k $tmpkey
+	res=$?
+	rm -f $tmpin $tmpkey
+    elif [ "$input" != "" ]; then
+	>&3 $R/src/zenroom -z $script -c $conf -a $tmpin
+	res=$?
+	rm -f $tmpin
+    else
+	>&3 $R/src/zenroom -z $script -c $conf
+	res=$?
+    fi
+    rm -f $script # getscript() generates this mktemp
+    return $res
+}
+
+# example:
+# json_extract "Alice" petition_request.json > petition_keypair.json
+function json_extract {
+	if ! [ -r extract.jq ]; then
+		cat <<EOF > extract.jq
+# break out early
+def filter(\$key):
+  label \$out
+  | foreach inputs as \$in ( null;
+      if . == null
+      then if \$in[0][0] == \$key then \$in
+           else empty
+           end
+      elif \$in[0][0] != \$key then break \$out
+      else \$in
+      end;
+      select(length==2) );
+reduce filter(\$key) as \$in ({};
+  setpath(\$in[0]; \$in[1]) )
+EOF
+	fi
+	jq -n -c --arg key "$1" --stream -f extract.jq "$2"
+}
+# example:
+# json_remove "Alice" petition_request.json
+function json_remove {
+	tmp=`mktemp`
+	jq -M "del(.$1)" $2 > $tmp
+	mv $tmp $2
+	rm -f $tmp
+}
+
+function json_join {
+	jq -s 'reduce .[] as $item ({}; . * $item)' $*
+}
+
+function save_output {
+    >&3 echo " 💾 $1"
+    if [ "${1##*.}"  == "json" ]; then
+	cat $TMP/out | tee "$BATS_FILE_TMPDIR/$1" | tee "$R/docs/examples/zencode_cookbook/$SUBDOC/$1" | >&3 jq .
+    else
+	cat $TMP/out | tee "$BATS_FILE_TMPDIR/$1" | >&3 tee "$R/docs/examples/zencode_cookbook/$SUBDOC/$1"
+    fi
+    export output=`cat $BATS_FILE_TMPDIR/$1`
+}
