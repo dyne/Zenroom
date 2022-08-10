@@ -24,23 +24,43 @@
 
 LAG = require_once('crypto_lagrange_interpolation')
 
+local function _export_big_as_octet_f(obj)
+    if type(obj) == 'zenroom.big' then
+        return obj:octet():base64()
+    end
+    return obj
+end
 function single_share_f(o)
    local obj = deepmap(CONF.input.encoding.fun, o)
-   return { x = ZEN.get(obj, 'x', BIG.new),
-            y = ZEN.get(obj, 'y', BIG.new) }
+   return { x = ZEN.get(obj, 'x', BIG.new, O.from_base64),
+            y = ZEN.get(obj, 'y', BIG.new, O.from_base64) }
 end
-
 ZEN.add_schema({
       -- single share
-      single_share = single_share_f,
+      single_share = {
+        import = single_share_f,
+        export = _export_big_as_octet_f,
+      },
       -- array of single shares
-      secret_shares = function(obj)
-         local res = { }
-         for k,v in pairs(obj) do
-            res[k] = single_share_f(v)
-         end
-         return res
-      end
+      secret_shares = {
+          import = function(obj)
+              local res = { }
+              for k,v in pairs(obj) do
+                  res[k] = single_share_f(v)
+              end
+              return res
+          end,
+          export = function(obj)
+              local res = { }
+              for k,v in pairs(obj) do
+                  res[k] = {
+                      x = _export_big_as_octet_f(v.x),
+                      y = _export_big_as_octet_f(v.y),
+                  }
+              end
+              return res
+          end,
+      }
 })
 
 When("create the secret shares of '' with '' quorum ''", function(sec, tot, q)
@@ -54,10 +74,18 @@ When("create the secret shares of '' with '' quorum ''", function(sec, tot, q)
 	local quorum = tonumber(q)
 	ZEN.assert(quorum, "Quorum shares is not a number: "..q)
         ACK.secret_shares = LAG.create_shared_secret(total,quorum,soct)
-        new_codec'secret_shares'
+        new_codec('secret_shares', {
+            encoding="complex",
+            zentype="schema",
+            schema="secret_shares",
+        })
 end)
 
 When("compose the secret using ''", function(shares)
 	local sh = have(shares)
-        ACK.secret = LAG.compose_shared_secret(sh)
+        ACK.secret = LAG.compose_shared_secret(sh):octet()
+        new_codec('secret', {
+            encoding="base64",
+            zentype="element",
+        })
 end)

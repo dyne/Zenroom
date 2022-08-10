@@ -62,7 +62,7 @@ local function then_outcast(val, sch)
    -- handle schema conversions
    if codec.encoding and codec.encoding == 'complex' then
       -- complex
-      if not isdictionary(val) then
+      if not isdictionary(val) and not isarray(val) then
 	 error('Complex schema value is not a dictionary: '..sch, 2)
       end
       return fun(val)
