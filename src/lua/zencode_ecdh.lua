@@ -186,11 +186,10 @@ When(
 		local pk = _pubkey_compat(_key)
 		local message = ACK[secret][_key] or ACK[secret]
 		local session = ECDH.session(sk, pk)
-		local checksum
-		ACK.text, checksum =
+		ACK.text, ACK.checksum =
 			ECDH.aead_decrypt(session, message.text, message.iv, message.header)
 		ZEN.assert(
-			checksum == message.checksum,
+			ACK.checksum == message.checksum,
 			'Failed verification of integrity for secret message'
 		)
 		new_codec'text'
