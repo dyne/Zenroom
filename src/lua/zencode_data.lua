@@ -516,7 +516,7 @@
  function prune(tab)
     assert(luatype(tab) == 'table', 'Cannot prune: not a table', 2)
     local pruned_values = deepmap(function(v)
-	  if #v == 0 then return nil
+	  if v.__len and #v == 0 then return nil
 	  else return v end
     end, tab)
     local function prune_in(ttab)
