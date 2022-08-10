@@ -138,51 +138,15 @@ if get_option('examples')
     install_subdir('../examples', install_dir: docdir, strip_directory: false)
 endif
 
-lua_tests = [
-    # himem
-    'test/sort.lua',
-    'test/literals.lua',
-    'test/pm.lua',
-    'test/nextvar.lua',
-    'test/gc.lua',
-    'test/calls.lua',
-    'test/constructs.lua',
-    'test/json.lua',
-
-    # lowmem
-    'test/vararg.lua',
-    'test/utf8.lua',
-    'test/tpack.lua',
-    'test/strings.lua',
-    'test/math.lua',
-    'test/goto.lua',
-    'test/events.lua',
-    'test/code.lua',
-    'test/locals.lua',
-
-    # crypto
-    'test/octet.lua',
-    'test/octet_conversion.lua',
-    'test/hash.lua',
-    'test/ecdh.lua',
-    'test/dh_session.lua',
-    'test/crypto_nist/aes_gcm.lua',
-    'test/crypto_nist/aes_cbc.lua',
-    'test/crypto_nist/aes_ctr.lua',
-    'test/ecp_generic.lua',
-    'test/elgamal.lua',
-    'test/bls_pairing.lua',
-    'test/coconut_test.lua',
-    'test/crypto_credential.lua',
-    'test/mnemonic_encoding.lua'
-]
-
-# test_dir = meson.source_root() + '/../'
-foreach test_file : lua_tests
-    test(test_file.underscorify(), zenroom_exe, args: ['../'+test_file])
-endforeach
-
+## BATS tests in test/lua
 test_dir = meson.source_root() + '/../test/'
+bats_bin = find_program(test_dir+'bats/bin/bats')
+lua_tests = [ 'lua/himem', 'lua/lowmem', 'lua/crypto' ]
+foreach test_file : lua_tests
+    test(test_file.underscorify(),
+	 bats_bin,
+	 args: [test_dir+test_file+'.bats'])
+endforeach
 
 zencode_tests = [
     'zencode_numbers',
