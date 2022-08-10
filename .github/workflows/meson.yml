@@ -36,4 +36,4 @@ jobs:
 
       - name: Run tests
         run: |
-          ninja -C meson test
+          make meson-test
