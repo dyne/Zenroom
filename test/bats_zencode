@@ -9,7 +9,9 @@ getscript() {
 }
 
 zexe() {
-    conf="debug=1,rngseed=hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    if [ "$conf" = "" ]; then
+	conf="debug=1,rngseed=hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    fi
     script=`getscript ${1}`
     >&3 cat $script
 
@@ -47,6 +49,11 @@ zexe() {
     # if [ $status != 0 ]; then >&3 cat $tmperr; fi
     # export output=`cat $TMP/out`
     return $status
+}
+
+rngzexe() {
+    conf="debug=1"
+    zexe $*
 }
 
 debug() {
