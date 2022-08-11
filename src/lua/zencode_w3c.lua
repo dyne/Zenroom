@@ -146,6 +146,7 @@ ZEN.add_schema(
         -- flexible verifiable credential
         -- only internal 'jws' member has peculiar encoding
         verifiable_credential = function(obj)
+            ACK.verifiable_credential = {}
             ZEN.CODEC.verifiable_credential = {
                 name = 'verifiable_credential',
                 encoding = 'string',
