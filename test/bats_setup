@@ -12,7 +12,7 @@ setup() {
     if [ "$ZENROOM_EXECUTABLE" == "" ]; then
 	ZENROOM_EXECUTABLE="${TR}/zenroom"
     fi
-    cd $BATS_SUITE_TMPDIR
+    cd $ZTMP
 }
 
 teardown() { >&3 echo; cd -; }
