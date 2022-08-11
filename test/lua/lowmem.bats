@@ -1,4 +1,4 @@
-load setup
+load ../bats_setup
 
 @test "Lua lowmem tests" {
     Z vararg.lua

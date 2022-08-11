@@ -1,4 +1,4 @@
-load setup
+load ../bats_setup
 
 @test "Lua crypto tests" {
     Z octet.lua
