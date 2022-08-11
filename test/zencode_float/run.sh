@@ -19,7 +19,7 @@ cat <<EOF | save float import_floats.json
   "int_number": 10000,
 }
 EOF
-cat <<EOF | debug import_floats.zen -a import_floats.json
+cat <<EOF | zexe import_floats.zen -a import_floats.json
 Given I have a 'float' named 'fp_number'
 Given I have a 'float' named 'fp_str'
 Given I have a 'float' named 'fp_int'
