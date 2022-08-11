@@ -201,6 +201,12 @@ When(
         local cred = have(vc)
         ZEN.assert(cred.proof, 'The object is not signed: ' .. vc)
         ACK.verification_method = cred.proof.verificationMethod
+        new_codec('verification_method', {
+            schema="verificationMethod",
+            name="verification_method",
+            encoding="complex",
+            zentype="schema"
+        })
     end
 )
 
