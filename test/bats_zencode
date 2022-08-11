@@ -20,15 +20,15 @@ zexe() {
     if [ "$2" == "" ]; then unset $input
     else
 	input="$BATS_FILE_TMPDIR/$2"
+	if ! [ -r $input ]; then input="$R/docs/examples/zencode_cookbook/$SUBDOC/$2"; fi
 	if ! [ -r $input ]; then echo "DATA input not found: $input"; return 1; fi
-	# cat $input | jq .
     fi
 
     if [ "$3" == "" ]; then unset $keys
     else
 	keys="$BATS_FILE_TMPDIR/$3"
+	if ! [ -r $keys ]; then keys="$R/docs/examples/zencode_cookbook/$SUBDOC/$3"; fi
 	if ! [ -r $keys ]; then  echo "KEYS input not found: $keys"; return 1; fi
-	cat $keys | jq .
     fi
 
     status=1 # BATS compatible
