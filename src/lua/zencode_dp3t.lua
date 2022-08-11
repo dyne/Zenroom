@@ -47,7 +47,7 @@ When("create the ephemeral ids for today", function()
 		ZEN.assert(isnumber(ACK.epoch), "Epoch length (minutes) not found")
         local epoch = tonumber(ACK.epoch)
 		local PRF = SHA256:hmac(ACK.secret_day_key, ACK.broadcast_key)
-		local epd = 24*60/epoch -- num epochs per day
+		local epd = (24*60)/epoch -- num epochs per day
 		local zero = OCTET.zero(epd*16) -- 0 byte buffer
 		ACK.ephemeral_ids = { }
 		for i = 0,epd,1 do
