@@ -141,11 +141,22 @@ endif
 ## BATS tests in test/lua
 test_dir = meson.source_root() + '/../test/'
 bats_bin = find_program(test_dir+'bats/bin/bats')
-tests = [ 'lua', 'determinism', 'zencode' ]
+tests = [ 'lua', 'determinism' ]
 foreach test_suite : tests
     test(test_suite.underscorify(),
 	 bats_bin,
 	 args: [test_dir+test_suite])
+endforeach
+
+## BATS tests in test/zencode
+test_dir = meson.source_root() + '/../test/'
+bats_bin = find_program(test_dir+'bats/bin/bats')
+tests = [ 'generic_ecdh', 'generic_eddsa', 'generic_schnorr',
+	  'generic_dilithium' ]
+foreach test_suite : tests
+    test(test_suite.underscorify(),
+	 bats_bin,
+	 args: [test_dir+'zencode/'+test_suite+'.bats'])
 endforeach
 
 # zencode_tests = [
