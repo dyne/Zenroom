@@ -44,9 +44,10 @@ end)
 When("create the ephemeral ids for today", function()
 		ZEN.assert(ACK.secret_day_key, "Secret day key not found")
 		ZEN.assert(ACK.broadcast_key, "Broadcast key not found")
-		ZEN.assert(type(ACK.epoch) == 'number', "Epoch length (minutes) not found")
+		ZEN.assert(isnumber(ACK.epoch), "Epoch length (minutes) not found")
+        local epoch = tonumber(ACK.epoch)
 		local PRF = SHA256:hmac(ACK.secret_day_key, ACK.broadcast_key)
-		local epd = (24*60)/ACK.epoch -- num epochs per day
+		local epd = 24*60/epoch -- num epochs per day
 		local zero = OCTET.zero(epd*16) -- 0 byte buffer
 		ACK.ephemeral_ids = { }
 		for i = 0,epd,1 do
@@ -54,15 +55,17 @@ When("create the ephemeral ids for today", function()
 		   local l,r = OCTET.chop(PRG,16)
 		   table.insert(ACK.ephemeral_ids, l)
 		end
+        new_codec'ephemeral_ids'
 end)
 
 When("create the proximity tracing of infected ids", function()
-		ZEN.assert(type(ACK.epoch) == 'number', "Number of moments not found")
+		ZEN.assert(isnumber(ACK.epoch), "Number of moments not found")
+        local epoch = tonumber(ACK.epoch)
 		ZEN.assert(type(ACK.list_of_infected) == 'table', "List of infected not found")
 		ZEN.assert(type(ACK.ephemeral_ids) == 'table', "List of ephemeral ids not found")
 		ZEN.assert(ACK.broadcast_key, "Broadcast key not found")
 		ACK.proximity_tracing = { }
-		local epd = (24*60)/ACK.epoch -- num epochs per day
+		local epd = (24*60)/epoch -- num epochs per day
 		local zero = OCTET.zero(epd*16) -- 0 byte buffer
 		for n,sk in ipairs(ACK.list_of_infected) do
 		   local PRF = SHA256:hmac(sk, ACK.broadcast_key)
@@ -75,4 +78,5 @@ When("create the proximity tracing of infected ids", function()
 			  end
 		   end
 		end
+        new_codec'proximity_tracing'
 end)
