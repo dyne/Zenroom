@@ -8,7 +8,6 @@ setup() {
     load "$TR"/test_helper/bats-support/load
     load "$TR"/test_helper/bats-assert/load
     load "$TR"/test_helper/bats-file/load
-    SUBDOC=lua
     if [ "$ZENROOM_EXECUTABLE" == "" ]; then
 	ZENROOM_EXECUTABLE="${TR}/zenroom"
     fi
