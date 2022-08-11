@@ -314,7 +314,7 @@ cat <<EOF >expressions.data
 }
 EOF
 
-cat <<EOF | debug expressions.zen -a expressions.data
+cat <<EOF | zexe expressions.zen -a expressions.data
 Given I have a 'integer' named 'a'
 Given I have a 'integer' named 'b'
 Given I have a 'integer' named 'c'
@@ -351,7 +351,7 @@ cat <<EOF >expressions_float.data
 }
 EOF
 
-cat <<EOF | debug expressions_float.zen -a expressions_float.data
+cat <<EOF | zexe expressions_float.zen -a expressions_float.data
 Given I have a 'float' named 'a'
 Given I have a 'float' named 'b'
 Given I have a 'float' named 'c'
@@ -378,7 +378,7 @@ cat <<EOF >compare_zero_float.data
 }
 EOF
 
-cat <<EOF | debug compare_zero_float.zen -a compare_zero_float.data
+cat <<EOF | zexe compare_zero_float.zen -a compare_zero_float.data
 Given I have a 'float' named 'a'
 Given I have a 'float' named 'b'
 Given I have a 'float' named 'c'
