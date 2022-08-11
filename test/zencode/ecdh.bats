@@ -30,6 +30,7 @@ and I encrypt the secret message 'whisper' with 'password'
 Then print the 'secret message'
 EOF
     save_output cipher_message.json
+#    assert_output '{"secret_message":{"checksum":"qcs/vRd0O5CGj1FsAxyyZg==","header":"Zm9yX3lvdXJfZXllc19vbmx5","iv":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA=","text":"qdvGKNccJf0fPgQIVk9WNXdanz+EGszLz+QCjzMZpm3ni/hIAJIQRqs8"}}'
 }
 
 
@@ -43,6 +44,7 @@ Then print the 'text' as 'string'
 and print the 'header' from 'secret message' as 'string'
 EOF
      save_output clear_message.json
+     assert_output '{"header":"for_your_eyes_only","text":"a_very_short_but_very_confidential_message"}'
 }
 
 @test "Generate asymmetric keys for Alice and Bob" {
@@ -81,7 +83,7 @@ EOF
 }
 
 @test "check that secret key doesn't changes on pubkey generation" {
-cat << EOF | zexe keygen_immutable.zen
+    cat << EOF | zexe keygen_immutable.zen
 Scenario ecdh
 Given I am known as 'Carl'
 When I create the ecdh key
@@ -92,10 +94,12 @@ and I verify 'ecdh before' is equal to 'ecdh after'
 Then print 'ecdh before' as 'hex'
 and print 'ecdh after' as 'hex'
 EOF
+    save_output immutable_pubkey.json
+    assert_output '{"ecdh_after":"078ad84d6c7a50c6dcd983d644da65e30d8cea063d8ea49aeb7ee7f0aaf6a4f7","ecdh_before":"078ad84d6c7a50c6dcd983d644da65e30d8cea063d8ea49aeb7ee7f0aaf6a4f7"}'
 }
 
 @test "Alice encrypts a message for Bob" {
-cat <<EOF | zexe enc_to_bob.zen alice_keys.json bob_pubkey.json
+    cat <<EOF | zexe enc_to_bob.zen alice_keys.json bob_pubkey.json
 Rule check version 1.0.0
 Scenario 'ecdh':
 	Given that I am known as 'Alice'
@@ -110,12 +114,13 @@ Scenario 'ecdh':
 	and print my 'keyring'
 	and print all data
 EOF
-save_output enc_alice_to_bob.json
+    save_output enc_alice_to_bob.json
+#    assert_output '{"Alice":{"ecdh_public_key":"BHdrWMNBRclVO1I1/iEaYjfEi5C0eEvG2GZgsCNq87qy8feZ74JEvnKK9FC07ThhJ8s4ON2ZQcLJ+8HpWMfKPww=","keyring":{"ecdh":"B4rYTWx6UMbc2YPWRNpl4w2M6gY9jqSa637n8Kr2pPc="}},"ecdh_public_key":"BHdrWMNBRclVO1I1/iEaYjfEi5C0eEvG2GZgsCNq87qy8feZ74JEvnKK9FC07ThhJ8s4ON2ZQcLJ+8HpWMfKPww=","header":"This_is_the_header","message":"This_is_my_secret_message.","public_key_session":{"Bob":"BHdrWMNBRclVO1I1/iEaYjfEi5C0eEvG2GZgsCNq87qy8feZ74JEvnKK9FC07ThhJ8s4ON2ZQcLJ+8HpWMfKPww="},"secret_message":{"checksum":"altG11tRLrbPsTJtUl0RKg==","header":"VGhpc19pc190aGVfaGVhZGVy","iv":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA=","text":"sXRz4tJE6u7YjWzdzt1YHxWi4eg2mL1h1Vc="}}'
 }
 
 
 @test "Bob decrypts the message from Alice" {
-cat <<EOF | zexe dec_from_alice.zen bob_keys.json enc_alice_to_bob.json
+    cat <<EOF | zexe dec_from_alice.zen bob_keys.json enc_alice_to_bob.json
 Rule check version 1.0.0
 Scenario 'ecdh':
 	Given that I am known as 'Bob'
@@ -126,11 +131,12 @@ Scenario 'ecdh':
 	Then print the 'text' as 'string'
 	and print the 'header' from 'secret message' as 'string'
 EOF
-save_output dec_bob_from_alice.json
+    save_output dec_bob_from_alice.json
+    assert_output '{"header":"This_is_the_header","text":"This_is_my_secret_message."}'
 }
 
 @test "Alice signs a message" {
-cat <<EOF | zexe sign_from_alice.zen alice_keys.json
+    cat <<EOF | zexe sign_from_alice.zen alice_keys.json
 Rule check version 2.0.0
 Scenario 'ecdh'
 Given that I am known as 'Alice'
@@ -140,11 +146,11 @@ and I create the ecdh signature of 'message'
 Then print the 'message'
 and print the 'ecdh signature'
 EOF
-save_output sign_alice_keyring.json
+    save_output sign_alice_keyring.json
 }
 
 @test "Verify a message signed by Alice" {
-cat <<EOF | zexe verify_from_alice.zen alice_pubkey.json sign_alice_keyring.json
+    cat <<EOF > alice_verify_signed.zen
 Rule check version 2.0.0
 Scenario 'ecdh'
 Given I have a 'ecdh' public key from 'Alice'
@@ -154,6 +160,25 @@ When I verify the 'message' has a ecdh signature in 'ecdh signature' by 'Alice'
 Then print the string 'Signature is valid'
 and print the 'message'
 EOF
-save_output verify_alice_signature.json
-assert_output '{"message":"This_is_my_authenticated_message.","output":["Signature_is_valid"]}'
+
+    cat alice_verify_signed.zen | zexe verify_from_alice.zen alice_pubkey.json sign_alice_keyring.json
+    save_output verify_alice_signature.json
+    assert_output '{"message":"This_is_my_authenticated_message.","output":["Signature_is_valid"]}'
+}
+
+@test "Fail verification on a different message" {
+    cat <<EOF > wrong_message.json
+{"message":"This_is_not_the_real_message.","ecdh signature":{"r":"d2tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"DwtadYikqZIduxNEB5+u1cgkUpN/+rH/aR5f7Je06F4="}}
+EOF
+    run $ZENROOM_EXECUTABLE -z alice_verify_signed.zen -a alice_pubkey.json -k wrong_message.json
+    assert_failure
+}
+
+@test "Fail verification on a wrong signature" {
+    # just change 2 to 3 at beginning of r base64
+    cat <<EOF > wrong_signature.json
+{"message":"This_is_my_authenticated_message.","ecdh signature":{"r":"d3tYw0FFyVU7UjX+IRpiN8SLkLR4S8bYZmCwI2rzurI=","s":"DwtadYikqZIduxNEB5+u1cgkUpN/+rH/aR5f7Je06F4="}}
+EOF
+    run $ZENROOM_EXECUTABLE -z alice_verify_signed.zen -a alice_pubkey.json -k wrong_signature.json
+    assert_failure
 }

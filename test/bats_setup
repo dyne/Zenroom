@@ -4,7 +4,7 @@ setup() {
     T="$BATS_TEST_DIRNAME"
     TR=`cd "$T"/.. && pwd`
     R=`cd "$TR"/.. && pwd`
-    TMP="$BATS_RUN_TMPDIR"
+    TMP="$BATS_TEST_TMPDIR"
     load "$TR"/test_helper/bats-support/load
     load "$TR"/test_helper/bats-assert/load
     load "$TR"/test_helper/bats-file/load
@@ -13,9 +13,10 @@ setup() {
     if [ "$ZENROOM_EXECUTABLE" == "" ]; then
 	ZENROOM_EXECUTABLE="${TR}/zenroom"
     fi
+    cd $BATS_SUITE_TMPDIR
 }
 
-teardown() { >&3 echo; >&3 echo; }
+teardown() { >&3 echo; cd -; }
 
 Z() {
     tmptmp=0
