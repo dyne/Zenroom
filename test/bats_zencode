@@ -140,3 +140,11 @@ function save_output {
     fi
     export output=`cat $BATS_FILE_TMPDIR/$1`
 }
+
+# Used to save something that is not an output
+function save_asset() {
+	docs="$R/docs/examples/zencode_cookbook/$SUBDOC"
+	mkdir -p ${docs}
+	cat $ZTMP/$1 | >&3 tee "${docs}/$1"
+}
+
