@@ -1,5 +1,7 @@
 #!/bin/bash
 
+debug=0
+
 getscript() {
     tszen="$TMP/$1"
     cat > $tszen
@@ -13,7 +15,11 @@ zexe() {
 	conf="debug=1,rngseed=hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
     fi
     script=`getscript ${1}`
-    >&3 cat $script
+    if (( $debug >= 1 )); then
+	>&3 cat $script
+    else
+	>&2 cat $script
+    fi
 
     if [ $? != 0 ]; then echo "Error in Zencode script: $script"; return 1; fi
 
@@ -61,37 +67,8 @@ rngzexe() {
 }
 
 debug() {
-    conf="debug=1,rngseed=hex:00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-    script=`getscript ${1}`
-    >&3 echo "Zencode: $script"
-    >&3 cat $script
-    if [ $? != 0 ]; then return $?; fi
-    input="$2"
-    keys="$3"
-    tmpin=`mktemp`
-    tmpkey=`mktemp`
-    if [ -r "${input}" ]; then
-	 cp ${input} ${tmpin}
-    else echo "$input" > $tmpin
-    fi
-    if [ -r "${keys}" ]; then
-	 cp ${keys} ${tmpkey}
-    else echo "$keys" > $tmpkey
-    fi
-    if [ "$keys" != "" ]; then
-	>&3 $R/src/zenroom -z $script -c $conf -a $tmpin -k $tmpkey
-	res=$?
-	rm -f $tmpin $tmpkey
-    elif [ "$input" != "" ]; then
-	>&3 $R/src/zenroom -z $script -c $conf -a $tmpin
-	res=$?
-	rm -f $tmpin
-    else
-	>&3 $R/src/zenroom -z $script -c $conf
-	res=$?
-    fi
-    rm -f $script # getscript() generates this mktemp
-    return $res
+    debug=1
+    zexe $*
 }
 
 # example:
@@ -132,19 +109,24 @@ function json_join {
 
 function save_output {
     >&3 echo " 💾 $1"
+    export output=`cat $TMP/out`
     mkdir -p $R/docs/examples/zencode_cookbook/$SUBDOC
-    if [ "${1##*.}"  == "json" ]; then
-	cat $TMP/out | tee "$BATS_FILE_TMPDIR/$1" | >&3 tee "$R/docs/examples/zencode_cookbook/$SUBDOC/$1"
+    if (( $debug >= 1 )); then
+	cat $TMP/out | tee "$BATS_SUITE_TMPDIR/$1" | >&3 tee "$R/docs/examples/zencode_cookbook/$SUBDOC/$1"
     else
-	cat $TMP/out | tee "$BATS_FILE_TMPDIR/$1" | >&3 tee "$R/docs/examples/zencode_cookbook/$SUBDOC/$1"
+	cat $TMP/out | tee "$BATS_SUITE_TMPDIR/$1" | >&2 tee "$R/docs/examples/zencode_cookbook/$SUBDOC/$1"
     fi
-    export output=`cat $BATS_FILE_TMPDIR/$1`
 }
 
 # Used to save something that is not an output
 function save_asset() {
-	docs="$R/docs/examples/zencode_cookbook/$SUBDOC"
-	mkdir -p ${docs}
-	cat $ZTMP/$1 | >&3 tee "${docs}/$1"
+    >&3 echo " 💾 $1"
+    docs="$R/docs/examples/zencode_cookbook/$SUBDOC"
+    mkdir -p ${docs}
+    if (( $debug >= 1 )); then
+	cat "$BATS_SUITE_TMPDIR/$1" | >&3 tee "${docs}/$1"
+    else
+	cat "$BATS_SUITE_TMPDIR/$1" | >&2 tee "${docs}/$1"
+    fi
 }
 
