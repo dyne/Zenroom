@@ -146,12 +146,13 @@ ZEN.add_schema(
         -- flexible verifiable credential
         -- only internal 'jws' member has peculiar encoding
         verifiable_credential = function(obj)
-            ZEN.CODEC.verifiable_credential = {
+            ACK.verifiable_credential = {}
+            new_codec('verifiable_credential', {
                 name = 'verifiable_credential',
                 encoding = 'string',
                 zentype = 'schema',
                 luatype = 'table'
-            }
+            })
             return (deepmap(OCTET.from_string, obj))
         end
     }
