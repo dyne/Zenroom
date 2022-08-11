@@ -142,17 +142,18 @@ end)
 
 Then("print ''", function(name)
 	local val = have(name)
-	if name == 'keyring' then
-	   OUT.keyring = export_keyring(val)
+    local codec = check_codec(name)
+	if name == 'keyring' or codec == 'keyring' then
+	   OUT[name] = export_keyring(val)
 	else
-	   OUT[name] = then_outcast( val, check_codec(name) )
+	   OUT[name] = then_outcast( val, codec )
 	end
 end)
 
 Then("print '' as ''",function(k, s)
 	local val = have(k)
-	if k == 'keyring' then
-	   OUT.keyring = export_keyring(val)
+	if k == 'keyring' or s == 'keyring' then
+	   OUT[k] = export_keyring(val)
 	   warn("DEPRECATED: Then print 'keyring' as '...'")
 	   warn("Please use: Then print keyring")
 	else
@@ -163,20 +164,21 @@ end)
 Then("print my ''",function(k)
 	Iam()
 	local val = have(k)
+    local codec = check_codec(k)
 	-- my statements always print to a dictionary named after WHO
 	if not OUT[WHO] then OUT[WHO] = { } end
-	if k == 'keyring' then
-	   OUT[WHO].keyring = export_keyring(val)
+	if k == 'keyring' or codec == 'keyring' then
+	   OUT[WHO][k] = export_keyring(val)
 	else
-	   OUT[WHO][k] = then_outcast( val, check_codec(k) )
+	   OUT[WHO][k] = then_outcast( val, codec )
 	end
 end)
 
 Then("print my '' as ''",function(k, s)
 	Iam()
 	local val = have(k) -- use array to check in depth
-	if k == 'keyring' then
-	   OUT.keyring = export_keyring(val)
+	if k == 'keyring' or s == 'keyring' then
+	   OUT[k] = export_keyring(val)
 	   warn("DEPRECATED: Then print 'keyring' as '...'")
 	   warn("Please use: Then print keyring")
 	else
@@ -186,14 +188,15 @@ end)
 
 Then("print '' from ''",function(k, f)
 	local val = have(f)
+    local codec = check_codec(f)
 	ZEN.assert(val[k], "Object: "..k..", not found in "..f)
-	if k == 'keyring' then
-	   OUT.keyring = export_keyring(val[k])
+	if k == 'keyring' or codec == 'keyring' then
+	   OUT[k] = export_keyring(val[k])
 	   warn("DEPRECATED: Then print 'keyring' from '...'")
 	   warn("Please use: Then print keyring from '...'")
 	else
 	   -- f is used in the then_outcast to support schemas
-	   OUT[k] = then_outcast( val, check_codec(f) )[k]
+	   OUT[k] = then_outcast( val, codec )[k]
 	end
 end)
 
@@ -248,8 +251,9 @@ end)
 
 Then('print data',function()
 	for k, v in pairs(ACK) do
-	   if k ~= 'keyring' then
-	      OUT[k] = then_outcast(v, check_codec(k))
+       local codec = check_codec(k)
+	   if k ~= 'keyring' and codec ~= 'keyring' then
+	      OUT[k] = then_outcast(v, codec)
 	   end
 	end
 end
