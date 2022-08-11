@@ -141,76 +141,76 @@ endif
 ## BATS tests in test/lua
 test_dir = meson.source_root() + '/../test/'
 bats_bin = find_program(test_dir+'bats/bin/bats')
-lua_tests = [ 'lua/himem', 'lua/lowmem', 'lua/crypto' ]
-foreach test_file : lua_tests
-    test(test_file.underscorify(),
+tests = [ 'lua', 'determinism', 'zencode' ]
+foreach test_suite : tests
+    test(test_suite.underscorify(),
 	 bats_bin,
-	 args: [test_dir+test_file+'.bats'])
+	 args: [test_dir+test_suite])
 endforeach
 
-zencode_tests = [
-    'zencode_numbers',
-    'zencode_random',
-    'zencode_array',
-    'zencode_branching',
-    'zencode_given',
-    'zencode_then',
-    'zencode_dictionary',
-    'zencode_hash',
-    'zencode_http',
-    'zencode_keys',
-    'zencode_secshare',
-    'zencode_ecdh',
-    'zencode_eddsa',
-    'zencode_credential',
-    'zencode_petition',
-    'zencode_bitcoin',
-    'zencode_ethereum',
-    'zencode_schnorr',
-    'zencode_w3c',
-    'zencode_reflow',
-    'zencode_cookbook',
-    'zencode_dp3t',
-    'zencode_qp',
-]
+# zencode_tests = [
+#     'zencode_numbers',
+#     'zencode_random',
+#     'zencode_array',
+#     'zencode_branching',
+#     'zencode_given',
+#     'zencode_then',
+#     'zencode_dictionary',
+#     'zencode_hash',
+#     'zencode_http',
+#     'zencode_keys',
+#     'zencode_secshare',
+#     'zencode_ecdh',
+#     'zencode_eddsa',
+#     'zencode_credential',
+#     'zencode_petition',
+#     'zencode_bitcoin',
+#     'zencode_ethereum',
+#     'zencode_schnorr',
+#     'zencode_w3c',
+#     'zencode_reflow',
+#     'zencode_cookbook',
+#     'zencode_dp3t',
+#     'zencode_qp',
+# ]
 
-foreach zencode_test : zencode_tests
-    test_script = find_program(test_dir + zencode_test + '/run.sh')
-    test(
-        zencode_test,
-        test_script,
-        env: [
-            'ZENROOM=' + zenroom_exe.full_path(),
-        ],
-        workdir: test_dir + zencode_test
-    )
-endforeach
+# foreach zencode_test : zencode_tests
+#     test_script = find_program(test_dir + zencode_test + '/run.sh')
+#     test(
+#         zencode_test,
+#         test_script,
+#         env: [
+#             'ZENROOM=' + zenroom_exe.full_path(),
+#         ],
+#         workdir: test_dir + zencode_test
+#     )
+# endforeach
 
-crypto_tests = [
-  'crypto_nist',
-  'crypto_json',
-  'crypto_ecdh',
-  'crypto_eddsa',
-]
-foreach crypto_test : crypto_tests
-    test_script = find_program(test_dir + crypto_test + '/run.sh')
-    test(crypto_test, test_script, env: [
-            'ZENROOM=' + zenroom_exe.full_path(),
-        ], workdir: test_dir + crypto_test, timeout: 60)
-endforeach
+# crypto_tests = [
+#   'crypto_nist',
+#   'crypto_json',
+#   'crypto_ecdh',
+#   'crypto_eddsa',
+# ]
+# foreach crypto_test : crypto_tests
+#     test_script = find_program(test_dir + crypto_test + '/run.sh')
+#     test(crypto_test, test_script, env: [
+#             'ZENROOM=' + zenroom_exe.full_path(),
+#         ], workdir: test_dir + crypto_test, timeout: 60)
+# endforeach
 
 
-# cookbook compared with different print routines
-zencode_cookbook_script = find_program(test_dir + 'zencode_cookbook/run-all.sh')
-test( 'zencode_cookbook print=sys', zencode_cookbook_script,
-    env: [ 'ZENROOM=' + zenroom_exe.full_path(), 'PRINT=mutt' ],
-    workdir: test_dir + 'zencode_cookbook')
-test( 'zencode_cookbook print=mutt', zencode_cookbook_script,
-    env: [ 'ZENROOM=' + zenroom_exe.full_path(), 'PRINT=mutt' ],
-    workdir: test_dir + 'zencode_cookbook')
-test( 'zencode_cookbook print=stb', zencode_cookbook_script,
-    env: [ 'ZENROOM=' + zenroom_exe.full_path(), 'PRINT=mutt' ],
-    workdir: test_dir + 'zencode_cookbook')
+# # cookbook compared with different print routines
+# zencode_cookbook_script = find_program(test_dir + 'zencode_cookbook/run-all.sh')
+# test( 'zencode_cookbook print=sys', zencode_cookbook_script,
+#     env: [ 'ZENROOM=' + zenroom_exe.full_path(), 'PRINT=mutt' ],
+#     workdir: test_dir + 'zencode_cookbook')
+# test( 'zencode_cookbook print=mutt', zencode_cookbook_script,
+#     env: [ 'ZENROOM=' + zenroom_exe.full_path(), 'PRINT=mutt' ],
+#     workdir: test_dir + 'zencode_cookbook')
+# test( 'zencode_cookbook print=stb', zencode_cookbook_script,
+#     env: [ 'ZENROOM=' + zenroom_exe.full_path(), 'PRINT=mutt' ],
+#     workdir: test_dir + 'zencode_cookbook')
 
 
 # test( 'zencode_cookbook memmanager=lw', zencode_cookbook_script,
