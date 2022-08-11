@@ -46,6 +46,10 @@ zexe() {
 	$ZENROOM_EXECUTABLE -z $script -c $conf                    1>$tmpout
 	status=$?
     fi
+    if [ $status == 0 ]; then
+	mkdir -p "$R/docs/examples/zencode_cookbook/$SUBDOC"
+	cat $script > "$R/docs/examples/zencode_cookbook/$SUBDOC/$1"
+    fi
     # if [ $status != 0 ]; then >&3 cat $tmperr; fi
     # export output=`cat $TMP/out`
     return $status
