@@ -96,12 +96,16 @@ ZEN.add_schema(
                 dec.pos = ZEN.get(obj.dec, 'pos', ECP.new)
                 return {
                     uid = ZEN.get(obj, 'uid'),
-                    c = ZEN.get(obj, 'c', INT.new),
+                    c = ZEN.get(obj, 'c', INT.new, O.from_base64),
                     dec = dec,
-                    rx = ZEN.get(obj, 'rx', INT.new)
+                    rx = ZEN.get(obj, 'rx', INT.new, O.from_base64),
                 }
             end,
-            export = function(obj) return obj end,
+            export = function(obj)
+                obj.c = obj.c:octet():base64()
+                obj.rx = obj.rx:octet():base64()
+                return obj
+            end,
         },
 	}
 )
