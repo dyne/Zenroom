@@ -8,10 +8,7 @@ check-bats:
 	$(call bats, test/lua/himem)
 	$(call bats, test/lua/lowmem)
 	$(call bats, test/lua/crypto)
-
-
-determinism-tests = \
-	test/deterministic_random_test.sh ${1}
+	$(call bats, test/determinism/run)
 
 # removed for memory usage in wasm
 #	    ${1} test/coroutine.lua
@@ -124,8 +121,8 @@ check-osx:
 	$(call bats, test/lua/himem)
 	$(call bats, test/lua/lowmem)
 	$(call bats, test/lua/crypto)
+	$(call bats, test/determinism/run)
 	rm -f /tmp/zenroom-test-summary.txt
-	$(call determinism-tests,${test-exec})
 	$(call zencode-tests,${test-exec})
 	$(call crypto-integration,${test-exec})
 	$(call zencode-integration,${test-exec})
@@ -140,7 +137,7 @@ check-linux:
 	$(call bats, test/lua/himem)
 	$(call bats, test/lua/lowmem)
 	$(call bats, test/lua/crypto)
-	$(call determinism-tests,${test-exec})
+	$(call bats, test/determinism/run)
 	$(call zencode-tests,${test-exec})
 	$(call crypto-integration,${test-exec})
 	$(call zencode-integration,${test-exec})
@@ -224,7 +221,7 @@ check-crypto:
 check-crypto-lw: test-exec := ./src/zenroom -c memmanager=lw
 check-crypto-lw:
 	rm -f /tmp/zenroom-test-summary.txt
-	$(call determinism-tests,${test-exec})
+	$(call bats, test/determinism/run)
 	$(call bats, test/lua/crypto)
 	$(call zencode-tests,${test-exec})
 	$(call zencode-integration,${test-exec})
@@ -237,7 +234,7 @@ check-crypto-lw:
 check-crypto-stb: test-exec := ./src/zenroom -c print=stb
 check-crypto-stb:
 	rm -f /tmp/zenroom-test-summary.txt
-	$(call determinism-tests,${test-exec})
+	$(call bats, test/determinism/run)
 	$(call bats, test/lua/crypto)
 	$(call zencode-tests,${test-exec})
 	$(call zencode-integration,${test-exec})
@@ -249,7 +246,7 @@ check-crypto-stb:
 check-crypto-mutt: test-exec := ./src/zenroom -c print=mutt
 check-crypto-mutt:
 	rm -f /tmp/zenroom-test-summary.txt
-	$(call determinism-tests,${test-exec})
+	$(call bats, test/determinism/run)
 	$(call bats, test/lua/crypto)
 	$(call zencode-tests,${test-exec})
 	$(call zencode-integration,${test-exec})
