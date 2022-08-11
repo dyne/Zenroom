@@ -123,7 +123,6 @@ check-osx:
 	$(call bats, test/lua/crypto)
 	$(call bats, test/determinism/run)
 	rm -f /tmp/zenroom-test-summary.txt
-	$(call zencode-tests,${test-exec})
 	$(call crypto-integration,${test-exec})
 	$(call zencode-integration,${test-exec})
 	@echo "----------------"
@@ -138,7 +137,6 @@ check-linux:
 	$(call bats, test/lua/lowmem)
 	$(call bats, test/lua/crypto)
 	$(call bats, test/determinism/run)
-	$(call zencode-tests,${test-exec})
 	$(call crypto-integration,${test-exec})
 	$(call zencode-integration,${test-exec})
 	cat /tmp/zenroom-test-summary.txt
@@ -152,7 +150,6 @@ check-js:
 	@echo "#!/bin/sh\n${test-exec}\n" > test/zenroom && chmod +x test/zenroom
 	$(call bats, test/lua/lowmem)
 	$(call bats, test/lua/crypto)
-	$(call zencode-tests,${test-exec})
 	@echo "----------------"
 	@echo "All tests passed for JS binary build"
 	@echo "----------------"
@@ -162,7 +159,6 @@ check-py:
 	@echo "#!/bin/sh\n${test-exec}\n" > test/zenroom && chmod +x test/zenroom
 	$(call bats, test/lua/lowmem)
 	$(call bats, test/lua/crypto)
-	$(call zencode-tests,${test-exec})
 	@echo "----------------"
 	@echo "All tests passed for PYTHON build"
 	@echo "----------------"
@@ -173,7 +169,6 @@ check-rs:
 	@echo "#!/bin/sh\n${test-exec}\n" > test/zenroom && chmod +x test/zenroom
 	$(call bats, test/lua/lowmem)
 	$(call bats, test/lua/crypto)
-	$(call zencode-tests,${test-exec})
 	@echo "----------------"
 	@echo "All tests passed for RUST build"
 	@echo "----------------"
@@ -184,7 +179,6 @@ check-go:
 	@echo "#!/bin/sh\n${test-exec}\n" > test/zenroom && chmod +x test/zenroom
 	$(call bats, test/lua/lowmem)
 	$(call bats, test/lua/crypto)
-	$(call zencode-tests,${test-exec})
 	@echo "----------------"
 	@echo "All tests passed for GO build"
 	@echo "----------------"
@@ -195,7 +189,6 @@ check-debug:
 	rm -f /tmp/zenroom-test-summary.txt
 	$(call bats, test/lua/lowmem)
 	$(call bats, test/lua/crypto)
-	$(call zencode-tests,${test-exec})
 	cat /tmp/zenroom-test-summary.txt
 	@echo "----------------"
 	@echo "All tests passed for DEBUG binary build"
@@ -210,7 +203,6 @@ check-crypto:
 
 # $(call determinism-tests,${test-exec})
 # $(call crypto-tests,${test-exec})
-# $(call zencode-tests,${test-exec})
 # $(call crypto-integration,${test-exec})
 # $(call zencode-integration,${test-exec})
 # cat /tmp/zenroom-test-summary.txt
@@ -223,7 +215,6 @@ check-crypto-lw:
 	rm -f /tmp/zenroom-test-summary.txt
 	$(call bats, test/determinism/run)
 	$(call bats, test/lua/crypto)
-	$(call zencode-tests,${test-exec})
 	$(call zencode-integration,${test-exec})
 	cat /tmp/zenroom-test-summary.txt
 	@echo "-----------------------"
@@ -236,7 +227,6 @@ check-crypto-stb:
 	rm -f /tmp/zenroom-test-summary.txt
 	$(call bats, test/determinism/run)
 	$(call bats, test/lua/crypto)
-	$(call zencode-tests,${test-exec})
 	$(call zencode-integration,${test-exec})
 	cat /tmp/zenroom-test-summary.txt
 	@echo "-----------------------"
@@ -248,7 +238,6 @@ check-crypto-mutt:
 	rm -f /tmp/zenroom-test-summary.txt
 	$(call bats, test/determinism/run)
 	$(call bats, test/lua/crypto)
-	$(call zencode-tests,${test-exec})
 	$(call zencode-integration,${test-exec})
 	cat /tmp/zenroom-test-summary.txt
 	@echo "-----------------------"
@@ -260,7 +249,6 @@ check-crypto-debug:
 	@echo "#!/bin/sh\n${test-exec}\n" > test/zenroom && chmod +x test/zenroom
 	rm -f /tmp/zenroom-test-summary.txt
 	$(call bats, test/lua/crypto)
-	$(call zencode-tests,${test-exec})
 	cat /tmp/zenroom-test-summary.txt
 
 check-cortex-m:
