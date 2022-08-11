@@ -19,7 +19,7 @@ setup_file() {
     assert_not_equal $seed $seed1
     assert_not_equal $seed $seed2
 
-    cat <<EOF > $TMP/determinism.lua
+    cat <<EOF > determinism.lua
 print("RNGSEED:".. RNGSEED:hex())
 first = O.random(16)
 second = O.random(16)
@@ -48,19 +48,19 @@ EOF
 }
 
 @test "Check same results with same seed" {
-    first=`Z  $TMP/determinism.lua -c rngseed=hex:$seed1`
-    second=`Z $TMP/determinism.lua -c rngseed=hex:$seed2`
+    first=`Z  determinism.lua -c rngseed=hex:$seed1`
+    second=`Z determinism.lua -c rngseed=hex:$seed2`
     assert_equal "$first" "$second"
 }
 
 @test "Check different results with random seeds" {
-    first=`Z $TMP/determinism.lua`
-    second=`Z $TMP/determinism.lua`
+    first=`Z determinism.lua`
+    second=`Z determinism.lua`
     assert_not_equal "$first" "$second"
 }
 
 @test "Check different results with different seeds" {
-    first=`Z  $TMP/determinism.lua -c rngseed=hex:$seed1`
-    second=`Z $TMP/determinism.lua -c rngseed=hex:$seed`
+    first=`Z  determinism.lua -c rngseed=hex:$seed1`
+    second=`Z determinism.lua -c rngseed=hex:$seed`
     assert_not_equal "$first" "$second"
 }
