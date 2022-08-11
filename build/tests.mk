@@ -2,8 +2,9 @@
 # bats function
 bats = @test/bats/bin/bats $(1).bats
 
+# temporary target for testing the tests
 check-bats:
-	@cp -v ${test-exec} test/zenroom
+	@cp -v src/zenroom test/zenroom
 	$(call bats, test/lua/himem)
 	$(call bats, test/lua/lowmem)
 	$(call bats, test/lua/crypto)

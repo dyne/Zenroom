@@ -1,15 +1,6 @@
-setup() {
-    bats_require_minimum_version 1.5.0
-    T="$( cd "$( dirname "$BATS_TEST_FILENAME" )" >/dev/null 2>&1 && pwd )"
-    TR="$( cd $T/.. && pwd )"
-    R="$(cd $TR/.. && pwd )"
-    TMP=$BATS_RUN_TMPDIR
-    load $TR/test_helper/bats-support/load
-    load $TR/test_helper/bats-assert/load
-    load $TR/test_helper/bats-file/load
-    load $TR/bats_utils.sh
-    SUBDOC=ecdh
-}
+load ../bats_setup
+load ../bats_zencode
+SUBDOC=ecdh
 
 # teardown() { rm -rf $TMP }
 
