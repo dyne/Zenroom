@@ -115,13 +115,13 @@ local function count_f(t)
 end
 When("create the length of ''", function(arr)
 	local obj = have(arr)
-	ACK.length = count_f(obj)
-	new_codec('length', {luatype='number',zentype='element'})
+	ACK.length = F.new(count_f(obj))
+	new_codec('length', {zentype='element'})
 end)
 When("create the size of ''", function(arr)
 	local obj = have(arr)
-	ACK.size = count_f(obj)
-	new_codec('size', {zentype='element',luatype='number'})
+	ACK.size = F.new(count_f(obj))
+	new_codec('size', {zentype='element'})
 end)
 
 When("create the copy of element '' in array ''", function(pos, arr)
@@ -348,6 +348,8 @@ local function _keys_flat_array(data, res)
    for k, item in pairs(data) do
       if type(k) == 'string' then
         k = O.from_string(k)
+      elseif type(k) == 'number' then
+        k = F.new(k)
       end
       table.insert(res, k)
       if luatype(item) == 'table' then
