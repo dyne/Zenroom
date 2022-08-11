@@ -42,53 +42,67 @@ end
 ZEN.add_schema(
 	{
 		petition_scores = petition_scores_f,
-		petition = function(obj)
-			local res = {
-				uid = ZEN.get(obj, 'uid'),
-				scores = petition_scores_f(obj.scores)
-			}
-			if obj.owner then
-				res.owner = ZEN.get(obj, 'owner', ECP.new)
-			end
-			if obj.issuer_public_key then
-				res.issuer_public_key = key_import_issuer_verifier_f(obj.issuer_public_key)
-			end
-			if obj.list then
-				res.list =
-					deepmap(
-					function(o)
-						return ZEN.get(o, '.', ECP.new)
-					end,
-					obj.list
-				)
-			end
-			if obj.signature then
-				res.signature = {
-					r = ZEN.get(obj.signature, 'r'),
-					s = ZEN.get(obj.signature, 's')
-				}
-			end
-			return res
-		end,
-		petition_signature = function(obj)
-			return {
-						-- from zencode_credential
-				proof = import_credential_proof_f(obj.proof),
-				uid_signature = ZEN.get(obj, 'uid_signature', ECP.new),
-				uid_petition = ZEN.get(obj, 'uid_petition')
-			}
-		end,
-		petition_tally = function(obj)
-			local dec = {}
-			dec.neg = ZEN.get(obj.dec, 'neg', ECP.new)
-			dec.pos = ZEN.get(obj.dec, 'pos', ECP.new)
-			return {
-				uid = ZEN.get(obj, 'uid'),
-				c = ZEN.get(obj, 'c', INT.new),
-				dec = dec,
-				rx = ZEN.get(obj, 'rx', INT.new)
-			}
-		end
+		petition = {
+            import = function(obj)
+                local res = {
+                    uid = ZEN.get(obj, 'uid'),
+                    scores = petition_scores_f(obj.scores)
+                }
+                if obj.owner then
+                    res.owner = ZEN.get(obj, 'owner', ECP.new)
+                end
+                if obj.issuer_public_key then
+                    res.issuer_public_key = key_import_issuer_verifier_f(obj.issuer_public_key)
+                end
+                if obj.list then
+                    res.list =
+                    deepmap(
+                    function(o)
+                        return ZEN.get(o, '.', ECP.new)
+                    end,
+                    obj.list
+                    )
+                end
+                if obj.signature then
+                    res.signature = {
+                        r = ZEN.get(obj.signature, 'r'),
+                        s = ZEN.get(obj.signature, 's')
+                    }
+                end
+                return res
+            end,
+            export = function(obj)
+                return obj
+            end,
+        },
+		petition_signature = {
+            import = function(obj)
+                return {
+                    -- from zencode_credential
+                    proof = import_credential_proof_f(obj.proof),
+                    uid_signature = ZEN.get(obj, 'uid_signature', ECP.new),
+                    uid_petition = ZEN.get(obj, 'uid_petition')
+                }
+            end,
+            export = function (obj)
+                obj.proof = export_credential_proof_f(obj.proof)
+                return obj
+            end,
+        },
+		petition_tally = {
+            import = function(obj)
+                local dec = {}
+                dec.neg = ZEN.get(obj.dec, 'neg', ECP.new)
+                dec.pos = ZEN.get(obj.dec, 'pos', ECP.new)
+                return {
+                    uid = ZEN.get(obj, 'uid'),
+                    c = ZEN.get(obj, 'c', INT.new),
+                    dec = dec,
+                    rx = ZEN.get(obj, 'rx', INT.new)
+                }
+            end,
+            export = function(obj) return obj end,
+        },
 	}
 )
 
@@ -113,7 +127,7 @@ When(
 		}
 		ZEN.CODEC.petition = {
 			name = 'petition',
-			encoding = check_codec('petition'),
+			encoding = 'complex',
 			zentype = 'schema'
 		}
 		-- generate an ECDH signature of the (encoded) petition using the
@@ -168,6 +182,11 @@ When(
 			uid_signature = zeta, -- ECP
 			uid_petition = ack_uid
 		}
+        new_codec('petition_signature', {
+            schema = 'petition_signature',
+            encoding = 'complex',
+            zentype = 'schema',
+        })
 	end
 )
 
@@ -246,6 +265,11 @@ When(
 			ACK.petition.scores
 		)
 		ACK.petition_tally.uid = ACK.petition.uid
+        new_codec('petition_tally', {
+            schema='petition_tally',
+            encoding="complex",
+            zentype="schema",
+        })
 	end
 )
 
@@ -259,9 +283,10 @@ When(
 			'Tally does not correspond to petition'
 		)
 		ACK.petition_results =
-			PET.count_signatures_petition(
+			INT.new(PET.count_signatures_petition(
 			ACK.petition.scores,
 			ACK.petition_tally
-		).pos
+		).pos)
+        new_codec('petition_results')
 	end
 )
