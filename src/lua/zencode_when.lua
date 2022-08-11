@@ -498,10 +498,9 @@ When("create the count of char '' found in ''", function(needle, haystack)
 	local h = have(haystack)
 	empty'count'
 --	ACK.count = _countchar(O.to_string(h), needle)
-	ACK.count = h:octet():charcount(tostring(needle))
+	ACK.count = F.new(h:octet():charcount(tostring(needle)))
 	new_codec('count',
 		  {encoding = 'number',
-		   luatype = 'number',
 		   zentype = 'element' })
 end)
 
