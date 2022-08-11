@@ -60,7 +60,7 @@ EOF
 @test "Alice signs a message" {
     cat <<EOF | zexe sign_from_alice.zen alice_keys.json
 Rule check version 2.0.0
-Scenario '%%ALGOSIGN%%'
+Scenario %%ALGOSIGN%%
 Given that I am known as 'Alice'
 and I have my 'keyring'
 When I write string 'This is my authenticated message.' in 'message'
@@ -84,7 +84,7 @@ EOF
 
     cat <<EOF | zexe verify_from_alice.zen sign_pubkey.json
 Rule check version 2.0.0
-Scenario '%%ALGOSIGN%%'
+Scenario %%ALGOSIGN%%
 Given I have a '%%ALGOSIGN%% public key'
 and I have a '%%ALGOSIGN%% signature'
 When I write string 'This is my authenticated message.' in 'message'
@@ -99,7 +99,7 @@ EOF
 @test "Fail verification on a different message" {
     cat <<EOF > wrong_message.zen
 Rule check version 2.0.0
-Scenario '%%ALGOSIGN%%'
+Scenario %%ALGOSIGN%%
 Given I have a '%%ALGOSIGN%% public key'
 and I have a '%%ALGOSIGN%% signature'
 When I write string 'This is the wrong message.' in 'message'
@@ -123,7 +123,7 @@ EOF
     save_output wrong_pubkey.json
     cat <<EOF > wrong_pubkey.zen
 Rule check version 2.0.0
-Scenario '%%ALGOSIGN%%'
+Scenario %%ALGOSIGN%%
 Given I have a '%%ALGOSIGN%% public key'
 and I have a '%%ALGOSIGN%% signature'
 When I write string 'This is my authenticated message.' in 'message'
