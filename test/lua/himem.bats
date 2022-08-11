@@ -1,4 +1,4 @@
-load setup
+load ../bats_setup
 
 @test "Lua himem tests" {
     Z sort.lua
