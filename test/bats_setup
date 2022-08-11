@@ -12,8 +12,35 @@ setup() {
     if [ "$ZENROOM_EXECUTABLE" == "" ]; then
 	ZENROOM_EXECUTABLE="${TR}/zenroom"
     fi
+
 }
 
+
 Z() {
-    $ZENROOM_EXECUTABLE $T/$1
+    tmptmp=0
+    if ! [ "$TMP" ]; then
+	TMP=`mktemp -d`; tmptmp=1
+    fi
+    script=$1
+    if [ "$script" == "-" ]; then
+	cat > $TMP/script_stdin
+	script=$TMP/script_stdin
+    else
+	if ! [ -r "$script" ]; then
+	    script=$T/$script
+	fi
+    fi
+    if ! [ -r $script ]; then
+	>&2 echo "Error - script not found: $script"
+	return 1
+    fi
+    shift 1
+    $ZENROOM_EXECUTABLE $script $*
+    if [ $tmptmp = 1 ]; then
+	rm -f $TMP/*
+	rmdir $TMP
+    fi
 }
+
+
+
