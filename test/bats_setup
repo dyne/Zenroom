@@ -12,9 +12,9 @@ setup() {
     if [ "$ZENROOM_EXECUTABLE" == "" ]; then
 	ZENROOM_EXECUTABLE="${TR}/zenroom"
     fi
-
 }
 
+teardown() { >&3 echo; >&3 echo; }
 
 Z() {
     tmptmp=0
