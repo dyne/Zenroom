@@ -1,14 +1,13 @@
 
 # bats function
-bats = @test/bats/bin/bats $(1).bats
-
+bats = @test/bats/bin/bats $(1)
+bats_file = @test/bats/bin/bats $(1).bats
 # temporary target for testing the tests
 check-bats:
 	@cp -v src/zenroom test/zenroom
-	$(call bats, test/lua/himem)
-	$(call bats, test/lua/lowmem)
-	$(call bats, test/lua/crypto)
-	$(call bats, test/determinism/run)
+	$(call bats, test/lua)
+	$(call bats, test/determinism)
+	$(call bats, test/zencode)
 
 # removed for memory usage in wasm
 #	    ${1} test/coroutine.lua
