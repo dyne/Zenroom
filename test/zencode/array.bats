@@ -3,7 +3,7 @@ load ../bats_zencode
 SUBDOC=array
 
 @test "Create array of randoms" {
-    cat <<EOF | zexe SYM01.zen
+    cat <<EOF | zexe array_32_256.zen
 rule output encoding url64
 Given nothing
 When I create the array of '32' random objects of '256' bits
@@ -15,17 +15,17 @@ EOF
 }
 
 @test "When I create the length of" {
-    cat << EOF | zexe SYM02.zen arr.json
+    cat << EOF | zexe array_length.zen arr.json
 Given I have a 'url64 array' named 'bonnetjes'
 When I create the length of 'bonnetjes'
 Then print the 'length'
 EOF
-    output=`cat $TMP/out`
+    save_output "array_length.json"
     assert_output '{"length":32}'
 }
 
 @test "When I pick the random object in, rename, remove" {
-    cat <<EOF | zexe SYM03.zen arr.json
+    cat <<EOF | zexe array_rename_remove.zen arr.json
 rule input encoding url64
 rule output encoding hex
 Given I have a 'url64 array' named 'bonnetjes'
@@ -36,6 +36,7 @@ and I remove the 'lucky one' from 'bonnetjes'
 and the 'lucky one' is not found in 'bonnetjes'
 Then print the 'lucky one'
 EOF
+    save_output "array_rename_remove.json"
 }
 
 @test "When I create the hash to point 'ECP' of each object in" {
@@ -69,7 +70,7 @@ EOF
     # 'x == ECP.hashtopoint(y)'
 }
 @test "When I create the hashes of each object in (left)" {
-    cat <<EOF | zexe SYM04.zen arr.json
+    cat <<EOF | zexe left_array_from_hash.zen arr.json
 rule input encoding url64
 rule output encoding url64
 Given I have a 'url64 array' named 'bonnetjes'
@@ -81,7 +82,7 @@ EOF
 }
 
 @test "When I create the hashes of each object in (right)" {
-    cat <<EOF | zexe SYM05.zen arr.json
+    cat <<EOF | zexe right_array_from_hash.zen arr.json
 rule input encoding url64
 rule output encoding url64
 Given I have a 'url64 array' named 'bonnetjes'
@@ -95,7 +96,7 @@ EOF
 # comparison
 
 @test "Array comparison" {
-    cat <<EOF | zexe SYM06.zen left_arr.json right_arr.json
+    cat <<EOF | zexe array_comparison.zen left_arr.json right_arr.json
 rule input encoding url64
 rule output encoding url64
 Given I have a 'url64 array' named 'left array'
@@ -103,12 +104,12 @@ and I have a 'url64 array' named 'right array'
 When I verify 'left array' is equal to 'right array'
 Then print the string 'OK'
 EOF
-    output=`cat $TMP/out`
+    save_output "array_comparison.json"
     assert_output '{"output":["OK"]}'
 }
 
 @test "Array remove object (right)" {
-    cat <<EOF | zexe SYM07.zen arr.json
+    cat <<EOF | zexe array_remove_object.zen arr.json
 rule input encoding url64
 rule output encoding url64
 Given I have a 'url64 array' named 'bonnetjes'
@@ -122,7 +123,7 @@ EOF
 }
 
 @test "Verify that arrays are not equal" {
-    cat <<EOF | zexe SYM08.zen left_arr.json right_arr.json
+    cat <<EOF | zexe array_not_comparison.zen left_arr.json right_arr.json
 rule input encoding url64
 rule output encoding url64
 Given I have a 'url64 array' named 'left array'
@@ -130,7 +131,7 @@ and I have a 'url64 array' named 'right array'
 When I verify 'left array' is not equal to 'right array'
 Then print the string 'OK'
 EOF
-    output=`cat $TMP/out`
+    save_output "array_not_comparison.json"
     assert_output '{"output":["OK"]}'
 }
 
@@ -139,14 +140,14 @@ EOF
 
 
 @test "Pick nested" {
-    cat <<EOF > $BATS_FILE_TMPDIR/nesting.json
+    cat <<EOF | save_asset nesting.json
 {
   "first" : { "inside" : "first.inside" },
   "second" : { "inside" : "second.inside" },
   "third" : "three"
 }
 EOF
-    cat <<EOF | zexe SYM09.zen nesting.json
+    cat <<EOF | zexe pick_nested.zen nesting.json
 rule check version 1.0.0
 rule input encoding string
 Given I have a 'string' named 'inside' inside 'first'
@@ -156,12 +157,12 @@ and I write string 'three' in 'tertiur'
 and I verify 'third' is equal to 'tertiur'
 Then print the 'test' as 'string'
 EOF
-    output=`cat $TMP/out`
+    save_output "pick_nested.json"
     assert_output '{"test":"first.inside"}'
 }
 
 @test "Leftmost split" {
-    cat <<EOF | zexe SYM10.zen
+    cat <<EOF | zexe leftmost_split.zen
 rule check version 1.0.0
 Given nothing
 When I set 'whole' to 'Zenroom works great' as 'string'
@@ -169,7 +170,7 @@ and I split the leftmost '3' bytes of 'whole'
 Then print the 'leftmost' as 'string'
 and print the 'whole' as 'string'
 EOF
-    output=`cat $TMP/out`
+    save_output "leftmost_split.json"
     assert_output '{"leftmost":"Zen","whole":"room_works_great"}'
 }
 
@@ -191,27 +192,27 @@ EOF
 }
 
 @test "Needle in haystack" {
-    cat << EOF > $ZTMP/array_matches.json
+    cat << EOF | save_asset array_matches.json
 { "haystack": [ "Approved", "Not approved", "Approved", "Not approved", "Approved","Not approved", "Approved","Not approved", "Approved" ] }
 EOF
-    cat << EOF > $ZTMP/quorum.json
+    cat << EOF | save_asset quorum.json
 { "quorum": 5,
   "needle": "Approved" }
 EOF
 
-    cat << EOF | zexe SYM11.zen array_matches.json quorum.json
+    cat << EOF | zexe needle_in_haystack.zen array_matches.json quorum.json
 Given I have a 'string array' named 'haystack'
 and I have a 'number' named 'quorum'
 and I have a 'string' named 'needle'
 When the 'needle' is found in 'haystack' at least 'quorum' times
 Then Print the string 'Success' 
 EOF
-    output=`cat $TMP/out`
+    save_output "needle_in_haystack.json"
     assert_output '{"output":["Success"]}'
 }
 
 @test "Timestamp stats" {
-    cat <<EOF >$ZTMP/timestamp_stats.json
+    cat <<EOF | save_asset timestamp_stats.json
 {
 	"1": {
 		"announce": "/api/consensusroom-announce",
@@ -278,7 +279,7 @@ EOF
 EOF
 
 
-    cat <<EOF | zexe SYM12.zen timestamp_stats.json
+    cat <<EOF | zexe timestamp_stats.zen timestamp_stats.json
 Given I have a 'string dictionary' named '1'
 Given I have a 'string dictionary' named '2'
 Given I have a 'string dictionary' named '3'
@@ -328,12 +329,12 @@ Then print the 'variance'
 Then print the 'standard deviation'
 Then print the 'allTimestamps'
 EOF
-    output=`cat $TMP/out`
+    save_output "timestamp_stats.json"
     assert_output '{"allTimestamps":["1644878787666","1644878787611","1644878787367","1644878787754","1644878787679","1644878787692"],"average":"1644878787628","standard_deviation":"135","variance":"18485"}'
 }
 
 @test "Flat array" {
-    cat <<EOF > $ZTMP/not_flat_array.json
+    cat <<EOF | save_asset not_flat_array.json
 {
 "identities": [
 	[
@@ -352,7 +353,7 @@ EOF
 }
 EOF
 
-    cat <<EOF | zexe SYM13.zen not_flat_array.json
+    cat <<EOF | zexe flat_array.zen not_flat_array.json
 Rule check version 2.0.0
 Given I have a 'string array' named 'identities'
 When I create the flat array of contents in 'identities'
@@ -367,9 +368,9 @@ EOF
 }
 
 @test "Flat dictionary" {
-    cat $ZTMP/timestamp_stats.json | jq '{"timestamp": . }' > $ZTMP/not_flat_dic.json
+    cat $BATS_SUITE_TMPDIR/timestamp_stats.json | jq '{"timestamp": . }' | save_asset not_flat_dic.json
 
-    cat <<EOF | zexe SYM14.zen not_flat_dic.json
+    cat <<EOF | zexe flat_array_contents.zen not_flat_dic.json
 Rule check version 2.0.0
 Given I have a 'string dictionary' named 'timestamp'
 When I create the flat array of contents in 'timestamp'
@@ -381,11 +382,11 @@ and print the 'contents flat array'
 EOF
 
     output=`cat $TMP/out`
-    assert_output '{"contents_flat_array":["/api/consensusroom-get-timestamp","http://45.79.92.158:3300","/api/consensusroom-announce","1","BGiQeHz55rNc/k/iy7wLzR1jNcq/MOy8IyS6NBZ0kY3Z4sExlyFXcILcdmWDJZp8FyrILOC6eukLkRNt7Q5tzWU=","/api/consensusroom-get-6-timestamps","11e06cf7615a43f08ebd31c97e1ef9cb","1644878787692","/api/consensusroom-get-timestamp","http://172.105.18.196:3300","/api/consensusroom-announce","1","BGiQeHz55rNc/k/iy7wLzR1jNcq/MOy8IyS6NBZ0kY3Z4sExlyFXcILcdmWDJZp8FyrILOC6eukLkRNt7Q5tzWU=","/api/consensusroom-get-6-timestamps","3794a7c3d1734dc8abcb57c82c972549","1644878787679","/api/consensusroom-get-timestamp","http://192.46.209.107:3300","/api/consensusroom-announce","1","BGiQeHz55rNc/k/iy7wLzR1jNcq/MOy8IyS6NBZ0kY3Z4sExlyFXcILcdmWDJZp8FyrILOC6eukLkRNt7Q5tzWU=","/api/consensusroom-get-6-timestamps","3d0fa08a6d034d01a820ea05cbf93831","1644878787754","/api/consensusroom-get-timestamp","http://212.71.234.197:3300","/api/consensusroom-announce","1","BGiQeHz55rNc/k/iy7wLzR1jNcq/MOy8IyS6NBZ0kY3Z4sExlyFXcILcdmWDJZp8FyrILOC6eukLkRNt7Q5tzWU=","/api/consensusroom-get-6-timestamps","cc95dbf6a3d340fb95452f452a23aa40","1644878787367","/api/consensusroom-get-timestamp","http://172.105.83.46:3300","/api/consensusroom-announce","1","BGiQeHz55rNc/k/iy7wLzR1jNcq/MOy8IyS6NBZ0kY3Z4sExlyFXcILcdmWDJZp8FyrILOC6eukLkRNt7Q5tzWU=","/api/consensusroom-get-6-timestamps","c1da19c60b7a4bf7a66f60825bec7a82","1644878787611","/api/consensusroom-get-timestamp","http://50.116.53.12:3300","/api/consensusroom-announce","1","BGiQeHz55rNc/k/iy7wLzR1jNcq/MOy8IyS6NBZ0kY3Z4sExlyFXcILcdmWDJZp8FyrILOC6eukLkRNt7Q5tzWU=","/api/consensusroom-get-6-timestamps","c633408f9d364740bec696456d5f1ae2","1644878787666","quarantadue"],"keys_flat_array":["6","timestampAPI","baseUrl","announce","version","public_key","get-6-timestamps","uid","myTimestamp","5","timestampAPI","baseUrl","announce","version","public_key","get-6-timestamps","uid","myTimestamp","4","timestampAPI","baseUrl","announce","version","public_key","get-6-timestamps","uid","myTimestamp","3","timestampAPI","baseUrl","announce","version","public_key","get-6-timestamps","uid","myTimestamp","2","timestampAPI","baseUrl","announce","version","public_key","get-6-timestamps","uid","myTimestamp","1","timestampAPI","baseUrl","announce","version","public_key","get-6-timestamps","uid","myTimestamp","non_numero"]}'
+    assert_output '{"contents_flat_array":["1644878787666","1644878787611","1644878787367","1644878787754","1644878787679","1644878787692","1644878787628","18485","135"],"keys_flat_array":["allTimestamps",1,2,3,4,5,6,"average","variance","standard_deviation"]}'
 }
 
 @test "Consensusroom flatten" {
-    cat <<EOF > $ZTMP/consensusroom-flatten.data
+    cat <<EOF | save_asset consensusroom-flatten.data
 {
  "identities": [
   [
@@ -417,7 +418,7 @@ EOF
 }
 EOF
 
-    cat <<EOF | zexe SYM15.zen consensusroom-flatten.data
+    cat <<EOF | zexe consensusroom-flatten.zen consensusroom-flatten.data
 Given I have a 'string array' named 'identities'
 Given I have a 'string dictionary' named 'identity'
 
@@ -431,7 +432,7 @@ Then print the 'flattened array 1'
 Then print the 'flattened array 2'
 Then print the string 'succes'
 EOF
-    output=`cat $TMP/out`
+    save_output "consensusroom-flatten.json"
     assert_output '{"flattened_array_1":["https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp","https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp","https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp","https://api/dyneorgroom.net/api/dyneorg/consensusroom-get-timestamp"],"flattened_array_2":["ip","port_https","get-6-timestampsAPI","uid","timestampAPI","announceAPI","baseUrl","port_http","public_key","version","tracker"],"output":["succes"]}'
 }
 
@@ -519,18 +520,18 @@ EOF
 }
 EOF
 
-    cat <<EOF | zexe SYM16.zen dictionaries.json
+    cat <<EOF | zexe dict2array.zen dictionaries.json
 Given I have a 'string dictionary' named 'identities'
 and a 'string' named 'nameOfObject'
 When I create the array of objects named by 'nameOfObject' found in 'identities'
 Then print the 'array'
 EOF
-    output=`cat $TMP/out`
+    save_output "dict2array.json"
     assert_output '{"array":["http://172.105.105.137:3300/api/consensusroom-get-timestamp","http://172.105.105.137:3300/api/consensusroom-get-timestamp","http://172.105.105.137:3300/api/consensusroom-get-timestamp","http://172.105.105.137:3300/api/consensusroom-get-timestamp","http://172.105.105.137:3300/api/consensusroom-get-timestamp","http://172.105.105.137:3300/api/consensusroom-get-timestamp","http://172.105.105.137:3300/api/consensusroom-get-timestamp"]}'
 }
 
 @test "Compare equal" {
-    cat <<EOF > $ZTMP/compare-equal.data
+    cat <<EOF | save_asset compare-equal.data
 {
  "arr": [1,1,1,1],
  "dict": {
@@ -547,7 +548,7 @@ EOF
 }
 EOF
 
-    cat <<EOF | zexe SYM17.zen compare-equal.data
+    cat <<EOF | zexe compare-equal.zen compare-equal.data
 Given I have a 'string array' named 'arr'
 Given I have a 'string dictionary' named 'dict'
 Given I have a 'string array' named 'nested_arr'
@@ -559,9 +560,41 @@ If the elements in 'nested arr' are all equal
 If the elements in 'empty dict' are all equal
 Then print string 'OK'
 EOF
-    output=`cat $TMP/out`
+    save_output "compare-equal.json"
     assert_output '{"output":["OK"]}'
 }
+
+@test "Compare not equal" {
+    cat <<EOF | save_asset compare-not-equal.data
+{
+ "arr": [1,1,1,3],
+ "dict": {
+   "hello": "world",
+   "nice": "world",
+   "big": "earth"
+ },
+ "nested_arr": [
+   { "nested": "nested" },
+   { "nested": "not-nested" }
+ ]
+
+}
+EOF
+
+    cat <<EOF | zexe compare-not-equal.zen compare-not-equal.data
+Given I have a 'string array' named 'arr'
+Given I have a 'string dictionary' named 'dict'
+Given I have a 'string array' named 'nested_arr'
+
+If the elements in 'arr' are not all equal
+If the elements in 'dict' are not all equal
+If the elements in 'nested arr' are not all equal
+Then print string 'OK'
+EOF
+    save_output "compare-not-equal.json"
+    assert_output '{"output":["OK"]}'
+}
+
 
 @test "Remove table from table" {
     cat <<EOF | save_asset table-arrays.json
@@ -645,7 +678,7 @@ EOF
 
 EOF
 
-cat <<EOF | zexe SYM18.zen table-arrays.json | jq .
+    cat <<EOF | zexe remove-table-from-table.zen table-arrays.json
 Given I have a 'string array' named 'identities'
 Given I have a 'string array' named 'identity'
 When I create the size of 'identities'
@@ -657,13 +690,13 @@ Then print the 'before'
 and print the 'after'
 EOF
 
-    output=`cat $TMP/out`
+    save_output "remove-table-from-table.json"
     assert_output '{"after":2,"before":3}'
 }
 
 
 @test "Split" {
-    cat <<EOF > $ZTMP/split.data
+    cat <<EOF | save_asset split.data
 {
   "id": "did:example:123456789abcdefghi#keys-1",
   "strange_id": "did::",
@@ -672,7 +705,7 @@ EOF
 }
 EOF
 
-    cat <<EOF | zexe SYM19.zen split.data
+    cat <<EOF | zexe split.zen split.data
 Given I have a 'string' named 'id'
 Given I have a 'string' named 'strange_id'
 Given I have a 'string' named 'very_strange_id'
@@ -684,19 +717,19 @@ When I rename 'array' to 'very_strange_array'
 When I create the array by splitting 'id' at 'separator'
 Then print the data
 EOF
-    output=`cat $TMP/out`
+    save_output "split.json"
     assert_output '{"array":["did","example","123456789abcdefghi#keys-1"],"id":"did:example:123456789abcdefghi#keys-1","separator":":","strange_array":["did"],"strange_id":"did::","very_strange_array":[],"very_strange_id":"::"}'
 }
 
 @test "Split space" {
-    cat <<EOF > $ZTMP/split_space.json
+    cat <<EOF | save_asset split_space.json
 {
   "string": "Hello world!",
   "separator": " "
 }
 EOF
 
-    cat <<EOF | zexe SYM20.zen split_space.json | jq
+    cat <<EOF | zexe split_space.zen split_space.json | jq
 Given I have a 'string'
 Given I have a 'string' named 'separator'
 
@@ -714,6 +747,6 @@ and I rename 'array' to 'split3'
 
 Then print data
 EOF
-    output=`cat $TMP/out`
+    save_output "split_space.json"
     assert_output '{"separator":" ","separator2":"_","split0":["Hello","world!"],"split1":["Hello","world!"],"split2":["hello","world"],"split3":["hello","world"],"string":"Hello world!","string2":"hello_world"}'
 }
