@@ -9,7 +9,6 @@ setup() {
     load "$TR"/test_helper/bats-assert/load
     load "$TR"/test_helper/bats-file/load
     ZTMP="$BATS_FILE_TMPDIR"
-    SUBDOC=lua
     if [ "$ZENROOM_EXECUTABLE" == "" ]; then
 	ZENROOM_EXECUTABLE="${TR}/zenroom"
     fi
