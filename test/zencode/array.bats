@@ -175,7 +175,7 @@ EOF
 
 @test "Import array of bls" {
     skip
-    cat << EOF > $ZTMP/array_public_bls.json
+    cat << EOF | save_asset array_public_bls.json
 { "public_keys": {
  "Alice":{"reflow_public_key": "KrfEl2HFpml3di0N5vnrN+yrbSgiSClGBgz9zEmp2BihHOejIuOrTsOS573Fh6ciCxv6jI3syiF7mfGKUKXurUruj1kUtJfRpXHXa4d22LlioeB9uv+l14qhecrFojboOGrxZulFoDKVVWVCB0/bAD6HquSmvX4+jyPl/BLt6TUnNDLeWK8vm6zu9sR8/XFtKqEfCgQB4u0vbDhqOKhRNut8MjLtMcxYgWZTunmszNAZdAGMcYSod/0p1AzOnAUi"},
  "Bob"  :{"reflow_public_key": "HA5WkWcTL0bJRRtjaTlW67SxTKBvuMniEOuao+jeuKA/2PT5965hvJgeDuTc2dHjGkCUzTjYhruOmY8puiF6s+8LRttJo17utYtsDNtNPNpaNdDSg8Dsg+wljGnqDUW8Jy29GQtuse2nqCOhGDzx9XC9pRCcu7hxAlIQsivpI2D9vXvi6BrVEniFG/kOrzzaUXXWNzBEuLhkwgvHcjLwC4Ph6ynrcsFIwEZycKuJKCaoOJu/ZQRT/nyfSf/Bom2k"}
@@ -436,7 +436,7 @@ EOF
 }
 
 @test "dict2array" {
-    cat <<EOF > $ZTMP/dictionaries.json
+    cat <<EOF | save_asset dictionaries.json
 {
 	"nameOfObject": "timestampEndpoint",
 	"identities": {
@@ -518,7 +518,6 @@ EOF
 	}
 }
 EOF
-    save_asset 'dictionaries.json'
 
     cat <<EOF | zexe SYM16.zen dictionaries.json
 Given I have a 'string dictionary' named 'identities'
@@ -565,7 +564,7 @@ EOF
 }
 
 @test "Remove table from table" {
-    cat <<EOF > $ZTMP/table-arrays.json
+    cat <<EOF | save_asset table-arrays.json
 { "identity": {
     "announceAPI": "/api/zenswarm-oracle-announce",
     "baseUrl": "http://zenswarm.zenroom.org",
@@ -645,7 +644,6 @@ EOF
 }
 
 EOF
-    save_asset "table-arrays.json"
 
 cat <<EOF | zexe SYM18.zen table-arrays.json | jq .
 Given I have a 'string array' named 'identities'
