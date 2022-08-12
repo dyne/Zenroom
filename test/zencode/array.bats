@@ -38,6 +38,36 @@ Then print the 'lucky one'
 EOF
 }
 
+@test "When I create the hash to point 'ECP' of each object in" {
+    skip
+    cat <<EOF | zexe array_hashtopoint.zen arr.json
+rule input encoding url64
+rule output encoding url64
+Given I have a 'array' named 'bonnetjes'
+When I create the hash to point 'ECP' of each object in 'bonnetjes'
+# When for each x in 'bonnetjes' create the of 'ECP.hashtopoint(x)'
+Then print the 'hashes'
+EOF
+    save_output "ecp.json"
+    # TODO: assert output
+}
+
+@test "When for each x in 'hashes' y in 'bonnetjes' is true 'x == ECP.hashtopoint(y)'" {
+    skip
+    cat <<EOF | zexe array_ecp_check.zen arr.json ecp.json
+rule input encoding url64
+rule output encoding url64
+Given I have a 'array' named 'bonnetjes'
+and I have a 'ecp array' named 'hashes'
+# When I pick the random object in array 'hashes'
+# and I remove the 'random object' from array 'hashes'
+When for each x in 'hashes' y in 'bonnetjes' is true 'x == ECP.hashtopoint(y)'
+Then print the 'hashes'
+EOF
+    save_output "hashes.json"
+    # TODO: assert
+    # 'x == ECP.hashtopoint(y)'
+}
 @test "When I create the hashes of each object in (left)" {
     cat <<EOF | zexe SYM04.zen arr.json
 rule input encoding url64
@@ -143,18 +173,22 @@ EOF
     assert_output '{"leftmost":"Zen","whole":"room_works_great"}'
 }
 
-# cat << EOF > array_public_bls.json
-# { "public_keys": {
-#  "Alice":{"reflow_public_key": "KrfEl2HFpml3di0N5vnrN+yrbSgiSClGBgz9zEmp2BihHOejIuOrTsOS573Fh6ciCxv6jI3syiF7mfGKUKXurUruj1kUtJfRpXHXa4d22LlioeB9uv+l14qhecrFojboOGrxZulFoDKVVWVCB0/bAD6HquSmvX4+jyPl/BLt6TUnNDLeWK8vm6zu9sR8/XFtKqEfCgQB4u0vbDhqOKhRNut8MjLtMcxYgWZTunmszNAZdAGMcYSod/0p1AzOnAUi"},
-#  "Bob"  :{"reflow_public_key": "HA5WkWcTL0bJRRtjaTlW67SxTKBvuMniEOuao+jeuKA/2PT5965hvJgeDuTc2dHjGkCUzTjYhruOmY8puiF6s+8LRttJo17utYtsDNtNPNpaNdDSg8Dsg+wljGnqDUW8Jy29GQtuse2nqCOhGDzx9XC9pRCcu7hxAlIQsivpI2D9vXvi6BrVEniFG/kOrzzaUXXWNzBEuLhkwgvHcjLwC4Ph6ynrcsFIwEZycKuJKCaoOJu/ZQRT/nyfSf/Bom2k"}
-# } }
-# EOF
+@test "Import array of bls" {
+    skip
+    cat << EOF > $ZTMP/array_public_bls.json
+{ "public_keys": {
+ "Alice":{"reflow_public_key": "KrfEl2HFpml3di0N5vnrN+yrbSgiSClGBgz9zEmp2BihHOejIuOrTsOS573Fh6ciCxv6jI3syiF7mfGKUKXurUruj1kUtJfRpXHXa4d22LlioeB9uv+l14qhecrFojboOGrxZulFoDKVVWVCB0/bAD6HquSmvX4+jyPl/BLt6TUnNDLeWK8vm6zu9sR8/XFtKqEfCgQB4u0vbDhqOKhRNut8MjLtMcxYgWZTunmszNAZdAGMcYSod/0p1AzOnAUi"},
+ "Bob"  :{"reflow_public_key": "HA5WkWcTL0bJRRtjaTlW67SxTKBvuMniEOuao+jeuKA/2PT5965hvJgeDuTc2dHjGkCUzTjYhruOmY8puiF6s+8LRttJo17utYtsDNtNPNpaNdDSg8Dsg+wljGnqDUW8Jy29GQtuse2nqCOhGDzx9XC9pRCcu7hxAlIQsivpI2D9vXvi6BrVEniFG/kOrzzaUXXWNzBEuLhkwgvHcjLwC4Ph6ynrcsFIwEZycKuJKCaoOJu/ZQRT/nyfSf/Bom2k"}
+} }
+EOF
 
-# cat <<EOF | debug array_schema.zen array_public_bls.json
-# Scenario reflow
-# Given I have a 'reflow public key array' named 'public keys'
-# Then print all data
-# EOF
+    cat <<EOF | debug array_schema.zen array_public_bls.json
+Scenario reflow
+Given I have a 'reflow public key array' named 'public keys'
+Then print all data
+EOF
+    # TODO: assert output
+}
 
 @test "Needle in haystack" {
     cat << EOF > $ZTMP/array_matches.json
@@ -371,8 +405,8 @@ EOF
   "uid": "random",
   "ip": "hostname -I",
   "baseUrl": "http://hostname -I",
-  "port_http": "$PORT_HTTP",
-  "port_https": "$PORT_HTTPS",
+  "port_http": "1000",
+  "port_https": "1001",
   "public_key": "BGiQeHz55rNc/k/iy7wLzR1jNcq/MOy8IyS6NBZ0kY3Z4sExlyFXcILcdmWDJZp8FyrILOC6eukLkRNt7Q5tzWU=",
   "version": "2",
   "announceAPI": "/api/consensusroom-announce",
@@ -484,8 +518,6 @@ EOF
 	}
 }
 EOF
-    # TODO: if I don't set SUBDOC the default value in save_asset is lua....
-    SUBDOC=array
     save_asset 'dictionaries.json'
 
     cat <<EOF | zexe SYM16.zen dictionaries.json
@@ -613,8 +645,7 @@ EOF
 }
 
 EOF
-    SUBDOC=array
-    save_asset "table-array.json"
+    save_asset "table-arrays.json"
 
 cat <<EOF | zexe SYM18.zen table-arrays.json | jq .
 Given I have a 'string array' named 'identities'
@@ -633,3 +664,58 @@ EOF
 }
 
 
+@test "Split" {
+    cat <<EOF > $ZTMP/split.data
+{
+  "id": "did:example:123456789abcdefghi#keys-1",
+  "strange_id": "did::",
+  "very_strange_id": "::",
+  "separator": ":"
+}
+EOF
+
+    cat <<EOF | zexe SYM19.zen split.data
+Given I have a 'string' named 'id'
+Given I have a 'string' named 'strange_id'
+Given I have a 'string' named 'very_strange_id'
+Given I have a 'string' named 'separator'
+When I create the array by splitting 'strange_id' at 'separator'
+When I rename 'array' to 'strange_array'
+When I create the array by splitting 'very_strange_id' at 'separator'
+When I rename 'array' to 'very_strange_array'
+When I create the array by splitting 'id' at 'separator'
+Then print the data
+EOF
+    output=`cat $TMP/out`
+    assert_output '{"array":["did","example","123456789abcdefghi#keys-1"],"id":"did:example:123456789abcdefghi#keys-1","separator":":","strange_array":["did"],"strange_id":"did::","very_strange_array":[],"very_strange_id":"::"}'
+}
+
+@test "Split space" {
+    cat <<EOF > $ZTMP/split_space.json
+{
+  "string": "Hello world!",
+  "separator": " "
+}
+EOF
+
+    cat <<EOF | zexe SYM20.zen split_space.json | jq
+Given I have a 'string'
+Given I have a 'string' named 'separator'
+
+When I set 'string2' to 'hello world' as 'string'
+When I set 'separator2' to ' ' as 'string'
+
+When I create the array by splitting 'string' at 'separator'
+and I rename 'array' to 'split0'
+When I create the array by splitting 'string' at 'separator2'
+and I rename 'array' to 'split1'
+When I create the array by splitting 'string2' at 'separator'
+and I rename 'array' to 'split2'
+When I create the array by splitting 'string2' at 'separator2'
+and I rename 'array' to 'split3'
+
+Then print data
+EOF
+    output=`cat $TMP/out`
+    assert_output '{"separator":" ","separator2":"_","split0":["Hello","world!"],"split1":["Hello","world!"],"split2":["hello","world"],"split3":["hello","world"],"string":"Hello world!","string2":"hello_world"}'
+}
