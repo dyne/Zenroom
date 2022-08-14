@@ -1135,6 +1135,7 @@ int luaopen_big(lua_State *L) {
 		{"modneg", big_modneg},
 		{"modsub", big_modsub},
 		{"modrand", big_modrand},
+		{"modpower", big_modpower},
 		{"random", big_random},
 		{"modinv", big_modinv},
 		{"jacobi", big_jacobi},
