@@ -194,7 +194,8 @@ check-debug:
 check-crypto: test-exec := ./src/zenroom
 check-crypto:
 	@cp -v ${test-exec} test/zenroom
-	$(call bats, test/lua/crypto)
+	$(call bats, test/lua/crypto.bats)
+	$(call bats, test/determinism)
 
 # $(call determinism-tests,${test-exec})
 # $(call crypto-tests,${test-exec})
