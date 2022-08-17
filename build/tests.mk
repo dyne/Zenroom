@@ -117,10 +117,8 @@ check:
 check-osx: test-exec := ./src/zenroom.command
 check-osx:
 	@cp -v ${test-exec} test/zenroom
-	$(call bats, test/lua/himem)
-	$(call bats, test/lua/lowmem)
-	$(call bats, test/lua/crypto)
-	$(call bats, test/determinism/run)
+	$(call bats, test/lua)
+	$(call bats, test/determinism)
 	rm -f /tmp/zenroom-test-summary.txt
 	$(call crypto-integration,${test-exec})
 	$(call zencode-integration,${test-exec})
@@ -132,10 +130,8 @@ check-linux: test-exec := ./src/zenroom
 check-linux:
 	@cp -v ${test-exec} test/zenroom
 	rm -f /tmp/zenroom-test-summary.txt
-	$(call bats, test/lua/himem)
-	$(call bats, test/lua/lowmem)
-	$(call bats, test/lua/crypto)
-	$(call bats, test/determinism/run)
+	$(call bats, test/lua)
+	$(call bats, test/determinism)
 	$(call crypto-integration,${test-exec})
 	$(call zencode-integration,${test-exec})
 	cat /tmp/zenroom-test-summary.txt
@@ -147,8 +143,8 @@ check-linux:
 check-js: test-exec := node ${pwd}/test/zenroom_exec.js ${pwd}/src/zenroom.js
 check-js:
 	@echo "#!/bin/sh\n${test-exec}\n" > test/zenroom && chmod +x test/zenroom
-	$(call bats, test/lua/lowmem)
-	$(call bats, test/lua/crypto)
+	$(call bats, test/lua/lowmem.bats)
+	$(call bats, test/lua/crypto.bats)
 	@echo "----------------"
 	@echo "All tests passed for JS binary build"
 	@echo "----------------"
@@ -156,8 +152,8 @@ check-js:
 check-py: test-exec := python3 ${pwd}/test/zenroom_exec.py ${pwd}
 check-py:
 	@echo "#!/bin/sh\n${test-exec}\n" > test/zenroom && chmod +x test/zenroom
-	$(call bats, test/lua/lowmem)
-	$(call bats, test/lua/crypto)
+	$(call bats, test/lua/lowmem.bats)
+	$(call bats, test/lua/crypto.bats)
 	@echo "----------------"
 	@echo "All tests passed for PYTHON build"
 	@echo "----------------"
@@ -166,8 +162,8 @@ check-rs: test-exec := ${pwd}/test/zenroom_exec_rs/target/debug/zenroom_exec_rs 
 check-rs:
 	cargo build --manifest-path ${pwd}/test/zenroom_exec_rs/Cargo.toml
 	@echo "#!/bin/sh\n${test-exec}\n" > test/zenroom && chmod +x test/zenroom
-	$(call bats, test/lua/lowmem)
-	$(call bats, test/lua/crypto)
+	$(call bats, test/lua/lowmem.bats)
+	$(call bats, test/lua/crypto.bats)
 	@echo "----------------"
 	@echo "All tests passed for RUST build"
 	@echo "----------------"
@@ -176,8 +172,8 @@ check-go: test-exec := ${pwd}/test/zenroom_exec_go/main ${pwd}
 check-go:
 	cd ${pwd}/test/zenroom_exec_go && go build
 	@echo "#!/bin/sh\n${test-exec}\n" > test/zenroom && chmod +x test/zenroom
-	$(call bats, test/lua/lowmem)
-	$(call bats, test/lua/crypto)
+	$(call bats, test/lua/lowmem.bats)
+	$(call bats, test/lua/crypto.bats)
 	@echo "----------------"
 	@echo "All tests passed for GO build"
 	@echo "----------------"
@@ -186,8 +182,8 @@ check-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom
 check-debug:
 	@echo "#!/bin/sh\n${test-exec}\n" > test/zenroom && chmod +x test/zenroom
 	rm -f /tmp/zenroom-test-summary.txt
-	$(call bats, test/lua/lowmem)
-	$(call bats, test/lua/crypto)
+	$(call bats, test/lua/lowmem.bats)
+	$(call bats, test/lua/crypto.bats)
 	cat /tmp/zenroom-test-summary.txt
 	@echo "----------------"
 	@echo "All tests passed for DEBUG binary build"
@@ -212,8 +208,8 @@ check-crypto:
 check-crypto-lw: test-exec := ./src/zenroom -c memmanager=lw
 check-crypto-lw:
 	rm -f /tmp/zenroom-test-summary.txt
-	$(call bats, test/determinism/run)
-	$(call bats, test/lua/crypto)
+	$(call bats, test/determinism)
+	$(call bats, test/lua/crypto.bats)
 	$(call zencode-integration,${test-exec})
 	cat /tmp/zenroom-test-summary.txt
 	@echo "-----------------------"
@@ -224,8 +220,8 @@ check-crypto-lw:
 check-crypto-stb: test-exec := ./src/zenroom -c print=stb
 check-crypto-stb:
 	rm -f /tmp/zenroom-test-summary.txt
-	$(call bats, test/determinism/run)
-	$(call bats, test/lua/crypto)
+	$(call bats, test/determinism)
+	$(call bats, test/lua/crypto.bats)
 	$(call zencode-integration,${test-exec})
 	cat /tmp/zenroom-test-summary.txt
 	@echo "-----------------------"
@@ -235,8 +231,8 @@ check-crypto-stb:
 check-crypto-mutt: test-exec := ./src/zenroom -c print=mutt
 check-crypto-mutt:
 	rm -f /tmp/zenroom-test-summary.txt
-	$(call bats, test/determinism/run)
-	$(call bats, test/lua/crypto)
+	$(call bats, test/determinism)
+	$(call bats, test/lua/crypto.bats)
 	$(call zencode-integration,${test-exec})
 	cat /tmp/zenroom-test-summary.txt
 	@echo "-----------------------"
@@ -247,7 +243,7 @@ check-crypto-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/ze
 check-crypto-debug:
 	@echo "#!/bin/sh\n${test-exec}\n" > test/zenroom && chmod +x test/zenroom
 	rm -f /tmp/zenroom-test-summary.txt
-	$(call bats, test/lua/crypto)
+	$(call bats, test/lua/crypto.bats)
 	cat /tmp/zenroom-test-summary.txt
 
 check-cortex-m:
