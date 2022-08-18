@@ -54,7 +54,7 @@ EOF
 @test "Alice signs a message" {
     cat <<EOF | zexe sign_from_alice.zen alice_keys.json
 Rule check version 2.0.0
-Scenario 'eddsa'
+Scenario eddsa
 Given that I am known as 'Alice'
 and I have my 'keyring'
 When I write string 'This is my authenticated message.' in 'message'
@@ -78,7 +78,7 @@ EOF
 
     cat <<EOF | zexe verify_from_alice.zen sign_pubkey.json
 Rule check version 2.0.0
-Scenario 'eddsa'
+Scenario eddsa
 Given I have a 'eddsa public key'
 and I have a 'eddsa signature'
 When I write string 'This is my authenticated message.' in 'message'
@@ -93,7 +93,7 @@ EOF
 @test "Fail verification on a different message" {
     cat <<EOF > wrong_message.zen
 Rule check version 2.0.0
-Scenario 'eddsa'
+Scenario eddsa
 Given I have a 'eddsa public key'
 and I have a 'eddsa signature'
 When I write string 'This is the wrong message.' in 'message'
@@ -117,7 +117,7 @@ EOF
     save_output wrong_pubkey.json
     cat <<EOF > wrong_pubkey.zen
 Rule check version 2.0.0
-Scenario 'eddsa'
+Scenario eddsa
 Given I have a 'eddsa public key'
 and I have a 'eddsa signature'
 When I write string 'This is my authenticated message.' in 'message'
@@ -127,4 +127,48 @@ and print the 'message'
 EOF
     run $ZENROOM_EXECUTABLE -z wrong_pubkey.zen -a wrong_pubkey.json
     assert_failure
+}
+
+@test "Alice signs a big file" {
+    cat <<EOF | $ZENROOM_EXECUTABLE -z > bigfile.json
+Rule check version 2.0.0
+Given Nothing
+When I create the random object of '1000000' bytes
+and I rename 'random object' to 'bigfile'
+Then print the 'bigfile' as 'base64'
+EOF
+
+    cat <<EOF | zexe sign_bigfile.zen alice_keys.json bigfile.json
+Rule check version 2.0.0
+Scenario 'eddsa'
+Given that I am known as 'Alice'
+and I have my 'keyring'
+and I have a 'base64' named 'bigfile'
+When I create the eddsa signature of 'bigfile'
+Then print the 'eddsa signature'
+EOF
+    save_output sign_bigfile_keyring.json
+}
+
+@test "Verify a big file signed by Alice" {
+    cat <<EOF | zexe join_sign_pubkey.zen sign_bigfile_keyring.json alice_pubkey.json
+Scenario eddsa
+Given I have a 'eddsa public key' in 'Alice'
+and I have a 'eddsa signature'
+Then print the 'eddsa signature'
+and print the 'eddsa public key'
+EOF
+    save_output sign_pubkey.json
+
+    cat <<EOF | zexe verify_from_alice.zen sign_pubkey.json bigfile.json
+Rule check version 2.0.0
+Scenario 'eddsa'
+Given I have a 'eddsa public key'
+and I have a 'eddsa signature'
+and I have a 'base64' named 'bigfile'
+When I verify the 'bigfile' has a eddsa signature in 'eddsa signature' by 'Alice'
+Then print the string 'Bigfile Signature is valid'
+EOF
+    save_output verify_alice_signature.json
+    assert_output '{"output":["Bigfile_Signature_is_valid"]}'
 }
