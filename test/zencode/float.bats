@@ -29,35 +29,29 @@ EOF
 }
 
 @test 'import float as int' {
-    skip 'could not assert failure'
-cat <<EOF | save_asset wrong_int.data
+
+    cat <<EOF | save_asset wrong_int.json
 {
   "int_fp": 100.5
 }
 EOF
-cat <<EOF | zexe wrong_int.zen wrong_int.data
+    cat <<EOF | save_asset wrong_int.zen
+| zexe wrong_int.zen wrong_int.data
 Given I have a 'integer' named 'int_fp'
-and debug
-
 Then print all data
 EOF
+    run $ZENROOM_EXECUTABLE -z wrong_int.zen -a wrong_int.json
     assert_failure
-
-
 }
 
 @test 'import float from non numeric string' {
-    skip 'could not assert failure'
     cat <<EOF | save_asset wrong_float.json
-{
-  "fp_str": "hello world"
-}
+{ "fp_str": "hello world" }
 EOF
-    cat <<EOF | zexe wrong_float.zen wrong_float.json
+    cat <<EOF | save_asset wrong_float.zen
 Given I have a 'float' named 'fp_str'
-and debug
-
 Then print all data
 EOF
+    run $ZENROOM_EXECUTABLE -z wrong_float.zen -a wrong_float.json
     assert_failure
 }
