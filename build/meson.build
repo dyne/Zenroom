@@ -138,24 +138,45 @@ if get_option('examples')
     install_subdir('../examples', install_dir: docdir, strip_directory: false)
 endif
 
+
+## BATS tests in test/determinism
+test_dir = meson.source_root() + '/../test/'
+bats_bin = find_program(test_dir+'bats/bin/bats')
+tests = [ 'determinism' ]
+foreach test_suite : tests
+    test('random_'+test_suite.underscorify(),
+	 bats_bin,
+	 args: [test_dir+test_suite])
+endforeach
+
+## BATS tests in vectors
+test_dir = meson.source_root() + '/../test/'
+bats_bin = find_program(test_dir+'bats/bin/bats')
+tests = [ 'sha' ]
+foreach test_suite : tests
+    test('vectors_'+test_suite.underscorify(),
+	 bats_bin,
+	 args: [test_dir+'vectors/'+test_suite+'.bats'])
+endforeach
+
 ## BATS tests in test/lua
 test_dir = meson.source_root() + '/../test/'
 bats_bin = find_program(test_dir+'bats/bin/bats')
-tests = [ 'lua', 'determinism' ]
+tests = [ 'lowmem', 'himem', 'primitives', 'crypto' ]
 foreach test_suite : tests
-    test(test_suite.underscorify(),
+    test('lua_'+test_suite.underscorify(),
 	 bats_bin,
-	 args: [test_dir+test_suite])
+	 args: [test_dir+'lua/'+test_suite+'.bats'])
 endforeach
 
 ## BATS tests in test/zencode
 test_dir = meson.source_root() + '/../test/'
 bats_bin = find_program(test_dir+'bats/bin/bats')
-tests = [ 'array', 'dictionary', 'branching',
+tests = [ 'array', 'dictionary', 'branching', 'float',
 	  'generic_ecdh', 'generic_eddsa', 'generic_schnorr', 'generic_dilithium',
 	  'zkp_01', 'zkp_02', 'credential', 'bitcoin', 'ecdh' ]
 foreach test_suite : tests
-    test(test_suite.underscorify(),
+    test('zencode_'+test_suite.underscorify(),
 	 bats_bin,
 	 args: [test_dir+'zencode/'+test_suite+'.bats'])
 endforeach
