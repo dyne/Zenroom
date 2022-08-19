@@ -16,14 +16,13 @@ load ../bats_setup
     Z crypto_credential.lua
     Z mnemonic_encoding.lua
     Z qp.lua
-    Z ecdsa_vectors.lua
     Z ethereum.lua
     Z hash_ripemd160.lua
     Z hdwallet.lua
     Z pbkdf2.lua
     Z rlp_encoding.lua
     Z satoshibtc.lua
-    Z zen_schnorr.lua
+    Z schnorr.lua
     Z w3c-vc.lua
     Z coconut_preference.lua
 }

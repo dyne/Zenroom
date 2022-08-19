@@ -1,7 +1,6 @@
 load ../bats_setup
 
 @test "Lua zenroom primitives tests" {
-    Z float.lua
     Z base45.lua
     Z big_decimal.lua
     Z big_shift.lua
