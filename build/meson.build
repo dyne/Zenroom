@@ -151,8 +151,9 @@ endforeach
 ## BATS tests in test/zencode
 test_dir = meson.source_root() + '/../test/'
 bats_bin = find_program(test_dir+'bats/bin/bats')
-tests = [ 'generic_ecdh', 'generic_eddsa', 'generic_schnorr',
-	  'generic_dilithium' ]
+tests = [ 'array', 'dictionary', 'branching',
+	  'generic_ecdh', 'generic_eddsa', 'generic_schnorr', 'generic_dilithium',
+	  'zkp_01', 'zkp_02', 'credential', 'bitcoin', 'ecdh' ]
 foreach test_suite : tests
     test(test_suite.underscorify(),
 	 bats_bin,
