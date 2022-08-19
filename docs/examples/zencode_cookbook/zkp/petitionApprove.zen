@@ -1,0 +1,11 @@
+Scenario credential
+Scenario petition: approve
+    Given that I have a 'issuer public key' inside 'MadHatter'
+    Given I have a 'credential proof'
+    Given I have a 'petition'
+    When I aggregate all the issuer public keys
+    When I verify the credential proof
+    When I verify the new petition to be empty
+    Then print the 'petition'
+    Then print the 'issuer public key'
+	Then print the 'uid' from 'petition' as 'string'

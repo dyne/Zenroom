@@ -1,0 +1,19 @@
+	Scenario credential: read and validate the credentials
+	Scenario petition: create the petition
+# Here I state my identity
+    Given that I am known as 'Alice'
+# Here I load everything needed to proceed
+    Given I have my 'keyring'
+    Given I have my 'credentials'
+    Given I have a 'issuer public key' inside 'MadHatter'
+# In the "when" phase we have the cryptographical creation of the petition
+    When I aggregate all the issuer public keys
+    When I create the credential proof
+    When I create the petition 'More privacy for all!'
+# Here we are printing out what is needed to the get the petition approved
+    Then print the 'issuer public key'
+	Then print the 'credential proof'
+	Then print the 'petition'
+# Here we're just printing the "uid" as string, instead of the default base64
+# so that it's human readable - this is not needed to advance in the flow
+	Then print the 'uid' from 'petition' as 'string'

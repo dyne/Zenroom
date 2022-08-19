@@ -1,0 +1,9 @@
+Scenario credential
+Scenario petition: sign petition
+    Given I am 'Alice'
+    Given I have my valid 'keyring'
+    Given I have my 'credentials'
+    Given I have a valid 'issuer public key' inside 'MadHatter'
+    When I aggregate all the issuer public keys
+	When I create the petition signature 'More privacy for all!'
+    Then print the 'petition signature'
