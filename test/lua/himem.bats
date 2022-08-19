@@ -9,4 +9,6 @@ load ../bats_setup
     Z calls.lua
     Z constructs.lua
     Z json.lua
+    Z coroutine.lua
+    Z closure.lua
 }
