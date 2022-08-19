@@ -1,0 +1,7 @@
+Scenario credential
+Scenario petition: tally
+    Given that I am 'Alice'
+    Given I have my 'keyring'
+    Given I have a valid 'petition'
+    When I create a petition tally
+    Then print the 'petition tally'

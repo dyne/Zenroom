@@ -1,0 +1,11 @@
+Scenario credential
+Scenario petition: aggregate signature
+    Given that I have a 'petition signature'
+    Given I have a 'petition'
+    Given I have a 'issuer public key'
+    When the petition signature is not a duplicate
+    When the petition signature is just one more
+    When I add the signature to the petition
+    and I aggregate all the issuer public keys
+    Then print the 'petition'
+    Then print the 'issuer public key'
