@@ -1,6 +1,6 @@
 load ../bats_setup
 load ../bats_zencode
-SUBDOC=credential
+SUBDOC=dictionary
 
 @test "Dictionary create issuer keypair" {
     cat <<EOF | zexe dictionariesCreate_issuer_keypair.zen
@@ -407,6 +407,244 @@ Then print the 'salesReport'
 EOF
     save_output 'dictionary_iter.json'
     assert_output '{"salesReport":{"maxPricePerKG":100,"sumValueAllTransactions":3800,"transferredProductAmountafterSalesStart":10}}'
+}
+
+@test "Append foreach" {
+    cat << EOF  | save_asset blockchains.json
+{
+   "blockchains":{
+      "b1":{
+         "endpoint":"http://pesce.com/" ,
+         "last-transaction": "123"
+      },
+      "b2":{
+         "endpoint":"http://fresco.com/",
+         "last-transaction": "234"
+      }
+   }
+}
+EOF
+
+    cat << EOF | zexe append_foreach.zen blockchains.json
+Given I have a 'string dictionary' named 'blockchains'
+When for each dictionary in 'blockchains' I append 'last-transaction' to 'endpoint'
+Then print 'blockchains'
+EOF
+    save_output 'append_foreach.json'
+    assert_output '{"blockchains":{"b1":{"endpoint":"http://pesce.com/123","last-transaction":"123"},"b2":{"endpoint":"http://fresco.com/234","last-transaction":"234"}}}'
+}
+
+@test "Copy content in" {
+    cat << EOF | zexe copy_contents_in.zen blockchains.json batch_data.json
+Given I have a 'string dictionary' named 'blockchains'
+Given that I have a 'string dictionary' named 'TransactionsBatchA'
+When I copy contents of 'blockchains' in 'TransactionsBatchA'
+Then print 'TransactionsBatchA'
+EOF
+    save_output 'copy_contents_in.json'
+    assert_output '{"TransactionsBatchA":{"ABC-Transactions1Data":{"PricePerKG":100,"ProductPurchasePrice":50,"TransactionValue":1500,"TransferredProductAmount":15,"UndeliveredProductAmount":7,"timestamp":1.597573e+09},"ABC-Transactions2Data":{"PricePerKG":80,"TransactionValue":1600,"TransferredProductAmount":20,"timestamp":1.597573e+09},"ABC-Transactions3Data":{"PricePerKG":70,"TransactionValue":700,"TransferredProductAmount":10,"timestamp":1.597573e+09},"Information":{"Buyer":"John Doe","Metadata":"TransactionsBatchB6789"},"MetaData":"This var is Not a Table","b1":{"endpoint":"http://pesce.com/","last-transaction":"123"},"b2":{"endpoint":"http://fresco.com/","last-transaction":"234"}}}'
+
+}
+
+@test "Dictionary named by" {
+    cat << EOF  | save_asset dictionary_named_by.json
+{
+	"Recipient": "User1234",
+	"NewRecipient": "User1235",
+	"myDict": {
+		"User1234": {
+			"name": "John",
+			"surname": "Doe"
+		}
+	}
+}
+EOF
+
+    cat << EOF | zexe dictionary_named_by.zen dictionary_named_by.json
+Given I have a 'string' named 'Recipient'
+Given I have a 'string' named 'NewRecipient'
+Given that I have a 'string dictionary' named 'myDict'
+
+Given that I have a 'string dictionary' named by 'Recipient' inside 'myDict'
+
+When I create the copy of object named by 'Recipient' from dictionary 'myDict'
+
+When I rename the 'copy' to 'tempObject'
+When I rename 'tempObject' to named by 'NewRecipient'
+
+Then print the object named by 'NewRecipient'
+EOF
+    save_output 'dictionary_named_by.json'
+    assert_output '{"User1235":{"name":"John","surname":"Doe"}}'
 
 
+}
+
+
+@test "Dict into array" {
+
+    cat <<EOF | save_asset dict-into-array.data
+{
+	"dataFromEndpoint": {
+		"data": {
+			"batches": [
+				{
+					"header": {
+						"signer_public_key": "0209373bda3561c82c246b226ab3dfdfcab5fbdcba3cb3969508ea5b427628bb1f",
+						"transaction_ids": [
+							"3ff09b69c5973eaed4f06214bfa45ad0cf3d88f92476f3f297b331efb7ec9ad51f27b94a217e0fe1c59a714f067bcdd9e595f8d73c8e3ab22a085b732fc8bb94"
+						]
+					},
+					"header_signature": "b81f74eec9f49fd8062c3a90dc5bd48249842ea6149b4a2e7cded38f50ca0e4d30cb66f6d74a807b737143f07fa2f7e807ef5dd44e3e03e89ac1f39ac41012f0",
+					"trace": false,
+					"transactions": [
+						{
+							"header": {
+								"batcher_public_key": "0209373bda3561c82c246b226ab3dfdfcab5fbdcba3cb3969508ea5b427628bb1f",
+								"dependencies": [],
+								"family_name": "restroom",
+								"family_version": "1.0",
+								"inputs": [
+									"c274b5"
+								],
+								"nonce": "",
+								"outputs": [
+									"c274b5"
+								],
+								"payload_sha512": "263e4334456dbe1c5904417e8d2b80d0235fd6766a7e71ca3b95bd0fa134b0fe7c722877ee44a715ac81d9dda0df8496abb3455c0f447c26e801dbdfba5f2bc3",
+								"signer_public_key": "0209373bda3561c82c246b226ab3dfdfcab5fbdcba3cb3969508ea5b427628bb1f"
+							},
+							"header_signature": "3ff09b69c5973eaed4f06214bfa45ad0cf3d88f92476f3f297b331efb7ec9ad51f27b94a217e0fe1c59a714f067bcdd9e595f8d73c8e3ab22a085b732fc8bb94",
+							"payload": "omV2YWx1ZXiTeyJkYXRhVG9TdG9yZSI6IlRHbG1aU0JwY3lCaWIzSnBibWNzSUd4bGRDQjFjeUJ6Y0dsalpTQnBkQ0IxY0NCM2FYUm9JSE52YldVZ1lteHZZMnRqYUdGcGJpQm1kVzVySVE9PSIsIm15MTI4Qml0c1JhbmRvbSI6IklBTVRDNzNEMlB0b0dPdEVRVTlPUXc9PSJ9Z2FkZHJlc3N4RmMyNzRiNTAyYjk5YmUxZDA1NmFmY2UzYTRmZTI0ZmM2Y2NmZjM0NzdmOGJlYjE5ODk2YjdhYTY2ZTQ1MjVjYTAwMTdkY2U="
+						}
+					]
+				}
+			],
+			"header": {
+				"batch_ids": [
+					"b81f74eec9f49fd8062c3a90dc5bd48249842ea6149b4a2e7cded38f50ca0e4d30cb66f6d74a807b737143f07fa2f7e807ef5dd44e3e03e89ac1f39ac41012f0"
+				],
+				"block_num": "50910",
+				"consensus": "CjEKBFNlYWwQ7sZSGN2NAyIhAlle86noklkwJcqHaKdsqYG3wT5nY+zuLpAhUSM9neiaEkBsxMiV0seIGVRIl1DVmP83/vbSme6fteGVmAlMeBe07QLmdw9Q3vynYLa2vvJ4+F6IrTUuGEZL1LdoGxIRo0tkGrUCCngKIQLOFYL60z4cyx702e+XrMqd1trEIZWdtR/Lv+sEW1vsdRJAbte6Bw6GixkD89OgkIRDvM1c8EoQ3NuEiBO3Pg72U+Ff37HahDK7qGIcnjVN/5ZkSF2ZXTtTQhlcTAmP+jrhgRoEcGJmdCIDMS4wKgZDb21taXQSQH1T1oahhMUWUTIPndLggRKKt2BZ059XM6x/sevk4BVHJsNylXeyHF/ONRn9fdw4F9rEtNLAgGGDV9KcSBuhvIwadwozCgZDb21taXQQ7sZSGN2NAyIhAs4VgvrTPhzLHvTZ75esyp3W2sQhlZ21H8u/6wRbW+x1EkBsxMiV0seIGVRIl1DVmP83/vbSme6fteGVmAlMeBe07QLmdw9Q3vynYLa2vvJ4+F6IrTUuGEZL1LdoGxIRo0tkGrUCCngKIQKSXcyCS0X60UbP5Hj0dag218kdsxT1lLXaHqnoVdvgNBJAt7JFxR/u2DMCAQus7oRlM/FhWr9ja/nov/3hgFSltcr9dQhRCaiynEPR/XpN2sV/vBohb+7DHPkiMQN9spKPAhoEcGJmdCIDMS4wKgZDb21taXQSQFbuGoovqhUcqacE9IPwT5HFkX/2rSnh/w7hMAx3O4FASGkcn1TXKRD23r5yktoibxRmigZGvKyFDhHezrFJAQwadwozCgZDb21taXQQ7sZSGN2NAyIhApJdzIJLRfrRRs/kePR1qDbXyR2zFPWUtdoeqehV2+A0EkBsxMiV0seIGVRIl1DVmP83/vbSme6fteGVmAlMeBe07QLmdw9Q3vynYLa2vvJ4+F6IrTUuGEZL1LdoGxIRo0tkGrUCCngKIQKe9eL0dTf0jPiq36TOpsmcCYOqLq4Xp22sERmaF8XuIhJAZh5oduHWyx0ovqjYg3pbci/VoB3y2s/mURH3cztVb7IGDJMSwoMG6yi468uvdWLzZt3qa2aKay0F6EDiGe3zbRoEcGJmdCIDMS4wKgZDb21taXQSQFyyWIq4PPpsICqH6twz5x202pQfcRNGWXhppLE+ujWUXkaucXNY+sUEtxaejZYrZa+oUkLXmEt81BpcizM/+k0adwozCgZDb21taXQQ7sZSGN2NAyIhAp714vR1N/SM+KrfpM6myZwJg6ourhenbawRGZoXxe4iEkBsxMiV0seIGVRIl1DVmP83/vbSme6fteGVmAlMeBe07QLmdw9Q3vynYLa2vvJ4+F6IrTUuGEZL1LdoGxIRo0tk",
+				"previous_block_id": "6cc4c895d2c7881954489750d598ff37fef6d299ee9fb5e19598094c7817b4ed02e6770f50defca760b6b6bef278f85e88ad352e18464bd4b7681b1211a34b64",
+				"signer_public_key": "02595ef3a9e892593025ca8768a76ca981b7c13e6763ecee2e902151233d9de89a",
+				"state_root_hash": "2debd89f31b8a8d18b663f16ab19d2b70ae79414a73d29b20eb19b60a4353997"
+			},
+			"header_signature": "6bfbf0662951751b62c6a43300d29cf9f80758d2ef0241d049f318d44ce0babd3228822482d57d161899598c5c876488e816e04a6a016c9653c1e26b15f2ca1c"
+		},
+		"link": "http://195.201.41.35:8008/blocks/6bfbf0662951751b62c6a43300d29cf9f80758d2ef0241d049f318d44ce0babd3228822482d57d161899598c5c876488e816e04a6a016c9653c1e26b15f2ca1c"
+	}
+}
+EOF
+
+cat <<EOF | zexe dict-into-array.zen dict-into-array.data
+Given I have a 'string dictionary' named 'data' inside 'dataFromEndpoint'
+When I create the copy of 'batches' from dictionary 'data'
+When I rename the 'copy' to 'batches'
+When I create the copy of 'header_signature' from dictionary 'batches'
+then print the 'copy'
+and print the 'batches'
+EOF
+    save_output 'dict-into-array.json'
+    assert_output '{"batches":[{"header":{"signer_public_key":"0209373bda3561c82c246b226ab3dfdfcab5fbdcba3cb3969508ea5b427628bb1f","transaction_ids":["3ff09b69c5973eaed4f06214bfa45ad0cf3d88f92476f3f297b331efb7ec9ad51f27b94a217e0fe1c59a714f067bcdd9e595f8d73c8e3ab22a085b732fc8bb94"]},"header_signature":"b81f74eec9f49fd8062c3a90dc5bd48249842ea6149b4a2e7cded38f50ca0e4d30cb66f6d74a807b737143f07fa2f7e807ef5dd44e3e03e89ac1f39ac41012f0","trace":false,"transactions":[{"header":{"batcher_public_key":"0209373bda3561c82c246b226ab3dfdfcab5fbdcba3cb3969508ea5b427628bb1f","dependencies":[],"family_name":"restroom","family_version":"1.0","inputs":["c274b5"],"outputs":["c274b5"],"payload_sha512":"263e4334456dbe1c5904417e8d2b80d0235fd6766a7e71ca3b95bd0fa134b0fe7c722877ee44a715ac81d9dda0df8496abb3455c0f447c26e801dbdfba5f2bc3","signer_public_key":"0209373bda3561c82c246b226ab3dfdfcab5fbdcba3cb3969508ea5b427628bb1f"},"header_signature":"3ff09b69c5973eaed4f06214bfa45ad0cf3d88f92476f3f297b331efb7ec9ad51f27b94a217e0fe1c59a714f067bcdd9e595f8d73c8e3ab22a085b732fc8bb94","payload":"omV2YWx1ZXiTeyJkYXRhVG9TdG9yZSI6IlRHbG1aU0JwY3lCaWIzSnBibWNzSUd4bGRDQjFjeUJ6Y0dsalpTQnBkQ0IxY0NCM2FYUm9JSE52YldVZ1lteHZZMnRqYUdGcGJpQm1kVzVySVE9PSIsIm15MTI4Qml0c1JhbmRvbSI6IklBTVRDNzNEMlB0b0dPdEVRVTlPUXc9PSJ9Z2FkZHJlc3N4RmMyNzRiNTAyYjk5YmUxZDA1NmFmY2UzYTRmZTI0ZmM2Y2NmZjM0NzdmOGJlYjE5ODk2YjdhYTY2ZTQ1MjVjYTAwMTdkY2U="}]}],"copy":"b81f74eec9f49fd8062c3a90dc5bd48249842ea6149b4a2e7cded38f50ca0e4d30cb66f6d74a807b737143f07fa2f7e807ef5dd44e3e03e89ac1f39ac41012f0"}'
+}
+
+@test "Pickup" {
+    cat <<EOF | zexe pickup.zen dict-into-array.data
+Given I have a 'string dictionary' named 'data' inside 'dataFromEndpoint'
+When I pickup from path 'data.batches.header_signature'
+When I take 'state root hash' from path 'data.header'
+Then print the 'header signature'
+and print the 'state root hash'
+EOF
+    save_output 'pickup.zen'
+    assert_output '{"header_signature":"b81f74eec9f49fd8062c3a90dc5bd48249842ea6149b4a2e7cded38f50ca0e4d30cb66f6d74a807b737143f07fa2f7e807ef5dd44e3e03e89ac1f39ac41012f0","state_root_hash":"2debd89f31b8a8d18b663f16ab19d2b70ae79414a73d29b20eb19b60a4353997"}'
+
+}
+
+
+@test "" {
+    cat << EOF | save_asset filter_from.data
+{
+	"myDict": {
+		 "name": "John",
+		 "surname": "Doe",
+		 "age": "42"
+	},
+	"myNestedArray": [
+			 {
+		 	  	"name": "John",
+			  	"surname": "Doe",
+		 	  	"age": "42"
+			 },
+		       	 {
+		 	  	"name": "Jane",
+		 	  	"surname": "Moe",
+		 	  	"age": "31"
+			 },
+		         {
+		 	  	"name": "Amber",
+		 	  	"surname": "Williams",
+		 	  	"age": "68"
+			 },
+		       	 {
+		       		"surname": "Tyson"
+			 }
+	],
+	"myNestedDict": {
+		       "myDict1": {
+		 	  	"name": "John",
+			  	"surname": "Doe",
+		 	  	"age": "42"
+				},
+		       "myDict2": {
+		 	  	"name": "Jane",
+		 	  	"surname": "Moe",
+		 	  	"age": "31"
+				},
+		       "myDict3": {
+		 	  	"name": "Bruce",
+		 	  	"surname": "Wayne"
+				},
+		       "myDict4": {
+		       		"surname": "Tyson"
+				},
+		       "myDict5": {
+		       		"myDict6": {
+					   "name": "Alfred",
+					   "surname": "Pennyworth"
+					   }
+				}
+	},
+	"myNumberDict": {
+			"height" : 182,
+			"age" : 55
+	},
+	"filters": [
+		   "name",
+		   "age"
+	]
+}
+EOF
+
+    cat << EOF | zexe filter_from.zen filter_from.data
+Given I have a 'string dictionary' named 'myDict'
+Given I have a 'string array' named 'myNestedArray'
+Given I have a 'string dictionary' named 'myNestedDict'
+Given I have a 'number dictionary' named 'myNumberDict'
+
+Given I have a 'string array' named 'filters'
+
+When I filter 'filters' fields from 'myDict'
+When I filter 'filters' fields from 'myNestedArray'
+When I filter 'filters' fields from 'myNestedDict'
+When I filter 'filters' fields from 'myNumberDict'
+
+Then print the 'myDict'
+and print the 'myNestedArray'
+and print the 'myNestedDict'
+and print the 'myNumberDict'
+EOF
+    save_output 'filter_from.json'
+    assert_output '{"myDict":{"age":"42","name":"John"},"myNestedArray":[{"age":"42","name":"John"},{"age":"31","name":"Jane"},{"age":"68","name":"Amber"},[]],"myNestedDict":{"myDict1":{"age":"42","name":"John"},"myDict2":{"age":"31","name":"Jane"},"myDict3":{"name":"Bruce"},"myDict4":[],"myDict5":{"myDict6":{"name":"Alfred"}}},"myNumberDict":{"age":55}}'
 }
