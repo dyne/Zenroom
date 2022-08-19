@@ -1,0 +1,7 @@
+Scenario credential
+Scenario petition: count
+    Given that I have a valid 'petition'
+    Given I have a valid 'petition tally'
+    When I count the petition results
+    Then print the 'petition results' as 'number'
+    Then print the 'uid' from 'petition'
