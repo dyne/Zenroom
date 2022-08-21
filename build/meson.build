@@ -152,7 +152,7 @@ endforeach
 ## BATS tests in vectors
 test_dir = meson.source_root() + '/../test/'
 bats_bin = find_program(test_dir+'bats/bin/bats')
-tests = [ 'sha', 'aes' ]
+tests = [ 'sha', 'aes', 'hmac' ]
 foreach test_suite : tests
     test('vectors_'+test_suite.underscorify(),
 	 bats_bin,
