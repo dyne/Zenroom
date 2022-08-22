@@ -36,7 +36,6 @@ EOF
 }
 EOF
     cat <<EOF | save_asset wrong_int.zen
-| zexe wrong_int.zen wrong_int.data
 Given I have a 'integer' named 'int_fp'
 Then print all data
 EOF
