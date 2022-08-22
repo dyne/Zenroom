@@ -20,14 +20,13 @@ EOF
 }
 
 @test "Read keys" {
-    skip "TODO: Look at the output"
     cat <<EOF | zexe Kyber_readkeys.zen Alice_Kyber_privatekey.keys
 Rule check version 2.0.0
 Scenario qp : Upload the kyber private key
 Given I am 'Alice'
 and I have the 'keyring'
 Then print my data
-Then print 'keyring'
+Then print my 'keyring'
 EOF
     save_output 'Kyber_readkeys.out'
 }
