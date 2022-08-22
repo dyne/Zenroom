@@ -28,6 +28,7 @@ zexe() {
 	input="$BATS_FILE_TMPDIR/$2"
 	if ! [ -r $input ]; then input="$R/docs/examples/zencode_cookbook/$SUBDOC/$2"; fi
 	if ! [ -r $input ]; then echo "DATA input not found: $input"; return 1; fi
+	>&3 echo "   📝 `basename $input`"
     fi
 
     if [ "$3" == "" ]; then unset $keys
@@ -35,6 +36,7 @@ zexe() {
 	keys="$BATS_FILE_TMPDIR/$3"
 	if ! [ -r $keys ]; then keys="$R/docs/examples/zencode_cookbook/$SUBDOC/$3"; fi
 	if ! [ -r $keys ]; then  echo "KEYS input not found: $keys"; return 1; fi
+	>&3 echo "   🔑 `basename $keys`"
     fi
 
     status=1 # BATS compatible
@@ -129,4 +131,5 @@ function save_asset() {
 	cat | tee "$BATS_SUITE_TMPDIR/$1" | >&2 tee "${docs}/$1"
     fi
 }
-
+# alias to save
+function save() { save_asset $1; }
