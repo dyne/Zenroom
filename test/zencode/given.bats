@@ -14,17 +14,17 @@ EOF
 }
 
 @test "Given nothing with something in input" {
-    skip "Could not asset failure"
     cat <<EOF | save_asset fail_nothing.data
 {"a": 1}
 EOF
-cat <<EOF | zexe fail_nothing.zen fail_nothing.data
+cat <<EOF | save_asset fail_nothing.zen 
 rule check version 1.0.0
 	 Given nothing
 	 When I create the random object of '256' bits
 	 Then print the 'random object'
 EOF
-    save_output "fail_nothing.json"
+    run $ZENROOM_EXECUTABLE -z fail_nothing.zen -a fail_nothing.data
+    assert_failure
 }
 @test "Given I have a '' named ''" {
     echo '{ "anykey": "anyvalue" }' | save_asset 'have_anyvalue.data'
@@ -168,7 +168,7 @@ EOF
 }
 
 # ambiguity explained:
-@test "" {
+@test "Given I have a 'keyring' inside ''" {
     cat <<EOF | zexe have_a_keyring_inside.zen have_my.data
 rule check version 1.0.0
 scenario 'ecdh'
