@@ -4,12 +4,12 @@ Given I have a 'string' named 'string_world'
 Given I have a 'string dictionary' named 'dictionary_equal'
 Given I have a 'string dictionary' named 'dictionary_not_equal'
 
-# Here we try a simple comparison between the strings 
+# Here we try a simple comparison between the strings
 If I verify 'string_hello' is equal to 'string_world'
 Then print string 'string_hello is equal to string_world, impossible!'
 Endif
 
-# Here we try a simple comparison between the strings 
+# Here we try a simple comparison between the strings
 If I verify 'string_hello' is not equal to 'string_world'
 Then print string 'string_hello is not equal to string_world'
 Endif

@@ -4,7 +4,7 @@ and I have a 'number' named 'number_higher'
 
 # Here we try a simple comparison between the numbers
 # if the condition is satisfied, the 'When' and 'Then' statements
-# in the rest of the branch will be executed, which is not the case here.  
+# in the rest of the branch will be executed, which is not the case here.
 If number 'number_lower' is more than 'number_higher'
 When I create the random 'random_left_is_higher'
 Then print string 'number_lower is higher'
@@ -25,7 +25,7 @@ If number 'number_lower' is more or equal than 'number_higher'
 Then print string 'the number_lower is more than or equal to number_higher, imposssible!'
 Endif
 
-# Here we try a nested comparison: if the first condition is 
+# Here we try a nested comparison: if the first condition is
 # satisfied, the second one is evaluated too. Given the conditions,
 # they can't both be true at the same time, so the rest of the branch won't be executed.
 If number 'number_lower' is less than 'number_higher'
