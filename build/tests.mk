@@ -168,10 +168,10 @@ check-rs:
 	@echo "All tests passed for RUST build"
 	@echo "----------------"
 
-check-go: test-exec := ${pwd}/test/zenroom_exec_go/main ${pwd}
+check-go: test-exec := ${pwd}/test/zenroom_exec_go/main
 check-go:
 	cd ${pwd}/test/zenroom_exec_go && go build
-	@echo "#!/bin/sh\n${test-exec}\n" > test/zenroom && chmod +x test/zenroom
+	@echo -e "#!/bin/sh\n${test-exec} \$$@\n" > test/zenroom && chmod +x test/zenroom
 	$(call bats, test/lua/lowmem.bats)
 	$(call bats, test/lua/crypto.bats)
 	@echo "----------------"
