@@ -3,17 +3,19 @@ load ../bats_zencode
 SUBDOC=cookbook_given
 
 @test "flat object and verbose out" {
-    echo '{ 
+    cat <<EOF | save myFlatObject.json
+{ 
       "myNumber":12345,
       "myString":"Hello World!",
       "myFiveStrings":[
          "String-1-one",
          "String-2-two",
          "String-3-three",
-		 "String-4-four",
-		 "String-5-five"
+	 "String-4-four",
+	 "String-5-five"
       ]
-}' | save myFlatObject.json
+}
+EOF
     cat <<EOF | zexe givenLoadFlatObject.zen myFlatObject.json
 Given I have a 'string' named 'myString'  
 Given I have a 'number' named 'myNumber'
@@ -49,7 +51,8 @@ EOF
 }
 
 @test "load arrays" {
-    echo '{ 
+    cat <<EOF | save givenArraysLoadInput.json
+{
       "myStringArray":[
          "String-1-one",
          "String-2-two",
@@ -89,7 +92,8 @@ EOF
 	"d2cfc1b31b087d0d7137e3f5d45fc6a9cf33025fdba6f9cad40a04e36b420763",
 	"554e2fcf3a4a1d872446febb81a91d910e772a4cf4c5e36a3569b159cb5ff439"
       ]	  
-}' | save givenArraysLoadInput.json
+}
+EOF
     cat <<EOF | zexe givenArraysLoad.zen givenArraysLoadInput.json
 Given I have a 'string array' named 'myStringArray'
 Given I have a 'number array' named 'myNumberArray'
@@ -110,7 +114,7 @@ EOF
    "myFirstObject":{
       "myNumber":11223344,
       "myString":"Hello World!",
-      "myFiveStrings":[
+      "myStringArray":[
          "String1",
          "String2",
          "String3",
@@ -120,7 +124,7 @@ EOF
    "mySecondObject":{
       "mySecondNumber":1234567890,
 	  "mySecondString":"Oh, hello again!",
-      "mySecondArray":[
+      "myStringArray":[
          "anotherString1",
          "anotherString2",
          "anotherString3",
@@ -141,22 +145,13 @@ EOF
 Scenario 'ecdh': let us load some stuff cause it is fun!
 Given I am 'Alice'
 And I have my 'keyring'
-And I have a 'string array' named 'myFiveStrings' inside 'myFirstObject' 
+And I have a 'string array' named 'myStringArray' inside 'myFirstObject' 
 #
 # # # Uncomment the line below to enjoy the fireworks
 # And I have a 'string array' named 'myStringArray' inside 'mySecondObject' 
 Then print all data
 EOF
     save_output givenLoadRepetitveObjectOutput.json
-    cat <<EOF | zexe givenLoadRepetitveObjectDebug.zen myNestedRepetitveObject.json
-Scenario 'ecdh': let us load some stuff cause it is fun!
-Given I am 'Alice'
-And I have my 'keyring'
-And I have a 'string array' named 'myFiveStrings' inside 'myFirstObject' 
-And I have a 'string array' named 'mySecondArray' inside 'mySecondObject' 
-Then print all data
-EOF
-    save_output givenLoadRepetitveObjectDebugOutput.json
 }
 
 

@@ -1,4 +1,3 @@
-
 # Load Arrays
 Given I have a 'string array' named 'myFirstArray' inside 'myFirstObject' 
 # Remember that you can load arrays of other types, just 
