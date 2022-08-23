@@ -61,6 +61,9 @@ typedef int (*snprintf_t)( char * buf, size_t count, char const * fmt, ... );
 typedef int (*vsprintf_t)( char * buf, char const * fmt, va_list va );
 typedef int (*vsnprintf_t)( char * buf, size_t count, char const * fmt, va_list va );
 
+// conf switches
+typedef enum { STB, MUTT, LIBC } printftype;
+typedef enum { NIL, VERBOSE, COLOR, RNGSEED, PRINTF } zconf;
 
 // zenroom context, also available as "_Z" global in lua space
 // contents are opaque in lua and available only as lightuserdata
@@ -80,7 +83,8 @@ typedef struct {
 	size_t stderr_full;
 
 	void *random_generator; // cast to RNG
-	char random_seed[RANDOM_SEED_LEN];
+	char random_seed[RANDOM_SEED_LEN+4];
+        char runtime_random256[256+4];
 	int random_external; // signal when rngseed is external
 
 	int debuglevel;
@@ -92,8 +96,18 @@ typedef struct {
 	vsprintf_t vsprintf;
 	vsnprintf_t vsnprintf;
 
+  	char zconf_rngseed[(RANDOM_SEED_LEN*2)+4]; // 0x and terminating \0
+  	printftype zconf_printf;
+
+	int exitcode;
 } zenroom_t;
 
+// EXIT CODES
+#define ERR_INIT 4
+#define ERR_PARSE 3
+#define ERR_EXEC 2
+#define ERR_GENERIC 1 // EXIT_FAILURE
+#define SUCCESS 0 // EXIT_SUCCESS
 
 zenroom_t *zen_init(const char *conf, char *keys, char *data);
 int  zen_exec_script(zenroom_t *Z, const char *script);
@@ -136,5 +150,10 @@ void zen_teardown(zenroom_t *zenroom);
 #define SIZE_MAX 65536
 #endif
 #endif
+
+// number of bytes pre-fetched from the PRNG on seed initialization
+// should never exceed 256
+#define PRNG_PREROLL 256
+// runtime random_seed addes 4 bytes to this (260 total) used by Lua init
 
 #endif
