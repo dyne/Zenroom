@@ -202,6 +202,8 @@ clean:
 	rm -f ${pwd}/build/swig_wrap.c
 	rm -f ${pwd}/.python-version
 	rm -f ${pwd}/src/zenroom
+	rm -f ${pwd}/lib/ed25519-donna/libed25519.a
+	rm -f ${pwd}/lib/ed25519-donna/*.o
 
 clean-src:
 	rm -f src/zen_ecdh_factory.c src/zen_ecp_factory.c src/zen_big_factory.c
