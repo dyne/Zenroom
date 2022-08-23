@@ -39,7 +39,7 @@ Z() {
     if [ "${1##*.}"  == "zen" ]; then
 	$ZENROOM_EXECUTABLE $@ -z $script
     else
-	$ZENROOM_EXECUTABLE $@ $script $*
+	$ZENROOM_EXECUTABLE $@ $script
     fi
     if [ $tmptmp = 1 ]; then
 	rm -f $TMP/*
