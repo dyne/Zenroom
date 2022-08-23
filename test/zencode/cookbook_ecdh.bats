@@ -4,12 +4,23 @@ SUBDOC=cookbook_ecdh
 
 @test "create the keyring" {
     cat <<EOF | zexe scenarioECDHZencodePart0.zen
-Scenario 'ecdh': Generate a keypair
+Scenario 'ecdh': Generate a key
 Given I am 'Alice'
 When I create the ecdh key
 Then print my keyring
 EOF
-    save_output scenarioECDHKeypair1.json
+    save_output scenarioECDHKeyring1.json
+}
+
+@test "create the public key" {
+    cat <<EOF | zexe scenarioECDHZencodePart0Publickey.zen scenarioECDHKeyring1.json
+Scenario 'ecdh': Generate a public key
+Given I am 'Alice'
+Given I have my 'keyring'
+When I create the ecdh public key
+Then print my 'ecdh public key'
+EOF
+    save_output scenarioECDHPubKey1.json
 }
 
 @test "encrypt a message with a password" {
@@ -143,7 +154,7 @@ EOF
 }
 
 @test "Encrypt a message with a public key" {
-    cat <<EOF | save_asset scenarioECDHAliceKeyapir.json
+    cat <<EOF | save_asset scenarioECDHAliceKeyring.json
 {
 	"Alice": {
 		"keyring": {
@@ -166,7 +177,7 @@ EOF
 }
 EOF
 
-    cat <<EOF | zexe scenarioECDHZencodePart5.zen scenarioECDHAliceKeyapir.json scenarioECDHBobCarlKeysMessage.json
+    cat <<EOF | zexe scenarioECDHZencodePart5.zen scenarioECDHAliceKeyring.json scenarioECDHBobCarlKeysMessage.json
 Scenario 'ecdh': Alice encrypts a message for Bob and Carl
 
 # Loading Alice' keypair

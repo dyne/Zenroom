@@ -1,0 +1,5 @@
+Scenario 'ecdh': Generate a public key
+Given I am 'Alice'
+Given I have my 'keyring'
+When I create the ecdh public key
+Then print my 'ecdh public key'

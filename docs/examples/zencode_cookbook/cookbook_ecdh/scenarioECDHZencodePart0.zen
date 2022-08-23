@@ -1,4 +1,4 @@
-Scenario 'ecdh': Generate a keypair
+Scenario 'ecdh': Generate a key
 Given I am 'Alice'
 When I create the ecdh key
 Then print my keyring

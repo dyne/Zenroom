@@ -17,4 +17,3 @@ Then print the 'myMessage'
 Then print the 'myMessage.signature'	
 Then print the 'myStringArray'
 Then print the 'myStringArray.signature'
-
