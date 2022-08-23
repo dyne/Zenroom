@@ -7,8 +7,8 @@ sys.path.append(path.resolve())
 
 from zenroom.zenroom import zenroom_exec
 
-print("[PY] zenroom_exec %s" % sys.argv[2])
-script_path = Path(sys.argv[1]) / sys.argv[2]
+print("[PY] zenroom_exec %s" % sys.argv[1])
+script_path = Path(sys.argv[1])
 
 try:
     script = script_path.read_text()

@@ -142,16 +142,16 @@ check-linux:
 
 check-js: test-exec := node ${pwd}/test/zenroom_exec.js ${pwd}/src/zenroom.js
 check-js:
-	@echo "#!/bin/sh\n${test-exec}\n" > test/zenroom && chmod +x test/zenroom
+	@echo -e "#!/bin/sh\n${test-exec} \$$@\n" > test/zenroom && chmod +x test/zenroom
 	$(call bats, test/lua/lowmem.bats)
 	$(call bats, test/lua/crypto.bats)
 	@echo "----------------"
 	@echo "All tests passed for JS binary build"
 	@echo "----------------"
 
-check-py: test-exec := python3 ${pwd}/test/zenroom_exec.py ${pwd}
+check-py: test-exec := python3 ${pwd}/test/zenroom_exec.py
 check-py:
-	@echo "#!/bin/sh\n${test-exec}\n" > test/zenroom && chmod +x test/zenroom
+	@echo -e "#!/bin/sh\n${test-exec} \$$@\n" > test/zenroom && chmod +x test/zenroom
 	$(call bats, test/lua/lowmem.bats)
 	$(call bats, test/lua/crypto.bats)
 	@echo "----------------"
