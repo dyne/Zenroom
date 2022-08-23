@@ -1,0 +1,4 @@
+Given nothing
+When I create the array of '16' random objects of '32' bits
+And I rename the 'array' to 'myArray'
+Then print all data

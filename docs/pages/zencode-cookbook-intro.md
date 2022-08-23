@@ -6,7 +6,7 @@ One of Zenroom's strong points is the quality of the random generation (see [ran
 Let's first go the super fast way to test code, entering the [Zenroom web playground](https://apiroom.net). Copy this code into the *Zencode* tab on the top left of the page: 
 
 
-[](../_media/examples/zencode_cookbook/randomArrayGeneration.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/cookbook_intro/randomArrayGeneration.zen ':include :type=code gherkin')
 
 
 
@@ -42,7 +42,7 @@ On Linux, you can use:
 zenroom -z arrayGenerator.zen | tee myFirstRandomArray.json
 ```
 
-After running this command, a file named *myFirstRandomArray.json* should have magically appeared in the folder you're in, looking like <a href="./_media/examples/zencode_cookbook/myFirstRandomArray.json" download>this one</a>.
+After running this command, a file named *myFirstRandomArray.json* should have magically appeared in the folder you're in, looking like <a href="./_media/examples/zencode_cookbook/cookbook_intro/myFirstRandomArray.json" download>this one</a>.
 
 # Renaming the array: the *And* keyword
 
@@ -51,17 +51,17 @@ Open *myArray.json* with your text editor, and notice that the array produced wi
  - Each phase can have as many commands as you like, provided that they're on a different line and they begin with the keyword *And* 
 For example, you can rename your array to *'myArray'* by running this script:
 
-[](../_media/examples/zencode_cookbook/randomArrayRename.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/cookbook_intro/randomArrayRename.zen ':include :type=code gherkin')
 
 Note that you need to use the **' '** in the line that renames the array, cause you may be generating and renaming a bunch of arrays already, like in this script:
 
-[](../_media/examples/zencode_cookbook/randomArrayMultiple.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/cookbook_intro/randomArrayMultiple.zen ':include :type=code gherkin')
 
 
 The script above will produce an output like this: 
 
 
-[](../_media/examples/zencode_cookbook/myArrays.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/cookbook_intro/myArrays.json ':include :type=code json')
 
 
 
