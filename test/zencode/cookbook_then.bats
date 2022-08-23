@@ -252,8 +252,7 @@ Then print 'myUrl64_6' as 'hex'
 EOF
     cat $R/docs/examples/zencode_cookbook/$SUBDOC/thenCompleteScriptGiven.zen \
 	$R/docs/examples/zencode_cookbook/$SUBDOC/thenExhaustiveScript.zen \
-	| save_asset then1.zen
-    run $ZENROOM_EXECUTABLE -z then1.zen -a myLargeNestedObjectThen.json
+	| zexe then1.zen myLargeNestedObjectThen.json
     save_output thenExhaustiveScriptOutput.json
 }
 
@@ -326,8 +325,7 @@ Then print the 'myFifthString' from 'myFourthObject' as 'hex'
 EOF
     cat $R/docs/examples/zencode_cookbook/$SUBDOC/thenCompleteScriptGiven.zen \
 	$R/docs/examples/zencode_cookbook/$SUBDOC/thenCompleteScriptPart2.zen \
-	| save_asset then2.zen
-    run $ZENROOM_EXECUTABLE -z then2.zen -a myLargeNestedObjectThen.json
+	| zexe then2.zen myLargeNestedObjectThen.json
 }
 
 @test "print messages" {
@@ -365,8 +363,7 @@ Then print 'header'
 EOF
     cat $R/docs/examples/zencode_cookbook/$SUBDOC/thenCompleteScriptGiven.zen \
 	$R/docs/examples/zencode_cookbook/$SUBDOC/thenCompleteScriptPart3.zen \
-	| save_asset then3.zen
-    run $ZENROOM_EXECUTABLE -z then3.zen -a myLargeNestedObjectThen.json
+	| zexe then3.zen myLargeNestedObjectThen.json
 }
 
 @test "print nested objects using 'in' and 'from'" {
@@ -382,6 +379,6 @@ Then print the 'issuer public key'
 EOF
     cat $R/docs/examples/zencode_cookbook/$SUBDOC/thenCompleteScriptGiven.zen \
 	$R/docs/examples/zencode_cookbook/$SUBDOC/thenCompleteScriptPart4.zen \
-	| save_asset then4.zen
-    run $ZENROOM_EXECUTABLE -z then4.zen -a myLargeNestedObjectThen.json
+	| zexe then4.zen myLargeNestedObjectThen.json
+    save_output thenCompleteOutputPart4.json
 }

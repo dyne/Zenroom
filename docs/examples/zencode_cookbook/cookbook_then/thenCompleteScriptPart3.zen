@@ -1,0 +1,30 @@
+When I write string 'This message is for Bob.' in 'messageForBob'
+When I write string 'This message is for Carl.' in 'messageForCarl'
+
+and I write string 'This is the header' in 'header'
+Then print 'header'
+
+#and I encrypt the message for 'Bob'
+# and I encrypt the 'messageForBob'
+# and I rename the 'message' to 'Message for Bob'
+# and debug
+#and I encrypt the message for 'Carl'
+#and I rename the 'message' to 'Message for Carl'
+#Then print the 'Message for Bob'
+#and print the 'Message for Carl'
+
+# Then print my 'keypair' 
+# Then print the 'public key' 
+# print ''
+# print '' as ''
+# print '' as '' in ''
+# print data
+# print data as ''
+# print my ''
+# print my '' as ''
+# print my data
+# print my data as ''
+# print the ''
+# print the '' as ''
+# print the '' as '' in ''
+# print the '' in ''

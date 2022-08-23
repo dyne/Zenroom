@@ -54,7 +54,6 @@ Given I have an 'url64' named 'myUrl64_6' inside 'myObject'
 # Dictionary
 Given I have a 'string dictionary' named 'salesReport'
 Given I have a 'string dictionary' named 'myFourthObject'
-
 # Then print all data
 
 # By printing all data, the first of the 5 items
@@ -119,4 +118,3 @@ Then print 'myUrl64_6' as 'hex'
 # Print from and as
 Then print the 'myFourthString' from 'myFourthObject'
 Then print the 'myFifthString' from 'myFourthObject' as 'hex'
-

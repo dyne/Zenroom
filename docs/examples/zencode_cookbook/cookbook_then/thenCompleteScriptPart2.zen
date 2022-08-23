@@ -1,0 +1,64 @@
+# Then print all data
+
+# By printing all data, the first of the 5 items
+# is printed with its default schema.
+# 
+# (0): default
+# 1: string
+# 2: number
+# 3: base64
+# 4: bin
+# 5: hex
+
+Then print 'myString_1'
+Then print 'myString_2' as 'number' 
+Then print 'myString_3' as 'base64' 
+Then print 'myString_4' as 'bin' 
+Then print 'myString_5' as 'hex' 
+
+Then print 'myNumber_1'  
+Then print 'myNumber_2' as 'string' 
+Then print 'myNumber_3' as 'base64'
+Then print 'myNumber_4' as 'bin' 
+Then print 'myNumber_5' as 'hex'
+
+Then print 'myStringArray_1' 
+Then print 'myStringArray_2' as 'number' 
+Then print 'myStringArray_3' as 'base64' 
+Then print 'myStringArray_4' as 'bin' 
+Then print 'myStringArray_5' as 'hex' 
+
+Then print 'myNumberArray_1' 
+Then print 'myNumberArray_2' as 'string' 
+Then print 'myNumberArray_3' as 'base64' 
+Then print 'myNumberArray_4' as 'bin' 
+Then print 'myNumberArray_5' as 'hex' 
+
+Then print 'myBinary_1' 
+Then print 'myBinary_2' as 'string' 
+Then print 'myBinary_3' as 'number' 
+Then print 'myBinary_4' as 'base64' 
+Then print 'myBinary_5' as 'hex' 
+
+Then print 'myBase64_1' 
+Then print 'myBase64_2' as 'string'
+Then print 'myBase64_3' as 'number' 
+Then print 'myBase64_4' as 'bin'
+Then print 'myBase64_5' as 'hex' 
+
+Then print 'myHex_1' 
+Then print 'myHex_2' as 'string'
+Then print 'myHex_3' as 'number' 
+Then print 'myHex_4' as 'base64'
+Then print 'myHex_5' as 'bin' 
+
+Then print 'myUrl64_1' 
+Then print 'myUrl64_2' as 'string'
+Then print 'myUrl64_3' as 'number'
+Then print 'myUrl64_4' as 'base64'
+Then print 'myUrl64_5' as 'bin'
+Then print 'myUrl64_6' as 'hex'
+
+# Print from and as
+Then print the 'myFourthString' from 'myFourthObject'
+Then print the 'myFifthString' from 'myFourthObject' as 'hex'
