@@ -12,9 +12,7 @@ import (
 )
 
 func main() {
-  script_name := os.Args[1]
-  script_path := os.Args[2]
-  final_path := path.Join(script_name, script_path)
+  final_path := path.Join(os.Args[1:]...)
 
   fmt.Println("[GO] zenroom_exec ", final_path)
 
