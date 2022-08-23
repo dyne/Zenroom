@@ -158,10 +158,10 @@ check-py:
 	@echo "All tests passed for PYTHON build"
 	@echo "----------------"
 
-check-rs: test-exec := ${pwd}/test/zenroom_exec_rs/target/debug/zenroom_exec_rs ${pwd}
+check-rs: test-exec := ${pwd}/test/zenroom_exec_rs/target/debug/zenroom_exec_rs
 check-rs:
 	cargo build --manifest-path ${pwd}/test/zenroom_exec_rs/Cargo.toml
-	@echo "#!/bin/sh\n${test-exec}\n" > test/zenroom && chmod +x test/zenroom
+	@echo -e "#!/bin/sh\n${test-exec} \$$@\n" > test/zenroom && chmod +x test/zenroom
 	$(call bats, test/lua/lowmem.bats)
 	$(call bats, test/lua/crypto.bats)
 	@echo "----------------"
