@@ -300,8 +300,7 @@ Then print all data
 EOF
     cat $R/docs/examples/zencode_cookbook/$SUBDOC/whenCompleteScriptGiven.zen \
 	$R/docs/examples/zencode_cookbook/$SUBDOC/whenCompleteScriptPart1.zen \
-	| save_asset when1.zen
-    run $ZENROOM_EXECUTABLE -z when1.zen -a myLargeNestedObjectWhen.json
+	| zexe when1.zen myLargeNestedObjectWhen.json
     save_output whenCompleteOutputPart1.json
 }
 
@@ -380,8 +379,7 @@ Then print all data
 EOF
     cat $R/docs/examples/zencode_cookbook/$SUBDOC/whenCompleteScriptGiven.zen \
 	$R/docs/examples/zencode_cookbook/$SUBDOC/whenCompleteScriptPart2.zen \
-	| save_asset when2.zen
-    run $ZENROOM_EXECUTABLE -z when2.zen -a myLargeNestedObjectWhen.json
+	| zexe when2.zen myLargeNestedObjectWhen.json
     save_output whenCompleteOutputPart2.json
 }
 
@@ -467,8 +465,7 @@ Then print all data
 EOF
     cat $R/docs/examples/zencode_cookbook/$SUBDOC/whenCompleteScriptGiven.zen \
 	$R/docs/examples/zencode_cookbook/$SUBDOC/whenCompleteScriptPart3.zen \
-	| save_asset when3.zen
-    run $ZENROOM_EXECUTABLE -z when3.zen -a myLargeNestedObjectWhen.json
+	| zexe when3.zen myLargeNestedObjectWhen.json
     save_output whenCompleteOutputPart3.json
 }
 
@@ -501,8 +498,7 @@ Then print all data
 EOF
     cat $R/docs/examples/zencode_cookbook/$SUBDOC/whenCompleteScriptGiven.zen \
 	$R/docs/examples/zencode_cookbook/$SUBDOC/whenCompleteScriptPart4.zen \
-	| save_asset when4.zen
-    run $ZENROOM_EXECUTABLE -z when4.zen -a myLargeNestedObjectWhen.json
+	| zexe when4.zen myLargeNestedObjectWhen.json
     save_output whenCompleteOutputPart4.json
 }
 
@@ -570,7 +566,6 @@ Then print the 'copy'
 EOF
     cat $R/docs/examples/zencode_cookbook/$SUBDOC/whenCompleteScriptGiven.zen \
 	$R/docs/examples/zencode_cookbook/$SUBDOC/whenCompleteScriptPart5.zen \
-	| save_asset when5.zen
-    run $ZENROOM_EXECUTABLE -z when5.zen -a myLargeNestedObjectWhen.json
+	| zexe when5.zen myLargeNestedObjectWhen.json
     save_output whenCompleteOutputPart5.json
 }

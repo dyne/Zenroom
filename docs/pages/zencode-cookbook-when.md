@@ -16,14 +16,14 @@ Link file with relative path: <a href="./_media/examples/zencode_cookbook/givenA
 The *When* keyword introduces the phase of Zencode execution, where data can be manipulated. The statemens executed in this phase allow you to: 
  - Manipulate objects: rename, append, cut, insert, remove, etc.
  - Create objects: different schemas can be created in different ways (including random objects), and values assigned to them.
- - Execute cryptography: this is where all the crypto-magic happens: creating keypairs, hashing points...
+ - Execute cryptography: this is where all the crypto-magic happens: creating keyring, hashing points...
  - Comparisons: compare value of numbers, strings and complex objects.
  
 ## First, let's get a nice JSON 
  
 We've done this already: let's start with create a file named *myLargeNestedObjectWhen.json*. This file contains everything we need for every part of this chapter and - along  with the *Given* part of the script, you can use this JSON to later make your own experiments with Zencode.
 
-[](../_media/examples/zencode_cookbook/myLargeNestedObjectWhen.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/cookbook_when/myLargeNestedObjectWhen.json ':include :type=code json')
 
  
 
@@ -32,7 +32,7 @@ We've done this already: let's start with create a file named *myLargeNestedObje
 Since the *When* phase contains many statements, we did split the scripts in four parts. The part of script that loads the JSON can be used for all the scripts below.
 
 
-[](../_media/examples/zencode_cookbook/whenCompleteScriptGiven.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/cookbook_when/whenCompleteScriptGiven.zen ':include :type=code gherkin')
 
 
 
@@ -69,7 +69,7 @@ We grouped together all the statements that perform object manipulation, so:
 In the script below, we've put together a list of this statement and explained in the comments how each statement works: 
  
 
-[](../_media/examples/zencode_cookbook/whenCompleteScriptPart1.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/cookbook_when/whenCompleteScriptPart1.zen ':include :type=code gherkin')
 
 
 To play with the script, first save it into the file *whenCompleteScriptPart1.zen*. Then run it while loading the data, using the command line:
@@ -78,7 +78,7 @@ To play with the script, first save it into the file *whenCompleteScriptPart1.ze
 zenroom -a myLargeNestedObjectWhen.json -z whenCompleteScriptPart1.zen | jq | tee whenCompleteOutputPart1.json
 ``` 
 
-The output should look like <a href="../_media/examples/zencode_cookbook/whenCompleteOutputPart1.json" download>whenCompleteOutputPart1.json</a>. Remember that the output gets sorted alphabetically, because in Zenroom *determinism is King*.
+The output should look like <a href="../_media/examples/zencode_cookbook/cookbook_when/whenCompleteOutputPart1.json" download>whenCompleteOutputPart1.json</a>. Remember that the output gets sorted alphabetically, because in Zenroom *determinism is King*.
 
 ## Create the "(name of schema)"
 
@@ -98,17 +98,16 @@ Some schemas need no **scenario** to work, and those are all listed on this page
 
 A statement we have use extensively already from the scenario 'ecdh'
 ```gherkin
-When I create the keypair
+When I create the ecdh key
 ``` 
 
-We'll look at two way to generate keypairs (from a random or from a known seed in the next chapter).
+We'll look at two way to generate keyring (from a random or from a known seed in the next chapter).
 
 As you probably know by now, this statement outputs something looking like this: 
 
 ```json
-{    "keypair": {
-      "private_key": "AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM=",
-      "public_key": "BDDuiMyAjIu8tE3pGSccJcwLYFGWvo3zUAyazLgTlZyEYOePoj+/UnpMwV8liM8mDobgd/2ydKhS5kLiuOOW6xw="
+{    "keyring": {
+      "ecdh": "AxLMXkey00i2BD675vpMQ8WhP/CwEfmdRr+BtpuJ2rM="
     }
   }
 ``` 
@@ -117,7 +116,7 @@ As you probably know by now, this statement outputs something looking like this:
 Another examples of the statement, from the scenario 'credential':
 
 ```gherkin
-When I create the credential keypair
+When I create the credential key
 ``` 
 
 An example, from the scenario 'petition':
@@ -147,17 +146,17 @@ In the second group we gathered the *When* statements that can create new object
  
  The "create the cbor of" statement allows you ***render an object to CBOR***. The statement also has a counterpart to render to JSON: "create the json of".
  
- A special case is the stament "create keypair", which we see in two flavours, one ***creates a keypair from a random seed***, one ***from a known seed***.
+ A special case is the stament "create key", which we see in two flavours, one ***creates a key from a random seed***, one ***from a known seed***.
  
 
  See our example script below: 
  
 
-[](../_media/examples/zencode_cookbook/whenCompleteScriptPart2.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/cookbook_when/whenCompleteScriptPart2.zen ':include :type=code gherkin')
 
 
 
-The output should look like <a href="../_media/examples/zencode_cookbook/whenCompleteOutputPart2.json" download>whenCompleteOutputPart2.json</a>.
+The output should look like <a href="../_media/examples/zencode_cookbook/cookbook_when/whenCompleteOutputPart2.json" download>whenCompleteOutputPart2.json</a>.
 
 
 
@@ -180,16 +179,16 @@ Here we have grouped together the statements that perform:
 
 Hashing works for any data type, so you can hash simple objects (strings, numbers etc.) as well as hashes and dictionaries.
 
-Keep in mind that in order to use more advanced cryptography like encryption, zero knowledge proof, zk-SNARKS, attributed based credential or the [Coconut](https://arxiv.org/pdf/1802.07344.pdf)  flow you will need to select a *scenario* in the beginning of the scripts. We'll write more about scenarios later, for now we're using the "ecdh" scenario as we're loading an asymetric keypair from the JSON. See our example below:
+Keep in mind that in order to use more advanced cryptography like encryption, zero knowledge proof, zk-SNARKS, attributed based credential or the [Coconut](https://arxiv.org/pdf/1802.07344.pdf)  flow you will need to select a *scenario* in the beginning of the scripts. We'll write more about scenarios later, for now we're using the "ecdh" scenario as we're loading an ecdh key from the JSON. See our example below:
 
 
 
 
-[](../_media/examples/zencode_cookbook/whenCompleteScriptPart3.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/cookbook_when/whenCompleteScriptPart3.zen ':include :type=code gherkin')
 
 
 
-The output should look like this: <a href="../_media/examples/zencode_cookbook/whenCompleteOutputPart3.json" download>whenCompleteOutputPart3.json</a>.
+The output should look like this: <a href="../_media/examples/zencode_cookbook/cookbook_When/whenCompleteOutputPart3.json" download>whenCompleteOutputPart3.json</a>.
 
 
 
@@ -209,12 +208,12 @@ This group includes all the statements to compare objects, you can:
 See our script below:
 
 
-[](../_media/examples/zencode_cookbook/whenCompleteScriptPart4.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/cookbook_when/whenCompleteScriptPart4.zen ':include :type=code gherkin')
 
 
 
 The output should look like 
-<a href="../_media/examples/zencode_cookbook/whenCompleteOutputPart4.json" download>whenCompleteOutputPart4.json</a>. 
+<a href="../_media/examples/zencode_cookbook/cookbook_when/whenCompleteOutputPart4.json" download>whenCompleteOutputPart4.json</a>. 
 
 
 ## Operations with arrays
@@ -242,12 +241,12 @@ Here are the statements to work with arrays. Arrays can be of any type (number, 
 See our script below:
 
 
-[](../_media/examples/zencode_cookbook/whenCompleteScriptPart5.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/cookbook_when/whenCompleteScriptPart5.zen ':include :type=code gherkin')
 
 
 
 The output should look like 
-<a href="../_media/examples/zencode_cookbook/whenCompleteOutputPart5.json" download>whenCompleteOutputPart5.json</a>. 
+<a href="../_media/examples/zencode_cookbook/cookbook_when/whenCompleteOutputPart5.json" download>whenCompleteOutputPart5.json</a>. 
 
 
 ## Operations with dictionaries
@@ -275,10 +274,13 @@ Operations with dictionaries allow you to:
 ***Prune***: remove all the empty strings ("") and the empty dictionaries (dictionaries that contain only empty strings).
 
 
-In the script we'll use as example we'll load a complex dataset, containing dictionaries that mimic records of transactions. Not that the dictionaries do not always have the same exact structure:
+In the script we'll use as example we'll load a complex dataset, containing dictionaries that mimic records of transactions. Note that the dictionaries do not always have the same exact structure:
 
-[](../_media/examples/zencode_cookbook/dictionariesBlockchain.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/cookbook_dictionaries/dictionariesBlockchain.json ':include :type=code json')
 
+Moreover we will also upload an ecdh public key:
+
+[](../_media/examples/zencode_cookbook/cookbook_dictionaries/dictionariesIssuer_keyring.json ':include :type=code json')
 
 In the script below we will: 
  - Find the *timestamp* of the latest *transaction* (and older transaction)
@@ -294,26 +296,19 @@ In the script below we will:
  - Create an array that contains all the objects named *timestamp* in *TransactionsBatchA*
  - Prune a string dictionary
 
-This part of the script load the dictionaries along with some simple objects:
-
-[](../_media/examples/zencode_cookbook/dictionariesGiven.zen ':include :type=code gherkin')
-
-and this part of the script does the computation:
-
-[](../_media/examples/zencode_cookbook/dictionariesWhen.zen ':include :type=code gherkin')
-
+[](../_media/examples/zencode_cookbook/cookbook_dictionaries/dictionariesComputation.zen ':include :type=code gherkin')
 
 
 The output should look like this: 
 
-[](../_media/examples/zencode_cookbook/dictionariesComputationOutput.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/cookbook_dictionaries/dictionariesComputationOutput.json ':include :type=code json')
 
 
 
 
 # The script used to create the material in this page
 
-All the smart contracts and the data you see in this page are generated by the scripts [run-when.sh](https://github.com/dyne/Zenroom/blob/master/test/zencode_cookbook/run-when.sh) and [run-dictionaries.sh](https://github.com/dyne/Zenroom/blob/master/test/zencode_cookbook/run-dictionaries.sh). If you want to run the scripts (on Linux) you should: 
+All the smart contracts and the data you see in this page are generated by the scripts [cookbook_when.bats](https://github.com/dyne/Zenroom/blob/master/test/zencode/cookbook_when.bats) and [cookbook_dictionaries.bats](https://github.com/dyne/Zenroom/blob/master/test/zencode/cookbook_dictionaries.bats). If you want to run the scripts (on Linux) you should: 
  - *git clone https://github.com/dyne/Zenroom.git*
  - install **zsh** and **jq**
  - download a [zenroom binary](https://zenroom.org/#downloads) and place it */bin* or */usr/bin* or in *./Zenroom/src*
