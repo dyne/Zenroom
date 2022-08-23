@@ -9,7 +9,7 @@ Given that I am known as 'Alice'
 When I create the ecdh key
 Then print my keyring
 EOF
-    save_output alice_keypair.json
+    save_output alice_keyring.json
 }
 
 @test "random array generation" {
