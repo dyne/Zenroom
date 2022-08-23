@@ -94,7 +94,6 @@ When I set 'myNewlytCreatedNumber' to '42' as 'number'
 When I set 'myNewlyCreatedNumberInBaseSomething' to '42' base '16'
 
 # CREATE KEYRING
-# TODO: update to Keyring handling
 # Keys inside keyrings can be created from a random seed or from a known seed
 
 # Below is the standard keyring generation statement, which uses a random seed
@@ -107,13 +106,13 @@ When I set 'myNewlyCreatedNumberInBaseSomething' to '42' base '16'
 # in the same script, so the second would overwrite the first. In reality you never want to 
 # rename a keyring, as its schema is hardcoded in Zenroom and cryptographically it doesn't make sense
 # to use more than one keyring in the same script.
-When I rename the 'keyring' to 'GivenKeypair'
+When I rename the 'keyring' to 'GivenKeyring'
 When I create the ecdh key
-and I rename the 'keyring' to 'keypairFromRandom'
+and I rename the 'keyring' to 'keyringFromRandom'
 
-# Below is a statement to create a keypair from a known seed.
+# Below is a statement to create a keyring from a known seed.
 # The seed has to be passed to Zenroom via a string, that can have an arbitrary size
 When I create the ecdh key with secret 'myThirteenStringPassword'
-and I rename the 'keyring' to 'keypairFromSeed'
+and I rename the 'keyring' to 'keyringFromSeed'
 
 Then print all data
