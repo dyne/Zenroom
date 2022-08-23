@@ -55,8 +55,7 @@ Endif
 When I create the random 'just a random in the main branch'
 Then print all data
 EOF
-
-    save_output "number_comparison.json"
+    save_output "number_comparison_output.json"
     assert_output '{"just_a_random":"XdjAYj+RY95+uyYMI8fR3+fmP5LyQaN54vyTTVKxZyA=","just_a_random_in_the_main_branch":"VyJ47aH6+hysFuthAZJP+LyFxmZs6L56Ru0P+JlCbDs=","number_higher":50,"number_lower":10,"output":["I_promise_that_number_higher_is_higher_than_number_lower","the_number_lower_is_less_than_or_equal_to_number_higher","I_found_the_newly_created_random_number,_so_I_certify_that_the_condition_is_satisfied"]}'
 }
 
@@ -111,7 +110,7 @@ Then print string 'all elements inside dictionary_not_equal are different'
 Endif
 
 EOF
-    save_output "complex_comparison.json"
+    save_output "complex_comparison_output.json"
     assert_output '{"output":["string_hello_is_not_equal_to_string_world","string_hello_is_equal_to_the_element_with_key_equal_to_1_in_dictionary_equal","all_elements_inside_dictionary_equal_are_equal","all_elements_inside_dictionary_not_equal_are_different"]}'
 }
 
