@@ -71,7 +71,7 @@ Loading ***schemas*** is yet a different story.
 
 ## ***Schemas***: loading complex objects for specific tasks
 
-***Schemas*** are mostly used in cryptography, when complex cryptographic objects are used. The internal structures of the ***schemas*** will typically not be intuitive to non crypto-developers and can therefore be transparent to the user. A simple example of ***schema*** is the **<a href="./_media/examples/zencode_cookbook/alice_keypair.json" download>keypair</a>** (from the *ecdh* scenario), a more complex example is the ***credential*** (from the *credential* scenario). We'll look at schemas in detail when looking at each individual scenario.
+***Schemas*** are mostly used in cryptography, when complex cryptographic objects are used. The internal structures of the ***schemas*** will typically not be intuitive to non crypto-developers and can therefore be transparent to the user. A simple example of ***schema*** is the **<a href="./_media/examples/zencode_cookbook/cookbook_intro/alice_keyring.json" download>keyring</a>** (from the *ecdh* scenario), a more complex example is the ***credential*** (from the *credential* scenario). We'll look at schemas in detail when looking at each individual scenario.
 
 
 ## Strings
@@ -98,7 +98,7 @@ The *Given I have* is in fact a family of statements that do most of the data im
 
 Let's start with a create a file named *myFlatObject.json* containing several an *number*, a *string* and a *string array*:
 
-[](../_media/examples/zencode_cookbook/myFlatObject.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/cookbook_given/myFlatObject.json ':include :type=code json')
 
 
 
@@ -109,7 +109,7 @@ The most important thing to know about loading data in Zencode, is that ***each 
 
 Following is a script that loads (and validates) all the data in myNestedObject.json and (extra bonus!) it randomizes the array and prints the output:
 
-[](../_media/examples/zencode_cookbook/givenLoadFlatObject.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/cookbook_given/givenLoadFlatObject.zen ':include :type=code gherkin')
 
 Let's now the script, loading the data, using the command line:
 
@@ -119,18 +119,18 @@ zenroom -a myFlatObject.json -z givenLoadFlatObject.zen | tee givenLoadFlatObjec
 
 The output should look like this:
 
-[](../_media/examples/zencode_cookbook/givenLoadFlatObjectOutput.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/cookbook_given/givenLoadFlatObjectOutput.json ':include :type=code json')
 
 Remember that the output gets sorted alphabetically, because in Zenroom *determinism is King*, no matter in what order you loaded them.
 
 
 Once again, alla data needs to be explicitly loaded, else Zenroom will ignore them. Using the same JSON file, try now this script:
 
-[](../_media/examples/zencode_cookbook/givenLoadNumber.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/cookbook_given/givenLoadNumber.zen ':include :type=code gherkin')
 
 Which should return this output:
 
-[](../_media/examples/zencode_cookbook/givenLoadNumberOutput.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/cookbook_given/givenLoadNumberOutput.json ':include :type=code json')
  
  
   
@@ -149,7 +149,7 @@ Given I am 'Alice'
 ``` 
 
 This statement is typically used when: 
-- Executing cryptographic operations that will need a key or keypair: the keys are passed to Zenroom (via *-a* and *-k* parameters) as JSON or CBOR files, using a format that includes the owner of the keys. In the next example we'll indeed a *keypair*.
+- Executing cryptographic operations that will need a key or a keyring: the keys are passed to Zenroom (via *-a* and *-k* parameters) as JSON or CBOR files, using a format that includes the owner of the keys. In the next example we'll indeed a *keyring*.
 - In scripts where the identity is a condition for the execution of the script.
 
 Note: this statement has a number of alias, so you these you can use the same statement with the syntax:
@@ -187,23 +187,23 @@ The paramater can be passed to Zenroom (via *-a* and *-k* parameters) as JSON or
 
 So let's go one step further and create a JSON file that containing two nested objects, we'll call it named *myNestedObject.json*:
 
-[](../_media/examples/zencode_cookbook/myNestedObject.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/cookbook_given/myNestedObject.json ':include :type=code json')
  
-The JSON objects contain each a ***string***, a ***number*** and an ***array*** (we'll leave the arrays alone for now) and one also contains a cryptographic ***keypair***. 
-We'll load a ***string***, a ***number*** and an ***keypair*** from the first object and  a ***string***, a ***number*** from the second one. 
+The JSON objects contain each a ***string***, a ***number*** and an ***array*** (we'll leave the arrays alone for now) and one also contains a cryptographic ***keyring***. 
+We'll load a ***string***, a ***number*** and an ***keyring*** from the first object and  a ***string***, a ***number*** from the second one. 
 
 Things you should focus on:
-- In order to load the crypto keypair you'll need to use a *scenario*, in this case we'll use the *scenario 'simple'*, don't worry about this for now. 
+- In order to load the crypto keyring you'll need to use a *scenario*, in this case we'll use the *scenario 'simple'*, don't worry about this for now. 
 - We're using the ***Given I am*** and the ***my*** operator to load data from the first JSON object, whose name matches the one declared in the ***Given I am*** statement.
 - We're loading the second ***string*** and ***number*** from a second JSON object, whose name we need to state.
 
 Time to look at the script and run it: 
  
-[](../_media/examples/zencode_cookbook/givenLoadNestedObject.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/cookbook_given/givenLoadNestedObject.zen ':include :type=code gherkin')
  
 The output should look like this: 
 
-[](../_media/examples/zencode_cookbook/givenLoadNestedObjectOutput.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/cookbook_given/givenLoadNestedObjectOutput.json ':include :type=code json')
 
 Once more, when looking at the output, remember that *determinism is king*. You'll read about manipulating, formatting and sorting the output when we'll get through the ***Then*** phase.
 
@@ -228,13 +228,13 @@ The syntax to load an ***array*** is pretty straight forward, just declare the *
 Given I have a 'hex array' named 'myFavouriteColors'
 ``` 
 
-If you want to experiment with loading different types of ***array*** you can experiment by loading the JSON file <a href="./_media/examples/zencode_cookbook/givenArraysLoadInput.json" download>givenArraysLoadInput.json</a> using the script <a href="../_media/examples/zencode_cookbook/givenArraysLoad.zen" download>givenArraysLoad.zen</a> with the line: 
+If you want to experiment with loading different types of ***array*** you can experiment by loading the JSON file <a href="./_media/examples/zencode_cookbook/cookbook_given/givenArraysLoadInput.json" download>givenArraysLoadInput.json</a> using the script <a href="../_media/examples/zencode_cookbook/cookbook_given/givenArraysLoad.zen" download>givenArraysLoad.zen</a> with the line: 
 
 ```bash
 zenroom -a givenArraysLoadInput.json -z givenArraysLoad.zen | tee myArraysOutput.json
 ``` 
 
-The output should looke like this: <a href="../_media/examples/zencode_cookbook/givenArraysLoadOutput.json" download>givenArraysLoadOutput.json</a>.
+The output should looke like this: <a href="../_media/examples/zencode_cookbook/cookbook_given/givenArraysLoadOutput.json" download>givenArraysLoadOutput.json</a>.
  
 
  
@@ -299,29 +299,29 @@ Given I have a 'string dictionary' named 'Beatles'
 
 Let's now load some real arrays, from a more complex JSON like this one: 
 
-[](../_media/examples/zencode_cookbook/myTripleNestedObject.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/cookbook_given/myTripleNestedObject.json ':include :type=code json')
 
 Let's try with this script: 
 
-[](../_media/examples/zencode_cookbook/givenLoadTripleNestedObject.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/cookbook_given/givenLoadTripleNestedObject.zen ':include :type=code gherkin')
  
 
 The output should look like this: 
 
-[](../_media/examples/zencode_cookbook/givenTripleNestedObjectOutput.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/cookbook_given/givenTripleNestedObjectOutput.json ':include :type=code json')
 
 ### More on loading dictionaries
 
 So let's try to load a real dataset that contains two dictionaries, dummy datasets representing transactions, the first named *ABC-TransactionListFirstBatch* and the second *ABC-TransactionListSecondBatch*, which we'll save in the file **dictionariesBlockchain.json**:
 
-[](../_media/examples/zencode_cookbook/dictionariesBlockchain.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/cookbook_dictionaries/dictionariesBlockchain.json ':include :type=code json')
 
 
 In order to load that the two dictionaries we'll use this script:
 
-[](../_media/examples/zencode_cookbook/dictionariesGiven.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/cookbook_dictionaries/dictionariesGiven.zen ':include :type=code gherkin')
 
-Note that along with the dictionaries, we are also loadin two ***numbers*** where the one named *PricePerKG* exists as well as inside each element of the object: this homonimy is not a problem in this case. 
+Note that along with the dictionaries, we are also loadin two ***numbers*** where the one named *PricePerKG* exists as well as inside each element of the object: this homonimy is not a problem in this case.
 You can use the *debug* statement everytime you are not sure about what is being loaded and what note, just read on to find out how.
 
 
@@ -330,19 +330,19 @@ You can use the *debug* statement everytime you are not sure about what is being
 
 ## Enjoy the silence: *Given nothing*
  
- This statement sets a pre-condition to the execution of the script: *Given nothing* will halt the execution if data is passed to Zenroom via *--data* and *--keys* parameters, you want to use it when you want to be sure that no data is being passed to Zenroom. You may want to use it when you generate random objects or keypairs. 
+ This statement sets a pre-condition to the execution of the script: *Given nothing* will halt the execution if data is passed to Zenroom via *--data* and *--keys* parameters, you want to use it when you want to be sure that no data is being passed to Zenroom. You may want to use it when you generate random objects or the keyring. 
  
  
 ## Homonymy
 
 Now let's look at corner cases: what would happen if I load two differently named objects, that contain objects with the same name? Something like this: 
 
-[](../_media/examples/zencode_cookbook/myNestedRepetitveObject.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/cookbook_given/myNestedRepetitveObject.json ':include :type=code json')
 
 We could try using the following script:
 
 
-[](../_media/examples/zencode_cookbook/givenLoadRepetitveObject.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/cookbook_given/givenLoadRepetitveObject.zen ':include :type=code gherkin')
 
 After uncommenting the statemen that loads the object *'myStringArray'* for the second time, Zenroom would halt the execution and return an error.
 
@@ -370,7 +370,7 @@ Given I have a 'string' named 'myString3' in 'myData'
 Then print data
 ```
 
-When doing son, you would incur in errors, cause Zenroom doesn't load objects with empty or *null* values. On the other hand, Zenroom doesn't normally allow you to set or change the value of an existing object, so importing an empty object expecting to fill it later, doesn't make much sense. You may instead create, copy and rename new objects at execution time, you will read about this in the [When](/pages/zencode-cookbook-when?id=manipulation-sumsubtract-rename-remove-append) section of this manual.
+When doing so, you would incur in errors, cause Zenroom doesn't load objects with empty or *null* values. On the other hand, Zenroom doesn't normally allow you to set or change the value of an existing object, so importing an empty object expecting to fill it later, doesn't make much sense. You may instead create, copy and rename new objects at execution time, you will read about this in the [When](/pages/zencode-cookbook-when?id=manipulation-sumsubtract-rename-remove-append) section of this manual.
 
  
 
@@ -381,18 +381,18 @@ When doing son, you would incur in errors, cause Zenroom doesn't load objects wi
 
 Let's use an even larger object this time, named *myLargeNestedObject.json*: 
 
-[](../_media/examples/zencode_cookbook/myLargeNestedObject.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/cookbook_given/myLargeNestedObject.json ':include :type=code json')
 
 Below is a list of most of the *Given* statements you will need to load data in Zenroom:
 
-[](../_media/examples/zencode_cookbook/givenFullList.zen ':include :type=code gherkin')
-
+[](../_media/examples/zencode_cookbook/cookbook_given/givenFullList.zen ':include :type=code gherkin')
+-->
 
 # The script used to create the material in this page
 
-All the smart contracts and the data you see in this page are generated by the script [run-given.sh](https://github.com/dyne/Zenroom/blob/master/test/zencode_cookbook/run-given.sh) and [run-dictionaries.sh](https://github.com/dyne/Zenroom/blob/master/test/zencode_cookbook/run-dictionaries.sh) If you want to run the script (on Linux) you should: 
+All the smart contracts and the data you see in this page are generated by the script [cookbook_given.sh](https://github.com/dyne/Zenroom/blob/master/test/zencode/cookbook_given.bats) and [cookbook_dictionaries.sh](https://github.com/dyne/Zenroom/blob/master/test/zencode/cookbook_dictionaries.bats) If you want to run the script (on Linux) you should: 
  - *git clone https://github.com/dyne/Zenroom.git*
  - install **zsh** and **jq**
  - download a [zenroom binary](https://zenroom.org/#downloads) and place it */bin* or */usr/bin* or in *./Zenroom/src*
--->
+
 
