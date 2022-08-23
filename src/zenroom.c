@@ -189,9 +189,9 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	switch(ZZ->zconf_printf) {
 	case STB:
 		ZZ->sprintf = &z_sprintf;
-		ZZ->snprintf = &z_snprintf;
+		ZZ->snprintf = (snprintf_t)&z_snprintf;
 		ZZ->vsprintf = &z_vsprintf;
-		ZZ->vsnprintf = &z_vsnprintf;
+		ZZ->vsnprintf = (vsnprintf_t)&z_vsnprintf;
 		act(NULL,"STB print functions in use");
 		break;
 	case MUTT:
