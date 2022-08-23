@@ -51,7 +51,6 @@ and I have my 'keyring'
 When I create the ecdh public key
 Then print my 'ecdh public key'
 EOF
-    save_output dictionariesIssuer_pubkey.json
 }
 
 
@@ -70,7 +69,6 @@ and I insert 'TransactionsConcluded' in 'ABC-TransactionsStatement'
 and I insert 'AverageAmountPerTransaction' in 'ABC-TransactionsStatement'
 Then print the 'ABC-TransactionsStatement' 
 EOF
-    save_output created_dictionary.json
 
     cat <<EOF | save dictionariesBlockchain.json
 {
@@ -202,6 +200,32 @@ EOF
       }
    }
 }
+EOF
+    cat <<EOF | zexe dictionariesGiven.zen dictionariesBlockchain.json 
+# LOAD DICTIONARIES
+# Here we load the two dictionaries and import their data.
+# Later we also load some numbers, one of them name "PricePerKG" exists in the dictionary's root, 
+# as well as inside each element of the object: homonimy is not a problem in this case.
+Given that I have a 'string dictionary' named 'TransactionsBatchA'
+Given that I have a 'string dictionary' named 'TransactionsBatchB'
+
+Given that I have a 'string dictionary' named 'TransactionAmountsA'
+Given that I have a 'string dictionary' named 'TransactionAmountsB'
+Given that I have a 'string dictionary' named 'PowerData'
+
+Given that I have a 'string dictionary' named 'notPrunedDictionary'
+
+
+# Loading other stuff here
+Given that I have a 'number' named 'referenceTimestamp'
+Given that I have a 'number' named 'PricePerKG'
+Given that I have a 'number' named 'otherPricePerKG'
+Given that I have a 'string' named 'dictionaryToBeFound'
+Given that I have a 'string' named 'objectToBeCopied'
+Given that I have a 'string' named 'myVerySecretPassword'
+
+# Setting my identity
+Given my name is in a 'string' named 'myUserName'
 EOF
 }
 

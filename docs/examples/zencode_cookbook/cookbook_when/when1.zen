@@ -46,7 +46,6 @@ Given I have a  'base64' named 'myFirstBase64' in 'myFirstObject'
 Given I have a  'binary' named 'myFirstBinary' in 'myFirstObject'
 Given I have an 'url64' named 'myFirstUrl64' in 'myFirstObject'
 # Here we're done loading stuff 
-
 # WRITE IN (create string or number)
 # the "write in" statement create a new object, assigns it an encoding but 
 # only "number" or "string" (if you need any other encoding, 

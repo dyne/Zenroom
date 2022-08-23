@@ -1,6 +1,3 @@
-# rule check version 1.0.0
-Scenario ecdh: dictionary computation and signing 
-
 # LOAD DICTIONARIES
 # Here we load the two dictionaries and import their data.
 # Later we also load some numbers, one of them name "PricePerKG" exists in the dictionary's root, 
@@ -23,7 +20,5 @@ Given that I have a 'string' named 'dictionaryToBeFound'
 Given that I have a 'string' named 'objectToBeCopied'
 Given that I have a 'string' named 'myVerySecretPassword'
 
-# Loading the keyring afer setting my identity
+# Setting my identity
 Given my name is in a 'string' named 'myUserName'
-Given that I have my 'keyring'
-
