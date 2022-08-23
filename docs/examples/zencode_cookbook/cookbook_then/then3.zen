@@ -54,7 +54,6 @@ Given I have an 'url64' named 'myUrl64_6' inside 'myObject'
 # Dictionary
 Given I have a 'string dictionary' named 'salesReport'
 Given I have a 'string dictionary' named 'myFourthObject'
-
 When I write string 'This message is for Bob.' in 'messageForBob'
 When I write string 'This message is for Carl.' in 'messageForCarl'
 
@@ -85,5 +84,3 @@ Then print 'header'
 # print the '' as ''
 # print the '' as '' in ''
 # print the '' in ''
-
-
