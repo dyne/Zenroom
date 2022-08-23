@@ -2,7 +2,7 @@
    "myFirstObject":{
       "myNumber":11223344,
       "myString":"Hello World!",
-      "myFiveStrings":[
+      "myStringArray":[
          "String1",
          "String2",
          "String3",
@@ -12,7 +12,7 @@
    "mySecondObject":{
       "mySecondNumber":1234567890,
 	  "mySecondString":"Oh, hello again!",
-      "mySecondArray":[
+      "myStringArray":[
          "anotherString1",
          "anotherString2",
          "anotherString3",

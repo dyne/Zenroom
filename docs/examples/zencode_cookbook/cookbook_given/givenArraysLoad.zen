@@ -6,5 +6,4 @@ Given I have a 'base64 array' named 'myBase64Array'
 Given I have a 'base64 array' named 'myECPArray'
 Given I have a 'base64 array' named 'myBIGArray'
 Given I have a 'base64 array' named 'myECP2Array'
-
 Then print all data
