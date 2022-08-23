@@ -1,4 +1,3 @@
-# rule check version 1.0.0 
 Scenario 'ecdh': Bob verifies the signature from Alice
 
 # Declaring who I am and loading all the stuff

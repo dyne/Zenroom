@@ -1,4 +1,3 @@
-Rule check version 1.0.0
 Scenario 'ecdh': Alice encrypts a message for Bob and Carl
 
 # Loading Alice' keypair
