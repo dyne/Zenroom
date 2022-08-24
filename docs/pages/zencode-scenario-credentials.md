@@ -12,38 +12,21 @@ When **Alice** is in possession of **credentials** then she can
 create a **proof** any time she wants using as input:
 
 - the **credentials**
-- her **credential keypair**
-- the **verifier** by MadHatter
-[](../_media/examples/zencode_simple/create_proof.zen ':include :type=code gherkin')
+- her **credential key**
+- the **issuer public key** by MadHatter
+
+[](../_media/examples/zencode_cookbook/credential/credentialParticipantCreateProof.zen ':include :type=code gherkin')
 
 All these "things" (credentials, proofs, etc.) are data structures that can be used as input and received as output of Zencode functions. For instance a **proof** can be print in **JSON** format and looks a bit list this:
 
-```json
-{
-   "credential_proof" : {
-      "pi_v" : {
-         "c" : "u64:tBrCGawWYEAi55_hHIPq0JT3OaapOebSHVW0GhjJcAk",
-         "rr" : "u64:J7R3FXsI2dcfyZRCqWA8fDYijG39P16LvGpX90wtCWw",
-         "rm" : "u64:QoG-28CNTAY3Ir4SQqVoK1ZpTlzOnXxX6Xtq5KMIxpo"
-      },
-      "nu" : "u64:BA77WYvBRsc53uAyrqTjuUdptJPZbcTlzr9icizm0...",
-      "sigma_prime" : {
-         "h_prime" : "u64:BB9AM5xjWPxsZ47zh1WAmFymru66W6YuK...",
-         "s_prime" : "u64:BAGYNM6JO0wRAGE87_-bQVuhUXeEoeJrh..."
-      },
-      "kappa" : "u64:GFVYsudbHOJNzPl3ZL0_VzB_DRvrPKF26OCZR9..."
-   },
-   "zenroom" : {
-      "scenario" : "coconut", "encoding" : "url64", "version" : "1.0.0"
-   }
-}
-```
+[](../_media/examples/zencode_cookbook/credential/credentialParticipantProof.json ':include :type=code json')
 
 Anyone can verify proofs using as input:
 
 - the **credential proof**
-- the **verifier** by MadHatter
-[](../_media/examples/zencode_simple/verify_proof.zen ':include :type=code gherkin')
+- the **issuer public key** by MadHatter
+
+[](../_media/examples/zencode_cookbook/credential/credentialAnyoneVerifyProof.zen ':include :type=code gherkin')
 
 What is so special about these proofs? Well!  Alice cannot be followed
 by her trail of proofs: **she can produce an infinite number of
@@ -69,7 +52,7 @@ from now on:
 ```mermaid
 graph LR
           subgraph Sign
-                           iKP>issuer keypair] --- I(Issuer)
+                           iKP>issuer key] --- I(Issuer)
                            hRQ --> I
                            I --> iSIG
           end
@@ -78,7 +61,7 @@ graph LR
                            Proof
           end
           subgraph Request
-                           H --> hKP> credential keypair ]
+                           H --> hKP> credential key]
                            hKP --> hRQ[request]
           end
           iSIG[signature] --> H(Holder)
@@ -97,9 +80,9 @@ sequenceDiagram
         participant H as Holder
         participant I as Issuer
         participant B as Blockchain
-        I->>I: 1 create a issuer keypair
-        I->>B: 1a publish the verifier
-        H->>H: 2 create a credential keypair
+        I->>I: 1 create a issuer key
+        I->>B: 1a publish the issuer public key
+        H->>H: 2 create a credential key
         H->>I: 3 send a credential request
         I->>H: 4 reply with the credential signature
         H->>H: 5 aggregate the credentials
@@ -110,32 +93,32 @@ sequenceDiagram
 ## The 'Coconut' credential flow in Zenroom
 
 
-1 **MadHatter** generates an **issuer keypair**
+1 **MadHatter** generates an **issuer key**
 
 ***Input:*** none
 
 ***Smart contract:*** credentialIssuerKeygen.zen
 
-[](../_media/examples/zencode_cookbook/credentialIssuerKeygen.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/credential/credentialIssuerKeygen.zen ':include :type=code gherkin')
 
 
-***Output:*** credentialIssuerKeypair.json
+***Output:*** credentialIssuerKeyring.json
 
-[](../_media/examples/zencode_cookbook/credentialIssuerKeypair.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/credential/credentialIssuerKeyring.json ':include :type=code json')
 
 ----
 
-1a **MadHatter** publishes the **verification key**
+1a **MadHatter** publishes the **issuer public key**
 
-***Input:*** credentialIssuerKeypair.json
+***Input:*** credentialIssuerKeyring.json
 
-***Smart contract:*** credentialIssuerPublishVerifier.zen
+***Smart contract:*** credentialIssuerPublishpublic_key.zen
 
-[](../_media/examples/zencode_cookbook/credentialIssuerPublishVerifier.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/credential/credentialIssuerPublishpublic_key.zen ':include :type=code gherkin')
 
-***Output:*** credentialIssuerVerifier.json
+***Output:*** credentialIssuerpublic_key.json
 
-[](../_media/examples/zencode_cookbook/credentialIssuerVerifier.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/credential/credentialIssuerpublic_key.json ':include :type=code json')
 
 
 ----
@@ -146,12 +129,12 @@ sequenceDiagram
 
 ***Smart contract:*** credentialParticipantKeygen.zen
 
-[](../_media/examples/zencode_cookbook/credentialParticipantKeygen.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/credential/credentialParticipantKeygen.zen ':include :type=code gherkin')
 
 
-***Output:*** credentialParticipantKeypair.json
+***Output:*** credentialParticipantKeyring.json
 
-[](../_media/examples/zencode_cookbook/credentialParticipantKeypair.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/credential/credentialParticipantKeyring.json ':include :type=code json')
 
 You can also generate the key elsewhere and then import it into Zenroom. To do that you can use one of the following statements:
 
@@ -165,70 +148,70 @@ where **myKey** is the credential key generated outside of Zenroom.
 
 3 **Alice** sends her **credential signature request**
 
-***Input:*** credentialParticipantKeypair.json 
+***Input:*** credentialParticipantKeyring.json 
 
 ***Smart contract:*** credentialParticipantSignatureRequest.zen
 
-[](../_media/examples/zencode_cookbook/credentialParticipantSignatureRequest.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/credential/credentialParticipantSignatureRequest.zen ':include :type=code gherkin')
 
 
 ***Output:*** credentialParticipantSignatureRequest.json
 
-[](../_media/examples/zencode_cookbook/credentialParticipantSignatureRequest.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/credential/credentialParticipantSignatureRequest.json ':include :type=code json')
 
 ----
 
 4 **MadHatter** decides to sign a **credential signature request**
 
-***Input:*** credentialParticipantSignatureRequest.json ***and*** credentialIssuerKeypair.json 
+***Input:*** credentialParticipantSignatureRequest.json ***and*** credentialIssuerKeyring.json 
 
 ***Smart contract:*** credentialIssuerSignRequest.zen
 
-[](../_media/examples/zencode_cookbook/credentialIssuerSignRequest.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/credential/credentialIssuerSignRequest.zen ':include :type=code gherkin')
 
 
 ***Output:*** credentialIssuerSignedCredential.json
 
-[](../_media/examples/zencode_cookbook/credentialIssuerSignedCredential.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/credential/credentialIssuerSignedCredential.json ':include :type=code json')
 
 ----
 
 5 **Alice** receives and aggregates the signed **credential**
 
-***Input:*** credentialIssuerSignedCredential.json ***and*** credentialParticipantKeypair.json
+***Input:*** credentialIssuerSignedCredential.json ***and*** credentialParticipantKeyring.json
 
 ***Smart contract:*** credentialParticipantAggregateCredential.zen
 
-[](../_media/examples/zencode_cookbook/credentialParticipantAggregateCredential.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/credential/credentialParticipantAggregateCredential.zen ':include :type=code gherkin')
 
 
 ***Output:*** credentialParticipantAggregatedCredential.json
 
-[](../_media/examples/zencode_cookbook/credentialParticipantAggregatedCredential.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/credential/credentialParticipantAggregatedCredential.json ':include :type=code json')
 
 ----
 
 6 **Alice** produces an anonymized version of the **credential** called **proof**
 
-***Input:*** credentialParticipantAggregatedCredential.json ***and*** credentialIssuerVerifier.json 
+***Input:*** credentialParticipantAggregatedCredential.json ***and*** credentialIssuerpublic_key.json 
 
 ***Smart contract:*** credentialParticipantCreateProof.zen
 
-[](../_media/examples/zencode_cookbook/credentialParticipantCreateProof.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/credential/credentialParticipantCreateProof.zen ':include :type=code gherkin')
 
 ***Output:*** credentialParticipantProof.json
 
-[](../_media/examples/zencode_cookbook/credentialParticipantProof.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/credential/credentialParticipantProof.json ':include :type=code json')
 
 ----
 
-7 **Anybody** matches Alice's **proof** to the MadHatter's **verifier**
+7 **Anybody** matches Alice's **proof** to the MadHatter's **issuer public key**
 
-***Input:***  credentialParticipantAggregatedCredential.json ***and*** credentialIssuerVerifier.json 
+***Input:***  credentialParticipantProof.json ***and***credentialIssuerpublic_key.json 
 
 ***Smart contract:*** credentialAnyoneVerifyProof.zen
 
-[](../_media/examples/zencode_cookbook/credentialAnyoneVerifyProof.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/credential/credentialAnyoneVerifyProof.zen ':include :type=code gherkin')
 
 ***Output:*** "Success" or else Zenroom throws an error
 
@@ -239,7 +222,7 @@ Lets see how flexible is Zencode.
 
 The flow described above is for a fully decentralized issuance of
 **credentials** where only the **Holder** is in possession of the
-**credential keypair** needed to produce a **credential proof**.
+**credential key** needed to produce a **credential proof**.
 
 But let's imagine a much more simple use-case for a more centralized
 system where the **Issuer** provides the **Holder** with everything
@@ -249,26 +232,16 @@ The implementation is very, very simple: just line up all the **When**
 blocks where the different operations are done at different times and
 print the results all together!
 
-```gherkin
-Scenario credential
-	Given that I am known as 'Issuer'
-	When I create the issuer keypair
-	and I create the credential keypair
-	and I create the credential request
-	and I create the credential signature
-	and I create the credentials
-	Then print the 'credentials'
-	and print the 'credential keypair'
-```
+[](../_media/examples/zencode_cookbook/credential/centralizedCredentialIssuance.zen ':include :type=code gherkin')
 
 This will produce **credentials** that anyone can take and run. Just
 beware that in this simplified version of ABC the **Issuer** may
-maliciously keep the **credential keypair** and impersonate the
+maliciously keep the **credential key** and impersonate the
 **Holder**.
 
 # The script used to create the material in this page
 
-All the smart contracts and the data you see in this page are generated by the script [run.sh](https://github.com/dyne/Zenroom/blob/master/test/zencode_credential/run.sh). If you need to setup credentials for other flows (such as *petition* and *reflow*), you can use the script  that creates multiple participants at once [setup_multi_credentials.sh](https://github.com/dyne/Zenroom/blob/master/test/zencode_credential/setup_multi_credentials.sh)
+All the smart contracts and the data you see in this page are generated by the script [credential.bats](https://github.com/dyne/Zenroom/blob/master/test/zencode/credential.bats). If you need to setup credentials for other flows (such as *petition* and *reflow*), you can use the script  that creates multiple participants at once [setup_multi_credentials.sh](https://github.com/dyne/Zenroom/blob/master/test/zencode_credential/setup_multi_credentials.sh)
 
 If you want to run the script (on Linux) you should: 
  - *git clone https://github.com/dyne/Zenroom.git*
