@@ -1,12 +1,7 @@
-#!/usr/bin/env bash
+load ../bats_setup
+load ../bats_zencode
+
 SUBDOC=w3c
-####################
-# common script init
-if ! test -r ../utils.sh; then
-	echo "run executable from its own directory: $0"; exit 1; fi
-. ../utils.sh
-Z="`detect_zenroom_path` `detect_zenroom_conf`"
-####################
 
 # How it works:
 # - The Oracle create private and public keys
@@ -14,8 +9,9 @@ Z="`detect_zenroom_path` `detect_zenroom_conf`"
 # - Now the Oracle can sign documents using its keys
 # - Everyone with the did-document can verify the signatures
 
-# Oracle private keys
-cat <<EOF | zexe privatekey_gen.zen | save $SUBDOC privatekey_gen.json
+
+@test "Generate oracle private keys" {
+    cat <<EOF | zexe privatekey_gen.zen
 Scenario 'ecdh': Create the key
 Scenario 'ethereum': Create key
 Scenario 'reflow': Create the key
@@ -28,17 +24,20 @@ Given nothing
 # Here we are creating the keys
 When I create the ecdh key
 When I create the eddsa key
-When I create the ethereum key 
+When I create the ethereum key
 When I create the reflow key
 When I create the schnorr key
 When I create the bitcoin key
 When I create the dilithium key
 
-Then print the data
+Then print 'keyring'
 EOF
+    save_output "privatekey_gen.json"
+}
 
-# Oracle public keys/address
-cat <<EOF | zexe pubkey_gen.zen -k privatekey_gen.json | save $SUBDOC pubkey_gen.json
+
+@test "Generate oracle public keys/address" {
+    cat <<EOF | zexe pubkey_gen.zen privatekey_gen.json
 Scenario 'ecdh': Create the key
 Scenario 'ethereum': Create key
 Scenario 'reflow': Create the key
@@ -50,7 +49,7 @@ Given I have the 'keyring'
 
 When I create the ecdh public key
 When I create the eddsa public key
-When I create the ethereum address 
+When I create the ethereum address
 When I create the reflow public key
 When I create the schnorr public key
 When I create the bitcoin public key
@@ -58,14 +57,18 @@ When I create the dilithium public key
 
 Then print the 'ecdh public key'
 Then print the 'eddsa public key'
-Then print the 'ethereum address' 
+Then print the 'ethereum address'
 Then print the 'reflow public key'
 Then print the 'schnorr public key'
 Then print the 'bitcoin public key'
 Then print the 'dilithium public key'
 EOF
+    save_output "pubkey_gen.json"
+}
 
-cat <<EOF | save $SUBDOC identity.json
+
+@test "Insert public keys inside identity" {
+    cat <<EOF | save_asset identity.json
 {
 	"identity": {
 		"service": [
@@ -128,9 +131,7 @@ cat <<EOF | save $SUBDOC identity.json
 	}
 }
 EOF
-
-# Insert public keys inside the identity
-cat <<EOF | zexe input_for_did_document.zen -k pubkey_gen.json -a identity.json | save $SUBDOC complete_identity.json
+    cat <<EOF | zexe input_for_did_document.zen pubkey_gen.json identity.json
 Given I have a 'string dictionary' named 'identity'
 Given I have a 'string' named 'dilithium public key'
 Given I have a 'string' named 'schnorr public key'
@@ -147,8 +148,14 @@ When I insert 'reflow public key' in 'identity'
 When I insert 'ethereum address' in 'identity'
 Then print the 'identity'
 EOF
+    save_output "complete_identity.json"
 
-cat <<EOF | save $SUBDOC controller.json
+
+}
+
+
+@test "the Controller creates the did-document of the Oracle" {
+    cat <<EOF | save_asset controller.json
 {
 	"@context": [
 		"https://www.w3.org/ns/did/v1",
@@ -181,9 +188,7 @@ cat <<EOF | save $SUBDOC controller.json
 	"ethereum_address": "8388f6a2a4940c3fe14d640ddf151aa771f03b81"
 }
 EOF
-
-# the Controller creates the did-document of the Oracle
-cat <<EOF | zexe did_doc_gen.zen -k controller.json -a complete_identity.json | save $SUBDOC did_document.json 
+    cat <<EOF | zexe did_doc_gen.zen controller.json complete_identity.json
 Scenario 'w3c': sign JSON
 
 # controller
@@ -216,7 +221,7 @@ When I insert '@context' in 'did document'
 
 ## id
 When I set 'did:dyne:id:' to 'did:dyne:id:' as 'string'
-When I append 'ecdh_public_key' to 'did:dyne:id:' 
+When I append 'ecdh_public_key' to 'did:dyne:id:'
 When I copy the 'did:dyne:id:' to 'id'
 When I insert 'id' in 'did document'
 
@@ -240,7 +245,7 @@ When I create the 'string array' named 'verificationMethod'
 # 1
 When I create the 'string dictionary' named 'verification-key1'
 # pk
-When I copy 'ecdh public key' to 'publicKeyBase64' 
+When I copy 'ecdh public key' to 'publicKeyBase64'
 When I insert 'publicKeyBase64' in 'verification-key1'
 # type
 When I set 'type' to 'EcdsaSecp256k1VerificationKey_b64' as 'string'
@@ -260,7 +265,7 @@ When I insert 'verification-key1' in 'verificationMethod'
 # 2
 When I create the 'string dictionary' named 'verification-key2'
 # pk
-When I copy 'reflow public key' to 'publicKeyBase64' 
+When I copy 'reflow public key' to 'publicKeyBase64'
 When I insert 'publicKeyBase64' in 'verification-key2'
 # type
 When I set 'type' to 'ReflowBLS12381VerificationKey_b64' as 'string'
@@ -280,7 +285,7 @@ When I insert 'verification-key2' in 'verificationMethod'
 # 3
 When I create the 'string dictionary' named 'verification-key3'
 # pk
-When I copy 'schnorr public key' to 'publicKeyBase64' 
+When I copy 'schnorr public key' to 'publicKeyBase64'
 When I insert 'publicKeyBase64' in 'verification-key3'
 # type
 When I set 'type' to 'SchnorrBLS12381VerificationKey_b64' as 'string'
@@ -300,7 +305,7 @@ When I insert 'verification-key3' in 'verificationMethod'
 # 4
 When I create the 'string dictionary' named 'verification-key4'
 # pk
-When I copy 'dilithium public key' to 'publicKeyBase64' 
+When I copy 'dilithium public key' to 'publicKeyBase64'
 When I insert 'publicKeyBase64' in 'verification-key4'
 # type
 When I set 'type' to 'Dilithium2VerificationKey_b64' as 'string'
@@ -343,7 +348,7 @@ When I create the 'string dictionary' named 'verification-key6'
 # this follows the CAIP-10(https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-10.md) spec
 # thus it is: namespace + ":" + chain_id + ":" + address
 When I set 'blockchainAccountId' to 'eip155:1717658228:0x' as 'string'
-When I append 'ethereum address' to 'blockchainAccountId' 
+When I append 'ethereum address' to 'blockchainAccountId'
 When I insert 'blockchainAccountId' in 'verification-key6'
 # type
 When I set 'type' to 'EcdsaSecp256k1RecoveryMethod2020' as 'string'
@@ -391,12 +396,14 @@ When I insert 'proof' in 'did document'
 # When I append ':nonce' to 'address:nonce'
 
 ### print all out
-then print the 'did document' 
+then print the 'did document'
 EOF
+    save_output "did_document.json"
+}
 
 
-# now the Oracle sign different documents with its keys
-cat <<EOF | save $SUBDOC to_sign.json
+@test "now the Oracle sign different documents with its keys" {
+    cat <<EOF | save_asset to_sign.json
 {
 	"json": {
 		"simple message": "hello world",
@@ -405,8 +412,7 @@ cat <<EOF | save $SUBDOC to_sign.json
 	}
 }
 EOF
-
-cat <<EOF | zexe oracle_signature.zen -k privatekey_gen.json -a to_sign.json | save $SUBDOC signed.json
+    cat <<EOF | zexe oracle_signature.zen privatekey_gen.json to_sign.json
 Scenario 'ecdh': sign
 Scenario 'schnorr': sign
 Scenario 'qp': sign
@@ -426,10 +432,13 @@ Then print the 'dilithium signature'
 Then print the 'eddsa signature'
 Then print the 'json'
 EOF
+    save_output "signed.json"
 
 
-# Everyone that has the did documetn can now verify the signatures
-cat <<EOF | zexe verify_signatures.zen -k did_document.json -a signed.json | jq
+}
+
+@test "Everyone that has the did documetn can now verify the signatures" {
+cat <<EOF | zexe verify_signatures.zen did_document.json signed.json
 Scenario 'w3c': did document
 Scenario 'ecdh': verify sign
 Scenario 'schnorr': verify sign
@@ -444,7 +453,7 @@ and I have a 'dilithium signature'
 and I have a 'eddsa signature'
 and I have a 'string dictionary' named 'json'
 
-# Here I retrieve all the public keys/address from 
+# Here I retrieve all the public keys/address from
 # the verififcationMethod
 When I create the verificationMethod
 
@@ -463,8 +472,6 @@ When I pickup from path 'verificationMethod.eddsa_public_key'
 When I verify the 'json' has a eddsa signature in 'eddsa signature' by 'eddsa public key'
 
 # verification is succesfull
-Then print the string 'signature verified!!!' 
+Then print the string 'signature verified!!!'
 EOF
-
-success
-rm *.json *.zen
+}
