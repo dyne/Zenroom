@@ -166,7 +166,8 @@ tests = [ 'lowmem', 'himem', 'primitives', 'crypto' ]
 foreach test_suite : tests
     test('lua_'+test_suite.underscorify(),
 	 bats_bin,
-	 args: [test_dir+'lua/'+test_suite+'.bats'])
+	 args: [test_dir+'lua/'+test_suite+'.bats'],
+         timeout: 60)
 endforeach
 
 ## BATS tests in test/zencode
