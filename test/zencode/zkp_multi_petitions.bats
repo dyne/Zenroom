@@ -1,64 +1,64 @@
-#!/usr/bin/env bash
+load ../bats_setup
+load ../bats_zencode
 
-RNGSEED='random'
-####################
-# common script init
-if ! test -r ../utils.sh; then
-	echo "run executable from its own directory: $0"; exit 1; fi
-. ../utils.sh
-Z="`detect_zenroom_path` `detect_zenroom_conf`"
-# # OR: out=../../docs/examples/zencode_cookbook
+SUBDOC=zkp
 
-# out=/dev/shm/files
-
+# Do not set seed, otherwise petition will go in error "duplicated petition signature"
+conf="debug=1"
 
 Participants=10
-
 users=""
 for i in $(seq $Participants)
 do
       users+=" Participant_${i}"
 done
 
-## ISSUER creation
-cat <<EOF | zexe issuer_keygen.zen  | save . issuer_key.json
+@test "Issuer creation" {
+    cat <<EOF | zexe issuer_keygen.zen
 Scenario credential
 Given I am 'The Authority'
 when I create the issuer key
 Then print my 'keyring'
 EOF
+   save_output "issuer_key.json"
+}
 
-cat <<EOF | zexe issuer_public_key.zen -k issuer_key.json  | save . credentialIssuerpublic_key.json
+@test "Issuer public key" {
+    cat <<EOF | zexe issuer_public_key.zen issuer_key.json
 Scenario credential: publish verifier
 Given that I am known as 'The Authority'
 and I have my 'keyring'
 When I create the issuer public key
 Then print my 'issuer public key'
 EOF
-##
-
+    save_output 'credentialIssuerpublic_key.json'
+}
 generate_participant() {
     local name=$1
     ## PARTICIPANT
-	cat <<EOF | zexe keygen_${1}.zen  | save . keypair_${1}.json
+	cat <<EOF | zexe keygen_${1}.zen
 Scenario multidarkroom
 Scenario credential
 Given I am '${1}'
 When I create the credential key
 Then print my 'keyring'
 EOF
+    save_output "keypair_${1}.json"
+    rm -f $TMP/out
 
-	cat <<EOF | zexe request_${1}.zen -k keypair_${1}.json  | save . request_${1}.json
+	cat <<EOF | zexe request_${1}.zen keypair_${1}.json
 Scenario credential
 Given I am '${1}'
 and I have my 'keyring'
 When I create the credential request
 Then print my 'credential request'
 EOF
+    save_output "request_${1}.json"
+    rm -f $TMP/out
 	##
 
 	## ISSUER SIGNS
-	cat <<EOF | zexe issuer_sign_${1}.zen -k issuer_key.json -a request_${1}.json  | save . issuer_signature_${1}.json
+	cat <<EOF | zexe issuer_sign_${1}.zen issuer_key.json request_${1}.json
 Scenario credential
 Given I am 'The Authority'
 and I have my 'keyring'
@@ -68,10 +68,12 @@ and I create the issuer public key
 Then print the 'credential signature'
 and print the 'issuer public key'
 EOF
+    save_output "issuer_signature_${1}.json"
+    rm -f $TMP/out
 	##
 
 	## PARTICIPANT AGGREGATES SIGNED CREDENTIAL
-	cat <<EOF | zexe aggr_cred_${1}.zen -k keypair_${1}.json -a issuer_signature_${1}.json  |  save . verified_credential_${1}.json
+	cat <<EOF | zexe aggr_cred_${1}.zen keypair_${1}.json issuer_signature_${1}.json
 Scenario credential
 Given I am '${1}'
 and I have my 'keyring'
@@ -80,23 +82,18 @@ when I create the credentials
 then print my 'credentials'
 and print my 'keyring'
 EOF
+    save_output "verified_credential_${1}.json"
 }
 
-# generate n signed credentials
-
-for user in ${users[@]}
-do
-    echo  "now generating the participant: "  ${user}
-    generate_participant ${user}
-done
-
-
-
-
-
-# Create the petition
-
-cat <<EOF | zexe petitionRequest.zen -k verified_credential_Participant_1.json -a credentialIssuerpublic_key.json  | save . petitionRequest.json
+@test "Generate n signed credentials" {
+    for user in ${users[@]}
+    do
+        echo  "now generating the participant: "  ${user} >&3
+        generate_participant ${user}
+    done
+}
+@test "Create petition" {
+    cat <<EOF | zexe petitionRequest.zen verified_credential_Participant_1.json credentialIssuerpublic_key.json
 # Two scenarios are needed for this script, "credential" and "petition".
 	Scenario credential: read and validate the credentials
 	Scenario petition: create the petition
@@ -118,10 +115,11 @@ cat <<EOF | zexe petitionRequest.zen -k verified_credential_Participant_1.json -
 # so that it's human readable - this is not needed to advance in the flow
 	Then print the 'uid' from 'petition' as 'string'
 EOF
+    save_output "petitionRequest.json"
+}
 
-# Approve the petition
-
-cat <<EOF | zexe petitionApprove.zen -k petitionRequest.json -a credentialIssuerpublic_key.json  | save . petition.json
+@test "Approve petition" {
+    cat <<EOF | zexe petitionApprove.zen petitionRequest.json credentialIssuerpublic_key.json
 Scenario credential
 Scenario petition: approve
     Given that I have a 'issuer public key' inside 'The Authority'
@@ -134,11 +132,13 @@ Scenario petition: approve
     Then print the 'issuer public key'
 	Then print the 'uid' from 'petition' as 'string'
 EOF
+    save_output "petition.json"
+    cat $BATS_SUITE_TMPDIR/petition.json | save_asset petitionEmpty.json
 
-cp -v petition.json petitionEmpty.json 
+}
 
 sign_petition() {
-    cat <<EOF | zexe petitionSign.zen -k verified_credential_$1.json -a credentialIssuerpublic_key.json | save . petitionSignature.json
+    cat <<EOF | zexe petitionSign.zen verified_credential_$1.json credentialIssuerpublic_key.json
 Scenario credential
 Scenario petition: sign petition
     Given I am '${1}'
@@ -150,13 +150,12 @@ Scenario petition: sign petition
     Then print the 'petition signature'
     # and print the 'issuer public key'
 EOF
-
-echo "signed petition for $1"
-
+  save_output "petitionSignature_$1.json"
+  rm -f $TMP/out
+  echo "signed petition for $1" >&3
 }
-
 aggregate_petition() {
-cat <<EOF | zexe petitionAggregateSignature.zen -k petition.json -a petitionSignature.json  | save . petitionAggregated.json
+    cat <<EOF | zexe petitionAggregateSignature.zen petition.json petitionSignature_$1.json
 Scenario credential
 Scenario petition: aggregate signature
     Given that I have a 'petition signature'
@@ -169,45 +168,17 @@ Scenario petition: aggregate signature
     Then print the 'petition'
     Then print the 'issuer public key'
 EOF
-
-mv petitionAggregated.json petition.json
-
-echo "aggregated petition for $1"
-cat petition.json | jq .
-
+    save_output "petitionAggregated.json"
+    rm -f $TMP/out
+    echo "aggregated petition for $1" >&3
+    cat $BATS_SUITE_TMPDIR/petitionAggregated.json | save_asset petition.json
 }
 
-echo "Signing and Aggregating"
-
-for user in ${users[@]}
-do
-    sign_petition $user
-    aggregate_petition $user
-done
-
-exit 0
-
-echo "Tallying the petition"
-
-cat <<EOF | debug petitionTally.zen -k verified_credential_Participant_1.json -a petition.json  | save . petitionTally.json
-Scenario credential
-Scenario petition: tally
-    Given that I am 'Participant_1'
-    Given I have my 'keyring'
-    Given I have a valid 'petition'
-    When I create a petition tally
-    Then print the 'petition tally'
-EOF
-
-
-echo Counting the signatures
-
-cat <<EOF | zexe petitionCount.zen -k petitionTally.json -a petition.json  | save . petitionCount.json
-Scenario credential
-Scenario petition: count
-    Given that I have a valid 'petition'
-    Given I have a valid 'petition tally'
-    When I count the petition results
-    Then print the 'petition results' as 'number'
-    Then print the 'uid' from 'petition'
-EOF
+@test "SIgning and aggregating" {
+    for user in ${users[@]}
+    do
+        echo "$user" >&3
+        sign_petition $user
+        aggregate_petition $user
+    done
+}
