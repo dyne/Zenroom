@@ -129,15 +129,15 @@ void zen_teardown(zenroom_t *zenroom);
 #endif
 
 #ifndef MAX_FILE // for cli.c
-#define MAX_FILE 2048000 // load max 2MiB files
+#define MAX_FILE 20971520 // load max 20MB files
 #endif
 
 #ifndef MAX_STRING // mostly for cli.c
-#define MAX_STRING 20480 // max 20KiB strings
+#define MAX_STRING 20971520 // max 20MB strings
 #endif
 
 #ifndef MAX_OCTET
-#define MAX_OCTET 4096000 // max 4MiB for octets
+#define MAX_OCTET 20971520 // max 20MB for octets
 #endif
 
 #define LUA_BASELIBNAME "_G"

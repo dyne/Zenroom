@@ -189,3 +189,24 @@ EOF
 
 
 }
+
+@test "Alice hash a big file" {
+    cat <<EOF | $ZENROOM_EXECUTABLE -z > bigfile.json
+Rule check version 2.0.0
+Given Nothing
+When I create the random object of '5000000' bytes
+and I rename 'random object' to 'bigfile'
+Then print the 'bigfile' as 'base64'
+EOF
+
+    cat <<EOF | zexe hash_bigfile.zen bigfile.json
+Rule check version 2.0.0
+Scenario qp
+Given I have a 'base64' named 'bigfile'
+# When I create the hash of 'bigfile'
+# Then print the 'hash'
+EOF
+    save_output hash_bigfile.out
+}
+
+
