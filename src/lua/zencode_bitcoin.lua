@@ -93,10 +93,13 @@ local function _satoshi_unspent_export(obj)
 end
 
 local function _address_import(obj)
-   return { raw = ZEN.get(obj, '.', O.from_segwit, tostring) }
+   local raw, version, network
+   raw, version = O.from_segwit(tostring(obj))
+   network = obj:sub(0,2)
+   return { raw = raw, version = F.new(version), network = O.from_string(network) }
 end
 local function _address_export(obj)
-   return O.to_segwit(obj.raw, obj.version, O.to_string(obj.network))
+   return O.to_segwit(obj.raw, tonumber(obj.version), O.to_string(obj.network))
 end
 
 local function _wif_import(obj)	return ZEN.get(obj, '.', BTC.wif_to_sk, O.from_base58) end
@@ -178,7 +181,7 @@ local function _create_addr(name,pfx)
 	   pk = ECDH.sk_to_pubc( havekey(name) )
 	end
 	ACK[name..'_address'] = { raw = btc.address_from_public_key(pk),
-				  version = 0,
+				  version = F.new(0),
 				  network = O.from_string(pfx) }
 	new_codec(name..' address', { zentype = 'schema',
 				      encoding = 'complex' })
