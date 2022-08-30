@@ -66,3 +66,23 @@ and print the 'keyring'
 EOF
     save_output "import_key.json"
 }
+
+
+@test "Export bitcoin address" {
+  cat <<EOF | zexe export_bitcoin_address.zen
+Given nothing
+When I create the bitcoin key
+When I create the bitcoin address
+Then print the 'keyring'
+Then print data
+EOF
+    save_output "export_bitcoin_address.out"
+}
+
+@test "Import bitcoin address" {
+  cat <<EOF | zexe import_bitcoin_address.zen export_bitcoin_address.out
+Given I have the 'bitcoin_address'
+Then print data
+EOF
+    save_output "import_bitcoin_address.out"
+}
