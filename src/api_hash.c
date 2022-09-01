@@ -38,9 +38,9 @@ int zenroom_hash_init(const char *hash_type,
   // size tests
   register int len = sizeof(hash512); // amcl struct
   void *sh;
-  if(hash_ctx_size<<1 <= len<<1) { // size*2 because hex encoded
+  if(hash_ctx_size < (len+4)<<1) { // size*2 because hex encoded
     zerror(NULL, "%s :: invalid hash context size: %u <= %u",
-	   __func__, hash_ctx_size<<1, len<<1);
+	   __func__, hash_ctx_size, (len+4)<<1);
     return 4;
   }
   if(strcasecmp(hash_type, "sha512") == 0) {    
@@ -55,6 +55,7 @@ int zenroom_hash_init(const char *hash_type,
   // serialize
   hash_ctx[0] = prefix;
   buf2hex(hash_ctx+1, (const char*)sh, (const size_t)len);
+  hash_ctx[len+2] = 0x0; // null terminated string
   free(sh);
   return 0;
 }

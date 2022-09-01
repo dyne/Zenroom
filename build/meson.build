@@ -70,6 +70,7 @@ zenroom_src = [
     '../src/mutt_sprintf.c',
     '../src/randombytes.c',
     '../src/repl.c',
+    '../src/api_hash.c',
     '../src/zen_aes.c',
     '../src/zen_big.c',
     '../src/zen_float.c',
