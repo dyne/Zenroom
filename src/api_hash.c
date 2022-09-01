@@ -102,8 +102,10 @@ int zenroom_hash_final(const char *hash_ctx,
     }
     tmp.len = 64;
     tmp.val = (char*)malloc(64);
+    // TODO: check malloc result
     len = sizeof(hash512);
     sh = (char*)malloc(len);
+    // TODO: check malloc result
     hex2buf(sh, hash_ctx+1);
     HASH512_hash((hash512*)sh, tmp.val);
   } else {
@@ -112,5 +114,6 @@ int zenroom_hash_final(const char *hash_ctx,
   }
   OCT_tobase64(hash_result,&tmp);
   free(tmp.val);
+  free(sh);
   return 0;
 }
