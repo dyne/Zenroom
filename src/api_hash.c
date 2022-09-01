@@ -33,7 +33,7 @@
 #define SHA512 '4'
 
 inline void print_ctx_hex(char prefix, void *sh, int len) {
-  char *hash_ctx = malloc((len<<1)+4);
+  char *hash_ctx = malloc((len<<1)+8);
   hash_ctx[0] = prefix;
   buf2hex(hash_ctx+1, (const char*)sh, (const size_t)len);
   hash_ctx[(len<<1)+2] = 0x0; // null terminated string
