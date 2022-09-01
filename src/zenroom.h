@@ -39,12 +39,10 @@ int zencode_exec_tobuf(char *script, char *conf, char *keys, char *data,
                        char *stderr_buf, size_t stderr_len);
 
 // direct access hash calls
-int zenroom_hash_init(const char *hash_type,
-		      char *hash_ctx, const int hash_ctx_size);
+int zenroom_hash_init(const char *hash_type);
 int zenroom_hash_update(char *hash_ctx,
 			const char *buffer, const int buffer_size);
-int zenroom_hash_final(const char *hash_ctx,
-		       char *hash_result, const int hash_result_size);
+int zenroom_hash_final(const char *hash_ctx);
 ////////////////////////////////////////
 
 
