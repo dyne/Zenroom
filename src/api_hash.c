@@ -30,7 +30,7 @@
 #include <encoding.h> // zenroom
 
  // first byte is type
-#define SHA512 64
+#define SHA512 '4'
 
 // returns a fills hash_ctx, which must be pre-allocated externally
 int zenroom_hash_init(const char *hash_type,
@@ -40,7 +40,7 @@ int zenroom_hash_init(const char *hash_type,
   register int len = 0; 
   void *sh;
   if(strcasecmp(hash_type, "sha512") == 0) {    
-    prefix = '4';
+    prefix = SHA512;
     len = sizeof(hash512); // amcl struct
     sh = malloc(len);
     // TODO: check what malloc returns
@@ -70,7 +70,7 @@ int zenroom_hash_update(char *hash_ctx,
   register char prefix = hash_ctx[0];
   register int len;
   char *sh;
-  if(prefix=='4') {
+  if(prefix==SHA512) {
     len = sizeof(hash512);
     sh = (char*)malloc(len);
     hex2buf(sh, hash_ctx+1);
@@ -94,7 +94,7 @@ int zenroom_hash_final(const char *hash_ctx,
   register char prefix = hash_ctx[0];
   octet tmp;
   char *sh;
-  if(prefix=='4') { // sha512
+  if(prefix==SHA512) {
     if(hash_result_size<90) { // base64 is 88 with padding
       zerror(NULL, "%s :: invalid hash result size: %u <= %u",
 	     __func__, hash_result_size, 64);
