@@ -81,3 +81,76 @@ export const zenroom_exec = async (
     _exec(lua, conf, keys, data);
   });
 };
+
+export const zenroom_hash_init = async (
+  hash_type: string
+): Promise<ZenroomResult> => {
+  const Module = await getModule();
+  return new Promise((resolve, reject) => {
+    let result = "";
+    let logs = "";
+    const _exec = Module.cwrap("zenroom_hash_init", "number", ["string"]);
+    Module.print = (t: string) => (result += t);
+    Module.printErr = (t: string) => (logs += t);
+    Module.exec_ok = () => {
+      resolve({result, logs});
+    };
+    Module.exec_error = () => {
+      reject({result, logs});
+    };
+    Module.onAbort = () => {
+      reject({result, logs});
+    };
+    _exec(hash_type);
+  });
+};
+
+export const zenroom_hash_update = async (
+  hash_ctx: string,
+  buffer: Uint8Array
+): Promise<ZenroomResult> => {
+  const Module = await getModule();
+  return new Promise((resolve, reject) => {
+    let result = "";
+    let logs = "";
+    const _exec = Module.cwrap("zenroom_hash_update", "number",
+      ["string",
+       "array",
+       "number"]);
+    Module.print = (t: string) => (result += t);
+    Module.printErr = (t: string) => (logs += t);
+    Module.exec_ok = () => {
+      resolve({result, logs});
+    };
+    Module.exec_error = () => {
+      reject({result, logs});
+    };
+    Module.onAbort = () => {
+      reject({result, logs});
+    };
+    _exec(hash_ctx, buffer, buffer.length);
+  });
+};
+
+export const zenroom_hash_final = async (
+  hash_ctx: string,
+): Promise<ZenroomResult> => {
+  const Module = await getModule();
+  return new Promise((resolve, reject) => {
+    let result = "";
+    let logs = "";
+    const _exec = Module.cwrap("zenroom_hash_final", "number", ["string"]);
+    Module.print = (t: string) => (result += t);
+    Module.printErr = (t: string) => (logs += t);
+    Module.exec_ok = () => {
+      resolve({result, logs});
+    };
+    Module.exec_error = () => {
+      reject({result, logs});
+    };
+    Module.onAbort = () => {
+      reject({result, logs});
+    };
+    _exec(hash_ctx);
+  });
+};

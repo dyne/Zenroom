@@ -226,7 +226,7 @@ ld := ${gcc}
 ranlib := ${EMSCRIPTEN}/emranlib
 system:= Javascript
 # lua_embed_opts := "compile"
-ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zencode_exec\"]'" -s "EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\",\"printErr\",\"print\"]'" -s USE_SDL=0 -s USE_PTHREADS=0 -lm
+ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zencode_exec\",\"_zenroom_hash_init\",\"_zenroom_hash_update\",\"_zenroom_hash_final\"]'" -s "EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\",\"printErr\",\"print\"]'" -s USE_SDL=0 -s USE_PTHREADS=0 -lm
 cflags := -Wall -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
 endif
 
