@@ -116,3 +116,28 @@ test("Run hash api", async (t) => {
   ctx = await zenroom_hash_final(ctx.result);
   t.is(ctx.result, 'IEqPxt2oLwoM7XvrjgikFlfBbvRosiioJ5vjMacDwzWW/RXBOxsH+aodO+pXeJygMa2Fx6cd1wNU7GMSOMo0RQ==');
 });
+
+
+test("Unknown hash type", async (t) => {
+  try {
+    await zenroom_hash_init("invalidhash");
+  } catch (e) {
+    t.true(e.logs.includes(`invalidhash`));
+  }
+});
+
+test("Wrong context prefix (update)", async (t) => {
+  try {
+    await zenroom_hash_update("z", enc.encode('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq'));
+  } catch (e) {
+    t.true(e.logs.endsWith('z'));
+  }
+});
+
+test("Wrong context prefix (final)", async (t) => {
+  try {
+    await zenroom_hash_final("z");
+  } catch (e) {
+    t.true(e.logs.endsWith('z'));
+  }
+});

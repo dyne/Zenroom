@@ -71,11 +71,14 @@ int zenroom_hash_init(const char *hash_type) {
     HASH256_init((hash256*)sh); // amcl init
   }
   else {
-    zerror(NULL, "%s :: invalid hash type: %s", __func__, hash_type);
 #ifdef __EMSCRIPTEN__
+    char buf[4096];
+    snprintf(buf, 4096, "invalid hash type: %s", hash_type);
+	  EM_ASM_({Module.printErr(UTF8ToString($0))}, buf);
     EM_ASM({Module.exec_error();});
     EM_ASM(Module.onAbort());
 #endif
+    zerror(NULL, "%s :: invalid hash type: %s", __func__, hash_type);
     return 4; // ERR_INIT
   }
   print_ctx_hex(prefix, sh, len);
@@ -111,6 +114,9 @@ int zenroom_hash_update(const char *hash_ctx,
   } else {
     zerror(NULL, "%s :: invalid hash context prefix: %c", __func__, prefix);
 #ifdef __EMSCRIPTEN__
+    char buf[4096];
+    snprintf(buf, 4096, "invalid hash context prefix: %c", prefix);
+    EM_ASM_({Module.printErr(UTF8ToString($0))}, buf);
     EM_ASM({Module.exec_error();});
     EM_ASM(Module.onAbort());
 #endif
@@ -154,6 +160,9 @@ int zenroom_hash_final(const char *hash_ctx) {
   } else {
     zerror(NULL, "%s :: invalid hash context prefix: %c", __func__, prefix);
 #ifdef __EMSCRIPTEN__
+    char buf[4096];
+    snprintf(buf, 4096, "invalid hash context prefix: %c", prefix);
+    EM_ASM_({Module.printErr(UTF8ToString($0))}, buf);
     EM_ASM({Module.exec_error();});
     EM_ASM(Module.onAbort());
 #endif
