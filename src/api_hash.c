@@ -31,6 +31,7 @@
 
  // first byte is type
 #define ZEN_SHA512 '4'
+#define ZEN_SHA256 '2'
 
 inline void print_ctx_hex(char prefix, void *sh, int len) {
   char *hash_ctx = malloc((len<<1)+2);
@@ -53,7 +54,14 @@ int zenroom_hash_init(const char *hash_type) {
     sh = calloc(len, 1);
     // TODO: check what malloc returns
     HASH512_init((hash512*)sh); // amcl init
-  } else {
+  } else if(strcasecmp(hash_type, "sha256") == 0) {    
+    prefix = ZEN_SHA256;
+    len = sizeof(hash256); // amcl struct
+    sh = calloc(len, 1);
+    // TODO: check what malloc returns
+    HASH256_init((hash256*)sh); // amcl init
+  }
+  else {
     zerror(NULL, "%s :: invalid hash type: %s", __func__, hash_type);
     return 4; // ERR_INIT
   }
@@ -75,6 +83,14 @@ int zenroom_hash_update(const char *hash_ctx,
     register int c;
     for(c=0; c<buffer_size; c++) {
       HASH512_process((hash512*)sh, buffer[c]);
+    }
+  } else if(prefix==ZEN_SHA256) {
+    len = sizeof(hash256);
+    sh = (char*)calloc(len, 1);
+    hex2buf(sh, hash_ctx+1);
+    register int c;
+    for(c=0; c<buffer_size; c++) {
+      HASH256_process((hash256*)sh, buffer[c]);
     }
   } else {
     zerror(NULL, "%s :: invalid hash context prefix: %c", __func__, prefix);
@@ -102,6 +118,16 @@ int zenroom_hash_final(const char *hash_ctx) {
     // TODO: check malloc result
     hex2buf(sh, hash_ctx+1);
     HASH512_hash((hash512*)sh, tmp.val);
+  } else if(prefix==ZEN_SHA256) {
+    hash_result = malloc(90); // base64 is 88 with padding
+    tmp.len = 32;
+    tmp.val = (char*)malloc(32);
+    // TODO: check malloc result
+    len = sizeof(hash256);
+    sh = (char*)calloc(len, 1);
+    // TODO: check malloc result
+    hex2buf(sh, hash_ctx+1);
+    HASH256_hash((hash256*)sh, tmp.val);
   } else {
     zerror(NULL, "%s :: invalid hash context prefix: %c", __func__, prefix);
     return 3;
