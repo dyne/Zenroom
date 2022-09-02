@@ -29,16 +29,25 @@
 #include <zen_error.h>
 #include <encoding.h> // zenroom
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
  // first byte is type
 #define ZEN_SHA512 '4'
 #define ZEN_SHA256 '2'
 
-inline void print_ctx_hex(char prefix, void *sh, int len) {
+void print_ctx_hex(char prefix, void *sh, int len) {
   char *hash_ctx = malloc((len<<1)+2);
   hash_ctx[0] = prefix;
   buf2hex(hash_ctx+1, (const char*)sh, (const size_t)len);
   hash_ctx[(len<<1)+1] = 0x0; // null terminated string
+
+#ifdef __EMSCRIPTEN__
+	EM_ASM_({Module.print(UTF8ToString($0))}, hash_ctx);
+#else
   fprintf(stdout, "%s\n", hash_ctx);
+#endif
   free(hash_ctx);
 }
 
@@ -63,10 +72,17 @@ int zenroom_hash_init(const char *hash_type) {
   }
   else {
     zerror(NULL, "%s :: invalid hash type: %s", __func__, hash_type);
+#ifdef __EMSCRIPTEN__
+    EM_ASM({Module.exec_error();});
+    EM_ASM(Module.onAbort());
+#endif
     return 4; // ERR_INIT
   }
   print_ctx_hex(prefix, sh, len);
   free(sh);
+#ifdef __EMSCRIPTEN__
+  EM_ASM({Module.exec_ok();});
+#endif
   return 0;
 }
 
@@ -94,10 +110,17 @@ int zenroom_hash_update(const char *hash_ctx,
     }
   } else {
     zerror(NULL, "%s :: invalid hash context prefix: %c", __func__, prefix);
+#ifdef __EMSCRIPTEN__
+    EM_ASM({Module.exec_error();});
+    EM_ASM(Module.onAbort());
+#endif
     return 3;
   }
   print_ctx_hex(prefix, sh, len);
   free(sh);
+#ifdef __EMSCRIPTEN__
+  EM_ASM({Module.exec_ok();});
+#endif
   return 0;
 }
 
@@ -130,12 +153,23 @@ int zenroom_hash_final(const char *hash_ctx) {
     HASH256_hash((hash256*)sh, tmp.val);
   } else {
     zerror(NULL, "%s :: invalid hash context prefix: %c", __func__, prefix);
+#ifdef __EMSCRIPTEN__
+    EM_ASM({Module.exec_error();});
+    EM_ASM(Module.onAbort());
+#endif
     return 3;
   }
   OCT_tobase64(hash_result,&tmp);
   free(tmp.val);
+#ifdef __EMSCRIPTEN__
+	EM_ASM_({Module.print(UTF8ToString($0))}, hash_result);
+#else
   fprintf(stdout, "%s\n", hash_result);
+#endif
   free(hash_result);
   free(sh);
+#ifdef __EMSCRIPTEN__
+  EM_ASM({Module.exec_ok();});
+#endif
   return 0;
 }
