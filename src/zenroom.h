@@ -39,9 +39,14 @@ int zencode_exec_tobuf(char *script, char *conf, char *keys, char *data,
                        char *stderr_buf, size_t stderr_len);
 
 // direct access hash calls
+// hash_type may be a string of: 'sha256' or 'sha512'
+// all functions return 0 on success, anything else signals an error
+// the output is always a string printed to stdout, i.e:
+// zenroom_hash_init('sha256') will print the hex encoded hash_ctx string
 int zenroom_hash_init(const char *hash_type);
-int zenroom_hash_update(char *hash_ctx,
-			const char *buffer, const int buffer_size);
+// zenroom_hash_update(hash_ctx, bytes, size) will print the updated hash_ctx in hex
+int zenroom_hash_update(const char *hash_ctx, const char *buffer, const int buffer_size);
+// zenroom_hash_final(hash_ctx) will print the base64 encoded hash of the data so far
 int zenroom_hash_final(const char *hash_ctx);
 ////////////////////////////////////////
 
