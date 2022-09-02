@@ -30,13 +30,13 @@
 #include <encoding.h> // zenroom
 
  // first byte is type
-#define SHA512 '4'
+#define ZEN_SHA512 '4'
 
 inline void print_ctx_hex(char prefix, void *sh, int len) {
-  char *hash_ctx = malloc((len<<1)+8);
+  char *hash_ctx = malloc((len<<1)+2);
   hash_ctx[0] = prefix;
   buf2hex(hash_ctx+1, (const char*)sh, (const size_t)len);
-  hash_ctx[(len<<1)+2] = 0x0; // null terminated string
+  hash_ctx[(len<<1)+1] = 0x0; // null terminated string
   fprintf(stdout, "%s\n", hash_ctx);
   free(hash_ctx);
 }
@@ -48,9 +48,9 @@ int zenroom_hash_init(const char *hash_type) {
   register int len = 0; 
   void *sh;
   if(strcasecmp(hash_type, "sha512") == 0) {    
-    prefix = SHA512;
+    prefix = ZEN_SHA512;
     len = sizeof(hash512); // amcl struct
-    sh = malloc(len);
+    sh = calloc(len, 1);
     // TODO: check what malloc returns
     HASH512_init((hash512*)sh); // amcl init
   } else {
@@ -68,9 +68,9 @@ int zenroom_hash_update(const char *hash_ctx,
   register char prefix = hash_ctx[0];
   register int len;
   char *sh;
-  if(prefix==SHA512) {
+  if(prefix==ZEN_SHA512) {
     len = sizeof(hash512);
-    sh = (char*)malloc(len);
+    sh = (char*)calloc(len, 1);
     hex2buf(sh, hash_ctx+1);
     register int c;
     for(c=0; c<buffer_size; c++) {
@@ -92,13 +92,13 @@ int zenroom_hash_final(const char *hash_ctx) {
   char *hash_result;
   octet tmp;
   char *sh;
-  if(prefix==SHA512) {
+  if(prefix==ZEN_SHA512) {
     hash_result = malloc(90); // base64 is 88 with padding
     tmp.len = 64;
     tmp.val = (char*)malloc(64);
     // TODO: check malloc result
     len = sizeof(hash512);
-    sh = (char*)malloc(len);
+    sh = (char*)calloc(len, 1);
     // TODO: check malloc result
     hex2buf(sh, hash_ctx+1);
     HASH512_hash((hash512*)sh, tmp.val);
