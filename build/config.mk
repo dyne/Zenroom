@@ -65,22 +65,6 @@ ldflags := -L/usr/x86_64-w64-mingw32/lib
 ldadd += -l:libm.a -l:libpthread.a -lssp
 endif
 
-ifneq (,$(findstring cyg,$(MAKECMDGOALS)))
-gcc := gcc
-ar  := ar
-ranlib := ranlib
-ld := ld
-system := Windows
-cflags := -mthreads -D'ARCH=\"WIN\"' -DARCH_WIN
-ldadd := ${pwd}/lib/lua53/src/liblua.a
-ldadd += ${milib}/libamcl_curve_${ecp_curve}.lib
-ldadd += ${milib}/libamcl_pairing_${ecp_curve}.lib
-ldadd += ${milib}/libamcl_curve_${ecdh_curve}.lib
-ldadd += ${milib}/amcl_core.lib
-ldadd += -l:libm.a -l:libpthread.a -lssp
-endif
-
-
 ifneq (,$(findstring cortex,$(MAKECMDGOALS)))
 gcc := arm-none-eabi-gcc
 objcopy := arm-none-eabi-objcopy
