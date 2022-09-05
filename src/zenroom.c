@@ -19,7 +19,7 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
+// #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -43,6 +43,9 @@
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
+
+#include <mimalloc.h>
+#include <mimalloc-override.h>
 
 #include <zenroom.h>
 #include <zen_memory.h>

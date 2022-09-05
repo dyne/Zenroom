@@ -9,7 +9,7 @@ PREFIX ?= /usr/local
 # VERSION is set in src/Makefile
 VERSION := $(shell awk '/ZENROOM_VERSION :=/ { print $$3; exit }' src/Makefile | tee VERSION)
 # Targets to be build in this order
-BUILDS := apply-patches milagro lua53 embed-lua zstd quantum-proof ed25519-donna
+BUILDS := apply-patches milagro lua53 embed-lua zstd quantum-proof ed25519-donna mimalloc
 
 # DESTDIR is supported by install target
 
@@ -125,7 +125,22 @@ milagro:
 		CC=${gcc} CFLAGS="${cflags}" AR=${ar} RANLIB=${ranlib} LD=${ld} \
 		$(MAKE) -C ${pwd}/lib/milagro-crypto-c/build; \
 	fi
-	CC=${gcc} CFLAGS="${cflags}" $(MAKE) quantum-proof
+
+mimalloc:
+	$(info -- Building mimalloc (${system}))
+	if ! [ -r ${pwd}/lib/mimalloc/build/CMakeCache.txt ]; then \
+		cd ${pwd}/lib/mimalloc && \
+		mkdir -p build && \
+		cd build && \
+		CC=${gcc} LD=${ld} \
+		cmake ../  -DMI_BUILD_SHARED=OFF -DMI_BUILD_OBJECT=OFF -DMI_BUILD_TESTS=OFF \
+	        -DCMAKE_C_FLAGS="${cflags} -fvisibility=hidden -Wstrict-prototypes -ftls-model=initial-exec -fno-builtin-malloc" \
+	        -DCMAKE_SYSTEM_NAME="${system}" -DCMAKE_AR=${ar} -DCMAKE_C_COMPILER=${gcc}; \
+	fi
+	if ! [ -r ${pwd}/lib/mimalloc/build/libamcl_core.a ]; then \
+		CC=${gcc} CFLAGS="${cflags}" AR=${ar} RANLIB=${ranlib} LD=${ld} \
+		$(MAKE) -C ${pwd}/lib/mimalloc/build; \
+	fi
 
 quantum-proof: CFLAGS += -I../../src -I.
 quantum-proof:
@@ -190,6 +205,7 @@ clean:
 	$(MAKE) clean -C ${pwd}/lib/lua53/src
 	$(MAKE) clean -C ${pwd}/lib/pqclean
 	rm -rf ${pwd}/lib/milagro-crypto-c/build
+	rm -rf ${pwd}/lib/mimalloc/build
 	$(MAKE) clean -C ${pwd}/lib/zstd
 	$(MAKE) clean -C ${pwd}/src
 	$(MAKE) clean -C ${pwd}/bindings

@@ -5,7 +5,7 @@
 #ifndef MUTT_SPRINTF_H
 #define MUTT_SPRINTF_H 1
 
-#include <stdlib.h>
+#include <stddef.h>
 #include <stdarg.h> /* ... */
 
 int mutt_vsnprintf(char *str, size_t count, const char *fmt, va_list args);

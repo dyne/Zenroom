@@ -23,7 +23,7 @@
 #ifndef __ZEN_ERROR_H__
 #define __ZEN_ERROR_H__
 
-#include <stdlib.h>
+// #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
 #include <lua.h>

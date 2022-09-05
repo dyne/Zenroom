@@ -27,6 +27,7 @@ CFLAGS  += -I. -I../lib/lua53/src \
 	-I../lib/milagro-crypto-c/include \
 	-I../lib/zstd \
 	-I../lib/ed25519-donna \
+	-I../lib/mimalloc/include \
 	-Wall -Wextra
 
 CMSIS := ../lib/cmsis
