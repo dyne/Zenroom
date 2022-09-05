@@ -28,7 +28,7 @@
 
 #include <strings.h>
 #include <stdio.h>
-#include <stdlib.h>
+// #include <stdlib.h>
 
 // Configuration parser, based on STB's C Lexer, see: stb_c_lexer.h
 

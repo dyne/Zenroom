@@ -18,6 +18,7 @@
  *
  */
 
+#include <stdlib.h>
 #include <unistd.h>
 #include <ctype.h>
 #include <zen_error.h>
@@ -27,6 +28,9 @@
 #include <lauxlib.h>
 
 #include <lua_functions.h>
+
+#include <mimalloc.h>
+#include <mimalloc-override.h>
 
 extern int zen_exec_script(zenroom_t *Z, const char *script);
 

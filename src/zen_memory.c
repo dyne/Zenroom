@@ -19,8 +19,10 @@
  */
 
 #include <errno.h>
-#include <stdlib.h>
+// #include <stdlib.h>
 #include <zen_error.h>
+#include <mimalloc.h>
+#include <mimalloc-override.h>
 
 // semantic distinction of alloc calls inside Lua or from outside
 void *zen_memory_alloc(size_t size) { return malloc(size); }

@@ -20,9 +20,6 @@
 
 // external API function for streaming hash
 
-#include <stdlib.h>
-#include <strings.h> // libc
-
 #include <amcl.h>
 #include <ecdh_support.h> // AMCL
 
@@ -32,6 +29,9 @@
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
+
+#include <mimalloc.h>
+#include <mimalloc-override.h>
 
  // first byte is type
 #define ZEN_SHA512 '4'

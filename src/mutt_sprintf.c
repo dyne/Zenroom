@@ -17,7 +17,6 @@
 /**** pts: sam2p-specific defines ****/
 #include <mutt_sprintf.h>
 #include <stdarg.h>
-#include <stdlib.h> /* malloc() */
 
 #undef  HAVE_LONG_DOUBLE
 #undef  HAVE_C99_VSNPRINTF /* force local implementation */
