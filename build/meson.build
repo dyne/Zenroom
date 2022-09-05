@@ -43,7 +43,7 @@ add_project_link_arguments(
     'libzstd.a',
     'libqpz.a',
     'libed25519.a',
-    'libmimalloc.a',
+    'libmimalloc-static.a',
     language: 'c'
 )
 

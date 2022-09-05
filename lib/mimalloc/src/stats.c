@@ -479,12 +479,12 @@ static void mi_stat_process_info(mi_msecs_t* elapsed, mi_msecs_t* utime, mi_msec
   *utime = filetime_msecs(&ut);
   *stime = filetime_msecs(&st);
   PROCESS_MEMORY_COUNTERS info;
-  GetProcessMemoryInfo(GetCurrentProcess(), &info, sizeof(info));
-  *current_rss    = (size_t)info.WorkingSetSize;
-  *peak_rss       = (size_t)info.PeakWorkingSetSize;
-  *current_commit = (size_t)info.PagefileUsage;
-  *peak_commit    = (size_t)info.PeakPagefileUsage;
-  *page_faults    = (size_t)info.PageFaultCount;  
+  /* GetProcessMemoryInfo(GetCurrentProcess(), &info, sizeof(info)); */
+  /* *current_rss    = (size_t)info.WorkingSetSize; */
+  /* *peak_rss       = (size_t)info.PeakWorkingSetSize; */
+  /* *current_commit = (size_t)info.PagefileUsage; */
+  /* *peak_commit    = (size_t)info.PeakPagefileUsage; */
+  /* *page_faults    = (size_t)info.PageFaultCount;   */
 }
 
 #elif !defined(__wasi__) && (defined(__unix__) || defined(__unix) || defined(unix) || defined(__APPLE__) || defined(__HAIKU__))
