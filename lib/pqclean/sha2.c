@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <mimalloc.h>
+#include <mimalloc-override.h>
+
 #include "sha2.h"
 
 static uint32_t load_bigendian_32(const uint8_t *x) {
