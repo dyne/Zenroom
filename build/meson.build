@@ -42,6 +42,7 @@ add_project_link_arguments(
     'libzstd.a',
     'libqpz.a',
     'libed25519.a',
+    'libmimalloc.a',
     language: 'c'
 )
 
@@ -50,6 +51,8 @@ zenroom_include_dirs = include_directories('../src')
 milagro_include_dirs = include_directories('../lib/milagro-crypto-c/include')
 
 milagro_generated_include_dirs = include_directories('milagro-crypto-c/include')
+
+mimalloc_include_dirs = include_directories('../lib/mimalloc/include')
 
 zstd_include_dirs = include_directories('../lib/zstd')
 
@@ -102,6 +105,7 @@ zenroom_lib = library(
         zstd_include_dirs,
 	ed25519_include_dirs,
         lua_include_dirs,
+	mimalloc_include_dirs,
     ],
     install: true,
 )
@@ -118,6 +122,7 @@ zenroom_dep = declare_dependency(
         zstd_include_dirs,
 	ed25519_include_dirs,
         lua_include_dirs,
+	mimalloc_include_dirs,
     ],
 )
 
