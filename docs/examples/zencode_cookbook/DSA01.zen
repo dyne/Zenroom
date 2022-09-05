@@ -1,8 +1,0 @@
-Rule check version 1.0.0
-Scenario 'ecdh': Alice signs a message for Bob
-	Given that I am known as 'Alice'
-	and I have my 'keypair'
-	When I write string 'This is my signed message to Bob.' in 'draft'
-	and I create the signature of 'draft'
-	Then print the 'signature'
-	and print my 'draft'

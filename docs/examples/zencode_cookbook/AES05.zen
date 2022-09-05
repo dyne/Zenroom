@@ -1,9 +1,0 @@
-Rule check version 1.0.0
-Scenario 'ecdh': Alice encrypts a message for Bob
-	Given that I am known as 'Alice'
-	and I have my 'keypair'
-	and I have a 'public key'
-	When I write string 'This is my secret message.' in 'message'
-	and I write string 'This is the header' in 'header'
-	and I encrypt the secret message of 'message' for 'Bob'
-	Then print the 'secret message'

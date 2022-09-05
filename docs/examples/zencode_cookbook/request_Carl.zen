@@ -1,5 +1,0 @@
-Scenario credential
-Given I am 'Carl'
-and I have my 'keyring'
-When I create the credential request
-Then print my 'credential request'

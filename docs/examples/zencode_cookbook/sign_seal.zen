@@ -1,8 +1,0 @@
-Scenario reflow
-Given I am 'Carl'
-and I have the 'credentials'
-and I have the 'keyring'
-and I have a 'reflow seal'
-and I have a 'issuer public key' from 'The Authority'
-When I create the reflow signature
-Then print the 'reflow signature'
