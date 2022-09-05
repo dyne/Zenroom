@@ -129,24 +129,33 @@ milagro:
 		$(MAKE) -C ${pwd}/lib/milagro-crypto-c/build; \
 	fi
 
-mimalloc: cflags += -fvisibility=hidden -Wstrict-prototypes
-mimalloc: cflags += -ftls-model=initial-exec -fno-builtin-malloc
+mimalloc_cmake_flags := -DMI_BUILD_SHARED=OFF -DMI_BUILD_OBJECT=OFF
+mimalloc_cmake_flags += -DMI_BUILD_TESTS=OFF -DMI_SECURE=ON
+mimalloc_cmake_flags += -DMI_LIBPTHREAD=0 -DMI_LIBRT=0
+mimalloc_cmake_flags += -DMI_LIBATOMIC=0
+mimalloc_cflags := -fvisibility=hidden -Wstrict-prototypes
+mimalloc_cflags += -ftls-model=initial-exec -fno-builtin-malloc
+mimalloc_cflags += -DMI_USE_RTLGENRANDOM
+ifneq (,$(findstring debug,$(MAKECMDGOALS)))
+mimalloc_cmake_flags += -DCMAKE_BUILD_TYPE=Debug
+mimalloc_cflags += -DMI_DEBUG_FULL
+endif
 mimalloc:
 	$(info -- Building mimalloc (${system}))
 	if ! [ -r ${pwd}/lib/mimalloc/build/CMakeCache.txt ]; then \
 		cd ${pwd}/lib/mimalloc && \
-		mkdir -p build && \
-		cd build && \
-		CC=${gcc} LD=${ld} \
-		cmake ../  \
-	-DMI_BUILD_SHARED=OFF -DMI_BUILD_OBJECT=OFF -DMI_BUILD_TESTS=OFF \
-	-DMI_LIBPTHREAD=0 -DMI_USE_PTHREADS=0 -DMI_LIBRT=0 -DMI_LIBATOMIC=0 \
-	        -DCMAKE_C_FLAGS="${cflags}" \
-	        -DCMAKE_SYSTEM_NAME="${system}" -DCMAKE_AR=${ar} -DCMAKE_C_COMPILER=${gcc}; \
+                mkdir -p build && \
+                cd build && \
+                CC=${gcc} LD=${ld} \
+                cmake ../ ${mimalloc_cmake_flags} \
+                -DCMAKE_C_FLAGS="${cflags} ${mimalloc_cflags}" \
+                -DCMAKE_SYSTEM_NAME="${system}" \
+                -DCMAKE_AR=${ar} -DCMAKE_C_COMPILER=${gcc} \
+	        -DCMAKE_CXX_COMPILER=$(subst gcc,g++,${gcc}); \
 	fi
-	if ! [ -r ${pwd}/lib/mimalloc/build/libamcl_core.a ]; then \
-		RANLIB=${ranlib} LD=${ld} \
-		${MAKE} -C ${pwd}/lib/mimalloc/build; \
+	if ! [ -r ${pwd}/lib/mimalloc/build/libmimalloc-static.a ]; then \
+                RANLIB=${ranlib} LD=${ld} \
+                ${MAKE} -C ${pwd}/lib/mimalloc/build; \
 	fi
 
 # quantum-proof: cflags += -I../../src -I.

@@ -251,19 +251,19 @@ else()
   set(mi_install_cmakedir   "${CMAKE_INSTALL_LIBDIR}/cmake/mimalloc-${mi_version}") # for cmake package info
 endif()
 
-if(MI_SECURE)
-  set(mi_basename "mimalloc-secure")
-else()
-  set(mi_basename "mimalloc")
-endif()
+# if(MI_SECURE)
+#   set(mi_basename "mimalloc-secure")
+# else()
+set(mi_basename "mimalloc")
+# endif()
 
 string(TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_LC)
-if(NOT(CMAKE_BUILD_TYPE_LC MATCHES "^(release|relwithdebinfo|minsizerel|none)$"))
-  set(mi_basename "${mi_basename}-${CMAKE_BUILD_TYPE_LC}") #append build type (e.g. -debug) if not a release version
-endif()
-if(MI_BUILD_SHARED)
-  list(APPEND mi_build_targets "shared")
-endif()
+# if(NOT(CMAKE_BUILD_TYPE_LC MATCHES "^(release|relwithdebinfo|minsizerel|none)$"))
+#   set(mi_basename "${mi_basename}-${CMAKE_BUILD_TYPE_LC}") #append build type (e.g. -debug) if not a release version
+# endif()
+# if(MI_BUILD_SHARED)
+#   list(APPEND mi_build_targets "shared")
+# endif()
 if(MI_BUILD_STATIC)
   list(APPEND mi_build_targets "static")
 endif()
@@ -334,14 +334,14 @@ if (MI_BUILD_STATIC)
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
       $<INSTALL_INTERFACE:${mi_install_incdir}>
   )
-  if(WIN32)
-    # When building both static and shared libraries on Windows, a static library should use a
-    # different output name to avoid the conflict with the import library of a shared one.
-    string(REPLACE "mimalloc" "mimalloc-static" mi_output_name ${mi_basename})
-    set_target_properties(mimalloc-static PROPERTIES OUTPUT_NAME ${mi_output_name})
-  else()
-    set_target_properties(mimalloc-static PROPERTIES OUTPUT_NAME ${mi_basename})
-  endif()
+  # if(WIN32)
+  #   # When building both static and shared libraries on Windows, a static library should use a
+  #   # different output name to avoid the conflict with the import library of a shared one.
+  #   string(REPLACE "mimalloc" "mimalloc-static" mi_output_name ${mi_basename})
+  #   set_target_properties(mimalloc-static PROPERTIES OUTPUT_NAME ${mi_output_name})
+  # else()
+  #   set_target_properties(mimalloc-static PROPERTIES OUTPUT_NAME ${mi_basename})
+  # endif()
 
   install(TARGETS mimalloc-static EXPORT mimalloc DESTINATION ${mi_install_objdir} LIBRARY)
   install(EXPORT mimalloc DESTINATION ${mi_install_cmakedir})

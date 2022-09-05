@@ -53,7 +53,7 @@ ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
 
 #-----------------
 # mimalloc settings
-ldadd += ${pwd}/lib/mimalloc/build/libmimalloc.a
+ldadd += ${pwd}/lib/mimalloc/build/libmimalloc-static.a
 
 # ------------------------
 # target specific settings

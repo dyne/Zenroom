@@ -85,6 +85,7 @@ lib-static: ${SOURCES}
 	ar x ${MILIB}/libamcl_curve_${ECDH}.a
 	ar x ${MILIB}/libamcl_core.a
 	ar x ../lib/zstd/libzstd.a
+	ar x ../lib/mimalloc/build/libmimalloc-static.a
 	ar x ../lib/ed25519-donna/libed25519.a
 	${AR} rcs libzenroom-${ARCH}.a *.o
 
