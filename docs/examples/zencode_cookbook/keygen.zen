@@ -1,4 +1,0 @@
-Scenario ecdh
-Given I am known as 'Bob'
-When I create the ecdh key
-Then print my 'keyring'
