@@ -1,8 +1,0 @@
-Scenario credential
-Given I am 'The Authority'
-Given I have my 'keys'
-Given I have a 'credential request' inside 'Participant_8'
-When I create the credential signature
-When I create the issuer public key
-Then print the 'credential signature'
-Then print the 'issuer public key'
