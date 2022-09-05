@@ -1,7 +1,0 @@
-Scenario credential
-Given I am 'Participant_8'
-Given I have my 'keys'
-Given I have a 'credential signature'
-When I create the credentials
-Then print my 'credentials'
-Then print my 'keys'
