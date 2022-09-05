@@ -19,6 +19,7 @@
  */
 
 // external API function for streaming hash
+#include <stdio.h>
 
 #include <amcl.h>
 #include <ecdh_support.h> // AMCL

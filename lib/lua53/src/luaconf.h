@@ -11,6 +11,9 @@
 #include <limits.h>
 #include <stddef.h>
 
+#include <mimalloc.h>
+#include <mimalloc-override.h>
+
 
 /*
 ** ===================================================================

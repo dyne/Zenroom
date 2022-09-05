@@ -91,16 +91,19 @@ zlib:
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
 	pwd="${pwd}" $(MAKE) -C ${pwd}/build/zlib -f ZenMakefile
 
+android-lua53: cflags += -I ${pwd}/lib/mimalloc/include
 android-lua53:
 	CC=${gcc} CFLAGS="${cflags} ${lua_cflags}" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
 	$(MAKE) -C ${pwd}/lib/lua53/src ${platform}
 
+musl-lua53: cflags += -I ${pwd}/lib/mimalloc/include
 musl-lua53:
 	CC=${gcc} CFLAGS="${cflags} ${lua_cflags}" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
 	$(MAKE) -C ${pwd}/lib/lua53/src ${platform}
 
+lua53: cflags += -I ${pwd}/lib/mimalloc/include
 lua53:
 	CC=${gcc} CFLAGS="${cflags} ${lua_cflags}" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
@@ -147,7 +150,7 @@ mimalloc:
 	fi
 
 # quantum-proof: cflags += -I../../src -I.
-quantum-proof: cflags += -I ${pwd}/src -I.
+quantum-proof: cflags += -I ${pwd}/src -I ${pwd}/lib/mimalloc/include -I.
 quantum-proof:
 	$(info -- Building Quantum-Proof libs)
 	CC=${gcc} \

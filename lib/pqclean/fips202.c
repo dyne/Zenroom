@@ -12,6 +12,9 @@
 
 #include "fips202.h"
 
+#include <mimalloc.h>
+#include <mimalloc-override.h>
+
 #define NROUNDS 24
 #define ROL(a, offset) (((a) << (offset)) ^ ((a) >> (64 - (offset))))
 
