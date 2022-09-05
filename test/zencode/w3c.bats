@@ -96,7 +96,6 @@ EOF
 
 
 @test "extract verification method" {
-    skip
     cat <<EOF | zexe W3C-VC_extract.zen W3C-VC_signed.json 
 Scenario 'w3c' : extract verification method
 Given I have a 'verifiable credential' named 'my-vc'
@@ -104,7 +103,7 @@ When I get the verification method in 'my-vc'
 Then print 'verification method' as 'string'
 EOF
     save_output 'W3C-VC_extracted_verification_method.json'
-    assert_output ''
+    assert_output '{"verification_method":"https://dyne.org/verification/keys/1"}'
 }
 
 

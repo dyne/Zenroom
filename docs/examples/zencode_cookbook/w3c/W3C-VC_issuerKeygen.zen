@@ -1,4 +1,4 @@
 Scenario 'ecdh': Create the keypair
-Given that I am known as 'Alice'
+Given that I am known as 'Authority'
 When I create the ecdh key
-Then print my data
+Then print my keyring
