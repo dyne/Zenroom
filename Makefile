@@ -122,10 +122,12 @@ milagro:
 		-DCMAKE_AR=${ar} -DCMAKE_C_COMPILER=${gcc} ${milagro_cmake_flags}; \
 	fi
 	if ! [ -r ${pwd}/lib/milagro-crypto-c/build/lib/libamcl_core.a ]; then \
-		CC=${gcc} CFLAGS="${cflags}" AR=${ar} RANLIB=${ranlib} LD=${ld} \
+		RANLIB=${ranlib} LD=${ld} \
 		$(MAKE) -C ${pwd}/lib/milagro-crypto-c/build; \
 	fi
 
+mimalloc: cflags += -fvisibility=hidden -Wstrict-prototypes
+mimalloc: cflags += -ftls-model=initial-exec -fno-builtin-malloc
 mimalloc:
 	$(info -- Building mimalloc (${system}))
 	if ! [ -r ${pwd}/lib/mimalloc/build/CMakeCache.txt ]; then \
@@ -133,19 +135,29 @@ mimalloc:
 		mkdir -p build && \
 		cd build && \
 		CC=${gcc} LD=${ld} \
-		cmake ../  -DMI_BUILD_SHARED=OFF -DMI_BUILD_OBJECT=OFF -DMI_BUILD_TESTS=OFF \
-	        -DCMAKE_C_FLAGS="${cflags} -fvisibility=hidden -Wstrict-prototypes -ftls-model=initial-exec -fno-builtin-malloc" \
+		cmake ../  \
+	-DMI_BUILD_SHARED=OFF -DMI_BUILD_OBJECT=OFF -DMI_BUILD_TESTS=OFF \
+	-DMI_LIBPTHREAD=0 -DMI_LIBRT=0 -DMI_LIBATOMIC=0 \
+	        -DCMAKE_C_FLAGS="${cflags}" \
 	        -DCMAKE_SYSTEM_NAME="${system}" -DCMAKE_AR=${ar} -DCMAKE_C_COMPILER=${gcc}; \
 	fi
 	if ! [ -r ${pwd}/lib/mimalloc/build/libamcl_core.a ]; then \
-		CC=${gcc} CFLAGS="${cflags}" AR=${ar} RANLIB=${ranlib} LD=${ld} \
-		$(MAKE) -C ${pwd}/lib/mimalloc/build; \
+		RANLIB=${ranlib} LD=${ld} \
+		${MAKE} -C ${pwd}/lib/mimalloc/build; \
 	fi
 
-quantum-proof: CFLAGS += -I../../src -I.
+# quantum-proof: cflags += -I../../src -I.
+quantum-proof: cflags += -I ${pwd}/src -I.
 quantum-proof:
-	@echo "-- Building Quantum-Proof libs"
-	$(MAKE) -C ${pwd}/lib/pqclean
+	$(info -- Building Quantum-Proof libs)
+	CC=${gcc} \
+	LD=${ld} \
+	AR=${ar} \
+	RANLIB=${ranlib} \
+	LD=${ld} \
+	CFLAGS="${cflags}" \
+	LDFLAGS="${ldflags}" \
+	${MAKE} -C ${pwd}/lib/pqclean
 
 check-milagro: milagro
 	CC=${gcc} CFLAGS="${cflags}" $(MAKE) -C ${pwd}/lib/milagro-crypto-c test
