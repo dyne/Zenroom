@@ -47,7 +47,9 @@ not accidentally mix pointers from different allocators).
 
 #define valloc(n)               mi_valloc(n)
 #define pvalloc(n)              mi_pvalloc(n)
-#define reallocarray(p,s,n)     mi_reallocarray(p,s,n)
+//#define reallocarray(p,s,n)     mi_reallocarray(p,s,n)
+#define reallocarray     mi_reallocarray
+
 #define reallocarr(p,s,n)       mi_reallocarr(p,s,n)
 #define memalign(a,n)           mi_memalign(a,n)
 #define aligned_alloc(a,n)      mi_aligned_alloc(a,n)
