@@ -1,7 +1,8 @@
 import test from "ava";
 
 import {zencode_exec, zenroom_exec,
-  zenroom_hash_init, zenroom_hash_update, zenroom_hash_final
+  zenroom_hash_init, zenroom_hash_update, zenroom_hash_final,
+  zenroom_hash
 } from "./index";
 import { TextEncoder } from 'util';
 var enc = new TextEncoder();
@@ -141,3 +142,31 @@ test("Wrong context prefix (final)", async (t) => {
     t.true(e.logs.endsWith('z'));
   }
 });
+
+
+test("Use zenroom_hash with unknown hash function", async (t) => {
+  try {
+    await zenroom_hash("z", enc.encode("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"));
+  } catch (e) {
+    t.true(e.logs.endsWith('z'));
+  }
+});
+
+
+test("Use zenroom_hash with small input", async (t) => {
+  const hash = await zenroom_hash("sha512", enc.encode("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"));
+  t.is(hash.result, 'IEqPxt2oLwoM7XvrjgikFlfBbvRosiioJ5vjMacDwzWW/RXBOxsH+aodO+pXeJygMa2Fx6cd1wNU7GMSOMo0RQ==');
+});
+
+
+test("Use zenroom_hash with big input", async (t) => {
+  // multiple of chunk size
+  const hash0 = await zenroom_hash("sha512", enc.encode("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq".repeat(1024*64)));
+  t.is(hash0.result, 'tqyQvZM1JPW5sSokgVWXbLp3tA8NNkEWdBc8YUX+6aDhfFTNEmQmralYFnk4izrXppH7cK7fVi3cpIvJrV783g==');
+
+  // not multiple of chunk size
+  const hash1 = await zenroom_hash("sha512", enc.encode("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq".repeat(1087 * 73)));
+  t.is(hash1.result, 'HM5Pm1A/V/FqShY8sm6x4AU5O5B44Gs9+uXjDn6PhjSg9cSzlPa2MHXriPSZS4wuRYn0UgN2g9L3A+P7rOJRdA==');
+});
+
+

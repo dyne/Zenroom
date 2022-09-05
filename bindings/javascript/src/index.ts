@@ -154,3 +154,19 @@ export const zenroom_hash_final = async (
     _exec(hash_ctx);
   });
 };
+
+
+
+export const zenroom_hash =
+    async (hash_type: string, ab: ArrayBuffer): Promise<ZenroomResult> => {
+  const bytesChunkSize = 1024 * 64;
+  let ctx = await zenroom_hash_init(hash_type);
+  let i = 0;
+  for(i = 0; i < ab.byteLength; i+=bytesChunkSize) {
+    const upperLimit = i+bytesChunkSize > ab.byteLength ?
+      ab.byteLength : i+bytesChunkSize;
+    const i8a = new Uint8Array(ab.slice(i, upperLimit));
+    ctx = await zenroom_hash_update(ctx.result, i8a);
+  }
+  return zenroom_hash_final(ctx.result);
+}
