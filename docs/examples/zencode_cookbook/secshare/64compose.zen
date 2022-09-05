@@ -1,0 +1,22 @@
+Rule check version 2.0.0
+Scenario secshare: compose a shared secret
+
+Given I have a 'secret shares' named 'rightmost shares'
+and I have a 'secret shares' named 'leftmost shares'
+and I have a 'hex' named 'secret'
+
+
+When I rename 'secret' to 'original secret'
+
+When I compose the secret using 'rightmost shares'
+and I rename 'secret' to 'rightmost secret'
+
+and I compose the secret using 'leftmost shares'
+and I rename 'secret' to 'leftmost secret'
+
+and I append 'rightmost secret' to 'leftmost secret'
+and I rename 'leftmost secret' to 'composed secret'
+
+and I verify 'original secret' is equal to 'composed secret'
+
+Then print string 'SECRETS MATCH'

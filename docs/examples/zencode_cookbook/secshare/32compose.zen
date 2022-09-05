@@ -1,0 +1,11 @@
+Rule check version 2.0.0
+Scenario secshare: compose a shared secret
+
+Given I have a 'secret shares'
+and I have a 'hex' named 'secret'
+
+When I rename 'secret' to 'original secret'
+and I compose the secret using 'secret shares'
+and I verify 'original secret' is equal to 'secret'
+
+Then print string 'SECRETS MATCH'

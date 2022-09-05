@@ -7,13 +7,16 @@ Given I have a 'base64 array' named 'mySharedSecret'
 
 When I pick the random object in 'mySharedSecret'
 and I remove the 'random object' from 'mySharedSecret'
+and I delete 'random object'
 and I pick the random object in 'mySharedSecret'
 and I remove the 'random object' from 'mySharedSecret'
+and I delete 'random object'
 and I pick the random object in 'mySharedSecret'
 and I remove the 'random object' from 'mySharedSecret'
+and I delete 'random object'
 and I pick the random object in 'mySharedSecret'
 and I remove the 'random object' from 'mySharedSecret'
 
-# Now we have an array with 5 shares that print out 
+# Now we have an array with 5 shares that print out
 When I rename the 'mySharedSecret' to 'my5partsOfTheSharedSecret'
 Then print the 'my5partsOfTheSharedSecret'
