@@ -18,27 +18,21 @@ jobs:
             uname -a
             echo ::set-output name=uname::$(uname -a)
 
+          run: |
+            # Remove shared library
+            rm -f bindings/golang/zenroom/lib/libzenroom.so
+            cp bindings/python3/setup.py .
+            # sed -ie 's/version=get_python_version()/version=${{ github.event.inputs.zenroom_python_version }}/' setup.py
+            sudo apt-get update
+            sudo apt-get install -y cmake vim zsh
+            pip install meson ninja wheel
+            python setup.py bdist_wheel
+            mkdir wheelhouse
+            cp bindings/python3/dist/*.whl ./wheelhouse
+
       - name: Confirm with uname
         run: |
           echo "The uname output was ${{ steps.runcmd.outputs.uname }}"
-
-      - uses: actions/setup-python@v2
-        name: Install Python
-        with:
-          python-version: '3.7'
-
-      - name: Build wheels
-        run: |
-          # Remove shared library
-          rm -f bindings/golang/zenroom/lib/libzenroom.so
-          cp bindings/python3/setup.py .
-          # sed -ie 's/version=get_python_version()/version=${{ github.event.inputs.zenroom_python_version }}/' setup.py
-          sudo apt-get update
-          sudo apt-get install -y cmake vim zsh
-          pip install meson ninja wheel
-          python setup.py bdist_wheel
-          mkdir wheelhouse
-          cp bindings/python3/dist/*.whl ./wheelhouse
 
       - uses: actions/upload-artifact@v2
         with:
