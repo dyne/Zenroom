@@ -33,7 +33,9 @@ jobs:
           rm -f bindings/golang/zenroom/lib/libzenroom.so
           cp bindings/python3/setup.py .
           # sed -ie 's/version=get_python_version()/version=${{ github.event.inputs.zenroom_python_version }}/' setup.py
-          apt-get update && apt-get install -y cmake vim zsh && pip install meson ninja
+          apt-get update
+          apt-get install -y cmake vim zsh
+          pip install meson ninja
           python setup.py bdist_wheel
           mkdir wheelhouse
           cp bindings/python3/dist/*.whl ./wheelhouse
