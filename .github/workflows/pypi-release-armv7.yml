@@ -1,0 +1,58 @@
+name: Release on PyPI
+
+on: [push, pull_request]
+
+jobs:
+  build_wheels_arm7:
+    runs-on: ubuntu-18.04
+    name: Build on ubuntu-18.04 armv7
+    steps:
+      - uses: actions/checkout@v3
+      - uses: uraimo/run-on-arch-action@v2
+        name: Run commands
+        id: runcmd
+        with:
+          arch: armv7
+          distro: ubuntu18.04
+        run: |
+            uname -a
+            echo ::set-output name=uname::$(uname -a)
+
+      - name: Confirm with uname
+        run: |
+          echo "The uname output was ${{ steps.runcmd.outputs.uname }}"
+
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: '3.7'
+
+      - name: Build wheels
+        run: |
+          # Remove shared library
+          rm -f bindings/golang/zenroom/lib/libzenroom.so
+          cp bindings/python3/setup.py .
+          # sed -ie 's/version=get_python_version()/version=${{ github.event.inputs.zenroom_python_version }}/' setup.py
+          apt-get update && apt-get install -y cmake vim zsh && pip install meson ninja
+          python setup.py bdist_wheel
+          mkdir wheelhouse
+          cp bindings/python3/dist/*.whl ./wheelhouse
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./wheelhouse/*.whl
+
+
+  upload_pypi:
+    needs: [build_wheels_arm7]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifact
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
