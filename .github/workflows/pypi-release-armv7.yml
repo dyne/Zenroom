@@ -14,7 +14,7 @@ jobs:
         with:
           arch: armv7
           distro: ubuntu18.04
-        run: |
+          run: |
             uname -a
             echo ::set-output name=uname::$(uname -a)
 
