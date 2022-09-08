@@ -26,3 +26,8 @@ License: BSD-3-Clause
 Files: lib/ed25519-donna/*
 Copyright: Andrew M. <liquidsun@gmail.com>
 License: CC0-1.0
+
+Files: lib/mimalloc/*
+Copyright: 2018-2021 Microsoft Corporation, Daan Leijen
+License: MIT
+
