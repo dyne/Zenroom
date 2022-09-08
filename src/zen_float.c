@@ -20,6 +20,7 @@
  * on 16/03/2022
  */
 
+#include <stdlib.h>
 #include <math.h>
 #include <float.h>
 
