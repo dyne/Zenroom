@@ -176,7 +176,7 @@ test_dir = meson.source_root() + '/../test/'
 bats_bin = find_program(test_dir+'bats/bin/bats')
 tests = [ 'array', 'dictionary', 'branching', 'float',
 	  'generic_ecdh', 'generic_eddsa', 'generic_schnorr', 'generic_dilithium',
-	  'zkp_01', 'zkp_02', 'credential', 'bitcoin', 'ecdh' ]
+	  'zkp', 'credential', 'bitcoin', 'ecdh' ]
 foreach test_suite : tests
     test('zencode_'+test_suite.underscorify(),
 	 bats_bin,
