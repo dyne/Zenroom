@@ -459,6 +459,7 @@ int main(int argc, char **argv) {
 	}
 #endif /* POSIX */
 	int exitcode = Z->exitcode;
+	int mi_stats = (int) (Z->debuglevel > 2);
 	zen_teardown(Z);
 
 	{
@@ -469,7 +470,7 @@ int main(int argc, char **argv) {
 	}
 
 	cli_free_buffers();
-	mi_stats_print(NULL);
+	if(mi_stats>0) mi_stats_print(NULL);
 	return exitcode;
 }
 
