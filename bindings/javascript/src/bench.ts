@@ -97,7 +97,7 @@ const signverify = async () => {
 bench('sign and verify 1000 times', (b) => {
   b.start();
 
-  // TODO: with more then 200 iteration wasm goes out of memory
+  // TODO: with more than 200 iteration wasm goes out of memory
   for(let i=0; i<100; i++) {
     signverify();
   }
