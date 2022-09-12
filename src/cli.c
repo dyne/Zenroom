@@ -204,6 +204,7 @@ int main(int argc, char **argv) {
 	int   interactive         = 0;
 	int   zencode             = 0;
 	int use_seccomp = 0;
+	mi_stats_reset();
 	cli_alloc_buffers();
 
 	zenroom_t *Z;
@@ -468,6 +469,7 @@ int main(int argc, char **argv) {
 	}
 
 	cli_free_buffers();
+	mi_stats_print(NULL);
 	return exitcode;
 }
 
