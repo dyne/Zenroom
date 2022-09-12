@@ -42,6 +42,7 @@
     "build:module": "tsc -p tsconfig.module.json",
     "coverage:old": "nyc report --reporter=text-lcov > coverage.lcov && codecov",
     "test": "nyc ava",
+    "bench": "node dist/main/bench.js",
     "doc": "documentation serve src/wrapper.js --shallow",
     "doc:api": "documentation readme src/wrapper.js -s '⚙️ API' --shallow --markdown-toc false",
     "release": "release-it --no-git.requireCleanWorkingDir",
