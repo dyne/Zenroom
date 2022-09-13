@@ -244,7 +244,7 @@ ranlib := ${EMSCRIPTEN}/emranlib
 system:= Javascript
 # lua_embed_opts := "compile"
 ldflags := -s "EXPORTED_FUNCTIONS='[\"_zenroom_exec\",\"_zencode_exec\",\"_zenroom_hash_init\",\"_zenroom_hash_update\",\"_zenroom_hash_final\"]'" -s "EXPORTED_RUNTIME_METHODS='[\"ccall\",\"cwrap\",\"printErr\",\"print\"]'" -s USE_SDL=0 -s USE_PTHREADS=0 -lm
-cflags := -Wall -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY
+cflags := -O2 -Wall -I ${EMSCRIPTEN}/system/include/libc -DLIBRARY ${defines}
 endif
 
 ifneq (,$(findstring esp32,$(MAKECMDGOALS)))
@@ -255,7 +255,7 @@ ranlib := ${pwd}/build/xtensa-esp32-elf/bin/xtensa-esp32-elf-ranlib
 system := Generic
 # TODO: not working, cmake doesn't uses the specified linked (bug?)
 milagro_cmake_flags := -DCMAKE_LINKER=${ld} -DCMAKE_C_LINK_EXECUTABLE="<CMAKE_LINKER> <FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
-cflags := -I. -mlongcalls  #${cflags_protection} -D'ARCH=\"LINUX\"' -DARCH_LINUX
+cflags := -I. -mlongcalls  #${cflags_protection} ${defines} -D'ARCH=\"LINUX\"' -DARCH_LINUX
 ldflags += -L${pwd}/build/xtensa-esp32-elf/lib -Teagle.app.v6.ld
 ldadd += ${ldadd} -nostdlib -Wl,--start-group -lmain -lc -Wl,--end-group -lgcc
 # ldadd += ${ldadd} -l:libm.a -l:libpthread.a -lssp
