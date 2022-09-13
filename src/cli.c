@@ -323,10 +323,6 @@ int main(int argc, char **argv) {
 	// time from here
     clock_gettime(CLOCK_MONOTONIC, &before);
 
-#ifdef MIMALLOC
-	mi_stats_reset();
-#endif
-
 	// set_debug(verbosity);
 	Z = zen_init(
 			(conffile[0])?conffile:NULL,
@@ -458,9 +454,6 @@ int main(int argc, char **argv) {
 	}
 #endif /* POSIX */
 	int exitcode = Z->exitcode;
-#ifdef MIMALLOC
-	int mi_stats = (int) (Z->debuglevel > 2);
-#endif
 	zen_teardown(Z);
 
 	{
@@ -469,10 +462,6 @@ int main(int argc, char **argv) {
 		long musecs = (after.tv_sec - before.tv_sec) * 1000000L;
 		act(NULL,"Time used: %lu", ( ((after.tv_nsec - before.tv_nsec) / 1000L) + musecs) );
 	}
-
-#ifdef MIMALLOC
-	if(mi_stats>0) mi_stats_print(NULL);
-#endif
 
 	cli_free_buffers();
 	return exitcode;
