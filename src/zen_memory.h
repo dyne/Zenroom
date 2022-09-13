@@ -21,8 +21,10 @@
 #ifndef __ZEN_MEMORY_H__
 #define __ZEN_MEMORY_H__
 
+#ifdef MIMALLOC
 #include <mimalloc.h>
 #include <mimalloc-override.h>
+#endif
 
 // header to inject our own memory allocation functions
 

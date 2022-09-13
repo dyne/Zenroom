@@ -44,8 +44,10 @@
 #include <emscripten.h>
 #endif
 
+#ifdef MIMALLOC
 #include <mimalloc.h>
 #include <mimalloc-override.h>
+#endif
 
 #include <zenroom.h>
 #include <zen_memory.h>
