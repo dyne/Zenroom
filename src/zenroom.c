@@ -152,6 +152,11 @@ int zen_init_pmain(lua_State *L) { // protected mode init
 // initializes globals: Z, L (in this order)
 // zen_init_pmain is the Lua routine executed in protected mode
 zenroom_t *zen_init(const char *conf, char *keys, char *data) {
+
+#ifdef MIMALLOC
+  mi_stats_reset();
+#endif
+
 	zenroom_t *ZZ = (zenroom_t*)malloc(sizeof(zenroom_t));
 
 	// create the zenroom_t global context
@@ -299,7 +304,16 @@ void zen_teardown(zenroom_t *ZZ) {
 	  ZSTD_freeDCtx(ZZ->zstd_d);
 	  ZZ->zstd_d = NULL;
 	}
+#ifdef MIMALLOC
+	int mi_stats = (int) (ZZ->debuglevel > 2);
+#endif
+
 	free(ZZ);
+
+#ifdef MIMALLOC
+	if(mi_stats>0) mi_stats_print(NULL);
+#endif
+
 }
 
 int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
