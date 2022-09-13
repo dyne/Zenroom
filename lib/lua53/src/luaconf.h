@@ -11,8 +11,10 @@
 #include <limits.h>
 #include <stddef.h>
 
+#ifdef MIMALLOC
 #include <mimalloc.h>
 #include <mimalloc-override.h>
+#endif
 
 
 /*

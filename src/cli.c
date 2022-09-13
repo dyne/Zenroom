@@ -51,8 +51,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#ifdef MIMALLOC
 #include <mimalloc.h>
 #include <mimalloc-override.h>
+#endif
 
 
 #if defined(ARCH_LINUX)
@@ -204,7 +206,6 @@ int main(int argc, char **argv) {
 	int   interactive         = 0;
 	int   zencode             = 0;
 	int use_seccomp = 0;
-	mi_stats_reset();
 	cli_alloc_buffers();
 
 	zenroom_t *Z;
@@ -327,6 +328,10 @@ int main(int argc, char **argv) {
 
 	// time from here
     clock_gettime(CLOCK_MONOTONIC, &before);
+
+#ifdef MIMALLOC
+	mi_stats_reset();
+#endif
 
 	// set_debug(verbosity);
 	Z = zen_init(
@@ -459,7 +464,9 @@ int main(int argc, char **argv) {
 	}
 #endif /* POSIX */
 	int exitcode = Z->exitcode;
+#ifdef MIMALLOC
 	int mi_stats = (int) (Z->debuglevel > 2);
+#endif
 	zen_teardown(Z);
 
 	{
@@ -469,8 +476,11 @@ int main(int argc, char **argv) {
 		act(NULL,"Time used: %lu", ( ((after.tv_nsec - before.tv_nsec) / 1000L) + musecs) );
 	}
 
-	cli_free_buffers();
+#ifdef MIMALLOC
 	if(mi_stats>0) mi_stats_print(NULL);
+#endif
+
+	cli_free_buffers();
 	return exitcode;
 }
 

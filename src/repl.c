@@ -29,8 +29,10 @@
 
 #include <lua_functions.h>
 
+#ifdef MIMALLOC
 #include <mimalloc.h>
 #include <mimalloc-override.h>
+#endif
 
 extern int zen_exec_script(zenroom_t *Z, const char *script);
 

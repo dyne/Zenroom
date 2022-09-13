@@ -31,8 +31,10 @@
 #include <emscripten.h>
 #endif
 
+#ifdef MIMALLOC
 #include <mimalloc.h>
 #include <mimalloc-override.h>
+#endif
 
  // first byte is type
 #define ZEN_SHA512 '4'

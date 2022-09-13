@@ -18,6 +18,8 @@ ar := $(shell which ar) # cmake requires full path
 ranlib := ranlib
 ld := ld
 cflags_protection := -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
+defines := -DMIMALLOC
+defines += $(if ${COMPILE_LUA}, -DLUA_COMPILED)
 cflags := -O2 ${cflags_protection}
 musl := ${pwd}/build/musl
 platform := posix
@@ -64,7 +66,7 @@ ar  := $(shell which x86_64-w64-mingw32-ar)
 ranlib := $(shell which x86_64-w64-mingw32-ranlib)
 ld := $(shell which x86_64-w64-mingw32-ld)
 system := Windows
-cflags := -mthreads -D'ARCH=\"WIN\"' -DARCH_WIN
+cflags := -mthreads -D'ARCH=\"WIN\"' -DARCH_WIN ${defines}
 ldflags := -L/usr/x86_64-w64-mingw32/lib
 ldadd += -l:libm.a -l:libpthread.a -lssp
 endif
@@ -76,20 +78,22 @@ ranlib := arm-none-eabi-ranlib
 ld := arm-none-eabi-ld
 system := Generic
 ldadd += -lm
-cflags_protection := ""
-cflags := ${cflags_protection} -DARCH_CORTEX -mcpu=cortex-m3 -mthumb -mlittle-endian -mthumb-interwork -Wstack-usage=1024 -DLIBRARY -Wno-main -ffreestanding -nostartfiles -specs=nano.specs -specs=nosys.specs
+cflags := -DARCH_CORTEX -mcpu=cortex-m3 -mthumb -mlittle-endian -mthumb-interwork -Wstack-usage=1024 -DLIBRARY -Wno-main -ffreestanding -nostartfiles -specs=nano.specs -specs=nosys.specs
 milagro_cmake_flags += -DCMAKE_SYSTEM_PROCESSOR="arm" -DCMAKE_CROSSCOMPILING=1 -DCMAKE_C_COMPILER_WORKS=1 -DBUILD_TESTING=0
 ldflags+=-mcpu=cortex-m3 -mthumb -mlittle-endian -mthumb-interwork -Wstack-usage=1024 -Wno-main -ffreestanding -T cortex_m.ld -nostartfiles -Wl,-gc-sections -ggdb
 endif
 
 ifneq (,$(findstring aarch64,$(MAKECMDGOALS)))
+defines := -DLIBCMALLOC
+BUILDS := $(filter-out mimalloc,$(BUILDS))
+ldadd := $(filter-out ${pwd}/lib/mimalloc/build/libmimalloc-static.a,${ldadd})
 gcc := aarch64-linux-gnu-gcc 
 objcopy := aarch64-linux-gnu-objcopy
 ranlib := aarch64-linux-gnu-ranlib
 ld := aarch64-linux-gnu 
 system := Linux 
 ldadd += -lm
-cflags := -O3 -fPIC -D'ARCH=\"LINUX\"' -DARCH_LINUX
+cflags := -O3 -fPIC -D'ARCH=\"LINUX\"' -DARCH_LINUX ${defines}
 ldflags := -lm -lpthread
 milagro_cmake_flags += -DCMAKE_SYSTEM_PROCESSOR="aarch64" -DCMAKE_CROSSCOMPILING=1 -DCMAKE_C_COMPILER_WORKS=1
 endif
@@ -102,13 +106,25 @@ ranlib := riscv64-linux-gnu-ranlib
 ld := riscv64-linux-gnu-ld
 system := Generic
 ldadd += -lm
-cflags_protection := ""
-cflags := ${cflags_protection}
+cflags := ""
 milagro_cmake_flags += -DCMAKE_CROSSCOMPILING=1 -DCMAKE_C_COMPILER_WORKS=1
 ldflags += -Wstack-usage=1024
 endif
 
+
+# ifneq (,$(findstring ios,$(MAKECMDGOALS)))
+# gcc := $(shell xcrun --sdk iphoneos -f gcc 2>/dev/null)
+# ar := $(shell xcrun --sdk iphoneos -f ar 2>/dev/null)
+# ld := $(shell xcrun --sdk iphoneos -f ld 2>/dev/null)
+# ldflags := lm
+# ranlib := $(shell xcrun --sdk iphoneos -f ranlib 2>/dev/null)
+# SDK := $(shell xcrun --sdk iphoneos --show-sdk-path 2>/dev/null)
+# cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM -DARCH_OSX
+# endif
 ifneq (,$(findstring ios,$(MAKECMDGOALS)))
+cflags := $(filter-out -DMIMALLOC,$(cflags))
+BUILDS := $(filter-out mimalloc,$(BUILDS))
+ldadd := $(filter-out ${pwd}/lib/mimalloc/build/libmimalloc-static.a,${ldadd})
 milagro_cmake_flags += -DCMAKE_SYSTEM_PROCESSOR="arm" -DCMAKE_CROSSCOMPILING=1 -DCMAKE_C_COMPILER_WORKS=1
 milagro_cmake_flags += -DCMAKE_OSX_SYSROOT="/" -DCMAKE_OSX_DEPLOYMENT_TARGET=""
 endif
@@ -118,17 +134,21 @@ gcc := g++
 endif
 
 ifneq (,$(findstring musl,$(MAKECMDGOALS)))
+defines := -DLIBCMALLOC
+BUILDS := $(filter-out mimalloc,$(BUILDS))
+ldadd := $(filter-out ${pwd}/lib/mimalloc/build/libmimalloc-static.a,${ldadd})
 gcc := musl-gcc
-cflags := -Os -static -std=gnu99 -fPIC ${cflags_protection} -D'ARCH=\"MUSL\"' -D__MUSL__ -DARCH_MUSL
+defines := -DLIBCMALLOC
+cflags := -Os -static -std=gnu99 -fPIC ${cflags_protection} -D'ARCH=\"MUSL\"' -D__MUSL__ -DARCH_MUSL ${defines}
 ldflags := -static
 system := Linux
 endif
 
 ifneq (,$(findstring linux,$(MAKECMDGOALS)))
-cflags := ${cflags} -fPIC ${cflags_protection} -D'ARCH=\"LINUX\"' -DARCH_LINUX
+defines += $(if ${COMPILE_LUA}, -DLUA_COMPILED)
+cflags := ${cflags} -fPIC ${cflags_protection} -D'ARCH=\"LINUX\"' -DARCH_LINUX ${defines}
 ldflags := -lm -lpthread
 system := Linux
-cflags += $(if ${COMPILE_LUA}, -DLUA_COMPILED)
 endif
 
 ifneq (,$(findstring clang,$(MAKECMDGOALS)))
@@ -136,19 +156,16 @@ gcc := clang
 endif
 
 ifneq (,$(findstring raspi,$(MAKECMDGOALS)))
+defines := -DLIBCMALLOC
+BUILDS := $(filter-out mimalloc,$(BUILDS))
+ldadd := $(filter-out ${pwd}/lib/mimalloc/build/libmimalloc-static.a,${ldadd})
 pi := ${CROSS_PI_PATH}
 gcc := ${pi}/bin/arm-linux-gnueabihf-gcc
 ar := ${pi}/bin/arm-linux-gnueabihf-ar
-cflags := -O3 -march=armv6 -mfloat-abi=hard -mfpu=vfp -I${pi}/arm-linux-gnueabihf/include -fPIC -D'ARCH=\"LINUX\"' -DARCH_LINUX
+cflags := -O3 -march=armv6 -mfloat-abi=hard -mfpu=vfp -I${pi}/arm-linux-gnueabihf/include -fPIC -D'ARCH=\"LINUX\"' -DARCH_LINUX ${defines}
 ldflags := -L${pi}arm-linux-gnueabihf/lib -lm -lpthread
 system := Linux
 endif
-
-ifneq (,$(findstring jemalloc,$(MAKECMDGOALS)))
-cflags += -DUSE_JEMALLOC
-ldflags += -ljemalloc
-endif
-
 
 #milagro_cmake_flags += -DCMAKE_SYSROOT=${sysroot} -DCMAKE_LINKER=${ld} -DCMAKE_C_LINK_EXECUTABLE="<CMAKE_LINKER> <FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
 # -DCMAKE_ANDROID_NDK=${sysroot}
@@ -157,25 +174,31 @@ endif
 ifneq (,$(findstring java,$(MAKECMDGOALS)))
 jdk = ${JAVA_HOME}
 ldflags += -shared
-cflags += -fPIC ${cflags_protection} -DLIBRARY -D'ARCH=\"LINUX\"' -DARCH_LINUX
+cflags += -fPIC -DLIBRARY -D'ARCH=\"LINUX\"' -DARCH_LINUX
 cflags += -DLUA_USE_DLOPEN -I${jdk}/include -I${jdk}/include/linux
 system := Java
 endif
 
 ifneq (,$(findstring android,$(MAKECMDGOALS)))
+cflags := $(filter-out -DMIMALLOC,$(cflags))
+BUILDS := $(filter-out mimalloc,$(BUILDS))
+ldadd := $(filter-out ${pwd}/lib/mimalloc/build/libmimalloc-static.a,${ldadd})
 ndk = ${NDK_HOME}
 toolchain = ${ndk}/toolchains/llvm/prebuilt/linux-x86_64
 gcc = ${toolchain}/bin/clang
 ar = ${toolchain}/bin/llvm-ar
 ldadd += -lm -llog
 ldflags := -shared
-cflags += -fPIC ${cflags_protection} -DLIBRARY -D'ARCH=\"LINUX\"' -DARCH_LINUX -DARCH_ANDROID
+cflags += -fPIC -DLIBRARY -D'ARCH=\"LINUX\"' -DARCH_LINUX -DARCH_ANDROID
 cflags += -DLUA_USE_DLOPEN -I${ndk}/sysroot/usr/include
 system := Android
 android := 18
 endif
 
 ifneq (,$(findstring android-arm,$(MAKECMDGOALS)))
+cflags := $(filter-out -DMIMALLOC,$(cflags))
+BUILDS := $(filter-out mimalloc,$(BUILDS))
+ldadd := $(filter-out ${pwd}/lib/mimalloc/build/libmimalloc-static.a,${ldadd})
 target = arm-linux-androideabi
 ld = ${toolchain}/bin/${target}-link
 sysroot = ${ndk}/platforms/android-${android}/arch-arm
@@ -184,6 +207,9 @@ milagro_cmake_flags += -DCMAKE_SYSTEM_NAME=${system} -DCMAKE_ANDROID_NDK=${ndk} 
 endif
 
 ifneq (,$(findstring android-x86,$(MAKECMDGOALS)))
+cflags := $(filter-out -DMIMALLOC,$(cflags))
+BUILDS := $(filter-out mimalloc,$(BUILDS))
+ldadd := $(filter-out ${pwd}/lib/mimalloc/build/libmimalloc-static.a,${ldadd})
 target = x86
 ld = ${toolchain}/bin/${target}-link
 sysroot = ${ndk}/platforms/android-${android}/arch-x86
@@ -192,6 +218,9 @@ milagro_cmake_flags += -DCMAKE_SYSTEM_NAME=${system} -DCMAKE_ANDROID_NDK=${ndk} 
 endif
 
 ifneq (,$(findstring android-aarch64,$(MAKECMDGOALS)))
+cflags := $(filter-out -DMIMALLOC,$(cflags))
+BUILDS := $(filter-out mimalloc,$(BUILDS))
+ldadd := $(filter-out ${pwd}/lib/mimalloc/build/libmimalloc-static.a,${ldadd})
 target = aarch64-linux-android
 ld = ${toolchain}/bin/${target}-link
 android := 21
@@ -201,7 +230,7 @@ milagro_cmake_flags += -DCMAKE_SYSTEM_NAME=${system} -DCMAKE_ANDROID_NDK=${ndk} 
 endif
 
 ifneq (,$(findstring osx,$(MAKECMDGOALS)))
-cflags := ${cflags} -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -DARCH_OSX
+cflags += -fPIC -D'ARCH=\"OSX\"' -DARCH_OSX
 ld := ${gcc}
 ldflags := -lm
 system := Darwin
@@ -232,19 +261,14 @@ ldadd += ${ldadd} -nostdlib -Wl,--start-group -lmain -lc -Wl,--end-group -lgcc
 # ldadd += ${ldadd} -l:libm.a -l:libpthread.a -lssp
 endif
 
-ifneq (,$(findstring release,$(MAKECMDGOALS)))
-cflags := -O3 -fstack-protector-all -D_FORTIFY_SOURCE=2 -fno-strict-overflow
-endif
-
 # clang doesn't supports -Wstack-usage=4096
 
 ifneq (,$(findstring debug,$(MAKECMDGOALS)))
-cflags := -Og -ggdb -DDEBUG=1 -Wall -Wextra -pedantic
-cflags += $(if ${COMPILE_LUA}, -DLUA_COMPILED)
+cflags := -Og -ggdb -DDEBUG=1 -Wall -Wextra -pedantic ${defines}
 endif
 
 ifneq (,$(findstring profile,$(MAKECMDGOALS)))
-cflags += -Og -ggdb -pg -DDEBUG=1
+cflags := -Og -ggdb -pg -DDEBUG=1 ${defines}
 endif
 
 ifneq (,$(findstring meson,$(MAKECMDGOALS)))
@@ -261,13 +285,3 @@ ifneq (,$(findstring python3,$(MAKECMDGOALS)))
 cflags += $(shell python3-config --cflags) -fPIC
 ldflags += $(shell python3-config --ldflags)
 endif
-
-# ifneq (,$(findstring ios,$(MAKECMDGOALS)))
-# gcc := $(shell xcrun --sdk iphoneos -f gcc 2>/dev/null)
-# ar := $(shell xcrun --sdk iphoneos -f ar 2>/dev/null)
-# ld := $(shell xcrun --sdk iphoneos -f ld 2>/dev/null)
-# ldflags := lm
-# ranlib := $(shell xcrun --sdk iphoneos -f ranlib 2>/dev/null)
-# SDK := $(shell xcrun --sdk iphoneos --show-sdk-path 2>/dev/null)
-# cflags := -O2 -fPIC ${cflags_protection} -D'ARCH=\"OSX\"' -isysroot ${SDK} -arch ${ARCH} -D NO_SYSTEM -DARCH_OSX
-# endif
