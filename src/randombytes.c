@@ -97,7 +97,7 @@ int randombytes_js_randombytes_nodejs(void *buf, size_t n) {
 		}, n);
 	for(c=0;c<n;c++)
 		((char*)buf)[c] = bytes[c];
-	system_free(bytes);
+	free(bytes);
 	return 0;
 }
 #endif

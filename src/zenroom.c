@@ -74,11 +74,7 @@ extern void zen_add_parse(lua_State *L);
 // prototype from zen_config.c
 extern int zen_conf_parse(zenroom_t *ZZ, const char *configuration);
 
-// prototypes from zen_memory.c
-// extern zen_mem_t *libc_memory_init();
-#ifdef USE_JEMALLOC
-extern zen_mem_t *jemalloc_memory_init();
-#endif
+// prototype from zen_memory.c
 extern void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
 
 // prototypes from lua_functions.c

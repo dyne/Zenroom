@@ -53,16 +53,6 @@ int zenroom_hash_final(const char *hash_ctx);
 
 // lower level api: init (exec_line*) teardown
 
-// heap initialised by the memory manager
-typedef struct {
-	void* (*malloc)(size_t size);
-	void* (*realloc)(void *ptr, size_t size);
-	void  (*free)(void *ptr);
-	void* (*sys_malloc)(size_t size);
-	void* (*sys_realloc)(void *ptr, size_t size);
-	void  (*sys_free)(void *ptr);
-} zen_mem_t;
-
 #define RANDOM_SEED_LEN 64
 
 #include <stdarg.h>
