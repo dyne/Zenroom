@@ -90,43 +90,43 @@ hash* hash_new(lua_State *L, const char *hashtype) {
 		strncpy(h->name,hashtype,15);
 		h->len = 32;
 		h->algo = _SHA256;
-		h->sha256 = (hash256*)zen_memory_alloc(sizeof(hash256));
+		h->sha256 = (hash256*)malloc(sizeof(hash256));
 		HASH256_init(h->sha256);
 	} else if(strncasecmp(hashtype,"sha384",6) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 48;
 		h->algo = _SHA384;
-		h->sha384 = (hash384*)zen_memory_alloc(sizeof(hash384));
+		h->sha384 = (hash384*)malloc(sizeof(hash384));
 		HASH384_init(h->sha384);
 	} else if(strncasecmp(hashtype,"sha512",6) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 64;
 		h->algo = _SHA512;
-		h->sha512 = (hash512*)zen_memory_alloc(sizeof(hash512));
+		h->sha512 = (hash512*)malloc(sizeof(hash512));
 		HASH512_init(h->sha512);
 	} else if(strncasecmp(hashtype,"sha3_256",7) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 32;
 		h->algo = _SHA3_256;
-		h->sha3_256 = (sha3*)zen_memory_alloc(sizeof(sha3));
+		h->sha3_256 = (sha3*)malloc(sizeof(sha3));
 		SHA3_init(h->sha3_256, h->len);
 	} else if(strncasecmp(hashtype,"sha3_512",7) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 64;
 		h->algo = _SHA3_512;
-		h->sha3_512 = (sha3*)zen_memory_alloc(sizeof(sha3));
+		h->sha3_512 = (sha3*)malloc(sizeof(sha3));
 		SHA3_init(h->sha3_512, h->len);
 	} else if(strncasecmp(hashtype,"keccak256",9) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 32;
 		h->algo = _KECCAK256;
-		h->keccak256 = (sha3*)zen_memory_alloc(sizeof(sha3));
+		h->keccak256 = (sha3*)malloc(sizeof(sha3));
 		SHA3_init(h->keccak256, h->len);
 	} else if(strncasecmp(hashtype,"ripemd160",9) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 20;
 		h->algo = _RMD160;
-		h->rmd160 = (dword*)zen_memory_alloc((160/32)+0x0f);
+		h->rmd160 = (dword*)malloc((160/32)+0x0f);
 		RMD160_init(h->rmd160);
 	} // ... TODO: other hashes
 	else {
@@ -147,9 +147,9 @@ int hash_destroy(lua_State *L) {
 	HEREs(h->name);
 	if(h->rng) free(h->rng);
 	if(h->algo == _SHA256)
-		zen_memory_free(h->sha256);
+		free(h->sha256);
 	else if (h->algo == _SHA512)
-		zen_memory_free(h->sha512);
+		free(h->sha512);
 	return 0;
 }
 

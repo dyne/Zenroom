@@ -24,15 +24,8 @@
 #ifdef MIMALLOC
 #include <mimalloc.h>
 #include <mimalloc-override.h>
+#else
+#include <stdlib.h>
 #endif
-
-// header to inject our own memory allocation functions
-
-char *zen_memory_alloc(size_t size);
-void *zen_memory_realloc(void *ptr, size_t size);
-void  zen_memory_free(void *ptr);
-void *system_alloc(size_t size);
-void *system_realloc(void *ptr, size_t size);
-void  system_free(void *ptr);
 
 #endif
