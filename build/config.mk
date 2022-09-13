@@ -277,11 +277,11 @@ cflags += -fPIC
 endif
 
 ifneq (,$(findstring python2,$(MAKECMDGOALS)))
-cflags += $(shell python2.7-config --cflags) -fPIC
+cflags += $(shell python2.7-config --cflags) -fPIC -DLIBRARY
 ldflags += $(shell python2.7-config --ldflags)
 endif
 
 ifneq (,$(findstring python3,$(MAKECMDGOALS)))
-cflags += $(shell python3-config --cflags) -fPIC
+cflags += $(shell python3-config --cflags) -fPIC -DLIBRARY
 ldflags += $(shell python3-config --ldflags)
 endif
