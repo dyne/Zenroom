@@ -10,6 +10,8 @@
 #ifdef MIMALLOC
 #include <mimalloc.h>
 #include <mimalloc-override.h>
+#else
+#include <stdlib.h>
 #endif
 
 #include "sha2.h"

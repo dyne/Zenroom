@@ -15,6 +15,8 @@
 #ifdef MIMALLOC
 #include <mimalloc.h>
 #include <mimalloc-override.h>
+#else
+#include <stdlib.h>
 #endif
 
 #define NROUNDS 24

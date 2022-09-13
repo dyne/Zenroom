@@ -170,10 +170,10 @@ int big_destroy(lua_State *L) {
 	HERE();
 	big *c = big_arg(L,1);
 	if(c->doublesize) {
-		if(c->dval) zen_memory_free(c->dval);
+		if(c->dval) free(c->dval);
 		if(c->val) warning(L,"found leftover buffer while freeing double big");
 	} else {
-		if(c->val) zen_memory_free(c->val);
+		if(c->val) free(c->val);
 		if(c->dval) warning(L,"found leftover buffer while freeing big");
 	}
 	SAFE(c);
@@ -210,7 +210,7 @@ int big_init(big *n) {
 		return 0; }
 	if(!n->val && !n->dval) {
 		size_t size = sizeof(BIG);
-		n->val = (int*)zen_memory_alloc(size);
+		n->val = (int*)malloc(size);
 		n->doublesize = 0;
 		n->len = MODBYTES;
 		return(size);
@@ -225,15 +225,15 @@ int dbig_init(big *n) {
 	size_t size = sizeof(DBIG); //sizeof(DBIG); // modbytes * 2, aka n->len<<1
 	if(n->val && !n->doublesize) {
 		n->doublesize = 1;
-		n->dval = (int*)zen_memory_alloc(size);
+		n->dval = (int*)malloc(size);
 		// extend from big to double big
 		BIG_dscopy(n->dval,n->val);
-		zen_memory_free(n->val);
+		free(n->val);
 		n->len = MODBYTES<<1;
 	}
 	if(!n->val || !n->dval) {
 		n->doublesize = 1;
-		n->dval = (int*)zen_memory_alloc(size);
+		n->dval = (int*)malloc(size);
 		n->len = MODBYTES<<1;
 		return(size);
 	}
@@ -469,7 +469,7 @@ static int big_to_decimal_string(lua_State *L) {
         	i++;
 		BIG_norm(ten_power);
 	}
-	char *s = zen_memory_alloc(i+4);
+	char *s = malloc(i+4);
 	if (i == 0) {
 		s[0] = '0';
 		i++;
@@ -510,7 +510,7 @@ static int big_to_decimal_string(lua_State *L) {
 	  j++;
 	}
 	lua_pushstring(L,s);
-	zen_memory_free(s);
+	free(s);
 	return 1;
 }
 

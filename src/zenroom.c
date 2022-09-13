@@ -44,11 +44,6 @@
 #include <emscripten.h>
 #endif
 
-#ifdef MIMALLOC
-#include <mimalloc.h>
-#include <mimalloc-override.h>
-#endif
-
 #include <zenroom.h>
 #include <zen_memory.h>
 
@@ -284,7 +279,7 @@ void zen_teardown(zenroom_t *ZZ) {
 
 	// stateful RNG instance for deterministic mode
 	if(ZZ->random_generator) {
-		zen_memory_free(ZZ->random_generator);
+		free(ZZ->random_generator);
 		ZZ->random_generator = NULL;
 	}
 

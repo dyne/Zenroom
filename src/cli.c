@@ -51,12 +51,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#ifdef MIMALLOC
-#include <mimalloc.h>
-#include <mimalloc-override.h>
-#endif
-
-
 #if defined(ARCH_LINUX)
 #include <sys/prctl.h>
 #include <linux/seccomp.h>

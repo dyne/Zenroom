@@ -115,10 +115,10 @@ int is_base64(const char *in) {
 }
 
 void push_octet_to_hex_string(lua_State *L, octet *o) {
-	char *s = zen_memory_alloc((o->len<<1)+1); // string len = double +1
+	char *s = malloc((o->len<<1)+1); // string len = double +1
 	buf2hex(s, o->val, o->len);
 	lua_pushstring(L,s);
-	zen_memory_free(s);
+	free(s);
 	return;
 }
 
@@ -178,7 +178,7 @@ octet* o_new(lua_State *L, const int size) {
 		return NULL; }
 	luaL_getmetatable(L, "zenroom.octet");
 	lua_setmetatable(L, -2);
-	o->val = zen_memory_alloc(size +0x0f);
+	o->val = malloc(size +0x0f);
 	if(!o->val) {
 		lerror(L, "Error allocating new octet of %u bytes",size);
 		return NULL; }
@@ -290,7 +290,7 @@ int o_destroy(lua_State *L) {
 	void *ud = luaL_testudata(L, 1, "zenroom.octet");
 	if(ud) {
 		octet *o = (octet*)ud;
-		if(o->val) zen_memory_free(o->val);
+		if(o->val) free(o->val);
 	}
 	return 0;
 }
@@ -497,7 +497,7 @@ static int from_base58(lua_State *L) {
 		lerror(L, "base58 string contains invalid characters");
 		return 0; }
 	size_t binmax = B64decoded_len(len); //((len + 3) >> 2) *3;
-	char *tmp = zen_memory_alloc(binmax);
+	char *tmp = malloc(binmax);
 	// size_t binmax = len + len + len;
 	size_t binlen = binmax;
 	if(!b58tobin((void*)tmp, &binlen, s, len)) {
@@ -509,7 +509,7 @@ static int from_base58(lua_State *L) {
 	} else {
 		memcpy(o->val,&tmp[binmax-binlen],binlen);
 	}
-	zen_memory_free(tmp);
+	free(tmp);
 	o->len = binlen;
 	return 1;
 }
@@ -701,17 +701,17 @@ static int to_segwit_address(lua_State *L) {
 	        lua_pushboolean(L,0);
 	        return 1;
 	}
-	char *result = zen_memory_alloc(73+strlen(hrp));
+	char *result = malloc(73+strlen(hrp));
 
 	if (!segwit_addr_encode(result, hrp, witver, (uint8_t*)o->val, o->len)) {
 		zerror(L, "%s :: cannot be encoded to segwit format", __func__);
 		lua_pushboolean(L, 0);
-		zen_memory_free(result);
+		free(result);
 		return 1;
         }
 
 	lua_pushstring(L,result);
-	zen_memory_free(result);
+	free(result);
 
 	return 1;
 }
@@ -724,14 +724,14 @@ static int to_mnemonic(lua_State *L) {
 	  lua_pushboolean(L, 0);
 	  return 0;
 	}
-	char *result = zen_memory_alloc(24 * 10);
+	char *result = malloc(24 * 10);
 	if(mnemonic_from_data(result, o->val, o->len)) {
 		lua_pushstring(L, result);
 	} else {
 		zerror(L, "%s :: cannot be encoded to mnemonic", __func__);
 		lua_pushboolean(L, 0);
 	}
-	zen_memory_free(result);
+	free(result);
 	return 1;
 }
 
@@ -843,10 +843,10 @@ static int to_base64 (lua_State *L) {
 		return 0; }
 	int newlen;
 	newlen = ((3+(4*(o->len/3))) & ~0x03)+0x0f;
-	char *b = zen_memory_alloc(newlen);
+	char *b = malloc(newlen);
 	OCT_tobase64(b,o);
 	lua_pushstring(L,b);
-	zen_memory_free(b);
+	free(b);
 	return 1;
 }
 
@@ -858,11 +858,11 @@ static int to_url64 (lua_State *L) {
 		return 0; }
 	int newlen;
 	newlen = B64encoded_len(o->len);
-	char *b = zen_memory_alloc(newlen);
+	char *b = malloc(newlen);
 	// b[0]='u';b[1]='6';b[2]='4';b[3]=':';
 	U64encode(b,o->val,o->len);
 	lua_pushstring(L,b);
-	zen_memory_free(b);
+	free(b);
 	return 1;
 }
 
@@ -897,14 +897,14 @@ static int to_base58(lua_State *L) {
 	// TODO: find out why this breaks!
 	// debug builds work, optimized build breaks here
 	// this workaround will break base58 encoding when using memmanager=lw
-	//char *b = zen_memory_alloc(maxlen);
+	//char *b = malloc(maxlen);
 	char *b = malloc(maxlen);
 
 	size_t b58len = maxlen;
 	b58enc(b, &b58len, o->val, o->len);
 	// b[b58len] = '\0'; // already present in libbase58
 	lua_pushstring(L,b);
-	// zen_memory_free(b);
+	// free(b);
 	free(b);
 	// don't free since its pushed as string in Lua
 	// so the GC will take care of it
@@ -914,10 +914,10 @@ static int to_base58(lua_State *L) {
 static int to_base45 (lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
 	int newlen = b45encode(NULL, o->val, o->len);
-	char *b = zen_memory_alloc(newlen);
+	char *b = malloc(newlen);
 	b45encode(b, o->val, o->len);
 	lua_pushstring(L,b);
-	zen_memory_free(b);
+	free(b);
 	return 1;
 }
 
@@ -986,12 +986,12 @@ static int to_octet(lua_State *L) {
 static int to_string(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
 	if(!o->len) { lua_pushnil(L); return 1; }
-	char *s = zen_memory_alloc(o->len+2);
+	char *s = malloc(o->len+2);
 	OCT_toStr(o,s); // TODO: inverted function signature, see
 					// https://github.com/milagro-crypto/milagro-crypto-c/issues/291
 	s[o->len] = '\0'; // make sure string is NULL terminated
 	lua_pushlstring(L,s,o->len);
-	zen_memory_free(s);
+	free(s);
 	return 1;
 }
 
@@ -1014,7 +1014,7 @@ int to_hex(lua_State *L) {
 static int to_bin(lua_State *L) {
 	octet *o = o_arg(L,1);	SAFE(o);
 	if(!o->len) { lua_pushnil(L); return 1; }
-	char *s = zen_memory_alloc(o->len*8+2);
+	char *s = malloc(o->len*8+2);
 	int i;
 	char oo;
 	char *is = s;
@@ -1032,7 +1032,7 @@ static int to_bin(lua_State *L) {
 	}
 	s[o->len*8] = 0x0;
 	lua_pushstring(L,s);
-	zen_memory_free(s);
+	free(s);
 	return(1);
 }
 
@@ -1232,7 +1232,7 @@ static int entropy_bytefreq(lua_State *L) {
 	octet *o = o_arg(L,1); SAFE(o);
 	register int i; // register
 	// byte frequency table
-	char *bfreq = zen_memory_alloc(0xff);
+	char *bfreq = malloc(0xff);
 	memset(bfreq,0x0,0xff);
 	// calculate freqency of byte values
 	register char *p = o->val;
@@ -1245,7 +1245,7 @@ static int entropy_bytefreq(lua_State *L) {
 		lua_pushnumber(L,*p);
 		lua_settable(L,-3);
 	}
-	zen_memory_free(bfreq);
+	free(bfreq);
 	return 1;
 }
 
@@ -1253,10 +1253,10 @@ static int entropy(lua_State *L) {
 	octet *o = o_arg(L,1); SAFE(o);
 	register int i; // register
 	// byte frequency table
-	char *bfreq = zen_memory_alloc(0xff);
+	char *bfreq = malloc(0xff);
 	memset(bfreq,0x0,0xff);
 	// probability of recurring for each byte
-	float *bprob = (float*)zen_memory_alloc(sizeof(float)*0xff);
+	float *bprob = (float*)malloc(sizeof(float)*0xff);
 	memset(bprob,0x0,sizeof(float)*0xff);
 	// calculate freqency of byte values
 	register char *p = o->val;
@@ -1275,8 +1275,8 @@ static int entropy(lua_State *L) {
 		entropy += *f * log2(*f);
 	}
 	// free work buffers
-	zen_memory_free(bfreq);
-	zen_memory_free(bprob);
+	free(bfreq);
+	free(bprob);
 	// return entropy ratio, max and bits
 	float bits = -1.0 * entropy;
 	float entmax = log2(num);

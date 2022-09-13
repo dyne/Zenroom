@@ -73,8 +73,8 @@ static int lua_strcasecmp(lua_State *L) {
 	b = luaL_checklstring(L,2,&lb); SAFE(b);
 	if(la>MAX_LINE) lerror(L, "strcasecmp: arg #1 MAX_LINE limit hit");
 	if(lb>MAX_LINE) lerror(L, "strcasecmp: arg #2 MAX_LINE limit hit");
-	ta = zen_memory_alloc(la+1);
-	tb = zen_memory_alloc(lb+1);
+	ta = malloc(la+1);
+	tb = malloc(lb+1);
 	la = trimto(ta, a, la);
 	lb = trimto(tb, b, lb);
 	if(la != lb) { lua_pushboolean(L,0); goto end; }
@@ -82,8 +82,8 @@ static int lua_strcasecmp(lua_State *L) {
 // else
 	lua_pushboolean(L,0);
 end:
-	zen_memory_free(ta);
-	zen_memory_free(tb);
+	free(ta);
+	free(tb);
 	return 1;
 }
 

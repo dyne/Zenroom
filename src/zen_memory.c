@@ -22,18 +22,7 @@
 // #include <stdlib.h>
 #include <zen_error.h>
 
-#ifdef MIMALLOC
-#include <mimalloc.h>
-#include <mimalloc-override.h>
-#endif
-
-// semantic distinction of alloc calls inside Lua or from outside
-void *zen_memory_alloc(size_t size) { return malloc(size); }
-void *zen_memory_realloc(void *ptr, size_t size) { return realloc(ptr, size); }
-void  zen_memory_free(void *ptr) { free(ptr); }
-void *system_alloc(size_t size) { return malloc(size); }
-void *system_realloc(void *ptr, size_t size) { return realloc(ptr, size); }
-void  system_free(void *ptr) { free(ptr); }
+#include <zen_memory.h>
 
 /**
  * Implementation of the memory allocator for the Lua state.
