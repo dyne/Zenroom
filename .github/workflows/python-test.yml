@@ -1,4 +1,4 @@
-name: Python unit tests on Linux
+name: Python unit tests on some unix-like OS
 
 on:
   push:
@@ -8,8 +8,8 @@ on:
     - '*.md'
 
 jobs:
-  python-test:
-    name: Run unit tests
+  python-test-linux:
+    name: Run unit tests on Ubuntu
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -22,6 +22,24 @@ jobs:
         with:
           python-version: '3.7'
       - run: sudo apt-get update && sudo apt-get install -y cmake vim zsh
+      - run: pip install meson ninja
+      - run: pip install -e .[test]
+      - run: pytest -s tests
+
+  python-test-macos:
+    name: Run unit tests on MacOS
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: bindings/python3
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        name: Install Python
+        with:
+          python-version: '3.7'
+      - run: brew install cmake vim zsh
       - run: pip install meson ninja
       - run: pip install -e .[test]
       - run: pytest -s tests
