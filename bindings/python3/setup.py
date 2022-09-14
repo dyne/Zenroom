@@ -88,7 +88,7 @@ meson_root = os.path.join(ZENROOM_ROOT, 'meson')
 
 os.chdir(ZENROOM_ROOT)
 subprocess.check_call(['make', 'clean'])
-subprocess.check_call(['make', 'linux-meson-release'])
+subprocess.check_call(['make', 'meson'])
 
 os.chdir(build_root)
 
