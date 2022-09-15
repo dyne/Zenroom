@@ -23,6 +23,7 @@
 #include <ctype.h>
 #include <errno.h>
 
+#include <mutt_sprintf.h>
 
 #include <zenroom.h>
 #include <zen_error.h>
@@ -54,7 +55,7 @@ int zen_write_err_va(zenroom_t *Z, const char *fmt, va_list va) {
 	res = __android_log_vprint(ANDROID_LOG_DEBUG, "ZEN", fmt, va);
 #elif defined(ARCH_CORTEX)
 	char buffer[MAX_STRING] = {0};
-	vsnprintf(buffer, MAX_STRING, fmt, va);
+	mutt_vsnprintf(buffer, MAX_STRING, fmt, va);
 	res = write_to_console(buffer);
 #else
 	if(!Z) res = vfprintf(stderr,fmt,va); // no init yet, print to stderr
@@ -64,7 +65,7 @@ int zen_write_err_va(zenroom_t *Z, const char *fmt, va_list va) {
 			return(0);
 		}
 		size_t max = Z->stderr_len - Z->stderr_pos;
-		res = (*Z->vsnprintf)
+		res = mutt_vsnprintf
 			(Z->stderr_buf + Z->stderr_pos, // buffer start
 			 Z->stderr_len - Z->stderr_pos,  // length max
 			 fmt, va);
@@ -103,7 +104,7 @@ int zen_write_out_va(zenroom_t *Z, const char *fmt, va_list va) {
 			return(0);
 		}
 		size_t max = Z->stdout_len - Z->stdout_pos;
-		res = (*Z->vsnprintf)
+		res = mutt_vsnprintf
 			(Z->stdout_buf + Z->stdout_pos, // buffer start
 			 Z->stdout_len - Z->stdout_pos,  // length max
 			 fmt, va);
