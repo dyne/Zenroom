@@ -45,8 +45,6 @@
 #include <repl.h>
 
 #include <zenroom.h>
-#include <zen_memory.h>
-#include <zen_error.h>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -86,32 +84,34 @@ void load_file(char *dst, FILE *fd) {
 	size_t offset = 0;
 	size_t bytes = 0;
 	if(!fd) {
-		zerror(0, "Error opening %s", strerror(errno));
+		fprintf(stderr, "Error opening %s\n", strerror(errno));
 		exit(1); }
 	if(fd!=stdin) {
 		if(fseek(fd, 0L, SEEK_END)<0) {
-			zerror(0, "fseek(end) error in %s: %s", __func__,
+			fprintf(stderr, "fseek(end) error in %s: %s\n", __func__,
 			      strerror(errno));
 			exit(1); }
 		file_size = ftell(fd);
 		if(fseek(fd, 0L, SEEK_SET)<0) {
-			zerror(0, "fseek(start) error in %s: %s", __func__,
+			fprintf(stderr, "fseek(start) error in %s: %s\n", __func__,
 			      strerror(errno));
 			exit(1); }
-		func(0, "size of file: %u", file_size);
+#ifdef DEBUG
+		fprintf(stderr, "size of file: %u\n", file_size);
+#endif
 	}
 
 	firstline = malloc(MAX_STRING);
 	// skip shebang on firstline
 	if(!fgets(firstline, MAX_STRING, fd)) {
 		if(errno==0) { // file is empty
-			zerror(0, "Error reading, file is empty");
+			fprintf(stderr, "Error reading, file is empty\n");
 			if(firstline) free(firstline);
 			exit(1); }
-		zerror(0, "Error reading first line: %s", strerror(errno));
+		fprintf(stderr, "Error reading first line: %s\n", strerror(errno));
 		exit(1); }
 	if(firstline[0]=='#' && firstline[1]=='!')
-		func(0, "Skipping shebang");
+		fprintf(stderr, "Skipping shebang\n");
 	else {
 		offset+=strlen(firstline);
 		strncpy(dst, firstline, MAX_STRING);
@@ -123,23 +123,23 @@ void load_file(char *dst, FILE *fd) {
 		if( offset+MAX_STRING>MAX_FILE )
 			chunk = MAX_FILE-offset-1;
 		if(!chunk) {
-			warning(0, "File too big, truncated at maximum supported size");
+			fprintf(stderr, "File too big, truncated at maximum supported size\n");
 			break; }
 		bytes = fread(&dst[offset],1,chunk,fd);
 
 		if(!bytes) {
 			if(feof(fd)) {
 				if((fd!=stdin) && (long)offset!=file_size) {
-					warning(0, "Incomplete file read (%u of %u bytes)",
+					fprintf(stderr, "Incomplete file read (%u of %u bytes)\n",
 					      offset, file_size);
 				} else {
-					func(0, "EOF after %u bytes",offset);
+					fprintf(stderr, "EOF after %u bytes\n",offset);
 				}
  				dst[offset] = '\0';
 				break;
 			}
 			if(ferror(fd)) {
-				zerror(0, "Error in %s: %s", __func__, strerror(errno));
+				fprintf(stderr, "Error in %s: %s\n", __func__, strerror(errno));
 				fclose(fd);
 				if(firstline) free(firstline);
 				exit(1); }
@@ -147,7 +147,7 @@ void load_file(char *dst, FILE *fd) {
 		offset += bytes;
 	}
 	if(fd!=stdin) fclose(fd);
-	act(0, "loaded file (%u bytes)", offset);
+	fprintf(stderr, "loaded file (%u bytes)\n", offset);
 	if(firstline) free(firstline);
 }
 
@@ -255,25 +255,25 @@ int main(int argc, char **argv) {
 			zencode = 1;
 			interactive = 0;
 			break;
-		case '?': zerror(0, help); cli_free_buffers(); return EXIT_FAILURE;
-		default:  zerror(0, help); cli_free_buffers(); return EXIT_FAILURE;
+		case '?': fprintf(stderr, help); cli_free_buffers(); return EXIT_FAILURE;
+		default:  fprintf(stderr, help); cli_free_buffers(); return EXIT_FAILURE;
 		}
 	}
 
 	if(verbosity) {
-		notice(NULL, "Zenroom v%s - secure crypto language VM",VERSION);
-		act(NULL, "Zenroom is Copyright (C) 2017-2021 by the Dyne.org foundation");
-		act(NULL, "For the original source code and documentation go to https://zenroom.org");
-		act(NULL, "Zenroom is free software: you can redistribute it and/or modify");
-		act(NULL, "it under the terms of the GNU Affero General Public License as");
-		act(NULL, "published by the Free Software Foundation, either version 3 of the");
-		act(NULL, "License, or (at your option) any later version.");
-		act(NULL, "Zenroom is distributed in the hope that it will be useful,");
-		act(NULL, "but WITHOUT ANY WARRANTY; without even the implied warranty of");
-		act(NULL, "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the");
-		act(NULL, "GNU Affero General Public License for more details.");
-		act(NULL, "You should have received a copy of the GNU Affero General Public License");
-		act(NULL, "along with this program.  If not, see http://www.gnu.org/licenses/");
+		fprintf(stderr, "Zenroom v%s - secure crypto language VM\n",VERSION);
+		fprintf(stderr, "Zenroom is Copyright (C) 2017-2022 by the Dyne.org foundation\n");
+		fprintf(stderr, "For the original source code and documentation go to https://zenroom.org\n");
+		fprintf(stderr, "Zenroom is free software: you can redistribute it and/or modify\n");
+		fprintf(stderr, "it under the terms of the GNU Affero General Public License as\n");
+		fprintf(stderr, "published by the Free Software Foundation, either version 3 of the\n");
+		fprintf(stderr, "License, or (at your option) any later version.\n");
+		fprintf(stderr, "Zenroom is distributed in the hope that it will be useful,\n");
+		fprintf(stderr, "but WITHOUT ANY WARRANTY; without even the implied warranty of\n");
+		fprintf(stderr, "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n");
+		fprintf(stderr, "GNU Affero General Public License for more details.\n");
+		fprintf(stderr, "You should have received a copy of the GNU Affero General Public License\n");
+		fprintf(stderr, "along with this program.  If not, see http://www.gnu.org/licenses/\n");
 	}
 
 	for (index = optind; index < argc; index++) {
@@ -281,12 +281,12 @@ int main(int argc, char **argv) {
 	}
 
 	if(keysfile[0]!='\0') {
-		if(verbosity) act(NULL, "reading KEYS from file: %s", keysfile);
+		if(verbosity) fprintf(stderr, "reading KEYS from file: %s\n", keysfile);
 		load_file(keys, fopen(keysfile, "r"));
 	}
 
 	if(datafile[0]!='\0' && verbosity) {
-		if(verbosity) act(NULL, "reading DATA from file: %s", datafile);
+		if(verbosity) fprintf(stderr, "reading DATA from file: %s\n", datafile);
 		load_file(data, fopen(datafile, "r"));
 	}
 
@@ -304,7 +304,7 @@ int main(int argc, char **argv) {
 		zen_add_function(L, repl_read, "read");
 		zen_add_function(L, repl_write, "write");
 		int res;
-		if(verbosity) notice(NULL, "Interactive console, press ctrl-d to quit.");
+		if(verbosity) fprintf(stderr, "Interactive console, press ctrl-d to quit.\n");
 		res = repl_loop(Z);
 		if(res)
 			// quits on ctrl-D
@@ -315,10 +315,10 @@ int main(int argc, char **argv) {
 
 	// configuration from -c or default
 	if(conffile[0]!='\0') {
-		if(verbosity) act(NULL, "configuration: %s",conffile);
+		if(verbosity) fprintf(stderr, "configuration: %s\n",conffile);
 	// load_file(conf, fopen(conffile, "r"));
 	} else
-		if(verbosity) act(NULL, "using default configuration");
+		if(verbosity) fprintf(stderr, "using default configuration\n");
 
 	// time from here
     clock_gettime(CLOCK_MONOTONIC, &before);
@@ -329,14 +329,14 @@ int main(int argc, char **argv) {
 			(keys[0])?keys:NULL,
 			(data[0])?data:NULL);
 	if(!Z) {
-		zerror(NULL, "Initialisation failed.");
+		fprintf(stderr, "Initialisation failed.\n");
 		cli_free_buffers();
 		return EXIT_FAILURE; }
 
 	// print scenario documentation
 	if(introspect[0]!='\0') {
 		static char zscript[MAX_ZENCODE];
-		notice(NULL, "Documentation for scenario: %s",introspect);
+		fprintf(stderr, "Documentation for scenario: %s\n",introspect);
 		snprintf(zscript,MAX_ZENCODE-1,
 		               "function Given(text, fn) ZEN.given_steps[text] = true end\n"
 		               "function When(text, fn) ZEN.when_steps[text] = true end\n"
@@ -359,9 +359,9 @@ int main(int argc, char **argv) {
 		               "  Schemas = ZEN.schemas }))", introspect, introspect);
 		int ret = luaL_dostring(Z->lua, zscript);
 		if(ret) {
-			zerror(Z->lua, "Zencode execution error");
-			zerror(Z->lua, "Script:\n%s", zscript);
-			zerror(Z->lua, "%s", lua_tostring(Z->lua, -1));
+			fprintf(stderr, "Zencode execution error\n");
+			fprintf(stderr, "Script:\n%s\n", zscript);
+			fprintf(stderr, "%s\n", lua_tostring(Z->lua, -1));
 			fflush(stderr);
 		}
 		zen_teardown(Z);
@@ -370,7 +370,7 @@ int main(int argc, char **argv) {
 	}
 
 	if(sideload[0]!='\0') {
-		notice(Z->lua,"Side loading library: %s",sideload);
+		fprintf(stderr,"Side loading library: %s\n",sideload);
 		load_file(sidescript, fopen(sideload,"rb"));
 		zen_exec_script(Z, sidescript);
 		// TODO: detect error
@@ -379,19 +379,19 @@ int main(int argc, char **argv) {
 	if(scriptfile[0]!='\0') {
 		////////////////////////////////////
 		// load a file as script and execute
-		if(verbosity) notice(NULL, "reading Zencode from file: %s", scriptfile);
+		if(verbosity) fprintf(stderr, "reading Zencode from file: %s\n", scriptfile);
 		load_file(script, fopen(scriptfile, "rb"));
 	} else {
 		////////////////////////
 		// get another argument from stdin
-		if(verbosity) act(NULL, "reading Zencode from stdin");
+		if(verbosity) fprintf(stderr, "reading Zencode from stdin\n");
 		load_file(script, stdin);
 		// func(NULL, "%s\n--",script);
 	}
 
 	// configure to parse Lua or Zencode
 	if(zencode) {
-		if(verbosity) notice(NULL, "Direct Zencode execution");
+		if(verbosity) fprintf(stderr, "Direct Zencode execution\n");
 		// func(NULL, script);
 	}
 
@@ -409,12 +409,12 @@ int main(int argc, char **argv) {
 			zen_exec_script(Z, script);
 		}
 	} else {
-		act(NULL, "protected mode (seccomp isolation) activated");
+		fprintf(stderr, "protected mode (seccomp isolation) activated\n");
 		if (fork() == 0) {
 #   ifdef ARCH_LINUX /* LINUX engages SECCOMP. */
 			if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) {
 
-				zerror(Z->lua, "Seccomp fail to set no_new_privs: %s", strerror(errno));
+				fprintf(stderr, "Seccomp fail to set no_new_privs: %s\n", strerror(errno));
 				zen_teardown(Z);
 
 				cli_free_buffers();
@@ -422,14 +422,14 @@ int main(int argc, char **argv) {
 			}
 			if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &strict)) {
 
-				zerror(Z->lua, "Seccomp fail to install filter: %s", strerror(errno));
+				fprintf(stderr, "Seccomp fail to install filter: %s\n", strerror(errno));
 				zen_teardown(Z);
 
 				cli_free_buffers();
 				return EXIT_FAILURE;
 			}
 #   endif /* ARCH_LINUX */
-			if(verbosity) act(NULL, "starting execution.");
+			if(verbosity) fprintf(stderr, "starting execution.\n");
 			int exitcode;
 			if(zencode) {
 				exitcode = zen_exec_zencode(Z, script);
@@ -447,9 +447,9 @@ int main(int argc, char **argv) {
 		if (WIFEXITED(status)) {
 			retval = WEXITSTATUS(status);
 			if (retval == 0)
-				if(verbosity) notice(NULL, "Execution completed.");
+				if(verbosity) fprintf(stderr, "Execution completed.\n");
 		} else if (WIFSIGNALED(status)) {
-			notice(NULL, "Execution interrupted by signal %d.", WTERMSIG(status));
+			fprintf(stderr, "Execution interrupted by signal %d.\n", WTERMSIG(status));
 		}
 	}
 #endif /* POSIX */
@@ -460,7 +460,7 @@ int main(int argc, char **argv) {
 		// measure and report time of execution
 		clock_gettime(CLOCK_MONOTONIC, &after);
 		long musecs = (after.tv_sec - before.tv_sec) * 1000000L;
-		act(NULL,"Time used: %lu", ( ((after.tv_nsec - before.tv_nsec) / 1000L) + musecs) );
+		fprintf(stderr,"Time used: %lu\n", ( ((after.tv_nsec - before.tv_nsec) / 1000L) + musecs) );
 	}
 
 	cli_free_buffers();
