@@ -101,7 +101,8 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 		case CLEX_id:
 			if(strcasecmp(lex.string,"debug")  ==0) { curconf = VERBOSE; break; } // bool
 			if(strcasecmp(lex.string,"verbose")==0) { curconf = VERBOSE; break; }
-			if(strcasecmp(lex.string,"rngseed")  ==0) { curconf = RNGSEED;   break; } // str
+			if(strcasecmp(lex.string,"rngseed")==0) { curconf = RNGSEED; break; } // str
+			if(strcasecmp(lex.string,"logfmt") ==0) { curconf = LOGFMT;  break; } // str
 			if(curconf==RNGSEED) {
 				int len = strlen(lex.string);
 				if( len-4 != RANDOM_SEED_LEN *2) { // hex doubles size
@@ -120,7 +121,20 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 				ZZ->zconf_rngseed[(RANDOM_SEED_LEN*2)] = 0x0;
 				break;
 			}
-
+			if(curconf==LOGFMT) {
+			  int len = strlen(lex.string);
+			  if( len != 4) { // must be 4 chars
+				zerror(NULL, "Invalid length of log format: %u (must be 4)",len);
+				return 0;
+			  }
+			  if(strncasecmp(lex.string, "json", 4) == 0) ZZ->logformat = JSON;
+			  else if(strncasecmp(lex.string, "text", 4) == 0) ZZ->logformat = TEXT;
+			  else {
+				zerror(NULL, "Invalid log format string: %s",lex.string);
+				return 0;
+			  }
+			  break;
+			}
 			// free(lexbuf);
 			zerror(NULL, "Invalid configuration: %s", lex.string);
 			curconf = NIL;

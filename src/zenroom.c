@@ -100,29 +100,29 @@ int zen_init_pmain(lua_State *L) { // protected mode init
 	// initialise global variables
 #if defined(VERSION)
 	zen_setenv(L, "VERSION", VERSION);
-	act(NULL,"Release version: %s", VERSION);
+	act(L,"Release version: %s", VERSION);
 #endif
 #if defined(COMMIT)
 	zen_setenv(L, "COMMIT", COMMIT);
-	act(NULL,"Build commit hash: %s", COMMIT);
+	act(L,"Build commit hash: %s", COMMIT);
 #endif
 #if defined(BRANCH)
 	zen_setenv(L, "BRANCH", BRANCH);
-	func(NULL,"Build branch: %s", BRANCH);
+	func(L,"Build branch: %s", BRANCH);
 #endif
 #if defined(ARCH)
 	zen_setenv(L, "ARCH", ARCH);
-	func(NULL,"Build architecture: %s", ARCH);
+	func(L,"Build architecture: %s", ARCH);
 #endif
 #define STRINGIZE(x) #x
 #define STRINGIZE_VALUE_OF(x) STRINGIZE(x)
 #if defined(MAKETARGET)
 	zen_setenv(L, "MAKETARGET", MAKETARGET);
-	func(NULL,"Build target: %s", MAKETARGET);
+	func(L,"Build target: %s", MAKETARGET);
 #endif
 #if defined(CFLAGS)
 	zen_setenv(L, "CFLAGS", STRINGIZE_VALUE_OF(CFLAGS));
-	func(NULL,"Build CFLAGS: %s", STRINGIZE_VALUE_OF(CFLAGS));
+	func(L,"Build CFLAGS: %s", STRINGIZE_VALUE_OF(CFLAGS));
 #endif
 #if defined(GITLOG)
 	zen_setenv(L, "GITLOG", GITLOG);
@@ -174,6 +174,7 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	// set zero rngseed as config flag
 	ZZ->zconf_rngseed[0] = '\0';
 	ZZ->exitcode = 1; // success
+	ZZ->logformat = JSON;
 
 	if(conf) {
 		if( ! zen_conf_parse(ZZ, conf) ) { // stb parsing
@@ -181,6 +182,9 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 			return(NULL);
 		}
 	}
+
+	// init log format if needed
+	if(ZZ->logformat == JSON) json_start(ZZ, "");
 
 	// use RNGseed from configuration if present (deterministic mode)
 	if(ZZ->zconf_rngseed[0] != 0x0) {
@@ -191,6 +195,7 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	} else {
 		func(NULL, "RNG seed not found in configuration");
 	}
+
 	// initialize the random generator
 	ZZ->random_generator = rng_alloc(ZZ);
 
@@ -245,8 +250,8 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 }
 
 void zen_teardown(zenroom_t *ZZ) {
-	notice(NULL,"Zenroom teardown.");
-	act(NULL,"Memory used: %u KB",
+	notice(ZZ->lua,"Zenroom teardown.");
+	act(ZZ->lua,"Memory used: %u KB",
 	    lua_gc(ZZ->lua,LUA_GCCOUNT,0));
 
 	// stateful RNG instance for deterministic mode
@@ -279,11 +284,13 @@ void zen_teardown(zenroom_t *ZZ) {
 	int mi_stats = (int) (ZZ->debuglevel > 2);
 #endif
 
-	free(ZZ);
-
 #ifdef MIMALLOC
 	if(mi_stats>0) mi_stats_print(NULL);
 #endif
+
+	if(ZZ->logformat == JSON) json_end(ZZ, "");
+
+	free(ZZ);
 
 }
 

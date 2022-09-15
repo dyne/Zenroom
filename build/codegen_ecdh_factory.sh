@@ -50,7 +50,7 @@ void ecdh_init(ecdh *ECDH) {
         BIG_${BN}_toBytes(PRIME, tmp);
         ECDH->prime = PRIME;
         ECDH->mod_size = MODBYTES_${BN};
-	act(NULL,"ECDH curve is ${CN}");
+//	act(NULL,"ECDH curve is ${CN}");
 }
 
 /*

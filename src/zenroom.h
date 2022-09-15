@@ -57,14 +57,14 @@ int zenroom_hash_final(const char *hash_ctx);
 
 // conf switches
 typedef enum { STB, MUTT, LIBC } printftype;
-typedef enum { NIL, VERBOSE, COLOR, RNGSEED } zconf;
+typedef enum { NIL, VERBOSE, COLOR, RNGSEED, LOGFMT } zconf;
 
 // zenroom context, also available as "_Z" global in lua space
 // contents are opaque in lua and available only as lightuserdata
 typedef struct {
 	void *lua; // (lua_State*)
-        void *zstd_c; // ZSTD context
-        void *zstd_d;
+    void *zstd_c; // ZSTD context
+    void *zstd_d;
 
 	char *stdout_buf;
 	size_t stdout_len;
@@ -78,17 +78,22 @@ typedef struct {
 
 	void *random_generator; // cast to RNG
 	char random_seed[RANDOM_SEED_LEN+4];
-        char runtime_random256[256+4];
+    char runtime_random256[256+4];
 	int random_external; // signal when rngseed is external
 
 	int debuglevel;
 	int errorlevel;
+    int logformat;
 	void *userdata; // anything passed at init (reserved for caller)
 
   	char zconf_rngseed[(RANDOM_SEED_LEN*2)+4]; // 0x and terminating \0
 
 	int exitcode;
 } zenroom_t;
+
+// LOG FORMATS
+#define TEXT 0
+#define JSON  1
 
 // EXIT CODES
 #define ERR_INIT 4
