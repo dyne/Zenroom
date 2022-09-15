@@ -50,11 +50,7 @@
 // hex2oct used to import hex sequence into rng seed
 #include <encoding.h>
 
-// alternative print functions
-#define STB_SPRINTF_IMPLEMENTATION 1
-#define STB_SPRINTF_NOFLOAT 1
-#define STB_SPRINTF_DECORATE(name) z_##name
-#include <stb_sprintf.h>
+// print functions
 #include <mutt_sprintf.h>
 
 // zstd
@@ -177,7 +173,6 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	ZZ->zstd_d = NULL;
 	// set zero rngseed as config flag
 	ZZ->zconf_rngseed[0] = '\0';
-	ZZ->zconf_printf = LIBC;
 	ZZ->exitcode = 1; // success
 
 	if(conf) {
@@ -185,30 +180,6 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 			zerror(NULL, "Fatal error");
 			return(NULL);
 		}
-	}
-
-	switch(ZZ->zconf_printf) {
-	case STB:
-		ZZ->sprintf = &z_sprintf;
-		ZZ->snprintf = (snprintf_t)&z_snprintf;
-		ZZ->vsprintf = &z_vsprintf;
-		ZZ->vsnprintf = (vsnprintf_t)&z_vsnprintf;
-		act(NULL,"STB print functions in use");
-		break;
-	case MUTT:
-		ZZ->sprintf = &sprintf; // TODO: mutt based
-		ZZ->vsprintf = &vsprintf;
-		ZZ->snprintf = &mutt_snprintf;
-		ZZ->vsnprintf = &mutt_vsnprintf;
-		act(NULL,"MUTT print functions in use");
-		break;
-	default: // LIBC_PRINTF
-		ZZ->sprintf = &sprintf;
-		ZZ->snprintf = &snprintf;
-		ZZ->vsprintf = &vsprintf;
-		ZZ->vsnprintf = &vsnprintf;
-		func(NULL,"LIBC print functions in use");
-		break;
 	}
 
 	// use RNGseed from configuration if present (deterministic mode)
@@ -329,7 +300,7 @@ int zen_exec_zencode(zenroom_t *ZZ, const char *script) {
 	char *zscript = malloc(MAX_ZENCODE);
 	lua_State* L = (lua_State*)ZZ->lua;
 	// introspection on code being executed
-	(*ZZ->snprintf)(zscript,MAX_ZENCODE-1,
+	mutt_snprintf(zscript,MAX_ZENCODE-1,
 	        "local _res, _err\n"
 		"_res, _err = pcall( function() ZEN:begin() end)\n"
 		"if not _res then exitcode(4) ZEN.OK = false error('INIT: '.._err,2) end\n"

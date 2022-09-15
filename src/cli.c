@@ -337,7 +337,7 @@ int main(int argc, char **argv) {
 	if(introspect[0]!='\0') {
 		static char zscript[MAX_ZENCODE];
 		notice(NULL, "Documentation for scenario: %s",introspect);
-		(*Z->snprintf)(zscript,MAX_ZENCODE-1,
+		snprintf(zscript,MAX_ZENCODE-1,
 		               "function Given(text, fn) ZEN.given_steps[text] = true end\n"
 		               "function When(text, fn) ZEN.when_steps[text] = true end\n"
 		               "function Then(text, fn) ZEN.then_steps[text] = true end\n"

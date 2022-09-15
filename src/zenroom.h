@@ -55,15 +55,9 @@ int zenroom_hash_final(const char *hash_ctx);
 
 #define RANDOM_SEED_LEN 64
 
-#include <stdarg.h>
-typedef int (*sprintf_t)( char * buf, char const * fmt, ... );
-typedef int (*snprintf_t)( char * buf, size_t count, char const * fmt, ... );
-typedef int (*vsprintf_t)( char * buf, char const * fmt, va_list va );
-typedef int (*vsnprintf_t)( char * buf, size_t count, char const * fmt, va_list va );
-
 // conf switches
 typedef enum { STB, MUTT, LIBC } printftype;
-typedef enum { NIL, VERBOSE, COLOR, RNGSEED, PRINTF } zconf;
+typedef enum { NIL, VERBOSE, COLOR, RNGSEED } zconf;
 
 // zenroom context, also available as "_Z" global in lua space
 // contents are opaque in lua and available only as lightuserdata
@@ -91,13 +85,7 @@ typedef struct {
 	int errorlevel;
 	void *userdata; // anything passed at init (reserved for caller)
 
-	sprintf_t sprintf;
-	snprintf_t snprintf;
-	vsprintf_t vsprintf;
-	vsnprintf_t vsnprintf;
-
   	char zconf_rngseed[(RANDOM_SEED_LEN*2)+4]; // 0x and terminating \0
-  	printftype zconf_printf;
 
 	int exitcode;
 } zenroom_t;

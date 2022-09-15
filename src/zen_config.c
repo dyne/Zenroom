@@ -85,7 +85,6 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 	char lexbuf[MAX_CONFIG];
 	zconf curconf = NIL;
 	// ZZ->zconf_rngseed[0] = '\0';
-	// ZZ->zconf_printf = LIBC;
 
 	// char *lexbuf = (char*)malloc(MAX_CONFIG);
 	stb_c_lexer_init(&lex, configuration, configuration+len, lexbuf, MAX_CONFIG);
@@ -103,7 +102,6 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 			if(strcasecmp(lex.string,"debug")  ==0) { curconf = VERBOSE; break; } // bool
 			if(strcasecmp(lex.string,"verbose")==0) { curconf = VERBOSE; break; }
 			if(strcasecmp(lex.string,"rngseed")  ==0) { curconf = RNGSEED;   break; } // str
-			if(strcasecmp(lex.string,"print") ==0) { curconf = PRINTF;   break; } // str
 			if(curconf==RNGSEED) {
 				int len = strlen(lex.string);
 				if( len-4 != RANDOM_SEED_LEN *2) { // hex doubles size
@@ -120,18 +118,6 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 				// copy string and null terminate
 				memcpy(ZZ->zconf_rngseed, lex.string+4, RANDOM_SEED_LEN*2);
 				ZZ->zconf_rngseed[(RANDOM_SEED_LEN*2)] = 0x0;
-				break;
-			}
-
-			if(curconf==PRINTF) {
-				if(strcasecmp(lex.string,"stb") == 0) ZZ->zconf_printf = STB;
-				else if(strcasecmp(lex.string,"sys") == 0) ZZ->zconf_printf = LIBC;
-				else if(strcasecmp(lex.string,"mutt") == 0) ZZ->zconf_printf = MUTT;
-				else {
-					zerror(NULL, "Invalid print function: %s", lex.string);
-					// free(lexbuf);
-					return 0;
-				}
 				break;
 			}
 
