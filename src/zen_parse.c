@@ -154,7 +154,7 @@ static int lua_unserialize_json(lua_State* L) {
 		}
 	}
 	// should never be here
-	lerror(L, "JSON as malformed beginning or end");
+	lerror(L, "JSON has malformed beginning or end");
 	return 0;
 }
 

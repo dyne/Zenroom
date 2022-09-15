@@ -114,12 +114,33 @@ void func(void *L, const char *format, ...) {
 
 #include <mutt_sprintf.h>
 
+void json_start(void *Z, const char *format, ...) {
+  char pfx[MAX_ERRMSG];
+  va_list arg;
+  mutt_snprintf(pfx, MAX_ERRMSG-1, "{[\"ZENROOM JSON LOG START\",\n");
+  va_start(arg, format);
+  zen_write_err_va(Z, pfx, arg);
+  va_end(arg);
+}
+
+void json_end(void *Z, const char *format, ...) {
+  char pfx[MAX_ERRMSG];
+  va_list arg;
+  mutt_snprintf(pfx, MAX_ERRMSG-1, "\"ZENROOM JSON LOG END\"]}\n");
+  va_start(arg, format);
+  zen_write_err_va(Z, pfx, arg);
+  va_end(arg);
+}
+
 void notice(void *L, const char *format, ...) {
   char pfx[MAX_ERRMSG];
   Z(L);
   if(Z && Z->debuglevel<1) return;
 	va_list arg;
-	mutt_snprintf(pfx, MAX_STRING-1, "[*] %s\n",format);
+	if(Z->logformat == JSON)
+	  mutt_snprintf(pfx, MAX_ERRMSG-1, "\"[*] %s\",\n",format);
+	else
+	  mutt_snprintf(pfx, MAX_ERRMSG-1, "[*] %s\n",format);
 	va_start(arg, format);
 	zen_write_err_va(Z, pfx, arg);
 	va_end(arg);
@@ -131,7 +152,10 @@ void func(void *L, const char *format, ...) {
   if(!Z) return; // without this a lot of debug is always printed
   if(Z && Z->debuglevel<3) return;
 	va_list arg;
-	mutt_snprintf(pfx, MAX_STRING-1, "[D] %s\n",format);
+	if(Z->logformat == JSON)
+	  mutt_snprintf(pfx, MAX_ERRMSG-1, "\"[D] %s\",\n",format);
+	else
+	  mutt_snprintf(pfx, MAX_ERRMSG-1, "[D] %s\n",format);
 	va_start(arg, format);
 	zen_write_err_va(Z, pfx, arg);
 	va_end(arg);
@@ -143,7 +167,10 @@ void zerror(void *L, const char *format, ...) {
 	char pfx[MAX_ERRMSG];
 	Z(L);
 	va_list arg;
-	mutt_snprintf(pfx, MAX_STRING-1, "[!] %s\n",format);
+	if(Z->logformat == JSON)
+	  mutt_snprintf(pfx, MAX_ERRMSG-1, "\"[!] %s\",\n",format);
+	else
+	  mutt_snprintf(pfx, MAX_ERRMSG-1, "[!] %s\n",format);
 	va_start(arg, format);
 	zen_write_err_va(Z, pfx, arg);
 	va_end(arg);
@@ -154,7 +181,10 @@ void act(void *L, const char *format, ...) {
   Z(L);
   if(Z && Z->debuglevel<2) return;
 	va_list arg;
-	mutt_snprintf(pfx, MAX_STRING-1, " .  %s\n",format);
+	if(Z->logformat == JSON)
+	  mutt_snprintf(pfx, MAX_ERRMSG-1, "\" .  %s\",\n",format);
+	else
+	  mutt_snprintf(pfx, MAX_ERRMSG-1, " .  %s\n",format);
 	va_start(arg, format);
 	zen_write_err_va(Z, pfx, arg);
 	va_end(arg);
@@ -165,7 +195,10 @@ void warning(void *L, const char *format, ...) {
   Z(L);
   if(Z && Z->debuglevel<2) return;
 	va_list arg;
-	mutt_snprintf(pfx, MAX_STRING-1, "[W] %s\n",format);
+	if(Z->logformat == JSON)
+	  mutt_snprintf(pfx, MAX_ERRMSG-1, "\"[W] %s\",\n",format);
+	else
+	  mutt_snprintf(pfx, MAX_ERRMSG-1, "[W] %s\n",format);
 	va_start(arg, format);
 	zen_write_err_va(Z, pfx, arg);
 	va_end(arg);

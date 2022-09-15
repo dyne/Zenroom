@@ -40,11 +40,8 @@ void zerror(void *L, const char *format, ...);
 void act(void *L, const char *format, ...);
 void warning(void *L, const char *format, ...);
 
-// from stb_sprintf.h
-int z_sprintf(char *buf, char const *fmt, ...);
-int z_snprintf(char *buf, int count, char const *fmt, ...);
-int z_vsprintf(char *buf, char const *fmt, va_list va);
-int z_vsnprintf(char *buf, int count, char const *fmt, va_list va);
+void json_start(void *Z, const char *format, ...);
+void json_end(void *Z, const char *format, ...);
 
 #define ERROR() zerror(0, "Error in %s",__func__)
 #define SAFE(x) if(!x) lerror(L, "NULL variable in %s",__func__)
