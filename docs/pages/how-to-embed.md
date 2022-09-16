@@ -1,38 +1,60 @@
 # Embedding Zenroom
 
-Zenroom is designed to facilitate embedding into other native applications and high-level scripting languages. The stable releases distribute compiled library components for Apple/iOS and Google/Android platforms, as well MS/Windows DLL. Golang bindings and a Jupyter kernel are also in experimental phase.
+Zenroom is designed to facilitate embedding into other native applications and high-level scripting languages. The stable releases distribute compiled library components for Apple/iOS and Google/Android platforms, as well MS/Windows DLL, Apple/OSX shared library and Javascript/WASM.
 
-To call Zenroom from an host program is very simple, since there isn't an API of calls, but a single call to execute scripts and return their results. The call is called `zenroom_exec` and prints results to the "stderr/stdout" terminal output. Its prototype is common to all libraries:
+To call Zenroom from an host program is very simple: there isn't an API to learn, but a single call to execute scripts and return their results. The call is called `zencode_exec` and prints results to the "stderr/stdout" terminal output. It will work more or less the same everywhere:
 
 ```c
-int zenroom_exec(char *script, char *conf, char *keys,
+int zencode_exec(char *script,
+                 char *conf,
+				 char *keys,
                  char *data);
 ```
-The input buffers are all read-only, here their functions:
-- `script`: a long string containing the script to be executed
-- `conf`: a short configuration string (for now only `umm` supported as value)
-- `keys`: a string often JSON formatted that contains keys (sensitive information)
-- `data`: a string (also JSON formatted) that contains data
+The input string buffers will not be modified by the call, they are:
+- `script`: the [Zencode script](https://dev.zenroom.org/#/pages/zencode-cookbook-intro) to be executed
+- `conf`: a series of comma separated key=value pairs
+- `keys`: JSON formatted data passed as input to the script
+- `data`: JSON formatted data passed as input to the script
 
-In addition to this function there is another one that copies results (error messages and printed output) inside memory buffers:
+This is all you need to know to start using Zenroom in your software, to try it out you may want to jump directly to the [specific instructions for language bindings](https://dev.zenroom.org/#/pages/how-to-embed?id=language-bindings).
+
+## Configuration directives
+
+The list of accepted configurations in `conf` argument are:
+
+- `debug` is the level of log verbosity, default is `debug=1`
+- `rngseed` is used to provide an external random seed for fully deterministic behaviour, it accepts an hexadecimal string representing a series of 64 bytes (128 chars in total) prefixed by `hex:`. For example: `rngseed=hex:000000...` up to 128 zeroes
+- `logfmt` is the format of the error logs, it can be `text` or `json`, the default is `logfmt=text`
+
+## Extended API
+
+In addition to the main `zencode_exec` function there is another one that copies results (error messages and printed output) inside memory buffers pre-allocated by the caller, instead of stdin and stdout file descriptors:
 ```c
-int zenroom_exec_tobuf(char *script, char *conf, char *keys,
-                       char *data,
+int zenroom_exec_tobuf(char *script, char *conf,
+                       char *keys,   char *data,
                        char *stdout_buf, size_t stdout_len,
                        char *stderr_buf, size_t stderr_len);
 ```
-In addition to the previously explained arguments, the new ones are:
-- `stdout_buf`: pre-allocated buffer by the caller where to copy stdout
-- `stdout_len`: maximum length of the pre-allocated stdout buffer
-- `stderr_buf`: pre-allocated buffer by the called where to copy stderr
-- `stderr_len`: maximum length of the pre-allocated stderr buffer
+The new arguments are:
+- `stdout_buf`: pre-allocated buffer where to write data output
+- `stdout_len`: maximum length of the data output buffer
+- `stderr_buf`: pre-allocated buffer where to write error logs
+- `stderr_len`: maximum length of the error logs buffer
 
-At last a third call is provided not to execute the script, but to obtain its JSON formatted Abstract Syntax Tree (AST) inside a provided buffer:
+More internal functions are made available to C/C++ applications, breaking up the execution in a typical init / exec / teardown sequence:
+
 ```c
-int zenroom_parse_ast(char *script,
-                      char *stdout_buf, size_t stdout_len,
-                      char *stderr_buf, size_t stderr_len);
+zenroom_t *zen_init(const char *conf, char *keys, char *data);
+int  zen_exec_zencode(zenroom_t *Z, const char *script);
+void zen_teardown(zenroom_t *zenroom);
 ```
+
+In addition to these calls there is also one that allows to execute directly a limited set of Lua instructions using the Zenroom VM, excluding those accessing network and filesystem (`os` etc.)
+```c
+int zen_exec_script(zenroom_t *Z, const char *script);
+```
+
+For more information see the [Zenroom header file](https://github.com/dyne/Zenroom/blob/master/src/zenroom.h) which is the only header you'll need to include in an application linking to the Zenroom static or shared library.
 
 # Language bindings
 
