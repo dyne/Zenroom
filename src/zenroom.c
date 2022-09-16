@@ -174,7 +174,7 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	// set zero rngseed as config flag
 	ZZ->zconf_rngseed[0] = '\0';
 	ZZ->exitcode = 1; // success
-	ZZ->logformat = JSON;
+	ZZ->logformat = TEXT;
 
 	if(conf) {
 		if( ! zen_conf_parse(ZZ, conf) ) { // stb parsing
