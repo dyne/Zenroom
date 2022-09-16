@@ -80,8 +80,8 @@ extern int zen_setenv(lua_State *L, char *key, char *val);
 // This function exits the process on failure.
 void load_file(char *dst, FILE *fd) {
 	char *firstline = NULL;
-	long file_size = 0L;
-	size_t offset = 0;
+	unsigned int file_size = 0L;
+	unsigned int offset = 0;
 	size_t bytes = 0;
 	if(!fd) {
 		fprintf(stderr, "Error opening %s\n", strerror(errno));
@@ -255,8 +255,8 @@ int main(int argc, char **argv) {
 			zencode = 1;
 			interactive = 0;
 			break;
-		case '?': fprintf(stderr, help); cli_free_buffers(); return EXIT_FAILURE;
-		default:  fprintf(stderr, help); cli_free_buffers(); return EXIT_FAILURE;
+		case '?': fprintf(stderr, "%s", help); cli_free_buffers(); return EXIT_FAILURE;
+		default:  fprintf(stderr, "%s", help); cli_free_buffers(); return EXIT_FAILURE;
 		}
 	}
 
