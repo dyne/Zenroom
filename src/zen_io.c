@@ -125,17 +125,6 @@ int zen_write_out_va(zenroom_t *Z, const char *fmt, va_list va) {
 	}
 	if(!res) res = vfprintf(stdout,fmt,va); // fallback no configured buffer
 	return(res);
-	// size_t len = 0;
-	// if(!Z) len = vfprintf(stdout,fmt,va);
-	// if(!len && Z->stdout_buf) {
-	// 	char *out = Z->stdout_buf;
-	// 	len = (*Z->vsnprintf)(out+Z->stdout_pos,
-	// 	                  Z->stdout_len-Z->stdout_pos,
-	// 	                  fmt, va);
-	// 	Z->stdout_pos+=len;
-	// }
-	// if(!len) len = vfprintf(stdout,fmt,va);
-	// return len;
 }
 
 int zen_write_err(zenroom_t *Z, const char *fmt, ...) {
@@ -258,33 +247,15 @@ static int zen_write (lua_State *L) {
 	size_t pos = 0;
 	int nargs = lua_gettop(L) +1;
 	int arg = 0;
-	char *s;
+	char *s = NULL;
 	for (; nargs--; arg++) {
 		size_t len;
-		const char *s = lua_tolstring(L, arg, &len);
+		s = lua_tolstring(L, arg, &len);
 	}
 	EM_ASM_({Module.print(UTF8ToString($0))}, s);
 	lua_pushboolean(L, 1);
 	return 1;
 }
-
-// static int zen_error (lua_State *L) {
-// 	size_t pos = 0;
-// 	size_t len = 0;
-// 	int n = lua_gettop(L);  /* number of arguments */
-// 	int i;
-// 	lua_getglobal(L, "tostring");
-// 	out[0] = '['; out[1] = '!';	out[2] = ']'; out[3] = ' ';	pos = 4;
-// 	for (i=1; i<=n; i++) {
-// 		const char *s = lua_print_format(L, i, &len);
-// 		if (i>1) { out[pos]='\t'; pos++; }
-// 		(*Z->snprintf)(out+pos,MAX_JSBUF-pos,"%s",s);
-// 		pos+=len;
-// 		lua_pop(L, 1);  /* pop result */
-// 	}
-// 	EM_ASM_({Module.printErr(UTF8ToString($0))}, out);
-// 	return 0;
-// }
 
 static int zen_warn (lua_State *L) {
 	size_t pos = 0;
@@ -297,7 +268,7 @@ static int zen_warn (lua_State *L) {
 	for (i=1; i<=n; i++) {
 		const char *s = lua_print_format(L, i, &len);
 		if (i>1) { out[pos]='\t'; pos++; }
-		(*Z->snprintf)(out+pos,MAX_JSBUF-pos,"%s\n",s);
+		mutt_snprintf(out+pos,MAX_JSBUF-pos,"%s\n",s);
 		pos+=len;
 		lua_pop(L, 1);  /* pop result */
 	}
@@ -316,7 +287,7 @@ static int zen_act (lua_State *L) {
 	for (i=1; i<=n; i++) {
 		const char *s = lua_print_format(L, i, &len);
 		if (i>1) { out[pos]='\t'; pos++; }
-		(*Z->snprintf)(out+pos,MAX_JSBUF-pos,"%s\n",s);
+		mutt_snprintf(out+pos,MAX_JSBUF-pos,"%s\n",s);
 		pos+=len;
 		lua_pop(L, 1);  /* pop result */
 	}
