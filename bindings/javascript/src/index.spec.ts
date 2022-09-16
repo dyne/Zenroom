@@ -68,6 +68,8 @@ test("does run zencode", async (t) => {
   t.is(result, "[]");
 });
 
+// this breaks with json log format
+// TODO: test both text and json logs
 test("error format contains newlines", async t => {
   try {
     await zencode_exec(`a`);
