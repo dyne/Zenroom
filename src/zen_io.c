@@ -175,79 +175,57 @@ const char *lua_print_format(lua_State *L,
 #ifdef __EMSCRIPTEN__
 static char out[MAX_JSBUF];
 static int zen_print (lua_State *L) {
-	int nargs = lua_gettop(L) +1;
-	int arg = 0;
-	const char *s;
-	for (; nargs--; arg++) {
-		size_t len;
-		s = lua_tolstring(L, arg, &len);
-		EM_ASM_({Module.print(UTF8ToString($0))}, s);
-	}
-	return 0;
+  octet *o = o_arg(L, 1); // it may be null (empty string)
+  if(!o) return 0;
+  o->val[o->len+1] = '\n'; // add newline
+  o->val[o->len+2] = 0x0; // add string termination
+  // octet safety buffer allows this: o->val = malloc(size +0x0f);
+  EM_ASM_({Module.print(UTF8ToString($0))}, o->val);
+  return 0;
 }
+
 static int zen_printerr (lua_State *L) {
-	size_t pos = 0;
-	int nargs = lua_gettop(L) +1;
-	int arg = 0;
-	char *s;
-	for (; nargs--; arg++) {
-		size_t len;
-		s = lua_tolstring(L, arg, &len);
-		EM_ASM_({Module.printErr(UTF8ToString($0))}, s);
-	}
-	return 0;
+  octet *o = o_arg(L, 1); // it may be null (empty string)
+  if(!o) return 0;
+  o->val[o->len+1] = '\n'; // add newline
+  o->val[o->len+2] = 0x0; // add string termination
+  // octet safety buffer allows this: o->val = malloc(size +0x0f);
+  EM_ASM_({Module.printErr(UTF8ToString($0))}, o->val);
+  return 0;
 }
 
 static int zen_write (lua_State *L) {
-	size_t pos = 0;
-	int nargs = lua_gettop(L) +1;
-	int arg = 0;
-	char *s = NULL;
-	for (; nargs--; arg++) {
-		size_t len;
-		s = lua_tolstring(L, arg, &len);
-		EM_ASM_({Module.print(UTF8ToString($0))}, s);
-	}
-	lua_pushboolean(L, 1);
-	return 1;
+  octet *o = o_arg(L, 1); // it may be null (empty string)
+  if(!o) return 0;
+  o->val[o->len+1] = 0x0; // add string termination
+  // octet safety buffer allows this: o->val = malloc(size +0x0f);
+  EM_ASM_({Module.print(UTF8ToString($0))}, o->val);
+  return 0;
 }
 
 static int zen_warn (lua_State *L) {
-	size_t pos = 0;
-	size_t len = 0;
-	int n = lua_gettop(L);  /* number of arguments */
-	int i;
-	lua_getglobal(L, "tostring");
-	out[0] = '['; out[1] = 'W';	out[2] = ']'; out[3] = ' ';	pos = 4;
-	for (i=1; i<=n; i++) {
-		const char *s = lua_print_format(L, i, &len);
-		if (i>1) { out[pos]='\t'; pos++; }
-		mutt_snprintf(out+pos,MAX_JSBUF-pos,"%s\n",s);
-		pos+=len;
-		lua_pop(L, 1);  /* pop result */
-	}
-	EM_ASM_({Module.printErr(UTF8ToString($0))}, out);
-	return 0;
+  octet *o = o_arg(L, 1); // it may be null (empty string)
+  if(!o) return 0;
+  EM_ASM_({Module.printErr(UTF8ToString($0))}, "WARN ");
+  o->val[o->len+1] = '\n'; // add newline
+  o->val[o->len+2] = 0x0; // add string termination
+  // octet safety buffer allows this: o->val = malloc(size +0x0f);
+  EM_ASM_({Module.printErr(UTF8ToString($0))}, o->val);
+  return 0;
 }
 
 static int zen_act (lua_State *L) {
-	size_t pos = 0;
-	size_t len = 0;
-	int n = lua_gettop(L);  /* number of arguments */
-	int i;
-	lua_getglobal(L, "tostring");
-	out[0] = ' '; out[1] = '.';	out[2] = ' '; out[3] = ' ';	pos = 4;
-	for (i=1; i<=n; i++) {
-		const char *s = lua_print_format(L, i, &len);
-		if (i>1) { out[pos]='\t'; pos++; }
-		mutt_snprintf(out+pos,MAX_JSBUF-pos,"%s\n",s);
-		pos+=len;
-		lua_pop(L, 1);  /* pop result */
-	}
-	EM_ASM_({Module.printErr(UTF8ToString($0))}, out);
-	return 0;
+  octet *o = o_arg(L, 1); // it may be null (empty string)
+  if(!o) return 0;
+  EM_ASM_({Module.printErr(UTF8ToString($0))}, "INFO ");
+  o->val[o->len+1] = '\n'; // add newline
+  o->val[o->len+2] = 0x0; // add string termination
+  // octet safety buffer allows this: o->val = malloc(size +0x0f);
+  EM_ASM_({Module.printErr(UTF8ToString($0))}, o->val);
+  return 0;
 }
 /* }}} */
+
 #elif defined(ARCH_CORTEX)
 /* {{{ embedded (cortex) print functions */
 static int zen_print (lua_State *L) {
@@ -360,7 +338,7 @@ static int zen_print (lua_State *L) {
   octet *o = o_arg(L, 1); // it may be null (empty string)
   if (Z->stdout_buf) {
 	char *p = Z->stdout_buf+Z->stdout_pos;
-	if(!o) { p='\n'; Z->stdout_pos++; }
+	if(!o) { *p='\n'; Z->stdout_pos++; return 0; }
 	if (Z->stdout_pos+o->len+1 > Z->stdout_len)
 	  zerror(L, "No space left in output buffer");
 	memcpy(p, o->val, o->len);
@@ -379,7 +357,7 @@ static int zen_printerr(lua_State *L) {
   octet *o = o_arg(L, 1); // it may be null (empty string)
   if (Z->stderr_buf) {
 	char *p = Z->stderr_buf+Z->stderr_pos;
-	if(!o) { p='\n'; Z->stderr_pos++; }
+	if(!o) { *p='\n'; Z->stderr_pos++; return 0; }
 	if (Z->stderr_pos+o->len+1 > Z->stderr_len)
 	  zerror(L, "No space left in output buffer");
 	memcpy(p, o->val, o->len);
