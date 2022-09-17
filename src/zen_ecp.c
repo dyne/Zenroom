@@ -81,7 +81,6 @@ ecp* ecp_dup(lua_State *L, ecp* in) {
 }
 
 int ecp_destroy(lua_State *L) {
-	HERE();
 	ecp *e = ecp_arg(L, 1);
 	SAFE(e);
 	return 0;

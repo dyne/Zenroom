@@ -194,8 +194,6 @@ install:
 	install -p -s src/zenroom ${destbin}
 	install -d ${destdocs}/docs
 	if [ -d docs/website/site ]; then cd docs/website/site && cp -ra * ${destdocs}/docs/; cd -; fi
-	install -d ${destdocs}/examples \
-		&& cp -ra examples/* ${destdocs}/examples/
 	if [ -d docs/Zencode_Whitepaper.pdf ]; then cp -ra docs/Zencode_Whitepaper.pdf ${destdocs}/; fi
 	cp README.md ${destdocs}/README.txt
 	cp LICENSE.txt ${destdocs}/LICENSE.txt

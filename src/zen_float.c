@@ -130,7 +130,6 @@ float *new_float_from_octet(lua_State *L, octet* o) {
     @function F.new(octet)
 */
 static int newfloat(lua_State *L) {
-	HERE();
 	// number argument, import
         if(lua_isnumber(L, 1)) {
                 lua_Number number = lua_tonumber(L, 1);

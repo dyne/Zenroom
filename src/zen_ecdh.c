@@ -434,7 +434,6 @@ static int ecdh_dsa_verify_hashed(lua_State *L) {
    @treturn[1] octet containing the authentication tag (checksum)
 */
 static int ecdh_aead_encrypt(lua_State *L) {
-	HERE();
 	octet *k =  o_arg(L, 1); SAFE(k);
         // AES key size nk can be 16, 24 or 32 bytes
 	if(k->len > 32 || k->len < 16) {
@@ -473,7 +472,6 @@ static int ecdh_aead_encrypt(lua_State *L) {
 */
 
 static int ecdh_aead_decrypt(lua_State *L) {
-	HERE();
 	octet *k = o_arg(L, 1); SAFE(k);
 	if(k->len > 32 || k->len < 16) {
 		zerror(L, "ECDH.aead_decrypt accepts only keys of 16, 24, 32, this is %u", k->len);

@@ -69,7 +69,6 @@ fp12 *fp12_dup(lua_State *L, fp12 *s) {
 }
 
 int fp12_destroy(lua_State *L) {
-	HERE();
 	fp12 *c = fp12_arg(L,1);
 	SAFE(c);
 

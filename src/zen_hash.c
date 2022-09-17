@@ -73,7 +73,6 @@ extern void RMD160_hash(dword *MDbuf, byte *hashcode);
 */
 
 hash* hash_new(lua_State *L, const char *hashtype) {
-	HEREs(hashtype);
 	hash *h = lua_newuserdata(L, sizeof(hash));
 	if(!h) {
 		lerror(L, "Error allocating new hash generator in %s",__func__);
@@ -144,8 +143,7 @@ hash* hash_arg(lua_State *L, int n) {
 
 int hash_destroy(lua_State *L) {
 	hash *h = hash_arg(L,1); SAFE(h);
-	HEREs(h->name);
-	if(h->rng) free(h->rng);
+		if(h->rng) free(h->rng);
 	if(h->algo == _SHA256)
 		free(h->sha256);
 	else if (h->algo == _SHA512)
@@ -207,7 +205,6 @@ static int hash_process(lua_State *L) {
 	hash *h = hash_arg(L,1); SAFE(h);
 	octet *o = o_arg(L,2); SAFE(o);
 	octet *res = o_new(L,h->len); SAFE(res);
-	HEREs(h->name);
 	_feed(h, o);
 	_yeld(h, res);
 	res->len = h->len;
@@ -224,7 +221,6 @@ static int hash_process(lua_State *L) {
 static int hash_feed(lua_State *L) {
 	hash *h = hash_arg(L,1); SAFE(h);
 	octet *o = o_arg(L,2); SAFE(o);
-	HEREs(h->name);
 	_feed(h, o);
 	return 0;
 }
@@ -239,9 +235,7 @@ static int hash_feed(lua_State *L) {
 */
 static int hash_yeld(lua_State *L) {
 	hash *h = hash_arg(L,1); SAFE(h);
-	HEREs(h->name);
 	octet *res = o_new(L,h->len); SAFE(res);
-	HEREs(h->name);
 	_yeld(h, res);
 	res->len = h->len;
 	return 1;

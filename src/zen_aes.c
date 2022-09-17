@@ -69,7 +69,6 @@ extern void AES_GCM_DECRYPT(octet *K, octet *IV, octet *H, octet *C, octet *P, o
    @treturn[1] octet containing the authentication tag (checksum)
 */
 static int gcm_encrypt(lua_State *L) {
-	HERE();
 	octet *k =  o_arg(L, 1); SAFE(k);
         // AES key size nk can be 16, 24 or 32 bytes
 	if(k->len > 32 || k->len < 16) {
@@ -108,7 +107,6 @@ static int gcm_encrypt(lua_State *L) {
 */
 
 static int gcm_decrypt(lua_State *L) {
-	HERE();
 	octet *k = o_arg(L, 1); SAFE(k);
 	if(k->len > 32 || k->len < 16) {
 		zerror(L, "ECDH.aead_decrypt accepts only keys of 16, 24, 32, this is %u", k->len);
@@ -133,7 +131,6 @@ static int gcm_decrypt(lua_State *L) {
 }
 
 static int ctr_process(lua_State *L) {
-	HERE();
 	amcl_aes a;
 	octet *key = o_arg(L, 1); SAFE(key);
 	if(key->len != 16 && key->len != 32) {
