@@ -126,7 +126,7 @@ extern const int8_t b58digits_map[];
 // extern const char b58digits_ordered[];
 int is_base58(lua_State *L, const char *in) {
 	if(!in) {
-		HEREs("null string in is_base58");
+		func(L,"null string in is_base58");
 		return 0; }
 	int c;
 	for(c=0; in[c]!='\0'; c++) {
@@ -209,13 +209,13 @@ octet* o_arg(lua_State *L,int n) {
 		size_t len; const char *str;
 		str = luaL_optlstring(L,n,NULL,&len);
 		if(!str || !len) {
-		  warning(L, "NULL octet from empty string");
+		  func(L, "NULL octet from empty string");
 		  return(NULL);
 		}
 		if(!len || len>MAX_OCTET) {
 			zerror(L, "invalid string size: %u", len);
 			lerror(L, "failed implicit conversion from string to octet");
-		return 0;
+			return NULL;
 		}
 		// fallback to a string
 		o = o_new(L, len+1); SAFE(o); // new

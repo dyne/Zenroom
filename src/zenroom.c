@@ -192,10 +192,10 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 		memset(ZZ->random_seed, 0x0, RANDOM_SEED_LEN);
 		int len = hex2buf(ZZ->random_seed, ZZ->zconf_rngseed);
 		fprintf(stderr,
-				"RNG seed converted from hex to %u bytes", len);
+				"RNG seed converted from hex to %u bytes\n", len);
 	} else {
 	  fprintf(stderr,
-			  "RNG seed not found in configuration");
+			  "RNG seed not found in configuration\n");
 	}
 
 	// initialize the random generator
@@ -205,7 +205,7 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	ZZ->lua = lua_newstate(zen_memory_manager, ZZ);
 	if(!ZZ->lua) {
 	  fprintf(stderr, "%s: %s", __func__,
-			  "Lua newstate creation failed");
+			  "Lua newstate creation failed\n");
 	  zen_teardown(ZZ);
 	  return NULL;
 	}

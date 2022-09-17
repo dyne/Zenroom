@@ -167,7 +167,6 @@ big *big_dup(lua_State *L, big *s) {
 }
 
 int big_destroy(lua_State *L) {
-	HERE();
 	big *c = big_arg(L,1);
 	if(c->doublesize) {
 		if(c->dval) free(c->dval);
@@ -275,12 +274,11 @@ static int lua_bigmax(lua_State *L) {
     @function BIG.new(octet)
 */
 static int newbig(lua_State *L) {
-	HERE();
 	void *ud;
 	// kept for backward compat with zenroom 0.9
 	ud = luaL_testudata(L, 2, "zenroom.big");
 	if(ud) {
-		HEREs("use of RNG deprecated");
+		warning(L, "use of RNG deprecated");
 		big *res = big_new(L); big_init(res); SAFE(res);
 		// random with modulus
 		big *modulus = (big*)ud; SAFE(modulus);

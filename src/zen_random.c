@@ -54,11 +54,11 @@
 #include <randombytes.h>
 
 void* rng_alloc(zenroom_t *ZZ) {
-	HERE();
 	RNG *rng = (RNG*)malloc(sizeof(csprng));
 	if(!rng) {
-		lerror(NULL, "Error allocating new random number generator in %s",__func__);
-		return NULL; }
+		fprintf(stderr, "Error allocating new random number generator");
+		return NULL;
+	}
 
 	// random seed provided externally 
 	if(ZZ->random_external) {
