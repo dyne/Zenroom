@@ -191,9 +191,11 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 		ZZ->random_external = 1;
 		memset(ZZ->random_seed, 0x0, RANDOM_SEED_LEN);
 		int len = hex2buf(ZZ->random_seed, ZZ->zconf_rngseed);
-		func(NULL, "RNG seed converted from hex to %u bytes", len);
+		fprintf(stderr,
+				"RNG seed converted from hex to %u bytes", len);
 	} else {
-		func(NULL, "RNG seed not found in configuration");
+	  fprintf(stderr,
+			  "RNG seed not found in configuration");
 	}
 
 	// initialize the random generator
@@ -202,9 +204,10 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	// initialize Lua's context
 	ZZ->lua = lua_newstate(zen_memory_manager, ZZ);
 	if(!ZZ->lua) {
-		zerror(NULL,"%s: %s", __func__, "Lua newstate creation failed");
-		zen_teardown(ZZ);
-		return NULL;
+	  fprintf(stderr, "%s: %s", __func__,
+			  "Lua newstate creation failed");
+	  zen_teardown(ZZ);
+	  return NULL;
 	}
 
 	// expose the debug level
@@ -262,7 +265,7 @@ void zen_teardown(zenroom_t *ZZ) {
 
 	// save pointers inside Z to free after L and Z
 	if(ZZ->lua) {
-		func(NULL, "lua gc and close...");
+		func(ZZ->lua, "lua gc and close...");
 		lua_gc((lua_State*)ZZ->lua, LUA_GCCOLLECT, 0);
 		lua_gc((lua_State*)ZZ->lua, LUA_GCCOLLECT, 0);
 		// this call here frees also Z (lightuserdata)

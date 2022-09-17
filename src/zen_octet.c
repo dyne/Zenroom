@@ -124,23 +124,24 @@ void push_octet_to_hex_string(lua_State *L, octet *o) {
 
 extern const int8_t b58digits_map[];
 // extern const char b58digits_ordered[];
-int is_base58(const char *in) {
+int is_base58(lua_State *L, const char *in) {
 	if(!in) {
 		HEREs("null string in is_base58");
 		return 0; }
 	int c;
 	for(c=0; in[c]!='\0'; c++) {
 		if(b58digits_map[(int8_t)in[c]]==-1) {
-			func(NULL,"invalid base58 digit");
+			func(L,"invalid base58 digit");
 			return 0; }
 		if(in[c] & 0x80) {
-			func(NULL,"high-bit set on invalid digit");
+			func(L,"high-bit set on invalid digit");
 			return 0; }
 	}
 	return c;
 }
 
-int is_hex(const char *in) {
+int is_hex(lua_State *L, const char *in) {
+  (void)L;
 	if(!in) { ERROR(); return 0; }
 	int c;
 	for(c=0; in[c]!=0; c++) {
@@ -151,7 +152,8 @@ int is_hex(const char *in) {
 }
 
 // return total string length including spaces
-int is_bin(const char *in) {
+int is_bin(lua_State *L, const char *in) {
+  (void)L;
 	if(!in) { ERROR(); return 0; }
 	register int c;
 	register int len = 0;
@@ -382,7 +384,7 @@ static int lua_is_url64(lua_State *L) {
 static int lua_is_base58(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "string expected");
-	int len = is_base58(s);
+	int len = is_base58(L, s);
 	if(!len) {
 		lua_pushboolean(L, 0);
 		func(L, "string is not a valid base58 sequence");
@@ -394,7 +396,7 @@ static int lua_is_base58(lua_State *L) {
 static int lua_is_hex(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "string expected");
-	int len = is_hex(s);
+	int len = is_hex(L, s);
 	if(!len) {
 		lua_pushboolean(L, 0);
 		func(L, "string is not a valid hex sequence");
@@ -405,7 +407,7 @@ static int lua_is_hex(lua_State *L) {
 static int lua_is_bin(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "string expected");
-	int len = is_bin(s);
+	int len = is_bin(L, s);
 	if(!len) {
 		lua_pushboolean(L, 0);
 		func(L, "string is not a valid binary sequence");
@@ -491,7 +493,7 @@ static int from_url64(lua_State *L) {
 static int from_base58(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "base58 string expected");
-	int len = is_base58(s);
+	int len = is_base58(L, s);
 	if(!len) {
 		lerror(L, "base58 string contains invalid characters");
 		return 0; }
@@ -537,8 +539,8 @@ static int from_hex(lua_State *L) {
 		return 1; }
 	int len;
 	if ( (s[0] == '0') && (s[1] == 'x') )
-	   	 len = is_hex(s+2);
-	else len = is_hex(s);
+	   	 len = is_hex(L, s+2);
+	else len = is_hex(L, s);
 	if(!len) {
 		zerror(L, "hex sequence invalid"); // fatal
 		lua_pushboolean(L, 0);
@@ -569,7 +571,7 @@ static int from_hex(lua_State *L) {
 static int from_bin(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "binary string sequence expected");
-	const int len = is_bin(s);
+	const int len = is_bin(L, s);
 	if(!len || len>MAX_FILE) {
 		zerror(L, "invalid binary sequence size: %u", len);
 		lerror(L, "operation aborted");

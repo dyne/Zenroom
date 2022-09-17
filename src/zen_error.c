@@ -41,6 +41,7 @@
 #include <lauxlib.h>
 
 #include <zenroom.h>
+#include <zen_octet.h>
 #include <zen_error.h>
 
 #define MAX_ERRMSG 256 // maximum length of an error message line
@@ -132,76 +133,105 @@ void json_end(void *Z, const char *format, ...) {
   va_end(arg);
 }
 
+static octet *o_malloc(int size) {
+  octet *o = malloc(sizeof(octet));
+  o->val = malloc(size);
+  o->max = size;
+  o->len = 0;
+  return(o);
+}
+
+static void o_free(octet *o) {
+  free(o->val);
+  free(o);
+}
+
+// from zen_io.c
+extern int zen_log(lua_State *L, const char *level, octet *oct);
+
 void notice(void *L, const char *format, ...) {
-  char pfx[MAX_ERRMSG];
   Z(L);
   if(Z && Z->debuglevel<1) return;
-	va_list arg;
-	if(Z->logformat == JSON)
-	  mutt_snprintf(pfx, MAX_ERRMSG-1, "\"[*] %s\",\n",format);
-	else
-	  mutt_snprintf(pfx, MAX_ERRMSG-1, "[*] %s\n",format);
-	va_start(arg, format);
-	zen_write_err_va(Z, pfx, arg);
-	va_end(arg);
+  octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
+  char *p = o->val;
+  if(Z->logformat == JSON) { *p = '"'; p++; }
+  va_list arg;
+  va_start(arg, format);
+  mutt_vsnprintf(p, o->max-4, format, arg);
+  o->len = strlen(o->val);
+  if(Z->logformat == JSON) {
+	p+=o->len; *p='"'; p++; *p=','; p++; o->len+=2;
+  }
+  zen_log(L, "[*]  ", o);
+  o_free(o);
 }
 
 void func(void *L, const char *format, ...) {
-  char pfx[MAX_ERRMSG];
   Z(L);
-  if(!Z) return; // without this a lot of debug is always printed
   if(Z && Z->debuglevel<3) return;
-	va_list arg;
-	if(Z->logformat == JSON)
-	  mutt_snprintf(pfx, MAX_ERRMSG-1, "\"[D] %s\",\n",format);
-	else
-	  mutt_snprintf(pfx, MAX_ERRMSG-1, "[D] %s\n",format);
-	va_start(arg, format);
-	zen_write_err_va(Z, pfx, arg);
-	va_end(arg);
-
+  octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
+  char *p = o->val;
+  if(Z->logformat == JSON) { *p = '"'; p++; }
+  va_list arg;
+  va_start(arg, format);
+  mutt_vsnprintf(p, o->max-4, format, arg);
+  o->len = strlen(o->val);
+  if(Z->logformat == JSON) {
+	p+=o->len; *p='"'; p++; *p=','; p++; o->len+=2;
+  }
+  zen_log(L, "[D]  ", o);
+  o_free(o);
 }
 
 void zerror(void *L, const char *format, ...) {
-	if(!format) return;
-	char pfx[MAX_ERRMSG];
-	Z(L);
-	va_list arg;
-	if(Z->logformat == JSON)
-	  mutt_snprintf(pfx, MAX_ERRMSG-1, "\"[!] %s\",\n",format);
-	else
-	  mutt_snprintf(pfx, MAX_ERRMSG-1, "[!] %s\n",format);
-	va_start(arg, format);
-	zen_write_err_va(Z, pfx, arg);
-	va_end(arg);
+  Z(L);
+  octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
+  char *p = o->val;
+  if(Z->logformat == JSON) { *p = '"'; p++; }
+  va_list arg;
+  va_start(arg, format);
+  mutt_vsnprintf(p, o->max-4, format, arg);
+  o->len = strlen(o->val);
+  if(Z->logformat == JSON) {
+	p+=o->len; *p='"'; p++; *p=','; p++; o->len+=2;
+  }
+  zen_log(L, "[!]  ", o);
+  o_free(o);
 }
 
 void act(void *L, const char *format, ...) {
-  char pfx[MAX_ERRMSG];
   Z(L);
   if(Z && Z->debuglevel<2) return;
-	va_list arg;
-	if(Z->logformat == JSON)
-	  mutt_snprintf(pfx, MAX_ERRMSG-1, "\" .  %s\",\n",format);
-	else
-	  mutt_snprintf(pfx, MAX_ERRMSG-1, " .  %s\n",format);
-	va_start(arg, format);
-	zen_write_err_va(Z, pfx, arg);
-	va_end(arg);
+  octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
+  // new octet is pushed to stack
+  char *p = o->val;
+  if(Z->logformat == JSON) { *p = '"'; p++; }
+  va_list arg;
+  va_start(arg, format);
+  mutt_vsnprintf(p, o->max-4, format, arg);
+  o->len = strlen(o->val);
+  if(Z->logformat == JSON) {
+	p+=o->len; *p='"'; p++; *p=','; p++; o->len+=2;
+  }
+  zen_log(L, " .  ", o); // pulls new octet from stack
+  o_free(o);
 }
 
 void warning(void *L, const char *format, ...) {
-  char pfx[MAX_ERRMSG];
   Z(L);
-  if(Z && Z->debuglevel<2) return;
-	va_list arg;
-	if(Z->logformat == JSON)
-	  mutt_snprintf(pfx, MAX_ERRMSG-1, "\"[W] %s\",\n",format);
-	else
-	  mutt_snprintf(pfx, MAX_ERRMSG-1, "[W] %s\n",format);
-	va_start(arg, format);
-	zen_write_err_va(Z, pfx, arg);
-	va_end(arg);
+  if(Z && Z->debuglevel<1) return;
+  octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
+  // new octet is pushed to stack
+  char *p = o->val;
+  if(Z->logformat == JSON) { *p = '"'; p++; }
+  va_list arg;
+  va_start(arg, format);
+  mutt_vsnprintf(p, o->max-4, format, arg);
+  o->len = strlen(o->val);
+  if(Z->logformat == JSON) {
+	p+=o->len; *p='"'; p++; *p=','; p++; o->len+=2;
+  }
+  zen_log(L, "[W]  ", o); // pulls new octet from stack
+  o_free(o);
 }
-
 #endif

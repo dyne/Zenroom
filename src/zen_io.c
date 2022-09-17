@@ -387,9 +387,9 @@ static int zen_write (lua_State *L) {
   return 0;
 }
 
-inline int _zen_log_level(lua_State *L, const char *level) {
+int zen_log(lua_State *L, const char *level, octet *oct) {
   Z(L);
-  octet *o = o_arg(L, 1);
+  octet *o = oct ? oct : o_arg(L, 1);
   if(!o) return 0;
   if (Z->stderr_buf) {
 	char *p = Z->stderr_buf+Z->stderr_pos;
@@ -408,11 +408,19 @@ inline int _zen_log_level(lua_State *L, const char *level) {
 }
 
 static int zen_warn (lua_State *L) {
-  return( _zen_log_level(L, "WARN ") );
+  return( zen_log(L, "[W]  ", NULL) ); // WARN
 }
 
 static int zen_act (lua_State *L) {
-  return( _zen_log_level(L, "INFO ") );
+  return( zen_log(L, " .   ", NULL) ); // STEP
+}
+
+static int zen_notice (lua_State *L) {
+  return( zen_log(L, "[*]  ", NULL) ); // INFO
+}
+
+static int zen_debug (lua_State *L) {
+  return( zen_log(L, "[D]  ", NULL) ); // DBUG
 }
 
 /* }}} */
@@ -495,8 +503,10 @@ void zen_add_io(lua_State *L) {
 		  {"printerr", zen_printerr},
 		  {"write", zen_write},
 		  {"zen_fatal", zen_fatal},
+		  {"notice", zen_notice},
 		  {"warn", zen_warn},
 		  {"act", zen_act},
+		  {"xxx", zen_debug},
 		  {"compress", zen_zstd_compress},
 		  {"decompress", zen_zstd_decompress},
 		  {"random_seed", zen_random_seed},
