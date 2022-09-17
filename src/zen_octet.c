@@ -207,9 +207,8 @@ octet* o_arg(lua_State *L,int n) {
 		size_t len; const char *str;
 		str = luaL_optlstring(L,n,NULL,&len);
 		if(!str || !len) {
-			zerror(L, "invalid NULL string (zero size)");
-			lerror(L, "failed implicit conversion from string to octet");
-			return 0;
+		  warning(L, "NULL octet from empty string");
+		  return(NULL);
 		}
 		if(!len || len>MAX_OCTET) {
 			zerror(L, "invalid string size: %u", len);

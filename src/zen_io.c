@@ -1,6 +1,6 @@
 /* This file is part of Zenroom (https://zenroom.dyne.org)
  *
- * Copyright (C) 2017-2019 Dyne.org foundation
+ * Copyright (C) 2017-2022 Dyne.org foundation
  * designed, written and maintained by Denis Roio <jaromil@dyne.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -49,6 +49,7 @@ extern int SEMIHOSTING_STDOUT_FILENO;
 extern int write_to_console(const char* str);
 #endif
 
+/* {{{ common i/o functions */
 int zen_write_err_va(zenroom_t *Z, const char *fmt, va_list va) {
 	int res = 0;
 #ifdef __ANDROID__
@@ -168,66 +169,20 @@ const char *lua_print_format(lua_State *L,
 	return s;
 }
 
-// retrieves output buffer if configured in _Z and append to that the
-// output without exceeding its length. Return 1 if output buffer was
-// configured so calling function can decide if to proceed with other
-// prints (stdout) or not
-static int lua_print_stdout_tobuf(lua_State *L, char newline) {
-	Z(L);
-	if(Z->stdout_buf && (Z->stdout_pos < Z->stdout_len)) {
-		int i;
-		int n = lua_gettop(L);  /* number of arguments */
-		size_t len;
-		const char *s;
-		lua_getglobal(L, "tostring");
-		for (i=1; i<=n; i++) {
-			s = lua_print_format(L, i, &len);
-			if(i>1) 
-				zen_write_out(Z, "\t%s%c",s,newline);
-			else
-				zen_write_out(Z, "%s%c",s,newline);
-			lua_pop(L, 1);
-		}
-		return 1;
-	}
-	return 0;
-}
-
-static int lua_print_stderr_tobuf(lua_State *L, char newline) {
-	Z(L);
-	if(Z->stderr_buf && (Z->stderr_pos < Z->stderr_len)) {
-		int i;
-		int n = lua_gettop(L);  /* number of arguments */
-		size_t len;
-		const char *s;
-		lua_getglobal(L, "tostring");
-		for (i=1; i<=n; i++) {
-			s = lua_print_format(L, i, &len);
-			if(i>1) 
-				zen_write_err(Z, "\t%s%c",s,newline);
-			else
-				zen_write_err(Z, "%s%c",s,newline);
-			lua_pop(L, 1);
-		}
-		return 1;
-	}
-	return 0;
-}
-
+/* {{{ javascript print functions */
 // optimized printing functions for wasm
 // these are about double the speed than the normal stdout/stderr wrapper
 #ifdef __EMSCRIPTEN__
 static char out[MAX_JSBUF];
 static int zen_print (lua_State *L) {
-	size_t pos = 0;
 	int nargs = lua_gettop(L) +1;
 	int arg = 0;
-	char *s;
+	const char *s;
 	for (; nargs--; arg++) {
 		size_t len;
 		s = lua_tolstring(L, arg, &len);
+		EM_ASM_({Module.print(UTF8ToString($0))}, s);
 	}
-	EM_ASM_({Module.print(UTF8ToString($0))}, s);
 	return 0;
 }
 static int zen_printerr (lua_State *L) {
@@ -238,8 +193,8 @@ static int zen_printerr (lua_State *L) {
 	for (; nargs--; arg++) {
 		size_t len;
 		s = lua_tolstring(L, arg, &len);
+		EM_ASM_({Module.printErr(UTF8ToString($0))}, s);
 	}
-	EM_ASM_({Module.printErr(UTF8ToString($0))}, s);
 	return 0;
 }
 
@@ -251,8 +206,8 @@ static int zen_write (lua_State *L) {
 	for (; nargs--; arg++) {
 		size_t len;
 		s = lua_tolstring(L, arg, &len);
+		EM_ASM_({Module.print(UTF8ToString($0))}, s);
 	}
-	EM_ASM_({Module.print(UTF8ToString($0))}, s);
 	lua_pushboolean(L, 1);
 	return 1;
 }
@@ -262,7 +217,6 @@ static int zen_warn (lua_State *L) {
 	size_t len = 0;
 	int n = lua_gettop(L);  /* number of arguments */
 	int i;
-	Z(L);
 	lua_getglobal(L, "tostring");
 	out[0] = '['; out[1] = 'W';	out[2] = ']'; out[3] = ' ';	pos = 4;
 	for (i=1; i<=n; i++) {
@@ -281,7 +235,6 @@ static int zen_act (lua_State *L) {
 	size_t len = 0;
 	int n = lua_gettop(L);  /* number of arguments */
 	int i;
-	Z(L);
 	lua_getglobal(L, "tostring");
 	out[0] = ' '; out[1] = '.';	out[2] = ' '; out[3] = ' ';	pos = 4;
 	for (i=1; i<=n; i++) {
@@ -294,9 +247,9 @@ static int zen_act (lua_State *L) {
 	EM_ASM_({Module.printErr(UTF8ToString($0))}, out);
 	return 0;
 }
-
+/* }}} */
 #elif defined(ARCH_CORTEX)
-
+/* {{{ embedded (cortex) print functions */
 static int zen_print (lua_State *L) {
 	if( lua_print_stdout_tobuf(L,'\n') ) return 0;
 
@@ -398,111 +351,93 @@ static int zen_act (lua_State *L) {
 	(void)w;
 	return 0;
 }
-
+/* }}} */
 #else
 
+/* {{{ standart print functions */
 static int zen_print (lua_State *L) {
-	if( lua_print_stdout_tobuf(L,'\n') ) return 0;
-
-	int status = 1;
-	size_t len = 0;
-	int n = lua_gettop(L);  /* number of arguments */
-	int i, w;
-	lua_getglobal(L, "tostring");
-	for (i=1; i<=n; i++) {
-		const char *s = lua_print_format(L, i, &len);
-		if(i>1)
-            w = write(STDOUT_FILENO, "\t", 1);
-        (void)w;
-		status = status &&
-			(write(STDOUT_FILENO, s,  len) == (int)len);
-		lua_pop(L, 1);  /* pop result */
-	}
-	w = write(STDOUT_FILENO,"\n",sizeof(char));
-    (void)w;
-	return 0;
+  Z(L);
+  octet *o = o_arg(L, 1); // it may be null (empty string)
+  if (Z->stdout_buf) {
+	char *p = Z->stdout_buf+Z->stdout_pos;
+	if(!o) { p='\n'; Z->stdout_pos++; }
+	if (Z->stdout_pos+o->len+1 > Z->stdout_len)
+	  zerror(L, "No space left in output buffer");
+	memcpy(p, o->val, o->len);
+	*(p + o->len) = '\n';
+	Z->stdout_pos += o->len + 1;
+  } else {
+	if(o) write(STDOUT_FILENO, o->val, o->len);
+	write(STDOUT_FILENO,"\n",sizeof(char));
+  }
+  return 0;
 }
 
 // print to stderr without raising errors
 static int zen_printerr(lua_State *L) {
-	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
-
-	int status = 1;
-	size_t len = 0;
-	int n = lua_gettop(L);  /* number of arguments */
-	int i, w;
-	lua_getglobal(L, "tostring");
-	for (i=1; i<=n; i++) {
-		const char *s = lua_print_format(L, i, &len);
-		if(i>1)
-			w = write(STDERR_FILENO, "\t", 1);
-		(void)w;
-		status = status &&
-			(write(STDERR_FILENO, s,  len) == (int)len);
-		lua_pop(L, 1);  /* pop result */
-	}
-	w = write(STDERR_FILENO,"\n",sizeof(char));
-	(void)w;
-	return 0;
+  Z(L);
+  octet *o = o_arg(L, 1); // it may be null (empty string)
+  if (Z->stderr_buf) {
+	char *p = Z->stderr_buf+Z->stderr_pos;
+	if(!o) { p='\n'; Z->stderr_pos++; }
+	if (Z->stderr_pos+o->len+1 > Z->stderr_len)
+	  zerror(L, "No space left in output buffer");
+	memcpy(p, o->val, o->len);
+	*(p + o->len) = '\n';
+	Z->stderr_pos += o->len + 1;
+  } else {
+	if(o) write(STDERR_FILENO, o->val, o->len);
+	write(STDERR_FILENO,"\n",sizeof(char));
+  }
+  return 0;
 }
 
 // print without an ending newline
 static int zen_write (lua_State *L) {
-	if( lua_print_stdout_tobuf(L,' ') ) return 0;
-	octet *o = o_arg(L, 1); SAFE(o);
-	short res;
-	int w;
-	w = write(STDOUT_FILENO, o->val, o->len);
-	res = (w == o->len) ? 0 : 1;
-	return(res);
+  Z(L);
+  octet *o = o_arg(L, 1); // it may be null (empty string)
+  if(!o) return 0;
+  if (Z->stdout_buf) {
+	char *p = Z->stderr_buf+Z->stderr_pos;
+	if (Z->stdout_pos+o->len > Z->stdout_len)
+	  zerror(L, "No space left in output buffer");
+	memcpy(p, o->val, o->len);
+	Z->stdout_pos += o->len;
+  } else {
+	write(STDOUT_FILENO, o->val, o->len);
+  }
+  return 0;
+}
+
+inline int _zen_log_level(lua_State *L, const char *level) {
+  Z(L);
+  octet *o = o_arg(L, 1);
+  if(!o) return 0;
+  if (Z->stderr_buf) {
+	char *p = Z->stderr_buf+Z->stderr_pos;
+	if (Z->stderr_pos+o->len+5 > Z->stderr_len)
+	  zerror(L, "No space left in error buffer");
+	memcpy(p, level, 5);
+	memcpy(p + 5, o->val, o->len);
+	*(p + 5 + o->len + 1) = '\n';
+	Z->stderr_pos += 5 + o->len + 1;
+  } else {
+	write(STDERR_FILENO, level, 5);
+	write(STDERR_FILENO, o->val, o->len);
+	write(STDERR_FILENO, "\n", 1);
+  }
+  return 0;
 }
 
 static int zen_warn (lua_State *L) {
-	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
-	int status = 1;
-	size_t len = 0;
-	int n = lua_gettop(L);  /* number of arguments */
-	int i, w;
-	lua_getglobal(L, "tostring");
-	w = write(STDERR_FILENO, "[W] ",4* sizeof(char));
-	(void)w;
-	for (i=1; i<=n; i++) {
-		const char *s = lua_print_format(L, i, &len);
-		if(i>1)
-			w = write(STDERR_FILENO, "\t",sizeof(char));
-		(void)w;
-		status = status &&
-			(write(STDERR_FILENO, s, len) == (int)len);
-		lua_pop(L, 1);  /* pop result */
-	}
-	w = write(STDERR_FILENO,"\n",sizeof(char));
-	(void)w;
-	return 0;
+  return( _zen_log_level(L, "WARN ") );
 }
 
 static int zen_act (lua_State *L) {
-	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
-	int status = 1;
-	size_t len = 0;
-	int n = lua_gettop(L);  /* number of arguments */
-	int i, w;
-	lua_getglobal(L, "tostring");
-	w = write(STDERR_FILENO, " .  ",4* sizeof(char));
-	(void)w;
-	for (i=1; i<=n; i++) {
-		const char *s = lua_print_format(L, i, &len);
-		if(i>1)
-			w = write(STDERR_FILENO, "\t",sizeof(char));
-		(void)w;
-		status = status &&
-			(write(STDERR_FILENO, s, len) == (int)len);
-		lua_pop(L, 1);  /* pop result */
-	}
-	w = write(STDERR_FILENO,"\n",sizeof(char));
-	(void)w;
-	return 0;
+  return( _zen_log_level(L, "INFO ") );
 }
 
+/* }}} */
 #endif
 
 
@@ -513,6 +448,7 @@ static int zen_fatal(lua_State *L) {
 	return 0; // unreachable code
 }
 
+/* {{{ compression */
 int zen_zstd_compress(lua_State *L) {
   octet *dst, *src;
   Z(L);
@@ -551,6 +487,7 @@ int zen_zstd_decompress(lua_State *L) {
   }
   return 1;
 }
+/* }}} */
 
 static int zen_random_seed(lua_State *L) {
   Z(L);
@@ -579,7 +516,6 @@ void zen_add_io(lua_State *L) {
 		{ {"print", zen_print},
 		  {"printerr", zen_printerr},
 		  {"write", zen_write},
-//		  {"error", zen_error},
 		  {"zen_fatal", zen_fatal},
 		  {"warn", zen_warn},
 		  {"act", zen_act},
