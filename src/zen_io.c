@@ -61,9 +61,9 @@ static int zen_print (lua_State *L) {
 	o->val[o->len] = '\n'; // add newline
 	o->val[o->len+1] = 0x0; // add string termination
 	// octet safety buffer allows this: o->val = malloc(size +0x0f);
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__)
 	EM_ASM_({Module.print(UTF8ToString($0))}, o->val);
-#elseif ARCH_CORTEX
+#elif defined(ARCH_CORTEX)
 	write(SEMIHOSTING_STDOUT_FILENO, o->val, o->len+1);
 #else
 	write(STDOUT_FILENO, o->val, o->len+1);
@@ -86,12 +86,12 @@ void printerr(lua_State *L, octet *o) {
   } else if(o) {
 	o->val[o->len] = '\n';
 	o->val[o->len+1] = 0x0; // add string termination
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__)
 	// octet safety buffer allows this: o->val = malloc(size +0x0f);
 	EM_ASM_({Module.print(UTF8ToString($0))}, o->val);
-#elseif __ANDROID__
+#elif defined(__ANDROID__)
 	__android_log_print(ANDROID_LOG_DEFAULT, "ZEN", "%s", o->val);
-#elseif ARCH_CORTEX
+#elif defined(ARCH_CORTEX)
 	write_to_console(o->val);
 #else
 	write(STDERR_FILENO, o->val, o->len+1);
@@ -153,10 +153,10 @@ int zen_log(lua_State *L, log_priority prio, octet *o) {
 	memcpy(p + 5, o->val, tlen);
 	Z->stderr_pos += 5 + tlen;
   } else {
-#ifdef __EMSCRIPTEN__
+#if defined(__EMSCRIPTEN__)
 	EM_ASM_({Module.printErr(UTF8ToString($0))}, prefix);
 	EM_ASM_({Module.printErr(UTF8ToString($0))}, o->val);
-#elseif ARCH_CORTEX
+#elif defined(ARCH_CORTEX)
 	write(SEMIHOSTING_STDOUT_FILENO, prefix, 5);
 	write(SEMIHOSTING_STDOUT_FILENO, o->val, tlen);
 #else
