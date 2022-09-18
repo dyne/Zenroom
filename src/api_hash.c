@@ -27,10 +27,6 @@
 #include <zen_error.h>
 #include <encoding.h> // zenroom
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#endif
-
 #include <zen_memory.h>
 
  // first byte is type
@@ -42,12 +38,7 @@ void print_ctx_hex(char prefix, void *sh, int len) {
   hash_ctx[0] = prefix;
   buf2hex(hash_ctx+1, (const char*)sh, (const size_t)len);
   hash_ctx[(len<<1)+1] = 0x0; // null terminated string
-
-#ifdef __EMSCRIPTEN__
-	EM_ASM_({Module.print(UTF8ToString($0))}, hash_ctx);
-#else
-  fprintf(stdout, "%s\n", hash_ctx);
-#endif
+  _out("%s",hash_ctx);
   free(hash_ctx);
 }
 
@@ -71,22 +62,12 @@ int zenroom_hash_init(const char *hash_type) {
     HASH256_init((hash256*)sh); // amcl init
   }
   else {
-#ifdef __EMSCRIPTEN__
-    char buf[4096];
-    snprintf(buf, 4096, "invalid hash type: %s", hash_type);
-	  EM_ASM_({Module.printErr(UTF8ToString($0))}, buf);
-    EM_ASM({Module.exec_error();});
-    EM_ASM(Module.onAbort());
-#endif
-    zerror(NULL, "%s :: invalid hash type: %s", __func__, hash_type);
-    return 4; // ERR_INIT
+	_err("%s :: invalid hash type: %s", __func__, hash_type);
+	return FAIL();
   }
   print_ctx_hex(prefix, sh, len);
   free(sh);
-#ifdef __EMSCRIPTEN__
-  EM_ASM({Module.exec_ok();});
-#endif
-  return 0;
+  return OK();
 }
 
 // returns hash_ctx updated
@@ -112,22 +93,12 @@ int zenroom_hash_update(const char *hash_ctx,
       HASH256_process((hash256*)sh, buffer[c]);
     }
   } else {
-    zerror(NULL, "%s :: invalid hash context prefix: %c", __func__, prefix);
-#ifdef __EMSCRIPTEN__
-    char buf[4096];
-    snprintf(buf, 4096, "invalid hash context prefix: %c", prefix);
-    EM_ASM_({Module.printErr(UTF8ToString($0))}, buf);
-    EM_ASM({Module.exec_error();});
-    EM_ASM(Module.onAbort());
-#endif
-    return 3;
+    _err("%s :: invalid hash context prefix: %c", __func__, prefix);
+	return FAIL();
   }
   print_ctx_hex(prefix, sh, len);
   free(sh);
-#ifdef __EMSCRIPTEN__
-  EM_ASM({Module.exec_ok();});
-#endif
-  return 0;
+  return OK();
 }
 
 // returns the hash string base64 encoded
@@ -158,27 +129,13 @@ int zenroom_hash_final(const char *hash_ctx) {
     hex2buf(sh, hash_ctx+1);
     HASH256_hash((hash256*)sh, tmp.val);
   } else {
-    zerror(NULL, "%s :: invalid hash context prefix: %c", __func__, prefix);
-#ifdef __EMSCRIPTEN__
-    char buf[4096];
-    snprintf(buf, 4096, "invalid hash context prefix: %c", prefix);
-    EM_ASM_({Module.printErr(UTF8ToString($0))}, buf);
-    EM_ASM({Module.exec_error();});
-    EM_ASM(Module.onAbort());
-#endif
-    return 3;
+    _err("%s :: invalid hash context prefix: %c\n", __func__, prefix);
+	return FAIL();
   }
   OCT_tobase64(hash_result,&tmp);
   free(tmp.val);
-#ifdef __EMSCRIPTEN__
-	EM_ASM_({Module.print(UTF8ToString($0))}, hash_result);
-#else
-  fprintf(stdout, "%s\n", hash_result);
-#endif
+  _out("%s",hash_result);
   free(hash_result);
   free(sh);
-#ifdef __EMSCRIPTEN__
-  EM_ASM({Module.exec_ok();});
-#endif
-  return 0;
+  return OK();
 }

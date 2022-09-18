@@ -73,11 +73,11 @@ static int zen_print (lua_State *L) {
   return 0;
 }
 
-void printerr(lua_State *L, octet *o) {
+int printerr(lua_State *L, octet *o) {
   Z(L);
   if (Z->stderr_buf) {
 	char *p = Z->stderr_buf+Z->stderr_pos;
-	if(!o) { *p='\n'; Z->stderr_pos++; return; }
+	if(!o) { *p='\n'; Z->stderr_pos++; return 0; }
 	if (Z->stderr_pos+o->len+1 > Z->stderr_len)
 	  zerror(L, "No space left in output buffer");
 	memcpy(p, o->val, o->len);
@@ -98,7 +98,7 @@ void printerr(lua_State *L, octet *o) {
 #endif
   } else
 	func(L, "printerr of an empty string");	
-  return;
+  return 0;
 }
 
 // print without an ending newline

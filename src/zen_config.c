@@ -90,7 +90,7 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 	stb_c_lexer_init(&lex, configuration, configuration+len, lexbuf, MAX_CONFIG);
 	while (stb_c_lexer_get_token(&lex)) {
 		if (lex.token == CLEX_parse_error) {
-			zerror(NULL, "%s: error parsing configuration: %s", __func__, configuration);
+			fprintf(stderr, "%s: error parsing configuration: %s\n", __func__, configuration);
 			// free(lexbuf);
 			return 0;
 		}
@@ -106,13 +106,13 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 			if(curconf==RNGSEED) {
 				int len = strlen(lex.string);
 				if( len-4 != RANDOM_SEED_LEN *2) { // hex doubles size
-					zerror(NULL, "Invalid length of random seed: %u (must be %u)",
+					fprintf(stderr, "Invalid length of random seed: %u (must be %u)\n",
 					      len/2, RANDOM_SEED_LEN);
 					// free(lexbuf);
 					return 0;
 				}
 				if(strncasecmp(lex.string, "hex:", 4) != 0) { // hex: prefix needed
-					zerror(NULL, "Invalid rngseed data prefix (must be hex:)");
+					fprintf(stderr, "Invalid rngseed data prefix (must be hex:)\n");
 					// free(lexbuf);
 					return 0;
 				}
@@ -124,36 +124,36 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 			if(curconf==LOGFMT) {
 			  int len = strlen(lex.string);
 			  if( len != 4) { // must be 4 chars
-				zerror(NULL, "Invalid length of log format: %u (must be 4)",len);
+				fprintf(stderr, "Invalid length of log format: %u (must be 4)\n",len);
 				return 0;
 			  }
 			  if(strncasecmp(lex.string, "json", 4) == 0) ZZ->logformat = JSON;
 			  else if(strncasecmp(lex.string, "text", 4) == 0) ZZ->logformat = TEXT;
 			  else {
-				zerror(NULL, "Invalid log format string: %s",lex.string);
+				fprintf(stderr, "Invalid log format string: %s\n",lex.string);
 				return 0;
 			  }
 			  break;
 			}
 			// free(lexbuf);
-			zerror(NULL, "Invalid configuration: %s", lex.string);
+			fprintf(stderr, "Invalid configuration: %s\n", lex.string);
 			curconf = NIL;
 			return 0;
 
 		case CLEX_intlit:
 			if(curconf==VERBOSE) { ZZ->debuglevel = lex.int_number; break; }
 			// free(lexbuf);
-			zerror(NULL, "Invalid integer configuration");
+			fprintf(stderr, "Invalid integer configuration\n");
 			curconf = NIL;
 			return 0;
 
 		default:
 			if(lex.token == ',') { curconf = NIL; break; }
 			if(lex.token == '=' && curconf == NIL) {
-				warning(NULL, "Undefined config variable");
+				fprintf(stderr, "Undefined config variable\n");
 				break; }
 			if(lex.token == '=' && curconf != NIL) break; // OK
-			zerror(NULL, "%s: Invalid string in configuration: %c", __func__, lex.token);
+			fprintf(stderr, "%s: Invalid string in configuration: %c\n", __func__, lex.token);
 			// free(lexbuf);
 			return 0;
 		}
