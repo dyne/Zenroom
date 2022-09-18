@@ -144,7 +144,7 @@ int zen_log(lua_State *L, log_priority prio, octet *o) {
 	// JSON termination
 	*p='"'; p++; *p=','; p++; tlen+=2;
   } // newline termination
-  *p='\n'; p++; *p=0x0; p++; tlen+=2;
+  *p='\n'; p++; *p=0x0; tlen++;
   char prefix[5] = "     ";
   get_log_prefix(Z,prio,prefix);
   if (Z->stderr_buf) {
@@ -152,6 +152,7 @@ int zen_log(lua_State *L, log_priority prio, octet *o) {
 	strncpy(p, prefix, 5);
 	memcpy(p + 5, o->val, tlen);
 	Z->stderr_pos += 5 + tlen;
+	Z->stderr_buf[Z->stderr_pos] = '\0';
   } else {
 #if defined(__EMSCRIPTEN__)
 	EM_ASM_({Module.printErr(UTF8ToString($0))}, prefix);
