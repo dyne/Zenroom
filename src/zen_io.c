@@ -25,11 +25,11 @@
 
 #include <mutt_sprintf.h>
 
+#include <lauxlib.h>
+
 #include <zenroom.h>
 #include <zen_error.h>
 #include <zen_octet.h>
-
-#include <lauxlib.h>
 
 #ifdef __ANDROID__
 #include <android/log.h>
@@ -37,9 +37,6 @@
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
-#ifndef MAX_JSBUF
-#define MAX_JSBUF 4096000 // 4MiB
-#endif
 #endif
 
 #include <zstd.h>
@@ -49,290 +46,6 @@ extern int SEMIHOSTING_STDOUT_FILENO;
 extern int write_to_console(const char* str);
 #endif
 
-/* {{{ common i/o functions */
-int zen_write_err_va(zenroom_t *Z, const char *fmt, va_list va) {
-	int res = 0;
-#ifdef __ANDROID__
-	res = __android_log_vprint(ANDROID_LOG_DEBUG, "ZEN", fmt, va);
-#elif defined(ARCH_CORTEX)
-	char buffer[MAX_STRING] = {0};
-	mutt_vsnprintf(buffer, MAX_STRING, fmt, va);
-	res = write_to_console(buffer);
-#else
-	if(!Z) res = vfprintf(stderr,fmt,va); // no init yet, print to stderr
-	if(!res && Z->stderr_buf) { // print to configured buffer
-		if(Z->stderr_full) {
-			zerror(Z->lua, "Error buffer full, log message lost");
-			return(0);
-		}
-		size_t max = Z->stderr_len - Z->stderr_pos;
-		res = mutt_vsnprintf
-			(Z->stderr_buf + Z->stderr_pos, // buffer start
-			 Z->stderr_len - Z->stderr_pos,  // length max
-			 fmt, va);
-		if(res < 0) {
-
-			zerror(Z->lua, "Fatal error writing error buffer: %s", strerror(errno));
-			Z->exitcode = ERR_GENERIC;
-			return(Z->exitcode);
-
-		}
-		if(res > (int)max) {
-			zerror(Z->lua, "Error buffer too small, log truncated: %u bytes (max %u)", res, max);
-			Z->stderr_full = 1;
-			Z->stderr_pos += max;
-		} else {
-			Z->stderr_pos += res;
-		}
-	}
-# ifdef __EMSCRIPTEN__
-	char s[MAX_JSBUF];
-	vsprintf(s,fmt,va);
-	EM_ASM_({Module.printErr(UTF8ToString($0))}, s);
-# else
-	if(!res) res = vfprintf(stderr,fmt,va); // fallback no configured buffer
-# endif
-#endif
-	return(res);
-}
-
-int zen_write_out_va(zenroom_t *Z, const char *fmt, va_list va) {
-	int res = 0;
-	if(!Z) res = vfprintf(stdout,fmt,va); // no init yet, print to stdout
-	if(!res && Z->stdout_buf) { // print to configured buffer
-		if(Z->stdout_full) {
-			zerror(Z->lua, "Output buffer full, result data lost");
-			return(0);
-		}
-		size_t max = Z->stdout_len - Z->stdout_pos;
-		res = mutt_vsnprintf
-			(Z->stdout_buf + Z->stdout_pos, // buffer start
-			 Z->stdout_len - Z->stdout_pos,  // length max
-			 fmt, va);
-		if(res < 0) {
-
-			zerror(Z->lua, "Fatal error writing output buffer: %s", strerror(errno));
-			Z->exitcode = ERR_GENERIC;
-			return(Z->exitcode);
-
-		}
-		if(res > (int)max) {
-			zerror(Z->lua, "Output buffer too small, data truncated: %u bytes (max %u)", res, max);
-			Z->stdout_full = 1;
-			Z->stdout_pos += max;
-		} else {
-			Z->stdout_pos += res;
-		}
-	}
-	if(!res) res = vfprintf(stdout,fmt,va); // fallback no configured buffer
-	return(res);
-}
-
-int zen_write_err(zenroom_t *Z, const char *fmt, ...) {
-// #ifdef __ANDROID__
-// 	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", "%s -- %s", pfx, msg);
-// 	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", fmt, va); // TODO: test
-// #endif
-	va_list arg;
-	size_t len;
-	va_start(arg,fmt);
-	len = zen_write_err_va(Z, fmt,arg);
-	va_end(arg);
-	return len;
-}
-
-int zen_write_out(zenroom_t *Z, const char *fmt, ...) {
-// #ifdef __ANDROID__
-// 	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", "%s -- %s", pfx, msg);
-// 	// __android_log_print(ANDROID_LOG_VERBOSE, "KZK", fmt, va); // TODO: test
-// #endif
-	va_list arg;
-	size_t len;
-	va_start(arg,fmt);
-	len = zen_write_out_va(Z, fmt,arg);
-	va_end(arg);
-	return len;
-}
-
-// passes the string to be printed through the 'tostring'
-// meta-function configured in Lua, taking care of conversions
-const char *lua_print_format(lua_State *L,
-		int pos, size_t *len) {
-	const char *s;
-	lua_pushvalue(L, -1);  /* function to be called */
-	lua_pushvalue(L, pos);   /* value to print */
-	lua_call(L, 1, 1);
-	s = lua_tolstring(L, -1, len);  /* get result */
-	if (s == NULL)
-		luaL_error(L, LUA_QL("tostring") " must return a string to "
-				LUA_QL("print"));
-	return s;
-}
-
-/* {{{ javascript print functions */
-// optimized printing functions for wasm
-// these are about double the speed than the normal stdout/stderr wrapper
-#ifdef __EMSCRIPTEN__
-static char out[MAX_JSBUF];
-static int zen_print (lua_State *L) {
-  octet *o = o_arg(L, 1); // it may be null (empty string)
-  if(!o) return 0;
-  o->val[o->len+1] = '\n'; // add newline
-  o->val[o->len+2] = 0x0; // add string termination
-  // octet safety buffer allows this: o->val = malloc(size +0x0f);
-  EM_ASM_({Module.print(UTF8ToString($0))}, o->val);
-  return 0;
-}
-
-static int zen_printerr (lua_State *L) {
-  octet *o = o_arg(L, 1); // it may be null (empty string)
-  if(!o) return 0;
-  o->val[o->len+1] = '\n'; // add newline
-  o->val[o->len+2] = 0x0; // add string termination
-  // octet safety buffer allows this: o->val = malloc(size +0x0f);
-  EM_ASM_({Module.printErr(UTF8ToString($0))}, o->val);
-  return 0;
-}
-
-static int zen_write (lua_State *L) {
-  octet *o = o_arg(L, 1); // it may be null (empty string)
-  if(!o) return 0;
-  o->val[o->len+1] = 0x0; // add string termination
-  // octet safety buffer allows this: o->val = malloc(size +0x0f);
-  EM_ASM_({Module.print(UTF8ToString($0))}, o->val);
-  return 0;
-}
-
-static int zen_warn (lua_State *L) {
-  octet *o = o_arg(L, 1); // it may be null (empty string)
-  if(!o) return 0;
-  EM_ASM_({Module.printErr(UTF8ToString($0))}, "WARN ");
-  o->val[o->len+1] = '\n'; // add newline
-  o->val[o->len+2] = 0x0; // add string termination
-  // octet safety buffer allows this: o->val = malloc(size +0x0f);
-  EM_ASM_({Module.printErr(UTF8ToString($0))}, o->val);
-  return 0;
-}
-
-static int zen_act (lua_State *L) {
-  octet *o = o_arg(L, 1); // it may be null (empty string)
-  if(!o) return 0;
-  EM_ASM_({Module.printErr(UTF8ToString($0))}, "INFO ");
-  o->val[o->len+1] = '\n'; // add newline
-  o->val[o->len+2] = 0x0; // add string termination
-  // octet safety buffer allows this: o->val = malloc(size +0x0f);
-  EM_ASM_({Module.printErr(UTF8ToString($0))}, o->val);
-  return 0;
-}
-/* }}} */
-
-#elif defined(ARCH_CORTEX)
-/* {{{ embedded (cortex) print functions */
-static int zen_print (lua_State *L) {
-	if( lua_print_stdout_tobuf(L,'\n') ) return 0;
-
-	int status = 1;
-	size_t len = 0;
-	int n = lua_gettop(L);  /* number of arguments */
-	int i, w;
-	lua_getglobal(L, "tostring");
-	for (i=1; i<=n; i++) {
-		const char *s = lua_print_format(L, i, &len);
-		if(i>1)
-            w = write(SEMIHOSTING_STDOUT_FILENO, "\t", 1);
-        (void)w;
-		status = status &&
-			(write(SEMIHOSTING_STDOUT_FILENO, s,  len) == (int)len);
-		lua_pop(L, 1);  /* pop result */
-	}
-	w = write(SEMIHOSTING_STDOUT_FILENO,"\n",sizeof(char));
-    (void)w;
-	return 0;
-}
-
-// print to stderr without raising errors
-static int zen_printerr(lua_State *L) {
-	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
-
-	int status = 1;
-	size_t len = 0;
-	int n = lua_gettop(L);  /* number of arguments */
-	int i, w;
-	lua_getglobal(L, "tostring");
-	for (i=1; i<=n; i++) {
-		const char *s = lua_print_format(L, i, &len);
-		if(i>1)
-			w = write_to_console("\t");
-		(void)w;
-		status = status &&
-			(write_to_console(s) == (int)len);
-		lua_pop(L, 1);  /* pop result */
-	}
-	w = write_to_console("\n");
-	(void)w;
-	return 0;
-}
-
-// print without an ending newline
-static int zen_write (lua_State *L) {
-	if( lua_print_stdout_tobuf(L,' ') ) return 0;
-	octet *o = o_arg(L, 1); SAFE(o);
-	short res;
-	int w;
-	w = write(SEMIHOSTING_STDOUT_FILENO, o->val, o->len);
-	res = (w == o->len) ? 0 : 1;
-	return(res);
-}
-
-static int zen_warn (lua_State *L) {
-	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
-	int status = 1;
-	size_t len = 0;
-	int n = lua_gettop(L);  /* number of arguments */
-	int i, w;
-	lua_getglobal(L, "tostring");
-	w = write_to_console("[W] ");
-	(void)w;
-	for (i=1; i<=n; i++) {
-		const char *s = lua_print_format(L, i, &len);
-		if(i>1)
-			w = write_to_console("\t");
-		(void)w;
-		status = status &&
-			(write_to_console(s) == (int)len);
-		lua_pop(L, 1);  /* pop result */
-	}
-	w = write_to_console("\n");
-	(void)w;
-	return 0;
-}
-
-static int zen_act (lua_State *L) {
-	if( lua_print_stderr_tobuf(L,'\n') ) return 0;
-	int status = 1;
-	size_t len = 0;
-	int n = lua_gettop(L);  /* number of arguments */
-	int i, w;
-	lua_getglobal(L, "tostring");
-	w = write_to_console(" .  ");
-	(void)w;
-	for (i=1; i<=n; i++) {
-		const char *s = lua_print_format(L, i, &len);
-		if(i>1)
-			w = write_to_console("\t");
-		(void)w;
-		status = status &&
-			(write_to_console(s));
-		lua_pop(L, 1);  /* pop result */
-	}
-	w = write_to_console("\n");
-	(void)w;
-	return 0;
-}
-/* }}} */
-#else
-
-/* {{{ standart print functions */
 static int zen_print (lua_State *L) {
   Z(L);
   octet *o = o_arg(L, 1); // it may be null (empty string)
@@ -344,17 +57,26 @@ static int zen_print (lua_State *L) {
 	memcpy(p, o->val, o->len);
 	*(p + o->len) = '\n';
 	Z->stdout_pos += o->len + 1;
-  } else {
-	if(o) write(STDOUT_FILENO, o->val, o->len);
-	write(STDOUT_FILENO,"\n",sizeof(char));
-  }
+  } else if(o) {
+	o->val[o->len] = '\n'; // add newline
+	o->val[o->len+1] = 0x0; // add string termination
+	// octet safety buffer allows this: o->val = malloc(size +0x0f);
+#ifdef __EMSCRIPTEN__
+	EM_ASM_({Module.print(UTF8ToString($0))}, o->val);
+#elseif ARCH_CORTEX
+	write(SEMIHOSTING_STDOUT_FILENO, o->val, o->len+1);
+#else
+	write(STDOUT_FILENO, o->val, o->len+1);
+#endif
+  } else
+	func(L, "print of an empty string");
   return 0;
 }
 
-// print to stderr without raising errors
-static int zen_printerr(lua_State *L) {
+// print to stderr without prefix with newline
+int zen_printerr(lua_State *L, octet *in) {
   Z(L);
-  octet *o = o_arg(L, 1); // it may be null (empty string)
+  octet *o = in ? in : o_arg(L, 1); // it may be null (empty string)
   if (Z->stderr_buf) {
 	char *p = Z->stderr_buf+Z->stderr_pos;
 	if(!o) { *p='\n'; Z->stderr_pos++; return 0; }
@@ -363,10 +85,21 @@ static int zen_printerr(lua_State *L) {
 	memcpy(p, o->val, o->len);
 	*(p + o->len) = '\n';
 	Z->stderr_pos += o->len + 1;
-  } else {
-	if(o) write(STDERR_FILENO, o->val, o->len);
-	write(STDERR_FILENO,"\n",sizeof(char));
-  }
+  } else if(o) {
+	o->val[o->len] = '\n';
+	o->val[o->len+1] = 0x0; // add string termination
+#ifdef __EMSCRIPTEN__
+	// octet safety buffer allows this: o->val = malloc(size +0x0f);
+	EM_ASM_({Module.print(UTF8ToString($0))}, o->val);
+#elseif __ANDROID__
+	__android_log_print(ANDROID_LOG_DEFAULT, "ZEN", "%s", o->val);
+#elseif ARCH_CORTEX
+	write_to_console(o->val);
+#else
+	write(STDERR_FILENO, o->val, o->len+1);
+#endif
+  } else
+	func(L, "printerr of an empty string");	
   return 0;
 }
 
@@ -381,60 +114,81 @@ static int zen_write (lua_State *L) {
 	  zerror(L, "No space left in output buffer");
 	memcpy(p, o->val, o->len);
 	Z->stdout_pos += o->len;
-  } else {
+  } else if(o) {
+#ifdef __EMSCRIPTEN_
+	o->val[o->len] = 0x0; // add string termination
+	// octet safety buffer allows this: o->val = malloc(size +0x0f);
+	EM_ASM_({Module.print(UTF8ToString($0))}, o->val);
+#else
 	write(STDOUT_FILENO, o->val, o->len);
-  }
+#endif
+  } else
+	func(L, "write of an empty string");
   return 0;
 }
 
-int zen_log(lua_State *L, const char *level, octet *oct) {
+int zen_log(lua_State *L, log_priority prio, octet *o) {
   Z(L);
-  octet *o = oct ? oct : o_arg(L, 1);
   if(!o) return 0;
-  if (Z->stderr_buf) {
-	char *p = Z->stderr_buf+Z->stderr_pos;
-	if (Z->stderr_pos+o->len+5 > Z->stderr_len)
+#ifdef __ANDROID__
+  o->val[o->len] = 0x0;
+  __android_log_print(prio, "ZEN", "%s", o->val);
+  return 0;
+#endif
+  if (Z->stderr_buf
+	  && Z->stderr_pos+o->len+5 > Z->stderr_len) {
 	  zerror(L, "No space left in error buffer");
-	memcpy(p, level, 5);
-	memcpy(p + 5, o->val, o->len);
-	*(p + 5 + o->len + 1) = '\n';
-	Z->stderr_pos += 5 + o->len + 1;
+	  return 1;
+  }
+  char *p = o->val + o->len;
+  int tlen = o->len;
+  if(Z->logformat == JSON) {
+	// JSON termination
+	*p='"'; p++; *p=','; p++; tlen+=2;
+  } // newline termination
+  *p='\n'; p++; *p=0x0; p++; tlen+=2;
+  char prefix[5] = "     ";
+  get_log_prefix(Z,prio,prefix);
+  if (Z->stderr_buf) {
+	p = Z->stderr_buf+Z->stderr_pos;
+	strncpy(p, prefix, 5);
+	memcpy(p + 5, o->val, tlen);
+	Z->stderr_pos += 5 + tlen;
   } else {
-	write(STDERR_FILENO, level, 5);
-	write(STDERR_FILENO, o->val, o->len);
-	write(STDERR_FILENO, "\n", 1);
+#ifdef __EMSCRIPTEN__
+	EM_ASM_({Module.printErr(UTF8ToString($0))}, prefix);
+	EM_ASM_({Module.printErr(UTF8ToString($0))}, o->val);
+#elseif ARCH_CORTEX
+	write(SEMIHOSTING_STDOUT_FILENO, prefix, 5);
+	write(SEMIHOSTING_STDOUT_FILENO, o->val, tlen);
+#else
+	write(STDERR_FILENO, prefix, 5);
+	write(STDERR_FILENO, o->val, tlen);
+#endif
   }
   return 0;
 }
 
 static int zen_warn (lua_State *L) {
-  return( zen_log(L, "[W]  ", NULL) ); // WARN
+  zen_log(L, LOG_WARN, o_arg(L, 1));
+  return 0;
 }
 
 static int zen_act (lua_State *L) {
-  return( zen_log(L, " .   ", NULL) ); // STEP
+  zen_log(L, LOG_DEBUG, o_arg(L, 1));
+  return 0;
 }
 
 static int zen_notice (lua_State *L) {
-  return( zen_log(L, "[*]  ", NULL) ); // INFO
+  zen_log(L, LOG_INFO, o_arg(L, 1));
+  return 0;
 }
 
 static int zen_debug (lua_State *L) {
-  return( zen_log(L, "[D]  ", NULL) ); // DBUG
+  zen_log(L, LOG_VERBOSE, o_arg(L, 1) );
+  return 0;
 }
 
-/* }}} */
-#endif
-
-
-extern void lua_fatal(lua_State *L);
-static int zen_fatal(lua_State *L) {
-	// zencode_traceback(L);
-	lua_fatal(L);
-	return 0; // unreachable code
-}
-
-/* {{{ compression */
 int zen_zstd_compress(lua_State *L) {
   octet *dst, *src;
   Z(L);
@@ -449,7 +203,6 @@ int zen_zstd_compress(lua_State *L) {
   func(L, "octet compressed: %u -> %u",src->len, dst->len);
   if (ZSTD_isError(dst->len)) {
     fprintf(stderr,"ZSTD error: %s\n",ZSTD_getErrorName(dst->len));
-    zen_fatal(L);
   }
   return 1;
 }
@@ -469,18 +222,16 @@ int zen_zstd_decompress(lua_State *L) {
   func(L, "octet uncompressed: %u -> %u",src->len, dst->len);
   if (ZSTD_isError(dst->len)) {
     fprintf(stderr,"ZSTD error: %s\n",ZSTD_getErrorName(dst->len));
-    zen_fatal(L);
   }
   return 1;
 }
-/* }}} */
 
 static int zen_random_seed(lua_State *L) {
   Z(L);
   octet *seed = o_arg(L, 1); SAFE(seed);
   if(seed->len <4) {
-    fprintf(stderr,"Random seed error: too small (%u bytes)\n",seed->len);
-    zen_fatal(L);
+    lerror(L,"Random seed error: too small (%u bytes)",seed->len);
+	return 0;
   }
   AMCL_(RAND_seed)(Z->random_generator, seed->len, seed->val);
   // fast-forward to runtime_random (256 bytes) and 4 bytes lua
@@ -496,13 +247,13 @@ static int zen_random_seed(lua_State *L) {
   // return "runtime random" fingerprint
   return 1;
 }
+
 void zen_add_io(lua_State *L) {
 	// override print() and io.write()
 	static const struct luaL_Reg custom_print [] =
 		{ {"print", zen_print},
 		  {"printerr", zen_printerr},
 		  {"write", zen_write},
-		  {"zen_fatal", zen_fatal},
 		  {"notice", zen_notice},
 		  {"warn", zen_warn},
 		  {"act", zen_act},

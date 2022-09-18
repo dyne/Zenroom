@@ -26,22 +26,36 @@
 // #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include <lua.h>
 
 // macro to obtain Z context from a lua_State
 #define Z(l) zenroom_t *Z = NULL; if (l) { void *_zv; lua_getallocf(l, &_zv); Z = _zv; }
 
-int lerror(lua_State *L, const char *fmt, ...);
-// int zencode_traceback(lua_State *L);
+// same as Android
+typedef enum log_priority {
+    LOG_UNKNOWN = 0,
+    LOG_DEFAULT,
+    LOG_VERBOSE,
+    LOG_DEBUG,
+    LOG_INFO,
+    LOG_WARN,
+    LOG_ERROR,
+    LOG_FATAL,
+    LOG_SILENT,
+} log_priority;
+#define LOG_DEFAULT " .   "
 
-void notice(void *L, const char *format, ...);
-void func(void *L, const char *format, ...);
-void zerror(void *L, const char *format, ...);
-void act(void *L, const char *format, ...);
-void warning(void *L, const char *format, ...);
+void get_log_prefix(void *Z, log_priority prio, char dest[5]);
 
-void json_start(void *Z, const char *format, ...);
-void json_end(void *Z, const char *format, ...);
+int lerror(void *L, const char *fmt, ...);
+
+void notice(void *L, const char *format, ...); // INFO
+void func(void *L, const char *format, ...); // VERBOSE
+void zerror(void *L, const char *format, ...); // ERROR
+void act(void *L, const char *format, ...); // DEBUG
+void warning(void *L, const char *format, ...); // WARN
+
+void json_start(void *L);
+void json_end(void *L);
 
 #define ERROR() zerror(0, "Error in %s",__func__)
 #define SAFE(x) if(!x) lerror(L, "NULL variable in %s",__func__)
@@ -52,15 +66,15 @@ void set_color(int on);
 
 // useful for debugging
 #if DEBUG == 1
-#define HERE() func(0, "-> %s()",__func__)
-#define HEREs(s) func(0, "-> %s(%s)",__func__,s)
-#define HEREp(p) func(0, "-> %s(%p)",__func__,p)
-#define HEREn(n) func(0, "-> %s(%i)",__func__,n)
-#define HEREc(c) func(0, "-> %s(%c)",__func__,c)
+#define HERE()   fprintf(stderr, "-> %s()\n",__func__)
+#define HEREs(s) fprintf(stderr, "-> %s(%s)\n",__func__,s)
+#define HEREp(p) fprintf(stderr, "-> %s(%p)\n",__func__,p)
+#define HEREn(n) fprintf(stderr, "-> %s(%i)\n",__func__,n)
+#define HEREc(c) fprintf(stderr, "-> %s(%c)\n",__func__,c)
 #define HEREoct(o) \
-	func(0, "-> %s - octet %p (%i/%i)",__func__,o->val,o->len,o->max)
+	fprintf(stderr, "-> %s - octet %p (%i/%i)\n",__func__,o->val,o->len,o->max)
 #define HEREecdh(e) \
-	func(0, "--> %s - ecdh %p\n\tcurve[%s] type[%s]\n\t fieldsize[%i] hash[%i]\n\tpubkey[%p(%i/%i)] publen[%i]\n\tseckey[%p(%i/%i)] seclen[%i]",__func__, e, e->curve, e->type, e->fieldsize, e->hash, e->pubkey, e->pubkey?e->pubkey->len:0x0, e->pubkey?e->pubkey->max:0x0, e->publen, e->seckey, e->seckey?e->seckey->len:0x0, e->seckey?e->seckey->max:0x0, e->seclen)
+	fprintf(stderr, "--> %s - ecdh %p\n\tcurve[%s] type[%s]\n\t fieldsize[%i] hash[%i]\n\tpubkey[%p(%i/%i)] publen[%i]\n\tseckey[%p(%i/%i)] seclen[%i]\m",__func__, e, e->curve, e->type, e->fieldsize, e->hash, e->pubkey, e->pubkey?e->pubkey->len:0x0, e->pubkey?e->pubkey->max:0x0, e->publen, e->seckey, e->seckey?e->seckey->len:0x0, e->seckey?e->seckey->max:0x0, e->seclen)
 #else
 #define HERE() (void)__func__
 #define HEREs(s) (void)__func__

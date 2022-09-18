@@ -128,6 +128,14 @@ int zen_init_pmain(lua_State *L) { // protected mode init
 	zen_setenv(L, "GITLOG", GITLOG);
 #endif
 
+#ifdef MIMALLOC
+	zen_setenv(L, "MEMMANAGER", "mimalloc");
+	act(L,"Memory manager: mimalloc");
+#else
+	zen_setenv(L, "MEMMANAGER", "libc");
+	act(L,"Memory manager: libc");
+#endif
+
 	// open all standard lua libraries
 	luaL_openlibs(L);
 	// load our own openlibs and extensions
@@ -183,9 +191,6 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 		}
 	}
 
-	// init log format if needed
-	if(ZZ->logformat == JSON) json_start(ZZ, "");
-
 	// use RNGseed from configuration if present (deterministic mode)
 	if(ZZ->zconf_rngseed[0] != 0x0) {
 		ZZ->random_external = 1;
@@ -210,6 +215,9 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	  return NULL;
 	}
 
+	// init log format if needed
+	if(ZZ->logformat == JSON) json_start(ZZ->lua);
+
 	// expose the debug level
 	lua_pushinteger(ZZ->lua, ZZ->debuglevel);
 	lua_setglobal (ZZ->lua, "DEBUG");
@@ -231,7 +239,7 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 
 	lua_gc(ZZ->lua, LUA_GCCOLLECT, 0);
 	lua_gc(ZZ->lua, LUA_GCCOLLECT, 0);
-	act(ZZ->lua,"Memory in use: %u KB",
+	func(ZZ->lua,"Initialized memory: %u KB",
 	    lua_gc(ZZ->lua,LUA_GCCOUNT,0));
 	// uncomment to restrict further requires
 	// zen_require_override(L,1);
@@ -263,15 +271,13 @@ void zen_teardown(zenroom_t *ZZ) {
 		ZZ->random_generator = NULL;
 	}
 
-	// save pointers inside Z to free after L and Z
-	if(ZZ->lua) {
-		func(ZZ->lua, "lua gc and close...");
-		lua_gc((lua_State*)ZZ->lua, LUA_GCCOLLECT, 0);
-		lua_gc((lua_State*)ZZ->lua, LUA_GCCOLLECT, 0);
-		// this call here frees also Z (lightuserdata)
-		lua_close((lua_State*)ZZ->lua);
-		ZZ->lua = NULL;
-	}
+	if(ZZ->logformat == JSON) json_end(ZZ->lua);
+
+	lua_gc((lua_State*)ZZ->lua, LUA_GCCOLLECT, 0);
+	lua_gc((lua_State*)ZZ->lua, LUA_GCCOLLECT, 0);
+	// this call here frees also Z (lightuserdata)
+	lua_close((lua_State*)ZZ->lua);
+	ZZ->lua = NULL;
 
 	// TODO: remove zstd header by segregating it to zen_io
 	// teardown
@@ -283,15 +289,10 @@ void zen_teardown(zenroom_t *ZZ) {
 	  ZSTD_freeDCtx(ZZ->zstd_d);
 	  ZZ->zstd_d = NULL;
 	}
-#ifdef MIMALLOC
-	int mi_stats = (int) (ZZ->debuglevel > 2);
-#endif
 
 #ifdef MIMALLOC
-	if(mi_stats>0) mi_stats_print(NULL);
+	if(ZZ->debuglevel > 2) mi_stats_print(NULL);
 #endif
-
-	if(ZZ->logformat == JSON) json_end(ZZ, "");
 
 	free(ZZ);
 
