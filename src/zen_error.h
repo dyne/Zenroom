@@ -28,7 +28,7 @@
 #include <stdarg.h>
 
 // macro to obtain Z context from a lua_State
-#define Z(l) zenroom_t *Z = NULL; if (l) { void *_zv; lua_getallocf(l, &_zv); Z = _zv; }
+#define Z(l) zenroom_t *Z = NULL; if (l) { void *_zv; lua_getallocf(l, &_zv); Z = _zv; } else { fprintf(stderr,"NULL context in call: %s\n", __func__); return(0); }
 
 // same as Android
 typedef enum log_priority {
@@ -46,18 +46,26 @@ typedef enum log_priority {
 
 void get_log_prefix(void *Z, log_priority prio, char dest[5]);
 
+// context free print and error messages
+void _out(const char *fmt, ...);
+void _err(const char *fmt, ...);
+// context free results
+int OK();
+int FAIL();
+
+// lua context error message
 int lerror(void *L, const char *fmt, ...);
 
-void notice(void *L, const char *format, ...); // INFO
-void func(void *L, const char *format, ...); // VERBOSE
-void zerror(void *L, const char *format, ...); // ERROR
-void act(void *L, const char *format, ...); // DEBUG
-void warning(void *L, const char *format, ...); // WARN
+int notice(void *L, const char *format, ...); // INFO
+int func(void *L, const char *format, ...); // VERBOSE
+int zerror(void *L, const char *format, ...); // ERROR
+int act(void *L, const char *format, ...); // DEBUG
+int warning(void *L, const char *format, ...); // WARN
 
 void json_start(void *L);
 void json_end(void *L);
 
-#define ERROR() zerror(0, "Error in %s",__func__)
+#define ERROR() zerror(L, "Error in %s",__func__)
 #define SAFE(x) if(!x) lerror(L, "NULL variable in %s",__func__)
 
 void set_debug(int lev);

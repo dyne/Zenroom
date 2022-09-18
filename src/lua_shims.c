@@ -30,12 +30,6 @@
 #include <zenroom.h>
 #include <zen_error.h>
 
-void lua_fatal(lua_State *L) {
-  Z(L);
-	Z->exitcode = -1;
-	luaD_throw(L, LUA_ERRRUN);
-}
-
 // moved from lua's lauxlib.c
 typedef struct LoadS {
 	const char *s;

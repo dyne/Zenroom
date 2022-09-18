@@ -138,7 +138,8 @@ void zen_add_random(lua_State *L) {
 	lua_getglobal(L, "_G");
 	luaL_setfuncs(L, rng_base, 0);
 	lua_pop(L, 1);
-	Z(L);
+	zenroom_t *Z = NULL;
+	void *_zv; lua_getallocf(L, &_zv); Z = _zv;
 	{ // pre-fill runtime_random
 		// used in
 		register int i;

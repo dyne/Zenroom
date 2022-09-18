@@ -18,9 +18,14 @@
  *
  */
 
+#include <unistd.h>
 
 #ifdef __ANDROID__
 #include <android/log.h>
+#endif
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
 #endif
 
 #if defined(_WIN32)
@@ -41,7 +46,7 @@
 
 // from zen_io.c
 extern int zen_log(lua_State *L, log_priority prio, octet *oct);
-extern void printerr(lua_State *L, octet *in);
+extern int printerr(lua_State *L, octet *in);
 
 #define MAX_ERRMSG 256 // maximum length of an error message line
 
@@ -65,17 +70,78 @@ void get_log_prefix(void *Z, log_priority prio, char dest[5]) {
   strncpy(p, log_prefix[prio], 4);
 }
 
+// error reported with lua context
 int lerror(void *LL, const char *fmt, ...) {
   lua_State *L = (lua_State*)LL;
   va_list argp;
   va_start(argp, fmt);
-  zerror(L, fmt, argp);
+  zerror(L, fmt, argp); // logs on all platforms
   luaL_where(L, 1);
   lua_pushvfstring(L, fmt, argp);
   va_end(argp);
   lua_concat(L, 2);
-  return lua_error(L);
+  return lua_error(L); // fatal
 }
+
+// stdout message free from context
+void _out(const char *fmt, ...) {
+  char msg[MAX_LINE];
+  int len;
+  va_list args;
+  va_start(args, fmt);
+  mutt_vsnprintf(msg, MAX_LINE-2, fmt, args);
+  va_end(args);
+  len = strlen(msg);
+  msg[len] = '\n';
+  msg[len+1] = 0x0;
+#if defined(__EMSCRIPTEN__)
+  EM_ASM_({Module.print(UTF8ToString($0))}, msg);
+#elif defined(ARCH_CORTEX)
+  write(SEMIHOSTING_STDOUT_FILENO, msg, len+1);
+#else
+  write(STDOUT_FILENO, msg, len+1);
+#endif
+}
+
+// error message free from context
+void _err(const char *fmt, ...) {
+  char msg[MAX_ERRMSG];
+  int len;
+  va_list args;
+  va_start(args, fmt);
+  mutt_vsnprintf(msg, MAX_ERRMSG, fmt, args);
+  va_end(args);
+  len = strlen(msg);
+  msg[len] = '\n';
+  msg[len+1] = 0x0;
+#if defined(__EMSCRIPTEN__)
+  EM_ASM_({Module.printErr(UTF8ToString($0))}, msg);
+  /* EM_ASM({Module.exec_error();}); */
+  /* EM_ASM(Module.onAbort()); */
+#elif defined(__ANDROID__)
+  __android_log_print(ANDROID_LOG_ERROR, "ZEN", "%s", msg);
+#elif defined(ARCH_CORTEX)
+  write_to_console(msg);
+#else
+  write(STDERR_FILENO, msg, len+1);
+#endif
+}
+
+// context free results
+#if defined(__EMSCRIPTEN__)
+int OK() {
+  EM_ASM({Module.exec_ok();});
+  return 0;
+}
+int FAIL() {
+  EM_ASM({Module.exec_error();});
+  EM_ASM(Module.onAbort());
+  return 1;
+}
+#else
+int OK() { return 0; }
+int FAIL() { return 1; }
+#endif
 
 static octet *o_malloc(int size) {
   octet *o = malloc(sizeof(octet));
@@ -110,9 +176,9 @@ void json_end(void *L) {
   free(o.val);
 }
 
-void notice(void *L, const char *format, ...) {
+int notice(void *L, const char *format, ...) {
   Z(L);
-  if(Z && Z->debuglevel<1) return;
+  if(Z && Z->debuglevel<1) return 0;
   octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
   va_list arg;
   va_start(arg, format);
@@ -120,11 +186,12 @@ void notice(void *L, const char *format, ...) {
   o->len = strlen(o->val);
   zen_log(L, LOG_INFO, o);
   o_free(o);
+  return 0;
 }
 
-void func(void *L, const char *format, ...) {
+int func(void *L, const char *format, ...) {
   Z(L);
-  if(Z && Z->debuglevel<3) return;
+  if(Z && Z->debuglevel<3) return 0;
   octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
   va_list arg;
   va_start(arg, format);
@@ -132,9 +199,10 @@ void func(void *L, const char *format, ...) {
   o->len = strlen(o->val);
   zen_log(L, LOG_VERBOSE, o);
   o_free(o);
+  return 0;
 }
 
-void zerror(void *L, const char *format, ...) {
+int zerror(void *L, const char *format, ...) {
   octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
   va_list arg;
   va_start(arg, format);
@@ -142,11 +210,12 @@ void zerror(void *L, const char *format, ...) {
   o->len = strlen(o->val);
   zen_log(L, LOG_ERROR, o);
   o_free(o);
+  return 0;
 }
 
-void act(void *L, const char *format, ...) {
+int act(void *L, const char *format, ...) {
   Z(L);
-  if(Z && Z->debuglevel<2) return;
+  if(Z && Z->debuglevel<2) return 0;
   octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
   // new octet is pushed to stack
   va_list arg;
@@ -155,11 +224,12 @@ void act(void *L, const char *format, ...) {
   o->len = strlen(o->val);
   zen_log(L, LOG_DEBUG, o);
   o_free(o);
+  return 0;
 }
 
-void warning(void *L, const char *format, ...) {
+int warning(void *L, const char *format, ...) {
   Z(L);
-  if(Z && Z->debuglevel<1) return;
+  if(Z && Z->debuglevel<1) return 0;
   octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
   va_list arg;
   va_start(arg, format);
@@ -167,4 +237,5 @@ void warning(void *L, const char *format, ...) {
   o->len = strlen(o->val);
   zen_log(L, LOG_WARN, o);
   o_free(o);
+  return 0;
 }
