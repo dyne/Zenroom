@@ -73,13 +73,11 @@ static int zen_print (lua_State *L) {
   return 0;
 }
 
-// print to stderr without prefix with newline
-int zen_printerr(lua_State *L, octet *in) {
+void printerr(lua_State *L, octet *o) {
   Z(L);
-  octet *o = in ? in : o_arg(L, 1); // it may be null (empty string)
   if (Z->stderr_buf) {
 	char *p = Z->stderr_buf+Z->stderr_pos;
-	if(!o) { *p='\n'; Z->stderr_pos++; return 0; }
+	if(!o) { *p='\n'; Z->stderr_pos++; return; }
 	if (Z->stderr_pos+o->len+1 > Z->stderr_len)
 	  zerror(L, "No space left in output buffer");
 	memcpy(p, o->val, o->len);
@@ -100,7 +98,7 @@ int zen_printerr(lua_State *L, octet *in) {
 #endif
   } else
 	func(L, "printerr of an empty string");	
-  return 0;
+  return;
 }
 
 // print without an ending newline
@@ -166,6 +164,13 @@ int zen_log(lua_State *L, log_priority prio, octet *o) {
 	write(STDERR_FILENO, o->val, tlen);
 #endif
   }
+  return 0;
+}
+
+// print to stderr without prefix with newline
+static int zen_printerr(lua_State *L) {
+  octet *o = o_arg(L, 1); // it may be null (empty string)
+  printerr(L, o);
   return 0;
 }
 
