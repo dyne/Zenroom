@@ -85,11 +85,11 @@ int lerror(void *LL, const char *fmt, ...) {
 
 // stdout message free from context
 void _out(const char *fmt, ...) {
-  char msg[MAX_LINE];
+  char msg[MAX_STRING];
   int len;
   va_list args;
   va_start(args, fmt);
-  mutt_vsnprintf(msg, MAX_LINE-2, fmt, args);
+  mutt_vsnprintf(msg, MAX_STRING-2, fmt, args);
   va_end(args);
   len = strlen(msg);
   msg[len] = '\n';
