@@ -41,7 +41,7 @@
 
 // from zen_io.c
 extern int zen_log(lua_State *L, log_priority prio, octet *oct);
-extern int zen_printerr(lua_State *L, octet *in);
+extern void printerr(lua_State *L, octet *in);
 
 #define MAX_ERRMSG 256 // maximum length of an error message line
 
@@ -96,7 +96,7 @@ void json_start(void *L) {
   o.len = o.max = strlen(logstart);
   o.val = malloc(o.len+0x0f);
   memcpy(o.val, logstart, o.len);
-  zen_printerr(L, &o);
+  printerr(L, &o);
   free(o.val);
 }
 
@@ -106,7 +106,7 @@ void json_end(void *L) {
   o.len = o.max = strlen(logend);
   o.val = malloc(o.len+0x0f);
   memcpy(o.val, logend, o.len);
-  zen_printerr(L, &o);
+  printerr(L, &o);
   free(o.val);
 }
 
