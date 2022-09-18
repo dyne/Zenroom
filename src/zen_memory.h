@@ -22,10 +22,14 @@
 #define __ZEN_MEMORY_H__
 
 #ifdef MIMALLOC
-#include <mimalloc.h>
-#include <mimalloc-override.h>
+  #include <mimalloc.h>
+  #include <mimalloc-override.h>
 #else
-#include <stdlib.h>
+  #if defined(_WIN32)
+    #include <malloc.h>
+  #else
+    #include <stdlib.h>
+  #endif
 #endif
 
 #endif
