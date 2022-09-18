@@ -83,6 +83,9 @@ void set_color(int on);
 	fprintf(stderr, "-> %s - octet %p (%i/%i)\n",__func__,o->val,o->len,o->max)
 #define HEREecdh(e) \
 	fprintf(stderr, "--> %s - ecdh %p\n\tcurve[%s] type[%s]\n\t fieldsize[%i] hash[%i]\n\tpubkey[%p(%i/%i)] publen[%i]\n\tseckey[%p(%i/%i)] seclen[%i]\m",__func__, e, e->curve, e->type, e->fieldsize, e->hash, e->pubkey, e->pubkey?e->pubkey->len:0x0, e->pubkey?e->pubkey->max:0x0, e->publen, e->seckey, e->seckey?e->seckey->len:0x0, e->seckey?e->seckey->max:0x0, e->seclen)
+#define HEREhex(b, len) \
+  char *dst = malloc((len<<1)+2); buf2hex(dst, b, len); \
+  dst[(len<<1)] = 0x0; fprintf(stderr,"%s\n",dst); free(dst);
 #else
 #define HERE() (void)__func__
 #define HEREs(s) (void)__func__
@@ -90,6 +93,7 @@ void set_color(int on);
 #define HEREn(s) (void)__func__
 #define HEREoct(o) (void)__func__
 #define HEREecdh(o) (void)__func__
+#define HEREhex(b,len) (void)__func__
 #endif
 
 #endif
