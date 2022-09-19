@@ -85,14 +85,12 @@ int lerror(void *LL, const char *fmt, ...) {
 
 // stdout message free from context
 void _out(const char *fmt, ...) {
-  char msg[MAX_STRING];
-  int len;
+  char msg[MAX_STRING+4];
   va_list args;
   va_start(args, fmt);
-  mutt_vsnprintf(msg, MAX_STRING-2, fmt, args);
+  int len = mutt_vsnprintf(msg, MAX_STRING, fmt, args);
   va_end(args);
-  len = strlen(msg);
-  msg[MAX_STRING] = 0x0; // safety
+  msg[len+1] = 0x0; //safety
 #if defined(__EMSCRIPTEN__)
   EM_ASM_({Module.print(UTF8ToString($0))}, msg);
 #elif defined(ARCH_CORTEX)
@@ -106,19 +104,16 @@ void _out(const char *fmt, ...) {
 
 // error message free from context
 void _err(const char *fmt, ...) {
-  char msg[MAX_ERRMSG];
+  char msg[MAX_ERRMSG+4];
   int len;
   va_list args;
   va_start(args, fmt);
-  mutt_vsnprintf(msg, MAX_ERRMSG, fmt, args);
+  len = mutt_vsnprintf(msg, MAX_ERRMSG, fmt, args);
   va_end(args);
-  len = strlen(msg);
   msg[len] = '\n';
   msg[len+1] = 0x0;
 #if defined(__EMSCRIPTEN__)
   EM_ASM_({Module.printErr(UTF8ToString($0))}, msg);
-  /* EM_ASM({Module.exec_error();}); */
-  /* EM_ASM(Module.onAbort()); */
 #elif defined(__ANDROID__)
   __android_log_print(ANDROID_LOG_ERROR, "ZEN", "%s", msg);
 #elif defined(ARCH_CORTEX)

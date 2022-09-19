@@ -28,7 +28,7 @@
 #include <stdarg.h>
 
 // macro to obtain Z context from a lua_State
-#define Z(l) zenroom_t *Z = NULL; if (l) { void *_zv; lua_getallocf(l, &_zv); Z = _zv; } else { fprintf(stderr,"NULL context in call: %s\n", __func__); return(0); }
+#define Z(l) zenroom_t *Z = NULL; if (l) { void *_zv; lua_getallocf(l, &_zv); Z = _zv; } else { _err("NULL context in call: %s\n", __func__); return(0); }
 
 // same as Android
 typedef enum log_priority {
@@ -74,18 +74,18 @@ void set_color(int on);
 
 // useful for debugging
 #if DEBUG == 1
-#define HERE()   fprintf(stderr, "-> %s()\n",__func__)
-#define HEREs(s) fprintf(stderr, "-> %s(%s)\n",__func__,s)
-#define HEREp(p) fprintf(stderr, "-> %s(%p)\n",__func__,p)
-#define HEREn(n) fprintf(stderr, "-> %s(%i)\n",__func__,n)
-#define HEREc(c) fprintf(stderr, "-> %s(%c)\n",__func__,c)
+#define HERE()   _err( "-> %s()\n",__func__)
+#define HEREs(s) _err( "-> %s(%s)\n",__func__,s)
+#define HEREp(p) _err( "-> %s(%p)\n",__func__,p)
+#define HEREn(n) _err( "-> %s(%i)\n",__func__,n)
+#define HEREc(c) _err( "-> %s(%c)\n",__func__,c)
 #define HEREoct(o) \
-	fprintf(stderr, "-> %s - octet %p (%i/%i)\n",__func__,o->val,o->len,o->max)
+	_err( "-> %s - octet %p (%i/%i)\n",__func__,o->val,o->len,o->max)
 #define HEREecdh(e) \
-	fprintf(stderr, "--> %s - ecdh %p\n\tcurve[%s] type[%s]\n\t fieldsize[%i] hash[%i]\n\tpubkey[%p(%i/%i)] publen[%i]\n\tseckey[%p(%i/%i)] seclen[%i]\m",__func__, e, e->curve, e->type, e->fieldsize, e->hash, e->pubkey, e->pubkey?e->pubkey->len:0x0, e->pubkey?e->pubkey->max:0x0, e->publen, e->seckey, e->seckey?e->seckey->len:0x0, e->seckey?e->seckey->max:0x0, e->seclen)
+	_err( "--> %s - ecdh %p\n\tcurve[%s] type[%s]\n\t fieldsize[%i] hash[%i]\n\tpubkey[%p(%i/%i)] publen[%i]\n\tseckey[%p(%i/%i)] seclen[%i]\m",__func__, e, e->curve, e->type, e->fieldsize, e->hash, e->pubkey, e->pubkey?e->pubkey->len:0x0, e->pubkey?e->pubkey->max:0x0, e->publen, e->seckey, e->seckey?e->seckey->len:0x0, e->seckey?e->seckey->max:0x0, e->seclen)
 #define HEREhex(b, len) \
   char *dst = malloc((len<<1)+2); buf2hex(dst, b, len); \
-  dst[(len<<1)] = 0x0; fprintf(stderr,"%s\n",dst); free(dst);
+  dst[(len<<1)] = 0x0; _err("%s\n",dst); free(dst);
 #else
 #define HERE() (void)__func__
 #define HEREs(s) (void)__func__
