@@ -196,11 +196,9 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 		ZZ->random_external = 1;
 		memset(ZZ->random_seed, 0x0, RANDOM_SEED_LEN);
 		int len = hex2buf(ZZ->random_seed, ZZ->zconf_rngseed);
-		fprintf(stderr,
-				"RNG seed converted from hex to %u bytes\n", len);
+		_err("RNG seed converted from hex to %u bytes\n", len);
 	} else {
-	  fprintf(stderr,
-			  "RNG seed not found in configuration\n");
+	  _err("RNG seed not found in configuration\n");
 	}
 
 	// initialize the random generator
@@ -209,7 +207,7 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	// initialize Lua's context
 	ZZ->lua = lua_newstate(zen_memory_manager, ZZ);
 	if(!ZZ->lua) {
-	  fprintf(stderr, "%s: %s", __func__,
+	  _err( "%s: %s", __func__,
 			  "Lua newstate creation failed\n");
 	  zen_teardown(ZZ);
 	  return NULL;
@@ -257,6 +255,10 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 		func(ZZ->lua, "declaring global: KEYS");
 		zen_setenv(ZZ->lua,"KEYS",keys);
 	}
+	func(ZZ->lua, "declaring log format: %s",
+		 ZZ->logformat == JSON ? "JSON" : "TEXT");
+	  zen_setenv(ZZ->lua, "LOGFMT",
+				 ZZ->logformat == JSON ? "JSON" : "TEXT");
 	return(ZZ);
 }
 
