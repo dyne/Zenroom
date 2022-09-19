@@ -92,13 +92,14 @@ void _out(const char *fmt, ...) {
   mutt_vsnprintf(msg, MAX_STRING-2, fmt, args);
   va_end(args);
   len = strlen(msg);
-  msg[len] = '\n';
-  msg[len+1] = 0x0;
+  msg[MAX_STRING] = 0x0; // safety
 #if defined(__EMSCRIPTEN__)
   EM_ASM_({Module.print(UTF8ToString($0))}, msg);
 #elif defined(ARCH_CORTEX)
+  msg[len] = '\n'; msg[len+1] = 0x0;
   write(SEMIHOSTING_STDOUT_FILENO, msg, len+1);
 #else
+  msg[len] = '\n'; msg[len+1] = 0x0;
   write(STDOUT_FILENO, msg, len+1);
 #endif
 }
