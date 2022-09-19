@@ -48,6 +48,8 @@
 extern int zen_log(lua_State *L, log_priority prio, octet *oct);
 extern int printerr(lua_State *L, octet *in);
 
+#define Z_FORMAT_ARG(l) zenroom_t *Z = NULL; if (l) { void *_zv; lua_getallocf(l, &_zv); Z = _zv; } else { _err(format, arg); return(0); }
+
 #define MAX_ERRMSG 256 // maximum length of an error message line
 
 #define LOG_DEFAULT " .   "
@@ -173,11 +175,11 @@ void json_end(void *L) {
 }
 
 int notice(void *L, const char *format, ...) {
-  Z(L);
-  if(Z && Z->debuglevel<1) return 0;
-  octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
   va_list arg;
   va_start(arg, format);
+  Z_FORMAT_ARG(L);
+  if(Z && Z->debuglevel<1) return 0;
+  octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
   mutt_vsnprintf(o->val, o->max-5, format, arg);
   o->len = strlen(o->val);
   zen_log(L, LOG_INFO, o);
@@ -186,11 +188,11 @@ int notice(void *L, const char *format, ...) {
 }
 
 int func(void *L, const char *format, ...) {
-  Z(L);
-  if(Z && Z->debuglevel<3) return 0;
-  octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
   va_list arg;
   va_start(arg, format);
+  Z_FORMAT_ARG(L);
+  if(Z && Z->debuglevel<3) return 0;
+  octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
   mutt_vsnprintf(o->val, o->max-5, format, arg);
   o->len = strlen(o->val);
   zen_log(L, LOG_VERBOSE, o);
@@ -199,9 +201,10 @@ int func(void *L, const char *format, ...) {
 }
 
 int zerror(void *L, const char *format, ...) {
-  octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
   va_list arg;
   va_start(arg, format);
+  Z_FORMAT_ARG(L);
+  octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
   mutt_vsnprintf(o->val, o->max-5, format, arg);
   o->len = strlen(o->val);
   zen_log(L, LOG_ERROR, o);
@@ -210,12 +213,12 @@ int zerror(void *L, const char *format, ...) {
 }
 
 int act(void *L, const char *format, ...) {
-  Z(L);
+  va_list arg;
+  va_start(arg, format);
+  Z_FORMAT_ARG(L);
   if(Z && Z->debuglevel<2) return 0;
   octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
   // new octet is pushed to stack
-  va_list arg;
-  va_start(arg, format);
   mutt_vsnprintf(o->val, o->max-5, format, arg);
   o->len = strlen(o->val);
   zen_log(L, LOG_DEBUG, o);
@@ -224,11 +227,11 @@ int act(void *L, const char *format, ...) {
 }
 
 int warning(void *L, const char *format, ...) {
-  Z(L);
-  if(Z && Z->debuglevel<1) return 0;
-  octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
   va_list arg;
   va_start(arg, format);
+  Z_FORMAT_ARG(L);
+  if(Z && Z->debuglevel<1) return 0;
+  octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
   mutt_vsnprintf(o->val, o->max-5, format, arg);
   o->len = strlen(o->val);
   zen_log(L, LOG_WARN, o);
