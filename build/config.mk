@@ -1,4 +1,7 @@
+# Automatic settings configuration
 # included by makefile
+
+# {{{ DEFAULTS
 
 pwd := $(shell pwd)
 mil := ${pwd}/build/milagro
@@ -17,60 +20,9 @@ cflags := -O2 ${cflags_protection}
 musl := ${pwd}/build/musl
 platform := posix
 
-# ------------
-# lua settings
-luasrc := ${pwd}/lib/lua53/src
-ldadd := ${pwd}/lib/lua53/src/liblua.a
-lua_embed_opts := ""
-lua_cc := ${gcc}
-lua_cflags := -DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE -DLUA_COMPAT_BITLIB -I${pwd}/lib/milagro-crypto-c/build/include -I${pwd}/src -I${pwd}/lib/milagro-crypto-c/build/include -I ${pwd}/lib/mimalloc/include
+# }}}
 
-# ----------------
-# milagro settings
-rsa_bits := ""
-# other ecdh curves := ED25519 C25519 NIST256 BRAINPOOL ANSSI HIFIVE
-# GOLDILOCKS NIST384 C41417 NIST521 NUMS256W NUMS256E NUMS384W
-# NUMS384E NUMS512W NUMS512E SECP256K1 BN254 BN254CX BLS381 BLS383
-# BLS24 BLS48 FP256BN FP512BN BLS461
-# see lib/milagro-crypto-c/cmake/AMCLParameters.cmake
-ecdh_curve := SECP256K1
-ecp_curve  := BLS381
-milagro_cmake_flags := -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DBUILD_DOCS=OFF -DBUILD_BENCHMARKS=OFF -DBUILD_EXAMPLES=OFF -DWORD_SIZE=32 -DBUILD_PAILLIER=OFF -DBUILD_X509=OFF -DBUILD_WCC=OFF -DBUILD_MPIN=OFF -DAMCL_CURVE=${ecdh_curve},${ecp_curve} -DAMCL_RSA=${rsa_bits} -DAMCL_PREFIX=AMCL_ -DCMAKE_SHARED_LIBRARY_LINK_FLAGS="" -DC99=1 -DPAIRING_FRIENDLY_BLS381='BLS' -DCOMBA=1 -DBUILD_TESTING=OFF
-milib := ${pwd}/lib/milagro-crypto-c/build/lib
-ldadd += ${milib}/libamcl_curve_${ecp_curve}.a
-ldadd += ${milib}/libamcl_pairing_${ecp_curve}.a
-ldadd += ${milib}/libamcl_curve_${ecdh_curve}.a
-ldadd += ${milib}/libamcl_core.a
-
-#-----------------
-# quantum-proof
-quantum_proof_cc = ${gcc}
-quantum_proof_cflags = -I ${pwd}/src -I ${pwd}/lib/mimalloc/include -I.
-ldadd += ${pwd}/lib/pqclean/libqpz.a
-
-# ----------------
-# zstd settings
-zstd_cc := ${gcc}
-ldadd += ${pwd}/lib/zstd/libzstd.a
-
-#-----------------
-# ed25519 settings
-ed25519_cc := ${gcc}
-ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
-
-#-----------------
-# mimalloc settings
-mimalloc_cmake_flags := -DMI_BUILD_SHARED=OFF -DMI_BUILD_OBJECT=OFF
-mimalloc_cmake_flags += -DMI_BUILD_TESTS=OFF -DMI_SECURE=ON
-mimalloc_cmake_flags += -DMI_LIBPTHREAD=0 -DMI_LIBRT=0
-mimalloc_cmake_flags += -DMI_LIBATOMIC=0
-mimalloc_cflags := -fvisibility=hidden -Wstrict-prototypes
-mimalloc_cflags += -ftls-model=initial-exec -fno-builtin-malloc
-mimalloc_cflags += -DMI_USE_RTLGENRANDOM
-ldadd += ${pwd}/lib/mimalloc/build/libmimalloc-static.a
-
-# ------------------------
-# target specific settings
+# {{{ TARGET SPECIFIC
 
 ifneq (,$(findstring win,$(MAKECMDGOALS)))
 gcc := $(shell which x86_64-w64-mingw32-gcc)
@@ -139,10 +91,6 @@ BUILDS := $(filter-out mimalloc,$(BUILDS))
 ldadd := $(filter-out ${pwd}/lib/mimalloc/build/libmimalloc-static.a,${ldadd})
 milagro_cmake_flags += -DCMAKE_SYSTEM_PROCESSOR="arm" -DCMAKE_CROSSCOMPILING=1 -DCMAKE_C_COMPILER_WORKS=1
 milagro_cmake_flags += -DCMAKE_OSX_SYSROOT="/" -DCMAKE_OSX_DEPLOYMENT_TARGET=""
-endif
-
-ifneq (,$(findstring c++,$(MAKECMDGOALS)))
-gcc := g++
 endif
 
 ifneq (,$(findstring musl,$(MAKECMDGOALS)))
@@ -245,6 +193,7 @@ system := Darwin
 endif
 
 ifneq (,$(findstring javascript,$(MAKECMDGOALS)))
+EMSCRIPTEN ?= ${EMSDK}/upstream/emscripten
 gcc := ${EMSCRIPTEN}/emcc
 ar := ${EMSCRIPTEN}/emar
 ld := ${gcc}
@@ -296,6 +245,10 @@ cflags += $(shell python3-config --cflags) -fPIC -DLIBRARY
 ldflags += $(shell python3-config --ldflags)
 endif
 
+ifneq (,$(findstring c++,$(MAKECMDGOALS)))
+gcc := g++
+endif
+
 ifneq (,$(findstring clang,$(MAKECMDGOALS)))
 gcc := clang
 endif
@@ -309,3 +262,59 @@ ed25519_cc := ccache ${gcc}
 lua_cc := ccache ${gcc}
 endif
 
+##########################
+# {{{ Dependency settings
+
+# ------------
+# lua settings
+luasrc := ${pwd}/lib/lua53/src
+ldadd := ${pwd}/lib/lua53/src/liblua.a
+lua_embed_opts := ""
+lua_cc := ${gcc}
+lua_cflags := -DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE -DLUA_COMPAT_BITLIB -I${pwd}/lib/milagro-crypto-c/build/include -I${pwd}/src -I${pwd}/lib/milagro-crypto-c/build/include -I ${pwd}/lib/mimalloc/include
+
+# ----------------
+# milagro settings
+rsa_bits := ""
+# other ecdh curves := ED25519 C25519 NIST256 BRAINPOOL ANSSI HIFIVE
+# GOLDILOCKS NIST384 C41417 NIST521 NUMS256W NUMS256E NUMS384W
+# NUMS384E NUMS512W NUMS512E SECP256K1 BN254 BN254CX BLS381 BLS383
+# BLS24 BLS48 FP256BN FP512BN BLS461
+# see lib/milagro-crypto-c/cmake/AMCLParameters.cmake
+ecdh_curve := SECP256K1
+ecp_curve  := BLS381
+milagro_cmake_flags := -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DBUILD_DOCS=OFF -DBUILD_BENCHMARKS=OFF -DBUILD_EXAMPLES=OFF -DWORD_SIZE=32 -DBUILD_PAILLIER=OFF -DBUILD_X509=OFF -DBUILD_WCC=OFF -DBUILD_MPIN=OFF -DAMCL_CURVE=${ecdh_curve},${ecp_curve} -DAMCL_RSA=${rsa_bits} -DAMCL_PREFIX=AMCL_ -DCMAKE_SHARED_LIBRARY_LINK_FLAGS="" -DC99=1 -DPAIRING_FRIENDLY_BLS381='BLS' -DCOMBA=1 -DBUILD_TESTING=OFF
+milib := ${pwd}/lib/milagro-crypto-c/build/lib
+ldadd += ${milib}/libamcl_curve_${ecp_curve}.a
+ldadd += ${milib}/libamcl_pairing_${ecp_curve}.a
+ldadd += ${milib}/libamcl_curve_${ecdh_curve}.a
+ldadd += ${milib}/libamcl_core.a
+
+#-----------------
+# quantum-proof
+quantum_proof_cc = ${gcc}
+quantum_proof_cflags = -I ${pwd}/src -I ${pwd}/lib/mimalloc/include -I.
+ldadd += ${pwd}/lib/pqclean/libqpz.a
+
+# ----------------
+# zstd settings
+zstd_cc := ${gcc}
+ldadd += ${pwd}/lib/zstd/libzstd.a
+
+#-----------------
+# ed25519 settings
+ed25519_cc := ${gcc}
+ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
+
+#-----------------
+# mimalloc settings
+mimalloc_cmake_flags := -DMI_BUILD_SHARED=OFF -DMI_BUILD_OBJECT=OFF
+mimalloc_cmake_flags += -DMI_BUILD_TESTS=OFF -DMI_SECURE=ON
+mimalloc_cmake_flags += -DMI_LIBPTHREAD=0 -DMI_LIBRT=0
+mimalloc_cmake_flags += -DMI_LIBATOMIC=0
+mimalloc_cflags := -fvisibility=hidden -Wstrict-prototypes
+mimalloc_cflags += -ftls-model=initial-exec -fno-builtin-malloc
+mimalloc_cflags += -DMI_USE_RTLGENRANDOM
+ldadd += ${pwd}/lib/mimalloc/build/libmimalloc-static.a
+
+# }}}
