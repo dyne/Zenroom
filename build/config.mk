@@ -270,8 +270,8 @@ endif
 luasrc := ${pwd}/lib/lua53/src
 ldadd := ${pwd}/lib/lua53/src/liblua.a
 lua_embed_opts := ""
-lua_cc := ${gcc}
-lua_cflags := -DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE -DLUA_COMPAT_BITLIB -I${pwd}/lib/milagro-crypto-c/build/include -I${pwd}/src -I${pwd}/lib/milagro-crypto-c/build/include -I ${pwd}/lib/mimalloc/include
+lua_cc ?= ${gcc}
+lua_cflags ?= -DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE -DLUA_COMPAT_BITLIB -I${pwd}/lib/milagro-crypto-c/build/include -I${pwd}/src -I${pwd}/lib/milagro-crypto-c/build/include -I ${pwd}/lib/mimalloc/include
 
 # ----------------
 # milagro settings
@@ -281,9 +281,9 @@ rsa_bits := ""
 # NUMS384E NUMS512W NUMS512E SECP256K1 BN254 BN254CX BLS381 BLS383
 # BLS24 BLS48 FP256BN FP512BN BLS461
 # see lib/milagro-crypto-c/cmake/AMCLParameters.cmake
-ecdh_curve := SECP256K1
-ecp_curve  := BLS381
-milagro_cmake_flags := -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DBUILD_DOCS=OFF -DBUILD_BENCHMARKS=OFF -DBUILD_EXAMPLES=OFF -DWORD_SIZE=32 -DBUILD_PAILLIER=OFF -DBUILD_X509=OFF -DBUILD_WCC=OFF -DBUILD_MPIN=OFF -DAMCL_CURVE=${ecdh_curve},${ecp_curve} -DAMCL_RSA=${rsa_bits} -DAMCL_PREFIX=AMCL_ -DCMAKE_SHARED_LIBRARY_LINK_FLAGS="" -DC99=1 -DPAIRING_FRIENDLY_BLS381='BLS' -DCOMBA=1 -DBUILD_TESTING=OFF
+ecdh_curve ?= SECP256K1
+ecp_curve  ?= BLS381
+milagro_cmake_flags += -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGEN=OFF -DBUILD_DOCS=OFF -DBUILD_BENCHMARKS=OFF -DBUILD_EXAMPLES=OFF -DWORD_SIZE=32 -DBUILD_PAILLIER=OFF -DBUILD_X509=OFF -DBUILD_WCC=OFF -DBUILD_MPIN=OFF -DAMCL_CURVE=${ecdh_curve},${ecp_curve} -DAMCL_RSA=${rsa_bits} -DAMCL_PREFIX=AMCL_ -DCMAKE_SHARED_LIBRARY_LINK_FLAGS="" -DC99=1 -DPAIRING_FRIENDLY_BLS381='BLS' -DCOMBA=1 -DBUILD_TESTING=OFF
 milib := ${pwd}/lib/milagro-crypto-c/build/lib
 ldadd += ${milib}/libamcl_curve_${ecp_curve}.a
 ldadd += ${milib}/libamcl_pairing_${ecp_curve}.a
@@ -292,27 +292,27 @@ ldadd += ${milib}/libamcl_core.a
 
 #-----------------
 # quantum-proof
-quantum_proof_cc = ${gcc}
-quantum_proof_cflags = -I ${pwd}/src -I ${pwd}/lib/mimalloc/include -I.
+quantum_proof_cc ?= ${gcc}
+quantum_proof_cflags ?= -I ${pwd}/src -I ${pwd}/lib/mimalloc/include -I.
 ldadd += ${pwd}/lib/pqclean/libqpz.a
 
 # ----------------
 # zstd settings
-zstd_cc := ${gcc}
+zstd_cc ?= ${gcc}
 ldadd += ${pwd}/lib/zstd/libzstd.a
 
 #-----------------
 # ed25519 settings
-ed25519_cc := ${gcc}
+ed25519_cc ?= ${gcc}
 ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
 
 #-----------------
 # mimalloc settings
-mimalloc_cmake_flags := -DMI_BUILD_SHARED=OFF -DMI_BUILD_OBJECT=OFF
+mimalloc_cmake_flags += -DMI_BUILD_SHARED=OFF -DMI_BUILD_OBJECT=OFF
 mimalloc_cmake_flags += -DMI_BUILD_TESTS=OFF -DMI_SECURE=ON
 mimalloc_cmake_flags += -DMI_LIBPTHREAD=0 -DMI_LIBRT=0
 mimalloc_cmake_flags += -DMI_LIBATOMIC=0
-mimalloc_cflags := -fvisibility=hidden -Wstrict-prototypes
+mimalloc_cflags += -fvisibility=hidden -Wstrict-prototypes
 mimalloc_cflags += -ftls-model=initial-exec -fno-builtin-malloc
 mimalloc_cflags += -DMI_USE_RTLGENRANDOM
 ldadd += ${pwd}/lib/mimalloc/build/libmimalloc-static.a
