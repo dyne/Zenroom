@@ -25,14 +25,17 @@ jobs:
           # install compiler
           sudo apt-get install --force-yes ${{ matrix.compiler }}
           # install deps
-          sudo apt-get install --force-yes cmake vim zsh luajit lua-cjson
+          sudo apt-get install --force-yes cmake vim zsh luajit lua-cjson ccache
           pip3 install meson
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
 
       - name: Build using meson
         env:
           CC: ${{ matrix.compiler }}
         run: |
-          make meson && ninja -C meson
+          make meson-ccache && ninja -C meson
 
       - name: Run tests
         run: |

@@ -163,10 +163,6 @@ ldflags := -lm -lpthread
 system := Linux
 endif
 
-ifneq (,$(findstring clang,$(MAKECMDGOALS)))
-gcc := clang
-endif
-
 ifneq (,$(findstring raspi,$(MAKECMDGOALS)))
 defines := -DLIBCMALLOC
 BUILDS := $(filter-out mimalloc,$(BUILDS))
@@ -300,6 +296,10 @@ cflags += $(shell python3-config --cflags) -fPIC -DLIBRARY
 ldflags += $(shell python3-config --ldflags)
 endif
 
+ifneq (,$(findstring clang,$(MAKECMDGOALS)))
+gcc := clang
+endif
+
 ifneq (,$(findstring ccache,$(MAKECMDGOALS)))
 milagro_cmake_flags += -DCMAKE_C_COMPILER_LAUNCHER=ccache
 mimalloc_cmake_flags += -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -308,3 +308,4 @@ zstd_cc := ccache ${gcc}
 ed25519_cc := ccache ${gcc}
 lua_cc := ccache ${gcc}
 endif
+
