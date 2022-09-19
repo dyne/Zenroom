@@ -208,7 +208,7 @@ int zen_zstd_compress(lua_State *L) {
 			       ZSTD_maxCLevel());
   func(L, "octet compressed: %u -> %u",src->len, dst->len);
   if (ZSTD_isError(dst->len)) {
-    fprintf(stderr,"ZSTD error: %s\n",ZSTD_getErrorName(dst->len));
+    _err("ZSTD error: %s\n",ZSTD_getErrorName(dst->len));
   }
   return 1;
 }
@@ -227,7 +227,7 @@ int zen_zstd_decompress(lua_State *L) {
 		      src->val, src->len);
   func(L, "octet uncompressed: %u -> %u",src->len, dst->len);
   if (ZSTD_isError(dst->len)) {
-    fprintf(stderr,"ZSTD error: %s\n",ZSTD_getErrorName(dst->len));
+    _err("ZSTD error: %s\n",ZSTD_getErrorName(dst->len));
   }
   return 1;
 }
