@@ -86,34 +86,27 @@ esp32: apply-patches milagro lua53
 # lpeglabel:
 # 	CC=${gcc} CFLAGS="${cflags} -I${pwd}/lib/lua53/src" AR="${ar}" $(MAKE) -C lib/lpeglabel
 
-zlib:
-	CC=${gcc} CFLAGS="${cflags}" \
-	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
-	pwd="${pwd}" $(MAKE) -C ${pwd}/build/zlib -f ZenMakefile
-
-android-lua53: cflags += -I ${pwd}/lib/mimalloc/include
 android-lua53:
-	CC=${gcc} CFLAGS="${cflags} ${lua_cflags}" \
+	CC="${lua_cc}" CFLAGS="${cflags} ${lua_cflags}" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
 	$(MAKE) -C ${pwd}/lib/lua53/src ${platform}
 
-musl-lua53: cflags += -I ${pwd}/lib/mimalloc/include
 musl-lua53:
-	CC=${gcc} CFLAGS="${cflags} ${lua_cflags}" \
+	CC="${lua_cc}" CFLAGS="${cflags} ${lua_cflags}" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
 	$(MAKE) -C ${pwd}/lib/lua53/src ${platform}
 
-lua53: cflags += -I ${pwd}/lib/mimalloc/include
 lua53:
-	CC=${gcc} CFLAGS="${cflags} ${lua_cflags}" \
+	CC="${lua_cc}" CFLAGS="${cflags} ${lua_cflags}" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
 	$(MAKE) -C ${pwd}/lib/lua53/src ${platform}
 
 cortex-lua53:
-	CC=${gcc} CFLAGS="${cflags} ${lua_cflags} -DLUA_BAREBONE" \
+	CC="${lua_cc}" CFLAGS="${cflags} ${lua_cflags} -DLUA_BAREBONE" \
 	LDFLAGS="${ldflags}" AR="${ar}" RANLIB=${ranlib} \
 	$(MAKE) -C ${pwd}/lib/lua53/src ${platform}
 
+milagro-debug: milagro
 milagro:
 	@echo "-- Building milagro (${system})"
 	if ! [ -r ${pwd}/lib/milagro-crypto-c/build/CMakeCache.txt ]; then \
@@ -129,17 +122,7 @@ milagro:
 		$(MAKE) -C ${pwd}/lib/milagro-crypto-c/build; \
 	fi
 
-mimalloc_cmake_flags := -DMI_BUILD_SHARED=OFF -DMI_BUILD_OBJECT=OFF
-mimalloc_cmake_flags += -DMI_BUILD_TESTS=OFF -DMI_SECURE=ON
-mimalloc_cmake_flags += -DMI_LIBPTHREAD=0 -DMI_LIBRT=0
-mimalloc_cmake_flags += -DMI_LIBATOMIC=0
-mimalloc_cflags := -fvisibility=hidden -Wstrict-prototypes
-mimalloc_cflags += -ftls-model=initial-exec -fno-builtin-malloc
-mimalloc_cflags += -DMI_USE_RTLGENRANDOM
-ifneq (,$(findstring debug,$(MAKECMDGOALS)))
-mimalloc_cmake_flags += -DCMAKE_BUILD_TYPE=Debug
-mimalloc_cflags += -DMI_DEBUG_FULL
-endif
+mimalloc-debug: mimalloc
 mimalloc:
 	$(info -- Building mimalloc (${system}))
 	if ! [ -r ${pwd}/lib/mimalloc/build/CMakeCache.txt ]; then \
@@ -158,16 +141,16 @@ mimalloc:
                 ${MAKE} -C ${pwd}/lib/mimalloc/build; \
 	fi
 
-# quantum-proof: cflags += -I../../src -I.
-quantum-proof: cflags += -I ${pwd}/src -I ${pwd}/lib/mimalloc/include -I.
+quantum-proof-ccache: quantum-proof
+quantum-proof-debug: quantum-proof
 quantum-proof:
 	$(info -- Building Quantum-Proof libs)
-	CC=${gcc} \
+	CC="${quantum_proof_cc}" \
 	LD=${ld} \
 	AR=${ar} \
 	RANLIB=${ranlib} \
 	LD=${ld} \
-	CFLAGS="${cflags}" \
+	CFLAGS="${quantum_proof_cflags} ${cflags}" \
 	LDFLAGS="${ldflags}" \
 	${MAKE} -C ${pwd}/lib/pqclean
 
@@ -176,7 +159,7 @@ check-milagro: milagro
 
 zstd:
 	echo "-- Building ZSTD"
-	CC=${gcc} \
+	CC="${zstd_cc}" \
 	LD=${ld} \
 	AR=${ar} \
 	RANLIB=${ranlib} \
@@ -192,10 +175,10 @@ zstd:
 	ZSTD_STRIP_ERROR_STRINGS=0 \
 	ZSTD_NO_INLINE=1
 
-# TODO: move into a makefile inside the lib
+ed25519-donna-ccache: ed25519-donna
 ed25519-donna:
 	echo "-- Building ED25519 for EDDSA"
-	CC=${gcc} \
+	CC="${ed25519_cc}" \
 	AR=${ar} \
 	CFLAGS="${cflags}" \
 	LDFLAGS="${ldflags}" \
