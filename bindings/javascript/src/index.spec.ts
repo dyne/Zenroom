@@ -15,12 +15,12 @@ test("does exists", (t) => {
 
 test("does run hello world", async (t) => {
   const {result} = await zenroom_exec(`print('hello world!')`);
-  t.is(result, "hello world!");
+  t.is(result, "hello world!\n");
 });
 
 test("does parse data", async (t) => {
   const {result} = await zenroom_exec(`print(DATA)`, {data: "DATA INSIDE"});
-  t.is(result, "DATA INSIDE");
+  t.is(result, "DATA INSIDE\n");
 });
 
 test("does broke gracefully", async (t) => {
@@ -29,7 +29,7 @@ test("does broke gracefully", async (t) => {
   } catch (e) {
     t.true(
       e.logs.includes(
-        `[!] [string "broken sapokdao"]:1: syntax error near 'sapokdao'`
+        `[!]  [string "broken sapokdao"]:1: syntax error near 'sapokdao'`
       )
     );
   }
@@ -39,12 +39,12 @@ test("does handle empty zencode", async (t) => {
   try {
     await zencode_exec(null);
   } catch (e) {
-    t.true(e.logs.includes("[!] NULL string as script argument"));
+    t.true(e.logs.includes("[!]  NULL string as script argument"));
   }
   try {
     await zencode_exec(``);
   } catch (e) {
-    t.true(e.logs.includes("[!] Empty string as script argument"));
+    t.true(e.logs.includes("[!]  Empty string as script argument"));
   }
 });
 
@@ -52,12 +52,12 @@ test("does handle empty lua", async (t) => {
   try {
     await zenroom_exec(null);
   } catch (e) {
-    t.true(e.logs.includes("[!] NULL string as script argument"));
+    t.true(e.logs.includes("[!]  NULL string as script argument"));
   }
   try {
     await zenroom_exec(``);
   } catch (e) {
-    t.true(e.logs.includes("[!] Empty string as script argument"));
+    t.true(e.logs.includes("[!]  Empty string as script argument"));
   }
 });
 
@@ -65,7 +65,7 @@ test("does run zencode", async (t) => {
   const {result} = await zencode_exec(`scenario simple:
   given nothing
   Then print all data`);
-  t.is(result, "[]");
+  t.is(result, "[]\n");
 });
 
 // this breaks with json log format
@@ -76,9 +76,9 @@ test("error format contains newlines", async t => {
   } catch (e) {
     const lines = e.logs.split('\n');
 
-    t.true(lines.includes('[W] Zencode text too short to parse'));
-    t.true(lines.includes('[W] Zencode is missing version check, please add: rule check version N.N.N'));
-    t.true(lines.includes('[!] Execution aborted'));
+    t.true(lines.includes('[W]  Zencode text too short to parse'));
+    t.true(lines.includes('[W]  Zencode is missing version check, please add: rule check version N.N.N'));
+    t.true(lines.includes('[!]  Execution aborted'));
   }
 })
 
@@ -133,7 +133,7 @@ test("Wrong context prefix (update)", async (t) => {
   try {
     await zenroom_hash_update("z", enc.encode('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq'));
   } catch (e) {
-    t.true(e.logs.endsWith('z'));
+    t.true(e.logs.endsWith('z\n'));
   }
 });
 
@@ -141,7 +141,7 @@ test("Wrong context prefix (final)", async (t) => {
   try {
     await zenroom_hash_final("z");
   } catch (e) {
-    t.true(e.logs.endsWith('z'));
+    t.true(e.logs.endsWith('z\n'));
   }
 });
 
@@ -150,7 +150,7 @@ test("Use zenroom_hash with unknown hash function", async (t) => {
   try {
     await zenroom_hash("z", enc.encode("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"));
   } catch (e) {
-    t.true(e.logs.endsWith('z'));
+    t.true(e.logs.endsWith('z\n'));
   }
 });
 
