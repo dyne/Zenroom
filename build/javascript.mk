@@ -13,7 +13,7 @@ javascript-demo: ldflags += -s WASM=1 \
 	-s ASSERTIONS=1 \
 	--shell-file ${website}/demo/shell_minimal.html
 javascript-demo: ${BUILDS}
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	CC="${gcc}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	JSEXT="--preload-file lua@/" \
 	JSOUT="${website}/demo/index.html" \
 	make -C src js
@@ -26,7 +26,7 @@ javascript-web: ldflags += -s WASM=1 -s ASSERTIONS=1 \
 	-s WASM_OBJECT_FILES=0 --llvm-lto 0 \
 	-s DISABLE_EXCEPTION_CATCHING=1
 javascript-web: ${BUILDS}
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	CC="${gcc}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	JSEXT="--preload-file lua@/" \
 	make -C src js
 	@mkdir -p build/web
@@ -46,7 +46,7 @@ javascript-wasm: ldflags += -s \
 	-s ASSERTIONS=1 \
 	--no-heap-copy
 javascript-wasm: ${BUILDS}
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	CC="${gcc}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	JSEXT="--embed-file lua@/" \
 	make -C src js
 	@mkdir -p build/wasm
@@ -61,7 +61,7 @@ javascript-npm: ldflags += -s \
 	-s ALLOW_MEMORY_GROWTH=1 \
 	--no-heap-copy
 javascript-npm: ${BUILDS}
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	CC="${gcc}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	JSEXT="--embed-file lua@/" \
 	make -C src js
 	@mkdir -p build/npm
@@ -76,7 +76,7 @@ javascript-rn: ldflags += -s WASM=0 \
 	-s EXIT_RUNTIME=1 \
 	--memory-init-file 0
 javascript-rn: ${BUILDS}
-	CC=${gcc} CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	CC="${gcc}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	JSEXT="--embed-file lua@/" \
 	make -C src js
 	sed -i 's/require("crypto")/require(".\/crypto")/g' src/zenroom.js
