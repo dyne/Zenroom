@@ -4,13 +4,6 @@ pwd := $(shell pwd)
 mil := ${pwd}/build/milagro
 website := ${pwd}/docs
 
-# ------------
-# lua settings
-luasrc := ${pwd}/lib/lua53/src
-ldadd := ${pwd}/lib/lua53/src/liblua.a
-lua_embed_opts := ""
-lua_cflags := -DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE -DLUA_COMPAT_BITLIB -I${pwd}/lib/milagro-crypto-c/build/include -I${pwd}/src -I${pwd}/lib/milagro-crypto-c/build/include
-
 # ----------------
 # zenroom defaults
 gcc := gcc
@@ -23,6 +16,14 @@ defines += $(if ${COMPILE_LUA}, -DLUA_COMPILED)
 cflags := -O2 ${cflags_protection}
 musl := ${pwd}/build/musl
 platform := posix
+
+# ------------
+# lua settings
+luasrc := ${pwd}/lib/lua53/src
+ldadd := ${pwd}/lib/lua53/src/liblua.a
+lua_embed_opts := ""
+lua_cc := ${gcc}
+lua_cflags := -DLUA_COMPAT_5_3 -DLUA_COMPAT_MODULE -DLUA_COMPAT_BITLIB -I${pwd}/lib/milagro-crypto-c/build/include -I${pwd}/src -I${pwd}/lib/milagro-crypto-c/build/include -I ${pwd}/lib/mimalloc/include
 
 # ----------------
 # milagro settings
@@ -43,18 +44,29 @@ ldadd += ${milib}/libamcl_core.a
 
 #-----------------
 # quantum-proof
+quantum_proof_cc = ${gcc}
+quantum_proof_cflags = -I ${pwd}/src -I ${pwd}/lib/mimalloc/include -I.
 ldadd += ${pwd}/lib/pqclean/libqpz.a
 
 # ----------------
 # zstd settings
+zstd_cc := ${gcc}
 ldadd += ${pwd}/lib/zstd/libzstd.a
 
 #-----------------
 # ed25519 settings
+ed25519_cc := ${gcc}
 ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
 
 #-----------------
 # mimalloc settings
+mimalloc_cmake_flags := -DMI_BUILD_SHARED=OFF -DMI_BUILD_OBJECT=OFF
+mimalloc_cmake_flags += -DMI_BUILD_TESTS=OFF -DMI_SECURE=ON
+mimalloc_cmake_flags += -DMI_LIBPTHREAD=0 -DMI_LIBRT=0
+mimalloc_cmake_flags += -DMI_LIBATOMIC=0
+mimalloc_cflags := -fvisibility=hidden -Wstrict-prototypes
+mimalloc_cflags += -ftls-model=initial-exec -fno-builtin-malloc
+mimalloc_cflags += -DMI_USE_RTLGENRANDOM
 ldadd += ${pwd}/lib/mimalloc/build/libmimalloc-static.a
 
 # ------------------------
@@ -264,6 +276,8 @@ endif
 # clang doesn't supports -Wstack-usage=4096
 
 ifneq (,$(findstring debug,$(MAKECMDGOALS)))
+mimalloc_cmake_flags += -DCMAKE_BUILD_TYPE=Debug
+mimalloc_cflags += -DMI_DEBUG_FULL
 cflags := -Og -ggdb -DDEBUG=1 -Wall -Wextra -pedantic ${defines}
 endif
 
@@ -284,4 +298,13 @@ endif
 ifneq (,$(findstring python3,$(MAKECMDGOALS)))
 cflags += $(shell python3-config --cflags) -fPIC -DLIBRARY
 ldflags += $(shell python3-config --ldflags)
+endif
+
+ifneq (,$(findstring ccache,$(MAKECMDGOALS)))
+milagro_cmake_flags += -DCMAKE_C_COMPILER_LAUNCHER=ccache
+mimalloc_cmake_flags += -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+quantum_proof_cc := ccache ${gcc}
+zstd_cc := ccache ${gcc}
+ed25519_cc := ccache ${gcc}
+lua_cc := ccache ${gcc}
 endif
