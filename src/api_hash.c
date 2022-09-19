@@ -129,7 +129,7 @@ int zenroom_hash_final(const char *hash_ctx) {
     hex2buf(sh, hash_ctx+1);
     HASH256_hash((hash256*)sh, tmp.val);
   } else {
-    _err("%s :: invalid hash context prefix: %c\n", __func__, prefix);
+    _err("%s :: invalid hash context prefix: %c", __func__, prefix);
 	return FAIL();
   }
   OCT_tobase64(hash_result,&tmp);
