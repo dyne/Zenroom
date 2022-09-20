@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         name: Install Python
         with:
           python-version: '3.7'
@@ -126,7 +126,7 @@ jobs:
           CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake vim zsh && pip install meson ninja
           CIBW_BEFORE_BUILD_MACOS: brew install cmake vim zsh && pip install meson ninja
         run: |
-          date +%s > current_time
+          git show -s --format=%ct HEAD > commit_time
           # Remove shared library
           rm -f bindings/golang/zenroom/lib/libzenroom.so
           cp bindings/python3/setup.py .
@@ -146,7 +146,7 @@ jobs:
           name: artifact
           path: dist
 
-      - uses: pypa/gh-action-pypi-publish@master
+      - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}

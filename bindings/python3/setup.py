@@ -34,14 +34,16 @@ def get_zenroom_version():
 
 def get_python_version():
     zenroom_version = '2.1.0'
-    current_time = ''
+    commit_time = ''
     try:
-        with open(os.path.join(ZENROOM_ROOT, 'current_time')) as f:
-            current_time = f.read()
+        with open(os.path.join(ZENROOM_ROOT, 'commit_time')) as f:
+            commit_time = f.read()
     except IOError:
-        current_time = str(int(time.time()))
+        commit_time = subprocess.run(['git', 'show', '-s', '--format=%ct', 'HEAD'],
+                                     cwd=ZENROOM_ROOT,
+                                     stdout=subprocess.PIPE).stdout.decode('utf-8')
     # Last char in hash is a newline
-    return zenroom_version + '.dev' + current_time
+    return zenroom_version + '.dev' + commit_time
 
 
 ZENROOM_SOURCES = [
