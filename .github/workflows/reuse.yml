@@ -1,12 +1,12 @@
-name: REUSE Compliance Check
+# name: REUSE Compliance Check
 
-on: [push, pull_request]
+# on: [push, pull_request]
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps: 
-    - uses: actions/checkout@v3
-    - name: REUSE Compliance Check
-      uses: fsfe/reuse-action@v1
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest
+#     steps:
+#     - uses: actions/checkout@v3
+#     - name: REUSE Compliance Check
+#       uses: fsfe/reuse-action@v1
 

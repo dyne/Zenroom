@@ -1,0 +1,53 @@
+name: REUSE Compliance Check
+
+on: [push, pull_request]
+
+jobs:
+  pre-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    - name: 🚨 REUSE Compliance
+      uses: fsfe/reuse-action@v1
+
+    - name: 🚨 C lint
+      uses: reviewdog/action-cpplint@master
+      env:
+        REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        reporter: github-pr-review
+        targets: --recursive src
+        level: warning
+        flags: --linelength=120 # Optional
+        filter: "-readability/braces\
+          ,-readability/casting\
+          ,-whitespace/comma\
+          ,-whitespace/braces\
+          ,-whitespace/comments\
+          ,-whitespace/indent\
+          ,-whitespace/newline\
+          ,-whitespace/operators\
+          ,-whitespace/parens\
+          ,-whitespace/tab\
+          " # Optional
+      #    - name: Fail fast?!
+      #      if: steps.linter.outputs.checks-failed > 0
+      #      run: |
+      #        echo "😤 Some files failed the C linting checks!"
+
+    - name: Setup luacheck
+      run: |
+          if ! hash luacheck &>/dev/null; then
+            sudo apt-get install -yq luarocks 1>/dev/null || exit 1
+            sudo luarocks install luacheck 1>/dev/null || exit 1
+            sudo luarocks install lanes &>/dev/null || true
+          fi
+          luacheck --version
+      shell: bash
+    - name: 🚨 LUA lint
+      run: |
+        luacheck --config .luacheckrc --std lua54 .
+

@@ -1,152 +1,152 @@
-name: Build and upload nightly to PyPI
+# name: Build and upload nightly to PyPI
 
-on:
-  push:
-    paths-ignore:
-    - 'docs/**'
-    - 'examples/**'
-    - '*.md'
-    branches:
-      - 'master'
+# on:
+#   push:
+#     paths-ignore:
+#     - 'docs/**'
+#     - 'examples/**'
+#     - '*.md'
+#     branches:
+#       - 'master'
 
-jobs:
-  python-test:
-    name: Run unit tests
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: bindings/python3
+# jobs:
+#   python-test:
+#     name: Run unit tests
+#     runs-on: ubuntu-latest
+#     defaults:
+#       run:
+#         working-directory: bindings/python3
 
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        name: Install Python
-        with:
-          python-version: '3.7'
-      - run: sudo apt-get update && sudo apt-get install -y cmake vim zsh
-      - run: pip install meson ninja
-      - run: pip install -e .[test]
-      - run: pytest -s tests
+#     steps:
+#       - uses: actions/checkout@v3
+#       - uses: actions/setup-python@v4
+#         name: Install Python
+#         with:
+#           python-version: '3.7'
+#       - run: sudo apt-get update && sudo apt-get install -y cmake vim zsh
+#       - run: pip install meson ninja
+#       - run: pip install -e .[test]
+#       - run: pytest -s tests
 
-  build_wheels:
-    needs: [python-test]
-    name: Build wheel on ${{ matrix.os }} for cp${{ matrix.python }}-${{ matrix.platform_id }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      # Ensure that a wheel builder finishes even if another fails
-      fail-fast: false
-      matrix:
-        include:
-          # Linux manylinux_x86_64
-          - os: ubuntu-latest
-            python: 37
-            platform_id: manylinux_x86_64
-          - os: ubuntu-latest
-            python: 38
-            platform_id: manylinux_x86_64
-          - os: ubuntu-latest
-            python: 39
-            platform_id: manylinux_x86_64
-          - os: ubuntu-latest
-            python: 310
-            platform_id: manylinux_x86_64
-          - os: ubuntu-latest
-            python: 311
-            platform_id: manylinux_x86_64
-          # Linux manylinux_i686
-          - os: ubuntu-latest
-            python: 37
-            platform_id: manylinux_i686
-          - os: ubuntu-latest
-            python: 38
-            platform_id: manylinux_i686
-          - os: ubuntu-latest
-            python: 39
-            platform_id: manylinux_i686
-          - os: ubuntu-latest
-            python: 310
-            platform_id: manylinux_i686
-          - os: ubuntu-latest
-            python: 311
-            platform_id: manylinux_i686
-          # Linux manylinux_aarch64
-          - os: ubuntu-latest
-            python: 37
-            platform_id: manylinux_aarch64
-          - os: ubuntu-latest
-            python: 38
-            platform_id: manylinux_aarch64
-          - os: ubuntu-latest
-            python: 39
-            platform_id: manylinux_aarch64
-          - os: ubuntu-latest
-            python: 310
-            platform_id: manylinux_aarch64
-          - os: ubuntu-latest
-            python: 311
-            platform_id: manylinux_aarch64
-          # Macos macosx_x86_64
-          - os: macos-latest
-            python: 37
-            platform_id: macosx_x86_64
-          - os: macos-latest
-            python: 38
-            platform_id: macosx_x86_64
-          - os: macos-latest
-            python: 39
-            platform_id: macosx_x86_64
-          - os: macos-latest
-            python: 310
-            platform_id: macosx_x86_64
-          - os: macos-latest
-            python: 311
-            platform_id: macosx_x86_64
+#   build_wheels:
+#     needs: [python-test]
+#     name: Build wheel on ${{ matrix.os }} for cp${{ matrix.python }}-${{ matrix.platform_id }}
+#     runs-on: ${{ matrix.os }}
+#     strategy:
+#       # Ensure that a wheel builder finishes even if another fails
+#       fail-fast: false
+#       matrix:
+#         include:
+#           # Linux manylinux_x86_64
+#           - os: ubuntu-latest
+#             python: 37
+#             platform_id: manylinux_x86_64
+#           - os: ubuntu-latest
+#             python: 38
+#             platform_id: manylinux_x86_64
+#           - os: ubuntu-latest
+#             python: 39
+#             platform_id: manylinux_x86_64
+#           - os: ubuntu-latest
+#             python: 310
+#             platform_id: manylinux_x86_64
+#           - os: ubuntu-latest
+#             python: 311
+#             platform_id: manylinux_x86_64
+#           # Linux manylinux_i686
+#           - os: ubuntu-latest
+#             python: 37
+#             platform_id: manylinux_i686
+#           - os: ubuntu-latest
+#             python: 38
+#             platform_id: manylinux_i686
+#           - os: ubuntu-latest
+#             python: 39
+#             platform_id: manylinux_i686
+#           - os: ubuntu-latest
+#             python: 310
+#             platform_id: manylinux_i686
+#           - os: ubuntu-latest
+#             python: 311
+#             platform_id: manylinux_i686
+#           # Linux manylinux_aarch64
+#           - os: ubuntu-latest
+#             python: 37
+#             platform_id: manylinux_aarch64
+#           - os: ubuntu-latest
+#             python: 38
+#             platform_id: manylinux_aarch64
+#           - os: ubuntu-latest
+#             python: 39
+#             platform_id: manylinux_aarch64
+#           - os: ubuntu-latest
+#             python: 310
+#             platform_id: manylinux_aarch64
+#           - os: ubuntu-latest
+#             python: 311
+#             platform_id: manylinux_aarch64
+#           # Macos macosx_x86_64
+#           - os: macos-latest
+#             python: 37
+#             platform_id: macosx_x86_64
+#           - os: macos-latest
+#             python: 38
+#             platform_id: macosx_x86_64
+#           - os: macos-latest
+#             python: 39
+#             platform_id: macosx_x86_64
+#           - os: macos-latest
+#             python: 310
+#             platform_id: macosx_x86_64
+#           - os: macos-latest
+#             python: 311
+#             platform_id: macosx_x86_64
 
-    steps:
-      - uses: actions/checkout@v3
+#     steps:
+#       - uses: actions/checkout@v3
 
-      - name: Set up QEMU
-        if: runner.os == 'Linux'
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
+#       - name: Set up QEMU
+#         if: runner.os == 'Linux'
+#         uses: docker/setup-qemu-action@v2
+#         with:
+#           platforms: all
 
-      - uses: actions/setup-python@v4
-        name: Install Python
-        with:
-          python-version: '3.7'
+#       - uses: actions/setup-python@v4
+#         name: Install Python
+#         with:
+#           python-version: '3.7'
 
-      - name: Build wheels
-        env:
-          CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
-          CIBW_ARCHS_LINUX: auto aarch64
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_24
-          CIBW_MANYLINUX_I686_IMAGE: manylinux_2_24
-          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_24
-          CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake vim zsh && pip install meson ninja
-          CIBW_BEFORE_BUILD_MACOS: brew install cmake vim zsh && pip install meson ninja
-        run: |
-          git show -s --format=%ct HEAD > commit_time
-          # Remove shared library
-          rm -f bindings/golang/zenroom/lib/libzenroom.so
-          cp bindings/python3/setup.py .
-          pip install cibuildwheel
-          cibuildwheel --output-dir wheelhouse
+#       - name: Build wheels
+#         env:
+#           CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
+#           CIBW_ARCHS_LINUX: auto aarch64
+#           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_24
+#           CIBW_MANYLINUX_I686_IMAGE: manylinux_2_24
+#           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_24
+#           CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake vim zsh && pip install meson ninja
+#           CIBW_BEFORE_BUILD_MACOS: brew install cmake vim zsh && pip install meson ninja
+#         run: |
+#           git show -s --format=%ct HEAD > commit_time
+#           # Remove shared library
+#           rm -f bindings/golang/zenroom/lib/libzenroom.so
+#           cp bindings/python3/setup.py .
+#           pip install cibuildwheel
+#           cibuildwheel --output-dir wheelhouse
 
-      - uses: actions/upload-artifact@v3
-        with:
-          path: ./wheelhouse/*.whl
+#       - uses: actions/upload-artifact@v3
+#         with:
+#           path: ./wheelhouse/*.whl
 
-  upload_pypi:
-    needs: [build_wheels]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v3
-        with:
-          name: artifact
-          path: dist
+#   upload_pypi:
+#     needs: [build_wheels]
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/download-artifact@v3
+#         with:
+#           name: artifact
+#           path: dist
 
-      - uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
+#       - uses: pypa/gh-action-pypi-publish@release/v1
+#         with:
+#           user: __token__
+#           password: ${{ secrets.PYPI_API_TOKEN }}

@@ -1,45 +1,45 @@
-name: Python unit tests on some unix-like OS
+# name: Python unit tests on some unix-like OS
 
-on:
-  push:
-    paths-ignore:
-    - 'docs/**'
-    - 'examples/**'
-    - '*.md'
+# on:
+#   push:
+#     paths-ignore:
+#     - 'docs/**'
+#     - 'examples/**'
+#     - '*.md'
 
-jobs:
-  python-test-linux:
-    name: Run unit tests on Ubuntu
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: bindings/python3
+# jobs:
+#   python-test-linux:
+#     name: Run unit tests on Ubuntu
+#     runs-on: ubuntu-latest
+#     defaults:
+#       run:
+#         working-directory: bindings/python3
 
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
-        name: Install Python
-        with:
-          python-version: '3.7'
-      - run: sudo apt-get update && sudo apt-get install -y cmake vim zsh
-      - run: pip install meson ninja
-      - run: pip install -e .[test]
-      - run: pytest -s tests
+#     steps:
+#       - uses: actions/checkout@v3
+#       - uses: actions/setup-python@v3
+#         name: Install Python
+#         with:
+#           python-version: '3.7'
+#       - run: sudo apt-get update && sudo apt-get install -y cmake vim zsh
+#       - run: pip install meson ninja
+#       - run: pip install -e .[test]
+#       - run: pytest -s tests
 
-  python-test-macos:
-    name: Run unit tests on MacOS
-    runs-on: macos-latest
-    defaults:
-      run:
-        working-directory: bindings/python3
+#   python-test-macos:
+#     name: Run unit tests on MacOS
+#     runs-on: macos-latest
+#     defaults:
+#       run:
+#         working-directory: bindings/python3
 
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
-        name: Install Python
-        with:
-          python-version: '3.7'
-      - run: brew install cmake vim zsh
-      - run: pip install meson ninja
-      - run: pip install -e .[test]
-      - run: pytest -s tests
+#     steps:
+#       - uses: actions/checkout@v3
+#       - uses: actions/setup-python@v3
+#         name: Install Python
+#         with:
+#           python-version: '3.7'
+#       - run: brew install cmake vim zsh
+#       - run: pip install meson ninja
+#       - run: pip install -e .[test]
+#       - run: pytest -s tests
