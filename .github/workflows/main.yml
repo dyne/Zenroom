@@ -3,7 +3,7 @@ name: REUSE Compliance Check
 on: [push, pull_request]
 
 jobs:
-  pre-check:
+  pre-checks:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -48,6 +48,7 @@ jobs:
           luacheck --version
       shell: bash
     - name: 🚨 LUA lint
+      working-directory: src/lua
       run: |
         luacheck --config .luacheckrc --std lua54 .
 
