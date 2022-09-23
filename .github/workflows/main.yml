@@ -147,6 +147,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: numworks/setup-arm-toolchain@2021-10
       - run: sudo apt install zsh qemu-system-arm
       - name: Download cmsis
         run: |
