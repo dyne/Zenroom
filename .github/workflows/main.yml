@@ -68,31 +68,6 @@ jobs:
       run: |
         luacheck --config .luacheckrc --std lua54 .
 
-  linux-crypto:
-    name: 🐧 Linux crypto tests
-    if: always()
-    needs: [reuse, c-lint, lua-lint]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - run: |
-          sudo apt install zsh jq meson && make linux
-          make check-crypto
-
-  macosx-crypto:
-    name: 🍎 macos crypto tests
-    runs-on: macos-latest
-    if: always()
-    needs: [reuse, c-lint, lua-lint]
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
-      - uses: seanmiddleditch/gha-setup-ninja@master
-      - run: |
-          pip install meson
-          make osx
-          make check-osx
-
   meson:
     name: 🥷 meson/ninja tests
     if: always()
@@ -117,3 +92,29 @@ jobs:
         env:
           CC: ${{ matrix.compiler }}
       - run: make meson-test
+
+  linux-crypto:
+    name: 🐧 Linux crypto tests
+    if: always()
+    needs: [meson]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          sudo apt install zsh jq meson
+          make linux
+          make check-crypto
+
+  macosx-crypto:
+    name: 🍎 macos crypto tests
+    runs-on: macos-latest
+    if: always()
+    needs: [meson]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+      - uses: seanmiddleditch/gha-setup-ninja@master
+      - run: |
+          pip install meson
+          make osx
+          make check-osx
