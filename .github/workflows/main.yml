@@ -68,9 +68,8 @@ jobs:
       run: |
         luacheck --config .luacheckrc --std lua54 .
 
-  meson:
-    name: 🥷 meson/ninja tests
-    if: always()
+  meson-build:
+    name: 🥷 meson/ninja build
     needs: [reuse, c-lint, lua-lint]
     strategy:
       matrix:
@@ -93,10 +92,25 @@ jobs:
           CC: ${{ matrix.compiler }}
       - run: make meson-test
 
+  go-build:
+    name: 🐹 go build
+    needs: [reuse, c-lint, lua-lint]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: ['1.13', '1.14', '1.15', '1.16']
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+      - uses: actions/setup-python@v3
+      - run: pip3 install meson ninja
+      - run: make linux-go
+
+
   linux-crypto:
     name: 🐧 Linux crypto tests
     if: always()
-    needs: [meson]
+    needs: [meson-build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -109,7 +123,7 @@ jobs:
     name: 🍎 macos crypto tests
     runs-on: macos-latest
     if: always()
-    needs: [meson]
+    needs: [meson-build]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3

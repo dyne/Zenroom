@@ -48,7 +48,7 @@ cortex-arm: ${BUILDS}
 aarch64: ldflags += -Wl,-Map=./zenroom.map
 aarch64: ${BUILDS}
 	CC="${gcc}" AR="${ar}" OBJCOPY="${objcopy}" CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
-	$(MAKE) -C src aarch64 
+	$(MAKE) -C src aarch64
 
 linux-riscv64: ${BUILDS}
 	CC="${gcc}" AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
@@ -124,7 +124,7 @@ linux-python3: linux-lib
 linux-go:
 	$(MAKE) meson
 	cp meson/libzenroom.so bindings/golang/zenroom/lib
-	cd bindings/golang/zenroom && $(MAKE) test
+	# cd bindings/golang/zenroom && $(MAKE) test
 
 linux-rust: CMD ?= build
 linux-rust:
