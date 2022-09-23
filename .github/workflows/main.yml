@@ -92,7 +92,7 @@ jobs:
           CC: ${{ matrix.compiler }}
       - run: make meson-test
 
-  go-build:
+  go-build-check:
     name: 🐹 go build
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
@@ -102,11 +102,21 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
-      - uses: dyne/workflows/.github/workflows/setup-meson.yml@main
+        with:
+          go-version: ${{ matrix.go }}
+      - uses: actions/setup-python@v4
+      - run: |
+          pip3 install meson ninja
+          sudo apt-get install --force-yes zsh
       - run: make linux-go
+      - run: cp meson/libzenroom.so bindings/golang/zenroom/lib
+      - name: 🧪 test bindings go-${{ matrix.go }}
+        working-directory: bindings/golang/zenroom
+        run: make test
+      - name: 🔐 check crypto with go-${{ matrix.go }}
+        run: make check-go
 
-
-  linux-crypto:
+  linux-crypto-check:
     name: 🐧 Linux crypto tests
     if: always()
     needs: [meson-build]
@@ -118,14 +128,14 @@ jobs:
           make linux
           make check-crypto
 
-  macosx-crypto:
+  macosx-crypto-check:
     name: 🍎 macos crypto tests
     runs-on: macos-latest
     if: always()
     needs: [meson-build]
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v4
       - uses: seanmiddleditch/gha-setup-ninja@master
       - run: |
           pip install meson
