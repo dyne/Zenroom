@@ -103,7 +103,9 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
       - uses: actions/setup-python@v3
-      - run: pip3 install meson ninja
+      - run: |
+          pip3 install meson ninja
+          sudo apt-get install --force-yes zsh
       - run: make linux-go
 
 
