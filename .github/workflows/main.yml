@@ -202,6 +202,29 @@ jobs:
         working-directory: ./
         run: make check-js
 
+  python-test:
+    name: 🐍 python tests
+    needs: [reuse, c-lint, lua-lint]
+    defaults:
+      run:
+        working-directory: bindings/python3
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.7'
+      - if: ${{ runner.os == 'Linux' }}
+        run: sudo apt-get update && sudo apt-get install -y cmake vim zsh
+      - if: ${{ runner.os == 'Macos' }}
+        run: brew install cmake vim zsh
+      - run: pip install meson ninja
+      - run: pip install -e .[test]
+      - run: pytest -s tests
+
   linux-crypto-check:
     name: 🐧 Linux crypto tests
     if: always()
@@ -233,7 +256,7 @@ jobs:
     name: 🕊  NPM release
     runs-on: ubuntu-latest
     needs: [js-build-check]
-    if: github.ref == 'refs/heads/master'
+    if: ${{ github.ref_name == 'master' &&  github.event_name == 'push' }}
     steps:
       - uses: actions/setup-node@v3
         with:
@@ -245,3 +268,90 @@ jobs:
       - run: npm publish . --tag next
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  build-python-wheels-ubuntu:
+    name: 🎡 build python wheels on ubuntu
+    if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    needs: [python-test]
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [37, 38, 39, 310, 311]
+        platform-id: [manylinux_x86_64, manylinux_i686, manylinux_aarch64]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: '3.7'
+      - name: Build wheels
+        env:
+          CIBW_BUILD: cp${{ matrix.python-version }}-${{ matrix.platform-id }}
+          CIBW_ARCHS_LINUX: auto aarch64
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_24
+          CIBW_MANYLINUX_I686_IMAGE: manylinux_2_24
+          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_24
+          CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake vim zsh && pip install meson ninja
+        run: |
+          git show -s --format=%ct HEAD > commit_time
+          # Remove shared library
+          rm -f bindings/golang/zenroom/lib/libzenroom.so
+          cp bindings/python3/setup.py .
+          pip install cibuildwheel
+          cibuildwheel --output-dir wheelhouse
+      - uses: actions/upload-artifact@v3
+        with:
+          path: ./wheelhouse/*.whl
+
+  build-python-wheels-macos:
+    name: 🎡 build python wheels on macos
+    if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
+    runs-on: macos-latest
+    needs: [python-test]
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [37, 38, 39, 310, 311]
+        platform-id: [macosx_x86_64]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: '3.7'
+      - name: Build wheels
+        env:
+          CIBW_BUILD: cp${{ matrix.python-version }}-${{ matrix.platform-id }}
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_24
+          CIBW_BEFORE_BUILD_MACOS: brew install cmake vim zsh && pip install meson ninja
+        run: |
+          git show -s --format=%ct HEAD > commit_time
+          # Remove shared library
+          rm -f bindings/golang/zenroom/lib/libzenroom.so
+          cp bindings/python3/setup.py .
+          pip install cibuildwheel
+          cibuildwheel --output-dir wheelhouse
+      - uses: actions/upload-artifact@v3
+        with:
+          path: ./wheelhouse/*.whl
+
+  PyPI-release:
+    name: 🆕 PyPI release
+    if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
+    needs: [build-python-wheels-ubuntu, build-python-wheels-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
