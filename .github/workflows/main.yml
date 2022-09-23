@@ -120,7 +120,7 @@ jobs:
         run: make check-go
 
   rust-build-check:
-    name: 🦀 rust build and checks
+    name: 🦀 rust build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
     strategy:
@@ -140,6 +140,22 @@ jobs:
         run: cargo test
       - name: 🔐 check crypto with rust-${{ matrix.rust }}
         run: make check-rs
+
+  cortex-m-build-check:
+    name: 📟 cortex-m build & checks
+    needs: [reuse, c-lint, lua-lint]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: sudo apt install zsh qemu-system-arm
+      - name: Download cmsis
+        run: |
+          curl -LO https://github.com/ARM-software/CMSIS_5/archive/refs/tags/5.7.0.tar.gz
+          tar xvf 5.7.0.tar.gz -C lib
+          mv lib/CMSIS_5-5.7.0 lib/cmsis
+      - run: make cortex-arm
+      - name: 🔐 check crypto with cortex-m
+        run: make check-cortex-m
 
   linux-crypto-check:
     name: 🐧 Linux crypto tests
