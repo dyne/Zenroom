@@ -63,7 +63,7 @@ jobs:
         luacheck --config .luacheckrc --std lua54 .
 
   linux-crypto:
-    name: 🐧 Linux crypto
+    name: 🐧 Linux crypto tests
     if: always()
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
@@ -74,16 +74,40 @@ jobs:
           make check-crypto
 
   macosx-crypto:
-    name: 🍎 Linux crypto
+    name: 🍎 macos crypto tests
     runs-on: macos-latest
     if: always()
     needs: [reuse, c-lint, lua-lint]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
+      - uses: seanmiddleditch/gha-setup-ninja@master
       - run: |
-          pip install meson ninja
+          pip install meson
           make osx
           make check-osx
 
-
+  meson:
+    name: 🥷 meson/ninja tests
+    if: always()
+    needs: [reuse, c-lint, lua-lint]
+    strategy:
+      matrix:
+        compiler: [clang-9, clang-10, clang-11, gcc-7, gcc-8, gcc-9, gcc-10]
+      fail-fast: false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+      - uses: seanmiddleditch/gha-setup-ninja@master
+      - name: Install compiler and dependencies
+        run: |
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+          sudo apt-get install --force-yes ${{ matrix.compiler }}
+          sudo apt-get install --force-yes cmake vim zsh luajit lua-cjson ccache
+          pip3 install meson ninja
+      - uses: hendrikmuhs/ccache-action@v1.2
+      - run: make meson-ccache && ninja -C meson
+        env:
+          CC: ${{ matrix.compiler }}
+      - run: make meson-test
