@@ -1,3 +1,4 @@
+name: Zenroom CI
 on: [push, pull_request]
 
 concurrency:
@@ -93,7 +94,7 @@ jobs:
       - run: make meson-test
 
   go-build-check:
-    name: 🐹 go build
+    name: 🐹 go build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
     strategy:
@@ -105,6 +106,8 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
       - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
       - run: |
           pip3 install meson ninja
           sudo apt-get install --force-yes zsh
@@ -115,6 +118,28 @@ jobs:
         run: make test
       - name: 🔐 check crypto with go-${{ matrix.go }}
         run: make check-go
+
+  rust-build-check:
+    name: 🦀 rust build and checks
+    needs: [reuse, c-lint, lua-lint]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust: ['stable', 'nightly']
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.rust }}
+      - run: |
+          pip3 install meson ninja
+          sudo apt-get install --force-yes zsh
+      - run: make linux-rust
+      - name: 🧪 test bindings rust-${{ matrix.rust }}
+        working-directory: bindings/rust
+        run: cargo test
+      - name: 🔐 check crypto with rust-${{ matrix.rust }}
+        run: make check-rs
 
   linux-crypto-check:
     name: 🐧 Linux crypto tests
@@ -136,8 +161,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
-      - uses: seanmiddleditch/gha-setup-ninja@master
+        with:
+          python-version: '3.10'
       - run: |
-          pip install meson
+          pip3 install meson ninja
           make osx
           make check-osx
