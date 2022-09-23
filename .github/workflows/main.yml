@@ -1,6 +1,9 @@
 name: REUSE Compliance Check
 
 on: [push, pull_request]
+concurrency:
+  group: ci-tests-${{ github.ref }}-1
+  cancel-in-progress: true
 
 jobs:
   reuse:
@@ -58,4 +61,29 @@ jobs:
       working-directory: src/lua
       run: |
         luacheck --config .luacheckrc --std lua54 .
+
+  linux-crypto:
+    name: 🐧 Linux crypto
+    if: always()
+    needs: [reuse, c-lint, lua-lint]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          sudo apt install zsh jq meson && make linux
+          make check-crypto
+
+  macosx-crypto:
+    name: 🍎 Linux crypto
+    runs-on: macos-latest
+    if: always()
+    needs: [reuse, c-lint, lua-lint]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+      - run: |
+          pip install meson ninja
+          make osx
+          make check-osx
+
 
