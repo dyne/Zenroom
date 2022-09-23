@@ -119,6 +119,7 @@ jobs:
       - name: 🔐 check crypto with go-${{ matrix.go }}
         run: make check-go
 
+
   rust-build-check:
     name: 🦀 rust build & checks
     needs: [reuse, c-lint, lua-lint]
@@ -158,6 +159,49 @@ jobs:
       - name: 🔐 check crypto with cortex-m
         run: make check-cortex-m
 
+  js-build-check:
+    name: 🐯 js build & checks
+    needs: [reuse, c-lint, lua-lint]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [14.x, 16.x, 18.x]
+    env:
+      EM_VERSION: latest
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    defaults:
+      run:
+        working-directory: bindings/javascript
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: mymindstorm/setup-emsdk@v11
+        with:
+          version: ${{ env.EM_VERSION }}
+      - run: sudo apt-get update; sudo apt-get install zsh meson ninja-build
+      - run: yarn
+      - run: yarn build
+        env:
+          EMSCRIPTEN: ${{ env.EMSDK }}/upstream/emscripten
+      - run: yarn version --new-version $(npm show zenroom version)-$(git rev-parse --short HEAD) --no-git-tag-version
+      - if: ${{ matrix.node-version == '16.x' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: javascript-artifact
+          path: |
+            ./bindings/javascript/CHANGELOG.md
+            ./bindings/javascript/LICENSE
+            ./bindings/javascript/package.json
+            ./bindings/javascript/README.md
+            ./bindings/javascript/dist/
+      - name: 🧪 test bindings node-${{ matrix.node-version }}
+        run: yarn test
+      - name:  🔐 check crypto with node-${{ matrix.node-version }}
+        working-directory: ./
+        run: make check-js
+
   linux-crypto-check:
     name: 🐧 Linux crypto tests
     if: always()
@@ -184,3 +228,20 @@ jobs:
           pip3 install meson ninja
           make osx
           make check-osx
+
+  NPM-release:
+    name: 🕊  NPM release
+    runs-on: ubuntu-latest
+    needs: [js-build-check]
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+      - uses: actions/download-artifact@v3
+        with:
+          name: javascript-artifact
+          path: ./dist
+      - run: npm publish . --tag next
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
