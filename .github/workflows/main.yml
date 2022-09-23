@@ -14,6 +14,7 @@ jobs:
     name: 🚨 C lint
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
       - uses: reviewdog/action-cpplint@master
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -43,6 +44,7 @@ jobs:
     name: 🚨 Lua lint
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v3
     - name: Setup luacheck
       run: |
           if ! hash luacheck &>/dev/null; then
