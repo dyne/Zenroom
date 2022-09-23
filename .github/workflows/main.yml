@@ -1,6 +1,5 @@
-name: REUSE Compliance Check
-
 on: [push, pull_request]
+
 concurrency:
   group: ci-tests-${{ github.ref }}-1
   cancel-in-progress: true
@@ -23,7 +22,7 @@ jobs:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: github-pr-review
+          reporter: github-pr-check
           targets: --recursive src
           level: warning
           flags: --linelength=120 # Optional
@@ -47,6 +46,12 @@ jobs:
     name: 🚨 Lua lint
     runs-on: ubuntu-latest
     steps:
+    # - uses: dorny/paths-filter@v2
+    #   with:
+    #     filters: |
+    #       src:
+    #         - 'src/lua'
+    # - if: steps.changes.outputs.src == 'true'
     - uses: actions/checkout@v3
     - name: Setup luacheck
       run: |
@@ -58,6 +63,7 @@ jobs:
           luacheck --version
       shell: bash
     - name: 🚨 LUA lint
+      continue-on-error: true
       working-directory: src/lua
       run: |
         luacheck --config .luacheckrc --std lua54 .
