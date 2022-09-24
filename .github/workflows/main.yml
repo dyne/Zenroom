@@ -109,7 +109,7 @@ jobs:
     name: 🐹 go build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
-    if: ${{ contains(github.event.head_commit.message, 'no-go') == false}}
+    if: "!contains(github.event.head_commit.message, 'skip go')"
     strategy:
       matrix:
         go: ['1.13', '1.14', '1.15', '1.16', '1.19']
@@ -137,7 +137,7 @@ jobs:
     name: 🦀 rust build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
-    if: ${{ contains(github.event.head_commit.message, 'no-rust') }}
+    if: "!contains(github.event.head_commit.message, 'skip rust')"
     strategy:
       matrix:
         rust: ['stable', 'nightly']
@@ -160,7 +160,7 @@ jobs:
     name: 📟 cortex-m build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
-    if: ${{ contains(github.event.head_commit.message, 'no-cortex') }}
+    if: "!contains(github.event.head_commit.message, 'skip cortex')"
     steps:
       - uses: actions/checkout@v3
       - uses: numworks/setup-arm-toolchain@2021-10
@@ -178,7 +178,7 @@ jobs:
     name: 🐯 js build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
-    if: ${{ contains(github.event.head_commit.message, 'skip js') == false }}
+    if: "contains(github.event.head_commit.message, 'skip js')"
     strategy:
       matrix:
         node-version: [14.x, 16.x, 18.x]
@@ -222,7 +222,7 @@ jobs:
     name: 🐍 Python build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ${{ matrix.os }}
-    if: ${{ !contains(github.event.head_commit.message, 'skip python') }}
+    if: "!contains(github.event.head_commit.message, 'skip python')"
     strategy:
       fail-fast: false
       matrix:
