@@ -247,7 +247,7 @@ jobs:
           CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake zsh && pip install meson ninja
           CIBW_BEFORE_BUILD_MACOS: brew install cmake zsh && pip install meson ninja
           CIBW_TEST_EXTRAS: "test"
-          CIBW_TEST_COMMAND: cd Zenroom/bindings/python3 && pytest -s tests
+          CIBW_TEST_COMMAND: ls -l
         run: |
           git show -s --format=%ct HEAD > commit_time
           # Remove shared library
