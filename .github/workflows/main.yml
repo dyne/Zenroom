@@ -175,7 +175,7 @@ jobs:
     name: 🐯 js build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, 'skip js')"
+    if: ${{ !contains(github.event.head_commit.message, 'skip js') }}
     strategy:
       matrix:
         node-version: [14.x, 16.x, 18.x]
@@ -218,7 +218,7 @@ jobs:
     name: 🐍 Python build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ${{ matrix.os }}
-    if: "!contains(github.event.head_commit.message, 'skip python')"
+    if: ${{ !contains(github.event.head_commit.message, 'skip python') }}
     strategy:
       fail-fast: false
       matrix:
@@ -251,8 +251,7 @@ jobs:
           CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake zsh vim && pip install meson ninja
           CIBW_BEFORE_BUILD_MACOS: brew install cmake zsh && pip install meson ninja
           CIBW_TEST_EXTRAS: "test"
-          CIBW_TEST_COMMAND_MACOS: ls -lR runner/work
-          CIBW_TEST_COMMAND_LINUX: ls -lR
+          CIBW_TEST_COMMAND: pytests -s ${{github.workspace}}/bindings/python3/tests
         run: |
           git show -s --format=%ct HEAD > commit_time
           # Remove shared library
