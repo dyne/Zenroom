@@ -1,8 +1,14 @@
 name: Zenroom CI
-on: [push, pull_request]
+on:
+  push:
+    paths-ignore:
+      - 'docs/**'
+      - 'examples/**'
+      - '*.md'
+  pull_request:
 
 concurrency:
-  group: ci-tests-${{ github.ref }}-1
+  group: ${{ github.workflow }}-${{ github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -99,7 +105,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: ['1.13', '1.14', '1.15', '1.16']
+        go: ['1.13', '1.14', '1.15', '1.16', '1.19']
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -199,31 +205,53 @@ jobs:
       - name: 🧪 test bindings node-${{ matrix.node-version }}
         run: yarn test
       - name:  🔐 check crypto with node-${{ matrix.node-version }}
-        working-directory: ./
         run: make check-js
 
-  python-test:
-    name: 🐍 python tests
+  python-build-check:
+    name: 🐍 Python build & checks
     needs: [reuse, c-lint, lua-lint]
-    defaults:
-      run:
-        working-directory: bindings/python3
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
+        python-version: [38, 39, 310, 311]
+        platform_id: [manylinux_x86_64, manylinux_i686, manylinux_aarch64, macosx_x86_64]
+        exclude:
+          - os: macos-latest
+            platform_id: manylinux_x86_64
+          - os: macos-latest
+            platform_id: manylinux_i686
+          - os: macos-latest
+            platform_id: manylinux_aarch64
+          - os: ubuntu-latest
+            platform_id: macosx_x86_64
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v3
+      - uses: docker/setup-qemu-action@v2
+        if: runner.os == 'Linux'
         with:
-          python-version: '3.7'
-      - if: ${{ runner.os == 'Linux' }}
-        run: sudo apt-get update && sudo apt-get install -y cmake vim zsh
-      - if: ${{ runner.os == 'Macos' }}
-        run: brew install cmake vim zsh
-      - run: pip install meson ninja
-      - run: pip install -e .[test]
-      - run: pytest -s tests
+          platforms: all
+      - name: Build wheels
+        env:
+          CIBW_BUILD: cp${{ matrix.python-version }}-${{ matrix.platform_id }}
+          CIBW_ARCHS_LINUX: auto aarch64
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_24
+          CIBW_MANYLINUX_I686_IMAGE: manylinux_2_24
+          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_24
+          CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake vim zsh && pip install meson ninja cibuildwheel
+          CIBW_BEFORE_BUILD_MACOS: brew install cmake vim zsh && pip install meson ninja cibuildwheel
+          CIBW_TEST_EXTRAS: "test"
+          CIBW_TEST_COMMAND: "pytest -s {project}/tests"
+        run: |
+          git show -s --format=%ct HEAD > commit_time
+          # Remove shared library
+          rm -f bindings/golang/zenroom/lib/libzenroom.so
+          cp bindings/python3/setup.py .
+          cibuildwheel --output-dir wheelhouse
+      - uses: actions/upload-artifact@v3
+        with:
+          path: ./wheelhouse/*.whl
 
   linux-crypto-check:
     name: 🐧 Linux crypto tests
@@ -252,10 +280,10 @@ jobs:
           make osx
           make check-osx
 
-  NPM-release:
-    name: 🕊  NPM release
+  npm-release:
+    name: 🕊 npm release
     runs-on: ubuntu-latest
-    needs: [js-build-check]
+    needs: js-build-check
     if: ${{ github.ref_name == 'master' &&  github.event_name == 'push' }}
     steps:
       - uses: actions/setup-node@v3
@@ -269,82 +297,10 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-  build-python-wheels-ubuntu:
-    name: 🎡 build python wheels on ubuntu
-    if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
-    runs-on: ubuntu-latest
-    needs: [python-test]
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: [37, 38, 39, 310, 311]
-        platform-id: [manylinux_x86_64, manylinux_i686, manylinux_aarch64]
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
-      - uses: actions/setup-python@v4
-        name: Install Python
-        with:
-          python-version: '3.7'
-      - name: Build wheels
-        env:
-          CIBW_BUILD: cp${{ matrix.python-version }}-${{ matrix.platform-id }}
-          CIBW_ARCHS_LINUX: auto aarch64
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_24
-          CIBW_MANYLINUX_I686_IMAGE: manylinux_2_24
-          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_24
-          CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake vim zsh && pip install meson ninja
-        run: |
-          git show -s --format=%ct HEAD > commit_time
-          # Remove shared library
-          rm -f bindings/golang/zenroom/lib/libzenroom.so
-          cp bindings/python3/setup.py .
-          pip install cibuildwheel
-          cibuildwheel --output-dir wheelhouse
-      - uses: actions/upload-artifact@v3
-        with:
-          path: ./wheelhouse/*.whl
-
-  build-python-wheels-macos:
-    name: 🎡 build python wheels on macos
-    if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
-    runs-on: macos-latest
-    needs: [python-test]
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: [37, 38, 39, 310, 311]
-        platform-id: [macosx_x86_64]
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        name: Install Python
-        with:
-          python-version: '3.7'
-      - name: Build wheels
-        env:
-          CIBW_BUILD: cp${{ matrix.python-version }}-${{ matrix.platform-id }}
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_24
-          CIBW_BEFORE_BUILD_MACOS: brew install cmake vim zsh && pip install meson ninja
-        run: |
-          git show -s --format=%ct HEAD > commit_time
-          # Remove shared library
-          rm -f bindings/golang/zenroom/lib/libzenroom.so
-          cp bindings/python3/setup.py .
-          pip install cibuildwheel
-          cibuildwheel --output-dir wheelhouse
-      - uses: actions/upload-artifact@v3
-        with:
-          path: ./wheelhouse/*.whl
-
-  PyPI-release:
+  pypi-release:
     name: 🆕 PyPI release
     if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
-    needs: [build-python-wheels-ubuntu, build-python-wheels-macos]
+    needs: python-build-check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v3
