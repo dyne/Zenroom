@@ -186,6 +186,7 @@ jobs:
       run:
         working-directory: bindings/javascript
     steps:
+      - run: echo ${{ github.event.head_commit.message }} - ${{ contains(github.event.head_commit.message, 'skip js') }}
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
@@ -212,6 +213,7 @@ jobs:
       - name: 🧪 test bindings node-${{ matrix.node-version }}
         run: yarn test
       - name:  🔐 check crypto with node-${{ matrix.node-version }}
+        working-directory: ./
         run: make check-js
 
   python-build-check:
