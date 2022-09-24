@@ -178,7 +178,7 @@ jobs:
     name: 🐯 js build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
-    if: ${{ contains(github.event.head_commit.message, 'skip js') == false }}
+    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_JS')"
     strategy:
       matrix:
         node-version: [14.x, 16.x, 18.x]
