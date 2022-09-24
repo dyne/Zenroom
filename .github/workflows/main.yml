@@ -22,6 +22,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: fsfe/reuse-action@v1
+      - run: echo $JSON
+        env:
+          JSON: ${{ toJSON(github) }}
 
   c-lint:
     name: 🚨 C lint
@@ -186,7 +189,6 @@ jobs:
       run:
         working-directory: bindings/javascript
     steps:
-      - run: echo ${{ github.event.head_commit.message }} - ${{ contains(github.event.head_commit.message, 'skip js') }}
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
