@@ -90,7 +90,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
-      - uses: seanmiddleditch/gha-setup-ninja@master
       - name: Install compiler and dependencies
         run: |
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test
@@ -107,7 +106,7 @@ jobs:
     name: 🐹 go build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
-    if: ${{ !contains(github.event.head_commit.message, 'no-go') }}
+    if: ${{ contains(github.event.head_commit.message, 'no-go') }}
     strategy:
       matrix:
         go: ['1.13', '1.14', '1.15', '1.16', '1.19']
@@ -135,7 +134,7 @@ jobs:
     name: 🦀 rust build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
-    if: ${{ !contains(github.event.head_commit.message, 'no-rust') }}
+    if: ${{ contains(github.event.head_commit.message, 'no-rust') }}
     strategy:
       matrix:
         rust: ['stable', 'nightly']
@@ -158,7 +157,7 @@ jobs:
     name: 📟 cortex-m build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
-    if: ${{ !contains(github.event.head_commit.message, 'no-cortex') }}
+    if: ${{ contains(github.event.head_commit.message, 'no-cortex') }}
     steps:
       - uses: actions/checkout@v3
       - uses: numworks/setup-arm-toolchain@2021-10
@@ -176,7 +175,7 @@ jobs:
     name: 🐯 js build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
-    if: ${{ !contains(github.event.head_commit.message, 'no-js') }}
+    if: ${{ contains(github.event.head_commit.message, 'no-js') }}
     strategy:
       matrix:
         node-version: [14.x, 16.x, 18.x]
@@ -219,7 +218,7 @@ jobs:
     name: 🐍 Python build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ${{ matrix.os }}
-    if: ${{ !contains(github.event.head_commit.message, 'no-python') }}
+    if: ${{ contains(github.event.head_commit.message, 'no-python') }}
     strategy:
       fail-fast: false
       matrix:
@@ -252,7 +251,7 @@ jobs:
           CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake zsh vim && pip install meson ninja
           CIBW_BEFORE_BUILD_MACOS: brew install cmake zsh && pip install meson ninja
           CIBW_TEST_EXTRAS: "test"
-          CIBW_TEST_COMMAND: ls -l project/
+          CIBW_TEST_COMMAND: ls -lR project/target
         run: |
           git show -s --format=%ct HEAD > commit_time
           # Remove shared library
