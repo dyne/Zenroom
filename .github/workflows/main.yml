@@ -239,8 +239,8 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_24
           CIBW_MANYLINUX_I686_IMAGE: manylinux_2_24
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_24
-          CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake vim zsh && pip install meson ninja cibuildwheel
-          CIBW_BEFORE_BUILD_MACOS: brew install cmake vim zsh && pip install meson ninja cibuildwheel
+          CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake vim zsh && pip install meson ninja
+          CIBW_BEFORE_BUILD_MACOS: brew install cmake vim zsh && pip install meson ninja
           CIBW_TEST_EXTRAS: "test"
           CIBW_TEST_COMMAND: "pytest -s {project}/tests"
         run: |
@@ -248,6 +248,7 @@ jobs:
           # Remove shared library
           rm -f bindings/golang/zenroom/lib/libzenroom.so
           cp bindings/python3/setup.py .
+          pip install cibuildwheel
           cibuildwheel --output-dir wheelhouse
       - uses: actions/upload-artifact@v3
         with:
