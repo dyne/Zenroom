@@ -247,7 +247,10 @@ jobs:
           CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake zsh && pip install meson ninja
           CIBW_BEFORE_BUILD_MACOS: brew install cmake zsh && pip install meson ninja
           CIBW_TEST_EXTRAS: "test"
-          CIBW_TEST_COMMAND: "pytest -s {package}/tests"
+          CIBW_TEST_COMMAND: >
+            cd {package} && FAILED=false &&
+            (pytest -s tests || FAILED=true) &&
+            if [ "FAILED" == true ]; then exit 1; fi
         run: |
           git show -s --format=%ct HEAD > commit_time
           # Remove shared library
