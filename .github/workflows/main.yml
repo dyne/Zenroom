@@ -175,7 +175,7 @@ jobs:
     name: 🐯 js build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, 'no-js')"
+    if: "!contains(github.event.head_commit.message, 'skip js')"
     strategy:
       matrix:
         node-version: [14.x, 16.x, 18.x]
@@ -218,7 +218,7 @@ jobs:
     name: 🐍 Python build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ${{ matrix.os }}
-    if: "!contains(github.event.head_commit.message, 'no-python')"
+    if: "!contains(github.event.head_commit.message, 'skip python')"
     strategy:
       fail-fast: false
       matrix:
