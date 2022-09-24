@@ -1,11 +1,15 @@
-name: Zenroom CI
+name: zenroom
 on:
   push:
     paths-ignore:
       - 'docs/**'
       - 'examples/**'
       - '*.md'
+    branches:
+    - master
   pull_request:
+    branches:
+    - master
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
@@ -212,6 +216,7 @@ jobs:
     needs: [reuse, c-lint, lua-lint]
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
         python-version: [38, 39, 310, 311]
@@ -242,7 +247,7 @@ jobs:
           CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake vim zsh && pip install meson ninja
           CIBW_BEFORE_BUILD_MACOS: brew install cmake vim zsh && pip install meson ninja
           CIBW_TEST_EXTRAS: "test"
-          CIBW_TEST_COMMAND: "pytest -s {project}/tests"
+          CIBW_TEST_COMMAND: "pytest -s {package}/tests"
         run: |
           git show -s --format=%ct HEAD > commit_time
           # Remove shared library
