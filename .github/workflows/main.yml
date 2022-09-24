@@ -22,9 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: fsfe/reuse-action@v1
-      - run: echo $JSON
-        env:
-          JSON: ${{ toJSON(github) }}
+
 
   c-lint:
     name: 🚨 C lint
@@ -85,6 +83,7 @@ jobs:
   meson-build:
     name: 🥷 meson/ninja build
     needs: [reuse, c-lint, lua-lint]
+    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_MESON')"
     strategy:
       matrix:
         compiler: [clang-9, clang-10, clang-11, gcc-7, gcc-8, gcc-9, gcc-10]
@@ -109,7 +108,7 @@ jobs:
     name: 🐹 go build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
-    if: ${{ contains(github.event.head_commit.message, 'no-go') == false}}
+    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_GO')"
     strategy:
       matrix:
         go: ['1.13', '1.14', '1.15', '1.16', '1.19']
@@ -137,7 +136,7 @@ jobs:
     name: 🦀 rust build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
-    if: ${{ contains(github.event.head_commit.message, 'no-rust') }}
+    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_RUST')"
     strategy:
       matrix:
         rust: ['stable', 'nightly']
@@ -160,7 +159,7 @@ jobs:
     name: 📟 cortex-m build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
-    if: ${{ contains(github.event.head_commit.message, 'no-cortex') }}
+    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_CORTEX')"
     steps:
       - uses: actions/checkout@v3
       - uses: numworks/setup-arm-toolchain@2021-10
@@ -222,7 +221,7 @@ jobs:
     name: 🐍 Python build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ${{ matrix.os }}
-    if: ${{ !contains(github.event.head_commit.message, 'skip python') }}
+    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_PY')"
     strategy:
       fail-fast: false
       matrix:
