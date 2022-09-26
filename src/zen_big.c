@@ -214,7 +214,7 @@ int big_init(lua_State *L,big *n) {
 		n->len = MODBYTES;
 		return(size);
 	}
-	zerror(NULL, "anomalous state of big number detected on initialization");
+	zerror(L, "anomalous state of big number detected on initialization");
 	return(-1);
 }
 int dbig_init(lua_State *L,big *n) {
