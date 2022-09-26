@@ -196,7 +196,7 @@ static int ecp_get_infinity(lua_State *L) {
 */
 static int ecp_order(lua_State *L) {
 	big *res = big_new(L); SAFE(res);
-	big_init(res);
+	big_init(L,res);
 	// BIG is an array of int32_t on chunk 32 (see rom_curve)
 
 	// curve order is ready-only so we need a copy for norm() to work
@@ -394,7 +394,7 @@ static int ecp_get_x(lua_State *L) {
 	ecp *e = ecp_arg(L, 1); SAFE(e);
 	ECP_affine(&e->val);
 	big *x = big_new(L);
-	big_init(x);
+	big_init(L,x);
 	_fp_to_big(x, &e->val.x);
 	return 1;
 }
@@ -409,13 +409,13 @@ static int ecp_get_y(lua_State *L) {
 	ecp *e = ecp_arg(L, 1); SAFE(e);
 	ECP_affine(&e->val);
 	big *y = big_new(L);
-	big_init(y);
+	big_init(L,y);
 	_fp_to_big(y, &e->val.y);
 	return 1;
 }
 
 static int ecp_prime(lua_State *L) {
-	big *p = big_new(L); big_init(p); SAFE(p);
+	big *p = big_new(L); big_init(L,p); SAFE(p);
 	BIG_rcopy(p->val, CURVE_Prime);
 	return 1;
 }

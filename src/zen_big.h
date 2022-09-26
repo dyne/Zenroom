@@ -48,8 +48,8 @@ big* big_dup(lua_State *L, big *c);
 big* big_arg(lua_State *L, int n);
 
 // internal initialisation of double or single big
-int big_init(big *n);
-int dbig_init(big *n);
+int big_init(lua_State *L,big *n);
+int dbig_init(lua_State *L,big *n);
 
 // internal conversion from d/big to octet
 octet *new_octet_from_big(lua_State *L, big *c);
