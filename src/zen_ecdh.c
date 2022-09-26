@@ -508,7 +508,7 @@ static int ecdh_order(lua_State *L) {
                 return 0;
         }
 	big *o = big_new(L); SAFE(o);
-        big_init(o);
+        big_init(L,o);
         BIG_fromBytesLen(o->val, ECDH.order, ECDH.mod_size);
 	return 1;
 }
@@ -525,7 +525,7 @@ static int ecdh_prime(lua_State *L) {
                 return 0;
         }
 	big *p = big_new(L); SAFE(p);
-        big_init(p);
+        big_init(L,p);
         BIG_fromBytesLen(p->val, ECDH.prime, ECDH.mod_size);
 	return 1;
 }
