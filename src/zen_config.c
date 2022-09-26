@@ -27,8 +27,7 @@
 ///////////////////////
 
 #include <strings.h>
-#include <stdio.h>
-// #include <stdlib.h>
+#include <ctype.h>
 
 // Configuration parser, based on STB's C Lexer, see: stb_c_lexer.h
 
@@ -79,8 +78,18 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 	(void)stb__strchr;            // avoid compiler warnings
 	(void)stb__clex_parse_string; // for unused functions
 	if(!configuration) return 0;
-	int len = strlen(configuration);
+	register int p, len;
+	len = strnlen(configuration, MAX_CONFIG);
 	if(len<3) return 0;
+	for(p=0; p<len; p++) {
+	  if(isalnum(configuration[p])) continue;
+	  if(isspace(configuration[p])) continue;
+	  if(configuration[p]==',') continue;
+	  if(configuration[p]==':') continue;
+	  if(configuration[p]=='=') continue;
+	  // illegal character
+	  return 0;
+	}
 	stb_lexer lex;
 	char lexbuf[MAX_CONFIG];
 	zconf curconf = NIL;
@@ -116,6 +125,14 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 					// free(lexbuf);
 					return 0;
 				}
+				for(p=4; p<RANDOM_SEED_LEN*2; p++) {
+				  if(! isxdigit(lex.string[p]) ) {
+					_err( "Invalid hex digit in random seed: %c\n",
+						  lex.string[p]);
+					return 0;
+				  }
+				}
+
 				// copy string and null terminate
 				memcpy(ZZ->zconf_rngseed, lex.string+4, RANDOM_SEED_LEN*2);
 				ZZ->zconf_rngseed[(RANDOM_SEED_LEN*2)] = 0x0;

@@ -186,7 +186,7 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 
 	if(conf) {
 		if( ! zen_conf_parse(ZZ, conf) ) { // stb parsing
-			_err( "Fatal error");
+			_err( "Error parsing configuration: %s\n", conf);
 			return(NULL);
 		}
 	}
