@@ -182,6 +182,6 @@ setup(
     python_requires='>=3.6, <4',
     extras_require={
         'dev': [],
-        'test': ['pytest', 'schema'],
+        'test': ['pytest', 'schema', 'meson', 'ninja'],
     },
 )

@@ -239,7 +239,6 @@ jobs:
       - run: brew install zsh
         if: runner.os == 'Darwin'
       - run: |
-          pip3 install meson ninja
           pip3 install .[test]
       - run: pytest -s tests
 
@@ -247,7 +246,6 @@ jobs:
     name: 🐍 Python build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ${{ matrix.os }}
-    # if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_PY')"
     if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
     strategy:
       fail-fast: false
