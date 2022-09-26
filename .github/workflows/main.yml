@@ -234,7 +234,7 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - run: apt install --force-yes zsh
+      - run: sudo apt install --force-yes zsh
         if: runner.os == 'Linux'
       - run: brew install zsh
         if: runner.os == 'Darwin'
