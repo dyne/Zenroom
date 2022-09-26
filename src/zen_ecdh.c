@@ -69,7 +69,7 @@
 	lerror(L, "Zenroom won't overwrite. Use a .new() instance.");
 
 // from zen_ecdh_factory.h to setup function pointers
-extern void ecdh_init(ecdh *e);
+extern void ecdh_init(lua_State *L, ecdh *e);
 
 ecdh ECDH;
 
@@ -625,7 +625,7 @@ int luaopen_ecdh(lua_State *L) {
 	 };
 
 
-	ecdh_init(&ECDH);
+	ecdh_init(L, &ECDH);
 
 	zen_add_class(L, "ecdh", ecdh_class, ecdh_methods);
 	return 1;

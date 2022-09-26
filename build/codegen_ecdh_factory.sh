@@ -28,7 +28,7 @@ static char PRIME[MODBYTES_${BN}];
 
 #define Cof CURVE_Cof_I_${CN};
 
-void ecdh_init(ecdh *ECDH) {
+void ecdh_init(lua_State *L, ecdh *ECDH) {
 	ECDH->fieldsize = EFS_${CN};
 	ECDH->hash = HASH_TYPE_${CN};
 	ECDH->ECP__KEY_PAIR_GENERATE = ECP_${CN}_KEY_PAIR_GENERATE;
@@ -45,12 +45,12 @@ void ecdh_init(ecdh *ECDH) {
         BIG_${BN}_rcopy(tmp, CURVE_Order_${CN});
         BIG_${BN}_toBytes(ORDER, tmp);
         ECDH->order = ORDER;
-	ECDH->cofactor = Cof;
+		ECDH->cofactor = Cof;
         BIG_${BN}_rcopy(tmp, Modulus_${CN});
         BIG_${BN}_toBytes(PRIME, tmp);
         ECDH->prime = PRIME;
         ECDH->mod_size = MODBYTES_${BN};
-//	act(NULL,"ECDH curve is ${CN}");
+		act(L,"ECDH curve is ${CN}");
 }
 
 /*
