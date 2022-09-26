@@ -131,7 +131,6 @@ jobs:
       - name: 🔐 check crypto with go-${{ matrix.go }}
         run: make check-go
 
-
   rust-build-check:
     name: 🦀 rust build & checks
     needs: [reuse, c-lint, lua-lint]
@@ -217,11 +216,39 @@ jobs:
         working-directory: ./
         run: make check-js
 
+  python-check:
+    name: 🐍 Python checks
+    needs: [reuse, c-lint, lua-lint]
+    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_PY') && github.event_name == 'pull_request'"
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: bindings/python3
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: apt install --force-yes zsh
+        if: runner.os == 'Linux'
+      - run: brew install zsh
+        if: runner.os == 'Darwin'
+      - run: |
+          pip3 install meson ninja
+          pip3 install .[test]
+      - run: pytest -s tests
+
   python-build-check:
     name: 🐍 Python build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ${{ matrix.os }}
-    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_PY')"
+    # if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_PY')"
+    if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
     strategy:
       fail-fast: false
       matrix:
