@@ -729,7 +729,7 @@ EOF
 }
 EOF
 
-    cat <<EOF | zexe split_space.zen split_space.json | jq
+    cat <<EOF | zexe split_space.zen split_space.json
 Given I have a 'string'
 Given I have a 'string' named 'separator'
 
