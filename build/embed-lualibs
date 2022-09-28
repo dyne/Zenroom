@@ -53,10 +53,10 @@ for i in ${(f)libs}; do
 	print         >>  ${dst}
 	print "// $i" >>  ${dst}
 	xxd -i ${n}   >>  ${dst}
-	if [[ "`uname`" =~ "BSD" || "`uname`" =~ "Darwin" ]]; then
-	    sed -i "" 's/^unsigned/const unsigned/' ${dst}
-	else
-	    sed -i 's/^unsigned/const unsigned/' ${dst}
+	if [[ "`sed 2>&1`" =~ "GNU" ]]; then
+	   sed -i 's/^unsigned/const unsigned/' ${dst}
+        else
+	   sed -e 's/^unsigned/const unsigned/' -i '' "${dst}"
 	fi
 	print         >>  ${dst}
 	popd
