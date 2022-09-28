@@ -4,6 +4,8 @@ LIB := libed25519.a
 OBJECTS := ed25519.o
 RM ?= rm
 CFLAGS := ${CFLAGS} -DED25519_REFHASH -DED25519_TEST
+# TODO: in future this condition may have to change for
+# other x64 operating systems (e.g. iOS)
 UNAME_S := $(shell uname -s)
 ifneq (${UNAME_S},Darwin)
 	CFLAGS := ${CFLAGS} -DED25519_FORCE_32BIT
