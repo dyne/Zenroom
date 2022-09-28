@@ -3,10 +3,15 @@ load ../bats_zencode
 SUBDOC=cookbook_hash_pdf
 
 @test "hash file and sign the head" {
+    if [[ "`uname -s`" == "Darwin" ]]; then
+        cmd_base64="base64 -b 0"
+    else
+        cmd_base64="base64 -w 0"
+    fi
     tmpFile="$R/docs/pages/lua.md"
     cat << EOF | save_asset fileToHash.json
 {
-"fileToBeHashedBase64" : "$(base64 -w 0 $tmpFile)",
+"fileToBeHashedBase64" : "$($cmd_base64 $tmpFile)",
 	"fileToBeHashed.Metadata" : {
 		"nameOfFileToBeHashed" : "$tmpFile",
 		"dateOfFileToBeHashed" : $(stat -c \"%y\" $tmpFile),
