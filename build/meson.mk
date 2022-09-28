@@ -42,8 +42,7 @@ linux-meson-clang-debug: ${TARGETS} prepare-meson run-meson
 
 meson-test:
 	echo '#!/bin/sh' > ${pwd}/test/zenroom
-	echo -n "${pwd}/meson/zenroom" >> ${pwd}/test/zenroom
-	echo ' $$*' >> ${pwd}/test/zenroom
+	echo "${pwd}/meson/zenroom "'$$*' >> ${pwd}/test/zenroom
 	chmod +x ${pwd}/test/zenroom
 	ninja -C meson test
 

@@ -45,13 +45,13 @@ zexe() {
     tmperr=$TMP/err
 
     if [ "$keys" != "" ]; then
-	$ZENROOM_EXECUTABLE -z $script -c $conf -a $input -k $keys 1>$tmpout
+	$ZENROOM_EXECUTABLE -c $conf -k $keys -a $input -z $script  1>$tmpout
 	status=$?
     elif [ "$input" != "" ]; then
-	$ZENROOM_EXECUTABLE -z $script -c $conf -a $input          1>$tmpout
+	$ZENROOM_EXECUTABLE -c $conf -a $input -z $script           1>$tmpout
 	status=$?
     else
-	$ZENROOM_EXECUTABLE -z $script -c $conf                    1>$tmpout
+	$ZENROOM_EXECUTABLE -c $conf -z $script                     1>$tmpout
 	status=$?
     fi
     if [ $status == 0 ]; then
