@@ -158,7 +158,7 @@ jobs:
     name: 📟 cortex-m build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
-    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_CORTEX')"
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'run cortex') || contains(github.event.head_commit.message, 'run cortex') }}
     steps:
       - uses: actions/checkout@v3
       - uses: numworks/setup-arm-toolchain@2021-10
@@ -331,7 +331,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: javascript-artifact
-          path: ./dist
+          path: .
       - run: npm publish . --tag next
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
