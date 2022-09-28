@@ -58,10 +58,10 @@ cortex-m-crypto-integration = \
 	test/integration_asymmetric_crypto.sh ${1}
 
 crypto-integration = \
+	$(call bats, test/vectors/sha.bats); \
 	cd test/crypto_json &&  ./run.sh ${1}; cd -; \
 	cd test/crypto_ecdh &&  ./run.sh ${1}; cd -; \
-	cd test/crypto_eddsa && ./run.sh ${1}; cd -; \
-	cd test/crypto_nist &&  ./run.sh ${1}; cd -;
+	cd test/crypto_eddsa && ./run.sh ${1}; cd -;
 
 # TODO: complete with tamale and date
 lua-modules = \
@@ -69,17 +69,8 @@ lua-modules = \
 	${1} test/slaxml.lua
 
 zencode-integration = \
-	./test/zencode_parser.sh && \
-	cd test/zencode_cookbook && ./run-all.sh; cd -; \
-	cd test/zencode_given && ./run.sh; cd -; \
-	cd test/zencode_numbers && ./run.sh; cd -; \
-	cd test/zencode_array && ./run.sh; cd -; \
-	cd test/zencode_hash && ./run.sh; cd -; \
-	cd test/zencode_ecdh && ./run.sh; cd -; \
-	cd test/zencode_eddsa && ./run.sh; cd -; \
-	cd test/zencode_credential && ./run.sh; cd -; \
-	cd test/zencode_petition && ./run.sh; cd -; \
-	cd test/zencode_reflow && ./run.sh; cd -;
+	$(call bats, test/zencode);
+
 
 
 # ${1} test/closure.lua && \
@@ -134,7 +125,6 @@ check-linux:
 	$(call bats, test/determinism)
 	$(call crypto-integration,${test-exec})
 	$(call zencode-integration,${test-exec})
-	cat /tmp/zenroom-test-summary.txt
 	@echo "----------------"
 	@echo "All tests passed for LINUX binary build"
 	@echo "----------------"
