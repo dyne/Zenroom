@@ -1,0 +1,352 @@
+name: zenroom
+on:
+  push:
+    paths-ignore:
+      - 'docs/**'
+      - 'examples/**'
+      - '*.md'
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  reuse:
+    name: 🚨 REUSE Compliance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: fsfe/reuse-action@v1
+
+
+  c-lint:
+    name: 🚨 C lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: reviewdog/action-cpplint@master
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-check
+          targets: --recursive src
+          level: warning
+          flags: --linelength=120 # Optional
+          filter: "-readability/braces\
+            ,-readability/casting\
+            ,-whitespace/comma\
+            ,-whitespace/braces\
+            ,-whitespace/comments\
+            ,-whitespace/indent\
+            ,-whitespace/newline\
+            ,-whitespace/operators\
+            ,-whitespace/parens\
+            ,-whitespace/tab\
+            " # Optional
+        #    - name: Fail fast?!
+        #      if: steps.linter.outputs.checks-failed > 0
+        #      run: |
+        #        echo "😤 Some files failed the C linting checks!"
+
+  lua-lint:
+    name: 🚨 Lua lint
+    runs-on: ubuntu-latest
+    steps:
+    # - uses: dorny/paths-filter@v2
+    #   with:
+    #     filters: |
+    #       src:
+    #         - 'src/lua'
+    # - if: steps.changes.outputs.src == 'true'
+    - uses: actions/checkout@v3
+    - name: Setup luacheck
+      run: |
+          if ! hash luacheck &>/dev/null; then
+            sudo apt-get install -yq luarocks 1>/dev/null || exit 1
+            sudo luarocks install luacheck 1>/dev/null || exit 1
+            sudo luarocks install lanes &>/dev/null || true
+          fi
+          luacheck --version
+      shell: bash
+    - name: 🚨 LUA lint
+      continue-on-error: true
+      working-directory: src/lua
+      run: |
+        luacheck --config .luacheckrc --std lua54 .
+
+  meson-build:
+    name: 🥷 meson/ninja build
+    needs: [reuse, c-lint, lua-lint]
+    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_MESON')"
+    strategy:
+      matrix:
+        compiler: [clang-9, clang-10, clang-11, gcc-7, gcc-8, gcc-9, gcc-10]
+      fail-fast: false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+      - name: Install compiler and dependencies
+        run: |
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+          sudo apt-get install --force-yes ${{ matrix.compiler }}
+          sudo apt-get install --force-yes cmake vim zsh luajit lua-cjson ccache
+          pip3 install meson ninja
+      - uses: hendrikmuhs/ccache-action@v1.2
+      - run: make meson-ccache && ninja -C meson
+        env:
+          CC: ${{ matrix.compiler }}
+      - run: make meson-test
+
+  go-build-check:
+    name: 🐹 go build & checks
+    needs: [reuse, c-lint, lua-lint]
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_GO')"
+    strategy:
+      matrix:
+        go: ['1.13', '1.14', '1.15', '1.16', '1.19']
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go }}
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - run: |
+          pip3 install meson ninja
+          sudo apt-get install --force-yes zsh
+      - run: make linux-go
+      - run: cp meson/libzenroom.so bindings/golang/zenroom/lib
+      - name: 🧪 test bindings go-${{ matrix.go }}
+        working-directory: bindings/golang/zenroom
+        run: make test
+      - name: 🔐 check crypto with go-${{ matrix.go }}
+        run: make check-go
+
+  rust-build-check:
+    name: 🦀 rust build & checks
+    needs: [reuse, c-lint, lua-lint]
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_RUST')"
+    strategy:
+      matrix:
+        rust: ['stable', 'nightly']
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.rust }}
+      - run: |
+          pip3 install meson ninja
+          sudo apt-get install --force-yes zsh
+      - run: make linux-rust
+      - name: 🧪 test bindings rust-${{ matrix.rust }}
+        working-directory: bindings/rust
+        run: cargo test
+      - name: 🔐 check crypto with rust-${{ matrix.rust }}
+        run: make check-rs
+
+  cortex-m-build-check:
+    name: 📟 cortex-m build & checks
+    needs: [reuse, c-lint, lua-lint]
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_CORTEX')"
+    steps:
+      - uses: actions/checkout@v3
+      - uses: numworks/setup-arm-toolchain@2021-10
+      - run: sudo apt install zsh qemu-system-arm
+      - name: Download cmsis
+        run: |
+          curl -LO https://github.com/ARM-software/CMSIS_5/archive/refs/tags/5.7.0.tar.gz
+          tar xvf 5.7.0.tar.gz -C lib
+          mv lib/CMSIS_5-5.7.0 lib/cmsis
+      - run: make cortex-arm
+      - name: 🔐 check crypto with cortex-m
+        run: make check-cortex-m
+
+  js-build-check:
+    name: 🐯 js build & checks
+    needs: [reuse, c-lint, lua-lint]
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_JS')"
+    strategy:
+      matrix:
+        node-version: [14.x, 16.x, 18.x]
+    env:
+      EM_VERSION: latest
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    defaults:
+      run:
+        working-directory: bindings/javascript
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: mymindstorm/setup-emsdk@v11
+        with:
+          version: ${{ env.EM_VERSION }}
+      - run: sudo apt-get update; sudo apt-get install zsh meson ninja-build
+      - run: yarn
+      - run: yarn build
+        env:
+          EMSCRIPTEN: ${{ env.EMSDK }}/upstream/emscripten
+      - run: yarn version --new-version $(npm show zenroom version)-$(git rev-parse --short HEAD) --no-git-tag-version
+      - if: ${{ matrix.node-version == '16.x' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: javascript-artifact
+          path: |
+            ./bindings/javascript/CHANGELOG.md
+            ./bindings/javascript/LICENSE
+            ./bindings/javascript/package.json
+            ./bindings/javascript/README.md
+            ./bindings/javascript/dist/
+      - name: 🧪 test bindings node-${{ matrix.node-version }}
+        run: yarn test
+      - name: 🔐 check crypto with node-${{ matrix.node-version }}
+        working-directory: ./
+        run: make check-js
+
+  python-check:
+    name: 🐍 Python checks
+    needs: [reuse, c-lint, lua-lint]
+    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_PY') && github.event_name == 'pull_request'"
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: bindings/python3
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.8", "3.9", "3.10"]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: sudo apt install --force-yes zsh
+        if: runner.os == 'Linux'
+      - run: brew install zsh
+        if: runner.os == 'Darwin'
+      - run: |
+          pip3 install meson ninja
+          pip3 install .[test]
+      - run: pytest -s tests
+
+  python-build-check:
+    name: 🐍 Python build & checks
+    needs: [reuse, c-lint, lua-lint]
+    runs-on: ${{ matrix.os }}
+    if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: [38, 39, 310, 311]
+        platform_id: [manylinux_x86_64, manylinux_i686, manylinux_aarch64, macosx_x86_64]
+        exclude:
+          - os: macos-latest
+            platform_id: manylinux_x86_64
+          - os: macos-latest
+            platform_id: manylinux_i686
+          - os: macos-latest
+            platform_id: manylinux_aarch64
+          - os: ubuntu-latest
+            platform_id: macosx_x86_64
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+      - uses: docker/setup-qemu-action@v2
+        if: runner.os == 'Linux'
+        with:
+          platforms: all
+      - name: Build wheels
+        env:
+          CIBW_BUILD: cp${{ matrix.python-version }}-${{ matrix.platform_id }}
+          CIBW_ARCHS_LINUX: auto aarch64
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_24
+          CIBW_MANYLINUX_I686_IMAGE: manylinux_2_24
+          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_24
+          CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake zsh vim && pip install meson ninja
+          CIBW_BEFORE_BUILD_MACOS: brew install cmake zsh && pip install meson ninja
+          CIBW_TEST_EXTRAS: "test"
+          CIBW_TEST_COMMAND: "pytest -s {project}/bindings/python3/tests"
+        run: |
+          git show -s --format=%ct HEAD > commit_time
+          # Remove shared library
+          rm -f bindings/golang/zenroom/lib/libzenroom.so
+          cp bindings/python3/setup.py .
+          pip install cibuildwheel
+          cibuildwheel --output-dir wheelhouse
+      - uses: actions/upload-artifact@v3
+        with:
+          path: ./wheelhouse/*.whl
+
+  linux-crypto-check:
+    name: 🐧 Linux crypto tests
+    if: always()
+    needs: [meson-build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          sudo apt install zsh jq meson
+          make linux
+          make check-crypto
+
+  macosx-crypto-check:
+    name: 🍎 macos crypto tests
+    runs-on: macos-latest
+    if: always()
+    needs: [meson-build]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - run: |
+          pip3 install meson ninja
+          make osx
+          make check-osx
+
+  npm-release:
+    name: 📦 npm release
+    runs-on: ubuntu-latest
+    needs: js-build-check
+    if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
+    steps:
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+      - uses: actions/download-artifact@v3
+        with:
+          name: javascript-artifact
+          path: ./dist
+      - run: npm publish . --tag next
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  pypi-release:
+    name: 📦 PyPI release
+    if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
+    needs: python-build-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
