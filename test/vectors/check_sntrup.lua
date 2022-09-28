@@ -14,7 +14,6 @@ end
 local QP = require'qp'
 local curr_fields = 0
 local test = { }
-local nr = 0
 for line in newline_iter(DATA) do
    if line:sub(1,1) ~= "#" then
       local rule = strtok(line)
@@ -26,22 +25,15 @@ for line in newline_iter(DATA) do
       end
       
       if curr_fields == 5 then
-	 -- I should check the name of the fields
-	 nr = nr + 1
-
 	 -- Here starts the test
-	 assert(test.pk == QP.sigpubgen(test.sk))
-	 assert(QP.sigpubcheck(test.pk))
-	 assert(QP.signature_check(test.sm:sub(1, QP.signature_len())))
-	 assert(QP.verify(test.pk, test.sm:sub(1, QP.signature_len()), test.msg))
-	 assert(test.msg == QP.verified_msg(test.pk, test.sm))
-
-	 assert(test.sm == QP.signed_msg(test.sk, test.msg))
-	 assert(test.sm:sub(1, QP.signature_len()) == QP.sign(test.sk, test.msg))
-
+	 assert(test.pk == QP.ntrup_pubgen(test.sk))
+	 assert(QP.ntrup_pubcheck(test.pk))
+	 assert(QP.ntrup_sscheck(test.ss))
+	 assert(QP.ntrup_ctcheck(test.ct))
+	 assert(test.ss == QP.ntrup_dec(test.sk, test.ct))
+	 
 	 curr_fields = 0
 	 test = { }
       end
    end
 end
-print(nr)

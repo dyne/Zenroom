@@ -14,7 +14,6 @@ end
 local QP = require'qp'
 local curr_fields = 0
 local test = { }
-local nr = 0
 for line in newline_iter(DATA) do
    if line:sub(1,1) ~= "#" then
       local rule = strtok(line)
@@ -26,9 +25,6 @@ for line in newline_iter(DATA) do
       end
       
       if curr_fields == 5 then
-	 -- I should check the name of the fields
-	 nr = nr + 1
-
 	 -- Here starts the test
 	 assert(test.pk == QP.kempubgen(test.sk))
 	 assert(QP.kempubcheck(test.pk))
@@ -41,4 +37,3 @@ for line in newline_iter(DATA) do
       end
    end
 end
-print(nr)
