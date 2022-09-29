@@ -107,7 +107,7 @@ static int zen_write (lua_State *L) {
   octet *o = o_arg(L, 1); // it may be null (empty string)
   if(!o) return 0;
   if (Z->stdout_buf) {
-	char *p = Z->stderr_buf+Z->stderr_pos;
+	char *p = Z->stdout_buf+Z->stdout_pos;
 	if (Z->stdout_pos+o->len > Z->stdout_len)
 	  zerror(L, "No space left in output buffer");
 	memcpy(p, o->val, o->len);
