@@ -54,7 +54,7 @@ fn aquire_zen_gil() -> ZenGIL {
     mutex.lock().unwrap()
 }
 
-const BUF_SIZE: usize = 2 * 1024 * 1024;
+const BUF_SIZE: usize = 10 * 1024;
 
 type Fun = unsafe extern "C" fn(
     *mut ::std::os::raw::c_char,
