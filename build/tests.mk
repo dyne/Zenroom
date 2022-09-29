@@ -58,9 +58,7 @@ cortex-m-crypto-integration = \
 	test/integration_asymmetric_crypto.sh ${1}
 
 crypto-integration = \
-	$(call bats, test/vectors/sha.bats); \
-	$(call bats, test/vectors/eddsa.bats); \
-	$(call bats, test/vectors/qp.bats); \
+	$(call bats, test/vectors/sha.bats test/vectors/eddsa.bats test/vectors/qp.bats); \
 	cd test/crypto_json &&  ./run.sh ${1}; cd -; \
 	cd test/crypto_ecdh &&  ./run.sh ${1}; cd -;
 
