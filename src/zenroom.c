@@ -409,18 +409,21 @@ int _check_zenroom_result(zenroom_t *zz, int res) {
   register int exitcode;
   if(res != SUCCESS) {
     zerror(zz->lua, "Execution aborted");
+  } else {
+    act(zz->lua, "Zenroom execution completed.");
+  }
+  exitcode = zz->exitcode;
+  zen_teardown(zz);
+  if(res != SUCCESS) {
 #ifdef __EMSCRIPTEN__
     EM_ASM({Module.exec_error();});
     EM_ASM(Module.onAbort());
 #endif
   } else {
-    act(zz->lua, "Zenroom execution completed.");
 #ifdef __EMSCRIPTEN__
     EM_ASM({Module.exec_ok();});
 #endif
   }
-  exitcode = zz->exitcode;
-  zen_teardown(zz);
   return(exitcode);
 }
 
