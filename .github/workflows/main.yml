@@ -242,6 +242,20 @@ jobs:
           pip3 install .[test]
       - run: pytest -s tests
 
+  make_sdist:
+    name: Make SDist
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - run: apt-get update && apt-get install -y cmake zsh vim && pip install meson ninja
+    - name: Build SDist
+      run: python setup.py sdist
+
+    - uses: actions/upload-artifact@v3
+      with:
+        path: dist/*.tar.gz
+
   python-build-check:
     name: 🐍 Python build & checks
     needs: [reuse, c-lint, lua-lint]
@@ -341,7 +355,7 @@ jobs:
   pypi-release:
     name: 📦 PyPI release
     if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
-    needs: python-build-check
+    needs: [python-build-check, make_sdist]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v3
