@@ -78,7 +78,7 @@ test("error format contains newlines", async t => {
 
     t.true(lines.includes('[W]  Zencode text too short to parse'));
     t.true(lines.includes('[W]  Zencode is missing version check, please add: rule check version N.N.N'));
-    t.true(lines.includes('[!]  Execution aborted'));
+    t.true(lines.includes('[!]  Execution aborted with errors'));
   }
 })
 
