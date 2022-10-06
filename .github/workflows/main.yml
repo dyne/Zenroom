@@ -295,6 +295,9 @@ jobs:
     name: 🐍 Python create source distribution
     runs-on: ubuntu-latest
     needs: [python-build-check]
+    defaults:
+      run:
+        working-directory: bindings/python3
     steps:
     - uses: actions/checkout@v3
     - run: |
