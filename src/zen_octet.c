@@ -165,22 +165,30 @@ int is_bin(lua_State *L, const char *in) {
 }
 
 // allocate octet without internally, no lua involved
-octet* o_alloc(lua_State *L, const int size) {
+octet* o_alloc(lua_State *L, int size) {
   if(size<0) {
-	zerror(L, "Cannot create octet, size less than zero");
-	lerror(L, "execution aborted");
+	if(L) {
+	  zerror(L, "Cannot create octet, size less than zero");
+	  lerror(L, "execution aborted");
+	}
 	return NULL; }
   if(size>MAX_OCTET) {
-	zerror(L, "Cannot create octet, size too big: %u", size);
-	lerror(L, "execution aborted");
+	if(L) {
+	  zerror(L, "Cannot create octet, size too big: %u", size);
+	  lerror(L, "execution aborted");
+	}
 	return NULL; }
   octet *o = malloc(sizeof(octet));
   if(!o) {
-	lerror(L, "Error allocating new octet of %u bytes",size);
+	if(L) {
+	  lerror(L, "Error allocating new octet of %u bytes",size);
+	}
 	return NULL; }
   o->val = malloc(size +0x0f);
   if(!o->val) {
-	lerror(L, "Error allocating new octet of %u bytes",size);
+	if(L) {
+	  lerror(L, "Error allocating new octet of %u bytes",size);
+	}
 	return NULL; }
   o->max = size;
   o->len = 0;
@@ -237,10 +245,6 @@ octet* o_arg(lua_State *L,int n) {
 		memcpy(r->val, o->val, o->len);
 		r->len = o->len;
 		return(r);
-	} else {
-	  zerror(L, "argument %u octet not found", n);
-	  lerror(L, "execution aborted");
-	  return NULL;
 	}
 	if( strlen(type) >= 6 && ((strncmp("string",type,6)==0)
 						  || (strncmp("number",type,6)==0)) ) {
