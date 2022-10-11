@@ -165,7 +165,7 @@ int is_bin(lua_State *L, const char *in) {
 }
 
 // allocate octet without internally, no lua involved
-octet* o_alloc(const int size) {
+octet* o_alloc(lua_State *L, const int size) {
   if(size<0) {
 	zerror(L, "Cannot create octet, size less than zero");
 	lerror(L, "execution aborted");
@@ -189,10 +189,10 @@ octet* o_alloc(const int size) {
 }
 
 void o_free(octet *o) {
-  if(!o) { lerror(L, "Error freeing NULL octet"); return; }
-  if(!o->val) { lerror(L, "Error freeing NULL octet"); return; }
-  free(o->val);
+  if(!o) return;
+  if(o->val) free(o->val);
   free(o);
+  return;
 }
 
 // REMEMBER: newuserdata already pushes the object in lua's stack
@@ -222,7 +222,7 @@ octet* o_new(lua_State *L, const int size) {
 }
 
 // here most internal type conversions happen
-octet* o_arg(lua_State *L,int n, int fake) {
+octet* o_arg(lua_State *L,int n) {
 	void *ud;
 	octet *o = NULL;
 	const char *type = luaL_typename(L,n);
@@ -233,7 +233,7 @@ octet* o_arg(lua_State *L,int n, int fake) {
 			lerror(L, "execution aborted");
 			return NULL;
 		} // allocate a new "internal" octet to be freed by caller
-		octet *r = o_alloc(o->len);
+		octet *r = o_alloc(L, o->len);
 		memcpy(r->val, o->val, o->len);
 		r->len = o->len;
 		return(r);
@@ -256,7 +256,7 @@ octet* o_arg(lua_State *L,int n, int fake) {
 			return NULL;
 		}
 		// fallback to a string
-		o = o_alloc(len);
+		o = o_alloc(L, len);
 		OCT_jstring(o, (char*)str); // null terminates and updates len
 		return(o);
 	}
@@ -277,19 +277,19 @@ octet* o_arg(lua_State *L,int n, int fake) {
 	ud = luaL_testudata(L, n, "zenroom.ecp");
 	if(ud) {
 		ecp *e = (ecp*)ud;
-		o = o_alloc(e->totlen); SAFE(o); // new
+		o = o_alloc(L, e->totlen); SAFE(o); // new
 		_ecp_to_octet(o,e);
 		return(o);
 	}
 	ud = luaL_testudata(L, n, "zenroom.ecp2");
 	if(ud) {
 		ecp2 *e = (ecp2*)ud;
-		o = o_alloc(e->totlen); SAFE(o); // new
+		o = o_alloc(L, e->totlen); SAFE(o); // new
 		_ecp2_to_octet(o,e);
 		return(o);
 	}
 	if( lua_isnil(L, n) || lua_isnone(L,n) ) {
-	  o = o_alloc(1);
+	  o = o_alloc(L, 1);
 	  o->val[0] = 0x0;
 	  o->len = 1;
 	  return(o);
@@ -352,7 +352,7 @@ excessing data. Octets cannot be resized.
 @return octet newly instantiated octet
 */
 static int newoctet (lua_State *L) {
-	const octet *o = o_arg(L, 1); SAFE(o);
+	octet *o = o_arg(L, 1); SAFE(o);
 	octet *r = o_dup(L,(octet*)o);
 	o_free(o);
 	(void)r;
@@ -442,7 +442,7 @@ static int lua_is_hex(lua_State *L) {
 	lua_pushboolean(L, 1);
 	return 1;
 }
-sdstatic int lua_is_bin(lua_State *L) {
+static int lua_is_bin(lua_State *L) {
 	const char *s = lua_tostring(L, 1);
 	luaL_argcheck(L, s != NULL, 1, "string expected");
 	int len = is_bin(L, s);
@@ -788,13 +788,13 @@ static int from_mnemonic(lua_State *L) {
 		lua_pushboolean(L, 0);
 		return 1; }
 	// From bip39 it can be at most 32bytes
-	octet *o = o_alloc(32);
+	octet *o = o_alloc(L, 32);
 	if(!mnemonic_check_and_bits(s, &(o->len), o->val)) {
 		zerror(L, "%s :: words cannot be encoded with bip39 format", __func__);
 		o_free(o);
 		lua_pushboolean(L, 0);
 	}
-	o_dup(o); // push in lua's stack
+	o_dup(L, o); // push in lua's stack
 	return 1;
 }
 
