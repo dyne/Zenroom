@@ -28,7 +28,13 @@ octet* o_new(lua_State *L, const int size);
 
 octet *o_dup(lua_State *L, octet *o);
 
-octet* o_arg(lua_State *L,int n);
+// REMEMBER: o_arg returns a new allocated octet to be freed with o_free
+octet* o_arg(lua_State *L, int n);
+
+// These functions are internal and not exposed to lua's stack
+// to make an octet visible to lua can be done using o_dup
+octet *o_alloc(const int size);
+void o_free(octet *o);
 
 void push_octet_to_hex_string(lua_State *L, octet *o);
 void push_buffer_to_octet(lua_State *L, char *p, size_t len);

@@ -315,12 +315,12 @@ octet *new_octet_from_big(lua_State *L, big *c) {
 	octet *o;
 	if(c->doublesize && c->dval) {
 		if (isdzero(c->dval)) { // zero
-			o = o_new(L,c->len); SAFE(o);
+			o = o_alloc(1);
 			o->val[0] = 0x0;
 			o->len = 1;
 		} else {
 			DBIG t; BIG_dcopy(t,c->dval); BIG_dnorm(t);
-			o = o_new(L,c->len); SAFE(o);
+			o = o_alloc(c->len);
 			for(i=c->len-1; i>=0; i--) {
 				o->val[i]=t[0]&0xff;
 				BIG_dshr(t,8);
@@ -329,13 +329,13 @@ octet *new_octet_from_big(lua_State *L, big *c) {
 		}
 	} else if(c->val) {
 		if (iszero(c->val)) { // zero
-			o = o_new(L,c->len); SAFE(o);
+			o = o_alloc(1);
 			o->val[0] = 0x0;
 			o->len = 1;
 		} else {
 			// fshr is destructive so use a copy
 			BIG t; BIG_copy(t,c->val); BIG_norm(t);
-			o = o_new(L,c->len); SAFE(o);
+			o = o_alloc(c->len);
 			for(i=c->len-1; i>=0; i--) {
 				o->val[i] = t[0]&0xff;
 				BIG_fshr(t,8);
