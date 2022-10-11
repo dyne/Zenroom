@@ -166,7 +166,7 @@ int notice(void *L, const char *format, ...) {
   va_start(arg, format);
   Z_FORMAT_ARG(L);
   if(Z && Z->debuglevel<1) return 0;
-  octet *o = o_alloc(MAX_ERRMSG); SAFE(o);
+  octet *o = o_alloc(L, MAX_ERRMSG); SAFE(o);
   mutt_vsnprintf(o->val, o->max-5, format, arg);
   o->len = strlen(o->val);
   zen_log(L, LOG_INFO, o);
@@ -179,7 +179,7 @@ int func(void *L, const char *format, ...) {
   va_start(arg, format);
   Z_FORMAT_ARG(L);
   if(Z && Z->debuglevel<3) return 0;
-  octet *o = o_alloc(MAX_ERRMSG); SAFE(o);
+  octet *o = o_alloc(L, MAX_ERRMSG); SAFE(o);
   mutt_vsnprintf(o->val, o->max-5, format, arg);
   o->len = strlen(o->val);
   zen_log(L, LOG_VERBOSE, o);
@@ -191,7 +191,7 @@ int zerror(void *L, const char *format, ...) {
   va_list arg;
   va_start(arg, format);
   Z_FORMAT_ARG(L);
-  octet *o = o_alloc(MAX_ERRMSG); SAFE(o);
+  octet *o = o_alloc(L, MAX_ERRMSG); SAFE(o);
   mutt_vsnprintf(o->val, o->max-5, format, arg);
   o->len = strlen(o->val);
   zen_log(L, LOG_ERROR, o);
@@ -204,7 +204,7 @@ int act(void *L, const char *format, ...) {
   va_start(arg, format);
   Z_FORMAT_ARG(L);
   if(Z && Z->debuglevel<2) return 0;
-  octet *o = o_alloc(MAX_ERRMSG); SAFE(o);
+  octet *o = o_alloc(L, MAX_ERRMSG); SAFE(o);
   // new octet is pushed to stack
   mutt_vsnprintf(o->val, o->max-5, format, arg);
   o->len = strlen(o->val);
@@ -218,7 +218,7 @@ int warning(void *L, const char *format, ...) {
   va_start(arg, format);
   Z_FORMAT_ARG(L);
   if(Z && Z->debuglevel<1) return 0;
-  octet *o = o_alloc(MAX_ERRMSG); SAFE(o);
+  octet *o = o_alloc(L, MAX_ERRMSG); SAFE(o);
   mutt_vsnprintf(o->val, o->max-5, format, arg);
   o->len = strlen(o->val);
   zen_log(L, LOG_WARN, o);

@@ -33,7 +33,7 @@ octet* o_arg(lua_State *L, int n);
 
 // These functions are internal and not exposed to lua's stack
 // to make an octet visible to lua can be done using o_dup
-octet *o_alloc(lua_State *L, const int size);
+octet *o_alloc(lua_State *L, int size);
 void o_free(octet *o);
 
 void push_octet_to_hex_string(lua_State *L, octet *o);
