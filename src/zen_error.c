@@ -78,7 +78,7 @@ int lerror(void *LL, const char *fmt, ...) {
   va_list argp;
   va_start(argp, fmt);
   zerror(L, fmt, argp); // logs on all platforms
-  luaL_where(L, 1);
+  luaL_where(L, 1); // 1 is the function which called the running function
   lua_pushvfstring(L, fmt, argp);
   va_end(argp);
   lua_concat(L, 2);
@@ -141,19 +141,6 @@ int OK() { return 0; }
 int FAIL() { return 1; }
 #endif
 
-static octet *o_malloc(int size) {
-  octet *o = malloc(sizeof(octet));
-  o->val = malloc(size+0x0f);
-  o->max = size;
-  o->len = 0;
-  return(o);
-}
-
-static void o_free(octet *o) {
-  free(o->val);
-  free(o);
-}
-
 void json_start(void *L) {
   const char *logstart = "{ [ \"ZENROOM JSON LOG START\",";
   octet o;
@@ -179,7 +166,7 @@ int notice(void *L, const char *format, ...) {
   va_start(arg, format);
   Z_FORMAT_ARG(L);
   if(Z && Z->debuglevel<1) return 0;
-  octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
+  octet *o = o_alloc(MAX_ERRMSG); SAFE(o);
   mutt_vsnprintf(o->val, o->max-5, format, arg);
   o->len = strlen(o->val);
   zen_log(L, LOG_INFO, o);
@@ -192,7 +179,7 @@ int func(void *L, const char *format, ...) {
   va_start(arg, format);
   Z_FORMAT_ARG(L);
   if(Z && Z->debuglevel<3) return 0;
-  octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
+  octet *o = o_alloc(MAX_ERRMSG); SAFE(o);
   mutt_vsnprintf(o->val, o->max-5, format, arg);
   o->len = strlen(o->val);
   zen_log(L, LOG_VERBOSE, o);
@@ -204,7 +191,7 @@ int zerror(void *L, const char *format, ...) {
   va_list arg;
   va_start(arg, format);
   Z_FORMAT_ARG(L);
-  octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
+  octet *o = o_alloc(MAX_ERRMSG); SAFE(o);
   mutt_vsnprintf(o->val, o->max-5, format, arg);
   o->len = strlen(o->val);
   zen_log(L, LOG_ERROR, o);
@@ -217,7 +204,7 @@ int act(void *L, const char *format, ...) {
   va_start(arg, format);
   Z_FORMAT_ARG(L);
   if(Z && Z->debuglevel<2) return 0;
-  octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
+  octet *o = o_alloc(MAX_ERRMSG); SAFE(o);
   // new octet is pushed to stack
   mutt_vsnprintf(o->val, o->max-5, format, arg);
   o->len = strlen(o->val);
@@ -231,10 +218,24 @@ int warning(void *L, const char *format, ...) {
   va_start(arg, format);
   Z_FORMAT_ARG(L);
   if(Z && Z->debuglevel<1) return 0;
-  octet *o = o_malloc(MAX_ERRMSG); SAFE(o);
+  octet *o = o_alloc(MAX_ERRMSG); SAFE(o);
   mutt_vsnprintf(o->val, o->max-5, format, arg);
   o->len = strlen(o->val);
   zen_log(L, LOG_WARN, o);
   o_free(o);
+  return 0;
+}
+
+// WIP
+// common function called both by C and Lua
+int _fatal(void *LL, int lvl, const char *fmt, ...) {
+  return 0;
+}
+
+int lua_fatal(lua_State *L) {
+  return lua_error(L);
+}
+
+int fatal(void *LL, const char *fmt, ...) {
   return 0;
 }

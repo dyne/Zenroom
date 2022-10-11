@@ -89,7 +89,7 @@ octet *new_octet_from_float(lua_State *L, float *f) {
 	        lerror(L, "Output size too big");
 		return 0;
 	}
-        o = o_new(L, bufsz);
+        o = o_alloc(bufsz);
         register int i;
         for(i=0; i<bufsz; i++) {
                 o->val[i] = dest[i];
