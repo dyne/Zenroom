@@ -61,6 +61,7 @@ static int zen_print (lua_State *L) {
 	  zerror(L, "No space left in output buffer");
 	memcpy(p, o->val, o->len);
 	*(p + o->len) = '\n';
+	*(p + o->len+1) = '\0';
 	Z->stdout_pos += o->len + 1;
   } else if(o) {
 	o->val[o->len] = '\n'; // add newline
