@@ -169,26 +169,18 @@ octet* o_alloc(lua_State *L, int size) {
   if(size<0) {
 	if(L) {
 	  zerror(L, "Cannot create octet, size less than zero");
-	  lerror(L, "execution aborted");
 	}
 	return NULL; }
   if(size>MAX_OCTET) {
 	if(L) {
 	  zerror(L, "Cannot create octet, size too big: %u", size);
-	  lerror(L, "execution aborted");
 	}
 	return NULL; }
   octet *o = malloc(sizeof(octet));
   if(!o) {
-	if(L) {
-	  lerror(L, "Error allocating new octet of %u bytes",size);
-	}
 	return NULL; }
   o->val = malloc(size +0x0f);
   if(!o->val) {
-	if(L) {
-	  lerror(L, "Error allocating new octet of %u bytes",size);
-	}
 	return NULL; }
   o->max = size;
   o->len = 0;
@@ -207,21 +199,17 @@ void o_free(octet *o) {
 octet* o_new(lua_State *L, const int size) {
 	if(size<0) {
 		zerror(L, "Cannot create octet, size less than zero");
-		lerror(L, "execution aborted");
 		return NULL; }
 	if(size>MAX_OCTET) {
 		zerror(L, "Cannot create octet, size too big: %u", size);
-		lerror(L, "execution aborted");
 		return NULL; }
 	octet *o = (octet *)lua_newuserdata(L, sizeof(octet));
 	if(!o) {
-		lerror(L, "Error allocating new userdata for octet");
 		return NULL; }
 	luaL_getmetatable(L, "zenroom.octet");
 	lua_setmetatable(L, -2);
 	o->val = malloc(size +0x0f);
 	if(!o->val) {
-		lerror(L, "Error allocating new octet of %u bytes",size);
 		return NULL; }
 	o->len = 0;
 	o->max = size;
@@ -238,7 +226,6 @@ octet* o_arg(lua_State *L,int n) {
 	if(o) {
 		if(o->len>MAX_OCTET) {
 			zerror(L, "argument %u octet too long: %u bytes", n, o->len);
-			lerror(L, "execution aborted");
 			return NULL;
 		} // allocate a new "internal" octet to be freed by caller
 		octet *r = o_alloc(L, o->len);
@@ -256,7 +243,6 @@ octet* o_arg(lua_State *L,int n) {
 		}
 		if(!len || len>MAX_OCTET) {
 			zerror(L, "invalid string size: %u", len);
-			lerror(L, "failed implicit conversion from string to octet");
 			return NULL;
 		}
 		// fallback to a string
@@ -299,7 +285,6 @@ octet* o_arg(lua_State *L,int n) {
 	  return(o);
 	}
 	zerror(L, "Error in argument #%u", n);
-	lerror(L, "%s: cannot convert %s to zeroom.octet", __func__, luaL_typename(L, n));
 	return NULL;
 	// if executing here, something is pushed into Lua's stack
 	// but this is an internal function to gather arguments, so
