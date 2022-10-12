@@ -363,6 +363,19 @@ static int newoctet (lua_State *L) {
 	return 1;
 }
 
+/***
+Create a new octet of size 0
+
+@function OCTET.empty()
+@return octet newly instantiated octet
+*/
+static int new_empty_octet (lua_State *L) {
+	octet *o = o_alloc(L, 0);
+	o_dup(L,o);
+	o_free(o);
+	return 1;
+}
+
 static int filloctet(lua_State *L) {
 	int i;
 	octet *o = (octet*) luaL_testudata(L, 1, "zenroom.octet");
@@ -797,6 +810,7 @@ static int from_mnemonic(lua_State *L) {
 		zerror(L, "%s :: words cannot be encoded with bip39 format", __func__);
 		o_free(o);
 		lua_pushboolean(L, 0);
+		return 1;
 	}
 	o_dup(L, o); // push in lua's stack
 	return 1;
@@ -1474,6 +1488,7 @@ int luaopen_octet(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg octet_class[] = {
 		{"new",   newoctet},
+		{"empty",   new_empty_octet},
 		{"zero",  zero},
 		{"crc",  crc8},
 		{"concat",concat_n},

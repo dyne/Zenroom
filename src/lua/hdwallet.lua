@@ -83,7 +83,7 @@ function HDW.getPublic(extkey)
 end
 
 function HDW.format_extkey(extkey, version)
-   local data = O.new()
+   local data = O.empty()
 
    assert(version == HDW.MAINPK or version == HDW.MAINSK or
 	  version == HDW.TESTPK or version == HDW.TESTSKK, "Unknown version", 2)

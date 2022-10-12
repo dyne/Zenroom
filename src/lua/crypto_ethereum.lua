@@ -25,7 +25,7 @@ local ETH = {}
 -- in RLP the 0 is reppresented as the empty octet
 function ETH.n2o(num)
    if num == INT.new(0) then
-      return O.new()
+      return O.empty()
    else
       return num:octet()
    end
@@ -53,7 +53,7 @@ function ETH.encodeRLP(data)
 
    if type(data) == 'table' then
       -- empty octet
-      res = O.new()
+      res = O.empty()
       for _, v in pairs(data) do
 	 res = res .. ETH.encodeRLP(v)
       end
@@ -110,7 +110,7 @@ local function decodeRLPgeneric(rlp, i)
    elseif bytInt <= 183 then
       idx = i+bytInt-128+1
       if bytInt == 128 then
-	 res = O.new()
+	 res = O.empty()
       else
 	 res = rlp:sub(i+1, idx-1)
       end
@@ -206,8 +206,8 @@ local function hashFromSignedTransaction(txSigned)
       tx[v] = txSigned[v]
    end
    tx["v"] = INT.shr(txSigned["v"]-INT.new(35), 1)
-   tx["r"] = O.new()
-   tx["s"] = O.new()
+   tx["r"] = O.empty()
+   tx["s"] = O.empty()
 
    H = HASH.new('keccak256')
    return H:process(ETH.encodeTransaction(tx))
@@ -293,7 +293,7 @@ function ETH.make_storage_data(src)
       paddingLength = 32 - paddingLength
       padding = O.zero(paddingLength)
    else
-      padding = O.new()
+      padding = O.empty()
    end
    -- done with padding
 
@@ -352,7 +352,7 @@ function ETH.data_contract_factory(fz_name, params)
 
             table.insert(tails, arg)
          else
-            table.insert(tails, O.new())
+            table.insert(tails, O.empty())
          end
       end
 
@@ -381,7 +381,7 @@ function ETH.data_contract_factory(fz_name, params)
                paddingLength = 32 - paddingLength
                padding = O.zero(paddingLength)
             else
-               padding = O.new()
+               padding = O.empty()
             end
             res = res .. INT.new(#v):fixed(32) .. v .. padding
          end

@@ -2,7 +2,7 @@
 
 H=HASH.new('ripemd160')
 
-assert(H:process(O.new()) == O.from_hex('9c1185a5c5e9fc54612808977ee8f548b2258d31'))
+assert(H:process(O.empty()) == O.from_hex('9c1185a5c5e9fc54612808977ee8f548b2258d31'))
 assert(H:process('a') == O.from_hex('0bdc9d2d256b3ee9daae347be6f4dc835a467ffe'))
 assert(H:process('abc') == O.from_hex('8eb208f7e05d987a9b044a8e98c6b087f15a0bfc'))
 assert(H:process('message digest') == O.from_hex('5d0689ef49d2fae572b881b123a85ffa21595f36'))
