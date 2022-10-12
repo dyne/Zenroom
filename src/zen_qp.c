@@ -104,6 +104,8 @@ static int qp_signature_pubgen(lua_State *L) {
 						(unsigned char*)sk->val);
 	pk->len = PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES;
 
+	o_free(sk);
+
 	return 1;
 }
 
@@ -114,6 +116,7 @@ static int qp_signature_pubcheck(lua_State *L) {
 		lua_pushboolean(L, 1);
 	else
 		lua_pushboolean(L, 0);
+	o_free(pk);
 	return 1;
 }
 
@@ -137,6 +140,8 @@ static int qp_sign(lua_State *L) {
 		lua_pushboolean(L, 0);
 		return 1;
 	}
+	o_free(sk);
+	o_free(m);
 	return 1;
 }
 
@@ -184,6 +189,8 @@ static int qp_verified_message(lua_State *L) {
 	if(!result) {
 		lua_pushboolean(L, 0);
 	}
+	o_free(pk);
+	o_free(sm);
 	return 1;
 }
 
@@ -203,6 +210,9 @@ static int qp_verify(lua_State *L) {
 								 (unsigned char*)m->val, m->len,
 								 (unsigned char*)pk->val);
 	lua_pushboolean(L, result == 0);
+	o_free(pk);
+	o_free(sig);
+	o_free(m);
 	return 1;
 }
 
@@ -217,6 +227,7 @@ static int qp_signature_check(lua_State *L){
 		lua_pushboolean(L, 1);
 	else
 		lua_pushboolean(L, 0);
+	o_free(sign);
 	return 1;
 }
 
@@ -245,6 +256,8 @@ static int qp_kem_pubgen(lua_State *L) {
 					      (unsigned char*)sk->val);
 	pk->len = PQCLEAN_KYBER512_CLEAN_CRYPTO_PUBLICKEYBYTES;
 
+	o_free(sk);
+
 	return 1;
 }
 
@@ -255,6 +268,7 @@ static int qp_kem_pubcheck(lua_State *L) {
 		lua_pushboolean(L, 1);
 	else
 		lua_pushboolean(L, 0);
+	o_free(pk);
 	return 1;
 }
 
@@ -265,6 +279,7 @@ static int qp_kem_sscheck(lua_State *L) {
 		lua_pushboolean(L, 1);
 	else
 		lua_pushboolean(L, 0);
+	o_free(ss);
 	return 1;
 }
 
@@ -275,6 +290,7 @@ static int qp_kem_ctcheck(lua_State *L) {
 		lua_pushboolean(L, 1);
 	else
 		lua_pushboolean(L, 0);
+	o_free(ct);
 	return 1;
 }
 
@@ -301,6 +317,7 @@ static int qp_enc(lua_State *L) {
 	}
 	ss->len = KYBER_SSBYTES;
 	ct->len = PQCLEAN_KYBER512_CLEAN_CRYPTO_CIPHERTEXTBYTES;
+	o_free(pk);
 	return 1;
 }
 
@@ -328,6 +345,8 @@ static int qp_dec(lua_State *L) {
 		return 1;
 	}
 	ss->len = KYBER_SSBYTES;
+	o_free(sk);
+	o_free(ct);
 	return 1;
 }
 
@@ -357,6 +376,7 @@ static int qp_sntrup_kem_pubgen(lua_State *L) {
 	PQCLEAN_SNTRUP761_CLEAN_crypto_kem_pubgen((unsigned char*)pk->val,
 						  (unsigned char*)sk->val);
 	pk->len = PQCLEAN_SNTRUP761_CLEAN_CRYPTO_PUBLICKEYBYTES;
+	o_free(sk);
 
 	return 1;
 }
@@ -367,6 +387,7 @@ static int qp_sntrup_kem_pubcheck(lua_State *L) {
 		lua_pushboolean(L, 1);
 	else
 		lua_pushboolean(L, 0);
+	o_free(pk);
 	return 1;
 }
 
@@ -376,6 +397,7 @@ static int qp_sntrup_kem_sscheck(lua_State *L) {
 		lua_pushboolean(L, 1);
 	else
 		lua_pushboolean(L, 0);
+	o_free(ss);
 	return 1;
 }
 
@@ -385,6 +407,7 @@ static int qp_sntrup_kem_ctcheck(lua_State *L) {
 		lua_pushboolean(L, 1);
 	else
 		lua_pushboolean(L, 0);
+	o_free(ct);
 	return 1;
 }
 
@@ -394,6 +417,7 @@ static int qp_sntrup_kem_enc(lua_State *L) {
 	if(pk->len != PQCLEAN_SNTRUP761_CLEAN_CRYPTO_PUBLICKEYBYTES) {
 		lerror(L, "invalid size for public key");
 		lua_pushboolean(L, 0);
+		o_free(pk);
 		return 1;
 	}
 	lua_createtable(L, 0, 2);
@@ -407,10 +431,12 @@ static int qp_sntrup_kem_enc(lua_State *L) {
 						  (unsigned char*)pk->val)) {
 		lerror(L, "error in the creation of the shared secret");
 		lua_pushboolean(L, 0);
+		o_free(pk);
 		return 1;
 	}
 	ss->len = PQCLEAN_SNTRUP761_CLEAN_CRYPTO_BYTES;
 	ct->len = PQCLEAN_SNTRUP761_CLEAN_CRYPTO_CIPHERTEXTBYTES;
+	o_free(pk);
 	return 1;
 }
 
@@ -438,6 +464,8 @@ static int qp_sntrup_kem_dec(lua_State *L) {
 		return 1;
 	}
 	ss->len = PQCLEAN_SNTRUP761_CLEAN_CRYPTO_BYTES;
+	o_free(sk);
+	o_free(ct);
 	return 1;
 }
 

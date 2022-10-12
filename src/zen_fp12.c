@@ -76,9 +76,10 @@ int fp12_destroy(lua_State *L) {
 }
 
 static int fp12_from_octet(lua_State *L) {
-    octet *o = o_arg(L,1); SAFE(o);
+	octet *o = o_arg(L,1); SAFE(o);
 	fp12 *f = fp12_new(L); SAFE(f);
 	FP12_fromOctet(&f->val,o);
+	o_free(o);
 	return 1;
 }
 
