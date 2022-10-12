@@ -121,13 +121,16 @@ static int qp_signature_pubcheck(lua_State *L) {
 }
 
 static int qp_sign(lua_State *L) {
+	char *failed_msg = NULL;
 	octet *sk = o_arg(L, 1); SAFE(sk);
 	octet *m = o_arg(L, 2); SAFE(m);
+	if(m == NULL) {
+		goto free_sk;
+	}
 
 	if(sk->len != PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_SECRETKEYBYTES) {
-		lerror(L, "invalid size for secret key");
-		lua_pushboolean(L, 0);
-		return 1;
+		failed_msg = "wrong secret key length";
+		goto free_m;
 	}
 	octet *sig = o_new(L, PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_BYTES); SAFE(sig);
 
@@ -136,12 +139,18 @@ static int qp_sign(lua_State *L) {
 							  (unsigned char*)m->val, m->len,
 							  (unsigned char*)sk->val)
 	   && sig->len > 0) {
-		lerror(L, "error in the signature");
-		lua_pushboolean(L, 0);
-		return 1;
+		failed_msg = "error in the signature";
+		goto free_m;
 	}
-	o_free(sk);
+free_m:
 	o_free(m);
+free_sk:
+	o_free(sk);
+
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushboolean(L, 0);
+	}
 	return 1;
 }
 
