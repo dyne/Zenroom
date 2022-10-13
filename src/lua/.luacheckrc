@@ -2,7 +2,7 @@ globals = {
     'ZEN', 'OCTET', 'O', 'BIG', 'INT', 'ECP', 'ECP2', 'SALT', 'FLOAT',
     'Given','When','Then','IN','KIN','ACK','keyring','OUT','CONF','WHO',
     'INSPECT', 'CBOR', 'JSON', 'ECDH', 'AES', 'HASH', 'BENCH', 'KDF',
-    'MACHINE', 'DATE', 'VERSION', 'SEMVER', 'I',
+    'MACHINE', 'DATE', 'VERSION', 'SEMVER', 'I', 'RNGSEED', 'F',
     'require', 'require_once','fif', 'deepmap', 'luatype',
     'empty', 'have', 'initkeyring', 'havekey', 'zenguard', 'exitcode',
     'parse_prefix', 'strtok', 'strcasecmp', 'uscore', 'debug_traceback',
@@ -13,7 +13,8 @@ globals = {
     'isarray', 'isdictionary', 'array_contains',
     'guess_conversion', 'operate_conversion', 'deepcopy', 'guess_outcast', 'new_codec',
     'hex', 'str', 'bin', 'base64', 'url64', 'base58',
-    'IfWhen', 'jsontok'
+    'IfWhen', 'jsontok', 'space', 'lua_pairs', 'deepcmp', 'deepmask', 'help',
+    'tonumber', 'isnumber',
     }
 local _columns = 120
 max_line_length	= _columns

@@ -32,7 +32,7 @@ _G['type'] = function(var)
 end
 -- TODO: optimise in C
 function iszen(n)
-   for _ in n:gmatch("zenroom") do
+   if n:gmatch("zenroom")() then
 	  return true
    end
    return false
@@ -87,17 +87,17 @@ local function _pairs(t)
 	  return a[i], t[a[i]]
    end
 end
-local function _ipairs(t)
-   local a = {}
-   for n in lua_ipairs(t) do table.insert(a, n) end
-   table.sort(a)
-   local i = 0      -- iterator variable
-   return function ()   -- iterator function
-	  i = i + 1
-	  -- if a[i] == nil then return nil
-	  return a[i]
-   end
-end
+-- local function _ipairs(t)
+--    local a = {}
+--    for n in lua_ipairs(t) do table.insert(a, n) end
+--    table.sort(a)
+--    local i = 0      -- iterator variable
+--    return function ()   -- iterator function
+-- 	  i = i + 1
+-- 	  -- if a[i] == nil then return nil
+-- 	  return a[i]
+--    end
+-- end
 -- Switch to deterministic (sorted) table iterators: this breaks lua
 -- tests in particular those stressing i/pairs and pack/unpack, which
 -- are anyway unnecessary corner cases in zenroom, which exits cleanly
@@ -124,10 +124,10 @@ end
 
 -- compare two tables
 function deepcmp(left, right)
-   if not ( luatype(left) == "table" ) then
+   if luatype(left) ~= "table" then
       error("Internal error: deepcmp 1st argument is not a table")
    end
-   if not ( luatype(right) == "table" ) then
+   if luatype(right) ~= "table" then
       error("Internal error: deepcmp 2nd argument is not a table")
    end
    if left == right then return true end
@@ -228,7 +228,7 @@ function isarray(obj)
       return false
    end
    local count = 0
-   for k, v in pairs(obj) do
+   for k, _ in pairs(obj) do
 	  -- check that all keys are numbers
 	  -- don't check sparse ratio (cjson's lua_array_length)
 	  if luatype(k) ~= "number" then return false end
@@ -256,7 +256,7 @@ function isdictionary(obj)
    if luatype(obj) ~= 'table' then return false end
    -- error("Argument is not a table: "..type(obj)
    local count = 0
-   for k, v in pairs(obj) do
+   for k, _ in pairs(obj) do
 	  -- check that all keys are not numbers
 	  -- don't check sparse ratio (cjson's lua_array_length)
 	  if luatype(k) ~= "string" then return false end

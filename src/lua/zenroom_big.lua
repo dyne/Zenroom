@@ -13,9 +13,7 @@ function big.sqrt(num)
     end
   end
 
-
   return xn
-  
 end
 
 return big

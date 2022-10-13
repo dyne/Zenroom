@@ -20,14 +20,14 @@
 -- required by zenroom_zpack
 
 local mpack = require_once'msgpack'
-local pack, unpack = string.pack, string.unpack
+local pack = string.pack
 
 local to_octenv = OCTET.to_url64
 local from_octenv = OCTET.from_url64
 
 -- userdata codes available
 
--- 0xc{7,8,9} 
+-- 0xc{7,8,9}
 mpack.encoder_functions['zenroom.octet'] = function(v)
    return pack('>Bs4', 0xc7, to_octenv(v)) end
 mpack.encoder_functions['zenroom.big'] = function(v)
@@ -52,11 +52,11 @@ local function decode_big(data, offset)
 end
 local function decode_ecp(data, offset)
    local value, pos = string.unpack('>s4', data, offset)
-   return ECP.new(from_octenv(value)), pos   
+   return ECP.new(from_octenv(value)), pos
 end
 local function decode_ecp2(data, offset)
    local value, pos = string.unpack('>s4', data, offset)
-   return ECP2.new(from_octenv(value)), pos   
+   return ECP2.new(from_octenv(value)), pos
 end
 mpack.decoder_functions[0xc7] = decode_octet
 mpack.decoder_functions[0xc8] = decode_big

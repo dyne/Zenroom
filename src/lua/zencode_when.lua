@@ -148,8 +148,8 @@ When("set '' to '' base ''", function(dest, content, base)
 	ZEN.assert(num, "Invalid numerical conversion for value: "..content)
 	ACK[dest] = F.new(num)
 	ZEN.CODEC[dest] = new_codec(dest,
- 				    {encoding = 'number',
- 				     zentype = 'element' })
+                     {encoding = 'number',
+                     zentype = 'element' })
 end)
 
 local function _delete_f(name)
@@ -298,8 +298,6 @@ local function _numinput(num)
 	else
 		return BIG.from_decimal(num:octet():string()) -- may give internal errors
 	end
-	error("Invalid number", 2)
-	return nil
 end
 
 -- escape math function overloads for pointers
@@ -490,9 +488,9 @@ When("create the result of '' in '' % '' in ''", function(left, ldict, right, rd
 	ACK.result, ZEN.CODEC.result = _math_op(_mod, l, r, BIG.zendiv)
 end)
 
-local function _countchar(haystack, needle)
-    return select(2, string.gsub(haystack, needle, ""))
-end
+-- local function _countchar(haystack, needle)
+--     return select(2, string.gsub(haystack, needle, ""))
+-- end
 When("create the count of char '' found in ''", function(needle, haystack)
 	local h = have(haystack)
 	empty'count'
@@ -523,7 +521,6 @@ When("remove zero values in ''", function(target)
                     return v
                 end
             end
-            i = i + 1
         end
         return v
 	end, ACK[target])

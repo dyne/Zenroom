@@ -43,7 +43,7 @@ bench.random_hamming_freq = function (s, q)
    local new = O.random(_s)
    local tot = 0
    local old
-   for i=_q,1,-1 do
+   for _=_q,1,-1 do
 	  old = new
 	  new = O.random(_s)
 	  tot = tot + O.hamming(old,new)
@@ -93,7 +93,7 @@ bench.math = function(a, b, c)
    local _c = c or 1
    act("Benchmark: math based prime number, args: ".._a.." ".._b.." ".._c)
    local res = { }
-   for n=_a,_b,_c do 
+   for n=_a,_b,_c do
 	  if isHappy(n) and isPrime(n) then
 		 table.insert(res, n)
 	  end
@@ -105,9 +105,8 @@ function bench.bit32(N)
    N = N or 1000
    act("Benchmark: bit32 based Mandelbrot generation, iterations: "..N)
    local bit = bit32
-   local bor, band = bit.bor, bit.band
+   local band = bit.band
    local shl, shr, rol = bit.lshift, bit.rshift, bit.lrotate
-   local char, unpack = string.char, table.unpack
 
    local M, buf = 2/N, {}
    for y=0,N-1 do
@@ -118,7 +117,7 @@ function bench.bit32(N)
 		 local Zr, Zi, Zrq, Ziq = Cr, Ci, Cr*Cr, Ciq
 		 local Zr2, Zi2, Zrq2, Ziq2 = Cr2, Ci, Cr2*Cr2, Ciq
 		 b = rol(b, 2)
-		 for i=1,49 do
+		 for _=1,49 do
 			Zi = Zr*Zi*2 + Ci; Zi2 = Zr2*Zi2*2 + Ci
 			Zr = Zrq-Ziq + Cr; Zr2 = Zrq2-Ziq2 + Cr2
 			Ziq = Zi*Zi; Ziq2 = Zi2*Zi2
