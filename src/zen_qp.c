@@ -100,12 +100,12 @@ static int qp_signature_pubgen(lua_State *L) {
 	char *failed_msg = NULL;
 	octet *sk = o_arg(L, 1);
 	if(sk == NULL) {
-		failed_msg = "failed to allocate space for secret key"
+		failed_msg = "failed to allocate space for secret key";
 		goto end;
 	}
 	octet *pk = o_new(L, PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES); SAFE(pk);
 	if(pk == NULL) {
-		failed_msg = "failed to allocate space for public key"
+		failed_msg = "failed to allocate space for public key";
 		goto free_sk;
 	}
 
@@ -113,8 +113,6 @@ static int qp_signature_pubgen(lua_State *L) {
 						(unsigned char*)sk->val);
 	pk->len = PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES;
 
-free_pk:
-	o_free(pk);
 free_sk:
 	o_free(sk);
 end:
@@ -130,7 +128,7 @@ end:
 static int qp_signature_pubcheck(lua_State *L) {
 	octet *pk = o_arg(L, 1); SAFE(pk);
 	if(pk == NULL) {
-		lerror(L, "failed to allocate space for public key")
+		lerror(L, "failed to allocate space for public key");
 		lua_pushboolean(L, 0);
 	}else{
 		if(pk->len == PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES)
@@ -146,12 +144,12 @@ static int qp_sign(lua_State *L) {
 	char *failed_msg = NULL;
 	octet *sk = o_arg(L, 1); SAFE(sk);
 	if(sk == NULL) {
-		failed_msg = "failed to allocate space for secret key"
+		failed_msg = "failed to allocate space for secret key";
 		goto end;
 	}
 	octet *m = o_arg(L, 2); SAFE(m);
 	if(m == NULL) {
-		failed_msg = "failed to allocate space for message"
+		failed_msg = "failed to allocate space for message";
 		goto free_sk;
 	}
 
@@ -184,15 +182,16 @@ end:
 
 // generate an octet which is signature+message
 static int qp_signed_message(lua_State *L) {
-	octet *sk = o_arg(L, 1); SAFE(sk);
+	char *failed_msg = NULL;
+	octet *sk = o_arg(L, 1);
 	if(sk == NULL) {
-		failed_msg = "failed to allocate space for secret key"
+		failed_msg = "failed to allocate space for secret key";
 		goto end;
 	}
-	octet *m = o_arg(L, 2); SAFE(m);
+	octet *m = o_arg(L, 2);
 	if(m == NULL) {
-		failed_msg = "failed to allocate space for message"
-		goto free_m;
+		failed_msg = "failed to allocate space for message";
+		goto free_sk;
 	}
 
 	if(sk->len != PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_SECRETKEYBYTES) {
@@ -201,7 +200,7 @@ static int qp_signed_message(lua_State *L) {
 	}
 	octet *sig = o_new(L, PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_BYTES+m->len);
 	if(sig == NULL) {
-		failed_msg = "could not allocate space for signature"
+		failed_msg = "could not allocate space for signature";
 		goto free_m;
 	}
 
