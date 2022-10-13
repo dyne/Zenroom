@@ -596,7 +596,7 @@ When("seed the random with ''",
 	local s = have(seed)
 	ZEN.assert(iszen(type(s)), "New random seed is not a valid zenroom type: "..seed)
 	local fingerprint = random_seed(s) -- pass the seed for srand init
-	act("New random seed of "..#s.." bytes") 
+	act("New random seed of "..#s.." bytes")
 	xxx("New random fingerprint: "..fingerprint:hex())
      end
 )
@@ -636,7 +636,7 @@ When("create the result of ''", function(expr)
   local specials = {'(', ')'}
   local i, j
   empty 'result'
-  for k, v in pairs(priorities) do
+  for k, _ in pairs(priorities) do
     table.insert(specials, k)
   end
   -- tokenizations
@@ -662,7 +662,7 @@ When("create the result of ''", function(expr)
   -- infix to RPN
   local rpn = {}
   local operators = {}
-  for k, v in pairs(tokens) do
+  for _, v in pairs(tokens) do
     if v == '-' and (#rpn == 0 or operators[#operators] == '(') then
         table.insert(operators, '~') -- unary minus (change sign)
     elseif priorities[v] then
@@ -688,16 +688,16 @@ When("create the result of ''", function(expr)
   end
 
   -- all remaining operators have to be applied
-  for i = #operators, 1, -1 do
-    if operators[i] == '(' then
+  for k = #operators, 1, -1 do
+    if operators[k] == '(' then
       ZEN.assert(false, "Paranthesis not balanced", 2)
     end
-    table.insert(rpn, operators[i])
+    table.insert(rpn, operators[k])
   end
 
   local values = {}
   -- evaluate the expression
-  for k, v in pairs(rpn) do
+  for _, v in pairs(rpn) do
     if v == '~' then
       local op = values[#values]; values[#values] = nil
       table.insert(values, apply_op1(v, op))
@@ -725,13 +725,13 @@ When("create the result of ''", function(expr)
   ACK.result = values[1]
   if type(values[1]) == 'zenroom.big' then
     ZEN.CODEC['result'] = new_codec('result',
-   		                    {encoding = 'integer',
+                                    {encoding = 'integer',
                                     luatype = 'userdata',
                                     rawtype = 'zenroom.big',
                                     zentype = 'element' })
   elseif type(values[1]) == 'zenroom.float' then
     ZEN.CODEC['result'] = new_codec('result',
-   		                    {encoding = 'number',
+                                    {encoding = 'number',
                                     luatype = 'userdata',
                                     rawtype = 'zenroom.float',
                                     zentype = 'element' })

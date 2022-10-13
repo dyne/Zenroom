@@ -56,8 +56,6 @@ end
 -- @param conv[opt] optional encoding spec (default CONF.input.encoding)
 -- @return true or false
 local function pick(what, conv)
-   local guess
-   local data
    local raw
    local name = _index_to_string(what)
    -- keyring special object

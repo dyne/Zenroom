@@ -111,7 +111,7 @@ end
 
 local function import_verification_method(doc)
     local res = {}
-    for key, ver_method in pairs(doc) do
+    for key, _ in pairs(doc) do
 	if key == "ethereum_address" then
 	    res[key] = ZEN.get(doc[key], '.', O.from_hex, tostring)
 	elseif key == "eddsa_public_key" then
@@ -217,12 +217,12 @@ When(
 	empty'jws'
         local sk = havekey'ecdh' -- assuming secp256k1
         ZEN.assert(not cred.proof,'The object is already signed: ' .. src)
-        local proof = {
-            type = 'Zenroom v'..ZENROOM_VERSION.original,
+        -- local proof = {
+        --     type = 'Zenroom v'..ZENROOM_VERSION.original,
 	    -- "Signature", -- TODO: check what to write here for secp256k1
-            -- created = "2018-06-18T21:19:10Z",
-            proofPurpose = 'authenticate' -- assertionMethod", -- TODO: check
-        }
+        --     -- created = "2018-06-18T21:19:10Z",
+        --     proofPurpose = 'authenticate' -- assertionMethod", -- TODO: check
+        -- }
 	local to_sign
 	if luatype(cred) == 'table' then
 	   to_sign = OCTET.from_string( JSON.encode(cred) )
@@ -282,27 +282,28 @@ When(
 
 local function _verification_f(doc)
     local d = have(doc)
+    local _
     ZEN.assert(d.proof and d.proof.jws, 'The object has no signature: ' .. doc)
     local public_key = have 'ecdh public key'
     local pub
     if luatype(public_key) == 'table' then
-	_, pub = next(public_key)
+	    _, pub = next(public_key)
     else
-	pub = public_key
+	    pub = public_key
     end
 
     -- omit the proof subtable from verification
     local proof = d.proof
     d.proof = nil
-    signed = JSON.encode(d)
+    local signed = JSON.encode(d)
     -- restore proof in HEAP (cred is still a pointer here)
     d.proof = proof
-    
+
     local signature = jws_octet_to_signature(d.proof.jws)
-    
+
     ZEN.assert(
-	ECDH.verify(pub, signed, signature),
-	'The signature does not validate: ' .. doc
+	    ECDH.verify(pub, signed, signature),
+	    'The signature does not validate: ' .. doc
     )
 end
 

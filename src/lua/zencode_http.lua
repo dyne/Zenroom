@@ -22,7 +22,7 @@
 local _UNRESERVED = "A-Za-z0-9%-._~"
 local _GEN_DELIMS = ":/?#%[%]@"
 local _SUB_DELIMS = "!$&'()*+,;="
-local _RESERVED = _GEN_DELIMS .. _SUB_DELIMS
+-- local _RESERVED = _GEN_DELIMS .. _SUB_DELIMS
 local _REG_NAME = "^[" .. _UNRESERVED .. "%%" .. _SUB_DELIMS .. "]*$"
 local _IP_FUTURE_LITERAL = "^v[0-9A-Fa-f]+%." ..
                            "[" .. _UNRESERVED .. _SUB_DELIMS .. "]+$"

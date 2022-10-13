@@ -161,13 +161,13 @@ encode_value = function(value)
 	return encoder_functions[type(value)](value)
 end
 
-local function encode(...)
-	local data = {}
-	for i = 1, select('#', ...) do
-		data[#data + 1] = encode_value(select(i, ...))
-	end
-	return tconcat(data)
-end
+-- local function encode(...)
+-- 	local data = {}
+-- 	for i = 1, select('#', ...) do
+-- 		data[#data + 1] = encode_value(select(i, ...))
+-- 	end
+-- 	return tconcat(data)
+-- end
 
 
 --[[----------------------------------------------------------------------------
@@ -188,7 +188,7 @@ end
 
 local function decode_map(data, position, length)
 	local elements, key, value = {}
-	for i = 1, length do
+	for _ = 1, length do
 		key, position = decode_value(data, position)
 		value, position = decode_value(data, position)
 		elements[key] = value
@@ -197,13 +197,13 @@ local function decode_map(data, position, length)
 end
 
 local decoder_functions = {
-	[0xc0] = function(data, position)
+	[0xc0] = function(_, position)
 		return nil, position
 	end,
-	[0xc2] = function(data, position)
+	[0xc2] = function(_, position)
 		return false, position
 	end,
-	[0xc3] = function(data, position)
+	[0xc3] = function(_, position)
 		return true, position
 	end,
 	[0xc4] = function(data, position)

@@ -30,7 +30,7 @@ local function _export_big_as_octet_f(obj)
     end
     return obj
 end
-function single_share_f(o)
+local function single_share_f(o)
    local obj = deepmap(CONF.input.encoding.fun, o)
    return { x = ZEN.get(obj, 'x', BIG.new, O.from_base64),
             y = ZEN.get(obj, 'y', BIG.new, O.from_base64) }

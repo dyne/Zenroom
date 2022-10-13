@@ -75,7 +75,8 @@ local function then_outcast(val, sch)
 	 return enc(res)
       end
    end
-   error("Then outcast cannot handle data: "..sch,2)
+   -- unreachable
+   -- error("Then outcast cannot handle data: "..sch,2)
 end
 
 local function then_insert(dest, val, key)
@@ -117,19 +118,19 @@ local function then_insert(dest, val, key)
    end
 end
 
-local function iterate_data(t)
-	local a = {}
-	for k,v in lua_pairs(t) do
-		if k ~= 'keyring' then
-			table.insert(a, n)
-		end
-	end
-	local i = 0      -- iterator variable
-	return function ()   -- iterator function
-	   i = i + 1
-	   return a[i], t[a[i]]
-	end
-end
+-- local function iterate_data(t)
+-- 	local a = {}
+-- 	for k,v in lua_pairs(t) do
+-- 		if k ~= 'keyring' then
+-- 			table.insert(a, n)
+-- 		end
+-- 	end
+-- 	local i = 0      -- iterator variable
+-- 	return function ()   -- iterator function
+-- 	   i = i + 1
+-- 	   return a[i], t[a[i]]
+-- 	end
+-- end
 
 Then("nothing", function() return end) -- nop to terminate if
 
@@ -260,7 +261,6 @@ end
 )
 
 Then("print data as ''",function(e)
-	local fun
 	for k, v in pairs(ACK) do
 	   if k ~= 'keyring' then
 	      OUT[k] = then_outcast(v, e)

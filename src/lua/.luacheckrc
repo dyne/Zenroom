@@ -2,7 +2,8 @@ globals = {
     'ZEN', 'OCTET', 'O', 'BIG', 'INT', 'ECP', 'ECP2', 'SALT', 'FLOAT',
     'Given','When','Then','IN','KIN','ACK','keyring','OUT','CONF','WHO',
     'INSPECT', 'CBOR', 'JSON', 'ECDH', 'AES', 'HASH', 'BENCH', 'KDF',
-    'MACHINE', 'DATE', 'VERSION', 'SEMVER', 'I', 'RNGSEED', 'F',
+    'MACHINE', 'DATE', 'VERSION', 'SEMVER', 'I', 'RNGSEED', 'F', 'TMP', 'ETH',
+    'ZENROOM_VERSION', 'LAG', 'MPACK', 'BTC', 'import_keyring', 'AST', 'DATA',
     'require', 'require_once','fif', 'deepmap', 'luatype',
     'empty', 'have', 'initkeyring', 'havekey', 'zenguard', 'exitcode',
     'parse_prefix', 'strtok', 'strcasecmp', 'uscore', 'debug_traceback',
@@ -14,7 +15,9 @@ globals = {
     'guess_conversion', 'operate_conversion', 'deepcopy', 'guess_outcast', 'new_codec',
     'hex', 'str', 'bin', 'base64', 'url64', 'base58',
     'IfWhen', 'jsontok', 'space', 'lua_pairs', 'deepcmp', 'deepmask', 'help',
-    'tonumber', 'isnumber',
+    'tonumber', 'isnumber', 'random_seed', 'export_keyring', 'Iam', 'load_scenario',
+    'import_credential_proof_f', 'export_credential_proof_f', 'key_import_issuer_verifier_f',
+    'compress', 'decompress', 'sort_pairs',
     }
 local _columns = 120
 max_line_length	= _columns

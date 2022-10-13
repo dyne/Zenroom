@@ -40,7 +40,7 @@ local function _neq(left, right)
     return (left ~= right)
   elseif (type(left) == 'zenroom.float' and type(right) == 'zenroom.float')
       or (type(left) == 'zenroom.big' and type(right) == 'zenroom.big') then
-    return not (left == right)
+    return (left ~= right)
   elseif luatype(left) == 'table' and luatype(right) == 'table' then
      if(#left ~= #right) then return true end -- optimization
      return (ZEN.serialize(left) ~= ZEN.serialize(right))
@@ -247,9 +247,9 @@ local function validemail(str)
   if not str:match('[%w]*[%p]*%@+[%w]*[%.]?[%w]*') then
     return nil, 'Email pattern test failed'
   end
-  if (lastAt == nil) then
-    lastAt = #str + 1
-  end
+  -- if (lastAt == nil) then
+  --   lastAt = #str + 1
+  -- end
 
   -- all our tests passed, so we are ok
   return true
@@ -275,7 +275,7 @@ IfWhen(
       'Object is not a container: ' .. name
     )
     local res, err
-    for k, v in pairs(A) do
+    for _, v in pairs(A) do
       res, err = validemail(O.to_string(v))
       ZEN.assert(res, (err or 'OK') .. ' on email: ' .. O.to_string(v))
     end
@@ -284,7 +284,6 @@ IfWhen(
 
 IfWhen("the elements in '' are equal", function(obj_name)
        local obj = have(obj_name)
-       local all_equal = true
        local first = nil
        local first_idx = nil
        for k,v in pairs(obj) do
@@ -303,11 +302,9 @@ end)
 IfWhen("the elements in '' are not equal", function(obj_name)
        local obj = have(obj_name)
        local first = nil
-       local first_idx = nil
-       for k,v in pairs(obj) do
+       for _,v in pairs(obj) do
              if first == nil then
                      first = v
-                     first_idx = k
             else
                     if _neq(first, v) then
                             -- at least two elements are different
