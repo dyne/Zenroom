@@ -222,7 +222,7 @@ static int hash_feed(lua_State *L) {
 	hash *h = hash_arg(L,1); SAFE(h);
 	octet *o = o_arg(L,2);
 	if(o == NULL) {
-		lerror(L, "Could not allocate octet for hashing")
+		lerror(L, "Could not allocate octet for hashing");
 	} else {
 		_feed(h, o);
 	}
@@ -327,7 +327,7 @@ static int hash_kdf2(lua_State *L) {
 
 static int hash_pbkdf2(lua_State *L) {
 	hash *h = hash_arg(L,1); SAFE(h);
-	octet *k = o_arg(L, 2); SAFE(k);
+	octet *k = o_arg(L, 2);
 	int iter, keylen;
 	octet *s, *ss;
 	// take a table as argument with salt, iterations and length parameters
@@ -335,7 +335,7 @@ static int hash_pbkdf2(lua_State *L) {
 		lua_getfield(L, 3, "salt");
 		lua_getfield(L, 3, "iterations");
 		lua_getfield(L, 3, "length"); // -3
-		s = o_arg(L,-3); SAFE(s);
+		s = o_arg(L,-3);
 		// default iterations 5000
 		iter = luaL_optinteger(L,-2, 5000);
 		keylen = luaL_optinteger(L,-1,k->len);

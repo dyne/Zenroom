@@ -279,10 +279,9 @@ octet* o_arg(lua_State *L,int n) {
 		return(o);
 	}
 	if( lua_isnil(L, n) || lua_isnone(L,n) ) {
-	  o = o_alloc(L, 1);
-	  o->val[0] = 0x0;
-	  o->len = 1;
-	  return(o);
+		o = o_alloc(L, 1);
+		o->len = 0;
+		return(o);
 	}
 	zerror(L, "Error in argument #%u", n);
 	return NULL;
