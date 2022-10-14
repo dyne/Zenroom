@@ -47,6 +47,7 @@ extern int write_to_console(const char* str);
 #endif
 
 static int zen_print (lua_State *L) {
+  BEGIN();
   Z(L);
   char *failed_msg = NULL;
   octet *o = o_arg(L, 1);
@@ -81,10 +82,11 @@ end:
   if(failed_msg != NULL) {
 	  lerror(L, failed_msg);
   }
-  return 0;
+  END(0);
 }
 
 int printerr(lua_State *L, octet *o) {
+  BEGIN();
   Z(L);
   if (Z->stderr_buf) {
 	char *p = Z->stderr_buf+Z->stderr_pos;
@@ -109,11 +111,12 @@ int printerr(lua_State *L, octet *o) {
 #endif
   } else
 	func(L, "printerr of an empty string");	
-  return 0;
+  END(0);
 }
 
 // print without an ending newline
 static int zen_write (lua_State *L) {
+  BEGIN();
   Z(L);
   char *failed_msg = NULL;
   octet *o = o_arg(L, 1);
@@ -142,10 +145,11 @@ end:
   if(failed_msg != NULL) {
 	  lerror(L, failed_msg);
   }
-  return 0;
+  END(0);
 }
 
 int zen_log(lua_State *L, log_priority prio, octet *o) {
+  BEGIN();
   Z(L);
   if(!o) return 0;
 #ifdef __ANDROID__
@@ -185,7 +189,7 @@ int zen_log(lua_State *L, log_priority prio, octet *o) {
 	write(STDERR_FILENO, o->val, tlen);
 #endif
   }
-  return 0;
+  END(0);
 }
 
 #define ZEN_PRINT(FUN_NAME, PRINT_FUN) \
@@ -207,6 +211,7 @@ ZEN_PRINT(zen_notice, zen_log(L, LOG_INFO, o))
 ZEN_PRINT(zen_debug, zen_log(L, LOG_VERBOSE, o))
 
 int zen_zstd_compress(lua_State *L) {
+  BEGIN();
   char *failed_msg = NULL;
   octet *dst, *src;
   Z(L);
@@ -236,10 +241,11 @@ end:
 	  lerror(L, failed_msg);
 	  lua_pushnil(L);
   }
-  return 1;
+  END(1);
 }
 
 int zen_zstd_decompress(lua_State *L) {
+  BEGIN();
   octet *src, *dst;
   char *failed_msg = NULL;
   Z(L);
@@ -270,10 +276,11 @@ end:
 	  lerror(L, failed_msg);
 	  lua_pushnil(L);
   }
-  return 1;
+  END(1);
 }
 
 static int zen_random_seed(lua_State *L) {
+  BEGIN();
   Z(L);
   char *failed_msg = NULL;
   octet *seed = o_arg(L, 1);
@@ -304,7 +311,7 @@ end:
 	  lerror(L, failed_msg);
 	  lua_pushnil(L);
   }
-  return 1;
+  END(1);
 }
 
 void zen_add_io(lua_State *L) {

@@ -108,8 +108,7 @@ end:
 		lerror(L, failed_msg);
 		lua_pushnil(L);
 	}
-	END();
-	return 1;
+	END(1);
 }
 
 static int qp_signature_pubgen(lua_State *L) {
@@ -138,8 +137,7 @@ end:
 		lua_pushnil(L);
 	}
 
-	END();
-	return 1;
+	END(1);
 }
 
 // checks the singature length
@@ -156,8 +154,7 @@ static int qp_signature_pubcheck(lua_State *L) {
 			lua_pushboolean(L, 0);
 		o_free(L,pk);
 	}
-	END();
-	return 1;
+	END(1);
 }
 
 static int qp_sign(lua_State *L) {
@@ -197,8 +194,7 @@ end:
 		lerror(L, failed_msg);
 		lua_pushnil(L);
 	}
-	END();
-	return 1;
+	END(1);
 }
 
 // generate an octet which is signature+message
@@ -243,8 +239,7 @@ end:
 		lerror(L, failed_msg);
 		lua_pushnil(L);
 	}
-	END();
-	return 1;
+	END(1);
 }
 
 static int qp_verified_message(lua_State *L) {
@@ -288,8 +283,7 @@ end:
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
 	}
-	END();
-	return 1;
+	END(1);
 }
 
 static int qp_verify(lua_State *L) {
@@ -330,15 +324,13 @@ end:
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
 	}
-	END();
-	return 1;
+	END(1);
 }
 
 static int qp_signature_len(lua_State *L){
 	BEGIN();
 	lua_pushinteger(L, PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_BYTES);
-	END();
-	return 1;
+	END(1);
 }
 
 static int qp_signature_check(lua_State *L){
@@ -359,8 +351,7 @@ end:
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
 	}
-	END();
-	return 1;
+	END(1);
 }
 
 /*#######################################*/
@@ -378,8 +369,7 @@ static int qp_kem_keygen(lua_State *L) {
 	public->len = PQCLEAN_KYBER512_CLEAN_CRYPTO_PUBLICKEYBYTES;
 	private->len = PQCLEAN_KYBER512_CLEAN_CRYPTO_SECRETKEYBYTES;
 
-	END();
-	return 1;
+	END(1);
 }
 
 static int qp_kem_pubgen(lua_State *L) {
@@ -408,8 +398,7 @@ end:
 		lua_pushboolean(L, 0);
 	}
 
-	END();
-	return 1;
+	END(1);
 }
 
 // checks the public key length
@@ -428,8 +417,7 @@ static int qp_kem_pubcheck(lua_State *L) {
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
 	}
-	END();
-	return 1;
+	END(1);
 }
 
 // checks the shared secret length
@@ -449,8 +437,7 @@ static int qp_kem_sscheck(lua_State *L) {
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
 	}
-	END();
-	return 1;
+	END(1);
 }
 
 // check the ciphertext length
@@ -469,8 +456,7 @@ static int qp_kem_ctcheck(lua_State *L) {
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
 	}
-	END();
-	return 1;
+	END(1);
 }
 
 static int qp_enc(lua_State *L) {
@@ -517,8 +503,7 @@ end:
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
 	}
-	END();
-	return 1;
+	END(1);
 }
 
 static int qp_dec(lua_State *L) {
@@ -560,8 +545,7 @@ end:
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
 	}
-	END();
-	return 1;
+	END(1);
 }
 
 
@@ -596,8 +580,7 @@ end:
 		lua_pushboolean(L, 0);
 	}
 
-	END();
-	return 1;
+	END(1);
 }
 
 static int qp_sntrup_kem_pubgen(lua_State *L) {
@@ -625,8 +608,7 @@ end:
 		lua_pushboolean(L, 0);
 	}
 
-	END();
-	return 1;
+	END(1);
 }
 
 static int qp_sntrup_kem_pubcheck(lua_State *L) {
@@ -644,8 +626,7 @@ static int qp_sntrup_kem_pubcheck(lua_State *L) {
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
 	}
-	END();
-	return 1;
+	END(1);
 }
 
 static int qp_sntrup_kem_sscheck(lua_State *L) {
@@ -663,8 +644,7 @@ static int qp_sntrup_kem_sscheck(lua_State *L) {
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
 	}
-	END();
-	return 1;
+	END(1);
 }
 
 static int qp_sntrup_kem_ctcheck(lua_State *L) {
@@ -682,8 +662,7 @@ static int qp_sntrup_kem_ctcheck(lua_State *L) {
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
 	}
-	END();
-	return 1;
+	END(1);
 }
 
 static int qp_sntrup_kem_enc(lua_State *L) {
@@ -726,8 +705,7 @@ end:
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
 	}
-	END();
-	return 1;
+	END(1);
 }
 
 static int qp_sntrup_kem_dec(lua_State *L) {
@@ -767,8 +745,7 @@ end:
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
 	}
-	END();
-	return 1;
+	END(1);
 }
 
 int luaopen_qp(lua_State *L) {

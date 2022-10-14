@@ -117,8 +117,7 @@ end:
 		lerror(L, failed_msg);
 		lua_pushnil(L);
 	}
-	END();
-	return 2;
+	END(2);
 }
 
 /*
@@ -183,8 +182,7 @@ end:
 		lerror(L, failed_msg);
 		lua_pushnil(L);
 	}
-	END();
-	return 2;
+	END(2);
 }
 
 static int ctr_process(lua_State *L) {
@@ -229,8 +227,7 @@ end:
 		lerror(L, failed_msg);
 		lua_pushnil(L);
 	}
-	END();
-	return 1;
+	END(1);
 }
 
 
