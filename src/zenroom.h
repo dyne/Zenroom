@@ -88,6 +88,7 @@ typedef struct {
 
   	char zconf_rngseed[(RANDOM_SEED_LEN*2)+4]; // 0x and terminating \0
 
+    int memcount_octets;
 	int exitcode;
 } zenroom_t;
 

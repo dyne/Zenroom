@@ -132,7 +132,7 @@ static int qp_signature_pubgen(lua_State *L) {
 	pk->len = PQCLEAN_DILITHIUM2_CLEAN_CRYPTO_PUBLICKEYBYTES;
 
 end:
-	o_free(sk);
+	o_free(L,sk);
 	if(failed_msg != NULL) {
 		lerror(L, failed_msg);
 		lua_pushnil(L);
@@ -154,7 +154,7 @@ static int qp_signature_pubcheck(lua_State *L) {
 			lua_pushboolean(L, 1);
 		else
 			lua_pushboolean(L, 0);
-		o_free(pk);
+		o_free(L,pk);
 	}
 	END();
 	return 1;
@@ -190,8 +190,8 @@ static int qp_sign(lua_State *L) {
 		goto end;
 	}
 end:
-	o_free(m);
-	o_free(sk);
+	o_free(L,m);
+	o_free(L,sk);
 
 	if(failed_msg != NULL) {
 		lerror(L, failed_msg);
@@ -237,8 +237,8 @@ static int qp_signed_message(lua_State *L) {
 	}
 
 end:
-	o_free(m);
-	o_free(sk);
+	o_free(L,m);
+	o_free(L,sk);
 	if(failed_msg != NULL) {
 		lerror(L, failed_msg);
 		lua_pushnil(L);
@@ -282,8 +282,8 @@ static int qp_verified_message(lua_State *L) {
 		lua_pushboolean(L, 0);
 	}
 end:
-	o_free(sm);
-	o_free(pk);
+	o_free(L,sm);
+	o_free(L,pk);
 	if(failed_msg) {
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
@@ -323,9 +323,9 @@ static int qp_verify(lua_State *L) {
 								 (unsigned char*)pk->val);
 	lua_pushboolean(L, result == 0);
 end:
-	o_free(m);
-	o_free(sig);
-	o_free(pk);
+	o_free(L,m);
+	o_free(L,sig);
+	o_free(L,pk);
 	if(failed_msg) {
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
@@ -354,7 +354,7 @@ static int qp_signature_check(lua_State *L){
 	else
 		lua_pushboolean(L, 0);
 end:
-	o_free(sign);
+	o_free(L,sign);
 	if(failed_msg) {
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
@@ -402,7 +402,7 @@ static int qp_kem_pubgen(lua_State *L) {
 	pk->len = PQCLEAN_KYBER512_CLEAN_CRYPTO_PUBLICKEYBYTES;
 
 end:
-	o_free(sk);
+	o_free(L,sk);
 	if(failed_msg) {
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
@@ -423,7 +423,7 @@ static int qp_kem_pubcheck(lua_State *L) {
 		lua_pushboolean(L, 1);
 	else
 		lua_pushboolean(L, 0);
-	o_free(pk);
+	o_free(L,pk);
 	if(failed_msg) {
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
@@ -444,7 +444,7 @@ static int qp_kem_sscheck(lua_State *L) {
 	else
 		lua_pushboolean(L, 0);
 
-	o_free(ss);
+	o_free(L,ss);
 	if(failed_msg) {
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
@@ -464,7 +464,7 @@ static int qp_kem_ctcheck(lua_State *L) {
 		lua_pushboolean(L, 1);
 	else
 		lua_pushboolean(L, 0);
-	o_free(ct);
+	o_free(L,ct);
 	if(failed_msg) {
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
@@ -512,7 +512,7 @@ static int qp_enc(lua_State *L) {
 	ss->len = KYBER_SSBYTES;
 	ct->len = PQCLEAN_KYBER512_CLEAN_CRYPTO_CIPHERTEXTBYTES;
 end:
-	o_free(pk);
+	o_free(L,pk);
 	if(failed_msg) {
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
@@ -554,8 +554,8 @@ static int qp_dec(lua_State *L) {
 	}
 	ss->len = KYBER_SSBYTES;
 end:
-	o_free(sk);
-	o_free(ct);
+	o_free(L,sk);
+	o_free(L,ct);
 	if(failed_msg) {
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
@@ -619,7 +619,7 @@ static int qp_sntrup_kem_pubgen(lua_State *L) {
 	pk->len = PQCLEAN_SNTRUP761_CLEAN_CRYPTO_PUBLICKEYBYTES;
 
 end:
-	o_free(sk);
+	o_free(L,sk);
 	if(failed_msg) {
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
@@ -639,7 +639,7 @@ static int qp_sntrup_kem_pubcheck(lua_State *L) {
 		lua_pushboolean(L, 1);
 	else
 		lua_pushboolean(L, 0);
-	o_free(pk);
+	o_free(L,pk);
 	if(failed_msg) {
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
@@ -658,7 +658,7 @@ static int qp_sntrup_kem_sscheck(lua_State *L) {
 		lua_pushboolean(L, 1);
 	else
 		lua_pushboolean(L, 0);
-	o_free(ss);
+	o_free(L,ss);
 	if(failed_msg) {
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
@@ -677,7 +677,7 @@ static int qp_sntrup_kem_ctcheck(lua_State *L) {
 		lua_pushboolean(L, 1);
 	else
 		lua_pushboolean(L, 0);
-	o_free(ct);
+	o_free(L,ct);
 	if(failed_msg) {
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
@@ -721,7 +721,7 @@ static int qp_sntrup_kem_enc(lua_State *L) {
 	ss->len = PQCLEAN_SNTRUP761_CLEAN_CRYPTO_BYTES;
 	ct->len = PQCLEAN_SNTRUP761_CLEAN_CRYPTO_CIPHERTEXTBYTES;
 end:
-	o_free(pk);
+	o_free(L,pk);
 	if(failed_msg) {
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);
@@ -761,8 +761,8 @@ static int qp_sntrup_kem_dec(lua_State *L) {
 	}
 	ss->len = PQCLEAN_SNTRUP761_CLEAN_CRYPTO_BYTES;
 end:
-	o_free(sk);
-	o_free(ct);
+	o_free(L,sk);
+	o_free(L,ct);
 	if(failed_msg) {
 		lerror(L, failed_msg);
 		lua_pushboolean(L, 0);

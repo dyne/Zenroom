@@ -191,7 +191,7 @@ static int float_to_octet(lua_State *L) {
 		lua_pushnil(L);
 	} else {
 		o_dup(L, o);
-		o_free(o);
+		o_free(L,o);
 	}
 	return 1;
 }

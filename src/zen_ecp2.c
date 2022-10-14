@@ -162,7 +162,7 @@ static int lua_new_ecp2(lua_State *L) {
 		goto end;
 	}
 end:
-	o_free(o);
+	o_free(L,o);
 	if(failed_msg != NULL) {
 		lerror(L, failed_msg);
 		lua_pushnil(L);
@@ -389,7 +389,7 @@ static int ecp2_mapit(lua_State *L) {
 	ecp2 *e = ecp2_new(L); SAFE(e);
 	ECP2_mapit(&e->val, o);
 end:
-	o_free(o);
+	o_free(L,o);
 	if(failed_msg != NULL) {
 		lerror(L, failed_msg);
 		lua_pushnil(L);

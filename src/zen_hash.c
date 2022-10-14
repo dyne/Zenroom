@@ -232,7 +232,7 @@ static int hash_feed(lua_State *L) {
 	} else {
 		_feed(h, o);
 	}
-	o_free(o);
+	o_free(L,o);
 	return 0;
 }
 
