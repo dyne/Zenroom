@@ -14,7 +14,7 @@ for line in newline_iter(DATA) do
    if tokens[3] ~= "" then
       m = O.from_hex(tokens[3])
    else
-      m = O.new()
+      m = O.empty()
    end
    local sig = O.from_hex(tokens[4]:sub(1,128))
 

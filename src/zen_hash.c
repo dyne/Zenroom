@@ -220,8 +220,13 @@ static int hash_process(lua_State *L) {
 */
 static int hash_feed(lua_State *L) {
 	hash *h = hash_arg(L,1); SAFE(h);
-	octet *o = o_arg(L,2); SAFE(o);
-	_feed(h, o);
+	octet *o = o_arg(L,2);
+	if(o == NULL) {
+		lerror(L, "Could not allocate octet for hashing")
+	} else {
+		_feed(h, o);
+	}
+	o_free(o);
 	return 0;
 }
 
@@ -254,8 +259,8 @@ static int hash_yeld(lua_State *L) {
 */
 static int hash_hmac(lua_State *L) {
 	hash *h   = hash_arg(L,1); SAFE(h);
-	octet *k  = o_arg(L, 2);     SAFE(k);
-	octet *in = o_arg(L, 3);    SAFE(in);
+	octet *k  = o_arg(L, 2);
+	octet *in = o_arg(L, 3);
 	// length defaults to hash bytes (SHA256 = 32 = sha256)
 	octet *out;
 	if(h->algo == _SHA256) {
