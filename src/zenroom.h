@@ -149,4 +149,7 @@ void zen_teardown(zenroom_t *zenroom);
 #define PRNG_PREROLL 256
 // runtime random_seed addes 4 bytes to this (260 total) used by Lua init
 
+#define BEGIN()
+#define END()
+
 #endif
