@@ -133,7 +133,6 @@ static int qp_signature_pubgen(lua_State *L) {
 
 end:
 	o_free(sk);
-	o_free(pk);
 	if(failed_msg != NULL) {
 		lerror(L, failed_msg);
 		lua_pushnil(L);
