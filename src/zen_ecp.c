@@ -100,6 +100,7 @@ int _fp_to_big(big *dst, FP *src) {
     @see ECP:octet
 */
 static int lua_new_ecp(lua_State *L) {
+	BEGIN();
 	// unsafe parsing into BIG, only necessary for tests
 	// deactivate when not running tests
 	void *tx;
@@ -168,7 +169,7 @@ end:
 		lerror(L, failed_msg);
 		lua_pushnil(L);
 	}
-	return 1;
+	END(1);
 }
 
 /***
@@ -178,6 +179,7 @@ end:
     @return ECP point of the curve's generator.
 */
 static int ecp_generator(lua_State *L) {
+	BEGIN();
 	ecp *e = ecp_new(L); SAFE(e);
 /* 	if(!ECP_set(&e->val,
 	    (chunk*)CURVE_Gx, (chunk*)CURVE_Gy)) {
@@ -185,7 +187,7 @@ static int ecp_generator(lua_State *L) {
 		return 0; }
  */
 	ECP_generator(&e->val);
-	return 1;
+	END(1);
 }
 
 /***
@@ -195,9 +197,10 @@ static int ecp_generator(lua_State *L) {
     @return ECP pointing to infinity (out of the curve).
 */
 static int ecp_get_infinity(lua_State *L) {
+	BEGIN();
 	ecp *e = ecp_new(L); SAFE(e);
 	ECP_inf(&e->val);
-	return 1;
+	END(1);
 }
 
 
@@ -208,13 +211,14 @@ static int ecp_get_infinity(lua_State *L) {
     @return a @{BIG} number containing the curve's order
 */
 static int ecp_order(lua_State *L) {
+	BEGIN();
 	big *res = big_new(L); SAFE(res);
 	big_init(L,res);
 	// BIG is an array of int32_t on chunk 32 (see rom_curve)
 
 	// curve order is ready-only so we need a copy for norm() to work
 	BIG_copy(res->val, (chunk*)CURVE_Order);
-	return 1;
+	END(1);
 }
 
 
@@ -226,6 +230,7 @@ static int ecp_order(lua_State *L) {
     @return an ECP that is univocally linked to the input OCTET
 */
 static int ecp_mapit(lua_State *L) {
+	BEGIN();
 	octet *o = o_arg(L, 1);
 	if(!o) {
 		lerror(L, "Could not allocate ecp point");
@@ -239,7 +244,7 @@ static int ecp_mapit(lua_State *L) {
 		func(L, "mapit on o->len %u", o->len);
 		ECP_mapit(&e->val, o);
 	}
-	return 1;
+	END(1);
 }
 
 /***
@@ -250,6 +255,7 @@ static int ecp_mapit(lua_State *L) {
     @return bool value: true if valid, false if not valid
 */
 static int ecp_validate(lua_State *L) {
+	BEGIN();
 	octet *o = o_arg(L, 1);
 	if(o) {
 		int res = ECP_validate(o);
@@ -258,7 +264,7 @@ static int ecp_validate(lua_State *L) {
 		lerror(L, "Could not allocate ECP point");
 		lua_pushnil(L);
 	}
-	return 1;
+	END(1);
 }
 
 
@@ -271,10 +277,11 @@ static int ecp_validate(lua_State *L) {
     @return ECP point made affine
 */
 static int ecp_affine(lua_State *L) {
+	BEGIN();
 	ecp *in = ecp_arg(L, 1); SAFE(in);
 	ecp *out = ecp_dup(L, in); SAFE(out);
 	ECP_affine(&out->val);
-	return 1;
+	END(1);
 }
 /***
     Returns true if an ECP coordinate points to infinity (out of the curve) and false otherwise.
@@ -283,9 +290,10 @@ static int ecp_affine(lua_State *L) {
     @return false if point is on curve, true if its off curve into infinity.
 */
 static int ecp_isinf(lua_State *L) {
+	BEGIN();
 	ecp *e = ecp_arg(L, 1); SAFE(e);
 	lua_pushboolean(L, ECP_isinf(&e->val));
-	return 1;
+	END(1);
 }
 
 /***
@@ -297,12 +305,13 @@ static int ecp_isinf(lua_State *L) {
     @return sum resulting from the addition
 */
 static int ecp_add(lua_State *L) {
+	BEGIN();
 	ecp *e = ecp_arg(L, 1); SAFE(e);
 	ecp *q = ecp_arg(L, 2); SAFE(q);
 	ecp *p = ecp_dup(L, e); // push
 	SAFE(p);
 	ECP_add(&p->val, &q->val);
-	return 1;
+	END(1);
 }
 
 /***
@@ -314,12 +323,13 @@ static int ecp_add(lua_State *L) {
     @return new ECP point resulting from the subtraction
 */
 static int ecp_sub(lua_State *L) {
-    ecp *e = ecp_arg(L, 1); SAFE(e);
-    ecp *q = ecp_arg(L, 2); SAFE(q);
+	BEGIN();
+	ecp *e = ecp_arg(L, 1); SAFE(e);
+	ecp *q = ecp_arg(L, 2); SAFE(q);
 	ecp *p = ecp_dup(L, e); // push
 	SAFE(p);
 	ECP_sub(&p->val, &q->val);
-	return 1;
+	END(1);
 }
 
 /***
@@ -328,10 +338,11 @@ static int ecp_sub(lua_State *L) {
     @function negative()
 */
 static int ecp_negative(lua_State *L) {
+	BEGIN();
 	ecp *in = ecp_arg(L, 1); SAFE(in);
 	ecp *out = ecp_dup(L, in); SAFE(out);
 	ECP_neg(&out->val);
-	return 1;
+	END(1);
 }
 
 /***
@@ -340,10 +351,11 @@ static int ecp_negative(lua_State *L) {
     @function double()
 */
 static int ecp_double(lua_State *L) {
+	BEGIN();
 	ecp *in = ecp_arg(L, 1); SAFE(in);
 	ecp *out = ecp_dup(L, in); SAFE(out);
 	ECP_dbl(&out->val);
-	return 1;
+	END(1);
 }
 
 /***
@@ -355,6 +367,7 @@ static int ecp_double(lua_State *L) {
     @return new ecp point resulting from the multiplication
 */
 static int ecp_mul(lua_State *L) {
+	BEGIN();
 	ecp *e = ecp_arg(L, 1); SAFE(e);
 	big *b = big_arg(L, 2); SAFE(b);
 	if(b->doublesize) {
@@ -362,7 +375,7 @@ static int ecp_mul(lua_State *L) {
 		return 0; }
 	ecp *out = ecp_dup(L, e); SAFE(out);
 	PAIR_G1mul(&out->val, b->val);
-	return 1;
+	END(1);
 }
 
 /***
@@ -374,14 +387,15 @@ static int ecp_mul(lua_State *L) {
     @return bool value: true if equal, false if not equal
 */
 static int ecp_eq(lua_State *L) {
+	BEGIN();
 	ecp *p = ecp_arg(L, 1); SAFE(p);
-    ecp *q = ecp_arg(L, 2); SAFE(q);
-// TODO: is affine rly needed?
+	ecp *q = ecp_arg(L, 2); SAFE(q);
+	// TODO: is affine rly needed?
 	ECP_affine(&p->val);
 	ECP_affine(&q->val);
 	lua_pushboolean(L, ECP_equals(
 		                &p->val, &q->val));
-	return 1;
+	END(1);
 }
 
 
@@ -401,10 +415,11 @@ int _ecp_to_octet(octet *o, ecp *e) {
     @return the ECP point as an OCTET sequence
 */
 static int ecp_octet(lua_State *L) {
+	BEGIN();
 	ecp *e = ecp_arg(L, 1); SAFE(e);
 	octet *o = o_new(L, e->totlen + 0x0f); SAFE(o);
 	_ecp_to_octet(o, e);
-	return 1;
+	END(1);
 }
 
 /***
@@ -414,12 +429,13 @@ static int ecp_octet(lua_State *L) {
     @return a BIG number indicating the X coordinate of the point on curve.
 */
 static int ecp_get_x(lua_State *L) {
+	BEGIN();
 	ecp *e = ecp_arg(L, 1); SAFE(e);
 	ECP_affine(&e->val);
 	big *x = big_new(L);
 	big_init(L,x);
 	_fp_to_big(x, &e->val.x);
-	return 1;
+	END(1);
 }
 
 /***
@@ -429,21 +445,24 @@ static int ecp_get_x(lua_State *L) {
     @return a BIG number indicating the Y coordinate of the point on curve.
 */
 static int ecp_get_y(lua_State *L) {
+	BEGIN();
 	ecp *e = ecp_arg(L, 1); SAFE(e);
 	ECP_affine(&e->val);
 	big *y = big_new(L);
 	big_init(L,y);
 	_fp_to_big(y, &e->val.y);
-	return 1;
+	END(1);
 }
 
 static int ecp_prime(lua_State *L) {
+	BEGIN();
 	big *p = big_new(L); big_init(L,p); SAFE(p);
 	BIG_rcopy(p->val, CURVE_Prime);
-	return 1;
+	END(1);
 }
 
 static int ecp_output(lua_State *L) {
+	BEGIN();
 	ecp *e = ecp_arg(L, 1); SAFE(e);
 	if (ECP_isinf(&e->val)) { // Infinity
 		octet *o = o_new(L, 3); SAFE(o);
@@ -454,7 +473,7 @@ static int ecp_output(lua_State *L) {
 	SAFE(o); lua_pop(L, 1);
 	_ecp_to_octet(o, e);
 	push_octet_to_hex_string(L, o);
-	return 1;
+	END(1);
 }
 
 int luaopen_ecp(lua_State *L) {

@@ -94,8 +94,7 @@ int ecp2_destroy(lua_State *L) {
 	BEGIN();
 	ecp2 *e = ecp2_arg(L, 1);
 	SAFE(e);
-	END();
-	return 0;
+	END(0);
 }
 
 /// Global ECP2 functions
@@ -167,8 +166,7 @@ end:
 		lerror(L, failed_msg);
 		lua_pushnil(L);
 	}
-	END();
-	return 1;
+	END(1);
 }
 
 /***
@@ -189,8 +187,7 @@ static int ecp2_generator(lua_State *L) {
 		return 0; }
  */
 	ECP2_generator(&e->val);
-	END();
-	return 1;
+	END(1);
 }
 
 
@@ -203,8 +200,7 @@ static int ecp2_millerloop(lua_State *L) {
 	ECP_affine(&y->val);
 	PAIR_ate(&f->val, &x->val, &y->val);
 	PAIR_fexp(&f->val);
-	END();
-	return 1;
+	END(1);
 }
 
 /// Class methods
@@ -220,8 +216,7 @@ static int ecp2_affine(lua_State *L) {
 	ecp2 *in = ecp2_arg(L, 1); SAFE(in);
 	ecp2 *out = ecp2_dup(L, in); SAFE(out);
 	ECP2_affine(&out->val);
-	END();
-	return 1;
+	END(1);
 }
 
 /***
@@ -234,8 +229,7 @@ static int ecp2_get_infinity(lua_State *L) {
 	BEGIN();
 	ecp2 *e = ecp2_new(L); SAFE(e);
 	ECP2_inf(&e->val);
-	END();
-	return 1;
+	END(1);
 }
 
 /***
@@ -248,8 +242,7 @@ static int ecp2_isinf(lua_State *L) {
 	BEGIN();
 	ecp2 *e = ecp2_arg(L, 1); SAFE(e);
 	lua_pushboolean(L, ECP2_isinf(&e->val));
-	END();
-	return 1;
+	END(1);
 }
 
 /***
@@ -269,8 +262,7 @@ static int ecp2_add(lua_State *L) {
 	ecp2 *p = ecp2_dup(L, e); // push
 	SAFE(p);
 	ECP2_add(&p->val, &q->val);
-	END();
-	return 1;
+	END(1);
 }
 
 
@@ -291,8 +283,7 @@ static int ecp2_sub(lua_State *L) {
 	ecp2 *p = ecp2_dup(L, e); // push
 	SAFE(p);
 	ECP2_sub(&p->val, &q->val);
-	END();
-	return 1;
+	END(1);
 }
 
 /***
@@ -305,8 +296,7 @@ static int ecp2_negative(lua_State *L) {
 	ecp2 *in = ecp2_arg(L, 1); SAFE(in);
 	ecp2 *out = ecp2_dup(L, in); SAFE(out);
 	ECP2_neg(&out->val);
-	END();
-	return 1;
+	END(1);
 }
 
 
@@ -329,8 +319,7 @@ static int ecp2_eq(lua_State *L) {
 	ECP2_affine(&q->val);
 	lua_pushboolean(L, ECP2_equals(
 		                &p->val, &q->val));
-	END();
-	return 1;
+	END(1);
 }
 
 
@@ -349,8 +338,7 @@ static int ecp2_octet(lua_State *L) {
 	octet *o = o_new(L, (MODBYTES<<2)+1);
 	SAFE(o);
 	ECP2_toOctet(o, &e->val);
-	END();
-	return 1;
+	END(1);
 }
 
 static int ecp2_mul(lua_State *L) {
@@ -359,8 +347,7 @@ static int ecp2_mul(lua_State *L) {
 	big  *b = big_arg(L, 2); SAFE(b);
 	ecp2 *r = ecp2_dup(L, p); SAFE(r);
 	PAIR_G2mul(&r->val, b->val);
-	END();
-	return 1;
+	END(1);
 }
 
 
@@ -394,8 +381,7 @@ end:
 		lerror(L, failed_msg);
 		lua_pushnil(L);
 	}
-	END();
-	return 1;
+	END(1);
 }
 
 // get the x coordinate real part as BIG
@@ -406,8 +392,7 @@ static int ecp2_get_xr(lua_State *L) {
 	big *xa = big_new(L); big_init(L,xa); SAFE(xa);
 	FP_copy(&fx, &e->val.x.a);
 	FP_reduce(&fx); FP_redc(xa->val, &fx);
-	END();
-	return 1;
+	END(1);
 }
 // get the x coordinate imaginary part as BIG
 static int ecp2_get_xi(lua_State *L) {
@@ -417,8 +402,7 @@ static int ecp2_get_xi(lua_State *L) {
 	big *xb = big_new(L); big_init(L,xb); SAFE(xb);
 	FP_copy(&fx, &e->val.x.b);
 	FP_reduce(&fx); FP_redc(xb->val, &fx);
-	END();
-	return 1;
+	END(1);
 }
 
 // get the y coordinate real part as BIG
@@ -429,8 +413,7 @@ static int ecp2_get_yr(lua_State *L) {
 	big *ya = big_new(L); big_init(L,ya); SAFE(ya);
 	FP_copy(&fy, &e->val.y.a);
 	FP_reduce(&fy); FP_redc(ya->val, &fy);
-	END();
-	return 1;
+	END(1);
 }
 static int ecp2_get_yi(lua_State *L) {
 	BEGIN();
@@ -439,8 +422,7 @@ static int ecp2_get_yi(lua_State *L) {
 	big *yb = big_new(L); big_init(L,yb); SAFE(yb);
 	FP_copy(&fy, &e->val.y.b);
 	FP_reduce(&fy); FP_redc(yb->val, &fy);
-	END();
-	return 1;
+	END(1);
 }
 static int ecp2_get_zr(lua_State *L) {
 	BEGIN();
@@ -449,8 +431,7 @@ static int ecp2_get_zr(lua_State *L) {
 	big *za = big_new(L); big_init(L,za); SAFE(za);
 	FP_copy(&fz, &e->val.z.a);
 	FP_reduce(&fz); FP_redc(za->val, &fz);
-	END();
-	return 1;
+	END(1);
 }
 static int ecp2_get_zi(lua_State *L) {
 	BEGIN();
@@ -459,8 +440,7 @@ static int ecp2_get_zi(lua_State *L) {
 	big *zb = big_new(L); big_init(L,zb); SAFE(zb);
 	FP_copy(&fz, &e->val.z.b);
 	FP_reduce(&fz); FP_redc(zb->val, &fz);
-	END();
-	return 1;
+	END(1);
 }
 
 static int ecp2_output(lua_State *L) {
@@ -475,8 +455,7 @@ static int ecp2_output(lua_State *L) {
 	SAFE(o); lua_pop(L, 1);
 	_ecp2_to_octet(o, e);
 	push_octet_to_hex_string(L, o);
-	END();
-	return 1;
+	END(1);
 }
 
 int luaopen_ecp2(lua_State *L) {
