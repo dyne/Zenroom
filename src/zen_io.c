@@ -77,7 +77,7 @@ static int zen_print (lua_State *L) {
   } else
 	func(L, "print of an empty string");
 end:
-  o_free(o);
+  o_free(L,o);
   if(failed_msg != NULL) {
 	  lerror(L, failed_msg);
   }
@@ -138,7 +138,7 @@ static int zen_write (lua_State *L) {
   } else
 	func(L, "write of an empty string");
 end:
-  o_free(o);
+  o_free(L,o);
   if(failed_msg != NULL) {
 	  lerror(L, failed_msg);
   }
@@ -193,7 +193,7 @@ int zen_log(lua_State *L, log_priority prio, octet *o) {
 		octet *o = o_arg(L, 1); \
 		if(o != NULL) { \
 			PRINT_FUN; \
-			o_free(o); \
+			o_free(L,o); \
 		} else { \
 			lerror(L, "Could not allocate message to show"); \
 		} \
@@ -231,7 +231,7 @@ int zen_zstd_compress(lua_State *L) {
     _err("ZSTD error: %s\n",ZSTD_getErrorName(dst->len));
   }
 end:
-  o_free(src);
+  o_free(L,src);
   if(failed_msg) {
 	  lerror(L, failed_msg);
 	  lua_pushnil(L);
@@ -265,7 +265,7 @@ int zen_zstd_decompress(lua_State *L) {
     _err("ZSTD error: %s\n",ZSTD_getErrorName(dst->len));
   }
 end:
-  o_free(src);
+  o_free(L,src);
   if(failed_msg) {
 	  lerror(L, failed_msg);
 	  lua_pushnil(L);
@@ -299,7 +299,7 @@ static int zen_random_seed(lua_State *L) {
   RAND_byte(Z->random_generator);
   // return "runtime random" fingerprint
 end:
-  o_free(seed);
+  o_free(L,seed);
   if(failed_msg) {
 	  lerror(L, failed_msg);
 	  lua_pushnil(L);

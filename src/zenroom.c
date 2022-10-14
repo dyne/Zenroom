@@ -183,6 +183,7 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	ZZ->zconf_rngseed[0] = '\0';
 	ZZ->exitcode = 1; // success
 	ZZ->logformat = TEXT;
+    ZZ->memcount_octets = 0;
 
 	if(conf) {
 		if( ! zen_conf_parse(ZZ, conf) ) { // stb parsing
@@ -267,7 +268,8 @@ void zen_teardown(zenroom_t *ZZ) {
 	notice(ZZ->lua,"Zenroom teardown.");
 	act(ZZ->lua,"Memory used: %u KB",
 	    lua_gc(ZZ->lua,LUA_GCCOUNT,0));
-
+	func(ZZ->lua,"Octet memory left allocated: %u B",
+		ZZ->memcount_octets);
 	// stateful RNG instance for deterministic mode
 	if(ZZ->random_generator) {
 		free(ZZ->random_generator);
@@ -294,7 +296,7 @@ void zen_teardown(zenroom_t *ZZ) {
 	}
 
 #ifdef MIMALLOC
-	if(ZZ->debuglevel > 2) mi_stats_print(NULL);
+	if(ZZ->debuglevel > 3) mi_stats_print(NULL);
 #endif
 
 	free(ZZ);

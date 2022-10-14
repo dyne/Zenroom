@@ -144,7 +144,7 @@ big* big_arg(lua_State *L,int n) {
 	if(o) {
 		big *b = big_new(L); SAFE(b); // To be freed by the caller
 		_octet_to_big(L,b,o);
-		o_free(o);
+		o_free(L,o);
 		return(b);
 	}
 	lerror(L, "invalib big number in argument");
@@ -307,7 +307,7 @@ static int newbig(lua_State *L) {
 		return 0; }
 	big *c = big_new(L); SAFE(c);
 	_octet_to_big(L, c,o);
-        o_free(o);
+        o_free(L,o);
 	return 1;
 }
 
@@ -436,7 +436,7 @@ static int big_to_fixed_octet(lua_State *L) {
 	o_dup(L, o);
 
 	// TODO: buffer overflow if I free o
-	//o_free(o);
+	//o_free(L,o);
 	return 1;
 }
 
@@ -522,7 +522,7 @@ static int luabig_to_octet(lua_State *L) {
 	big *c = big_arg(L,1); SAFE(c);
 	octet * c_oct = new_octet_from_big(L,c);
 	o_dup(L, c_oct);
-	o_free(c_oct);
+	o_free(L,c_oct);
 	return 1;
 }
 

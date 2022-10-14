@@ -170,7 +170,7 @@ int notice(void *L, const char *format, ...) {
   mutt_vsnprintf(o->val, o->max-5, format, arg);
   o->len = strlen(o->val);
   zen_log(L, LOG_INFO, o);
-  o_free(o);
+  o_free((lua_State*)L,o);
   return 0;
 }
 
@@ -183,7 +183,7 @@ int func(void *L, const char *format, ...) {
   mutt_vsnprintf(o->val, o->max-5, format, arg);
   o->len = strlen(o->val);
   zen_log(L, LOG_VERBOSE, o);
-  o_free(o);
+  o_free((lua_State*)L,o);
   return 0;
 }
 
@@ -195,7 +195,7 @@ int zerror(void *L, const char *format, ...) {
   mutt_vsnprintf(o->val, o->max-5, format, arg);
   o->len = strlen(o->val);
   zen_log(L, LOG_ERROR, o);
-  o_free(o);
+  o_free((lua_State*)L,o);
   return 0;
 }
 
@@ -209,7 +209,7 @@ int act(void *L, const char *format, ...) {
   mutt_vsnprintf(o->val, o->max-5, format, arg);
   o->len = strlen(o->val);
   zen_log(L, LOG_DEBUG, o);
-  o_free(o);
+  o_free((lua_State*)L,o);
   return 0;
 }
 
@@ -222,7 +222,7 @@ int warning(void *L, const char *format, ...) {
   mutt_vsnprintf(o->val, o->max-5, format, arg);
   o->len = strlen(o->val);
   zen_log(L, LOG_WARN, o);
-  o_free(o);
+  o_free((lua_State*)L,o);
   return 0;
 }
 
