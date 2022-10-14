@@ -187,6 +187,19 @@ int func(void *L, const char *format, ...) {
   return 0;
 }
 
+int trace(void *L, const char *format, ...) {
+  va_list arg;
+  va_start(arg, format);
+  Z_FORMAT_ARG(L);
+  if(Z && Z->debuglevel<4) return 0;
+  octet *o = o_alloc(L, MAX_ERRMSG); SAFE(o);
+  mutt_vsnprintf(o->val, o->max-5, format, arg);
+  o->len = strlen(o->val);
+  zen_log(L, LOG_VERBOSE, o);
+  o_free((lua_State*)L,o);
+  return 0;
+}
+
 int zerror(void *L, const char *format, ...) {
   va_list arg;
   va_start(arg, format);

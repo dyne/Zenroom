@@ -58,6 +58,7 @@ int lerror(void *L, const char *fmt, ...);
 
 int notice(void *L, const char *format, ...); // INFO
 int func(void *L, const char *format, ...); // VERBOSE
+int trace(void *L, const char *format, ...) // TRACE (VERY VERBOSE)
 int zerror(void *L, const char *format, ...); // ERROR
 int act(void *L, const char *format, ...); // DEBUG
 int warning(void *L, const char *format, ...); // WARN
