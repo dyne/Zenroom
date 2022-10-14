@@ -203,11 +203,17 @@ static int hash_to_octet(lua_State *L) {
 */
 static int hash_process(lua_State *L) {
 	hash *h = hash_arg(L,1); SAFE(h);
-	octet *o = o_arg(L,2); SAFE(o);
-	octet *res = o_new(L,h->len); SAFE(res);
-	_feed(h, o);
-	_yeld(h, res);
-	res->len = h->len;
+	octet *o = o_arg(L,2);
+	if(!o) {
+		lerror(L, "Could not allocate input message");
+		lua_pushnil(L);
+	} else {
+		octet *res = o_new(L,h->len); SAFE(res);
+		_feed(h, o);
+		_yeld(h, res);
+		res->len = h->len;
+		o_free(o);
+	}
 	return 1;
 }
 
@@ -258,13 +264,22 @@ static int hash_yeld(lua_State *L) {
    @return a new octet containing the computed HMAC or false on failure
 */
 static int hash_hmac(lua_State *L) {
+	char *failed_msg = NULL;
 	hash *h   = hash_arg(L,1); SAFE(h);
 	octet *k  = o_arg(L, 2);
 	octet *in = o_arg(L, 3);
+	if(!k || !in) {
+		lerror(L, "Cuold not allocate key or data");
+		goto end;
+	}
 	// length defaults to hash bytes (SHA256 = 32 = sha256)
 	octet *out;
 	if(h->algo == _SHA256) {
 		out = o_new(L, SHA256+1); SAFE(out);
+		if(!out) {
+			lerror(L, "Cuold not allocate output");
+			goto end;
+		}
 		//              hash    m   k  outlen  out
 		if(!AMCL_(HMAC)(SHA256, in, k, SHA256, out)) {
 			zerror(L, "%s: hmac (%u bytes) failed.", SHA256);
@@ -273,6 +288,10 @@ static int hash_hmac(lua_State *L) {
 		}
 	} else if(h->algo == _SHA512) {
 		out = o_new(L, SHA512+1); SAFE(out);
+		if(!out) {
+			lerror(L, "Cuold not allocate output");
+			goto end;
+		}
 		//              hash    m   k  outlen  out
 		if(!AMCL_(HMAC)(SHA512, in, k, SHA512, out)) {
 			zerror(L, "%s: hmac (%u bytes) failed.", SHA512);
@@ -280,8 +299,14 @@ static int hash_hmac(lua_State *L) {
 			lua_pushboolean(L,0);
 		}
 	} else {
-		lerror(L, "HMAC is only supported for hash SHA256 or SHA512");
-		return 0;
+		failed_msg = "HMAC is only supported for hash SHA256 or SHA512";
+	}
+end:
+	o_free(k);
+	o_free(in);
+	if(failed_msg) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
 	}
 	return 1;
 }
@@ -301,11 +326,26 @@ static int hash_hmac(lua_State *L) {
 */
 
 static int hash_kdf2(lua_State *L) {
+	char *failed_msg = NULL;
 	hash *h = hash_arg(L,1); SAFE(h);
-	octet *in = o_arg(L, 2); SAFE(in);
+	octet *in = o_arg(L, 2);
+	if(!in) {
+		failed_msg = "Could not allocate input message";
+		goto end;
+	}
 	// output keylen is length of hash
 	octet *out = o_new(L, h->len+0x0f); SAFE(out);
+	if(!out) {
+		failed_msg = "Could not allocate derived key";
+		goto end;
+	}
 	KDF2(h->len, in, NULL , h->len, out);
+end:
+	o_free(in);
+	if(failed_msg) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
 	return 1;
 }
 
@@ -326,10 +366,15 @@ static int hash_kdf2(lua_State *L) {
 */
 
 static int hash_pbkdf2(lua_State *L) {
+	char *failed_msg = NULL;
+	int iter, keylen;
+	octet *s = NULL, *ss = NULL;
 	hash *h = hash_arg(L,1); SAFE(h);
 	octet *k = o_arg(L, 2);
-	int iter, keylen;
-	octet *s, *ss;
+	if(!k) {
+		failed_msg = "Could not allocate key";
+		goto end;
+	}
 	// take a table as argument with salt, iterations and length parameters
 	if(lua_type(L, 3) == LUA_TTABLE) {
 		lua_getfield(L, 3, "salt");
@@ -345,6 +390,10 @@ static int hash_pbkdf2(lua_State *L) {
 		// keylen is length of input key
 		keylen = luaL_optinteger(L, 5, k->len);
 	}
+	if(!s) {
+		failed_msg = "Could not allocate salt";
+		goto end;
+	}
 	// There must be the space to concat a 4 byte integer
 	// (look at the source code of PBKDF2)
 	ss = o_new(L, s->len+4); SAFE(ss);
@@ -355,6 +404,13 @@ static int hash_pbkdf2(lua_State *L) {
         // TODO: according to RFC2898, s should have a size of 8
         // c should be a positive integer
 	PBKDF2(h->len, k, ss, iter, keylen, out);
+end:
+	o_free(s);
+	o_free(k);
+	if(failed_msg) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
 	return 1;
 }
 

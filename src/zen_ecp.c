@@ -103,6 +103,7 @@ static int lua_new_ecp(lua_State *L) {
 	// unsafe parsing into BIG, only necessary for tests
 	// deactivate when not running tests
 	void *tx;
+	char *failed_msg = NULL;
 #ifdef DEBUG
 	tx = luaL_testudata(L, 1, "zenroom.big");
 	void *ty = luaL_testudata(L, 2, "zenroom.big");
@@ -136,25 +137,37 @@ static int lua_new_ecp(lua_State *L) {
 	// We protect well this entrypoint since parsing any input is at risk
 	// Milagro's _fromOctet() uses ECP_BLS_set(ECP_BLS *P, BIG x)
 	// then converts the BIG to an FP modulo using FP_BLS_nres.
-	octet *o = o_arg(L, 1); SAFE(o);
+	octet *o = o_arg(L, 1);
+	if(!o) {
+		failed_msg = "Could not allocate input";
+		goto end;
+	}
 	ecp *e = ecp_new(L); SAFE(e);
 	if(o->len == 2 && o->val[0] == SCHAR_MAX && o->val[1] == SCHAR_MAX) {
 		ECP_inf(&e->val); return 1; } // ECP Infinity
 	if(o->len > e->totlen) { // quick and dirty safety
 		lua_pop(L, 1);
 		zerror(L, "Octet length %u instead of %u bytes", o->len, e->totlen);
-		lerror(L, "Invalid octet length to parse an ECP point");
-		return 0; }
+		failed_msg = "Invalid octet length to parse an ECP point";
+		goto end;
+	}
 	int res = ECP_validate(o);
 	if(res<0) { // test in Milagro's ecdh_*.h ECP_*_PUBLIC_KEY_VALIDATE
 		lua_pop(L, 1);
-		zerror(L, "ECP point validation returns %i", res);
-		lerror(L, "Octet is not a valid ECP (point is not on this curve)");
-		return 0; }
+		failed_msg = "Octet is not a valid ECP (point is not on this curve)";
+		goto end;
+	}
 	if(! ECP_fromOctet(&e->val, o) ) {
 		lua_pop(L, 1);
-		lerror(L, "Octet doesn't contains a valid ECP");
-		return 0; }
+		failed_msg = "Octet doesn't contains a valid ECP";
+		goto end;
+	}
+end:
+	o_free(o);
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
 	return 1;
 }
 
@@ -213,14 +226,19 @@ static int ecp_order(lua_State *L) {
     @return an ECP that is univocally linked to the input OCTET
 */
 static int ecp_mapit(lua_State *L) {
-	octet *o = o_arg(L, 1); SAFE(o);
-	if(o->len != 64) {
+	octet *o = o_arg(L, 1);
+	if(!o) {
+		lerror(L, "Could not allocate ecp point");
+		lua_pushnil(L);
+	} else if(o->len != 64) {
 		zerror(L, "octet length is %u instead of 64 (need to use sha512)", o->len);
 		lerror(L, "Invalid argument to ECP.mapit(), not an hash");
-		return 0; }
-	ecp *e = ecp_new(L); SAFE(e);
-	func(L, "mapit on o->len %u", o->len);
-	ECP_mapit(&e->val, o);
+		lua_pushnil(L);
+	} else {
+		ecp *e = ecp_new(L); SAFE(e);
+		func(L, "mapit on o->len %u", o->len);
+		ECP_mapit(&e->val, o);
+	}
 	return 1;
 }
 
@@ -232,9 +250,14 @@ static int ecp_mapit(lua_State *L) {
     @return bool value: true if valid, false if not valid
 */
 static int ecp_validate(lua_State *L) {
-	octet *o = o_arg(L, 1); SAFE(o);
-	int res = ECP_validate(o);
-	lua_pushboolean(L, res>=0);
+	octet *o = o_arg(L, 1);
+	if(o) {
+		int res = ECP_validate(o);
+		lua_pushboolean(L, res>=0);
+	} else {
+		lerror(L, "Could not allocate ECP point");
+		lua_pushnil(L);
+	}
 	return 1;
 }
 
