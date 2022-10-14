@@ -185,7 +185,14 @@ float* float_arg(lua_State *L,int n) {
 
 static int float_to_octet(lua_State *L) {
 	float *c = float_arg(L,1); SAFE(c);
-	new_octet_from_float(L,c);
+	octet *o = new_octet_from_float(L,c);
+	if(o == NULL) {
+		lerror(L, "Could not create octet");
+		lua_pushnil(L);
+	} else {
+		o_dup(L, o);
+		o_free(o);
+	}
 	return 1;
 }
 

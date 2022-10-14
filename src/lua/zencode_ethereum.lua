@@ -148,8 +148,8 @@ function(destaddr)
   tx.gas_price = have'gas price'
   tx.gas_limit = have'gas limit'
   tx.nonce = have'ethereum nonce'
-  tx.value = O.new()
-  tx.data = O.new()
+  tx.value = O.empty()
+  tx.data = O.empty()
   tx.to = have(destaddr)
   ACK.ethereum_transaction = tx
   new_codec('ethereum transaction', { zentype = 'schema', encoding = 'complex'})

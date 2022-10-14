@@ -63,8 +63,8 @@ static int ed_pubgen(lua_State *L) {
 }
 
 static int ed_sign(lua_State *L) {
-	octet *sk = o_arg(L, 1); SAFE(sk);
-	octet *m = o_arg(L, 2); SAFE(m);
+	octet *sk = o_arg(L, 1);
+	octet *m = o_arg(L, 2);
 
 	ASSERT_OCT_LEN(sk, ed25519_secret_key, "Invalid size for EdDSA secret key")
 
