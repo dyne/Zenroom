@@ -236,12 +236,8 @@ octet* o_arg(lua_State *L,int n) {
 	if( strlen(type) >= 6 && ((strncmp("string",type,6)==0)
 						  || (strncmp("number",type,6)==0)) ) {
 		size_t len; const char *str;
-		str = luaL_optlstring(L,n,NULL,&len);
-		if(!str || !len) {
-		  func(L, "NULL octet from empty string");
-		  return(NULL);
-		}
-		if(!len || len>MAX_OCTET) {
+		str = luaL_optlstring(L,n,"",&len);
+		if(len>MAX_OCTET) {
 			zerror(L, "invalid string size: %u", len);
 			return NULL;
 		}
@@ -280,6 +276,7 @@ octet* o_arg(lua_State *L,int n) {
 	}
 	if( lua_isnil(L, n) || lua_isnone(L,n) ) {
 		o = o_alloc(L, 1);
+		o->val[0] = 0x00;
 		o->len = 0;
 		return(o);
 	}

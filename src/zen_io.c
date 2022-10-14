@@ -48,7 +48,12 @@ extern int write_to_console(const char* str);
 
 static int zen_print (lua_State *L) {
   Z(L);
-  octet *o = o_arg(L, 1); // it may be null (empty string)
+  char *failed_msg = NULL;
+  octet *o = o_arg(L, 1);
+  if(o == NULL) {
+	  failed_msg = "Could not allocate message to show";
+	  goto end;
+  }
   if (Z->stdout_buf) {
 	char *p = Z->stdout_buf+Z->stdout_pos;
 	if(!o) { *p='\n'; Z->stdout_pos++; return 0; }
@@ -70,6 +75,11 @@ static int zen_print (lua_State *L) {
 #endif
   } else
 	func(L, "print of an empty string");
+end:
+  o_free(o);
+  if(failed_msg != NULL) {
+	  lerror(L, failed_msg);
+  }
   return 0;
 }
 
@@ -104,8 +114,12 @@ int printerr(lua_State *L, octet *o) {
 // print without an ending newline
 static int zen_write (lua_State *L) {
   Z(L);
-  octet *o = o_arg(L, 1); // it may be null (empty string)
-  if(!o) return 0;
+  char *failed_msg = NULL;
+  octet *o = o_arg(L, 1);
+  if(o == NULL) {
+	  failed_msg = "Could not allocate message to show";
+	  goto end;
+  }
   if (Z->stdout_buf) {
 	char *p = Z->stdout_buf+Z->stdout_pos;
 	if (Z->stdout_pos+o->len > Z->stdout_len)
@@ -122,6 +136,11 @@ static int zen_write (lua_State *L) {
 #endif
   } else
 	func(L, "write of an empty string");
+end:
+  o_free(o);
+  if(failed_msg != NULL) {
+	  lerror(L, failed_msg);
+  }
   return 0;
 }
 
@@ -168,40 +187,40 @@ int zen_log(lua_State *L, log_priority prio, octet *o) {
   return 0;
 }
 
+#define ZEN_PRINT(FUN_NAME, PRINT_FUN) \
+	static int (FUN_NAME)(lua_State *L) { \
+		octet *o = o_arg(L, 1); \
+		if(o != NULL) { \
+			PRINT_FUN; \
+			o_free(o); \
+		} else { \
+			lerror(L, "Could not allocate message to show"); \
+		} \
+		return 0; \
+	}
 // print to stderr without prefix with newline
-static int zen_printerr(lua_State *L) {
-  octet *o = o_arg(L, 1); // it may be null (empty string)
-  printerr(L, o);
-  return 0;
-}
-
-static int zen_warn (lua_State *L) {
-  zen_log(L, LOG_WARN, o_arg(L, 1));
-  return 0;
-}
-
-static int zen_act (lua_State *L) {
-  zen_log(L, LOG_DEBUG, o_arg(L, 1));
-  return 0;
-}
-
-static int zen_notice (lua_State *L) {
-  zen_log(L, LOG_INFO, o_arg(L, 1));
-  return 0;
-}
-
-static int zen_debug (lua_State *L) {
-  zen_log(L, LOG_VERBOSE, o_arg(L, 1) );
-  return 0;
-}
+ZEN_PRINT(zen_printerr, printerr(L, o))
+ZEN_PRINT(zen_warn, zen_log(L, LOG_WARN, o))
+ZEN_PRINT(zen_act, zen_log(L, LOG_INFO, o))
+ZEN_PRINT(zen_notice, zen_log(L, LOG_INFO, o))
+ZEN_PRINT(zen_debug, zen_log(L, LOG_VERBOSE, o))
 
 int zen_zstd_compress(lua_State *L) {
+  char *failed_msg = NULL;
   octet *dst, *src;
   Z(L);
   if(!Z->zstd_c)
     Z->zstd_c = ZSTD_createCCtx();
-  src = o_arg(L, 1); SAFE(src);
+  src = o_arg(L, 1);
+  if(src == NULL) {
+	  failed_msg = "Could not allocate message to compress";
+	  goto end;
+  }
   dst = o_new(L, ZSTD_compressBound(src->len));
+  if(dst == NULL) {
+	  failed_msg = "Could not allocate compressed message";
+	  goto end;
+  }
   dst->len = ZSTD_compressCCtx(Z->zstd_c,
 			       dst->val, dst->max,
 			       src->val, src->len,
@@ -210,16 +229,31 @@ int zen_zstd_compress(lua_State *L) {
   if (ZSTD_isError(dst->len)) {
     _err("ZSTD error: %s\n",ZSTD_getErrorName(dst->len));
   }
+end:
+  o_free(src);
+  if(failed_msg) {
+	  lerror(L, failed_msg);
+	  lua_pushnil(L);
+  }
   return 1;
 }
 
 int zen_zstd_decompress(lua_State *L) {
   octet *src, *dst;
+  char *failed_msg = NULL;
   Z(L);
   if(!Z->zstd_d)
     Z->zstd_d = ZSTD_createDCtx();
   src = o_arg(L, 1); SAFE(src);
+  if(src == NULL) {
+	  failed_msg = "Could not allocate message to decompress";
+	  goto end;
+  }
   dst = o_new(L, src->len * 3); // assuming max bound is *3
+  if(dst == NULL) {
+	  failed_msg = "Could not allocate decompressed message";
+	  goto end;
+  }
   SAFE(dst);
   func(L, "decompressing octet: %u", src->len);
   dst->len = ZSTD_decompressDCtx(Z->zstd_d,
@@ -229,15 +263,27 @@ int zen_zstd_decompress(lua_State *L) {
   if (ZSTD_isError(dst->len)) {
     _err("ZSTD error: %s\n",ZSTD_getErrorName(dst->len));
   }
+end:
+  o_free(src);
+  if(failed_msg) {
+	  lerror(L, failed_msg);
+	  lua_pushnil(L);
+  }
   return 1;
 }
 
 static int zen_random_seed(lua_State *L) {
   Z(L);
-  octet *seed = o_arg(L, 1); SAFE(seed);
-  if(seed->len <4) {
+  char *failed_msg = NULL;
+  octet *seed = o_arg(L, 1);
+  if(seed == NULL) {
+	  failed_msg = "Could not allocate seed";
+	  goto end;
+  }
+  else if(seed->len <4) {
     lerror(L,"Random seed error: too small (%u bytes)",seed->len);
-	return 0;
+    failed_msg = "Random seed error: too small";
+    goto end;
   }
   AMCL_(RAND_seed)(Z->random_generator, seed->len, seed->val);
   // fast-forward to runtime_random (256 bytes) and 4 bytes lua
@@ -251,6 +297,12 @@ static int zen_random_seed(lua_State *L) {
   RAND_byte(Z->random_generator);
   RAND_byte(Z->random_generator);
   // return "runtime random" fingerprint
+end:
+  o_free(seed);
+  if(failed_msg) {
+	  lerror(L, failed_msg);
+	  lua_pushnil(L);
+  }
   return 1;
 }
 
