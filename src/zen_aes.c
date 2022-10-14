@@ -69,26 +69,55 @@ extern void AES_GCM_DECRYPT(octet *K, octet *IV, octet *H, octet *C, octet *P, o
    @treturn[1] octet containing the authentication tag (checksum)
 */
 static int gcm_encrypt(lua_State *L) {
-	octet *k =  o_arg(L, 1); SAFE(k);
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *k = NULL, *in = NULL, *iv = NULL, *h = NULL;
+	k =  o_arg(L, 1);
+	if(k == NULL) {
+		failed_msg = "failed to allocate space for the aes key";
+		goto end;
+	}
         // AES key size nk can be 16, 24 or 32 bytes
 	if(k->len > 32 || k->len < 16) {
 		zerror(L, "ECDH.aead_encrypt accepts only keys of 16, 24, 32, this is %u", k->len);
-		lerror(L, "ECDH encryption aborted");
-		return 0; }
-	octet *in = o_arg(L, 2); SAFE(in);
-
-	octet *iv = o_arg(L, 3); SAFE(iv);
+		failed_msg = "ECDH encryption aborted";
+		goto end;
+	}
+	in = o_arg(L, 2);
+	if(in == NULL) {
+		failed_msg = "failed to allocate space for the messsage text";
+		goto end;
+	}
+	iv = o_arg(L, 3);
+	if(iv == NULL) {
+		failed_msg = "failed to allocate space for the iv";
+		goto end;
+	}
         if (iv->len < 12) {
 		zerror(L, "ECDH.aead_encrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
-		lerror(L, "ECDH encryption aborted");
-		return 0; }
-
-	octet *h =  o_arg(L, 4); SAFE(h);
+		failed_msg = "ECDH encryption aborted";
+		goto end;
+	}
+	h =  o_arg(L, 4);
+	if(h == NULL) {
+		failed_msg = "failed to allocate space for the header";
+		goto end;
+	}
 	// output is padded to next word
 	octet *out = o_new(L, in->len+16); SAFE(out);
 
 	octet *t = o_new(L, 16); SAFE (t);
 	AES_GCM_ENCRYPT(k, iv, h, in, out, t);
+end:
+	o_free(L, h);
+	o_free(L, iv);
+	o_free(L, in);
+	o_free(L, k);
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
+	END();
 	return 2;
 }
 
@@ -107,46 +136,100 @@ static int gcm_encrypt(lua_State *L) {
 */
 
 static int gcm_decrypt(lua_State *L) {
-	octet *k = o_arg(L, 1); SAFE(k);
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *k = NULL, *in = NULL, *iv = NULL, *h = NULL;
+	k = o_arg(L, 1);
+	if(k == NULL) {
+		failed_msg = "failed to allocate space for the aes key";
+		goto end;
+	}
 	if(k->len > 32 || k->len < 16) {
 		zerror(L, "ECDH.aead_decrypt accepts only keys of 16, 24, 32, this is %u", k->len);
-		lerror(L, "ECDH decryption aborted");
-		return 0; }
-
-	octet *in = o_arg(L, 2); SAFE(in);
-
-	octet *iv = o_arg(L, 3); SAFE(iv);
+		failed_msg = "ECDH decryption aborted";
+		goto end;
+	}
+	in = o_arg(L, 2);
+	if(in == NULL) {
+		failed_msg = "failed to allocate space for the messsage text";
+		goto end;
+	}
+	iv = o_arg(L, 3);
+	if(iv == NULL) {
+		failed_msg = "failed to allocate space for the iv";
+		goto end;
+	}
         if (iv->len < 12) {
 		zerror(L, "ECDH.aead_decrypt accepts an iv of 12 bytes minimum, this is %u", iv->len);
-		lerror(L, "ECDH decryption aborted");
-		return 0; }
-
-	octet *h = o_arg(L, 4); SAFE(h);
+		failed_msg = "ECDH decryption aborted";
+		goto end;
+	}
+	h = o_arg(L, 4);
+	if(h == NULL) {
+		failed_msg = "failed to allocate space for the header";
+		goto end;
+	}
 	// output is padded to next word
 	octet *out = o_new(L, in->len+16); SAFE(out);
 	octet *t2 = o_new(L, 16); SAFE(t2);
 
 	AES_GCM_DECRYPT(k, iv, h, in, out, t2);
+end:
+	o_free(L, h);
+	o_free(L, iv);
+	o_free(L, in);
+	o_free(L, k);
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
+	END();
 	return 2;
 }
 
 static int ctr_process(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *k = NULL, *in = NULL, *iv = NULL;
 	amcl_aes a;
-	octet *key = o_arg(L, 1); SAFE(key);
-	if(key->len != 16 && key->len != 32) {
-		zerror(L, "AES.ctr_process accepts only keys of 16 or 32 bytes, this is %u", key->len);
-		lerror(L, "AES-CTR process aborted");
-		return 0; }
-	octet *in = o_arg(L, 2); SAFE(in);
-	octet *iv = o_arg(L, 3); SAFE(iv);
+	k = o_arg(L, 1);
+	if(k == NULL) {
+		failed_msg = "failed to allocate space for the aes key";
+		goto end;
+	}
+	if(k->len != 16 && k->len != 32) {
+		zerror(L, "AES.ctr_process accepts only keys of 16 or 32 bytes, this is %u", k->len);
+		failed_msg = "AES-CTR process aborted";
+		goto end;
+	}
+	in = o_arg(L, 2);
+	if(in == NULL) {
+		failed_msg = "failed to allocate space for the messsage text";
+		goto end;
+	}
+	iv = o_arg(L, 3);
+	if(iv == NULL) {
+		failed_msg = "failed to allocate space for the iv";
+		goto end;
+	}
 	if (iv->len < 12) {
 		zerror(L, "AES.ctr_process accepts an iv of 12 bytes minimum, this is %u", iv->len);
-		lerror(L, "AES-CTR process aborted");
-		return 0; }
-	AES_init(&a, CTR16, key->len, key->val, iv->val);
+		failed_msg = "AES-CTR process aborted";
+		goto end;
+	}
+	AES_init(&a, CTR16, k->len, k->val, iv->val);
 	octet *out = o_dup(L, in); SAFE(out);
 	AMCL_(AES_encrypt)(&a, out->val);
 	AES_end(&a);
+end:
+	o_free(L, iv);
+	o_free(L, in);
+	o_free(L, k);
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
+	END();
 	return 1;
 }
 
