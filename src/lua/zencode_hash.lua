@@ -126,7 +126,7 @@ When(
 
 local function _pbkdf2_f(src, pass, n)
     if luatype(src) == 'table' then
-	src = ZEN.serialize(src)
+	    src = ZEN.serialize(src)
     end
     ACK.key_derivation =
 	HASH.new('sha512'):pbkdf2(src,
