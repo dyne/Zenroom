@@ -212,7 +212,7 @@ static int hash_process(lua_State *L) {
 		_feed(h, o);
 		_yeld(h, res);
 		res->len = h->len;
-		o_free(o);
+		o_free(L,o);
 	}
 	return 1;
 }
@@ -302,8 +302,8 @@ static int hash_hmac(lua_State *L) {
 		failed_msg = "HMAC is only supported for hash SHA256 or SHA512";
 	}
 end:
-	o_free(k);
-	o_free(in);
+	o_free(L,k);
+	o_free(L,in);
 	if(failed_msg) {
 		lerror(L, failed_msg);
 		lua_pushnil(L);
@@ -341,7 +341,7 @@ static int hash_kdf2(lua_State *L) {
 	}
 	KDF2(h->len, in, NULL , h->len, out);
 end:
-	o_free(in);
+	o_free(L,in);
 	if(failed_msg) {
 		lerror(L, failed_msg);
 		lua_pushnil(L);
@@ -405,8 +405,8 @@ static int hash_pbkdf2(lua_State *L) {
         // c should be a positive integer
 	PBKDF2(h->len, k, ss, iter, keylen, out);
 end:
-	o_free(s);
-	o_free(k);
+	o_free(L,s);
+	o_free(L,k);
 	if(failed_msg) {
 		lerror(L, failed_msg);
 		lua_pushnil(L);
