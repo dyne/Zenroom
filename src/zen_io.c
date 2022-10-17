@@ -149,7 +149,6 @@ end:
 }
 
 int zen_log(lua_State *L, log_priority prio, octet *o) {
-  BEGIN();
   Z(L);
   if(!o) return 0;
 #ifdef __ANDROID__
@@ -189,7 +188,7 @@ int zen_log(lua_State *L, log_priority prio, octet *o) {
 	write(STDERR_FILENO, o->val, tlen);
 #endif
   }
-  END(0);
+  return 0;
 }
 
 #define ZEN_PRINT(FUN_NAME, PRINT_FUN) \
