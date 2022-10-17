@@ -24,9 +24,5 @@ load ../bats_setup
     Z schnorr.lua
     Z w3c-vc.lua
     Z coconut_preference.lua
-}
-
-@test "Ethereum tests in lua" {
-    skip "Fails sometimes in CI, to be investigated why"
     Z ethereum.lua
 }
