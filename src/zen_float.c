@@ -130,6 +130,7 @@ float *new_float_from_octet(lua_State *L, octet* o) {
     @function F.new(octet)
 */
 static int newfloat(lua_State *L) {
+	BEGIN();
 	// number argument, import
         if(lua_isnumber(L, 1)) {
                 lua_Number number = lua_tonumber(L, 1);
@@ -149,11 +150,18 @@ static int newfloat(lua_State *L) {
                 return 1;
         }
 	// octet argument, import
-	octet *o = o_arg(L, 1); SAFE(o);
-	new_float_from_octet(L, o);
-	return 1;
+	octet *o = o_arg(L, 1);
+	if(o) {
+		new_float_from_octet(L, o);
+		o_free(L, o);
+	} else {
+		lerror(L, "Could not allocate input");
+		lua_pushnil(L);
+	}
+	END(1);
 }
 static int is_float(lua_State *L) {
+	BEGIN();
         int result = 0;
         if(lua_isnumber(L, 1)) {
                 result = 1;
@@ -165,7 +173,7 @@ static int is_float(lua_State *L) {
                 result = (*pEnd == '\0');
         }
         lua_pushboolean(L, result);
-        return 1;
+        END(1);
 }
 float* float_arg(lua_State *L,int n) {
 	void *ud = luaL_testudata(L, n, "zenroom.float");
@@ -175,15 +183,17 @@ float* float_arg(lua_State *L,int n) {
 		return(b);
 	}
 
+	float *result = NULL;
 	octet *o = o_arg(L,n);
 	if(o) {
-		return new_float_from_octet(L, o);
+		result = new_float_from_octet(L, o);
+		o_free(L, o);
 	}
-	lerror(L, "invalib float number in argument");
-	return NULL;
+	return result;
 }
 
 static int float_to_octet(lua_State *L) {
+	BEGIN();
 	float *c = float_arg(L,1); SAFE(c);
 	octet *o = new_octet_from_float(L,c);
 	if(o == NULL) {
@@ -193,10 +203,11 @@ static int float_to_octet(lua_State *L) {
 		o_dup(L, o);
 		o_free(L,o);
 	}
-	return 1;
+	END(1);
 }
 
 static int float_eq(lua_State *L) {
+	BEGIN();
 	float *a = float_arg(L,1); SAFE(a);
 	float *b = float_arg(L,2); SAFE(b);
         lua_pushboolean(L, fabs(*a - *b) < EPS);
@@ -217,72 +228,81 @@ static int float_eq(lua_State *L) {
 		res = (diff / (absA + absB) < EPS);
 	}*/
 
-	return 1;
+	END(1);
 }
 
 static int float_lt(lua_State *L) {
+	BEGIN();
 	float *a = float_arg(L,1); SAFE(a);
 	float *b = float_arg(L,2); SAFE(b);
         lua_pushboolean(L, *a < *b);
-	return 1;
+	END(1);
 }
 
 // TODO: could be false due to equality
 static int float_lte(lua_State *L) {
+	BEGIN();
 	float *a = float_arg(L,1); SAFE(a);
 	float *b = float_arg(L,2); SAFE(b);
         lua_pushboolean(L, *a <= *b);
-	return 1;
+	END(1);
 }
 
 static int float_add(lua_State *L) {
+	BEGIN();
 	float *a = float_arg(L,1); SAFE(a);
 	float *b = float_arg(L,2); SAFE(b);
         float *c = float_new(L); SAFE(c);
         *c = *a + *b;
-	return 1;
+	END(1);
 }
 
 static int float_opposite(lua_State *L) {
+	BEGIN();
 	float *a = float_arg(L,1); SAFE(a);
         float *b = float_new(L); SAFE(b);
         *b = -(*a);
-	return 1;
+	END(1);
 }
 
 static int float_sub(lua_State *L) {
+	BEGIN();
 	float *a = float_arg(L,1); SAFE(a);
 	float *b = float_arg(L,2); SAFE(b);
         float *c = float_new(L); SAFE(c);
         *c = *a - *b;
-	return 1;
+	END(1);
 }
 
 static int float_mul(lua_State *L) {
+	BEGIN();
 	float *a = float_arg(L,1); SAFE(a);
 	float *b = float_arg(L,2); SAFE(b);
         float *c = float_new(L); SAFE(c);
         *c = *a * *b;
-	return 1;
+	END(1);
 }
 
 static int float_div(lua_State *L) {
+	BEGIN();
 	float *a = float_arg(L,1); SAFE(a);
 	float *b = float_arg(L,2); SAFE(b);
         float *c = float_new(L); SAFE(c);
         *c = *a / *b;
-	return 1;
+	END(1);
 }
 
 static int float_mod(lua_State *L) {
+	BEGIN();
 	float *a = float_arg(L,1); SAFE(a);
 	float *b = float_arg(L,2); SAFE(b);
         float *c = float_new(L); SAFE(c);
         *c = fmod(*a, *b);
-	return 1;
+	END(1);
 }
 
 static int float_to_string(lua_State *L) {
+	BEGIN();
 	float *c = float_arg(L,1); SAFE(c);
         char dest[1024];
         int bufsz = _string_from_float(dest, *c);
@@ -291,7 +311,7 @@ static int float_to_string(lua_State *L) {
 		return 0;
 	}
         lua_pushstring(L, dest);
-	return 1;
+	END(1);
 }
 
 int luaopen_float(lua_State *L) {

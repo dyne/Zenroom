@@ -31,60 +31,119 @@
 
 #define ASSERT_OCT_LEN(OCT, TYPE, MSG)\
 	if((OCT)->len != sizeof(TYPE)) { \
-		lerror(L, (MSG));\
-		lua_pushboolean(L, 0);\
-		return 1;\
+		failed_msg = (MSG);\
+		lua_pushnil(L);\
+		goto end;\
 	}
 
 #define PUSH_CHECK_OCT_LEN(OCT, TYPE)\
 	lua_pushboolean(L, ((OCT)->len == sizeof(TYPE))):
 static int ed_secgen(lua_State *L) {
-  Z(L);
+	BEGIN();
+	Z(L);
 	register const size_t sksize = sizeof(ed25519_secret_key);
-	octet *sk = o_new(L, sksize); SAFE(sk);
-	register size_t i;
-	for(i=0; i < sksize; i++)
-	  sk->val[i] = RAND_byte(Z->random_generator);
-	sk->len = sksize;
-	return 1;
+	octet *sk = o_new(L, sksize);
+	if(!sk) {
+		lerror(L, "Could not allocate secret key");
+		lua_pushnil(L);
+	} else {
+		register size_t i;
+		for(i=0; i < sksize; i++)
+		  sk->val[i] = RAND_byte(Z->random_generator);
+		sk->len = sksize;
+	}
+	END(1);
 }
 
 static int ed_pubgen(lua_State *L) {
-	octet *sk = o_arg(L, 1); SAFE(sk);
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *pk = NULL, *sk = NULL;
+	sk = o_arg(L, 1);
+	if(!sk) {
+		failed_msg = "Could not allocate secret key";
+		goto end;
+	}
 
 	ASSERT_OCT_LEN(sk, ed25519_secret_key, "Invalid size for EdDSA secret key")
 
-	octet *pk = o_new(L, sizeof(ed25519_public_key)); SAFE(pk);
+	pk = o_new(L, sizeof(ed25519_public_key));
+	if(!pk) {
+		failed_msg = "Could not allocate public key";
+		goto end;
+	}
 	pk->len = sizeof(ed25519_public_key);
 
 	ed25519_publickey((unsigned char*)sk->val, (unsigned char *)pk->val);
-
-	return 1;
+end:
+	o_free(L, sk);
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
+	END(1);
 }
 
 static int ed_sign(lua_State *L) {
-	octet *sk = o_arg(L, 1);
-	octet *m = o_arg(L, 2);
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *sk = NULL, *m = NULL, *sig = NULL;
+	sk = o_arg(L, 1);
+	if(!sk) {
+		failed_msg = "Could not allocate secret key";
+		goto end;
+	}
+	m = o_arg(L, 2);
+	if(!m) {
+		failed_msg = "Could not allocate message";
+		goto end;
+	}
 
 	ASSERT_OCT_LEN(sk, ed25519_secret_key, "Invalid size for EdDSA secret key")
 
 	ed25519_public_key pk;
 	ed25519_publickey((unsigned char*)sk->val, pk);
 
-	octet *sig = o_new(L, sizeof(ed25519_signature)); SAFE(sig);
+	sig = o_new(L, sizeof(ed25519_signature)); SAFE(sig);
+	if(!sig) {
+		failed_msg = "Could not allocate signature";
+		goto end;
+	}
 	sig->len = sizeof(ed25519_signature);
 
 	ed25519_sign((unsigned char*)m->val, m->len,
 		     (unsigned char*)sk->val, pk,
 		     (unsigned char*)sig->val);
 
-	return 1;
+end:
+	o_free(L, m);
+	o_free(L, sk);
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
+	END(1);
 }
 
 static int ed_verify(lua_State *L) {
-	octet *pk = o_arg(L, 1); SAFE(pk);
-	octet *sig = o_arg(L, 2); SAFE(sig);
-	octet *m = o_arg(L, 3); SAFE(m);
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *pk = NULL, *sig = NULL, *m = NULL;
+	pk = o_arg(L, 1);
+	if(!pk) {
+		failed_msg = "Could not allocate public key";
+		goto end;
+	}
+	sig = o_arg(L, 2);
+	if(!sig) {
+		failed_msg = "Could not allocate signature";
+		goto end;
+	}
+	m = o_arg(L, 3);
+	if(!m) {
+		failed_msg = "Could not allocate message";
+		goto end;
+	}
 
 	ASSERT_OCT_LEN(pk, ed25519_public_key, "Invalid size for EdDSA public key")
 	ASSERT_OCT_LEN(sig, ed25519_signature, "Invalid size for EdDSA signature")
@@ -93,7 +152,15 @@ static int ed_verify(lua_State *L) {
 				             (unsigned char*)pk->val,
 					     (unsigned char*)sig->val) == 0);
 
-	return 1;
+end:
+	o_free(L, m);
+	o_free(L, pk);
+	o_free(L, sig);
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
+	END(1);
 }
 
 int luaopen_ed(lua_State *L) {
