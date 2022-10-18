@@ -193,6 +193,7 @@ int zen_log(lua_State *L, log_priority prio, octet *o) {
 
 #define ZEN_PRINT(FUN_NAME, PRINT_FUN) \
 	static int (FUN_NAME)(lua_State *L) { \
+		BEGIN(); \
 		octet *o = o_arg(L, 1); \
 		if(o != NULL) { \
 			PRINT_FUN; \
@@ -200,7 +201,7 @@ int zen_log(lua_State *L, log_priority prio, octet *o) {
 		} else { \
 			lerror(L, "Could not allocate message to show"); \
 		} \
-		return 0; \
+		END(0); \
 	}
 // print to stderr without prefix with newline
 ZEN_PRINT(zen_printerr, printerr(L, o))
