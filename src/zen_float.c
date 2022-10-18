@@ -110,17 +110,9 @@ float *float_new(lua_State *L) {
         return number;
 }
 
-float *new_float_from_octet(lua_State *L, octet* o) {
-        float *f = float_new(L);
-        char *pEnd;
-        *f = strtof(o->val, &pEnd);
-        if(*pEnd) {
-                lerror(L, "Could not parse float number");
-                return NULL;
-        }
-        return f;
+static void float_free(float *f) {
+	if(f) free(f);
 }
-
 
 /***
     Create a new float number. If an argument is present, import it as @{OCTET} and initialise it with its value.
@@ -152,7 +144,14 @@ static int newfloat(lua_State *L) {
 	// octet argument, import
 	octet *o = o_arg(L, 1);
 	if(o) {
-		new_float_from_octet(L, o);
+		char *pEnd = NULL;
+		float* f = float_new(L);
+		*f = strtof(o->val, &pEnd);
+		if(*pEnd) {
+			o_free(L, o);
+			lerror(L, "Could not parse float number");
+			lua_pushnil(L);
+		}
 		o_free(L, o);
 	} else {
 		lerror(L, "Could not allocate input");
@@ -162,31 +161,39 @@ static int newfloat(lua_State *L) {
 }
 static int is_float(lua_State *L) {
 	BEGIN();
-        int result = 0;
-        if(lua_isnumber(L, 1)) {
-                result = 1;
-        } else if(lua_isstring(L, 1)) {
-                const char* arg = lua_tostring(L, 1);
-                float *flt = float_new(L);
-                char *pEnd;
-                *flt = strtof(arg, &pEnd);
-                result = (*pEnd == '\0');
-        }
-        lua_pushboolean(L, result);
-        END(1);
+	int result = 0;
+	if(lua_isnumber(L, 1)) {
+		result = 1;
+	} else if(lua_isstring(L, 1)) {
+		const char* arg = lua_tostring(L, 1);
+		float *flt = float_new(L);
+		char *pEnd;
+		*flt = strtof(arg, &pEnd);
+		result = (*pEnd == '\0');
+	}
+	lua_pushboolean(L, result);
+	END(1);
 }
+
 float* float_arg(lua_State *L,int n) {
+	float *result = (float*)malloc(sizeof(float));
+	if(result == NULL) {
+		return NULL;
+	}
 	void *ud = luaL_testudata(L, n, "zenroom.float");
-	luaL_argcheck(L, ud != NULL, n, "float class expected");
 	if(ud) {
-		float *b = (float*)ud;
-		return(b);
+		*result = *(float*)ud;
+		return result;
 	}
 
-	float *result = NULL;
 	octet *o = o_arg(L,n);
 	if(o) {
-		result = new_float_from_octet(L, o);
+		char *pEnd = NULL;
+		*result = strtof(o->val, &pEnd);
+		if(*pEnd) {
+			free(result);
+			result = NULL;
+		}
 		o_free(L, o);
 	}
 	return result;
@@ -194,23 +201,38 @@ float* float_arg(lua_State *L,int n) {
 
 static int float_to_octet(lua_State *L) {
 	BEGIN();
-	float *c = float_arg(L,1); SAFE(c);
-	octet *o = new_octet_from_float(L,c);
-	if(o == NULL) {
-		lerror(L, "Could not create octet");
-		lua_pushnil(L);
-	} else {
-		o_dup(L, o);
-		o_free(L,o);
+	char *failed_msg = NULL;
+	octet *o = NULL;
+	float *c = float_arg(L,1);
+	if(!c) {
+		failed_msg = "Could not read float input";
+		goto end;
 	}
+	o = new_octet_from_float(L,c);
+	if(o == NULL) {
+		failed_msg = "Could not create octet";
+		goto end;
+	}
+	o_dup(L, o);
+end:
+	float_free(c);
+	o_free(L,o);
+	if(failed_msg) {
+		lerror(L, "%s: %s", __func__, failed_msg);
+		lua_pushnil(L);
+	}
+
 	END(1);
 }
 
 static int float_eq(lua_State *L) {
 	BEGIN();
-	float *a = float_arg(L,1); SAFE(a);
-	float *b = float_arg(L,2); SAFE(b);
-        lua_pushboolean(L, fabs(*a - *b) < EPS);
+	float *a,*b;
+	a = float_arg(L,1);
+	b = float_arg(L,2);
+	if(a && b) {
+		lua_pushboolean(L, fabs(*a - *b) < EPS);
+	}
 	// ref. https://stackoverflow.com/a/4915891
 	// TODO: try these tests https://floating-point-gui.de/errors/NearlyEqualsTest.java
 	/*const float absA = fabs(*a);
@@ -227,90 +249,172 @@ static int float_eq(lua_State *L) {
 	} else {  // use relative error
 		res = (diff / (absA + absB) < EPS);
 	}*/
+	float_free(a);
+	float_free(b);
+	if(!a || !b) {
+		lerror(L, "Error with float input in %s", __func__);
+		lua_pushnil(L);
+	}
 
 	END(1);
 }
 
 static int float_lt(lua_State *L) {
 	BEGIN();
-	float *a = float_arg(L,1); SAFE(a);
-	float *b = float_arg(L,2); SAFE(b);
-        lua_pushboolean(L, *a < *b);
+	float *a = float_arg(L,1);
+	float *b = float_arg(L,2);
+	if(a && b) {
+		lua_pushboolean(L, *a < *b);
+	}
+	float_free(a);
+	float_free(b);
+	if(!a || !b) {
+		lerror(L, "Error with float input in %s", __func__);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 
-// TODO: could be false due to equality
+// TODO: could be wrong due to equality
 static int float_lte(lua_State *L) {
 	BEGIN();
-	float *a = float_arg(L,1); SAFE(a);
-	float *b = float_arg(L,2); SAFE(b);
-        lua_pushboolean(L, *a <= *b);
+	float *a = float_arg(L,1);
+	float *b = float_arg(L,2);
+	if(a && b) {
+		lua_pushboolean(L, *a <= *b);
+	}
+	float_free(a);
+	float_free(b);
+	if(!a || !b) {
+		lerror(L, "Error with float input in %s", __func__);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 
 static int float_add(lua_State *L) {
 	BEGIN();
-	float *a = float_arg(L,1); SAFE(a);
-	float *b = float_arg(L,2); SAFE(b);
-        float *c = float_new(L); SAFE(c);
-        *c = *a + *b;
+	float *a = float_arg(L,1);
+	float *b = float_arg(L,2);
+        float *c = float_new(L);
+	if(a && b && c) {
+		*c = *a + *b;
+	}
+	float_free(a);
+	float_free(b);
+	if(!a || !b || !c) {
+		lerror(L, "Error with float input in %s", __func__);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 
 static int float_opposite(lua_State *L) {
 	BEGIN();
-	float *a = float_arg(L,1); SAFE(a);
-        float *b = float_new(L); SAFE(b);
-        *b = -(*a);
+	float *a = float_arg(L,1);
+        float *b = float_new(L);
+	if(a && b) {
+		*b = -(*a);
+	}
+	float_free(a);
+	if(!a || !b) {
+		lerror(L, "Error with float input in %s", __func__);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 
 static int float_sub(lua_State *L) {
 	BEGIN();
-	float *a = float_arg(L,1); SAFE(a);
-	float *b = float_arg(L,2); SAFE(b);
-        float *c = float_new(L); SAFE(c);
-        *c = *a - *b;
+	float *a = float_arg(L,1);
+	float *b = float_arg(L,2);
+        float *c = float_new(L);
+	if(a && b && c) {
+		*c = *a - *b;
+	}
+	float_free(a);
+	float_free(b);
+	if(!a || !b || !c) {
+		lerror(L, "Error with float input in %s", __func__);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 
 static int float_mul(lua_State *L) {
 	BEGIN();
-	float *a = float_arg(L,1); SAFE(a);
-	float *b = float_arg(L,2); SAFE(b);
-        float *c = float_new(L); SAFE(c);
-        *c = *a * *b;
+	float *a = float_arg(L,1);
+	float *b = float_arg(L,2);
+        float *c = float_new(L);
+	if(a && b && c) {
+		*c = *a * *b;
+	}
+	float_free(a);
+	float_free(b);
+	if(!a || !b || !c) {
+		lerror(L, "Error with float input in %s", __func__);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 
 static int float_div(lua_State *L) {
 	BEGIN();
-	float *a = float_arg(L,1); SAFE(a);
-	float *b = float_arg(L,2); SAFE(b);
-        float *c = float_new(L); SAFE(c);
-        *c = *a / *b;
+	float *a = float_arg(L,1);
+	float *b = float_arg(L,2);
+        float *c = float_new(L);
+	if(a && b && c) {
+		// TODO: what happen if I divide by 0?
+		*c = *a / *b;
+	}
+	float_free(a);
+	float_free(b);
+	if(!a || !b || !c) {
+		lerror(L, "Error with float input in %s", __func__);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 
 static int float_mod(lua_State *L) {
 	BEGIN();
-	float *a = float_arg(L,1); SAFE(a);
-	float *b = float_arg(L,2); SAFE(b);
-        float *c = float_new(L); SAFE(c);
-        *c = fmod(*a, *b);
+	float *a = float_arg(L,1);
+	float *b = float_arg(L,2);
+        float *c = float_new(L);
+	if(a && b && c) {
+		// TODO: what happen if I divide by 0?
+		*c = fmod(*a, *b);
+	}
+	float_free(a);
+	float_free(b);
+	if(!a || !b || !c) {
+		lerror(L, "Error with float input in %s", __func__);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 
 static int float_to_string(lua_State *L) {
 	BEGIN();
-	float *c = float_arg(L,1); SAFE(c);
+	char *failed_msg = NULL;
+	float* c = float_arg(L,1);
+	if(c == NULL) {
+	        failed_msg = "Could not read float";
+		goto end;
+	}
         char dest[1024];
         int bufsz = _string_from_float(dest, *c);
 	if(bufsz < 0) {
-	        lerror(L, "Output size too big");
-		return 0;
+	        failed_msg = "Output size too big";
+		goto end;
 	}
         lua_pushstring(L, dest);
+end:
+	float_free(c);
+	if(failed_msg) {
+		lerror(L, "%s: %s", __func__, failed_msg);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 
