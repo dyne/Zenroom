@@ -66,11 +66,14 @@ int _ecp2_to_octet(octet *o, ecp2 *e) {
 	return(1);
 }
 
+void ecp2_free(ecp2 *e) {
+	if(e) free(e);
+}
 
 ecp2* ecp2_new(lua_State *L) {
 	ecp2 *e = (ecp2 *)lua_newuserdata(L, sizeof(ecp2));
 	if(!e) {
-		lerror(L, "Error allocating new ecp2 in %s", __func__);
+		zerror(L, "Error allocating new ecp2 in %s", __func__);
 		return NULL; }
 	e->halflen = sizeof(BIG)*2;
 	e->totlen = (MODBYTES*4)+1;
@@ -78,14 +81,25 @@ ecp2* ecp2_new(lua_State *L) {
 	lua_setmetatable(L, -2);
 	return(e);
 }
+
 ecp2* ecp2_arg(lua_State *L, int n) {
-	void *ud = luaL_checkudata(L, n, "zenroom.ecp2");
-	luaL_argcheck(L, ud != NULL, n, "ecp2 class expected");
-	ecp2 *e = (ecp2*)ud;
-	return(e);
+	ecp2 *result = (ecp2*)malloc(sizeof(ecp2));
+	void *ud = luaL_testudata(L, n, "zenroom.ecp2");
+	if(ud) {
+		*result = *(ecp2*)ud;
+		return result;
+	}
+	ecp2_free(result);
+	zerror(L, "invalid ecp2 point in argument");
+	return NULL;
 }
+
 ecp2* ecp2_dup(lua_State *L, ecp2* in) {
-	ecp2 *e = ecp2_new(L); SAFE(e);
+	ecp2 *e = ecp2_new(L);
+	if(e == NULL) {
+		zerror(L, "Error duplicating ecp2 in %s", __func__);
+		return NULL;
+	}
 	ECP2_copy(&e->val, &in->val);
 	return(e);
 }
@@ -152,16 +166,20 @@ static int lua_new_ecp2(lua_State *L) {
 	octet *o = NULL;
 	o = o_arg(L, 1);
 	if(o == NULL) {
-		failed_msg = "failed to allocate space for ecp2 point";
+		failed_msg = "failed to allocate space for octet";
 		goto end;
 	}
-	ecp2 *e = ecp2_new(L); SAFE(e);
+	ecp2 *e = ecp2_new(L);
+	if(e == NULL) {
+		failed_msg = "failed to allocate space for new ecp2 point";
+		goto end;
+	}
 	if(! ECP2_fromOctet(&e->val, o) ) {
 		failed_msg = "Octet doesn't contains a valid ECP2";
 		goto end;
 	}
 end:
-	o_free(L,o);
+	o_free(L, o);
 	if(failed_msg != NULL) {
 		lerror(L, failed_msg);
 		lua_pushnil(L);
@@ -178,8 +196,13 @@ end:
 */
 static int ecp2_generator(lua_State *L) {
 	BEGIN();
-	ecp2 *e = ecp2_new(L); SAFE(e);
-/* 	FP2 x, y;
+	ecp2 *e = ecp2_new(L);
+	if(e == NULL) {
+		lerror(L, "failed to allocate space for new ecp2 point");
+		lua_pushnil(L);
+		return 1;
+	}
+	/* 	FP2 x, y;
 	FP2_from_BIGs(&x, (chunk*)CURVE_G2xa, (chunk*)CURVE_G2xb);
 	FP2_from_BIGs(&y, (chunk*)CURVE_G2ya, (chunk*)CURVE_G2yb);
 	if(!ECP2_set(&e->val, &x, &y)) {
@@ -193,13 +216,25 @@ static int ecp2_generator(lua_State *L) {
 
 static int ecp2_millerloop(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	fp12 *f = fp12_new(L);   SAFE(f);
-	ecp2 *x = ecp2_arg(L, 1); SAFE(x);
-	ecp  *y = ecp_arg(L, 2);  SAFE(y);
+	ecp2 *x = ecp2_arg(L, 1);
+	if(x == NULL) {
+		failed_msg = "failed to allocate space for ecp2 point";
+		goto end;
+	}
+	ecp  *y = ecp_arg(L, 2);
 	ECP2_affine(&x->val);
 	ECP_affine(&y->val);
 	PAIR_ate(&f->val, &x->val, &y->val);
 	PAIR_fexp(&f->val);
+end:
+	// ecp_free(y);
+	ecp2_free(x);
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 
@@ -213,9 +248,24 @@ static int ecp2_millerloop(lua_State *L) {
 */
 static int ecp2_affine(lua_State *L) {
 	BEGIN();
-	ecp2 *in = ecp2_arg(L, 1); SAFE(in);
-	ecp2 *out = ecp2_dup(L, in); SAFE(out);
+	char *failed_msg = NULL;
+	ecp2 *in = ecp2_arg(L, 1);
+	if(in == NULL) {
+		failed_msg = "failed to allocate space for ecp2 point";
+		goto end;
+	}
+	ecp2 *out = ecp2_dup(L, in);
+	if(out == NULL) {
+		failed_msg = "failed to duplicate ecp2 point";
+		goto end;
+	}
 	ECP2_affine(&out->val);
+end:
+	ecp2_free(in);
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 
@@ -227,7 +277,11 @@ static int ecp2_affine(lua_State *L) {
 */
 static int ecp2_get_infinity(lua_State *L) {
 	BEGIN();
-	ecp2 *e = ecp2_new(L); SAFE(e);
+	ecp2 *e = ecp2_new(L);
+	if(e == NULL) {
+		lerror(L, "failed to allocate space for new ecp2 point");
+		return 0;
+	}
 	ECP2_inf(&e->val);
 	END(1);
 }
@@ -240,8 +294,13 @@ static int ecp2_get_infinity(lua_State *L) {
 */
 static int ecp2_isinf(lua_State *L) {
 	BEGIN();
-	ecp2 *e = ecp2_arg(L, 1); SAFE(e);
+	ecp2 *e = ecp2_arg(L, 1);
+	if(e == NULL) {
+		lerror(L, "failed to allocate space for ecp2 point");
+		return 0;
+	}
 	lua_pushboolean(L, ECP2_isinf(&e->val));
+	ecp2_free(e);
 	END(1);
 }
 
@@ -257,11 +316,26 @@ static int ecp2_isinf(lua_State *L) {
 */
 static int ecp2_add(lua_State *L) {
 	BEGIN();
-	ecp2 *e = ecp2_arg(L, 1); SAFE(e);
-	ecp2 *q = ecp2_arg(L, 2); SAFE(q);
-	ecp2 *p = ecp2_dup(L, e); // push
-	SAFE(p);
+	char *failed_msg = NULL;
+	ecp2 *e = ecp2_arg(L, 1);
+	ecp2 *q = ecp2_arg(L, 2);
+	if(e == NULL || q == NULL) {
+		failed_msg = "failed to allocate space for ecp2 point";
+		goto end;
+	}
+	ecp2 *p = ecp2_dup(L, e);
+	if(p == NULL) {
+		failed_msg = "failed to duplicate ecp2 point";
+		goto end;
+	}
 	ECP2_add(&p->val, &q->val);
+end:
+	ecp2_free(e);
+	ecp2_free(q);
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 
@@ -278,11 +352,26 @@ static int ecp2_add(lua_State *L) {
 */
 static int ecp2_sub(lua_State *L) {
 	BEGIN();
-	ecp2 *e = ecp2_arg(L, 1); SAFE(e);
-	ecp2 *q = ecp2_arg(L, 2); SAFE(q);
-	ecp2 *p = ecp2_dup(L, e); // push
-	SAFE(p);
+	char *failed_msg = NULL;
+	ecp2 *e = ecp2_arg(L, 1);
+	ecp2 *q = ecp2_arg(L, 2);
+	if(e == NULL || q == NULL) {
+		failed_msg = "failed to allocate space for ecp2 point";
+		goto end;
+	}
+	ecp2 *p = ecp2_dup(L, e);
+	if(p == NULL) {
+		failed_msg = "failed to duplicate ecp2 point";
+		goto end;
+	}
 	ECP2_sub(&p->val, &q->val);
+end:
+	ecp2_free(e);
+	ecp2_free(q);
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 
@@ -293,9 +382,24 @@ static int ecp2_sub(lua_State *L) {
 */
 static int ecp2_negative(lua_State *L) {
 	BEGIN();
-	ecp2 *in = ecp2_arg(L, 1); SAFE(in);
-	ecp2 *out = ecp2_dup(L, in); SAFE(out);
+	char *failed_msg = NULL;
+	ecp2 *in = ecp2_arg(L, 1);
+	if(in == NULL) {
+		failed_msg = "failed to allocate space for ecp2 point";
+		goto end;
+	}
+	ecp2 *out = ecp2_dup(L, in);
+	if(out == NULL) {
+		failed_msg = "failed to duplicate ecp2 point";
+		goto end;
+	}
 	ECP2_neg(&out->val);
+end:
+	ecp2_free(in);
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 
@@ -312,13 +416,24 @@ static int ecp2_negative(lua_State *L) {
 */
 static int ecp2_eq(lua_State *L) {
 	BEGIN();
-	ecp2 *p = ecp2_arg(L, 1); SAFE(p);
-	ecp2 *q = ecp2_arg(L, 2); SAFE(q);
+	char *failed_msg = NULL;
+	ecp2 *p = ecp2_arg(L, 1);
+	ecp2 *q = ecp2_arg(L, 2);
+	if(p == NULL || q == NULL) {
+		failed_msg = "failed to allocate space for ecp2 points";
+		goto end;
+	}
 // TODO: is affine rly needed?
 	ECP2_affine(&p->val);
 	ECP2_affine(&q->val);
-	lua_pushboolean(L, ECP2_equals(
-		                &p->val, &q->val));
+	lua_pushboolean(L, ECP2_equals(&p->val, &q->val));
+end:
+	ecp2_free(p);
+	ecp2_free(q);
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 
@@ -334,19 +449,54 @@ static int ecp2_eq(lua_State *L) {
 */
 static int ecp2_octet(lua_State *L) {
 	BEGIN();
-	ecp2 *e = ecp2_arg(L, 1); SAFE(e);
+	char *failed_msg = NULL;
+	ecp2 *e = ecp2_arg(L, 1);
+	if(e == NULL) {
+		failed_msg = "failed to alloce space for ecp2 point";
+		goto end;
+	}
 	octet *o = o_new(L, (MODBYTES<<2)+1);
-	SAFE(o);
+	if(o == NULL) {
+		failed_msg = "failed to alloce space for octet";
+		goto end;
+	}
 	ECP2_toOctet(o, &e->val);
+end:
+	ecp2_free(e);
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 
 static int ecp2_mul(lua_State *L) {
 	BEGIN();
-	ecp2 *p = ecp2_arg(L, 1); SAFE(p);
-	big  *b = big_arg(L, 2); SAFE(b);
-	ecp2 *r = ecp2_dup(L, p); SAFE(r);
+	char *failed_msg = NULL;
+	big *b = NULL;
+	ecp2 *p = ecp2_arg(L, 1);
+	if(p == NULL) {
+		failed_msg = "failed to alloce space for ecp2 point";
+		goto end;
+	}
+	b = big_arg(L, 2);
+	if(b == NULL) {
+		failed_msg = "failed to alloce space for big";
+		goto end;
+	}
+	ecp2 *r = ecp2_dup(L, p);
+	if(r == NULL) {
+		failed_msg = "failed to duplicate ecp2 point";
+		goto end;
+	}
 	PAIR_G2mul(&r->val, b->val);
+end:
+	big_free(b);
+	ecp2_free(p);
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 
@@ -361,10 +511,9 @@ static int ecp2_mul(lua_State *L) {
 static int ecp2_mapit(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	octet *o = NULL;
-	o = o_arg(L, 1);
+	octet *o = o_arg(L, 1);
 	if(o == NULL) {
-		failed_msg = "failed to allocate space for ecp2 point";
+		failed_msg = "failed to allocate space for octet";
 		goto end;
 	}
 	if(o->len != 64) {
@@ -373,10 +522,14 @@ static int ecp2_mapit(lua_State *L) {
 		failed_msg = "Invalid argument to ECP2.mapit(), not an hash";
 		goto end;
 	}
-	ecp2 *e = ecp2_new(L); SAFE(e);
+	ecp2 *e = ecp2_new(L);
+	if(e == NULL) {
+		failed_msg = "failed to allocate space for ecp2 point";
+		goto end;
+	}
 	ECP2_mapit(&e->val, o);
 end:
-	o_free(L,o);
+	o_free(L, o);
 	if(failed_msg != NULL) {
 		lerror(L, failed_msg);
 		lua_pushnil(L);
@@ -387,74 +540,188 @@ end:
 // get the x coordinate real part as BIG
 static int ecp2_get_xr(lua_State *L) {
 	BEGIN();
-	ecp2 *e = ecp2_arg(L, 1); SAFE(e);
+	char *failed_msg = NULL;
+	ecp2 *e = ecp2_arg(L, 1);
+	if(e == NULL) {
+		failed_msg = "failed to allocate space for ecp2 point";
+		goto end;
+	}
 	FP fx;
-	big *xa = big_new(L); big_init(L,xa); SAFE(xa);
+	big *xa = big_new(L);
+	if(xa == NULL) {
+		failed_msg = "failed to allocate space for big";
+		goto end;
+	}
+	big_init(L,xa);
 	FP_copy(&fx, &e->val.x.a);
 	FP_reduce(&fx); FP_redc(xa->val, &fx);
+end:
+	ecp2_free(e);
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 // get the x coordinate imaginary part as BIG
 static int ecp2_get_xi(lua_State *L) {
 	BEGIN();
-	ecp2 *e = ecp2_arg(L, 1); SAFE(e);
+	char *failed_msg = NULL;
+	ecp2 *e = ecp2_arg(L, 1);
+	if(e == NULL) {
+		failed_msg = "failed to allocate space for ecp2 point";
+		goto end;
+	}
 	FP fx;
-	big *xb = big_new(L); big_init(L,xb); SAFE(xb);
+	big *xb = big_new(L);
+	if(xb == NULL) {
+		failed_msg = "failed to allocate space for big";
+		goto end;
+	}
+	big_init(L,xb);
 	FP_copy(&fx, &e->val.x.b);
 	FP_reduce(&fx); FP_redc(xb->val, &fx);
+end:
+	ecp2_free(e);
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 
 // get the y coordinate real part as BIG
 static int ecp2_get_yr(lua_State *L) {
 	BEGIN();
-	ecp2 *e = ecp2_arg(L, 1); SAFE(e);
+	char *failed_msg = NULL;
+	ecp2 *e = ecp2_arg(L, 1);
+	if(e == NULL) {
+		failed_msg = "failed to allocate space for ecp2 point";
+		goto end;
+	}
 	FP fy;
-	big *ya = big_new(L); big_init(L,ya); SAFE(ya);
+	big *ya = big_new(L);
+	if(ya == NULL) {
+		failed_msg = "failed to allocate space for big";
+		goto end;
+	}
+	big_init(L,ya);
 	FP_copy(&fy, &e->val.y.a);
 	FP_reduce(&fy); FP_redc(ya->val, &fy);
+end:
+	ecp2_free(e);
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 static int ecp2_get_yi(lua_State *L) {
 	BEGIN();
-	ecp2 *e = ecp2_arg(L, 1); SAFE(e);
+	char *failed_msg = NULL;
+	ecp2 *e = ecp2_arg(L, 1);
+	if(e == NULL) {
+		failed_msg = "failed to allocate space for ecp2 point";
+		goto end;
+	}
 	FP fy;
-	big *yb = big_new(L); big_init(L,yb); SAFE(yb);
+	big *yb = big_new(L);
+	if(yb == NULL) {
+		failed_msg = "failed to allocate space for big";
+		goto end;
+	}
+	big_init(L,yb);
 	FP_copy(&fy, &e->val.y.b);
 	FP_reduce(&fy); FP_redc(yb->val, &fy);
+end:
+	ecp2_free(e);
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 static int ecp2_get_zr(lua_State *L) {
 	BEGIN();
-	ecp2 *e = ecp2_arg(L, 1); SAFE(e);
+	char *failed_msg = NULL;
+	ecp2 *e = ecp2_arg(L, 1);
+	if(e == NULL) {
+		failed_msg = "failed to allocate space for ecp2 point";
+		goto end;
+	}
 	FP fz;
-	big *za = big_new(L); big_init(L,za); SAFE(za);
+	big *za = big_new(L);
+	if(za == NULL) {
+		failed_msg = "failed to allocate space for big";
+		goto end;
+	}
+	big_init(L,za);
 	FP_copy(&fz, &e->val.z.a);
 	FP_reduce(&fz); FP_redc(za->val, &fz);
+end:
+	ecp2_free(e);
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 static int ecp2_get_zi(lua_State *L) {
 	BEGIN();
-	ecp2 *e = ecp2_arg(L, 1); SAFE(e);
+	char *failed_msg = NULL;
+	ecp2 *e = ecp2_arg(L, 1);
+	if(e == NULL) {
+		failed_msg = "failed to allocate space for ecp2 point";
+		goto end;
+	}
 	FP fz;
-	big *zb = big_new(L); big_init(L,zb); SAFE(zb);
+	big *zb = big_new(L);
+	if(zb == NULL) {
+		failed_msg = "failed to allocate space for big";
+		goto end;
+	}
+	big_init(L,zb);
 	FP_copy(&fz, &e->val.z.b);
 	FP_reduce(&fz); FP_redc(zb->val, &fz);
+end:
+	ecp2_free(e);
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 
 static int ecp2_output(lua_State *L) {
 	BEGIN();
-	ecp2 *e = ecp2_arg(L, 1); SAFE(e);
+	char *failed_msg = NULL;
+	ecp2 *e = ecp2_arg(L, 1);
+	if(e == NULL) {
+		failed_msg = "failed to allocate space for ecp2 point";
+		goto end;
+	}
 	if (ECP2_isinf(&e->val)) { // Infinity
-		octet *o = o_new(L, 3); SAFE(o);
+		octet *o = o_new(L, 3);
+		if(o == NULL) {
+			failed_msg = "failed to allocate space for octet";
+			goto end;
+		}
 		o->val[0] = SCHAR_MAX; o->val[1] = SCHAR_MAX;
 		o->val[3] = 0x0; o->len = 2;
 		return 1; }
 	octet *o = o_new(L, e->totlen + 0x0f);
-	SAFE(o); lua_pop(L, 1);
+	if(o == NULL) {
+		failed_msg = "failed to allocate space for octet";
+		goto end;
+	}
 	_ecp2_to_octet(o, e);
 	push_octet_to_hex_string(L, o);
+end:
+	ecp2_free(e);
+	if(failed_msg != NULL) {
+		lerror(L, failed_msg);
+		lua_pushnil(L);
+	}
 	END(1);
 }
 
