@@ -236,6 +236,7 @@ static int ecp_mapit(lua_State *L) {
 		lerror(L, "Could not allocate ecp point");
 		lua_pushnil(L);
 	} else if(o->len != 64) {
+		o_free(L, o);
 		zerror(L, "octet length is %u instead of 64 (need to use sha512)", o->len);
 		lerror(L, "Invalid argument to ECP.mapit(), not an hash");
 		lua_pushnil(L);
@@ -243,6 +244,7 @@ static int ecp_mapit(lua_State *L) {
 		ecp *e = ecp_new(L); SAFE(e);
 		func(L, "mapit on o->len %u", o->len);
 		ECP_mapit(&e->val, o);
+		o_free(L, o);
 	}
 	END(1);
 }
