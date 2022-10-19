@@ -1032,8 +1032,14 @@ static int to_array(lua_State *L) {
     Return self (octet), implemented for compatibility with all
     zenroom types so that anything can be casted to octet */
 static int to_octet(lua_State *L) {
-	octet *o = o_arg(L,1);	SAFE(o);
-	o_dup(L, o); // pushes to stack
+	octet *o = o_arg(L,1);
+	if(o) {
+		o_dup(L, o); // pushes to stack
+		o_free(L, o);
+	} else {
+		lerror(L, "Could not allocate octet");
+		lua_pushnil(L);
+	}
 	return 1;
 }
 
