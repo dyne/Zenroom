@@ -862,29 +862,60 @@ static int big_random(lua_State *L) {
 }
 
 static int big_mul(lua_State *L) {
-	big *l = big_arg(L,1); SAFE(l);
+	char *failed_msg = NULL;
+	big *l = big_arg(L,1);
+	if(!l) {
+		failed_msg = "Could not read big";
+		goto end;
+	}
 	void *ud = luaL_testudata(L, 2, "zenroom.ecp");
 	if(ud) {
-		ecp *e = (ecp*)ud; SAFE(e);
+		ecp *e = (ecp*)ud;
 		if(l->doublesize) {
-			lerror(L,"cannot multiply double BIG numbers with ECP point, need modulo");
-			return 0; }
-		ecp *out = ecp_dup(L,e); SAFE(out);
+			failed_msg = "cannot multiply double BIG numbers with ECP point, need modulo";
+			goto end;
+		}
+
+		// push result on stack
+		ecp *out = ecp_dup(L,e);
+		if(!out) {
+			failed_msg = "Could not create ECP";
+			goto end;
+		}
 		PAIR_G1mul(&out->val,l->val);
 		// TODO: use unaccellerated multiplication for non-pairing curves
 		// ECP_mul(&out->val,l->val);
-		return 1; }
-	big *r = big_arg(L,2); SAFE(r);
-	if(l->doublesize || r->doublesize) {
-		lerror(L,"cannot multiply double BIG numbers");
-		return 0; }
-	// BIG_norm(l->val); BIG_norm(r->val);
-	big *d = big_new(L); SAFE(d);
-	big_init(L,d);
-	// dbig_init(L,d); // assume it always returns a double big
-	// BIG_dzero(d->dval);
-	BIG_modmul(d->val, l->val, r->val, (chunk*)CURVE_Order);
-	BIG_norm(d->val);
+	}
+	else {
+		big *r = big_arg(L,2);
+		if(!r) {
+			failed_msg = "Could not create BIG";
+			goto end_big;
+		}
+		if(l->doublesize || r->doublesize) {
+			failed_msg = "cannot multiply double BIG numbers";
+			goto end_big;
+		}
+		// BIG_norm(l->val); BIG_norm(r->val);
+		big *d = big_new(L);
+		if(!d) {
+			failed_msg = "Could not create BIG";
+			goto end_big;
+		}
+		big_init(L,d);
+		// dbig_init(L,d); // assume it always returns a double big
+		// BIG_dzero(d->dval);
+		BIG_modmul(d->val, l->val, r->val, (chunk*)CURVE_Order);
+		BIG_norm(d->val);
+end_big:
+		big_free(r);
+	}
+
+end:
+	big_free(l);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	return 1;
 }
 
@@ -893,95 +924,179 @@ static int big_modpower(lua_State *L) {
 	big *x = big_arg(L,1); SAFE(x);
 	big *n = big_arg(L,2); SAFE(n);
 	big *m = big_arg(L,3); SAFE(m);
+	if(x && n && m) {
+		BIG safen;
+		BIG_copy(safen, n->val);
 
-	BIG safen;
-	BIG_copy(safen, n->val);
+		big *res = big_new(L); SAFE(res);
+		big_init(L,res);
+		BIG_zero(res->val);
+		BIG_inc(res->val, 1);
 
-	big *res = big_new(L); SAFE(res);
-	big_init(L,res);
-	BIG_zero(res->val);
-	BIG_inc(res->val, 1);
+		BIG powerx;
+		BIG_copy(powerx, x->val);
 
-	BIG powerx;
-	BIG_copy(powerx, x->val);
+		BIG zero;
+		BIG_zero(zero);
 
-	BIG zero;
-	BIG_zero(zero);
-
-	while(BIG_comp(safen, zero) > 0) {
-	        if((safen[0] & 1) == 1) {
-			// n odd
-		        BIG_modmul(res->val, res->val, powerx, m->val);
-			BIG_dec(safen, 1);
-		} else {
-			// n even
-			BIG tmp;
-			BIG_modmul(tmp, powerx, powerx, m->val);
-			BIG_copy(powerx, tmp);
-			BIG_norm(safen);
-			BIG_shr(safen, 1);
+		while(BIG_comp(safen, zero) > 0) {
+			if((safen[0] & 1) == 1) {
+				// n odd
+				BIG_modmul(res->val, res->val, powerx, m->val);
+				BIG_dec(safen, 1);
+			} else {
+				// n even
+				BIG tmp;
+				BIG_modmul(tmp, powerx, powerx, m->val);
+				BIG_copy(powerx, tmp);
+				BIG_norm(safen);
+				BIG_shr(safen, 1);
+			}
 		}
 	}
-
+	big_free(m);
+	big_free(n);
+	big_free(x);
+	if(!x || !n || !m) {
+		THROW("Could not create BIGs");
+	}
 	return 1;
 }
 
 static int big_sqr(lua_State *L) {
-	big *l = big_arg(L,1); SAFE(l);
+	char *failed_msg = NULL;
+	big *d = NULL;
+	big *l = big_arg(L,1);
+	if(!l) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
 	if(l->doublesize) {
-		lerror(L,"cannot make square root of a double big number");
-		return 0; }
+		failed_msg = "cannot make square root of a double big number";
+		goto end;
+	}
 	// BIG_norm(l->val); BIG_norm(r->val);
 	// BIG_norm(l->val);
-	big *d = big_new(L); SAFE(d);
+	d = big_new(L);
+	if(!d) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
 	dbig_init(L,d); // assume it always returns a double big
 	BIG_sqr(d->dval,l->val);
+end:
+	big_free(d);
+	big_free(l);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	return 1;
 }
 
 static int big_monty(lua_State *L) {
-	big *s = big_arg(L,1); SAFE(s);
+	char *failed_msg = NULL;
+	big *m = NULL;
+	big *s = big_arg(L,1);
+	if(!s) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
 	if(!s->doublesize) {
-		lerror(L,"no need for montgomery reduction: not a double big number");
-		return 0; }
-	big *m = big_arg(L,2); SAFE(m);
+		failed_msg = "no need for montgomery reduction: not a double big number";
+		goto end;
+	}
+	m = big_arg(L,2);
+	if(!m) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
 	if(m->doublesize) {
-		lerror(L,"double big modulus in montgomery reduction");
-		return 0; }
-	big *d = big_new(L); big_init(L,d); SAFE(d);
+		failed_msg = "double big modulus in montgomery reduction";
+		goto end;
+	}
+	big *d = big_new(L);
+	if(!d) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
+	big_init(L,d);
 	BIG_monty(d->val, m->val, Montgomery, s->dval);
+end:
+	big_free(m);
+	big_free(s);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	return 1;
 }
 
 static int big_mod(lua_State *L) {
-	big *l = big_arg(L,1); SAFE(l);
-	big *r = big_arg(L,2); SAFE(r);
+	char *failed_msg = NULL;
+	big *l = big_arg(L,1);
+	big *r = big_arg(L,2);
+	if(!l || !r) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
 	if(r->doublesize) {
-		lerror(L,"modulus cannot be a double big (dmod)");
-		return 0; }
+		failed_msg = "modulus cannot be a double big (dmod)";
+		goto end;
+	}
 	if(l->doublesize) {
-		big *d = big_new(L); big_init(L,d); SAFE(d);
-		DBIG t; BIG_dcopy(t, l->dval); // dmod destroys 2nd arg
-		BIG_dmod(d->val, t, r->val);
+		big *d = big_new(L);
+		if(d) {
+			big_init(L,d);
+			DBIG t; BIG_dcopy(t, l->dval); // dmod destroys 2nd arg
+			BIG_dmod(d->val, t, r->val);
+		} else {
+			failed_msg = "Could not create BIG";
+		}
 	} else {
-		big *d = big_dup(L,l); SAFE(d);
-		BIG_mod(d->val,r->val);
+		big *d = big_dup(L,l);
+		if(d) {
+			BIG_mod(d->val,r->val);
+		} else {
+			failed_msg = "Could not create BIG";
+		}
+	}
+end:
+	big_free(r);
+	big_free(l);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	return 1;
 }
 
 static int big_div(lua_State *L) {
-	big *l = big_arg(L, 1); SAFE(l);
-	big *r = big_arg(L, 2); SAFE(r);
+	char *failed_msg = NULL;
+	big *l = big_arg(L, 1);
+	big *r = big_arg(L, 2);
+	big *d = NULL;
+	if(!l || !r) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
 	if(r->doublesize) {
-		lerror(L, "division not supported with double big modulus");
-		return 0; }
-	big *d = big_dup(L, l); SAFE(d);
+		failed_msg = "division not supported with double big modulus";
+		goto end;
+	}
+	d = big_dup(L, l);
+	if(!d) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
 	if(l->doublesize) { // use ddiv on double big
 		DBIG t; BIG_dcopy(t, l->dval); 	// in ddiv the 2nd arg is destroyed
 		BIG_ddiv(d->val, t, r->val);
 	} else { // use sdiv for normal bigs
 		BIG_sdiv(d->val, r->val);
+	}
+end:
+	big_free(r);
+	big_free(l);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	return 1;
 }
@@ -996,86 +1111,157 @@ static int big_div(lua_State *L) {
     @function BIG.modmul(coefficient, modulo)
 */
 static int big_modmul(lua_State *L) {
-	big *y = big_arg(L, 1); SAFE(y);
-	big *z = big_arg(L, 2); SAFE(z);
+	char *failed_msg = NULL;
+	big *y = big_arg(L, 1);
+	big *z = big_arg(L, 2);
+	if(!y || !z) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
 	big *n = luaL_testudata(L, 3, "zenroom.big");
+	big *x = big_new(L);
+	if(!x) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
 	if(n) {
 		if(y->doublesize || z->doublesize || n->doublesize) {
-			lerror(L, "modmul not supported on double big numbers");
-			return 0; }
+			failed_msg = "modmul not supported on double big numbers";
+			goto end;
+		}
 		BIG t1, t2;
 		BIG_copy(t1, y->val);
 		BIG_copy(t2, z->val);
-		big *x = big_new(L); SAFE(x);
 		big_init(L,x);
 		BIG_modmul(x->val, t1, t2, n->val);
 		BIG_norm(x->val);
-		return 1;
 	} else {
 		// modulo default ORDER from ECP
 		BIG t1, t2;
 		BIG_copy(t1, y->val);
 		BIG_copy(t2, z->val);
-		big *x = big_new(L); SAFE(x);
 		big_init(L,x);
 		BIG_modmul(x->val, t1, t2, (chunk*)CURVE_Order);
 		BIG_norm(x->val);
-		return 1;
 	}
+end:
+	big_free(z);
+	big_free(y);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	return 1;
 }
 
 static int big_moddiv(lua_State *L) {
+	char *failed_msg = NULL;
 	big *y = big_arg(L, 1); SAFE(y);
 	big *div = big_arg(L, 2); SAFE(div);
 	big *mod = big_arg(L, 3); SAFE(mod);
+	if(!y || !div || !mod) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
 	if(y->doublesize || div->doublesize || mod->doublesize) {
-		lerror(L, "moddiv not supported on double big numbers");
-		return 0; }
+		failed_msg = "moddiv not supported on double big numbers";
+		goto end;
+	}
 	BIG t;
 	BIG_copy(t, y->val);
 	big *x = big_new(L); SAFE(x);
 	big_init(L,x);
 	BIG_moddiv(x->val, t, div->val, mod->val);
 	BIG_norm(x->val);
+end:
+	big_free(y);
+	big_free(div);
+	big_free(mod);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	return 1;
 }
 
 static int big_modsqr(lua_State *L) {
-	big *y = big_arg(L, 1); SAFE(y);
-	big *n = big_arg(L, 2); SAFE(n);
+	char *failed_msg = NULL;
+	big *y = big_arg(L, 1);
+	big *n = big_arg(L, 2);
+	if(!y || !n) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
 	if(y->doublesize || n->doublesize) {
-		lerror(L, "modsqr not supported on double big numbers");
-		return 0; }
+		failed_msg = "modsqr not supported on double big numbers";
+		goto end;
+	}
 	BIG t;
 	BIG_copy(t, y->val);
 	big *x = big_new(L); SAFE(x);
+	if(!x) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
 	big_init(L,x);
 	BIG_modsqr(x->val, t, n->val);
 	BIG_norm(x->val);
+end:
+	big_free(n);
+	big_free(y);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	return 1;
 }
 
 static int big_modneg(lua_State *L) {
-	big *y = big_arg(L, 1); SAFE(y);
-	big *n = big_arg(L, 2); SAFE(n);
+	char *failed_msg = NULL;
+	big *y = big_arg(L, 1);
+	big *n = big_arg(L, 2);
+	if(!y || !n) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
 	if(y->doublesize || n->doublesize) {
-		lerror(L, "modneg not supported on double big numbers");
-		return 0; }
+		failed_msg = "modneg not supported on double big numbers";
+		goto end;
+	}
 	BIG t;
 	BIG_copy(t, y->val);
-	big *x = big_new(L); SAFE(x);
+	big *x = big_new(L);
+	if(!x) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
 	big_init(L,x);
 	BIG_modneg(x->val, t, n->val);
 	BIG_norm(x->val);
+end:
+	big_free(y);
+	big_free(n);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	return 1;
 }
 static int big_jacobi(lua_State *L) {
-	big *x = big_arg(L, 1); SAFE(x);
-	big *y = big_arg(L, 2); SAFE(y);
+	char *failed_msg = NULL;
+	big *x = big_arg(L, 1);
+	big *y = big_arg(L, 2);
+	if(!x || !y) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
 	if(x->doublesize || y->doublesize) {
-		lerror(L, "jacobi not supported on double big numbers");
-		return 0; }
+		failed_msg = "jacobi not supported on double big numbers";
+		goto end;
+	}
 	lua_pushinteger(L, BIG_jacobi(x->val, y->val));
+end:
+	big_free(x);
+	big_free(y);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	return 1;
 }
 
@@ -1083,8 +1269,15 @@ static int big_modinv(lua_State *L) {
 	big *y = big_arg(L, 1); SAFE(y);
 	big *m = big_arg(L, 2); SAFE(m);
 	big *x = big_new(L); SAFE(x);
-	big_init(L,x);
-	BIG_invmodp(x->val, y->val, m->val);
+	if(y && m && x) {
+		big_init(L,x);
+		BIG_invmodp(x->val, y->val, m->val);
+	}
+	big_free(y);
+	big_free(m);
+	if(!y || !m || !x) {
+		THROW("Could not create BIG");
+	}
 	return 1;
 }
 
@@ -1109,37 +1302,61 @@ static void _algebraic_sum(lua_State *L, big *c, big *a, big *b) {
 }
 
 static int big_zenadd(lua_State *L) {
-	big *a = big_arg(L, 1); SAFE(a);
-	big *b = big_arg(L, 2); SAFE(b);
-	big *c = big_new(L); SAFE(c);
-        big_init(L,c);
-        _algebraic_sum(L, c, a, b);
+	big *a = big_arg(L, 1);
+	big *b = big_arg(L, 2);
+	big *c = big_new(L);
+	if(a && b && c) {
+		big_init(L,c);
+		_algebraic_sum(L, c, a, b);
+	}
+	big_free(b);
+	big_free(a);
+	if(!a || !b || !c) {
+		THROW("Could not create BIG");
+	}
 	return 1;
 }
 
 static int big_zensub(lua_State *L) {
-	big *a = big_arg(L, 1); SAFE(a);
-	big *b = big_arg(L, 2); SAFE(b);
-	big *c = big_new(L); SAFE(c);
-        big_init(L,c);
-        b->zencode_positive = BIG_OPPOSITE(b->zencode_positive);
-        _algebraic_sum(L, c, a, b);
-        b->zencode_positive = BIG_OPPOSITE(b->zencode_positive);
+	big *a = big_arg(L, 1);
+	big *b = big_arg(L, 2);
+	big *c = big_new(L);
+	if(a && b && c) {
+		big_init(L,c);
+		b->zencode_positive = BIG_OPPOSITE(b->zencode_positive);
+		_algebraic_sum(L, c, a, b);
+		b->zencode_positive = BIG_OPPOSITE(b->zencode_positive);
+	}
+	big_free(b);
+	big_free(a);
+	if(!a || !b || !c) {
+		THROW("Could not create BIG");
+	}
 	return 1;
 }
 
 // the result is expected to be inside a BIG
 static int big_zenmul(lua_State *L) {
-	big *a = big_arg(L, 1); SAFE(a);
-	big *b = big_arg(L, 2); SAFE(b);
+	char *failed_msg = NULL;
+	big *a = big_arg(L, 1);
+	big *b = big_arg(L, 2);
+	if(!a || !b) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
 	if(a->doublesize || b->doublesize) {
-		lerror(L,"cannot multiply double BIG numbers");
-		return 0;
+		failed_msg = "cannot multiply double BIG numbers";
+		goto end;
+
         }
 	//BIG_norm(a->val); BIG_norm(b->val);
         DBIG result;
         BIG top;
-	big *bottom = big_new(L); SAFE(bottom);
+	big *bottom = big_new(L);
+	if(!bottom) {
+		failed_msg = "could not create BIG";
+		goto end;
+	}
         big_init(L,bottom);
 
         BIG_mul(result, a->val, b->val);
@@ -1148,62 +1365,113 @@ static int big_zenmul(lua_State *L) {
 
         // check that the result is a big (not a dbig)
         if(!iszero(top)) {
-		lerror(L,"the result is too big");
-		return 0;
+		failed_msg = "the result is too big";
+		goto end;
         }
 
         bottom->zencode_positive = BIG_MULSIGN(a->zencode_positive, b->zencode_positive);
+end:
+	big_free(b);
+	big_free(a);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 
 	return 1;
 }
 
 static int big_zendiv(lua_State *L) {
-	big *a = big_arg(L, 1); SAFE(a);
-	big *b = big_arg(L, 2); SAFE(b);
+	char *failed_msg = NULL;
+	big *a = big_arg(L, 1);
+	big *b = big_arg(L, 2);
+	if(!a || !b) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
 	if(a->doublesize || b->doublesize) {
-		lerror(L,"cannot multiply double BIG numbers");
-		return 0;
+		failed_msg = "cannot multiply double BIG numbers";
+		goto end;
         }
         DBIG dividend;
         BIG_dzero(dividend);
         dcopy(dividend, a->val);
-	big *result = big_new(L); SAFE(result);
+	big *result = big_new(L);
+	if(!result) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
         big_init(L,result);
 
         BIG_ddiv(result->val, dividend, b->val);
 
         result->zencode_positive = BIG_MULSIGN(a->zencode_positive, b->zencode_positive);
+end:
+	big_free(b);
+	big_free(a);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 
 	return 1;
 }
 
 static int big_zenmod(lua_State *L) {
-	big *a = big_arg(L, 1); SAFE(a);
-	big *b = big_arg(L, 2); SAFE(b);
+	char *failed_msg = NULL;
+	big *a = big_arg(L, 1);
+	big *b = big_arg(L, 2);
+	if(!a || !b) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
 	if(a->doublesize || b->doublesize) {
-		lerror(L,"cannot multiply double BIG numbers");
-		return 0;
+		failed_msg = "cannot multiply double BIG numbers";
+		goto end;
         }
 	if(a->zencode_positive == BIG_NEGATIVE || b->zencode_positive == BIG_NEGATIVE) {
-		lerror(L,"modulo operation only available with positive numbers");
-		return 0;
+		failed_msg = "modulo operation only available with positive numbers";
+		goto end;
         }
-	big *result = big_new(L); SAFE(result);
+	big *result = big_new(L);
+	if(!result) {
+		failed_msg = "could not create BIG";
+		goto end;
+	}
         big_init(L,result);
         BIG_copy(result->val, a->val);
 
         BIG_mod(result->val, b->val);
 
         result->zencode_positive = BIG_POSITIVE;
+end:
+	big_free(b);
+	big_free(a);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 
 	return 1;
 }
 
 static int big_zenopposite(lua_State *L) {
-	big *a = big_arg(L, 1); SAFE(a);
-	big *result = big_dup(L, a); SAFE(result);
+	char *failed_msg = NULL;
+	big *a = big_arg(L, 1);
+	if(!a) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
+	big *result = big_dup(L, a);
+	if(!a) {
+		failed_msg = "Could not copy BIG";
+		goto end;
+	}
 
         result->zencode_positive = BIG_OPPOSITE(result->zencode_positive);
+end:
+	big_free(a);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+
 
 	return 1;
 }
@@ -1231,18 +1499,27 @@ static int big_isinteger(lua_State *L) {
 }
 
 static int big_parity(lua_State *L) {
-	big *c = big_arg(L, 1); SAFE(c);
-	lua_pushboolean(L, BIG_parity(c->val)==1); // big % 2
+	big *c = big_arg(L, 1);
+	if(c) {
+		lua_pushboolean(L, BIG_parity(c->val)==1); // big % 2
+	} else {
+		THROW("Could not create BIG");
+	}
 	return 1;
 }
 
 static int big_shiftr(lua_State *L) {
-        big *c = big_arg(L, 1); SAFE(c);
+	char *failed_msg = NULL;
+        big *c = big_arg(L, 1);
+	if(!c) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
 	int i;
 	lua_Number n = lua_tointegerx(L, 2, &i);
 	if(!i) {
-		lerror(L, "the number of bits to shift has to be a number");
-		return 0;
+		failed_msg = "the number of bits to shift has to be a number";
+		goto end;
 	}
 	int int_n = n;
   
@@ -1253,6 +1530,11 @@ static int big_shiftr(lua_State *L) {
 	} else {
 		BIG_norm(r->val);
 		BIG_shr(r->val, int_n);
+	}
+end:
+	big_free(c);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	return 1;
 }
