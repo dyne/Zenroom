@@ -45,6 +45,7 @@ big* big_new(lua_State *L);
 
 big* big_dup(lua_State *L, big *c);
 
+void big_free(big *c);
 big* big_arg(lua_State *L, int n);
 
 // internal initialisation of double or single big
