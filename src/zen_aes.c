@@ -104,9 +104,16 @@ static int gcm_encrypt(lua_State *L) {
 		goto end;
 	}
 	// output is padded to next word
-	octet *out = o_new(L, in->len+16); SAFE(out);
-
-	octet *t = o_new(L, 16); SAFE (t);
+	octet *out = o_new(L, in->len+16);
+	if(out == NULL) {
+		failed_msg = "failed to allocate space for the output";
+		goto end;
+	}
+	octet *t = o_new(L, 16);
+	if(t == NULL) {
+		failed_msg = "failed to allocate space for the checksum";
+		goto end;
+	}
 	AES_GCM_ENCRYPT(k, iv, h, in, out, t);
 end:
 	o_free(L, h);
@@ -169,9 +176,16 @@ static int gcm_decrypt(lua_State *L) {
 		goto end;
 	}
 	// output is padded to next word
-	octet *out = o_new(L, in->len+16); SAFE(out);
+	octet *out = o_new(L, in->len+16);
+	if(out == NULL) {
+		failed_msg = "failed to allocate space for the output";
+		goto end;
+	}
 	octet *t2 = o_new(L, 16); SAFE(t2);
-
+	if(t2 == NULL) {
+		failed_msg = "failed to allocate space for the checksum";
+		goto end;
+	}
 	AES_GCM_DECRYPT(k, iv, h, in, out, t2);
 end:
 	o_free(L, h);
@@ -216,7 +230,11 @@ static int ctr_process(lua_State *L) {
 		goto end;
 	}
 	AES_init(&a, CTR16, k->len, k->val, iv->val);
-	octet *out = o_dup(L, in); SAFE(out);
+	octet *out = o_dup(L, in);
+	if(out == NULL) {
+		failed_msg = "failed to allocate space for the output";
+		goto end;
+	}
 	AMCL_(AES_encrypt)(&a, out->val);
 	AES_end(&a);
 end:
