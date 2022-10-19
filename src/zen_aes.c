@@ -181,7 +181,7 @@ static int gcm_decrypt(lua_State *L) {
 		failed_msg = "failed to allocate space for the output";
 		goto end;
 	}
-	octet *t2 = o_new(L, 16); SAFE(t2);
+	octet *t2 = o_new(L, 16);
 	if(t2 == NULL) {
 		failed_msg = "failed to allocate space for the checksum";
 		goto end;
