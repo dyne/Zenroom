@@ -105,8 +105,7 @@ ecp2* ecp2_dup(lua_State *L, ecp2* in) {
 
 int ecp2_destroy(lua_State *L) {
 	BEGIN();
-	ecp2 *e = ecp2_arg(L, 1);
-	SAFE(e);
+	(void)L;
 	END(0);
 }
 
@@ -165,12 +164,12 @@ static int lua_new_ecp2(lua_State *L) {
 	octet *o = NULL;
 	o = o_arg(L, 1);
 	if(o == NULL) {
-		failed_msg = "failed to allocate space for octet";
+		failed_msg = "Could not allocate OCTET";
 		goto end;
 	}
 	ecp2 *e = ecp2_new(L);
 	if(e == NULL) {
-		failed_msg = "failed to allocate space for new ecp2 point";
+		failed_msg = "Could not create ECP2 point";
 		goto end;
 	}
 	if(! ECP2_fromOctet(&e->val, o) ) {
@@ -179,9 +178,8 @@ static int lua_new_ecp2(lua_State *L) {
 	}
 end:
 	o_free(L, o);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -197,8 +195,7 @@ static int ecp2_generator(lua_State *L) {
 	BEGIN();
 	ecp2 *e = ecp2_new(L);
 	if(e == NULL) {
-		lerror(L, "failed to allocate space for new ecp2 point");
-		lua_pushnil(L);
+		THROW("Could not create ECP2 point");
 		return 1;
 	}
 	/* 	FP2 x, y;
@@ -219,17 +216,17 @@ static int ecp2_millerloop(lua_State *L) {
 	ecp *y = NULL;
 	ecp2 *x = ecp2_arg(L, 1);
 	if(x == NULL) {
-		failed_msg = "failed to allocate space for ecp2 point";
+		failed_msg = "Could not allocate ECP2 point";
 		goto end;
 	}
 	y = ecp_arg(L, 2);
 	if(y == NULL) {
-		failed_msg = "failed to allocate space for ecp point";
+		failed_msg = "Could not allocate ECP point";
 		goto end;
 	}
 	fp12 *f = fp12_new(L);
 	if(f == NULL) {
-		failed_msg = "failed to allocate space for new fp12";
+		failed_msg = "Could not create FP12";
 		goto end;
 	}
 	ECP2_affine(&x->val);
@@ -239,9 +236,8 @@ static int ecp2_millerloop(lua_State *L) {
 end:
 	ecp_free(y);
 	ecp2_free(x);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -259,20 +255,19 @@ static int ecp2_affine(lua_State *L) {
 	char *failed_msg = NULL;
 	ecp2 *in = ecp2_arg(L, 1);
 	if(in == NULL) {
-		failed_msg = "failed to allocate space for ecp2 point";
+		failed_msg = "Could not allocate ECP2 point";
 		goto end;
 	}
 	ecp2 *out = ecp2_dup(L, in);
 	if(out == NULL) {
-		failed_msg = "failed to duplicate ecp2 point";
+		failed_msg = "Could not duplicate ECP2 point";
 		goto end;
 	}
 	ECP2_affine(&out->val);
 end:
 	ecp2_free(in);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -287,7 +282,7 @@ static int ecp2_get_infinity(lua_State *L) {
 	BEGIN();
 	ecp2 *e = ecp2_new(L);
 	if(e == NULL) {
-		lerror(L, "failed to allocate space for new ecp2 point");
+		THROW("Could not create ECP2 point");
 		return 0;
 	}
 	ECP2_inf(&e->val);
@@ -304,7 +299,7 @@ static int ecp2_isinf(lua_State *L) {
 	BEGIN();
 	ecp2 *e = ecp2_arg(L, 1);
 	if(e == NULL) {
-		lerror(L, "failed to allocate space for ecp2 point");
+		THROW("Could not allocate ECP2 point");
 		return 0;
 	}
 	lua_pushboolean(L, ECP2_isinf(&e->val));
@@ -328,21 +323,20 @@ static int ecp2_add(lua_State *L) {
 	ecp2 *e = ecp2_arg(L, 1);
 	ecp2 *q = ecp2_arg(L, 2);
 	if(e == NULL || q == NULL) {
-		failed_msg = "failed to allocate space for ecp2 point";
+		failed_msg = "Could not allocate ECP2 point";
 		goto end;
 	}
 	ecp2 *p = ecp2_dup(L, e);
 	if(p == NULL) {
-		failed_msg = "failed to duplicate ecp2 point";
+		failed_msg = "Could not duplicate ECP2 point";
 		goto end;
 	}
 	ECP2_add(&p->val, &q->val);
 end:
 	ecp2_free(e);
 	ecp2_free(q);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -364,21 +358,20 @@ static int ecp2_sub(lua_State *L) {
 	ecp2 *e = ecp2_arg(L, 1);
 	ecp2 *q = ecp2_arg(L, 2);
 	if(e == NULL || q == NULL) {
-		failed_msg = "failed to allocate space for ecp2 point";
+		failed_msg = "Could not allocate ECP2 point";
 		goto end;
 	}
 	ecp2 *p = ecp2_dup(L, e);
 	if(p == NULL) {
-		failed_msg = "failed to duplicate ecp2 point";
+		failed_msg = "Could not duplicate ECP2 point";
 		goto end;
 	}
 	ECP2_sub(&p->val, &q->val);
 end:
 	ecp2_free(e);
 	ecp2_free(q);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -393,20 +386,19 @@ static int ecp2_negative(lua_State *L) {
 	char *failed_msg = NULL;
 	ecp2 *in = ecp2_arg(L, 1);
 	if(in == NULL) {
-		failed_msg = "failed to allocate space for ecp2 point";
+		failed_msg = "Could not allocate ECP2 point";
 		goto end;
 	}
 	ecp2 *out = ecp2_dup(L, in);
 	if(out == NULL) {
-		failed_msg = "failed to duplicate ecp2 point";
+		failed_msg = "Could not allocate ECP2 point";
 		goto end;
 	}
 	ECP2_neg(&out->val);
 end:
 	ecp2_free(in);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -428,7 +420,7 @@ static int ecp2_eq(lua_State *L) {
 	ecp2 *p = ecp2_arg(L, 1);
 	ecp2 *q = ecp2_arg(L, 2);
 	if(p == NULL || q == NULL) {
-		failed_msg = "failed to allocate space for ecp2 points";
+		failed_msg = "Could not allocate ECP2 point";
 		goto end;
 	}
 // TODO: is affine rly needed?
@@ -438,9 +430,8 @@ static int ecp2_eq(lua_State *L) {
 end:
 	ecp2_free(p);
 	ecp2_free(q);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -460,20 +451,19 @@ static int ecp2_octet(lua_State *L) {
 	char *failed_msg = NULL;
 	ecp2 *e = ecp2_arg(L, 1);
 	if(e == NULL) {
-		failed_msg = "failed to alloce space for ecp2 point";
+		failed_msg = "Could not allocate ECP2 point";
 		goto end;
 	}
 	octet *o = o_new(L, (MODBYTES<<2)+1);
 	if(o == NULL) {
-		failed_msg = "failed to alloce space for octet";
+		failed_msg = "Could not create OCTET";
 		goto end;
 	}
 	ECP2_toOctet(o, &e->val);
 end:
 	ecp2_free(e);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -484,26 +474,25 @@ static int ecp2_mul(lua_State *L) {
 	big *b = NULL;
 	ecp2 *p = ecp2_arg(L, 1);
 	if(p == NULL) {
-		failed_msg = "failed to alloce space for ecp2 point";
+		failed_msg = "Could not allocate ECP2 point";
 		goto end;
 	}
 	b = big_arg(L, 2);
 	if(b == NULL) {
-		failed_msg = "failed to alloce space for big";
+		failed_msg = "Could not allocate BIG";
 		goto end;
 	}
 	ecp2 *r = ecp2_dup(L, p);
 	if(r == NULL) {
-		failed_msg = "failed to duplicate ecp2 point";
+		failed_msg = "Could not duplicate ECP2 point";
 		goto end;
 	}
 	PAIR_G2mul(&r->val, b->val);
 end:
 	big_free(b);
 	ecp2_free(p);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -521,7 +510,7 @@ static int ecp2_mapit(lua_State *L) {
 	char *failed_msg = NULL;
 	octet *o = o_arg(L, 1);
 	if(o == NULL) {
-		failed_msg = "failed to allocate space for octet";
+		failed_msg = "Could not allocate OCTET";
 		goto end;
 	}
 	if(o->len != 64) {
@@ -532,15 +521,14 @@ static int ecp2_mapit(lua_State *L) {
 	}
 	ecp2 *e = ecp2_new(L);
 	if(e == NULL) {
-		failed_msg = "failed to allocate space for ecp2 point";
+		failed_msg = "Could not create ECP2 point";
 		goto end;
 	}
 	ECP2_mapit(&e->val, o);
 end:
 	o_free(L, o);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -551,13 +539,13 @@ static int ecp2_get_xr(lua_State *L) {
 	char *failed_msg = NULL;
 	ecp2 *e = ecp2_arg(L, 1);
 	if(e == NULL) {
-		failed_msg = "failed to allocate space for ecp2 point";
+		failed_msg = "Could not allocate ECP2 point";
 		goto end;
 	}
 	FP fx;
 	big *xa = big_new(L);
 	if(xa == NULL) {
-		failed_msg = "failed to allocate space for big";
+		failed_msg = "Could not create BIG";
 		goto end;
 	}
 	big_init(L,xa);
@@ -565,9 +553,8 @@ static int ecp2_get_xr(lua_State *L) {
 	FP_reduce(&fx); FP_redc(xa->val, &fx);
 end:
 	ecp2_free(e);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -577,13 +564,13 @@ static int ecp2_get_xi(lua_State *L) {
 	char *failed_msg = NULL;
 	ecp2 *e = ecp2_arg(L, 1);
 	if(e == NULL) {
-		failed_msg = "failed to allocate space for ecp2 point";
+		failed_msg = "Could not allocate ECP2 point";
 		goto end;
 	}
 	FP fx;
 	big *xb = big_new(L);
 	if(xb == NULL) {
-		failed_msg = "failed to allocate space for big";
+		failed_msg = "Could not create BIG";
 		goto end;
 	}
 	big_init(L,xb);
@@ -591,9 +578,8 @@ static int ecp2_get_xi(lua_State *L) {
 	FP_reduce(&fx); FP_redc(xb->val, &fx);
 end:
 	ecp2_free(e);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -604,13 +590,13 @@ static int ecp2_get_yr(lua_State *L) {
 	char *failed_msg = NULL;
 	ecp2 *e = ecp2_arg(L, 1);
 	if(e == NULL) {
-		failed_msg = "failed to allocate space for ecp2 point";
+		failed_msg = "Could not allocate ECP2 point";
 		goto end;
 	}
 	FP fy;
 	big *ya = big_new(L);
 	if(ya == NULL) {
-		failed_msg = "failed to allocate space for big";
+		failed_msg = "Could not create BIG";
 		goto end;
 	}
 	big_init(L,ya);
@@ -618,9 +604,8 @@ static int ecp2_get_yr(lua_State *L) {
 	FP_reduce(&fy); FP_redc(ya->val, &fy);
 end:
 	ecp2_free(e);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -629,13 +614,13 @@ static int ecp2_get_yi(lua_State *L) {
 	char *failed_msg = NULL;
 	ecp2 *e = ecp2_arg(L, 1);
 	if(e == NULL) {
-		failed_msg = "failed to allocate space for ecp2 point";
+		failed_msg = "Could not allocate ECP2 point";
 		goto end;
 	}
 	FP fy;
 	big *yb = big_new(L);
 	if(yb == NULL) {
-		failed_msg = "failed to allocate space for big";
+		failed_msg = "Could not create BIG";
 		goto end;
 	}
 	big_init(L,yb);
@@ -643,9 +628,8 @@ static int ecp2_get_yi(lua_State *L) {
 	FP_reduce(&fy); FP_redc(yb->val, &fy);
 end:
 	ecp2_free(e);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -654,13 +638,13 @@ static int ecp2_get_zr(lua_State *L) {
 	char *failed_msg = NULL;
 	ecp2 *e = ecp2_arg(L, 1);
 	if(e == NULL) {
-		failed_msg = "failed to allocate space for ecp2 point";
+		failed_msg = "Could not allocate ECP2 point";
 		goto end;
 	}
 	FP fz;
 	big *za = big_new(L);
 	if(za == NULL) {
-		failed_msg = "failed to allocate space for big";
+		failed_msg = "Could not create BIG";
 		goto end;
 	}
 	big_init(L,za);
@@ -668,9 +652,8 @@ static int ecp2_get_zr(lua_State *L) {
 	FP_reduce(&fz); FP_redc(za->val, &fz);
 end:
 	ecp2_free(e);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -679,13 +662,13 @@ static int ecp2_get_zi(lua_State *L) {
 	char *failed_msg = NULL;
 	ecp2 *e = ecp2_arg(L, 1);
 	if(e == NULL) {
-		failed_msg = "failed to allocate space for ecp2 point";
+		failed_msg = "Could not allocate ECP2 point";
 		goto end;
 	}
 	FP fz;
 	big *zb = big_new(L);
 	if(zb == NULL) {
-		failed_msg = "failed to allocate space for big";
+		failed_msg = "Could not create BIG";
 		goto end;
 	}
 	big_init(L,zb);
@@ -693,9 +676,8 @@ static int ecp2_get_zi(lua_State *L) {
 	FP_reduce(&fz); FP_redc(zb->val, &fz);
 end:
 	ecp2_free(e);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -705,13 +687,13 @@ static int ecp2_output(lua_State *L) {
 	char *failed_msg = NULL;
 	ecp2 *e = ecp2_arg(L, 1);
 	if(e == NULL) {
-		failed_msg = "failed to allocate space for ecp2 point";
+		failed_msg = "Could not allocate ECP2 point";
 		goto end;
 	}
 	if (ECP2_isinf(&e->val)) { // Infinity
 		octet *o = o_new(L, 3);
 		if(o == NULL) {
-			failed_msg = "failed to allocate space for octet";
+			failed_msg = "Could not create OCTET";
 			goto end;
 		}
 		o->val[0] = SCHAR_MAX; o->val[1] = SCHAR_MAX;
@@ -719,16 +701,15 @@ static int ecp2_output(lua_State *L) {
 		return 1; }
 	octet *o = o_new(L, e->totlen + 0x0f);
 	if(o == NULL) {
-		failed_msg = "failed to allocate space for octet";
+		failed_msg = "Could not create OCTET";
 		goto end;
 	}
 	_ecp2_to_octet(o, e);
 	push_octet_to_hex_string(L, o);
 end:
 	ecp2_free(e);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
