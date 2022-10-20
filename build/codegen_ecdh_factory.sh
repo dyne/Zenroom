@@ -41,16 +41,16 @@ void ecdh_init(lua_State *L, ecdh *ECDH) {
 	ECDH->ECP__SP_DSA_NOHASH = ECP_${CN}_SP_DSA_NOHASH;
 	ECDH->ECP__VP_DSA_NOHASH = ECP_${CN}_VP_DSA_NOHASH;
 	ECDH->ECP__PUBLIC_KEY_RECOVERY = ECP_${CN}_PUBLIC_KEY_RECOVERY;
-        BIG_${BN} tmp; // toBytes takes a non const BIG
-        BIG_${BN}_rcopy(tmp, CURVE_Order_${CN});
-        BIG_${BN}_toBytes(ORDER, tmp);
-        ECDH->order = ORDER;
-		ECDH->cofactor = Cof;
-        BIG_${BN}_rcopy(tmp, Modulus_${CN});
-        BIG_${BN}_toBytes(PRIME, tmp);
-        ECDH->prime = PRIME;
-        ECDH->mod_size = MODBYTES_${BN};
-		act(L,"ECDH curve is ${CN}");
+	BIG_${BN} tmp; // toBytes takes a non const BIG
+	BIG_${BN}_rcopy(tmp, CURVE_Order_${CN});
+	BIG_${BN}_toBytes(ORDER, tmp);
+	ECDH->order = ORDER;
+	ECDH->cofactor = Cof;
+	BIG_${BN}_rcopy(tmp, Modulus_${CN});
+	BIG_${BN}_toBytes(PRIME, tmp);
+	ECDH->prime = PRIME;
+	ECDH->mod_size = MODBYTES_${BN};
+	act(L,"ECDH curve is ${CN}");
 }
 
 /*
@@ -64,24 +64,38 @@ void ecdh_init(lua_State *L, ecdh *ECDH) {
 extern ecdh ECDH;
 
 int ecdh_add(lua_State *L) {
-	octet *pk1 = o_arg(L, 1); SAFE(pk1);
-	if((*ECDH.ECP__PUBLIC_KEY_VALIDATE)(pk1)!=0) {
-		return lerror(L, "Invalid public key passed as argument");
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *pk1 = o_arg(L, 1);
+	octet *pk2 = o_arg(L, 2);
+	if(pk1 == NULL || pk2 == NULL) {
+		failed_msg = "Could not allocate public key";
+		goto end;
 	}
-	octet *pk2 = o_arg(L, 2); SAFE(pk2);
-	if((*ECDH.ECP__PUBLIC_KEY_VALIDATE)(pk2)!=0) {
-		return lerror(L, "Invalid public key passed as argument");
+	if((*ECDH.ECP__PUBLIC_KEY_VALIDATE)(pk1)!=0 ||
+	   (*ECDH.ECP__PUBLIC_KEY_VALIDATE)(pk2)!=0) {
+		failed_msg = "Invalid public key passed as argument";
+		goto end;
 	}
 	ECP_${CN} p1, p2;
 	// Export public key to octet.  This is like o_dup but skips
 	// first byte since that is used internally by Milagro as a
 	// prefix for Montgomery (2) or non-Montgomery curves (4)
-	octet *pk_sum = o_new(L, pk1->len); SAFE(pk_sum);
-	ECP_${CN}_fromOctet(&p1,pk1);
-	ECP_${CN}_fromOctet(&p2,pk2);
+	octet *pk_sum = o_new(L, pk1->len);
+	if(pk_sum == NULL) {
+		failed_msg = "Could not create public key";
+		goto end;
+	}
+	ECP_${CN}_fromOctet(&p1, pk1);
+	ECP_${CN}_fromOctet(&p2, pk2);
 	ECP_${CN}_add(&p1, &p2);
 	ECP_${CN}_toOctet(pk_sum, &p1, false);
-
+end:
+	o_free(L, pk1);
+	o_free(L, pk2);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	return 1;
 }
 
