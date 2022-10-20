@@ -36,7 +36,7 @@
 fp12* fp12_new(lua_State *L) {
 	fp12 *c = (fp12 *)lua_newuserdata(L, sizeof(fp12));
 	if(!c) {
-		lerror(L, "Error allocating new fp12 in %s",__func__);
+		zerror(L, "Error allocating new fp12 in %s",__func__);
 		return NULL; }
 	luaL_getmetatable(L, "zenroom.fp12");
 	lua_setmetatable(L, -2);
@@ -47,107 +47,233 @@ fp12* fp12_new(lua_State *L) {
 	return(c);
 }
 
+void fp12_free(fp12 *f) {
+	if(f) free(f);
+}
+
 fp12* fp12_arg(lua_State *L,int n) {
-	void *ud = luaL_checkudata(L, n, "zenroom.fp12");
-	luaL_argcheck(L, ud != NULL, n, "fp12 class expected");
-	fp12 *o = (fp12*)ud;
-	if(o->len != sizeof(FP12)) {
-		lerror(L, "%s: fp12 size mismatch (%u != %u)",__func__,o->len, sizeof(FP12));
-		return NULL; }
-	if(o->chunk != CHUNK) {
-		lerror(L, "%s: fp12 chunk size mismatch (%u != %u)",__func__,o->chunk, CHUNK);
-		return NULL; }
-	return(o);
+	void *ud = luaL_testudata(L, n, "zenroom.fp12");
+	if(ud) {
+		fp12 *result = (fp12*)malloc(sizeof(fp12));
+		if(result == NULL) return NULL;
+		*result = *(fp12*)ud;
+		if(result->len != sizeof(FP12)) {
+			fp12_free(result);
+			zerror(L, "%s: fp12 size mismatch (%u != %u)",
+			       __func__, result->len, sizeof(FP12));
+			return NULL; }
+		if(result->chunk != CHUNK) {
+			fp12_free(result);
+			zerror(L, "%s: fp12 chunk size mismatch (%u != %u)",
+			       __func__, result->chunk, CHUNK);
+			return NULL; }
+		return(result);
+	}
+	zerror(L, "invalid fp12 in argument");
+	return NULL;
 }
 
 // allocates a new fp in LUA, duplicating the one in arg
 fp12 *fp12_dup(lua_State *L, fp12 *s) {
-	SAFE(s);
+	if(s == NULL) {
+		zerror(L, "Error duplicating fp12 in %s", __func__);
+		return NULL;
+	}
 	fp12 *n = fp12_new(L);
-	FP12_copy(&n->val,&s->val);
+	if(n == NULL) {
+		zerror(L, "Error duplicating fp12 in %s", __func__);
+		return NULL;
+	}
+	FP12_copy(&n->val, &s->val);
 	return(n);
 }
 
 int fp12_destroy(lua_State *L) {
-	fp12 *c = fp12_arg(L,1);
-	SAFE(c);
-
+	(void)L;
 	return 0;
 }
 
 static int fp12_from_octet(lua_State *L) {
-	octet *o = o_arg(L,1); SAFE(o);
-	fp12 *f = fp12_new(L); SAFE(f);
-	FP12_fromOctet(&f->val,o);
-	o_free(L,o);
-	return 1;
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *o = o_arg(L, 1);
+	if(o == NULL) {
+		failed_msg = "Could not allocate input";
+		goto end;
+	}
+	fp12 *f = fp12_new(L);
+	if(f == NULL) {
+		failed_msg = "Could not create FP12";
+		goto end;
+	}
+	FP12_fromOctet(&f->val, o);
+end:
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
 }
 
 static int fp12_to_octet(lua_State *L) {
-	fp12 *f = fp12_arg(L,1); SAFE(f);
-	octet *o = o_new(L, sizeof(FP12)); SAFE(o);
+	BEGIN();
+	char *failed_msg = NULL;
+	fp12 *f = fp12_arg(L, 1);
+	if(f == NULL) {
+		failed_msg = "Could not allocate FP12";
+		goto end;
+	}
+	octet *o = o_new(L, sizeof(FP12));
+	if(o == NULL) {
+		failed_msg = "Could not allocate output";
+		goto end;
+	}
 	FP12_toOctet(o, &f->val);
-	return 1;
+end:
+	fp12_free(f);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
 }
 
 static int fp12_eq(lua_State *L) {
-	fp12 *l = fp12_arg(L,1); SAFE(l);
-	fp12 *r = fp12_arg(L,2); SAFE(r);
-	int res = FP12_eq(&l->val,&r->val);
+	BEGIN();
+	char *failed_msg = NULL;
+	fp12 *l = fp12_arg(L, 1);
+	fp12 *r = fp12_arg(L, 2);
+	if(l == NULL || r == NULL) {
+		failed_msg = "Could not allocate FP12";
+		goto end;
+	}
+	int res = FP12_eq(&l->val, &r->val);
 	lua_pushboolean(L, res);
-	return 1;
+end:
+	fp12_free(r);
+	fp12_free(l);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
 }
 
 static int fp12_mul(lua_State *L) {
-	fp12 *x = fp12_arg(L,1); SAFE(x);
-	fp12 *y = fp12_arg(L,2); SAFE(y);
-	fp12 *d = fp12_dup(L,x); SAFE(d);
-	FP12_mul(&d->val,&y->val);
-	return 1;
+	BEGIN();
+	char *failed_msg = NULL;
+	fp12 *x = fp12_arg(L, 1);
+	fp12 *y = fp12_arg(L, 2);
+	if(x == NULL || y == NULL) {
+		failed_msg = "Could not allocate FP12";
+		goto end;
+	}
+	fp12 *d = fp12_dup(L, x);
+	if(d == NULL) {
+		failed_msg = "Could not create FP12";
+		goto end;
+	}
+	FP12_mul(&d->val, &y->val);
+end:
+	fp12_free(y);
+	fp12_free(x);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
 }
 
 static int fp12_pow(lua_State *L) {
-	fp12 *x = fp12_arg(L,1); SAFE(x);
-	big  *b = big_arg(L,2); SAFE(b);
-	fp12 *r = fp12_dup(L,x); SAFE(r);
-	FP12_GTpow(&r->val,b->val);
-	return 1;
+	BEGIN();
+	char *failed_msg = NULL;
+	big *b = NULL;
+	fp12 *x = fp12_arg(L, 1);
+	if(x == NULL) {
+		failed_msg = "Could not allocate FP12";
+		goto end;
+	}
+	b = big_arg(L, 2);
+	if(b == NULL) {
+		failed_msg = "Could not allocate BIG";
+		goto end;
+	}
+	fp12 *r = fp12_dup(L, x);
+	if(r == NULL) {
+		failed_msg = "Could not create FP12";
+		goto end;
+	}
+	FP12_GTpow(&r->val, b->val);
+end:
+	big_free(b);
+	fp12_free(x);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
 }
 
 static int fp12_sqr(lua_State *L) {
-	fp12 *s = fp12_arg(L,1); SAFE(s);
-	fp12 *d = fp12_dup(L,s); SAFE(d);
-	FP12_sqr(&d->val,&s->val);
-	return 1;
+	BEGIN();
+	char *failed_msg = NULL;
+	fp12 *s = fp12_arg(L, 1);
+	if(s == NULL) {
+		failed_msg = "Could not allocate FP12";
+		goto end;
+	}
+	fp12 *d = fp12_dup(L, s);
+	if(d == NULL) {
+		failed_msg = "Could not create FP12";
+		goto end;
+	}
+	FP12_sqr(&d->val, &s->val);
+end:
+	fp12_free(s);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
 }
 static int fp12_inv(lua_State *L) {
-	fp12 *s = fp12_arg(L,1); SAFE(s);
-	fp12 *d = fp12_dup(L,s); SAFE(d);
-	FP12_inv(&d->val,&s->val);
-	return 1;
+	BEGIN();
+	char *failed_msg = NULL;
+	fp12 *s = fp12_arg(L, 1);
+	if(s == NULL) {
+		failed_msg = "Could not allocate FP12";
+		goto end;
+	}
+	fp12 *d = fp12_dup(L, s);
+	if(d == NULL) {
+		failed_msg = "Could not create FP12";
+		goto end;
+	}
+	FP12_inv(&d->val, &s->val);
+end:
+	fp12_free(s);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
 }
 
 #define fp12_common_methods \
-	    {"eq",fp12_eq}, \
-		{"mul",fp12_mul}, \
-		{"sqr",fp12_sqr}, \
-		{"inv",fp12_inv}
+		{"eq", fp12_eq}, \
+		{"mul", fp12_mul}, \
+		{"sqr", fp12_sqr}, \
+		{"inv", fp12_inv}
 
 int luaopen_fp12(lua_State *L) {
-		(void)L;
+	(void)L;
 	const struct luaL_Reg fp12_class[] = {
-		{"new",fp12_from_octet},
-		{"octet",fp12_from_octet},
+		{"new", fp12_from_octet},
+		{"octet", fp12_from_octet},
 		fp12_common_methods,
 		{NULL,NULL}
 	};
 	const struct luaL_Reg fp12_methods[] = {
 		// idiomatic operators
 		fp12_common_methods,
-		{"octet",fp12_to_octet},
-		{"pow",fp12_pow},
-		{"__mul",fp12_mul},
-		{"__eq",fp12_eq},
+		{"octet", fp12_to_octet},
+		{"pow", fp12_pow},
+		{"__mul", fp12_mul},
+		{"__eq", fp12_eq},
 		{"__gc", fp12_destroy},
 		{"__pow", fp12_pow},
 		{NULL,NULL}
