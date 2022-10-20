@@ -57,6 +57,7 @@
 #include <zen_memory.h>
 #include <lua_functions.h>
 
+
 ecp* ecp_new(lua_State *L) {
 	ecp *e = (ecp *)lua_newuserdata(L, sizeof(ecp));
 	if(!e) {
@@ -68,21 +69,34 @@ ecp* ecp_new(lua_State *L) {
 	lua_setmetatable(L, -2);
 	return(e);
 }
-ecp* ecp_arg(lua_State *L, int n) {
-	void *ud = luaL_checkudata(L, n, "zenroom.ecp");
-	luaL_argcheck(L, ud != NULL, n, "ecp class expected");
-	ecp *e = (ecp*)ud;
-	return(e);
+
+void ecp_free(ecp* e) {
+	if(e) {
+		free(e);
+	}
 }
+
+ecp* ecp_arg(lua_State *L, int n) {
+	ecp* result = (ecp*)malloc(sizeof(ecp));
+	void *ud = luaL_testudata(L, n, "zenroom.ecp");
+	if(ud) {
+		*result = *(ecp*)ud;
+		return result;
+	}
+
+	zerror(L, "invalib big number in argument");
+	ecp_free(result);
+	return NULL;
+}
+
 ecp* ecp_dup(lua_State *L, ecp* in) {
-    ecp *e = ecp_new(L); SAFE(e);
+	ecp *e = ecp_new(L); SAFE(e);
 	ECP_copy(&e->val, &in->val);
 	return(e);
 }
 
 int ecp_destroy(lua_State *L) {
-	ecp *e = ecp_arg(L, 1);
-	SAFE(e);
+	(void)L;
 	return 0;
 }
 
@@ -105,40 +119,75 @@ static int lua_new_ecp(lua_State *L) {
 	// deactivate when not running tests
 	void *tx;
 	char *failed_msg = NULL;
+	octet *o = NULL;
 #ifdef DEBUG
 	tx = luaL_testudata(L, 1, "zenroom.big");
 	void *ty = luaL_testudata(L, 2, "zenroom.big");
 	if(tx && ty) {
-		ecp *e = ecp_new(L); SAFE(e);
-		big *x, *y;
-		x = big_arg(L, 1); SAFE(x);
-		y = big_arg(L, 2); SAFE(y);
+		ecp *e = ecp_new(L);
+		big *x = NULL, *y = NULL;
+		if(!e) {
+			failed_msg = "Could not create ECP";
+			goto end_big_big;
+		}
+		x = big_arg(L, 1);
+		y = big_arg(L, 2);
+		if(!x || !y) {
+			failed_msg = "Could not create BIGs";
+			goto end_big_big;
+		}
 		if(!ECP_set(&e->val, x->val, y->val))
 			warning(L, "new ECP value out of curve (points to infinity)");
-		return 1; }
+end_big_big:
+		big_free(y);
+		big_free(x);
+		goto end;
+	}
 	// If x is on the curve then y is calculated from the curve equation.
 	int tn;
 	lua_Number n = lua_tonumberx(L, 2, &tn);
 	if(tx && tn) {
-		ecp *e = ecp_new(L); SAFE(e);
-		big *x = big_arg(L, 1); SAFE(x);
+		big *x = NULL;
+		ecp *e = ecp_new(L);
+		if(!e) {
+			failed_msg = "Could not create ECP";
+			goto end_big_number;
+		}
+		x = big_arg(L, 1);
+		if(!x) {
+			failed_msg = "Could not create BIG";
+			goto end_big_number;
+		}
 		if(!ECP_setx(&e->val, x->val, (int)n))
 			warning(L, "new ECP value out of curve (points to infinity)");
-		return 1; }
+end_big_number:
+		big_free(x);
+		goto end;
+	}
 #endif
 	tx = luaL_testudata(L, 1, "zenroom.big");
 	if(tx) {
-		ecp *e = ecp_new(L); SAFE(e);
-		big *x;
-		x = big_arg(L, 1); SAFE(x);
+		ecp *e = ecp_new(L);
+		big *x = NULL;
+		if(!e) {
+			failed_msg = "Could not create ECP";
+			goto end_big;
+		}
+		x = big_arg(L, 1);
+		if(!x) {
+			failed_msg = "Could not create BIG";
+			goto end_big;
+		}
 		if(!ECP_setx(&e->val, x->val, 0))
 			warning(L, "new ECP value out of curve (points to infinity)");
-		return 1;
+end_big:
+		big_free(x);
+		goto end;
 	}
 	// We protect well this entrypoint since parsing any input is at risk
 	// Milagro's _fromOctet() uses ECP_BLS_set(ECP_BLS *P, BIG x)
 	// then converts the BIG to an FP modulo using FP_BLS_nres.
-	octet *o = o_arg(L, 1);
+	o = o_arg(L, 1);
 	if(!o) {
 		failed_msg = "Could not allocate input";
 		goto end;
@@ -198,8 +247,12 @@ static int ecp_generator(lua_State *L) {
 */
 static int ecp_get_infinity(lua_State *L) {
 	BEGIN();
-	ecp *e = ecp_new(L); SAFE(e);
-	ECP_inf(&e->val);
+	ecp *e = ecp_new(L);
+	if(e) {
+		ECP_inf(&e->val);
+	} else {
+		THROW("Could not create ECP");
+	}
 	END(1);
 }
 
@@ -212,12 +265,16 @@ static int ecp_get_infinity(lua_State *L) {
 */
 static int ecp_order(lua_State *L) {
 	BEGIN();
-	big *res = big_new(L); SAFE(res);
-	big_init(L,res);
-	// BIG is an array of int32_t on chunk 32 (see rom_curve)
+	big *res = big_new(L);
+	if(res) {
+		big_init(L,res);
+		// BIG is an array of int32_t on chunk 32 (see rom_curve)
 
-	// curve order is ready-only so we need a copy for norm() to work
-	BIG_copy(res->val, (chunk*)CURVE_Order);
+		// curve order is ready-only so we need a copy for norm() to work
+		BIG_copy(res->val, (chunk*)CURVE_Order);
+	} else {
+		THROW("Could not create BIG");
+	}
 	END(1);
 }
 
@@ -263,8 +320,7 @@ static int ecp_validate(lua_State *L) {
 		int res = ECP_validate(o);
 		lua_pushboolean(L, res>=0);
 	} else {
-		lerror(L, "Could not allocate ECP point");
-		lua_pushnil(L);
+		THROW("Could not allocate ECP point");
 	}
 	END(1);
 }
@@ -280,9 +336,24 @@ static int ecp_validate(lua_State *L) {
 */
 static int ecp_affine(lua_State *L) {
 	BEGIN();
-	ecp *in = ecp_arg(L, 1); SAFE(in);
-	ecp *out = ecp_dup(L, in); SAFE(out);
+	char *failed_msg = NULL;
+	ecp *out = NULL;
+	ecp *in = ecp_arg(L, 1);
+	if(!in) {
+		failed_msg = "Could not create ECP";
+		goto end;
+	}
+	out = ecp_dup(L, in);
+	if(!out) {
+		failed_msg = "Could not create ECP";
+		goto end;
+	}
 	ECP_affine(&out->val);
+end:
+	ecp_free(in);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 /***
@@ -293,8 +364,12 @@ static int ecp_affine(lua_State *L) {
 */
 static int ecp_isinf(lua_State *L) {
 	BEGIN();
-	ecp *e = ecp_arg(L, 1); SAFE(e);
-	lua_pushboolean(L, ECP_isinf(&e->val));
+	ecp *e = ecp_arg(L, 1);
+	if(e) {
+		lua_pushboolean(L, ECP_isinf(&e->val));
+	} else {
+		THROW("Could not create ECP");
+	}
 	END(1);
 }
 
@@ -308,11 +383,23 @@ static int ecp_isinf(lua_State *L) {
 */
 static int ecp_add(lua_State *L) {
 	BEGIN();
-	ecp *e = ecp_arg(L, 1); SAFE(e);
-	ecp *q = ecp_arg(L, 2); SAFE(q);
+	char *failed_msg = NULL;
+	ecp *e = ecp_arg(L, 1);
+	ecp *q = ecp_arg(L, 2);
+	if(!e || !q) {
+		failed_msg = "Could not create ECP";
+		goto end;
+	}
 	ecp *p = ecp_dup(L, e); // push
-	SAFE(p);
+	if(!p) {
+		failed_msg = "Could not create ECP";
+		goto end;
+	}
 	ECP_add(&p->val, &q->val);
+end:
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
@@ -326,11 +413,23 @@ static int ecp_add(lua_State *L) {
 */
 static int ecp_sub(lua_State *L) {
 	BEGIN();
+	char *failed_msg = NULL;
 	ecp *e = ecp_arg(L, 1); SAFE(e);
 	ecp *q = ecp_arg(L, 2); SAFE(q);
+	if(!e || !q) {
+		failed_msg = "Could not create ECP";
+		goto end;
+	}
 	ecp *p = ecp_dup(L, e); // push
-	SAFE(p);
+	if(!p) {
+		failed_msg = "Could not create ECP";
+		goto end;
+	}
 	ECP_sub(&p->val, &q->val);
+end:
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
@@ -341,9 +440,24 @@ static int ecp_sub(lua_State *L) {
 */
 static int ecp_negative(lua_State *L) {
 	BEGIN();
-	ecp *in = ecp_arg(L, 1); SAFE(in);
-	ecp *out = ecp_dup(L, in); SAFE(out);
+	char *failed_msg = NULL;
+	ecp *out = NULL;
+	ecp *in = ecp_arg(L, 1);
+	if(!in) {
+		failed_msg = "Could not create ECP";
+		goto end;
+	}
+	out = ecp_dup(L, in);
+	if(!out) {
+		failed_msg = "Could not create ECP";
+		goto end;
+	}
 	ECP_neg(&out->val);
+end:
+	ecp_free(in);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
@@ -354,9 +468,23 @@ static int ecp_negative(lua_State *L) {
 */
 static int ecp_double(lua_State *L) {
 	BEGIN();
-	ecp *in = ecp_arg(L, 1); SAFE(in);
-	ecp *out = ecp_dup(L, in); SAFE(out);
+	char *failed_msg = NULL;
+	ecp *out = NULL;
+	ecp *in = ecp_arg(L, 1);
+	if(!in) {
+		failed_msg = "Could not create ECP";
+		goto end;
+	}
+	out = ecp_dup(L, in);
+	if(!out) {
+		failed_msg = "Could not create ECP";
+		goto end;
+	}
 	ECP_dbl(&out->val);
+end:
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
@@ -370,13 +498,30 @@ static int ecp_double(lua_State *L) {
 */
 static int ecp_mul(lua_State *L) {
 	BEGIN();
-	ecp *e = ecp_arg(L, 1); SAFE(e);
-	big *b = big_arg(L, 2); SAFE(b);
+	char *failed_msg = NULL;
+	ecp *out = NULL;
+	ecp *e = ecp_arg(L, 1);
+	big *b = big_arg(L, 2);
+	if(!e || !b) {
+		failed_msg = "Could not instantiate input";
+		goto end;
+	}
 	if(b->doublesize) {
-		lerror(L, "cannot multiply ECP point with double BIG numbers, need modulo");
-		return 0; }
-	ecp *out = ecp_dup(L, e); SAFE(out);
+		failed_msg = "cannot multiply ECP point with double BIG numbers, need modulo";
+		goto end;
+	}
+	out = ecp_dup(L, e);
+	if(!out) {
+		failed_msg = "Could not create ECP";
+		goto end;
+	}
 	PAIR_G1mul(&out->val, b->val);
+end:
+	ecp_free(e);
+	big_free(b);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
@@ -390,13 +535,20 @@ static int ecp_mul(lua_State *L) {
 */
 static int ecp_eq(lua_State *L) {
 	BEGIN();
-	ecp *p = ecp_arg(L, 1); SAFE(p);
-	ecp *q = ecp_arg(L, 2); SAFE(q);
-	// TODO: is affine rly needed?
-	ECP_affine(&p->val);
-	ECP_affine(&q->val);
-	lua_pushboolean(L, ECP_equals(
-		                &p->val, &q->val));
+	ecp *p = ecp_arg(L, 1);
+	ecp *q = ecp_arg(L, 2);
+	if(p && q) {
+		// TODO: is affine rly needed?
+		ECP_affine(&p->val);
+		ECP_affine(&q->val);
+		lua_pushboolean(L, ECP_equals(
+					&p->val, &q->val));
+	}
+	ecp_free(p);
+	ecp_free(q);
+	if(!p || !q) {
+		THROW("Could no read ECP");
+	}
 	END(1);
 }
 
@@ -418,9 +570,24 @@ int _ecp_to_octet(octet *o, ecp *e) {
 */
 static int ecp_octet(lua_State *L) {
 	BEGIN();
-	ecp *e = ecp_arg(L, 1); SAFE(e);
-	octet *o = o_new(L, e->totlen + 0x0f); SAFE(o);
+	char *failed_msg = NULL;
+	octet *o = NULL;
+	ecp *e = ecp_arg(L, 1);
+	if(!e) {
+		failed_msg = "Could not instantiate ECP";
+		goto end;
+	}
+	o = o_new(L, e->totlen + 0x0f);
+	if(!o) {
+		failed_msg = "Could not instantiate ECP";
+		goto end;
+	}
 	_ecp_to_octet(o, e);
+end:
+	ecp_free(e);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 
@@ -448,11 +615,26 @@ static int ecp_get_x(lua_State *L) {
 */
 static int ecp_get_y(lua_State *L) {
 	BEGIN();
-	ecp *e = ecp_arg(L, 1); SAFE(e);
+	char *failed_msg = NULL;
+	big *y = NULL;
+	ecp *e = ecp_arg(L, 1);
+	if(!e) {
+		failed_msg = "Could not read ECP";
+		goto end;
+	}
 	ECP_affine(&e->val);
-	big *y = big_new(L);
+	y = big_new(L);
+	if(!y) {
+		failed_msg = "Could not read BIG";
+		goto end;
+	}
 	big_init(L,y);
 	_fp_to_big(y, &e->val.y);
+end:
+	ecp_free(e);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(1);
 }
 

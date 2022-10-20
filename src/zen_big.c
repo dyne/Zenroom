@@ -85,10 +85,6 @@ extern ecp* ecp_dup(lua_State *L, ecp* in);
 		lerror(L,"incompatible sizes: arg2 is double, arg1 is not"); \
 	}
 
-#define THROW(ERR) \
-	lerror(L, "fatal %s: %s", __func__, (ERR)); \
-	lua_pushnil(L)
-
 
 int _octet_to_big(lua_State *L, big *dst, octet *src) {
 	int i;

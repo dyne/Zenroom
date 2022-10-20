@@ -27,6 +27,10 @@
 #define BEGIN() trace(L, "vv begin %s",__func__)
 #define END(n) trace(L, "^^ end %s",__func__); return(n)
 
+#define THROW(ERR) \
+	lerror(L, "fatal %s: %s", __func__, (ERR)); \
+	lua_pushnil(L)
+
 // REMEMBER: o_new and o_dup push a new object in lua's stack
 octet* o_new(lua_State *L, const int size);
 
