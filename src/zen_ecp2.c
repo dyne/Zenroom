@@ -83,13 +83,12 @@ ecp2* ecp2_new(lua_State *L) {
 }
 
 ecp2* ecp2_arg(lua_State *L, int n) {
-	ecp2 *result = (ecp2*)malloc(sizeof(ecp2));
 	void *ud = luaL_testudata(L, n, "zenroom.ecp2");
 	if(ud) {
+		ecp2 *result = (ecp2*)malloc(sizeof(ecp2));
 		*result = *(ecp2*)ud;
 		return result;
 	}
-	ecp2_free(result);
 	zerror(L, "invalid ecp2 point in argument");
 	return NULL;
 }
@@ -217,19 +216,28 @@ static int ecp2_generator(lua_State *L) {
 static int ecp2_millerloop(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	fp12 *f = fp12_new(L);   SAFE(f);
+	ecp *y = NULL;
 	ecp2 *x = ecp2_arg(L, 1);
 	if(x == NULL) {
 		failed_msg = "failed to allocate space for ecp2 point";
 		goto end;
 	}
-	ecp  *y = ecp_arg(L, 2);
+	y = ecp_arg(L, 2);
+	if(y == NULL) {
+		failed_msg = "failed to allocate space for ecp point";
+		goto end;
+	}
+	fp12 *f = fp12_new(L);
+	if(f == NULL) {
+		failed_msg = "failed to allocate space for new fp12";
+		goto end;
+	}
 	ECP2_affine(&x->val);
 	ECP_affine(&y->val);
 	PAIR_ate(&f->val, &x->val, &y->val);
 	PAIR_fexp(&f->val);
 end:
-	// ecp_free(y);
+	ecp_free(y);
 	ecp2_free(x);
 	if(failed_msg != NULL) {
 		lerror(L, failed_msg);
