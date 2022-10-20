@@ -281,6 +281,7 @@ end:
 */
 static int ecdh_pub_xy(lua_State *L) {
 	BEGIN();
+	int res = 1;
 	char *failed_msg = NULL;
 	octet *pk = o_arg(L, 1);
 	if(pk == NULL) {
@@ -294,7 +295,6 @@ static int ecdh_pub_xy(lua_State *L) {
 	// Export public key to octet.  This is like o_dup but skips
 	// first byte since that is used internally by Milagro as a
 	// prefix for Montgomery (2) or non-Montgomery curves (4)
-	int res = 1;
 	register int i;
 	octet *x = o_new(L, ECDH.fieldsize+1);
 	if(x == NULL) {
