@@ -85,12 +85,19 @@ ecdh ECDH;
 // 	ECDH = e; // global pointer to a single ECDH instance
 // 	return(1);
 // }
+void ecdh_free(ecdh *e) {
+	if(e) free(e);
+}
 
 ecdh* ecdh_arg(lua_State *L,int n) {
-	void *ud = luaL_checkudata(L, n, "zenroom.ecdh");
-	luaL_argcheck(L, ud != NULL, n, "ecdh class expected");
-	ecdh *e = (ecdh*)ud;
-	return(e);
+	void *ud = luaL_testudata(L, n, "zenroom.ecdh");
+	if(ud) {
+		ecdh *result = (ecdh*)malloc(sizeof(ecdh));
+		*result = *(ecdh*)ud;
+		return result;
+	}
+	zerror(L, "invalid ecdh in argument");
+	return NULL;
 }
 
 int ecdh_destroy(lua_State *L) {
@@ -118,22 +125,21 @@ static int ecdh_keygen(lua_State *L) {
 	lua_createtable(L, 0, 2);
 	octet *pk = o_new(L,ECDH.fieldsize*2 +1);
 	if(pk == NULL) {
-		failed_msg = "failed to allocate space for secret key";
+		failed_msg = "Could not create public key";
 		goto end;
 	}
 	lua_setfield(L, -2, "public");
 	octet *sk = o_new(L,ECDH.fieldsize);
 	if(sk == NULL) {
-		failed_msg = "failed to allocate space for secret key";
+		failed_msg = "Could not create secret key";
 		goto end;
 	}
 	lua_setfield(L, -2, "private");
 	Z(L);
 	(*ECDH.ECP__KEY_PAIR_GENERATE)(Z->random_generator,sk,pk);
 end:
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -152,17 +158,17 @@ static int ecdh_pubgen(lua_State *L) {
 	char *failed_msg = NULL;
 	octet *sk = o_arg(L, 1);
 	if(sk == NULL) {
-		failed_msg = "failed to allocate space for secret key";
+		failed_msg = "Could not allocate secret key";
 		goto end;
 	}
 	octet *tmp = o_dup(L, sk);
 	if(sk == NULL) {
-		failed_msg = "failed to copy the secret key";
+		failed_msg = "Could not duplicate secret key";
 		goto end;
 	}
 	octet *pk = o_new(L,ECDH.fieldsize*2 +1);
 	if(pk == NULL) {
-		failed_msg = "failed to allocate space for public key";
+		failed_msg = "Could not create public key";
 		goto end;
 	}
 	// If RNG is NULL then the private key is provided externally in S
@@ -170,9 +176,8 @@ static int ecdh_pubgen(lua_State *L) {
 	(*ECDH.ECP__KEY_PAIR_GENERATE)(NULL,tmp,pk);
 end:
 	o_free(L, sk);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -193,7 +198,7 @@ static int ecdh_pubcheck(lua_State *L) {
 	BEGIN();
 	octet *pk = o_arg(L, 1);
 	if(pk == NULL) {
-		lerror(L, "failed to allocate space for public key");
+		lerror(L, "Could not allocate public key");
 		lua_pushboolean(L, 0);
 	} else {
 		if((*ECDH.ECP__PUBLIC_KEY_VALIDATE)(pk)==0)
@@ -226,12 +231,12 @@ static int ecdh_session(lua_State *L) {
 	octet *f = NULL, *s = NULL, *sk = NULL, *pk = NULL;
 	f = o_arg(L, 1);
 	if(f == NULL) {
-		failed_msg = "failed to allocate space for session key";
+		failed_msg = "Could not allocate session key";
 		goto end;
 	}
 	s = o_arg(L, 2);
 	if(s == NULL) {
-		failed_msg = "failed to allocate space for session key";
+		failed_msg = "Could not allocate session key";
 		goto end;
 	}
 	// ECDH_OK is 0 in milagro's ecdh.h.in
@@ -244,12 +249,12 @@ static int ecdh_session(lua_State *L) {
 	sk = (pk == s) ? f : s;
 	octet *kdf = o_new(L, SHA256);
 	if(!kdf) {
-		failed_msg = "failed to allocate space for kdf result";
+		failed_msg = "Could not create KDF";
 		goto end;
 	}
 	octet *ses = o_new(L, 64); // modbytes of ecdh curve
 	if(!ses) {
-		failed_msg = "failed to allocate space for shared key";
+		failed_msg = "Could not create shared key";
 		goto end;
 	}
 	(*ECDH.ECP__SVDP_DH)(sk,pk,ses);
@@ -259,9 +264,8 @@ static int ecdh_session(lua_State *L) {
 end:
 	o_free(L, s);
 	o_free(L, f);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(2);
 }
@@ -280,7 +284,7 @@ static int ecdh_pub_xy(lua_State *L) {
 	char *failed_msg = NULL;
 	octet *pk = o_arg(L, 1);
 	if(pk == NULL) {
-		failed_msg = "failed to allocate space for public key";
+		failed_msg = "Could not allocate public key";
 		goto end;
 	}
 	if((*ECDH.ECP__PUBLIC_KEY_VALIDATE)(pk)!=0) {
@@ -294,7 +298,7 @@ static int ecdh_pub_xy(lua_State *L) {
 	register int i;
 	octet *x = o_new(L, ECDH.fieldsize+1);
 	if(x == NULL) {
-		failed_msg = "failed to allocate space for x coordinate";
+		failed_msg = "Could not create x coordinate";
 		goto end;
 	}
 	for(i=0; i < ECDH.fieldsize; i++)
@@ -306,7 +310,7 @@ static int ecdh_pub_xy(lua_State *L) {
 	if(pk->len > ECDH.fieldsize<<1) {
 		octet *y = o_new(L, ECDH.fieldsize+1);
 		if(x == NULL) {
-			failed_msg = "failed to allocate space for y coordinate";
+			failed_msg = "Could not create y coordinate";
 			goto end;
 		}
 		for(i=0; i < ECDH.fieldsize; i++)
@@ -317,9 +321,8 @@ static int ecdh_pub_xy(lua_State *L) {
 	}
 end:
 	o_free(L, pk);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(res);
 }
@@ -347,12 +350,12 @@ static int ecdh_dsa_sign(lua_State *L) {
 	octet *sk = NULL, *m = NULL, *k = NULL;
 	sk = o_arg(L,1);
 	if(sk == NULL) {
-		failed_msg = "failed to allocate space for secret key";
+		failed_msg = "Could not allocate secret key";
 		goto end;
 	}
 	m = o_arg(L,2);
 	if(m == NULL) {
-		failed_msg = "failed to allocate space for message";
+		failed_msg = "Could not allocate message";
 		goto end;
 	}
 	// IEEE ECDSA Signature, R and S are signature on F using private
@@ -366,13 +369,13 @@ static int ecdh_dsa_sign(lua_State *L) {
 		lua_createtable(L, 0, 2);
 		octet *r = o_new(L,max_size);
 		if(r == NULL) {
-			failed_msg = "failed to allocate space for r-coordinature of signautre";
+			failed_msg = "Could not create signautre.r";
 			goto end;
 		}
 		lua_setfield(L, -2, "r");
 		octet *s = o_new(L,max_size);
 		if(s == NULL) {
-			failed_msg = "failed to allocate space for s-coordinature of signautre";
+			failed_msg = "Could not create signautre.s";
 			goto end;
 		}
 		lua_setfield(L, -2, "s");
@@ -381,20 +384,20 @@ static int ecdh_dsa_sign(lua_State *L) {
 	} else {
 		octet *k = o_arg(L, 3);
 		if(k == NULL) {
-			failed_msg = "failed to allocate space for ephemeral key";
+			failed_msg = "Could not allocate ephemeral key";
 			goto end;
 		}
 		// return a table
 		lua_createtable(L, 0, 2);
 		octet *r = o_new(L,max_size);
 		if(r == NULL) {
-			failed_msg = "failed to allocate space for r-coordinature of signautre";
+			failed_msg = "Could not create signautre.r";
 			goto end;
 		}
 		lua_setfield(L, -2, "r");
 		octet *s = o_new(L,max_size);
 		if(s == NULL) {
-			failed_msg = "failed to allocate space for s-coordinature of signautre";
+			failed_msg = "Could not create signautre.s";
 			goto end;
 		}
 		lua_setfield(L, -2, "s");
@@ -404,9 +407,8 @@ end:
 	o_free(L, k);
 	o_free(L, m);
 	o_free(L, sk);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -427,12 +429,12 @@ static int ecdh_dsa_sign_hashed(lua_State *L) {
 	octet *sk = NULL, *m = NULL, *k = NULL;
 	sk = o_arg(L, 1);
 	if(sk == NULL) {
-		failed_msg = "failed to allocate space for secret key";
+		failed_msg = "Could not allocate secret key";
 		goto end;
 	}
 	m = o_arg(L, 2);
 	if(m == NULL) {
-		failed_msg = "failed to allocate space for message";
+		failed_msg = "Could not allocate message";
 		goto end;
 	}
 	// IEEE ECDSA Signature, R and S are signature on F using private
@@ -444,25 +446,25 @@ static int ecdh_dsa_sign_hashed(lua_State *L) {
 	int parity;
 	lua_Number n = lua_tointegerx(L, 3, &max_size);
 	if(max_size==0) {
-		ERROR();
 		failed_msg = "missing 3rd argument: byte size of octet to sign";
 		goto end;
 	}
 	if (m->len != (int)n) {
-		ERROR(); zerror(L, "size of input does not match: %u != %u", m->len, (int)n);
+		failed_msg = "size of input does not match";
+		goto end;
 	}
 	if(lua_isnoneornil(L, 4)) {
 		// return a table
 		lua_createtable(L, 0, 2);
 		octet *r = o_new(L, (int)n);
 		if(r == NULL) {
-			failed_msg = "failed to allocate space for r-coordinature of signautre";
+			failed_msg = "Could not create signautre.r";
 			goto end;
 		}
 		lua_setfield(L, -2, "r");
-		octet *s = o_new(L,(int)n);
+		octet *s = o_new(L, (int)n);
 		if(s == NULL) {
-			failed_msg = "failed to allocate space for s-coordinature of signautre";
+			failed_msg = "Could not create signautre.s";
 			goto end;
 		}
 		lua_setfield(L, -2, "s");
@@ -472,20 +474,20 @@ static int ecdh_dsa_sign_hashed(lua_State *L) {
 	} else {
 		k = o_arg(L, 4);
 		if(k == NULL) {
-			failed_msg = "failed to allocate space for ephemeral key";
+			failed_msg = "Could not allocate ephemeral key";
 			goto end;
 		}
 		// return a table
 		lua_createtable(L, 0, 2);
 		octet *r = o_new(L, (int)n);
 		if(r == NULL) {
-			failed_msg = "failed to allocate space for r-coordinature of signautre";
+			failed_msg = "Could not create signautre.r";
 			goto end;
 		}
 		lua_setfield(L, -2, "r");
 		octet *s = o_new(L, (int)n);
 		if(s == NULL) {
-			failed_msg = "failed to allocate space for s-coordinature of signautre";
+			failed_msg = "Could not create signautre.s";
 			goto end;
 		}
 		lua_setfield(L, -2, "s");
@@ -497,9 +499,8 @@ end:
 	o_free(L, k);
 	o_free(L, m);
 	o_free(L, sk);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(2);
 }
@@ -525,12 +526,12 @@ static int ecdh_dsa_verify(lua_State *L) {
 	octet *pk = NULL, *m = NULL, *r = NULL, *s = NULL;
 	pk = o_arg(L, 1);
 	if(pk == NULL) {
-		failed_msg = "failed to allocate space for public key";
+		failed_msg = "Could not allocate public key";
 		goto end;
 	}
 	m = o_arg(L, 2);
 	if(m == NULL) {
-		failed_msg = "failed to allocate space for message";
+		failed_msg = "Could not allocate message";
 		goto end;
 	}
 	if(lua_type(L, 3) == LUA_TTABLE) {
@@ -538,16 +539,15 @@ static int ecdh_dsa_verify(lua_State *L) {
 		lua_getfield(L, 3, "s"); // -2 stack
 		r = o_arg(L, -2);
 		if(r == NULL) {
-			failed_msg = "failed to allocate space for r-coordinature of signautre";
+			failed_msg = "Could not allocate signature.r";
 			goto end;
 		}
 		s = o_arg(L, -1);
 		if(s == NULL) {
-			failed_msg = "failed to allocate space for s-coordinature of signautre";
+			failed_msg = "Could not allocate signautre.s";
 			goto end;
 		}
 	} else {
-		ERROR();
 		failed_msg = "signature argument invalid: not a table";
 		goto end;
 	}
@@ -566,9 +566,8 @@ end:
 	o_free(L, r);
 	o_free(L, m);
 	o_free(L, pk);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -581,12 +580,12 @@ static int ecdh_dsa_verify_hashed(lua_State *L) {
 	octet *pk = NULL, *m = NULL, *r = NULL, *s = NULL;
 	pk = o_arg(L, 1);
 	if(pk == NULL) {
-		failed_msg = "failed to allocate space for public key";
+		failed_msg = "Could not allocate public key";
 		goto end;
 	}
 	m = o_arg(L, 2);
 	if(m == NULL) {
-		failed_msg = "failed to allocate space for message";
+		failed_msg = "Could not allocate message";
 		goto end;
 	}
 	if(lua_type(L, 3) == LUA_TTABLE) {
@@ -594,28 +593,26 @@ static int ecdh_dsa_verify_hashed(lua_State *L) {
 		lua_getfield(L, 3, "s"); // -2 stack
 		r = o_arg(L, -2);
 		if(r == NULL) {
-			failed_msg = "failed to allocate space for r-coordinature of signautre";
+			failed_msg = "Could not allocate signautre.r";
 			goto end;
 		}
 		s = o_arg(L, -1);
 		if(s == NULL) {
-			failed_msg = "failed to allocate space for s-coordinature of signautre";
+			failed_msg = "Could not allocate signautre.s";
 			goto end;
 		}
 	} else {
-		ERROR();
 		failed_msg = "signature argument invalid: not a table";
 		goto end;
 	}
 	int max_size = 0;
 	lua_Number n = lua_tointegerx(L, 4, &max_size);
 	if(max_size == 0) {
-		ERROR();
 		failed_msg = "invalid size zero for material to sign";
 		goto end;
 	}
 	if (m->len != (int)n) {
-		ERROR(); zerror(L, "size of input does not match: %u != %u", m->len, (int)n);
+		failed_msg = "size of input does not match";
 	}
 	int res = (*ECDH.ECP__VP_DSA_NOHASH)((int)n, pk, m, r, s);
 	if(res <0) // ECDH_INVALID in milagro/include/ecdh.h.in (!?!)
@@ -631,9 +628,8 @@ end:
 	o_free(L, r);
 	o_free(L, m);
 	o_free(L, pk);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -664,7 +660,7 @@ static int ecdh_aead_encrypt(lua_State *L) {
 	octet *k = NULL, *in = NULL, *iv = NULL, *h = NULL;
 	k =  o_arg(L, 1);
 	if(k == NULL) {
-		failed_msg = "failed to allocate space for aes key";
+		failed_msg = "Could not allocate aes key";
 		goto end;
 	}
 	// AES key size nk can be 16, 24 or 32 bytes
@@ -675,12 +671,12 @@ static int ecdh_aead_encrypt(lua_State *L) {
 	}
 	in = o_arg(L, 2);
 	if(in == NULL) {
-		failed_msg = "failed to allocate space for message";
+		failed_msg = "Could not allocate message";
 		goto end;
 	}
 	iv = o_arg(L, 3);
 	if(iv == NULL) {
-		failed_msg = "failed to allocate space for iv";
+		failed_msg = "Could not allocate iv";
 		goto end;
 	}
 	if (iv->len < 12) {
@@ -690,18 +686,18 @@ static int ecdh_aead_encrypt(lua_State *L) {
 	}
 	h =  o_arg(L, 4);
 	if(h == NULL) {
-		failed_msg = "failed to allocate space for header";
+		failed_msg = "Could not allocate header";
 		goto end;
 	}
 	// output is padded to next word
 	octet *out = o_new(L, in->len+16);
 	if(out == NULL) {
-		failed_msg = "failed to allocate space for ciphertext";
+		failed_msg = "Could not create ciphertext";
 		goto end;
 	}
 	octet *t = o_new(L, 16);
 	if(t == NULL) {
-		failed_msg = "failed to allocate space for authentication tag";
+		failed_msg = "Could not create authentication tag";
 		goto end;
 	}
 	AES_GCM_ENCRYPT(k, iv, h, in, out, t);
@@ -710,9 +706,8 @@ end:
 	o_free(L, iv);
 	o_free(L, in);
 	o_free(L, k);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(2);
 }
@@ -737,7 +732,7 @@ static int ecdh_aead_decrypt(lua_State *L) {
 	octet *k = NULL, *in = NULL, *iv = NULL, *h = NULL;
 	k = o_arg(L, 1);
 	if(k == NULL) {
-		failed_msg = "failed to allocate space for the aes key";
+		failed_msg = "Could not allocate aes key";
 		goto end;
 	}
 	if(k->len > 32 || k->len < 16) {
@@ -747,12 +742,12 @@ static int ecdh_aead_decrypt(lua_State *L) {
 	}
 	in = o_arg(L, 2);
 	if(in == NULL) {
-		failed_msg = "failed to allocate space for the messsage text";
+		failed_msg = "Could not allocate messsage";
 		goto end;
 	}
 	iv = o_arg(L, 3);
 	if(iv == NULL) {
-		failed_msg = "failed to allocate space for the iv";
+		failed_msg = "Could not allocate iv";
 		goto end;
 	}
 	if (iv->len < 12) {
@@ -762,18 +757,18 @@ static int ecdh_aead_decrypt(lua_State *L) {
 	}
 	h = o_arg(L, 4);
 	if(h == NULL) {
-		failed_msg = "failed to allocate space for the header";
+		failed_msg = "Could not allocate header";
 		goto end;
 	}
 	// output is padded to next word
 	octet *out = o_new(L, in->len+16);
 	if(out == NULL) {
-		failed_msg = "failed to allocate space for ciphertext";
+		failed_msg = "Could not create ciphertext";
 		goto end;
 	}
 	octet *t2 = o_new(L, 16);
 	if(t2 == NULL) {
-		failed_msg = "failed to allocate space for authentication tag";
+		failed_msg = "Could not create authentication tag";
 		goto end;
 	}
 	AES_GCM_DECRYPT(k, iv, h, in, out, t2);
@@ -782,9 +777,8 @@ end:
 	o_free(L, iv);
 	o_free(L, in);
 	o_free(L, k);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(2);
 }
@@ -865,7 +859,7 @@ static int ecdh_dsa_recovery(lua_State *L) {
 	octet *x = NULL, *m = NULL, *r = NULL, *s = NULL;
 	x = o_arg(L, 1);
 	if(x == NULL) {
-		failed_msg = "failed to allocate space for x-coordinate";
+		failed_msg = "Could not allocate x-coordinate";
 		goto end;
 	}
 	int i;
@@ -876,7 +870,7 @@ static int ecdh_dsa_recovery(lua_State *L) {
 	}
 	m = o_arg(L, 3);
 	if(m == NULL) {
-		failed_msg = "failed to allocate space for message";
+		failed_msg = "Could not allocate message";
 		goto end;
 	}
 	if(lua_type(L, 4) == LUA_TTABLE) {
@@ -884,22 +878,21 @@ static int ecdh_dsa_recovery(lua_State *L) {
 		lua_getfield(L, 4, "s");
 		r = o_arg(L, -2);
 		if(r == NULL) {
-			failed_msg = "failed to allocate space for r-coordinature of signautre";
+			failed_msg = "Could not allocate signautre.r";
 			goto end;
 		}
 		s = o_arg(L, -1);
 		if(s == NULL) {
-			failed_msg = "failed to allocate space for s-coordinature of signautre";
+			failed_msg = "Could not allocate signautre.s";
 			goto end;
 		}
 	} else {
-		ERROR();
 		failed_msg = "signature argument invalid: not a table";
 		goto end;
 	}
 	octet *pk = o_new(L, ECDH.fieldsize*2 +1);
 	if(pk == NULL) {
-		failed_msg = "failed to allocate space for public key";
+		failed_msg = "Could not create public key";
 		goto end;
 	}
 
@@ -912,9 +905,8 @@ end:
 	o_free(L, r);
 	o_free(L, m);
 	o_free(L, x);
-	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	END(2);
 }
