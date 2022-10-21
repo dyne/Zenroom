@@ -82,100 +82,39 @@ int _string_from_float(char dest[1024], float src) {
 }
 
 octet *new_octet_from_float(lua_State *L, float *f) {
-        octet *o;
-        char dest[1024];
+	octet *o;
+	char dest[1024];
 	int bufsz = _string_from_float(dest, *f);
 	if(bufsz < 0) {
-	        lerror(L, "Output size too big");
-		return 0;
+		zerror(L, "Output size too big");
+		return NULL;
 	}
-        o = o_alloc(L, bufsz);
-        register int i;
-        for(i=0; i<bufsz; i++) {
-                o->val[i] = dest[i];
-        }
-        o->len = bufsz;
-        return o;
+	o = o_alloc(L, bufsz);
+	register int i;
+	for(i=0; i<bufsz; i++) {
+		o->val[i] = dest[i];
+	}
+	o->len = bufsz;
+	return o;
 }
 
 float *float_new(lua_State *L) {
-        float *number = (float *)lua_newuserdata(L, sizeof(float));
-        if(!number) {
-                lerror(L, "Error allocating a new big in %s", __func__);
-                return NULL;
-        }
-        *number = 0;
+	float *number = (float *)lua_newuserdata(L, sizeof(float));
+	if(!number) {
+		zerror(L, "Error allocating a new float in %s", __func__);
+		return NULL;
+	}
+	*number = 0;
 	luaL_getmetatable(L, "zenroom.float");
 	lua_setmetatable(L, -2);
-        return number;
+	return number;
 }
 
 static void float_free(float *f) {
 	if(f) free(f);
 }
 
-/***
-    Create a new float number. If an argument is present, import it as @{OCTET} and initialise it with its value.
-
-    @param[opt] octet value
-    @return a new float number
-    @function F.new(octet)
-*/
-static int newfloat(lua_State *L) {
-	BEGIN();
-	// number argument, import
-        if(lua_isnumber(L, 1)) {
-                lua_Number number = lua_tonumber(L, 1);
-                float *flt = float_new(L);
-                *flt = (float)number;
-                return 1;
-        }
-        if(lua_isstring(L, 1)) {
-                const char* arg = lua_tostring(L, 1);
-                float *flt = float_new(L);
-                char *pEnd;
-                *flt = strtof(arg, &pEnd);
-                if(*pEnd) {
-                        lerror(L, "Could not parse float number %s", arg);
-                        return 0;
-                }
-                return 1;
-        }
-	// octet argument, import
-	octet *o = o_arg(L, 1);
-	if(o) {
-		char *pEnd = NULL;
-		float* f = float_new(L);
-		*f = strtof(o->val, &pEnd);
-		if(*pEnd) {
-			o_free(L, o);
-			lerror(L, "Could not parse float number");
-			lua_pushnil(L);
-		}
-		o_free(L, o);
-	} else {
-		lerror(L, "Could not allocate input");
-		lua_pushnil(L);
-	}
-	END(1);
-}
-static int is_float(lua_State *L) {
-	BEGIN();
-	int result = 0;
-	if(lua_isnumber(L, 1)) {
-		result = 1;
-	} else if(lua_isstring(L, 1)) {
-		const char* arg = lua_tostring(L, 1);
-		float *flt = float_new(L);
-		char *pEnd;
-		*flt = strtof(arg, &pEnd);
-		result = (*pEnd == '\0');
-	}
-	lua_pushboolean(L, result);
-	END(1);
-}
-
-float* float_arg(lua_State *L,int n) {
+float* float_arg(lua_State *L, int n) {
 	float *result = (float*)malloc(sizeof(float));
 	if(result == NULL) {
 		return NULL;
@@ -185,8 +124,7 @@ float* float_arg(lua_State *L,int n) {
 		*result = *(float*)ud;
 		return result;
 	}
-
-	octet *o = o_arg(L,n);
+	octet *o = o_arg(L, n);
 	if(o) {
 		char *pEnd = NULL;
 		*result = strtof(o->val, &pEnd);
@@ -199,6 +137,87 @@ float* float_arg(lua_State *L,int n) {
 	return result;
 }
 
+/***
+    Create a new float number. If an argument is present,
+    import it as @{OCTET} and initialise it with its value.
+
+    @param[opt] octet value
+    @return a new float number
+    @function F.new(octet)
+*/
+static int newfloat(lua_State *L) {
+	BEGIN();
+	// number argument, import
+	if(lua_isnumber(L, 1)) {
+		lua_Number number = lua_tonumber(L, 1);
+		float *flt = float_new(L);
+		if(!flt) {
+			lerror(L, "Could not create float number");
+			return 0;
+		}
+		*flt = (float)number;
+		return 1;
+	}
+	if(lua_isstring(L, 1)) {
+		const char* arg = lua_tostring(L, 1);
+		float *flt = float_new(L);
+		if(!flt) {
+			lerror(L, "Could not create float number");
+			return 0;
+		}
+		char *pEnd;
+		*flt = strtof(arg, &pEnd);
+		if(*pEnd) {
+			lerror(L, "Could not parse float number %s", arg);
+			return 0;
+		}
+		return 1;
+	}
+	// octet argument, import
+	char *failed_msg = NULL;
+	octet *o = o_arg(L, 1);
+	if(!o) {
+		failed_msg = "Could not allocate octet";
+		goto end;
+	}
+	char *pEnd = NULL;
+	float* f = float_new(L);
+	if(!f) {
+		failed_msg = "Could not create float number";
+		goto end;
+	}
+	*f = strtof(o->val, &pEnd);
+	if(*pEnd) {
+		failed_msg = "Could not parse float number";
+		goto end;
+	}
+end:
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+static int is_float(lua_State *L) {
+	BEGIN();
+	int result = 0;
+	if(lua_isnumber(L, 1)) {
+		result = 1;
+	} else if(lua_isstring(L, 1)) {
+		const char* arg = lua_tostring(L, 1);
+		float *flt = float_new(L);
+		if(!flt) {
+			THROW("Could not create float number");
+		}
+		char *pEnd;
+		*flt = strtof(arg, &pEnd);
+		result = (*pEnd == '\0');
+	}
+	lua_pushboolean(L, result);
+	END(1);
+}
+
 static int float_to_octet(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -208,7 +227,7 @@ static int float_to_octet(lua_State *L) {
 		failed_msg = "Could not read float input";
 		goto end;
 	}
-	o = new_octet_from_float(L,c);
+	o = new_octet_from_float(L, c);
 	if(o == NULL) {
 		failed_msg = "Could not create octet";
 		goto end;
@@ -216,10 +235,9 @@ static int float_to_octet(lua_State *L) {
 	o_dup(L, o);
 end:
 	float_free(c);
-	o_free(L,o);
+	o_free(L, o);
 	if(failed_msg) {
-		lerror(L, "%s: %s", __func__, failed_msg);
-		lua_pushnil(L);
+		THROW(failed_msg);
 	}
 
 	END(1);
@@ -252,10 +270,8 @@ static int float_eq(lua_State *L) {
 	float_free(a);
 	float_free(b);
 	if(!a || !b) {
-		lerror(L, "Error with float input in %s", __func__);
-		lua_pushnil(L);
+		THROW("Could not allocate float number");
 	}
-
 	END(1);
 }
 
@@ -269,8 +285,7 @@ static int float_lt(lua_State *L) {
 	float_free(a);
 	float_free(b);
 	if(!a || !b) {
-		lerror(L, "Error with float input in %s", __func__);
-		lua_pushnil(L);
+		THROW("Could not allocate float number");
 	}
 	END(1);
 }
@@ -286,8 +301,7 @@ static int float_lte(lua_State *L) {
 	float_free(a);
 	float_free(b);
 	if(!a || !b) {
-		lerror(L, "Error with float input in %s", __func__);
-		lua_pushnil(L);
+		THROW("Could not allocate float number");
 	}
 	END(1);
 }
@@ -296,15 +310,14 @@ static int float_add(lua_State *L) {
 	BEGIN();
 	float *a = float_arg(L,1);
 	float *b = float_arg(L,2);
-        float *c = float_new(L);
+	float *c = float_new(L);
 	if(a && b && c) {
 		*c = *a + *b;
 	}
 	float_free(a);
 	float_free(b);
 	if(!a || !b || !c) {
-		lerror(L, "Error with float input in %s", __func__);
-		lua_pushnil(L);
+		THROW("Could not allocate float number");
 	}
 	END(1);
 }
@@ -312,14 +325,13 @@ static int float_add(lua_State *L) {
 static int float_opposite(lua_State *L) {
 	BEGIN();
 	float *a = float_arg(L,1);
-        float *b = float_new(L);
+	float *b = float_new(L);
 	if(a && b) {
 		*b = -(*a);
 	}
 	float_free(a);
 	if(!a || !b) {
-		lerror(L, "Error with float input in %s", __func__);
-		lua_pushnil(L);
+		THROW("Could not allocate float number");
 	}
 	END(1);
 }
@@ -328,15 +340,14 @@ static int float_sub(lua_State *L) {
 	BEGIN();
 	float *a = float_arg(L,1);
 	float *b = float_arg(L,2);
-        float *c = float_new(L);
+	float *c = float_new(L);
 	if(a && b && c) {
 		*c = *a - *b;
 	}
 	float_free(a);
 	float_free(b);
 	if(!a || !b || !c) {
-		lerror(L, "Error with float input in %s", __func__);
-		lua_pushnil(L);
+		THROW("Could not allocate float number");
 	}
 	END(1);
 }
@@ -345,15 +356,14 @@ static int float_mul(lua_State *L) {
 	BEGIN();
 	float *a = float_arg(L,1);
 	float *b = float_arg(L,2);
-        float *c = float_new(L);
+	float *c = float_new(L);
 	if(a && b && c) {
 		*c = *a * *b;
 	}
 	float_free(a);
 	float_free(b);
 	if(!a || !b || !c) {
-		lerror(L, "Error with float input in %s", __func__);
-		lua_pushnil(L);
+		THROW("Could not allocate float number");
 	}
 	END(1);
 }
@@ -362,7 +372,7 @@ static int float_div(lua_State *L) {
 	BEGIN();
 	float *a = float_arg(L,1);
 	float *b = float_arg(L,2);
-        float *c = float_new(L);
+	float *c = float_new(L);
 	if(a && b && c) {
 		// TODO: what happen if I divide by 0?
 		*c = *a / *b;
@@ -370,8 +380,7 @@ static int float_div(lua_State *L) {
 	float_free(a);
 	float_free(b);
 	if(!a || !b || !c) {
-		lerror(L, "Error with float input in %s", __func__);
-		lua_pushnil(L);
+		THROW("Could not allocate float number");
 	}
 	END(1);
 }
@@ -380,7 +389,7 @@ static int float_mod(lua_State *L) {
 	BEGIN();
 	float *a = float_arg(L,1);
 	float *b = float_arg(L,2);
-        float *c = float_new(L);
+	float *c = float_new(L);
 	if(a && b && c) {
 		// TODO: what happen if I divide by 0?
 		*c = fmod(*a, *b);
@@ -388,8 +397,7 @@ static int float_mod(lua_State *L) {
 	float_free(a);
 	float_free(b);
 	if(!a || !b || !c) {
-		lerror(L, "Error with float input in %s", __func__);
-		lua_pushnil(L);
+		THROW("Could not allocate float number");
 	}
 	END(1);
 }
@@ -399,21 +407,20 @@ static int float_to_string(lua_State *L) {
 	char *failed_msg = NULL;
 	float* c = float_arg(L,1);
 	if(c == NULL) {
-	        failed_msg = "Could not read float";
+		failed_msg = "Could not read float";
 		goto end;
 	}
-        char dest[1024];
-        int bufsz = _string_from_float(dest, *c);
+	char dest[1024];
+	int bufsz = _string_from_float(dest, *c);
 	if(bufsz < 0) {
-	        failed_msg = "Output size too big";
+		failed_msg = "Output size too big";
 		goto end;
 	}
-        lua_pushstring(L, dest);
+	lua_pushstring(L, dest);
 end:
 	float_free(c);
 	if(failed_msg) {
-		lerror(L, "%s: %s", __func__, failed_msg);
-		lua_pushnil(L);
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -421,29 +428,29 @@ end:
 int luaopen_float(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg float_class[] = {
-		{"new",newfloat},
-		{"to_octet",float_to_octet},
-		{"eq",float_eq},
-		{"add",float_add},
-		{"sub",float_sub},
-		{"mul",float_mul},
-		{"div",float_div},
-		{"opposite",float_opposite},
-		{"is_float",is_float},
-		{NULL,NULL}
+		{"new", newfloat},
+		{"to_octet", float_to_octet},
+		{"eq", float_eq},
+		{"add", float_add},
+		{"sub", float_sub},
+		{"mul", float_mul},
+		{"div", float_div},
+		{"opposite", float_opposite},
+		{"is_float", is_float},
+		{NULL, NULL}
 	};
 	const struct luaL_Reg float_methods[] = {
-		{"octet",float_to_octet},
-		{"__tostring",float_to_string},
-		{"__eq",float_eq},
+		{"octet", float_to_octet},
+		{"__tostring", float_to_string},
+		{"__eq", float_eq},
 		{"__lt", float_lt},
 		{"__lte", float_lte},
-		{"__add",float_add},
-		{"__sub",float_sub},
-		{"__mul",float_mul},
-		{"__div",float_div},
-		{"__mod",float_mod},
-		{NULL,NULL}
+		{"__add", float_add},
+		{"__sub", float_sub},
+		{"__mul", float_mul},
+		{"__div", float_div},
+		{"__mod", float_mod},
+		{NULL, NULL}
 	};
 	zen_add_class(L, "float", float_class, float_methods);
 	return 1;
