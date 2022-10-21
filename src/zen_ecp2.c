@@ -157,10 +157,10 @@ static int lua_new_ecp2(lua_State *L) {
 			goto end_big_big_big_big;
 		}
 end_big_big_big_big:
-		big_free(yi);
-		big_free(y);
-		big_free(xi);
-		big_free(x);
+		big_free(L,yi);
+		big_free(L,y);
+		big_free(L,xi);
+		big_free(L,x);
 		goto end;
 	}
 	// If x is on the curve then y is calculated from the curve equation.
@@ -180,8 +180,8 @@ end_big_big_big_big:
 			goto end_big_big;
 		}
 end_big_big:
-		big_free(xi);
-		big_free(x);
+		big_free(L,xi);
+		big_free(L,x);
 		goto end;
 	}
 #endif
@@ -257,7 +257,7 @@ static int ecp2_millerloop(lua_State *L) {
 	PAIR_ate(&f->val, &x->val, &y->val);
 	PAIR_fexp(&f->val);
 end:
-	ecp_free(y);
+	ecp_free(L, y);
 	ecp2_free(x);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -512,7 +512,7 @@ static int ecp2_mul(lua_State *L) {
 	}
 	PAIR_G2mul(&r->val, b->val);
 end:
-	big_free(b);
+	big_free(L,b);
 	ecp2_free(p);
 	if(failed_msg) {
 		THROW(failed_msg);

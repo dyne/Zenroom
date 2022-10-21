@@ -34,7 +34,7 @@ typedef struct {
 	// curves ECP.
 } ecp;
 
-void ecp_free(ecp* e);
+void ecp_free(lua_State *L, ecp* e);
 ecp* ecp_new(lua_State *L);
 ecp* ecp_arg(lua_State *L,int n);
 

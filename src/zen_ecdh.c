@@ -85,15 +85,21 @@ ecdh ECDH;
 // 	ECDH = e; // global pointer to a single ECDH instance
 // 	return(1);
 // }
-void ecdh_free(ecdh *e) {
-	if(e) free(e);
+void ecdh_free(lua_State *L, ecdh *e) {
+	Z(L);
+	if(e) {
+		free(e);
+		Z->memcount_ecdhs--;
+	}
 }
 
 ecdh* ecdh_arg(lua_State *L,int n) {
+	Z(L);
 	void *ud = luaL_testudata(L, n, "zenroom.ecdh");
 	if(ud) {
 		ecdh *result = (ecdh*)malloc(sizeof(ecdh));
 		*result = *(ecdh*)ud;
+		Z->memcount_ecdhs++;
 		return result;
 	}
 	zerror(L, "invalid ecdh in argument");

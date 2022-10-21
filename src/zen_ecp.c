@@ -70,17 +70,21 @@ ecp* ecp_new(lua_State *L) {
 	return(e);
 }
 
-void ecp_free(ecp* e) {
+void ecp_free(lua_State *L, ecp* e) {
+	Z(L);
 	if(e) {
 		free(e);
+		Z->memcount_ecp--;
 	}
 }
 
 ecp* ecp_arg(lua_State *L, int n) {
+	Z(L);
 	void *ud = luaL_testudata(L, n, "zenroom.ecp");
 	if(ud) {
 		ecp* result = (ecp*)malloc(sizeof(ecp));
 		*result = *(ecp*)ud;
+		Z->memcount_ecp++;
 		return result;
 	}
 	zerror(L, "invalid ECP in argument");
@@ -141,8 +145,8 @@ static int lua_new_ecp(lua_State *L) {
 		if(!ECP_set(&e->val, x->val, y->val))
 			warning(L, "new ECP value out of curve (points to infinity)");
 end_big_big:
-		big_free(y);
-		big_free(x);
+		big_free(L,y);
+		big_free(L,x);
 		goto end;
 	}
 	// If x is on the curve then y is calculated from the curve equation.
@@ -163,7 +167,7 @@ end_big_big:
 		if(!ECP_setx(&e->val, x->val, (int)n))
 			warning(L, "new ECP value out of curve (points to infinity)");
 end_big_number:
-		big_free(x);
+		big_free(L,x);
 		goto end;
 	}
 #endif
@@ -183,7 +187,7 @@ end_big_number:
 		if(!ECP_setx(&e->val, x->val, 0))
 			warning(L, "new ECP value out of curve (points to infinity)");
 end_big:
-		big_free(x);
+		big_free(L,x);
 		goto end;
 	}
 	// We protect well this entrypoint since parsing any input is at risk
@@ -353,7 +357,7 @@ static int ecp_affine(lua_State *L) {
 	}
 	ECP_affine(&out->val);
 end:
-	ecp_free(in);
+	ecp_free(L,in);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -370,7 +374,7 @@ static int ecp_isinf(lua_State *L) {
 	ecp *e = ecp_arg(L, 1);
 	if(e) {
 		lua_pushboolean(L, ECP_isinf(&e->val));
-		ecp_free(e);
+		ecp_free(L,e);
 	} else {
 		THROW("Could not create ECP");
 	}
@@ -401,8 +405,8 @@ static int ecp_add(lua_State *L) {
 	}
 	ECP_add(&p->val, &q->val);
 end:
-	ecp_free(q);
-	ecp_free(e);
+	ecp_free(L,q);
+	ecp_free(L,e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -433,8 +437,8 @@ static int ecp_sub(lua_State *L) {
 	}
 	ECP_sub(&p->val, &q->val);
 end:
-	ecp_free(q);
-	ecp_free(e);
+	ecp_free(L,q);
+	ecp_free(L,e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -462,7 +466,7 @@ static int ecp_negative(lua_State *L) {
 	}
 	ECP_neg(&out->val);
 end:
-	ecp_free(in);
+	ecp_free(L,in);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -490,7 +494,7 @@ static int ecp_double(lua_State *L) {
 	}
 	ECP_dbl(&out->val);
 end:
-	ecp_free(in);
+	ecp_free(L,in);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -526,8 +530,8 @@ static int ecp_mul(lua_State *L) {
 	}
 	PAIR_G1mul(&out->val, b->val);
 end:
-	ecp_free(e);
-	big_free(b);
+	ecp_free(L,e);
+	big_free(L,b);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -556,8 +560,8 @@ static int ecp_eq(lua_State *L) {
 	ECP_affine(&q->val);
 	lua_pushboolean(L, ECP_equals(&p->val, &q->val));
 end:
-	ecp_free(p);
-	ecp_free(q);
+	ecp_free(L,p);
+	ecp_free(L,q);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -596,7 +600,7 @@ static int ecp_octet(lua_State *L) {
 	}
 	_ecp_to_octet(o, e);
 end:
-	ecp_free(e);
+	ecp_free(L,e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -626,7 +630,7 @@ static int ecp_get_x(lua_State *L) {
 	big_init(L,x);
 	_fp_to_big(x, &e->val.x);
 end:
-	ecp_free(e);
+	ecp_free(L,e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -657,7 +661,7 @@ static int ecp_get_y(lua_State *L) {
 	big_init(L,y);
 	_fp_to_big(y, &e->val.y);
 end:
-	ecp_free(e);
+	ecp_free(L,e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -687,7 +691,8 @@ static int ecp_output(lua_State *L) {
 		}
 		o->val[0] = SCHAR_MAX; o->val[1] = SCHAR_MAX;
 		o->val[3] = 0x0; o->len = 2;
-		return 1; }
+		goto end;
+	}
 	octet *o = o_new(L, e->totlen + 0x0f);
 	if(!o) {
 		failed_msg = "Could not read OCTET";
@@ -696,7 +701,7 @@ static int ecp_output(lua_State *L) {
 	_ecp_to_octet(o, e);
 	push_octet_to_hex_string(L, o);
 end:
-	ecp_free(e);
+	ecp_free(L,e);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}

@@ -88,6 +88,7 @@ extern ecp* ecp_dup(lua_State *L, ecp* in);
 
 int _octet_to_big(lua_State *L, big *dst, octet *src) {
 	int i;
+	Z(L);
 	if(src->len <= MODBYTES) { // big
 		big_init(L,dst);
 		BIG_zero(dst->val);
@@ -112,9 +113,11 @@ int _octet_to_big(lua_State *L, big *dst, octet *src) {
 	return(i);
 }
 
-void big_free(big *b) {
+void big_free(lua_State *L, big *b) {
+	Z(L);
 	if(b) {
 		free(b);
+		Z->memcount_bigs--;
 	}
 }
 
@@ -136,28 +139,31 @@ big* big_new(lua_State *L) {
 }
 
 big* big_arg(lua_State *L,int n) {
+	Z(L);
 	big* result = (big*)malloc(sizeof(big));
 	void *ud = luaL_testudata(L, n, "zenroom.big");
 	if(ud) {
 		*result = *(big*)ud;
 		if(!result->val && !result->dval) {
 			zerror(L, "invalid big number in argument: not initalized");
-			big_free(result);
+			big_free(L,result);
 			return NULL; }
+		if(result) Z->memcount_bigs++;
 		return(result);
 	}
 
 	octet *o = o_arg(L,n);
 	if(o) {
 		if(!_octet_to_big(L,result,o)) {
-			big_free(result);
+			big_free(L,result);
 			result = NULL;
 		}
 		o_free(L,o);
+		if(result) Z->memcount_bigs++;
 		return(result);
 	}
 	zerror(L, "invalib big number in argument");
-	big_free(result);
+	big_free(L,result);
 	return NULL;
 }
 
@@ -482,7 +488,7 @@ static int big_to_fixed_octet(lua_State *L) {
 
 	}
 end:
-	big_free(num);
+	big_free(L,num);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -582,7 +588,7 @@ static int luabig_to_octet(lua_State *L) {
 	}
 	o_dup(L, c_oct);
 end:
-	big_free(c);
+	big_free(L,c);
 	o_free(L,c_oct);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -607,8 +613,8 @@ static int big_concat(lua_State *L) {
 	OCT_copy(d,ol);
 	OCT_joctet(d,or);
 end:
-	big_free(r);
-	big_free(l);
+	big_free(L,r);
+	big_free(L,l);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -631,7 +637,7 @@ static int big_to_hex(lua_State *L) {
 	push_octet_to_hex_string(L,o);
 end:
 	o_free(L, o);
-	big_free(a);
+	big_free(L,a);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -663,7 +669,7 @@ static int big_to_int(lua_State *L) {
 	lua_pushinteger(L, (lua_Integer) res);
 end:
 	o_free(L, o);
-	big_free(a);
+	big_free(L,a);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -702,8 +708,8 @@ static int big_eq(lua_State *L) {
 		lua_pushboolean(L, (res==0)?1:0);
 	}
 end:
-	big_free(r);
-	big_free(l);
+	big_free(L,r);
+	big_free(L,l);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -722,8 +728,8 @@ static int big_lt(lua_State *L) {
 	// -1 if x<y, 0 if x=y, 1 if x>y
 	lua_pushboolean(L, (res<0)?1:0);
 end:
-	big_free(l);
-	big_free(r);
+	big_free(L,l);
+	big_free(L,r);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -742,8 +748,8 @@ static int big_lte(lua_State *L) {
 	// -1 if x<y, 0 if x=y, 1 if x>y
 	lua_pushboolean(L, (res<0)?1:(res==0)?1:0);
 end:
-	big_free(r);
-	big_free(l);
+	big_free(L,r);
+	big_free(L,l);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -767,8 +773,8 @@ static int big_add(lua_State *L) {
 			BIG_norm(d->val);
 		}
 	}
-	big_free(r);
-	big_free(l);
+	big_free(L,r);
+	big_free(L,l);
 	if(!l || !r || !d) {
 		THROW("Could not create bigs");
 	}
@@ -809,8 +815,8 @@ static int big_sub(lua_State *L) {
 		BIG_norm(d->val);
 	}
 end:
-	big_free(r);
-	big_free(l);
+	big_free(L,r);
+	big_free(L,l);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -850,9 +856,9 @@ static int big_modsub(lua_State *L) {
 			}
 		}
 	}
-	big_free(l);
-	big_free(r);
-	big_free(m);
+	big_free(L,l);
+	big_free(L,r);
+	big_free(L,m);
 	if(!l || !r || !m || !d) {
 		THROW("Could not create BIGs");
 	}
@@ -877,7 +883,7 @@ static int big_modrand(lua_State *L) {
 		big_init(L,res);
 		BIG_randomnum(res->val,modulus->val,Z->random_generator);
 	}
-	big_free(modulus);
+	big_free(L,modulus);
 	if(!modulus || !res) {
 		THROW("Could not create BIGs");
 	}
@@ -945,11 +951,11 @@ static int big_mul(lua_State *L) {
 		BIG_modmul(d->val, l->val, r->val, (chunk*)CURVE_Order);
 		BIG_norm(d->val);
 end_big:
-		big_free(r);
+		big_free(L,r);
 	}
 
 end:
-	big_free(l);
+	big_free(L,l);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -991,9 +997,9 @@ static int big_modpower(lua_State *L) {
 			}
 		}
 	}
-	big_free(m);
-	big_free(n);
-	big_free(x);
+	big_free(L,m);
+	big_free(L,n);
+	big_free(L,x);
 	if(!x || !n || !m) {
 		THROW("Could not create BIGs");
 	}
@@ -1022,8 +1028,8 @@ static int big_sqr(lua_State *L) {
 	dbig_init(L,d); // assume it always returns a double big
 	BIG_sqr(d->dval,l->val);
 end:
-	big_free(d);
-	big_free(l);
+	big_free(L,d);
+	big_free(L,l);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -1059,8 +1065,8 @@ static int big_monty(lua_State *L) {
 	big_init(L,d);
 	BIG_monty(d->val, m->val, Montgomery, s->dval);
 end:
-	big_free(m);
-	big_free(s);
+	big_free(L,m);
+	big_free(L,s);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -1097,8 +1103,8 @@ static int big_mod(lua_State *L) {
 		}
 	}
 end:
-	big_free(r);
-	big_free(l);
+	big_free(L,r);
+	big_free(L,l);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -1130,8 +1136,8 @@ static int big_div(lua_State *L) {
 		BIG_sdiv(d->val, r->val);
 	}
 end:
-	big_free(r);
-	big_free(l);
+	big_free(L,r);
+	big_free(L,l);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -1182,8 +1188,8 @@ static int big_modmul(lua_State *L) {
 		BIG_norm(x->val);
 	}
 end:
-	big_free(z);
-	big_free(y);
+	big_free(L,z);
+	big_free(L,y);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -1210,9 +1216,9 @@ static int big_moddiv(lua_State *L) {
 	BIG_moddiv(x->val, t, div->val, mod->val);
 	BIG_norm(x->val);
 end:
-	big_free(y);
-	big_free(div);
-	big_free(mod);
+	big_free(L,y);
+	big_free(L,div);
+	big_free(L,mod);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -1242,8 +1248,8 @@ static int big_modsqr(lua_State *L) {
 	BIG_modsqr(x->val, t, n->val);
 	BIG_norm(x->val);
 end:
-	big_free(n);
-	big_free(y);
+	big_free(L,n);
+	big_free(L,y);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -1273,8 +1279,8 @@ static int big_modneg(lua_State *L) {
 	BIG_modneg(x->val, t, n->val);
 	BIG_norm(x->val);
 end:
-	big_free(y);
-	big_free(n);
+	big_free(L,y);
+	big_free(L,n);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -1294,8 +1300,8 @@ static int big_jacobi(lua_State *L) {
 	}
 	lua_pushinteger(L, BIG_jacobi(x->val, y->val));
 end:
-	big_free(x);
-	big_free(y);
+	big_free(L,x);
+	big_free(L,y);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -1310,8 +1316,8 @@ static int big_modinv(lua_State *L) {
 		big_init(L,x);
 		BIG_invmodp(x->val, y->val, m->val);
 	}
-	big_free(y);
-	big_free(m);
+	big_free(L,y);
+	big_free(L,m);
 	if(!y || !m || !x) {
 		THROW("Could not create BIG");
 	}
@@ -1350,8 +1356,8 @@ static int big_zenadd(lua_State *L) {
 	big_init(L,c);
 	_algebraic_sum(c, a, b, failed_msg);
 end:
-	big_free(b);
-	big_free(a);
+	big_free(L,b);
+	big_free(L,a);
 	if(failed_msg) {
 		THROW("Could not create BIG");
 	}
@@ -1372,8 +1378,8 @@ static int big_zensub(lua_State *L) {
 	_algebraic_sum(c, a, b, failed_msg);
 	b->zencode_positive = BIG_OPPOSITE(b->zencode_positive);
 end:
-	big_free(b);
-	big_free(a);
+	big_free(L,b);
+	big_free(L,a);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -1415,8 +1421,8 @@ static int big_zenmul(lua_State *L) {
 
         bottom->zencode_positive = BIG_MULSIGN(a->zencode_positive, b->zencode_positive);
 end:
-	big_free(b);
-	big_free(a);
+	big_free(L,b);
+	big_free(L,a);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -1450,8 +1456,8 @@ static int big_zendiv(lua_State *L) {
 
         result->zencode_positive = BIG_MULSIGN(a->zencode_positive, b->zencode_positive);
 end:
-	big_free(b);
-	big_free(a);
+	big_free(L,b);
+	big_free(L,a);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -1487,8 +1493,8 @@ static int big_zenmod(lua_State *L) {
 
         result->zencode_positive = BIG_POSITIVE;
 end:
-	big_free(b);
-	big_free(a);
+	big_free(L,b);
+	big_free(L,a);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -1511,7 +1517,7 @@ static int big_zenopposite(lua_State *L) {
 
         result->zencode_positive = BIG_OPPOSITE(result->zencode_positive);
 end:
-	big_free(a);
+	big_free(L,a);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
@@ -1576,7 +1582,7 @@ static int big_shiftr(lua_State *L) {
 		BIG_shr(r->val, int_n);
 	}
 end:
-	big_free(c);
+	big_free(L,c);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
