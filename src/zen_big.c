@@ -76,13 +76,13 @@ extern ecp* ecp_dup(lua_State *L, ecp* in);
 
 #define checkalldouble(l,r) \
 	if(!l->val && !l->dval) { \
-		lerror(L,"uninitialised big in arg1"); } \
+		failed_msg = "uninitialised big in arg1"; } \
 	if(!r->val && !r->dval) { \
-		lerror(L,"uninitialised big in arg2"); } \
+		failed_msg = "uninitialised big in arg2"; } \
 	if(l->doublesize && !r->doublesize) { \
-		lerror(L,"incompatible sizes: arg1 is double, arg2 is not"); \
+		failed_msg = "incompatible sizes: arg1 is double, arg2 is not"; \
 	} else if(r->doublesize && !l->doublesize) { \
-		lerror(L,"incompatible sizes: arg2 is double, arg1 is not"); \
+		failed_msg = "incompatible sizes: arg2 is double, arg1 is not"; \
 	}
 
 
@@ -371,7 +371,7 @@ octet *new_octet_from_big(lua_State *L, big *c) {
 			o->len = c->len;
 		}
 	} else {
-		lerror(NULL,"Invalid BIG number, cannot convert to octet");
+		zerror(NULL,"Invalid BIG number, cannot convert to octet");
 		return NULL;
 	}
 	// remove leading zeroes from octet
@@ -425,14 +425,24 @@ static int big_from_decimal_string(lua_State *L) {
   @param big_endian use big endian order (if omitted by default is true)
 */
 static int big_to_fixed_octet(lua_State *L) {
+	char *failed_msg = NULL;
         int n_args = lua_gettop(L);
-        big *num = big_arg(L,1); SAFE(num);
-	octet* o = new_octet_from_big(L,num);
+	octet *o = NULL;
+        big *num = big_arg(L,1);
+	if(!num) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
+	o = new_octet_from_big(L,num);
+	if(!o) {
+		failed_msg = "Could not create octet from BIG";
+		goto end;
+	}
 	int i;
 	lua_Number len = lua_tointegerx(L,2,&i);
 	if(!i) {
-		lerror(L, "O.from_number input is not a number");
-		return 0;
+		failed_msg = "O.from_number input is not a number";
+		goto end;
 	}
 
 	int big_endian = 1;
@@ -443,6 +453,11 @@ static int big_to_fixed_octet(lua_State *L) {
 	octet* padded_oct;
 	if(o->len < len) {
 		padded_oct = o_new(L, len);
+		if(!padded_oct) {
+			failed_msg = "Could not create octet";
+			o_free(L, o);
+			goto end;
+		}
 		for(i=0; i<o->len; i++) {
 		  padded_oct->val[int_len-(o->len)+i] = o->val[i];
 		}
@@ -465,6 +480,11 @@ static int big_to_fixed_octet(lua_State *L) {
 			i++; j--;
 		}
 
+	}
+end:
+	big_free(num);
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	return 1;
 }
@@ -650,66 +670,82 @@ end:
 	return(1);
 }
 
-static int _compare_bigs(lua_State *L, big *l, big *r) {
-	int res;
+static int _compare_bigs(big *l, big *r, char *failed_msg) {
+	int res = 0;
 	checkalldouble(l,r);
-	if(l->doublesize || r->doublesize) {
-		godbig2(l,r);
-		BIG_dnorm(_l);
-		BIG_dnorm(_r);
-		res = BIG_dcomp(_l,_r);
-	} else {
-		BIG_norm(l->val);
-		BIG_norm(r->val);
-		res = BIG_comp(l->val,r->val);
+	if(!failed_msg) {
+		if(l->doublesize || r->doublesize) {
+			godbig2(l,r);
+			BIG_dnorm(_l);
+			BIG_dnorm(_r);
+			res = BIG_dcomp(_l,_r);
+		} else {
+			BIG_norm(l->val);
+			BIG_norm(r->val);
+			res = BIG_comp(l->val,r->val);
+		}
 	}
 	return(res);
 }
 static int big_eq(lua_State *L) {
+	char *failed_msg = NULL;
 	big *l = big_arg(L,1);
 	big *r = big_arg(L,2);
-	if(l && r) {
-		// BIG_comp requires external normalization
-		int res = _compare_bigs(L,l,r);
+	if(!l || !r) {
+		failed_msg = "Could not read big";
+		goto end;
+	}
+	// BIG_comp requires external normalization
+	int res = _compare_bigs(l,r,failed_msg);
+	if(!failed_msg) {
 		// -1 if x<y, 0 if x=y, 1 if x>y
 		lua_pushboolean(L, (res==0)?1:0);
 	}
+end:
 	big_free(r);
 	big_free(l);
-	if(!l || !r) {
-		THROW("Could not read big");
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	return 1;
 }
 static int big_lt(lua_State *L) {
+	char *failed_msg = NULL;
 	big *l = big_arg(L,1);
 	big *r = big_arg(L,2);
-	if(l && r) {
-		// BIG_comp requires external normalization
-		int res = _compare_bigs(L,l,r);
-		// -1 if x<y, 0 if x=y, 1 if x>y
-		lua_pushboolean(L, (res<0)?1:0);
+	if(!r || !l) {
+		failed_msg = "Could not read big";
+		goto end;
 	}
+	// BIG_comp requires external normalization
+	int res = _compare_bigs(l,r,failed_msg);
+	// -1 if x<y, 0 if x=y, 1 if x>y
+	lua_pushboolean(L, (res<0)?1:0);
+end:
 	big_free(l);
 	big_free(r);
-	if(!r || !l) {
-		THROW("Could not read big");
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	return 1;
 }
 static int big_lte(lua_State *L) {
+	char *failed_msg = NULL;
 	big *l = big_arg(L,1);
 	big *r = big_arg(L,2);
-	if(r && l) {
-		// BIG_comp requires external normalization
-		int res = _compare_bigs(L,l,r);
-		// -1 if x<y, 0 if x=y, 1 if x>y
-		lua_pushboolean(L, (res<0)?1:(res==0)?1:0);
+	if(!r || !l) {
+		failed_msg = "Could not read big";
+		goto end;
 	}
+	// BIG_comp requires external normalization
+	int res = _compare_bigs(l,r,failed_msg);
+	// -1 if x<y, 0 if x=y, 1 if x>y
+	lua_pushboolean(L, (res<0)?1:(res==0)?1:0);
+end:
 	big_free(r);
 	big_free(l);
-	if(!r || !l) {
-		THROW("Could not read big");
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	return 1;
 }
@@ -740,38 +776,43 @@ static int big_add(lua_State *L) {
 }
 
 static int big_sub(lua_State *L) {
+	char *failed_msg = NULL;
 	big *l = big_arg(L,1);
 	big *r = big_arg(L,2);
 	big *d = big_new(L);
-	if(l && r && d) {
-		if(l->doublesize || r->doublesize) {
-			godbig2(l, r);
-			dbig_init(L,d);
-			if(BIG_dcomp(_l,_r)<0) {
-				lerror(L,"Subtraction error: arg1 smaller than arg2 (consider use of :modsub)");
-				return 0; }
-			BIG_dsub(d->dval, _l, _r);
-			BIG_dnorm(d->dval);
-		} else {
-			// if(BIG_comp(l->val,r->val)<0) {
-			// 	lerror(L,"Subtraction error: arg1 smaller than arg2");
-			// 	return 0; }
-			big_init(L,d);
-			if(BIG_comp(l->val,r->val)<0) {
-				BIG t;
-				BIG_sub(t, r->val, l->val);
-				BIG_sub(d->val, (chunk*)CURVE_Order, t);
-			} else {
-				BIG_sub(d->val, l->val, r->val);
-				BIG_mod(d->val, (chunk*)CURVE_Order);
-			}
-			BIG_norm(d->val);
-		}
+	if(!l || !r || !d) {
+		failed_msg = "Could not create BIGs";
+		goto end;
 	}
+	if(l->doublesize || r->doublesize) {
+		godbig2(l, r);
+		dbig_init(L,d);
+		if(BIG_dcomp(_l,_r)<0) {
+			failed_msg = "Subtraction error: arg1 smaller than arg2 (consider use of :modsub)";
+			goto end;
+		}
+		BIG_dsub(d->dval, _l, _r);
+		BIG_dnorm(d->dval);
+	} else {
+		// if(BIG_comp(l->val,r->val)<0) {
+		// 	lerror(L,"Subtraction error: arg1 smaller than arg2");
+		// 	return 0; }
+		big_init(L,d);
+		if(BIG_comp(l->val,r->val)<0) {
+			BIG t;
+			BIG_sub(t, r->val, l->val);
+			BIG_sub(d->val, (chunk*)CURVE_Order, t);
+		} else {
+			BIG_sub(d->val, l->val, r->val);
+			BIG_mod(d->val, (chunk*)CURVE_Order);
+		}
+		BIG_norm(d->val);
+	}
+end:
 	big_free(r);
 	big_free(l);
-	if(!l || !r || !d) {
-		lerror(L, "Could not create BIGs");
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	return 1;
 }
@@ -1278,12 +1319,12 @@ static int big_modinv(lua_State *L) {
 }
 
 // algebraic sum (add and sub) taking under account zencode sign
-static void _algebraic_sum(lua_State *L, big *c, big *a, big *b) {
+static void _algebraic_sum(big *c, big *a, big *b, char *failed_msg) {
         if (a->zencode_positive == b->zencode_positive) {
 	        BIG_add(c->val, a->val, b->val);
                 c->zencode_positive = a->zencode_positive;
         } else {
-                int res = _compare_bigs(L,a,b);
+                int res = _compare_bigs(a,b,failed_msg);
                 // a and b have opposite sign, so I do the bigger minus the
                 // smaller and take the sign of the bigger
                 if(res > 0) {
@@ -1298,35 +1339,43 @@ static void _algebraic_sum(lua_State *L, big *c, big *a, big *b) {
 }
 
 static int big_zenadd(lua_State *L) {
+	char *failed_msg = NULL;
 	big *a = big_arg(L, 1);
 	big *b = big_arg(L, 2);
 	big *c = big_new(L);
-	if(a && b && c) {
-		big_init(L,c);
-		_algebraic_sum(L, c, a, b);
+	if(!a || !b || !c) {
+		failed_msg = "Could not create BIG";
+		goto end;
 	}
+	big_init(L,c);
+	_algebraic_sum(c, a, b, failed_msg);
+end:
 	big_free(b);
 	big_free(a);
-	if(!a || !b || !c) {
+	if(failed_msg) {
 		THROW("Could not create BIG");
 	}
 	return 1;
 }
 
 static int big_zensub(lua_State *L) {
+	char *failed_msg = NULL;
 	big *a = big_arg(L, 1);
 	big *b = big_arg(L, 2);
 	big *c = big_new(L);
-	if(a && b && c) {
-		big_init(L,c);
-		b->zencode_positive = BIG_OPPOSITE(b->zencode_positive);
-		_algebraic_sum(L, c, a, b);
-		b->zencode_positive = BIG_OPPOSITE(b->zencode_positive);
+	if(!a || !b || !c) {
+		failed_msg = "Could not create BIG";
+		goto end;
 	}
+	big_init(L,c);
+	b->zencode_positive = BIG_OPPOSITE(b->zencode_positive);
+	_algebraic_sum(c, a, b, failed_msg);
+	b->zencode_positive = BIG_OPPOSITE(b->zencode_positive);
+end:
 	big_free(b);
 	big_free(a);
-	if(!a || !b || !c) {
-		THROW("Could not create BIG");
+	if(failed_msg) {
+		THROW(failed_msg);
 	}
 	return 1;
 }
@@ -1343,7 +1392,6 @@ static int big_zenmul(lua_State *L) {
 	if(a->doublesize || b->doublesize) {
 		failed_msg = "cannot multiply double BIG numbers";
 		goto end;
-
         }
 	//BIG_norm(a->val); BIG_norm(b->val);
         DBIG result;
