@@ -661,7 +661,7 @@ static int from_hex(lua_State *L) {
 	if(!s) {
 		zerror(L, "%s :: invalid argument", __func__); // fatal
 		lua_pushboolean(L, 0);
-		return 1; }
+		END(1); }
 	int len;
 	if ( (s[0] == '0') && (s[1] == 'x') )
 	   	 len = is_hex(L, s+2);
@@ -669,22 +669,22 @@ static int from_hex(lua_State *L) {
 	if(!len) {
 		zerror(L, "hex sequence invalid"); // fatal
 		lua_pushboolean(L, 0);
-		return 1; }
+		END(1); }
 	func(L,"hex string sequence length: %u",len);
 	if(!len || len>MAX_FILE<<1) { // *2 hex tuples
 		zerror(L, "hex sequence too long: %u bytes", len<<1); // fatal
 		lua_pushboolean(L, 0);
-		return 1; }
+		END(1); }
 	octet *o = o_new(L, len>>1); SAFE(o);
 	if ( (s[0] == '0') && (s[1] == 'x') ) {
 		// ethereum elides the leftmost 0 char when value <= 0F
 		if((len&1)==1) { // odd length means elision
 			s[1]='0'; // overwrite a single byte in const
 			o->len = hex2buf(o->val, s+1);
-			return 1;
+			END(1);
 		} else {
 			o->len = hex2buf(o->val, s+2);
-			return 1;
+			END(1);
 		}
 	}
 	o->len = hex2buf(o->val,s);
@@ -744,7 +744,7 @@ static int from_segwit_address(lua_State *L) {
 	if(!s) {
 		zerror(L, "%s :: invalid argument", __func__); // fatal
 		lua_pushboolean(L, 0);
-		return 1; }
+		END(1); }
 	int witver;
 	uint8_t witprog[40];
 	size_t witprog_len;
@@ -757,7 +757,7 @@ static int from_segwit_address(lua_State *L) {
 	if(!ret) {
 		zerror(L, "%s :: not bech32 address", __func__);
 		lua_pushboolean(L, 0);
-		return 1;
+		END(1);
 	}
 	octet *o = o_new(L, witprog_len); SAFE(o);
 	register size_t i;
@@ -856,7 +856,7 @@ static int to_mnemonic(lua_State *L) {
 		zerror(L, "%s :: octet bigger than 32 bytes cannot be encoded to mnemonic");
 		o_free(L,o);
 		lua_pushboolean(L, 0);
-		return 0;
+		END(0);
 	}
 	char *result = malloc(24 * 10);
 	if(mnemonic_from_data(result, o->val, o->len)) {
@@ -876,7 +876,7 @@ static int from_mnemonic(lua_State *L) {
 	if(!s) {
 		zerror(L, "%s :: invalid argument", __func__); // fatal
 		lua_pushboolean(L, 0);
-		return 1; }
+		END(1); }
 	// From bip39 it can be at most 32bytes
 	octet *o = o_alloc(L, 32); SAFE(o);
 	if(!mnemonic_check_and_bits(s, &(o->len), o->val)) {
@@ -1677,11 +1677,12 @@ static int popcount64b(uint64_t x) {
 // compare bit by bit two arrays and returns the hamming distance
 static int popcount_hamming_distance(lua_State *L) {
 	BEGIN();
+	char failed_msg = NULL;
 	int distance, c, nlen;
 	octet *left = o_arg(L, 1);
 	octet *right = o_arg(L, 2);
 	if(!left || !right) {
-		THROW("Could not allocate OCTET");
+		failed_msg = "Could not allocate OCTET";
 		goto end;
 	}
 	nlen = min(left->len, right->len)>>3; // 64bit chunks of minimum length
@@ -1696,6 +1697,9 @@ static int popcount_hamming_distance(lua_State *L) {
 end:
 	o_free(L, left);
 	o_free(L, right);
+	if(failed_msg) {
+		THROW(falied_msg);
+	}
 	END(1);
 }
 
