@@ -289,13 +289,17 @@ static int zen_random_seed(lua_State *L) {
 	  goto end;
   }
   else if(seed->len <4) {
-    lerror(L,"Random seed error: too small (%u bytes)",seed->len);
+    zerror(L,"Random seed error: too small (%u bytes)",seed->len);
     failed_msg = "Random seed error: too small";
     goto end;
   }
   AMCL_(RAND_seed)(Z->random_generator, seed->len, seed->val);
   // fast-forward to runtime_random (256 bytes) and 4 bytes lua
-  octet *rr = o_new(L, PRNG_PREROLL); SAFE(rr);
+  octet *rr = o_new(L, PRNG_PREROLL);
+  if(rr == NULL) {
+	  failed_msg = "Could not allocate runtime random";
+	  goto end;
+  }
   for(register int i=0;i<PRNG_PREROLL;i++)
     rr->val[i] = RAND_byte(Z->random_generator);
   rr->len = PRNG_PREROLL;
