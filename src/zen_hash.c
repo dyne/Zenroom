@@ -162,10 +162,15 @@ int hash_destroy(lua_State *L) {
 	hash *h = (hash*)luaL_testudata(L, 1, "zenroom.hash");
 	if(h){
 		if(h->rng) free(h->rng);
-		if(h->algo == _SHA256)
-			free(h->sha256);
-		else if (h->algo == _SHA512)
-			free(h->sha512);
+		switch(h->algo) {
+		case _SHA256: free(h->sha256); break;
+		case _SHA384: free(h->sha384); break;
+		case _SHA512: free(h->sha512); break;
+		case _SHA3_256: free(h->sha3_256); break;
+		case _SHA3_512: free(h->sha3_512); break;
+		case _KECCAK256: free(h->keccak256); break;
+		case _RMD160: free(h->rmd160); break;
+		}
 	}
 	END(0);
 }
