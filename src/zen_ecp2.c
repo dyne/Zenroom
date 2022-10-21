@@ -127,7 +127,10 @@ If only the first two arguments are provided (X and Xi), then Y and Yi are calcu
     @function ECP2.new(X, Xi, Y, Yi)
 */
 static int lua_new_ecp2(lua_State *L) {
+	// WARNING: each if implement his own try-catch with gotos
 	BEGIN();
+	octet *o = NULL;
+	char *failed_msg = NULL;
 // TODO: unsafe and only needed when running tests
 #ifdef DEBUG
 	void *tx  = luaL_testudata(L, 1, "zenroom.big");
@@ -138,30 +141,50 @@ static int lua_new_ecp2(lua_State *L) {
 	if(tx && txi && ty && tyi) {
 		ecp2 *e = ecp2_new(L); SAFE(e);
 		big *x, *xi, *y, *yi;
-		x  = big_arg(L, 1); SAFE(x);
-		xi = big_arg(L, 2); SAFE(xi);
-		y  = big_arg(L, 3); SAFE(y);
-		yi = big_arg(L, 4); SAFE(yi);
+		x  = big_arg(L, 1);
+		xi = big_arg(L, 2);
+		y  = big_arg(L, 3);
+		yi = big_arg(L, 4);
+		if(!x || !y || !xi || !yi) {
+			failed_msg = "Could not create BIG";
+			goto end_big_big_big_big;
+		}
 		FP2 fx, fy;
 		FP2_from_BIGs(&fx, x->val, xi->val);
 		FP2_from_BIGs(&fy, y->val, yi->val);
-		if(!ECP2_set(&e->val, &fx, &fy))
+		if(!ECP2_set(&e->val, &fx, &fy)) {
 			warning(L, "new ECP2 value out of curve (points to infinity)");
-		return 1; }
+			goto end_big_big_big_big;
+		}
+end_big_big_big_big:
+		big_free(yi);
+		big_free(y);
+		big_free(xi);
+		big_free(x);
+		goto end;
+	}
 	// If x is on the curve then y is calculated from the curve equation.
 	if(tx && txi) {
 		ecp2 *e = ecp2_new(L); SAFE(e);
 		big *x, *xi;
 		x  = big_arg(L, 1); SAFE(x);
 		xi = big_arg(L, 2); SAFE(xi);
+		if(!x || !xi) {
+			failed_msg = "Could not create BIG";
+			goto end_big_big;
+		}
 		FP2 fx;
 		FP2_from_BIGs(&fx, x->val, xi->val);
-		if(!ECP2_setx(&e->val, &fx))
+		if(!ECP2_setx(&e->val, &fx)) {
 			warning(L, "new ECP2 value out of curve (points to infinity)");
-		return 1; }
+			goto end_big_big;
+		}
+end_big_big:
+		big_free(xi);
+		big_free(x);
+		goto end;
+	}
 #endif
-	char *failed_msg = NULL;
-	octet *o = NULL;
 	o = o_arg(L, 1);
 	if(o == NULL) {
 		failed_msg = "Could not allocate OCTET";
@@ -698,7 +721,8 @@ static int ecp2_output(lua_State *L) {
 		}
 		o->val[0] = SCHAR_MAX; o->val[1] = SCHAR_MAX;
 		o->val[3] = 0x0; o->len = 2;
-		return 1; }
+		goto end;
+	}
 	octet *o = o_new(L, e->totlen + 0x0f);
 	if(o == NULL) {
 		failed_msg = "Could not create OCTET";
