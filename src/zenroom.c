@@ -188,6 +188,8 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	ZZ->memcount_hashes = 0;
 	ZZ->memcount_ecp = 0;
 	ZZ->memcount_ecp2 = 0;
+	ZZ->memcount_floats = 0;
+	ZZ->memcount_ecdhs = 0;
 
 	if(conf) {
 		if( ! zen_conf_parse(ZZ, conf) ) { // stb parsing
