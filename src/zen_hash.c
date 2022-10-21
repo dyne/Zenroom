@@ -75,7 +75,7 @@ extern void RMD160_hash(dword *MDbuf, byte *hashcode);
 hash* hash_new(lua_State *L, const char *hashtype) {
 	hash *h = lua_newuserdata(L, sizeof(hash));
 	if(!h) {
-		lerror(L, "Error allocating new hash generator in %s",__func__);
+		zerror(L, "Error allocating new hash generator in %s",__func__);
 		return NULL; }
 	luaL_getmetatable(L, "zenroom.hash");
 	lua_setmetatable(L, -2);
@@ -129,9 +129,15 @@ hash* hash_new(lua_State *L, const char *hashtype) {
 		RMD160_init(h->rmd160);
 	} // ... TODO: other hashes
 	else {
-		lerror(L, "Hash algorithm not known: %s", hashtype);
+		zerror(L, "Hash algorithm not known: %s", hashtype);
 		return NULL; }
 	return(h);
+}
+
+void hash_free(hash *h) {
+	if(h) {
+		free(h);
+	}
 }
 
 hash* hash_arg(lua_State *L, int n) {
@@ -140,28 +146,34 @@ hash* hash_arg(lua_State *L, int n) {
 	if(ud) {
 		result = (hash*)malloc(sizeof(hash));
 		*result = *(hash*)ud;
-	} else {
-		zerror(L, "invalib big number in argument");
 	}
-
+	else {
+		zerror(L, "invalid hash in argument");
+	}
 	return result;
 }
 
 int hash_destroy(lua_State *L) {
-	hash *h = hash_arg(L,1); SAFE(h);
+	BEGIN();
+	hash *h = (hash*)luaL_testudata(L, 1, "zenroom.hash");
+	if(h){
 		if(h->rng) free(h->rng);
-	if(h->algo == _SHA256)
-		free(h->sha256);
-	else if (h->algo == _SHA512)
-		free(h->sha512);
-	return 0;
+		if(h->algo == _SHA256)
+			free(h->sha256);
+		else if (h->algo == _SHA512)
+			free(h->sha512);
+	}
+	END(0);
 }
 
 static int lua_new_hash(lua_State *L) {
 	BEGIN();
 	const char *hashtype = luaL_optstring(L,1,"sha256");
-	hash *h = hash_new(L, hashtype); SAFE(h);
+	hash *h = hash_new(L, hashtype);
 	if(h) func(L,"new hash type %s",hashtype);
+	else {
+		THROW("Could not create hash");
+	}
 	END(1);
 }
 
@@ -174,7 +186,7 @@ static void _feed(hash *h, octet *o) {
 	case _SHA512: for(i=0;i<o->len;i++) HASH512_process(h->sha512,o->val[i]); break;
 	case _SHA3_256: for(i=0;i<o->len;i++) SHA3_process(h->sha3_256,o->val[i]); break;
 	case _SHA3_512: for(i=0;i<o->len;i++) SHA3_process(h->sha3_512,o->val[i]); break;
-        case _KECCAK256: for(i=0;i<o->len;i++) SHA3_process(h->keccak256,o->val[i]); break;
+	case _KECCAK256: for(i=0;i<o->len;i++) SHA3_process(h->keccak256,o->val[i]); break;
 	case _RMD160: RMD160_process(h->rmd160, (unsigned char*)o->val, o->len); break;
 	}
 }
@@ -189,12 +201,6 @@ static void _yeld(hash *h, octet *o) {
 	case _SHA3_512: SHA3_hash(h->sha3_512,o->val); break;
 	case _KECCAK256: KECCAK_hash(h->keccak256,o->val); break;
 	case _RMD160: RMD160_hash(h->rmd160, (unsigned char*)o->val); break;
-	}
-}
-
-void hash_free(hash *h) {
-	if(h) {
-		free(h);
 	}
 }
 
@@ -270,14 +276,25 @@ end:
 */
 static int hash_feed(lua_State *L) {
 	BEGIN();
-	hash *h = hash_arg(L,1); SAFE(h);
-	octet *o = o_arg(L,2);
-	if(o == NULL) {
-		lerror(L, "Could not allocate octet for hashing");
-	} else {
-		_feed(h, o);
+	char *failed_msg = NULL;
+	octet *o = NULL;
+	hash *h = hash_arg(L,1);
+	if(!h) {
+		failed_msg = "Could not create HASH";
+		goto end;
 	}
-	o_free(L,o);
+	o = o_arg(L,2);
+	if(!o) {
+		failed_msg = "Could not allocate octet for hashing";
+		goto end;
+	}
+	_feed(h, o);
+end:
+	o_free(L, o);
+	hash_free(h);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
 	END(0);
 }
 
@@ -298,7 +315,7 @@ static int hash_yeld(lua_State *L) {
 		failed_msg = "Could not create HASH";
 		goto end;
 	}
-	res = o_new(L,h->len); SAFE(res);
+	res = o_new(L,h->len);
 	if(!res) {
 		failed_msg = "Could not create octet";
 		goto end;
@@ -342,7 +359,7 @@ static int hash_hmac(lua_State *L) {
 	// length defaults to hash bytes (SHA256 = 32 = sha256)
 	octet *out;
 	if(h->algo == _SHA256) {
-		out = o_new(L, SHA256+1); SAFE(out);
+		out = o_new(L, SHA256+1);
 		if(!out) {
 			failed_msg = "Cuold not allocate output";
 			goto end;
@@ -354,7 +371,7 @@ static int hash_hmac(lua_State *L) {
 			lua_pushboolean(L,0);
 		}
 	} else if(h->algo == _SHA512) {
-		out = o_new(L, SHA512+1); SAFE(out);
+		out = o_new(L, SHA512+1);
 		if(!out) {
 			failed_msg = "Cuold not allocate output";
 			goto end;
@@ -395,24 +412,26 @@ end:
 static int hash_kdf2(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
-	hash *h = hash_arg(L,1);
+	octet *in = NULL;
+	hash *h = hash_arg(L, 1);
 	if(!h) {
 		failed_msg = "Could not create HASH";
+		goto end;
 	}
-	octet *in = o_arg(L, 2);
+	in = o_arg(L, 2);
 	if(!in) {
 		failed_msg = "Could not allocate input message";
 		goto end;
 	}
 	// output keylen is length of hash
-	octet *out = o_new(L, h->len+0x0f); SAFE(out);
+	octet *out = o_new(L, h->len+0x0f);
 	if(!out) {
 		failed_msg = "Could not allocate derived key";
 		goto end;
 	}
 	KDF2(h->len, in, NULL , h->len, out);
 end:
-	o_free(L,in);
+	o_free(L, in);
 	hash_free(h);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -461,7 +480,7 @@ static int hash_pbkdf2(lua_State *L) {
 		iter = luaL_optinteger(L,-2, 5000);
 		keylen = luaL_optinteger(L,-1,k->len);
 	} else {
-		s = o_arg(L, 3); SAFE(s);
+		s = o_arg(L, 3);
 		iter = luaL_optinteger(L, 4, 5000);
 		// keylen is length of input key
 		keylen = luaL_optinteger(L, 5, k->len);
@@ -472,13 +491,20 @@ static int hash_pbkdf2(lua_State *L) {
 	}
 	// There must be the space to concat a 4 byte integer
 	// (look at the source code of PBKDF2)
-	ss = o_new(L, s->len+4); SAFE(ss);
+	ss = o_new(L, s->len+4);
+	if(!ss) {
+		failed_msg = "Could not create salt copy";
+		goto end;
+	}
 	memcpy(ss->val, s->val, s->len);
 	ss->len = s->len;
-	octet *out = o_new(L, keylen); SAFE(out);
-
-        // TODO: according to RFC2898, s should have a size of 8
-        // c should be a positive integer
+	octet *out = o_new(L, keylen);
+	if(!out) {
+		failed_msg = "Could not allocate derived key";
+		goto end;
+	}
+	// TODO: according to RFC2898, s should have a size of 8
+	// c should be a positive integer
 	PBKDF2(h->len, k, ss, iter, keylen, out);
 end:
 	o_free(L,s);
@@ -541,112 +567,112 @@ static int mnemonic_to_seed(lua_State *L) {
 }
 
 static int hash_srand(lua_State *L) {
-  BEGIN();
-  char *failed_msg = NULL;
-  octet *seed = NULL;
-  hash *h = hash_arg(L,1);
-  if(!h) {
-    failed_msg = "Could not create HASH";
-    goto end;
-  }
-  seed = o_arg(L, 2);
-  if(!seed) {
-    failed_msg = "Could not create octet";
-    goto end;
-  }
-  if(!h->rng) // TODO: reuse if same seed is already sown
-    h->rng = (csprng*)malloc(sizeof(csprng));
-  if(!h->rng) {
-    failed_msg = "Error allocating new random number generator";
-    goto end;
-  }
-  AMCL_(RAND_seed)(h->rng, seed->len, seed->val);
-  // fast-forward to runtime_random (256 bytes) and 4 bytes lua
-  for(register int i=0;i<PRNG_PREROLL+4;i++) RAND_byte(h->rng);
-end:
-  o_free(L, seed);
-  hash_free(h);
-  if(failed_msg) {
-    THROW(failed_msg);
-  }
-  END(0);
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *seed = NULL;
+	hash *h = hash_arg(L,1);
+	if(!h) {
+		failed_msg = "Could not create HASH";
+		goto end;
+	}
+	seed = o_arg(L, 2);
+	if(!seed) {
+		failed_msg = "Could not create octet";
+		goto end;
+	}
+	if(!h->rng) // TODO: reuse if same seed is already sown
+		h->rng = (csprng*)malloc(sizeof(csprng));
+	if(!h->rng) {
+		failed_msg = "Error allocating new random number generator";
+		goto end;
+	}
+	AMCL_(RAND_seed)(h->rng, seed->len, seed->val);
+	// fast-forward to runtime_random (256 bytes) and 4 bytes lua
+	for(register int i=0;i<PRNG_PREROLL+4;i++) RAND_byte(h->rng);
+ end:
+	o_free(L, seed);
+	hash_free(h);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(0);
 }
 
 static int rand_uint8(lua_State *L) {
-  BEGIN();
-  char *failed_msg = NULL;
-  hash *h = hash_arg(L,1);
-  if(!h) {
-    failed_msg = "Could not create HASH";
-    goto end;
-  } else if(!h->rng) {
-    failed_msg = "HASH random number generator lacks seed";
-    goto end;
-  }
-  uint8_t res = RAND_byte(h->rng);
-  lua_pushinteger(L, (lua_Integer)res);
-end:
-  hash_free(h);
-  if(h) {
-    THROW(failed_msg);
-  }
-  END(1);
+	BEGIN();
+	char *failed_msg = NULL;
+	hash *h = hash_arg(L,1);
+	if(!h) {
+		failed_msg = "Could not create HASH";
+		goto end;
+	} else if(!h->rng) {
+		failed_msg = "HASH random number generator lacks seed";
+		goto end;
+	}
+	uint8_t res = RAND_byte(h->rng);
+	lua_pushinteger(L, (lua_Integer)res);
+ end:
+	hash_free(h);
+	if(h) {
+		THROW(failed_msg);
+	}
+	END(1);
 }
 
 static int rand_uint16(lua_State *L) {
-  BEGIN();
-  char *failed_msg = NULL;
-  hash *h = hash_arg(L,1);
-  if(!h) {
-    failed_msg = "Could not create HASH";
-    goto end;
-  } else if(!h->rng) {
-    failed_msg = "HASH random number generator lacks seed";
-    goto end;
-  }
-  uint16_t res =
-    RAND_byte(h->rng)
-    | (uint32_t) RAND_byte(h->rng) << 8;
-  lua_pushinteger(L, (lua_Integer)res);
-end:
-  hash_free(h);
-  if(failed_msg) {
-	  THROW(failed_msg);
-  }
-  END(1);
+	BEGIN();
+	char *failed_msg = NULL;
+	hash *h = hash_arg(L,1);
+	if(!h) {
+		failed_msg = "Could not create HASH";
+		goto end;
+	} else if(!h->rng) {
+		failed_msg = "HASH random number generator lacks seed";
+		goto end;
+	}
+	uint16_t res =
+		RAND_byte(h->rng)
+		| (uint32_t) RAND_byte(h->rng) << 8;
+	lua_pushinteger(L, (lua_Integer)res);
+ end:
+	hash_free(h);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
 }
 
 static int rand_uint32(lua_State *L) {
-  BEGIN();
-  char *failed_msg = NULL;
-  hash *h = hash_arg(L,1); SAFE(h);
-  if(!h) {
-    failed_msg = "Could not create HASH";
-    goto end;
-  } else if(!h->rng) {
-    failed_msg = "HASH random number generator lacks seed";
-    goto end;
-  }
-  uint32_t res =
-    RAND_byte(h->rng)
-    | (uint32_t) RAND_byte(h->rng) << 8
-    | (uint32_t) RAND_byte(h->rng) << 16
-    | (uint32_t) RAND_byte(h->rng) << 24;
-  lua_pushinteger(L, (lua_Integer)res);
-end:
-  hash_free(h);
-  if(failed_msg) {
-    THROW(failed_msg);
-  }
-  END(1);
+	BEGIN();
+	char *failed_msg = NULL;
+	hash *h = hash_arg(L,1);
+	if(!h) {
+		failed_msg = "Could not create HASH";
+		goto end;
+	} else if(!h->rng) {
+		failed_msg = "HASH random number generator lacks seed";
+		goto end;
+	}
+	uint32_t res =
+		RAND_byte(h->rng)
+		| (uint32_t) RAND_byte(h->rng) << 8
+		| (uint32_t) RAND_byte(h->rng) << 16
+		| (uint32_t) RAND_byte(h->rng) << 24;
+	lua_pushinteger(L, (lua_Integer)res);
+ end:
+	hash_free(h);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
 }
 
 int luaopen_hash(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg hash_class[] = {
-		{"new",lua_new_hash},
-		{"octet",hash_to_octet},
-		{"hmac",hash_hmac},
+		{"new", lua_new_hash},
+		{"octet", hash_to_octet},
+		{"hmac", hash_hmac},
 		{"kdf2", hash_kdf2},
 		{"kdf", hash_kdf2},
 		{"pbkdf2", hash_pbkdf2},
@@ -658,12 +684,12 @@ int luaopen_hash(lua_State *L) {
 		{"random_int32", rand_uint32},
 		{NULL,NULL}};
 	const struct luaL_Reg hash_methods[] = {
-		{"octet",hash_to_octet},
-		{"process",hash_process},
-		{"feed",hash_feed},
-		{"yeld",hash_yeld},
-		{"do",hash_process},
-		{"hmac",hash_hmac},
+		{"octet", hash_to_octet},
+		{"process", hash_process},
+		{"feed", hash_feed},
+		{"yeld", hash_yeld},
+		{"do", hash_process},
+		{"hmac", hash_hmac},
 		{"kdf2", hash_kdf2},
 		{"kdf", hash_kdf2},
 		{"pbkdf2", hash_pbkdf2},
