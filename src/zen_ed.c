@@ -44,8 +44,7 @@ static int ed_secgen(lua_State *L) {
 	register const size_t sksize = sizeof(ed25519_secret_key);
 	octet *sk = o_new(L, sksize);
 	if(!sk) {
-		lerror(L, "Could not allocate secret key");
-		lua_pushnil(L);
+		THROW("Could not allocate secret key");
 	} else {
 		register size_t i;
 		for(i=0; i < sksize; i++)
@@ -78,8 +77,7 @@ static int ed_pubgen(lua_State *L) {
 end:
 	o_free(L, sk);
 	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -104,7 +102,7 @@ static int ed_sign(lua_State *L) {
 	ed25519_public_key pk;
 	ed25519_publickey((unsigned char*)sk->val, pk);
 
-	sig = o_new(L, sizeof(ed25519_signature)); SAFE(sig);
+	sig = o_new(L, sizeof(ed25519_signature));
 	if(!sig) {
 		failed_msg = "Could not allocate signature";
 		goto end;
@@ -119,8 +117,7 @@ end:
 	o_free(L, m);
 	o_free(L, sk);
 	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+		THROW(failed_msg);
 	}
 	END(1);
 }
@@ -157,8 +154,7 @@ end:
 	o_free(L, pk);
 	o_free(L, sig);
 	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+		THROW(failed_msg);
 	}
 	END(1);
 }
