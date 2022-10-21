@@ -283,7 +283,7 @@ void zen_teardown(zenroom_t *ZZ) {
 	func(ZZ->lua,"Number of HASHes left unallocated: %d",
 		ZZ->memcount_hashes);
 	func(ZZ->lua,"Number of BIGs left unallocated: %d",
-		ZZ->memcount_ecp2);
+		ZZ->memcount_bigs);
 	func(ZZ->lua,"Number of FLOATs left unallocated: %d",
 		ZZ->memcount_floats);
 	func(ZZ->lua,"Number of ECDHs left unallocated: %d",
