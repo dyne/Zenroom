@@ -110,11 +110,17 @@ float *float_new(lua_State *L) {
 	return number;
 }
 
-static void float_free(float *f) {
-	if(f) free(f);
+static void float_free(lua_State *L, float *f) {
+	Z(L);
+	if(f) {
+		free(f);
+		Z->memcount_floats--;
+
+	}
 }
 
 float* float_arg(lua_State *L, int n) {
+	Z(L);
 	float *result = (float*)malloc(sizeof(float));
 	if(result == NULL) {
 		return NULL;
@@ -122,6 +128,7 @@ float* float_arg(lua_State *L, int n) {
 	void *ud = luaL_testudata(L, n, "zenroom.float");
 	if(ud) {
 		*result = *(float*)ud;
+		Z->memcount_floats++;
 		return result;
 	}
 	octet *o = o_arg(L, n);
@@ -134,6 +141,8 @@ float* float_arg(lua_State *L, int n) {
 		}
 		o_free(L, o);
 	}
+
+	if(result) Z->memcount_floats++;
 	return result;
 }
 
@@ -234,7 +243,7 @@ static int float_to_octet(lua_State *L) {
 	}
 	o_dup(L, o);
 end:
-	float_free(c);
+	float_free(L,c);
 	o_free(L, o);
 	if(failed_msg) {
 		THROW(failed_msg);
@@ -267,8 +276,8 @@ static int float_eq(lua_State *L) {
 	} else {  // use relative error
 		res = (diff / (absA + absB) < EPS);
 	}*/
-	float_free(a);
-	float_free(b);
+	float_free(L,a);
+	float_free(L,b);
 	if(!a || !b) {
 		THROW("Could not allocate float number");
 	}
@@ -282,8 +291,8 @@ static int float_lt(lua_State *L) {
 	if(a && b) {
 		lua_pushboolean(L, *a < *b);
 	}
-	float_free(a);
-	float_free(b);
+	float_free(L,a);
+	float_free(L,b);
 	if(!a || !b) {
 		THROW("Could not allocate float number");
 	}
@@ -298,8 +307,8 @@ static int float_lte(lua_State *L) {
 	if(a && b) {
 		lua_pushboolean(L, *a <= *b);
 	}
-	float_free(a);
-	float_free(b);
+	float_free(L,a);
+	float_free(L,b);
 	if(!a || !b) {
 		THROW("Could not allocate float number");
 	}
@@ -314,8 +323,8 @@ static int float_add(lua_State *L) {
 	if(a && b && c) {
 		*c = *a + *b;
 	}
-	float_free(a);
-	float_free(b);
+	float_free(L,a);
+	float_free(L,b);
 	if(!a || !b || !c) {
 		THROW("Could not allocate float number");
 	}
@@ -329,7 +338,7 @@ static int float_opposite(lua_State *L) {
 	if(a && b) {
 		*b = -(*a);
 	}
-	float_free(a);
+	float_free(L,a);
 	if(!a || !b) {
 		THROW("Could not allocate float number");
 	}
@@ -344,8 +353,8 @@ static int float_sub(lua_State *L) {
 	if(a && b && c) {
 		*c = *a - *b;
 	}
-	float_free(a);
-	float_free(b);
+	float_free(L,a);
+	float_free(L,b);
 	if(!a || !b || !c) {
 		THROW("Could not allocate float number");
 	}
@@ -360,8 +369,8 @@ static int float_mul(lua_State *L) {
 	if(a && b && c) {
 		*c = *a * *b;
 	}
-	float_free(a);
-	float_free(b);
+	float_free(L,a);
+	float_free(L,b);
 	if(!a || !b || !c) {
 		THROW("Could not allocate float number");
 	}
@@ -377,8 +386,8 @@ static int float_div(lua_State *L) {
 		// TODO: what happen if I divide by 0?
 		*c = *a / *b;
 	}
-	float_free(a);
-	float_free(b);
+	float_free(L,a);
+	float_free(L,b);
 	if(!a || !b || !c) {
 		THROW("Could not allocate float number");
 	}
@@ -394,8 +403,8 @@ static int float_mod(lua_State *L) {
 		// TODO: what happen if I divide by 0?
 		*c = fmod(*a, *b);
 	}
-	float_free(a);
-	float_free(b);
+	float_free(L,a);
+	float_free(L,b);
 	if(!a || !b || !c) {
 		THROW("Could not allocate float number");
 	}
@@ -418,7 +427,7 @@ static int float_to_string(lua_State *L) {
 	}
 	lua_pushstring(L, dest);
 end:
-	float_free(c);
+	float_free(L,c);
 	if(failed_msg) {
 		THROW(failed_msg);
 	}

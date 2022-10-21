@@ -183,7 +183,11 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	ZZ->zconf_rngseed[0] = '\0';
 	ZZ->exitcode = 1; // success
 	ZZ->logformat = TEXT;
-    ZZ->memcount_octets = 0;
+	ZZ->memcount_octets = 0;
+	ZZ->memcount_bigs = 0;
+	ZZ->memcount_hashes = 0;
+	ZZ->memcount_ecp = 0;
+	ZZ->memcount_ecp2 = 0;
 
 	if(conf) {
 		if( ! zen_conf_parse(ZZ, conf) ) { // stb parsing
@@ -270,6 +274,18 @@ void zen_teardown(zenroom_t *ZZ) {
 	    lua_gc(ZZ->lua,LUA_GCCOUNT,0));
 	func(ZZ->lua,"Octet memory left allocated: %u B",
 		ZZ->memcount_octets);
+	func(ZZ->lua,"Number of ECPs points left unallocated: %d",
+		ZZ->memcount_ecp);
+	func(ZZ->lua,"Number of ECP2s left unallocated: %d",
+		ZZ->memcount_ecp2);
+	func(ZZ->lua,"Number of HASHes left unallocated: %d",
+		ZZ->memcount_hashes);
+	func(ZZ->lua,"Number of BIGs left unallocated: %d",
+		ZZ->memcount_ecp2);
+	func(ZZ->lua,"Number of FLOATs left unallocated: %d",
+		ZZ->memcount_floats);
+	func(ZZ->lua,"Number of ECDHs left unallocated: %d",
+		ZZ->memcount_ecdhs);
 	// stateful RNG instance for deterministic mode
 	if(ZZ->random_generator) {
 		free(ZZ->random_generator);

@@ -202,7 +202,7 @@ static int fp12_pow(lua_State *L) {
 	}
 	FP12_GTpow(&r->val, b->val);
 end:
-	big_free(b);
+	big_free(L,b);
 	fp12_free(x);
 	if(failed_msg) {
 		THROW(failed_msg);
