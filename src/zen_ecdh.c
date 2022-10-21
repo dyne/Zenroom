@@ -201,10 +201,7 @@ static int ecdh_pubcheck(lua_State *L) {
 		lerror(L, "Could not allocate public key");
 		lua_pushboolean(L, 0);
 	} else {
-		if((*ECDH.ECP__PUBLIC_KEY_VALIDATE)(pk)==0)
-			lua_pushboolean(L, 1);
-		else
-			lua_pushboolean(L, 0);
+		lua_pushboolean(L, (*ECDH.ECP__PUBLIC_KEY_VALIDATE)(pk)==0);
 		o_free(L, pk);
 	}
 	END(1);
@@ -266,6 +263,7 @@ end:
 	o_free(L, f);
 	if(failed_msg) {
 		THROW(failed_msg);
+		lua_pushnil(L);
 	}
 	END(2);
 }
@@ -309,7 +307,7 @@ static int ecdh_pub_xy(lua_State *L) {
 	// could be omitted in montgomery notation
 	if(pk->len > ECDH.fieldsize<<1) {
 		octet *y = o_new(L, ECDH.fieldsize+1);
-		if(x == NULL) {
+		if(y == NULL) {
 			failed_msg = "Could not create y coordinate";
 			goto end;
 		}
@@ -323,6 +321,7 @@ end:
 	o_free(L, pk);
 	if(failed_msg) {
 		THROW(failed_msg);
+		lua_pushnil(L);
 	}
 	END(res);
 }
@@ -501,6 +500,7 @@ end:
 	o_free(L, sk);
 	if(failed_msg) {
 		THROW(failed_msg);
+		lua_pushnil(L);
 	}
 	END(2);
 }
@@ -896,10 +896,7 @@ static int ecdh_dsa_recovery(lua_State *L) {
 		goto end;
 	}
 
-	if( !(*ECDH.ECP__PUBLIC_KEY_RECOVERY)(x, (int)y, m, r, s, pk) )
-		lua_pushboolean(L, 1);
-	else
-		lua_pushboolean(L, 0);
+	lua_pushboolean(L, !(*ECDH.ECP__PUBLIC_KEY_RECOVERY)(x, (int)y, m, r, s, pk));
 end:
 	o_free(L, s);
 	o_free(L, r);
@@ -907,6 +904,7 @@ end:
 	o_free(L, x);
 	if(failed_msg) {
 		THROW(failed_msg);
+		lua_pushnil(L);
 	}
 	END(2);
 }
