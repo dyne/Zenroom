@@ -1698,7 +1698,7 @@ end:
 	o_free(L, left);
 	o_free(L, right);
 	if(failed_msg) {
-		THROW(falied_msg);
+		THROW(failed_msg);
 	}
 	END(1);
 }
