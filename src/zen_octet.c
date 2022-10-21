@@ -1677,7 +1677,7 @@ static int popcount64b(uint64_t x) {
 // compare bit by bit two arrays and returns the hamming distance
 static int popcount_hamming_distance(lua_State *L) {
 	BEGIN();
-	char failed_msg = NULL;
+	char *failed_msg = NULL;
 	int distance, c, nlen;
 	octet *left = o_arg(L, 1);
 	octet *right = o_arg(L, 2);
