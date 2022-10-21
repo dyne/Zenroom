@@ -121,7 +121,7 @@ end:
 	o_free(L, in);
 	o_free(L, k);
 	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
+		THROW(failed_msg);
 		lua_pushnil(L);
 	}
 	END(2);
@@ -193,7 +193,7 @@ end:
 	o_free(L, in);
 	o_free(L, k);
 	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
+		THROW(failed_msg);
 		lua_pushnil(L);
 	}
 	END(2);
@@ -242,8 +242,7 @@ end:
 	o_free(L, in);
 	o_free(L, k);
 	if(failed_msg != NULL) {
-		lerror(L, failed_msg);
-		lua_pushnil(L);
+		THROW(failed_msg);
 	}
 	END(1);
 }
