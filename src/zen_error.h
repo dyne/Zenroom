@@ -28,7 +28,7 @@
 #include <stdarg.h>
 
 // macro to obtain Z context from a lua_State
-#define Z(l) zenroom_t *Z = NULL; if (l) { void *_zv; lua_getallocf(l, &_zv); Z = _zv; } else { _err("NULL context in call: %s\n", __func__); return(0); }
+#define Z(l) zenroom_t *Z = NULL; if (l) { void *_zv; lua_getallocf(l, &_zv); Z = _zv; } else { _err("NULL context in call: %s\n", __func__); }
 
 // same as Android
 typedef enum log_priority {
