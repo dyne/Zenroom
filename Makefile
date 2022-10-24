@@ -182,7 +182,7 @@ ed25519-donna:
 	AR=${ar} \
 	CFLAGS="${cflags}" \
 	LDFLAGS="${ldflags}" \
-	make -C ${pwd}/lib/ed25519-donna
+	$(MAKE) -C ${pwd}/lib/ed25519-donna
 
 # -------------------
 # Test suites for all platforms
