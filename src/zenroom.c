@@ -288,6 +288,12 @@ void zen_teardown(zenroom_t *ZZ) {
 		ZZ->memcount_floats);
 	func(ZZ->lua,"Number of ECDHs left unallocated: %d",
 		ZZ->memcount_ecdhs);
+	int memcount = ZZ->memcount_octets + ZZ->memcount_ecp
+	  + ZZ->memcount_ecp2 + ZZ->memcount_hashes + ZZ->memcount_bigs
+	  + ZZ->memcount_floats + ZZ->memcount_ecdhs;
+	if(memcount>0)
+	  act(ZZ->lua, "Zenroom memory left allocated: %u B", memcount);
+
 	// stateful RNG instance for deterministic mode
 	if(ZZ->random_generator) {
 		free(ZZ->random_generator);
