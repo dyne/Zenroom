@@ -208,12 +208,13 @@ Scenario petition: tally
     Given I have a valid 'petition'
     When I create a petition tally
     Then print the 'petition tally'
+    Then print the 'petition'
 EOF
     save_output petitionTally.json
 }
 
 @test "count the petition signatures" {
-    cat <<EOF | zexe petitionCount.zen petitionTally.json petitionAggregatedSignature.json
+    cat <<EOF | zexe petitionCount.zen petitionTally.json
 Scenario credential
 Scenario petition: count
     Given that I have a valid 'petition'
