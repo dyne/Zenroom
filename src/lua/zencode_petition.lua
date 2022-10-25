@@ -102,10 +102,13 @@ ZEN.add_schema(
                 }
             end,
             export = function(obj)
-                obj.c = obj.c:octet():base64()
-                obj.rx = obj.rx:octet():base64()
-                return obj
-            end,
+		 return {
+		    uid = obj.uid,
+		    c = obj.c:octet():base64(),
+		    dec = obj.dec,
+		    rx = obj.rx:octet():base64()
+		 }
+	      end,
         },
 	}
 )
