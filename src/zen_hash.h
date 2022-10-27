@@ -24,10 +24,11 @@
 #include <lua.h>
 #include <amcl.h>
 #include <rmd160.h>
+#include <blake2.h>
 
+// must be unique numbers
 #define SHA256 32
 #define SHA512 64
-
 #define _SHA256 2
 #define _SHA384 3
 #define _SHA512 5
@@ -38,6 +39,7 @@
 #define _SHA3_256 3256
 #define _KECCAK256 7
 #define _RMD160 160
+#define _BLAKE2 464
 
 typedef struct {
 	char name[16];
@@ -50,6 +52,7 @@ typedef struct {
 	sha3 *sha3_512; // SHA3 aka keccak with 64 bytes
         sha3 *keccak256;
         dword *rmd160;
+  blake2b_state *blake2;
         csprng *rng; // zencode runtime random
         // ...
 } hash;

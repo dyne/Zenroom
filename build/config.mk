@@ -22,6 +22,8 @@ ldadd += ${pwd}/lib/pqclean/libqpz.a
 ldadd += ${pwd}/lib/zstd/libzstd.a
 ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
 ldadd += ${pwd}/lib/mimalloc/build/libmimalloc-static.a
+ldadd += ${pwd}/lib/blake2/libblake2.a
+ldadd += ${pwd}/lib/argon2/libargon2.a
 
 # ----------------
 # zenroom defaults
@@ -309,6 +311,11 @@ zstd_cc ?= ${gcc}
 #-----------------
 # ed25519 settings
 ed25519_cc ?= ${gcc}
+
+#-----------------
+# argon2 settings
+blake2_cc ?= ${gcc}
+argon2_cc ?= ${gcc}
 
 #-----------------
 # mimalloc settings

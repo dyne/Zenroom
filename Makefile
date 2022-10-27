@@ -9,7 +9,7 @@ PREFIX ?= /usr/local
 # VERSION is set in src/Makefile
 VERSION := $(shell awk '/ZENROOM_VERSION :=/ { print $$3; exit }' src/Makefile | tee VERSION)
 # Targets to be build in this order
-BUILDS := apply-patches milagro lua53 embed-lua zstd quantum-proof ed25519-donna mimalloc
+BUILDS := apply-patches milagro lua53 embed-lua zstd quantum-proof ed25519-donna mimalloc blake2 argon2
 
 # DESTDIR is supported by install target
 
@@ -184,6 +184,22 @@ ed25519-donna:
 	LDFLAGS="${ldflags}" \
 	$(MAKE) -C ${pwd}/lib/ed25519-donna
 
+blake2:
+	$(info -- Building Blake2 for Argon2)
+	CC="${blake2_cc}" \
+	AR=${ar} \
+	CFLAGS="${cflags}" \
+	LDFLAGS="${ldflags}" \
+	$(MAKE) -C ${pwd}/lib/blake2
+
+argon2:
+	$(info -- Building Argon2)
+	CC="${argon2_cc}" \
+	AR=${ar} \
+	CFLAGS="${cflags} -DARGON2_NO_THREADS" \
+	LDFLAGS="${ldflags}" \
+	$(MAKE) -C ${pwd}/lib/argon2
+
 # -------------------
 # Test suites for all platforms
 include ${pwd}/build/tests.mk
@@ -225,6 +241,8 @@ clean:
 	rm -f ${pwd}/src/zenroom
 	rm -f ${pwd}/lib/ed25519-donna/libed25519.a
 	rm -f ${pwd}/lib/ed25519-donna/*.o
+	$(MAKE) clean -C ${pwd}/lib/blake2
+	$(MAKE) clean -C ${pwd}/lib/argon2
 
 clean-src:
 	rm -f src/zen_ecdh_factory.c src/zen_ecp_factory.c src/zen_big_factory.c

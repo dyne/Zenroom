@@ -127,6 +127,13 @@ hash* hash_new(lua_State *L, const char *hashtype) {
 		h->algo = _RMD160;
 		h->rmd160 = (dword*)malloc((160/32)+0x0f);
 		RMD160_init(h->rmd160);
+	} else if(strncasecmp(hashtype,"blake2",6) == 0) {
+		strncpy(h->name,hashtype,15);
+		h->len = 64;
+		h->algo = _BLAKE2;
+		h->blake2 = (blake2b_state*)malloc(sizeof(blake2b_state));
+		blake2b_init(h->blake2, 64);
+		// first init, blake2 needs to call init again after every yeld
 	} // ... TODO: other hashes
 	else {
 		zerror(L, "Hash algorithm not known: %s", hashtype);
@@ -170,6 +177,7 @@ int hash_destroy(lua_State *L) {
 		case _SHA3_512: free(h->sha3_512); break;
 		case _KECCAK256: free(h->keccak256); break;
 		case _RMD160: free(h->rmd160); break;
+		case _BLAKE2: free(h->blake2); break;
 		}
 	}
 	END(0);
@@ -197,6 +205,7 @@ static void _feed(hash *h, octet *o) {
 	case _SHA3_512: for(i=0;i<o->len;i++) SHA3_process(h->sha3_512,o->val[i]); break;
 	case _KECCAK256: for(i=0;i<o->len;i++) SHA3_process(h->keccak256,o->val[i]); break;
 	case _RMD160: RMD160_process(h->rmd160, (unsigned char*)o->val, o->len); break;
+	case _BLAKE2: blake2b_update(h->blake2, o->val, o->max); break;
 	}
 }
 
@@ -210,6 +219,10 @@ static void _yeld(hash *h, octet *o) {
 	case _SHA3_512: SHA3_hash(h->sha3_512,o->val); break;
 	case _KECCAK256: KECCAK_hash(h->keccak256,o->val); break;
 	case _RMD160: RMD160_hash(h->rmd160, (unsigned char*)o->val); break;
+	case _BLAKE2:
+	  blake2b_final(h->blake2, o->val, o->max);
+	  blake2b_init(h->blake2, 64); // prepare for the next
+	  break;
 	}
 }
 
