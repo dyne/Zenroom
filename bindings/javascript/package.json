@@ -63,6 +63,11 @@
   "devDependencies": {
     "@ava/typescript": "^3.0.1",
     "@istanbuljs/nyc-config-typescript": "^1.0.2",
+    "@semantic-release/commit-analyzer": "^9.0.2",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^8.0.6",
+    "@semantic-release/npm": "^9.0.1",
+    "@semantic-release/release-notes-generator": "^10.0.3",
     "@types/node": "^17.0.23",
     "ava": "^4.1.0",
     "codecov": "^3.8.1",
@@ -108,5 +113,31 @@
       "**/*.spec.js",
       "**/zenroom.js"
     ]
+  },
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    "@semantic-release/github",
+    "@semantic-release/npm",
+    "@semantic-release/git"
+  ],
+  "release": {
+    "branches": [
+      "main"
+    ],
+    "prepare": [
+      "@semantic-release/npm",
+      {
+        "path": "@semantic-release/git",
+        "assets": [
+          "package.json",
+          "yarn.lock"
+        ],
+        "message": "chore(release): 🚀 ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+      }
+    ]
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

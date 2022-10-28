@@ -104,6 +104,31 @@ jobs:
           CC: ${{ matrix.compiler }}
       - run: make meson-test
 
+    linux-crypto-check:
+    name: 🐧 Linux crypto tests
+    needs: [reuse, c-lint, lua-lint]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          sudo apt install zsh jq meson
+          make linux
+          make check-crypto
+
+  macosx-crypto-check:
+    name: 🍎 macos crypto tests
+    needs: [reuse, c-lint, lua-lint]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - run: |
+          pip3 install meson ninja
+          make osx
+          make check-osx
+
   go-build-check:
     name: 🐹 go build & checks
     needs: [reuse, c-lint, lua-lint]
@@ -198,17 +223,6 @@ jobs:
       - run: yarn build
         env:
           EMSCRIPTEN: ${{ env.EMSDK }}/upstream/emscripten
-      - run: yarn version --new-version $(npm show zenroom version)-$(git rev-parse --short HEAD) --no-git-tag-version
-      - if: ${{ matrix.node-version == '16.x' }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: javascript-artifact
-          path: |
-            ./bindings/javascript/CHANGELOG.md
-            ./bindings/javascript/LICENSE
-            ./bindings/javascript/package.json
-            ./bindings/javascript/README.md
-            ./bindings/javascript/dist/
       - name: 🧪 test bindings node-${{ matrix.node-version }}
         run: yarn test
       - name: 🔐 check crypto with node-${{ matrix.node-version }}
@@ -242,11 +256,43 @@ jobs:
           pip3 install .[test]
       - run: pytest -s tests
 
+  check-commit-status:
+    name: 👷 check commit status
+    runs-on: ubuntu-latest
+    needs: [rust-build-check, go-build-check, meson-build, js-build-check, linux-crypto-check, macosx-crypto-check]
+    outputs:
+      check: ${{ steps.success.outputs.check }}
+    if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Check commit status
+        id: check
+        run: |
+          success=1; i=1
+          while [ true ]; do
+            h=`git log HEAD~$i -1 --pretty=format:"%H"`
+            i=$((i+1))
+            url="https://api.github.com/repos/${{ github.repository }}/commits/$h/status"
+            state=`curl -H "Accept: application/vnd.github+json" $url | jq -r '.state'`
+            if [[ $state == "failure" || $h == "aacbe534bf3e7444e785ff5fa4d9237d98e8a35c" ]]; then
+              echo "check=Failure" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            if [[ $state == "success" ]]; then
+              success=$((success+1))
+              if [[ $success == 3 ]]; then
+                echo "check=Success" >> $GITHUB_OUTPUT
+                exit 0
+              fi
+            fi
+          done
+
   python-build-check:
     name: 🐍 Python build & checks
-    needs: [reuse, c-lint, lua-lint]
+    needs: [check-commit-status]
     runs-on: ${{ matrix.os }}
-    if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
     strategy:
       fail-fast: false
       matrix:
@@ -293,8 +339,8 @@ jobs:
 
   python-sdist:
     name: 🐍 Python create source distribution
-    runs-on: ubuntu-latest
     needs: [python-build-check]
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: bindings/python3
@@ -309,56 +355,44 @@ jobs:
       with:
         path: ./bindings/python3/dist/*.tar.gz
 
-  linux-crypto-check:
-    name: 🐧 Linux crypto tests
-    if: always()
-    needs: [meson-build]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - run: |
-          sudo apt install zsh jq meson
-          make linux
-          make check-crypto
-
-  macosx-crypto-check:
-    name: 🍎 macos crypto tests
-    runs-on: macos-latest
-    if: always()
-    needs: [meson-build]
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      - run: |
-          pip3 install meson ninja
-          make osx
-          make check-osx
-
   npm-release:
     name: 📦 npm release
+    needs: [check-commit-status]
     runs-on: ubuntu-latest
-    needs: js-build-check
-    if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v3
         with:
           node-version: 16.x
           registry-url: 'https://registry.npmjs.org'
-      - uses: actions/download-artifact@v3
+      - uses: mymindstorm/setup-emsdk@v11
         with:
-          name: javascript-artifact
-          path: .
-      - run: npm publish . --tag next
+          version: latest
+      - run: sudo apt-get update; sudo apt-get install zsh meson ninja-build
+      - name: Install and build
+        run: |
+          yarn
+          yarn build
+        env:
+          EMSCRIPTEN: ${{ env.EMSDK }}/upstream/emscripten
+      - name: Stable release
+        if: ${{ needs.check-commit-status.outputs.check == 'Success' }}
+        run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Next release
+        if: ${{ needs.check-commit-status.outputs.check == 'Failure' }}
+        run: |
+          yarn version --new-version $(npm show zenroom version)-$(git rev-parse --short HEAD) --no-git-tag-version
+          npm publish . --tag next
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   pypi-release:
     name: 📦 PyPI release
-    if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
     needs: [python-sdist]
     runs-on: ubuntu-latest
     steps:
@@ -373,7 +407,7 @@ jobs:
 
   create-commit-status:
     name: 🏆 Commit status
-    needs: [rust-build-check, go-build-check, linux-crypto-check, macosx-crypto-check, npm-release, pypi-release]
+    needs: [npm-release, pypi-release]
     if: ${{ always() && github.ref_name == 'master' && github.event_name == 'push' }}
     runs-on: ubuntu-latest
     steps:
