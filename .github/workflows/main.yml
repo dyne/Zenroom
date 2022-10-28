@@ -104,7 +104,7 @@ jobs:
           CC: ${{ matrix.compiler }}
       - run: make meson-test
 
-    linux-crypto-check:
+  linux-crypto-check:
     name: 🐧 Linux crypto tests
     needs: [reuse, c-lint, lua-lint]
     runs-on: ubuntu-latest
