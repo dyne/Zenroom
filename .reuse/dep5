@@ -31,3 +31,11 @@ Files: lib/mimalloc/*
 Copyright: 2018-2021 Microsoft Corporation, Daan Leijen
 License: MIT
 
+Files: lib/blake2/*
+Copyright: 2015 Daniel Dinu, Dmitry Khovratovich, Jean-Philippe Aumasson, and Samuel Neves
+License: CC0-1.0
+
+Files: lib/argon2/*
+Copyright: 2015 Daniel Dinu, Dmitry Khovratovich, Jean-Philippe Aumasson, and Samuel Neves
+License: CC0-1.0
+
