@@ -15,6 +15,9 @@ fn main() {
     println!("cargo:rustc-link-lib=static=ed25519");
     println!("cargo:rustc-link-lib=static=zstd");
     println!("cargo:rustc-link-lib=static=mimalloc-static");
+    println!("cargo:rustc-link-lib=static=blake2");
+    println!("cargo:rustc-link-lib=static=argon2");
+
     println!("cargo:rustc-link-search=native=clib");
 
     println!("cargo:rerun-if-changed=wrapper.h");
