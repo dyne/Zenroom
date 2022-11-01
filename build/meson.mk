@@ -11,6 +11,8 @@ prepare-meson:
 	ln -sf ${pwd}/lib/lua53/src/liblua.a ${pwd}/meson/liblua.a
 	ln -sf ${pwd}/lib/ed25519-donna/libed25519.a ${pwd}/meson/libed25519.a
 	ln -sf ${pwd}/lib/mimalloc/build/libmimalloc-static.a ${pwd}/meson/libmimalloc-static.a
+	ln -sf ${pwd}/lib/blake2/libblake2.a ${pwd}/meson/libblake2.a
+	ln -sf ${pwd}/lib/argon2/libargon2.a ${pwd}/meson/libargon2.a
 
 run-meson:
 	CC="${gcc}" AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \

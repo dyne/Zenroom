@@ -44,6 +44,8 @@ add_project_link_arguments(
     'libqpz.a',
     'libed25519.a',
     'libmimalloc-static.a',
+	'libblake2.a',
+	'libargon2.a',
     language: 'c'
 )
 
@@ -60,6 +62,9 @@ zstd_include_dirs = include_directories('../lib/zstd')
 lua_include_dirs = include_directories('../lib/lua53/src')
 
 ed25519_include_dirs = include_directories('../lib/ed25519-donna')
+
+blake2_include_dirs = include_directories('../lib/blake2')
+argon2_include_dirs = include_directories('../lib/argon2')
 
 zenroom_src = [
     '../src/base58.c',
@@ -107,6 +112,8 @@ zenroom_lib = library(
 	ed25519_include_dirs,
         lua_include_dirs,
 	mimalloc_include_dirs,
+	blake2_include_dirs,
+	argon2_include_dirs,
     ],
     install: true,
 )
@@ -124,6 +131,8 @@ zenroom_dep = declare_dependency(
 	ed25519_include_dirs,
         lua_include_dirs,
 	mimalloc_include_dirs,
+	blake2_include_dirs,
+	argon2_include_dirs,
     ],
 )
 
