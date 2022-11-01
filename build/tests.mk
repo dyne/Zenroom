@@ -57,8 +57,14 @@ cortex-m-crypto-integration = \
 	test/octet-json.sh ${1} && \
 	test/integration_asymmetric_crypto.sh ${1}
 
+crypto-vectors = \
+	$(call bats, test/vectors/sha.bats test/vectors/eddsa.bats test/vectors/qp.bats test/vectors/argon2.bats);
+crypto-vectors:
+	$(call crypto-vectors,${test-exec})
+
+
+# Old, TODO: import in bats
 crypto-integration = \
-	$(call bats, test/vectors/sha.bats test/vectors/eddsa.bats test/vectors/qp.bats); \
 	cd test/crypto_json &&  ./run.sh ${1}; cd -; \
 	cd test/crypto_ecdh &&  ./run.sh ${1}; cd -;
 
@@ -109,6 +115,7 @@ check-osx:
 	@cp -v ${test-exec} test/zenroom
 	$(call bats, test/lua)
 	$(call bats, test/determinism)
+	$(call crypto-vectors,${test-exec})
 	rm -f /tmp/zenroom-test-summary.txt
 	$(call crypto-integration,${test-exec})
 	$(call zencode-integration,${test-exec})
@@ -122,6 +129,7 @@ check-linux:
 	rm -f /tmp/zenroom-test-summary.txt
 	$(call bats, test/lua)
 	$(call bats, test/determinism)
+	$(call crypto-vectors,${test-exec})
 	$(call crypto-integration,${test-exec})
 	$(call zencode-integration,${test-exec})
 	@echo "----------------"
@@ -185,6 +193,7 @@ check-crypto:
 	@cp -v ${test-exec} test/zenroom
 	$(call bats, test/lua/crypto.bats)
 	$(call bats, test/determinism)
+	$(call crypto-vectors,${test-exec})
 
 # $(call determinism-tests,${test-exec})
 # $(call crypto-tests,${test-exec})
@@ -194,40 +203,6 @@ check-crypto:
 # @echo "-----------------------"
 # @echo "All CRYPTO tests passed"
 # @echo "-----------------------"
-
-check-crypto-lw: test-exec := ./src/zenroom -c memmanager=lw
-check-crypto-lw:
-	rm -f /tmp/zenroom-test-summary.txt
-	$(call bats, test/determinism)
-	$(call bats, test/lua/crypto.bats)
-	$(call zencode-integration,${test-exec})
-	cat /tmp/zenroom-test-summary.txt
-	@echo "-----------------------"
-	@echo "All CRYPTO tests passed with lw memory manager"
-	@echo "-----------------------"
-
-
-check-crypto-stb: test-exec := ./src/zenroom -c print=stb
-check-crypto-stb:
-	rm -f /tmp/zenroom-test-summary.txt
-	$(call bats, test/determinism)
-	$(call bats, test/lua/crypto.bats)
-	$(call zencode-integration,${test-exec})
-	cat /tmp/zenroom-test-summary.txt
-	@echo "-----------------------"
-	@echo "All CRYPTO tests passed with lw memory manager"
-	@echo "-----------------------"
-
-check-crypto-mutt: test-exec := ./src/zenroom -c print=mutt
-check-crypto-mutt:
-	rm -f /tmp/zenroom-test-summary.txt
-	$(call bats, test/determinism)
-	$(call bats, test/lua/crypto.bats)
-	$(call zencode-integration,${test-exec})
-	cat /tmp/zenroom-test-summary.txt
-	@echo "-----------------------"
-	@echo "All CRYPTO tests passed with lw memory manager"
-	@echo "-----------------------"
 
 check-crypto-debug: test-exec := valgrind --max-stackframe=5000000 ${pwd}/src/zenroom
 check-crypto-debug:
