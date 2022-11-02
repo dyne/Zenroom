@@ -466,7 +466,7 @@ jobs:
     name: 🏆 Commit status
     needs: [check-commit-status, npm-release, pypi-release]
     runs-on: ubuntu-latest
-    if: ${{ always() }}
+    if: ${{ always() && github.ref_name == 'master' && github.event_name == 'push' }}
     steps:
       - name: Failure
         id: failure
