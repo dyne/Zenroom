@@ -104,6 +104,31 @@ jobs:
           CC: ${{ matrix.compiler }}
       - run: make meson-test
 
+  linux-crypto-check:
+    name: 🐧 Linux crypto tests
+    needs: [reuse, c-lint, lua-lint]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          sudo apt install zsh jq meson
+          make linux
+          make check-crypto
+
+  macosx-crypto-check:
+    name: 🍎 macos crypto tests
+    needs: [reuse, c-lint, lua-lint]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - run: |
+          pip3 install meson ninja
+          make osx
+          make check-osx
+
   go-build-check:
     name: 🐹 go build & checks
     needs: [reuse, c-lint, lua-lint]
@@ -242,11 +267,75 @@ jobs:
           pip3 install .[test]
       - run: pytest -s tests
 
+  check-commit-status:
+    name: 👷 check commit status
+    runs-on: ubuntu-latest
+    needs: [rust-build-check, go-build-check, meson-build, js-build-check, linux-crypto-check, macosx-crypto-check]
+    outputs:
+      check: ${{ steps.check.outputs.check }}
+      new_version: ${{ steps.version.outputs.new_version }}
+      old_version: ${{ steps.version.outputs.old_version }}
+      release: ${{ steps.version.outputs.release }}
+    if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+      - name: Check commit status
+        id: check
+        run: |
+          success=1; i=1
+          while [ true ]; do
+            h=`git log HEAD~$i -1 --pretty=format:"%H"`
+            i=$((i+1))
+            url="https://api.github.com/repos/${{ github.repository }}/commits/$h/status"
+            state=`curl -H "Accept: application/vnd.github+json" $url | jq -r '.state'`
+            if [[ $state == "failure" ]]; then
+              echo "check=Failure" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            if [[ $state == "success" ]]; then
+              success=$((success+1))
+              if [[ $success == 3 ]]; then
+                echo "check=Success" >> $GITHUB_OUTPUT
+                exit 0
+              fi
+            fi
+            if [[ $h == "aacbe534bf3e7444e785ff5fa4d9237d98e8a35c" ]]; then
+              echo "check=Success" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+          done
+      - name: Compute release version
+        id: version
+        run: |
+          old_version=`npm show zenroom version`
+          commit_msg=${{ github.event.head_commit.message }}
+          v=(${old_version//./ })
+          if [[ ${commit_msg} == *"BREAKING CHANGE:"* ]]; then
+            v[0]=$((v[0]+1)); v[1]=0; v[2]=0;
+          elif [[ ${commit_msg} == "feat:"* ]] || [[ ${commit_msg} == "feat("*"):"* ]]; then
+            v[1]=$((v[1]+1)); v[2]=0;
+          elif [[ ${commit_msg} == "fix:"* ]] || [[ ${commit_msg} == "fix("*"):"* ]]; then
+            v[2]=$((v[2]+1))
+          fi
+          new_version="${v[0]}.${v[1]}.${v[2]}"
+          echo "new_version=${new_version}" >> $GITHUB_OUTPUT
+          echo "old_version=${old_version}" >> $GITHUB_OUTPUT
+          if [[ ${old_version} == ${new_version} ]]; then
+            echo "release=False" >> $GITHUB_OUTPUT
+          else
+            echo "release=True" >> $GITHUB_OUTPUT
+          fi
+
   python-build-check:
     name: 🐍 Python build & checks
-    needs: [reuse, c-lint, lua-lint]
+    needs: [check-commit-status]
     runs-on: ${{ matrix.os }}
-    if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
+    if: ${{ needs.check-commit-status.outputs.release == 'True' }}
     strategy:
       fail-fast: false
       matrix:
@@ -269,6 +358,17 @@ jobs:
         if: runner.os == 'Linux'
         with:
           platforms: all
+      - name: Stable release
+        if: ${{ needs.check-commit-status.outputs.check == 'Success' }}
+        run: |
+          version=${{ needs.check-commit-status.outputs.new_version }}
+          sed -ie "s/version=get_python_version()/version=\'${version}\'/" bindings/python3/setup.py
+      - name: Pre-release
+        if: ${{ needs.check-commit-status.outputs.check == 'Failure' }}
+        run: |
+          time=`git show -s --format=%ct HEAD`
+          version=${{ needs.check-commit-status.outputs.old_version }}
+          sed -ie "s/version=get_python_version()/version=\'${version}.dev${time}\'/" bindings/python3/setup.py
       - name: Build wheels
         env:
           CIBW_BUILD: cp${{ matrix.python-version }}-${{ matrix.platform_id }}
@@ -293,56 +393,38 @@ jobs:
 
   python-sdist:
     name: 🐍 Python create source distribution
+    needs: [check-commit-status]
     runs-on: ubuntu-latest
-    needs: [python-build-check]
+    if: ${{ needs.check-commit-status.outputs.release == 'True' }}
     defaults:
       run:
         working-directory: bindings/python3
     steps:
     - uses: actions/checkout@v3
+    - name: Stable release
+      if: ${{ needs.check-commit-status.outputs.check == 'Success' }}
+      run: |
+        version=${{ needs.check-commit-status.outputs.new_version }}
+        sed -ie "s/version=get_python_version()/version=\'${version}\'/" setup.py
+    - name: Pre-release
+      if: ${{ needs.check-commit-status.outputs.check == 'Failure' }}
+      run: |
+        time=`git show -s --format=%ct HEAD`
+        version=${{ needs.check-commit-status.outputs.old_version }}
+        sed -ie "s/version=get_python_version()/version=\'${version}.dev${time}\'/" setup.py
     - run: |
-          sudo apt-get install --force-yes cmake vim zsh
-          pip install meson ninja twine
+        sudo apt-get install --force-yes cmake vim zsh
+        pip install meson ninja twine
     - run: pipx run build --sdist
     - run: twine check dist/*.tar.gz
     - uses: actions/upload-artifact@v3
       with:
         path: ./bindings/python3/dist/*.tar.gz
 
-  linux-crypto-check:
-    name: 🐧 Linux crypto tests
-    if: always()
-    needs: [meson-build]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - run: |
-          sudo apt install zsh jq meson
-          make linux
-          make check-crypto
-
-  macosx-crypto-check:
-    name: 🍎 macos crypto tests
-    runs-on: macos-latest
-    if: always()
-    needs: [meson-build]
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      - run: |
-          pip3 install meson ninja
-          make osx
-          make check-osx
-
   npm-release:
     name: 📦 npm release
+    needs: [check-commit-status, python-build-check, python-sdist]
     runs-on: ubuntu-latest
-    needs: js-build-check
-    if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/setup-node@v3
         with:
@@ -352,14 +434,23 @@ jobs:
         with:
           name: javascript-artifact
           path: .
-      - run: npm publish . --tag next
+      - name: Stable release
+        if: ${{ needs.check-commit-status.outputs.check == 'Success' }}
+        run: |
+          yarn version --new-version ${{ needs.check-commit-status.outputs.new_version }} --no-git-tag-version
+          npm publish . --tag latest
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Pre-release
+        if: ${{ needs.check-commit-status.outputs.check == 'Failure' }}
+        run: |
+          npm publish . --tag next
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   pypi-release:
     name: 📦 PyPI release
-    if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
-    needs: [python-sdist]
+    needs: [python-build-check, python-sdist]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v3
@@ -373,13 +464,13 @@ jobs:
 
   create-commit-status:
     name: 🏆 Commit status
-    needs: [npm-release, pypi-release]
-    if: ${{ always() && github.ref_name == 'master' && github.event_name == 'push' }}
+    needs: [check-commit-status, npm-release, pypi-release]
     runs-on: ubuntu-latest
+    if: ${{ always() }}
     steps:
       - name: Failure
         id: failure
-        if: ${{ contains(join(needs.*.result, ','), 'failure') || contains(join(needs.*.result, ','), 'skipped') }}
+        if: ${{ (contains(join(needs.*.result, ','), 'skipped') || contains(join(needs.*.result, ','), 'failure'))  && needs.check-commit-status.outputs.release == 'True' }}
         run: |
           curl --request POST \
           --url https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }} \
@@ -392,7 +483,7 @@ jobs:
           "target_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           }'
       - name: Success
-        if: steps.failure.conclusion == 'skipped'
+        if: ${{ steps.failure.conclusion == 'skipped' }}
         run: |
           curl --request POST \
           --url https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }} \
