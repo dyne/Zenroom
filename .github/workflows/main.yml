@@ -286,7 +286,7 @@ jobs:
 
   python-build-check:
     name: 🐍 Python build & checks
-    needs: [semantic-version]
+    needs: [semantic-release]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -340,7 +340,7 @@ jobs:
   python-sdist:
     name: 🐍 Python create source distribution
     runs-on: ubuntu-latest
-    needs: [semantic-version]
+    needs: [semantic-release]
     defaults:
       run:
         working-directory: bindings/python3
@@ -363,7 +363,7 @@ jobs:
   npm-release:
     name: 📦 npm release
     runs-on: ubuntu-latest
-    needs: [semantic-version]
+    needs: [semantic-release]
     steps:
       - uses: actions/checkout@v3
         with:
