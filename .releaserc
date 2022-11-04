@@ -1,0 +1,16 @@
+
+{
+  "repositoryUrl": "git@github.com:dyne/Zenroom.git",
+  "dryRun": false,
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    "@semantic-release/changelog",
+    [
+      "@semantic-release/npm",
+      {
+        "npmPublish": false
+      }
+    ]
+  ]
+}
