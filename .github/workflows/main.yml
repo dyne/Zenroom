@@ -238,6 +238,7 @@ jobs:
       - run: brew install zsh
         if: runner.os == 'Darwin'
       - run: |
+          ./prepare.sh
           pip3 install meson ninja
           pip3 install .[test]
       - run: pytest -s tests
