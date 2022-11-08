@@ -246,9 +246,6 @@ jobs:
   python-build-check:
     name: 🐍 Python build & checks
     needs: [reuse, c-lint, lua-lint]
-    #defaults:
-    #  run:
-    #    working-directory: bindings/python3
     runs-on: ${{ matrix.os }}
     if: ${{ (github.ref_name == 'master' && github.event_name == 'push')|| github.event_name == 'pull_request' }}
     strategy:
@@ -283,7 +280,7 @@ jobs:
           CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake zsh vim && pip install meson ninja
           CIBW_BEFORE_BUILD_MACOS: brew install cmake zsh && pip install meson ninja
           CIBW_TEST_EXTRAS: "test"
-          CIBW_TEST_COMMAND: "pytest -s {project}/bindings/python3/tests"
+          CIBW_TEST_COMMAND: "pytest -s {project}/tests"
         run: |
           git show -s --format=%ct HEAD > commit_time
           # Remove shared library
