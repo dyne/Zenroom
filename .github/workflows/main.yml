@@ -282,8 +282,8 @@ jobs:
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_24
           CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake zsh vim && pip install meson ninja
           CIBW_BEFORE_BUILD_MACOS: brew install cmake zsh && pip install meson ninja
-          #CIBW_TEST_EXTRAS: "test"
-          #CIBW_TEST_COMMAND: "pytest -s {project}/bindings/python3/tests"
+          CIBW_TEST_EXTRAS: "test"
+          CIBW_TEST_COMMAND: "pytest -s {project}/bindings/python3/tests"
         run: |
           git show -s --format=%ct HEAD > commit_time
           # Remove shared library
