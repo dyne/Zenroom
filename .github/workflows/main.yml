@@ -245,6 +245,9 @@ jobs:
   python-build-check:
     name: 🐍 Python build & checks
     needs: [reuse, c-lint, lua-lint]
+    defaults:
+      run:
+        working-directory: bindings/python3
     runs-on: ${{ matrix.os }}
     if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
     strategy:
@@ -283,13 +286,13 @@ jobs:
         run: |
           git show -s --format=%ct HEAD > commit_time
           # Remove shared library
-          rm -f bindings/golang/zenroom/lib/libzenroom.so
-          cp bindings/python3/setup.py .
+          rm -f ../golang/zenroom/lib/libzenroom.so
+          ./prepare.sh
           pip install cibuildwheel
           cibuildwheel --output-dir wheelhouse
       - uses: actions/upload-artifact@v3
         with:
-          path: ./wheelhouse/*.whl
+          path: ./bindings/python3/wheelhouse/*.whl
 
   python-sdist:
     name: 🐍 Python create source distribution
@@ -303,6 +306,7 @@ jobs:
     - run: |
           sudo apt-get install --force-yes cmake vim zsh
           pip install meson ninja twine
+          ./prepare.sh
     - run: pipx run build --sdist
     - run: twine check dist/*.tar.gz
     - uses: actions/upload-artifact@v3

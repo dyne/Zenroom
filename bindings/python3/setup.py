@@ -6,18 +6,12 @@ from setuptools import Extension, setup
 ECP_CURVE = 'BLS381'
 ECDH_CURVE = 'SECP256K1'
 
-if os.path.exists('bindings'):
-    ZENROOM_ROOT = os.getcwd()
-else:
-    ZENROOM_ROOT = os.path.dirname(os.path.dirname(os.getcwd()))
+PYTHON_ROOT = os.getcwd()
+ZENROOM_ROOT = os.path.join( os.getcwd(), 'src')
 
-
-ZENROOM_LIB_ROOT = os.path.join(ZENROOM_ROOT, 'src')
-
+ZENROOM_LIB_ROOT_REL= 'src/src'
 LUA_ROOT = os.path.join(ZENROOM_ROOT, 'lib/lua53/src')
-MILAGRO_INCLUDE_DIR = os.path.join(ZENROOM_ROOT,
-                                   'lib/milagro-crypto-c/include')
-
+MILAGRO_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/milagro-crypto-c/include')
 QP_ROOT = os.path.join(ZENROOM_ROOT, 'lib/pqclean')
 ZSTD_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/zstd')
 ED25519_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/ed25519-donna')
@@ -81,22 +75,20 @@ ZENROOM_SOURCES = [
 ]
 
 # Add meson build variables to the environment
-build_root = os.path.join(ZENROOM_ROOT, 'bindings/python3/')
 # source_root = os.path.join(ZENROOM_ROOT, 'build')
 meson_root = os.path.join(ZENROOM_ROOT, 'meson')
 # env = dict(os.environ,
 #            MESON_SOURCE_ROOT=source_root,
-#            MESON_BUILD_ROOT=build_root)
+#            MESON_BUILD_ROOT=PYTHON_ROOT)
 
 os.chdir(ZENROOM_ROOT)
 subprocess.check_call(['make', 'clean'])
 subprocess.check_call(['make', 'meson'])
-
-os.chdir(build_root)
+os.chdir(PYTHON_ROOT)
 
 zenroom_lib = Extension('zenroom',
                         sources=[
-                            os.path.join(ZENROOM_LIB_ROOT, src)
+                            os.path.join(ZENROOM_LIB_ROOT_REL, src)
                             for src in ZENROOM_SOURCES
                         ],
                         #  + [zenroom_ecdh_factory] + [
@@ -105,7 +97,7 @@ zenroom_lib = Extension('zenroom',
                         # ],
                         include_dirs=[
                             os.getcwd(),
-                            ZENROOM_LIB_ROOT,
+                            ZENROOM_LIB_ROOT_REL,
                             LUA_ROOT,
                             MILAGRO_INCLUDE_DIR,
                             ZSTD_INCLUDE_DIR,
@@ -178,6 +170,7 @@ setup(
         'Documentation': 'https://dev.zenroom.org/',
     },
     packages=['zenroom'],
+    include_package_data=True,
     ext_modules=[zenroom_lib],
     python_requires='>=3.6, <4',
     extras_require={
