@@ -350,6 +350,59 @@ jobs:
         with:
           path: ./wheelhouse/*.whl
 
+    python-build-check-armv7:
+    name: 🐍 Python build & check on armv7
+    runs-on: ubuntu-22.04
+    needs: [semantic-release]
+    if: ${{ needs.semantic-release.outputs.release == 'True' }}
+    strategy:
+      matrix:
+        python_version: ['3.8', '3.9', '3.10', '3.11']
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: master
+          fetch-depth: 0
+      - uses: uraimo/run-on-arch-action@v2
+        name: Build wheels
+        with:
+          arch: armv7
+          distro: ubuntu22.04
+          install: |
+            apt-get update
+            apt-get install -y git vim zsh software-properties-common cmake ninja-build
+          run: |
+            # preparation
+            git config --global --add safe.directory /home/runner/work/Zenroom/Zenroom
+            # default python version is 3.10
+            if [[ ${{ matrix.python_version }} != '3.10' ]]; then
+              add-apt-repository -y ppa:deadsnakes/ppa && apt-get update
+              apt-get install -y python${{ matrix.python_version }} python${{ matrix.python_version }}-distutils
+              py_3=`which python3`
+              py_310=`which python3.10`
+              py=`which python${{ matrix.python_version }}`
+              update-alternatives --install $py_3 python3 $py_310 1
+              update-alternatives --install $py_3 python3 $py 2
+              update-alternatives --set python3 $py
+            fi
+            apt-get install -y python3-pip && python3 -m pip install --upgrade pip
+            pip install meson wheel pytest schema
+            # version
+            version=$(git describe --tags `git rev-list --tags --max-count=1`)
+            sed -ie "s/version=get_python_version()/version=\'${version:1}\'/" bindings/python3/setup.py
+            # build
+            rm -f bindings/golang/zenroom/lib/libzenroom.so
+            cp bindings/python3/setup.py .
+            python3 setup.py bdist_wheel
+            mkdir wheelhouse && cp bindings/python3/dist/*.whl ./wheelhouse
+            # tests
+            pip install ./wheelhouse/*.whl
+            cd bindings/python3
+            pytest -s tests
+      - uses: actions/upload-artifact@v3
+        with:
+          path: ./wheelhouse/*.whl
+
   python-sdist:
     name: 🐍 Python create source distribution
     runs-on: ubuntu-latest
@@ -401,7 +454,7 @@ jobs:
 
   pypi-release:
     name: 📦 PyPI release
-    needs: [python-build-check, python-sdist]
+    needs: [python-build-check, python-build-check-armv7, python-sdist]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v3
