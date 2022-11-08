@@ -247,7 +247,7 @@ jobs:
     name: 🐍 Python build & checks
     needs: [reuse, c-lint, lua-lint]
     runs-on: ${{ matrix.os }}
-    if: ${{ (github.ref_name == 'master' && github.event_name == 'push')|| github.event_name == 'pull_request' }}
+    if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
     strategy:
       fail-fast: false
       matrix:
@@ -300,7 +300,6 @@ jobs:
     defaults:
       run:
         working-directory: bindings/python3
-    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_PY') && github.event_name == 'pull_request'"
     steps:
     - uses: actions/checkout@v3
     - run: |
