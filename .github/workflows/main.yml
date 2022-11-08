@@ -250,7 +250,7 @@ jobs:
       run:
         working-directory: bindings/python3
     runs-on: ${{ matrix.os }}
-    if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
+    if: ${{ (github.ref_name == 'master' && github.event_name == 'push')|| github.event_name == 'pull_request' }}
     strategy:
       fail-fast: false
       matrix:
@@ -302,6 +302,7 @@ jobs:
     defaults:
       run:
         working-directory: bindings/python3
+    if: "!contains(github.event.pull_request.labels.*.name, 'SKIP_PY') && github.event_name == 'pull_request'"
     steps:
     - uses: actions/checkout@v3
     - run: |
