@@ -6,10 +6,14 @@ on:
       - 'examples/**'
       - '*.md'
     branches:
-    - master
+      - master
   pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - 'examples/**'
+      - '*.md'
     branches:
-    - master
+      - master
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
