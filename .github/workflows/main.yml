@@ -394,12 +394,11 @@ jobs:
             sed -ie "s/version=get_python_version()/version=\'${version:1}\'/" bindings/python3/setup.py
             # build
             rm -f bindings/golang/zenroom/lib/libzenroom.so
-            cp bindings/python3/setup.py .
-            python3 setup.py bdist_wheel
-            mkdir wheelhouse && cp bindings/python3/dist/*.whl ./wheelhouse
-            # tests
-            pip install ./wheelhouse/*.whl
             cd bindings/python3
+            python3 setup.py bdist_wheel
+            mkdir ../../wheelhouse && cp dist/*.whl ../../wheelhouse
+            # tests
+            pip install ./dist/*.whl
             pytest -s tests
       - uses: actions/upload-artifact@v3
         with:
