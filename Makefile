@@ -213,7 +213,7 @@ clean:
 	rm -rf ${pwd}/lib/mimalloc/build
 	$(MAKE) clean -C ${pwd}/lib/zstd
 	$(MAKE) clean -C ${pwd}/src
-	$(MAKE) clean -C ${pwd}/bindings
+	if [ -d "bindings" ]; then $(MAKE) clean -C ${pwd}/bindings; fi
 	rm -f ${extras}/index.*
 	rm -rf ${pwd}/build/asmjs
 	rm -rf ${pwd}/build/wasm

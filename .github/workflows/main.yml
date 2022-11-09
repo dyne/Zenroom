@@ -266,6 +266,7 @@ jobs:
       - run: brew install zsh
         if: runner.os == 'Darwin'
       - run: |
+          ./prepare.sh
           pip3 install meson ninja
           pip3 install .[test]
       - run: pytest -s tests
@@ -336,19 +337,20 @@ jobs:
           CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake zsh vim && pip install meson ninja
           CIBW_BEFORE_BUILD_MACOS: brew install cmake zsh && pip install meson ninja
           CIBW_TEST_EXTRAS: "test"
-          CIBW_TEST_COMMAND: "pytest -s {project}/bindings/python3/tests"
+          CIBW_TEST_COMMAND: "pytest -s {project}/tests"
         run: |
           # version
           version=$(git describe --tags `git rev-list --tags --max-count=1`)
           sed -ie "s/version=get_python_version()/version=\'${version:1}\'/" bindings/python3/setup.py
           # Remove shared library
           rm -f bindings/golang/zenroom/lib/libzenroom.so
-          cp bindings/python3/setup.py .
+          cd bindings/python3
+          ./prepare.sh
           pip install cibuildwheel
           cibuildwheel --output-dir wheelhouse
       - uses: actions/upload-artifact@v3
         with:
-          path: ./wheelhouse/*.whl
+          path: ./bindings/python3/wheelhouse/*.whl
 
   python-build-check-armv7:
     name: 🐍 Python build & check on armv7
@@ -421,6 +423,7 @@ jobs:
         sed -ie "s/version=get_python_version()/version=\'${version:1}\'/" setup.py
         sudo apt-get install --force-yes cmake vim zsh
         pip install meson ninja twine
+        ./prepare.sh
     - run: pipx run build --sdist
     - run: twine check dist/*.tar.gz
     - uses: actions/upload-artifact@v3
