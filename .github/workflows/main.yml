@@ -395,6 +395,7 @@ jobs:
             # build
             rm -f bindings/golang/zenroom/lib/libzenroom.so
             cd bindings/python3
+            ./prepare.sh
             python3 setup.py bdist_wheel
             mkdir ../../wheelhouse && cp dist/*.whl ../../wheelhouse
             # tests
