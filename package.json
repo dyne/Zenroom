@@ -1,8 +1,14 @@
 {
-	"projectname": "Zenroom",
-	"projectversion": "1.2",
-	"license": "AGPL-3.0",
-	"repository": "https://github.com/dyne/zenroom",
-	"author": "dyne",
-	"description": "Secure VM for smart-contract execution in human-like language"
+    "name": "Zenroom",
+    "version": "3.0.0",
+    "license": "AGPL-3.0",
+    "repository": "https://github.com/dyne/zenroom",
+    "author": "dyne",
+    "description": "Secure VM for smart-contract execution in human-like language",
+    "devDependencies": {
+        "@semantic-release/changelog": "^6.0.1",
+        "@semantic-release/commit-analyzer": "^9.0.2",
+        "@semantic-release/release-notes-generator": "^10.0.3",
+        "semantic-release": "^19.0.5"
+    }
 }
