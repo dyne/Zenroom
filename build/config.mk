@@ -41,12 +41,13 @@ platform := posix
 # {{{ TARGET SPECIFIC
 
 ifneq (,$(findstring win,$(MAKECMDGOALS)))
+defines += -D'ARCH=\"WIN\"' -DARCH_WIN
 gcc := $(shell which x86_64-w64-mingw32-gcc)
 ar  := $(shell which x86_64-w64-mingw32-ar)
 ranlib := $(shell which x86_64-w64-mingw32-ranlib)
 ld := $(shell which x86_64-w64-mingw32-ld)
 system := Windows
-cflags := -mthreads -D'ARCH=\"WIN\"' -DARCH_WIN ${defines}
+cflags := -mthreads ${defines}
 ldflags := -L/usr/x86_64-w64-mingw32/lib
 ldadd += -l:libm.a -l:libpthread.a -lssp
 endif
