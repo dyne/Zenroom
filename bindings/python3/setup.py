@@ -17,27 +17,22 @@ ZSTD_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/zstd')
 ED25519_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/ed25519-donna')
 MIMALLOC_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/mimalloc/include')
 
-def get_zenroom_version():
-    zenroom_version = '1.0.0'
-    hash = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'],
-                          cwd=ZENROOM_ROOT,
-                          stdout=subprocess.PIPE).stdout.decode('utf-8')
-    # Last char in hash is a newline
-    return zenroom_version + '+' + hash[:-1]
-
-
-def get_python_version():
-    zenroom_version = '2.1.0'
-    commit_time = ''
-    try:
-        with open(os.path.join(ZENROOM_ROOT, 'commit_time')) as f:
-            commit_time = f.read()
-    except IOError:
-        commit_time = subprocess.run(['git', 'show', '-s', '--format=%ct', 'HEAD'],
-                                     cwd=ZENROOM_ROOT,
-                                     stdout=subprocess.PIPE).stdout.decode('utf-8')
-    # Last char in hash is a newline
-    return zenroom_version + '.dev' + commit_time
+def get_versions():
+    # performed in ZENROOM_ROOT
+    # first char is v, last one is a newline
+    python_version = subprocess.run(['git', 'describe', '--tags', '--abbrev=0'],
+                                     stdout=subprocess.PIPE).stdout.decode('utf-8')[1:-1]
+    zenroom_version = python_version
+    branch = subprocess.run(['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
+                            stdout=subprocess.PIPE).stdout.decode('utf-8')
+    if branch != "master":
+        hash = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'],
+                              stdout=subprocess.PIPE).stdout.decode('utf-8')
+        time = subprocess.run(['git', 'show', '-s', '--format=%ct', 'HEAD'],
+                              stdout=subprocess.PIPE).stdout.decode('utf-8')
+        zenroom_version += '+'+hash[:-1]
+        python_version += '.dev'+time[:-1]
+    return python_version, zenroom_version
 
 
 ZENROOM_SOURCES = [
@@ -84,6 +79,7 @@ meson_root = os.path.join(ZENROOM_ROOT, 'meson')
 os.chdir(ZENROOM_ROOT)
 subprocess.check_call(['make', 'clean'])
 subprocess.check_call(['make', 'meson'])
+python_version, zenroom_version = get_versions()
 os.chdir(PYTHON_ROOT)
 
 zenroom_lib = Extension('zenroom',
@@ -110,7 +106,7 @@ zenroom_lib = Extension('zenroom',
                             # os.path.join(QP_ROOT, 'sntrup761'),
                         ],
                         extra_compile_args=[
-                            '-DVERSION="' + get_zenroom_version() + '"',
+                            '-DVERSION="' + zenroom_version + '"',
                             # '-DLUA_COMPAT_5_3',
                             # '-DLUA_COMPAT_MODULE',
                             # '-DLUA_COMPAT_BITLIB'
@@ -142,7 +138,7 @@ def get_readme():
 setup(
     name='zenroom',
     description='Zenroom for Python: Bindings of Zenroom library for Python.',
-    version=get_python_version(),
+    version=python_version,
     long_description=get_readme(),
     long_description_content_type='text/markdown',
     license = 'AGPLv3',
