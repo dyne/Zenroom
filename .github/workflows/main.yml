@@ -258,13 +258,15 @@ jobs:
         python-version: ["3.8", "3.9", "3.10"]
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - run: sudo apt install --force-yes zsh
         if: runner.os == 'Linux'
       - run: brew install zsh
-        if: runner.os == 'Darwin'
+        if: runner.os == 'macOS'
       - run: |
           ./prepare.sh
           pip3 install meson ninja
@@ -339,9 +341,6 @@ jobs:
           CIBW_TEST_EXTRAS: "test"
           CIBW_TEST_COMMAND: "pytest -s {project}/tests"
         run: |
-          # version
-          version=$(git describe --tags `git rev-list --tags --max-count=1`)
-          sed -ie "s/version=get_python_version()/version=\'${version:1}\'/" bindings/python3/setup.py
           # Remove shared library
           rm -f bindings/golang/zenroom/lib/libzenroom.so
           cd bindings/python3
@@ -389,9 +388,6 @@ jobs:
             fi
             apt-get install -y python3-pip && python3 -m pip install --upgrade pip
             pip install meson wheel pytest schema
-            # version
-            version=$(git describe --tags `git rev-list --tags --max-count=1`)
-            sed -ie "s/version=get_python_version()/version=\'${version:1}\'/" bindings/python3/setup.py
             # build
             rm -f bindings/golang/zenroom/lib/libzenroom.so
             cd bindings/python3
@@ -419,8 +415,6 @@ jobs:
         ref: master
         fetch-depth: 0
     - run: |
-        version=$(git describe --tags --abbrev=0)
-        sed -ie "s/version=get_python_version()/version=\'${version:1}\'/" setup.py
         sudo apt-get install --force-yes cmake vim zsh
         pip install meson ninja twine
         ./prepare.sh
