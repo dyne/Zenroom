@@ -455,7 +455,7 @@ and I have a 'string dictionary' named 'json'
 
 # Here I retrieve all the public keys/address from
 # the verififcationMethod
-When I create the verificationMethod
+When I create the verificationMethod of 'did document'
 
 # Here I use the publc keys to verify the sgnatures
 
