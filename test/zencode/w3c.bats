@@ -262,8 +262,8 @@ Scenario 'w3c': did document manipulation
 
 Given I have a 'did document'
 
-When I create the verificationMethod
-When I create the serviceEndpoint
+When I create the verificationMethod of 'did document'
+When I create the serviceEndpoint of 'did document'
 
 Then print the 'verificationMethod'
 Then print the 'serviceEndpoint'

@@ -316,9 +316,9 @@ IfWhen(
 
 -- operations on the did-document
 When(
-    "create the serviceEndpoint",
-    function()
-	local doc = have 'did document'
+    "create the serviceEndpoint of ''",
+    function(did_doc)
+	local doc = have(did_doc)
 	ZEN.assert(doc.service, 'service not found')
 	ACK.serviceEndpoint = {}
 	for _, service in pairs(doc.service) do
@@ -332,9 +332,9 @@ When(
 )
 
 When(
-    "create the verificationMethod",
-    function()
-	local doc = have 'did document'
+    "create the verificationMethod of ''",
+    function(did_doc)
+	local doc = have(did_doc)
 	ZEN.assert(doc.verificationMethod, 'verificationMethod not found')
 	empty 'verificationMethod'
 	ACK.verificationMethod = {}
