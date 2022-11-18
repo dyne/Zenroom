@@ -242,7 +242,7 @@ local function take_out_f(root, path, dest)
 	   res = _extract(res, v)
 	end
 	ACK[dest] = _extract(res, dest)
-	new_codec(dest, {}, root)
+	new_codec(dest, {encoding = ZEN.CODEC[root].encoding})
 end
 When("pickup from path ''", function(path)
 	local parr = strtok(uscore(path), '([^.]+)')
