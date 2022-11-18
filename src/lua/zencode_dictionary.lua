@@ -235,28 +235,35 @@ When("create the copy of object named by '' from dictionary ''", function(name, 
   create_copy_f(dict, label:string())
 end)
 
-local function take_out_f(root, path, dest)
+local function take_out_f(path, dest, format)
+	local parr = strtok(uscore(path), '([^.]+)')
+	local root = parr[1] -- first
+	table.remove(parr, 1)
+	if not dest then
+	   dest = parr[#parr]
+	   table.remove(parr, #parr)
+	end
 	empty(dest)
 	local res = have(root)
-	for k,v in pairs(path) do
-	   res = _extract(res, v)
+	for k,v in pairs(parr) do
+		res = _extract(res, v)
 	end
 	ACK[dest] = _extract(res, dest)
-	new_codec(dest, {encoding = ZEN.CODEC[root].encoding})
+	new_codec(dest,
+		  (format and guess_conversion(ACK[dest], format))
+		  or { encoding = ZEN.CODEC[root].encoding })
 end
+
 When("pickup from path ''", function(path)
-	local parr = strtok(uscore(path), '([^.]+)')
-	local dest = parr[#parr] -- last
-	table.remove(parr, #parr)
-	local root = parr[1] -- first
-	table.remove(parr, 1)
-	take_out_f(root,parr,dest)
+	take_out_f(path, nil, nil)
 end)
+
+When("pickup a '' from path ''", function(format, path)
+	take_out_f(path, nil, format)
+end)
+
 When("take '' from path ''", function(target, path)
-	local parr = strtok(uscore(path), '([^.]+)')
-	local root = parr[1] -- first
-	table.remove(parr, 1)
-	take_out_f(root,parr,uscore(target))
+	take_out_f(path, uscore(target), nil)
 end)
 
 When("move '' from '' to ''", function(name, src, dst)
