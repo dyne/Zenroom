@@ -92,20 +92,31 @@ jobs:
       matrix:
         compiler: [clang-9, clang-10, clang-11, gcc-7, gcc-8, gcc-9, gcc-10]
       fail-fast: false
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
-      - name: Install compiler and dependencies
-        run: |
-          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-          sudo apt-get install --force-yes ${{ matrix.compiler }}
-          sudo apt-get install --force-yes cmake vim zsh luajit lua-cjson ccache
-          pip3 install meson ninja
+        with:
+          python-version: '3.10'
       - uses: hendrikmuhs/ccache-action@v1.2
-      - run: make meson-ccache && ninja -C meson
-        env:
-          CC: ${{ matrix.compiler }}
+      - name: install compiler and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ${{ matrix.compiler }}
+          sudo apt-get install -y vim zsh luajit lua-cjson
+          pip3 install meson ninja
+      - name: Compile with ${{ matrix.compiler }}
+        run: |
+          compiler=`echo ${{ matrix.compiler }} | cut -d "-" -f 1`
+          if [[ ${compiler} == 'gcc' ]]; then
+            default='gcc-9'; command='meson-ccache'
+          else
+            default='clang-11'; command='meson-clang-ccache'
+          fi
+          sudo update-alternatives --install $(which ${compiler}) ${compiler} $(which ${default}) 1
+          sudo update-alternatives --install $(which ${compiler}) ${compiler} $(which ${{ matrix.compiler }}) 2
+          sudo update-alternatives --set ${compiler} $(which ${{ matrix.compiler }})
+          make ${command}
       - run: make meson-test
 
   linux-crypto-check:
