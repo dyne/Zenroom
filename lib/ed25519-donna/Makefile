@@ -8,7 +8,9 @@ CFLAGS := ${CFLAGS} -DED25519_REFHASH -DED25519_TEST
 # other x64 operating systems (e.g. iOS)
 UNAME_S := $(shell uname -s)
 ifneq (${UNAME_S},Darwin)
+ifeq (,$(findstring clang,$(CC)))
 	CFLAGS := ${CFLAGS} -DED25519_FORCE_32BIT
+endif
 endif
 
 all: $(LIB)
