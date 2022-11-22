@@ -99,7 +99,7 @@ int _octet_to_big(lua_State *L, big *dst, octet *src) {
 		}
 	} else if(src->len > MODBYTES && src->len <= MODBYTES<<1) {
 		dbig_init(L,dst);
-		BIG_zero(dst->dval);
+		BIG_dzero(dst->dval);
 		for(i=0; i<src->len; i++) {
 			BIG_dshl(dst->dval,8);
 			dst->dval[0] += (int)(unsigned char) src->val[i];
@@ -141,6 +141,8 @@ big* big_new(lua_State *L) {
 big* big_arg(lua_State *L,int n) {
 	Z(L);
 	big* result = (big*)malloc(sizeof(big));
+	result->val = NULL;
+	result->dval = NULL;
 	void *ud = luaL_testudata(L, n, "zenroom.big");
 	if(ud) {
 		*result = *(big*)ud;
@@ -515,7 +517,13 @@ end:
 // TODO: always show negative sign or put a flag?
 static int big_to_decimal_string(lua_State *L) {
 	BEGIN();
-	big *num = big_arg(L,1); SAFE(num);
+	big *num = big_arg(L,1);
+	if (!num) {
+		THROW("Could not read input number");
+	} else if(num->doublesize || num->dval) {
+		big_free(L, num);
+		THROW("Integer too big to be exported");
+	}
 	BIG_norm(num->val);
 
 	// I can modify safenum without loosing num
@@ -544,7 +552,6 @@ static int big_to_decimal_string(lua_State *L) {
 		s[0] = '0';
 		i++;
 	} else {
-
 		i = 0;
 		while(!BIG_iszilch(safenum)) {
 			// Read less significant digit
@@ -572,12 +579,12 @@ static int big_to_decimal_string(lua_State *L) {
 	j = 0;
 	i--;
 	while(j < i) {
-	  char t;
-	  t = s[i];
-	  s[i] = s[j];
-	  s[j] = t;
-	  i--;
-	  j++;
+		char t;
+		t = s[i];
+		s[i] = s[j];
+		s[j] = t;
+		i--;
+		j++;
 	}
 	lua_pushstring(L,s);
 	free(s);
