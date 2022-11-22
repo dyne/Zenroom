@@ -24,8 +24,8 @@ def get_versions():
                                      stdout=subprocess.PIPE).stdout.decode('utf-8')[1:-1]
     zenroom_version = python_version
     branch = subprocess.run(['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
-                            stdout=subprocess.PIPE).stdout.decode('utf-8')[:-1]
-    if branch != "master":
+                            stdout=subprocess.PIPE).stdout.decode('utf-8')
+    if branch.strip() != "master":
         hash = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'],
                               stdout=subprocess.PIPE).stdout.decode('utf-8')
         time = subprocess.run(['git', 'show', '-s', '--format=%ct', 'HEAD'],
