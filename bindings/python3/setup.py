@@ -21,7 +21,7 @@ def get_versions():
     # performed in ZENROOM_ROOT
     # first char is v, last one is a newline
     python_version = subprocess.run(['git', 'describe', '--tags', '--abbrev=0'],
-                                     stdout=subprocess.PIPE).stdout.decode('utf-8')[1:-1]
+                                     stdout=subprocess.PIPE).stdout.decode('utf-8').strip('v\n')
     zenroom_version = python_version
     branch = subprocess.run(['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
                             stdout=subprocess.PIPE).stdout.decode('utf-8')
