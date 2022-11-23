@@ -120,6 +120,7 @@ EOF
     assert_output '{"output":["OK"]}'
 }
 
+
 @test "When I create the json of ''" {
     cat <<EOF | save_asset json_encode.json
 {
@@ -174,3 +175,22 @@ EOF
     save_output 'rmchar.out'
     assert_output '{"json.myBase64Array":"[\"BPEg2X6/Y+68oolE6ocCPDlLWQZLqdaBV00d/jJ5f0dRNQNBUcIh/JHGgfDotpM4p682MPZ5PKoC3vsjhI88OeE=\"]","json.myBase64Dictionary":"{\"first\":\"aGVsbG8=\",\"second\":\"d29ybGQh\"}","json.myString":"\"hello World!\"","json.myStringArray":"[\"Hello World! myFirstObject, myFirstArray[0]\",\"Hello World! myFirstObject, myFirstArray[1]\",\"Hello World! myFirstObject, myFirstArray[2]\"]","json.myStringDictionary":"{\"first\":\"hello\",\"second\":\"world!\"}"}'
 }
+
+@test "cast float into integer" {
+    cat <<EOF | save_asset cast_float.json
+{"b64": "ITQjFPGiNLU0LC0yQeI=",
+ "integer": "123456789123456789123456789"}
+EOF
+
+    cat <<EOF | zexe cast_float.zen cast_float.json
+Given  have a 'base64' named 'b64'
+Given I have a 'integer'
+When create the float 'fb64' cast of integer in 'b64'
+When create the float 'finteger' cast of integer in 'integer'
+
+Then print data
+EOF
+    save_output 'cast_float.out'
+    assert_output '{"b64":"ITQjFPGiNLU0LC0yQeI=","fb64":6.734502e+32,"finteger":1.234568e+26,"integer":"123456789123456789123456789"}'
+}
+
