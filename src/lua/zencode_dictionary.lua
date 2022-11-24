@@ -246,12 +246,14 @@ local function take_out_f(path, dest, format)
 	empty(dest)
 	local res = have(root)
 	for k,v in pairs(parr) do
-		res = _extract(res, v)
+	   res = _extract(res, v)
 	end
 	ACK[dest] = _extract(res, dest)
-	new_codec(dest,
-		  (format and guess_conversion(ACK[dest], format))
-		  or { encoding = ZEN.CODEC[root].encoding })
+	if format then
+	   new_codec(dest, guess_conversion(ACK[dest], format))
+	else
+	   new_codec(dest, { encoding = ZEN.CODEC[root].encoding })
+	end
 end
 
 When("pickup from path ''", function(path)
