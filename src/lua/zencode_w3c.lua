@@ -20,8 +20,6 @@
 --on Wednesday, 14th July 2021
 --]]
 
--- possiblity to add more verififcationMethod specs
--- like base58, jws, ...
 local function import_vm(obj, key)
     if key == 'publicKeyBase64' then
 	return O.from_base64(obj)
@@ -44,68 +42,29 @@ end
 
 local function import_did_doc(doc)
     local res = {}
-    -- id is always present in DID-documents
-    res.id = ZEN.get(doc, 'id', O.from_string, tostring)
-    -- @context, alsoKnownAs, verificationMethod,Country, State,
-    -- desciption, service and proof can also not be present
-    if doc['@context'] then
-	res['@context'] = deepmap(O.from_string, doc['@context'])
-    end
-    if doc.alsoKnownAs then
-	res.alsoKnownAs = ZEN.get(doc, 'alsoKnownAs', O.from_string, tostring)
-    end
+    local vm = nil
+    -- id must be always present in DID-documents
+    ZEN.assert(doc.id, 'Invalid DID document: id not found')
+    -- all the other fields are optional and imported as a string
+    -- except for verificationMethod that has its own import function
     if doc.verificationMethod then
-	res.verificationMethod = deepmap(import_vm, doc.verificationMethod)
+	vm = ZEN.get(doc, 'verificationMethod', import_vm, tostring)
+	doc.verificationMethod = nil
     end
-    if doc.Country then
-       res.Country = ZEN.get(doc, 'Country', O.from_string, tostring)
-    end
-    if doc.State then
-       res.State = ZEN.get(doc, 'State', O.from_string, tostring)
-    end
-    if doc.description then
-       res.description = ZEN.get(doc, 'description', O.from_string, tostring)
-    end
-    -- services
-    if doc.service then
-       res.service = deepmap(O.from_string, doc.service)
-    end
-    -- proof
-    if doc.proof then
-       res.proof = deepmap(O.from_string, doc.proof)
-    end
+    res = ZEN.get(doc, '.', O.from_string, tostring)
+    res.verificationMethod = vm
     return res
 end
 
 local function export_did_doc(doc)
     local res = {}
-    res.id = doc.id:string()
-    if doc['@context'] then
-	res['@context'] = deepmap(O.to_string, doc['@context'])
-    end
-    if doc.alsoKnownAs then
-	res.alsoKnownAs = doc.alsoKnownAs:string()
-    end
+    local vm = nil
     if doc.verificationMethod then
-	res.verificationMethod = deepmap(export_vm, doc.verificationMethod)
+	vm = deepmap(export_vm, doc.verificationMethod)
+	doc.verificationMethod = nil
     end
-    if doc.Country then
-	res.Country = doc.Country:string()
-    end
-    if doc.State then
-	res.State = doc.State:string()
-    end
-    if doc.description then
-	res.description = doc.description:string()
-    end
-    -- serivce
-    if doc.service then
-	res.service = deepmap(O.to_string, doc.service)
-    end
-    -- proof
-    if doc.proof then
-	res.proof = deepmap(O.to_string, doc.proof)
-    end
+    res = deepmap(O.to_string, doc)
+    res.verificationMethod = vm
     return res
 end
 
