@@ -1,9 +1,9 @@
 
 local ED = require'ed'
 
-When("create the planetmint signatures of '' with eddsa", function(tx_name)
+When("create the planetmint signatures of planetmint transaction with eddsa", function(tx_name)
     empty'planetmint_signatures'
-    local serialized_tx = have(tx_name):string()
+    local serialized_tx = have('planetmint transaction'):string()
     local tx = JSON.decode(serialized_tx)
 
     local sk = havekey'eddsa'
