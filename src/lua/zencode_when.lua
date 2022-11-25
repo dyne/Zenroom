@@ -136,7 +136,11 @@ end)
 When("create the json of ''", function(src)
 	have(src)
 	empty'json'
-	ACK.json = OCTET.from_string( JSON.encode(ACK[src]) )
+	local codec = ZEN.CODEC[src]
+	ACK.json = OCTET.from_string(
+	   JSON.encode(ACK[src], codec and codec.encoding) )
+	new_codec('json', {encoding = 'string',
+			   zentype = 'element'})
 end)
 
 -- numericals
