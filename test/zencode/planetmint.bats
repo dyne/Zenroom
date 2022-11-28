@@ -17,7 +17,7 @@ EOF
 Scenario 'planetmint': sign outputs
 Given I have the 'keyring'
 Given I have a 'string' named 'planetmint transaction'
-When I create the 'planetmint signatures' of 'planetmint transaction' with the eddsa key
+When I create the 'planetmint signatures' of 'planetmint transaction'
 Then print the data
 EOF
     save_output "transfer_tx.out"
@@ -39,7 +39,7 @@ EOF
 Scenario 'planetmint': sign outputs
 Given I have the 'keyring'
 Given I have a 'string' named 'planetmint transaction'
-When I create the 'planetmint signatures' of 'planetmint transaction' with the eddsa key
+When I create the 'planetmint signatures' of 'planetmint transaction'
 Then print the data
 EOF
     save_output "transfer_tx.out"
