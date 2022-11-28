@@ -1,9 +1,9 @@
 
 local ED = require'ed'
 
-When("create the planetmint signatures of planetmint transaction with eddsa", function()
-    empty'planetmint_signatures'
-    local serialized_tx = have('planetmint transaction'):string()
+When("create the '' of '' with the eddsa key", function(signatures, tx)
+    empty(tx)
+    local serialized_tx = have(tx):string()
     local tx = JSON.decode(serialized_tx)
 
     local sk = havekey'eddsa'
@@ -22,6 +22,6 @@ When("create the planetmint signatures of planetmint transaction with eddsa", fu
         table.insert(planetmint_output_signatures, signature)
     end
 
-    ACK['planetmint_signatures'] = planetmint_output_signatures
-    new_codec('planetmint_signatures', {zentype='array', luatype='table', encoding='hex'})
+    ACK[signatures] = planetmint_output_signatures
+    new_codec(signatures, {zentype='array', luatype='table', encoding='hex'})
 end)
