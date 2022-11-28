@@ -120,3 +120,57 @@ EOF
     assert_output '{"output":["OK"]}'
 }
 
+@test "When I create the json of ''" {
+    cat <<EOF | save_asset json_encode.json
+{
+    "myStringArray": [
+      "Hello World! myFirstObject, myFirstArray[0]",
+      "Hello World! myFirstObject, myFirstArray[1]",
+      "Hello World! myFirstObject, myFirstArray[2]"
+    ],
+    "myBase64Array": [
+      "BPEg2X6/Y+68oolE6ocCPDlLWQZLqdaBV00d/jJ5f0dRNQNBUcIh/JHGgfDotpM4p682MPZ5PKoC3vsjhI88OeE="
+    ],
+    "myStringDictionary" : {
+      "first": "hello",
+      "second": "world!"
+    },
+    "myBase64Dictionary" : {
+      "first": "aGVsbG8=",
+      "second": "d29ybGQh"
+    },
+    "myString": "hello World!"
+}
+EOF
+
+    cat <<EOF | zexe json_encode.zen json_encode.json
+Given I have a 'string array' named 'myStringArray'
+Given I have a 'base64 array' named 'myBase64Array'
+Given I have a 'string dictionary' named 'myStringDictionary'
+Given I have a 'base64 dictionary' named 'myBase64Dictionary'
+Given I have a 'string' named 'myString'
+
+When I create the json of 'myStringArray'
+and I rename the 'json' to 'json.myStringArray'
+
+When I create the json of 'myBase64Array'
+and I rename the 'json' to 'json.myBase64Array'
+
+When I create the json of 'myStringDictionary'
+and I rename the 'json' to 'json.myStringDictionary'
+
+When I create the json of 'myBase64Dictionary'
+and I rename the 'json' to 'json.myBase64Dictionary'
+
+When I create the json of 'myString'
+and I rename the 'json' to 'json.myString'
+
+Then print the 'json.myStringArray'
+Then print the 'json.myBase64Array'
+Then print the 'json.myStringDictionary'
+Then print the 'json.myBase64Dictionary'
+Then print the 'json.myString'
+EOF
+    save_output 'rmchar.out'
+    assert_output '{"json.myBase64Array":"[\"BPEg2X6/Y+68oolE6ocCPDlLWQZLqdaBV00d/jJ5f0dRNQNBUcIh/JHGgfDotpM4p682MPZ5PKoC3vsjhI88OeE=\"]","json.myBase64Dictionary":"{\"first\":\"aGVsbG8=\",\"second\":\"d29ybGQh\"}","json.myString":"\"hello World!\"","json.myStringArray":"[\"Hello World! myFirstObject, myFirstArray[0]\",\"Hello World! myFirstObject, myFirstArray[1]\",\"Hello World! myFirstObject, myFirstArray[2]\"]","json.myStringDictionary":"{\"first\":\"hello\",\"second\":\"world!\"}"}'
+}
