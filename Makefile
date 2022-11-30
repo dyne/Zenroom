@@ -185,7 +185,7 @@ ed25519-donna:
 	$(MAKE) -C ${pwd}/lib/ed25519-donna
 
 blake2:
-	$(info -- Building Blake2 for Argon2)
+	$(info -- Building Blake2 hash)
 	CC="${blake2_cc}" \
 	AR=${ar} \
 	CFLAGS="${cflags}" \
