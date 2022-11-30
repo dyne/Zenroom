@@ -321,6 +321,148 @@ function ETH.address_from_public_key(pk)
    return H:process(pk:sub(2, #pk)):sub(13, 32)
 end
 
+function encode(t, arg)
+   local res
+   if type(t) == "string" then
+      if string.match(t, 'uint%d+$') or t == 'address' then
+         res = encode_uint(arg)
+      elseif string.match(t, 'bytes%d+$') then
+         if iszen(type(arg)) then
+            arg = arg:octet()
+         else
+            arg = O.new(arg)
+         end
+         local paddingLength = #arg % 32
+         local padding
+         if paddingLength > 0 then
+            paddingLength = 32 - paddingLength
+            padding = O.zero(paddingLength)
+         else
+            padding = O.empty()
+         end
+         res = arg .. padding
+      elseif t == 'bool' then
+         res = BIG.new(fif(arg, 1, 0)):fixed(32)
+      elseif t == 'string' or t == 'bytes' then
+         if iszen(type(arg)) then
+            arg = arg:octet()
+         else
+            arg = O.new(arg)
+         end
+         -- right padding
+         local paddingLength = #arg % 32
+         local padding
+         if paddingLength > 0 then
+            paddingLength = 32 - paddingLength
+            padding = O.zero(paddingLength)
+         else
+            padding = O.empty()
+         end
+         res = INT.new(#arg):fixed(32) .. arg .. padding
+      else
+         -- try to parse an array type
+         local len
+         local tt, k = string.match(t, "([a-zA-Z0-9]+)%[(%d*)%]")
+         if tt then
+            if k and #k > 0 then
+               len = tonumber(k)
+               res = O.empty()
+            else
+               len = #arg
+               res = encode_uint(#arg)
+            end
+            local params = {}
+            for i=1,len, 1 do
+               table.insert(params, tt)
+            end
+            res = res .. encode(params, arg)
+         else
+            error("Unable to encode " .. t)
+         end
+
+      end
+   elseif type(t) == 'table' then
+      res = encode_tuple(t, arg)
+   end
+   return res
+end
+
+function encode_uint(val)
+   return BIG.new(val):fixed(32)
+end
+
+-- The following types are called “dynamic”:
+--     bytes
+--     string
+--     T[] for any T
+--     T[k] for any dynamic T and any k >= 0
+--     (T1,...,Tk) if Ti is dynamic for some 1 <= i <= k
+function is_dynamic(t)
+   dyn = t == 'string' or t == 'bytes' or string.match(t, '[a-zA-Z0-9]+%[%]')
+   if not dyn then
+      t = string.match(t, '([a-zA-Z]+)%[%d+%]')
+      if t then
+         dyn = is_dynamic(t)
+      end
+   end
+   return dyn
+end
+
+function encode_tuple(params, args)
+   local res = O.empty()
+
+   if type(params) == 'string' then
+   elseif type(params) ~= 'table' then
+      error("Type not encodable as tuple")
+   end
+
+   local tails = {}
+   local heads = {}
+   local head
+   local tail
+
+   local head_size = 0;
+   local tail_size = 0;
+   -- check if there are dynamic types and compute tails
+   for i, v in ipairs(params) do
+      if is_dynamic(v) then
+         local arg = nil;
+         head_size = head_size + 32
+         table.insert(tails, encode(v, args[i]))
+      else
+         local t, k = string.match(v, "([a-zA-Z0-9]+)%[(%d+)%]")
+         if t and k then
+            head_size = head_size + 32 * tonumber(k)
+         else
+            head_size = head_size + 32
+         end
+         table.insert(tails, O.empty())
+      end
+   end
+
+   for i, v in ipairs(params) do
+      -- I don't check the range of values (for bool the input should be 0 or 1),
+      -- while for int<M> should be 0 ... 2^(<M>)-1
+      -- append offset
+      if is_dynamic(v) then
+         table.insert(heads, encode_uint(head_size+tail_size))
+         tail_size = tail_size + #tails[i]
+      else
+         table.insert(heads, encode(v, args[i]))
+      end
+   end
+
+   -- implement O.concat for memory efficient concat
+   for i, v in pairs(heads) do
+      res = res .. v
+   end
+   for i, v in pairs(tails) do
+      res = res .. v
+   end
+   return res
+end
+
+
 -- TODO: remove so many .., there should be something like table.concat for octets
 -- Really simple data encoder, it only works with elementary types (for
 -- example ERC-20 only uses this kind of data types)
@@ -332,61 +474,7 @@ function ETH.data_contract_factory(fz_name, params)
    local signature = fz_name .. '(' .. table.concat(params, ",") .. ')'
    local f_id = O.from_hex(string.sub(hex(H:process(signature)), 1, 8))
    return function(...)
-      local args = table.pack(...)
-
-      local res = f_id
-
-
-      local tails = {}
-
-      -- check if there are dynamic types and compute tails
-      for i, v in ipairs(params) do
-
-         if v == 'string' or v == 'bytes' then
-            local arg = nil;
-            if iszen(type(args[i])) then
-               arg = args[i]:octet()
-            else
-               arg = O.new(args[i])
-            end
-
-            table.insert(tails, arg)
-         else
-            table.insert(tails, O.empty())
-         end
-      end
-
-      local head_size = #params * 32;
-      local tail_size = 0;
-
-      for i, v in ipairs(params) do
-	 -- I don't check the range of values (for bool the input should be 0 or 1),
-	 -- while for int<M> should be 0 ... 2^(<M>)-1
-	 if string.match(v, 'uint%d+') or v == 'address' then
-	    res = res .. BIG.new(args[i]):fixed(32)
-	 elseif v == 'bool' then
-	    res = res .. BIG.new(fif(args[i], 1, 0)):fixed(32)
-         elseif v == 'string' or v == 'bytes' then
-            -- append offset
-            res = res .. BIG.new(head_size + tail_size):fixed(32)
-            tail_size = tail_size + #tails[i]
-	 end
-      end
-      for i, v in pairs(tails) do
-         if #v > 0 then
-            -- right padding
-            local paddingLength = #v % 32
-            local padding
-            if paddingLength > 0 then
-               paddingLength = 32 - paddingLength
-               padding = O.zero(paddingLength)
-            else
-               padding = O.empty()
-            end
-            res = res .. INT.new(#v):fixed(32) .. v .. padding
-         end
-      end
-      return res
+      return f_id .. encode_tuple(params, table.pack(...))
    end
 end
 
