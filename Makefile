@@ -9,7 +9,7 @@ PREFIX ?= /usr/local
 # VERSION is set in src/Makefile
 VERSION := $(shell awk '/ZENROOM_VERSION :=/ { print $$3; exit }' src/Makefile | tee VERSION)
 # Targets to be build in this order
-BUILDS := apply-patches milagro lua53 embed-lua zstd quantum-proof ed25519-donna mimalloc
+BUILDS := apply-patches milagro lua53 embed-lua zstd quantum-proof ed25519-donna mimalloc blake2
 
 # DESTDIR is supported by install target
 
@@ -183,6 +183,14 @@ ed25519-donna:
 	CFLAGS="${cflags}" \
 	LDFLAGS="${ldflags}" \
 	$(MAKE) -C ${pwd}/lib/ed25519-donna
+
+blake2:
+	$(info -- Building Blake2 for Argon2)
+	CC="${blake2_cc}" \
+	AR=${ar} \
+	CFLAGS="${cflags}" \
+	LDFLAGS="${ldflags}" \
+	$(MAKE) -C ${pwd}/lib/blake2
 
 # -------------------
 # Test suites for all platforms
