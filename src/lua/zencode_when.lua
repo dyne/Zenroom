@@ -606,8 +606,7 @@ When("create the float '' cast of integer in ''", function(dest, source)
     if type(src) ~= 'zenroom.big' then
         src = BIG.new(src)
     end
-    I.spy(src)
-    ACK[dest] = I.spy(F.new(I.spy(BIG.to_decimal(src))))
+    ACK[dest] = F.new(BIG.to_decimal(src))
 	new_codec(dest, {encoding = 'float'})
 end)
 
