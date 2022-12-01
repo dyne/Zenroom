@@ -184,6 +184,31 @@ When("insert '' in ''", function(ele, dest)
 	ZEN.CODEC[ele] = nil
 end)
 
+When("insert named by '' in ''", function(ele, dest)
+	local d = have(dest)
+	local e_name = have(ele):string()
+	local e = have(e_name)
+        ZEN.assert(luatype(d) == 'table',
+		   "Invalid destination, not a table: "..dest)
+        ZEN.assert(ZEN.CODEC[dest].zentype ~= 'element',
+		   "Invalid destination, not a container: "..dest)
+        if ZEN.CODEC[dest].zentype == 'array' then
+           table.insert(ACK[dest], e)
+        elseif ZEN.CODEC[dest].zentype == 'dictionary' then
+           ACK[dest][e_name] = e
+        elseif ZEN.CODEC[dest].zentype == 'schema' then
+           ACK[dest][e_name] = e
+	else
+	   ZEN.assert(false, "Invalid destination type: "
+		      ..ZEN.CODEC[dest].zentype)
+        end
+	ZEN.CODEC[dest][ele] = ZEN.CODEC[ele]
+	ACK[e_name] = nil
+	ZEN.CODEC[e_name] = nil
+	ACK[ele] = nil
+	ZEN.CODEC[ele] = nil
+end)
+
 -- When("insert the '' in ''", function(ele,arr)
 --     ZEN.assert(ACK[ele], "Element not found: "..ele)
 --     ZEN.assert(ACK[arr], "Array not found: "..arr)
