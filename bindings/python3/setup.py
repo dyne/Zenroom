@@ -113,7 +113,7 @@ zenroom_lib = Extension('zenroom',
                             os.path.join(meson_root, 'libblake2.a'),
                             os.path.join(meson_root, 'libmimalloc-static.a'),
                         ],
-                        extra_link_args=['-lm']
+                        extra_link_args=['-lm', '-latomic']
                         )
 
 
