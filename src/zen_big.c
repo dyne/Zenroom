@@ -1514,6 +1514,22 @@ end:
 	END(1);
 }
 
+static int big_zenpositive(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	big *a = big_arg(L, 1);
+	if(!a) {
+		failed_msg = "Could not create BIG";
+		goto end;
+	}
+	lua_pushboolean(L, a->zencode_positive == BIG_POSITIVE);
+end:
+	big_free(L,a);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
 static int big_zenmod(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1679,6 +1695,7 @@ int luaopen_big(lua_State *L) {
 		{"zensub", big_zensub},
 		{"zenmul", big_zenmul},
 		{"zendiv", big_zendiv},
+		{"zenpositive", big_zenpositive},
 		{NULL, NULL}
 	};
 	const struct luaL_Reg big_methods[] = {

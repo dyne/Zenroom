@@ -53,6 +53,7 @@ local zencode = {
 	given_steps = {},
 	when_steps = {},
 	if_steps = {},
+	foreach_steps = {},
 	then_steps = {},
 	schemas = {},
 	branch = false,
@@ -62,7 +63,10 @@ local zencode = {
 	traceback = {}, -- execution backtrace
 	eval_cache = {}, -- zencode_eval if...then conditions
 	checks = {version = false}, -- version, scenario checked, etc.
-	OK = true -- set false by asserts
+	OK = true, -- set false by asserts
+	current_instruction = 0, -- first instruction
+	next_instruction = 1, -- first instruction
+	ITER = nil, -- foreach infos
 }
 
 -- set_sentence
@@ -70,8 +74,15 @@ local zencode = {
 
 local function set_sentence(self, event, from, to, ctx)
 	local index = self.current
-	if self.current == 'whenif' then index = 'when' end
-	if self.current == 'thenif' then index = 'then' end
+	if self.current == 'whenif' then index = 'when'
+	elseif self.current == 'thenif' then index = 'then'
+	elseif self.current == 'whenforeach' then index = 'when'
+	elseif self.current == 'whenforeachif' then index = 'when'
+	elseif self.current == 'whenifforeach' then index = 'when'
+	elseif self.current == 'foreachif' then index = 'foreach'
+	elseif self.current == 'endforeachif' then index = 'endforeach'
+	elseif self.current == 'ifforeach' then index = 'if'
+	elseif self.current == 'endifforeach' then index = 'endif' end
 	local reg = ctx.Z[index .. '_steps']
 	ctx.Z.OK = false
 	xxx('Zencode parser from: ' .. from .. " to: "..to, 3)
@@ -96,6 +107,7 @@ local function set_sentence(self, event, from, to, ctx)
 	tt = gsub(tt, '^then ', '', 1)
 	tt = gsub(tt, '^given ', '', 1)
 	tt = gsub(tt, '^if ', '', 1)
+	tt = gsub(tt, '^foreach ', '', 1)
 	tt = gsub(tt, '^and ', '', 1) -- TODO: expunge only first 'and'
 	-- generic particles
 	tt = gsub(tt, '^that ', ' ', 1)
@@ -248,20 +260,32 @@ local function new_state_machine()
 				{name = 'enter_given', from = {'init', 'rule', 'scenario'},	to = 'given'},
 				{name = 'enter_given', from = {'given'}, to = 'given'},
 
-				{name = 'enter_when', from = {'given', 'when', 'then', 'endif'}, to = 'when'},
-				{name = 'enter_then', from = {'given', 'when', 'then', 'endif'}, to = 'then'},
+				{name = 'enter_when', from = {'given', 'when', 'then', 'endif', 'endforeach'}, to = 'when'},
+				{name = 'enter_then', from = {'given', 'when', 'then', 'endif', 'endforeach'}, to = 'then'},
 
-				{name = 'enter_if', from = {'if', 'given', 'when', 'then', 'endif'}, to = 'if'},
-				{name = 'enter_whenif', from = {'if', 'whenif', 'thenif'}, to = 'whenif'},
+				{name = 'enter_if', from = {'if', 'given', 'when', 'then', 'endif', 'endforeach'}, to = 'if'},
+				{name = 'enter_whenif', from = {'if', 'whenif', 'thenif', 'endforeachif'}, to = 'whenif'},
 				{name = 'enter_thenif', from = {'if', 'whenif', 'thenif'}, to = 'thenif'},
-				{name = 'enter_endif', from = {'whenif', 'thenif'}, to = 'endif'},
+				{name = 'enter_endif', from = {'whenif', 'thenif', 'endforeachif'}, to = 'endif'},
+
+				{name = 'enter_foreachif', from = {'if', 'whenif', 'endforeachif', 'foreachif'}, to = 'foreachif'},
+				{name = 'enter_whenforeachif', from = {'foreachif', 'whenforeachif'}, to = 'whenforeachif'},
+				{name = 'enter_endforeachif', from = {'foreachif', 'whenforeachif'}, to = 'endforeachif'},
+
+				{name = 'enter_ifforeach', from = {'foreach', 'whenforeach', 'ifforeach', 'endifforeach'}, to = 'ifforeach'},
+				{name = 'enter_whenifforeach', from = {'ifforeach', 'whenifforeach'}, to = 'whenifforeach'},
+				{name = 'enter_endifforeach', from = {'ifforeach', 'whenifforeach'}, to = 'endifforeach'},
+
+				{name = 'enter_foreach', from = {'given', 'when', 'endif', 'foreach'}, to = 'foreach'},
+				{name = 'enter_whenforeach', from = {'foreach', 'whenforeach', 'endifforeach'}, to = 'whenforeach'},
+				{name = 'enter_endforeach', from = {'whenforeach', 'endifforeach'}, to = 'endforeach'},
 
 				{name = 'enter_and', from = 'given', to = 'given'},
 				{name = 'enter_and', from = 'when', to = 'when'},
 				{name = 'enter_and', from = 'then', to = 'then'},
 				{name = 'enter_and', from = 'whenif', to = 'whenif'},
 				{name = 'enter_and', from = 'thenif', to = 'thenif'},
-				{name = 'enter_and', from = 'if', to = 'if'}
+				{name = 'enter_and', from = 'if', to = 'if'},
 
 			},
 			-- graph TD
@@ -272,6 +296,12 @@ local function new_state_machine()
 			--     When --> IF
 			--     Then --> IF
 			--     IF --> Then
+			--     IF -> FOR
+			--     When -> FOR
+			--     FOR -> When
+			--     FOR -> Then
+			--     FOR -> IF
+			--     FOR -> Then
 			--     When --> Then
 			--     Given --> Then
 			callbacks = {
@@ -299,7 +329,16 @@ local function new_state_machine()
 				onthen = set_sentence,
 				onand = set_sentence,
 				onwhenif = set_sentence,
-				onthenif = set_sentence
+				onthenif = set_sentence,
+				onforeach = set_sentence,
+				onendforeach = set_sentence,
+				onwhenforeach = set_sentence,
+				onforeachif = set_sentence,
+				onwhenforeachif = set_sentence,
+				onendforeachif = set_sentence,
+				onifforeach = set_sentence,
+				onwhenifforeach = set_sentence,
+				onendifforeach = set_sentence,
 			}
 		}
 	)
@@ -317,6 +356,7 @@ WHO = nil
 
 -- init statements
 zencode.endif_steps = { endif = function() return end } --nop
+zencode.endforeach_steps = { endforeach = function() return end } --nop
 
 function Given(text, fn)
         text = text:lower()
@@ -346,6 +386,14 @@ function IfWhen(text, fn)
 	)
 	ZEN.if_steps[text]   = fn
 	ZEN.when_steps[text] = fn
+end
+function Foreach(text, fn)
+        text = text:lower()
+        assert(
+		not ZEN.foreach_steps[text],
+		'Conflicting FOREACH statement loaded by scenario: ' .. text, 2
+	)
+	ZEN.foreach_steps[text] = fn
 end
 function Then(text, fn)
         text = text:lower()
@@ -476,6 +524,8 @@ function zencode:parse(text)
    -- xxx(text,3)
 	local prefix
 	local branching = false
+	local looping = false
+	local prefixes = {}
 	local parse_prefix = parse_prefix -- optimization
    for line in zencode_newline_iter(text) do
 	linenum = linenum + 1
@@ -489,10 +539,26 @@ function zencode:parse(text)
 	  assert(prefix, "Invalid Zencode line "..linenum..": "..line)
 	  self.OK = true
 	  exitcode(0)
-	  if prefix == 'if' then branching = true end
-	  if branching and (prefix == 'when') then prefix = prefix..'if' end
-	  if branching and (prefix == 'then') then prefix = prefix..'if' end
-	  if prefix == 'endif' then branching = false end
+	  if not branching and prefix == 'if' then
+		  branching = true
+		  table.insert(prefixes, 1, 'if')
+	  elseif not looping and prefix == 'foreach' then
+		  looping = true
+		  table.insert(prefixes, 1, 'foreach')
+	  elseif prefix == 'endif' then
+		  branching = false
+		  table.remove(prefixes, 1)
+	  elseif prefix == 'endforeach' then
+		  looping = false
+		  table.remove(prefixes, 1)
+	  end
+	  if prefix == 'if' or prefix == 'foreach' then
+		  prefix =  table.concat(prefixes,'')
+	  elseif prefix == 'when' or prefix == 'then'
+		  or prefix == 'endif' or prefix == 'endforeach' then
+		  prefix =  prefix .. table.concat(prefixes,'')
+	  end
+
 	  -- try to enter the machine state named in prefix
 	  -- xxx("Zencode machine enter_"..prefix..": "..text, 3)
 	  local fm = self.machine["enter_"..prefix]
@@ -545,13 +611,13 @@ end
 -- return true: caller skip execution and go to ::continue::
 -- return false: execute statement
 local function manage_branching(x)
-	if x.section == 'if' then
+	if string.match(x.section, '^if') then
 		--xxx("START conditional execution: "..x.source, 2)
 		if not ZEN.branch then ZEN.branch_valid = true end
 		ZEN.branch = true
 		return false
 	end
-	if x.section == 'endif' then
+	if string.match(x.section, '^endif') then
 		--xxx("END   conditional execution: "..x.source, 2)
 		ZEN.branch = false
 		return true
@@ -564,7 +630,28 @@ local function manage_branching(x)
 	return false
 end
 
-
+-- return true: caller skip execution and go to ::continue::
+-- return false: execute statement
+local function manage_foreach(x)
+	if string.match(x.section, '^foreach') and not ZEN.ITER then
+		ZEN.ITER = {jump = ZEN.current_instruction, pos = 1}
+		return false
+	end
+	if string.match(x.section, '^endforeach') then
+		local info = ZEN.ITER
+		if info.pos > 0 then
+			info.pos = info.pos + 1
+			ZEN.next_instruction = info.jump
+			return true
+		else
+			ZEN.ITER = nil
+		end
+	end
+	-- for nested foreach look at the rest of the stack
+	-- condition: skip the statement if I am in a foreach and
+	-- there is the skip condition (pos = 0)
+	return ZEN.ITER and ZEN.ITER.pos == 0
+end
 -- assert all values in table are converted to zenroom types
 -- used in zencode when transitioning out of given memory
 local function zenguard(val, key) -- AKA watchdog
@@ -636,9 +723,17 @@ function zencode:run()
 	end
 
 	-- EXEC zencode
-	for _, x in pairs(self.AST) do
+	-- TODO: for optimization, to develop a lua iterator, which would save lookup time
+	-- https://www.lua.org/pil/7.1.html
+	while ZEN.next_instruction <= #self.AST do
+		ZEN.current_instruction = ZEN.next_instruction
+		local x = self.AST[ZEN.current_instruction]
+		ZEN.next_instruction = ZEN.next_instruction + 1
 		-- ZEN:trace(x.source)
 		if manage_branching(x) then
+			goto continue
+		end
+		if manage_foreach(x) then
 			goto continue
 		end
 		-- trigger upon switch to when or then section
@@ -715,5 +810,6 @@ function zencode.heap()
 		OUT = OUT
 	})
 end
+
 
 return zencode
