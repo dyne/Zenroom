@@ -132,10 +132,6 @@ linux-rust:
 	[ -d bindings/rust/clib ] || mkdir bindings/rust/clib
 	cp meson/libzenroom.a bindings/rust/clib
 	cp lib/milagro-crypto-c/build/lib/* bindings/rust/clib
-	cp meson/liblua.a bindings/rust/clib
-	cp meson/libqpz.a bindings/rust/clib
-	cp meson/libzstd.a bindings/rust/clib
-	cp meson/libed25519.a bindings/rust/clib
-	cp meson/libmimalloc-static.a bindings/rust/clib
+	cp meson/*.a bindings/rust/clib
 	cp src/zenroom.h bindings/rust
 	cd bindings/rust && cargo ${CMD}

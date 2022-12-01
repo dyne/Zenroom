@@ -31,3 +31,6 @@ Files: lib/mimalloc/*
 Copyright: 2018-2021 Microsoft Corporation, Daan Leijen
 License: MIT
 
+Files: lib/blake2/*
+Copyright: 2012 Samuel Neves
+License: CC0-1.0

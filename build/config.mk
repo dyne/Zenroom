@@ -21,6 +21,7 @@ ldadd += ${milib}/libamcl_core.a
 ldadd += ${pwd}/lib/pqclean/libqpz.a
 ldadd += ${pwd}/lib/zstd/libzstd.a
 ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
+ldadd += ${pwd}/lib/blake2/libblake2.a
 ldadd += ${pwd}/lib/mimalloc/build/libmimalloc-static.a
 
 # ----------------
@@ -309,6 +310,10 @@ zstd_cc ?= ${gcc}
 #-----------------
 # ed25519 settings
 ed25519_cc ?= ${gcc}
+
+#-----------------
+# blake2 settings
+blake2_cc ?= ${gcc}
 
 #-----------------
 # mimalloc settings
