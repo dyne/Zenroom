@@ -162,6 +162,7 @@ When("insert false in ''", function(dest)
 end)
 
 When("insert '' in ''", function(ele, dest)
+    warn("DEPRECATED: When I move '' in ''")
 	local d = have(dest)
 	local e = have(ele)
         ZEN.assert(luatype(d) == 'table',
