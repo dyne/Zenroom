@@ -128,7 +128,7 @@ jobs:
       - run: |
           sudo apt install zsh jq meson
           make linux
-          make check-crypto
+          make check-linux
 
   macosx-crypto-check:
     name: 🍎 macos crypto tests
