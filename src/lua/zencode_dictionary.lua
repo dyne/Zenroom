@@ -292,17 +292,33 @@ When("for each dictionary in '' append '' to ''", function(arr, right, left)
 	end
 end)
 
-When("move '' in ''", function(src, dict)
+local function move_in(src, dest)
 	local s = have(src)
-	local d = have(dict)
-	ZEN.assert(luatype(d) == 'table', "Object is not a table: "..dict)
-	ZEN.assert(ZEN.CODEC[dict].zentype == 'dictionary'
-		   or ZEN.CODEC[dict].zentype == 'schema',
-		   "Object is not a schema or dictionary: "..dict)
-	ZEN.assert(not d[src], "Dictionary already contains: "..src)
-	d[src] = s
+	local d = have(dest)
+	ZEN.assert(luatype(d) == 'table', "Object is not a table: "..dest)
+	if ZEN.CODEC[dest].zentype == 'dictionary'
+            or ZEN.CODEC[dest].zentype == 'schema' then
+        ZEN.assert(not d[src], "Dictionary already contains: "..src)
+        d[src] = s
+    elseif ZEN.CODEC[dest].zentype == 'array' then
+        table.insert(ACK[dest], s)
+    else
+	   ZEN.assert(false, "Invalid destination type: "
+		      ..ZEN.CODEC[dest].zentype)
+    end
 	ACK[src] = nil
 	ZEN.CODEC[src] = nil
+end
+
+When("move named by '' in ''", function(src_name, dest)
+	local src = have(src_name):string()
+    move_in(src, dest)
+    ACK[src_name] = nil
+    ZEN.CODEC[src_name] = nil
+end)
+
+When("move '' in ''", function(src, dest)
+    move_in(src, dest)
 end)
 
 local function _filter_from(v, k, f)
