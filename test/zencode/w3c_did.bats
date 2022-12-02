@@ -4,9 +4,9 @@ load ../bats_zencode
 SUBDOC=w3c
 
 # How it works:
-# - The Oracle create private and public keys
-# - The public keys are sent to the Controller that creates the did-document
-# - Now the Oracle can sign documents using its keys
+# - The Oracle creates private and public keys
+# - The Oracle creates its did document and send it to the controller that notarize it
+# - The Oracle can sign documents using its keys
 # - Everyone with the did-document can verify the signatures
 
 
@@ -15,8 +15,6 @@ SUBDOC=w3c
 Scenario 'ecdh': Create the key
 Scenario 'ethereum': Create key
 Scenario 'reflow': Create the key
-Scenario 'schnorr': Create the key
-Scenario 'qp': create the key
 Scenario 'eddsa' : create the key
 
 Given nothing
@@ -26,23 +24,18 @@ When I create the ecdh key
 When I create the eddsa key
 When I create the ethereum key
 When I create the reflow key
-When I create the schnorr key
 When I create the bitcoin key
-When I create the dilithium key
 
 Then print 'keyring'
 EOF
     save_output "privatekey_gen.json"
 }
 
-
 @test "Generate oracle public keys/address" {
     cat <<EOF | zexe pubkey_gen.zen privatekey_gen.json
 Scenario 'ecdh': Create the key
 Scenario 'ethereum': Create key
 Scenario 'reflow': Create the key
-Scenario 'schnorr': Create the key
-Scenario 'qp': create the key
 Scenario 'eddsa' : create the key
 
 Given I have the 'keyring'
@@ -51,27 +44,21 @@ When I create the ecdh public key
 When I create the eddsa public key
 When I create the ethereum address
 When I create the reflow public key
-When I create the schnorr public key
 When I create the bitcoin public key
-When I create the dilithium public key
 
-Then print the 'ecdh public key'
-Then print the 'eddsa public key'
+Then print the 'ecdh public key' as 'base58'
+Then print the 'eddsa public key' as 'base58'
 Then print the 'ethereum address'
-Then print the 'reflow public key'
-Then print the 'schnorr public key'
-Then print the 'bitcoin public key'
-Then print the 'dilithium public key'
+Then print the 'reflow public key' as 'base58'
+Then print the 'bitcoin public key' as 'base58'
 EOF
     save_output "pubkey_gen.json"
 }
 
-
-@test "Insert public keys inside identity" {
-    cat <<EOF | save_asset identity.json
+@test "The Oracle creates its did document" {
+    cat <<EOF | save_asset data.json
 {
-	"identity": {
-		"service": [
+	"service": [
 		{
 			"id": "did:dyne:zenswarm-api#zenswarm-oracle-announce",
 			"serviceEndpoint": "http://172.104.233.185:28634/api/zenswarm-oracle-announce",
@@ -117,290 +104,205 @@ EOF
 			"serviceEndpoint": "http://172.104.233.185:28634/api/zenswarm-oracle-update",
 			"type": "LinkedDomains"
 		}
-		],
-		"uid": "zenswarm.zenroom.org:25931",
-		"ip": "zenswarm.zenroom.org",
-		"baseUrl": "https://zenswarm.zenroom.org",
-		"port_https": "25931",
-		"version": "2",
-		"tracker": "https://apiroom.net/",
-		"description": "restroom-mw",
-		"State": "NONE",
-		"Country": "ES",
-		"L0": "planetmint"
-	}
-}
-EOF
-    cat <<EOF | zexe input_for_did_document.zen pubkey_gen.json identity.json
-Given I have a 'string dictionary' named 'identity'
-Given I have a 'string' named 'dilithium public key'
-Given I have a 'string' named 'schnorr public key'
-Given I have a 'string' named 'ecdh public key'
-Given I have a 'string' named 'eddsa public key'
-Given I have a 'string' named 'reflow public key'
-Given I have a 'string' named 'ethereum address'
-
-When I insert 'dilithium public key' in 'identity'
-When I insert 'ecdh public key' in 'identity'
-When I insert 'eddsa public key' in 'identity'
-When I insert 'schnorr public key' in 'identity'
-When I insert 'reflow public key' in 'identity'
-When I insert 'ethereum address' in 'identity'
-Then print the 'identity'
-EOF
-    save_output "complete_identity.json"
-
-
-}
-
-
-@test "the Controller creates the did-document of the Oracle" {
-    cat <<EOF | save_asset controller.json
-{
-	"@context": [
+	],
+	"@context":[
 		"https://www.w3.org/ns/did/v1",
-		"https://dyne.github.io/W3C-DID/specs/EcdsaSecp256k1_b64.json",
-		"https://dyne.github.io/W3C-DID/specs/ReflowBLS12381_b64.json",
-		"https://dyne.github.io/W3C-DID/specs/SchnorrBLS12381_b64.json",
+		"https://w3id.org/security/suites/ed25519-2018/v1",
+		"https://w3id.org/security/suites/secp256k1-2019/v1",
 		"https://w3id.org/security/suites/secp256k1-2020/v1",
+		"https://dyne.github.io/W3C-DID/specs/ReflowBLS12381.json",
 		{
-			"Country": "https://schema.org/Country",
-			"State": "https://schema.org/State",
-			"description": "https://schema.org/description",
-			"url": "https://schema.org/url"
+			"Country":"https://schema.org/Country",
+			"State":"https://schema.org/State",
+			"description":"https://schema.org/description",
+			"url":"https://schema.org/url"
 		}
 	],
-	"type": "EcdsaSecp256k1VerificationKey2019",
-	"W3C-DID-dyne-issuer": {
-		"ecdh_public_key": "BLL50JCBTKJZc+Pc5sC9cW7Feyx728h3TAEkWYIcOUZzukbPVPYIfOjDptkYIv/GGSI/XFh778eAFHtnkJppLls=",
-		"keyring": {
-			"ecdh": "Fi9XW2IWlBrUWsTmgKXeE9+LzlrQyNLPb/7tWwwuOSQ="
-		}
-	},
-	"proof": {
-		"type": "EcdsaSecp256k1Signature2019",
-		"proofPurpose": "assertionMethod",
-		"created": "0"
-	},
-	"misc-input": {
-		"controller": "did:dyne:controller:BLL50JCBTKJZc+Pc5sC9cW7Feyx728h3TAEkWYIcOUZzukbPVPYIfOjDptkYIv/GGSI/XFh778eAFHtnkJppLls="
-	},
-	"ethereum_address": "8388f6a2a4940c3fe14d640ddf151aa771f03b81"
+	"Country":"de",
+	"State":"NONE",
+	"description":"restroom-mw"
 }
 EOF
-    cat <<EOF | zexe did_doc_gen.zen controller.json complete_identity.json
+    cat <<EOF | zexe did_doc_gen.zen data.json pubkey_gen.json
 Scenario 'w3c': sign JSON
+# public keys, description, State and Country
+Given I have a 'string' named 'ecdh_public_key'
+Given I have a 'string' named 'reflow_public_key'
+Given I have a 'string' named 'ethereum_address'
+Given I have a 'string' named 'eddsa_public_key'
+Given I have a 'string' named 'bitcoin_public_key'
+Given I have a 'string' named 'description'
+Given I have a 'string' named 'State'
+Given I have a 'string' named 'Country'
 
-# controller
-Given I am 'W3C-DID-dyne-issuer'
-Given I have my 'keyring'
-Given I have a 'string dictionary' named 'misc-input'
-# service
-Given I have a 'string dictionary' named 'service' in 'identity'
-# identity
-Given I have a 'string' named 'Country' in 'identity'
-Given I have a 'string' named 'State' in 'identity'
-#Given I have a 'string' named 'baseUrl' in 'identity'
-#Given I have a 'string' named 'port_http' in 'identity'
-Given I have a 'string' named 'description' inside 'identity'
-Given I have a 'string' named 'ecdh_public_key' in 'identity'
-Given I have a 'string' named 'eddsa_public_key' in 'identity'
-Given I have a 'string' named 'reflow_public_key' in 'identity'
-Given I have a 'string' named 'schnorr_public_key' in 'identity'
-Given I have a 'string' named 'dilithium_public_key' in 'identity'
-Given I have a 'string' named 'ethereum_address' in 'identity'
-# context and proof
+# context and service
 Given I have a 'string array' named '@context'
-Given I have a 'string dictionary' named 'proof'
+Given I have a 'string array' named 'service'
 
 ### DID-Document
 When I create the 'string dictionary' named 'did document'
 
 ## @context
 When I insert '@context' in 'did document'
+## service
+When I insert 'service' in 'did document'
+## State
+When I insert 'State' in 'did document'
+## Country
+When I insert 'Country' in 'did document'
+## description
+When I insert 'description' in 'did document'
 
 ## id
-When I set 'did:dyne:id:' to 'did:dyne:id:' as 'string'
-When I append 'ecdh_public_key' to 'did:dyne:id:'
-When I copy the 'did:dyne:id:' to 'id'
+When I set 'did:dyne:' to 'did:dyne:oracle:' as 'string'
+When I append 'eddsa public key' to 'did:dyne:'
+When I copy the 'did:dyne:' to 'id'
 When I insert 'id' in 'did document'
 
 ## alsoKnownAs
-When I set 'alsoKnownAs' to 'did:dyne:fabchain:' as 'string'
-When I append 'ecdh public key' to 'alsoKnownAs'
+When I set 'alsoKnownAs' to 'did:dyne:ganache:' as 'string'
+When I append 'eddsa public key' to 'alsoKnownAs'
 When I insert 'alsoKnownAs' in 'did document'
-
-## Country
-When I insert 'Country' in 'did document'
-
-## State
-When I insert 'State' in 'did document'
-
-## description
-When I insert 'description' in 'did document'
 
 ## veririfcationMethod
 When I create the 'string array' named 'verificationMethod'
 
-# 1
-When I create the 'string dictionary' named 'verification-key1'
+# 1-ecdsa public key
+When I create the 'string dictionary' named 'verification-key'
 # pk
-When I copy 'ecdh public key' to 'publicKeyBase64'
-When I insert 'publicKeyBase64' in 'verification-key1'
+When I copy 'ecdh public key' to 'publicKeyBase58' 
+When I insert 'publicKeyBase58' in 'verification-key'
 # type
-When I set 'type' to 'EcdsaSecp256k1VerificationKey_b64' as 'string'
-When I insert 'type' in 'verification-key1'
+When I set 'type' to 'EcdsaSecp256k1VerificationKey2019' as 'string'
+When I insert 'type' in 'verification-key'
 # id
-When I copy 'did:dyne:id:' to 'id'
-When I set '#key1' to '#key1' as 'string'
-When I append '#key1' to 'id'
-When I insert 'id' in 'verification-key1'
+When I copy 'did:dyne:' to 'id'
+When I set '#ecdh_public_key' to '#ecdh_public_key' as 'string'
+When I append '#ecdh_public_key' to 'id'
+When I insert 'id' in 'verification-key'
 # controller
-When I create the copy of 'controller' from dictionary 'misc-input'
-When I rename the 'copy' to 'controller'
-When I insert 'controller' in 'verification-key1'
+When I copy 'did:dyne:' to 'controller'
+When I insert 'controller' in 'verification-key'
+When I insert 'verification-key' in 'verificationMethod'
 
-When I insert 'verification-key1' in 'verificationMethod'
-
-# 2
-When I create the 'string dictionary' named 'verification-key2'
+# 2-reflow public key
+When I create the 'string dictionary' named 'verification-key'
 # pk
-When I copy 'reflow public key' to 'publicKeyBase64'
-When I insert 'publicKeyBase64' in 'verification-key2'
+When I copy 'reflow public key' to 'publicKeyBase58' 
+When I insert 'publicKeyBase58' in 'verification-key'
 # type
-When I set 'type' to 'ReflowBLS12381VerificationKey_b64' as 'string'
-When I insert 'type' in 'verification-key2'
+When I set 'type' to 'ReflowBLS12381VerificationKey' as 'string'
+When I insert 'type' in 'verification-key'
 # id
-When I copy 'did:dyne:id:' to 'id'
-When I set '#key2' to '#key2' as 'string'
-When I append '#key2' to 'id'
-When I insert 'id' in 'verification-key2'
+When I copy 'did:dyne:' to 'id'
+When I set '#reflow_public_key' to '#reflow_public_key' as 'string'
+When I append '#reflow_public_key' to 'id'
+When I insert 'id' in 'verification-key'
 # controller
-When I create the copy of 'controller' from dictionary 'misc-input'
-When I rename the 'copy' to 'controller'
-When I insert 'controller' in 'verification-key2'
+When I copy 'did:dyne:' to 'controller'
+When I insert 'controller' in 'verification-key'
+When I insert 'verification-key' in 'verificationMethod'
 
-When I insert 'verification-key2' in 'verificationMethod'
-
-# 3
-When I create the 'string dictionary' named 'verification-key3'
+# 3-bitcoin public key
+When I create the 'string dictionary' named 'verification-key'
 # pk
-When I copy 'schnorr public key' to 'publicKeyBase64'
-When I insert 'publicKeyBase64' in 'verification-key3'
+When I copy 'bitcoin public key' to 'publicKeyBase58' 
+When I insert 'publicKeyBase58' in 'verification-key'
 # type
-When I set 'type' to 'SchnorrBLS12381VerificationKey_b64' as 'string'
-When I insert 'type' in 'verification-key3'
+When I set 'type' to 'EcdsaSecp256k1VerificationKey2019' as 'string'
+When I insert 'type' in 'verification-key'
 # id
-When I copy 'did:dyne:id:' to 'id'
-When I set '#key3' to '#key3' as 'string'
-When I append '#key3' to 'id'
-When I insert 'id' in 'verification-key3'
+When I copy 'did:dyne:' to 'id'
+When I set '#bitcoin_public_key' to '#bitcoin_public_key' as 'string'
+When I append '#bitcoin_public_key' to 'id'
+When I insert 'id' in 'verification-key'
 # controller
-When I create the copy of 'controller' from dictionary 'misc-input'
-When I rename the 'copy' to 'controller'
-When I insert 'controller' in 'verification-key3'
+When I copy 'did:dyne:' to 'controller'
+When I insert 'controller' in 'verification-key'
+When I insert 'verification-key' in 'verificationMethod'
 
-When I insert 'verification-key3' in 'verificationMethod'
-
-# 4
-When I create the 'string dictionary' named 'verification-key4'
+# 4-eddsa public key
+When I create the 'string dictionary' named 'verification-key'
 # pk
-When I copy 'dilithium public key' to 'publicKeyBase64'
-When I insert 'publicKeyBase64' in 'verification-key4'
-# type
-When I set 'type' to 'Dilithium2VerificationKey_b64' as 'string'
-When I insert 'type' in 'verification-key4'
-# id
-When I copy 'did:dyne:id:' to 'id'
-When I set '#key4' to '#key4' as 'string'
-When I append '#key4' to 'id'
-When I insert 'id' in 'verification-key4'
-# controller
-When I create the copy of 'controller' from dictionary 'misc-input'
-When I rename the 'copy' to 'controller'
-When I insert 'controller' in 'verification-key4'
-
-When I insert 'verification-key4' in 'verificationMethod'
-
-# 5
-When I create the 'string dictionary' named 'verification-key5'
-# pk
-When I copy 'eddsa public key' to 'publicKeyBase58'
-When I insert 'publicKeyBase58' in 'verification-key5'
+When I copy 'eddsa_public_key' to 'publicKeyBase58'
+When I insert 'publicKeyBase58' in 'verification-key'
 # type
 When I set 'type' to 'Ed25519VerificationKey2018' as 'string'
-When I insert 'type' in 'verification-key5'
+When I insert 'type' in 'verification-key'
 # id
-When I copy 'did:dyne:id:' to 'id'
-When I set '#key5' to '#key5' as 'string'
-When I append '#key5' to 'id'
-When I insert 'id' in 'verification-key5'
+When I copy 'did:dyne:' to 'id'
+When I set '#eddsa_public_key' to '#eddsa_public_key' as 'string'
+When I append '#eddsa_public_key' to 'id'
+When I insert 'id' in 'verification-key'
 # controller
-When I create the copy of 'controller' from dictionary 'misc-input'
-When I rename the 'copy' to 'controller'
-When I insert 'controller' in 'verification-key5'
+When I copy 'did:dyne:' to 'controller'
+When I insert 'controller' in 'verification-key'
+When I insert 'verification-key' in 'verificationMethod'
 
-When I insert 'verification-key5' in 'verificationMethod'
-
-# 6
-When I create the 'string dictionary' named 'verification-key6'
+# 5-ethereum address
+When I create the 'string dictionary' named 'verification-key'
 # address
 # this follows the CAIP-10(https://github.com/ChainAgnostic/CAIPs/blob/master/CAIPs/caip-10.md) spec
 # thus it is: namespace + ":" + chain_id + ":" + address
 When I set 'blockchainAccountId' to 'eip155:1717658228:0x' as 'string'
 When I append 'ethereum address' to 'blockchainAccountId'
-When I insert 'blockchainAccountId' in 'verification-key6'
+When I insert 'blockchainAccountId' in 'verification-key'
 # type
 When I set 'type' to 'EcdsaSecp256k1RecoveryMethod2020' as 'string'
-When I insert 'type' in 'verification-key6'
+When I insert 'type' in 'verification-key'
 # id
-When I copy 'did:dyne:id:' to 'id'
-When I set '#blockchainAccountId' to '#blockchainAccountId' as 'string'
-When I append '#blockchainAccountId' to 'id'
-When I insert 'id' in 'verification-key6'
+When I copy 'did:dyne:' to 'id'
+When I set '#ethereum_address' to '#ethereum_address' as 'string'
+When I append '#ethereum_address' to 'id'
+When I insert 'id' in 'verification-key'
 # controller
-When I create the copy of 'controller' from dictionary 'misc-input'
-When I rename the 'copy' to 'controller'
-When I insert 'controller' in 'verification-key6'
-
-When I insert 'verification-key6' in 'verificationMethod'
+When I copy 'did:dyne:' to 'controller'
+When I insert 'controller' in 'verification-key'
+When I insert 'verification-key' in 'verificationMethod'
 
 When I insert 'verificationMethod' in 'did document'
-
-## service
-When I insert 'service' in 'did document'
-
-## Proof
-# jws
-When I create the jws signature of 'did document'
-When I insert 'jws' in 'proof'
-# created
-# When I insert 'created' in 'proof'
-# verificationMethod
-When I create the copy of 'controller' from dictionary 'misc-input'
-When I rename the 'copy' to 'verificationMethod'
-When I append '#key1' to 'verificationMethod'
-When I insert 'verificationMethod' in 'proof'
-
-When I insert 'proof' in 'did document'
-
 ### DID-Document ended
 
-### mpack of the DID-Document
-# When I create the mpack of 'DID'
-# When I rename the 'mpack' to 'DID-mpack'
-
-### create the address:nonce that will be incremented in the next script
-# When I copy 'ethereum address' to 'address:nonce'
-# When I set ':nonce' to ':nonce' as 'string'
-# When I append ':nonce' to 'address:nonce'
-
-### print all out
-then print the 'did document'
+### save DID document
+Then print the 'did document'
 EOF
     save_output "did_document.json"
 }
 
+@test "the Oracle sign the did document" {
+    cat <<EOF | zexe did_doc_sign.zen privatekey_gen.json did_document.json
+    Scenario 'eddsa': sign the did doc
+
+    Given I have a 'string dictionary' named 'did document'
+    Given I have a 'keyring'
+
+    When I create the json of 'did document'
+    When I create the eddsa signature of 'json'
+
+    Then print the 'did document'
+    Then print the 'eddsa signature'
+EOF
+    save_output "did_document_signed.json"
+}
+
+@test "the Controller verify the signature" {
+    cat <<EOF | zexe did_doc_sign.zen did_document_signed.json
+    Scenario 'w3c': did doc
+    Scenario 'eddsa': verify signature
+
+    Given I have a 'string dictionary' named 'did document'
+    Given I have a 'eddsa signature'
+
+    When I create the verificationMethod of 'did document'
+    When I pickup a 'eddsa_public_key' from path 'verificationMethod.eddsa_public_key'
+
+    When I create the json of 'did document'
+    When I verify the 'json' has a eddsa signature in 'eddsa signature' by 'eddsa public key'
+
+    Then print the string 'did document signature verified'
+EOF
+    save_output "did_document_signed.json"
+}
 
 @test "now the Oracle sign different documents with its keys" {
     cat <<EOF | save_asset to_sign.json
@@ -414,42 +316,30 @@ EOF
 EOF
     cat <<EOF | zexe oracle_signature.zen privatekey_gen.json to_sign.json
 Scenario 'ecdh': sign
-Scenario 'schnorr': sign
-Scenario 'qp': sign
 Scenario 'eddsa': sign
 
 Given I have a 'keyring'
 Given I have a 'string dictionary' named 'json'
 
 When I create the ecdh signature of 'json'
-When I create the schnorr signature of 'json'
-When I create the dilithium signature of 'json'
 When I create the eddsa signature of 'json'
 
 Then print the 'ecdh signature'
-Then print the 'schnorr signature'
-Then print the 'dilithium signature'
 Then print the 'eddsa signature'
 Then print the 'json'
 EOF
     save_output "signed.json"
-
-
 }
 
-@test "Everyone that has the did documetn can now verify the signatures" {
+@test "Everyone that has the did document can now verify the signatures" {
 cat <<EOF | zexe verify_signatures.zen did_document.json signed.json
 Scenario 'w3c': did document
 Scenario 'ecdh': verify sign
-Scenario 'schnorr': verify sign
-Scenario 'qp': verify sign
 Scenario 'eddsa':verify sign
 
 # load did document and signatures
 Given I have a 'did document'
 and I have a 'ecdh signature'
-and I have a 'schnorr signature'
-and I have a 'dilithium signature'
 and I have a 'eddsa signature'
 and I have a 'string dictionary' named 'json'
 
@@ -461,12 +351,6 @@ When I create the verificationMethod of 'did document'
 
 When I pickup from path 'verificationMethod.ecdh_public_key'
 When I verify the 'json' has a ecdh signature in 'ecdh signature' by 'ecdh public key'
-
-When I pickup from path 'verificationMethod.schnorr_public_key'
-When I verify the 'json' has a schnorr signature in 'schnorr signature' by 'schnorr public key'
-
-When I pickup from path 'verificationMethod.dilithium_public_key'
-When I verify the 'json' has a dilithium signature in 'dilithium signature' by 'dilthium public key'
 
 When I pickup from path 'verificationMethod.eddsa_public_key'
 When I verify the 'json' has a eddsa signature in 'eddsa signature' by 'eddsa public key'
