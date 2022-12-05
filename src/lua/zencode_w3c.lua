@@ -19,89 +19,52 @@
 --Last modified by Denis Roio
 --on Wednesday, 14th July 2021
 --]]
+local ETHEREUM_ADDRESS = "ethereum_address"
+local EDDSA_PUBLIC_KEY = "eddsa_public_key"
 
-local function import_vm(obj, key)
-    if key == 'publicKeyBase64' then
-	return O.from_base64(obj)
-    elseif key == 'publicKeyBase58' then
-	return O.from_base58(obj)
-    else
-	return O.from_string(obj)
-    end
-end
-
-local function export_vm(obj, key)
-    if key == 'publicKeyBase64' then
-	return O.to_base64(obj)
-    elseif key == 'publicKeyBase58' then
-	return O.to_base58(obj)
-    else
-	return O.to_string(obj)
-    end
-end
-
-local function import_did_doc(doc)
-    local res = {}
-    local vm = nil
+local function import_did_document(doc)
     -- id must be always present in DID-documents
     ZEN.assert(doc.id, 'Invalid DID document: id not found')
     -- all the other fields are optional and imported as a string
-    -- except for verificationMethod that has its own import function
-    if doc.verificationMethod then
-	vm = ZEN.get(doc, 'verificationMethod', import_vm, tostring)
-	doc.verificationMethod = nil
-    end
-    res = ZEN.get(doc, '.', O.from_string, tostring)
-    res.verificationMethod = vm
-    return res
+    return ZEN.get(doc, '.', O.from_string, tostring)
 end
 
-local function export_did_doc(doc)
-    local res = {}
-    local vm = nil
-    if doc.verificationMethod then
-	vm = deepmap(export_vm, doc.verificationMethod)
-	doc.verificationMethod = nil
-    end
-    res = deepmap(O.to_string, doc)
-    res.verificationMethod = vm
-    return res
+local function export_did_document(doc)
+    return deepmap(O.to_string, doc)
 end
 
 local function import_verification_method(doc)
     local res = {}
-    for key, ver_method in pairs(doc) do
-	if key == "ethereum_address" then
-	    res[key] = ZEN.get(doc[key], '.', O.from_hex, tostring)
-	elseif key == "eddsa_public_key" then
-	    res[key] = ZEN.get(doc[key], '.', O.from_base58, tostring)
-	else
-	    res[key] = ZEN.get(doc[key], '.', O.from_base64, tostring)
-	end
+    local import_functions = {
+        [ETHEREUM_ADDRESS] = O.from_hex,
+        [EDDSA_PUBLIC_KEY] = O.from_base58
+    }
+    for key, _ in pairs(doc) do
+        res[key] = ZEN.get(doc[key], '.',
+                           import_functions[key] or O.from_base64,
+                           tostring)
     end
     return res
 end
 
 local function export_verification_method(doc)
     local res = {}
+    local export_functions = {
+        [ETHEREUM_ADDRESS] = O.to_hex,
+        [EDDSA_PUBLIC_KEY] = O.to_base58
+    }
     for key, ver_method in pairs(doc) do
-	if key == "ethereum_address" then
-	    res[key] = O.to_hex(ver_method)
-	elseif key == "eddsa_public_key" then
-	    res[key] = O.to_base58(ver_method)
-	else
-	    res[key] = O.to_base64(ver_method)
-	end
+        res[key] = (export_functions[key] or O.to_base64)(ver_method)
     end
     return res
 end
 
 ZEN.add_schema(
     {
-	did_document = { import = import_did_doc,
-			 export = export_did_doc },
-	verificationMethod = { import = import_verification_method,
-			       export = export_verification_method },
+        did_document = { import = import_did_document,
+                         export = export_did_document },
+        verificationMethod = { import = import_verification_method,
+                               export = export_verification_method },
         -- flexible verifiable credential
         -- only internal 'jws' member has peculiar encoding
         verifiable_credential = function(obj)
@@ -172,26 +135,19 @@ When(
 
 When(
     "create the jws signature of ''", function(src)
-        local cred = have(src)
-	empty'jws'
+        local source = have(src)
+        empty'jws'
         local sk = havekey'ecdh' -- assuming secp256k1
-        ZEN.assert(not cred.proof,'The object is already signed: ' .. src)
-        local proof = {
-            type = 'Zenroom v'..ZENROOM_VERSION.original,
-	    -- "Signature", -- TODO: check what to write here for secp256k1
-            -- created = "2018-06-18T21:19:10Z",
-            proofPurpose = 'authenticate' -- assertionMethod", -- TODO: check
-        }
-	local to_sign
-	if luatype(cred) == 'table' then
-	   to_sign = OCTET.from_string( JSON.encode(cred) )
-	else
-	   to_sign = cred
-	end
-	ACK.jws = OCTET.from_string(
-	   jws_signature_to_octet(ECDH.sign(sk, to_sign)) )
-	new_codec('jws', { zentype = 'element',
-			   encoding = 'string' }) -- url64 encoding is opaque
+        local source_str
+        if luatype(source) == 'table' then
+           source_str = O.from_string( JSON.encode(source) )
+        else
+           source_str = source
+        end
+        ACK.jws = O.from_string(
+            jws_signature_to_octet(ECDH.sign(sk, source_str)) )
+        new_codec('jws', { zentype = 'element',
+                           encoding = 'string' })
     end
 )
 
@@ -199,10 +155,10 @@ IfWhen(
     "verify the jws signature of ''",
     function(src)
         local jws = have'jws'
-	local signed = have(src)
-	if luatype(signed) == 'table' then
-	   signed = JSON.encode(signed)
-	end
+        local signed = have(src)
+        if luatype(signed) == 'table' then
+           signed = JSON.encode(signed)
+        end
         local pub = have 'ecdh public key'
         local signature = jws_octet_to_signature(jws)
         -- omit the proof subtable from verification
@@ -216,52 +172,44 @@ IfWhen(
 When(
     "sign the verifiable credential named ''",
     function(vc)
-        local cred = have(vc)
+        local credential = have(vc)
         local sk = havekey'ecdh' -- assuming secp256k1
-        ZEN.assert(not cred.proof,'The object is already signed: ' .. vc)
+        ZEN.assert(not credential.proof,'The object is already signed: ' .. vc)
         local proof = {
-            type = 'Zenroom v'..ZENROOM_VERSION.original,
-	    -- "Signature", -- TODO: check what to write here for secp256k1
+            type = 'Zenroom v'.._G.ZENROOM_VERSION.original,
+            -- "Signature", -- TODO: check what to write here for secp256k1
             -- created = "2018-06-18T21:19:10Z",
             proofPurpose = 'authenticate' -- assertionMethod", -- TODO: check
         }
-	local cred_str
-	if luatype(cred) == 'table' then
-	   cred_str = JSON.encode(cred)
-	else
-	   cred_str = cred
-	end
+        local cred_str
+        if luatype(credential) == 'table' then
+           cred_str = JSON.encode(credential)
+        else
+           cred_str = credential
+        end
         proof.jws =
             jws_signature_to_octet(
-	      ECDH.sign(sk, OCTET.from_string(cred_str))
+              ECDH.sign(sk, OCTET.from_string(cred_str))
         )
         ACK[vc].proof = deepmap(OCTET.from_string, proof)
     end
 )
 
 local function _verification_f(doc)
-    local d = have(doc)
-    ZEN.assert(d.proof and d.proof.jws, 'The object has no signature: ' .. doc)
+    local document = have(doc)
+    ZEN.assert(document.proof and document.proof.jws,
+               'The object has no signature: ' .. doc)
+    local signature = jws_octet_to_signature(document.proof.jws)
     local public_key = have 'ecdh public key'
-    local pub
-    if luatype(public_key) == 'table' then
-	_, pub = next(public_key)
-    else
-	pub = public_key
-    end
 
     -- omit the proof subtable from verification
-    local proof = d.proof
-    d.proof = nil
-    signed = JSON.encode(d)
-    -- restore proof in HEAP (cred is still a pointer here)
-    d.proof = proof
-    
-    local signature = jws_octet_to_signature(d.proof.jws)
-    
+    local proof = document.proof
+    document.proof = nil
+    local signed = JSON.encode(document)
+    document.proof = proof
     ZEN.assert(
-	ECDH.verify(pub, signed, signature),
-	'The signature does not validate: ' .. doc
+        ECDH.verify(public_key, signed, signature),
+        'The signature does not validate: ' .. doc
     )
 end
 
@@ -277,46 +225,39 @@ IfWhen(
 When(
     "create the serviceEndpoint of ''",
     function(did_doc)
-	local doc = have(did_doc)
-	ZEN.assert(doc.service, 'service not found')
-	ACK.serviceEndpoint = {}
-	for _, service in pairs(doc.service) do
-	    local name = strtok(O.to_string(service.id), '[^#]*')[2]
-	    ACK.serviceEndpoint[name] = service.serviceEndpoint
-	end
-	new_codec('serviceEndpoint', { encoding = 'string',
-				       luatype = 'table',
-				       zentype = 'dictionary' })
+        local doc = have(did_doc)
+        ZEN.assert(doc.service, 'service not found')
+        ACK.serviceEndpoint = {}
+        for _, service in pairs(doc.service) do
+            local name = strtok(O.to_string(service.id), '[^#]*')[2]
+            ACK.serviceEndpoint[name] = service.serviceEndpoint
+        end
+        new_codec('serviceEndpoint', { encoding = 'string',
+                                       luatype = 'table',
+                                       zentype = 'dictionary' })
     end
 )
 
 When(
     "create the verificationMethod of ''",
     function(did_doc)
-	local doc = have(did_doc)
-	ZEN.assert(doc.verificationMethod, 'verificationMethod not found')
-	empty 'verificationMethod'
-	ACK.verificationMethod = {}
+        local doc = have(did_doc)
+        ZEN.assert(doc.verificationMethod, 'verificationMethod not found')
+        empty 'verificationMethod'
+        ACK.verificationMethod = {}
 
-	local alias = { EcdsaSecp256k1VerificationKey_b64 = 'ecdh_public_key',
-			Ed25519VerificationKey2018 = 'eddsa_public_key',
-			ReflowBLS12381VerificationKey_b64 = 'reflow_public_key',
-			SchnorrBLS12381VerificationKey_b64 = 'schnorr_public_key',
-			Dilithium2VerificationKey_b64 = 'dilithium_public_key',
-			EcdsaSecp256k1RecoveryMethod2020 = 'ethereum_address'}
-
-	for _, ver_method in pairs(doc.verificationMethod) do
-	    local z_name = alias[O.to_string(ver_method.type)]
-	    if ver_method.publicKeyBase64 then
-		ACK.verificationMethod[z_name] = ver_method.publicKeyBase64
-	    elseif ver_method.publicKeyBase58 then
-		ACK.verificationMethod[z_name] = ver_method.publicKeyBase58
-	    elseif ver_method.blockchainAccountId then
-		local address = strtok(O.to_string(ver_method.blockchainAccountId), '[^:]*')[3]
-		ACK.verificationMethod[z_name] = O.from_hex(address)
-	    end
-	end
-	new_codec('verificationMethod', { zentype = 'schema',
-					  encoding = 'complex' })
+        for _, ver_method in pairs(doc.verificationMethod) do
+            local pub_key_name = strtok(O.to_string(ver_method.id), '[^#]*')[2]
+            if pub_key_name == ETHEREUM_ADDRESS then
+                local address = strtok(
+                    O.to_string(ver_method.blockchainAccountId), '[^:]*' )[3]
+                ACK.verificationMethod[pub_key_name] = O.from_hex(address)
+            else
+                local pub_key = O.to_string(ver_method.publicKeyBase58)
+                ACK.verificationMethod[pub_key_name] = O.from_base58(pub_key)
+            end
+        end
+        new_codec('verificationMethod', { zentype = 'schema',
+                                          encoding = 'complex' })
     end
 )
