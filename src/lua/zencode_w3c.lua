@@ -177,7 +177,7 @@ When(
         local sk = havekey'ecdh' -- assuming secp256k1
         ZEN.assert(not credential.proof,'The object is already signed: ' .. vc)
         local proof = {
-            type = 'Zenroom v'..ZENROOM_VERSION.original,
+            type = 'Zenroom v'.._G.ZENROOM_VERSION.original,
             -- "Signature", -- TODO: check what to write here for secp256k1
             -- created = "2018-06-18T21:19:10Z",
             proofPurpose = 'authenticate' -- assertionMethod", -- TODO: check
