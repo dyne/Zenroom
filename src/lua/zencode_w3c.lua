@@ -54,7 +54,6 @@ local function export_verification_method(doc)
         [EDDSA_PUBLIC_KEY] = O.to_base58
     }
     for key, ver_method in pairs(doc) do
-        -- local func = export_function[key] or O.to_base64
         res[key] = (export_functions[key] or O.to_base64)(ver_method)
     end
     return res
