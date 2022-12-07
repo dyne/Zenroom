@@ -112,6 +112,7 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 			if(strcasecmp(lex.string,"verbose")==0) { curconf = VERBOSE; break; }
 			if(strcasecmp(lex.string,"rngseed")==0) { curconf = RNGSEED; break; } // str
 			if(strcasecmp(lex.string,"logfmt") ==0) { curconf = LOGFMT;  break; } // str
+			if(strcasecmp(lex.string,"maxiter")==0) { curconf = MAXITER; break; } // str
 			if(curconf==RNGSEED) {
 				int len = strlen(lex.string);
 				if( len-4 != RANDOM_SEED_LEN *2) { // hex doubles size
@@ -151,6 +152,32 @@ int zen_conf_parse(zenroom_t *ZZ, const char *configuration) {
 				return 0;
 			  }
 			  break;
+			}
+			if(curconf==MAXITER) {
+				int len = strlen(lex.string);
+				if( len-4 > STR_MAXITER_LEN || len < 5) { // hex doubles size
+					_err( "Invalid length of maxiter, must be less than %u digits",
+					      STR_MAXITER_LEN);
+					// free(lexbuf);
+					return 0;
+				}
+				if(strncasecmp(lex.string, "dec:", 4) != 0) { // dec: prefix needed
+					_err( "Invalid rngseed data prefix (must be dec:)\n");
+					// free(lexbuf);
+					return 0;
+				}
+				for(p=4; p<len; p++) {
+				  if(! isdigit(lex.string[p]) ) {
+					_err( "Invalid digit in maxiter: %c\n",
+						  lex.string[p]);
+					return 0;
+				  }
+				}
+
+				// copy string and null terminate
+				memcpy(ZZ->str_maxiter, lex.string+4, len-4);
+				ZZ->str_maxiter[len-4] = 0x0;
+				break;
 			}
 			// free(lexbuf);
 			_err( "Invalid configuration: %s\n", lex.string);

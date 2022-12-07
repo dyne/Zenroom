@@ -82,6 +82,7 @@ TIME = require('timetable')
 BTC = require('crypto_bitcoin')
 V = require('semver')
 ZENROOM_VERSION = V(VERSION)
+MAXITER = tonumber(STR_MAXITER)
 
 ZEN = require('zencode')
 -- the global ZEN context

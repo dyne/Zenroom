@@ -647,9 +647,11 @@ local function manage_foreach(x)
 			ZEN.ITER = nil
 		end
 	end
-	-- for nested foreach look at the rest of the stack
-	-- condition: skip the statement if I am in a foreach and
-	-- there is the skip condition (pos = 0)
+
+	if ZEN.ITER and ZEN.ITER.pos >= MAXITER then
+		error("Limit of iterations reached: " .. MAXITER)
+	end
+
 	return ZEN.ITER and ZEN.ITER.pos == 0
 end
 -- assert all values in table are converted to zenroom types
