@@ -183,6 +183,11 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	ZZ->zconf_rngseed[0] = '\0';
 	ZZ->exitcode = 1; // success
 	ZZ->logformat = TEXT;
+	ZZ->str_maxiter[0] = '1';
+	ZZ->str_maxiter[1] = '0';
+	ZZ->str_maxiter[2] = '0';
+	ZZ->str_maxiter[3] = '0';
+	ZZ->str_maxiter[4] = '\0';
 	ZZ->memcount_octets = 0;
 	ZZ->memcount_bigs = 0;
 	ZZ->memcount_hashes = 0;
@@ -227,6 +232,9 @@ zenroom_t *zen_init(const char *conf, char *keys, char *data) {
 	// expose the debug level
 	lua_pushinteger(ZZ->lua, ZZ->debuglevel);
 	lua_setglobal (ZZ->lua, "DEBUG");
+
+	lua_pushstring(ZZ->lua, ZZ->str_maxiter);
+	lua_setglobal (ZZ->lua, "STR_MAXITER");
 
 	lua_atpanic(ZZ->lua, &zen_lua_panic); // as done in lauxlib luaL_newstate
 	lua_pushcfunction(ZZ->lua, &zen_init_pmain);  /* to call in protected mode */

@@ -54,10 +54,11 @@ int zenroom_hash_final(const char *hash_ctx);
 // lower level api: init (exec_line*) teardown
 
 #define RANDOM_SEED_LEN 64
+#define STR_MAXITER_LEN 10
 
 // conf switches
 typedef enum { STB, MUTT, LIBC } printftype;
-typedef enum { NIL, VERBOSE, COLOR, RNGSEED, LOGFMT } zconf;
+typedef enum { NIL, VERBOSE, COLOR, RNGSEED, LOGFMT, MAXITER } zconf;
 
 // zenroom context, also available as "_Z" global in lua space
 // contents are opaque in lua and available only as lightuserdata
@@ -87,6 +88,8 @@ typedef struct {
 	void *userdata; // anything passed at init (reserved for caller)
 
   	char zconf_rngseed[(RANDOM_SEED_LEN*2)+4]; // 0x and terminating \0
+
+        char str_maxiter[STR_MAXITER_LEN + 1];
 
         int memcount_octets;
         int memcount_bigs;
