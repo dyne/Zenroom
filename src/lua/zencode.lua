@@ -634,6 +634,8 @@ end
 
 -- return true: caller skip execution and go to ::continue::
 -- return false: execute statement
+-- TODO(optimization): introduce a second jump to skip all
+-- statements in the foreach in the last iteration
 local function manage_foreach(x)
 	if string.match(x.section, '^foreach') and not ZEN.ITER then
 		ZEN.ITER = {jump = ZEN.current_instruction, pos = 1}
