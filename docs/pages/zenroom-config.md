@@ -56,6 +56,13 @@ Should always generate the keypair:
 }
 ```  
   
+## Limit iterations
+
+### Syntax and values: **maxiter=dec:[at most 10 decimal digits]**
+
+Define the maximum number of iterations the contract is allowed to do.
+
+
 ## Memory manager
 ### Syntax and values: **memmanager=sys, lw, je**
 
