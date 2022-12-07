@@ -73,16 +73,18 @@ local zencode = {
 -- set_rule
 
 local function set_sentence(self, event, from, to, ctx)
-	local index = self.current
-	if self.current == 'whenif' then index = 'when'
-	elseif self.current == 'thenif' then index = 'then'
-	elseif self.current == 'whenforeach' then index = 'when'
-	elseif self.current == 'whenforeachif' then index = 'when'
-	elseif self.current == 'whenifforeach' then index = 'when'
-	elseif self.current == 'foreachif' then index = 'foreach'
-	elseif self.current == 'endforeachif' then index = 'endforeach'
-	elseif self.current == 'ifforeach' then index = 'if'
-	elseif self.current == 'endifforeach' then index = 'endif' end
+	local translate = {
+		whenif = 'when',
+		thenif = 'then',
+		whenforeach = 'when',
+		whenforeachif = 'when',
+		whenifforeach = 'when',
+		foreachif = 'foreach',
+		endforeachif = 'endforeach',
+		ifforeach = 'if',
+		endifforeach = 'endif',
+	}
+	local index = translate[self.current] or self.current
 	local reg = ctx.Z[index .. '_steps']
 	ctx.Z.OK = false
 	xxx('Zencode parser from: ' .. from .. " to: "..to, 3)
