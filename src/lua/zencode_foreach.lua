@@ -33,6 +33,7 @@ Foreach("'' in sequence from '' to '' with step ''", function(name, from_name, t
     ZEN.assert(type(from) == 'zenroom.big' or type(from) == 'zenroom.float', "Unknown number type")
     local current_value
     local finished
+    -- TODO(optimization): we are currently doing multiplication at each iteration
     if type(from) == 'zenroom.big' then
         ZEN.assert(BIG.zenpositive(step)
             and BIG.zenpositive(BIG.zensub(to, from)),
