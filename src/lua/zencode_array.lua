@@ -161,8 +161,7 @@ When("insert false in ''", function(dest)
 	table.insert(ACK[dest], false)
 end)
 
-When("insert '' in ''", function(ele, dest)
-    warn("DEPRECATED: use instead When I move '' in ''")
+When(deprecated("insert '' in ''", "move '' in ''"), function(ele, dest)
 	local d = have(dest)
 	local e = have(ele)
         ZEN.assert(luatype(d) == 'table',
