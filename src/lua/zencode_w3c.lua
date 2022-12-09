@@ -30,7 +30,12 @@ local function import_did_document(doc)
 end
 
 local function export_did_document(doc)
-    return deepmap(O.to_string, doc)
+   local t = luatype(doc)
+   if t == 'table' then
+	  return deepmap(O.to_string, doc)
+   else
+	  return O.to_string(doc)
+   end
 end
 
 local function import_verification_method(doc)
