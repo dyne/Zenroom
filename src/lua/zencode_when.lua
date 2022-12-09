@@ -134,11 +134,14 @@ When("set '' to '' as ''", function(dest, content, format)
 end)
 
 When("create the json of ''", function(src)
-	have(src)
+	local obj, codec = have(src)
 	empty'json'
-	local codec = ZEN.CODEC[src]
+	local encoding = fif( codec.encoding == 'complex',
+						  codec.schema or src, codec.encoding)
 	ACK.json = OCTET.from_string(
-	   JSON.encode(ACK[src], codec and codec.encoding) )
+
+	   JSON.encode(obj, encoding)
+	)
 	new_codec('json', {encoding = 'string',
 			   zentype = 'element'})
 end)

@@ -443,6 +443,8 @@ end
 
 function have(obj) -- accepts arrays for depth checks
 	local res
+
+	-- depth check used in pick
 	if luatype(obj) == 'table' then
 		local prev = ACK
 		for k, v in ipairs(obj) do
@@ -452,13 +454,17 @@ function have(obj) -- accepts arrays for depth checks
 			end
 			prev = res
 		end
-	else
-		res = ACK[uscore(trim(obj))]
-		if not res then
-			error('Cannot find object: ' .. obj, 2)
-		end
+		return res
 	end
-	return res
+
+	local name = uscore(trim(obj))
+	res = ACK[name]
+	if not res then
+	   error('Cannot find object: ' .. name, 2)
+	end
+	local codec = ZEN.CODEC[name]
+	if not codec then error("CODEC not found: "..name, 2) end
+	return res, codec
 end
 function empty(obj)
 	-- convert all spaces to underscore in argument
