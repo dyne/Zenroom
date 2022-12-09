@@ -300,3 +300,13 @@ EOF
     assert_output '{"output":["W3C_JWS_IS_VALID"]}'
 }
 
+@test "Creater JSON" {
+    cat <<EOF | zexe did_document.zen did_document.json
+Scenario 'w3c': did document manipulation
+
+Given I have a 'did document'
+When I create the json of 'did document'
+
+EOF
+    save_output 'did_document.out'
+}
