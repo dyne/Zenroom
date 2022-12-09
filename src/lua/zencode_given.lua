@@ -450,3 +450,16 @@ Given(
       gc()
    end
 )
+
+Given(
+   "rename '' to ''",
+   function(old, new)
+       empty(new)
+       ACK[new] = ACK[old]
+       new_codec(new, ZEN.CODEC[old])
+       ZEN.CODEC[new].name = new
+
+       ACK[old] = nil
+       ZEN.CODEC[old] = nil
+   end
+)

@@ -341,3 +341,23 @@ EOF
     save_output 'nested_dict_in.json'
     assert_output '{"id":"did:example:123456789abcdefghi#keys-1"}'
 }
+
+@test "rename '' to ''" {
+    cat <<EOF | save_asset given_rename.data
+{
+   "eddsa_public_key": "2s5wmQjZeYtpckyHakLiP5ujWKDL1M2b8CiP6vwajNrK",
+   "comment": " è una stringa"
+}
+EOF
+
+    cat <<EOF | zexe given_rename.zen given_rename.data
+Given that I have a 'string' named 'eddsa public key'
+Given that I rename 'eddsa_public_key' to 'eddsa string'
+Given that I have a 'base58' named 'eddsa public key'
+Given I have a 'string' named 'comment'
+When I append 'comment' to 'eddsa string'
+Then print all data
+EOF
+    save_output 'given_rename.json'
+    assert_output '{"comment":" è una stringa","eddsa_public_key":"2s5wmQjZeYtpckyHakLiP5ujWKDL1M2b8CiP6vwajNrK","eddsa_string":"2s5wmQjZeYtpckyHakLiP5ujWKDL1M2b8CiP6vwajNrK è una stringa"}'
+}
