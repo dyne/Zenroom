@@ -220,6 +220,7 @@ clean:
 	rm -rf ${pwd}/lib/milagro-crypto-c/build
 	rm -rf ${pwd}/lib/mimalloc/build
 	$(MAKE) clean -C ${pwd}/lib/zstd
+	$(MAKE) clean -C ${pwd}/lib/blake2
 	$(MAKE) clean -C ${pwd}/src
 	if [ -d "bindings" ]; then $(MAKE) clean -C ${pwd}/bindings; fi
 	rm -f ${extras}/index.*
