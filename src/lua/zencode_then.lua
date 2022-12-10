@@ -161,6 +161,12 @@ Then("print '' as ''",function(k, s)
 	end
 end)
 
+Then("print my name in ''",function(dst)
+		ZEN.assert(WHO, 'No identity specified: please use Given I am')
+		ZEN.assert(not OUT[dst], 'Cannot overwrite OUT.'..dst)
+		OUT[dst] = WHO
+end)
+
 Then("print my ''",function(k)
 	Iam()
 	local val = have(k)
