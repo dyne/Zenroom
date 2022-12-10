@@ -95,3 +95,12 @@ EOF
     assert_output '{"to":"1b620ca5172a8d6a64798fca2ee690066f7a7816","tx":{"gas_limit":"300000","gas_price":"100000000000","nonce":"0","to":"1b620ca5172a8d6a64798fca2ee690066f7a7816","value":"0"}}'
 
 }
+
+@test "Print my name" {
+    cat <<EOF | zexe print_my_name.zen
+Given I am known as 'Alice'
+Then print my name in 'identity'
+EOF
+    save_output 'print_my_name.out'
+    assert_output '{"identity":"Alice"}'
+}
