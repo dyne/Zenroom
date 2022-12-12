@@ -650,3 +650,44 @@ EOF
     save_output 'filter_from.json'
     assert_output '{"myDict":{"age":"42","name":"John"},"myNestedArray":[{"age":"42","name":"John"},{"age":"31","name":"Jane"},{"age":"68","name":"Amber"},[]],"myNestedDict":{"myDict1":{"age":"42","name":"John"},"myDict2":{"age":"31","name":"Jane"},"myDict3":{"name":"Bruce"},"myDict4":[],"myDict5":{"myDict6":{"name":"Alfred"}}},"myNumberDict":{"age":55}}'
 }
+
+@test "move statements" {
+    cat << EOF | save_asset move.data
+{
+	"myDict": {
+		 "name": "Bruce",
+		 "surname": "Wayne",
+		 "age": "44"
+	},
+	"myArray": [
+			 "John",
+			 "Doe",
+		 	 "42"
+	],
+	"myString": "who?",
+	"mySecondString": "where?",
+	"name": "mySecondString"
+}
+EOF
+
+    cat << EOF | zexe move.zen move.data
+Given I have a 'string dictionary' named 'myDict'
+Given I have a 'string array' named 'myArray'
+Given I have a 'string' named 'myString'
+Given I have a 'string' named 'mySecondString'
+Given I have a 'string' named 'name'
+
+When I move 'myString' in 'myDict'
+When I move named by 'name' in 'myArray'
+When I move 'surname' from 'myDict' to 'myArray'
+
+When I create the 'string array' named 'myNewArray'
+When I move 'name' from 'myDict' to 'myNewArray'
+
+Then print the 'myDict'
+and print the 'myArray'
+and print the 'myNewArray'
+EOF
+    save_output 'move.json'
+    assert_output '{"myArray":["John","Doe","42","where?","Wayne"],"myDict":{"age":"44","myString":"who?"},"myNewArray":["Bruce"]}'
+}
