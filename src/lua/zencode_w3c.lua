@@ -23,9 +23,34 @@ local ETHEREUM_ADDRESS = "ethereum_address"
 local EDDSA_PUBLIC_KEY = "eddsa_public_key"
 
 local function import_did_document(doc)
-    -- id must be always present in DID-documents
+    -- id and @context must be always present in DID-documents
     ZEN.assert(doc.id, 'Invalid DID document: id not found')
-    -- all the other fields are optional and imported as a string
+    ZEN.assert(doc['@context'], 'Invalid DID document: @context not found')
+    local did_components = strtok(doc.id, '[^:]*')
+    -- schme: did
+    ZEN.assert(did_components[1] == 'did',
+	       'Invalid DID document: invalid scheme')
+    -- method name: a-z/0-9
+    ZEN.assert(not did_components[2]:match('[^%l%d]'),
+	       'Invalid DID document: invalid method-name')
+    -- mathod specific identifier: a-z/A-Z/0-9/"."/"-"/"_"/"%" HEXDIG HEXDIG
+    local error_msg = 'Invalid DID document: invalid method specific identifier'
+    for i=3,#did_components do
+	first = true
+	for chars in did_components[i]:gmatch('[^%%]*') do
+	    if first then
+		ZEN.assert(not chars:match('[^%w%.%-%_]'),
+			   error_msg)
+		first = nil
+	    else
+		-- checks %%
+		ZEN.assert(chars, error_msg)
+		-- checks %hexhex...
+		ZEN.assert(chars:match('%x%x[%w%.%-%_]*') == chars,
+			   error_msg)
+	    end
+	end
+    end
     return ZEN.get(doc, '.', O.from_string, tostring)
 end
 
