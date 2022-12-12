@@ -24,8 +24,9 @@ local EDDSA_PUBLIC_KEY = "eddsa_public_key"
 
 local function import_did_document(doc)
     -- id and @context must be always present in DID-documents
-    ZEN.assert(doc.id, 'Invalid DID document: id not found')
+    ZEN.assert(doc.id and #doc.id < 256, 'Invalid DID document: id not found')
     ZEN.assert(doc['@context'], 'Invalid DID document: @context not found')
+    ZEN.assert(#JSON.encode(doc, 'string') < 5096, 'DID document too large')
     local did_components = strtok(doc.id, '[^:]*')
     -- schme: did
     ZEN.assert(did_components[1] == 'did',
