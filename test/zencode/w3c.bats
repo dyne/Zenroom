@@ -377,14 +377,14 @@ Scenario 'w3c': did document
 Given I have a 'did document'
 Then print the 'did document'
 EOF
-    run $ZENROOM_EXECUTABLE -z did_document_parsing.zen -a invalid_scheme.json
+    run $ZENROOM_EXECUTABLE -a invalid_scheme.json -z did_document_parsing.zen
     assert_failure
-    run $ZENROOM_EXECUTABLE -z did_document_parsing.zen -a invalid_method_name.json
+    run $ZENROOM_EXECUTABLE -a invalid_method_name.json -z did_document_parsing.zen
     assert_failure
-    run $ZENROOM_EXECUTABLE -z did_document_parsing.zen -a invalid_method_specific_identifier.json
+    run $ZENROOM_EXECUTABLE -a invalid_method_specific_identifier.json -z did_document_parsing.zen
     assert_failure
-    run $ZENROOM_EXECUTABLE -z did_document_parsing.zen -a invalid_method_specific_identifier2.json
+    run $ZENROOM_EXECUTABLE -a invalid_method_specific_identifier2.json -z did_document_parsing.zen
     assert_failure
-    run $ZENROOM_EXECUTABLE -z did_document_parsing.zen -a valid_id.json
+    run $ZENROOM_EXECUTABLE -a valid_id.json -z did_document_parsing.zen
     assert_success
 }
