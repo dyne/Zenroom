@@ -278,7 +278,6 @@ Then("print data from ''", function(src)
 	local obj = have(src)
 	for k,v in pairs(obj) do
 	   if k ~= 'keyring' then
-	      ACK[k] = true -- to legitimate new_codec creation
 	      OUT[k] = then_outcast( v, check_codec(src) )
 	   end
 	end
@@ -288,7 +287,6 @@ Then("print data from '' as ''", function(src, e)
 	local obj = have(src)
 	for k,v in pairs(obj) do
 	   if k ~= 'keyring' then
-	      ACK[k] = true -- to legitimate new_codec creation
 	      OUT[k] = then_outcast( v, e )
 	   end
 	end
