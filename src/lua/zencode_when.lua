@@ -80,6 +80,17 @@ When("append '' to ''", function(src, dest)
         end
 end)
 
+When("append the '' of '' to ''", function(enc, src, dest)
+	local from = have(src)
+	local to = have(dest)
+	ZEN.assert(type(to) == 'zenroom.octet', "Destination type is not octet: "..dest.." ("..type(to)..")")
+	ZEN.assert(ZEN.CODEC[dest].encoding == 'string', "Destination encoding is not string: "..dest)
+	local f = guess_outcast(enc)
+	ZEN.assert(f, "Encoding format not found: "..enc)
+	to = to .. O.from_string( f( from:octet() ) )
+	ACK[dest] = to
+end)
+
 When("create the ''", function(dest)
 	empty (dest)
 	ACK[dest] = { }

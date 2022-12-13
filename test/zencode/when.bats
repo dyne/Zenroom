@@ -19,6 +19,32 @@ EOF
     assert_output '{"dest":"0011ffff","my_hex":"0011ffff"}'
 }
 
+@test "When I append the encoded string of" {
+	cat <<EOF | save_asset pub_did.json
+	{
+	  "hex_path": "did:dyne:sandbox:",
+	  "base58_path": "did:dyne:sandbox:",
+	  "base64_path": "did:dyne:sandbox:",
+	  "eddsa_public_key": "8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ",
+	}
+EOF
+	cat <<EOF | zexe append_encoded_to.zen pub_did.json
+Scenario eddsa
+Given I have a 'string' named 'hex_path'
+and I have a 'string' named 'base58_path'
+and I have a 'string' named 'base64_path'
+and I have a 'eddsa public key'
+When I append the 'hex' of 'eddsa_public_key' to 'hex_path'
+and I append the 'base58' of 'eddsa_public_key' to 'base58_path'
+and I append the 'base64' of 'eddsa_public_key' to 'base64_path'
+Then print the 'hex_path'
+and print the 'base58 path'
+and print the 'base64 path'
+EOF
+	save_output did.json
+	assert_output '{"base58_path":"did:dyne:sandbox:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ","base64_path":"did:dyne:sandbox:bjbiQ5ryoK1I7akMK2wkTcQCLj7FS1sy7fYY2peqnxo=","hex_path":"did:dyne:sandbox:6e36e2439af2a0ad48eda90c2b6c244dc4022e3ec54b5b32edf618da97aa9f1a"}'
+}
+
 @test "When I pickup from path ''" {
     cat <<EOF | save_asset stringnum.json
 {
@@ -32,7 +58,6 @@ EOF
 
 }
 EOF
-
     cat <<EOF | zexe append_number_try.zen stringnum.json
 Given I have a 'string dictionary' named 'latest'
 
