@@ -41,9 +41,20 @@ EOF
     cat <<EOF | zexe print_data_from.zen dictionary.json
 Given I have the 'string dictionary' named 'dictionary'
 Then print data from 'dictionary'
+Then print the 'dictionary'
 EOF
     save_output 'print_data_from.out'
-    assert_output '{"first":{"v1":1,"v2":2,"vs":"hello"},"second":{"v3":3,"v4":4,"vs":"world"}}'
+    assert_output '{"dictionary":{"first":{"v1":1,"v2":2,"vs":"hello"},"second":{"v3":3,"v4":4,"vs":"world"}},"first":{"v1":1,"v2":2,"vs":"hello"},"second":{"v3":3,"v4":4,"vs":"world"}}'
+}
+
+@test "Print data from as" {
+    cat <<EOF | zexe print_data_from_as.zen dictionary.json
+Given I have the 'string dictionary' named 'dictionary'
+Then print data from 'dictionary' as 'base58'
+Then print the 'dictionary'
+EOF
+    save_output 'print_data_from_as.out'
+    assert_output '{"dictionary":{"first":{"v1":1,"v2":2,"vs":"hello"},"second":{"v3":3,"v4":4,"vs":"world"}},"first":{"v1":1,"v2":2,"vs":"Cn8eVZg"},"second":{"v3":3,"v4":4,"vs":"EUYUqQf"}}'
 }
 
 @test "Then print '' from ''" {
