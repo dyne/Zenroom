@@ -283,13 +283,14 @@ When("for each dictionary in '' append '' to ''", function(arr, right, left)
 	end
 end)
 
-local function move_in(src_value, src_name, dest)
+local function move_or_copy_in(src_value, src_name, dest)
    local d = have(dest)
    ZEN.assert(luatype(d) == 'table', "Object is not a table: "..dest)
    if ZEN.CODEC[dest].zentype == 'dictionary'
       or ZEN.CODEC[dest].zentype == 'schema' then
       ZEN.assert(not d[src_name], "Dictionary already contains: "..src_name)
       d[src_name] = src_value
+      ACK[dest] = d
    elseif ZEN.CODEC[dest].zentype == 'array' then
       table.insert(ACK[dest], src_value)
    else
@@ -300,20 +301,29 @@ end
 
 When("move named by '' in ''", function(src_name, dest)
 	local src = have(src_name):string()
-	move_in(have(src), src, dest)
+	move_or_copy_in(have(src), src, dest)
 	ACK[src] = nil
 	ZEN.CODEC[src] = nil
 end)
 
 When("move '' in ''", function(src, dest)
-	move_in(have(src), src, dest)
+	move_or_copy_in(have(src), src, dest)
 	ACK[src] = nil
 	ZEN.CODEC[src] = nil
 end)
 
 When("move '' from '' to ''", function(name, src, dest)
-	move_in(have({src, name}), name, dest)
+	move_or_copy_in(have({src, name}), name, dest)
 	ACK[src][name] = nil
+end)
+
+When("copy named by '' in ''", function(src_name, dest)
+	local src = have(src_name):string()
+	move_or_copy_in(deepcopy(have(src)), src, dest)
+end)
+
+When("copy '' in ''", function(src, dest)
+	move_or_copy_in(deepcopy(have(src)), src, dest)
 end)
 
 local function _filter_from(v, k, f)

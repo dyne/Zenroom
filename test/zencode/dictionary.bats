@@ -691,3 +691,40 @@ EOF
     save_output 'move.json'
     assert_output '{"myArray":["John","Doe","42","where?","Wayne"],"myDict":{"age":"44","myString":"who?"},"myNewArray":["Bruce"]}'
 }
+
+@test "copy statements" {
+    cat << EOF | save_asset copy.data
+{
+	"myDict": {
+		 "name": "Bruce",
+		 "surname": "Wayne",
+		 "age": "44"
+	},
+	"myArray": [
+			 "John",
+			 "Doe",
+		 	 "42"
+	],
+	"myString": "who?",
+	"mySecondString": "where?",
+	"name": "mySecondString"
+}
+EOF
+
+    cat << EOF | zexe copy.zen copy.data
+Given I have a 'string dictionary' named 'myDict'
+Given I have a 'string array' named 'myArray'
+Given I have a 'string' named 'myString'
+Given I have a 'string' named 'mySecondString'
+Given I have a 'string' named 'name'
+
+When I copy 'myArray' in 'myDict'
+When I copy 'myDict' in 'myArray'
+When I move 'myString' in 'myArray'
+
+Then print the 'myDict'
+and print the 'myArray'
+EOF
+    save_output 'copy.json'
+    assert_output '{"myArray":["John","Doe","42",{"age":"44","myArray":["John","Doe","42"],"name":"Bruce","surname":"Wayne"},"who?"],"myDict":{"age":"44","myArray":["John","Doe","42"],"name":"Bruce","surname":"Wayne"}}'
+}
