@@ -268,15 +268,6 @@ When("take '' from path ''", function(target, path)
 	take_out_f(path, uscore(target), nil)
 end)
 
-When("move '' from '' to ''", function(name, src, dst)
-	local dest = have(dst)
-	local source = have(src)
-	ZEN.assert(not dest[name], "Cannot overwrite '"..name.."' in '"..dst.."'")
-	ZEN.assert(source[name], "Member not found: '"..name.."' in '"..src.."'")
-	ACK[dst][name] = source[name]
-	ACK[src][name] = nil
-end)
-
 When("for each dictionary in '' append '' to ''", function(arr, right, left)
 	local dicts = have(arr)
 	ZEN.assert(luatype(dicts) == 'table', 'Object is not a table: '..arr)
@@ -292,33 +283,47 @@ When("for each dictionary in '' append '' to ''", function(arr, right, left)
 	end
 end)
 
-local function move_in(src, dest)
-	local s = have(src)
-	local d = have(dest)
-	ZEN.assert(luatype(d) == 'table', "Object is not a table: "..dest)
-	if ZEN.CODEC[dest].zentype == 'dictionary'
-            or ZEN.CODEC[dest].zentype == 'schema' then
-        ZEN.assert(not d[src], "Dictionary already contains: "..src)
-        d[src] = s
-    elseif ZEN.CODEC[dest].zentype == 'array' then
-        table.insert(ACK[dest], s)
-    else
-	   ZEN.assert(false, "Invalid destination type: "
-		      ..ZEN.CODEC[dest].zentype)
-    end
-	ACK[src] = nil
-	ZEN.CODEC[src] = nil
+local function move_or_copy_in(src_value, src_name, dest)
+   local d = have(dest)
+   ZEN.assert(luatype(d) == 'table', "Object is not a table: "..dest)
+   if ZEN.CODEC[dest].zentype == 'dictionary'
+      or ZEN.CODEC[dest].zentype == 'schema' then
+      ZEN.assert(not d[src_name], "Dictionary already contains: "..src_name)
+      d[src_name] = src_value
+      ACK[dest] = d
+   elseif ZEN.CODEC[dest].zentype == 'array' then
+      table.insert(ACK[dest], src_value)
+   else
+      ZEN.assert(false, "Invalid destination type: "
+		 ..ZEN.CODEC[dest].zentype)
+   end
 end
 
 When("move named by '' in ''", function(src_name, dest)
 	local src = have(src_name):string()
-    move_in(src, dest)
-    ACK[src_name] = nil
-    ZEN.CODEC[src_name] = nil
+	move_or_copy_in(have(src), src, dest)
+	ACK[src] = nil
+	ZEN.CODEC[src] = nil
 end)
 
 When("move '' in ''", function(src, dest)
-    move_in(src, dest)
+	move_or_copy_in(have(src), src, dest)
+	ACK[src] = nil
+	ZEN.CODEC[src] = nil
+end)
+
+When("move '' from '' to ''", function(name, src, dest)
+	move_or_copy_in(have({src, name}), name, dest)
+	ACK[src][name] = nil
+end)
+
+When("copy named by '' in ''", function(src_name, dest)
+	local src = have(src_name):string()
+	move_or_copy_in(deepcopy(have(src)), src, dest)
+end)
+
+When("copy '' in ''", function(src, dest)
+	move_or_copy_in(deepcopy(have(src)), src, dest)
 end)
 
 local function _filter_from(v, k, f)

@@ -188,6 +188,7 @@ Endif
 If number 'limit' is less than 'x'
 When I move named by 'keyname' in 'ifdict'
 Endif
+When I remove 'keyname'
 # some comments
 # some comments
 # some comments
