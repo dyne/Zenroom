@@ -321,7 +321,10 @@ function isnumber(n)
   return t == 'number' or t == 'zenroom.float' or t == 'zenroom.big'
 end
 
-function deprecated(old, new)
-    warn(table.concat({"DEPRECATED:\n", old, "\nuse instead\n", new}))
-    return old
+function deprecated(old, new, func)
+    local warn_func = function(...)
+	warn(table.concat({"DEPRECATED:\n", old, "\nuse instead\n", new}))
+	func(...)
+    end
+    return old, warn_func
 end
