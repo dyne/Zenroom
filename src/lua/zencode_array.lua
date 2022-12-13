@@ -161,27 +161,30 @@ When("insert false in ''", function(dest)
 	table.insert(ACK[dest], false)
 end)
 
-When(deprecated("insert '' in ''", "move '' in ''"), function(ele, dest)
-	local d = have(dest)
-	local e = have(ele)
-        ZEN.assert(luatype(d) == 'table',
-		   "Invalid destination, not a table: "..dest)
-        ZEN.assert(ZEN.CODEC[dest].zentype ~= 'element',
-		   "Invalid destination, not a container: "..dest)
-        if ZEN.CODEC[dest].zentype == 'array' then
-           table.insert(ACK[dest], e)
-        elseif ZEN.CODEC[dest].zentype == 'dictionary' then
-           ACK[dest][ele] = e
-        elseif ZEN.CODEC[dest].zentype == 'schema' then
-           ACK[dest][ele] = e
-	else
-	   ZEN.assert(false, "Invalid destination type: "
-		      ..ZEN.CODEC[dest].zentype)
-        end
-	ZEN.CODEC[dest][ele] = ZEN.CODEC[ele]
-	ACK[ele] = nil
-	ZEN.CODEC[ele] = nil
-end)
+When(deprecated("insert '' in ''",
+		"move '' in ''",
+		function(ele, dest)
+		    local d = have(dest)
+		    local e = have(ele)
+		    ZEN.assert(luatype(d) == 'table',
+			       "Invalid destination, not a table: "..dest)
+		    ZEN.assert(ZEN.CODEC[dest].zentype ~= 'element',
+			       "Invalid destination, not a container: "..dest)
+		    if ZEN.CODEC[dest].zentype == 'array' then
+			table.insert(ACK[dest], e)
+		    elseif ZEN.CODEC[dest].zentype == 'dictionary' then
+			ACK[dest][ele] = e
+		    elseif ZEN.CODEC[dest].zentype == 'schema' then
+			ACK[dest][ele] = e
+		    else
+			ZEN.assert(false, "Invalid destination type: "
+				   ..ZEN.CODEC[dest].zentype)
+		    end
+		    ZEN.CODEC[dest][ele] = ZEN.CODEC[ele]
+		    ACK[ele] = nil
+		    ZEN.CODEC[ele] = nil
+	       end)
+)
 
 -- When("insert the '' in ''", function(ele,arr)
 --     ZEN.assert(ACK[ele], "Element not found: "..ele)
