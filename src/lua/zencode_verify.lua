@@ -351,6 +351,14 @@ IfWhen("verify '' starts with ''", function(str, sub)
 	  start_with_from(str, sub, 1)
 end)
 
+IfWhen("verify '' has prefix ''", function(str, sub)
+	  start_with_from(str, sub, 1)
+end)
+
 IfWhen("verify '' ends with ''", function(str, sub)
+	  start_with_from(str, sub, nil)
+end)
+
+IfWhen("verify '' has suffix ''", function(str, sub)
 	  start_with_from(str, sub, nil)
 end)
