@@ -600,6 +600,15 @@ When("create the '' cast of strings in ''", function(conv, source)
 	new_codec(conv, {encoding = conv})
 end)
 
+When("create the float '' cast of integer in ''", function(dest, source)
+	empty(dest)
+	local src = have(source)
+    if type(src) ~= 'zenroom.big' then
+        src = BIG.new(src)
+    end
+    ACK[dest] = F.new(BIG.to_decimal(src))
+	new_codec(dest, {encoding = 'float'})
+end)
 
 When("seed the random with ''",
      function(seed)

@@ -156,17 +156,6 @@ float* float_arg(lua_State *L, int n) {
 */
 static int newfloat(lua_State *L) {
 	BEGIN();
-	// number argument, import
-	if(lua_isnumber(L, 1)) {
-		lua_Number number = lua_tonumber(L, 1);
-		float *flt = float_new(L);
-		if(!flt) {
-			lerror(L, "Could not create float number");
-			return 0;
-		}
-		*flt = (float)number;
-		return 1;
-	}
 	if(lua_isstring(L, 1)) {
 		const char* arg = lua_tostring(L, 1);
 		float *flt = float_new(L);
@@ -176,10 +165,21 @@ static int newfloat(lua_State *L) {
 		}
 		char *pEnd;
 		*flt = strtof(arg, &pEnd);
-		if(*pEnd) {
+		if(*pEnd || isnan(*flt) || isinf(*flt)) {
 			lerror(L, "Could not parse float number %s", arg);
 			return 0;
 		}
+		return 1;
+	}
+	// number argument, import
+	if(lua_isnumber(L, 1)) {
+		lua_Number number = lua_tonumber(L, 1);
+		float *flt = float_new(L);
+		if(!flt) {
+			lerror(L, "Could not create float number");
+			return 0;
+		}
+		*flt = (float)number;
 		return 1;
 	}
 	// octet argument, import
