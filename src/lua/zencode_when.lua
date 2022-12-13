@@ -60,24 +60,36 @@ IfWhen("'' is not found in ''", function(el, t)
 end)
 
 When("append '' to ''", function(src, dest)
-	local val = have(src)
-	local dst = have(dest)
-        -- if the destination is a number, fix the encoding to string
-        if isnumber(dst) then
-          dst = O.from_string( tostring(dst) )
-          ZEN.CODEC[dest].encoding = "string"
-          ZEN.CODEC[dest].luatype = "string"
-          ZEN.CODEC[dest].zentype = "element"
+		local val = have(src)
+		local dst = have(dest)
+		ZEN.assert(luatype(dst) ~= 'table',
+				   "Cannot append to table: "..dest)
+		-- if the destination is a number, fix the encoding to string
+		if isnumber(dst) then
+		   dst = O.from_string( tostring(dst) )
+		   ZEN.CODEC[dest].encoding = "string"
+		   ZEN.CODEC[dest].luatype = "string"
+		   ZEN.CODEC[dest].zentype = "element"
         end
         if isnumber(val) then
-	   val = O.from_string( tostring(val) )
+		   val = O.from_string( tostring(val) )
+		end
+        dst = dst:octet() .. val
+		ACK[dest] = dst
+end)
+
+When("append the string '' to ''", function(hstr, dest)
+	local dst = have(dest)
+	ZEN.assert(luatype(dst) ~= 'table', "Cannot append to table: "..dest)
+	-- if the destination is a number, fix the encoding to string
+	if isnumber(dst) then
+	   dst = O.from_string( tostring(dst) )
+	   ZEN.CODEC[dest].encoding = "string"
+	   ZEN.CODEC[dest].luatype = "string"
+	   ZEN.CODEC[dest].zentype = "element"
 	end
-        dst = dst .. val
-        if luatype(dst) == 'string' then
-          ACK[dest] = O.from_string(dst)
-        else
-	  ACK[dest] = dst
-        end
+	dst = dst:octet() .. O.from_string(hstr)
+	ACK[dest] = dst
 end)
 
 When("append the '' of '' to ''", function(enc, src, dest)
@@ -229,12 +241,46 @@ When("rename the object named by '' to named by ''", function(old,new)
 	ZEN.CODEC[olds] = nil
 end)
 
+When("create the '' string of ''", function(encoding, src)
+		local orig = have(src)
+		ZEN.assert(luatype(orig) ~= 'table', "Source element is not a table: "..src)
+		empty(encoding) -- destination name is encoding name
+		local f = guess_outcast(encoding)
+		ZEN.assert(f, "Encoding format not found: "..encoding)
+		ACK[encoding] = O.from_string( f( orig:octet() ) )
+		new_codec(encoding, { zentype = 'element',
+							  luatype = 'string',
+							  encoding = 'string' })
+end)
+
 When("copy the '' to ''", function(old,new)
 	have(old)
 	empty(new)
 	ACK[new] = deepcopy(ACK[old])
 	new_codec(new, { }, old)
 end)
+
+local function _copy_move_in(old, new, inside, delete)
+	local src = have(old)
+	local dst = have(inside)
+	ZEN.assert(luatype(dst) == 'table', "Destination is not a table: "..inside)
+	ZEN.assert(not dst[new],
+			   "Cannot overwrite destination: "..new.." inside "..inside)
+	dst[new] = deepcopy(src)
+	ACK[inside] = dst
+	if delete then
+	   ACK[old] = nil
+	   ZEN.CODEC[old] = nil
+	end
+end
+When("copy the '' to '' in ''", function(old,new,inside)
+		_copy_move_in(old, new, inside, false)
+end)
+When("move the '' to '' in ''", function(old,new,inside)
+		_copy_move_in(old, new, inside, true)
+end)
+
+
 When("copy '' to ''", function(old,new)
 	have(old)
 	empty(new)
