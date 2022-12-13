@@ -105,7 +105,7 @@ function import_keyring(obj)
    -- bls_curve
    local res = {}
    if obj.ecdh then
-      res.ecdh = ZEN.get(obj, 'ecdh')
+      res.ecdh = ZEN.get(obj, 'ecdh', nop, O.from_base64)
    end
    if obj.credential then
       res.credential = ZEN.get(obj, 'credential', INT.new, O.from_base64)
@@ -132,16 +132,16 @@ function import_keyring(obj)
       res.ethereum = ZEN.get(obj, 'ethereum', nop, O.from_hex)
    end
    if obj.dilithium then
-      res.dilithium = ZEN.get(obj, 'dilithium', dilithium_f)
+      res.dilithium = ZEN.get(obj, 'dilithium', dilithium_f, O.from_base64)
    end
    if obj.kyber then
-      res.kyber = ZEN.get(obj, 'kyber', kyber_f)
+      res.kyber = ZEN.get(obj, 'kyber', kyber_f, O.from_base64)
    end
    if obj.schnorr then
-      res.schnorr = ZEN.get(obj, 'schnorr')
+      res.schnorr = ZEN.get(obj, 'schnorr', nop, O.from_base64)
    end
    if obj.ntrup then
-      res.ntrup = ZEN.get(obj, 'ntrup', ntrup_f)
+      res.ntrup = ZEN.get(obj, 'ntrup', ntrup_f, O.from_base64)
    end
    if obj.eddsa then
       res.eddsa = ZEN.get(obj, 'eddsa', nop, O.from_base58)
