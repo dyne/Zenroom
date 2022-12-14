@@ -463,3 +463,18 @@ Given(
        ZEN.CODEC[old] = nil
    end
 )
+
+Given("a '' named '' with string prefix ''", function(enc, src, pfx)
+		 local whole = KIN[src] or IN[src]
+		 ZEN.assert(whole, "Cannot find '" .. src .. "' anywhere (null value?)")
+		 ZEN.assert(#whole > 2, "String too short in '" .. src)
+		 ZEN.assert( > 2, "String too short in '" .. src)
+
+   -- if not conv and ZEN.schemas[what] then conv = what end
+   TMP = guess_conversion(raw, conv or name)
+
+end)
+
+Given("a '' named '' with string suffix ''", function(enc, src, pfx)
+
+end)

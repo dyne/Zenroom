@@ -361,3 +361,18 @@ EOF
     save_output 'given_rename.json'
     assert_output '{"comment":" è una stringa","eddsa_public_key":"2s5wmQjZeYtpckyHakLiP5ujWKDL1M2b8CiP6vwajNrK","eddsa_string":"2s5wmQjZeYtpckyHakLiP5ujWKDL1M2b8CiP6vwajNrK è una stringa"}'
 }
+
+@test "Given to decode partials with string prefix and suffix" {
+	  cat << EOF | save_asset string_partials_examples.json
+	  { "identity": "did:dyne:sandbox:2s5wmQjZeYtpckyHakLiP5ujWKDL1M2b8CiP6vwajNrK",
+	    "filename": "my_essay.odt" }
+EOF
+
+	  cat << EOF | zexe decode_prefixed.zen string_partials_examples.json
+Given I have a 'base58' named 'identity' with string prefix 'did:dyne:sandbox:'
+Then print the 'identity' as 'hex'
+EOF
+	  # TODO: check the integrity of the public key i.e verifying a signature
+	  save_output 'hex_eddsa.json'
+	  assert_output ''
+}
