@@ -317,3 +317,48 @@ IfWhen("the elements in '' are not equal", function(obj_name)
        end
        ZEN.assert(false, "Verification failed: all elements are equal")
 end)
+
+-- if start = nil then will check if
+-- the string ends with the substring
+local function start_with_from(str, sub, start)
+   local str_oct = have(str)
+   local sub_oct = ACK[sub]
+   local str_codec = ZEN.CODEC[str]
+   local sub_codec = {}
+   if sub_oct then
+      sub_codec = ZEN.CODEC[sub]
+   else
+      sub_oct = O.from_string(sub)
+      sub_codec.luatype = 'string'
+      sub_codec.zentype = 'element'
+   end
+   ZEN.assert(str_codec.zentype == 'element' and
+	      sub_codec.zentype == 'element',
+	      "Verification failed: one or both inputs are not elements")
+   ZEN.assert(str_codec.luatype == 'string' and
+	      sub_codec.luatype == 'string',
+	      "Verification failed: one or both inputs are not strings")
+   ZEN.assert(#sub_oct <= #str_oct,
+	      "Verification failed: substring is longer than the string")
+   local s = str_oct:string()
+   local b = sub_oct:string()
+   start = start or (#s-#b+1)
+   ZEN.assert(s:find(b, start, true) == start,
+	      "Verification failed: substring not found at position "..start)
+end
+
+IfWhen("verify '' starts with ''", function(str, sub)
+	  start_with_from(str, sub, 1)
+end)
+
+IfWhen("verify '' has prefix ''", function(str, sub)
+	  start_with_from(str, sub, 1)
+end)
+
+IfWhen("verify '' ends with ''", function(str, sub)
+	  start_with_from(str, sub, nil)
+end)
+
+IfWhen("verify '' has suffix ''", function(str, sub)
+	  start_with_from(str, sub, nil)
+end)
