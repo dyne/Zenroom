@@ -329,14 +329,14 @@ local function start_with_from(str, sub, start)
       sub_codec = ZEN.CODEC[sub]
    else
       sub_oct = O.from_string(sub)
-      sub_codec.luatype = 'string'
+      sub_codec.encoding = 'string'
       sub_codec.zentype = 'element'
    end
    ZEN.assert(str_codec.zentype == 'element' and
 	      sub_codec.zentype == 'element',
 	      "Verification failed: one or both inputs are not elements")
-   ZEN.assert(str_codec.luatype == 'string' and
-	      sub_codec.luatype == 'string',
+   ZEN.assert(str_codec.encoding == 'string' and
+	      sub_codec.encoding == 'string',
 	      "Verification failed: one or both inputs are not strings")
    ZEN.assert(#sub_oct <= #str_oct,
 	      "Verification failed: substring is longer than the string")
