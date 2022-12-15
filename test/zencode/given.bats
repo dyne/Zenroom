@@ -361,3 +361,46 @@ EOF
     save_output 'given_rename.json'
     assert_output '{"comment":" è una stringa","eddsa_public_key":"2s5wmQjZeYtpckyHakLiP5ujWKDL1M2b8CiP6vwajNrK","eddsa_string":"2s5wmQjZeYtpckyHakLiP5ujWKDL1M2b8CiP6vwajNrK è una stringa"}'
 }
+
+@test "Given to decode partials with string prefix and suffix" {
+	  cat << EOF | save_asset string_partials_examples.json
+	  { "identity": "did:dyne:sandbox:2s5wmQjZeYtpckyHakLiP5ujWKDL1M2b8CiP6vwajNrK",
+	    "pk": "2s5wmQjZeYtpckyHakLiP5ujWKDL1M2b8CiP6vwajNrK:pk",
+	    "sfx_onebyte": "2s5wmQjZeYtpckyHakLiP5ujWKDL1M2b8CiP6vwajNrK@",
+	    "pfx_onebyte": "@2s5wmQjZeYtpckyHakLiP5ujWKDL1M2b8CiP6vwajNrK",
+ }
+EOF
+
+	  cat << EOF | zexe decode_prefixed.zen string_partials_examples.json
+Given I have a 'base58' part of 'identity' after string prefix 'did:dyne:sandbox:'
+Then print the 'identity' as 'hex'
+EOF
+	  # TODO: check the integrity of the public key i.e verifying a signature
+	  save_output 'hex_eddsa.json'
+	  assert_output '{"identity":"1bb0515e4fe007600355be41f4d7d93508b3b11b6741b9af51ec295a1b544c40"}'
+
+	  cat << EOF | zexe decode_prefixed.zen string_partials_examples.json
+Given I have a 'base58' part of 'pfx_onebyte' after string prefix '@'
+Then print the 'pfx_onebyte' as 'hex'
+EOF
+	  # TODO: check the integrity of the public key i.e verifying a signature
+	  save_output 'hex_eddsa.json'
+	  assert_output '{"pfx_onebyte":"1bb0515e4fe007600355be41f4d7d93508b3b11b6741b9af51ec295a1b544c40"}'
+
+	  cat << EOF | zexe decode_prefixed.zen string_partials_examples.json
+Given I have a 'base58' part of 'pk' before string suffix ':pk'
+Then print the 'pk' as 'hex'
+EOF
+	  # TODO: check the integrity of the public key i.e verifying a signature
+	  save_output 'hex_eddsa.json'
+	  assert_output '{"pk":"1bb0515e4fe007600355be41f4d7d93508b3b11b6741b9af51ec295a1b544c40"}'
+
+	  cat << EOF | zexe decode_prefixed.zen string_partials_examples.json
+Given I have a 'base58' part of 'sfx onebyte' before string suffix '@'
+Then print the 'sfx_onebyte' as 'hex'
+EOF
+	  # TODO: check the integrity of the public key i.e verifying a signature
+	  save_output 'hex_eddsa.json'
+	  assert_output '{"sfx_onebyte":"1bb0515e4fe007600355be41f4d7d93508b3b11b6741b9af51ec295a1b544c40"}'
+
+}

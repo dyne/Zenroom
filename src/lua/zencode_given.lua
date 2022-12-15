@@ -463,3 +463,35 @@ Given(
        ZEN.CODEC[old] = nil
    end
 )
+
+Given("a '' part of '' after string prefix ''", function(enc, src, pfx)
+		 local whole = KIN[src] or IN[src]
+		 ZEN.assert(whole, "Cannot find '" .. src .. "' anywhere (null value?)")
+		 local plen = #pfx
+		 local wlen = #whole
+		 ZEN.assert(wlen > plen, "String too short: "
+					.. src.. "("..wlen..") prefix("..plen..")")
+		 ZEN.assert(string.sub(whole, 1, plen) == pfx,
+					"Prefix not found in "..src..": "..pfx)
+		 -- if not conv and ZEN.schemas[what] then conv = what end
+		 TMP = guess_conversion(string.sub(whole,plen+1,wlen), enc)
+		 TMP.name = src
+		 ack(src)
+		 gc()
+end)
+
+Given("a '' part of '' before string suffix ''", function(enc, src, sfx)
+		 local whole = KIN[src] or IN[src]
+		 ZEN.assert(whole, "Cannot find '" .. src .. "' anywhere (null value?)")
+		 local slen = #sfx
+		 local wlen = #whole
+		 ZEN.assert(wlen > slen, "String too short: "
+					.. src.. "("..wlen..") suffix("..slen..")")
+		 ZEN.assert(I.spy( string.sub(whole, wlen-slen+1, wlen) )== sfx,
+					"Suffix not found in "..src..": "..sfx)
+		 -- if not conv and ZEN.schemas[what] then conv = what end
+		 TMP = guess_conversion(string.sub(whole,1,wlen-slen), enc)
+		 TMP.name = src
+		 ack(src)
+		 gc()
+end)
