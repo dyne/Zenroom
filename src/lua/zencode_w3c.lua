@@ -163,20 +163,34 @@ When(
     end
 )
 
+local function _json_encoding(src)
+    local source, codec = have(src)
+    local source_str = source
+    if luatype(source) == 'table' then
+        local encoding = fif( codec.encoding == 'complex',
+                              codec.schema or src, codec.encoding)
+        source_str = O.from_string( JSON.encode(source, encoding) )
+    end
+    return source_str
+end
 
 When(
     "create the jws signature of ''", function(src)
-        local source = have(src)
+        local source_str = _json_encoding(src)
         empty'jws'
         local sk = havekey'ecdh' -- assuming secp256k1
-        local source_str
-        if luatype(source) == 'table' then
-           source_str = O.from_string( JSON.encode(source) )
-        else
-           source_str = source
-        end
         ACK.jws = O.from_string(
             jws_signature_to_octet(ECDH.sign(sk, source_str)) )
+        new_codec('jws', { zentype = 'element',
+                           encoding = 'string' })
+    end
+)
+
+When(
+    "create the jws signature using the ecdh signature in ''", function(sign)
+        local signature = have(sign)
+        empty'jws'
+        ACK.jws = O.from_string(jws_signature_to_octet(signature))
         new_codec('jws', { zentype = 'element',
                            encoding = 'string' })
     end
@@ -186,15 +200,11 @@ IfWhen(
     "verify the jws signature of ''",
     function(src)
         local jws = have'jws'
-        local signed = have(src)
-        if luatype(signed) == 'table' then
-           signed = JSON.encode(signed)
-        end
         local pub = have 'ecdh public key'
+        local source_str = _json_encoding(src)
         local signature = jws_octet_to_signature(jws)
-        -- omit the proof subtable from verification
         ZEN.assert(
-            ECDH.verify(pub, signed, signature),
+            ECDH.verify(pub, source_str, signature),
             'The signature does not validate: ' .. src
         )
     end
@@ -212,35 +222,30 @@ When(
             -- created = "2018-06-18T21:19:10Z",
             proofPurpose = 'authenticate' -- assertionMethod", -- TODO: check
         }
-        local cred_str
-        if luatype(credential) == 'table' then
-           cred_str = JSON.encode(credential)
-        else
-           cred_str = credential
-        end
+        local cred_str = _json_encoding(vc)
         proof.jws =
             jws_signature_to_octet(
-              ECDH.sign(sk, OCTET.from_string(cred_str))
+              ECDH.sign(sk, cred_str)
         )
         ACK[vc].proof = deepmap(OCTET.from_string, proof)
     end
 )
 
-local function _verification_f(doc)
-    local document = have(doc)
+local function _verification_f(src)
+    local document = have(src)
     ZEN.assert(document.proof and document.proof.jws,
-               'The object has no signature: ' .. doc)
+               'The object has no signature: ' .. src)
     local signature = jws_octet_to_signature(document.proof.jws)
     local public_key = have 'ecdh public key'
 
     -- omit the proof subtable from verification
     local proof = document.proof
     document.proof = nil
-    local signed = JSON.encode(document)
+    local document_str = _json_encoding(src)
     document.proof = proof
     ZEN.assert(
-        ECDH.verify(public_key, signed, signature),
-        'The signature does not validate: ' .. doc
+        ECDH.verify(public_key, document_str, signature),
+        'The signature does not validate: ' .. src
     )
 end
 

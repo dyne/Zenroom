@@ -126,7 +126,6 @@ EOF
     assert_output '{"jws":"eyJhbGciOiJFUzI1NksiLCJiNjQiOnRydWUsImNyaXQiOiJiNjQifQ..d2tYw0FFyVU7UjX-IRpiN8SLkLR4S8bYZmCwI2rzurJTP4L6hseBhAMa0UR05xHREChrzQeeTAhRh9sWQX1Hwg","simple":"once upon a time... there was a wolf"}'
 }
 
-
 @test "When I verify the jws signature of ''" {
     cat <<EOF | zexe W3C-jws_verify.zen W3C-jws_signed.json W3C-VC_pubkey.json
 Scenario 'w3c': verify signature
@@ -143,6 +142,42 @@ EOF
 
 }
 
+@test "When I create the jws signature using the ecdh signature in ''" {
+    cat <<EOF | save_asset simple_json.json
+{
+   "simple": {
+      "tale": "once upon a time... there was a wolf",
+      "ending": "it didn't went well"
+   }
+}
+EOF
+
+cat <<EOF | zexe W3C-jws__crafted_signature.zen simple_json.json W3C-VC_issuerKeypair.json
+Scenario 'w3c': sign JSON
+Scenario 'ecdh': (required)
+Given that I am 'Authority'
+Given I have my 'keyring'
+Given I have a 'string dictionary' named 'simple'
+When I create the json of 'simple'
+and I create the ecdh signature of 'json'
+and I create the jws signature using the ecdh signature in 'ecdh signature'
+Then print the 'json'
+Then print the 'jws'
+and print the 'simple'
+EOF
+    save_output 'W3C-jws_crafter_sigature.json'
+cat <<EOF | zexe W3C-jws_crafted_verify.zen W3C-jws_crafter_sigature.json W3C-VC_pubkey.json
+Scenario 'w3c': verify signature
+Scenario 'ecdh': (required)
+Given I have a 'ecdh public key' inside 'Authority'
+and I have a 'string' named 'jws'
+and I have a 'string dictionary' named 'simple'
+When I verify the jws signature of 'simple'
+Then print the string 'W3C JWS IS VALID'
+EOF
+    save_output 'W3C-jws_crafted_verify.out'
+    assert_output '{"output":["W3C_JWS_IS_VALID"]}'
+}
 
 @test "reading did documents" {
     cat <<EOF | save_asset did_document.json
