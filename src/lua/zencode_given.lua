@@ -455,6 +455,7 @@ Given(
    "rename '' to ''",
    function(old, new)
        empty(new)
+       have(old)
        ACK[new] = ACK[old]
        new_codec(new, ZEN.CODEC[old])
        ZEN.CODEC[new].name = new
@@ -487,7 +488,7 @@ Given("a '' part of '' before string suffix ''", function(enc, src, sfx)
 		 local wlen = #whole
 		 ZEN.assert(wlen > slen, "String too short: "
 					.. src.. "("..wlen..") suffix("..slen..")")
-		 ZEN.assert(I.spy( string.sub(whole, wlen-slen+1, wlen) )== sfx,
+		 ZEN.assert(string.sub(whole, wlen-slen+1, wlen) == sfx,
 					"Suffix not found in "..src..": "..sfx)
 		 -- if not conv and ZEN.schemas[what] then conv = what end
 		 TMP = guess_conversion(string.sub(whole,1,wlen-slen), enc)
