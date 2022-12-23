@@ -231,12 +231,8 @@ When(
     end
 )
 
-local function _verification_f(src)
-    local document = have(src)
-    ZEN.assert(document.proof and document.proof.jws,
-               'The object has no signature: ' .. src)
+local function _verification_f(src, document, public_key)
     local signature = jws_octet_to_signature(document.proof.jws)
-    local public_key = have 'ecdh public key'
 
     -- omit the proof subtable from verification
     local proof = document.proof
@@ -250,13 +246,51 @@ local function _verification_f(src)
 end
 
 IfWhen(
-    "verify the verifiable credential named ''", _verification_f
+    "verify the verifiable credential named ''",
+    function(src)
+        local document = have(src)
+        ZEN.assert(document.proof and document.proof.jws,
+                    'The object has no signature: ' .. src)
+        _verification_f(src, document, have('ecdh public key'))
+    end
 )
 
 IfWhen(
-    "verify the did document named ''", _verification_f
+    "verify the did document named ''",
+    function(src)
+        local document = have(src)
+        ZEN.assert(document.proof and document.proof.jws,
+                    'The object has no signature: ' .. src)
+        _verification_f(src, document, have('ecdh public key'))
+    end
 )
 
+IfWhen(
+    "verify the did document named '' is signed by ''",
+    function(src, signer_did_doc)
+        local document = have(src)
+        local signer_document = have(signer_did_doc)
+        ZEN.assert(document.proof and document.proof.jws,
+                    'The object has no signature: ' .. src)
+        ZEN.assert(document.proof.verificationMethod,
+                    'The proof inside '..src..' has no verificationMethod')
+        local data = strtok(O.to_string(document.proof.verificationMethod), '[^#]*' )
+        local signer_id = O.from_string(data[1])
+        ZEN.assert(signer_id == signer_document.id,
+                    'The signer id in proof is different from the one in '..signer_did_doc)
+        local i = 1
+        local pk = nil
+        repeat
+            if signer_document.verificationMethod[i].id == document.proof.verificationMethod then
+                pk = O.from_base58(
+                    O.to_string( signer_document.verificationMethod[i].publicKeyBase58 ))
+            end
+            i = i+1
+        until( ( not signer_document.verificationMethod[i] ) or pk )
+        ZEN.assert(pk , data[2]..' used to sign '..src..' not found in the did document '..signer_did_doc)
+        _verification_f(src, document, pk)
+    end
+)
 -- operations on the did-document
 When(
     "create the serviceEndpoint of ''",

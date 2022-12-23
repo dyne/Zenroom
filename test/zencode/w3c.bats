@@ -509,3 +509,195 @@ EOF
     run $ZENROOM_EXECUTABLE -a did_document.json -z pk_from_doc_not_exist.zen
     assert_failure
 }
+
+@test "verify the did document named 'did_document' is signed by 'signer_did_document'" {
+    cat <<EOF > did_documents.json
+    {
+    "did_document":{
+      "@context":[
+         "https://www.w3.org/ns/did/v1",
+         "https://w3id.org/security/suites/ed25519-2018/v1",
+         "https://w3id.org/security/suites/secp256k1-2019/v1",
+         "https://w3id.org/security/suites/secp256k1-2020/v1",
+         "https://dyne.github.io/W3C-DID/specs/ReflowBLS12381.json",
+         {
+            "description":"https://schema.org/description"
+         }
+      ],
+      "description":"fake sandbox-admin",
+      "id":"did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ",
+      "proof": {
+         "created": "1671805668826",
+         "jws": "eyJhbGciOiJFUzI1NksiLCJiNjQiOnRydWUsImNyaXQiOiJiNjQifQ..0RywWwpi-26gwNhPC4lBcTce80WMDDygtlYu8EzyXa-PZRrG64Bt46z-wp_QXhF-FIbtgf_zfIVHDBeR7sPGGw",
+         "proofPurpose": "assertionMethod",
+         "type": "EcdsaSecp256k1Signature2019",
+         "verificationMethod": "did:dyne:admin:DMMYfDo7VpvKRHoJmiXvEpXrfbW3sCfhUBE4tBeXmNrJ#ecdh_public_key"
+       },
+      "verificationMethod":[
+         {
+            "controller":"did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ",
+            "id":"did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ#ecdh_public_key",
+            "publicKeyBase58":"S1bs1YRaGcfeUjAQh3jigvAXuV8bff2AHjERoHaBPKtBLnXLKDcGPrnB4j5bY8ZHVu9fQGkUW5XzDa9bdhGYbjPf",
+            "type":"EcdsaSecp256k1VerificationKey2019"
+         },
+         {
+            "controller":"did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ",
+            "id":"did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ#reflow_public_key",
+            "publicKeyBase58":"9kPV92zSUok2Do2RJKx3Zn7ZY9WScvBZoorMQ8FRcoH7m1eo3mAuGJcrSpaw1YrSKeqAhJnpcFdQjLhTBEve3qvwGe7qZsam3kLo85CpTM84TaEnxVyaTZVYxuY4ytmGX2Yz1scayfSdJYASvn9z12VnmC8xM3D1cXMHNDN5zMkLZ29hgq631ssT55UQif6Pj371HUC5g6u2xYQ2mGYiQ6bQt1NWSMJDzzKTr9y7bEMPKq5bDfYEBab6a4fzk6Aqixr1P3",
+            "type":"ReflowBLS12381VerificationKey"
+         },
+         {
+            "controller":"did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ",
+            "id":"did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ#bitcoin_public_key",
+            "publicKeyBase58":"rjXTCrGHFMtQhfnPMZz5rak6DDAtavVTrv2AEMXvZSBj",
+            "type":"EcdsaSecp256k1VerificationKey2019"
+         },
+         {
+            "controller":"did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ",
+            "id":"did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ#eddsa_public_key",
+            "publicKeyBase58":"8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ",
+            "type":"Ed25519VerificationKey2018"
+         },
+         {
+            "blockchainAccountId":"eip155:1:0xd3765bb6f5917d1a91adebadcfad6c248e721294",
+            "controller":"did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ",
+            "id":"did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ#ethereum_address",
+            "type":"EcdsaSecp256k1RecoveryMethod2020"
+         }
+      ]
+   },
+   "signer_did_document":{
+      "@context":[
+         "https://www.w3.org/ns/did/v1",
+         "https://w3id.org/security/suites/ed25519-2018/v1",
+         "https://w3id.org/security/suites/secp256k1-2019/v1",
+         "https://w3id.org/security/suites/secp256k1-2020/v1",
+         "https://dyne.github.io/W3C-DID/specs/ReflowBLS12381.json",
+         {
+            "description":"https://schema.org/description"
+         }
+      ],
+      "description":"did dyne admin",
+      "id":"did:dyne:admin:DMMYfDo7VpvKRHoJmiXvEpXrfbW3sCfhUBE4tBeXmNrJ",
+      "proof": {
+         "created": "1671805540866",
+         "jws": "eyJhbGciOiJFUzI1NksiLCJiNjQiOnRydWUsImNyaXQiOiJiNjQifQ..c-ZsQNm-thjXJZlUofx67h9IKoLUUBV4piL6_HBPShBoQeYcQbnZmuIYepYYkOdI8VoO9YGJScB0YLhExABO5g",
+         "proofPurpose": "assertionMethod",
+         "type": "EcdsaSecp256k1Signature2019",
+         "verificationMethod": "did:dyne:admin:DMMYfDo7VpvKRHoJmiXvEpXrfbW3sCfhUBE4tBeXmNrJ#ecdh_public_key"
+      },
+      "verificationMethod":[
+         {
+            "controller":"did:dyne:admin:DMMYfDo7VpvKRHoJmiXvEpXrfbW3sCfhUBE4tBeXmNrJ",
+            "id":"did:dyne:admin:DMMYfDo7VpvKRHoJmiXvEpXrfbW3sCfhUBE4tBeXmNrJ#ecdh_public_key",
+            "publicKeyBase58":"RgeFFa3E245tR9fRTzUWDzn7VCX4NZQXuko69JaxPrN3wG59VYkjijzduHi3CBVXGejp5MgBUWPCYgaFmA4YUBGd",
+            "type":"EcdsaSecp256k1VerificationKey2019"
+         },
+         {
+            "controller":"did:dyne:admin:DMMYfDo7VpvKRHoJmiXvEpXrfbW3sCfhUBE4tBeXmNrJ",
+            "id":"did:dyne:admin:DMMYfDo7VpvKRHoJmiXvEpXrfbW3sCfhUBE4tBeXmNrJ#reflow_public_key",
+            "publicKeyBase58":"6haJ6HKw2WKuS6TzbxGyJFvDWwui3fWWchpXjuNhTRiivPGF3FQP4FF1bJBHd3cSsA7cnymmBgwRwLzdkVvTePLXbcje97ZSu1GrvvVYcfEfq5XQHbZFN9ThxUp4VApPMAY8DzufVcLJaMAqP29itvz5gSzXw4WvsJoBgtujBz5b4LT3CgX425CpmyLEwNDgNnhR3vXMxSDT2QxuwtKDAFUHUDCkULDcmFxkox5S2JTWmjEyMpmw97SrXKTcwRQdu9vr2M",
+            "type":"ReflowBLS12381VerificationKey"
+         },
+         {
+            "controller":"did:dyne:admin:DMMYfDo7VpvKRHoJmiXvEpXrfbW3sCfhUBE4tBeXmNrJ",
+            "id":"did:dyne:admin:DMMYfDo7VpvKRHoJmiXvEpXrfbW3sCfhUBE4tBeXmNrJ#bitcoin_public_key",
+            "publicKeyBase58":"yWG2QEZqPeAPez39qZf6vpCkmse8oz4UmhD4nWkyCT13",
+            "type":"EcdsaSecp256k1VerificationKey2019"
+         },
+         {
+            "controller":"did:dyne:admin:DMMYfDo7VpvKRHoJmiXvEpXrfbW3sCfhUBE4tBeXmNrJ",
+            "id":"did:dyne:admin:DMMYfDo7VpvKRHoJmiXvEpXrfbW3sCfhUBE4tBeXmNrJ#eddsa_public_key",
+            "publicKeyBase58":"DMMYfDo7VpvKRHoJmiXvEpXrfbW3sCfhUBE4tBeXmNrJ",
+            "type":"Ed25519VerificationKey2018"
+         },
+         {
+            "blockchainAccountId":"eip155:1:0x9a31eb5778e6105a252eee9214767828a72d5672",
+            "controller":"did:dyne:admin:DMMYfDo7VpvKRHoJmiXvEpXrfbW3sCfhUBE4tBeXmNrJ",
+            "id":"did:dyne:admin:DMMYfDo7VpvKRHoJmiXvEpXrfbW3sCfhUBE4tBeXmNrJ#ethereum_address",
+            "type":"EcdsaSecp256k1RecoveryMethod2020"
+         }
+      ]
+   },
+   "not_signer_did_document": {
+      "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/ed25519-2018/v1",
+        "https://w3id.org/security/suites/secp256k1-2019/v1",
+        "https://w3id.org/security/suites/secp256k1-2020/v1",
+        "https://dyne.github.io/W3C-DID/specs/ReflowBLS12381.json",
+        {
+          "description": "https://schema.org/description"
+        }
+      ],
+      "description": "Alice",
+      "id": "did:dyne:sandbox:Vi4hPJiRikEBeB45pdb1FBQSEXmNiPe3CSk24KaGUC2",
+      "proof": {
+        "created": "1671820405629",
+        "jws": "eyJhbGciOiJFUzI1NksiLCJiNjQiOnRydWUsImNyaXQiOiJiNjQifQ..8BAEgVTCR4H_8mzsGg5ty9tEvAByIaJRDk6d-R-d7wWVGcHDNAMUrt5kZ_WkTaSUmku0x8oYLzLXWwV9pmS1JA",
+        "proofPurpose": "assertionMethod",
+        "type": "EcdsaSecp256k1Signature2019",
+        "verificationMethod": "did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ#ecdh_public_key"
+      },
+      "verificationMethod": [
+        {
+          "controller": "did:dyne:sandbox:Vi4hPJiRikEBeB45pdb1FBQSEXmNiPe3CSk24KaGUC2",
+          "id": "did:dyne:sandbox:Vi4hPJiRikEBeB45pdb1FBQSEXmNiPe3CSk24KaGUC2#ecdh_public_key",
+          "publicKeyBase58": "NSJpR4i2XF5vFRLW1r9V6Qt4q9rsZQDyV34bxdVUovmcR2k6eoQKWvhSFupAy3S7ie9pD74oXECNQauVLfqd2Yow",
+          "type": "EcdsaSecp256k1VerificationKey2019"
+        },
+        {
+          "controller": "did:dyne:sandbox:Vi4hPJiRikEBeB45pdb1FBQSEXmNiPe3CSk24KaGUC2",
+          "id": "did:dyne:sandbox:Vi4hPJiRikEBeB45pdb1FBQSEXmNiPe3CSk24KaGUC2#reflow_public_key",
+          "publicKeyBase58": "4g7G5RJRXiSPytBPPXgYstRMNm4t1tPFD9M99njKW6A2ggJr8N3bJjnML63xVXcMxwBoW3NtuoHeq17tLos88EngBHnfkDPZvPnQ9akC9TbG7u8kPx4YGd15Q7zqcn28PrhA64chMbjxeadXeMJZyfJ18AJMNB8VBWwpNH8GbA9W7Lvd1QkCoGBMSLDMs8zr83sA2NUGVuNYEpTXUccZdDqg4cvUgKb9xEWGJMwio6bmchDfU5Af6hXBBtHMhVoKLXP7WD",
+          "type": "ReflowBLS12381VerificationKey"
+        },
+        {
+          "controller": "did:dyne:sandbox:Vi4hPJiRikEBeB45pdb1FBQSEXmNiPe3CSk24KaGUC2",
+          "id": "did:dyne:sandbox:Vi4hPJiRikEBeB45pdb1FBQSEXmNiPe3CSk24KaGUC2#bitcoin_public_key",
+          "publicKeyBase58": "hQV8K74jNTMvN6mzXRHbgxHxsyGd1VAypqPQbJT4ZPSW",
+          "type": "EcdsaSecp256k1VerificationKey2019"
+        },
+        {
+          "controller": "did:dyne:sandbox:Vi4hPJiRikEBeB45pdb1FBQSEXmNiPe3CSk24KaGUC2",
+          "id": "did:dyne:sandbox:Vi4hPJiRikEBeB45pdb1FBQSEXmNiPe3CSk24KaGUC2#eddsa_public_key",
+          "publicKeyBase58": "Vi4hPJiRikEBeB45pdb1FBQSEXmNiPe3CSk24KaGUC2",
+          "type": "Ed25519VerificationKey2018"
+        },
+        {
+          "blockchainAccountId": "eip155:1:0x18ad3e39ee80842982c8a104b3cce8cb8720dd50",
+          "controller": "did:dyne:sandbox:Vi4hPJiRikEBeB45pdb1FBQSEXmNiPe3CSk24KaGUC2",
+          "id": "did:dyne:sandbox:Vi4hPJiRikEBeB45pdb1FBQSEXmNiPe3CSk24KaGUC2#ethereum_address",
+          "type": "EcdsaSecp256k1RecoveryMethod2020"
+        }
+      ]
+    }
+}
+EOF
+    cat <<EOF | zexe verify_did_doc.zen did_documents.json
+Scenario 'w3c': did document manipulation
+Scenario 'ecdh': ecdh pk
+
+Given I have a 'did document' named 'did_document'
+Given I have a 'did document' named 'signer_did_document'
+
+When I verify the did document named 'did_document' is signed by 'signer_did_document'
+
+Then print the string 'did document verified'
+EOF
+    save_output verify_did_doc.json
+    assert_output '{"output":["did_document_verified"]}'
+
+cat <<EOF > verify_wrong_did_doc.zen
+Scenario 'w3c': did document manipulation
+
+Given I have a 'did document' named 'did_document'
+Given I have a 'did document' named 'not_signer_did_document'
+
+When I verify the did document named 'did_document' is signed by 'not_signer_did_document'
+
+Then print the string 'should not be verified'
+EOF
+    run $ZENROOM_EXECUTABLE -a did_documents.json -z verify_wrong_did_doc.zen
+    assert_failure
+}
