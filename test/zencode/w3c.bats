@@ -423,3 +423,89 @@ EOF
     run $ZENROOM_EXECUTABLE -a valid_id.json -z did_document_parsing.zen
     assert_success
 }
+
+@test "create the 'public key' from 'did document'" {
+    cat <<EOF > did_document.json
+    {
+    "didDocument":{
+      "@context":[
+         "https://www.w3.org/ns/did/v1",
+         "https://w3id.org/security/suites/ed25519-2018/v1",
+         "https://w3id.org/security/suites/secp256k1-2019/v1",
+         "https://w3id.org/security/suites/secp256k1-2020/v1",
+         "https://dyne.github.io/W3C-DID/specs/ReflowBLS12381.json",
+         {
+            "description":"https://schema.org/description"
+         }
+      ],
+      "description":"fake sandbox-admin",
+      "id":"did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ",
+      "verificationMethod":[
+         {
+            "controller":"did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ",
+            "id":"did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ#ecdh_public_key",
+            "publicKeyBase58":"S1bs1YRaGcfeUjAQh3jigvAXuV8bff2AHjERoHaBPKtBLnXLKDcGPrnB4j5bY8ZHVu9fQGkUW5XzDa9bdhGYbjPf",
+            "type":"EcdsaSecp256k1VerificationKey2019"
+         },
+         {
+            "controller":"did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ",
+            "id":"did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ#reflow_public_key",
+            "publicKeyBase58":"9kPV92zSUok2Do2RJKx3Zn7ZY9WScvBZoorMQ8FRcoH7m1eo3mAuGJcrSpaw1YrSKeqAhJnpcFdQjLhTBEve3qvwGe7qZsam3kLo85CpTM84TaEnxVyaTZVYxuY4ytmGX2Yz1scayfSdJYASvn9z12VnmC8xM3D1cXMHNDN5zMkLZ29hgq631ssT55UQif6Pj371HUC5g6u2xYQ2mGYiQ6bQt1NWSMJDzzKTr9y7bEMPKq5bDfYEBab6a4fzk6Aqixr1P3",
+            "type":"ReflowBLS12381VerificationKey"
+         },
+         {
+            "controller":"did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ",
+            "id":"did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ#bitcoin_public_key",
+            "publicKeyBase58":"rjXTCrGHFMtQhfnPMZz5rak6DDAtavVTrv2AEMXvZSBj",
+            "type":"EcdsaSecp256k1VerificationKey2019"
+         },
+         {
+            "controller":"did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ",
+            "id":"did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ#eddsa_public_key",
+            "publicKeyBase58":"8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ",
+            "type":"Ed25519VerificationKey2018"
+         },
+         {
+            "blockchainAccountId":"eip155:1:0xd3765bb6f5917d1a91adebadcfad6c248e721294",
+            "controller":"did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ",
+            "id":"did:dyne:sandbox.A:8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ#ethereum_address",
+            "type":"EcdsaSecp256k1RecoveryMethod2020"
+         }
+      ]
+    }
+}
+EOF
+    cat <<EOF | zexe pk_from_doc.zen did_document.json
+Scenario 'w3c': did document manipulation
+Scenario 'ecdh': ecdh pk
+Scenario 'eddsa': eddsa pk
+Scenario 'reflow': reflow pk
+Scenario 'ethereum': ethereum add
+
+Given I have a 'did document' named 'didDocument'
+
+When I create the 'ecdh' public key from did document 'didDocument'
+When I create the 'reflow' public key from did document 'didDocument'
+When I create the 'bitcoin' public key from did document 'didDocument'
+When I create the 'eddsa' public key from did document 'didDocument'
+
+When I remove 'didDocument'
+
+Then print the data
+EOF
+    save_output pk_from_doc.json
+    assert_output '{"bitcoin_public_key":"AuLxfD6ec7hwAwX2TmHiZJa/+vfGxA+BCiVEjLh0X/GC","ecdh_public_key":"BOLxfD6ec7hwAwX2TmHiZJa/+vfGxA+BCiVEjLh0X/GCXfYCH39vIGurbqpW2SzIQQ/6wkBpNCwaJio73SP3eao=","eddsa_public_key":"8REPQXUsFmaN6avGN6aozQtkhLNC9xUmZZNRM7u2UqEZ","reflow_public_key":"ELPfkkW1UMdCeN6Q/e58J0C9CFAVZ/H5S+RBZpTK5i4QY7QSo4+dz21VQhuuOY9/CBMvYX8rdLldfJ6QaWZe7J9D7Ut9r01YZ6Do7cleVHLp77Z4jr/UyqNCi12xofzLBCpA6vJUd+udreSzKtomYxd0M/XzqUbd96v5Nc0SEsb3UxusIQyMDp0hG1eYw28UDcCaV6yYKZFM4pb2p571+aGNt9ziupy9ZydgxuKx5245jCw8CNoHBbgn+XwrwP02"}'
+
+cat <<EOF > pk_from_doc_not_exist.zen
+Scenario 'w3c': did document manipulation
+Scenario 'schnorr': schnorr pk
+
+Given I have a 'did document' named 'didDocument'
+
+When I create the 'schnorr' public key from did document 'didDocument'
+
+Then print the data
+EOF
+    run $ZENROOM_EXECUTABLE -a did_document.json -z pk_from_doc_not_exist.zen
+    assert_failure
+}
