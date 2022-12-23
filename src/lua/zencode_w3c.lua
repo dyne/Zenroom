@@ -297,3 +297,24 @@ When(
                                           encoding = 'complex' })
     end
 )
+
+When(
+    "create the '' public key from did document ''",
+    function(algo, did_doc)
+        local doc = have (did_doc)
+        local pk_name = algo..'_public_key'
+        empty (pk_name)
+        ZEN.assert(doc.verificationMethod, 'verificationMethod not found in '..did_doc)
+        local id = doc.id..O.from_string('#'..pk_name)
+        local i = 1
+        repeat
+            if doc.verificationMethod[i].id == id then
+                ACK[pk_name] = O.from_base58(O.to_string((doc.verificationMethod[i].publicKeyBase58)))
+            end
+            i = i+1
+        until( ( not doc.verificationMethod[i] ) or ACK[pk_name] )
+        ZEN.assert(ACK[pk_name], pk_name..' not found in the did document '..did_doc)
+        ZEN.CODEC[pk_name] = guess_conversion(ACK[pk_name], pk_name)
+        ZEN.CODEC[pk_name].name = pk_name
+    end
+)
