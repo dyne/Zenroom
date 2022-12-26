@@ -1,0 +1,65 @@
+name: Create and publish binary builds
+
+on:
+  push:
+    branches:
+      - 'master'
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - 'master'
+      - 'binary-builds'
+
+jobs:
+  build-on-ubuntu:
+    name: 🐧 Binary builds on Ubuntu
+    runs-on: ubuntu-latest
+    needs: [semantic-release]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Install build deps
+        run: |
+          sudo apt install zsh jq cmake make gcc g++ musl-dev meson clang
+      - name: Build mimalloc
+        run: make mimalloc
+      - name: Build x86_64 with musl-system
+        run: make musl-system
+      - name: Upload artifact linux-amd64
+        uses: actions/upload-artifact@v3
+        with:
+          name: zenroom-linux-amd64
+          path: src/zenroom
+
+      - name: Clean for next build
+        run: make clean
+
+      - name: Build x86_64 shlib
+        run: make linux-meson-clang-release
+      - name: Upload artifact linux-lib-amd64
+        uses: actions/upload-artifact@v3
+        with:
+          name: libzenroom-linux-amd64
+          path: |
+            meson/libzenroom.a
+            meson/libzenroom.so
+        
+  pack-release:
+    name: 📦 Pack release
+    needs: [build-on-ubuntu]
+    runs-on: ubuntu-latest
+    steps:
+      - name: download binary artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: zenroom-bin
+      - name: relase all binary artifacts
+        uses: softprops/action-gh-release@v1
+        with:
+          files: zenroom-bin/**
+          tag_name: 3.0.0-test-release
+          draft: true
+          prerelease: true
+          fail_on_unmatched_files: true
+
