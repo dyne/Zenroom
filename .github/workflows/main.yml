@@ -505,7 +505,7 @@ jobs:
 
   draft-binary-release:
     name: 📦 Pack release
-    needs: [build-release-on-ubuntu]
+    needs: [semantic-release, build-release-on-ubuntu]
     runs-on: ubuntu-latest
     steps:
       - name: download binary artifacts
@@ -520,7 +520,7 @@ jobs:
         with:
           files: |
             zenroom-bin/release*/*
-          tag_name: ${{ steps.tag_release.outputs.release }}
+          tag_name: ${{ needs.semantic-release.outputs.release }}
           draft: true
           prerelease: true
           fail_on_unmatched_files: true
