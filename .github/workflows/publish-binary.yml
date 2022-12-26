@@ -15,7 +15,6 @@ jobs:
   build-on-ubuntu:
     name: 🐧 Binary builds on Ubuntu
     runs-on: ubuntu-latest
-    needs: [semantic-release]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
