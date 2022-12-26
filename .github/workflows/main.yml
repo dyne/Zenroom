@@ -511,10 +511,11 @@ jobs:
       - name: download binary artifacts
         uses: actions/download-artifact@v3
         with:
-          files: |
+          name: |
             release-bin-linux-amd64
             release-lib-linux-amd64
-          path: zenroom-bin
+          path: |
+            zenroom-bin
       - name: relase all binary artifacts
         uses: softprops/action-gh-release@v1
         with:
