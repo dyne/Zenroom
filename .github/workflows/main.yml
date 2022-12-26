@@ -488,7 +488,7 @@ jobs:
       - name: Upload artifact linux-amd64
         uses: actions/upload-artifact@v3
         with:
-          name: zenroom-linux-amd64
+          name: release-bin-linux-amd64
           path: |
             src/zenroom
       - name: Clean for next build
@@ -498,7 +498,7 @@ jobs:
       - name: Upload artifact linux-lib-amd64
         uses: actions/upload-artifact@v3
         with:
-          name: libzenroom-linux-amd64
+          name: release-lib-linux-amd64
           path: |
             meson/libzenroom.a
             meson/libzenroom.so
@@ -511,11 +511,15 @@ jobs:
       - name: download binary artifacts
         uses: actions/download-artifact@v3
         with:
+          files: |
+            release-bin-linux-amd64
+            release-lib-linux-amd64
           path: zenroom-bin
       - name: relase all binary artifacts
         uses: softprops/action-gh-release@v1
         with:
-          files: zenroom-bin/*
+          files: |
+            zenroom-bin/release*/*
           tag_name: ${{ steps.tag_release.outputs.release }}
           draft: true
           prerelease: true
