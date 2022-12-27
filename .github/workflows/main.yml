@@ -535,6 +535,8 @@ jobs:
           files: |
             zenroom-bin/release*/*
           tag_name: ${{ needs.semantic-release.outputs.version }}
+          body_path: build/release-intro.md
+          append_body: true
           draft: false
           prerelease: false
           fail_on_unmatched_files: true
