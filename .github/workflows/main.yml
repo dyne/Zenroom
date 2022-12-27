@@ -480,6 +480,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+      - name: Upload release docs artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: documentation
+          path: |
+            build/release-intro.md
       - name: Install build deps
         run: |
           sudo apt install zsh tree jq cmake make gcc g++ musl-dev meson clang gcc-mingw-w64 g++-mingw-w64
@@ -537,7 +543,7 @@ jobs:
           files: |
             zenroom-bin/release*/*
           tag_name: ${{ needs.semantic-release.outputs.version }}
-          body_path: zenroom/build/release-intro.md
+          body_path: zenroom-bin/documentation/release-intro.md
           append_body: true
           draft: false
           prerelease: false
