@@ -141,8 +141,12 @@ big* big_new(lua_State *L) {
 big* big_arg(lua_State *L,int n) {
 	Z(L);
 	big* result = (big*)malloc(sizeof(big));
+	strcpy(result->name,"big384");
+	result->chunksize = CHUNK;
+	result->doublesize = 0;
 	result->val = NULL;
 	result->dval = NULL;
+	result->zencode_positive = BIG_POSITIVE;
 	void *ud = luaL_testudata(L, n, "zenroom.big");
 	if(ud) {
 		*result = *(big*)ud;
