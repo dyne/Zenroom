@@ -3,7 +3,7 @@
 LIB := libed25519.a
 OBJECTS := ed25519.o
 RM ?= rm
-CFLAGS := ${CFLAGS} -DED25519_REFHASH -DED25519_TEST
+CFLAGS := ${CFLAGS} -I../milagro-crypto-c/build/include -DED25519_CUSTOMHASH -DED25519_TEST
 # TODO: in future this condition may have to change for
 # other x64 operating systems (e.g. iOS)
 UNAME_S := $(shell uname -s)
