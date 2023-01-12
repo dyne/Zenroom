@@ -1,0 +1,33 @@
+# Copyright 2017-2023 Dyne.org foundation
+# SPDX-FileCopyrightText: 2017-2021 Dyne.org foundation
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+
+
+[**/*.[ch]]
+indent_style = tab
+indent_size = 8
+
+[Makefile]
+indent_style = tab
+
+[src/lua/*.lua]
+indent_style = space
+indent_size = 4
+
+[test/**.lua]
+indent_style = space
+indent_size = 4
+
+[src/lua/crypto_ethereum.lua]
+indent_style = space
+indent_size = 3
+
+[src/lua/zencode.lua]
+indent_style = tab
+indent_size = 4
