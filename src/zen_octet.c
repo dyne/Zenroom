@@ -681,13 +681,17 @@ static int from_hex(lua_State *L) {
 		if((len&1)==1) { // odd length means elision
 			s[1]='0'; // overwrite a single byte in const
 			o->len = hex2buf(o->val, s+1);
-			END(1);
 		} else {
 			o->len = hex2buf(o->val, s+2);
-			END(1);
 		}
+	} else {
+		o->len = hex2buf(o->val,s);
 	}
-	o->len = hex2buf(o->val,s);
+	if(o->len < 0) {
+		zerror(L, "%s :: Invalid octet in hex string", __func__);
+		lerror(L, "operation aborted");
+		lua_pushnil(L);
+	}
 	END(1);
 }
 
