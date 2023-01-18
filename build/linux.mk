@@ -60,6 +60,11 @@ linux-debug: ${BUILDS}
 	$(MAKE) -C src linux-debug
 	@cp -v src/zenroom build/zenroom
 
+linux-asan: ${BUILDS}
+	CC="${gcc}" AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
+	$(MAKE) -C src linux-debug
+	@cp -v src/zenroom build/zenroom
+
 linux-debug-ccache: ${BUILDS}
 	CC="${gcc}" AR="${ar}"  CFLAGS="${cflags}" LDFLAGS="${ldflags}" LDADD="${ldadd}" \
 	$(MAKE) -C src linux-debug
