@@ -25,4 +25,5 @@ load ../bats_setup
     Z w3c-vc.lua
     Z coconut_preference.lua
     Z ethereum.lua
+    Z bbs.lua
 }
