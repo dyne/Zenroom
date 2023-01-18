@@ -18,6 +18,12 @@ run-meson:
 	-Decdh_curve=${ecdh_curve} -Decp_curve=${ecp_curve} \
 	-Ddefault_library=both build meson
 
+asan-meson:
+	CC="clang" CXX="clang++" AR="llvm-ar"  CFLAGS="-fsanitize=address -fno-omit-frame-pointer" LDFLAGS="-fsanitize=address ${ldflags}" LDADD="${ldadd}" \
+	meson -Dexamples=false -Ddocs=false -Doptimization=0 \
+	-Decdh_curve=${ecdh_curve} -Decp_curve=${ecp_curve} \
+	-Ddefault_library=both -Db_sanitize=address build meson
+
 meson: linux-meson
 meson-ccache: linux-meson
 meson-debug:  linux-meson
@@ -38,6 +44,9 @@ linux-meson-debug: ${TARGETS} prepare-meson run-meson
 	ninja -C meson
 
 linux-meson-clang-debug: ${TARGETS} prepare-meson run-meson
+	ninja -C meson
+
+linux-meson-asan: ${TARGETS} prepare-meson asan-meson
 	ninja -C meson
 
 meson-test:

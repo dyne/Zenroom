@@ -243,6 +243,21 @@ mimalloc_cflags += -DMI_DEBUG_FULL
 cflags := -Og -ggdb -DDEBUG=1 -Wall -Wextra -pedantic ${defines}
 endif
 
+ifneq (,$(findstring asan,$(MAKECMDGOALS)))
+gcc := /usr/lib/llvm-11/bin/clang
+g++ := /usr/lib/llvm-11/bin/clang++
+ar := /usr/lib/llvm-11/bin/llvm-ar
+ranlib := /usr/lib/llvm-11/bin/llvm-ranlib
+ld := /usr/lib/llvm-11/bin/llvm-link
+mimalloc_cmake_flags += -DCMAKE_BUILD_TYPE=Debug
+mimalloc_cflags += -DMI_DEBUG_FULL -fno-omit-frame-pointer -fsanitize=address
+milagro_cmake_flags += -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS_DEBUG="${CMAKE_C_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address" -DCMAKE_LINKER_FLAGS_DEBUG="${CMAKE_LINKER_FLAGS_DEBUG} -fsanitize=address"
+cflags := -Og -ggdb -DDEBUG=1 -Wall -Wextra -pedantic -fno-omit-frame-pointer -fsanitize=address ${defines}
+ldflags += -fsanitize=address -lstatic-libasan
+ldadd += -lasan
+endif
+
+
 ifneq (,$(findstring profile,$(MAKECMDGOALS)))
 cflags := -Og -ggdb -pg -DDEBUG=1 ${defines}
 endif
