@@ -47,3 +47,11 @@ for k,v in pairs(hkdf_tests) do
     print("Test Case " .. k)
     run_test_hkdf(v)
 end
+
+-- Key Pair
+local ikm = O.from_hex('746869732d49532d6a7573742d616e2d546573742d494b4d2d746f2d67656e65726174652d246528724074232d6b6579')
+local sk = bbs.keygen(ikm)
+I.spy(sk)
+--assert(sk == BIG.new(O.from_hex('47d2ede63ab4c329092b342ab526b1079dbc2595897d4f2ab2de4d841cbe7d56')))
+--sk = BIG.new(O.from_hex('47d2ede63ab4c329092b342ab526b1079dbc2595897d4f2ab2de4d841cbe7d56'))
+--I.spy(bbs.sk2pk(sk))
