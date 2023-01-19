@@ -105,14 +105,13 @@ int is_base64(const char *in) {
 	// check b64: header
 	// if(in[0]!='b' || in[1]!='6' || in[2]!='4' || in[3]!=':') return 0;
 	// check all valid characters
-	for(c=4; in[c]!='\0'; c++) {
+	for(c=0; in[c]!='\0'; c++) {
 		if (!(isalnum(in[c])
 			  || '+' == in[c]
 			  || '=' == in[c]
 			  || '/' == in[c])) {
 			return 0; }
 	}
-	if(c%4 != 0) return 0; // always multiple of 4
 	return c;
 }
 
