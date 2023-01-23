@@ -19,20 +19,9 @@ BLAKE2_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/blake2')
 MIMALLOC_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/mimalloc/include')
 
 def get_versions():
-    # performed in ZENROOM_ROOT
-    # first char is v, last one is a newline
-    python_version = subprocess.run(['git', 'describe', '--tags', '--abbrev=0'],
-                                     stdout=subprocess.PIPE).stdout.decode('utf-8').strip('v\n')
-    zenroom_version = python_version
-    branch = subprocess.run(['git', 'rev-parse', '--abbrev-ref', 'HEAD'],
-                            stdout=subprocess.PIPE).stdout.decode('utf-8')
-    if branch.strip() != "master":
-        hash = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'],
-                              stdout=subprocess.PIPE).stdout.decode('utf-8')
-        time = subprocess.run(['git', 'show', '-s', '--format=%ct', 'HEAD'],
-                              stdout=subprocess.PIPE).stdout.decode('utf-8')
-        zenroom_version += '+'+hash[:-1]
-        python_version += '.dev'+time[:-1]
+    with open(os.path.join(ZENROOM_ROOT, 'git_utils')) as f:
+        zenroom_version = f.readline().strip('\n')
+        python_version = f.readline().strip('\n')
     return python_version, zenroom_version
 
 
