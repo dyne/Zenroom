@@ -226,7 +226,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: mymindstorm/setup-emsdk@v11
+      - uses: mymindstorm/setup-emsdk@v12
         with:
           version: ${{ env.EM_VERSION }}
       - run: sudo apt-get update; sudo apt-get install zsh meson ninja-build
@@ -333,7 +333,9 @@ jobs:
         with:
           ref: master
           fetch-depth: 0
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
       - uses: docker/setup-qemu-action@v2
         if: runner.os == 'Linux'
         with:
