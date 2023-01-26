@@ -1,93 +1,96 @@
 # Make ❤️  with Zenroom and Javascript (part 3)
 
 
-## Howto use Zenroom with React
 
-We all know, React is one of the most adopted frameworks for client-side nowadays. Even if we have an open debate with Facebook that tried to undermine our project, read here the whole story, by stealing from us and take advantage for his Calibra/Libra stuff.
+## 🏹 Let’s create a encrypt/decrypt service
+So you have just experimented how to encrypt and decrypt a message with a password/secret with ECDH (Elliptic-curve Diffie–Hellman) on the elliptic curve SECP256K1 in Plain Javascript (Did you? No? Then, jump back to [Zenroom in the browser](zenroom-javascript2b)).
 
-Anyhow having React working with WASM is not as straightforward as it seems and there are several attempts and several ways to achieve it (try to search on the web: wasm + react)
+Now let's add some interactivity and see how we can play and interact with Zencode smart contracts within React.
 
-What we propose here is, in our opinion, the more pragmatic way with less steps freely inspired by [Marvin Irwin's article](https://medium.com/@marvin_78330/webassembly-react-and-create-react-app-8b73346c9b65).
 
-## 🎮 Let’s get our hands dirty
+## 💻 Let’s get our hands dirty
 
 Let’s start by creating a standard React project with the [CRA](https://reactjs.org/docs/create-a-new-react-app.html) tool, and add Zenroom as a dependency
 
 ```bash
 npx create-react-app zenroom-react-test
-cd zenroom-react-test
-yarn add zenroom
 ```
 
-So now we have to know that the `create-react-app` is not able to bundle by default the `.wasm` binary file, so the twearky solution to this is serving it as a static file, hence we are going to
+You should now have into `zencode-encrypt` a file structure like this
+
 
 ```bash
-cd public
-ln -s ../node_modules/zenroom/dist/lib/zenroom.wasm .
+.
+├── README.md
+├── package.json
+├── public
+│   ├── favicon.ico
+│   ├── index.html
+│   ├── logo192.png
+│   ├── logo512.png
+│   ├── manifest.json
+│   └── robots.txt
+├── src
+│   ├── App.css
+│   ├── App.js
+│   ├── App.test.js
+│   ├── index.css
+│   ├── index.js
+│   ├── logo.svg
+│   ├── reportWebVitals.js
+│   └── setupTests.js
+└── yarn.lock
 ```
 
-link it in our `/public` folder.
-This means that when we are going to start the webserver it will serve the file under `/zenroom.wasm` (cause we put it in the root directory)
 
-But now our glue code (look at the previous post entry if you don’t know about the glue code) doesn’t have the correct address to resolve the binary we have to change a couple of lines in `node_modules/zenroom/dist/lib/zenroom.js` file.
+Let's add **zenroom** as a dependency
 
-Open the file and search for the string `zenroom.wasm`. Then change the lines
-
-from this
-
-```javascript
-var wasmBinaryFile = 'zenroom.wasm';
-if (!isDataURI(wasmBinaryFile)) {
-  wasmBinaryFile = locateFile(wasmBinaryFile);
-}
+```bash
+$ yarn add — dev zenroom@next
+yarn add v1.22.10
+[1/4] 🔍 Resolving packages…
+[2/4] 🚚 Fetching packages…
+[3/4] 🔗 Linking dependencies…
+[4/4] 🔨 Building fresh packages…
+success Saved lockfile.
+success Saved 1 new dependency.
+info Direct dependencies
+└─ zenroom@2.2.0-f6d8035
+info All dependencies
+└─ zenroom@2.2.0-f6d8035
+✨ Done in 11.59s.
 ```
 
-to this
+
+We are now ready to start with our `hello world` smart contract!
+
+Edit the `App.js` as such:
+
+
 
 ```javascript
-var wasmBinaryFile = '/zenroom.wasm';
-if (!isDataURI(wasmBinaryFile)) {
-  // wasmBinaryFile = locateFile(wasmBinaryFile);
-}
-```
-
-we added an absolute path and commented the line that looks for the localFile that now is served as a public static one.
-
-Now we can start to use our zenroom js lib per needed by editing the `src/App.js` that will look like:
-
-```javascript
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
-
-import zenroom from 'zenroom'
-
-const keygen_contract = `rule check version 1.0.0
-Scenario 'ecdh': Create the keypair
-Given that I am known as 'Puria'
-When I create the keypair
-Then print my data`
-
-zenroom.script(keygen_contract).zencode_exec()
+import {useEffect, useState} from 'react'
+import {zencode_exec} from 'zenroom'
 
 function App() {
+  const [result, setResult] = useState("");
+
+  useEffect(() => {
+    const exec = async () => {
+      const smartContract = `Given that I have a 'string' named 'hello'
+                             Then print all data as 'string'`
+      const data = JSON.stringify({ hello: 'world!' })
+      const conf = 'memmanager=lw'
+      const {result} = await zencode_exec(smartContract, {data, conf});
+      setResult(result)
+    }
+
+    exec()
+  })
+
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <h1>{result}</h1>
   );
 }
 
@@ -100,9 +103,96 @@ and now if you run the server with
 yarn start
 ```
 
-The expected result is
 
-![Result of zenCode on React](https://www.dyne.org/wp-content/uploads/2019/10/Screenshot_2019-10-16_09-26-40-951x1024.png)
+You are good to go, open `http://localhost:3000/` and you should see something like: 
 
-Hoorayyy!!! 🥳🥳🥳 And with this now you are able to maybe create your `<Zencode>` or `<Zenroom>` components and endless creative and secure possibilities.
+
+![Result of zenCode on React](../_media/images/zenroom-react1.png)
+
+Hoorayyy!!!  You just run a Zencode smart contract in React with no fuss. 🥳🥳🥳 And with this now you are able to maybe create your `<Zencode>` or `<Zenroom>` components and endless creative and secure possibilities.
+
+
+## 🔏 Let’s complicate it a bit! Let’s encrypt!
+
+Now that we saw how the basics works, let’s proceed with some sophistication: let’s encrypt a message with a password/secret with **ECDH (Elliptic-curve Diffie–Hellman)** on the elliptic curve SECP256K1 sounds complicated, isn’t it?
+
+
+
+
+```javascript
+import { useEffect, useState } from "react";
+import { zencode_exec } from "zenroom";
+import { Form, FormGroup, Label, Input, Container } from "reactstrap";
+import ReactJson from "react-json-view";
+
+function App() {
+  const [result, setResult] = useState({});
+  const [message, setMessage] = useState("");
+  const [password, setPassword] = useState("");
+
+  useEffect(() => {
+    const conf = "memmanager=lw";
+    const encrypt = async (message, password) => {
+      if (!message || !password) return;
+      const keys = JSON.stringify({ password });
+      const data = JSON.stringify({ message });
+      const contract = `Scenario 'ecdh': Encrypt a message with a password/secret 
+        Given that I have a 'string' named 'password' 
+        and that I have a 'string' named 'message' 
+        When I encrypt the secret message 'message' with 'password' 
+        Then print the 'secret message'`;
+      const { result } = await zencode_exec(contract, { data, keys, conf });
+      setResult(JSON.parse(result));
+    };
+
+    encrypt(message, password);
+  }, [message, password]);
+
+  return (
+    <Container>
+      <Form>
+        <FormGroup>
+          <Label for="password">Password</Label>
+          <Input
+            type="text"
+            name="password"
+            id="password"
+            onChange={(e) => {
+              setPassword(e.target.value);
+            }}
+          />
+        </FormGroup>
+        <FormGroup>
+          <Label for="message">Message</Label>
+          <Input
+            type="textarea"
+            id="message"
+            onChange={(e) => {
+              setMessage(e.target.value);
+            }}
+          />
+        </FormGroup>
+      </Form>
+      <ReactJson src={result} />
+    </Container>
+  );
+}
+
+export default App;
+```
+
+Et voila 🤯 as easy as the hello the world! We added an encryption function, and some component to give some styling. If you run it you’ll get something like:
+
+
+<img src="../_media/images/zenroom-react2.gif" alt="drawing" width="1200"/>
+
+
+
+
+It's embarrassing fast, encryption with password over Elliptic-curve Diffie–Hellman on curve SECP256K1 in react! Now hold tight until next week for the part 4… in the meantime clap this post and spread it all over the socials. 
+
+One last thing, you’ll find the working code project on [Github](https://github.com/dyne/blog-code-samples/tree/master/zencode-javascript-series/part3-react)
+
+
+
 
