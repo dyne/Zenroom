@@ -292,9 +292,9 @@ EOF
 cat <<EOF | save_asset name_named_in.data
 {
 	"UserData": {
-	        "Sender": "Alice"
+	        "Sender": "Alice in wonderland"
 	},
-	"Alice": {
+	"Alice in wonderland": {
 		"keyring": {
 			"ecdh": "2mZDRS1rE4jT5EuozwZfbS+GLE7ogBfgWOr30wXoe3g="
 		}
@@ -311,7 +311,7 @@ Given that I have my 'keyring'
 Then print my 'keyring'
 EOF
     save_output 'name_named_in.json'
-    assert_output '{"Alice":{"keyring":{"ecdh":"2mZDRS1rE4jT5EuozwZfbS+GLE7ogBfgWOr30wXoe3g="}}}'
+    assert_output '{"Alice_in_wonderland":{"keyring":{"ecdh":"2mZDRS1rE4jT5EuozwZfbS+GLE7ogBfgWOr30wXoe3g="}}}'
 }
 
 

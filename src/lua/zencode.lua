@@ -416,7 +416,7 @@ function Iam(name)
 	if name then
 		ZEN.assert(not WHO, 'Identity already defined in WHO')
 		ZEN.assert(type(name) == 'string', 'Own name not a string')
-		WHO = name
+		WHO = uscore(name)
 	else
 		ZEN.assert(WHO, 'No identity specified in WHO')
 	end
