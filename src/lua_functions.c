@@ -35,7 +35,7 @@ int zen_unset(lua_State *L, char *key) {
 	return 0;
 }
 
-int zen_setenv(lua_State *L, char *key, char *val) {
+int zen_setenv(lua_State *L, const char *key, const char *val) {
 	if(!val) {
 		func(L, "setenv: NULL string detected");
 		return 1; }
