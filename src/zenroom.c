@@ -74,7 +74,7 @@ extern int zen_conf_parse(zenroom_t *ZZ, const char *configuration);
 extern void *zen_memory_manager(void *ud, void *ptr, size_t osize, size_t nsize);
 
 // prototypes from lua_functions.c
-extern int zen_setenv(lua_State *L, char *key, char *val);
+extern int zen_setenv(lua_State *L, const char *key, const char *val);
 extern void zen_add_function(lua_State *L, lua_CFunction func,
 		const char *func_name);
 
