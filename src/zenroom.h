@@ -21,20 +21,22 @@
 #ifndef __ZENROOM_H__
 #define __ZENROOM_H__
 
+#include <stddef.h>
+
 /////////////////////////////////////////
 // high level api: one simple call
 
-int zenroom_exec(char *script, char *conf, char *keys, char *data);
+int zenroom_exec(const char *script, const char *conf, const char *keys, const char *data);
 
-int zencode_exec(char *script, char *conf, char *keys, char *data);
+int zencode_exec(const char *script, const char *conf, const char *keys, const char *data);
 
 // in case buffers should be used instead of stdout/err file
 // descriptors, this call defines where to print out the output and
 // the maximum sizes allowed for it. Output is NULL terminated.
-int zenroom_exec_tobuf(char *script, char *conf, char *keys, char *data,
+int zenroom_exec_tobuf(const char *script, const char *conf, const char *keys, const char *data,
                        char *stdout_buf, size_t stdout_len,
                        char *stderr_buf, size_t stderr_len);
-int zencode_exec_tobuf(char *script, char *conf, char *keys, char *data,
+int zencode_exec_tobuf(const char *script, const char *conf, const char *keys, const char *data,
                        char *stdout_buf, size_t stdout_len,
                        char *stderr_buf, size_t stderr_len);
 
@@ -112,7 +114,7 @@ typedef struct {
 #define ERR_GENERIC 1 // EXIT_FAILURE
 #define SUCCESS 0 // EXIT_SUCCESS
 
-zenroom_t *zen_init(const char *conf, char *keys, char *data);
+zenroom_t *zen_init(const char *conf, const char *keys, const char *data);
 int  zen_exec_script(zenroom_t *Z, const char *script);
 int  zen_exec_zencode(zenroom_t *Z, const char *script);
 void zen_teardown(zenroom_t *zenroom);

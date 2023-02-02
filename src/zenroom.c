@@ -155,7 +155,7 @@ int zen_init_pmain(lua_State *L) { // protected mode init
 #include <lstate.h>
 // initializes globals: Z, L (in this order)
 // zen_init_pmain is the Lua routine executed in protected mode
-zenroom_t *zen_init(const char *conf, char *keys, char *data) {
+zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 
 #ifdef MIMALLOC
   mi_stats_reset();
@@ -394,7 +394,7 @@ int zen_exec_script(zenroom_t *ZZ, const char *script) {
 	return ZZ->exitcode;
 }
 
-int _check_script_arg(char *s) {
+int _check_script_arg(const char *s) {
   if(!s) {
     _err( "NULL string as script argument");
     _err( "Execution aborted");
@@ -459,11 +459,11 @@ int _check_zenroom_result(zenroom_t *zz, int res) {
   return(exitcode);
 }
 
-int zencode_exec(char *script, char *conf, char *keys, char *data) {
+int zencode_exec(const char *script, const char *conf, const char *keys, const char *data) {
 
 	if (_check_script_arg(script) != SUCCESS) return ERR_INIT;
 
-	char *c, *k, *d;
+	const char *c, *k, *d;
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
@@ -474,11 +474,11 @@ int zencode_exec(char *script, char *conf, char *keys, char *data) {
 	return( _check_zenroom_result(Z, zen_exec_zencode(Z, script) ));
 }
 
-int zenroom_exec(char *script, char *conf, char *keys, char *data) {
+int zenroom_exec(const char *script, const char *conf, const char *keys, const char *data) {
 
 	if (_check_script_arg(script) != SUCCESS) return ERR_INIT;
 
-	char *c, *k, *d;
+	const char *c, *k, *d;
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
@@ -489,13 +489,13 @@ int zenroom_exec(char *script, char *conf, char *keys, char *data) {
 	return( _check_zenroom_result(Z, zen_exec_script(Z, script) ));
 }
 
-int zencode_exec_tobuf(char *script, char *conf, char *keys, char *data,
+int zencode_exec_tobuf(const char *script, const char *conf, const char *keys, const char *data,
 		char *stdout_buf, size_t stdout_len,
 		char *stderr_buf, size_t stderr_len) {
 
 	if (_check_script_arg(script) != SUCCESS) return ERR_INIT;
 
-	char *c, *k, *d;
+	const char *c, *k, *d;
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
@@ -513,13 +513,13 @@ int zencode_exec_tobuf(char *script, char *conf, char *keys, char *data,
 }
 
 
-int zenroom_exec_tobuf(char *script, char *conf, char *keys, char *data,
+int zenroom_exec_tobuf(const char *script, const char *conf, const char *keys, const char *data,
 		char *stdout_buf, size_t stdout_len,
 		char *stderr_buf, size_t stderr_len) {
 
 	if (_check_script_arg(script) != SUCCESS) return ERR_INIT;
 
-	char *c, *k, *d;
+	const char *c, *k, *d;
 	c = conf ? (conf[0] == '\0') ? NULL : conf : NULL;
 	k = keys ? (keys[0] == '\0') ? NULL : keys : NULL;
 	d = data ? (data[0] == '\0') ? NULL : data : NULL;
