@@ -57,10 +57,10 @@ fn aquire_zen_gil() -> ZenGIL {
 const BUF_SIZE: usize = 2 * 1024 * 1024;
 
 type Fun = unsafe extern "C" fn(
-    *mut ::std::os::raw::c_char,
-    *mut ::std::os::raw::c_char,
-    *mut ::std::os::raw::c_char,
-    *mut ::std::os::raw::c_char,
+    *const ::std::os::raw::c_char,
+    *const ::std::os::raw::c_char,
+    *const ::std::os::raw::c_char,
+    *const ::std::os::raw::c_char,
     *mut ::std::os::raw::c_char,
     ::std::os::raw::c_ulong,
     *mut ::std::os::raw::c_char,
