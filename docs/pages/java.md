@@ -7,7 +7,7 @@ Zenroom assumes the code passed to it via buffers is Zencode (and not Lua). *Imp
 
 ## Example
 
-The following example generates a keypair. 
+The following example generates an ECDH private key. 
 
 ```javascript
 package com.example.zencode;
@@ -40,14 +40,14 @@ public class MainActivity extends AppCompatActivity {
 //  Important:
 //  Each Zencode line should end with a "\n" 
 
-        script = "rule check version 1.0.0\n"
-        + "Scenario 'simple':Create the keypair\n"
-        + "Given that I am known as 'Alice'\n"
-        + "When I create the keypair\n"
-        + "Then print all data";
+        script = "rule check version 3.0.0\n"
+        + "Scenario 'ecdh': Create the key\n"
+		+ "Given I am 'Alice'\n"
+		+ "When I create the ecdh key\n"
+		+ "Then print my 'keyring'";
         keys = "";
         data= "";
-        conf = "debug=1";
+        conf = "";
 
         String result = (new Zenroom()).execute(script, conf, keys, data);
     //       Log.d("testseb",(new Zenroom()).execute(script, conf, keys, data));
@@ -66,14 +66,12 @@ The result should look like this:
 
 ```json
 {
-   "Alice":{
-      "credential_keypair":{
-         "private":"AZNuDnEujJlccuejLIHihxFeKzzuReL3mwikvtcCVHlFaYo7rCdR",
-         "public":"AhMBC4woNICc0OZyQS3kPE5q6EVlwyn5VTsBKG1ulsxmDfN1f9Kmqc0fgWUsRxRSIhSsJnSsP1CUjNk"
+   "Alice": {
+      "keyring": {
+         "ecdh": "OfLaWogJKLN3wsXlopBqVSS1LHxre3jT7uqOy1W6Mr0="
       }
    }
 }
-
 ```
 
 ## Source
