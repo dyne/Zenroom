@@ -156,87 +156,94 @@ local function set_sentence(self, event, from, to, ctx)
 	end
 end
 
+
 local function set_rule(text)
-	local res = false
 	local tr = text.msg:gsub(' +', ' ') -- eliminate multiple internal spaces
 	local rule = strtok(trim(tr):lower())
-	if rule[2] == 'check' and rule[3] == 'version' and rule[4] then
-		-- TODO: check version of running VM
-		-- elseif rule[2] == 'load' and rule[3] then
-		--     act("zencode extension: "..rule[3])
-		--     require("zencode_"..rule[3])
-		local ver = V(rule[4]) -- SEMVER
-		if ver == ZENROOM_VERSION then
-			act('Zencode version match: ' .. ZENROOM_VERSION.original)
-			res = true
-		elseif ver < ZENROOM_VERSION then
-			warn('Zencode written for an older version: ' .. ver.original)
-			res = true
-		elseif ver > ZENROOM_VERSION then
-			warn('Zencode written for a newer version: ' .. ver.original)
-			res = true
-		else
-			error('Version check error: ' .. rule[4])
-		end
-		text.Z.checks.version = res
-	elseif rule[2] == 'input' and rule[3] then
-		-- rule input encoding|format ''
-		if rule[3] == 'encoding' and rule[4] then
-			CONF.input.encoding = input_encoding(rule[4])
-			res = true and CONF.input.encoding
-		elseif rule[3] == 'format' and rule[4] then
-			CONF.input.format = get_format(rule[4])
-			res = true and CONF.input.format
-		elseif rule[3] == 'untagged' then
-			res = true
-			CONF.input.tagged = false
-		end
-	elseif rule[2] == 'output' and rule[3] then
+	local rules = {
 		-- TODO: rule debug [ format | encoding ]
-		-- rule input encoding|format ''
-		if rule[3] == 'encoding' then
-			CONF.output.encoding = { fun = guess_outcast(rule[4]),
-						 name = rule[4] }
-			res = true and CONF.output.encoding
-		elseif rule[3] == 'format' then
-			CONF.output.format = get_format(rule[4])
-			res = true and CONF.output.format
-		elseif rule[3] == 'versioning' then
+		-- ['load'] = function(extension)
+		--	if not extension then return false end
+		--  act("zencode extension: "..extension)
+		--  require("zencode_"..extension)
+		-- 	return true
+		-- end,
+		['check version'] = function (version)
+			-- TODO: check version of running VM
+			if not version then return false end
+			local ver = V(version)
+			if ver == ZENROOM_VERSION then
+				act('Zencode version match: ' .. ZENROOM_VERSION.original)
+			elseif ver < ZENROOM_VERSION then
+				warn('Zencode written for an older version: ' .. ver.original)
+			elseif ver > ZENROOM_VERSION then
+				warn('Zencode written for a newer version: ' .. ver.original)
+			else
+				error('Version check error: ' .. version)
+			end
+			text.Z.checks.version = true
+			return true
+		end,
+		['input encoding'] = function (encoding)
+			if not encoding then return false end
+			CONF.input.encoding = input_encoding(encoding)
+			return true and CONF.input.encoding
+		end,
+		['input format'] = function (format)
+			if not format then return false end
+			CONF.input.format = get_format(format)
+			return true and CONF.input.format
+		end,
+		['input untagged'] = function ()
+			CONF.input.tagged = false
+			return true
+		end,
+		['output encoding'] = function (encoding)
+			if not encoding then return false end
+			CONF.output.encoding = { fun = guess_outcast(encoding),
+							name = encoding }
+			return true and CONF.output.encoding
+		end,
+		['output format'] = function (format)
+			if not format then return false end
+			CONF.output.format = get_format(format)
+			return true and CONF.output.format
+		end,
+		['output versioning'] = function ()
 			CONF.output.versioning = true
-			res = true
-		end
-	elseif rule[2] == 'unknown' and rule[3] then
-		if rule[3] == 'ignore' then
+			return true
+		end,
+		['unknown ignore'] = function ()
 			CONF.parser.strict_match = false
-			res = true
-		end
-	elseif rule[2] == 'collision' and rule[3] then
-	   if rule[3] == 'ignore' then
-	      CONF.heap.check_collision = false
-	      res = true
-	   end
-	   -- alias of unknown ignore for specific callers
-	elseif rule[2] == 'caller' and rule[3] then
-		if rule[3] == 'restroom-mw' then
+			return true
+		end,
+		['collision ignore'] = function ()
+			CONF.heap.check_collision = false
+			return true
+		end,
+		['caller restroom-mw'] = function()
 			CONF.parser.strict_match = false
 			CONF.heap.check_collision = false
-			res = true
-		end
-	elseif rule[2] == 'set' and rule[4] then
-		CONF[rule[3]] = fif( tonumber(rule[4]), tonumber(rule[4]),
-							fif( rule[4]=='true', true,
-							fif( rule[4]=='false', false,
-							rule[4])))
-		res = true
-	end
-	if not res then
-		error('Rule invalid: ' .. text.msg, 3)
+			return true
+		end,
+		['set'] = function (conf, value)
+			if not conf or not value then return false end
+			CONF[conf] = fif( tonumber(value), tonumber(value),
+							fif( value=='true', true,
+							fif( value=='false', false,
+							value)))
+			return true
+		end,
+	}
+	local res
+	if rule[2] == 'set' then
+		res = rules[rule[2]](rule[3], rule[4])
 	else
-		act(text.msg)
+		res = rules[rule[2]..' '..rule[3]] and rules[rule[2]..' '..rule[3]](rule[4])
 	end
+	if res then act(text.msg) else error('Rule invalid: ' .. text.msg, 3) end
 	return res
 end
-
 
 local function new_state_machine()
 	-- stateDiagram
