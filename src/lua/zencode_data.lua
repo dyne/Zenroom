@@ -373,9 +373,9 @@
     if what == 'json' or what == 'JSON' then
        return { fun = JSON.auto,
 		name = 'json' }
-    elseif what == 'cbor' or what == 'CBOR' then
-       return { fun = CBOR.auto,
-		name = 'cbor' }
+    -- elseif what == 'cbor' or what == 'CBOR' then
+    --    return { fun = CBOR.auto,
+	-- 	name = 'cbor' }
     end
     error("Conversion format not supported: "..what, 2)
     return nil

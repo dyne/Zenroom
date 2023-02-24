@@ -30,13 +30,3 @@ The ***rule check version*** statement, will validate the script's syntax to mak
 rule check version 1.0.0
 ```
 
-# Rule input/output format: using JSON or CBOR
-
-Zenroom's default file format is JSON, but it can also manage CBOR. You can switch between the two by using the ***rule format*** statement, like for example: 
-
-```gherkin
-Rule input format CBOR
-Rule output format JSON
-```
-
-This two statements will make sure that CBOR data is imported, and then the output is printed in JSON. 
