@@ -125,11 +125,10 @@ An example, from the scenario 'petition':
 When I create the petition signature 'nameOfThePetitionIWantToSign'
 ``` 
 
-And an exotic version of the statement is the one used to transform the formatting of an object to CBOR (if originally in JSON) or to JSON (if originally in CBOR): 
+A statement is available also to transform a binary object to a JSON string: 
 
 ```gherkin
-When I create the cbor of 'myJsonObject'
-When I create the json of 'myCborObject'
+When I create the json of 'myObject'
 ``` 
 
 We're sparing you the full list of **schemas** that you can create, but the best place to see a full and updated list is <a href="https://apiroom.net">https://apiroom.net</a>. 
@@ -139,12 +138,11 @@ We're sparing you the full list of **schemas** that you can create, but the best
 
 In the second group we gathered the *When* statements that can create new objects and assign values to them.
 
-
  The "create" statements can ***generate random numbers*** (or arrays thereof), with different parameters.
 
  The "set" statements allow you to ***create an object and assign a value to it***. 
  
- The "create the cbor of" statement allows you ***render an object to CBOR***. The statement also has a counterpart to render to JSON: "create the json of".
+ The "create the json of" statement allows you ***render an object to a JSON string***, which at the end can be printed as a string and is internal to the main JSON output returned by Zencode: it is a JSON string inside a JSON dictionary value.
  
  A special case is the stament "create key", which we see in two flavours, one ***creates a key from a random seed***, one ***from a known seed***.
  

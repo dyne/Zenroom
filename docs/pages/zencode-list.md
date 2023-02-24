@@ -30,7 +30,7 @@ Rules are *optional*, they are used to define input and output formats of the sm
 
 ```txt
 rule input encoding [ url64 | base64 | hex | bin ]
-rule input format [ json | cbor ]
+rule input format [ json ]
 ```
 
 For example, a valid config is: 
@@ -63,7 +63,7 @@ There are different ways to state who you are in order to use **my** statements 
 ```
 
 Data provided as input (from **data** and **keys**) is all imported
-automatically from **JSON** or [CBOR](https://tools.ietf.org/html/rfc7049) binary formats.
+automatically from the **JSON** string format.
 There can also be no input to the code, in this case can be checked the emptiness with:
 
 ```gherkin
@@ -158,12 +158,12 @@ Each of the following scenario enable a set of sentences:
 
 # *Then*
 
-Output is all exported in JSON or CBOR
+Output is all exported in JSON
 
 [](../_media/zencode_utterances_reworked.yaml ':include :fragment=then :type=code gherkin')
 
 Settings:
 ```txt
 rule output encoding [ url64 | base64 | hex | bin ]
-rule output format [ json | cbor ]
+rule output format [ json ]
 ```

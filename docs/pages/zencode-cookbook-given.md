@@ -13,7 +13,7 @@ Link file with relative path:
 # The *Given* phase: reading and verifying input
 
 The *Given* keyword marks the first phase of Zencode execution, where input is read and processed and first internal variables are set. More precisely: 
- - Read data from files, passed using the *--data* and *--keys* parameters, formatted in JSON or CBOR (where JSON is the default and CBOR needs to be specified)
+ - Read data from files, passed using the *--data* and *--keys* parameters, formatted in JSON
  - Validate the input, both synctatically and cryptographically. 
  - State the identity of the script executor.
 
@@ -22,7 +22,7 @@ The *Given* keyword marks the first phase of Zencode execution, where input is r
 
 
 Zencode allows you to load a very broad spectrum of input by: 
- - Reading input data as ***JSON*** or ***CBOR***
+ - Reading input data as ***JSON***
  - Importing and validating several simple ***data types*** as well as complex data structures
  - Reading data coming with different ***encodings***, which are crucial in cryptographic operations. Zencode's default encoding is ***base64*** but many crypto-operation will work with data in ***hex*** and for example *bitcoin* uses ***base58*** encoding - Zenroom can read all of these, and more. 
 
@@ -149,7 +149,7 @@ Given I am 'Alice'
 ``` 
 
 This statement is typically used when: 
-- Executing cryptographic operations that will need a key or a keyring: the keys are passed to Zenroom (via *-a* and *-k* parameters) as JSON or CBOR files, using a format that includes the owner of the keys. In the next example we'll indeed a *keyring*.
+- Executing cryptographic operations that will need a key or a keyring: the keys are passed to Zenroom (via *-a* and *-k* parameters) as JSON files, using a format that includes the owner of the keys. In the next example we'll indeed a *keyring*.
 - In scripts where the identity is a condition for the execution of the script.
 
 Note: this statement has a number of alias, so you these you can use the same statement with the syntax:
@@ -180,7 +180,7 @@ And you will need to pass the identity in a parameter, looking like this:
 }
 ```
 
-The paramater can be passed to Zenroom (via *-a* and *-k* parameters) as JSON or CBOR files. 
+The paramater can be passed to Zenroom (via *-a* and *-k* parameters) as JSON files. 
 
 
 ## *Given I have*: load data from nested JSON file (part 2)
