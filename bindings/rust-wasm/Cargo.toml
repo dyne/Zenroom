@@ -1,0 +1,18 @@
+[package]
+name = "zenroom"
+version = "3.0.0"
+authors = ["Denis Roio <J@dyne.org>", "Alberto Lerda <alberto@dyne.org>"]
+edition = "2021"
+documentation = "https://dev.zenroom.org"
+license = "AGPL-3.0-only"
+description = "zenroom is a small, portable and secure language interpreter of a domain specific language called zencode, able to execute cryptographic operations and smart contracts in a multiplatform environment."
+include = ["src/", "zenroom.h", "build.rs", "zenroom.h"]
+build = "build.rs"
+
+[lib]
+name = "zenroom"
+path = "src/lib.rs"
+crate-type = ["lib"]
+
+[build-dependencies]
+cc = "1.0"
