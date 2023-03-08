@@ -131,6 +131,7 @@ static int lua_unserialize_json(lua_State* L) {
 	size_t size;
 	register int level = 0;
 	register char *p;
+	register char in_literal_str = 0;
 	in = luaL_checklstring(L, 1, &size);
 	p = (char*)in;
 	while (size && isspace(*p) ) { size--; p++; } // first char
@@ -145,12 +146,25 @@ static int lua_unserialize_json(lua_State* L) {
 		return 1;
 	} // ok, level is 1
 	for( p++ ; size>0 ; size--, p++ ) {
-		if(*p=='{' || *p=='[') level++;
-		if(*p=='}' || *p==']') level--;
-		if(level==0) { // end of first block
-			lua_pushlstring(L, in, (size_t)(p - in)+1);
-			lua_pushlstring(L, ++p, size);
-			return 2;
+		if(in_literal_str) {
+			// a string literal end with a " which is not escaped, i.e. \"
+			// in case a string literal ends with \\", it ends
+			// p-1 and p-2 cannot be outside buffer because a JSON dictionary
+			// starts at least with {"
+			if(*p == '"' && (*(p-1) != '\\' || *(p-2) == '\\')) {
+				in_literal_str = 0;
+			}
+		} else {
+			if(*p=='"') in_literal_str = 1;
+			else {
+				if(*p=='{' || *p=='[') level++;
+				if(*p=='}' || *p==']') level--;
+				if(level==0) { // end of first block
+					lua_pushlstring(L, in, (size_t)(p - in)+1);
+					lua_pushlstring(L, ++p, size);
+					return 2;
+				}
+			}
 		}
 	}
 	// should never be here
