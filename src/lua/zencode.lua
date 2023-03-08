@@ -295,6 +295,11 @@ local function new_state_machine()
 				{name = 'enter_and', from = 'whenif', to = 'whenif'},
 				{name = 'enter_and', from = 'thenif', to = 'thenif'},
 				{name = 'enter_and', from = 'if', to = 'if'},
+				{name = 'enter_and', from = 'foreach', to = 'foreach'},
+				{name = 'enter_and', from = 'ifforeach', to = 'ifforeach'},
+				{name = 'enter_and', from = 'foreachif', to = 'foreachif'},
+				{name = 'enter_and', from = 'whenforeach', to = 'whenforeach'},
+				{name = 'enter_and', from = 'whenifforeach', to = 'whenifforeach'},
 
 			},
 			-- graph TD
