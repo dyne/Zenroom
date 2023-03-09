@@ -194,6 +194,10 @@ test("decode collection", function()
 --    [ '[1, 2, 3, 4, 5, 6]'            ] = {1, 2, 3, 4, 5, 6},
 --    [ '[1, 2, 3, "hello"]'            ] = {1, 2, 3, "hello"},
     [ '{ "name": "test", "id": 231 }' ] = {name = "test", id = 231},
+    [ '{ "name": "test{", "id": 231 }' ] = {name = "test{", id = 231},
+    [ '{ "name": "test{\\\\", "id": 231 }' ] = {name = "test{\\", id = 231},
+    [ '{ "name": "}test[", "id": 231 }' ] = {name = "}test[", id = 231},
+    [ '{ "name": "\\"test\\"", "id": 231 }' ] = {name = "\"test\"", id = 231},
     [ '{"x":1,"y":2,"z":[1,2,3]}'     ] = {x = 1, y = 2, z = {1, 2, 3}},
   }
   for k, v in pairs(t) do
