@@ -127,7 +127,7 @@ end)
 When("create the copy of element '' in array ''", function(pos, arr)
 		ZEN.assert(ACK[arr], "No array found in: "..arr)
 		ZEN.assert(isarray(ACK[arr]), "Not an array: "..arr)
-		local num = tonumber(pos)
+		local num = tonumber(mayhave(pos) or pos)
 		ZEN.assert(num, "Argument is not a position number: "..pos)
 		ZEN.assert(ACK[arr][num], "No element found in: "..arr.."["..pos.."]")
 		ACK.copy = ACK[arr][num]
