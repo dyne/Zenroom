@@ -484,6 +484,17 @@ function empty(obj)
 		error('Cannot overwrite existing object: ' .. obj, 2)
 	end
 end
+function mayhave(obj)
+	-- TODO: accept arrays for depth checks as the `have` function
+	local name = uscore(trim(obj))
+	res = ACK[name]
+	if not res then
+		return nil
+	end
+	local codec = ZEN.CODEC[name]
+	if not codec then error("CODEC not found: "..name, 2) end
+	return res, codec
+end
 
 ---------------------------------------------------------------
 -- ZENCODE PARSER

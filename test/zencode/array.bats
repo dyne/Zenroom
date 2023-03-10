@@ -750,3 +750,26 @@ EOF
     save_output "split_space.json"
     assert_output '{"separator":" ","separator2":"_","split0":["Hello","world!"],"split1":["Hello","world!"],"split2":["hello","world"],"split3":["hello","world"],"string":"Hello world!","string2":"hello_world"}'
 }
+
+@test "Pass length inside a variable" {
+    cat <<EOF | save_asset length_param.data
+{
+	"array": [
+		"pippo",
+		"topolino",
+		"pluto"
+	]
+}
+EOF
+
+    cat <<EOF | zexe length_param.zen length_param.data
+Given I have a 'string array' named 'array'
+
+When I create the length of 'array'
+and I create the copy of element 'length' in array 'array'
+
+Then print the 'copy'
+EOF
+    save_output "length_param.json"
+    assert_output '{"copy":"pluto"}'
+}
