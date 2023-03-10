@@ -773,3 +773,29 @@ EOF
     save_output "length_param.json"
     assert_output '{"copy":"pluto"}'
 }
+
+@test "Copy last element" {
+    cat <<EOF | save_asset last_element.data
+{
+  "smallarray": ["a", "b", 2, 3, "foo"],
+  "smalldict": {
+    "key": "val",
+    "foo": "bar"
+  }
+}
+EOF
+
+    cat <<EOF | zexe last_element.zen last_element.data
+Given I have a 'string array' named 'smallarray'
+Given I have a 'string dictionary' named 'smalldict'
+
+When I create the copy of last element in 'smallarray'
+When I rename 'copy_of_last_element' to 'last array'
+When I create the copy of last element in 'smalldict'
+
+Then print the 'last array'
+Then print the 'copy of last element'
+EOF
+    save_output "last_element.json"
+    assert_output '{"copy_of_last_element":"key","last_array":"foo"}'
+}

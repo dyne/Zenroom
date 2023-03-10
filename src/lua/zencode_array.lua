@@ -404,3 +404,31 @@ When("create the array by splitting '' at ''", function(data_name, sep_name)
         new_codec('array', { encoding='string', zentype='array' })
 
 end)
+When("create the copy of last element in ''", function(obj_name)
+    local obj, obj_codec = have(obj_name)
+    if type(obj) ~= 'table' then
+        error("Can only index tables")
+    end
+    if obj_codec.zentype == 'array' then
+        if #obj == 0 then
+            error("Last element doesn't exist for empty array")
+        end
+        ACK.copy_of_last_element = obj[#obj]
+
+        new_codec('copy_of_last_element', { encoding='string', zentype='element' })
+    elseif obj_codec.zentype == 'dictionary' then
+        local elem = nil
+        for k, _ in sort_pairs(obj) do
+            elem = k
+        end
+        if not elem then
+            error("Last element doesn't exist for empty dictionary")
+        end
+
+        ACK.copy_of_last_element = elem
+
+        new_codec('copy_of_last_element', { encoding='string', zentype='element' })
+    else
+        error("Cannot find last element in " .. obj_codec.zentype)
+    end
+end)
