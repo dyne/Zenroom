@@ -27,7 +27,7 @@ local function import_did_document(doc)
     ZEN.assert(doc.id and #doc.id < 256, 'Invalid DID document: id not found')
     ZEN.assert(doc['@context'], 'Invalid DID document: @context not found')
     ZEN.assert(#JSON.encode(doc, 'string') < 4096, 'DID document too large')
-    local did_components = strtok(doc.id, '[^:]*')
+    local did_components = strtok(doc.id, ':')
     -- schme: did
     ZEN.assert(did_components[1] == 'did',
 	       'Invalid DID document: invalid scheme')
@@ -113,7 +113,7 @@ ZEN.add_schema(
 
 -- return { r , s } table suitable for signature verification
 local function jws_octet_to_signature(obj)
-    local toks = strtok(OCTET.to_string(obj), '[^.]*')
+    local toks = strtok(OCTET.to_string(obj), '.')
     -- header parsing may be skipped
     -- local header = JSON.decode( OCTET.from_url64(toks[1]):to_string() )
     local res = {}
@@ -274,7 +274,7 @@ IfWhen(
                     'The object has no signature: ' .. src)
         ZEN.assert(document.proof.verificationMethod,
                     'The proof inside '..src..' has no verificationMethod')
-        local data = strtok(O.to_string(document.proof.verificationMethod), '[^#]*' )
+        local data = strtok(O.to_string(document.proof.verificationMethod), '#' )
         local signer_id = O.from_string(data[1])
         ZEN.assert(signer_id == signer_document.id,
                     'The signer id in proof is different from the one in '..signer_did_doc)
@@ -299,7 +299,7 @@ When(
         ZEN.assert(doc.service, 'service not found')
         ACK.serviceEndpoint = {}
         for _, service in pairs(doc.service) do
-            local name = strtok(O.to_string(service.id), '[^#]*')[2]
+            local name = strtok(O.to_string(service.id), '#')[2]
             ACK.serviceEndpoint[name] = service.serviceEndpoint
         end
         new_codec('serviceEndpoint', { encoding = 'string',
@@ -317,10 +317,10 @@ When(
         ACK.verificationMethod = {}
 
         for _, ver_method in pairs(doc.verificationMethod) do
-            local pub_key_name = strtok(O.to_string(ver_method.id), '[^#]*')[2]
+            local pub_key_name = strtok(O.to_string(ver_method.id), '#')[2]
             if pub_key_name == ETHEREUM_ADDRESS then
                 local address = strtok(
-                    O.to_string(ver_method.blockchainAccountId), '[^:]*' )[3]
+                    O.to_string(ver_method.blockchainAccountId), ':' )[3]
                 ACK.verificationMethod[pub_key_name] = O.from_hex(address)
             else
                 local pub_key = O.to_string(ver_method.publicKeyBase58)

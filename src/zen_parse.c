@@ -172,6 +172,62 @@ static int lua_unserialize_json(lua_State* L) {
 	return 0;
 }
 
+char* strtok_single(char* str, char const* delims)
+{
+    static char* src = NULL;
+    char *p, *ret = NULL;
+
+    if (str != NULL)
+        src = str;
+
+    if (src == NULL)
+        return NULL;
+
+    if ((p = strpbrk(src, delims)) != NULL) {
+        *p = 0;
+        ret = src;
+        src = ++p;
+    } else {
+        ret = src;
+        src = NULL;
+    }
+
+    return ret;
+}
+
+static int lua_strtok(lua_State* L) {
+	const char DEFAULT_SEP[] = " ";
+
+	char copy[MAX_FILE];
+	char *sep = DEFAULT_SEP;
+
+	const char *in;
+	size_t size;
+	register int i = 1;
+	register char *token;
+
+	in = luaL_checklstring(L, 1, &size);
+
+	if (lua_gettop(L) > 1) {
+		sep = luaL_checklstring(L, 2, NULL);
+	}
+
+	lua_newtable(L);
+
+	memcpy(copy, in, size+1);
+
+	token = strtok_single(copy, sep);
+	while(token != NULL) {
+		lua_pushlstring(L, token, strlen(token));
+
+		lua_rawseti(L, -2, i);
+
+		token = strtok_single(NULL, sep);
+		i = i + 1;
+	}
+	return 1;
+}
+
 void zen_add_parse(lua_State *L) {
 	// override print() and io.write()
 	static const struct luaL_Reg custom_parser [] =
@@ -180,6 +236,7 @@ void zen_add_parse(lua_State *L) {
 		  {"trim", lua_trim_spaces},
 		  {"trimq", lua_trim_quotes},
 		  {"jsontok", lua_unserialize_json},
+		  {"strtok", lua_strtok},
 		  {NULL, NULL} };
 	lua_getglobal(L, "_G");
 	luaL_setfuncs(L, custom_parser, 0);  // for Lua versions 5.2 or greater

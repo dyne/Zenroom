@@ -100,7 +100,7 @@
  -- return leftmost and rightmost if definition string indicates
  -- a lua table: dictionary, array or schema
  local function expect_table(definition)
-    local toks = strtok(definition, '[^_]+')
+    local toks = strtok(definition, '_')
     local res = { rightmost = toks[#toks] }
     if res.rightmost == 'array'
        or

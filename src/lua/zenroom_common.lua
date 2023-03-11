@@ -295,19 +295,6 @@ function help(module)
    -- end
 end
 
--- TODO: optimize in C using strtok
-local function split(src,pat)
-   local tbl = {}
-   src:gsub(pat, function(x) tbl[#tbl+1]=x end)
-   return tbl
-end
-function strtok(src, pat)
-   if not src then return { } end
-   pat = pat or "%S+"
-   ZEN.assert(luatype(src) == "string", "strtok error: argument is not a string")
-   return split(src, pat)
-end
-
 local oldtonumber = tonumber
 function tonumber(obj, ...)
     if type(obj) == "zenroom.float" then

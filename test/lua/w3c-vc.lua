@@ -52,7 +52,7 @@ local v_proof = cred_table.proof
 v_cred_table.proof = nil
 v_cred_oct = ZEN.serialize(v_cred_table)
 assert(v_cred_oct == cred_oct) -- check serialization is deterministic
-local v_jws = strtok(v_proof.jws,'[^.]*')
+local v_jws = strtok(v_proof.jws,'.')
 -- parse header
 local v_header = JSON.decode( v_jws[1] )
 I.print(v_header)
