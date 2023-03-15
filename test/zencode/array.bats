@@ -797,5 +797,5 @@ Then print the 'last array'
 Then print the 'copy of last element'
 EOF
     save_output "last_element.json"
-    assert_output '{"copy_of_last_element":"key","last_array":"foo"}'
+    assert_output '{"copy_of_last_element":"val","last_array":"foo"}'
 }
