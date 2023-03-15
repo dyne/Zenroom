@@ -6,7 +6,7 @@ local function newline_iter(text)
 end
 
 for line in newline_iter(DATA) do
-   local tokens = strtok(line, "[^:]*")
+   local tokens = strtok(line, ":")
    local sk = O.from_hex(tokens[1]:sub(1, 64))
    local pk = O.from_hex(tokens[2])
    assert(ED.pubgen(sk) == pk)

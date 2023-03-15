@@ -125,7 +125,7 @@ When("create the url from ''", function(src)
 	if url:sub(1,7)=='http://' then proto = 'http://' end
 	if url:sub(1,8)=='https://' then proto = 'https://' end
 	ZEN.assert(proto, "Invalid http prefix in url: "..obj:str())
-	local toks = strtok(url, '[^/]+') -- second is the host
+	local toks = strtok(url, '/') -- second is the host
 	local res = _is_valid_host(toks[2])
 	ZEN.assert(not res, res)
 	ACK.url = obj

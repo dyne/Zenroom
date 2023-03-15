@@ -391,7 +391,7 @@ When("create the array by splitting '' at ''", function(data_name, sep_name)
         local sep = uscore(have(sep_name):octet():string())
         ZEN.assert(#sep == 1, "You can only split with respect to one character")
         empty'array'
-        local strings = strtok(data, "[^" .. sep .. "]*")
+        local strings = strtok(data, sep)
         local octets = {}
         for k, v in ipairs(strings) do
                 -- exclude empty strings from conversion
