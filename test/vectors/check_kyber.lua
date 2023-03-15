@@ -18,7 +18,7 @@ for line in newline_iter(DATA) do
    if line:sub(1,1) ~= "#" then
       local rule = strtok(line)
 
-      if #rule > 0 and rule[1]:lower() ~= "count" and rule[1]:lower() ~= "mlen" and rule[1]:lower() ~= "smlen" then
+      if #rule > 0 and rule[1] ~= "" and rule[1]:lower() ~= "count" and rule[1]:lower() ~= "mlen" and rule[1]:lower() ~= "smlen" then
 	 curr_fields = curr_fields+1
 
 	 test[rule[1]:lower()] = O.from_hex(rule[3])
