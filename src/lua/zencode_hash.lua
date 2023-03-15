@@ -51,20 +51,36 @@ When(
     end
 )
 
-When(
-    "create the hash to point '' of each object in ''",
-    function(what, arr)
-        local F = _G[what]
-        ZEN.assert(
+When("create the hash to point '' of ''", function(curve, object)
+    local F = _G[curve]
+    ZEN.assert(
             luatype(F.hashtopoint) == 'function',
-            'Hash type ' .. what .. ' is invalid (no hashtopoint)'
+            'Hash type ' .. curve .. ' is invalid (no hashtopoint)'
+    )
+    empty'hash_to_point'
+    local obj = have(object)
+    ACK.hash_to_point = F.hashtopoint(ZEN.serialize(obj))
+    new_codec('hash_to_point', { zentype='element' })
+end)
+
+When(deprecated("create the hash to point '' of each object in ''",
+    [[Foreach 'element' in 'array'
+When I create the hash to point of 'array'
+and I move 'hash to point' in 'array of hashes'
+EndForeach]],
+    function(curve, object)
+        local F = _G[curve]
+        ZEN.assert(
+                luatype(F.hashtopoint) == 'function',
+                'Hash type ' .. curve .. ' is invalid (no hashtopoint)'
         )
-        local A = have(arr)
-        local count = isarray(A)
-        ZEN.assert(count > 0, 'Object is not an array: ' .. arr)
-        ACK.hash_to_point = deepmap(F.hashtopoint, A)
-	new_codec('hash_to_point', { luatype='table', zentype='array' })
-    end
+        empty'hash_to_point'
+        local obj = have(object)
+        local count = isarray(obj)
+        ZEN.assert(count > 0, 'Object is not an array: ' .. object)
+        ACK.hash_to_point = deepmap(F.hashtopoint, obj)
+        new_codec('hash_to_point', { luatype='table', zentype='array' })
+    end)
 )
 
 When(
