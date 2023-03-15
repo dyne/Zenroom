@@ -189,3 +189,18 @@ EOF
 
 
 }
+
+@test "Hash to point ECP" {
+    cat << EOF | zexe hash_to_point.zen
+Given nothing
+When I set 'string' to 'hello world!' as 'string'
+and I create the hash to point 'ECP' of 'string'
+and I rename 'hash to point' to 'hash to point ecp'
+and I create the hash to point 'ECP2' of 'string'
+and I rename 'hash to point' to 'hash to point ecp2'
+Then print 'hash to point ecp'
+Then print 'hash to point ecp2'
+EOF
+    save_output 'hash_to_point.json'
+    assert_output '{"hash_to_point_ecp":"Awd+icZ7dJ55g2iQFzcwtdM/gLTU7HQ663RoAxj8d82YTtLuHIQAbPMDxMfP7/RFAg==","hash_to_point_ecp2":"AhTWpLtcBe+YX4hIBogbdhkQwj36Y+uhaqF0+BR3NeLs1bez+LIRclu9kxgAfeiVCLK3u/eYavyFEtQ2zyf8Mc+tbwRy18oGghnano/eGpkEbPqapfH3otxVeUcLdCb9AduV4iMLeGKydqkBilCrTWghg5JRDJxScA6uE1010azDNY9YnBJWi+Saxlxo7aIXDNv4skA1+VgT9GBzMb1EsfPhOsksJh+alnIF7ERyhF/blHf67toTzfjZlkhTJkeK"}'
+}
