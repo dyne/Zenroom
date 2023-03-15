@@ -415,11 +415,11 @@ When("create the copy of last element in ''", function(obj_name)
         end
         ACK.copy_of_last_element = obj[#obj]
 
-        new_codec('copy_of_last_element', { encoding='string', zentype='element' })
+        new_codec('copy_of_last_element', { zentype='element' }, obj_name)
     elseif obj_codec.zentype == 'dictionary' then
         local elem = nil
-        for k, _ in sort_pairs(obj) do
-            elem = k
+        for _, v in sort_pairs(obj) do
+            elem = v
         end
         if not elem then
             error("Last element doesn't exist for empty dictionary")
@@ -427,7 +427,7 @@ When("create the copy of last element in ''", function(obj_name)
 
         ACK.copy_of_last_element = elem
 
-        new_codec('copy_of_last_element', { encoding='string', zentype='element' })
+        new_codec('copy_of_last_element', { zentype='element' }, obj_name)
     else
         error("Cannot find last element in " .. obj_codec.zentype)
     end
