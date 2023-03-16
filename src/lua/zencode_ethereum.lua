@@ -209,10 +209,13 @@ When("create the signed ethereum transaction for chain ''",
 function(chainid)
   local sk = havekey'ethereum'
   local tx = have'ethereum transaction'
-  local cid = tonumber(chainid)
-  if not cid then
-    cid = INT.new(O.from_string(tostring(chainid)))
-  else cid = INT.new(cid) end
+  local cid = mayhave(chainid)
+  if cid then
+    cid = tonumber(cid) or O.from_string(tostring(cid))
+  else
+    cid = tonumber(chainid) or O.from_string(tostring(chainid))
+  end
+  cid = INT.new(cid)
   ZEN.assert(cid, "Invalid chain id: "..chainid)
   if not tx.data  then tx.data = O.new() end
   if not tx.value then tx.value = O.new() end
