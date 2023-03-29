@@ -45,6 +45,7 @@ end
 function ETH.encodeRLP(data)
    local header = nil
    local res = nil
+   local byt = nil
 
    if type(data) == 'zenroom.big' then
       data = ETH.n2o(data)
@@ -284,13 +285,14 @@ function ETH.make_storage_data(src)
    offset = O.from_hex('0000000000000000000000000000000000000000000000000000000000000020')
 
    -- length as a 256 unsigned integer
-   if iszen(type(src)) then
-      src = src:octet()
+   local src_o = src
+   if iszen(type(src_o)) then
+      src_o = src_o:octet()
    end
-   bytLen = INT.new(#src):octet()
+   bytLen = INT.new(#src_o):octet()
    paddingLength = 32-#bytLen
    paddingLen = O.zero(paddingLength)
-   paddingLength = #src % 32
+   paddingLength = #src_o % 32
    if paddingLength > 0 then
       paddingLength = 32 - paddingLength
       padding = O.zero(paddingLength)
@@ -299,7 +301,7 @@ function ETH.make_storage_data(src)
    end
    -- done with padding
 
-   return fId .. offset .. paddingLen .. bytLen  .. src .. padding
+   return fId .. offset .. paddingLen .. bytLen  .. src_o .. padding
 end
 
 -- generate an ethereum keypair
