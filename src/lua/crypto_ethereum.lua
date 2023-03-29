@@ -45,7 +45,6 @@ end
 function ETH.encodeRLP(data)
    local header = nil
    local res = nil
-   local byt = nil
 
    if type(data) == 'zenroom.big' then
       data = ETH.n2o(data)
@@ -401,7 +400,7 @@ end
 --     T[k] for any dynamic T and any k >= 0
 --     (T1,...,Tk) if Ti is dynamic for some 1 <= i <= k
 function is_dynamic(t)
-   dyn = t == 'string' or t == 'bytes' or string.match(t, '[a-zA-Z0-9]+%[%]')
+   local dyn = t == 'string' or t == 'bytes' or string.match(t, '[a-zA-Z0-9]+%[%]')
    if not dyn then
       t = string.match(t, '([a-zA-Z]+)%[%d+%]')
       if t then
@@ -414,22 +413,18 @@ end
 function encode_tuple(params, args)
    local res = O.empty()
 
-   if type(params) == 'string' then
-   elseif type(params) ~= 'table' then
+   if type(params) ~= 'table' then
       error("Type not encodable as tuple")
    end
 
    local tails = {}
    local heads = {}
-   local head
-   local tail
 
    local head_size = 0;
    local tail_size = 0;
    -- check if there are dynamic types and compute tails
    for i, v in ipairs(params) do
       if is_dynamic(v) then
-         local arg = nil;
          head_size = head_size + 32
          table.insert(tails, encode(v, args[i]))
       else
@@ -456,10 +451,10 @@ function encode_tuple(params, args)
    end
 
    -- implement O.concat for memory efficient concat
-   for i, v in pairs(heads) do
+   for _, v in pairs(heads) do
       res = res .. v
    end
-   for i, v in pairs(tails) do
+   for _, v in pairs(tails) do
       res = res .. v
    end
    return res
