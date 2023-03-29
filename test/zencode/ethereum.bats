@@ -188,6 +188,23 @@ EOF
     save_output 'alice_storage_tx.json'
 }
 
+@test "When I use the ethereum transaction to store ecp point" {
+    cat <<EOF | zexe transaction_storage_ecp.zen alice_nonce_eth.json storage_contract.json
+Scenario ethereum
+Given I have a 'ethereum address' named 'storage contract'
+# here we assume bob is a storage contract
+and I have a 'gas price'
+and I have a 'gas limit'
+and I have an 'ethereum nonce'
+When I set 'data' to 'Hello, it is me Mario!' as 'string'
+When I create the hash to point 'ecp' of 'data'
+When I create the ethereum transaction to 'storage contract'
+and I use the ethereum transaction to store 'hash to point'
+Then print the 'ethereum transaction'
+EOF
+    save_output 'alice_storage_tx.json'
+}
+
 @test "When I create the signed ethereum transaction for chain '' (again)" {
     cat <<eof | zexe sign_transaction_chainid.zen alice_storage_tx.json alice_keys.json
 scenario ethereum
