@@ -285,6 +285,9 @@ function ETH.make_storage_data(src)
    offset = O.from_hex('0000000000000000000000000000000000000000000000000000000000000020')
 
    -- length as a 256 unsigned integer
+   if iszen(type(src)) then
+      src = src:octet()
+   end
    bytLen = INT.new(#src):octet()
    paddingLength = 32-#bytLen
    paddingLen = O.zero(paddingLength)
