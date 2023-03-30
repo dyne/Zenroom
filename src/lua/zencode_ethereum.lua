@@ -211,9 +211,9 @@ function(chainid)
   local tx = have'ethereum transaction'
   local cid = mayhave(chainid)
   if cid then
-    cid = tonumber(cid) or O.from_string(tostring(cid))
+    cid = tonumber(cid) or cid:octet()
   else
-    cid = tonumber(chainid) or O.from_string(tostring(chainid))
+    cid = tonumber(chainid) or O.from_string(chainid)
   end
   cid = INT.new(cid)
   ZEN.assert(cid, "Invalid chain id: "..chainid)
