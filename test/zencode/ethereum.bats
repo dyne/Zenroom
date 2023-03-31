@@ -474,3 +474,63 @@ Then print the 'data retrieved' as 'string'
 EOF
     save_output 'doc_retrieved_data.json'
 }
+
+@test "Import transaction" {
+    cat <<EOF | save_asset 'import_tx.data'
+{
+    "keyring": {
+		"bitcoin": "L44aGie6PCJY6drzVFszi9HPc7g98LQmcsJwDEGumBnMReX45xGK",
+		"ecdh": "0L/FuN1ZaIG/imjoDBGgAvCpHMLL/WB2lX+DEQOSC4o=",
+		"eddsa": "Cwj9CcqHNoBnXBo8iDfnhFkQeDun4Y4LStd2m3TEAYAg",
+		"ethereum": "9ab36c2688502bd219eeea9e6021a056fb7f734f86ea727feec8ed96431bf6ad",
+		"reflow": "OUaM/6vq37bVO8xRU7a/yh7mZZygU8aD+zWo5gRE6DA=",
+		"schnorr": "ZQR+vMkjuRpcoqQ9bAcDowI3noEcjFVUmLLxyP1gPDg="
+	},
+    "ethereum_transaction": {
+        "gas_limit": "50000",
+        "gas_price": "2000000000",
+        "nonce": "241",
+        "to": "4806db98240cd10f9575737f6d0fc17afb50e936",
+        "value": "500000"
+    },
+    "bigcid": "80",
+    "strcid": "fabt",
+    "numcid": "80"
+}
+EOF
+
+    cat <<EOF | zexe import_tx.zen import_tx.data
+scenario ethereum
+
+given I have the 'keyring'
+and I have a 'ethereum transaction'
+
+given I have a 'string' named 'strcid'
+given I have a 'string' named 'numcid'
+given I have a 'integer' named 'bigcid'
+
+When I create the signed ethereum transaction for chain 'fabt'
+When I copy the 'v' in 'ethereum_transaction' to 'v0'
+When I remove 'signed ethereum transaction'
+When I create the signed ethereum transaction for chain 'strcid'
+When I copy the 'v' in 'ethereum_transaction' to 'v1'
+When I remove 'signed ethereum transaction'
+When I create the signed ethereum transaction for chain '80'
+When I copy the 'v' in 'ethereum_transaction' to 'v2'
+When I remove 'signed ethereum transaction'
+When I create the signed ethereum transaction for chain 'numcid'
+When I copy the 'v' in 'ethereum_transaction' to 'v3'
+When I remove 'signed ethereum transaction'
+When I create the signed ethereum transaction for chain 'bigcid'
+When I copy the 'v' in 'ethereum_transaction' to 'v4'
+When I remove 'signed ethereum transaction'
+
+then print the 'v0' as 'hex'
+then print the 'v1' as 'hex'
+then print the 'v2' as 'hex'
+then print the 'v3' as 'hex'
+then print the 'v4' as 'hex'
+EOF
+    save_output 'import_tx.json'
+    assert_output '{"v0":"3435316491","v1":"3435316492","v2":"195","v3":"196","v4":"196"}'
+}

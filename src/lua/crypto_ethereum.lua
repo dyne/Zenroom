@@ -254,20 +254,6 @@ function ETH.verify_from_address(add, txSigned)
    return (valid and ETH.address_from_public_key(pk) == add)
 end
 
-function ETH.parse_chainid(chainid, cid, enc)
-   if not enc then enc = "string" end
-   if cid then
-      if enc == "string" then
-          cid = tonumber(cid:str()) or cid:octet()
-      elseif enc ~= "integer" then
-          return nil
-      end
-    else
-      cid = tonumber(chainid) or O.from_string(chainid)
-    end
-    return INT.new(cid)
-end
-
 -- Assume we are given a smart contract with a function with the
 -- following signature
 -- function writeString(string memory)

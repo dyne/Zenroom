@@ -24,6 +24,10 @@ indent_size = 4
 indent_style = space
 indent_size = 4
 
+[test/**.bats]
+indent_style = space
+indent_size = 4
+
 [src/lua/crypto_ethereum.lua]
 indent_style = space
 indent_size = 3

@@ -489,6 +489,7 @@ function mayhave(obj)
 	local name = uscore(trim(obj))
 	res = ACK[name]
 	if not res then
+		I.warn(name .. " not found in DATA or KEYS")
 		return nil
 	end
 	local codec = ZEN.CODEC[name]
