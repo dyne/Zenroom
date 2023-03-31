@@ -113,11 +113,13 @@ local function count_f(t)
    end
    return count
 end
-When("create the length of ''", function(arr)
-	local obj = have(arr)
-	ACK.length = F.new(count_f(obj))
-	new_codec('length', {zentype='element'})
-end)
+When(deprecated("create the length of ''",
+			   "create the size of ''",
+			   function(arr)
+				  local obj = have(arr)
+				  ACK.length = F.new(count_f(obj))
+				  new_codec('length', {zentype='element'})
+end))
 When("create the size of ''", function(arr)
 	local obj = have(arr)
 	ACK.size = F.new(count_f(obj))
