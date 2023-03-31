@@ -103,6 +103,7 @@ local function set_sentence(self, event, from, to, ctx)
 	if to == 'given' then
 	   tt = gsub(tt, ' the ', ' a ', 1)
 	   tt = gsub(tt, ' have ', ' ', 1)
+	   tt = gsub(tt, ' known as ', ' ', 1)
 	end
 	-- prefixes found at beginning of statement
 	tt = gsub(tt, '^when ', '', 1)
@@ -113,11 +114,13 @@ local function set_sentence(self, event, from, to, ctx)
 	tt = gsub(tt, '^and ', '', 1) -- TODO: expunge only first 'and'
 	-- generic particles
 	tt = gsub(tt, '^that ', ' ', 1)
-	tt = gsub(tt, ' valid ', ' ', 1) -- backward compat
-	tt = gsub(tt, ' known as ', ' ', 1)
+	tt = gsub(tt, '^an ', 'a ', 1) -- equivalence
+	tt = gsub(tt, ' valid ', ' ', 1) -- backward compat (v1)
 	tt = gsub(tt, ' all ', ' ', 1)
 	tt = gsub(tt, ' inside ', ' in ', 1) -- equivalence
-	tt = gsub(tt, '^an ', 'a ', 1)
+	-- TODO: expire deprecation then activate equivalence
+	-- tt = gsub(tt, ' size ', ' length ', 1)
+	-- trimming
 	tt = gsub(tt, ' +', ' ') -- eliminate multiple internal spaces
 	tt = gsub(tt, '^ +', '') -- remove initial spaces
 	tt = gsub(tt, ' +$', '') -- remove final spaces
