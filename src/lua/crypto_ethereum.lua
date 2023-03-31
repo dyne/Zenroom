@@ -325,7 +325,30 @@ function ETH.address_from_public_key(pk)
    return H:process(pk:sub(2, #pk)):sub(13, 32)
 end
 
-function encode(t, arg)
+local function encode_uint(val)
+   return BIG.new(val):fixed(32)
+end
+
+-- The following types are called “dynamic”:
+--     bytes
+--     string
+--     T[] for any T
+--     T[k] for any dynamic T and any k >= 0
+--     (T1,...,Tk) if Ti is dynamic for some 1 <= i <= k
+local function is_dynamic(t)
+   local dyn = t == 'string' or t == 'bytes' or string.match(t, '[a-zA-Z0-9]+%[%]')
+   if not dyn then
+      t = string.match(t, '([a-zA-Z]+)%[%d+%]')
+      if t then
+         dyn = is_dynamic(t)
+      end
+   end
+   return dyn
+end
+
+local encode_tuple
+
+local function encode(t, arg)
    local res
    if type(t) == "string" then
       if string.match(t, 'uint%d+$') or t == 'address' then
@@ -389,27 +412,6 @@ function encode(t, arg)
       res = encode_tuple(t, arg)
    end
    return res
-end
-
-function encode_uint(val)
-   return BIG.new(val):fixed(32)
-end
-
--- The following types are called “dynamic”:
---     bytes
---     string
---     T[] for any T
---     T[k] for any dynamic T and any k >= 0
---     (T1,...,Tk) if Ti is dynamic for some 1 <= i <= k
-function is_dynamic(t)
-   local dyn = t == 'string' or t == 'bytes' or string.match(t, '[a-zA-Z0-9]+%[%]')
-   if not dyn then
-      t = string.match(t, '([a-zA-Z]+)%[%d+%]')
-      if t then
-         dyn = is_dynamic(t)
-      end
-   end
-   return dyn
 end
 
 function encode_tuple(params, args)
