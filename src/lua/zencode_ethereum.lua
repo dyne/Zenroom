@@ -209,14 +209,9 @@ When("create the signed ethereum transaction for chain ''",
 function(chainid)
   local sk = havekey'ethereum'
   local tx = have'ethereum transaction'
-  local cid = mayhave(chainid)
-  if cid then
-    cid = tonumber(cid) or cid:octet()
-  else
-    cid = tonumber(chainid) or O.from_string(chainid)
-  end
-  cid = INT.new(cid)
-  ZEN.assert(cid, "Invalid chain id: "..chainid)
+  local cid, cid_codec = mayhave(chainid)
+  cid = ETH.parse_chainid(chainid, cid, cid_codec.encoding)
+  ZEN.assert(cid, "Invalid chain id encoding: "..cid_codec.encoding)
   if not tx.data  then tx.data = O.new() end
   if not tx.value then tx.value = O.new() end
   tx.v = cid
