@@ -70,6 +70,7 @@ cat <<EOF > "${DIR}"/zen_ecp_factory.h
 
 #define FP2 FP2_${CN}
 #define FP2_from_BIGs(x,a,b) FP2_${CN}_from_BIGs(x,a,b)
+#define FP2_reduce(q) FP2_${CN}_reduce(q)
 
 #define ECP2_copy(d,s) ECP2_${CN}_copy(d,s)
 #define ECP2_set(d,x,y) ECP2_${CN}_set(d, x, y)
@@ -87,6 +88,7 @@ cat <<EOF > "${DIR}"/zen_ecp_factory.h
 #define ECP2_toOctet(o,d) ECP2_${CN}_toOctet(o,d)
 #define ECP2_generator(e) ECP2_${CN}_generator(e)
 #define ECP2_mapit(q,w) ECP2_${CN}_mapit(q,w)
+#define ECP2_get(x,y,q) ECP2_${CN}_get(x,y,q)
 
 #define PAIR_ate(r,p,q) PAIR_${CN}_ate(r,p,q)
 #define PAIR_fexp(x) PAIR_${CN}_fexp(x)
@@ -181,6 +183,7 @@ extern void PAIR_${CN}_GTpow(FP12_${CN} *x,BIG_${BS} b);
 #define BIG_dfromBytesLen(d,o,l) BIG_${BS}_dfromBytesLen(d,o,l)
 #define BIG_dzero(d) BIG_${BS}_dzero(d)
 #define BIG_dnbits(d) BIG_${BS}_dnbits(d)
+#define BIG_output(d) BIG_${BS}_output(d)
 
 #define FP FP_${CN}
 #define FP_nres(f,b) FP_${CN}_nres(f,b)

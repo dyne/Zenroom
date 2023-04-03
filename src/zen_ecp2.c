@@ -59,6 +59,7 @@
 #include <zen_memory.h>
 #include <lua_functions.h>
 
+extern int _octet_to_big(lua_State *L, big *dst, octet *src);
 
 // use shared internally with octet o_arg()
 int _ecp2_to_octet(octet *o, ecp2 *e) {
@@ -738,6 +739,146 @@ end:
 	END(1);
 }
 
+static int ecp2_zcash_export(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	ecp2 *e = ecp2_arg(L, 1);
+	if(e == NULL) {
+		THROW("Could not create ECP2 point");
+		return 0;
+	}
+
+	octet *o = o_new(L, 96);
+	if(o == NULL) {
+		failed_msg = "Could not allocate ECP2 point";
+		goto end;
+	}
+
+	if(ECP2_isinf(&e->val)) {
+		o->len = 96;
+		o->val[0] = (char)0xc0;
+		memset(o->val+1, 0, 95);
+	} else {
+		FP2 x,y;
+		const char c_bit = 1;
+		const char i_bit = 0;
+		const char s_bit = 0; //TODO: sign of point
+		char m_byte = (char)((c_bit << 7)+(i_bit << 6)+(s_bit << 5));
+
+		ECP2_get(&x, &y, &e->val);
+		BIG bx,by;
+		FP2_reduce(&x);
+		FP_redc(bx,&(x.a));
+		FP_redc(by,&(x.b));
+
+		BIG_toBytes(o->val+48, bx);
+		BIG_toBytes(o->val, by);
+		o->len = 96;
+
+
+		o->val[0] |= m_byte;
+	}
+
+end:
+	ecp2_free(e);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+static int sign_gf(const big* x0, const big* x1) {
+	BIG p = CURVE_Prime;
+
+}
+
+// TODO: remove magic numbers
+// TODO: implement import for non compressed octets
+static int ecp2_zcash_import(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *o = o_arg(L, 1);
+
+	ecp2 *e = ecp2_new(L);
+	if(e == NULL) {
+		THROW("Could not create ECP2 point");
+		return 0;
+	}
+	if(o == NULL) {
+		failed_msg = "Could not allocate ECP2 point";
+		goto end;
+	}
+	unsigned char m_byte = o->val[0] & 0xE0;
+	char c_bit;
+	char i_bit;
+	char s_bit;
+	register int i = 0;
+	if(m_byte == 0x20 || m_byte == 0x60 || m_byte == 0xE0) {
+		failed_msg = "Invalid octet header";
+		goto end;
+	}
+	c_bit = ((m_byte & 0x80) == 0x80);
+	i_bit = ((m_byte & 0x40) == 0x40);
+	s_bit = ((m_byte & 0x20) == 0x20);
+
+	if(c_bit) {
+		if(o->len != 96) {
+			failed_msg = "Invalid octet header";
+			goto end;
+		}
+	} else {
+		if(o->len != 192) {
+			failed_msg = "Invalid octet header";
+			goto end;
+		}
+	}
+
+	o->val[0] = o->val[0] & 0x1F;
+
+
+	if(i_bit) {
+		// TODO: check o->val is all 0
+		ECP2_inf(&e->val);
+		goto end;
+	}
+
+	if(c_bit) {
+		FP2 fx;
+		octet x0 = {
+			.max = 48,
+			.len = 48,
+			.val = o->val
+		};
+		octet x1 = {
+			.max = 48,
+			.len = 48,
+			.val = o->val+48
+		};
+
+		big* bigx0 = big_new(L);
+		big* bigx1 = big_new(L);
+		_octet_to_big(L, bigx0, &x0);
+		_octet_to_big(L, bigx1, &x1);
+		FP2_from_BIGs(&fx, bigx1->val, bigx0->val);
+		if(!ECP2_setx(&e->val, &fx)) {
+			failed_msg = "Invalid input octet: not a point on the curve";
+			goto end;
+		}
+		lua_pop(L,1);
+		lua_pop(L,1);
+
+	} else {
+		failed_msg = "Not yet implemented";
+		goto end;
+	}
+end:
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
 int luaopen_ecp2(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg ecp2_class[] = {
@@ -747,6 +888,7 @@ int luaopen_ecp2(lua_State *L) {
 		{"mapit", ecp2_mapit},
 		{"inf", ecp2_get_infinity},
 		{"infinity", ecp2_get_infinity},
+		{"zcash_import", ecp2_zcash_import},
 		// basic pairing function & aliases
 		{"pair", ecp2_millerloop},
 		{"loop", ecp2_millerloop},
@@ -775,6 +917,7 @@ int luaopen_ecp2(lua_State *L) {
 		{"__mul", ecp2_mul},
 		{"__gc", ecp2_destroy},
 		{"__tostring", ecp2_output},
+		{"zcash_export", ecp2_zcash_export},
 		{NULL, NULL}
 	};
 	zen_add_class(L, "ecp2", ecp2_class, ecp2_methods);

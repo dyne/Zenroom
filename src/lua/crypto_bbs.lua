@@ -83,8 +83,8 @@ function bbs.keygen(ikm, key_info)
     sk = INT.new(0)
     while sk == INT.new(0) do
         salt = hash:process(salt)
-        prk = I.spy(bbs.hkdf_extract(salt, ikm .. i2osp(0, 1)))
-        okm = I.spy(bbs.hkdf_expand(prk, key_info .. i2osp(l, 2), l))
+        prk = bbs.hkdf_extract(salt, ikm .. i2osp(0, 1))
+        okm = bbs.hkdf_expand(prk, key_info .. i2osp(l, 2), l)
         sk = os2ip(okm) % ECP.order()
     end
 
