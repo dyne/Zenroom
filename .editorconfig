@@ -32,6 +32,10 @@ indent_size = 3
 indent_style = tab
 indent_size = 4
 
+[src/lua/zencode_array.lua]
+indent_style = tab
+indent_size = 4
+
 [src/lua/zencode_data.lua]
 indent_style = space
 indent_size = 2
