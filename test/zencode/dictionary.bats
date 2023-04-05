@@ -654,19 +654,21 @@ EOF
 @test "move statements" {
     cat << EOF | save_asset move.data
 {
-	"myDict": {
-		 "name": "Bruce",
-		 "surname": "Wayne",
-		 "age": "44"
-	},
-	"myArray": [
-			 "John",
-			 "Doe",
-		 	 "42"
-	],
-	"myString": "who?",
-	"mySecondString": "where?",
-	"name": "mySecondString"
+    "myDict": {
+        "name": "Bruce",
+        "surname": "Wayne",
+        "age": "44"
+    },
+    "myArray": [
+            "John",
+            "Doe",
+            "42"
+    ],
+    "myString": "who?",
+    "mySecondString": "where?",
+    "myThirdString": "when?",
+    "name": "mySecondString",
+    "dest_name": "myDict"
 }
 EOF
 
@@ -675,10 +677,13 @@ Given I have a 'string dictionary' named 'myDict'
 Given I have a 'string array' named 'myArray'
 Given I have a 'string' named 'myString'
 Given I have a 'string' named 'mySecondString'
+Given I have a 'string' named 'myThirdString'
 Given I have a 'string' named 'name'
+Given I have a 'string' named 'dest_name'
 
 When I move 'myString' in 'myDict'
 When I move named by 'name' in 'myArray'
+When I move 'myThirdString' in named by 'dest_name'
 When I move 'surname' from 'myDict' to 'myArray'
 
 When I create the 'string array' named 'myNewArray'
@@ -689,7 +694,7 @@ and print the 'myArray'
 and print the 'myNewArray'
 EOF
     save_output 'move.json'
-    assert_output '{"myArray":["John","Doe","42","where?","Wayne"],"myDict":{"age":"44","myString":"who?"},"myNewArray":["Bruce"]}'
+    assert_output '{"myArray":["John","Doe","42","where?","Wayne"],"myDict":{"age":"44","myString":"who?","myThirdString":"when?"},"myNewArray":["Bruce"]}'
 }
 
 @test "copy statements" {

@@ -312,6 +312,13 @@ When("move '' in ''", function(src, dest)
 	ZEN.CODEC[src] = nil
 end)
 
+When("move '' in named by ''", function(src, dest_name)
+    local dest = have(dest_name):string()
+    move_or_copy_in(have(src), src, dest)
+    ACK[src] = nil
+    ZEN.CODEC[src] = nil
+end)
+
 When("move '' from '' to ''", function(name, src, dest)
 	move_or_copy_in(have({src, name}), name, dest)
 	ACK[src][name] = nil
