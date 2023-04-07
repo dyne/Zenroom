@@ -787,10 +787,11 @@ end:
 	END(1);
 }
 
-static int sign_gf(const big* x0, const big* x1) {
-	BIG p = CURVE_Prime;
-
-}
+// TODO: remove if not used
+//static int sign_gf(const big* x0, const big* x1) {
+//	BIG p = CURVE_Prime;
+//
+//}
 
 // TODO: remove magic numbers
 // TODO: implement import for non compressed octets
