@@ -100,4 +100,38 @@ function bbs.sign(sk, pk, headers, messages)
 
 end
 
+-- draft-irtf-cfrg-hash-to-curve-16 section 5.3.1
+-- It outputs a uniformly random byte string.
+function bbs.expand_message_xmd(msg, DST, len_in_bytes)
+    -- msg, DST are OCTETS; len_in_bytes is an integer.
+
+    -- Parameters:
+    -- a hash function (SHA-256 or SHA3-256 are appropriate)
+    local b_in_bytes = 32 -- = output size of hash IN BITS / 8
+    local s_in_bytes = 64 -- ok for SHA-256
+
+    local ell = math.ceil(len_in_bytes / b_in_bytes)
+    assert(ell <= 255)
+    assert(len_in_bytes <= 65535)
+    local DST_len = O.len(DST)
+    assert( DST_len <= 255)
+
+    local DST_prime = DST .. i2osp(DST_len, 1)
+    local Z_pad = i2osp(0, s_in_bytes)
+    local l_i_b_str = i2osp(len_in_bytes, 2)
+    local msg_prime = Z_pad..msg..l_i_b_str..i2osp(0,1)..DST_prime
+
+    local b_0 = hash:process(msg_prime)
+    local b_1 = hash:process(b_0..i2osp(1,1)..DST_prime)
+    local uniform_bytes = b_1
+    local b_j = b_1
+    for i = 2,ell do
+        local b_i = hash:process(O.xor(b_0, b_j)..i2osp(i,1)..DST_prime)
+        b_j = b_i
+        uniform_bytes = uniform_bytes..b_i
+    end
+    return uniform_bytes:sub(1,len_in_bytes), DST_prime, msg_prime
+
+end
+
 return bbs
