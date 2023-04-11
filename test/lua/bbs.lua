@@ -29,7 +29,7 @@ hkdf_tests = {
     },
 }
 
-function run_test_hkdf(test)
+local function run_test_hkdf(test)
     if type(test.salt) == 'string' then
         test.salt = O.from_hex(test.salt)
     end
@@ -42,7 +42,8 @@ function run_test_hkdf(test)
     assert(O.from_hex(test.okm) == okm)
 end
 
-
+print('----------------------')
+print("TEST: hkdf (extract + expand)")
 for k,v in pairs(hkdf_tests) do
     print("Test Case " .. k)
     run_test_hkdf(v)
@@ -59,11 +60,13 @@ oct = O.from_hex('aaff983278257afc45fa9d44d156c454d716fb1a250dfed132d65b2009331f
 assert(bbs.sk2pk(sk) == ECP2.zcash_import(O.from_hex('aaff983278257afc45fa9d44d156c454d716fb1a250dfed132d65b2009331f618c623c14efa16245f50cc92e60334051087f1ae92669b89690f5feb92e91568f95a8e286d110b011e9ac9923fd871238f57d1295395771331ff6edee43e4ccc6')))
 
 -- expand_message_xmd(SHA-256)
-DST_test = 'QUUX-V01-CS02-with-expander-SHA256-128'
+local DST_test = 'QUUX-V01-CS02-with-expander-SHA256-128'
 
-expand_message_xmd_SHA_256_test = {
+-- Test vectors originated from:
+-- draft-irtf-cfrg-hash-to-curve, Appendix K.1
+local expand_message_xmd_SHA_256_test = {
     {
-      msg     = "" ,
+      msg     = '',
       len_in_bytes = '0x20',
       DST_prime = '515555582d5630312d435330322d776974682d657870616e6465722d5348413235362d31323826', 
       msg_prime = '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000515555582d5630312d435330322d776974682d657870616e6465722d5348413235362d31323826',
@@ -135,24 +138,15 @@ uniform_bytes = '546aff5444b5b79aa6148bd81728704c32decb73a3ba76e9e75885cad9def1d
     }
 
 }
-print(type(bbs.hkdf_expand))
-print(type(bbs.expand_message_xmd))
-example = bbs.expand_message_xmd(O.from_string("aaa"), O.from_string(DST_test), 20)
 
-function run_test_expand_message_xmd_SHA_256 (test)
-    if type(test.msg) == 'string' then
-        if test.msg == "" then
-            test.msg = O.empty()
-        else
-            test.msg = O.from_string(test.msg)
-        end
-    end
-    output_bytes, output_DST, output_msg = bbs.expand_message_xmd(test.msg, O.from_string(DST_test), tonumber(test.len_in_bytes))
-    assert(output_bytes == test.uniform_bytes, "Wrong output bytes")
-    assert(output_DST == test.DST_prime, "Wrong dst prime")
-    assert(output_msg == test.msg_prime, "Wrong msg_prime")
+local function run_test_expand_message_xmd_SHA_256 (test)
+    local output_bytes, output_DST, output_msg = bbs.expand_message_xmd(O.from_string(test.msg), O.from_string(DST_test), tonumber(test.len_in_bytes))
+    assert(output_bytes:hex() == test.uniform_bytes, "Wrong output bytes")
+    assert(output_DST:hex() == test.DST_prime, "Wrong dst prime")
+    assert(output_msg:hex() == test.msg_prime, "Wrong msg_prime")
 end
 
+print('----------------------')
 print("TEST: expand_message_xmd (SHA-256)")
 for k,v in pairs(expand_message_xmd_SHA_256_test) do
     print("Test Case " .. k)

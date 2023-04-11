@@ -100,6 +100,8 @@ function bbs.sign(sk, pk, headers, messages)
 
 end
 
+-- TODO: implement expand_message_xmd with other hash functions? Leave this function inside the bbs table?
+
 -- draft-irtf-cfrg-hash-to-curve-16 section 5.3.1
 -- It outputs a uniformly random byte string.
 function bbs.expand_message_xmd(msg, DST, len_in_bytes)
@@ -113,7 +115,7 @@ function bbs.expand_message_xmd(msg, DST, len_in_bytes)
     local ell = math.ceil(len_in_bytes / b_in_bytes)
     assert(ell <= 255)
     assert(len_in_bytes <= 65535)
-    local DST_len = O.len(DST)
+    local DST_len = #DST
     assert( DST_len <= 255)
 
     local DST_prime = DST .. i2osp(DST_len, 1)
@@ -124,6 +126,7 @@ function bbs.expand_message_xmd(msg, DST, len_in_bytes)
     local b_0 = hash:process(msg_prime)
     local b_1 = hash:process(b_0..i2osp(1,1)..DST_prime)
     local uniform_bytes = b_1
+    -- b_j assumes the value of b_(i-1) inside the for loop, for i between 2 and ell.
     local b_j = b_1
     for i = 2,ell do
         local b_i = hash:process(O.xor(b_0, b_j)..i2osp(i,1)..DST_prime)
