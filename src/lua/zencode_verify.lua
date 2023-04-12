@@ -105,7 +105,7 @@ IfWhen(
   end
 )
 
--- check a tuple of numbers before comparison, convert to BIG or number
+-- check a tuple of numbers before comparison, convert to number
 local function numcheck(left, right)
   local al, ar
   --
@@ -119,9 +119,11 @@ local function numcheck(left, right)
     end
   end
   if tl == 'zenroom.octet' then
-    al = BIG.new(left)
-  elseif tl == 'zenroom.big' or tl == 'number' or tl == 'zenroom.float' then
-    al = left
+    al = tonumber( BIG.new(left):decimal() )
+  elseif tl == 'zenroom.big' then
+    al = tonumber( left:decimal() )
+  elseif tl == 'number' or tl == 'zenroom.float' then
+    al = tonumber( left )
   else
     al = left:octet()
   end
@@ -136,9 +138,11 @@ local function numcheck(left, right)
     end
   end
   if tr == 'zenroom.octet' then
-    ar = BIG.new(right)
-  elseif tr == 'zenroom.big' or tr == 'number' or tr == 'zenroom.float' then
-    ar = right
+    ar = tonumber( BIG.new(right):decimal() )
+  elseif tr == 'zenroom.big' then
+    ar = tonumber( right:decimal() )
+  elseif tr == 'number' or tr == 'zenroom.float' then
+    ar = tonumber( right )
   else
     ar = right:octet()
   end
@@ -187,6 +191,61 @@ IfWhen(
     )
   end
 )
+
+local function _check_compare_length(obj_name, num_name)
+    local obj, obj_codec = have(obj_name)
+    local num = have(num_name)
+    local obj_ztype = obj_codec.zentype
+    ZEN.assert(obj_ztype == "array" or obj_ztype == "dictionary" or
+        (obj_ztype == "element" and obj_codec.encoding == "string"),
+        "Can not compute the length for type "..obj_ztype)
+    local obj_len
+    if obj_ztype == "array" or obj_ztype == "element" then
+        obj_len = #obj
+    else
+        obj_len = 0
+        for _ in pairs(obj) do
+            obj_len = obj_len + 1
+        end
+    end
+    return numcheck(obj_len, num)
+end
+
+IfWhen("verify the length of '' is less than ''", function(obj_name, num_name)
+    local l, r = _check_compare_length(obj_name, num_name)
+    I.spy("l")
+    I.spy(l)
+    I.spy(r)
+    ZEN.assert(l < r,
+        "Comparison fail: length of "..obj_name.." is not less than "..num_name)
+end)
+
+IfWhen("verify the length of '' is less or equal than ''", function(obj_name, num_name)
+    local l, r = _check_compare_length(obj_name, num_name)
+    I.spy("le")
+    I.spy(l)
+    I.spy(r)
+    ZEN.assert(l <= r,
+        "Comparison fail: length of "..obj_name.." is not less or equal than "..num_name)
+end)
+
+IfWhen("verify the length of '' is more than ''", function(obj_name, num_name)
+    local l, r = _check_compare_length(obj_name, num_name)
+    I.spy("m")
+    I.spy(l)
+    I.spy(r)
+    ZEN.assert(r < l,
+        "Comparison fail: length of "..obj_name.." is not more than "..num_name)
+end)
+
+IfWhen("verify the length of '' is more or equal than ''", function(obj_name, num_name)
+    local l, r = _check_compare_length(obj_name, num_name)
+    I.spy("me")
+    I.spy(l)
+    I.spy(r)
+    ZEN.assert(r <= l,
+        "Comparison fail: length of "..obj_name.." is not more or equal than "..num_name)
+end)
 
 -- TODO: substitute with RFC2047 compliant code (take from jaromail)
 local function validemail(str)

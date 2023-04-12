@@ -515,3 +515,86 @@ EOF
     save_output "start_end.out"
     assert_output '{"results":["str_starts_with_sub","str_ends_with_string_who?"]}'
 }
+
+@test "verify length of array, dictionaries and strings" {
+	cat << EOF | save_asset verify_length.data
+{
+	"my_string": "hello",
+	"my_array": [
+		"This array contains 5 strings",
+		"This array contains 5 strings",
+		"This array contains 5 strings",
+		"This array contains 5 strings",
+		"This array contains 5 strings"
+	],
+	"my_dict": {
+		"number of elements": "3",
+		"string": "hello",
+		"number": "3"
+	},
+	"2_int": "2",
+	"3_int": "3",
+	"4_int": "4",
+	"5_int": "5",
+	"6_int": "6",
+	"2_float": 2,
+	"3_float": 3,
+	"4_float": 4,
+	"5_float": 5,
+	"6_float": 6
+}
+EOF
+	cat << EOF | zexe verify_length.zen verify_length.data
+Given I have a 'string' named 'my_string'
+Given I have a 'string array' named 'my_array'
+Given I have a 'string dictionary' named 'my_dict'
+
+Given I have a 'integer' named '2_int'
+Given I have a 'integer' named '3_int'
+Given I have a 'integer' named '4_int'
+Given I have a 'integer' named '5_int'
+Given I have a 'integer' named '6_int'
+Given I have a 'float' named '2_float'
+Given I have a 'float' named '3_float'
+Given I have a 'float' named '4_float'
+Given I have a 'float' named '5_float'
+Given I have a 'float' named '6_float'
+
+# string with integer
+When I verify the length of 'my_string' is more than '2_int'
+When I verify the length of 'my_string' is more or equal than '5_int'
+When I verify the length of 'my_string' is less or equal than '5_int'
+When I verify the length of 'my_string' is less than '6_int'
+# string with float
+When I verify the length of 'my_string' is more than '2_float'
+When I verify the length of 'my_string' is more or equal than '5_float'
+When I verify the length of 'my_string' is less or equal than '5_float'
+When I verify the length of 'my_string' is less than '6_float'
+
+# array with integer
+When I verify the length of 'my_array' is more than '3_int'
+When I verify the length of 'my_array' is more or equal than '5_int'
+When I verify the length of 'my_array' is less or equal than '5_int'
+When I verify the length of 'my_array' is less than '6_int'
+# array with float
+When I verify the length of 'my_array' is more than '3_float'
+When I verify the length of 'my_array' is more or equal than '5_float'
+When I verify the length of 'my_array' is less or equal than '5_float'
+When I verify the length of 'my_array' is less than '6_float'
+
+# array with integer
+When I verify the length of 'my_dict' is more than '2_int'
+When I verify the length of 'my_dict' is more or equal than '3_int'
+When I verify the length of 'my_dict' is less or equal than '3_int'
+When I verify the length of 'my_dict' is less than '5_int'
+# array with float
+When I verify the length of 'my_dict' is more than '2_float'
+When I verify the length of 'my_dict' is more or equal than '3_float'
+When I verify the length of 'my_dict' is less or equal than '3_float'
+When I verify the length of 'my_dict' is less than '5_float'
+
+Then print the string 'all comparison succedded'
+EOF
+	save_output verify_length.json
+	assert_output '{"output":["all_comparison_succedded"]}'
+}
