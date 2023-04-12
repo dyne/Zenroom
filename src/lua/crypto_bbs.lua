@@ -137,4 +137,33 @@ function bbs.expand_message_xmd(msg, DST, len_in_bytes)
 
 end
 
+-- draft-irtf-cfrg-hash-to-curve-16 section 8.8.1 (BLS12-381 parameters)
+-- BLS12381G1_XMD:SHA-256_SSWU_RO_ 
+
+--local p = ECP.prime()
+local m = 1
+local k = 128
+local L = 64 --local L = math.ceil((math.ceil(math.log(p,2)) + k) / 8)
+
+-- draft-irtf-cfrg-hash-to-curve-16 section 5.2
+--it returns u a table of tables containing big integers representing elements of the field 
+function bbs.hash_to_field(msg, count, DST)
+
+    local len_in_bytes = count*m*L
+    local uniform_bytes = bbs.expand_message_xmd(msg, DST, len_in_bytes)
+    local u = {}
+    for i = 0, (count-1) do
+        local u_i = {}
+        for j = 0, (m-1) do
+            local elm_offset = L*(j+i*m)
+            local tv = uniform_bytes:sub(elm_offset+1,L+elm_offset)
+            local e_j = BIG.mod(tv, ECP.prime()) --local e_j = os2ip(tv) % p 
+            u_i[j+1] = e_j
+        end
+        u[i+1] = u_i
+    end
+
+    return u
+end
+
 return bbs
