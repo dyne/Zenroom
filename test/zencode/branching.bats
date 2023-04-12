@@ -47,8 +47,8 @@ Then print string 'the conditions can never be satisfied'
 Endif
 
 # You can also check if an object exists at a certain point of the execution, with the statement:
-# If 'objectName' is found
-If 'just a random' is found
+# If I verify 'objectName' is found
+If I verify 'just a random' is found
 Then print string 'I found the newly created random number, so I certify that the condition is satisfied'
 Endif
 
@@ -167,15 +167,15 @@ Given I have a 'string' named 'str'
 
 When I create the 'string array' named 'found output'
 
-If 'str' is found
+If I verify 'str' is found
 When I insert string '1.success' in 'found output'
 EndIf
 
-If 'empty_arr' is found
+If I verify 'empty_arr' is found
 When I insert string '2.success' in 'found output'
 EndIf
 
-If 'hello' is not found
+If I verify 'hello' is not found
 When I insert string '3.success' in 'found output'
 EndIf
 
