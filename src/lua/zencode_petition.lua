@@ -212,39 +212,46 @@ IfWhen(
 	end
 )
 
-IfWhen(
-	'the petition signature is not a duplicate',
-	function()
-		if luatype(ACK.petition.list) == 'table' then
-			ZEN.assert(
-				(not array_contains(
-					ACK.petition.list,
-					ACK.petition_signature.uid_signature
-				)),
-				'Duplicate petition signature detected'
-			)
-		else
-			ACK.petition.list = {}
-		end
-		table.insert(ACK.petition.list, ACK.petition_signature.uid_signature)
-	end
+local function _check_duplicate()
+    if luatype(ACK.petition.list) == 'table' then
+        ZEN.assert(
+            (not array_contains(
+                ACK.petition.list,
+                ACK.petition_signature.uid_signature
+            )),
+            'Duplicate petition signature detected'
+        )
+    else
+        ACK.petition.list = {}
+    end
+    table.insert(ACK.petition.list, ACK.petition_signature.uid_signature)
+end
+
+IfWhen(deprecated('the petition signature is not a duplicate',
+    'verify the petition signature is not a duplicate',
+    _check_duplicate)
+)
+IfWhen('verify the petition signature is not a duplicate', _check_duplicate)
+
+local function _check_one_more()
+    -- verify that the signature is +1 (no other value supported)
+    ACK.petition_signature.one =
+        PET.prove_sign_petition(ACK.petition.owner, BIG.new(1))
+    ZEN.assert(
+        PET.verify_sign_petition(
+            ACK.petition.owner,
+            ACK.petition_signature.one
+        ),
+        'ABC petition signature adds more than one signature'
+    )
+end
+
+IfWhen(deprecated('the petition signature is just one more',
+    'verify the petition signature is just one more',
+    _check_one_more)
 )
 
-IfWhen(
-	'the petition signature is just one more',
-	function()
-		-- verify that the signature is +1 (no other value supported)
-		ACK.petition_signature.one =
-			PET.prove_sign_petition(ACK.petition.owner, BIG.new(1))
-		ZEN.assert(
-			PET.verify_sign_petition(
-				ACK.petition.owner,
-				ACK.petition_signature.one
-			),
-			'ABC petition signature adds more than one signature'
-		)
-	end
-)
+IfWhen('verify the petition signature is just one more', _check_one_more)
 
 When(
 	'add the signature to the petition',
