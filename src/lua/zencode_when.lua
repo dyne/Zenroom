@@ -45,18 +45,48 @@ local function _is_found(el, t)
 	return false
 end
 
-IfWhen("'' is found", function(el)
-	ZEN.assert(_is_found(el), "Cannot find object: "..el)
-end)
-IfWhen("'' is not found", function(el)
-	ZEN.assert(not _is_found(el), "Object should not be found: "..el)
+IfWhen(deprecated("'' is found",
+    "verify '' is found",
+    function(el)
+        ZEN.assert(_is_found(el), "Cannot find object: "..el)
+    end)
+)
+
+IfWhen(deprecated("'' is not found",
+    "verify '' is not found",
+    function(el)
+        ZEN.assert(not _is_found(el), "Object should not be found: "..el)
+    end)
+)
+
+IfWhen(deprecated("'' is found in ''",
+    "verify '' is found in ''",
+    function(el, t)
+        ZEN.assert(_is_found(el, t), "Cannot find object: "..el.." in "..t)
+    end)
+)
+
+IfWhen(deprecated("'' is not found in ''",
+    "verify '' is not found in ''",
+    function(el, t)
+        ZEN.assert(not _is_found(el,t), "Object: "..el.." should not be found in "..t)
+    end)
+)
+
+IfWhen("verify '' is found", function(el)
+    ZEN.assert(_is_found(el), "Cannot find object: "..el)
 end)
 
-IfWhen("'' is found in ''", function(el, t)
-	ZEN.assert(_is_found(el, t), "Cannot find object: "..el.." in "..t)
+IfWhen("verify '' is not found", function(el)
+    ZEN.assert(not _is_found(el), "Object should not be found: "..el)
 end)
-IfWhen("'' is not found in ''", function(el, t)
-	ZEN.assert(not _is_found(el,t), "Object: "..el.." should not be found in "..t)
+
+IfWhen("verify '' is found in ''", function(el, t)
+    ZEN.assert(_is_found(el, t), "Cannot find object: "..el.." in "..t)
+end)
+
+IfWhen("verify '' is not found in ''", function(el, t)
+    ZEN.assert(not _is_found(el,t), "Object: "..el.." should not be found in "..t)
 end)
 
 When("append '' to ''", function(src, dest)

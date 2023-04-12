@@ -179,56 +179,56 @@ If 'hello' is not found
 When I insert string '3.success' in 'found output'
 EndIf
 
-If 'hello' is found in 'arr'
+If I verify 'hello' is found in 'arr'
 When I insert string '4.success' in 'found output'
 EndIf
 
-If 'hello' is found in 'dict'
+If I verify 'hello' is found in 'dict'
 When I insert string '5.success' in 'found output'
 EndIf
 
-If 'good' is not found in 'arr'
+If I verify 'good' is not found in 'arr'
 When I insert string '6.success' in 'found output'
 EndIf
 
-If 'good' is not found in 'dict'
+If I verify 'good' is not found in 'dict'
 When I insert string '7.success' in 'found output'
 EndIf
 
-If 'empty octet' is not found in 'not_empty_dict'
+If I verify 'empty octet' is not found in 'not_empty_dict'
 When I insert string '8.success' in 'found output'
 EndIf
 
 
-If 'hello' is found
+If I verify 'hello' is found
 When I insert string '1.fail' in 'found output'
 EndIf
 
-If 'str' is not found
+If I verify 'str' is not found
 When I insert string '2.fail' in 'found output'
 EndIf
 
-If 'good' is found in 'arr'
+If I verify 'good' is found in 'arr'
 When I insert string '3.fail' in 'found output'
 EndIf
 
-If 'good' is found in 'dict'
+If I verify 'good' is found in 'dict'
 When I insert string '4.fail' in 'found output'
 EndIf
 
-If 'hello' is not found in 'arr'
+If I verify 'hello' is not found in 'arr'
 When I insert string '5.fail' in 'found output'
 EndIf
 
-If 'hello' is not found in 'dict'
+If I verify 'hello' is not found in 'dict'
 When I insert string '6.fail' in 'found output'
 EndIf
 
-If 'hello' is found in 'empty arr'
+If I verify 'hello' is found in 'empty arr'
 When I insert string '7.fail' in 'found output'
 EndIf
 
-If 'empty_arr' is not found
+If I verify 'empty_arr' is not found
 When I insert string '8.fail' in 'found output'
 EndIf
 
