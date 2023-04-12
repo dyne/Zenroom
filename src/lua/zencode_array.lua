@@ -382,6 +382,7 @@ When("create the array by splitting '' at ''", function(data_name, sep_name)
 	ACK.array = octets
 	new_codec('array', { encoding='string', zentype='array' })
 end)
+
 When("create the copy of last element in ''", function(obj_name)
 	local obj, obj_codec = have(obj_name)
 	if type(obj) ~= 'table' then
@@ -406,4 +407,30 @@ When("create the copy of last element in ''", function(obj_name)
 	else
 		error("Cannot find last element in " .. obj_codec.zentype)
 	end
+end)
+
+When("create the '' from '' in ''", function(dest, key_name, obj_name)
+	empty(dest)
+	local obj, obj_codec = have(obj_name)
+	local key, key_enc = mayhave(key_name)
+	if key then
+		if key_enc.encoding == "string" then
+			key = key:str()
+		elseif key_enc.encoding == "integer" then
+			key = key:decimal()
+		end
+	else
+		key = key_name
+	end
+	if obj_codec.zentype == 'array' then
+		local key_num = tonumber(key)
+		ZEN.assert(#obj >= key_num, "Element "..key_num.." does not exists in array "..obj_name)
+		ACK[dest] = obj[key_num]
+	elseif obj_codec.zentype == 'dictionary' then
+		ZEN.assert(obj[key], "Element "..key.." does not exists in dictionary "..obj_name)
+		ACK[dest] = obj[key]
+	else
+		error("Last object must be an array or dictionary, found instead: "..obj_codec.zentype)
+	end
+	new_codec(dest, { zentype='element' }, obj_name)
 end)
