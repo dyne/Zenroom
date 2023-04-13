@@ -126,7 +126,6 @@ static int lua_new_ecp(lua_State *L) {
 	void *tx;
 	char *failed_msg = NULL;
 	octet *o = NULL;
-#ifdef DEBUG
 	tx = luaL_testudata(L, 1, "zenroom.big");
 	void *ty = luaL_testudata(L, 2, "zenroom.big");
 	if(tx && ty) {
@@ -149,6 +148,7 @@ end_big_big:
 		big_free(L,x);
 		goto end;
 	}
+#ifdef DEBUG
 	// If x is on the curve then y is calculated from the curve equation.
 	int tn;
 	lua_Number n = lua_tonumberx(L, 2, &tn);
