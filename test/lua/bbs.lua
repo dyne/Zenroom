@@ -235,3 +235,32 @@ for k,v in pairs(hash_to_curve_test) do
     print("Test Case " .. k)
     run_test_hash_to_field(v)
 end 
+
+local function run_test_map_to_curve (test)
+    local output_Q0 = bbs.map_to_curve(BIG.new(O.from_hex(test.u_0)))
+    local output_Q1 = bbs.map_to_curve(BIG.new(O.from_hex(test.u_1)))
+    assert(output_Q0:x() == BIG.new(O.from_hex(test.Q0_x)), "Wrong Q0_x")
+    assert(output_Q0:y() == BIG.new(O.from_hex(test.Q0_y)), "Wrong Q0_y")
+    assert(output_Q1:x() == BIG.new(O.from_hex(test.Q1_x)), "Wrong Q1_x")
+    assert(output_Q1:y() == BIG.new(O.from_hex(test.Q1_y)), "Wrong Q1_y")
+end
+
+print('----------------------')
+print("TEST: map_to_curve")
+for k,v in pairs(hash_to_curve_test) do
+    print("Test Case " .. k)
+    run_test_map_to_curve(v)
+end
+
+local function run_test_hash_to_curve (test)
+    local output_P = bbs.hash_to_curve(O.from_string(test.msg), O.from_string(DST_hash_to_field))
+    assert(output_P:x() == BIG.new(O.from_hex(test.P_x)), "Wrong P_x")
+    assert(output_P:y() == BIG.new(O.from_hex(test.P_y)), "Wrong P_y")
+end
+
+print('----------------------')
+print("TEST: hash_to_curve (and clear_cofactor)")
+for k,v in pairs(hash_to_curve_test) do
+    print("Test Case " .. k)
+    run_test_hash_to_curve(v)
+end
