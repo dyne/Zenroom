@@ -213,36 +213,24 @@ end
 
 IfWhen("verify the length of '' is less than ''", function(obj_name, num_name)
     local l, r = _check_compare_length(obj_name, num_name)
-    I.spy("l")
-    I.spy(l)
-    I.spy(r)
     ZEN.assert(l < r,
         "Comparison fail: length of "..obj_name.." is not less than "..num_name)
 end)
 
 IfWhen("verify the length of '' is less or equal than ''", function(obj_name, num_name)
     local l, r = _check_compare_length(obj_name, num_name)
-    I.spy("le")
-    I.spy(l)
-    I.spy(r)
     ZEN.assert(l <= r,
         "Comparison fail: length of "..obj_name.." is not less or equal than "..num_name)
 end)
 
 IfWhen("verify the length of '' is more than ''", function(obj_name, num_name)
     local l, r = _check_compare_length(obj_name, num_name)
-    I.spy("m")
-    I.spy(l)
-    I.spy(r)
     ZEN.assert(r < l,
         "Comparison fail: length of "..obj_name.." is not more than "..num_name)
 end)
 
 IfWhen("verify the length of '' is more or equal than ''", function(obj_name, num_name)
     local l, r = _check_compare_length(obj_name, num_name)
-    I.spy("me")
-    I.spy(l)
-    I.spy(r)
     ZEN.assert(r <= l,
         "Comparison fail: length of "..obj_name.." is not more or equal than "..num_name)
 end)
