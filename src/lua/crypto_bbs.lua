@@ -287,22 +287,6 @@ function bbs.hash_to_field_m1(msg, count, DST)
 
     return u
 end
-
---hash_to_field CASE m = 1
-
-function bbs.hash_to_field_m1(msg, count, DST)
-
-    local len_in_bytes = count*L
-    local uniform_bytes = bbs.expand_message_xmd(msg, DST, len_in_bytes)
-    local u = {}
-    for i = 0, (count-1) do
-        local elm_offset = L*i
-        local tv = uniform_bytes:sub(elm_offset+1,L+elm_offset)
-        u[i+1] = BIG.mod(tv, p) --local e_j = os2ip(tv) % p 
-    end
-
-    return u
-end
 --]]
 
 -- hash_to_field CASE m = 1, count = 2
