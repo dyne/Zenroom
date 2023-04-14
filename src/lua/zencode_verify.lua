@@ -105,7 +105,7 @@ IfWhen(
   end
 )
 
--- check a tuple of numbers before comparison, convert to number
+-- check a tuple of numbers before comparison, convert to BIG or number
 local function numcheck(left, right)
   local al, ar
   --
@@ -119,11 +119,9 @@ local function numcheck(left, right)
     end
   end
   if tl == 'zenroom.octet' then
-    al = tonumber( BIG.new(left):decimal() )
-  elseif tl == 'zenroom.big' then
-    al = tonumber( left:decimal() )
-  elseif tl == 'number' or tl == 'zenroom.float' then
-    al = tonumber( left )
+    al = BIG.new(left)
+  elseif tl == 'zenroom.big' or tl == 'number' or tl == 'zenroom.float' then
+    al = left
   else
     al = left:octet()
   end
@@ -138,11 +136,9 @@ local function numcheck(left, right)
     end
   end
   if tr == 'zenroom.octet' then
-    ar = tonumber( BIG.new(right):decimal() )
-  elseif tr == 'zenroom.big' then
-    ar = tonumber( right:decimal() )
-  elseif tr == 'number' or tr == 'zenroom.float' then
-    ar = tonumber( right )
+    ar = BIG.new(right)
+  elseif tr == 'zenroom.big' or tr == 'number' or tr == 'zenroom.float' then
+    ar = right
   else
     ar = right:octet()
   end
@@ -194,21 +190,26 @@ IfWhen(
 
 local function _check_compare_length(obj_name, num_name)
     local obj, obj_codec = have(obj_name)
-    local num = have(num_name)
     local obj_ztype = obj_codec.zentype
+    local num, num_codec = have(num_name)
+    local num_enc = num_codec.encoding
     ZEN.assert(obj_ztype == "array" or obj_ztype == "dictionary" or
         (obj_ztype == "element" and obj_codec.encoding == "string"),
         "Can not compute the length for type "..obj_ztype)
+    ZEN.assert(num_enc == "integer" or num_enc == "float",
+        "Can not compare the length of "..obj_name.." with number of type "..num_enc)
+    local obj_len_enc = { ["integer"] = BIG.new, ["float"] = F.new }
     local obj_len
     if obj_ztype == "array" or obj_ztype == "element" then
-        obj_len = #obj
+        obj_len = obj_len_enc[num_enc](#obj)
     else
-        obj_len = 0
+        obj_len = obj_len_enc[num_enc](0)
+        local one = obj_len_enc[num_enc](1)
         for _ in pairs(obj) do
-            obj_len = obj_len + 1
+            obj_len = obj_len + one
         end
     end
-    return numcheck(obj_len, num)
+    return obj_len, num
 end
 
 IfWhen("verify the length of '' is less than ''", function(obj_name, num_name)
