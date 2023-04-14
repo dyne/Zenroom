@@ -146,6 +146,8 @@ end
 -- BLS12381G1_XMD:SHA-256_SSWU_RO_ 
 
 local p = ECP.prime()
+local BIG_0 = BIG.new(0)
+local BIG_1 = BIG.new(1)
 local BIG_2 = BIG.new(2)
 local m = 1
 local k = 128
@@ -173,7 +175,12 @@ BIG.new(O.from_hex('11a05f2b1e833340b809101dd99815856b303e88a2d7005ff2627b56cdb4
     BIG.new(O.from_hex('080d3cf1f9a78fc47b90b33563be990dc43b756ce79f5574a2c596c928c5d1de4fa295f296b74e956d71986a8497e317')),--
     BIG.new(O.from_hex('169b1f8e1bcfa7c42e0c37515d138f22dd2ecb803a0c5c99676314baf4bb1b7fa3190b2edc0327797f241067be390c9e')),
     BIG.new(O.from_hex('10321da079ce07e272d8ec09d2565b0dfa7dccdde6787f96d50af36003b14866f69b771f8c285decca67df3f1605fb7b')),
-    BIG.new(O.from_hex('06e08c248e260e70bd1e962381edee3d31d79d7e22c837bc23c0bf1bc24c6b68c24b1b80b64d391fa9c8ba2e8ba2d229'))},--
+    BIG.new(O.from_hex('06e08c248e260e70bd1e962381edee3d31d79d7e22c837bc23c0bf1bc24c6b68c24b1b80b64d391fa9c8ba2e8ba2d229')),--
+    BIG_0,
+    BIG_0,
+    BIG_0,
+    BIG_0
+},--
 
     { -- K[2][i]
         BIG.new(O.from_hex('08ca8d548cff19ae18b2e62f4bd3fa6f01d5ef4ba35b48ba9c9588617fc8ac62b558d681be343df8993cf9fa40d21b1c')),--
@@ -185,7 +192,13 @@ BIG.new(O.from_hex('11a05f2b1e833340b809101dd99815856b303e88a2d7005ff2627b56cdb4
     BIG.new(O.from_hex('0772caacf16936190f3e0c63e0596721570f5799af53a1894e2e073062aede9cea73b3538f0de06cec2574496ee84a3a')),--
     BIG.new(O.from_hex('14a7ac2a9d64a8b230b3f5b074cf01996e7f63c21bca68a81996e1cdf9822c580fa5b9489d11e2d311f7d99bbdcc5a5e')),
     BIG.new(O.from_hex('0a10ecf6ada54f825e920b3dafc7a3cce07f8d1d7161366b74100da67f39883503826692abba43704776ec3a79a1d641')),--
-    BIG.new(O.from_hex('095fc13ab9e92ad4476d6e3eb3a56680f682b4ee96f7d03776df533978f31c1593174e4b4b7865002d6384d168ecdd0a'))},--
+    BIG.new(O.from_hex('095fc13ab9e92ad4476d6e3eb3a56680f682b4ee96f7d03776df533978f31c1593174e4b4b7865002d6384d168ecdd0a')), --
+    BIG_1,
+    BIG_0,
+    BIG_0,
+    BIG_0,
+    BIG_0,
+    BIG_0},
 
      { -- K[3][i]
         BIG.new(O.from_hex('090d97c81ba24ee0259d1f094980dcfa11ad138e48a869522b52af6c956543d3cd0c7aee9b3ba3c2be9845719707bb33')),--
@@ -220,21 +233,25 @@ BIG.new(O.from_hex('11a05f2b1e833340b809101dd99815856b303e88a2d7005ff2627b56cdb4
     BIG.new(O.from_hex('0accbb67481d033ff5852c1e48c50c477f94ff8aefce42d28c0f9a88cea7913516f968986f7ebbea9684b529e2561092')),--
     BIG.new(O.from_hex('0ad6b9514c767fe3c3613144b45f1496543346d98adf02267d5ceef9a00d9b8693000763e3b90ac11e99b138573345cc')),--
     BIG.new(O.from_hex('02660400eb2e4f3b628bdd0d53cd76f2bf565b94e72927c1cb748df27942480e420517bd8714cc80d1fadc1326ed06f7')),--
-    BIG.new(O.from_hex('0e0fa1d816ddc03e6b24255e0d7819c171c40f65e273b853324efcd6356caa205ca2f570f13497804415473a1d634b8f'))} --
+    BIG.new(O.from_hex('0e0fa1d816ddc03e6b24255e0d7819c171c40f65e273b853324efcd6356caa205ca2f570f13497804415473a1d634b8f')),--
+    BIG_1} 
 }
 
 -- draft-irtf-cfrg-hash-to-curve-16 Appendix I.1
--- SPECIALISED FOR OUR CASE (m=1, p = 3 mod 4) -- I.spy(ECP.prime() % BIG.new(4))
-local c1 = BIG.div( BIG.new(O.from_hex('1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaac')),
-BIG.new(4)) -- (p+1)/4
-local prime_minus_one = BIG.new(O.from_hex('1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaaa'))
-
+-- SPECIALISED FOR OUR CASE (m=1, p = 3 mod 4) 
+local cc1 = BIG.div( BIG.new(O.from_hex('1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaac')), BIG.new(4)) -- (p+1)/4 INTEGER ARITHMETIC
+-- draft-irtf-cfrg-hash-to-curve-16 Appendix F.2.1.2
+local c1 = BIG.div(BIG.modsub(p, BIG.new(3), p), BIG.new(4)) -- (p-3)/4 INTEGER ARITHMETIC
+local c2 = (BIG.modsub(p, Z, p)):modpower(cc1, p) -- Sqrt(-Z) in curve where q = 3 mod 4
+--- local prime_minus_one = BIG.new(O.from_hex('1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaaa'))
+--- local is_square_exponent = BIG.moddiv(prime_minus_one, BIG_2, p) 
 -----------------------------------------------
 -----------------------------------------------
 -----------------------------------------------
 
 -- draft-irtf-cfrg-hash-to-curve-16 section 5.2
 --it returns u a table of tables containing big integers representing elements of the field 
+--[[
 function bbs.hash_to_field(msg, count, DST)
 
     local len_in_bytes = count*m*L
@@ -254,15 +271,103 @@ function bbs.hash_to_field(msg, count, DST)
     return u
 end
 
+--hash_to_field CASE m = 1
+
+function bbs.hash_to_field_m1(msg, count, DST)
+
+    local len_in_bytes = count*L
+    local uniform_bytes = bbs.expand_message_xmd(msg, DST, len_in_bytes)
+    local u = {}
+    for i = 0, (count-1) do
+        local elm_offset = L*i
+        local tv = uniform_bytes:sub(elm_offset+1,L+elm_offset)
+        u[i+1] = BIG.mod(tv, p) --local e_j = os2ip(tv) % p 
+    end
+
+    return u
+end
+--]]
+
+-- hash_to_field CASE m = 1, count = 2
+
+function bbs.hash_to_field_m1_c2(msg, DST)
+    local uniform_bytes = bbs.expand_message_xmd(msg, DST, 2*L)
+    local u = {}
+    u[1] = BIG.mod(uniform_bytes:sub(1,L), p)
+    u[2] = BIG.mod(uniform_bytes:sub(L+1,2*L), p)
+    return u
+end
+
+-- draft-irtf-cfrg-hash-to-curve-16 Section 4
+-- If the third argument is FALSE, it returns the first argument, otherwise it returns the second argument
+local function CMOV(arg1, arg2, bool)
+    if bool then
+        return arg2
+    else
+        return arg1
+    end
+end
+
+-- draft-irtf-cfrg-hash-to-curve-16 Appendix F.2.1.2
+-- It returns EITHER (true, sqrt(u/v)) OR (false, sqrt(Z * (u/v))
+local function sqrt_ratio_3mod4(u, v)
+    local tv1 = v:modsqr(p)
+    local tv2 = BIG.modmul(u, v, p)
+    tv1 = BIG.modmul(tv1, tv2, p)
+    local y1 = tv1:modpower(c1, p)
+
+    y1 = BIG.modmul(y1, tv2, p)
+    local y2 = BIG.modmul( y1, c2, p)
+    local tv3 = y1:modsqr(p)
+    tv3 = BIG.modmul(tv3, v, p)
+
+    local isQR = tv3 == u
+    return isQR, CMOV(y2, y1, isQR)
+end
+
+-- draft-irtf-cfrg-hash-to-curve-16 Appendix F.2
+-- It returns the (x,y) coordinate of a point over E' (isogenous curve)
+local function map_to_curve_simple_swu(u)
+    -- u is of type BIG.
+    local tv1 = u:modsqr(p)
+    tv1 = BIG.modmul(Z, tv1, p)
+    local tv2 = tv1:modsqr(p)
+    tv2 = (tv2 + tv1) % p
+
+    local tv3 = (tv2 + BIG_1) % p
+    tv3 = BIG.modmul(B, tv3, p)
+    local tv4 = CMOV( Z, BIG.modsub( p, tv2, p), tv2 ~= BIG_0 )
+    tv4 = BIG.modmul(A, tv4, p)
+
+    tv2 = tv3:modsqr(p)
+    local tv6 = tv4:modsqr(p)
+    local tv5 = BIG.modmul(A, tv6, p)
+    tv2 = (tv2 + tv5) % p
+
+    tv2 = BIG.modmul(tv2, tv3, p)
+    tv6 = BIG.modmul(tv6, tv4, p)
+    tv5 = BIG.modmul(B, tv6, p)
+    tv2 = (tv2 + tv5) % p
+
+    local x = BIG.modmul(tv1, tv3, p)
+    local is_gx1_square, y1 = sqrt_ratio_3mod4(tv2, tv6)
+    local y = BIG.modmul(tv1, u, p)
+    y = BIG.modmul(y, y1, p)
+
+    x = CMOV(x, tv3, is_gx1_square)
+    y = CMOV(y, y1, is_gx1_square)
+    y = CMOV( BIG.modsub(p, y, p), y, (u:parity()) == (y:parity()))
+
+    return {['x'] = BIG.moddiv( x, tv4, p), ['y'] = y}
+end
+
+--[[
 -- draft-irtf-cfrg-hash-to-curve-16 section 4
 -- It returns "true" if the field element is a square.
 local function is_square(x)
 
-    local BIG_1 = BIG.new(1)
-    local frac = BIG.div(prime_minus_one, BIG_2) --(p-1)/2
-    local y = x:modpower( frac, p)
-
-    if (y == BIG.new(0) or y == BIG_1) then
+    local y = x:modpower(is_square_exponent, p)
+    if (y == BIG.new(0) or y == BIG.new(1)) then
         return true
     else
         return false
@@ -280,13 +385,8 @@ end
 -- It returns ONE of the square root of an element in our SPECIFIC field.
 local function sqrt_3mod4(x)
     return x:modpower(c1, p)
-    -- return x:modpower(c1, BIG.new(11))
 end
 
--- I.spy(Z:modpower(BIG.new(2), ECP.prime()))
--- I.spy((BIG.new(0)):modinv(BIG.new(5)))
--- I.spy(ECP.prime() - BIG.new(3))
--- I.spy((BIG.new(5):modsqr(BIG.new(4)))) -- 5^2 mod 4
 
 -- draft-irtf-cfrg-hash-to-curve-16 section 6.6.2
 -- It returns the (x,y) coordinate of a point over E' (isogenous curve)
@@ -330,51 +430,58 @@ local function map_to_curve_simple_swu(u)
     return {['x'] = x, ['y'] = y}
 
 end
+--]]
 
 --draft-irtf-cfrg-hash-to-curve-16 Appendix E.2
 -- It maps a point to BLS12-381 from an isogenous curve.
+
+
+
+--polynomial evaluation using Horner's rule
+local function pol_evaluation(x, K)
+    local len = #K
+    local y = K[len]
+    for i = len-1, 1, -1 do
+        y = (K[i] + y:modmul(x, p)) % p
+    end 
+    return y
+end
+
 local function iso_map(point)
-    -- point is an ecp point, x and y coordinate
-
-    local temp = BIG.new(1)
-    local x_num = K[1][1]
-    for i = 2,12 do
-        temp = temp:modmul(point.x, p)
-        x_num = (x_num + (K[1][i]):modmul(temp, p)) % p
-    end
-
-    temp = BIG.new(1)
-    local x_den = K[2][1]
-    for i = 2,10 do
-        temp = temp:modmul(point.x, p)
-        x_den = (x_den + (K[2][i]):modmul(temp, p)) % p
-    end
-    temp = temp:modmul(point.x, p)
-    x_den = (x_den + temp) % p
-
-    temp = BIG.new(1)
-    local y_num = K[3][1]
-    for i = 2,16 do
-        temp = temp:modmul(point.x, p)
-        y_num = (y_num + (K[3][i]):modmul(temp, p)) % p
-    end
-
-    temp = BIG.new(1)
-    local y_den = K[4][1]
-    for i = 2,15 do
-        temp = temp:modmul(point.x, p)
-        y_den = (y_den + (K[4][i]):modmul(temp, p)) % p
-    end
-    temp = temp:modmul(point.x, p)
-    y_den = (y_den + temp) % p
-
-    local x = x_num:moddiv(x_den, p)
+    local x_num = pol_evaluation(point.x, K[1])
+    local x_den = pol_evaluation(point.x, K[2])
+    local y_num = pol_evaluation(point.x, K[3])
+    local y_den = pol_evaluation(point.x, K[4])
+    local x = BIG.moddiv(x_num, x_den, p)
     local y = y_num:modmul(point.y, p)
     y = y:moddiv(y_den, p)
+    return ECP.new(x,y)
+end
 
+--[[
+local function iso_map(point)
+    local x_num = K[1][1]
+    local x_den = K[2][1]
+    local y_num = K[3][1]
+    local y_den = K[4][1]
+    local temp = BIG_1
+    for i = 2, 16 do
+        temp = temp:modmul(point.x, p)
+        x_num = (x_num + (K[1][i]):modmul(temp, p)) % p
+        x_den = (x_den + (K[2][i]):modmul(temp, p)) % p
+        y_num = (y_num + (K[3][i]):modmul(temp, p)) % p
+        y_den = (y_den + (K[4][i]):modmul(temp, p)) % p
+    end
+
+    local x = BIG.moddiv(x_num, x_den, p)
+    local y = y_num:modmul(point.y, p)
+    y = y:moddiv(y_den, p)
+    
     return ECP.new(x,y)
 
 end
+--]]
+
 
 -- draft-irtf-cfrg-hash-to-curve-16 Section 6.6.3
 -- It returns a point in the curve BLS12-381.
@@ -391,11 +498,11 @@ end
 -- draft-irtf-cfrg-hash-to-curve-16 Section 3
 -- It returns a point in the correct subgroup.
 function bbs.hash_to_curve(msg, DST)
-    local u = bbs.hash_to_field(msg, 2, DST)
-    local Q0 = bbs.map_to_curve(u[1][1])
-    local Q1 = bbs.map_to_curve(u[2][1])
-    local R = Q0 + Q1
-    return bbs.clear_cofactor(R)
+    -- local u = bbs.hash_to_field_m1(msg, 2, DST)
+    local u = bbs.hash_to_field_m1_c2(msg, DST)
+    local Q0 = bbs.map_to_curve(u[1]) --u[1][1])
+    local Q1 = bbs.map_to_curve(u[2]) --u[2][1])
+    return bbs.clear_cofactor(Q0 + Q1)
 end
 
 return bbs
