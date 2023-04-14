@@ -39,6 +39,132 @@ EOF
     save_output "array_rename_remove.json"
 }
 
+@test "the '' is found and not found" {
+    cat <<EOF | save_asset found.data
+{
+  "my_array": ["pluto", "paperino", "topolino"],
+  "my_dict": {
+    "pluto": "dog",
+    "topolino": "mouse",
+  },
+  "found_key_string": "topolino",
+  "found_key_base64": "dG9wb2xpbm8=",
+  "found_key_hex": "746f706f6c696e6f",
+  "found_key_base58": "LUZxwdpKZS6",
+  "not_found_key_string": "nosense",
+  "not_found_key_base64": "bm9zZW5zZQ==",
+  "not_found_key_hex": "6e6f73656e7365",
+  "not_found_key_base58": "5BjMhAyi6p"
+}
+EOF
+    cat <<EOF | zexe found.zen found.data
+Given I have a 'string array' named 'my_array'
+and I have a 'string dictionary' named 'my_dict'
+and I have a 'string' named 'found_key_string'
+and I have a 'base64' named 'found_key_base64'
+and I have a 'hex' named 'found_key_hex'
+and I have a 'base58' named 'found_key_base58'
+and I have a 'string' named 'not_found_key_string'
+and I have a 'base64' named 'not_found_key_base64'
+and I have a 'hex' named 'not_found_key_hex'
+and I have a 'base58' named 'not_found_key_base58'
+
+When the 'found_key_string' is found in 'my_array'
+and the 'found_key_base64' is found in 'my_array'
+and the 'found_key_hex' is found in 'my_array'
+and the 'found_key_base58' is found in 'my_array'
+
+When the 'found_key_string' is found in 'my_dict'
+and the 'found_key_base64' is found in 'my_dict'
+and the 'found_key_hex' is found in 'my_dict'
+and the 'found_key_base58' is found in 'my_dict'
+
+When the 'not_found_key_string' is not found in 'my_array'
+and the 'not_found_key_base64' is not found in 'my_array'
+and the 'not_found_key_hex' is not found in 'my_array'
+and the 'not_found_key_base58' is not found in 'my_array'
+
+When the 'not_found_key_string' is not found in 'my_dict'
+and the 'not_found_key_base64' is not found in 'my_dict'
+and the 'not_found_key_hex' is not found in 'my_dict'
+and the 'not_found_key_base58' is not found in 'my_dict'
+
+When I set 'result' to 'success' as 'string'
+
+If the 'not_found_key_string' is found in 'my_array'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+If the 'not_found_key_base64' is found in 'my_array'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+If the 'not_found_key_hex' is found in 'my_array'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+IF the 'not_found_key_base58' is found in 'my_array'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+
+If the 'not_found_key_string' is found in 'my_dict'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+If the 'not_found_key_base64' is found in 'my_dict'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+If the 'not_found_key_hex' is found in 'my_dict'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+IF the 'not_found_key_base58' is found in 'my_dict'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+
+If the 'found_key_string' is not found in 'my_array'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+If the 'found_key_base64' is not found in 'my_array'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+If the 'found_key_hex' is not found in 'my_array'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+IF the 'found_key_base58' is not found in 'my_array'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+
+If the 'found_key_string' is not found in 'my_dict'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+If the 'found_key_base64' is not found in 'my_dict'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+If the 'found_key_hex' is not found in 'my_dict'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+IF the 'found_key_base58' is not found in 'my_dict'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+
+Then print the 'result'
+EOF
+    save_output "found.json"
+    assert_output '{"result":"success"}'
+}
+
 @test "When I create the hash to point 'ECP' of each object in" {
     skip
     cat <<EOF | zexe array_hashtopoint.zen arr.json

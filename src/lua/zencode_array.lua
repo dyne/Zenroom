@@ -105,40 +105,33 @@ When("create the size of ''", function(arr)
 end)
 
 When("create the copy of element '' in array ''", function(pos, arr)
-	ZEN.assert(ACK[arr], "No array found in: "..arr)
-	ZEN.assert(isarray(ACK[arr]), "Not an array: "..arr)
+	empty 'copy'
+	local src, src_codec = have(arr)
+	ZEN.assert(src_codec.zentype == "array", "Not an array: "..arr)
 	local num = tonumber(mayhave(pos) or pos)
 	ZEN.assert(num, "Argument is not a position number: "..pos)
-	ZEN.assert(ACK[arr][num], "No element found in: "..arr.."["..pos.."]")
-	ACK.copy = ACK[arr][num]
-	-- TODO: support nested arrays or dictionaries
-	new_codec('copy',{zentype='element',luatype=luatype(ACK.copy)},arr)
+	ZEN.assert(src[num], "No element found in: "..arr.."["..pos.."]")
+	ACK.copy = src[num]
+	new_codec('copy', {encoding = src_codec.encoding})
 end)
+
+local function _insert_in(what, dest)
+	local d, d_codec = have(dest)
+	ZEN.assert(d_codec.luatype == 'table',
+	"Invalid destination, not a table: "..dest)
+	ZEN.assert(d_codec.zentype == 'array',
+	"Invalid destination, not an array: "..dest)
+	table.insert(ACK[dest], what)
+end
 
 When("insert string '' in ''", function(st, dest)
-	local d = have(dest)
-	ZEN.assert(luatype(d) == 'table',
-	"Invalid destination, not a table: "..dest)
-	ZEN.assert(ZEN.CODEC[dest].zentype == 'array',
-	"Invalid destination, not an array: "..dest)
-	table.insert(ACK[dest], O.from_string(st))
+	_insert_in(O.from_string(st), dest)
 end)
-
 When("insert true in ''", function(dest)
-	local d = have(dest)
-	ZEN.assert(luatype(d) == 'table',
-	"Invalid destination, not a table: "..dest)
-	ZEN.assert(ZEN.CODEC[dest].zentype == 'array',
-	"Invalid destination, not an array: "..dest)
-	table.insert(ACK[dest], true)
+	_insert_in(true, dest)
 end)
 When("insert false in ''", function(dest)
-	local d = have(dest)
-	ZEN.assert(luatype(d) == 'table',
-	"Invalid destination, not a table: "..dest)
-	ZEN.assert(ZEN.CODEC[dest].zentype == 'array',
-	"Invalid destination, not an array: "..dest)
-	table.insert(ACK[dest], false)
+	_insert_in(false, dest)
 end)
 
 When(deprecated("insert '' in ''",
@@ -174,67 +167,58 @@ end)
 --     table.insert(ACK[arr], ACK[ele])
 -- end)
 
-IfWhen("the '' is not found in ''", function(ele, arr)
-	local obj = ACK[ele]
-	ZEN.assert(obj, "Element not found: "..ele)
-	ZEN.assert(ACK[arr], "Array not found: "..arr)
-	if ZEN.CODEC[arr].zentype == 'array' then
-		for _,v in pairs(ACK[arr]) do
-			ZEN.assert(v ~= obj, "Element '"..ele.."' is contained inside: "..arr)
+IfWhen("the '' is not found in ''", function(ele_name, obj_name)
+	local ele, ele_codec = have(ele_name)
+	local obj, obj_codec = have(obj_name)
+	if obj_codec.zentype == 'array' then
+		for _,v in pairs(obj) do
+			ZEN.assert(v ~= ele, "Element '"..ele_name.."' is contained inside: "..obj_name)
 		end
-	elseif ZEN.CODEC[arr].zentype == 'dictionary' then
-		for k,_ in pairs(ACK[arr]) do
-			local val = k
-			if luatype(k) == 'string' then
-				val = O.from_string(k)
-			end
-			ZEN.assert(val ~= obj, "Element '"..ele.."' is contained inside: "..arr)
-		end
+	elseif obj_codec.zentype == 'dictionary' then
+		local val = O.to_string(ele)
+		ZEN.assert(obj[val] == nil, "Element '"..ele_name.."' is contained inside: "..obj_name)
 	else
-		ZEN.assert(false, "Invalid container type: "..arr.." is "..ZEN.CODEC[arr].zentype)
+		ZEN.assert(false, "Invalid container type: "..obj_name.." is "..obj_codec.zentype)
 	end
 end)
 
-IfWhen("the '' is found in ''", function(ele, arr)
-	local obj = ACK[ele]
-	ZEN.assert(obj, "Element not found: "..ele)
-	ZEN.assert(ACK[arr], "Array not found: "..arr)
-	local found = false
-	if ZEN.CODEC[arr].zentype == 'array' then
-		for _,v in pairs(ACK[arr]) do
-			if v == obj then found = true end
-		end
-	elseif ZEN.CODEC[arr].zentype == 'dictionary' then
-		for k,_ in pairs(ACK[arr]) do
-			local val = k
-			if luatype(k) == 'string' then
-				val = O.from_string(k)
+IfWhen("the '' is found in ''", function(ele_name, obj_name)
+	local ele, ele_codec = have(ele_name)
+	local obj, obj_codec = have(obj_name)
+	if obj_codec.zentype == 'array' then
+		local found = false
+		for _,v in pairs(obj) do
+			if v == ele then
+				found = true
+				break
 			end
-			if val == obj then found = true end
 		end
+		ZEN.assert(found, "The content of element '"..ele_name.."' is not found inside: "..obj_name)
+	elseif obj_codec.zentype == 'dictionary' then
+		local val = O.to_string(ele)
+		ZEN.assert(obj[val] ~= nil, "Element '"..ele_name.."' is not found inside: "..obj_name)
 	else
-		ZEN.assert(false, "Invalid container type: "..arr.." is "..ZEN.CODEC[arr].zentype)
+		ZEN.assert(false, "Invalid container type: "..obj_name.." is "..obj_codec.zentype)
 	end
-	ZEN.assert(found, "The content of element '"..ele.."' is not found inside: "..arr)
 end)
 
-IfWhen("the '' is found in '' at least '' times", function(ele, arr, times)
-	local obj = have(ele)
-	ZEN.assert( luatype(obj) ~= 'table', "Invalid use of table in object comparison: "..ele)
+IfWhen("the '' is found in '' at least '' times", function(ele_name, obj_name, times)
+	local ele, ele_codec = have(ele_name)
+	ZEN.assert( ele_codec.luatype ~= 'table', "Invalid use of table in object comparison: "..ele)
 	local num = have(times)
-	local list = have(arr)
-	ZEN.assert( luatype(list) == 'table', "Not a table: "..arr)
-	ZEN.assert( isarray(list), "Not an array: "..arr)
+	local obj, obj_codec = have(obj_name)
+	ZEN.assert( obj_codec.luatype == 'table', "Not a table: "..obj_name)
+	ZEN.assert( obj_codec.zentype = 'array', "Not an array: "..obj_name)
 	local constructor = fif(type(num) == "zenroom.big", BIG.new, F.new)
 	local found = constructor(0)
 	local one = constructor(1)
 	for _,v in pairs(list) do
-		if type(v) == type(obj) and v == obj then found = found + one end
+		if type(v) == type(ele) and v == ele then found = found + one end
 	end
 	if type(num) == "zenroom.big" then
-		ZEN.assert(found >= num, "Object "..ele.." found only "..found:decimal().." times instead of "..num:decimal().." in array "..arr)
+		ZEN.assert(found >= num, "Object "..ele_name.." found only "..found:decimal().." times instead of "..num:decimal().." in array "..obj_name)
 	else
-		ZEN.assert(found >= num, "Object "..ele.." found only "..tostring(found).." times instead of "..tostring(num).." in array "..arr)
+		ZEN.assert(found >= num, "Object "..ele_name.." found only "..tostring(found).." times instead of "..tostring(num).." in array "..obj_name)
 	end
 end)
 
