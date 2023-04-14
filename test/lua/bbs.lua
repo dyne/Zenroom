@@ -230,12 +230,30 @@ local function run_test_hash_to_field (test)
     assert(output_u[2][1] == BIG.new(O.from_hex(test.u_1)), "Wrong u_1") 
 end
 
+
 print('----------------------')
 print("TEST: hash_to_field")
 for k,v in pairs(hash_to_curve_test) do
     print("Test Case " .. k)
     run_test_hash_to_field(v)
 end 
+--]]
+
+local function run_test_hash_to_field_m1 (test)
+    local output_u = bbs.hash_to_field_m1(O.from_string(test.msg), 2, O.from_string(DST_hash_to_field))
+    assert(output_u[1] == BIG.new(O.from_hex(test.u_0)), "Wrong u_0")
+    assert(output_u[2] == BIG.new(O.from_hex(test.u_1)), "Wrong u_1") 
+end
+
+
+print('----------------------')
+print("TEST: hash_to_field_m1")
+for k,v in pairs(hash_to_curve_test) do
+    print("Test Case " .. k)
+    run_test_hash_to_field_m1(v)
+end 
+
+
 
 
 local function run_test_hash_to_field_m1 (test)
