@@ -506,8 +506,52 @@ function bbs.hash_to_curve(msg, DST)
     return bbs.clear_cofactor(Q0 + Q1)
 end
 
--- draft-irtf-cfrg-bbs-signatures-latest Appendix A.1
+
+
+--see Appendix A.1
 local r = BIG.new(O.from_hex('73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001'))
+local seed_len = 48 --ceil((ceil(log2(r)) + k)/8)
+
+
+--draft-irtf-cfrg-pairing-friendly-curves-11 Section 4.2.1
+local IdG1_x = BIG.new(O.from_hex('17f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb'))
+local IdG1_y = BIG.new(O.from_hex('08b3f481e3aaa0f1a09e30ed741d8ae4fcf5e095d5d00af600db18cb2c04b3edd03cc744a2888ae40caa232946c5e7e1'))
+local Identity_G1 = ECP.new(IdG1_x, IdG1_y)
+
+--draft-irtf-cfrg-bbs-signatures Section 4.2
+--It returns an array of generators.
+
+function bbs.create_generators(count, generator_seed, seed_dst, generator_dst)
+    local v = bbs.expand_message_xmd(generator_seed, seed_dst, seed_len)
+    local n = 1
+    local generators = {}
+    for i = 1, count do
+        v = bbs.expand_message_xmd(v..i2osp(n,4), seed_dst, seed_len)
+        n = n + 1
+        generators[i] = Identity_G1
+        local candidate = bbs.hash_to_curve(v, generator_dst)
+        local bool = false
+        for j = 1, #generators do
+            if (candidate == generators[j]) then
+                bool = true
+                break
+            end
+        end
+        if bool then
+            i = i-1
+        else
+            generators[i] = candidate
+        end
+    end
+    return generators
+    
+end
+
+
+
+
+-- draft-irtf-cfrg-bbs-signatures-latest Appendix A.1
+--local r = BIG.new(O.from_hex('73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001'))
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 3.4.3
 local EXPAND_LEN = 48
