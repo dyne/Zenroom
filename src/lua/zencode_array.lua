@@ -204,15 +204,15 @@ end)
 
 IfWhen("the '' is found in '' at least '' times", function(ele_name, obj_name, times)
 	local ele, ele_codec = have(ele_name)
-	ZEN.assert( ele_codec.luatype ~= 'table', "Invalid use of table in object comparison: "..ele)
+	ZEN.assert( ele_codec.luatype ~= 'table', "Invalid use of table in object comparison: "..ele_name)
 	local num = have(times)
 	local obj, obj_codec = have(obj_name)
 	ZEN.assert( obj_codec.luatype == 'table', "Not a table: "..obj_name)
-	ZEN.assert( obj_codec.zentype = 'array', "Not an array: "..obj_name)
+	ZEN.assert( obj_codec.zentype == 'array', "Not an array: "..obj_name)
 	local constructor = fif(type(num) == "zenroom.big", BIG.new, F.new)
 	local found = constructor(0)
 	local one = constructor(1)
-	for _,v in pairs(list) do
+	for _,v in pairs(obj) do
 		if type(v) == type(ele) and v == ele then found = found + one end
 	end
 	if type(num) == "zenroom.big" then
