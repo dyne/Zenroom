@@ -432,5 +432,5 @@ When("create the '' from '' in ''", function(dest, key_name, obj_name)
 	else
 		error("Last object must be an array or dictionary, found instead: "..obj_codec.zentype)
 	end
-	new_codec(dest, { zentype='element' }, obj_name)
+	new_codec(dest, {encoding = obj_codec.encoding})
 end)
