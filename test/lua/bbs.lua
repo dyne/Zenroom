@@ -311,3 +311,42 @@ for k,v in pairs(hash_to_curve_test) do
     print("Test Case " .. k)
     run_test_hash_to_curve(v)
 end
+
+-- Test vectors originated from:
+-- draft-irtf-cfrg-bbs-signatures-latest Sections 7.3 AND 7.5.1
+local DST_MAP_MESSAGES_TO_SCALAR = '4242535f424c53313233383147315f584d443a5348412d3235365f535357555f524f5f4d41505f4d53475f544f5f5343414c41525f41535f484153485f'
+
+local map_messages_to_scalar_messages = {
+    '9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02',
+    '87a8bd656d49ee07b8110e1d8fd4f1dcef6fb9bc368c492d9bc8c4f98a739ac6',
+    '96012096adda3f13dd4adbe4eea481a4c4b5717932b73b00e31807d3c5894b90',
+    'ac55fb33a75909edac8994829b250779298aa75d69324a365733f16c333fa943',
+    'd183ddc6e2665aa4e2f088af9297b78c0d22b4290273db637ed33ff5cf703151',
+    '515ae153e22aae04ad16f759e07237b43022cb1ced4c176e0999c6a8ba5817cc',
+    '496694774c5604ab1b2544eababcf0f53278ff5040c1e77c811656e8220417a2',
+    '77fe97eb97a1ebe2e81e4e3597a3ee740a66e9ef2412472c23364568523f8b91',
+    '7372e9daa5ed31e6cd5c825eac1b855e84476a1d94932aa348e07b7320912416',
+    'c344136d9ab02da4dd5908bbba913ae6f58c2cc844b802a6f811f5fb075f9b80'
+}
+
+local map_messages_to_scalar_test = {
+    '0e95c55a6ba91b0ed5e9425151dca52fff8748d935e780c828ad00031b93ed7f',
+    '1b8a006679df6534aca94caf0fed58234b1d7f575a2646308e6c9d5fdf4bba60',
+    '0060ba23303163460a943404fa505b5e039bb11d6efd3689560cc9985094d0c2',
+    '4380b070a45f309c3abed92324a15a8a6ccdc6972f9735e043e267745b50b3a0',
+    '6df7849922283ab15f3dfe1b4699f33d5820acf5dede3e48e33df5e7fcf3762c',
+    '0e1aa2ed096260ebd262673b5d3613c44371374849b9f3dd25c456a41f56ecc1',
+    '4ceec5a33e7c25c95e6234825b013f846243f492805a81a65b242c2422b516e6',
+    '05dfbcc38db8c56cd638903805a0068be05c8201afebc04926b6332f44ff46f0',
+    '313750e2398ea3547d558aa8d25ad2426c8cea82d68d9f159f08c72223e1673a',
+    '364dd864673c8b33ebd7a1f8a1249f5735c757f08e3c94e2265b61a019cb4bd3'
+}
+
+
+print('----------------------')
+print("TEST: MapMessageToScalarAsHash")
+for k = 1, #map_messages_to_scalar_test do
+    print("Test Case " .. k)
+    local output_scalar = bbs.MapMessageToScalarAsHash(O.from_hex(map_messages_to_scalar_messages[k]), O.from_hex(DST_MAP_MESSAGES_TO_SCALAR))
+    assert(output_scalar == BIG.new(O.from_hex(map_messages_to_scalar_test[k])), "Wrong scalar")
+end

@@ -506,4 +506,53 @@ function bbs.hash_to_curve(msg, DST)
     return bbs.clear_cofactor(Q0 + Q1)
 end
 
+-- draft-irtf-cfrg-bbs-signatures-latest Appendix A.1
+local r = BIG.new(O.from_hex('73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001'))
+
+-- draft-irtf-cfrg-bbs-signatures-latest Section 3.4.3
+local EXPAND_LEN = 48
+
+-- draft-irtf-cfrg-bbs-signatures-latest Section 4.4
+-- It converts a message written in octects into a BIG modulo r (order of subgroup)
+local function hash_to_scalar_SHA_256(msg_octects, dst)
+    -- TODO: default dst?
+    local counter = 0
+    local hashed_scalar = BIG_0
+    while hashed_scalar == BIG_0 do
+        if counter > 255 then
+            return 'INVALID'
+        end
+        local msg_prime = msg_octects .. i2osp(counter, 1)
+        local uniform_bytes = bbs.expand_message_xmd(msg_prime, dst, EXPAND_LEN)
+
+        -- if uniform_bytes is INVALID, return INVALID
+
+        hashed_scalar = BIG.mod(uniform_bytes, r) -- = os2ip(uniform_bytes) % r
+
+        counter = counter + 1
+    end
+
+    return hashed_scalar
+end
+
+-- draft-irtf-cfrg-bbs-signatures-latest Section 4.3.1
+-- It converts a message written in octects into a BIG modulo r (order of subgroup)
+function bbs.MapMessageToScalarAsHash(msg, dst)
+    -- TODO: default DST?
+    -- TODO: check if len(msg) > 2^64 - 1 causes error because of integer limit of lua l?
+    -- 2^64 - 1 = 18,446,744,073,709,551,615
+
+    if (#msg > 18446744073709551615) or (#dst > 255) then
+        return 'INVALID'
+    end
+
+    local msg_scalar = hash_to_scalar_SHA_256(msg, dst)
+
+    if msg_scalar == 'INVALID' then
+        return 'INVALID'
+    end
+    return msg_scalar
+end
+
+
 return bbs
