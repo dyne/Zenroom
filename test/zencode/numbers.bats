@@ -81,7 +81,7 @@ rule check version 1.0.0
 Given nothing
 When I write number '10' in 'left'
 and I write number '20' in 'right'
-and number 'left' is less or equal than 'right'
+and I verify number 'left' is less or equal than 'right'
 Then print the string 'OK'
 Then print data
 EOF
@@ -108,7 +108,7 @@ EOF
 # Given nothing
 # When I write number '10' in 'left'
 # and I write number '20' in 'right'
-# and number 'right' is less than 'left'
+# and I verify number 'right' is less than 'left'
 # Then print the string 'OK'
 # EOF
 
@@ -119,7 +119,7 @@ EOF
 # Given nothing
 # When I set 'left' to '0a' base '16'
 # and I set 'right' to '14' base '16'
-# and number 'left' is less or equal than 'right'
+# and I verify number 'left' is less or equal than 'right'
 # Then print the string 'OK'
 # Then print data
 # EOF
@@ -129,7 +129,7 @@ EOF
 # Given nothing
 # When I set 'left' to '0a' base '16'
 # and I set 'right' to '14' base '16'
-# and number 'left' is less than 'right'
+# and I verify number 'left' is less than 'right'
 # Then print the string 'OK'
 # Then print data
 # EOF
@@ -198,7 +198,7 @@ rule check version 1.0.0
 Given nothing
 When I write number '161917811' in 'left'
 and I write number '161917812' in 'right'
-and number 'left' is less or equal than 'right'
+and I verify number 'left' is less or equal than 'right'
 Then print the string 'OK'
 Then print data
 EOF
