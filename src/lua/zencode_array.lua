@@ -167,7 +167,7 @@ end)
 --     table.insert(ACK[arr], ACK[ele])
 -- end)
 
-IfWhen("the '' is not found in ''", function(ele_name, obj_name)
+local function _not_found_in(ele_name, obj_name)
 	local ele, ele_codec = have(ele_name)
 	local obj, obj_codec = have(obj_name)
 	if obj_codec.zentype == 'array' then
@@ -180,9 +180,15 @@ IfWhen("the '' is not found in ''", function(ele_name, obj_name)
 	else
 		ZEN.assert(false, "Invalid container type: "..obj_name.." is "..obj_codec.zentype)
 	end
-end)
+end
 
-IfWhen("the '' is found in ''", function(ele_name, obj_name)
+IfWhen(deprecated("the '' is not found in ''",
+	"verify the '' is not found in ''",
+	_not_found_in)
+)
+IfWhen("verify the '' is not found in ''", _not_found_in)
+
+local function _found_in(ele_name, obj_name)
 	local ele, ele_codec = have(ele_name)
 	local obj, obj_codec = have(obj_name)
 	if obj_codec.zentype == 'array' then
@@ -200,9 +206,15 @@ IfWhen("the '' is found in ''", function(ele_name, obj_name)
 	else
 		ZEN.assert(false, "Invalid container type: "..obj_name.." is "..obj_codec.zentype)
 	end
-end)
+end
 
-IfWhen("the '' is found in '' at least '' times", function(ele_name, obj_name, times)
+IfWhen(deprecated("the '' is found in ''",
+	"verify the '' is found in ''",
+	_found_in)
+)
+IfWhen("verify the '' is found in ''", _found_in)
+
+local function _found_in_atleast(ele_name, obj_name, times)
 	local ele, ele_codec = have(ele_name)
 	ZEN.assert( ele_codec.luatype ~= 'table', "Invalid use of table in object comparison: "..ele_name)
 	local num = have(times)
@@ -220,7 +232,13 @@ IfWhen("the '' is found in '' at least '' times", function(ele_name, obj_name, t
 	else
 		ZEN.assert(found >= num, "Object "..ele_name.." found only "..tostring(found).." times instead of "..tostring(num).." in array "..obj_name)
 	end
-end)
+end
+
+IfWhen(deprecated("the '' is found in '' at least '' times",
+	"verify the '' is found in '' at least '' times",
+	_found_in_atleast)
+)
+IfWhen("verify the '' is found in '' at least '' times", _found_in_atleast)
 
 local function _aggr_array(arr)
 	local A = have(arr)
