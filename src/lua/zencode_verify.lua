@@ -105,88 +105,93 @@ IfWhen(
   end
 )
 
--- check a tuple of numbers before comparison, convert to BIG or number
-local function numcheck(left, right)
-  local al, ar
-  --
-  if left == nil then
-    error('1st argument of numerical comparison is nil', 2)
-  end
-  local tl = type(left)
-  if not iszen(tl) then
-    if tl ~= 'number' then
-      error('1st argument invalid numeric type: ' .. tl, 2)
+-- check a tuple of numbers before comparison, convert to BIG or number, and then compare
+local function numcheck(l, r, op)
+    local operators = {
+        ["<"] = function(x, y) return x<y end,
+        ["<="] = function(x, y) return x<=y end,
+        [">"] = function(x, y) return x>y end,
+        [">="] = function(x, y) return x>=y end
+    }
+    local left = have(l)
+    local right = have(r)
+    local al, ar
+    --
+    if left == nil then
+        error('1st argument of numerical comparison is nil', 2)
     end
-  end
-  if tl == 'zenroom.octet' then
-    al = BIG.new(left)
-  elseif tl == 'zenroom.big' or tl == 'number' or tl == 'zenroom.float' then
-    al = left
-  else
-    al = left:octet()
-  end
-  --
-  if right == nil then
-    error('2nd argument of numerical comparison is nil', 2)
-  end
-  local tr = type(right)
-  if not iszen(tr) then
-    if tr ~= 'number' then
-      error('2nd argument invalid numeric type: ' .. tr, 2)
+    local tl = type(left)
+    if not iszen(tl) then
+        if tl ~= 'number' then
+            error('1st argument invalid numeric type: ' .. tl, 2)
+        end
     end
-  end
-  if tr == 'zenroom.octet' then
-    ar = BIG.new(right)
-  elseif tr == 'zenroom.big' or tr == 'number' or tr == 'zenroom.float' then
-    ar = right
-  else
-    ar = right:octet()
-  end
-  return al, ar
+    if tl == 'zenroom.octet' then
+        al = BIG.new(left)
+    elseif tl == 'zenroom.big' or tl == 'number' or tl == 'zenroom.float' then
+        al = left
+    else
+        al = left:octet()
+    end
+    --
+    if right == nil then
+        error('2nd argument of numerical comparison is nil', 2)
+    end
+    local tr = type(right)
+    if not iszen(tr) then
+        if tr ~= 'number' then
+            error('2nd argument invalid numeric type: ' .. tr, 2)
+        end
+    end
+    if tr == 'zenroom.octet' then
+        ar = BIG.new(right)
+    elseif tr == 'zenroom.big' or tr == 'number' or tr == 'zenroom.float' then
+        ar = right
+    else
+        ar = right:octet()
+    end
+    ZEN.assert(operators[op](al, ar), 'Comparison fail: ' .. l .. op .. r)
 end
 
-IfWhen(
-  "number '' is less than ''",
-  function(left, right)
-    local l, r = numcheck(ACK[left], ACK[right])
-    ZEN.assert(
-      l < r,
-      'Comparison fail: ' .. left .. ' is not less than ' .. right
-    )
-  end
+IfWhen(deprecated("number '' is less than ''",
+    "verify number '' is less than ''",
+    function(left, right)
+        numcheck(left, right, "<")
+    end)
 )
-IfWhen(
-  "number '' is less or equal than ''",
-  function(left, right)
-    local l, r = numcheck(ACK[left], ACK[right])
-    ZEN.assert(
-      l <= r,
-      'Comparison fail: ' ..
-        left .. ' is not less or equal than ' .. right
-    )
-  end
+IfWhen("verify number '' is less than ''", function(left, right)
+    numcheck(left, right, "<")
+end)
+
+IfWhen(deprecated("number '' is less or equal than ''",
+    "verify number '' is less or equal than ''",
+    function(left, right)
+        numcheck(left, right, "<=")
+    end)
 )
-IfWhen(
-  "number '' is more than ''",
-  function(left, right)
-    local l, r = numcheck(ACK[left], ACK[right])
-    ZEN.assert(
-      r < l,
-      'Comparison fail: ' .. left .. ' is not more than ' .. right
-    )
-  end
+IfWhen("verify number '' is less or equal than ''", function(left, right)
+    numcheck(left, right, "<=")
+end)
+
+IfWhen(deprecated("number '' is more than ''",
+    "verify number '' is more than ''",
+    function(left, right)
+        numcheck(left, right, ">")
+    end)
 )
-IfWhen(
-  "number '' is more or equal than ''",
-  function(left, right)
-    local l, r = numcheck(ACK[left], ACK[right])
-    ZEN.assert(
-      r <= l,
-      'Comparison fail: ' ..
-        left .. ' is not more or equal than ' .. right
-    )
-  end
+IfWhen("verify number '' is more than ''", function(left, right)
+    numcheck(left, right, ">")
+end)
+
+IfWhen(deprecated("number '' is more or equal than ''",
+    "verify number '' is more or equal than ''",
+    function(left, right)
+        numcheck(left, right, ">=")
+    end)
 )
+IfWhen("verify number '' is more or equal than ''", function(left, right)
+    numcheck(left, right, ">=")
+end)
 
 local function _check_compare_length(obj_name, num_name)
     local obj, obj_codec = have(obj_name)
@@ -330,41 +335,52 @@ IfWhen(
   end
 )
 
-IfWhen("the elements in '' are equal", function(obj_name)
-       local obj = have(obj_name)
-       local all_equal = true
-       local first = nil
-       local first_idx = nil
-       for k,v in pairs(obj) do
-             if first == nil then
-                     first = v
-                     first_idx = k
-            else
-                     ZEN.assert(_eq(first, v),
-                         "Verification failed: the elements in position "
-                         .. k .. " and " .. first_idx
-                         .. "are not equal")
-            end
-       end
-end)
+local function _check_elements_equals(obj_name)
+    local obj = have(obj_name)
+    local first = nil
+    local first_idx = nil
+    for k,v in pairs(obj) do
+        if first == nil then
+            first = v
+            first_idx = k
+        else
+            ZEN.assert(_eq(first, v),
+                "Verification failed: the elements in position "
+                .. k .. " and " .. first_idx
+                .. "are not equal")
+        end
+    end
+end
 
-IfWhen("the elements in '' are not equal", function(obj_name)
-       local obj = have(obj_name)
-       local first = nil
-       local first_idx = nil
-       for k,v in pairs(obj) do
-             if first == nil then
-                     first = v
-                     first_idx = k
-            else
-                    if _neq(first, v) then
-                            -- at least two elements are different
-                            return true
-                    end
+IfWhen(deprecated("the elements in '' are equal",
+    "verify the elements in '' are equal",
+    _check_elements_equals)
+)
+IfWhen("verify the elements in '' are equal", _check_elements_equals)
+
+local function _check_elements_not_equals(obj_name)
+    local obj = have(obj_name)
+    local first = nil
+    local first_idx = nil
+    for k,v in pairs(obj) do
+        if first == nil then
+            first = v
+            first_idx = k
+        else
+            if _neq(first, v) then
+                -- at least two elements are different
+                return true
             end
-       end
-       ZEN.assert(false, "Verification failed: all elements are equal")
-end)
+        end
+    end
+    ZEN.assert(false, "Verification failed: all elements are equal")
+end
+
+IfWhen(deprecated("the elements in '' are not equal",
+    "verify the elements in '' are not equal",
+    _check_elements_not_equals)
+)
+IfWhen("verify the elements in '' are not equal", _check_elements_not_equals)
 
 -- if start = nil then will check if
 -- the string ends with the substring
