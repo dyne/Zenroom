@@ -1861,7 +1861,7 @@ static int zcash_topoint(lua_State *L) {
 
 	if(c_bit) {
 		if(e == NULL) {
-			FP2 fx;
+			FP2 fx, fy;
 			octet x0 = {
 				.max = 48,
 				.len = 48,
@@ -1873,17 +1873,43 @@ static int zcash_topoint(lua_State *L) {
 				.val = o->val+48
 			};
 
+			octet y0 = {
+				.max = 48,
+				.len = 48,
+				.val = o->val
+			};
+			octet y1 = {
+				.max = 48,
+				.len = 48,
+				.val = o->val+48
+			};
+
 			big* bigx0 = big_new(L);
 			big* bigx1 = big_new(L);
+			big* bigy0 = big_new(L);
+			big* bigy1 = big_new(L);
 			_octet_to_big(L, bigx0, &x0);
 			_octet_to_big(L, bigx1, &x1);
+			_octet_to_big(L, bigy0, &y0);
+			_octet_to_big(L, bigy1, &y1);
 			FP2_from_BIGs(&fx, bigx1->val, bigx0->val);
+			FP2_from_BIGs(&fy, bigy1->val, bigy0->val);
+
 			if(!ECP2_setx(&e2->val, &fx)) {
 				failed_msg = "Invalid input octet: not a point on the curve";
 				goto end;
 			}
+
+			ECP2_get(&fx, &fy, &e2->val);
+			if(gf2_sign(bigy0->val, bigy1->val) != s_bit) {
+				ECP2_neg(&e2->val);
+			}
+
 			lua_pop(L,1);
 			lua_pop(L,1);
+			lua_pop(L,1);
+			lua_pop(L,1);
+
 		} else {
 			BIG xpoint, ypoint;
 			big* bigx = big_new(L);

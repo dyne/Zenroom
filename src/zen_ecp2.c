@@ -739,6 +739,27 @@ end:
 	END(1);
 }
 
+char gf2_sign(BIG y0, BIG y1){
+	BIG zero;
+	BIG_zero(zero);
+	if (BIG_comp(y1, zero) == 0){
+		return gf_sign(y0);
+	}
+
+	BIG p;
+	BIG_rcopy(p, CURVE_Prime);
+	BIG_dec(p, 1);
+	BIG_norm(p);
+	BIG_shr(p, 1);
+	if(BIG_comp(y1, p) == 1){
+		printf("%s\n", "CASE 1 SIGN2");
+		return 1;
+	} else {
+		printf("%s\n", "CASE 0 SIGN2");
+		return 0;
+	}
+}
+
 static int ecp2_zcash_export(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -762,17 +783,23 @@ static int ecp2_zcash_export(lua_State *L) {
 		FP2 x,y;
 		const char c_bit = 1;
 		const char i_bit = 0;
-		const char s_bit = 0; //TODO: sign of point
-		char m_byte = (char)((c_bit << 7)+(i_bit << 6)+(s_bit << 5));
 
 		ECP2_get(&x, &y, &e->val);
-		BIG bx,by;
-		FP2_reduce(&x);
-		FP_redc(bx,&(x.a));
-		FP_redc(by,&(x.b));
 
-		BIG_toBytes(o->val+48, bx);
-		BIG_toBytes(o->val, by);
+		BIG bx0,bx1,by0,by1;
+		FP2_reduce(&x);
+		FP_redc(bx0,&(x.a));
+		FP_redc(bx1,&(x.b));
+
+		FP2_reduce(&y);
+		FP_redc(by0,&(y.a));
+		FP_redc(by1,&(y.b));
+
+		const char s_bit = gf2_sign(by0, by1);
+		char m_byte = (char)((c_bit << 7)+(i_bit << 6)+(s_bit << 5));
+
+		BIG_toBytes(o->val+48, bx0);
+		BIG_toBytes(o->val, bx1);
 		o->len = 96;
 
 
@@ -813,7 +840,7 @@ static int ecp2_zcash_import(lua_State *L) {
 	char c_bit;
 	char i_bit;
 	char s_bit;
-	register int i = 0;
+	// register int i = 0;
 	if(m_byte == 0x20 || m_byte == 0x60 || m_byte == 0xE0) {
 		failed_msg = "Invalid octet header";
 		goto end;
