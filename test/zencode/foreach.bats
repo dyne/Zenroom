@@ -35,7 +35,7 @@ Given I have a 'float array' named 'xs'
 Given I have a 'float' named 'one'
 Given I have a 'float' named 'limit'
 When I create the new array
-If number 'one' is less than 'limit'
+If I verify number 'one' is less than 'limit'
 Foreach 'x' in 'xs'
 When I move 'x' in 'new array'
 EndForeach
@@ -67,7 +67,7 @@ Given I have a 'float array' named 'xs'
 Given I have a 'float' named 'limit'
 When I create the new array
 Foreach 'x' in 'xs'
-If number 'x' is less than 'limit'
+If I verify number 'x' is less than 'limit'
 When I move 'x' in 'new array'
 Endif
 EndForeach
@@ -177,15 +177,15 @@ When I copy 'result' to 'result in array'
 # some comments
 # some comments
 # some comments
-If number 'limit' is less than 'x'
+If I verify number 'limit' is less than 'x'
 When I set 'keyname' to 'key' as 'string'
 When I append 'x' to 'keyname'
 Endif
 When I move 'result in array' in 'new nums'
-If number 'limit' is less than 'x'
+If I verify number 'limit' is less than 'x'
 When I rename the object named by 'resultname' to named by 'keyname'
 Endif
-If number 'limit' is less than 'x'
+If I verify number 'limit' is less than 'x'
 When I move named by 'keyname' in 'ifdict'
 Endif
 When I remove 'keyname'
@@ -255,13 +255,13 @@ When I create the 'float array'
 When I rename 'float array' to 'floats'
 Foreach 'x' in 'numbers'
 Foreach 'y' in 'numbers2'
-If number 'x' is more than 'limit'
-If number 'y' is more than 'limit'
+If I verify number 'x' is more than 'limit'
+If I verify number 'y' is more than 'limit'
 When I move 'x' in 'floats'
 endif
 EndForeach
-If number 'zero' is less than 'limit'
-If number 'zero' is less than 'limit'
+If I verify number 'zero' is less than 'limit'
+If I verify number 'zero' is less than 'limit'
 Foreach 'a' in 'numbers'
 Foreach 'b' in 'numbers2'
 When I move 'b' in 'floats'
