@@ -525,30 +525,23 @@ local Identity_G1 = ECP.new(IdG1_x, IdG1_y)
 function bbs.create_generators(count, generator_seed, seed_dst, generator_dst)
     local v = bbs.expand_message_xmd(generator_seed, seed_dst, seed_len)
     local n = 1
-    local generators = {}
+    local generators = {[Identity_G1] = true}
+    local mess_generators = {}
     for i = 1, count do
         v = bbs.expand_message_xmd(v..i2osp(n,4), seed_dst, seed_len)
         n = n + 1
-        generators[i] = Identity_G1
         local candidate = bbs.hash_to_curve(v, generator_dst)
-        local bool = false
-        for j = 1, #generators do
-            if (candidate == generators[j]) then
-                bool = true
-                break
-            end
-        end
-        if bool then
+        if (generators[candidate]) then
             i = i-1
         else
-            generators[i] = candidate
+            generators[candidate] = true
+            mess_generators[i] = candidate
         end
     end
-    return generators
+    
+    return mess_generators
     
 end
-
-
 
 
 -- draft-irtf-cfrg-bbs-signatures-latest Appendix A.1
