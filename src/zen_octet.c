@@ -95,6 +95,8 @@ static inline int _max(int x, int y) { if(x > y) return x;	else return y; }
 
 #include <ctype.h>
 
+extern int _octet_to_big(lua_State *L, big *dst, octet *src);
+
 // assumes null terminated string
 // returns 0 if not base else length of base encoded string
 int is_base64(const char *in) {
@@ -1795,6 +1797,124 @@ end:
 	return 1;
 }
 
+// TODO: remove magic numbers
+// TODO: implement import for non compressed octets
+static int zcash_topoint(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *o = o_arg(L, 1);
+	if(o == NULL) {
+		failed_msg = "Could not allocate octet";
+		goto end;
+	}
+
+	ecp2 *e2 = NULL;
+	ecp  *e = NULL;
+
+	unsigned char m_byte = o->val[0] & 0xE0;
+	char c_bit;
+	char i_bit;
+	char s_bit;
+	if(m_byte == 0x20 || m_byte == 0x60 || m_byte == 0xE0) {
+		failed_msg = "Invalid octet header";
+		goto end;
+	}
+	c_bit = ((m_byte & 0x80) == 0x80);
+	i_bit = ((m_byte & 0x40) == 0x40);
+	s_bit = ((m_byte & 0x20) == 0x20);
+
+	if(c_bit) {
+		if(o->len != 96 && o->len != 48) {
+			failed_msg = "Invalid octet header";
+			goto end;
+		}
+	} else {
+		if(o->len != 192 && o->len != 96) {
+			failed_msg = "Invalid octet header";
+			goto end;
+		}
+	}
+
+	switch(o->len) {
+	case 192:
+		e2 = ecp2_new(L);
+		break;
+	case 48:
+		e = ecp_new(L);
+		break;
+	case 96:
+		if(c_bit) e2 = ecp2_new(L);
+		else e = ecp_new(L);
+	}
+
+	o->val[0] = o->val[0] & 0x1F;
+
+	if(i_bit) {
+		// TODO: check o->val is all 0
+		if(e == NULL) {
+			ECP2_inf(&e2->val);
+		} else {
+			ECP_inf(&e->val);
+		}
+		goto end;
+	}
+
+	if(c_bit) {
+		if(e == NULL) {
+			FP2 fx;
+			octet x0 = {
+				.max = 48,
+				.len = 48,
+				.val = o->val
+			};
+			octet x1 = {
+				.max = 48,
+				.len = 48,
+				.val = o->val+48
+			};
+
+			big* bigx0 = big_new(L);
+			big* bigx1 = big_new(L);
+			_octet_to_big(L, bigx0, &x0);
+			_octet_to_big(L, bigx1, &x1);
+			FP2_from_BIGs(&fx, bigx1->val, bigx0->val);
+			if(!ECP2_setx(&e2->val, &fx)) {
+				failed_msg = "Invalid input octet: not a point on the curve";
+				goto end;
+			}
+			lua_pop(L,1);
+			lua_pop(L,1);
+		} else {
+			BIG xpoint, ypoint;
+			big* bigx = big_new(L);
+			_octet_to_big(L, bigx, o);
+
+			if(!ECP_setx(&e->val, bigx->val, 0)) {
+				failed_msg = "Invalid input octet: not a point on the curve";
+				goto end;
+			}
+
+			ECP_get(xpoint, ypoint, &e->val);
+			if(gf_sign(ypoint) != s_bit) {
+				ECP_neg(&e->val);
+
+			}
+
+			lua_pop(L,1);
+		}
+
+	} else {
+		failed_msg = "Not yet implemented";
+		goto end;
+	}
+end:
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
 int luaopen_octet(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg octet_class[] = {
@@ -1879,6 +1999,7 @@ int luaopen_octet(lua_State *L) {
 		{"charcount", charcount},
 		{"rmchar", remove_char},
 		{"compact_ascii", compact_ascii},
+		{"zcash_topoint", zcash_topoint},
 		// idiomatic operators
 		{"__len",size},
 		{"__concat",concat_n},
