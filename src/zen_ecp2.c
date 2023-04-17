@@ -740,9 +740,8 @@ end:
 }
 
 char gf2_sign(BIG y0, BIG y1){
-	BIG zero;
-	BIG_zero(zero);
-	if (BIG_comp(y1, zero) == 0){
+
+	if (BIG_iszilch(y1)) {
 		return gf_sign(y0);
 	}
 
@@ -752,10 +751,8 @@ char gf2_sign(BIG y0, BIG y1){
 	BIG_norm(p);
 	BIG_shr(p, 1);
 	if(BIG_comp(y1, p) == 1){
-		printf("%s\n", "CASE 1 SIGN2");
 		return 1;
 	} else {
-		printf("%s\n", "CASE 0 SIGN2");
 		return 0;
 	}
 }
