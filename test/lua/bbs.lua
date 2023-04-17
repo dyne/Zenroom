@@ -393,3 +393,108 @@ print("TEST: create_generators")
 run_test_create_generators(create_generators_test)
 
 --]]
+
+-- Test vectors originated from
+-- draft-irtf-cfrg-bbs-signatures-latest Sections 3.2.2, 7.2, {7.3} 7.5
+local HEADER = '11223344556677889900aabbccddeeff'
+local SINGLE_MESSAGE = '9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02'
+local SK_VALUE = '4a39afffd624d69e81808b2e84385cc80bf86adadf764e030caa46c231f2a8d7'
+local PK_VALUE = 'aaff983278257afc45fa9d44d156c454d716fb1a250dfed132d65b2009331f618c623c14efa16245f50cc92e60334051087f1ae92669b89690f5feb92e91568f95a8e286d110b011e9ac9923fd871238f57d1295395771331ff6edee43e4ccc6'
+local VALID_SINGLE_MESSAGE_SIGNATURE_TEST_SHA_256 = 'a7386ffaa4e70a9a44483adccc202a658e1c1f02190fb95bfd0f826a0188d73ab910c556fb3c1d9e212dea3c5e9989271a5e578c4625d290a0e7f2355eabe7584af5eb822c72319e588b2c20cd1e8256698d6108f599c2e48cf1be8e4ebfaf7ae397a5733a498d3d466b843c027311bb'
+
+-- Test is of the form
+-- sign(SK_VALUE, PK_VALUE, HEADER, {SINGLE_MESSAGE}) == VALID_SINGLE_MESSAGE_SIGNATURE_TEST_SHA_256
+
+local VALID_MULTIMSG_SIGNATURE_TEST_SHA_256 = 'b058678021dba2313c65fadc469eb4f030264719e40fb93bbf68bdf79079317a0a36193288b7dcb983fae0bc3e4c077f145f99a66794c5d0510cb0e12c0441830817822ad4ba74068eb7f34eb11ce3ee606d86160fecd844dda9d04bed759a676b0c8868d3f97fbe2e8b574169bd73a3'
+
+-- Test is of the form
+-- sign(SK_VALUE, PK_VALUE, HEADER, map_messages_to_scalar_messages) == VALID_MULTIMSG_SIGNATURE_TEST_SHA_256
+
+---
+---
+---
+
+-- Test vectors originated from
+-- draft-irtf-cfrg-bbs-signatures-latest Appendix C.2.1
+local MODIFIED_MSG_SIGNATURE_SHA_256 = '8fb17415378ec4462bc167be75583989e0528913da142239848ae88309805bfb3656bcff322e5d8fd1a7e40a660a62266099f27fa81ff5010443f36285f6f0758e4d701c444b20447cded906a3f2001714087f165f760369b901ccbe5173438b32ad195b005e2747492cf002cf51e498'
+
+-- Test is of the form
+-- verify(PK_VALUE, MODIFIED_MSG_SIGNATURE_SHA_256, HEADER, {SINGLE_MESSAGE})
+-- RETURNS AN ERROR: fail signature validation due to the message value being different from what was signed.
+
+-- Test vectors originated from
+-- draft-irtf-cfrg-bbs-signatures-latest Appendix C.2.2
+local TWO_MESSAGES = {
+    '9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02',
+    '87a8bd656d49ee07b8110e1d8fd4f1dcef6fb9bc368c492d9bc8c4f98a739ac6'
+}
+
+local EXTRA_UNSIGNED_MSG_SIGNATURE_SHA_256 = '8fb17415378ec4462bc167be75583989e0528913da142239848ae88309805bfb3656bcff322e5d8fd1a7e40a660a62266099f27fa81ff5010443f36285f6f0758e4d701c444b20447cded906a3f2001714087f165f760369b901ccbe5173438b32ad195b005e2747492cf002cf51e498'
+
+-- Test is of the form
+-- verify(PK_VALUE, EXTRA_UNSIGNED_MSG_SIGNATURE_SHA_256, HEADER, TWO_MESSAGES)
+-- fails signature validation due to an additional message being supplied that was not signed
+
+-- Test vectors originated from
+-- draft-irtf-cfrg-bbs-signatures-latest Appendix C.2.3
+local MISSING_MESSAGE_SIGNATURE_SHA_256 = 'b058678021dba2313c65fadc469eb4f030264719e40fb93bbf68bdf79079317a0a36193288b7dcb983fae0bc3e4c077f145f99a66794c5d0510cb0e12c0441830817822ad4ba74068eb7f34eb11ce3ee606d86160fecd844dda9d04bed759a676b0c8868d3f97fbe2e8b574169bd73a3'
+
+-- Test is of the form
+-- verify(PK_VALUE, MISSING_MESSAGE_SIGNATURE_SHA_256, HEADER, TWO_MESSAGES)
+-- fail signature validation due to missing messages that were originally present during the signing.
+
+-- Test vectors originated from
+-- draft-irtf-cfrg-bbs-signatures-latest Appendix C.2.4
+local REORDERED_MSGS = {
+    'c344136d9ab02da4dd5908bbba913ae6f58c2cc844b802a6f811f5fb075f9b80',
+    '7372e9daa5ed31e6cd5c825eac1b855e84476a1d94932aa348e07b7320912416',
+    '77fe97eb97a1ebe2e81e4e3597a3ee740a66e9ef2412472c23364568523f8b91',
+    '496694774c5604ab1b2544eababcf0f53278ff5040c1e77c811656e8220417a2',
+    '515ae153e22aae04ad16f759e07237b43022cb1ced4c176e0999c6a8ba5817cc',
+    'd183ddc6e2665aa4e2f088af9297b78c0d22b4290273db637ed33ff5cf703151',
+    'ac55fb33a75909edac8994829b250779298aa75d69324a365733f16c333fa943',
+    '96012096adda3f13dd4adbe4eea481a4c4b5717932b73b00e31807d3c5894b90',
+    '87a8bd656d49ee07b8110e1d8fd4f1dcef6fb9bc368c492d9bc8c4f98a739ac6',
+    '9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02'
+}
+
+local REORDERED_MSG_SIGNATURE_SHA_256 = 'b058678021dba2313c65fadc469eb4f030264719e40fb93bbf68bdf79079317a0a36193288b7dcb983fae0bc3e4c077f145f99a66794c5d0510cb0e12c0441830817822ad4ba74068eb7f34eb11ce3ee606d86160fecd844dda9d04bed759a676b0c8868d3f97fbe2e8b574169bd73a3'
+
+
+-- Test is of the form
+-- verify(PK_VALUE, REORDERED_MSG_SIGNATURE_SHA_256, HEADER, REORDERED_MSGS)
+-- fails signature validation due to messages being re-ordered from the order in which they were signed.
+
+-- Test vectors originated from
+-- draft-irtf-cfrg-bbs-signatures-latest Appendix C.2.5
+
+local WRONG_PUBLIC_KEY_SIGNATURE_SHA_256 = 'b058678021dba2313c65fadc469eb4f030264719e40fb93bbf68bdf79079317a0a36193288b7dcb983fae0bc3e4c077f145f99a66794c5d0510cb0e12c0441830817822ad4ba74068eb7f34eb11ce3ee606d86160fecd844dda9d04bed759a676b0c8868d3f97fbe2e8b574169bd73a3'
+
+-- Test is of the form
+-- verify(PK_VALUE, WRONG_PUBLIC_KEY_SIGNATURE_SHA_256, HEADER, map_messages_to_scalar_messages)
+-- fails signature validation due to public key used to verify is incorrect.
+
+-- Test vectors originated from
+-- draft-irtf-cfrg-bbs-signatures-latest Appendix C.2.6
+
+local WRONG_HEADER = 'ffeeddccbbaa00998877665544332211'
+
+local WRONG_HEADER_SIGNATURE_SHA_256 = 'b058678021dba2313c65fadc469eb4f030264719e40fb93bbf68bdf79079317a0a36193288b7dcb983fae0bc3e4c077f145f99a66794c5d0510cb0e12c0441830817822ad4ba74068eb7f34eb11ce3ee606d86160fecd844dda9d04bed759a676b0c8868d3f97fbe2e8b574169bd73a3'
+
+-- Test is of the form
+-- verify(PK_VALUE, WRONG_HEADER_SIGNATURE_SHA_256, WRONG_HEADER, map_messages_to_scalar_messages)
+-- fails signature validation due to header value being modified from what was originally signed.
+
+-- Test vectors originated from
+-- draft-irtf-cfrg-bbs-signatures-latest Appendix C.2.7
+
+local INPUT_MSG_BBS_SHA_256 = '9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02'
+
+local DEFAULT_DST_HASH_TO_SCALAR = '4242535f424c53313233383147315f584d443a5348412d3235365f535357555f524f5f4832535f'
+
+local BBS_SHA_256_H2S_TEST = '669e7db2fcd926d6ec6ff14cbb3143f50cce0242627f1389d58b5cccbc0ef927'
+
+print('----------------------')
+print("TEST: MapMessageToScalarAsHash (BBS paper, C.2.7)")
+print("(literally only first test vector of the above test with same name)")
+assert(bbs.MapMessageToScalarAsHash(O.from_hex(INPUT_MSG_BBS_SHA_256), O.from_hex(DEFAULT_DST_HASH_TO_SCALAR)) == BIG.new(O.from_hex(BBS_SHA_256_H2S_TEST)))

@@ -161,6 +161,7 @@ local h_eff = BIG.new(O.from_hex('d201000000010001'))
 local minusB = BIG.from_decimal('1095739230579739822926531667709610274979796698522379745127656044405743452317263233474751598099989487782925445922507')
 
 
+-- TODO: if you end up using Horner's rule (polynomial_evaluation), remove BIG_0 from constants K (you save some computations each time)
 -- draft-irtf-cfrg-hash-to-curve-16 Appendix E.2
 -- Constants used for the 11-isogeny map.
 local K = {{ -- K[1][i]
