@@ -158,7 +158,7 @@ local B = BIG.new(O.from_hex('12e2908d11688030018b12e8753eee3b2016c1f0f24f4070a0
 local Z = BIG.new(11)
 local h_eff = BIG.new(O.from_hex('d201000000010001'))
 -- -B mod p
-local minusB = BIG.from_decimal('1095739230579739822926531667709610274979796698522379745127656044405743452317263233474751598099989487782925445922507')
+-- local minusB = BIG.from_decimal('1095739230579739822926531667709610274979796698522379745127656044405743452317263233474751598099989487782925445922507')
 
 
 -- TODO: if you end up using Horner's rule (polynomial_evaluation), remove BIG_0 from constants K (you save some computations each time)
@@ -560,12 +560,16 @@ local EXPAND_LEN = 48
 -- draft-irtf-cfrg-bbs-signatures-latest Section 4.4
 -- It converts a message written in octects into a BIG modulo r (order of subgroup)
 local function hash_to_scalar_SHA_256(msg_octects, dst)
-    -- TODO: default dst?
+    -- Default value of DST when not provided (see also Section 6.2.2)
+    if(dst == nil) then
+        dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_H2S_')
+    end
+
     local counter = 0
     local hashed_scalar = BIG_0
     while hashed_scalar == BIG_0 do
         if counter > 255 then
-            return 'INVALID'
+            error("The counter of hash_to_scalar_SHA_256 is larger than 255", 2) -- return 'INVALID'
         end
         local msg_prime = msg_octects .. i2osp(counter, 1)
         local uniform_bytes = bbs.expand_message_xmd(msg_prime, dst, EXPAND_LEN)
@@ -583,19 +587,19 @@ end
 -- draft-irtf-cfrg-bbs-signatures-latest Section 4.3.1
 -- It converts a message written in octects into a BIG modulo r (order of subgroup)
 function bbs.MapMessageToScalarAsHash(msg, dst)
-    -- TODO: default DST?
-    -- TODO: check if len(msg) > 2^64 - 1 causes error because of integer limit of lua l?
-    -- 2^64 - 1 = 18,446,744,073,709,551,615
+    -- Default value of DST when not provided (see also Section 6.2.2)
+    if(dst == nil) then
+        dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MAP_MSG_TO_SCALAR_AS_HASH_')
+    end
 
-    if (#msg > 18446744073709551615) or (#dst > 255) then
-        return 'INVALID'
+    -- NOTE: in the specification it is ALSO written that an error must be raised
+    -- if len(msg) > 2^64 - 1 = 18,446,744,073,709,551,615 which is lua integer limit.
+    if (#dst > 255) then
+        error("dst is too long in MapMessageToScalarAsHash", 2) -- return 'INVALID'
     end
 
     local msg_scalar = hash_to_scalar_SHA_256(msg, dst)
-
-    if msg_scalar == 'INVALID' then
-        return 'INVALID'
-    end
+    -- if msg_scalar == 'INVALID' then return 'INVALID' end
     return msg_scalar
 end
 

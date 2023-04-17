@@ -497,4 +497,5 @@ local BBS_SHA_256_H2S_TEST = '669e7db2fcd926d6ec6ff14cbb3143f50cce0242627f1389d5
 print('----------------------')
 print("TEST: MapMessageToScalarAsHash (BBS paper, C.2.7)")
 print("(literally only first test vector of the above test with same name)")
+print('Test case 1')
 assert(bbs.MapMessageToScalarAsHash(O.from_hex(INPUT_MSG_BBS_SHA_256), O.from_hex(DEFAULT_DST_HASH_TO_SCALAR)) == BIG.new(O.from_hex(BBS_SHA_256_H2S_TEST)))
