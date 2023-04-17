@@ -370,7 +370,7 @@ Given that I have a 'string dictionary' named 'TransactionsBatchA'
 Given that I have a 'number' named 'salesStartTimestamp'
 
 # Here we search if a certain dictionary exists in the list
-When the 'dictionaryToBeFound' is found in 'TransactionsBatchA'
+When I verify the 'dictionaryToBeFound' is found in 'TransactionsBatchA'
 
 # Here we find the highest value of an element, in all dictionaries
 When I find the max value 'PricePerKG' for dictionaries in 'TransactionsBatchA'

@@ -33,7 +33,7 @@ When I pick the random object in 'bonnetjes'
 and I rename the 'random object' to 'lucky one'
 and I remove the 'lucky one' from 'bonnetjes'
 # redundant check
-and the 'lucky one' is not found in 'bonnetjes'
+and I verify the 'lucky one' is not found in 'bonnetjes'
 Then print the 'lucky one'
 EOF
     save_output "array_rename_remove.json"
@@ -69,92 +69,92 @@ and I have a 'base64' named 'not_found_key_base64'
 and I have a 'hex' named 'not_found_key_hex'
 and I have a 'base58' named 'not_found_key_base58'
 
-When the 'found_key_string' is found in 'my_array'
-and the 'found_key_base64' is found in 'my_array'
-and the 'found_key_hex' is found in 'my_array'
-and the 'found_key_base58' is found in 'my_array'
+When I verify the 'found_key_string' is found in 'my_array'
+and I verify the 'found_key_base64' is found in 'my_array'
+and I verify the 'found_key_hex' is found in 'my_array'
+and I verify the 'found_key_base58' is found in 'my_array'
 
-When the 'found_key_string' is found in 'my_dict'
-and the 'found_key_base64' is found in 'my_dict'
-and the 'found_key_hex' is found in 'my_dict'
-and the 'found_key_base58' is found in 'my_dict'
+When I verify the 'found_key_string' is found in 'my_dict'
+and I verify the 'found_key_base64' is found in 'my_dict'
+and I verify the 'found_key_hex' is found in 'my_dict'
+and I verify the 'found_key_base58' is found in 'my_dict'
 
-When the 'not_found_key_string' is not found in 'my_array'
-and the 'not_found_key_base64' is not found in 'my_array'
-and the 'not_found_key_hex' is not found in 'my_array'
-and the 'not_found_key_base58' is not found in 'my_array'
+When I verify the 'not_found_key_string' is not found in 'my_array'
+and I verify the 'not_found_key_base64' is not found in 'my_array'
+and I verify the 'not_found_key_hex' is not found in 'my_array'
+and I verify the 'not_found_key_base58' is not found in 'my_array'
 
-When the 'not_found_key_string' is not found in 'my_dict'
-and the 'not_found_key_base64' is not found in 'my_dict'
-and the 'not_found_key_hex' is not found in 'my_dict'
-and the 'not_found_key_base58' is not found in 'my_dict'
+When I verify the 'not_found_key_string' is not found in 'my_dict'
+and I verify the 'not_found_key_base64' is not found in 'my_dict'
+and I verify the 'not_found_key_hex' is not found in 'my_dict'
+and I verify the 'not_found_key_base58' is not found in 'my_dict'
 
 When I set 'result' to 'success' as 'string'
 
-If the 'not_found_key_string' is found in 'my_array'
+If I verify the 'not_found_key_string' is found in 'my_array'
 When I remove 'result'
 and I set 'result' to 'failure' as 'string'
 EndIf
-If the 'not_found_key_base64' is found in 'my_array'
+If I verify the 'not_found_key_base64' is found in 'my_array'
 When I remove 'result'
 and I set 'result' to 'failure' as 'string'
 EndIf
-If the 'not_found_key_hex' is found in 'my_array'
+If I verify the 'not_found_key_hex' is found in 'my_array'
 When I remove 'result'
 and I set 'result' to 'failure' as 'string'
 EndIf
-IF the 'not_found_key_base58' is found in 'my_array'
-When I remove 'result'
-and I set 'result' to 'failure' as 'string'
-EndIf
-
-If the 'not_found_key_string' is found in 'my_dict'
-When I remove 'result'
-and I set 'result' to 'failure' as 'string'
-EndIf
-If the 'not_found_key_base64' is found in 'my_dict'
-When I remove 'result'
-and I set 'result' to 'failure' as 'string'
-EndIf
-If the 'not_found_key_hex' is found in 'my_dict'
-When I remove 'result'
-and I set 'result' to 'failure' as 'string'
-EndIf
-IF the 'not_found_key_base58' is found in 'my_dict'
+If I verify the 'not_found_key_base58' is found in 'my_array'
 When I remove 'result'
 and I set 'result' to 'failure' as 'string'
 EndIf
 
-If the 'found_key_string' is not found in 'my_array'
+If I verify the 'not_found_key_string' is found in 'my_dict'
 When I remove 'result'
 and I set 'result' to 'failure' as 'string'
 EndIf
-If the 'found_key_base64' is not found in 'my_array'
+If I verify the 'not_found_key_base64' is found in 'my_dict'
 When I remove 'result'
 and I set 'result' to 'failure' as 'string'
 EndIf
-If the 'found_key_hex' is not found in 'my_array'
+If I verify the 'not_found_key_hex' is found in 'my_dict'
 When I remove 'result'
 and I set 'result' to 'failure' as 'string'
 EndIf
-IF the 'found_key_base58' is not found in 'my_array'
+IF I verify the 'not_found_key_base58' is found in 'my_dict'
 When I remove 'result'
 and I set 'result' to 'failure' as 'string'
 EndIf
 
-If the 'found_key_string' is not found in 'my_dict'
+If I verify the 'found_key_string' is not found in 'my_array'
 When I remove 'result'
 and I set 'result' to 'failure' as 'string'
 EndIf
-If the 'found_key_base64' is not found in 'my_dict'
+If I verify the 'found_key_base64' is not found in 'my_array'
 When I remove 'result'
 and I set 'result' to 'failure' as 'string'
 EndIf
-If the 'found_key_hex' is not found in 'my_dict'
+If I verify the 'found_key_hex' is not found in 'my_array'
 When I remove 'result'
 and I set 'result' to 'failure' as 'string'
 EndIf
-IF the 'found_key_base58' is not found in 'my_dict'
+IF I verify the 'found_key_base58' is not found in 'my_array'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+
+If I verify the 'found_key_string' is not found in 'my_dict'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+If I verify the 'found_key_base64' is not found in 'my_dict'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+If I verify the 'found_key_hex' is not found in 'my_dict'
+When I remove 'result'
+and I set 'result' to 'failure' as 'string'
+EndIf
+IF I verify the 'found_key_base58' is not found in 'my_dict'
 When I remove 'result'
 and I set 'result' to 'failure' as 'string'
 EndIf
@@ -330,7 +330,7 @@ EOF
 Given I have a 'string array' named 'haystack'
 and I have a 'number' named 'quorum'
 and I have a 'string' named 'needle'
-When the 'needle' is found in 'haystack' at least 'quorum' times
+When I verify the 'needle' is found in 'haystack' at least 'quorum' times
 Then Print the string 'Success' 
 EOF
     save_output "needle_in_haystack.json"

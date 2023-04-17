@@ -491,9 +491,9 @@ When number 'myThirdNumber' is more than 'mySecondNumber'
 # and matches it against each element of the array.
 # It works with any kind of array, as long as the element of the array are of the same schema
 # as the variable.
-When the 'myTenthString' is found in 'myFourthArray'
-When the 'myFirstString' is not found in 'myFourthArray'
-When the 'mySeventeenthString' is found in 'myFourthArray' at least 'myFourthNumber' times
+When I verify the 'myTenthString' is found in 'myFourthArray'
+When I verify the 'myFirstString' is not found in 'myFourthArray'
+When I verify the 'mySeventeenthString' is found in 'myFourthArray' at least 'myFourthNumber' times
 Then print all data
 EOF
     cat $R/docs/examples/zencode_cookbook/$SUBDOC/whenCompleteScriptGiven.zen \
