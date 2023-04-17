@@ -459,7 +459,7 @@ Given I have a 'string' named 'id'
 
 Given I have a 'string array' named 'W3C-DID'
 
-If the 'id' is not found in 'W3C-DID'
+If I verify the 'id' is not found in 'W3C-DID'
 When I set 'title' to 'Identifier Not Found' as 'string'
 When I set 'type' to 'about:blank' as 'string'
 When I set 'status' to '404' as 'number'
@@ -469,7 +469,7 @@ Then print 'type'
 Then print 'title'
 Endif
 
-If the 'id' is  found in 'W3C-DID'
+If I verify the 'id' is  found in 'W3C-DID'
 Then print 'W3C-DID'
 Then print the 'id'
 Endif

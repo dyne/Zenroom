@@ -44,7 +44,7 @@ Given nothing
 When I create the array of '32' random objects of '256' bits
 and I pick the random object in 'array'
 and I remove the 'random object' from 'array'
-and the 'random object' is not found in 'array'
+and I verify the 'random object' is not found in 'array'
 Then print the 'random object'
 EOF
     save_output "random_from_array.out"
@@ -74,7 +74,7 @@ When I pick the random object in 'bonnetjes'
 and I rename the 'random object' to 'lucky one'
 and I remove the 'lucky one' from 'bonnetjes'
 # redundant check
-and the 'lucky one' is not found in 'bonnetjes'
+and I verify the 'lucky one' is not found in 'bonnetjes'
 Then print the 'lucky one'
 EOF
     save_output 'array_rename_remove.out'
