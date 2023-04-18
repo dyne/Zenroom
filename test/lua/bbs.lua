@@ -391,6 +391,8 @@ run_test_create_generators(create_generators_test)
 
 
 
+--[[
+
 -- Test vectors originated from
 -- draft-irtf-cfrg-bbs-signatures-latest Sections 3.2.2, 7.2, {7.3} 7.5
 local HEADER = '11223344556677889900aabbccddeeff'
@@ -399,6 +401,11 @@ local SK_VALUE = '4a39afffd624d69e81808b2e84385cc80bf86adadf764e030caa46c231f2a8
 local PK_VALUE = 'aaff983278257afc45fa9d44d156c454d716fb1a250dfed132d65b2009331f618c623c14efa16245f50cc92e60334051087f1ae92669b89690f5feb92e91568f95a8e286d110b011e9ac9923fd871238f57d1295395771331ff6edee43e4ccc6'
 local VALID_SINGLE_MESSAGE_SIGNATURE_TEST_SHA_256 = 'a7386ffaa4e70a9a44483adccc202a658e1c1f02190fb95bfd0f826a0188d73ab910c556fb3c1d9e212dea3c5e9989271a5e578c4625d290a0e7f2355eabe7584af5eb822c72319e588b2c20cd1e8256698d6108f599c2e48cf1be8e4ebfaf7ae397a5733a498d3d466b843c027311bb'
 
+print('----------------------')
+print("TEST: Valid single message signature SHA 256")
+print("Test case 1")
+local output_sign = bbs.sign( BIG.new(O.from_hex(SK_VALUE)), O.from_hex(PK_VALUE), O.from_hex(HEADER), { BIG.new(O.from_hex(SINGLE_MESSAGE)) } )
+assert( I.spy(output_sign) == O.from_hex(VALID_SINGLE_MESSAGE_SIGNATURE_TEST_SHA_256), "WRONG SIGNATURE")
 -- Test is of the form
 -- sign(SK_VALUE, PK_VALUE, HEADER, {SINGLE_MESSAGE}) == VALID_SINGLE_MESSAGE_SIGNATURE_TEST_SHA_256
 
@@ -406,6 +413,8 @@ local VALID_MULTIMSG_SIGNATURE_TEST_SHA_256 = 'b058678021dba2313c65fadc469eb4f03
 
 -- Test is of the form
 -- sign(SK_VALUE, PK_VALUE, HEADER, map_messages_to_scalar_messages) == VALID_MULTIMSG_SIGNATURE_TEST_SHA_256
+
+--]]
 
 ---
 ---

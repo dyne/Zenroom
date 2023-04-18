@@ -96,9 +96,6 @@ function bbs.sk2pk(sk)
     return ECP2.generator() * sk
 end
 
-function bbs.sign(sk, pk, headers, messages)
-
-end
 
 -- TODO: implement expand_message_xmd with other hash functions? Leave this function inside the bbs table?
 
@@ -141,6 +138,11 @@ end
 -------------------------------------------------
 -------------------------------------------------
 
+
+-- draft-irtf-cfrg-bbs-signatures-latest Section 6.2.2
+local OCTET_SCALAR_LENGTH = 32 -- ceil(log2(r)/8)
+local CIPHERSUITE_ID_OCTET_SHA_256 = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_")
+local P1 = (O.from_hex('8533b3fbea84e8bd9ccee177e3c56fbe1d2e33b798e491228f6ed65bb4d1e0ada07bcc4489d8751f8ba7a1b69b6eecd7')):zcash_topoint()
 
 -- draft-irtf-cfrg-hash-to-curve-16 section 8.8.1 (BLS12-381 parameters)
 -- BLS12381G1_XMD:SHA-256_SSWU_RO_ 
@@ -509,7 +511,7 @@ end
 
 
 
---see Appendix A.1
+--see draft-irtf-cfrg-bbs-signatures-latest Appendix A.1
 local r = BIG.new(O.from_hex('73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001'))
 local seed_len = 48 --ceil((ceil(log2(r)) + k)/8)
 
@@ -538,14 +540,10 @@ function bbs.create_generators(count, generator_seed, seed_dst, generator_dst)
             mess_generators[i] = candidate
         end
     end
-    
+
     return mess_generators
-    
+
 end
-
-
--- draft-irtf-cfrg-bbs-signatures-latest Appendix A.1
---local r = BIG.new(O.from_hex('73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001'))
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 3.4.3
 local EXPAND_LEN = 48
@@ -554,7 +552,7 @@ local EXPAND_LEN = 48
 -- It converts a message written in octects into a BIG modulo r (order of subgroup)
 local function hash_to_scalar_SHA_256(msg_octects, dst)
     -- Default value of DST when not provided (see also Section 6.2.2)
-    if(dst == nil) then
+    if not dst then
         dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_H2S_')
     end
 
@@ -581,7 +579,7 @@ end
 -- It converts a message written in octects into a BIG modulo r (order of subgroup)
 function bbs.MapMessageToScalarAsHash(msg, dst)
     -- Default value of DST when not provided (see also Section 6.2.2)
-    if(dst == nil) then
+    if not dst then
         dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MAP_MSG_TO_SCALAR_AS_HASH_')
     end
 
@@ -596,5 +594,128 @@ function bbs.MapMessageToScalarAsHash(msg, dst)
     return msg_scalar
 end
 
+-- draft-irtf-cfrg-bbs-signatures-latest Section 4.7.1
+-- It converts an input array into an octet.
+local function serialize(input_array)
+    local octet_result = O.empty()
+    local el_octs = O.empty()
+
+    for i=1, #input_array do
+        local elt = input_array[i]
+        local elt_type = type(elt)
+
+        if (elt_type == "zenroom.ecp") or (elt_type == "zenroom.epc2") then
+            print("Point")
+            el_octs = elt:zcash_export()
+
+        elseif (elt_type == "zenroom.big") then
+            -- elt >= 0 true by definition of BIG I think
+            if (elt >= BIG_0) and (elt < r) then
+                print("Scalar")
+                el_octs = i2osp(elt, OCTET_SCALAR_LENGTH)
+
+            elseif (elt >= BIG_0) and (elt >= r) then -- The check "< 2^64 - 1" is omitted here.
+                print("Normal")
+                el_octs = i2osp(elt, 8)
+
+            else
+                error("Negative integer passed inside serialize", 2)
+            end
+
+        else
+            error("Invalid type passed inside serialize", 2)
+        end
+
+        octet_result = octet_result .. el_octs
+        I.spy(octet_result)
+    end
+    print("------")
+    return octet_result
+end
+
+-- draft-irtf-cfrg-bbs-signatures-latest Section 4.5
+-- It calculates a domain value, distillating all essential contextual information for a signature.
+local function calculate_domain(PK_octet, Q1, Q2, H_points, header)
+    -- Default header is "empty octet string" ("")
+    if not header then
+        header = O.empty()
+    end
+
+    local len = #H_points
+    -- We avoid the following checks:
+    -- assert(#(header) < 2^64)
+    -- assert(L < 2^64)
+
+    local dom_array = {BIG.new(len), Q1, Q2}
+    if (len > 0) then
+        for i = 1, len do
+            dom_array[i+3] = H_points[i]
+        end
+    end
+
+    local dom_octs = serialize(dom_array) .. CIPHERSUITE_ID_OCTET_SHA_256
+    -- if dom_octs is "INVALID", return "INVALID"
+    
+    local dom_input = PK_octet .. dom_octs .. i2osp(#header, 8) .. header
+
+    local domain = hash_to_scalar_SHA_256(dom_input)
+    -- if domain is "INVALID", return "INVALID"
+
+    return domain
+end
+
+-- draft-irtf-cfrg-bbs-signatures-latest Section 3.4.1
+-- It computes a deterministic signature from a secret key (SK) and optionally over a header and/or a vector of messages.
+function bbs.sign(SK, PK, header, messages)
+    -- Default values for header and messages.
+    if not header then
+        header = O.empty()
+    end
+    if not messages then
+        messages = {}
+    end
+
+    local LEN = #messages
+    local point_array = bbs.create_generators(LEN + 2, O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MESSAGE_GENERATOR_SEED"), O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_GENERATOR_SEED_"), O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_GENERATOR_DST_"))
+    local Q_1 = point_array[1]
+    local Q_2 = point_array[2]
+    local H_array = {}
+    if (LEN > 0) then
+        for i = 1, LEN do
+            H_array[i] = point_array[i+2]
+        end
+    end
+    local domain = calculate_domain(PK, Q_1, Q_2, H_array, header)
+    -- if domain is "INVALID" return "INVALID"
+
+    local serialise_array = {SK, domain}
+    if (LEN > 0) then
+        for i = 1,LEN do
+            serialise_array[i+2] = messages[i]
+        end
+    end
+    print("ULTIMO DI QUESTI MESSAGGIO")
+    local e_s_octs = serialize(serialise_array)
+    -- IF e_s_octs is "INVALID", then return "INVALID"
+
+    local e_s_len = OCTET_SCALAR_LENGTH * 2
+    local e_s_expand = bbs.expand_message_xmd(e_s_octs, O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_DET_DST_'), e_s_len)
+    -- if e_s_expand is "INVALID", return "INVALID"
+
+    local e = hash_to_scalar_SHA_256(e_s_expand:sub(1, OCTET_SCALAR_LENGTH))
+    local s = hash_to_scalar_SHA_256(e_s_expand:sub(OCTET_SCALAR_LENGTH + 1, e_s_len))
+    -- If e or s is INVALID, return INVALID
+
+    local BB = P1 + (BIG.mod(s, r) * Q_1) + (BIG.mod(domain, r) * Q_2)
+    if (LEN > 0) then
+        for i = 1,LEN do
+            BB = BB + (BIG.mod(messages[i], r)* H_array[i])
+        end
+    end
+
+    local AA = BIG.modinv(SK + e, r) * BB
+
+    return serialize({AA, e, s})
+end
 
 return bbs
