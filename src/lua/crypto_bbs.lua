@@ -92,6 +92,7 @@ function bbs.keygen(ikm, key_info)
 end
 
 
+-- TODO: make this function return an OCTET
 function bbs.sk2pk(sk)
     return ECP2.generator() * sk
 end
@@ -141,6 +142,7 @@ end
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 6.2.2
 local OCTET_SCALAR_LENGTH = 32 -- ceil(log2(r)/8)
+local OCTET_POINT_LENGTH = 48 --ceil(log2(p)/8)
 local CIPHERSUITE_ID_OCTET_SHA_256 = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_")
 local P1 = (O.from_hex('8533b3fbea84e8bd9ccee177e3c56fbe1d2e33b798e491228f6ed65bb4d1e0ada07bcc4489d8751f8ba7a1b69b6eecd7')):zcash_topoint()
 
@@ -553,7 +555,8 @@ local EXPAND_LEN = 48
 local function hash_to_scalar_SHA_256(msg_octects, dst)
     -- Default value of DST when not provided (see also Section 6.2.2)
     if not dst then
-        dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_H2S_')
+        -- dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_H2S_')
+        dst = O.from_hex('4242535f424c53313233383147315f584d443a5348412d3235365f535357555f524f5f4832535f')
     end
 
     local counter = 0
@@ -581,6 +584,7 @@ function bbs.MapMessageToScalarAsHash(msg, dst)
     -- Default value of DST when not provided (see also Section 6.2.2)
     if not dst then
         dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MAP_MSG_TO_SCALAR_AS_HASH_')
+        -- dst = O.from_hex("4242535f424c53313233383147315f584d443a5348412d3235365f535357555f524f5f4d41505f4d53475f544f5f5343414c41525f41535f484153485f")
     end
 
     -- NOTE: in the specification it is ALSO written that an error must be raised
@@ -596,7 +600,7 @@ end
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 4.7.1
 -- It converts an input array into an octet.
-local function serialize(input_array)
+function bbs.serialize(input_array)
     local octet_result = O.empty()
     local el_octs = O.empty()
 
@@ -605,17 +609,14 @@ local function serialize(input_array)
         local elt_type = type(elt)
 
         if (elt_type == "zenroom.ecp") or (elt_type == "zenroom.epc2") then
-            print("Point")
             el_octs = elt:zcash_export()
 
         elseif (elt_type == "zenroom.big") then
             -- elt >= 0 true by definition of BIG I think
             if (elt >= BIG_0) and (elt < r) then
-                print("Scalar")
                 el_octs = i2osp(elt, OCTET_SCALAR_LENGTH)
 
             elseif (elt >= BIG_0) and (elt >= r) then -- The check "< 2^64 - 1" is omitted here.
-                print("Normal")
                 el_octs = i2osp(elt, 8)
 
             else
@@ -627,9 +628,8 @@ local function serialize(input_array)
         end
 
         octet_result = octet_result .. el_octs
-        I.spy(octet_result)
     end
-    print("------")
+
     return octet_result
 end
 
@@ -653,9 +653,9 @@ local function calculate_domain(PK_octet, Q1, Q2, H_points, header)
         end
     end
 
-    local dom_octs = serialize(dom_array) .. CIPHERSUITE_ID_OCTET_SHA_256
+    local dom_octs = bbs.serialize(dom_array) .. CIPHERSUITE_ID_OCTET_SHA_256
     -- if dom_octs is "INVALID", return "INVALID"
-    
+
     local dom_input = PK_octet .. dom_octs .. i2osp(#header, 8) .. header
 
     local domain = hash_to_scalar_SHA_256(dom_input)
@@ -694,28 +694,145 @@ function bbs.sign(SK, PK, header, messages)
             serialise_array[i+2] = messages[i]
         end
     end
-    print("ULTIMO DI QUESTI MESSAGGIO")
-    local e_s_octs = serialize(serialise_array)
+
+    local e_s_octs = bbs.serialize(serialise_array)
     -- IF e_s_octs is "INVALID", then return "INVALID"
 
     local e_s_len = OCTET_SCALAR_LENGTH * 2
-    local e_s_expand = bbs.expand_message_xmd(e_s_octs, O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_DET_DST_'), e_s_len)
+    local e_s_expand = bbs.expand_message_xmd(e_s_octs, O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_DET_DST_'), e_s_len) -- bbs.expand_message_xmd(e_s_octs, O.from_string('\\x42\\x42\\x53\\x5f\\x42\\x4c\\x53\\x31\\x32\\x33\\x38\\x31\\x47\\x31\\x5f\\x58\\x4d\\x44\\x3a\\x53\\x48\\x41\\x2d\\x32\\x35\\x36\\x5f\\x53\\x53\\x57\\x55\\x5f\\x52\\x4f\\x5f\\x53\\x49\\x47\\x5f\\x44\\x45\\x54\\x5f\\x44\\x53\\x54\\x5f'), e_s_len)
     -- if e_s_expand is "INVALID", return "INVALID"
 
     local e = hash_to_scalar_SHA_256(e_s_expand:sub(1, OCTET_SCALAR_LENGTH))
     local s = hash_to_scalar_SHA_256(e_s_expand:sub(OCTET_SCALAR_LENGTH + 1, e_s_len))
     -- If e or s is INVALID, return INVALID
+    -- local e = BIG.new(O.from_hex("6099f27fa81ff5010443f36285f6f0758e4d701c444b20447cded906a3f20017"))
+    -- local s = BIG.new(O.from_hex("14087f165f760369b901ccbe5173438b32ad195b005e2747492cf002cf51e498"))
 
-    local BB = P1 + (BIG.mod(s, r) * Q_1) + (BIG.mod(domain, r) * Q_2)
+    local BB = P1 + (Q_1 * s) + (Q_2 * domain)
     if (LEN > 0) then
         for i = 1,LEN do
-            BB = BB + (BIG.mod(messages[i], r)* H_array[i])
+            BB = BB + (H_array[i]* messages[i])
         end
     end
 
-    local AA = BIG.modinv(SK + e, r) * BB
+    assert(BIG.mod(SK + e, r) ~= BIG_0)
+    local AA = BIG.moddiv(BIG_1, SK + e, r) * BB
 
-    return serialize({AA, e, s})
+    --[[
+    local W = PK:zcash_topoint()
+    local LHS = ECP2.ate(W + (ECP2.generator() * e), AA)
+    local RHS = ECP2.ate(ECP2.generator():negative(), BB)
+    -- local element = LHS:mul(RHS)
+    if (LHS:inv() == RHS) then
+        print("VALID")
+    else
+        print("INVALID")
+    end
+    --]]
+
+    return bbs.serialize({AA, e, s})
+end
+
+-- 
+-- It is the opposite function of "serialize" with input "(POINT, SCALAR, SCALAR)"
+function bbs.octets_to_signature(signature_octets)
+    local expected_len = OCTET_SCALAR_LENGTH * 2 + OCTET_POINT_LENGTH
+    if (#signature_octets ~= expected_len) then
+        error("Wrong length of signature_octets", 2)
+    end
+
+    local A_octets = signature_octets:sub(1, OCTET_POINT_LENGTH)
+    local AA = A_octets:zcash_topoint()
+    -- if AA is "INVALID" return "INVALID"
+    if (AA == Identity_G1) then
+        error("Point is identity", 2)
+    end
+
+    local index = OCTET_POINT_LENGTH + 1
+    local end_index = index + OCTET_SCALAR_LENGTH - 1
+    local e = os2ip(signature_octets:sub(index, end_index))
+    if (e == BIG_0) or (e >= r) then
+        error("Wrong e in desirialization", 2)
+    end
+
+    index = index + OCTET_SCALAR_LENGTH
+    end_index = index + OCTET_SCALAR_LENGTH - 1
+    local s = os2ip(signature_octets:sub(index, end_index))
+    if (s == BIG_0) or (s >= r) then
+        error("Wrong s in desirialization", 2)
+    end
+
+    return { AA, e, s}
+end
+
+local function octets_to_pub_key(PK)
+    local W = PK:zcash_topoint()
+    -- If W is INVALID return INVALID
+
+    -- ECP2.infinity == Identity_G2
+    if (W == ECP2.infinity()) then
+        error("W is identity G2", 2)
+    end
+    -- TODO: implement paper with faster subgroup check
+    if (W * r ~= ECP2.infinity()) then
+        error("W is not in subgroup", 2)
+    end
+    --]]
+    return W
+end
+
+
+function bbs.verify(PK, signature, header, messages)
+    -- Default values
+    if not header then
+        header = O.empty()
+    end
+    if not messages then
+        messages = {}
+    end
+
+    -- Deserialization
+    local signature_result = bbs.octets_to_signature(signature)
+    -- if signature_result is INVALID return INVALID
+
+    local AA = signature_result[1]
+    local e = signature_result[2]
+    local s = signature_result[3]
+
+    local W = octets_to_pub_key(PK)
+    -- if W is INVALID, return INVALID
+    local LEN = #messages
+
+    -- Procedure
+    local point_array = bbs.create_generators(LEN + 2, O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MESSAGE_GENERATOR_SEED"), O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_GENERATOR_SEED_"), O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_GENERATOR_DST_"))
+    local Q_1 = point_array[1]
+    local Q_2 = point_array[2]
+    local H_points = {}
+    if (LEN > 0) then
+        for i = 1, LEN do
+            H_points[i] = point_array[i+2]
+        end
+    end
+    local domain = calculate_domain(PK, Q_1, Q_2, H_points, header)
+    -- If domain is INVALID then return INVALID
+
+    local BB = P1 + (Q_1 * s) + (Q_2 * domain)
+    if (LEN > 0) then
+        for i = 1,LEN do
+            BB = BB + (H_points[i] * messages[i])
+        end
+    end
+
+
+    local LHS = ECP2.ate(W + (ECP2.generator() * e), AA)
+    local RHS = ECP2.ate(ECP2.generator():negative(), BB)
+    -- local element = LHS:mul(RHS)
+    if (LHS:inv() == RHS) then
+        return "VALID"
+    else
+        return "INVALID"
+    end
+    --- ECP2.ate(ECP2, ECP)     FP12.mul(arg1, arg2)
 end
 
 return bbs
