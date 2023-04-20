@@ -543,3 +543,35 @@ print("TEST: MapMessageToScalarAsHash (BBS paper, C.2.7)")
 print("(literally only first test vector of the above test with same name)")
 print('Test case 1')
 assert(bbs.MapMessageToScalarAsHash(O.from_hex(INPUT_MSG_BBS_SHA_256), O.from_hex(DEFAULT_DST_HASH_TO_SCALAR)) == BIG.new(O.from_hex(BBS_SHA_256_H2S_TEST)))
+
+
+-- Test vectors originated from
+-- draft-irtf-cfrg-bbs-signatures-latest Section 7.5.4
+
+local SEED_RANDOM_SCALAR = O.from_hex("332e313431353932363533353839373933323338343632363433333833323739")
+
+local MOCKED_RANDOM_SCALARS_TEST = {
+    '41b5e116922813fab50e1bcafd5a68f38c977fe4b01b3992424bc4ff1f1490bc',
+    '57062c3eb0b030cbb45535bc7e8b3756288cfeee52ab6e2d1a56aedcfee668ba',
+    '20a1f16c18342bc8650655783cd87b4491ce3986d0942e863d62053914bb3da1',
+    '21ba43b4e1da365c6062b8cb00e3c22b0d49d68e30fae8a21ff9a476912a49ee',
+    '2d34df08a57d8d7c6d3a8bdd34f45f0db539a4fc17b3e8948cb36360190248ed',
+    '4840669faf2ab03e2b8a80d3ebc597cabfe35642680cec12f622daf63529be52',
+    '3151326acfc6ec15b68ce67d52ce75abbe17d4224e78abb1c31f410f5664fc1a',
+    '4cb74272bc2673959a3c72d992485057b1312cd8d2bf32747741324a92152c81',
+    '2af0ebadecd3e43aefaafcfd3f426dca179140cdaf356a838381e584dfa0e4d1',
+    '3aa6190cb2ae26ba433c3f6ff01504088cead97687f417f4bc80ac906201356c'
+}
+
+local function run_test_mocked_random (test)
+    local output_mocked = bbs.seeded_random_scalars(SEED_RANDOM_SCALAR, 10)
+    for i = 1, 10 do
+        print("Test case ".. i)
+        assert(output_mocked[i] == BIG.new(O.from_hex(test[i])))
+    end
+end
+
+print('----------------------')
+print("TEST: Mocked/Seeded random scalars")
+
+run_test_mocked_random(MOCKED_RANDOM_SCALARS_TEST)

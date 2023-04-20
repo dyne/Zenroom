@@ -144,7 +144,8 @@ end
 local OCTET_SCALAR_LENGTH = 32 -- ceil(log2(r)/8)
 local OCTET_POINT_LENGTH = 48 --ceil(log2(p)/8)
 local CIPHERSUITE_ID_OCTET_SHA_256 = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_")
-local P1 = (O.from_hex('8533b3fbea84e8bd9ccee177e3c56fbe1d2e33b798e491228f6ed65bb4d1e0ada07bcc4489d8751f8ba7a1b69b6eecd7')):zcash_topoint()
+local P1 = (O.from_hex('b57ec5e001c28d4063e0b6f5f0a6eee357b51b64d789a21cf18fd11e73e73577910182d421b5a61812f5d1ca751fa3f0')):zcash_topoint() -- (O.from_hex('8533b3fbea84e8bd9ccee177e3c56fbe1d2e33b798e491228f6ed65bb4d1e0ada07bcc4489d8751f8ba7a1b69b6eecd7')):zcash_topoint()
+-- I.spy(bbs.create_generators(1, generator_seed_test, seed_dst_test, generator_dst_test)[1]:zcash_export())
 
 -- draft-irtf-cfrg-hash-to-curve-16 section 8.8.1 (BLS12-381 parameters)
 -- BLS12381G1_XMD:SHA-256_SSWU_RO_ 
@@ -612,15 +613,12 @@ function bbs.serialize(input_array)
             el_octs = elt:zcash_export()
 
         elseif (elt_type == "zenroom.big") then
-            -- elt >= 0 true by definition of BIG I think
-            if (elt >= BIG_0) and (elt < r) then
+            -- elt >= 0 true by definition of BIG
+            if (elt < r) then
                 el_octs = i2osp(elt, OCTET_SCALAR_LENGTH)
 
-            elseif (elt >= BIG_0) and (elt >= r) then -- The check "< 2^64 - 1" is omitted here.
+            else -- The check "< 2^64 - 1" is omitted here.
                 el_octs = i2osp(elt, 8)
-
-            else
-                error("Negative integer passed inside serialize", 2)
             end
 
         else
@@ -716,7 +714,7 @@ function bbs.sign(SK, PK, header, messages)
     end
 
     assert(BIG.mod(SK + e, r) ~= BIG_0)
-    local AA = BIG.moddiv(BIG_1, SK + e, r) * BB
+    local AA = BB * BIG.moddiv(BIG_1, SK + e, r)
 
     --[[
     local W = PK:zcash_topoint()
@@ -833,6 +831,41 @@ function bbs.verify(PK, signature, header, messages)
         return "INVALID"
     end
     --- ECP2.ate(ECP2, ECP)     FP12.mul(arg1, arg2)
+end
+
+
+---------------------------------
+-- Credentials:ProofGen,ProofVerify -------
+---------------------------------
+---------------------------------
+---------------------------------
+---------------------------------
+---------------------------------
+---------------------------------
+---------------------------------
+---------------------------------
+---------------------------------
+
+-- draft-irtf-cfrg-bbs-signatures-latest Section 7.1
+-- It SIMULATES a random generation of scalars.
+-- DO NOT USE IN FINAL ProofGen
+function bbs.seeded_random_scalars(SEED, count)
+
+    local SEEDED_RANDOM_DST = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MOCK_RANDOM_SCALARS_DST_")
+
+    local out_len = EXPAND_LEN * count
+    assert(out_len <= 65535)
+    local v = bbs.expand_message_xmd(SEED, SEEDED_RANDOM_DST, out_len)
+    -- if v is INVALID return INVALID
+
+
+    local arr = {}
+    for i = 1, count do
+        local start_idx = 1 + (i-1)*EXPAND_LEN
+        local end_idx = i * EXPAND_LEN
+        arr[i] = BIG.mod(v:sub(start_idx, end_idx), r) -- = os2ip(v:sub(start_idx, end_idx)) % r
+    end
+    return arr
 end
 
 return bbs
