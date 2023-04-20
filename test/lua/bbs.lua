@@ -402,6 +402,16 @@ print("Test case 1")
 local output_signature = bbs.sign( BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(HEADER), SINGLE_MSG_ARRAY)
 I.spy(output_signature)
 I.spy(bbs.verify(O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), SINGLE_MSG_ARRAY))
+
+--[[
+local PRESENTATION_HEADER = O.from_hex("bed231d880675ed101ead304512e043ade9958dd0241ea70b4b3957fba941501")
+
+print('----------------------')
+print("TEST: Valid single message proof SHA 256")
+print("Test case 1")
+I.spy(bbs.ProofGen(O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE), O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY))
+--]]
+
 -- I.spy(bbs.verify(O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE), O.from_hex(HEADER), SINGLE_MSG_ARRAY))
 -- assert( output_signature == I.spy(O.from_hex(VALID_SIGNATURE)))
 
