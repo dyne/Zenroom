@@ -616,10 +616,9 @@ end
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 4.7.1
 -- It converts an input array into an octet.
-function bbs.serialize(input_array)
+function serialization(input_array)
     local octet_result = O.empty()
     local el_octs = O.empty()
-
     for i=1, #input_array do
         local elt = input_array[i]
         local elt_type = type(elt)
@@ -633,13 +632,14 @@ function bbs.serialize(input_array)
 
         elseif (elt_type == "number") then
         -- The check "< 2^64 - 1" is omitted here.
-        el_octs = i2osp(elt, 8)
+            el_octs = i2osp(elt, 8)
 
         else
             error("Invalid type passed inside serialize", 2)
         end
-
+        
         octet_result = octet_result .. el_octs
+        
     end
 
     return octet_result
@@ -665,7 +665,7 @@ local function calculate_domain(PK_octet, Q1, Q2, H_points, header)
         end
     end
 
-    local dom_octs = bbs.serialize(dom_array) .. CIPHERSUITE_ID_OCTET_SHA_256
+    local dom_octs = serialization(dom_array) .. CIPHERSUITE_ID_OCTET_SHA_256
     -- if dom_octs is "INVALID", return "INVALID"
 
     local dom_input = PK_octet .. dom_octs .. i2osp(#header, 8) .. header
@@ -700,7 +700,7 @@ function bbs.sign(SK, PK, header, messages)
         serialise_array[i+2] = messages[i]
     end
 
-    local e_s_octs = bbs.serialize(serialise_array)
+    local e_s_octs = serialization(serialise_array)
     -- IF e_s_octs is "INVALID", then return "INVALID"
 
     local e_s_len = OCTET_SCALAR_LENGTH * 2
@@ -723,19 +723,7 @@ function bbs.sign(SK, PK, header, messages)
     assert(BIG.mod(SK + e, r) ~= BIG_0)
     local AA = BB * BIG.moddiv(BIG_1, SK + e, r)
 
-    --[[
-    local W = PK:zcash_topoint()
-    local LHS = ECP2.ate(W + (ECP2.generator() * e), AA)
-    local RHS = ECP2.ate(ECP2.generator():negative(), BB)
-    -- local element = LHS:mul(RHS)
-    if (LHS:inv() == RHS) then
-        print("VALID")
-    else
-        print("INVALID")
-    end
-    --]]
-
-    return bbs.serialize({AA, e, s})
+    return serialization({AA, e, s})
 end
 
 -- 
@@ -799,10 +787,7 @@ function bbs.verify(PK, signature, header, messages)
     -- Deserialization
     local signature_result = octets_to_signature(signature)
     -- if signature_result is INVALID return INVALID
-
-    local AA = signature_result[1]
-    local e = signature_result[2]
-    local s = signature_result[3]
+    local AA, e, s = table.unpack(signature_result)
 
     local W = octets_to_pub_key(PK)
     -- if W is INVALID, return INVALID
@@ -888,23 +873,22 @@ local function calculate_challenge(Aprime, Abar, D, C1, C2, i_array, msg_array, 
         error("i_array length is not equal to msg_array length", 2)
     end
     -- We avoid the check #(ph) < 2^64
-    local c_array
+    local c_array = {}
     if R ~= 0 then
         c_array = {Aprime, Abar, D, C1, C2, R, table.unpack(i_array), table.unpack(msg_array), domain }
     else
         c_array = {Aprime, Abar, D, C1, C2, R, domain}
     end
 
-    print("c_array")
-    I.spy(c_array)
-
-    local c_octs = serialize(c_array)
+    local c_octs = serialization(c_array)
     -- if c_octs is invalid, return invalid
 
-    local c_input = c_octs .. i2osp(#ph, 8) .. ph
+    local c_input = c_octs .. i2osp(#ph, 8) 
+    c_input = c_input.. ph
 
     local challenge = hash_to_scalar_SHA_256(c_input)
     -- if challenge id INVALID return INVALID
+
     return challenge
 end
 
@@ -991,7 +975,7 @@ function bbs.ProofGen(PK, signature, header, ph, messages, disclosed_indexes)
     for i = 1, secret_len do
         C2 = C2 + (secret_H_points[i] * mjt[i])
     end
-
+    
     local c = calculate_challenge(Aprime, Abar, D, C1, C2, disclosed_indexes, disclosed_messages, domain, ph)
     -- if c is INVALID, return INVALID
     
@@ -1004,7 +988,7 @@ function bbs.ProofGen(PK, signature, header, ph, messages, disclosed_indexes)
     for j = 1, secret_len do
         proof[j+8] = BIG.mod( BIG.modmul(c, secret_messages[j], r) + mjt[j], r)
     end
-    return serialize(proof)
+    return serialization(proof)
 
 end
 

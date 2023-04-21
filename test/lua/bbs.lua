@@ -409,9 +409,14 @@ assert(bbs.verify(O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), 
 --[[
 local PRESENTATION_HEADER = O.from_hex("bed231d880675ed101ead304512e043ade9958dd0241ea70b4b3957fba941501")
 
+
+
 print('----------------------')
 print("TEST: Valid single message proof SHA 256")
 print("Test case 1")
+
+local PROOF_GEN_OUT = O.from_hex('99b6215be8357400353057b57b440e3998c259d34bce12e1d24dc7f9b63762122d4144cacefc5f3231172308907e3f2c8cf98d238dccf7e1eecf66441f27a7e140fc1a11788f24c634c5e4e6675c904670be71cdd44e613d1436f6badc4d9f31b6b575ab7a165dd120bb97d2b5a481f43e202477fdf5798af07c6ee639c80b3ec83c727cbe4a98da6c2966489524c26e3d84d7985370e3628271ec8cf5dafcb0e39de2d90f6fcdd2b72f2793e6cb985f60143f2a320e875036b5a0bb85e8548b531f2b60f3f9ed5b3d490eecd9ae44916098e8f293efeeeffe51ed4cac07bb46677b65f7de0ab3096f5ab39b4bcc187d25a14520bbf0cfe1c861bda63e0afdd2c030e4862b52cdaee5d6d9ace784493a576d96a3e0b29205aeaa2fea8bd5888eead49c7b06bba9c7d642260887756cd7')
+I.spy(PROOF_GEN_OUT)
 I.spy(bbs.ProofGen(O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE), O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY))
 --]]
 
