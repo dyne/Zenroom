@@ -406,6 +406,7 @@ I.spy(bbs.verify(O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), S
 --[[
 local PRESENTATION_HEADER = O.from_hex("bed231d880675ed101ead304512e043ade9958dd0241ea70b4b3957fba941501")
 
+
 print('----------------------')
 print("TEST: Valid single message proof SHA 256")
 print("Test case 1")
@@ -585,3 +586,4 @@ print('----------------------')
 print("TEST: Mocked/Seeded random scalars")
 
 run_test_mocked_random(MOCKED_RANDOM_SCALARS_TEST)
+

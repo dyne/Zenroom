@@ -761,14 +761,14 @@ local function octets_to_signature(signature_octets)
     local end_index = index + OCTET_SCALAR_LENGTH - 1
     local e = os2ip(signature_octets:sub(index, end_index))
     if (e == BIG_0) or (e >= r) then
-        error("Wrong e in desirialization", 2)
+        error("Wrong e in deserialization", 2)
     end
 
     index = index + OCTET_SCALAR_LENGTH
     end_index = index + OCTET_SCALAR_LENGTH - 1
     local s = os2ip(signature_octets:sub(index, end_index))
     if (s == BIG_0) or (s >= r) then
-        error("Wrong s in desirialization", 2)
+        error("Wrong s in deserialization", 2)
     end
 
     return { AA, e, s}
@@ -886,27 +886,26 @@ local function calculate_challenge(Aprime, Abar, D, C1, C2, i_array, msg_array, 
         ph = O.empty()
     end
 
-    local R = #(i_array)
+    local R = #i_array
     -- We avoid the check R < 2^64
     if R ~= #msg_array then
         error("i_array length is not equal to msg_array length", 2)
     end
     -- We avoid the check #(ph) < 2^64
-
-    local c_array = {Aprime, Abar, D, C1, C2, BIG.new(R) }
-    for i = 1, R do
-        c_array[i+6] = i_array[i]
-        c_array[i+6+R] = msg_array[i]
+    local c_array
+    if R ~= 0 then 
+        c_array = {Aprime, Abar, D, C1, C2, BIG.new(R), table.unpack(i_array), table.unpack(msg_array), domain }
+    else
+        c_array = {Aprime, Abar, D, C1, C2, BIG.new(R), domain}
     end
-    c_array[(2*R) + 7] = domain
+    
     print("c_array")
     I.spy(c_array)
-    -- TODO: Concatenation of separate serialize... Oh no.
-    -- local c_octs = serialize(c_array[1..4]) .. serialize(c_array[5..8]) etc
+    
     local c_octs = serialize(c_array)
     -- if c_octs is invalid, return invalid
 
-    local c_input = c_octs .. i2osp(#(ph), 8) .. ph
+    local c_input = c_octs .. i2osp(#ph, 8) .. ph
 
     local challenge = hash_to_scalar_SHA_256(c_input)
     -- if challenge id INVALID return INVALID
@@ -932,10 +931,7 @@ function bbs.ProofGen(PK, signature, header, ph, messages, disclosed_indexes)
     local signature_result = octets_to_signature(signature)
     -- if signature is INVALID then return INVALID
 
-    local AA = signature_result[1]
-    local e = signature_result[2]
-    local s = signature_result[3]
-
+    local AA, e, s = table.unpack(signature_result)
 
     local msg_len = #messages
     local disclosed_messages = {}
@@ -944,28 +940,32 @@ function bbs.ProofGen(PK, signature, header, ph, messages, disclosed_indexes)
     -- NOTE: pointer, after the for loop, STORES THE LENGTH OF THE DISCLOSED MESSAGES
     local pointer = 1
 
-    for i = 1, msg_len do
-        if i == disclosed_indexes[pointer] then
-            disclosed_messages[i] = messages[i]
-            pointer = pointer + 1
-        else
+    if #disclosed_indexes == 0 then
+        for i =1, msg_len do
             secret_indexes[i] = true
+        end
+    else
+        for i = 1, msg_len do
+            if i == disclosed_indexes[pointer] then
+                disclosed_messages[pointer] = messages[i]
+                pointer = pointer + 1
+            else
+                secret_indexes[i] = true
+            end
         end
     end
 
     -- local ind_len = pointer
-    local secret_len = msg_len - pointer
+    local secret_len = msg_len - #disclosed_indexes
 
-    local points_array = bbs.create_generators(L + 2)
-    local Q_1 = points_array[1]
-    local Q_2 = points_array[2]
-    local all_H_points = {}
+    local points_array = bbs.create_generators(msg_len + 2)
+    local Q_1, Q_2 = table.unpack(points_array,1,2)
+    local all_H_points = {table.unpack(points_array, 3, msg_len+2)}
     local secret_H_points = {}
     local counter = 1
     for i = 1, msg_len do
-        all_H_points[i] = points_array[i+2]
         if secret_indexes[i] then
-            secret_H_points[counter] = points_array[i+2]
+            secret_H_points[counter] = all_H_points[i]
             secret_messages[counter] = messages[i]
             counter = counter + 1
         end
@@ -976,38 +976,41 @@ function bbs.ProofGen(PK, signature, header, ph, messages, disclosed_indexes)
 
     -- TODO: CHANGE THIS WHEN NOT IN TEST MODE
     local random_scalars = bbs.seeded_random_scalars( O.from_hex("332e313431353932363533353839373933323338343632363433333833323739"), 6 + secret_len)
+    local r1, r2, et, r2t, r3t, st = table.unpack(random_scalars,1,6)
+    local mjt = {table.unpack(random_scalars, 7, 6 + secret_len)}
 
     local BB = P1 + (Q_1 * s) + (Q_2 * domain)
     for i = 1, msg_len do
         BB = BB + (all_H_points[i] * messages[i])
     end
 
-    local r3 = BIG.modinv(random_scalars[1], r)
-    local Aprime = AA * random_scalars[1]
-    local Abar = (Aprime * BIG.modneg( e, r)) + (BB * random_scalars[1])
-    local D = (BB * random_scalars[1]) + (Q_1 * random_scalars[2])
-    local sprime = BIG.mod( BIG.modmul(random_scalars[2], r3, r) + s, r)
-    local C1 = (Aprime * random_scalars[3]) + (Q_1 * random_scalars[4])
+    local r3 = BIG.modinv(r1, r)
+    local Aprime = AA * r1
+    local Abar = (Aprime * BIG.modneg( e, r)) + (BB * r1)
+    local D = (BB * r1) + (Q_1 * r2)
+    local sprime = BIG.mod( BIG.modmul(r2, r3, r) + s, r)
+    local C1 = (Aprime * et) + (Q_1 * r2t)
 
-    local C2 = (D * BIG.modneg( random_scalars[5], r)) + (Q_1 * random_scalars[6])
+    local C2 = (D * BIG.modneg( r3t, r)) + (Q_1 * st)
     for i = 1, secret_len do
-        C2 = C2 + (secret_H_points[i] * random_scalars[6+i])
+        C2 = C2 + (secret_H_points[i] * mjt[i])
     end
 
     local c = calculate_challenge(Aprime, Abar, D, C1, C2, disclosed_indexes, disclosed_messages, domain, ph)
     -- if c is INVALID, return INVALID
-
-    local ehat = BIG.mod(BIG.modmul(c, e, r) + random_scalars[3], r)
-    local r2hat = BIG.mod( BIG.modmul(c, random_scalars[2], r) + random_scalars[4], r)
-    local r3hat = BIG.mod( BIG.modmul(c, r3, r) + random_scalars[5], r)
-    local shat = BIG.mod( BIG.modmul(c, sprime, r) + random_scalars[6], r)
+    
+    local ehat = BIG.mod(BIG.modmul(c, e, r) + et, r)
+    local r2hat = BIG.mod( BIG.modmul(c, r2, r) + r2t, r)
+    local r3hat = BIG.mod( BIG.modmul(c, r3, r) + r3t, r)
+    local shat = BIG.mod( BIG.modmul(c, sprime, r) + st, r)
 
     local proof = { Aprime, Abar, D, c, ehat, r2hat, r3hat, shat}
     for j = 1, secret_len do
-        proof[j+8] = BIG.mod( BIG.modmul(c, secret_messages[j], r) + random_scalars[6+j], r)
+        proof[j+8] = BIG.mod( BIG.modmul(c, secret_messages[j], r) + mjt[j], r)
     end
     return serialize(proof)
 
 end
+
 
 return bbs
