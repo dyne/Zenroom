@@ -396,16 +396,18 @@ local HEADER = "11223344556677889900aabbccddeeff"
 local SINGLE_MSG_ARRAY = { bbs.MapMessageToScalarAsHash(O.from_hex("9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02")) }
 local VALID_SIGNATURE = "8fb17415378ec4462bc167be75583989e0528913da142239848ae88309805bfb3656bcff322e5d8fd1a7e40a660a62266099f27fa81ff5010443f36285f6f0758e4d701c444b20447cded906a3f2001714087f165f760369b901ccbe5173438b32ad195b005e2747492cf002cf51e498"
 
+-- FROM trinsic-id / bbs BRANCH update result.
+-- 0x8fb17415378ec4462bc167be75583989e0528913da142239848ae88309805bfb3656bcff322e5d8fd1a7e40a660a62266099f27fa81ff5010443f36285f6f0758e4d701c444b20447cded906a3f2001714087f165f760369b901ccbe5173438b32ad195b005e2747492cf002cf51e498
+
 print('----------------------')
 print("TEST: Valid single message signature SHA 256")
 print("Test case 1")
 local output_signature = bbs.sign( BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(HEADER), SINGLE_MSG_ARRAY)
-I.spy(output_signature)
-I.spy(bbs.verify(O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), SINGLE_MSG_ARRAY))
+assert(output_signature == O.from_hex(VALID_SIGNATURE))
+assert(bbs.verify(O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), SINGLE_MSG_ARRAY) == true)
 
 --[[
 local PRESENTATION_HEADER = O.from_hex("bed231d880675ed101ead304512e043ade9958dd0241ea70b4b3957fba941501")
-
 
 print('----------------------')
 print("TEST: Valid single message proof SHA 256")
@@ -426,48 +428,9 @@ print('----------------------')
 print("TEST: Valid multi message signature SHA 256")
 print("Test case 1")
 local output_multi_signature = bbs.sign( BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(HEADER), MULTI_MSG_ARRAY)
-I.spy(output_multi_signature)
-I.spy(bbs.verify(O.from_hex(PUBLIC_KEY), output_multi_signature, O.from_hex(HEADER), MULTI_MSG_ARRAY))
--- assert( output_multi_signature == I.spy(O.from_hex("b058678021dba2313c65fadc469eb4f030264719e40fb93bbf68bdf79079317a0a36193288b7dcb983fae0bc3e4c077f145f99a66794c5d0510cb0e12c0441830817822ad4ba74068eb7f34eb11ce3ee606d86160fecd844dda9d04bed759a676b0c8868d3f97fbe2e8b574169bd73a3")))
+assert( output_multi_signature == O.from_hex("b058678021dba2313c65fadc469eb4f030264719e40fb93bbf68bdf79079317a0a36193288b7dcb983fae0bc3e4c077f145f99a66794c5d0510cb0e12c0441830817822ad4ba74068eb7f34eb11ce3ee606d86160fecd844dda9d04bed759a676b0c8868d3f97fbe2e8b574169bd73a3"))
+assert(bbs.verify(O.from_hex(PUBLIC_KEY), output_multi_signature, O.from_hex(HEADER), MULTI_MSG_ARRAY) == true)
 
--- Test vectors originated from
--- draft-irtf-cfrg-bbs-signatures-latest Sections 3.2.2, 7.2, {7.3} 7.5
--- local HEADER = '11223344556677889900aabbccddeeff'
--- local SINGLE_MESSAGE = '9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02'
--- local SK_VALUE = '4a39afffd624d69e81808b2e84385cc80bf86adadf764e030caa46c231f2a8d7'
--- local PK_VALUE = 'aaff983278257afc45fa9d44d156c454d716fb1a250dfed132d65b2009331f618c623c14efa16245f50cc92e60334051087f1ae92669b89690f5feb92e91568f95a8e286d110b011e9ac9923fd871238f57d1295395771331ff6edee43e4ccc6'
--- local VALID_SINGLE_MESSAGE_SIGNATURE_TEST_SHA_256 = '8fb17415378ec4462bc167be75583989e0528913da142239848ae88309805bfb3656bcff322e5d8fd1a7e40a660a62266099f27fa81ff5010443f36285f6f0758e4d701c444b20447cded906a3f2001714087f165f760369b901ccbe5173438b32ad195b005e2747492cf002cf51e498'-- 'a7386ffaa4e70a9a44483adccc202a658e1c1f02190fb95bfd0f826a0188d73ab910c556fb3c1d9e212dea3c5e9989271a5e578c4625d290a0e7f2355eabe7584af5eb822c72319e588b2c20cd1e8256698d6108f599c2e48cf1be8e4ebfaf7ae397a5733a498d3d466b843c027311bb'
-
---[[
-print('----------------------')
-I.spy( bbs.sign( BIG.new(O.from_hex(SK_VALUE)), O.from_hex(PK_VALUE), nil, { bbs.MapMessageToScalarAsHash(O.from_hex(SINGLE_MESSAGE)) } ) )
-print("Random call bbs.verify")
-I.spy(bbs.verify(O.from_hex(PK_VALUE), bbs.sign( BIG.new(O.from_hex(SK_VALUE)), O.from_hex(PK_VALUE), O.from_hex(HEADER), { bbs.MapMessageToScalarAsHash(O.from_hex(SINGLE_MESSAGE)) } ), O.from_hex(HEADER), { bbs.MapMessageToScalarAsHash(O.from_hex(SINGLE_MESSAGE)) }))
-I.spy(bbs.verify(O.from_hex(PK_VALUE), bbs.sign( BIG.new(O.from_hex(SK_VALUE)), O.from_hex(PK_VALUE), nil, { bbs.MapMessageToScalarAsHash(O.from_hex(SINGLE_MESSAGE)) } ), nil, { bbs.MapMessageToScalarAsHash(O.from_hex(SINGLE_MESSAGE)) }))
---]]
-
---[[
-print('----------------------')
-print("TEST: Valid single message signature SHA 256")
-print("Test case 1")
-local output_signature = bbs.sign( BIG.new(O.from_hex(SK_VALUE)), O.from_hex(PK_VALUE), O.from_hex(HEADER), { bbs.MapMessageToScalarAsHash(O.from_hex(SINGLE_MESSAGE)) } )
-I.spy(output_signature)
-assert( output_signature == O.from_hex(VALID_SINGLE_MESSAGE_SIGNATURE_TEST_SHA_256), "WRONG SIGNATURE")
--- Test is of the form
--- sign(SK_VALUE, PK_VALUE, HEADER, {SINGLE_MESSAGE}) == VALID_SINGLE_MESSAGE_SIGNATURE_TEST_SHA_256
---]]
-local VALID_MULTIMSG_SIGNATURE_TEST_SHA_256 = 'b058678021dba2313c65fadc469eb4f030264719e40fb93bbf68bdf79079317a0a36193288b7dcb983fae0bc3e4c077f145f99a66794c5d0510cb0e12c0441830817822ad4ba74068eb7f34eb11ce3ee606d86160fecd844dda9d04bed759a676b0c8868d3f97fbe2e8b574169bd73a3'
-
--- local output_multi_msg_signature = bbs.sign( BIG.new(O.from_hex(SK_VALUE)), O.from_hex(PK_VALUE), O.from_hex(HEADER), mapped_messages)
--- I.spy(output_multi_msg_signature)
-
--- Test is of the form
--- sign(SK_VALUE, PK_VALUE, HEADER, map_messages_to_scalar_messages) == VALID_MULTIMSG_SIGNATURE_TEST_SHA_256
-
-
----
----
----
 
 -- Test vectors originated from
 -- draft-irtf-cfrg-bbs-signatures-latest Appendix C.2.1

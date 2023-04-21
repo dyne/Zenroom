@@ -144,7 +144,9 @@ end
 local OCTET_SCALAR_LENGTH = 32 -- ceil(log2(r)/8)
 local OCTET_POINT_LENGTH = 48 --ceil(log2(p)/8)
 local CIPHERSUITE_ID_OCTET_SHA_256 = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_")
-local P1 = (O.from_hex('b57ec5e001c28d4063e0b6f5f0a6eee357b51b64d789a21cf18fd11e73e73577910182d421b5a61812f5d1ca751fa3f0')):zcash_topoint() -- (O.from_hex('8533b3fbea84e8bd9ccee177e3c56fbe1d2e33b798e491228f6ed65bb4d1e0ada07bcc4489d8751f8ba7a1b69b6eecd7')):zcash_topoint()
+-- local P1 = (O.from_hex('b57ec5e001c28d4063e0b6f5f0a6eee357b51b64d789a21cf18fd11e73e73577910182d421b5a61812f5d1ca751fa3f0')):zcash_topoint()
+-- '533b3fbea84e8bd9ccee177e3c56fbe1d2e33b798e491228f6ed65bb4d1e0ada07bcc4489d8751f8ba7a1b69b6eecd7'
+local P1 = (O.from_hex('8533b3fbea84e8bd9ccee177e3c56fbe1d2e33b798e491228f6ed65bb4d1e0ada07bcc4489d8751f8ba7a1b69b6eecd7')):zcash_topoint()
 -- I.spy(bbs.create_generators(1, generator_seed_test, seed_dst_test, generator_dst_test)[1]:zcash_export())
 
 -- draft-irtf-cfrg-hash-to-curve-16 section 8.8.1 (BLS12-381 parameters)
@@ -566,9 +568,11 @@ local EXPAND_LEN = 48
 -- It converts a message written in octects into a BIG modulo r (order of subgroup)
 local function hash_to_scalar_SHA_256(msg_octects, dst)
     -- Default value of DST when not provided (see also Section 6.2.2)
+
     if not dst then
         -- dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_H2S_')
         dst = O.from_hex('4242535f424c53313233383147315f584d443a5348412d3235365f535357555f524f5f4832535f')
+        -- dst = O.empty()
     end
 
     local counter = 0
@@ -625,12 +629,11 @@ function bbs.serialize(input_array)
 
         elseif (elt_type == "zenroom.big") then
             -- elt >= 0 true by definition of BIG
-            if (elt < r) then
-                el_octs = i2osp(elt, OCTET_SCALAR_LENGTH)
+            el_octs = i2osp(elt, OCTET_SCALAR_LENGTH)
 
-            else -- The check "< 2^64 - 1" is omitted here.
-                el_octs = i2osp(elt, 8)
-            end
+        elseif (elt_type == "number") then
+        -- The check "< 2^64 - 1" is omitted here.
+        el_octs = i2osp(elt, 8)
 
         else
             error("Invalid type passed inside serialize", 2)
@@ -655,7 +658,7 @@ local function calculate_domain(PK_octet, Q1, Q2, H_points, header)
     -- assert(#(header) < 2^64)
     -- assert(L < 2^64)
 
-    local dom_array = {BIG.new(len), Q1, Q2}
+    local dom_array = {len, Q1, Q2}
     if (len > 0) then
         for i = 1, len do
             dom_array[i+3] = H_points[i]
@@ -686,22 +689,15 @@ function bbs.sign(SK, PK, header, messages)
 
     local LEN = #messages
     local point_array = bbs.create_generators(LEN + 2, O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MESSAGE_GENERATOR_SEED"), O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_GENERATOR_SEED_"), O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_GENERATOR_DST_"))
-    local Q_1 = point_array[1]
-    local Q_2 = point_array[2]
-    local H_array = {}
-    if (LEN > 0) then
-        for i = 1, LEN do
-            H_array[i] = point_array[i+2]
-        end
-    end
+    local Q_1, Q_2 = table.unpack(point_array, 1, 2)
+    local H_array = { table.unpack(point_array, 3, LEN + 2) }
+
     local domain = calculate_domain(PK, Q_1, Q_2, H_array, header)
     -- if domain is "INVALID" return "INVALID"
 
     local serialise_array = {SK, domain}
-    if (LEN > 0) then
-        for i = 1,LEN do
-            serialise_array[i+2] = messages[i]
-        end
+    for i = 1,LEN do
+        serialise_array[i+2] = messages[i]
     end
 
     local e_s_octs = bbs.serialize(serialise_array)
@@ -837,9 +833,9 @@ function bbs.verify(PK, signature, header, messages)
     local RHS = ECP2.ate(ECP2.generator():negative(), BB)
     -- local element = LHS:mul(RHS)
     if (LHS:inv() == RHS) then
-        return "VALID"
+        return true -- return "VALID"
     else
-        return "INVALID"
+        return false -- return "INVALID"
     end
     --- ECP2.ate(ECP2, ECP)     FP12.mul(arg1, arg2)
 end
@@ -893,15 +889,15 @@ local function calculate_challenge(Aprime, Abar, D, C1, C2, i_array, msg_array, 
     end
     -- We avoid the check #(ph) < 2^64
     local c_array
-    if R ~= 0 then 
-        c_array = {Aprime, Abar, D, C1, C2, BIG.new(R), table.unpack(i_array), table.unpack(msg_array), domain }
+    if R ~= 0 then
+        c_array = {Aprime, Abar, D, C1, C2, R, table.unpack(i_array), table.unpack(msg_array), domain }
     else
-        c_array = {Aprime, Abar, D, C1, C2, BIG.new(R), domain}
+        c_array = {Aprime, Abar, D, C1, C2, R, domain}
     end
-    
+
     print("c_array")
     I.spy(c_array)
-    
+
     local c_octs = serialize(c_array)
     -- if c_octs is invalid, return invalid
 
