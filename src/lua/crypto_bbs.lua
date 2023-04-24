@@ -658,12 +658,7 @@ local function calculate_domain(PK_octet, Q1, Q2, H_points, header)
     -- assert(#(header) < 2^64)
     -- assert(L < 2^64)
 
-    local dom_array = {len, Q1, Q2}
-    if (len > 0) then
-        for i = 1, len do
-            dom_array[i+3] = H_points[i]
-        end
-    end
+    local dom_array = {len, Q1, Q2, table.unpack(H_points)}
 
     local dom_octs = serialization(dom_array) .. CIPHERSUITE_ID_OCTET_SHA_256
     -- if dom_octs is "INVALID", return "INVALID"
@@ -837,6 +832,7 @@ end
 ---------------------------------
 ---------------------------------
 ---------------------------------
+local EXPAND_LEN_PG = 48
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 7.1
 -- It SIMULATES a random generation of scalars.
@@ -845,7 +841,7 @@ function bbs.seeded_random_scalars(SEED, count)
 
     local SEEDED_RANDOM_DST = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MOCK_RANDOM_SCALARS_DST_")
 
-    local out_len = EXPAND_LEN * count
+    local out_len = EXPAND_LEN_PG * count
     assert(out_len <= 65535)
     local v = bbs.expand_message_xmd(SEED, SEEDED_RANDOM_DST, out_len)
     -- if v is INVALID return INVALID
@@ -853,8 +849,8 @@ function bbs.seeded_random_scalars(SEED, count)
 
     local arr = {}
     for i = 1, count do
-        local start_idx = 1 + (i-1)*EXPAND_LEN
-        local end_idx = i * EXPAND_LEN
+        local start_idx = 1 + (i-1)*EXPAND_LEN_PG
+        local end_idx = i * EXPAND_LEN_PG
         arr[i] = BIG.mod(v:sub(start_idx, end_idx), r) -- = os2ip(v:sub(start_idx, end_idx)) % r
     end
     return arr
@@ -874,8 +870,18 @@ local function calculate_challenge(Aprime, Abar, D, C1, C2, i_array, msg_array, 
     end
     -- We avoid the check #(ph) < 2^64
     local c_array = {}
+
+    --in test indexes from 0 and not from 1
+    for j = 1, R do
+        i_array[j] = i_array[j]-1
+    end
+
     if R ~= 0 then
-        c_array = {Aprime, Abar, D, C1, C2, R, table.unpack(i_array), table.unpack(msg_array), domain }
+        c_array = {Aprime, Abar, D, C1, C2, R, table.unpack(i_array)}
+        for i = 1, R do
+            c_array[i+6+R] = msg_array[i] 
+        end
+        c_array[7+2*R] = domain
     else
         c_array = {Aprime, Abar, D, C1, C2, R, domain}
     end
@@ -883,8 +889,7 @@ local function calculate_challenge(Aprime, Abar, D, C1, C2, i_array, msg_array, 
     local c_octs = serialization(c_array)
     -- if c_octs is invalid, return invalid
 
-    local c_input = c_octs .. i2osp(#ph, 8) 
-    c_input = c_input.. ph
+    local c_input = c_octs .. i2osp(#ph, 8) .. ph 
 
     local challenge = hash_to_scalar_SHA_256(c_input)
     -- if challenge id INVALID return INVALID
@@ -976,9 +981,11 @@ function bbs.ProofGen(PK, signature, header, ph, messages, disclosed_indexes)
         C2 = C2 + (secret_H_points[i] * mjt[i])
     end
     
+
     local c = calculate_challenge(Aprime, Abar, D, C1, C2, disclosed_indexes, disclosed_messages, domain, ph)
     -- if c is INVALID, return INVALID
     
+
     local ehat = BIG.mod(BIG.modmul(c, e, r) + et, r)
     local r2hat = BIG.mod( BIG.modmul(c, r2, r) + r2t, r)
     local r3hat = BIG.mod( BIG.modmul(c, r3, r) + r3t, r)
