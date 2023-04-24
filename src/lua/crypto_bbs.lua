@@ -49,12 +49,12 @@ function bbs.hkdf_expand(prk, info, l)
         info = O.from_string(info)
     end
 
-    n = math.ceil(l/hash_len)
+    -- local n = math.ceil(l/hash_len)
 
     -- TODO: optimize using something like table.concat for octets
-    tprec = HASH.hmac(hash, prk, info .. O.from_hex('01'))
-    i = 2
-    t = tprec
+    local tprec = HASH.hmac(hash, prk, info .. O.from_hex('01'))
+    local i = 2
+    local t = tprec
     while l > #t do
         tprec = HASH.hmac(hash, prk, tprec .. info .. O.from_hex(string.format("%02x", i)))
         t = t .. tprec
@@ -78,13 +78,13 @@ function bbs.keygen(ikm, key_info)
     -- using BLS381
     -- 254 < log2(r) < 255
     -- ceil((3 * ceil(log2(r))) / 16)
-    l = 48
-    salt = INITSALT
-    sk = INT.new(0)
+    local l = 48
+    local salt = INITSALT
+    local sk = INT.new(0)
     while sk == INT.new(0) do
         salt = hash:process(salt)
-        prk = bbs.hkdf_extract(salt, ikm .. i2osp(0, 1))
-        okm = bbs.hkdf_expand(prk, key_info .. i2osp(l, 2), l)
+        local prk = bbs.hkdf_extract(salt, ikm .. i2osp(0, 1))
+        local okm = bbs.hkdf_expand(prk, key_info .. i2osp(l, 2), l)
         sk = os2ip(okm) % ECP.order()
     end
 
@@ -164,11 +164,10 @@ local A = BIG.new(O.from_hex('144698a3b8e9433d693a02c96d4982b0ea985383ee66a8d8e8
 local B = BIG.new(O.from_hex('12e2908d11688030018b12e8753eee3b2016c1f0f24f4070a0b9c14fcef35ef55a23215a316ceaa5d1cc48e98e172be0'))
 local Z = BIG.new(11)
 local h_eff = BIG.new(O.from_hex('d201000000010001'))
--- -B mod p
+
 -- local minusB = BIG.from_decimal('1095739230579739822926531667709610274979796698522379745127656044405743452317263233474751598099989487782925445922507')
 
 
--- TODO: if you end up using Horner's rule (polynomial_evaluation), remove BIG_0 from constants K (you save some computations each time)
 -- draft-irtf-cfrg-hash-to-curve-16 Appendix E.2
 -- Constants used for the 11-isogeny map.
 local K = {{ -- K[1][i]
@@ -183,11 +182,7 @@ BIG.new(O.from_hex('11a05f2b1e833340b809101dd99815856b303e88a2d7005ff2627b56cdb4
     BIG.new(O.from_hex('080d3cf1f9a78fc47b90b33563be990dc43b756ce79f5574a2c596c928c5d1de4fa295f296b74e956d71986a8497e317')),--
     BIG.new(O.from_hex('169b1f8e1bcfa7c42e0c37515d138f22dd2ecb803a0c5c99676314baf4bb1b7fa3190b2edc0327797f241067be390c9e')),
     BIG.new(O.from_hex('10321da079ce07e272d8ec09d2565b0dfa7dccdde6787f96d50af36003b14866f69b771f8c285decca67df3f1605fb7b')),
-    BIG.new(O.from_hex('06e08c248e260e70bd1e962381edee3d31d79d7e22c837bc23c0bf1bc24c6b68c24b1b80b64d391fa9c8ba2e8ba2d229')),--
-    BIG_0,
-    BIG_0,
-    BIG_0,
-    BIG_0
+    BIG.new(O.from_hex('06e08c248e260e70bd1e962381edee3d31d79d7e22c837bc23c0bf1bc24c6b68c24b1b80b64d391fa9c8ba2e8ba2d229'))--
 },--
 
     { -- K[2][i]
@@ -201,12 +196,8 @@ BIG.new(O.from_hex('11a05f2b1e833340b809101dd99815856b303e88a2d7005ff2627b56cdb4
     BIG.new(O.from_hex('14a7ac2a9d64a8b230b3f5b074cf01996e7f63c21bca68a81996e1cdf9822c580fa5b9489d11e2d311f7d99bbdcc5a5e')),
     BIG.new(O.from_hex('0a10ecf6ada54f825e920b3dafc7a3cce07f8d1d7161366b74100da67f39883503826692abba43704776ec3a79a1d641')),--
     BIG.new(O.from_hex('095fc13ab9e92ad4476d6e3eb3a56680f682b4ee96f7d03776df533978f31c1593174e4b4b7865002d6384d168ecdd0a')), --
-    BIG_1,
-    BIG_0,
-    BIG_0,
-    BIG_0,
-    BIG_0,
-    BIG_0},
+    BIG_1
+ },
 
      { -- K[3][i]
         BIG.new(O.from_hex('090d97c81ba24ee0259d1f094980dcfa11ad138e48a869522b52af6c956543d3cd0c7aee9b3ba3c2be9845719707bb33')),--
@@ -370,79 +361,6 @@ local function map_to_curve_simple_swu(u)
     return {['x'] = BIG.moddiv( x, tv4, p), ['y'] = y}
 end
 
---[[
--- draft-irtf-cfrg-hash-to-curve-16 section 4
--- It returns "true" if the field element is a square.
-local function is_square(x)
-
-    local y = x:modpower(is_square_exponent, p)
-    if (y == BIG.new(0) or y == BIG.new(1)) then
-        return true
-    else
-        return false
-    end
-
-end
-
--- draft-irtf-cfrg-hash-to-curve-16 section 4.1
--- It returns the "sign" of an element of a finite field (either 0 or 1) for m = 1.
-local function sgn0_m_eq_1(x)
-    return x % BIG_2
-end
-
--- draft-irtf-cfrg-hash-to-curve-16 Appendix I.1
--- It returns ONE of the square root of an element in our SPECIFIC field.
-local function sqrt_3mod4(x)
-    return x:modpower(c1, p)
-end
-
-
--- draft-irtf-cfrg-hash-to-curve-16 section 6.6.2
--- It returns the (x,y) coordinate of a point over E' (isogenous curve)
-local function map_to_curve_simple_swu(u)
-    -- u is of type BIG.
-    local BIG_3 = BIG.new(3)
-
-    local term1 = BIG.modmul( Z:modpower(BIG_2, p), u:modpower(BIG.new(4), p), p )
-    local term2 = BIG.modmul( Z, u:modpower(BIG_2, p), p )
-    local inv_tv1 = (term1 + term2) % p
-    local x1
-    if inv_tv1 == BIG.new(0) then
-        local mult = BIG.modmul( Z, A, p)
-        x1 = B:moddiv( mult, p)
-    else
-        local tv1 = inv_tv1:modinv(p)
-        local div = BIG.moddiv( minusB, A, p)
-        x1 = BIG.modmul(div, BIG.new(1) + tv1, p)
-    end
-
-    local pow3 = x1:modpower(BIG_3, p)
-    local Ax1 = BIG.modmul( A, x1, p)
-    local gx1 = (pow3 + Ax1 + B) % p
-    local x,y
-    if is_square(gx1) then
-        x = x1
-        y = sqrt_3mod4(gx1)
-    else
-        local Zu2 = BIG.modmul( Z, u:modpower(BIG_2, p), p)
-        x = BIG.modmul( Zu2, x1, p)
-        local x2pow3 = x:modpower(BIG_3, p)
-        local Ax2 = BIG.modmul( A, x, p)
-        local gx2 = (x2pow3 + Ax2 + B) % p
-        y = sqrt_3mod4(gx2)
-    end
-
-    if sgn0_m_eq_1(u) ~= sgn0_m_eq_1(y) then
-        y = BIG.modsub( p, y, p)
-    end
-
-    return {['x'] = x, ['y'] = y}
-
-end
---]]
-
---draft-irtf-cfrg-hash-to-curve-16 Appendix E.2
--- It maps a point to BLS12-381 from an isogenous curve.
 
 
 
@@ -456,6 +374,8 @@ local function pol_evaluation(x, K)
     return y
 end
 
+--draft-irtf-cfrg-hash-to-curve-16 Appendix E.2
+-- It maps a point to BLS12-381 from an isogenous curve.
 local function iso_map(point)
     local x_num = pol_evaluation(point.x, K[1])
     local x_den = pol_evaluation(point.x, K[2])
@@ -466,30 +386,6 @@ local function iso_map(point)
     y = y:moddiv(y_den, p)
     return ECP.new(x,y)
 end
-
---[[
-local function iso_map(point)
-    local x_num = K[1][1]
-    local x_den = K[2][1]
-    local y_num = K[3][1]
-    local y_den = K[4][1]
-    local temp = BIG_1
-    for i = 2, 16 do
-        temp = temp:modmul(point.x, p)
-        x_num = (x_num + (K[1][i]):modmul(temp, p)) % p
-        x_den = (x_den + (K[2][i]):modmul(temp, p)) % p
-        y_num = (y_num + (K[3][i]):modmul(temp, p)) % p
-        y_den = (y_den + (K[4][i]):modmul(temp, p)) % p
-    end
-
-    local x = BIG.moddiv(x_num, x_den, p)
-    local y = y_num:modmul(point.y, p)
-    y = y:moddiv(y_den, p)
-    
-    return ECP.new(x,y)
-
-end
---]]
 
 
 -- draft-irtf-cfrg-hash-to-curve-16 Section 6.6.3
@@ -513,7 +409,6 @@ function bbs.hash_to_curve(msg, DST)
     local Q1 = bbs.map_to_curve(u[2]) --u[2][1])
     return bbs.clear_cofactor(Q0 + Q1)
 end
-
 
 
 --see draft-irtf-cfrg-bbs-signatures-latest Appendix A.1
@@ -616,7 +511,7 @@ end
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 4.7.1
 -- It converts an input array into an octet.
-function serialization(input_array)
+local function serialization(input_array)
     local octet_result = O.empty()
     local el_octs = O.empty()
     for i=1, #input_array do
@@ -690,10 +585,7 @@ function bbs.sign(SK, PK, header, messages)
     local domain = calculate_domain(PK, Q_1, Q_2, H_array, header)
     -- if domain is "INVALID" return "INVALID"
 
-    local serialise_array = {SK, domain}
-    for i = 1,LEN do
-        serialise_array[i+2] = messages[i]
-    end
+    local serialise_array = {SK, domain, table.unpack(messages)}
 
     local e_s_octs = serialization(serialise_array)
     -- IF e_s_octs is "INVALID", then return "INVALID"
@@ -705,8 +597,6 @@ function bbs.sign(SK, PK, header, messages)
     local e = hash_to_scalar_SHA_256(e_s_expand:sub(1, OCTET_SCALAR_LENGTH))
     local s = hash_to_scalar_SHA_256(e_s_expand:sub(OCTET_SCALAR_LENGTH + 1, e_s_len))
     -- If e or s is INVALID, return INVALID
-    -- local e = BIG.new(O.from_hex("6099f27fa81ff5010443f36285f6f0758e4d701c444b20447cded906a3f20017"))
-    -- local s = BIG.new(O.from_hex("14087f165f760369b901ccbe5173438b32ad195b005e2747492cf002cf51e498"))
 
     local BB = P1 + (Q_1 * s) + (Q_2 * domain)
     if (LEN > 0) then
@@ -790,14 +680,9 @@ function bbs.verify(PK, signature, header, messages)
 
     -- Procedure
     local point_array = bbs.create_generators(LEN + 2)
-    local Q_1 = point_array[1]
-    local Q_2 = point_array[2]
-    local H_points = {}
-    if (LEN > 0) then
-        for i = 1, LEN do
-            H_points[i] = point_array[i+2]
-        end
-    end
+    local Q_1, Q_2 = table.unpack(point_array, 1, 2)
+    local H_points = { table.unpack(point_array, 3, LEN + 2) } 
+    
     local domain = calculate_domain(PK, Q_1, Q_2, H_points, header)
     -- If domain is INVALID then return INVALID
 
@@ -871,13 +756,13 @@ local function calculate_challenge(Aprime, Abar, D, C1, C2, i_array, msg_array, 
     -- We avoid the check #(ph) < 2^64
     local c_array = {}
 
-    --in test indexes from 0 and not from 1
-    for j = 1, R do
-        i_array[j] = i_array[j]-1
-    end
-
     if R ~= 0 then
-        c_array = {Aprime, Abar, D, C1, C2, R, table.unpack(i_array)}
+        c_array = {Aprime, Abar, D, C1, C2, R}
+        
+        for i = 1, R do 
+            -- Note: changing i_array directly affects the array itself in the calling function
+            c_array[i+6] = i_array[i] -1
+        end
         for i = 1, R do
             c_array[i+6+R] = msg_array[i] 
         end
@@ -894,9 +779,12 @@ local function calculate_challenge(Aprime, Abar, D, C1, C2, i_array, msg_array, 
     local challenge = hash_to_scalar_SHA_256(c_input)
     -- if challenge id INVALID return INVALID
 
+
     return challenge
 end
 
+
+-- draft-irtf-cfrg-bbs-signatures-latest Section 3.4.3
 function bbs.ProofGen(PK, signature, header, ph, messages, disclosed_indexes)
     -- disclosed_indexes is a STRICTLY INCREASING array of POSITIVE integers.
     if not header then
@@ -947,12 +835,11 @@ function bbs.ProofGen(PK, signature, header, ph, messages, disclosed_indexes)
     local Q_1, Q_2 = table.unpack(points_array,1,2)
     local all_H_points = {table.unpack(points_array, 3, msg_len+2)}
     local secret_H_points = {}
-    local counter = 1
+    
     for i = 1, msg_len do
         if secret_indexes[i] then
-            secret_H_points[counter] = all_H_points[i]
-            secret_messages[counter] = messages[i]
-            counter = counter + 1
+            table.insert(secret_H_points, all_H_points[i])
+            table.insert(secret_messages, messages[i])
         end
     end
 
@@ -981,11 +868,9 @@ function bbs.ProofGen(PK, signature, header, ph, messages, disclosed_indexes)
         C2 = C2 + (secret_H_points[i] * mjt[i])
     end
     
-
     local c = calculate_challenge(Aprime, Abar, D, C1, C2, disclosed_indexes, disclosed_messages, domain, ph)
     -- if c is INVALID, return INVALID
     
-
     local ehat = BIG.mod(BIG.modmul(c, e, r) + et, r)
     local r2hat = BIG.mod( BIG.modmul(c, r2, r) + r2t, r)
     local r3hat = BIG.mod( BIG.modmul(c, r3, r) + r3t, r)
@@ -997,6 +882,136 @@ function bbs.ProofGen(PK, signature, header, ph, messages, disclosed_indexes)
     end
     return serialization(proof)
 
+end
+
+-- draft-irtf-cfrg-bbs-signatures-latest Section 4.7.5
+local function octets_to_proof(proof_octets)
+    local proof_len_floor = 3*OCTET_POINT_LENGTH + 5*OCTET_SCALAR_LENGTH
+    if #proof_octets < proof_len_floor then
+        error("proof_octets is too short", 2)
+    end
+    local index = 1
+    local return_array = {}
+    for i = 1, 3 do
+        local end_index = index + OCTET_POINT_LENGTH - 1
+        return_array[i] = (proof_octets:sub(index, end_index)):zcash_topoint()
+        if return_array[i] == Identity_G1 then
+            error("Invalid point", 2)
+        end
+        index = index + OCTET_POINT_LENGTH
+    end
+    
+    local j = 4
+    while index < #proof_octets do
+        local end_index = index + OCTET_SCALAR_LENGTH -1
+        return_array[j] = os2ip(proof_octets:sub(index, end_index))
+        if (return_array[j] == BIG_0) or (return_array[j]>=r) then
+            error("Not a scalar in octets_to_proof", 2)
+        end
+        index = index + OCTET_SCALAR_LENGTH
+        j = j+1
+    end
+
+    if index ~= #proof_octets +1 then
+        error("Index is not right length",2)
+    end
+
+    local msg_commitments = {}
+    if j > 9 then
+        msg_commitments = {table.unpack(return_array, 9, j-1)}
+    end
+    local ret_array = {table.unpack(return_array, 1, 8)}
+    ret_array[9] = msg_commitments
+    return ret_array
+
+end
+
+-- draft-irtf-cfrg-bbs-signatures-latest Section 3.4.4
+function bbs.ProofVerify(PK, proof, header, ph, disclosed_messages, disclosed_indexes)
+
+    if not header then
+        header = O.empty()
+    end
+
+    if not ph then
+        ph = O.empty()
+    end
+
+    if not disclosed_messages then
+        disclosed_messages = {}
+    end
+
+    if not disclosed_indexes then
+        disclosed_indexes = {}
+    end
+
+    --Deserialization
+    local proof_result = octets_to_proof(proof)
+    local Aprime, Abar, D, c, ehat, r2hat, r3hat, shat, commitments = table.unpack(proof_result)
+    local W = octets_to_pub_key(PK)
+    local len_U = #commitments
+    local len_R = #disclosed_indexes
+    local len_L = len_R + len_U
+
+    --end Deserialization
+
+    --Preconditions
+
+    for _,i in pairs(disclosed_indexes) do
+        if (i < 1) or (i > len_L) then
+            error("disclosed_indexes out of range",2)
+        end
+    end
+    if #disclosed_messages ~= len_R then
+        error("Unmatching indexes and messages", 2)
+    end
+    --end Preconditions
+
+    local create_out = bbs.create_generators(len_L +2)
+    local Q_1, Q_2 = table.unpack(create_out, 1, 2)
+    local MsgGenerators = {table.unpack(create_out, 3, len_L+2)}
+
+    local disclosed_H = {}
+    local secret_H = {}
+    local counter_d = 1
+    for i = 1, len_L do
+        if i == disclosed_indexes[counter_d] then
+            table.insert(disclosed_H, MsgGenerators[i])
+            counter_d = counter_d +1
+        else
+            table.insert(secret_H, MsgGenerators[i])
+        end
+    end
+
+    local domain = calculate_domain(PK, Q_1, Q_2, MsgGenerators, header)
+
+    local C1 = (Abar - D)*c + Aprime*ehat + Q_1*r2hat
+    local T = P1 + Q_2*domain
+    for i = 1, len_R do
+        T = T + disclosed_H[i]*disclosed_messages[i]
+    end
+    
+    local C2 = T*c - D*r3hat + Q_1*shat
+    for i = 1, len_U do
+        C2 = C2 + secret_H[i]*commitments[i]
+    end
+
+    local cv = calculate_challenge(Aprime, Abar, D, C1, C2, disclosed_indexes, disclosed_messages, domain, ph)
+
+    if c ~= cv then
+        return false
+    end
+    if Aprime == Identity_G1 then
+        return false
+    end
+
+    local LHS = ECP2.ate(W, Aprime)
+    local RHS = ECP2.ate(ECP2.generator():negative(), Abar)
+    if (LHS:inv() ~= RHS) then
+        return false
+    end
+
+    return true
 end
 
 

@@ -230,7 +230,6 @@ local function run_test_hash_to_field (test)
     assert(output_u[2][1] == BIG.new(O.from_hex(test.u_1)), "Wrong u_1") 
 end
 
-
 print('----------------------')
 print("TEST: hash_to_field")
 for k,v in pairs(hash_to_curve_test) do
@@ -245,16 +244,12 @@ local function run_test_hash_to_field_m1 (test)
     assert(output_u[2] == BIG.new(O.from_hex(test.u_1)), "Wrong u_1") 
 end
 
-
 print('----------------------')
 print("TEST: hash_to_field_m1")
 for k,v in pairs(hash_to_curve_test) do
     print("Test Case " .. k)
     run_test_hash_to_field_m1(v)
 end 
-
-
-
 
 local function run_test_hash_to_field_m1 (test)
     local output_u = bbs.hash_to_field_m1(O.from_string(test.msg), 2, O.from_string(DST_hash_to_field))
@@ -425,6 +420,9 @@ local pg_output = bbs.ProofGen(O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATUR
 
 assert(PROOF_GEN_OUT == pg_output)
 
+print("Test ProofVerify")
+
+assert( bbs.ProofVerify(O.from_hex(PUBLIC_KEY), pg_output, O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1}) == true)
 
 
 print('----------------------')
@@ -530,15 +528,20 @@ print('----------------------')
 print("TEST: Valid multi message proof SHA 256")
 print("Test case 1 : disclose all messages")
 
-local disclosed_indexes = {1,2,3,4,5,6,7,8,9,10}
+local DISCLOSED_INDEXES = {1,2,3,4,5,6,7,8,9,10}
 
 --local PROOF_GEN_MULTI_OUT = O.from_hex('af210c6571df52d805fa17620bf1a88dbcfb23829b5af59a86b9f4bc931d72942a94edfaaa88fa2363dce155ec70a2368e9b01eef49ec11f13fe4bb6b730bbec6b0cce4c3e7a0705fb57218563ec997d31daf49ad2b52621c03b83af8568b0a1a4daa67c99b04482f7556fb45f892e90ee0383564eed3ef199db76189d575c97307b02cf1fc8e384357f7c14ef308732287ae4e96c6f371e6864f6527542895e28ef39c8354ebb0174958212aba8da360fc6d5bed9faabad83601d8035cf8b86ab8b1a2a4984bbe09f653d68e06af0952c3a78e9a47d2b20c626e13a33a7830f147a41d306b3dcb97488d46cd561312c112ba29eb82bda43f452b255627210c2c4d9197be6bbaa9e5113617716caa6a25f6e297ccd4a6d716bdd9d258f9dc529477098cd69b6282ff351c21e35c19dc8')
 
 local PROOF_GEN_MULTI_OUT = O.from_hex('b95e27fc635eeb7e47bf2e488fca4b3f8930bb2f6343bf0c9d585abd8b8112160a540566417bac3c77ad40ff7d00cc4a85f5a98a9f1f1e57d4c1444830c5493108b393a2b309c4980071f71eda6fc84ce0432443d463b47fbcf0841be0f1e472b031e2564cd615d89e9e7ed344c7f87bddebe02ed8cd77dd91a06b0d2119f47a00220164e49117d5b3ee3c009f5e537b66502ea4435cb042ddea1e0fc4e9688f81b0568917205481eccef5443e4f45f33043eb3e70a442dce23c4247e8f0804b2396ead74bd44977f6425d02db3fc20860a4fa9531c98fb443f8cd9062dc90c4c2917a39f58cbce7c7a5dcff72b1afa35e6d0651a3968a5d6589967a601142e7a8085b9dfbb2335adb89ece7411e64812672bf715352c24e3c0c35796e7ae667ec8244b994324fcb928dc1288ffe6594')
 
-local pg_multi_output = bbs.ProofGen(O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, O.from_hex(HEADER), PRESENTATION_HEADER, MULTI_MSG_ARRAY, disclosed_indexes)
+local pg_multi_output = bbs.ProofGen(O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, O.from_hex(HEADER), PRESENTATION_HEADER, MULTI_MSG_ARRAY, DISCLOSED_INDEXES)
 
 assert(PROOF_GEN_MULTI_OUT == pg_multi_output)
+
+print("Test ProofVerify")
+
+assert( bbs.ProofVerify(O.from_hex(PUBLIC_KEY), pg_multi_output, O.from_hex(HEADER), PRESENTATION_HEADER, MULTI_MSG_ARRAY, DISCLOSED_INDEXES ) == true)
+
 
 print("Test case 2 : disclose some messages")
 --disclosed (messages in index 0, 2, 4 and 6, in that order)
@@ -550,6 +553,11 @@ local PROOF_GEN_MULTI_D_OUT = O.from_hex('8ee5a0c7fc62e6058bfac10b1489cb872283fa
 local pg_multi_d_output = bbs.ProofGen(O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, O.from_hex(HEADER), PRESENTATION_HEADER, MULTI_MSG_ARRAY, disclosed_some_indexes)
 
 assert(PROOF_GEN_MULTI_D_OUT == pg_multi_d_output)
+
+print("Test ProofVerify")
+local DISC_MSG = {MULTI_MSG_ARRAY[1], MULTI_MSG_ARRAY[3],MULTI_MSG_ARRAY[5], MULTI_MSG_ARRAY[7]}
+assert( bbs.ProofVerify(O.from_hex(PUBLIC_KEY), pg_multi_d_output, O.from_hex(HEADER), PRESENTATION_HEADER, DISC_MSG, disclosed_some_indexes) == true)
+
 
 
 print('----------------------')
