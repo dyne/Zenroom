@@ -94,7 +94,7 @@ end
 
 -- TODO: make this function return an OCTET
 function bbs.sk2pk(sk)
-    return ECP2.generator() * sk
+    return (ECP2.generator() * sk):zcash_export()
 end
 
 
@@ -423,7 +423,7 @@ local Identity_G1 = ECP.new(IdG1_x, IdG1_y)
 
 --draft-irtf-cfrg-bbs-signatures Section 4.2
 --It returns an array of generators.
-
+-- TODO: cache like 50 or so generators (considerable speed-up)
 function bbs.create_generators(count, generator_seed, seed_dst, generator_dst)
 
     if not generator_seed then
