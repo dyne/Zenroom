@@ -22,7 +22,7 @@ local bbs = {}
 local hash = HASH.new('sha256')
 local hash_len = 32
 
-local hash3 = HASH.new('sha3_256')
+local hash3 = HASH.new('shake256')
 
 -- RFC8017 section 4
 -- converts a nonnegative integer to an octet string of a specified length.
@@ -98,7 +98,26 @@ function bbs.sk2pk(sk)
 end
 
 
--- TODO: implement expand_message_xmd with other hash functions? Leave this function inside the bbs table?
+--TODO: implement variant using DSTs longer than 255 bytes??
+
+-- draft-irtf-cfrg-hash-to-curve-16 section 5.3.2
+-- It outputs a uniformly random byte string. (uses SHAKE256)
+function bbs.expand_message_xof(msg, DST, len_in_bytes)
+--msg and DST must be octets
+    if len_in_bytes > 65536 then
+        error("len_in_bytes is too big", 2)
+    end
+    if #DST > 255 then
+        error("len(DST) is too big", 2)
+    end
+
+    local DST_prime = DST .. i2osp(#DST, 1)
+    local msg_prime = msg .. i2osp(len_in_bytes, 2) .. DST_prime
+    local uniform_bytes = hash3:process(msg_prime, len_in_bytes)
+
+    return uniform_bytes, DST_prime, msg_prime
+
+end
 
 -- draft-irtf-cfrg-hash-to-curve-16 section 5.3.1
 -- It outputs a uniformly random byte string.
@@ -138,7 +157,6 @@ end
 -------------------------------------------------
 -------------------------------------------------
 -------------------------------------------------
-
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 6.2.2
 local OCTET_SCALAR_LENGTH = 32 -- ceil(log2(r)/8)
@@ -374,9 +392,14 @@ local function pol_evaluation(x, K)
     return y
 end
 
+local K = nil
 --draft-irtf-cfrg-hash-to-curve-16 Appendix E.2
 -- It maps a point to BLS12-381 from an isogenous curve.
 local function iso_map(point)
+    if not K then
+        K = {}
+    end
+
     local x_num = pol_evaluation(point.x, K[1])
     local x_den = pol_evaluation(point.x, K[2])
     local y_num = pol_evaluation(point.x, K[3])
@@ -420,6 +443,8 @@ local seed_len = 48 --ceil((ceil(log2(r)) + k)/8)
 local IdG1_x = BIG.new(O.from_hex('17f1d3a73197d7942695638c4fa9ac0fc3688c4f9774b905a14e3a3f171bac586c55e83ff97a1aeffb3af00adb22c6bb'))
 local IdG1_y = BIG.new(O.from_hex('08b3f481e3aaa0f1a09e30ed741d8ae4fcf5e095d5d00af600db18cb2c04b3edd03cc744a2888ae40caa232946c5e7e1'))
 local Identity_G1 = ECP.new(IdG1_x, IdG1_y)
+
+--if not generators[dst] or #generators[dst] < counter
 
 --draft-irtf-cfrg-bbs-signatures Section 4.2
 --It returns an array of generators.
@@ -730,7 +755,6 @@ function bbs.seeded_random_scalars(SEED, count)
     assert(out_len <= 65535)
     local v = bbs.expand_message_xmd(SEED, SEEDED_RANDOM_DST, out_len)
     -- if v is INVALID return INVALID
-
 
     local arr = {}
     for i = 1, count do
