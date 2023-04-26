@@ -17,22 +17,40 @@ end
 hash = HASH.new(KEYS)
 local test = { }
 local nr = 0
+
 for line in newline_iter(DATA) do
    local rule = strtok(line)
    -- I.print(rule)
    if #rule > 0 then
-	  if rule[1]:lower() == 'msg' then -- new check
-		 if rule[3] ~= '00' then -- skip 00
-			test = { msg = O.from_hex(rule[3]) }
-		 end
-	  elseif rule[1]:lower() == 'md' and test.msg then
-		 nr = nr + 1
-		 assert(hash:process(test.msg) == O.from_hex(rule[3]),
+    
+        if rule[1]:lower() == 'outputlen' then -- new check
+            if rule[3] ~= '00' then -- skip 00
+                test["outputlen"] = tonumber(rule[3])//8
+            end
+        elseif rule[1]:lower() == 'msg' then -- new check
+		    if rule[3] ~= '00' then -- skip 00
+			    test["msg"] = O.from_hex(rule[3])
+		    end
+	    elseif rule[1]:lower() == 'md' and test.msg then
+		    nr = nr + 1
+		    assert(I.spy(hash:process(test.msg)) == O.from_hex(rule[3]),
 				'error with hash '..KEYS..' test vector nr '..nr)
 		 -- print('OK\t'..KEYS..'\t'..nr..'\t('..#test.msg..' bytes)')
-		 test = { }
+		    test = { }
 		 -- test.msg = nil
-	  end
+        elseif rule[1]:lower() == 'output' and test.msg then
+            nr = nr + 1
+            if not test.outputlen then
+                assert(I.spy(hash:process(test.msg, 32)) == O.from_hex(rule[3]),
+                     'error with hash '..KEYS..' test vector nr '..nr)
+            -- print('OK\t'..KEYS..'\t'..nr..'\t('..#test.msg..' bytes)')
+            else 
+                assert(I.spy(hash:process(test.msg, test.outputlen)) == O.from_hex(rule[3]),
+                   'error with hash '..KEYS..' test vector nr '..nr)
+            end
+            test = { }
+            -- test.msg = nil
+	    end
    end
 end
 print(nr)
