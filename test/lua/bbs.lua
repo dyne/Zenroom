@@ -257,10 +257,53 @@ run_test_create_generators(create_generators_test)
 print('----------------------')
 print("TEST: Mocked/Seeded random scalars")
 
+-- draft-irtf-cfrg-bbs-signatures-latest Section 7.1
+-- It SIMULATES a random generation of scalars.
+-- DO NOT USE IN FINAL ProofGen
+local function seeded_random_scalars_xmd(count)
+    local EXPAND_LEN = 48
+    local SEED = O.from_hex("332e313431353932363533353839373933323338343632363433333833323739")
+    local r = BIG.new(O.from_hex('73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001'))
+
+    local out_len = EXPAND_LEN * count
+    assert(out_len <= 65535)
+    local v = expand_message_xmd(SEED, O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MOCK_RANDOM_SCALARS_DST_"), out_len)
+    -- if v is INVALID return INVALID
+
+    local arr = {}
+    for i = 1, count do
+        local start_idx = 1 + (i-1)*EXPAND_LEN
+        local end_idx = i * EXPAND_LEN
+        arr[i] = BIG.mod(v:sub(start_idx, end_idx), r) -- = os2ip(v:sub(start_idx, end_idx)) % r
+    end
+    return arr
+end
+
+local function seeded_random_scalars_xof(count)
+    local EXPAND_LEN = 48
+    local SEED = O.from_hex("332e313431353932363533353839373933323338343632363433333833323739")
+    local r = BIG.new(O.from_hex('73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001'))
+
+    local out_len = EXPAND_LEN * count
+    assert(out_len <= 65535)
+    local v = expand_message_xof(SEED, O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MOCK_RANDOM_SCALARS_DST_"), out_len)
+    -- if v is INVALID return INVALID
+
+    local arr = {}
+    for i = 1, count do
+        local start_idx = 1 + (i-1)*EXPAND_LEN
+        local end_idx = i * EXPAND_LEN
+        arr[i] = BIG.mod(v:sub(start_idx, end_idx), r) -- = os2ip(v:sub(start_idx, end_idx)) % r
+    end
+    return arr
+end
+
+local old_random = bbs.calculate_random_scalars
+
+bbs.calculate_random_scalars = seeded_random_scalars_xmd
+
 -- Test vectors originated from
 -- draft-irtf-cfrg-bbs-signatures-latest Section 7.5.4
-local SEED_RANDOM_SCALAR = O.from_hex("332e313431353932363533353839373933323338343632363433333833323739")
-
 local MOCKED_RANDOM_SCALARS_TEST = {
     '41b5e116922813fab50e1bcafd5a68f38c977fe4b01b3992424bc4ff1f1490bc',
     '57062c3eb0b030cbb45535bc7e8b3756288cfeee52ab6e2d1a56aedcfee668ba',
@@ -275,7 +318,7 @@ local MOCKED_RANDOM_SCALARS_TEST = {
 }
 
 local function run_test_mocked_random (test)
-    local output_mocked = bbs.seeded_random_scalars(SEED_RANDOM_SCALAR, 10)
+    local output_mocked = seeded_random_scalars_xmd(10)
     for i = 1, 10 do
         print("Test case ".. i)
         assert(output_mocked[i] == BIG.new(O.from_hex(test[i])))
@@ -435,5 +478,15 @@ assert(PROOF_GEN_MULTI_D_OUT == pg_multi_d_output)
 print("Test ProofVerify")
 local DISC_MSG = {MULTI_MSG_ARRAY[1], MULTI_MSG_ARRAY[3],MULTI_MSG_ARRAY[5], MULTI_MSG_ARRAY[7]}
 assert( bbs.ProofVerify(O.from_hex(PUBLIC_KEY), pg_multi_d_output, O.from_hex(HEADER), PRESENTATION_HEADER, DISC_MSG, disclosed_some_indexes) == true)
+
+
+bbs.calculate_random_scalars = seeded_random_scalars_xof
+
+bbs.calculate_random_scalars = old_random
+
+print('----------------------')
+print("TEST: ProofGen is random")
+I.spy(bbs.ProofGen(O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE), O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1}))
+I.spy(bbs.ProofGen(O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE), O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1}))
 
 bbs.destroy()

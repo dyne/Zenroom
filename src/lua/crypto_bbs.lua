@@ -51,7 +51,6 @@ function bbs.cipher_sha256()
         hash_to_scalar_dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_H2S_'),
         MAP_MSG_TO_SCALAR_AS_HASH_dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MAP_MSG_TO_SCALAR_AS_HASH_'),
         expand_dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_DET_DST_'),
-        SEEDED_RANDOM_DST = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MOCK_RANDOM_SCALARS_DST_"),
         P1 = (O.from_hex('8533b3fbea84e8bd9ccee177e3c56fbe1d2e33b798e491228f6ed65bb4d1e0ada07bcc4489d8751f8ba7a1b69b6eecd7')):zcash_topoint(),
         GENERATORS = {}
     }
@@ -68,7 +67,6 @@ function bbs.cipher_shake256()
         hash_to_scalar_dst = O.from_string('BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_H2S_'),
         MAP_MSG_TO_SCALAR_AS_HASH_dst = O.from_string('BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MAP_MSG_TO_SCALAR_AS_HASH_'),
         expand_dst = O.from_string('BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_SIG_DET_DST_'),
-        SEEDED_RANDOM_DST = O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MOCK_RANDOM_SCALARS_DST_"),
         P1 = (O.from_hex('91b784eaac4b2b2c6f9bfb2c9eae97e817dd12bba49a0821d175a50f1632465b319ca9fb81dda3fb0434412185e2cca5')):zcash_topoint(),
         GENERATORS = {}
     }
@@ -676,23 +674,24 @@ end
 ---------------------------------
 ---------------------------------
 
--- draft-irtf-cfrg-bbs-signatures-latest Section 7.1
--- It SIMULATES a random generation of scalars.
--- DO NOT USE IN FINAL ProofGen
-function bbs.seeded_random_scalars(SEED, count)
-
-    local out_len = EXPAND_LEN * count
-    assert(out_len <= 65535)
-    local v = CIPHERSUITE.expand(SEED, CIPHERSUITE.SEEDED_RANDOM_DST, out_len)
-    -- if v is INVALID return INVALID
-
-    local arr = {}
-    for i = 1, count do
-        local start_idx = 1 + (i-1)*EXPAND_LEN
-        local end_idx = i * EXPAND_LEN
-        arr[i] = BIG.mod(v:sub(start_idx, end_idx), r) -- = os2ip(v:sub(start_idx, end_idx)) % r
+-- draft-irtf-cfrg-bbs-signatures-latest Section 4.1
+-- It returns count random scalar.
+-- TODO: do we want to leave it like this or do we follow the draft?
+function bbs.calculate_random_scalars(count)
+    --[[ BUT r is 32 long!!!!
+    1. for i in (1, ..., count):
+    2.     ri = OS2IP(get_random(48)) mod r
+    3. return (r_1, r_2, ..., r_count)
+    --]]
+    local scalar_array = {}
+    local scalar = nil
+    while #scalar_array < count do
+        scalar = os2ip(O.random(32))
+        if scalar < r then
+            table.insert(scalar_array, scalar)
+        end
     end
-    return arr
+    return scalar_array
 end
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 4.6
@@ -800,7 +799,7 @@ function bbs.ProofGen(PK, signature, header, ph, messages, disclosed_indexes)
     -- if domain INVALID, then INVALID
 
     -- TODO: CHANGE THIS WHEN NOT IN TEST MODE
-    local random_scalars = bbs.seeded_random_scalars( O.from_hex("332e313431353932363533353839373933323338343632363433333833323739"), 6 + secret_len)
+    local random_scalars = bbs.calculate_random_scalars(6 + secret_len)
     local r1, r2, et, r2t, r3t, st = table.unpack(random_scalars,1,6)
     local mjt = {table.unpack(random_scalars, 7, 6 + secret_len)}
 
