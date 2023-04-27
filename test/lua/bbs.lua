@@ -1,4 +1,7 @@
 local bbs = require'crypto_bbs'
+
+bbs.init('sha256')
+
 local hkdf_tests = {
     {
         ikm='0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b',
@@ -36,9 +39,9 @@ local function run_test_hkdf(test)
     if type(test.info) == 'string' then
         test.info = O.from_hex(test.info)
     end
-    local prk = bbs.hkdf_extract(test.salt, O.from_hex(test.ikm))
+    local prk = bbs.hkdf_extract(HASH.new('sha256'), test.salt, O.from_hex(test.ikm))
     assert(O.from_hex(test.prk) == prk)
-    local okm = bbs.hkdf_expand(prk, test.info, test.l)
+    local okm = bbs.hkdf_expand(HASH.new('sha256'), prk, test.info, test.l)
     assert(O.from_hex(test.okm) == okm)
 end
 
@@ -697,3 +700,4 @@ print("Test ProofVerify")
 local DISC_MSG = {MULTI_MSG_ARRAY[1], MULTI_MSG_ARRAY[3],MULTI_MSG_ARRAY[5], MULTI_MSG_ARRAY[7]}
 assert( bbs.ProofVerify(O.from_hex(PUBLIC_KEY), pg_multi_d_output, O.from_hex(HEADER), PRESENTATION_HEADER, DISC_MSG, disclosed_some_indexes) == true)
 
+bbs.destroy()

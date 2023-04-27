@@ -44,6 +44,7 @@ function sha256(data) return init(256):process(data) end
 function sha512(data) return init(512):process(data) end
 function shake256(data, len) 
     if SHAKE256==nil then SHAKE256 = hash.new('shake256') end
+    if not len then len = 32 end
     return SHAKE256:process(data, len)
 end
     
