@@ -44,7 +44,7 @@ local CIPHERSUITE = nil
 function bbs.cipher_sha256()
     return {
         hash = HASH.new('sha256'),
-        expand = bbs.expand_message_xmd,
+        expand = expand_message_xmd,
         CIPHERSUITE_ID = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_"),
         generator_seed = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MESSAGE_GENERATOR_SEED"),
         seed_dst = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_GENERATOR_SEED_"),
@@ -60,7 +60,7 @@ end
 function bbs.cipher_shake256()
     return {
         hash = shake256,
-        expand = bbs.expand_message_xof,
+        expand = expand_message_xof,
         CIPHERSUITE_ID = O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_"),
         generator_seed = O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MESSAGE_GENERATOR_SEED"),
         seed_dst = O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_SIG_GENERATOR_SEED_"),
@@ -169,36 +169,6 @@ end
 local function os2ip(oct)
     return BIG.new(oct)
 end
-function bbs.hkdf_extract(hash, salt, ikm)
-    return HASH.hmac(hash, salt, ikm)
-end
-
-function bbs.hkdf_expand(hash, prk, info, l)
-
-    local hash_len = 32
-    assert(#prk >= hash_len)
-    assert(l <= 255 * hash_len)
-    assert(l > 0)
-
-    if type(info) == 'string' then
-        info = O.from_string(info)
-    end
-
-    -- local n = math.ceil(l/hash_len)
-
-    -- TODO: optimize using something like table.concat for octets
-    local tprec = HASH.hmac(hash, prk, info .. O.from_hex('01'))
-    local i = 2
-    local t = tprec
-    while l > #t do
-        tprec = HASH.hmac(hash, prk, tprec .. info .. O.from_hex(string.format("%02x", i)))
-        t = t .. tprec
-        i = i+1
-    end
-
-    -- TODO: check that sub is not creating a copy
-    return t:sub(1,l)
-end
 
 function bbs.keygen(ikm, key_info)
     -- TODO: add warning on curve must be BLS12-381
@@ -218,8 +188,8 @@ function bbs.keygen(ikm, key_info)
     local sk = INT.new(0)
     while sk == INT.new(0) do
         salt = CIPHERSUITE.hash:process(salt)
-        local prk = bbs.hkdf_extract(CIPHERSUITE.hash, salt, ikm .. i2osp(0, 1))
-        local okm = bbs.hkdf_expand(CIPHERSUITE.hash, prk, key_info .. i2osp(l, 2), l)
+        local prk = hkdf_extract(CIPHERSUITE.hash, salt, ikm .. i2osp(0, 1))
+        local okm = hkdf_expand(CIPHERSUITE.hash, prk, key_info .. i2osp(l, 2), l)
         sk = os2ip(okm) % ECP.order()
     end
 
@@ -232,60 +202,6 @@ function bbs.sk2pk(sk)
     return (ECP2.generator() * sk):zcash_export()
 end
 
-
--- draft-irtf-cfrg-hash-to-curve-16 section 5.3.2
--- It outputs a uniformly random byte string. (uses SHAKE256)
-function bbs.expand_message_xof(msg, DST, len_in_bytes)
---msg and DST must be octets
-    if len_in_bytes > 65536 then
-        error("len_in_bytes is too big", 2)
-    end
-    if #DST > 255 then
-        error("len(DST) is too big", 2)
-    end
-
-    local DST_prime = DST .. i2osp(#DST, 1)
-    local msg_prime = msg .. i2osp(len_in_bytes, 2) .. DST_prime
-    local uniform_bytes = shake256(msg_prime, len_in_bytes)
-
-    return uniform_bytes, DST_prime, msg_prime
-
-end
-
--- draft-irtf-cfrg-hash-to-curve-16 section 5.3.1
--- It outputs a uniformly random byte string.
-function bbs.expand_message_xmd(msg, DST, len_in_bytes)
-    -- msg, DST are OCTETS; len_in_bytes is an integer.
-
-    -- Parameters:
-    -- a hash function (SHA-256 or SHA3-256 are appropriate)
-    local b_in_bytes = 32 -- = output size of hash IN BITS / 8
-    local s_in_bytes = 64 -- ok for SHA-256
-
-    local ell = math.ceil(len_in_bytes / b_in_bytes)
-    assert(ell <= 255)
-    assert(len_in_bytes <= 65535)
-    local DST_len = #DST
-    assert( DST_len <= 255)
-
-    local DST_prime = DST .. i2osp(DST_len, 1)
-    local Z_pad = i2osp(0, s_in_bytes)
-    local l_i_b_str = i2osp(len_in_bytes, 2)
-    local msg_prime = Z_pad..msg..l_i_b_str..i2osp(0,1)..DST_prime
-
-    local b_0 = sha256(msg_prime)
-    local b_1 = sha256(b_0..i2osp(1,1)..DST_prime)
-    local uniform_bytes = b_1
-    -- b_j assumes the value of b_(i-1) inside the for loop, for i between 2 and ell.
-    local b_j = b_1
-    for i = 2,ell do
-        local b_i = sha256(O.xor(b_0, b_j)..i2osp(i,1)..DST_prime)
-        b_j = b_i
-        uniform_bytes = uniform_bytes..b_i
-    end
-    return uniform_bytes:sub(1,len_in_bytes), DST_prime, msg_prime
-
-end
 
 -----------------------------------------------
 -----------------------------------------------
@@ -766,10 +682,6 @@ end
 ---------------------------------
 ---------------------------------
 ---------------------------------
----------------------------------
----------------------------------
----------------------------------
----------------------------------
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 7.1
 -- It SIMULATES a random generation of scalars.
@@ -1061,6 +973,5 @@ function bbs.ProofVerify(PK, proof, header, ph, disclosed_messages, disclosed_in
 
     return true
 end
-
 
 return bbs
