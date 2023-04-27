@@ -20,21 +20,17 @@
 
 local bbs = {}
 
-local OCTET_SCALAR_LENGTH = 32 -- ceil(log2(r)/8)
+local OCTET_SCALAR_LENGTH = 32 -- ceil(log2(PRIME_R)/8)
 local OCTET_POINT_LENGTH = 48 --ceil(log2(p)/8)
 -- Coefficient A',B' for the isogenous curve.
 local A = BIG.new(O.from_hex('144698a3b8e9433d693a02c96d4982b0ea985383ee66a8d8e8981aefd881ac98936f8da0e0f97f5cf428082d584c1d'))
 local B = BIG.new(O.from_hex('12e2908d11688030018b12e8753eee3b2016c1f0f24f4070a0b9c14fcef35ef55a23215a316ceaa5d1cc48e98e172be0'))
-local h_eff = BIG.new(O.from_hex('d201000000010001'))
 
 --see draft-irtf-cfrg-bbs-signatures-latest Appendix A.1
-local r = BIG.new(O.from_hex('73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001'))
+local PRIME_R = BIG.new(O.from_hex('73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001'))
 
 --draft-irtf-cfrg-pairing-friendly-curves-11 Section 4.2.1
 local Identity_G1 = ECP.generator()
-
--- draft-irtf-cfrg-bbs-signatures-latest Section 3.4.3
-local EXPAND_LEN = 48
 
 local K = nil -- see function K_INIT() below
 
@@ -42,7 +38,6 @@ local CIPHERSUITE = nil
 
 function bbs.cipher_sha256()
     return {
-        hash = HASH.new('sha256'),
         expand = expand_message_xmd,
         CIPHERSUITE_ID = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_"),
         generator_seed = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MESSAGE_GENERATOR_SEED"),
@@ -58,7 +53,6 @@ end
 
 function bbs.cipher_shake256()
     return {
-        hash = shake256,
         expand = expand_message_xof,
         CIPHERSUITE_ID = O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_"),
         generator_seed = O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MESSAGE_GENERATOR_SEED"),
@@ -181,23 +175,21 @@ function bbs.keygen(ikm, key_info)
     end
 
     -- using BLS381
-    -- 254 < log2(r) < 255
-    -- ceil((3 * ceil(log2(r))) / 16)
+    -- 254 < log2(PRIME_R) < 255
+    -- ceil((3 * ceil(log2(PRIME_R))) / 16)
     local l = 48
     local salt = INITSALT
     local sk = INT.new(0)
     while sk == INT.new(0) do
-        salt = CIPHERSUITE.hash:process(salt)
-        local prk = hkdf_extract(CIPHERSUITE.hash, salt, ikm .. i2osp(0, 1))
-        local okm = hkdf_expand(CIPHERSUITE.hash, prk, key_info .. i2osp(l, 2), l)
+        salt = sha256(salt)
+        local prk = hkdf_extract(salt, ikm .. i2osp(0, 1))
+        local okm = hkdf_expand(prk, key_info .. i2osp(l, 2), l)
         sk = os2ip(okm) % ECP.order()
     end
 
     return sk
 end
 
-
--- TODO: make this function return an OCTET
 function bbs.sk2pk(sk)
     return (ECP2.generator() * sk):zcash_export()
 end
@@ -285,7 +277,6 @@ local function sqrt_ratio_3mod4(u, v)
     local c1 = BIG.div(BIG.modsub(p, BIG.new(3), p), BIG.new(4)) -- (p-3)/4 INTEGER ARITHMETIC
     local c2 = (BIG.modsub(p, BIG.new(11), p)):modpower(cc1, p) -- Sqrt(-Z) in curve where q = 3 mod 4
 
-
     local tv1 = v:modsqr(p)
     local tv2 = BIG.modmul(u, v, p)
     tv1 = BIG.modmul(tv1, tv2, p)
@@ -351,12 +342,10 @@ local function pol_evaluation(x, K_array)
     return y
 end
 
--- local K = nil
 --draft-irtf-cfrg-hash-to-curve-16 Appendix E.2
 -- It maps a point to BLS12-381 from an isogenous curve.
 local function iso_map(point)
     local p = ECP.prime()
-
     if not K then
         K = K_INIT()
     end
@@ -371,7 +360,6 @@ local function iso_map(point)
     return ECP.new(x,y)
 end
 
-
 -- draft-irtf-cfrg-hash-to-curve-16 Section 6.6.3
 -- It returns a point in the curve BLS12-381.
 function bbs.map_to_curve(u)
@@ -381,7 +369,8 @@ end
 -- draft-irtf-cfrg-hash-to-curve-16 Section 7
 -- It returns a point in the correct subgroup.
 function bbs.clear_cofactor(ecp_point)
-    return h_eff * ecp_point
+    local h_eff = BIG.new(O.from_hex('d201000000010001'))
+    return ecp_point * h_eff
 end
 
 -- draft-irtf-cfrg-hash-to-curve-16 Section 3
@@ -396,16 +385,15 @@ end
 
 --draft-irtf-cfrg-bbs-signatures Section 4.2
 --It returns an array of generators.
--- TODO: cache like 50 or so generators (considerable speed-up)
 function bbs.create_generators(count)
 
     if #CIPHERSUITE.GENERATORS < count then
 
-        local seed_len = 48 --ceil((ceil(log2(r)) + k)/8)
+        local seed_len = 48 --ceil((ceil(log2(PRIME_R)) + k)/8)
 
         local v = CIPHERSUITE.expand(CIPHERSUITE.generator_seed, CIPHERSUITE.seed_dst, seed_len)
         local n = 1
-        local generators = {[Identity_G1] = true} -- Identity_G1 == ECP.generator()
+        local generators = {[Identity_G1] = true}
         local mess_generators = {}
         for i = 1, count do
             v = CIPHERSUITE.expand(v..i2osp(n,4), CIPHERSUITE.seed_dst, seed_len)
@@ -424,13 +412,14 @@ function bbs.create_generators(count)
     else
         return {table.unpack(CIPHERSUITE.GENERATORS, 1, count)}
     end
-
 end
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 4.4
--- It converts a message written in octects into a BIG modulo r (order of subgroup)
+-- It converts a message written in octects into a BIG modulo PRIME_R (order of subgroup)
 local function hash_to_scalar(msg_octects, dst)
     local BIG_0 = BIG.new(0)
+    -- draft-irtf-cfrg-bbs-signatures-latest Section 3.4.3
+    local EXPAND_LEN = 48
 
     -- Default value of DST when not provided (see also Section 6.2.2)
     if not dst then
@@ -441,37 +430,28 @@ local function hash_to_scalar(msg_octects, dst)
     local hashed_scalar = BIG_0
     while hashed_scalar == BIG_0 do
         if counter > 255 then
-            error("The counter of hash_to_scalar is larger than 255", 2) -- return 'INVALID'
+            error("The counter of hash_to_scalar is larger than 255", 2)
         end
         local msg_prime = msg_octects .. i2osp(counter, 1)
         local uniform_bytes = CIPHERSUITE.expand(msg_prime, dst, EXPAND_LEN)
-
-        -- if uniform_bytes is INVALID, return INVALID
-
-        hashed_scalar = BIG.mod(uniform_bytes, r) -- = os2ip(uniform_bytes) % r
-
+        hashed_scalar = BIG.mod(uniform_bytes, PRIME_R) -- = os2ip(uniform_bytes) % PRIME_R
         counter = counter + 1
     end
-
     return hashed_scalar
 end
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 4.3.1
--- It converts a message written in octects into a BIG modulo r (order of subgroup)
+-- It converts a message written in octects into a BIG modulo PRIME_R (order of subgroup)
 function bbs.MapMessageToScalarAsHash(msg, dst)
     -- Default value of DST when not provided (see also Section 6.2.2)
     if not dst then
         dst = CIPHERSUITE.MAP_MSG_TO_SCALAR_AS_HASH_dst
     end
-
-    -- NOTE: in the specification it is ALSO written that an error must be raised
-    -- if len(msg) > 2^64 - 1 = 18,446,744,073,709,551,615 which is lua integer limit.
+    -- assert(#msg < 2^64))
     if (#dst > 255) then
-        error("dst is too long in MapMessageToScalarAsHash", 2) -- return 'INVALID'
+        error("dst is too long in MapMessageToScalarAsHash", 2) 
     end
-
     local msg_scalar = hash_to_scalar(msg, dst)
-    -- if msg_scalar == 'INVALID' then return 'INVALID' end
     return msg_scalar
 end
 
@@ -508,19 +488,13 @@ local function calculate_domain(PK_octet, Q1, Q2, H_points, header)
     end
 
     local len = #H_points
-    -- We avoid the following checks:
     -- assert(#(header) < 2^64)
     -- assert(L < 2^64)
 
     local dom_array = {len, Q1, Q2, table.unpack(H_points)}
-
     local dom_octs = serialization(dom_array) .. CIPHERSUITE.CIPHERSUITE_ID
-    -- if dom_octs is "INVALID", return "INVALID"
-
     local dom_input = PK_octet .. dom_octs .. i2osp(#header, 8) .. header
-
     local domain = hash_to_scalar(dom_input)
-    -- if domain is "INVALID", return "INVALID"
 
     return domain
 end
@@ -542,20 +516,15 @@ function bbs.sign(SK, PK, header, messages)
     local H_array = { table.unpack(point_array, 3, LEN + 2) }
 
     local domain = calculate_domain(PK, Q_1, Q_2, H_array, header)
-    -- if domain is "INVALID" return "INVALID"
 
     local serialise_array = {SK, domain, table.unpack(messages)}
-
     local e_s_octs = serialization(serialise_array)
-    -- IF e_s_octs is "INVALID", then return "INVALID"
 
     local e_s_len = OCTET_SCALAR_LENGTH * 2
     local e_s_expand = CIPHERSUITE.expand(e_s_octs, CIPHERSUITE.expand_dst, e_s_len)
-    -- if e_s_expand is "INVALID", return "INVALID"
 
     local e = hash_to_scalar(e_s_expand:sub(1, OCTET_SCALAR_LENGTH))
     local s = hash_to_scalar(e_s_expand:sub(OCTET_SCALAR_LENGTH + 1, e_s_len))
-    -- If e or s is INVALID, return INVALID
 
     local BB = CIPHERSUITE.P1 + (Q_1 * s) + (Q_2 * domain)
     if (LEN > 0) then
@@ -564,8 +533,8 @@ function bbs.sign(SK, PK, header, messages)
         end
     end
 
-    assert(BIG.mod(SK + e, r) ~= BIG.new(0))
-    local AA = BB * BIG.moddiv(BIG.new(1), SK + e, r)
+    assert(BIG.mod(SK + e, PRIME_R) ~= BIG.new(0))
+    local AA = BB * BIG.moddiv(BIG.new(1), SK + e, PRIME_R)
 
     return serialization({AA, e, s})
 end
@@ -580,8 +549,7 @@ local function octets_to_signature(signature_octets)
 
     local A_octets = signature_octets:sub(1, OCTET_POINT_LENGTH)
     local AA = A_octets:zcash_topoint()
-    -- if AA is "INVALID" return "INVALID"
-    if (AA == Identity_G1) then -- Identity_G1 == ECP.generator
+    if (AA == Identity_G1) then 
         error("Point is identity", 2)
     end
 
@@ -589,14 +557,14 @@ local function octets_to_signature(signature_octets)
     local index = OCTET_POINT_LENGTH + 1
     local end_index = index + OCTET_SCALAR_LENGTH - 1
     local e = os2ip(signature_octets:sub(index, end_index))
-    if (e == BIG_0) or (e >= r) then
+    if (e == BIG_0) or (e >= PRIME_R) then
         error("Wrong e in deserialization", 2)
     end
 
     index = index + OCTET_SCALAR_LENGTH
     end_index = index + OCTET_SCALAR_LENGTH - 1
     local s = os2ip(signature_octets:sub(index, end_index))
-    if (s == BIG_0) or (s >= r) then
+    if (s == BIG_0) or (s >= PRIME_R) then
         error("Wrong s in deserialization", 2)
     end
 
@@ -605,20 +573,17 @@ end
 
 local function octets_to_pub_key(PK)
     local W = PK:zcash_topoint()
-    -- If W is INVALID return INVALID
 
     -- ECP2.infinity == Identity_G2
     if (W == ECP2.infinity()) then
         error("W is identity G2", 2)
     end
-    -- TODO: implement paper with faster subgroup check
-    if (W * r ~= ECP2.infinity()) then
+    if (W * PRIME_R ~= ECP2.infinity()) then
         error("W is not in subgroup", 2)
     end
 
     return W
 end
-
 
 function bbs.verify(PK, signature, header, messages)
     -- Default values
@@ -631,20 +596,15 @@ function bbs.verify(PK, signature, header, messages)
 
     -- Deserialization
     local signature_result = octets_to_signature(signature)
-    -- if signature_result is INVALID return INVALID
     local AA, e, s = table.unpack(signature_result)
-
     local W = octets_to_pub_key(PK)
-    -- if W is INVALID, return INVALID
     local LEN = #messages
 
     -- Procedure
     local point_array = bbs.create_generators(LEN + 2)
     local Q_1, Q_2 = table.unpack(point_array, 1, 2)
     local H_points = { table.unpack(point_array, 3, LEN + 2) } 
-    
     local domain = calculate_domain(PK, Q_1, Q_2, H_points, header)
-    -- If domain is INVALID then return INVALID
 
     local BB = CIPHERSUITE.P1 + (Q_1 * s) + (Q_2 * domain)
     if (LEN > 0) then
@@ -653,18 +613,14 @@ function bbs.verify(PK, signature, header, messages)
         end
     end
 
-
     local LHS = ECP2.ate(W + (ECP2.generator() * e), AA)
     local RHS = ECP2.ate(ECP2.generator():negative(), BB)
-    -- local element = LHS:mul(RHS)
     if (LHS:inv() == RHS) then
-        return true -- return "VALID"
+        return true
     else
-        return false -- return "INVALID"
+        return false
     end
-    --- ECP2.ate(ECP2, ECP)     FP12.mul(arg1, arg2)
 end
-
 
 ---------------------------------
 -- Credentials:ProofGen,ProofVerify -------
@@ -678,16 +634,17 @@ end
 -- It returns count random scalar.
 -- TODO: do we want to leave it like this or do we follow the draft?
 function bbs.calculate_random_scalars(count)
-    --[[ BUT r is 32 long!!!!
-    1. for i in (1, ..., count):
-    2.     ri = OS2IP(get_random(48)) mod r
-    3. return (r_1, r_2, ..., r_count)
-    --]]
+    
     local scalar_array = {}
     local scalar = nil
+    --[[
+    for i = 1, count do
+        scalar_array[i] = BIG.mod(O.random(48)), PRIME_R)
+    end
+    --]]
     while #scalar_array < count do
         scalar = os2ip(O.random(32))
-        if scalar < r then
+        if scalar < PRIME_R then
             table.insert(scalar_array, scalar)
         end
     end
@@ -701,40 +658,33 @@ local function calculate_challenge(Aprime, Abar, D, C1, C2, i_array, msg_array, 
         ph = O.empty()
     end
 
-    local R = #i_array
-    -- We avoid the check R < 2^64
-    if R ~= #msg_array then
+    local R_len = #i_array
+    -- We avoid the check R_len < 2^64
+    if R_len ~= #msg_array then
         error("i_array length is not equal to msg_array length", 2)
     end
     -- We avoid the check #(ph) < 2^64
     local c_array = {}
 
-    if R ~= 0 then
-        c_array = {Aprime, Abar, D, C1, C2, R}
-        
-        for i = 1, R do 
+    if R_len ~= 0 then
+        c_array = {Aprime, Abar, D, C1, C2, R_len} 
+        for i = 1, R_len do 
             c_array[i+6] = i_array[i] -1
         end
-        for i = 1, R do
-            c_array[i+6+R] = msg_array[i] 
+        for i = 1, R_len do
+            c_array[i+6+R_len] = msg_array[i] 
         end
-        c_array[7+2*R] = domain
+        c_array[7+2*R_len] = domain
     else
-        c_array = {Aprime, Abar, D, C1, C2, R, domain}
+        c_array = {Aprime, Abar, D, C1, C2, R_len, domain}
     end
 
     local c_octs = serialization(c_array)
-    -- if c_octs is invalid, return invalid
-
     local c_input = c_octs .. i2osp(#ph, 8) .. ph 
-
     local challenge = hash_to_scalar(c_input)
-    -- if challenge id INVALID return INVALID
-
 
     return challenge
 end
-
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 3.4.3
 function bbs.ProofGen(PK, signature, header, ph, messages, disclosed_indexes)
@@ -754,17 +704,12 @@ function bbs.ProofGen(PK, signature, header, ph, messages, disclosed_indexes)
 
     -- Deserialisation
     local signature_result = octets_to_signature(signature)
-    -- if signature is INVALID then return INVALID
-
     local AA, e, s = table.unpack(signature_result)
-
     local msg_len = #messages
     local disclosed_messages = {}
     local secret_messages = {}
     local secret_indexes = {}
-    -- NOTE: pointer, after the for loop, STORES THE LENGTH OF THE DISCLOSED MESSAGES
     local pointer = 1
-
     if #disclosed_indexes == 0 then
         for i =1, msg_len do
             secret_indexes[i] = true
@@ -780,9 +725,7 @@ function bbs.ProofGen(PK, signature, header, ph, messages, disclosed_indexes)
         end
     end
 
-    -- local ind_len = pointer
     local secret_len = msg_len - #disclosed_indexes
-
     local points_array = bbs.create_generators(msg_len + 2)
     local Q_1, Q_2 = table.unpack(points_array,1,2)
     local all_H_points = {table.unpack(points_array, 3, msg_len+2)}
@@ -796,9 +739,7 @@ function bbs.ProofGen(PK, signature, header, ph, messages, disclosed_indexes)
     end
 
     local domain = calculate_domain(PK, Q_1, Q_2, all_H_points, header)
-    -- if domain INVALID, then INVALID
 
-    -- TODO: CHANGE THIS WHEN NOT IN TEST MODE
     local random_scalars = bbs.calculate_random_scalars(6 + secret_len)
     local r1, r2, et, r2t, r3t, st = table.unpack(random_scalars,1,6)
     local mjt = {table.unpack(random_scalars, 7, 6 + secret_len)}
@@ -808,29 +749,28 @@ function bbs.ProofGen(PK, signature, header, ph, messages, disclosed_indexes)
         BB = BB + (all_H_points[i] * messages[i])
     end
 
-    local r3 = BIG.modinv(r1, r)
+    local r3 = BIG.modinv(r1, PRIME_R)
     local Aprime = AA * r1
-    local Abar = (Aprime * BIG.modneg( e, r)) + (BB * r1)
+    local Abar = (Aprime * BIG.modneg( e, PRIME_R)) + (BB * r1)
     local D = (BB * r1) + (Q_1 * r2)
-    local sprime = BIG.mod( BIG.modmul(r2, r3, r) + s, r)
+    local sprime = BIG.mod( BIG.modmul(r2, r3, PRIME_R) + s, PRIME_R)
     local C1 = (Aprime * et) + (Q_1 * r2t)
 
-    local C2 = (D * BIG.modneg( r3t, r)) + (Q_1 * st)
+    local C2 = (D * BIG.modneg( r3t, PRIME_R)) + (Q_1 * st)
     for i = 1, secret_len do
         C2 = C2 + (secret_H_points[i] * mjt[i])
     end
     
     local c = calculate_challenge(Aprime, Abar, D, C1, C2, disclosed_indexes, disclosed_messages, domain, ph)
-    -- if c is INVALID, return INVALID
     
-    local ehat = BIG.mod(BIG.modmul(c, e, r) + et, r)
-    local r2hat = BIG.mod( BIG.modmul(c, r2, r) + r2t, r)
-    local r3hat = BIG.mod( BIG.modmul(c, r3, r) + r3t, r)
-    local shat = BIG.mod( BIG.modmul(c, sprime, r) + st, r)
+    local ehat = BIG.mod(BIG.modmul(c, e, PRIME_R) + et, PRIME_R)
+    local r2hat = BIG.mod( BIG.modmul(c, r2, PRIME_R) + r2t, PRIME_R)
+    local r3hat = BIG.mod( BIG.modmul(c, r3, PRIME_R) + r3t, PRIME_R)
+    local shat = BIG.mod( BIG.modmul(c, sprime, PRIME_R) + st, PRIME_R)
 
     local proof = { Aprime, Abar, D, c, ehat, r2hat, r3hat, shat}
     for j = 1, secret_len do
-        proof[j+8] = BIG.mod( BIG.modmul(c, secret_messages[j], r) + mjt[j], r)
+        proof[j+8] = BIG.mod( BIG.modmul(c, secret_messages[j], PRIME_R) + mjt[j], PRIME_R)
     end
     return serialization(proof)
 
@@ -857,7 +797,7 @@ local function octets_to_proof(proof_octets)
     while index < #proof_octets do
         local end_index = index + OCTET_SCALAR_LENGTH -1
         return_array[j] = os2ip(proof_octets:sub(index, end_index))
-        if (return_array[j] == BIG.new(0)) or (return_array[j]>=r) then
+        if (return_array[j] == BIG.new(0)) or (return_array[j]>=PRIME_R) then
             error("Not a scalar in octets_to_proof", 2)
         end
         index = index + OCTET_SCALAR_LENGTH
@@ -904,11 +844,9 @@ function bbs.ProofVerify(PK, proof, header, ph, disclosed_messages, disclosed_in
     local len_U = #commitments
     local len_R = #disclosed_indexes
     local len_L = len_R + len_U
-
     --end Deserialization
 
     --Preconditions
-
     for _,i in pairs(disclosed_indexes) do
         if (i < 1) or (i > len_L) then
             error("disclosed_indexes out of range",2)
@@ -949,7 +887,6 @@ function bbs.ProofVerify(PK, proof, header, ph, disclosed_messages, disclosed_in
     end
 
     local cv = calculate_challenge(Aprime, Abar, D, C1, C2, disclosed_indexes, disclosed_messages, domain, ph)
-
     if c ~= cv then
         return false
     end
