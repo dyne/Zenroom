@@ -29,7 +29,6 @@ local h_eff = BIG.new(O.from_hex('d201000000010001'))
 
 --see draft-irtf-cfrg-bbs-signatures-latest Appendix A.1
 local r = BIG.new(O.from_hex('73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001'))
-local seed_len = 48 --ceil((ceil(log2(r)) + k)/8)
 
 --draft-irtf-cfrg-pairing-friendly-curves-11 Section 4.2.1
 local Identity_G1 = ECP.generator()
@@ -53,7 +52,8 @@ function bbs.cipher_sha256()
         MAP_MSG_TO_SCALAR_AS_HASH_dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MAP_MSG_TO_SCALAR_AS_HASH_'),
         expand_dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_DET_DST_'),
         SEEDED_RANDOM_DST = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MOCK_RANDOM_SCALARS_DST_"),
-        P1 = (O.from_hex('8533b3fbea84e8bd9ccee177e3c56fbe1d2e33b798e491228f6ed65bb4d1e0ada07bcc4489d8751f8ba7a1b69b6eecd7')):zcash_topoint()
+        P1 = (O.from_hex('8533b3fbea84e8bd9ccee177e3c56fbe1d2e33b798e491228f6ed65bb4d1e0ada07bcc4489d8751f8ba7a1b69b6eecd7')):zcash_topoint(),
+        GENERATORS = {}
     }
 end
 
@@ -69,7 +69,8 @@ function bbs.cipher_shake256()
         MAP_MSG_TO_SCALAR_AS_HASH_dst = O.from_string('BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MAP_MSG_TO_SCALAR_AS_HASH_'),
         expand_dst = O.from_string('BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_SIG_DET_DST_'),
         SEEDED_RANDOM_DST = O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MOCK_RANDOM_SCALARS_DST_"),
-        P1 = (O.from_hex('91b784eaac4b2b2c6f9bfb2c9eae97e817dd12bba49a0821d175a50f1632465b319ca9fb81dda3fb0434412185e2cca5')):zcash_topoint()
+        P1 = (O.from_hex('91b784eaac4b2b2c6f9bfb2c9eae97e817dd12bba49a0821d175a50f1632465b319ca9fb81dda3fb0434412185e2cca5')):zcash_topoint(),
+        GENERATORS = {}
     }
 end
 
@@ -151,6 +152,7 @@ function bbs.init(hash_name)
     else
         error('Invalid hash, use sha256 or shake256', 2)
     end
+    CIPHERSUITE.GENERATORS = bbs.create_generators(20)
 end
 
 function bbs.destroy()
@@ -202,7 +204,6 @@ function bbs.sk2pk(sk)
     return (ECP2.generator() * sk):zcash_export()
 end
 
-
 -----------------------------------------------
 -----------------------------------------------
 -----------------------------------------------
@@ -232,7 +233,6 @@ function bbs.hash_to_field(msg, count, DST)
 
     return u
 end
-
 
 --hash_to_field CASE m = 1
 function bbs.hash_to_field_m1(msg, count, DST)
@@ -341,9 +341,6 @@ local function map_to_curve_simple_swu(u)
     return {['x'] = BIG.moddiv( x, tv4, p), ['y'] = y}
 end
 
-
-
-
 --polynomial evaluation using Horner's rule
 local function pol_evaluation(x, K_array)
     local p = ECP.prime()
@@ -399,40 +396,36 @@ function bbs.hash_to_curve(msg, DST)
     return bbs.clear_cofactor(Q0 + Q1)
 end
 
---if not generators[dst] or #generators[dst] < counter
-
 --draft-irtf-cfrg-bbs-signatures Section 4.2
 --It returns an array of generators.
 -- TODO: cache like 50 or so generators (considerable speed-up)
-function bbs.create_generators(count, generator_seed, seed_dst, generator_dst)
+function bbs.create_generators(count)
 
-    if not generator_seed then
-        generator_seed = CIPHERSUITE.generator_seed
-    end
-    if not seed_dst then
-        seed_dst = CIPHERSUITE.seed_dst
-    end
-    if not generator_dst then
-        generator_dst = CIPHERSUITE.generator_dst
-    end
+    if #CIPHERSUITE.GENERATORS < count then
 
-    local v = CIPHERSUITE.expand(generator_seed, seed_dst, seed_len)
-    local n = 1
-    local generators = {[Identity_G1] = true} -- Identity_G1 == ECP.generator()
-    local mess_generators = {}
-    for i = 1, count do
-        v = CIPHERSUITE.expand(v..i2osp(n,4), seed_dst, seed_len)
-        n = n + 1
-        local candidate = bbs.hash_to_curve(v, generator_dst)
-        if (generators[candidate]) then
-            i = i-1
-        else
-            generators[candidate] = true
-            mess_generators[i] = candidate
+        local seed_len = 48 --ceil((ceil(log2(r)) + k)/8)
+
+        local v = CIPHERSUITE.expand(CIPHERSUITE.generator_seed, CIPHERSUITE.seed_dst, seed_len)
+        local n = 1
+        local generators = {[Identity_G1] = true} -- Identity_G1 == ECP.generator()
+        local mess_generators = {}
+        for i = 1, count do
+            v = CIPHERSUITE.expand(v..i2osp(n,4), CIPHERSUITE.seed_dst, seed_len)
+            n = n + 1
+            local candidate = bbs.hash_to_curve(v, CIPHERSUITE.generator_dst)
+            if (generators[candidate]) then
+                i = i-1
+            else
+                generators[candidate] = true
+                mess_generators[i] = candidate
+            end
         end
-    end
 
-    return mess_generators
+        CIPHERSUITE.GENERATORS = mess_generators
+        return CIPHERSUITE.GENERATORS
+    else
+        return {table.unpack(CIPHERSUITE.GENERATORS, 1, count)}
+    end
 
 end
 

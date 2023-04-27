@@ -2,19 +2,22 @@ local bbs = require'crypto_bbs'
 
 bbs.init('sha256')
 
-
 -- Key Pair
+print('----------------------')
+print("TEST: key pair")
 local ikm = O.from_hex('746869732d49532d6a7573742d616e2d546573742d494b4d2d746f2d67656e65726174652d246528724074232d6b6579')
 local key_info = O.from_hex('746869732d49532d736f6d652d6b65792d6d657461646174612d746f2d62652d757365642d696e2d746573742d6b65792d67656e')
 local sk = bbs.keygen(ikm, key_info)
+print("Test Case 1")
 assert(sk == BIG.new(O.from_hex('4a39afffd624d69e81808b2e84385cc80bf86adadf764e030caa46c231f2a8d7')))
 -- p=bbs.sk2pk(sk)
-
 -- oct = O.from_hex('aaff983278257afc45fa9d44d156c454d716fb1a250dfed132d65b2009331f618c623c14efa16245f50cc92e60334051087f1ae92669b89690f5feb92e91568f95a8e286d110b011e9ac9923fd871238f57d1295395771331ff6edee43e4ccc6')
 assert(bbs.sk2pk(sk) == O.from_hex('aaff983278257afc45fa9d44d156c454d716fb1a250dfed132d65b2009331f618c623c14efa16245f50cc92e60334051087f1ae92669b89690f5feb92e91568f95a8e286d110b011e9ac9923fd871238f57d1295395771331ff6edee43e4ccc6'))
 
 
 
+print('----------------------')
+print("TEST: hash_to_field_m1_c2")
 -- Test vectors originated from:
 -- draft-irtf-cfrg-hash-to-curve, Appendix J.9.1
 local DST_hash_to_field = 'QUUX-V01-CS02-with-BLS12381G1_XMD:SHA-256_SSWU_RO_'
@@ -56,7 +59,6 @@ local hash_to_curve_test = {
     Q1_y = '1879074f344471fac5f839e2b4920789643c075792bec5af4282c73f7941cda5aa77b00085eb10e206171b9787c4169f'
 
 },
-
 {
     msg  = 'q128_qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq',
     P_x  = '15f68eaa693b95ccb85215dc65fa81038d69629f70aeee0d0f677cf22285e7bf58d7cb86eefe8f2e9bc3f8cb84fac488',
@@ -82,6 +84,16 @@ local hash_to_curve_test = {
     Q1_y = '028e6d0169a72cfedb737be45db6c401d3adfb12c58c619c82b93a5dfcccef12290de530b0480575ddc8397cda0bbebf'
 }
 }
+
+local function run_test_hash_to_field_m1_c2 (test)
+    local output_u = bbs.hash_to_field_m1_c2(O.from_string(test.msg), O.from_string(DST_hash_to_field))
+    assert(output_u[1] == BIG.new(O.from_hex(test.u_0)), "Wrong u_0")
+    assert(output_u[2] == BIG.new(O.from_hex(test.u_1)), "Wrong u_1")
+end
+for k,v in pairs(hash_to_curve_test) do
+    print("Test Case " .. k)
+    run_test_hash_to_field_m1_c2(v)
+end 
 
 --[[
 local function run_test_hash_to_field (test)
@@ -125,18 +137,8 @@ for k,v in pairs(hash_to_curve_test) do
 end 
 --]]
 
-local function run_test_hash_to_field_m1_c2 (test)
-    local output_u = bbs.hash_to_field_m1_c2(O.from_string(test.msg), O.from_string(DST_hash_to_field))
-    assert(output_u[1] == BIG.new(O.from_hex(test.u_0)), "Wrong u_0")
-    assert(output_u[2] == BIG.new(O.from_hex(test.u_1)), "Wrong u_1")
-end
-
 print('----------------------')
-print("TEST: hash_to_field_m1_c2")
-for k,v in pairs(hash_to_curve_test) do
-    print("Test Case " .. k)
-    run_test_hash_to_field_m1_c2(v)
-end 
+print("TEST: map_to_curve")
 
 local function run_test_map_to_curve (test)
     local output_Q0 = bbs.map_to_curve(BIG.new(O.from_hex(test.u_0)))
@@ -147,12 +149,13 @@ local function run_test_map_to_curve (test)
     assert(output_Q1:y() == BIG.new(O.from_hex(test.Q1_y)), "Wrong Q1_y")
 end
 
-print('----------------------')
-print("TEST: map_to_curve")
 for k,v in pairs(hash_to_curve_test) do
     print("Test Case " .. k)
     run_test_map_to_curve(v)
 end
+
+print('----------------------')
+print("TEST: hash_to_curve (and clear_cofactor)")
 
 local function run_test_hash_to_curve (test)
     local output_P = bbs.hash_to_curve(O.from_string(test.msg), O.from_string(DST_hash_to_field))
@@ -160,12 +163,13 @@ local function run_test_hash_to_curve (test)
     assert(output_P:y() == BIG.new(O.from_hex(test.P_y)), "Wrong P_y")
 end
 
-print('----------------------')
-print("TEST: hash_to_curve (and clear_cofactor)")
 for k,v in pairs(hash_to_curve_test) do
     print("Test Case " .. k)
     run_test_hash_to_curve(v)
 end
+
+print('----------------------')
+print("TEST: MapMessageToScalarAsHash")
 
 -- Test vectors originated from:
 -- draft-irtf-cfrg-bbs-signatures-latest Sections 7.3 AND 7.5.1
@@ -197,9 +201,6 @@ local map_messages_to_scalar_test = {
     '364dd864673c8b33ebd7a1f8a1249f5735c757f08e3c94e2265b61a019cb4bd3'
 }
 
-
-print('----------------------')
-print("TEST: MapMessageToScalarAsHash")
 for k = 1, #map_messages_to_scalar_test do
     print("Test Case " .. k)
     local output_scalar = bbs.MapMessageToScalarAsHash(O.from_hex(map_messages_to_scalar_messages[k]), DST_MAP_MESSAGES_TO_SCALAR)
@@ -207,6 +208,9 @@ for k = 1, #map_messages_to_scalar_test do
 end
 
 
+print('----------------------')
+print("TEST: MapMessageToScalarAsHash (BBS paper, C.2.7)")
+print("(literally only first test vector of the above test with same name)")
 
 -- Test vectors originated from
 -- draft-irtf-cfrg-bbs-signatures-latest Appendix C.2.7
@@ -217,16 +221,13 @@ local DEFAULT_DST_HASH_TO_SCALAR = '4242535f424c53313233383147315f584d443a534841
 
 local BBS_SHA_256_H2S_TEST = '669e7db2fcd926d6ec6ff14cbb3143f50cce0242627f1389d58b5cccbc0ef927'
 
-print('----------------------')
-print("TEST: MapMessageToScalarAsHash (BBS paper, C.2.7)")
-print("(literally only first test vector of the above test with same name)")
 print('Test case 1')
 assert(bbs.MapMessageToScalarAsHash(O.from_hex(INPUT_MSG_BBS_SHA_256), O.from_hex(DEFAULT_DST_HASH_TO_SCALAR)) == BIG.new(O.from_hex(BBS_SHA_256_H2S_TEST)))
 
-
+print('----------------------')
+print("TEST: create_generators")
 
 -- Section 7.5.2
-
 local create_generators_test = {
     (O.from_hex('b57ec5e001c28d4063e0b6f5f0a6eee357b51b64d789a21cf18fd11e73e73577910182d421b5a61812f5d1ca751fa3f0')):zcash_topoint(),
     (O.from_hex('909573cbb9da401b89d2778e8a405fdc7d504b03f0158c31ba64cdb9b648cc35492b18e56088b44c8b4dc6310afb5e49')):zcash_topoint(),
@@ -242,29 +243,22 @@ local create_generators_test = {
     (O.from_hex('86d4ae04738dc082eb37e753bc8ec35a8d982e463559214d0f777599f71aa1f95780b3dccbdcae45e146e5c7623dfe7d')):zcash_topoint()
 }
 local count_test = 12
-local generator_seed_test = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MESSAGE_GENERATOR_SEED")
-local seed_dst_test = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_GENERATOR_SEED_")
-local generator_dst_test = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_GENERATOR_DST_")
 
 local function run_test_create_generators (test)
-    local output_generators = bbs.create_generators(count_test, generator_seed_test, seed_dst_test, generator_dst_test)
+    local output_generators = bbs.create_generators(count_test)
     for i = 1, count_test do
         print("Test case ".. i)
         assert(output_generators[i] == test[i])
     end
 end
 
-print('----------------------')
-print("TEST: create_generators")
-
 run_test_create_generators(create_generators_test)
 
-
-
+print('----------------------')
+print("TEST: Mocked/Seeded random scalars")
 
 -- Test vectors originated from
 -- draft-irtf-cfrg-bbs-signatures-latest Section 7.5.4
-
 local SEED_RANDOM_SCALAR = O.from_hex("332e313431353932363533353839373933323338343632363433333833323739")
 
 local MOCKED_RANDOM_SCALARS_TEST = {
@@ -288,11 +282,7 @@ local function run_test_mocked_random (test)
     end
 end
 
-print('----------------------')
-print("TEST: Mocked/Seeded random scalars")
-
 run_test_mocked_random(MOCKED_RANDOM_SCALARS_TEST)
-
 
 print('----------------------')
 print("TEST: Single message signature SHA 256")
@@ -307,11 +297,9 @@ local VALID_SIGNATURE = "8fb17415378ec4462bc167be75583989e0528913da142239848ae88
 -- FROM trinsic-id / bbs BRANCH update result.
 -- 0x8fb17415378ec4462bc167be75583989e0528913da142239848ae88309805bfb3656bcff322e5d8fd1a7e40a660a62266099f27fa81ff5010443f36285f6f0758e4d701c444b20447cded906a3f2001714087f165f760369b901ccbe5173438b32ad195b005e2747492cf002cf51e498
 
-
 local output_signature = bbs.sign( BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(HEADER), SINGLE_MSG_ARRAY)
 assert(output_signature == O.from_hex(VALID_SIGNATURE))
 assert(bbs.verify(O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), SINGLE_MSG_ARRAY) == true)
-
 
 print("Test case 2")
 -- Test vectors originated from
@@ -321,7 +309,6 @@ local MODIFIED_MSG_ARR = { bbs.MapMessageToScalarAsHash(O.from_hex("c344136d9ab0
 
 assert(bbs.verify(O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE), O.from_hex(HEADER), MODIFIED_MSG_ARR) == false)
 -- RETURNS AN ERROR: fail signature validation due to the message value being different from what was signed.
-
 
 print("Test case 3")
 -- Test vectors originated from
@@ -333,11 +320,6 @@ local TWO_MESSAGES = {
 
 assert(bbs.verify(O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE), O.from_hex(HEADER), TWO_MESSAGES) == false)
 -- fails signature validation due to an additional message being supplied that was not signed
-
-
-
-
-
 
 print('----------------------')
 print("TEST: Single message proof SHA 256")
@@ -383,7 +365,6 @@ local output_multi_signature = bbs.sign( BIG.new(O.from_hex(SECRET_KEY)), O.from
 assert( output_multi_signature == VALID_MULTI_SIGNATURE)
 assert(bbs.verify(O.from_hex(PUBLIC_KEY), output_multi_signature, O.from_hex(HEADER), MULTI_MSG_ARRAY) == true)
 
-
 print("Test case 2")
 -- Test vectors originated from
 -- draft-irtf-cfrg-bbs-signatures-latest Appendix C.2.3
@@ -406,11 +387,9 @@ local REORDERED_MSGS = {
     bbs.MapMessageToScalarAsHash(O.from_hex('9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02'))
 }
 
-
 assert(bbs.verify(O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, O.from_hex(HEADER), REORDERED_MSGS) == false)
 -- fails signature validation due to messages being re-ordered from the order in which they were signed.
 
---
 print("Test case 4")
 -- Test vectors originated from
 -- draft-irtf-cfrg-bbs-signatures-latest Appendix C.2.5 (WRONG SENTENCES THOUGH)
@@ -425,8 +404,6 @@ local WRONG_HEADER = 'ffeeddccbbaa00998877665544332211'
 
 assert(bbs.verify(O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, O.from_hex(WRONG_HEADER), MULTI_MSG_ARRAY) == false)
 -- fails signature validation due to header value being modified from what was originally signed.
-
-
 
 print('----------------------')
 print("TEST: Valid multi message proof SHA 256")
@@ -443,7 +420,6 @@ assert(PROOF_GEN_MULTI_OUT == pg_multi_output)
 print("Test ProofVerify")
 
 assert( bbs.ProofVerify(O.from_hex(PUBLIC_KEY), pg_multi_output, O.from_hex(HEADER), PRESENTATION_HEADER, MULTI_MSG_ARRAY, DISCLOSED_INDEXES ) == true)
-
 
 print("Test case 2 : disclose some messages")
 --disclosed (messages in index 0, 2, 4 and 6, in that order)
