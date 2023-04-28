@@ -30,48 +30,50 @@ local B = BIG.new(O.from_hex('12e2908d11688030018b12e8753eee3b2016c1f0f24f4070a0
 local PRIME_R = BIG.new(O.from_hex('73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001'))
 
 --draft-irtf-cfrg-pairing-friendly-curves-11 Section 4.2.1
-local Identity_G1 = ECP.generator()
+local IDENTITY_G1 = ECP.generator()
 
 local K = nil -- see function K_INIT() below
 
-local CIPHERSUITE = nil
-
-local function cipher_sha256()
-    -- 48 == seed_len
-    return {
-        expand = expand_message_xmd,
-        CIPHERSUITE_ID = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_"),
-        generator_seed = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MESSAGE_GENERATOR_SEED"),
-        seed_dst = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_GENERATOR_SEED_"),
-        generator_dst = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_GENERATOR_DST_"),
-        hash_to_scalar_dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_H2S_'),
-        MAP_MSG_TO_SCALAR_AS_HASH_dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MAP_MSG_TO_SCALAR_AS_HASH_'),
-        expand_dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_DET_DST_'),
-        P1 = (O.from_hex('8533b3fbea84e8bd9ccee177e3c56fbe1d2e33b798e491228f6ed65bb4d1e0ada07bcc4489d8751f8ba7a1b69b6eecd7')):zcash_topoint(),
-        GENERATORS = {},
-        GENERATOR_N = 1,
-        GENERATOR_V = expand_message_xmd(O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MESSAGE_GENERATOR_SEED"),
-        O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_GENERATOR_SEED_"), 48)
-    }
-end
-
-local function cipher_shake256()
-    -- 48 == seed_len
-    return {
-        expand = expand_message_xof,
-        CIPHERSUITE_ID = O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_"),
-        generator_seed = O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MESSAGE_GENERATOR_SEED"),
-        seed_dst = O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_SIG_GENERATOR_SEED_"),
-        generator_dst = O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_SIG_GENERATOR_DST_"),
-        hash_to_scalar_dst = O.from_string('BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_H2S_'),
-        MAP_MSG_TO_SCALAR_AS_HASH_dst = O.from_string('BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MAP_MSG_TO_SCALAR_AS_HASH_'),
-        expand_dst = O.from_string('BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_SIG_DET_DST_'),
-        P1 = (O.from_hex('91b784eaac4b2b2c6f9bfb2c9eae97e817dd12bba49a0821d175a50f1632465b319ca9fb81dda3fb0434412185e2cca5')):zcash_topoint(),
-        GENERATORS = {},
-        GENERATOR_N = 1,
-        GENERATOR_V = expand_message_xof(O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MESSAGE_GENERATOR_SEED"),
-        O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_SIG_GENERATOR_SEED_"), 48)
-    }
+-- Take as input the hash as string and return a table with the corresponding parameters
+function bbs.ciphersuite(hash_name)
+    -- seed_len = 48
+    if hash_name:lower() == 'sha256' then
+        return {
+            expand = expand_message_xmd,
+            ciphersuite_ID = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_"),
+            generator_seed = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MESSAGE_GENERATOR_SEED"),
+            seed_dst = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_GENERATOR_SEED_"),
+            generator_dst = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_GENERATOR_DST_"),
+            hash_to_scalar_dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_H2S_'),
+            MAP_MSG_TO_SCALAR_AS_HASH_dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MAP_MSG_TO_SCALAR_AS_HASH_'),
+            expand_dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_DET_DST_'),
+            P1 = (O.from_hex('8533b3fbea84e8bd9ccee177e3c56fbe1d2e33b798e491228f6ed65bb4d1e0ada07bcc4489d8751f8ba7a1b69b6eecd7')):zcash_topoint(),
+            GENERATORS = {},
+            GENERATOR_N = 1,
+            GENERATOR_V = expand_message_xmd(O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MESSAGE_GENERATOR_SEED"),
+            O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_GENERATOR_SEED_"), 48)
+        }
+        
+    elseif hash_name:lower() == 'shake256' then
+        return {
+            expand = expand_message_xof,
+            ciphersuite_ID = O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_"),
+            generator_seed = O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MESSAGE_GENERATOR_SEED"),
+            seed_dst = O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_SIG_GENERATOR_SEED_"),
+            generator_dst = O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_SIG_GENERATOR_DST_"),
+            hash_to_scalar_dst = O.from_string('BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_H2S_'),
+            MAP_MSG_TO_SCALAR_AS_HASH_dst = O.from_string('BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MAP_MSG_TO_SCALAR_AS_HASH_'),
+            expand_dst = O.from_string('BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_SIG_DET_DST_'),
+            P1 = (O.from_hex('91b784eaac4b2b2c6f9bfb2c9eae97e817dd12bba49a0821d175a50f1632465b319ca9fb81dda3fb0434412185e2cca5')):zcash_topoint(),
+            GENERATORS = {},
+            GENERATOR_N = 1,
+            GENERATOR_V = expand_message_xof(O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MESSAGE_GENERATOR_SEED"),
+            O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_SIG_GENERATOR_SEED_"), 48)
+        }
+    else
+        error('Invalid hash: use sha256 or shake256', 2)
+    end
+    
 end
 
 -- draft-irtf-cfrg-hash-to-curve-16 Appendix E.2
@@ -144,22 +146,6 @@ local function K_INIT()
     }
 end
 
-function bbs.init(hash_name)
-    if hash_name:lower() == 'sha256' then
-        CIPHERSUITE = cipher_sha256()
-    elseif hash_name:lower() == 'shake256' then
-        CIPHERSUITE = cipher_shake256()
-    else
-        error('Invalid hash, use sha256 or shake256', 2)
-    end
-    -- CIPHERSUITE.GENERATORS = bbs.create_generators(5)
-end
-
-function bbs.destroy()
-    CIPHERSUITE = nil
-    K = nil
-end
-
 -- RFC8017 section 4
 -- converts a nonnegative integer to an octet string of a specified length.
 local function i2osp(x, x_len)
@@ -172,6 +158,7 @@ local function os2ip(oct)
     return BIG.new(oct)
 end
 
+--draft-irtf-cfrg-bbs-signatures Section 3.3.1
 function bbs.keygen(ikm, key_info)
     -- TODO: add warning on curve must be BLS12-381
     local INITSALT = O.from_string("BBS-SIG-KEYGEN-SALT-")
@@ -198,6 +185,7 @@ function bbs.keygen(ikm, key_info)
     return sk
 end
 
+--draft-irtf-cfrg-bbs-signatures Section 3.3.2
 function bbs.sk2pk(sk)
     return (ECP2.generator() * sk):zcash_export()
 end
@@ -255,11 +243,11 @@ end
 
 -- draft-irtf-cfrg-hash-to-curve-16 section 5.2
 -- It returns u a table of tables containing big integers representing elements of the field (SPECIFIC CASE m = 1, count = 2)
-function bbs.hash_to_field_m1_c2(msg, DST)
+function bbs.hash_to_field_m1_c2(ciphersuite, msg, dst)
     local p = ECP.prime()
     local L = 64
 
-    local uniform_bytes = CIPHERSUITE.expand(msg, DST, 2*L)
+    local uniform_bytes = ciphersuite.expand(msg, dst, 2*L)
     local u = {}
     u[1] = BIG.mod(uniform_bytes:sub(1,L), p)
     u[2] = BIG.mod(uniform_bytes:sub(L+1,2*L), p)
@@ -384,9 +372,9 @@ end
 
 -- draft-irtf-cfrg-hash-to-curve-16 Section 3
 -- It returns a point in the correct subgroup.
-function bbs.hash_to_curve(msg, DST)
+function bbs.hash_to_curve(ciphersuite, msg, dst)
     -- local u = bbs.hash_to_field_m1(msg, 2, DST)
-    local u = bbs.hash_to_field_m1_c2(msg, DST)
+    local u = bbs.hash_to_field_m1_c2(ciphersuite, msg, dst)
     local Q0 = bbs.map_to_curve(u[1]) --u[1][1])
     local Q1 = bbs.map_to_curve(u[2]) --u[2][1])
     return clear_cofactor(Q0 + Q1)
@@ -394,47 +382,48 @@ end
 
 --draft-irtf-cfrg-bbs-signatures Section 4.2
 --It returns an array of generators.
-function bbs.create_generators(count)
+function bbs.create_generators(ciphersuite, count)
 
-    if #CIPHERSUITE.GENERATORS < count then
+    if #ciphersuite.GENERATORS < count then
         -- local seed_len = 48 --ceil((ceil(log2(PRIME_R)) + k)/8)
-        local v = CIPHERSUITE.GENERATOR_V
-        local n = CIPHERSUITE.GENERATOR_N
+        local v = ciphersuite.GENERATOR_V
+        local n = ciphersuite.GENERATOR_N
 
-        local generators = {[Identity_G1] = true}
-        for _,val in pairs(CIPHERSUITE.GENERATORS) do
+        local generators = {[IDENTITY_G1] = true}
+        for _,val in pairs(ciphersuite.GENERATORS) do
             generators[val] = true
         end
 
-        for i = #CIPHERSUITE.GENERATORS + 1, count do
-            v = CIPHERSUITE.expand(v..i2osp(n,4), CIPHERSUITE.seed_dst, 48)
+        for i = #ciphersuite.GENERATORS + 1, count do
+            v = ciphersuite.expand(v..i2osp(n,4), ciphersuite.seed_dst, 48)
             n = n + 1
-            local candidate = bbs.hash_to_curve(v, CIPHERSUITE.generator_dst)
+            local candidate = bbs.hash_to_curve(ciphersuite, v, ciphersuite.generator_dst)
             if (generators[candidate]) then
                 i = i-1
             else
                 generators[candidate] = true
-                table.insert(CIPHERSUITE.GENERATORS, candidate)
+                table.insert(ciphersuite.GENERATORS, candidate)
             end
         end
 
-        CIPHERSUITE.GENERATOR_V = v
-        CIPHERSUITE.GENERATOR_N = n
-        return CIPHERSUITE.GENERATORS
+        ciphersuite.GENERATOR_V = v
+        ciphersuite.GENERATOR_N = n
+        return ciphersuite.GENERATORS
     else
-        return {table.unpack(CIPHERSUITE.GENERATORS, 1, count)}
+        return {table.unpack(ciphersuite.GENERATORS, 1, count)}
     end
 end
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 4.4
 -- It converts a message written in octects into a BIG modulo PRIME_R (order of subgroup)
-local function hash_to_scalar(msg_octects, dst)
+local function hash_to_scalar(ciphersuite, msg_octects, dst)
+
     local BIG_0 = BIG.new(0)
     -- draft-irtf-cfrg-bbs-signatures-latest Section 3.4.3
     local EXPAND_LEN = 48
 
     -- Default value of DST when not provided (see also Section 6.2.2)
-    dst = dst or CIPHERSUITE.hash_to_scalar_dst
+    dst = dst or ciphersuite.hash_to_scalar_dst
 
     local counter = 0
     local hashed_scalar = BIG_0
@@ -443,7 +432,7 @@ local function hash_to_scalar(msg_octects, dst)
             error("The counter of hash_to_scalar is larger than 255", 2)
         end
         local msg_prime = msg_octects .. i2osp(counter, 1)
-        local uniform_bytes = CIPHERSUITE.expand(msg_prime, dst, EXPAND_LEN)
+        local uniform_bytes = ciphersuite.expand(msg_prime, dst, EXPAND_LEN)
         hashed_scalar = BIG.mod(uniform_bytes, PRIME_R) -- = os2ip(uniform_bytes) % PRIME_R
         counter = counter + 1
     end
@@ -452,14 +441,15 @@ end
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 4.3.1
 -- It converts a message written in octects into a BIG modulo PRIME_R (order of subgroup)
-function bbs.MapMessageToScalarAsHash(msg, dst)
+function bbs.MapMessageToScalarAsHash(ciphersuite, msg, dst)
+
     -- Default value of DST when not provided (see also Section 6.2.2)
-    dst = dst or CIPHERSUITE.MAP_MSG_TO_SCALAR_AS_HASH_dst
+    dst = dst or ciphersuite.MAP_MSG_TO_SCALAR_AS_HASH_dst
     -- assert(#msg < 2^64))
     if (#dst > 255) then
         error("dst is too long in MapMessageToScalarAsHash", 2) 
     end
-    local msg_scalar = hash_to_scalar(msg, dst)
+    local msg_scalar = hash_to_scalar(ciphersuite, msg, dst)
     return msg_scalar
 end
 
@@ -490,7 +480,8 @@ end
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 4.5
 -- It calculates a domain value, distillating all essential contextual information for a signature.
-local function calculate_domain(PK_octet, Q1, Q2, H_points, header)
+local function calculate_domain(ciphersuite, pk_octet, Q1, Q2, H_points, header)
+
     header = header or O.empty()
 
     local len = #H_points
@@ -498,16 +489,17 @@ local function calculate_domain(PK_octet, Q1, Q2, H_points, header)
     -- assert(L < 2^64)
 
     local dom_array = {len, Q1, Q2, table.unpack(H_points)}
-    local dom_octs = serialization(dom_array) .. CIPHERSUITE.CIPHERSUITE_ID
-    local dom_input = PK_octet .. dom_octs .. i2osp(#header, 8) .. header
-    local domain = hash_to_scalar(dom_input)
+    local dom_octs = serialization(dom_array) .. ciphersuite.ciphersuite_ID
+    local dom_input = pk_octet .. dom_octs .. i2osp(#header, 8) .. header
+    local domain = hash_to_scalar(ciphersuite, dom_input)
 
     return domain
 end
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 3.4.1
--- It computes a deterministic signature from a secret key (SK) and optionally over a header and/or a vector of messages.
-function bbs.sign(SK, PK, header, messages_octets)
+-- It computes a deterministic signature from a secret key (sk) and optionally over a header and/or a vector of messages.
+function bbs.sign(ciphersuite, sk, pk, header, messages_octets)
+
     -- Default values for header and messages.
     header = header or O.empty()
     messages_octets = messages_octets or {}
@@ -515,39 +507,39 @@ function bbs.sign(SK, PK, header, messages_octets)
     -- Converting generic octet messages into scalars
     local messages = {}
     for k,v in pairs(messages_octets) do
-        messages[k] = bbs.MapMessageToScalarAsHash(v)
+        messages[k] = bbs.MapMessageToScalarAsHash(ciphersuite, v)
     end
 
     local LEN = #messages
-    local point_array = bbs.create_generators(LEN + 2)
+    local point_array = bbs.create_generators(ciphersuite, LEN + 2)
     local Q_1, Q_2 = table.unpack(point_array, 1, 2)
     local H_array = { table.unpack(point_array, 3, LEN + 2) }
 
-    local domain = calculate_domain(PK, Q_1, Q_2, H_array, header)
+    local domain = calculate_domain(ciphersuite, pk, Q_1, Q_2, H_array, header)
 
-    local serialise_array = {SK, domain, table.unpack(messages)}
+    local serialise_array = {sk, domain, table.unpack(messages)}
     local e_s_octs = serialization(serialise_array)
 
     local e_s_len = OCTET_SCALAR_LENGTH * 2
-    local e_s_expand = CIPHERSUITE.expand(e_s_octs, CIPHERSUITE.expand_dst, e_s_len)
+    local e_s_expand = ciphersuite.expand(e_s_octs, ciphersuite.expand_dst, e_s_len)
 
-    local e = hash_to_scalar(e_s_expand:sub(1, OCTET_SCALAR_LENGTH))
-    local s = hash_to_scalar(e_s_expand:sub(OCTET_SCALAR_LENGTH + 1, e_s_len))
+    local e = hash_to_scalar(ciphersuite, e_s_expand:sub(1, OCTET_SCALAR_LENGTH))
+    local s = hash_to_scalar(ciphersuite, e_s_expand:sub(OCTET_SCALAR_LENGTH + 1, e_s_len))
 
-    local BB = CIPHERSUITE.P1 + (Q_1 * s) + (Q_2 * domain)
+    local BB = ciphersuite.P1 + (Q_1 * s) + (Q_2 * domain)
     if (LEN > 0) then
         for i = 1,LEN do
             BB = BB + (H_array[i]* messages[i])
         end
     end
 
-    assert(BIG.mod(SK + e, PRIME_R) ~= BIG.new(0))
-    local AA = BB * BIG.moddiv(BIG.new(1), SK + e, PRIME_R)
+    assert(BIG.mod(sk + e, PRIME_R) ~= BIG.new(0))
+    local AA = BB * BIG.moddiv(BIG.new(1), sk + e, PRIME_R)
 
     return serialization({AA, e, s})
 end
 
--- 
+--draft-irtf-cfrg-bbs-signatures Section 4.7.3
 -- It is the opposite function of "serialize" with input "(POINT, SCALAR, SCALAR)"
 local function octets_to_signature(signature_octets)
     local expected_len = OCTET_SCALAR_LENGTH * 2 + OCTET_POINT_LENGTH
@@ -557,7 +549,7 @@ local function octets_to_signature(signature_octets)
 
     local A_octets = signature_octets:sub(1, OCTET_POINT_LENGTH)
     local AA = A_octets:zcash_topoint()
-    if (AA == Identity_G1) then 
+    if (AA == IDENTITY_G1) then 
         error("Point is identity", 2)
     end
 
@@ -579,8 +571,9 @@ local function octets_to_signature(signature_octets)
     return { AA, e, s}
 end
 
-function bbs.octets_to_pub_key(PK)
-    local W = PK:zcash_topoint()
+--draft-irtf-cfrg-bbs-signatures Section 4.7.6
+function bbs.octets_to_pub_key(pk)
+    local W = pk:zcash_topoint()
 
     -- ECP2.infinity == Identity_G2
     if (W == ECP2.infinity()) then
@@ -593,7 +586,9 @@ function bbs.octets_to_pub_key(PK)
     return W
 end
 
-function bbs.verify(PK, signature, header, messages_octets)
+--draft-irtf-cfrg-bbs-signatures Section 3.4.2
+function bbs.verify(ciphersuite, pk, signature, header, messages_octets)
+
     -- Default values
     header = header or O.empty()
     messages_octets = messages_octets or {}
@@ -601,22 +596,22 @@ function bbs.verify(PK, signature, header, messages_octets)
     -- Converting generic octet messages into scalars
     local messages = {}
     for k,v in pairs(messages_octets) do
-        messages[k] = bbs.MapMessageToScalarAsHash(v)
+        messages[k] = bbs.MapMessageToScalarAsHash(ciphersuite, v)
     end
 
     -- Deserialization
     local signature_result = octets_to_signature(signature)
     local AA, e, s = table.unpack(signature_result)
-    local W = bbs.octets_to_pub_key(PK)
+    local W = bbs.octets_to_pub_key(pk)
     local LEN = #messages
 
     -- Procedure
-    local point_array = bbs.create_generators(LEN + 2)
+    local point_array = bbs.create_generators(ciphersuite, LEN + 2)
     local Q_1, Q_2 = table.unpack(point_array, 1, 2)
     local H_points = { table.unpack(point_array, 3, LEN + 2) } 
-    local domain = calculate_domain(PK, Q_1, Q_2, H_points, header)
+    local domain = calculate_domain(ciphersuite, pk, Q_1, Q_2, H_points, header)
 
-    local BB = CIPHERSUITE.P1 + (Q_1 * s) + (Q_2 * domain)
+    local BB = ciphersuite.P1 + (Q_1 * s) + (Q_2 * domain)
     if (LEN > 0) then
         for i = 1,LEN do
             BB = BB + (H_points[i] * messages[i])
@@ -625,6 +620,7 @@ function bbs.verify(PK, signature, header, messages_octets)
 
     local LHS = ECP2.ate(W + (ECP2.generator() * e), AA)
     local RHS = ECP2.ate(ECP2.generator():negative(), BB)
+
     if (LHS:inv() == RHS) then
         return true
     else
@@ -662,7 +658,7 @@ end
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 4.6
 -- It returns a scalar using various points and array.
-local function calculate_challenge(Aprime, Abar, D, C1, C2, i_array, msg_array, domain, ph)
+local function calculate_challenge(ciphersuite, Aprime, Abar, D, C1, C2, i_array, msg_array, domain, ph)
     ph = ph or O.empty()
 
     local R_len = #i_array
@@ -688,13 +684,14 @@ local function calculate_challenge(Aprime, Abar, D, C1, C2, i_array, msg_array, 
 
     local c_octs = serialization(c_array)
     local c_input = c_octs .. i2osp(#ph, 8) .. ph 
-    local challenge = hash_to_scalar(c_input)
+    local challenge = hash_to_scalar(ciphersuite, c_input)
 
     return challenge
 end
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 3.4.3
-function bbs.ProofGen(PK, signature, header, ph, messages_octets, disclosed_indexes)
+function bbs.ProofGen(ciphersuite, pk, signature, header, ph, messages_octets, disclosed_indexes)
+
     -- disclosed_indexes is a STRICTLY INCREASING array of POSITIVE integers.
     header = header or O.empty()
     ph = ph or O.empty()
@@ -704,7 +701,7 @@ function bbs.ProofGen(PK, signature, header, ph, messages_octets, disclosed_inde
     -- Converting generic octet messages into scalars
     local messages = {}
     for k,v in pairs(messages_octets) do
-        messages[k] = bbs.MapMessageToScalarAsHash(v)
+        messages[k] = bbs.MapMessageToScalarAsHash(ciphersuite, v)
     end
 
     -- Deserialisation
@@ -731,7 +728,7 @@ function bbs.ProofGen(PK, signature, header, ph, messages_octets, disclosed_inde
     end
 
     local secret_len = msg_len - #disclosed_indexes
-    local points_array = bbs.create_generators(msg_len + 2)
+    local points_array = bbs.create_generators(ciphersuite, msg_len + 2)
     local Q_1, Q_2 = table.unpack(points_array,1,2)
     local all_H_points = {table.unpack(points_array, 3, msg_len+2)}
     local secret_H_points = {}
@@ -743,13 +740,13 @@ function bbs.ProofGen(PK, signature, header, ph, messages_octets, disclosed_inde
         end
     end
 
-    local domain = calculate_domain(PK, Q_1, Q_2, all_H_points, header)
+    local domain = calculate_domain(ciphersuite, pk, Q_1, Q_2, all_H_points, header)
 
     local random_scalars = bbs.calculate_random_scalars(6 + secret_len)
     local r1, r2, et, r2t, r3t, st = table.unpack(random_scalars,1,6)
     local mjt = {table.unpack(random_scalars, 7, 6 + secret_len)}
 
-    local BB = CIPHERSUITE.P1 + (Q_1 * s) + (Q_2 * domain)
+    local BB = ciphersuite.P1 + (Q_1 * s) + (Q_2 * domain)
     for i = 1, msg_len do
         BB = BB + (all_H_points[i] * messages[i])
     end
@@ -766,7 +763,7 @@ function bbs.ProofGen(PK, signature, header, ph, messages_octets, disclosed_inde
         C2 = C2 + (secret_H_points[i] * mjt[i])
     end
     
-    local c = calculate_challenge(Aprime, Abar, D, C1, C2, disclosed_indexes, disclosed_messages, domain, ph)
+    local c = calculate_challenge(ciphersuite ,Aprime, Abar, D, C1, C2, disclosed_indexes, disclosed_messages, domain, ph)
     
     local ehat = BIG.mod(BIG.modmul(c, e, PRIME_R) + et, PRIME_R)
     local r2hat = BIG.mod( BIG.modmul(c, r2, PRIME_R) + r2t, PRIME_R)
@@ -777,6 +774,7 @@ function bbs.ProofGen(PK, signature, header, ph, messages_octets, disclosed_inde
     for j = 1, secret_len do
         proof[j+8] = BIG.mod( BIG.modmul(c, secret_messages[j], PRIME_R) + mjt[j], PRIME_R)
     end
+
     return serialization(proof)
 
 end
@@ -792,7 +790,7 @@ local function octets_to_proof(proof_octets)
     for i = 1, 3 do
         local end_index = index + OCTET_POINT_LENGTH - 1
         return_array[i] = (proof_octets:sub(index, end_index)):zcash_topoint()
-        if return_array[i] == Identity_G1 then
+        if return_array[i] == IDENTITY_G1 then
             error("Invalid point", 2)
         end
         index = index + OCTET_POINT_LENGTH
@@ -824,7 +822,8 @@ local function octets_to_proof(proof_octets)
 end
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 3.4.4
-function bbs.ProofVerify(PK, proof, header, ph, disclosed_messages_octets, disclosed_indexes)
+function bbs.ProofVerify(ciphersuite, pk, proof, header, ph, disclosed_messages_octets, disclosed_indexes)
+    
     header = header or O.empty()
     ph = ph or O.empty()
     disclosed_messages_octets = disclosed_messages_octets or {}
@@ -833,13 +832,13 @@ function bbs.ProofVerify(PK, proof, header, ph, disclosed_messages_octets, discl
     -- Converting generic octet messages into scalars
     local disclosed_messages = {}
     for k,v in pairs(disclosed_messages_octets) do
-        disclosed_messages[k] = bbs.MapMessageToScalarAsHash(v)
+        disclosed_messages[k] = bbs.MapMessageToScalarAsHash(ciphersuite, v)
     end
 
     --Deserialization
     local proof_result = octets_to_proof(proof)
     local Aprime, Abar, D, c, ehat, r2hat, r3hat, shat, commitments = table.unpack(proof_result)
-    local W = bbs.octets_to_pub_key(PK)
+    local W = bbs.octets_to_pub_key(pk)
     local len_U = #commitments
     local len_R = #disclosed_indexes
     local len_L = len_R + len_U
@@ -856,7 +855,7 @@ function bbs.ProofVerify(PK, proof, header, ph, disclosed_messages_octets, discl
     end
     --end Preconditions
 
-    local create_out = bbs.create_generators(len_L +2)
+    local create_out = bbs.create_generators(ciphersuite, len_L +2)
     local Q_1, Q_2 = table.unpack(create_out, 1, 2)
     local MsgGenerators = {table.unpack(create_out, 3, len_L+2)}
 
@@ -872,10 +871,10 @@ function bbs.ProofVerify(PK, proof, header, ph, disclosed_messages_octets, discl
         end
     end
 
-    local domain = calculate_domain(PK, Q_1, Q_2, MsgGenerators, header)
+    local domain = calculate_domain(ciphersuite, pk, Q_1, Q_2, MsgGenerators, header)
 
     local C1 = (Abar - D)*c + Aprime*ehat + Q_1*r2hat
-    local T = CIPHERSUITE.P1 + Q_2*domain
+    local T = ciphersuite.P1 + Q_2*domain
     for i = 1, len_R do
         T = T + disclosed_H[i]*disclosed_messages[i]
     end
@@ -885,11 +884,11 @@ function bbs.ProofVerify(PK, proof, header, ph, disclosed_messages_octets, discl
         C2 = C2 + secret_H[i]*commitments[i]
     end
 
-    local cv = calculate_challenge(Aprime, Abar, D, C1, C2, disclosed_indexes, disclosed_messages, domain, ph)
+    local cv = calculate_challenge(ciphersuite ,Aprime, Abar, D, C1, C2, disclosed_indexes, disclosed_messages, domain, ph)
     if c ~= cv then
         return false
     end
-    if Aprime == Identity_G1 then
+    if Aprime == IDENTITY_G1 then
         return false
     end
 
