@@ -160,6 +160,7 @@ end
 
 --draft-irtf-cfrg-bbs-signatures Section 3.3.1
 function bbs.keygen(ikm, key_info)
+    ikm = ikm or O.random(32) -- O.random is a secure RNG.
     -- TODO: add warning on curve must be BLS12-381
     local INITSALT = O.from_string("BBS-SIG-KEYGEN-SALT-")
 
@@ -498,7 +499,7 @@ end
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 3.4.1
 -- It computes a deterministic signature from a secret key (sk) and optionally over a header and/or a vector of messages.
-function bbs.sign(ciphersuite, sk, pk, header, messages_octets)
+function bbs.sign(ciphersuite, sk, pk, messages_octets, header)
 
     -- Default values for header and messages.
     header = header or O.empty()

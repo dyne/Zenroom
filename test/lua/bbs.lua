@@ -339,7 +339,7 @@ local VALID_SIGNATURE = "8fb17415378ec4462bc167be75583989e0528913da142239848ae88
 -- FROM trinsic-id / bbs BRANCH update result.
 -- 0x8fb17415378ec4462bc167be75583989e0528913da142239848ae88309805bfb3656bcff322e5d8fd1a7e40a660a62266099f27fa81ff5010443f36285f6f0758e4d701c444b20447cded906a3f2001714087f165f760369b901ccbe5173438b32ad195b005e2747492cf002cf51e498
 
-local output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(HEADER), SINGLE_MSG_ARRAY)
+local output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), SINGLE_MSG_ARRAY, O.from_hex(HEADER))
 assert(output_signature == O.from_hex(VALID_SIGNATURE))
 assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), SINGLE_MSG_ARRAY) == true)
 
@@ -401,7 +401,7 @@ end
 
 local VALID_MULTI_SIGNATURE = O.from_hex("b058678021dba2313c65fadc469eb4f030264719e40fb93bbf68bdf79079317a0a36193288b7dcb983fae0bc3e4c077f145f99a66794c5d0510cb0e12c0441830817822ad4ba74068eb7f34eb11ce3ee606d86160fecd844dda9d04bed759a676b0c8868d3f97fbe2e8b574169bd73a3")
 
-local output_multi_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(HEADER), MULTI_MSG_ARRAY)
+local output_multi_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), MULTI_MSG_ARRAY, O.from_hex(HEADER))
 assert( output_multi_signature == VALID_MULTI_SIGNATURE)
 assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_multi_signature, O.from_hex(HEADER), MULTI_MSG_ARRAY) == true)
 
@@ -592,7 +592,7 @@ local Shake_HEADER = "11223344556677889900aabbccddeeff"
 local SSINGLE_MSG_ARRAY = { O.from_hex("9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02") }
 local S_VALID_SIGNATURE = "a7386ffaa4e70a9a44483adccc202a658e1c1f02190fb95bfd0f826a0188d73ab910c556fb3c1d9e212dea3c5e9989271a5e578c4625d290a0e7f2355eabe7584af5eb822c72319e588b2c20cd1e8256698d6108f599c2e48cf1be8e4ebfaf7ae397a5733a498d3d466b843c027311bb"
 
-local output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(Shake_HEADER), SSINGLE_MSG_ARRAY)
+output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), SSINGLE_MSG_ARRAY, O.from_hex(Shake_HEADER))
 assert(output_signature == O.from_hex(S_VALID_SIGNATURE))
 assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(Shake_HEADER), SSINGLE_MSG_ARRAY) == true)
 
@@ -640,7 +640,7 @@ print("TEST: multi message signature SHAKE 256")
 print("Test case 1")
 
 local S_VALID_MULTI_SIGNATURE = O.from_hex("ae0587beb6b307f847eaf654f74177de4689b46c6d2b3eca6a6a80c798db78b0ccc251966debb500ec7fee8ca382bcc925860a0030570b2b56eb39868215b3b1ca1ab1ad9cdd5baccc8825f8133f12a4288c875e7f1aedc5861d7f3e45542e456425c632c9a82f4cc0b237e3b603b1b6")
-output_multi_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), O.from_hex(Shake_HEADER), MULTI_MSG_ARRAY)
+output_multi_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), MULTI_MSG_ARRAY, O.from_hex(Shake_HEADER))
 assert( output_multi_signature == S_VALID_MULTI_SIGNATURE)
 assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_multi_signature, O.from_hex(Shake_HEADER), MULTI_MSG_ARRAY) == true)
 
