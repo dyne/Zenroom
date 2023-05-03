@@ -27,7 +27,8 @@ local A = BIG.new(O.from_hex('144698a3b8e9433d693a02c96d4982b0ea985383ee66a8d8e8
 local B = BIG.new(O.from_hex('12e2908d11688030018b12e8753eee3b2016c1f0f24f4070a0b9c14fcef35ef55a23215a316ceaa5d1cc48e98e172be0'))
 
 --see draft-irtf-cfrg-bbs-signatures-latest Appendix A.1
-local PRIME_R = BIG.new(O.from_hex('73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001'))
+local PRIME_R = ECP.order()
+--local PRIME_R = BIG.new(O.from_hex('73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001'))
 
 --draft-irtf-cfrg-pairing-friendly-curves-11 Section 4.2.1
 local IDENTITY_G1 = ECP.generator()
@@ -45,7 +46,7 @@ function bbs.ciphersuite(hash_name)
             seed_dst = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_GENERATOR_SEED_"),
             generator_dst = O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_GENERATOR_DST_"),
             hash_to_scalar_dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_H2S_'),
-            MAP_MSG_TO_SCALAR_AS_HASH_dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MAP_MSG_TO_SCALAR_AS_HASH_'),
+            map_msg_to_scalar_as_hash_dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MAP_MSG_TO_SCALAR_AS_HASH_'),
             expand_dst = O.from_string('BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_DET_DST_'),
             P1 = (O.from_hex('8533b3fbea84e8bd9ccee177e3c56fbe1d2e33b798e491228f6ed65bb4d1e0ada07bcc4489d8751f8ba7a1b69b6eecd7')):zcash_topoint(),
             GENERATORS = {},
@@ -62,7 +63,7 @@ function bbs.ciphersuite(hash_name)
             seed_dst = O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_SIG_GENERATOR_SEED_"),
             generator_dst = O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_SIG_GENERATOR_DST_"),
             hash_to_scalar_dst = O.from_string('BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_H2S_'),
-            MAP_MSG_TO_SCALAR_AS_HASH_dst = O.from_string('BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MAP_MSG_TO_SCALAR_AS_HASH_'),
+            map_msg_to_scalar_as_hash_dst = O.from_string('BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MAP_MSG_TO_SCALAR_AS_HASH_'),
             expand_dst = O.from_string('BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_SIG_DET_DST_'),
             P1 = (O.from_hex('91b784eaac4b2b2c6f9bfb2c9eae97e817dd12bba49a0821d175a50f1632465b319ca9fb81dda3fb0434412185e2cca5')):zcash_topoint(),
             GENERATORS = {},
@@ -445,7 +446,7 @@ end
 function bbs.MapMessageToScalarAsHash(ciphersuite, msg, dst)
 
     -- Default value of DST when not provided (see also Section 6.2.2)
-    dst = dst or ciphersuite.MAP_MSG_TO_SCALAR_AS_HASH_dst
+    dst = dst or ciphersuite.map_msg_to_scalar_as_hash_dst
     -- assert(#msg < 2^64))
     if (#dst > 255) then
         error("dst is too long in MapMessageToScalarAsHash", 2) 
@@ -588,7 +589,7 @@ function bbs.octets_to_pub_key(pk)
 end
 
 --draft-irtf-cfrg-bbs-signatures Section 3.4.2
-function bbs.verify(ciphersuite, pk, signature, header, messages_octets)
+function bbs.verify(ciphersuite, pk, signature, messages_octets, header)
 
     -- Default values
     header = header or O.empty()

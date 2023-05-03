@@ -341,14 +341,14 @@ local VALID_SIGNATURE = "8fb17415378ec4462bc167be75583989e0528913da142239848ae88
 
 local output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), SINGLE_MSG_ARRAY, O.from_hex(HEADER))
 assert(output_signature == O.from_hex(VALID_SIGNATURE))
-assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(HEADER), SINGLE_MSG_ARRAY) == true)
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, SINGLE_MSG_ARRAY, O.from_hex(HEADER)) == true)
 
 print("Test case 2")
 -- Test vectors originated from
 -- draft-irtf-cfrg-bbs-signatures-latest Appendix C.2.1
 local MODIFIED_MSG_ARR = { O.from_hex("c344136d9ab02da4dd5908bbba913ae6f58c2cc844b802a6f811f5fb075f9b80") }
 
-assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE), O.from_hex(HEADER), MODIFIED_MSG_ARR) == false)
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE), MODIFIED_MSG_ARR, O.from_hex(HEADER)) == false)
 -- RETURNS AN ERROR: fail signature validation due to the message value being different from what was signed.
 
 print("Test case 3")
@@ -359,7 +359,7 @@ local TWO_MESSAGES = {
     O.from_hex('87a8bd656d49ee07b8110e1d8fd4f1dcef6fb9bc368c492d9bc8c4f98a739ac6')
 }
 
-assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE), O.from_hex(HEADER), TWO_MESSAGES) == false)
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE),  TWO_MESSAGES, O.from_hex(HEADER)) == false)
 -- fails signature validation due to an additional message being supplied that was not signed
 
 print('----------------------')
@@ -403,12 +403,12 @@ local VALID_MULTI_SIGNATURE = O.from_hex("b058678021dba2313c65fadc469eb4f0302647
 
 local output_multi_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), MULTI_MSG_ARRAY, O.from_hex(HEADER))
 assert( output_multi_signature == VALID_MULTI_SIGNATURE)
-assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_multi_signature, O.from_hex(HEADER), MULTI_MSG_ARRAY) == true)
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_multi_signature, MULTI_MSG_ARRAY, O.from_hex(HEADER)) == true)
 
 print("Test case 2")
 -- Test vectors originated from
 -- draft-irtf-cfrg-bbs-signatures-latest Appendix C.2.3
-assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, O.from_hex(HEADER), TWO_MESSAGES) == false)
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, TWO_MESSAGES, O.from_hex(HEADER)) == false)
 -- fail signature validation due to missing messages that were originally present during the signing.
 
 print("Test case 3")
@@ -427,13 +427,13 @@ local REORDERED_MSGS = {
     O.from_hex('9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02')
 }
 
-assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, O.from_hex(HEADER), REORDERED_MSGS) == false)
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, REORDERED_MSGS, O.from_hex(HEADER)) == false)
 -- fails signature validation due to messages being re-ordered from the order in which they were signed.
 
 print("Test case 4")
 -- Test vectors originated from
 -- draft-irtf-cfrg-bbs-signatures-latest Appendix C.2.5 (WRONG SENTENCES THOUGH)
-assert(bbs.verify(ciphersuite, bbs.sk2pk(bbs.keygen(O.from_hex('0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b'))), VALID_MULTI_SIGNATURE, O.from_hex(HEADER), MULTI_MSG_ARRAY) == false)
+assert(bbs.verify(ciphersuite, bbs.sk2pk(bbs.keygen(O.from_hex('0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b'))), VALID_MULTI_SIGNATURE, MULTI_MSG_ARRAY, O.from_hex(HEADER)) == false)
 -- fails signature validation due to public key used to verify is incorrect.
 
 print("Test case 5")
@@ -441,7 +441,7 @@ print("Test case 5")
 -- draft-irtf-cfrg-bbs-signatures-latest Appendix C.2.6
 local WRONG_HEADER = 'ffeeddccbbaa00998877665544332211'
 
-assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, O.from_hex(WRONG_HEADER), MULTI_MSG_ARRAY) == false)
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, MULTI_MSG_ARRAY, O.from_hex(WRONG_HEADER)) == false)
 -- fails signature validation due to header value being modified from what was originally signed.
 
 print('----------------------')
@@ -594,7 +594,7 @@ local S_VALID_SIGNATURE = "a7386ffaa4e70a9a44483adccc202a658e1c1f02190fb95bfd0f8
 
 output_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), SSINGLE_MSG_ARRAY, O.from_hex(Shake_HEADER))
 assert(output_signature == O.from_hex(S_VALID_SIGNATURE))
-assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, O.from_hex(Shake_HEADER), SSINGLE_MSG_ARRAY) == true)
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_signature, SSINGLE_MSG_ARRAY, O.from_hex(Shake_HEADER)) == true)
 
 print("Test case 2")
 -- Appendix C.1.1
@@ -602,7 +602,7 @@ local shake_modified_msg = {
     O.from_hex("c344136d9ab02da4dd5908bbba913ae6f58c2cc844b802a6f811f5fb075f9b80")
 }
 local shake_modified_msg_signature = O.from_hex("a7386ffaa4e70a9a44483adccc202a658e1c1f02190fb95bfd0f826a0188d73ab910c556fb3c1d9e212dea3c5e9989271a5e578c4625d290a0e7f2355eabe7584af5eb822c72319e588b2c20cd1e8256698d6108f599c2e48cf1be8e4ebfaf7ae397a5733a498d3d466b843c027311bb")
-assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), shake_modified_msg_signature, O.from_hex(Shake_HEADER), shake_modified_msg) == false)
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), shake_modified_msg_signature, shake_modified_msg, O.from_hex(Shake_HEADER)) == false)
 -- fails signature validation due to wrong message used.
 
 print("Test case 3")
@@ -612,7 +612,7 @@ local shake_extra_msg = {
     O.from_hex("9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02"),
     O.from_hex("87a8bd656d49ee07b8110e1d8fd4f1dcef6fb9bc368c492d9bc8c4f98a739ac6")
 }
-assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), shake_modified_msg_signature, O.from_hex(Shake_HEADER), shake_extra_msg) == false)
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), shake_modified_msg_signature, shake_extra_msg, O.from_hex(Shake_HEADER)) == false)
 -- fails signature validation due to an extra unsigned message.
 
 print('----------------------')
@@ -642,23 +642,23 @@ print("Test case 1")
 local S_VALID_MULTI_SIGNATURE = O.from_hex("ae0587beb6b307f847eaf654f74177de4689b46c6d2b3eca6a6a80c798db78b0ccc251966debb500ec7fee8ca382bcc925860a0030570b2b56eb39868215b3b1ca1ab1ad9cdd5baccc8825f8133f12a4288c875e7f1aedc5861d7f3e45542e456425c632c9a82f4cc0b237e3b603b1b6")
 output_multi_signature = bbs.sign(ciphersuite, BIG.new(O.from_hex(SECRET_KEY)), O.from_hex(PUBLIC_KEY), MULTI_MSG_ARRAY, O.from_hex(Shake_HEADER))
 assert( output_multi_signature == S_VALID_MULTI_SIGNATURE)
-assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_multi_signature, O.from_hex(Shake_HEADER), MULTI_MSG_ARRAY) == true)
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), output_multi_signature, MULTI_MSG_ARRAY, O.from_hex(Shake_HEADER)) == true)
 
 print("Test case 2")
 -- Appendix C.1.2
-assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), S_VALID_MULTI_SIGNATURE, O.from_hex(Shake_HEADER), shake_extra_msg) == false)
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), S_VALID_MULTI_SIGNATURE, shake_extra_msg, O.from_hex(Shake_HEADER)) == false)
 -- fails signature validation due to missing messages in msg_array.
 
 print("Test case 3")
 -- Appendix C.1.4
-assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), S_VALID_MULTI_SIGNATURE, O.from_hex(Shake_HEADER), REORDERED_MSGS) == false)
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), S_VALID_MULTI_SIGNATURE, REORDERED_MSGS, O.from_hex(Shake_HEADER)) == false)
 -- fails signature validation due to wrong order in message array.
 
 print("Test case 4")
-assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), S_VALID_MULTI_SIGNATURE, O.from_hex(WRONG_HEADER), MULTI_MSG_ARRAY) == false)
+assert(bbs.verify(ciphersuite, O.from_hex(PUBLIC_KEY), S_VALID_MULTI_SIGNATURE, MULTI_MSG_ARRAY, O.from_hex(WRONG_HEADER)) == false)
 -- fails signature validation due to header used to verify is incorrect.
 print("Test case 5")
-assert(bbs.verify(ciphersuite, bbs.sk2pk(bbs.keygen(O.from_hex('0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b'))), S_VALID_MULTI_SIGNATURE, O.from_hex(Shake_HEADER), MULTI_MSG_ARRAY) == false)
+assert(bbs.verify(ciphersuite, bbs.sk2pk(bbs.keygen(O.from_hex('0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b'))), S_VALID_MULTI_SIGNATURE, MULTI_MSG_ARRAY, O.from_hex(Shake_HEADER)) == false)
 -- fails signature validation due to public key used to verify is incorrect.
 
 print('----------------------')
