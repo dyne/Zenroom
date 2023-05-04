@@ -101,27 +101,27 @@ end)
      and application specific information. If not supplied, it defaultsto an empty string.
 --]]
 When("create the bbs signature of '' using ''", function(doc, h)
-            local sk = havekey'bbs'
-            local obj = have(doc)
-            assert(type(h) == 'string')
-            local ciphersuite = BBS.ciphersuite(h)
-            if (type(obj) ~= 'table') then
-                obj = {obj}
-            end
-            local pk = ACK.bbs_public_key or BBS.sk2pk(sk)
-            
-            empty'bbs signature'
-            ACK.bbs_signature = BBS.sign(ciphersuite, sk, pk, obj)
-            new_codec('bbs signature', { zentype = 'element'})
+    local sk = havekey'bbs'
+    local obj = have(doc)
+    local hash = O.to_string(mayhave(h)) or h
+    local ciphersuite = BBS.ciphersuite(hash)
+    if (type(obj) ~= 'table') then
+        obj = {obj}
+    end
+    local pk = ACK.bbs_public_key or BBS.sk2pk(sk)
+    
+    empty'bbs signature'
+    ACK.bbs_signature = BBS.sign(ciphersuite, sk, pk, obj)
+    new_codec('bbs signature', { zentype = 'element'})
     
 end)
 
 
 IfWhen("verify the '' has a bbs signature in '' by '' using ''", function (doc, sig, by, h)
     local pk = load_pubkey_compat(by, 'bbs')
-    local hash = mayhave(h) or h
+    local hash = O.to_string(mayhave(h)) or h
     local obj = have(doc)
-    local ciphersuite = BBS.ciphersuite(O.to_string(hash))
+    local ciphersuite = BBS.ciphersuite(hash)
     if (type(obj) ~= 'table') then
         obj = {obj}
     end
