@@ -262,8 +262,7 @@ print("TEST: Mocked/Seeded random scalars")
 local function seeded_random_scalars_xmd(count)
     local EXPAND_LEN = 48
     local SEED = O.from_hex("332e313431353932363533353839373933323338343632363433333833323739")
-    local r = BIG.new(O.from_hex('73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001'))
-
+    local r = ECP.order()
     local out_len = EXPAND_LEN * count
     assert(out_len <= 65535)
     local v = expand_message_xmd(SEED, O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MOCK_RANDOM_SCALARS_DST_"), out_len)
@@ -281,8 +280,7 @@ end
 local function seeded_random_scalars_xof(count)
     local EXPAND_LEN = 48
     local SEED = O.from_hex("332e313431353932363533353839373933323338343632363433333833323739")
-    local r = BIG.new(O.from_hex('73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001'))
-
+    local r = ECP.order()
     local out_len = EXPAND_LEN * count
     assert(out_len <= 65535)
     local v = expand_message_xof(SEED, O.from_string("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_MOCK_RANDOM_SCALARS_DST_"), out_len)
@@ -483,7 +481,10 @@ print("Test Case 1")
 local pfg1 = bbs.ProofGen(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE), O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1})
 local pfg2 = bbs.ProofGen(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE), O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1})
 assert(pfg1 ~= pfg2)
-
+print("ProofVerify 1")
+assert(bbs.ProofVerify(ciphersuite, O.from_hex(PUBLIC_KEY), pfg1, O.from_hex(HEADER), PRESENTATION_HEADER,SINGLE_MSG_ARRAY,{1}) == true)
+print("ProofVerify 2")
+assert(bbs.ProofVerify(ciphersuite, O.from_hex(PUBLIC_KEY), pfg2, O.from_hex(HEADER), PRESENTATION_HEADER,SINGLE_MSG_ARRAY,{1}) == true)
 
 print('----------------- TEST SHAKE256 ------------------')
 
@@ -692,6 +693,12 @@ print("TEST: ProofGen is random")
 bbs.calculate_random_scalars = old_random
 
 print("Test Case 1")
-local spfg1 = bbs.ProofGen(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE), O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1})
-local spfg2 = bbs.ProofGen(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE), O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1})
+local spfg1 = bbs.ProofGen(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(S_VALID_SIGNATURE), O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1})
+local spfg2 = bbs.ProofGen(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(S_VALID_SIGNATURE), O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1})
 assert(spfg1 ~= spfg2)
+print("Proof Verify 1")
+assert(bbs.ProofVerify(ciphersuite, O.from_hex(PUBLIC_KEY), spfg1, O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1}) == true)
+print("Proof Verify 2")
+assert(bbs.ProofVerify(ciphersuite, O.from_hex(PUBLIC_KEY), spfg2, O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1}) == true)
+
+

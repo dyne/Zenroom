@@ -22,9 +22,6 @@ local bbs = {}
 
 local OCTET_SCALAR_LENGTH = 32 -- ceil(log2(PRIME_R)/8)
 local OCTET_POINT_LENGTH = 48 --ceil(log2(p)/8)
--- Coefficient A',B' for the isogenous curve.
-local A = BIG.new(O.from_hex('144698a3b8e9433d693a02c96d4982b0ea985383ee66a8d8e8981aefd881ac98936f8da0e0f97f5cf428082d584c1d'))
-local B = BIG.new(O.from_hex('12e2908d11688030018b12e8753eee3b2016c1f0f24f4070a0b9c14fcef35ef55a23215a316ceaa5d1cc48e98e172be0'))
 
 --see draft-irtf-cfrg-bbs-signatures-latest Appendix A.1
 local PRIME_R = ECP.order()
@@ -297,6 +294,9 @@ end
 local function map_to_curve_simple_swu(u)
     local p = ECP.prime()
     local Z = BIG.new(11)
+    -- Coefficient A',B' for the isogenous curve.
+    local A = BIG.new(O.from_hex('144698a3b8e9433d693a02c96d4982b0ea985383ee66a8d8e8981aefd881ac98936f8da0e0f97f5cf428082d584c1d'))
+    local B = BIG.new(O.from_hex('12e2908d11688030018b12e8753eee3b2016c1f0f24f4070a0b9c14fcef35ef55a23215a316ceaa5d1cc48e98e172be0'))
 
     -- u is of type BIG.
     local tv1 = u:modsqr(p)
@@ -645,7 +645,7 @@ function bbs.calculate_random_scalars(count)
     local scalar = nil
     --[[ This does not seem uniformly random:
     for i = 1, count do
-        scalar_array[i] = BIG.mod(O.random(48)), PRIME_R)
+        scalar_array[i] = BIG.mod(O.random(48), PRIME_R)
     end
     --]]
     -- We leave it like this because it should yield a more uniform distribution.
@@ -895,8 +895,8 @@ function bbs.ProofVerify(ciphersuite, pk, proof, header, ph, disclosed_messages_
     end
 
     local LHS = ECP2.ate(W, Aprime)
-    local RHS = ECP2.ate(ECP2.generator():negative(), Abar)
-    if (LHS:inv() ~= RHS) then
+    local RHS = ECP2.ate(ECP2.generator(), Abar)
+    if (LHS ~= RHS) then
         return false
     end
 
