@@ -23,8 +23,7 @@
 local BBS = require'crypto_bbs'
 
 local function bbs_public_key_f(obj)
-    local res = ZEN.get(obj, '.')
-    local point = res:zcash_topoint()
+    local point = obj:zcash_topoint()
     ZEN.assert(
        point ~=  ECP2.infinity(),
        'bbs public key is not valid'
@@ -33,17 +32,18 @@ local function bbs_public_key_f(obj)
        point*ECP.order() ==  ECP2.infinity(),
        'bbs public key is not valid'
     )
-    return res
+    return obj
 end
 
 
 ZEN.add_schema(
    {
-      bbs_public_key = bbs_public_key_f,
+      bbs_public_key = function(obj)
+        return ZEN.get(obj, '.', bbs_public_key_f)
+      end,
       bbs_signature = O.from_base64
    }
 )
-
 
 --[[
     KeyGen takes as input an octet string (of length at least 32 bytes) IKM. 
@@ -55,6 +55,7 @@ ZEN.add_schema(
     This parameter MAY be used to derive multiple independent keys from the same IKM. 
     By default, key_info is the empty string.
 --]]
+
 -- generate the private key
 When('create the bbs key',function()
 	initkeyring'bbs'
@@ -98,7 +99,7 @@ When("create the bbs public key with secret key ''",function(sec)
 end)
 
 --[[ The function BBS.sign may take as input also a string octet HEADER containing context 
-     and application specific information. If not supplied, it defaultsto an empty string.
+     and application specific information. If not supplied, it defaults to an empty string.
 --]]
 When("create the bbs signature of '' using ''", function(doc, h)
     local sk = havekey'bbs'
@@ -140,80 +141,15 @@ end)
     TODO: is it ok to generate it randomly?
 --]]
 
-local function import_bbs_messages_f(obj)
-    -- local msg_table = ZEN.get(obj, '.')
-    local msg_table = obj
-    if type(msg_table) ~= 'table' then
-        error('Import of disclosed msg is not a table', 2)
-    end
-    local msg_return = {}
-    for k,v in pairs(msg_table) do
-        msg_return[k] = O.from_string(v)
-    end
-    return msg_return
-end
-
-local function export_bbs_messages_f(obj)
-    local ret_arr = {}
-    for k,v in pairs(obj) do
-        ret_arr[k] = O.to_string(v)
-    end
-    return ret_arr
-end
-
---[[
-local function import_bbs_disclosed_indexes_f(obj)
-    -- local ind_table = ZEN.get(obj, '.')
-    local ind_table = obj
-    if type(ind_table) ~= 'table' then
-        error('Import of disclosed ind is not a table', 2)
-    end
-    local ind_return = {}
-    for k,v in pairs(ind_table) do
-        ind_return[k] = BIG.new(v):octet() --O.from_number(v)
-    end
-
-    return ind_return
-end
-
-local function export_bbs_disclosed_indexes_f(obj)
-    local arr = {}
-    for k,v in pairs(obj) do
-        arr[k] = BIG.from_decimal(v:octet():string()):integer()
-    end
-    return arr
-end
---]]
-
 ZEN.add_schema(
     {
-        bbs_messages = { import = import_bbs_messages_f,
-        export = export_bbs_messages_f},
-        bbs_disclosed_messages = { import = import_bbs_messages_f,
-        export = export_bbs_messages_f},
-        --bbs_disclosed_indexes = { import = import_bbs_disclosed_indexes_f,
-        --export = export_bbs_disclosed_indexes_f},
-        bbs_issuer_public_key = O.from_base64,
-        bbs_proof = O.from_base64,
+        bbs_proof = function(obj)
+            return ZEN.get(obj, '.')
+        end,
         bbs_credential = O.from_base64,
         bbs_presentation_header = O.from_base64
     }
 )
-
---[[
-When("create the bbs disclosed indexes with ''", function(obj)
-    local arr = have(obj)
-    assert(type(arr) == 'table')
-    empty 'bbs disclosed indexes'
-    local dis_indx = {}
-    for k,v in pairs(arr) do
-        dis_indx[k] = BIG.from_decimal(v:octet():string()):integer()
-    end
-    ACK.bbs_disclosed_indexes = dis_indx
-    new_codec('bbs disclosed indexes', { zentype = 'array', encoding = 'integer'})
-
-end)
---]]
 
 When("create the bbs disclosed messages", function()
     local dis_ind = have'bbs disclosed indexes'
@@ -222,10 +158,10 @@ When("create the bbs disclosed messages", function()
     empty'bbs disclosed messages'
     local dis_msgs = {}
     for k,v in pairs(dis_ind) do
-        dis_msgs[k] = all_msgs[BIG.from_decimal(v:octet():string()):integer()] --all_msgs[BIG.new(v):integer()]
+        dis_msgs[k] = all_msgs[tonumber(v)]
     end
     ACK.bbs_disclosed_messages = dis_msgs
-    new_codec('bbs disclosed messages', { zentype = 'table', encoding = 'string'})
+    new_codec('bbs disclosed messages', { zentype = 'array', encoding = 'string'})
 end)
 
 When("create the bbs proof using ''", function(h)
@@ -239,10 +175,10 @@ When("create the bbs proof using ''", function(h)
     local float_indexes = have'bbs disclosed indexes'
     local disclosed_indexes = {}
     for k,v in pairs(float_indexes) do
-        disclosed_indexes[k] = BIG.from_decimal(v:octet():string()):integer()
+        disclosed_indexes[k] = tonumber(v)
     end
 
-    local pubk = have'bbs issuer public key'
+    local pubk = have'bbs public key'
     local signature = have'bbs credential'
 
     empty'bbs proof'
@@ -254,14 +190,14 @@ end)
 IfWhen("verify the bbs proof using ''", function(h)
     local hash =  O.to_string(mayhave(h)) or h
     local ciphersuite = BBS.ciphersuite(hash)
-    local pubk = have'bbs issuer public key'
+    local pubk = have'bbs public key'
     local proof = have'bbs proof'
     local ph = have'bbs presentation header'
     local disclosed_messages_octets = have'bbs disclosed messages'
     local float_indexes = have'bbs disclosed indexes'
     local disclosed_indexes = {}
     for k,v in pairs(float_indexes) do
-        disclosed_indexes[k] = BIG.from_decimal(v:octet():string()):integer()
+        disclosed_indexes[k] = tonumber(v)
     end
     ZEN.assert(
         BBS.ProofVerify(ciphersuite, pubk, proof, nil, ph, disclosed_messages_octets, disclosed_indexes),
