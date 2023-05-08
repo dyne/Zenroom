@@ -371,20 +371,20 @@ local PROOF_GEN_OUT = O.from_hex('99b6215be8357400353057b57b440e3998c259d34bce12
 --con PH empty
 --local PROOF_GEN_OUT = O.from_hex('99b6215be8357400353057b57b440e3998c259d34bce12e1d24dc7f9b63762122d4144cacefc5f3231172308907e3f2c8cf98d238dccf7e1eecf66441f27a7e140fc1a11788f24c634c5e4e6675c904670be71cdd44e613d1436f6badc4d9f319380b42122f33e956e861ad5e01d1bb2355015cd3d510f9636a1a746f496142a709f9d4914cdaffdf1ca936e12244e4850c9bdb7570028bb16233a92c0c4af229e528b4074fba2266dfd3023ee622b0832e92251e1b29d356111cb50cffae36c88b11baaaceb02553b5dcd6b348eb88370c8d06c93b3b56f91d1c3d7969f732d1ffc7620c68936f2d0e04b515dda8e41661706b3f851e51d154a8efbd036acee9b5cbbfec266d45acd5fd9f2fe47c54b15b0e30ba2e0e26bae6228ffdb499beea962ec564dabc3010e6f4021340ad77b')
 
-local pg_output = bbs.ProofGen(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE), O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1})
+local pg_output = bbs.proof_gen(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE), O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1})
 
 assert(PROOF_GEN_OUT == pg_output)
 
 print("Test case 1 ProofVerify")
 
-assert( bbs.ProofVerify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_output, O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1}) == true)
+assert( bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_output, O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1}) == true)
 
 print("Test case 2 ProofVerify")
-assert( bbs.ProofVerify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_output, O.from_hex(HEADER), PRESENTATION_HEADER, MODIFIED_MSG_ARR, {1}) == false)
+assert( bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_output, O.from_hex(HEADER), PRESENTATION_HEADER, MODIFIED_MSG_ARR, {1}) == false)
 -- Fails because of wrong message as input.
 
 print("Test case 3 ProofVerify")
-assert( bbs.ProofVerify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_output, O.from_hex(HEADER), PRESENTATION_HEADER, TWO_MESSAGES, {1,2}) == false)
+assert( bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_output, O.from_hex(HEADER), PRESENTATION_HEADER, TWO_MESSAGES, {1,2}) == false)
 -- Fails because of wrong messages as input.
 
 print('----------------------')
@@ -450,13 +450,13 @@ local DISCLOSED_INDEXES = {1,2,3,4,5,6,7,8,9,10}
 
 local PROOF_GEN_MULTI_OUT = O.from_hex('b95e27fc635eeb7e47bf2e488fca4b3f8930bb2f6343bf0c9d585abd8b8112160a540566417bac3c77ad40ff7d00cc4a85f5a98a9f1f1e57d4c1444830c5493108b393a2b309c4980071f71eda6fc84ce0432443d463b47fbcf0841be0f1e472b031e2564cd615d89e9e7ed344c7f87bddebe02ed8cd77dd91a06b0d2119f47a00220164e49117d5b3ee3c009f5e537b66502ea4435cb042ddea1e0fc4e9688f81b0568917205481eccef5443e4f45f33043eb3e70a442dce23c4247e8f0804b2396ead74bd44977f6425d02db3fc20860a4fa9531c98fb443f8cd9062dc90c4c2917a39f58cbce7c7a5dcff72b1afa35e6d0651a3968a5d6589967a601142e7a8085b9dfbb2335adb89ece7411e64812672bf715352c24e3c0c35796e7ae667ec8244b994324fcb928dc1288ffe6594')
 
-local pg_multi_output = bbs.ProofGen(ciphersuite, O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, O.from_hex(HEADER), PRESENTATION_HEADER, MULTI_MSG_ARRAY, DISCLOSED_INDEXES)
+local pg_multi_output = bbs.proof_gen(ciphersuite, O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, O.from_hex(HEADER), PRESENTATION_HEADER, MULTI_MSG_ARRAY, DISCLOSED_INDEXES)
 
 assert(PROOF_GEN_MULTI_OUT == pg_multi_output)
 
 print("Test ProofVerify")
 
-assert( bbs.ProofVerify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_multi_output, O.from_hex(HEADER), PRESENTATION_HEADER, MULTI_MSG_ARRAY, DISCLOSED_INDEXES ) == true)
+assert( bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_multi_output, O.from_hex(HEADER), PRESENTATION_HEADER, MULTI_MSG_ARRAY, DISCLOSED_INDEXES ) == true)
 
 print("Test case 2 : disclose some messages")
 --disclosed (messages in index 0, 2, 4 and 6, in that order)
@@ -465,26 +465,26 @@ local disclosed_some_indexes = {1,3,5,7}
 
 local PROOF_GEN_MULTI_D_OUT = O.from_hex('8ee5a0c7fc62e6058bfac10b1489cb872283faee59c4132a076f01660eb3f28dd03fcf44fb8dadf8794e314a33b6b84cb95bfd630da6fe9f10b818b51f205d08143ea55bc05f6ad85a332b2acb3567c9134aeb29b9fa1e26ba8db63f956949ff846e9ff2cccfee820c4ffaf1aaa161cf04af8b7f27bede66c42f18c9289007972f0f0230f4cda28beb5885aa71bcbe9b27d4dca32aae82f02961e982bb7f50483924087180f9ca76efdd1b3534b5b393614b51070a6f5d088fb464ccb2d296ccb69e31ef0f84d25f286186a6ab36ce4a257eacf0c7e3ad362ae00738d876999f44228c085ffd0a97961280c05113ed21075115770819d9afbcb40d4fae6c40e3d66a324637d3b1b79e5abd86fb3a1a8d3404ffa0019cacdf988f065009fe8bb27fd99e804ab679c96fe559bbf2e3a95b2183b54eb4238c4a268e04c51036dd24139c6d001698614484d285e55e3911af18af4fc1b241f2f168565ffa74dc082aaf15d7b82cc598896ad34efe960bbcb06cea9ee551d65080cae87181e50463b9348cbfb05f5242174197b3d34efa56f513fc11cb31591d199e61af4f46bcbcca67d46cd16e2ec83694767780e0c8ccbc70d7fc61c0bda6209e22d17049e90e61c940104ca0cc69310393dc14b6c2b512219257782c19e185e3bbc85cfe0bc432a91082fd148044fbd14092702bd39e81')
 
-local pg_multi_d_output = bbs.ProofGen(ciphersuite, O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, O.from_hex(HEADER), PRESENTATION_HEADER, MULTI_MSG_ARRAY, disclosed_some_indexes)
+local pg_multi_d_output = bbs.proof_gen(ciphersuite, O.from_hex(PUBLIC_KEY), VALID_MULTI_SIGNATURE, O.from_hex(HEADER), PRESENTATION_HEADER, MULTI_MSG_ARRAY, disclosed_some_indexes)
 
 assert(PROOF_GEN_MULTI_D_OUT == pg_multi_d_output)
 
 print("Test ProofVerify")
 local DISC_MSG = {MULTI_MSG_ARRAY[1], MULTI_MSG_ARRAY[3],MULTI_MSG_ARRAY[5], MULTI_MSG_ARRAY[7]}
-assert( bbs.ProofVerify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_multi_d_output, O.from_hex(HEADER), PRESENTATION_HEADER, DISC_MSG, disclosed_some_indexes) == true)
+assert( bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_multi_d_output, O.from_hex(HEADER), PRESENTATION_HEADER, DISC_MSG, disclosed_some_indexes) == true)
 
 bbs.calculate_random_scalars = old_random
 
 print('----------------------')
 print("TEST: ProofGen is random")
 print("Test Case 1")
-local pfg1 = bbs.ProofGen(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE), O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1})
-local pfg2 = bbs.ProofGen(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE), O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1})
+local pfg1 = bbs.proof_gen(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE), O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1})
+local pfg2 = bbs.proof_gen(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(VALID_SIGNATURE), O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1})
 assert(pfg1 ~= pfg2)
 print("ProofVerify 1")
-assert(bbs.ProofVerify(ciphersuite, O.from_hex(PUBLIC_KEY), pfg1, O.from_hex(HEADER), PRESENTATION_HEADER,SINGLE_MSG_ARRAY,{1}) == true)
+assert(bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), pfg1, O.from_hex(HEADER), PRESENTATION_HEADER,SINGLE_MSG_ARRAY,{1}) == true)
 print("ProofVerify 2")
-assert(bbs.ProofVerify(ciphersuite, O.from_hex(PUBLIC_KEY), pfg2, O.from_hex(HEADER), PRESENTATION_HEADER,SINGLE_MSG_ARRAY,{1}) == true)
+assert(bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), pfg2, O.from_hex(HEADER), PRESENTATION_HEADER,SINGLE_MSG_ARRAY,{1}) == true)
 
 print('----------------- TEST SHAKE256 ------------------')
 
@@ -622,18 +622,18 @@ local shake_pres_header = O.from_hex("bed231d880675ed101ead304512e043ade9958dd02
 local shake_single_msg_proof = O.from_hex("8acd61a806203fb1c5203c4d90d92e8dfb1b7706cd9fc6e4233116204e9bfb96b0b0293f4b7c3fac69229e62c9e2bf36a9052cce6cc4ed37ebfbc3a45e45f77a87c2d4f90dc88aae23433b761f420debdfd2041057dc57f5cdf945c4e1df729cace4a3043f1b832731362434a0ab77086be5750a18505eb96422b9ff9fecf325197898760a4304af699e3d35ee99692048b58e5864da380772e16fd3e339b05b334f900a0b663b329379713ae925dbdc5dfa2490c7ebf390ec7d39e1bdfd1c1e3c8062d5254e683d46003cf5bf4a9366607d1e5c4ed120b4e9a7776d205c83aac9559ff1110ee4550801abdb5ea48a9d33514b9afb2fbc9eaca94ed1af5795ee5dec1664dc38ec908b4b7dd92cfd6f995c6bc436842be7608437c813b812220efe6a06b780cfaf8a57214319c0618915")
 
 print('Test case 1')
-local pg_output = bbs.ProofGen(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(S_VALID_SIGNATURE), O.from_hex(Shake_HEADER), shake_pres_header, SSINGLE_MSG_ARRAY, {1})
+local pg_output = bbs.proof_gen(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(S_VALID_SIGNATURE), O.from_hex(Shake_HEADER), shake_pres_header, SSINGLE_MSG_ARRAY, {1})
 assert(shake_single_msg_proof  == pg_output)
 
 print("Test case 1 ProofVerify")
-assert( bbs.ProofVerify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_output, O.from_hex(Shake_HEADER), shake_pres_header, SSINGLE_MSG_ARRAY, {1}) == true)
+assert( bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_output, O.from_hex(Shake_HEADER), shake_pres_header, SSINGLE_MSG_ARRAY, {1}) == true)
 
 print("Test case 2 ProofVerify")
-assert( bbs.ProofVerify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_output, O.from_hex(Shake_HEADER), shake_pres_header, shake_modified_msg, {1}) == false)
+assert( bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_output, O.from_hex(Shake_HEADER), shake_pres_header, shake_modified_msg, {1}) == false)
 -- Fails because of wrong message as input.
 
 print("Test case 3 ProofVerify")
-assert( bbs.ProofVerify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_output, O.from_hex(Shake_HEADER), shake_pres_header, shake_extra_msg, {1,2}) == false)
+assert( bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), pg_output, O.from_hex(Shake_HEADER), shake_pres_header, shake_extra_msg, {1,2}) == false)
 -- Fails because of wrong messages as input.
 
 print('----------------------')
@@ -669,36 +669,36 @@ print("Test case 1 : disclose all messages")
 local shake_multi_msg_all_disclosed_proof = O.from_hex("af210c6571df52d805fa17620bf1a88dbcfb23829b5af59a86b9f4bc931d72942a94edfaaa88fa2363dce155ec70a2368e9b01eef49ec11f13fe4bb6b730bbec6b0cce4c3e7a0705fb57218563ec997d31daf49ad2b52621c03b83af8568b0a1a4daa67c99b04482f7556fb45f892e90ee0383564eed3ef199db76189d575c97307b02cf1fc8e384357f7c14ef308732287ae4e96c6f371e6864f6527542895e28ef39c8354ebb0174958212aba8da360fc6d5bed9faabad83601d8035cf8b86ab8b1a2a4984bbe09f653d68e06af0952c3a78e9a47d2b20c626e13a33a7830f147a41d306b3dcb97488d46cd561312c112ba29eb82bda43f452b255627210c2c4d9197be6bbaa9e5113617716caa6a25f6e297ccd4a6d716bdd9d258f9dc529477098cd69b6282ff351c21e35c19dc8")
 local shake_all_disclosed_ind = {1,2,3,4,5,6,7,8,9,10}
 
-local spg_multi_output = bbs.ProofGen(ciphersuite, O.from_hex(PUBLIC_KEY), S_VALID_MULTI_SIGNATURE, O.from_hex(Shake_HEADER), shake_pres_header, MULTI_MSG_ARRAY, shake_all_disclosed_ind)
+local spg_multi_output = bbs.proof_gen(ciphersuite, O.from_hex(PUBLIC_KEY), S_VALID_MULTI_SIGNATURE, O.from_hex(Shake_HEADER), shake_pres_header, MULTI_MSG_ARRAY, shake_all_disclosed_ind)
 
 assert(shake_multi_msg_all_disclosed_proof == spg_multi_output)
 
 print("Test ProofVerify")
 
-assert( bbs.ProofVerify(ciphersuite, O.from_hex(PUBLIC_KEY), spg_multi_output, O.from_hex(Shake_HEADER), shake_pres_header, MULTI_MSG_ARRAY, shake_all_disclosed_ind) == true)
+assert( bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), spg_multi_output, O.from_hex(Shake_HEADER), shake_pres_header, MULTI_MSG_ARRAY, shake_all_disclosed_ind) == true)
 
 print("Test case 2 : disclose some messages")
 local shake_multi_msg_some_disclosed_proof = O.from_hex("8733f60b98294aea82f8cc2994203a5ff630a50147d5aca82f41f26cbb4425e9b23b41874110d4f5de1e7c2db5945dc88e2f0c1ac96a03ccb3f6fd5759799302f100db5c14975eb68331442a99544c096b18efc9500ece042e628303faf7fa0f91047bc8295d97953bb8a1c034f17963ba70eff00eea8e41d1c4218a42132b536dc22ee56405f8c4f8a9576bb206aabc66052fc0e9ce161349966b9c257137eddef48b33a87fb4e492376e54dabe7b256523e6710cee7f117679943b4768faf4c516cb656cbc85199d9b4f51472c5b4464dda241332c4501b6fcae13c746e460e0478f241837efa80d87151dd72c57b664faaa912fe781ad4589d67ccb86270aadcc8f8786052d5599f902640f0d1de55f188b3e5f077841fdd6379e7b27df42b0069df43700eb5381aba2b2ba9d74890fc710a17567ec0b8052282d68a61eafd289f4767f0a927b6a1c6e6b2ce7546928cbd5c2e61407a76654d0ed19102effb8330d883a40af5c9cd6bb2e15103c5733b0eba1cc7ec617ceabd65beb8dee3abb2bd32f584c5cd3ff0637fdcaa700212548816512cbbb5e218ff74cf6f6ae8e327b9e29d5e578c400ca334ba0e1e17633215c59152d3c933eb9db6ca954558df5a2bc211e8f6e6b7a779a6c46222c1e6ec129d7d38aad9a9eff5a1bc0cef0e87cb58205f86c8c92f01fe04c4805aba3")
 local shake_disclosed_ind = {1, 3, 5, 7}
 
-local spg_multi_output = bbs.ProofGen(ciphersuite, O.from_hex(PUBLIC_KEY), S_VALID_MULTI_SIGNATURE, O.from_hex(Shake_HEADER), shake_pres_header, MULTI_MSG_ARRAY, shake_disclosed_ind)
+local spg_multi_output = bbs.proof_gen(ciphersuite, O.from_hex(PUBLIC_KEY), S_VALID_MULTI_SIGNATURE, O.from_hex(Shake_HEADER), shake_pres_header, MULTI_MSG_ARRAY, shake_disclosed_ind)
 assert(shake_multi_msg_some_disclosed_proof  == spg_multi_output)
 
 print("Test ProofVerify")
 local S_Disclosed_msg = {MULTI_MSG_ARRAY[1], MULTI_MSG_ARRAY[3], MULTI_MSG_ARRAY[5], MULTI_MSG_ARRAY[7]}
-assert( bbs.ProofVerify(ciphersuite, O.from_hex(PUBLIC_KEY), spg_multi_output, O.from_hex(Shake_HEADER), shake_pres_header, S_Disclosed_msg, shake_disclosed_ind) == true)
+assert( bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), spg_multi_output, O.from_hex(Shake_HEADER), shake_pres_header, S_Disclosed_msg, shake_disclosed_ind) == true)
 
 print('----------------------')
 print("TEST: ProofGen is random")
 bbs.calculate_random_scalars = old_random
 
 print("Test Case 1")
-local spfg1 = bbs.ProofGen(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(S_VALID_SIGNATURE), O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1})
-local spfg2 = bbs.ProofGen(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(S_VALID_SIGNATURE), O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1})
+local spfg1 = bbs.proof_gen(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(S_VALID_SIGNATURE), O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1})
+local spfg2 = bbs.proof_gen(ciphersuite, O.from_hex(PUBLIC_KEY), O.from_hex(S_VALID_SIGNATURE), O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1})
 assert(spfg1 ~= spfg2)
 print("Proof Verify 1")
-assert(bbs.ProofVerify(ciphersuite, O.from_hex(PUBLIC_KEY), spfg1, O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1}) == true)
+assert(bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), spfg1, O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1}) == true)
 print("Proof Verify 2")
-assert(bbs.ProofVerify(ciphersuite, O.from_hex(PUBLIC_KEY), spfg2, O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1}) == true)
+assert(bbs.proof_verify(ciphersuite, O.from_hex(PUBLIC_KEY), spfg2, O.from_hex(HEADER), PRESENTATION_HEADER, SINGLE_MSG_ARRAY, {1}) == true)
 
 

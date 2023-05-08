@@ -147,7 +147,7 @@ end)
 IfWhen("verify the '' has a bbs signature in '' by '' using ''", generic_verify)
 
 --[[
-    Participant generates proof with the function bbs.ProofGen(ciphersuite, pk, signature, 
+    Participant generates proof with the function bbs.proof_gen(ciphersuite, pk, signature, 
     header, ph, messages_octets, disclosed_indexes)
 
     ph = presentation header, used to mitigate replay attack.
@@ -195,7 +195,7 @@ When("create the bbs proof using ''", function(h)
     local signature = have'bbs credential'
 
     empty'bbs proof'
-    ACK.bbs_proof = BBS.ProofGen(ciphersuite, pubk, signature, nil, ph, message_octets, disclosed_indexes)
+    ACK.bbs_proof = BBS.proof_gen(ciphersuite, pubk, signature, nil, ph, message_octets, disclosed_indexes)
     new_codec('bbs proof', { zentype = 'element'})
 end)
 
@@ -213,7 +213,7 @@ IfWhen("verify the bbs proof using ''", function(h)
         disclosed_indexes[k] = tonumber(v)
     end
     ZEN.assert(
-        BBS.ProofVerify(ciphersuite, pubk, proof, nil, ph, disclosed_messages_octets, disclosed_indexes),
+        BBS.proof_verify(ciphersuite, pubk, proof, nil, ph, disclosed_messages_octets, disclosed_indexes),
        'The bbs proof is not valid')
 end)
 

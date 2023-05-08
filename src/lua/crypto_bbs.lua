@@ -692,7 +692,7 @@ local function calculate_challenge(ciphersuite, Aprime, Abar, D, C1, C2, i_array
 end
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 3.4.3
-function bbs.ProofGen(ciphersuite, pk, signature, header, ph, messages_octets, disclosed_indexes)
+function bbs.proof_gen(ciphersuite, pk, signature, header, ph, messages_octets, disclosed_indexes)
 
     -- disclosed_indexes is a STRICTLY INCREASING array of POSITIVE integers.
     header = header or O.empty()
@@ -824,7 +824,7 @@ local function octets_to_proof(proof_octets)
 end
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 3.4.4
-function bbs.ProofVerify(ciphersuite, pk, proof, header, ph, disclosed_messages_octets, disclosed_indexes)
+function bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages_octets, disclosed_indexes)
     
     header = header or O.empty()
     ph = ph or O.empty()
