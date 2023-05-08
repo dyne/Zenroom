@@ -248,8 +248,8 @@ static void _yeld(hash *h, octet *o) {
 
 static void _yeld_len(hash *h, octet *o, int len) {
 	switch(h->algo) {
-	case _SHAKE256: 
-	  SHA3_shake(h->shake256,o->val, len); 
+	case _SHAKE256:
+	  SHA3_shake(h->shake256,o->val, len);
 	  SHA3_init(h->shake256, h->len);
 	  break;
 	}
@@ -304,9 +304,9 @@ static int hash_process(lua_State *L) {
 	}
 	len =  luaL_optinteger (L, 3, 0);
 
-	if (len <= 0) {   
+	if (len <= 0) {
 		res = o_new(L,h->len);
-		
+
 	} else {
 		res = o_new(L, len);
 	}
