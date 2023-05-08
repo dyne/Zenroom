@@ -303,7 +303,7 @@ static int hash_process(lua_State *L) {
 		goto end;
 	}
 	len =  luaL_optinteger (L, 3, 0);
-	
+
 	if (len <= 0) {   
 		res = o_new(L,h->len);
 		
