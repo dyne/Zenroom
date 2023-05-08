@@ -101,7 +101,8 @@ end)
 --[[ The function BBS.sign may take as input also a string octet HEADER containing context 
      and application specific information. If not supplied, it defaults to an empty string.
 --]]
-When("create the bbs signature of '' using ''", function(doc, h)
+
+local function generic_bbs_signature(doc, h)
     local sk = havekey'bbs'
     local obj = have(doc)
     local hash = O.to_string(mayhave(h)) or h
@@ -115,10 +116,16 @@ When("create the bbs signature of '' using ''", function(doc, h)
     ACK.bbs_signature = BBS.sign(ciphersuite, sk, pk, obj)
     new_codec('bbs signature', { zentype = 'element'})
 
+end
+
+When("create the bbs signature of ''", function(doc)
+    return generic_bbs_signature(doc, 'shake256')
 end)
 
+When("create the bbs signature of '' using ''", generic_bbs_signature)
 
-IfWhen("verify the '' has a bbs signature in '' by '' using ''", function (doc, sig, by, h)
+
+local function generic_verify(doc, sig, by, h)
     local pk = load_pubkey_compat(by, 'bbs')
     local hash = O.to_string(mayhave(h)) or h
     local obj = have(doc)
@@ -131,7 +138,13 @@ IfWhen("verify the '' has a bbs signature in '' by '' using ''", function (doc, 
         BBS.verify(ciphersuite, pk, s, obj),
        'The bbs signature by '..by..' is not authentic'
     )
+end
+
+IfWhen("verify the '' has a bbs signature in '' by ''", function(doc, sig, by)
+    return generic_verify(doc, sig, by, 'shake256')
 end)
+
+IfWhen("verify the '' has a bbs signature in '' by '' using ''", generic_verify)
 
 --[[
     Participant generates proof with the function bbs.ProofGen(ciphersuite, pk, signature, 
