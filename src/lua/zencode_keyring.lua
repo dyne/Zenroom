@@ -58,7 +58,7 @@ local keytypes = {
     ecdh = true,
     credential = true,
     issuer = true,
-    bls = true,
+    bbs = true,
     reflow = true,
     bitcoin = true,
     testnet = true,
@@ -116,8 +116,8 @@ function import_keyring(obj)
 	 y = ZEN.get(obj.issuer, 'y', INT.new, O.from_base64)
       }
    end
-   if obj.bls then
-      res.bls = ZEN.get(obj, 'bls', INT.new, O.from_base64)
+   if obj.bbs then
+      res.bbs = ZEN.get(obj, 'bbs', INT.new, O.from_base64) -- TODO: is this right?
    end
    if obj.reflow then
       res.reflow = ZEN.get(obj, 'reflow', INT.new, O.from_base64)
@@ -165,7 +165,7 @@ function export_keyring(obj)
       res.issuer = {x = obj.issuer.x:octet(), y = obj.issuer.y:octet()}
       res.issuer = deepmap(fun, res.issuer)
    end
-   if obj.bls then res.bls = obj.bls:octet():base64() end
+   if obj.bbs then res.bbs = obj.bbs:octet():base64() end
    if obj.reflow then res.reflow = obj.reflow:octet():base64() end
    if obj.bitcoin then
       res.bitcoin = O.to_base58( BTC.sk_to_wif(obj.bitcoin, 'bitcoin') )

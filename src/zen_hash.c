@@ -115,6 +115,12 @@ hash* hash_new(lua_State *L, const char *hashtype) {
 		h->algo = _SHA3_512;
 		h->sha3_512 = (sha3*)malloc(sizeof(sha3));
 		SHA3_init(h->sha3_512, h->len);
+	} else if(strncasecmp(hashtype,"shake256",8) == 0) {
+		strncpy(h->name,hashtype,15);
+		h->len = 32;
+		h->algo = _SHAKE256;
+		h->shake256 = (sha3*)malloc(sizeof(sha3));
+		SHA3_init(h->shake256, h->len);
 	} else if(strncasecmp(hashtype,"keccak256",9) == 0) {
 		strncpy(h->name,hashtype,15);
 		h->len = 32;
@@ -181,6 +187,7 @@ int hash_destroy(lua_State *L) {
 		case _SHA512: free(h->sha512); break;
 		case _SHA3_256: free(h->sha3_256); break;
 		case _SHA3_512: free(h->sha3_512); break;
+		case _SHAKE256: free(h->shake256); break;
 		case _KECCAK256: free(h->keccak256); break;
 		case _RMD160: free(h->rmd160); break;
 		case _BLAKE2B: free(h->blake2b); break;
@@ -210,6 +217,7 @@ static void _feed(hash *h, octet *o) {
 	case _SHA512: for(i=0;i<o->len;i++) HASH512_process(h->sha512,o->val[i]); break;
 	case _SHA3_256: for(i=0;i<o->len;i++) SHA3_process(h->sha3_256,o->val[i]); break;
 	case _SHA3_512: for(i=0;i<o->len;i++) SHA3_process(h->sha3_512,o->val[i]); break;
+	case _SHAKE256: for(i=0;i<o->len;i++) SHA3_process(h->shake256,o->val[i]); break;
 	case _KECCAK256: for(i=0;i<o->len;i++) SHA3_process(h->keccak256,o->val[i]); break;
 	case _RMD160: RMD160_process(h->rmd160, (unsigned char*)o->val, o->len); break;
 	case _BLAKE2B: blake2b_update(h->blake2b, o->val, o->max); break;
@@ -234,6 +242,15 @@ static void _yeld(hash *h, octet *o) {
 	case _BLAKE2S:
 	  blake2s_final(h->blake2s, o->val, o->max);
 	  blake2s_init(h->blake2s, 64); // prepare for the next
+	  break;
+	}
+}
+
+static void _yeld_len(hash *h, octet *o, int len) {
+	switch(h->algo) {
+	case _SHAKE256:
+	  SHA3_shake(h->shake256,o->val, len);
+	  SHA3_init(h->shake256, h->len);
 	  break;
 	}
 }
@@ -274,6 +291,7 @@ static int hash_process(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
 	octet *o = NULL, *res = NULL;
+	int len;
 	hash *h = hash_arg(L,1);
 	if(!h) {
 		failed_msg = "Could not create HASH";
@@ -284,14 +302,27 @@ static int hash_process(lua_State *L) {
 		failed_msg = "Could not allocate input message";
 		goto end;
 	}
-	res = o_new(L,h->len);
+	len =  luaL_optinteger (L, 3, 0);
+
+	if (len <= 0) {
+		res = o_new(L,h->len);
+
+	} else {
+		res = o_new(L, len);
+	}
 	if(!res) {
 		failed_msg = "Could not create octet";
 		goto end;
 	}
 	_feed(h, o);
-	_yeld(h, res);
-	res->len = h->len;
+	if (len <= 0) {
+		_yeld(h, res);
+		res->len = h->len;
+	} else {
+		_yeld_len(h, res, len);
+		res->len = len;
+	}
+
 end:
 	o_free(L,o);
 	hash_free(L,h);

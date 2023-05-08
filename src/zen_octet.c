@@ -95,6 +95,8 @@ static inline int _max(int x, int y) { if(x > y) return x;	else return y; }
 
 #include <ctype.h>
 
+extern int _octet_to_big(lua_State *L, big *dst, octet *src);
+
 // assumes null terminated string
 // returns 0 if not base else length of base encoded string
 int is_base64(const char *in) {
@@ -105,9 +107,9 @@ int is_base64(const char *in) {
 	// check all valid characters
 	for(c=4; in[c]!='\0'; c++) {
 		if (!(isalnum(in[c])
-		      || '+' == in[c]
-		      || '=' == in[c]
-		      || '/' == in[c])) {
+			  || '+' == in[c]
+			  || '=' == in[c]
+			  || '/' == in[c])) {
 			return 0; }
 	}
 	if(c%4 != 0) return 0; // always multiple of 4
@@ -430,10 +432,10 @@ executed when using the '<b>~</b>' operator between two
 octets. Results in a newly allocated octet, does not change the
 contents of any other octet involved.
 
-    @param dest leftmost octet used in XOR operation
-    @param source rightmost octet used in XOR operation
-    @function OCTET.xor(dest, source)
-    @return a new octet resulting from the operation
+	@param dest leftmost octet used in XOR operation
+	@param source rightmost octet used in XOR operation
+	@function OCTET.xor(dest, source)
+	@return a new octet resulting from the operation
 */
 static int xor_n(lua_State *L) {
 	BEGIN();
@@ -664,7 +666,7 @@ static int from_hex(lua_State *L) {
 		END(1); }
 	int len;
 	if ( (s[0] == '0') && (s[1] == 'x') )
-	   	 len = is_hex(L, s+2);
+		 len = is_hex(L, s+2);
 	else len = is_hex(L, s);
 	if(!len) {
 		zerror(L, "hex sequence invalid"); // fatal
@@ -900,10 +902,10 @@ Concatenate two octets, returns a new octet. This is also executed
 when using the '<b>..</b>' operator btween two octets. It results in a
 newly allocated octet, does not change the contents of other octets.
 
-    @param dest leftmost octet will be overwritten by result
-    @param source rightmost octet used in XOR operation
-    @function OCTET.concat(dest, source)
-    @return a new octet resulting from the operation
+	@param dest leftmost octet will be overwritten by result
+	@param source rightmost octet used in XOR operation
+	@function OCTET.concat(dest, source)
+	@return a new octet resulting from the operation
 */
 static int concat_n(lua_State *L) {
 	BEGIN();
@@ -1071,8 +1073,8 @@ This encoding uses the same alphabet as Bitcoin addresses. Why base58 instead of
 - E-mail usually won't line-break if there's no punctuation to break at.
 - Double-clicking selects the whole string as one word if it's all alphanumeric.
 
-    @function octet:base58()
-    @return a string representing the octet's contents in base58
+	@function octet:base58()
+	@return a string representing the octet's contents in base58
 */
 static int to_base58(lua_State *L) {
 	BEGIN();
@@ -1149,10 +1151,10 @@ static int from_base45(lua_State *L) {
 
 
 /***
-    Converts an octet into an array of bytes, compatible with Lua's transformations on <a href="https://www.lua.org/pil/11.1.html">arrays</a>.
+	Converts an octet into an array of bytes, compatible with Lua's transformations on <a href="https://www.lua.org/pil/11.1.html">arrays</a>.
 
-    @function octet:array()
-    @return an array as Lua's internal representation
+	@function octet:array()
+	@return an array as Lua's internal representation
 */
 
 static int to_array(lua_State *L) {
@@ -1187,8 +1189,8 @@ end:
 }
 
 /***
-    Return self (octet), implemented for compatibility with all
-    zenroom types so that anything can be casted to octet */
+	Return self (octet), implemented for compatibility with all
+	zenroom types so that anything can be casted to octet */
 static int to_octet(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -1210,10 +1212,10 @@ end:
 }
 
 /***
-    Print an octet as string.
+	Print an octet as string.
 
-    @function octet:str()
-    @return a string representing the octet's contents
+	@function octet:str()
+	@return a string representing the octet's contents
 */
 static int to_string(lua_State *L) {
 	BEGIN();
@@ -1226,7 +1228,7 @@ static int to_string(lua_State *L) {
 	if(!o->len) { lua_pushnil(L); goto end; }
 	char *s = malloc(o->len+2);
 	OCT_toStr(o, s); // TODO: inverted function signature, see
-	                 // https://github.com/milagro-crypto/milagro-crypto-c/issues/291
+					 // https://github.com/milagro-crypto/milagro-crypto-c/issues/291
 	s[o->len] = '\0'; // make sure string is NULL terminated
 	lua_pushlstring(L, s, o->len);
 	free(s);
@@ -1244,8 +1246,8 @@ Converts an octet into a string of hexadecimal numbers representing its contents
 
 This is the default format when `print()` is used on an octet.
 
-    @function octet:hex()
-    @return a string of hexadecimal numbers
+	@function octet:hex()
+	@return a string of hexadecimal numbers
 */
 int to_hex(lua_State *L) {
 	BEGIN();
@@ -1286,11 +1288,11 @@ end:
 }
 
 /***
-    Pad an octet with leading zeroes up to indicated length or its maximum size.
+	Pad an octet with leading zeroes up to indicated length or its maximum size.
 
-    @int[opt=octet:max] length pad to this size, will use maximum octet size if omitted
-    @return new octet padded at length
-    @function octet:pad(length)
+	@int[opt=octet:max] length pad to this size, will use maximum octet size if omitted
+	@return new octet padded at length
+	@function octet:pad(length)
 */
 static int pad(lua_State *L) {
 	BEGIN();
@@ -1317,10 +1319,10 @@ end:
 }
 
 /***
-    Create an octet filled with zero values up to indicated size or its maximum size.
+	Create an octet filled with zero values up to indicated size or its maximum size.
 
-    @int[opt=octet:max] length fill with zero up to this size, use maxumum octet size if omitted
-    @function octet:zero(length)
+	@int[opt=octet:max] length fill with zero up to this size, use maxumum octet size if omitted
+	@function octet:zero(length)
 */
 static int zero(lua_State *L) {
 	BEGIN();
@@ -1411,12 +1413,12 @@ end:
 
 /***
 
-    Extracts a piece of the octet from the start position to the end position inclusive, expressed in numbers.
+	Extracts a piece of the octet from the start position to the end position inclusive, expressed in numbers.
 
-    @int start position, begins from 1 not 0 like in lua
-    @int end position, may be same as start for a single byte
-    @return new octet sub-section from start to end inclusive
-    @function octet:sub(start, end)
+	@int start position, begins from 1 not 0 like in lua
+	@int end position, may be same as start for a single byte
+	@return new octet sub-section from start to end inclusive
+	@function octet:sub(start, end)
 */
 static int sub(lua_State *L) {
 	BEGIN();
@@ -1463,10 +1465,10 @@ end:
 }
 
 /***
-    Compare two octets to see if contents are equal.
+	Compare two octets to see if contents are equal.
 
-    @function octet:eq(first, second)
-    @return true if equal, false otherwise
+	@function octet:eq(first, second)
+	@return true if equal, false otherwise
 */
 
 static int eq(lua_State *L) {
@@ -1576,12 +1578,12 @@ static int compact_ascii(lua_State *L) {
 		if(escape) {
 			escape--;
 			if( o->val[i] == 'a'
-			    || o->val[i] == 'b'
-			    || o->val[i] == 't'
-			    || o->val[i] == 'n'
-			    || o->val[i] == 'v'
-			    || o->val[i] == 'f'
-			    || o->val[i] == 'r' )
+				|| o->val[i] == 'b'
+				|| o->val[i] == 't'
+				|| o->val[i] == 'n'
+				|| o->val[i] == 'v'
+				|| o->val[i] == 'f'
+				|| o->val[i] == 'r' )
 				continue;
 		}
 		if( o->val[i] == 0x5C) { escape++; continue; } // \ = 0x5c ASCII
@@ -1795,6 +1797,140 @@ end:
 	return 1;
 }
 
+// TODO: remove magic numbers
+// TODO: implement import for non compressed octets
+static int zcash_topoint(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *o = o_arg(L, 1);
+	if(o == NULL) {
+		failed_msg = "Could not allocate octet";
+		goto end;
+	}
+
+	ecp2 *e2 = NULL;
+	ecp  *e = NULL;
+
+	unsigned char m_byte = o->val[0] & 0xE0;
+	char c_bit;
+	char i_bit;
+	char s_bit;
+	if(m_byte == 0x20 || m_byte == 0x60 || m_byte == 0xE0) {
+		failed_msg = "Invalid octet header";
+		goto end;
+	}
+	c_bit = ((m_byte & 0x80) == 0x80);
+	i_bit = ((m_byte & 0x40) == 0x40);
+	s_bit = ((m_byte & 0x20) == 0x20);
+
+	if(c_bit) {
+		if(o->len != 96 && o->len != 48) {
+			failed_msg = "Invalid octet header";
+			goto end;
+		}
+	} else {
+		if(o->len != 192 && o->len != 96) {
+			failed_msg = "Invalid octet header";
+			goto end;
+		}
+	}
+
+	switch(o->len) {
+	case 192:
+		e2 = ecp2_new(L);
+		break;
+	case 48:
+		e = ecp_new(L);
+		break;
+	case 96:
+		if(c_bit) e2 = ecp2_new(L);
+		else e = ecp_new(L);
+	}
+
+	o->val[0] = o->val[0] & 0x1F;
+
+	if(i_bit) {
+		// TODO: check o->val is all 0
+		if(e == NULL) {
+			ECP2_inf(&e2->val);
+		} else {
+			ECP_inf(&e->val);
+		}
+		goto end;
+	}
+
+	if(c_bit) {
+		if(e == NULL) {
+			FP2 fx, fy;
+			octet x0 = {
+				.max = 48,
+				.len = 48,
+				.val = o->val
+			};
+			octet x1 = {
+				.max = 48,
+				.len = 48,
+				.val = o->val+48
+			};
+
+			big* bigx0 = big_new(L);
+			big* bigx1 = big_new(L);
+
+			_octet_to_big(L, bigx0, &x0);
+			_octet_to_big(L, bigx1, &x1);
+
+			FP2_from_BIGs(&fx, bigx1->val, bigx0->val);
+
+			if(!ECP2_setx(&e2->val, &fx)) {
+				failed_msg = "Invalid input octet: not a point on the curve";
+				goto end;
+			}
+
+			ECP2_get(&fx, &fy, &e2->val);
+
+			BIG by0,by1;
+			FP2_reduce(&fy);
+			FP_redc(by0,&(fy.a));
+			FP_redc(by1,&(fy.b));
+
+			if(gf2_sign(by0, by1) != s_bit) {
+				ECP2_neg(&e2->val);
+			}
+
+			lua_pop(L,1);
+			lua_pop(L,1);
+
+		} else {
+			BIG xpoint, ypoint;
+			big* bigx = big_new(L);
+			_octet_to_big(L, bigx, o);
+
+			if(!ECP_setx(&e->val, bigx->val, 0)) {
+				failed_msg = "Invalid input octet: not a point on the curve";
+				goto end;
+			}
+
+			ECP_get(xpoint, ypoint, &e->val);
+			if(gf_sign(ypoint) != s_bit) {
+				ECP_neg(&e->val);
+
+			}
+
+			lua_pop(L,1);
+		}
+
+	} else {
+		failed_msg = "Not yet implemented";
+		goto end;
+	}
+end:
+	o_free(L, o);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
 int luaopen_octet(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg octet_class[] = {
@@ -1879,6 +2015,7 @@ int luaopen_octet(lua_State *L) {
 		{"charcount", charcount},
 		{"rmchar", remove_char},
 		{"compact_ascii", compact_ascii},
+		{"zcash_topoint", zcash_topoint},
 		// idiomatic operators
 		{"__len",size},
 		{"__concat",concat_n},

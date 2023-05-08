@@ -49,4 +49,11 @@ typedef struct {
 	// curves ECP.
 } ecp2;
 
+void ecp2_free(ecp2* e);
+ecp2* ecp2_new(lua_State *L);
+ecp2* ecp2_arg(lua_State *L,int n);
+
+char gf_sign(BIG y);
+char gf2_sign(BIG y0, BIG y1);
+
 #endif
