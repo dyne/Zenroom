@@ -35,9 +35,9 @@ local function run_test_hkdf(test)
     if type(test.info) == 'string' then
         test.info = O.from_hex(test.info)
     end
-    local prk = hkdf_extract(HASH.new('sha256'), test.salt, O.from_hex(test.ikm))
+    local prk = hkdf_extract(test.salt, O.from_hex(test.ikm))
     assert(O.from_hex(test.prk) == prk)
-    local okm = hkdf_expand(HASH.new('sha256'), prk, test.info, test.l)
+    local okm = hkdf_expand(prk, test.info, test.l)
     assert(O.from_hex(test.okm) == okm)
 end
 

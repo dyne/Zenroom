@@ -67,13 +67,12 @@ end
 
 --used in BBS+ signature
 function hkdf_extract(salt, ikm)
-	if SHA256==nil then SHA256 = hash.new('sha256') end
-	return HASH.hmac(SHA256, salt, ikm)
+	return HASH.hmac(hash.new('sha256'), salt, ikm)
 end
 
 --used in BBS+ signature
 function hkdf_expand(prk, info, l)
-	if SHA256==nil then SHA256 = hash.new('sha256') end
+	local h = hash.new('sha256')
 	local hash_len = 32
 	assert(#prk >= hash_len)
 	assert(l <= 255 * hash_len)
@@ -86,11 +85,11 @@ function hkdf_expand(prk, info, l)
 	-- local n = math.ceil(l/hash_len)
 
 	-- TODO: optimize using something like table.concat for octets
-	local tprec = HASH.hmac(SHA256, prk, info .. O.from_hex('01'))
+	local tprec = HASH.hmac(h, prk, info .. O.from_hex('01'))
 	local i = 2
 	local t = tprec
 	while l > #t do
-		tprec = HASH.hmac(SHA256, prk, tprec .. info .. O.from_hex(string.format("%02x", i)))
+		tprec = HASH.hmac(h, prk, tprec .. info .. O.from_hex(string.format("%02x", i)))
 		t = t .. tprec
 		i = i+1
 	end
