@@ -142,6 +142,9 @@ function schnorr.sign(sk, m)
    return sig
 end
 
+local function _schnorr_assert(condition, message)
+    return (condition) or (table.insert(ZEN.traceback, message) and false)
+end
 
 -- verification algortihm
 -- @param pk a 48 Byte OCTET, public key
@@ -152,18 +155,18 @@ function schnorr.verify(pk, m, sig)
    if iszen(type(pk)) then pk = pk:octet() end
    --the follwing "lifts" pk to an ECP with x = pk and y is even
    local P = ECP.new(BIG.new(pk))    
-   assert(P, "lifting failed")
+   if not _schnorr_assert(P, "lifting failed") then return false end
    local r_arr, s_arr = OCTET.chop(sig,48)
    local r = BIG.new(r_arr)
-   assert(r <= p, "Verification failed, r overflows p")
+   if not _schnorr_assert(r <= p , "lifting failed") then return false end
    local s = BIG.new(s_arr)
-   assert(s <= o, "Verification failed, s overflows o")
+   if not _schnorr_assert(s <= o, "Verification failed, s overflows o") then return false end
    
    local e = BIG.new(hash_tag("BIP0340/challenge", r:octet()..(P:x()):octet()..m)) % o 
    local R = (s*G) - (e*P)     --if the signature is valid the result will be k*G as expected   
-   assert(not ECP.isinf(R), "Verification failed, point to infinity")
-   assert(not R:y():parity() , "Verification failed, y is odd")
-   assert((R:x() == r), "Verification failed")
+   if not _schnorr_assert(not ECP.isinf(R), "Verification failed, point to infinity") then return false end
+   if not _schnorr_assert(not R:y():parity() , "Verification failed, y is odd") then return false end
+   if not _schnorr_assert((R:x() == r), "Verification failed") then return false end
    return true
 end
 
