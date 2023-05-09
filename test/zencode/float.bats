@@ -39,8 +39,8 @@ EOF
 Given I have a 'integer' named 'int_fp'
 Then print all data
 EOF
-    run $ZENROOM_EXECUTABLE -z wrong_int.zen -a wrong_int.json
-    assert_failure
+    run $ZENROOM_EXECUTABLE -z -a wrong_int.json wrong_int.zen
+    assert_line '[W]  [!] [string "zencode_given"]:227: Could not read int_fp'
 }
 
 @test 'import float from non numeric string' {
@@ -51,6 +51,6 @@ EOF
 Given I have a 'float' named 'fp_str'
 Then print all data
 EOF
-    run $ZENROOM_EXECUTABLE -z wrong_float.zen -a wrong_float.json
-    assert_failure
+    run $ZENROOM_EXECUTABLE -z -a wrong_float.json wrong_float.zen
+    assert_line '[W]  [!] [string "zencode_given"]:227: Could not read fp_str'
 }

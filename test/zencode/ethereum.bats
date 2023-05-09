@@ -107,7 +107,7 @@ function getnonce() (
 @test "When I create the ethereum transaction of '' to ''" {
     HOST=http://test.fabchain.net:8545
 
-    alice_address=`cat $BATS_SUITE_TMPDIR/alice_address.json | cut -d'"' -f6`
+    alice_address=`cat $BATS_FILE_TMPDIR/alice_address.json | cut -d'"' -f6`
     echo "Alice address: 0x${alice_address}"
     # getnonce "0x${alice_address}"
 
@@ -384,7 +384,7 @@ EOF
     }
 EOF
 
-    jq -s '.[0]*.[1]' "$BATS_SUITE_TMPDIR/alice_nonce_eth.json" "$BATS_SUITE_TMPDIR/bob_address.json" | save_asset doc_tx_information_eth.json
+    jq -s '.[0]*.[1]' "$BATS_FILE_TMPDIR/alice_nonce_eth.json" "$BATS_FILE_TMPDIR/bob_address.json" | save_asset doc_tx_information_eth.json
 cat <<EOF | zexe doc_transaction.zen doc_tx_information_eth.json
 Scenario ethereum
 
@@ -404,7 +404,7 @@ EOF
 }
 
 @test "Used in documentation (4)" {
-    jq -s '.[0]*.[1]' "$BATS_SUITE_TMPDIR/alice_nonce_data.json" "$BATS_SUITE_TMPDIR/doc_alice_data.json" | save_asset doc_tx_information_data.json
+    jq -s '.[0]*.[1]' "$BATS_FILE_TMPDIR/alice_nonce_data.json" "$BATS_FILE_TMPDIR/doc_alice_data.json" | save_asset doc_tx_information_data.json
 cat <<EOF | zexe doc_transaction_storage.zen doc_tx_information_data.json
 Scenario ethereum
 

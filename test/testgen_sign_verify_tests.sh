@@ -9,7 +9,7 @@ load ../bats_zencode
 SUBDOC=%%ALGOSIGN%%
 
 @test "Generate asymmetric keys for Alice and Bob" {
-    cat <<EOF | zexe keygen.zen
+    cat <<EOF | rngzexe keygen.zen
 Scenario %%ALGOSIGN%%
 Given I am known as 'Alice'
 When I create the keyring
@@ -25,7 +25,7 @@ When I create the %%ALGOSIGN%% public key
 Then print my '%%ALGOSIGN%% public key'
 EOF
     save_output alice_pubkey.json
-    cat <<EOF | zexe keygen.zen
+    cat <<EOF | rngzexe keygen.zen
 Scenario %%ALGOSIGN%%
 Given I am known as 'Bob'
 When I create the keyring
@@ -107,8 +107,8 @@ and I verify the 'message' has a %%ALGOSIGN%% signature in '%%ALGOSIGN%% signatu
 Then print the string 'Signature is valid'
 and print the 'message'
 EOF
-    run \$ZENROOM_EXECUTABLE -z wrong_message.zen -a sign_pubkey.json
-    assert_failure
+    run \$ZENROOM_EXECUTABLE -z -a sign_pubkey.json wrong_message.zen
+    assert_line '[W]  The %%ALGOSIGN%% signature by Alice is not authentic'
 }
 
 @test "Fail verification on a different public key" {
@@ -131,8 +131,8 @@ and I verify the 'message' has a %%ALGOSIGN%% signature in '%%ALGOSIGN%% signatu
 Then print the string 'Signature is valid'
 and print the 'message'
 EOF
-    run \$ZENROOM_EXECUTABLE -z wrong_pubkey.zen -a wrong_pubkey.json
-    assert_failure
+    run \$ZENROOM_EXECUTABLE -z -a wrong_pubkey.json wrong_pubkey.zen
+    assert_line '[W]  The %%ALGOSIGN%% signature by Alice is not authentic'
 }
 
 @test "Alice signs a big file" {

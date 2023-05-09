@@ -187,8 +187,8 @@ and I have a 'string array' named 'myStringArray'
 When I verify the 'myStringArray' has a bbs signature in 'bbs signature' by 'Alice' using 'shake256'
 Then print the string 'Signature is valid'
 EOF
-    run $ZENROOM_EXECUTABLE -z $BATS_SUITE_TMPDIR/wrong_message_shake.zen -a $BATS_SUITE_TMPDIR/3messages_shake.json -k $BATS_SUITE_TMPDIR/sign_pubkey_shake.json
-    assert_failure
+    run $ZENROOM_EXECUTABLE -z -a '3messages_shake.json' -k sign_pubkey_shake.json wrong_message_shake.zen
+    assert_line '[W]  The bbs signature by Alice is not authentic'
 }
 
 @test "Fail verification on a different public key" {
@@ -209,6 +209,6 @@ and I have a 'hex array' named 'myStringArray'
 When I verify the 'myStringArray' has a bbs signature in 'bbs signature' by 'Alice' using 'shake256'
 Then print the string 'Signature is valid'
 EOF
-    run $ZENROOM_EXECUTABLE -z $BATS_SUITE_TMPDIR/verify_from_wrong_pk_shake.zen -a $BATS_SUITE_TMPDIR/multi_msg_data_shake.json -k $BATS_SUITE_TMPDIR/sign_pubkey_shake.json
-    assert_failure
+    run $ZENROOM_EXECUTABLE -z -a multi_msg_data_shake.json -k sign_pubkey_shake.json verify_from_wrong_pk_shake.zen
+    assert_line '[W]  The bbs signature by Alice is not authentic'
 }

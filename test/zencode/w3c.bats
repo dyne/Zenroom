@@ -412,15 +412,15 @@ Scenario 'w3c': did document
 Given I have a 'did document'
 Then print the 'did document'
 EOF
-    run $ZENROOM_EXECUTABLE -a invalid_scheme.json -z did_document_parsing.zen
-    assert_failure
-    run $ZENROOM_EXECUTABLE -a invalid_method_name.json -z did_document_parsing.zen
-    assert_failure
-    run $ZENROOM_EXECUTABLE -a invalid_method_specific_identifier.json -z did_document_parsing.zen
-    assert_failure
-    run $ZENROOM_EXECUTABLE -a invalid_method_specific_identifier2.json -z did_document_parsing.zen
-    assert_failure
-    run $ZENROOM_EXECUTABLE -a valid_id.json -z did_document_parsing.zen
+    run $ZENROOM_EXECUTABLE -z -a invalid_scheme.json did_document_parsing.zen
+    assert_line '[W]  Invalid DID document: invalid scheme'
+    run $ZENROOM_EXECUTABLE -z -a invalid_method_name.json did_document_parsing.zen
+    assert_line '[W]  Invalid DID document: invalid method-name'
+    run $ZENROOM_EXECUTABLE -z -a invalid_method_specific_identifier.json did_document_parsing.zen
+    assert_line '[W]  Invalid DID document: invalid method specific identifier'
+    run $ZENROOM_EXECUTABLE -z -a invalid_method_specific_identifier2.json did_document_parsing.zen
+    assert_line '[W]  Invalid DID document: invalid method specific identifier'
+    run $ZENROOM_EXECUTABLE -z -a valid_id.json did_document_parsing.zen
     assert_success
 }
 
@@ -506,8 +506,8 @@ When I create the 'schnorr' public key from did document 'didDocument'
 
 Then print the data
 EOF
-    run $ZENROOM_EXECUTABLE -a did_document.json -z pk_from_doc_not_exist.zen
-    assert_failure
+    run $ZENROOM_EXECUTABLE -z -a did_document.json pk_from_doc_not_exist.zen
+    assert_line '[W]  schnorr_public_key not found in the did document didDocument'
 }
 
 @test "verify the did document named 'did_document' is signed by 'signer_did_document'" {
@@ -698,6 +698,6 @@ When I verify the did document named 'did_document' is signed by 'not_signer_did
 
 Then print the string 'should not be verified'
 EOF
-    run $ZENROOM_EXECUTABLE -a did_documents.json -z verify_wrong_did_doc.zen
-    assert_failure
+    run $ZENROOM_EXECUTABLE -z -a did_documents.json verify_wrong_did_doc.zen
+    assert_line '[W]  The signer id in proof is different from the one in not_signer_did_document'
 }

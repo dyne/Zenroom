@@ -23,8 +23,8 @@ rule check version 1.0.0
 	 When I create the random object of '256' bits
 	 Then print the 'random object'
 EOF
-    run $ZENROOM_EXECUTABLE -z fail_nothing.zen -a fail_nothing.data
-    assert_failure
+    run $ZENROOM_EXECUTABLE -z -a fail_nothing.data fail_nothing.zen
+    assert_line '[W]  Undesired data passed as input'
 }
 @test "Given I have a '' named ''" {
     echo '{ "anykey": "anyvalue" }' | save_asset 'have_anyvalue.data'

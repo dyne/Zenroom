@@ -494,7 +494,7 @@ EOF
 }
 
 @test "Flat dictionary" {
-    cat $BATS_SUITE_TMPDIR/timestamp_stats.json | jq '{"timestamp": . }' | save_asset not_flat_dic.json
+    cat $BATS_FILE_TMPDIR/timestamp_stats.json | jq '{"timestamp": . }' | save_asset not_flat_dic.json
 
     cat <<EOF | zexe flat_array_contents.zen not_flat_dic.json
 Rule check version 2.0.0

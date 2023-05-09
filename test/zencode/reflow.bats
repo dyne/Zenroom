@@ -38,7 +38,6 @@ and I create the credential key
 Then print my 'keyring'
 EOF
     save_output "keypair_${1}.json"
-    rm $TMP/out
 
 	cat <<EOF | zexe pubkey_${1}.zen keypair_${1}.json
 Scenario reflow
@@ -48,7 +47,6 @@ When I create the reflow public key
 Then print my 'reflow public key'
 EOF
     save_output "public_key_${1}.json"
-    rm $TMP/out
 
 	cat <<EOF | zexe request_${1}.zen keypair_${1}.json
 Scenario credential
@@ -58,7 +56,6 @@ When I create the credential request
 Then print my 'credential request' as 'credential request'
 EOF
     save_output "request_${1}.json"
-    rm $TMP/out
 
 	## ISSUER SIGNS
 	cat <<EOF | zexe issuer_sign_${1}.zen issuer_keypair.json request_${1}.json
@@ -72,7 +69,6 @@ Then print the 'credential signature'
 and print the 'issuer public key'
 EOF
     save_output "issuer_signature_${1}.json"
-    rm $TMP/out
 
 	## PARTICIPANT AGGREGATES SIGNED CREDENTIAL
 	cat <<EOF | zexe aggr_cred_${1}.zen keypair_${1}.json issuer_signature_${1}.json
@@ -85,7 +81,6 @@ then print 'credentials'
 and print 'keyring'
 EOF
     save_output "verified_credential_${1}.json"
-    rm $TMP/out
 }
 
 @test "CREATE Reflow seal" {
@@ -96,8 +91,8 @@ EOF
 
 @test "Generate seal" {
     echo "# join the verifiers of signed credentials" >&3
-    json_join $BATS_SUITE_TMPDIR/public_key_Alice.json $BATS_SUITE_TMPDIR/public_key_Bob.json $BATS_SUITE_TMPDIR/public_key_Carl.json | save_asset public_keys.json
-    echo "{\"public_keys\": `cat $BATS_SUITE_TMPDIR/public_keys.json` }" | save_asset public_key_array.json
+    json_join $BATS_FILE_TMPDIR/public_key_Alice.json $BATS_FILE_TMPDIR/public_key_Bob.json $BATS_FILE_TMPDIR/public_key_Carl.json | save_asset public_keys.json
+    echo "{\"public_keys\": `cat $BATS_FILE_TMPDIR/public_keys.json` }" | save_asset public_key_array.json
 
     cat <<EOF | save_asset uid.json
 {
@@ -128,11 +123,11 @@ EOF
     save_output "reflow_seal.json"
 
 
-    cat $BATS_SUITE_TMPDIR/reflow_seal.json | save_asset reflow_seal_empty.json
+    cat $BATS_FILE_TMPDIR/reflow_seal.json | save_asset reflow_seal_empty.json
 
     # anyone can require a verified credential to be able to sign, chosing
     # the right issuer verifier for it
-    json_join $BATS_SUITE_TMPDIR/issuer_verifier.json $BATS_SUITE_TMPDIR/reflow_seal.json | save_asset credential_to_sign.json
+    json_join $BATS_FILE_TMPDIR/issuer_verifier.json $BATS_FILE_TMPDIR/reflow_seal.json | save_asset credential_to_sign.json
 }
 
 # PARTICIPANT SIGNS (function)
@@ -161,9 +156,9 @@ function collect_sign() {
 	local name=$1
 	local tmp_msig=$1_msig.json
 	local tmp_sig=$1_sig.json
-	cat $BATS_SUITE_TMPDIR/reflow_seal.json | save_asset $tmp_msig
+	cat $BATS_FILE_TMPDIR/reflow_seal.json | save_asset $tmp_msig
 #	json_join issuer_verifier.json signature_$name.json > $tmp_sig
-	jq -s '.[0] * .[1]' $BATS_SUITE_TMPDIR/issuer_verifier.json $BATS_SUITE_TMPDIR/signature_$name.json | save_asset issuer_verifier_signature_$name.json
+	jq -s '.[0] * .[1]' $BATS_FILE_TMPDIR/issuer_verifier.json $BATS_FILE_TMPDIR/signature_$name.json | save_asset issuer_verifier_signature_$name.json
 	cat << EOF | zexe collect_sign.zen $tmp_msig issuer_verifier_signature_$name.json
 Scenario reflow
 Given I have a 'reflow seal'

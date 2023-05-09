@@ -82,7 +82,7 @@ Then print the 'ntrup secret' from 'ntrup kem'
 EOF
     save_output 'ntrup_Kem.json'
 
-    jq 'del(.ntrup_secret)' $BATS_SUITE_TMPDIR/ntrup_Kem.json | save_asset ntrup_ciphertext.json
+    jq 'del(.ntrup_secret)' $BATS_FILE_TMPDIR/ntrup_Kem.json | save_asset ntrup_ciphertext.json
 }
 
 @test "When I create the ntrup secret from ''" {
