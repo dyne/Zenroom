@@ -61,6 +61,7 @@ For many quick running examples visit the
 
 Many applications already include Zenroom and use the Zencode language.
 
+- [W3C compatible Distributed Identity did:dyne](https://did.dyne.org)
 - [Global Passport Project](https://globalpassportproject.org)
 - [Keypairoom mnemonic deterministic and private keypairs](https://github.com/LedgerProject/keypairoom)
 - [Simple Android app to show how to use Zenroom libs](https://github.com/dyne/Zenroom-Android-app)
@@ -88,6 +89,12 @@ operational crypto flows.
 Environment) and by signing in with a username and password you can
 save your contracts and download them as a Dockerfile micro-service
 ready to deploy.
+
+### Tutorials
+
+- [Bitcoin secure off-line wallet](https://medium.com/think-do-tank/bitcoin-secure-off-line-wallet-be50a57a8474)
+- [Easy Ethereum (and ERC20) transactions](https://medium.com/think-do-tank/easy-ethereum-transactions-with-zenroom-ac911a0bfdc0)
+- [Quantum Proof Crypto](https://medium.com/think-do-tank/quantum-proof-cryptography-e23b165b3bbd)
 
 ## Build
 
@@ -129,15 +136,15 @@ Will produce a `zenroom` executable and a `libzenroom` shared lib in `zenroom/bu
 
 ## License
 
-Copyright (C) 2017-2022 Dyne.org foundation
+Copyright (C) 2017-2023 Dyne.org foundation
 
 Designed and written by Denis "[Jaromil](https://jaromil.dyne.org)" Roio with the help of [Puria](https://github.com/puria) Nafisi Azizi and [Andrea](https://github.com/andrea-dintino) D'Intino.
 
-Includes code contributions by Alberto Lerda and Danilo Spinella.
+Includes code contributions by Alberto Lerda, Matteo Cristino, Danilo Spinella, Luca Di Domenico and Rebecca Selvaggini.
 
 Reviews and suggestions contributed by: Richard Stallman, Daniele
 Lacamera, Enrico Zimuel, Sofía Celi, Sebastian Blichfeld, Danilo
-Spinella, Adam Burns and Thomas Fuerstner.
+Spinella, Adam Burns, Thomas Fuerstner and Jürgen Eckel.
 
 Zenroom [complies with the REUSE license specification](https://github.com/dyne/Zenroom/actions/workflows/reuse.yml) and redistributes:
 - Lua 5.3 - Copyright © 1994–2019 Lua.org, PUC-Rio.
