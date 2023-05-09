@@ -87,6 +87,6 @@ IfWhen("verify the '' has a eddsa signature in '' by ''",function(msg, sig, by)
 	  local s = have(sig)
 	  ZEN.assert(
 	     ED.verify(pk, s, ZEN.serialize(m)),
-	     'The signature by '..by..' is not authentic'
+	     'The eddsa signature by '..by..' is not authentic'
 	  )
 end)

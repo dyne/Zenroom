@@ -212,7 +212,7 @@ local function _verifying(msg, sig, by)
    local s = have(sig)
    ZEN.assert(
       ECDH.verify(pk, ZEN.serialize(obj), s),
-      'The signature by ' .. by .. ' is not authentic'
+      'The ecdh signature by ' .. by .. ' is not authentic'
    )
 end
 
