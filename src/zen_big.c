@@ -86,7 +86,7 @@ extern ecp* ecp_dup(lua_State *L, ecp* in);
 	}
 
 
-int _octet_to_big(lua_State *L, big *dst, octet *src) {
+int _octet_to_big(lua_State *L, big *dst, const octet *src) {
 	int i;
 	Z(L);
 	if(src->len <= MODBYTES) { // big

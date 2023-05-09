@@ -126,7 +126,6 @@ static int lua_new_ecp(lua_State *L) {
 	void *tx;
 	char *failed_msg = NULL;
 	octet *o = NULL;
-#ifdef DEBUG
 	tx = luaL_testudata(L, 1, "zenroom.big");
 	void *ty = luaL_testudata(L, 2, "zenroom.big");
 	if(tx && ty) {
@@ -149,6 +148,7 @@ end_big_big:
 		big_free(L,x);
 		goto end;
 	}
+#ifdef DEBUG
 	// If x is on the curve then y is calculated from the curve equation.
 	int tn;
 	lua_Number n = lua_tonumberx(L, 2, &tn);
@@ -708,6 +708,61 @@ end:
 	END(1);
 }
 
+char gf_sign(BIG y) {
+	BIG p;
+	BIG_rcopy(p, CURVE_Prime);
+	BIG_dec(p, 1);
+	BIG_norm(p);
+	BIG_shr(p, 1);
+	if(BIG_comp(y, p) == 1)
+		return 1;
+	else
+		return 0;
+}
+
+static int ecp_zcash_export(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	ecp *e = ecp_arg(L, 1);
+	if(e == NULL) {
+		THROW("Could not create ECP point");
+		return 0;
+	}
+
+	octet *o = o_new(L, 48);
+	if(o == NULL) {
+		failed_msg = "Could not allocate ECP point";
+		goto end;
+	}
+
+	if(ECP_isinf(&e->val)) {
+		o->len = 48;
+		o->val[0] = (char)0xc0;
+		memset(o->val+1, 0, 47);
+	} else {
+		BIG x, y;
+		const char c_bit = 1;
+		const char i_bit = 0;
+
+		ECP_get(x, y, &e->val);
+
+		const char s_bit = gf_sign(y);
+		char m_byte = (char)((c_bit << 7)+(i_bit << 6)+(s_bit << 5));
+
+		BIG_toBytes(o->val, x);
+		o->len = 48;
+
+		o->val[0] |= m_byte;
+	}
+
+end:
+	ecp_free(L, e);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
 int luaopen_ecp(lua_State *L) {
 	(void)L;
 	const struct luaL_Reg ecp_class[] = {
@@ -744,6 +799,7 @@ int luaopen_ecp(lua_State *L) {
 		{"__eq", ecp_eq},
 		{"__gc", ecp_destroy},
 		{"__tostring", ecp_output},
+		{"zcash_export", ecp_zcash_export},
 		{NULL, NULL}
 	};
 	zen_add_class(L, "ecp", ecp_class, ecp_methods);

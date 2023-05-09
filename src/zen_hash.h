@@ -37,6 +37,7 @@
 #define _SHA3_384 3384
 #define _SHA3_512 3512
 #define _SHA3_256 3256
+#define _SHAKE256 8
 #define _KECCAK256 7
 #define _RMD160 160
 #define _BLAKE2B 464
@@ -52,6 +53,7 @@ typedef struct {
 	sha3 *sha3_256; // SHA3 aka keccak with 32 bytes
 	sha3 *sha3_512; // SHA3 aka keccak with 64 bytes
         sha3 *keccak256;
+	sha3 *shake256;
         dword *rmd160;
   blake2b_state *blake2b;
   blake2s_state *blake2s;
