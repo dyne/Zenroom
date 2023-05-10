@@ -13,7 +13,6 @@ ZENROOM_LIB_ROOT_REL= 'src/src'
 LUA_ROOT = os.path.join(ZENROOM_ROOT, 'lib/lua53/src')
 MILAGRO_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/milagro-crypto-c/include')
 QP_ROOT = os.path.join(ZENROOM_ROOT, 'lib/pqclean')
-ZSTD_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/zstd')
 ED25519_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/ed25519-donna')
 BLAKE2_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/blake2')
 MIMALLOC_INCLUDE_DIR = os.path.join(ZENROOM_ROOT, 'lib/mimalloc/include')
@@ -86,7 +85,6 @@ zenroom_lib = Extension('zenroom',
                             ZENROOM_LIB_ROOT_REL,
                             LUA_ROOT,
                             MILAGRO_INCLUDE_DIR,
-                            ZSTD_INCLUDE_DIR,
                             ED25519_INCLUDE_DIR,
                             BLAKE2_INCLUDE_DIR,
                             MIMALLOC_INCLUDE_DIR,
@@ -110,7 +108,6 @@ zenroom_lib = Extension('zenroom',
                             os.path.join(meson_root, 'milagro-crypto-c/lib/libamcl_pairing_' + ECP_CURVE + '.a'),
                             os.path.join(meson_root, 'milagro-crypto-c/lib/libamcl_curve_' + ECP_CURVE + '.a'),
                             os.path.join(meson_root, 'libqpz.a'),
-                            os.path.join(meson_root, 'libzstd.a'),
                             os.path.join(meson_root, 'liblua.a'),
                             os.path.join(meson_root, 'libed25519.a'),
                             os.path.join(meson_root, 'libblake2.a'),

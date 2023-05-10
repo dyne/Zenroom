@@ -43,7 +43,7 @@ Given that I am known as 'MadHatter'
 Then print 'Success' 'OK'
 EOF
     run $ZENROOM_EXECUTABLE -z $TMP/error1.zen
-    assert_line "[!]  PARSE: [string \"zencode\"]:600: Invalid Zencode line 4: '0YOUI4qhIeXmIpyK'"
+    assert_line --partial "Invalid Zencode line 4: '0YOUI4qhIeXmIpyK'"
 }
 
 
@@ -56,7 +56,7 @@ and 0YOUI4qhIeXmIpyK
 Then print 'Success' 'OK'
 EOF
     run $ZENROOM_EXECUTABLE -z $TMP/error2.zen
-    assert_line '[!]  PARSE: [string "zencode"]:155: Zencode pattern not found (given): and 0YOUI4qhIeXmIpyK'
+    assert_line --partial 'Zencode pattern not found (given): and 0YOUI4qhIeXmIpyK'
 }
 
 
@@ -70,5 +70,5 @@ and this should fail or 'rule unknown ignore'
 Then print my 'issuer keypair'
 EOF
     run $ZENROOM_EXECUTABLE -z $TMP/error3.zen
-    assert_line "[!]  PARSE: [string \"zencode\"]:155: Zencode pattern not found (when): and this should fail or 'rule unknown ignore'"
+    assert_line --partial "Zencode pattern not found (when): and this should fail or 'rule unknown ignore'"
 }

@@ -7,9 +7,8 @@ pwd := $(shell pwd)
 # ARCH ?=$(shell uname -m)
 PREFIX ?= /usr/local
 # VERSION is set in src/Makefile
-VERSION := $(shell awk '/ZENROOM_VERSION :=/ { print $$3; exit }' src/Makefile | tee VERSION)
 # Targets to be build in this order
-BUILDS := apply-patches milagro lua53 embed-lua zstd quantum-proof ed25519-donna mimalloc blake2
+BUILDS := apply-patches milagro lua53 embed-lua quantum-proof ed25519-donna mimalloc blake2
 
 # DESTDIR is supported by install target
 
@@ -29,8 +28,6 @@ all:
 	@echo "for android and ios see scripts in build/"
 
 # if ! [ -r build/luac ]; then ${gcc} -I${luasrc} -o build/luac ${luasrc}/luac.c ${luasrc}/liblua.a -lm; fi
-
-.PHONY: zstd
 
 sonarqube:
 	@echo "Configure login token in build/sonarqube.sh"
@@ -157,24 +154,6 @@ quantum-proof:
 check-milagro: milagro
 	CC=${gcc} CFLAGS="${cflags}" $(MAKE) -C ${pwd}/lib/milagro-crypto-c test
 
-zstd:
-	echo "-- Building ZSTD"
-	CC="${zstd_cc}" \
-	LD=${ld} \
-	AR=${ar} \
-	RANLIB=${ranlib} \
-	LD=${ld} \
-	CFLAGS="${cflags}" \
-	LDFLAGS="${ldflags}" \
-	$(MAKE) libzstd.a -C ${pwd}/lib/zstd \
-	ZSTD_LIB_DICTBUILDER=0 \
-	ZSTD_LIB_DEPRECATED=0 \
-	ZSTD_LEGACY_SUPPORT=0 \
-	HUF_FORCE_DECOMPRESS_X1=1 \
-	ZSTD_FORCE_DECOMPRESS_SEQUENCES_SHORT=1 \
-	ZSTD_STRIP_ERROR_STRINGS=0 \
-	ZSTD_NO_INLINE=1
-
 ed25519-donna-ccache: ed25519-donna
 ed25519-donna:
 	echo "-- Building ED25519 for EDDSA"
@@ -219,7 +198,6 @@ clean:
 	$(MAKE) clean -C ${pwd}/lib/pqclean
 	rm -rf ${pwd}/lib/milagro-crypto-c/build
 	rm -rf ${pwd}/lib/mimalloc/build
-	$(MAKE) clean -C ${pwd}/lib/zstd
 	$(MAKE) clean -C ${pwd}/lib/blake2
 	$(MAKE) clean -C ${pwd}/src
 	if [ -d "bindings" ]; then $(MAKE) clean -C ${pwd}/bindings; fi

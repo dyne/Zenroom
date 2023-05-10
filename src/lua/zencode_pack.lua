@@ -34,23 +34,3 @@ When("create the '' decoded from mpack ''", function(dst, src)
     ACK[dst] = MPACK.decode( OCTET.to_string( pack ) )
     new_codec(dst)
 end)
-
-
-When("create the zpack of ''", function(src)
-    empty'zpack'
-    local source = have(src)
-    local tmp = MPACK.encode( { data = source,
-				codec = ZEN.CODEC[src] } )
-    ACK.zpack = compress( O.from_rawlen(tmp, #tmp) )
-    new_codec('zpack', { zentype = 'element'})
-end)
-
-When("create the '' decoded from zpack ''", function(dst, src)
-    empty(dst)
-    local zpack = have(src)
-    local tmp = MPACK.decode ( O.to_string( decompress(zpack) ) )
-    ZEN.assert( tmp.data, "Invalid zpack, data not found: "..src)
-    ZEN.assert( tmp.codec, "Invalid zpack, codec not found: "..src)
-    ACK[dst] = tmp.data
-    ZEN.CODEC[dst] = tmp.codec
-end)

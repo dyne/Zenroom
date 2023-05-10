@@ -71,28 +71,3 @@ EOF
     save_output 'newblock_unpack.out'
     assert_output '{"output":["MPACK_SUCCESS"]}'
 }
-
-
-# TODO: ZPACK
-@test "Create the zpack" {
-    cat << EOF | zexe zpack.zen newblock.json
-Given I have a 'hex dictionary' named 'newblock'
-When I create the zpack of 'newblock'
-Then print the 'zpack' as 'base64'
-EOF
-    save_output 'zpack.json'
-    assert_output '{"zpack":"KLUv/SD19QYAco0yLkBr3cMwxo+KSNQxDMCkRvftdxe/28dvX3Ny7Mk3OxeNVdBySHkjdapchuFLBySNauMsBGCrrvNXqitujRX0QDAYyKCZSSxHzDANUudB5uaqpI4g4o2Dd4etDJGg7WPfLrujGgz8V+UsxWueaYFGDq4QafPBCqgGak+PDQpEXiNRjodBgiZJ9B1AXgYwDHMxs89QwrXL8GJ/V0Ds9lIdqbS+nxZef8ZMicSrXd5by1e34WuX68lvoHZOq3w/KTBL5Y32LRPx5Y2TiAUA1TVATqAXtArH5spSLWUG"}'
-}
-
-@test "Zunpack" {
-    cat << EOF | zexe zunpack.zen newblock.json zpack.json
-Given I have a 'base64' named 'zpack'
-and I have a 'hex dictionary' named 'newblock'
-When I create the 'decoded' decoded from zpack 'zpack'
-and I verify 'decoded' is equal to 'newblock'
-Then print the string 'ZPACK SUCCESS'
-EOF
-    save_output "zunpack.out"
-    assert_output '{"output":["ZPACK_SUCCESS"]}'
-
-}

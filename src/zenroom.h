@@ -66,8 +66,6 @@ typedef enum { NIL, VERBOSE, COLOR, RNGSEED, LOGFMT, MAXITER } zconf;
 // contents are opaque in lua and available only as lightuserdata
 typedef struct {
 	void *lua; // (lua_State*)
-    void *zstd_c; // ZSTD context
-    void *zstd_d;
 
 	char *stdout_buf;
 	size_t stdout_len;

@@ -39,8 +39,6 @@
 #include <emscripten.h>
 #endif
 
-#include <zstd.h>
-
 #if defined(ARCH_CORTEX)
 extern int SEMIHOSTING_STDOUT_FILENO;
 extern int write_to_console(const char* str);
@@ -210,74 +208,6 @@ ZEN_PRINT(zen_act, zen_log(L, LOG_INFO, o))
 ZEN_PRINT(zen_notice, zen_log(L, LOG_INFO, o))
 ZEN_PRINT(zen_debug, zen_log(L, LOG_VERBOSE, o))
 
-int zen_zstd_compress(lua_State *L) {
-  BEGIN();
-  char *failed_msg = NULL;
-  octet *dst, *src;
-  Z(L);
-  if(!Z->zstd_c)
-    Z->zstd_c = ZSTD_createCCtx();
-  src = o_arg(L, 1);
-  if(src == NULL) {
-	  failed_msg = "Could not allocate message to compress";
-	  goto end;
-  }
-  dst = o_new(L, ZSTD_compressBound(src->len));
-  if(dst == NULL) {
-	  failed_msg = "Could not allocate compressed message";
-	  goto end;
-  }
-  dst->len = ZSTD_compressCCtx(Z->zstd_c,
-			       dst->val, dst->max,
-			       src->val, src->len,
-			       ZSTD_maxCLevel());
-  func(L, "octet compressed: %u -> %u",src->len, dst->len);
-  if (ZSTD_isError(dst->len)) {
-    _err("ZSTD error: %s\n",ZSTD_getErrorName(dst->len));
-  }
-end:
-  o_free(L,src);
-  if(failed_msg) {
-	  lerror(L, failed_msg);
-	  lua_pushnil(L);
-  }
-  END(1);
-}
-
-int zen_zstd_decompress(lua_State *L) {
-  BEGIN();
-  octet *src, *dst;
-  char *failed_msg = NULL;
-  Z(L);
-  if(!Z->zstd_d)
-    Z->zstd_d = ZSTD_createDCtx();
-  src = o_arg(L, 1); SAFE(src);
-  if(src == NULL) {
-	  failed_msg = "Could not allocate message to decompress";
-	  goto end;
-  }
-  dst = o_new(L, src->len * 3); // assuming max bound is *3
-  if(dst == NULL) {
-	  failed_msg = "Could not allocate decompressed message";
-	  goto end;
-  }
-  SAFE(dst);
-  func(L, "decompressing octet: %u", src->len);
-  dst->len = ZSTD_decompressDCtx(Z->zstd_d,
-		      dst->val, dst->max,
-		      src->val, src->len);
-  func(L, "octet uncompressed: %u -> %u",src->len, dst->len);
-  if (ZSTD_isError(dst->len)) {
-    _err("ZSTD error: %s\n",ZSTD_getErrorName(dst->len));
-  }
-end:
-  o_free(L,src);
-  if(failed_msg) {
-	  lerror(L, failed_msg);
-	  lua_pushnil(L);
-  }
-  END(1);
-}
 
 static int zen_random_seed(lua_State *L) {
   BEGIN();
@@ -328,8 +258,6 @@ void zen_add_io(lua_State *L) {
 		  {"warn", zen_warn},
 		  {"act", zen_act},
 		  {"xxx", zen_debug},
-		  {"compress", zen_zstd_compress},
-		  {"decompress", zen_zstd_decompress},
 		  {"random_seed", zen_random_seed},
 		  {NULL, NULL} };
 	lua_getglobal(L, "_G");

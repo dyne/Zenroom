@@ -17,8 +17,6 @@
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --]]
 
--- required by zenroom_zpack
-
 local mpack = require_once'msgpack'
 local pack, unpack = string.pack, string.unpack
 

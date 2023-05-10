@@ -19,7 +19,6 @@ ldadd += ${milib}/libamcl_pairing_${ecp_curve}.a
 ldadd += ${milib}/libamcl_curve_${ecdh_curve}.a
 ldadd += ${milib}/libamcl_core.a
 ldadd += ${pwd}/lib/pqclean/libqpz.a
-ldadd += ${pwd}/lib/zstd/libzstd.a
 ldadd += ${pwd}/lib/ed25519-donna/libed25519.a
 ldadd += ${pwd}/lib/blake2/libblake2.a
 ldadd += ${pwd}/lib/mimalloc/build/libmimalloc-static.a
@@ -275,7 +274,6 @@ ifneq (,$(findstring ccache,$(MAKECMDGOALS)))
 milagro_cmake_flags += -DCMAKE_C_COMPILER_LAUNCHER=ccache
 mimalloc_cmake_flags += -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 quantum_proof_cc := ccache ${gcc}
-zstd_cc := ccache ${gcc}
 ed25519_cc := ccache ${gcc}
 lua_cc := ccache ${gcc}
 endif
@@ -302,10 +300,6 @@ milagro_cmake_flags += -DBUILD_SHARED_LIBS=OFF -DBUILD_PYTHON=OFF -DBUILD_DOXYGE
 # quantum-proof
 quantum_proof_cc ?= ${gcc}
 quantum_proof_cflags ?= -I ${pwd}/src -I ${pwd}/lib/mimalloc/include -I.
-
-# ----------------
-# zstd settings
-zstd_cc ?= ${gcc}
 
 #-----------------
 # ed25519 settings
