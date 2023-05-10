@@ -270,13 +270,16 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - run: sudo apt install --force-yes zsh
+      - run: sudo apt update
+        if: runner.os == 'Linux'
+      - run: sudo apt install -y zsh cmake
         if: runner.os == 'Linux'
       - run: brew install zsh
         if: runner.os == 'macOS'
       - run: |
           ./prepare.sh
-          pip3 install meson ninja
+          pipx install meson
+          pipx install ninja
           pip3 install .[test]
       - run: pytest -s tests
 
