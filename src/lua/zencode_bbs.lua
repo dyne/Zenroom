@@ -35,13 +35,46 @@ local function bbs_public_key_f(obj)
     return obj
 end
 
+--see function octets_to_signature in src/lua/crypto_bbs.lua
+local function bbs_signature_f(obj)
+    local expected_len = 112
+    local signature_octets = obj:octet()
+    ZEN.assert(#signature_octets == expected_len,
+        "Wrong length of signature_octets"
+    )
+
+    local A_octets = signature_octets:sub(1, 48)
+    local AA = A_octets:zcash_topoint()
+    ZEN.assert(AA ~= ECP.generator(),
+        "Point is identity"
+    )
+
+    local BIG_0 = BIG.new(0)
+    local index = 49
+    local end_index = index + 31
+    local e = BIG.new(signature_octets:sub(index, end_index))
+    local PRIME_R = ECP.order()
+    ZEN.assert( e ~= BIG_0 and e < PRIME_R,
+        "Wrong e in deserialization"
+    )
+
+    index = index + 32
+    end_index = index + 31
+    local s = BIG.new(signature_octets:sub(index, end_index))
+    ZEN.assert( s ~= BIG_0 and s < PRIME_R,
+        "Wrong s in deserialization"
+    )
+    return obj
+end
 
 ZEN.add_schema(
    {
       bbs_public_key = function(obj)
         return ZEN.get(obj, '.', bbs_public_key_f)
       end,
-      bbs_signature = O.from_base64
+      bbs_signature = function(obj)
+        return ZEN.get(obj, '.', bbs_signature_f)
+      end
    }
 )
 
@@ -58,16 +91,16 @@ ZEN.add_schema(
 
 -- generate the private key
 When('create the bbs key',function()
-	initkeyring'bbs'
-	ACK.keyring.bbs = BBS.keygen()
+    initkeyring'bbs'
+    ACK.keyring.bbs = BBS.keygen()
 end)
 
 -- generate the public key
 When('create the bbs public key',function()
-	empty'bbs public key'
-	local sk = havekey'bbs'
-	ACK.bbs_public_key = BBS.sk2pk(sk)
-	new_codec('bbs public key', { zentype = 'element'})
+    empty'bbs public key'
+    local sk = havekey'bbs'
+    ACK.bbs_public_key = BBS.sk2pk(sk)
+    new_codec('bbs public key', { zentype = 'element'})
 end)
 
 local function _key_from_secret(sec)
@@ -88,14 +121,14 @@ When("create the bbs key with secret ''",
 )
 
 When("create the bbs public key with secret key ''",function(sec)
-	local sk = have(sec)
+    local sk = have(sec)
     -- Check if the user-provided sk is reasonable
     assert(type(sk) == "zenroom.big", "sk must have type integer")
     assert(sk < ECP.order(), "sk is not a scalar")
 
-	empty'bbs public key'
-	ACK.bbs_public_key = BBS.sk2pk(sk)
-	new_codec('bbs public key', { zentype = 'element'})
+    empty'bbs public key'
+    ACK.bbs_public_key = BBS.sk2pk(sk)
+    new_codec('bbs public key', { zentype = 'element'})
 end)
 
 --[[ The function BBS.sign may take as input also a string octet HEADER containing context 
@@ -115,7 +148,6 @@ local function generic_bbs_signature(doc, h)
     empty'bbs signature'
     ACK.bbs_signature = BBS.sign(ciphersuite, sk, pk, obj)
     new_codec('bbs signature', { zentype = 'element'})
-
 end
 
 When("create the bbs signature of ''", function(doc)
@@ -123,7 +155,6 @@ When("create the bbs signature of ''", function(doc)
 end)
 
 When("create the bbs signature of '' using ''", generic_bbs_signature)
-
 
 local function generic_verify(doc, sig, by, h)
     local pk = load_pubkey_compat(by, 'bbs')
@@ -151,16 +182,45 @@ IfWhen("verify the '' has a bbs signature in '' by '' using ''", generic_verify)
     header, ph, messages_octets, disclosed_indexes)
 
     ph = presentation header, used to mitigate replay attack.
-    TODO: is it ok to generate it randomly?
 --]]
+
+--see function octets_to_proof in src/lua/crypto_bbs.lua
+local function bbs_proof_f(obj)
+    local proof_octets = obj:octet()
+    local proof_len_floor = 304
+    ZEN.assert(#proof_octets >= proof_len_floor,
+        "proof_octets is too short"
+    )
+    local index = 1
+    for i = 1, 3 do
+        local end_index = index + 47
+        local point = (proof_octets:sub(index, end_index)):zcash_topoint()
+        ZEN.assert(point ~= ECP.generator(),
+            "Invalid point"
+        )
+        index = index + 48
+    end
+    local PRIME_R = ECP.order()
+    while index < #proof_octets do
+        local end_index = index + 31
+        local sc = BIG.new(proof_octets:sub(index, end_index))
+        ZEN.assert( sc ~= BIG.new(0) and sc < PRIME_R,
+            "Not a scalar in octets_proof"
+        )
+        index = index + 32
+    end
+
+    return obj
+end
 
 ZEN.add_schema(
     {
         bbs_proof = function(obj)
-            return ZEN.get(obj, '.')
+            return ZEN.get(obj, '.', bbs_proof_f)
         end,
-        bbs_credential = O.from_base64,
-        bbs_presentation_header = O.from_base64
+        bbs_credential = function(obj)
+            return ZEN.get(obj, '.', bbs_signature_f)
+          end
     }
 )
 
@@ -180,7 +240,7 @@ end)
 When("create the bbs proof using ''", function(h)
     local hash =  O.to_string(mayhave(h)) or h
     local ciphersuite = BBS.ciphersuite(hash)
-    local ph = have'bbs presentation header'
+    local ph = have'bbs presentation header':octet()
     local message_octets = have'bbs messages'
     if(type(message_octets) ~= 'table') then
         message_octets = {message_octets}
@@ -199,13 +259,12 @@ When("create the bbs proof using ''", function(h)
     new_codec('bbs proof', { zentype = 'element'})
 end)
 
-
 IfWhen("verify the bbs proof using ''", function(h)
     local hash =  O.to_string(mayhave(h)) or h
     local ciphersuite = BBS.ciphersuite(hash)
     local pubk = have'bbs public key'
     local proof = have'bbs proof'
-    local ph = have'bbs presentation header'
+    local ph = have'bbs presentation header':octet()
     local disclosed_messages_octets = have'bbs disclosed messages'
     local float_indexes = have'bbs disclosed indexes'
     local disclosed_indexes = {}
@@ -216,5 +275,3 @@ IfWhen("verify the bbs proof using ''", function(h)
         BBS.proof_verify(ciphersuite, pubk, proof, nil, ph, disclosed_messages_octets, disclosed_indexes),
        'The bbs proof is not valid')
 end)
-
-
