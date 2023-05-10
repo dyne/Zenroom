@@ -1,7 +1,7 @@
 project(
     'zenroom',
     'c',
-    version: '3.0.0-devel',
+    version: run_command(['git', 'describe', '--tags'], capture : true, check : true).stdout().split('-')[0],
     license: 'GPL3',
      meson_version: '>=0.49.2',
     default_options: [
@@ -11,7 +11,8 @@ project(
 )
 
 add_project_arguments(
-    '-DVERSION="' + meson.project_version() + '"',
+    '-DVERSION="' + meson.project_version() +'"',
+	'-DCOMMIT="' + run_command(['git', 'rev-parse', '--short', 'HEAD'], capture: true, check : true).stdout().strip() +'"',
     '-D_POSIX_C_SOURCE=200112L',
     '-D_DARWIN_C_SOURCE',
     language: 'c'
@@ -40,7 +41,6 @@ add_project_link_arguments(
     'milagro-crypto-c/lib/libamcl_pairing_' + ecp_curve + '.a',
     'milagro-crypto-c/lib/libamcl_curve_' + ecp_curve + '.a',
     'liblua.a',
-    'libzstd.a',
     'libqpz.a',
     'libed25519.a',
 	'libblake2.a',
@@ -55,8 +55,6 @@ milagro_include_dirs = include_directories('../lib/milagro-crypto-c/include')
 milagro_generated_include_dirs = include_directories('milagro-crypto-c/include')
 
 mimalloc_include_dirs = include_directories('../lib/mimalloc/include')
-
-zstd_include_dirs = include_directories('../lib/zstd')
 
 lua_include_dirs = include_directories('../lib/lua53/src')
 
@@ -106,7 +104,6 @@ zenroom_lib = library(
         zenroom_include_dirs,
         milagro_include_dirs,
         milagro_generated_include_dirs,
-        zstd_include_dirs,
 	ed25519_include_dirs,
 	blake2_include_dirs,
         lua_include_dirs,
@@ -124,7 +121,6 @@ zenroom_dep = declare_dependency(
         zenroom_include_dirs,
         milagro_include_dirs,
         milagro_generated_include_dirs,
-        zstd_include_dirs,
 	ed25519_include_dirs,
 	blake2_include_dirs,
         lua_include_dirs,

@@ -95,6 +95,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
@@ -125,6 +127,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - run: |
           sudo apt install zsh jq meson
           make linux
@@ -136,6 +140,8 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - run: |
           make osx
           make check-osx
@@ -150,6 +156,8 @@ jobs:
         go: ['1.13', '1.14', '1.15', '1.16', '1.19']
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go }}
@@ -177,6 +185,8 @@ jobs:
         rust: ['stable', 'nightly']
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ matrix.rust }}
@@ -197,6 +207,8 @@ jobs:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'run cortex') || contains(github.event.head_commit.message, 'run cortex') }}
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - uses: numworks/setup-arm-toolchain@2021-10
       - run: sudo apt install zsh qemu-system-arm
       - name: Download cmsis
@@ -223,6 +235,8 @@ jobs:
         working-directory: bindings/javascript
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
@@ -296,7 +310,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 16.x
+          node-version: 18.x
       - run: yarn
       - name: Tag release
         id: tag_release
@@ -493,6 +507,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Upload release docs artifacts
         uses: actions/upload-artifact@v3
         with:

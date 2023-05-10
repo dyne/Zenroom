@@ -87,7 +87,14 @@ local function parsePrereleaseAndBuild(str)
 end
 
 local function parseVersion(str)
-   local sMajor, sMinor, sPatch, sPrereleaseAndBuild = str:match("^(%d+)%.?(%d*)%.?(%d*)(.-)$")
+   local sMajor
+   local sMinor
+   local sPatch
+   local sPrereleaseAndBuild
+   sMajor, sMinor, sPatch, sPrereleaseAndBuild = str:match("^(%d+)%.?(%d*)%.?(%d*)(.-)$")
+   if not sMajor then
+	  sMajor, sMinor, sPatch, sPrereleaseAndBuild = str:match("^v(%d+)%.?(%d*)%.?(%d*)(.-)$")
+   end
    assert(type(sMajor) == 'string', ("Could not extract version number(s) from %q"):format(str))
    local major, minor, patch = tonumber(sMajor), tonumber(sMinor), tonumber(sPatch)
    local prerelease, build = parsePrereleaseAndBuild(sPrereleaseAndBuild)

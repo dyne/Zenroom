@@ -6,7 +6,6 @@ TARGETS := ${BUILDS}
 prepare-meson:
 	mkdir -p ${pwd}/meson
 	ln -sf ${pwd}/lib/milagro-crypto-c/build ${pwd}/meson/milagro-crypto-c
-	ln -sf ${pwd}/lib/zstd/libzstd.a ${pwd}/meson/libzstd.a
 	ln -sf ${pwd}/lib/pqclean/libqpz.a ${pwd}/meson/libqpz.a
 	ln -sf ${pwd}/lib/lua53/src/liblua.a ${pwd}/meson/liblua.a
 	ln -sf ${pwd}/lib/ed25519-donna/libed25519.a ${pwd}/meson/libed25519.a

@@ -53,9 +53,6 @@
 // print functions
 #include <mutt_sprintf.h>
 
-// zstd
-#include <zstd.h>
-
 // prototypes from zen_octet.c
 extern void push_buffer_to_octet(lua_State *L, char *p, size_t len);
 
@@ -177,8 +174,6 @@ zenroom_t *zen_init(const char *conf, const char *keys, const char *data) {
 	ZZ->debuglevel = 2;
 	ZZ->random_generator = NULL;
 	ZZ->random_external = 0;
-	ZZ->zstd_c = NULL;
-	ZZ->zstd_d = NULL;
 	// set zero rngseed as config flag
 	ZZ->zconf_rngseed[0] = '\0';
 	ZZ->exitcode = 1; // success
@@ -315,17 +310,6 @@ void zen_teardown(zenroom_t *ZZ) {
 	// this call here frees also Z (lightuserdata)
 	lua_close((lua_State*)ZZ->lua);
 	ZZ->lua = NULL;
-
-	// TODO: remove zstd header by segregating it to zen_io
-	// teardown
-	if(ZZ->zstd_c) {
-	  ZSTD_freeCCtx(ZZ->zstd_c);
-	  ZZ->zstd_c = NULL;
-	}
-	if(ZZ->zstd_d) {
-	  ZSTD_freeDCtx(ZZ->zstd_d);
-	  ZZ->zstd_d = NULL;
-	}
 
 #ifdef MIMALLOC
 	if(ZZ->debuglevel > 3) mi_stats_print(NULL);
