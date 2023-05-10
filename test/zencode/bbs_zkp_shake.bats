@@ -46,7 +46,7 @@ EOF
 Scenario bbs
 Given I have a 'bbs public key'
 and I have a 'bbs proof'
-and I have a 'bbs presentation header'
+and I have a 'base64' named 'bbs presentation header'
 and I have a 'integer array' named 'bbs disclosed indexes'
 and I have a 'string array' named 'bbs disclosed messages'
 When I verify the bbs proof using 'shake256'
