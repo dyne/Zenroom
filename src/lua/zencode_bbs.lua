@@ -1,8 +1,8 @@
 --[[
 --This file is part of zenroom
 --
---Copyright (C) 2022 Dyne.org foundation
---designed, written and maintained by Alberto Lerda and Denis Roio
+--Copyright (C) 2023 Dyne.org foundation
+--designed, written and maintained by Rebecca Selvaggini, Luca Di Domenico and Alberto Lerda
 --
 --This program is free software: you can redistribute it and/or modify
 --it under the terms of the GNU Affero General Public License v3.0
@@ -16,8 +16,8 @@
 --GNU Affero General Public License v3.0
 --If not, see http://www.gnu.org/licenses/agpl.txt
 --
---Last modified by Alberto Lerda
---on Monday, 20th June 2022
+--Last modified by Rebecca Selvaggini
+--on Thursday, 11th May 2023
 --]]
 
 local BBS = require'crypto_bbs'
