@@ -275,3 +275,44 @@ IfWhen("verify the bbs proof using ''", function(h)
         BBS.proof_verify(ciphersuite, pubk, proof, nil, ph, disclosed_messages_octets, disclosed_indexes),
        'The bbs proof is not valid')
 end)
+
+--bbs.proof_gen(ciphersuite, pk, signature, header, ph, messages_octets, disclosed_indexes)
+When("create the bbs proof of the signature '' of the messages '' using '' with public key '' presentation header '' and disclosed indexes ''", function(sig, msg, h, pk, prh, dis_ind)
+    local hash =  O.to_string(mayhave(h)) or h
+    local ciphersuite = BBS.ciphersuite(hash)
+    local ph = have(prh):octet()
+    local message_octets = have(msg)
+    if(type(message_octets) ~= 'table') then
+        message_octets = {message_octets}
+    end
+    local float_indexes = have(dis_ind)
+    local disclosed_indexes = {}
+    for k,v in pairs(float_indexes) do
+        disclosed_indexes[k] = tonumber(v)
+    end
+
+    local pubk = have(pk)
+    local signature = have(sig)
+
+    empty'bbs proof'
+    ACK.bbs_proof = BBS.proof_gen(ciphersuite, pubk, signature, nil, ph, message_octets, disclosed_indexes)
+    new_codec('bbs proof', { zentype = 'element'})
+end)
+
+--bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages_octets, disclosed_indexes)
+IfWhen("verify the bbs proof using '' with public key '' presentation header '' disclosed messages '' and disclosed indexes ''", function(h, pk, prh, dis_msg, dis_ind)
+    local hash =  O.to_string(mayhave(h)) or h
+    local ciphersuite = BBS.ciphersuite(hash)
+    local pubk = have(pk)
+    local proof = have'bbs proof'
+    local ph = have(prh):octet()
+    local disclosed_messages_octets = have(dis_msg)
+    local float_indexes = have(dis_ind)
+    local disclosed_indexes = {}
+    for k,v in pairs(float_indexes) do
+        disclosed_indexes[k] = tonumber(v)
+    end
+    ZEN.assert(
+        BBS.proof_verify(ciphersuite, pubk, proof, nil, ph, disclosed_messages_octets, disclosed_indexes),
+       'The bbs proof is not valid')
+end)
