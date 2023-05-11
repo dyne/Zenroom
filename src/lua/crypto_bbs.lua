@@ -1,8 +1,8 @@
 --[[
 --This file is part of zenroom
 --
---Copyright (C) 2021 Dyne.org foundation
---designed, written and maintained by Alberto Lerda
+--Copyright (C) 2023 Dyne.org foundation
+--designed, written and maintained by Luca Di Domenico, Rebecca Selvaggini and Alberto Lerda
 --
 --This program is free software: you can redistribute it and/or modify
 --it under the terms of the GNU Affero General Public License v3.0
@@ -25,7 +25,6 @@ local OCTET_POINT_LENGTH = 48 --ceil(log2(p)/8)
 
 --see draft-irtf-cfrg-bbs-signatures-latest Appendix A.1
 local PRIME_R = ECP.order()
---local PRIME_R = BIG.new(O.from_hex('73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001'))
 
 --draft-irtf-cfrg-pairing-friendly-curves-11 Section 4.2.1
 local IDENTITY_G1 = ECP.generator()
@@ -51,7 +50,7 @@ function bbs.ciphersuite(hash_name)
             GENERATOR_V = expand_message_xmd(O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_MESSAGE_GENERATOR_SEED"),
             O.from_string("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_SIG_GENERATOR_SEED_"), 48)
         }
-        
+
     elseif hash_name:lower() == 'shake256' then
         return {
             expand = expand_message_xof,
@@ -71,7 +70,7 @@ function bbs.ciphersuite(hash_name)
     else
         error('Invalid hash: use sha256 or shake256', 2)
     end
-    
+
 end
 
 -- draft-irtf-cfrg-hash-to-curve-16 Appendix E.2
@@ -80,7 +79,7 @@ local function K_INIT()
     return {{ -- K[1][i]
     BIG.new(O.from_hex('11a05f2b1e833340b809101dd99815856b303e88a2d7005ff2627b56cdb4e2c85610c2d5f2e62d6eaeac1662734649b7')),
         BIG.new(O.from_hex('17294ed3e943ab2f0588bab22147a81c7c17e75b2f6a8417f565e33c70d1e86b4838f2a6f318c356e834eef1b3cb83bb')),
-        BIG.new(O.from_hex('0d54005db97678ec1d1048c5d10a9a1bce032473295983e56878e501ec68e25c958c3e3d2a09729fe0179f9dac9edcb0')), -- 
+        BIG.new(O.from_hex('0d54005db97678ec1d1048c5d10a9a1bce032473295983e56878e501ec68e25c958c3e3d2a09729fe0179f9dac9edcb0')), --
         BIG.new(O.from_hex('1778e7166fcc6db74e0609d307e55412d7f5e4656a8dbf25f1b33289f1b330835336e25ce3107193c5b388641d9b6861')),
         BIG.new(O.from_hex('0e99726a3199f4436642b4b3e4118e5499db995a1257fb3f086eeb65982fac18985a286f301e77c451154ce9ac8895d9')), --
         BIG.new(O.from_hex('1630c3250d7313ff01d1201bf7a74ab5db3cb17dd952799b9ed3ab9097e68f90a0870d2dcae73d19cd13c1c66f652983')),
@@ -91,7 +90,7 @@ local function K_INIT()
         BIG.new(O.from_hex('10321da079ce07e272d8ec09d2565b0dfa7dccdde6787f96d50af36003b14866f69b771f8c285decca67df3f1605fb7b')),
         BIG.new(O.from_hex('06e08c248e260e70bd1e962381edee3d31d79d7e22c837bc23c0bf1bc24c6b68c24b1b80b64d391fa9c8ba2e8ba2d229'))--
     },--
-    
+
         { -- K[2][i]
             BIG.new(O.from_hex('08ca8d548cff19ae18b2e62f4bd3fa6f01d5ef4ba35b48ba9c9588617fc8ac62b558d681be343df8993cf9fa40d21b1c')),--
         BIG.new(O.from_hex('12561a5deb559c4348b4711298e536367041e8ca0cf0800c0126c2588c48bf5713daa8846cb026e9e5c8276ec82b3bff')),
@@ -105,7 +104,7 @@ local function K_INIT()
         BIG.new(O.from_hex('095fc13ab9e92ad4476d6e3eb3a56680f682b4ee96f7d03776df533978f31c1593174e4b4b7865002d6384d168ecdd0a')), --
         BIG.new(1)
      },
-    
+
          { -- K[3][i]
             BIG.new(O.from_hex('090d97c81ba24ee0259d1f094980dcfa11ad138e48a869522b52af6c956543d3cd0c7aee9b3ba3c2be9845719707bb33')),--
          BIG.new(O.from_hex('134996a104ee5811d51036d776fb46831223e96c254f383d0f906343eb67ad34d6c56711962fa8bfe097e75a2e41c696')),
@@ -123,7 +122,7 @@ local function K_INIT()
          BIG.new(O.from_hex('0245a394ad1eca9b72fc00ae7be315dc757b3b080d4c158013e6632d3c40659cc6cf90ad1c232a6442d9d3f5db980133')),--
          BIG.new(O.from_hex('05c129645e44cf1102a159f748c4a3fc5e673d81d7e86568d9ab0f5d396a7ce46ba1049b6579afb7866b1e715475224b')),--
          BIG.new(O.from_hex('15e6be4e990f03ce4ea50b3b42df2eb5cb181d8f84965a3957add4fa95af01b2b665027efec01c7704b456be69c8b604'))},
-    
+
         { -- K[4][i]
             BIG.new(O.from_hex('16112c4c3a9c98b252181140fad0eae9601a6de578980be6eec3232b5be72e7a07f3688ef60c206d01479253b03663c1')),
         BIG.new(O.from_hex('1962d75c2381201e1a0cbd6c43c348b885c84ff731c4d59ca4a10356f453e01f78a4260763529e3532f6102c2e49a03d')),
@@ -140,7 +139,7 @@ local function K_INIT()
         BIG.new(O.from_hex('0ad6b9514c767fe3c3613144b45f1496543346d98adf02267d5ceef9a00d9b8693000763e3b90ac11e99b138573345cc')),--
         BIG.new(O.from_hex('02660400eb2e4f3b628bdd0d53cd76f2bf565b94e72927c1cb748df27942480e420517bd8714cc80d1fadc1326ed06f7')),--
         BIG.new(O.from_hex('0e0fa1d816ddc03e6b24255e0d7819c171c40f65e273b853324efcd6356caa205ca2f570f13497804415473a1d634b8f')),--
-        BIG.new(1)} 
+        BIG.new(1)}
     }
 end
 
@@ -196,11 +195,11 @@ end
 -- THE FOLLOWING MULTI-LINE COMMENT CONTAINS GENERIC VERSIONS OF THE hash_to_field function.
 
 -- draft-irtf-cfrg-hash-to-curve-16 section 5.2
---it returns u a table of tables containing big integers representing elements of the field 
+--it returns u a table of tables containing big integers representing elements of the field
 --[[
 function bbs.hash_to_field(msg, count, DST)
     -- draft-irtf-cfrg-hash-to-curve-16 section 8.8.1 (BLS12-381 parameters)
-    -- BLS12381G1_XMD:SHA-256_SSWU_RO_ 
+    -- BLS12381G1_XMD:SHA-256_SSWU_RO_
     local m = 1
     local L = 64
 
@@ -212,7 +211,7 @@ function bbs.hash_to_field(msg, count, DST)
         for j = 0, (m-1) do
             local elm_offset = L*(j+i*m)
             local tv = uniform_bytes:sub(elm_offset+1,L+elm_offset)
-            local e_j = BIG.mod(tv, p) --local e_j = os2ip(tv) % p 
+            local e_j = BIG.mod(tv, p) --local e_j = os2ip(tv) % p
             u_i[j+1] = e_j
         end
         u[i+1] = u_i
@@ -224,7 +223,7 @@ end
 --hash_to_field CASE m = 1
 function bbs.hash_to_field_m1(msg, count, DST)
     -- draft-irtf-cfrg-hash-to-curve-16 section 8.8.1 (BLS12-381 parameters)
-    -- BLS12381G1_XMD:SHA-256_SSWU_RO_ 
+    -- BLS12381G1_XMD:SHA-256_SSWU_RO_
     local L = 64
 
     local len_in_bytes = count*L
@@ -233,7 +232,7 @@ function bbs.hash_to_field_m1(msg, count, DST)
     for i = 0, (count-1) do
         local elm_offset = L*i
         local tv = uniform_bytes:sub(elm_offset+1,L+elm_offset)
-        u[i+1] = BIG.mod(tv, p) --local e_j = os2ip(tv) % p 
+        u[i+1] = BIG.mod(tv, p) --local e_j = os2ip(tv) % p
     end
 
     return u
@@ -269,7 +268,7 @@ local function sqrt_ratio_3mod4(u, v)
     local p = ECP.prime()
 
     -- draft-irtf-cfrg-hash-to-curve-16 Appendix I.1
-    -- SPECIALISED FOR OUR CASE (m=1, p = 3 mod 4) 
+    -- SPECIALISED FOR OUR CASE (m=1, p = 3 mod 4)
     local cc1 = BIG.div( BIG.new(O.from_hex('1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaac')), BIG.new(4)) -- (p+1)/4 INTEGER ARITHMETIC
     -- draft-irtf-cfrg-hash-to-curve-16 Appendix F.2.1.2
     local c1 = BIG.div(BIG.modsub(p, BIG.new(3), p), BIG.new(4)) -- (p-3)/4 INTEGER ARITHMETIC
@@ -339,7 +338,7 @@ local function pol_evaluation(x, K_array)
     local y = K_array[len]
     for i = len-1, 1, -1 do
         y = (K_array[i] + y:modmul(x, p)) % p
-    end 
+    end
     return y
 end
 
@@ -377,8 +376,8 @@ end
 function bbs.hash_to_curve(ciphersuite, msg, dst)
     -- local u = bbs.hash_to_field_m1(msg, 2, DST)
     local u = bbs.hash_to_field_m1_c2(ciphersuite, msg, dst)
-    local Q0 = bbs.map_to_curve(u[1]) --u[1][1])
-    local Q1 = bbs.map_to_curve(u[2]) --u[2][1])
+    local Q0 = bbs.map_to_curve(u[1])
+    local Q1 = bbs.map_to_curve(u[2])
     return clear_cofactor(Q0 + Q1)
 end
 
@@ -449,7 +448,7 @@ function bbs.MapMessageToScalarAsHash(ciphersuite, msg, dst)
     dst = dst or ciphersuite.map_msg_to_scalar_as_hash_dst
     -- assert(#msg < 2^64))
     if (#dst > 255) then
-        error("dst is too long in MapMessageToScalarAsHash", 2) 
+        error("dst is too long in MapMessageToScalarAsHash", 2)
     end
     local msg_scalar = hash_to_scalar(ciphersuite, msg, dst)
     return msg_scalar
@@ -472,9 +471,9 @@ local function serialization(input_array)
         else
             error("Invalid type passed inside serialize", 2)
         end
-        
+
         octet_result = octet_result .. el_octs
-        
+
     end
 
     return octet_result
@@ -551,7 +550,7 @@ local function octets_to_signature(signature_octets)
 
     local A_octets = signature_octets:sub(1, OCTET_POINT_LENGTH)
     local AA = A_octets:zcash_topoint()
-    if (AA == IDENTITY_G1) then 
+    if (AA == IDENTITY_G1) then
         error("Point is identity", 2)
     end
 
@@ -610,7 +609,7 @@ function bbs.verify(ciphersuite, pk, signature, messages_octets, header)
     -- Procedure
     local point_array = bbs.create_generators(ciphersuite, LEN + 2)
     local Q_1, Q_2 = table.unpack(point_array, 1, 2)
-    local H_points = { table.unpack(point_array, 3, LEN + 2) } 
+    local H_points = { table.unpack(point_array, 3, LEN + 2) }
     local domain = calculate_domain(ciphersuite, pk, Q_1, Q_2, H_points, header)
 
     local BB = ciphersuite.P1 + (Q_1 * s) + (Q_2 * domain)
@@ -621,9 +620,9 @@ function bbs.verify(ciphersuite, pk, signature, messages_octets, header)
     end
 
     local LHS = ECP2.ate(W + (ECP2.generator() * e), AA)
-    local RHS = ECP2.ate(ECP2.generator():negative(), BB)
+    local RHS = ECP2.ate(ECP2.generator(), BB)
 
-    if (LHS:inv() == RHS) then
+    if (LHS == RHS) then
         return true
     else
         return false
@@ -672,12 +671,12 @@ local function calculate_challenge(ciphersuite, Aprime, Abar, D, C1, C2, i_array
     local c_array = {}
 
     if R_len ~= 0 then
-        c_array = {Aprime, Abar, D, C1, C2, R_len} 
-        for i = 1, R_len do 
+        c_array = {Aprime, Abar, D, C1, C2, R_len}
+        for i = 1, R_len do
             c_array[i+6] = i_array[i] -1
         end
         for i = 1, R_len do
-            c_array[i+6+R_len] = msg_array[i] 
+            c_array[i+6+R_len] = msg_array[i]
         end
         c_array[7+2*R_len] = domain
     else
@@ -685,7 +684,7 @@ local function calculate_challenge(ciphersuite, Aprime, Abar, D, C1, C2, i_array
     end
 
     local c_octs = serialization(c_array)
-    local c_input = c_octs .. i2osp(#ph, 8) .. ph 
+    local c_input = c_octs .. i2osp(#ph, 8) .. ph
     local challenge = hash_to_scalar(ciphersuite, c_input)
 
     return challenge
@@ -734,7 +733,7 @@ function bbs.proof_gen(ciphersuite, pk, signature, header, ph, messages_octets, 
     local Q_1, Q_2 = table.unpack(points_array,1,2)
     local all_H_points = {table.unpack(points_array, 3, msg_len+2)}
     local secret_H_points = {}
-    
+
     for i = 1, msg_len do
         if secret_indexes[i] then
             table.insert(secret_H_points, all_H_points[i])
@@ -764,9 +763,9 @@ function bbs.proof_gen(ciphersuite, pk, signature, header, ph, messages_octets, 
     for i = 1, secret_len do
         C2 = C2 + (secret_H_points[i] * mjt[i])
     end
-    
+
     local c = calculate_challenge(ciphersuite ,Aprime, Abar, D, C1, C2, disclosed_indexes, disclosed_messages, domain, ph)
-    
+
     local ehat = BIG.mod(BIG.modmul(c, e, PRIME_R) + et, PRIME_R)
     local r2hat = BIG.mod( BIG.modmul(c, r2, PRIME_R) + r2t, PRIME_R)
     local r3hat = BIG.mod( BIG.modmul(c, r3, PRIME_R) + r3t, PRIME_R)
@@ -797,7 +796,7 @@ local function octets_to_proof(proof_octets)
         end
         index = index + OCTET_POINT_LENGTH
     end
-    
+
     local j = 4
     while index < #proof_octets do
         local end_index = index + OCTET_SCALAR_LENGTH -1
@@ -825,7 +824,7 @@ end
 
 -- draft-irtf-cfrg-bbs-signatures-latest Section 3.4.4
 function bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages_octets, disclosed_indexes)
-    
+
     header = header or O.empty()
     ph = ph or O.empty()
     disclosed_messages_octets = disclosed_messages_octets or {}
@@ -880,7 +879,7 @@ function bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages
     for i = 1, len_R do
         T = T + disclosed_H[i]*disclosed_messages[i]
     end
-    
+
     local C2 = T*c - D*r3hat + Q_1*shat
     for i = 1, len_U do
         C2 = C2 + secret_H[i]*commitments[i]
