@@ -350,7 +350,15 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_24
           CIBW_MANYLINUX_I686_IMAGE: manylinux_2_24
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_24
-          CIBW_BEFORE_BUILD_LINUX: apt-get update && apt-get install -y cmake zsh vim && pip install meson ninja
+          CIBW_BEFORE_BUILD_LINUX: |
+            # deb.debian.org -> archive.debian.org
+            sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list
+            # security.debian.org -> archive.debian.org/debian-security/
+            sed -i 's|security.debian.org|archive.debian.org/|g' /etc/apt/sources.list
+            # remove line that contains source stretch-update
+            sed -i '/stretch-updates/d' /etc/apt/sources.list
+            # update and install
+            apt-get update && apt-get install -y cmake zsh vim && pip install meson ninja
           CIBW_BEFORE_BUILD_MACOS: brew install cmake zsh && pip install meson ninja
           CIBW_TEST_EXTRAS: "test"
           CIBW_TEST_COMMAND: "pytest -s {project}/tests"
