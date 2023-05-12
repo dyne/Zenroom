@@ -1,0 +1,16 @@
+{
+	"The_Authority": {
+		"bbs_public_key": "o+JuJ0zDfbRzXkXsgBZ9t2YvM+OGOFWqByaQeYxplqUU/2SNEYTcP5QQh1mSN9xxDyNW/s6Lm/fR8D6c7kfbdRwSPcx+xb0iemsNxhwFtVqo/KrAtpsOaBugtUh8P0xY"
+	},
+    "bbs_credential": "mM+sPY0BNTri66IFR/G9HgSvJuzhf1fz36twKO4RnQXQyKYv2afPYa0J7fKpGC2KSdUb4M9lC59iLXS5n6Cutgc8pE21NRyvaV/Pp3mOnOxSw8ScbPbpuQuPVqUkPK16V+hlWMKRVc7+njxQZUt1oA==",
+	"bbs_messages": [
+		"above 18",
+		"italian",
+		"professor"
+	],
+	"hash_name": "sha256",
+	"bbs_disclosed_indexes": [
+		1,
+		3
+	]
+}

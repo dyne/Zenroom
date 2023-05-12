@@ -212,3 +212,100 @@ EOF
     run $ZENROOM_EXECUTABLE -z $BATS_SUITE_TMPDIR/verify_from_wrong_pk_sha.zen -a $BATS_SUITE_TMPDIR/multi_msg_data_sha.json -k $BATS_SUITE_TMPDIR/sign_pubkey_sha.json
     assert_failure
 }
+
+@test "DOCS: Generate keys for Alice" {
+    cat <<EOF | zexe keygen_docs.zen
+Scenario bbs
+Given I am known as 'Alice'
+When I create the keyring
+and I create the bbs key
+Then print my 'keyring'
+EOF
+    save_output alice_keys_docs.json
+    cat <<EOF | zexe pubkey_docs.zen alice_keys_docs.json
+Scenario bbs
+Given I am known as 'Alice'
+Given I have my 'keyring'
+When I create the bbs public key
+Then print my 'bbs public key'
+EOF
+    save_output alice_pubkey_docs.json
+}
+
+@test "DOCS: create signature example" {
+    cat << EOF | save_asset messages_docs.json
+{
+	"myMessage": "Dear Bob, your name is too short, goodbye - Alice.",
+	"myStringArray": [
+		"Hello World! This is my string array, element [0]",
+		"Hello World! This is my string array, element [1]",
+		"Hello World! This is my string array, element [2]"
+	]
+}
+EOF
+    cat <<EOF | zexe sign_bbs_docs.zen alice_keys_docs.json messages_docs.json 
+Scenario 'bbs': create the signature of an object 
+Given I am 'Alice' 
+Given I have my 'keyring' 
+Given I have a 'string' named 'myMessage' 
+Given I have a 'string array' named 'myStringArray' 
+
+When I create the bbs signature of 'myStringArray' 
+When I rename the 'bbs signature' to 'myStringArray.signature' 
+
+When I create the bbs signature of 'myMessage' 
+When I rename the 'bbs signature' to 'myMessage.signature' 
+
+#If we want we can specify the hash function used by the algorithm
+
+When I create the bbs signature of 'myStringArray' using 'sha256'
+When I rename the 'bbs signature' to 'myStringArray.signature.sha' 
+
+When I create the bbs signature of 'myMessage' using 'sha256'
+When I rename the 'bbs signature' to 'myMessage.signature.sha' 
+
+# Here we are printing out the signatures  
+Then print the 'myStringArray' 
+Then print the 'myStringArray.signature' 
+Then print the 'myStringArray.signature.sha'
+Then print the 'myMessage' 
+Then print the 'myMessage.signature'
+Then print the 'myMessage.signature.sha'
+EOF
+    save_output signed_bbs_docs.json
+}
+
+@test "DOCS: verify signature example" {
+    cat <<EOF | zexe verify_bbs_docs.zen alice_pubkey_docs.json signed_bbs_docs.json
+Scenario 'bbs': Bob verifies the signature from Alice 
+
+# Here we load the pubkey we'll verify the signature against
+Given I have a 'bbs public key' from 'Alice' 
+
+# Here we load the objects to be verified
+Given I have a 'string' named 'myMessage' 
+Given I have a 'string array' named 'myStringArray' 
+
+# Here we load the objects' signatures
+Given I have a 'bbs signature' named 'myStringArray.signature'
+Given I have a 'bbs signature' named 'myMessage.signature' 
+Given I have a 'bbs signature' named 'myStringArray.signature.sha'
+Given I have a 'bbs signature' named 'myMessage.signature.sha' 
+
+# Here we perform the verifications.
+# When not specified, the bbs verification algorithm uses SHAKE-256. 
+When I verify the 'myMessage' has a bbs signature in 'myMessage.signature' by 'Alice' 
+When I verify the 'myStringArray' has a bbs signature in 'myStringArray.signature' by 'Alice'
+
+# You can specify either 'SHA256' or 'SHAKE256' as input like this:
+When I verify the 'myMessage' has a bbs signature in 'myMessage.signature.sha' by 'Alice' using 'sha256'
+When I verify the 'myStringArray' has a bbs signature in 'myStringArray.signature.sha' by 'Alice' using 'sha256'
+
+# Here we print out the result: if the verifications succeeded, a string will be printed out
+# If the verifications failed, Zenroom will throw an error.
+Then print the string 'Zenroom certifies that signatures are all correct!' 
+Then print the 'myMessage'
+Then print the 'myStringArray'
+EOF
+    save_output verified_bbs_docs.json
+}
