@@ -1,80 +1,140 @@
 
-# EdDSA
+# BBS
 
-[EdDSA](https://en.wikipedia.org/wiki/EdDSA)(*Edwards-curve Digital Signature Algorithm*) is a variant of Schnorr signature algorithm. The main change apported in this scheme is the employment of twisted Edwards-curves that result in having higher perfomance with respect to other digital signature algorithms, wihtout sacrificing security. Moreover this scheme resolve also another major issue emerged in the other signature schemes: it **does not need a criptographically secure random number generator** to create a random signature.
+The implementation of the BBS scheme inside Zenroom is based on this [draft](https://identity.foundation/bbs-signature/draft-irtf-cfrg-bbs-signatures.html).
 
-In Zenroom, using the *Scenario eddsa*, you will use the **Ed25519** version of this algorithm that is based on *SHA-512* and the *Edwards form of Curve25519*. Moreover, the private key, the public key and the signature generated with Zenroom will be encoded in base58.
+The BBS is a digital signature algorithm categorised as a form of short group signature. It can sign multiple messages and produce a fixed-length output. Also, a zero-knowledge proof scheme can be mounted on top of it. Through this capability, the possessor of a signature can generate proofs by selectively disclosing subsets of the originally signed set of messages, whilst preserving the verifiable authenticity and integrity of the messages.
+
+In Zenroom, using the *Scenario bbs*, you will use the **BLS12-381** ciphersuite designed for this algorithm. Moreover, there is the possibility to use two different hash functions: *SHAKE-256*, that is set to be the default for the signature and verification algorithms, or *SHA-256*.
 
 # Key Generation
 
 ## Private key
 
-The script below generates a **EdDSA** private key.
+The script below generates a **BBS** private key.
 
-[](../_media/examples/zencode_cookbook/eddsa/alice_keygen.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/bbs/keygen_docs.zen ':include :type=code gherkin')
 
 The output should look like this:
 
-[](../_media/examples/zencode_cookbook/eddsa/alice_keys.json ':include :type=code json')
-
-### Upload a private key
-
-Key generation in Zenroom uses by default a pseudo-random as seed, that is internally generated.
-
-You can also opt to use a seed generated elsewhere, for example by using the [keypairoom](https://github.com/ledgerproject/keypairoom) library or it's [npm package](https://www.npmjs.com/package/keypair-lib). Suppose you end with a **EdDSA private key**, like:
-
-[](../_media/examples/zencode_cookbook/eddsa/secret_key.json ':include :type=code json')
-
-Then you can upload it with a script that look like the following script:
-
-[](../_media/examples/zencode_cookbook/eddsa/alice_key_upload.zen ':include :type=code gherkin')
-
-Here we simply print the *keyring*.
+[](../_media/examples/zencode_cookbook/bbs/alice_keys_docs.json ':include :type=code json')
 
 ## Public key
 
 Once you have created a private key, you can feed it to the following script to generate the **public key**:
 
-[](../_media/examples/zencode_cookbook/eddsa/alice_pubkey.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/bbs/pubkey_docs.zen ':include :type=code gherkin')
 
 The output should look like this:
 
-[](../_media/examples/zencode_cookbook/eddsa/alice_pubkey.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/bbs/alice_pubkey_docs.json ':include :type=code json')
 
 # Signature
 
-In this example we'll sign three objects: a string, a string array and a string dictionary, that we'll verify in the next script. Along with the data to be signed, we'll need the private key. The private key is in the file we have generated with the first script, while the one with the messages that we will sign is the following:
+In this example we'll sign two objects: a string and a string array, that we'll verify in the next script. We show how to sign the two objects with or without specifing the hash function used, when not declared the algorithm will use *SHAKE-256*.
+Along with the data to be signed, we'll need the private key. The private key is in the file we have generated with the first script, while the one with the messages that we will sign is the following:
 
-[](../_media/examples/zencode_cookbook/eddsa/message.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/bbs/messages_docs.json ':include :type=code json')
 
 The script to **sign** these objects look like this:
 
-[](../_media/examples/zencode_cookbook/eddsa/sign_from_alice.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/bbs/sign_bbs_docs.zen ':include :type=code gherkin')
 
 And the output should look like this:
 
-[](../_media/examples/zencode_cookbook/eddsa/signed_from_alice.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/bbs/signed_bbs_docs.json ':include :type=code json')
 
 # Verification
 
-In this section we will **verify** the signatures produced in the previous step. to carry out this task we would need the signatures, the messages and the signer public key. The signatures and the messages are contanined in the output of the last script, while the signer public key can be found in the output of the second script. So the input files should look like:
+In this section we will **verify** the signatures produced in the previous step. To carry out this task we would need the signatures, the messages and the signer public key. The signatures and the messages are contanined in the output of the last script, while the signer public key can be found in the output of the second script. So the input files should look like:
 
-[](../_media/examples/zencode_cookbook/eddsa/signed_from_alice.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/bbs/signed_bbs_docs.json ':include :type=code json')
 
 
-[](../_media/examples/zencode_cookbook/eddsa/alice_pubkey.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/bbs/alice_pubkey_docs.json ':include :type=code json')
 
 The script to verify these signatures is the following:
 
-[](../_media/examples/zencode_cookbook/eddsa/verify_from_alice.zen ':include :type=code gherkin')
+[](../_media/examples/zencode_cookbook/bbs/verify_bbs_docs.zen ':include :type=code gherkin')
 
 The result should look like:
 
-[](../_media/examples/zencode_cookbook/eddsa/verified_from_alice.json ':include :type=code json')
+[](../_media/examples/zencode_cookbook/bbs/verified_bbs_docs.json ':include :type=code json')
 
-# The script used to create the material in this page
+# BBS Zero-knowledge proof
 
-All the smart contracts and the data you see in this page are generated by the scripts [run.sh](https://github.com/dyne/Zenroom/blob/master/test/zencode_eddsa/run.sh). If you want to run the scripts (on Linux) you should: 
+This scheme is used to create a proof of knowledge of a signature, also called *credential*. It is said to be zero-knowledge as it does not reveal the underlying signature and the undisclosed messages.
+
+The main entities involved in this scheme are: a trusted authority called issuer, a participant and anyone else who wishes to verify the proof. Assume that the participant has already established a secure communication with the issuer, and assume that the issuer and the participant have agreed on a set of messages. The issuer signs the set of messages using its private key creating the credential. Then he sends both the credential and the set of messages to the participant. Then, the partitpant creates the proof, deciding which messages from the agreed set will be disclosed. Finally, the participant can send its proof and the disclosed messages to someone who requests to verify the proof.
+
+## Creation of the issuer keys
+
+In this section we will show how the issuer can create its private and public key.
+This step is identical to the generation of the BBS key shown before.
+The script to generate the two keys should look like:
+
+[](../_media/examples/zencode_cookbook/bbs/issuer_keys_docs.zen ':include :type=code gherkin')
+
+The output should look like:
+
+[](../_media/examples/zencode_cookbook/bbs/issuer_keys_output_docs.json ':include :type=code json')
+
+## Creation of the credential
+
+In this section we will show how the issuer can create the **credential** for a participant in the network. Here we suppose that the issuer and the participant have previously agreed on a set of messages to be signed to create the credential.  
+In this case the input file for the issuer should look like:
+
+[](../_media/examples/zencode_cookbook/bbs/data_credential_docs.json ':include :type=code json')
+
+The script to generate the valid credential looks like this:
+
+[](../_media/examples/zencode_cookbook/bbs/create_credential_docs.zen ':include :type=code gherkin')
+
+In this case, since we MUST give the hash function used to the participant, the output should look like this:
+
+[](../_media/examples/zencode_cookbook/bbs/output_credential_docs.json ':include :type=code json')
+
+## Generation of the proof
+
+In this section, the participant will create the **proof** for its private credential given from an issuer. In order to generate the proof a participant must have the credential of the messages (i.e. the signature produced by the issuer in the previous step), the public key of the issuer and the hash function used to create the credential.  
+Moreover, the participant should generate a presentation header (in this example is a random bit string) and choose a set of disclosed indexes, that could be empty, corresponding to the messages that will be disclosed by the proof.  
+So the input file should look like:
+
+[](../_media/examples/zencode_cookbook/bbs/proof_data_docs.json ':include :type=code json')
+
+Given the inputs, one can choose either to use a verbose declaration of all the data needed to perform the operation, or to use an implicit statement that require only the hash function as input. When creating the proof, one also create the disclosed messages needed later for the verification of the proof.  
+The script to create the proof is the following:
+
+[](../_media/examples/zencode_cookbook/bbs/create_proof_docs.zen ':include :type=code gherkin')
+
+Note that the proof generation algorithm is randomized, so the output of the two statement should be different.  
+The result should look like this:
+
+[](../_media/examples/zencode_cookbook/bbs/created_proof_docs.json ':include :type=code json')
+
+## Verification of the proof
+
+In this section we will **verify** the proof produced in the previous step. This task  can be performed by anyone that is in possession of the proof, together with the hash function, the disclosed indexes, the disclosed messages, the presentation header used for the proof generation, and the issuer public key.
+These data are contanined in the output of the last script. 
+So the input file should look like:
+
+[](../_media/examples/zencode_cookbook/bbs/proved_signature_docs.json ':include :type=code json')
+
+Given the inputs, one can choose either to use a verbose declaration of all the data needed to perform the operation, or to use an implicit statement that require only the hash function as input.  
+The script to verify the proof is the following:
+
+[](../_media/examples/zencode_cookbook/bbs/verify_proof_docs.zen ':include :type=code gherkin')
+
+The result should look like:
+
+[](../_media/examples/zencode_cookbook/bbs/verified_proof_docs.json ':include :type=code json')
+
+
+# The scripts used to create the material in this page
+
+All the smart contracts and the data you see in this page are generated by the scripts [bbs_sha.bats](https://github.com/dyne/Zenroom/blob/master/test/zencode/bbs_sha.bats) and [bbs_zkp.bats](https://github.com/dyne/Zenroom/blob/master/test/zencode/bbs_zkp.bats).
+
+If you want to run the scripts (on Linux) you should: 
  - *git clone https://github.com/dyne/Zenroom.git*
  - install **zsh** and **jq**
  - download a [zenroom binary](https://zenroom.org/#downloads) and place it */bin* or */usr/bin* or in *./Zenroom/src*
