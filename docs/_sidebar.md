@@ -18,6 +18,7 @@
   - [Scenario 'credentials': zero knowledge proof and attribute based credentials](/pages/zencode-scenario-credentials.md "Zencode credentials")
   - [Scenario 'ecdh': encryption, signature](/pages/zencode-scenarios-ecdh "Zencode ecdh")
   - [Scenario 'eddsa': signature](/pages/zencode-scenarios-eddsa "Zencode eddsa")
+  - [Scenario 'bbs': signature](/pages/zencode-scenarios-bbs "Zencode BBS")
   - [Scenario 'petition': cryptographic petition](/pages/zencode-scenarios-petition "Zencode petition")
   - [Scenario 'dp3t': proximity tracing](/pages/zencode-scenario-dp3t "Zencode dp3t")
   - [Scenario 'secshare': secret sharing](/pages/zencode-scenario-secShare "Zencode secret share")
