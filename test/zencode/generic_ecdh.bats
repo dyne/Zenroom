@@ -3,7 +3,7 @@ load ../bats_zencode
 SUBDOC=ecdh
 
 @test "Generate asymmetric keys for Alice and Bob" {
-    cat <<EOF | zexe keygen.zen
+    cat <<EOF | rngzexe keygen.zen
 Scenario ecdh
 Given I am known as 'Alice'
 When I create the keyring
@@ -19,7 +19,7 @@ When I create the ecdh public key
 Then print my 'ecdh public key'
 EOF
     save_output alice_pubkey.json
-    cat <<EOF | zexe keygen.zen
+    cat <<EOF | rngzexe keygen.zen
 Scenario ecdh
 Given I am known as 'Bob'
 When I create the keyring
@@ -101,8 +101,8 @@ and I verify the 'message' has a ecdh signature in 'ecdh signature' by 'Alice'
 Then print the string 'Signature is valid'
 and print the 'message'
 EOF
-    run $ZENROOM_EXECUTABLE -z wrong_message.zen -a sign_pubkey.json
-    assert_failure
+    run $ZENROOM_EXECUTABLE -z -a sign_pubkey.json wrong_message.zen
+    assert_line '[W]  The ecdh signature by Alice is not authentic'
 }
 
 @test "Fail verification on a different public key" {
@@ -125,8 +125,8 @@ and I verify the 'message' has a ecdh signature in 'ecdh signature' by 'Alice'
 Then print the string 'Signature is valid'
 and print the 'message'
 EOF
-    run $ZENROOM_EXECUTABLE -z wrong_pubkey.zen -a wrong_pubkey.json
-    assert_failure
+    run $ZENROOM_EXECUTABLE -z -a wrong_pubkey.json wrong_pubkey.zen
+    assert_line '[W]  The ecdh signature by Alice is not authentic'
 }
 
 @test "Alice signs a big file" {
@@ -140,7 +140,7 @@ EOF
 
     cat <<EOF | zexe sign_bigfile.zen alice_keys.json bigfile.json
 Rule check version 2.0.0
-Scenario 'ecdh'
+Scenario ecdh
 Given that I am known as 'Alice'
 and I have my 'keyring'
 and I have a 'base64' named 'bigfile'
@@ -162,7 +162,7 @@ EOF
 
     cat <<EOF | zexe verify_from_alice.zen sign_pubkey.json bigfile.json
 Rule check version 2.0.0
-Scenario 'ecdh'
+Scenario ecdh
 Given I have a 'ecdh public key'
 and I have a 'ecdh signature'
 and I have a 'base64' named 'bigfile'

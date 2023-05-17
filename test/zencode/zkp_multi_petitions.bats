@@ -133,7 +133,7 @@ Scenario petition: approve
 	Then print the 'uid' from 'petition' as 'string'
 EOF
     save_output "petition.json"
-    cat $BATS_SUITE_TMPDIR/petition.json | save_asset petitionEmpty.json
+    cat $BATS_FILE_TMPDIR/petition.json | save_asset petitionEmpty.json
 
 }
 
@@ -171,7 +171,7 @@ EOF
     save_output "petitionAggregated.json"
     rm -f $TMP/out
     echo "aggregated petition for $1" >&3
-    cat $BATS_SUITE_TMPDIR/petitionAggregated.json | save_asset petition.json
+    cat $BATS_FILE_TMPDIR/petitionAggregated.json | save_asset petition.json
 }
 
 @test "SIgning and aggregating" {

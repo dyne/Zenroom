@@ -85,7 +85,7 @@ Then print the 'kyber secret' from 'kyber kem'
 EOF
     save_output 'Kyber_Kem.json'
 
-    jq 'del(.kyber_secret)' $BATS_SUITE_TMPDIR/Kyber_Kem.json | save_asset Kyber_ciphertext.json
+    jq 'del(.kyber_secret)' $BATS_FILE_TMPDIR/Kyber_Kem.json | save_asset Kyber_ciphertext.json
 }
 
 @test "When I create the kyber secret from ''" {

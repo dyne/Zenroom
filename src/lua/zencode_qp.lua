@@ -183,7 +183,7 @@ IfWhen("verify the '' has a dilithium signature in '' by ''",function(msg, sig, 
 	  local s = have(sig)
 	  ZEN.assert(
 	     QP.verify(pk, s, ZEN.serialize(m)),
-	     'The signature by '..by..' is not authentic'
+	     'The dilithium signature by '..by..' is not authentic'
 	  )
 end)
 

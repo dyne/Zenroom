@@ -21,8 +21,8 @@ Given nothing
 When I create the random 'random'
 Then print the data
 EOF
-    run $ZENROOM_EXECUTABLE -z $BATS_SUITE_TMPDIR/check_version_fail.zen
-    assert_failure
+    run $ZENROOM_EXECUTABLE -z check_version_fail.zen
+    assert_line '[!]  PARSE: [string "semver"]:91: Could not extract version number(s) from "abc"'
 }
 
 # --- output --- #
@@ -50,8 +50,8 @@ When I create the ecdh key
 and I create the ecdh public key
 Then print the 'ecdh public key'
 EOF
-    run $ZENROOM_EXECUTABLE -z $BATS_SUITE_TMPDIR/output_encoding_fail.zen
-    assert_failure
+    run $ZENROOM_EXECUTABLE -z output_encoding_fail.zen
+    assert_line '[!]  PARSE: [string "zencode"]:206: Invalid output conversion: base123'
 }
 
 @test "Rule output format" {
@@ -78,8 +78,8 @@ When I create the ecdh key
 and I create the ecdh public key
 Then print the 'ecdh public key'
 EOF
-    run $ZENROOM_EXECUTABLE -z $BATS_SUITE_TMPDIR/output_format_fail.zen
-    assert_failure
+    run $ZENROOM_EXECUTABLE -z output_format_fail.zen
+    assert_line '[!]  PARSE: [string "zencode"]:212: Conversion format not supported: not_a_format'
 }
 
 @test "Rule output versioning" {
@@ -115,8 +115,8 @@ Scenario 'ecdh': public key
 Given I have a 'ecdh public key'
 Then print the data
 EOF
-    run $ZENROOM_EXECUTABLE -z -a $BATS_SUITE_TMPDIR/base58_output.json $BATS_SUITE_TMPDIR/input_encoding_fail.zen
-    assert_failure
+    run $ZENROOM_EXECUTABLE -z -a base58_output.json input_encoding_fail.zen
+    assert_line '[!]  PARSE: [string "zencode"]:192: Input encoding not found: base123'
 }
 
 @test "Rule input format" {
@@ -141,8 +141,8 @@ Scenario 'ecdh': public key
 Given I have a 'ecdh public key'
 Then print the data
 EOF
-    run $ZENROOM_EXECUTABLE -z -a $BATS_SUITE_TMPDIR/base58_output.json $BATS_SUITE_TMPDIR/input_format_fail.zen
-    assert_failure
+    run $ZENROOM_EXECUTABLE -z -a base58_output.json input_format_fail.zen
+    assert_line '[!]  PARSE: [string "zencode"]:197: Conversion format not supported: not_a_format'
 }
 
 @test "Rule input untagged" {
@@ -229,8 +229,8 @@ When I create the random 'source'
 and I create the hash of 'source'
 Then print 'hash'
 EOF
-    run $ZENROOM_EXECUTABLE -z $BATS_SUITE_TMPDIR/set_fail.zen
-    assert_failure
+    run $ZENROOM_EXECUTABLE -z set_fail.zen
+    assert_line '[!]  Hash algorithm not known: sha123'
 }
 
 # --- Rule invalid --- #
@@ -243,6 +243,6 @@ When I create the random 'source'
 and I create the hash of 'source'
 Then print 'hash'
 EOF
-    run $ZENROOM_EXECUTABLE -z $BATS_SUITE_TMPDIR/rule_invalid.zen
-    assert_failure
+    run $ZENROOM_EXECUTABLE -z rule_invalid.zen
+    assert_line '[!]  PARSE: [string "statemachine"]:42: Rule invalid: Rule that does not exists'
 }

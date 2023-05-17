@@ -20,5 +20,5 @@ Given I have a 'string' named 'string'
 Then print the data
 EOF
 	run $ZENROOM_EXECUTABLE -z no_string_failure.zen
-	assert_failure
+	assert_line "[W]  [!] [string \"zencode_given\"]:372: Cannot find 'string' anywhere (null value?)"
 }
