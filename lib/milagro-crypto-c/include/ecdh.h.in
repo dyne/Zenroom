@@ -139,6 +139,9 @@ extern int ECP_ZZZ_SP_DSA(int h,csprng *R,octet *k,octet *s,octet *M,octet *c,oc
 	@param d component of the input signature
 	@return 0 or an error code
  */
+
+extern int ECP_ZZZ_SP_DSA_DET(int sha,octet *S,octet *F,octet *C,octet *D, octet *octU);
+
 extern int ECP_ZZZ_VP_DSA(int h,octet *W,octet *M,octet *c,octet *d);
 extern int ECP_ZZZ_SP_DSA_NOHASH(int sha,csprng *RNG,octet *K,octet *S,octet *H,octet *C,octet *D, int *parity);
 extern int ECP_ZZZ_VP_DSA_NOHASH(int h,octet *W,octet *M,octet *c,octet *d);

@@ -418,6 +418,58 @@ end:
 	END(1);
 }
 
+static int ecdh_dsa_sign_det(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *sk = NULL, *m = NULL;
+	sk = o_arg(L,1);
+	if(sk == NULL) {
+		failed_msg = "Could not allocate secret key";
+		goto end;
+	}
+	m = o_arg(L,2);
+	if(m == NULL) {
+		failed_msg = "Could not allocate message";
+		goto end;
+	}
+	
+	int max_size = 0;
+	lua_Number n = lua_tointegerx(L, 3, &max_size);
+	if(max_size == 0) {
+		failed_msg = "invalid size zero for material to sign";
+		goto end;
+	}
+	
+	// return a table
+	lua_createtable(L, 0, 3);
+	octet *r = o_new(L, (int) n);
+	if(r == NULL) {
+		failed_msg = "Could not create signautre.r";
+		goto end;
+	}
+	lua_setfield(L, -2, "r");
+	octet *s = o_new(L,(int) n);
+	if(s == NULL) {
+		failed_msg = "Could not create signautre.s";
+		goto end;
+	}
+	lua_setfield(L, -2, "s");
+	 octet *k = o_new(L, (int) n);
+	 if(k == NULL) {
+	 	failed_msg = "Could not create signautre.s";
+	 	goto end;
+	 }
+	 lua_setfield(L, -2, "k");
+	(*ECDH.ECP__SP_DSA_DET)( (int) n, sk, m, r, s, k);
+
+end:
+	o_free(L, m);
+	o_free(L, sk);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
 /**
  * Sign a message directly, without taking the hash (the input in an hashed message
  * that is it is already hashed)
@@ -559,6 +611,65 @@ static int ecdh_dsa_verify(lua_State *L) {
 	}
 	int max_size = 64;
 	int res = (*ECDH.ECP__VP_DSA)(max_size, pk, m, r, s);
+	if(res <0) // ECDH_INVALID in milagro/include/ecdh.h.in (!?!)
+		// TODO: maybe suggest fixing since there seems to be
+		// no criteria between ERROR (used in the first check
+		// in VP_SDA) and INVALID (in the following two
+		// checks...)
+		lua_pushboolean(L, 0);
+	else
+		lua_pushboolean(L, 1);
+end:
+	o_free(L, s);
+	o_free(L, r);
+	o_free(L, m);
+	o_free(L, pk);
+	if(failed_msg) {
+		THROW(failed_msg);
+	}
+	END(1);
+}
+
+static int ecdh_dsa_verify_det(lua_State *L) {
+	BEGIN();
+	// IEEE1363 ECDSA Signature Verification. Signature C and D on F
+	// is verified using public key W
+	char *failed_msg = NULL;
+	octet *pk = NULL, *m = NULL, *r = NULL, *s = NULL;
+	pk = o_arg(L, 1);
+	if(pk == NULL) {
+		failed_msg = "Could not allocate public key";
+		goto end;
+	}
+	m = o_arg(L, 2);
+	if(m == NULL) {
+		failed_msg = "Could not allocate message";
+		goto end;
+	}
+	if(lua_type(L, 3) == LUA_TTABLE) {
+		lua_getfield(L, 3, "r");
+		lua_getfield(L, 3, "s"); // -2 stack
+		r = o_arg(L, -2);
+		if(r == NULL) {
+			failed_msg = "Could not allocate signature.r";
+			goto end;
+		}
+		s = o_arg(L, -1);
+		if(s == NULL) {
+			failed_msg = "Could not allocate signautre.s";
+			goto end;
+		}
+	} else {
+		failed_msg = "signature argument invalid: not a table";
+		goto end;
+	}
+	int max_size = 0;
+	lua_Number n = lua_tointegerx(L, 4, &max_size);
+	if(max_size == 0) {
+		failed_msg = "invalid size zero for material to sign";
+		goto end;
+	}
+	int res = (*ECDH.ECP__VP_DSA)((int) n, pk, m, r, s);
 	if(res <0) // ECDH_INVALID in milagro/include/ecdh.h.in (!?!)
 		// TODO: maybe suggest fixing since there seems to be
 		// no criteria between ERROR (used in the first check
@@ -937,6 +1048,8 @@ int luaopen_ecdh(lua_State *L) {
 		{"validate", ecdh_pubcheck},
 		{"sign", ecdh_dsa_sign},
 		{"verify", ecdh_dsa_verify},
+		{"sign_deterministic", ecdh_dsa_sign_det},
+		{"verify_deterministic", ecdh_dsa_verify_det},
 		{"sign_hashed", ecdh_dsa_sign_hashed},
 		{"verify_hashed", ecdh_dsa_verify_hashed},
 		{"recovery", ecdh_dsa_recovery},
