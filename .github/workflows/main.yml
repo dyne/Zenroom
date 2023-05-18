@@ -381,6 +381,7 @@ jobs:
           rm -f bindings/golang/zenroom/lib/libzenroom.so
           cd bindings/python3
           ./prepare.sh
+          cp -r ../../.git .
           pip install cibuildwheel
           cibuildwheel --output-dir wheelhouse
       - uses: actions/upload-artifact@v3
