@@ -21,6 +21,8 @@ CC ?= gcc
 BRANCH := $(shell git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
 COMMIT := $(shell git rev-parse --short HEAD)
 VERSION := $(shell git describe --tags | cut -d- -f1)
+CURRENT_YEAR := $(shell date +%Y)
+
 CFLAGS  += -I. -I../lib/lua53/src \
 	-I../lib/milagro-crypto-c/build/include \
 	-I../lib/milagro-crypto-c/include \
@@ -160,5 +162,12 @@ clean:
 	rm -f zenroom.wasm
 	rm -f zenroom.html
 
+# hard-code build information
 .c.o:
-	$(CC) $(CFLAGS) -c $< -o $@ -DVERSION=\"${VERSION}\" -DMAKETARGET=\"${MAKECMDGOALS}\" -DCOMMIT=\"${COMMIT}\" -DBRANCH=\"${BRANCH}\" -DCFLAGS="${CFLAGS}"
+	$(CC) $(CFLAGS) -c $< -o $@ \
+	-DVERSION=\"${VERSION}\" \
+	-DCURRENT_YEAR=\"${CURRENT_YEAR}\" \
+	-DMAKETARGET=\"${MAKECMDGOALS}\" \
+	-DCOMMIT=\"${COMMIT}\" \
+	-DBRANCH=\"${BRANCH}\" \
+	-DCFLAGS="${CFLAGS}"
