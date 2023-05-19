@@ -225,7 +225,8 @@ int ECP_ZZZ_SP_DSA(int sha,csprng *RNG,octet *K,octet *S,octet *F,octet *C,octet
 }
 
 /* RFC6979 Section 3 https://www.rfc-editor.org/rfc/rfc6979 */
-/* IEEE ECDSA Deterministic Signature, C and D are signature on F using private key S */
+/* IEEE ECDSA Deterministic Signature, C and D are signature on F using private key S.
+octU is the deterministic parameter k in the RFC6979.*/
 int ECP_ZZZ_SP_DSA_DET(int sha,octet *S,octet *F,octet *C,octet *D, octet *octU)
 {
     char h[128];
@@ -240,16 +241,15 @@ int ECP_ZZZ_SP_DSA_DET(int sha,octet *S,octet *F,octet *C,octet *D, octet *octU)
 
     BIG_XXX_rcopy(r,CURVE_Order_ZZZ);
     
-    int rBytes = BIG_XXX_nbits(r)/8;
+    int rBytes = (BIG_XXX_nbits(r) + 7)/8;
 
-    char temp[2*rBytes], vec[H.len], k[H.len], ch[2*rBytes], conc[512];
+    char temp[rBytes], vec[sha], k[sha], ch[rBytes], conc[sha + 1 + (2*rBytes)];
 
     octet octS = {rBytes, sizeof(temp), temp};
     OCT_copy(&octS, S);
     OCT_pad(&octS, rBytes);
 
     BIG_XXX_fromBytes(s, octS.val);
-    int nbits = BIG_XXX_nbits(s);
 
     int hlen=H.len;
     if (H.len>MODBYTES_XXX) hlen=MODBYTES_XXX;
@@ -289,6 +289,8 @@ int ECP_ZZZ_SP_DSA_DET(int sha,octet *S,octet *F,octet *C,octet *D, octet *octU)
     AMCL_(HMAC)(sha,&CONC,&K, sha, &K);
     AMCL_(HMAC)(sha,&VEC,&K, sha, &VEC);
 
+    char check_k;
+
     do {
         char t[2*rBytes];
         octet T = {VEC.len,sizeof(t), t};
@@ -308,17 +310,21 @@ int ECP_ZZZ_SP_DSA_DET(int sha,octet *S,octet *F,octet *C,octet *D, octet *octU)
         BIG_XXX_copy(c,vx);
         BIG_XXX_mod(c,r);
 
-        octet CONC2 = {0, sizeof(t),t};
-        OCT_copy(&CONC2, &VEC);
-        OCT_jbyte(&CONC2, 0, 1);
-        AMCL_(HMAC)(sha,&CONC2,&K, sha, &K);
-        AMCL_(HMAC)(sha,&VEC,&K, sha, &VEC);
+        check_k = BIG_XXX_iszilch(u) || BIG_XXX_comp(u, r) >= 0 || BIG_XXX_iszilch(c);
+        if(check_k){
+            octet CONC2 = {0, sizeof(t),t};
+            OCT_copy(&CONC2, &VEC);
+            OCT_jbyte(&CONC2, 0, 1);
+            AMCL_(HMAC)(sha,&CONC2,&K, sha, &K);
+            AMCL_(HMAC)(sha,&VEC,&K, sha, &VEC);
+        }
 
-    } while(BIG_XXX_iszilch(u) || BIG_XXX_comp(u, r) >= 0 || BIG_XXX_iszilch(c));
+    } while(check_k);
     
-    octU->len = rBytes;
-    BIG_XXX_toBytes(octU->val, u);  
-
+    if(octU){
+        octU->len = rBytes;
+        BIG_XXX_toBytes(octU->val, u);  
+    }
     BIG_XXX_invmodp(u,u,r);
     BIG_XXX_modmul(d,s,c,r);
 
