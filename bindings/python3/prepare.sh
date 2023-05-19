@@ -8,12 +8,14 @@ cp -r ../../src src/src
 cp -r ../../test src/test
 
 py_version=`git describe --tags --abbrev=0 | sed 's/^v//'`
+py_version_hash=${py_version}
+py_version_time=${py_version}
+hash="$(git rev-parse --short HEAD)"
 branch=`git rev-parse --abbrev-ref HEAD`
-hash=""
-time=""
 if [ "$branch" != "master" ]; then
-    hash="+$(git rev-parse --short HEAD)"
-    time=".dev$(git show -s --format=%ct HEAD)"
+    py_version_hash="${py_version_hash}+${hash}"
+    py_version_time="${py_version_time}.dev$(git show -s --format=%ct HEAD)"
 fi
-echo "${py_version}${hash}" > src/git_utils
-echo "${py_version}${time}" >> src/git_utils
+echo "${py_version_hash}" > src/git_utils
+echo "${py_version_time}" >> src/git_utils
+echo "${hash}" >> src/git_utils
