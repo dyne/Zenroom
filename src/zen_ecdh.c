@@ -418,6 +418,24 @@ end:
 	END(1);
 }
 
+/**
+   Elliptic Curve Digital Signature Algorithm (ECDSA) signing
+   function with deterministic generation of k (see RFC6979 https://www.rfc-editor.org/rfc/rfc6979).
+   This method uses the private key inside a keyring to sign
+   a message, returning a signature to be used in @{keyring:verify_deterministic}.
+
+   @param kp.private @{OCTET} of a public key
+   @param message string or @{OCTET} message to sign
+   @param sha int length in bytes of the digest of the SHA function
+   @function ECDH.sign_deterministic(kp.private, message, sha)
+   @return table containing signature parameters octets and k (r,s,k)
+   @usage
+   kp = ECDH.keygen() -- generate keys or import them
+   m = "Message to be signed"
+   sha = 32 -- This is SHA256. Also 48 = SHA384 or 64 = SHA512 may be used.
+   signature = ECDH.sign_deterministic(kp.private, m, sha)
+   assert( ECDH.verify_determinitsic(kp.public, m, signature, sha) )
+*/
 static int ecdh_dsa_sign_det(lua_State *L) {
 	BEGIN();
 	char *failed_msg = NULL;
@@ -441,7 +459,7 @@ static int ecdh_dsa_sign_det(lua_State *L) {
 	}
 	
 	// return a table
-	lua_createtable(L, 0, 3);
+	lua_createtable(L, 0, 2);
 	octet *r = o_new(L, (int) n);
 	if(r == NULL) {
 		failed_msg = "Could not create signautre.r";
@@ -454,12 +472,11 @@ static int ecdh_dsa_sign_det(lua_State *L) {
 		goto end;
 	}
 	lua_setfield(L, -2, "s");
-	 octet *k = o_new(L, (int) n);
-	 if(k == NULL) {
-	 	failed_msg = "Could not create signautre.s";
-	 	goto end;
-	 }
-	 lua_setfield(L, -2, "k");
+	octet *k = o_new(L, (int) n);
+	if(k == NULL) {
+		failed_msg = "Could not create signautre.s";
+		goto end;
+	}
 	(*ECDH.ECP__SP_DSA_DET)( (int) n, sk, m, r, s, k);
 
 end:
@@ -468,8 +485,9 @@ end:
 	if(failed_msg) {
 		THROW(failed_msg);
 	}
-	END(1);
+	END(2);
 }
+
 /**
  * Sign a message directly, without taking the hash (the input in an hashed message
  * that is it is already hashed)
@@ -630,6 +648,21 @@ end:
 	END(1);
 }
 
+/**
+   Elliptic Curve Digital Signature Algorithm (ECDSA) verification
+   function. The main difference between ecdh_dsa_verify and this function
+   is that here we also consider the input parameter sha int.
+   This method uses the public key inside a keyring to verify
+   a message, returning true or false. The signature parameters are
+   returned as 'r' and 's' in this same order by @{keyring:sign_deterministic}.
+
+   @param message the message whose signature has to be verified
+   @param signature the signature table returned by @{keyring:sign_deterministic}
+   @param sha int length in bytes of the digest of the SHA function
+   @function ECDH.verify_deterministic(kp.public, message, signature, sha)
+   @return true if the signature is OK, or false if not.
+   @see ECDH.sign_deterministic
+*/
 static int ecdh_dsa_verify_det(lua_State *L) {
 	BEGIN();
 	// IEEE1363 ECDSA Signature Verification. Signature C and D on F
