@@ -253,6 +253,28 @@ function ETH.verifySignatureTransaction(pk, txSigned)
 end
 
 -- verify the signature of a transaction only with the address
+function ETH.verify_signature_from_address(signature, address, y_parity, hash)
+   local pk, valid
+
+   local x = INT.new(signature.r)
+   local p = ECDH.prime()
+   local n = ECDH.order()
+   local h = ECDH.cofactor() --h=1
+   repeat
+	   pk, valid = ECDH.recovery(x:octet(), y_parity, hash, signature)
+      I.spy(pk)
+      I.spy(valid)
+      I.spy(ETH.address_from_public_key(pk))
+	   if h > 0 then   -- do not add n last iteration
+		   x = (x + n) % p
+	   end
+	   h = h-1
+   until (valid and ETH.address_from_public_key(pk) == add) or (h < 0)
+
+   return (valid and ETH.address_from_public_key(pk) == add)
+end
+
+-- verify the signature of a transaction only with the address
 function ETH.verify_from_address(add, txSigned)
    local txHash, sig, y_parity, pk, valid
    txHash = hashFromSignedTransaction(txSigned)
@@ -488,6 +510,8 @@ function encode_tuple(params, args)
    end
    return res
 end
+
+ETH.abi_encode = encode
 
 
 -- TODO: remove so many .., there should be something like table.concat for octets
