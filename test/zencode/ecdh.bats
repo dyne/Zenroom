@@ -149,6 +149,34 @@ EOF
     save_output sign_alice_keyring.json
 }
 
+@test "Alice signs a message (deterministic)" {
+    cat <<EOF | zexe sign_deterministic_from_alice.zen alice_keys.json
+Scenario 'ecdh'
+Given that I am known as 'Alice'
+and I have my 'keyring'
+When I write string 'This is my authenticated message.' in 'message'
+and I create the ecdsa deterministic signature of 'message'
+Then print the 'message'
+and print the 'ecdsa deterministic signature'
+EOF
+    save_output sign_deterministic_alice_keyring.json
+}
+
+@test "Verify a message signed by Alice (deterministic)" {
+    cat <<EOF > alice_verify_deterministic_signed.zen
+Scenario 'ecdh'
+Given I have a 'ecdh' public key from 'Alice'
+and I have a 'string' named 'message'
+and I have a 'ecdsa deterministic signature'
+When I verify the 'message' has a ecdsa deterministic signature in 'ecdsa deterministic signature' by 'Alice'
+Then print the string 'Signature is valid'
+and print the 'message'
+EOF
+    cat alice_verify_deterministic_signed.zen | zexe verify_deterministic_from_alice.zen alice_pubkey.json sign_deterministic_alice_keyring.json
+    save_output verify_deterministic_alice_signature.json
+    assert_output '{"message":"This_is_my_authenticated_message.","output":["Signature_is_valid"]}'
+}
+
 @test "Verify a message signed by Alice" {
     cat <<EOF > alice_verify_signed.zen
 Rule check version 2.0.0

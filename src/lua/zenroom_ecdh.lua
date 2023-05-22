@@ -61,6 +61,20 @@ function ecdh.sign_ecdh(sk, data)
    return sig, y
 end
 
+-- it is similar to sign eth, s < order/2 for deterministic ecdsa
+function ecdh.sign_ecdh_deterministic(sk, data, hash_len)
+    local o = ECDH.order()
+    local sig, sig_s
+    sig = ECDH.sign_deterministic(sk, data, hash_len)
+ 
+    sig_s = INT.new(sig.s)
+    if sig_s > INT.shr(o, 1) then
+       sig_s = INT.modsub(o, sig_s, o)
+       sig.s = sig_s:octet()
+    end
+    return sig
+ end
+
 -- Compute the compressed public key (pubc) from the secret key
 function ecdh.sk_to_pubc(sk)
    if not #sk == 32 then

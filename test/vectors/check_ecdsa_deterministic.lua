@@ -53,18 +53,11 @@ for i,v in pairs(test_vec_2) do
     print("Test case " .. i)
     local sk = O.from_hex(v[1])
     local msg = O.from_string(v[2])
-    local sig = ECDH.sign_deterministic(sk, msg, 32)
+    local sig = ECDH.sign_ecdh_deterministic(sk, msg, 32)
 
     local pk = ECDH.pubgen(sk)
     assert(ECDH.verify_deterministic(pk, msg, sig, 32), "FAILED SIGN")
 
-    local big_s = BIG.new(sig.s)
-    local big_order = BIG.from_decimal("115792089237316195423570985008687907852837564279074904382605163141518161494337")
-    if (big_s > BIG.shr(big_order, 1)) then
-        big_s = BIG.sub(big_order, big_s)
-    end
-    sig.s = O.new(big_s)
-    assert(ECDH.verify_deterministic(pk, msg, sig, 32), "FAILED SIGN")
     assert((sig.r):hex() == string.sub(v[3],1,64), "Wrong r")
     assert((sig.s):hex() == string.sub(v[3],65,128), "Wrong s")
 end
