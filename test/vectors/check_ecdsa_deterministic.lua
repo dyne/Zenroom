@@ -53,11 +53,11 @@ for i,v in pairs(test_vec_2) do
     print("Test case " .. i)
     local sk = O.from_hex(v[1])
     local msg = O.from_string(v[2])
-    local sig = ECDH.sign_deterministic(sk, msg, 32)
+    local sig = ECDH.sign_ecdh_deterministic(sk, msg, 32)
 
     local pk = ECDH.pubgen(sk)
     assert(ECDH.verify_deterministic(pk, msg, sig, 32), "FAILED SIGN")
-    
+
     local o = ECDH.order()
     local sig_s = INT.new(sig.s)
     if sig_s > INT.shr(o, 1) then
@@ -102,4 +102,3 @@ for n,v in pairs(msgs) do
     print("Test 3 failure case " .. n)
     assert(not ECDH.verify_deterministic(alice.public, O.from_string(v), {["r"] = O.random(64), ["s"] = O.random(64)}, 64), "Valid signature with wrong sig")
 end
-
