@@ -122,6 +122,40 @@ EOF
     save_output scenarioECDHPart3.json
 }
 
+@test "Create the deterministic signature of an object" {
+    cat <<EOF | zexe scenarioECDHZencodePart3DET.zen scenarioECDHInputDataPart2.json
+Scenario 'ecdh': create the deterministic signature of an object
+
+# Declaring who I am and loading all the stuff
+Given my name is in a 'string' named 'myUserName'
+Given I have my 'keyring'
+Given that I have a 'string' named 'myMessage' inside 'mySecretStuff'
+Given I have a 'string array' named 'myStringArray'
+
+When I create the ecdh deterministic signature of 'myStringArray'
+When I rename the 'ecdh deterministic signature' to 'myStringArray.signature'
+
+#The same signature can be computed using the following statement 
+When I create the ecdsa deterministic signature of 'myStringArray'
+When I rename the 'ecdsa deterministic signature' to 'myStringArray.ecdsa.signature'
+
+When I create the ecdh deterministic signature of 'myMessage'
+When I rename the 'ecdh deterministic signature' to 'myMessage.signature'
+
+When I create the ecdsa deterministic signature of 'myMessage'
+When I rename the 'ecdsa deterministic signature' to 'myMessage.ecdsa.signature'
+
+# Here we print both the messages and the signatures
+Then print the 'myMessage'
+Then print the 'myMessage.signature'
+Then print the 'myMessage.ecdsa.signature'	
+Then print the 'myStringArray'
+Then print the 'myStringArray.signature'
+Then print the 'myStringArray.ecdsa.signature'
+EOF
+    save_output scenarioECDHPart3DET.json
+}
+
 @test "Verify the signature of an object" {
     cat <<EOF | save_asset scenarioECDHAlicePublicKey.json
 {
