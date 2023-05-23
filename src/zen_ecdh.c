@@ -488,6 +488,64 @@ end:
 	END(2);
 }
 
+/* Same as ecdha_dsa_sign_det but input message is already hashed.
+For the generation of the k parameter we use HMAC with the SHA function of corresponding length.
+ */
+static int ecdh_dsa_sign_det_hashed(lua_State *L) {
+	BEGIN();
+	char *failed_msg = NULL;
+	octet *sk = NULL, *m = NULL;
+	sk = o_arg(L, 1);
+	if(sk == NULL) {
+		failed_msg = "Could not allocate secret key";
+		goto end;
+	}
+	m = o_arg(L, 2);
+	if(m == NULL) {
+		failed_msg = "Could not allocate message";
+		goto end;
+	}
+
+	int max_size;
+	int parity;
+	lua_Number n = lua_tointegerx(L, 3, &max_size);
+	if(max_size==0) {
+		failed_msg = "missing 3rd argument: byte size of octet to sign";
+		goto end;
+	}
+	if (m->len != (int)n) {
+		failed_msg = "size of input does not match";
+		goto end;
+	}
+
+	// return a table
+	lua_createtable(L, 0, 2);
+	octet *r = o_new(L, (int)n);
+	if(r == NULL) {
+		failed_msg = "Could not create signautre.r";
+		goto end;
+	}
+	lua_setfield(L, -2, "r");
+	octet *s = o_new(L, (int)n);
+	if(s == NULL) {
+		failed_msg = "Could not create signautre.s";
+		goto end;
+	}
+	lua_setfield(L, -2, "s");
+	// Size of a big256 used with SECP256k1
+	(*ECDH.ECP__SP_DSA_DET_NOHASH)((int)n, sk, m, r, s, &parity);
+
+	lua_pushboolean(L, parity);
+end:
+	o_free(L, m);
+	o_free(L, sk);
+	if(failed_msg) {
+		THROW(failed_msg);
+		lua_pushnil(L);
+	}
+	END(2);
+}
+
 /**
  * Sign a message directly, without taking the hash (the input in an hashed message
  * that is it is already hashed)
@@ -1082,6 +1140,7 @@ int luaopen_ecdh(lua_State *L) {
 		{"sign", ecdh_dsa_sign},
 		{"verify", ecdh_dsa_verify},
 		{"sign_deterministic", ecdh_dsa_sign_det},
+		{"sign_det_hashed", ecdh_dsa_sign_det_hashed},
 		{"verify_deterministic", ecdh_dsa_verify_det},
 		{"sign_hashed", ecdh_dsa_sign_hashed},
 		{"verify_hashed", ecdh_dsa_verify_hashed},
