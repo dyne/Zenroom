@@ -53,10 +53,32 @@ for i,v in pairs(test_vec_2) do
     print("Test case " .. i)
     local sk = O.from_hex(v[1])
     local msg = O.from_string(v[2])
-    local sig = ECDH.sign_ecdh_deterministic(sk, msg, 32)
+    local sig = ECDH.sign_deterministic(sk, msg, 32)
 
     local pk = ECDH.pubgen(sk)
     assert(ECDH.verify_deterministic(pk, msg, sig, 32), "FAILED SIGN")
+    
+    local o = ECDH.order()
+    local sig_s = INT.new(sig.s)
+    if sig_s > INT.shr(o, 1) then
+       sig_s = INT.modsub(o, sig_s, o)
+       sig.s = sig_s:octet():pad(32)
+    end
+    assert((sig.r):hex() == string.sub(v[3],1,64), "Wrong r")
+    assert((sig.s):hex() == string.sub(v[3],65,128), "Wrong s")
+end
+
+print("---------------------")
+print("Deterministic ECDSA HASHED test 2")
+for i,v in pairs(test_vec_2) do
+    print("Test case " .. i)
+    local sk = O.from_hex(v[1])
+    local msg = O.from_string(v[2])
+    local hmsg = sha256(msg)
+    local sig = ECDH.sign_ecdh_deterministic(sk, hmsg, 32)
+
+    local pk = ECDH.pubgen(sk)
+    assert(ECDH.verify_hashed(pk, hmsg, sig, 32), "FAILED SIGN")
 
     assert((sig.r):hex() == string.sub(v[3],1,64), "Wrong r")
     assert((sig.s):hex() == string.sub(v[3],65,128), "Wrong s")

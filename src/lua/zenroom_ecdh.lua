@@ -65,12 +65,12 @@ end
 function ecdh.sign_ecdh_deterministic(sk, data, hash_len)
     local o = ECDH.order()
     local sig, sig_s
-    sig = ECDH.sign_deterministic(sk, data, hash_len)
+    sig = ECDH.sign_det_hashed(sk, data, hash_len)
  
     sig_s = INT.new(sig.s)
     if sig_s > INT.shr(o, 1) then
        sig_s = INT.modsub(o, sig_s, o)
-       sig.s = sig_s:octet()
+       sig.s = sig_s:octet():pad(32)
     end
     return sig
  end
