@@ -167,8 +167,8 @@ EOF
 Scenario 'ecdh'
 Given I have a 'ecdh' public key from 'Alice'
 and I have a 'string' named 'message'
-and I have a 'ecdsa deterministic signature'
-When I verify the 'message' has a ecdsa deterministic signature in 'ecdsa deterministic signature' by 'Alice'
+and I have a 'ecdh signature' named 'ecdsa deterministic signature'
+When I verify the 'message' has a ecdh signature in 'ecdsa deterministic signature' by 'Alice'
 Then print the string 'Signature is valid'
 and print the 'message'
 EOF
