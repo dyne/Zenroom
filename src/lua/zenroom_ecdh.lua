@@ -71,7 +71,7 @@ function ecdh.sign_ecdh_deterministic(sk, data, hash_len)
     if sig_s > INT.shr(o, 1) then
        sig_s = INT.modsub(o, sig_s, o)
        sig.s = sig_s:octet():pad(32)
-       y = (y +1)%2
+       y = not y
     end
     return sig, y
  end

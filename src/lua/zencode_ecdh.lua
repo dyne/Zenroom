@@ -236,6 +236,7 @@ When(
    _signing(msg, 'ecdh_signature')
 end)
 
+-- The deterministic ecdsa/ecdh uses the default SHA512 to sign and verify.
 local function _signing_det(msg, var)
     local sk = havekey'ecdh'
     empty(var)
@@ -244,7 +245,6 @@ local function _signing_det(msg, var)
     ACK[var] = ECDH.sign_deterministic(sk, ZEN.serialize(obj), 64)
     new_codec(var, { zentype = 'dictionary' })
 end
-
 
 When("create the ecdh deterministic signature of ''",function(msg)
     _signing_det(msg, "ecdh_deterministic_signature")

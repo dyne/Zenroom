@@ -535,7 +535,7 @@ static int ecdh_dsa_sign_det_hashed(lua_State *L) {
 	// Size of a big256 used with SECP256k1
 	(*ECDH.ECP__SP_DSA_DET_NOHASH)((int)n, sk, m, r, s, &parity);
 
-	lua_pushinteger(L, parity);
+	lua_pushboolean(L, parity);
 end:
 	o_free(L, m);
 	o_free(L, sk);
