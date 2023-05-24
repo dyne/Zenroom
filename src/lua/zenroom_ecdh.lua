@@ -64,15 +64,16 @@ end
 -- it is similar to sign eth, s < order/2 for deterministic ecdsa
 function ecdh.sign_ecdh_deterministic(sk, data, hash_len)
     local o = ECDH.order()
-    local sig, sig_s
-    sig = ECDH.sign_det_hashed(sk, data, hash_len)
+    local sig, sig_s, y
+    sig, y = ECDH.sign_det_hashed(sk, data, hash_len)
  
     sig_s = INT.new(sig.s)
     if sig_s > INT.shr(o, 1) then
        sig_s = INT.modsub(o, sig_s, o)
        sig.s = sig_s:octet():pad(32)
+       y = (y +1)%2
     end
-    return sig
+    return sig, y
  end
 
 -- Compute the compressed public key (pubc) from the secret key
