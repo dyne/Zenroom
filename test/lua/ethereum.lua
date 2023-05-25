@@ -47,11 +47,11 @@ for i=1,100 do
 	  "verification from pk and tx failed")
    assert(ETH.verifySignatureTransaction(pk, decodedTx),
 	  "verification from pk and decodedTx failed")
-   assert(ETH.verify_from_address(add, tx),
+   assert(ETH.verify_transaction_from_address(add, tx),
 	  "verification from add and tx failed")
-   assert(ETH.verify_from_address(add, decodedTx),
+   assert(ETH.verify_transaction_from_address(add, decodedTx),
 	  "verification from add and decodedTx failed")
-   assert(not ETH.verify_from_address(not_add, decodedTx),
+   assert(not ETH.verify_transaction_from_address(not_add, decodedTx),
 	  "verification from not_add and decodedTx succeded")
 end
 

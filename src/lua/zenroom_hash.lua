@@ -26,6 +26,7 @@ local hash = require'hash'
 SHA256 = nil
 SHA512 = nil
 SHAKE256 = nil
+KECCAK256 = nil
 local function init(bits)
    local h
    if bits == 256 or bits == 32 then
@@ -46,6 +47,11 @@ function shake256(data, len)
 	if SHAKE256==nil then SHAKE256 = hash.new('shake256') end
 	if not len then len = 32 end
 	return SHAKE256:process(data, len)
+end
+
+function keccak256(data)
+    if KECCAK256==nil then KECCAK256 = hash.new('keccak256') end
+    return KECCAK256:process(data)
 end
 
 function KDF(data, bits)

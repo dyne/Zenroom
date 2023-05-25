@@ -252,6 +252,24 @@ function ETH.verifySignatureTransaction(pk, txSigned)
    return ECDH.verify_hashed(pk, txHash, sig, #txHash)
 end
 
+local encode
+
+function ETH.encodeSignedData(sk, message)
+   local ethersMessage = O.from_string("\x19Ethereum Signed Message:\n") .. O.new(#message) .. message
+   local hmsg = keccak256(ethersMessage)
+   local sig, y_par = ECDH.sign_ecdh(sk, hmsg)
+   -- If y_par = 0 = false then you write 27. Otherwise 28.
+   -- See https://bitcoin.stackexchange.com/a/112489
+   if y_par then
+      sig["v"] = BIG.new(28)
+   else
+      sig["v"] = BIG.new(27)
+   end
+
+   return sig
+end
+
+
 -- verify the signature of a transaction only with the address
 function ETH.verify_signature_from_address(signature, address, y_parity, hash)
    local pk, valid
@@ -272,7 +290,7 @@ function ETH.verify_signature_from_address(signature, address, y_parity, hash)
 end
 
 -- verify the signature of a transaction only with the address
-function ETH.verify_from_address(add, txSigned)
+function ETH.verify_transaction_from_address(add, txSigned)
    local txHash, sig, y_parity, pk, valid
    txHash = hashFromSignedTransaction(txSigned)
 
@@ -283,19 +301,7 @@ function ETH.verify_from_address(add, txSigned)
 
    y_parity = fif(txSigned.v:parity(), 0, 1) -- y_parity=0 <=> v:parity()=1
 
-   local x = INT.new(sig.r)
-   local p = ECDH.prime()
-   local n = ECDH.order()
-   local h = ECDH.cofactor() --h=1
-   repeat
-	   pk, valid = ECDH.recovery(x:octet(), y_parity, txHash, sig)
-	   if h > 0 then   -- do not add n last iteration
-		   x = (x + n) % p
-	   end
-	   h = h-1
-   until (valid and ETH.address_from_public_key(pk) == add) or (h < 0)
-
-   return (valid and ETH.address_from_public_key(pk) == add)
+   return ETH.verify_signature_from_address(sig, add, y_parity, txHash)
 end
 
 -- Assume we are given a smart contract with a function with the
@@ -392,7 +398,7 @@ end
 
 local encode_tuple
 
-local function encode(t, arg)
+function encode(t, arg)
    local res
    if type(t) == "string" then
       if string.match(t, 'uint%d+$') or t == 'address' then

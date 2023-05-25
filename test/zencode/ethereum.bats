@@ -535,6 +535,76 @@ EOF
     assert_output '{"v0":"3435316491","v1":"3435316492","v2":"195","v3":"196","v4":"196"}'
 }
 
+@test "KECCAK256 on the abi encoding" {
+    cat <<EOF | save_asset 'keccak_abi.data'
+{
+    "address": "77c2f9730B6C3341e1B71F76ECF19ba39E88f247",
+    "vote": "234",
+    "typeSpec": ["address", "string"]
+}
+EOF
+    cat <<EOF | zexe keccak_abi.zen keccak_abi.data
+Scenario ethereum
+
+Given I have a 'hex' named 'address'
+Given I have a 'string' named 'vote'
+Given I have a 'string array' named 'typeSpec'
+
+When I create the new array
+When I move 'address' in 'new array'
+When I move 'vote' in 'new array'
+When I create the ethereum abi encoding of 'new array' using 'typeSpec'
+When I create the hash of 'ethereum abi encoding' using 'keccak256'
+
+Then print the 'ethereum abi encoding'
+Then print the 'hash'
+EOF
+    save_output 'keccak_abi_out.json'
+    assert_output '{"ethereum_abi_encoding":"00000000000000000000000077c2f9730b6c3341e1b71f76ecf19ba39e88f247000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033233340000000000000000000000000000000000000000000000000000000000","hash":"pTFYbyovWkOT6CaHSRNCN7ySQ/AGbphs9WQnZ2JwPWQ="}'
+}
+
+@test "Create ethereum signature" {
+    cat <<EOF | save_asset 'sk_sign.data'
+{
+    "ethereum_address": "380FfB13F42AfFBE88949643B27FA74Ba85B3977",
+    "keyring": {
+        "ethereum": "876f6d4554e91f6f4bdaf8c741eef18b28f580f01d9d1af43c5238b8fe6bac6b"
+    }
+}
+EOF
+    cat <<EOF | zexe signtest.zen sk_sign.data keccak_abi_out.json
+Scenario ethereum
+
+Given I have a 'ethereum address'
+Given I have a 'keyring'
+Given I have a 'base64' named 'hash'
+
+When I create the ethereum signature of 'hash'
+
+Then print the 'ethereum signature'
+Then print the 'ethereum address'
+Then print the 'hash'
+EOF
+    save_output 'signtest_out.json'
+}
+
+@test "Verify a ethereum signature from an address" {
+    cat <<EOF | zexe verifytesteth.zen signtest_out.json
+Scenario ethereum
+
+Given I have a 'ethereum signature'
+Given I have a 'ethereum address'
+Given I have a 'base64' named 'hash'
+
+When I verify the 'hash' has a ethereum signature in 'ethereum signature' by 'ethereum address'
+
+Then print the string 'The signature is valid'
+EOF
+    save_output verifytesteth_out.json
+    assert_output '{"output":["The_signature_is_valid"]}'
+}
+
+
 @test "Verify etherum address encoding" {
     cat <<EOF | save_asset checksum_enc.json
 {
@@ -544,7 +614,7 @@ EOF
 
     cat <<EOF | zexe doc_checksum_enc.zen checksum_enc.json
 Scenario ethereum
-Given I have a 'string' named 'ethereum address' 
+Given I have a 'string' named 'ethereum address'
 When I verify the ethereum address string 'ethereum address' is valid
 Then print the string 'The address has a valid encoding'
 EOF
@@ -559,7 +629,7 @@ EOF
 }
 EOF
 
-    cat <<EOF | save_asset checksum_fail.zen 
+    cat <<EOF | save_asset checksum_fail.zen
 Scenario ethereum
 Given I have a 'string' named 'ethereum address'
 Given I rename 'ethereum address' to 'string address'
