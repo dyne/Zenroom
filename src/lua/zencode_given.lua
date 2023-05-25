@@ -60,19 +60,6 @@ local function pick(what, conv)
    local data
    local raw
    local name = _index_to_string(what)
-   -- keyring special object
-   if name == 'keyring' then -- backward compat
-      local keyring = KIN.keyring or IN.keyring
-      if not keyring then error("Keyring not found in input", 2) end
-      TMP = { fun = import_keyring,
-	      encoding = 'keyring',
-	      raw = keyring,
-	      name = 'keyring',
-	      luatype = 'table',
-	      zentype = 'schema' }
-      return true
-   end
-   ---
    raw = KIN[name] or IN[name]
    if not raw then error("Cannot find '" .. name .. "' anywhere (null value?)", 2) end
    if raw == '' then error("Found empty string in '" .. name) end
@@ -81,7 +68,6 @@ local function pick(what, conv)
    if not TMP then error('Cannot guess any conversion for: ' ..
          luatype(raw) .. ' ' .. (conv or name or '(nil)')) end
    TMP.name = name
-   TMP.schema = conv
    assert(ZEN.OK)
    if DEBUG > 1 then
       ZEN:ftrace('pick found ' .. name .. '('..TMP.zentype..')')
@@ -118,18 +104,6 @@ local function pickin(section, what, conv, fail)
    if not root then
       error("Cannot find '"..section.."'", 2)
    end
-   if name == 'keyring' then -- backward compat
-      local keyring = root.keyring
-      if not keyring then error("Keyring not found in section: "..section, 2) end
-      TMP = { fun = import_keyring,
-	      encoding = 'keyring',
-	      raw = keyring,
-	      root = section,
-	      name = 'keyring',
-	      luatype = 'table',
-	      zentype = 'schema' }
-      return true
-   end
 
    if luatype(root) ~= 'table' then
       error("Object is not a table: "..section, 2)
@@ -154,7 +128,6 @@ local function pickin(section, what, conv, fail)
    TMP = guess_conversion(raw, conv or name)
    TMP.name = name
    TMP.root = section
-   TMP.schema = conv
    assert(ZEN.OK)
    if DEBUG > 1 then
       ZEN:ftrace('pickin found ' .. name .. ' in ' .. section)
@@ -162,74 +135,80 @@ local function pickin(section, what, conv, fail)
 end
 
 
- -- takes a data object and the guessed structure, operates the
- -- conversion and returns the resulting raw data to be used inside the
- -- WHEN block in HEAP.
- function operate_conversion(guessed)
-    -- check if already a zenroom type
-    -- (i.e. zenroom.big from json decode)
-    if not guessed.fun then
-       I.warn(guessed)
-       error('No conversion operation guessed', 2)
-       return nil
-    end
-    -- carry guessed detection in CODEC
-    ZEN.CODEC[guessed.name] = {
-       name = guessed.name,
-       encoding = guessed.encoding,
-       zentype = guessed.zentype,
-       luatype = guessed.luatype,
-       root = guessed.root,
-       schema = guessed.schema,
-    }
-    -- I.warn({ codec = ZEN.CODEC[guessed.name],
-    --	     guessed = guessed })
-    -- TODO: make xxx print to stderr!
-    -- xxx('Operating conversion on: '..guessed.name)
-    if guessed.zentype == 'schema' then
-       -- error('Invalid schema conversion for encoding: '..guessed.encoding, 2)
-       local res = {}
-       if guessed.encoding == 'array' then
-	  for _,v in pairs(guessed.raw) do
-	     table.insert(res, guessed.fun(v))
-	  end
-	  return(res)
-       elseif guessed.encoding == 'dictionary' then
-	  for k, v in pairs(guessed.raw) do
-	     res[k] = guessed.fun(v[guessed.schema])
-	  end
-	  return (res)
-       elseif guessed.encoding == 'complex' then
-	  return guessed.fun.import(guessed.raw)
-       else
-	  return guessed.fun(guessed.raw)
-       end
-    elseif guessed.luatype == 'table' then
-       -- TODO: better error checking on deepmap?
-       if luatype(guessed.check) == 'function' then
-	  deepmap(guessed.check, guessed.raw)
-       end
-       return deepmap(guessed.fun, guessed.raw)
-    else -- element
-
-       -- corner case: input is already a zenroom type
-       if guessed.luatype == 'userdata' then
-	  if iszen(guessed.rawtype) then
-	     return(guessed.raw)
+-- takes a data object and the guessed structure, operates the
+-- conversion and returns the resulting raw data to be used inside the
+-- WHEN block in HEAP.
+function operate_conversion(guessed)
+   -- check if already a zenroom type
+   -- (i.e. zenroom.big from json decode)
+   if not guessed.fun then
+	  I.warn(guessed)
+	  error('No conversion operation guessed', 2)
+	  return nil
+   end
+   -- carry guessed detection in CODEC
+   ZEN.CODEC[guessed.name] = {
+	  name = guessed.name,
+	  encoding = guessed.encoding,
+	  zentype = guessed.zentype,
+	  luatype = guessed.luatype,
+	  root = guessed.root,
+	  schema = guessed.schema,
+   }
+   -- I.warn({ codec = ZEN.CODEC[guessed.name],
+   --	     guessed = guessed })
+   -- TODO: make xxx print to stderr!
+   -- xxx('Operating conversion on: '..guessed.name)
+   if guessed.luatype == 'table' then
+	  if guessed.schema then
+		 -- error('Invalid schema conversion for encoding: '..guessed.encoding, 2)
+		 local res = {}
+		 if guessed.zentype == 'array' then
+			for _,v in pairs(guessed.raw) do
+			   table.insert(res, guessed.fun(v))
+			end
+			return(res)
+		 elseif guessed.zentype == 'dictionary' then
+			for k, v in pairs(guessed.raw) do
+			   res[k] = guessed.fun(v)
+			end
+			return (res)
+		 elseif guessed.encoding == 'complex' then
+			return guessed.fun.import(guessed.raw)
+		 else
+			return guessed.fun(guessed.raw)
+		 end
 	  else
-	     error("Unknown userdata type for element: "..guessed.name, 2)
+		 -- TODO: better error checking on deepmap?
+		 if luatype(guessed.check) == 'function' then
+			deepmap(guessed.check, guessed.raw)
+		 end
+		 return deepmap(guessed.fun, guessed.raw)
 	  end
-       end
-       ---
+   else -- element
 
-       if guessed.check then
-	  if not guessed.check(guessed.raw) then
-	     error("Could not read " .. guessed.name)
+	  -- corner case: input is already a zenroom type
+	  if guessed.luatype == 'userdata' then
+		 if iszen(guessed.rawtype) then
+			return(guessed.raw)
+		 else
+			error("Unknown userdata type for element: "..guessed.name, 2)
+		 end
 	  end
-       end
-       return guessed.fun(guessed.raw)
-    end
- end
+	  ---
+
+	  if guessed.check then
+		 if not guessed.check(guessed.raw) then
+			error("Could not read " .. guessed.name)
+		 end
+	  end
+	  if guessed.encoding == 'complex' then
+		 return guessed.fun.import(guessed.raw)
+	  else
+		 return guessed.fun(guessed.raw)
+	  end
+   end
+end
 
 local function ack_table(key, val)
    ZEN.assert(

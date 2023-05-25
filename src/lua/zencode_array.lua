@@ -65,13 +65,13 @@ When("remove the '' from ''", function(ele,from)
 	local codec = ZEN.CODEC[from]
 	ZEN.assert(codec, "No codec registration for target: "..from)
 	if codec.zentype == 'dictionary'
-	or codec.zentype == 'schema' then
-		_when_remove_dictionary(ele, from)
+	   or codec.schema then
+	   _when_remove_dictionary(ele, from)
 	elseif codec.zentype == 'array' then
-		_when_remove_array(ele, from)
+	   _when_remove_array(ele, from)
 	else
-		I.warn({ CODEC = codec})
-		error("Invalid codec registration for target: "..from)
+	   I.warn({ CODEC = codec})
+	   error("Invalid codec registration for target: "..from)
 	end
 end)
 

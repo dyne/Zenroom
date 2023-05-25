@@ -160,7 +160,8 @@
        -- default is always the configured output encoding
        return ({
 	     fun = t,
-	     zentype = 'schema',
+		 schema = definition,
+	     zentype = 'element',
 	     luatype = objtype,
 	     raw = obj,
 	     encoding = c
@@ -173,28 +174,30 @@
     if objtype == 'table' then
        local def = expect_table(definition)
        if not def then -- check if the last word is among zentype collections
-	  error("Cannot take object: expected '"..definition
-		.."' but found '"..objtype.."' (not a dictionary or array)",3)
+		  error("Cannot take object: expected '"..definition
+				.."' but found '"..objtype.."' (not a dictionary or array)",3)
        end
        -- schema type in array or dict
        t = ZEN.schemas[ def.leftwords ]
        if t then
-	  return ({
-		fun = t,
-		zentype = 'schema',
-		schema = def.leftwords,
-		luatype = objtype,
-		raw = obj,
-		encoding = def.rightmost
-	  })
+		  return ({
+				fun = t,
+				zentype = def.rightmost,
+				schema = def.leftwords,
+				luatype = objtype,
+				raw = obj,
+		  })
        end
        -- normal type in input encoding: string, base64 etc.
        res = input_encoding(def.leftwords)
        if res then
-	  res.luatype = 'table'
-	  res.zentype = def.rightmost -- zentypes couples with table
-	  res.raw = obj
-	  return (res)
+		  -- res.encoding is set
+		  -- res.fun is set
+		  res.luatype = 'table'
+		  res.zentype = def.rightmost -- zentypes couples with table
+		  res.raw = obj
+		  res.schema = nil
+		  return (res)
        end
        error("Cannot take object: invalid "..def.rightmost.." with encoding "..def.leftwords, 3)
        return nil
@@ -224,6 +227,7 @@
        res = input_encoding(definition)
        res.luatype = 'string'
        res.zentype = 'element'
+	   res.schema = nil
        res.raw = obj
        return (res)
     end
@@ -362,11 +366,9 @@
        assert(luatype(fun.export) == 'function',
 	      "Guess outcast cannot find schema export")
        return fun.export
-    elseif fun then
-       return CONF.output.encoding.fun
     end
-    error('Invalid output conversion: ' .. cast, 2)
-    return nil
+	-- last default
+	return CONF.output.encoding.fun
  end
 
  function get_format(what)

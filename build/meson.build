@@ -189,10 +189,14 @@ endforeach
 ## BATS tests in test/zencode
 test_dir = meson.source_root() + '/../test/'
 bats_bin = find_program(test_dir+'bats/bin/bats')
-tests = [ 'array', 'dictionary', 'branching', 'float',
-	  'generic_ecdh', 'generic_eddsa', 'generic_schnorr', 'generic_dilithium', 'generic_bbs',
-	  'zkp', 'credential', 'bitcoin', 'ecdh', 'foreach', 'and',
-	  'bbs_sha', 'bbs_shake', 'bbs_zkp', 'bbs_zkp_shake' ]
+tests = [
+'and', 'array', 'bbs_sha', 'bbs_shake', 'bbs_zkp', 'bbs_zkp_shake', 'bitcoin', 'branching',
+'credential', 'dictionary', 'dp3t', 'ecdh', 'ethereum', 'float', 'foreach', 'generic_bbs',
+'generic_dilithium', 'generic_ecdh', 'generic_eddsa', 'generic_schnorr', 'given', 'hash',
+'http', 'keys', 'kyber', 'ntrup', 'numbers', 'output', 'pack', 'parser', 'planetmint',
+'random', 'reflow', 'rules', 'secshare', 'then', 'w3c', 'w3c_did', 'when', 'zenswarm',
+'zkp', 'zkp_multi_petitions'
+]
 foreach test_suite : tests
     test('zencode_'+test_suite.underscorify(),
 	 bats_bin,
