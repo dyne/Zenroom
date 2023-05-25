@@ -1,7 +1,7 @@
 project(
     'zenroom',
     'c',
-    version: run_command(['git', 'describe', '--tags'], capture : true, check : true).stdout().strip().split('-')[0],
+    version: run_command('meson_version.sh', capture:true, check: true).stdout().strip(),
     license: 'GPL3',
      meson_version: '>=0.49.2',
     default_options: [
@@ -10,13 +10,17 @@ project(
     ],
 )
 
+if run_command(['git','describe'], check:false).returncode() == 0
+    commit_hash = run_command(['git', 'rev-parse', '--short', 'HEAD'], capture: true, check : true).stdout().strip()
+else
+    commit_hash = run_command(['awk', 'NR==3', '../git_utils'], capture: true, check : true).stdout().strip()
+endif
 current_year = run_command(['date','+%Y'],capture:true, check:true).stdout().strip()
-commit_hash = run_command(['git', 'rev-parse', '--short', 'HEAD'], capture: true, check : true).stdout().strip()
 
 add_project_arguments(
     '-DVERSION="' + meson.project_version() +'"',
-	'-DCURRENT_YEAR="' + current_year +'"',
-	'-DCOMMIT="' + commit_hash +'"',
+    '-DCURRENT_YEAR="' + current_year +'"',
+    '-DCOMMIT="' + commit_hash +'"',
     '-D_POSIX_C_SOURCE=200112L',
     '-D_DARWIN_C_SOURCE',
     language: 'c'
