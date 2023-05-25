@@ -88,6 +88,31 @@ local function export_eth_tx(obj)
   return res
 end
 
+local function import_signature_f(obj)
+    local res = {}
+    local supp = ZEN.get(obj, '.', nil, O.from_hex)
+    if (type(supp) == 'zenroom.octet') then
+        res = {
+            r = supp:sub(1,32),
+            s = supp:sub(33, 64),
+            v = BIG.new(supp:sub(65, 65))
+        }
+    else
+        res.r = ZEN.get(obj, 'r', nil, O.from_hex)
+        res.v = ZEN.get(obj, 'v', nil, BIG.from_decimal)
+        res.s = ZEN.get(obj, 's', nil, O.from_hex)
+    end
+    return res
+end
+
+local function export_signature_f(obj)
+  local res = { }
+  if obj.v then res.v = obj.v:decimal() end
+  if obj.r then res.r = obj.r:octet():hex() end
+  if obj.s then res.s = obj.s:octet():hex() end
+  return res
+end
+
 ZEN.add_schema(
    {
       ethereum_public_key = { import = O.from_hex,
@@ -118,7 +143,9 @@ ZEN.add_schema(
       gwei_value = { import = str_gwei_to_big_wei,
 					 export = big_wei_to_str_gwei },
       wei_value = { import = str_wei_to_big_wei,
-					export = big_wei_to_str_wei }
+		    export = big_wei_to_str_wei },
+      ethereum_signature = { import = import_signature_f,
+            export = export_signature_f}
 })
 
 When('create the ethereum key', function()
@@ -318,4 +345,47 @@ function(token_id, nft, to)
                          have(nft),
                          BIG.new(have(token_id)),
                          have(to))
+end)
+
+When("create the ethereum abi encoding of '' using ''", function(t, args)
+    -- We imply that t is an octet/octet array and args is a single string/a string array
+    local data = have(t)
+    local o_type_spec = have(args)
+    local type_spec
+    -- TODO: support for nested array using deepmap.
+    if(type(o_type_spec) == "table") then
+        type_spec = {}
+        for i,v in pairs(o_type_spec) do
+            type_spec[i] = O.to_string(v)
+        end
+    else
+        type_spec = O.to_string(o_type_spec)
+    end
+    empty'ethereum abi encoding'
+    ACK.ethereum_abi_encoding = ETH.abi_encode(type_spec, data)
+    new_codec('ethereum abi encoding', { zentype = 'element', encoding = 'hex'})
+end)
+
+When("create the ethereum signature of ''", function(object)
+    local sk = havekey'ethereum'
+    local data = have(object)
+
+    empty'ethereum signature'
+    ACK.ethereum_signature = ETH.encodeSignedData(sk, data)
+    new_codec('ethereum signature', { zentype = 'schema', encoding = 'complex'})
+end)
+
+IfWhen("verify the '' has a ethereum signature in '' by ''", function(doc, sig, by)
+
+    local msg = have(doc)
+    local ethersMessage = O.from_string("\x19Ethereum Signed Message:\n") .. O.new(#msg) .. msg
+    local hmsg = keccak256(ethersMessage)
+
+    local signature = have(sig)
+    local address = have(by)
+
+    ZEN.assert(
+        ETH.verify_signature_from_address(signature, address, fif(signature.v:parity(), 0, 1), hmsg),
+       'The ethereum signature by '..by..' is not authentic'
+    )
 end)
