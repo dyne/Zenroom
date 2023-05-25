@@ -95,7 +95,7 @@ local function ntrup_f(o)
    return o
 end  
 
-function import_keyring(obj)
+local function import_keyring(obj)
    for k,_ in pairs(obj) do
       if not keytypes[k] then
 	 error("Unsupported key type found in keyring: "..k, 2)
@@ -154,6 +154,7 @@ local function _default_export(obj)
    return fun(obj)
 end
 
+-- used in zencode_then directly
 function export_keyring(obj)
    -- ecdh_curve
    -- bls_curve
@@ -184,6 +185,11 @@ function export_keyring(obj)
    return (res)
 end
 
+ZEN.add_schema(
+   { keyring = { import = import_keyring,
+				 export = export_keyring }
+   }
+)
 
 -- UTILS
 -- check various locations to find the public key
