@@ -181,7 +181,7 @@
        if t then
 		  return ({
 				fun = t,
-				zentype = def.rightmost,
+				zentype = string.sub(def.rightmost,1,1),
 				schema = def.leftwords,
 				luatype = objtype,
 				raw = obj,
@@ -190,7 +190,7 @@
        -- normal type in input encoding: string, base64 etc.
        res = input_encoding(def.leftwords)
        if res then
-		  res.zentype = def.rightmost -- zentypes couples with table
+		  res.zentype = string.sub(def.rightmost,1,1)
 		  res.raw = obj
 		  res.schema = nil
 		  return (res)
@@ -323,6 +323,14 @@
     end
  end
 
+ function default_export_f(obj)
+	if luatype(obj) == 'table' then
+	   return deepmap(O.to_octet,obj)
+	else
+	   return O.to_octet(obj)
+	end
+ end
+
  -- takes a string returns the function, good for use in deepmap(fun,table)
  function guess_outcast(cast)
     if not cast then
@@ -354,12 +362,13 @@
        return function(data) return data end
     end
     -- try schemas
-    local fun = ZEN.schemas[uscore(cast, ' ', '_')]
+    local fun = ZEN.schemas[uscore(cast)]
     if luatype(fun) == 'table' then
-       -- complex schema encoding
-       assert(luatype(fun.export) == 'function',
-	      "Guess outcast cannot find schema export")
-       return fun.export
+	   if fun.export then
+		  return fun.export
+	   else
+		  return default_export_f
+	   end
     end
 	-- last default
 	return CONF.output.encoding.fun
@@ -385,7 +394,8 @@
 	else -- may be a numerical index
 	   name = cname
 	end
-    if not ACK[name] then error("Cannot create codec, object not found: "..name, 2) end
+	local ackn = ACK[name]
+    if not ackn then error("Cannot create codec, object not found: "..name, 2) end
     if ZEN.CODEC[name] then error("Cannot overwrite ZEN.CODEC."..name, 2) end
     local res
     if clone then
@@ -406,27 +416,27 @@
 		  end
 	   end
     end
+    -- always detect zentype (may be an element extracted from dict)
+	local lt = luatype(ackn)
+	if lt == 'table' then
+	   if isdictionary(ackn) then
+		  res.zentype = 'd'
+	   elseif isarray(ackn) then
+		  res.zentype = 'a'
+	   else
+		  error("Unknown zentype for lua table: "..name, 2)
+	   end
+	else
+	   res.zentype = 'e'
+	end
     -- overwrite with paramenters in argument
     if parameters then
        for k,v in pairs(parameters) do
 		  res[k] = v
        end
     end
-    -- detect zentype
-    if not res.zentype then
-	   local lt = luatype(ACK[name])
-       if lt == 'table' then
-		  if isdictionary(ACK[name]) then
-			 res.zentype = 'd'
-		  elseif isarray(ACK[name]) then
-			 res.zentype = 'a'
-		  else
-			 error("Unknown zentype for lua table: "..name, 2)
-		  end
-       else
-		  res.zentype = 'e'
-       end
-    end
+	-- default encoding if not specified
+	if not res.encoding then res.encoding = 'def' end
     ZEN.CODEC[name] = res
     return(res) -- redundant, should not use return value for efficiency
  end

@@ -198,14 +198,14 @@ local function _check_compare_length(obj_name, num_name)
     local obj_ztype = obj_codec.zentype
     local num, num_codec = have(num_name)
     local num_enc = num_codec.encoding
-    ZEN.assert(obj_ztype == "array" or obj_ztype == "dictionary" or
-        (obj_ztype == "element" and obj_codec.encoding == "string"),
+    ZEN.assert(obj_ztype == "a" or obj_ztype == "d" or
+        (obj_ztype == "e" and obj_codec.encoding == "string"),
         "Can not compute the length for type "..obj_ztype)
     ZEN.assert(num_enc == "integer" or num_enc == "float",
         "Can not compare the length of "..obj_name.." with number of type "..num_enc)
     local obj_len_enc = { ["integer"] = BIG.new, ["float"] = F.new }
     local obj_len
-    if obj_ztype == "array" or obj_ztype == "element" then
+    if obj_ztype == "a" or obj_ztype == "e" then
         obj_len = obj_len_enc[num_enc](#obj)
     else
         obj_len = obj_len_enc[num_enc](0)
