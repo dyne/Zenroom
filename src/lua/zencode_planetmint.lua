@@ -23,5 +23,5 @@ When("create the planetmint signatures of ''", function(tx)
     end
 
     ACK['planetmint_signatures'] = planetmint_output_signatures
-    new_codec('planetmint_signatures', {zentype='array', luatype='table', encoding='hex'})
+    new_codec('planetmint_signatures', {zentype='a', luatype='table', encoding='hex'})
 end)

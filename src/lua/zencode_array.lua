@@ -64,10 +64,10 @@ end
 When("remove the '' from ''", function(ele,from)
 	local codec = ZEN.CODEC[from]
 	ZEN.assert(codec, "No codec registration for target: "..from)
-	if codec.zentype == 'dictionary'
+	if codec.zentype == 'd'
 	   or codec.schema then
 	   _when_remove_dictionary(ele, from)
-	elseif codec.zentype == 'array' then
+	elseif codec.zentype == 'a' then
 	   _when_remove_array(ele, from)
 	else
 	   I.warn({ CODEC = codec})
@@ -77,7 +77,7 @@ end)
 
 When("create the new array", function()
 	ACK.new_array = { }
-	new_codec('new array', {zentype='array'})
+	new_codec('new array', {zentype='a'})
 end)
 
 local function count_f(t)
@@ -96,12 +96,12 @@ When(deprecated("create the length of ''",
 function(arr)
 	local obj = have(arr)
 	ACK.length = F.new(count_f(obj))
-	new_codec('length', {zentype='element'})
+	new_codec('length', {zentype='e'})
 end))
 When("create the size of ''", function(arr)
 	local obj = have(arr)
 	ACK.size = F.new(count_f(obj))
-	new_codec('size', {zentype='element'})
+	new_codec('size', {zentype='e'})
 end)
 
 When("create the copy of element '' in array ''", function(pos, arr)
@@ -119,7 +119,7 @@ local function _insert_in(what, dest)
 	local d, d_codec = have(dest)
 	ZEN.assert(luatype(d) == 'table',
 	"Invalid destination, not a table: "..dest)
-	ZEN.assert(d_codec.zentype == 'array',
+	ZEN.assert(d_codec.zentype == 'a',
 	"Invalid destination, not an array: "..dest)
 	table.insert(ACK[dest], what)
 end
@@ -141,11 +141,11 @@ function(ele, dest)
 	local e = have(ele)
 	ZEN.assert(luatype(d) == 'table',
 	"Invalid destination, not a table: "..dest)
-	ZEN.assert(ZEN.CODEC[dest].zentype ~= 'element',
+	ZEN.assert(ZEN.CODEC[dest].zentype ~= 'e',
 	"Invalid destination, not a container: "..dest)
-	if ZEN.CODEC[dest].zentype == 'array' then
+	if ZEN.CODEC[dest].zentype == 'a' then
 		table.insert(ACK[dest], e)
-	elseif ZEN.CODEC[dest].zentype == 'dictionary' then
+	elseif ZEN.CODEC[dest].zentype == 'd' then
 		ACK[dest][ele] = e
 	elseif ZEN.CODEC[dest].zentype == 'schema' then
 		ACK[dest][ele] = e
@@ -162,7 +162,7 @@ end)
 -- When("insert the '' in ''", function(ele,arr)
 --     ZEN.assert(ACK[ele], "Element not found: "..ele)
 --     ZEN.assert(ACK[arr], "Array not found: "..arr)
--- 	ZEN.assert(ZEN.CODEC[arr].zentype == 'array',
+-- 	ZEN.assert(ZEN.CODEC[arr].zentype == 'a',
 -- 			   "Object is not an array: "..arr)
 --     table.insert(ACK[arr], ACK[ele])
 -- end)
@@ -170,11 +170,11 @@ end)
 local function _not_found_in(ele_name, obj_name)
 	local ele, ele_codec = have(ele_name)
 	local obj, obj_codec = have(obj_name)
-	if obj_codec.zentype == 'array' then
+	if obj_codec.zentype == 'a' then
 		for _,v in pairs(obj) do
 			ZEN.assert(v ~= ele, "Element '"..ele_name.."' is contained inside: "..obj_name)
 		end
-	elseif obj_codec.zentype == 'dictionary' then
+	elseif obj_codec.zentype == 'd' then
 		local val = O.to_string(ele)
 		ZEN.assert(obj[val] == nil, "Element '"..ele_name.."' is contained inside: "..obj_name)
 	else
@@ -191,7 +191,7 @@ IfWhen("verify the '' is not found in ''", _not_found_in)
 local function _found_in(ele_name, obj_name)
 	local ele, ele_codec = have(ele_name)
 	local obj, obj_codec = have(obj_name)
-	if obj_codec.zentype == 'array' then
+	if obj_codec.zentype == 'a' then
 		local found = false
 		for _,v in pairs(obj) do
 			if v == ele then
@@ -200,7 +200,7 @@ local function _found_in(ele_name, obj_name)
 			end
 		end
 		ZEN.assert(found, "The content of element '"..ele_name.."' is not found inside: "..obj_name)
-	elseif obj_codec.zentype == 'dictionary' then
+	elseif obj_codec.zentype == 'd' then
 		local val = O.to_string(ele)
 		ZEN.assert(obj[val] ~= nil, "Element '"..ele_name.."' is not found inside: "..obj_name)
 	else
@@ -222,7 +222,7 @@ local function _found_in_atleast(ele_name, obj_name, times)
 	local obj, obj_codec = have(obj_name)
 	ZEN.assert( luatype(obj) == 'table',
 				"Not a table: "..obj_name)
-	ZEN.assert( obj_codec.zentype == 'array', "Not an array: "..obj_name)
+	ZEN.assert( obj_codec.zentype == 'a', "Not an array: "..obj_name)
 	local constructor = fif(type(num) == "zenroom.big", BIG.new, F.new)
 	local found = constructor(0)
 	local one = constructor(1)
@@ -245,9 +245,7 @@ IfWhen("verify the '' is found in '' at least '' times", _found_in_atleast)
 local function _aggr_array(arr)
 	local A = have(arr)
 	local codec = ZEN.CODEC[arr]
-	ZEN.assert(codec.zentype == 'array' or
-	(codec.zentype == 'schema' and codec.encoding == 'array'),
-	"Object is not a valid array: "..arr)
+	ZEN.assert(codec.zentype == 'a', "Object is not a valid array: "..arr)
 	local count = isarray(A)
 	ZEN.assert( count > 0, "Array is empty or invalid: "..arr)
 	local res, par
@@ -256,31 +254,31 @@ local function _aggr_array(arr)
 		for _,v in next,A,nil do
 			res = res + tonumber(v)
 		end
-		par = {encoding='number',zentype='element'}
+		par = {encoding='number',zentype='e'}
 	elseif type(A[1]) == 'zenroom.big' then
 		res = BIG.new(0)
 		for _,v in next,A,nil do
 			res = res + v
 		end
-		par = {zentype = 'element'}
+		par = {zentype = 'e'}
 	elseif type(A[1]) == 'zenroom.ecp' then
 		res = ECP.generator()
 		for _,v in next,A,nil do
 			res = res + v
 		end
-		par = {zentype = 'element'}
+		par = {zentype = 'e'}
 	elseif type(A[1]) == 'zenroom.ecp2' then
 		res = ECP2.generator()
 		for _,v in next,A,nil do
 			res = res + v
 		end
-		par = {zentype = 'element'}
+		par = {zentype = 'e'}
 	elseif type(A[1]) == 'zenroom.float' then
 		res = F.new(0)
 		for _,v in next,A,nil do
 			res = res + v
 		end
-		par = {zentype = 'element'}
+		par = {zentype = 'e'}
 	else
 		error("Unknown aggregation for type: "..type(A[1]))
 	end
@@ -320,8 +318,8 @@ end)
 
 When("create the flat array of contents in ''", function(dic)
 	local codec = ZEN.CODEC[dic]
-	ZEN.assert(codec.zentype == 'array' or
-	codec.zentype == 'dictionary',
+	ZEN.assert(codec.zentype == 'a' or
+	codec.zentype == 'd',
 	"Target is not a valid: "..dic)
 	local data = have(dic)
 	ZEN.assert(luatype(data) == 'table', "Invalid array: "..dic)
@@ -347,8 +345,8 @@ end
 
 When("create the flat array of keys in ''", function(dic)
 	local codec = ZEN.CODEC[dic]
-	ZEN.assert(codec.zentype == 'array' or
-	codec.zentype == 'dictionary',
+	ZEN.assert(codec.zentype == 'a' or
+	codec.zentype == 'd',
 	"Target is not a valid: "..dic)
 	local data = have(dic)
 	ZEN.assert(luatype(data) == 'table', "Invalid target: "..dic)
@@ -367,7 +365,7 @@ When("create the array of objects named by '' found in ''", function(name, dict)
 	deepmap(function(v,k,res)
 		if k == n then table.insert(res, v) end
 	end, src, ACK.array)
-	new_codec('array', { encoding='string', zentype='array' })
+	new_codec('array', { encoding='string', zentype='a' })
 end)
 
 When("create the array by splitting '' at ''", function(data_name, sep_name)
@@ -384,7 +382,7 @@ When("create the array by splitting '' at ''", function(data_name, sep_name)
 		end
 	end
 	ACK.array = octets
-	new_codec('array', { encoding='string', zentype='array' })
+	new_codec('array', { encoding='string', zentype='a' })
 end)
 
 When("create the copy of last element in ''", function(obj_name)
@@ -392,12 +390,12 @@ When("create the copy of last element in ''", function(obj_name)
 	if type(obj) ~= 'table' then
 		error("Can only index tables")
 	end
-	if obj_codec.zentype == 'array' then
+	if obj_codec.zentype == 'a' then
 		if #obj == 0 then
 			error("Last element doesn't exist for empty array")
 		end
 		ACK.copy_of_last_element = obj[#obj]
-	elseif obj_codec.zentype == 'dictionary' then
+	elseif obj_codec.zentype == 'd' then
 		local elem = nil
 		for _, v in sort_pairs(obj) do
 			elem = v
@@ -425,11 +423,11 @@ When("create the '' from '' in ''", function(dest, key_name, obj_name)
 	else
 		key = key_name
 	end
-	if obj_codec.zentype == 'array' then
+	if obj_codec.zentype == 'a' then
 		local key_num = tonumber(key)
 		ZEN.assert(#obj >= key_num, "Element "..key_num.." does not exists in array "..obj_name)
 		ACK[dest] = obj[key_num]
-	elseif obj_codec.zentype == 'dictionary' then
+	elseif obj_codec.zentype == 'd' then
 		ZEN.assert(obj[key], "Element "..key.." does not exists in dictionary "..obj_name)
 		ACK[dest] = obj[key]
 	else

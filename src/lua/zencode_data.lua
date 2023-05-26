@@ -161,7 +161,7 @@
        return ({
 	     fun = t,
 		 schema = definition,
-	     zentype = 'element',
+	     zentype = 'e',
 	     raw = obj,
 	     encoding = c
        })
@@ -206,7 +206,7 @@
 	  --	  error("Cannot take object: expected '"..definition.."' but found '"..objtype.."'",3)
        end
        res = input_encoding(definition)
-       res.zentype = 'element'
+       res.zentype = 'e'
        -- if obj > 2147483647 then
        --	  error('Overflow of number object over 32bit signed size', 3)
        --	  -- TODO: maybe support unsigned native here
@@ -220,7 +220,7 @@
 
     if objtype == 'string' then
        res = input_encoding(definition)
-       res.zentype = 'element'
+       res.zentype = 'e'
 	   res.schema = nil
        res.raw = obj
        return (res)
@@ -230,7 +230,7 @@
     objtype = type(obj)
     if iszen(objtype) then
        res = CONF.input.encoding
-       res.zentype = 'element'
+       res.zentype = 'e'
        res.schema = nil
        res.raw = obj
        return(res)
@@ -417,14 +417,14 @@
 	   local lt = luatype(ACK[name])
        if lt == 'table' then
 		  if isdictionary(ACK[name]) then
-			 res.zentype = 'dictionary'
+			 res.zentype = 'd'
 		  elseif isarray(ACK[name]) then
-			 res.zentype = 'array'
+			 res.zentype = 'a'
 		  else
 			 error("Unknown zentype for lua table: "..name, 2)
 		  end
        else
-		  res.zentype = 'element'
+		  res.zentype = 'e'
        end
     end
     ZEN.CODEC[name] = res

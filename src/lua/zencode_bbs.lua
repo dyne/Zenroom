@@ -100,7 +100,7 @@ When('create the bbs public key',function()
     empty'bbs public key'
     local sk = havekey'bbs'
     ACK.bbs_public_key = BBS.sk2pk(sk)
-    new_codec('bbs public key', { zentype = 'element'})
+    new_codec('bbs public key', { zentype = 'e'})
 end)
 
 local function _key_from_secret(sec)
@@ -128,7 +128,7 @@ When("create the bbs public key with secret key ''",function(sec)
 
     empty'bbs public key'
     ACK.bbs_public_key = BBS.sk2pk(sk)
-    new_codec('bbs public key', { zentype = 'element'})
+    new_codec('bbs public key', { zentype = 'e'})
 end)
 
 --[[ The function BBS.sign may take as input also a string octet HEADER containing context 
@@ -147,7 +147,7 @@ local function generic_bbs_signature(doc, h)
 
     empty'bbs signature'
     ACK.bbs_signature = BBS.sign(ciphersuite, sk, pk, obj)
-    new_codec('bbs signature', { zentype = 'element'})
+    new_codec('bbs signature', { zentype = 'e'})
 end
 
 When("create the bbs signature of ''", function(doc)
@@ -234,7 +234,7 @@ When("create the bbs disclosed messages", function()
         dis_msgs[k] = all_msgs[tonumber(v)]
     end
     ACK.bbs_disclosed_messages = dis_msgs
-    new_codec('bbs disclosed messages', { zentype = 'array', encoding = 'string'})
+    new_codec('bbs disclosed messages', { zentype = 'a', encoding = 'string'})
 end)
 
 When("create the bbs proof using ''", function(h)
@@ -256,7 +256,7 @@ When("create the bbs proof using ''", function(h)
 
     empty'bbs proof'
     ACK.bbs_proof = BBS.proof_gen(ciphersuite, pubk, signature, nil, ph, message_octets, disclosed_indexes)
-    new_codec('bbs proof', { zentype = 'element'})
+    new_codec('bbs proof', { zentype = 'e'})
 end)
 
 IfWhen("verify the bbs proof using ''", function(h)
@@ -296,7 +296,7 @@ When("create the bbs proof of the signature '' of the messages '' using '' with 
 
     empty'bbs proof'
     ACK.bbs_proof = BBS.proof_gen(ciphersuite, pubk, signature, nil, ph, message_octets, disclosed_indexes)
-    new_codec('bbs proof', { zentype = 'element'})
+    new_codec('bbs proof', { zentype = 'e'})
 end)
 
 --bbs.proof_verify(ciphersuite, pk, proof, header, ph, disclosed_messages_octets, disclosed_indexes)

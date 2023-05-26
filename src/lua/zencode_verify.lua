@@ -394,10 +394,10 @@ local function start_with_from(str, sub, start)
    else
       sub_oct = O.from_string(sub)
       sub_codec.encoding = 'string'
-      sub_codec.zentype = 'element'
+      sub_codec.zentype = 'e'
    end
-   ZEN.assert(str_codec.zentype == 'element' and
-	      sub_codec.zentype == 'element',
+   ZEN.assert(str_codec.zentype == 'e' and
+	      sub_codec.zentype == 'e',
 	      "Verification failed: one or both inputs are not elements")
    ZEN.assert(str_codec.encoding == 'string' and
 	      sub_codec.encoding == 'string',

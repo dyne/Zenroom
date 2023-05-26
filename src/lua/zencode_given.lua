@@ -163,12 +163,12 @@ function operate_conversion(guessed)
 	  if guessed.schema then
 		 -- error('Invalid schema conversion for encoding: '..guessed.encoding, 2)
 		 local res = {}
-		 if guessed.zentype == 'array' then
+		 if guessed.zentype == 'a' then
 			for _,v in pairs(guessed.raw) do
 			   table.insert(res, guessed.fun(v))
 			end
 			return(res)
-		 elseif guessed.zentype == 'dictionary' then
+		 elseif guessed.zentype == 'd' then
 			for k, v in pairs(guessed.raw) do
 			   res[k] = guessed.fun(v)
 			end

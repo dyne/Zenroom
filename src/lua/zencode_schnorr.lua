@@ -77,7 +77,7 @@ When('create the schnorr public key',function()
 	empty'schnorr public key'
 	local sk = havekey'schnorr'
 	ACK.schnorr_public_key = SCH.pubgen(sk)
-	new_codec('schnorr public key', { zentype = 'element'})
+	new_codec('schnorr public key', { zentype = 'e'})
 end)
 
 When("create the schnorr public key with secret key ''",function(sec)
@@ -86,7 +86,7 @@ When("create the schnorr public key with secret key ''",function(sec)
 	ACK.keyring.schnorr = sk
 	empty'schnorr public key'
 	ACK.schnorr_public_key = SCH.pubgen(sk)
-	new_codec('schnorr public key', { zentype = 'element'})
+	new_codec('schnorr public key', { zentype = 'e'})
 end)
 
 local function _schnorr_key_from_secret(sec)
@@ -111,7 +111,7 @@ When("create the schnorr signature of ''",function(doc)
 	local obj = have(doc)
 	empty'schnorr signature'
 	ACK.schnorr_signature = SCH.sign(sk, ZEN.serialize(obj))
-	new_codec('schnorr signature', { zentype = 'element'})
+	new_codec('schnorr signature', { zentype = 'e'})
 end)
 
 IfWhen("verify the '' has a schnorr signature in '' by ''",function(doc, sig, by)

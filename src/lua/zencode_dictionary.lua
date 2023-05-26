@@ -60,14 +60,14 @@ end
 When("create the new dictionary", function()
 		empty'new dictionary'
 		ACK.new_dictionary = { }
-		new_codec('new dictionary', { zentype = 'dictionary' })
+		new_codec('new dictionary', { zentype = 'd' })
 end)
 
 
 When("create the new dictionary named ''", function(name)
 		empty(name)
 		ACK[name] = { }
-		new_codec(name, { zentype = 'dictionary' })
+		new_codec(name, { zentype = 'd' })
 end)
 
 When("create the array of elements named '' for dictionaries in ''",
@@ -84,7 +84,7 @@ When("create the array of elements named '' for dictionaries in ''",
 	   end
 	end
 	ACK.array = res
-	new_codec('array', {zentype='array'}, dict)
+	new_codec('array', {zentype='a'}, dict)
 end)
 
 When("create the pruned dictionary of ''", function(dict)
@@ -110,7 +110,7 @@ When("find the max value '' for dictionaries in ''", function(name, arr)
     ZEN.assert(max, "No max value "..name.." found across dictionaries in"..arr)
     ACK.max_value = max
 	new_codec('max value', {
-		zentype = 'element', -- introduce scalar?
+		zentype = 'e', -- introduce scalar?
 	}, arr) -- clone array's encoding
 end)
 
@@ -132,7 +132,7 @@ When("find the min value '' for dictionaries in ''", function(name, arr)
 	dicts_reduce(ACK[arr],params)
 	ACK.min_value = min
 	new_codec('min value', {
-		zentype = 'element', -- introduce scalar?
+		zentype = 'e', -- introduce scalar?
 	}, arr) -- clone array's encoding
 end)
 
@@ -173,7 +173,7 @@ When("create the sum value '' for dictionaries in '' where '' > ''", function(na
 				  .." found across dictionaries in"..arr)
     ACK.sum_value = sum
 	new_codec('sum value', {
-		zentype = 'element', -- introduce scalar?
+		zentype = 'e', -- introduce scalar?
 	}, arr) -- clone array's encoding
 end)
 
@@ -193,7 +193,7 @@ When("find the '' for dictionaries in '' where '' = ''",function(name, arr, left
 	dicts_reduce(ACK[arr], params)
 	ZEN.assert(val, "No value found "..name.." across dictionaries in "..arr)
 	ACK[name] = val
-	new_codec(name, {zentype = 'array'}, arr)
+	new_codec(name, {zentype = 'a'}, arr)
 end)
 
 
@@ -280,12 +280,12 @@ end)
 local function move_or_copy_in(src_value, src_name, dest)
    local d = have(dest)
    ZEN.assert(luatype(d) == 'table', "Object is not a table: "..dest)
-   if ZEN.CODEC[dest].zentype == 'dictionary'
+   if ZEN.CODEC[dest].zentype == 'd'
       or ZEN.CODEC[dest].zentype == 'schema' then
       ZEN.assert(not d[src_name], "Dictionary already contains: "..src_name)
       d[src_name] = src_value
       ACK[dest] = d
-   elseif ZEN.CODEC[dest].zentype == 'array' then
+   elseif ZEN.CODEC[dest].zentype == 'a' then
       table.insert(ACK[dest], src_value)
    else
       ZEN.assert(false, "Invalid destination type: "

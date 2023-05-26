@@ -42,7 +42,7 @@ When('create the eddsa public key',function()
 	empty'eddsa public key'
 	local sk = havekey'eddsa'
 	ACK.eddsa_public_key = ED.pubgen(sk)
-	new_codec('eddsa public key', { zentype = 'element',
+	new_codec('eddsa public key', { zentype = 'e',
 					encoding = 'base58'})
 end)
 
@@ -67,7 +67,7 @@ When("create the eddsa public key with secret key ''",function(sec)
 	ACK.keyring.eddsa = sk
 	empty'eddsa public key'
 	ACK.eddsa_public_key = ED.pubgen(sk)
-	new_codec('eddsa public key', { zentype = 'element',
+	new_codec('eddsa public key', { zentype = 'e',
 					encoding = 'base58'})
 end)
 
@@ -77,7 +77,7 @@ When("create the eddsa signature of ''",function(doc)
 	local obj = have(doc)
 	empty'eddsa signature'
 	ACK.eddsa_signature = ED.sign(sk, ZEN.serialize(obj))
-	new_codec('eddsa signature', { zentype = 'element',
+	new_codec('eddsa signature', { zentype = 'e',
 				       encoding = 'base58'})
 end)
 
