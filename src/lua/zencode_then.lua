@@ -35,37 +35,57 @@
 -- my from as
 ----------------------
 
+ -- CODEC format:
+ -- { name: string,
+ --   encoding: encoder name string or 'complex' handled by schema
+ --   zentype:  zencode type: element, array or dictionary
+ --   schema: schema name used to import (may differ from name)
+ -- }
+ -- return: name of codec encoding
+local function check_codec(in_name)
+    local name = uscore(in_name)
+    local codec = ZEN.CODEC[name]
+	if not codec then error("CODEC not found for object: "..name, 2) end
+	local schema = ZEN.schemas[codec.schema]
+	if schema then return codec.schema end
+	if codec.encoding == 'def' then return CONF.output.encoding.name end
+	return codec.encoding
+ end
+
 -- executes a guess_outcast and then operates it
 -- sch may be fed with check_codec() result (name of encoding)
 local function then_outcast(val, sch, key)
    if not val then
       error("Then outcast called on empty variable", 2)
    end
-   local codec = ZEN.CODEC[sch]
    -- if sch has a codec then we extract its export function from its
    -- schema name if it exist, otherwise from its name
    -- if no codec is found then we simply extract the export function
    -- from the name sch
    local fun
+   local codec = ZEN.CODEC[sch]
+
    if key and sch == 'complex' then
 	  fun = guess_outcast(key)
-   elseif codec then
-      fun = guess_outcast(codec.schema or codec.name)
    else
-      fun = guess_outcast(sch)
+	  if codec then
+		 fun = guess_outcast(codec.schema or codec.name)
+	  else
+		 fun = guess_outcast(sch)
+	  end
    end
 
    local lt = luatype(val)
    -- handle simple conversions
    if lt ~= 'table' then return fun(val) end
-   if not codec or codec and codec.zentype ~= 'schema' then
+   if not codec or ( codec and not codec.schema ) then
       return deepmap(fun, val)
    end
    -- handle schema conversions
    if codec.encoding and codec.encoding == 'complex' then
       -- complex
       if not isdictionary(val) and not isarray(val) then
-	 error('Complex schema value is not a dictionary: '..sch, 2)
+	 error('Complex schema value is not a dictionary: '..sch..' '..key, 2)
       end
 	  -- fun is already set to schema.export by guess_outcast
       return fun(val)
@@ -78,7 +98,7 @@ local function then_outcast(val, sch, key)
 	 return enc(res)
       end
    end
-   error("Then outcast cannot handle data: "..sch,2)
+   error("Then outcast cannot handle data: "..sch..' '..key,2)
 end
 
 local function then_insert(dest, val, key)

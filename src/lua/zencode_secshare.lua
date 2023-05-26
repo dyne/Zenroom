@@ -76,7 +76,6 @@ When("create the secret shares of '' with '' quorum ''", function(sec, tot, q)
         ACK.secret_shares = LAG.create_shared_secret(total,quorum,soct)
         new_codec('secret_shares', {
             encoding="complex",
-            zentype="schema",
             schema="secret_shares",
         })
 end)

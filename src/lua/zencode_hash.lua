@@ -79,7 +79,7 @@ EndForeach]],
         local count = isarray(obj)
         ZEN.assert(count > 0, 'Object is not an array: ' .. object)
         ACK.hash_to_point = deepmap(F.hashtopoint, obj)
-        new_codec('hash_to_point', { luatype='table', zentype='array' })
+        new_codec('hash_to_point', {zentype='array'})
     end)
 )
 
@@ -90,7 +90,7 @@ When(
         local count = isarray(A)
         ZEN.assert(count > 0, 'Object is not an array: ' .. arr)
         ACK.hashes = deepmap(sha256, A)
-	new_codec('hashes', { luatype='table', zentype='array' })
+	new_codec('hashes', {zentype='array' })
     end
 )
 
@@ -135,8 +135,7 @@ When(
 		    return HASH.new(CONF.hash):kdf(v)
 		end,
 		t)
-	 new_codec('key derivations', { luatype = 'table',
-					zentype = ZEN.CODEC[tab].zentype})
+	 new_codec('key derivations', {zentype = ZEN.CODEC[tab].zentype})
     end
 )
 

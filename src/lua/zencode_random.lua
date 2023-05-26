@@ -74,7 +74,7 @@ When("create the array of '' random objects", function(s)
 		for i = s,1,-1 do
 		   table.insert(ACK.array,OCTET.random(64))
 		end
-		new_codec('array', { luatype = 'table', zentype = 'array'})
+		new_codec('array', {zentype = 'array'})
 end)
 
 When("create the array of '' random objects of '' bits", function(s, b)
@@ -87,7 +87,7 @@ When("create the array of '' random objects of '' bits", function(s, b)
 	for i = q,1,-1 do
 	   table.insert(ACK.array,OCTET.random(bytes))
 	end
-	new_codec('array', { luatype = 'table', zentype = 'array'})
+	new_codec('array', {zentype = 'array'})
 end)
 
 When("create the array of '' random objects of '' bytes", function(s, b)
@@ -99,7 +99,7 @@ When("create the array of '' random objects of '' bytes", function(s, b)
 	for i = q,1,-1 do
 	   table.insert(ACK.array,OCTET.random(bytes))
 	end
-	new_codec('array', { luatype = 'table', zentype = 'array'})
+	new_codec('array', {zentype = 'array'})
 end)
 
 When("create the array of '' random numbers", function(s)
@@ -108,7 +108,7 @@ When("create the array of '' random numbers", function(s)
 	for i = s,1,-1 do
 		table.insert(ACK.array,F.new(random_int16()))
 	end
-	new_codec('array', { luatype = 'table',	zentype = 'array', encoding = 'number' })
+	new_codec('array', {zentype = 'array', encoding = 'number' })
 end)
 
 When("create the array of '' random numbers modulo ''", function(s,m)
@@ -117,7 +117,7 @@ When("create the array of '' random numbers modulo ''", function(s,m)
 	for i = s,1,-1 do
 		table.insert(ACK.array,F.new(math.floor(random_int16() % m)))
 	end
-	new_codec('array', { luatype = 'table',	zentype = 'array', encoding = 'number' })
+	new_codec('array', {zentype = 'array', encoding = 'number' })
 end)
 
 local function _extract_random_elements(num, from, random_fun)

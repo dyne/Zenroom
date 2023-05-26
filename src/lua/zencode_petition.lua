@@ -279,11 +279,7 @@ When(
 			ACK.petition.scores
 		)
 		ACK.petition_tally.uid = ACK.petition.uid
-        new_codec('petition_tally', {
-            schema='petition_tally',
-            encoding="complex",
-            zentype="schema",
-        })
+        new_codec('petition_tally')
 	end
 )
 

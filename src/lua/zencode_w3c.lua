@@ -96,15 +96,16 @@ ZEN.add_schema(
                          export = export_did_document },
         verificationMethod = { import = import_verification_method,
                                export = export_verification_method },
+        verification_method = { import = import_verification_method,
+								export = export_verification_method },
         -- flexible verifiable credential
         -- only internal 'jws' member has peculiar encoding
         verifiable_credential = function(obj)
             ACK.verifiable_credential = {}
             new_codec('verifiable_credential', {
-                name = 'verifiable_credential',
                 encoding = 'string',
-                zentype = 'schema',
-                luatype = 'table'
+				schema = 'verifiable_credential',
+                zentype = 'dictionary'
             })
             return (deepmap(OCTET.from_string, obj))
         end
@@ -148,19 +149,14 @@ When(
 )
 
 When(
-    "get the verification method in ''",
-    function(vc)
-        empty 'verification_method'
-        local cred = have(vc)
-        ZEN.assert(cred.proof, 'The object is not signed: ' .. vc)
-        ACK.verification_method = cred.proof.verificationMethod
-        new_codec('verification_method', {
-            schema="verificationMethod",
-            name="verification_method",
-            encoding="complex",
-            zentype="schema"
-        })
-    end
+   "get the verification method in ''",
+   function(vc)
+	  empty 'verification_method'
+	  local cred = have(vc)
+	  ZEN.assert(cred.proof, 'The object is not signed: ' .. vc)
+	  ACK.verification_method = cred.proof.verificationMethod
+	  new_codec('verification_method')
+   end
 )
 
 local function _json_encoding(src)
@@ -303,7 +299,6 @@ When(
             ACK.serviceEndpoint[name] = service.serviceEndpoint
         end
         new_codec('serviceEndpoint', { encoding = 'string',
-                                       luatype = 'table',
                                        zentype = 'dictionary' })
     end
 )

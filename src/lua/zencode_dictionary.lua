@@ -84,7 +84,7 @@ When("create the array of elements named '' for dictionaries in ''",
 	   end
 	end
 	ACK.array = res
-	new_codec('array', {luatype='table',zentype='array'}, dict)
+	new_codec('array', {zentype='array'}, dict)
 end)
 
 When("create the pruned dictionary of ''", function(dict)
@@ -111,7 +111,6 @@ When("find the max value '' for dictionaries in ''", function(name, arr)
     ACK.max_value = max
 	new_codec('max value', {
 		zentype = 'element', -- introduce scalar?
-		luatype = 'number'
 	}, arr) -- clone array's encoding
 end)
 
@@ -134,7 +133,6 @@ When("find the min value '' for dictionaries in ''", function(name, arr)
 	ACK.min_value = min
 	new_codec('min value', {
 		zentype = 'element', -- introduce scalar?
-		luatype = 'number'
 	}, arr) -- clone array's encoding
 end)
 
@@ -176,7 +174,6 @@ When("create the sum value '' for dictionaries in '' where '' > ''", function(na
     ACK.sum_value = sum
 	new_codec('sum value', {
 		zentype = 'element', -- introduce scalar?
-		luatype = 'number'
 	}, arr) -- clone array's encoding
 end)
 
@@ -196,10 +193,7 @@ When("find the '' for dictionaries in '' where '' = ''",function(name, arr, left
 	dicts_reduce(ACK[arr], params)
 	ZEN.assert(val, "No value found "..name.." across dictionaries in "..arr)
 	ACK[name] = val
-	new_codec(name, {
-                luatype = 'table',
-		zentype = 'array'
-	}, arr)
+	new_codec(name, {zentype = 'array'}, arr)
 end)
 
 

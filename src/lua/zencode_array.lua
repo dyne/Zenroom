@@ -77,7 +77,7 @@ end)
 
 When("create the new array", function()
 	ACK.new_array = { }
-	new_codec('new array', {zentype='array', luatype='table'})
+	new_codec('new array', {zentype='array'})
 end)
 
 local function count_f(t)
@@ -117,7 +117,7 @@ end)
 
 local function _insert_in(what, dest)
 	local d, d_codec = have(dest)
-	ZEN.assert(d_codec.luatype == 'table',
+	ZEN.assert(luatype(d) == 'table',
 	"Invalid destination, not a table: "..dest)
 	ZEN.assert(d_codec.zentype == 'array',
 	"Invalid destination, not an array: "..dest)
@@ -216,10 +216,12 @@ IfWhen("verify the '' is found in ''", _found_in)
 
 local function _found_in_atleast(ele_name, obj_name, times)
 	local ele, ele_codec = have(ele_name)
-	ZEN.assert( ele_codec.luatype ~= 'table', "Invalid use of table in object comparison: "..ele_name)
+	ZEN.assert( luatype(ele) ~= 'table',
+				"Invalid use of table in object comparison: "..ele_name)
 	local num = have(times)
 	local obj, obj_codec = have(obj_name)
-	ZEN.assert( obj_codec.luatype == 'table', "Not a table: "..obj_name)
+	ZEN.assert( luatype(obj) == 'table',
+				"Not a table: "..obj_name)
 	ZEN.assert( obj_codec.zentype == 'array', "Not an array: "..obj_name)
 	local constructor = fif(type(num) == "zenroom.big", BIG.new, F.new)
 	local found = constructor(0)

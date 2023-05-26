@@ -156,13 +156,12 @@
     if t then
        -- complex schema is a table specfying in/out conversions as:
        -- {import=fun, export=fun}
-       local c = fif(luatype(t)=='table', 'complex', CONF.output.encoding.name)
+       local c = fif(luatype(t)=='table', 'complex', 'def')
        -- default is always the configured output encoding
        return ({
 	     fun = t,
 		 schema = definition,
 	     zentype = 'element',
-	     luatype = objtype,
 	     raw = obj,
 	     encoding = c
        })
@@ -191,9 +190,6 @@
        -- normal type in input encoding: string, base64 etc.
        res = input_encoding(def.leftwords)
        if res then
-		  -- res.encoding is set
-		  -- res.fun is set
-		  res.luatype = 'table'
 		  res.zentype = def.rightmost -- zentypes couples with table
 		  res.raw = obj
 		  res.schema = nil
@@ -210,7 +206,6 @@
 	  --	  error("Cannot take object: expected '"..definition.."' but found '"..objtype.."'",3)
        end
        res = input_encoding(definition)
-       res.luatype = 'number'
        res.zentype = 'element'
        -- if obj > 2147483647 then
        --	  error('Overflow of number object over 32bit signed size', 3)
@@ -225,7 +220,6 @@
 
     if objtype == 'string' then
        res = input_encoding(definition)
-       res.luatype = 'string'
        res.zentype = 'element'
 	   res.schema = nil
        res.raw = obj
@@ -236,9 +230,7 @@
     objtype = type(obj)
     if iszen(objtype) then
        res = CONF.input.encoding
-       res.luatype = 'userdata'
        res.zentype = 'element'
-       res.rawtype = objtype
        res.schema = nil
        res.raw = obj
        return(res)
@@ -338,7 +330,9 @@
     end
     if luatype(cast) ~= 'string' then
        error('guess_outcast called with wrong argument: '..type(cast), 3) end
-    if cast == 'string' then
+    if cast == 'def' then
+	   return CONF.output.encoding.fun
+	elseif cast == 'string' then
        return f_factory_outcast(O.to_string)
     elseif cast == 'hex' then
        return f_factory_outcast(O.to_hex)
@@ -383,79 +377,54 @@
     return nil
  end
 
- -- CODEC format:
- -- { name: string,
- --   encoding: encoder name string or 'complex' handled by schema
- --   zentype:  zencode type: element, array, dictionary or schema
- --   luatype:  lua type (string, number, table or userdata)
- --   schema: schema name used to import (may differ from name)
- -- }
- -- return: name of codec encoding
- function check_codec(in_name)
-    local name = uscore(in_name)
-    if not ZEN.CODEC then
-       return CONF.output.encoding.name
-    end
-    if not ZEN.CODEC[name] then
-       xxx('Object has no CODEC registration: ' .. name)
-       local s = ZEN.schemas[name]
-       if s then
-	  return name
-       else
-	  return CONF.output.encoding.name
-       end
-    end
-    local codec = ZEN.CODEC[name]
-    if codec.zentype == 'schema' and codec.encoding == 'complex' then
-       local sch = codec.schema or codec.name
-       local s = ZEN.schemas[sch]
-       if not s then error("Schema not found: "..name, 2) end
-       if luatype(s) == 'function' then
-	  error("Simple schema found instead of complex: "..name, 2) end
-       assert(s.export, "Complex export function for schema not found: "..name)
-       assert(luatype(s.export) == 'function',
-	      "Complex export for schema is not a function: "..name)
-       return name -- name of schema itself as it contains export
-    else
-       return codec.encoding or CONF.output.encoding.name
-    end
-    return CONF.output.encoding.name
- end
-
  function new_codec(cname, parameters, clone)
     if not cname then error("Missing name in new codec", 2) end
-    local name = fif(luatype(cname) == 'string', uscore(cname), cname) -- may be a numerical index
+    local name
+	if luatype(cname) == 'string' then
+	   name = uscore(cname)
+	else -- may be a numerical index
+	   name = cname
+	end
     if not ACK[name] then error("Cannot create codec, object not found: "..name, 2) end
     if ZEN.CODEC[name] then error("Cannot overwrite ZEN.CODEC."..name, 2) end
     local res
-    if clone and not ZEN.CODEC[clone] then error("Clone not found in ZEN.CODEC."..clone, 2) end
-    if ZEN.CODEC[clone] then
-       res = deepcopy(ZEN.CODEC[clone])
+    if clone then
+	   local cclone = ZEN.CODEC[clone]
+	   if not cclone then
+		  error("Clone not found in ZEN.CODEC."..clone, 2)
+	   end
+       res = deepcopy(cclone)
        res.name = name
     else
        res = { name = name }
+	   -- check if name is a schema
+	   local sch = ZEN.schemas[name]
+	   if sch then
+		  res.schema = name
+		  if luatype(sch) == 'table' and sch.import and sch.export then
+			 res.encoding = 'complex'
+		  end
+	   end
     end
     -- overwrite with paramenters in argument
     if parameters then
        for k,v in pairs(parameters) do
-	  res[k] = v
+		  res[k] = v
        end
     end
-    -- detect zentype and luatype
-    if not res.luatype then
-       res.luatype = luatype(ACK[name])
-    end
+    -- detect zentype
     if not res.zentype then
-       if res.luatype == 'table' then
-	  if isdictionary(ACK[name]) then
-	     res.zentype = 'dictionary'
-	  elseif isarray(ACK[name]) then
-	     res.zentype = 'array'
-	  else
-	     error("Unknown zentype for lua table: "..name, 2)
-	  end
+	   local lt = luatype(ACK[name])
+       if lt == 'table' then
+		  if isdictionary(ACK[name]) then
+			 res.zentype = 'dictionary'
+		  elseif isarray(ACK[name]) then
+			 res.zentype = 'array'
+		  else
+			 error("Unknown zentype for lua table: "..name, 2)
+		  end
        else
-	  res.zentype = 'element'
+		  res.zentype = 'element'
        end
     end
     ZEN.CODEC[name] = res
