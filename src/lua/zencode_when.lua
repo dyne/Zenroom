@@ -98,7 +98,6 @@ When("append '' to ''", function(src, dest)
 		if isnumber(dst) then
 		   dst = O.from_string( tostring(dst) )
 		   ZEN.CODEC[dest].encoding = "string"
-		   ZEN.CODEC[dest].luatype = "string"
 		   ZEN.CODEC[dest].zentype = "element"
         end
         if isnumber(val) then
@@ -115,7 +114,6 @@ When("append the string '' to ''", function(hstr, dest)
 	if isnumber(dst) then
 	   dst = O.from_string( tostring(dst) )
 	   ZEN.CODEC[dest].encoding = "string"
-	   ZEN.CODEC[dest].luatype = "string"
 	   ZEN.CODEC[dest].zentype = "element"
 	end
 	dst = dst:octet() .. O.from_string(hstr)
@@ -413,16 +411,15 @@ local function _math_op(op, l, r, bigop)
 	ACK.result = true -- new_codec checks existance
 	if lz == "zenroom.big" then
 		codec = new_codec('result',
-				  {encoding = 'integer',
-				   luatype = 'userdata',
-				   zentype = 'element',
-                   rawtype = 'zenroom.big'})
+						  {encoding = 'integer',
+						   zentype = 'element'}
+		)
+
 	else
 		codec = new_codec('result',
-				  {encoding = 'float',
-				   luatype = 'userdata',
-				   zentype = 'element',
-                   rawtype = 'zenroom.float'})
+						  {encoding = 'float',
+						   zentype = 'element'}
+		)
 	end
         if type(left) == 'zenroom.big'
           and type(right) == 'zenroom.big' then
@@ -832,14 +829,10 @@ When("create the result of ''", function(expr)
   if type(values[1]) == 'zenroom.big' then
     ZEN.CODEC['result'] = new_codec('result',
    		                    {encoding = 'integer',
-                                    luatype = 'userdata',
-                                    rawtype = 'zenroom.big',
-                                    zentype = 'element' })
+							 zentype = 'element' })
   elseif type(values[1]) == 'zenroom.float' then
     ZEN.CODEC['result'] = new_codec('result',
    		                    {encoding = 'number',
-                                    luatype = 'userdata',
-                                    rawtype = 'zenroom.float',
-                                    zentype = 'element' })
+							 zentype = 'element' })
   end
 end)

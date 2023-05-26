@@ -151,7 +151,6 @@ function operate_conversion(guessed)
 	  name = guessed.name,
 	  encoding = guessed.encoding,
 	  zentype = guessed.zentype,
-	  luatype = guessed.luatype,
 	  root = guessed.root,
 	  schema = guessed.schema,
    }
@@ -159,7 +158,8 @@ function operate_conversion(guessed)
    --	     guessed = guessed })
    -- TODO: make xxx print to stderr!
    -- xxx('Operating conversion on: '..guessed.name)
-   if guessed.luatype == 'table' then
+   local lt = luatype(guessed.raw)
+   if lt == 'table' then
 	  if guessed.schema then
 		 -- error('Invalid schema conversion for encoding: '..guessed.encoding, 2)
 		 local res = {}
@@ -188,8 +188,8 @@ function operate_conversion(guessed)
    else -- element
 
 	  -- corner case: input is already a zenroom type
-	  if guessed.luatype == 'userdata' then
-		 if iszen(guessed.rawtype) then
+	  if lt == 'userdata' then
+		 if iszen(type(guessed.raw)) then
 			return(guessed.raw)
 		 else
 			error("Unknown userdata type for element: "..guessed.name, 2)

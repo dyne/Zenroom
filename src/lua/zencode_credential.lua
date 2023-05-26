@@ -111,11 +111,7 @@ ZEN.add_schema(
 When('create the credential request', function()
 	havekey'credential'
 	ACK.credential_request = CRED.prepare_blind_sign(ACK.keyring.credential)
-	new_codec('credential request', {
-        encoding="complex",
-        zentype="schema",
-        schema="credential_request",
-    })
+	new_codec('credential request')
 end)
 
 -- issuer's signature of credentials
@@ -227,7 +223,6 @@ When(
 			CRED.prove_cred(ACK.verifiers, ACK.credentials, ACK.keyring.credential)
 		new_codec('credential proof', {
             encoding="complex",
-            zentype="schema",
             schema="credential_proof",
         })
 	end

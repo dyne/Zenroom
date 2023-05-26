@@ -33,10 +33,7 @@ function initkeyring(ktype)
    elseif ACK.keyring == nil then
       -- initialise empty ACK.keyring
       ACK.keyring = {} -- TODO: save curve types
-      new_codec('keyring', {
-		   zentype = 'schema',
-		   encoding = 'keyring',
-		   luatype = 'table'    })
+      new_codec('keyring')
    else
       error('Keyring table is corrupted', 2)
    end
@@ -149,17 +146,12 @@ local function import_keyring(obj)
    return (res)
 end
 
-local function _default_export(obj)
-   local fun = guess_outcast(CONF.output.encoding.name)
-   return fun(obj)
-end
-
 -- used in zencode_then directly
 function export_keyring(obj)
    -- ecdh_curve
    -- bls_curve
    local res = {}
-   if obj.ecdh then res.ecdh = _default_export(obj.ecdh) end
+   if obj.ecdh then res.ecdh = CONF.output.encoding.fun(obj.ecdh) end
    if obj.credential then res.credential = obj.credential:octet():base64() end
    if obj.issuer then
       local fun = guess_outcast("base64")
@@ -177,10 +169,10 @@ function export_keyring(obj)
    if obj.ethereum then
       res.ethereum = O.to_hex(obj.ethereum)
    end
-   if obj.dilithium then res.dilithium = _default_export(obj.dilithium) end
-   if obj.kyber then     res.kyber     = _default_export(obj.kyber) end
-   if obj.schnorr then   res.schnorr   = _default_export(obj.schnorr) end
-   if obj.ntrup then     res.ntrup     = _default_export(obj.ntrup) end
+   if obj.dilithium then res.dilithium = CONF.output.encoding.fun(obj.dilithium) end
+   if obj.kyber then     res.kyber     = CONF.output.encoding.fun(obj.kyber) end
+   if obj.schnorr then   res.schnorr   = CONF.output.encoding.fun(obj.schnorr) end
+   if obj.ntrup then     res.ntrup     = CONF.output.encoding.fun(obj.ntrup) end
    if obj.eddsa then     res.eddsa     = O.to_base58(obj.eddsa) end
    return (res)
 end

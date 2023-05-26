@@ -249,11 +249,7 @@ When('create the reflow signature', function()
 	   proof = p,
 	   zeta = z
 	}
-	new_codec('reflow signature', {
-        encoding="complex",
-        zentype="schema",
-        schema="reflow_signature",
-    })
+	new_codec('reflow signature')
 end)
 
 When(

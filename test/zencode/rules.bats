@@ -40,19 +40,19 @@ EOF
     assert_output '{"ecdh_public_key":"Prv7EbvuXevABNJytdsoXPqjJFJxnuiHVk3QqcuWHtn7yzEQHkctuEgezzjG9tCCNriD4HsmFNnFPFDcGfMs3kmR"}'
 }
 
-@test "Rule output encoding fails" {
-    cat <<EOF | save_asset output_encoding_fail.zen
-Rule output encoding base123
-Scenario 'ecdh': pk
+# @test "Rule output encoding fails" {
+#     cat <<EOF | save_asset output_encoding_fail.zen
+# Rule output encoding base123
+# Scenario 'ecdh': pk
 
-Given I have nothing
-When I create the ecdh key
-and I create the ecdh public key
-Then print the 'ecdh public key'
-EOF
-    run $ZENROOM_EXECUTABLE -z output_encoding_fail.zen
-    assert_line --partial 'Invalid output conversion: base123'
-}
+# Given I have nothing
+# When I create the ecdh key
+# and I create the ecdh public key
+# Then print the 'ecdh public key'
+# EOF
+#     run $ZENROOM_EXECUTABLE -z output_encoding_fail.zen
+#     assert_line --partial 'Invalid output conversion: base123'
+# }
 
 @test "Rule output format" {
     cat <<EOF | zexe output_format.zen

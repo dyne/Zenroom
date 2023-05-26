@@ -42,18 +42,15 @@ will prompt to the screen the following warning message:
     CODEC = {
         eddsa_public_key = {
             encoding = "base58",
-            luatype = "userdata",
             name = "eddsa_public_key",
             zentype = "element"
         },
         keyring = {
             encoding = "complex",
-            luatype = "table",
             name = "keyring",
             zentype = "schema"
         },
         schnorr_public_key = {
-            luatype = "userdata",
             name = "schnorr_public_key",
             zentype = "element"
         }

@@ -167,7 +167,7 @@ local function _get_pub(name)
 	empty(name..' public key')
 	local sk = havekey(name)
 	ACK[name..'_public_key'] = ECDH.sk_to_pubc(sk)
-	new_codec(name..' public key', { zentype = 'schema' })
+	new_codec(name..' public key')
 end
 When("create the bitcoin public key", function() _get_pub('bitcoin') end)
 When("create the testnet public key", function() _get_pub('testnet') end)
@@ -183,8 +183,7 @@ local function _create_addr(name,pfx)
 	ACK[name..'_address'] = { raw = btc.address_from_public_key(pk),
 				  version = F.new(0),
 				  network = O.from_string(pfx) }
-	new_codec(name..' address', { zentype = 'schema',
-				      encoding = 'complex' })
+	new_codec(name..' address')
 end
 When("create the bitcoin address", function() _create_addr('bitcoin','bc') end)
 When("create the testnet address", function() _create_addr('testnet','tb') end)
